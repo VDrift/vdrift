@@ -1,0 +1,21 @@
+libusb development headers are required.
+
+This tool came from the following thread:
+http://vdrift.net/Forum/viewtopic.php?t=866
+
+More information:
+http://wiki.vdrift.net/Logitech_G25_support
+http://wiki.vdrift.net/Setting_up_force_feedback
+
+Tool options:
+--verbose
+--brief
+--reconnect
+--nativemode
+--reset
+--range 900
+
+In most cases, you only need to run:
+./G25manage --nativemode
+and
+./G25manage --range 900

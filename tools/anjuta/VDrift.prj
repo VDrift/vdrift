@@ -1,0 +1,265 @@
+# Anjuta Version 1.2.4 
+Compatibility Level: 1 
+
+<PROJECT_DESCRIPTION_START>
+<PROJECT_DESCRIPTION_END>
+<CONFIG_PROGS_START>
+<CONFIG_PROGS_END>
+<CONFIG_LIBS_START>
+dnl Check for SDL
+SDL_VERSION=1.2.0
+AM_PATH_SDL($SDL_VERSION,
+            :,
+            AC_MSG_ERROR([*** SDL version $SDL_VERSION not found!])
+)
+CFLAGS="$CFLAGS $SDL_CFLAGS"
+LIBS="$LIBS $SDL_LIBS"
+
+dnl Check for SDL_image: 
+AC_CHECK_LIB(SDL_image, 
+       IMG_Load, 
+       LIBS="$LIBS -lSDL_image", 
+       AC_MSG_ERROR([*** SDL_image library not found!]) 
+)
+
+dnl Check for GL:
+AC_CHECK_LIB(GL, 
+       glBegin, 
+       LIBS="$LIBS -lGL", 
+       AC_MSG_ERROR([*** GL library not found!]) 
+)
+
+dnl Check for GLU:
+AC_CHECK_LIB(GLU, 
+       gluLookAt, 
+       LIBS="$LIBS -lGLU", 
+       AC_MSG_ERROR([*** GLU library not found!]) 
+)
+
+dnl Check for OpenAL:
+AC_CHECK_LIB(openal, 
+       alutInit, 
+       LIBS="$LIBS -lopenal", 
+       AC_MSG_ERROR([*** OpenAL 1.0 library not found!]) 
+)<CONFIG_LIBS_END>
+<CONFIG_HEADERS_START>
+<CONFIG_HEADERS_END>
+<CONFIG_CHARACTERISTICS_START>
+<CONFIG_CHARACTERISTICS_END>
+<CONFIG_LIB_FUNCS_START>
+<CONFIG_LIB_FUNCS_END>
+<CONFIG_ADDITIONAL_START>
+<CONFIG_ADDITIONAL_END>
+<CONFIG_FILES_START>
+<CONFIG_FILES_END>
+<MAKEFILE_AM_START>
+<MAKEFILE_AM_END>
+
+props.file.type=project
+
+anjuta.version=1.2.4
+anjuta.compatibility.level=1
+
+project.name=VDrift
+project.type=GENERIC
+project.target.type=EXECUTABLE
+project.version=0.1
+project.author=Joe Venzon
+project.source.target=vdrift
+project.has.gettext=0
+project.gui.command=
+project.programming.language=C_C++
+project.excluded.modules=intl
+
+project.config.extra.modules.before=
+project.config.extra.modules.after=
+project.config.blocked=0
+project.config.disable.overwriting=1 1 1 1 1 1 1 1 1 
+
+project.menu.entry=VDrift Version 0.1
+project.menu.group=Applications
+project.menu.comment=VDrift Version 0.1
+project.menu.icon=
+project.menu.need.terminal=0
+
+project.configure.options=
+anjuta.program.arguments=
+preferences.build.option.jobs=0
+preferences.build.option.silent=0
+preferences.build.option.autosave=1
+preferences.anjuta.make.options=-k
+preferences.make=make
+preferences.build.option.keep.going=0
+preferences.build.option.warn.undef=1
+preferences.autoformat.custom.style= -i8 -sc -bli0 -bl0 -cbi0 -ss
+preferences.indent.opening=0
+preferences.autoformat.disable=0
+preferences.indent.automatic=1
+preferences.use.tabs=1
+preferences.indent.size=4
+preferences.tabsize=4
+preferences.indent.closing=0
+
+module.include.name=include
+module.include.type=
+module.include.files=\
+	utility.h\
+	font.h\
+	globals.h\
+	backdrop.h\
+	quat.h\
+	camera.h\
+	weather.h\
+	keyman.h\
+	model.h\
+	vamosworld.h\
+	mouse.h\
+	messageq.h\
+	sound.h\
+	menu.h\
+	timer.h\
+	controls.h\
+	replay.h\
+	particles.h\
+	trees.h\
+	logo.h\
+	gamestate.h\
+	objects.h\
+	multiplay.h\
+	net.h\
+	settings.h\
+	configfile.h\
+	textures.h\
+	track.h\
+	bezier.h\
+	joepack.h\
+	gui/button.h\
+	gui/controlgrab.h\
+	gui/gui.h\
+	gui/image.h\
+	gui/label.h\
+	gui/listbox.h\
+	gui/multi_image.h\
+	gui/slider.h\
+	gui/spinning_car.h\
+	gui/textbox.h\
+	gui/toggle.h\
+	gui/wheel.h\
+	cardinfo.h\
+	gui/calibrate.h\
+	ai.h
+
+module.source.name=src
+module.source.type=
+module.source.files=\
+	main.cpp\
+	utility.cpp\
+	font.cpp\
+	backdrop.cpp\
+	quat.cpp\
+	camera.cpp\
+	weather.cpp\
+	keyman.cpp\
+	vamos/body/Car.cc\
+	vamos/body/Aerodynamic_Device.cc\
+	vamos/body/Brake.cc\
+	vamos/body/Clutch.cc\
+	vamos/body/Contact_Point.cc\
+	vamos/body/Differential.cc\
+	vamos/body/Engine.cc\
+	vamos/body/Exerter.cc\
+	vamos/body/Frame.cc\
+	vamos/body/Fuel_Tank.cc\
+	vamos/body/Gauge.cc\
+	vamos/body/Gl_Car.cc\
+	vamos/body/Particle.cc\
+	vamos/body/Rigid_Body.cc\
+	vamos/body/Suspension.cc\
+	vamos/body/Tire.cc\
+	vamos/body/Transmission.cc\
+	vamos/body/Wheel.cc\
+	vamos/geometry/Inertia_Tensor.cc\
+	vamos/geometry/Linear_Interpolator.cc\
+	vamos/geometry/Material.cc\
+	vamos/geometry/Sample.cc\
+	vamos/geometry/Spline.cc\
+	vamos/geometry/Three_Matrix.cc\
+	vamos/geometry/Three_Vector.cc\
+	vamos/geometry/Two_Point.cc\
+	vamos/geometry/XML_Parser.cc\
+	vamos/track/Road_Segment.cc\
+	vamos/track/Strip_Track.cc\
+	vamos/world/World.cc\
+	vamos/body/Drivetrain.cc\
+	vamos/geometry/Gl_Texture_Image.cc\
+	vamos/geometry/Texture_Image.cc\
+	model.cpp\
+	vamosworld.cc\
+	mouse.cpp\
+	messageq.cpp\
+	sound.cpp\
+	menu.cpp\
+	timer.cpp\
+	controls.cc\
+	replay.cpp\
+	particles.cpp\
+	trees.cpp\
+	logo.cpp\
+	gamestate.cpp\
+	objects.cpp\
+	multiplay.cpp\
+	net.cpp\
+	settings.cpp\
+	configfile.cpp\
+	textures.cpp\
+	track.cpp\
+	bezier.cpp\
+	joepack.cpp\
+	gui/button.cpp\
+	gui/controlgrab.cpp\
+	gui/gui.cpp\
+	gui/image.cpp\
+	gui/label.cpp\
+	gui/multi_image.cpp\
+	gui/slider.cpp\
+	gui/spinning_car.cpp\
+	gui/textbox.cpp\
+	gui/toggle.cpp\
+	cardinfo.cpp\
+	gui/page.cpp\
+	ai.cpp
+
+module.pixmap.name=pixmaps
+module.pixmap.type=
+module.pixmap.files=
+
+module.data.name=data
+module.data.type=
+module.data.files=
+
+module.help.name=help
+module.help.type=
+module.help.files=
+
+module.doc.name=doc
+module.doc.type=
+module.doc.files=
+
+module.po.files=
+
+compiler.options.supports=
+compiler.options.include.paths=\
+	../include
+compiler.options.library.paths=
+compiler.options.libraries=
+compiler.options.libraries.selected=
+compiler.options.defines=
+compiler.options.defines.selected=
+compiler.options.warning.buttons=0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 
+compiler.options.optimize.buttons=0 1 0 0 
+compiler.options.other.buttons=0 0 
+compiler.options.other.c.flags=
+compiler.options.other.l.flags=
+compiler.options.other.l.libs=
+
+project.src.paths=

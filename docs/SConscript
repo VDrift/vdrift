@@ -1,0 +1,14 @@
+#-------------#
+# Import Vars #
+#-------------#
+Import('*')
+
+src = Split("""AUTHORS COPYING INSTALL NEWS README TODO VAMOS.txt ChangeLog""")
+
+#-----------------------------------#
+# Distribute to src_dir and bin_dir #
+#-----------------------------------#
+dist_files = ['SConscript'] + src
+
+env.Distribute (src_dir, dist_files)
+env.Distribute (bin_dir, src)

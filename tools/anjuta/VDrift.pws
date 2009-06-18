@@ -1,0 +1,69 @@
+
+[filenumbers]
+0=347
+1=115
+2=152
+3=95
+4=64
+5=704
+6=109
+7=73
+8=247
+9=1
+10=2225
+11=2130
+12=425
+13=128
+14=197
+15=230
+
+[filemarkers]
+0=
+1=
+2=
+3=
+4=
+5=
+6=
+7=
+8=
+9=
+10=
+11=
+12=
+13=
+14=
+15=
+
+[File View]
+filter.file.unmatch=*.so *.o *.a *.la
+filter.file.ignore.hidden=0
+filter.dir.ignore.hidden=0
+
+[executer]
+RunInTerminal=true
+
+[Project State]
+clean before build=false
+
+[filelist]
+0=/home/joe/code/VDrift/src/vamos/world/World.cc
+1=/home/joe/code/VDrift/include/sound.h
+2=/home/joe/code/VDrift/include/controls.h
+3=/home/joe/code/VDrift/src/controls.cc
+4=/home/joe/code/VDrift/include/gamestate.h
+5=/home/joe/code/VDrift/src/configfile.cpp
+6=/home/joe/code/VDrift/include/configfile.h
+7=/home/joe/code/VDrift/include/timer.h
+8=/home/joe/code/VDrift/src/timer.cpp
+9=/home/joe/code/VDrift/include/vamosworld.h
+10=/home/joe/code/VDrift/src/vamosworld.cc
+11=/home/joe/code/VDrift/src/main.cpp
+
+[Project Tree]
+0=0
+1=0:0
+2=0:1
+
+[File Tree]
+0=0

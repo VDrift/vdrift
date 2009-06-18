@@ -1,0 +1,291 @@
+drive = 
+
+[ steering ]
+max-angle = 
+
+[ engine ]
+position = 
+mass = 
+max-power = 
+peak-engine-rpm = 
+rpm-limit = 
+inertia = 
+idle = 
+start-rpm = 
+stall-rpm = 
+fuel-consumption = 
+
+[ clutch ]
+sliding = 
+radius = 
+area = 
+max-pressure = 
+
+[ transmission ]
+gears = 
+gear-ratio-r = 
+gear-ratio-1 = 
+gear-ratio-2 = 
+gear-ratio-3 = 
+gear-ratio-4 = 
+gear-ratio-5 = 
+gear-ratio-6 = 
+shift-delay = 
+
+[ differential ]
+final-drive = 
+anti-slip = 
+
+[ fuel-tank ]
+position = 
+capacity = 
+volume = 
+fuel-density = 
+
+[ suspension-front ]
+spring-constant = 
+bounce = 
+rebound = 
+travel = 
+max-compression-velocity = 
+camber = 
+caster = 
+toe = 
+anti-roll = 
+
+[ suspension-rear ]
+spring-constant = 
+bounce = 
+rebound = 
+travel = 
+max-compression-velocity = 
+camber = 
+caster = 
+toe = 
+anti-roll = 
+
+[ tire-front ]
+radius = 
+rolling-resistance = 
+rotational-inertia = 
+# Lateral force
+a0=
+a1=
+a2=
+a3=
+a4=
+a5=
+a6=
+a7=
+a8=
+a9=
+a10=
+a111=
+a112=
+a12=
+a13=
+# Longitudinal force
+b0=
+b1=
+b2=
+b3=
+b4=
+b5=
+b6=
+b7=
+b8=
+b9=
+b10=
+b11=
+b12=
+# Aligning moment
+c0=
+c1=
+c2=
+c3=
+c4=
+c5=
+c6=
+c7=
+c8=
+c9=
+c10=
+c11=
+c12=
+c13=
+c14=
+c15=
+c16=
+c17=
+
+[ tire-rear ]
+radius = 
+rolling-resistance = 
+rotational-inertia = 
+# Lateral force
+a0=
+a1=
+a2=
+a3=
+a4=
+a5=
+a6=
+a7=
+a8=
+a9=
+a10=
+a111=
+a112=
+a12=
+a13=
+# Longitudinal force
+b0=
+b1=
+b2=
+b3=
+b4=
+b5=
+b6=
+b7=
+b8=
+b9=
+b10=
+b11=
+b12=
+# Aligning moment
+c0=
+c1=
+c2=
+c3=
+c4=
+c5=
+c6=
+c7=
+c8=
+c9=
+c10=
+c11=
+c12=
+c13=
+c14=
+c15=
+c16=
+c17=
+
+[ brakes-front ]
+friction = 
+max-pressure = 
+bias = 
+radius = 
+area = 
+
+[ brakes-rear ]
+friction = 
+max-pressure = 
+bias = 
+radius = 
+area = 
+
+[ driver ]
+position = 
+mass = 
+view-position = 
+
+[ drag ]
+position = 
+frontal-area = 
+drag-coefficient = 
+
+[ wing-front ]
+position = 
+frontal-area = 
+drag-coefficient = 
+surface-area = 
+lift-coefficient = 
+efficiency = 
+
+[ wing-rear ]
+position = 
+frontal-area = 
+drag-coefficient = 
+surface-area = 
+lift-coefficient = 
+efficiency = 
+
+[ wheel-FR ]
+position = 
+roll-height = 
+mass = 
+restitution = 
+
+[ suspension-FR ]
+position = 
+hinge = 
+
+[ wheel-FL ]
+position = 
+roll-height = 
+mass = 
+restitution = 
+
+[ suspension-FL ]
+position = 
+hinge = 
+
+[ wheel-RR ]
+position = 
+roll-height = 
+mass = 
+restitution = 
+
+[ suspension-RR ]
+position = 
+hinge = 
+
+[ wheel-RL ]
+position = 
+roll-height = 
+mass = 
+restitution = 
+
+[ suspension-RL ]
+position = 
+hinge = 
+
+[ contact-points ]
+# used to find the bounds of the car (for collisions)
+# also play into the weight distribution and balance
+mass = 
+position-00 = 
+position-01 = 
+position-02 = 
+position-03 = 
+position-04 = 
+position-05 = 
+position-06 = 
+position-07 = 
+
+# these are used to calculate the weight distribution and balance
+[ particle-00 ]
+mass = 
+position = 
+
+[ particle-01 ]
+mass = 
+position = 
+
+[ particle-02 ]
+mass = 
+position = 
+
+[ particle-03 ]
+mass = 
+position = 
+
+[ particle-04 ]
+mass = 
+position = 
+
+[ particle-05 ]
+mass = 
+position = 

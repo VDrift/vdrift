@@ -1,0 +1,57 @@
+#-------------#
+# Import Vars #
+#-------------#
+Import('*')
+
+src = Split("""Info.plist
+               ReadMe.rtf
+               SConscript
+               SDLMain.h
+               SDLMain.m
+               config_mac.mm
+               vdrift.icns
+               English.lproj/InfoPlist.strings
+               vdrift.xcodeproj/julian.pbxuser
+               vdrift.xcodeproj/julian.perspective
+               vdrift.xcodeproj/project.pbxproj
+               SDL.framework/Versions/A/SDL
+               SDL_image.framework/Versions/A/SDL_image
+               SDL_net.framework/Versions/A/SDL_net
+               SDL.framework/Versions/A/Headers/SDL.h
+               SDL.framework/Versions/A/Headers/SDL_active.h
+               SDL.framework/Versions/A/Headers/SDL_audio.h
+               SDL.framework/Versions/A/Headers/SDL_byteorder.h
+               SDL.framework/Versions/A/Headers/SDL_cdrom.h
+               SDL.framework/Versions/A/Headers/SDL_copying.h
+               SDL.framework/Versions/A/Headers/SDL_endian.h
+               SDL.framework/Versions/A/Headers/SDL_error.h
+               SDL.framework/Versions/A/Headers/SDL_events.h
+               SDL.framework/Versions/A/Headers/SDL_getenv.h
+               SDL.framework/Versions/A/Headers/SDL_joystick.h
+               SDL.framework/Versions/A/Headers/SDL_keyboard.h
+               SDL.framework/Versions/A/Headers/SDL_keysym.h
+               SDL.framework/Versions/A/Headers/SDL_loadso.h
+               SDL.framework/Versions/A/Headers/SDL_main.h
+               SDL.framework/Versions/A/Headers/SDL_mouse.h
+               SDL.framework/Versions/A/Headers/SDL_mutex.h
+               SDL.framework/Versions/A/Headers/SDL_opengl.h
+               SDL.framework/Versions/A/Headers/SDL_quit.h
+               SDL.framework/Versions/A/Headers/SDL_rwops.h
+               SDL.framework/Versions/A/Headers/SDL_syswm.h
+               SDL.framework/Versions/A/Headers/SDL_thread.h
+               SDL.framework/Versions/A/Headers/SDL_timer.h
+               SDL.framework/Versions/A/Headers/SDL_types.h
+               SDL.framework/Versions/A/Headers/SDL_version.h
+               SDL.framework/Versions/A/Headers/SDL_video.h
+               SDL.framework/Versions/A/Headers/begin_code.h
+               SDL.framework/Versions/A/Headers/close_code.h
+               SDL.framework/Versions/A/Resources/Info.plist
+               SDL.framework/Versions/A/Resources/SDLMain.nib
+               SDL_image.framework/Versions/A/Headers/SDL_image.h
+               SDL_net.framework/Versions/A/Headers/SDL_net.h
+               SDL_net.framework/Versions/A/Resources/Info.plist""")
+
+#-----------------------#
+# Distribute to src_dir #
+#-----------------------#
+env.Distribute (src_dir, src)

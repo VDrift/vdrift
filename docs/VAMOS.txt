@@ -1,0 +1,28 @@
+Changes from vamos:
+
+copied body/*.cc
+copied geometry/*.cc
+copied track/*.cc
+copied world/world.cc
+
+removed geometry/Ac3d.cc
+
+heavily modified body/gl_car.cc
+
+modified body/suspension.cc and body/wheel.cc and track/Road_Segment.cc to not use Ac3d models
+then modified them to use the terrain engine for height
+
+gutted geometry/sample.cc
+
+modified world/world.cc
+
+modified body/cars.cc:
+changed
+      mp_car->exterior_model (m_data_dir + "cars/" + m_strings [0],
+                              m_doubles [0], m_vectors [0], m_vectors [1]);
+to
+      mp_car->exterior_model ("cars/" + m_strings [0],
+                              m_doubles [0], m_vectors [0], m_vectors [1]);
+also removed midpoint stuff from propogate
+
+modified wheel.cc, added position() function

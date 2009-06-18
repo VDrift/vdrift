@@ -1,0 +1,32 @@
+vdrift (0.0.2007.03.23-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Matthew A. Nicholson <matt@matt-land.com>  Wed, 04 Apr 2007 14:16:53 -0500
+
+vdrift (0.0.2006.10.06-1) unstable; urgency=low
+
+  * New upstream release.
+  * Changed package version numbering scheme to match the official debian
+    version.  Previous changelog entries were updated, probaby a bad thing to
+    do.
+  * Package updated to reflect upstream changes.
+  * Skins was added tools/debian/vdrift-data.install
+  * Addition clean commands were added from the official debian package.
+  * datadir and bindir were set for the build in tools/debian/rules.
+  * A TODO.Debian was added.
+
+ -- Matthew A. Nicholson <matt@matt-land.com>  Fri,  6 Oct 2006 01:06:47 -0500
+
+vdrift (0.0.2006.02.21-1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Matthew A. Nicholson <matt@matt-land.com>  Wed, 22 Feb 2006 23:47:42 -0600
+
+vdrift (0.0.2005.11.03-1) unstable; urgency=low
+
+  * Initial release.
+
+ -- Matthew A. Nicholson <matt@matt-land.com>  Sun, 11 Dec 2005 23:28:32 -0600
+

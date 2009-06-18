@@ -1,0 +1,19 @@
+People Responsible for VDrift
+
+Get the latest version of this document from
+(http://vdrift.net/staticpages/index.php/AUTHORS).
+
+VDrift was created by Joe Venzon who continues to write all the source code
+for the game, and created everything in the game not attributed to someone
+else below. The physics engine in the game is the Vamos automotive
+simulator (http://vamos.sourceforge.net/) written by Sam Varner. Other
+contributors include:
+
+Chris Guirl - this web site, Subversion repository, SCons build scripts,
+S2000 model, the tress, some other graphics, menus, bug reports and
+generally annoying Joe
+Teemu Haapoja -  Mustang model originally from the Motorsport
+(http://www.motorsport-sim.org/) project.
+loungekid (on race sim central (http://rscnet.org/) and Racer-Xtreme
+(http://www.racer-xtreme.com/)) - settings and model of 1988 Porsche
+Carrera Clubsport originally for Racer (http://www.racer.nl).

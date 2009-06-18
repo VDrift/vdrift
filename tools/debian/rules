@@ -1,0 +1,15 @@
+#!/usr/bin/make -f
+# Sample debian/rules that uses cdbs.  Originaly written by Robert Millan.
+# This file is public domain.
+
+include debian/cdbs/scons.mk
+include /usr/share/cdbs/1/rules/debhelper.mk
+  
+DEB_AUTO_CLEANUP_RCS            := yes
+
+# Add here any variable or target overrides you need
+DEB_SCONS_OPTIONS := destdir=$(DEB_DESTDIR) bindir=games datadir=share/games/vdrift use_binreloc=0 release=1 cache=no
+
+#DEB_SCONS_INSTALL_OPTIONS := destdir=$(DEB_DESTDIR)
+#DEB_SCONS_BUILD_OPTIONS := release=1
+

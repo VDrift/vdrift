@@ -1,0 +1,214 @@
+#include "shader.h"
+
+#include <cassert>
+#include <sstream>
+#include <fstream>
+#include <iostream>
+#include <cstring>
+
+using std::string;
+using std::ostream;
+using std::stringstream;
+using std::ifstream;
+using std::pair;
+using std::endl;
+using std::strcpy;
+
+bool SHADER_GLSL::Load(const std::string & vertex_filename, const std::string & fragment_filename, const std::vector <std::string> & preprocessor_defines, std::ostream & info_output, std::ostream & error_output)
+{
+	assert(GLEW_ARB_shading_language_100);
+	
+	Unload();
+	
+	string vertexshader_source, fragmentshader_source;
+	LoadFileIntoString(vertex_filename, vertexshader_source, error_output);
+	LoadFileIntoString(fragment_filename, fragmentshader_source, error_output);
+	
+	//prepend #define values
+	for (std::vector <std::string>::const_iterator i = preprocessor_defines.begin(); i != preprocessor_defines.end(); i++)
+	{
+		vertexshader_source = "#define " + *i + "\n" + vertexshader_source;
+		fragmentshader_source = "#define " + *i + "\n" + fragmentshader_source;
+	}
+	
+	//prepend #version
+	fragmentshader_source = "#version 120\n" + fragmentshader_source;
+	
+	//create shader objects
+	program = glCreateProgramObjectARB();
+	vertex_shader = glCreateShaderObjectARB(GL_VERTEX_SHADER_ARB);
+	fragment_shader = glCreateShaderObjectARB(GL_FRAGMENT_SHADER_ARB);
+	
+	//load shader sources
+	GLcharARB vertshad[vertexshader_source.length()+1];
+	strcpy(vertshad, vertexshader_source.c_str());
+	const GLcharARB * vertshad2 = vertshad;
+	glShaderSourceARB(vertex_shader, 1, &vertshad2, NULL);
+	GLcharARB fragshad[fragmentshader_source.length()+1];
+	strcpy(fragshad, fragmentshader_source.c_str());
+	const GLcharARB * fragshad2 = fragshad;
+	glShaderSourceARB(fragment_shader, 1, &fragshad2, NULL);
+	
+	//compile the shaders
+	GLint vertex_compiled(0);
+	GLint fragment_compiled(0);
+	
+	glCompileShaderARB(vertex_shader);
+	PrintShaderLog(vertex_shader, vertex_filename, info_output);
+	glCompileShaderARB(fragment_shader);
+	PrintShaderLog(fragment_shader, fragment_filename, info_output);
+	
+	glGetObjectParameterivARB(vertex_shader, GL_OBJECT_COMPILE_STATUS_ARB, &vertex_compiled);
+	glGetObjectParameterivARB(fragment_shader, GL_OBJECT_COMPILE_STATUS_ARB, &fragment_compiled);
+	
+	//attach shader objects to the program object
+	glAttachObjectARB(program, vertex_shader);
+	glAttachObjectARB(program, fragment_shader);
+	
+	//link the program
+	glLinkProgramARB(program);
+	GLint program_linked(0);
+	glGetProgramiv(program, GL_LINK_STATUS, &program_linked);
+	
+	const bool success = (vertex_compiled && fragment_compiled && program_linked);
+	
+	//spit out any error info
+	PrintProgramLog(program, vertex_filename + " and " + fragment_filename, info_output);
+	
+	if (!success)
+	{
+		error_output << "Shader compilation failure: " + vertex_filename + " and " + fragment_filename << endl;
+	}
+	else
+	{
+		//need to enable to be able to set passed variable info
+		glUseProgramObjectARB(program);
+		
+		//set passed variable information for tus
+		for (int i = 0; i < 16; i++)
+		{
+			stringstream tustring;
+			tustring << "tu" << i;
+			int tu_loc;
+			tu_loc = glGetUniformLocationARB(program, (tustring.str()+"_2D").c_str());
+			if (tu_loc >= 0) glUniform1iARB(tu_loc, i);
+				
+			tu_loc = glGetUniformLocationARB(program, (tustring.str()+"_2DRect").c_str());
+			if (tu_loc >= 0) glUniform1iARB(tu_loc, i);
+				
+			tu_loc = glGetUniformLocationARB(program, (tustring.str()+"_cube").c_str());
+			if (tu_loc >= 0)
+			{
+				glUniform1iARB(tu_loc, i);
+			}
+		}
+	}
+	
+	loaded = success;
+	
+	return success;
+}
+
+void SHADER_GLSL::LoadFileIntoString(const std::string & filepath, std::string & filestring, ostream & error_output) const
+{
+	ifstream f;
+	f.open(filepath.c_str());
+	if (f)
+	{
+		char c[1024];
+		
+		while (f.good())
+		{
+			f.get(c, 1024, 0);
+			filestring = filestring + c;
+		}
+		
+		f.close();
+	}
+	else
+	{
+		error_output << "Shader file not found: " + filepath << endl;
+		assert(f);
+	}
+}
+
+void SHADER_GLSL::Unload()
+{
+	if (loaded) glDeleteObjectARB(program);
+}
+
+void SHADER_GLSL::Enable()
+{
+	assert(loaded);
+	
+	glUseProgramObjectARB(program);
+}
+
+bool SHADER_GLSL::UploadMat16(const string & varname, float * mat16)
+{
+	Enable();
+	
+	int mat_loc = glGetUniformLocationARB(program, varname.c_str());
+	if (mat_loc >= 0) glUniformMatrix4fv(mat_loc, 1, GL_FALSE, mat16);
+	return (mat_loc >= 0);
+}
+
+///returns true on successful upload
+bool SHADER_GLSL::UploadActiveShaderParameter1i(const string & param, int val)
+{
+	Enable();
+	
+	int loc = glGetUniformLocationARB(program, param.c_str());
+	if (loc >= 0) glUniform1i(loc, val);
+	return (loc >= 0);
+}
+
+///returns true on successful upload
+bool SHADER_GLSL::UploadActiveShaderParameter1f(const string & param, float val)
+{
+	Enable();
+	
+	int loc = glGetUniformLocationARB(program, param.c_str());
+	if (loc >= 0) glUniform1f(loc, val);
+	return (loc >= 0);
+}
+
+///returns true on successful upload
+bool SHADER_GLSL::UploadActiveShaderParameter3f(const std::string & param, float val1, float val2, float val3)
+{
+	Enable();
+	
+	int loc = glGetUniformLocationARB(program, param.c_str());
+	if (loc >= 0) glUniform3f(loc, val1, val2, val3);
+	return (loc >= 0);
+}
+
+///query the card for the shader program link log and print it out
+void SHADER_GLSL::PrintProgramLog(GLhandleARB & program, const std::string & name, std::ostream & out)
+{
+	unsigned int logsize = 65536;
+	char shaderlog[logsize];
+	GLsizei loglength;
+	glGetInfoLogARB(program, logsize, &loglength, shaderlog);
+	if (loglength > 0)
+	{
+		out << "----- Start Shader Link Log for " + name + " -----" << endl;
+		out << shaderlog << endl;
+		out << "----- End Shader Link Log -----" << endl;
+	}
+}
+
+///query the card for the shader compile log and print it out
+void SHADER_GLSL::PrintShaderLog(GLhandleARB & shader, const std::string & name, std::ostream & out)
+{
+	unsigned int logsize = 65536;
+	char shaderlog[logsize];
+	GLsizei loglength;
+	glGetInfoLogARB(shader, logsize, &loglength, shaderlog);
+	if (loglength > 0)
+	{
+		out << "----- Start Shader Compile Log for " + name + " -----" << endl;
+		out << shaderlog << endl;
+		out << "----- End Shader Compile Log -----" << endl;
+	}
+}

@@ -1,0 +1,72 @@
+# -*- shell-script -*-
+[Meta]
+ShortName: vdrift
+SoftwareVersion: 2007-03-23-full
+DisplayName: VDrift
+RootName: @vdrift.net/vdrift:$SOFTWAREVERSION
+Summary: A cross-platform, open source driving simulation made with drift racing in mind.
+Maintainer: The VDrift Team <vdrift-devel@lists.sf.net>
+Packager: Chris Guirl <thelusiv@gmail.com>
+PackageVersion: 1
+CPUArchitectures: x86
+AutopackageTarget: 1.2
+Type: Application
+License: GNU General Public License (GPL)
+URL: http://vdrift.net/
+
+[Description]
+VDrift is a cross-platform, open source driving simulation made with drift racing in mind. It's powered by the excellent Vamos physics engine.
+
+[BuildPrepare]
+export APBUILD_STATIC="SDL_gfx openal alut"
+export APBUILD_STATIC_LIBGCC=1
+export APBUILD_DEBUG=1
+export CC=apgcc
+export CXX=apg++
+export CXX1=g++-3.3
+export CXX2=g++-3.4
+export APBUILD_CC=gcc-3.3
+export APBUILD_CXX1=g++-3.3
+scons -c destdir=$STAGING_DIR
+mkdirs $STAGING_DIR
+copyFile $PWD/tools/autopackage/vdrift.desktop $STAGING_DIR/vdrift.desktop
+scons install minimal=0 force_feedback=1 release=1 use_binreloc=1 use_apbuild=1 cache=0 destdir=$STAGING_DIR
+
+[BuildUnprepare]
+scons -c install destdir=$STAGING_DIR
+removeFile $STAGING_DIR/vdrift.desktop
+removeDir $STAGING_DIR
+
+[Globals]
+STAGING_DIR=$PWD/vdrift-tmp-build
+CXX2=g++-3.4
+
+[Prepare]
+#require '@xfree86.org/xlib' 6
+require '@opengl.org/opengl' 1.2
+#require '@opengl.org/glu' 1.3
+#require '@libsdl.org/sdl' 1.2
+#require '@libsdl.org/sdl_image' 1.2
+#require '@libsdl.org/sdl_mixer' 1.2
+#require '@libsdl.org/sdl_net' 1.2
+
+[Imports]
+FILES_TO_INCLUDE="$STAGING_DIR/*"
+echo $FILES_TO_INCLUDE | import
+
+[Install]
+copyFile usr/share/games/vdrift/bin/vdrift $PREFIX/share/games/vdrift/bin/vdrift
+linkFile $PREFIX/share/games/vdrift/bin/vdrift $PREFIX/bin/vdrift
+copyFiles usr/share/games/vdrift/data/settings $PREFIX/share/games/vdrift/data
+copyFiles usr/share/games/vdrift/data/lists $PREFIX/share/games/vdrift/data
+copyFiles usr/share/games/vdrift/data/sounds $PREFIX/share/games/vdrift/data
+copyFiles usr/share/games/vdrift/data/textures $PREFIX/share/games/vdrift/data
+copyFiles usr/share/games/vdrift/data/skins $PREFIX/share/games/vdrift/data
+copyFiles usr/share/games/vdrift/data/cars $PREFIX/share/games/vdrift/data
+copyFiles usr/share/games/vdrift/data/tracks $PREFIX/share/games/vdrift/data
+installLocale usr/share/locale/
+installIcon usr/share/games/vdrift/data/textures/icons/vdrift-64x64.png usr/share/games/vdrift/data/textures/icons/vdrift-32x32.png usr/share/games/vdrift/data/textures/icons/vdrift-16x16.png
+installMenuItem "Game;Simulation;" vdrift.desktop
+
+[Uninstall]
+uninstallFromLog

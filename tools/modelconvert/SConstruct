@@ -1,0 +1,18 @@
+env = Environment()
+
+env.Append(LIBPATH = ['.'])
+env.Append(CCFLAGS = ['-g3'])
+#env.Append(CCFLAGS = ['-O1','-g3'])
+env.Append(CPPPATH=['.', '../../include'])
+#env.Append(LIBS = ['boost_thread-mt'])
+env.Append(LIBS = ['GL', 'GLEW', 'glut'])
+list = Split("""main.cpp
+	../../src/model_joe03.cpp
+	../../src/model_obj.cpp
+	../../src/vertexarray.cpp
+	../../src/joepack.cpp
+	../../src/mathvector.cpp
+	../../src/aabb.cpp
+	../../src/opengl_utility.cpp
+	../../src/model.cpp""")
+env.Program('modelconvert', list)

@@ -1,0 +1,13 @@
+[Desktop Entry]
+Encoding=UTF-8
+Type=Application
+Version=2007-03-16
+Name=VDrift
+GenericName=Racing Simulation
+Comment=Open source racing simulation with drifting in mind
+Icon=vdrift-64x64.png
+Exec=vdrift
+Path=.
+Terminal=false
+Categories=Game;Simulation;
+

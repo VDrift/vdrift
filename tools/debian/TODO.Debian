@@ -1,0 +1,6 @@
+Debian VDrift TODO File
+=======================
+
+The debian build needs to have the ability to generate a vdrift-data-full and a
+vdrift-data-minimal package.
+

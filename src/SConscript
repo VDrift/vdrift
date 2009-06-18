@@ -1,0 +1,292 @@
+import os, sys
+
+#-------------#
+# Import Vars #
+#-------------#
+Import('*')
+
+#----------------#
+# Subdirectories #
+#----------------#
+#vamosobjs = SConscript('vamos/SConscript', exports=['env', 'src_dir'])
+#guiobjs = SConscript('gui/SConscript', exports=['env', 'src_dir'])
+
+if (sys.platform != 'freebsd6') and (sys.platform != 'freebsd7') and (sys.platform != 'freebsd8'):
+    def addbulletpath( val ):
+        return "#bullet/"+val
+
+#---------#
+# Sources #
+#---------#
+src = Split("""main.cpp
+		graphics.cpp
+		shader.cpp
+		mathvector.cpp
+		mathplane.cpp
+		pathmanager.cpp
+		quaternion.cpp
+		fbtexture.cpp
+		opengl_utility.cpp
+		endian_utility.cpp
+		eventsystem.cpp
+		toggle.cpp
+		vertexarray.cpp
+		model.cpp
+		model_joe03.cpp
+		model_obj.cpp
+		joepack.cpp
+		track.cpp
+		configfile.cpp
+		settings.cpp
+		texture.cpp
+		scenegraph.cpp
+		track_object.cpp
+		text_draw.cpp
+		font.cpp
+		gui.cpp
+		hud.cpp
+		guipage.cpp
+		linearframe.cpp
+		rotationalframe.cpp
+		car.cpp
+		aabb.cpp
+		aabb_space_partitioning.cpp
+		collision_detection.cpp
+		carcontrolmap_local.cpp
+		rigidbody.cpp
+		parallel_task.cpp
+		sound.cpp
+		bezier.cpp
+		trackmap.cpp
+		timer.cpp
+		performance_testing.cpp
+		k1999.cpp
+		coordinatesystems.cpp
+		joeserialize.cpp
+		replay.cpp
+		optional.cpp
+		reseatable_reference.cpp
+		forcefeedback.cpp
+		particle.cpp
+		containeralgorithm.cpp
+		camera.cpp
+		ai.cpp
+		random.cpp
+		httpget.cpp
+		nedmalloc.c
+		game.cpp""")
+
+src.sort(lambda x, y: cmp(x.lower(),y.lower()))
+
+bullet_src = Split("""LinearMath/btAlignedAllocator.cpp
+		LinearMath/btConvexHull.cpp
+		LinearMath/btGeometryUtil.cpp
+		LinearMath/btQuickprof.cpp
+		BulletCollision/CollisionDispatch/btSphereTriangleCollisionAlgorithm.cpp
+		BulletCollision/CollisionDispatch/btManifoldResult.cpp
+		BulletCollision/CollisionDispatch/btCollisionObject.cpp
+		BulletCollision/CollisionDispatch/btConvexPlaneCollisionAlgorithm.cpp
+		BulletCollision/CollisionDispatch/btSphereSphereCollisionAlgorithm.cpp
+		BulletCollision/CollisionDispatch/btActivatingCollisionAlgorithm.cpp
+		BulletCollision/CollisionDispatch/btConvexConcaveCollisionAlgorithm.cpp
+		BulletCollision/CollisionDispatch/btEmptyCollisionAlgorithm.cpp
+		BulletCollision/CollisionDispatch/SphereTriangleDetector.cpp
+		BulletCollision/CollisionDispatch/btCompoundCollisionAlgorithm.cpp
+		BulletCollision/CollisionDispatch/btConvexConvexAlgorithm.cpp
+		BulletCollision/CollisionDispatch/btDefaultCollisionConfiguration.cpp
+		BulletCollision/CollisionDispatch/btSphereBoxCollisionAlgorithm.cpp
+		BulletCollision/CollisionDispatch/btBoxBoxCollisionAlgorithm.cpp
+		BulletCollision/CollisionDispatch/btSimulationIslandManager.cpp
+		BulletCollision/CollisionDispatch/btCollisionDispatcher.cpp
+		BulletCollision/CollisionDispatch/btUnionFind.cpp
+		BulletCollision/CollisionDispatch/btBoxBoxDetector.cpp
+		BulletCollision/CollisionDispatch/btCollisionWorld.cpp
+		BulletCollision/CollisionDispatch/btGhostObject.cpp
+		BulletCollision/Gimpact/btContactProcessing.cpp
+		BulletCollision/Gimpact/gim_box_set.cpp
+		BulletCollision/Gimpact/btGImpactShape.cpp
+		BulletCollision/Gimpact/btGImpactQuantizedBvh.cpp
+		BulletCollision/Gimpact/gim_memory.cpp
+		BulletCollision/Gimpact/btGenericPoolAllocator.cpp
+		BulletCollision/Gimpact/btGImpactCollisionAlgorithm.cpp
+		BulletCollision/Gimpact/gim_tri_collision.cpp
+		BulletCollision/Gimpact/gim_contact.cpp
+		BulletCollision/Gimpact/btTriangleShapeEx.cpp
+		BulletCollision/Gimpact/btGImpactBvh.cpp
+		BulletCollision/CollisionShapes/btMinkowskiSumShape.cpp
+		BulletCollision/CollisionShapes/btConeShape.cpp
+		BulletCollision/CollisionShapes/btMultimaterialTriangleMeshShape.cpp
+		BulletCollision/CollisionShapes/btShapeHull.cpp
+		BulletCollision/CollisionShapes/btConvexPointCloudShape.cpp
+		BulletCollision/CollisionShapes/btCompoundShape.cpp
+		BulletCollision/CollisionShapes/btStridingMeshInterface.cpp
+		BulletCollision/CollisionShapes/btTriangleIndexVertexArray.cpp
+		BulletCollision/CollisionShapes/btStaticPlaneShape.cpp
+		BulletCollision/CollisionShapes/btMultiSphereShape.cpp
+		BulletCollision/CollisionShapes/btBvhTriangleMeshShape.cpp
+		BulletCollision/CollisionShapes/btCylinderShape.cpp
+		BulletCollision/CollisionShapes/btConvexTriangleMeshShape.cpp
+		BulletCollision/CollisionShapes/btConvexShape.cpp
+		BulletCollision/CollisionShapes/btEmptyShape.cpp
+		BulletCollision/CollisionShapes/btConvexHullShape.cpp
+		BulletCollision/CollisionShapes/btTetrahedronShape.cpp
+		BulletCollision/CollisionShapes/btCollisionShape.cpp
+		BulletCollision/CollisionShapes/btTriangleMesh.cpp
+		BulletCollision/CollisionShapes/btScaledBvhTriangleMeshShape.cpp
+		BulletCollision/CollisionShapes/btBoxShape.cpp
+		BulletCollision/CollisionShapes/btHeightfieldTerrainShape.cpp
+		BulletCollision/CollisionShapes/btTriangleBuffer.cpp
+		BulletCollision/CollisionShapes/btOptimizedBvh.cpp
+		BulletCollision/CollisionShapes/btUniformScalingShape.cpp
+		BulletCollision/CollisionShapes/btTriangleCallback.cpp
+		BulletCollision/CollisionShapes/btTriangleIndexVertexMaterialArray.cpp
+		BulletCollision/CollisionShapes/btConcaveShape.cpp
+		BulletCollision/CollisionShapes/btConvexInternalShape.cpp
+		BulletCollision/CollisionShapes/btTriangleMeshShape.cpp
+		BulletCollision/CollisionShapes/btPolyhedralConvexShape.cpp
+		BulletCollision/CollisionShapes/btCapsuleShape.cpp
+		BulletCollision/CollisionShapes/btSphereShape.cpp
+		BulletCollision/NarrowPhaseCollision/btGjkEpaPenetrationDepthSolver.cpp
+		BulletCollision/NarrowPhaseCollision/btGjkPairDetector.cpp
+		BulletCollision/NarrowPhaseCollision/btSubSimplexConvexCast.cpp
+		BulletCollision/NarrowPhaseCollision/btContinuousConvexCollision.cpp
+		BulletCollision/NarrowPhaseCollision/btConvexCast.cpp
+		BulletCollision/NarrowPhaseCollision/btRaycastCallback.cpp
+		BulletCollision/NarrowPhaseCollision/btGjkEpa2.cpp
+		BulletCollision/NarrowPhaseCollision/btMinkowskiPenetrationDepthSolver.cpp
+		BulletCollision/NarrowPhaseCollision/btPersistentManifold.cpp
+		BulletCollision/NarrowPhaseCollision/btGjkConvexCast.cpp
+		BulletCollision/NarrowPhaseCollision/btVoronoiSimplexSolver.cpp
+		BulletCollision/BroadphaseCollision/btMultiSapBroadphase.cpp
+		BulletCollision/BroadphaseCollision/btDbvt.cpp
+		BulletCollision/BroadphaseCollision/btDispatcher.cpp
+		BulletCollision/BroadphaseCollision/btQuantizedBvh.cpp
+		BulletCollision/BroadphaseCollision/btCollisionAlgorithm.cpp
+		BulletCollision/BroadphaseCollision/btSimpleBroadphase.cpp
+		BulletCollision/BroadphaseCollision/btDbvtBroadphase.cpp
+		BulletCollision/BroadphaseCollision/btAxisSweep3.cpp
+		BulletCollision/BroadphaseCollision/btBroadphaseProxy.cpp
+		BulletCollision/BroadphaseCollision/btOverlappingPairCache.cpp""")
+
+if (sys.platform != 'freebsd6') and (sys.platform != 'freebsd7') and (sys.platform != 'freebsd8'):
+    bullet_src = map(addbulletpath, bullet_src)
+
+#------------------------#
+# Copy Build Environment #
+#------------------------#
+local_env = env.Clone()
+SConsignFile()
+
+#--------------------------#
+# Modify Build Environment #
+#--------------------------#
+appdir = ""
+vdrift_install = None
+common_libs = ['SDL_image', 'SDL_gfx', 'vorbisfile', 'vdriftbullet']
+
+if (sys.platform == 'freebsd6') or (sys.platform == 'freebsd7') or (sys.platform == 'freebsd8'):
+    common_libs.append('libbulletcollision')
+    common_libs.append('libbulletmath')
+elif ( 'darwin' == sys.platform ):
+    vdrift_install = "${PRODUCT_NAME}.app"
+    pkgbase = "%s/Contents" % vdrift_install
+    appdir = "%s/MacOS/" % pkgbase
+    pkgsrc = "../tools/osx"
+
+    common_libs.append( 'SDL' )
+    common_libs.append( 'GLExtensionWrangler' )
+    def batch_copy( target, source, env): 
+        # Do a mini svn export... this funtion could possibly
+        # be useful in general ( as a builder ), but I don't 
+        # want to think about getting it cross-platform... 
+        # win32 could use xcopy... but there are so many different
+        # versions of the tools below in circulation that 
+        # testing would be difficult
+        for tgt, src in zip( target, source ):
+            src = str(src)
+            tgt = str(tgt)
+            env.Execute( ( "mkdir -p '%s';" +
+                "tar -cf - -C '%s' . --exclude \\*/.svn\\* |" +
+                "tar -xf - -C '%s'" )  % ( tgt, src, tgt ) )
+
+    def build_list( template, items ):
+        return [ template % x for x in items ]
+
+    Alias( 'vdrift', [
+        local_env.ProcessTemplate( 
+            '%s/Info.plist' % pkgbase, 
+            '%s/Info.plist' % pkgsrc ),
+        local_env.Command( 
+            '%s/Resources/${PRODUCT_NAME}.icns' % pkgbase, 
+            '%s/vdrift.icns' % pkgsrc,
+            Copy( '$TARGET', '$SOURCE') ),
+        [ local_env.WorkingExport( '%s/Frameworks' % pkgbase, s ) for s in
+            build_list( '%s/%%s.framework' % pkgsrc, common_libs ) ] ] ) 
+        #local_env.Command(
+        #    build_list( '%s/Frameworks/%%s.framework' % pkgbase, common_libs  ),
+        #    build_list( '%s/%%s.framework' % pkgsrc, common_libs ),
+        #    batch_copy )  ] )
+    libs_link = ['objc']
+    local_env.Append( FRAMEWORKS = [ common_libs, 'Foundation', 'AppKit'] )
+    src.append(['../tools/osx/SDLMain.m', '../tools/osx/config_mac.mm'])
+elif ( 'win32' == sys.platform or 'cygwin' == sys.platform ):
+    local_env.Append(LIBPATH = ['/usr/lib/mingw', '#tools/win/lib', '#build'])
+    libs_link = ['opengl32', 'glu32', 'glew32', 'mingw32', 'SDLmain', 'SDL', 'ws2_32', common_libs ]
+else:
+    local_env.ParseConfig('sdl-config --cflags --libs')
+    local_env.Append(LIBPATH = ['/usr/X11R6/lib'])
+#    libs_link = ['GL', 'GLU', 'GLEW', 'pthread', common_libs]
+    libs_link = ['GLU', 'GLEW', 'pthread', common_libs]
+
+local_env.Append(LIBS = libs_link)
+
+#local_env.ParseConfig('openal-config --cflags --libs')
+#local_env.Append(CCFLAGS = ["-include #include/pch.h"])
+
+#-----------------------#
+# Distribute to src_dir #
+#-----------------------#
+dist_files = ['SConscript'] + src
+
+env.Distribute (src_dir, dist_files)
+
+#--------------------#
+# Compile Executable #
+#--------------------#
+#vdrift = local_env.Program(target='%s${EXECUTABLE_NAME}' % appdir, source=[src, vamosobjs, guiobjs])
+vdriftbullet = local_env.Library('vdriftbullet', bullet_src);
+vdrift = local_env.Program(target='%s${EXECUTABLE_NAME}' % appdir, source=src)
+Depends(vdrift, vdriftbullet)
+Default(Alias('vdrift', vdrift))
+
+#---------#
+# Install #
+#---------#
+if not vdrift_install: vdrift_install = vdrift
+install = env.Install(Dir(env.subst("$destdir$prefix/$bindir")), vdrift_install)
+env.Alias("install", install)
+
+#---------------#
+# Python Export #
+#---------------#
+
+if not ( 'win32' == sys.platform or 'cygwin' == sys.platform ):
+    #for now this seems to break windows build so disabling for win
+    wrapper_build_env = local_env.Clone()
+
+    pybase = 'python%s' % sys.version[0:3]
+    wrapper_build_env.Append(CPPPATH=[os.path.join(sys.prefix, 'include', pybase)],
+                             LIBPATH=[os.path.join(sys.prefix, 'lib', pybase, 'config')],
+                             LIBS=['lib%s' % pybase])
+
+#    wrapper_build_env.Append(CPPDEFINES=['BOOST_PYTHON_STATIC_LIB', 'BOOST_PYTHON_STATIC_MODULE'],
+#                             CPPPATH=['#include','$boostIncludes'],  # boostIncludes is a PathOption
+#                             LIBS=['boost_python'])
+
+    wrapper_build_env.Replace(SHLIBPREFIX = '_')  # do not add 'lib' in front of the output file
+    wrapper_build_env.Append(SWIGFLAGS=['-c++', '-python'])
+#wrapper = wrapper_build_env.SharedLibrary('vdrift', [src, vamosobjs, guiobjs, "vdrift.i"])
+    wrapper = wrapper_build_env.SharedLibrary('vdrift', [src, "vdrift.i"])
+
+    env.Alias("wrapper", wrapper)
+
