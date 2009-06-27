@@ -87,15 +87,15 @@ float TEXT_DRAW::RenderCharacter(VERTEXARRAY & output_array, const float tw, con
 	//float x1, y1, x2, y2;
 	//float u1, v1, u2, v2;
 	
-	float x1 = x + c.xoffset/tw*scalex;
-	float x2 = x1 + c.width/tw*scalex;
-	float y1 = y - c.yoffset/th*scaley;
-	float y2 = y1 + c.height/th*scaley;
+	float x1 = x + (float)c.xoffset/tw*scalex;
+	float x2 = x1 + (float)c.width/tw*scalex;
+	float y1 = y - (float)c.yoffset/th*scaley;
+	float y2 = y1 + (float)c.height/th*scaley;
 	
-	float u1 = c.x/tw;
-	float u2 = u1 + c.width/tw;
-	float v1 = c.y/th;
-	float v2 = v1 + c.height/th;
+	float u1 = (float)c.x/tw;
+	float u2 = u1 + (float)c.width/tw;
+	float v1 = (float)c.y/th;
+	float v2 = v1 + (float)c.height/th;
 	
 	//std::cout << x1 << "," << x2 << "," << y1 << "," << y2 << std::endl;
 	//std::cout << u1 << "," << u2 << "," << v1 << "," << v2 << std::endl;
@@ -145,7 +145,7 @@ float TEXT_DRAW::RenderCharacter(VERTEXARRAY & output_array, const float tw, con
 		output_array.Add(norms, 0, vcorners, 12, bfaces, 6, uvs, 8);
 	}
 	
-	return (c.xadvance/tw)*scalex;
+	return ((float)c.xadvance/tw)*scalex;
 }
 
 float TEXT_DRAW::GetWidth(const FONT & font, const std::string & newtext, const float newscale) const

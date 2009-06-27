@@ -1067,6 +1067,15 @@ bool CAR::LoadDynamics(CONFIGFILE & c, std::ostream & error_output)
 			paramname = str.str();
 		}
 	}
+	
+	//load the max steering angle
+	{
+		float maxangle = 45.0;
+		if ( !GetConfigfileParam ( error_output, c, "steering.max-angle", maxangle ) )
+			return false;
+	
+		dynamics.SetMaxSteeringAngle ( maxangle );
+	}
 
 	//load the driver
 	{

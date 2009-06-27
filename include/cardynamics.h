@@ -206,6 +206,7 @@ private:
 		AWD
 	} drive;
 	MATHVECTOR <T, 3> center_of_mass; ///< the center of mass of the rigid body in local coordinates
+	T maxangle;
 	
 	//set every tick
 	std::vector <MATHVECTOR <T, 3> > wheel_velocity; ///< wheel (hub) velocity
@@ -871,7 +872,7 @@ private:
 	}
 	
 public:
-	CARDYNAMICS() : drive(RWD), telemetry("telemetry")
+	CARDYNAMICS() : drive(RWD), maxangle(45.0), telemetry("telemetry")
 	{
 		suspension.resize(WHEEL_POSITION_SIZE);wheel.resize(WHEEL_POSITION_SIZE);
 		tire.resize(WHEEL_POSITION_SIZE);wheel_contacts.resize(WHEEL_POSITION_SIZE);
@@ -1416,9 +1417,6 @@ public:
 	///set the steering angle to "value", where 1.0 is maximum right lock and -1.0 is maximum left lock.
 	void SetSteering(const T value)
 	{
-		//TODO: load in max steering angle
-		T maxangle = 45.0;
-		
 		T steerangle = value * maxangle; //steering angle in degrees
 		
 		//ackermann stuff
@@ -1448,11 +1446,16 @@ public:
 		wheel[FRONT_RIGHT].SetSteerAngle(right_wheel_angle);
 	}
 	
-	//TODO: load in max steering angle
 	///Get the maximum steering angle in degrees
 	T GetMaxSteeringAngle() const
 	{
-		return 45.0;
+		return maxangle;
+	}
+	
+	///Set the maximum steering angle in degrees
+	void SetMaxSteeringAngle(T newangle)
+	{
+		maxangle = newangle;
 	}
 	
 	///get the worldspace engine position

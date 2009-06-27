@@ -35,6 +35,12 @@ public:
 	{
 		*this = other;
 	}
+	MATHVECTOR(const T x, const T y)
+	{
+		assert(dimension==2);
+		v[0] = x;
+		v[1] = y;
+	}
 		
 	const T Magnitude() const
 	{
