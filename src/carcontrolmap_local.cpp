@@ -547,6 +547,11 @@ const std::vector <float> & CARCONTROLMAP_LOCAL::ProcessInput(const std::string 
 	return inputs;
 }
 
+float sinesmooth(float val)
+{
+	return sin((val-1.0f)*3.141593f*0.5f)+1.0f;
+}
+
 void CARCONTROLMAP_LOCAL::ProcessSteering(const std::string & joytype, float steerpos, float dt, bool joy_200, float carmph, float speedsens)
 {
 	//std::cout << "steerpos: " << steerpos << std::endl;
@@ -590,11 +595,13 @@ void CARCONTROLMAP_LOCAL::ProcessSteering(const std::string & joytype, float ste
 	{
 		float ratio = 20.0f;
 		float coeff = 1.0;
+		float ssco = speedsens*(1.0f-pow(val,2.0f));
+		
 		if (carmph > 1)
-			coeff = ratio/(carmph*(0.1+speedsens*2.0));
+			coeff = ratio*45.0f*(1.0f-atan(carmph*80.0f*ssco)*0.6366198);
 
-		if (coeff > 1)
-			coeff = 1.0;
+		if (coeff > 1.0f)
+			coeff = 1.0f;
 		
 		//std::cout << "Speed sensitivity coefficient: " << coeff << std::endl;
 		
