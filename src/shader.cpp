@@ -14,6 +14,25 @@ using std::pair;
 using std::endl;
 using std::strcpy;
 
+void PrintWithLineNumbers(ostream & out, const string & str)
+{
+	stringstream in(str);
+	int count = 0;
+	while (in && count < 10000)
+	{
+		count++;
+		string linestr;
+		getline(in, linestr);
+		stringstream countstream;
+		countstream << count;
+		string countstr = countstream.str();
+		out << countstr;
+		for (int i = 0; i < 5 - countstr.size(); i++)
+			out << " ";
+		out << ": " << linestr << endl;
+	}
+}
+
 bool SHADER_GLSL::Load(const std::string & vertex_filename, const std::string & fragment_filename, const std::vector <std::string> & preprocessor_defines, std::ostream & info_output, std::ostream & error_output)
 {
 	assert(GLEW_ARB_shading_language_100);
@@ -77,7 +96,13 @@ bool SHADER_GLSL::Load(const std::string & vertex_filename, const std::string & 
 	
 	if (!success)
 	{
-		error_output << "Shader compilation failure: " + vertex_filename + " and " + fragment_filename << endl;
+		error_output << "Shader compilation failure: " + vertex_filename + " and " + fragment_filename << endl << endl;
+		error_output << "Vertex shader:" << endl;
+		PrintWithLineNumbers(error_output, vertexshader_source);
+		error_output << endl;
+		error_output << "Fragment shader:" << endl;
+		PrintWithLineNumbers(error_output, fragmentshader_source);
+		error_output << endl;
 	}
 	else
 	{
