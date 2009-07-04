@@ -30,6 +30,7 @@ src = Split("""main.cpp
 		endian_utility.cpp
 		eventsystem.cpp
 		toggle.cpp
+		cardynamics.cpp
 		vertexarray.cpp
 		model.cpp
 		model_joe03.cpp

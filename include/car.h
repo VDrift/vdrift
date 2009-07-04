@@ -29,7 +29,7 @@ class CAR
 friend class PERFORMANCE_TESTING;
 friend class joeserialize::Serializer;
 private:
-	CARDYNAMICS <double> dynamics;
+	CARDYNAMICS dynamics;
 	
 	std::vector <float> feedbackbuffer;
 	unsigned int feedbackbufferpos;
