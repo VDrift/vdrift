@@ -37,31 +37,27 @@ private:
 	MODEL_JOE03 bodymodel;
 	MODEL_JOE03 interiormodel;
 	MODEL_JOE03 glassmodel;
-	TEXTURE_GL bodytexture;
-	TEXTURE_GL interiortexture;
-	TEXTURE_GL glasstexture;
 	DRAWABLE * wheeldraw[4];
 	SCENENODE * wheelnode[4];
 	MODEL_JOE03 wheelmodelfront;
 	MODEL_JOE03 wheelmodelrear;
-	TEXTURE_GL wheeltexturefront;
-	TEXTURE_GL wheeltexturerear;
+	std::map <std::string, TEXTURE_GL> textures;
 	
 	void Unload()
 	{
 		//std::cout << "Unloading..." << std::endl;
 		
 		//unload the car's assets
+		for (std::map <std::string, TEXTURE_GL>::iterator i = textures.begin(); i != textures.end(); i++)
+			i->second.Unload();
+		textures.clear();
+		
 		bodymodel.Clear();
 		interiormodel.Clear();
 		glassmodel.Clear();
-		interiortexture.Unload();
-		glasstexture.Unload();
-		bodytexture.Unload();
 		wheelmodelfront.Clear();
 		wheelmodelrear.Clear();
-		wheeltexturefront.Unload();
-		wheeltexturerear.Unload();
+		
 		if (carnode)
 			carnode->Clear();
 		bodydraw = NULL;
@@ -79,26 +75,44 @@ private:
 	
 	///load assets.  if the parentnode is NULL then the output_drawableptr isn't touched.  if the model or texture is already loaded, they do not get re-loaded
 	bool LoadInto ( SCENENODE * parentnode, DRAWABLE * & output_drawableptr, const std::string & joefile,
-			MODEL_JOE03 & output_model, const std::string & texfile, TEXTURE_GL & output_texture_diffuse,
+			MODEL_JOE03 & output_model, const std::string & texfile, const std::string & texfilemisc1,
 			int anisotropy, bool transparency, std::ostream & error_output )
 	{
 		if (!output_model.Loaded())
 			if (!output_model.Load(joefile, error_output))
-		{
-			error_output << "Error loading model: " << joefile << std::endl;
-			return false;
-		}
+			{
+				error_output << "Error loading model: " << joefile << std::endl;
+				return false;
+			}
 
-		TEXTUREINFO texinfo;
-		texinfo.SetName(texfile);
-		texinfo.SetMipMap(true);
-		texinfo.SetAnisotropy(anisotropy);
-		const std::string texture_size(tsize);
-		if (!output_texture_diffuse.Loaded())
-			if (!output_texture_diffuse.Load(texinfo, error_output, texture_size))
+		if (!texfile.empty())
 		{
-			error_output << "Error loading texture: " << texfile << std::endl;
-			return false;
+			TEXTUREINFO texinfo;
+			texinfo.SetName(texfile);
+			texinfo.SetMipMap(true);
+			texinfo.SetAnisotropy(anisotropy);
+			const std::string texture_size(tsize);
+			if (!textures[texfile].Loaded())
+				if (!textures[texfile].Load(texinfo, error_output, texture_size))
+				{
+					error_output << "Error loading texture: " << texfile << std::endl;
+					textures.erase(texfile);
+					return false;
+				}
+		}
+		
+		if (!texfilemisc1.empty())
+		{
+			TEXTUREINFO texinfo;
+			texinfo.SetName(texfilemisc1);
+			texinfo.SetMipMap(true);
+			texinfo.SetAnisotropy(anisotropy);
+			const std::string texture_size(tsize);
+			if (!textures[texfilemisc1].Loaded())
+				if (!textures[texfilemisc1].Load(texinfo, error_output, texture_size))
+				{
+					textures.erase(texfilemisc1);
+				}
 		}
 
 		if (parentnode)
@@ -106,7 +120,9 @@ private:
 			output_drawableptr = &parentnode->AddDrawable();
 			//output_drawableptr->SetModel(&output_model);
 			output_drawableptr->AddDrawList(output_model.GetListID());
-			output_drawableptr->SetDiffuseMap(&output_texture_diffuse);
+			output_drawableptr->SetDiffuseMap(&textures[texfile]);
+			if (textures.find(texfilemisc1) != textures.end())
+				output_drawableptr->SetMiscMap1(&textures[texfilemisc1]);
 			output_drawableptr->SetObjectCenter(output_model.GetCenter());
 			output_drawableptr->SetCameraTransformEnable(false);
 			output_drawableptr->SetPartialTransparency(transparency);
@@ -126,15 +142,15 @@ private:
 		std::stringstream loadlog;
 		bodynode = &carnode->AddNode();
 		if (!LoadInto(bodynode, bodydraw, carpath+"body.joe", bodymodel,
-		     carpath+"/textures/body"+paintstr+".png", bodytexture, 0, false, loadlog)) //TODO: anisotropy
+			 carpath+"/textures/body"+paintstr+".png", carpath+"/textures/body-misc1.png", 0, false, loadlog)) //TODO: anisotropy
 			if (bodydraw)
 				bodynode->Delete(bodydraw);
 		if (!LoadInto(bodynode, interiordraw, carpath+"interior.joe", interiormodel,
-		     carpath+"/textures/interior.png", interiortexture, 0, false, loadlog))
+			 carpath+"/textures/interior.png", carpath+"/textures/interior-misc1.png", 0, false, loadlog))
 			if (interiordraw)
 				bodynode->Delete(interiordraw);
 		if (!LoadInto(bodynode, glassdraw, carpath+"glass.joe", glassmodel,
-		     carpath+"/textures/glass.png", glasstexture, 0, true, loadlog))
+			 carpath+"/textures/glass.png", carpath+"/textures/glass-misc1.png", 0, true, loadlog))
 			if (glassdraw)
 				bodynode->Delete(glassdraw);
 		
@@ -149,9 +165,9 @@ private:
 		//load the wheels
 		DRAWABLE * junk(NULL);
 		if (LoadInto(NULL, junk, carpath+"wheel_front.joe", wheelmodelfront,
-		    carpath+"/textures/wheel_front.png", wheeltexturefront, 0, false, loadlog) &&
+			carpath+"/textures/wheel_front.png", carpath+"/textures/wheel_front-misc1.png", 0, false, loadlog) &&
 				  LoadInto(NULL, junk, carpath+"wheel_rear.joe", wheelmodelrear,
-					   carpath+"/textures/wheel_rear.png", wheeltexturerear, 0, false, loadlog))
+				  carpath+"/textures/wheel_rear.png", carpath+"/textures/wheel_rear-misc1.png", 0, false, loadlog))
 		{
 			CONFIGFILE carconf;
 			if (carconf.Load(carpath+carname+".car" ) )
@@ -163,11 +179,13 @@ private:
 				{
 					QUATERNION <float> myfixer = fixer;
 					MODEL_JOE03 * model = &wheelmodelfront;
-					TEXTURE_GL * texture = &wheeltexturefront;
+					std::string texturename = carpath+"/textures/wheel_front.png";
+					std::string texturenamemisc1 = carpath+"/textures/wheel_front-misc1.png";
 					if (i > 1)
 					{
 						model = &wheelmodelrear;
-						texture = &wheeltexturerear;
+						texturename = carpath+"/textures/wheel_rear.png";
+						texturenamemisc1 = carpath+"/textures/wheel_rear-misc1.png";
 					}
 					if (i == 1 || i == 3)
 						myfixer = -fixer;
@@ -200,8 +218,7 @@ private:
 						tempvec.Set(position[0],position[1], position[2]);
 						
 						wheelnode[i] = &carnode->AddNode();
-						if (LoadInto(wheelnode[i], wheeldraw[i], "", *model, "",
-								*texture, 0, false, loadlog))
+						if (LoadInto(wheelnode[i], wheeldraw[i], "", *model, texturename, texturenamemisc1, 0, false, loadlog))
 						{
 							wheelnode[i]->GetTransform().SetRotation(myfixer);
 							wheelnode[i]->GetTransform().SetTranslation(tempvec+bboxcenter);
