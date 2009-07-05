@@ -64,7 +64,7 @@ class TEST_PLAYER
 	//private:
 	public: //the test needs access to these; otherwise they'd be private
 		TEST_VERTEX position;
-		int animframe;
+		unsigned int animframe;
 		string name;
 		string player_description;
 		bool alive;

@@ -49,6 +49,7 @@ class Serializer
 		///serialization overload for a simple type; this is a leaf.
 		///a serializer must implement this function. note that in some cases (if the format has IDs implied by the order of data) the name might be ignored. returns true on success
 		virtual bool Serialize(const std::string & name, int & t) = 0;
+		virtual bool Serialize(const std::string & name, unsigned int & t) = 0;
 		virtual bool Serialize(const std::string & name, float & t) = 0;
 		virtual bool Serialize(const std::string & name, double & t) = 0;
 		virtual bool Serialize(const std::string & name, std::string & t) = 0;
@@ -557,6 +558,11 @@ class TextOutputSerializer : public SerializerOutput
 			return WriteData(name, i, false);
 		}
 		
+		virtual bool Serialize(const std::string & name, unsigned int & i)
+		{
+			return WriteData(name, i, false);
+		}
+		
 		virtual bool Serialize(const std::string & name, float & i)
 		{
 			return WriteData(name, i, true);
@@ -761,6 +767,11 @@ class TextInputSerializer : public SerializerInput
 			return ReadData(name, i);
 		}
 		
+		virtual bool Serialize(const std::string & name, unsigned int & i)
+		{
+			return ReadData(name, i);
+		}
+		
 		virtual bool Serialize(const std::string & name, float & i)
 		{
 			return ReadData(name, i);
@@ -838,6 +849,11 @@ class BinaryOutputSerializer : public SerializerOutput
 		BinaryOutputSerializer(std::ostream & newout) : out_(newout),bigendian_(IsBigEndian()) {}
 		
 		virtual bool Serialize(const std::string & name, int & i)
+		{
+			return WriteData(name, i);
+		}
+		
+		virtual bool Serialize(const std::string & name, unsigned int & i)
 		{
 			return WriteData(name, i);
 		}
@@ -921,6 +937,11 @@ class BinaryInputSerializer : public SerializerInput
 		BinaryInputSerializer(std::istream & newin) : in_(newin),bigendian_(IsBigEndian()) {}
 		
 		virtual bool Serialize(const std::string & name, int & i)
+		{
+			return ReadData(name, i);
+		}
+		
+		virtual bool Serialize(const std::string & name, unsigned int & i)
 		{
 			return ReadData(name, i);
 		}
@@ -1079,6 +1100,11 @@ class ReflectionSerializer : public Serializer
 		bool WriteToObject(T & object) {direction_ = DIRECTION_INPUT; serialization_location_.clear(); return Serializer::Serialize(object);}
 		
 		virtual bool Serialize(const std::string & name, int & i)
+		{
+			return ReadWriteData(name, i);
+		}
+		
+		virtual bool Serialize(const std::string & name, unsigned int & i)
 		{
 			return ReadWriteData(name, i);
 		}
