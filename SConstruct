@@ -22,11 +22,11 @@ opts.Add(BoolVariable('os_cc', 'Set this to 1 if you want to use the operating s
 opts.Add(BoolVariable('os_cxx', 'Set this to 1 if you want to use the operating system\'s C++ compiler environment variable.', 0))
 opts.Add(BoolVariable('os_cxxflags', 'Set this to 1 if you want to use the operating system\'s C++ compiler flags environment variable.', 0))
 opts.Add(BoolVariable('NLS', 'Set this to 1 to turn on i18n support', 0))
-opts.Add(BoolVariable('use_distcc', 'Set this to 1 to enable distributed compilacion', 0))
+opts.Add(BoolVariable('use_distcc', 'Set this to 1 to enable distributed compilation', 0))
 opts.Add(BoolVariable('force_feedback', 'Enable force-feedback support', 0))
 opts.Add(BoolVariable('profiling', 'Turn on profiling output', 0))
 opts.Add(BoolVariable('efficiency', 'Turn on compile-time efficiency warnings', 0))
-
+opts.Add(BoolVariable('verbose', 'Show verbose compiling output', 1)) 
 
 #--------------------------#
 # Create Build Environment #
@@ -143,6 +143,12 @@ else:
         options = opts)
     check_headers = ['asio.hpp', 'boost/bind.hpp', 'GL/gl.h', 'GL/glu.h', 'SDL/SDL.h', 'SDL/SDL_image.h', 'SDL/SDL_rotozoom.h', 'vorbis/vorbisfile.h', 'GL/glew.h']
 
+if ARGUMENTS.get('verbose') != "1":
+       env['ARCOMSTR'] = "\tARCH $TARGET"
+       env['CCCOMSTR'] = "\tCC $TARGET"
+       env['CXXCOMSTR'] = "\tCPP $TARGET"
+       env['LINKCOMSTR'] = "\tLINK $TARGET"
+       env['RANLIBCOMSTR'] = "\tRANLIB $TARGET"
 
 #-------------------------------#
 # General configurarion options #
