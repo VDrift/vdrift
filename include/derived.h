@@ -15,7 +15,7 @@ class DERIVED
 		DERIVED() : ptr(NULL) {}
 		DERIVED(T_BASECLASS * newobj) {ptr = newobj;}
 		DERIVED(const DERIVED & other) : ptr(NULL) {operator=(other);}
-		DERIVED & operator= (T_BASECLASS * newobj) {if (ptr) delete ptr;ptr=newobj;}
+		DERIVED & operator= (T_BASECLASS * newobj) {if (ptr) delete ptr;ptr=newobj;return *this;}
 		~DERIVED() {if (ptr) delete ptr;}
 		T_BASECLASS * Get() {return ptr;}
 		const T_BASECLASS * Get() const {return ptr;}
