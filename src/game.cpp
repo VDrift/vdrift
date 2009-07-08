@@ -284,7 +284,7 @@ vector <string> Tokenize(const string & input, const string & tokens)
 	unsigned int pos = 0;
 	unsigned int lastpos = 0;
 	
-	while (pos != string::npos)
+	while (pos != (unsigned int) string::npos)
 	{
 		pos = input.find_first_of(tokens, pos);
 		string thisstr = input.substr(lastpos,pos-lastpos);
