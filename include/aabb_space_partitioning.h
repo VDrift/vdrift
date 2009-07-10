@@ -25,14 +25,14 @@ class AABB_SPACE_PARTITIONING_NODE
 		{
 			if (this != &collapse_target)
 			{
-				for (typename objectlist_type::iterator i = objects.begin(); i != objects.end(); i++)
+				for (typename objectlist_type::iterator i = objects.begin(); i != objects.end(); ++i)
 				{
 					collapse_target.Add(i->first, i->second);
 				}
 				objects.clear();
 			}
 			
-			for (typename childrenlist_type::iterator i = children.begin(); i != children.end(); i++)
+			for (typename childrenlist_type::iterator i = children.begin(); i != children.end(); ++i)
 			{
 				i->CollapseTo(collapse_target);
 			}
@@ -56,7 +56,7 @@ class AABB_SPACE_PARTITIONING_NODE
 	
 			//enforce the rules:  i don't want to start with any children,
 			// so tell all children to send me their objects, then delete them
-			for (typename childrenlist_type::iterator i = children.begin(); i != children.end(); i++)
+			for (typename childrenlist_type::iterator i = children.begin(); i != children.end(); ++i)
 			{
 				i->CollapseTo(*this);
 			}
@@ -72,7 +72,7 @@ class AABB_SPACE_PARTITIONING_NODE
 			MATHVECTOR <float, 3> avgcenter;
 			int numobj = objects.size();
 			float incamount = 1.0 / numobj;
-			for (typename objectlist_type::iterator i = objects.begin(); i != objects.end(); i++)
+			for (typename objectlist_type::iterator i = objects.begin(); i != objects.end(); ++i)
 			{
 				avgcenter = avgcenter + i->second.GetCenter() * incamount;
 			}
@@ -99,7 +99,7 @@ class AABB_SPACE_PARTITIONING_NODE
 			//distribute objects to each child
 			float avgcentercoord = avgcenter.dot(axismask);
 			int distributor(0);
-			for (typename objectlist_type::iterator i = objects.begin(); i != objects.end(); i++)
+			for (typename objectlist_type::iterator i = objects.begin(); i != objects.end(); ++i)
 			{
 				float objcentercoord = i->second.GetCenter().dot(axismask);
 		
@@ -132,7 +132,7 @@ class AABB_SPACE_PARTITIONING_NODE
 			//if one child doesn't have any objects, then delete both children and take back their objects
 			if (child1obj == 0 || child2obj == 0)
 			{
-				for (typename childrenlist_type::iterator i = children.begin(); i != children.end(); i++)
+				for (typename childrenlist_type::iterator i = children.begin(); i != children.end(); ++i)
 				{
 					for (typename objectlist_type::iterator n = i->objects.begin(); n != i->objects.end(); n++)
 					{
@@ -143,7 +143,7 @@ class AABB_SPACE_PARTITIONING_NODE
 				children.clear();
 			}
 	
-			for (typename childrenlist_type::iterator i = children.begin(); i != children.end(); i++)
+			for (typename childrenlist_type::iterator i = children.begin(); i != children.end(); ++i)
 				i->DistributeObjectsToChildren(level + 1);
 		}
 	
@@ -161,7 +161,7 @@ class AABB_SPACE_PARTITIONING_NODE
 	
 			objectcount += objects.size();
 	
-			for (typename childrenlist_type::iterator i = children.begin(); i != children.end(); i++)
+			for (typename childrenlist_type::iterator i = children.begin(); i != children.end(); ++i)
 				i->DebugPrint(level+1, objectcount, verbose, o);
 	
 			if (level == 0)
@@ -196,7 +196,7 @@ class AABB_SPACE_PARTITIONING_NODE
 			typename std::list <typename objectlist_type::iterator> todel;
 	
 			//if we've got objects, test them
-			for (typename objectlist_type::iterator i = objects.begin(); i != objects.end(); i++)
+			for (typename objectlist_type::iterator i = objects.begin(); i != objects.end(); ++i)
 			{
 				if (i->first == object)
 				{
@@ -205,13 +205,13 @@ class AABB_SPACE_PARTITIONING_NODE
 			}
 	
 			//do any deletions
-			for (typename std::list <typename objectlist_type::iterator>::iterator i = todel.begin(); i != todel.end(); i++)
+			for (typename std::list <typename objectlist_type::iterator>::iterator i = todel.begin(); i != todel.end(); ++i)
 			{
 				objects.erase(*i);
 			}
 	
 			//if we have children, pass it on
-			for (typename childrenlist_type::iterator i = children.begin(); i != children.end(); i++)
+			for (typename childrenlist_type::iterator i = children.begin(); i != children.end(); ++i)
 			{
 				i->Delete(object);
 			}
@@ -223,7 +223,7 @@ class AABB_SPACE_PARTITIONING_NODE
 			typename std::list <typename objectlist_type::iterator> todel;
 	
 			//if we've got objects, test them
-			for (typename objectlist_type::iterator i = objects.begin(); i != objects.end(); i++)
+			for (typename objectlist_type::iterator i = objects.begin(); i != objects.end(); ++i)
 			{
 				if (i->first == object)
 				{
@@ -232,13 +232,13 @@ class AABB_SPACE_PARTITIONING_NODE
 			}
 	
 			//do any deletions
-			for (typename std::list <typename objectlist_type::iterator>::iterator i = todel.begin(); i != todel.end(); i++)
+			for (typename std::list <typename objectlist_type::iterator>::iterator i = todel.begin(); i != todel.end(); ++i)
 			{
 				objects.erase(*i);
 			}
 	
 			//if we have children, pass it on
-			for (typename childrenlist_type::iterator i = children.begin(); i != children.end(); i++)
+			for (typename childrenlist_type::iterator i = children.begin(); i != children.end(); ++i)
 			{
 				if (i->GetBBOX().Intersect(objaabb))
 					i->Delete(object, objaabb);
@@ -276,13 +276,13 @@ class AABB_SPACE_PARTITIONING_NODE
 		void GetContainedObjects(std::list <DATATYPE *> & outputlist)
 		{
 			//if we've got objects, add them
-			for (typename objectlist_type::iterator i = objects.begin(); i != objects.end(); i++)
+			for (typename objectlist_type::iterator i = objects.begin(); i != objects.end(); ++i)
 			{
 				outputlist.push_back(&i->first);
 			}
 	
 			//if we have children, add them
-			for (typename childrenlist_type::iterator i = children.begin(); i != children.end(); i++)
+			for (typename childrenlist_type::iterator i = children.begin(); i != children.end(); ++i)
 			{
 				i->GetContainedObjects(outputlist);
 			}

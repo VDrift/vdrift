@@ -29,7 +29,7 @@ string GUI::LoadOptions(const std::string & optionfile, const std::map<std::stri
 	
 	std::list <std::string> sectionlist;
 	o.GetSectionList(sectionlist);
-	for (std::list <std::string>::iterator i = sectionlist.begin(); i != sectionlist.end(); i++)
+	for (std::list <std::string>::iterator i = sectionlist.begin(); i != sectionlist.end(); ++i)
 	{
 		if (!i->empty())
 		{

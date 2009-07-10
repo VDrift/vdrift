@@ -233,7 +233,7 @@ public:
 	{
 		label.SetAlpha(newalpha);
 		addbutton.SetAlpha(newalpha);
-		for (std::list <CONTROLWIDGET>::iterator i = controlbuttons.begin(); i != controlbuttons.end(); i++)
+		for (std::list <CONTROLWIDGET>::iterator i = controlbuttons.begin(); i != controlbuttons.end(); ++i)
 		{
 			i->widget.SetAlpha(newalpha);
 		}
@@ -243,7 +243,7 @@ public:
 	{
 		label.SetVisible(newvis);
 		addbutton.SetVisible(newvis);
-		for (std::list <CONTROLWIDGET>::iterator i = controlbuttons.begin(); i != controlbuttons.end(); i++)
+		for (std::list <CONTROLWIDGET>::iterator i = controlbuttons.begin(); i != controlbuttons.end(); ++i)
 		{
 			i->widget.SetVisible(newvis);
 		}
@@ -265,7 +265,7 @@ public:
 		}
 		
 		//generate the input tooltip, check to see if we clicked, generate an action
-		for (std::list <CONTROLWIDGET>::iterator i = controlbuttons.begin(); i != controlbuttons.end(); i++)
+		for (std::list <CONTROLWIDGET>::iterator i = controlbuttons.begin(); i != controlbuttons.end(); ++i)
 		{
 			if (i->widget.ProcessInput(cursorx, cursory, cursordown, cursorjustup))
 			{

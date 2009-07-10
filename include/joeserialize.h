@@ -75,7 +75,7 @@ class Serializer
 				if (!this->Serialize("size", listsize)) return false;
 				
 				int count = 1;
-				for (typename std::list <T>::iterator i = t.begin(); i != t.end(); i++,count++)
+				for (typename std::list <T>::iterator i = t.begin(); i != t.end(); ++i, ++count)
 				{
 					std::stringstream itemname;
 					itemname << "item" << count;
@@ -113,7 +113,7 @@ class Serializer
 				if (!this->Serialize("size", listsize)) return false;
 				
 				int count = 1;
-				for (typename std::set <T>::iterator i = t.begin(); i != t.end(); i++,count++)
+				for (typename std::set <T>::iterator i = t.begin(); i != t.end(); ++i, ++count)
 				{
 					std::stringstream itemname;
 					itemname << "item" << count;
@@ -154,7 +154,7 @@ class Serializer
 				if (!this->Serialize("size", listsize)) return false;
 				
 				int count = 1;
-				for (typename std::vector <T>::iterator i = t.begin(); i != t.end(); i++,count++)
+				for (typename std::vector <T>::iterator i = t.begin(); i != t.end(); ++i, ++count)
 				{
 					std::stringstream itemname;
 					itemname << "item" << count;
@@ -193,7 +193,7 @@ class Serializer
 				if (!this->Serialize("size", listsize)) return false;
 				
 				int count = 1;
-				for (typename std::map <U,T>::iterator i = t.begin(); i != t.end(); i++,count++)
+				for (typename std::map <U,T>::iterator i = t.begin(); i != t.end(); ++i, ++count)
 				{
 					std::stringstream countstr;
 					countstr << count;
@@ -243,7 +243,7 @@ class Serializer
 				if (!this->Serialize("size", listsize)) return false;
 				
 				int count = 1;
-				for (typename std::tr1::unordered_map <U,T>::iterator i = t.begin(); i != t.end(); i++,count++)
+				for (typename std::tr1::unordered_map <U,T>::iterator i = t.begin(); i != t.end(); ++i, ++count)
 				{
 					std::stringstream countstr;
 					countstr << count;
@@ -317,7 +317,7 @@ class TreeMap
 			}
 			else
 			{
-				for (typename std::map <std::string, TreeMap>::const_iterator i = branches_.begin(); i != branches_.end(); i++)
+				for (typename std::map <std::string, TreeMap>::const_iterator i = branches_.begin(); i != branches_.end(); ++i)
 				{
 					location.push_back(i->first);
 					i->second.Print(out, location);
@@ -330,7 +330,7 @@ class TreeMap
 		std::vector <std::string> GetBranches() const
 		{
 			std::vector <std::string> leavesout;
-			for (typename std::map <std::string, TreeMap>::const_iterator i = branches_.begin(); i != branches_.end(); i++)
+			for (typename std::map <std::string, TreeMap>::const_iterator i = branches_.begin(); i != branches_.end(); ++i)
 			{
 				leavesout.push_back(i->first);
 			}
@@ -379,7 +379,7 @@ class TreeMap
 		{
 			const TreeMap * curmap = this;
 			
-			for ( std::deque <std::string>::const_iterator i = location.begin(); i != location.end(); i++ )
+			for ( std::deque <std::string>::const_iterator i = location.begin(); i != location.end(); ++i )
 			{
 				curmap = curmap->branch ( *i );
 
@@ -396,7 +396,7 @@ class TreeMap
 		{
 			TreeMap * curmap = this;
 			
-			for ( std::deque <std::string>::const_iterator i = location.begin(); i != location.end(); i++ )
+			for ( std::deque <std::string>::const_iterator i = location.begin(); i != location.end(); ++i )
 			{
 				curmap = curmap->branch ( *i );
 
@@ -414,7 +414,7 @@ class TreeMap
 		{
 			const TreeMap * curmap = this;
 
-			for ( std::deque <std::string>::const_iterator i = location.begin(); i != location.end(); i++ )
+			for ( std::deque <std::string>::const_iterator i = location.begin(); i != location.end(); ++i )
 			{
 				curmap = curmap->branch ( *i );
 
@@ -438,7 +438,7 @@ class TreeMap
 		{
 			TreeMap * curmap = this;
 
-			for ( std::deque <std::string>::const_iterator i = location.begin(); i != location.end(); i++ )
+			for ( std::deque <std::string>::const_iterator i = location.begin(); i != location.end(); ++i )
 			{
 				TreeMap * nextmap = curmap->branch ( *i );
 
@@ -468,7 +468,7 @@ class TreeMap
 		{
 			std::string imploded;
 			
-			for (std::deque <std::string>::const_iterator i = container.begin(); i != container.end(); i++)
+			for (std::deque <std::string>::const_iterator i = container.begin(); i != container.end(); ++i)
 			{
 				if (i != container.begin())
 					imploded.push_back(implode_delimiter);
@@ -483,7 +483,8 @@ class TreeMap
 		{
 			leaf_ = othertree.leaf_;
 			
-			for (typename std::map <std::string, TreeMap>::const_iterator i = othertree.branches_.begin(); i != othertree.branches_.end(); i++)
+			for (typename std::map <std::string, TreeMap>::const_iterator i = othertree.branches_.begin();
+				i != othertree.branches_.end(); ++i)
 			{
 				TreeMap * curmap = branch(i->first);
 				if (!curmap)

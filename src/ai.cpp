@@ -632,7 +632,7 @@ float AI::brakeFromOthers(AI_Car *c, float dt, const std::list <CAR> & othercars
 	float mineta = 1000;
 	float mindistance = 1000;
 	
-	for (std::map <const CAR *, AI_Car::OTHERCARINFO>::iterator i = c->othercars.begin(); i != c->othercars.end(); i++)
+	for (std::map <const CAR *, AI_Car::OTHERCARINFO>::iterator i = c->othercars.begin(); i != c->othercars.end(); ++i)
 	{
 		if (i->second.active && std::abs(i->second.horizontal_distance) < horizontal_care)
 		{
@@ -686,7 +686,7 @@ void AI::analyzeOthers(AI_Car *c, float dt, const std::list <CAR> & othercars)
 	c->avoidancedraw->ClearLine();
 #endif
 	
-	for (std::list <CAR>::const_iterator i = othercars.begin(); i != othercars.end(); i++)
+	for (std::list <CAR>::const_iterator i = othercars.begin(); i != othercars.end(); ++i)
 	{
 		if (&(*i) != c->car)
 		{
@@ -848,7 +848,7 @@ float AI::steerAwayFromOthers(AI_Car *c, float dt, const std::list <CAR> & other
 	float eta = 1000;
 	float min_horizontal_distance = 1000;
 	
-	for (std::map <const CAR *, AI_Car::OTHERCARINFO>::iterator i = c->othercars.begin(); i != c->othercars.end(); i++)
+	for (std::map <const CAR *, AI_Car::OTHERCARINFO>::iterator i = c->othercars.begin(); i != c->othercars.end(); ++i)
 	{
 		if (i->second.active && std::abs(i->second.horizontal_distance) < std::abs(min_horizontal_distance))
 		{
@@ -899,7 +899,7 @@ void AI::Visualize(AI_Car *c, SCENENODE & topnode)
 	ConfigureDrawable(c->avoidancedraw, topnode, 1,0,0);
 	
 	c->brakedraw->ClearLine();
-	for (std::vector <BEZIER>::iterator i = c->brakelook.begin(); i != c->brakelook.end(); i++)
+	for (std::vector <BEZIER>::iterator i = c->brakelook.begin(); i != c->brakelook.end(); ++i)
 	{
 		BEZIER & patch = *i;
 		c->brakedraw->AddLinePoint(TransformToWorldspace(patch.GetBL()));
@@ -911,7 +911,7 @@ void AI::Visualize(AI_Car *c, SCENENODE & topnode)
 	}
 	
 	c->steerdraw->ClearLine();
-	for (std::vector <BEZIER>::iterator i = c->steerlook.begin(); i != c->steerlook.end(); i++)
+	for (std::vector <BEZIER>::iterator i = c->steerlook.begin(); i != c->steerlook.end(); ++i)
 	{
 		BEZIER & patch = *i;
 		c->brakedraw->AddLinePoint(TransformToWorldspace(patch.GetBL()));

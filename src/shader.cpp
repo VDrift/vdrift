@@ -27,7 +27,7 @@ void PrintWithLineNumbers(ostream & out, const string & str)
 		countstream << count;
 		string countstr = countstream.str();
 		out << countstr;
-		for (int i = 0; i < 5 - countstr.size(); i++)
+		for (int i = 0; i < 5 - (int)countstr.size(); i++)
 			out << " ";
 		out << ": " << linestr << endl;
 	}
@@ -44,7 +44,7 @@ bool SHADER_GLSL::Load(const std::string & vertex_filename, const std::string & 
 	LoadFileIntoString(fragment_filename, fragmentshader_source, error_output);
 	
 	//prepend #define values
-	for (std::vector <std::string>::const_iterator i = preprocessor_defines.begin(); i != preprocessor_defines.end(); i++)
+	for (std::vector <std::string>::const_iterator i = preprocessor_defines.begin(); i != preprocessor_defines.end(); ++i)
 	{
 		vertexshader_source = "#define " + *i + "\n" + vertexshader_source;
 		fragmentshader_source = "#define " + *i + "\n" + fragmentshader_source;

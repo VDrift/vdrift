@@ -220,7 +220,7 @@ bool CAR::LoadSounds(const std::string & carpath, const std::string & carname, c
 	{
 		list <string> sections;
 		aud.GetSectionList(sections);
-		for (list <string>::iterator i = sections.begin(); i != sections.end(); i++)
+		for (list <string>::iterator i = sections.begin(); i != sections.end(); ++i)
 		{
 			//load the buffer
 			string filename;
@@ -260,7 +260,7 @@ bool CAR::LoadSounds(const std::string & carpath, const std::string & carname, c
 		std::map <ENGINESOUNDINFO *, ENGINESOUNDINFO *> temporary_to_actual_map;
 		std::list <ENGINESOUNDINFO> poweron_sounds;
 		std::list <ENGINESOUNDINFO> poweroff_sounds;
-		for (std::list <std::pair <ENGINESOUNDINFO, SOUNDSOURCE> >::iterator i = enginesounds.begin(); i != enginesounds.end(); i++)
+		for (std::list <std::pair <ENGINESOUNDINFO, SOUNDSOURCE> >::iterator i = enginesounds.begin(); i != enginesounds.end(); ++i)
 		{
 			ENGINESOUNDINFO & info = i->first;
 			if (info.power == ENGINESOUNDINFO::POWERON)
@@ -286,7 +286,7 @@ bool CAR::LoadSounds(const std::string & carpath, const std::string & carname, c
 			if (n == 1)
 				cursounds = &poweroff_sounds;
 
-			for (list <ENGINESOUNDINFO>::iterator i = (*cursounds).begin(); i != (*cursounds).end(); i++)
+			for (list <ENGINESOUNDINFO>::iterator i = (*cursounds).begin(); i != (*cursounds).end(); ++i)
 			{
 				//set start blend
 				if (i == (*cursounds).begin())
@@ -306,7 +306,7 @@ bool CAR::LoadSounds(const std::string & carpath, const std::string & carname, c
 			}
 
 			//now assign back to the actual infos
-			for (list <ENGINESOUNDINFO>::iterator i = (*cursounds).begin(); i != (*cursounds).end(); i++)
+			for (list <ENGINESOUNDINFO>::iterator i = (*cursounds).begin(); i != (*cursounds).end(); ++i)
 			{
 				assert(temporary_to_actual_map.find(&(*i)) != temporary_to_actual_map.end());
 				*temporary_to_actual_map[&(*i)] = *i;
@@ -1395,7 +1395,7 @@ void CAR::UpdateSounds(float dt)
 
 	float loudest = 0.0; //for debugging
 
-	for (std::list <std::pair <ENGINESOUNDINFO, SOUNDSOURCE> >::iterator i = enginesounds.begin(); i != enginesounds.end(); i++)
+	for (std::list <std::pair <ENGINESOUNDINFO, SOUNDSOURCE> >::iterator i = enginesounds.begin(); i != enginesounds.end(); ++i)
 	{
 		ENGINESOUNDINFO & info = i->first;
 		SOUNDSOURCE & sound = i->second;
@@ -1432,7 +1432,7 @@ void CAR::UpdateSounds(float dt)
 
 	//normalize gains
 	assert(total_gain >= 0.0);
-	for (std::list <std::pair <SOUNDSOURCE *, float> >::iterator i = gainlist.begin(); i != gainlist.end(); i++)
+	for (std::list <std::pair <SOUNDSOURCE *, float> >::iterator i = gainlist.begin(); i != gainlist.end(); ++i)
 	{
 		if (total_gain == 0.0)
 			i->first->SetGain(0.0);
@@ -1695,7 +1695,7 @@ float CAR::GetFeedback()
 	//return 0.5*(dynamics.GetTire(FRONT_LEFT).GetFeedback()+dynamics.GetTire(FRONT_RIGHT).GetFeedback());
 	assert(!feedbackbuffer.empty());
 	float feedback = 0.0;
-	for (std::vector <float>::iterator i = feedbackbuffer.begin(); i != feedbackbuffer.end(); i++)
+	for (std::vector <float>::iterator i = feedbackbuffer.begin(); i != feedbackbuffer.end(); ++i)
 		feedback += *i;
 	feedback /= feedbackbuffer.size();
 	//std::cout << feedback << ", " << mz_nominalmax << ", " << feedback/(mz_nominalmax*0.1) << std::endl;

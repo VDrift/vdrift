@@ -204,7 +204,7 @@ void GRAPHICS_SDLGL::Init(const std::string shaderpath, const std::string & wind
 	filter_list.push_back(&skyboxes_noblend);
 	filter_list.push_back(&camtransfilter);
 
-	for (std::list <DRAWABLE_FILTER *>::iterator i = filter_list.begin(); i != filter_list.end(); i++)
+	for (std::list <DRAWABLE_FILTER *>::iterator i = filter_list.begin(); i != filter_list.end(); ++i)
 	{
 		static_drawlist_map[*i];
 		dynamic_drawlist_map[*i];
@@ -1126,7 +1126,7 @@ void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::DrawList(GLSTATEMANAGER & glstate)
 					glLineWidth(i->GetDraw()->GetLinesize());
 					glBegin(GL_LINE_STRIP);
 					const std::vector< MATHVECTOR < float , 3 > > & line = i->GetDraw()->GetLine();
-					for (std::vector< MATHVECTOR < float , 3 > >::const_iterator i = line.begin(); i != line.end(); i++)
+					for (std::vector< MATHVECTOR < float , 3 > >::const_iterator i = line.begin(); i != line.end(); ++i)
 						glVertex3f((*i)[0],(*i)[1],(*i)[2]);
 					glEnd();
 				}
@@ -1661,7 +1661,7 @@ void GRAPHICS_SDLGL::OptimizeStaticDrawlistmap()
 {
 	static_object_partitioning.clear();
 	
-	for (std::map < DRAWABLE_FILTER *, std::vector <SCENEDRAW> >::iterator i = static_drawlist_map.begin(); i != static_drawlist_map.end(); i++)
+	for (std::map < DRAWABLE_FILTER *, std::vector <SCENEDRAW> >::iterator i = static_drawlist_map.begin(); i != static_drawlist_map.end(); ++i)
 	{
 		AABB_SPACE_PARTITIONING_NODE <SCENEDRAW*> & partition = static_object_partitioning[i->first];
 		

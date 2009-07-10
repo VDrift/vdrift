@@ -410,8 +410,11 @@ public:
 	void OptimizeStaticDrawlistmap(); ///<should be called after filling the static drawlist map
 	void ClearStaticDrawlistMap()
 	{
-		for (std::map <DRAWABLE_FILTER *, std::vector <SCENEDRAW> >::iterator i = GetStaticDrawlistmap().begin(); i != GetStaticDrawlistmap().end(); i++)
+		for (std::map <DRAWABLE_FILTER *, std::vector <SCENEDRAW> >::iterator i =
+			GetStaticDrawlistmap().begin(); i != GetStaticDrawlistmap().end(); ++i)
+
 			i->second.clear();
+
 		OptimizeStaticDrawlistmap();
 	}
 	void SetupScene(float fov, float new_view_distance, const MATHVECTOR <float, 3> cam_position, const QUATERNION <float> & cam_rotation)

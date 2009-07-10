@@ -351,7 +351,8 @@ public:
 
 	void GetSoundList(std::list <SOUNDSOURCE *> & outputlist)
 	{
-		for (std::list <std::pair <ENGINESOUNDINFO, SOUNDSOURCE> >::iterator i = enginesounds.begin(); i != enginesounds.end(); i++)
+		for (std::list <std::pair <ENGINESOUNDINFO, SOUNDSOURCE> >::iterator i =
+			enginesounds.begin(); i != enginesounds.end(); ++i)
 		{
 			outputlist.push_back(&i->second);
 		}
@@ -375,7 +376,8 @@ public:
 
 	void GetEngineSoundList(std::list <SOUNDSOURCE *> & outputlist)
 	{
-		for (std::list <std::pair <ENGINESOUNDINFO, SOUNDSOURCE> >::iterator i = enginesounds.begin(); i != enginesounds.end(); i++)
+		for (std::list <std::pair <ENGINESOUNDINFO, SOUNDSOURCE> >::iterator i =
+			enginesounds.begin(); i != enginesounds.end(); ++i)
 		{
 			outputlist.push_back(&i->second);
 		}

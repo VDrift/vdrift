@@ -28,7 +28,7 @@ int main(int argc, char ** argv)
   map <string, string> argmap;
 
   //generate an argument map
-  for (list <string>::iterator i = args.begin(); i != args.end(); i++)
+  for (list <string>::iterator i = args.begin(); i != args.end(); ++i)
   {
       if ((*i)[0] == '-')
       {
@@ -62,13 +62,13 @@ int main(int argc, char ** argv)
   {
 	  cout << "Usage: -in <INPUTFILE> -out <OUTPUTFILE>" << endl << endl;
 	  cout << "Input file formats supported: ova";
-	  for (map <string, MODEL *>::iterator i = typemap.begin(); i != typemap.end(); i++)
+	  for (map <string, MODEL *>::iterator i = typemap.begin(); i != typemap.end(); ++i)
 	  {
 		  cout << ", " << i->first;
 	  }
 	  cout << endl;
 	  cout << "Output file formats supported: ova";
-	  for (map <string, MODEL *>::iterator i = typemap.begin(); i != typemap.end(); i++)
+	  for (map <string, MODEL *>::iterator i = typemap.begin(); i != typemap.end(); ++i)
 	  {
 		  if (i->second->CanSave())
 			  cout << ", " << i->first;

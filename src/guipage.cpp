@@ -87,9 +87,9 @@ bool GUIPAGE::Load(const std::string & path, const std::string & texpath, const 
 		
 		std::list <std::list <DERIVED <WIDGET> >::iterator> todel;
 		
-		for (std::list <DERIVED <WIDGET> >::iterator i = widgets.begin(); i != widgets.end(); i++)
+		for (std::list <DERIVED <WIDGET> >::iterator i = widgets.begin(); i != widgets.end(); ++i)
 		{
-			for (std::list <WIDGET_CONTROLGRAB *>::iterator n = controlgrabs.begin(); n != controlgrabs.end(); n++)
+			for (std::list <WIDGET_CONTROLGRAB *>::iterator n = controlgrabs.begin(); n != controlgrabs.end(); ++n)
 			{
 				if (i->Get() == *n)
 				{
@@ -98,7 +98,7 @@ bool GUIPAGE::Load(const std::string & path, const std::string & texpath, const 
 			}
 		}
 		
-		for (std::list <std::list <DERIVED <WIDGET> >::iterator>::iterator i = todel.begin(); i != todel.end(); i++)
+		for (std::list <std::list <DERIVED <WIDGET> >::iterator>::iterator i = todel.begin(); i != todel.end(); ++i)
 		{
 			widgets.erase(*i);
 		}
@@ -115,7 +115,7 @@ bool GUIPAGE::Load(const std::string & path, const std::string & texpath, const 
 	if (!sectionlist.empty())
 		if (sectionlist.front() == "")
 			sectionlist.pop_front();
-	for (std::list <std::string>::iterator i = sectionlist.begin(); i != sectionlist.end(); i++)
+	for (std::list <std::string>::iterator i = sectionlist.begin(); i != sectionlist.end(); ++i)
 	{
 		stringstream widgetstr;
 		widgetstr.str(*i);
@@ -597,9 +597,9 @@ bool GUIPAGE::Load(const std::string & path, const std::string & texpath, const 
 	if (!reloadcontrolsonly)
 	{
 		//do a second pass to assign hooks
-		for (map <WIDGET *, list <string> >::iterator i = hookmap.begin(); i != hookmap.end(); i++)
+		for (map <WIDGET *, list <string> >::iterator i = hookmap.begin(); i != hookmap.end(); ++i)
 		{
-			for (list <string>::iterator n = i->second.begin(); n != i->second.end(); n++)
+			for (list <string>::iterator n = i->second.begin(); n != i->second.end(); ++n)
 			{
 				map <string, WIDGET *>::iterator hookee = namemap.find(*n);
 				if (hookee != namemap.end())
@@ -627,7 +627,7 @@ std::list <std::pair <std::string, bool> > GUIPAGE::ProcessInput(bool movedown, 
 	list <std::pair <std::string, bool> > actions;
 	string tooltip;
 	
-	for (std::list <DERIVED <WIDGET> >::iterator i = widgets.begin(); i != widgets.end(); i++)
+	for (std::list <DERIVED <WIDGET> >::iterator i = widgets.begin(); i != widgets.end(); ++i)
 	{
 		bool mouseover = (*i)->ProcessInput(cursorx, cursory, cursordown, cursorjustup);
 		if (mouseover)

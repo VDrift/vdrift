@@ -66,7 +66,7 @@ bool FONT::Load(const std::string & fontinfopath, const std::string & fonttextur
 	
 	if (font_texture.GetScale() != 1.0)
 	{
-		for (std::vector <CHARINFO>::iterator i = charinfo.begin(); i != charinfo.end(); i++)
+		for (std::vector <CHARINFO>::iterator i = charinfo.begin(); i != charinfo.end(); ++i)
 		{
 			CHARINFO & char_to_scale = *i;
 			char_to_scale.x *= font_texture.GetScale();

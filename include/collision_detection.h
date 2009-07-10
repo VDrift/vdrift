@@ -237,7 +237,8 @@ class COLLISION_WORLD
 		
 		void Clear()
 		{
-			for (std::set <COLLISION_OBJECT *>::iterator i = dynamic_objects.begin(); i != dynamic_objects.end(); i++)
+			for (std::set <COLLISION_OBJECT *>::iterator i = dynamic_objects.begin();
+				i != dynamic_objects.end(); ++i)
 			{
 				id.removeCollisionObject(&(*i)->GetBulletObject());
 			}

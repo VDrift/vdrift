@@ -127,7 +127,8 @@ class CARTELEMETRY
 			assert(f);
 			f << "plot ";
 			unsigned int count = 0;
-			for (std::vector <std::pair <std::string, T> >::iterator i = variable_names.begin(); i != variable_names.end(); i++)
+			for (std::vector <std::pair <std::string, T> >::iterator i =
+				variable_names.begin(); i != variable_names.end(); ++i)
 			{
 				f << "\\" << std::endl << "\"" << filename+".dat" << "\" u 1:" << count+2 << " t '" << i->first << "' w lines";
 				if (count < variable_names.size()-1)
@@ -146,7 +147,8 @@ class CARTELEMETRY
 		void AddRecord(const std::string & name, T value)
 		{
 			bool found = false;
-			for (std::vector <std::pair <std::string, T> >::iterator i = variable_names.begin(); i != variable_names.end(); i++)
+			for (std::vector <std::pair <std::string, T> >::iterator i =
+				variable_names.begin(); i != variable_names.end(); ++i)
 			{
 				if (name == i->first)
 				{
@@ -167,7 +169,8 @@ class CARTELEMETRY
 			
 			assert(file);
 			file << time << " ";
-			for (std::vector <std::pair <std::string, T> >::iterator i = variable_names.begin(); i != variable_names.end(); i++)
+			for (std::vector <std::pair <std::string, T> >::iterator i =
+				variable_names.begin(); i != variable_names.end(); ++i)
 				file << i->second << " ";
 			file << "\n";
 		}

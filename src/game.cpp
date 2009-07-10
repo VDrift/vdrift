@@ -141,7 +141,7 @@ void GAME::Start(list <string> & args)
 	//load particle systems
 	list <string> smoketexlist;
 	pathmanager.GetFolderIndex(pathmanager.GetTireSmokeTexturePath(), smoketexlist, ".png");
-	for (list <string>::iterator i = smoketexlist.begin(); i != smoketexlist.end(); i++)
+	for (list <string>::iterator i = smoketexlist.begin(); i != smoketexlist.end(); ++i)
 		*i = pathmanager.GetTireSmokeTexturePath() + "/" + *i;
 	if (!tire_smoke.Load(rootnode, smoketexlist, settings.GetAnisotropy(), settings.GetTextureSize(), error_output))
 	{
@@ -222,7 +222,7 @@ bool GAME::InitializeGUI()
 		//remove any pages that have ~ characters
 		list <list <string>::iterator> todel;
 
-		for (list <string>::iterator i = menufiles.begin(); i != menufiles.end(); i++)
+		for (list <string>::iterator i = menufiles.begin(); i != menufiles.end(); ++i)
 		{
 			if (i->find("~") != string::npos)
 			{
@@ -230,7 +230,7 @@ bool GAME::InitializeGUI()
 			}
 		}
 
-		for (list <list <string>::iterator>::iterator i = todel.begin(); i != todel.end(); i++)
+		for (list <list <string>::iterator>::iterator i = todel.begin(); i != todel.end(); ++i)
 			menufiles.erase(*i);
 	}
 	std::map<std::string, std::list <std::pair <std::string, std::string> > > valuelists;
@@ -305,7 +305,7 @@ bool GAME::ParseArguments(std::list <std::string> & args)
 	map <string, string> argmap;
 
 	//generate an argument map
-	for (list <string>::iterator i = args.begin(); i != args.end(); i++)
+	for (list <string>::iterator i = args.begin(); i != args.end(); ++i)
 	{
 		if ((*i)[0] == '-')
 		{
@@ -423,10 +423,10 @@ bool GAME::ParseArguments(std::list <std::string> & args)
 	{
 		string helpstr;
 		unsigned int longest = 0;
-		for (std::map <string,string>::iterator i = arghelp.begin(); i != arghelp.end(); i++)
+		for (std::map <string,string>::iterator i = arghelp.begin(); i != arghelp.end(); ++i)
 			if (i->first.size() > longest)
 				longest = i->first.size();
-		for (std::map <string,string>::iterator i = arghelp.begin(); i != arghelp.end(); i++)
+		for (std::map <string,string>::iterator i = arghelp.begin(); i != arghelp.end(); ++i)
 		{
 			helpstr.append(i->first);
 			for (unsigned int n = 0; n < longest+3-i->first.size(); n++)
@@ -625,7 +625,7 @@ void GAME::AdvanceGameLogic()
 				PROFILER.endBlock("ai");
 				
 				PROFILER.beginBlock("car-update");
-				for (list <CAR>::iterator i = cars.begin(); i != cars.end(); i++)
+				for (list <CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
 				{
 					UpdateCar(*i, TickPeriod());
 				}
@@ -634,7 +634,7 @@ void GAME::AdvanceGameLogic()
 				PROFILER.beginBlock("collision");
 				if (cur_collision_frameskip == 0)
 					UpdateCarChassisCollisions();
-				for (list <CAR>::iterator i = cars.begin(); i != cars.end(); i++)
+				for (list <CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
 				{
 					if (cur_collision_frameskip == 0)
 					{
@@ -674,7 +674,7 @@ void GAME::AdvanceGameLogic()
 				}
 				else
 				{
-					for (list <CAR>::iterator i = cars.begin(); i != cars.end(); i++)
+					for (list <CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
 					{
 						PROFILER.beginBlock("car-physics");
 						UpdateCarPhysics(*i, cached_collisions_by_car[&(*i)]);
@@ -763,7 +763,7 @@ void GAME::ProcessGameInputs()
 void GAME::UpdateTimer()
 {
 	//check for cars doing a lap
-	for (list <CAR>::iterator i = cars.begin(); i != cars.end(); i++)
+	for (list <CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
 	{
 	    int carid = cartimerids[&(*i)];
 
@@ -851,7 +851,7 @@ void GAME::UpdateTimer()
 void GAME::UpdateTrackMap()
 {
 	list <pair<MATHVECTOR <float, 3>, bool> > carpositions;
-	for (list <CAR>::iterator i = cars.begin(); i != cars.end(); i++)
+	for (list <CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
 	{
 		bool playercar = (carcontrols_local.first == &(*i));
 		carpositions.push_back(pair<MATHVECTOR <float, 3>, bool> (i->GetCenterOfMassPosition(), playercar));
@@ -902,7 +902,7 @@ void GAME::ProcessGUIInputs()
 
 		//check for key inputs
 		std::map <SDLKey, TOGGLE> & keymap = eventsystem.GetKeyMap();
-		for (std::map <SDLKey, TOGGLE>::iterator i = keymap.begin(); i != keymap.end() && !have_a_control_input; i++)
+		for (std::map <SDLKey, TOGGLE>::iterator i = keymap.begin(); i != keymap.end() && !have_a_control_input; ++i)
 		{
 			if (i->second.GetImpulseRising())
 			{
@@ -1048,7 +1048,7 @@ void GAME::ProcessGUIInputs()
 		}
 
 		//process gui actions
-		for (list <string>::iterator i = gui_actions.begin(); i != gui_actions.end(); i++)
+		for (list <string>::iterator i = gui_actions.begin(); i != gui_actions.end(); ++i)
 		{
 			ProcessGUIAction(*i);
 		}
@@ -1322,7 +1322,7 @@ void GAME::ProcessGUIAction(const std::string & action)
 		opponents.push_back(std::make_pair(settings.GetOpponentCar(), settings.GetOpponentCarPaint()));
 
 		std::string opponentstr = "Opponents: ";
-		for (std::vector <std::pair<std::string, std::string> >::iterator i = opponents.begin(); i != opponents.end(); i++)
+		for (std::vector <std::pair<std::string, std::string> >::iterator i = opponents.begin(); i != opponents.end(); ++i)
 		{
 			if (i != opponents.begin())
 				opponentstr += ", ";
@@ -1535,7 +1535,7 @@ void GAME::UpdateCarInputs(CAR & car)
 bool IsACar(const CAR * ptr, const list <CAR> & cars)
 {
 	bool match = false;
-	for (list <CAR>::const_iterator i = cars.begin(); i != cars.end(); i++)
+	for (list <CAR>::const_iterator i = cars.begin(); i != cars.end(); ++i)
 		if (&(*i) == ptr)
 			match = true;
 	return match;
@@ -1547,7 +1547,7 @@ void GAME::UpdateCarChassisCollisions()
 	std::map <COLLISION_OBJECT *, std::list <COLLISION_CONTACT> > cartocarcollisions;
 	collision.CollideDynamicObjects(cartocarcollisions);
 	//std::cout << "Dynamic colliding objects: " << cartocarcollisions.size() << endl;
-	for (std::map <COLLISION_OBJECT *, std::list <COLLISION_CONTACT> >::iterator i = cartocarcollisions.begin(); i!= cartocarcollisions.end(); i++)
+	for (std::map <COLLISION_OBJECT *, std::list <COLLISION_CONTACT> >::iterator i = cartocarcollisions.begin(); i!= cartocarcollisions.end(); ++i)
 	{
 		std::list <COLLISION_CONTACT> & contactlist = i->second;
 		//std::cout << "Number of collisions: " << contactlist.size() << endl;
@@ -1580,7 +1580,7 @@ void GAME::UpdateCarChassisCollisions()
 	}
 	
 	//do car-to-scenery collisions
-	for (list <CAR>::iterator i = cars.begin(); i != cars.end(); i++)
+	for (list <CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
 	{
 		CAR & car = *i;
 		
@@ -1974,7 +1974,7 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	if (addopponents)
 	{
 		int carcount = 1;
-		for (std::vector <std::pair<std::string, std::string> >::iterator i = opponents.begin(); i != opponents.end(); i++)
+		for (std::vector <std::pair<std::string, std::string> >::iterator i = opponents.begin(); i != opponents.end(); ++i)
 		{
 			//int startplace = std::min(carcount, track.GetNumStartPositions()-1);
 			int startplace = carcount;
@@ -1988,11 +1988,11 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 		opponents.clear();
 
 	//send car sounds to the sound subsystem
-	for (std::list <CAR>::iterator i = cars.begin(); i != cars.end(); i++)
+	for (std::list <CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
 	{
 		std::list <SOUNDSOURCE *> soundlist;
 		i->GetSoundList(soundlist);
-		for (std::list <SOUNDSOURCE *>::iterator s = soundlist.begin(); s != soundlist.end(); s++)
+		for (std::list <SOUNDSOURCE *>::iterator s = soundlist.begin(); s != soundlist.end(); ++s)
 		{
 			sound.AddSource(**s);
 		}
@@ -2022,7 +2022,7 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 
 	//add cars to the timer system
 	int count = 0;
-	for (std::list <CAR>::iterator i = cars.begin(); i != cars.end(); i++)
+	for (std::list <CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
 	{
 		cartimerids[&(*i)] = timer.AddCar(i->GetCarType());
 		if (carcontrols_local.first == &(*i))
@@ -2096,7 +2096,7 @@ void GAME::LeaveGame()
 	cur_collision_frameskip = 0;
 	if (sound.Enabled())
 	{
-		for (std::list <CAR>::iterator i = cars.begin(); i != cars.end(); i++)
+		for (std::list <CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
 		{
 			std::list <SOUNDSOURCE *> soundlist;
 			i->GetSoundList(soundlist);
@@ -2119,7 +2119,7 @@ void GAME::LeaveGame()
 ///move the cars on the z axis until they are touching the ground; returns false if the car isn't near ground
 bool GAME::AlignCarsWithGround()
 {
-	for (list <CAR>::iterator i = cars.begin(); i != cars.end(); i++)
+	for (list <CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
 	{
 		//find the precise starting position for the car (trim out the extra space)
 		float lowest_point = 0;
@@ -2296,7 +2296,7 @@ bool GAME::LoadTrack(const std::string & trackname)
 	//send track collision objects to the collision subsystem
 	list <COLLISION_OBJECT*> colobjlist;
 	track.GetCollisionObjectsTo(colobjlist);
-	for (list <COLLISION_OBJECT *>::iterator i = colobjlist.begin(); i != colobjlist.end(); i++)
+	for (list <COLLISION_OBJECT *>::iterator i = colobjlist.begin(); i != colobjlist.end(); ++i)
 		collision.AddPhysicsObject(**i);
 
 	//info_output << "After track load: ";
@@ -2391,7 +2391,7 @@ void GAME::PopulateReplayList(std::list <std::pair <std::string, std::string> > 
 	std::list <std::string> replayfoldercontents;
 	if (pathmanager.GetFolderIndex(pathmanager.GetReplayPath(),replayfoldercontents))
 	{
-		for (std::list <std::string>::iterator i = replayfoldercontents.begin(); i != replayfoldercontents.end(); i++)
+		for (std::list <std::string>::iterator i = replayfoldercontents.begin(); i != replayfoldercontents.end(); ++i)
 		{
 			if (*i != "benchmark.vdr" && i->find(".vdr") == i->length()-4)
 			{
@@ -2446,7 +2446,7 @@ void GAME::PopulateValueLists(std::map<std::string, std::list <std::pair <std::s
 		list <pair<string,string> > tracklist;
 		list <string> trackfolderlist;
 		pathmanager.GetFolderIndex(pathmanager.GetTrackPath(),trackfolderlist);
-		for (list <string>::iterator i = trackfolderlist.begin(); i != trackfolderlist.end(); i++)
+		for (list <string>::iterator i = trackfolderlist.begin(); i != trackfolderlist.end(); ++i)
 		{
 			ifstream check((pathmanager.GetTrackPath() + "/" + *i + "/about.txt").c_str());
 			if (check)
@@ -2465,7 +2465,7 @@ void GAME::PopulateValueLists(std::map<std::string, std::list <std::pair <std::s
 		list <pair<string,string> > carlist;
 		list <string> carfolderlist;
 		pathmanager.GetFolderIndex(pathmanager.GetCarPath(),carfolderlist);
-		for (list <string>::iterator i = carfolderlist.begin(); i != carfolderlist.end(); i++)
+		for (list <string>::iterator i = carfolderlist.begin(); i != carfolderlist.end(); ++i)
 		{
 			ifstream check((pathmanager.GetCarPath() + "/" + *i + "/about.txt").c_str());
 			if (check)
@@ -2545,7 +2545,7 @@ void GAME::LoadSaveOptions(OPTION_ACTION action, std::map<std::string, std::stri
 		settings.Serialize(true, tempconfig);
 		list <string> paramlistoutput;
 		tempconfig.GetParamList(paramlistoutput);
-		for (list <string>::iterator i = paramlistoutput.begin(); i != paramlistoutput.end(); i++)
+		for (list <string>::iterator i = paramlistoutput.begin(); i != paramlistoutput.end(); ++i)
 		{
 			string val;
 			tempconfig.GetParam(*i, val);
@@ -2556,7 +2556,7 @@ void GAME::LoadSaveOptions(OPTION_ACTION action, std::map<std::string, std::stri
 	else //save from the options map to the settings class
 	{
 		CONFIGFILE tempconfig;
-		for (map<string, string>::iterator i = options.begin(); i != options.end(); i++)
+		for (map<string, string>::iterator i = options.begin(); i != options.end(); ++i)
 		{
 			tempconfig.SetParam(i->first, i->second);
 			//std::cout << "SAVE - PARAM: " << i->first << " = " << i->second << endl;
@@ -2610,7 +2610,7 @@ void GAME::CollapseSceneToDrawlistmap(SCENENODE & node, std::map < DRAWABLE_FILT
 {
 	if (clearfirst)
 	{
-		for (std::map <DRAWABLE_FILTER *, std::vector <SCENEDRAW> >::iterator mi = outputmap.begin(); mi != outputmap.end(); mi++)
+		for (std::map <DRAWABLE_FILTER *, std::vector <SCENEDRAW> >::iterator mi = outputmap.begin(); mi != outputmap.end(); ++mi)
 		{
 			mi->second.resize(0);
 		}
@@ -2619,7 +2619,7 @@ void GAME::CollapseSceneToDrawlistmap(SCENENODE & node, std::map < DRAWABLE_FILT
 	node.GetCollapsedDrawList(outputmap, identity);
 
 	//auto-sort a 2D list
-	for (std::map <DRAWABLE_FILTER *, std::vector <SCENEDRAW> >::iterator mi = outputmap.begin(); mi != outputmap.end(); mi++)
+	for (std::map <DRAWABLE_FILTER *, std::vector <SCENEDRAW> >::iterator mi = outputmap.begin(); mi != outputmap.end(); ++mi)
 	{
 		if (mi->first->Is2DOnlyFilter())
 			std::sort(mi->second.begin(), mi->second.end());

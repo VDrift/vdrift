@@ -56,7 +56,7 @@ private:
 	///send options from the optionmap to the widgets
 	void UpdateOptions(std::ostream & error_output)
 	{
-		for (std::map<std::string, PAGEINFO>::iterator i = pages.begin(); i != pages.end(); i++)
+		for (std::map<std::string, PAGEINFO>::iterator i = pages.begin(); i != pages.end(); ++i)
 		{
 			i->second.page.UpdateOptions(false, optionmap, error_output);
 		}
@@ -105,7 +105,7 @@ public:
 		CONFIGFILE controlsconfig;
 		controlsconfig.Load(carcontrolsfile); //pre-load controls file so that each individual widget doesn't have to reload it
 		
-		for (std::list <std::string>::const_iterator i = pagelist.begin(); i != pagelist.end(); i++)
+		for (std::list <std::string>::const_iterator i = pagelist.begin(); i != pagelist.end(); ++i)
 		{
 			if (*i != "SConscript")
 			{
@@ -135,7 +135,7 @@ public:
 	
 	void DeactivateAll()
 	{
-		for (std::map<std::string, PAGEINFO>::iterator i = pages.begin(); i != pages.end(); i++)
+		for (std::map<std::string, PAGEINFO>::iterator i = pages.begin(); i != pages.end(); ++i)
 		{
 			i->second.page.SetVisible(false);
 		}
@@ -214,7 +214,7 @@ public:
 		bool save_options = false;
 		
 		//process resulting actions
-		for (std::list <std::pair <std::string, bool> >::iterator i = actions.begin(); i != actions.end(); i++)
+		for (std::list <std::pair <std::string, bool> >::iterator i = actions.begin(); i != actions.end(); ++i)
 		{
 			std::string actionname = i->first;
 			
@@ -295,7 +295,7 @@ public:
 	{
 		//std::cout << "Syncing options: " << external_settings_are_newer << ", " << syncme_from_external << std::endl;
 		
-		for (std::map <std::string, std::string>::iterator i = external_options.begin(); i != external_options.end(); i++)
+		for (std::map <std::string, std::string>::iterator i = external_options.begin(); i != external_options.end(); ++i)
 		{
 			if (external_settings_are_newer || syncme_from_external)
 			{

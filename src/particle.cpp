@@ -7,7 +7,7 @@ bool PARTICLE_SYSTEM::Load(SCENENODE & parentnode, const std::list <std::string>
 {
 	node = parentnode.AddNode();
 	
-	for (std::list <std::string>::const_iterator i = texlist.begin(); i != texlist.end(); i++)
+	for (std::list <std::string>::const_iterator i = texlist.begin(); i != texlist.end(); ++i)
 	{
 		textures.push_back(TEXTURE_GL());
 		TEXTUREINFO texinfo(*i);
@@ -56,7 +56,7 @@ void PARTICLE_SYSTEM::Update(float dt, const QUATERNION <float> & camdir)
 		//do the old swap & pop trick to remove expired particles quickly.
 		//all swaps must be done before the popping starts, because popping invalidates iterators
 		int newback = particles.size()-1;
-		for (std::vector <int>::iterator i = expired_list.begin(); i != expired_list.end(); i++)
+		for (std::vector <int>::iterator i = expired_list.begin(); i != expired_list.end(); ++i)
 		{
 			//only bother to swap if it's not already at the end
 			if (*i != newback)
@@ -113,7 +113,7 @@ void PARTICLE_SYSTEM::AddParticle(const MATHVECTOR <float,3> & position, float n
 
 void PARTICLE_SYSTEM::Clear()
 {
-	for (std::vector <PARTICLE>::iterator i = particles.begin(); i != particles.end(); i++)
+	for (std::vector <PARTICLE>::iterator i = particles.begin(); i != particles.end(); ++i)
 	{
 		node->Delete(&i->GetNode());
 	}

@@ -74,7 +74,7 @@ public:
 	
 	void SetVisible(const bool newvis)
 	{
-		for (std::list <DERIVED <WIDGET> >::iterator i = widgets.begin(); i != widgets.end(); i++)
+		for (std::list <DERIVED <WIDGET> >::iterator i = widgets.begin(); i != widgets.end(); ++i)
 		{
 			(*i)->SetVisible(newvis);
 		}
@@ -82,7 +82,7 @@ public:
 	
 	void SetAlpha(const float newalpha)
 	{
-		for (std::list <DERIVED <WIDGET> >::iterator i = widgets.begin(); i != widgets.end(); i++)
+		for (std::list <DERIVED <WIDGET> >::iterator i = widgets.begin(); i != widgets.end(); ++i)
 		{
 			(*i)->SetAlpha(newalpha);
 		}
@@ -91,7 +91,7 @@ public:
 	///tell all child widgets to update to/from the option map
 	void UpdateOptions(bool save_to_options, std::map<std::string, GUIOPTION> & optionmap, std::ostream & error_output)
 	{
-		for (std::list <DERIVED <WIDGET> >::iterator i = widgets.begin(); i != widgets.end(); i++)
+		for (std::list <DERIVED <WIDGET> >::iterator i = widgets.begin(); i != widgets.end(); ++i)
 		{
 			(*i)->UpdateOptions(save_to_options, optionmap, error_output);
 		}
@@ -104,7 +104,7 @@ public:
 	///tell all child widgets to do as update tick
 	void Update(float dt)
 	{
-		for (std::list <DERIVED <WIDGET> >::iterator i = widgets.begin(); i != widgets.end(); i++)
+		for (std::list <DERIVED <WIDGET> >::iterator i = widgets.begin(); i != widgets.end(); ++i)
 		{
 			(*i)->Update(dt);
 		}

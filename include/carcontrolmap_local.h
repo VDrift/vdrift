@@ -204,7 +204,8 @@ private:
 	
 	std::string GetStringFromInput(const CARINPUT::CARINPUT input) const
 	{
-		for (std::map <std::string, CARINPUT::CARINPUT>::const_iterator i = carinput_stringmap.begin(); i != carinput_stringmap.end(); i++)
+		for (std::map <std::string, CARINPUT::CARINPUT>::const_iterator i =
+			carinput_stringmap.begin(); i != carinput_stringmap.end(); ++i)
 		{
 			if (i->second == input)
 				return i->first;
@@ -473,7 +474,9 @@ public:
 			
 			std::vector<CONTROL>::iterator todel = controls[carinput_stringmap[inputname]].end();
 			
-			for (std::vector<CONTROL>::iterator i = controls[carinput_stringmap[inputname]].begin(); i != controls[carinput_stringmap[inputname]].end(); i++)
+			for (std::vector<CONTROL>::iterator i =
+				controls[carinput_stringmap[inputname]].begin();
+				i != controls[carinput_stringmap[inputname]].end(); ++i)
 			{
 				if (ctrltodel == *i)
 					todel = i;
@@ -503,7 +506,9 @@ public:
 			
 			bool did_update = false;
 			
-			for (std::vector<CONTROL>::iterator i = controls[carinput_stringmap[inputname]].begin(); i != controls[carinput_stringmap[inputname]].end(); i++)
+			for (std::vector<CONTROL>::iterator i =
+				controls[carinput_stringmap[inputname]].begin();
+				i != controls[carinput_stringmap[inputname]].end(); ++i)
 			{
 				if (ctrltoupdate == *i)
 				{

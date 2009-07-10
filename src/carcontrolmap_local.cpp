@@ -199,9 +199,9 @@ void CARCONTROLMAP_LOCAL::Save(CONFIGFILE & controls_config, std::ostream & info
 {
 	int id = 0;
 	
-	for (std::map <CARINPUT::CARINPUT, std::vector <CONTROL> >::iterator n = controls.begin(); n != controls.end(); n++)
+	for (std::map <CARINPUT::CARINPUT, std::vector <CONTROL> >::iterator n = controls.begin(); n != controls.end(); ++n)
 	{
-		for (std::vector <CONTROL>::iterator i = n->second.begin(); i != n->second.end(); i++)
+		for (std::vector <CONTROL>::iterator i = n->second.begin(); i != n->second.end(); ++i)
 		{
 			stringstream ss;
 			ss << "control mapping ";
@@ -211,7 +211,7 @@ void CARCONTROLMAP_LOCAL::Save(CONFIGFILE & controls_config, std::ostream & info
 			string ctrl_id = ss.str();
 			
 			string ctrl_name = "INVALID";
-			for (std::map <std::string, CARINPUT::CARINPUT>::const_iterator s = carinput_stringmap.begin(); s != carinput_stringmap.end(); s++)
+			for (std::map <std::string, CARINPUT::CARINPUT>::const_iterator s = carinput_stringmap.begin(); s != carinput_stringmap.end(); ++s)
 				if (s->second == inputid)
 					ctrl_name = s->first;
 			
@@ -315,11 +315,11 @@ const std::vector <float> & CARCONTROLMAP_LOCAL::ProcessInput(const std::string 
 	assert(inputs.size() == CARINPUT::INVALID); //this looks weird, but it ensures that our inputs vector contains exactly one item per input
 	assert(lastinputs.size() == CARINPUT::INVALID); //this looks weird, but it ensures that our inputs vector contains exactly one item per input
 		
-	for (std::map <CARINPUT::CARINPUT, std::vector <CONTROL> >::iterator n = controls.begin(); n != controls.end(); n++)
+	for (std::map <CARINPUT::CARINPUT, std::vector <CONTROL> >::iterator n = controls.begin(); n != controls.end(); ++n)
 	{
 		float newval = 0.0;
 		
-		for (std::vector <CONTROL>::iterator i = n->second.begin(); i != n->second.end(); i++)
+		for (std::vector <CONTROL>::iterator i = n->second.begin(); i != n->second.end(); ++i)
 		{
 			bool handled = false;
 			float tempval = newval;

@@ -92,7 +92,7 @@ class ROADSTRIP
 		void CreateRacingLine(SCENENODE * parentnode, 
 				      TEXTURE_GL & racingline_texture, std::ostream & error_output)
 		{
-			for (std::list <ROADPATCH>::iterator i = patches.begin(); i != patches.end(); i++)
+			for (std::list <ROADPATCH>::iterator i = patches.begin(); i != patches.end(); ++i)
 			{
 				std::list <ROADPATCH>::iterator n = i;
 				n++;
@@ -159,7 +159,7 @@ class TRACK
 			}
 			
 			K1999 k1999data;
-			for (std::list <ROADSTRIP>::iterator i = roads.begin(); i != roads.end(); i++)
+			for (std::list <ROADSTRIP>::iterator i = roads.begin(); i != roads.end(); ++i)
 			{
 				if (k1999data.LoadData(&(*i)))
 				{
@@ -323,7 +323,7 @@ class TRACK
 		void GetCollisionObjectsTo(std::list <COLLISION_OBJECT *> & outputlist)
 		{
 			outputlist.clear();
-			for (std::list <TRACK_OBJECT>::iterator i = objects.begin(); i != objects.end(); i++)
+			for (std::list <TRACK_OBJECT>::iterator i = objects.begin(); i != objects.end(); ++i)
 			{
 				if (i->GetCollisionObject())
 					outputlist.push_back(i->GetCollisionObject());

@@ -116,7 +116,7 @@ void CARDYNAMICS::ApplyEngineTorqueToBody ( MATHVECTOR <T, 3> & total_force, MAT
 void CARDYNAMICS::ApplyAerodynamicsToBody ( MATHVECTOR <T, 3> & total_force, MATHVECTOR <T, 3> & total_torque )
 {
 	int count = 0;
-	for ( std::vector <CARAERO <T> >::iterator i = aerodynamics.begin(); i != aerodynamics.end(); i++ )
+	for ( std::vector <CARAERO <T> >::iterator i = aerodynamics.begin(); i != aerodynamics.end(); ++i )
 	{
 		MATHVECTOR <T, 3> wind_velocity = -body.GetVelocity();
 		( -body.GetOrientation() ).RotateVector ( wind_velocity );
@@ -1023,7 +1023,7 @@ void CARDYNAMICS::DebugPrint ( std::ostream & out, bool p1, bool p2, bool p3, bo
 
 	if ( p4 )
 	{
-		for ( std::vector <CARAERO<T> >::iterator i = aerodynamics.begin(); i != aerodynamics.end(); i++ )
+		for ( std::vector <CARAERO<T> >::iterator i = aerodynamics.begin(); i != aerodynamics.end(); ++i )
 		{
 			i->DebugPrint ( out );
 			out << std::endl;
@@ -1035,7 +1035,7 @@ MATHVECTOR <T, 3> CARDYNAMICS::GetTotalAero() const
 {
 	MATHVECTOR <T, 3> downforce = 0;
 
-	for ( std::vector <CARAERO<T> >::const_iterator i = aerodynamics.begin(); i != aerodynamics.end(); i++ )
+	for ( std::vector <CARAERO<T> >::const_iterator i = aerodynamics.begin(); i != aerodynamics.end(); ++i )
 	{
 		downforce = downforce + i->GetLiftVector();
 		downforce = downforce + i->GetDragVector();
@@ -1061,7 +1061,7 @@ void CARDYNAMICS::UpdateMass()
 	center_of_mass.Set ( 0,0,0 );
 
 	//calculate the total mass, and center of mass
-	for ( std::list <MASS_PAIR>::iterator i = mass_only_particles.begin(); i != mass_only_particles.end(); i++ )
+	for ( std::list <MASS_PAIR>::iterator i = mass_only_particles.begin(); i != mass_only_particles.end(); ++i )
 	{
 		//add the current mass to the total mass
 		total_mass += i->first;
@@ -1078,7 +1078,7 @@ void CARDYNAMICS::UpdateMass()
 	MATRIX3 <T> inertia;
 	for ( int i = 0; i < 9; i++ )
 		inertia[i] = 0;
-	for ( std::list <MASS_PAIR>::iterator i = mass_only_particles.begin(); i != mass_only_particles.end(); i++ )
+	for ( std::list <MASS_PAIR>::iterator i = mass_only_particles.begin(); i != mass_only_particles.end(); ++i )
 	{
 		//transform into the rigid body coordinates
 		MATHVECTOR <T, 3> position = CarLocalToRigidBodyLocal ( i->second );
@@ -1281,7 +1281,7 @@ MATHVECTOR< T, 3 > CARDYNAMICS::GetCenterOfMass() const
 T CARDYNAMICS::GetAerodynamicDownforceCoefficient() const
 {
 	T coeff = 0.0;
-	for ( std::vector <CARAERO <T> >::const_iterator i = aerodynamics.begin(); i != aerodynamics.end(); i++ )
+	for ( std::vector <CARAERO <T> >::const_iterator i = aerodynamics.begin(); i != aerodynamics.end(); ++i )
 		coeff += i->GetAerodynamicDownforceCoefficient();
 	return coeff;
 }
@@ -1290,7 +1290,7 @@ T CARDYNAMICS::GetAerodynamicDownforceCoefficient() const
 T CARDYNAMICS::GetAeordynamicDragCoefficient() const
 {
 	T coeff = 0.0;
-	for ( std::vector <CARAERO <T> >::const_iterator i = aerodynamics.begin(); i != aerodynamics.end(); i++ )
+	for ( std::vector <CARAERO <T> >::const_iterator i = aerodynamics.begin(); i != aerodynamics.end(); ++i )
 		coeff += i->GetAeordynamicDragCoefficient();
 	return coeff;
 }

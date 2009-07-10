@@ -408,7 +408,7 @@ void CONFIGFILE::DebugPrint(ostream & out)
 	
 	std::list <CONFIGVARIABLE> vlist;
 	
-	for (bucketed_hashmap <std::string, CONFIGVARIABLE>::iterator i = variables.begin(); i != variables.end(); i++)
+	for (bucketed_hashmap <std::string, CONFIGVARIABLE>::iterator i = variables.begin(); i != variables.end(); ++i)
 	{
 		//cout << incsuccess << endl;
 		//variables.IteratorGet()->DebugPrint();
@@ -417,7 +417,7 @@ void CONFIGFILE::DebugPrint(ostream & out)
 	
 	vlist.sort();
 	
-	for (list <CONFIGVARIABLE>::iterator i = vlist.begin(); i != vlist.end(); i++)
+	for (list <CONFIGVARIABLE>::iterator i = vlist.begin(); i != vlist.end(); ++i)
 	{
 		i->DebugPrint(out);
 	}
@@ -598,7 +598,7 @@ bool CONFIGFILE::Write(bool with_brackets, string save_as)
 		
 		list <CONFIGVARIABLE> vlist;
 	
-		for (bucketed_hashmap <std::string, CONFIGVARIABLE>::iterator i = variables.begin(); i != variables.end(); i++)
+		for (bucketed_hashmap <std::string, CONFIGVARIABLE>::iterator i = variables.begin(); i != variables.end(); ++i)
 		{
 			//cout << incsuccess << endl;
 			//variables.IteratorGet()->DebugPrint();
@@ -608,7 +608,7 @@ bool CONFIGFILE::Write(bool with_brackets, string save_as)
 		vlist.sort();
 		
 		string cursection = "";
-		for (list <CONFIGVARIABLE>::iterator cur = vlist.begin(); cur != vlist.end(); cur++)
+		for (list <CONFIGVARIABLE>::iterator cur = vlist.begin(); cur != vlist.end(); ++cur)
 		{
 			if (cur->section == "")
 			{
@@ -652,12 +652,12 @@ void CONFIGFILE::GetSectionList(list <string> & sectionlistoutput) const
 {
 	sectionlistoutput.clear();
 	map <string, bool> templist;
-	for (bucketed_hashmap <std::string, CONFIGVARIABLE>::const_iterator i = variables.begin(); i != variables.end(); i++)
+	for (bucketed_hashmap <std::string, CONFIGVARIABLE>::const_iterator i = variables.begin(); i != variables.end(); ++i)
 	{
 		templist[i->section] = true;
 	}
 	
-	for (map <string, bool>::iterator i = templist.begin(); i != templist.end(); i++)
+	for (map <string, bool>::iterator i = templist.begin(); i != templist.end(); ++i)
 	{
 		sectionlistoutput.push_back(i->first);
 	}
@@ -673,7 +673,7 @@ void CONFIGFILE::GetParamList(list <string> & paramlistoutput, string sel_sectio
 	
 	paramlistoutput.clear();
 	map <string, bool> templist;
-	for (bucketed_hashmap <std::string, CONFIGVARIABLE>::const_iterator i = variables.begin(); i != variables.end(); i++)
+	for (bucketed_hashmap <std::string, CONFIGVARIABLE>::const_iterator i = variables.begin(); i != variables.end(); ++i)
 	{
 		if (all)
 			templist[i->section+"."+i->name] = true;
@@ -688,7 +688,7 @@ void CONFIGFILE::GetParamList(list <string> & paramlistoutput, string sel_sectio
 		}*/
 	}
 	
-	for (map <string, bool>::iterator i = templist.begin(); i != templist.end(); i++)
+	for (map <string, bool>::iterator i = templist.begin(); i != templist.end(); ++i)
 	{
 		paramlistoutput.push_back(i->first);
 	}
@@ -731,7 +731,7 @@ void CONFIGFILE::ChangeSectionName(std::string oldname, std::string newname)
 	std::list <std::string> paramlist;
 	GetParamList(paramlist, oldname);
 	
-	for (std::list <std::string>::iterator i = paramlist.begin(); i != paramlist.end(); i++)
+	for (std::list <std::string>::iterator i = paramlist.begin(); i != paramlist.end(); ++i)
 	{
 		std::string value;
 		bool success = GetParam(oldname+"."+*i, value);

@@ -123,7 +123,7 @@ DRAWABLE & SCENENODE::AddDrawable()
 void SCENENODE::Delete(SCENENODE * todelete)
 {
 	list <SCENENODE>::iterator itdel = childlist.end();
-	for (list <SCENENODE>::iterator i = childlist.begin(); i != childlist.end(); i++)
+	for (list <SCENENODE>::iterator i = childlist.begin(); i != childlist.end(); ++i)
 	{
 		if (&(*i) == todelete)
 			itdel = i;
@@ -138,7 +138,7 @@ void SCENENODE::Delete(SCENENODE * todelete)
 void SCENENODE::Delete(DRAWABLE * todelete)
 {
 	list <DRAWABLE>::iterator itdel = drawlist.end();
-	for (list <DRAWABLE>::iterator i = drawlist.begin(); i != drawlist.end(); i++)
+	for (list <DRAWABLE>::iterator i = drawlist.begin(); i != drawlist.end(); ++i)
 	{
 		if (&(*i) == todelete)
 			itdel = i;
@@ -236,11 +236,11 @@ void SCENENODE::GetCollapsedDrawList(map < DRAWABLE_FILTER *, vector <SCENEDRAW>
 		this_transform = this_transform.Multiply(prev_transform);
 	}
 	
-	for (map <DRAWABLE_FILTER *, vector <SCENEDRAW> >::iterator mi = drawlist_output_map.begin(); mi != drawlist_output_map.end(); mi++)
+	for (map <DRAWABLE_FILTER *, vector <SCENEDRAW> >::iterator mi = drawlist_output_map.begin(); mi != drawlist_output_map.end(); ++mi)
 	{
 		//calgo::for_each(drawlist, DRAWLISTCOPY_FUNCTOR(*mi->first, this_transform, mi->second));
 		
-		for (list <DRAWABLE>::const_iterator i = drawlist.begin(); i != drawlist.end(); i++)
+		for (list <DRAWABLE>::const_iterator i = drawlist.begin(); i != drawlist.end(); ++i)
 		{
 			if (mi->first->Matches(*i))
 			//if (i->GetDrawEnable())
@@ -259,7 +259,7 @@ void SCENENODE::GetCollapsedDrawList(map < DRAWABLE_FILTER *, vector <SCENEDRAW>
 		}
 	}
 	
-	for (list <SCENENODE>::const_iterator i = childlist.begin(); i != childlist.end(); i++)
+	for (list <SCENENODE>::const_iterator i = childlist.begin(); i != childlist.end(); ++i)
 	{
 		i->GetCollapsedDrawList(drawlist_output_map, this_transform);
 	}
@@ -279,7 +279,7 @@ MAT4 SCENENODE::CollapseTransform() const
 	nodelist.reverse();
 	
 	MAT4 outmat;
-	for (list <const SCENENODE*>::iterator i = nodelist.begin(); i != nodelist.end(); i++)
+	for (list <const SCENENODE*>::iterator i = nodelist.begin(); i != nodelist.end(); ++i)
 	{
 		MAT4 rotmat;
 		//rotmat.Set((*i)->transform.GetRotation());
@@ -325,7 +325,7 @@ VEC3 SCENENODE::TransformIntoLocalSpace(const VEC3 & worldspace) const
 	
 	//cout << "Started at ";worldspace.DebugPrint();
 	
-	for (list <const SCENENODE*>::iterator i = nodelist.begin(); i != nodelist.end(); i++)
+	for (list <const SCENENODE*>::iterator i = nodelist.begin(); i != nodelist.end(); ++i)
 	{
 		//cout << "Subtracting ";(*i)->transform.GetTranslation().DebugPrint();
 		pos = pos - (*i)->transform.GetTranslation();
@@ -371,7 +371,7 @@ void SCENENODE::DebugPrint(std::ostream & out)
 	out << "Drawables: " << drawlist.size() << endl;
 	out << "Children: " << childlist.size() << endl;
 	int count = 1;
-	for (list <SCENENODE>::iterator i = childlist.begin(); i != childlist.end(); i++)
+	for (list <SCENENODE>::iterator i = childlist.begin(); i != childlist.end(); ++i)
 	{
 		out << "---start child " << count << "---" << endl;
 		i->DebugPrint(out);
@@ -424,12 +424,12 @@ void SCENENODE::SortDrawablesByRenderState()
 
 void SCENENODE::SetChildVisibility(bool newvis)
 {
-	for (list <DRAWABLE>::iterator i = drawlist.begin(); i != drawlist.end(); i++)
+	for (list <DRAWABLE>::iterator i = drawlist.begin(); i != drawlist.end(); ++i)
 	{
 		i->SetDrawEnable(newvis);
 	}
 	
-	for (list <SCENENODE>::iterator i = childlist.begin(); i != childlist.end(); i++)
+	for (list <SCENENODE>::iterator i = childlist.begin(); i != childlist.end(); ++i)
 	{
 		i->SetChildVisibility(newvis);
 	}
@@ -437,12 +437,12 @@ void SCENENODE::SetChildVisibility(bool newvis)
 
 void SCENENODE::SetChildAlpha(float a)
 {
-	for (list <DRAWABLE>::iterator i = drawlist.begin(); i != drawlist.end(); i++)
+	for (list <DRAWABLE>::iterator i = drawlist.begin(); i != drawlist.end(); ++i)
 	{
 		i->SetAlpha(a);
 	}
 	
-	for (list <SCENENODE>::iterator i = childlist.begin(); i != childlist.end(); i++)
+	for (list <SCENENODE>::iterator i = childlist.begin(); i != childlist.end(); ++i)
 	{
 		i->SetChildAlpha(a);
 	}

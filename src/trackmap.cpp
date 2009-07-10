@@ -27,7 +27,7 @@ void TRACKMAP::Unload()
 	assert((!mapnode && !mapdraw) || (mapnode && mapdraw));
 	if (mapnode)
 	{
-		for (list <CARDOT>::iterator i = dotlist.begin(); i != dotlist.end(); i++)
+		for (list <CARDOT>::iterator i = dotlist.begin(); i != dotlist.end(); ++i)
 			mapnode->Delete(i->GetDrawable());
 		dotlist.clear();
 		
@@ -315,14 +315,14 @@ void TRACKMAP::Update(bool mapvisible, const std::list <std::pair<MATHVECTOR <fl
 			car++;
 			count++;
 		}
-		for (list <CARDOT>::iterator i = dot; i != dotlist.end(); i++)
+		for (list <CARDOT>::iterator i = dot; i != dotlist.end(); ++i)
 			mapnode->Delete(i->GetDrawable());
 		dotlist.erase(dot,dotlist.end());
 	}
 	
 	if (mapdraw)
 		mapdraw->SetDrawEnable(mapvisible);
-	for (list <CARDOT>::iterator i = dotlist.begin(); i != dotlist.end(); i++)
+	for (list <CARDOT>::iterator i = dotlist.begin(); i != dotlist.end(); ++i)
 		i->SetVisible(mapvisible);
 	
 	/*for (list <CARDOT>::iterator i = dotlist.begin(); i != dotlist.end(); i++)

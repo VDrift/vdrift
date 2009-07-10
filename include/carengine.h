@@ -306,7 +306,8 @@ class CARENGINE
 			if (curve[0].first != 0)
 				torque_curve.AddPoint(0,0);
 			
-			for (typename std::vector <std::pair <T, T> >::iterator i = curve.begin(); i != curve.end(); i++)
+			for (typename std::vector <std::pair <T, T> >::iterator i = curve.begin();
+				i != curve.end(); ++i)
 			{
 				torque_curve.AddPoint(i->first, i->second*dyno_correction_factor);
 			}

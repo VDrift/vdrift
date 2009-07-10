@@ -155,13 +155,13 @@ bool PATHMANAGER::GetFolderIndex(string folderpath, list <string> & outputfolder
 	if (!extension.empty())
 	{
 		list <list <string>::iterator> todel;
-		for (list <string>::iterator i = outputfolderlist.begin(); i != outputfolderlist.end(); i++)
+		for (list <string>::iterator i = outputfolderlist.begin(); i != outputfolderlist.end(); ++i)
 		{
 			if (i->find(extension) != i->length()-extension.length())
 				todel.push_back(i);
 		}
 		
-		for (list <list <string>::iterator>::iterator i = todel.begin(); i != todel.end(); i++)
+		for (list <list <string>::iterator>::iterator i = todel.begin(); i != todel.end(); ++i)
 			outputfolderlist.erase(*i);
 	}
 	

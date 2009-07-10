@@ -1096,7 +1096,7 @@ void SOUND::CollectGarbage()
 		return;
 
 	list <SOUNDSOURCE *> todel;
-	for (list <SOUNDSOURCE *>::iterator i = sourcelist.begin(); i != sourcelist.end(); i++)
+	for (list <SOUNDSOURCE *>::iterator i = sourcelist.begin(); i != sourcelist.end(); ++i)
 	{
 		if (!(*i)->Audible() && (*i)->GetAutoDelete())
 		{
@@ -1104,7 +1104,7 @@ void SOUND::CollectGarbage()
 		}
 	}
 
-	for (list <SOUNDSOURCE *>::iterator i = todel.begin(); i != todel.end(); i++)
+	for (list <SOUNDSOURCE *>::iterator i = todel.begin(); i != todel.end(); ++i)
 	{
 		RemoveSource(*i);
 	}
@@ -1117,7 +1117,7 @@ void SOUND::DetermineActiveSources(list <SOUNDSOURCE *> & active_sourcelist, lis
 	active_sourcelist.clear();
 	inaudible_sourcelist.clear();
 	//int sourcenum = 0;
-	for (list <SOUNDSOURCE *>::const_iterator i = sourcelist.begin(); i != sourcelist.end(); i++)
+	for (list <SOUNDSOURCE *>::const_iterator i = sourcelist.begin(); i != sourcelist.end(); ++i)
 	{
 		if ((*i)->Audible())
 		{
@@ -1143,7 +1143,7 @@ void SOUND::RemoveSource(SOUNDSOURCE * todel)
 	assert(todel);
 
 	list <SOUNDSOURCE *>::iterator delit = sourcelist.end();
-	for (list <SOUNDSOURCE *>::iterator i = sourcelist.begin(); i != sourcelist.end(); i++)
+	for (list <SOUNDSOURCE *>::iterator i = sourcelist.begin(); i != sourcelist.end(); ++i)
 	{
 		if (*i == todel)
 			delit = i;
@@ -1170,7 +1170,7 @@ void SOUND::RemoveSource(SOUNDSOURCE * todel)
 
 void SOUND::Compute3DEffects(list <SOUNDSOURCE *> & sources, const MATHVECTOR <float, 3> & listener_pos, const QUATERNION <float> & listener_rot) const
 {
-	for (list <SOUNDSOURCE *>::iterator i = sources.begin(); i != sources.end(); i++)
+	for (list <SOUNDSOURCE *>::iterator i = sources.begin(); i != sources.end(); ++i)
 	{
 		if ((*i)->Get3DEffects())
 		{
@@ -1309,7 +1309,7 @@ void SOUNDFILTER::Filter(int * chan1, int * chan2, const int len)
 SOUNDFILTER & SOUNDSOURCE::GetFilter(int num)
 {
 	int curnum = 0;
-	for (list <SOUNDFILTER>::iterator i = filters.begin(); i != filters.end(); i++)
+	for (list <SOUNDFILTER>::iterator i = filters.begin(); i != filters.end(); ++i)
 	{
 		if (num == curnum)
 			return *i;

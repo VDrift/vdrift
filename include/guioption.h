@@ -74,7 +74,7 @@ class GUIOPTION
 						floatstr.str(storedvaluename);
 						floatstr >> storedvaluefloat;
 					}
-					for (std::list <std::pair<std::string, std::string> >::iterator i = values.begin(); i != values.end(); i++)
+					for (std::list <std::pair<std::string, std::string> >::iterator i = values.begin(); i != values.end(); ++i)
 					{
 						float ifloat(0);
 						std::stringstream floatstr;
@@ -89,7 +89,7 @@ class GUIOPTION
 				}
 				else
 				{
-					for (std::list <std::pair<std::string, std::string> >::iterator i = values.begin(); i != values.end(); i++)
+					for (std::list <std::pair<std::string, std::string> >::iterator i = values.begin(); i != values.end(); ++i)
 					{
 						if (i->first == storedvaluename)
 						{

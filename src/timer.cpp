@@ -55,7 +55,7 @@ void TIMER::Tick(float dt)
 
 	assert(elapsed_time >= 0);
 
-	for (vector <LAPINFO>::iterator i = car.begin(); i != car.end(); i++)
+	for (vector <LAPINFO>::iterator i = car.begin(); i != car.end(); ++i)
 		i->Tick(elapsed_time);
 }
 
@@ -125,7 +125,7 @@ std::pair <int, int> TIMER::GetCarPlace(int index)
     distances.sort();
 
     int curplace = 1;
-    for (std::list <PLACE>::iterator i = distances.begin(); i != distances.end(); i++)
+    for (std::list <PLACE>::iterator i = distances.begin(); i != distances.end(); ++i)
     {
         if (i->GetIndex() == index)
             place = curplace;

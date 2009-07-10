@@ -55,7 +55,7 @@ void COLLISION_WORLD::CollideRay(const MATHVECTOR <float, 3> & position, const M
 		raymask |= 1;
 	
 	//cout << "collision candidates: " << candidates.size() << endl;
-	for (list <COLLISION_OBJECT *>::iterator i = candidates.begin(); i != candidates.end(); i++)
+	for (list <COLLISION_OBJECT *>::iterator i = candidates.begin(); i != candidates.end(); ++i)
 	{
 		//if (collisionObject->getBroadphaseHandle()->m_collisionFilterGroup & raymask)
 		if (settings.CanCollide(**i))
@@ -77,7 +77,7 @@ void COLLISION_WORLD::CollideRay(const MATHVECTOR <float, 3> & position, const M
 	{
 		//HandleCollision(settings, &colresult, outputcontactlist);
 		
-		for (list <btCollisionWorld::LocalRayResult>::iterator i = colresult.results.begin(); i != colresult.results.end(); i++)
+		for (list <btCollisionWorld::LocalRayResult>::iterator i = colresult.results.begin(); i != colresult.results.end(); ++i)
 		{
 			//cout << "processing collision" << endl;
 			
@@ -142,7 +142,7 @@ void COLLISION_WORLD::CollideObject(COLLISION_OBJECT & object, std::list <COLLIS
 	
 	//std::cout << "Manifolds before: " << collisiondispatcher.getNumManifolds() << std::endl;
 	
-	for (list <COLLISION_OBJECT *>::iterator i = candidates.begin(); i != candidates.end(); i++)
+	for (list <COLLISION_OBJECT *>::iterator i = candidates.begin(); i != candidates.end(); ++i)
 	{
 		algo = collisiondispatcher.findAlgorithm(&object.GetBulletObject(), &((*i)->GetBulletObject()));
 		
@@ -273,7 +273,7 @@ bool COLLISION_WORLD::PassesFilter(const COLLISION_SETTINGS & settings, void * c
 {
 	bool exception = false;
 	
-	for (list <void *>::const_iterator i = settings.GetExceptionObjectIDs().begin(); i != settings.GetExceptionObjectIDs().end(); i++)
+	for (list <void *>::const_iterator i = settings.GetExceptionObjectIDs().begin(); i != settings.GetExceptionObjectIDs().end(); ++i)
 	{
 		exception = exception || (*i == checkme);
 	}
@@ -427,7 +427,7 @@ void COLLISION_WORLD::CollideMovingBox(const MATHVECTOR <float, 3> & position, c
 	
 	CollideBox(newposition, orientation, newdimensions, outputcontactlist, settings);
 	
-	for (std::list <COLLISION_CONTACT>::iterator i = outputcontactlist.begin(); i != outputcontactlist.end(); i++)
+	for (std::list <COLLISION_CONTACT>::iterator i = outputcontactlist.begin(); i != outputcontactlist.end(); ++i)
 	{
 		
 	}

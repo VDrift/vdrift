@@ -48,7 +48,7 @@ private:
 		//std::cout << "Unloading..." << std::endl;
 		
 		//unload the car's assets
-		for (std::map <std::string, TEXTURE_GL>::iterator i = textures.begin(); i != textures.end(); i++)
+		for (std::map <std::string, TEXTURE_GL>::iterator i = textures.begin(); i != textures.end(); ++i)
 			i->second.Unload();
 		textures.clear();
 		

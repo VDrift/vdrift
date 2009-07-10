@@ -249,7 +249,7 @@ public:
 	///iterators will be invalidated
 	void Clear()
 	{
-		for (typename std::vector < std::map <KEYCLASS, DATACLASS> >::iterator i = data.begin(); i != data.end(); i++)
+		for (typename std::vector < std::map <KEYCLASS, DATACLASS> >::iterator i = data.begin(); i != data.end(); ++i)
 		{
 			i->clear();
 		}
@@ -319,7 +319,7 @@ public:
 			obj += data[i].size();
 		}*/
 		
-		for (typename std::vector < std::map <KEYCLASS, DATACLASS> >::const_iterator i = data.begin(); i != data.end(); i++)
+		for (typename std::vector < std::map <KEYCLASS, DATACLASS> >::const_iterator i = data.begin(); i != data.end(); ++i)
 		{
 			obj += i->size();
 		}

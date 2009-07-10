@@ -99,12 +99,12 @@ bool TRACK::LoadLapSequence(const std::string & trackpath, bool reverse, std::os
 			//info_output << "Looking for lap sequence: " << roadid << ", " << patchid << endl;
 
 			int curroad = 0;
-			for (list <ROADSTRIP>::iterator i = roads.begin(); i != roads.end(); i++)
+			for (list <ROADSTRIP>::iterator i = roads.begin(); i != roads.end(); ++i)
 			{
 				if (curroad == roadid)
 				{
 					int curpatch = 0;
-					for (list <ROADPATCH>::const_iterator p = i->GetPatchList().begin(); p != i->GetPatchList().end(); p++)
+					for (list <ROADPATCH>::const_iterator p = i->GetPatchList().begin(); p != i->GetPatchList().end(); ++p)
 					{
 						if (curpatch == patchid)
 						{
@@ -658,7 +658,7 @@ void ROADSTRIP::GenerateSpacePartitioning()
 {
 	aabb_part.Clear();
 
-	for (std::list <ROADPATCH>::iterator i = patches.begin(); i != patches.end(); i++)
+	for (std::list <ROADPATCH>::iterator i = patches.begin(); i != patches.end(); ++i)
 	{
 		ROADPATCH * rp = &(*i);
 		aabb_part.Add(rp, i->GetPatch().GetAABB());
@@ -672,7 +672,7 @@ bool ROADSTRIP::Collide(const MATHVECTOR <float, 3> & origin, const MATHVECTOR <
 	std::list <ROADPATCH *> candidates;
 	aabb_part.Query(AABB<float>::RAY(origin, direction, seglen), candidates);
 	bool col = false;
-	for (std::list <ROADPATCH *>::iterator i = candidates.begin(); i != candidates.end(); i++)
+	for (std::list <ROADPATCH *>::iterator i = candidates.begin(); i != candidates.end(); ++i)
 	{
 		MATHVECTOR <float, 3> coltri, colnorm;
 		if ((*i)->Collide(origin, direction, seglen, coltri, colnorm))
@@ -695,14 +695,14 @@ void ROADSTRIP::Reverse()
 {
 	patches.reverse();
 
-	for (std::list <ROADPATCH>::iterator i = patches.begin(); i != patches.end(); i++)
+	for (std::list <ROADPATCH>::iterator i = patches.begin(); i != patches.end(); ++i)
 	{
 		i->GetPatch().Reverse();
 		i->GetPatch().ResetDistFromStart();
 	}
 
 	//fix pointers to next patches for race placement
-	for (std::list <ROADPATCH>::iterator i = patches.begin(); i != patches.end(); i++)
+	for (std::list <ROADPATCH>::iterator i = patches.begin(); i != patches.end(); ++i)
 	{
 		std::list <ROADPATCH>::iterator n = i;
 		n++;
@@ -728,7 +728,7 @@ void TRACK::Reverse()
 	{
 		int counts = 0;
 
-		for (std::list <ROADSTRIP>::iterator i = roads.begin(); i != roads.end(); i++)
+		for (std::list <ROADSTRIP>::iterator i = roads.begin(); i != roads.end(); ++i)
 		{
 			optional <const BEZIER *> newstartline = i->FindBezierAtOffset(lapsequence[0],-1);
 			if (newstartline)
@@ -747,14 +747,15 @@ void TRACK::Reverse()
 		//reverse the lap sequence, but keep the first bezier where it is (remember, the track is a loop)
 		//so, for example, now instead of 1 2 3 4 we should have 1 4 3 2
 		std::vector <const BEZIER *>::iterator secondbezier = lapsequence.begin();
-		secondbezier++;
+		++secondbezier;
 		assert(secondbezier != lapsequence.end());
 		std::reverse(secondbezier, lapsequence.end());
 	}
 
 
 	//flip start positions
-	for (std::vector <std::pair <MATHVECTOR <float, 3>, QUATERNION <float> > >::iterator i = start_positions.begin(); i != start_positions.end(); i++)
+	for (std::vector <std::pair <MATHVECTOR <float, 3>, QUATERNION <float> > >::iterator i = start_positions.begin();
+		i != start_positions.end(); ++i)
 	{
 		i->second.Rotate(3.141593, 0,0,1);
 	}
@@ -802,7 +803,7 @@ bool TRACK::LoadRoads(const std::string & trackpath, bool reverse, std::ostream 
 bool TRACK::CollideRoads(const MATHVECTOR <float, 3> & origin, const MATHVECTOR <float, 3> & direction, float seglen, MATHVECTOR <float, 3> & outtri, const BEZIER * & colpatch, MATHVECTOR <float, 3> & normal) const
 {
 	bool col = false;
-	for (std::list <ROADSTRIP>::const_iterator i = roads.begin(); i != roads.end(); i++)
+	for (std::list <ROADSTRIP>::const_iterator i = roads.begin(); i != roads.end(); ++i)
 	{
 		MATHVECTOR <float, 3> coltri, colnorm;
 		const BEZIER * colbez = NULL;
@@ -897,7 +898,7 @@ optional <const BEZIER *> ROADSTRIP::FindBezierAtOffset(const BEZIER * bezier, i
 	std::list <ROADPATCH>::const_iterator it = patches.end(); //this iterator will hold the found ROADPATCH
 
 	//search for the roadpatch containing the bezier and store an iterator to it in "it"
-	for (std::list <ROADPATCH>::const_iterator i = patches.begin(); i != patches.end(); i++)
+	for (std::list <ROADPATCH>::const_iterator i = patches.begin(); i != patches.end(); ++i)
 	{
 		if (&i->GetPatch() == bezier)
 		{
@@ -999,7 +1000,8 @@ void TRACK::OBJECTLOADER::Optimize()
 	//if (unoptimized_scene.GetDrawableList().size() > 2500) optimize = true;
 	if (agressivecombine) optimize = true; //framerate only gained here for ATI cards, so we leave agressivecombine false for NVIDIA
 
-	for (std::list <DRAWABLE>::const_iterator i = unoptimized_scene.GetDrawableList().begin(); i != unoptimized_scene.GetDrawableList().end(); i++)
+	for (std::list <DRAWABLE>::const_iterator i = unoptimized_scene.GetDrawableList().begin();
+		i != unoptimized_scene.GetDrawableList().end(); ++i)
 	{
 		if (optimize)
 		{

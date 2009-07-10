@@ -567,7 +567,7 @@ void VERTEXARRAY::BuildFromFaces(const std::vector <FACE> & newfaces)
 	Clear();
 	texcoords.resize(1);
 	
-	for (std::vector <FACE>::const_iterator i = newfaces.begin(); i != newfaces.end(); i++) //loop through input triangles
+	for (std::vector <FACE>::const_iterator i = newfaces.begin(); i != newfaces.end(); ++i) //loop through input triangles
 	{
 		for (int v = 0; v < 3; v++) //loop through vertices in triangle
 		{

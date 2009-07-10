@@ -57,7 +57,7 @@ public:
 			
 			void AgeToggles()
 			{
-				for (std::vector <TOGGLE>::iterator i = button.begin(); i != button.end(); i++)
+				for (std::vector <TOGGLE>::iterator i = button.begin(); i != button.end(); ++i)
 				{
 					i->Tick();
 				}
