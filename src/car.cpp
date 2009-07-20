@@ -782,6 +782,7 @@ bool CAR::LoadDynamics(CONFIGFILE & c, std::ostream & error_output)
 			COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0],pos[1],pos[2]);
 		position.Set(pos[0],pos[1],pos[2]);
 		dynamics.GetFuelTank().SetPosition(position);
+		//dynamics.AddMassParticle(fuel_density*volume, position);
 	}
 
 	//load the suspension
@@ -1379,7 +1380,14 @@ float CAR::ShiftAutoClutchThrottle() const
 	if (remaining_shift_time > 0.0 && remaining_shift_time <= 0.1)
 		shift_clutch = 1.0-remaining_shift_time/0.1;
 	return shift_clutch;*/
-	return ShiftAutoClutch() < 1.0 ? 0. : 1.;
+	//return ShiftAutoClutch() < 1.0 ? 0. : 1.;
+	float throttleblip = 0.0;
+	if (shift_gear < dynamics.GetTransmission().GetGear())
+	{
+		throttleblip = 0.5;
+		//std::cout << remaining_shift_time << std::endl;
+	}
+	return ShiftAutoClutch() < 1.0 ? throttleblip : 1.;
 }
 
 void CAR::UpdateSounds(float dt)

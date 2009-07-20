@@ -241,7 +241,7 @@ private:
 	///apply forces on the engine due to drag from the clutch
 	void ApplyClutchTorque(T engine_drag, T clutch_speed);
 	
-	///calculate the drive torque that the engine applies to each wheel, and put the output into the supplied 4-element array
+	///calculate the drive torque that the engine applies to each wheel, and put the output into the supplied 4-element array.
 	void CalculateDriveTorque(T * wheel_drive_torque, T clutch_torque);
 	
 	void ApplyEngineTorqueToBody(MATHVECTOR <T, 3> & total_force, MATHVECTOR <T, 3> & total_torque);

@@ -20,6 +20,7 @@ private:
 	ROTATIONALFRAME <T> rotation; ///< a simulation of wheel rotation.  this contains the wheel orientation, angular velocity, angular acceleration, and inertia tensor
 	
 	//variables
+	T additional_inertia;
 	T drive_torque;
 	T braking_torque;
 	T rolling_resistance_torque;
@@ -201,6 +202,17 @@ public:
 		_SERIALIZE_(s,inertia_cache);
 		_SERIALIZE_(s,steer_angle);
 		return true;
+	}
+
+	void SetAdditionalInertia ( const T& value )
+	{
+		additional_inertia = value;
+		
+		MATRIX3 <T> inertia;
+		inertia.Scale(inertia_cache + additional_inertia);
+		rotation.SetInertia(inertia);
+		
+		//std::cout << inertia_cache << " + " << additional_inertia << " = " << inertia_cache + additional_inertia << std::endl;
 	}
 };
 

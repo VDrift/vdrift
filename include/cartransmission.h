@@ -90,6 +90,11 @@ class CARTRANSMISSION
 			return ratio;
 		}
 		
+		T GetCurrentGearRatio() const
+		{
+			return GetGearRatio(gear);
+		}
+		
 		///get the torque on the driveshaft due to the given torque at the clutch
 		T GetTorque(T clutch_torque)
 		{

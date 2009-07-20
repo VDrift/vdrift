@@ -48,26 +48,14 @@ void CARDYNAMICS::ApplyClutchTorque ( T engine_drag, T clutch_speed )
 	}
 	else
 	{
-		if ( clutch.GetEngaged() )
-		{
-			//if the clutch is engaged, force the engine speed to the transmission speed
-			engine.SetClutchTorque ( 0.0 );
-			engine.SetAngularVelocity ( clutch_speed );
-		}
-		else
-		{
-			//if the clutch isn't engaged, send the engine the torque from the clutch
-			engine.SetClutchTorque ( engine_drag );
-		}
+		engine.SetClutchTorque ( engine_drag );
 	}
 }
 
 ///calculate the drive torque that the engine applies to each wheel, and put the output into the supplied 4-element array
 void CARDYNAMICS::CalculateDriveTorque ( T * wheel_drive_torque, T clutch_torque )
 {
-	//T driveshaft_torque = transmission.GetTorque(engine.GetTorque());
 	T driveshaft_torque = transmission.GetTorque ( clutch_torque );
-	//T driveshaft_torque = transmission.GetTorque(100);
 	assert ( !isnan ( driveshaft_torque ) );
 
 	for ( int i = 0; i < WHEEL_POSITION_SIZE; i++ )
@@ -560,6 +548,20 @@ void CARDYNAMICS::ApplyForces ( T dt )
 	//calculate engine drag torque due to friction from the clutch
 	T engine_drag = clutch.GetTorque ( crankshaft_speed, clutch_speed );
 	assert ( !isnan ( engine_drag ) );
+	
+	//compute engine combustion torque and friction torque
+	engine.ComputeForces();
+	
+	//reduce engine_drag if required; the most force the clutch should be able to exert is only enough to get the crankshaft_speed and clutch_speed to match
+	T speed_diff = clutch_speed - crankshaft_speed;
+	assert(dt != 0);
+	T max_engine_drag = -(speed_diff*engine.GetInertia()/dt - engine.GetTorque());
+	if ((max_engine_drag > 0 && engine_drag > max_engine_drag) || (max_engine_drag < 0 && engine_drag < max_engine_drag))
+	{
+		//std::cout << speed_diff << ", " << engine.GetTorque() << ", " << engine_drag << ", " << max_engine_drag << std::endl;
+		engine_drag = max_engine_drag;
+		assert ( !isnan ( engine_drag ) );
+	}
 
 	//apply the clutch drag torque to the engine, then have the engine apply its internal forces
 	ApplyClutchTorque ( engine_drag, clutch_speed );
@@ -567,10 +569,7 @@ void CARDYNAMICS::ApplyForces ( T dt )
 
 	//get the drive torque for each wheel
 	T wheel_drive_torque[4];
-	T engine_torque = engine_drag;
-	if ( clutch.GetEngaged() )
-		engine_torque = engine.GetTorque();
-	CalculateDriveTorque ( wheel_drive_torque, engine_torque );
+	CalculateDriveTorque ( wheel_drive_torque, engine_drag );
 
 	//start accumulating forces and torques on the car body
 	MATHVECTOR <T, 3> total_force ( 0 );
@@ -672,19 +671,19 @@ void CARDYNAMICS::UpdateTelemetry ( float dt )
 {
 	/*for (int i = 2; i < WHEEL_POSITION_SIZE; i++) //front wheels
 	{
-	std::stringstream str;
-	str << i;
-		//telemetry.back().AddVariable(&(suspension[WHEEL_POSITION(i)].GetDisplacement()), str.str()+"-displacement");
+		std::stringstream str;
+		str << i;
+		telemetry.AddRecord(str.str()+"-displacement", suspension[WHEEL_POSITION(i)].GetDisplacement());
 		//telemetry.back().AddVariable(&(suspension[WHEEL_POSITION(i)].GetLastDisplacement()), str.str()+"-last-displacement");
 		//telemetry.back().AddVariable(&(suspension[WHEEL_POSITION(i)].GetVelocity()), str.str()+"-velocity");
-	telemetry.AddRecord(str.str()+"-spring", suspension[WHEEL_POSITION(i)].GetSpringForce());
-	telemetry.AddRecord(str.str()+"-damp", suspension[WHEEL_POSITION(i)].GetDampForce());
+		//telemetry.AddRecord(str.str()+"-spring", suspension[WHEEL_POSITION(i)].GetSpringForce());
+		//telemetry.AddRecord(str.str()+"-damp", suspension[WHEEL_POSITION(i)].GetDampForce());
 	}*/
 
-	telemetry.AddRecord ( "velocity x", body.GetVelocity() [0] );
+	/*telemetry.AddRecord ( "velocity x", body.GetVelocity() [0] );
 	telemetry.AddRecord ( "velocity y", body.GetVelocity() [1] );
 	telemetry.AddRecord ( "velocity z", body.GetVelocity() [2] );
-	telemetry.AddRecord ( "speed", body.GetVelocity().Magnitude() );
+	telemetry.AddRecord ( "speed", body.GetVelocity().Magnitude() );*/
 
 	/*telemetry.push_back(CARTELEMETRY <T> ("wheel"));
 	for (int i = 0; i < WHEEL_POSITION_SIZE; i++)
@@ -1069,6 +1068,10 @@ void CARDYNAMICS::UpdateMass()
 		//incorporate the current mass into the center of mass
 		center_of_mass = center_of_mass + i->second * i->first;
 	}
+	
+	//account for fuel
+	total_mass += fuel_tank.GetMass();
+	center_of_mass =  center_of_mass + fuel_tank.GetPosition() * fuel_tank.GetMass();
 
 	body.SetMass ( total_mass );
 
@@ -1095,7 +1098,7 @@ void CARDYNAMICS::UpdateMass()
 		inertia[7] = inertia[5];
 		inertia[8] += mass * ( position[0] * position[0] + position[1] * position[1] );
 	}
-	//inertia.Inverse().DebugPrint(std::cout);
+	//inertia.DebugPrint(std::cout);
 	body.SetInertia ( inertia );
 }
 

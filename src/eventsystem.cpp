@@ -15,6 +15,8 @@ using std::endl;
 
 #include <cassert>
 
+#include <numeric>
+
 void EVENTSYSTEM_SDL::Init(std::ostream & info_output)
 {
 	info_output << SDL_NumJoysticks() << " joystick";
@@ -289,11 +291,7 @@ void EVENTSYSTEM_SDL::RecordFPS(const float fps)
 
 float EVENTSYSTEM_SDL::GetFPS() const
 {
-	float avg(0);
-	for (list <float>::const_iterator i = fps_memory.begin(); i != fps_memory.end(); i++)
-	{
-		avg += *i;
-	}
+	float avg = std::accumulate(fps_memory.begin(), fps_memory.end(), 0);
 	
 	if (!fps_memory.empty())
 		avg = avg / fps_memory.size();

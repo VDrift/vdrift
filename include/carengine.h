@@ -217,7 +217,7 @@ class CARENGINE
 			out << "Running: " << !stalled << std::endl;
 		}
 		
-		///return the sum of all torques acting on the engine
+		///return the sum of all torques acting on the engine (except clutch forces)
 		T GetTorque()
 		{
 			//std::cout << combustion_torque << ", " << friction_torque << std::endl;
@@ -229,17 +229,11 @@ class CARENGINE
 				return combustion_torque + friction_torque;
 		}
 		
-		void ApplyForces(const T dt)
+		void ComputeForces()
 		{
-			MATHVECTOR <T, 3> total_torque(0);
-			
 			if (GetRPM() < stall_rpm)
 			{
-				//MATHVECTOR <T, 3> zero(0);
-				//crankshaft.SetAngularVelocity(zero);
-				//crankshaft.SetTorque(zero);
 				stalled = true;
-				//return;
 			}
 			else
 				stalled = false;
@@ -263,10 +257,8 @@ class CARENGINE
 				rev_limit_exceeded = true;
 			
 			combustion_torque = GetTorqueCurve(throttle_position, GetRPM());
-				
-			if (!out_of_gas && !rev_limit_exceeded && !stalled)
-				total_torque[0] += combustion_torque;
-			else
+			
+			if (out_of_gas || rev_limit_exceeded || stalled)
 			{
 				friction_factor = 0.0;
 				combustion_torque = 0.0;
@@ -278,15 +270,17 @@ class CARENGINE
 				//try to model the static friction of the engine
 				friction_torque *= 100.0;
 			}
-			total_torque[0] += friction_torque;
+		}
+		
+		void ApplyForces(const T dt)
+		{
+			MATHVECTOR <T, 3> total_torque(0);
 			
+			total_torque[0] += combustion_torque;
+			total_torque[0] += friction_torque;
 			total_torque[0] -= clutch_torque;
 			
-			//std::cout << "Rev limit exceeded: " << rev_limit_exceeded << ", total_torque = " << total_torque << std::endl;
-			
 			crankshaft.SetTorque(total_torque);
-			
-			//std::cout << "RPMs: " << GetRPM() << std::endl;
 		}
 		
 		///Set the torque curve using a vector of (RPM, torque) pairs.

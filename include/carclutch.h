@@ -80,13 +80,13 @@ class CARCLUTCH
 			
 			T normal_force = clutch_position * max_pressure * area;
 		
-			if (std::abs (engine_speed - drive_speed) < threshold * normal_force)// || clutch_position >= 1.0)
+			/*if (std::abs (engine_speed - drive_speed) < threshold * normal_force)// || clutch_position >= 1.0)
 			{
 				engaged = true;
 				last_torque = 0.0;
 				return 0.0;
 			}
-			else
+			else*/
 				engaged = false;
 		
 			T force = sliding_friction * normal_force;

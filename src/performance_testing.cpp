@@ -33,7 +33,7 @@ void PERFORMANCE_TESTING::Test(const std::string & carpath, const std::string & 
 	info_output << "Car dynamics loaded" << endl;
 
 	info_output << carname << " Summary:\n" <<
-			"Mass (kg): " << car.dynamics.GetBody().GetMass() << "\n" <<
+			"Mass (kg) including driver and fuel: " << car.dynamics.GetBody().GetMass() << "\n" <<
 			"Center of mass (m): " << car.dynamics.GetCenterOfMass() <<
 			endl;
 	

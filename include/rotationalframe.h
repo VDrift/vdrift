@@ -86,11 +86,17 @@ public:
 	
 	void SetInertia(const MATRIX3 <T> & inertia)
 	{
+		//inertia.DebugPrint(std::cout);
+		MATHVECTOR <T, 3> angvel_old = GetAngularVelocityFromMomentum(angular_momentum);
 		inertia_tensor = inertia;
-		inverse_inertia_tensor = inertia.Inverse();
+		inverse_inertia_tensor = inertia_tensor.Inverse();
+		world_inverse_inertia_tensor = orientmat.Transpose().Multiply(inverse_inertia_tensor).Multiply(orientmat);
+		MATRIX3 <T> world_inertia_tensor = orientmat.Transpose().Multiply(inertia_tensor).Multiply(orientmat);
+		angular_momentum = world_inertia_tensor.Multiply(angvel_old);
+		angular_velocity = GetAngularVelocityFromMomentum(angular_momentum);
 	}
 	
-	const MATRIX3 <T> GetInertia()
+	const MATRIX3 <T> & GetInertia() const
 	{
 		return inertia_tensor;
 	}
