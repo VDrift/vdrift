@@ -1273,9 +1273,19 @@ void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectFlags(SCENEDRAW & forme, GLSTATEM
 		//else
 		glstate.Disable(GL_ALPHA_TEST);
 		glstate.Enable(GL_BLEND);
-		glstate.SetBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
-		if (i->GetDraw()->GetSmoke())
-			glstate.SetBlendFunc(GL_SRC_ALPHA,GL_ONE);
+		
+		//glstate.SetBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+		
+		/*if (shaders)
+		{
+			glstate.SetBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+		}
+		else*/
+		{
+			glstate.SetBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			if (i->GetDraw()->GetSmoke())
+				glstate.SetBlendFunc(GL_SRC_ALPHA, GL_ONE);
+		}
 	}
 	else
 	{
@@ -1291,6 +1301,7 @@ void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectFlags(SCENEDRAW & forme, GLSTATEM
 		/*}
 		else
 		{*/
+			//glstate.Enable(GL_BLEND);
 			glstate.Disable(GL_BLEND);
 			if (i->GetDraw()->GetDistanceField())
 				glstate.SetAlphaFunc(GL_GREATER, 0.5f);

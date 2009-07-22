@@ -245,12 +245,15 @@ bool TRACKMAP::BuildMap(SCENENODE * parentnode, const std::list <ROADSTRIP> & ro
 	TEXTUREINFO texinfo;
 	texinfo.SetSurface(surface);
 	texinfo.SetRepeat(false, false);
+	
 	if (!track_map.Load(texinfo, error_output, texsize)) return false;
 	
+	//std::cout << "Loading track map dots" << std::endl;
 	if (!cardot0.Load(TEXTUREINFO(texturepath+"/cardot0.png"), error_output, texsize)) return false;
 	if (!cardot1.Load(TEXTUREINFO(texturepath+"/cardot1.png"), error_output, texsize)) return false;
 	if (!cardot0_focused.Load(TEXTUREINFO(texturepath+"/cardot0_focused.png"), error_output, texsize)) return false;
 	if (!cardot1_focused.Load(TEXTUREINFO(texturepath+"/cardot1_focused.png"), error_output, texsize)) return false;
+	//std::cout << "Done loading track map dots" << std::endl;
 	
 	CalcPosition(w, h);
 	

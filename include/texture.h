@@ -29,12 +29,14 @@ private:
 	bool repeatu, repeatv;
 	bool allow_non_power_of_two;
 	bool nearest;
+	bool pre_multiply_alpha; ///< pre-multiply the color by the alpha value; allows using glstate.SetBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA); when drawing the texture to get correct blending
 
 public:
 	TEXTUREINFO() : mipmap(true), cube(false), verticalcross(false), normalmap(false),
 		    surface(NULL), anisotropy(0), repeatu(true), repeatv(true), allow_non_power_of_two(true),nearest(false) {}
 	TEXTUREINFO(const std::string & newname) : name(newname), mipmap(true), cube(false), verticalcross(false), normalmap(false),
-		surface(NULL), anisotropy(0), repeatu(true), repeatv(true), allow_non_power_of_two(true),nearest(false) {}
+		surface(NULL), anisotropy(0), repeatu(true), repeatv(true), allow_non_power_of_two(true),nearest(false),
+		pre_multiply_alpha(true) {}
 	//void SetDefaults() {mipmap = true;cube=false;verticalcross=false;normalmap=false;surface=NULL;}
 	const std::string GetName() const {return name;}
 	bool GetMipMap() const {return mipmap;}
