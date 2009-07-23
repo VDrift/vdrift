@@ -290,9 +290,9 @@ private:
 			return end;
 		
 		float cur = start;
-		float sign = 1.0;
+		float sign = 0.3;
 		if (end < start)
-			sign = -1.0;
+			sign = -1.2;
 		if (button_ramp > 0)
 			cur += button_ramp*dt*sign;
 		
