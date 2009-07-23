@@ -40,6 +40,7 @@ using std::map;
 using std::vector;
 
 #include <algorithm>
+#include <numeric>
 
 //#define _SHADOWMAP_DEBUG_
 
@@ -1159,6 +1160,10 @@ void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::DrawList(GLSTATEMANAGER & glstate)
 		glPopMatrix();
 }
 
+float accum_square(float till_now, float next){
+	return till_now + next*next;
+}
+
 ///returns true if the object was culled and should not be drawn
 bool GRAPHICS_SDLGL::RENDER_INPUT_SCENE::FrustumCull(SCENEDRAW & tocull) const
 {
@@ -1175,17 +1180,17 @@ bool GRAPHICS_SDLGL::RENDER_INPUT_SCENE::FrustumCull(SCENEDRAW & tocull) const
 			i->GetMatrix4()->TransformVectorOut(objpos[0],objpos[1],objpos[2]);
 		else if (d->GetParent() != NULL)
 			objpos = d->GetParent()->TransformIntoWorldSpace(objpos);
-		float dx=objpos[0]-cam_position[0]; float dy=objpos[1]-cam_position[1]; float dz=objpos[2]-cam_position[2];
-		float rc=dx*dx+dy*dy+dz*dz;
-		float temp_lod_far = lod_far + d->GetRadius();
-		if (rc > temp_lod_far*temp_lod_far)
-			return true;
-		else if (rc < d->GetRadius()*d->GetRadius())
+		float dr[3] = {objpos[0]-cam_position[0], objpos[1]-cam_position[1], objpos[2]-cam_position[2]};
+		float rc=std::accumulate(dr, dr+3, 0, accum_square);
+		float bound = d->GetRadius();
+		float temp_lod_far = lod_far + bound;
+		if (rc < bound*bound)
 			return false;
+		else if (rc > temp_lod_far*temp_lod_far)
+			return true;
 		else
 		{
-			float bound, rd;
-			bound = d->GetRadius();
+			float rd;
 			for (int i=0; i<6; i++)
 			{
 				rd=frustum[i][0]*objpos[0]+
@@ -1405,8 +1410,6 @@ void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectTexturing(SCENEDRAW & forme, GLST
 ///returns true if the matrix was pushed
 bool GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectTransformStart(SCENEDRAW & forme, GLSTATEMANAGER & glstate)
 {
-	bool need_a_pop = true;
-
 	SCENEDRAW * i(&forme);
 	if (i->GetDraw()->Get2D())
 	{
@@ -1427,6 +1430,7 @@ bool GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectTransformStart(SCENEDRAW & forme,
 		{
 			glMultMatrixf(i->GetMatrix4()->GetArray());
 		}
+		return true;
 	}
 	else
 	{
@@ -1449,6 +1453,7 @@ bool GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectTransformStart(SCENEDRAW & forme,
 
 				glPushMatrix();
 				glLoadMatrixf(i->GetMatrix4()->GetArray());
+				return true;
 			}
 			else if (i->GetDraw()->GetSkybox())
 			{
@@ -1471,13 +1476,11 @@ bool GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectTransformStart(SCENEDRAW & forme,
 					glTranslatef(0.0,0.0,-objpos[2]);
 				}
 				glMultMatrixf(i->GetMatrix4()->GetArray());
+				return true;
 			}
 			else
 			{
-				bool need_new_transform = !last_transform_valid;
-				if (last_transform_valid)
-					need_new_transform = (!last_transform.Equals(*i->GetMatrix4()));
-				if (need_new_transform)
+				if (!last_transform_valid || !last_transform.Equals(*i->GetMatrix4()))
 				{
 					if (last_transform_valid)
 						glPopMatrix();
@@ -1487,14 +1490,11 @@ bool GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectTransformStart(SCENEDRAW & forme,
 					last_transform = *i->GetMatrix4();
 					last_transform_valid = true;
 
-					need_a_pop = false;
 				}
-				else need_a_pop = false;
+				return false;
 			}
 		}
 	}
-
-	return need_a_pop;
 }
 
 void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectTransformEnd(SCENEDRAW & forme, bool need_pop)
