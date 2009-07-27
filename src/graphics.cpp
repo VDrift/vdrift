@@ -1055,7 +1055,7 @@ void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::DrawList(GLSTATEMANAGER & glstate)
 	unsigned int drawcount = 0;
 	unsigned int loopcount = 0;
 	
-	for (vector <SCENEDRAW*>::iterator ptr = combined_drawlist_cache.begin(); ptr != combined_drawlist_cache.end(); ptr++, loopcount++)
+	for (vector <SCENEDRAW*>::iterator ptr = combined_drawlist_cache.begin(); ptr != combined_drawlist_cache.end(); ++ptr, ++loopcount)
 	{
 		SCENEDRAW * i = *ptr;
 		if (i->IsDraw())
@@ -1079,24 +1079,22 @@ void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::DrawList(GLSTATEMANAGER & glstate)
 					//cout << "beep" << endl;
 					//assert(i->GetDraw()->GetModel()->HaveListID());
 					//glCallList(i->GetDraw()->GetModel()->GetListID());
-					const unsigned int numlists = i->GetDraw()->GetDrawLists().size();
-					for (unsigned int n = 0; n < numlists; ++n)
-						glCallList(i->GetDraw()->GetDrawLists()[n]);
+					for_each (i->GetDraw()->GetDrawLists().begin(), i->GetDraw()->GetDrawLists().end(), glCallList);
 				}
 				else if (i->GetDraw()->GetVertArray())
 				{
 					glEnableClientState(GL_VERTEX_ARRAY);
 
 					const float * verts;
-					int vertcount;
-					i->GetDraw()->GetVertArray()->GetVertices(verts, vertcount);
+					int counter;	// now responsible for vertices
+					i->GetDraw()->GetVertArray()->GetVertices(verts, counter);
 					glVertexPointer(3, GL_FLOAT, 0, verts);
 
 					const float * norms;
-					int normcount;
-					i->GetDraw()->GetVertArray()->GetNormals(norms, normcount);
+					counter = 0;	// now responsible for normals
+					i->GetDraw()->GetVertArray()->GetNormals(norms, counter);
 					glNormalPointer(GL_FLOAT, 0, norms);
-					if (normcount > 0)
+					if (counter > 0)
 						glEnableClientState(GL_NORMAL_ARRAY);
 
 					//const float * tc[i->GetDraw()->varray.GetTexCoordSets()];
@@ -1111,10 +1109,10 @@ void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::DrawList(GLSTATEMANAGER & glstate)
 					}
 
 					const int * faces;
-					int facecount;
-					i->GetDraw()->GetVertArray()->GetFaces(faces, facecount);
+					counter = 0;	// now responsible for faces
+					i->GetDraw()->GetVertArray()->GetFaces(faces, counter);
 
-					glDrawElements(GL_TRIANGLES, facecount, GL_UNSIGNED_INT, faces);
+					glDrawElements(GL_TRIANGLES, counter, GL_UNSIGNED_INT, faces);
 
 					glDisableClientState(GL_VERTEX_ARRAY);
 					glDisableClientState(GL_NORMAL_ARRAY);
@@ -1178,8 +1176,10 @@ bool GRAPHICS_SDLGL::RENDER_INPUT_SCENE::FrustumCull(SCENEDRAW & tocull) const
 		MATHVECTOR <float, 3> objpos(d->GetObjectCenter());
 		if (i->IsCollapsed())
 			i->GetMatrix4()->TransformVectorOut(objpos[0],objpos[1],objpos[2]);
-		else if (d->GetParent() != NULL)
+		else { //if (d->GetParent() != NULL)
+			assert(d->GetParent() != NULL);
 			objpos = d->GetParent()->TransformIntoWorldSpace(objpos);
+		}
 		float dr[3] = {objpos[0]-cam_position[0], objpos[1]-cam_position[1], objpos[2]-cam_position[2]};
 		float rc=std::accumulate(dr, dr+3, 0, accum_square);
 		float bound = d->GetRadius();
