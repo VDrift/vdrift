@@ -63,9 +63,8 @@ double K1999::GetRInverse(int prev, double x, double y, int next)
  double n1 = x1 * x1 + y1 * y1;
  double n2 = x2 * x2 + y2 * y2;
  double n3 = x3 * x3 + y3 * y3;
- double nnn = sqrt(n1 * n2 * n3);
  
- double c = 2 * det / nnn;
+ double c = 2 * det / sqrt(n1 * n2 * n3);
  return c;
 }
 

@@ -1086,7 +1086,7 @@ void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::DrawList(GLSTATEMANAGER & glstate)
 					glEnableClientState(GL_VERTEX_ARRAY);
 
 					const float * verts;
-					int counter;	// now responsible for vertices
+					unsigned int counter;	// now responsible for vertices
 					i->GetDraw()->GetVertArray()->GetVertices(verts, counter);
 					glVertexPointer(3, GL_FLOAT, 0, verts);
 
@@ -1100,7 +1100,7 @@ void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::DrawList(GLSTATEMANAGER & glstate)
 					//const float * tc[i->GetDraw()->varray.GetTexCoordSets()];
 					//int tccount[i->GetDraw()->varray.GetTexCoordSets()];
 					const float * tc[1];
-					int tccount[1];
+					unsigned int tccount[1];
 					if (i->GetDraw()->GetVertArray()->GetTexCoordSets() > 0)
 					{
 						i->GetDraw()->GetVertArray()->GetTexCoords(0, tc[0], tccount[0]);

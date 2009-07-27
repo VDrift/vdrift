@@ -38,11 +38,11 @@ public:
 		float * newtc, int newtccount); ///< assumes there is 1 tex coord set
 	
 	//C style interface functions
-	void GetNormals(const float * & output_array_pointer, int & output_array_num) const;
-	void GetVertices(const float * & output_array_pointer, int & output_array_num) const;
-	void GetFaces(const int * & output_array_pointer, int & output_array_num) const;
-	inline int GetTexCoordSets() const {return texcoords.size();}
-	void GetTexCoords(size_t set, const float * & output_array_pointer, int & output_array_num) const;
+	void GetNormals(const float * & output_array_pointer, unsigned int & output_array_num) const;
+	void GetVertices(const float * & output_array_pointer, unsigned int & output_array_num) const;
+	void GetFaces(const int * & output_array_pointer, unsigned int & output_array_num) const;
+	inline unsigned int GetTexCoordSets() const {return texcoords.size();}
+	void GetTexCoords(size_t set, const float * & output_array_pointer, unsigned int & output_array_num) const;
 	
 	//C++ style interface functions
 	inline int GetNumFaces() const {return faces.size();}

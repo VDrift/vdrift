@@ -10,7 +10,7 @@ QT_TEST(vertexarray_test)
 	VERTEXARRAY testarray;
 	
 	const float * ptr;
-	int ptrnum;
+	unsigned int ptrnum;
 	float somevec[3];
 	somevec[0] = somevec[2] = 0;
 	somevec[1] = 1000.0;
@@ -182,19 +182,19 @@ void VERTEXARRAY::SetTexCoords(size_t set, float * newarray, size_t newarraycoun
 	}*/
 }
 
-void VERTEXARRAY::GetNormals(const float * & output_array_pointer, int & output_array_num) const
+void VERTEXARRAY::GetNormals(const float * & output_array_pointer, unsigned int & output_array_num) const
 {
 	output_array_num = normals.size();
 	output_array_pointer = normals.empty() ? NULL : &normals[0];
 }
 
-void VERTEXARRAY::GetVertices(const float * & output_array_pointer, int & output_array_num) const
+void VERTEXARRAY::GetVertices(const float * & output_array_pointer, unsigned int & output_array_num) const
 {
 	output_array_num = vertices.size();
 	output_array_pointer = vertices.empty() ? NULL : &vertices[0];
 }
 
-void VERTEXARRAY::GetFaces(const int * & output_array_pointer, int & output_array_num) const
+void VERTEXARRAY::GetFaces(const int * & output_array_pointer, unsigned int & output_array_num) const
 {
 	output_array_num = faces.size();
 	//output_array_pointer = faces.empty() ? NULL : &faces[0];
@@ -204,7 +204,7 @@ void VERTEXARRAY::GetFaces(const int * & output_array_pointer, int & output_arra
 		output_array_pointer = &faces[0];
 }
 
-void VERTEXARRAY::GetTexCoords(size_t set, const float * & output_array_pointer, int & output_array_num) const
+void VERTEXARRAY::GetTexCoords(size_t set, const float * & output_array_pointer, unsigned int & output_array_num) const
 {
 	//Tried to get a tex coord set beyond the allocated number of sets
 	assert(set < texcoords.size());
@@ -240,14 +240,14 @@ VERTEXARRAY VERTEXARRAY::operator+ (const VERTEXARRAY & v) const
 		out.faces.push_back(v.faces[i]+idxoffset);
 	}
 	
-	int maxtcsets = GetTexCoordSets();
+	unsigned int maxtcsets = GetTexCoordSets();
 	if (v.GetTexCoordSets() > maxtcsets)
 		maxtcsets = v.GetTexCoordSets();
-	int tcsets1 = GetTexCoordSets();
-	int tcsets2 = v.GetTexCoordSets();
+	unsigned int tcsets1 = GetTexCoordSets();
+	unsigned int tcsets2 = v.GetTexCoordSets();
 	out.SetTexCoordSets(maxtcsets);
 	//ITERVEC(vector <float>,texcoords,i)
-	for (int i = 0; i < maxtcsets; i++)
+	for (unsigned int i = 0; i < maxtcsets; i++)
 	{
 		if (i >= tcsets1 && i < tcsets2)
 		{
@@ -650,7 +650,7 @@ QT_TEST(vertexarray_buldfromfaces_test)
 	
 	const float * tempfloat(NULL);
 	const int * tempint(NULL);
-	int tempnum;
+	unsigned int tempnum;
 	
 	varray.GetNormals(tempfloat, tempnum);
 	QT_CHECK(tempfloat != NULL);
