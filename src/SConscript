@@ -74,6 +74,7 @@ src = Split("""main.cpp
 		ai.cpp
 		random.cpp
 		httpget.cpp
+		linearinterp.cpp
 		game.cpp""")
 
 src.sort(lambda x, y: cmp(x.lower(),y.lower()))

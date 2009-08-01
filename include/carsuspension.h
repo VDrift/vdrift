@@ -2,11 +2,13 @@
 #define _CARSUSPENSION_H
 
 #include <iostream>
+#include <cmath>
 
 #include "mathvector.h"
 #include "linearframe.h"
 #include "joeserialize.h"
 #include "macros.h"
+#include "linearinterp.h"
 
 template <typename T>
 class CARSUSPENSION
@@ -25,6 +27,8 @@ private:
 	T caster; ///< caster angle in degrees. sign convention depends on the side
 	T toe; ///< toe angle in degrees. sign convention depends on the side
 	//MATHVECTOR <T, 3> position; ///< where the suspension applies its force on the car body
+	LINEARINTERP <T> damper_factors;
+	LINEARINTERP <T> spring_factors;
 	
 	//variables
 	T displacement; ///< a linear representation of the suspension displacement.  in actuality the displacement is about the arc formed by the hinge
@@ -41,7 +45,8 @@ private:
 public:
 	//default constructor makes an S2000-like car
 	CARSUSPENSION() : spring_constant(50000.0), bounce(2588), rebound(2600), travel(0.19),
-			anti_roll_k(8000), camber(-0.5), caster(0.28), toe(0), displacement(0),
+			anti_roll_k(8000), camber(-0.5), caster(0.28), toe(0),
+			damper_factors(1), spring_factors(1), displacement(0),
 			last_displacement(0), overtravel(0),
 			velocity(0), damp_force(0), spring_force(0) {}
 
@@ -52,6 +57,7 @@ public:
 		out << "Velocity: " << velocity << std::endl;
 		out << "Spring force: " << spring_force << std::endl;
 		out << "Damp force: " << damp_force << std::endl;
+		out << "Damp factor: " << damper_factors.Interpolate(std::abs(velocity)) << std::endl;
 		out << "Anti-roll force: " << antiroll_force << std::endl;
 	}
 
@@ -210,13 +216,17 @@ public:
 		T damping = bounce;
 		//note that displacement is defined opposite to the classical definition (positive values mean compressed instead of extended)
 		velocity = (displacement - last_displacement)/dt;
-		//velocity = (displacement - last_last_displacement)*0.5/dt;
 		if (velocity < 0)
 		{
 			damping = rebound;
 		}
+		
+		//compute damper factor based on curve
+		T velabs = std::abs(velocity);
+		T dampfactor = damper_factors.Interpolate(velabs);
+		
 		spring_force = displacement * spring_constant; //when compressed, the spring force will push the car in the positive z direction
-		damp_force = velocity * damping; //when compression is increasing, the damp force will push the car in the positive z direction
+		damp_force = velocity * damping * dampfactor; //when compression is increasing, the damp force will push the car in the positive z direction
 		return spring_force + damp_force;
 	}
 
@@ -257,6 +267,15 @@ public:
 		return overtravel;
 	}
 	
+	void SetDamperFactorPoints(std::vector <std::pair <T, T> > & curve)
+	{
+		//std::cout << "Damper factors: " << std::endl;
+		for (typename std::vector <std::pair <T, T> >::iterator i = curve.begin(); i != curve.end(); i++)
+		{
+			//std::cout << i->first << ", " << i->second << std::endl;
+			damper_factors.AddPoint(i->first, i->second);
+		}
+	}
 };
 
 #endif

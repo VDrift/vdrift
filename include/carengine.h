@@ -8,6 +8,7 @@
 #include "rotationalframe.h"
 #include "matrix3.h"
 #include "spline.h"
+#include "linearinterp.h"
 #include "mathvector.h"
 #include "joeserialize.h"
 #include "macros.h"

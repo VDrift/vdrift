@@ -194,7 +194,9 @@ MATHVECTOR <T, 3> CARDYNAMICS::ApplySuspensionForceToBody ( int i, T dt, MATHVEC
 	//MATHVECTOR <T, 3> suspension_force_application_point = CarLocalToWorld(suspension[WHEEL_POSITION(i)].GetPosition()) - GetCenterOfMassPosition();
 	MATHVECTOR <T, 3> suspension_force_application_point = GetWheelPosition ( WHEEL_POSITION ( i ) ) - GetCenterOfMassPosition();
 #endif
+	
 	body.GetForceAtOffset ( suspension_force, suspension_force_application_point, total_force, total_torque );
+	
 	for ( int n = 0; n < 3; n++ ) assert ( !isnan ( total_force[n] ) );
 	for ( int n = 0; n < 3; n++ ) assert ( !isnan ( total_torque[n] ) );
 
@@ -297,16 +299,10 @@ void CARDYNAMICS::DoTCS ( int i, T suspension_force )
 			//T thresholddis = -sp;
 
 			if ( error > thresholdeng && ! tcs_active[i] )
-			{
 				tcs_active[i] = true;
-				//cout << count << " ABS engaging: " << maxspindiff << endl;
-			}
 
 			if ( error < thresholddis && tcs_active[i] )
-			{
 				tcs_active[i] = false;
-				//cout << count << " ABS disengaging: " << maxspindiff << endl;
-			}
 
 			if ( tcs_active[i] )
 			{
@@ -314,27 +310,17 @@ void CARDYNAMICS::DoTCS ( int i, T suspension_force )
 				if ( curclutch > 1 ) curclutch = 1;
 				if ( curclutch < 0 ) curclutch = 0;
 
-				//std::cout << i << ". TCS retarding throttle from " << gas;
-
 				gas = gas - error*10.0*curclutch;
 				if ( gas < 0 ) gas = 0;
 				if ( gas > 1 ) gas = 1;
 				engine.SetThrottle ( gas );
-
-				//std::cout << " to " << gas << std::endl;
-			}
-			else
-			{
-				//cout << count << " ABS not engaged: " << maxspindiff << endl;
 			}
 		}
 		else
 			tcs_active[i] = false;
 	}
 	else
-	{
 		tcs_active[i] = false;
-	}
 }
 
 ///do anti-lock brake system calculations and modify the brake force if necessary
@@ -343,7 +329,6 @@ void CARDYNAMICS::DoABS ( int i, T suspension_force )
 	//an ideal ABS algorithm
 	T sp ( 0 ), ah ( 0 );
 	tire[WHEEL_POSITION ( i ) ].LookupSigmaHatAlphaHat ( suspension_force, sp, ah );
-	//sp *= 0.0;
 	//sp is the ideal slip ratio given tire loading
 
 	//only active if brakes commanded past threshold
@@ -357,53 +342,28 @@ void CARDYNAMICS::DoABS ( int i, T suspension_force )
 				maxspeed = wheel[WHEEL_POSITION ( i2 ) ].GetAngularVelocity();
 		}
 
-		//std::cout << brakesetting << ", " << maxspeed << std::endl;
-		//std::cout << i << ". " << tire[WHEEL_POSITION(i)].GetSlip() << std::endl;
-		//return;
 		//don't engage ABS if all wheels are moving slowly
 		if ( maxspeed > 6.0 )
 		{
 			T error = - tire[WHEEL_POSITION ( i ) ].GetSlide() - sp;
-			//std::cout << i << ". " << suspension_force << ", - " << tire[WHEEL_POSITION(i)].GetSlide() << " - " << sp << ", vel = " << wheel[WHEEL_POSITION(i)].GetAngularVelocity() << std::endl;
-
-			//if (count == 0)	cout << error << endl;
+			
 			T thresholdeng = 0.0;
 			T thresholddis = -sp/2.0;
 
 			if ( error > thresholdeng && ! abs_active[i] )
-			{
 				abs_active[i] = true;
-				//std::cout << i << " ABS engaging: " << error << std::endl;
-			}
 
 			if ( error < thresholddis && abs_active[i] )
-			{
 				abs_active[i] = false;
-				//std::cout << i << " ABS disengaging: " << error << std::endl;
-			}
 		}
 		else
-		{
 			abs_active[i] = false;
-		}
 	}
 	else
-	{
 		abs_active[i] = false;
-	}
 
 	if ( abs_active[i] )
-	{
-		//cout << count << " ABS engage: " << maxspindiff << endl;
 		brake[WHEEL_POSITION ( i ) ].SetBrakeFactor ( 0.0 );
-		//if (count == 3)	cout << 1 << endl;
-	}
-	else
-	{
-		//cout << count << " ABS not engaged: " << maxspindiff << endl;
-		//( *it )->brake ( brakesetting );
-		//if (count == 3)	cout << 0 << endl;
-	}
 }
 
 void CARDYNAMICS::ApplyWheelForces ( T dt, T wheel_drive_torque, int i, const MATHVECTOR <T, 3> & suspension_force, MATHVECTOR <T, 3> & total_force, MATHVECTOR <T, 3> & total_torque )
@@ -553,7 +513,7 @@ void CARDYNAMICS::ApplyForces ( T dt )
 	engine.ComputeForces();
 	
 	//reduce engine_drag if required; the most force the clutch should be able to exert is only enough to get the crankshaft_speed and clutch_speed to match
-	T speed_diff = clutch_speed - crankshaft_speed;
+	/*T speed_diff = clutch_speed - crankshaft_speed;
 	assert(dt != 0);
 	T max_engine_drag = -(speed_diff*engine.GetInertia()/dt - engine.GetTorque());
 	if ((max_engine_drag > 0 && engine_drag > max_engine_drag) || (max_engine_drag < 0 && engine_drag < max_engine_drag))
@@ -561,7 +521,7 @@ void CARDYNAMICS::ApplyForces ( T dt )
 		//std::cout << speed_diff << ", " << engine.GetTorque() << ", " << engine_drag << ", " << max_engine_drag << std::endl;
 		engine_drag = max_engine_drag;
 		assert ( !isnan ( engine_drag ) );
-	}
+	}*/
 
 	//apply the clutch drag torque to the engine, then have the engine apply its internal forces
 	ApplyClutchTorque ( engine_drag, clutch_speed );

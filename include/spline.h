@@ -1,9 +1,13 @@
 #ifndef _SPLINE_H
 #define _SPLINE_H
 
+#include "pairsort.h"
+
 #include <ostream>
 #include <vector>
 #include <map>
+#include <algorithm>
+#include <cassert>
 
 template <typename T>
 class SPLINE
@@ -15,7 +19,6 @@ private:
 	T last_slope;
 	mutable bool derivs_calculated;
 	mutable T slope;
-	mutable size_t last_index;
 	
 	void Calculate() const
 	{
@@ -90,6 +93,8 @@ public:
 	{
 		points.push_back(std::pair <T,T> (x,y));
 		derivs_calculated = false;
+		PAIRSORTER_FIRST <T> sorter;
+		std::sort(points.begin(), points.end(), sorter);
 	}
 	
 	T Interpolate(T x) const

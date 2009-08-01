@@ -112,7 +112,7 @@ public:
 	
 	void GetSectionList(std::list <std::string> & sectionlistoutput) const;
 	void GetParamList(std::list <std::string> & paramlistoutput) const {GetParamList(paramlistoutput, "");}
-	void GetParamList(std::list <std::string> & paramlistoutput, std::string section) const;
+	void GetParamList(std::list <std::string> & paramlistoutput, std::string section) const; ///< returns param names only, not their sections
 	
 	void ChangeSectionName(std::string oldname, std::string newname);
 

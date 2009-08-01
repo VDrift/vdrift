@@ -562,6 +562,28 @@ void CAR::CopyPhysicsResultsIntoDisplay()
 	collisionobject.SetQuaternion(GetOrientation());
 }
 
+void GetConfigfilePoints(CONFIGFILE & c, const std::string & sectionname, const std::string & paramprefix, std::vector <std::pair <double, double> > & output_points)
+{
+	std::list <std::string> params;
+	c.GetParamList(params, sectionname);
+	//std::cout << "Section name: " << sectionname << std::endl;
+	//std::cout << "Params: " << params.size() << std::endl;
+	for (std::list <std::string>::iterator i = params.begin(); i != params.end(); i++)
+	{
+		if (i->find(paramprefix) == 0)
+		{
+			float point[3];
+			point[0] = 0;
+			point[1] = 0;
+			point[2] = 0;
+			if (c.GetParam(sectionname+"."+*i, point))
+			{
+				output_points.push_back(std::make_pair(point[0], point[1]));
+			}
+		}
+	}
+}
+
 bool CAR::LoadDynamics(CONFIGFILE & c, std::ostream & error_output)
 {
 	string drive = "RWD";
@@ -816,6 +838,11 @@ bool CAR::LoadDynamics(CONFIGFILE & c, std::ostream & error_output)
 			if (!GetConfigfileParam(error_output, c, "suspension-"+posstr+".rebound", rebound)) return false;
 			dynamics.GetSuspension(posl).SetRebound(rebound);
 			dynamics.GetSuspension(posr).SetRebound(rebound);
+			
+			std::vector <std::pair <double, double> > damper_factor_points;
+			GetConfigfilePoints(c, "suspension-"+posstr, "damper-factor", damper_factor_points);
+			dynamics.GetSuspension(posl).SetDamperFactorPoints(damper_factor_points);
+			dynamics.GetSuspension(posr).SetDamperFactorPoints(damper_factor_points);
 
 			if (!GetConfigfileParam(error_output, c, "suspension-"+posstr+".max-compression-velocity", maxcompvel)) return false;
 			dynamics.GetSuspension(posl).SetMaxCompressionVelocity(maxcompvel);
