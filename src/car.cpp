@@ -843,6 +843,11 @@ bool CAR::LoadDynamics(CONFIGFILE & c, std::ostream & error_output)
 			GetConfigfilePoints(c, "suspension-"+posstr, "damper-factor", damper_factor_points);
 			dynamics.GetSuspension(posl).SetDamperFactorPoints(damper_factor_points);
 			dynamics.GetSuspension(posr).SetDamperFactorPoints(damper_factor_points);
+			
+			std::vector <std::pair <double, double> > spring_factor_points;
+			GetConfigfilePoints(c, "suspension-"+posstr, "spring-factor", spring_factor_points);
+			dynamics.GetSuspension(posl).SetSpringFactorPoints(spring_factor_points);
+			dynamics.GetSuspension(posr).SetSpringFactorPoints(spring_factor_points);
 
 			if (!GetConfigfileParam(error_output, c, "suspension-"+posstr+".max-compression-velocity", maxcompvel)) return false;
 			dynamics.GetSuspension(posl).SetMaxCompressionVelocity(maxcompvel);

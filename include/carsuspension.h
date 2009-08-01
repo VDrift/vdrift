@@ -56,6 +56,7 @@ public:
 		out << "Displacement: " << displacement << std::endl;
 		out << "Velocity: " << velocity << std::endl;
 		out << "Spring force: " << spring_force << std::endl;
+		out << "Spring factor: " << spring_factors.Interpolate(displacement) << std::endl;
 		out << "Damp force: " << damp_force << std::endl;
 		out << "Damp factor: " << damper_factors.Interpolate(std::abs(velocity)) << std::endl;
 		out << "Anti-roll force: " << antiroll_force << std::endl;
@@ -225,7 +226,10 @@ public:
 		T velabs = std::abs(velocity);
 		T dampfactor = damper_factors.Interpolate(velabs);
 		
-		spring_force = displacement * spring_constant; //when compressed, the spring force will push the car in the positive z direction
+		//compute spring factor based on curve
+		T springfactor = spring_factors.Interpolate(displacement);
+		
+		spring_force = displacement * spring_constant * springfactor; //when compressed, the spring force will push the car in the positive z direction
 		damp_force = velocity * damping * dampfactor; //when compression is increasing, the damp force will push the car in the positive z direction
 		return spring_force + damp_force;
 	}
@@ -274,6 +278,16 @@ public:
 		{
 			//std::cout << i->first << ", " << i->second << std::endl;
 			damper_factors.AddPoint(i->first, i->second);
+		}
+	}
+	
+	void SetSpringFactorPoints(std::vector <std::pair <T, T> > & curve)
+	{
+		//std::cout << "Spring factors: " << std::endl;
+		for (typename std::vector <std::pair <T, T> >::iterator i = curve.begin(); i != curve.end(); i++)
+		{
+			//std::cout << i->first << ", " << i->second << std::endl;
+			spring_factors.AddPoint(i->first, i->second);
 		}
 	}
 };
