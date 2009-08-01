@@ -29,6 +29,7 @@ private:
 	
 	//for info only
 	T angvel;
+	T camber_deg;
 	
 	
 public:
@@ -42,6 +43,7 @@ public:
 		out << "Braking torque: " << braking_torque << std::endl;
 		out << "Wheel speed: " << GetRPM() << std::endl;
 		out << "Steer angle: " << steer_angle << std::endl;
+		out << "Camber angle: " << camber_deg << std::endl;
 	}
 
 	void SetExtendedPosition ( const MATHVECTOR< T, 3 >& value )
@@ -213,6 +215,11 @@ public:
 		rotation.SetInertia(inertia);
 		
 		//std::cout << inertia_cache << " + " << additional_inertia << " = " << inertia_cache + additional_inertia << std::endl;
+	}
+
+	void SetCamberDeg ( const T& value )
+	{
+		camber_deg = value;
 	}
 };
 

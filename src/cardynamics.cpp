@@ -170,6 +170,7 @@ MATHVECTOR <T, 3> CARDYNAMICS::ApplySuspensionForceToBody ( int i, T dt, MATHVEC
 	T antirollforce = suspension[WHEEL_POSITION ( i ) ].GetAntiRollK() *
 	                  ( suspension[WHEEL_POSITION ( i ) ].GetDisplacement()-
 	                    suspension[WHEEL_POSITION ( otheri ) ].GetDisplacement() );
+	suspension[WHEEL_POSITION(i)].SetAntiRollInfo(antirollforce);
 	assert ( !isnan ( antirollforce ) );
 
 	//find the vector direction to apply the suspension force
@@ -236,6 +237,7 @@ MATHVECTOR <T, 3> CARDYNAMICS::ComputeTireFrictionForce ( int i, T dt, const MAT
 	//camber_rads = (crosscheck[0] < 0) ? -camber_rads : camber_rads; //correct sign of angular distance
 	camber_rads = -camber_rads;
 	//std::cout << i << ". " << Aproj << " | " << camber_rads*180/3.141593 << std::endl;
+	wheel[WHEEL_POSITION(i)].SetCamberDeg(camber_rads*180.0/3.141593);
 
 	T friction_coeff = tire[WHEEL_POSITION ( i ) ].GetTread() *wheel_contacts[i].GetFrictionTread() + ( 1.0-tire[WHEEL_POSITION ( i ) ].GetTread() ) *wheel_contacts[i].GetFrictionNoTread();
 
