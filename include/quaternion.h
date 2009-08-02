@@ -276,11 +276,8 @@ public:
 	const T GetAngleBetween(const QUATERNION <T> & quat2) const
 	{
 		//establish a forward vector
-		T forward[3];
-		forward[0] = 0;
-		forward[1] = 0;
-		forward[2] = 1;
-	
+		T forward[] = {0,0,1};
+
 		//create vectors for quats
 		T vec1[3];
 		T vec2[3];

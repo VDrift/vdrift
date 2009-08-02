@@ -136,9 +136,9 @@ elif ( 'win32' == sys.platform or 'cygwin' == sys.platform ):
 else:
     env = Environment(ENV = os.environ,
         CPPPATH = ['#include', '#bullet'],
-        CCFLAGS = ['-Wall', '-Wextra', '-Wno-unused-parameter', '-pthread'],
+        CCFLAGS = ['-Wall', '-Wextra', '-Wno-unused-parameter', '-pthread', '-fopenmp'],
         LIBPATH = ['.', '#lib'],
-        LINKFLAGS = ['-pthread'],
+        LINKFLAGS = ['-pthread', '-fopenmp'],
         CC = 'gcc', CXX = 'g++',
         options = opts)
     check_headers = ['asio.hpp', 'boost/bind.hpp', 'GL/gl.h', 'GL/glu.h', 'SDL/SDL.h', 'SDL/SDL_image.h', 'SDL/SDL_rotozoom.h', 'vorbis/vorbisfile.h', 'GL/glew.h']

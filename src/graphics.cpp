@@ -1191,6 +1191,8 @@ bool GRAPHICS_SDLGL::RENDER_INPUT_SCENE::FrustumCull(SCENEDRAW & tocull) const
 		else
 		{
 			float rd;
+			int num_of_trues = 0;
+			#pragma omp parallel for shared(num_of_trues) private(rd)
 			for (int i=0; i<6; i++)
 			{
 				rd=frustum[i][0]*objpos[0]+
@@ -1199,9 +1201,10 @@ bool GRAPHICS_SDLGL::RENDER_INPUT_SCENE::FrustumCull(SCENEDRAW & tocull) const
 						frustum[i][3];
 				if (rd <= -bound)
 				{
-					return true;
+					++num_of_trues;
 				}
 			}
+			if (num_of_trues>0) return true;
 		}
 	}
 

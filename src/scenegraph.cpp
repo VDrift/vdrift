@@ -220,8 +220,7 @@ void SCENENODE::GetCollapsedDrawList(map < DRAWABLE_FILTER *, vector <SCENEDRAW>
 	
 	MAT4 this_transform(prev_transform);
 	
-	bool identitytransform = transform.IsIdentityTransform();
-	if (!identitytransform)
+	if (!transform.IsIdentityTransform())
 	{
 		//MAT4 curmat;
 		//curmat.Set(this_transform);
@@ -236,11 +235,14 @@ void SCENENODE::GetCollapsedDrawList(map < DRAWABLE_FILTER *, vector <SCENEDRAW>
 		this_transform = this_transform.Multiply(prev_transform);
 	}
 	
-	for (map <DRAWABLE_FILTER *, vector <SCENEDRAW> >::iterator mi = drawlist_output_map.begin(); mi != drawlist_output_map.end(); ++mi)
+	map <DRAWABLE_FILTER *, vector <SCENEDRAW> >::iterator mi;
+	list <DRAWABLE>::const_iterator i;
+	#pragma omp parallel private(mi, i)
+	for (mi = drawlist_output_map.begin(); mi != drawlist_output_map.end(); ++mi)
 	{
 		//calgo::for_each(drawlist, DRAWLISTCOPY_FUNCTOR(*mi->first, this_transform, mi->second));
 		
-		for (list <DRAWABLE>::const_iterator i = drawlist.begin(); i != drawlist.end(); ++i)
+		for (i = drawlist.begin(); i != drawlist.end(); ++i)
 		{
 			if (mi->first->Matches(*i))
 			//if (i->GetDrawEnable())
@@ -252,6 +254,7 @@ void SCENENODE::GetCollapsedDrawList(map < DRAWABLE_FILTER *, vector <SCENEDRAW>
 					{
 						//mi->second.push_back(SCENEDRAW());
 						//mi->second.back().SetCollapsed(*i,this_transform);
+						#pragma omp single
 						mi->second.push_back(SCENEDRAW(*i,this_transform));
 					}
 				}
