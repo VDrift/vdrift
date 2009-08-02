@@ -820,6 +820,19 @@ QUATERNION <T> CARDYNAMICS::GetWheelOrientation ( WHEEL_POSITION wp, QUATERNION 
 	return body.GetOrientation() * GetWheelSteeringAndSuspensionOrientation ( wp ) * modelorient * wheelrot * siderot;
 }
 
+///returns the orientation of the wheel but ignores wheel rotation, accounting for a supplied orientation adjustment for the model
+QUATERNION <T> CARDYNAMICS::GetWheelOrientationFloating ( WHEEL_POSITION wp, QUATERNION <T> modelorient )
+{
+	QUATERNION <T> wheelrot;
+	QUATERNION <T> siderot;
+	if ( wp == FRONT_RIGHT || wp == REAR_RIGHT )
+	{
+		siderot.Rotate ( 3.141593, 0,0,1 );
+	}
+
+	return body.GetOrientation() * GetWheelSteeringAndSuspensionOrientation ( wp ) * modelorient * wheelrot * siderot;
+}
+
 ///returns the orientation of the wheel due only to steering and suspension
 QUATERNION <T> CARDYNAMICS::GetWheelSteeringAndSuspensionOrientation ( WHEEL_POSITION wp ) const
 {

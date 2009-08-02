@@ -332,6 +332,9 @@ public:
 	///returns the orientation of the wheel due only to steering and suspension
 	QUATERNION <T> GetWheelSteeringAndSuspensionOrientation(WHEEL_POSITION wp) const;
 	
+	///returns the orientation of the wheel but ignores wheel rotation, accounting for a supplied orientation adjustment for the model
+	QUATERNION <T> GetWheelOrientationFloating ( WHEEL_POSITION wp, QUATERNION <T> modelorient );
+	
 	///returns the worldspace position of the center of the wheel when the suspension is compressed by the displacement_percent where 1.0 is fully compressed
 	MATHVECTOR< T, 3 > GetWheelPositionAtDisplacement(WHEEL_POSITION wp, T displacement_percent) const;
 	

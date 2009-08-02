@@ -216,10 +216,14 @@ private:
 
 	DRAWABLE * wheeldraw[4];
 	SCENENODE * wheelnode[4];
+	DRAWABLE * floatingdraw[4];
+	SCENENODE * floatingnode[4];
 	DRAWABLE * debugwheeldraw[40]; //10 debug wheels per wheel
 	SCENENODE * debugwheelnode[40]; //10 debug wheels per wheel
 	MODEL_JOE03 wheelmodelfront;
 	MODEL_JOE03 wheelmodelrear;
+	MODEL_JOE03 floatingmodelfront;
+	MODEL_JOE03 floatingmodelrear;
 	TEXTURE_GL wheeltexturefront;
 	TEXTURE_GL wheeltexturerear;
 	TEXTURE_GL wheeltexturefront_misc1;
@@ -265,6 +269,7 @@ private:
 	float mz_nominalmax; //the nominal maximum Mz force, used to scale force feedback
 
 	///take the parentnode, add a scenenode (only if output_scenenodeptr is NULL), add a drawable to the scenenode, load a model, load a texture, and set up the drawable with the model and texture.
+	/// the given TEXTURE_GL textures will not be reloaded if they are already loaded
 	/// returns true if successful
 	bool LoadInto(SCENENODE * parentnode, SCENENODE * & output_scenenodeptr, DRAWABLE * & output_drawableptr, const std::string & joefile,
 		      MODEL_JOE03 & output_model, const std::string & texfile, TEXTURE_GL & output_texture_diffuse,

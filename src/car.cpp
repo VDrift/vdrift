@@ -40,6 +40,7 @@ CAR::CAR() : topnode(NULL),bodydraw(NULL),glassdraw(NULL),bodynode(NULL),drivern
 	{
 		curpatch[i] = NULL;
 		wheelnode[i] = NULL;
+		floatingnode[i] = NULL;
 	}
 		
 	feedbackbuffer.resize(20,0.0);
@@ -133,6 +134,14 @@ bool CAR::Load (CONFIGFILE & carconf, const std::string & carpath, const std::st
       			carpath+"/"+carname+"/textures/wheel_front-misc1.png", wheeltexturefront_misc1,
       			anisotropy, texsize, error_output ) )
 			return false;
+		
+		//load floating elements
+		std::stringstream nullout;
+		LoadInto ( topnode, floatingnode[i], floatingdraw[i],
+			carpath+"/"+carname+"/floating_front.joe", floatingmodelfront,
+   			"", bodytexture,
+      		"", bodytexture_misc1,
+      		anisotropy, texsize, nullout );
 	}
 	for (int i = 2; i < 4; i++) //rear pair
 	{
@@ -142,6 +151,14 @@ bool CAR::Load (CONFIGFILE & carconf, const std::string & carpath, const std::st
 			carpath+"/"+carname+"/textures/wheel_rear-misc1.png", wheeltexturerear_misc1,
 			anisotropy, texsize, error_output ) )
 			return false;
+		
+		//load floating elements
+		std::stringstream nullout;
+		LoadInto ( topnode, floatingnode[i], floatingdraw[i],
+			carpath+"/"+carname+"/floating_rear.joe", floatingmodelrear,
+   			"", bodytexture,
+      		"", bodytexture_misc1,
+      		anisotropy, texsize, nullout );
 	}
 
 	//load debug wheel graphics
@@ -543,6 +560,14 @@ void CAR::CopyPhysicsResultsIntoDisplay()
 		dblfixer.Rotate(-3.141593*0.5, 0, 0, 1);
 		wheelquat = dynamics.GetWheelOrientation(WHEEL_POSITION(i),dblfixer);
 		wheelnode[WHEEL_POSITION(i)]->GetTransform().SetRotation(wheelquat);
+		
+		if (floatingnode[i])
+		{
+			floatingnode[i]->GetTransform().SetTranslation(vec);
+			QUATERNION <float> floatquat;
+			floatquat = dynamics.GetOrientation()*dynamics.GetWheelSteeringAndSuspensionOrientation(WHEEL_POSITION(i))*dblfixer;
+			floatingnode[i]->GetTransform().SetRotation(floatquat);
+		}
 
 		//update debug wheel drawing
 		if (debug_wheel_draw)
