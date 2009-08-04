@@ -16,7 +16,7 @@ class CARCLUTCH
 		T area; ///< torque on the clutch is found by dividing the clutch pressure by the value in the area tag and multiplying by the radius and sliding (friction) parameters
 		T max_pressure; ///< maximum allowed pressure on the plates
 		T threshold; ///< the clutch pretends to be fully engaged when engine speed - transmission speeds is less than m_threshold * normal force
-		
+
 		//variables
 		T clutch_position;
 		bool engaged;
@@ -77,6 +77,8 @@ class CARCLUTCH
 		{
 			engine_speed = n_engine_speed;
 			drive_speed = n_drive_speed;
+			T new_speed_diff = engine_speed - drive_speed;
+			//T speed_diff_rate = new_speed_diff - speed_diff;
 			
 			T normal_force = clutch_position * max_pressure * area;
 		
@@ -89,12 +91,24 @@ class CARCLUTCH
 			else*/
 				engaged = false;
 		
-			T force = sliding_friction * normal_force;
-			if (engine_speed < drive_speed)
-				force = -force;
+			//T static_friction_coefficient = 100.0;
+			T max_force = sliding_friction * normal_force;
+			T friction_force = max_force * new_speed_diff;// / static_friction_coefficient;
+			//std::cout << friction_force << ", " << max_force << std::endl;
+			if (friction_force > max_force)
+				friction_force = max_force;
+			if (friction_force < -max_force)
+				friction_force = -max_force;
+			T force = friction_force;
+			//T damp_force = - speed_diff_rate * damping;
+			//std::cout << friction_force << ", " << damp_force << std::endl;
+			//T force =  friction_force + damp_force;
+			/*if (engine_speed < drive_speed)
+				force = -force;*/
 		
 			//compute torque by applying force at the radius
 			last_torque = force * radius;
+			//speed_diff = new_speed_diff;
 			return force * radius;
 		}
 	
@@ -109,6 +123,12 @@ class CARCLUTCH
 			_SERIALIZE_(s,engaged);
 			return true;
 		}
+
+	T GetLastTorque() const
+	{
+		return last_torque;
+	}
+	
 };
 
 #endif

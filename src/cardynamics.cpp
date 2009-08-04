@@ -39,6 +39,32 @@ T CARDYNAMICS::CalculateDriveshaftSpeed()
 	return driveshaft_speed;
 }
 
+T CARDYNAMICS::GetDriveshaftSpeed() const
+{
+	T driveshaft_speed = 0.0;
+	T left_front_wheel_speed = wheel[FRONT_LEFT].GetAngularVelocity();
+	T right_front_wheel_speed = wheel[FRONT_RIGHT].GetAngularVelocity();
+	T left_rear_wheel_speed = wheel[REAR_LEFT].GetAngularVelocity();
+	T right_rear_wheel_speed = wheel[REAR_RIGHT].GetAngularVelocity();
+	for ( int i = 0; i < 4; i++ ) assert ( !isnan ( wheel[WHEEL_POSITION ( i ) ].GetAngularVelocity() ) );
+	if ( drive == RWD )
+	{
+		driveshaft_speed = rear_differential.GetDriveshaftSpeed ( left_rear_wheel_speed, right_rear_wheel_speed );
+	}
+	else if ( drive == FWD )
+	{
+		driveshaft_speed = front_differential.GetDriveshaftSpeed ( left_front_wheel_speed, right_front_wheel_speed );
+	}
+	else if ( drive == AWD )
+	{
+		driveshaft_speed = center_differential.GetDriveshaftSpeed (
+				front_differential.GetDriveshaftSpeed ( left_front_wheel_speed, right_front_wheel_speed ),
+				rear_differential.GetDriveshaftSpeed ( left_rear_wheel_speed, right_rear_wheel_speed ) );
+	}
+
+	return driveshaft_speed;
+}
+
 ///apply forces on the engine due to drag from the clutch
 void CARDYNAMICS::ApplyClutchTorque ( T engine_drag, T clutch_speed )
 {
@@ -515,15 +541,19 @@ void CARDYNAMICS::ApplyForces ( T dt )
 	engine.ComputeForces();
 	
 	//reduce engine_drag if required; the most force the clutch should be able to exert is only enough to get the crankshaft_speed and clutch_speed to match
-	/*T speed_diff = clutch_speed - crankshaft_speed;
-	assert(dt != 0);
+	T speed_diff = clutch_speed - crankshaft_speed;
+	/*assert(dt != 0);
 	T max_engine_drag = -(speed_diff*engine.GetInertia()/dt - engine.GetTorque());
 	if ((max_engine_drag > 0 && engine_drag > max_engine_drag) || (max_engine_drag < 0 && engine_drag < max_engine_drag))
 	{
 		//std::cout << speed_diff << ", " << engine.GetTorque() << ", " << engine_drag << ", " << max_engine_drag << std::endl;
 		engine_drag = max_engine_drag;
 		assert ( !isnan ( engine_drag ) );
-	}*/
+	}
+	telemetry.AddRecord("max engine drag", max_engine_drag);*/
+	telemetry.AddRecord("speed diff*100", speed_diff*100);
+	telemetry.AddRecord("engine torque*100", engine.GetTorque()*100);
+	telemetry.AddRecord("crankshaft_speed*10", crankshaft_speed*10);
 
 	//apply the clutch drag torque to the engine, then have the engine apply its internal forces
 	ApplyClutchTorque ( engine_drag, clutch_speed );
@@ -631,6 +661,10 @@ bool CARDYNAMICS::GetTCSActive() const
 
 void CARDYNAMICS::UpdateTelemetry ( float dt )
 {
+	telemetry.AddRecord("RPM", GetDriveshaftRPM());
+	telemetry.AddRecord("clutch torque", clutch.GetLastTorque());
+	//telemetry.AddRecord("rear left wheel speed", wheel[REAR_LEFT].GetAngularVelocity());
+	
 	/*for (int i = 2; i < WHEEL_POSITION_SIZE; i++) //front wheels
 	{
 		std::stringstream str;
@@ -733,7 +767,7 @@ void CARDYNAMICS::Tick ( T dt )
 	engine.Integrate2(dt);
 	body.Integrate2(dt);*/
 
-	//UpdateTelemetry(dt);
+	UpdateTelemetry(dt);
 }
 
 ///set the height between the center of the wheel and the ground

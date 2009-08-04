@@ -237,6 +237,7 @@ private:
 	
 	///use the wheel speed to calculate the driveshaft speed
 	T CalculateDriveshaftSpeed();
+	T GetDriveshaftSpeed() const; ///< const function to recalculate and return the driveshaft speed without changing anything
 	
 	///apply forces on the engine due to drag from the clutch
 	void ApplyClutchTorque(T engine_drag, T clutch_speed);

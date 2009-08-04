@@ -152,7 +152,10 @@ class CARENGINE
 		
 		void Integrate2(const T dt)
 		{
+			//std::cout << "torque: " << crankshaft.GetTorque()[0] << std::endl;
+			//std::cout << "ang vel prev: " << crankshaft.GetAngularVelocity()[0] << std::endl;
 			crankshaft.Integrate2(dt);
+			//std::cout << "ang vel next: " << crankshaft.GetAngularVelocity()[0] << std::endl;
 		}
 		
 		const T GetRPM() const
