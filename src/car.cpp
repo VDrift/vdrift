@@ -1352,7 +1352,7 @@ float CAR::AutoClutch(float last_clutch, float dt) const
 	bool protect_against_brake_lockup = true;
 
 	float rpm = dynamics.GetEngine().GetRPM();
-	float driveshaft_rpm = dynamics.GetDriveshaftRPM();
+	float driveshaft_rpm = dynamics.CalculateDriveshaftRPM();
 	//if (!protect_against_brake_lockup)
 	driveshaft_rpm = rpm;
 
@@ -1703,7 +1703,7 @@ int CAR::AutoShift() const
         if (current_gear > 0 && GetClutch() == 1.0)
         {
             //float rpm = GetEngineRPM();
-            float rpm = dynamics.GetDriveshaftRPM();
+            float rpm = dynamics.CalculateDriveshaftRPM();
 
             // shift up when engine speed exceeds peak speed
             if (rpm > GetEngineRedline() &&

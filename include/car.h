@@ -432,7 +432,7 @@ public:
 	int GetEngineRPM() const
 	{
 		if (dynamics.GetEngine().GetCombustion())
-			return dynamics.GetEngine().GetRPM();
+			return dynamics.GetTachoRPM();
 		else
 			return 0;
 	}

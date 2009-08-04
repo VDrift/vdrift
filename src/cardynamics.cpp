@@ -534,26 +534,34 @@ void CARDYNAMICS::ApplyForces ( T dt )
 	assert ( !isnan ( crankshaft_speed ) );
 
 	//calculate engine drag torque due to friction from the clutch
+	//last_crankshaft_speed = (crankshaft_speed + last_crankshaft_speed) * 0.5;
+	//T speed_diff = clutch_speed - crankshaft_speed;
 	T engine_drag = clutch.GetTorque ( crankshaft_speed, clutch_speed );
 	assert ( !isnan ( engine_drag ) );
 	
 	//compute engine combustion torque and friction torque
 	engine.ComputeForces();
 	
+	//telemetry.AddRecord("clutch torque", engine_drag);
+	
 	//reduce engine_drag if required; the most force the clutch should be able to exert is only enough to get the crankshaft_speed and clutch_speed to match
-	T speed_diff = clutch_speed - crankshaft_speed;
 	/*assert(dt != 0);
-	T max_engine_drag = -(speed_diff*engine.GetInertia()/dt - engine.GetTorque());
+	//T max_engine_drag = -(speed_diff*engine.GetInertia()/dt - engine.GetTorque());
+	T max_engine_drag = -((last_crankshaft_speed-crankshaft_speed)*engine.GetInertia()/dt - engine.GetTorque());
+	//T max_engine_drag = -(((last_crankshaft_speed+speed_diff)*0.5)*engine.GetInertia()/dt - engine.GetTorque());
 	if ((max_engine_drag > 0 && engine_drag > max_engine_drag) || (max_engine_drag < 0 && engine_drag < max_engine_drag))
 	{
 		//std::cout << speed_diff << ", " << engine.GetTorque() << ", " << engine_drag << ", " << max_engine_drag << std::endl;
 		engine_drag = max_engine_drag;
 		assert ( !isnan ( engine_drag ) );
 	}
-	telemetry.AddRecord("max engine drag", max_engine_drag);*/
+	telemetry.AddRecord("max engine drag", max_engine_drag);
 	telemetry.AddRecord("speed diff*100", speed_diff*100);
 	telemetry.AddRecord("engine torque*100", engine.GetTorque()*100);
 	telemetry.AddRecord("crankshaft_speed*10", crankshaft_speed*10);
+	telemetry.AddRecord("last_crankshaft_speed*100", last_crankshaft_speed*100);
+	std::cout << speed_diff << ", " << last_crankshaft_speed << ", " << (last_crankshaft_speed+speed_diff)*0.5 << std::endl;
+	last_crankshaft_speed = speed_diff;*/
 
 	//apply the clutch drag torque to the engine, then have the engine apply its internal forces
 	ApplyClutchTorque ( engine_drag, clutch_speed );
@@ -636,7 +644,7 @@ void CARDYNAMICS::InitializeWheelVelocity()
 	//wheel_position_valid.resize(WHEEL_POSITION_SIZE, false);
 }
 
-CARDYNAMICS::CARDYNAMICS() : drive ( RWD ), maxangle ( 45.0 ), telemetry ( "telemetry" )
+CARDYNAMICS::CARDYNAMICS() : drive ( RWD ), maxangle ( 45.0 ), abs(false), tacho_rpm(0), telemetry ( "telemetry" )
 {
 	suspension.resize ( WHEEL_POSITION_SIZE );wheel.resize ( WHEEL_POSITION_SIZE );
 	tire.resize ( WHEEL_POSITION_SIZE );wheel_contacts.resize ( WHEEL_POSITION_SIZE );
@@ -661,8 +669,7 @@ bool CARDYNAMICS::GetTCSActive() const
 
 void CARDYNAMICS::UpdateTelemetry ( float dt )
 {
-	telemetry.AddRecord("RPM", GetDriveshaftRPM());
-	telemetry.AddRecord("clutch torque", clutch.GetLastTorque());
+	//telemetry.AddRecord("RPM", GetDriveshaftRPM());
 	//telemetry.AddRecord("rear left wheel speed", wheel[REAR_LEFT].GetAngularVelocity());
 	
 	/*for (int i = 2; i < WHEEL_POSITION_SIZE; i++) //front wheels
@@ -766,6 +773,10 @@ void CARDYNAMICS::Tick ( T dt )
 	wheel[WHEEL_POSITION(i)].Integrate2(dt);
 	engine.Integrate2(dt);
 	body.Integrate2(dt);*/
+	
+	//calculate tacho
+	const float tacho_factor = 0.1;
+	tacho_rpm = engine.GetRPM()*tacho_factor+tacho_rpm*(1.0-tacho_factor);
 
 	UpdateTelemetry(dt);
 }
@@ -1258,7 +1269,7 @@ void CARDYNAMICS::AddAerodynamicDevice ( const MATHVECTOR <T, 3> & newpos, T dra
 	                          lift_coefficient, lift_efficiency );
 }
 
-T CARDYNAMICS::GetDriveshaftRPM() const
+T CARDYNAMICS::CalculateDriveshaftRPM() const
 {
 	T driveshaft_speed = 0.0;
 	T left_front_wheel_speed = wheel[FRONT_LEFT].GetAngularVelocity();
@@ -1328,6 +1339,7 @@ bool CARDYNAMICS::Serialize ( joeserialize::Serializer & s )
 	_SERIALIZE_ ( s,tcs );
 	_SERIALIZE_ ( s,tcs_active );
 	_SERIALIZE_ ( s,last_suspension_force );
+	//_SERIALIZE_ ( s,last_crankshaft_speed );
 	return true;
 }
 
@@ -1347,3 +1359,4 @@ bool CARDYNAMICS::WheelDriven ( WHEEL_POSITION pos ) const
 
 	return false;
 }
+

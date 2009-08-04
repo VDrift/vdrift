@@ -219,8 +219,10 @@ private:
 	std::vector <int> tcs_active; ///< for each wheel, whether or not the tcs system is currently activating (releasing the throttle)
 	std::vector <MATHVECTOR <T, 3> > last_suspension_force; ///< needs to be held through an iteration so TCS can use it to find the optimal slip ratio
 	MATHVECTOR <T, 3> lastbodyforce; ///< held so external classes can extract it for things such as applying physics to camera mounts
+	//T last_crankshaft_speed; ///< this is actually the 2-frame average of the last crankshaft speed and the crankshaft speed
 	//mutable std::vector <MATHVECTOR <T, 3> > wheel_position; ///< computed once per frame and cached for performance reasons
 	//mutable std::vector <bool> wheel_position_valid; ///< true if wheel_position has been computed yet for this frame
+	T tacho_rpm; ///< this is not used internally but is available externally for HUD display
 	
 	//set by external systems
 	std::vector <CARCONTACTPROPERTIES> wheel_contacts;
@@ -426,7 +428,7 @@ public:
 	void AddAerodynamicDevice(const MATHVECTOR <T, 3> & newpos, T drag_frontal_area, T drag_coefficient, T lift_surface_area,
 				 T lift_coefficient, T lift_efficiency);
 	
-	T GetDriveshaftRPM() const;
+	T CalculateDriveshaftRPM() const;
 
 	MATHVECTOR< T, 3 > GetCenterOfMass() const;
 	
@@ -441,6 +443,11 @@ public:
 	MATHVECTOR< T, 3 > GetLastBodyForce() const;
 	
 	bool WheelDriven(WHEEL_POSITION pos) const;
+
+	T GetTachoRPM() const
+	{
+		return tacho_rpm;
+	}
 };
 
 #endif
