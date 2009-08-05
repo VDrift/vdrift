@@ -1192,7 +1192,7 @@ bool GRAPHICS_SDLGL::RENDER_INPUT_SCENE::FrustumCull(SCENEDRAW & tocull) const
 		{
 			float rd;
 			int num_of_trues = 0;
-			#pragma omp parallel for shared(num_of_trues) private(rd)
+			#pragma omp parallel for reduction(+:num_of_trues) private(rd)
 			for (int i=0; i<6; i++)
 			{
 				rd=frustum[i][0]*objpos[0]+
@@ -1711,18 +1711,16 @@ unsigned int GRAPHICS_SDLGL::RENDER_INPUT_SCENE::CombineDrawlists()
 	combined_drawlist_cache.resize(0);
 	combined_drawlist_cache.reserve(drawlist_static->size()+drawlist_dynamic->size());
 	
-	unsigned int already_culled = 0;
-	
 	if (use_static_partitioning)
 	{
 		AABB<float>::FRUSTUM aabbfrustum(frustum);
 		//aabbfrustum.DebugPrint(std::cout);
 		static_partitioning->Query(aabbfrustum, combined_drawlist_cache);
-		already_culled = combined_drawlist_cache.size();
-	}
-	else
+		calgo::transform(*drawlist_dynamic, std::back_inserter(combined_drawlist_cache), &PointerTo);
+		return combined_drawlist_cache.size();
+	} else {
 		calgo::transform(*drawlist_static, std::back_inserter(combined_drawlist_cache), &PointerTo);
-	calgo::transform(*drawlist_dynamic, std::back_inserter(combined_drawlist_cache), &PointerTo);
-	
-	return already_culled;
+		calgo::transform(*drawlist_dynamic, std::back_inserter(combined_drawlist_cache), &PointerTo);
+		return 0;
+	}
 }

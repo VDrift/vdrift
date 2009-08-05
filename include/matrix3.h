@@ -23,6 +23,12 @@ class MATRIX3
 	
 	public:
 		MATRIX3() {LoadIdentity();}
+		MATRIX3(T num) {
+			#pragma omp parallel for
+			for (int i = 0; i < 9; ++i){
+				data[i] = num;
+			}
+		}
 		MATRIX3(const MATRIX3 <T> & other) {Set(other);}
 		const MATRIX3 & operator=(const MATRIX3 <T> & other) {Set(other); return *this;}
 		
