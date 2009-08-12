@@ -1679,7 +1679,7 @@ void GRAPHICS_SDLGL::OptimizeStaticDrawlistmap()
 	{
 		AABB_SPACE_PARTITIONING_NODE <SCENEDRAW*> & partition = static_object_partitioning[i->first];
 		
-		for (std::vector <SCENEDRAW>::iterator s = i->second.begin(); s != i->second.end(); s++)
+		for (std::vector <SCENEDRAW>::iterator s = i->second.begin(); s != i->second.end(); ++s)
 		{
 			const DRAWABLE * draw = s->GetDraw();
 			assert(draw);
@@ -1701,11 +1701,6 @@ void GRAPHICS_SDLGL::OptimizeStaticDrawlistmap()
 	}
 }
 
-SCENEDRAW * PointerTo(const SCENEDRAW & sd)
-{
-	return const_cast<SCENEDRAW *> (&sd);
-}
-
 unsigned int GRAPHICS_SDLGL::RENDER_INPUT_SCENE::CombineDrawlists()
 {
 	combined_drawlist_cache.resize(0);
@@ -1716,11 +1711,17 @@ unsigned int GRAPHICS_SDLGL::RENDER_INPUT_SCENE::CombineDrawlists()
 		AABB<float>::FRUSTUM aabbfrustum(frustum);
 		//aabbfrustum.DebugPrint(std::cout);
 		static_partitioning->Query(aabbfrustum, combined_drawlist_cache);
-		calgo::transform(*drawlist_dynamic, std::back_inserter(combined_drawlist_cache), &PointerTo);
+		for (unsigned int i = 0; i < drawlist_dynamic->size(); ++i){
+			combined_drawlist_cache.push_back(&drawlist_dynamic->at(i));
+		}
 		return combined_drawlist_cache.size();
 	} else {
-		calgo::transform(*drawlist_static, std::back_inserter(combined_drawlist_cache), &PointerTo);
-		calgo::transform(*drawlist_dynamic, std::back_inserter(combined_drawlist_cache), &PointerTo);
+		for (unsigned int i = 0; i < drawlist_static->size(); ++i){
+			combined_drawlist_cache.push_back(&drawlist_static->at(i));
+		}
+		for (unsigned int i = 0; i < drawlist_dynamic->size(); ++i){
+			combined_drawlist_cache.push_back(&drawlist_dynamic->at(i));
+		}
 		return 0;
 	}
 }
