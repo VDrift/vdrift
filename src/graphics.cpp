@@ -1703,7 +1703,7 @@ void GRAPHICS_SDLGL::OptimizeStaticDrawlistmap()
 
 unsigned int GRAPHICS_SDLGL::RENDER_INPUT_SCENE::CombineDrawlists()
 {
-	combined_drawlist_cache.resize(0);
+	combined_drawlist_cache.clear();
 	combined_drawlist_cache.reserve(drawlist_static->size()+drawlist_dynamic->size());
 	
 	if (use_static_partitioning)
