@@ -47,7 +47,7 @@ private:
 	}
 	
 public:
-	bool Load(const std::string & fontinfopath, const std::string & fonttexturepath, const std::string & texsize, std::ostream & error_output);
+	bool Load(const std::string & fontinfopath, const std::string & fonttexturepath, const std::string & texsize, std::ostream & error_output, bool mipmap=false);
 
 	const TEXTURE_GL & GetFontTexture() const
 	{

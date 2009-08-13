@@ -11,7 +11,7 @@ using std::endl;
 
 #include <algorithm>
 
-bool FONT::Load(const std::string & fontinfopath, const std::string & fonttexturepath, const std::string & texsize, std::ostream & error_output)
+bool FONT::Load(const std::string & fontinfopath, const std::string & fonttexturepath, const std::string & texsize, std::ostream & error_output, bool mipmap)
 {
 	ifstream fontinfo(fontinfopath.c_str());
 	if (!fontinfo)
@@ -60,7 +60,7 @@ bool FONT::Load(const std::string & fontinfopath, const std::string & fonttextur
 	}
 	
 	TEXTUREINFO texinfo(fonttexturepath);
-	texinfo.SetMipMap(false);
+	texinfo.SetMipMap(mipmap);
 	texinfo.SetRepeat(false, false);
 	if (!font_texture.Load(texinfo, error_output, texsize)) return false;
 	

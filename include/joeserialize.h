@@ -13,6 +13,7 @@
 
 #ifdef USE_TR1
 #include <tr1/unordered_map>
+#include <tr1/unordered_set>
 #endif
 
 namespace joeserialize
@@ -274,6 +275,47 @@ class Serializer
 					U tempkey;
 					if (!this->Serialize(keystr, tempkey)) return false;
 					if (!this->Serialize(valstr, t[tempkey])) return false;
+				}
+			}
+			ComplexTypeEnd(name);
+			return true;
+		}
+		
+		///serialization overload for a complex type that we don't have the ability to change,
+		/// so we explicitly define the serialization process here. returns true on success
+		template <typename T, typename H>
+		bool Serialize(const std::string & name, std::tr1::unordered_set <T, H> & t)
+		{
+			ComplexTypeStart(name);
+			if (this->GetIODirection() == DIRECTION_OUTPUT)
+			{
+				int listsize = t.size();
+				if (!this->Serialize("size", listsize)) return false;
+				
+				int count = 1;
+				for (typename std::tr1::unordered_set <T>::iterator i = t.begin(); i != t.end(); ++i, ++count)
+				{
+					std::stringstream itemname;
+					itemname << "item" << count;
+					if (!this->Serialize(itemname.str(), const_cast<T&>(*i))) return false;
+				}
+			}
+			else //input
+			{
+				t.clear();
+
+				int listsize(0);
+				if (!this->Serialize("size", listsize)) return false;
+
+				for (int i = 0; i < listsize; i++)
+				{
+					std::stringstream itemname;
+					itemname << "item" << i+1;
+					//t.push_back(T());
+					//if (!this->Serialize(itemname.str(), t.back())) return false;
+					T prototype;
+					if (!this->Serialize(itemname.str(), prototype)) return false;
+					t.insert(prototype);
 				}
 			}
 			ComplexTypeEnd(name);

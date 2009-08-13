@@ -188,6 +188,11 @@ class TEXTURELIBRARY
 			repeatu = u;
 			repeatv = v;
 		}
+		
+		void Clear()
+		{
+			resourcemap.clear();
+		}
 };
 
 #endif
