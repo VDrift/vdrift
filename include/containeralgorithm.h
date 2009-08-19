@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <functional>
+#include <vector>
 
 namespace calgo
 {
@@ -54,6 +55,34 @@ namespace calgo
 	InputIterator find ( const Container & c, const T& value )
 	{
 		return std::find(c.begin(), c.end(), value);
+	}
+	
+	template<class T>
+	void SwapAndPop(std::vector <T> & container, const std::vector <unsigned int> & todel)
+	{
+		if (todel.size() >= container.size())
+		{
+			container.clear();
+		}
+		else
+		{
+			std::vector <unsigned int> remap(container.size());
+			for (unsigned int i = 0; i < remap.size(); i++)
+				remap[i] = i;
+			
+			unsigned int orig_container_size = container.size();
+			for (unsigned int i = 0; i < todel.size(); i++)
+			{
+				unsigned int endi = orig_container_size - i - 1;
+				unsigned int todeli = remap[todel[i]];
+				if (endi != todeli)
+				{
+					std::swap(container[endi], container[todeli]);
+					remap[endi] = todeli;
+				}
+				container.pop_back();
+			}
+		}
 	}
 }
 

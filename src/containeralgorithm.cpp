@@ -19,6 +19,16 @@ class myclass
 bool starts_with_1(const std::string & s) {return (s[0] == '1');}
 };
 
+std::ostream & operator << (std::ostream &os, const vector <string> & v)
+{
+	for (size_t i = 0; i < v.size()-1; i++)
+	{
+		os << v[i] << ", ";
+	}
+	os << v[v.size()-1];// << std::endl;
+	return os;
+}
+
 QT_TEST(calgo_test)
 {
 	vector <string> vec;
@@ -47,4 +57,96 @@ QT_TEST(calgo_test)
 	QT_CHECK_EQUAL(vec4[0], 4);
 	QT_CHECK_EQUAL(vec4[1], 4);
 	QT_CHECK_EQUAL(vec4[2], 3);
+	
+	vector <string> vec5;
+	vector <string> target;
+	vector <unsigned int> todel;
+	
+	vec5.clear();
+	target.clear();
+	todel.clear();
+	calgo::copy(vec, std::back_inserter(vec5));
+	calgo::copy(vec, std::back_inserter(target));
+	calgo::SwapAndPop(vec5, todel);
+	QT_CHECK_EQUAL(vec5, target);
+	
+	vec5.clear();
+	target.clear();
+	todel.clear();
+	calgo::copy(vec, std::back_inserter(vec5));
+	calgo::copy(vec, std::back_inserter(target));
+	todel.push_back(0);
+	target[0] = vec5[2];
+	calgo::SwapAndPop(vec5, todel);
+	target.pop_back();
+	QT_CHECK_EQUAL(vec5, target);
+	
+	vec5.clear();
+	target.clear();
+	todel.clear();
+	calgo::copy(vec, std::back_inserter(vec5));
+	calgo::copy(vec, std::back_inserter(target));
+	todel.push_back(1);
+	target[1] = vec5[2];
+	calgo::SwapAndPop(vec5, todel);
+	target.pop_back();
+	QT_CHECK_EQUAL(vec5, target);
+	
+	vec5.clear();
+	target.clear();
+	todel.clear();
+	calgo::copy(vec, std::back_inserter(vec5));
+	calgo::copy(vec, std::back_inserter(target));
+	todel.push_back(2);
+	calgo::SwapAndPop(vec5, todel);
+	target.pop_back();
+	QT_CHECK_EQUAL(vec5, target);
+	
+	vec5.clear();
+	target.clear();
+	todel.clear();
+	calgo::copy(vec, std::back_inserter(vec5));
+	calgo::copy(vec, std::back_inserter(target));
+	todel.push_back(0);
+	todel.push_back(1);
+	target[0] = vec5[2];
+	calgo::SwapAndPop(vec5, todel);
+	target.pop_back();
+	target.pop_back();
+	QT_CHECK_EQUAL(vec5, target);
+	
+	vec5.clear();
+	target.clear();
+	todel.clear();
+	calgo::copy(vec, std::back_inserter(vec5));
+	calgo::copy(vec, std::back_inserter(target));
+	todel.push_back(1);
+	todel.push_back(2);
+	calgo::SwapAndPop(vec5, todel);
+	target.pop_back();
+	target.pop_back();
+	QT_CHECK_EQUAL(vec5, target);
+	
+	vec5.clear();
+	target.clear();
+	todel.clear();
+	calgo::copy(vec, std::back_inserter(vec5));
+	calgo::copy(vec, std::back_inserter(target));
+	todel.push_back(0);
+	todel.push_back(2);
+	target[0] = vec5[1];
+	calgo::SwapAndPop(vec5, todel);
+	target.pop_back();
+	target.pop_back();
+	QT_CHECK_EQUAL(vec5, target);
+	
+	vec5.clear();
+	target.clear();
+	todel.clear();
+	calgo::copy(vec, std::back_inserter(vec5));
+	todel.push_back(0);
+	todel.push_back(1);
+	todel.push_back(2);
+	calgo::SwapAndPop(vec5, todel);
+	QT_CHECK_EQUAL(vec5, target);
 }
