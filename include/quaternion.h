@@ -177,34 +177,42 @@ public:
 		H = (v[3] - v[1])*(quat2.v[3] + quat2.v[2]);
 
 
-		return QUATERNION (A - (E + F + G + H)*0.5,
+		QUATERNION output(A - (E + F + G + H)*0.5,
 			C + (E - F + G - H)*0.5,
 			D + (E - F - G + H)*0.5,
 			B + (-E - F + G + H)*0.5);
+		return output;
 	}
 	
 	///has the potential to return a un-normalized quaternion
 	QUATERNION <T> operator*(const T & scalar ) const
 	{
-		return QUATERNION (v[0]*scalar, v[1]*scalar, v[2]*scalar, v[3]*scalar);
+		QUATERNION output(v[0]*scalar, v[1]*scalar, v[2]*scalar, v[3]*scalar);
+		
+		//output.Normalize();
+		return output;
 	}
 	
 	///has the potential to return a un-normalized quaternion
 	QUATERNION <T> operator+(const QUATERNION <T> & quat2) const
 	{
-		return QUATERNION (v[0]+quat2.v[0], v[1]+quat2.v[1], v[2]+quat2.v[2], v[3]+quat2.v[3]);
+		QUATERNION output(v[0]+quat2.v[0], v[1]+quat2.v[1], v[2]+quat2.v[2], v[3]+quat2.v[3]);
+		
+		//output.Normalize();
+		return output;
 	}
 	
 	template <typename T2>
 	bool operator== (const QUATERNION <T2> & other) const
 	{
+		bool same(true);
+		
 		for (size_type i = 0; i < 4; i++)
 		{
-			if (v[i] != other.v[i])
-				return false;
+			same = same && (v[i] == other.v[i]);
 		}
 		
-		return true;
+		return same;
 	}
 	
 	template <typename T2>
@@ -268,8 +276,11 @@ public:
 	const T GetAngleBetween(const QUATERNION <T> & quat2) const
 	{
 		//establish a forward vector
-		T forward[] = {0,0,1};
-
+		T forward[3];
+		forward[0] = 0;
+		forward[1] = 0;
+		forward[2] = 1;
+	
 		//create vectors for quats
 		T vec1[3];
 		T vec2[3];

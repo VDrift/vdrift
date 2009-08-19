@@ -14,16 +14,15 @@ void MODEL::GenerateListID(std::ostream & error_output)
 	
 	glBegin(GL_TRIANGLES);
 	
-	unsigned int true_faces = mesh.GetNumFaces() / 3;
+	int true_faces = mesh.GetNumFaces() / 3;
 	
 	//cout << "generating list from " << true_faces << " faces" << endl;
 	
 	// iterate through all of the faces (polygons)
-	unsigned int whichVertex;
-	for(unsigned int j = 0; j < true_faces; j++)
+	for(int j = 0; j < true_faces; j++)
 	{
 		// iterate though each vertex in the face
-		for (whichVertex = 0; whichVertex < 3; whichVertex++)
+		for(int whichVertex = 0; whichVertex < 3; whichVertex++)
 		{
 			// get the 3D location for this vertex
 			///vert array bounds are not checked but it is assumed to be of size 3
@@ -63,14 +62,14 @@ void MODEL::GenerateMeshMetrics()
 	float maxv[3];
 	float minv[3];
 	bool havevals[6];
-	for (unsigned int n = 0; n < 6; n++ )
+	for ( int n = 0; n < 6; n++ )
 		havevals[n] = false;
 
 	const float * verts;
-	unsigned int vnum;
+	int vnum;
 	mesh.GetVertices(verts, vnum);
 	vnum = vnum / 3;
-	for (unsigned int v = 0; v < vnum; v++ )
+	for ( int v = 0; v < vnum; v++ )
 	{
 		MATHVECTOR <float, 3> temp;
 
@@ -79,7 +78,7 @@ void MODEL::GenerateMeshMetrics()
 		//cout << verts[v*3] << "," << verts[v*3+1] << "," << verts[v*3+2] << endl;
 	
 		//cache for bbox stuff
-		for (unsigned int n = 0; n < 3; n++ )
+		for ( int n = 0; n < 3; n++ )
 		{
 			if (!havevals[n])
 			{

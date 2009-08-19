@@ -399,7 +399,9 @@ public:
 	///returns the position of the center of the wheel at the given suspension displacement
 	const MATHVECTOR <float, 3> GetWheelPositionAtDisplacement(const WHEEL_POSITION wpos, const float displacement) const
 	{
-		return dynamics.GetWheelPositionAtDisplacement(wpos, displacement);
+		MATHVECTOR <float, 3> v;
+		v=dynamics.GetWheelPositionAtDisplacement(wpos, displacement);
+		return v;
 	}
 
 	float GetTireRadius(const WHEEL_POSITION wpos) const

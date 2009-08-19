@@ -1098,7 +1098,9 @@ void CARDYNAMICS::UpdateMass()
 	center_of_mass = center_of_mass * ( 1.0/total_mass );
 
 	//calculate the inertia tensor
-	MATRIX3 <T> inertia(0);
+	MATRIX3 <T> inertia;
+	for ( int i = 0; i < 9; i++ )
+		inertia[i] = 0;
 	for ( std::list <MASS_PAIR>::iterator i = mass_only_particles.begin(); i != mass_only_particles.end(); ++i )
 	{
 		//transform into the rigid body coordinates

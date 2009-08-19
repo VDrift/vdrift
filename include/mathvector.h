@@ -49,7 +49,6 @@ public:
 	const T MagnitudeSquared() const
 	{
 		T running_total(0);
-		#pragma omp parallel for reduction(+:running_total)
 		for (size_type i = 0; i < dimension; i++)
 			running_total += v[i] * v[i];
 		return running_total;
@@ -79,7 +78,6 @@ public:
 	///careful, there's no way to check the bounds of the array
 	void Set(const T * array_pointer)
 	{
-		#pragma omp parallel for
 		for (size_t i = 0; i < dimension; i++)
 			v[i] = array_pointer[i];
 	}
@@ -93,7 +91,6 @@ public:
 		
 		assert(mag != 0);
 		
-		#pragma omp parallel for
 		for (size_type i = 0; i < dimension; i++)
 		{
 			output[i] = v[i]/mag;
@@ -152,7 +149,6 @@ public:
 	{
 		MATHVECTOR <T, dimension> output;
 		
-		#pragma omp parallel for
 		for (size_type i = 0; i < dimension; i++)
 		{
 			output[i] = v[i]*scalar;
@@ -168,7 +164,6 @@ public:
 		
 		MATHVECTOR <T, dimension> output;
 		
-		#pragma omp parallel for
 		for (size_type i = 0; i < dimension; i++)
 		{
 			output[i] = v[i]/scalar;
@@ -193,7 +188,6 @@ public:
 	{
 		MATHVECTOR <T, dimension> output;
 		
-		#pragma omp parallel for
 		for (size_type i = 0; i < dimension; i++)
 		{
 			output[i] = v[i] - other.v[i];
@@ -205,7 +199,6 @@ public:
 	template <typename T2>
 	const MATHVECTOR <T, dimension> & operator = (const MATHVECTOR <T2, dimension> & other)
 	{
-		#pragma omp parallel for
 		for (size_type i = 0; i < dimension; ++i)
 			v[i] = other[i];
 		
@@ -215,13 +208,14 @@ public:
 	template <typename T2>
 	bool operator== (const MATHVECTOR <T2, dimension> & other) const
 	{
+		bool same(true);
+		
 		for (size_type i = 0; i < dimension; i++)
 		{
-			if (v[i] != other.v[i])
-				return false;
+			same = same && (v[i] == other.v[i]);
 		}
 		
-		return true;
+		return same;
 	}
 	
 	template <typename T2>

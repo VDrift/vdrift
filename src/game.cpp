@@ -1901,11 +1901,10 @@ void GAME::UpdateCarWheelCollisionsFromCachedWithSurfaces(CAR & car, std::vector
 }
 
 ///start a new game.  LeaveGame() is called first thing, which should take care of clearing out all current data.
-bool GAME::NewGame(bool playreplay, bool addopponents, int race_laps)
+bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 {
 	LeaveGame(); //this should clear out all data
 
-	string trackname;
 	if (playreplay)
 	{
 		stringstream replayfilenamestream;
@@ -1919,12 +1918,16 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int race_laps)
 		info_output << "Loading replay file " << replayfilename << endl;
 		if (!replay.StartPlaying(replayfilename, error_output))
 			return false;
-
-		//set the track name
-		trackname = replay.GetTrack();
-	} else {
-		trackname = settings.GetTrack();
 	}
+
+	//set the track name
+	string trackname;
+	if (playreplay)
+	{
+		trackname = replay.GetTrack();
+	}
+	else
+		trackname = settings.GetTrack();
 
 	if (!LoadTrack(trackname))
 	{
@@ -1935,19 +1938,37 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int race_laps)
 	//start out with no camera
 	active_camera = NULL;
 
-	//set the car name, paint, player's car
-	string carname, carpaint("00");
-	if (playreplay) {
+	//set the car name
+	string carname;
+	if (playreplay)
 		carname = replay.GetCarType();
+	else
+		carname = settings.GetSelectedCar();
+
+	//set the car paint
+	string carpaint("00");
+	if (playreplay)
 		carpaint = replay.GetCarPaint();
+	else
+		carpaint = settings.GetCarPaint();
+
+	//load the local player's car
+	//cout << "About to load car..." << endl;
+	if (playreplay)
+	{
 		if (!LoadCar(carname, carpaint, track.GetStart(0).first, track.GetStart(0).second, true, false, replay.GetCarFile()))
 			return false;
-	} else {
-		carname = settings.GetSelectedCar();
-		carpaint = settings.GetCarPaint();
+	}
+	else
+	{
+		//cout << "Not playing replay..." << endl;
 		if (!LoadCar(carname, carpaint, track.GetStart(0).first, track.GetStart(0).second, true, false))
 			return false;
+		//cout << "Loaded car successfully" << endl;
 	}
+	//cout << "After load car: " << carcontrols_local.first << endl;
+
+    race_laps = num_laps;
 
 	//load AI cars
 	if (addopponents)
@@ -1994,8 +2015,8 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int race_laps)
 
 	//load the timer
 	float pretime = 0.0f;
-	if (race_laps > 0)
-		pretime = 3.0f;
+	if (num_laps > 0)
+        pretime = 3.0f;
 	if (!timer.Load(pathmanager.GetTrackRecordsPath()+"/"+trackname+".txt", pretime, error_output))
 		return false;
 
@@ -2197,19 +2218,21 @@ bool GAME::LoadCar(const std::string & carname, const std::string & carpaint, co
 
 			//set the active camera
 			active_camera = cars.back().GetChaseCamera();
-			if (settings.GetCameraMode() == "chase")
-				active_camera = cars.back().GetChaseCamera();
-			else if (settings.GetCameraMode() == "hood") {
+			if (settings.GetCameraMode() == "hood")
+			{
 				//std::cout << "Hood camera mode" << std::endl;
 				active_camera = cars.back().GetHoodCamera();
-			} else if (settings.GetCameraMode() == "incar")
+			}
+			if (settings.GetCameraMode() == "incar")
 				active_camera = cars.back().GetDriverCamera();
-			else if (settings.GetCameraMode() == "free")
+			if (settings.GetCameraMode() == "free")
 				active_camera = &free_camera;
-			else if (settings.GetCameraMode() == "orbit")
+			if (settings.GetCameraMode() == "orbit")
 				active_camera = cars.back().GetOrbitCamera();
-			else if (settings.GetCameraMode() == "chaserigid")
+			if (settings.GetCameraMode() == "chaserigid")
 				active_camera = cars.back().GetRigidChaseCamera();
+			if (settings.GetCameraMode() == "chase")
+				active_camera = cars.back().GetChaseCamera();
 
 			//setup auto clutch and auto shift
 			ProcessNewSettings();

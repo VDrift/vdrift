@@ -52,7 +52,6 @@ void K1999::DrawPath(std::ostream &out)
 /////////////////////////////////////////////////////////////////////////////
 double K1999::GetRInverse(int prev, double x, double y, int next)
 {
- double det(0), n1(0), n2(0), n3(0);
  double x1 = tx[next] - x;
  double y1 = ty[next] - y;
  double x2 = tx[prev] - x;
@@ -60,17 +59,13 @@ double K1999::GetRInverse(int prev, double x, double y, int next)
  double x3 = tx[next] - tx[prev];
  double y3 = ty[next] - ty[prev];
  
- #pragma omp task
- det = x1 * y2 - x2 * y1;
- #pragma omp task
- n1 = x1 * x1 + y1 * y1;
- #pragma omp task
- n2 = x2 * x2 + y2 * y2;
- #pragma omp task
- n3 = x3 * x3 + y3 * y3;
+ double det = x1 * y2 - x2 * y1;
+ double n1 = x1 * x1 + y1 * y1;
+ double n2 = x2 * x2 + y2 * y2;
+ double n3 = x3 * x3 + y3 * y3;
+ double nnn = sqrt(n1 * n2 * n3);
  
- #pragma omp taskwait
- double c = 2 * det / sqrt(n1 * n2 * n3);
+ double c = 2 * det / nnn;
  return c;
 }
 

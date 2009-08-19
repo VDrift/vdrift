@@ -332,9 +332,9 @@ void COLLISION_OBJECT::InitBox(const MATHVECTOR <float, 3> & halfextents, const 
 void COLLISION_OBJECT::InitTrimesh(const VERTEXARRAY & varray, const COLLISION_OBJECT_SETTINGS & objsettings)
 {
 	const float * vertices;
-	unsigned int vcount;
+	int vcount;
 	const int * faces;
-	unsigned int fcount;
+	int fcount;
 	float * normals(NULL);
 	varray.GetVertices(vertices, vcount);
 	varray.GetFaces(faces, fcount);

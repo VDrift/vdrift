@@ -74,7 +74,7 @@ void EVENTSYSTEM_SDL::ProcessEvents()
 	
 	AgeToggles <SDLKey> (keymap);
 	AgeToggles <int> (mbutmap);
-	for (std::vector <JOYSTICK>::iterator i = joystick.begin(); i != joystick.end(); ++i)
+	for (std::vector <JOYSTICK>::iterator i = joystick.begin(); i != joystick.end(); i++)
 	{
 		i->AgeToggles();
 	}

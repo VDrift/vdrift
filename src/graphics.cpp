@@ -40,7 +40,6 @@ using std::map;
 using std::vector;
 
 #include <algorithm>
-#include <numeric>
 
 //#define _SHADOWMAP_DEBUG_
 
@@ -1055,7 +1054,7 @@ void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::DrawList(GLSTATEMANAGER & glstate)
 	unsigned int drawcount = 0;
 	unsigned int loopcount = 0;
 	
-	for (vector <SCENEDRAW*>::iterator ptr = combined_drawlist_cache.begin(); ptr != combined_drawlist_cache.end(); ++ptr, ++loopcount)
+	for (vector <SCENEDRAW*>::iterator ptr = combined_drawlist_cache.begin(); ptr != combined_drawlist_cache.end(); ptr++, loopcount++)
 	{
 		SCENEDRAW * i = *ptr;
 		if (i->IsDraw())
@@ -1079,28 +1078,30 @@ void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::DrawList(GLSTATEMANAGER & glstate)
 					//cout << "beep" << endl;
 					//assert(i->GetDraw()->GetModel()->HaveListID());
 					//glCallList(i->GetDraw()->GetModel()->GetListID());
-					for_each (i->GetDraw()->GetDrawLists().begin(), i->GetDraw()->GetDrawLists().end(), glCallList);
+					const unsigned int numlists = i->GetDraw()->GetDrawLists().size();
+					for (unsigned int n = 0; n < numlists; ++n)
+						glCallList(i->GetDraw()->GetDrawLists()[n]);
 				}
 				else if (i->GetDraw()->GetVertArray())
 				{
 					glEnableClientState(GL_VERTEX_ARRAY);
 
 					const float * verts;
-					unsigned int counter;	// now responsible for vertices
-					i->GetDraw()->GetVertArray()->GetVertices(verts, counter);
+					int vertcount;
+					i->GetDraw()->GetVertArray()->GetVertices(verts, vertcount);
 					glVertexPointer(3, GL_FLOAT, 0, verts);
 
 					const float * norms;
-					counter = 0;	// now responsible for normals
-					i->GetDraw()->GetVertArray()->GetNormals(norms, counter);
+					int normcount;
+					i->GetDraw()->GetVertArray()->GetNormals(norms, normcount);
 					glNormalPointer(GL_FLOAT, 0, norms);
-					if (counter > 0)
+					if (normcount > 0)
 						glEnableClientState(GL_NORMAL_ARRAY);
 
 					//const float * tc[i->GetDraw()->varray.GetTexCoordSets()];
 					//int tccount[i->GetDraw()->varray.GetTexCoordSets()];
 					const float * tc[1];
-					unsigned int tccount[1];
+					int tccount[1];
 					if (i->GetDraw()->GetVertArray()->GetTexCoordSets() > 0)
 					{
 						i->GetDraw()->GetVertArray()->GetTexCoords(0, tc[0], tccount[0]);
@@ -1109,10 +1110,10 @@ void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::DrawList(GLSTATEMANAGER & glstate)
 					}
 
 					const int * faces;
-					counter = 0;	// now responsible for faces
-					i->GetDraw()->GetVertArray()->GetFaces(faces, counter);
+					int facecount;
+					i->GetDraw()->GetVertArray()->GetFaces(faces, facecount);
 
-					glDrawElements(GL_TRIANGLES, counter, GL_UNSIGNED_INT, faces);
+					glDrawElements(GL_TRIANGLES, facecount, GL_UNSIGNED_INT, faces);
 
 					glDisableClientState(GL_VERTEX_ARRAY);
 					glDisableClientState(GL_NORMAL_ARRAY);
@@ -1158,10 +1159,6 @@ void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::DrawList(GLSTATEMANAGER & glstate)
 		glPopMatrix();
 }
 
-float accum_square(float till_now, float next){
-	return till_now + next*next;
-}
-
 ///returns true if the object was culled and should not be drawn
 bool GRAPHICS_SDLGL::RENDER_INPUT_SCENE::FrustumCull(SCENEDRAW & tocull) const
 {
@@ -1176,23 +1173,19 @@ bool GRAPHICS_SDLGL::RENDER_INPUT_SCENE::FrustumCull(SCENEDRAW & tocull) const
 		MATHVECTOR <float, 3> objpos(d->GetObjectCenter());
 		if (i->IsCollapsed())
 			i->GetMatrix4()->TransformVectorOut(objpos[0],objpos[1],objpos[2]);
-		else { //if (d->GetParent() != NULL)
-			assert(d->GetParent() != NULL);
+		else if (d->GetParent() != NULL)
 			objpos = d->GetParent()->TransformIntoWorldSpace(objpos);
-		}
-		float dr[3] = {objpos[0]-cam_position[0], objpos[1]-cam_position[1], objpos[2]-cam_position[2]};
-		float rc=std::accumulate(dr, dr+3, 0, accum_square);
-		float bound = d->GetRadius();
-		float temp_lod_far = lod_far + bound;
-		if (rc < bound*bound)
-			return false;
-		else if (rc > temp_lod_far*temp_lod_far)
+		float dx=objpos[0]-cam_position[0]; float dy=objpos[1]-cam_position[1]; float dz=objpos[2]-cam_position[2];
+		float rc=dx*dx+dy*dy+dz*dz;
+		float temp_lod_far = lod_far + d->GetRadius();
+		if (rc > temp_lod_far*temp_lod_far)
 			return true;
+		else if (rc < d->GetRadius()*d->GetRadius())
+			return false;
 		else
 		{
-			float rd;
-			int num_of_trues = 0;
-			#pragma omp parallel for reduction(+:num_of_trues) private(rd)
+			float bound, rd;
+			bound = d->GetRadius();
 			for (int i=0; i<6; i++)
 			{
 				rd=frustum[i][0]*objpos[0]+
@@ -1201,10 +1194,9 @@ bool GRAPHICS_SDLGL::RENDER_INPUT_SCENE::FrustumCull(SCENEDRAW & tocull) const
 						frustum[i][3];
 				if (rd <= -bound)
 				{
-					++num_of_trues;
+					return true;
 				}
 			}
-			if (num_of_trues>0) return true;
 		}
 	}
 
@@ -1413,6 +1405,8 @@ void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectTexturing(SCENEDRAW & forme, GLST
 ///returns true if the matrix was pushed
 bool GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectTransformStart(SCENEDRAW & forme, GLSTATEMANAGER & glstate)
 {
+	bool need_a_pop = true;
+
 	SCENEDRAW * i(&forme);
 	if (i->GetDraw()->Get2D())
 	{
@@ -1433,7 +1427,6 @@ bool GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectTransformStart(SCENEDRAW & forme,
 		{
 			glMultMatrixf(i->GetMatrix4()->GetArray());
 		}
-		return true;
 	}
 	else
 	{
@@ -1456,7 +1449,6 @@ bool GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectTransformStart(SCENEDRAW & forme,
 
 				glPushMatrix();
 				glLoadMatrixf(i->GetMatrix4()->GetArray());
-				return true;
 			}
 			else if (i->GetDraw()->GetSkybox())
 			{
@@ -1479,11 +1471,13 @@ bool GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectTransformStart(SCENEDRAW & forme,
 					glTranslatef(0.0,0.0,-objpos[2]);
 				}
 				glMultMatrixf(i->GetMatrix4()->GetArray());
-				return true;
 			}
 			else
 			{
-				if (!last_transform_valid || !last_transform.Equals(*i->GetMatrix4()))
+				bool need_new_transform = !last_transform_valid;
+				if (last_transform_valid)
+					need_new_transform = (!last_transform.Equals(*i->GetMatrix4()));
+				if (need_new_transform)
 				{
 					if (last_transform_valid)
 						glPopMatrix();
@@ -1493,11 +1487,14 @@ bool GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectTransformStart(SCENEDRAW & forme,
 					last_transform = *i->GetMatrix4();
 					last_transform_valid = true;
 
+					need_a_pop = false;
 				}
-				return false;
+				else need_a_pop = false;
 			}
 		}
 	}
+
+	return need_a_pop;
 }
 
 void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectTransformEnd(SCENEDRAW & forme, bool need_pop)
@@ -1679,7 +1676,7 @@ void GRAPHICS_SDLGL::OptimizeStaticDrawlistmap()
 	{
 		AABB_SPACE_PARTITIONING_NODE <SCENEDRAW*> & partition = static_object_partitioning[i->first];
 		
-		for (std::vector <SCENEDRAW>::iterator s = i->second.begin(); s != i->second.end(); ++s)
+		for (std::vector <SCENEDRAW>::iterator s = i->second.begin(); s != i->second.end(); s++)
 		{
 			const DRAWABLE * draw = s->GetDraw();
 			assert(draw);
@@ -1701,27 +1698,28 @@ void GRAPHICS_SDLGL::OptimizeStaticDrawlistmap()
 	}
 }
 
+SCENEDRAW * PointerTo(const SCENEDRAW & sd)
+{
+	return const_cast<SCENEDRAW *> (&sd);
+}
+
 unsigned int GRAPHICS_SDLGL::RENDER_INPUT_SCENE::CombineDrawlists()
 {
-	combined_drawlist_cache.clear();
+	combined_drawlist_cache.resize(0);
 	combined_drawlist_cache.reserve(drawlist_static->size()+drawlist_dynamic->size());
+	
+	unsigned int already_culled = 0;
 	
 	if (use_static_partitioning)
 	{
 		AABB<float>::FRUSTUM aabbfrustum(frustum);
 		//aabbfrustum.DebugPrint(std::cout);
 		static_partitioning->Query(aabbfrustum, combined_drawlist_cache);
-		for (unsigned int i = 0; i < drawlist_dynamic->size(); ++i){
-			combined_drawlist_cache.push_back(&drawlist_dynamic->at(i));
-		}
-		return combined_drawlist_cache.size();
-	} else {
-		for (unsigned int i = 0; i < drawlist_static->size(); ++i){
-			combined_drawlist_cache.push_back(&drawlist_static->at(i));
-		}
-		for (unsigned int i = 0; i < drawlist_dynamic->size(); ++i){
-			combined_drawlist_cache.push_back(&drawlist_dynamic->at(i));
-		}
-		return 0;
+		already_culled = combined_drawlist_cache.size();
 	}
+	else
+		calgo::transform(*drawlist_static, std::back_inserter(combined_drawlist_cache), &PointerTo);
+	calgo::transform(*drawlist_dynamic, std::back_inserter(combined_drawlist_cache), &PointerTo);
+	
+	return already_culled;
 }
