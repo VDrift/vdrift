@@ -141,13 +141,14 @@ bool MODEL::WriteToFile(const std::string & filepath)
 	return Serialize(s);
 }
 
-bool MODEL::ReadFromFile(const std::string & filepath, std::ostream & error_output)
+bool MODEL::ReadFromFile(const std::string & filepath, std::ostream & error_output, bool generatelistid)
 {
-	const std::string magic = "OGLVARRAYV01";
 	std::ifstream filein(filepath.c_str());
 	if (!filein)
 		return false;
+	//else std::cout << "File " << filepath << " exists!" << std::endl;
 	
+	const std::string magic = "OGLVARRAYV01";
 	char fmagic[magic.size()+1];
 	filein.read(fmagic, magic.size());
 	if (!filein)
@@ -168,7 +169,8 @@ bool MODEL::ReadFromFile(const std::string & filepath, std::ostream & error_outp
 	ClearListID();
 	ClearMetrics();
 	GenerateMeshMetrics();
-	GenerateListID(error_output);
+	if (generatelistid)
+		GenerateListID(error_output);
 	
 	return true;
 }

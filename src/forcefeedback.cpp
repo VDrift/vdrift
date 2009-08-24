@@ -31,7 +31,7 @@ using std::endl;
 /* Test the bit with given index=offset in an unsigned char array */
 #define testBit(bit, array)    ((array[ucharIndexForBit(bit)] >> bitOffsetInUchar(bit)) & 1)
 
-FORCEFEEDBACK::FORCEFEEDBACK( string device, std::ostream & error_output )
+FORCEFEEDBACK::FORCEFEEDBACK( string device, std::ostream & error_output, std::ostream & info_output )
 	: device_name(device), enabled(true), stop_and_play(false), lastforce(0)
 {
 	unsigned char key_bits[1 + KEY_MAX/8/sizeof(unsigned char)];
@@ -158,8 +158,9 @@ FORCEFEEDBACK::FORCEFEEDBACK( string device, std::ostream & error_output )
 		disable();
 		return;
 	}
+	
+	info_output << "Force feedback initialized successfully" << std::endl;
 }
-
 
 void FORCEFEEDBACK::update(double force, double * position, double dt, std::ostream & error_output)
 {

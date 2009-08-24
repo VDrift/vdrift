@@ -152,7 +152,7 @@ void GAME::Start(list <string> & args)
 
 	//initialize force feedback
 #ifdef ENABLE_FORCE_FEEDBACK
-	forcefeedback.reset(new FORCEFEEDBACK(settings.GetFFDevice(), error_output));
+	forcefeedback.reset(new FORCEFEEDBACK(settings.GetFFDevice(), error_output, info_output));
 	ff_update_time = 0;
 #endif
 
@@ -2669,7 +2669,7 @@ void GAME::UpdateForceFeedback(float dt)
 			//double center = sin( timefactor * 2 * M_PI * motion_frequency ) * motion_amplitude;
 			double force = feedback;
 
-			//file << "ff_update_time: " << ff_update_time << " force: " << force << endl;
+			//std::cout << "ff_update_time: " << ff_update_time << " force: " << force << endl;
 			forcefeedback->update(force, &feedback, ffdt, error_output);
 		}
 	}

@@ -60,8 +60,8 @@ public:
 	MODEL() : generatedlistid(false),generatedmetrics(false),radius(0),radiusxz(0) {}
 	virtual ~MODEL() {Clear();}
 	
-	virtual bool Load(const std::string & strFileName, std::ostream & error_output) = 0;
-	virtual bool CanSave() const = 0;  ///< returns true if the model format is capable of saving to a file
+	virtual bool Load(const std::string & strFileName, std::ostream & error_output) {return false;}
+	virtual bool CanSave() const {return false;}  ///< returns true if the model format is capable of saving to a file
 	virtual bool Save(const std::string & strFileName, std::ostream & error_output) const {return false;} ///< optional capability
 	
 	bool Serialize(joeserialize::Serializer & s)
@@ -72,7 +72,7 @@ public:
 	}
 	
 	bool WriteToFile(const std::string & filepath);
-	bool ReadFromFile(const std::string & filepath, std::ostream & error_output);
+	bool ReadFromFile(const std::string & filepath, std::ostream & error_output, bool generatelistid=true);
 	
 	void SetDiffuseTexture(const std::string & newdiff) {diffuse_texture = newdiff;}
 	void SetNormalTexture(const std::string & newnorm) {normal_texture = newnorm;}

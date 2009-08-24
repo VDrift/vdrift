@@ -13,6 +13,8 @@
 #include "aabb_space_partitioning.h"
 
 #include "btBulletCollisionCommon.h"
+//#include "BulletCollision/Gimpact/btGImpactShape.h"
+//#include "BulletCollision/Gimpact/btGImpactCollisionAlgorithm.h"
 
 namespace COLLISION_DETECTION
 {
@@ -66,15 +68,48 @@ class COLLISION_OBJECT_SETTINGS
 	private:
 		OBJECT_TYPE type;
 		void * objid;
+		unsigned short int mask;
+		unsigned short int group;
 	
 	public:
-		COLLISION_OBJECT_SETTINGS() : type(STATIC) {}
+		COLLISION_OBJECT_SETTINGS() : type(STATIC), objid(NULL), mask(1), group(1) {}
 		void SetStaticObject() {type = STATIC;}
 		void SetDynamicObject() {type = DYNAMIC;}
 		void SetObjectID(void * newobjid) {objid = newobjid;}
 	
 		OBJECT_TYPE GetType() const {return type;}
 		const void * ObjID() const {return objid;}
+		
+		///groupid is 0 through 15.  by default objects are members of group 0. objects can be members of multiple groups.
+		void SetDynamicObjectGroup(unsigned int groupid, bool isamember)
+		{
+			unsigned int bits = 1 << (groupid);
+			if (isamember)
+				group = group | bits;
+			else
+				group = group & (~bits);
+		}
+		
+		///maskid is 0 through 15.  by default objects have mask 0 enabled. objects can have multiple masks enabled.
+		///objects that have a mask enabled will collide with objects of that group.
+		void SetDynamicObjectMask(unsigned int maskid, bool enable)
+		{
+			unsigned int bits = 1 << (maskid);
+			if (enable)
+				mask = mask | bits;
+			else
+				mask = mask & (~bits);
+		}
+
+		unsigned short int GetMask() const
+		{
+			return mask;
+		}
+	
+		unsigned short int GetGroup() const
+		{
+			return group;
+		}
 };
 
 class COLLISION_OBJECT
@@ -99,11 +134,16 @@ class COLLISION_OBJECT
 	
 		void InitTrimesh(const float * vertices, int vstride, int vcount, const int * faces, int fcount, int istride, const float * normals, const COLLISION_OBJECT_SETTINGS & objsettings);
 		void InitTrimesh(const VERTEXARRAY & varray, const COLLISION_OBJECT_SETTINGS & objsettings);
+		void InitConvexHull(const std::vector <float> & varray, const COLLISION_OBJECT_SETTINGS & objsettings);
 		void InitBox(const MATHVECTOR <float, 3> & halfextents, const COLLISION_OBJECT_SETTINGS & objsettings);
+		
+		///the cylinder is pointing along the Z axis and the half dimensions are provided in the halfextents vector
+		void InitCylinderZ(const MATHVECTOR <float, 3> & halfextents, const COLLISION_OBJECT_SETTINGS & objsettings);
 		
 		void DeInit();
 		void SetPosition(const MATHVECTOR <float, 3> & newpos);
 		void SetQuaternion(const QUATERNION <float> & newquat);
+		MATHVECTOR <float, 3> GetPosition() const;
 	
 		COLLISION_OBJECT_SETTINGS & GetSettings() {return settings;}
 		const COLLISION_OBJECT_SETTINGS & GetSettings() const {return settings;}
@@ -193,9 +233,35 @@ class COLLISION_WORLD
 		std::set <COLLISION_OBJECT *> dynamic_objects;
 
 		bool PassesFilter(const COLLISION_SETTINGS & settings, void * checkme) const;
+		
+		struct BulletBroadphaseFilterCallback : public btOverlapFilterCallback
+		{
+        	// return true when pairs need collision
+			virtual bool needBroadphaseCollision(btBroadphaseProxy* proxy0,btBroadphaseProxy* proxy1) const
+			{
+				bool collides = (proxy0->m_collisionFilterGroup & proxy1->m_collisionFilterMask) != 0;
+				collides = collides && (proxy1->m_collisionFilterGroup & proxy0->m_collisionFilterMask);
+				btCollisionObject * obj0 = reinterpret_cast<btCollisionObject*>(proxy0->m_clientObject);
+				btCollisionObject * obj1 = reinterpret_cast<btCollisionObject*>(proxy1->m_clientObject);
+				if (obj0 && obj1)
+				{
+					COLLISION_OBJECT * col0 = reinterpret_cast<COLLISION_OBJECT*>(obj0->getUserPointer());
+					COLLISION_OBJECT * col1 = reinterpret_cast<COLLISION_OBJECT*>(obj1->getUserPointer());
+					if (col0 && col1)
+					{
+						collides = collides && (col0->ObjID() != col1->ObjID());
+					}
+				}
+				return collides;
+			}
+		} bulletbroadphasefiltercallback;
 
 	public:
-		COLLISION_WORLD() : collisionconfig(), collisiondispatcher(&collisionconfig), collisionbroadphase(btVector3(-10000, -10000, -10000), btVector3(10000, 10000, 10000)), id(&collisiondispatcher, &collisionbroadphase, &collisionconfig) {}
+		COLLISION_WORLD() : collisionconfig(), collisiondispatcher(&collisionconfig), collisionbroadphase(btVector3(-10000, -10000, -10000), btVector3(10000, 10000, 10000)), id(&collisiondispatcher, &collisionbroadphase, &collisionconfig)
+		{
+			//btGImpactCollisionAlgorithm::registerAlgorithm(&collisiondispatcher);
+		}
+		//COLLISION_WORLD() : collisionconfig(), collisiondispatcher(&collisionconfig), collisionbroadphase(), id(&collisiondispatcher, &collisionbroadphase, &collisionconfig) {}
 		~COLLISION_WORLD() {Clear();}
 		
 		void DebugPrint(std::ostream & out)
@@ -274,6 +340,12 @@ class COLLISION_WORLD
 		void CollideBox(const MATHVECTOR <float, 3> & position, const QUATERNION <float> & orientation, const MATHVECTOR <float, 3> & dimensions, std::list <COLLISION_CONTACT> & outputcontactlist, const COLLISION_SETTINGS & settings) const;
 		
 		void CollideMovingBox(const MATHVECTOR <float, 3> & position, const MATHVECTOR <float, 3> & velocity, const QUATERNION <float> & orientation, const MATHVECTOR <float, 3> & half_dimensions, std::list <COLLISION_CONTACT> & outputcontactlist, const COLLISION_SETTINGS & settings, float dt) const;
+		
+		///prevent dynamic objects that have ObjIDs pointing to the same place from colliding
+		void FilterOutDynamicCollisionsFromEqualObjectIDs()
+		{
+			id.getPairCache()->setOverlapFilterCallback(&bulletbroadphasefiltercallback);
+		}
 };
 
 #endif

@@ -14,7 +14,7 @@
 class FORCEFEEDBACK
 {
 public:
-	FORCEFEEDBACK( std::string device, std::ostream & error_output);
+	FORCEFEEDBACK( std::string device, std::ostream & error_output, std::ostream & info_output);
 	~FORCEFEEDBACK() {}
 	void update( double force, double * position, double dt, std::ostream & error_output );
 	void disable() { enabled = false; }

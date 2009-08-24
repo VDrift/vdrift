@@ -6,6 +6,8 @@
 #include <algorithm>
 #include <functional>
 #include <vector>
+#include <map>
+#include <cassert>
 
 namespace calgo
 {
@@ -66,7 +68,27 @@ namespace calgo
 		}
 		else
 		{
-			std::vector <unsigned int> remap(container.size());
+			std::map <unsigned int, unsigned int> remap;
+			
+			unsigned int orig_container_size = container.size();
+			for (unsigned int i = 0; i < todel.size(); i++)
+			{
+				unsigned int endi = orig_container_size - i - 1;
+				unsigned int todeli = todel[i];
+				if (todeli > endi)
+				{
+					assert(remap.find(todeli) != remap.end());
+					todeli = remap[todeli];
+				}
+				if (endi != todeli)
+				{
+					std::swap(container[endi], container[todeli]);
+					remap[endi] = todeli;
+				}
+				container.pop_back();
+			}
+			
+			/*std::vector <unsigned int> remap(container.size());
 			for (unsigned int i = 0; i < remap.size(); i++)
 				remap[i] = i;
 			
@@ -81,7 +103,7 @@ namespace calgo
 					remap[endi] = todeli;
 				}
 				container.pop_back();
-			}
+			}*/
 		}
 	}
 }

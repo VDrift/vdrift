@@ -1276,15 +1276,25 @@ class ReflectionSerializer : public Serializer
 };
 
 //utility functions
+
+///retursn true on success
 template <typename T>
-void WriteObjectToFile(const std::string & path, T & object, std::ostream & info_output)
+bool WriteObjectToFile(const std::string & path, T & object, std::ostream & info_output, bool binary=false)
 {
 	std::ofstream outfile(path.c_str());
 	bool error = false;
 	if (outfile)
 	{
-		joeserialize::TextOutputSerializer out(outfile);
-		error = !object.Serialize(out);
+		if (binary)
+		{
+			joeserialize::BinaryOutputSerializer out(outfile);
+			error = !object.Serialize(out);
+		}
+		else
+		{
+			joeserialize::TextOutputSerializer out(outfile);
+			error = !object.Serialize(out);
+		}
 	}
 	else
 		error = true;
@@ -1293,6 +1303,64 @@ void WriteObjectToFile(const std::string & path, T & object, std::ostream & info
 		info_output << "Could not write to file " << path << std::endl;
 	else
 		info_output << "Wrote " << path << std::endl;
+	
+	return !error;
+}
+
+///returns true on success
+template <typename T>
+bool LoadObjectFromFile(const std::string & path, T & object, std::ostream & info_output, bool binary=false)
+{
+	info_output << "Loading " << path << "..." << std::endl;
+
+	std::ifstream infile(path.c_str());
+	bool error = false;
+	if (infile)
+	{
+		if (binary)
+		{
+			joeserialize::BinaryInputSerializer in(infile);
+			if (object.Serialize(in))
+			{
+				info_output << "Loaded " << path << std::endl;
+			}
+			else
+			{
+				info_output << "File " << path << " had serialization errors" << std::endl;
+				error = true;
+			}
+		}
+		else
+		{
+			joeserialize::TextInputSerializer in;
+			in.set_error_output(info_output);
+			std::istream & i = infile;
+			if (!in.Parse(i))
+			{
+				info_output << "File " << path << " had parsing errors" << std::endl;
+				error = true;
+			}
+			else
+			{
+				if (object.Serialize(in))
+				{
+					info_output << "Loaded " << path << std::endl;
+				}
+				else
+				{
+					info_output << "File " << path << " had serialization errors; trying to upgrade it" << std::endl;
+					error = true;
+				}
+			}
+		}
+	}
+	else
+	{
+		error = true;
+		info_output << "File " << path << " not found" << std::endl;
+	}
+	
+	return !error;
 }
 
 template <typename T>

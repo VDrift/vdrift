@@ -1,4 +1,5 @@
 #include "collision_detection.h"
+#include "unittest.h"
 
 #include <list>
 using std::list;
@@ -228,6 +229,7 @@ void COLLISION_WORLD::CollideDynamicObjects(std::map <COLLISION_OBJECT *, std::l
 	id.performDiscreteCollisionDetection();
 	
 	int num_manifolds = collisiondispatcher.getNumManifolds();
+	//std::cout << num_manifolds << std::endl;
 	
 	for (int i=0; i < num_manifolds; i++)
 	{
@@ -292,6 +294,7 @@ void COLLISION_OBJECT::InitTrimesh(const float * vertices, int vstride, int vcou
 	
 	trimesh_varray = new btTriangleIndexVertexArray(fcount/3, (int*) faces, istride, vcount, (float*) vertices, vstride);
 	shape = new btBvhTriangleMeshShape(trimesh_varray, true);
+	//shape = new btGImpactMeshShape(trimesh_varray);
 	
 	id.getWorldTransform().setIdentity();
 	id.setCollisionShape(shape);
@@ -304,7 +307,46 @@ void COLLISION_OBJECT::InitTrimesh(const float * vertices, int vstride, int vcou
 	bboxmax.Set(AabbMax.x(),AabbMax.y(),AabbMax.z());
 	
 	bbox.SetFromCorners(bboxmin, bboxmax);
+	bbox.SetFromCorners(bboxmin, bboxmax);
+	//std::cout << bboxmin << " -- " << bboxmax << std::endl;
 	//id.setUserPointer(const_cast<void *>(objsettings.ObjID()));
+	id.setUserPointer(this);
+	settings = objsettings;
+	
+	loaded = true;
+}
+
+void COLLISION_OBJECT::InitConvexHull(const std::vector <float> & varray, const COLLISION_OBJECT_SETTINGS & objsettings)
+{
+	/*const float * vertices;
+	int vcount;
+	varray.GetVertices(vertices, vcount);*/
+	
+	assert(!loaded); //Tried to double load a physics object
+	
+	if (shape != NULL)
+		DeInit();
+	
+	//shape = new btConvexHullShape(&(varray[0]), varray.size());
+	btConvexHullShape * hull = new btConvexHullShape();
+	shape = hull;
+	for (unsigned int i = 0; i < varray.size(); i+=3)
+	{
+		btVector3 vert(varray[i],varray[i+1],varray[i+2]);
+		hull->addPoint(vert);
+	}
+	
+	/*btConvexHullShape * hull = new btConvexHullShape();
+	shape = hull;
+	for (int i = 0; i < vcount; i+=3)
+	{
+		btVector3 vert(vertices[i],vertices[i+1],vertices[i+2]);
+		if (!hull->isInside(vert, 0))
+			hull->addPoint(vert);
+	}*/
+	
+	id.getWorldTransform().setIdentity();
+	id.setCollisionShape(shape);
 	id.setUserPointer(this);
 	settings = objsettings;
 	
@@ -319,6 +361,24 @@ void COLLISION_OBJECT::InitBox(const MATHVECTOR <float, 3> & halfextents, const 
 		DeInit();
 	
 	shape = new btBoxShape(COLLISION_DETECTION::ToBulletVector(halfextents));
+	id.getWorldTransform().setIdentity();
+	id.setCollisionShape(shape);
+	bbox.SetFromCorners(halfextents, -halfextents);
+	//id.setUserPointer(const_cast<void *>(objsettings.ObjID()));
+	id.setUserPointer(this);
+	settings = objsettings;
+	
+	loaded = true;
+}
+
+void COLLISION_OBJECT::InitCylinderZ(const MATHVECTOR <float, 3> & halfextents, const COLLISION_OBJECT_SETTINGS & objsettings)
+{
+	assert(!loaded); //Tried to double load a physics object
+	
+	if (shape != NULL)
+		DeInit();
+	
+	shape = new btCylinderShapeZ(COLLISION_DETECTION::ToBulletVector(halfextents));
 	id.getWorldTransform().setIdentity();
 	id.setCollisionShape(shape);
 	bbox.SetFromCorners(halfextents, -halfextents);
@@ -357,6 +417,13 @@ void COLLISION_OBJECT::SetPosition(const MATHVECTOR <float, 3> & newpos)
 {
 	assert(loaded); //Physics object not loaded yet
 	id.getWorldTransform().setOrigin(btVector3(newpos[0],newpos[1],newpos[2]));
+}
+
+MATHVECTOR <float, 3> COLLISION_OBJECT::GetPosition() const
+{
+	assert(loaded); //Physics object not loaded yet
+	btVector3 newpos = id.getWorldTransform().getOrigin();
+	return MATHVECTOR <float, 3> (newpos[0],newpos[1],newpos[2]);
 }
 
 void COLLISION_OBJECT::SetQuaternion(const QUATERNION <float> & newquat)
@@ -431,4 +498,17 @@ void COLLISION_WORLD::CollideMovingBox(const MATHVECTOR <float, 3> & position, c
 	{
 		
 	}
+}
+
+QT_TEST(collision_test)
+{
+	COLLISION_OBJECT_SETTINGS settings;
+	QT_CHECK_EQUAL(settings.GetMask(),1);
+	QT_CHECK_EQUAL(settings.GetGroup(),1);
+	settings.SetDynamicObjectMask(0,false);
+	QT_CHECK_EQUAL(settings.GetMask(),0);
+	settings.SetDynamicObjectGroup(2,true);
+	QT_CHECK_EQUAL(settings.GetGroup(),5);
+	settings.SetDynamicObjectGroup(0,false);
+	QT_CHECK_EQUAL(settings.GetGroup(),4);
 }
