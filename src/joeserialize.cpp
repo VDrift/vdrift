@@ -76,6 +76,7 @@ class TEST_PLAYER
 		vector <TEST_VERTEX> myvector2;
 		double curtime;
 		float x;
+		pair <string, int> somepair;
 
 	public:
 		string & GetName() {return name;}
@@ -106,6 +107,9 @@ class TEST_PLAYER
 				aiming = false;
 
 				curtime = 0.123456789;
+				
+				somepair.first = "string";
+				somepair.second = 4321;
 			}
 		}
 
@@ -124,6 +128,7 @@ class TEST_PLAYER
 			_SERIALIZE_(s,mymap);
 			_SERIALIZE_(s,x);
 			_SERIALIZE_(s,myvector2);
+			_SERIALIZE_(s,somepair);
 			return true;
 		}
 };
@@ -217,6 +222,9 @@ QT_TEST(TextSerializer_test)
 	QT_CHECK_EQUAL(player2.aiming, false);
 
 	QT_CHECK_EQUAL(player2.curtime, 0.123456789);
+	
+	QT_CHECK_EQUAL(player2.somepair.first, "string");
+	QT_CHECK_EQUAL(player2.somepair.second, 4321);
 }
 
 QT_TEST(BinarySerializer_test)
@@ -310,6 +318,9 @@ QT_TEST(BinarySerializer_test)
 	QT_CHECK_EQUAL(player2.aiming, false);
 
 	QT_CHECK_EQUAL(player2.curtime, 0.123456789);
+	
+	QT_CHECK_EQUAL(player2.somepair.first, "string");
+	QT_CHECK_EQUAL(player2.somepair.second, 4321);
 }
 
 QT_TEST(ReflectionSerializer_test)
@@ -428,6 +439,9 @@ QT_TEST(ReflectionSerializer_test)
 	QT_CHECK_EQUAL ( player2.aiming, false );
 	
 	QT_CHECK_CLOSE(player2.curtime, 0.987654321, 0.000001); //note: this is the one we modified!
+	
+	QT_CHECK_EQUAL(player2.somepair.first, "string");
+	QT_CHECK_EQUAL(player2.somepair.second, 4321);
 }
 
 //check for compatibility of the binary format
@@ -508,6 +522,9 @@ QT_TEST(serialization_test_bin_compatibility)
 	QT_CHECK_EQUAL(player2.aiming, false);
 
 	QT_CHECK_EQUAL(player2.curtime, 0.123456789);
+	
+	QT_CHECK_EQUAL(player2.somepair.first, "string");
+	QT_CHECK_EQUAL(player2.somepair.second, 4321);
 }
 
 class TEST_WHEEL

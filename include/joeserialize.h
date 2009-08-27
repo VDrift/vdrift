@@ -66,6 +66,18 @@ class Serializer
 		
 		///serialization overload for a complex type that we don't have the ability to change,
 		/// so we explicitly define the serialization process here. returns true on success
+		template <typename U, typename T>
+		bool Serialize(const std::string & name, std::pair <U, T> & t)
+		{
+			ComplexTypeStart(name);
+			if (!Serialize("first", t.first)) return false;
+			if (!Serialize("second", t.second)) return false;
+			ComplexTypeEnd(name);
+			return true;
+		}
+		
+		///serialization overload for a complex type that we don't have the ability to change,
+		/// so we explicitly define the serialization process here. returns true on success
 		template <typename T>
 		bool Serialize(const std::string & name, std::list <T> & t)
 		{
