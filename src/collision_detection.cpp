@@ -31,6 +31,8 @@ void COLLISION_WORLD::CollideRay(const MATHVECTOR <float, 3> & position, const M
 {
 	outputcontactlist.clear();
 	
+	unsigned short int raymask = settings.GetRayMask();
+	
 	//return;
 	
 	MATHVECTOR <float, 3> rpos = position;
@@ -38,9 +40,6 @@ void COLLISION_WORLD::CollideRay(const MATHVECTOR <float, 3> & position, const M
 	MATHVECTOR <float, 3> rayend = position + direction * length;
 	AABB <float> raybox;
 	raybox.SetFromCorners(position,rayend);
-	list <COLLISION_OBJECT *> candidates;
-	
-	colspeedup.Query(AABB<float>::RAY(rpos, rdir, length), candidates);
 	
 	btVector3 rayFrom = COLLISION_DETECTION::ToBulletVector(position);
 	btVector3 rayTo = COLLISION_DETECTION::ToBulletVector(rayend);
@@ -51,22 +50,26 @@ void COLLISION_WORLD::CollideRay(const MATHVECTOR <float, 3> & position, const M
 	rayToTrans.setIdentity();
 	rayToTrans.setOrigin(rayTo);
 	
-	short int raymask = 0;
 	if (settings.GetDynamicCollide())
-		raymask |= 1;
+		id.rayTest(rayFrom, rayTo, colresult);
 	
-	//cout << "collision candidates: " << candidates.size() << endl;
-	for (list <COLLISION_OBJECT *>::iterator i = candidates.begin(); i != candidates.end(); ++i)
+	if (settings.GetStaticCollide())
 	{
-		//if (collisionObject->getBroadphaseHandle()->m_collisionFilterGroup & raymask)
-		if (settings.CanCollide(**i))
+		list <COLLISION_OBJECT *> candidates;
+		colspeedup.Query(AABB<float>::RAY(rpos, rdir, length), candidates);
+		
+		//cout << "collision candidates: " << candidates.size() << endl;
+		for (list <COLLISION_OBJECT *>::iterator i = candidates.begin(); i != candidates.end(); ++i)
 		{
-			btCollisionObject * collisionObject = &((*i)->GetBulletObject());
-			id.rayTestSingle(rayFromTrans,rayToTrans,
-					collisionObject,
-       				collisionObject->getCollisionShape(),
-					collisionObject->getWorldTransform(),
-					colresult);
+			if (settings.CanCollide(**i))
+			{
+				btCollisionObject * collisionObject = &((*i)->GetBulletObject());
+				id.rayTestSingle(rayFromTrans,rayToTrans,
+						collisionObject,
+						collisionObject->getCollisionShape(),
+						collisionObject->getWorldTransform(),
+						colresult);
+			}
 		}
 	}
 	
@@ -84,7 +87,7 @@ void COLLISION_WORLD::CollideRay(const MATHVECTOR <float, 3> & position, const M
 			
 			assert (i->m_collisionObject); //assert collision hit is tied to an object
 			
-			if (PassesFilter(settings, i->m_collisionObject->getUserPointer()))
+			if (PassesFilter(settings, i->m_collisionObject->getUserPointer()) && (!i->m_collisionObject->getBroadphaseHandle() || i->m_collisionObject->getBroadphaseHandle()->m_collisionFilterGroup & raymask))
 			{
 				COLLISION_CONTACT newcont;
 				outputcontactlist.push_back(newcont);

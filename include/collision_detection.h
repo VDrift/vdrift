@@ -186,9 +186,10 @@ class COLLISION_SETTINGS
 		bool staticcollide;
 		bool dynamiccollide;
 		std::list <void *> exception_objectids;
+		unsigned short int raymask;
 	
 	public:
-		COLLISION_SETTINGS() : staticcollide(true),dynamiccollide(false) {}
+		COLLISION_SETTINGS() : staticcollide(true),dynamiccollide(false),raymask(0xFF) {}
 		
 		void SetExceptionObjectID(void * except_id) {exception_objectids.push_back(except_id);}
 		const std::list <void *> & GetExceptionObjectIDs() const {return exception_objectids;}
@@ -217,6 +218,16 @@ class COLLISION_SETTINGS
 		{
 			return (staticcollide && obj.GetSettings().GetType() == COLLISION_OBJECT_SETTINGS::STATIC) ||
 				   (dynamiccollide && obj.GetSettings().GetType() == COLLISION_OBJECT_SETTINGS::DYNAMIC);
+		}
+
+		unsigned short int GetRayMask() const
+		{
+			return raymask;
+		}
+
+		void SetRayMask ( const unsigned short int& value )
+		{
+			raymask = value;
 		}
 };
 
