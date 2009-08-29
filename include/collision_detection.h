@@ -34,7 +34,8 @@ struct	MultipleRayResultCallback : public btCollisionWorld::RayResultCallback
 	
 	virtual	btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult,bool normalInWorldSpace)
 	{
-		m_closestHitFraction = rayResult.m_hitFraction;
+		//m_closestHitFraction = rayResult.m_hitFraction;
+		m_closestHitFraction = 1.0;
 		results.push_back(rayResult);
 		
 		if (!normalInWorldSpace)
@@ -225,9 +226,21 @@ class COLLISION_SETTINGS
 			return raymask;
 		}
 
+		///set the ray mask to a given short int. this can be used to clear raymask to 0x00 or 0xFF.
+		///specific bits can be set with the SetRayMaskBit function
 		void SetRayMask ( const unsigned short int& value )
 		{
 			raymask = value;
+		}
+		
+		///maskid is 0 through 15
+		void SetRayMaskBit(unsigned int maskid, bool enable)
+		{
+			unsigned int bits = 1 << (maskid);
+			if (enable)
+				raymask = raymask | bits;
+			else
+				raymask = raymask & (~bits);
 		}
 };
 
@@ -331,13 +344,13 @@ class COLLISION_WORLD
 			
 			if (object.GetSettings().GetType() == COLLISION_OBJECT_SETTINGS::DYNAMIC)
 			{
-				short int group = 1;
-				short int mask = 1;
+				short int group = object.GetSettings().GetGroup();
+				short int mask = object.GetSettings().GetMask();
 				btCollisionObject * colobj = &object.GetBulletObject();
 				assert(colobj);
 				id.addCollisionObject(colobj, group, mask);
 				dynamic_objects.insert(&object);
-				//std::cout << "Adding dynamic collision object." << std::endl;
+				//std::cout << "Adding dynamic collision object: " << group << ", " << mask << std::endl;
 			}
 			else
 			{

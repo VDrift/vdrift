@@ -31,8 +31,6 @@ void COLLISION_WORLD::CollideRay(const MATHVECTOR <float, 3> & position, const M
 {
 	outputcontactlist.clear();
 	
-	unsigned short int raymask = settings.GetRayMask();
-	
 	//return;
 	
 	MATHVECTOR <float, 3> rpos = position;
@@ -44,6 +42,8 @@ void COLLISION_WORLD::CollideRay(const MATHVECTOR <float, 3> & position, const M
 	btVector3 rayFrom = COLLISION_DETECTION::ToBulletVector(position);
 	btVector3 rayTo = COLLISION_DETECTION::ToBulletVector(rayend);
 	MultipleRayResultCallback colresult(rayFrom, rayTo);
+	colresult.m_collisionFilterGroup = 0xFF;
+	colresult.m_collisionFilterMask = settings.GetRayMask();
 	btTransform rayFromTrans,rayToTrans;
 	rayFromTrans.setIdentity();
 	rayFromTrans.setOrigin(rayFrom);
@@ -87,7 +87,7 @@ void COLLISION_WORLD::CollideRay(const MATHVECTOR <float, 3> & position, const M
 			
 			assert (i->m_collisionObject); //assert collision hit is tied to an object
 			
-			if (PassesFilter(settings, i->m_collisionObject->getUserPointer()) && (!i->m_collisionObject->getBroadphaseHandle() || i->m_collisionObject->getBroadphaseHandle()->m_collisionFilterGroup & raymask))
+			if (PassesFilter(settings, i->m_collisionObject->getUserPointer()))// && (!i->m_collisionObject->getBroadphaseHandle() || i->m_collisionObject->getBroadphaseHandle()->m_collisionFilterGroup & raymask))
 			{
 				COLLISION_CONTACT newcont;
 				outputcontactlist.push_back(newcont);
@@ -111,7 +111,12 @@ void COLLISION_WORLD::CollideRay(const MATHVECTOR <float, 3> & position, const M
 				//cout << "PHYSICS::COLLIDERAY Collision hit: raylength=" << (colresult.m_rayToWorld - colresult.m_rayFromWorld).length() << ", hitfraction=" << i->m_hitFraction << ", depth=" << (colresult.m_rayToWorld - colresult.m_rayFromWorld).length() * i->m_hitFraction << ", hitpoint=";VERTEX(hp.x(),hp.y(),hp.z()).DebugPrint();
 				//cout << "Collision hit: raylength=" << (colresult.m_rayToWorld - colresult.m_rayFromWorld).length() << ", hitfraction=" << i->m_hitFraction << ", depth=" << (colresult.m_rayToWorld - colresult.m_rayFromWorld).length() * i->m_hitFraction << ", normal=";normal.DebugPrint();
 			}
-			//else cout << "discarded collision due to filtering" << endl;
+			/*else
+			{
+				std::cout << "discarded collision due to filtering" << std::endl;
+				if (i->m_collisionObject->getBroadphaseHandle())
+					std::cout << i->m_collisionObject->getBroadphaseHandle()->m_collisionFilterGroup << ", " << raymask << std::endl;
+			}*/
 		}
 	}
 }
@@ -505,13 +510,22 @@ void COLLISION_WORLD::CollideMovingBox(const MATHVECTOR <float, 3> & position, c
 
 QT_TEST(collision_test)
 {
-	COLLISION_OBJECT_SETTINGS settings;
-	QT_CHECK_EQUAL(settings.GetMask(),1);
-	QT_CHECK_EQUAL(settings.GetGroup(),1);
-	settings.SetDynamicObjectMask(0,false);
-	QT_CHECK_EQUAL(settings.GetMask(),0);
-	settings.SetDynamicObjectGroup(2,true);
-	QT_CHECK_EQUAL(settings.GetGroup(),5);
-	settings.SetDynamicObjectGroup(0,false);
-	QT_CHECK_EQUAL(settings.GetGroup(),4);
+	{
+		COLLISION_OBJECT_SETTINGS settings;
+		QT_CHECK_EQUAL(settings.GetMask(),1);
+		QT_CHECK_EQUAL(settings.GetGroup(),1);
+		settings.SetDynamicObjectMask(0,false);
+		QT_CHECK_EQUAL(settings.GetMask(),0);
+		settings.SetDynamicObjectGroup(2,true);
+		QT_CHECK_EQUAL(settings.GetGroup(),5);
+		settings.SetDynamicObjectGroup(0,false);
+		QT_CHECK_EQUAL(settings.GetGroup(),4);
+	}
+	{
+		COLLISION_OBJECT_SETTINGS settings;
+		QT_CHECK_EQUAL(settings.GetGroup(),1);
+		settings.SetDynamicObjectGroup(0,false);
+		settings.SetDynamicObjectGroup(1,true);
+		QT_CHECK_EQUAL(settings.GetGroup(),2);
+	}
 }
