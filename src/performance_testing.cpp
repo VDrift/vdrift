@@ -110,10 +110,13 @@ void PERFORMANCE_TESTING::TestMaxSpeed(std::ostream & info_output, std::ostream 
 	float stopthreshold = 0.001; //if the accel (in m/s^2) is less than this value, discontinue the testing
 
 	float timeto60start = 0; //don't start the 0-60 clock until the car is moving at a threshold speed to account for the crappy launch that the autoclutch gives
-	//float timeto60startthreshold = 2.5; //threshold speed to start 0-60 clock in m/s
-	float timeto60startthreshold = 0.01; //threshold speed to start 0-60 clock in m/s
+	float timeto60startthreshold = 2.23; //threshold speed to start 0-60 clock in m/s
+	//float timeto60startthreshold = 0.01; //threshold speed to start 0-60 clock in m/s
 	float timeto60 = maxtime;
-
+	
+	float timetoquarter = maxtime;
+	float quarterspeed = 0;
+	
 	string downforcestr = "N/A";
 	
 	while (t < maxtime)
@@ -143,6 +146,13 @@ void PERFORMANCE_TESTING::TestMaxSpeed(std::ostream & info_output, std::ostream 
 
 		if (car.dynamics.GetSpeed() < 26.8224)
 			timeto60 = t;
+		
+		if (car.dynamics.GetCenterOfMassPosition().Magnitude() > 402.3 && timetoquarter == maxtime)
+		{
+			//quarter mile!
+			timetoquarter = t - timeto60start;
+			quarterspeed = car.dynamics.GetSpeed();
+		}
 
 		car.remaining_shift_time-=dt;
 		if (car.remaining_shift_time < 0)
@@ -174,6 +184,7 @@ void PERFORMANCE_TESTING::TestMaxSpeed(std::ostream & info_output, std::ostream 
 	info_output << "Maximum speed: " << ConvertToMPH(maxspeed.second) << " MPH at " << maxspeed.first << " s" << endl;
 	info_output << "Downforce at maximum speed: " << downforcestr << endl;
 	info_output << "0-60 MPH time: " << timeto60-timeto60start << " s" << endl;
+	info_output << "1/4 mile time: " << timetoquarter << " s" << " at " << ConvertToMPH(quarterspeed) << " MPH" << endl;
 }
 
 void PERFORMANCE_TESTING::TestStoppingDistance(bool abs, std::ostream & info_output, std::ostream & error_output)

@@ -2673,6 +2673,12 @@ void GAME::UpdateForceFeedback(float dt)
 			forcefeedback->update(force, &feedback, ffdt, error_output);
 		}
 	}
+	
+	if (pause && dt == 0)
+	{
+		double pos=0;
+		forcefeedback->update(0, &pos, 0.02, error_output);
+	}
 #endif
 }
 
