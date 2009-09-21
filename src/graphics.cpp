@@ -299,6 +299,8 @@ void GRAPHICS_SDLGL::Deinit()
 			glUseProgramObjectARB(0);
 		shadermap.clear();
 	}
+	
+	SDL_Quit();
 }
 
 void GRAPHICS_SDLGL::BeginScene(std::ostream & error_output)
