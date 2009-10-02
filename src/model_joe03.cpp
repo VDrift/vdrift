@@ -174,7 +174,7 @@ void MODEL_JOE03::ReadData ( FILE *m_FilePointer, JOEPACK * pack, JOEObject * pO
 		}
 	}
 	
-	if (NeedsNormalFlip(pObject))
+	if (NeedsNormalSwap(pObject))
 	{
 		for (int i = 0; i < num_frames; i++)
 		{
@@ -185,6 +185,7 @@ void MODEL_JOE03::ReadData ( FILE *m_FilePointer, JOEPACK * pack, JOEObject * pO
 				pObject->frames[i].normals[v].vertex[1] = -pObject->frames[i].normals[v].vertex[1];
 			}
 		}
+		//std::cout << "!!! swapped normals !!!" << std::endl;
 	}
 	
 	//assert(!NeedsNormalFlip(pObject));
@@ -377,7 +378,7 @@ void MODEL_JOE03::CorrectEndian ( struct JOETexCoord *p, int num )
 }
 
 ///fix invalid normals (my own fault, i suspect.  the DOF converter i wrote may have flipped Y & Z normals)
-bool MODEL_JOE03::NeedsNormalFlip(JOEObject * pObject)
+bool MODEL_JOE03::NeedsNormalSwap(JOEObject * pObject)
 {
 	bool need_normal_flip = false;
 	for (int f = 0; f < pObject->info.num_frames; f++)

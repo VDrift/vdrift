@@ -529,23 +529,31 @@ bool TEXTURE_GL::Load(std::ostream & error_output, const std::string & texsize)
 		h = texture_surface->h;
 
 		//detect channels
+		bool compression = false;
+		if (orig_surface->w > 512 || orig_surface->h > 512)
+			compression = true;
 		int format = GL_RGB;
+		int internalformat = compression ? GL_COMPRESSED_RGB : GL_RGB;
 		switch (texture_surface->format->BytesPerPixel)
 		{
 			case 1:
 				format = GL_LUMINANCE;
+				internalformat = compression ? GL_COMPRESSED_LUMINANCE : GL_LUMINANCE;
 				alphachannel = false;
 				break;
 			case 2:
 				format = GL_LUMINANCE_ALPHA;
+				internalformat = compression ? GL_COMPRESSED_LUMINANCE_ALPHA : GL_LUMINANCE_ALPHA;
 				alphachannel = true;
 				break;
 			case 3:
 				format = GL_RGB;
+				internalformat = compression ? GL_COMPRESSED_RGB : GL_RGB;
 				alphachannel = false;
 				break;
 			case 4:
 				format = GL_RGBA;
+				internalformat = compression ? GL_COMPRESSED_RGBA : GL_RGBA;
 				alphachannel = true;
 				break;
 			default:
@@ -579,7 +587,7 @@ bool TEXTURE_GL::Load(std::ostream & error_output, const std::string & texsize)
 				glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
 			}
 			//std:: cout << (int) texture_surface->format->BytesPerPixel << "," << format << "," << texture_surface->w << "," << texture_surface->h << "," << texture_surface->pixels << endl;
-			gluBuild2DMipmaps( GL_TEXTURE_2D, format, texture_surface->w, texture_surface->h, format, GL_UNSIGNED_BYTE, texture_surface->pixels ); //causes a crash on some png files, dunno why
+			gluBuild2DMipmaps( GL_TEXTURE_2D, internalformat, texture_surface->w, texture_surface->h, format, GL_UNSIGNED_BYTE, texture_surface->pixels ); //causes a crash on some png files, dunno why
 
 		}
 		else
@@ -594,7 +602,7 @@ bool TEXTURE_GL::Load(std::ostream & error_output, const std::string & texsize)
 				glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
 				glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
 			}
-			glTexImage2D( GL_TEXTURE_2D, 0, format,texture_surface->w, texture_surface->h, 0, format, GL_UNSIGNED_BYTE, texture_surface->pixels );
+			glTexImage2D( GL_TEXTURE_2D, 0, internalformat,texture_surface->w, texture_surface->h, 0, format, GL_UNSIGNED_BYTE, texture_surface->pixels );
 		}
 
 		OPENGL_UTILITY::CheckForOpenGLErrors("Texture creation", error_output);

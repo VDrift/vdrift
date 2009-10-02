@@ -93,7 +93,7 @@ private:
 
 	void ReadData(FILE *m_FilePointer, JOEPACK * pack, JOEObject * pObject); // This reads in the data from the MD2 file and stores it in the member variable
 	
-	bool NeedsNormalFlip(JOEObject * pObject);
+	bool NeedsNormalSwap(JOEObject * pObject);
 };
 
 #endif
