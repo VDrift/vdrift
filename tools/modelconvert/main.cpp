@@ -77,15 +77,15 @@ int main(int argc, char ** argv)
 	  return 0;
   }
   
-  string inext = infile.substr(max((unsigned int)0,infile.size()-3));
-  string outext = outfile.substr(max((unsigned int)0,outfile.size()-3));
+  string inext = infile.substr(max(infile.size()*0,infile.size()-3));
+  string outext = outfile.substr(max(outfile.size()*0,outfile.size()-3));
 
   MODEL * inmodel(NULL);  
 
   if (inext == "ova")
   {
 	  inmodel = new MODEL_OBJ();
-	  if (!inmodel->ReadFromFile(infile))
+	  if (!inmodel->ReadFromFile(infile, cerr, false))
 	  {
 		  cerr << "Error loading " << infile << endl;
 		  return 0;
