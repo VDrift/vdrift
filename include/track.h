@@ -142,7 +142,7 @@ class TRACK
 		SCENENODE * racingline_node;
 		TEXTURE_GL racingline_texture;
 		bool CreateRacingLines(SCENENODE * parentnode, 
-				       const std::string & texturepath, const std::string & texsize, std::ostream & error_output)
+			const std::string & texturepath, const std::string & texsize, std::ostream & error_output)
 		{
 			assert(parentnode);
 			if (!racingline_node)
@@ -159,14 +159,15 @@ class TRACK
 			}
 			
 			K1999 k1999data;
-			for (std::list <ROADSTRIP>::iterator i = roads.begin(); i != roads.end(); ++i)
+			int n = 0;
+			for (std::list <ROADSTRIP>::iterator i = roads.begin(); i != roads.end(); ++i,++n)
 			{
 				if (k1999data.LoadData(&(*i)))
 				{
 					k1999data.CalcRaceLine();
 					k1999data.UpdateRoadStrip(&(*i));
 				}
-				//else std::cerr << "Didn't load racingline data" << std::endl;
+				//else error_output << "Couldn't create racing line for roadstrip " << n << std::endl;
 				
 				i->CreateRacingLine(racingline_node, racingline_texture, error_output);
 			}

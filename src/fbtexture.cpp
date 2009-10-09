@@ -107,6 +107,10 @@ void FBTEXTURE_GL::Init(int sizex, int sizey, bool rect, bool newdepth, bool fil
 	
 	GLenum status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
 	
+	if (status != GL_FRAMEBUFFER_UNSUPPORTED_EXT)
+	{
+		error_output << "Unsupported framebuffer format in FBTEXTURE_GL::Init(" << sizex << ", " << sizey << ", " << rect << ", " << depth << ", " << filternearest << ", " << alpha << ")" << std::endl;
+	}
 	assert(status != GL_FRAMEBUFFER_UNSUPPORTED_EXT);
 	assert(status == GL_FRAMEBUFFER_COMPLETE_EXT);
 	
