@@ -226,10 +226,16 @@ void K1999::Interpolate(int Step)
 
 void K1999::CalcRaceLine()
 {
+	const int stepsize = 128;
+	
+	//abort if the track isn't long enough
+	if (tx.size() < stepsize)
+		return;
+	
  //
  // Smoothing loop
  //
- for (int Step = 128; (Step /= 2) > 0;)
+ for (int Step = stepsize; (Step /= 2) > 0;)
  {
   for (int i = Iterations * int(sqrt(Step)); --i >= 0;)
    Smooth(Step);
