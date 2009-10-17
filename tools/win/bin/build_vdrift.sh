@@ -10,14 +10,6 @@ echo "Make sure you're running this from your VDrift folder, like so:"
 echo "sh tools/win/bin/build_vdrift.sh"
 echo
 
-if [ ! -d "bullet-2.73" ]
-then
-	echo "Bullet folder doesn't exist; untarring it"
-	tar zxvf bullet-2.73-sp1.tgz || exit
-else
-	echo "Bullet folder already exists:  good!"
-fi
-
 echo
 
 scons release=1 || exit
