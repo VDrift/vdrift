@@ -209,6 +209,8 @@ void GRAPHICS_SDLGL::Init(const std::string shaderpath, const std::string & wind
 		static_drawlist_map[*i];
 		dynamic_drawlist_map[*i];
 	}
+	
+	//glstate.Enable(GL_SCISSOR_TEST);
 
 	initialized = true;
 }

@@ -535,6 +535,8 @@ std::pair <bool,bool> TRACK::OBJECTLOADER::ContinueObjectLoad(std::map <std::str
 					miscmap1 = texture_library[miscmap1_texture_name];
 			}
 		}
+		else
+			miscmap1 = texture_library.find(miscmap1_texture_name)->second;
 
 		TEXTURE * diffuse = &texture_library[diffuse_texture_name];
 
