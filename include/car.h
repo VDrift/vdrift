@@ -292,8 +292,7 @@ private:
 
 	float AutoClutch(float last_clutch, float dt) const;
 	float ShiftAutoClutch() const;
-	float ShiftAutoClutchThrottle() const; ///< return the maximum throttle position taking into account autoclutch work due to shifting
-
+	float ShiftAutoClutchThrottle(float throttle, float dt);
 	int AutoShift() const;
 
 	float DownshiftPoint(int gear) const;
@@ -624,6 +623,7 @@ public:
 	void SetAutoShift ( bool value )
 	{
 		autoshift_enabled = value;
+		if(value) ShiftGears(1);
 	}
 
 	bool Serialize(joeserialize::Serializer & s)
