@@ -1686,8 +1686,9 @@ int CAR::AutoShift() const
             float rpm = GetEngineRPM();
 
             // shift up when engine speed exceeds peak speed
-            if (rpm > GetEngineRedline() &&
-                current_gear < dynamics.GetTransmission().GetForwardGears())
+            if (rpm > GetEngineRedline()
+                && current_gear < dynamics.GetTransmission().GetForwardGears()
+                && current_gear >= 0)
             {
                 return 1;
             }
