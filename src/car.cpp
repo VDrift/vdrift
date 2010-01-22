@@ -1225,18 +1225,6 @@ void CAR::HandleInputs(const std::vector <float> & inputs, float dt)
 	//std::cout << "Throttle: " << inputs[CARINPUT::THROTTLE] << std::endl;
 	//std::cout << "Shift up: " << inputs[CARINPUT::SHIFT_UP] << std::endl;
 
-	//start the engine if requested
-	if (inputs[CARINPUT::START_ENGINE])
-		dynamics.GetEngine().StartEngine();
-
-	//set the throttle
-	float throttle = inputs[CARINPUT::THROTTLE];
-	if (auto_clutch)
-	{
-		throttle *= ShiftAutoClutchThrottle();
-	}
-	dynamics.GetEngine().SetThrottle(throttle);
-
 	//set the brakes
 	for (int i = 0; i < 4; i++)
 		dynamics.GetBrake(WHEEL_POSITION(i)).SetBrakeFactor(inputs[CARINPUT::BRAKE]);
@@ -1253,6 +1241,10 @@ void CAR::HandleInputs(const std::vector <float> & inputs, float dt)
 		steer_value = -inputs[CARINPUT::STEER_LEFT];
 	dynamics.SetSteering(steer_value);
 	last_steer = steer_value;
+
+    //start the engine if requested
+	if (inputs[CARINPUT::START_ENGINE])
+		dynamics.GetEngine().StartEngine();
 
 	//do shifting
 	int gear_change = 0;
@@ -1293,30 +1285,23 @@ void CAR::HandleInputs(const std::vector <float> & inputs, float dt)
 		}
 	}
 
-	if (remaining_shift_time <= shift_time*0.5 && !shifted)
+	if (remaining_shift_time <= shift_time * 0.5 && !shifted)
 	{
 		shifted = true;
 		dynamics.GetTransmission().Shift(shift_gear);
 	}
 
+	float throttle = inputs[CARINPUT::THROTTLE];
+	float clutch = inputs[CARINPUT::CLUTCH];
 	if (auto_clutch)
 	{
-		float newauto = AutoClutch(last_auto_clutch, dt);
-		last_auto_clutch = newauto;
-		dynamics.GetClutch().SetClutch(newauto);
+		if (!dynamics.GetEngine().GetCombustion()) dynamics.GetEngine().StartEngine();
+		throttle = ShiftAutoClutchThrottle(throttle, dt);
+		clutch = AutoClutch(last_auto_clutch, dt);
+		last_auto_clutch = clutch;
 	}
-	else
-	{
-		//set the clutch
-		dynamics.GetClutch().SetClutch(inputs[CARINPUT::CLUTCH]);
-	}
-	
-	//automatically restart the engine if autoclutch is enabled
-	if (auto_clutch)
-	{
-		if (!dynamics.GetEngine().GetCombustion())
-			dynamics.GetEngine().StartEngine();
-	}
+	dynamics.GetEngine().SetThrottle(throttle);
+	dynamics.GetClutch().SetClutch(clutch);
 
 	//do camera inputs
 	orbit_cam.RotateDown(-inputs[CARINPUT::PAN_UP]*dt);
@@ -1392,8 +1377,6 @@ float CAR::AutoClutch(float last_clutch, float dt) const
 		thresh *= 0.5;
 	float clutch = (rpm-stallrpm) / (thresh-stallrpm);
 
-	float shift_clutch = ShiftAutoClutch();
-
 	//std::cout << rpm << ", " << stallrpm << ", " << threshold << ", " << clutch << std::endl;
 
 	if (clutch < 0)
@@ -1401,10 +1384,7 @@ float CAR::AutoClutch(float last_clutch, float dt) const
 	if (clutch > 1.0)
 		clutch = 1.0;
 
-	if (gear == 0)
-		clutch = 0.0;
-
-	float newauto = clutch*shift_clutch;
+	float newauto = clutch * ShiftAutoClutch();
 
 	//rate limit the autoclutch
 	const float min_engage_time = 0.05; //the fastest time in seconds for auto-clutch engagement
@@ -1422,29 +1402,30 @@ float CAR::AutoClutch(float last_clutch, float dt) const
 float CAR::ShiftAutoClutch() const
 {
 	float shift_clutch = 1.0;
-	/*if (remaining_shift_time >= 0.2 && remaining_shift_time <= 0.3)
-		shift_clutch = (1.0-(remaining_shift_time-0.2)/0.1)*shift_clutch_start;*/
-	if (remaining_shift_time > shift_time*0.5)
-		shift_clutch = 0.0;
-	else if (remaining_shift_time > 0.0 && remaining_shift_time <= shift_time*0.5)
-		shift_clutch = 1.0-remaining_shift_time/(shift_time*0.5);
+	if (remaining_shift_time > shift_time * 0.5)
+	    shift_clutch = 0.0;
+	else if (remaining_shift_time > 0.0)
+	    shift_clutch = 1.0 - remaining_shift_time / (shift_time * 0.5);
 	return shift_clutch;
 }
 
-float CAR::ShiftAutoClutchThrottle() const
+float CAR::ShiftAutoClutchThrottle(float throttle, float dt)
 {
-	/*float shift_clutch = 0.0;
-	if (remaining_shift_time > 0.0 && remaining_shift_time <= 0.1)
-		shift_clutch = 1.0-remaining_shift_time/0.1;
-	return shift_clutch;*/
-	//return ShiftAutoClutch() < 1.0 ? 0. : 1.;
-	float throttleblip = 0.0;
-	if (shift_gear < dynamics.GetTransmission().GetGear())
+	if(remaining_shift_time > 0.0)
 	{
-		throttleblip = 0.5;
-		//std::cout << remaining_shift_time << std::endl;
+	    const float erpm = dynamics.GetEngine().GetRPM();
+	    const float crpm = dynamics.CalculateDriveshaftRPM();
+	    if(erpm < crpm)
+	    {
+	        remaining_shift_time += dt;
+            return 1.0;
+	    }
+	    else
+	    {
+	        return 0.0;
+	    }
 	}
-	return ShiftAutoClutch() < 1.0 ? throttleblip : 1.;
+	return throttle;
 }
 
 void CAR::UpdateSounds(float dt)
@@ -1697,13 +1678,12 @@ int CAR::AutoShift() const
 {
 	int current_gear = dynamics.GetTransmission().GetGear();
 
-	// only autoshift when not in neutral or reverse gear and a shift is not in progress
+	// only autoshift if a shift is not in progress
 	if (shifted)
 	{
-        if (current_gear > 0 && GetClutch() == 1.0)
+        if (GetClutch() == 1.0)
         {
-            //float rpm = GetEngineRPM();
-            float rpm = dynamics.CalculateDriveshaftRPM();
+            float rpm = GetEngineRPM();
 
             // shift up when engine speed exceeds peak speed
             if (rpm > GetEngineRedline() &&
@@ -1714,13 +1694,11 @@ int CAR::AutoShift() const
 
             // shift down when engine speed below shift_down_point
             // however, we do not auto shift down from 1st gear to neutral
-            if (current_gear > 1 && rpm < DownshiftPoint(current_gear))
+            else if (rpm < DownshiftPoint(current_gear))
             {
                 return -1;
             }
         }
-        else if (current_gear == 0) //always shift up if in neutral
-            return 1;
     }
 
 	return 0;
@@ -1728,16 +1706,13 @@ int CAR::AutoShift() const
 
 float CAR::DownshiftPoint(int gear) const
 {
-	float shift_down_point = 1200.0;
-	if (gear > 2)
+	float shift_down_point = 0.0;
+	if (gear > 1)
 	{
 		double current_gear_ratio = dynamics.GetTransmission().GetGearRatio(gear);
-		double lower_gear_ratio = dynamics.GetTransmission().GetGearRatio(gear - 2);
+		double lower_gear_ratio = dynamics.GetTransmission().GetGearRatio(gear - 1);
 		float peak_engine_speed = GetEngineRedline();
-		shift_down_point = peak_engine_speed / lower_gear_ratio * current_gear_ratio;
-		//shift_down_point -= (1200.0 / gear);
-
-		//assert(0);
+		shift_down_point = 0.75 * peak_engine_speed / lower_gear_ratio * current_gear_ratio;
 	}
 
 	return shift_down_point;
