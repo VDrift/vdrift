@@ -1372,13 +1372,13 @@ class ReflectionSerializer : public Serializer
 template <typename T>
 bool WriteObjectToFile(const std::string & path, T & object, std::ostream & info_output, bool binary=false)
 {
-	std::ofstream outfile(path.c_str());
+	std::ofstream outfile(path.c_str(), binary ? std::ios_base::binary : std::ios_base::out);
 	bool error = false;
 	if (outfile)
 	{
 		if (binary)
 		{
-			joeserialize::BinaryOutputSerializer out(outfile, std::ios_base::binary);
+			joeserialize::BinaryOutputSerializer out(outfile);
 			error = !object.Serialize(out);
 		}
 		else
@@ -1404,13 +1404,13 @@ bool LoadObjectFromFile(const std::string & path, T & object, std::ostream & inf
 {
 	info_output << "Loading " << path << "..." << std::endl;
 
-	std::ifstream infile(path.c_str());
+	std::ifstream infile(path.c_str(), binary ? std::ios_base::binary : std::ios_base::in);
 	bool error = false;
 	if (infile)
 	{
 		if (binary)
 		{
-			joeserialize::BinaryInputSerializer in(infile, std::ios_base::binary);
+			joeserialize::BinaryInputSerializer in(infile);
 			if (object.Serialize(in))
 			{
 				info_output << "Loaded " << path << std::endl;
