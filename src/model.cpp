@@ -143,7 +143,7 @@ bool MODEL::WriteToFile(const std::string & filepath)
 
 bool MODEL::ReadFromFile(const std::string & filepath, std::ostream & error_output, bool generatelistid)
 {
-	std::ifstream filein(filepath.c_str());
+	std::ifstream filein(filepath.c_str(), std::ios_base::binary);
 	if (!filein)
 	{
 		error_output << "Can't find file: " << filepath << std::endl;
