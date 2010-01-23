@@ -1378,7 +1378,7 @@ bool WriteObjectToFile(const std::string & path, T & object, std::ostream & info
 	{
 		if (binary)
 		{
-			joeserialize::BinaryOutputSerializer out(outfile);
+			joeserialize::BinaryOutputSerializer out(outfile, std::ios_base::binary);
 			error = !object.Serialize(out);
 		}
 		else
@@ -1410,7 +1410,7 @@ bool LoadObjectFromFile(const std::string & path, T & object, std::ostream & inf
 	{
 		if (binary)
 		{
-			joeserialize::BinaryInputSerializer in(infile);
+			joeserialize::BinaryInputSerializer in(infile, std::ios_base::binary);
 			if (object.Serialize(in))
 			{
 				info_output << "Loaded " << path << std::endl;
