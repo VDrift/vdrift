@@ -145,23 +145,33 @@ bool MODEL::ReadFromFile(const std::string & filepath, std::ostream & error_outp
 {
 	std::ifstream filein(filepath.c_str());
 	if (!filein)
+	{
+		error_output << "Can't find file: " << filepath << std::endl;
 		return false;
+	}
 	//else std::cout << "File " << filepath << " exists!" << std::endl;
 	
 	const std::string magic = "OGLVARRAYV01";
 	char fmagic[magic.size()+1];
 	filein.read(fmagic, magic.size());
 	if (!filein)
+	{
+		error_output << "File magic read error: " << filepath << std::endl;
 		return false;
+	}
 	
 	fmagic[magic.size()] = '\0';
 	std::string fmagicstr = fmagic;
 	if (magic != fmagic)
+	{
+		error_output << "File magic is incorrect: \"" << magic << "\" != \"" << fmagic << "\" in " << filepath << std::endl;
 		return false;
+	}
 	
 	joeserialize::BinaryInputSerializer s(filein);
 	if (!Serialize(s))
 	{
+		error_output << "Serialization error: " << filepath << std::endl;
 		Clear();
 		return false;
 	}
