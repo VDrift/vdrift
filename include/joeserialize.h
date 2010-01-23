@@ -194,6 +194,85 @@ class Serializer
 			return true;
 		}
 		
+		/// vector <bool> is special
+		bool Serialize(const std::string & name, std::vector <bool> & t)
+		{
+			ComplexTypeStart(name);
+			if (this->GetIODirection() == DIRECTION_OUTPUT)
+			{
+				int listsize = t.size();
+				if (!this->Serialize("size", listsize)) return false;
+				
+				int count = 1;
+				for (std::vector <bool>::iterator i = t.begin(); i != t.end(); ++i, ++count)
+				{
+					std::stringstream itemname;
+					itemname << "item" << count;
+					bool booli = *i;
+					if (!this->Serialize(itemname.str(), booli)) return false;
+				}
+			}
+			else //input
+			{
+				//t.clear();
+				int listsize;
+				if (!this->Serialize("size", listsize)) return false;
+				t.resize(listsize); //only resize, don't clear; we don't want to throw away information
+
+				for (int i = 0; i < listsize; i++)
+				{
+					std::stringstream itemname;
+					itemname << "item" << i+1;
+					//t.push_back(T());
+					//if (!this->Serialize(itemname.str(), t.back())) return false;
+					bool booli;
+					if (!this->Serialize(itemname.str(), booli)) return false;
+					t[i] = booli;
+				}
+			}
+			ComplexTypeEnd(name);
+			return true;
+		}
+		
+		///serialization overload for a complex type that we don't have the ability to change,
+		/// so we explicitly define the serialization process here. returns true on success
+		template <typename T>
+		bool Serialize(const std::string & name, std::deque <T> & t)
+		{
+			ComplexTypeStart(name);
+			if (this->GetIODirection() == DIRECTION_OUTPUT)
+			{
+				int listsize = t.size();
+				if (!this->Serialize("size", listsize)) return false;
+				
+				int count = 1;
+				for (typename std::deque <T>::iterator i = t.begin(); i != t.end(); ++i, ++count)
+				{
+					std::stringstream itemname;
+					itemname << "item" << count;
+					if (!this->Serialize(itemname.str(), *i)) return false;
+				}
+			}
+			else //input
+			{
+				//t.clear();
+				int listsize;
+				if (!this->Serialize("size", listsize)) return false;
+				t.resize(listsize); //only resize, don't clear; we don't want to throw away information
+
+				for (int i = 0; i < listsize; i++)
+				{
+					std::stringstream itemname;
+					itemname << "item" << i+1;
+					//t.push_back(T());
+					//if (!this->Serialize(itemname.str(), t.back())) return false;
+					if (!this->Serialize(itemname.str(), t[i])) return false;
+				}
+			}
+			ComplexTypeEnd(name);
+			return true;
+		}
+		
 		///serialization overload for a complex type that we don't have the ability to change,
 		/// so we explicitly define the serialization process here. returns true on success
 		template <typename U, typename T>
@@ -1289,7 +1368,7 @@ class ReflectionSerializer : public Serializer
 
 //utility functions
 
-///retursn true on success
+///returns true on success
 template <typename T>
 bool WriteObjectToFile(const std::string & path, T & object, std::ostream & info_output, bool binary=false)
 {
