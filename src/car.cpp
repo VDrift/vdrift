@@ -1415,7 +1415,8 @@ float CAR::ShiftAutoClutchThrottle(float throttle, float dt)
 	{
 	    const float erpm = dynamics.GetEngine().GetRPM();
 	    const float crpm = dynamics.CalculateDriveshaftRPM();
-	    if(erpm < crpm)
+	    const float redl =  dynamics.GetEngine().GetRedline();
+	    if(erpm < crpm && erpm < redl)
 	    {
 	        remaining_shift_time += dt;
             return 1.0;
