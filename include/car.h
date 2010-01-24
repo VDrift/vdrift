@@ -457,6 +457,12 @@ public:
 	{
 		return dynamics.GetTransmission().GetGear();
 	}
+	
+	// a quick hack(see game.cpp 2241), need a proper solution
+    void SetGear(int gear)
+	{
+	    ShiftGears(gear, true);
+	}
 
 	float GetClutch() const
 	{
@@ -623,7 +629,6 @@ public:
 	void SetAutoShift ( bool value )
 	{
 		autoshift_enabled = value;
-		if(value) ShiftGears(1);
 	}
 
 	bool Serialize(joeserialize::Serializer & s)
