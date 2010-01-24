@@ -2234,8 +2234,11 @@ bool GAME::LoadCar(const std::string & carname, const std::string & carpaint, co
 			if (settings.GetCameraMode() == "chase")
 				active_camera = cars.back().GetChaseCamera();
 
-			//setup auto clutch and auto shift
+			// setup auto clutch and auto shift
 			ProcessNewSettings();
+			// shift into first gear if autoshift enabled
+			if (carcontrols_local.first && settings.GetAutoShift())
+                carcontrols_local.first->SetGear(1);
 		}
 	}
 	
