@@ -1418,16 +1418,11 @@ void GAME::UpdateCarInputs(CAR & car)
 		assert(carinputs.size() == CARINPUT::INVALID);
 	}
 
-	//force brake on and no other car inputs during staging and once the race is over
+	//force brake and clutch during staging and once the race is over
 	if (timer.Staging() || ((int)timer.GetCurrentLap(cartimerids[&car]) > race_laps && race_laps > 0))
 	{
-	    for (int i = 0; i < CARINPUT::GAME_ONLY_INPUTS_START_HERE; i++)
-	    {
-	        if (i != CARINPUT::SHIFT_UP && i != CARINPUT::SHIFT_DOWN)
-                carinputs[i] = 0.0f;
-	    }
-
         carinputs[CARINPUT::BRAKE] = 1.0;
+        carinputs[CARINPUT::CLUTCH] = 1.0;
 	}
 
 	car.HandleInputs(carinputs, TickPeriod());
