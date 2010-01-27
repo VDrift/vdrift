@@ -1423,10 +1423,54 @@ float CAR::ShiftAutoClutchThrottle(float throttle, float dt)
 	    }
 	    else
 	    {
-	        return 0.0;
+	        return 0.5 * throttle;
 	    }
 	}
 	return throttle;
+}
+
+///return the gear change (0 for no change, -1 for shift down, 1 for shift up)
+int CAR::AutoShift() const
+{
+	int current_gear = dynamics.GetTransmission().GetGear();
+
+	// only autoshift if a shift is not in progress
+	if (shifted)
+	{
+        if (GetClutch() == 1.0)
+        {
+            float rpm = dynamics.CalculateDriveshaftRPM();
+            float redline = GetEngineRedline();
+
+            // shift up when driveshaft speed exceeds engine redline
+            // we do not shift up from neutral/reverse
+            if (rpm > redline && current_gear > 0)
+            {
+                return 1;
+            }
+            // shift down when engine speed below shift_down_point
+            // however, we do not auto shift down from 1st gear to neutral
+            else if(rpm < DownshiftPoint(current_gear))
+            {
+                return -1; 
+            }
+        }
+    }
+
+	return 0;
+}
+
+float CAR::DownshiftPoint(int gear) const
+{
+	float shift_down_point = 0.0;
+	if (gear > 1)
+	{
+        float current_gear_ratio = dynamics.GetTransmission().GetGearRatio(gear);
+        float lower_gear_ratio = dynamics.GetTransmission().GetGearRatio(gear - 1);
+		float peak_engine_speed = GetEngineRedline();
+		shift_down_point = 0.75 * peak_engine_speed / lower_gear_ratio * current_gear_ratio;
+	}
+	return shift_down_point;
 }
 
 void CAR::UpdateSounds(float dt)
@@ -1674,52 +1718,6 @@ void CAR::UpdateCameras(float dt)
 	orbit_cam.SetFocus(GetCenterOfMassPosition());
 }
 
-///return the gear change (0 for no change, -1 for shift down, 1 for shift up)
-int CAR::AutoShift() const
-{
-	int current_gear = dynamics.GetTransmission().GetGear();
-
-	// only autoshift if a shift is not in progress
-	if (shifted)
-	{
-        if (GetClutch() == 1.0)
-        {
-            float rpm = GetEngineRPM();
-
-            // shift up when engine speed exceeds peak speed
-            if (rpm > GetEngineRedline()
-                && current_gear < dynamics.GetTransmission().GetForwardGears()
-                && current_gear >= 0)
-            {
-                return 1;
-            }
-
-            // shift down when engine speed below shift_down_point
-            // however, we do not auto shift down from 1st gear to neutral
-            else if (rpm < DownshiftPoint(current_gear))
-            {
-                return -1;
-            }
-        }
-    }
-
-	return 0;
-}
-
-float CAR::DownshiftPoint(int gear) const
-{
-	float shift_down_point = 0.0;
-	if (gear > 1)
-	{
-		double current_gear_ratio = dynamics.GetTransmission().GetGearRatio(gear);
-		double lower_gear_ratio = dynamics.GetTransmission().GetGearRatio(gear - 1);
-		float peak_engine_speed = GetEngineRedline();
-		shift_down_point = 0.75 * peak_engine_speed / lower_gear_ratio * current_gear_ratio;
-	}
-
-	return shift_down_point;
-}
-
 CAR::SUSPENSIONBUMPDETECTION::SUSPENSIONBUMPDETECTION() : state(SETTLED), laststate(SETTLED),
 						displacetime(0.01), displacevelocitythreshold(0.5),
 						settletime(0.01), settlevelocitythreshold(0.0),
@@ -1818,7 +1816,7 @@ float CAR::GetTireSquealAmount(WHEEL_POSITION i) const
 	float squeal = (groundvel.Magnitude()-3.0)*0.2;
 	
 	std::pair <double, double> slideslip = dynamics.GetTire(i).GetSlideSlipRatios();
-	double maxratio = std::max(std::abs(slideslip.first),std::abs(slideslip.second));
+	double maxratio = std::max(std::abs(slideslip.first), std::abs(slideslip.second));
 	float squealfactor = std::max(0.0,maxratio - 1.0);
 	squeal *= squealfactor;
 	if (squeal < 0)
