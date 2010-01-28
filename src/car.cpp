@@ -1373,7 +1373,7 @@ float CAR::AutoClutch(float last_clutch, float dt) const
 	if (gear <= 1)
 		gearfactor = 2.0;
 	float thresh = threshold * (maxrpm/7000.0) * ((1.0-geareffect)+gearfactor*geareffect) + stallrpm;
-	if (dynamics.GetClutch().GetEngaged())
+	if (dynamics.GetClutch().IsLocked())
 		thresh *= 0.5;
 	float clutch = (rpm-stallrpm) / (thresh-stallrpm);
 
