@@ -84,12 +84,16 @@ class CARCLUTCH
             T torque_capacity = sliding_friction * max_pressure * area * radius; // constant
 			T max_torque = clutch_position * torque_capacity;
 			T friction_torque = max_torque * new_speed_diff;    // viscous coupling (locked clutch)
-			if (friction_torque  > max_torque)
-                friction_torque  = max_torque;
-			if (friction_torque  < -max_torque)
-                friction_torque  = -max_torque;
-			if (friction_torque == max_torque)
-                locked = false;                                 // slipping clutch
+			if (friction_torque > max_torque)
+			{
+			    friction_torque  = max_torque;
+			    locked = false;                                 // slipping clutch
+			}
+			else if (friction_torque < -max_torque)
+			{
+			    friction_torque  = -max_torque;
+			    locked = false;
+			}
 			
 			T torque = friction_torque;
 			last_torque = torque;
