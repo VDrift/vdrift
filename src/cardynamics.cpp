@@ -157,13 +157,13 @@ void CARDYNAMICS::ComputeSuspensionDisplacement ( int i, T dt )
 	T posz = wheel_contacts[i].GetPosition() [2];
 	T phase = 2*3.141593* ( posx+posz ) / wheel_contacts[i].GetBumpWavelength();
 	T shift = 2.0*sin ( phase*1.414214 );
-	T amplitude = 0.25*wheel_contacts[i].GetBumpAmplitude();
+	T amplitude = 0.25 * wheel_contacts[i].GetBumpAmplitude();
 	T bumpoffset = amplitude * ( sin ( phase + shift ) + sin ( 1.414214*phase ) - 2.0 );
 
 	T wheelheight_above_ground = wheel_contacts[i].GetWheelheight() - tire[i].GetRadius() - bumpoffset;
 	assert ( !isnan ( wheelheight_above_ground ) );
 	assert ( !isnan ( suspension[WHEEL_POSITION ( i ) ].GetDisplacement() ) );
-	suspension[WHEEL_POSITION ( i ) ].SetDisplacement ( suspension[WHEEL_POSITION ( i ) ].GetDisplacement()-wheelheight_above_ground, dt );
+	suspension[WHEEL_POSITION ( i ) ].SetDisplacement ( suspension[WHEEL_POSITION ( i ) ].GetDisplacement() - wheelheight_above_ground, dt );
 	assert ( !isnan ( suspension[WHEEL_POSITION ( i ) ].GetDisplacement() ) );
 }
 
@@ -176,6 +176,8 @@ MATHVECTOR <T, 3> CARDYNAMICS::ApplySuspensionForceToBody ( int i, T dt, MATHVEC
 
 	//correct for a bottomed suspension by moving the car body up.  this is sort of a kludge.
 	T overtravel = suspension[WHEEL_POSITION ( i ) ].GetOvertravel();
+	//assert(overtravel < 1.0);
+	//if (overtravel > 1.0) std::cout << "wheel overtravel = " << overtravel;
 	if ( overtravel > 0 )
 	{
 		MATHVECTOR <T, 3> worldup ( 0,0,1 );
@@ -1227,7 +1229,7 @@ void CARDYNAMICS::ProcessContact ( const MATHVECTOR <T, 3> & pos, const MATHVECT
         impulse =  impulse - v_par.Normalize() * friction; // add some friction
 	MATHVECTOR <T, 3> newtorque;
 	body.GetForceAtOffset ( impulse, pos - GetCenterOfMassPosition(), contact_force, newtorque );
-	contact_torque = newtorque * 0.1; // dampen the torque
+	contact_torque = newtorque * 0.1; // damp the torque
 }
 
 ///return the spedometer reading in m/s based on the driveshaft speed
