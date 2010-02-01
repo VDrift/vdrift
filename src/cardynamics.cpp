@@ -1224,12 +1224,12 @@ void CARDYNAMICS::ProcessContact ( const MATHVECTOR <T, 3> & pos, const MATHVECT
 	MATHVECTOR <T, 3> v_par = relative_velocity - v_perp;
 	MATHVECTOR <T, 3> impulse;
 	if ( v_perp.Magnitude() > 0.001 )
-		impulse = -v_perp * body.GetMass(); // impulse normal to surface
-        float friction = min(v_par.Magnitude(), 0.1 * impulse.Magnitude());
-        impulse =  impulse - v_par.Normalize() * friction; // add some friction
+		impulse = -v_perp * body.GetMass(); // inelastic collision
+        float friction = min(v_par.Magnitude(), 0.5 * impulse.Magnitude()); // add some friction
+        impulse =  impulse - v_par.Normalize() * friction;
 	MATHVECTOR <T, 3> newtorque;
 	body.GetForceAtOffset ( impulse, pos - GetCenterOfMassPosition(), contact_force, newtorque );
-	contact_torque = newtorque * 0.1; // damp the torque
+	contact_torque = newtorque * 0.25; // damp the torque
 }
 
 ///return the spedometer reading in m/s based on the driveshaft speed
