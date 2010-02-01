@@ -28,7 +28,7 @@ class CAR
 {
 friend class PERFORMANCE_TESTING;
 friend class joeserialize::Serializer;
-private:
+protected:
 	CARDYNAMICS dynamics;
 	
 	std::vector <float> feedbackbuffer;
