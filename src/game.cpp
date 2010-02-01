@@ -1629,12 +1629,13 @@ void GAME::UpdateCarWheelCollisions(CAR & car, std::vector <COLLISION_CONTACT> &
 			//MATHVECTOR <float, 3> wp = car.GetWheelPositionAtDisplacement(WHEEL_POSITION(n),1.0);
 			//info_output << wp << "..." << cam_position << endl;
 		MATHVECTOR <float, 3> dir = car.GetDownVector();
-		MATHVECTOR <float, 3> raystart = wp;;
+		MATHVECTOR <float, 3> raystart = wp;
 		float raylen = 10.0;
-		float moveback = -car.GetWheelVelocity(WHEEL_POSITION(n))[2];
+		float moveback = 0;//-car.GetWheelVelocity(WHEEL_POSITION(n))[2]; //moveback is too large, need to look into wheel velocity
+		//if(moveback > 1) cout << "moveback = " << moveback << endl;
 		if (moveback < 0)
 			moveback = 0;
-		raystart = raystart - dir*(car.GetTireRadius(WHEEL_POSITION(n))+moveback); //move back slightly
+		raystart = raystart - dir * (car.GetTireRadius(WHEEL_POSITION(n)) + moveback); //move back slightly
 
 		//start by doing a road patch collision check
 		MATHVECTOR <float, 3> bezierspace_raystart(raystart[1], raystart[2], raystart[0]);
@@ -1670,7 +1671,7 @@ void GAME::UpdateCarWheelCollisions(CAR & car, std::vector <COLLISION_CONTACT> &
 				//cout << "Model contact point = " << cp << endl;
 				//cout << "Contact, Wheel penetration: " << cp[2] - wp[2] << " (" << cp[2] << " - " << wp[2] << "), " << contactlist.size() << "," << contact.GetContactDepth() << endl;
 				const TRACK_OBJECT * const obj = reinterpret_cast <const TRACK_OBJECT * const> (contact.GetCollidingObject1()->ObjID());
-				car.SetWheelContactProperties(WHEEL_POSITION(n), contact.GetContactDepth() - car.GetTireRadius(WHEEL_POSITION(n))-moveback, contact.GetContactPosition(), contact.GetContactNormal(),
+				car.SetWheelContactProperties(WHEEL_POSITION(n), contact.GetContactDepth() - car.GetTireRadius(WHEEL_POSITION(n)) - moveback, contact.GetContactPosition(), contact.GetContactNormal(),
 						obj->GetBumpWavelength(), obj->GetBumpAmplitude(), obj->GetFrictionNoTread(), obj->GetFrictionTread(), obj->GetRollingResistanceCoefficient(), obj->GetRollingDrag(), obj->GetSurfaceType());
 				if (cached_collisions.size() != 4)
 					cached_collisions.resize(4);
