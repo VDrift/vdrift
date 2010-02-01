@@ -1212,6 +1212,7 @@ void CARDYNAMICS::Translate ( const MATHVECTOR <T, 3> & translation )
 ///apply force from a contact to the body.  units are worldspace
 void CARDYNAMICS::ProcessContact ( const MATHVECTOR <T, 3> & pos, const MATHVECTOR <T, 3> & normal, const MATHVECTOR <T, 3> & relative_velocity, T depth, T dt )
 {
+    assert(depth < 0.5f); // look for deep collisions => something gone wrong
 	MATHVECTOR <T, 3> translation;
 	translation = normal* ( depth + 0.0 );
 
@@ -1221,12 +1222,12 @@ void CARDYNAMICS::ProcessContact ( const MATHVECTOR <T, 3> & pos, const MATHVECT
 	MATHVECTOR <T, 3> v_par = relative_velocity - v_perp;
 	MATHVECTOR <T, 3> impulse;
 	if ( v_perp.Magnitude() > 0.001 )
-		impulse = v_perp * -1.0 * body.GetMass() - v_par.Normalize() * v_perp.Magnitude();
-	impulse = impulse*1.0;
-	//std::cout << impulse.Magnitude() << ", " << depth << " -- " << relative_velocity << std::endl;
+		impulse = -v_perp * body.GetMass() * 0.1f; // impulse normal to surface dampened by  0.05
+        float friction = min(v_par.Magnitude(), impulse.Magnitude());
+        impulse =  impulse - v_par.Normalize() * friction; // add some friction
 	MATHVECTOR <T, 3> newtorque;
-	body.GetForceAtOffset ( impulse, pos-GetCenterOfMassPosition(), contact_force, newtorque );
-	contact_torque = newtorque * 0.05;
+	body.GetForceAtOffset ( impulse, pos - GetCenterOfMassPosition(), contact_force, newtorque );
+	contact_torque = newtorque;
 }
 
 ///return the spedometer reading in m/s based on the driveshaft speed
