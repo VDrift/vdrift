@@ -1631,11 +1631,11 @@ void GAME::UpdateCarWheelCollisions(CAR & car, std::vector <COLLISION_CONTACT> &
 		MATHVECTOR <float, 3> dir = car.GetDownVector();
 		MATHVECTOR <float, 3> raystart = wp;
 		float raylen = 10.0;
-		float moveback = 0;//-car.GetWheelVelocity(WHEEL_POSITION(n))[2]; //moveback is too large, need to look into wheel velocity
-		//if(moveback > 1) cout << "moveback = " << moveback << endl;
+		float moveback = car.GetVelocity()[2]; // don't want to fall through the ground
+		if (moveback > 1) cout << "moveback = " << moveback << endl;
 		if (moveback < 0)
 			moveback = 0;
-		raystart = raystart - dir * (car.GetTireRadius(WHEEL_POSITION(n)) + moveback); //move back slightly
+		raystart = raystart - dir * (car.GetTireRadius(WHEEL_POSITION(n)) + moveback);
 
 		//start by doing a road patch collision check
 		MATHVECTOR <float, 3> bezierspace_raystart(raystart[1], raystart[2], raystart[0]);
