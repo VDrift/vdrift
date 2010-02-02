@@ -1632,7 +1632,6 @@ void GAME::UpdateCarWheelCollisions(CAR & car, std::vector <COLLISION_CONTACT> &
 		MATHVECTOR <float, 3> raystart = wp;
 		float raylen = 10.0;
 		float moveback = -car.GetVelocity()[2]; // don't want to fall through the ground
-		if (moveback > 1) cout << "moveback = " << moveback << endl;
 		if (moveback < 0)
 			moveback = 0;
 		raystart = raystart - dir * (car.GetTireRadius(WHEEL_POSITION(n)) + moveback);
