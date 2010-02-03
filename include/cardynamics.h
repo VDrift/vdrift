@@ -182,7 +182,7 @@ friend class PERFORMANCE_TESTING;
 friend class joeserialize::Serializer;
 public:
 	typedef double T;
-private:
+protected:
 	//-----------Data------------
 	
 	//sub-components
