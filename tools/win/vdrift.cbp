@@ -29,6 +29,9 @@
 				<Linker>
 					<Add option="-s" />
 				</Linker>
+				<ExtraCommands>
+					<Add after="xcopy /d dll\*.dll ..\..\" />
+				</ExtraCommands>
 			</Target>
 		</Build>
 		<Compiler>
