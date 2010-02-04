@@ -137,9 +137,9 @@ public:
 		return rotation.GetTorque()[0];
 	}
 	
-	T GetLockUpTorque()
+	T GetLockUpTorque(const T dt) const
 	{
-	    return -rotation.GetInertia().Multiply(rotation.GetAngularVelocity())[0] - rotation.GetTorque()[0];//rotation.GetAngularMomentum()[0];
+	    return rotation.GetLockUpTorque(dt)[0];
 	}
 	
 	void ZeroForces()

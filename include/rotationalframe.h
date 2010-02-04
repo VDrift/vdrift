@@ -198,6 +198,11 @@ public:
 		return orientation;
 	}
 	
+	const MATHVECTOR<T, 3> GetLockUpTorque(const T dt) const
+	{
+	    return -angular_momentum / dt;
+	}
+	
 	bool Serialize(joeserialize::Serializer & s)
 	{
 		_SERIALIZE_(s,orientation);
