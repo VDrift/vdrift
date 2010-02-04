@@ -398,23 +398,22 @@ void CARDYNAMICS::ApplyWheelForces(T dt, T drive_torque, int i, const MATHVECTOR
     if(lock_up_torque >= 0 && lock_up_torque > brake_torque)
     {
         brake.WillLock(false);
-        //wheel_torque += brake_torque;
-        wheel.SetTorque(wheel_torque + brake_torque);
+        wheel_torque += brake_torque;
+        wheel.SetTorque(wheel_torque);
     }
     else if(lock_up_torque < 0 && lock_up_torque < -brake_torque)
     {
         brake.WillLock(false);
-        //wheel_torque -= brake_torque;
-        wheel.SetTorque(wheel_torque - brake_torque);
+        wheel_torque -= brake_torque;
+        wheel.SetTorque(wheel_torque);
     }
     else
     {
         brake.WillLock(true);
-        //wheel_torque += lock_up_torque;
+        wheel_torque = wheel.GetLockUpTorque();//lock_up_torque;
         wheel.SetAngularVelocity(0);
         wheel.SetTorque(0);
     }
-    //wheel.SetTorque(wheel_torque);
     
     wheel.Integrate2(dt);
     
@@ -423,7 +422,7 @@ void CARDYNAMICS::ApplyWheelForces(T dt, T drive_torque, int i, const MATHVECTOR
     
     //apply forces to body
     MATHVECTOR <T, 3> tire_force(friction_force[0], friction_force[1], 0);
-	MATHVECTOR <T, 3> tire_torque(0, wheel.GetTorque(), -friction_force[2]);
+	MATHVECTOR <T, 3> tire_torque(0, wheel_torque, -friction_force[2]);
     tire_force = tire_force - groundvel * wheel_contacts[i].GetRollingDrag();
     
 	MATHVECTOR <T, 3> world_tire_force = tire_force;
