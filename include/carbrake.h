@@ -48,7 +48,8 @@ class CARBRAKE
 			brake_factor = newfactor;
 		}
 		
-		T GetTorque ( T rotational_speed )
+		///brake torque magnitude
+		T GetTorque()
 		{
 			T brake = brake_factor > handbrake*handbrake_factor ? brake_factor : handbrake*handbrake_factor;
 			//brake = pow(brake,2.0f);
@@ -56,49 +57,20 @@ class CARBRAKE
 			T pressure = brake * bias * max_pressure;
 			T normal = pressure * area;
 			T torque = friction * normal * radius;
-			T velocity = radius * rotational_speed;
-			if ( velocity < 0.0 )
-				torque = -torque;
-			
-			T absvel = std::abs(velocity);
-			
-			// See if the brake is locked.
-			if ( absvel < threshold * normal )
-			//if ( absvel < ( threshold * brake ) )
-			{
-				torque = 0.0;
-				locked = true;
-			}
-			else
-				locked = false;
-			
 			lasttorque = torque;
-			
 			return torque;
 		}
 		
 		///used by the autoclutch system to determine if the brakes are about to lock up
-		bool WillLock(T rotational_speed) const
+		bool WillLock() const
 		{
-			T brake = brake_factor > handbrake*handbrake_factor ? brake_factor : handbrake*handbrake_factor;
-			T pressure = brake * bias * max_pressure;
-			T normal = pressure * area;
-			T torque = friction * normal * radius;
-			T velocity = radius * rotational_speed;
-			if ( velocity < 0.0 )
-				torque = -torque;
-			
-			T absvel = std::abs(velocity);
-			
-			// See if the brake is locked.
-			if ( absvel < ( threshold * normal ) )
-			//if ( absvel < ( threshold * brake ) )
-			{
-				return true;
-			}
-			else
-				return false;
+		    return locked;
 		}
+		
+        void WillLock(T lock)
+		{
+		    locked = lock;
+        }
 
 		void SetFriction ( const T& value )
 		{

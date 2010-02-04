@@ -76,29 +76,29 @@ public:
 		std::cout << "force = " << body_force << ", offset = " << body_offset << ", torque = " << body_torque << std::endl;*/
 	}
 	
-	/// given the input force (in world space) and torque (in world space) applied at the given offset from the center of mass (in world space), add the force and torque generated at the center of mass to the output vectors (in world space)
-	void GetForceAndTorqueAtOffset(const MATHVECTOR <T, 3> & force, const MATHVECTOR <T, 3> & torque, const MATHVECTOR <T, 3> & offset, MATHVECTOR <T, 3> & output_force, MATHVECTOR <T, 3> & output_torque)
+	void GetTorqueAtOffset(const MATHVECTOR <T, 3> & torque, const MATHVECTOR <T, 3> & offset, MATHVECTOR <T, 3> & output_torque)
 	{
-		//here's the equation:
-		//F_linear = F
-		//F_torque = F cross (distance from center of mass)
-		//T_torque = T * (I/(I+mass*D.D))
-		
-		GetForceAtOffset(force, offset, output_force, output_torque);
-		
-		//now, the torque stuff
-		if (torque.Magnitude() > 1e-9)
+	    //here's the equation:
+	    //T_torque = T * (I/(I+mass*D.D))
+        if (torque.Magnitude() > 1e-9)
 		{
 			MATRIX3 <T> inertia_tensor = rotation.GetInertia();
 			MATHVECTOR <T, 3> bodytorque = torque;
 			(-GetOrientation()).RotateVector(bodytorque);
 			T inertia_factor = (inertia_tensor.Multiply(bodytorque.Normalize())).Magnitude();
 			MATHVECTOR <T, 3> newtorque = bodytorque * (inertia_factor/(inertia_factor + linear.GetMass() * (offset.dot(offset))));
-			//std::cout << bodytorque << " -- " << newtorque << std::endl;
+            //std::cout << bodytorque << " -- " << newtorque << std::endl;
 			GetOrientation().RotateVector(newtorque);
 			output_torque = output_torque + newtorque;
-			//output_torque = output_torque - newtorque;
+            //output_torque = output_torque - newtorque;
 		}
+	}
+	
+	/// given the input force (in world space) and torque (in world space) applied at the given offset from the center of mass (in world space), add the force and torque generated at the center of mass to the output vectors (in world space)
+	void GetForceAndTorqueAtOffset(const MATHVECTOR <T, 3> & force, const MATHVECTOR <T, 3> & torque, const MATHVECTOR <T, 3> & offset, MATHVECTOR <T, 3> & output_force, MATHVECTOR <T, 3> & output_torque)
+	{
+		GetForceAtOffset(force, offset, output_force, output_torque);
+		GetTorqueAtOffset(torque, offset, output_torque);
 	}
 	
 	bool Serialize(joeserialize::Serializer & s)
