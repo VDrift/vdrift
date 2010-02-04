@@ -29,9 +29,6 @@
 				<Linker>
 					<Add option="-s" />
 				</Linker>
-				<ExtraCommands>
-					<Add after="xcopy /d dll\*.dll ..\..\" />
-				</ExtraCommands>
 			</Target>
 		</Build>
 		<Compiler>
@@ -56,6 +53,10 @@
 			<Add library="vorbisfile" />
 			<Add directory="dll" />
 		</Linker>
+		<ExtraCommands>
+			<Add before='cmd /c &quot;if not exist ..\..\include\definitions.h. (echo #ifndef _DEFINITIONS_H&gt; ..\..\include\definitions.h &amp;&amp; echo #define _DEFINITIONS_H&gt;&gt; ..\..\include\definitions.h &amp;&amp; echo #define SETTINGS_DIR &quot;.vdrift&quot;&gt;&gt; ..\..\include\definitions.h &amp;&amp; echo #define DATA_DIR &quot;./data&quot;&gt;&gt; ..\..\include\definitions.h &amp;&amp; echo #define VERSION &quot;$(TODAY)&quot;&gt;&gt; ..\..\include\definitions.h &amp;&amp; echo #define REVISION &quot;latest&quot;&gt;&gt; ..\..\include\definitions.h &amp;&amp; echo #endif&gt;&gt; ..\..\include\definitions.h)&quot;' />
+			<Add after="xcopy /d dll\*.dll ..\..\" />
+		</ExtraCommands>
 		<Unit filename="..\..\bullet\BulletCollision\BroadphaseCollision\btAxisSweep3.cpp" />
 		<Unit filename="..\..\bullet\BulletCollision\BroadphaseCollision\btAxisSweep3.h" />
 		<Unit filename="..\..\bullet\BulletCollision\BroadphaseCollision\btBroadphaseInterface.h" />
