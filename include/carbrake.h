@@ -50,7 +50,7 @@ class CARBRAKE
 		
 		T GetTorque ( T rotational_speed )
 		{
-			T brake = brake_factor > handbrake_factor ? brake_factor : handbrake_factor;
+			T brake = brake_factor > handbrake*handbrake_factor ? brake_factor : handbrake*handbrake_factor;
 			//brake = pow(brake,2.0f);
 			
 			T pressure = brake * bias * max_pressure;
@@ -80,7 +80,7 @@ class CARBRAKE
 		///used by the autoclutch system to determine if the brakes are about to lock up
 		bool WillLock(T rotational_speed) const
 		{
-			T brake = brake_factor > handbrake_factor ? brake_factor : handbrake_factor;
+			T brake = brake_factor > handbrake*handbrake_factor ? brake_factor : handbrake*handbrake_factor;
 			T pressure = brake * bias * max_pressure;
 			T normal = pressure * area;
 			T torque = friction * normal * radius;
