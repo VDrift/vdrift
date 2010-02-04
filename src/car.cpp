@@ -1295,7 +1295,11 @@ void CAR::HandleInputs(const std::vector <float> & inputs, float dt)
 	float clutch = inputs[CARINPUT::CLUTCH];
 	if (auto_clutch)
 	{
-		if (!dynamics.GetEngine().GetCombustion()) dynamics.GetEngine().StartEngine();
+		if (!dynamics.GetEngine().GetCombustion())
+		{
+		    dynamics.GetEngine().StartEngine();
+		    cout << "clutch: " << clutch << "gear: " << cur_gear << endl;
+		}
 		throttle = ShiftAutoClutchThrottle(throttle, dt);
 		clutch = AutoClutch(last_auto_clutch, dt);
 		last_auto_clutch = clutch;
@@ -1334,31 +1338,24 @@ float CAR::AutoClutch(float last_clutch, float dt) const
 	const float margin = 100.0;//100.0;
 	const float geareffect = 1.0; //zero to 1, defines special consideration of first/reverse gear
 
-	bool protect_against_brake_lockup = true;
-
 	float rpm = dynamics.GetEngine().GetRPM();
 	float driveshaft_rpm = dynamics.CalculateDriveshaftRPM();
-	//if (!protect_against_brake_lockup)
 	driveshaft_rpm = rpm;
 
-	bool braking(false);
-	
 	//take into account locked brakes
+	bool protect_against_brake_lockup = true;
+	bool braking(true);
 	if (protect_against_brake_lockup)
 	{
 		for (int i = 0; i < 4; i++)
 		{
 			if (dynamics.WheelDriven(WHEEL_POSITION(i)))
 			{
-				if (dynamics.GetBrake(WHEEL_POSITION(i)).WillLock(dynamics.GetWheel(WHEEL_POSITION(i)).GetAngularVelocity()))
-				//if (dynamics.GetBrake(WHEEL_POSITION(i)).GetBrakeFactor() > 0.9 || dynamics.GetBrake(WHEEL_POSITION(i)).WillLock(dynamics.GetWheel(WHEEL_POSITION(i)).GetAngularVelocity()))
-				{
-					//driveshaft_rpm = 0;
-					braking = true;
-					//std::cout << "Braking will lock: " << dynamics.GetBrake(WHEEL_POSITION(i)).GetBrakeFactor() << std::endl;
-				}
+                braking = braking && dynamics.GetBrake(WHEEL_POSITION(i)).WillLock();
 			}
 		}
+		if (braking)
+            return 0; 
 	}
 
 	//use driveshaft_rpm if it's lower
@@ -1392,11 +1389,8 @@ float CAR::AutoClutch(float last_clutch, float dt) const
 	const float rate = (last_clutch - newauto)/dt; //engagement rate in clutch units per second
 	if (rate > engage_rate_limit)
 		newauto = last_clutch - engage_rate_limit*dt;
-	
-	if (braking)
-		return 0;
-	else
-		return newauto;
+    
+    return newauto;
 }
 
 float CAR::ShiftAutoClutch() const
@@ -1414,9 +1408,9 @@ float CAR::ShiftAutoClutchThrottle(float throttle, float dt)
 	if(remaining_shift_time > 0.0)
 	{
 	    const float erpm = dynamics.GetEngine().GetRPM();
-	    const float crpm = dynamics.CalculateDriveshaftRPM();
+	    const float drpm = dynamics.CalculateDriveshaftRPM();
 	    const float redl =  dynamics.GetEngine().GetRedline();
-	    if(erpm < crpm && erpm < redl)
+	    if(erpm < drpm && erpm < redl)
 	    {
 	        remaining_shift_time += dt;
             return 1.0;
@@ -1432,13 +1426,12 @@ float CAR::ShiftAutoClutchThrottle(float throttle, float dt)
 ///return the gear change (0 for no change, -1 for shift down, 1 for shift up)
 int CAR::AutoShift() const
 {
-	int current_gear = dynamics.GetTransmission().GetGear();
-
 	// only autoshift if a shift is not in progress
 	if (shifted)
 	{
         if (GetClutch() == 1.0)
         {
+            int current_gear = dynamics.GetTransmission().GetGear();
             float rpm = dynamics.CalculateDriveshaftRPM();
             float redline = GetEngineRedline();
 
@@ -1448,15 +1441,15 @@ int CAR::AutoShift() const
             {
                 return 1;
             }
-            // shift down when engine speed below shift_down_point
-            // however, we do not auto shift down from 1st gear to neutral
-            else if(rpm < DownshiftPoint(current_gear))
+            // shift down when driveshaft speed below shift_down_point
+            // we do not auto shift down from 1st gear to neutral
+            float drpm = DownshiftPoint(current_gear);
+            if(rpm < drpm)
             {
                 return -1; 
             }
         }
     }
-
 	return 0;
 }
 
