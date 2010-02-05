@@ -51,6 +51,7 @@ bool SHADER_GLSL::Load(const std::string & vertex_filename, const std::string & 
 	}
 	
 	//prepend #version
+	vertexshader_source = "#version 120\n" + vertexshader_source;
 	fragmentshader_source = "#version 120\n" + fragmentshader_source;
 	
 	//create shader objects
