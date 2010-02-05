@@ -172,6 +172,16 @@ public:
 		integration_step = 0;
 	}
 	
+    ///this must only be called between integrate1 and integrate2 steps
+	const MATHVECTOR<T, 3> GetLockUpTorque(const T dt) const
+	{
+#ifdef MODIFIEDVERLET
+	    return -2 * angular_momentum / dt;
+#else
+        return -angular_momentum / dt;
+#endif
+	}
+	
 	///this must only be called between integrate1 and integrate2 steps
 	void SetTorque(const MATHVECTOR <T, 3> & newtorque)
 	{
@@ -196,11 +206,6 @@ public:
 	const QUATERNION <T> & GetOrientation() const
 	{
 		return orientation;
-	}
-	
-	const MATHVECTOR<T, 3> GetLockUpTorque(const T dt) const
-	{
-	    return -angular_momentum / dt;
 	}
 	
 	bool Serialize(joeserialize::Serializer & s)
