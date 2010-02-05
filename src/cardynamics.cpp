@@ -392,31 +392,24 @@ void CARDYNAMICS::ApplyWheelForces(T dt, T drive_torque, int i, const MATHVECTOR
     T friction_torque = friction_force[0] * tire.GetRadius();
     T rolling_resistance_torque = tire.GetRollingResistanceTorque(suspension_force.Magnitude(), wheel.GetAngularVelocity(), wheel_contacts[i].GetRollingResistanceCoefficient());
     T wheel_torque = drive_torque - friction_torque;
-    T lock_up_torque = wheel.GetLockUpTorque(dt);
-    lock_up_torque -= wheel_torque;
+    T lock_up_torque = wheel.GetLockUpTorque(dt) - wheel_torque;
     T brake_torque = brake.GetTorque() + rolling_resistance_torque;
-    //cout << "drive: " << drive_torque << " frict: " << friction_torque << " wheel: " << wheel_torque << " lock: " << lock_up_torque << " brake: " << brake_torque;
     if(lock_up_torque >= 0 && lock_up_torque > brake_torque)
     {
         brake.WillLock(false);
         wheel_torque += brake_torque;
-        wheel.SetTorque(wheel_torque);
     }
     else if(lock_up_torque < 0 && lock_up_torque < -brake_torque)
     {
         brake.WillLock(false);
         wheel_torque -= brake_torque;
-        wheel.SetTorque(wheel_torque);
     }
     else
     {
         brake.WillLock(true);
-        wheel_torque = wheel.GetLockUpTorque(dt);//lock_up_torque;
-        wheel.SetAngularVelocity(0);
-        wheel.SetTorque(0);
+        wheel_torque = wheel.GetLockUpTorque(dt);
     }
-    //cout << " final: " << wheel_torque << endl;
-    
+    wheel.SetTorque(wheel_torque);
     wheel.Integrate2(dt);
     
     //calculate force feedback
@@ -424,7 +417,7 @@ void CARDYNAMICS::ApplyWheelForces(T dt, T drive_torque, int i, const MATHVECTOR
     
     //apply forces to body
     MATHVECTOR <T, 3> tire_force(friction_force[0], friction_force[1], 0);
-	MATHVECTOR <T, 3> tire_torque(0, wheel_torque, -friction_force[2]);
+	MATHVECTOR <T, 3> tire_torque(0, -friction_force[0] * tire.GetRadius(), -friction_force[2]);
     tire_force = tire_force - groundvel * wheel_contacts[i].GetRollingDrag();
     
 	MATHVECTOR <T, 3> world_tire_force = tire_force;
