@@ -390,19 +390,21 @@ void CARDYNAMICS::ApplyWheelForces(T dt, T drive_torque, int i, const MATHVECTOR
     MATHVECTOR <T, 3> friction_force = ComputeTireFrictionForce ( i, dt, suspension_force, false, wheel_speed, groundvel, wheel_orientation );
     
     T friction_torque = friction_force[0] * tire.GetRadius();
-    T rolling_resistance_torque = tire.GetRollingResistanceTorque(suspension_force.Magnitude(), wheel.GetAngularVelocity(), wheel_contacts[i].GetRollingResistanceCoefficient());
+    T rolling_resistance = tire.GetRollingResistance(suspension_force.Magnitude(), wheel.GetAngularVelocity(), wheel_contacts[i].GetRollingResistanceCoefficient());
     T wheel_torque = drive_torque - friction_torque;
     T lock_up_torque = wheel.GetLockUpTorque(dt) - wheel_torque;
-    T brake_torque = brake.GetTorque() + rolling_resistance_torque;
+    T brake_torque = brake.GetTorque() + rolling_resistance * tire.GetRadius();
     if(lock_up_torque >= 0 && lock_up_torque > brake_torque)
     {
         brake.WillLock(false);
         wheel_torque += brake_torque;
+        friction_force[0] += rolling_resistance;
     }
     else if(lock_up_torque < 0 && lock_up_torque < -brake_torque)
     {
         brake.WillLock(false);
         wheel_torque -= brake_torque;
+        friction_force[0] -= rolling_resistance;
     }
     else
     {
