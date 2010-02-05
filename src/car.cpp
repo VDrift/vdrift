@@ -96,7 +96,25 @@ bool CAR::Load (CONFIGFILE & carconf, const std::string & carpath, const std::st
 			else
 			{
 				assert(bodydraw);
-				bodydraw->SetAdditiveMap1(&braketexture);
+			}
+		}
+	}
+
+	//load car reverse light texture
+	{
+		TEXTUREINFO texinfo;
+		texinfo.SetName(carpath+"/"+carname+"/textures/reverse.png");
+		texinfo.SetMipMap(true);
+		texinfo.SetAnisotropy(anisotropy);
+		if (!reversetexture.Loaded())
+		{
+			if (!reversetexture.Load(texinfo, nullout, texsize))
+			{
+				info_output << "No car reverse texture exists, continuing without one" << endl;
+			}
+			else
+			{
+				assert(bodydraw);
 			}
 		}
 	}
@@ -1228,8 +1246,6 @@ void CAR::HandleInputs(const std::vector <float> & inputs, float dt)
 	//set the brakes
 	for (int i = 0; i < 4; i++)
 		dynamics.GetBrake(WHEEL_POSITION(i)).SetBrakeFactor(inputs[CARINPUT::BRAKE]);
-	if (bodydraw)
-		bodydraw->SetSelfIllumination(inputs[CARINPUT::BRAKE] > 0); //update brake lights based on brake pedal.  don't think handbrakes usually play into brake lights, but haven't ever checked on a real car
 
 	//set the handbrakes
 	for (int i = 0; i < 4; i++)
@@ -1314,6 +1330,20 @@ void CAR::HandleInputs(const std::vector <float> & inputs, float dt)
 	orbit_cam.RotateRight(inputs[CARINPUT::PAN_RIGHT]*dt);
 	orbit_cam.ZoomIn(inputs[CARINPUT::ZOOM_IN]*dt*4.0);
 	orbit_cam.ZoomIn(-inputs[CARINPUT::ZOOM_OUT]*dt*4.0);
+
+	// update brake/reverse lights
+	if (bodydraw)
+	{
+		if(inputs[CARINPUT::BRAKE] > 0 && braketexture.Loaded())
+			bodydraw->SetAdditiveMap1(&braketexture);
+		else
+			bodydraw->SetAdditiveMap1(NULL);
+		if (cur_gear < 0 && reversetexture.Loaded())
+			bodydraw->SetAdditiveMap2(&reversetexture);
+		else
+			bodydraw->SetAdditiveMap2(NULL);
+		bodydraw->SetSelfIllumination(true);
+	}
 
 	//do driver aid toggles
 	if (inputs[CARINPUT::ABS_TOGGLE])

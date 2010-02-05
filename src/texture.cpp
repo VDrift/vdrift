@@ -651,6 +651,12 @@ void TEXTURE_GL::Activate() const
 	OPENGL_UTILITY::CheckForOpenGLErrors("Texture binding ("+texture_info.GetName()+")", std::cerr);
 }
 
+void TEXTURE_GL::Deactivate() const
+{
+    glDisable(GL_TEXTURE_2D);
+    glBindTexture(GL_TEXTURE_2D,0);
+}
+
 void TEXTURE_GL::Unload()
 {
 	if (loaded)

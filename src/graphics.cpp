@@ -1390,12 +1390,15 @@ void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectTexturing(SCENEDRAW & forme, GLST
 				if (i->GetDraw()->GetAdditiveMap1() && i->GetDraw()->GetSelfIllumination())
 					i->GetDraw()->GetAdditiveMap1()->Activate();
 				else
-				{
-					glDisable(GL_TEXTURE_2D);
-					glBindTexture(GL_TEXTURE_2D,0);
-				}
+					i->GetDraw()->GetAdditiveMap1()->Deactivate();
+				
+				glActiveTextureARB(GL_TEXTURE7_ARB);
+				if (i->GetDraw()->GetAdditiveMap2() && i->GetDraw()->GetSelfIllumination())
+					i->GetDraw()->GetAdditiveMap2()->Activate();
+                else
+                    i->GetDraw()->GetAdditiveMap2()->Deactivate();
 
-				glActiveTextureARB(GL_TEXTURE0_ARB);
+                glActiveTextureARB(GL_TEXTURE0_ARB);
 			}
 		}
 	}
