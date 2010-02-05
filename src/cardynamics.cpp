@@ -344,7 +344,7 @@ MATHVECTOR <T, 3> CARDYNAMICS::ComputeTireFrictionForce (
 {
 	MATHVECTOR <T, 3> wheel_normal (0, 0, 1);
 	wheel_orientation.RotateVector ( wheel_normal );
-	T normal_force = suspension_force.Magnitude();
+	T normal_force = max(0.0, suspension_force.dot(wheel_normal)); // positive wheel normal force
 	assert ( !isnan ( normal_force ) );
 
 	//determine camber relative to the road
