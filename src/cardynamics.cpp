@@ -392,12 +392,13 @@ void CARDYNAMICS::ApplyWheelForces(T dt, T drive_torque, int i, const MATHVECTOR
     T friction_torque = friction_force[0] * tire.GetRadius();
     T rolling_resistance = tire.GetRollingResistance(suspension_force.Magnitude(), wheel.GetAngularVelocity(), wheel_contacts[i].GetRollingResistanceCoefficient());
     T wheel_torque = drive_torque - friction_torque;
-    T lock_up_torque = wheel.GetLockUpTorque(dt) - wheel_torque;
+    T lock_up_torque = wheel.GetLockUpTorque(dt) - wheel_torque;    // torque needed to lock the wheel
     T brake_torque = brake.GetTorque() + rolling_resistance * tire.GetRadius();
+    // brake and rooling resistance torque should never exceed lock up torque
     if(lock_up_torque >= 0 && lock_up_torque > brake_torque)
     {
         brake.WillLock(false);
-        wheel_torque += brake_torque;
+        wheel_torque += brake_torque;   // brake torque has same direction as lock up torque 
         friction_force[0] += rolling_resistance;
     }
     else if(lock_up_torque < 0 && lock_up_torque < -brake_torque)
@@ -434,8 +435,8 @@ void CARDYNAMICS::ApplyWheelForces(T dt, T drive_torque, int i, const MATHVECTOR
 	MATHVECTOR <T, 3> contactpos = wheelpos - wheel_normal * tire.GetRadius();
 	MATHVECTOR <T, 3> cm_force;
 	MATHVECTOR <T, 3> cm_torque;
-	body.GetTorqueAtOffset(world_tire_torque, wheelpos, cm_torque);
-	body.GetForceAtOffset(world_tire_force, contactpos, cm_force, cm_torque);
+	body.GetTorqueAtOffset(world_tire_torque, wheelpos, cm_torque); // apply torque at wheel center
+	body.GetForceAtOffset(world_tire_force, contactpos, cm_force, cm_torque); // apply force at tire contact
 
 	//std::cout << i << ", " << tirepos << std::endl;
 	//std::cout << i << ". force = " << tire_force << ", torque = " << tire_torque << std::endl;
