@@ -331,14 +331,14 @@ public:
 		feedback = aligning_force;
 	}
 	
-	// max rolling resistance torque magnitude
-	T GetRollingResistanceTorque(const T force, const T speed, const T rolling_resistance_factor) const
+	// max rolling resistance magnitude
+	T GetRollingResistance(const T force, const T speed, const T rolling_resistance_factor) const
 	{
 	    // Include constant(rolling_resistance_linear) and quadratic rolling resistance.
 		T rolling = rolling_resistance_factor * 
 		//( rolling_resistance_linear * force + rolling_resistance_quadratic * speed * speed ); // have very hight normal forces on bumpy surfaces, need to fix it
 		( rolling_resistance_linear + rolling_resistance_quadratic * speed * speed );
-		return rolling * radius;
+		return rolling;
 	}
 	
 	void CalculateSigmaHatAlphaHat(int tablesize=20)
