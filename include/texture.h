@@ -111,6 +111,7 @@ public:
 	~TEXTURE_GL() { Unload(); }
 
 	void Activate() const;
+	void Deactivate() const;
 
 	void SetInfo(const TEXTUREINFO & texinfo) {texture_info.CopyFrom(texinfo);}
 	bool Load(const TEXTUREINFO & texinfo, std::ostream & error_output, const std::string & texsize)

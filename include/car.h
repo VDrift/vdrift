@@ -229,6 +229,7 @@ protected:
 	TEXTURE_GL wheeltexturefront_misc1;
 	TEXTURE_GL wheeltexturerear_misc1;
 	TEXTURE_GL braketexture;
+	TEXTURE_GL reversetexture;
 
 	SOUNDSOURCE tiresqueal[4];
 	SOUNDSOURCE tirebump[4];

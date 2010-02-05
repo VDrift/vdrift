@@ -83,6 +83,7 @@ private:
 	const TEXTURE_GL * diffuse_map;
 	const TEXTURE_GL * misc_map1;
 	const TEXTURE_GL * additive_map1;
+	const TEXTURE_GL * additive_map2;
 	const VERTEXARRAY * vert_array;
 	std::vector <MATHVECTOR <float, 3> > lineverts;
 	
@@ -111,7 +112,7 @@ private:
 
 public:
 	DRAWABLE() : parent(NULL),diffuse_map(NULL),misc_map1(NULL),
-		 additive_map1(NULL),vert_array(NULL),decal(false),r(1.0),g(1.0),b(1.0),a(1.0),lit(true),drawenabled(true),
+		 additive_map1(NULL),additive_map2(NULL),vert_array(NULL),decal(false),r(1.0),g(1.0),b(1.0),a(1.0),lit(true),drawenabled(true),
 		is2d(false),partial_transparency(false),cull(false),cull_front(false),radius(0.0),
 		draw_order(0),blur(true),
 		skybox(false),vertical_track(false),self_illumination(false),issmoke(false),distance_field(false),
@@ -247,6 +248,11 @@ public:
 		additive_map1 = value;
 	}
 
+	void SetAdditiveMap2 ( const TEXTURE_GL* value )
+	{
+		additive_map2 = value;
+	}
+
 	const TEXTURE_GL* GetMiscMap1() const
 	{
 		return misc_map1;
@@ -255,6 +261,11 @@ public:
 	const TEXTURE_GL* GetAdditiveMap1() const
 	{
 		return additive_map1;
+	}
+
+	const TEXTURE_GL* GetAdditiveMap2() const
+	{
+		return additive_map2;
 	}
 
 	bool GetSelfIllumination() const
