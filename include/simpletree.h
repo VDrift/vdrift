@@ -4,20 +4,15 @@
 #include <map>
 #include <iostream>
 
-using std::map;
-using std::cout;
-using std::endl;
-using std::ostream;
-
 template<typename KEYTYPE, typename VALUETYPE>
 class SIMPLETREE
 {
 private:
-	void DebugPrint(int level, ostream & mystream)
+	void DebugPrint(int level, std::ostream & mystream)
 	{
 		mystream << value << endl;
 		
-		for (typename map <KEYTYPE,SIMPLETREE>::iterator i = branch.begin();
+		for (typename std::map <KEYTYPE,SIMPLETREE>::iterator i = branch.begin();
 				   i != branch.end(); i++)
 		{
 			for (int n = 0; n < level; n++)
@@ -33,7 +28,7 @@ public:
 	
 	SIMPLETREE * parent;
 	VALUETYPE value;
-	map <KEYTYPE, SIMPLETREE> branch;
+	std::map <KEYTYPE, SIMPLETREE> branch;
 	
 	void DebugPrint() {DebugPrint(0,cout);}
 };

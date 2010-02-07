@@ -277,14 +277,14 @@ bool GAME::InitializeSound()
 }
 
 ///break up the input into a vector of strings using the token characters given
-vector <string> Tokenize(const string & input, const string & tokens)
+std::vector <std::string> Tokenize(const std::string & input, const std::string & tokens)
 {
-	vector <string> out;
+	std::vector <std::string> out;
 	
 	unsigned int pos = 0;
 	unsigned int lastpos = 0;
 	
-	while (pos != (unsigned int) string::npos)
+	while (pos != (unsigned int) std::string::npos)
 	{
 		pos = input.find_first_of(tokens, pos);
 		string thisstr = input.substr(lastpos,pos-lastpos);
@@ -362,7 +362,7 @@ bool GAME::ParseArguments(std::list <std::string> & args)
 	if (!argmap["-resolution"].empty())
 	{
 		string res(argmap["-resolution"]);
-		vector <string> restoken = Tokenize(res, "x,");
+		std::vector <std::string> restoken = Tokenize(res, "x,");
 		if (restoken.size() != 2)
 		{
 			error_output << "Expected resolution to be in the form 640x480" << endl;
@@ -638,25 +638,11 @@ void GAME::AdvanceGameLogic()
 				{
 					if (cur_collision_frameskip == 0)
 					{
-						if (track.UseSurfaceTypes()) // change collision method depending on surface flag
-						{
-							UpdateCarWheelCollisionsWithSurfaces(*i, cached_collisions_by_car[&(*i)]);
-						}
-						else
-						{
-							UpdateCarWheelCollisions(*i, cached_collisions_by_car[&(*i)]);
-						}
+						UpdateCarWheelCollisions(*i, cached_collisions_by_car[&(*i)]);
 					}
 					else
 					{
-						if (track.UseSurfaceTypes())
-						{
-							UpdateCarWheelCollisionsFromCachedWithSurfaces(*i, cached_collisions_by_car[&(*i)]);
-						}
-						else
-						{
-							UpdateCarWheelCollisionsFromCached(*i, cached_collisions_by_car[&(*i)]);
-						}
+						UpdateCarWheelCollisionsFromCached(*i, cached_collisions_by_car[&(*i)]);
 					}
 				}
 				PROFILER.endBlock("collision");
@@ -1635,129 +1621,35 @@ void GAME::UpdateCarWheelCollisions(CAR & car, std::vector <COLLISION_CONTACT> &
 		if (moveback < 0)
 			moveback = 0;
 		raystart = raystart - dir * (car.GetTireRadius(WHEEL_POSITION(n)) + moveback);
-
-		//start by doing a road patch collision check
-		MATHVECTOR <float, 3> bezierspace_raystart(raystart[1], raystart[2], raystart[0]);
-		MATHVECTOR <float, 3> bezierspace_dir(dir[1], dir[2], dir[0]);
-		MATHVECTOR <float, 3> colpoint, colnormal;
-		const BEZIER * colpatch = NULL;
-		bool col = track.CollideRoads(bezierspace_raystart, bezierspace_dir, raylen, colpoint, colpatch, colnormal);
-		if (col)
-		{
-			COLLISION_CONTACT contact;
-			contact.Set(MATHVECTOR <float, 3> (colpoint[2], colpoint[0], colpoint[1]), MATHVECTOR <float, 3> (colnormal[2], colnormal[0], colnormal[1]), (colpoint-bezierspace_raystart).Magnitude(), NULL, NULL);
-			car.SetWheelContactProperties(WHEEL_POSITION(n), contact.GetContactDepth() - car.GetTireRadius(WHEEL_POSITION(n)) - moveback, contact.GetContactPosition(), contact.GetContactNormal(),1,0,1,0.9,1,0,SURFACE::ASPHALT);
-			if (cached_collisions.size() != 4)
-				cached_collisions.resize(4);
-			cached_collisions[n] = contact;
-
-			car.SetCurPatch(n, colpatch);
-		}
-		else
-		{
-			car.SetCurPatch(n, NULL); //this behavior is needed for the AI
-
-			//do a track model collision check
-			COLLISION_SETTINGS settings;
-			settings.SetStaticCollide(true);
-			list <COLLISION_CONTACT> contactlist;
-			collision.CollideRay(raystart, dir, raylen, contactlist, settings);
-			if (!contactlist.empty())
-			{
-				contactlist.sort();
-				COLLISION_CONTACT & contact = contactlist.front();
-				//MATHVECTOR <float, 3> cp = contact.GetContactPosition();
-				//cout << "Model contact point = " << cp << endl;
-				//cout << "Contact, Wheel penetration: " << cp[2] - wp[2] << " (" << cp[2] << " - " << wp[2] << "), " << contactlist.size() << "," << contact.GetContactDepth() << endl;
-				const TRACK_OBJECT * const obj = reinterpret_cast <const TRACK_OBJECT * const> (contact.GetCollidingObject1()->ObjID());
-				car.SetWheelContactProperties(WHEEL_POSITION(n), contact.GetContactDepth() - car.GetTireRadius(WHEEL_POSITION(n)) - moveback, contact.GetContactPosition(), contact.GetContactNormal(),
-						obj->GetBumpWavelength(), obj->GetBumpAmplitude(), obj->GetFrictionNoTread(), obj->GetFrictionTread(), obj->GetRollingResistanceCoefficient(), obj->GetRollingDrag(), obj->GetSurfaceType());
-				if (cached_collisions.size() != 4)
-					cached_collisions.resize(4);
-				cached_collisions[n] = contact;
-				//if (n == 0) cout << "setting cache to " << contact.GetContactDepth() << endl;
-			}
-			else //no collision
-			{
-				car.SetWheelContactProperties(WHEEL_POSITION(n), 100.0, MATHVECTOR <float, 3> (raystart+dir*100.0), MATHVECTOR <float, 3> (-dir),1,0,1,0.9,1,0,SURFACE::NONE);
-				if (cached_collisions.size() != 4)
-					cached_collisions.resize(4);
-				cached_collisions[n].Set(MATHVECTOR <float, 3> (0), MATHVECTOR <float, 3> (0),
-						-100, NULL, NULL);
-			}
-		}
-	}
-}
-
-void GAME::UpdateCarWheelCollisionsWithSurfaces(CAR & car, std::vector <COLLISION_CONTACT> & cached_collisions) const
-{
-	//do car wheel collisions
-	for (int n = 0; n < WHEEL_POSITION_SIZE; n++)
-	{
-		MATHVECTOR <float, 3> wp = car.GetWheelPosition(WHEEL_POSITION(n));
-		//MATHVECTOR <float, 3> wp = car.GetWheelPositionAtDisplacement(WHEEL_POSITION(n),1.0);
-		//info_output << wp << "..." << cam_position << endl;
-		MATHVECTOR <float, 3> dir = car.GetDownVector();
-		MATHVECTOR <float, 3> raystart = wp;;
-		float raylen = 10.0;
-		float moveback = -car.GetWheelVelocity(WHEEL_POSITION(n))[2];
-		if (moveback < 0)
-			moveback = 0;
-		raystart = raystart - dir*(car.GetTireRadius(WHEEL_POSITION(n))+moveback); //move back slightly
+		
+		//by default, set properties to no collision
+		float bump_wavelength(1);
+		float bump_amplitude(0);
+		float friction_notread(1);
+		float friction_tread(0.9);
+		float rolling_resistance(1);
+		float rolling_drag(0);
+		SURFACE::CARSURFACETYPE surface(SURFACE::NONE);
+		COLLISION_CONTACT contact;
+		contact.Set(MATHVECTOR <float, 3> (0), MATHVECTOR <float, 3> (0),-100, NULL, NULL);
 		
 		//start by doing a road patch collision check
 		MATHVECTOR <float, 3> bezierspace_raystart(raystart[1], raystart[2], raystart[0]);
 		MATHVECTOR <float, 3> bezierspace_dir(dir[1], dir[2], dir[0]);
 		MATHVECTOR <float, 3> colpoint, colnormal;
 		const BEZIER * colpatch = NULL;
-		bool col = track.CollideRoads(bezierspace_raystart, bezierspace_dir, raylen, colpoint, colpatch, colnormal);
-		if (col)
+		bool beziercol = track.CollideRoads(bezierspace_raystart, bezierspace_dir, raylen, colpoint, colpatch, colnormal);
+		if (beziercol)
 		{
-			COLLISION_CONTACT contact;
-			
-			// put in a track model collision check to get the surface type
-			COLLISION_SETTINGS settings;
-			settings.SetStaticCollide(true);
-			list <COLLISION_CONTACT> contactlist;
-			collision.CollideRay(raystart, dir, raylen, contactlist, settings);
-			
-			if (contactlist.empty()) // prevent a crash if no object is found
-			{
-				error_output << "Got a Bezier contact but not a model" << endl;
-				
-				contact.Set(MATHVECTOR <float, 3> (colpoint[2], colpoint[0], colpoint[1]), MATHVECTOR <float, 3> (colnormal[2], colnormal[0], colnormal[1]), (colpoint-bezierspace_raystart).Magnitude(), NULL, NULL);
-				car.SetWheelContactProperties(WHEEL_POSITION(n), contact.GetContactDepth() - car.GetTireRadius(WHEEL_POSITION(n)) - moveback, contact.GetContactPosition(), contact.GetContactNormal(),1,0,1,0.9,1,0,SURFACE::ASPHALT);
-				if (cached_collisions.size() != 4)
-					cached_collisions.resize(4);
-				cached_collisions[n] = contact;
-			}
-			else
-			{
-				contactlist.sort();
-				COLLISION_CONTACT & mcontact = contactlist.front();
-				assert(mcontact.GetCollidingObject1() != NULL);
-				const TRACK_OBJECT * const obj = reinterpret_cast <const TRACK_OBJECT * const> (mcontact.GetCollidingObject1()->ObjID()); // find the object
-				// set the bezier contact to get position. Store the object for cached collisions
-				contact.Set(MATHVECTOR <float, 3> (colpoint[2], colpoint[0], colpoint[1]), MATHVECTOR <float, 3> (colnormal[2], colnormal[0], colnormal[1]), (colpoint-bezierspace_raystart).Magnitude(), NULL, mcontact.GetCollidingObject1());
-				
-				// get the tracksurface data
-				int i = obj->GetSurfaceInt();
-				TRACKSURFACE tempsurf = track.GetTrackSurface(i);
-				
-				car.SetWheelContactProperties(WHEEL_POSITION(n), contact.GetContactDepth() - car.GetTireRadius(WHEEL_POSITION(n))-moveback, contact.GetContactPosition(), contact.GetContactNormal(),
-											  tempsurf.bumpWaveLength, tempsurf.bumpAmplitude, tempsurf.frictionNonTread,
-											  tempsurf.frictionTread, tempsurf.rollResistanceCoefficient, tempsurf.rollingDrag, obj->GetSurfaceType());
-				
-				if (cached_collisions.size() != 4)
-					cached_collisions.resize(4);
-				cached_collisions[n] = contact;
-			}
+			contact.Set(MATHVECTOR <float, 3> (colpoint[2], colpoint[0], colpoint[1]), MATHVECTOR <float, 3> (colnormal[2], colnormal[0], colnormal[1]), (colpoint-bezierspace_raystart).Magnitude(), NULL, NULL);
+			surface = SURFACE::ASPHALT;
 			car.SetCurPatch(n, colpatch);
 		}
-		else
+		
+		//now check for a track geometry collision
 		{
 			car.SetCurPatch(n, NULL); //this behavior is needed for the AI
-			
+
 			//do a track model collision check
 			COLLISION_SETTINGS settings;
 			settings.SetStaticCollide(true);
@@ -1766,34 +1658,45 @@ void GAME::UpdateCarWheelCollisionsWithSurfaces(CAR & car, std::vector <COLLISIO
 			if (!contactlist.empty())
 			{
 				contactlist.sort();
-				COLLISION_CONTACT & contact = contactlist.front();
-				//MATHVECTOR <float, 3> cp = contact.GetContactPosition();
-				//cout << "Model contact point = " << cp << endl;
-				//cout << "Contact, Wheel penetration: " << cp[2] - wp[2] << " (" << cp[2] << " - " << wp[2] << "), " << contactlist.size() << "," << contact.GetContactDepth() << endl;
+				if (!beziercol)
+				{
+					contact = contactlist.front();
+				}
+				else
+				{
+					contact.SetCollisionObjects(contactlist.front().GetCollidingObject1(), contactlist.front().GetCollidingObject2());
+				}
+				
 				const TRACK_OBJECT * const obj = reinterpret_cast <const TRACK_OBJECT * const> (contact.GetCollidingObject1()->ObjID());
 				
-				// get the tracksurface data
-				int i = obj->GetSurfaceInt();
-				TRACKSURFACE tempsurf = track.GetTrackSurface(i);
+				bump_wavelength = obj->GetBumpWavelength();
+				bump_amplitude = obj->GetBumpAmplitude();
+				friction_notread = obj->GetFrictionNoTread();
+				friction_tread = obj->GetFrictionTread();
+				rolling_resistance = obj->GetRollingResistanceCoefficient();
+				rolling_drag = obj->GetRollingDrag();
+				surface = obj->GetSurfaceType();
 				
-				car.SetWheelContactProperties(WHEEL_POSITION(n), contact.GetContactDepth() - car.GetTireRadius(WHEEL_POSITION(n))-moveback, contact.GetContactPosition(), contact.GetContactNormal(),
-											  tempsurf.bumpWaveLength, tempsurf.bumpAmplitude, tempsurf.frictionNonTread,
-											  tempsurf.frictionTread, tempsurf.rollResistanceCoefficient, tempsurf.rollingDrag, obj->GetSurfaceType());
-				
-				if (cached_collisions.size() != 4)
-					cached_collisions.resize(4);
-				cached_collisions[n] = contact;
-				//if (n == 0) cout << "setting cache to " << contact.GetContactDepth() << endl;
-			}
-			else //no collision
-			{
-				car.SetWheelContactProperties(WHEEL_POSITION(n), 100.0, MATHVECTOR <float, 3> (raystart+dir*100.0), MATHVECTOR <float, 3> (-dir),1,0,1,0.9,1,0,SURFACE::NONE);
-				if (cached_collisions.size() != 4)
-					cached_collisions.resize(4);
-				cached_collisions[n].Set(MATHVECTOR <float, 3> (0), MATHVECTOR <float, 3> (0),
-										 -100, NULL, NULL);
+				if (track.UseSurfaceTypes())
+				{
+					int i = obj->GetSurfaceInt();
+					TRACKSURFACE tempsurf = track.GetTrackSurface(i);
+					
+					bump_wavelength = tempsurf.bumpWaveLength;
+					bump_amplitude = tempsurf.bumpAmplitude;
+					friction_notread = tempsurf.frictionNonTread;
+					friction_tread = tempsurf.frictionTread;
+					rolling_resistance = tempsurf.rollResistanceCoefficient;
+					rolling_drag = tempsurf.rollingDrag;
+				}
 			}
 		}
+
+		car.SetWheelContactProperties(WHEEL_POSITION(n), contact.GetContactDepth() - car.GetTireRadius(WHEEL_POSITION(n)) - moveback, contact.GetContactPosition(), contact.GetContactNormal(),
+									  bump_wavelength, bump_amplitude, friction_notread, friction_tread, rolling_resistance, rolling_drag, surface);
+		if (cached_collisions.size() != 4)
+			cached_collisions.resize(4);
+		cached_collisions[n] = contact;
 	}
 }
 
@@ -1824,70 +1727,41 @@ void GAME::UpdateCarWheelCollisionsFromCached(CAR & car, std::vector <COLLISION_
 				else
 				{
 					const TRACK_OBJECT * const obj = reinterpret_cast <const TRACK_OBJECT * const> (contact.GetCollidingObject1()->ObjID());
-					car.SetWheelContactProperties(WHEEL_POSITION(n), contact.GetContactDepth() - car.GetTireRadius(WHEEL_POSITION(n))-moveback, contact.GetContactPosition(), contact.GetContactNormal(),
-							obj->GetBumpWavelength(), obj->GetBumpAmplitude(), obj->GetFrictionNoTread(), obj->GetFrictionTread(), obj->GetRollingResistanceCoefficient(), obj->GetRollingDrag(), obj->GetSurfaceType());
-				}
-			}
-			else //the new ray query doesn't impact the cached collision information
-				car.SetWheelContactProperties(WHEEL_POSITION(n), 100.0, MATHVECTOR <float, 3> (raystart+dir*100.0), MATHVECTOR <float, 3> (-dir),1,0,1,0.9,1,0,SURFACE::NONE);
-		}
-	}
-}
-
-void GAME::UpdateCarWheelCollisionsFromCachedWithSurfaces(CAR & car, std::vector <COLLISION_CONTACT> & cached_collisions) const
-{
-	//do car wheel collisions
-	for (int n = 0; n < WHEEL_POSITION_SIZE; n++)
-	{
-		MATHVECTOR <float, 3> wp = car.GetWheelPosition(WHEEL_POSITION(n));
-		//MATHVECTOR <float, 3> wp = car.GetWheelPositionAtDisplacement(WHEEL_POSITION(n),1.0);
-		//info_output << wp << "..." << cam_position << endl;
-		MATHVECTOR <float, 3> dir = car.GetDownVector();
-		MATHVECTOR <float, 3> raystart = wp;;
-		float moveback = -car.GetWheelVelocity(WHEEL_POSITION(n))[2];
-		if (moveback < 0)
-			moveback = 0;
-		raystart = raystart - dir*(car.GetTireRadius(WHEEL_POSITION(n))+moveback); //move back slightly
-		
-		assert(cached_collisions.size() == 4);
-		if (cached_collisions[n].GetContactDepth() > 0) //if there was a contact from the last query
-		{
-			COLLISION_CONTACT contact;
-			if (cached_collisions[n].CollideRay(raystart, dir, 10.0, contact)) //if the new ray query impacts the cached collision information
-			{
-				//if (n == 0) cout << "got cached value " << contact.GetContactDepth() << endl;
-				if (contact.GetCollidingObject1() == NULL) // this means we hit a bezier
-				{
-					// check that the model is stored to save us from crashing out
-					if (contact.GetCollidingObject2() == NULL)
+					
+					float bump_wavelength(1);
+					float bump_amplitude(0);
+					float friction_notread(1);
+					float friction_tread(0.9);
+					float rolling_resistance(1);
+					float rolling_drag(0);
+					SURFACE::CARSURFACETYPE surface(SURFACE::NONE);
+					
+					bump_wavelength = obj->GetBumpWavelength();
+					bump_amplitude = obj->GetBumpAmplitude();
+					friction_notread = obj->GetFrictionNoTread();
+					friction_tread = obj->GetFrictionTread();
+					rolling_resistance = obj->GetRollingResistanceCoefficient();
+					rolling_drag = obj->GetRollingDrag();
+					surface = obj->GetSurfaceType();
+					
+					if (track.UseSurfaceTypes())
 					{
-						error_output << "Colliding Object 2 is NULL" << endl;
-						car.SetWheelContactProperties(WHEEL_POSITION(n), contact.GetContactDepth() - car.GetTireRadius(WHEEL_POSITION(n))-moveback, contact.GetContactPosition(), contact.GetContactNormal(),1,0,1,0.9,1,0, SURFACE::ASPHALT);
-					}
-					else
-					{
-						const TRACK_OBJECT * const obj = reinterpret_cast <const TRACK_OBJECT * const> (contact.GetCollidingObject2()->ObjID());
-						
-						// get the tracksurface data
 						int i = obj->GetSurfaceInt();
 						TRACKSURFACE tempsurf = track.GetTrackSurface(i);
 						
-						car.SetWheelContactProperties(WHEEL_POSITION(n), contact.GetContactDepth() - car.GetTireRadius(WHEEL_POSITION(n))-moveback, contact.GetContactPosition(), contact.GetContactNormal(),
-													  tempsurf.bumpWaveLength, tempsurf.bumpAmplitude, tempsurf.frictionNonTread,
-													  tempsurf.frictionTread, tempsurf.rollResistanceCoefficient, tempsurf.rollingDrag, obj->GetSurfaceType());
+						bump_wavelength = tempsurf.bumpWaveLength;
+						bump_amplitude = tempsurf.bumpAmplitude;
+						friction_notread = tempsurf.frictionNonTread;
+						friction_tread = tempsurf.frictionTread;
+						rolling_resistance = tempsurf.rollResistanceCoefficient;
+						rolling_drag = tempsurf.rollingDrag;
 					}
-				}
-				else
-				{
-					const TRACK_OBJECT * const obj = reinterpret_cast <const TRACK_OBJECT * const> (contact.GetCollidingObject1()->ObjID());
 					
-					// get the tracksurface data
-					int i = obj->GetSurfaceInt();
-					TRACKSURFACE tempsurf = track.GetTrackSurface(i);
+					//std::cout << obj->GetSurfaceInt() << ": " << obj->GetBumpAmplitude() << "/" << bump_amplitude << std::endl;
 					
 					car.SetWheelContactProperties(WHEEL_POSITION(n), contact.GetContactDepth() - car.GetTireRadius(WHEEL_POSITION(n))-moveback, contact.GetContactPosition(), contact.GetContactNormal(),
-												  tempsurf.bumpWaveLength, tempsurf.bumpAmplitude, tempsurf.frictionNonTread,
-												  tempsurf.frictionTread, tempsurf.rollResistanceCoefficient, tempsurf.rollingDrag, obj->GetSurfaceType());				}
+							bump_wavelength, bump_amplitude, friction_notread, friction_tread, rolling_resistance, rolling_drag, surface);
+				}
 			}
 			else //the new ray query doesn't impact the cached collision information
 				car.SetWheelContactProperties(WHEEL_POSITION(n), 100.0, MATHVECTOR <float, 3> (raystart+dir*100.0), MATHVECTOR <float, 3> (-dir),1,0,1,0.9,1,0,SURFACE::NONE);

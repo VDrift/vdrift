@@ -7,6 +7,8 @@ using std::list;
 using std::string;
 
 #include <iostream>
+using std::endl;
+
 #include <fstream>
 #include <sstream>
 

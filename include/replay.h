@@ -208,7 +208,7 @@ public:
 	const std::vector <float> & PlayFrame(CAR & car);
 	
 	//recording
-	void StartRecording(const std::string & newcartype, const std::string & newcarpaint, const std::string & carfilename, const std::string & trackname, ostream & error_log);
+	void StartRecording(const std::string & newcartype, const std::string & newcarpaint, const std::string & carfilename, const std::string & trackname, std::ostream & error_log);
 	void StopRecording(const std::string & replayfilename); ///< if replayfilename is empty, do not save the data
 	bool GetRecording() const {return (replaymode == RECORDING);} ///< returns true if the replay system is currently recording
 	void RecordFrame(const std::vector <float> & inputs, CAR & car);

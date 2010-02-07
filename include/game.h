@@ -55,8 +55,6 @@ private:
 	void UpdateCarChassisCollisions(); ///< for all cars
 	void UpdateCarWheelCollisions(CAR & car, std::vector <COLLISION_CONTACT> & cached_collisions) const;
 	void UpdateCarWheelCollisionsFromCached(CAR & car, std::vector <COLLISION_CONTACT> & cached_collisions) const;
-	void UpdateCarWheelCollisionsWithSurfaces(CAR & car, std::vector <COLLISION_CONTACT> & cached_collisions) const;
-	void UpdateCarWheelCollisionsFromCachedWithSurfaces(CAR & car, std::vector <COLLISION_CONTACT> & cached_collisions) const;
 	void UpdateCarCollisionsNew(CAR & car, std::vector <COLLISION_CONTACT> & cached_collisions, bool allowexpensive) const;
 	void UpdateCarPhysics(CAR & car, std::vector <COLLISION_CONTACT> & cached_collisions) const;
 	void UpdateTimer();

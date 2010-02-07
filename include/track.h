@@ -352,12 +352,13 @@ class TRACK
 		{
 			return direction == DIRECTION_REVERSE;
 		}
-		bool UseSurfaceTypes()
+		bool UseSurfaceTypes() const
 		{
 			return usesurfaces;
 		}
 		TRACKSURFACE GetTrackSurface(int index) const
 		{
+			assert(index >= 0 && index < (int)tracksurfaces.size());
 			return tracksurfaces[index];
 		}
 };

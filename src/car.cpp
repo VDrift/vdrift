@@ -4,6 +4,7 @@
 #include "coordinatesystems.h"
 
 #include <iostream>
+using std::cout;
 using std::endl;
 
 #include <algorithm>
@@ -484,14 +485,14 @@ bool CAR::LoadInto ( SCENENODE * parentnode, SCENENODE * & output_scenenodeptr, 
 
 	if (!output_model.Loaded())
 	{
-		if (output_model.ReadFromFile(joefile.substr(0,std::max((long unsigned int)0,(long unsigned int) joefile.size()-3))+"ova", error_output))
+		std::stringstream nullout;
+		if (!output_model.ReadFromFile(joefile.substr(0,std::max((long unsigned int)0,(long unsigned int) joefile.size()-3))+"ova", nullout))
 		{
-			
-		}
-		else if (!output_model.Load(joefile, error_output))
-		{
-			error_output << "Error loading model: " << joefile << endl;
-			return false;
+			if (!output_model.Load(joefile, error_output))
+			{
+				error_output << "Error loading model: " << joefile << endl;
+				return false;
+			}
 		}
 	}
 

@@ -2,6 +2,11 @@
 
 typedef CARDYNAMICS::T T;
 
+using std::max;
+using std::min;
+using std::cout;
+using std::ostream;
+
 MATHVECTOR <T, 3> CARDYNAMICS::GetGravityForce()
 {
 	MATHVECTOR <T, 3> g;

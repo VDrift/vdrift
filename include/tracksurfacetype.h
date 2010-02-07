@@ -1,5 +1,4 @@
 #include <string>
-using std::string;
 
 #ifndef _TRACKSURFACETYPE_H
 #define _TRACKSURFACETYPE_H
@@ -7,7 +6,7 @@ using std::string;
 struct TRACKSURFACE
 {
 	int surface;
-	string surfaceName;
+	std::string surfaceName;
 	float bumpWaveLength;
 	float bumpAmplitude;
 	float frictionNonTread;

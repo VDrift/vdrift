@@ -298,22 +298,22 @@ bool TRACK::LoadSurfaces(const std::string & trackpath, std::ostream & info_outp
 		tempsurface.surfaceName = *section;
 		
 		float temp = 0.0;
-		param.GetParam(*section + ".BumpWaveLength", temp);
+		param.GetParamOrPrintError(*section + ".BumpWaveLength", temp, error_output);
 		tempsurface.bumpWaveLength = temp;
 		
-		param.GetParam(*section + ".BumpWaveAmplitude", temp);
+		param.GetParamOrPrintError(*section + ".BumpAmplitude", temp, error_output);
 		tempsurface.bumpAmplitude = temp;
 		
-		param.GetParam(*section + ".frictionNonTread", temp);
+		param.GetParamOrPrintError(*section + ".FrictionNonTread", temp, error_output);
 		tempsurface.frictionNonTread = temp;
 		
-		param.GetParam(*section + ".frictionTread", temp);
+		param.GetParamOrPrintError(*section + ".FrictionTread", temp, error_output);
 		tempsurface.frictionTread = temp;
 		
-		param.GetParam(*section + ".rollResistanceCoefficient", temp);
+		param.GetParamOrPrintError(*section + ".RollResistanceCoefficient", temp, error_output);
 		tempsurface.rollResistanceCoefficient = temp;
 		
-		param.GetParam(*section + ".rollingDrag", temp);
+		param.GetParamOrPrintError(*section + ".RollingDrag", temp, error_output);
 		tempsurface.rollingDrag = temp;
 		
 		tracksurfaces[indexnum] = tempsurface;

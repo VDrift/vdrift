@@ -178,6 +178,11 @@ class COLLISION_CONTACT
 			col1 = c1;
 			col2 = c2;
 		}
+		void SetCollisionObjects(COLLISION_OBJECT * c1, COLLISION_OBJECT * c2)
+		{
+			col1 = c1;
+			col2 = c2;
+		}
 		bool CollideRay(const MATHVECTOR <float, 3> & origin, const MATHVECTOR <float, 3> & direction, const float length, COLLISION_CONTACT & output_contact) const;
 };
 

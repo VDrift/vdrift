@@ -2,6 +2,7 @@
 #include "unittest.h"
 
 #include <iostream>
+using std::ostream;
 using std::endl;
 
 #include <string>
@@ -9,6 +10,10 @@ using std::string;
 
 #include <sstream>
 using std::stringstream;
+
+#include <fstream>
+using std::ifstream;
+using std::ofstream;
 
 void REPLAY::Save(std::ostream & outstream)
 {

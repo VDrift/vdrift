@@ -9,7 +9,6 @@
 #include <vector>
 
 #include <cmath>
-using namespace std;
 
 #ifdef _WIN32
 bool isnan(float number);
