@@ -345,34 +345,27 @@ void CARDYNAMICS::DoABS ( int i, T suspension_force )
 MATHVECTOR <T, 3> CARDYNAMICS::ComputeTireFrictionForce ( 
     int i, T dt, const MATHVECTOR <T, 3> & suspension_force,
     bool frictionlimiting, T wheelspeed, MATHVECTOR <T, 3> & groundvel, 
-    const QUATERNION <T> & wheel_orientation )
+    const QUATERNION <T> & wheel_space )
 {
-	MATHVECTOR <T, 3> wheel_normal (0, 0, 1);
-	wheel_orientation.RotateVector ( wheel_normal );
+	MATHVECTOR <T, 3> wheel_normal(0, 0, 1);
+	wheel_space.RotateVector(wheel_normal); //wheel normal in world space
 	T normal_force = max(0.0, suspension_force.dot(wheel_normal)); // positive wheel normal force
-	assert ( !isnan ( normal_force ) );
+	assert(!isnan(normal_force));
 
 	//determine camber relative to the road
-	//the component of vector A projected onto plane B = A || B = B × (A×B / |B|) / |B|
-	//plane B is the plane defined by using the tire's forward-facing vector as the plane's normal, in wheelspace
-	//vector A is the normal of the driving surface, in wheelspace
-	MATHVECTOR <T, 3> B ( 1,0,0 ); //forward facing normal vector
-	MATHVECTOR <T, 3> A = wheel_contacts[WHEEL_POSITION ( i ) ].GetNormal(); //driving surface normal
-	( - ( body.GetOrientation() * wheel_orientation ) ).RotateVector ( A ); //rotate to wheelspace
-	MATHVECTOR <T, 3> Aproj = B.cross ( A.cross ( B ) / B.Magnitude() ); //project the ground normal onto our forward facing plane
-	assert ( Aproj.Magnitude() > 0.001 ); //ensure the wheel isn't in an odd orientation
-	Aproj = Aproj.Normalize();
-	MATHVECTOR <T, 3> up ( 0,0,1 ); //upward facing normal vector
-	T camber_rads = acos ( Aproj.dot ( up ) ); //find the angular difference in the camber axis between up and the projected ground normal
-	assert ( !isnan ( camber_rads ) );
-	//MATHVECTOR <T, 3> crosscheck = Aproj.cross(up); //find axis of rotation between Aproj and up
-	//camber_rads = (crosscheck[0] < 0) ? -camber_rads : camber_rads; //correct sign of angular distance
-	camber_rads = -camber_rads;
-	//std::cout << i << ". " << Aproj << " | " << camber_rads*180/3.141593 << std::endl;
-	wheel[WHEEL_POSITION(i)].SetCamberDeg(camber_rads*180.0/3.141593);
+	MATHVECTOR <T, 3> surface_normal = wheel_contacts[WHEEL_POSITION(i)].GetNormal();
+	(-wheel_space).RotateVector(surface_normal);
+	T camber_rads;
+	if (i == 0 || i == 2) // left wheels
+        camber_rads = 1.57079633 - acos(-surface_normal[1]); 
+	else
+        camber_rads = 1.57079633 - acos(surface_normal[1]);
+	assert(!isnan(camber_rads));
+	wheel[WHEEL_POSITION(i)].SetCamberDeg(camber_rads * 180.0/3.141593);
+    
     T friction_coeff = tire[WHEEL_POSITION(i)].GetTread() * wheel_contacts[i].GetFrictionTread() + (1.0 - tire[WHEEL_POSITION(i)].GetTread()) * wheel_contacts[i].GetFrictionNoTread();
-	MATHVECTOR <T, 3> friction_force = tire[WHEEL_POSITION ( i ) ].GetForce ( normal_force, friction_coeff, groundvel, wheelspeed, camber_rads );
-	for ( int n = 0; n < 3; n++ ) assert ( !isnan ( friction_force[n] ) );
+	MATHVECTOR <T, 3> friction_force = tire[WHEEL_POSITION(i)].GetForce(normal_force, friction_coeff, groundvel, wheelspeed, camber_rads);
+	for(int n = 0; n < 3; n++) assert(!isnan(friction_force[n]));
 	return friction_force;
 }
 
@@ -386,13 +379,14 @@ void CARDYNAMICS::ApplyWheelForces(T dt, T drive_torque, int i, const MATHVECTOR
 	MATHVECTOR <T, 3> groundvel = wheel_velocity[WHEEL_POSITION(i)];
 	QUATERNION <T> wheel_orientation = GetWheelSteeringAndSuspensionOrientation(WHEEL_POSITION(i));
 	QUATERNION <T> wheel_space = body.GetOrientation() * wheel_orientation;
+	wheel_space.Normalize(); // wheel space not normalized ?! fixme
 	(-wheel_space).RotateVector(groundvel);
 
 	// tire force / torque
     wheel.Integrate1(dt);
 
     T wheel_speed = wheel.GetAngularVelocity() * tire.GetRadius();
-    MATHVECTOR <T, 3> friction_force = ComputeTireFrictionForce ( i, dt, suspension_force, false, wheel_speed, groundvel, wheel_orientation );
+    MATHVECTOR <T, 3> friction_force = ComputeTireFrictionForce(i, dt, suspension_force, false, wheel_speed, groundvel, wheel_space);
     
     T friction_torque = friction_force[0] * tire.GetRadius();
     T rolling_resistance = tire.GetRollingResistance(suspension_force.Magnitude(), wheel.GetAngularVelocity(), wheel_contacts[i].GetRollingResistanceCoefficient());
@@ -572,7 +566,7 @@ void CARDYNAMICS::ApplyForces ( T dt )
 	body.SetTorque ( total_torque );
 
 	//update fuel tank
-	fuel_tank.Consume ( engine.FuelRate() *dt );
+	fuel_tank.Consume ( engine.FuelRate() * dt );
 	engine.SetOutOfGas ( fuel_tank.Empty() );
 }
 
