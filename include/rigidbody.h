@@ -31,7 +31,7 @@ public:
 	void SetInitialTorque(const MATHVECTOR <T, 3> & torque) {rotation.SetInitialTorque(torque);}
 	void SetTorque(const MATHVECTOR <T, 3> & torque) {rotation.SetTorque(torque);}
 	void SetInertia(const MATRIX3 <T> & inertia) {rotation.SetInertia(inertia);}
-	const T GetInertia() {return rotation.GetInertia();}
+	const MATRIX3 <T> & GetInertia() {return rotation.GetInertia();}
 	void SetOrientation(const QUATERNION <T> & orientation) {rotation.SetOrientation(orientation);}
 	const QUATERNION <T> & GetOrientation() const {return rotation.GetOrientation();}
 	void SetAngularVelocity(const MATHVECTOR <T, 3> & newangvel) {rotation.SetAngularVelocity(newangvel);}
