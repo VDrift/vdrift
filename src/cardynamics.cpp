@@ -344,15 +344,15 @@ void CARDYNAMICS::DoABS ( int i, T suspension_force )
 
 // returns friction force in world space, aligning momentum Mz in tire space
 MATHVECTOR <T, 3> CARDYNAMICS::ComputeTireFrictionForce ( 
-    int i, const MATHVECTOR <T, 3> & suspension_force,
-    const QUATERNION <T> & wheel_space, T* Mz)
+	int i, const MATHVECTOR <T, 3> & suspension_force,
+	const QUATERNION <T> & wheel_space, T* Mz)
 {
-    CARWHEEL<T> & wheel = this->wheel[WHEEL_POSITION(i)];
+	CARWHEEL<T> & wheel = this->wheel[WHEEL_POSITION(i)];
 	CARTIRE<T> & tire = this->tire[WHEEL_POSITION(i)];
-    CARCONTACTPROPERTIES & wheel_contact = this->wheel_contacts[WHEEL_POSITION(i)];
+	CARCONTACTPROPERTIES & wheel_contact = this->wheel_contacts[WHEEL_POSITION(i)];
 	
-    // normal force relative to surface
-    MATHVECTOR <T, 3> surface_normal = wheel_contact.GetNormal();
+	// normal force relative to surface
+	MATHVECTOR <T, 3> surface_normal = wheel_contact.GetNormal();
 	T normal_force = suspension_force.dot(surface_normal);
 	assert(!isnan(normal_force));
 
@@ -364,20 +364,20 @@ MATHVECTOR <T, 3> CARDYNAMICS::ComputeTireFrictionForce (
 	wheel.SetCamberDeg(camber_rads * 180.0/3.141593);
 	
 	// tire space(SAE Tire Coordinate System)
-    // surface normal is z-axis
-    // wheel axis projected on surface plane is y-axis
-    MATHVECTOR <T, 3> y_axis = wheel_axis - surface_normal * camber_sin;
-    MATHVECTOR <T, 3> x_axis = y_axis.cross(surface_normal);
-    
-    // wheel velocity in tire space
+	// surface normal is z-axis
+	// wheel axis projected on surface plane is y-axis
+	MATHVECTOR <T, 3> y_axis = wheel_axis - surface_normal * camber_sin;
+	MATHVECTOR <T, 3> x_axis = y_axis.cross(surface_normal);
+	
+	// wheel velocity in tire space
 	MATHVECTOR <T, 3> wheel_vel;
-    wheel_vel[0] = x_axis.dot(wheel_velocity[WHEEL_POSITION(i)]);
-    wheel_vel[1] = y_axis.dot(wheel_velocity[WHEEL_POSITION(i)]);
-    wheel_vel[2] = 0; // not used
-    
-    // friction force in tire space
-    T wheel_speed = wheel.GetAngularVelocity() * tire.GetRadius();
-    T friction_coeff = tire.GetTread() * wheel_contact.GetFrictionTread() + (1.0 - tire.GetTread()) * wheel_contact.GetFrictionNoTread();
+	wheel_vel[0] = x_axis.dot(wheel_velocity[WHEEL_POSITION(i)]);
+	wheel_vel[1] = y_axis.dot(wheel_velocity[WHEEL_POSITION(i)]);
+	wheel_vel[2] = 0; // not used
+	
+	// friction force in tire space
+	T wheel_speed = wheel.GetAngularVelocity() * tire.GetRadius();
+	T friction_coeff = tire.GetTread() * wheel_contact.GetFrictionTread() + (1.0 - tire.GetTread()) * wheel_contact.GetFrictionNoTread();
 	MATHVECTOR <T, 3> friction_force = tire.GetForce(normal_force, friction_coeff,  wheel_vel, wheel_speed, camber_rads);
 	for(int n = 0; n < 3; n++) assert(!isnan(friction_force[n]));
 	
@@ -398,72 +398,68 @@ void CARDYNAMICS::ApplyWheelForces(T dt, T drive_torque, int i, const MATHVECTOR
 	CARTIRE<T> & tire = this->tire[WHEEL_POSITION(i)];
 	CARBRAKE<T> & brake = this->brake[WHEEL_POSITION(i)];
 	
+	 // wheel space not normalized ?! fixme
 	QUATERNION <T> wheel_orientation = GetWheelSteeringAndSuspensionOrientation(WHEEL_POSITION(i));
 	QUATERNION <T> wheel_space = body.GetOrientation() * wheel_orientation;
-	wheel_space.Normalize(); // wheel space not normalized ?! fixme
+	wheel_space.Normalize();
 
 	// tire force / torque
-    wheel.Integrate1(dt);
-    
-    T Mz = 0;
-    MATHVECTOR <T, 3> friction_force = ComputeTireFrictionForce(i, suspension_force, wheel_space, &Mz);
-    (-wheel_space).RotateVector(friction_force); // friction force in wheel space
-    T friction_torque = friction_force[0] * tire.GetRadius();
-    T rolling_resistance = tire.GetRollingResistance(suspension_force.Magnitude(), wheel.GetAngularVelocity(), wheel_contacts[i].GetRollingResistanceCoefficient());
-    T wheel_torque = drive_torque - friction_torque;
-    T lock_up_torque = wheel.GetLockUpTorque(dt) - wheel_torque;    // torque needed to lock the wheel
-    T brake_torque = brake.GetTorque() + rolling_resistance * tire.GetRadius();
+	wheel.Integrate1(dt);
+	
+	// friction force in world space (+aligning torque)
+	T Mz = 0;
+	MATHVECTOR <T, 3> world_friction_force = ComputeTireFrictionForce(i, suspension_force, wheel_space, &Mz);
+	
+	// friction force in wheel space
+	MATHVECTOR <T, 3> friction_force = world_friction_force;
+	(-wheel_space).RotateVector(friction_force);
+	
+	// torques acting on wheel
+	T friction_torque = friction_force[0] * tire.GetRadius();
+	T rolling_resistance = tire.GetRollingResistance(suspension_force.Magnitude(), wheel.GetAngularVelocity(), wheel_contacts[i].GetRollingResistanceCoefficient());
+	T wheel_torque = drive_torque - friction_torque;
+	T lock_up_torque = wheel.GetLockUpTorque(dt) - wheel_torque;	// torque needed to lock the wheel
+	T brake_torque = brake.GetTorque() + rolling_resistance * tire.GetRadius();
 
-    // brake and rolling resistance torque should never exceed lock up torque
-    if(lock_up_torque >= 0 && lock_up_torque > brake_torque)
-    {
-        brake.WillLock(false);
-        wheel_torque += brake_torque;   // brake torque has same direction as lock up torque 
-        friction_force[0] += rolling_resistance;
-    }
-    else if(lock_up_torque < 0 && lock_up_torque < -brake_torque)
-    {
-        brake.WillLock(false);
-        wheel_torque -= brake_torque;
-        friction_force[0] -= rolling_resistance;
-    }
-    else
-    {
-        brake.WillLock(true);
-        wheel_torque = wheel.GetLockUpTorque(dt);
-    }
-    
-    wheel.SetTorque(wheel_torque);
-    wheel.Integrate2(dt);
-    
-    //calculate force feedback
-    tire.SetFeedback(Mz);
-    
-    //apply forces to body
-    MATHVECTOR <T, 3> tire_force = friction_force;
-	MATHVECTOR <T, 3> tire_torque(0, -friction_force[0] * tire.GetRadius(), -Mz);
-    
-	MATHVECTOR <T, 3> world_tire_force = tire_force;
-	wheel_space.RotateVector(world_tire_force);
-	MATHVECTOR <T, 3> world_tire_torque = tire_torque;
+	// brake and rolling resistance torque should never exceed lock up torque
+	if(lock_up_torque >= 0 && lock_up_torque > brake_torque)
+	{
+		brake.WillLock(false);
+		wheel_torque += brake_torque;   // brake torque has same direction as lock up torque 
+		friction_force[0] += rolling_resistance;
+	}
+	else if(lock_up_torque < 0 && lock_up_torque < -brake_torque)
+	{
+		brake.WillLock(false);
+		wheel_torque -= brake_torque;
+		friction_force[0] -= rolling_resistance;
+	}
+	else
+	{
+		brake.WillLock(true);
+		wheel_torque = wheel.GetLockUpTorque(dt);
+	}
+	
+	wheel.SetTorque(wheel_torque);
+	wheel.Integrate2(dt);
+	
+	// set force feedback
+	tire.SetFeedback(Mz);
+	
+	// wheel torque in world space (+aligning torque)
+	MATHVECTOR <T, 3> world_tire_torque(0, -wheel_torque, -Mz);
 	wheel_space.RotateVector(world_tire_torque);
-    MATHVECTOR <T, 3> wheel_normal(0, 0, 1);
+	
+	//apply forces to body
+	MATHVECTOR <T, 3> wheel_normal(0, 0, 1);
 	wheel_space.RotateVector(wheel_normal);
 	MATHVECTOR <T, 3> wheelpos = GetWheelPosition (WHEEL_POSITION(i)) - GetCenterOfMassPosition();
 	MATHVECTOR <T, 3> contactpos = wheelpos - wheel_normal * tire.GetRadius();
 	MATHVECTOR <T, 3> cm_force;
 	MATHVECTOR <T, 3> cm_torque;
 	body.GetTorqueAtOffset(world_tire_torque, wheelpos, cm_torque); // apply torque at wheel center
-	body.GetForceAtOffset(world_tire_force, contactpos, cm_force, cm_torque); // apply force at tire contact
-
-	//std::cout << i << ", " << tirepos << std::endl;
-	//std::cout << i << ". force = " << tire_force << ", torque = " << tire_torque << std::endl;
-	//std::cout << i << ". groundspeed = " << groundvel << ", wheelspeed = " << wheelspeed << ", friction = " << friction_force << std::endl;
-	//std::cout << i << ". groundvel = " << groundvel << ", wheelspeed = " << wheelspeed << ", torque = " << tire_torque << std::endl;
-	//std::cout << i << ". bodyvel = " << body.GetVelocity() << std::endl;
-	//std::cout << i << ". worldvel = " << GetWheelVelocity(WHEEL_POSITION(i),dt) << ", cm_force = " << cm_force << ", cm_torque = " << cm_torque << std::endl;
-	//std::cout << i << ". world force = " << world_tire_force << ", body torque = " << body_tire_torque << std::endl;
-
+	body.GetForceAtOffset(world_friction_force, contactpos, cm_force, cm_torque); // apply force at tire contact
+	
 	total_force = total_force + cm_force;
 	total_torque = total_torque + cm_torque;
 }
@@ -1173,7 +1169,7 @@ void CARDYNAMICS::Translate ( const MATHVECTOR <T, 3> & translation )
 ///apply force from a contact to the body.  units are worldspace
 void CARDYNAMICS::ProcessContact ( const MATHVECTOR <T, 3> & pos, const MATHVECTOR <T, 3> & normal, const MATHVECTOR <T, 3> & relative_velocity, T depth, T dt )
 {
-    assert(depth < 1.0f); // look for deep collisions => something gone wrong
+	assert(depth < 1.0f); // look for deep collisions => something gone wrong
 	MATHVECTOR <T, 3> translation;
 	translation = normal * ( depth + 0.0 );
 
@@ -1184,16 +1180,16 @@ void CARDYNAMICS::ProcessContact ( const MATHVECTOR <T, 3> & pos, const MATHVECT
 	MATHVECTOR <T, 3> impulse;
 	if ( v_perp.Magnitude() > 0.001 )
 	{
-        impulse = -v_perp * body.GetMass(); // inelastic collision
+		impulse = -v_perp * body.GetMass(); // inelastic collision
 		T v_par_mag = v_par.Magnitude();
 		if (v_par_mag > 0.001)  // add some friction (0.5 friction coefficient)
 		{
-            T friction = min(v_par_mag, 0.5 * impulse.Magnitude());
-            impulse =  impulse - v_par / v_par_mag * friction;
+			T friction = min(v_par_mag, 0.5 * impulse.Magnitude());
+			impulse =  impulse - v_par / v_par_mag * friction;
 		}
-        MATHVECTOR <T, 3> newtorque;
-        body.GetForceAtOffset ( impulse, pos - GetCenterOfMassPosition(), contact_force, newtorque );
-        contact_torque = newtorque * 0.25; // damp torque
+		MATHVECTOR <T, 3> newtorque;
+		body.GetForceAtOffset ( impulse, pos - GetCenterOfMassPosition(), contact_force, newtorque );
+		contact_torque = newtorque * 0.25; // damp torque
 	}
 }
 
@@ -1256,8 +1252,8 @@ T CARDYNAMICS::CalculateDriveshaftRPM() const
 	else if ( drive == AWD )
 	{
 		driveshaft_speed = center_differential.GetDriveshaftSpeed (
-		                       front_differential.GetDriveshaftSpeed ( left_front_wheel_speed, right_front_wheel_speed ),
-		                       rear_differential.GetDriveshaftSpeed ( left_rear_wheel_speed, right_rear_wheel_speed ) );
+							   front_differential.GetDriveshaftSpeed ( left_front_wheel_speed, right_front_wheel_speed ),
+							   rear_differential.GetDriveshaftSpeed ( left_rear_wheel_speed, right_rear_wheel_speed ) );
 	}
 
 	return transmission.GetClutchSpeed ( driveshaft_speed ) * 30.0 / 3.141593;
