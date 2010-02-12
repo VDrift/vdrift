@@ -1643,13 +1643,12 @@ void GAME::UpdateCarWheelCollisions(CAR & car, std::vector <COLLISION_CONTACT> &
 		{
 			contact.Set(MATHVECTOR <float, 3> (colpoint[2], colpoint[0], colpoint[1]), MATHVECTOR <float, 3> (colnormal[2], colnormal[0], colnormal[1]), (colpoint-bezierspace_raystart).Magnitude(), NULL, NULL);
 			surface = SURFACE::ASPHALT;
-			car.SetCurPatch(n, colpatch);
 		}
+		
+		car.SetCurPatch(n, colpatch);
 		
 		//now check for a track geometry collision
 		{
-			car.SetCurPatch(n, NULL); //this behavior is needed for the AI
-
 			//do a track model collision check
 			COLLISION_SETTINGS settings;
 			settings.SetStaticCollide(true);
