@@ -158,7 +158,9 @@ void CARDYNAMICS::ComputeSuspensionDisplacement ( int i, T dt )
 	//compute bump effect
 	T posx = wheel_contacts[i].GetPosition() [0];
 	T posz = wheel_contacts[i].GetPosition() [2];
-	T phase = 2*3.141593* ( posx+posz ) / wheel_contacts[i].GetBumpWavelength();
+	T phase = 0;
+	if (wheel_contacts[i].GetBumpWavelength() > 0.0001)
+		phase = 2*3.141593* ( posx+posz ) / wheel_contacts[i].GetBumpWavelength();
 	T shift = 2.0*sin ( phase*1.414214 );
 	T amplitude = 0.25 * wheel_contacts[i].GetBumpAmplitude();
 	T bumpoffset = amplitude * ( sin ( phase + shift ) + sin ( 1.414214*phase ) - 2.0 );
