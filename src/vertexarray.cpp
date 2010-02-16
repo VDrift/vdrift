@@ -490,7 +490,7 @@ void VERTEXARRAY::SetTo2DButton(float x, float y, float w, float h, float sidewi
 	SetTexCoords(0, uvs, 8*3);
 }
 
-void VERTEXARRAY::SetTo2DBox(float x, float y, float w, float h, float marginwidth, float marginheight)
+void VERTEXARRAY::SetTo2DBox(float x, float y, float w, float h, float marginwidth, float marginheight, float clipx)
 {
 	const unsigned int quads = 9;
 	float vcorners[12*quads];
@@ -511,48 +511,54 @@ void VERTEXARRAY::SetTo2DBox(float x, float y, float w, float h, float marginwid
 	MATHVECTOR <float, 2> margin;
 	margin.Set(marginwidth, marginheight);
 	
+	float lxmax = std::max((corner1-margin)[0],std::min(clipx,corner1[0]));
+	float cxmax = std::max(corner1[0],std::min(clipx,corner2[0]));
+	float rxmax = std::max(corner2[0],std::min(clipx,(corner2+margin)[0]));
+	float lumax = (lxmax-(corner1-margin)[0])/(corner1[0]-(corner1-margin)[0])*0.5;
+	float rumax = (rxmax-corner2[0])/((corner2+margin)[0]-corner2[0])*0.5+0.5;
+	
 	//upper left
-	SetVertexData2DQuad((corner1-margin)[0],(corner1-margin)[1],corner1[0],corner1[1],
-			    0,0,0.5,0.5, vcorners,uvs,bfaces);
+	SetVertexData2DQuad((corner1-margin)[0],(corner1-margin)[1],lxmax,corner1[1],
+			    0,0,lumax,0.5, vcorners,uvs,bfaces);
 	
 	//upper center
-	SetVertexData2DQuad(corner1[0],(corner1-margin)[1],corner2[0],corner1[1],
+	SetVertexData2DQuad(corner1[0],(corner1-margin)[1],cxmax,corner1[1],
 			     0.5,0,0.5,0.5,
 			     &(vcorners[12*1]),&(uvs[8*1]),&(bfaces[6*1]),4*1);
 	
 	//upper right
-	SetVertexData2DQuad(corner2[0],(corner1-margin)[1],(corner2+margin)[0],corner1[1],
-			    0.5,0,1,0.5,
+	SetVertexData2DQuad(corner2[0],(corner1-margin)[1],rxmax,corner1[1],
+			    0.5,0,rumax,0.5,
 			    &(vcorners[12*2]),&(uvs[8*2]),&(bfaces[6*2]),4*2);
 	
 	//center left
-	SetVertexData2DQuad((corner1-margin)[0],corner1[1],corner1[0],corner2[1],
-			    0,0.5,0.5,0.5,
+	SetVertexData2DQuad((corner1-margin)[0],corner1[1],lxmax,corner2[1],
+			    0,0.5,lumax,0.5,
 			    &(vcorners[12*3]),&(uvs[8*3]),&(bfaces[6*3]),4*3);
 	
 	//center center
-	SetVertexData2DQuad(corner1[0],corner1[1],corner2[0],corner2[1],
+	SetVertexData2DQuad(corner1[0],corner1[1],cxmax,corner2[1],
 			    0.5,0.5,0.5,0.5,
 			    &(vcorners[12*4]),&(uvs[8*4]),&(bfaces[6*4]),4*4);
 	
 	//center right
-	SetVertexData2DQuad(corner2[0],corner1[1],(corner2+margin)[0],corner2[1],
-			    0.5,0.5,1,0.5,
+	SetVertexData2DQuad(corner2[0],corner1[1],rxmax,corner2[1],
+			    0.5,0.5,rumax,0.5,
 			    &(vcorners[12*5]),&(uvs[8*5]),&(bfaces[6*5]),4*5);
 	
 	//lower left
-	SetVertexData2DQuad((corner1-margin)[0],corner2[1],corner1[0],(corner2+margin)[1],
-			    0,0.5,0.5,1,
+	SetVertexData2DQuad((corner1-margin)[0],corner2[1],lxmax,(corner2+margin)[1],
+			    0,0.5,lumax,1,
 			    &(vcorners[12*6]),&(uvs[8*6]),&(bfaces[6*6]),4*6);
 	
 	//lower center
-	SetVertexData2DQuad(corner1[0],corner2[1],corner2[0],(corner2+margin)[1],
+	SetVertexData2DQuad(corner1[0],corner2[1],cxmax,(corner2+margin)[1],
 			    0.5,0.5,0.5,1,
 			    &(vcorners[12*7]),&(uvs[8*7]),&(bfaces[6*7]),4*7);
 	
 	//lower right
-	SetVertexData2DQuad(corner2[0],corner2[1],(corner2+margin)[0],(corner2+margin)[1],
-			    0.5,0.5,1,1,
+	SetVertexData2DQuad(corner2[0],corner2[1],rxmax,(corner2+margin)[1],
+			    0.5,0.5,rumax,1,
 			    &(vcorners[12*8]),&(uvs[8*8]),&(bfaces[6*8]),4*8);
 	
 	SetFaces(bfaces, 6*quads);

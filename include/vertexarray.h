@@ -81,7 +81,7 @@ public:
 	
 	void SetTo2DButton(float x, float y, float w, float h, float sidewidth, bool flip=false);
 	
-	void SetTo2DBox(float x, float y, float w, float h, float marginwidth, float marginheight);
+	void SetTo2DBox(float x, float y, float w, float h, float marginwidth, float marginheight, float clipx=1.f);
 	
 	void SetTo2DQuad(float x1, float y1, float x2, float y2, float u1, float v1, float u2, float v2, float z);
 	
