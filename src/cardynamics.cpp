@@ -571,8 +571,8 @@ void CARDYNAMICS::ApplyForces ( T dt )
 		ApplyWheelForces ( dt, wheel_drive_torque[i], i, last_suspension_force[i], total_force, total_torque );
 	}
 
-	total_force = total_force + contact_force/dt;
-	total_torque = total_torque + contact_torque/dt;
+	total_force = total_force + contact_force;
+	total_torque = total_torque + contact_torque;
 	contact_force.Set ( 0.0 );
 	contact_torque.Set ( 0.0 );
 
@@ -1189,9 +1189,7 @@ void CARDYNAMICS::ProcessContact ( const MATHVECTOR <T, 3> & pos, const MATHVECT
 			T friction = min(v_par_mag, 0.5 * impulse.Magnitude());
 			impulse =  impulse - v_par / v_par_mag * friction;
 		}
-		MATHVECTOR <T, 3> newtorque;
-		body.GetForceAtOffset ( impulse, pos - GetCenterOfMassPosition(), contact_force, newtorque );
-		contact_torque = newtorque * 0.25; // damp torque
+		body.GetForceAtOffset ( impulse / dt, pos - GetCenterOfMassPosition(), contact_force, contact_torque );
 	}
 }
 
