@@ -251,7 +251,7 @@ bool GAME::InitializeGUI()
 
 bool GAME::InitializeSound()
 {
-	if (sound.Init(512, info_output, error_output))
+	if (sound.Init(2048, info_output, error_output))
 	{
 		generic_sounds.SetLibraryPath(pathmanager.GetGenericSoundPath());
 		
