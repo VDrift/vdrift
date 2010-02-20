@@ -10,27 +10,106 @@
 #include "rigidbody.h"
 #include "random.h"
 
-///abstract base class for a camera
+///base class for a camera
 class CAMERA
 {
+	protected:
+		const std::string name;
+	
 	public:
+		CAMERA(const std::string camera_name) : name(camera_name) {}
+		const std::string & GetName() const {return name;}
+		
 		virtual MATHVECTOR <float, 3> GetPosition() const = 0;
 		virtual QUATERNION <float> GetOrientation() const = 0;
+		
+		// reset position, orientation
+		virtual void Reset(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newquat)
+		{
+		}
+		// update position, orientation
+		virtual void Update(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newquat, const MATHVECTOR <float, 3> & accel, float dt)
+		{
+		}
+		// move relative to current position, orientation
+		virtual void Move(float dx, float dy, float dz) {}
+		// rotate relative to current position, orientation
+		virtual void Rotate(float up, float left) {}
+};
+
+///camera manager class
+class CAMERA_SYSTEM
+{
+	protected:
+		std::vector<CAMERA*> camera;			//camera vector used to preserve order
+		unsigned int active;					//active camera index
+		std::map<std::string, int> camera_map;	//name => index
+	
+	public:
+		~CAMERA_SYSTEM()
+		{
+			for(unsigned int i = 0; i < camera.size(); i++)
+			{
+				if (camera[i]) delete camera[i];
+			}
+		}
+		CAMERA * Active() const
+		{
+			return camera[active];
+		}
+		CAMERA * Select(const std::string & name)
+		{
+			active = 0;
+			std::map<std::string, int>::iterator it = camera_map.find(name);
+			if (it != camera_map.end()) active = it->second;
+			return camera[active];
+		}
+		CAMERA * Next()
+		{
+			active++;
+			if (active == camera.size()) active = 0;
+			return camera[active];
+		}
+		CAMERA * Prev()
+		{
+			if (active == 0) active = camera.size();
+			active--;
+			return camera[active];
+		}
+		void Add(CAMERA * newcam)
+		{
+			active = camera.size();
+			camera_map[newcam->GetName()] = active;
+			camera.push_back(newcam);
+			//std::cout << "camera " << active << ": "<< newcam->GetName() << std::endl;
+		}
 };
 
 class CAMERA_FIXED : public CAMERA
 {
 	private:
 		MATHVECTOR <float, 3> position;
+		MATHVECTOR <float, 3> offset;
 		QUATERNION <float> orientation;
 
 	public:
+		CAMERA_FIXED(const std::string name) : CAMERA(name) {}
 		virtual MATHVECTOR <float, 3> GetPosition() const {return position;}
 		virtual QUATERNION <float> GetOrientation() const {return orientation;}
-		void Set(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newquat)
+		virtual void Reset(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newquat)
 		{
-			position = newpos;
+			MATHVECTOR <float, 3> newoffset = offset;
+			newquat.RotateVector(newoffset);
+			position = newpos + newoffset;
 			orientation = newquat;
+		}
+		virtual void Update(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newquat, const MATHVECTOR <float, 3> & accel, float dt)
+		{
+			Reset(newpos, newquat);
+		}
+		void SetOffset(float x, float y, float z)
+		{
+			offset.Set(x, y, z);
 		}
 };
 
@@ -38,50 +117,41 @@ class CAMERA_FREE : public CAMERA
 {
 	private:
 		MATHVECTOR <float, 3> position;
+		MATHVECTOR <float, 3> offset;
 		float leftright_rotation;
 		float updown_rotation;
 
 	public:
-		CAMERA_FREE() : leftright_rotation(0), updown_rotation(0) {}
+		CAMERA_FREE(const std::string name) : CAMERA(name), offset(0, 0, 2), leftright_rotation(0), updown_rotation(0) {}
 
 		virtual MATHVECTOR <float, 3> GetPosition() const {return position;}
 		virtual QUATERNION <float> GetOrientation() const
 		{
 			QUATERNION <float> rot;
-			rot.Rotate(updown_rotation, 0,1,0);
-			rot.Rotate(leftright_rotation, 0,0,1);
+			rot.Rotate(updown_rotation, 0, 1, 0);
+			rot.Rotate(leftright_rotation, 0, 0, 1);
 			return rot;
 		}
-		void Reset(const MATHVECTOR <float, 3> & newpos)
+		virtual void Reset(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newquat)
 		{
-			position = newpos;
+			position = newpos + offset;
 			leftright_rotation = 0;
 			updown_rotation = 0;
+			Move(-8.0, 0, 0);
 		}
-		void ResetRotation()
+		virtual void Rotate(float up, float left)
 		{
-			updown_rotation = 0;
-			leftright_rotation = 0;
-		}
-		///rotate by the given amount in radians.  a negative value will result in left rotation
-		void RotateRight(float deltarot)
-		{
-			leftright_rotation += -deltarot;
-			//TODO: account for wrap
-		}
-		///rotate by the given amount in radians
-		void RotateDown(float deltarot)
-		{
-			updown_rotation += deltarot;
+			updown_rotation += up;
 			if (updown_rotation > 1.0)
 				updown_rotation = 1.0;
 			if (updown_rotation <-1.0)
 				updown_rotation =-1.0;
+			
+			leftright_rotation += left;
 		}
-		void MoveForward(float meters)
+		virtual void Move(float dx, float dy, float dz)
 		{
-			MATHVECTOR <float, 3> forward(8,0,0);
-			forward = forward * meters;
+			MATHVECTOR <float, 3> forward(dx, 0, 0);
 			GetOrientation().RotateVector(forward);
 			position = position + forward;
 		}
@@ -96,7 +166,7 @@ class CAMERA_ORBIT : public CAMERA
 		float orbit_distance;
 
 	public:
-		CAMERA_ORBIT() : leftright_rotation(0), updown_rotation(0), orbit_distance(4.0) {}
+		CAMERA_ORBIT(const std::string name) : CAMERA(name), leftright_rotation(0), updown_rotation(0), orbit_distance(4.0) {}
 
 		virtual MATHVECTOR <float, 3> GetPosition() const
 		{
@@ -107,40 +177,35 @@ class CAMERA_ORBIT : public CAMERA
 		virtual QUATERNION <float> GetOrientation() const
 		{
 			QUATERNION <float> rot;
-			rot.Rotate(updown_rotation, 0,1,0);
-			rot.Rotate(leftright_rotation, 0,0,1);
+			rot.Rotate(updown_rotation, 0, 1, 0);
+			rot.Rotate(leftright_rotation, 0, 0, 1);
 			return rot;
 		}
-		void Reset(const MATHVECTOR <float, 3> & newfocus)
+		virtual void Reset(const MATHVECTOR <float, 3> & newfocus, const QUATERNION <float> & newquat)
 		{
-			SetFocus(newfocus);
+			focus = newfocus;
 			leftright_rotation = 0;
 			updown_rotation = 0;
 			orbit_distance = 4.0;
 		}
-		void SetFocus(const MATHVECTOR <float, 3> & newfocus)
+		virtual void Update(const MATHVECTOR <float, 3> & newfocus, const QUATERNION <float> & newquat, const MATHVECTOR <float, 3> & accel, float dt)
 		{
 			focus = newfocus;
 		}
-		///rotate by the given amount in radians.  a negative value will result in left rotation
-		void RotateRight(float deltarot)
+		virtual void Rotate(float up, float left)
 		{
-			leftright_rotation += -deltarot;
-			//TODO: account for wrap
-		}
-		///rotate by the given amount in radians
-		void RotateDown(float deltarot)
-		{
-			float maxupdown = 1.5;
-			updown_rotation += deltarot;
+			const float maxupdown = 1.5;
+			updown_rotation += up;
 			if (updown_rotation > maxupdown)
 				updown_rotation = maxupdown;
 			if (updown_rotation <-maxupdown)
 				updown_rotation =-maxupdown;
+			
+			leftright_rotation -= left;
 		}
-		void ZoomIn(float meters)
+		virtual void Move(float dx, float dy, float dz)
 		{
-			orbit_distance -= meters;
+			orbit_distance -= dx;
 			if (orbit_distance < 3.0)
 				orbit_distance = 3.0;
 			if (orbit_distance > 10.0)
@@ -163,8 +228,6 @@ class CAMERA_CHASE : public CAMERA
 		{
 			float dotprod = vec1.Normalize().dot(vec2.Normalize());
 			float angle = acos(dotprod);
-			//std::cout << dotprod << std::endl;
-			//assert(angle == angle);
 			float epsilon = 1e-6;
 			if (fabs(dotprod) <= epsilon)
 				angle = 3.141593*0.5;
@@ -178,25 +241,24 @@ class CAMERA_CHASE : public CAMERA
 		void LookAt(MATHVECTOR <float, 3> eye, MATHVECTOR <float, 3> center, MATHVECTOR <float, 3> up);
 
 	public:
-		CAMERA_CHASE() : chase_distance(6),chase_height(1.5),posblend_on(true) {}
+		CAMERA_CHASE(const std::string name) : CAMERA(name), chase_distance(6), chase_height(1.5), posblend_on(true) {}
 		virtual MATHVECTOR <float, 3> GetPosition() const {return position;}
 		virtual QUATERNION <float> GetOrientation() const {return orientation;}
-		void Reset(const MATHVECTOR <float, 3> & newfocus, const QUATERNION <float> & focus_facing)
+		virtual void Reset(const MATHVECTOR <float, 3> & newfocus, const QUATERNION <float> & focus_facing)
 		{
 			focus = newfocus;
 			orientation = focus_facing;
-			MATHVECTOR <float, 3> view_offset(-chase_distance,0,chase_height);
+			MATHVECTOR <float, 3> view_offset(-chase_distance, 0, chase_height);
 			orientation.RotateVector(view_offset);
 			position = focus + view_offset;
 		}
+		virtual void Update(const MATHVECTOR <float, 3> & newfocus, const QUATERNION <float> & focus_facing, const MATHVECTOR <float, 3> & accel, float dt);
 
 		void SetChaseDistance ( float value )
 		{
 			chase_distance = value;
 		}
-
-		void Set(const MATHVECTOR <float, 3> & newfocus, const QUATERNION <float> & focus_facing, float dt, bool lookbehind);
-
+		
 		void SetChaseHeight ( float value )
 		{
 			chase_height = value;
@@ -224,17 +286,20 @@ class CAMERA_SIMPLEMOUNT : public CAMERA
 		std::vector<signalprocessing::PID> offsetpid;
 
 		DETERMINISTICRANDOM randgen;
+		
+		float stiffness; ///< where 0.0 is nominal stiffness for a sports car and 1.0 is a formula 1 car
 
 		float Random();
 		float Distribution(float input);
 
 	public:
-        CAMERA_SIMPLEMOUNT() {randgen.ReSeed(0);}
+        CAMERA_SIMPLEMOUNT(const std::string name) : CAMERA(name) {randgen.ReSeed(0);}
 		virtual MATHVECTOR <float, 3> GetPosition() const {return position;}
 		virtual QUATERNION <float> GetOrientation() const {return orientation;}
-		void Reset(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newquat, float stiffness); ///< where 0.0 is nominal stiffness for a sports car and 1.0 is a formula 1 car
-		void Set(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newdir, float dt);
+		virtual void Reset(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newquat); 
+		virtual void Update(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newdir, const MATHVECTOR <float, 3> & accel, float dt);
 		MATHVECTOR <float, 3> GetOffset() const {return offset_final;}
+		void SetStiffness ( float value ) {stiffness = value;}
 };
 
 class CAMERA_MOUNT : public CAMERA
@@ -242,9 +307,9 @@ class CAMERA_MOUNT : public CAMERA
 	private:
 		RIGIDBODY <float> body;
 		MATHVECTOR <float, 3> anchor;
+		MATHVECTOR <float, 3> offset;	// offset relative car(center of mass)
+		QUATERNION<float> rotation; 	// camera rotation relative to car
 		float effect;
-
-		//CAMERA_SIMPLEMOUNT bouncesim;
 		
 		DETERMINISTICRANDOM randgen;
 
@@ -252,14 +317,24 @@ class CAMERA_MOUNT : public CAMERA
 		float offset_effect_strength; ///< where 1.0 is normal effect strength
 
 	public:
-		CAMERA_MOUNT() : effect(0.0), stiffness(0.0), offset_effect_strength(1.0) {}
+		CAMERA_MOUNT(const std::string name) : CAMERA(name), effect(0.0), stiffness(0.0), offset_effect_strength(1.0) {}
 
 		virtual MATHVECTOR <float, 3> GetPosition() const;
 		virtual QUATERNION <float> GetOrientation() const {return body.GetOrientation();}
+		virtual void Reset(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newquat);
+		virtual void Update(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newdir, const MATHVECTOR <float, 3> & accel, float dt);
 
-		void Reset(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newquat);
-		void Set(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newdir, const MATHVECTOR <float, 3> & accel, float dt);
-
+		void SetOffset(MATHVECTOR <float, 3> value)
+		{
+			offset = value;
+		}
+		
+		void SetRotation(float up, float left)
+		{
+			rotation.Rotate(up, 0, 1, 0);
+			rotation.Rotate(left, 0, 0, 1);
+		}
+		
 		void SetStiffness ( float value )
 		{
 			stiffness = value;

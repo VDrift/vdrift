@@ -29,6 +29,8 @@ enum CARINPUT
 
     //inputs that are used elsewhere in the game only
     GAME_ONLY_INPUTS_START_HERE,
+ 	VIEW_PREV,
+ 	VIEW_NEXT,
     VIEW_HOOD,
     VIEW_INCAR,
     VIEW_CHASERIGID,

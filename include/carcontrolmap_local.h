@@ -329,6 +329,8 @@ public:
 		carinput_stringmap["reverse"] = CARINPUT::REVERSE;
 		carinput_stringmap["rear_view"] = CARINPUT::REAR_VIEW;
 		
+		carinput_stringmap["view_prev"] = CARINPUT::VIEW_PREV;
+		carinput_stringmap["view_next"] = CARINPUT::VIEW_NEXT;
 		carinput_stringmap["view_hood"] = CARINPUT::VIEW_HOOD;
 		carinput_stringmap["view_incar"] = CARINPUT::VIEW_INCAR;
 		carinput_stringmap["view_chaserigid"] = CARINPUT::VIEW_CHASERIGID;

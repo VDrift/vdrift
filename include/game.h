@@ -114,9 +114,7 @@ private:
 	float fps_max;
 	bool multithreaded;
 	bool benchmode;
-	//GAME_RENDER rendertask;
-	const CAMERA * active_camera;
-	CAMERA_FREE free_camera;
+	CAMERA * active_camera;
 	bool pause;
 	unsigned int particle_timer;
 	std::vector <std::pair<std::string, std::string> > opponents; //pairs of car names and car paints for opponents

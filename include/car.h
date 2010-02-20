@@ -237,17 +237,8 @@ protected:
 	SOUNDSOURCE gravelsound[4];
 	SOUNDSOURCE crashsound;
 	SOUNDSOURCE roadnoise;
-
-	MATHVECTOR <float, 3> view_position;
-	MATHVECTOR <float, 3> hood_position;
-
-	//CAMERA_FIXED driver_cam;
-	CAMERA_MOUNT driver_cam;
-	//CAMERA_FIXED hood_cam;
-	CAMERA_MOUNT hood_cam;
-	CAMERA_CHASE rigidchase_cam;
-	CAMERA_CHASE chase_cam;
-	CAMERA_ORBIT orbit_cam;
+	
+	CAMERA_SYSTEM cameras;
 
 	//internal variables that might change during driving (so, they need to be serialized)
 	bool auto_clutch;
@@ -430,6 +421,11 @@ public:
 	}
 
 	void HandleInputs(const std::vector <float> & inputs, float dt);
+	
+	CAMERA_SYSTEM& Cameras()
+	{
+		return cameras;
+	}
 
 	int GetEngineRPM() const
 	{
@@ -492,18 +488,10 @@ public:
 		newpos = new_position;
 		dynamics.GetBody().SetPosition(newpos);
 
-		QUATERNION <float> floatq;
-		floatq = dynamics.GetBody().GetOrientation();
-		chase_cam.Reset(GetCenterOfMassPosition(), floatq);
-
-		MATHVECTOR <double, 3> doublevec;
-		doublevec = view_position;
-		MATHVECTOR <float, 3> floatvec;
-		floatvec = dynamics.CarLocalToWorld(doublevec);
-		driver_cam.Reset(floatvec, floatq);
-		doublevec = hood_position;
-		floatvec = dynamics.CarLocalToWorld(doublevec);
-		hood_cam.Reset(floatvec, floatq);
+		QUATERNION <float> rot;
+		rot = dynamics.GetBody().GetOrientation();
+		
+		cameras.Active()->Reset(newpos, rot);
 	}
 
 	MATHVECTOR <float, 3> GetCenterOfMassPosition() const
@@ -540,12 +528,6 @@ public:
 	{
 		return dynamics.WorldToRigidBodyLocal(world);
 	}
-
-	const CAMERA * GetDriverCamera() const {return &driver_cam;}
-	const CAMERA * GetHoodCamera() const {return &hood_cam;}
-	const CAMERA * GetOrbitCamera() const {return &orbit_cam;}
-	const CAMERA * GetChaseCamera() const {return &chase_cam;}
-	const CAMERA * GetRigidChaseCamera() const {return &rigidchase_cam;}
 
 	const AABB <float> GetCollisionDimensions()
 	{
@@ -720,7 +702,6 @@ public:
 	{
 		return collisionobject;
 	}
-	
 };
 
 #endif
