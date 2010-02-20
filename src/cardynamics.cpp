@@ -181,9 +181,7 @@ MATHVECTOR <T, 3> CARDYNAMICS::ApplySuspensionForceToBody ( int i, T dt, MATHVEC
 
 	//correct for a bottomed suspension by moving the car body up.  this is sort of a kludge.
 	T overtravel = suspension[WHEEL_POSITION ( i ) ].GetOvertravel();
-	//assert(overtravel < 1.0);
-	//if (overtravel > 1.0) std::cout << "wheel overtravel = " << overtravel;
-	if ( overtravel > 0 )
+	if ( overtravel > 0 && overtravel < 0.5 )
 	{
 		MATHVECTOR <T, 3> worldup ( 0,0,1 );
 		body.GetOrientation().RotateVector ( worldup );
@@ -1173,7 +1171,7 @@ void CARDYNAMICS::ProcessContact ( const MATHVECTOR <T, 3> & pos, const MATHVECT
 {
 	assert(depth < 1.0f); // look for deep collisions => something gone wrong
 	MATHVECTOR <T, 3> translation;
-	translation = normal * ( depth + 0.0 );
+	translation = normal * depth;
 
 	Translate ( translation );
 
@@ -1186,7 +1184,8 @@ void CARDYNAMICS::ProcessContact ( const MATHVECTOR <T, 3> & pos, const MATHVECT
 		T v_par_mag = v_par.Magnitude();
 		if (v_par_mag > 0.001)  // add some friction (0.5 friction coefficient)
 		{
-			T friction = min(v_par_mag, 0.5 * impulse.Magnitude());
+			T max_friction = v_par_mag * body.GetMass();
+			T friction = min(max_friction, 0.5 * impulse.Magnitude());
 			impulse =  impulse - v_par / v_par_mag * friction;
 		}
 		body.GetForceAtOffset ( impulse / dt, pos - GetCenterOfMassPosition(), contact_force, contact_torque );
