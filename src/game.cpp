@@ -1352,15 +1352,6 @@ void GAME::ProcessGUIAction(const std::string & action)
 ///send inputs to the car, check for collisions, and so on
 void GAME::UpdateCar(CAR & car, double dt)
 {
-	//hide glass if we're inside the car
-	if (carcontrols_local.first == &car)
-	{
-		if (active_camera == car.GetHoodCamera() || active_camera == car.GetDriverCamera())
-			car.EnableGlass(false);
-		else
-			car.EnableGlass(true);
-	}
-	
 	car.Update(dt);
 	UpdateCarInputs(car);
 	AddTireSmokeParticles(dt, car);
@@ -1452,64 +1443,71 @@ void GAME::UpdateCarInputs(CAR & car)
 			timer.GetThisDriftScore(cartimerids[&car]));
 
 		//handle camera mode change inputs
+		CAMERA * old_camera = active_camera;
 		if (carcontrols_local.second.GetInput(CARINPUT::VIEW_HOOD))
 		{
-			active_camera = car.GetHoodCamera();
-			settings.SetCameraMode("hood");
+			active_camera = car.Cameras().Select("hood");
 		}
 		else if (carcontrols_local.second.GetInput(CARINPUT::VIEW_INCAR))
 		{
-			active_camera = car.GetDriverCamera();
-			settings.SetCameraMode("incar");
+			active_camera = car.Cameras().Select("incar");
 		}
 		else if (carcontrols_local.second.GetInput(CARINPUT::VIEW_FREE))
 		{
-			active_camera = &free_camera;
-			free_camera.Reset(MATHVECTOR <float, 3> (car.GetCenterOfMassPosition()+MATHVECTOR <float, 3> (0,0,2)));
-			free_camera.MoveForward(-2.0);
-			free_camera.ResetRotation();
-			settings.SetCameraMode("free");
+			active_camera = car.Cameras().Select("free");
 		}
 		else if (carcontrols_local.second.GetInput(CARINPUT::VIEW_ORBIT))
 		{
-			active_camera = car.GetOrbitCamera();
-			settings.SetCameraMode("orbit");
+			active_camera = car.Cameras().Select("orbit");
 		}
 		else if (carcontrols_local.second.GetInput(CARINPUT::VIEW_CHASERIGID))
 		{
-			active_camera = car.GetRigidChaseCamera();
-			settings.SetCameraMode("chaserigid");
+			active_camera = car.Cameras().Select("chaserigid");
 		}
 		else if (carcontrols_local.second.GetInput(CARINPUT::VIEW_CHASE))
 		{
-			active_camera = car.GetChaseCamera();
-			settings.SetCameraMode("chase");
+			active_camera = car.Cameras().Select("chase");
 		}
+		else if (carcontrols_local.second.GetInput(CARINPUT::VIEW_NEXT))
+		{
+			active_camera = car.Cameras().Next();
+		}
+		else if (carcontrols_local.second.GetInput(CARINPUT::VIEW_PREV))
+		{
+			active_camera = car.Cameras().Prev();
+		}
+		settings.SetCameraMode(active_camera->GetName());
+		
+		if(old_camera != active_camera)
+			active_camera->Reset(car.GetCenterOfMassPosition(), car.GetOrientation());
 
 		//handle camera inputs
-		if (active_camera == &free_camera)
-		{
-			free_camera.RotateDown(-carcontrols_local.second.GetInput(CARINPUT::PAN_UP)*TickPeriod());
-			free_camera.RotateDown(carcontrols_local.second.GetInput(CARINPUT::PAN_DOWN)*TickPeriod());
-			free_camera.RotateRight(-carcontrols_local.second.GetInput(CARINPUT::PAN_LEFT)*TickPeriod());
-			free_camera.RotateRight(carcontrols_local.second.GetInput(CARINPUT::PAN_RIGHT)*TickPeriod());
-			free_camera.MoveForward(carcontrols_local.second.GetInput(CARINPUT::ZOOM_IN)*TickPeriod());
-			free_camera.MoveForward(-carcontrols_local.second.GetInput(CARINPUT::ZOOM_OUT)*TickPeriod());
-		}
+		float left = TickPeriod() * (carcontrols_local.second.GetInput(CARINPUT::PAN_LEFT)
+							- carcontrols_local.second.GetInput(CARINPUT::PAN_RIGHT));
+		float up = TickPeriod() * (carcontrols_local.second.GetInput(CARINPUT::PAN_UP)
+							- carcontrols_local.second.GetInput(CARINPUT::PAN_DOWN));
+		float dx = TickPeriod() * (carcontrols_local.second.GetInput(CARINPUT::ZOOM_IN)
+							- carcontrols_local.second.GetInput(CARINPUT::ZOOM_OUT));
+		active_camera->Rotate(-up, left); //up is inverted
+		active_camera->Move(4 * dx, 0, 0);
 
-		//determine whether or not we should use cockpit sounds
-		bool cockpitsounds = (active_camera == car.GetDriverCamera() || active_camera == car.GetHoodCamera());
+		//set cockpit sounds
+		bool incar = (active_camera->GetName() == "hood" || active_camera->GetName() == "incar");
 		{
 			std::list <SOUNDSOURCE *> soundlist;
 			car.GetEngineSoundList(soundlist);
 			for (std::list <SOUNDSOURCE *>::iterator s = soundlist.begin(); s != soundlist.end(); s++)
 			{
-				(*s)->Set3DEffects(!cockpitsounds);
+				(*s)->Set3DEffects(!incar);
 				//cout << "3d effects off" << endl;
 			}
 		}
 		
-		graphics.SetCloseShadow(cockpitsounds ? 1.0 : 5.0); //move up the close shadow distance if we're in the cockpit
+		//hide glass if we're inside the car
+		car.EnableGlass(!incar);
+		
+		//move up the close shadow distance if we're in the cockpit
+		graphics.SetCloseShadow(incar ? 1.0 : 5.0);
 	}
 }
 
@@ -2085,22 +2083,9 @@ bool GAME::LoadCar(const std::string & carname, const std::string & carpaint, co
 			carcontrols_local.first = &cars.back();
 
 			//set the active camera
-			active_camera = cars.back().GetChaseCamera();
-			if (settings.GetCameraMode() == "hood")
-			{
-				//std::cout << "Hood camera mode" << std::endl;
-				active_camera = cars.back().GetHoodCamera();
-			}
-			if (settings.GetCameraMode() == "incar")
-				active_camera = cars.back().GetDriverCamera();
-			if (settings.GetCameraMode() == "free")
-				active_camera = &free_camera;
-			if (settings.GetCameraMode() == "orbit")
-				active_camera = cars.back().GetOrbitCamera();
-			if (settings.GetCameraMode() == "chaserigid")
-				active_camera = cars.back().GetRigidChaseCamera();
-			if (settings.GetCameraMode() == "chase")
-				active_camera = cars.back().GetChaseCamera();
+			CAR& car = cars.back();
+			active_camera = car.Cameras().Select(settings.GetCameraMode());
+			active_camera->Reset(car.GetCenterOfMassPosition(), car.GetOrientation());
 
 			// setup auto clutch and auto shift
 			ProcessNewSettings();

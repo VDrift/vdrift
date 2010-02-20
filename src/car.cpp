@@ -60,8 +60,12 @@ bool CAR::Load (CONFIGFILE & carconf, const std::string & carpath, const std::st
 
 	cartype = carname;
 
-	driver_cam.SetEffectStrength(camerabounce);
-	hood_cam.SetEffectStrength(camerabounce);
+	CAMERA_MOUNT* hood_cam = new CAMERA_MOUNT("hood");
+	CAMERA_MOUNT* driver_cam = new CAMERA_MOUNT("incar");
+	driver_cam->SetEffectStrength(camerabounce);
+	hood_cam->SetEffectStrength(camerabounce);
+	cameras.Add(hood_cam);
+	cameras.Add(driver_cam);
 	
 	std::stringstream nullout;
 
@@ -129,7 +133,6 @@ bool CAR::Load (CONFIGFILE & carconf, const std::string & carpath, const std::st
 	 		anisotropy, texsize, nullout ) )
 	{
 		info_output << "No car interior model exists, continuing without one" << endl;
-		//return false;
 	}
 
 	//load car glass graphics
@@ -139,7 +142,6 @@ bool CAR::Load (CONFIGFILE & carconf, const std::string & carpath, const std::st
 			anisotropy, texsize, nullout ) )
 	{
 		info_output << "No car glass model exists, continuing without one" << endl;
-		//return false;
 	}
 	else
 		glassdraw->SetPartialTransparency(true);
@@ -224,11 +226,6 @@ bool CAR::Load (CONFIGFILE & carconf, const std::string & carpath, const std::st
 	QUATERNION <float> fixer; //due to historical reasons the initial orientation places the car faces the wrong way
 	fixer.Rotate(3.141593,0,0,1);
 	dynamics.SetInitialConditions(initial_position, fixer*initial_orientation);
-
-	//setup the cameras
-	/*driver_cam.SetPositionBlending(false);
-	driver_cam.SetChaseHeight(0.0f);
-	driver_cam.SetChaseDistance(0.0f);*/
 
 	//load sounds
 	if (soundenabled)
@@ -1157,7 +1154,7 @@ bool CAR::LoadDynamics(CONFIGFILE & c, std::ostream & error_output)
 	//load the driver
 	{
 		float mass;
-		float pos[3], hoodpos[3];
+		float pos[3];
 		MATHVECTOR <double, 3> position;
 
 		if (!GetConfigfileParam(error_output, c, "driver.mass", mass)) return false;
@@ -1172,30 +1169,78 @@ bool CAR::LoadDynamics(CONFIGFILE & c, std::ostream & error_output)
 			COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0],pos[1],pos[2]);
 		position.Set(pos[0], pos[1], pos[2]);
 		dynamics.AddMassParticle(mass, position);
-
+	}
+	
+	dynamics.UpdateMass();
+	
+	//load views (center of mass has to be calculated before)
+	{
+		CAMERA_MOUNT* hood_cam = dynamic_cast<CAMERA_MOUNT*>(cameras.Select("hood"));
+		CAMERA_MOUNT* driver_cam = dynamic_cast<CAMERA_MOUNT*>(cameras.Select("incar"));
+		
+		float pos[3], hoodpos[3];
 		if (!GetConfigfileParam(error_output, c, "driver.view-position", pos)) return false;
-		if (version == 2)
-			COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0],pos[1],pos[2]);
-		view_position.Set(pos);
+		if (version == 2) COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
+		MATHVECTOR <float, 3> cam_offset;
+		cam_offset.Set(pos);
+		cam_offset = dynamics.CarLocalToRigidBodyLocal(cam_offset);
+		driver_cam->SetOffset(cam_offset);
+		//driver_cam->SetRotation(0, 3.14/2);
 
 		if (!GetConfigfileParam(error_output, c, "driver.hood-mounted-view-position", hoodpos))
 		{
 			pos[1] = 0;
 			pos[0] += 1.0;
-			hood_position.Set(pos);
+			cam_offset.Set(pos);
 		}
 		else
 		{
 			if (version == 2)
 				COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(hoodpos[0],hoodpos[1],hoodpos[2]);
-			hood_position.Set(hoodpos);
+			cam_offset.Set(hoodpos);
 		}
+		cam_offset = dynamics.CarLocalToRigidBodyLocal(cam_offset);
+		hood_cam->SetOffset(cam_offset);
 
 		float view_stiffness = 0.0;
-		if (!c.GetParam("driver.view-stiffness", view_stiffness))
-			view_stiffness = 0.0;
-		driver_cam.SetStiffness(view_stiffness);
-		hood_cam.SetStiffness(view_stiffness);
+		c.GetParam("driver.view-stiffness", view_stiffness);
+		driver_cam->SetStiffness(view_stiffness);
+		hood_cam->SetStiffness(view_stiffness);
+		
+		CAMERA_FIXED * cam_chaserigid = new CAMERA_FIXED("chaserigid");
+		cam_chaserigid->SetOffset(-6, 0, 1.5);
+		cameras.Add(cam_chaserigid);
+		
+		CAMERA_CHASE * cam_chase = new CAMERA_CHASE("chase");
+		cam_chase->SetChaseHeight(2.0);
+		cameras.Add(cam_chase);
+		
+		cameras.Add(new CAMERA_ORBIT("orbit"));
+		cameras.Add(new CAMERA_FREE("free"));
+	}
+	
+	// load additional views
+	{
+		// eek, ugly macro
+		#define tostr( x ) dynamic_cast< std::ostringstream & >( ( std::ostringstream() << std::dec << x ) ).str()
+		std::string view_name;
+		for(int i = 1; c.GetParam("view.name-" + tostr(i), view_name); i++)
+		{
+			float pos[3], angle[3];
+			if (!c.GetParam("view.position-" + tostr(i), pos)) continue;
+			if (!c.GetParam("view.angle-" + tostr(i), angle)) continue;
+			if (version == 2) COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
+			
+			CAMERA_MOUNT* next_view = new CAMERA_MOUNT(view_name);
+			
+			MATHVECTOR <float, 3> view_offset;
+			view_offset.Set(pos);
+			view_offset = dynamics.CarLocalToRigidBodyLocal(view_offset);
+			
+			next_view->SetOffset(view_offset);
+			next_view->SetRotation(angle[0] * 3.141593/180.0, angle[1] * 3.141593/180.0);
+			cameras.Add(next_view);
+		}
 	}
 
 	//load the aerodynamics
@@ -1229,8 +1274,6 @@ bool CAR::LoadDynamics(CONFIGFILE & c, std::ostream & error_output)
 			dynamics.AddAerodynamicDevice(position, drag_area, drag_c, lift_area, lift_c, lift_eff);
 		}
 	}
-
-	dynamics.UpdateMass();
 	
 	mz_nominalmax = (GetTireMaxMz(FRONT_LEFT) + GetTireMaxMz(FRONT_RIGHT))*0.5;
 
@@ -1323,14 +1366,6 @@ void CAR::HandleInputs(const std::vector <float> & inputs, float dt)
 	}
 	dynamics.GetEngine().SetThrottle(throttle);
 	dynamics.GetClutch().SetClutch(clutch);
-
-	//do camera inputs
-	orbit_cam.RotateDown(-inputs[CARINPUT::PAN_UP]*dt);
-	orbit_cam.RotateDown(inputs[CARINPUT::PAN_DOWN]*dt);
-	orbit_cam.RotateRight(-inputs[CARINPUT::PAN_LEFT]*dt);
-	orbit_cam.RotateRight(inputs[CARINPUT::PAN_RIGHT]*dt);
-	orbit_cam.ZoomIn(inputs[CARINPUT::ZOOM_IN]*dt*4.0);
-	orbit_cam.ZoomIn(-inputs[CARINPUT::ZOOM_OUT]*dt*4.0);
 
 	// update brake/reverse lights
 	if (bodydraw)
@@ -1705,41 +1740,18 @@ void CAR::UpdateSounds(float dt)
 
 void CAR::UpdateCameras(float dt)
 {
-	MATHVECTOR <double, 3> doublevec;
-	doublevec = view_position;
-	MATHVECTOR <float, 3> floatvec;
-	floatvec = dynamics.CarLocalToWorld(doublevec);
-	QUATERNION <float> floatq;
-	floatq = dynamics.GetBody().GetOrientation();
-	MATHVECTOR <float, 3> accel;
-	accel = dynamics.GetLastBodyForce()/dynamics.GetBody().GetMass();
+	QUATERNION <float> rot;
+	rot = dynamics.GetBody().GetOrientation();
+	MATHVECTOR <float, 3> pos = GetCenterOfMassPosition();
+	MATHVECTOR <float, 3> acc = dynamics.GetLastBodyForce() / dynamics.GetBody().GetMass();
 	
-	// reverse the camera direction
 	if (lookbehind)
 	{
-		floatq.Rotate(3.141593,0,0,1);
-		
-		MATHVECTOR<float, 3> driver_reverse_offset(0.2,0,0);
-		floatq.RotateVector(driver_reverse_offset);
-		driver_cam.Set(floatvec+driver_reverse_offset, floatq, accel, dt);
-		doublevec = hood_position;
-		floatvec = dynamics.CarLocalToWorld(doublevec);
-		hood_cam.Set(floatvec+MATHVECTOR<float, 3>(0,0,0.15), floatq, accel, dt);
-		rigidchase_cam.Reset(GetCenterOfMassPosition(), floatq);
-		chase_cam.Set(GetCenterOfMassPosition()+MATHVECTOR<float, 3>(0,0,0.5), floatq, dt, lookbehind);
+		// reverse the camera direction
+		rot.Rotate(3.141593, 0, 0, 1);
 	}
-	else
-	{
-		//driver_cam.Reset(floatvec, floatq);
-		driver_cam.Set(floatvec, floatq, accel, dt);
-		doublevec = hood_position;
-		floatvec = dynamics.CarLocalToWorld(doublevec);
-		//hood_cam.Set(floatvec, floatq);
-		hood_cam.Set(floatvec, floatq, accel, dt);
-		rigidchase_cam.Reset(GetCenterOfMassPosition(), floatq);
-		chase_cam.Set(GetCenterOfMassPosition()+MATHVECTOR<float, 3>(0,0,0.5), floatq, dt, lookbehind);
-	}
-	orbit_cam.SetFocus(GetCenterOfMassPosition());
+	
+	cameras.Active()->Update(pos, rot, acc, dt);
 }
 
 CAR::SUSPENSIONBUMPDETECTION::SUSPENSIONBUMPDETECTION() : state(SETTLED), laststate(SETTLED),

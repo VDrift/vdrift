@@ -5,37 +5,35 @@
 
 using std::endl;
 
-void CAMERA_CHASE::Set(const MATHVECTOR <float, 3> & newfocus, const QUATERNION <float> & focus_facing, float dt, bool lookbehind)
+void CAMERA_CHASE::Update(const MATHVECTOR <float, 3> & newfocus, const QUATERNION <float> & focus_facing, const MATHVECTOR <float, 3> & accel, float dt)
 {
 	focus = newfocus;
-	//orientation = focus_facing;
-	MATHVECTOR <float, 3> view_offset(-chase_distance,0,chase_height);
+	MATHVECTOR <float, 3> view_offset(-chase_distance, 0, chase_height);
 	focus_facing.RotateVector(view_offset);
 	MATHVECTOR <float, 3> target_position = focus + view_offset;
-	float posblend = 10.0*dt;
-	if (lookbehind)
-		posblend *= 10;
+	float posblend = 10.0 * dt;
+	//if (lookbehind)
+	//	posblend *= 10;
 	
 	if (posblend > 1.0)
 		posblend = 1.0;
 	if (!posblend_on)
 		posblend = 1.0;
-	position = position*(1.0-posblend)+target_position*posblend;
+	position = position * (1.0 - posblend) + target_position * posblend;
 
-	MATHVECTOR <float, 3> focus_offset(0,0,0);
-	if (lookbehind)
+	MATHVECTOR <float, 3> focus_offset(0, 0, 0);
+	//if (lookbehind)
+	//{
+	//	focus_offset[2] = 1.0;
+	//}
+	//else 
+	if (chase_distance < 0.0001)
 	{
-		focus_offset[2] = 1.0;
-	}
-	else if (chase_distance < 0.0001)
-	{
-		focus_offset.Set(1.0,0.0,0.0);
+		focus_offset.Set(1.0, 0.0, 0.0);
 		focus_facing.RotateVector(focus_offset);
-		//assert(0);
 	}
 
-	LookAt(position, focus+focus_offset, MATHVECTOR <float, 3> (0,0,1));
-	//orientation = focus_facing;
+	LookAt(position, focus + focus_offset, MATHVECTOR <float, 3> (0, 0, 1));
 }
 
 void CAMERA_CHASE::LookAt(MATHVECTOR <float, 3> eye, MATHVECTOR <float, 3> center, MATHVECTOR <float, 3> up)
@@ -45,7 +43,7 @@ void CAMERA_CHASE::LookAt(MATHVECTOR <float, 3> eye, MATHVECTOR <float, 3> cente
 	MATHVECTOR <float, 3> side = (forward.cross(up)).Normalize();
 	MATHVECTOR <float, 3> realup = side.cross(forward);
 
-			//rotate so the camera is pointing along the forward line
+	//rotate so the camera is pointing along the forward line
 	MATHVECTOR <float, 3> curforward (1,0,0);
 	float theta = AngleBetween(forward, curforward);
 	assert(theta == theta);
@@ -53,7 +51,7 @@ void CAMERA_CHASE::LookAt(MATHVECTOR <float, 3> eye, MATHVECTOR <float, 3> cente
 	MATHVECTOR <float, 3> axis = forward.cross(curforward).Normalize();
 	orientation.Rotate(-theta, axis[0], axis[1], axis[2]);
 
-			//now rotate the camera so it's pointing up
+	//now rotate the camera so it's pointing up
 	MATHVECTOR <float, 3> curup (0,0,1);
 	orientation.RotateVector(curup);
 	float rollangle = AngleBetween(realup, curup);
@@ -84,7 +82,7 @@ float CAMERA_SIMPLEMOUNT::Distribution(float input)
 	return power * sign * 8.0;
 }
 
-void CAMERA_SIMPLEMOUNT::Set(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newdir, float dt)
+void CAMERA_SIMPLEMOUNT::Update(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newdir, const MATHVECTOR <float, 3> & accel, float dt)
 {
 	MATHVECTOR <float, 3> vel = newpos - position;
 
@@ -93,8 +91,6 @@ void CAMERA_SIMPLEMOUNT::Set(const MATHVECTOR <float, 3> & newpos, const QUATERN
 	randvec[2] = Distribution(Random());
 
 	offset_randomwalk = offset_randomwalk + randvec*dt;
-
-	//offset = offset + randvec * dt;
 
 	MATHVECTOR <float, 3> controlleroutput;
 	for (int i = 0; i < 3; i++)
@@ -107,10 +103,6 @@ void CAMERA_SIMPLEMOUNT::Set(const MATHVECTOR <float, 3> & newpos, const QUATERN
 
 	for (int i = 0; i < 3; i++)
 		offset_filtered[i] = offsetlowpass[i].Process(offset_randomwalk[i]+controlleroutput[i]);
-
-	//newoffset[i] = LowPass(newoffset[i], offset[i], dt*2.0);
-
-	//offset_filtered = offset_filtered + controlleroutput;
 
 	float effect = vel.Magnitude();
 	effect -= 0.04;
@@ -128,16 +120,13 @@ void CAMERA_SIMPLEMOUNT::Set(const MATHVECTOR <float, 3> & newpos, const QUATERN
 	orientation = orientation.QuatSlerp(newdir, dt*40.0);
 }
 
-void CAMERA_SIMPLEMOUNT::Reset(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newquat, float stiffness)
+void CAMERA_SIMPLEMOUNT::Reset(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newquat)
 {
 	offsetdelay.clear();
 	offsetlowpass.clear();
 	offsetpid.clear();
 	for (int i = 0; i < 3; i++)
 	{
-		/*offsetdelay.push_back(signalprocessing::DELAY(6-5*stiffness));
-		offsetlowpass.push_back(signalprocessing::LOWPASS(.04*(stiffness+1.0)));
-		offsetpid.push_back(signalprocessing::PID(0.2*stiffness,0.1*(stiffness+1.0),0,false));*/
 		offsetdelay.push_back(signalprocessing::DELAY(3-2*stiffness));
 		offsetlowpass.push_back(signalprocessing::LOWPASS(.1*(stiffness+1.0)));
 		offsetpid.push_back(signalprocessing::PID(0.2*stiffness,0.25*(stiffness+1.0),0,false));
@@ -154,23 +143,29 @@ void CAMERA_MOUNT::Reset(const MATHVECTOR <float, 3> & newpos, const QUATERNION 
 	float length = 0.05;
 	body.SetMass(mass);
 	MATRIX3 <float> rotinertia;
-	//rotinertia.Scale(2.0*mass*radius*radius/5.0);
 	rotinertia.Scale(mass*length*length/3.0);
 	body.SetInertia(rotinertia);
 	body.SetInitialForce(MATHVECTOR <float, 3> (0));
 	body.SetInitialTorque(MATHVECTOR <float, 3> (0));
-
 	body.SetPosition(MATHVECTOR <float, 3>(0));
-	anchor = newpos;
-	//body.SetPosition(newpos);
+	
+	MATHVECTOR <float, 3> pos = offset;
+	newquat.RotateVector(pos);
+	anchor = pos + newpos;
+	
 	body.SetOrientation(newquat);
-
-	//bouncesim.Reset(newpos, newquat, stiffness);
 }
 
-void CAMERA_MOUNT::Set(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newdir, const MATHVECTOR <float, 3> & accel, float dt)
+void CAMERA_MOUNT::Update(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newdir, const MATHVECTOR <float, 3> & accel, float dt)
 {
-	MATHVECTOR <float, 3> vel = newpos - anchor;
+	MATHVECTOR <float, 3> pos = offset;
+	newdir.RotateVector(pos);
+	pos = pos + newpos;
+	QUATERNION<float> dir = newdir * rotation;
+	
+	MATHVECTOR <float, 3> vel = pos - anchor;
+	
+	anchor = pos;
 	
 	effect = (vel.Magnitude()-.02)/0.04;
 	if (effect < 0)
@@ -180,23 +175,19 @@ void CAMERA_MOUNT::Set(const MATHVECTOR <float, 3> & newpos, const QUATERNION <f
 	//std::cout << vel.Magnitude() << std::endl;
 	
 	float bumpdiff = randgen.Get();
-	float power = pow(bumpdiff,32.0);
-	//power -= 0.05;
+	float power = pow(bumpdiff, 32.0);
 	if (power < 0)
 		power = 0;
 	assert(power <= 1.0f);
 	if (power > 0.2)
 		power = 0.2;
 	float veleffect = std::min(pow(vel.Magnitude()*(2.0-stiffness),3.0),1.0);
-	float bumpimpulse = power*130.0*veleffect;//*(1.0-stiffness*0.5);
+	float bumpimpulse = power*130.0*veleffect;
 	
 	body.Integrate1(dt);
-	//body.SetForce(MATHVECTOR <float, 3> (0));
-
-	anchor = newpos;
 
 	MATHVECTOR <float, 3> accellocal = -accel;
-	(-newdir).RotateVector(accellocal);
+	(-dir).RotateVector(accellocal);
 
 	float k = 800.0+stiffness*800.0*4.0;
 	float c = 2.0*std::sqrt(k*body.GetMass())*0.35;
@@ -208,16 +199,12 @@ void CAMERA_MOUNT::Set(const MATHVECTOR <float, 3> & newpos, const QUATERNION <f
 	body.SetForce(springforce+damperforce+accelforce+bumpforce);
 	
 	//std::cout << bumpdiff << ", " << power << ", " << vel.Magnitude() << ", " << veleffect << ", " << bumpimpulse << std::endl;
-
 	//std::cout << accellocal << std::endl;
-
+	
 	body.SetTorque(MATHVECTOR <float, 3> (0));
 	body.Integrate2(dt);
-
-	//body.SetPosition(newpos);
-	body.SetOrientation(newdir);
-
-	//bouncesim.Set(newpos, newdir, dt);
+	
+	body.SetOrientation(dir);
 }
 
 MATHVECTOR <float, 3> CAMERA_MOUNT::GetPosition() const
@@ -233,9 +220,7 @@ MATHVECTOR <float, 3> CAMERA_MOUNT::GetPosition() const
 		if (modbody[i] < -maxallowed[i])
 			modbody[i] = -maxallowed[i];
 	}
-
 	modbody[1] *= 0.5;
 
-	//return anchor+(modbody*effect+bouncesim.GetOffset())*offset_effect_strength;
 	return anchor+(modbody*effect)*offset_effect_strength;
 }
