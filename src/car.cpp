@@ -1221,14 +1221,14 @@ bool CAR::LoadDynamics(CONFIGFILE & c, std::ostream & error_output)
 	
 	// load additional views
 	{
-		// eek, ugly macro
-		#define tostr( x ) dynamic_cast< std::ostringstream & >( ( std::ostringstream() << std::dec << x ) ).str()
+		int i = 1;
+		std::string istr = "1";
 		std::string view_name;
-		for(int i = 1; c.GetParam("view.name-" + tostr(i), view_name); i++)
+		while(c.GetParam("view.name-" + istr, view_name))
 		{
 			float pos[3], angle[3];
-			if (!c.GetParam("view.position-" + tostr(i), pos)) continue;
-			if (!c.GetParam("view.angle-" + tostr(i), angle)) continue;
+			if (!c.GetParam("view.position-" + istr, pos)) continue;
+			if (!c.GetParam("view.angle-" + istr, angle)) continue;
 			if (version == 2) COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
 			
 			CAMERA_MOUNT* next_view = new CAMERA_MOUNT(view_name);
@@ -1240,6 +1240,10 @@ bool CAR::LoadDynamics(CONFIGFILE & c, std::ostream & error_output)
 			next_view->SetOffset(view_offset);
 			next_view->SetRotation(angle[0] * 3.141593/180.0, angle[1] * 3.141593/180.0);
 			cameras.Add(next_view);
+			
+			std::stringstream sstr;
+			sstr << ++i;
+			istr = sstr.str();
 		}
 	}
 
