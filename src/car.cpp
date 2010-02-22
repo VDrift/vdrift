@@ -1408,24 +1408,31 @@ float CAR::AutoClutch(float last_clutch, float dt) const
 	const float margin = 100.0;//100.0;
 	const float geareffect = 1.0; //zero to 1, defines special consideration of first/reverse gear
 
+	bool protect_against_brake_lockup = true;
+
 	float rpm = dynamics.GetEngine().GetRPM();
 	float driveshaft_rpm = dynamics.CalculateDriveshaftRPM();
+	//if (!protect_against_brake_lockup)
 	driveshaft_rpm = rpm;
 
+	bool braking(false);
+	
 	//take into account locked brakes
-	bool protect_against_brake_lockup = true;
-	bool braking(true);
 	if (protect_against_brake_lockup)
 	{
 		for (int i = 0; i < 4; i++)
 		{
 			if (dynamics.WheelDriven(WHEEL_POSITION(i)))
 			{
-                braking = braking && dynamics.GetBrake(WHEEL_POSITION(i)).WillLock();
+				if (dynamics.GetBrake(WHEEL_POSITION(i)).WillLock(dynamics.GetWheel(WHEEL_POSITION(i)).GetAngularVelocity()))
+				//if (dynamics.GetBrake(WHEEL_POSITION(i)).GetBrakeFactor() > 0.9 || dynamics.GetBrake(WHEEL_POSITION(i)).WillLock(dynamics.GetWheel(WHEEL_POSITION(i)).GetAngularVelocity()))
+				{
+					//driveshaft_rpm = 0;
+					braking = true;
+					//std::cout << "Braking will lock: " << dynamics.GetBrake(WHEEL_POSITION(i)).GetBrakeFactor() << std::endl;
+				}
 			}
 		}
-		if (braking)
-            return 0; 
 	}
 
 	//use driveshaft_rpm if it's lower
@@ -1459,8 +1466,11 @@ float CAR::AutoClutch(float last_clutch, float dt) const
 	const float rate = (last_clutch - newauto)/dt; //engagement rate in clutch units per second
 	if (rate > engage_rate_limit)
 		newauto = last_clutch - engage_rate_limit*dt;
-    
-    return newauto;
+	
+	if (braking)
+		return 0;
+	else
+		return newauto;
 }
 
 float CAR::ShiftAutoClutch() const
