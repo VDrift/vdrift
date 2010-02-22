@@ -21,6 +21,9 @@ private:
 	
 	//variables
 	T additional_inertia;
+	T drive_torque;
+	T braking_torque;
+	T rolling_resistance_torque;
 	T inertia_cache;
 	T steer_angle; ///<negative values cause steering to the left
 	
@@ -31,11 +34,13 @@ private:
 	
 public:
 	//default constructor makes an S2000-like car
-	CARWHEEL() : roll_height(0.29), mass(18.14),inertia_cache(10.0),steer_angle(0) {SetInertia(10.0);}
+	CARWHEEL() : roll_height(0.29), mass(18.14),drive_torque(0),braking_torque(0),rolling_resistance_torque(0),inertia_cache(10.0),steer_angle(0) {SetInertia(10.0);}
 	
 	void DebugPrint(std::ostream & out)
 	{
 		out << "---Wheel---" << std::endl;
+		out << "Drive torque: " << drive_torque << std::endl;
+		out << "Braking torque: " << braking_torque << std::endl;
 		out << "Wheel speed: " << GetRPM() << std::endl;
 		out << "Steer angle: " << steer_angle << std::endl;
 		out << "Camber angle: " << camber_deg << std::endl;
@@ -125,10 +130,12 @@ public:
 		rotation.Integrate2(dt);
 	}
 	
-	void SetTorque(const T torque)
+	void ApplyForces(const T dt)
 	{
-		MATHVECTOR <T, 3> v(torque, 0, 0);
+		MATHVECTOR <T, 3> v;
+		v[0] = drive_torque + braking_torque + rolling_resistance_torque;
 		rotation.SetTorque(v);
+		
 		angvel = GetAngularVelocity();
 	}
 	
@@ -137,20 +144,45 @@ public:
 		return rotation.GetTorque()[0];
 	}
 	
-	T GetLockUpTorque(const T dt) const
-	{
-	    return rotation.GetLockUpTorque(dt)[0];
-	}
-	
 	void ZeroForces()
 	{
 		MATHVECTOR <T, 3> v;
 		rotation.SetTorque(v);
 	}
+
+	void SetDriveTorque ( const T& value )
+	{
+		drive_torque = value;
+	}
 	
 	const QUATERNION <T> & GetOrientation() const
 	{
 		return rotation.GetOrientation();
+	}
+
+	void SetBrakingTorque ( const T& value )
+	{
+		braking_torque = value;
+	}
+
+	void SetRollingResistanceTorque ( const T& value )
+	{
+		rolling_resistance_torque = value;
+	}
+
+	const T & GetDriveTorque() const
+	{
+		return drive_torque;
+	}
+
+	const T & GetBrakingTorque() const
+	{
+		return braking_torque;
+	}
+
+	const T & GetRollingResistanceTorque() const
+	{
+		return rolling_resistance_torque;
 	}
 
 	T GetSteerAngle() const
@@ -165,6 +197,9 @@ public:
 	
 	bool Serialize(joeserialize::Serializer & s)
 	{
+		_SERIALIZE_(s,drive_torque);
+		_SERIALIZE_(s,braking_torque);
+		_SERIALIZE_(s,rolling_resistance_torque);
 		_SERIALIZE_(s,inertia_cache);
 		_SERIALIZE_(s,steer_angle);
 		return true;

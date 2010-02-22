@@ -256,9 +256,9 @@ protected:
 	///returns the suspension force (so it can be applied to the tires)
 	MATHVECTOR <T, 3> ApplySuspensionForceToBody(int i, T dt, MATHVECTOR <T, 3> & total_force, MATHVECTOR <T, 3> & total_torque);
 	
-	///returns friction force in world space and aligning momentum Mz
-	MATHVECTOR <T, 3> ComputeTireFrictionForce(int i, const MATHVECTOR <T, 3> & suspension_force,
-			const QUATERNION <T> & wheel_orientation, T* Mz);
+	MATHVECTOR <T, 3> ComputeTireFrictionForce(int i, T dt, const MATHVECTOR <T, 3> & suspension_force,
+			bool frictionlimiting, T wheelspeed, MATHVECTOR <T, 3> & groundvel,
+			const QUATERNION <T> & wheel_orientation);
 	
 	///do traction control system (wheelspin prevention) calculations and modify the throttle position if necessary
 	void DoTCS(int i, T suspension_force);

@@ -330,13 +330,14 @@ public:
 		feedback = aligning_force;
 	}
 	
-	// max rolling resistance magnitude
-	T GetRollingResistance(const T force, const T speed, const T rolling_resistance_factor) const
+	T GetRollingResistance(const T speed, const T rolling_resistance_factor) const
 	{
-	    // Include constant(rolling_resistance_linear) and quadratic rolling resistance.
-		T rolling = rolling_resistance_factor * 
-		//( rolling_resistance_linear * force + rolling_resistance_quadratic * speed * speed ); // have very hight normal forces on bumpy surfaces, need to fix it
-		( rolling_resistance_linear + rolling_resistance_quadratic * speed * speed );
+		T rolling_1 = rolling_resistance_linear;
+		if ( speed < 0.0 )
+			rolling_1 = -rolling_1;
+		// Include constant and quadratic rolling resistance.
+		T rolling = rolling_resistance_factor
+					* ( rolling_1 + rolling_resistance_quadratic * speed * speed );
 		return rolling;
 	}
 	
