@@ -1660,7 +1660,8 @@ void GAME::UpdateCarWheelCollisions(CAR & car, std::vector <COLLISION_CONTACT> &
 				}
 				else
 				{
-					contact.SetCollisionObjects(contactlist.front().GetCollidingObject1(), contactlist.front().GetCollidingObject2());
+					// setting the second parameter to NULL is our code for a bezier collision
+					contact.SetCollisionObjects(contactlist.front().GetCollidingObject1(), NULL);
 				}
 				
 				const TRACK_OBJECT * const obj = reinterpret_cast <const TRACK_OBJECT * const> (contact.GetCollidingObject1()->ObjID());
@@ -1671,7 +1672,9 @@ void GAME::UpdateCarWheelCollisions(CAR & car, std::vector <COLLISION_CONTACT> &
 				friction_tread = obj->GetFrictionTread();
 				rolling_resistance = obj->GetRollingResistanceCoefficient();
 				rolling_drag = obj->GetRollingDrag();
-				surface = obj->GetSurfaceType();
+				
+				if (!beziercol)
+					surface = obj->GetSurfaceType();
 				
 				if (track.UseSurfaceTypes())
 				{
@@ -1723,6 +1726,7 @@ void GAME::UpdateCarWheelCollisionsFromCached(CAR & car, std::vector <COLLISION_
 				else
 				{
 					const TRACK_OBJECT * const obj = reinterpret_cast <const TRACK_OBJECT * const> (contact.GetCollidingObject1()->ObjID());
+					assert(obj);
 					
 					float bump_wavelength(1);
 					float bump_amplitude(0);
@@ -1738,7 +1742,12 @@ void GAME::UpdateCarWheelCollisionsFromCached(CAR & car, std::vector <COLLISION_
 					friction_tread = obj->GetFrictionTread();
 					rolling_resistance = obj->GetRollingResistanceCoefficient();
 					rolling_drag = obj->GetRollingDrag();
-					surface = obj->GetSurfaceType();
+					
+					if (!contact.GetCollidingObject2()) // this is our code for a bezier collision
+					{
+						surface = obj->GetSurfaceType();
+						surface = SURFACE::ASPHALT;
+					}
 					
 					if (track.UseSurfaceTypes())
 					{
