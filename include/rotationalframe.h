@@ -108,8 +108,8 @@ public:
 	
 	void SetAngularVelocity(const MATHVECTOR <T, 3> & newangvel)
 	{
-		angular_momentum = inverse_inertia_tensor.Inverse().Multiply(newangvel);
-		RecalculateSecondary();
+		angular_momentum = world_inverse_inertia_tensor.Inverse().Multiply(newangvel); 
+		angular_velocity = newangvel;
 	}
 	
 	const MATHVECTOR <T, 3> GetAngularVelocity() const
