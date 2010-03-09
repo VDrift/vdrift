@@ -358,6 +358,13 @@ bool GAME::ParseArguments(std::list <std::string> & args)
 	}
 	arghelp["-profiling"] = "Display game performance data.";
 	
+	if (argmap.find("-dumpfps") != argmap.end())
+	{
+		info_output << "Dumping the frame-rate to log." << endl;
+		dumpfps = true;
+	}
+	arghelp["-dumpfps"] = "Continually dump the framerate to the log.";
+	
 	
 	if (!argmap["-resolution"].empty())
 	{
@@ -565,8 +572,8 @@ void GAME::Tick(float deltat)
 		curticks++;
 	}
 
-	//if (curticks > 0 && frame % 100 == 0)
-	//	info_output << "FPS: " << eventsystem.GetFPS() << endl;
+	if (dumpfps && curticks > 0 && frame % 100 == 0)
+		info_output << "Current FPS: " << eventsystem.GetFPS() << endl;
 }
 
 void GAME::ParallelUpdate(int carindex)

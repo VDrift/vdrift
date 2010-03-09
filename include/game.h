@@ -114,6 +114,7 @@ private:
 	float fps_max;
 	bool multithreaded;
 	bool benchmode;
+	bool dumpfps;
 	CAMERA * active_camera;
 	bool pause;
 	unsigned int particle_timer;
@@ -167,7 +168,7 @@ public:
 		target_time(0),framerate(0.01),collision_rate(0.01),collision_frameskip(collision_rate/framerate),
 		cur_collision_frameskip(0), carphysics_rate(0.001), fps_draw(NULL),
 		fps_track(10,0),fps_position(0),fps_min(0),fps_max(0),
-		multithreaded(false), benchmode(false), active_camera(NULL), pause(false), particle_timer(0),
+		multithreaded(false), benchmode(false), dumpfps(false), active_camera(NULL), pause(false), particle_timer(0),
 		race_laps(0), debugmode(false), profilingmode(false), tracknode(NULL), replay(framerate)
 	{
 		carcontrols_local.first = NULL;
