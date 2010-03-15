@@ -87,7 +87,16 @@ public:
 	
 };
 
-class TEXTURE_GL
+/// an abstract base class for a simple texture interface
+class TEXTURE_INTERFACE
+{
+	public:
+		virtual bool Loaded() const = 0;
+		virtual void Activate() const = 0;
+		virtual void Deactivate() const = 0;
+};
+
+class TEXTURE_GL : public TEXTURE_INTERFACE
 {
 private:
 	TEXTUREINFO texture_info;
@@ -110,8 +119,8 @@ public:
 		loaded(false), w(0), h(0), origw(0),origh(0),scale(1.0), alphachannel(false) {}
 	~TEXTURE_GL() { Unload(); }
 
-	void Activate() const;
-	void Deactivate() const;
+	virtual void Activate() const;
+	virtual void Deactivate() const;
 
 	void SetInfo(const TEXTUREINFO & texinfo) {texture_info.CopyFrom(texinfo);}
 	bool Load(const TEXTUREINFO & texinfo, std::ostream & error_output, const std::string & texsize)
@@ -127,7 +136,7 @@ public:
 	bool IsEqualTo(const TEXTURE_GL & othertex) const {return IsEqualTo(othertex.GetTextureInfo());}
 	bool IsEqualTo(const TEXTUREINFO & texinfo) const;
 	const TEXTUREINFO & GetTextureInfo() const {return texture_info;}
-	bool Loaded() const {return loaded;}
+	virtual bool Loaded() const {return loaded;}
 
 	///scale factor from original size.  allows the user to determine
 	///what the texture size scaling did to the texture dimensions

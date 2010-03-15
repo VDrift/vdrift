@@ -228,8 +228,8 @@ private:
 			void SetActiveShader(const SHADER_TYPE & newshader);
 			std::vector <SHADER_GLSL *> shadermap;
 			SHADER_TYPE activeshader;
-			reseatable_reference <TEXTURE_GL> reflection;
-			reseatable_reference <TEXTURE_GL> ambient;
+			reseatable_reference <TEXTURE_INTERFACE> reflection;
+			reseatable_reference <TEXTURE_INTERFACE> ambient;
 			bool orthomode;
 			unsigned int fsaa;
 			float contrast;
@@ -265,24 +265,11 @@ private:
 			void SetShader(SHADER_TYPE stype, SHADER_GLSL & newshader) {assert((unsigned int)stype < shadermap.size());shadermap[stype]=&newshader;}
 			void SetClear(bool newclearcolor, bool newcleardepth) {clearcolor = newclearcolor;cleardepth = newcleardepth;}
 			virtual void Render(GLSTATEMANAGER & glstate);
-			void SetReflection ( TEXTURE_GL & value ) {reflection = value;}
-			void SetFSAA ( unsigned int value )
-			{
-				fsaa = value;
-			}
-			void SetAmbient ( TEXTURE_GL & value )
-			{
-				ambient = value;
-			}
-			void SetContrast ( float value )
-			{
-				contrast = value;
-			}
-
-			void SetDepthModeEqual ( bool value )
-			{
-				depth_mode_equal = value;
-			}
+			void SetReflection ( TEXTURE_INTERFACE & value ) {reflection = value;}
+			void SetFSAA ( unsigned int value ) {fsaa = value;}
+			void SetAmbient ( TEXTURE_INTERFACE & value ) {ambient = value;}
+			void SetContrast ( float value ) {contrast = value;}
+			void SetDepthModeEqual ( bool value ) {depth_mode_equal = value;}
 	};
 	
 	class RENDER_OUTPUT

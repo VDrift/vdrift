@@ -3,7 +3,7 @@
 #include "opengl_utility.h"
 #include <SDL/SDL.h>
 
-void FBTEXTURE_GL::Init(int sizex, int sizey, bool rect, bool newdepth, bool filternearest, bool newalpha, std::ostream & error_output, int newmultisample)
+void FBTEXTURE_GL::Init(int sizex, int sizey, TARGET target, bool newdepth, bool filternearest, bool newalpha, std::ostream & error_output, int newmultisample)
 {
 	assert(!(newalpha && newdepth)); //not allowed; depth maps don't have alpha
 	
@@ -20,7 +20,7 @@ void FBTEXTURE_GL::Init(int sizex, int sizey, bool rect, bool newdepth, bool fil
 	sizew = sizex;
 	sizeh = sizey;
 	
-	rectangle = rect;
+	texture_target = target;
 	
 	multisample = newmultisample;
 	if (!(GL_EXT_framebuffer_multisample && GL_EXT_framebuffer_blit))
@@ -31,11 +31,9 @@ void FBTEXTURE_GL::Init(int sizex, int sizey, bool rect, bool newdepth, bool fil
 	glGenFramebuffersEXT(1, &framebuffer_object);
 	
 	//set texture info
-	int texture_target(GL_TEXTURE_2D);
-	if (rectangle)
+	if (texture_target == GL_TEXTURE_RECTANGLE_ARB)
 	{
 		assert(GLEW_ARB_texture_rectangle);
-		texture_target = GL_TEXTURE_RECTANGLE_ARB;
 	}
 	int texture_format1(GL_RGB);
 	int texture_format2(GL_RGB);
@@ -89,7 +87,7 @@ void FBTEXTURE_GL::Init(int sizex, int sizey, bool rect, bool newdepth, bool fil
 	else
 	{
 		single_sample_FBO_for_multisampling = new FBTEXTURE_GL;
-		single_sample_FBO_for_multisampling->Init(sizex, sizey, rect, depth, filternearest, alpha, error_output, 0);
+		single_sample_FBO_for_multisampling->Init(sizex, sizey, texture_target, depth, filternearest, alpha, error_output, 0);
 	}
 	
 	//bind the framebuffer
@@ -135,7 +133,7 @@ void FBTEXTURE_GL::Init(int sizex, int sizey, bool rect, bool newdepth, bool fil
 	
 	if (status == GL_FRAMEBUFFER_UNSUPPORTED_EXT)
 	{
-		error_output << "Unsupported framebuffer format in FBTEXTURE_GL::Init(" << sizex << ", " << sizey << ", " << rect << ", " << depth << ", " << filternearest << ", " << alpha << ")" << std::endl;
+		error_output << "Unsupported framebuffer format in FBTEXTURE_GL::Init(" << sizex << ", " << sizey << ", " << texture_target << ", " << depth << ", " << filternearest << ", " << alpha << ")" << std::endl;
 	}
 	assert(status != GL_FRAMEBUFFER_UNSUPPORTED_EXT);
 	if (status != GL_FRAMEBUFFER_COMPLETE_EXT)
@@ -208,10 +206,6 @@ void FBTEXTURE_GL::End(std::ostream & error_output)
 
 void FBTEXTURE_GL::Activate() const
 {
-	int texture_target(GL_TEXTURE_2D);
-	if (rectangle)
-		texture_target = GL_TEXTURE_RECTANGLE_ARB;
-
 	if (single_sample_FBO_for_multisampling)
 	{
 		glBindTexture(texture_target, single_sample_FBO_for_multisampling->fbtexture);
@@ -261,4 +255,10 @@ void FBTEXTURE_GL::Screenshot(const std::string & filename, std::ostream & error
 
 	SDL_SaveBMP(temp, filename.c_str());
 	SDL_FreeSurface(temp);
+}
+
+void FBTEXTURE_GL::Deactivate() const
+{
+    glDisable(texture_target);
+    glBindTexture(texture_target,0);
 }
