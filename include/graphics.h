@@ -331,7 +331,8 @@ private:
 	std::map < DRAWABLE_FILTER *, AABB_SPACE_PARTITIONING_NODE <SCENEDRAW*> > static_object_partitioning; //used to speed up frustum checking for the static_drawlist_map
 
 	std::list <DRAWABLE_FILTER *> filter_list;
-	DRAWABLE_FILTER no2d_noblend;
+	DRAWABLE_FILTER no2d_noblend_noblur;
+	DRAWABLE_FILTER no2d_noblend_blur;
 	DRAWABLE_FILTER no2d_blend;
 	DRAWABLE_FILTER only2d;
 	DRAWABLE_FILTER skyboxes_noblend;
@@ -354,6 +355,7 @@ private:
 	MATHVECTOR <float, 3> campos;
 	QUATERNION <float> camorient;
 	QUATERNION <float> lightdirection;
+	MATHVECTOR <float, 3> dynamic_reflection_sample_position;
 	
 	unsigned int fsaa;
 	int lighting; ///<lighting quality; see data/settings/options.config for definition of values
@@ -405,12 +407,14 @@ public:
 
 		OptimizeStaticDrawlistmap();
 	}
-	void SetupScene(float fov, float new_view_distance, const MATHVECTOR <float, 3> cam_position, const QUATERNION <float> & cam_rotation)
+	void SetupScene(float fov, float new_view_distance, const MATHVECTOR <float, 3> cam_position, const QUATERNION <float> & cam_rotation,
+					const MATHVECTOR <float, 3> & dynamic_reflection_sample_pos)
 	{
 		camfov = fov;
 		campos = cam_position;
 		camorient = cam_rotation;
 		view_distance = new_view_distance;
+		dynamic_reflection_sample_position = dynamic_reflection_sample_pos;
 	}
 	void DrawScene(std::ostream & error_output);
 	void EndScene(std::ostream & error_output);

@@ -494,14 +494,18 @@ void GAME::BeginDraw()
 		//send scene information to the graphics subsystem
 	if (active_camera)
 	{
+		MATHVECTOR <float, 3> reflection_sample_location = active_camera->GetPosition();
+		if (carcontrols_local.first)
+			reflection_sample_location = carcontrols_local.first->GetCenterOfMassPosition();
+		
 		QUATERNION <float> camlook;
 		camlook.Rotate(3.141593*0.5,1,0,0);
 		camlook.Rotate(-3.141593*0.5,0,0,1);
 		QUATERNION <float> camorient = -(active_camera->GetOrientation()*camlook);
-		graphics.SetupScene(settings.GetFOV(), settings.GetViewDistance(), active_camera->GetPosition(), camorient);
+		graphics.SetupScene(settings.GetFOV(), settings.GetViewDistance(), active_camera->GetPosition(), camorient, reflection_sample_location);
 	}
 	else
-		graphics.SetupScene(settings.GetFOV(), settings.GetViewDistance(), MATHVECTOR <float, 3> (), QUATERNION <float> ());
+		graphics.SetupScene(settings.GetFOV(), settings.GetViewDistance(), MATHVECTOR <float, 3> (), QUATERNION <float> (), MATHVECTOR <float, 3> ());
 
 	graphics.SetContrast(settings.GetContrast());
 	graphics.BeginScene(error_output);
@@ -2506,7 +2510,7 @@ void GAME::LoadingScreen(float progress, float max)
 
 	CollapseSceneToDrawlistmap(loadingscreen_node, graphics.GetDrawlistmap(), true);
 
-	graphics.SetupScene(45.0, 100.0, MATHVECTOR <float, 3> (), QUATERNION <float> ());
+	graphics.SetupScene(45.0, 100.0, MATHVECTOR <float, 3> (), QUATERNION <float> (), MATHVECTOR <float, 3> ());
 
 	graphics.BeginScene(error_output);
 	graphics.DrawScene(error_output);

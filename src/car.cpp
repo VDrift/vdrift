@@ -208,6 +208,7 @@ bool CAR::Load (CONFIGFILE & carconf, const std::string & carpath, const std::st
 
 				debugwheeldraw[w*10+i]->SetColor(1,1,1,0.25);
 				debugwheeldraw[w*10+i]->SetPartialTransparency(true);
+				debugwheeldraw[w*10+i]->SetBlur(false);
 			}
 		}
 	}
@@ -541,6 +542,7 @@ bool CAR::LoadInto ( SCENENODE * parentnode, SCENENODE * & output_scenenodeptr, 
 	output_drawableptr->AddDrawList(output_model.GetListID());
 	output_drawableptr->SetDiffuseMap(&output_texture_diffuse);
 	output_drawableptr->SetObjectCenter(output_model.GetCenter());
+	output_drawableptr->SetBlur(false);
 	if (output_texture_misc1.Loaded()) output_drawableptr->SetMiscMap1(&output_texture_misc1);
 
 	return true;

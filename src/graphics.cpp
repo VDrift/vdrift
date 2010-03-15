@@ -177,10 +177,19 @@ void GRAPHICS_SDLGL::Init(const std::string shaderpath, const std::string & wind
 	}
 
 	//initialize scenegraph structures
-	no2d_noblend.SetFilter_is2d(true, false);
-	no2d_noblend.SetFilter_partial_transparency(true, false);
-	no2d_noblend.SetFilter_skybox(true,false);
-	no2d_noblend.SetFilter_cameratransform(true, true);
+	
+	// for objects that should get the motion blur effect (cars shouldn't)
+	no2d_noblend_noblur.SetFilter_is2d(true, false);
+	no2d_noblend_noblur.SetFilter_partial_transparency(true, false);
+	no2d_noblend_noblur.SetFilter_skybox(true,false);
+	no2d_noblend_noblur.SetFilter_cameratransform(true, true);
+	no2d_noblend_noblur.SetFilter_blur(true, false);
+	
+	no2d_noblend_blur.SetFilter_is2d(true, false);
+	no2d_noblend_blur.SetFilter_partial_transparency(true, false);
+	no2d_noblend_blur.SetFilter_skybox(true,false);
+	no2d_noblend_blur.SetFilter_cameratransform(true, true);
+	no2d_noblend_blur.SetFilter_blur(true, true);
 
 	no2d_blend.SetFilter_is2d(true, false);
 	no2d_blend.SetFilter_partial_transparency(true, true);
@@ -200,7 +209,8 @@ void GRAPHICS_SDLGL::Init(const std::string shaderpath, const std::string & wind
 
 	camtransfilter.SetFilter_cameratransform(true, false);
 
-	filter_list.push_back(&no2d_noblend);
+	filter_list.push_back(&no2d_noblend_blur);
+	filter_list.push_back(&no2d_noblend_noblur);
 	filter_list.push_back(&no2d_blend);
 	filter_list.push_back(&only2d);
 	filter_list.push_back(&skyboxes_blend);
@@ -645,7 +655,9 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 					renderscene.SetDefaultShader(shadermap["depthgen2"]);
 				else
 					renderscene.SetDefaultShader(shadermap["depthgen"]);
-				SendDrawlistToRenderScene(renderscene,&no2d_noblend);
+				SendDrawlistToRenderScene(renderscene,&no2d_noblend_blur);
+				Render(&renderscene, *i, error_output);
+				SendDrawlistToRenderScene(renderscene,&no2d_noblend_noblur);
 				Render(&renderscene, *i, error_output);
 				//renderscene.SetClear(false, false);
 				//SendDrawlistToRenderScene(renderscene,&no2d_blend);
@@ -698,7 +710,9 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 			SendDrawlistToRenderScene(renderscene,&skyboxes_blend);
 			Render(&renderscene, edgecontrastenhancement_depths, error_output);
 			renderscene.SetCameraInfo(campos, camorient, camfov, view_distance, w, h);
-			SendDrawlistToRenderScene(renderscene,&no2d_noblend);
+			SendDrawlistToRenderScene(renderscene,&no2d_noblend_blur);
+			Render(&renderscene, edgecontrastenhancement_depths, error_output);
+			SendDrawlistToRenderScene(renderscene,&no2d_noblend_noblur);
 			Render(&renderscene, edgecontrastenhancement_depths, error_output);
 			//SendDrawlistToRenderScene(renderscene,&no2d_blend);
 			//Render(&renderscene, edgecontrastenhancement_depths, error_output);
@@ -772,15 +786,15 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 				
 				// render the scene
 				renderscene.SetDefaultShader(shadermap["simple"]);
-				renderscene.SetCameraInfo(campos, orient, fov, 10000.0, rw, rh); //use very high draw distance for skyboxes
+				renderscene.SetCameraInfo(dynamic_reflection_sample_position, orient, fov, 10000.0, rw, rh); //use very high draw distance for skyboxes
 				renderscene.SetClear(true, true);
 				SendDrawlistToRenderScene(renderscene,&skyboxes_noblend);
 				Render(&renderscene, dynamic_reflection, error_output);
 				renderscene.SetClear(false, false);
 				SendDrawlistToRenderScene(renderscene,&skyboxes_blend);
 				Render(&renderscene, dynamic_reflection, error_output);
-				renderscene.SetCameraInfo(campos, orient, fov, 100.0, rw, rh); //use a smaller draw distance than normal
-				SendDrawlistToRenderScene(renderscene,&no2d_noblend);
+				renderscene.SetCameraInfo(dynamic_reflection_sample_position, orient, fov, 100.0, rw, rh); //use a smaller draw distance than normal
+				SendDrawlistToRenderScene(renderscene,&no2d_noblend_blur);
 				Render(&renderscene, dynamic_reflection, error_output);
 			}
 			
@@ -831,10 +845,13 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 		renderscene.SetCameraInfo(campos+shadowoffset, ldir, camfov, 10000.0, w, h);*/
 
 		renderscene.SetClear(false, true);
-		SendDrawlistToRenderScene(renderscene,&no2d_noblend);
+		SendDrawlistToRenderScene(renderscene,&no2d_noblend_blur);
 		Render(&renderscene, *scenebuffer, error_output);
 		
 		renderscene.SetClear(false, false);
+		SendDrawlistToRenderScene(renderscene,&no2d_noblend_noblur);
+		Render(&renderscene, *scenebuffer, error_output);
+		
 		SendDrawlistToRenderScene(renderscene,&no2d_blend);
 		Render(&renderscene, *scenebuffer, error_output);
 
@@ -910,7 +927,11 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 
 		renderscene.SetClear(false, true);
 		renderscene.SetCameraInfo(campos, camorient, camfov, view_distance, w, h);
-		SendDrawlistToRenderScene(renderscene,&no2d_noblend);
+		SendDrawlistToRenderScene(renderscene,&no2d_noblend_noblur);
+		renderscene.Render(glstate);
+		
+		renderscene.SetClear(false, false);
+		SendDrawlistToRenderScene(renderscene,&no2d_noblend_blur);
 		renderscene.Render(glstate);
 
 		renderscene.SetClear(false, false);
@@ -1497,6 +1518,8 @@ void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectTexturing(SCENEDRAW & forme, GLST
 					else
 						i->GetDraw()->GetAdditiveMap1()->Deactivate();
 				}
+				else
+					glBindTexture(GL_TEXTURE_2D,0);
 				
 				glActiveTextureARB(GL_TEXTURE7_ARB);
 				if (i->GetDraw()->GetAdditiveMap2())
@@ -1506,6 +1529,8 @@ void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectTexturing(SCENEDRAW & forme, GLST
 	                else
 	                    i->GetDraw()->GetAdditiveMap2()->Deactivate();
 				}
+				else
+					glBindTexture(GL_TEXTURE_2D,0);
 
                 glActiveTextureARB(GL_TEXTURE0_ARB);
 			}
