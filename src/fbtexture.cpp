@@ -2,6 +2,8 @@
 #include <cassert>
 #include "opengl_utility.h"
 #include <SDL/SDL.h>
+#include <sstream>
+#include <string>
 
 void FBTEXTURE_GL::Init(int sizex, int sizey, TARGET target, bool newdepth, bool filternearest, bool newalpha, std::ostream & error_output, int newmultisample)
 {
@@ -56,11 +58,25 @@ void FBTEXTURE_GL::Init(int sizex, int sizey, TARGET target, bool newdepth, bool
 	{
 		glGenTextures(1, &fbtexture);
 		glBindTexture(texture_target, fbtexture);
-		glTexImage2D(texture_target, 0, texture_format1, sizex, sizey, 0, texture_format2, texture_format3, NULL);
+		
+		if (texture_target == CUBEMAP)
+		{
+			// generate storage for each of the six sides
+			for (int i = 0; i < 6; i++)
+			{
+				glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X+i, 0, texture_format1, sizex, sizey, 0, texture_format2, texture_format3, NULL);
+			}
+		}
+		else
+		{
+			glTexImage2D(texture_target, 0, texture_format1, sizex, sizey, 0, texture_format2, texture_format3, NULL);
+		}
+		
 		//glTexParameteri(texture_target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 		//glTexParameteri(texture_target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
 		glTexParameteri(texture_target, GL_TEXTURE_WRAP_S, GL_CLAMP);
 		glTexParameteri(texture_target, GL_TEXTURE_WRAP_T, GL_CLAMP);
+		glTexParameteri(texture_target, GL_TEXTURE_WRAP_R, GL_CLAMP);
 		
 		if (filternearest)
 		{
@@ -123,28 +139,53 @@ void FBTEXTURE_GL::Init(int sizex, int sizey, TARGET target, bool newdepth, bool
 	}
 	
 	//attach the texture to the FBO
-	int texture_attachment(GL_COLOR_ATTACHMENT0_EXT);
+	texture_attachment = GL_COLOR_ATTACHMENT0_EXT;
 	if (depth)
 		texture_attachment = GL_DEPTH_ATTACHMENT_EXT;
 	if (multisample == 0)
-		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, texture_attachment, texture_target, fbtexture, 0);
-	
-	GLenum status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
-	
-	if (status == GL_FRAMEBUFFER_UNSUPPORTED_EXT)
 	{
-		error_output << "Unsupported framebuffer format in FBTEXTURE_GL::Init(" << sizex << ", " << sizey << ", " << texture_target << ", " << depth << ", " << filternearest << ", " << alpha << ")" << std::endl;
+		if (texture_target == CUBEMAP)
+		{
+			// if we're using a cubemap, arbitrarily pick one of the faces to activate so we can check that the FBO is complete
+			glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, texture_attachment, GL_TEXTURE_CUBE_MAP_POSITIVE_X, fbtexture, 0);
+		}
+		else
+		{
+			glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, texture_attachment, texture_target, fbtexture, 0);
+		}
 	}
-	assert(status != GL_FRAMEBUFFER_UNSUPPORTED_EXT);
-	if (status != GL_FRAMEBUFFER_COMPLETE_EXT)
-	{
-		error_output << "Framebuffer is not complete: " << status << std::endl;
-	}
-	assert(status == GL_FRAMEBUFFER_COMPLETE_EXT);
+	
+	bool status_ok = CheckStatus(error_output);
+	assert(status_ok);
 	
 	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 	
 	OPENGL_UTILITY::CheckForOpenGLErrors("FBO creation", error_output);
+}
+
+bool FBTEXTURE_GL::CheckStatus(std::ostream & error_output)
+{
+	GLenum status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
+	
+	if (status == GL_FRAMEBUFFER_UNSUPPORTED_EXT)
+	{
+		error_output << "Unsupported framebuffer format in FBTEXTURE_GL " << sizew << ", " << sizeh << ", " << texture_target << ", " << depth << ", " << alpha << std::endl;
+		return false;
+	}
+
+	if (status != GL_FRAMEBUFFER_COMPLETE_EXT)
+	{
+		error_output << "Framebuffer is not complete: " << status << std::endl;
+		return false;
+	}
+	
+	return true;
+}
+
+void FBTEXTURE_GL::SetCubeSide(CUBE_SIDE side)
+{
+	assert(texture_target == CUBEMAP);
+	cur_side = side;
 }
 
 void FBTEXTURE_GL::DeInit()
@@ -168,11 +209,25 @@ void FBTEXTURE_GL::DeInit()
 
 void FBTEXTURE_GL::Begin(std::ostream & error_output, float viewscale)
 {
+	OPENGL_UTILITY::CheckForOpenGLErrors("before FBO begin", error_output);
+	
 	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, framebuffer_object);
+	
+	OPENGL_UTILITY::CheckForOpenGLErrors("FBO bind to framebuffer", error_output);
+	
+	if (texture_target == CUBEMAP)
+	{
+		glFramebufferTexture2DEXT(GL_FRAMEBUFFER_EXT, texture_attachment, cur_side, fbtexture, 0);
+		OPENGL_UTILITY::CheckForOpenGLErrors("FBO cubemap side attachment", error_output);
+	}
+	
+	bool status_ok = CheckStatus(error_output);
+	assert(status_ok);
+	
 	glPushAttrib(GL_VIEWPORT_BIT);
 	glViewport(0,0,(int)(sizew*viewscale),(int)(sizeh*viewscale));
 	
-	OPENGL_UTILITY::CheckForOpenGLErrors("FBO begin", error_output);
+	OPENGL_UTILITY::CheckForOpenGLErrors("during FBO begin", error_output);
 }
 
 void FBTEXTURE_GL::End(std::ostream & error_output)

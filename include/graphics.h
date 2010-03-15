@@ -265,7 +265,7 @@ private:
 			void SetShader(SHADER_TYPE stype, SHADER_GLSL & newshader) {assert((unsigned int)stype < shadermap.size());shadermap[stype]=&newshader;}
 			void SetClear(bool newclearcolor, bool newcleardepth) {clearcolor = newclearcolor;cleardepth = newcleardepth;}
 			virtual void Render(GLSTATEMANAGER & glstate);
-			void SetReflection ( TEXTURE_INTERFACE & value ) {reflection = value;}
+			void SetReflection ( TEXTURE_INTERFACE * value ) {if (!value) reflection.clear(); else reflection = value;}
 			void SetFSAA ( unsigned int value ) {fsaa = value;}
 			void SetAmbient ( TEXTURE_INTERFACE & value ) {ambient = value;}
 			void SetContrast ( float value ) {contrast = value;}
@@ -347,6 +347,7 @@ private:
 	RENDER_OUTPUT full_scene_buffer;
 	RENDER_OUTPUT bloom_buffer;
 	RENDER_OUTPUT blur_buffer;
+	RENDER_OUTPUT dynamic_reflection;
 	
 	float camfov;
 	float view_distance;

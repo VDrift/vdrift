@@ -42,6 +42,7 @@ using std::vector;
 #include <algorithm>
 
 //#define _SHADOWMAP_DEBUG_
+//#define _DYNAMIC_REFLECT_DEBUG_
 
 void GRAPHICS_SDLGL::Init(const std::string shaderpath, const std::string & windowcaption,
 	unsigned int resx, unsigned int resy, unsigned int bpp,
@@ -60,8 +61,10 @@ void GRAPHICS_SDLGL::Init(const std::string shaderpath, const std::string & wind
 	lighting = lighting_quality;
 	bloom = newbloom;
 
-	if (reflection_type > 0)
+	if (reflection_type == 1)
 		reflection_status = REFLECTION_STATIC;
+	else if (reflection_type == 2)
+		reflection_status = REFLECTION_DYNAMIC;
 
 	if ( SDL_Init( SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK
 /*#ifdef ENABLE_FORCE_FEEDBACK
@@ -152,8 +155,8 @@ void GRAPHICS_SDLGL::Init(const std::string shaderpath, const std::string & wind
 
 	OPENGL_UTILITY::CheckForOpenGLErrors("Shader loading", error_output);
 
-	//load reflection map
-	if (reflection_status == REFLECTION_STATIC && !static_reflectionmap_file.empty())
+	//load static reflection map for dynamic reflections too, since we may need it
+	if ((reflection_status == REFLECTION_STATIC || reflection_status == REFLECTION_DYNAMIC) && !static_reflectionmap_file.empty())
 	{
 		TEXTUREINFO t;
 		t.SetName(static_reflectionmap_file);
@@ -431,6 +434,7 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 	}
 
 	shader_load_success = shader_load_success && LoadShader(shaderpath, "simple", info_output, error_output);
+	shader_load_success = shader_load_success && LoadShader(shaderpath, "simplecube", info_output, error_output);
 	shader_load_success = shader_load_success && LoadShader(shaderpath, "less_simple", info_output, error_output);
 	//shader_load_success = shader_load_success && LoadShader(shaderpath, "full", info_output, error_output, "_noblend", "_ALPHATEST_");
 	shader_load_success = shader_load_success && LoadShader(shaderpath, "full", info_output, error_output, "_noblend", "_ALPHATEST_");
@@ -497,6 +501,13 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 
 			FBTEXTURE_GL & blurFBO = blur_buffer.RenderToFBO();
 			blurFBO.Init(bloom_size, bloom_size, FBTEXTURE_GL::NORMAL, false, false, false, error_output);
+		}
+		
+		if (reflection_status == REFLECTION_DYNAMIC)
+		{
+			int reflection_size = 256;
+			FBTEXTURE_GL & reflection_cubemap = dynamic_reflection.RenderToFBO();
+			reflection_cubemap.Init(reflection_size, reflection_size, FBTEXTURE_GL::CUBEMAP, false, false, false, error_output);
 		}
 
 		final.RenderToFramebuffer();
@@ -576,7 +587,7 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 	renderscene.SetCameraInfo(campos, camorient, camfov, view_distance, w, h);
 
 	if (reflection_status == REFLECTION_STATIC)
-		renderscene.SetReflection(static_reflection);
+		renderscene.SetReflection(&static_reflection);
 	renderscene.SetAmbient(static_ambient);
 	renderscene.SetContrast(contrast);
 
@@ -698,6 +709,86 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 			edgecontrastenhancement_depths.RenderToFBO().Activate();
 			glActiveTexture(GL_TEXTURE0);
 		}
+		
+		//dynamic reflection cubemap pre-pass to generate reflection map
+		if (reflection_status == REFLECTION_DYNAMIC)
+		{
+			OPENGL_UTILITY::CheckForOpenGLErrors("reflection map generation: begin", error_output);
+			
+			FBTEXTURE_GL & reflection_fbo = dynamic_reflection.RenderToFBO();
+			
+			const float pi = 3.141593;
+			
+			for (int i = 0; i < 6; i++)
+			{
+				QUATERNION <float> orient;
+				
+				// set up our target
+				switch (i)
+				{
+					case 0:
+					reflection_fbo.SetCubeSide(FBTEXTURE_GL::POSX);
+					orient.Rotate(pi*0.5, 0,1,0);
+					break;
+					
+					case 1:
+					reflection_fbo.SetCubeSide(FBTEXTURE_GL::NEGX);
+					orient.Rotate(-pi*0.5, 0,1,0);
+					break;
+					
+					case 2:
+					reflection_fbo.SetCubeSide(FBTEXTURE_GL::POSY);
+					orient.Rotate(pi*0.5, 1,0,0);
+					break;
+					
+					case 3:
+					reflection_fbo.SetCubeSide(FBTEXTURE_GL::NEGY);
+					orient.Rotate(-pi*0.5, 1,0,0);
+					break;
+					
+					case 4:
+					reflection_fbo.SetCubeSide(FBTEXTURE_GL::POSZ);
+					// orient is already set up for us!
+					break;
+					
+					case 5:
+					reflection_fbo.SetCubeSide(FBTEXTURE_GL::NEGZ);
+					orient.Rotate(pi, 0,1,0);
+					break;
+					
+					default:
+					error_output << "Reached odd spot while building dynamic reflection cubemap. How many sides are in a cube, anyway? " << i << "?" << std::endl;
+					break;
+				};
+				
+				OPENGL_UTILITY::CheckForOpenGLErrors("reflection map generation: FBO cube side attachment", error_output);
+				
+				float fov = 90;
+				int rw = reflection_fbo.GetWidth();
+				int rh = reflection_fbo.GetHeight();
+				
+				// make sure we don't ever try to bind ourselves
+				renderscene.SetReflection(NULL);
+				
+				// render the scene
+				renderscene.SetDefaultShader(shadermap["simple"]);
+				renderscene.SetCameraInfo(campos, orient, fov, 10000.0, rw, rh); //use very high draw distance for skyboxes
+				renderscene.SetClear(true, true);
+				SendDrawlistToRenderScene(renderscene,&skyboxes_noblend);
+				Render(&renderscene, dynamic_reflection, error_output);
+				renderscene.SetClear(false, false);
+				SendDrawlistToRenderScene(renderscene,&skyboxes_blend);
+				Render(&renderscene, dynamic_reflection, error_output);
+				renderscene.SetCameraInfo(campos, orient, fov, 100.0, rw, rh); //use a smaller draw distance than normal
+				SendDrawlistToRenderScene(renderscene,&no2d_noblend);
+				Render(&renderscene, dynamic_reflection, error_output);
+			}
+			
+			OPENGL_UTILITY::CheckForOpenGLErrors("reflection map generation: end", error_output);
+			
+			// set it up to be used
+			renderscene.SetReflection(&reflection_fbo);
+		}
 
 		renderscene.SetSunDirection(lightposition);
 		renderscene.SetDefaultShader(shadermap["full"]);
@@ -784,6 +875,18 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 		depth_lookup.SetShader(&shadermap["simple"]);
 		depth_lookup.SetSourceTexture(shadow_depthtexturelist.back().RenderToFBO());
 		Render(&depth_lookup, final, error_output);
+		#endif
+		
+		// debugging for dynamic reflections
+		#ifdef _DYNAMIC_REFLECT_DEBUG_
+		if (reflection_status == REFLECTION_DYNAMIC)
+		{
+			FBTEXTURE_GL & reflection_fbo = dynamic_reflection.RenderToFBO();
+			RENDER_INPUT_POSTPROCESS cubelookup;
+			cubelookup.SetShader(&shadermap["simplecube"]);
+			cubelookup.SetSourceTexture(reflection_fbo);
+			Render(&cubelookup, final, error_output);
+		}
 		#endif
 
 		SendDrawlistToRenderScene(renderscene,&only2d);
