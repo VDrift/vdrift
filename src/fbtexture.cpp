@@ -5,7 +5,7 @@
 #include <sstream>
 #include <string>
 
-void FBTEXTURE_GL::Init(int sizex, int sizey, TARGET target, bool newdepth, bool filternearest, bool newalpha, std::ostream & error_output, int newmultisample)
+void FBTEXTURE_GL::Init(int sizex, int sizey, TARGET target, bool newdepth, bool filternearest, bool newalpha, bool usemipmap, std::ostream & error_output, int newmultisample)
 {
 	assert(!(newalpha && newdepth)); //not allowed; depth maps don't have alpha
 	
@@ -21,6 +21,8 @@ void FBTEXTURE_GL::Init(int sizex, int sizey, TARGET target, bool newdepth, bool
 	
 	sizew = sizex;
 	sizeh = sizey;
+	
+	mipmap = usemipmap;
 	
 	texture_target = target;
 	
@@ -80,30 +82,44 @@ void FBTEXTURE_GL::Init(int sizex, int sizey, TARGET target, bool newdepth, bool
 		
 		if (filternearest)
 		{
-			glTexParameteri(texture_target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			if (mipmap)
+				glTexParameteri(texture_target, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+			else
+				glTexParameteri(texture_target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			
 			glTexParameteri(texture_target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		}
 		else
 		{
-			glTexParameteri(texture_target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			if (mipmap)
+				glTexParameteri(texture_target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+			else
+				glTexParameteri(texture_target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			
 			glTexParameteri(texture_target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		}
 		
 		if (depth)
 		{
-			glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_LUMINANCE);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC_ARB, GL_LEQUAL);
+			glTexParameteri(texture_target, GL_DEPTH_TEXTURE_MODE, GL_LUMINANCE);
+			glTexParameteri(texture_target, GL_TEXTURE_COMPARE_FUNC_ARB, GL_LEQUAL);
 			//if (depthcomparisonenabled)
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE_ARB, GL_COMPARE_R_TO_TEXTURE_ARB);
+				glTexParameteri(texture_target, GL_TEXTURE_COMPARE_MODE_ARB, GL_COMPARE_R_TO_TEXTURE_ARB);
 			//else
 			//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE_ARB, GL_NONE);
 		}
+		
+		if (mipmap)
+		{
+			glGenerateMipmapEXT(texture_target);
+		}
+		
 		glBindTexture(texture_target, 0); // don't leave the texture bound
 	}
 	else
 	{
 		single_sample_FBO_for_multisampling = new FBTEXTURE_GL;
-		single_sample_FBO_for_multisampling->Init(sizex, sizey, texture_target, depth, filternearest, alpha, error_output, 0);
+		single_sample_FBO_for_multisampling->Init(sizex, sizey, texture_target, depth, filternearest, alpha, mipmap, error_output, 0);
 	}
 	
 	//bind the framebuffer
@@ -255,6 +271,14 @@ void FBTEXTURE_GL::End(std::ostream & error_output)
 	
 	glPopAttrib();
 	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+	
+	// optionally rebuild mipmaps
+	if (mipmap)
+	{
+		Activate();
+		glGenerateMipmap(texture_target);
+		Deactivate();
+	}
 	
 	OPENGL_UTILITY::CheckForOpenGLErrors("end of FBO end", error_output);
 }

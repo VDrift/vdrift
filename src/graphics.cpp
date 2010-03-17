@@ -479,12 +479,12 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 			{
 				FBTEXTURE_GL & depthFBO = i->RenderToFBO();
 #ifdef _SHADOWMAP_DEBUG_
-				depthFBO.Init(shadow_resolution, shadow_resolution, FBTEXTURE_GL::NORMAL, false, false, false, error_output);
+				depthFBO.Init(shadow_resolution, shadow_resolution, FBTEXTURE_GL::NORMAL, false, false, false, false, error_output);
 #else
 				if (shadow_quality < 4 || count > 0)
-					depthFBO.Init(shadow_resolution, shadow_resolution, FBTEXTURE_GL::NORMAL, true, false, false, error_output); //depth texture
+					depthFBO.Init(shadow_resolution, shadow_resolution, FBTEXTURE_GL::NORMAL, true, false, false, false, error_output); //depth texture
 				else
-					depthFBO.Init(shadow_resolution, shadow_resolution, FBTEXTURE_GL::NORMAL, false, true, false, error_output); //RGBA texture w/ nearest neighbor filtering
+					depthFBO.Init(shadow_resolution, shadow_resolution, FBTEXTURE_GL::NORMAL, false, true, false, false, error_output); //RGBA texture w/ nearest neighbor filtering
 #endif
 				count++;
 			}
@@ -494,30 +494,30 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 		{
 			int map_size = 1024;
 			FBTEXTURE_GL & depthFBO = edgecontrastenhancement_depths.RenderToFBO();
-			depthFBO.Init(map_size, map_size, FBTEXTURE_GL::NORMAL, true, false, false, error_output);
+			depthFBO.Init(map_size, map_size, FBTEXTURE_GL::NORMAL, true, false, false, false, error_output);
 		}
 
 		if (bloom) //generate a screen-sized rectangular FBO
 		{
 			FBTEXTURE_GL & sceneFBO = full_scene_buffer.RenderToFBO();
-			sceneFBO.Init(w, h, FBTEXTURE_GL::RECTANGLE, false, false, true, error_output);
+			sceneFBO.Init(w, h, FBTEXTURE_GL::RECTANGLE, false, false, true, false, error_output);
 		}
 
 		if (bloom) //generate a buffer to store the bloom result plus a buffer for separable blur intermediate step
 		{
 			int bloom_size = 512;
 			FBTEXTURE_GL & bloomFBO = bloom_buffer.RenderToFBO();
-			bloomFBO.Init(bloom_size, bloom_size, FBTEXTURE_GL::NORMAL, false, false, false, error_output);
+			bloomFBO.Init(bloom_size, bloom_size, FBTEXTURE_GL::NORMAL, false, false, false, false, error_output);
 
 			FBTEXTURE_GL & blurFBO = blur_buffer.RenderToFBO();
-			blurFBO.Init(bloom_size, bloom_size, FBTEXTURE_GL::NORMAL, false, false, false, error_output);
+			blurFBO.Init(bloom_size, bloom_size, FBTEXTURE_GL::NORMAL, false, false, false, false, error_output);
 		}
 		
 		if (reflection_status == REFLECTION_DYNAMIC)
 		{
 			int reflection_size = 256;
 			FBTEXTURE_GL & reflection_cubemap = dynamic_reflection.RenderToFBO();
-			reflection_cubemap.Init(reflection_size, reflection_size, FBTEXTURE_GL::CUBEMAP, false, false, false, error_output);
+			reflection_cubemap.Init(reflection_size, reflection_size, FBTEXTURE_GL::CUBEMAP, false, false, false, false, error_output);
 		}
 
 		final.RenderToFramebuffer();

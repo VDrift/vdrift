@@ -46,6 +46,7 @@ class FBTEXTURE_GL : public TEXTURE_INTERFACE
 		TARGET texture_target;
 		bool depth;
 		bool alpha;
+		bool mipmap;
 		int multisample;
 		int texture_attachment;
 		CUBE_SIDE cur_side;
@@ -55,10 +56,10 @@ class FBTEXTURE_GL : public TEXTURE_INTERFACE
 
 	public:
 		FBTEXTURE_GL() : single_sample_FBO_for_multisampling(NULL),loaded(false),inited(false),sizew(0),sizeh(0),
-			texture_target(NORMAL),depth(false),alpha(false),multisample(0),texture_attachment(GL_COLOR_ATTACHMENT0_EXT),
-		    cur_side(POSX) {}
+			texture_target(NORMAL),depth(false),alpha(false),mipmap(false),multisample(0),
+			texture_attachment(GL_COLOR_ATTACHMENT0_EXT),cur_side(POSX) {}
 		~FBTEXTURE_GL() {DeInit();}
-		void Init(int sizex, int sizey, TARGET target, bool newdepth, bool filternearest, bool newalpha, std::ostream & error_output, int newmultisample = 0);
+		void Init(int sizex, int sizey, TARGET target, bool newdepth, bool filternearest, bool newalpha, bool usemipmap, std::ostream & error_output, int newmultisample = 0);
 		void DeInit();
 		void Begin(std::ostream & error_output, float viewscale = 1.0);
 		void End(std::ostream & error_output);
