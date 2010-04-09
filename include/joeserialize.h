@@ -720,6 +720,7 @@ class TextInputSerializer : public SerializerInput
 		TreeMap <std::string> parsed_data_tree_;
 		std::deque <std::string> serialization_location_;
 		std::ostream * error_output_;
+		bool allowmissing;
 		
 		void ConsumeWhitespace(std::istream & in) const
 		{
@@ -786,20 +787,28 @@ class TextInputSerializer : public SerializerInput
 			{
 				if (error_output_)
 				{
-					*error_output_ << "Error serializing " << parsed_data_tree_.Implode(serialization_location_) << " as it does not exist in the parsed data" << std::endl;
-					*error_output_ << "Full dump of parsed data follows:" << std::endl;
-					parsed_data_tree_.Print(*error_output_);
-					*error_output_ << "Full dump of parsed data ends." << std::endl;
+					if (allowmissing)
+						*error_output_ << "Using default value for " << parsed_data_tree_.Implode(serialization_location_) << std::endl;
+					else
+					{
+						*error_output_ << "Error serializing " << parsed_data_tree_.Implode(serialization_location_) << " as it does not exist in the parsed data" << std::endl;
+						*error_output_ << "Full dump of parsed data follows:" << std::endl;
+						parsed_data_tree_.Print(*error_output_);
+						*error_output_ << "Full dump of parsed data ends." << std::endl;
+					}
 				}
-				return false;
+				serialization_location_.pop_back();
+				return allowmissing;
 			}
+			else
+			{			
+				std::stringstream converter(string_representation);
+				converter >> i;
 			
-			std::stringstream converter(string_representation);
-			converter >> i;
-			
-			serialization_location_.pop_back();
-			
-			return true;
+				serialization_location_.pop_back();
+				
+				return true;
+			}
 		}
 		
 		bool ReadStringData(const std::string & name, std::string & i)
@@ -809,17 +818,24 @@ class TextInputSerializer : public SerializerInput
 			{
 				if (error_output_)
 				{
-					*error_output_ << "Error serializing " << parsed_data_tree_.Implode(serialization_location_) << " as it does not exist in the parsed data" << std::endl;
-					*error_output_ << "Full dump of parsed data follows:" << std::endl;
-					parsed_data_tree_.Print(*error_output_);
-					*error_output_ << "Full dump of parsed data ends." << std::endl;
+					if (allowmissing)
+						*error_output_ << "Using default value for " << parsed_data_tree_.Implode(serialization_location_) << std::endl;
+					else
+					{
+						*error_output_ << "Error serializing " << parsed_data_tree_.Implode(serialization_location_) << " as it does not exist in the parsed data" << std::endl;
+						*error_output_ << "Full dump of parsed data follows:" << std::endl;
+						parsed_data_tree_.Print(*error_output_);
+						*error_output_ << "Full dump of parsed data ends." << std::endl;
+					}
 				}
-				return false;
+				serialization_location_.pop_back();
+				return allowmissing;
 			}
-			
-			serialization_location_.pop_back();
-			
-			return true;
+			else
+			{
+				serialization_location_.pop_back();
+				return true;
+			}
 		}
 		
 	protected:
@@ -834,8 +850,13 @@ class TextInputSerializer : public SerializerInput
 		}
 		
 	public:
-		TextInputSerializer() : error_output_(NULL) {}
-		TextInputSerializer(std::istream & in) : error_output_(NULL) {Parse(in);}
+		TextInputSerializer() : error_output_(NULL),allowmissing(false) {}
+		TextInputSerializer(std::istream & in) : error_output_(NULL),allowmissing(false) {Parse(in);}
+		
+		void SetAllowMissing(bool allow)
+		{
+			allowmissing = allow;
+		}
 		
 		void set_error_output(std::ostream & value)
 		{
