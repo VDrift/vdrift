@@ -169,6 +169,8 @@ public:
 			}
 	};
 	void BuildFromFaces(const std::vector <FACE> & faces);
+	void Translate(float x, float y, float z);
+	void Rotate(float a, float x, float y, float z);
 };
 
 #endif

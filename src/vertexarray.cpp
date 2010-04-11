@@ -1,6 +1,7 @@
 #include "vertexarray.h"
 #include "unittest.h"
 #include "mathvector.h"
+#include "quaternion.h"
 
 #include <map>
 #include <cassert>
@@ -607,6 +608,31 @@ void VERTEXARRAY::BuildFromFaces(const std::vector <FACE> & newfaces)
 	assert(faces.size()/3 == newfaces.size());
 	assert(vertices.size()/3 == normals.size()/3 && normals.size()/3 == texcoords[0].size()/2);
 	assert(vertices.size()/3 <= faces.size());
+}
+
+void VERTEXARRAY::Translate(float x, float y, float z)
+{
+	assert(vertices.size() % 3 == 0);
+	for (std::vector <float>::iterator i = vertices.begin(); i != vertices.end(); i += 3)
+	{
+		float * vert = &*i;
+		vert[0] += x;
+		vert[1] += y;
+		vert[2] += z;
+    }
+}
+
+void VERTEXARRAY::Rotate(float a, float x, float y, float z)
+{
+	QUATERNION <float> q;
+	q.Rotate(a,x,y,z);
+	
+	assert(vertices.size() % 3 == 0);
+	for (std::vector <float>::iterator i = vertices.begin(); i != vertices.end(); i += 3)
+	{
+		float * vert = &*i;
+		q.RotateVector(vert);
+    }
 }
 
 QT_TEST(vertexarray_buldfromfaces_test)
