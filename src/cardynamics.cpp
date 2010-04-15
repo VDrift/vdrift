@@ -634,14 +634,14 @@ void CARDYNAMICS::Init(
 	for (int i = 0; i < 4; i++)
 	{
 		MATHVECTOR <float, 3> wheelpos = GetLocalWheelPosition(WHEEL_POSITION(i), 0);
-		
+
 		const MODEL * wheelmodel = &wheelModelFront;
 		if (i > 1) wheelmodel = &wheelModelRear;
-		
+
 		AABB <float> wheelaabb;
 		float sidefactor = 1.0;
 		if (i == 1 || i == 3) sidefactor = -1.0;
-		
+
 		wheelaabb.SetFromCorners(
 			wheelpos - wheelmodel->GetAABB().GetSize() * 0.5 * sidefactor,
 			wheelpos + wheelmodel->GetAABB().GetSize() * 0.5 * sidefactor);
@@ -651,7 +651,7 @@ void CARDYNAMICS::Init(
 	const MATHVECTOR <T, 3> verticalMargin(0, 0, 0.3);
 	btVector3 origin = ToBulletVector(box.GetCenter() + verticalMargin - center_of_mass);
 	btVector3 size = ToBulletVector(box.GetSize() - verticalMargin);
-	
+
 	localtransform.setOrigin(origin);
 	btBoxShape * hull = new btBoxShape(size * 0.5);
 
@@ -689,14 +689,14 @@ void CARDYNAMICS::Init(
 		btScalar wheelMass = wheel[i].GetMass();
 		btScalar wheelRadius = tire[i].GetRadius();
 		btScalar wheelWidth = 0.24;
-		btScalar inertiaY = wheel[i].GetInertia(); // cylinder: 1/2*M*R^2 
+		btScalar inertiaY = wheel[i].GetInertia(); // cylinder: 1/2*M*R^2
 		btScalar inertiaXZ = 1/12.0 * wheelMass * wheelWidth * wheelWidth + 0.5 * inertiaY; // 1/12*M*h^2+1/4*M*R^2
-		
+
 		btVector3 wheelInertia(inertiaXZ, inertiaY, inertiaXZ);
 		btVector3 wheelHalfExtents(wheelRadius, 0.5*wheelWidth, wheelRadius);
 		btVector3 wheelPosition = ToBulletVector(CarLocalToWorld(wheel[i].GetExtendedPosition()));
 		btQuaternion wheelRotation = ToBulletQuaternion(orientation);
-		
+
 		btCylinderShape * wheelShape = new btCylinderShape(wheelHalfExtents);
 		btTransform wheelTransform;
 		wheelTransform.setOrigin(wheelPosition);
@@ -706,19 +706,19 @@ void CARDYNAMICS::Init(
 
 		btRigidBody::btRigidBodyConstructionInfo wheelInfo(wheelMass, wheelState, wheelShape, wheelInertia);
 		wheelBody[i] = world.AddRigidBody(wheelInfo);
-		
+
 		// suspension(hinge)
 		btGeneric6DofSpringConstraint * joint = NULL;
 		bool useLinearReferenceFrameA = true;
 		bool disableCollisionsBetweenLinked = true;
-		
+
 		btTransform chassisFrame;
 		btTransform wheelFrame;
 		chassisFrame.setIdentity();
 		chassisFrame.setOrigin(ToBulletVector(suspension[i].GetHinge() - center_of_mass));
 		wheelFrame.setIdentity();
 		wheelFrame.setOrigin(ToBulletVector(suspension[i].GetHinge() - wheel[i].GetExtendedPosition()));
-		
+
 		joint = new btGeneric6DofSpringConstraint(*chassis, *wheelBody[i], chassisFrame, wheelFrame, useLinearReferenceFrameA);
 		joint->setAngularLowerLimit(btVector3(0, 0, 0));
 		joint->setAngularUpperLimit(btVector3(0, 0, 0));
@@ -742,10 +742,10 @@ void CARDYNAMICS::updateAction(btCollisionWorld * collisionWorld, btScalar dt)
 {
 	// get velocity, position orientation after dt
 	SynchronizeBody();
-	
+
 	// update wheel contacts given new velocity, position
 	UpdateWheelContacts();
-	
+
 	// run internal simulation
 	Tick(dt);
 
@@ -1326,7 +1326,7 @@ void CARDYNAMICS::ApplyForce(const MATHVECTOR <T, 3> & force, const MATHVECTOR <
 void CARDYNAMICS::ApplyTorque(const MATHVECTOR <T, 3> & torque)
 {
 	body.ApplyTorque(torque);
-	//if(torque.MagnitudeSquared() > 1E-6) 
+	//if(torque.MagnitudeSquared() > 1E-6)
 	//	chassis->applyTorque(ToBulletVector(torque));
 }
 
@@ -1410,7 +1410,7 @@ MATHVECTOR <T, 3> CARDYNAMICS::UpdateSuspension ( int i , T dt )
 	//std::cout << i << ". " << forcedirection << std::endl;
 	MATHVECTOR <T, 3> suspension_force = forcedirection * ( antirollforce+springdampforce );
 #else
-	MATHVECTOR <T, 3> suspension_force = (0, 0, antirollforce + springdampforce);
+	MATHVECTOR <T, 3> suspension_force(0, 0, antirollforce + springdampforce);
 #endif
 	Orientation().RotateVector(suspension_force);
 	return suspension_force;
@@ -1519,7 +1519,7 @@ void CARDYNAMICS::UpdateBody(T dt, T drive_torque[])
 {
 	body.Integrate1(dt);
 	//chassis->clearForces();
-	
+
 	UpdateWheelVelocity();
 
 	ApplyEngineTorqueToBody();
@@ -1539,7 +1539,7 @@ void CARDYNAMICS::UpdateBody(T dt, T drive_torque[])
 
 	body.Integrate2(dt);
 	//chassis->integrateVelocities(dt);
-	
+
 	// update wheel state
 	for(int i = 0; i < WHEEL_POSITION_SIZE; i++)
 	{
@@ -1985,7 +1985,7 @@ void CARDYNAMICS::DoTCS ( int i, T suspension_force )
 			//sp is the ideal slip ratio given tire loading
 			T sp ( 0 ), ah ( 0 );
 			tire[WHEEL_POSITION ( i ) ].LookupSigmaHatAlphaHat ( suspension_force, sp, ah );
-			
+
 			T sense = 1.0;
 			if ( transmission.GetGear() < 0 )
 				sense = -1.0;
@@ -2024,7 +2024,7 @@ void CARDYNAMICS::DoABS ( int i, T suspension_force )
 {
 	T braketresh = 0.1;
 	T brakesetting = brake[WHEEL_POSITION ( i ) ].GetBrakeFactor();
-	
+
 	//only active if brakes commanded past threshold
 	if ( brakesetting > braketresh )
 	{
@@ -2041,7 +2041,7 @@ void CARDYNAMICS::DoABS ( int i, T suspension_force )
 			//sp is the ideal slip ratio given tire loading
 			T sp ( 0 ), ah ( 0 );
 			tire[WHEEL_POSITION ( i ) ].LookupSigmaHatAlphaHat ( suspension_force, sp, ah );
-	
+
 			T error = - tire[WHEEL_POSITION ( i ) ].GetSlide() - sp;
 			T thresholdeng = 0.0;
 			T thresholddis = -sp/2.0;
