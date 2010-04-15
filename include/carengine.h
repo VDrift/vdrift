@@ -202,9 +202,7 @@ class CARENGINE
 		///used to set the engine speed to the transmission speed when the clutch is fully engaged
 		void SetAngularVelocity(T angvel)
 		{
-			MATHVECTOR <T, 3> v;
-			//v[0] = start_rpm * 3.141593 / 30.0;
-			v[0] = angvel;
+			MATHVECTOR <T, 3> v(angvel, 0, 0);
 			crankshaft.SetAngularVelocity(v);
 		}
 		
@@ -224,13 +222,7 @@ class CARENGINE
 		///return the sum of all torques acting on the engine (except clutch forces)
 		T GetTorque()
 		{
-			//std::cout << combustion_torque << ", " << friction_torque << std::endl;
-			
-			//return crankshaft.GetTorque()[0];
-			/*if (stalled)
-				return 0;
-			else*/
-				return combustion_torque + friction_torque;
+			return combustion_torque + friction_torque;
 		}
 		
 		void ComputeForces()
@@ -276,7 +268,7 @@ class CARENGINE
 			}
 		}
 		
-		void ApplyForces(const T dt)
+		void ApplyForces()
 		{
 			MATHVECTOR <T, 3> total_torque(0);
 			

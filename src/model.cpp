@@ -1,6 +1,13 @@
 #include "model.h"
 #include "opengl_utility.h"
 
+#ifdef __APPLE__
+#include <GLExtensionWrangler/glew.h>
+#include <OpenGL/gl.h>
+#else
+#include <GL/glew.h>
+#include <GL/gl.h>
+#endif
 #include <fstream>
 
 using std::vector;
@@ -152,7 +159,8 @@ bool MODEL::ReadFromFile(const std::string & filepath, std::ostream & error_outp
 	//else std::cout << "File " << filepath << " exists!" << std::endl;
 	
 	const std::string magic = "OGLVARRAYV01";
-	char fmagic[magic.size()+1];
+	const int magicsize = 12;//magic.size();
+	char fmagic[magicsize+1];
 	filein.read(fmagic, magic.size());
 	if (!filein)
 	{

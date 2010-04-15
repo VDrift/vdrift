@@ -15,7 +15,7 @@ private:
 	MATHVECTOR <T, 3> size; ///< size of AABB
 	
 public:
-	AABB(const AABB <T> & other) : pos(other.pos),center(other.center),size(other.size) {}
+	AABB(const AABB <T> & other) : pos(other.pos), center(other.center), size(other.size) {}
 	AABB() {}
 	
 	const AABB <T> & operator = (const AABB <T> & other)
@@ -193,34 +193,6 @@ public:
 	
 	bool Intersect(const FRUSTUM & frustum) const
 	{
-		/*MATHVECTOR <float, 3> corners[8];
-		corners[0] = pos;
-		corners[1] = pos+size.dot(MATHVECTOR <float, 3> (0,0,1));
-		corners[2] = pos+size.dot(MATHVECTOR <float, 3> (0,1,0));
-		corners[3] = pos+size.dot(MATHVECTOR <float, 3> (0,1,1));
-		corners[4] = pos+size.dot(MATHVECTOR <float, 3> (1,0,0));
-		corners[5] = pos+size.dot(MATHVECTOR <float, 3> (1,0,1));
-		corners[6] = pos+size.dot(MATHVECTOR <float, 3> (1,1,0));
-		corners[7] = pos+size;
-		
-		for (int p = 0; p < 6; p++)
-		{
-			int outcount = 0;
-			
-			for (int i = 0; i < 8; i++)
-			{
-				if (frustum.planes[p].DistanceToPoint(corners[i]) < 0)
-				{
-					outcount++;
-				}
-			}
-			
-			if (outcount == 8)
-				return false;
-		}
-		
-		return true;*/
-		
 		float rd;
 		const float bound = size.Magnitude()*0.5;
 		for (int i=0; i<6; i++)

@@ -221,7 +221,7 @@ bool TEXTURE_GL::LoadCubeVerticalCross(std::ostream & error_output)
 				return false;
 			}
 
-			unsigned char cubeface[w*h*texture_surface->format->BytesPerPixel];
+			unsigned char * cubeface = new unsigned char[w*h*texture_surface->format->BytesPerPixel];
 
 			if (i == 4) //special case for negative z
 			{
@@ -257,6 +257,7 @@ bool TEXTURE_GL::LoadCubeVerticalCross(std::ostream & error_output)
 			}
 
 			glTexImage2D( targetparam, 0, format, w, h, 0, format, GL_UNSIGNED_BYTE, cubeface );
+			delete [] cubeface;
 		}
 	}
 	else

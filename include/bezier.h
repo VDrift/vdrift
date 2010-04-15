@@ -8,45 +8,13 @@
 
 class AI;
 class TRACK;
-class ROADPATCH;
+//class ROADPATCH;
 
 class BEZIER
 {
 friend class AI;
 friend class TRACK;
 friend class ROADPATCH;
-private:
-	///return the bernstein given the normalized coordinate u (zero to one) and an array of four points p
-	MATHVECTOR <float, 3> Bernstein(float u, MATHVECTOR <float, 3> *p) const;
-
-	///return the bernstein tangent (normal) given the normalized coordinate u (zero to one) and an array of four points p
-	MATHVECTOR <float, 3> BernsteinTangent(float u, MATHVECTOR <float, 3> *p) const;
-
-	///return the 3D point on the bezier surface at the given normalized coordinates px and py
-	MATHVECTOR <float, 3> SurfCoord(float px, float py) const;
-
-	///return the normal of the bezier surface at the given normalized coordinates px and py
-	MATHVECTOR <float, 3> SurfNorm(float px, float py) const;
-
-	///return true if the ray at orig with direction dir intersects the given quadrilateral.
-	/// also put the collision depth in t and the collision coordinates in u,v
-	bool IntersectQuadrilateralF(const MATHVECTOR <float, 3> & orig, const MATHVECTOR <float, 3> & dir,
-					     const MATHVECTOR <float, 3> & v_00, const MATHVECTOR <float, 3> & v_10,
-					     const MATHVECTOR <float, 3> & v_11, const MATHVECTOR <float, 3> & v_01,
-					     float &t, float &u, float &v) const;
-
-	MATHVECTOR <float, 3> points[4][4];
-	MATHVECTOR <float, 3> center;
-	float radius;
-	float length;
-	float dist_from_start;
-
-	BEZIER *next_patch;
-	float track_radius;
-	int turn; //-1 - this is a left turn, +1 - a right turn, 0 - straight
-	float track_curvature;
-	MATHVECTOR <float, 3> racing_line;
-	bool have_racingline;
 
 public:
 	BEZIER();
@@ -55,10 +23,9 @@ public:
 	BEZIER & operator=(const BEZIER & other) {return CopyFrom(other);}
 	BEZIER & CopyFrom(const BEZIER &other);
 
+	float GetDistFromStart() const {return dist_from_start;}
 	void ResetDistFromStart() {dist_from_start = 0.0f;}
 	void ResetNextPatch() {next_patch = NULL;}
-
-	float GetDistFromStart() const {return dist_from_start;}
 
 	///initialize this bezier to the quad defined by the given corner points
 	void SetFromCorners(const MATHVECTOR <float, 3> & fl, const MATHVECTOR <float, 3> & fr, const MATHVECTOR <float, 3> & bl, const MATHVECTOR <float, 3> & br);
@@ -93,49 +60,7 @@ public:
 	const MATHVECTOR <float, 3> & GetBR() const {return points[3][3];}
 
 	///get the AABB that encloses this BEZIER
-	AABB <float> GetAABB() const
-	{
-		float maxv[3];
-		float minv[3];
-		bool havevals[6];
-		for (int n = 0; n < 6; n++)
-			havevals[n] = false;
-
-		for (int x = 0; x < 4; x++)
-		{
-			for (int y = 0; y < 4; y++)
-			{
-				MATHVECTOR <float, 3> temp(points[x][y]);
-
-				//cache for bbox stuff
-				for ( int n = 0; n < 3; n++ )
-				{
-					if (!havevals[n])
-					{
-						maxv[n] = temp[n];
-						havevals[n] = true;
-					}
-					else if (temp[n] > maxv[n])
-						maxv[n] = temp[n];
-
-					if (!havevals[n+3])
-					{
-						minv[n] = temp[n];
-						havevals[n+3] = true;
-					}
-					else if (temp[n] < minv[n])
-						minv[n] = temp[n];
-				}
-			}
-		}
-
-		MATHVECTOR <float, 3> bboxmin(minv[0], minv[1], minv[2]);
-		MATHVECTOR <float, 3> bboxmax(maxv[0], maxv[1], maxv[2]);
-
-		AABB <float> box;
-		box.SetFromCorners(bboxmin, bboxmax);
-		return box;
-	}
+	AABB <float> GetAABB() const;
 
 	///access the bezier points where x = n % 4 and y = n / 4
 	const MATHVECTOR <float, 3> & operator[](const int n) const
@@ -172,6 +97,43 @@ public:
 	{
 		return have_racingline;
 	}
+
+private:
+	///return the bernstein given the normalized coordinate u (zero to one) and an array of four points p
+	MATHVECTOR <float, 3> Bernstein(float u, MATHVECTOR <float, 3> *p) const;
+
+	///return the bernstein tangent (normal) given the normalized coordinate u (zero to one) and an array of four points p
+	MATHVECTOR <float, 3> BernsteinTangent(float u, MATHVECTOR <float, 3> *p) const;
+
+	///return the 3D point on the bezier surface at the given normalized coordinates px and py
+	MATHVECTOR <float, 3> SurfCoord(float px, float py) const;
+
+	///return the normal of the bezier surface at the given normalized coordinates px and py
+	MATHVECTOR <float, 3> SurfNorm(float px, float py) const;
+
+	///return true if the ray at orig with direction dir intersects the given quadrilateral.
+	/// also put the collision depth in t and the collision coordinates in u,v
+	bool IntersectQuadrilateralF(
+		const MATHVECTOR <float, 3> & orig,
+		const MATHVECTOR <float, 3> & dir,
+		const MATHVECTOR <float, 3> & v_00,
+		const MATHVECTOR <float, 3> & v_10,
+		const MATHVECTOR <float, 3> & v_11,
+		const MATHVECTOR <float, 3> & v_01,
+		float &t, float &u, float &v) const;
+
+	MATHVECTOR <float, 3> points[4][4];
+	MATHVECTOR <float, 3> center;
+	float radius;
+	float length;
+	float dist_from_start;
+
+	BEZIER *next_patch;
+	float track_radius;
+	int turn; //-1 - this is a left turn, +1 - a right turn, 0 - straight
+	float track_curvature;
+	MATHVECTOR <float, 3> racing_line;
+	bool have_racingline;
 };
 
 std::ostream & operator << (std::ostream &os, const BEZIER & b);

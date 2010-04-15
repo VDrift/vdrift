@@ -19,7 +19,8 @@
 #include "text_draw.h"
 #include "gui.h"
 #include "car.h"
-#include "collision_detection.h"
+#include "collision_world.h"
+#include "collision_contact.h"
 #include "carcontrolmap_local.h"
 #include "hud.h"
 #include "inputgraph.h"
@@ -33,6 +34,7 @@
 #include "particle.h"
 #include "ai.h"
 #include "quickmp.h"
+#include "sky.h"
 
 class GAME
 {
@@ -52,11 +54,6 @@ private:
 	void UpdateCar(CAR & car, double dt);
 	void UpdateDriftScore(CAR & car, double dt);
 	void UpdateCarInputs(CAR & car);
-	void UpdateCarChassisCollisions(); ///< for all cars
-	void UpdateCarWheelCollisions(CAR & car, std::vector <COLLISION_CONTACT> & cached_collisions) const;
-	void UpdateCarWheelCollisionsFromCached(CAR & car, std::vector <COLLISION_CONTACT> & cached_collisions) const;
-	void UpdateCarCollisionsNew(CAR & car, std::vector <COLLISION_CONTACT> & cached_collisions, bool allowexpensive) const;
-	void UpdateCarPhysics(CAR & car, std::vector <COLLISION_CONTACT> & cached_collisions) const;
 	void UpdateTimer();
 	void ProcessGUIInputs();
 	void ProcessGameInputs();
@@ -65,7 +62,6 @@ private:
 	void LeaveGame();
 	bool LoadTrack(const std::string & trackname);
 	bool LoadCar(const std::string & carname, const std::string & carpaint, const MATHVECTOR <float, 3> & start_position, const QUATERNION <float> & start_orientation, bool islocal, bool isai, const std::string & carfile=""); ///< carfile is a string containing an entire .car file (e.g. XS.car) and is used instead of reading from disk.  this is optional
-	bool AlignCarsWithGround();
 	bool LoadFonts();
 	void CalculateFPS();
 	void PopulateValueLists(std::map<std::string, std::list <std::pair<std::string,std::string> > > & valuelists);
@@ -101,10 +97,6 @@ private:
 	double clocktime; ///< elapsed wall clock time
 	double target_time;
 	const float framerate;
-	const float collision_rate;
-	unsigned int collision_frameskip;
-	unsigned int cur_collision_frameskip;
-	const float carphysics_rate;
 	TEXT_DRAW fps;
 	TEXT_DRAWABLE profiling_text;
 	DRAWABLE * fps_draw;
@@ -137,8 +129,8 @@ private:
 	SOUNDBUFFERLIBRARY generic_sounds;
 	SETTINGS settings;
 	PATHMANAGER pathmanager;
-	TRACK track;
 	TRACKMAP trackmap;
+	TRACK track;
 	GUI gui;
 	std::map <std::string, FONT> fonts;
 	SCENENODE rootnode;
@@ -146,8 +138,8 @@ private:
 	std::list <CAR> cars;
 	std::map <CAR *, int> cartimerids;
 	std::pair <CAR *, CARCONTROLMAP_LOCAL> carcontrols_local;
-	std::map <CAR *, std::vector <COLLISION_CONTACT> > cached_collisions_by_car;
 	COLLISION_WORLD collision;
+	
 	HUD hud;
 	INPUTGRAPH inputgraph;
 	LOADINGSCREEN loadingscreen;
@@ -156,6 +148,8 @@ private:
 	REPLAY replay;
 	PARTICLE_SYSTEM tire_smoke;
 	AI ai;
+	
+	SKY sky;
 
 #ifdef ENABLE_FORCE_FEEDBACK
 	std::auto_ptr <FORCEFEEDBACK> forcefeedback;
@@ -163,13 +157,32 @@ private:
 #endif
 
 public:
-	GAME(std::ostream & info_out, std::ostream & err_out) :
-		info_output(info_out), error_output(err_out), frame(0), displayframe(0), clocktime(0),
-		target_time(0),framerate(0.01),collision_rate(0.01),collision_frameskip(collision_rate/framerate),
-		cur_collision_frameskip(0), carphysics_rate(0.001), fps_draw(NULL),
-		fps_track(10,0),fps_position(0),fps_min(0),fps_max(0),
-		multithreaded(false), benchmode(false), dumpfps(false), active_camera(NULL), pause(false), particle_timer(0),
-		race_laps(0), debugmode(false), profilingmode(false), tracknode(NULL), replay(framerate)
+	GAME(std::ostream & info_out, std::ostream & err_out)
+	:	info_output(info_out),
+		error_output(err_out),
+		frame(0),
+		displayframe(0),
+		clocktime(0),
+		target_time(0),
+		framerate(0.01),
+		fps_draw(NULL),
+		fps_track(10,0),
+		fps_position(0),
+		fps_min(0),
+		fps_max(0),
+		multithreaded(false),
+		benchmode(false),
+		dumpfps(false),
+		active_camera(NULL),
+		pause(false),
+		particle_timer(0),
+		race_laps(0),
+		debugmode(false),
+		profilingmode(false),
+		track(info_out, err_out),
+		tracknode(NULL),
+		replay(framerate),
+		sky(graphics, info_out, err_out)
 	{
 		carcontrols_local.first = NULL;
 	}

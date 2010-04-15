@@ -194,7 +194,7 @@ class hash_iterator
 		}
 };
 
-}; //namespace HASH_NAMESPACE
+} //namespace HASH_NAMESPACE
 
 template <class KEYCLASS, class DATACLASS>
 class bucketed_hashmap

@@ -13,7 +13,9 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Option use_console_runner="0" />
+				<Option parameters="-debug" />
 				<Compiler>
+					<Add option="-Wall" />
 					<Add option="-g" />
 				</Compiler>
 			</Target>
@@ -25,9 +27,10 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O3" />
+					<Add option="-pg" />
 				</Compiler>
 				<Linker>
-					<Add option="-s" />
+					<Add option="-pg -lgmon" />
 				</Linker>
 			</Target>
 		</Build>
@@ -57,6 +60,7 @@
 			<Add before='cmd /c &quot;if not exist ..\..\include\definitions.h. (echo #ifndef _DEFINITIONS_H&gt; ..\..\include\definitions.h &amp;&amp; echo #define _DEFINITIONS_H&gt;&gt; ..\..\include\definitions.h &amp;&amp; echo #define SETTINGS_DIR &quot;.vdrift&quot;&gt;&gt; ..\..\include\definitions.h &amp;&amp; echo #define DATA_DIR &quot;./data&quot;&gt;&gt; ..\..\include\definitions.h &amp;&amp; echo #define VERSION &quot;$(TODAY)&quot;&gt;&gt; ..\..\include\definitions.h &amp;&amp; echo #define REVISION &quot;latest&quot;&gt;&gt; ..\..\include\definitions.h &amp;&amp; echo #endif&gt;&gt; ..\..\include\definitions.h)&quot;' />
 			<Add after="xcopy /d dll\*.dll ..\..\" />
 		</ExtraCommands>
+		<Unit filename="..\..\bullet\Bullet-C-Api.h" />
 		<Unit filename="..\..\bullet\BulletCollision\BroadphaseCollision\btAxisSweep3.cpp" />
 		<Unit filename="..\..\bullet\BulletCollision\BroadphaseCollision\btAxisSweep3.h" />
 		<Unit filename="..\..\bullet\BulletCollision\BroadphaseCollision\btBroadphaseInterface.h" />
@@ -83,6 +87,8 @@
 		<Unit filename="..\..\bullet\BulletCollision\CollisionDispatch\SphereTriangleDetector.h" />
 		<Unit filename="..\..\bullet\BulletCollision\CollisionDispatch\btActivatingCollisionAlgorithm.cpp" />
 		<Unit filename="..\..\bullet\BulletCollision\CollisionDispatch\btActivatingCollisionAlgorithm.h" />
+		<Unit filename="..\..\bullet\BulletCollision\CollisionDispatch\btBox2dBox2dCollisionAlgorithm.cpp" />
+		<Unit filename="..\..\bullet\BulletCollision\CollisionDispatch\btBox2dBox2dCollisionAlgorithm.h" />
 		<Unit filename="..\..\bullet\BulletCollision\CollisionDispatch\btBoxBoxCollisionAlgorithm.cpp" />
 		<Unit filename="..\..\bullet\BulletCollision\CollisionDispatch\btBoxBoxCollisionAlgorithm.h" />
 		<Unit filename="..\..\bullet\BulletCollision\CollisionDispatch\btBoxBoxDetector.cpp" />
@@ -97,6 +103,8 @@
 		<Unit filename="..\..\bullet\BulletCollision\CollisionDispatch\btCollisionWorld.h" />
 		<Unit filename="..\..\bullet\BulletCollision\CollisionDispatch\btCompoundCollisionAlgorithm.cpp" />
 		<Unit filename="..\..\bullet\BulletCollision\CollisionDispatch\btCompoundCollisionAlgorithm.h" />
+		<Unit filename="..\..\bullet\BulletCollision\CollisionDispatch\btConvex2dConvex2dAlgorithm.cpp" />
+		<Unit filename="..\..\bullet\BulletCollision\CollisionDispatch\btConvex2dConvex2dAlgorithm.h" />
 		<Unit filename="..\..\bullet\BulletCollision\CollisionDispatch\btConvexConcaveCollisionAlgorithm.cpp" />
 		<Unit filename="..\..\bullet\BulletCollision\CollisionDispatch\btConvexConcaveCollisionAlgorithm.h" />
 		<Unit filename="..\..\bullet\BulletCollision\CollisionDispatch\btConvexConvexAlgorithm.cpp" />
@@ -109,6 +117,8 @@
 		<Unit filename="..\..\bullet\BulletCollision\CollisionDispatch\btEmptyCollisionAlgorithm.h" />
 		<Unit filename="..\..\bullet\BulletCollision\CollisionDispatch\btGhostObject.cpp" />
 		<Unit filename="..\..\bullet\BulletCollision\CollisionDispatch\btGhostObject.h" />
+		<Unit filename="..\..\bullet\BulletCollision\CollisionDispatch\btInternalEdgeUtility.cpp" />
+		<Unit filename="..\..\bullet\BulletCollision\CollisionDispatch\btInternalEdgeUtility.h" />
 		<Unit filename="..\..\bullet\BulletCollision\CollisionDispatch\btManifoldResult.cpp" />
 		<Unit filename="..\..\bullet\BulletCollision\CollisionDispatch\btManifoldResult.h" />
 		<Unit filename="..\..\bullet\BulletCollision\CollisionDispatch\btSimulationIslandManager.cpp" />
@@ -121,6 +131,8 @@
 		<Unit filename="..\..\bullet\BulletCollision\CollisionDispatch\btSphereTriangleCollisionAlgorithm.h" />
 		<Unit filename="..\..\bullet\BulletCollision\CollisionDispatch\btUnionFind.cpp" />
 		<Unit filename="..\..\bullet\BulletCollision\CollisionDispatch\btUnionFind.h" />
+		<Unit filename="..\..\bullet\BulletCollision\CollisionShapes\btBox2dShape.cpp" />
+		<Unit filename="..\..\bullet\BulletCollision\CollisionShapes\btBox2dShape.h" />
 		<Unit filename="..\..\bullet\BulletCollision\CollisionShapes\btBoxShape.cpp" />
 		<Unit filename="..\..\bullet\BulletCollision\CollisionShapes\btBoxShape.h" />
 		<Unit filename="..\..\bullet\BulletCollision\CollisionShapes\btBvhTriangleMeshShape.cpp" />
@@ -136,6 +148,8 @@
 		<Unit filename="..\..\bullet\BulletCollision\CollisionShapes\btConcaveShape.h" />
 		<Unit filename="..\..\bullet\BulletCollision\CollisionShapes\btConeShape.cpp" />
 		<Unit filename="..\..\bullet\BulletCollision\CollisionShapes\btConeShape.h" />
+		<Unit filename="..\..\bullet\BulletCollision\CollisionShapes\btConvex2dShape.cpp" />
+		<Unit filename="..\..\bullet\BulletCollision\CollisionShapes\btConvex2dShape.h" />
 		<Unit filename="..\..\bullet\BulletCollision\CollisionShapes\btConvexHullShape.cpp" />
 		<Unit filename="..\..\bullet\BulletCollision\CollisionShapes\btConvexHullShape.h" />
 		<Unit filename="..\..\bullet\BulletCollision\CollisionShapes\btConvexInternalShape.cpp" />
@@ -183,6 +197,7 @@
 		<Unit filename="..\..\bullet\BulletCollision\CollisionShapes\btTriangleIndexVertexArray.h" />
 		<Unit filename="..\..\bullet\BulletCollision\CollisionShapes\btTriangleIndexVertexMaterialArray.cpp" />
 		<Unit filename="..\..\bullet\BulletCollision\CollisionShapes\btTriangleIndexVertexMaterialArray.h" />
+		<Unit filename="..\..\bullet\BulletCollision\CollisionShapes\btTriangleInfoMap.h" />
 		<Unit filename="..\..\bullet\BulletCollision\CollisionShapes\btTriangleMesh.cpp" />
 		<Unit filename="..\..\bullet\BulletCollision\CollisionShapes\btTriangleMesh.h" />
 		<Unit filename="..\..\bullet\BulletCollision\CollisionShapes\btTriangleMeshShape.cpp" />
@@ -255,6 +270,54 @@
 		<Unit filename="..\..\bullet\BulletCollision\NarrowPhaseCollision\btSubSimplexConvexCast.h" />
 		<Unit filename="..\..\bullet\BulletCollision\NarrowPhaseCollision\btVoronoiSimplexSolver.cpp" />
 		<Unit filename="..\..\bullet\BulletCollision\NarrowPhaseCollision\btVoronoiSimplexSolver.h" />
+		<Unit filename="..\..\bullet\BulletDynamics\Character\btCharacterControllerInterface.h" />
+		<Unit filename="..\..\bullet\BulletDynamics\Character\btKinematicCharacterController.cpp" />
+		<Unit filename="..\..\bullet\BulletDynamics\Character\btKinematicCharacterController.h" />
+		<Unit filename="..\..\bullet\BulletDynamics\ConstraintSolver\btConeTwistConstraint.cpp" />
+		<Unit filename="..\..\bullet\BulletDynamics\ConstraintSolver\btConeTwistConstraint.h" />
+		<Unit filename="..\..\bullet\BulletDynamics\ConstraintSolver\btConstraintSolver.h" />
+		<Unit filename="..\..\bullet\BulletDynamics\ConstraintSolver\btContactConstraint.cpp" />
+		<Unit filename="..\..\bullet\BulletDynamics\ConstraintSolver\btContactConstraint.h" />
+		<Unit filename="..\..\bullet\BulletDynamics\ConstraintSolver\btContactSolverInfo.h" />
+		<Unit filename="..\..\bullet\BulletDynamics\ConstraintSolver\btGeneric6DofConstraint.cpp" />
+		<Unit filename="..\..\bullet\BulletDynamics\ConstraintSolver\btGeneric6DofConstraint.h" />
+		<Unit filename="..\..\bullet\BulletDynamics\ConstraintSolver\btGeneric6DofSpringConstraint.cpp" />
+		<Unit filename="..\..\bullet\BulletDynamics\ConstraintSolver\btGeneric6DofSpringConstraint.h" />
+		<Unit filename="..\..\bullet\BulletDynamics\ConstraintSolver\btHinge2Constraint.cpp" />
+		<Unit filename="..\..\bullet\BulletDynamics\ConstraintSolver\btHinge2Constraint.h" />
+		<Unit filename="..\..\bullet\BulletDynamics\ConstraintSolver\btHingeConstraint.cpp" />
+		<Unit filename="..\..\bullet\BulletDynamics\ConstraintSolver\btHingeConstraint.h" />
+		<Unit filename="..\..\bullet\BulletDynamics\ConstraintSolver\btJacobianEntry.h" />
+		<Unit filename="..\..\bullet\BulletDynamics\ConstraintSolver\btPoint2PointConstraint.cpp" />
+		<Unit filename="..\..\bullet\BulletDynamics\ConstraintSolver\btPoint2PointConstraint.h" />
+		<Unit filename="..\..\bullet\BulletDynamics\ConstraintSolver\btSequentialImpulseConstraintSolver.cpp" />
+		<Unit filename="..\..\bullet\BulletDynamics\ConstraintSolver\btSequentialImpulseConstraintSolver.h" />
+		<Unit filename="..\..\bullet\BulletDynamics\ConstraintSolver\btSliderConstraint.cpp" />
+		<Unit filename="..\..\bullet\BulletDynamics\ConstraintSolver\btSliderConstraint.h" />
+		<Unit filename="..\..\bullet\BulletDynamics\ConstraintSolver\btSolve2LinearConstraint.cpp" />
+		<Unit filename="..\..\bullet\BulletDynamics\ConstraintSolver\btSolve2LinearConstraint.h" />
+		<Unit filename="..\..\bullet\BulletDynamics\ConstraintSolver\btSolverBody.h" />
+		<Unit filename="..\..\bullet\BulletDynamics\ConstraintSolver\btSolverConstraint.h" />
+		<Unit filename="..\..\bullet\BulletDynamics\ConstraintSolver\btTypedConstraint.cpp" />
+		<Unit filename="..\..\bullet\BulletDynamics\ConstraintSolver\btTypedConstraint.h" />
+		<Unit filename="..\..\bullet\BulletDynamics\ConstraintSolver\btUniversalConstraint.cpp" />
+		<Unit filename="..\..\bullet\BulletDynamics\ConstraintSolver\btUniversalConstraint.h" />
+		<Unit filename="..\..\bullet\BulletDynamics\Dynamics\Bullet-C-API.cpp" />
+		<Unit filename="..\..\bullet\BulletDynamics\Dynamics\btActionInterface.h" />
+		<Unit filename="..\..\bullet\BulletDynamics\Dynamics\btContinuousDynamicsWorld.cpp" />
+		<Unit filename="..\..\bullet\BulletDynamics\Dynamics\btContinuousDynamicsWorld.h" />
+		<Unit filename="..\..\bullet\BulletDynamics\Dynamics\btDiscreteDynamicsWorld.cpp" />
+		<Unit filename="..\..\bullet\BulletDynamics\Dynamics\btDiscreteDynamicsWorld.h" />
+		<Unit filename="..\..\bullet\BulletDynamics\Dynamics\btDynamicsWorld.h" />
+		<Unit filename="..\..\bullet\BulletDynamics\Dynamics\btRigidBody.cpp" />
+		<Unit filename="..\..\bullet\BulletDynamics\Dynamics\btRigidBody.h" />
+		<Unit filename="..\..\bullet\BulletDynamics\Dynamics\btSimpleDynamicsWorld.cpp" />
+		<Unit filename="..\..\bullet\BulletDynamics\Dynamics\btSimpleDynamicsWorld.h" />
+		<Unit filename="..\..\bullet\BulletDynamics\Vehicle\btRaycastVehicle.cpp" />
+		<Unit filename="..\..\bullet\BulletDynamics\Vehicle\btRaycastVehicle.h" />
+		<Unit filename="..\..\bullet\BulletDynamics\Vehicle\btVehicleRaycaster.h" />
+		<Unit filename="..\..\bullet\BulletDynamics\Vehicle\btWheelInfo.cpp" />
+		<Unit filename="..\..\bullet\BulletDynamics\Vehicle\btWheelInfo.h" />
 		<Unit filename="..\..\bullet\LinearMath\btAabbUtil2.h" />
 		<Unit filename="..\..\bullet\LinearMath\btAlignedAllocator.cpp" />
 		<Unit filename="..\..\bullet\LinearMath\btAlignedAllocator.h" />
@@ -277,17 +340,27 @@
 		<Unit filename="..\..\bullet\LinearMath\btQuickprof.h" />
 		<Unit filename="..\..\bullet\LinearMath\btRandom.h" />
 		<Unit filename="..\..\bullet\LinearMath\btScalar.h" />
+		<Unit filename="..\..\bullet\LinearMath\btSerializer.cpp" />
+		<Unit filename="..\..\bullet\LinearMath\btSerializer.h" />
 		<Unit filename="..\..\bullet\LinearMath\btStackAlloc.h" />
 		<Unit filename="..\..\bullet\LinearMath\btTransform.h" />
 		<Unit filename="..\..\bullet\LinearMath\btTransformUtil.h" />
 		<Unit filename="..\..\bullet\LinearMath\btVector3.h" />
 		<Unit filename="..\..\bullet\btBulletCollisionCommon.h" />
+		<Unit filename="..\..\bullet\btBulletDynamicsCommon.h" />
 		<Unit filename="..\..\include\aabb.h" />
 		<Unit filename="..\..\include\aabb_space_partitioning.h" />
 		<Unit filename="..\..\include\ai.h" />
 		<Unit filename="..\..\include\bezier.h" />
 		<Unit filename="..\..\include\bucketed_hashmap.h" />
 		<Unit filename="..\..\include\camera.h" />
+		<Unit filename="..\..\include\camera_chase.h" />
+		<Unit filename="..\..\include\camera_fixed.h" />
+		<Unit filename="..\..\include\camera_free.h" />
+		<Unit filename="..\..\include\camera_mount.h" />
+		<Unit filename="..\..\include\camera_orbit.h" />
+		<Unit filename="..\..\include\camera_simplemount.h" />
+		<Unit filename="..\..\include\camera_system.h" />
 		<Unit filename="..\..\include\car.h" />
 		<Unit filename="..\..\include\caraerodynamicdevice.h" />
 		<Unit filename="..\..\include\carbrake.h" />
@@ -298,18 +371,22 @@
 		<Unit filename="..\..\include\carengine.h" />
 		<Unit filename="..\..\include\carfueltank.h" />
 		<Unit filename="..\..\include\carinput.h" />
-		<Unit filename="..\..\include\carsurfacetype.h" />
 		<Unit filename="..\..\include\carsuspension.h" />
+		<Unit filename="..\..\include\cartelemetry.h" />
 		<Unit filename="..\..\include\cartire.h" />
 		<Unit filename="..\..\include\cartransmission.h" />
 		<Unit filename="..\..\include\carwheel.h" />
 		<Unit filename="..\..\include\carwheelposition.h" />
-		<Unit filename="..\..\include\collision_detection.h" />
+		<Unit filename="..\..\include\collision_contact.h" />
+		<Unit filename="..\..\include\collision_world.h" />
 		<Unit filename="..\..\include\configfile.h" />
 		<Unit filename="..\..\include\containeralgorithm.h" />
 		<Unit filename="..\..\include\coordinatesystems.h" />
+		<Unit filename="..\..\include\crashdetection.h" />
+		<Unit filename="..\..\include\definitions.h" />
 		<Unit filename="..\..\include\derived.h" />
 		<Unit filename="..\..\include\endian_utility.h" />
+		<Unit filename="..\..\include\enginesoundinfo.h" />
 		<Unit filename="..\..\include\eventsystem.h" />
 		<Unit filename="..\..\include\fbtexture.h" />
 		<Unit filename="..\..\include\font.h" />
@@ -339,6 +416,7 @@
 		<Unit filename="..\..\include\model_joe03.h" />
 		<Unit filename="..\..\include\model_obj.h" />
 		<Unit filename="..\..\include\numprocessors.h" />
+		<Unit filename="..\..\include\objectloader.h" />
 		<Unit filename="..\..\include\opengl_utility.h" />
 		<Unit filename="..\..\include\optional.h" />
 		<Unit filename="..\..\include\pairsort.h" />
@@ -353,23 +431,29 @@
 		<Unit filename="..\..\include\replay.h" />
 		<Unit filename="..\..\include\reseatable_reference.h" />
 		<Unit filename="..\..\include\rigidbody.h" />
+		<Unit filename="..\..\include\roadpatch.h" />
+		<Unit filename="..\..\include\roadstrip.h" />
 		<Unit filename="..\..\include\rotationalframe.h" />
 		<Unit filename="..\..\include\scenegraph.h" />
 		<Unit filename="..\..\include\settings.h" />
 		<Unit filename="..\..\include\shader.h" />
 		<Unit filename="..\..\include\signalprocessing.h" />
 		<Unit filename="..\..\include\simpletree.h" />
+		<Unit filename="..\..\include\sky.h" />
 		<Unit filename="..\..\include\sound.h" />
 		<Unit filename="..\..\include\spline.h" />
 		<Unit filename="..\..\include\sprite2d.h" />
+		<Unit filename="..\..\include\suspensionbumpdetection.h" />
 		<Unit filename="..\..\include\text_draw.h" />
 		<Unit filename="..\..\include\texture.h" />
+		<Unit filename="..\..\include\texturelibrary.h" />
 		<Unit filename="..\..\include\timer.h" />
+		<Unit filename="..\..\include\tobullet.h" />
 		<Unit filename="..\..\include\toggle.h" />
 		<Unit filename="..\..\include\track.h" />
 		<Unit filename="..\..\include\track_object.h" />
 		<Unit filename="..\..\include\trackmap.h" />
-		<Unit filename="..\..\include\tracksurfacetype.h" />
+		<Unit filename="..\..\include\tracksurface.h" />
 		<Unit filename="..\..\include\unittest.h" />
 		<Unit filename="..\..\include\vertexarray.h" />
 		<Unit filename="..\..\include\widget.h" />
@@ -388,13 +472,21 @@
 		<Unit filename="..\..\src\ai.cpp" />
 		<Unit filename="..\..\src\bezier.cpp" />
 		<Unit filename="..\..\src\camera.cpp" />
+		<Unit filename="..\..\src\camera_chase.cpp" />
+		<Unit filename="..\..\src\camera_fixed.cpp" />
+		<Unit filename="..\..\src\camera_free.cpp" />
+		<Unit filename="..\..\src\camera_mount.cpp" />
+		<Unit filename="..\..\src\camera_orbit.cpp" />
+		<Unit filename="..\..\src\camera_simplemount.cpp" />
+		<Unit filename="..\..\src\camera_system.cpp" />
 		<Unit filename="..\..\src\car.cpp" />
 		<Unit filename="..\..\src\carcontrolmap_local.cpp" />
 		<Unit filename="..\..\src\cardynamics.cpp" />
-		<Unit filename="..\..\src\collision_detection.cpp" />
+		<Unit filename="..\..\src\collision_world.cpp" />
 		<Unit filename="..\..\src\configfile.cpp" />
 		<Unit filename="..\..\src\containeralgorithm.cpp" />
 		<Unit filename="..\..\src\coordinatesystems.cpp" />
+		<Unit filename="..\..\src\crashdetection.cpp" />
 		<Unit filename="..\..\src\endian_utility.cpp" />
 		<Unit filename="..\..\src\eventsystem.cpp" />
 		<Unit filename="..\..\src\fbtexture.cpp" />
@@ -418,6 +510,7 @@
 		<Unit filename="..\..\src\model.cpp" />
 		<Unit filename="..\..\src\model_joe03.cpp" />
 		<Unit filename="..\..\src\model_obj.cpp" />
+		<Unit filename="..\..\src\objectloader.cpp" />
 		<Unit filename="..\..\src\opengl_utility.cpp" />
 		<Unit filename="..\..\src\optional.cpp" />
 		<Unit filename="..\..\src\parallel_task.cpp" />
@@ -429,11 +522,15 @@
 		<Unit filename="..\..\src\replay.cpp" />
 		<Unit filename="..\..\src\reseatable_reference.cpp" />
 		<Unit filename="..\..\src\rigidbody.cpp" />
+		<Unit filename="..\..\src\roadpatch.cpp" />
+		<Unit filename="..\..\src\roadstrip.cpp" />
 		<Unit filename="..\..\src\rotationalframe.cpp" />
 		<Unit filename="..\..\src\scenegraph.cpp" />
 		<Unit filename="..\..\src\settings.cpp" />
 		<Unit filename="..\..\src\shader.cpp" />
+		<Unit filename="..\..\src\sky.cpp" />
 		<Unit filename="..\..\src\sound.cpp" />
+		<Unit filename="..\..\src\suspensionbumpdetection.cpp" />
 		<Unit filename="..\..\src\text_draw.cpp" />
 		<Unit filename="..\..\src\texture.cpp" />
 		<Unit filename="..\..\src\timer.cpp" />
@@ -442,6 +539,8 @@
 		<Unit filename="..\..\src\track_object.cpp" />
 		<Unit filename="..\..\src\trackmap.cpp" />
 		<Unit filename="..\..\src\vertexarray.cpp" />
+		<Unit filename="strptime.cpp" />
+		<Unit filename="strptime.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />

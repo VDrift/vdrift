@@ -84,7 +84,7 @@ public:
 	/// both steps must be executed each frame and forces must be set between steps 1 and 2
 	void Integrate2(const T & dt)
 	{
-		assert(integration_step == 2);
+		assert(integration_step == 1);
 		
 #ifdef MODIFIEDVERLET
 		momentum = momentum + force * dt * 0.5;
@@ -108,19 +108,21 @@ public:
 		RecalculateSecondary();
 		
 		integration_step = 0;
+		force.Set(0.0);
 	}
 	
 	///this must only be called between integrate1 and integrate2 steps
-	void SetForce(const MATHVECTOR <T, 3> & newforce)
+	void ApplyForce(const MATHVECTOR <T, 3> & f)
 	{
 		assert(integration_step == 1);
-		
-		force = newforce;
-		
-		integration_step++;
+		force = force + f;
 	}
 	
-	const MATHVECTOR <T, 3> & GetForce() {return force;}
+	void SetForce(const MATHVECTOR <T, 3> & f)
+	{
+		assert(integration_step == 1);
+		force = f;
+	}
 	
 	///this must be called once at sim start to set the initial force present
 	void SetInitialForce(const MATHVECTOR <T, 3> & newforce)
@@ -139,6 +141,11 @@ public:
 	const MATHVECTOR< T, 3 > GetVelocity() const
 	{
 		return GetVelocityFromMomentum(momentum);
+	}
+	
+	const MATHVECTOR< T, 3 > & GetForce() const
+	{
+		return old_force;
 	}
 	
 	bool Serialize(joeserialize::Serializer & s)

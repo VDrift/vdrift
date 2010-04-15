@@ -25,7 +25,7 @@ QT_TEST(linearframe_test)
 	for (int i = 0; i < 1000; i++)
 	{
 		frame.Integrate1(0.01);
-		frame.SetForce(gravity);
+		frame.ApplyForce(gravity);
 		frame.Integrate2(0.01);
 		t += 0.01;
 	}
@@ -55,7 +55,7 @@ QT_TEST(linearframe_test)
 		frame.Integrate1(0.01);
 		force.Set(0,1,0);
 		force = force - frame.GetVelocity() * 10.0f;
-		frame.SetForce(force);
+		frame.ApplyForce(force);
 		frame.Integrate2(0.01);
 		t += 0.01;
 	}

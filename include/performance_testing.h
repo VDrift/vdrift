@@ -11,6 +11,7 @@ class PERFORMANCE_TESTING
 {
 private:
 	CAR car;
+	TRACKSURFACE surface;
 	std::string carstate;
 	void SimulateFlatRoad();
 	void ResetCar();
@@ -20,6 +21,7 @@ private:
 	float ConvertToFeet(float meters) {return meters*3.2808399;}
 	
 public:
+	PERFORMANCE_TESTING();
 	void Test(const std::string & carpath, const std::string & carname, std::ostream & info_output, std::ostream & error_output);
 };
 

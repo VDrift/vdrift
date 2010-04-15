@@ -14,9 +14,7 @@
 #include <iostream>
 #include <fstream>
 
-class ROADSTRIP; //forward declaration
-
-//#define DRAWPATH
+class ROADSTRIP;
 
 class K1999
 {

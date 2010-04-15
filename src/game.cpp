@@ -10,7 +10,7 @@
 #include "performance_testing.h"
 #include "widget_label.h"
 #include "quickprof.h"
-#include "tracksurfacetype.h"
+#include "tracksurface.h"
 
 #include <fstream>
 using std::ifstream;
@@ -123,8 +123,7 @@ void GAME::Start(list <string> & args)
 	inputgraph.Hide();
 
 	//initialize GUI
-	if (!InitializeGUI())
-		return;
+	if (!InitializeGUI()) return;
 
 	//initialize FPS counter
 	fps_draw = &rootnode.AddDrawable();
@@ -162,7 +161,6 @@ void GAME::Start(list <string> & args)
 		{
 			error_output << "Error loading benchmark" << endl;
 		}
-		//End();
 	}
 	
 	DoneStartingUp();
@@ -491,7 +489,7 @@ void GAME::Test()
 void GAME::BeginDraw()
 {
 	PROFILER.beginBlock("render");
-		//send scene information to the graphics subsystem
+	//send scene information to the graphics subsystem
 	if (active_camera)
 	{
 		MATHVECTOR <float, 3> reflection_sample_location = active_camera->GetPosition();
@@ -580,19 +578,6 @@ void GAME::Tick(float deltat)
 		info_output << "Current FPS: " << eventsystem.GetFPS() << endl;
 }
 
-void GAME::ParallelUpdate(int carindex)
-{
-	list <CAR>::iterator carit = cars.begin();
-	for (int i = 0; i < carindex; i++)
-	{
-		assert(carit != cars.end());
-		carit++;
-	}
-	assert(carit != cars.end());
-	CAR & car = *carit;
-	UpdateCarPhysics(car, cached_collisions_by_car[&car]);
-}
-
 ///increment game logic by one frame
 void GAME::AdvanceGameLogic()
 {
@@ -635,51 +620,16 @@ void GAME::AdvanceGameLogic()
 				ai.update(TickPeriod(), &track, cars);
 				PROFILER.endBlock("ai");
 				
+				PROFILER.beginBlock("physics");
+				collision.Update(TickPeriod());
+				PROFILER.endBlock("physics");
+				
 				PROFILER.beginBlock("car-update");
 				for (list <CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
 				{
 					UpdateCar(*i, TickPeriod());
 				}
 				PROFILER.endBlock("car-update");
-				
-				PROFILER.beginBlock("collision");
-				if (cur_collision_frameskip == 0)
-					UpdateCarChassisCollisions();
-				for (list <CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
-				{
-					if (cur_collision_frameskip == 0)
-					{
-						UpdateCarWheelCollisions(*i, cached_collisions_by_car[&(*i)]);
-					}
-					else
-					{
-						UpdateCarWheelCollisionsFromCached(*i, cached_collisions_by_car[&(*i)]);
-					}
-				}
-				PROFILER.endBlock("collision");
-				
-				if (multithreaded)
-				{
-					PROFILER.beginBlock("car-physics");
-					GAME * thisgame = this;
-					QMP_SHARE(thisgame);
-					QMP_PARALLEL_FOR(i, 0, cars.size(), quickmp::INTERLEAVED);
-						QMP_USE_SHARED(thisgame, GAME*);
-						thisgame->ParallelUpdate(i);
-					QMP_END_PARALLEL_FOR;
-					PROFILER.endBlock("car-physics");
-				}
-				else
-				{
-					for (list <CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
-					{
-						PROFILER.beginBlock("car-physics");
-						UpdateCarPhysics(*i, cached_collisions_by_car[&(*i)]);
-						PROFILER.endBlock("car-physics");
-					}
-				}
-				
-				cur_collision_frameskip = (cur_collision_frameskip + 1) % collision_frameskip; //this has to be done here so it only gets incremented once per frame, instead of once per car per frame
 				
 				//PROFILER.beginBlock("timer");
 				UpdateTimer();
@@ -784,17 +734,10 @@ void GAME::UpdateTimer()
 
 		if (advance)
 		{
-		    //std::cout << "Lap: " <<
-			timer.Lap(carid, i->GetSector(), nextsector, (i->GetSector() >= 0)); //only count it if the car's current sector isn't -1, which is the default value when the car is loaded
-
+		    // only count it if the car's current sector isn't -1
+		    // which is the default value when the car is loaded
+			timer.Lap(carid, i->GetSector(), nextsector, (i->GetSector() >= 0)); 
 			i->SetSector(nextsector);
-			/*if (nextsector == 0)
-			{
-				if ((it->lap_number + 1) > state.GetLaps() && (state.GetGameMode() == MODE_SINGLERACE))
-				{
-					it->end_race = true;
-				}
-			}*/
 		}
 
 		//update how far the car is on the track
@@ -1014,10 +957,6 @@ void GAME::ProcessGUIInputs()
 					eventsystem.GetMousePosition()[0]/(float)graphics.GetW(), eventsystem.GetMousePosition()[1]/(float)graphics.GetH(),
 							eventsystem.GetMouseButtonState(1).down, eventsystem.GetMouseButtonState(1).just_up, (float)graphics.GetH()/graphics.GetW(), error_output);
 		}
-		else
-		{
-
-		}
 	}
 
 	if (gui.Active())
@@ -1098,12 +1037,10 @@ void GAME::ProcessGUIAction(const std::string & action)
 	}
 	else if (action == "StartPracticeGame")
 	{
-		if (NewGame())
+		if (!NewGame())
 		{
-
-		}
-		else
 			LeaveGame();
+		}
 	}
 	else if (action.substr(0,14) == "controlgrabadd")
 	{
@@ -1330,28 +1267,25 @@ void GAME::ProcessGUIAction(const std::string & action)
 	else if (action == "RestartGame")
 	{
 		bool add_opponents = !opponents.empty();
-		if (NewGame(false, add_opponents, race_laps))
+		if (!NewGame(false, add_opponents, race_laps))
 		{
-
-		}
-		else
 			LeaveGame();
+		}
 	}
 	else if (action == "StartRace")
 	{
 		//handle a single race
 		if (opponents.empty())
+		{
 			gui.ActivatePage("NoOpponentsError", 0.25, error_output);
+		}
 		else
 		{
 		    int num_laps = settings.GetNumberOfLaps();
-
-			if (NewGame(false, true, num_laps))
+			if (!NewGame(false, true, num_laps))
 			{
-
-			}
-			else
 				LeaveGame();
+			}
 		}
 	}
 	else
@@ -1367,20 +1301,6 @@ void GAME::UpdateCar(CAR & car, double dt)
 	UpdateCarInputs(car);
 	AddTireSmokeParticles(dt, car);
 	UpdateDriftScore(car, dt);
-}
-
-void GAME::UpdateCarPhysics(CAR & car, std::vector <COLLISION_CONTACT> & cached_collisions) const
-{
-	const int extraticks = (int)((framerate+carphysics_rate*0.5)/carphysics_rate);
-	const double dt = TickPeriod()/extraticks;
-	
-	for (int i = 0; i < extraticks; i++)
-	{
-		UpdateCarWheelCollisionsFromCached(car, cached_collisions);
-	
-		//update the car dynamics simulation
-		car.TickPhysics(dt);
-	}
 }
 
 void GAME::UpdateCarInputs(CAR & car)
@@ -1490,7 +1410,9 @@ void GAME::UpdateCarInputs(CAR & car)
 		settings.SetCameraMode(active_camera->GetName());
 		
 		if(old_camera != active_camera)
-			active_camera->Reset(car.GetCenterOfMassPosition(), car.GetOrientation());
+		{
+			active_camera->Reset(car.GetPosition(), car.GetOrientation());
+		}
 
 		//handle camera inputs
 		float left = TickPeriod() * (carcontrols_local.second.GetInput(CARINPUT::PAN_LEFT)
@@ -1519,271 +1441,6 @@ void GAME::UpdateCarInputs(CAR & car)
 		
 		//move up the close shadow distance if we're in the cockpit
 		graphics.SetCloseShadow(incar ? 1.0 : 5.0);
-	}
-}
-
-bool IsACar(const CAR * ptr, const list <CAR> & cars)
-{
-	bool match = false;
-	for (list <CAR>::const_iterator i = cars.begin(); i != cars.end(); ++i)
-		if (&(*i) == ptr)
-			match = true;
-	return match;
-}
-
-void GAME::UpdateCarChassisCollisions()
-{
-	//do car-to-car collisions
-	std::map <COLLISION_OBJECT *, std::list <COLLISION_CONTACT> > cartocarcollisions;
-	collision.CollideDynamicObjects(cartocarcollisions);
-	//std::cout << "Dynamic colliding objects: " << cartocarcollisions.size() << endl;
-	for (std::map <COLLISION_OBJECT *, std::list <COLLISION_CONTACT> >::iterator i = cartocarcollisions.begin(); i!= cartocarcollisions.end(); ++i)
-	{
-		std::list <COLLISION_CONTACT> & contactlist = i->second;
-		//std::cout << "Number of collisions: " << contactlist.size() << endl;
-		
-		if (!contactlist.empty()) //don't think this should ever happen, but good to be safe
-		{
-			CAR * carptr = (CAR*)i->first->ObjID();
-			assert(carptr);
-			assert(IsACar(carptr, cars)); //make sure the car pointer is really a pointer to a car before we dereference it
-			
-			CAR & car = *carptr;
-			
-			contactlist.sort();
-			COLLISION_CONTACT & contact = contactlist.back();
-			
-			CAR * othercarptr = (CAR*)contact.GetCollidingObject2()->ObjID();
-			assert(othercarptr);
-			assert(othercarptr != carptr);
-			assert(IsACar(othercarptr, cars));
-			CAR & othercar = *othercarptr;
-			
-			MATHVECTOR <float, 3> colcenter = car.GetCollisionDimensions().GetCenter();
-			MATHVECTOR <float, 3> colpt ( contact.GetContactPosition() );
-			MATHVECTOR <float, 3> normal ( contact.GetContactNormal() );
-			float depth ( contact.GetContactDepth() );
-			
-			car.SetDynamicChassisContact(colpt, normal, car.GetVelocity() - othercar.GetVelocity(), depth*0.5, collision_rate);
-			othercar.SetDynamicChassisContact(colpt, -normal, -car.GetVelocity() + othercar.GetVelocity(), depth*0.5, collision_rate);
-		}
-	}
-	
-	//do car-to-scenery collisions
-	for (list <CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
-	{
-		CAR & car = *i;
-		
-		int maxloops = 1;
-		int loopcount = 0;
-		bool col = true;
-		while (col && loopcount < maxloops)
-		{
-			loopcount++;
-			col = false;
-	
-			COLLISION_SETTINGS settings;
-			settings.SetStaticCollide(true);
-			list <COLLISION_CONTACT> contactlist;
-			const AABB <float> & colbox = car.GetCollisionDimensions();
-			MATHVECTOR <float, 3> colcenter = car.CarLocalToWorld(colbox.GetCenter());
-			
-			//collision.CollideBox(colcenter, car.GetOrientation(), colbox.GetSize()*0.5, contactlist, settings);
-			//collision.CollideMovingBox(colcenter, car.GetVelocity(), car.GetOrientation(), colbox.GetSize()*0.5, contactlist, settings, collision_rate);
-			collision.CollideObject(car.GetCollisionObject(), contactlist, settings);
-			
-			if (!contactlist.empty())
-			{
-				col = true;
-				contactlist.sort();
-				COLLISION_CONTACT & contact = contactlist.back();
-	
-				MATHVECTOR <float, 3> colpt ( contact.GetContactPosition() );
-				MATHVECTOR <float, 3> normal ( contact.GetContactNormal() );
-				float depth ( contact.GetContactDepth() );
-	
-				//normal = normal * -1.0;
-	
-				//cout << (colpt - colcenter).dot(normal) << endl;
-	
-				if ((colpt - colcenter).dot(normal) <= 0)
-					car.SetChassisContact(colpt, normal, depth, collision_rate);
-	
-				//cout << "contact " << colpt << endl;
-			}
-		}
-	}
-}
-
-void GAME::UpdateCarWheelCollisions(CAR & car, std::vector <COLLISION_CONTACT> & cached_collisions) const
-{
-    // don't want to fall through the ground
-    MATHVECTOR <float, 3> dir = car.GetDownVector();
-    float moveback = dir.dot(car.GetVelocity()) * TickPeriod();
-    if (moveback < 0) moveback = 0;
-	
-	//do car wheel collisions
-	for (int n = 0; n < WHEEL_POSITION_SIZE; n++)
-	{
-	    float offset = car.GetTireRadius(WHEEL_POSITION(n)) + moveback;
-		MATHVECTOR <float, 3> wp = car.GetWheelPosition(WHEEL_POSITION(n));
-        MATHVECTOR <float, 3> raystart = wp - dir * offset;
-		float raylen = 10;
-		
-		//by default, set properties to no collision
-		float bump_wavelength(1);
-		float bump_amplitude(0);
-		float friction_notread(1);
-		float friction_tread(0.9);
-		float rolling_resistance(1);
-		float rolling_drag(0);
-		SURFACE::CARSURFACETYPE surface(SURFACE::NONE);
-		COLLISION_CONTACT contact;
-		contact.Set(raystart + dir * (raylen + offset), -dir, raylen + offset, NULL, NULL); //some sane default values
-		
-		//start by doing a road patch collision check
-		MATHVECTOR <float, 3> bezierspace_raystart(raystart[1], raystart[2], raystart[0]);
-		MATHVECTOR <float, 3> bezierspace_dir(dir[1], dir[2], dir[0]);
-		MATHVECTOR <float, 3> colpoint, colnormal;
-		const BEZIER * colpatch = NULL;
-		bool beziercol = track.CollideRoads(bezierspace_raystart, bezierspace_dir, raylen, colpoint, colpatch, colnormal);
-		if (beziercol)
-		{
-			contact.Set(MATHVECTOR <float, 3> (colpoint[2], colpoint[0], colpoint[1]), MATHVECTOR <float, 3> (colnormal[2], colnormal[0], colnormal[1]), (colpoint-bezierspace_raystart).Magnitude(), NULL, NULL);
-			surface = SURFACE::ASPHALT;
-		}
-		
-		car.SetCurPatch(n, colpatch);
-		
-		//now check for a track geometry collision
-		{
-			//do a track model collision check
-			COLLISION_SETTINGS settings;
-			settings.SetStaticCollide(true);
-			list <COLLISION_CONTACT> contactlist;
-			collision.CollideRay(raystart, dir, raylen, contactlist, settings);
-			if (!contactlist.empty())
-			{
-				contactlist.sort();
-				if (!beziercol)
-				{
-					contact = contactlist.front();
-				}
-				else
-				{
-					// setting the second parameter to NULL is our code for a bezier collision
-					contact.SetCollisionObjects(contactlist.front().GetCollidingObject1(), NULL);
-				}
-				
-				const TRACK_OBJECT * const obj = reinterpret_cast <const TRACK_OBJECT * const> (contact.GetCollidingObject1()->ObjID());
-				
-				bump_wavelength = obj->GetBumpWavelength();
-				bump_amplitude = obj->GetBumpAmplitude();
-				friction_notread = obj->GetFrictionNoTread();
-				friction_tread = obj->GetFrictionTread();
-				rolling_resistance = obj->GetRollingResistanceCoefficient();
-				rolling_drag = obj->GetRollingDrag();
-				
-				if (!beziercol)
-					surface = obj->GetSurfaceType();
-				
-				if (track.UseSurfaceTypes())
-				{
-					int i = obj->GetSurfaceInt();
-					TRACKSURFACE tempsurf = track.GetTrackSurface(i);
-					
-					bump_wavelength = tempsurf.bumpWaveLength;
-					bump_amplitude = tempsurf.bumpAmplitude;
-					friction_notread = tempsurf.frictionNonTread;
-					friction_tread = tempsurf.frictionTread;
-					rolling_resistance = tempsurf.rollResistanceCoefficient;
-					rolling_drag = tempsurf.rollingDrag;
-				}
-			}
-		}
-
-		car.SetWheelContactProperties(WHEEL_POSITION(n), contact.GetContactDepth() - offset, contact.GetContactPosition(), contact.GetContactNormal(),
-									  bump_wavelength, bump_amplitude, friction_notread, friction_tread, rolling_resistance, rolling_drag, surface);
-		if (cached_collisions.size() != 4)
-			cached_collisions.resize(4);
-		cached_collisions[n] = contact;
-	}
-}
-
-void GAME::UpdateCarWheelCollisionsFromCached(CAR & car, std::vector <COLLISION_CONTACT> & cached_collisions) const
-{
-    // don't want to fall through the ground(move back)
-    MATHVECTOR <float, 3> dir = car.GetDownVector();
-    float moveback = dir.dot(car.GetVelocity()) * TickPeriod();
-    if (moveback < 0) moveback = 0;
-    
-	//do car wheel collisions
-	for (int n = 0; n < WHEEL_POSITION_SIZE; n++)
-	{
-	    float offset = car.GetTireRadius(WHEEL_POSITION(n)) + moveback;
-		MATHVECTOR <float, 3> wp = car.GetWheelPosition(WHEEL_POSITION(n));
-		MATHVECTOR <float, 3> raystart = wp - dir * offset;
-		float raylen = 10;
-
-		assert(cached_collisions.size() == 4);
-		if (cached_collisions[n].GetContactDepth() > 0) //if there was a contact from the last query
-		{
-			COLLISION_CONTACT contact;
-			if (cached_collisions[n].CollideRay(raystart, dir, raylen, contact)) //if the new ray query impacts the cached collision information
-			{
-				//if (n == 0) cout << "got cached value " << contact.GetContactDepth() << endl;
-				if (contact.GetCollidingObject1() == NULL)
-					car.SetWheelContactProperties(WHEEL_POSITION(n), contact.GetContactDepth() - offset, contact.GetContactPosition(), contact.GetContactNormal(),1,0,1,0.9,1,0, SURFACE::ASPHALT);
-				else
-				{
-					const TRACK_OBJECT * const obj = reinterpret_cast <const TRACK_OBJECT * const> (contact.GetCollidingObject1()->ObjID());
-					assert(obj);
-					
-					float bump_wavelength(1);
-					float bump_amplitude(0);
-					float friction_notread(1);
-					float friction_tread(0.9);
-					float rolling_resistance(1);
-					float rolling_drag(0);
-					SURFACE::CARSURFACETYPE surface(SURFACE::NONE);
-					
-					bump_wavelength = obj->GetBumpWavelength();
-					bump_amplitude = obj->GetBumpAmplitude();
-					friction_notread = obj->GetFrictionNoTread();
-					friction_tread = obj->GetFrictionTread();
-					rolling_resistance = obj->GetRollingResistanceCoefficient();
-					rolling_drag = obj->GetRollingDrag();
-					
-					if (!contact.GetCollidingObject2()) // this is our code for a bezier collision
-					{
-						surface = obj->GetSurfaceType();
-						surface = SURFACE::ASPHALT;
-					}
-					
-					if (track.UseSurfaceTypes())
-					{
-						int i = obj->GetSurfaceInt();
-						TRACKSURFACE tempsurf = track.GetTrackSurface(i);
-						
-						bump_wavelength = tempsurf.bumpWaveLength;
-						bump_amplitude = tempsurf.bumpAmplitude;
-						friction_notread = tempsurf.frictionNonTread;
-						friction_tread = tempsurf.frictionTread;
-						rolling_resistance = tempsurf.rollResistanceCoefficient;
-						rolling_drag = tempsurf.rollingDrag;
-					}
-					
-					//std::cout << obj->GetSurfaceInt() << ": " << obj->GetBumpAmplitude() << "/" << bump_amplitude << std::endl;
-					
-					car.SetWheelContactProperties(WHEEL_POSITION(n), contact.GetContactDepth() - offset, contact.GetContactPosition(), contact.GetContactNormal(),
-							bump_wavelength, bump_amplitude, friction_notread, friction_tread, rolling_resistance, rolling_drag, surface);
-				}
-			}
-			else //the new ray query doesn't impact the cached collision information
-			{
-                car.SetWheelContactProperties(WHEEL_POSITION(n), 100.0, raystart + dir * 100.0, -dir, 1, 0, 1, 0.9, 1, 0, SURFACE::NONE);
-			}
-		}
 	}
 }
 
@@ -1820,6 +1477,16 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	{
 		error_output << "Error during track loading: " << trackname << endl;
 		return false;
+	}
+	
+	if (!sky.Load(pathmanager.GetTrackPath()+"/"+trackname))
+	{
+		graphics.sky = NULL;
+		info_output << "No sky settings file found. Fall back to sky box." << std::endl;
+	}
+	else
+	{
+		graphics.sky = &sky;
 	}
 
 	//start out with no camera
@@ -1884,15 +1551,6 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 			sound.AddSource(**s);
 		}
 	}
-
-	//trim out extra space between the current car positions and the ground
-	if (!AlignCarsWithGround())
-		return false;
-
-	//set the camera position
-	/*cam_position = track.GetStart(0).first;
-	cam_position[2] += 5.0;*/
-	//cam_rotation = track.GetStart(0).second;
 
 	//enable HUD display
 	if (settings.GetShowHUD())
@@ -1979,8 +1637,7 @@ void GAME::LeaveGame()
 		graphics.ClearStaticDrawlistMap();
 	}
 	collision.Clear();
-	cached_collisions_by_car.clear();
-	cur_collision_frameskip = 0;
+
 	if (sound.Enabled())
 	{
 		for (std::list <CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
@@ -2003,80 +1660,18 @@ void GAME::LeaveGame()
 	tire_smoke.Clear();
 }
 
-///move the cars on the z axis until they are touching the ground; returns false if the car isn't near ground
-bool GAME::AlignCarsWithGround()
-{
-	for (list <CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
-	{
-		//find the precise starting position for the car (trim out the extra space)
-		float lowest_point = 0;
-		bool no_lowest_point_yet = true;
-		for (int n = 0; n < WHEEL_POSITION_SIZE; n++)
-		{
-			MATHVECTOR <float, 3> wp = i->GetWheelPositionAtDisplacement(WHEEL_POSITION(n),0);
-			//info_output << wp << "..." << cam_position << endl;
-			MATHVECTOR <float, 3> dir;
-			dir.Set(0,0,-1);
-			MATHVECTOR <float, 3> raystart = wp;
-			raystart = raystart - dir; //move back 1 meter
-			COLLISION_SETTINGS settings;
-			settings.SetStaticCollide(true);
-			list <COLLISION_CONTACT> contactlist;
-			collision.CollideRay(raystart, dir, 10.0, contactlist, settings); //TODO: check for road bezier collisions first
-			if (!contactlist.empty())
-			{
-				contactlist.sort();
-				COLLISION_CONTACT & contact = contactlist.front();
-				//MATHVECTOR <float, 3> cp = contact.GetContactPosition();
-				//cout << "Contact, Wheel penetration: " << cp[2] - wp[2] << " (" << cp[2] << " - " << wp[2] << "), " << contactlist.size() << "," << contact.GetContactDepth() << endl;
-				float wheelheight = contact.GetContactDepth() - 1.0 - i->GetTireRadius(WHEEL_POSITION(n));
-				//std::cout << wheelheight << std::endl;
-				if (wheelheight < lowest_point || no_lowest_point_yet)
-				{
-					lowest_point = wheelheight;
-					no_lowest_point_yet = false;
-				}
-			}
-			else
-			{
-				error_output << "Car is starting too far away from the track or isn't over the track at all" << endl;
-				return false;
-			}
-		}
-		MATHVECTOR <float, 3> trimmed_position = i->GetCenterOfMassPosition();
-		trimmed_position[2] -= lowest_point;
-		//std::cout << "!!! trimming off " << lowest_point << std::endl;
-
-		i->SetPosition(trimmed_position);
-	}
-
-	return true;
-}
-
 ///add a car, optionally controlled by the local player
 bool GAME::LoadCar(const std::string & carname, const std::string & carpaint, const MATHVECTOR <float, 3> & start_position,
 		   const QUATERNION <float> & start_orientation, bool islocal, bool isai, const string & carfile)
 {
-	//std::cout << "Start position: " << start_position << endl;
-
 	CONFIGFILE carconf;
 	if (carfile.empty()) //if no file is passed in, then load it from disk
 	{
-		//cout << "Loading from disk" << endl;
 		if ( !carconf.Load ( pathmanager.GetCarPath()+"/"+carname+"/"+carname+".car" ) )
 			return false;
 	}
 	else
 	{
-		/*cout << "Loading from passed car" << endl;
-		stringstream debugcar(carfile);
-		ofstream f("debug.car");
-		while (debugcar)
-		{
-			char tempchar[1024];
-			debugcar.getline(tempchar,1024);
-			f << tempchar << endl;
-		}*/
 		stringstream carstream(carfile);
 		if ( !carconf.Load ( carstream ) )
 			return false;
@@ -2084,11 +1679,26 @@ bool GAME::LoadCar(const std::string & carname, const std::string & carpaint, co
 
 	cars.push_back(CAR());
 
-	if (!cars.back().Load(carconf, pathmanager.GetCarPath(), pathmanager.GetDriverPath()+"/driver2",
-	     carname, carpaint, start_position,
-	     start_orientation, rootnode, sound.Enabled(), sound.GetDeviceInfo(), generic_sounds,
-	     settings.GetAnisotropy(), settings.GetABS() || isai, settings.GetTCS() || isai, settings.GetTextureSize(),
-	     settings.GetCameraBounce(), debugmode, info_output, error_output))
+	if (!cars.back().Load(
+		carconf, pathmanager.GetCarPath(),
+		pathmanager.GetDriverPath()+"/driver2",
+		carname,
+		carpaint,
+		start_position,
+		start_orientation,
+		rootnode,
+		collision,
+		sound.Enabled(),
+		sound.GetDeviceInfo(),
+		generic_sounds,
+		settings.GetAnisotropy(),
+		settings.GetABS() || isai,
+		settings.GetTCS() || isai,
+		settings.GetTextureSize(),
+		settings.GetCameraBounce(),
+		debugmode,
+		info_output,
+		error_output))
 	{
 		error_output << "Error loading car: " << carname << endl;
 		cars.pop_back();
@@ -2106,7 +1716,7 @@ bool GAME::LoadCar(const std::string & carname, const std::string & carpaint, co
 			//set the active camera
 			CAR& car = cars.back();
 			active_camera = car.Cameras().Select(settings.GetCameraMode());
-			active_camera->Reset(car.GetCenterOfMassPosition(), car.GetOrientation());
+			active_camera->Reset(car.GetPosition(), car.GetOrientation());
 
 			// setup auto clutch and auto shift
 			ProcessNewSettings();
@@ -2115,8 +1725,6 @@ bool GAME::LoadCar(const std::string & carname, const std::string & carpaint, co
                 carcontrols_local.first->SetGear(1);
 		}
 	}
-	
-	collision.AddPhysicsObject(cars.back().GetCollisionObject());
 
 	return true;
 }
@@ -2125,20 +1733,27 @@ bool GAME::LoadTrack(const std::string & trackname)
 {
 	//create or clear the track scenegraph node
 	if (!tracknode)
-		//tracknode = &rootnode.AddNode();
+	{
 		tracknode = new SCENENODE();
+	}
 	else
+	{
 		tracknode->Clear();
+	}
 	assert(tracknode);
 
 	LoadingScreen(0.0,1.0);
 
 	//load the track
-
-	//info_output << "Prior to track load: ";
-	//collision.DebugPrint(info_output);
-
-	if (!track.DeferredLoad(pathmanager.GetTrackPath()+"/"+trackname, pathmanager.GetEffectsTexturePath(), *tracknode, settings.GetTrackReverse(), settings.GetAnisotropy(), settings.GetTextureSize(), graphics.GetShadows(), false, info_output, error_output))
+	if (!track.DeferredLoad(
+			pathmanager.GetTrackPath()+"/"+trackname,
+			pathmanager.GetEffectsTexturePath(),
+			*tracknode,
+			settings.GetTrackReverse(),
+			settings.GetAnisotropy(),
+			settings.GetTextureSize(),
+			graphics.GetShadows(),
+			false))
 	{
 		error_output << "Error loading track: " << trackname << endl;
 		return false;
@@ -2149,7 +1764,9 @@ bool GAME::LoadTrack(const std::string & trackname)
 	{
 		int displayevery = track.DeferredLoadTotalObjects() / 50;
 		if (displayevery == 0 || count % displayevery == 0)
+		{
 			LoadingScreen(count, track.DeferredLoadTotalObjects());
+		}
 		success = track.ContinueDeferredLoad();
 		count++;
 	}
@@ -2170,13 +1787,8 @@ bool GAME::LoadTrack(const std::string & trackname)
 		return false;
 	}
 
-	//send track collision objects to the collision subsystem
-	list <COLLISION_OBJECT*> colobjlist;
-	track.GetCollisionObjectsTo(colobjlist);
-	for (list <COLLISION_OBJECT *>::iterator i = colobjlist.begin(); i != colobjlist.end(); ++i)
-		collision.AddPhysicsObject(**i);
-
-	//info_output << "After track load: ";
+	//setup track collision
+	collision.SetTrack(&track);
 	collision.DebugPrint(info_output);
 	
 	assert(tracknode);
@@ -2211,12 +1823,16 @@ bool GAME::LoadFonts()
 void GAME::CalculateFPS()
 {
 	if (eventsystem.Get_dt() > 0)
+	{
 		fps_track[fps_position] = 1.0/eventsystem.Get_dt();
+	}
 
 	fps_position = (fps_position + 1) % 10;
 	float fps_avg = 0.0;
 	for (int i = 0; i < 10; i++)
+	{
 		fps_avg += fps_track[i];
+	}
 	fps_avg /= 10.0;
 
 	stringstream fpsstr;
@@ -2246,14 +1862,14 @@ void GAME::CalculateFPS()
 		fps_draw->SetDrawEnable(true);
 	}
 	else
+	{
 		fps_draw->SetDrawEnable(false);
+	}
 	
 	if (profilingmode && frame % 10 == 0)
-		//profiling_text.Revise(PROFILER.getAvgSummary(quickprof::PERCENT));
+	{
 		profiling_text.Revise(PROFILER.getAvgSummary(quickprof::MICROSECONDS));
-
-	//std::cout << cam_rotation.x() << "," << cam_rotation.y() << "," << cam_rotation.z() << "," << cam_rotation.w() << endl;
-	//std::cout << cam_position[0] << "," << cam_position[1] << "," << cam_position[2] << endl;
+	}
 }
 
 bool SortStringPairBySecond (const pair<string,string> & first, const pair<string,string> & second)
@@ -2286,7 +1902,9 @@ void GAME::PopulateReplayList(std::list <std::pair <std::string, std::string> > 
 		settings.SetSelectedReplay(0); //replay zero is a special value that the GAME class interprets as "None"
 	}
 	else
+	{
 		settings.SetSelectedReplay(1);
+	}
 }
 
 void GAME::PopulateCarPaintList(const std::string & carname, std::list <std::pair <std::string, std::string> > & carpaintlist)
@@ -2448,16 +2066,6 @@ void GAME::LoadSaveOptions(OPTION_ACTION action, std::map<std::string, std::stri
 ///update the game with any new setting changes that have just been made
 void GAME::ProcessNewSettings()
 {
-	/*std::map<std::string, std::list <std::pair <std::string, std::string> > > valuelists;
-	PopulateValueLists(valuelists);
-	for (std::map<std::string, std::list <std::pair <std::string, std::string> > >::iterator v = valuelists.begin(); v != valuelists.end(); v++)
-	{
-		gui.GetOptionMap()[v->first].ReplaceValues(valuelists[v->first]);
-	}
-	std::map<std::string, std::string> optionmap;
-	LoadSaveOptions(LOAD, optionmap);
-	gui.SyncOptions(true, optionmap, error_output);*/
-
 	if (track.Loaded())
 	{
 		if (settings.GetShowHUD())
@@ -2563,18 +2171,14 @@ void GAME::AddTireSmokeParticles(float dt, CAR & car)
 {
 	for (int i = 0; i < 4; i++)
 	{
-		//float squeal = car.GetTireSquealAmount(WHEEL_POSITION(i), carphysics_rate);
-		//const int extraticks = (int)((framerate+carphysics_rate*0.5)/carphysics_rate);
 		float squeal = car.GetTireSquealAmount(WHEEL_POSITION(i));
-		
 		if (squeal > 0)
 		{
-			//unsigned int mininterval = 0.2/TickPeriod();
-			//unsigned int maxinterval = 1.0/TickPeriod();
-			unsigned int interval = 0.2/dt; //only spawn particles every so often
+			unsigned int interval = 0.2 / dt; //only spawn particles every so often
 			if (particle_timer % interval == 0)
 			{
-				tire_smoke.AddParticle(car.GetWheelPosition(WHEEL_POSITION(i))-MATHVECTOR<float,3>(0,0,car.GetTireRadius(WHEEL_POSITION(i))),
+				tire_smoke.AddParticle(
+					car.GetWheelPosition(WHEEL_POSITION(i)) - MATHVECTOR<float,3>(0,0,car.GetTireRadius(WHEEL_POSITION(i))),
 					0.5, 0.5, 0.5, 0.5);
 			}
 		}

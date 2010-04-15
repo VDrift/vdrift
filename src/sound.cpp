@@ -204,7 +204,7 @@ bool SOUNDBUFFER::LoadOGG(const string & filename, const SOUNDINFO & sound_devic
 		vorbis_info *pInfo;
 		OggVorbis_File oggFile;
 
-		ov_open(fp, &oggFile, NULL, 0);
+		ov_open_callbacks(fp, &oggFile, NULL, 0, OV_CALLBACKS_DEFAULT);
 
 		pInfo = ov_info(&oggFile, -1);
 
@@ -663,8 +663,8 @@ void SOUND::Callback16bitstereo(void *myself, Uint8 *stream, int len)
 		(*s)->IncrementWithPitch(len/4);
 	}
 
-	int buffer1[len/4];
-	int buffer2[len/4];
+	int * buffer1 = new int[len/4];
+	int * buffer2 = new int[len/4];
 	for (list <SOUNDSOURCE *>::iterator s = active_sourcelist.begin(); s != active_sourcelist.end(); s++)
 	{
 		SOUNDSOURCE * src = *s;
@@ -693,6 +693,8 @@ void SOUND::Callback16bitstereo(void *myself, Uint8 *stream, int len)
 			}
 		}
 	}
+	delete [] buffer1;
+	delete [] buffer2,
 	
 	UnlockSourceList();
 
@@ -1186,7 +1188,7 @@ void SOUND::Compute3DEffects(list <SOUNDSOURCE *> & sources, const MATHVECTOR <f
 				len = relvec.Magnitude();
 			}
 			listener_rot.RotateVector(relvec);
-			float cgain = log(1000.0/pow((double)len,1.3))/log(100);
+			float cgain = log(1000.0 / pow((double)len, 1.3)) / log(100.0);
 			if (cgain > 1.0)
 				cgain = 1.0;
 			if (cgain < 0.0)

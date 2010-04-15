@@ -8,7 +8,6 @@
 #include <vector>
 
 #include "shader.h"
-//#include "model_ase.h"
 #include "mathvector.h"
 #include "fbtexture.h"
 #include "scenegraph.h"
@@ -16,9 +15,9 @@
 #include "texture.h"
 #include "reseatable_reference.h"
 #include "aabb_space_partitioning.h"
-
 #include <SDL/SDL.h>
 
+class SKY;
 class SCENENODE;
 
 class GRAPHICS_SDLGL
@@ -297,6 +296,12 @@ private:
 				target = RENDER_TO_FRAMEBUFFER;
 			}
 			
+			FBTEXTURE_GL * GetFBO()
+			{
+				if (target != RENDER_TO_FBO) return NULL;
+				return &fbo; 
+			} 
+			
 			void Begin(std::ostream & error_output)
 			{
 				if (target == RENDER_TO_FBO)
@@ -341,7 +346,6 @@ private:
 	
 	//render pipeline info
 	RENDER_INPUT_SCENE renderscene;
-	//RENDER_OUTPUT scene_depthtexture;
 	std::list <RENDER_OUTPUT> shadow_depthtexturelist;
 	RENDER_OUTPUT final;
 	RENDER_OUTPUT edgecontrastenhancement_depths;
@@ -375,10 +379,25 @@ private:
 	
 	void Render(RENDER_INPUT * input, RENDER_OUTPUT & output, std::ostream & error_output);
 public:
-	GRAPHICS_SDLGL() : surface(NULL),initialized(false),using_shaders(false),max_anisotropy(0),shadows(false),
-		       	closeshadow(5.0), reflection_status(REFLECTION_DISABLED),camfov(45),
-			view_distance(10000),fsaa(1),lighting(0),bloom(false),contrast(1.0), aticard(false)
-			{activeshader = shadermap.end();}
+	GRAPHICS_SDLGL() : 
+		surface(NULL),
+		initialized(false),
+		using_shaders(false),
+		max_anisotropy(0),
+		shadows(false),
+		closeshadow(5.0),
+		reflection_status(REFLECTION_DISABLED),
+		camfov(45),
+		view_distance(10000),
+		fsaa(1),
+		lighting(0),
+		bloom(false),
+		contrast(1.0),
+		aticard(false),
+		sky(NULL)
+	{
+		activeshader = shadermap.end();
+	}
 	~GRAPHICS_SDLGL() {}
 	
 	///reflection_type is 0 (low=OFF), 1 (medium=static), 2 (high=dynamic)
@@ -453,6 +472,16 @@ public:
 	}
 	
 	bool HaveATICard() {return aticard;}
+	
+	//////////////////////
+	// kinda hacky right now, should be a scenegraph object
+	SKY* sky; 
+	
+	// get reference to a loaded shader
+	SHADER_GLSL & GetShader(std::string shader) { return shadermap[shader]; }
+	
+	// draw into framebuffer if output == null
+	void DrawScreenQuad(SHADER_GLSL & shader, FBTEXTURE_GL * input, FBTEXTURE_GL * output, std::ostream & error_output);
 };
 
 #endif

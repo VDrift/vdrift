@@ -25,7 +25,7 @@ QT_TEST(rotationalframe_test)
 			frame.Integrate1(0.01);
 			torque.Set(0,1,0);
 			torque = torque - frame.GetAngularVelocity() * 10.0f;
-			frame.SetTorque(torque);
+			frame.ApplyTorque(torque);
 			frame.Integrate2(0.01);
 		}
 		
@@ -55,7 +55,7 @@ QT_TEST(rotationalframe_test)
 		for (int i = 0; i < 1000; i++)
 		{
 			frame.Integrate1(0.01);
-			frame.SetTorque(torque);
+			frame.ApplyTorque(torque);
 			frame.Integrate2(0.01);
 		}
 		

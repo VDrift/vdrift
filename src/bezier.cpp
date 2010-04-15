@@ -30,6 +30,50 @@ BEZIER::~BEZIER()
 	
 }
 
+AABB <float> BEZIER::GetAABB() const
+{
+	float maxv[3];
+	float minv[3];
+	bool havevals[6];
+	for (int n = 0; n < 6; n++)
+		havevals[n] = false;
+
+	for (int x = 0; x < 4; x++)
+	{
+		for (int y = 0; y < 4; y++)
+		{
+			MATHVECTOR <float, 3> temp(points[x][y]);
+
+			//cache for bbox stuff
+			for ( int n = 0; n < 3; n++ )
+			{
+				if (!havevals[n])
+				{
+					maxv[n] = temp[n];
+					havevals[n] = true;
+				}
+				else if (temp[n] > maxv[n])
+					maxv[n] = temp[n];
+
+				if (!havevals[n+3])
+				{
+					minv[n] = temp[n];
+					havevals[n+3] = true;
+				}
+				else if (temp[n] < minv[n])
+					minv[n] = temp[n];
+			}
+		}
+	}
+
+	MATHVECTOR <float, 3> bboxmin(minv[0], minv[1], minv[2]);
+	MATHVECTOR <float, 3> bboxmax(maxv[0], maxv[1], maxv[2]);
+
+	AABB <float> box;
+	box.SetFromCorners(bboxmin, bboxmax);
+	return box;
+}
+
 void BEZIER::SetFromCorners(const MATHVECTOR <float, 3> & fl, const MATHVECTOR <float, 3> & fr, const MATHVECTOR <float, 3> & bl, const MATHVECTOR <float, 3> & br)
 {
 	MATHVECTOR <float, 3> temp;

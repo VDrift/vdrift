@@ -23,7 +23,7 @@
 * more details.                                                         *
 ************************************************************************/
 
-// Please visit the project website (http://quickprof.sourceforge.net) 
+// Please visit the project website (http://quickprof.sourceforge.net)
 // for usage instructions.
 
 #ifndef _QUICK_PROF_H_
@@ -37,13 +37,15 @@
 
 #if defined(WIN32) || defined(_WIN32)
 	#define USE_WINDOWS_TIMERS
+	#undef NOMINMAX
+	#define NOMINMAX 1
 	#include <windows.h>
 	#include <time.h>
 #else
 	#include <sys/time.h>
 #endif
 
-/// Use this macro to access the profiler singleton.  For example: 
+/// Use this macro to access the profiler singleton.  For example:
 /// PROFILER.init();
 /// ...
 /// PROFILER.beginBlock("foo");
@@ -54,7 +56,7 @@
 /// The main namespace that contains everything.
 namespace quickprof
 {
-	/// A simple data structure representing a single timed block 
+	/// A simple data structure representing a single timed block
 	/// of code.
 	struct ProfileBlock
 	{
@@ -69,11 +71,11 @@ namespace quickprof
 		/// The starting time (in us) of the current block update.
 		unsigned long long int currentBlockStartMicroseconds;
 
-		/// The accumulated time (in us) spent in this block during the 
+		/// The accumulated time (in us) spent in this block during the
 		/// current profiling cycle.
 		unsigned long long int currentCycleTotalMicroseconds;
 
-		/// The accumulated time (in us) spent in this block during the 
+		/// The accumulated time (in us) spent in this block during the
 		/// past profiling cycle.
 		double avgCycleTotalMicroseconds;
 
@@ -81,7 +83,7 @@ namespace quickprof
 		unsigned long long int totalMicroseconds;
 	};
 
-	/// A cross-platform clock class inspired by the Timer classes in 
+	/// A cross-platform clock class inspired by the Timer classes in
 	/// Ogre (http://www.ogre3d.org).
 	class Clock
 	{
@@ -113,36 +115,36 @@ namespace quickprof
 		}
 
 		/**
-		Returns the time in us since the last call to reset or since 
+		Returns the time in us since the last call to reset or since
 		the Clock was created.
 
-		@return The requested time in microseconds.  Assuming 64-bit 
-                integers are available, the return value is valid for 2^63 
+		@return The requested time in microseconds.  Assuming 64-bit
+                integers are available, the return value is valid for 2^63
                 clock cycles (over 104 years w/ clock frequency 2.8 GHz).
 		*/
 		unsigned long long int getTimeMicroseconds()
 		{
 #ifdef USE_WINDOWS_TIMERS
-			// Compute the number of elapsed clock cycles since the 
-			// clock was created/reset.  Using 64-bit signed ints, this 
-			// is valid for 2^63 clock cycles (over 104 years w/ clock 
+			// Compute the number of elapsed clock cycles since the
+			// clock was created/reset.  Using 64-bit signed ints, this
+			// is valid for 2^63 clock cycles (over 104 years w/ clock
 			// frequency 2.8 GHz).
 			LARGE_INTEGER currentTime;
 			QueryPerformanceCounter(&currentTime);
-			LONGLONG clockCycles = currentTime.QuadPart - 
+			LONGLONG clockCycles = currentTime.QuadPart -
 				mStartTime.QuadPart;
 
-			// Compute the total elapsed seconds.  This is valid for 2^63 
+			// Compute the total elapsed seconds.  This is valid for 2^63
 			// clock cycles (over 104 years w/ clock frequency 2.8 GHz).
 			LONGLONG sec = clockCycles / mClockFrequency.QuadPart;
 
-			// Check for unexpected leaps in the Win32 performance counter.  
-			// (This is caused by unexpected data across the PCI to ISA 
-			// bridge, aka south bridge.  See Microsoft KB274323.)  Avoid 
-			// the problem with GetTickCount() wrapping to zero after 47 
-			// days (because it uses 32-bit unsigned ints to represent 
+			// Check for unexpected leaps in the Win32 performance counter.
+			// (This is caused by unexpected data across the PCI to ISA
+			// bridge, aka south bridge.  See Microsoft KB274323.)  Avoid
+			// the problem with GetTickCount() wrapping to zero after 47
+			// days (because it uses 32-bit unsigned ints to represent
 			// milliseconds).
-			LONGLONG msec1 = sec * 1000 + (clockCycles - sec * 
+			LONGLONG msec1 = sec * 1000 + (clockCycles - sec *
 				mClockFrequency.QuadPart) * 1000 / mClockFrequency.QuadPart;
 			DWORD tickCount = GetTickCount();
 			if (tickCount < mStartTick)
@@ -154,8 +156,8 @@ namespace quickprof
 			if (msecDiff < -100 || msecDiff > 100)
 			{
 				// Adjust the starting time forwards.
-				LONGLONG adjustment = (std::min)(msecDiff * 
-					mClockFrequency.QuadPart / 1000, clockCycles - 
+				LONGLONG adjustment = (std::min)(msecDiff *
+					mClockFrequency.QuadPart / 1000, clockCycles -
 					mPrevClockCycles);
 				mStartTime.QuadPart += adjustment;
 				clockCycles -= adjustment;
@@ -164,26 +166,26 @@ namespace quickprof
 				sec = clockCycles / mClockFrequency.QuadPart;
 			}
 
-			// Compute the milliseconds part.  This is always valid since 
+			// Compute the milliseconds part.  This is always valid since
 			// it will never be greater than 1000000.
-			LONGLONG usec = (clockCycles - sec * mClockFrequency.QuadPart) * 
+			LONGLONG usec = (clockCycles - sec * mClockFrequency.QuadPart) *
 				1000000 / mClockFrequency.QuadPart;
 
-			// Store the current elapsed clock cycles for adjustments next 
+			// Store the current elapsed clock cycles for adjustments next
 			// time.
 			mPrevClockCycles = clockCycles;
 
-			// The return value here is valid for 2^63 clock cycles (over 
+			// The return value here is valid for 2^63 clock cycles (over
 			// 104 years w/ clock frequency 2.8 GHz).
 			return sec * 1000000 + usec;
 #else
-			// Assuming signed 32-bit integers for tv_sec and tv_usec, and 
-			// casting the seconds difference to a 64-bit unsigned long long 
+			// Assuming signed 32-bit integers for tv_sec and tv_usec, and
+			// casting the seconds difference to a 64-bit unsigned long long
 			// int, the return value here is valid for over 136 years.
 			struct timeval currentTime;
 			gettimeofday(&currentTime, NULL);
-			return (unsigned long long int)(currentTime.tv_sec - 
-				mStartTime.tv_sec) * 1000000 + (currentTime.tv_usec - 
+			return (unsigned long long int)(currentTime.tv_sec -
+				mStartTime.tv_sec) * 1000000 + (currentTime.tv_usec -
 				mStartTime.tv_usec);
 #endif
 		}
@@ -215,9 +217,9 @@ namespace quickprof
 		/**
 		Useful for creating multiple Profiler instances.
 
-		Normally the Profiler class should be accessed only through the 
-		singleton instance method, which provides global access to a single 
-		static Profiler instance.  However, it is also possible to create 
+		Normally the Profiler class should be accessed only through the
+		singleton instance method, which provides global access to a single
+		static Profiler instance.  However, it is also possible to create
 		several local Profiler instances, if necessary.
 		*/
 		inline Profiler();
@@ -232,47 +234,47 @@ namespace quickprof
 		inline static Profiler& instance();
 
 		/**
-		Initializes the profiler. 
+		Initializes the profiler.
 
-		This must be called first.  If this is never called, the profiler 
-		is effectively disabled, and all other functions will return 
-		immediately.  This can be called more than once to re-initialize the 
-		profiler, which erases all previous profiling block names and their 
+		This must be called first.  If this is never called, the profiler
+		is effectively disabled, and all other functions will return
+		immediately.  This can be called more than once to re-initialize the
+		profiler, which erases all previous profiling block names and their
 		timing data.
 
-		@param smoothing      The measured duration for each profile 
-                              block can be averaged across multiple 
-                              cycles, and this parameter defines the 
+		@param smoothing      The measured duration for each profile
+                              block can be averaged across multiple
+                              cycles, and this parameter defines the
                               smoothness of this averaging process.
-                              The higher the value, the smoother the 
-                              resulting average durations will appear.  
-                              Leaving it at zero will essentially 
-                              disable the smoothing effect.  More 
-                              specifically, this parameter is a time 
-                              constant (defined in terms of cycles) that 
-                              defines an exponentially-weighted moving 
-                              average.  For example, a value of 4.0 
-                              means the past four cycles will contribute 
-                              63% of the current weighted average.  This 
+                              The higher the value, the smoother the
+                              resulting average durations will appear.
+                              Leaving it at zero will essentially
+                              disable the smoothing effect.  More
+                              specifically, this parameter is a time
+                              constant (defined in terms of cycles) that
+                              defines an exponentially-weighted moving
+                              average.  For example, a value of 4.0
+                              means the past four cycles will contribute
+                              63% of the current weighted average.  This
                               value must be >= 0.
-		@param outputFilename If defined, enables timing data to be 
+		@param outputFilename If defined, enables timing data to be
                               printed to a data file for later analysis.
-		@param printPeriod    Defines how often data is printed to the 
-                              file, in number of profiling cycles.  For 
-                              example, set this to 1 if you want data 
-                              printed after each cycle, or 5 if you want 
-                              it printed every 5 cycles.  It is a good 
-                              idea to increase this if you don't want 
-                              huge data files.  Keep in mind, however, 
-                              that when you increase this, you might 
-                              want to increase the smoothing 
-                              parameter.  (A good heuristic is to set 
-                              the smoothing parameter equal to the 
+		@param printPeriod    Defines how often data is printed to the
+                              file, in number of profiling cycles.  For
+                              example, set this to 1 if you want data
+                              printed after each cycle, or 5 if you want
+                              it printed every 5 cycles.  It is a good
+                              idea to increase this if you don't want
+                              huge data files.  Keep in mind, however,
+                              that when you increase this, you might
+                              want to increase the smoothing
+                              parameter.  (A good heuristic is to set
+                              the smoothing parameter equal to the
                               print period.)  This value must be >= 1.
-		@param printFormat    Defines the format used when printing data 
+		@param printFormat    Defines the format used when printing data
                               to a file.
 		*/
-		inline void init(double smoothing=0.0, 
+		inline void init(double smoothing=0.0,
 			const std::string outputFilename="", size_t printPeriod=1,
 			TimeFormat printFormat=MILLISECONDS);
 
@@ -291,37 +293,37 @@ namespace quickprof
 		inline void endBlock(const std::string& name);
 
 		/**
-		Defines the end of a profiling cycle. 
+		Defines the end of a profiling cycle.
 
-		Use this regularly by calling it at the end of all timing blocks.  
-		This is necessary for smoothing and for file output, but not if 
-		you just want a total summary at the end of execution (i.e. from 
+		Use this regularly by calling it at the end of all timing blocks.
+		This is necessary for smoothing and for file output, but not if
+		you just want a total summary at the end of execution (i.e. from
 		getSummary).  This must not be called within a timing block.
 		*/
 		inline void endCycle();
 
 		/**
 		Returns the average time used in the named block per profiling cycle.
-		
-		If smoothing is disabled (see init), this returns the most recent 
+
+		If smoothing is disabled (see init), this returns the most recent
 		duration measurement.
 
 		@param name   The name of the block.
 		@param format The desired time format to use for the result.
 		@return       The block's average duration per cycle.
 		*/
-		inline double getAvgDuration(const std::string& name, 
+		inline double getAvgDuration(const std::string& name,
 			TimeFormat format)const;
 
 		/**
-		Returns the total time spent in the named block since the profiler was 
+		Returns the total time spent in the named block since the profiler was
 		initialized.
 
 		@param name   The name of the block.
 		@param format The desired time format to use for the result.
 		@return       The block total time.
 		*/
-		inline double getTotalDuration(const std::string& name, 
+		inline double getTotalDuration(const std::string& name,
 			TimeFormat format);
 
 		/**
@@ -345,8 +347,8 @@ namespace quickprof
 		/**
 		Returns everything to its initial state.
 
-		Deallocates memory, closes output files, and resets all variables.  
-		This is called when the profiler is re-initialized and when the 
+		Deallocates memory, closes output files, and resets all variables.
+		This is called when the profiler is re-initialized and when the
 		process exits.
 		*/
 		inline void destroy();
@@ -382,8 +384,8 @@ namespace quickprof
 		/// The starting time (in us) of the current profiling cycle.
 		unsigned long long int mCurrentCycleStartMicroseconds;
 
-		/// The average profiling cycle duration (in us).  If smoothing is 
-		/// disabled, this is the same as the duration of the most recent 
+		/// The average profiling cycle duration (in us).  If smoothing is
+		/// disabled, this is the same as the duration of the most recent
 		/// cycle.
 		double mAvgCycleDurationMicroseconds;
 
@@ -396,11 +398,11 @@ namespace quickprof
 		/// Tracks whether we have begun printing data to the output file.
 		bool mFirstFileOutput;
 
-		/// A pre-computed scalar used to update exponentially-weighted moving 
+		/// A pre-computed scalar used to update exponentially-weighted moving
 		/// averages.
 		double mMovingAvgScalar;
 
-		/// Determines how often (in number of profiling cycles) timing data 
+		/// Determines how often (in number of profiling cycles) timing data
 		/// is printed to the output file.
 		size_t mPrintPeriod;
 
@@ -429,7 +431,7 @@ namespace quickprof
 
 	Profiler::~Profiler()
 	{
-		// This is called when the program exits because the singleton 
+		// This is called when the program exits because the singleton
 		// instance is static.
 
 		destroy();
@@ -464,14 +466,14 @@ namespace quickprof
 		mFirstCycle = true;
 	}
 
-	void Profiler::init(double smoothing, const std::string outputFilename, 
+	void Profiler::init(double smoothing, const std::string outputFilename,
 		size_t printPeriod, TimeFormat printFormat)
 	{
 		if (mEnabled)
 		{
 			// Reset everything to its initial state and re-initialize.
 			destroy();
-			std::cout << "[QuickProf] Re-initializing profiler, " 
+			std::cout << "[QuickProf] Re-initializing profiler, "
 				<< "erasing all profiling blocks" << std::endl;
 		}
 
@@ -529,7 +531,7 @@ namespace quickprof
 
 		ProfileBlock* block = NULL;
 
-		std::map<std::string, ProfileBlock*>::iterator iter = 
+		std::map<std::string, ProfileBlock*>::iterator iter =
 			mProfileBlocks.find(name);
 		if (mProfileBlocks.end() == iter)
 		{
@@ -562,7 +564,7 @@ namespace quickprof
 			return;
 		}
 
-		unsigned long long int blockDuration = endTick - 
+		unsigned long long int blockDuration = endTick -
 			block->currentBlockStartMicroseconds;
 		block->currentCycleTotalMicroseconds += blockDuration;
 		block->totalMicroseconds += blockDuration;
@@ -576,45 +578,45 @@ namespace quickprof
 		}
 
 		// Update the average total cycle time.
-		// On the first cycle we set the average cycle time equal to the 
-		// measured cycle time.  This avoids having to ramp up the average 
+		// On the first cycle we set the average cycle time equal to the
+		// measured cycle time.  This avoids having to ramp up the average
 		// from zero initially.
-		unsigned long long int currentCycleDurationMicroseconds = 
+		unsigned long long int currentCycleDurationMicroseconds =
 			mClock.getTimeMicroseconds() - mCurrentCycleStartMicroseconds;
 		if (mFirstCycle)
 		{
-			mAvgCycleDurationMicroseconds = 
+			mAvgCycleDurationMicroseconds =
 				(double)currentCycleDurationMicroseconds;
 		}
 		else
 		{
-			mAvgCycleDurationMicroseconds = mMovingAvgScalar * 
-				mAvgCycleDurationMicroseconds + (1 - mMovingAvgScalar) 
+			mAvgCycleDurationMicroseconds = mMovingAvgScalar *
+				mAvgCycleDurationMicroseconds + (1 - mMovingAvgScalar)
 				* (double)currentCycleDurationMicroseconds;
 		}
 
 		// Update the average cycle time for each block.
-		std::map<std::string, ProfileBlock*>::iterator blocksBegin = 
+		std::map<std::string, ProfileBlock*>::iterator blocksBegin =
 			mProfileBlocks.begin();
-		std::map<std::string, ProfileBlock*>::iterator blocksEnd = 
+		std::map<std::string, ProfileBlock*>::iterator blocksEnd =
 			mProfileBlocks.end();
 		std::map<std::string, ProfileBlock*>::iterator iter = blocksBegin;
 		for (; iter != blocksEnd; ++iter)
 		{
 			ProfileBlock* block = iter->second;
 
-			// On the first cycle we set the average cycle time equal to the 
-			// measured cycle time.  This avoids having to ramp up the average 
+			// On the first cycle we set the average cycle time equal to the
+			// measured cycle time.  This avoids having to ramp up the average
 			// from zero initially.
 			if (mFirstCycle)
 			{
-				block->avgCycleTotalMicroseconds = 
+				block->avgCycleTotalMicroseconds =
 					(double)block->currentCycleTotalMicroseconds;
 			}
 			else
 			{
-				block->avgCycleTotalMicroseconds = mMovingAvgScalar * 
-					block->avgCycleTotalMicroseconds + (1 - mMovingAvgScalar) * 
+				block->avgCycleTotalMicroseconds = mMovingAvgScalar *
+					block->avgCycleTotalMicroseconds + (1 - mMovingAvgScalar) *
 					(double)block->currentCycleTotalMicroseconds;
 			}
 
@@ -633,7 +635,7 @@ namespace quickprof
 
 			if (mFirstFileOutput)
 			{
-				// On the first iteration, print a header line that shows the 
+				// On the first iteration, print a header line that shows the
 				// names of each data column (i.e. profiling block names).
 				mOutputFile << "# t(s)";
 
@@ -652,7 +654,7 @@ namespace quickprof
 			// Print the cycle time for each block.
 			for (iter = blocksBegin; iter != blocksEnd; ++iter)
 			{
-				mOutputFile << " " << getAvgDuration((*iter).first, 
+				mOutputFile << " " << getAvgDuration((*iter).first,
 					mPrintFormat);
 			}
 
@@ -663,7 +665,7 @@ namespace quickprof
 		mCurrentCycleStartMicroseconds = mClock.getTimeMicroseconds();
 	}
 
-	double Profiler::getAvgDuration(const std::string& name, 
+	double Profiler::getAvgDuration(const std::string& name,
 		TimeFormat format)const
 	{
 		if (!mEnabled)
@@ -698,7 +700,7 @@ namespace quickprof
 				}
 				else
 				{
-					result = 100.0 * block->avgCycleTotalMicroseconds / 
+					result = 100.0 * block->avgCycleTotalMicroseconds /
 						mAvgCycleDurationMicroseconds;
 				}
 				break;
@@ -710,7 +712,7 @@ namespace quickprof
 		return result;
 	}
 
-	double Profiler::getTotalDuration(const std::string& name, 
+	double Profiler::getTotalDuration(const std::string& name,
 		TimeFormat format)
 	{
 		if (!mEnabled)
@@ -747,7 +749,7 @@ namespace quickprof
 					}
 					else
 					{
-						result = 100.0 * blockTotalMicroseconds / 
+						result = 100.0 * blockTotalMicroseconds /
 							microsecondsSinceInit;
 					}
 				}
@@ -801,9 +803,9 @@ namespace quickprof
 		std::ostringstream oss;
 		std::string suffix = getSuffixString(format);
 
-		std::map<std::string, ProfileBlock*>::iterator blocksBegin = 
+		std::map<std::string, ProfileBlock*>::iterator blocksBegin =
 			mProfileBlocks.begin();
-		std::map<std::string, ProfileBlock*>::iterator blocksEnd = 
+		std::map<std::string, ProfileBlock*>::iterator blocksEnd =
 			mProfileBlocks.end();
 		std::map<std::string, ProfileBlock*>::iterator iter = blocksBegin;
 		for (; iter != blocksEnd; ++iter)
@@ -822,7 +824,7 @@ namespace quickprof
 
 		return oss.str();
 	}
-	
+
 	std::string Profiler::getAvgSummary(TimeFormat format)
 	{
 		if (!mEnabled)
@@ -833,9 +835,9 @@ namespace quickprof
 		std::ostringstream oss;
 		std::string suffix = getSuffixString(format);
 
-		std::map<std::string, ProfileBlock*>::iterator blocksBegin = 
+		std::map<std::string, ProfileBlock*>::iterator blocksBegin =
 				mProfileBlocks.begin();
-		std::map<std::string, ProfileBlock*>::iterator blocksEnd = 
+		std::map<std::string, ProfileBlock*>::iterator blocksEnd =
 				mProfileBlocks.end();
 		std::map<std::string, ProfileBlock*>::iterator iter = blocksBegin;
 		for (; iter != blocksEnd; ++iter)
@@ -862,12 +864,12 @@ namespace quickprof
 
 	ProfileBlock* Profiler::getProfileBlock(const std::string& name)const
 	{
-		std::map<std::string, ProfileBlock*>::const_iterator iter = 
+		std::map<std::string, ProfileBlock*>::const_iterator iter =
 			mProfileBlocks.find(name);
 		if (mProfileBlocks.end() == iter)
 		{
 			// The named block does not exist.  Print an error.
-			printError("The profile block named '" + name + 
+			printError("The profile block named '" + name +
 				"' does not exist.");
 			return NULL;
 		}
@@ -902,6 +904,6 @@ namespace quickprof
 
 		return suffix;
 	}
-};
+}
 
 #endif

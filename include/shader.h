@@ -33,7 +33,7 @@ public:
 	bool Load(const std::string & vertex_filename, const std::string & fragment_filename, const std::vector <std::string> & preprocessor_defines, std::ostream & info_output, std::ostream & error_output);
 	void Enable();
 	void EndScene();
-	bool UploadMat16(const std::string & varname, float * mat16);
+	bool UploadMat16(const std::string & varname, const float * mat16);
 	bool UploadActiveShaderParameter1i(const std::string & param, int val);
 	bool UploadActiveShaderParameter1f(const std::string & param, float val);
 	bool UploadActiveShaderParameter3f(const std::string & param, float val1, float val2, float val3);

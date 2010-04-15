@@ -185,6 +185,6 @@ namespace logging
 				return 0;
 			}
 	};
-};
+}
 
 #endif

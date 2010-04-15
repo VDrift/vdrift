@@ -119,11 +119,6 @@ bool GUIPAGE::Load(const std::string & path, const std::string & texpath, const 
 	{
 		stringstream widgetstr;
 		widgetstr.str(*i);
-		/*widgetstr << "widget-";
-		widgetstr.width(2);
-		widgetstr.fill('0');
-		widgetstr << i;*/
-		
 		//std::cout << *i << ": " << widgetstr.str()+".type" << std::endl;
 		
 		string wtype;
@@ -433,8 +428,8 @@ bool GUIPAGE::Load(const std::string & path, const std::string & texpath, const 
 			else if (wtype == "slider")
 			{
 				float xy[3];
-				float min(0), max(1);
-				bool percentage(false);
+				float min = 0, max = 1;
+				bool percentage = false;
 				string setting, values;
 				int fontsize;
 				

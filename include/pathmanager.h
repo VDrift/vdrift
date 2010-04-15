@@ -10,6 +10,8 @@
 
 //includes for listing folder contents
 #ifdef _WIN32
+#undef NOMINMAX
+#define NOMINMAX 1
 #include <windows.h>
 #include <tchar.h>
 #include <cstdio>
@@ -49,11 +51,7 @@ class PATHMANAGER
 		
 		void MakeDir(const std::string & dir)
 		{
-#ifndef _WIN32
-			mkdir(dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-#else
-			mkdir(dir.c_str());
-#endif
+			_mkdir(dir.c_str());
 		}
 	
 	public:

@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <cstring>
+#include <cmath>
 
 template <typename T>
 class MATRIX4
@@ -120,6 +121,77 @@ class MATRIX4
 		}
 		
 		const T * GetArray() const {return data;}
+		
+		static MATRIX4<T> Perspective(T fovy, T aspect, T znear, T zfar)
+		{
+			MATRIX4<T> mat;
+			
+			const T pi = 3.14159265;
+			T f = 1.0 / tan(0.5 * fovy * pi / 180.0);
+			mat[0] = f / aspect; mat[1] = 0; mat[2] = 0; mat[3] = 0;				
+			mat[4] = 0; mat[5] = f; mat[6] = 0; mat[7] = 0;
+			mat[8] = 0; mat[9] = 0; mat[10] = (zfar + znear) / (znear - zfar); mat[11] = -1;
+			mat[12] = 0; mat[13] = 0; mat[14] = 2 * zfar * znear / (znear - zfar); mat[15] = 0;
+
+			return mat;
+		}
+		
+		static MATRIX4<T> InvPerspective(T fovy, T aspect, T znear, T zfar)
+		{
+			MATRIX4<T> mat;
+			
+			const T pi = 3.14159265;
+			T f = 1.0 / tan(0.5 * fovy * pi / 180.0);
+			mat[0] = aspect / f; mat[1] = 0; mat[2] = 0; mat[3] = 0;				
+			mat[4] = 0; mat[5] = 1 / f; mat[6] = 0; mat[7] = 0;
+			mat[8] = 0; mat[9] = 0; mat[10] = 0; mat[11] = (znear - zfar) / (2 * zfar * znear);
+			mat[12] = 0; mat[13] = 0; mat[14] = -1; mat[15] = (zfar + znear) / (2 * zfar * znear);
+
+			return mat;
+		}
+		
+		MATRIX4<T> Inverse()
+		{
+			MATRIX4<T> Inv;
+			
+			T A0 = data[ 0]*data[ 5] - data[ 1]*data[ 4];
+			T A1 = data[ 0]*data[ 6] - data[ 2]*data[ 4];
+			T A2 = data[ 0]*data[ 7] - data[ 3]*data[ 4];
+			T A3 = data[ 1]*data[ 6] - data[ 2]*data[ 5];
+			T A4 = data[ 1]*data[ 7] - data[ 3]*data[ 5];
+			T A5 = data[ 2]*data[ 7] - data[ 3]*data[ 6];
+			T B0 = data[ 8]*data[13] - data[ 9]*data[12];
+			T B1 = data[ 8]*data[14] - data[10]*data[12];
+			T B2 = data[ 8]*data[15] - data[11]*data[12];
+			T B3 = data[ 9]*data[14] - data[10]*data[13];
+			T B4 = data[ 9]*data[15] - data[11]*data[13];
+			T B5 = data[10]*data[15] - data[11]*data[14];
+			
+			T Det = A0*B5 - A1*B4 + A2*B3 + A3*B2 - A4*B1 + A5*B0;
+			assert (fabs(Det) > 1e-10); //matrix inversion failed
+			
+			Inv[ 0] = + data[ 5]*B5 - data[ 6]*B4 + data[ 7]*B3;
+			Inv[ 4] = - data[ 4]*B5 + data[ 6]*B2 - data[ 7]*B1;
+			Inv[ 8] = + data[ 4]*B4 - data[ 5]*B2 + data[ 7]*B0;
+			Inv[12] = - data[ 4]*B3 + data[ 5]*B1 - data[ 6]*B0;
+			Inv[ 1] = - data[ 1]*B5 + data[ 2]*B4 - data[ 3]*B3;
+			Inv[ 5] = + data[ 0]*B5 - data[ 2]*B2 + data[ 3]*B1;
+			Inv[ 9] = - data[ 0]*B4 + data[ 1]*B2 - data[ 3]*B0;
+			Inv[13] = + data[ 0]*B3 - data[ 1]*B1 + data[ 2]*B0;
+			Inv[ 2] = + data[13]*A5 - data[14]*A4 + data[15]*A3;
+			Inv[ 6] = - data[12]*A5 + data[14]*A2 - data[15]*A1;
+			Inv[10] = + data[12]*A4 - data[13]*A2 + data[15]*A0;
+			Inv[14] = - data[12]*A3 + data[13]*A1 - data[14]*A0;
+			Inv[ 3] = - data[ 9]*A5 + data[10]*A4 - data[11]*A3;
+			Inv[ 7] = + data[ 8]*A5 - data[10]*A2 + data[11]*A1;
+			Inv[11] = - data[ 8]*A4 + data[ 9]*A2 - data[11]*A0;
+			Inv[15] = + data[ 8]*A3 - data[ 9]*A1 + data[10]*A0;
+
+			T InvDet = 1.0 / Det;
+			for (int i = 0; i < 16; i++) Inv[i] *= InvDet;
+						
+			return Inv;
+		}
 };
 
 #endif

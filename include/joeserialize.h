@@ -24,10 +24,10 @@ class Serializer
 {
 	protected:
 		///optional hints to higher level classes about where we are in the serialization process
-		virtual void ComplexTypeStart(const std::string & name) {}
+		virtual void ComplexTypeStart(const std::string & name) { (void) name; }
 		
 		///optional hints to higher level classes about where we are in the serialization process
-		virtual void ComplexTypeEnd(const std::string & name) {}
+		virtual void ComplexTypeEnd(const std::string & name) { (void) name; }
 	
 	public:
 		///generic serialization function that will be called for complex types; this is a branch. returns true on success
@@ -679,6 +679,7 @@ class TextOutputSerializer : public SerializerOutput
 		
 		virtual void ComplexTypeEnd(const std::string & name)
 		{
+			(void) name;
 			indent_--;
 			PrintIndent();
 			out_ << "}" << std::endl;
@@ -720,7 +721,6 @@ class TextInputSerializer : public SerializerInput
 		TreeMap <std::string> parsed_data_tree_;
 		std::deque <std::string> serialization_location_;
 		std::ostream * error_output_;
-		bool allowmissing;
 		
 		void ConsumeWhitespace(std::istream & in) const
 		{
@@ -787,28 +787,20 @@ class TextInputSerializer : public SerializerInput
 			{
 				if (error_output_)
 				{
-					if (allowmissing)
-						*error_output_ << "Using default value for " << parsed_data_tree_.Implode(serialization_location_) << std::endl;
-					else
-					{
-						*error_output_ << "Error serializing " << parsed_data_tree_.Implode(serialization_location_) << " as it does not exist in the parsed data" << std::endl;
-						*error_output_ << "Full dump of parsed data follows:" << std::endl;
-						parsed_data_tree_.Print(*error_output_);
-						*error_output_ << "Full dump of parsed data ends." << std::endl;
-					}
+					*error_output_ << "Error serializing " << parsed_data_tree_.Implode(serialization_location_) << " as it does not exist in the parsed data" << std::endl;
+					*error_output_ << "Full dump of parsed data follows:" << std::endl;
+					parsed_data_tree_.Print(*error_output_);
+					*error_output_ << "Full dump of parsed data ends." << std::endl;
 				}
-				serialization_location_.pop_back();
-				return allowmissing;
+				return false;
 			}
-			else
-			{			
-				std::stringstream converter(string_representation);
-				converter >> i;
 			
-				serialization_location_.pop_back();
-				
-				return true;
-			}
+			std::stringstream converter(string_representation);
+			converter >> i;
+			
+			serialization_location_.pop_back();
+			
+			return true;
 		}
 		
 		bool ReadStringData(const std::string & name, std::string & i)
@@ -818,24 +810,17 @@ class TextInputSerializer : public SerializerInput
 			{
 				if (error_output_)
 				{
-					if (allowmissing)
-						*error_output_ << "Using default value for " << parsed_data_tree_.Implode(serialization_location_) << std::endl;
-					else
-					{
-						*error_output_ << "Error serializing " << parsed_data_tree_.Implode(serialization_location_) << " as it does not exist in the parsed data" << std::endl;
-						*error_output_ << "Full dump of parsed data follows:" << std::endl;
-						parsed_data_tree_.Print(*error_output_);
-						*error_output_ << "Full dump of parsed data ends." << std::endl;
-					}
+					*error_output_ << "Error serializing " << parsed_data_tree_.Implode(serialization_location_) << " as it does not exist in the parsed data" << std::endl;
+					*error_output_ << "Full dump of parsed data follows:" << std::endl;
+					parsed_data_tree_.Print(*error_output_);
+					*error_output_ << "Full dump of parsed data ends." << std::endl;
 				}
-				serialization_location_.pop_back();
-				return allowmissing;
+				return false;
 			}
-			else
-			{
-				serialization_location_.pop_back();
-				return true;
-			}
+			
+			serialization_location_.pop_back();
+			
+			return true;
 		}
 		
 	protected:
@@ -846,17 +831,13 @@ class TextInputSerializer : public SerializerInput
 		
 		virtual void ComplexTypeEnd(const std::string & name)
 		{
+			(void) name;
 			serialization_location_.pop_back();
 		}
 		
 	public:
-		TextInputSerializer() : error_output_(NULL),allowmissing(false) {}
-		TextInputSerializer(std::istream & in) : error_output_(NULL),allowmissing(false) {Parse(in);}
-		
-		void SetAllowMissing(bool allow)
-		{
-			allowmissing = allow;
-		}
+		TextInputSerializer() : error_output_(NULL) {}
+		TextInputSerializer(std::istream & in) : error_output_(NULL) {Parse(in);}
 		
 		void set_error_output(std::ostream & value)
 		{
@@ -980,6 +961,7 @@ class BinaryOutputSerializer : public SerializerOutput
 		template <typename T>
 		bool WriteData(const std::string & name, const T & i)
 		{
+			(void) name;
 			if (!bigendian_)
 			{
 				T temp(i);
@@ -994,6 +976,7 @@ class BinaryOutputSerializer : public SerializerOutput
 		
 		bool WriteStringData(const std::string & name, const std::string & i)
 		{
+			(void) name;
 			unsigned int strlen = i.length();
 			if (!WriteData("length", strlen)) return false;
 			out_.write(i.c_str(),strlen*sizeof(char));
@@ -1059,6 +1042,7 @@ class BinaryInputSerializer : public SerializerInput
 		template <typename T>
 		bool ReadData(const std::string & name, T & i)
 		{
+			(void) name;
 			if (in_.eof()) return false;
 			in_.read(reinterpret_cast<char *>(&i),sizeof(T));
 			if (in_.fail() || in_.gcount() != sizeof(T)) return false;
@@ -1073,9 +1057,10 @@ class BinaryInputSerializer : public SerializerInput
 		
 		bool ReadStringData(const std::string & name, std::string & i)
 		{
+			(void) name;
 			int strlen = 0;
 			if (!ReadData("length", strlen)) return false;
-			char inbuffer[strlen+1];
+			char * inbuffer = new char[strlen+1];
 			inbuffer[strlen] = '\0';
 			in_.read(inbuffer,strlen*sizeof(char));
 			if (in_.fail() || in_.gcount() != (int)(strlen*sizeof(char))) return false;
@@ -1084,7 +1069,7 @@ class BinaryInputSerializer : public SerializerInput
 			{
 				i.push_back(inbuffer[n]);
 			}
-			
+			delete [] inbuffer;
 			return true;
 		}
 		
@@ -1208,6 +1193,7 @@ class ReflectionSerializer : public Serializer
 		
 		virtual void ComplexTypeEnd(const std::string & name)
 		{
+			(void) name;
 			serialization_location_.pop_back();
 		}
 		
@@ -1535,6 +1521,6 @@ void LoadObjectFromFileOrCreateDefault(const std::string & path, T & object, std
 	}
 }
 
-};
+}
 
 #endif

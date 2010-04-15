@@ -80,16 +80,18 @@ public:
 	
 	///a higher level helper function to read from a configfile or print out an error
 	template <typename T>
-	bool GetParamOrPrintError(const std::string & paramname, T & output, std::ostream & error_output) const
+	bool GetParam(const std::string & param, T & output, std::ostream & error_output) const
 	{
-		if (!GetParam(paramname, output))
+		if (!GetParam(param, output))
 		{
-			error_output << "Couldn't get parameter \"" << paramname << "\" from file \"" << LoadedFile() << "\"" << std::endl;
+			error_output << "Couldn't get parameter \"" << param << "\" from file \"" << LoadedFile() << "\"" << std::endl;
 			return false;
 		}
-		else
-			return true;
+		return true;
 	}
+	
+	// read points from configfile section
+	void GetPoints(const std::string & sectionname, const std::string & paramprefix, std::vector <std::pair <double, double> > & output_points);
 	
 	///a higher level helper function to read to/write from a configfile based on the passed directional boolean.
 	///if set_direction is true, then the param will be set to value.

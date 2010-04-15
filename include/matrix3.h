@@ -165,7 +165,158 @@ class MATRIX3
 			
 			return out;
 		}
-};
 
+		// returns false on error
+		static bool Diagonalize(MATRIX3<T>& m, MATRIX3<T>& v, MATHVECTOR<T, 3>& w)
+		{
+			double sm[3][3], ev[3][3], ew[3];
+			for(int i = 0; i < 3; i++)
+			{
+				for(int j = 0; j < 3; j++)
+				{
+					sm[i][j] = m[i*3 + j];
+				}
+			}
+			
+			if(MATRIX3<T>::dsyevj3(sm, ev, ew)) return false;
+			
+			for(int i = 0; i < 3; i++)
+			{
+				for(int j = 0; j < 3; j++)
+				{
+					v[i*3 + j] = ev[i][j];
+				}
+			}
+			
+			w.Set(ew);
+			return true;
+		}
+
+		// from "Efficient numerical diagonalization of hermitian 3x3 matrices"
+		// ----------------------------------------------------------------------------
+		private: static int dsyevj3(double A[3][3], double Q[3][3], double w[3])
+		// ----------------------------------------------------------------------------
+		// Calculates the eigenvalues and normalized eigenvectors of a symmetric 3x3
+		// matrix A using the Jacobi algorithm.
+		// The upper triangular part of A is destroyed during the calculation,
+		// the diagonal elements are read but not destroyed, and the lower
+		// triangular elements are not referenced at all.
+		// ----------------------------------------------------------------------------
+		// Parameters:
+		//   A: The symmetric input matrix
+		//   Q: Storage buffer for eigenvectors
+		//   w: Storage buffer for eigenvalues
+		// ----------------------------------------------------------------------------
+		// Return value:
+		//   0: Success
+		//  -1: Error (no convergence)
+		// ----------------------------------------------------------------------------
+		{
+		  const int n = 3;
+		  double sd, so;                  // Sums of diagonal resp. off-diagonal elements
+		  double s, c, t;                 // sin(phi), cos(phi), tan(phi) and temporary storage
+		  double g, h, z, theta;          // More temporary storage
+		  double thresh;
+		  
+		  // Initialize Q to the identitity matrix
+		  for (int i=0; i < n; i++)
+		  {
+			Q[i][i] = 1.0;
+			for (int j=0; j < i; j++)
+			  Q[i][j] = Q[j][i] = 0.0;
+		  }
+
+		  // Initialize w to diag(A)
+		  for (int i=0; i < n; i++)
+			w[i] = A[i][i];
+
+		  // Calculate tr(A)^2 
+		  sd = 0.0;
+		  for (int i=0; i < n; i++)
+			sd += fabs(w[i]);
+		  sd = sd * sd;
+		 
+		  // Main iteration loop
+		  for (int nIter=0; nIter < 50; nIter++)
+		  {
+			// Test for convergence 
+			so = 0.0;
+			for (int p=0; p < n; p++)
+			  for (int q=p+1; q < n; q++)
+				so += fabs(A[p][q]);
+			if (so == 0.0)
+			  return 0;
+
+			if (nIter < 4)
+			  thresh = 0.2 * so / (n * n);
+			else
+			  thresh = 0.0;
+
+			// Do sweep
+			for (int p=0; p < n; p++)
+			  for (int q=p+1; q < n; q++)
+			  {
+				g = 100.0 * fabs(A[p][q]);
+				if (nIter > 4  &&  fabs(w[p]) + g == fabs(w[p])
+							   &&  fabs(w[q]) + g == fabs(w[q]))
+				{
+				  A[p][q] = 0.0;
+				}
+				else if (fabs(A[p][q]) > thresh)
+				{
+				  // Calculate Jacobi transformation
+				  h = w[q] - w[p];
+				  if (fabs(h) + g == fabs(h))
+				  {
+					t = A[p][q] / h;
+				  }
+				  else
+				  {
+					theta = 0.5 * h / A[p][q];
+					if (theta < 0.0)
+					  t = -1.0 / (sqrt(1.0 + theta * theta) - theta);
+					else
+					  t = 1.0 / (sqrt(1.0 + theta * theta) + theta);
+				  }
+				  c = 1.0/sqrt(1.0 + t * t);
+				  s = t * c;
+				  z = t * A[p][q];
+
+				  // Apply Jacobi transformation
+				  A[p][q] = 0.0;
+				  w[p] -= z;
+				  w[q] += z;
+				  for (int r=0; r < p; r++)
+				  {
+					t = A[r][p];
+					A[r][p] = c*t - s*A[r][q];
+					A[r][q] = s*t + c*A[r][q];
+				  }
+				  for (int r=p+1; r < q; r++)
+				  {
+					t = A[p][r];
+					A[p][r] = c*t - s*A[r][q];
+					A[r][q] = s*t + c*A[r][q];
+				  }
+				  for (int r=q+1; r < n; r++)
+				  {
+					t = A[p][r];
+					A[p][r] = c*t - s*A[q][r];
+					A[q][r] = s*t + c*A[q][r];
+				  }
+
+				  // Update eigenvectors
+				  for (int r=0; r < n; r++)
+				  {
+					t = Q[r][p];
+					Q[r][p] = c*t - s*Q[r][q];
+					Q[r][q] = s*t + c*Q[r][q];
+				  }
+				}
+			  }
+		  }
+		  return -1;
+		}
+};
 #endif
 

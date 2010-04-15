@@ -60,14 +60,17 @@ bool SHADER_GLSL::Load(const std::string & vertex_filename, const std::string & 
 	fragment_shader = glCreateShaderObjectARB(GL_FRAGMENT_SHADER_ARB);
 	
 	//load shader sources
-	GLcharARB vertshad[vertexshader_source.length()+1];
+	GLcharARB * vertshad = new GLcharARB[vertexshader_source.length()+1];
 	strcpy(vertshad, vertexshader_source.c_str());
 	const GLcharARB * vertshad2 = vertshad;
 	glShaderSourceARB(vertex_shader, 1, &vertshad2, NULL);
-	GLcharARB fragshad[fragmentshader_source.length()+1];
+	delete [] vertshad;
+
+	GLcharARB * fragshad = new GLcharARB[fragmentshader_source.length()+1];
 	strcpy(fragshad, fragmentshader_source.c_str());
 	const GLcharARB * fragshad2 = fragshad;
 	glShaderSourceARB(fragment_shader, 1, &fragshad2, NULL);
+	delete [] fragshad;
 	
 	//compile the shaders
 	GLint vertex_compiled(0);
@@ -170,7 +173,7 @@ void SHADER_GLSL::Enable()
 	glUseProgramObjectARB(program);
 }
 
-bool SHADER_GLSL::UploadMat16(const string & varname, float * mat16)
+bool SHADER_GLSL::UploadMat16(const string & varname, const float * mat16)
 {
 	Enable();
 	
@@ -212,7 +215,7 @@ bool SHADER_GLSL::UploadActiveShaderParameter3f(const std::string & param, float
 ///query the card for the shader program link log and print it out
 void SHADER_GLSL::PrintProgramLog(GLhandleARB & program, const std::string & name, std::ostream & out)
 {
-	unsigned int logsize = 65536;
+	const unsigned int logsize = 65536;
 	char shaderlog[logsize];
 	GLsizei loglength;
 	glGetInfoLogARB(program, logsize, &loglength, shaderlog);
@@ -227,7 +230,7 @@ void SHADER_GLSL::PrintProgramLog(GLhandleARB & program, const std::string & nam
 ///query the card for the shader compile log and print it out
 void SHADER_GLSL::PrintShaderLog(GLhandleARB & shader, const std::string & name, std::ostream & out)
 {
-	unsigned int logsize = 65536;
+	const unsigned int logsize = 65536;
 	char shaderlog[logsize];
 	GLsizei loglength;
 	glGetInfoLogARB(shader, logsize, &loglength, shaderlog);

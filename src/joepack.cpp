@@ -26,11 +26,12 @@ bool JOEPACK::LoadPack(const string & fn)
 		packpath = fn;
 		
 		//load header
-		char versioncstr[versionstr.length()+1];
+		char * versioncstr = new char[versionstr.length() + 1];
 		f.read(versioncstr, versionstr.length());
 		versioncstr[versionstr.length()] = '\0';
 		string fversionstr = versioncstr;
-		if (versioncstr != versionstr)
+		delete [] versioncstr;
+		if (fversionstr != versionstr)
 		{
 			//write out an error?
 			return false;
@@ -49,7 +50,7 @@ bool JOEPACK::LoadPack(const string & fn)
 		
 		//DPRINT(maxstrlen << " max string length");
 		
-		char fnch[maxstrlen+1];
+		char * fnch = new char[maxstrlen+1];
 		
 		//load FAT
 		for (unsigned int i = 0; i < numobjs; i++)
@@ -67,6 +68,7 @@ bool JOEPACK::LoadPack(const string & fn)
 			//DPRINT(filename << ": offest " << fa.offset << " length " << fa.length);
 		}
 		
+		delete [] fnch;
 		return true;
 	}
 	else

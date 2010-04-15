@@ -319,7 +319,9 @@ void AI::updateGasBrake(AI_Car *c, float dt, TRACK* track_p, const std::list <CA
 	//check speed against speed limit of current patch
 	float speed_limit = 0;
 	if (!curr_patch.next_patch)
+	{
 		speed_limit = calcSpeedLimit(c, &curr_patch, NULL, c->lateral_mu, GetPatchWidthVector(*curr_patch_ptr).Magnitude())*speed_percent;
+	}
 	else
 	{
 		BEZIER next_patch = RevisePatch(curr_patch.next_patch, c->use_racingline, c, othercars);
@@ -385,7 +387,9 @@ void AI::updateGasBrake(AI_Car *c, float dt, TRACK* track_p, const std::list <CA
 		
 		//speed_limit = calcSpeedLimit(c, &patch_to_check, c->lateral_mu)*speed_percent;
 		if (!patch_to_check.next_patch)
+		{
 			speed_limit = calcSpeedLimit(c, &patch_to_check, NULL, c->lateral_mu, GetPatchWidthVector(*unmodified_patch_to_check).Magnitude())*speed_percent;
+		}
 		else
 		{
 			BEZIER next_patch = RevisePatch(patch_to_check.next_patch, c->use_racingline, c, othercars);
@@ -409,15 +413,17 @@ void AI::updateGasBrake(AI_Car *c, float dt, TRACK* track_p, const std::list <CA
 	}
 	
 	//std::cout << speed_limit << std::endl;
-
+/* fixme
 	if (c->car->GetGear() == 0 && !c->car->Shifting())
 	{
 		c->inputs[CARINPUT::SHIFT_UP] = 1.0;
 		gas_value = 0.2;
 	}
 	else
+	{
 		c->inputs[CARINPUT::SHIFT_UP] = 0.0;
-	
+	}
+*/
 	/*float trafficbrake = brakeFromOthers(c, dt, othercars, speed_diff); //consider traffic avoidance bias
 	if (trafficbrake > 0)
 	{
@@ -558,9 +564,7 @@ void AI::updateSteer(AI_Car *c, float dt, const std::list <CAR> & othercars)
 	MATHVECTOR <float, 3> next_position = TransformToWorldspace(dest_point);
 	MATHVECTOR <float, 3> car_position = c->car->GetCenterOfMassPosition();
 	MATHVECTOR <float, 3> car_orientation(0,1,0);
-	QUATERNION <float> fixer;
-	fixer.Rotate(-3.141593*0.5, 0, 0, 1);
-	(c->car->GetOrientation()*fixer).RotateVector(car_orientation);
+	c->car->GetOrientation().RotateVector(car_orientation);
 
 	MATHVECTOR <float, 3> desire_orientation = next_position - car_position;
 
@@ -693,7 +697,8 @@ void AI::analyzeOthers(AI_Car *c, float dt, const std::list <CAR> & othercars)
 			struct AI_Car::OTHERCARINFO & info = c->othercars[&(*i)];
 			
 			//find direction of othercar in our frame
-			MATHVECTOR <float, 3> relative_position = c->car->WorldToRigidBodyLocal(i->GetCenterOfMassPosition());
+			MATHVECTOR <float, 3> relative_position = i->GetCenterOfMassPosition() - c->car->GetCenterOfMassPosition();
+			(-c->car->GetOrientation()).RotateVector(relative_position);
 			
 			//std::cout << relative_position.dot(throttle_axis) << ", " << relative_position.dot(steer_right_axis) << std::endl;
 			

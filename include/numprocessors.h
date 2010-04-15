@@ -6,6 +6,8 @@ namespace NUMPROCESSORS
 
 #if defined(WIN32) || defined(_WIN32) || defined (__WIN32) || defined(__WIN32__) \
 	|| defined (_WIN64) || defined(__CYGWIN__) || defined(__MINGW32__)
+	#undef NOMINMAX
+	#define NOMINMAX 1
 	#include <windows.h>
 	#include <process.h>
 #elif defined(__APPLE__) || defined (__FreeBSD__)
@@ -35,7 +37,7 @@ namespace NUMPROCESSORS
 		int returnCode = sysctlbyname("hw.ncpu", &numProcessors, &size, NULL, 0);
 		if (0 != returnCode)
 		{
-			std::cout << "[QuickMP] WARNING: Cannot determine number of " 
+			std::cout << "[QuickMP] WARNING: Cannot determine number of "
 				<< "processors, defaulting to 1" << std::endl;
 			return 1;
 		}
@@ -46,28 +48,28 @@ namespace NUMPROCESSORS
 #else
 		// Methods for getting the number of processors:
 
-		// POSIX systems: sysconf() queries system info; the constants 
-		// _SC_NPROCESSORS_CONF and _SC_NPROCESSORS_ONLN are provided on many 
-		// systems, but they aren't part of the POSIX standard; they're not 
+		// POSIX systems: sysconf() queries system info; the constants
+		// _SC_NPROCESSORS_CONF and _SC_NPROCESSORS_ONLN are provided on many
+		// systems, but they aren't part of the POSIX standard; they're not
 		// available on Mac OS X.
-		
-		// The GNU C library provides get_nprocs_conf() (number configured) 
-		// and get_nprocs() (number available) in <sys/sysinfo.h>, but these 
+
+		// The GNU C library provides get_nprocs_conf() (number configured)
+		// and get_nprocs() (number available) in <sys/sysinfo.h>, but these
 		// are not available on Mac OS X.
 
-		// In each of these methods there is a way to get the number of 
-		// processors configured, which stays constant between reboots, and 
-		// the number of processors online (capable of running processes), 
-		// which can change during the lifetime of the calling process is 
+		// In each of these methods there is a way to get the number of
+		// processors configured, which stays constant between reboots, and
+		// the number of processors online (capable of running processes),
+		// which can change during the lifetime of the calling process is
 		// the OS decides to disable some processors.
 
-		// We'll just assume we have access to all processors.  (When setting 
-		// the number of threads, we default to this value, but the user 
+		// We'll just assume we have access to all processors.  (When setting
+		// the number of threads, we default to this value, but the user
 		// still has the option of setting any number of threads.)
 		return (unsigned int)get_nprocs_conf();
 #endif
 	}
 
-};
+}
 
 #endif

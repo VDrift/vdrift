@@ -6,19 +6,13 @@
 #include <cassert>
 #include <sstream>
 
-#ifdef __APPLE__
-#include <GLExtensionWrangler/glew.h>
-#include <OpenGL/gl.h>
-#else
-#include <GL/glew.h>
-#include <GL/gl.h>
-#endif
-
 #include "vertexarray.h"
 #include "mathvector.h"
 #include "aabb.h"
 #include "joeserialize.h"
 #include "macros.h"
+
+template <typename T> class MATRIX4;
 
 ///loading data into the mesh vertexarray is implemented by derived classes
 class MODEL
@@ -100,6 +94,8 @@ public:
 	void SetVertexArray(const VERTEXARRAY & newmesh) {Clear(); mesh = newmesh;}
 	
 	bool Loaded() {return (mesh.GetNumFaces() > 0);}
+
+	void Transform(const MATRIX4 <float> & m) {mesh.Transform(m); GenerateMeshMetrics();}
 	
 	AABB <float> GetAABB() const
 	{

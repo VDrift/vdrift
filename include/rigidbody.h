@@ -26,6 +26,8 @@ public:
 	const MATHVECTOR <T, 3> & GetPosition() const {return linear.GetPosition();}
 	void SetVelocity(const MATHVECTOR <T, 3> & velocity) {linear.SetVelocity(velocity);}
 	const MATHVECTOR <T, 3> GetVelocity() const {return linear.GetVelocity();}
+	const MATHVECTOR <T, 3> GetVelocity(const MATHVECTOR <T, 3> & offset) {return linear.GetVelocity() + rotation.GetAngularVelocity().cross(offset);}
+	const MATHVECTOR <T, 3> & GetForce() const {return linear.GetForce();}
 	
 	//access to rotational frame
 	void SetInitialTorque(const MATHVECTOR <T, 3> & torque) {rotation.SetInitialTorque(torque);}
@@ -55,50 +57,23 @@ public:
 		return output;
 	}
 	
-	/// given the input force (in world space) applied at the given offset from the center of mass (in world space), add the force and torque generated at the center of mass to the output vectors (in world space)
-	void GetForceAtOffset(const MATHVECTOR <T, 3> & force, const MATHVECTOR <T, 3> & offset, MATHVECTOR <T, 3> & output_force, MATHVECTOR <T, 3> & output_torque)
+	// apply force in world space
+	void ApplyForce(const MATHVECTOR <T, 3> & force)
 	{
-		//here's the equation:
-		//F_linear = F
-		//F_torque = F cross (distance from center of mass)
-		
-		output_force = output_force + force;
-		MATHVECTOR <T, 3> zero;
-		MATHVECTOR <T, 3> torque = force.cross(zero-offset);
-		output_torque = output_torque + torque;
-		
-		/*MATHVECTOR <T, 3> body_force = force;
-		(-GetOrientation()).RotateVector(body_force);
-		MATHVECTOR <T, 3> body_offset = offset;
-		(-GetOrientation()).RotateVector(body_offset);
-		MATHVECTOR <T, 3> body_torque = torque;
-		(-GetOrientation()).RotateVector(body_torque);
-		std::cout << "force = " << body_force << ", offset = " << body_offset << ", torque = " << body_torque << std::endl;*/
+		linear.ApplyForce(force);
 	}
 	
-	void GetTorqueAtOffset(const MATHVECTOR <T, 3> & torque, const MATHVECTOR <T, 3> & offset, MATHVECTOR <T, 3> & output_torque)
+	// apply force at offset from center of mass in world space
+	void ApplyForce(const MATHVECTOR <T, 3> & force, const MATHVECTOR <T, 3> & offset)
 	{
-	    //here's the equation:
-	    //T_torque = T * (I/(I+mass*D.D))
-        if (torque.Magnitude() > 1e-9)
-		{
-			MATRIX3 <T> inertia_tensor = rotation.GetInertia();
-			MATHVECTOR <T, 3> bodytorque = torque;
-			(-GetOrientation()).RotateVector(bodytorque);
-			T inertia_factor = (inertia_tensor.Multiply(bodytorque.Normalize())).Magnitude();
-			MATHVECTOR <T, 3> newtorque = bodytorque * (inertia_factor/(inertia_factor + linear.GetMass() * (offset.dot(offset))));
-            //std::cout << bodytorque << " -- " << newtorque << std::endl;
-			GetOrientation().RotateVector(newtorque);
-			output_torque = output_torque + newtorque;
-            //output_torque = output_torque - newtorque;
-		}
+		linear.ApplyForce(force);
+		rotation.ApplyTorque(offset.cross(force));
 	}
 	
-	/// given the input force (in world space) and torque (in world space) applied at the given offset from the center of mass (in world space), add the force and torque generated at the center of mass to the output vectors (in world space)
-	void GetForceAndTorqueAtOffset(const MATHVECTOR <T, 3> & force, const MATHVECTOR <T, 3> & torque, const MATHVECTOR <T, 3> & offset, MATHVECTOR <T, 3> & output_force, MATHVECTOR <T, 3> & output_torque)
+	// apply torque in world space
+	void ApplyTorque(const MATHVECTOR <T, 3> & torque)
 	{
-		GetForceAtOffset(force, offset, output_force, output_torque);
-		GetTorqueAtOffset(torque, offset, output_torque);
+		rotation.ApplyTorque(torque);
 	}
 	
 	bool Serialize(joeserialize::Serializer & s)

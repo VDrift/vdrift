@@ -2,6 +2,7 @@
 #include "unittest.h"
 #include "mathvector.h"
 #include "quaternion.h"
+#include "matrix4.h"
 
 #include <map>
 #include <cassert>
@@ -283,11 +284,16 @@ void VERTEXARRAY::Add(float * newnorm, int newnormcount, float * newvert, int ne
 		
 		int newsize = origsize + newcount;
 		if (newcount > 0)
-			normals.resize(newsize);
-		float * myarray = &(normals[0]);
-		for (int i = 0; i < newcount; ++i)
 		{
-			myarray[i+origsize] = newnorm[i];
+			normals.resize(newsize);
+		}
+		if (normals.size() != 0)
+		{
+			float * myarray = &(normals[0]);
+			for (int i = 0; i < newcount; ++i)
+			{
+				myarray[i+origsize] = newnorm[i];
+			}
 		}
 	}
 	
@@ -301,11 +307,16 @@ void VERTEXARRAY::Add(float * newnorm, int newnormcount, float * newvert, int ne
 		
 		int newsize = origsize + newcount;
 		if (newcount > 0)
-			vertices.resize(newsize);
-		float * myarray = &(vertices[0]);
-		for (int i = 0; i < newcount; ++i)
 		{
-			myarray[i+origsize] = newvert[i];
+			vertices.resize(newsize);
+		}
+		if (vertices.size() != 0)
+		{
+			float * myarray = &(vertices[0]);
+			for (int i = 0; i < newcount; ++i)
+			{
+				myarray[i+origsize] = newvert[i];
+			}
 		}
 	}
 	
@@ -319,11 +330,16 @@ void VERTEXARRAY::Add(float * newnorm, int newnormcount, float * newvert, int ne
 			
 		int newsize = origsize + newcount;
 		if (newcount > 0)
-			faces.resize(newsize);
-		int * myarray = &(faces[0]);
-		for (int i = 0; i < newcount; ++i)
 		{
-			myarray[i+origsize] = newfaces[i] + idxoffset;
+			faces.resize(newsize);
+		}
+		if (faces.size() != 0)
+		{
+			int * myarray = &(faces[0]);
+			for (int i = 0; i < newcount; ++i)
+			{
+				myarray[i+origsize] = newfaces[i] + idxoffset;
+			}
 		}
 	}
 	
@@ -340,12 +356,37 @@ void VERTEXARRAY::Add(float * newnorm, int newnormcount, float * newvert, int ne
 		
 		int newsize = origsize + newcount;
 		if (newcount > 0)
-			texcoords[0].resize(newsize);
-		float * myarray = &(texcoords[0][0]);
-		for (int i = 0; i < newcount; ++i)
 		{
-			myarray[i+origsize] = newtc[i];
+			texcoords[0].resize(newsize);
 		}
+		if (texcoords.size() != 0)
+		{
+			float * myarray = &(texcoords[0][0]);
+			for (int i = 0; i < newcount; ++i)
+			{
+				myarray[i+origsize] = newtc[i];
+			}
+		}
+	}
+}
+
+void VERTEXARRAY::Transform(const MATRIX4 <float> & m)
+{
+	MATRIX4 <float> mat = m;
+
+	// rotate + translate vertices
+	assert(vertices.size() % 3 == 0);
+	for(unsigned int i = 0; i < vertices.size(); i+=3)
+	{
+		mat.TransformVectorOut(vertices[i], vertices[i+1], vertices[i+2]);
+	}
+
+	// rotate normals
+	mat[12] = 0; mat[13] = 0; mat[14] = 0;
+	assert(normals.size() % 3 == 0);
+	for(unsigned int i = 0; i < normals.size(); i+=3)
+	{
+		mat.TransformVectorOut(normals[i], normals[i+1], normals[i+2]);
 	}
 }
 

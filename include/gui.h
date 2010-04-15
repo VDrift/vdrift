@@ -135,6 +135,8 @@ public:
 	
 	void DeactivateAll()
 	{
+		node->IsActive(false);
+
 		for (std::map<std::string, PAGEINFO>::iterator i = pages.begin(); i != pages.end(); ++i)
 		{
 			i->second.page.SetVisible(false);
@@ -146,7 +148,7 @@ public:
 	///ensure the last last active page is invisible, update options from the last page and start fading it out, and load options into the new page and fade it in
 	void ActivatePage(const std::string & pagename, float activation_time, std::ostream & error_output, bool save_options=false)
 	{
-		//std::cout << "Activating page" << std::endl;
+		node->IsActive(true);
 		
 		if (last_active_page != pages.end())
 			last_active_page->second.page.SetVisible(false);

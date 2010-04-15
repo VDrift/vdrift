@@ -1,5 +1,6 @@
 #include "performance_testing.h"
 #include "configfile.h"
+#include "tracksurface.h"
 
 #include <vector>
 using std::vector;
@@ -13,6 +14,17 @@ using std::string;
 #include <sstream>
 using std::stringstream;
 
+PERFORMANCE_TESTING::PERFORMANCE_TESTING()
+{
+	surface.type = TRACKSURFACE::ASPHALT;
+	surface.bumpWaveLength = 1;
+	surface.bumpAmplitude = 0;
+	surface.frictionNonTread = 1;
+	surface.frictionTread = 1;
+	surface.rollResistanceCoefficient = 1;
+	surface.rollingDrag = 0;
+}
+
 void PERFORMANCE_TESTING::Test(const std::string & carpath, const std::string & carname, std::ostream & info_output, std::ostream & error_output)
 {
 	info_output << "Beginning car performance test on " << carname << endl;
@@ -25,7 +37,7 @@ void PERFORMANCE_TESTING::Test(const std::string & carpath, const std::string & 
 		error_output << "Error loading car configuration file: " << carfile << endl;
 		return;
 	}
-	if (!car.LoadDynamics(carconf, error_output))
+	if (!car.dynamics.Load(carconf, error_output))
 	{
 		error_output << "Error during car dynamics load: " << carfile << endl;
 		return;
@@ -33,17 +45,17 @@ void PERFORMANCE_TESTING::Test(const std::string & carpath, const std::string & 
 	info_output << "Car dynamics loaded" << endl;
 
 	info_output << carname << " Summary:\n" <<
-			"Mass (kg) including driver and fuel: " << car.dynamics.GetBody().GetMass() << "\n" <<
-			"Center of mass (m): " << car.dynamics.GetCenterOfMass() <<
+			"Mass (kg) including driver and fuel: " << car.dynamics.GetMass() << "\n" <<
+			"Center of mass (m): " << car.dynamics.center_of_mass <<
 			endl;
-	
+
 	std::stringstream statestream;
 	joeserialize::BinaryOutputSerializer serialize_output(statestream);
 	if (!car.Serialize(serialize_output))
 		error_output << "Serialization error" << endl;
 	//else info_output << "Car state: " << statestream.str();
 	carstate = statestream.str();
-	
+
 	TestMaxSpeed(info_output, error_output);
 	TestStoppingDistance(false, info_output, error_output);
 	TestStoppingDistance(true, info_output, error_output);
@@ -57,11 +69,8 @@ void PERFORMANCE_TESTING::ResetCar()
 	joeserialize::BinaryInputSerializer serialize_input(statestream);
 	car.Serialize(serialize_input);
 
-	//set position to zero, etc
-	QUATERNION <double> fixer; //due to historical reasons the initial orientation places the car faces the wrong way
-	fixer.Rotate(3.141593,0,0,1);
-	MATHVECTOR <double, 3> initial_position(0,0,0);
-	car.dynamics.SetInitialConditions(initial_position, fixer);
+	MATHVECTOR <double, 3> initial_position(0, 0, 0);
+	car.dynamics.SetPosition(initial_position);
 
 	car.dynamics.SetTCS(true);
 	car.dynamics.SetABS(true);
@@ -75,16 +84,11 @@ void PERFORMANCE_TESTING::SimulateFlatRoad()
 	//simulate an infinite, flat road
 	for (int i = 0; i < 4; i++)
 	{
-		MATHVECTOR <double, 3> dblnorm, dblpos;
-		MATHVECTOR <double, 3> wp = car.dynamics.GetWheelPosition(WHEEL_POSITION(i));
-		double wheelheight = wp[2] - car.GetTireRadius(WHEEL_POSITION(i)); //should really project along the car's down vector, but... oh well
-		dblpos = MATHVECTOR <double, 3> (wp[0], wp[1], 0);
-		dblnorm = MATHVECTOR <double, 3> (0,0,1);
-
-		car.dynamics.SetWheelContactProperties(WHEEL_POSITION(i), wheelheight,
-				dblpos, dblnorm,
-				1.0, 0.0, 1.0, 1.0,
-				1.0, 0.0, SURFACE::ASPHALT);
+		MATHVECTOR <float, 3> wp = car.dynamics.GetWheelPosition(WHEEL_POSITION(i));
+		float depth = wp[2] - car.GetTireRadius(WHEEL_POSITION(i)); //should really project along the car's down vector, but... oh well
+		MATHVECTOR <float, 3> pos(wp[0], wp[1], 0);
+		MATHVECTOR <float, 3> norm(0, 0, 1);
+		car.GetWheelContact(WHEEL_POSITION(i)).Set(pos, norm, depth, &surface, NULL, NULL);
 	}
 }
 
@@ -113,12 +117,12 @@ void PERFORMANCE_TESTING::TestMaxSpeed(std::ostream & info_output, std::ostream 
 	float timeto60startthreshold = 2.23; //threshold speed to start 0-60 clock in m/s
 	//float timeto60startthreshold = 0.01; //threshold speed to start 0-60 clock in m/s
 	float timeto60 = maxtime;
-	
+
 	float timetoquarter = maxtime;
 	float quarterspeed = 0;
-	
+
 	string downforcestr = "N/A";
-	
+
 	while (t < maxtime)
 	{
 		SimulateFlatRoad();
@@ -146,18 +150,18 @@ void PERFORMANCE_TESTING::TestMaxSpeed(std::ostream & info_output, std::ostream 
 
 		if (car.dynamics.GetSpeed() < 26.8224)
 			timeto60 = t;
-		
+
 		if (car.dynamics.GetCenterOfMassPosition().Magnitude() > 402.3 && timetoquarter == maxtime)
 		{
 			//quarter mile!
 			timetoquarter = t - timeto60start;
 			quarterspeed = car.dynamics.GetSpeed();
 		}
-
+/* fixme
 		car.remaining_shift_time-=dt;
 		if (car.remaining_shift_time < 0)
 			car.remaining_shift_time = 0;
-
+*/
 		if (i % (int)(1.0/dt) == 0) //every second
 		{
 			if (1)
@@ -251,11 +255,11 @@ void PERFORMANCE_TESTING::TestStoppingDistance(bool abs, std::ostream & info_out
 			error_output << "Car stalled during launch, t=" << t << endl;
 			break;
 		}
-
+/* fixme
 		car.remaining_shift_time-=dt;
 		if (car.remaining_shift_time < 0)
 			car.remaining_shift_time = 0;
-
+*/
 		if (i % (int)(1.0/dt) == 0) //every second
 		{
 			//std::cout << t << ", " << car.dynamics.GetSpeed() << ", " << car.GetGear() << ", " << car.GetEngineRPM() << std::endl;

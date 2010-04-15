@@ -165,6 +165,23 @@ bool CONFIGFILE::GetParam(string param, string & outvar) const
 	return true;
 }
 
+void CONFIGFILE::GetPoints(const std::string & sectionname, const std::string & paramprefix, std::vector <std::pair <double, double> > & output_points)
+{
+	std::list <std::string> params;
+	GetParamList(params, sectionname);
+	for (std::list <std::string>::iterator i = params.begin(); i != params.end(); i++)
+	{
+		if (i->find(paramprefix) == 0)
+		{
+			float point[3] = {0, 0, 0};
+			if (GetParam(sectionname+"."+*i, point))
+			{
+				output_points.push_back(std::make_pair(point[0], point[1]));
+			}
+		}
+	}
+}
+
 void CONFIGFILE::Clear()
 {
 	filename.clear();

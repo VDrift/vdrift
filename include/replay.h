@@ -46,10 +46,11 @@ private:
 			{
 				//read the file format version data manually
 				const unsigned int bufsize = format_version.length()+1;
-				char version_buf[bufsize];
+				char * version_buf = new char[bufsize+1];
 				instream.get(version_buf, bufsize);
 				version_buf[bufsize] = '\0';
 				format_version = version_buf;
+				delete [] version_buf;
 				
 				//read the rest of the versioning info
 				joeserialize::BinaryInputSerializer serialize_input(instream);

@@ -6,6 +6,7 @@
 #include <SDL/SDL_gfxPrimitives.h> //part of the SDL_gfx package
 #endif
 
+#include "float.h"
 
 using std::endl;
 using std::string;
