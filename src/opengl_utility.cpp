@@ -1,4 +1,5 @@
 #include "opengl_utility.h"
+#include <assert.h>
 
 void OPENGL_UTILITY::CheckForOpenGLErrors(std::string activity_description, std::ostream & error_output)
 {

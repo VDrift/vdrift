@@ -4,6 +4,8 @@
 #include <string>
 #include <iostream>
 
+#include <GL/glew.h>
+
 namespace OPENGL_UTILITY
 {
 	void CheckForOpenGLErrors(std::string activity_description, std::ostream & error_output);
