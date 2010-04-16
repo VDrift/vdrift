@@ -982,7 +982,7 @@ bool CARDYNAMICS::GetTCSActive() const
 void CARDYNAMICS::SetPosition(const MATHVECTOR<T, 3> & position)
 {
 	body.SetPosition(position);
-	//chassis->translate(ToBulletVector(position) - chassis->getCenterOfMassPosition());
+	chassis->translate(ToBulletVector(position) - chassis->getCenterOfMassPosition());
 }
 
 //find the precise starting position for the car (trim out the extra space)
