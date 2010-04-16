@@ -413,8 +413,7 @@ void AI::updateGasBrake(AI_Car *c, float dt, TRACK* track_p, const std::list <CA
 	}
 	
 	//std::cout << speed_limit << std::endl;
-/* fixme
-	if (c->car->GetGear() == 0 && !c->car->Shifting())
+	if (c->car->GetGear() == 0)
 	{
 		c->inputs[CARINPUT::SHIFT_UP] = 1.0;
 		gas_value = 0.2;
@@ -423,7 +422,7 @@ void AI::updateGasBrake(AI_Car *c, float dt, TRACK* track_p, const std::list <CA
 	{
 		c->inputs[CARINPUT::SHIFT_UP] = 0.0;
 	}
-*/
+
 	/*float trafficbrake = brakeFromOthers(c, dt, othercars, speed_diff); //consider traffic avoidance bias
 	if (trafficbrake > 0)
 	{
@@ -564,7 +563,9 @@ void AI::updateSteer(AI_Car *c, float dt, const std::list <CAR> & othercars)
 	MATHVECTOR <float, 3> next_position = TransformToWorldspace(dest_point);
 	MATHVECTOR <float, 3> car_position = c->car->GetCenterOfMassPosition();
 	MATHVECTOR <float, 3> car_orientation(0,1,0);
-	c->car->GetOrientation().RotateVector(car_orientation);
+	QUATERNION <float> fixer;
+	fixer.Rotate(-3.141593*0.5, 0, 0, 1);
+	(c->car->GetOrientation()*fixer).RotateVector(car_orientation);
 
 	MATHVECTOR <float, 3> desire_orientation = next_position - car_position;
 
