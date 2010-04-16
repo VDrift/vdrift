@@ -51,7 +51,11 @@ class PATHMANAGER
 		
 		void MakeDir(const std::string & dir)
 		{
-			_mkdir(dir.c_str());
+#ifndef _WIN32
+			mkdir(dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+#else
+			mkdir(dir.c_str());
+#endif
 		}
 	
 	public:
