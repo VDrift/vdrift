@@ -179,19 +179,23 @@ public:
 			new_displacement = travel;
 		else if (new_displacement < 0)
 			new_displacement = 0;
-		
+
 		// calculate derivatives
 		//if (new_displacement < ext_displacement)*/
 			new_displacement = ext_displacement;
 
 		velocity = (new_displacement - displacement) / dt;
-		
+
 		// clamp velocity (workaround for very high damping values)
-		if (velocity > 5) velocity = 5;
-		else if (velocity < -5) velocity = -5;
+		if (velocity > 10) velocity = 10;
+		else if (velocity < -10) velocity = -10;
 
 		displacement = new_displacement;
 		force = GetForce(displacement, velocity);
+
+		// account for overtravel(bump stopper) experimental
+		const T bump_stiffness = 500000;
+		force -= overtravel * bump_stiffness;
 
 		return -force;
 	}

@@ -685,7 +685,7 @@ void CARDYNAMICS::Init(
 /*
 	for(unsigned int i = 0; i < WHEEL_POSITION_SIZE; i++)
 	{
-		// wheel: got mass, inertia(y-axis), radius, width is missing
+		// wheel: got mass, (y-axis), radius, width is missing
 		btScalar wheelMass = wheel[i].GetMass();
 		btScalar wheelRadius = tire[i].GetRadius();
 		btScalar wheelWidth = 0.24;
@@ -1655,10 +1655,9 @@ void CARDYNAMICS::UpdateMass()
 
 	center_of_mass = center_of_mass * ( 1.0 / total_mass );
 
-	//calculate the inertia tensor
+	//calculate the inertia tensor (is symmetric)
 	MATRIX3 <T> inertia;
-	for ( int i = 0; i < 9; i++ )
-		inertia[i] = 0;
+	for ( int i = 0; i < 9; i++ ) inertia[i] = 0;
 	for ( std::list <MASS_PAIR>::iterator i = mass_only_particles.begin(); i != mass_only_particles.end(); ++i )
 	{
 		//transform into the rigid body coordinates
@@ -1666,15 +1665,15 @@ void CARDYNAMICS::UpdateMass()
 		T mass = i->first;
 
 		//add the current mass to the inertia tensor
-		inertia[0] += mass * ( position[1] * position[1] + position[2] * position[2] );
-		inertia[1] -= mass * ( position[0] * position[1] );
-		inertia[2] -= mass * ( position[0] * position[2] );
+		inertia[0] += mass * ( position[1] * position[1] + position[2] * position[2] ); //mi*(yi^2+zi^2)
+		inertia[1] -= mass * ( position[0] * position[1] ); //-mi*xi*yi
+		inertia[2] -= mass * ( position[0] * position[2] ); //-mi*xi*zi
 		inertia[3] = inertia[1];
-		inertia[4] += mass * ( position[2] * position[2] + position[0] * position[0] );
-		inertia[5] -= mass * ( position[1] * position[2] );
+		inertia[4] += mass * ( position[2] * position[2] + position[0] * position[0] ); //mi*(xi^2+zi^2)
+		inertia[5] -= mass * ( position[1] * position[2] ); //-mi*yi*zi
 		inertia[6] = inertia[2];
 		inertia[7] = inertia[5];
-		inertia[8] += mass * ( position[0] * position[0] + position[1] * position[1] );
+		inertia[8] += mass * ( position[0] * position[0] + position[1] * position[1] ); //mi*(xi^2+yi^2)
 	}
 	//inertia.DebugPrint(std::cout);
 	body.SetInertia ( inertia );
@@ -1953,7 +1952,7 @@ T CARDYNAMICS::DownshiftRPM(int gear) const
         T current_gear_ratio = transmission.GetGearRatio(gear);
         T lower_gear_ratio = transmission.GetGearRatio(gear - 1);
 		T peak_engine_speed = engine.GetRedline();
-		shift_down_point = 0.5 * peak_engine_speed / lower_gear_ratio * current_gear_ratio;
+		shift_down_point = 0.7 * peak_engine_speed / lower_gear_ratio * current_gear_ratio;
 	}
 	return shift_down_point;
 }

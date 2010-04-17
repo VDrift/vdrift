@@ -6,7 +6,7 @@
 #include "track.h"
 
 COLLISION_WORLD::COLLISION_WORLD()
-: collisiondispatcher(&collisionconfig), 
+: collisiondispatcher(&collisionconfig),
   collisionbroadphase(btVector3(-5000, -5000, -5000), btVector3(5000, 5000, 5000)),
   world(&collisiondispatcher, &collisionbroadphase, &constraintsolver, &collisionconfig),
   track(NULL), trackObject(NULL), trackMesh(NULL)
@@ -53,22 +53,22 @@ void COLLISION_WORLD::AddConstraint(btTypedConstraint * constraint, bool disable
 void COLLISION_WORLD::SetTrack(TRACK * t)
 {
 	assert(t);
-	
+
 	// remove old track
 	if(track)
 	{
 		world.removeCollisionObject(trackObject);
-		
+
 		delete trackObject->getCollisionShape();
 		trackObject->setCollisionShape(NULL);
-		
+
 		delete trackObject;
 		trackObject = NULL;
-		
+
 		delete trackMesh;
 		trackMesh = NULL;
 	}
-	
+
 	// setup new track
 	track = t;
 	trackMesh = new btTriangleIndexVertexArray();
@@ -90,7 +90,7 @@ void COLLISION_WORLD::SetTrack(TRACK * t)
 	trackObject = new btCollisionObject();
 	trackObject->setCollisionShape(trackShape);
 	trackObject->setUserPointer(NULL);
-	
+
 	world.addCollisionObject(trackObject);
 }
 
@@ -102,9 +102,9 @@ btIndexedMesh COLLISION_WORLD::GetIndexedMesh(const MODEL & model)
 	int fcount;
 	model.GetVertexArray().GetVertices(vertices, vcount);
 	model.GetVertexArray().GetFaces(faces, fcount);
-	
+
 	assert(fcount % 3 == 0); //Face count is not a multiple of 3
-	
+
 	btIndexedMesh mesh;
 	mesh.m_numTriangles = fcount / 3;
 	mesh.m_triangleIndexBase = (const unsigned char *)faces;
@@ -121,10 +121,10 @@ btCollisionShape * COLLISION_WORLD::AddMeshShape(const MODEL & model)
 	btTriangleIndexVertexArray * mesh = new btTriangleIndexVertexArray();
 	mesh->addIndexedMesh(GetIndexedMesh(model));
 	btCollisionShape * shape = new btBvhTriangleMeshShape(mesh, true);
-	
+
 	meshes.push_back(mesh);
 	shapes.push_back(shape);
-	
+
 	return shape;
 }
 
@@ -140,14 +140,14 @@ struct MyRayResultCallback : public btCollisionWorld::RayResultCallback
 
 	btVector3	m_hitNormalWorld;
 	btVector3	m_hitPointWorld;
-	
+
 	int m_shapeId;
-		
+
 	virtual	btScalar	addSingleResult(btCollisionWorld::LocalRayResult& rayResult,bool normalInWorldSpace)
 	{
 		//caller already does the filter on the m_closestHitFraction
 		btAssert(rayResult.m_hitFraction <= m_closestHitFraction);
-		
+
 		m_closestHitFraction = rayResult.m_hitFraction;
 		m_collisionObject = rayResult.m_collisionObject;
 		m_shapeId = rayResult.m_localShapeInfo->m_shapePart;
@@ -174,14 +174,14 @@ bool COLLISION_WORLD::CastRay(
 	btVector3 from = ToBulletVector(origin);
 	btVector3 to = ToBulletVector(origin + direction * length);
 	MyRayResultCallback rayCallback(from, to);
-	
+
 	MATHVECTOR <float, 3> p;
 	MATHVECTOR <float, 3> n;
 	float d;
 	const TRACKSURFACE * s = TRACKSURFACE::None();
 	const BEZIER * b = NULL;
 	btCollisionObject * c = NULL;
-	
+
 	// track geometry collision
 	world.rayTest(from, to, rayCallback);
 	bool geometryHit = rayCallback.hasHit();
@@ -207,7 +207,7 @@ bool COLLISION_WORLD::CastRay(
 				s = trackSurface[shapeId];
 			}
 		}
-		
+
 		// track bezierpatch collision
 		if (track != NULL)
 		{
@@ -231,7 +231,7 @@ bool COLLISION_WORLD::CastRay(
 		contact.Set(p, n, d, s, b, c);
 		return true;
 	}
-	
+
 	// should only happen on vehicle rollover
 	contact.Set(origin + direction * length, -direction, length, s, b, c);
 	return false;
@@ -239,9 +239,9 @@ bool COLLISION_WORLD::CastRay(
 
 void COLLISION_WORLD::Update(float dt)
 {
-	const int maxsubsteps = 7;
+	const int maxSubSteps = 7;
 	const float fixedTimeStep = 1 / 60.0f;
-	world.stepSimulation(dt, maxsubsteps, fixedTimeStep);
+	world.stepSimulation(dt, maxSubSteps, fixedTimeStep);
 }
 
 void COLLISION_WORLD::DebugPrint(std::ostream & out)
@@ -270,7 +270,7 @@ void COLLISION_WORLD::Clear()
 		world.removeConstraint(constraints[i]);
 	}
 	constraints.resize(0);
-	
+
 	for(int i = world.getNumCollisionObjects() - 1; i >= 0; i--)
 	{
 		btCollisionObject* obj = world.getCollisionObjectArray()[i];
@@ -282,7 +282,7 @@ void COLLISION_WORLD::Clear()
 		world.removeCollisionObject(obj);
 		delete obj;
 	}
-	
+
 	for(int i = 0; i < shapes.size(); i++)
 	{
 		btCollisionShape * shape = shapes[i];
@@ -297,13 +297,13 @@ void COLLISION_WORLD::Clear()
 		delete shape;
 	}
 	shapes.resize(0);
-	
+
 	for(int i = 0; i < meshes.size(); i++)
 	{
 		delete meshes[i];
 	}
 	meshes.resize(0);
-	
+
 	for(int i = 0; i < actions.size(); i++)
 	{
 		world.removeAction(actions[i]);

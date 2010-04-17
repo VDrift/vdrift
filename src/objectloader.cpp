@@ -7,7 +7,7 @@
 
 OBJECTLOADER::OBJECTLOADER(
 	const std::string & ntrackpath,
-	SCENENODE & nsceneroot, 
+	SCENENODE & nsceneroot,
 	int nanisotropy,
 	bool newdynamicshadowsenabled,
 	std::ostream & ninfo_output,
@@ -29,7 +29,7 @@ OBJECTLOADER::OBJECTLOADER(
 	dynamicshadowsenabled(newdynamicshadowsenabled),
 	agressivecombine(doagressivecombining)
 {
-	
+
 }
 
 bool OBJECTLOADER::BeginObjectLoad()
@@ -45,7 +45,7 @@ bool OBJECTLOADER::BeginObjectLoad()
 
 	if (params_per_object != expected_params)
 		info_output << "Track object list has " << params_per_object << " params per object, expected " << expected_params << ", this is fine, continuing" << std::endl;
-	
+
 	if (params_per_object < min_params)
 	{
 		error_output << "Track object list has " << params_per_object << " params per object, expected " << expected_params << std::endl;
@@ -150,17 +150,17 @@ std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad(
 	GetParam(objectfile, friction_tread);
 	GetParam(objectfile, rolling_resistance);
 	GetParam(objectfile, rolling_drag);
-	
+
 	if (params_per_object >= 15)
 		GetParam(objectfile, isashadow);
-	
+
 	if (params_per_object >= 16)
 		GetParam(objectfile, clamptexture);
-	
+
 	if (params_per_object >= 17)
 		GetParam(objectfile, surface_type);
-		
-		
+
+
 	for (int i = 0; i < params_per_object - expected_params; i++)
 		GetParam(objectfile, otherjunk);
 
@@ -188,7 +188,7 @@ std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad(
 	}
 
 	bool skip = false;
-	
+
 	if (dynamicshadowsenabled && isashadow)
 		skip = true;
 
@@ -253,7 +253,7 @@ std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad(
 		{
 			d.SetVerticalTrack(true);
 		}
-		
+
 		const TRACKSURFACE * surfacePtr = NULL;
 		if (collideable || driveable)
 		{
@@ -274,9 +274,9 @@ std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad(
 				surface.frictionTread = friction_tread;
 				surface.rollResistanceCoefficient = rolling_resistance;
 				surface.rollingDrag = rolling_drag;
-				
+
 				// could use hash here(assume we dont have many surfaces)
-				std::list<TRACKSURFACE>::const_reverse_iterator ri;
+				std::list<TRACKSURFACE>::reverse_iterator ri;
 				for(ri = surfaces.rbegin() ; ri != surfaces.rend(); ++ri)
 				{
 					if (*ri == surface) break;
@@ -289,7 +289,7 @@ std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad(
 				surfacePtr = &*ri;
 			}
 		}
-		
+
 		TRACK_OBJECT object(model, diffuse, surfacePtr);
 		objects.push_back(object);
 	}
@@ -315,7 +315,7 @@ std::string GetDrawableSortString(const DRAWABLE & d)
 }
 
 bool DrawableOptimizeLessThan(const DRAWABLE & d1, const DRAWABLE & d2)
-{	
+{
 	return GetDrawableSortString(d1) < GetDrawableSortString(d2);
 }
 
@@ -362,7 +362,7 @@ void OBJECTLOADER::Optimize()
 				//find the new radius by taking half the distance between the centers plus the max radius
 				//float newradius = (center2-center1).Magnitude()*0.5+maxradius;
 				float newradius = (center2-center1).Magnitude()*0.5+maxradius;
-				
+
 				if (newradius > (radius1+radius2)*optimizemetric) //don't combine if it's not worth it
 				//if (0)
 				{
@@ -371,7 +371,7 @@ void OBJECTLOADER::Optimize()
 					DRAWABLE & d = sceneroot.AddDrawable();
 					d = *i;
 					lastdrawable = &d;
-					
+
 					//std::cout << "Not optimizing: " << i->GetRadius() << " and " << lastdrawable->GetRadius() << " to " << newradius << std::endl;
 				}
 				else
@@ -379,7 +379,7 @@ void OBJECTLOADER::Optimize()
 					lastdrawable->AddDrawList(i->GetDrawLists()[0]);
 					lastdrawable->SetObjectCenter(newcenter);
 					lastdrawable->SetRadius(newradius);
-					
+
 					//std::cout << "Optimizing: " << i->GetRadius() << " and " << lastdrawable->GetRadius() << " to " << newradius << std::endl;
 				}
 
