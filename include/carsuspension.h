@@ -34,21 +34,26 @@ private:
 	T displacement; ///< a linear representation of the suspension displacement.  in actuality the displacement is about the arc formed by the hinge
 	T velocity;
 	T force;
+	
+	T spring_force;
+	T damp_force;
 
 public:
 	//default constructor makes an S2000-like car
 	CARSUSPENSION() : spring_constant(50000.0), bounce(2588), rebound(2600), travel(0.19),
 			anti_roll_k(8000), damper_factors(1), spring_factors(1),
 			camber(-0.5), caster(0.28), toe(0),
-			overtravel(0), displacement(0), velocity(0), force(0) {}
+			overtravel(0), displacement(0), velocity(0), force(0), spring_force(0), damp_force(0) {}
 
 	void DebugPrint(std::ostream & out)
 	{
 		out << "---Suspension---" << std::endl;
 		out << "Displacement: " << displacement << std::endl;
 		out << "Velocity: " << velocity << std::endl;
-		out << "Spring factor: " << spring_factors.Interpolate(displacement) << std::endl;
-		out << "Damp factor: " << damper_factors.Interpolate(std::abs(velocity)) << std::endl;
+		out << "Spring force: " << spring_force << std::endl;
+		out << "Damp force: " << damp_force << std::endl;
+		//out << "Spring factor: " << spring_factors.Interpolate(displacement) << std::endl;
+		//out << "Damp factor: " << damper_factors.Interpolate(std::abs(velocity)) << std::endl;
 	}
 
 	void SetHinge ( const MATHVECTOR< T, 3 >& value )
@@ -153,50 +158,38 @@ public:
 	}
 
 	///compute the suspension force for the given time interval and external displacement
-	T Update(T dt, T ext_displacement)
+	T Update(T dt, T displacement_ext)
 	{
+		overtravel = displacement_ext - travel;
+		if (overtravel < 0) overtravel = 0;
+		
 		// clamp external displacement
-		overtravel = ext_displacement - travel;
-		if (overtravel < 0)
-			overtravel = 0;
-		if (ext_displacement > travel)
-			ext_displacement = travel;
-		else if (ext_displacement < 0)
-			ext_displacement = 0;
-
-		T new_displacement;
-/*
+		if (displacement_ext > travel)
+			displacement_ext = travel;
+		else if (displacement_ext < 0)
+			displacement_ext = 0;
+/*		
 		const T inv_mass = 1/20.0;
-		const T tire_stiffness = 250000;
-
-		T ext_force = tire_stiffness * ext_displacement;
-
-		// predict new displacement
-		new_displacement = displacement + velocity * dt + 0.5 * force * inv_mass * dt * dt;
-
+		T displacement_new = displacement + velocity * dt + force * inv_mass * dt * dt;
+		
 		// clamp new displacement
-		if (new_displacement > travel)
-			new_displacement = travel;
-		else if (new_displacement < 0)
-			new_displacement = 0;
+		if (displacement_new > travel)
+			displacement_new = travel;
+		else if (displacement_new < displacement_ext)
+			displacement_new = displacement_ext;
+*/
+		T displacement_new = displacement_ext;
+		
+		velocity = (displacement_new - displacement) / dt;
 
-		// calculate derivatives
-		//if (new_displacement < ext_displacement)*/
-			new_displacement = ext_displacement;
-
-		velocity = (new_displacement - displacement) / dt;
-
-		// clamp velocity (workaround for very high damping values)
-		if (velocity > 10) velocity = 10;
-		else if (velocity < -10) velocity = -10;
-
-		displacement = new_displacement;
+		displacement = displacement_new;
+		
 		force = GetForce(displacement, velocity);
-
-		// account for overtravel(bump stopper) experimental
-		const T bump_stiffness = 500000;
-		force -= overtravel * bump_stiffness;
-
+		
+		// account for suspension overtravel
+		//const T bump_stiffness = 500000;
+		//new_force = new_force - overtravel * bump_stiffness;
+		
 		return -force;
 	}
 
@@ -204,15 +197,15 @@ public:
 	{
 		T damping = bounce;
 		if (velocity < 0) damping = rebound;
-
+		
 		//compute damper factor based on curve
 		T dampfactor = damper_factors.Interpolate(std::abs(velocity));
 
 		//compute spring factor based on curve
 		T springfactor = spring_factors.Interpolate(displacement);
 
-		T spring_force = -displacement * spring_constant * springfactor; //when compressed, the spring force will push the car in the positive z direction
-		T damp_force = -velocity * damping * dampfactor; //when compression is increasing, the damp force will push the car in the positive z direction
+		spring_force = -displacement * spring_constant * springfactor; //when compressed, the spring force will push the car in the positive z direction
+		damp_force = -velocity * damping * dampfactor; //when compression is increasing, the damp force will push the car in the positive z direction
 		T force = spring_force + damp_force;
 
 		return force;
