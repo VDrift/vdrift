@@ -688,13 +688,13 @@ void CARDYNAMICS::Init(
 		// wheel: got mass, (y-axis), radius, width is missing
 		btScalar wheelMass = wheel[i].GetMass();
 		btScalar wheelRadius = tire[i].GetRadius();
-		btScalar wheelWidth = 0.24;
+		btScalar wheelWidth = 0.3;
 		btScalar inertiaY = wheel[i].GetInertia(); // cylinder: 1/2*M*R^2
 		btScalar inertiaXZ = 1/12.0 * wheelMass * wheelWidth * wheelWidth + 0.5 * inertiaY; // 1/12*M*h^2+1/4*M*R^2
 
 		btVector3 wheelInertia(inertiaXZ, inertiaY, inertiaXZ);
 		btVector3 wheelHalfExtents(wheelRadius, 0.5*wheelWidth, wheelRadius);
-		btVector3 wheelPosition = ToBulletVector(CarLocalToWorld(wheel[i].GetExtendedPosition()));
+		btVector3 wheelPosition = ToBulletVector(LocalToWorld(wheel[i].GetExtendedPosition()));
 		btQuaternion wheelRotation = ToBulletQuaternion(orientation);
 
 		btCylinderShape * wheelShape = new btCylinderShape(wheelHalfExtents);
@@ -705,6 +705,7 @@ void CARDYNAMICS::Init(
 		wheelState->setWorldTransform(wheelTransform);
 
 		btRigidBody::btRigidBodyConstructionInfo wheelInfo(wheelMass, wheelState, wheelShape, wheelInertia);
+		wheelInfo.m_friction = 0;
 		wheelBody[i] = world.AddRigidBody(wheelInfo);
 
 		// suspension(hinge)
@@ -724,11 +725,11 @@ void CARDYNAMICS::Init(
 		joint->setAngularUpperLimit(btVector3(0, 0, 0));
 		joint->setLinearLowerLimit(btVector3(0, 0, 0));
 		joint->setLinearUpperLimit(btVector3(0, 0, 0));
-		if (i%2) joint->setAngularUpperLimit(btVector3(0.1, 0, 0));
-		else joint->setAngularLowerLimit(btVector3(-0.1, 0, 0));
+		if (i%2) joint->setAngularUpperLimit(btVector3(0.15, 0, 0));
+		else joint->setAngularLowerLimit(btVector3(-0.15, 0, 0));
 		joint->enableSpring(3, true);
-		joint->setStiffness(3, 100000);
-		joint->setDamping(3, 20000);
+		joint->setStiffness(3, suspension[i].GetSpringConstant()*2);
+		joint->setDamping(3, suspension[i].GetBounce()*2);
 		joint->setEquilibriumPoint();
 
 		world.AddConstraint(joint, disableCollisionsBetweenLinked);
@@ -789,7 +790,7 @@ MATHVECTOR <T, 3> CARDYNAMICS::GetWheelPosition(WHEEL_POSITION wp) const
 	MATHVECTOR <T, 3> pos = GetLocalWheelPosition(wp, suspension[wp].GetDisplacementPercent());
 	chassisRotation.RotateVector(pos);
 	return pos + chassisPosition;
-
+	
 	//btTransform wheelTrans;
 	//wheelBody[WHEEL_POSITION(wp)]->getMotionState()->getWorldTransform(wheelTrans);
 	//return ToMathVector<T>(wheelTrans.getOrigin());
@@ -1257,6 +1258,7 @@ MATHVECTOR <T, 3> CARDYNAMICS::LocalToWorld(const MATHVECTOR <T, 3> & local) con
 	MATHVECTOR <T,3> position = local - center_of_mass;
 	body.GetOrientation().RotateVector(position);
 	return position + body.GetPosition();
+	
 	//btVector3 position = chassis->getCenterOfMassTransform().getBasis() * ToBulletVector(local - center_of_mass);
 	//position = position + chassis->getCenterOfMassTransform().getOrigin();
 	//return ToMathVector <T> (position);
@@ -1364,7 +1366,7 @@ void CARDYNAMICS::ApplyAerodynamicsToBody(T dt)
 	ApplyForce(wind_force);
 	ApplyTorque(wind_torque);
 
-	//apply rotational damping/drag (hide oscillation around z-axis) ?
+	//apply rotational damping
 	//MATHVECTOR <T, 3> rotational_aero_drag = - ToMathVector<T>(chassis->getAngularVelocity()) * 1000.0f;
 	//ApplyTorque(rotational_aero_drag);
 }
@@ -1381,8 +1383,7 @@ MATHVECTOR <T, 3> CARDYNAMICS::UpdateSuspension ( int i , T dt )
 	T shift = 2.0 * sin ( phase*1.414214 );
 	T amplitude = 0.25 * surface.bumpAmplitude;
 	T bumpoffset = amplitude * ( sin ( phase + shift ) + sin ( 1.414214*phase ) - 2.0 );
-	T ray_offset = 1; // wheel ray origin is offset by 1 meter relative to wheel extended position
-	T displacement = ray_offset + tire[i].GetRadius() - wheel_contact[i].GetDepth() + bumpoffset;
+	T displacement = suspension[i].GetDisplacement() + 2 * tire[i].GetRadius() + bumpoffset - wheel_contact[i].GetDepth();
 
 	// compute suspension force
 	T springdampforce = suspension[WHEEL_POSITION ( i ) ].Update ( dt , displacement );
@@ -1608,8 +1609,8 @@ void CARDYNAMICS::UpdateWheelContacts()
 	for (int i = 0; i < WHEEL_POSITION_SIZE; i++)
 	{
 		COLLISION_CONTACT & wheelContact = wheel_contact[WHEEL_POSITION(i)];
-		MATHVECTOR <float, 3> raystart = LocalToWorld(wheel[i].GetExtendedPosition());
-		raystart = raystart - raydir; // 1 meter offset form extended position
+		MATHVECTOR <float, 3> raystart = wheel_position[i];
+		raystart = raystart - raydir * tire[i].GetRadius();
 		float raylen = 5;
 		world->CastRay(raystart, raydir, raylen, wheelContact);
 	}
@@ -1620,8 +1621,8 @@ void CARDYNAMICS::InterpolateWheelContacts(T dt)
 	MATHVECTOR <float, 3> raydir = GetDownVector();
 	for (int i = 0; i < WHEEL_POSITION_SIZE; i++)
 	{
-		MATHVECTOR <float, 3> raystart = LocalToWorld(wheel[i].GetExtendedPosition());
-		raystart = raystart - raydir; // 1 meter offset form extended position
+		MATHVECTOR <float, 3> raystart = wheel_position[i];
+		raystart = raystart - raydir * tire[i].GetRadius();
 		float raylen = 5;
 		GetWheelContact(WHEEL_POSITION(i)).CastRay(raystart, raydir, raylen);
 	}
