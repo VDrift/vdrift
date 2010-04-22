@@ -1008,17 +1008,31 @@ void CARDYNAMICS::AlignWithGround()
 	SetPosition(trimmed_position);
 }
 
-// proof of concept: doesn't respect car current orientation
+// ugh, ugly code
 void CARDYNAMICS::RolloverRecover()
 {
 	btQuaternion rot(0, 0, 0, 1);
 	btTransform transform = chassis->getCenterOfMassTransform();
 	
+	btVector3 z(0, 0, 1);
+	btVector3 y_car = transform.getBasis().getColumn(0);
+	y_car = y_car - z * z.dot(y_car);
+	y_car.normalize();
+	
+	btVector3 z_car = transform.getBasis().getColumn(2);
+	z_car = z_car - y_car * y_car.dot(z_car);
+	z_car.normalize();
+	
+	T angle = z_car.angle(z);
+	if (fabs(angle) < M_PI_4) return;
+	
+	rot.setRotation(y_car, angle);
+	rot = rot * transform.getRotation();
+	
 	transform.setRotation(rot);
 	chassis->setCenterOfMassTransform(transform);
 	
-	QUATERNION <T> orient = ToMathQuaternion<T>(transform.getRotation());
-	body.SetOrientation(orient);
+	body.SetOrientation(ToMathQuaternion<T>(rot));
 	
 	AlignWithGround();
 }
