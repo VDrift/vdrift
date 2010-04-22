@@ -107,8 +107,11 @@ public:
 // cardynamics
 	void SetPosition(const MATHVECTOR<T, 3> & pos);
 
-	// move the car along z-axis until it is touching the ground, false on error
-	bool AlignWithGround();
+	// move the car along z-axis until it is touching the ground
+	void AlignWithGround();
+	
+	// rotate car back onto it's wheels after rollover
+	void RolloverRecover();
 
 	// set the steering angle to "value", where 1.0 is maximum right lock and -1.0 is maximum left lock.
 	void SetSteering(const T value);

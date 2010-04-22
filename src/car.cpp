@@ -657,18 +657,17 @@ bool CAR::LoadInto (
 	return true;
 }
 
-bool CAR::SetPosition(const MATHVECTOR <float, 3> & new_position)
+void CAR::SetPosition(const MATHVECTOR <float, 3> & new_position)
 {
 	MATHVECTOR <double,3> newpos;
 	newpos = new_position;
 	dynamics.SetPosition(newpos);
-	bool align = dynamics.AlignWithGround();
+	dynamics.AlignWithGround();
 
 	QUATERNION <float> rot;
 	rot = dynamics.GetOrientation();
 
 	cameras.Active()->Reset(newpos, rot);
-	return align;
 }
 
 void CAR::CopyPhysicsResultsIntoDisplay()
@@ -781,6 +780,10 @@ void CAR::HandleInputs(const std::vector <float> & inputs, float dt)
 
 	//std::cout << "Throttle: " << inputs[CARINPUT::THROTTLE] << std::endl;
 	//std::cout << "Shift up: " << inputs[CARINPUT::SHIFT_UP] << std::endl;
+	
+	// recover from a rollover
+	if(inputs[CARINPUT::ROLLOVER_RECOVER])
+		dynamics.RolloverRecover();
 
 	//set brakes
 	dynamics.SetBrake(inputs[CARINPUT::BRAKE]);

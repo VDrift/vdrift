@@ -987,34 +987,41 @@ void CARDYNAMICS::SetPosition(const MATHVECTOR<T, 3> & position)
 }
 
 //find the precise starting position for the car (trim out the extra space)
-bool CARDYNAMICS::AlignWithGround()
+void CARDYNAMICS::AlignWithGround()
 {
-	float lowest_point = 0;
-	bool no_lowest_point_yet = true;
-	for (int n = 0; n < WHEEL_POSITION_SIZE; n++)
+	UpdateWheelContacts();
+	
+	T min_height = 0;
+	bool no_min_height = true;
+	for (int i = 0; i < WHEEL_POSITION_SIZE; i++)
 	{
-		MATHVECTOR <float, 3> wp = GetWheelPositionAtDisplacement(WHEEL_POSITION(n), 0);
-		MATHVECTOR <float, 3> dir(0, 0, -1);
-		MATHVECTOR <float, 3> raystart = wp - dir;  //move back 1 meter
-		COLLISION_CONTACT wheelContact;
-		if (world->CastRay(raystart, dir, 10.0, wheelContact))
+		T height = wheel_contact[i].GetDepth() - 2 * tire[i].GetRadius();
+		if (height < min_height || no_min_height)
 		{
-			float wheelheight = wheelContact.GetDepth() - 1.0 - tire[WHEEL_POSITION(n)].GetRadius();
-			if (wheelheight < lowest_point || no_lowest_point_yet)
-			{
-				lowest_point = wheelheight;
-				no_lowest_point_yet = false;
-			}
-		}
-		else
-		{
-			return false;
+			min_height = height;
+			no_min_height = false;
 		}
 	}
-	MATHVECTOR <float, 3> trimmed_position = Position();
-	trimmed_position[2] -= lowest_point;
+	
+	MATHVECTOR <T, 3> trimmed_position = Position();
+	trimmed_position[2] -= min_height;
 	SetPosition(trimmed_position);
-	return true;
+}
+
+// proof of concept: doesn't respect car current orientation
+void CARDYNAMICS::RolloverRecover()
+{
+	
+	btTransform transform = chassis->getCenterOfMassTransform();
+	btQuaternion rot(0, 0, 0, 1);
+	
+	transform.setRotation(rot);
+	chassis->setCenterOfMassTransform(transform);
+	
+	QUATERNION <T> orient = ToMathQuaternion<T>(transform.getRotation());
+	body.SetOrientation(orient);
+	
+	AlignWithGround();
 }
 
 //TODO: adjustable ackermann-like parameters
