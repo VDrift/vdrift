@@ -989,6 +989,7 @@ void CARDYNAMICS::SetPosition(const MATHVECTOR<T, 3> & position)
 //find the precise starting position for the car (trim out the extra space)
 void CARDYNAMICS::AlignWithGround()
 {
+	UpdateWheelTransform();
 	UpdateWheelContacts();
 	
 	T min_height = 0;
@@ -1003,8 +1004,7 @@ void CARDYNAMICS::AlignWithGround()
 		}
 	}
 	
-	MATHVECTOR <T, 3> trimmed_position = Position();
-	trimmed_position[2] -= min_height;
+	MATHVECTOR <T, 3> trimmed_position = Position() + GetDownVector() * min_height;
 	SetPosition(trimmed_position);
 }
 
@@ -1348,6 +1348,15 @@ void CARDYNAMICS::UpdateWheelVelocity()
 	}
 }
 
+void CARDYNAMICS::UpdateWheelTransform()
+{
+	for(int i = 0; i < WHEEL_POSITION_SIZE; i++)
+	{
+		wheel_position[i] = GetWheelPositionAtDisplacement(WHEEL_POSITION(i), suspension[i].GetDisplacementPercent());
+		wheel_orientation[i] = Orientation() * GetWheelSteeringAndSuspensionOrientation(WHEEL_POSITION(i));
+	}
+}
+
 void CARDYNAMICS::ApplyEngineTorqueToBody()
 {
 	MATHVECTOR <T, 3> engine_torque(-engine.GetTorque(), 0, 0);
@@ -1547,12 +1556,7 @@ void CARDYNAMICS::UpdateBody(T dt, T drive_torque[])
 	body.Integrate2(dt);
 	//chassis->integrateVelocities(dt);
 
-	// update wheel state
-	for(int i = 0; i < WHEEL_POSITION_SIZE; i++)
-	{
-		wheel_position[i] = GetWheelPositionAtDisplacement(WHEEL_POSITION(i), suspension[i].GetDisplacementPercent());
-		wheel_orientation[i] = Orientation() * GetWheelSteeringAndSuspensionOrientation(WHEEL_POSITION(i));
-	}
+	UpdateWheelTransform();
 	InterpolateWheelContacts(dt);
 
 	for(int i = 0; i < WHEEL_POSITION_SIZE; i++)

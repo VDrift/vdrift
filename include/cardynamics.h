@@ -224,6 +224,8 @@ protected:
 	void ApplyTorque(const MATHVECTOR <T, 3> & torque);
 
 	void UpdateWheelVelocity();
+	
+	void UpdateWheelTransform();
 
 	// apply engine torque to chassis
 	void ApplyEngineTorqueToBody();
