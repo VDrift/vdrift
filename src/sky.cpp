@@ -141,19 +141,19 @@ void SKY::UpdateSunColor()
 }
 
 void SKY::UpdateSkyTexture()
-{
+{/*
 	if (!graphics.GetUsingShaders()) return;
 	SHADER_GLSL & shader = graphics.GetShader("sky_scatter");
 	shader.UploadActiveShaderParameter1f("exposure", exposure);
 	shader.UploadActiveShaderParameter1f("turbidity", 0.005*turbidity);
 	shader.UploadActiveShaderParameter3f("sundir", sundir[0], sundir[1], sundir[2]);
 	graphics.DrawScreenQuad(shader, NULL, &sky_texture, error_output);
-	//sky_texture.Screenshot("sky.bmp", error_output);
+	//sky_texture.Screenshot("sky.bmp", error_output);*/
 }
 
 void SKY::Draw(MATRIX4<float> & iviewproj, FBTEXTURE_GL * output)
-{
+{/*
 	SHADER_GLSL & shader = graphics.GetShader("sky_draw");
 	shader.UploadMat16("iviewproj", iviewproj.GetArray());
-	graphics.DrawScreenQuad(shader, &sky_texture, output, error_output);
+	graphics.DrawScreenQuad(shader, &sky_texture, output, error_output);*/
 }

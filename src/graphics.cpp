@@ -20,7 +20,6 @@
 #include "reseatable_reference.h"
 #include "definitions.h"
 #include "containeralgorithm.h"
-#include "sky.h"
 
 #include <cassert>
 
@@ -475,8 +474,6 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 	shader_load_success = shader_load_success && LoadShader(shaderpath, "bloomcomposite", info_output, error_output);
 	shader_load_success = shader_load_success && LoadShader(shaderpath, "gaussian_blur", info_output, error_output, "_horizontal", "_HORIZONTAL_");
 	shader_load_success = shader_load_success && LoadShader(shaderpath, "gaussian_blur", info_output, error_output, "_vertical", "_VERTICAL_");
-	//shader_load_success = shader_load_success && LoadShader(shaderpath, "sky_draw", info_output, error_output);
-	//shader_load_success = shader_load_success && LoadShader(shaderpath, "sky_scatter", info_output, error_output);
 
 	if (shader_load_success)
 	{
@@ -580,6 +577,7 @@ void GRAPHICS_SDLGL::SetupCamera()
 {
 	glMatrixMode( GL_PROJECTION );
 	glLoadIdentity();
+	//gluPerspective( camfov, w/(float)h, 0.1f, 10000.0f );
 	gluPerspective( camfov, w/(float)h, 0.1f, 10000.0f );
 	glMatrixMode( GL_MODELVIEW );
 	float temp_matrix[16];
@@ -656,7 +654,7 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 				float shadow_radius = lambda*(nd*powf(fd/nd,si))+(1.0-lambda)*(nd+(fd-nd)*si);*/
 
 				MATHVECTOR <float, 3> shadowbox(1,1,1);
-				shadowbox = shadowbox * (shadow_radius*sqrt(2.0f));
+				shadowbox = shadowbox * (shadow_radius*sqrt(2.0));
 				MATHVECTOR <float, 3> shadowoffset(0,0,-1);
 				shadowoffset = shadowoffset * shadow_radius;
 				(-camorient).RotateVector(shadowoffset);
@@ -839,25 +837,10 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 		//determine render output for the full scene
 		reseatable_reference <RENDER_OUTPUT> scenebuffer = final;
 		if (bloom)
-		{
 			scenebuffer = full_scene_buffer;
-		}
-		if(sky == NULL)
-		{
-			SendDrawlistToRenderScene(renderscene, &skyboxes_noblend);
-			Render(&renderscene, *scenebuffer, error_output);
-		}
-		else
-		{	
-			MATRIX4<float> iproj = MATRIX4<float>::InvPerspective(camfov, w/(float)h, 1.0, 10.0);
-			MATRIX4<float> iview;
-			QUATERNION <float> fixer;
-			fixer.Rotate(3.141593*0.5, 1, 0, 0);
-			(-(camorient*fixer)).GetMatrix4(iview);
-			MATRIX4<float> iviewproj = iproj.Multiply(iview);
-			sky->Draw(iviewproj, scenebuffer->GetFBO());
-		}
 
+		SendDrawlistToRenderScene(renderscene,&skyboxes_noblend);
+		Render(&renderscene, *scenebuffer, error_output);
 		renderscene.SetClear(false, true);
 		SendDrawlistToRenderScene(renderscene,&skyboxes_blend);
 		//std::reverse(drawlist_map[&skyboxes].begin(), drawlist_map[&skyboxes].end());
@@ -1897,48 +1880,4 @@ unsigned int GRAPHICS_SDLGL::RENDER_INPUT_SCENE::CombineDrawlists()
 	calgo::transform(*drawlist_dynamic, std::back_inserter(combined_drawlist_cache), &PointerTo);
 	
 	return already_culled;
-}
-
-void GRAPHICS_SDLGL::DrawScreenQuad(SHADER_GLSL & shader, FBTEXTURE_GL * input, FBTEXTURE_GL * output, std::ostream & error_output)
-{
-	if(output)
-	{
-		output->Begin(error_output);
-		OPENGL_UTILITY::CheckForOpenGLErrors("render output begin", error_output);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		glstate.Disable(GL_DEPTH_TEST);
-	}
-	if(input)
-	{
-		glstate.Enable(GL_DEPTH_TEST);
-		glstate.Enable(GL_TEXTURE_2D);
-		glActiveTextureARB(GL_TEXTURE0_ARB);
-		input->Activate();
-	}
-	
-	shader.Enable();
-	glstate.Disable(GL_BLEND);
-
-	// screen space quad
-	glBegin(GL_QUADS);
-	glTexCoord2f(0.0f, 0.0f); glVertex3f( -1.0f,  -1.0f,  0.0f);
-	glTexCoord2f(1.0, 0.0f); glVertex3f( 1.0f,  -1.0f,  0.0f);
-	glTexCoord2f(1.0, 1.0); glVertex3f( 1.0f,  1.0f,  0.0f);
-	glTexCoord2f(0.0f, 1.0); glVertex3f( -1.0f,  1.0f,  0.0f);
-	glEnd();
-
-	OPENGL_UTILITY::CheckForOpenGLErrors("render finish", error_output);
-	
-	if(input)
-	{
-		glstate.Disable(GL_DEPTH_TEST);
-		glstate.Disable(GL_TEXTURE_2D);
-	}
-	
-	if(output)
-	{
-		glstate.Enable(GL_DEPTH_TEST);
-		output->End(error_output);
-		OPENGL_UTILITY::CheckForOpenGLErrors("render output end", error_output);
-	}
 }

@@ -173,7 +173,7 @@ void SHADER_GLSL::Enable()
 	glUseProgramObjectARB(program);
 }
 
-bool SHADER_GLSL::UploadMat16(const string & varname, const float * mat16)
+bool SHADER_GLSL::UploadMat16(const string & varname, float * mat16)
 {
 	Enable();
 	

@@ -1,13 +1,6 @@
 #include "model.h"
 #include "opengl_utility.h"
 
-#ifdef __APPLE__
-#include <GLExtensionWrangler/glew.h>
-#include <OpenGL/gl.h>
-#else
-#include <GL/glew.h>
-#include <GL/gl.h>
-#endif
 #include <fstream>
 
 using std::vector;

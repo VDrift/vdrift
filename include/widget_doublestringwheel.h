@@ -111,37 +111,57 @@ public:
 	{
 		current1 = values1.end();
 		current2 = values2.end();
+		//int offset = -1;
+		//int count = 0;
+		//for (std::list <std::pair<std::string,std::string> >::iterator i1 = values1.begin(),std::list <std::pair<std::string,std::string> >::iterator i2 = values2.begin();
+		//		   i1 != values1.end(),i2 != values2.end(); i1++,i2++)
 		std::list <std::pair<std::string,std::string> >::iterator i1 = values1.begin();
 		std::list <std::pair<std::string,std::string> >::iterator i2 = values2.begin();
 		while (i1 != values1.end() && i2 != values2.end())
 		{
 			if (i1->first == newsetting1 && i2->first == newsetting2)
 			{
+				//offset = count;
 				current1 = i1;
 				current2 = i2;
 			}
+			//count++;
 			i1++;i2++;
 		}
+		
+		/*count = 0;
+		for (std::list <std::pair<std::string,std::string> >::iterator i = values2.begin(); i != values2.end(); i++)
+		{
+			if (count == offset)
+				current2 = i;
+			count++;
+		}*/
 		
 		assert (current1 != values1.end());
 		assert (current2 != values2.end());
 
-		label.ReviseDrawable(current1->second+ "," +current2->second);
+		label.ReviseDrawable(current1->second+","+current2->second);
 	}
 	
 	void SetCurrent(const std::string newsetting1, const std::string newsetting2, std::ostream & error_output)
 	{
 		current1 = values1.end();
 		current2 = values2.end();
+		//int offset = -1;
+		//int count = 0;
+		//for (std::list <std::pair<std::string,std::string> >::iterator i1 = values1.begin(),std::list <std::pair<std::string,std::string> >::iterator i2 = values2.begin();
+		//		   i1 != values1.end(),i2 != values2.end(); i1++,i2++)
 		std::list <std::pair<std::string,std::string> >::iterator i1 = values1.begin();
 		std::list <std::pair<std::string,std::string> >::iterator i2 = values2.begin();
 		while (i1 != values1.end() && i2 != values2.end())
 		{
 			if (i1->first == newsetting1 && i2->first == newsetting2)
 			{
+				//offset = count;
 				current1 = i1;
 				current2 = i2;
 			}
+			//count++;
 			i1++;i2++;
 		}
 		

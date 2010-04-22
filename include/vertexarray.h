@@ -8,8 +8,6 @@
 #include "joeserialize.h"
 #include "macros.h"
 
-template <typename T> class MATRIX4;
-
 class MODEL_OBJ;
 
 class VERTEXARRAY
@@ -165,13 +163,12 @@ public:
 						return v3;
 						break;
 					default:
-						return v1;
+						assert(0);
 						break;
 				}
 			}
 	};
 	void BuildFromFaces(const std::vector <FACE> & faces);
-	void Transform(const MATRIX4 <float> & m);
 	void Translate(float x, float y, float z);
 	void Rotate(float a, float x, float y, float z);
 };

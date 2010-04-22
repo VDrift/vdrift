@@ -1478,17 +1478,12 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 		error_output << "Error during track loading: " << trackname << endl;
 		return false;
 	}
-	
+/*	
 	if (!sky.Load(pathmanager.GetTrackPath()+"/"+trackname))
 	{
-		graphics.sky = NULL;
 		info_output << "No sky settings file found. Fall back to sky box." << std::endl;
 	}
-	else
-	{
-		graphics.sky = &sky;
-	}
-
+*/
 	//start out with no camera
 	active_camera = NULL;
 

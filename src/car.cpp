@@ -599,10 +599,9 @@ bool CAR::LoadInto (
 			}
 
 			// car mesh orientation fixer: -90° around z-axis
-			MATRIX4<float> m;
-			m[0] = 0; m[4] = 1; m[1] = -1; m[5] = 0;
-			output_model.Transform(m);
-			output_model.GenerateListID(error_output); // reload mesh
+			output_model.Rotate(-M_PI_2, 0, 0, 1);
+ 			output_model.GenerateMeshMetrics();
+			output_model.GenerateListID(error_output);
 		}
 	}
 

@@ -22,7 +22,7 @@ class FBTEXTURE_GL : public TEXTURE_INTERFACE
 			RECTANGLE = GL_TEXTURE_RECTANGLE_ARB,
 			CUBEMAP = GL_TEXTURE_CUBE_MAP_ARB
 		};
-
+		
 		enum CUBE_SIDE
 		{
 			POSX = GL_TEXTURE_CUBE_MAP_POSITIVE_X,
@@ -32,7 +32,7 @@ class FBTEXTURE_GL : public TEXTURE_INTERFACE
 			POSZ = GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
 			NEGZ = GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
 		};
-
+	
 	private:
 		GLuint fbtexture;
 		GLuint renderbuffer_depth;
@@ -42,7 +42,7 @@ class FBTEXTURE_GL : public TEXTURE_INTERFACE
 		bool loaded;
 		bool inited;
 		int sizew, sizeh;
-
+		
 		TARGET texture_target;
 		bool depth;
 		bool alpha;
@@ -50,7 +50,7 @@ class FBTEXTURE_GL : public TEXTURE_INTERFACE
 		int multisample;
 		int texture_attachment;
 		CUBE_SIDE cur_side;
-
+		
 		/// returns true if statis is good
 		bool CheckStatus(std::ostream & error_output);
 

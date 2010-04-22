@@ -12,8 +12,6 @@
 #include "joeserialize.h"
 #include "macros.h"
 
-template <typename T> class MATRIX4;
-
 ///loading data into the mesh vertexarray is implemented by derived classes
 class MODEL
 {
@@ -95,7 +93,7 @@ public:
 	
 	bool Loaded() {return (mesh.GetNumFaces() > 0);}
 
-	void Transform(const MATRIX4 <float> & m) {mesh.Transform(m); GenerateMeshMetrics();}
+	void Rotate(float a, float x, float y, float z) {mesh.Rotate(a, x, y, z);}
 	
 	AABB <float> GetAABB() const
 	{

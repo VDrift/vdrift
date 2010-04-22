@@ -371,6 +371,13 @@ public:
 	{
 		draw = &newdraw;
 		mat4.Set(newmat4);
+		
+		/*//detect if we need to buffer the vertex array
+		if (draw.GetVertArray())
+		{
+			varray = *draw.GetVertArray();
+			draw.SetVertArray(&varray);
+		}*/
 	}
 };
 
@@ -396,6 +403,7 @@ public:
 	unsigned int Nodes() const {return childlist.size();}
 	unsigned int Drawables() const {return drawlist.size();}
 	SCENETRANSFORM & GetTransform() {return transform;}
+	//void GetDrawList(std::vector <SCENEDRAW> & drawlistoutput, const DRAWABLE_FILTER & filter) const;
 	void GetCollapsedDrawList(std::map < DRAWABLE_FILTER *, std::vector <SCENEDRAW> > & drawlist_output_map, const MAT4 & prev_transform) const;
 	void SetParent(SCENENODE & newparent) {parent = &newparent;}
 	SCENENODE * GetParent() {return parent;}
@@ -413,5 +421,24 @@ public:
 	bool IsActive() const { return active; };
 	void IsActive(bool value) { active = value; };
 };
+
+/*class SCENEGRAPH
+{
+private:
+	SCENENODE rootnode;
+
+public:
+	SCENEGRAPH() {}
+	~SCENEGRAPH() {}
+
+	const TESTER Test();
+	SCENENODE & GetRoot() {return rootnode;}
+	//void GetDrawList(list <SCENEDRAW> & drawlist) const;
+	void GetDrawList(list <DRAWABLE_FILTER *> & filter_list, map < DRAWABLE_FILTER *, list <SCENEDRAW> > & drawlist_output_map) const;
+	//void GetCollapsedDrawList(list <SCENEDRAW> & drawlist) const;
+	void GetCollapsedDrawList(list <DRAWABLE_FILTER *> & filter_list, map < DRAWABLE_FILTER *, list <SCENEDRAW> > & drawlist_output_map) const;
+	void Delete(SCENENODE * todelete);
+	void Delete(DRAWABLE * todelete);
+};*/
 
 #endif
