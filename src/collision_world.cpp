@@ -12,6 +12,7 @@ COLLISION_WORLD::COLLISION_WORLD()
   track(NULL), trackObject(NULL), trackMesh(NULL)
 {
 	world.setGravity(btVector3(0.0, 0.0, -9.81));
+	world.setForceUpdateAllAabbs(false); //optimization
 }
 
 COLLISION_WORLD::~COLLISION_WORLD()
@@ -130,8 +131,8 @@ btCollisionShape * COLLISION_WORLD::AddMeshShape(const MODEL & model)
 
 struct MyRayResultCallback : public btCollisionWorld::RayResultCallback
 {
-	MyRayResultCallback(const btVector3 & rayFromWorld,const btVector3 & rayToWorld)
-	:m_rayFromWorld(rayFromWorld), m_rayToWorld(rayToWorld)
+	MyRayResultCallback(const btVector3 & rayFromWorld, const btVector3 & rayToWorld, const btCollisionObject * exclude)
+	:m_rayFromWorld(rayFromWorld), m_rayToWorld(rayToWorld), m_exclude(exclude)
 	{
 	}
 
@@ -142,9 +143,13 @@ struct MyRayResultCallback : public btCollisionWorld::RayResultCallback
 	btVector3	m_hitPointWorld;
 
 	int m_shapeId;
+	const btCollisionObject * m_exclude;
 
-	virtual	btScalar	addSingleResult(btCollisionWorld::LocalRayResult& rayResult,bool normalInWorldSpace)
+	virtual	btScalar	addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace)
 	{
+		if (rayResult.m_collisionObject == m_exclude)
+			return 1.0;
+		
 		//caller already does the filter on the m_closestHitFraction
 		btAssert(rayResult.m_hitFraction <= m_closestHitFraction);
 
@@ -158,7 +163,7 @@ struct MyRayResultCallback : public btCollisionWorld::RayResultCallback
 		else
 		{
 			///need to transform normal into worldspace
-			m_hitNormalWorld = m_collisionObject->getWorldTransform().getBasis()*rayResult.m_hitNormalLocal;
+			m_hitNormalWorld = m_collisionObject->getWorldTransform().getBasis() * rayResult.m_hitNormalLocal;
 		}
 		m_hitPointWorld.setInterpolate3(m_rayFromWorld,m_rayToWorld,rayResult.m_hitFraction);
 		return rayResult.m_hitFraction;
@@ -169,11 +174,12 @@ bool COLLISION_WORLD::CastRay(
 	const MATHVECTOR <float, 3> & origin,
 	const MATHVECTOR <float, 3> & direction,
 	const float length,
+	const btCollisionObject * caster,
 	COLLISION_CONTACT & contact) const
 {
 	btVector3 from = ToBulletVector(origin);
 	btVector3 to = ToBulletVector(origin + direction * length);
-	MyRayResultCallback rayCallback(from, to);
+	MyRayResultCallback rayCallback(from, to, caster);
 
 	MATHVECTOR <float, 3> p;
 	MATHVECTOR <float, 3> n;

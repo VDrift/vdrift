@@ -1011,9 +1011,8 @@ void CARDYNAMICS::AlignWithGround()
 // proof of concept: doesn't respect car current orientation
 void CARDYNAMICS::RolloverRecover()
 {
-	
-	btTransform transform = chassis->getCenterOfMassTransform();
 	btQuaternion rot(0, 0, 0, 1);
+	btTransform transform = chassis->getCenterOfMassTransform();
 	
 	transform.setRotation(rot);
 	chassis->setCenterOfMassTransform(transform);
@@ -1619,7 +1618,7 @@ void CARDYNAMICS::UpdateWheelContacts()
 		MATHVECTOR <float, 3> raystart = wheel_position[i];
 		raystart = raystart - raydir * tire[i].GetRadius();
 		float raylen = 5;
-		world->CastRay(raystart, raydir, raylen, wheelContact);
+		world->CastRay(raystart, raydir, raylen, chassis, wheelContact);
 	}
 }
 
