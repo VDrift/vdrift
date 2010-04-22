@@ -646,6 +646,13 @@ void VERTEXARRAY::Rotate(float a, float x, float y, float z)
 		float * vert = &*i;
 		q.RotateVector(vert);
     }
+    
+	assert(normals.size() % 3 == 0);
+	for (std::vector <float>::iterator i = normals.begin(); i != normals.end(); i += 3)
+	{
+		float * n = &*i;
+		q.RotateVector(n);
+    }
 }
 
 QT_TEST(vertexarray_buldfromfaces_test)
