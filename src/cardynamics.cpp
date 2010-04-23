@@ -36,7 +36,9 @@ CARDYNAMICS::CARDYNAMICS()
 	brake.resize ( WHEEL_POSITION_SIZE );
 	abs_active.resize ( WHEEL_POSITION_SIZE, false );
 	tcs_active.resize ( WHEEL_POSITION_SIZE, false );
-	//wheelBody.resize(WHEEL_POSITION_SIZE);
+#ifdef _BULLET_
+	wheelBody.resize(WHEEL_POSITION_SIZE);
+#endif
 }
 
 bool CARDYNAMICS::Load(CONFIGFILE & c, std::ostream & error_output)
@@ -677,15 +679,7 @@ void CARDYNAMICS::Init(
 	chassis = world.AddRigidBody(info);
 	world.AddAction(this);
 
-	// init wheels, suspension
-	for (int i = 0; i < WHEEL_POSITION_SIZE; i++)
-	{
-		wheel[WHEEL_POSITION(i)].SetInitialConditions();
-		wheel_velocity[i].Set(0.0);
-		wheel_position[i] = GetWheelPositionAtDisplacement(WHEEL_POSITION(i), 0);
-		wheel_orientation[i] = orientation * GetWheelSteeringAndSuspensionOrientation(WHEEL_POSITION(i));
-	}
-/*
+#ifdef _BULLET_
 	for(unsigned int i = 0; i < WHEEL_POSITION_SIZE; i++)
 	{
 		// wheel: got mass, (y-axis), radius, width is missing
@@ -728,22 +722,37 @@ void CARDYNAMICS::Init(
 		joint->setAngularUpperLimit(btVector3(0, 0, 0));
 		joint->setLinearLowerLimit(btVector3(0, 0, 0));
 		joint->setLinearUpperLimit(btVector3(0, 0, 0));
+		
+		// hinge radial limit
 		if (i%2) joint->setAngularUpperLimit(btVector3(0.15, 0, 0));
 		else joint->setAngularLowerLimit(btVector3(-0.15, 0, 0));
+		
+		// spring/damper
 		joint->enableSpring(3, true);
-		joint->setStiffness(3, suspension[i].GetSpringConstant()*2);
-		joint->setDamping(3, suspension[i].GetBounce()*2);
+		joint->setStiffness(3, suspension[i].GetSpringConstant()*3);
+		joint->setDamping(3, suspension[i].GetBounce()*3);
 		joint->setEquilibriumPoint();
 
 		world.AddConstraint(joint, disableCollisionsBetweenLinked);
 	}
-*/
+#else
+	// init wheels, suspension
+	for (int i = 0; i < WHEEL_POSITION_SIZE; i++)
+	{
+		wheel[WHEEL_POSITION(i)].SetInitialConditions();
+		wheel_velocity[i].Set(0.0);
+		wheel_position[i] = GetWheelPositionAtDisplacement(WHEEL_POSITION(i), 0);
+		wheel_orientation[i] = orientation * GetWheelSteeringAndSuspensionOrientation(WHEEL_POSITION(i));
+	}
+	
 	AlignWithGround();
+#endif
 }
 
 // executed as last function(after integration) in bullet singlestepsimulation
 void CARDYNAMICS::updateAction(btCollisionWorld * collisionWorld, btScalar dt)
 {
+#ifndef _BULLET_
 	// get velocity, position orientation after dt
 	SynchronizeBody();
 
@@ -755,6 +764,7 @@ void CARDYNAMICS::updateAction(btCollisionWorld * collisionWorld, btScalar dt)
 
 	// update velocity
 	SynchronizeChassis();
+#endif
 }
 
 void CARDYNAMICS::debugDraw(btIDebugDraw* debugDrawer)
@@ -790,13 +800,15 @@ const QUATERNION <T> & CARDYNAMICS::GetOrientation() const
 
 MATHVECTOR <T, 3> CARDYNAMICS::GetWheelPosition(WHEEL_POSITION wp) const
 {
+#ifdef _BULLET_
+	btTransform wheelTrans;
+	wheelBody[WHEEL_POSITION(wp)]->getMotionState()->getWorldTransform(wheelTrans);
+	return ToMathVector<T>(wheelTrans.getOrigin());
+#else
 	MATHVECTOR <T, 3> pos = GetLocalWheelPosition(wp, suspension[wp].GetDisplacementPercent());
 	chassisRotation.RotateVector(pos);
 	return pos + chassisPosition;
-	
-	//btTransform wheelTrans;
-	//wheelBody[WHEEL_POSITION(wp)]->getMotionState()->getWorldTransform(wheelTrans);
-	//return ToMathVector<T>(wheelTrans.getOrigin());
+#endif
 }
 
 MATHVECTOR <T, 3> CARDYNAMICS::GetWheelPosition(WHEEL_POSITION wp, T displacement_percent) const
@@ -813,20 +825,25 @@ QUATERNION <T> CARDYNAMICS::GetWheelOrientation(WHEEL_POSITION wp) const
 	{
 		siderot.Rotate(3.141593, 0, 0, 1);
 	}
+	
+#ifdef _BULLET_
+	btTransform wheelTrans;
+	wheelBody[WHEEL_POSITION(wp)]->getMotionState()->getWorldTransform(wheelTrans);
+	return ToMathQuaternion<T>(wheelTrans.getRotation()) * siderot;
+#else
 	return chassisRotation * GetWheelSteeringAndSuspensionOrientation(wp) * wheel[wp].GetOrientation() * siderot;
-
-	//btTransform wheelTrans;
-	//wheelBody[WHEEL_POSITION(wp)]->getMotionState()->getWorldTransform(wheelTrans);
-	//return ToMathQuaternion<T>(wheelTrans.getRotation()) * siderot;
+#endif
 }
 
 QUATERNION <T> CARDYNAMICS::GetUprightOrientation(WHEEL_POSITION wp) const
 {
+#ifdef _BULLET_
+	btTransform wheelTrans;
+	wheelBody[WHEEL_POSITION(wp)]->getMotionState()->getWorldTransform(wheelTrans);
+	return ToMathQuaternion<T>(wheelTrans.getRotation());
+#else
 	return chassisRotation * GetWheelSteeringAndSuspensionOrientation(wp);
-
-	//btTransform wheelTrans;
-	//wheelBody[WHEEL_POSITION(wp)]->getMotionState()->getWorldTransform(wheelTrans);
-	//return ToMathQuaternion<T>(wheelTrans.getRotation());
+#endif
 }
 
 /// worldspace wheel center position
@@ -852,14 +869,16 @@ float CARDYNAMICS::GetMass() const
 
 T CARDYNAMICS::GetSpeed() const
 {
-	return body.GetVelocity().Magnitude();
-	//return chassis->getLinearVelocity().length();
+	return GetVelocity().Magnitude();
 }
 
 MATHVECTOR <T, 3> CARDYNAMICS::GetVelocity() const
 {
+#ifdef _BULLET_
+	return ToMathVector<T>(chassis->getLinearVelocity());
+#else
 	return body.GetVelocity();
-	//return ToMathVector<T>(chassis->getLinearVelocity());
+#endif
 }
 
 MATHVECTOR <T, 3> CARDYNAMICS::GetEnginePosition() const
@@ -1266,25 +1285,33 @@ MATHVECTOR <T, 3> CARDYNAMICS::GetDownVector() const
 
 QUATERNION <T> CARDYNAMICS::Orientation() const
 {
+#ifdef _BULLET_
+	return ToMathQuaternion<T>(chassis->getOrientation());
+#else
 	return body.GetOrientation();
-	//return ToMathQuaternion<T>(chassis->getOrientation());
+#endif
 }
 
 MATHVECTOR <T, 3> CARDYNAMICS::Position() const
 {
+#ifdef _BULLET_
+	return ToMathVector<T>(chassis->getCenterOfMassPosition());
+#else
 	return body.GetPosition();
-	//return ToMathVector<T>(chassis->getCenterOfMassPosition());
+#endif
 }
 
 MATHVECTOR <T, 3> CARDYNAMICS::LocalToWorld(const MATHVECTOR <T, 3> & local) const
 {
+#ifdef _BULLET_
+	btVector3 position = chassis->getCenterOfMassTransform().getBasis() * ToBulletVector(local - center_of_mass);
+	position = position + chassis->getCenterOfMassTransform().getOrigin();
+	return ToMathVector <T> (position);
+#else
 	MATHVECTOR <T,3> position = local - center_of_mass;
 	body.GetOrientation().RotateVector(position);
 	return position + body.GetPosition();
-	
-	//btVector3 position = chassis->getCenterOfMassTransform().getBasis() * ToBulletVector(local - center_of_mass);
-	//position = position + chassis->getCenterOfMassTransform().getOrigin();
-	//return ToMathVector <T> (position);
+#endif
 }
 
 //simple hinge (arc) suspension displacement
@@ -1338,30 +1365,42 @@ MATHVECTOR <T, 3> CARDYNAMICS::GetWheelPositionAtDisplacement(WHEEL_POSITION wp,
 
 void CARDYNAMICS::ApplyForce(const MATHVECTOR <T, 3> & force)
 {
+#ifdef _BULLET_
+	chassis->applyCentralForce(ToBulletVector(force));
+#else
 	body.ApplyForce(force);
-	//chassis->applyCentralForce(ToBulletVector(force));
+#endif
 }
 
 void CARDYNAMICS::ApplyForce(const MATHVECTOR <T, 3> & force, const MATHVECTOR <T, 3> & offset)
 {
+#ifdef _BULLET_
+	chassis->applyForce(ToBulletVector(force), ToBulletVector(offset));
+#else
 	body.ApplyForce(force, offset);
-	//chassis->applyForce(ToBulletVector(force), ToBulletVector(offset));
+#endif
 }
 
 void CARDYNAMICS::ApplyTorque(const MATHVECTOR <T, 3> & torque)
 {
+#ifdef _BULLET_
+	if(torque.MagnitudeSquared() > 1E-6)
+		chassis->applyTorque(ToBulletVector(torque));
+#else
 	body.ApplyTorque(torque);
-	//if(torque.MagnitudeSquared() > 1E-6)
-	//	chassis->applyTorque(ToBulletVector(torque));
+#endif
 }
 
 void CARDYNAMICS::UpdateWheelVelocity()
 {
 	for(int i = 0; i < WHEEL_POSITION_SIZE; i++)
 	{
+#ifdef _BULLET_
+		btVector3 offset = ToBulletVector(wheel_position[i]) - chassis->getCenterOfMassPosition();
+		wheel_velocity[i] = ToMathVector<T>(chassis->getVelocityInLocalPoint(offset));
+#else
 		wheel_velocity[i] = body.GetVelocity(wheel_position[i] - body.GetPosition());
-		//btVector3 offset = ToBulletVector(wheel_position[i]) - chassis->getCenterOfMassPosition();
-		//wheel_velocity[i] = ToMathVector<T>(chassis->getVelocityInLocalPoint(offset));
+#endif
 	}
 }
 
@@ -1550,8 +1589,12 @@ void CARDYNAMICS::ApplyWheelTorque(T dt, T drive_torque, int i, MATHVECTOR <T, 3
 
 void CARDYNAMICS::UpdateBody(T dt, T drive_torque[])
 {
+
+#ifdef _BULLET_
+	chassis->clearForces();
+#else
 	body.Integrate1(dt);
-	//chassis->clearForces();
+#endif
 
 	UpdateWheelVelocity();
 
@@ -1570,8 +1613,11 @@ void CARDYNAMICS::UpdateBody(T dt, T drive_torque[])
 		ApplyWheelTorque(dt, drive_torque[i], i, tire_friction, wheel_orientation[i]);
 	}
 
+#ifdef _BULLET_
+	chassis->integrateVelocities(dt);
+#else
 	body.Integrate2(dt);
-	//chassis->integrateVelocities(dt);
+#endif
 
 	UpdateWheelTransform();
 	InterpolateWheelContacts(dt);

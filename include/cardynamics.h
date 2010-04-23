@@ -26,6 +26,8 @@
 #include <iostream>
 #include <utility>
 
+//#define _BULLET_
+
 class MODEL;
 class CONFIGFILE;
 class COLLISION_WORLD;
@@ -146,7 +148,10 @@ protected:
 	MATHVECTOR <T, 3> center_of_mass;
 	COLLISION_WORLD * world;
 	btRigidBody * chassis;
-	//std::vector <btRigidBody *> wheelBody;
+	
+#ifdef _BULLET_
+	std::vector <btRigidBody *> wheelBody;
+#endif
 
 	// interpolated chassis state
 	MATHVECTOR <T, 3> chassisPosition;

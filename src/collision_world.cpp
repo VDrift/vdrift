@@ -13,6 +13,7 @@ COLLISION_WORLD::COLLISION_WORLD()
 {
 	world.setGravity(btVector3(0.0, 0.0, -9.81));
 	world.setForceUpdateAllAabbs(false); //optimization
+	//world.getSolverInfo().m_numIterations = 20;
 }
 
 COLLISION_WORLD::~COLLISION_WORLD()
