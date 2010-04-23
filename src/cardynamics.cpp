@@ -631,6 +631,7 @@ void CARDYNAMICS::Init(
 	btConvexHullShape * hull = new btConvexHullShape(vertices, vertices_size / 3, 3 * sizeof(float));
 */
 	AABB <float> box = chassisModel.GetAABB();
+	float bottom = box.GetCenter()[2] - box.GetSize()[2] * 0.5;
 	for (int i = 0; i < 4; i++)
 	{
 		MATHVECTOR <float, 3> wheelpos = GetLocalWheelPosition(WHEEL_POSITION(i), 0);
@@ -638,19 +639,21 @@ void CARDYNAMICS::Init(
 		const MODEL * wheelmodel = &wheelModelFront;
 		if (i > 1) wheelmodel = &wheelModelRear;
 
-		AABB <float> wheelaabb;
 		float sidefactor = 1.0;
 		if (i == 1 || i == 3) sidefactor = -1.0;
 
+		AABB <float> wheelaabb;
 		wheelaabb.SetFromCorners(
 			wheelpos - wheelmodel->GetAABB().GetSize() * 0.5 * sidefactor,
 			wheelpos + wheelmodel->GetAABB().GetSize() * 0.5 * sidefactor);
 		box.CombineWith(wheelaabb);
 	}
+	float bottom_new = box.GetCenter()[2] - box.GetSize()[2] * 0.5;
+	const float delta = 0.25;
+	MATHVECTOR <T, 3> offset(0, 0, bottom - bottom_new + delta);
 
-	const MATHVECTOR <T, 3> verticalMargin(0, 0, 0.3);
-	btVector3 origin = ToBulletVector(box.GetCenter() + verticalMargin - center_of_mass);
-	btVector3 size = ToBulletVector(box.GetSize() - verticalMargin);
+	btVector3 origin = ToBulletVector(box.GetCenter() + offset * 0.5 - center_of_mass);
+	btVector3 size = ToBulletVector(box.GetSize() - offset);
 
 	localtransform.setOrigin(origin);
 	btBoxShape * hull = new btBoxShape(size * 0.5);
