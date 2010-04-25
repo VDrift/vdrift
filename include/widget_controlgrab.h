@@ -49,14 +49,14 @@ private:
 	std::string description;
 	std::string tempdescription;
 	std::string active_action;
-	reseatable_reference <SCENENODE> topnode;
+	keyed_container <SCENENODE>::handle topnode;
 	float x, y;
 	float scale_x, scale_y;
 	float w, h;
 	bool analog;
 	bool only_one;
 	
-	void AddButton(SCENENODE * scene, TEXTURE_GL * tex_unsel, TEXTURE_GL * tex_sel, FONT * font, 
+	void AddButton(SCENENODE & scene, TEXTURE_GL * tex_unsel, TEXTURE_GL * tex_sel, FONT * font, 
 		       const std::string & type, const std::string & name, float scalex, float scaley,
 		       float y, bool once, bool down, const std::string & key, const std::string & keycode, const std::string & joy_type,
 		       int joy_index, int joy_button, int joy_axis, const std::string & joy_axis_type,
@@ -93,6 +93,8 @@ private:
 			font, "", x, y, scalex*0.8*(4.0/3.0), scaley*0.8, r,g,b);
 	}
 	
+	SCENENODE & GetTopNode(SCENENODE & scene) {return scene.GetNode(topnode);}
+	
 public:
 	WIDGET_CONTROLGRAB() {}
 	virtual WIDGET * clone() const {return new WIDGET_CONTROLGRAB(*this);};
@@ -112,21 +114,21 @@ public:
     		END
 	};
 	
-	SCENENODE * GetNode()
+	keyed_container <SCENENODE>::handle GetNode()
 	{
-		return &topnode.get();
+		return topnode;
 	}
 	
-	void SetupDrawable(SCENENODE * scene, CONFIGFILE & c, const std::string & newsetting, const std::vector <TEXTURE_GL *> & texturevector, FONT * font, const std::string & text, float centerx, float centery, float scalex, float scaley, bool newanalog, bool newonly_one)
+	void SetupDrawable(SCENENODE & scene, CONFIGFILE & c, const std::string & newsetting, const std::vector <TEXTURE_GL *> & texturevector, FONT * font, const std::string & text, float centerx, float centery, float scalex, float scaley, bool newanalog, bool newonly_one)
 	{
 		assert(texturevector.size() == END);
-		assert(scene);
 		assert(font);
 		assert(!newsetting.empty());
 		for (int i = 0; i < END; i++)
 			assert(texturevector[i]);
 		
-		topnode = scene->AddNode();
+		topnode = scene.AddNode();
+		SCENENODE & topnoderef = scene.GetNode(topnode);
 		
 		setting = newsetting;
 		
@@ -149,15 +151,15 @@ public:
 		
 		//std::cout << scalex << "," << scaley << std::endl;
 		
-		label.SetupDrawable(&topnode.get(), font, text, textx, y, scalex, scaley, r, g, b, 2);
-		addbutton.SetupDrawable(&topnode.get(), texturevector[ADD], texturevector[ADDSEL], texturevector[ADDSEL],
+		label.SetupDrawable(topnoderef, font, text, textx, y, scalex, scaley, r, g, b, 2);
+		addbutton.SetupDrawable(topnoderef, texturevector[ADD], texturevector[ADDSEL], texturevector[ADDSEL],
 			font, "", x, y, scalex*0.8*(4.0/3.0), scaley*0.8, r,g,b);
 		
 		//add control buttons as necessary
-		LoadControls(&topnode.get(), c, texturevector, font);
+		LoadControls(topnoderef, c, texturevector, font);
 	}
 	
-	void LoadControls(SCENENODE * scene, CONFIGFILE & c, const std::vector <TEXTURE_GL *> & texturevector, FONT * font)
+	void LoadControls(SCENENODE & scene, CONFIGFILE & c, const std::vector <TEXTURE_GL *> & texturevector, FONT * font)
 	{
 		assert(!setting.empty()); //ensure that we've already done a SetupDrawable
 
@@ -229,34 +231,38 @@ public:
 		}
 	}
 	
-	virtual void SetAlpha(float newalpha)
+	virtual void SetAlpha(SCENENODE & scene, float newalpha)
 	{
-		label.SetAlpha(newalpha);
-		addbutton.SetAlpha(newalpha);
+		SCENENODE & topnoderef = GetTopNode(scene);
+		label.SetAlpha(topnoderef, newalpha);
+		addbutton.SetAlpha(topnoderef, newalpha);
 		for (std::list <CONTROLWIDGET>::iterator i = controlbuttons.begin(); i != controlbuttons.end(); ++i)
 		{
-			i->widget.SetAlpha(newalpha);
+			i->widget.SetAlpha(topnoderef, newalpha);
 		}
 	}
 	
-	virtual void SetVisible(bool newvis)
+	virtual void SetVisible(SCENENODE & scene, bool newvis)
 	{
-		label.SetVisible(newvis);
-		addbutton.SetVisible(newvis);
+		SCENENODE & topnoderef = GetTopNode(scene);
+		label.SetVisible(topnoderef, newvis);
+		addbutton.SetVisible(topnoderef, newvis);
 		for (std::list <CONTROLWIDGET>::iterator i = controlbuttons.begin(); i != controlbuttons.end(); ++i)
 		{
-			i->widget.SetVisible(newvis);
+			i->widget.SetVisible(topnoderef, newvis);
 		}
 	}
 	
-	virtual bool ProcessInput(float cursorx, float cursory, bool cursordown, bool cursorjustup)
+	virtual bool ProcessInput(SCENENODE & scene, float cursorx, float cursory, bool cursordown, bool cursorjustup)
 	{
 		active_action.clear();
 		
 		tempdescription.clear();
 		
+		SCENENODE & topnoderef = GetTopNode(scene);
+		
 		//generate the add input tooltip, check to see if we pressed the add input button, generate an action
-		if (addbutton.ProcessInput(cursorx, cursory, cursordown, cursorjustup))
+		if (addbutton.ProcessInput(topnoderef, cursorx, cursory, cursordown, cursorjustup))
 		{
 			tempdescription = "Add a new input";
 			
@@ -267,7 +273,7 @@ public:
 		//generate the input tooltip, check to see if we clicked, generate an action
 		for (std::list <CONTROLWIDGET>::iterator i = controlbuttons.begin(); i != controlbuttons.end(); ++i)
 		{
-			if (i->widget.ProcessInput(cursorx, cursory, cursordown, cursorjustup))
+			if (i->widget.ProcessInput(topnoderef, cursorx, cursory, cursordown, cursorjustup))
 			{
 				if (i->type == "key")
 				{

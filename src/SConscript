@@ -53,11 +53,14 @@ src = Split("""aabb.cpp
 		joepack.cpp
 		joeserialize.cpp
 		k1999.cpp
+		keyed_container.cpp
 		linearframe.cpp
 		linearinterp.cpp
 		main.cpp
 		mathplane.cpp
 		mathvector.cpp
+		matrix4.cpp
+		mesh_gen.cpp
 		model.cpp
 		model_joe03.cpp
 		model_obj.cpp

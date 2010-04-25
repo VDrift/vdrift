@@ -43,7 +43,7 @@ void TEXT_DRAW::Set(DRAWABLE & draw, const FONT & font, const std::string & newt
 	oldscaley = newscaley;
 }
 
-void TEXT_DRAW::Revise(DRAWABLE & draw, const FONT & font, const std::string & newtext, float x, float y, float scalex, float scaley, VERTEXARRAY & output_array)
+void TEXT_DRAW::Revise(const FONT & font, const std::string & newtext, float x, float y, float scalex, float scaley, VERTEXARRAY & output_array)
 {
 	text=newtext;
 	

@@ -118,7 +118,7 @@ void ROADSTRIP::Reverse()
 }
 
 void ROADSTRIP::CreateRacingLine(
-	SCENENODE * parentnode, 
+	SCENENODE & parentnode, 
 	TEXTURE_GL & racingline_texture,
 	std::ostream & error_output)
 {

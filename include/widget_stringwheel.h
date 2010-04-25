@@ -29,13 +29,13 @@ private:
 	std::string setting;
 	std::list <WIDGET *> hooks;
 	
-	void SyncOption()
+	void SyncOption(SCENENODE & scene)
 	{
 		if (option)
 		{
-			label.ReviseDrawable(option->GetCurrentDisplayValue());
+			label.ReviseDrawable(scene, option->GetCurrentDisplayValue());
 			for (std::list <WIDGET *>::iterator n = hooks.begin(); n != hooks.end(); n++)
-				(*n)->HookMessage(option->GetCurrentStorageValue());
+				(*n)->HookMessage(scene, option->GetCurrentStorageValue());
 		}
 	}
 	
@@ -43,11 +43,10 @@ public:
 	WIDGET_STRINGWHEEL() : option(NULL) {}
 	virtual WIDGET * clone() const {return new WIDGET_STRINGWHEEL(*this);};
 	
-	void SetupDrawable(SCENENODE * scene, const std::string & newtitle, TEXTURE_GL * teximage_left_up, TEXTURE_GL * teximage_left_down, 
+	void SetupDrawable(SCENENODE & scene, const std::string & newtitle, TEXTURE_GL * teximage_left_up, TEXTURE_GL * teximage_left_down, 
 			   TEXTURE_GL * teximage_right_up, TEXTURE_GL * teximage_right_down,
 			   FONT * font, float scalex, float scaley, float centerx, float centery)
 	{
-		assert(scene);
 		assert(teximage_left_up);
 		assert(teximage_left_down);
 		assert(teximage_right_up);
@@ -67,76 +66,47 @@ public:
 		button_right.SetupDrawable(scene, teximage_right_up, teximage_right_down, teximage_right_up, font, "", centerx+0.02*2.0+titlewidth, centery, buttonsize,buttonsize, 1,1,1);
 	}
 	
-	virtual void SetAlpha(float newalpha)
+	virtual void SetAlpha(SCENENODE & scene, float newalpha)
 	{
-		title.SetAlpha(newalpha);
-		label.SetAlpha(newalpha);
-		button_left.SetAlpha(newalpha);
-		button_right.SetAlpha(newalpha);
+		title.SetAlpha(scene, newalpha);
+		label.SetAlpha(scene, newalpha);
+		button_left.SetAlpha(scene, newalpha);
+		button_right.SetAlpha(scene, newalpha);
 	}
 	
-	virtual void SetVisible(bool newvis)
+	virtual void SetVisible(SCENENODE & scene, bool newvis)
 	{
 		if (newvis)
-			SyncOption();
-		title.SetVisible(newvis);
-		label.SetVisible(newvis);
-		button_left.SetVisible(newvis);
-		button_right.SetVisible(newvis);
+			SyncOption(scene);
+		title.SetVisible(scene, newvis);
+		label.SetVisible(scene, newvis);
+		button_left.SetVisible(scene, newvis);
+		button_right.SetVisible(scene, newvis);
 	}
 	
-	virtual bool ProcessInput(float cursorx, float cursory, bool cursordown, bool cursorjustup)
+	virtual bool ProcessInput(SCENENODE & scene, float cursorx, float cursory, bool cursordown, bool cursorjustup)
 	{
 		active_action.clear();
 		
-		bool left = button_left.ProcessInput(cursorx, cursory, cursordown, cursorjustup);
-		bool right = button_right.ProcessInput(cursorx, cursory, cursordown, cursorjustup);
+		bool left = button_left.ProcessInput(scene, cursorx, cursory, cursordown, cursorjustup);
+		bool right = button_right.ProcessInput(scene, cursorx, cursory, cursordown, cursorjustup);
 		
 		if (option)
 		{
 			if (left && cursorjustup)
 			{
 				option->Decrement();
-				SyncOption();
+				SyncOption(scene);
 				active_action = action;
 			}
 			
 			if (right && cursorjustup)
 			{
 				option->Increment();
-				SyncOption();
+				SyncOption(scene);
 				active_action = action;
 			}
 		}
-		
-		/*if (current != values.end())
-		{
-			if (left && cursorjustup)
-			{
-				active_action = action;
-				
-				if (current == values.begin())
-					SetCurrent(values.back().first);
-				else
-				{
-					std::list <std::pair<std::string,std::string> >::iterator i = current;
-					i--;
-					SetCurrent(i->first);
-				}
-			}
-			
-			if (right && cursorjustup)
-			{
-				active_action = action;
-				
-				std::list <std::pair<std::string,std::string> >::iterator i = current;
-				i++;
-				if (i == values.end())
-					SetCurrent(values.front().first);
-				else
-					SetCurrent(i->first);
-			}
-		}*/
 		
 		return left || right;
 	}
@@ -145,50 +115,6 @@ public:
 	{
 		action = newaction;
 	}
-	
-	virtual std::string GetAction() const {return active_action;}
-	
-	/*void SetCurrent(const std::string newsetting)
-	{
-		current = values.end();
-		for (std::list <std::pair<std::string,std::string> >::iterator i = values.begin(); i != values.end(); i++)
-		{
-			if (i->first == newsetting)
-			{
-				current = i;
-				for (list <WIDGET *>::iterator n = hooks.begin(); n != hooks.end(); n++)
-					(*n)->HookMessage(newsetting);
-			}
-		}
-		
-		assert (current != values.end());
-
-		label.ReviseDrawable(current->second);
-	}*/
-	
-	/*void SetCurrent(const std::string newsetting, std::ostream & error_output)
-	{
-		current = values.end();
-		for (std::list <std::pair<std::string,std::string> >::iterator i = values.begin(); i != values.end(); i++)
-		{
-			if (i->first == newsetting)
-			{
-				current = i;
-				for (list <WIDGET *>::iterator n = hooks.begin(); n != hooks.end(); n++)
-					(*n)->HookMessage(newsetting);
-			}
-		}
-		
-		if (current == values.end())
-		{
-			error_output << "Option " << setting << " doesn't have value " << newsetting << std::endl;
-			label.ReviseDrawable("");
-		}
-		else
-		{
-			label.ReviseDrawable(current->second);
-		}
-	}*/
 	
 	void SetSetting(const std::string & newsetting)
 	{
@@ -200,46 +126,21 @@ public:
 	virtual void SetDescription(const std::string & newdesc) {description = newdesc;}
 	
 	///set the local option pointer to the associated optionmap
-	virtual void UpdateOptions(bool save_to_options, std::map<std::string, GUIOPTION> & optionmap, std::ostream & error_output)
+	virtual void UpdateOptions(SCENENODE & scene, bool save_to_options, std::map<std::string, GUIOPTION> & optionmap, std::ostream & error_output)
 	{
 		option = &(optionmap[setting]);
 		
 		if (!save_to_options)
-			SyncOption();
-		
-		//error_output << "Updating options: " << save_to_options << std::endl;
-		/*if (save_to_options)
-		{
-			//error_output << "!!!setting option " << setting << " to " << current->first << std::endl;
-			if (current == values.end())
-				return;
-			optionmap[setting].SetCurrentValue(current->first);
-		}
-		else
-		{
-			std::string currentsetting = optionmap[setting].GetCurrentStorageValue();
-			if (currentsetting.empty())
-			{
-				//error_output << "Option " << setting << " doesn't have a current value or the current value is blank." << std::endl;
-				if (values.empty())
-					error_output << "Option " << setting << " also doesn't have any possible values." << std::endl;
-				else
-					SetCurrent(values.begin()->first, error_output);
-			}
-			else
-			{
-				SetCurrent(currentsetting, error_output);
-			}
-		}*/
+			SyncOption(scene);
 	}
 	
 	virtual void AddHook(WIDGET * other) {hooks.push_back(other);}
-	virtual void HookMessage(const std::string & message)
+	virtual void HookMessage(SCENENODE & scene, const std::string & message)
 	{
 		if (option)
 			option->SetToFirstValue();
 		
-		SyncOption();
+		SyncOption(scene);
 		
 		//SetCurrent(values.begin()->first);
 		

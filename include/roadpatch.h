@@ -12,7 +12,7 @@ class TEXTURE_GL;
 class ROADPATCH
 {
 public:
-	ROADPATCH() : track_curvature(0), racingline_draw(NULL) {}
+	ROADPATCH() : track_curvature(0) {}
 	
 	const BEZIER & GetPatch() const {return patch;}
 	
@@ -50,7 +50,7 @@ public:
 	}
 	
 	void AddRacinglineScenenode(
-		SCENENODE * node,
+		SCENENODE & node,
 		ROADPATCH * nextpatch, 
 		TEXTURE_GL & racingline_texture,
 		std::ostream & error_output);
@@ -60,7 +60,6 @@ private:
 	float track_curvature;
 	MATHVECTOR <float, 3> racing_line;
 	
-	DRAWABLE * racingline_draw;
 	VERTEXARRAY racingline_vertexarray;
 };
 

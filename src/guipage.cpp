@@ -32,25 +32,27 @@ using std::endl;
 using std::stringstream;
 
 bool GUIPAGE::Load(const std::string & path, const std::string & texpath, const std::string & datapath,
-	CONFIGFILE & controlsconfig, SCENENODE * parentnode, std::map<std::string, TEXTURE_GL> & textures,
+	CONFIGFILE & controlsconfig, SCENENODE & parentnode, std::map<std::string, TEXTURE_GL> & textures,
  	std::map <std::string, FONT> & fonts, std::map<std::string, GUIOPTION> & optionmap,
   	float screenhwratio, const std::string & texsize, std::ostream & error_output, bool reloadcontrolsonly)
 {
 	if (reloadcontrolsonly)
-		assert(s);
+		assert(s.valid());
 	else
-		assert(!s);
+		assert(!s.valid());
 	
 	if (!reloadcontrolsonly)
 	{
-		Clear();
+		Clear(parentnode);
 	
 		//std::cout << "GUI PAGE LOAD" << std::endl;
 		
-		s = &parentnode->AddNode();
+		s = parentnode.AddNode();
 	
 		fontmap = &fonts;
 	}
+	
+	SCENENODE & sref = GetNode(parentnode);
 	
 	//error_output << "Loading " << path << endl;
 	
@@ -73,7 +75,7 @@ bool GUIPAGE::Load(const std::string & path, const std::string & texpath, const 
 		//generate background
 		WIDGET_IMAGE * bg_widget = NewWidget<WIDGET_IMAGE>();
 		if (!EnsureTextureIsLoaded(background, texpath, textures, texsize, error_output)) return false;
-		bg_widget->SetupDrawable(s, &textures[background], 0.5, 0.5, 1.0, 1.0, -1);
+		bg_widget->SetupDrawable(sref, &textures[background], 0.5, 0.5, 1.0, 1.0, -1);
 	}
 	
 	//remove existing controlgrabs
@@ -82,7 +84,7 @@ bool GUIPAGE::Load(const std::string & path, const std::string & texpath, const 
 		//first, unload all of the assets from the widgets we're about to delete
 		for (std::list <WIDGET_CONTROLGRAB *>::iterator n = controlgrabs.begin(); n != controlgrabs.end(); n++)
 		{
-			s->Delete((*n)->GetNode());
+			sref.Delete((*n)->GetNode());
 		}
 		
 		std::list <std::list <DERIVED <WIDGET> >::iterator> todel;
@@ -149,7 +151,7 @@ bool GUIPAGE::Load(const std::string & path, const std::string & texpath, const 
 		
 		//std::cout << widgetstr.str() << ": " << wtype << endl;
 		
-		assert(s);
+		assert(s.valid());
 		
 		if (!reloadcontrolsonly)
 		{
@@ -165,7 +167,7 @@ bool GUIPAGE::Load(const std::string & path, const std::string & texpath, const 
 				string texfn;
 				if (!pagefile.GetParam(widgetstr.str()+".filename", texfn)) return false;
 				if (!EnsureTextureIsLoaded(texfn, texpath, textures, texsize, error_output)) return false;
-				new_widget->SetupDrawable(s, &textures[texfn], xy[0], xy[1], w, h);
+				new_widget->SetupDrawable(sref, &textures[texfn], xy[0], xy[1], w, h);
 			}
 			else if (wtype == "button")
 			{
@@ -193,7 +195,7 @@ bool GUIPAGE::Load(const std::string & path, const std::string & texpath, const 
 				if (!EnsureTextureIsLoaded(texfn_sel, texpath, textures, texsize, error_output)) return false;
 				float fontscaley = ((((float) fontsize - 7.0f) * 0.25f) + 1.0f)*0.25;
 				float fontscalex = fontscaley*screenhwratio;
-				new_widget->SetupDrawable(s, &textures[texfn_up], &textures[texfn_down], &textures[texfn_sel], &fonts["futuresans"], text, xy[0],xy[1], fontscalex,fontscaley, color[0],color[1],color[2]);
+				new_widget->SetupDrawable(sref, &textures[texfn_up], &textures[texfn_down], &textures[texfn_sel], &fonts["futuresans"], text, xy[0],xy[1], fontscalex,fontscaley, color[0],color[1],color[2]);
 				new_widget->SetAction(action);
 				new_widget->SetDescription(description);
 				new_widget->SetCancel(cancel);
@@ -218,7 +220,7 @@ bool GUIPAGE::Load(const std::string & path, const std::string & texpath, const 
 				WIDGET_LABEL * new_widget = NewWidget<WIDGET_LABEL>();
 				float fontscaley = ((((float) fontsize - 7.0f) * 0.25f) + 1.0f)*0.25;
 				float fontscalex = fontscaley*screenhwratio;
-				new_widget->SetupDrawable(s, &fonts["futuresans"], text, xy[0],xy[1], fontscalex,fontscaley, color[0],color[1],color[2], 2);
+				new_widget->SetupDrawable(sref, &fonts["futuresans"], text, xy[0],xy[1], fontscalex,fontscaley, color[0],color[1],color[2], 2);
 				
 				string name;
 				if (pagefile.GetParam(widgetstr.str()+".name", name)) label_widgets[name] = *new_widget;
@@ -263,7 +265,7 @@ bool GUIPAGE::Load(const std::string & path, const std::string & texpath, const 
 					float fontscaley = ((((float) fontsize - 7.0f) * 0.25f) + 1.0f)*0.25;
 					float fontscalex = fontscaley*screenhwratio;
 					float fw = new_widget->GetWidth(&fonts["futuresans"], title, fontscalex);
-					new_widget->SetupDrawable(s, &fonts["futuresans"], title, xy[0]+fw*0.5,xy[1]+(0.02*0.25*4.0/3.0), fontscalex,fontscaley, 1,1,1, 2);
+					new_widget->SetupDrawable(sref, &fonts["futuresans"], title, xy[0]+fw*0.5,xy[1]+(0.02*0.25*4.0/3.0), fontscalex,fontscaley, 1,1,1, 2);
 				}
 				
 				//generate toggle
@@ -282,14 +284,14 @@ bool GUIPAGE::Load(const std::string & path, const std::string & texpath, const 
 					float h = 0.025;
 					float w = h*screenhwratio;
 					
-					new_widget->SetupDrawable(s, &textures[texfn_up], &textures[texfn_down], &textures[texfn_upsel], 
+					new_widget->SetupDrawable(sref, &textures[texfn_up], &textures[texfn_down], &textures[texfn_upsel], 
 							&textures[texfn_downsel], &textures[texfn_trans], xy[0]-0.02,xy[1], w, h);
 					//new_widget->SetAction(action);
 					new_widget->SetDescription(description);
 					
 					new_widget->SetSetting(setting);
 					
-					new_widget->UpdateOptions(false, optionmap, error_output);
+					new_widget->UpdateOptions(sref, false, optionmap, error_output);
 				}
 			}
 			else if (wtype == "stringwheel" || wtype == "intwheel" || wtype == "floatwheel")
@@ -336,7 +338,7 @@ bool GUIPAGE::Load(const std::string & path, const std::string & texpath, const 
 				//float h = w*(4.0/3.0);
 				float fontscaley = ((((float) fontsize - 7.0f) * 0.25f) + 1.0f)*0.25;
 				float fontscalex = fontscaley*screenhwratio;
-				new_widget->SetupDrawable(s, title+":", &textures[texfn_up_l], &textures[texfn_down_l], 
+				new_widget->SetupDrawable(sref, title+":", &textures[texfn_up_l], &textures[texfn_down_l], 
 						&textures[texfn_up_r], &textures[texfn_down_r], &fonts["futuresans"],
 						fontscalex,fontscaley, xy[0], xy[1]);
 				new_widget->SetAction(action);
@@ -344,7 +346,7 @@ bool GUIPAGE::Load(const std::string & path, const std::string & texpath, const 
 					
 				new_widget->SetSetting(setting);
 				
-				new_widget->UpdateOptions(false, optionmap, error_output);
+				new_widget->UpdateOptions(sref, false, optionmap, error_output);
 				
 				string name;
 				if (pagefile.GetParam(widgetstr.str()+".name", name)) namemap[name] = new_widget;
@@ -397,7 +399,7 @@ bool GUIPAGE::Load(const std::string & path, const std::string & texpath, const 
 				//float h = w*(4.0/3.0);
 				float fontscaley = ((((float) fontsize - 7.0f) * 0.25f) + 1.0f)*0.25;
 				float fontscalex = fontscaley*screenhwratio;
-				new_widget->SetupDrawable(s, title+":", &textures[texfn_up_l], &textures[texfn_down_l], 
+				new_widget->SetupDrawable(sref, title+":", &textures[texfn_up_l], &textures[texfn_down_l], 
 						&textures[texfn_up_r], &textures[texfn_down_r], &fonts["futuresans"],
 						fontscalex,fontscaley, xy[0], xy[1]);
 				//new_widget->SetAction(action);
@@ -409,7 +411,7 @@ bool GUIPAGE::Load(const std::string & path, const std::string & texpath, const 
 				const std::list <std::pair<std::string,std::string> > & valuelist2 = optionmap[setting2].GetValueList();
 				new_widget->SetValueList(valuelist1, valuelist2);
 					
-				new_widget->UpdateOptions(false, optionmap, error_output);
+				new_widget->UpdateOptions(sref, false, optionmap, error_output);
 			}
 			else if (wtype == "multi-image")
 			{
@@ -426,7 +428,7 @@ bool GUIPAGE::Load(const std::string & path, const std::string & texpath, const 
 				if (!pagefile.GetParam(widgetstr.str()+".postfix", postfix)) return false;
 				
 				WIDGET_MULTIIMAGE * new_widget = NewWidget<WIDGET_MULTIIMAGE>();
-				new_widget->SetupDrawable(s, texsize, datapath, prefix, postfix, xy[0],xy[1], width, height, error_output, 102);
+				new_widget->SetupDrawable(sref, texsize, datapath, prefix, postfix, xy[0],xy[1], width, height, error_output, 102);
 				
 				if (pagefile.GetParam(widgetstr.str()+".name", name)) namemap[name] = new_widget;
 			}
@@ -495,7 +497,7 @@ bool GUIPAGE::Load(const std::string & path, const std::string & texpath, const 
 					float fontscaley = ((((float) fontsize - 7.0f) * 0.25f) + 1.0f)*0.25;
 					float fontscalex = fontscaley*screenhwratio;
 					fw = new_widget->GetWidth(&fonts["futuresans"], title, fontscalex);
-					new_widget->SetupDrawable(s, &fonts["futuresans"], title, xy[0]+fw*0.5,xy[1]+(0.02*0.25*4.0/3.0), fontscalex,fontscaley, 1,1,1, 2);
+					new_widget->SetupDrawable(sref, &fonts["futuresans"], title, xy[0]+fw*0.5,xy[1]+(0.02*0.25*4.0/3.0), fontscalex,fontscaley, 1,1,1, 2);
 				}
 				
 				//xy[0] += fw+w*4.0*0.5+0.01;
@@ -507,7 +509,7 @@ bool GUIPAGE::Load(const std::string & path, const std::string & texpath, const 
 				FONT * font = &fonts["lcd"];
 				
 				WIDGET_SLIDER * new_widget = NewWidget<WIDGET_SLIDER>();
-				new_widget->SetupDrawable(s, &textures[texfn_wedge], &textures[texfn_cursor],
+				new_widget->SetupDrawable(sref, &textures[texfn_wedge], &textures[texfn_cursor],
 					xy[0], xy[1], w, h, min, max, percentage, setting,
      					font, fontscalex, fontscaley, error_output, 102);
 				new_widget->SetDescription(description);
@@ -523,7 +525,7 @@ bool GUIPAGE::Load(const std::string & path, const std::string & texpath, const 
 				if (!pagefile.GetParam(widgetstr.str()+".values", values)) return false;
 				
 				WIDGET_SPINNINGCAR * new_widget = NewWidget<WIDGET_SPINNINGCAR>();
-				new_widget->SetupDrawable(s, texsize, datapath, centerxy[0],centerxy[1], MATHVECTOR <float, 3> (carposxy[0], carposxy[1], carposxy[2]), error_output, 110);
+				new_widget->SetupDrawable(sref, texsize, datapath, centerxy[0],centerxy[1], MATHVECTOR <float, 3> (carposxy[0], carposxy[1], carposxy[2]), error_output, 110);
 				
 				if (pagefile.GetParam(widgetstr.str()+".name", name)) namemap[name] = new_widget;
 			}
@@ -587,7 +589,7 @@ bool GUIPAGE::Load(const std::string & path, const std::string & texpath, const 
 			
 			float fontscaley = ((((float) fontsize - 7.0f) * 0.25f) + 1.0f)*0.25;
 			float fontscalex = fontscaley*screenhwratio;
-			new_widget->SetupDrawable(s, controlsconfig, setting, controltex, 
+			new_widget->SetupDrawable(sref, controlsconfig, setting, controltex, 
 					&fonts["futuresans"], text, xy[0],xy[1], fontscalex,fontscaley,
 					analog, only_one);
 			new_widget->SetDescription(description);
@@ -612,24 +614,26 @@ bool GUIPAGE::Load(const std::string & path, const std::string & texpath, const 
 		tooltip_widget = NewWidget<WIDGET_LABEL>();
 		assert(tooltip_widget);
 		assert(fonts.find("futuresans") != fonts.end());
-		tooltip_widget->SetupDrawable(s, &fonts["futuresans"], "", 0.5,0.95, 0.2*screenhwratio,0.2, 1,1,1, 1);
+		tooltip_widget->SetupDrawable(sref, &fonts["futuresans"], "", 0.5,0.95, 0.2*screenhwratio,0.2, 1,1,1, 1);
 	}
 	
 	return true;
 }
 
-std::list <std::pair <std::string, bool> > GUIPAGE::ProcessInput(bool movedown, bool moveup, float cursorx, float cursory,
+std::list <std::pair <std::string, bool> > GUIPAGE::ProcessInput(SCENENODE & parent, bool movedown, bool moveup, float cursorx, float cursory,
 		bool cursordown, bool cursorjustup, float screenhwratio)
 {
 	assert(fontmap);
 	assert(tooltip_widget);
+	
+	SCENENODE & sref = parent.GetNode(s);
 	
 	list <std::pair <std::string, bool> > actions;
 	string tooltip;
 	
 	for (std::list <DERIVED <WIDGET> >::iterator i = widgets.begin(); i != widgets.end(); ++i)
 	{
-		bool mouseover = (*i)->ProcessInput(cursorx, cursory, cursordown, cursorjustup);
+		bool mouseover = (*i)->ProcessInput(sref, cursorx, cursory, cursordown, cursorjustup);
 		if (mouseover)
 			tooltip = (*i)->GetDescription();
 		string action = (*i)->GetAction();
@@ -639,7 +643,7 @@ std::list <std::pair <std::string, bool> > GUIPAGE::ProcessInput(bool movedown, 
 	
 	if (tooltip != tooltip_widget->GetText())
 	{
-		tooltip_widget->ReviseDrawable(&(*fontmap)["futuresans"], tooltip, 0.5,0.95, 0.2*screenhwratio,0.2);
+		tooltip_widget->ReviseDrawable(sref, &(*fontmap)["futuresans"], tooltip, 0.5,0.95, 0.2*screenhwratio,0.2);
 	}
 	
 	return actions;

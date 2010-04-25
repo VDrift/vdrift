@@ -17,11 +17,10 @@
 #include "suspensionbumpdetection.h"
 #include "crashdetection.h"
 #include "enginesoundinfo.h"
+#include "scenegraph.h"
 
 class BEZIER;
 class PERFORMANCE_TESTING;
-class DRAWABLE;
-class SCENENODE;
 
 class CAR 
 {
@@ -29,8 +28,8 @@ friend class PERFORMANCE_TESTING;
 friend class joeserialize::Serializer;
 public:
 	CAR();
-	~CAR();
 	
+	/// world is an optional parameter, if NULL it will load the car's appearance but not the physics
 	bool Load(
 		CONFIGFILE & carconf,
 		const std::string & carpath,
@@ -39,8 +38,7 @@ public:
 		const std::string & carpaint,
 		const MATHVECTOR <float, 3> & initial_position,
 		const QUATERNION <float> & initial_orientation,
-		SCENENODE & sceneroot,
-		COLLISION_WORLD & world,
+		COLLISION_WORLD * world,
 		bool soundenabled,
 		const SOUNDINFO & sound_device_info,
 		const SOUNDBUFFERLIBRARY & soundbufferlibrary,
@@ -278,14 +276,17 @@ public:
 		return dynamics.GetMaxSteeringAngle();
 	}
 
+
+	SCENENODE & GetNode() {return topnode;}
+	
 protected:
 	CARDYNAMICS dynamics;
 
-	SCENENODE * topnode;
-	DRAWABLE * bodydraw;
-	DRAWABLE * interiordraw;
-	DRAWABLE * glassdraw;
-	SCENENODE * bodynode;
+	SCENENODE topnode;
+	keyed_container <DRAWABLE>::handle bodydraw;
+	keyed_container <DRAWABLE>::handle interiordraw;
+	keyed_container <DRAWABLE>::handle glassdraw;
+	keyed_container <SCENENODE>::handle bodynode;
 	MODEL_JOE03 bodymodel;
 	MODEL_JOE03 interiormodel;
 	MODEL_JOE03 glassmodel;
@@ -296,8 +297,8 @@ protected:
 	TEXTURE_GL glasstexture;
 	TEXTURE_GL glasstexture_misc1;
 	
-	DRAWABLE * driverdraw;
-	SCENENODE * drivernode;
+	keyed_container <DRAWABLE>::handle driverdraw;
+	keyed_container <SCENENODE>::handle drivernode;
 	MODEL_JOE03 drivermodel;
 	TEXTURE_GL drivertexture;
 	TEXTURE_GL drivertexture_misc1;
@@ -308,12 +309,12 @@ protected:
 	std::map <std::string, SOUNDBUFFER> soundbuffers;
 	std::list <std::pair <ENGINESOUNDINFO, SOUNDSOURCE> > enginesounds;
 
-	DRAWABLE * wheeldraw[4];
-	SCENENODE * wheelnode[4];
-	DRAWABLE * floatingdraw[4];
-	SCENENODE * floatingnode[4];
-	DRAWABLE * debugwheeldraw[40]; //10 debug wheels per wheel
-	SCENENODE * debugwheelnode[40]; //10 debug wheels per wheel
+	keyed_container <DRAWABLE>::handle wheeldraw[4];
+	keyed_container <SCENENODE>::handle wheelnode[4];
+	keyed_container <DRAWABLE>::handle floatingdraw[4];
+	keyed_container <SCENENODE>::handle floatingnode[4];
+	keyed_container <DRAWABLE>::handle debugwheeldraw[40]; //10 debug wheels per wheel
+	keyed_container <SCENENODE>::handle debugwheelnode[40]; //10 debug wheels per wheel
 	MODEL_JOE03 wheelmodelfront;
 	MODEL_JOE03 wheelmodelrear;
 	MODEL_JOE03 floatingmodelfront;
@@ -343,24 +344,19 @@ protected:
 	int sector; //the last lap timing sector that the car hit
 	const BEZIER * curpatch[4]; //the last bezier patch that each wheel hit
 	
+	float applied_brakes; ///< cached so we can update the brake light
+	
 	float mz_nominalmax; //the nominal maximum Mz force, used to scale force feedback
 
-	///take the parentnode, add a scenenode (only if output_scenenodeptr is NULL), add a drawable to the scenenode, load a model, load a texture, and set up the drawable with the model and texture.
+	///take the parentnode, add a scenenode (if output_scenenode isn't yet valid), add a drawable to the
+	/// scenenode, load a model, load a texture, and set up the drawable with the model and texture.
 	/// the given TEXTURE_GL textures will not be reloaded if they are already loaded
 	/// returns true if successful
-	bool LoadInto(
-		SCENENODE * parentnode,
-		SCENENODE * & output_scenenodeptr,
-		DRAWABLE * & output_drawableptr,
-		const std::string & joefile,
-		MODEL_JOE03 & output_model,
-		const std::string & texfile,
-		TEXTURE_GL & output_texture_diffuse,
-		const std::string & misc1texfile,
-		TEXTURE_GL & output_texture_misc1,
-  		int anisotropy,
-  		const std::string & texsize,
-  		std::ostream & error_output);
+	bool LoadInto(SCENENODE & parentnode, keyed_container <SCENENODE>::handle & output_scenenode,
+		keyed_container <DRAWABLE>::handle & output_drawable, const std::string & joefile,
+		MODEL_JOE03 & output_model, const std::string & texfile, TEXTURE_GL & output_texture_diffuse,
+		const std::string & misc1texfile, TEXTURE_GL & output_texture_misc1,
+  		int anisotropy, const std::string & texsize, bool blend, std::ostream & error_output);
 	
 	void UpdateSounds(float dt);
 	
@@ -375,6 +371,9 @@ protected:
 		const SOUNDBUFFERLIBRARY & soundbufferlibrary,
 		std::ostream & info_output,
 		std::ostream & error_output);
+		
+	keyed_container <DRAWABLE> & GetDrawlistNoBlend(SCENENODE & node) {return node.GetDrawlist().normal_noblend;}
+	keyed_container <DRAWABLE> & GetDrawlistBlend(SCENENODE & node) {return node.GetDrawlist().normal_blend;}
 };
 
 #endif

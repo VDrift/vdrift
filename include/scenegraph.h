@@ -6,79 +6,21 @@
 #include <list>
 #include <map>
 #include <vector>
-
 #include <cassert>
 
 #include "quaternion.h"
 #include "mathvector.h"
 #include "matrix4.h"
 #include "vertexarray.h"
+#include "keyed_container.h"
+#include "containeralgorithm.h"
 
 class MODEL;
 class TEXTURE_GL;
-class SCENENODE;
-class DRAWABLE;
-
-class DRAWABLE_FILTER
-{
-	private:
-		enum FILTERTYPE
-		{
-			IS2D=0,
-			PARTIALTRANSPARENCY=1,
-			BLUR=2,
-			SKYBOX=3,
-			CAMERATRANSFORM=4
-		};
-	
-		unsigned int filtermask;
-		unsigned int filtervalue;
-	
-		unsigned int SetBit(unsigned int input, unsigned int bit) const
-		{
-			return input | (1 << bit);
-		}
-	
-		unsigned int UnsetBit(unsigned int input, unsigned int bit) const
-		{
-			return input & ~(1 << bit);
-		}
-	
-		bool GetBit(unsigned int input, unsigned int bit) const
-		{
-			return ((input & (1 << bit)) != 0);
-		}
-	
-		void SetFilter(FILTERTYPE type, bool filter_enable, bool filter_value)
-		{
-			unsigned int bit = type;
-			
-			filtermask = filter_enable ? SetBit(filtermask, bit) : UnsetBit(filtermask, bit);
-			filtervalue = filter_value ? SetBit(filtervalue, bit) : UnsetBit(filtervalue, bit);
-		}
-	
-	public:
-		DRAWABLE_FILTER() : filtermask(0),filtervalue(0) {}
-	
-		bool Is2DOnlyFilter() {return GetBit(filtermask, IS2D) && GetBit(filtervalue, IS2D);}
-	
-		void SetFilter_is2d(bool filter_enable, bool filter_value) {SetFilter(IS2D, filter_enable, filter_value);}
-		void SetFilter_partial_transparency(bool filter_enable, bool filter_value) {SetFilter(PARTIALTRANSPARENCY, filter_enable, filter_value);}
-		void SetFilter_blur(bool filter_enable, bool filter_value) {SetFilter(BLUR, filter_enable, filter_value);}
-		void SetFilter_skybox(bool filter_enable, bool filter_value) {SetFilter(SKYBOX, filter_enable, filter_value);}
-		void SetFilter_cameratransform(bool filter_enable, bool filter_value) {SetFilter(CAMERATRANSFORM, filter_enable, filter_value);}
-		bool Matches(const DRAWABLE & drawable) const;
-		bool Allows2D() const {return !(GetBit(filtermask, IS2D) && !GetBit(filtervalue, IS2D));}
-		bool AllowsSkybox() const {return !(GetBit(filtermask, SKYBOX) && !GetBit(filtervalue, SKYBOX));}
-		bool AllowsNoCameraTransform() const {return !(GetBit(filtermask, CAMERATRANSFORM) && GetBit(filtervalue, CAMERATRANSFORM));}
-};
 
 class DRAWABLE
 {
-friend class DRAWABLE_FILTER;
 private:
-	SCENENODE * parent;
-
 	std::vector <int> list_ids;
 	const TEXTURE_GL * diffuse_map;
 	const TEXTURE_GL * misc_map1;
@@ -108,28 +50,24 @@ private:
 	float linesize;
 	bool forcealphatest;
 	
-	DRAWABLE_FILTER filterspeedup; ///< a bitmask that duplicates some flags above to speed up drawable_filter matching
+	MATRIX4 <float> transform;
 
 public:
-	DRAWABLE() : parent(NULL),diffuse_map(NULL),misc_map1(NULL),
+	DRAWABLE() : diffuse_map(NULL),misc_map1(NULL),
 		 additive_map1(NULL),additive_map2(NULL),vert_array(NULL),decal(false),r(1.0),g(1.0),b(1.0),a(1.0),lit(true),drawenabled(true),
 		is2d(false),partial_transparency(false),cull(false),cull_front(false),radius(0.0),
 		draw_order(0),blur(true),
 		skybox(false),vertical_track(false),self_illumination(false),issmoke(false),distance_field(false),
 		cameratransform(true),objcenter(0), linesize(1.0), forcealphatest(false)
 		{
-			filterspeedup.SetFilter_blur(true, true);
-			filterspeedup.SetFilter_cameratransform(true, true);
 		}
-	~DRAWABLE();
 	
 	bool operator< (const DRAWABLE & other) const;
 
-	void Set(const DRAWABLE & other) {*this = other;}
-	void SetParent(SCENENODE & newparent) {parent = &newparent;}
-	SCENENODE * GetParent() const {return parent;}
+	void SetTransform(const MATRIX4 <float> & trans) {transform = trans;}
+	const MATRIX4 <float> & GetTransform() {return transform;}
 	void SetDecal(bool newdecal) {decal = newdecal;}
-	void Set2D(bool new2d) {is2d = new2d;filterspeedup.SetFilter_is2d(true, new2d);}
+	void Set2D(bool new2d) {is2d = new2d;}
 	bool Get2D() const {return is2d;}
 	void SetColor(float nr, float ng, float nb, float na) {r=nr;g=ng;b=nb;a=na;}
 	void SetColor(float nr, float ng, float nb) {r=nr;g=ng;b=nb;}
@@ -138,7 +76,7 @@ public:
 	void SetLit(bool newlit) {lit = newlit;}
 	bool GetLit() const {return lit;}
 	void SetDrawEnable(bool newenable) {drawenabled = newenable;}
-	void SetPartialTransparency(bool newpt) {partial_transparency = newpt;filterspeedup.SetFilter_partial_transparency(true, newpt);}
+	void SetPartialTransparency(bool newpt) {partial_transparency = newpt;}
 	bool GetPartialTransparency() const {return partial_transparency;}
 	void SetCull(bool newcull, bool newcullfront) {cull = newcull; cull_front = newcullfront;}
 	bool GetCull() const {return cull;}
@@ -149,8 +87,8 @@ public:
 	void SetSmoke(bool newsmoke) {issmoke = newsmoke;}
 	bool GetSmoke() const {return issmoke;}
 	int GetOrder() const {return draw_order;}
-	void SetBlur(bool newblur) {blur=newblur;filterspeedup.SetFilter_blur(true, newblur);}
-	void SetSkybox(bool newskybox) {skybox = newskybox;filterspeedup.SetFilter_skybox(true, newskybox);}
+	void SetBlur(bool newblur) {blur=newblur;}
+	void SetSkybox(bool newskybox) {skybox = newskybox;}
 	inline bool GetSkybox() const {return skybox;}
 	bool GetDecal() const {return decal;}
 	void SetSelfIllumination(bool newsi) {self_illumination=newsi;}
@@ -230,7 +168,6 @@ public:
 	void SetCameraTransformEnable ( bool value )
 	{
 		cameratransform = value;
-		filterspeedup.SetFilter_cameratransform(true, value);
 	}
 
 	bool GetCameraTransformEnable() const
@@ -315,6 +252,185 @@ public:
 	}
 };
 
+// drawable container helper functions
+namespace DRAWABLE_CONTAINER_HELPER
+{
+struct SetVisibility
+{
+	SetVisibility(bool newvis) : vis(newvis) {}
+	bool vis;
+	template <typename T>
+	void operator()(T & container)
+	{
+		for (typename T::iterator i = container.begin(); i != container.end(); i++)
+		{
+			i->SetDrawEnable(vis);
+		}
+	}
+};
+struct SetAlpha
+{
+	SetAlpha(float newa) : a(newa) {}
+	float a;
+	template <typename T>
+	void operator()(T & container)
+	{
+		for (typename T::iterator i = container.begin(); i != container.end(); i++)
+		{
+			i->SetAlpha(a);
+		}
+	}
+};
+struct ClearContainer
+{
+	template <typename T>
+	void operator()(T & container)
+	{
+		container.clear();
+	}
+};
+struct AccumulateSize
+{
+	AccumulateSize(unsigned int & newcount) : count(newcount) {}
+	unsigned int & count;
+	template <typename T>
+	void operator()(const T & container)
+	{
+		count += container.size();
+	}
+};
+template <typename F>
+struct ApplyFunctor
+{
+	ApplyFunctor(F newf) : func(newf) {}
+	F func;
+	template <typename T>
+	void operator()(T & container)
+	{
+		for (typename T::iterator i = container.begin(); i != container.end(); i++)
+		{
+			func(*i);
+		}
+	}
+};
+template <typename DRAWABLE_TYPE, typename CONTAINER_TYPE, bool use_transform>
+void AddDrawableToContainer(DRAWABLE_TYPE & drawable, CONTAINER_TYPE & container, const MATRIX4 <float> & transform)
+{
+	if (drawable.GetDrawEnable())
+	{
+		if (use_transform)
+			drawable.SetTransform(transform);
+		container.push_back(&drawable);
+	}
+}
+/// adds elements from the first container to the second
+template <typename DRAWABLE_TYPE, typename CONTAINERT, typename U, bool use_transform>
+void AddDrawablesToContainer(CONTAINERT & source, U & dest, const MATRIX4 <float> & transform)
+{
+	for (typename CONTAINERT::iterator i = source.begin(); i != source.end(); i++)
+	{
+		AddDrawableToContainer<DRAWABLE_TYPE,U,use_transform>(*i, dest, transform);
+	}
+}
+};
+
+template <typename T>
+class PTRVECTOR : public std::vector <T*>
+{};
+
+template <template <typename U> class CONTAINER>
+struct DRAWABLE_CONTAINER
+{
+	// all of the layers of the scene
+	CONTAINER <DRAWABLE> generic;
+	CONTAINER <DRAWABLE> twodim;
+	CONTAINER <DRAWABLE> normal_noblend;
+	CONTAINER <DRAWABLE> normal_blend;
+	CONTAINER <DRAWABLE> skybox_blend;
+	CONTAINER <DRAWABLE> skybox_noblend;
+	CONTAINER <DRAWABLE> text;
+	CONTAINER <DRAWABLE> particle;
+	CONTAINER <DRAWABLE> nocamtrans_blend;
+	CONTAINER <DRAWABLE> nocamtrans_noblend;
+	// don't forget to add new members to the ForEach function and the AppendTo function
+	
+	template <typename T> 
+	void ForEach(T func)
+	{
+		func(generic);
+		func(twodim);
+		func(normal_noblend);
+		func(normal_blend);
+		func(skybox_blend);
+		func(skybox_noblend);
+		func(text);
+		func(particle);
+		func(nocamtrans_blend);
+		func(nocamtrans_noblend);
+	}
+	
+	/// adds elements from the first drawable container to the second
+	template <typename CONTAINERU, bool use_transform>
+	void AppendTo(CONTAINERU & dest, const MATRIX4 <float> & transform)
+	{
+		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,PTRVECTOR<DRAWABLE>,use_transform>
+			(generic, dest.generic, transform);
+		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,PTRVECTOR<DRAWABLE>,use_transform>
+			(twodim, dest.twodim, transform);
+		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,PTRVECTOR<DRAWABLE>,use_transform>
+			(normal_noblend, dest.normal_noblend, transform);
+		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,PTRVECTOR<DRAWABLE>,use_transform>
+			(normal_blend, dest.normal_blend, transform);
+		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,PTRVECTOR<DRAWABLE>,use_transform>
+			(skybox_blend, dest.skybox_blend, transform);
+		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,PTRVECTOR<DRAWABLE>,use_transform>
+			(skybox_noblend, dest.skybox_noblend, transform);
+		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,PTRVECTOR<DRAWABLE>,use_transform>
+			(text, dest.text, transform);
+		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,PTRVECTOR<DRAWABLE>,use_transform>
+			(particle, dest.particle, transform);
+		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,PTRVECTOR<DRAWABLE>,use_transform>
+			(nocamtrans_blend, dest.nocamtrans_blend, transform);
+		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,PTRVECTOR<DRAWABLE>,use_transform>
+			(nocamtrans_noblend, dest.nocamtrans_noblend, transform);
+	}
+	
+	/// apply this functor to all drawables
+	template <typename T>
+	void ForEachDrawable(T func)
+	{
+		ForEach(DRAWABLE_CONTAINER_HELPER::ApplyFunctor<T>(func));
+	}
+	
+	bool empty() const
+	{
+		return (size() == 0);
+	}
+	
+	unsigned int size() const
+	{
+		DRAWABLE_CONTAINER <CONTAINER> * me = const_cast<DRAWABLE_CONTAINER <CONTAINER> *>(this); // messy, but avoids more typing. const correctness is enforced in AccumulateSize::operator()
+		unsigned int count = 0;
+		me->ForEach(DRAWABLE_CONTAINER_HELPER::AccumulateSize(count));
+		return count;
+	}
+	
+	void clear()
+	{
+		ForEach(DRAWABLE_CONTAINER_HELPER::ClearContainer());
+	}
+	
+	void SetVisibility(bool newvis)
+	{
+		ForEach(DRAWABLE_CONTAINER_HELPER::SetVisibility(newvis));
+	}
+	
+	void SetAlpha(float a)
+	{
+		ForEach(DRAWABLE_CONTAINER_HELPER::SetAlpha(a));
+	}
+};
+
 class SCENETRANSFORM
 {
 private:
@@ -323,10 +439,6 @@ private:
 	
 	QUAT rotation;
 	VEC3 translation;
-	
-	//used for tweening
-	VEC3 angular_velocity;
-	VEC3 linear_velocity;
 
 public:
 	const QUAT & GetRotation() const {return rotation;}
@@ -337,108 +449,77 @@ public:
 	void Clear() {rotation.LoadIdentity();translation.Set(0.0f);}
 };
 
-class SCENEDRAW
+class STATICDRAWABLES
 {
-private:
-	//const SCENETRANSFORM * transform;
-	const DRAWABLE * draw;
-	//VERTEXARRAY varray; //unfortunately (for text and racing line drawing) the main thread will change this, so we need a copy //edit: way faster without this, so who cares about multithreading, for now
-	
-	typedef MATRIX4<float> MAT4;
-	MAT4 mat4;
-
-public:
-	SCENEDRAW() : draw(NULL) {}
-	SCENEDRAW(const SCENEDRAW & other) : draw(other.draw),/*varray(other.varray),*/mat4(other.mat4)
-	{
-		//if (draw.GetVertArray()) draw.SetVertArray(&varray);
-	}
-	SCENEDRAW & operator=(const SCENEDRAW & other)
-	{
-		draw = other.draw;
-		mat4=other.mat4;
-		//varray = other.varray;
-		//if (draw.GetVertArray()) draw.SetVertArray(&varray);
-		return *this;
-	}
-	SCENEDRAW(const DRAWABLE & newdraw, const MAT4 & newmat4) : draw(&newdraw), mat4(newmat4) {}
-	bool operator< (const SCENEDRAW & other) const;
-	bool IsCollapsed() const {return true;}
-	bool IsDraw() const {return true;}
-	const DRAWABLE * GetDraw() const {assert(draw);return draw;}
-	const MAT4 * GetMatrix4() const {return &mat4;}
-	void SetCollapsed(const DRAWABLE & newdraw, const MAT4 & newmat4)
-	{
-		draw = &newdraw;
-		mat4.Set(newmat4);
+	private:
+		typedef MATRIX4<float> MAT4;
+		DRAWABLE_CONTAINER <keyed_container> drawlist;
+		SCENETRANSFORM transform;
 		
-		/*//detect if we need to buffer the vertex array
-		if (draw.GetVertArray())
-		{
-			varray = *draw.GetVertArray();
-			draw.SetVertArray(&varray);
-		}*/
-	}
+	public:
+		DRAWABLE_CONTAINER <keyed_container> & GetDrawlist() {return drawlist;}
+		const DRAWABLE_CONTAINER <keyed_container> & GetDrawlist() const {return drawlist;}
+		SCENETRANSFORM & GetTransform() {return transform;}
 };
 
 class SCENENODE
 {
 private:
-	std::list <SCENENODE> childlist;
-	std::list <DRAWABLE> drawlist;
-	SCENETRANSFORM transform;
-
-	SCENENODE * parent;
-	
 	typedef MATRIX4<float> MAT4;
 	typedef MATHVECTOR<float,3> VEC3;
-	bool active;
+	
+	keyed_container <SCENENODE> childlist;
+	DRAWABLE_CONTAINER <keyed_container> drawlist;
+	SCENETRANSFORM transform;
+	MAT4 cached_transform;
 
 public:
-	SCENENODE() : parent(NULL), active(true) {}
-	~SCENENODE();
-	std::list <DRAWABLE> & GetDrawableList() {return drawlist;}
-	SCENENODE & AddNode();
-	DRAWABLE & AddDrawable();
+	keyed_container <SCENENODE>::handle AddNode() {return childlist.insert(SCENENODE());}
+	SCENENODE & GetNode(keyed_container <SCENENODE>::handle handle) {return childlist.get(handle);}
+	const SCENENODE & GetNode(keyed_container <SCENENODE>::handle handle) const {return childlist.get(handle);}
+	
+	DRAWABLE_CONTAINER <keyed_container> & GetDrawlist() {return drawlist;}
+	const DRAWABLE_CONTAINER <keyed_container> & GetDrawlist() const {return drawlist;}
+	
+	SCENETRANSFORM & GetTransform() {return transform;}
+	const SCENETRANSFORM & GetTransform() const {return transform;}
 	unsigned int Nodes() const {return childlist.size();}
 	unsigned int Drawables() const {return drawlist.size();}
-	SCENETRANSFORM & GetTransform() {return transform;}
-	//void GetDrawList(std::vector <SCENEDRAW> & drawlistoutput, const DRAWABLE_FILTER & filter) const;
-	void GetCollapsedDrawList(std::map < DRAWABLE_FILTER *, std::vector <SCENEDRAW> > & drawlist_output_map, const MAT4 & prev_transform) const;
-	void SetParent(SCENENODE & newparent) {parent = &newparent;}
-	SCENENODE * GetParent() {return parent;}
+	void Traverse(DRAWABLE_CONTAINER <PTRVECTOR> & drawlist_output, const MAT4 & prev_transform);
 	void Clear() {drawlist.clear();childlist.clear();}
-	void Delete(SCENENODE * todelete);
-	void Delete(DRAWABLE * todelete);
+	void Delete(keyed_container <SCENENODE>::handle handle) {childlist.erase(handle);}
 	VEC3 TransformIntoWorldSpace() const {VEC3 zero;return TransformIntoWorldSpace(zero);}
 	VEC3 TransformIntoWorldSpace(const VEC3 & localspace) const;
 	VEC3 TransformIntoLocalSpace(const VEC3 & worldspace) const;
-	MAT4 CollapseTransform() const;
-	void DebugPrint(std::ostream & out);
-	void SortDrawablesByRenderState();
 	void SetChildVisibility(bool newvis);
 	void SetChildAlpha(float a);
-	bool IsActive() const { return active; };
-	void IsActive(bool value) { active = value; };
+	void DebugPrint(std::ostream & out, int curdepth = 0);
+	
+	/// traverse all drawable containers applying the specified functor.
+	/// the functor should take a drawable container reference as an argument.
+	/// note that the functor is passed by value to this function.
+	template <typename T>
+	void ApplyDrawableContainerFunctor(T functor)
+	{
+		functor(drawlist);
+		for (keyed_container <SCENENODE>::iterator i = childlist.begin(); i != childlist.end(); ++i)
+		{
+			i->ApplyDrawableContainerFunctor(functor);
+		}
+	}
+	
+	/// traverse all drawables applying the specified functor.
+	/// the functor should take any drawable typed reference as an argument.
+	/// note that the functor is passed by value to this function.
+	template <typename T>
+	void ApplyDrawableFunctor(T functor)
+	{
+		drawlist.ForEachDrawable(functor);
+		for (keyed_container <SCENENODE>::iterator i = childlist.begin(); i != childlist.end(); ++i)
+		{
+			i->ApplyDrawableFunctor(functor);
+		}
+	}
 };
-
-/*class SCENEGRAPH
-{
-private:
-	SCENENODE rootnode;
-
-public:
-	SCENEGRAPH() {}
-	~SCENEGRAPH() {}
-
-	const TESTER Test();
-	SCENENODE & GetRoot() {return rootnode;}
-	//void GetDrawList(list <SCENEDRAW> & drawlist) const;
-	void GetDrawList(list <DRAWABLE_FILTER *> & filter_list, map < DRAWABLE_FILTER *, list <SCENEDRAW> > & drawlist_output_map) const;
-	//void GetCollapsedDrawList(list <SCENEDRAW> & drawlist) const;
-	void GetCollapsedDrawList(list <DRAWABLE_FILTER *> & filter_list, map < DRAWABLE_FILTER *, list <SCENEDRAW> > & drawlist_output_map) const;
-	void Delete(SCENENODE * todelete);
-	void Delete(DRAWABLE * todelete);
-};*/
 
 #endif

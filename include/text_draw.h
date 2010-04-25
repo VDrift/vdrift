@@ -27,17 +27,17 @@ public:
 	
 	void Set(DRAWABLE & draw, const FONT & font, const std::string & newtext, const float x, const float y, const float newscalex, const float newscaley, const float r, const float g, const float b, VERTEXARRAY & output_array);
 	
-	void Revise(DRAWABLE & draw, const FONT & font, const std::string & newtext)
+	void Revise(const FONT & font, const std::string & newtext)
 	{
-		Revise(draw, font, newtext, oldx, oldy, oldscalex, oldscaley);
+		Revise(font, newtext, oldx, oldy, oldscalex, oldscaley);
 	}
 	
-	void Revise(DRAWABLE & draw, const FONT & font, const std::string & newtext, float x, float y, float scalex, float scaley)
+	void Revise(const FONT & font, const std::string & newtext, float x, float y, float scalex, float scaley)
 	{
-		Revise(draw, font, newtext, x, y, scalex, scaley, varray);
+		Revise(font, newtext, x, y, scalex, scaley, varray);
 	}
 	
-	void Revise(DRAWABLE & draw, const FONT & font, const std::string & newtext, float x, float y, float scalex, float scaley, VERTEXARRAY & output_array);
+	void Revise(const FONT & font, const std::string & newtext, float x, float y, float scalex, float scaley, VERTEXARRAY & output_array);
 	
 	float GetWidth(const FONT & font, const std::string & newtext, const float newscale) const;
 
@@ -49,70 +49,68 @@ public:
 	const std::pair<float,float> GetCurrentScale() const {return std::pair<float,float>(oldscalex,oldscaley);}
 };
 
-///a slightly higher level class than the TEXT_DRAW Class that contains its own DRAWABLE pointer
+///a slightly higher level class than the TEXT_DRAW Class that contains its own DRAWABLE handle
 class TEXT_DRAWABLE
 {
 private:
 	TEXT_DRAW text;
-	DRAWABLE * draw;
+	keyed_container <DRAWABLE>::handle draw;
 	const FONT * font;
 	float curx, cury;
 	float cr,cg,cb,ca;
 	
 public:
-	TEXT_DRAWABLE() : draw(NULL),font(NULL),curx(0),cury(0),cr(1),cg(1),cb(1),ca(1) {}
+	TEXT_DRAWABLE() : font(NULL),curx(0),cury(0),cr(1),cg(1),cb(1),ca(1) {}
 	
-	///this function will call parentnode.AddDrawable() and store the result
+	///this function will add a drawable to parentnode and store the result
 	void Init(SCENENODE & parentnode, const FONT & newfont, const std::string & newtext, const float x, const float y, const float newscalex, const float newscaley)
 	{
-		assert(draw == NULL);
-		assert (font == NULL);
+		assert(font == NULL);
 		
-		draw = &parentnode.AddDrawable();
-		assert (draw);
+		draw = parentnode.GetDrawlist().text.insert(DRAWABLE());
+		DRAWABLE & drawref = GetDrawable(parentnode);
 		font = &newfont;
 		curx = x;
 		cury = y;
-		text.Set(*draw, *font, newtext, x, y, newscalex, newscaley, cr,cg,cb);
-		SetAlpha(ca);
+		text.Set(drawref, *font, newtext, x, y, newscalex, newscaley, cr,cg,cb);
+		SetAlpha(parentnode, ca);
 	}
 	
 	void Revise(const std::string & newtext)
 	{
-		assert(draw);
 		assert(font);
-		text.Revise(*draw, *font, newtext, curx, cury, text.GetCurrentScale().first, text.GetCurrentScale().second);
+		text.Revise(*font, newtext, curx, cury, text.GetCurrentScale().first, text.GetCurrentScale().second);
 	}
 	
 	void Revise(const std::string & newtext, const float x, const float y, const float newscalex, const float newscaley)
 	{
 		curx = x;
 		cury = y;
-		text.Revise(*draw, *font, newtext, curx, cury, newscalex, newscaley);
+		text.Revise(*font, newtext, curx, cury, newscalex, newscaley);
 	}
 	
 	void SetPosition(float newx, float newy)
 	{
-		assert(draw);
 		assert(font);
 		curx = newx;
 		cury = newy;
-		text.Revise(*draw, *font, text.GetText(), curx, cury, text.GetCurrentScale().first, text.GetCurrentScale().second);
+		text.Revise(*font, text.GetText(), curx, cury, text.GetCurrentScale().first, text.GetCurrentScale().second);
 	}
 	
-	void SetColor(const float r, const float g, const float b)
+	void SetColor(SCENENODE & parentnode, const float r, const float g, const float b)
 	{
-		assert(draw);
+		DRAWABLE & drawref = GetDrawable(parentnode);
 		cr = r;
 		cg = g;
 		cb = b;
-		draw->SetColor(cr,cg,cb,ca);
+		drawref.SetColor(cr,cg,cb,ca);
 	}
 	
-	void SetAlpha(const float a)
+	void SetAlpha(SCENENODE & parentnode, const float a)
 	{
+		DRAWABLE & drawref = GetDrawable(parentnode);
 		ca = a;
-		draw->SetColor(cr,cg,cb,ca);
+		drawref.SetColor(cr,cg,cb,ca);
 	}
 	
 	float GetWidth() const
@@ -121,25 +119,32 @@ public:
 		return text.GetWidth(*font, text.GetText(), text.GetCurrentScale().first);
 	}
 	
-	void SetDrawOrder(float newdo)
+	float GetWidth(const std::string & newstr) const
 	{
-		assert(draw);
-		draw->SetDrawOrder(newdo);
+		assert (font);
+		return text.GetWidth(*font, newstr, text.GetCurrentScale().first);
 	}
 	
-	void SetDrawEnable(bool newvis)
+	void SetDrawOrder(SCENENODE & parentnode, float newdo)
 	{
-		assert(draw);
-		draw->SetDrawEnable(newvis);
+		DRAWABLE & drawref = GetDrawable(parentnode);
+		drawref.SetDrawOrder(newdo);
 	}
 	
-	void ToggleDrawEnable()
+	void SetDrawEnable(SCENENODE & parentnode, bool newvis)
 	{
-		assert(draw);
-		draw->SetDrawEnable(!draw->GetDrawEnable());
+		DRAWABLE & drawref = GetDrawable(parentnode);
+		drawref.SetDrawEnable(newvis);
 	}
 	
-	DRAWABLE * GetDrawable() {return draw;}
+	void ToggleDrawEnable(SCENENODE & parentnode)
+	{
+		DRAWABLE & drawref = GetDrawable(parentnode);
+		drawref.SetDrawEnable(!drawref.GetDrawEnable());
+	}
+	
+	DRAWABLE & GetDrawable(SCENENODE & parentnode)
+	{return parentnode.GetDrawlist().text.get(draw);}
 };
 
 #endif

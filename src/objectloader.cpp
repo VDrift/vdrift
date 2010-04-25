@@ -29,7 +29,6 @@ OBJECTLOADER::OBJECTLOADER(
 	dynamicshadowsenabled(newdynamicshadowsenabled),
 	agressivecombine(doagressivecombining)
 {
-
 }
 
 bool OBJECTLOADER::BeginObjectLoad()
@@ -45,7 +44,7 @@ bool OBJECTLOADER::BeginObjectLoad()
 
 	if (params_per_object != expected_params)
 		info_output << "Track object list has " << params_per_object << " params per object, expected " << expected_params << ", this is fine, continuing" << std::endl;
-
+	
 	if (params_per_object < min_params)
 	{
 		error_output << "Track object list has " << params_per_object << " params per object, expected " << expected_params << std::endl;
@@ -105,15 +104,15 @@ std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad(
 	std::string model_name;
 
 	if (error)
-		return std::pair <bool,bool> (true, false);
+		return std::make_pair(true, false);
 
 	if (!(GetParam(objectfile, model_name)))
 	{
-		info_output << "Track loading was successful: " << model_library.size() << " unique models, " << texture_library.size() << " unique textures, " << surfaces.size() << " unique surfaces" << std::endl;
+		info_output << "Track loading was successful: " << model_library.size() << " unique models, " << texture_library.size() << " unique textures" << std::endl;
 		Optimize();
-		info_output << "Objects before optimization: " << unoptimized_scene.GetDrawableList().size() << ", objects after optimization: " << sceneroot.GetDrawableList().size() << std::endl;
+		info_output << "Objects before optimization: " << unoptimized_scene.GetDrawlist().size() << ", objects after optimization: " << sceneroot.GetDrawlist().size() << std::endl;
 		unoptimized_scene.Clear();
-		return std::pair <bool,bool> (false, false);
+		return std::make_pair(false, false);
 	}
 
 	assert(objectfile.good());
@@ -150,17 +149,17 @@ std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad(
 	GetParam(objectfile, friction_tread);
 	GetParam(objectfile, rolling_resistance);
 	GetParam(objectfile, rolling_drag);
-
+	
 	if (params_per_object >= 15)
 		GetParam(objectfile, isashadow);
-
+	
 	if (params_per_object >= 16)
 		GetParam(objectfile, clamptexture);
-
+	
 	if (params_per_object >= 17)
 		GetParam(objectfile, surface_type);
-
-
+		
+		
 	for (int i = 0; i < params_per_object - expected_params; i++)
 		GetParam(objectfile, otherjunk);
 
@@ -173,7 +172,7 @@ std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad(
 			if (!model_library[model_name].Load(model_name, &pack, error_output))
 			{
 				error_output << "Error loading model: " << objectpath + "/" + model_name << " from pack " << objectpath + "/objects.jpk" << std::endl;
-				return std::pair <bool, bool> (true, false); //fail the entire track loading
+				return std::make_pair(true, false); //fail the entire track loading
 			}
 		}
 		else
@@ -181,14 +180,15 @@ std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad(
 			if (!model_library[model_name].Load(objectpath + "/" + model_name, NULL, error_output))
 			{
 				error_output << "Error loading model: " << objectpath + "/" + model_name << std::endl;
-				return std::pair <bool, bool> (true, false); //fail the entire track loading
+				return std::make_pair(true, false); //fail the entire track loading
 			}
 		}
+
 		model = &model_library[model_name];
 	}
 
 	bool skip = false;
-
+	
 	if (dynamicshadowsenabled && isashadow)
 		skip = true;
 
@@ -238,13 +238,30 @@ std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad(
 			miscmap1 = texture_library.find(miscmap1_texture_name)->second;
 
 		TEXTURE_GL * diffuse = &texture_library[diffuse_texture_name];
-		DRAWABLE & d = unoptimized_scene.AddDrawable();
+
+		//info_output << "Loading " << model_name << endl;
+
+		//use a different drawlist layer where necessary
+		bool transparent = (transparent_blend==1);
+		keyed_container <DRAWABLE> * dlist = &unoptimized_scene.GetDrawlist().normal_noblend;
+		if (transparent)
+			dlist = &unoptimized_scene.GetDrawlist().normal_blend;
+		if (skybox)
+		{
+			if (transparent)
+				dlist = &unoptimized_scene.GetDrawlist().skybox_blend;
+			else
+				dlist = &unoptimized_scene.GetDrawlist().skybox_noblend;
+		}
+		keyed_container <DRAWABLE>::handle dref = dlist->insert(DRAWABLE());
+		DRAWABLE & d = dlist->get(dref);
+		
 		d.AddDrawList(model->GetListID());
 		d.SetDiffuseMap(diffuse);
 		if (miscmap1)
 			d.SetMiscMap1(&miscmap1.get());
 		d.SetLit(!nolighting);
-		d.SetPartialTransparency((transparent_blend==1));
+		d.SetPartialTransparency(transparent);
 		d.SetCull(cull && (transparent_blend!=2), false);
 		d.SetRadius(model->GetRadius());
 		d.SetObjectCenter(model->GetCenter());
@@ -294,7 +311,7 @@ std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad(
 		objects.push_back(object);
 	}
 
-	return std::pair <bool, bool> (false, true);
+	return std::make_pair(false, true);
 }
 
 std::string booltostr(bool val)
@@ -316,7 +333,19 @@ std::string GetDrawableSortString(const DRAWABLE & d)
 
 bool DrawableOptimizeLessThan(const DRAWABLE & d1, const DRAWABLE & d2)
 {
+	/*return (d1.GetDiffuseMap() < d2.GetDiffuseMap()) ||
+			(d1.GetLit() < d2.GetLit()) ||
+			(d1.GetSkybox() < d2.GetSkybox()) ||
+			(d1.GetPartialTransparency() < d2.GetPartialTransparency()) ||
+			(d1.GetCull() < d2.GetCull());*/
+	
+	//return (d1.GetDiffuseMap() < d2.GetDiffuseMap());
+	
 	return GetDrawableSortString(d1) < GetDrawableSortString(d2);
+	
+	/* ||
+			(d1.GetObjectCenter()[0] < d2.GetObjectCenter()[0]) ||
+			(d1.GetObjectCenter()[1] < d2.GetObjectCenter()[1]);*/
 }
 
 bool DrawableOptimizeEqual(const DRAWABLE & d1, const DRAWABLE & d2)
@@ -330,7 +359,10 @@ bool DrawableOptimizeEqual(const DRAWABLE & d1, const DRAWABLE & d2)
 
 void OBJECTLOADER::Optimize()
 {
-	unoptimized_scene.GetDrawableList().sort(DrawableOptimizeLessThan);
+	//TODO: re-implement or do away with in favor of generic static drawlists
+	sceneroot = unoptimized_scene;
+	
+	/*unoptimized_scene.GetDrawableList().sort(DrawableOptimizeLessThan);
 
 	DRAWABLE lastmatch;
 	DRAWABLE * lastdrawable = NULL;
@@ -362,7 +394,7 @@ void OBJECTLOADER::Optimize()
 				//find the new radius by taking half the distance between the centers plus the max radius
 				//float newradius = (center2-center1).Magnitude()*0.5+maxradius;
 				float newradius = (center2-center1).Magnitude()*0.5+maxradius;
-
+				
 				if (newradius > (radius1+radius2)*optimizemetric) //don't combine if it's not worth it
 				//if (0)
 				{
@@ -371,7 +403,7 @@ void OBJECTLOADER::Optimize()
 					DRAWABLE & d = sceneroot.AddDrawable();
 					d = *i;
 					lastdrawable = &d;
-
+					
 					//std::cout << "Not optimizing: " << i->GetRadius() << " and " << lastdrawable->GetRadius() << " to " << newradius << std::endl;
 				}
 				else
@@ -379,16 +411,9 @@ void OBJECTLOADER::Optimize()
 					lastdrawable->AddDrawList(i->GetDrawLists()[0]);
 					lastdrawable->SetObjectCenter(newcenter);
 					lastdrawable->SetRadius(newradius);
-
+					
 					//std::cout << "Optimizing: " << i->GetRadius() << " and " << lastdrawable->GetRadius() << " to " << newradius << std::endl;
 				}
-
-				/*std::cout << "center1: " << center1 << std::endl;
-				std::cout << "radius1: " << radius1 << std::endl;
-				std::cout << "center2: " << center2 << std::endl;
-				std::cout << "radius2: " << radius2 << std::endl;
-				std::cout << "newcenter: " << newcenter << std::endl;
-				std::cout << "newradius: " << newradius << std::endl;*/
 			}
 			else if (i->IsDrawList())
 			{
@@ -404,5 +429,5 @@ void OBJECTLOADER::Optimize()
 			DRAWABLE & d = sceneroot.AddDrawable();
 			d = *i;
 		}
-	}
+	}*/
 }

@@ -34,7 +34,7 @@ TRACK::TRACK(std::ostream & info, std::ostream & error)
   texture_size("large"),
   vertical_tracking_skyboxes(false),
   usesurfaces(false),
-  racingline_node(NULL),
+  racingline_visible(false),
   loaded(false),
   cull(false)
 {
@@ -55,7 +55,6 @@ TRACK::~TRACK()
 bool TRACK::Load(
 	const std::string & trackpath,
 	const std::string & effects_texturepath,
-	SCENENODE & rootnode,
 	bool reverse,
 	int anisotropy,
 	const std::string & texsize)
@@ -88,13 +87,13 @@ bool TRACK::Load(
 		return false;
 	}
 
-	if (!CreateRacingLines(&rootnode, effects_texturepath, texsize))
+	if (!CreateRacingLines(effects_texturepath, texsize))
 	{
 		return false;
 	}
 
 	//load objects
-	if (!LoadObjects(trackpath, rootnode, anisotropy))
+	if (!LoadObjects(trackpath, tracknode, anisotropy))
 	{
 		return false;
 	}
@@ -178,15 +177,13 @@ bool TRACK::LoadLapSequence(const std::string & trackpath, bool reverse)
 	return true;
 }
 
-bool TRACK::DeferredLoad(
-	const std::string & trackpath,
-	const std::string & effects_texturepath,
-	SCENENODE & rootnode,
-	bool reverse,
-	int anisotropy,
-	const std::string & texsize,
-	bool dynamicshadowsenabled,
-	bool doagressivecombining)
+bool TRACK::DeferredLoad(const std::string & trackpath, 
+						 const std::string & effects_texturepath, 
+						 bool reverse, 
+						 int anisotropy, 
+						 const std::string & texsize, 
+						 bool dynamicshadowsenabled, 
+						 bool doagressivecombining)
 {
 	Clear();
 
@@ -216,13 +213,13 @@ bool TRACK::DeferredLoad(
 		return false;
 	}
 
-	if (!CreateRacingLines(&rootnode, effects_texturepath, texsize))
+	if (!CreateRacingLines(effects_texturepath, texsize))
 	{
 		return false;
 	}
 
 	//load objects
-	if (!BeginObjectLoad(trackpath, rootnode, anisotropy, dynamicshadowsenabled, doagressivecombining))
+	if (!BeginObjectLoad(trackpath, tracknode, anisotropy, dynamicshadowsenabled, doagressivecombining))
 		return false;
 
 	return true;
@@ -258,22 +255,16 @@ void TRACK::Clear()
 	ClearRoads();
 	lapsequence.clear();
 	start_positions.clear();
-	racingline_node = NULL;
+	racingline_node.Clear();
+	tracknode.Clear();
 	loaded = false;
 	usesurfaces = false;
 }
 
 bool TRACK::CreateRacingLines(
-	SCENENODE * parentnode, 
 	const std::string & texturepath,
 	const std::string & texsize)
 {
-	assert(parentnode);
-	if (!racingline_node)
-	{
-		racingline_node = &parentnode->AddNode();
-	}
-	
 	if (!racingline_texture.Loaded())
 	{
 		TEXTUREINFO tex; 
@@ -431,7 +422,13 @@ bool TRACK::BeginObjectLoad(
 std::pair <bool,bool> TRACK::ContinueObjectLoad()
 {
 	assert(objload.get());
-	return objload->ContinueObjectLoad(model_library, texture_library, objects, tracksurfaces, usesurfaces, vertical_tracking_skyboxes, texture_size);
+	return objload->ContinueObjectLoad(model_library,
+									   texture_library,
+									   objects,
+									   tracksurfaces,
+									   usesurfaces,
+									   vertical_tracking_skyboxes, 
+									   texture_size);
 }
 
 bool TRACK::LoadObjects(const std::string & trackpath, SCENENODE & sceneroot, int anisotropy)

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cstring>
 #include <cmath>
+#include <cassert>
 
 template <typename T>
 class MATRIX4
@@ -78,6 +79,7 @@ class MATRIX4
 		}
 		
 		bool operator==(const MATRIX4 <T> & other) {return Equals(other);}
+		bool operator!=(const MATRIX4 <T> & other) {return !Equals(other);}
 		
 		bool Equals(const MATRIX4 <T> & other)
 		{
@@ -91,6 +93,10 @@ class MATRIX4
 		
 		void TransformVectorIn(float & x, float & y, float & z) const
 		{
+			x -= data[12];
+			y -= data[13];
+			z -= data[14];
+			
 			float outx = x * data[0] + y * data[1] + z * data[2];
 			float outy = x * data[4] + y * data[5] + z * data[6];
 			float outz = x * data[8] + y * data[9] + z * data[10];
@@ -102,13 +108,13 @@ class MATRIX4
 		
 		void TransformVectorOut(float & x, float & y, float & z) const
 		{
-			float outx = x * data[0] + y * data[4] + z * data[8] + data[12];
-			float outy = x * data[1] + y * data[5] + z * data[9] + data[13];
-			float outz = x * data[2] + y * data[6] + z * data[10] + data[14];
+			float outx = x * data[0] + y * data[4] + z * data[8];
+			float outy = x * data[1] + y * data[5] + z * data[9];
+			float outz = x * data[2] + y * data[6] + z * data[10];
 			
-			x = outx;
-			y = outy;
-			z = outz;
+			x = outx + data[12];
+			y = outy + data[13];
+			z = outz + data[14];
 		}
 		
 		void Scale(T scalar)

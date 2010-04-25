@@ -27,7 +27,7 @@ public:
 	std::list <ROADPATCH> & GetPatchList() {return patches;}
 	
 	void CreateRacingLine(
-		SCENENODE * parentnode, 
+		SCENENODE & parentnode, 
 		TEXTURE_GL & racingline_texture,
 		std::ostream & error_output);
 

@@ -20,25 +20,21 @@ bool ROADPATCH::Collide(
 	}
 }
 
-void ROADPATCH::AddRacinglineScenenode(
-	SCENENODE * node,
-	ROADPATCH * nextpatch,
-	TEXTURE_GL & racingline_texture,
-	std::ostream & error_output)
+void ROADPATCH::AddRacinglineScenenode(SCENENODE & node, ROADPATCH * nextpatch,
+		TEXTURE_GL & racingline_texture, std::ostream & error_output)
 {
-	assert(node);
-
 	if (!nextpatch)
 		return;
 
 	//Create racing line scenenode
-	racingline_draw = &node->AddDrawable();
+	keyed_container <DRAWABLE>::handle drawhandle = node.GetDrawlist().normal_noblend.insert(DRAWABLE());
+	DRAWABLE & draw = node.GetDrawlist().normal_noblend.get(drawhandle);
 
-	racingline_draw->SetDiffuseMap(&racingline_texture);
-	racingline_draw->SetLit(false);
-	racingline_draw->SetPartialTransparency(true);
-	racingline_draw->SetDecal(true);
-	racingline_draw->SetVertArray(&racingline_vertexarray);
+	draw.SetDiffuseMap(&racingline_texture);
+	draw.SetLit(false);
+	draw.SetPartialTransparency(true);
+	draw.SetDecal(true);
+	draw.SetVertArray(&racingline_vertexarray);
 
 	MATHVECTOR <float, 3> v0 = racing_line + (patch.GetPoint(0,0) - racing_line).Normalize()*0.1;
 	MATHVECTOR <float, 3> v1 = racing_line + (patch.GetPoint(0,3) - racing_line).Normalize()*0.1;

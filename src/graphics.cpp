@@ -193,55 +193,6 @@ void GRAPHICS_SDLGL::Init(const std::string shaderpath, const std::string & wind
 		static_ambient.Load(t, error_output, texturesize);
 	}
 
-	//initialize scenegraph structures
-	
-	// for objects that should get the motion blur effect (cars shouldn't)
-	no2d_noblend_noblur.SetFilter_is2d(true, false);
-	no2d_noblend_noblur.SetFilter_partial_transparency(true, false);
-	no2d_noblend_noblur.SetFilter_skybox(true,false);
-	no2d_noblend_noblur.SetFilter_cameratransform(true, true);
-	no2d_noblend_noblur.SetFilter_blur(true, false);
-	
-	no2d_noblend_blur.SetFilter_is2d(true, false);
-	no2d_noblend_blur.SetFilter_partial_transparency(true, false);
-	no2d_noblend_blur.SetFilter_skybox(true,false);
-	no2d_noblend_blur.SetFilter_cameratransform(true, true);
-	no2d_noblend_blur.SetFilter_blur(true, true);
-
-	no2d_blend.SetFilter_is2d(true, false);
-	no2d_blend.SetFilter_partial_transparency(true, true);
-	no2d_blend.SetFilter_skybox(true,false);
-	no2d_blend.SetFilter_cameratransform(true, true);
-
-	only2d.SetFilter_is2d(true, true);
-	only2d.SetFilter_skybox(true, false);
-
-	skyboxes_noblend.SetFilter_skybox(true,true);
-	skyboxes_noblend.SetFilter_cameratransform(true, true);
-	skyboxes_noblend.SetFilter_partial_transparency(true, false);
-
-	skyboxes_blend.SetFilter_skybox(true,true);
-	skyboxes_blend.SetFilter_cameratransform(true, true);
-	skyboxes_blend.SetFilter_partial_transparency(true, true);
-
-	camtransfilter.SetFilter_cameratransform(true, false);
-
-	filter_list.push_back(&no2d_noblend_blur);
-	filter_list.push_back(&no2d_noblend_noblur);
-	filter_list.push_back(&no2d_blend);
-	filter_list.push_back(&only2d);
-	filter_list.push_back(&skyboxes_blend);
-	filter_list.push_back(&skyboxes_noblend);
-	filter_list.push_back(&camtransfilter);
-
-	for (std::list <DRAWABLE_FILTER *>::iterator i = filter_list.begin(); i != filter_list.end(); ++i)
-	{
-		static_drawlist_map[*i];
-		dynamic_drawlist_map[*i];
-	}
-	
-	//glstate.Enable(GL_SCISSOR_TEST);
-
 	initialized = true;
 }
 
@@ -599,12 +550,15 @@ void GRAPHICS_SDLGL::SetupCamera()
 	}
 }*/
 
-void GRAPHICS_SDLGL::SendDrawlistToRenderScene(RENDER_INPUT_SCENE & renderscene, DRAWABLE_FILTER * filter_ptr)
+void GRAPHICS_SDLGL::SendDrawlistToRenderScene(RENDER_INPUT_SCENE & renderscene, std::vector <DRAWABLE*> & drawlist)
 {
-	bool speedup = false;
-	if (filter_ptr->Allows2D() || filter_ptr->AllowsNoCameraTransform() || filter_ptr->AllowsSkybox())
-		speedup = false;
-	renderscene.SetDrawList(static_drawlist_map[filter_ptr], dynamic_drawlist_map[filter_ptr], static_object_partitioning[filter_ptr], speedup);
+	renderscene.SetDrawList(drawlist);
+}
+
+bool SortDraworder(DRAWABLE * d1, DRAWABLE * d2)
+{
+	assert(d1 && d2);
+	return (d1->GetDrawOrder() < d2->GetDrawOrder());
 }
 
 void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
@@ -618,13 +572,8 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 	renderscene.SetAmbient(static_ambient);
 	renderscene.SetContrast(contrast);
 
-	/*std::cout << "no2d_noblend: " << drawlist_map[&no2d_noblend].size() << std::endl;
-	std::cout << "no2d_blend: " << drawlist_map[&no2d_blend].size() << std::endl;
-	std::cout << "only2d: " << drawlist_map[&only2d].size() << std::endl;
-	std::cout << "skyboxes_blend: " << drawlist_map[&skyboxes_blend].size() << std::endl;
-	std::cout << "skyboxes_noblend: " << drawlist_map[&skyboxes_noblend].size() << std::endl;
-	std::cout << "camtransfilter: " << drawlist_map[&camtransfilter].size() << std::endl;
-	std::cout << std::endl;*/
+	//pre-process the drawlists
+	std::sort(dynamic_drawlist.twodim.begin(),dynamic_drawlist.twodim.end(),&SortDraworder);
 
 	//shader path
 	if (using_shaders)
@@ -672,9 +621,7 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 					renderscene.SetDefaultShader(shadermap["depthgen2"]);
 				else
 					renderscene.SetDefaultShader(shadermap["depthgen"]);
-				SendDrawlistToRenderScene(renderscene,&no2d_noblend_blur);
-				Render(&renderscene, *i, error_output);
-				SendDrawlistToRenderScene(renderscene,&no2d_noblend_noblur);
+				SendDrawlistToRenderScene(renderscene,dynamic_drawlist.normal_noblend);
 				Render(&renderscene, *i, error_output);
 				//renderscene.SetClear(false, false);
 				//SendDrawlistToRenderScene(renderscene,&no2d_blend);
@@ -721,15 +668,13 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 			renderscene.SetDefaultShader(shadermap["depthonly"]);
 			renderscene.SetCameraInfo(campos, camorient, camfov, 10000.0, w, h); //use very high draw distance for skyboxes
 			renderscene.SetClear(false, true);
-			SendDrawlistToRenderScene(renderscene,&skyboxes_noblend);
+			SendDrawlistToRenderScene(renderscene,dynamic_drawlist.skybox_noblend);
 			Render(&renderscene, edgecontrastenhancement_depths, error_output);
 			renderscene.SetClear(false, false);
-			SendDrawlistToRenderScene(renderscene,&skyboxes_blend);
+			SendDrawlistToRenderScene(renderscene,dynamic_drawlist.skybox_blend);
 			Render(&renderscene, edgecontrastenhancement_depths, error_output);
 			renderscene.SetCameraInfo(campos, camorient, camfov, view_distance, w, h);
-			SendDrawlistToRenderScene(renderscene,&no2d_noblend_blur);
-			Render(&renderscene, edgecontrastenhancement_depths, error_output);
-			SendDrawlistToRenderScene(renderscene,&no2d_noblend_noblur);
+			SendDrawlistToRenderScene(renderscene,dynamic_drawlist.normal_noblend);
 			Render(&renderscene, edgecontrastenhancement_depths, error_output);
 			//SendDrawlistToRenderScene(renderscene,&no2d_blend);
 			//Render(&renderscene, edgecontrastenhancement_depths, error_output);
@@ -805,13 +750,13 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 				renderscene.SetDefaultShader(shadermap["simple"]);
 				renderscene.SetCameraInfo(dynamic_reflection_sample_position, orient, fov, 10000.0, rw, rh); //use very high draw distance for skyboxes
 				renderscene.SetClear(true, true);
-				SendDrawlistToRenderScene(renderscene,&skyboxes_noblend);
+				SendDrawlistToRenderScene(renderscene,dynamic_drawlist.skybox_noblend);
 				Render(&renderscene, dynamic_reflection, error_output);
 				renderscene.SetClear(false, false);
-				SendDrawlistToRenderScene(renderscene,&skyboxes_blend);
+				SendDrawlistToRenderScene(renderscene,dynamic_drawlist.skybox_blend);
 				Render(&renderscene, dynamic_reflection, error_output);
 				renderscene.SetCameraInfo(dynamic_reflection_sample_position, orient, fov, 100.0, rw, rh); //use a smaller draw distance than normal
-				SendDrawlistToRenderScene(renderscene,&no2d_noblend_blur);
+				SendDrawlistToRenderScene(renderscene,dynamic_drawlist.normal_noblend);
 				Render(&renderscene, dynamic_reflection, error_output);
 			}
 			
@@ -839,10 +784,10 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 		if (bloom)
 			scenebuffer = full_scene_buffer;
 
-		SendDrawlistToRenderScene(renderscene,&skyboxes_noblend);
+		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.skybox_noblend);
 		Render(&renderscene, *scenebuffer, error_output);
 		renderscene.SetClear(false, true);
-		SendDrawlistToRenderScene(renderscene,&skyboxes_blend);
+		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.skybox_blend);
 		//std::reverse(drawlist_map[&skyboxes].begin(), drawlist_map[&skyboxes].end());
 		Render(&renderscene, *scenebuffer, error_output);
 		renderscene.SetCameraInfo(campos, camorient, camfov, view_distance, w, h);
@@ -862,14 +807,11 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 		renderscene.SetCameraInfo(campos+shadowoffset, ldir, camfov, 10000.0, w, h);*/
 
 		renderscene.SetClear(false, true);
-		SendDrawlistToRenderScene(renderscene,&no2d_noblend_blur);
+		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.normal_noblend);
 		Render(&renderscene, *scenebuffer, error_output);
 		
 		renderscene.SetClear(false, false);
-		SendDrawlistToRenderScene(renderscene,&no2d_noblend_noblur);
-		Render(&renderscene, *scenebuffer, error_output);
-		
-		SendDrawlistToRenderScene(renderscene,&no2d_blend);
+		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.normal_blend);
 		Render(&renderscene, *scenebuffer, error_output);
 
 		if (bloom) //do bloom post-processing
@@ -923,44 +865,54 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 		}
 		#endif
 
-		SendDrawlistToRenderScene(renderscene,&only2d);
+		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.twodim);
+		Render(&renderscene, final, error_output);
+		
+		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.text);
 		Render(&renderscene, final, error_output);
 
 		renderscene.SetClear(false, true);
 		renderscene.SetCameraInfo(campos, camorient, 45.0, view_distance, w, h);
-		SendDrawlistToRenderScene(renderscene,&camtransfilter);
+		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.nocamtrans_noblend);
+		Render(&renderscene, final, error_output);
+		
+		renderscene.SetClear(false, false);
+		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.nocamtrans_blend);
 		Render(&renderscene, final, error_output);
 	}
 	else //non-shader path
 	{
 		renderscene.SetClear(false, true);
 		renderscene.SetCameraInfo(campos, camorient, camfov, 10000.0, w, h); //use very high draw distance for skyboxes
-		SendDrawlistToRenderScene(renderscene,&skyboxes_noblend);
+		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.skybox_noblend);
 		renderscene.Render(glstate);
 
 		renderscene.SetClear(false, true);
-		SendDrawlistToRenderScene(renderscene,&skyboxes_blend);
+		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.skybox_blend);
 		renderscene.Render(glstate);
 
 		renderscene.SetClear(false, true);
 		renderscene.SetCameraInfo(campos, camorient, camfov, view_distance, w, h);
-		SendDrawlistToRenderScene(renderscene,&no2d_noblend_noblur);
+		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.normal_noblend);
 		renderscene.Render(glstate);
 		
 		renderscene.SetClear(false, false);
-		SendDrawlistToRenderScene(renderscene,&no2d_noblend_blur);
+		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.normal_blend);
 		renderscene.Render(glstate);
 
-		renderscene.SetClear(false, false);
-		SendDrawlistToRenderScene(renderscene,&no2d_blend);
+		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.twodim);
 		renderscene.Render(glstate);
-
-		SendDrawlistToRenderScene(renderscene,&only2d);
+		
+		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.text);
 		renderscene.Render(glstate);
 
 		renderscene.SetClear(false, true);
 		renderscene.SetCameraInfo(campos, camorient, 45.0, view_distance, w, h);
-		SendDrawlistToRenderScene(renderscene,&camtransfilter);
+		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.nocamtrans_noblend);
+		renderscene.Render(glstate);
+		
+		renderscene.SetClear(false, false);
+		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.nocamtrans_blend);
 		renderscene.Render(glstate);
 	}
 }
@@ -1191,20 +1143,19 @@ void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::DrawList(GLSTATEMANAGER & glstate)
 	
 	ExtractFrustum();
 	
-	unsigned int already_culled = CombineDrawlists();
-
 	last_transform_valid = false;
 	activeshader = SHADER_NONE;
 
 	unsigned int drawcount = 0;
 	unsigned int loopcount = 0;
 	
-	for (vector <SCENEDRAW*>::iterator ptr = combined_drawlist_cache.begin(); ptr != combined_drawlist_cache.end(); ptr++, loopcount++)
+	for (vector <DRAWABLE*>::iterator ptr = drawlist_ptr->begin(); ptr != drawlist_ptr->end(); ptr++, loopcount++)
 	{
-		SCENEDRAW * i = *ptr;
-		if (i->IsDraw())
+		DRAWABLE * i = *ptr;
+		//if (i->IsDraw())
 		{
-			if (loopcount < already_culled || !FrustumCull(*i))
+			//if (loopcount < already_culled || !FrustumCull(*i))
+			if (!FrustumCull(*i))
 			{
 				drawcount++;
 				
@@ -1218,27 +1169,27 @@ void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::DrawList(GLSTATEMANAGER & glstate)
 
 				//assert(i->GetDraw()->GetVertArray() || i->GetDraw()->IsDrawList() || !i->GetDraw()->GetLine().empty());
 
-				if (i->GetDraw()->IsDrawList())
+				if (i->IsDrawList())
 				{
 					//cout << "beep" << endl;
 					//assert(i->GetDraw()->GetModel()->HaveListID());
 					//glCallList(i->GetDraw()->GetModel()->GetListID());
-					const unsigned int numlists = i->GetDraw()->GetDrawLists().size();
+					const unsigned int numlists = i->GetDrawLists().size();
 					for (unsigned int n = 0; n < numlists; ++n)
-						glCallList(i->GetDraw()->GetDrawLists()[n]);
+						glCallList(i->GetDrawLists()[n]);
 				}
-				else if (i->GetDraw()->GetVertArray())
+				else if (i->GetVertArray())
 				{
 					glEnableClientState(GL_VERTEX_ARRAY);
 
 					const float * verts;
 					int vertcount;
-					i->GetDraw()->GetVertArray()->GetVertices(verts, vertcount);
+					i->GetVertArray()->GetVertices(verts, vertcount);
 					glVertexPointer(3, GL_FLOAT, 0, verts);
 
 					const float * norms;
 					int normcount;
-					i->GetDraw()->GetVertArray()->GetNormals(norms, normcount);
+					i->GetVertArray()->GetNormals(norms, normcount);
 					glNormalPointer(GL_FLOAT, 0, norms);
 					if (normcount > 0)
 						glEnableClientState(GL_NORMAL_ARRAY);
@@ -1247,16 +1198,16 @@ void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::DrawList(GLSTATEMANAGER & glstate)
 					//int tccount[i->GetDraw()->varray.GetTexCoordSets()];
 					const float * tc[1];
 					int tccount[1];
-					if (i->GetDraw()->GetVertArray()->GetTexCoordSets() > 0)
+					if (i->GetVertArray()->GetTexCoordSets() > 0)
 					{
-						i->GetDraw()->GetVertArray()->GetTexCoords(0, tc[0], tccount[0]);
+						i->GetVertArray()->GetTexCoords(0, tc[0], tccount[0]);
 						glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 						glTexCoordPointer(2, GL_FLOAT, 0, tc[0]);
 					}
 
 					const int * faces;
 					int facecount;
-					i->GetDraw()->GetVertArray()->GetFaces(faces, facecount);
+					i->GetVertArray()->GetFaces(faces, facecount);
 
 					glDrawElements(GL_TRIANGLES, facecount, GL_UNSIGNED_INT, faces);
 
@@ -1264,13 +1215,13 @@ void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::DrawList(GLSTATEMANAGER & glstate)
 					glDisableClientState(GL_NORMAL_ARRAY);
 					glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 				}
-				else if (!i->GetDraw()->GetLine().empty())
+				else if (!i->GetLine().empty())
 				{
 					glstate.Enable(GL_LINE_SMOOTH);
 					glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-					glLineWidth(i->GetDraw()->GetLinesize());
+					glLineWidth(i->GetLinesize());
 					glBegin(GL_LINE_STRIP);
-					const std::vector< MATHVECTOR < float , 3 > > & line = i->GetDraw()->GetLine();
+					const std::vector< MATHVECTOR < float , 3 > > & line = i->GetLine();
 					for (std::vector< MATHVECTOR < float , 3 > >::const_iterator i = line.begin(); i != line.end(); ++i)
 						glVertex3f((*i)[0],(*i)[1],(*i)[2]);
 					glEnd();
@@ -1305,21 +1256,17 @@ void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::DrawList(GLSTATEMANAGER & glstate)
 }
 
 ///returns true if the object was culled and should not be drawn
-bool GRAPHICS_SDLGL::RENDER_INPUT_SCENE::FrustumCull(SCENEDRAW & tocull) const
+bool GRAPHICS_SDLGL::RENDER_INPUT_SCENE::FrustumCull(DRAWABLE & tocull)
 {
 	//return false;
 
-	const SCENEDRAW * i (& tocull);
-	const DRAWABLE * d (i->GetDraw());
+	DRAWABLE * d (&tocull);
 	//if (d->GetRadius() != 0.0 && d->parent != NULL && !d->skybox)
 	if (d->GetRadius() != 0.0 && !d->GetSkybox() && d->GetCameraTransformEnable())
 	{
 		//do frustum culling
 		MATHVECTOR <float, 3> objpos(d->GetObjectCenter());
-		if (i->IsCollapsed())
-			i->GetMatrix4()->TransformVectorOut(objpos[0],objpos[1],objpos[2]);
-		else if (d->GetParent() != NULL)
-			objpos = d->GetParent()->TransformIntoWorldSpace(objpos);
+		d->GetTransform().TransformVectorOut(objpos[0],objpos[1],objpos[2]);
 		float dx=objpos[0]-cam_position[0]; float dy=objpos[1]-cam_position[1]; float dz=objpos[2]-cam_position[2];
 		float rc=dx*dx+dy*dy+dz*dz;
 		float temp_lod_far = lod_far + d->GetRadius();
@@ -1348,24 +1295,24 @@ bool GRAPHICS_SDLGL::RENDER_INPUT_SCENE::FrustumCull(SCENEDRAW & tocull) const
 	return false;
 }
 
-void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectAppropriateShader(SCENEDRAW & forme)
+void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectAppropriateShader(DRAWABLE & forme)
 {
-	if (forme.GetDraw()->Get2D())
+	if (forme.Get2D())
 	{
-		if (forme.GetDraw()->GetDistanceField())
+		if (forme.GetDistanceField())
 			SetActiveShader(SHADER_DISTANCEFIELD);
 		else
 			SetActiveShader(SHADER_SIMPLE);
 	}
 	else
 	{
-		if (forme.GetDraw()->GetSkybox() || !forme.GetDraw()->GetLit())
+		if (forme.GetSkybox() || !forme.GetLit())
 			SetActiveShader(SHADER_SKYBOX);
-		else if (forme.GetDraw()->GetSmoke())
+		else if (forme.GetSmoke())
 			SetActiveShader(SHADER_SIMPLE);
 		else
 		{
-			bool blend = (forme.GetDraw()->GetDecal() || forme.GetDraw()->GetPartialTransparency());
+			bool blend = (forme.GetDecal() || forme.GetPartialTransparency());
 			if (blend)
 				SetActiveShader(SHADER_FULLBLEND);
 			else
@@ -1374,10 +1321,10 @@ void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectAppropriateShader(SCENEDRAW & for
 	}
 }
 
-void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectFlags(SCENEDRAW & forme, GLSTATEMANAGER & glstate)
+void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectFlags(DRAWABLE & forme, GLSTATEMANAGER & glstate)
 {
-	SCENEDRAW * i(&forme);
-	if (i->GetDraw()->GetDecal() || i->GetDraw()->GetPartialTransparency())
+	DRAWABLE * i(&forme);
+	if (i->GetDecal() || i->GetPartialTransparency())
 	{
 		glstate.Enable(GL_POLYGON_OFFSET_FILL);
 	}
@@ -1386,12 +1333,12 @@ void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectFlags(SCENEDRAW & forme, GLSTATEM
 		glstate.Disable(GL_POLYGON_OFFSET_FILL);
 	}
 
-	if (i->GetDraw()->GetCull())
+	if (i->GetCull())
 	{
 		glstate.Enable(GL_CULL_FACE);
-		if (i->GetDraw()->GetCull())
+		if (i->GetCull())
 		{
-			if (i->GetDraw()->GetCullFront())
+			if (i->GetCullFront())
 				glstate.SetCullFace(GL_FRONT);
 			else
 				glstate.SetCullFace(GL_BACK);
@@ -1400,10 +1347,10 @@ void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectFlags(SCENEDRAW & forme, GLSTATEM
 	else
 		glstate.Disable(GL_CULL_FACE);
 
-	bool blend = (i->GetDraw()->GetDecal() || i->GetDraw()->Get2D() ||
-			i->GetDraw()->GetPartialTransparency() || i->GetDraw()->GetDistanceField());
+	bool blend = (i->GetDecal() || i->Get2D() ||
+			i->GetPartialTransparency() || i->GetDistanceField());
 
-	if (blend && !i->GetDraw()->GetForceAlphaTest())
+	if (blend && !i->GetForceAlphaTest())
 	{
 		if (fsaa > 1)
 		{
@@ -1428,7 +1375,7 @@ void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectFlags(SCENEDRAW & forme, GLSTATEM
 		else*/
 		{
 			glstate.SetBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			if (i->GetDraw()->GetSmoke())
+			if (i->GetSmoke())
 				glstate.SetBlendFunc(GL_SRC_ALPHA, GL_ONE);
 		}
 	}
@@ -1448,7 +1395,7 @@ void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectFlags(SCENEDRAW & forme, GLSTATEM
 		{*/
 			//glstate.Enable(GL_BLEND);
 			glstate.Disable(GL_BLEND);
-			if (i->GetDraw()->GetDistanceField())
+			if (i->GetDistanceField())
 				glstate.SetAlphaFunc(GL_GREATER, 0.5f);
 			else
 				glstate.SetAlphaFunc(GL_GREATER, 0.25f);
@@ -1456,7 +1403,7 @@ void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectFlags(SCENEDRAW & forme, GLSTATEM
 		//}
 	}
 
-	if (i->GetDraw()->GetSmoke())// || i->GetDraw()->GetSkybox()) // commented out because the depth buffer will now be cleared after rendering skyboxes
+	if (i->GetSmoke())// || i->GetDraw()->GetSkybox()) // commented out because the depth buffer will now be cleared after rendering skyboxes
 	{
 		glstate.SetDepthMask(false);
 	}
@@ -1466,23 +1413,23 @@ void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectFlags(SCENEDRAW & forme, GLSTATEM
 	}
 
 	//if (i->GetDraw()->GetSmoke() || i->GetDraw()->Get2D() || i->GetDraw()->GetSkybox())
-	if (i->GetDraw()->GetSmoke() || i->GetDraw()->Get2D())
+	if (i->GetSmoke() || i->Get2D())
 		glstate.Disable(GL_DEPTH_TEST);
 	else
 		glstate.Enable(GL_DEPTH_TEST);
 
 	float r,g,b,a;
-	i->GetDraw()->GetColor(r,g,b,a);
+	i->GetColor(r,g,b,a);
 	glstate.SetColor(r,g,b,a);
 }
 
-void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectTexturing(SCENEDRAW & forme, GLSTATEMANAGER & glstate)
+void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectTexturing(DRAWABLE & forme, GLSTATEMANAGER & glstate)
 {
-	SCENEDRAW * i(&forme);
+	DRAWABLE * i(&forme);
 
 	bool enabletex = true;
 
-	const TEXTURE_GL * diffusetexture = i->GetDraw()->GetDiffuseMap();
+	const TEXTURE_GL * diffusetexture = i->GetDiffuseMap();
 
 	if (!diffusetexture)
 		enabletex = false;
@@ -1509,7 +1456,7 @@ void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectTexturing(SCENEDRAW & forme, GLST
 
 			glstate.Enable(GL_TEXTURE_2D);
 
-			i->GetDraw()->GetDiffuseMap()->Activate();
+			i->GetDiffuseMap()->Activate();
 
 			//cout << "boop" << endl;
 
@@ -1522,29 +1469,29 @@ void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectTexturing(SCENEDRAW & forme, GLST
 				//shadermap[activeshader]->UploadActiveShaderParameter1f("diffuse_texture_height", i->GetDraw()->GetDiffuseMap()->GetH());
 
 				glActiveTextureARB(GL_TEXTURE1_ARB);
-				if (i->GetDraw()->GetMiscMap1())
-					i->GetDraw()->GetMiscMap1()->Activate();
+				if (i->GetMiscMap1())
+					i->GetMiscMap1()->Activate();
 				else
 					glBindTexture(GL_TEXTURE_2D,0);
 
 				glActiveTextureARB(GL_TEXTURE8_ARB);
-				if (i->GetDraw()->GetAdditiveMap1())
+				if (i->GetAdditiveMap1())
 				{
-					if (i->GetDraw()->GetSelfIllumination())
-						i->GetDraw()->GetAdditiveMap1()->Activate();
+					if (i->GetSelfIllumination())
+						i->GetAdditiveMap1()->Activate();
 					else
-						i->GetDraw()->GetAdditiveMap1()->Deactivate();
+						i->GetAdditiveMap1()->Deactivate();
 				}
 				else
 					glBindTexture(GL_TEXTURE_2D,0);
 				
 				glActiveTextureARB(GL_TEXTURE7_ARB);
-				if (i->GetDraw()->GetAdditiveMap2())
+				if (i->GetAdditiveMap2())
 				{
-					if (i->GetDraw()->GetSelfIllumination())
-						i->GetDraw()->GetAdditiveMap2()->Activate();
+					if (i->GetSelfIllumination())
+						i->GetAdditiveMap2()->Activate();
 	                else
-	                    i->GetDraw()->GetAdditiveMap2()->Deactivate();
+	                    i->GetAdditiveMap2()->Deactivate();
 				}
 				else
 					glBindTexture(GL_TEXTURE_2D,0);
@@ -1561,12 +1508,12 @@ void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectTexturing(SCENEDRAW & forme, GLST
 }
 
 ///returns true if the matrix was pushed
-bool GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectTransformStart(SCENEDRAW & forme, GLSTATEMANAGER & glstate)
+bool GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectTransformStart(DRAWABLE & forme, GLSTATEMANAGER & glstate)
 {
 	bool need_a_pop = true;
 
-	SCENEDRAW * i(&forme);
-	if (i->GetDraw()->Get2D())
+	DRAWABLE * i(&forme);
+	if (i->Get2D())
 	{
 		if (last_transform_valid)
 			glPopMatrix();
@@ -1581,18 +1528,14 @@ bool GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectTransformStart(SCENEDRAW & forme,
 		glMatrixMode(GL_MODELVIEW);
 		glPushMatrix();
 		glLoadIdentity();
-		if (i->IsCollapsed())
-		{
-			glMultMatrixf(i->GetMatrix4()->GetArray());
-		}
+		glMultMatrixf(i->GetTransform().GetArray());
 	}
 	else
 	{
 		glstate.Enable(GL_DEPTH_TEST);
 
-		assert (i->IsCollapsed());
 		{
-			if (!i->GetDraw()->GetCameraTransformEnable()) //do our own transform only and ignore the camera position / orientation
+			if (!i->GetCameraTransformEnable()) //do our own transform only and ignore the camera position / orientation
 			{
 				if (last_transform_valid)
 					glPopMatrix();
@@ -1606,9 +1549,9 @@ bool GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectTransformStart(SCENEDRAW & forme,
 				glMatrixMode(GL_MODELVIEW);
 
 				glPushMatrix();
-				glLoadMatrixf(i->GetMatrix4()->GetArray());
+				glLoadMatrixf(i->GetTransform().GetArray());
 			}
-			else if (i->GetDraw()->GetSkybox())
+			else if (i->GetSkybox())
 			{
 				if (last_transform_valid)
 					glPopMatrix();
@@ -1618,31 +1561,31 @@ bool GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectTransformStart(SCENEDRAW & forme,
 				float temp_matrix[16];
 				cam_rotation.GetMatrix4(temp_matrix);
 				glLoadMatrixf(temp_matrix);
-				if (i->GetDraw()->GetVerticalTrack())
+				if (i->GetVerticalTrack())
 				{
-					MATHVECTOR< float, 3 > objpos(i->GetDraw()->GetObjectCenter());
+					MATHVECTOR< float, 3 > objpos(i->GetObjectCenter());
 					//std::cout << "Vertical offset: " << objpos;
-					objpos = i->GetDraw()->GetParent()->TransformIntoWorldSpace(objpos);
+					i->GetTransform().TransformVectorOut(objpos[0],objpos[1],objpos[2]);
 					//std::cout << " || " << objpos << endl;
 					//glTranslatef(-objpos.x,-objpos.y,-objpos.z);
 					//glTranslatef(0,game.cam.position.y,0);
 					glTranslatef(0.0,0.0,-objpos[2]);
 				}
-				glMultMatrixf(i->GetMatrix4()->GetArray());
+				glMultMatrixf(i->GetTransform().GetArray());
 			}
 			else
 			{
 				bool need_new_transform = !last_transform_valid;
 				if (last_transform_valid)
-					need_new_transform = (!last_transform.Equals(*i->GetMatrix4()));
+					need_new_transform = (!last_transform.Equals(i->GetTransform()));
 				if (need_new_transform)
 				{
 					if (last_transform_valid)
 						glPopMatrix();
 
 					glPushMatrix();
-					glMultMatrixf(i->GetMatrix4()->GetArray());
-					last_transform = *i->GetMatrix4();
+					glMultMatrixf(i->GetTransform().GetArray());
+					last_transform = i->GetTransform();
 					last_transform_valid = true;
 
 					need_a_pop = false;
@@ -1655,19 +1598,19 @@ bool GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectTransformStart(SCENEDRAW & forme,
 	return need_a_pop;
 }
 
-void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectTransformEnd(SCENEDRAW & forme, bool need_pop)
+void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::SelectTransformEnd(DRAWABLE & forme, bool need_pop)
 {
-	SCENEDRAW * i(&forme);
-	if (i->GetDraw()->Get2D() && need_pop)
+	DRAWABLE * i(&forme);
+	if (i->Get2D() && need_pop)
 	{
 		glMatrixMode(GL_PROJECTION);
 		glPopMatrix();
 		glMatrixMode(GL_MODELVIEW);
 		glPopMatrix();
 	}
-	else if (i->IsCollapsed())
+	else
 	{
-		if (!forme.GetDraw()->GetCameraTransformEnable())
+		if (!i->GetCameraTransformEnable())
 		{
 			glActiveTextureARB(GL_TEXTURE1_ARB);
 			glMatrixMode(GL_TEXTURE);
@@ -1809,7 +1752,7 @@ void GRAPHICS_SDLGL::RENDER_INPUT_SCENE::ExtractFrustum()
 	frustum[5][3] /= t;
 }
 
-GRAPHICS_SDLGL::RENDER_INPUT_SCENE::RENDER_INPUT_SCENE() : last_transform_valid(false), shaders(false), clearcolor(false), cleardepth(false), orthomode(false), contrast(1.0), use_static_partitioning(false), depth_mode_equal(false)
+GRAPHICS_SDLGL::RENDER_INPUT_SCENE::RENDER_INPUT_SCENE() : last_transform_valid(false), shaders(false), clearcolor(false), cleardepth(false), orthomode(false), contrast(1.0), depth_mode_equal(false)
 {
 	shadermap.resize(SHADER_NONE, NULL);
 	MATHVECTOR <float, 3> front(1,0,0);
@@ -1821,12 +1764,12 @@ GRAPHICS_SDLGL::RENDER_INPUT_SCENE::RENDER_INPUT_SCENE() : last_transform_valid(
 	ldir.RotateVector(lightposition);
 }
 
-bool TextureSort(const SCENEDRAW & draw1, const SCENEDRAW & draw2)
+bool TextureSort(const DRAWABLE & draw1, const DRAWABLE & draw2)
 {
-	return (draw1.GetDraw()->GetDiffuseMap()->GetTextureInfo().GetName() < draw2.GetDraw()->GetDiffuseMap()->GetTextureInfo().GetName());
+	return (draw1.GetDiffuseMap()->GetTextureInfo().GetName() < draw2.GetDiffuseMap()->GetTextureInfo().GetName());
 }
 
-void GRAPHICS_SDLGL::OptimizeStaticDrawlistmap()
+/*void GRAPHICS_SDLGL::OptimizeStaticDrawlistmap()
 {
 	static_object_partitioning.clear();
 	
@@ -1854,14 +1797,15 @@ void GRAPHICS_SDLGL::OptimizeStaticDrawlistmap()
 		
 		//std::sort(i->second.begin(), i->second.end(), TextureSort);
 	}
-}
+	//TODO: update/remove OptimizeStaticDrawlistmap
+}*/
 
-SCENEDRAW * PointerTo(const SCENEDRAW & sd)
+/*SCENEDRAW * PointerTo(const SCENEDRAW & sd)
 {
 	return const_cast<SCENEDRAW *> (&sd);
-}
+}*/
 
-unsigned int GRAPHICS_SDLGL::RENDER_INPUT_SCENE::CombineDrawlists()
+/*unsigned int GRAPHICS_SDLGL::RENDER_INPUT_SCENE::CombineDrawlists()
 {
 	combined_drawlist_cache.resize(0);
 	combined_drawlist_cache.reserve(drawlist_static->size()+drawlist_dynamic->size());
@@ -1880,4 +1824,4 @@ unsigned int GRAPHICS_SDLGL::RENDER_INPUT_SCENE::CombineDrawlists()
 	calgo::transform(*drawlist_dynamic, std::back_inserter(combined_drawlist_cache), &PointerTo);
 	
 	return already_culled;
-}
+}*/

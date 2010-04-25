@@ -73,7 +73,6 @@ private:
 		LOAD
 	};
 	void LoadSaveOptions(OPTION_ACTION action, std::map<std::string, std::string> & options);
-	void CollapseSceneToDrawlistmap(SCENENODE & node, std::map < DRAWABLE_FILTER *, std::vector <SCENEDRAW> > & outputmap, bool clearfirst);
 	void UpdateTrackMap();
 	void LoadingScreen(float progress, float max);
 	void ProcessNewSettings();
@@ -97,9 +96,11 @@ private:
 	double clocktime; ///< elapsed wall clock time
 	double target_time;
 	const float framerate;
-	TEXT_DRAW fps;
+	
+	SCENENODE debugnode;
+	TEXT_DRAWABLE fps_draw;
 	TEXT_DRAWABLE profiling_text;
-	DRAWABLE * fps_draw;
+	
 	std::vector <float> fps_track;
 	int fps_position;
 	float fps_min;
@@ -133,8 +134,6 @@ private:
 	TRACK track;
 	GUI gui;
 	std::map <std::string, FONT> fonts;
-	SCENENODE rootnode;
-	SCENENODE * tracknode;
 	std::list <CAR> cars;
 	std::map <CAR *, int> cartimerids;
 	std::pair <CAR *, CARCONTROLMAP_LOCAL> carcontrols_local;
@@ -143,7 +142,6 @@ private:
 	HUD hud;
 	INPUTGRAPH inputgraph;
 	LOADINGSCREEN loadingscreen;
-	SCENENODE loadingscreen_node;
 	TIMER timer;
 	REPLAY replay;
 	PARTICLE_SYSTEM tire_smoke;
@@ -165,7 +163,6 @@ public:
 		clocktime(0),
 		target_time(0),
 		framerate(0.01),
-		fps_draw(NULL),
 		fps_track(10,0),
 		fps_position(0),
 		fps_min(0),
@@ -180,7 +177,6 @@ public:
 		debugmode(false),
 		profilingmode(false),
 		track(info_out, err_out),
-		tracknode(NULL),
 		replay(framerate),
 		sky(graphics, info_out, err_out)
 	{

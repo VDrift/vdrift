@@ -40,7 +40,6 @@ public:
 	bool Load(
 		const std::string & trackpath,
 		const std::string & effects_texturepath,
-		SCENENODE & sceneroot,
 		bool reverse,
 		int anisotropy,
 		const std::string & texsize);
@@ -49,7 +48,6 @@ public:
 	bool DeferredLoad(
 		const std::string & trackpath,
 		const std::string & effects_texturepath,
-		SCENENODE & sceneroot,
 		bool reverse,
 		int anisotropy,
 		const std::string & texsize,
@@ -97,13 +95,11 @@ public:
 	
 	void SetRacingLineVisibility(bool newvis)
 	{
-		if(racingline_node)
-			racingline_node->SetChildVisibility(newvis);
+		racingline_visible = newvis;
 	}
 	
 	void Unload()
 	{
-		racingline_node = NULL;
 		Clear();
 	}
 	
@@ -121,6 +117,9 @@ public:
 	{
 		return objects;
 	}
+	
+	SCENENODE & GetRacinglineNode() {if (racingline_visible) return racingline_node; else return empty_node;}
+	SCENENODE & GetTrackNode() {return tracknode;}
 
 private:
 	std::ostream & info_output;
@@ -155,13 +154,18 @@ private:
 	std::vector <const BEZIER *> lapsequence;
 	
 	//racing line data
-	SCENENODE * racingline_node;
+	SCENENODE racingline_node;
+	SCENENODE empty_node;
 	TEXTURE_GL racingline_texture;
+	bool racingline_visible;
 	
-	bool CreateRacingLines(
-		SCENENODE * parentnode, 
-		const std::string & texturepath,
-		const std::string & texsize);
+	SCENENODE tracknode;
+	
+	bool loaded;
+	bool cull;
+	
+	
+	bool CreateRacingLines(const std::string & texturepath, const std::string & texsize);
 	
 	bool LoadParameters(const std::string & trackpath);
 	
@@ -219,9 +223,6 @@ private:
 		sstr >> output;
 		return true;
 	}
-	
-	bool loaded;
-	bool cull;
 };
 
 #endif

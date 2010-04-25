@@ -514,3 +514,247 @@
    fun:snd_pcm_mmap_writei
    fun:snd_pcm_writei
 }
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Param
+   rt_sigaction(act->sa_mask)
+   fun:__libc_sigaction
+   obj:/usr/lib/tls/libnvidia-tls.so.185.18.36
+   fun:(below main)
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Param
+   rt_sigaction(act->sa_flags)
+   fun:__libc_sigaction
+   obj:/usr/lib/tls/libnvidia-tls.so.185.18.36
+   fun:(below main)
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Param
+   rt_sigaction(act->sa_restorer)
+   fun:__libc_sigaction
+   obj:/usr/lib/tls/libnvidia-tls.so.185.18.36
+   fun:(below main)
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Param
+   semctl(IPC_SET, arg.buf)
+   fun:semctl@@GLIBC_2.2
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_dmix_open
+   fun:_snd_pcm_dmix_open
+   obj:/usr/lib/libasound.so.2.0.0
+   obj:/usr/lib/libasound.so.2.0.0
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:_snd_pcm_softvol_open
+   obj:/usr/lib/libasound.so.2.0.0
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:_snd_pcm_plug_open
+   obj:/usr/lib/libasound.so.2.0.0
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Param
+   ioctl(arg)
+   fun:ioctl
+   fun:snd_pcm_hwsync
+   obj:/usr/lib/libasound.so.2.0.0
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_start
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_start
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_start
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_mmap_writei
+   fun:snd_pcm_writei
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Param
+   ioctl(arg)
+   fun:ioctl
+   fun:snd_timer_start
+   obj:/usr/lib/libasound.so.2.0.0
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_start
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_start
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_start
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_mmap_writei
+   fun:snd_pcm_writei
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Param
+   ioctl(arg)
+   fun:ioctl
+   fun:snd_pcm_hwsync
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_hwsync
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_hwsync
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_hwsync
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_mmap_writei
+   fun:snd_pcm_writei
+   obj:/usr/lib/libSDL-1.2.so.0.11.2
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Param
+   ioctl(arg)
+   fun:ioctl
+   fun:snd_timer_stop
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_hwsync
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_hwsync
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_hwsync
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_mmap_writei
+   fun:snd_pcm_writei
+   obj:/usr/lib/libSDL-1.2.so.0.11.2
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Param
+   ioctl(arg)
+   fun:ioctl
+   fun:snd_pcm_hwsync
+   obj:/usr/lib/libasound.so.2.0.0
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_avail_update
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_avail_update
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_avail_update
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_mmap_writei
+   fun:snd_pcm_writei
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Param
+   ioctl(arg)
+   fun:ioctl
+   fun:snd_timer_stop
+   obj:/usr/lib/libasound.so.2.0.0
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_avail_update
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_mmap_commit
+   obj:/usr/lib/libasound.so.2.0.0
+   obj:/usr/lib/libasound.so.2.0.0
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_mmap_commit
+   obj:/usr/lib/libasound.so.2.0.0
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Param
+   ioctl(arg)
+   fun:ioctl
+   fun:snd_pcm_hwsync
+   obj:/usr/lib/libasound.so.2.0.0
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_mmap_commit
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_mmap_commit
+   obj:/usr/lib/libasound.so.2.0.0
+   obj:/usr/lib/libasound.so.2.0.0
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_mmap_commit
+   obj:/usr/lib/libasound.so.2.0.0
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Param
+   ioctl(arg)
+   fun:ioctl
+   fun:snd_timer_stop
+   obj:/usr/lib/libasound.so.2.0.0
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_mmap_commit
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_mmap_commit
+   obj:/usr/lib/libasound.so.2.0.0
+   obj:/usr/lib/libasound.so.2.0.0
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_mmap_commit
+   obj:/usr/lib/libasound.so.2.0.0
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Param
+   ioctl(arg)
+   fun:ioctl
+   fun:snd_pcm_hwsync
+   obj:/usr/lib/libasound.so.2.0.0
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_drain
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_drain
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_drain
+   obj:/usr/lib/libSDL-1.2.so.0.11.2
+   fun:SDL_AudioQuit
+   fun:SDL_QuitSubSystem
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Param
+   ioctl(arg)
+   fun:ioctl
+   fun:snd_timer_stop
+   obj:/usr/lib/libasound.so.2.0.0
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_drain
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_drain
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_drain
+   obj:/usr/lib/libSDL-1.2.so.0.11.2
+   fun:SDL_AudioQuit
+   fun:SDL_QuitSubSystem
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Param
+   ioctl(arg)
+   fun:ioctl
+   fun:snd_timer_stop
+   obj:/usr/lib/libasound.so.2.0.0
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_drop
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_drop
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_drop
+   fun:snd_pcm_close
+   obj:/usr/lib/libSDL-1.2.so.0.11.2
+   fun:SDL_AudioQuit
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Param
+   ioctl(arg)
+   fun:ioctl
+   fun:snd_timer_start
+   obj:/usr/lib/libasound.so.2.0.0
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_start
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_start
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_start
+   obj:/usr/lib/libasound.so.2.0.0
+   fun:snd_pcm_mmap_writei
+   fun:snd_pcm_writei
+}

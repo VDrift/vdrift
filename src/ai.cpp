@@ -688,7 +688,7 @@ void AI::analyzeOthers(AI_Car *c, float dt, const std::list <CAR> & othercars)
 	const MATHVECTOR <float, 3> throttle_axis(1,0,0); //positive is in front of the car
 	
 #ifdef VISUALIZE_AI_DEBUG
-	c->avoidancedraw->ClearLine();
+	//c->avoidancedraw->ClearLine();
 #endif
 	
 	for (std::list <CAR>::const_iterator i = othercars.begin(); i != othercars.end(); ++i)
@@ -887,56 +887,60 @@ double AI::Angle(double x1, double y1)
 	return atan2(y1, x1) * 180.0 / M_PI;
 }
 
-void ConfigureDrawable(reseatable_reference <DRAWABLE> & ref, SCENENODE & topnode, float r, float g, float b)
+void ConfigureDrawable(keyed_container <DRAWABLE>::handle & ref, SCENENODE & topnode, float r, float g, float b)
 {
-	if (!ref)
+	if (!ref.valid())
 	{
-		ref = topnode.AddDrawable();
-		ref->SetColor(r,g,b,1);
-		ref->SetLit(false);
-		ref->SetDecal(true);
+		ref = topnode.GetDrawlist().normal_noblend.insert(DRAWABLE());
+		DRAWABLE & d = topnode.GetDrawlist().normal_noblend.get(ref);
+		d.SetColor(r,g,b,1);
+		d.SetLit(false);
+		d.SetDecal(true);
 	}
 }
 
-void AI::Visualize(AI_Car *c, SCENENODE & topnode)
+void AI::Visualize(AI_Car *c)
 {
 	ConfigureDrawable(c->brakedraw, topnode, 0,1,0);
 	ConfigureDrawable(c->steerdraw, topnode, 0,0,1);
-	ConfigureDrawable(c->avoidancedraw, topnode, 1,0,0);
+	//ConfigureDrawable(c->avoidancedraw, topnode, 1,0,0);
 	
-	c->brakedraw->ClearLine();
+	DRAWABLE & brakedraw = topnode.GetDrawlist().normal_noblend.get(c->brakedraw);
+	DRAWABLE & steerdraw = topnode.GetDrawlist().normal_noblend.get(c->steerdraw);
+	
+	brakedraw.ClearLine();
 	for (std::vector <BEZIER>::iterator i = c->brakelook.begin(); i != c->brakelook.end(); ++i)
 	{
 		BEZIER & patch = *i;
-		c->brakedraw->AddLinePoint(TransformToWorldspace(patch.GetBL()));
-		c->brakedraw->AddLinePoint(TransformToWorldspace(patch.GetFL()));
-		c->brakedraw->AddLinePoint(TransformToWorldspace(patch.GetFR()));
-		c->brakedraw->AddLinePoint(TransformToWorldspace(patch.GetBR()));
-		c->brakedraw->AddLinePoint(TransformToWorldspace(patch.GetBL()));
-		c->brakedraw->AddLinePoint(TransformToWorldspace(patch.GetFL()));
+		brakedraw.AddLinePoint(TransformToWorldspace(patch.GetBL()));
+		brakedraw.AddLinePoint(TransformToWorldspace(patch.GetFL()));
+		brakedraw.AddLinePoint(TransformToWorldspace(patch.GetFR()));
+		brakedraw.AddLinePoint(TransformToWorldspace(patch.GetBR()));
+		brakedraw.AddLinePoint(TransformToWorldspace(patch.GetBL()));
+		brakedraw.AddLinePoint(TransformToWorldspace(patch.GetFL()));
 	}
 	
-	c->steerdraw->ClearLine();
+	steerdraw.ClearLine();
 	for (std::vector <BEZIER>::iterator i = c->steerlook.begin(); i != c->steerlook.end(); ++i)
 	{
 		BEZIER & patch = *i;
-		c->brakedraw->AddLinePoint(TransformToWorldspace(patch.GetBL()));
-		c->steerdraw->AddLinePoint(TransformToWorldspace(patch.GetFL()));
-		c->steerdraw->AddLinePoint(TransformToWorldspace(patch.GetBR()));
-		c->steerdraw->AddLinePoint(TransformToWorldspace(patch.GetFR()));
-		c->steerdraw->AddLinePoint(TransformToWorldspace(patch.GetBL()));
-		c->steerdraw->AddLinePoint(TransformToWorldspace(patch.GetFL()));
+		brakedraw.AddLinePoint(TransformToWorldspace(patch.GetBL()));
+		steerdraw.AddLinePoint(TransformToWorldspace(patch.GetFL()));
+		steerdraw.AddLinePoint(TransformToWorldspace(patch.GetBR()));
+		steerdraw.AddLinePoint(TransformToWorldspace(patch.GetFR()));
+		steerdraw.AddLinePoint(TransformToWorldspace(patch.GetBL()));
+		steerdraw.AddLinePoint(TransformToWorldspace(patch.GetFL()));
 	}
 }
 
-void AI::Visualize(SCENENODE & topnode)
+void AI::Visualize()
 {
 #ifdef VISUALIZE_AI_DEBUG
 	/*if (!AI_Cars.empty())
 		Visualize(&AI_Cars.back(), topnode);*/
 	for( std::vector<AI_Car>::iterator it = AI_Cars.begin (); it != AI_Cars.end (); it++ )
 	{
-		Visualize(&(*it), topnode);
+		Visualize(&(*it));
 	}
 #endif
 }

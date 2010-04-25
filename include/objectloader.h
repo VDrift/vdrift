@@ -6,6 +6,11 @@
 #include "track_object.h"
 #include "tracksurface.h"
 
+// for std::pair
+#include <map>
+
+class TEXTURE_GL;
+
 class OBJECTLOADER
 {
 public:
@@ -41,12 +46,11 @@ public:
 		bool usesurfaces,
 		bool vertical_tracking_skyboxes,
 		const std::string & texture_size);
-
+	
 	///optimize the drawables by grouping them
 	void Optimize();
-	
 	bool GetSurfacesBool();
-
+	
 private:
 	const std::string & trackpath;
 	std::string objectpath;

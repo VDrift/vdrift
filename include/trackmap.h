@@ -44,64 +44,58 @@ private:
 	TEXTURE_GL cardot0_focused;
 	TEXTURE_GL cardot1_focused;
 	
-	SCENENODE * mapnode;
-	DRAWABLE * mapdraw;
+	SCENENODE mapnode;
+	keyed_container <DRAWABLE>::handle mapdraw;
 	VERTEXARRAY mapverts;
 	
 	class CARDOT
 	{
 		private:
-			DRAWABLE * dotdraw;
+			keyed_container <DRAWABLE>::handle dotdraw;
 			VERTEXARRAY dotverts;
 			
-		public:
-			CARDOT() : dotdraw(NULL) {}
-			CARDOT(SCENENODE * topnode, TEXTURE_GL & tex, const MATHVECTOR <float, 2> & corner1, const MATHVECTOR <float, 2> & corner2)
+			DRAWABLE & GetDrawable(SCENENODE & topnode)
 			{
-				dotdraw = &topnode->AddDrawable();
-				assert(dotdraw);
-				dotdraw->SetVertArray(&dotverts);
-				dotdraw->SetLit(false);
-				dotdraw->Set2D(true);
-				dotdraw->SetCull(false, false);
-				dotdraw->SetColor(1,1,1,0.7);
-				dotdraw->SetDrawOrder(0.1);
-				Retexture(tex);
+				return topnode.GetDrawlist().twodim.get(dotdraw);
+			}
+			
+		public:
+			CARDOT() {}
+			CARDOT(SCENENODE & topnode, TEXTURE_GL & tex, const MATHVECTOR <float, 2> & corner1, const MATHVECTOR <float, 2> & corner2)
+			{
+				dotdraw = topnode.GetDrawlist().twodim.insert(DRAWABLE());
+				DRAWABLE & drawref = GetDrawable(topnode);
+				drawref.SetVertArray(&dotverts);
+				drawref.SetLit(false);
+				drawref.Set2D(true);
+				drawref.SetCull(false, false);
+				drawref.SetColor(1,1,1,0.7);
+				drawref.SetDrawOrder(0.1);
+				Retexture(topnode, tex);
 				Reposition(corner1, corner2);
 			}
-			CARDOT(const CARDOT & other)
+			void Retexture(SCENENODE & topnode, TEXTURE_GL & newtex)
 			{
-				dotdraw = other.dotdraw;
-				dotverts = other.dotverts;
-				if (dotdraw)
-					dotdraw->SetVertArray(&dotverts);
-			}
-			~CARDOT()
-			{
-				dotdraw = NULL;
-			}
-			void Retexture(TEXTURE_GL & newtex)
-			{
-				assert(dotdraw);
 				assert(newtex.Loaded());
-				dotdraw->SetDiffuseMap(&newtex);
+				GetDrawable(topnode).SetDiffuseMap(&newtex);
 			}
 			void Reposition(const MATHVECTOR <float, 2> & corner1, const MATHVECTOR <float, 2> & corner2)
 			{
 				dotverts.SetToBillboard(corner1[0], corner1[1], corner2[0], corner2[1]);
 			}
-			void SetVisible(bool visible)
+			void SetVisible(SCENENODE & topnode, bool visible)
 			{
-				assert(dotdraw);
-				dotdraw->SetDrawEnable(visible);
-				//dotdraw->SetVertArray(&dotverts);
+				GetDrawable(topnode).SetDrawEnable(visible);
 			}
-			void DebugPrint(std::ostream & out)
+			void DebugPrint(SCENENODE & topnode, std::ostream & out)
 			{
-				assert(dotdraw);
-				out << dotdraw << ": enable=" << dotdraw->GetDrawEnable() << ", tex=" << dotdraw->GetDiffuseMap() << ", verts=" << dotdraw->GetVertArray() << std::endl;
+				DRAWABLE & drawref = GetDrawable(topnode);
+				out << &drawref << ": enable=" << drawref.GetDrawEnable() << ", tex=" << drawref.GetDiffuseMap() << ", verts=" << drawref.GetVertArray() << std::endl;
 			}
-			DRAWABLE * GetDrawable() {return dotdraw;}
+			keyed_container <DRAWABLE>::handle & GetDrawableHandle()
+			{
+				return dotdraw;
+			}
 	};
 	
 	std::list <CARDOT> dotlist;
@@ -113,7 +107,7 @@ public:
 	TRACKMAP();
 	~TRACKMAP();
 	///w and h are the display device dimensions in pixels.  returns true if successful.
-	bool BuildMap(SCENENODE * parentnode, const std::list <ROADSTRIP> & roads, int w, int h, const std::string & texturepath, const std::string & texsize, std::ostream & error_output);
+	bool BuildMap(const std::list <ROADSTRIP> & roads, int w, int h, const std::string & texturepath, const std::string & texsize, std::ostream & error_output);
 	void Unload();
 	///update the map with provided information for map visibility, as well as a list of car positions and whether or not they're the player car
 	void Update(bool mapvisible, const std::list <std::pair<MATHVECTOR <float, 3>, bool> > & carpositions);

@@ -30,11 +30,10 @@ public:
 	WIDGET_DOUBLESTRINGWHEEL() {current1 = values1.end();current2 = values2.end();}
 	virtual WIDGET * clone() const {return new WIDGET_DOUBLESTRINGWHEEL(*this);};
 	
-	void SetupDrawable(SCENENODE * scene, const std::string & newtitle, TEXTURE_GL * teximage_left_up, TEXTURE_GL * teximage_left_down, 
+	void SetupDrawable(SCENENODE & scene, const std::string & newtitle, TEXTURE_GL * teximage_left_up, TEXTURE_GL * teximage_left_down, 
 			   TEXTURE_GL * teximage_right_up, TEXTURE_GL * teximage_right_down,
 			   FONT * font, float scalex, float scaley, float centerx, float centery)
 	{
-		assert(scene);
 		assert(teximage_left_up);
 		assert(teximage_left_down);
 		assert(teximage_right_up);
@@ -54,40 +53,40 @@ public:
 		button_right.SetupDrawable(scene, teximage_right_up, teximage_right_down, teximage_right_up, font, "", centerx+0.02*2.0+titlewidth, centery, buttonsize,buttonsize, 1,1,1);
 	}
 	
-	virtual void SetAlpha(float newalpha)
+	virtual void SetAlpha(SCENENODE & scene, float newalpha)
 	{
-		title.SetAlpha(newalpha);
-		label.SetAlpha(newalpha);
-		button_left.SetAlpha(newalpha);
-		button_right.SetAlpha(newalpha);
+		title.SetAlpha(scene, newalpha);
+		label.SetAlpha(scene, newalpha);
+		button_left.SetAlpha(scene, newalpha);
+		button_right.SetAlpha(scene, newalpha);
 	}
 	
-	virtual void SetVisible(bool newvis)
+	virtual void SetVisible(SCENENODE & scene, bool newvis)
 	{
-		title.SetVisible(newvis);
-		label.SetVisible(newvis);
-		button_left.SetVisible(newvis);
-		button_right.SetVisible(newvis);
+		title.SetVisible(scene, newvis);
+		label.SetVisible(scene, newvis);
+		button_left.SetVisible(scene, newvis);
+		button_right.SetVisible(scene, newvis);
 	}
 	
-	virtual bool ProcessInput(float cursorx, float cursory, bool cursordown, bool cursorjustup)
+	virtual bool ProcessInput(SCENENODE & scene, float cursorx, float cursory, bool cursordown, bool cursorjustup)
 	{
-		bool left = button_left.ProcessInput(cursorx, cursory, cursordown, cursorjustup);
-		bool right = button_right.ProcessInput(cursorx, cursory, cursordown, cursorjustup);
+		bool left = button_left.ProcessInput(scene, cursorx, cursory, cursordown, cursorjustup);
+		bool right = button_right.ProcessInput(scene, cursorx, cursory, cursordown, cursorjustup);
 		
 		if (current1 != values1.end())
 		{
 			if (left && cursorjustup)
 			{
 				if (current1 == values1.begin())
-					SetCurrent(values1.back().first, values2.back().first);
+					SetCurrent(scene, values1.back().first, values2.back().first);
 				else
 				{
 					std::list <std::pair<std::string,std::string> >::iterator i1 = current1;
 					i1--;
 					std::list <std::pair<std::string,std::string> >::iterator i2 = current2;
 					i2--;
-					SetCurrent(i1->first, i2->first);
+					SetCurrent(scene, i1->first, i2->first);
 				}
 			}
 			
@@ -98,16 +97,16 @@ public:
 				std::list <std::pair<std::string,std::string> >::iterator i2 = current2;
 				i2++;
 				if (i1 == values1.end())
-					SetCurrent(values1.front().first, values2.front().first);
+					SetCurrent(scene, values1.front().first, values2.front().first);
 				else
-					SetCurrent(i1->first, i2->first);
+					SetCurrent(scene, i1->first, i2->first);
 			}
 		}
 		
 		return left || right;
 	}
 	
-	void SetCurrent(const std::string newsetting1, const std::string newsetting2)
+	void SetCurrent(SCENENODE & scene, const std::string newsetting1, const std::string newsetting2)
 	{
 		current1 = values1.end();
 		current2 = values2.end();
@@ -140,10 +139,10 @@ public:
 		assert (current1 != values1.end());
 		assert (current2 != values2.end());
 
-		label.ReviseDrawable(current1->second+","+current2->second);
+		label.ReviseDrawable(scene, current1->second+","+current2->second);
 	}
 	
-	void SetCurrent(const std::string newsetting1, const std::string newsetting2, std::ostream & error_output)
+	void SetCurrent(SCENENODE & scene, const std::string newsetting1, const std::string newsetting2, std::ostream & error_output)
 	{
 		current1 = values1.end();
 		current2 = values2.end();
@@ -168,11 +167,11 @@ public:
 		if (current1 == values1.end() || current2 == values2.end())
 		{
 			error_output << "Option " << setting1 << " doesn't have value " << newsetting1 << " or option " << setting2 << " doesn't pair with " << newsetting2 << std::endl;
-			label.ReviseDrawable("");
+			label.ReviseDrawable(scene, "");
 		}
 		else
 		{
-			label.ReviseDrawable(current1->second+","+current2->second);
+			label.ReviseDrawable(scene, current1->second+","+current2->second);
 		}
 	}
 	
@@ -192,7 +191,7 @@ public:
 	//virtual std::string GetAction() const {return active_action;}
 	virtual std::string GetDescription() const {return description;}
 	virtual void SetDescription(const std::string & newdesc) {description = newdesc;}
-	virtual void UpdateOptions(bool save_to_options, std::map<std::string, GUIOPTION> & optionmap, std::ostream & error_output)
+	virtual void UpdateOptions(SCENENODE & scene, bool save_to_options, std::map<std::string, GUIOPTION> & optionmap, std::ostream & error_output)
 	{
 		//error_output << "Updating options: " << save_to_options << std::endl;
 		if (save_to_options)
@@ -213,11 +212,11 @@ public:
 				if (values1.empty())
 					error_output << "Option " << setting1 << " also doesn't have any possible values." << std::endl;
 				else
-					SetCurrent(values1.begin()->first, values2.begin()->first, error_output);
+					SetCurrent(scene, values1.begin()->first, values2.begin()->first, error_output);
 			}
 			else
 			{
-				SetCurrent(currentsetting1, currentsetting2, error_output);
+				SetCurrent(scene, currentsetting1, currentsetting2, error_output);
 			}
 		}
 	}

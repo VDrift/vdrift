@@ -3,10 +3,8 @@
 
 using std::endl;
 
-bool PARTICLE_SYSTEM::Load(SCENENODE & parentnode, const std::list <std::string> & texlist, int anisotropy, const std::string & texsize, std::ostream & error_output)
+bool PARTICLE_SYSTEM::Load(const std::list <std::string> & texlist, int anisotropy, const std::string & texsize, std::ostream & error_output)
 {
-	node = parentnode.AddNode();
-	
 	for (std::list <std::string>::const_iterator i = texlist.begin(); i != texlist.end(); ++i)
 	{
 		textures.push_back(TEXTURE_GL());
@@ -34,7 +32,7 @@ void PARTICLE_SYSTEM::Update(float dt, const QUATERNION <float> & camdir)
 	
 	for (unsigned int i = 0; i < particles.size(); i++)
 	{
-		particles[i].Update(dt, camdir_conj);
+		particles[i].Update(node, dt, camdir_conj);
 		if (particles[i].Expired())
 			expired_list.push_back(i);
 	}
@@ -65,7 +63,7 @@ void PARTICLE_SYSTEM::Update(float dt, const QUATERNION <float> & camdir)
 			}
 			
 			//std::cout << "Deleted node: " << &particles[newback].GetNode() << endl;
-			node->Delete(&particles[newback].GetNode());
+			node.Delete(particles[newback].GetNode());
 			
 			newback--;
 		}
@@ -100,7 +98,7 @@ void PARTICLE_SYSTEM::AddParticle(const MATHVECTOR <float,3> & position, float n
 	while (particles.size() >= max_particles)
 		particles.pop_back();
 	
-	particles.push_back(PARTICLE(*node, position, direction,
+	particles.push_back(PARTICLE(node, position, direction,
 			    speed_range.first+newspeed*(speed_range.second-speed_range.first),
 			    transparency_range.first+newspeed*(transparency_range.second-transparency_range.first),
 			    longevity_range.first+newspeed*(longevity_range.second-longevity_range.first),
@@ -115,7 +113,7 @@ void PARTICLE_SYSTEM::Clear()
 {
 	for (std::vector <PARTICLE>::iterator i = particles.begin(); i != particles.end(); ++i)
 	{
-		node->Delete(&i->GetNode());
+		node.Delete(i->GetNode());
 	}
 	
 	particles.clear();
@@ -138,11 +136,10 @@ void PARTICLE_SYSTEM::SetParameters(float transmin, float transmax, float longmi
 
 QT_TEST(particle_test)
 {
-	SCENENODE node;
 	PARTICLE_SYSTEM s;
 	s.SetParameters(1.0,1.0,0.5,1.0,1.0,1.0,1.0,1.0,MATHVECTOR<float,3>(0,1,0));
 	std::stringstream out;
-	s.Load(node, std::list<std::string> (), 0, "large", out);
+	s.Load(std::list<std::string> (), 0, "large", out);
 	
 	//test basic particle management:  adding particles and letting them expire and get removed over time
 	QT_CHECK_EQUAL(s.NumParticles(),0);

@@ -208,10 +208,7 @@ private:
 			};
 		
 		private:
-			reseatable_reference <std::vector <SCENEDRAW> > drawlist_static;
-			reseatable_reference <std::vector <SCENEDRAW> > drawlist_dynamic;
-			reseatable_reference <AABB_SPACE_PARTITIONING_NODE <SCENEDRAW*> > static_partitioning;
-			std::vector <SCENEDRAW*> combined_drawlist_cache;
+			reseatable_reference <std::vector <DRAWABLE*> > drawlist_ptr;
 			bool last_transform_valid;
 			MATRIX4 <float> last_transform;
 			QUATERNION <float> cam_rotation; //used for the skybox effect
@@ -225,7 +222,6 @@ private:
 			float lod_far; //used for distance culling
 			bool shaders;
 			bool clearcolor, cleardepth;
-			void SetActiveShader(const SHADER_TYPE & newshader);
 			std::vector <SHADER_GLSL *> shadermap;
 			SHADER_TYPE activeshader;
 			reseatable_reference <TEXTURE_INTERFACE> reflection;
@@ -233,28 +229,25 @@ private:
 			bool orthomode;
 			unsigned int fsaa;
 			float contrast;
-			bool use_static_partitioning;
 			bool depth_mode_equal;
 			
 			void DrawList(GLSTATEMANAGER & glstate);
-			bool FrustumCull(SCENEDRAW & tocull) const;
-			void SelectAppropriateShader(SCENEDRAW & forme);
-			void SelectFlags(SCENEDRAW & forme, GLSTATEMANAGER & glstate);
-			void SelectTexturing(SCENEDRAW & forme, GLSTATEMANAGER & glstate);
-			bool SelectTransformStart(SCENEDRAW & forme, GLSTATEMANAGER & glstate);
-			void SelectTransformEnd(SCENEDRAW & forme, bool need_pop);
+			bool FrustumCull(DRAWABLE & tocull);
+			void SelectAppropriateShader(DRAWABLE & forme);
+			void SelectFlags(DRAWABLE & forme, GLSTATEMANAGER & glstate);
+			void SelectTexturing(DRAWABLE & forme, GLSTATEMANAGER & glstate);
+			bool SelectTransformStart(DRAWABLE & forme, GLSTATEMANAGER & glstate);
+			void SelectTransformEnd(DRAWABLE & forme, bool need_pop);
 			void ExtractFrustum();
-			unsigned int CombineDrawlists(); ///< returns the number of scenedraw elements that have already gone through culling
+			//unsigned int CombineDrawlists(); ///< returns the number of scenedraw elements that have already gone through culling
+			void SetActiveShader(const SHADER_TYPE & newshader);
 			
 		public:
 			RENDER_INPUT_SCENE();
 			
-			void SetDrawList(std::vector <SCENEDRAW> & dl_static, std::vector <SCENEDRAW> & dl_dynamic, AABB_SPACE_PARTITIONING_NODE <SCENEDRAW*> & static_speedup, bool useit)
+			void SetDrawList(std::vector <DRAWABLE*> & dl_dynamic)
 			{
-				drawlist_static = &dl_static;
-				drawlist_dynamic = &dl_dynamic;
-				static_partitioning = &static_speedup;
-				use_static_partitioning = useit;
+				drawlist_ptr = &dl_dynamic;
 			}
 			void DisableOrtho() {orthomode = false;}
 			void SetOrtho(const MATHVECTOR <float, 3> & neworthomin, const MATHVECTOR <float, 3> & neworthomax) {orthomode = true; orthomin = neworthomin; orthomax = neworthomax;}
@@ -326,18 +319,7 @@ private:
 	std::map <std::string, SHADER_GLSL> shadermap;
 	std::map <std::string, SHADER_GLSL>::iterator activeshader;
 	
-	std::map < DRAWABLE_FILTER *, std::vector <SCENEDRAW> > dynamic_drawlist_map; //used for objects that move
-	std::map < DRAWABLE_FILTER *, std::vector <SCENEDRAW> > static_drawlist_map; //used for objects that do not move
-	std::map < DRAWABLE_FILTER *, AABB_SPACE_PARTITIONING_NODE <SCENEDRAW*> > static_object_partitioning; //used to speed up frustum checking for the static_drawlist_map
-
-	std::list <DRAWABLE_FILTER *> filter_list;
-	DRAWABLE_FILTER no2d_noblend_noblur;
-	DRAWABLE_FILTER no2d_noblend_blur;
-	DRAWABLE_FILTER no2d_blend;
-	DRAWABLE_FILTER only2d;
-	DRAWABLE_FILTER skyboxes_noblend;
-	DRAWABLE_FILTER skyboxes_blend;
-	DRAWABLE_FILTER camtransfilter;
+	DRAWABLE_CONTAINER <PTRVECTOR> dynamic_drawlist; //used for objects that move
 	
 	//render pipeline info
 	RENDER_INPUT_SCENE renderscene;
@@ -371,7 +353,7 @@ private:
 	void DisableShaders();
 	void DrawBox(const MATHVECTOR <float, 3> & corner1, const MATHVECTOR <float, 3> & corner2) const;
 	void SetupCamera();
-	void SendDrawlistToRenderScene(RENDER_INPUT_SCENE & renderscene, DRAWABLE_FILTER * filter_ptr);
+	void SendDrawlistToRenderScene(RENDER_INPUT_SCENE & renderscene, std::vector <DRAWABLE*> & drawlist);
 	
 	void Render(RENDER_INPUT * input, RENDER_OUTPUT & output, std::ostream & error_output);
 public:
@@ -380,6 +362,8 @@ public:
 			view_distance(10000),fsaa(1),lighting(0),bloom(false),contrast(1.0), aticard(false)
 			{activeshader = shadermap.end();}
 	~GRAPHICS_SDLGL() {}
+	
+	typedef DRAWABLE_CONTAINER <PTRVECTOR> dynamicdrawlist_type;
 	
 	///reflection_type is 0 (low=OFF), 1 (medium=static), 2 (high=dynamic)
 	void Init(const std::string shaderpath, const std::string & windowcaption,
@@ -395,18 +379,7 @@ public:
 				std::ostream & info_output, std::ostream & error_output);
 	void Deinit();
 	void BeginScene(std::ostream & error_output);
-	std::map < DRAWABLE_FILTER *, std::vector <SCENEDRAW> > & GetStaticDrawlistmap() {return static_drawlist_map;}
-	std::map < DRAWABLE_FILTER *, std::vector <SCENEDRAW> > & GetDrawlistmap() {return dynamic_drawlist_map;}
-	void OptimizeStaticDrawlistmap(); ///<should be called after filling the static drawlist map
-	void ClearStaticDrawlistMap()
-	{
-		for (std::map <DRAWABLE_FILTER *, std::vector <SCENEDRAW> >::iterator i =
-			GetStaticDrawlistmap().begin(); i != GetStaticDrawlistmap().end(); ++i)
-
-			i->second.clear();
-
-		OptimizeStaticDrawlistmap();
-	}
+	DRAWABLE_CONTAINER <PTRVECTOR> & GetDynamicDrawlist() {return dynamic_drawlist;}
 	void SetupScene(float fov, float new_view_distance, const MATHVECTOR <float, 3> cam_position, const QUATERNION <float> & cam_rotation,
 					const MATHVECTOR <float, 3> & dynamic_reflection_sample_pos)
 	{

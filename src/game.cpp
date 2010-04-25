@@ -79,7 +79,7 @@ void GAME::Start(list <string> & args)
 	InitializeCoreSubsystems();
 
 	//load loading screen assets
-	if (!loadingscreen.Initialize(loadingscreen_node, pathmanager.GetGUITexturePath(settings.GetSkin()),
+	if (!loadingscreen.Initialize(pathmanager.GetGUITexturePath(settings.GetSkin()),
 				 graphics.GetW(), graphics.GetH(), settings.GetTextureSize(), error_output))
 	{
 		error_output << "Error loading the loading screen" << endl; //ironic
@@ -107,7 +107,7 @@ void GAME::Start(list <string> & args)
 	}
 
 	//initialize HUD
-	if (!hud.Init(rootnode, pathmanager.GetGUITexturePath(settings.GetSkin()), fonts["lcd"], fonts["futuresans"], error_output, graphics.GetW(), graphics.GetH(), settings.GetTextureSize(), debugmode))
+	if (!hud.Init(pathmanager.GetGUITexturePath(settings.GetSkin()), fonts["lcd"], fonts["futuresans"], error_output, graphics.GetW(), graphics.GetH(), settings.GetTextureSize(), debugmode))
 	{
 		error_output << "Error initializing HUD" << endl;
 		return;
@@ -115,7 +115,7 @@ void GAME::Start(list <string> & args)
 	hud.Hide();
 
 	//initialise input graph
-	if (!inputgraph.Init(rootnode, pathmanager.GetGUITexturePath(settings.GetSkin()), error_output, settings.GetTextureSize()))
+	if (!inputgraph.Init(pathmanager.GetGUITexturePath(settings.GetSkin()), error_output, settings.GetTextureSize()))
 	{
 		error_output << "Error initializing input graph" << endl;
 		return;
@@ -126,15 +126,19 @@ void GAME::Start(list <string> & args)
 	if (!InitializeGUI()) return;
 
 	//initialize FPS counter
-	fps_draw = &rootnode.AddDrawable();
-	fps_draw->SetDrawOrder(150);
+	{
+		float screenhwratio = (float)graphics.GetH()/graphics.GetW();
+		float w = 0.06;
+		fps_draw.Init(debugnode, fonts["futuresans"], "", 0.5-w*0.5,1.0-0.02, screenhwratio*0.2,0.2);
+		fps_draw.SetDrawOrder(debugnode, 150);
+	}
 	
 	//initialize profiling text
 	if (profilingmode)
 	{
 		float screenhwratio = (float)graphics.GetH()/graphics.GetW();
-		profiling_text.Init(rootnode, fonts["futuresans"], "", 0.01, 0.25, screenhwratio*0.2,0.2);
-		profiling_text.GetDrawable()->SetDrawOrder(150);
+		profiling_text.Init(debugnode, fonts["futuresans"], "", 0.01, 0.25, screenhwratio*0.2,0.2);
+		profiling_text.SetDrawOrder(debugnode, 150);
 	}
 
 	//load particle systems
@@ -142,7 +146,7 @@ void GAME::Start(list <string> & args)
 	pathmanager.GetFolderIndex(pathmanager.GetTireSmokeTexturePath(), smoketexlist, ".png");
 	for (list <string>::iterator i = smoketexlist.begin(); i != smoketexlist.end(); ++i)
 		*i = pathmanager.GetTireSmokeTexturePath() + "/" + *i;
-	if (!tire_smoke.Load(rootnode, smoketexlist, settings.GetAnisotropy(), settings.GetTextureSize(), error_output))
+	if (!tire_smoke.Load(smoketexlist, settings.GetAnisotropy(), settings.GetTextureSize(), error_output))
 	{
 		error_output << "Error loading tire smoke particle system" << endl;
 		return;
@@ -206,6 +210,22 @@ void GAME::InitializeCoreSubsystems()
 	eventsystem.Init(info_output);
 }
 
+///write the scenegraph to the output drawlist
+template <bool clearfirst>
+void TraverseScene(SCENENODE & node, GRAPHICS_SDLGL::dynamicdrawlist_type & output)
+{
+	if (clearfirst)
+	{
+		output.clear();
+	}
+	
+	MATRIX4 <float> identity;
+	node.Traverse(output, identity);
+	
+	//std::cout << output.size() << std::endl;
+	//std::cout << node.Nodes() << "," << node.Drawables() << std::endl;
+}
+
 bool GAME::InitializeGUI()
 {
 	list <string> menufiles;
@@ -233,7 +253,7 @@ bool GAME::InitializeGUI()
 	}
 	std::map<std::string, std::list <std::pair <std::string, std::string> > > valuelists;
 	PopulateValueLists(valuelists);
-	if (!gui.Load(menufiles, valuelists, pathmanager.GetOptionsFile(), pathmanager.GetCarControlsFile(), menufolder, pathmanager.GetGUITexturePath(settings.GetSkin()), pathmanager.GetDataPath(), &rootnode.AddNode(), fonts, (float)graphics.GetH()/graphics.GetW(), settings.GetTextureSize(), info_output, error_output))
+	if (!gui.Load(menufiles, valuelists, pathmanager.GetOptionsFile(), pathmanager.GetCarControlsFile(), menufolder, pathmanager.GetGUITexturePath(settings.GetSkin()), pathmanager.GetDataPath(), fonts, (float)graphics.GetH()/graphics.GetW(), settings.GetTextureSize(), info_output, error_output))
 	{
 		error_output << "Error loading GUI files" << endl;
 		return false;
@@ -471,10 +491,6 @@ void GAME::End()
 	collision.Clear();
 	track.Clear();
 	trackmap.Unload();
-	
-	if (tracknode)
-		delete tracknode;
-	tracknode = NULL;
 
 	graphics.Deinit();
 }
@@ -510,7 +526,18 @@ void GAME::BeginDraw()
 	PROFILER.endBlock("render");
 
 	PROFILER.beginBlock("scenegraph");
-	CollapseSceneToDrawlistmap(rootnode, graphics.GetDrawlistmap(), true);
+	
+	TraverseScene<true>(debugnode, graphics.GetDynamicDrawlist());
+	TraverseScene<false>(gui.GetNode(), graphics.GetDynamicDrawlist());
+	TraverseScene<false>(track.GetRacinglineNode(), graphics.GetDynamicDrawlist());
+	TraverseScene<false>(track.GetTrackNode(), graphics.GetDynamicDrawlist());
+	TraverseScene<false>(hud.GetNode(), graphics.GetDynamicDrawlist());
+	for (list <CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
+	{
+		TraverseScene<false>(i->GetNode(), graphics.GetDynamicDrawlist());
+	}
+	
+	//gui.GetNode().DebugPrint(info_output);
 	PROFILER.endBlock("scenegraph");
 	PROFILER.beginBlock("render");
 	graphics.DrawScene(error_output);
@@ -616,7 +643,7 @@ void GAME::AdvanceGameLogic()
 					sound.Pause(false);
 				
 				PROFILER.beginBlock("ai");
-				ai.Visualize(rootnode);
+				ai.Visualize();
 				ai.update(TickPeriod(), &track, cars);
 				PROFILER.endBlock("ai");
 				
@@ -1021,10 +1048,11 @@ void GAME::LoadControlsIntoGUIPage(const std::string & pagename)
 	PopulateValueLists(valuelists);
 	CONFIGFILE controlfile;
 	carcontrols_local.second.Save(controlfile, info_output, error_output);
-	assert(gui.GetPage(pagename).Load(pathmanager.GetGUIMenuPath(settings.GetSkin())+"/"+pagename,
+	bool loaded = gui.GetPage(pagename).Load(pathmanager.GetGUIMenuPath(settings.GetSkin())+"/"+pagename,
 		    pathmanager.GetGUITexturePath(settings.GetSkin()), pathmanager.GetDataPath(),
-		    controlfile, gui.GetNode(), gui.GetTextureMap(), fonts,
-		    gui.GetOptionMap(), (float)graphics.GetH()/graphics.GetW(), settings.GetTextureSize(), error_output, true));
+		    controlfile, gui.GetPageNode(pagename), gui.GetTextureMap(), fonts,
+		    gui.GetOptionMap(), (float)graphics.GetH()/graphics.GetW(), settings.GetTextureSize(), error_output, true);
+	assert(loaded);
 }
 
 ///process the action string from the GUI
@@ -1126,7 +1154,7 @@ void GAME::ProcessGUIAction(const std::string & action)
 			tempoptionmap["controledit.analog.gain"].SetCurrentValue(gain);
 		}
 		//std::cout << "Updating options..." << endl;
-		gui.GetPage(gui.GetActivePageName()).UpdateOptions(false, tempoptionmap, error_output);
+		gui.GetPage(gui.GetActivePageName()).UpdateOptions(gui.GetNode(), false, tempoptionmap, error_output);
 		//std::cout << "Done updating options." << endl;
 		gui.SetControlsNeedLoading(false);
 	}
@@ -1139,7 +1167,7 @@ void GAME::ProcessGUIAction(const std::string & action)
 			//get current GUI state
 			tempoptionmap["controledit.button.held_once"].SetCurrentValue(controlgrab_editcontrol.onetime?"true":"false");
 			tempoptionmap["controledit.button.up_down"].SetCurrentValue(controlgrab_editcontrol.keypushdown?"true":"false");
-			gui.GetPage(gui.GetActivePageName()).UpdateOptions(true, tempoptionmap, error_output);
+			gui.GetPage(gui.GetActivePageName()).UpdateOptions(gui.GetNode(), true, tempoptionmap, error_output);
 
 			//save GUI state to our control
 			if (tempoptionmap["controledit.button.held_once"].GetCurrentDisplayValue() == "true")
@@ -1159,7 +1187,7 @@ void GAME::ProcessGUIAction(const std::string & action)
 			tempoptionmap["controledit.analog.deadzone"].SetCurrentValue("0");
 			tempoptionmap["controledit.analog.exponent"].SetCurrentValue("1");
 			tempoptionmap["controledit.analog.gain"].SetCurrentValue("1");
-			gui.GetPage(gui.GetActivePageName()).UpdateOptions(true, tempoptionmap, error_output);
+			gui.GetPage(gui.GetActivePageName()).UpdateOptions(gui.GetNode(), true, tempoptionmap, error_output);
 
 			//save GUI state to our control
 			{
@@ -1262,7 +1290,8 @@ void GAME::ProcessGUIAction(const std::string & action)
 				opponentstr += ", ";
 			opponentstr += i->first;
 		}
-		gui.GetPage("SingleRace").GetLabel("OpponentsLabel").get().SetText(opponentstr);
+		SCENENODE & pagenode = gui.GetPage("SingleRace").GetNode(gui.GetNode());
+		gui.GetPage("SingleRace").GetLabel("OpponentsLabel").get().SetText(pagenode, opponentstr);
 	}
 	else if (action == "RestartGame")
 	{
@@ -1626,11 +1655,7 @@ void GAME::LeaveGame()
 
 	gui.SetInGame(false);
 	track.Unload();
-	if (tracknode)
-	{
-		tracknode->Clear();
-		graphics.ClearStaticDrawlistMap();
-	}
+	
 	collision.Clear();
 
 	if (sound.Enabled())
@@ -1681,8 +1706,7 @@ bool GAME::LoadCar(const std::string & carname, const std::string & carpaint, co
 		carpaint,
 		start_position,
 		start_orientation,
-		rootnode,
-		collision,
+		&collision,
 		sound.Enabled(),
 		sound.GetDeviceInfo(),
 		generic_sounds,
@@ -1726,24 +1750,12 @@ bool GAME::LoadCar(const std::string & carname, const std::string & carpaint, co
 
 bool GAME::LoadTrack(const std::string & trackname)
 {
-	//create or clear the track scenegraph node
-	if (!tracknode)
-	{
-		tracknode = new SCENENODE();
-	}
-	else
-	{
-		tracknode->Clear();
-	}
-	assert(tracknode);
-
 	LoadingScreen(0.0,1.0);
 
 	//load the track
 	if (!track.DeferredLoad(
 			pathmanager.GetTrackPath()+"/"+trackname,
 			pathmanager.GetEffectsTexturePath(),
-			*tracknode,
 			settings.GetTrackReverse(),
 			settings.GetAnisotropy(),
 			settings.GetTextureSize(),
@@ -1776,7 +1788,7 @@ bool GAME::LoadTrack(const std::string & trackname)
 	track.SetRacingLineVisibility(settings.GetRacingline());
 
 	//generate the track map
-	if (!trackmap.BuildMap(&rootnode, track.GetRoadList(), graphics.GetW(), graphics.GetH(), pathmanager.GetHUDTexturePath(), settings.GetTextureSize(), error_output))
+	if (!trackmap.BuildMap(track.GetRoadList(), graphics.GetW(), graphics.GetH(), pathmanager.GetHUDTexturePath(), settings.GetTextureSize(), error_output))
 	{
 		error_output << "Error loading track map: " << trackname << endl;
 		return false;
@@ -1786,9 +1798,9 @@ bool GAME::LoadTrack(const std::string & trackname)
 	collision.SetTrack(&track);
 	collision.DebugPrint(info_output);
 	
-	assert(tracknode);
-	CollapseSceneToDrawlistmap(*tracknode, graphics.GetStaticDrawlistmap(), true);
-	graphics.OptimizeStaticDrawlistmap();
+	// TODO: reimplement static drawlist
+	//CollapseSceneToDrawlistmap(*tracknode, graphics.GetStaticDrawlistmap(), true);
+	//graphics.OptimizeStaticDrawlistmap();
 
 	return true;
 }
@@ -1847,18 +1859,16 @@ void GAME::CalculateFPS()
 		fps_min = fps_avg;
 	}
 
-	assert(fps_draw);
-
 	if (settings.GetShowFps())
 	{
-		float w = fps.GetWidth(fonts["futuresans"], "FPS: 100", 0.2);
+		float w = fps_draw.GetWidth("FPS: 100");
 		float screenhwratio = (float)graphics.GetH()/graphics.GetW();
-		fps.Set(*fps_draw, fonts["futuresans"], fpsstr.str(), 0.5-w*0.5,1.0-0.02, screenhwratio*0.2,0.2, 1.0,1.0,1.0);
-		fps_draw->SetDrawEnable(true);
+		fps_draw.Revise(fpsstr.str(), 0.5-w*0.5,1.0-0.02, screenhwratio*0.2,0.2);
+		fps_draw.SetDrawEnable(debugnode, true);
 	}
 	else
 	{
-		fps_draw->SetDrawEnable(false);
+		fps_draw.SetDrawEnable(debugnode, false);
 	}
 	
 	if (profilingmode && frame % 10 == 0)
@@ -2085,33 +2095,12 @@ void GAME::ProcessNewSettings()
 	sound.SetMasterVolume(settings.GetMasterVolume());
 }
 
-///write the scenegraph to the output drawlist map
-void GAME::CollapseSceneToDrawlistmap(SCENENODE & node, std::map < DRAWABLE_FILTER *, std::vector <SCENEDRAW> > & outputmap, bool clearfirst)
-{
-	if (clearfirst)
-	{
-		for (std::map <DRAWABLE_FILTER *, std::vector <SCENEDRAW> >::iterator mi = outputmap.begin(); mi != outputmap.end(); ++mi)
-		{
-			mi->second.resize(0);
-		}
-	}
-	MATRIX4 <float> identity;
-	node.GetCollapsedDrawList(outputmap, identity);
-
-	//auto-sort a 2D list
-	for (std::map <DRAWABLE_FILTER *, std::vector <SCENEDRAW> >::iterator mi = outputmap.begin(); mi != outputmap.end(); ++mi)
-	{
-		if (mi->first->Is2DOnlyFilter())
-			std::sort(mi->second.begin(), mi->second.end());
-	}
-}
-
 void GAME::LoadingScreen(float progress, float max)
 {
 	assert(max > 0);
 	loadingscreen.Update(progress/max);
 
-	CollapseSceneToDrawlistmap(loadingscreen_node, graphics.GetDrawlistmap(), true);
+	TraverseScene<true>(loadingscreen.GetNode(), graphics.GetDynamicDrawlist());
 
 	graphics.SetupScene(45.0, 100.0, MATHVECTOR <float, 3> (), QUATERNION <float> (), MATHVECTOR <float, 3> ());
 

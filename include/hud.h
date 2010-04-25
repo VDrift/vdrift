@@ -16,31 +16,30 @@
 class HUDBAR
 {
 	private:
-		DRAWABLE * draw;
+		keyed_container <DRAWABLE>::handle draw;
 		VERTEXARRAY verts;
 
 	public:
-		HUDBAR() : draw(NULL) {}
 		void Set(SCENENODE & parent, TEXTURE_GL & bartex, float x, float y, float w, float h, float opacity, bool flip)
 		{
-			draw = &parent.AddDrawable();
-			assert(draw);
-
-			draw->SetDiffuseMap(&bartex);
-			draw->SetVertArray(&verts);
-			draw->SetLit(false);
-			draw->Set2D(true);
-			draw->SetCull(false, false);
-			draw->SetColor(1,1,1,opacity);
-			draw->SetDrawOrder(1);
+			draw = parent.GetDrawlist().twodim.insert(DRAWABLE());
+			DRAWABLE & drawref = parent.GetDrawlist().twodim.get(draw);
+			
+			drawref.SetDiffuseMap(&bartex);
+			drawref.SetVertArray(&verts);
+			drawref.SetLit(false);
+			drawref.Set2D(true);
+			drawref.SetCull(false, false);
+			drawref.SetColor(1,1,1,opacity);
+			drawref.SetDrawOrder(1);
 
 			verts.SetTo2DButton(x,y,w,h,h*0.75,flip);
 		}
 
-		void SetVisible(bool newvis)
+		void SetVisible(SCENENODE & parent, bool newvis)
 		{
-			assert(draw);
-			draw->SetDrawEnable(newvis);
+			DRAWABLE & drawref = parent.GetDrawlist().twodim.get(draw);
+			drawref.SetDrawEnable(newvis);
 		}
 };
 
@@ -48,21 +47,21 @@ class HUD
 {
 private:
 	TEXTURE_GL bartex;
-	SCENENODE * hudroot;
+	SCENENODE hudroot;
 	std::list <HUDBAR> bars;
 
 	TEXTURE_GL progbartex;
-	DRAWABLE * rpmbar;
-	DRAWABLE * rpmredbar;
+	keyed_container <DRAWABLE>::handle rpmbar;
+	keyed_container <DRAWABLE>::handle rpmredbar;
 	VERTEXARRAY rpmbarverts;
 	VERTEXARRAY rpmredbarverts;
-	DRAWABLE * rpmbox;
+	keyed_container <DRAWABLE>::handle rpmbox;
 	VERTEXARRAY rpmboxverts;
 
 	//variables for drawing the timer
-	SCENENODE * timernode;
+	keyed_container <SCENENODE>::handle timernode;
 	TEXTURE_GL timerboxtex;
-	DRAWABLE * timerboxdraw;
+	keyed_container <DRAWABLE>::handle timerboxdraw;
 	VERTEXARRAY timerboxverts;
 	/*TEXTURE_GL timerbartex;
 	DRAWABLE * timerbardraw;
@@ -82,57 +81,40 @@ private:
 	TEXT_DRAWABLE abs;
 	TEXT_DRAWABLE tcs;
 
+	//debug info
+	keyed_container <SCENENODE>::handle debugnode;
 	TEXT_DRAW debugtext1;
-	DRAWABLE * debugtextdraw1;
+	keyed_container <DRAWABLE>::handle debugtextdraw1;
 	TEXT_DRAW debugtext2;
-	DRAWABLE * debugtextdraw2;
+	keyed_container <DRAWABLE>::handle debugtextdraw2;
 	TEXT_DRAW debugtext3;
-	DRAWABLE * debugtextdraw3;
+	keyed_container <DRAWABLE>::handle debugtextdraw3;
 	TEXT_DRAW debugtext4;
-	DRAWABLE * debugtextdraw4;
+	keyed_container <DRAWABLE>::handle debugtextdraw4;
 
 	TEXT_DRAW geartext;
-	DRAWABLE * geartextdraw;
+	keyed_container <DRAWABLE>::handle geartextdraw;
 
 	TEXT_DRAW mphtext;
-	DRAWABLE * mphtextdraw;
+	keyed_container <DRAWABLE>::handle mphtextdraw;
 
 	bool debug_hud_info;
 
 	bool racecomplete;
 
-	void SetVisible(DRAWABLE * d,  bool newvis)
-	{
-		if (d) d->SetDrawEnable(newvis);
-	}
-
 	void SetVisible(bool newvis)
 	{
-		/*for (std::list <HUDBAR>::iterator i = bars.begin(); i != bars.end(); i++)
-		{
-			i->SetVisible(newvis);
-		}
-
-		SetVisible(rpmbar, newvis);
-		SetVisible(rpmredbar, newvis);
-		SetVisible(rpmbox, newvis);
-		SetVisible(geartextdraw, newvis);
-		SetVisible(mphtextdraw, newvis);
-		//SetVisible(timerboxdraw, newvis);
-		//SetVisible(timerbardraw, newvis);
-		assert(timernode);
-		timernode->SetChildVisibility(newvis);*/
-		assert(hudroot);
-		hudroot->SetChildVisibility(newvis);
+		hudroot.SetChildVisibility(newvis);
 
 		SetDebugVisibility(newvis && debug_hud_info);
 	}
 
-	DRAWABLE * SetupText(SCENENODE & parent, FONT & font, TEXT_DRAW & textdraw, const std::string & str, const float x, const float y, const float scalex, const float scaley, const float r, const float g, const float b)
+	keyed_container <DRAWABLE>::handle SetupText(SCENENODE & parent, FONT & font, TEXT_DRAW & textdraw, const std::string & str, const float x, const float y, const float scalex, const float scaley, const float r, const float g, const float b, float zorder = 0)
 	{
-		DRAWABLE * draw = &parent.AddDrawable();
-		assert(draw);
-		textdraw.Set(*draw, font, str, x, y, scalex,scaley, r, g, b);
+		keyed_container <DRAWABLE>::handle draw = parent.GetDrawlist().twodim.insert(DRAWABLE());
+		DRAWABLE & drawref = parent.GetDrawlist().twodim.get(draw);
+		textdraw.Set(drawref, font, str, x, y, scalex,scaley, r, g, b);
+		drawref.SetDrawOrder(zorder);
 		return draw;
 	}
 
@@ -152,12 +134,11 @@ private:
 	}
 
 public:
-	HUD() : hudroot(NULL), rpmbar(NULL), rpmredbar(NULL), timernode(NULL), timerboxdraw(NULL),
-	        debugtextdraw1(NULL), debugtextdraw2(NULL),
-		debugtextdraw3(NULL), debugtextdraw4(NULL), geartextdraw(NULL), mphtextdraw(NULL),
-		debug_hud_info(false), racecomplete(false) {}
+	HUD() : debug_hud_info(false), racecomplete(false) {}
 
-	bool Init(SCENENODE & parentnode, const std::string & texturepath, FONT & lcdfont, FONT & sansfont, std::ostream & error_output, float displaywidth, float displayheight, const std::string & texsize, bool debugon);
+	bool Init(const std::string & texturepath, FONT & lcdfont, FONT & sansfont,
+			  std::ostream & error_output, float displaywidth, float displayheight,
+			  const std::string & texsize, bool debugon);
 
 	void Hide()
 	{
@@ -177,8 +158,13 @@ public:
 		float displayheight, bool absenabled, bool absactive, bool tcsenabled, bool tcsactive,
 		bool drifting, float driftscore, float thisdriftscore);
 
-	void SetDebugVisibility(bool show) {debugtextdraw1->SetDrawEnable(show);debugtextdraw2->SetDrawEnable(show);
-		debugtextdraw3->SetDrawEnable(show);debugtextdraw4->SetDrawEnable(show);}
+	void SetDebugVisibility(bool show)
+	{
+		SCENENODE & debugnoderef = hudroot.GetNode(debugnode);
+		debugnoderef.SetChildVisibility(show);
+	}
+	
+	SCENENODE & GetNode() {return hudroot;}
 };
 
 #endif

@@ -14,7 +14,7 @@ using std::ostream;
 using std::list;
 using std::pair;
 
-TRACKMAP::TRACKMAP() : scale(1.0), MAP_WIDTH(256),MAP_HEIGHT(256),surface(NULL),mapnode(NULL),mapdraw(NULL)
+TRACKMAP::TRACKMAP() : scale(1.0), MAP_WIDTH(256),MAP_HEIGHT(256),surface(NULL)
 {
 }
 
@@ -25,18 +25,16 @@ TRACKMAP::~TRACKMAP()
 
 void TRACKMAP::Unload()
 {
-	assert((!mapnode && !mapdraw) || (mapnode && mapdraw));
-	if (mapnode)
+	for (list <CARDOT>::iterator i = dotlist.begin(); i != dotlist.end(); ++i)
 	{
-		for (list <CARDOT>::iterator i = dotlist.begin(); i != dotlist.end(); ++i)
-			mapnode->Delete(i->GetDrawable());
-		dotlist.clear();
-		
-		mapnode->Delete(mapdraw);
-		mapnode->GetParent()->Delete(mapnode);
-		mapnode = NULL;
-		mapdraw = NULL;
+		mapnode.GetDrawlist().twodim.erase(i->GetDrawableHandle());
 	}
+	dotlist.clear();
+	
+	if (mapdraw.valid())
+		mapnode.GetDrawlist().twodim.erase(mapdraw);
+	mapdraw.invalidate();
+
 	if (surface)
 	{
 		SDL_FreeSurface(surface);
@@ -61,35 +59,7 @@ void TRACKMAP::CalcPosition(int w, int h)
 	dot_size[1] = cardot0.GetH() / 2.0 / screen[1]; 
 }
 
-/*void TRACKMAP::DrawCarDot(int car_index, Vamos_Geometry::Three_Vector position, bool focused)
-{
-	VERTEX car_pos;
-	car_pos.x = position[0];
-	car_pos.y = position[2];
-	car_pos.z = -position[1];
-
-	float x = position_x + ((car_pos.x - map_w_min) * scale + 1) / screen_w;
-	float y = position_y + ((car_pos.z - map_h_min) * scale + 1) / screen_h;
-
-	if (car_index == 0) // player car
-	{
-		if (focused)
-			game.utility.Draw2D(x - dot_w_half, y - dot_h_half, x + dot_w_half, y + dot_h_half, &cardot0_focused);
-		else
-			game.utility.Draw2D(x - dot_w_half, y - dot_h_half, x + dot_w_half, y + dot_h_half, &cardot0);
-	}
-	else // opponent car
-	{
-		if (focused)
-			game.utility.Draw2D(x - dot_w_half, y - dot_h_half, x + dot_w_half, y + dot_h_half, &cardot1_focused);
-		else
-			game.utility.Draw2D(x - dot_w_half, y - dot_h_half, x + dot_w_half, y + dot_h_half, &cardot1);
-	}
-}
-
-void TRACKMAP::DrawMap() { game.utility.Draw2D(position_x, position_y, position_x + width, position_y + height, &track_map); }
-*/
-bool TRACKMAP::BuildMap(SCENENODE * parentnode, const std::list <ROADSTRIP> & roads, int w, int h, const std::string & texturepath, const std::string & texsize, std::ostream & error_output)
+bool TRACKMAP::BuildMap(const std::list <ROADSTRIP> & roads, int w, int h, const std::string & texturepath, const std::string & texsize, std::ostream & error_output)
 {
 	Unload();
 	
@@ -258,18 +228,15 @@ bool TRACKMAP::BuildMap(SCENENODE * parentnode, const std::list <ROADSTRIP> & ro
 	
 	CalcPosition(w, h);
 	
-	assert(parentnode);
-	mapnode = &parentnode->AddNode();
-	assert(mapnode);
-	mapdraw = &mapnode->AddDrawable();
-	assert(mapdraw);
-	mapdraw->SetDiffuseMap(&track_map);
-	mapdraw->SetVertArray(&mapverts);
-	mapdraw->SetLit(false);
-	mapdraw->Set2D(true);
-	mapdraw->SetCull(false, false);
-	mapdraw->SetColor(1,1,1,0.7);
-	mapdraw->SetDrawOrder(0);
+	mapdraw = mapnode.GetDrawlist().twodim.insert(DRAWABLE());
+	DRAWABLE & mapdrawref = mapnode.GetDrawlist().twodim.get(mapdraw);
+	mapdrawref.SetDiffuseMap(&track_map);
+	mapdrawref.SetVertArray(&mapverts);
+	mapdrawref.SetLit(false);
+	mapdrawref.Set2D(true);
+	mapdrawref.SetCull(false, false);
+	mapdrawref.SetColor(1,1,1,0.7);
+	mapdrawref.SetDrawOrder(0);
 	mapverts.SetToBillboard(position[0], position[1], position[0]+size[0], position[1]+size[1]);
 	
 	return true;
@@ -308,7 +275,7 @@ void TRACKMAP::Update(bool mapvisible, const std::list <std::pair<MATHVECTOR <fl
 			else
 			{
 				//update existing dot
-				dot->Retexture(*tex);
+				dot->Retexture(mapnode, *tex);
 				dot->Reposition(corner1, corner2);
 				
 				//std::cout << count << ". reusing existing dot: " << corner1 << " || " << corner2 << endl;
@@ -320,14 +287,17 @@ void TRACKMAP::Update(bool mapvisible, const std::list <std::pair<MATHVECTOR <fl
 			count++;
 		}
 		for (list <CARDOT>::iterator i = dot; i != dotlist.end(); ++i)
-			mapnode->Delete(i->GetDrawable());
+			mapnode.GetDrawlist().twodim.erase(i->GetDrawableHandle());
 		dotlist.erase(dot,dotlist.end());
 	}
 	
-	if (mapdraw)
-		mapdraw->SetDrawEnable(mapvisible);
+	if (mapdraw.valid())
+	{
+		DRAWABLE & mapdrawref = mapnode.GetDrawlist().twodim.get(mapdraw);
+		mapdrawref.SetDrawEnable(mapvisible);
+	}
 	for (list <CARDOT>::iterator i = dotlist.begin(); i != dotlist.end(); ++i)
-		i->SetVisible(mapvisible);
+		i->SetVisible(mapnode, mapvisible);
 	
 	/*for (list <CARDOT>::iterator i = dotlist.begin(); i != dotlist.end(); i++)
 		i->DebugPrint(std::cout);*/

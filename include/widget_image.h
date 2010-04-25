@@ -17,13 +17,17 @@ private:
 	MATHVECTOR <float, 2> corner1;
 	MATHVECTOR <float, 2> corner2;
 	VERTEXARRAY varray;
-	DRAWABLE * draw;
+	keyed_container <DRAWABLE>::handle draw;
+	
+	DRAWABLE & GetDrawable(SCENENODE & scene)
+	{
+		return scene.GetDrawlist().twodim.get(draw);
+	}
 	
 public:
-	WIDGET_IMAGE() : draw(NULL) {}
 	virtual WIDGET * clone() const {return new WIDGET_IMAGE(*this);};
 	
-	void SetupDrawable(SCENENODE * scene, TEXTURE_GL * teximage, float x, float y, float w, float h, int order=0, bool button_mode=false, float screenhwratio=1.0)
+	void SetupDrawable(SCENENODE & scene, TEXTURE_GL * teximage, float x, float y, float w, float h, int order=0, bool button_mode=false, float screenhwratio=1.0)
 	{
 		MATHVECTOR <float, 2> dim;
 		dim.Set(w,h);
@@ -32,16 +36,16 @@ public:
 		corner1 = center - dim*0.5;
 		corner2 = center + dim*0.5;
 		
-		assert(scene);
-		draw = &scene->AddDrawable();
-		draw->SetDiffuseMap(teximage);
-		draw->SetVertArray(&varray);
-		draw->SetLit(false);
-		draw->Set2D(true);
-		draw->SetCull(false, false);
-		draw->SetColor(1,1,1,1);
-		draw->SetDrawOrder(order+100);
-		draw->SetPartialTransparency(true);
+		draw = scene.GetDrawlist().twodim.insert(DRAWABLE());
+		DRAWABLE & drawref = GetDrawable(scene);
+		drawref.SetDiffuseMap(teximage);
+		drawref.SetVertArray(&varray);
+		drawref.SetLit(false);
+		drawref.Set2D(true);
+		drawref.SetCull(false, false);
+		drawref.SetColor(1,1,1,1);
+		drawref.SetDrawOrder(order+100);
+		drawref.SetPartialTransparency(true);
 		
 		if (button_mode)
 			varray.SetTo2DButton(x, y, w, h, h/(screenhwratio*3.0));
@@ -50,16 +54,14 @@ public:
 			varray.SetToBillboard(corner1[0], corner1[1], corner2[0], corner2[1]);
 	}
 	
-	virtual void SetAlpha(float newalpha)
+	virtual void SetAlpha(SCENENODE & node, float newalpha)
 	{
-		if (draw)
-			draw->SetColor(1,1,1,newalpha);
+		GetDrawable(node).SetColor(1,1,1,newalpha);
 	}
 	
-	virtual void SetVisible(bool newvis)
+	virtual void SetVisible(SCENENODE & node, bool newvis)
 	{
-		if (draw)
-			draw->SetDrawEnable(newvis);
+		GetDrawable(node).SetDrawEnable(newvis);
 	}
 	
 	const MATHVECTOR <float, 2> & GetCorner1() const {return corner1;}

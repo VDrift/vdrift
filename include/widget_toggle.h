@@ -50,11 +50,10 @@ public:
 		action = newaction;
 	}*/
 	
-	void SetupDrawable(SCENENODE * scene, TEXTURE_GL * teximage_up, TEXTURE_GL * teximage_down, 
+	void SetupDrawable(SCENENODE & scene, TEXTURE_GL * teximage_up, TEXTURE_GL * teximage_down, 
 		TEXTURE_GL * teximage_upselected, TEXTURE_GL * teximage_downselected, 
       		TEXTURE_GL * teximage_transition, float centerx, float centery, float w, float h)
 	{
-		assert(scene);
 		assert(teximage_up);
 		assert(teximage_down);
 		assert(teximage_upselected);
@@ -67,45 +66,45 @@ public:
 		image_downsel.SetupDrawable(scene, teximage_downselected, centerx, centery, w, h, 1);
 		image_transition.SetupDrawable(scene, teximage_transition, centerx, centery, w, h, 1);
 		
-		SetState(UP);
+		SetState(scene, UP);
 	}
 	
-	virtual void SetAlpha(float newalpha)
+	virtual void SetAlpha(SCENENODE & scene, float newalpha)
 	{
 		//if (newalpha > 0 && !wasvisible) std::cout << "Changing alpha on invisible toggle: " << newalpha << std::endl;
 		
-		image_up.SetAlpha(newalpha);
-		image_down.SetAlpha(newalpha);
-		image_upsel.SetAlpha(newalpha);
-		image_downsel.SetAlpha(newalpha);
-		image_transition.SetAlpha(newalpha);
+		image_up.SetAlpha(scene, newalpha);
+		image_down.SetAlpha(scene, newalpha);
+		image_upsel.SetAlpha(scene, newalpha);
+		image_downsel.SetAlpha(scene, newalpha);
+		image_transition.SetAlpha(scene, newalpha);
 	}
 	
-	virtual void SetVisible(bool newvis)
+	virtual void SetVisible(SCENENODE & scene, bool newvis)
 	{
 		//if (newvis != wasvisible) std::cout << this << " New vis: " << newvis << ", " << wasvisible << " " << &wasvisible << std::endl;
 		
 		wasvisible = newvis;
 		
-		image_down.SetVisible(false);
-		image_up.SetVisible(false);
-		image_upsel.SetVisible(false);
-		image_downsel.SetVisible(false);
-		image_transition.SetVisible(false);
+		image_down.SetVisible(scene, false);
+		image_up.SetVisible(scene, false);
+		image_upsel.SetVisible(scene, false);
+		image_downsel.SetVisible(scene, false);
+		image_transition.SetVisible(scene, false);
 		
 		if (state == UP)
-			image_up.SetVisible(newvis);
+			image_up.SetVisible(scene, newvis);
 		else if (state == DOWN)
-			image_down.SetVisible(newvis);
+			image_down.SetVisible(scene, newvis);
 		else if (state == UPSEL)
-			image_upsel.SetVisible(newvis);
+			image_upsel.SetVisible(scene, newvis);
 		else if (state == DOWNSEL)
-			image_downsel.SetVisible(newvis);
+			image_downsel.SetVisible(scene, newvis);
 		else if (state == UPTRANS || state == DOWNTRANS)
-			image_transition.SetVisible(newvis);
+			image_transition.SetVisible(scene, newvis);
 	}
 	
-	virtual bool ProcessInput(float cursorx, float cursory, bool cursordown, bool cursorjustup)
+	virtual bool ProcessInput(SCENENODE & scene, float cursorx, float cursory, bool cursordown, bool cursorjustup)
 	{
 		//active_action.clear();
 		
@@ -116,22 +115,22 @@ public:
 			{
 				if (state == DOWN || state == DOWNTRANS)
 				{
-					SetState(DOWNSEL);
+					SetState(scene, DOWNSEL);
 				}
 				else if (state == UP || state == UPTRANS)
 				{
-					SetState(UPSEL);
+					SetState(scene, UPSEL);
 				}
 			}
 			else
 			{
 				if (state == DOWN || state == DOWNSEL)
 				{
-					SetState(UPTRANS);
+					SetState(scene, UPTRANS);
 				}
 				else if (state == UP || state == UPSEL)
 				{
-					SetState(DOWNTRANS);
+					SetState(scene, DOWNTRANS);
 				}
 			}
 			
@@ -149,11 +148,11 @@ public:
 		{
 			if (state == UPSEL || state == UPTRANS)
 			{
-				SetState(UP);
+				SetState(scene, UP);
 			}
 			else if (state == DOWNSEL || state == DOWNTRANS)
 			{
-				SetState(DOWN);
+				SetState(scene, DOWN);
 			}
 			
 			//std::cout << image_up.GetCorner1() << " x " << image_up.GetCorner2() << cursorx << "," << cursory << std::endl << std::endl;
@@ -161,7 +160,7 @@ public:
 		}
 	}
 	
-	void SetState(const TOGGLESTATE & newstate)
+	void SetState(SCENENODE & scene, const TOGGLESTATE & newstate)
 	{
 		state = newstate;
 		
@@ -171,7 +170,7 @@ public:
 		
 		//if (wasvisible) std::cout << "Refreshing state visibility" << std::endl;
 		
-		SetVisible(wasvisible);
+		SetVisible(scene, wasvisible);
 	}
 	
 	void SetSetting(const std::string & newsetting) {setting = newsetting;}
@@ -179,7 +178,7 @@ public:
 	//virtual std::string GetAction() const {return active_action;}
 	virtual std::string GetDescription() const {return description;}
 	virtual void SetDescription(const std::string & newdesc) {description = newdesc;}
-	virtual void UpdateOptions(bool save_to_options, std::map<std::string, GUIOPTION> & optionmap, std::ostream & error_output)
+	virtual void UpdateOptions(SCENENODE & scene, bool save_to_options, std::map<std::string, GUIOPTION> & optionmap, std::ostream & error_output)
 	{
 		if (setting.empty())
 			return;
@@ -203,11 +202,11 @@ public:
 			}
 			else if (currentsetting == "true")
 			{
-				SetState(DOWN);
+				SetState(scene, DOWN);
 			}
 			else if (currentsetting == "false")
 			{
-				SetState(UP);
+				SetState(scene, UP);
 			}
 			else
 			{

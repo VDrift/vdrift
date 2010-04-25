@@ -11,22 +11,22 @@
 class LOADINGSCREEN
 {
 private:
-	SCENENODE * root;
+	SCENENODE root;
 	TEXTURE_GL bartex;
-	DRAWABLE * bardraw;
+	keyed_container <DRAWABLE>::handle bardraw;
 	VERTEXARRAY barverts;
-	DRAWABLE * barbackdraw;
+	keyed_container <DRAWABLE>::handle barbackdraw;
 	VERTEXARRAY barbackverts;
 	TEXTURE_GL boxtex;
-	DRAWABLE * boxdraw;
+	keyed_container <DRAWABLE>::handle boxdraw;
 	VERTEXARRAY boxverts;
 	float w, h, hscale;
 	
 public:
-	LOADINGSCREEN() : root(NULL),bardraw(NULL),boxdraw(NULL) {}
+	SCENENODE & GetNode() {return root;}
 	
 	///initialize the loading screen given the root node for the loading screen
-	bool Initialize(SCENENODE & rootnode, const std::string & texturepath, int displayw, int displayh, const std::string & texsize, std::ostream & error_output)
+	bool Initialize(const std::string & texturepath, int displayw, int displayh, const std::string & texsize, std::ostream & error_output)
 	{
 		TEXTUREINFO boxtexinfo(texturepath+"/loadingbox.png");
 		boxtexinfo.SetMipMap(false);
@@ -44,60 +44,53 @@ public:
 			return false;
 		}
 		
-		root = &rootnode;
-		bardraw = &root->AddDrawable();
-		assert(bardraw);
-		boxdraw = &root->AddDrawable();
-		assert(boxdraw);
-		barbackdraw = &root->AddDrawable();
-		assert(barbackdraw);
+		bardraw = root.GetDrawlist().twodim.insert(DRAWABLE());
+		boxdraw = root.GetDrawlist().twodim.insert(DRAWABLE());
+		barbackdraw = root.GetDrawlist().twodim.insert(DRAWABLE());
+		DRAWABLE & bardrawref = root.GetDrawlist().twodim.get(bardraw);
+		DRAWABLE & boxdrawref = root.GetDrawlist().twodim.get(boxdraw);
+		DRAWABLE & barbackdrawref = root.GetDrawlist().twodim.get(barbackdraw);
 		
-		boxdraw->SetDiffuseMap(&boxtex);
-		boxdraw->SetVertArray(&boxverts);
-		boxdraw->SetDrawOrder(0);
-		boxdraw->SetLit(false);
-		boxdraw->Set2D(true);
-		boxdraw->SetCull(false, false);
-		boxdraw->SetColor(1,1,1,1);
+		boxdrawref.SetDiffuseMap(&boxtex);
+		boxdrawref.SetVertArray(&boxverts);
+		boxdrawref.SetDrawOrder(0);
+		boxdrawref.SetLit(false);
+		boxdrawref.Set2D(true);
+		boxdrawref.SetCull(false, false);
+		boxdrawref.SetColor(1,1,1,1);
 		
 		w = 128.0/displayw;
 		h = 128.0/displayw;
 		boxverts.SetTo2DButton(0.5,0.5,w,h,w*0.5,false);
 		
-		barbackdraw->SetDiffuseMap(&bartex);
-		barbackdraw->SetVertArray(&barbackverts);
-		barbackdraw->SetDrawOrder(1);
-		barbackdraw->SetLit(false);
-		barbackdraw->Set2D(true);
-		barbackdraw->SetCull(false, false);
-		//barbackdraw->SetColor(0.3, 0.3, 0.3, 0.4);
-		barbackdraw->SetColor(0.3, 0.3, 0.3, 0.4);
+		barbackdrawref.SetDiffuseMap(&bartex);
+		barbackdrawref.SetVertArray(&barbackverts);
+		barbackdrawref.SetDrawOrder(1);
+		barbackdrawref.SetLit(false);
+		barbackdrawref.Set2D(true);
+		barbackdrawref.SetCull(false, false);
+		barbackdrawref.SetColor(0.3, 0.3, 0.3, 0.4);
 		
 		hscale = 0.3;
 		barbackverts.SetToBillboard(0.5-w*0.5,0.5-h*0.5*hscale,0.5+w*0.5, 0.5+h*0.5*hscale);
 		
-		bardraw->SetDiffuseMap(&bartex);
-		bardraw->SetVertArray(&barverts);
-		bardraw->SetDrawOrder(2);
-		bardraw->SetLit(false);
-		bardraw->Set2D(true);
-		bardraw->SetCull(false, false);
-		//bardraw->SetColor(0.3, 0.3, 0.3, 0.4);
-		bardraw->SetColor(1,1,1, 0.7);
+		bardrawref.SetDiffuseMap(&bartex);
+		bardrawref.SetVertArray(&barverts);
+		bardrawref.SetDrawOrder(2);
+		bardrawref.SetLit(false);
+		bardrawref.Set2D(true);
+		bardrawref.SetCull(false, false);
+		bardrawref.SetColor(1,1,1, 0.7);
 		
 		return true;
 	}
 	
 	void Update(float percentage)
 	{
-		//assert(percentage >= 0 && percentage <= 1.0);
 		if (percentage < 0)
 			percentage = 0;
 		if (percentage > 1.0)
 			percentage = 1.0;
-		assert(root);
-		assert(bardraw);
-		assert(boxdraw);
 		
 		barverts.SetToBillboard(0.5-w*0.5,0.5-h*0.5*hscale,0.5-w*0.5+w*percentage, 0.5+h*0.5*hscale);
 	}

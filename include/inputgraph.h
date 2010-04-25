@@ -5,7 +5,7 @@
 class INPUTGRAPH
 {
 private:
-	SCENENODE * graphroot;
+	SCENENODE graphroot;
 	SPRITE2D vslider;
 	SPRITE2D hslider;
 	SPRITE2D vball;
@@ -15,19 +15,14 @@ private:
 	
 	void SetVisible(bool newvis)
 	{
-		assert(graphroot);
-		graphroot->SetChildVisibility(newvis);
+		graphroot.SetChildVisibility(newvis);
 	}
 public:
-	INPUTGRAPH() : graphroot(NULL) {}
-
-	bool Init(SCENENODE & parentnode, const std::string & texturepath, std::ostream & error_output, const std::string & texsize)
+	bool Init(const std::string & texturepath, std::ostream & error_output, const std::string & texsize)
 	{
 		float hheight, hball_scale, hx_pos, hy_pos;
 		float vwidth, vx_pos, vy_pos;
-		graphroot = &parentnode.AddNode();
-		assert(graphroot);
-
+		
 		hwidth = 0.2;
 		hheight = 0.2*1.33333;
 		hx_pos = 0.5-hwidth/2;
@@ -63,12 +58,12 @@ public:
 		if (std::abs(inputs[CARINPUT::STEER_LEFT]) > std::abs(inputs[CARINPUT::STEER_RIGHT])) //use whichever control is larger
 			steer_value = -inputs[CARINPUT::STEER_LEFT];
 		
-		translation = hball.GetTransform().GetTranslation();
+		translation = hball.GetTransform(graphroot).GetTranslation();
 		translation[0] = steer_value*hwidth/2.7;
-		hball.GetTransform().SetTranslation(translation);
-		translation = vball.GetTransform().GetTranslation();
+		hball.GetTransform(graphroot).SetTranslation(translation);
+		translation = vball.GetTransform(graphroot).GetTranslation();
 		translation[1] = -throttle*vheight/2.7;
-		vball.GetTransform().SetTranslation(translation);
+		vball.GetTransform(graphroot).SetTranslation(translation);
 	}
 	
 	void Hide()

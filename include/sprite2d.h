@@ -15,21 +15,36 @@ class SPRITE2D
 private:
 	VERTEXARRAY varray;
 	TEXTURE_GL texture;
-	DRAWABLE * draw;
-	SCENENODE * node;
+	keyed_container <DRAWABLE>::handle draw;
+	keyed_container <SCENENODE>::handle node;
 	float r,g,b,a;
-
-	void SendColor()
+	
+	DRAWABLE & GetDrawableFromParent(SCENENODE & parent)
 	{
-		assert(draw);
-		draw->SetColor(r,g,b,a);
+		SCENENODE & noderef = GetNode(parent);
+		return GetDrawableFromNode(noderef);
+	}
+	const DRAWABLE & GetDrawableFromParent(const SCENENODE & parent) const
+	{
+		const SCENENODE & noderef = GetNode(parent);
+		return GetDrawableFromNode(noderef);
+	}
+	
+	DRAWABLE & GetDrawableFromNode(SCENENODE & noderef)
+	{
+		return noderef.GetDrawlist().twodim.get(draw);
+	}
+	const DRAWABLE & GetDrawableFromNode(const SCENENODE & noderef) const
+	{
+		return noderef.GetDrawlist().twodim.get(draw);
 	}
 
 public:
-	SPRITE2D() : draw(NULL),node(NULL),r(1),g(1),b(1),a(1) {}
+	SPRITE2D() : r(1),g(1),b(1),a(1) {}
 
-	DRAWABLE * GetDrawable() {return draw;}
-	SCENENODE * GetNode() {return node;}
+	DRAWABLE & GetDrawable(SCENENODE & parent) {return GetDrawableFromParent(parent);}
+	SCENENODE & GetNode(SCENENODE & parent) {return parent.GetNode(node);}
+	const SCENENODE & GetNode(const SCENENODE & parent) const {return parent.GetNode(node);}
 
 	float GetW() const
 	{
@@ -51,15 +66,16 @@ public:
 	    return texture.GetOriginalH();
 	}
 
-	void Unload(SCENENODE * parent)
+	void Unload(SCENENODE & parent)
 	{
-		assert(parent);
-		if (node && draw)
-			node->Delete(draw);
-		if (node)
-			parent->Delete(node);
-		node = NULL;
-		draw = NULL;
+		if (node.valid())
+		{
+			SCENENODE & noderef = GetNode(parent);
+			noderef.GetDrawlist().twodim.erase(draw);
+			parent.Delete(node);
+		}
+		node.invalidate();
+		draw.invalidate();
 
 		if (texture.Loaded())
 			texture.Unload();
@@ -67,15 +83,13 @@ public:
 		varray.Clear();
 	}
 
-	bool Load(SCENENODE * parent, const std::string & texturefile, const std::string & texturesize,
+	bool Load(SCENENODE & parent, const std::string & texturefile, const std::string & texturesize,
 		  float draworder, std::ostream & error_output)
 	{
-		assert(parent);
-
 		Unload(parent);
 
-		assert(!draw);
-		assert(!node);
+		assert(!draw.valid());
+		assert(!node.valid());
 
 		TEXTUREINFO texinfo(texturefile);
 		texinfo.SetMipMap(false);
@@ -84,19 +98,19 @@ public:
 		if (!texture.Load(texinfo, error_output, texturesize))
 			return false;
 
-		node = &parent->AddNode();
-		draw = &node->AddDrawable();
-		assert(node);
-		assert(draw);
+		node = parent.AddNode();
+		SCENENODE & noderef = parent.GetNode(node);
+		draw = noderef.GetDrawlist().twodim.insert(DRAWABLE());
+		DRAWABLE & drawref = GetDrawableFromNode(noderef);
 
-		draw->SetDiffuseMap(&texture);
-		draw->SetVertArray(&varray);
-		draw->SetDrawOrder(draworder);
-		draw->SetLit(false);
-		draw->Set2D(true);
-		draw->SetCull(false, false);
-		draw->SetPartialTransparency(true);
-		SendColor();
+		drawref.SetDiffuseMap(&texture);
+		drawref.SetVertArray(&varray);
+		drawref.SetDrawOrder(draworder);
+		drawref.SetLit(false);
+		drawref.Set2D(true);
+		drawref.SetCull(false, false);
+		drawref.SetPartialTransparency(true);
+		drawref.SetColor(r,g,b,a);
 
 		//std::cout << "Sprite draworder: " << draworder << std::endl;
 
@@ -105,71 +119,64 @@ public:
 
 	///get the transformation data associated with this sprite's scenenode.
 	///this can be used to get the current translation and rotation or set new ones.
-	SCENETRANSFORM & GetTransform()
+	SCENETRANSFORM & GetTransform(SCENENODE & parent)
 	{
-		assert(node);
-		return node->GetTransform();
+		SCENENODE & noderef = GetNode(parent);
+		return noderef.GetTransform();
 	}
-	const SCENETRANSFORM & GetTransform() const
+	const SCENETRANSFORM & GetTransform(const SCENENODE & parent) const
 	{
-		assert(node);
-		return node->GetTransform();
+		const SCENENODE & noderef = GetNode(parent);
+		return noderef.GetTransform();
 	}
 
 	///use the provided texture
-	bool Load(SCENENODE * parent, TEXTURE_GL * texture2d, float draworder, std::ostream & error_output)
+	bool Load(SCENENODE & parent, TEXTURE_GL * texture2d, float draworder, std::ostream & error_output)
 	{
-		assert(parent);
-
 		Unload(parent);
 
-		assert(!draw);
-		assert(!node);
+		assert(!draw.valid());
+		assert(!node.valid());
 
-		node = &parent->AddNode();
-		draw = &node->AddDrawable();
-		assert(node);
-		assert(draw);
+		node = parent.AddNode();
+		SCENENODE & noderef = parent.GetNode(node);
+		draw = noderef.GetDrawlist().twodim.insert(DRAWABLE());
+		DRAWABLE & drawref = GetDrawableFromNode(noderef);
 
-		draw->SetDiffuseMap(texture2d);
-		draw->SetVertArray(&varray);
-		draw->SetDrawOrder(draworder);
-		draw->SetLit(false);
-		draw->Set2D(true);
-		draw->SetCull(false, false);
-		draw->SetPartialTransparency(true);
-		SendColor();
-
-		//std::cout << "Sprite draworder: " << draworder << std::endl;
-
+		drawref.SetDiffuseMap(texture2d);
+		drawref.SetVertArray(&varray);
+		drawref.SetDrawOrder(draworder);
+		drawref.SetLit(false);
+		drawref.Set2D(true);
+		drawref.SetCull(false, false);
+		drawref.SetPartialTransparency(true);
+		drawref.SetColor(r,g,b,a);
+		
 		return true;
 	}
 
-	void SetAlpha(float na)
+	void SetAlpha(SCENENODE & parent, float na)
 	{
-		a = na;
-		SendColor();
-		//std::cout << "Sprite alpha: " << a << std::endl;
+		a=na;
+		GetDrawableFromParent(parent).SetColor(r,g,b,a);
 	}
 
-	void SetVisible(bool newvis)
+	void SetVisible(SCENENODE & parent, bool newvis)
 	{
-		assert(draw);
-		draw->SetDrawEnable(newvis);
+		GetDrawableFromParent(parent).SetDrawEnable(newvis);
 	}
 	
-	bool GetVisible() const
+	bool GetVisible(const SCENENODE & parent) const
 	{
-		assert(draw);
-		return draw->GetDrawEnable();
+		return GetDrawableFromParent(parent).GetDrawEnable();
 	}
 
-	void SetColor(float nr, float ng, float nb)
+	void SetColor(SCENENODE & parent, float nr, float ng, float nb)
 	{
 		r = nr;
 		g = ng;
 		b = nb;
-		SendColor();
+		GetDrawableFromParent(parent).SetColor(r,g,b,a);
 	}
 
 	///x and y represent the upper left corner.
@@ -196,7 +203,7 @@ public:
 
 	bool Loaded()
 	{
-		return (draw != NULL);
+		return (draw.valid());
 	}
 
 	float GetR() const

@@ -42,9 +42,8 @@ public:
 		action = newaction;
 	}
 	
-	void SetupDrawable(SCENENODE * scene, TEXTURE_GL * teximage_up, TEXTURE_GL * teximage_down, TEXTURE_GL * teximage_selected, FONT * font, const std::string & text, float centerx, float centery, float scalex, float scaley, const float r, const float g, const float b)
+	void SetupDrawable(SCENENODE & scene, TEXTURE_GL * teximage_up, TEXTURE_GL * teximage_down, TEXTURE_GL * teximage_selected, FONT * font, const std::string & text, float centerx, float centery, float scalex, float scaley, const float r, const float g, const float b)
 	{
-		assert(scene);
 		assert(teximage_up);
 		assert(teximage_down);
 		assert(teximage_selected);
@@ -64,31 +63,31 @@ public:
 		image_up.SetupDrawable(scene, teximage_up, centerx, centery, w, h, 1, true, scaley/scalex);
 		image_down.SetupDrawable(scene, teximage_down, centerx, centery, w, h, 1, true, scaley/scalex);
 		image_selected.SetupDrawable(scene, teximage_selected, centerx, centery, w, h, 1, true, scaley/scalex);
-		image_down.SetVisible(false);
-		image_selected.SetVisible(false);
+		image_down.SetVisible(scene, false);
+		image_selected.SetVisible(scene, false);
 		state = UP;
 	}
 	
-	virtual void SetAlpha(float newalpha)
+	virtual void SetAlpha(SCENENODE & scene, float newalpha)
 	{
-		label.SetAlpha(newalpha);
-		image_up.SetAlpha(newalpha);
-		image_down.SetAlpha(newalpha);
-		image_selected.SetAlpha(newalpha);
+		label.SetAlpha(scene, newalpha);
+		image_up.SetAlpha(scene, newalpha);
+		image_down.SetAlpha(scene, newalpha);
+		image_selected.SetAlpha(scene, newalpha);
 	}
 	
-	virtual void SetVisible(bool newvis)
+	virtual void SetVisible(SCENENODE & scene, bool newvis)
 	{
-		label.SetVisible(newvis);
+		label.SetVisible(scene, newvis);
 		if (state == UP)
-			image_up.SetVisible(newvis);
+			image_up.SetVisible(scene, newvis);
 		else if (state == DOWN)
-			image_down.SetVisible(newvis);
+			image_down.SetVisible(scene, newvis);
 		else if (state == SELECTED)
-			image_selected.SetVisible(newvis);
+			image_selected.SetVisible(scene, newvis);
 	}
 	
-	virtual bool ProcessInput(float cursorx, float cursory, bool cursordown, bool cursorjustup)
+	virtual bool ProcessInput(SCENENODE & scene, float cursorx, float cursory, bool cursordown, bool cursorjustup)
 	{
 		active_action.clear();
 		
@@ -98,18 +97,18 @@ public:
 			if (cursordown && state != DOWN)
 			{
 				state = DOWN;
-				image_down.SetVisible(true);
-				image_up.SetVisible(false);
-				image_selected.SetVisible(false);
+				image_down.SetVisible(scene, true);
+				image_up.SetVisible(scene, false);
+				image_selected.SetVisible(scene, false);
 				
 				//std::cout << "depress" << std::endl;
 			}
 			else if (!cursordown && state != SELECTED)
 			{
 				state = SELECTED;
-				image_down.SetVisible(false);
-				image_up.SetVisible(false);
-				image_selected.SetVisible(true);
+				image_down.SetVisible(scene, false);
+				image_up.SetVisible(scene, false);
+				image_selected.SetVisible(scene, true);
 			}
 			
 			//std::cout << "hover" << std::endl << std::endl;
@@ -127,9 +126,9 @@ public:
 			if (state != UP)
 			{
 				state = UP;
-				image_down.SetVisible(false);
-				image_up.SetVisible(true);
-				image_selected.SetVisible(false);
+				image_down.SetVisible(scene, false);
+				image_up.SetVisible(scene, true);
+				image_selected.SetVisible(scene, false);
 			}
 			
 			//std::cout << image_up.GetCorner1() << " x " << image_up.GetCorner2() << cursorx << "," << cursory << std::endl << std::endl;

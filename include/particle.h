@@ -30,9 +30,14 @@ private:
 		float size;
 		float time; ///< time since the particle was created; i.e. the particle's age
 		
-		reseatable_reference <SCENENODE> node;
-		reseatable_reference <DRAWABLE> draw;
+		keyed_container <SCENENODE>::handle node;
+		keyed_container <DRAWABLE>::handle draw;
 		VERTEXARRAY varray;
+		
+		static keyed_container <DRAWABLE> & GetDrawlist(SCENENODE & node)
+		{
+			return node.GetDrawlist().particle;
+		}
 		
 		void Set(const PARTICLE & other)
 		{
@@ -44,12 +49,12 @@ private:
 			size = other.size;
 			time = other.time;
 			node = other.node;
-			//std::cout << "\tCopied node: " << &node.get() << endl;
 			draw = other.draw;
 			varray = other.varray;
 			
 			//reseat the drawable's varray reference
-			draw->SetVertArray(&varray);
+			//draw->SetVertArray(&varray);
+			// this is now done in Update
 		}
 
 	public:
@@ -59,14 +64,16 @@ private:
 			  speed(newspeed), direction(new_dir), size(newsize), time(0)
 		{
 			node = parentnode.AddNode();
+			SCENENODE & noderef = parentnode.GetNode(node);
 			//std::cout << "Created node: " << &node.get() << endl;
-			draw = node->AddDrawable();
-			draw->SetDrawEnable(false);
-			draw->SetVertArray(&varray);
-			draw->SetDiffuseMap(&tex);
-			draw->SetSmoke(true);
-			draw->SetCull(false,false);
-			draw->SetPartialTransparency(true);
+			draw = GetDrawlist(noderef).insert(DRAWABLE());
+			DRAWABLE & drawref = GetDrawlist(noderef).get(draw);
+			drawref.SetDrawEnable(false);
+			drawref.SetVertArray(&varray);
+			drawref.SetDiffuseMap(&tex);
+			drawref.SetSmoke(true);
+			drawref.SetCull(false,false);
+			drawref.SetPartialTransparency(true);
 		}
 		
 		PARTICLE(const PARTICLE & other)
@@ -80,16 +87,20 @@ private:
 			return *this;
 		}
 		
-		SCENENODE & GetNode()
+		keyed_container <SCENENODE>::handle & GetNode()
 		{
-			return *node;
+			return node;
 		}
 		
-		void Update(float dt, const QUATERNION <float> & camdir_conjugate)
+		void Update(SCENENODE & parent, float dt, const QUATERNION <float> & camdir_conjugate)
 		{
 			time += dt;
 			
-			node->GetTransform().SetTranslation(start_position + direction * time * speed);
+			SCENENODE & noderef = parent.GetNode(node);
+			DRAWABLE & drawref = GetDrawlist(noderef).get(draw);
+			drawref.SetVertArray(&varray);
+			
+			noderef.GetTransform().SetTranslation(start_position + direction * time * speed);
 			//std::cout << "particle position: " << start_position << std::endl;
 			//MATHVECTOR <float,3> v(0,1,0);
 			//camdir_conjugate.RotateVector(v);
@@ -97,7 +108,7 @@ private:
 			//QUATERNION <float> rot = camdir_conjugate;
 			//rot = rot * camdir_conjugate;
 			//rot.Rotate(3.141593*0.5,1,0,0);
-			node->GetTransform().SetRotation(camdir_conjugate);
+			noderef.GetTransform().SetRotation(camdir_conjugate);
 			
 			float sizescale = 1.0;
 			float trans = transparency*std::pow((double)(1.0-time/longevity),4.0);
@@ -110,9 +121,9 @@ private:
 			sizescale = 5.0*(time/longevity)+1.0;
 			
 			varray.SetToBillboard(-sizescale,-sizescale,sizescale,sizescale);
-			draw->SetRadius(sizescale);
-			draw->SetColor(1,1,1,trans);
-			draw->SetDrawEnable(true);
+			drawref.SetRadius(sizescale);
+			drawref.SetColor(1,1,1,trans);
+			drawref.SetDrawEnable(true);
 		}
 		
 		bool Expired() const
@@ -131,7 +142,7 @@ private:
 	std::pair <float,float> size_range;
 	MATHVECTOR <float, 3> direction;
 	
-	reseatable_reference <SCENENODE> node;
+	SCENENODE node;
 	
 public:
 	PARTICLE_SYSTEM() : transparency_range(0.5,1), longevity_range(5,14), speed_range(0.3,1),
@@ -141,7 +152,7 @@ public:
 	}
 	
 	///returns true if at least one particle texture was loaded
-	bool Load(SCENENODE & parentnode, const std::list <std::string> & texlist, int anisotropy, const std::string & texsize, std::ostream & error_output);
+	bool Load(const std::list <std::string> & texlist, int anisotropy, const std::string & texsize, std::ostream & error_output);
 	void Update(float dt, const QUATERNION <float> & camdir);
 	
 	/// all of the parameters are from 0.0 to 1.0 and scale to the ranges set with SetParameters.  testonly should be kept false and is only used for unit testing.

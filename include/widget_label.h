@@ -17,19 +17,23 @@ class WIDGET_LABEL : public WIDGET
 {
 private:
 	TEXT_DRAW text_draw;
-	DRAWABLE * draw;
+	keyed_container <DRAWABLE>::handle draw;
 	FONT * savedfont;
 	float r,g,b;
 	float saved_x, saved_y, saved_scalex, saved_scaley;
 	bool saved_centered;
 	
+	DRAWABLE & GetDrawable(SCENENODE & scene)
+	{
+		return scene.GetDrawlist().twodim.get(draw);
+	}
+	
 public:
-	WIDGET_LABEL() : draw(NULL),savedfont(NULL),r(1),g(1),b(1) {}
+	WIDGET_LABEL() : savedfont(NULL),r(1),g(1),b(1) {}
 	virtual WIDGET * clone() const {return new WIDGET_LABEL(*this);};
 	
-	void SetupDrawable(SCENENODE * scene, FONT * font, const std::string & text, float x, float y, float scalex, float scaley, const float nr, const float ng, const float nb, int order=0, bool centered=true)
+	void SetupDrawable(SCENENODE & scene, FONT * font, const std::string & text, float x, float y, float scalex, float scaley, const float nr, const float ng, const float nb, int order=0, bool centered=true)
 	{
-		assert(scene);
 		assert(font);
 		savedfont = font;
 		
@@ -47,15 +51,14 @@ public:
 		if (!centered)
 			w = 0;
 
-		draw = &scene->AddDrawable();
-		
-		text_draw.Set(*draw, *font, text, x-w*0.5, y, scalex, scaley, r,g,b);
-		draw->SetDrawOrder(order+100);
+		draw = scene.GetDrawlist().twodim.insert(DRAWABLE());
+		DRAWABLE & drawref = GetDrawable(scene);
+		text_draw.Set(drawref, *font, text, x-w*0.5, y, scalex, scaley, r,g,b);
+		drawref.SetDrawOrder(order+100);
 	}
 	
-	void ReviseDrawable(FONT * font, const std::string & text, float x, float y, float scalex, float scaley, bool centered=true)
+	void ReviseDrawable(SCENENODE & scene, FONT * font, const std::string & text, float x, float y, float scalex, float scaley, bool centered=true)
 	{
-		assert(draw);
 		assert(font);
 		
 		savedfont = font;
@@ -69,29 +72,27 @@ public:
 		if (!centered)
 			w = 0;
 		
-		text_draw.Revise(*draw, *font, text, x-w*0.5, y, scalex, scaley);
+		text_draw.Revise(*font, text, x-w*0.5, y, scalex, scaley);
 	}
 	
-	void SetText(const std::string & text)
+	void SetText(SCENENODE & scene, const std::string & text)
 	{
-		assert(draw);
 		assert(savedfont);
 		
 		float w = text_draw.GetWidth(*savedfont, text, saved_scalex);
 		if (!saved_centered)
 			w = 0;
 		
-		text_draw.Revise(*draw, *savedfont, text, saved_x-w*0.5, saved_y, saved_scalex, saved_scaley);
+		text_draw.Revise(*savedfont, text, saved_x-w*0.5, saved_y, saved_scalex, saved_scaley);
 	}
 	
-	void ReviseDrawable(const std::string & text)
+	void ReviseDrawable(SCENENODE & scene, const std::string & text)
 	{
-		assert(draw);
 		assert(savedfont);
 		
 		//float w = text_draw.GetWidth(*savedfont, text, scale);
 		
-		text_draw.Revise(*draw, *savedfont, text);
+		text_draw.Revise(*savedfont, text);
 	}
 	
 	float GetWidth(FONT * font, const std::string & text, float scale) const
@@ -101,16 +102,14 @@ public:
 		return text_draw.GetWidth(*font, text, scale);
 	}
 	
-	virtual void SetAlpha(float newalpha)
+	virtual void SetAlpha(SCENENODE & scene, float newalpha)
 	{
-		if (draw)
-			draw->SetColor(r,g,b,newalpha);
+		GetDrawable(scene).SetColor(r,g,b,newalpha);
 	}
 	
-	virtual void SetVisible(bool newvis)
+	virtual void SetVisible(SCENENODE & scene, bool newvis)
 	{
-		if (draw)
-			draw->SetDrawEnable(newvis);
+		GetDrawable(scene).SetDrawEnable(newvis);
 	}
 	
 	const std::string & GetText()
