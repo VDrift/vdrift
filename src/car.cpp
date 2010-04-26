@@ -1104,6 +1104,9 @@ float CAR::GetTireSquealAmount(WHEEL_POSITION i) const
 
 void CAR::EnableGlass(bool enable)
 {
+	if (!glassdraw.valid())
+		return;
+	
 	SCENENODE & bodynoderef = topnode.GetNode(bodynode);
 	DRAWABLE & glassdrawref = GetDrawlistBlend(bodynoderef).get(glassdraw);
 	glassdrawref.SetDrawEnable(enable);
