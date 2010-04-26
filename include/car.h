@@ -373,7 +373,7 @@ protected:
 		std::ostream & info_output,
 		std::ostream & error_output);
 		
-	keyed_container <DRAWABLE> & GetDrawlistNoBlend(SCENENODE & node) {return node.GetDrawlist().normal_noblend;}
+	keyed_container <DRAWABLE> & GetDrawlistNoBlend(SCENENODE & node) {return node.GetDrawlist().car_noblend;}
 	keyed_container <DRAWABLE> & GetDrawlistBlend(SCENENODE & node) {return node.GetDrawlist().normal_blend;}
 };
 

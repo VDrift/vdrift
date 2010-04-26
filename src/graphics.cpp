@@ -623,6 +623,8 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 					renderscene.SetDefaultShader(shadermap["depthgen"]);
 				SendDrawlistToRenderScene(renderscene,dynamic_drawlist.normal_noblend);
 				Render(&renderscene, *i, error_output);
+				SendDrawlistToRenderScene(renderscene,dynamic_drawlist.car_noblend);
+				Render(&renderscene, *i, error_output);
 				//renderscene.SetClear(false, false);
 				//SendDrawlistToRenderScene(renderscene,&no2d_blend);
 				//Render(&renderscene, *i, error_output);
@@ -675,6 +677,8 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 			Render(&renderscene, edgecontrastenhancement_depths, error_output);
 			renderscene.SetCameraInfo(campos, camorient, camfov, view_distance, w, h);
 			SendDrawlistToRenderScene(renderscene,dynamic_drawlist.normal_noblend);
+			Render(&renderscene, edgecontrastenhancement_depths, error_output);
+			SendDrawlistToRenderScene(renderscene,dynamic_drawlist.car_noblend);
 			Render(&renderscene, edgecontrastenhancement_depths, error_output);
 			//SendDrawlistToRenderScene(renderscene,&no2d_blend);
 			//Render(&renderscene, edgecontrastenhancement_depths, error_output);
@@ -811,6 +815,9 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 		Render(&renderscene, *scenebuffer, error_output);
 		
 		renderscene.SetClear(false, false);
+		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.car_noblend);
+		Render(&renderscene, *scenebuffer, error_output);
+		
 		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.normal_blend);
 		Render(&renderscene, *scenebuffer, error_output);
 		
@@ -900,6 +907,9 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 		renderscene.Render(glstate);
 		
 		renderscene.SetClear(false, false);
+		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.car_noblend);
+		renderscene.Render(glstate);
+		
 		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.normal_blend);
 		renderscene.Render(glstate);
 		

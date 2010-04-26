@@ -344,6 +344,7 @@ struct DRAWABLE_CONTAINER
 	// all of the layers of the scene
 	CONTAINER <DRAWABLE> twodim;
 	CONTAINER <DRAWABLE> normal_noblend;
+	CONTAINER <DRAWABLE> car_noblend;
 	CONTAINER <DRAWABLE> normal_blend;
 	CONTAINER <DRAWABLE> skybox_blend;
 	CONTAINER <DRAWABLE> skybox_noblend;
@@ -358,6 +359,7 @@ struct DRAWABLE_CONTAINER
 	{
 		func(twodim);
 		func(normal_noblend);
+		func(car_noblend);
 		func(normal_blend);
 		func(skybox_blend);
 		func(skybox_noblend);
@@ -375,6 +377,8 @@ struct DRAWABLE_CONTAINER
 			(twodim, dest.twodim, transform);
 		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,PTRVECTOR<DRAWABLE>,use_transform>
 			(normal_noblend, dest.normal_noblend, transform);
+		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,PTRVECTOR<DRAWABLE>,use_transform>
+			(car_noblend, dest.car_noblend, transform);
 		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,PTRVECTOR<DRAWABLE>,use_transform>
 			(normal_blend, dest.normal_blend, transform);
 		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,PTRVECTOR<DRAWABLE>,use_transform>

@@ -24,8 +24,8 @@ public:
 	{
 		void operator()(DRAWABLE_CONTAINER <keyed_container> & drawlist)
 		{
-			drawlist.nocamtrans_noblend = drawlist.normal_noblend;
-			drawlist.normal_noblend.clear();
+			drawlist.nocamtrans_noblend = drawlist.car_noblend;
+			drawlist.car_noblend.clear();
 			drawlist.nocamtrans_blend = drawlist.normal_blend;
 			drawlist.normal_blend.clear();
 		}
