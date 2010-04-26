@@ -75,4 +75,6 @@ public:
 	{
 		SetVisible(true);
 	}
+	
+	SCENENODE & GetNode() {return graphroot;}
 };

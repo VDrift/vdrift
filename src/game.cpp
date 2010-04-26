@@ -532,6 +532,9 @@ void GAME::BeginDraw()
 	TraverseScene<false>(track.GetRacinglineNode(), graphics.GetDynamicDrawlist());
 	TraverseScene<false>(track.GetTrackNode(), graphics.GetDynamicDrawlist());
 	TraverseScene<false>(hud.GetNode(), graphics.GetDynamicDrawlist());
+	TraverseScene<false>(trackmap.GetNode(), graphics.GetDynamicDrawlist());
+	TraverseScene<false>(inputgraph.GetNode(), graphics.GetDynamicDrawlist());
+	TraverseScene<false>(tire_smoke.GetNode(), graphics.GetDynamicDrawlist());
 	for (list <CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
 	{
 		TraverseScene<false>(i->GetNode(), graphics.GetDynamicDrawlist());

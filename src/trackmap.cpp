@@ -25,14 +25,10 @@ TRACKMAP::~TRACKMAP()
 
 void TRACKMAP::Unload()
 {
-	for (list <CARDOT>::iterator i = dotlist.begin(); i != dotlist.end(); ++i)
-	{
-		mapnode.GetDrawlist().twodim.erase(i->GetDrawableHandle());
-	}
 	dotlist.clear();
 	
-	if (mapdraw.valid())
-		mapnode.GetDrawlist().twodim.erase(mapdraw);
+	mapnode.Clear();
+	
 	mapdraw.invalidate();
 
 	if (surface)
@@ -267,7 +263,8 @@ void TRACKMAP::Update(bool mapvisible, const std::list <std::pair<MATHVECTOR <fl
 			if (dot == dotlist.end())
 			{
 				//need to insert a new dot
-				dotlist.push_back(CARDOT(mapnode, *tex, corner1, corner2));
+				dotlist.push_back(CARDOT());
+				dotlist.back().Init(mapnode, *tex, corner1, corner2);
 				dot = dotlist.end();
 				
 				//std::cout << count << ". inserting new dot: " << corner1 << " || " << corner2 << endl;

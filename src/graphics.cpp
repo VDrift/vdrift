@@ -813,6 +813,9 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 		renderscene.SetClear(false, false);
 		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.normal_blend);
 		Render(&renderscene, *scenebuffer, error_output);
+		
+		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.particle);
+		Render(&renderscene, *scenebuffer, error_output);
 
 		if (bloom) //do bloom post-processing
 		{
@@ -898,6 +901,9 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 		
 		renderscene.SetClear(false, false);
 		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.normal_blend);
+		renderscene.Render(glstate);
+		
+		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.particle);
 		renderscene.Render(glstate);
 
 		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.twodim);

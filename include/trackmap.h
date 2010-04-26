@@ -60,8 +60,10 @@ private:
 			}
 			
 		public:
-			CARDOT() {}
-			CARDOT(SCENENODE & topnode, TEXTURE_GL & tex, const MATHVECTOR <float, 2> & corner1, const MATHVECTOR <float, 2> & corner2)
+			void Init(SCENENODE & topnode, 
+					  TEXTURE_GL & tex, 
+					  const MATHVECTOR <float, 2> & corner1, 
+					  const MATHVECTOR <float, 2> & corner2)
 			{
 				dotdraw = topnode.GetDrawlist().twodim.insert(DRAWABLE());
 				DRAWABLE & drawref = GetDrawable(topnode);
@@ -111,8 +113,7 @@ public:
 	void Unload();
 	///update the map with provided information for map visibility, as well as a list of car positions and whether or not they're the player car
 	void Update(bool mapvisible, const std::list <std::pair<MATHVECTOR <float, 3>, bool> > & carpositions);
-	//void DrawMap();
-	//void DrawCarDot(int car_index, Vamos_Geometry::Three_Vector position, bool focused);
+	SCENENODE & GetNode() {return mapnode;}
 };
 
 #endif

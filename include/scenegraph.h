@@ -342,7 +342,6 @@ template <template <typename U> class CONTAINER>
 struct DRAWABLE_CONTAINER
 {
 	// all of the layers of the scene
-	CONTAINER <DRAWABLE> generic;
 	CONTAINER <DRAWABLE> twodim;
 	CONTAINER <DRAWABLE> normal_noblend;
 	CONTAINER <DRAWABLE> normal_blend;
@@ -357,7 +356,6 @@ struct DRAWABLE_CONTAINER
 	template <typename T> 
 	void ForEach(T func)
 	{
-		func(generic);
 		func(twodim);
 		func(normal_noblend);
 		func(normal_blend);
@@ -373,8 +371,6 @@ struct DRAWABLE_CONTAINER
 	template <typename CONTAINERU, bool use_transform>
 	void AppendTo(CONTAINERU & dest, const MATRIX4 <float> & transform)
 	{
-		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,PTRVECTOR<DRAWABLE>,use_transform>
-			(generic, dest.generic, transform);
 		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,PTRVECTOR<DRAWABLE>,use_transform>
 			(twodim, dest.twodim, transform);
 		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,PTRVECTOR<DRAWABLE>,use_transform>

@@ -27,8 +27,8 @@ void ROADPATCH::AddRacinglineScenenode(SCENENODE & node, ROADPATCH * nextpatch,
 		return;
 
 	//Create racing line scenenode
-	keyed_container <DRAWABLE>::handle drawhandle = node.GetDrawlist().normal_noblend.insert(DRAWABLE());
-	DRAWABLE & draw = node.GetDrawlist().normal_noblend.get(drawhandle);
+	keyed_container <DRAWABLE>::handle drawhandle = node.GetDrawlist().normal_blend.insert(DRAWABLE());
+	DRAWABLE & draw = node.GetDrawlist().normal_blend.get(drawhandle);
 
 	draw.SetDiffuseMap(&racingline_texture);
 	draw.SetLit(false);

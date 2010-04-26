@@ -229,7 +229,7 @@ void K1999::CalcRaceLine()
 	const unsigned int stepsize = 128;
 	
 	//abort if the track isn't long enough
-	if ((int)tx.size() < stepsize)
+	if (tx.size() < stepsize)
 		return;
 	
  //

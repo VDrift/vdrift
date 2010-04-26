@@ -162,6 +162,7 @@ public:
 		float speedmin, float speedmax, float sizemin, float sizemax,
 		MATHVECTOR <float,3> newdir);
 	unsigned int NumParticles() {return particles.size();}
+	SCENENODE & GetNode() {return node;}
 };
 
 #endif

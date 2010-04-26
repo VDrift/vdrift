@@ -99,13 +99,13 @@ public:
 		}
 		else
 		{
-			int lbound;
-			T blend;
-			lbound = (int)(nf/HAT_LOAD);
+			int lbound = (int)(nf/HAT_LOAD);
 			lbound--;
 			if (lbound < 0)
 				lbound = 0;
-			blend = (nf-HAT_LOAD*(lbound+1))/HAT_LOAD;
+			if (lbound >= (int)sigma_hat.size())
+				lbound = (int)sigma_hat.size()-1;
+			T blend = (nf-HAT_LOAD*(lbound+1))/HAT_LOAD;
 			sh = sigma_hat[lbound]*(1.0-blend)+sigma_hat[lbound+1]*blend;
 			ah = alpha_hat[lbound]*(1.0-blend)+alpha_hat[lbound+1]*blend;
 		}
