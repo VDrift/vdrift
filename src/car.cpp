@@ -28,7 +28,8 @@ bool isnan(double number) {return (number != number);}
 CAR::CAR()
 : last_steer(0),
   debug_wheel_draw(false),
-  sector(-1)
+  sector(-1),
+  applied_brakes(0)
 {
 }
 

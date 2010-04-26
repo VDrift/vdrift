@@ -118,6 +118,9 @@ private:
 			return;
 		}
 		
+		// this puts the wheels where they should be
+		car.back().CopyPhysicsResultsIntoDisplay();
+		
 		//copy the car's scene to our scene
 		carnoderef = car.back().GetNode();
 		
@@ -132,8 +135,7 @@ private:
 		
 		carnoderef.SetChildVisibility(wasvisible);
 		
-		if (!loadlog.str().empty())
-			*errptr << "Loading log: " << loadlog.str() << std::endl;
+		//if (!loadlog.str().empty()) *errptr << "Loading log: " << loadlog.str() << std::endl;
 	}
 	
 public:

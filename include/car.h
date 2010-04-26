@@ -26,6 +26,7 @@ class CAR
 {
 friend class PERFORMANCE_TESTING;
 friend class joeserialize::Serializer;
+friend class WIDGET_SPINNINGCAR;
 public:
 	CAR();
 	
