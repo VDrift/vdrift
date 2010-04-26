@@ -474,7 +474,7 @@ private:
 
 public:
 	#ifdef TRACK_CONTAINERS
-	keyed_container() : containerid((int)this) {}
+	keyed_container() : containerid((size_t)this) {}
 	#endif
 	
 	bool Serialize(joeserialize::Serializer & s)
