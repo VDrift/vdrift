@@ -534,11 +534,6 @@ void GRAPHICS_SDLGL::SetupCamera()
 	}
 }*/
 
-void GRAPHICS_SDLGL::SendDrawlistToRenderScene(RENDER_INPUT_SCENE & renderscene, std::vector <DRAWABLE*> & drawlist)
-{
-	renderscene.SetDrawList(drawlist);
-}
-
 bool SortDraworder(DRAWABLE * d1, DRAWABLE * d2)
 {
 	assert(d1 && d2);
@@ -605,14 +600,10 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 					renderscene.SetDefaultShader(shadermap["depthgen2"]);
 				else
 					renderscene.SetDefaultShader(shadermap["depthgen"]);
-				SendDrawlistToRenderScene(renderscene,dynamic_drawlist.normal_noblend);
-				Render(&renderscene, *i, error_output);
-				SendDrawlistToRenderScene(renderscene,dynamic_drawlist.car_noblend);
-				Render(&renderscene, *i, error_output);
-				//renderscene.SetClear(false, false);
-				//SendDrawlistToRenderScene(renderscene,&no2d_blend);
-				//Render(&renderscene, *i, error_output);
-
+				
+				RenderDrawlist(dynamic_drawlist.normal_noblend, renderscene, *i, error_output);
+				RenderDrawlist(dynamic_drawlist.car_noblend, renderscene, *i, error_output);
+				
 				//extract matrices for shadowing.  this is possible because the Render function for RENDER_INPUT_SCENE does not pop matrices at the end
 				float mv[16], mp[16], clipmat[16];
 				glGetFloatv( GL_PROJECTION_MATRIX, mp );
@@ -652,23 +643,19 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 		if (lighting == 1)
 		{
 			renderscene.SetDefaultShader(shadermap["depthonly"]);
+			
 			renderscene.SetCameraInfo(campos, camorient, camfov, 10000.0, w, h); //use very high draw distance for skyboxes
 			renderscene.SetClear(false, true);
-			SendDrawlistToRenderScene(renderscene,dynamic_drawlist.skybox_noblend);
-			Render(&renderscene, edgecontrastenhancement_depths, error_output);
+			RenderDrawlist(dynamic_drawlist.skybox_noblend, renderscene, edgecontrastenhancement_depths, error_output);
 			renderscene.SetClear(false, false);
-			SendDrawlistToRenderScene(renderscene,dynamic_drawlist.skybox_blend);
-			Render(&renderscene, edgecontrastenhancement_depths, error_output);
+			RenderDrawlist(dynamic_drawlist.skybox_blend, renderscene, edgecontrastenhancement_depths, error_output);
+			
 			renderscene.SetCameraInfo(campos, camorient, camfov, view_distance, w, h);
-			SendDrawlistToRenderScene(renderscene,dynamic_drawlist.normal_noblend);
-			Render(&renderscene, edgecontrastenhancement_depths, error_output);
-			SendDrawlistToRenderScene(renderscene,dynamic_drawlist.car_noblend);
-			Render(&renderscene, edgecontrastenhancement_depths, error_output);
-			//SendDrawlistToRenderScene(renderscene,&no2d_blend);
-			//Render(&renderscene, edgecontrastenhancement_depths, error_output);
-
+			RenderDrawlist(dynamic_drawlist.normal_noblend, renderscene, edgecontrastenhancement_depths, error_output);
+			RenderDrawlist(dynamic_drawlist.car_noblend, renderscene, edgecontrastenhancement_depths, error_output);
+			
 			//load the texture
-			glActiveTexture(GL_TEXTURE7);
+			glActiveTexture(GL_TEXTURE9);
 			glEnable(GL_TEXTURE_2D);
 			edgecontrastenhancement_depths.RenderToFBO().Activate();
 			glActiveTexture(GL_TEXTURE0);
@@ -738,14 +725,11 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 				renderscene.SetDefaultShader(shadermap["simple"]);
 				renderscene.SetCameraInfo(dynamic_reflection_sample_position, orient, fov, 10000.0, rw, rh); //use very high draw distance for skyboxes
 				renderscene.SetClear(true, true);
-				SendDrawlistToRenderScene(renderscene,dynamic_drawlist.skybox_noblend);
-				Render(&renderscene, dynamic_reflection, error_output);
+				RenderDrawlist(dynamic_drawlist.skybox_noblend, renderscene, dynamic_reflection, error_output);
 				renderscene.SetClear(false, false);
-				SendDrawlistToRenderScene(renderscene,dynamic_drawlist.skybox_blend);
-				Render(&renderscene, dynamic_reflection, error_output);
+				RenderDrawlist(dynamic_drawlist.skybox_blend, renderscene, dynamic_reflection, error_output);
 				renderscene.SetCameraInfo(dynamic_reflection_sample_position, orient, fov, 100.0, rw, rh); //use a smaller draw distance than normal
-				SendDrawlistToRenderScene(renderscene,dynamic_drawlist.normal_noblend);
-				Render(&renderscene, dynamic_reflection, error_output);
+				RenderDrawlist(dynamic_drawlist.normal_noblend, renderscene, dynamic_reflection, error_output);
 			}
 			
 			OPENGL_UTILITY::CheckForOpenGLErrors("reflection map generation: end", error_output);
@@ -772,12 +756,9 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 		if (bloom)
 			scenebuffer = full_scene_buffer;
 
-		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.skybox_noblend);
-		Render(&renderscene, *scenebuffer, error_output);
+		RenderDrawlist(dynamic_drawlist.skybox_noblend, renderscene, *scenebuffer, error_output);
 		renderscene.SetClear(false, true);
-		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.skybox_blend);
-		//std::reverse(drawlist_map[&skyboxes].begin(), drawlist_map[&skyboxes].end());
-		Render(&renderscene, *scenebuffer, error_output);
+		RenderDrawlist(dynamic_drawlist.skybox_blend, renderscene, *scenebuffer, error_output);
 		renderscene.SetCameraInfo(campos, camorient, camfov, view_distance, w, h);
 
 		//debug shadow camera positioning
@@ -795,19 +776,12 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 		renderscene.SetCameraInfo(campos+shadowoffset, ldir, camfov, 10000.0, w, h);*/
 
 		renderscene.SetClear(false, true);
-		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.normal_noblend);
-		Render(&renderscene, *scenebuffer, error_output);
-		
+		RenderDrawlist(dynamic_drawlist.normal_noblend, renderscene, *scenebuffer, error_output);
 		renderscene.SetClear(false, false);
-		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.car_noblend);
-		Render(&renderscene, *scenebuffer, error_output);
+		RenderDrawlist(dynamic_drawlist.car_noblend, renderscene, *scenebuffer, error_output);
+		RenderDrawlist(dynamic_drawlist.normal_blend, renderscene, *scenebuffer, error_output);
+		RenderDrawlist(dynamic_drawlist.particle, renderscene, *scenebuffer, error_output);
 		
-		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.normal_blend);
-		Render(&renderscene, *scenebuffer, error_output);
-		
-		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.particle);
-		Render(&renderscene, *scenebuffer, error_output);
-
 		if (bloom) //do bloom post-processing
 		{
 			RENDER_INPUT_POSTPROCESS bloom_postprocess;
@@ -859,62 +833,54 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 		}
 		#endif
 
-		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.twodim);
-		Render(&renderscene, final, error_output);
-		
-		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.text);
-		Render(&renderscene, final, error_output);
+		RenderDrawlist(dynamic_drawlist.twodim, renderscene, final, error_output);
+		RenderDrawlist(dynamic_drawlist.text, renderscene, final, error_output);
 
 		renderscene.SetClear(false, true);
 		renderscene.SetCameraInfo(campos, camorient, 45.0, view_distance, w, h);
-		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.nocamtrans_noblend);
-		Render(&renderscene, final, error_output);
-		
+		RenderDrawlist(dynamic_drawlist.nocamtrans_noblend, renderscene, final, error_output);
 		renderscene.SetClear(false, false);
-		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.nocamtrans_blend);
-		Render(&renderscene, final, error_output);
+		RenderDrawlist(dynamic_drawlist.nocamtrans_blend, renderscene, final, error_output);
 	}
 	else //non-shader path
 	{
+		RENDER_OUTPUT framebuffer;
+		framebuffer.RenderToFramebuffer();
+		
+		// render skybox
 		renderscene.SetClear(false, true);
 		renderscene.SetCameraInfo(campos, camorient, camfov, 10000.0, w, h); //use very high draw distance for skyboxes
-		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.skybox_noblend);
-		renderscene.Render(glstate);
-
+		RenderDrawlist(dynamic_drawlist.skybox_noblend, renderscene, framebuffer, error_output);
 		renderscene.SetClear(false, true);
-		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.skybox_blend);
-		renderscene.Render(glstate);
+		RenderDrawlist(dynamic_drawlist.skybox_blend, renderscene, framebuffer, error_output);
 
+		// render most 3d stuff
 		renderscene.SetClear(false, true);
 		renderscene.SetCameraInfo(campos, camorient, camfov, view_distance, w, h);
-		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.normal_noblend);
-		renderscene.Render(glstate);
-		
+		RenderDrawlist(dynamic_drawlist.normal_noblend, renderscene, framebuffer, error_output);
 		renderscene.SetClear(false, false);
-		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.car_noblend);
-		renderscene.Render(glstate);
-		
-		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.normal_blend);
-		renderscene.Render(glstate);
-		
-		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.particle);
-		renderscene.Render(glstate);
+		RenderDrawlist(dynamic_drawlist.car_noblend, renderscene, framebuffer, error_output);
+		RenderDrawlist(dynamic_drawlist.normal_blend, renderscene, framebuffer, error_output);
+		RenderDrawlist(dynamic_drawlist.particle, renderscene, framebuffer, error_output);
+		RenderDrawlist(dynamic_drawlist.twodim, renderscene, framebuffer, error_output);
+		RenderDrawlist(dynamic_drawlist.text, renderscene, framebuffer, error_output);
 
-		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.twodim);
-		renderscene.Render(glstate);
-		
-		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.text);
-		renderscene.Render(glstate);
-
+		// render any viewspace 3d elements
 		renderscene.SetClear(false, true);
 		renderscene.SetCameraInfo(campos, camorient, 45.0, view_distance, w, h);
-		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.nocamtrans_noblend);
-		renderscene.Render(glstate);
-		
+		RenderDrawlist(dynamic_drawlist.nocamtrans_noblend, renderscene, framebuffer, error_output);
 		renderscene.SetClear(false, false);
-		SendDrawlistToRenderScene(renderscene,dynamic_drawlist.nocamtrans_blend);
-		renderscene.Render(glstate);
+		RenderDrawlist(dynamic_drawlist.nocamtrans_blend, renderscene, framebuffer, error_output);
 	}
+}
+
+void GRAPHICS_SDLGL::RenderDrawlist(std::vector <DRAWABLE*> & drawlist,
+						RENDER_INPUT_SCENE & render_scene, 
+						RENDER_OUTPUT & render_output, 
+						std::ostream & error_output)
+{
+	render_scene.SetDrawList(drawlist);
+	Render(&render_scene, render_output, error_output);
 }
 
 void GRAPHICS_SDLGL::DrawBox(const MATHVECTOR <float, 3> & corner1, const MATHVECTOR <float, 3> & corner2) const

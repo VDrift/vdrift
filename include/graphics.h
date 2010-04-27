@@ -77,7 +77,10 @@ private:
 	void DisableShaders();
 	void DrawBox(const MATHVECTOR <float, 3> & corner1, const MATHVECTOR <float, 3> & corner2) const;
 	void SetupCamera();
-	void SendDrawlistToRenderScene(RENDER_INPUT_SCENE & renderscene, std::vector <DRAWABLE*> & drawlist);
+	void RenderDrawlist(std::vector <DRAWABLE*> & drawlist,
+						RENDER_INPUT_SCENE & render_scene, 
+						RENDER_OUTPUT & render_output, 
+						std::ostream & error_output);
 	
 	void Render(RENDER_INPUT * input, RENDER_OUTPUT & output, std::ostream & error_output);
 public:
