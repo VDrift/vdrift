@@ -1,0 +1,119 @@
+#ifndef _GLSTATEMANAGER_H
+#define _GLSTATEMANAGER_H
+
+#include <vector>
+
+class GLSTATEMANAGER
+{
+public:
+	GLSTATEMANAGER() : 
+		used(65536, false), 
+		state(65536), 
+		r(1),g(1),b(1),a(1), 
+		depthmask(true), 
+		alphamode(GL_NEVER), 
+		alphavalue(0), 
+		blendsource(GL_ZERO), 
+		blenddest(GL_ZERO), 
+		cullmode(GL_BACK)
+	{
+	}
+	
+	inline void Enable(int stateid)
+	{
+		Set(stateid, true);
+	}
+	
+	inline void Disable(int stateid)
+	{
+		Set(stateid, false);
+	}
+	
+	void SetColor(float nr, float ng, float nb, float na)
+	{
+		if (r != nr || g != ng || b != nb || a != na)
+		{
+			r=nr;g=ng;b=nb;a=na;
+			glColor4f(r,g,b,a);
+		}
+	}
+	
+	void SetDepthMask(bool newdepthmask)
+	{
+		if (newdepthmask != depthmask)
+		{
+			depthmask = newdepthmask;
+			glDepthMask(depthmask ? 1 : 0);
+		}
+	}
+	
+	void SetAlphaFunc(GLenum mode, float value)
+	{
+		if (mode != alphamode || value != alphavalue)
+		{
+			alphamode = mode;
+			alphavalue = value;
+			glAlphaFunc(mode, value);
+		}
+	}
+	
+	void SetBlendFunc(GLenum s, GLenum d)
+	{
+		if (blendsource != s || blenddest != d)
+		{
+			blendsource = s;
+			blenddest = d;
+			glBlendFunc(s, d);
+		}
+	}
+	
+	void SetCullFace(GLenum mode)
+	{
+		if (mode != cullmode)
+		{
+			cullmode = mode;
+			glCullFace(cullmode);
+		}
+	}
+	
+private:
+	std::vector <bool> used; //on modern compilers this should result in a lower memory usage bit_vector-type arrangement
+	std::vector <bool> state;
+	
+	float r, g, b, a;
+	bool depthmask;
+	GLenum alphamode;
+	float alphavalue;
+	GLenum blendsource;
+	GLenum blenddest;
+	GLenum cullmode;
+	
+	void Set(int stateid, bool newval)
+	{
+		assert(stateid <= 65535);
+		
+		if (used[stateid])
+		{
+			if (state[stateid] != newval)
+			{
+				state[stateid] = newval;
+				if (newval)
+					glEnable(stateid);
+				else
+					glDisable(stateid);
+			}
+		}
+		else
+		{
+			used[stateid] = true;
+			state[stateid] = newval;
+			if (newval)
+				glEnable(stateid);
+			else
+				glDisable(stateid);
+		}
+	}
+};
+
+#endif
+

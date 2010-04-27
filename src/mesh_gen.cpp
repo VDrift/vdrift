@@ -521,8 +521,7 @@ void mesh_gen_tire(VERTEXARRAY *tire, float sectionWidth_mm, float aspectRatio, 
 	}
 
 
-	// assign VERTEXARRAY to this data?
-	// or am i telling VERTEXARRAY to copy this data?
+	// VERTEXARRAY will copy this data
 	tire->SetVertices(vertexData, vertexFloatCount);
 	tire->SetFaces((int *)triData, triVIndexCount);
 	tire->SetTexCoords(0, texData, texCoordFloats);
