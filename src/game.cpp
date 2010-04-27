@@ -1157,7 +1157,7 @@ void GAME::ProcessGUIAction(const std::string & action)
 			tempoptionmap["controledit.analog.gain"].SetCurrentValue(gain);
 		}
 		//std::cout << "Updating options..." << endl;
-		gui.GetPage(gui.GetActivePageName()).UpdateOptions(gui.GetNode(), false, tempoptionmap, error_output);
+		gui.GetPage(gui.GetActivePageName()).UpdateOptions(gui.GetPageNode(gui.GetActivePageName()), false, tempoptionmap, error_output);
 		//std::cout << "Done updating options." << endl;
 		gui.SetControlsNeedLoading(false);
 	}
@@ -1170,7 +1170,7 @@ void GAME::ProcessGUIAction(const std::string & action)
 			//get current GUI state
 			tempoptionmap["controledit.button.held_once"].SetCurrentValue(controlgrab_editcontrol.onetime?"true":"false");
 			tempoptionmap["controledit.button.up_down"].SetCurrentValue(controlgrab_editcontrol.keypushdown?"true":"false");
-			gui.GetPage(gui.GetActivePageName()).UpdateOptions(gui.GetNode(), true, tempoptionmap, error_output);
+			gui.GetPage(gui.GetActivePageName()).UpdateOptions(gui.GetPageNode(gui.GetActivePageName()), true, tempoptionmap, error_output);
 
 			//save GUI state to our control
 			if (tempoptionmap["controledit.button.held_once"].GetCurrentDisplayValue() == "true")
@@ -1190,7 +1190,7 @@ void GAME::ProcessGUIAction(const std::string & action)
 			tempoptionmap["controledit.analog.deadzone"].SetCurrentValue("0");
 			tempoptionmap["controledit.analog.exponent"].SetCurrentValue("1");
 			tempoptionmap["controledit.analog.gain"].SetCurrentValue("1");
-			gui.GetPage(gui.GetActivePageName()).UpdateOptions(gui.GetNode(), true, tempoptionmap, error_output);
+			gui.GetPage(gui.GetActivePageName()).UpdateOptions(gui.GetPageNode(gui.GetActivePageName()), true, tempoptionmap, error_output);
 
 			//save GUI state to our control
 			{
