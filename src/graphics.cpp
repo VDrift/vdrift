@@ -539,6 +539,11 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 	static_drawlist.GetDrawlist().skybox_blend.Query(AABB<float>::INTERSECT_ALWAYS(), normalcam_static_drawlist.skybox_blend);
 	static_drawlist.GetDrawlist().skybox_noblend.Query(AABB<float>::INTERSECT_ALWAYS(), normalcam_static_drawlist.skybox_noblend);
 	
+	/*int objectcount = 0;
+	static_drawlist.GetDrawlist().normal_noblend.GetTree().DebugPrint(0, objectcount, true, std::cout);
+	std::cout << std::endl;
+	std::cout << std::endl;*/
+	
 	//shader path
 	if (using_shaders)
 	{

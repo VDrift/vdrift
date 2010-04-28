@@ -562,7 +562,7 @@ public:
 	void Query(const U & object, std::vector <T*> & output) {spacetree.Query(object, output);}
 	
 private:
-	AABB_SPACE_PARTITIONING_NODE <T*> spacetree;
+	AABB_SPACE_PARTITIONING_NODE <T*,1> spacetree;
 	unsigned int count; ///< cached from spacetree.size()
 };
 

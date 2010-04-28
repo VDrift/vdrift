@@ -8,7 +8,7 @@
 #include <iostream>
 #include <map>
 
-template <typename DATATYPE>
+template <typename DATATYPE, unsigned int ideal_objects_per_node = 1>
 class AABB_SPACE_PARTITIONING_NODE
 {
 	private:
@@ -50,7 +50,6 @@ class AABB_SPACE_PARTITIONING_NODE
 		///intelligently add new child nodes and parse objects to them, recursively
 		void DistributeObjectsToChildren(const int level)
 		{
-			const unsigned int ideal_objects_per_node(1);
 			const unsigned int ideal_children_per_node(2);
 			const bool verbose(false);
 	
@@ -148,7 +147,7 @@ class AABB_SPACE_PARTITIONING_NODE
 		}
 	
 	public:
-		void DebugPrint(int level, int & objectcount, bool verbose, std::ostream & o)
+		void DebugPrint(int level, int & objectcount, bool verbose, std::ostream & o) const
 		{
 			if (verbose)
 			{
@@ -161,7 +160,7 @@ class AABB_SPACE_PARTITIONING_NODE
 	
 			objectcount += objects.size();
 	
-			for (typename childrenlist_type::iterator i = children.begin(); i != children.end(); ++i)
+			for (typename childrenlist_type::const_iterator i = children.begin(); i != children.end(); ++i)
 				i->DebugPrint(level+1, objectcount, verbose, o);
 	
 			if (level == 0)

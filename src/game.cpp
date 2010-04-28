@@ -39,6 +39,8 @@ using std::sort;
 
 #define _PRINTSIZE_(x) {std::cout << #x << ": " << sizeof(x) << std::endl;}
 
+#define USE_STATIC_OPTIMIZATION_FOR_TRACK
+
 ///start the game with the given arguments
 void GAME::Start(list <string> & args)
 {
@@ -530,7 +532,9 @@ void GAME::BeginDraw()
 	TraverseScene<true>(debugnode, graphics.GetDynamicDrawlist());
 	TraverseScene<false>(gui.GetNode(), graphics.GetDynamicDrawlist());
 	TraverseScene<false>(track.GetRacinglineNode(), graphics.GetDynamicDrawlist());
-	//TraverseScene<false>(track.GetTrackNode(), graphics.GetDynamicDrawlist());
+	#ifndef USE_STATIC_OPTIMIZATION_FOR_TRACK
+	TraverseScene<false>(track.GetTrackNode(), graphics.GetDynamicDrawlist());
+	#endif
 	TraverseScene<false>(hud.GetNode(), graphics.GetDynamicDrawlist());
 	TraverseScene<false>(trackmap.GetNode(), graphics.GetDynamicDrawlist());
 	TraverseScene<false>(inputgraph.GetNode(), graphics.GetDynamicDrawlist());
@@ -1802,7 +1806,9 @@ bool GAME::LoadTrack(const std::string & trackname)
 	collision.DebugPrint(info_output);
 	
 	//build static drawlist
+	#ifdef USE_STATIC_OPTIMIZATION_FOR_TRACK
 	graphics.AddStaticNode(track.GetTrackNode());
+	#endif
 
 	return true;
 }

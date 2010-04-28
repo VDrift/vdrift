@@ -649,7 +649,7 @@ void TEXTURE_GL::Activate() const
 		glBindTexture(GL_TEXTURE_2D, tex_id);
 	}
 
-	OPENGL_UTILITY::CheckForOpenGLErrors("Texture binding ("+texture_info.GetName()+")", std::cerr);
+	//OPENGL_UTILITY::CheckForOpenGLErrors("Texture binding ("+texture_info.GetName()+")", std::cerr);
 }
 
 void TEXTURE_GL::Deactivate() const
