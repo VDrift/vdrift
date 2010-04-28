@@ -1663,6 +1663,10 @@ void GAME::LeaveGame()
 	gui.SetInGame(false);
 	track.Unload();
 	
+	// clear out the static drawables
+	SCENENODE empty;
+	graphics.AddStaticNode(empty, true);
+	
 	collision.Clear();
 
 	if (sound.Enabled())
