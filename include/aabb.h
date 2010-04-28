@@ -177,16 +177,16 @@ public:
 		return true;
 	}
 	
-	bool Intersect(const FRUSTUM <T> & frustum) const
+	bool Intersect(const FRUSTUM & frustum) const
 	{
 		float rd;
 		const float bound = size.Magnitude()*0.5;
 		for (int i=0; i<6; i++)
 		{
-			rd=frustum.planes[i][0]*center[0]+
-					frustum.planes[i][1]*center[1]+
-					frustum.planes[i][2]*center[2]+
-					frustum.planes[i][3];
+			rd=frustum.frustum[i][0]*center[0]+
+					frustum.frustum[i][1]*center[1]+
+					frustum.frustum[i][2]*center[2]+
+					frustum.frustum[i][3];
 			if (rd <= -bound)
 			{
 				return false;

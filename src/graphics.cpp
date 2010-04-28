@@ -529,7 +529,7 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 	std::sort(dynamic_drawlist.twodim.begin(),dynamic_drawlist.twodim.end(),&SortDraworder);
 
 	//do fast culling for the normal camera frustum
-	FRUSTUM <float> normalcam = renderscene.SetCameraInfo(campos, camorient, camfov, view_distance, w, h);
+	FRUSTUM normalcam = renderscene.SetCameraInfo(campos, camorient, camfov, view_distance, w, h);
 	DRAWABLE_CONTAINER <PTRVECTOR> normalcam_static_drawlist;
 	//normalcam_static_drawlist.normal_noblend.reserve(static_drawlist.GetDrawlist().normal_noblend.size());
 	static_drawlist.GetDrawlist().normal_noblend.Query(normalcam, normalcam_static_drawlist.normal_noblend);
@@ -577,7 +577,7 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 				//if (csm_count == 1) std::cout << shadowoffset << std::endl;
 				shadowbox[2] += 60.0;
 				renderscene.SetOrtho(-shadowbox, shadowbox);
-				FRUSTUM <float> frustum = renderscene.SetCameraInfo(campos+shadowoffset, lightdirection, camfov, 10000.0, w, h);
+				FRUSTUM frustum = renderscene.SetCameraInfo(campos+shadowoffset, lightdirection, camfov, 10000.0, w, h);
 				
 				// do fast culling
 				specialcam_static_drawlist.clear();
@@ -724,7 +724,7 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 				RenderDrawlists(dynamic_drawlist.skybox_blend, normalcam_static_drawlist.skybox_blend, renderscene, dynamic_reflection, error_output);
 				
 				// do fast culling
-				FRUSTUM <float> frustum = renderscene.SetCameraInfo(dynamic_reflection_sample_position, orient, fov, 100.0, rw, rh); //use a smaller draw distance than normal
+				FRUSTUM frustum = renderscene.SetCameraInfo(dynamic_reflection_sample_position, orient, fov, 100.0, rw, rh); //use a smaller draw distance than normal
 				specialcam_static_drawlist.clear();
 				static_drawlist.GetDrawlist().normal_noblend.Query(frustum, specialcam_static_drawlist.normal_noblend);
 				

@@ -69,7 +69,7 @@ public:
 	}
 	void DisableOrtho() {orthomode = false;}
 	void SetOrtho(const MATHVECTOR <float, 3> & neworthomin, const MATHVECTOR <float, 3> & neworthomax) {orthomode = true; orthomin = neworthomin; orthomax = neworthomax;}
-	FRUSTUM<float> SetCameraInfo(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newrot, float newfov, float newlodfar, float neww, float newh);
+	FRUSTUM SetCameraInfo(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newrot, float newfov, float newlodfar, float neww, float newh);
 	void SetSunDirection(const MATHVECTOR <float, 3> & newsun) {lightposition = newsun;}
 	void SetFlags(bool newshaders) {shaders=newshaders;}
 	void SetDefaultShader(SHADER_GLSL & newdefault) {shadermap.clear();shadermap.resize(SHADER_NONE, &newdefault);}
@@ -94,7 +94,7 @@ private:
 	MATHVECTOR <float, 3> orthomax;
 	float w, h;
 	float camfov;
-	FRUSTUM<float> frustum; //used for frustum culling
+	FRUSTUM frustum; //used for frustum culling
 	float lod_far; //used for distance culling
 	bool shaders;
 	bool clearcolor, cleardepth;

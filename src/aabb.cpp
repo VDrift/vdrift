@@ -55,7 +55,7 @@ QT_TEST(aabb_test)
 		plane[0][2] = 1;
 		plane[0][3] = 10;
 		distribute(plane);
-		QT_CHECK(box1.Intersect(FRUSTUM<float>(plane)));
+		QT_CHECK(box1.Intersect(FRUSTUM(plane)));
 	}
 	{
 		float plane[6][4];
@@ -64,7 +64,7 @@ QT_TEST(aabb_test)
 		plane[0][2] = 1;
 		plane[0][3] = 0;
 		distribute(plane);
-		QT_CHECK(box1.Intersect(FRUSTUM<float>(plane)));
+		QT_CHECK(box1.Intersect(FRUSTUM(plane)));
 	}
 	{
 		float plane[6][4];
@@ -73,7 +73,7 @@ QT_TEST(aabb_test)
 		plane[0][2] = 1;
 		plane[0][3] = -10;
 		distribute(plane);
-		QT_CHECK(!box1.Intersect(FRUSTUM<float>(plane)));
+		QT_CHECK(!box1.Intersect(FRUSTUM(plane)));
 	}
 	{
 		float plane[6][4];
@@ -82,7 +82,7 @@ QT_TEST(aabb_test)
 		plane[0][2] = 0;
 		plane[0][3] = 10000;
 		distribute(plane);
-		QT_CHECK(box1.Intersect(FRUSTUM<float>(plane)));
+		QT_CHECK(box1.Intersect(FRUSTUM(plane)));
 	}
 	{
 		float plane[6][4];
@@ -91,6 +91,6 @@ QT_TEST(aabb_test)
 		plane[0][2] = 0;
 		plane[0][3] = -119;
 		distribute(plane);
-		QT_CHECK(!box1.Intersect(FRUSTUM<float>(plane)));
+		QT_CHECK(!box1.Intersect(FRUSTUM(plane)));
 	}
 }

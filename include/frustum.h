@@ -6,13 +6,9 @@
 
 #include <iostream>
 
-template <typename T>
-class AABB;
-
-template <typename T>
+/*template <typename T>
 class FRUSTUM
 {
-friend class AABB<T>;
 public:
 	FRUSTUM() : planes(6) {}
 	FRUSTUM(T cfrustum[][4]) : planes(6)
@@ -47,6 +43,26 @@ public:
 	
 private:
 	std::vector <MATHPLANE <T> > planes;
+};*/
+
+//typedef float FRUSTUM[6][4];
+
+struct FRUSTUM
+{
+public:
+	FRUSTUM() {}
+	FRUSTUM(float cfrustum[][4])
+	{
+		Set(cfrustum);
+	}
+	void Set(float cfrustum[][4])
+	{
+		for (int i = 0; i < 6; i++)
+			for (int n = 0; n < 4; n++)
+				frustum[i][n] = cfrustum[i][n];
+	}
+	
+	float frustum[6][4];
 };
 
 #endif

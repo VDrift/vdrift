@@ -347,10 +347,10 @@ bool RENDER_INPUT_SCENE::FrustumCull(DRAWABLE & tocull)
 			bound = d->GetRadius();
 			for (int i=0; i<6; i++)
 			{
-				rd=frustum[i][0]*objpos[0]+
-						frustum[i][1]*objpos[1]+
-						frustum[i][2]*objpos[2]+
-						frustum[i][3];
+				rd=frustum.frustum[i][0]*objpos[0]+
+						frustum.frustum[i][1]*objpos[1]+
+						frustum.frustum[i][2]*objpos[2]+
+						frustum.frustum[i][3];
 				if (rd <= -bound)
 				{
 					return true;
@@ -695,7 +695,7 @@ void RENDER_INPUT_SCENE::SelectTransformEnd(DRAWABLE & forme, bool need_pop)
 	}
 }
 
-FRUSTUM<float> RENDER_INPUT_SCENE::SetCameraInfo(const MATHVECTOR <float, 3> & newpos,
+FRUSTUM RENDER_INPUT_SCENE::SetCameraInfo(const MATHVECTOR <float, 3> & newpos,
 		const QUATERNION <float> & newrot, float newfov, float newlodfar, float neww, float newh)
 {
 	cam_position = newpos;
@@ -763,84 +763,84 @@ void RENDER_INPUT_SCENE::ExtractFrustum()
 	clip[13] = modl[12] * proj[ 1] + modl[13] * proj[ 5] + modl[14] * proj[ 9] + modl[15] * proj[13];
 	clip[14] = modl[12] * proj[ 2] + modl[13] * proj[ 6] + modl[14] * proj[10] + modl[15] * proj[14];
 	clip[15] = modl[12] * proj[ 3] + modl[13] * proj[ 7] + modl[14] * proj[11] + modl[15] * proj[15];
-
+	
 	/* Extract the numbers for the RIGHT plane */
-	frustum[0][0] = clip[ 3] - clip[ 0];
-	frustum[0][1] = clip[ 7] - clip[ 4];
-	frustum[0][2] = clip[11] - clip[ 8];
-	frustum[0][3] = clip[15] - clip[12];
+	frustum.frustum[0][0] = clip[ 3] - clip[ 0];
+	frustum.frustum[0][1] = clip[ 7] - clip[ 4];
+	frustum.frustum[0][2] = clip[11] - clip[ 8];
+	frustum.frustum[0][3] = clip[15] - clip[12];
 
 	/* Normalize the result */
-	t = sqrt( frustum[0][0] * frustum[0][0] + frustum[0][1] * frustum[0][1] + frustum[0][2] * frustum[0][2] );
-	frustum[0][0] /= t;
-	frustum[0][1] /= t;
-	frustum[0][2] /= t;
-	frustum[0][3] /= t;
+	t = sqrt( frustum.frustum[0][0] * frustum.frustum[0][0] + frustum.frustum[0][1] * frustum.frustum[0][1] + frustum.frustum[0][2] * frustum.frustum[0][2] );
+	frustum.frustum[0][0] /= t;
+	frustum.frustum[0][1] /= t;
+	frustum.frustum[0][2] /= t;
+	frustum.frustum[0][3] /= t;
 
 	/* Extract the numbers for the LEFT plane */
-	frustum[1][0] = clip[ 3] + clip[ 0];
-	frustum[1][1] = clip[ 7] + clip[ 4];
-	frustum[1][2] = clip[11] + clip[ 8];
-	frustum[1][3] = clip[15] + clip[12];
+	frustum.frustum[1][0] = clip[ 3] + clip[ 0];
+	frustum.frustum[1][1] = clip[ 7] + clip[ 4];
+	frustum.frustum[1][2] = clip[11] + clip[ 8];
+	frustum.frustum[1][3] = clip[15] + clip[12];
 
 	/* Normalize the result */
-	t = sqrt( frustum[1][0] * frustum[1][0] + frustum[1][1] * frustum[1][1] + frustum[1][2] * frustum[1][2] );
-	frustum[1][0] /= t;
-	frustum[1][1] /= t;
-	frustum[1][2] /= t;
-	frustum[1][3] /= t;
+	t = sqrt( frustum.frustum[1][0] * frustum.frustum[1][0] + frustum.frustum[1][1] * frustum.frustum[1][1] + frustum.frustum[1][2] * frustum.frustum[1][2] );
+	frustum.frustum[1][0] /= t;
+	frustum.frustum[1][1] /= t;
+	frustum.frustum[1][2] /= t;
+	frustum.frustum[1][3] /= t;
 
 	/* Extract the BOTTOM plane */
-	frustum[2][0] = clip[ 3] + clip[ 1];
-	frustum[2][1] = clip[ 7] + clip[ 5];
-	frustum[2][2] = clip[11] + clip[ 9];
-	frustum[2][3] = clip[15] + clip[13];
+	frustum.frustum[2][0] = clip[ 3] + clip[ 1];
+	frustum.frustum[2][1] = clip[ 7] + clip[ 5];
+	frustum.frustum[2][2] = clip[11] + clip[ 9];
+	frustum.frustum[2][3] = clip[15] + clip[13];
 
 	/* Normalize the result */
-	t = sqrt( frustum[2][0] * frustum[2][0] + frustum[2][1] * frustum[2][1] + frustum[2][2] * frustum[2][2] );
-	frustum[2][0] /= t;
-	frustum[2][1] /= t;
-	frustum[2][2] /= t;
-	frustum[2][3] /= t;
+	t = sqrt( frustum.frustum[2][0] * frustum.frustum[2][0] + frustum.frustum[2][1] * frustum.frustum[2][1] + frustum.frustum[2][2] * frustum.frustum[2][2] );
+	frustum.frustum[2][0] /= t;
+	frustum.frustum[2][1] /= t;
+	frustum.frustum[2][2] /= t;
+	frustum.frustum[2][3] /= t;
 
 	/* Extract the TOP plane */
-	frustum[3][0] = clip[ 3] - clip[ 1];
-	frustum[3][1] = clip[ 7] - clip[ 5];
-	frustum[3][2] = clip[11] - clip[ 9];
-	frustum[3][3] = clip[15] - clip[13];
+	frustum.frustum[3][0] = clip[ 3] - clip[ 1];
+	frustum.frustum[3][1] = clip[ 7] - clip[ 5];
+	frustum.frustum[3][2] = clip[11] - clip[ 9];
+	frustum.frustum[3][3] = clip[15] - clip[13];
 
 	/* Normalize the result */
-	t = sqrt( frustum[3][0] * frustum[3][0] + frustum[3][1] * frustum[3][1] + frustum[3][2] * frustum[3][2] );
-	frustum[3][0] /= t;
-	frustum[3][1] /= t;
-	frustum[3][2] /= t;
-	frustum[3][3] /= t;
+	t = sqrt( frustum.frustum[3][0] * frustum.frustum[3][0] + frustum.frustum[3][1] * frustum.frustum[3][1] + frustum.frustum[3][2] * frustum.frustum[3][2] );
+	frustum.frustum[3][0] /= t;
+	frustum.frustum[3][1] /= t;
+	frustum.frustum[3][2] /= t;
+	frustum.frustum[3][3] /= t;
 
 	/* Extract the FAR plane */
-	frustum[4][0] = clip[ 3] - clip[ 2];
-	frustum[4][1] = clip[ 7] - clip[ 6];
-	frustum[4][2] = clip[11] - clip[10];
-	frustum[4][3] = clip[15] - clip[14];
+	frustum.frustum[4][0] = clip[ 3] - clip[ 2];
+	frustum.frustum[4][1] = clip[ 7] - clip[ 6];
+	frustum.frustum[4][2] = clip[11] - clip[10];
+	frustum.frustum[4][3] = clip[15] - clip[14];
 
 	/* Normalize the result */
-	t = sqrt( frustum[4][0] * frustum[4][0] + frustum[4][1] * frustum[4][1] + frustum[4][2] * frustum[4][2] );
-	frustum[4][0] /= t;
-	frustum[4][1] /= t;
-	frustum[4][2] /= t;
-	frustum[4][3] /= t;
+	t = sqrt( frustum.frustum[4][0] * frustum.frustum[4][0] + frustum.frustum[4][1] * frustum.frustum[4][1] + frustum.frustum[4][2] * frustum.frustum[4][2] );
+	frustum.frustum[4][0] /= t;
+	frustum.frustum[4][1] /= t;
+	frustum.frustum[4][2] /= t;
+	frustum.frustum[4][3] /= t;
 
 	/* Extract the NEAR plane */
-	frustum[5][0] = clip[ 3] + clip[ 2];
-	frustum[5][1] = clip[ 7] + clip[ 6];
-	frustum[5][2] = clip[11] + clip[10];
-	frustum[5][3] = clip[15] + clip[14];
+	frustum.frustum[5][0] = clip[ 3] + clip[ 2];
+	frustum.frustum[5][1] = clip[ 7] + clip[ 6];
+	frustum.frustum[5][2] = clip[11] + clip[10];
+	frustum.frustum[5][3] = clip[15] + clip[14];
 
 	/* Normalize the result */
-	t = sqrt( frustum[5][0] * frustum[5][0] + frustum[5][1] * frustum[5][1] + frustum[5][2] * frustum[5][2] );
-	frustum[5][0] /= t;
-	frustum[5][1] /= t;
-	frustum[5][2] /= t;
-	frustum[5][3] /= t;
+	t = sqrt( frustum.frustum[5][0] * frustum.frustum[5][0] + frustum.frustum[5][1] * frustum.frustum[5][1] + frustum.frustum[5][2] * frustum.frustum[5][2] );
+	frustum.frustum[5][0] /= t;
+	frustum.frustum[5][1] /= t;
+	frustum.frustum[5][2] /= t;
+	frustum.frustum[5][3] /= t;
 }
 
 RENDER_INPUT_SCENE::RENDER_INPUT_SCENE() : last_transform_valid(false), shaders(false), clearcolor(false), cleardepth(false), orthomode(false), contrast(1.0), depth_mode_equal(false)
