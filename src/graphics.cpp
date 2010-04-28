@@ -531,6 +531,7 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 	//do fast culling for the normal camera frustum
 	FRUSTUM <float> normalcam = renderscene.SetCameraInfo(campos, camorient, camfov, view_distance, w, h);
 	DRAWABLE_CONTAINER <PTRVECTOR> normalcam_static_drawlist;
+	//normalcam_static_drawlist.normal_noblend.reserve(static_drawlist.GetDrawlist().normal_noblend.size());
 	static_drawlist.GetDrawlist().normal_noblend.Query(normalcam, normalcam_static_drawlist.normal_noblend);
 	//std::cout << "Fast cull from " << static_drawlist.GetDrawlist().normal_noblend.size() << " to " << normalcam_static_drawlist.normal_noblend.size() << std::endl;
 	static_drawlist.GetDrawlist().normal_blend.Query(normalcam, normalcam_static_drawlist.normal_blend);

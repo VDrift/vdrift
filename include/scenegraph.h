@@ -544,6 +544,8 @@ class AABB_SPACE_PARTITIONING_NODE_ADAPTER
 {
 friend class STATICDRAWABLES;
 public:
+	AABB_SPACE_PARTITIONING_NODE_ADAPTER() : count(0) {}
+	
 	void push_back(T * drawable)
 	{
 		MATHVECTOR <float, 3> objpos(drawable->GetObjectCenter());
@@ -553,14 +555,15 @@ public:
 		box.SetFromSphere(objpos, radius);
 		spacetree.Add(drawable, box);
 	}
-	unsigned int size() const {return spacetree.size();} ///< this is slow!
+	unsigned int size() const {return count;}
 	void clear() {spacetree.Clear();}
-	void Optimize() {spacetree.Optimize();}
+	void Optimize() {spacetree.Optimize();count=spacetree.size();}
 	template <typename U>
 	void Query(const U & object, std::vector <T*> & output) {spacetree.Query(object, output);}
 	
 private:
 	AABB_SPACE_PARTITIONING_NODE <T*> spacetree;
+	unsigned int count; ///< cached from spacetree.size()
 };
 
 class STATICDRAWABLES
