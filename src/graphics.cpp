@@ -593,8 +593,9 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 				else
 					renderscene.SetDefaultShader(shadermap["depthgen"]);
 				
-				RenderDrawlists(dynamic_drawlist.normal_noblend, specialcam_static_drawlist.normal_noblend, renderscene, *i, error_output);
 				RenderDrawlist(dynamic_drawlist.car_noblend, renderscene, *i, error_output);
+				renderscene.SetClear(false,false);
+				RenderDrawlists(dynamic_drawlist.normal_noblend, specialcam_static_drawlist.normal_noblend, renderscene, *i, error_output);
 				
 				//extract matrices for shadowing.  this is possible because the Render function for RENDER_INPUT_SCENE does not pop matrices at the end
 				float mv[16], mp[16], clipmat[16];
