@@ -16,6 +16,7 @@
 #include "reseatable_reference.h"
 #include "aabb_space_partitioning.h"
 #include "glstatemanager.h"
+#include "frustum.h"
 
 #include <SDL/SDL.h>
 
@@ -61,13 +62,14 @@ public:
 	
 	RENDER_INPUT_SCENE();
 	
-	void SetDrawList(std::vector <DRAWABLE*> & dl_dynamic)
+	void SetDrawLists(std::vector <DRAWABLE*> & dl_dynamic, std::vector <DRAWABLE*> & dl_static)
 	{
-		drawlist_ptr = &dl_dynamic;
+		dynamic_drawlist_ptr = &dl_dynamic;
+		static_drawlist_ptr = &dl_static;
 	}
 	void DisableOrtho() {orthomode = false;}
 	void SetOrtho(const MATHVECTOR <float, 3> & neworthomin, const MATHVECTOR <float, 3> & neworthomax) {orthomode = true; orthomin = neworthomin; orthomax = neworthomax;}
-	void SetCameraInfo(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newrot, float newfov, float newlodfar, float neww, float newh);
+	FRUSTUM<float> SetCameraInfo(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newrot, float newfov, float newlodfar, float neww, float newh);
 	void SetSunDirection(const MATHVECTOR <float, 3> & newsun) {lightposition = newsun;}
 	void SetFlags(bool newshaders) {shaders=newshaders;}
 	void SetDefaultShader(SHADER_GLSL & newdefault) {shadermap.clear();shadermap.resize(SHADER_NONE, &newdefault);}
@@ -81,7 +83,8 @@ public:
 	void SetDepthModeEqual ( bool value ) {depth_mode_equal = value;}
 
 private:
-	reseatable_reference <std::vector <DRAWABLE*> > drawlist_ptr;
+	reseatable_reference <std::vector <DRAWABLE*> > dynamic_drawlist_ptr;
+	reseatable_reference <std::vector <DRAWABLE*> > static_drawlist_ptr;
 	bool last_transform_valid;
 	MATRIX4 <float> last_transform;
 	QUATERNION <float> cam_rotation; //used for the skybox effect
@@ -91,7 +94,7 @@ private:
 	MATHVECTOR <float, 3> orthomax;
 	float w, h;
 	float camfov;
-	float frustum[6][4]; //used for frustum culling
+	FRUSTUM<float> frustum; //used for frustum culling
 	float lod_far; //used for distance culling
 	bool shaders;
 	bool clearcolor, cleardepth;
@@ -104,7 +107,7 @@ private:
 	float contrast;
 	bool depth_mode_equal;
 	
-	void DrawList(GLSTATEMANAGER & glstate);
+	void DrawList(GLSTATEMANAGER & glstate, std::vector <DRAWABLE*> & drawlist, bool preculled);
 	bool FrustumCull(DRAWABLE & tocull);
 	void SelectAppropriateShader(DRAWABLE & forme);
 	void SelectFlags(DRAWABLE & forme, GLSTATEMANAGER & glstate);

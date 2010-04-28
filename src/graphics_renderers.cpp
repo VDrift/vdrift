@@ -118,6 +118,7 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate)
 	(cam_rotation).GetMatrix4(temp_matrix);
 	glLoadMatrixf(temp_matrix);
 	glTranslatef(-cam_position[0],-cam_position[1],-cam_position[2]);
+	ExtractFrustum();
 
 	//send information to the shaders
 	if (shaders)
@@ -202,31 +203,29 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate)
 		glDepthFunc( GL_EQUAL );
 	else
 		glDepthFunc( GL_LEQUAL );
-
-	DrawList(glstate);
-}
-
-void RENDER_INPUT_SCENE::DrawList(GLSTATEMANAGER & glstate)
-{
-	//std::cout << drawlist.size() << endl;
-
-	//unsigned int cullcount = 0;
-	
-	ExtractFrustum();
 	
 	last_transform_valid = false;
 	activeshader = SHADER_NONE;
+	
+	DrawList(glstate, *dynamic_drawlist_ptr, false);
+	DrawList(glstate, *static_drawlist_ptr, true);
+	
+	if (last_transform_valid)
+		glPopMatrix();
+}
 
+void RENDER_INPUT_SCENE::DrawList(GLSTATEMANAGER & glstate, std::vector <DRAWABLE*> & drawlist, bool preculled)
+{
 	unsigned int drawcount = 0;
 	unsigned int loopcount = 0;
 	
-	for (vector <DRAWABLE*>::iterator ptr = drawlist_ptr->begin(); ptr != drawlist_ptr->end(); ptr++, loopcount++)
+	for (vector <DRAWABLE*>::iterator ptr = drawlist.begin(); ptr != drawlist.end(); ptr++, loopcount++)
 	{
 		DRAWABLE * i = *ptr;
 		//if (i->IsDraw())
 		{
 			//if (loopcount < already_culled || !FrustumCull(*i))
-			if (!FrustumCull(*i))
+			if (preculled || !FrustumCull(*i))
 			{
 				drawcount++;
 				
@@ -321,9 +320,6 @@ void RENDER_INPUT_SCENE::DrawList(GLSTATEMANAGER & glstate)
 	}
 	
 	//std::cout << "drew " << drawcount << " of " << drawlist_static->size() + drawlist_dynamic->size() << " ("  << combined_drawlist_cache.size() << "/" << already_culled << ")" << std::endl;
-
-	if (last_transform_valid)
-		glPopMatrix();
 }
 
 ///returns true if the object was culled and should not be drawn
@@ -699,7 +695,7 @@ void RENDER_INPUT_SCENE::SelectTransformEnd(DRAWABLE & forme, bool need_pop)
 	}
 }
 
-void RENDER_INPUT_SCENE::SetCameraInfo(const MATHVECTOR <float, 3> & newpos,
+FRUSTUM<float> RENDER_INPUT_SCENE::SetCameraInfo(const MATHVECTOR <float, 3> & newpos,
 		const QUATERNION <float> & newrot, float newfov, float newlodfar, float neww, float newh)
 {
 	cam_position = newpos;
@@ -708,6 +704,30 @@ void RENDER_INPUT_SCENE::SetCameraInfo(const MATHVECTOR <float, 3> & newpos,
 	lod_far = newlodfar;
 	w = neww;
 	h = newh;
+	
+	glMatrixMode( GL_PROJECTION );
+	glPushMatrix();
+	glLoadIdentity();
+	if (orthomode)
+	{
+		glOrtho(orthomin[0], orthomax[0], orthomin[1], orthomax[1], orthomin[2], orthomax[2]);
+	}
+	else
+	{
+		gluPerspective( camfov, w/(float)h, 0.1f, lod_far );
+	}
+	glMatrixMode( GL_MODELVIEW );
+	glPushMatrix();
+	float temp_matrix[16];
+	(cam_rotation).GetMatrix4(temp_matrix);
+	glLoadMatrixf(temp_matrix);
+	glTranslatef(-cam_position[0],-cam_position[1],-cam_position[2]);
+	ExtractFrustum();
+	glMatrixMode( GL_PROJECTION );
+	glPopMatrix();
+	glMatrixMode( GL_MODELVIEW );
+	glPopMatrix();
+	return frustum;
 }
 
 void RENDER_INPUT_SCENE::ExtractFrustum()

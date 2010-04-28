@@ -43,7 +43,8 @@ private:
 	std::map <std::string, SHADER_GLSL> shadermap;
 	std::map <std::string, SHADER_GLSL>::iterator activeshader;
 	
-	DRAWABLE_CONTAINER <PTRVECTOR> dynamic_drawlist; //used for objects that move
+	DRAWABLE_CONTAINER <PTRVECTOR> dynamic_drawlist; //used for objects that move or change
+	STATICDRAWABLES static_drawlist; //used for objects that will never change
 	
 	//render pipeline info
 	RENDER_INPUT_SCENE renderscene;
@@ -76,9 +77,17 @@ private:
 	void EnableShaders(const std::string & shaderpath, std::ostream & info_output, std::ostream & error_output);
 	void DisableShaders();
 	void DrawBox(const MATHVECTOR <float, 3> & corner1, const MATHVECTOR <float, 3> & corner2) const;
-	void SetupCamera();
 	void RenderDrawlist(std::vector <DRAWABLE*> & drawlist,
 						RENDER_INPUT_SCENE & render_scene, 
+						RENDER_OUTPUT & render_output, 
+						std::ostream & error_output);
+	void RenderDrawlists(std::vector <DRAWABLE*> & dynamic_drawlist,
+						std::vector <DRAWABLE*> & static_drawlist,
+						RENDER_INPUT_SCENE & render_scene, 
+						RENDER_OUTPUT & render_output, 
+						std::ostream & error_output);
+	void RenderPostProcess(const std::string & shadername,
+						FBTEXTURE_GL & texture0, 
 						RENDER_OUTPUT & render_output, 
 						std::ostream & error_output);
 	
@@ -107,6 +116,7 @@ public:
 	void Deinit();
 	void BeginScene(std::ostream & error_output);
 	DRAWABLE_CONTAINER <PTRVECTOR> & GetDynamicDrawlist() {return dynamic_drawlist;}
+	void AddStaticNode(SCENENODE & node, bool clearcurrent = true);
 	void SetupScene(float fov, float new_view_distance, const MATHVECTOR <float, 3> cam_position, const QUATERNION <float> & cam_rotation,
 					const MATHVECTOR <float, 3> & dynamic_reflection_sample_pos)
 	{

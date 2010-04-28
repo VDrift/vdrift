@@ -57,12 +57,14 @@ class MATHPLANE
 	
 		inline const T & operator[](const int n) const
 		{
+			assert(n >= 0);
 			assert(n < 4);
 			return v[n];
 		}
 	
 		inline T & operator[](const int n)
 		{
+			assert(n >= 0);
 			assert(n < 4);
 			return v[n];
 		}

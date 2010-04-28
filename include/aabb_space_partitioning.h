@@ -172,6 +172,18 @@ class AABB_SPACE_PARTITIONING_NODE
 			}
 		}
 		
+		unsigned int size(unsigned int objectcount = 0) const
+		{
+			unsigned int childcount = 0;
+			
+			for (typename childrenlist_type::const_iterator i = children.begin(); i != children.end(); ++i)
+				childcount += i->size(objectcount);
+			
+			objectcount += objects.size() + childcount;
+	
+			return objectcount;
+		}
+		
 		void Optimize()
 		{
 			CollapseTo(*this);

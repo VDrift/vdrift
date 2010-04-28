@@ -5,6 +5,7 @@
 
 #include "mathvector.h"
 #include "mathplane.h"
+#include "frustum.h"
 
 template <typename T>
 class AABB
@@ -41,6 +42,14 @@ public:
 	void DebugPrint2(std::ostream & o) const
 	{
 		o << "center: " << center[0] << "," << center[1] << "," << center[2] << " size: " << size[0] << "," << size[1] << "," << size[2] << std::endl;
+	}
+	
+	void SetFromSphere(const MATHVECTOR <T, 3> & newcenter, float radius)
+	{
+		center = newcenter;
+		size.Set(radius,radius,radius);
+		size = size * 2.0;
+		pos = center - size*0.5;
 	}
 	
 	void SetFromCorners(const MATHVECTOR <T, 3> & c1, const MATHVECTOR <T, 3> & c2)
@@ -168,30 +177,7 @@ public:
 		return true;
 	}
 	
-	class FRUSTUM
-	{
-		public:
-			FRUSTUM() : planes(6) {}
-			FRUSTUM(T cfrustum[][4]) : planes(6)
-			{
-				Set(cfrustum);
-			}
-			void Set(T cfrustum[][4])
-			{
-				for (int i = 0; i < 6; i++)
-					planes[i].Set(cfrustum[i]);
-			}
-			
-			std::vector <MATHPLANE <T> > planes;
-			
-			void DebugPrint(std::ostream & output)
-			{
-				for (int i = 0; i < 6; i++)
-					output << i << ". " << planes[i] << "\n";
-			}
-	};
-	
-	bool Intersect(const FRUSTUM & frustum) const
+	bool Intersect(const FRUSTUM <T> & frustum) const
 	{
 		float rd;
 		const float bound = size.Magnitude()*0.5;
@@ -209,6 +195,9 @@ public:
 		
 		return true;
 	}
+	
+	struct INTERSECT_ALWAYS{};
+	bool Intersect(INTERSECT_ALWAYS always) const {return true;}
 };
 
 #endif

@@ -14,6 +14,8 @@
 #include "vertexarray.h"
 #include "keyed_container.h"
 #include "containeralgorithm.h"
+#include "aabb_space_partitioning.h"
+#include "frustum.h"
 
 class MODEL;
 class TEXTURE_GL;
@@ -370,28 +372,28 @@ struct DRAWABLE_CONTAINER
 	}
 	
 	/// adds elements from the first drawable container to the second
-	template <typename CONTAINERU, bool use_transform>
-	void AppendTo(CONTAINERU & dest, const MATRIX4 <float> & transform)
+	template <template <typename UU> class CONTAINERU, bool use_transform>
+	void AppendTo(DRAWABLE_CONTAINER <CONTAINERU> & dest, const MATRIX4 <float> & transform)
 	{
-		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,PTRVECTOR<DRAWABLE>,use_transform>
+		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,CONTAINERU<DRAWABLE>,use_transform>
 			(twodim, dest.twodim, transform);
-		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,PTRVECTOR<DRAWABLE>,use_transform>
+		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,CONTAINERU<DRAWABLE>,use_transform>
 			(normal_noblend, dest.normal_noblend, transform);
-		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,PTRVECTOR<DRAWABLE>,use_transform>
+		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,CONTAINERU<DRAWABLE>,use_transform>
 			(car_noblend, dest.car_noblend, transform);
-		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,PTRVECTOR<DRAWABLE>,use_transform>
+		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,CONTAINERU<DRAWABLE>,use_transform>
 			(normal_blend, dest.normal_blend, transform);
-		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,PTRVECTOR<DRAWABLE>,use_transform>
+		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,CONTAINERU<DRAWABLE>,use_transform>
 			(skybox_blend, dest.skybox_blend, transform);
-		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,PTRVECTOR<DRAWABLE>,use_transform>
+		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,CONTAINERU<DRAWABLE>,use_transform>
 			(skybox_noblend, dest.skybox_noblend, transform);
-		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,PTRVECTOR<DRAWABLE>,use_transform>
+		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,CONTAINERU<DRAWABLE>,use_transform>
 			(text, dest.text, transform);
-		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,PTRVECTOR<DRAWABLE>,use_transform>
+		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,CONTAINERU<DRAWABLE>,use_transform>
 			(particle, dest.particle, transform);
-		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,PTRVECTOR<DRAWABLE>,use_transform>
+		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,CONTAINERU<DRAWABLE>,use_transform>
 			(nocamtrans_blend, dest.nocamtrans_blend, transform);
-		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,PTRVECTOR<DRAWABLE>,use_transform>
+		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,CONTAINERU<DRAWABLE>,use_transform>
 			(nocamtrans_noblend, dest.nocamtrans_noblend, transform);
 	}
 	
@@ -449,19 +451,6 @@ public:
 	void Clear() {rotation.LoadIdentity();translation.Set(0.0f);}
 };
 
-class STATICDRAWABLES
-{
-	private:
-		typedef MATRIX4<float> MAT4;
-		DRAWABLE_CONTAINER <keyed_container> drawlist;
-		SCENETRANSFORM transform;
-		
-	public:
-		DRAWABLE_CONTAINER <keyed_container> & GetDrawlist() {return drawlist;}
-		const DRAWABLE_CONTAINER <keyed_container> & GetDrawlist() const {return drawlist;}
-		SCENETRANSFORM & GetTransform() {return transform;}
-};
-
 class SCENENODE
 {
 private:
@@ -485,7 +474,6 @@ public:
 	const SCENETRANSFORM & GetTransform() const {return transform;}
 	unsigned int Nodes() const {return childlist.size();}
 	unsigned int Drawables() const {return drawlist.size();}
-	void Traverse(DRAWABLE_CONTAINER <PTRVECTOR> & drawlist_output, const MAT4 & prev_transform);
 	void Clear() {drawlist.clear();childlist.clear();}
 	void Delete(keyed_container <SCENENODE>::handle handle) {childlist.erase(handle);}
 	VEC3 TransformIntoWorldSpace() const {VEC3 zero;return TransformIntoWorldSpace(zero);}
@@ -494,6 +482,35 @@ public:
 	void SetChildVisibility(bool newvis);
 	void SetChildAlpha(float a);
 	void DebugPrint(std::ostream & out, int curdepth = 0);
+	
+	template <template <typename U> class T>
+	void Traverse(DRAWABLE_CONTAINER <T> & drawlist_output, const MAT4 & prev_transform)
+	{
+		if (drawlist.empty() && childlist.empty())
+			return;
+		
+		MAT4 this_transform(prev_transform);
+		
+		bool identitytransform = transform.IsIdentityTransform();
+		if (!identitytransform)
+		{
+			transform.GetRotation().GetMatrix4(this_transform);
+			this_transform.Translate(transform.GetTranslation()[0], transform.GetTranslation()[1], transform.GetTranslation()[2]);
+			this_transform = this_transform.Multiply(prev_transform);
+		}
+		
+		if (this_transform != cached_transform)
+			drawlist.AppendTo<T,true>(drawlist_output, this_transform);
+		else
+			drawlist.AppendTo<T,false>(drawlist_output, this_transform);
+		
+		for (keyed_container <SCENENODE>::iterator i = childlist.begin(); i != childlist.end(); ++i)
+		{
+			i->Traverse(drawlist_output, this_transform);
+		}
+		
+		cached_transform = this_transform;
+	}
 	
 	/// traverse all drawable containers applying the specified functor.
 	/// the functor should take a drawable container reference as an argument.
@@ -520,6 +537,60 @@ public:
 			i->ApplyDrawableFunctor(functor);
 		}
 	}
+};
+
+template <typename T>
+class AABB_SPACE_PARTITIONING_NODE_ADAPTER
+{
+friend class STATICDRAWABLES;
+public:
+	void push_back(T * drawable)
+	{
+		MATHVECTOR <float, 3> objpos(drawable->GetObjectCenter());
+		drawable->GetTransform().TransformVectorOut(objpos[0],objpos[1],objpos[2]);
+		float radius = drawable->GetRadius();
+		AABB <float> box;
+		box.SetFromSphere(objpos, radius);
+		spacetree.Add(drawable, box);
+	}
+	unsigned int size() const {return spacetree.size();} ///< this is slow!
+	void clear() {spacetree.Clear();}
+	void Optimize() {spacetree.Optimize();}
+	template <typename U>
+	void Query(const U & object, std::vector <T*> & output) {spacetree.Query(object, output);}
+	
+private:
+	AABB_SPACE_PARTITIONING_NODE <T*> spacetree;
+};
+
+class STATICDRAWABLES
+{
+private:
+	struct OptimizeFunctor
+	{
+		template <typename T>
+		void operator()(AABB_SPACE_PARTITIONING_NODE_ADAPTER <T> & container)
+		{
+			container.Optimize();
+		}
+	};
+	
+public:
+	void Generate(SCENENODE & node, bool clearfirst = true)
+	{
+		if (clearfirst)
+			drawables.clear();
+		
+		MATRIX4 <float> identity;
+		node.Traverse(drawables, identity);
+		
+		drawables.ForEach(OptimizeFunctor());
+	}
+	
+	DRAWABLE_CONTAINER <AABB_SPACE_PARTITIONING_NODE_ADAPTER> & GetDrawlist() {return drawables;}
+	
+private:
+	DRAWABLE_CONTAINER <AABB_SPACE_PARTITIONING_NODE_ADAPTER> drawables;
 };
 
 #endif

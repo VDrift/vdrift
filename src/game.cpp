@@ -530,7 +530,7 @@ void GAME::BeginDraw()
 	TraverseScene<true>(debugnode, graphics.GetDynamicDrawlist());
 	TraverseScene<false>(gui.GetNode(), graphics.GetDynamicDrawlist());
 	TraverseScene<false>(track.GetRacinglineNode(), graphics.GetDynamicDrawlist());
-	TraverseScene<false>(track.GetTrackNode(), graphics.GetDynamicDrawlist());
+	//TraverseScene<false>(track.GetTrackNode(), graphics.GetDynamicDrawlist());
 	TraverseScene<false>(hud.GetNode(), graphics.GetDynamicDrawlist());
 	TraverseScene<false>(trackmap.GetNode(), graphics.GetDynamicDrawlist());
 	TraverseScene<false>(inputgraph.GetNode(), graphics.GetDynamicDrawlist());
@@ -1801,9 +1801,8 @@ bool GAME::LoadTrack(const std::string & trackname)
 	collision.SetTrack(&track);
 	collision.DebugPrint(info_output);
 	
-	// TODO: reimplement static drawlist
-	//CollapseSceneToDrawlistmap(*tracknode, graphics.GetStaticDrawlistmap(), true);
-	//graphics.OptimizeStaticDrawlistmap();
+	//build static drawlist
+	graphics.AddStaticNode(track.GetTrackNode());
 
 	return true;
 }

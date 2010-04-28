@@ -22,34 +22,6 @@ typedef MATRIX4<float> MAT4;
 typedef MATHVECTOR<float,3> VEC3;
 typedef QUATERNION<float> QUAT;
 
-void SCENENODE::Traverse(DRAWABLE_CONTAINER <PTRVECTOR> & drawlist_output, const MAT4 & prev_transform)
-{
-	if (drawlist.empty() && childlist.empty())
-		return;
-	
-	MAT4 this_transform(prev_transform);
-	
-	bool identitytransform = transform.IsIdentityTransform();
-	if (!identitytransform)
-	{
-		transform.GetRotation().GetMatrix4(this_transform);
-		this_transform.Translate(transform.GetTranslation()[0], transform.GetTranslation()[1], transform.GetTranslation()[2]);
-		this_transform = this_transform.Multiply(prev_transform);
-	}
-	
-	if (this_transform != cached_transform)
-		drawlist.AppendTo<DRAWABLE_CONTAINER<PTRVECTOR>,true>(drawlist_output, this_transform);
-	else
-		drawlist.AppendTo<DRAWABLE_CONTAINER<PTRVECTOR>,false>(drawlist_output, this_transform);
-	
-	for (keyed_container <SCENENODE>::iterator i = childlist.begin(); i != childlist.end(); ++i)
-	{
-		i->Traverse(drawlist_output, this_transform);
-	}
-	
-	cached_transform = this_transform;
-}
-
 VEC3 SCENENODE::TransformIntoWorldSpace(const VEC3 & localspace) const
 {
 	VEC3 out(localspace);

@@ -508,32 +508,6 @@ void GRAPHICS_SDLGL::EndScene(std::ostream & error_output)
 	OPENGL_UTILITY::CheckForOpenGLErrors("SDL_GL buffer swap", error_output);
 }
 
-void GRAPHICS_SDLGL::SetupCamera()
-{
-	glMatrixMode( GL_PROJECTION );
-	glLoadIdentity();
-	//gluPerspective( camfov, w/(float)h, 0.1f, 10000.0f );
-	gluPerspective( camfov, w/(float)h, 0.1f, 10000.0f );
-	glMatrixMode( GL_MODELVIEW );
-	float temp_matrix[16];
-	(camorient).GetMatrix4(temp_matrix);
-	glLoadMatrixf(temp_matrix);
-	glTranslatef(-campos[0],-campos[1],-campos[2]);
-	//game.cam.ExtractFrustum();
-}
-
-/*void GRAPHICS_SDLGL::GenerateCombinedDrawlistMap()
-{
-	for (std::map <DRAWABLE_FILTER *, std::vector <SCENEDRAW> >::iterator i = combined_drawlist_map.begin(); i != combined_drawlist_map.end(); i++)
-	{
-		i->second.resize(0);
-		std::vector <SCENEDRAW> & staticdraw = static_drawlist_map[i->first];
-		std::vector <SCENEDRAW> & dynamicdraw = dynamic_drawlist_map[i->first];
-		calgo::copy(staticdraw,std::back_inserter(i->second));
-		calgo::copy(dynamicdraw,std::back_inserter(i->second));
-	}
-}*/
-
 bool SortDraworder(DRAWABLE * d1, DRAWABLE * d2)
 {
 	assert(d1 && d2);
@@ -554,16 +528,28 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 	//pre-process the drawlists
 	std::sort(dynamic_drawlist.twodim.begin(),dynamic_drawlist.twodim.end(),&SortDraworder);
 
+	//do fast culling for the normal camera frustum
+	FRUSTUM <float> normalcam = renderscene.SetCameraInfo(campos, camorient, camfov, view_distance, w, h);
+	DRAWABLE_CONTAINER <PTRVECTOR> normalcam_static_drawlist;
+	static_drawlist.GetDrawlist().normal_noblend.Query(normalcam, normalcam_static_drawlist.normal_noblend);
+	//std::cout << "Fast cull from " << static_drawlist.GetDrawlist().normal_noblend.size() << " to " << normalcam_static_drawlist.normal_noblend.size() << std::endl;
+	static_drawlist.GetDrawlist().normal_blend.Query(normalcam, normalcam_static_drawlist.normal_blend);
+	//note that all skybox objects go in, no frustum culling for them
+	static_drawlist.GetDrawlist().skybox_blend.Query(AABB<float>::INTERSECT_ALWAYS(), normalcam_static_drawlist.skybox_blend);
+	static_drawlist.GetDrawlist().skybox_noblend.Query(AABB<float>::INTERSECT_ALWAYS(), normalcam_static_drawlist.skybox_noblend);
+	
 	//shader path
 	if (using_shaders)
 	{
 		//construct light position
 		MATHVECTOR <float, 3> lightposition(0,0,1);
 		(-lightdirection).RotateVector(lightposition);
-
+		
 		//shadow pre-passes
 		if (shadows)
 		{
+			DRAWABLE_CONTAINER <PTRVECTOR> specialcam_static_drawlist;
+			
 			int csm_count = 0;
 			std::vector <MATRIX4 <float> > shadow_clipmat(shadow_depthtexturelist.size()); //hold the clip matrices for the shadow maps so we can send to the "full" shader later
 			for (std::list <RENDER_OUTPUT>::iterator i = shadow_depthtexturelist.begin(); i != shadow_depthtexturelist.end(); ++i,++csm_count)
@@ -581,6 +567,7 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 				float si = (csm_count+1.0)/shadow_depthtexturelist.size();
 				float shadow_radius = lambda*(nd*powf(fd/nd,si))+(1.0-lambda)*(nd+(fd-nd)*si);*/
 
+				// setup the camera
 				MATHVECTOR <float, 3> shadowbox(1,1,1);
 				shadowbox = shadowbox * (shadow_radius*sqrt(2.0));
 				MATHVECTOR <float, 3> shadowoffset(0,0,-1);
@@ -589,7 +576,11 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 				//if (csm_count == 1) std::cout << shadowoffset << std::endl;
 				shadowbox[2] += 60.0;
 				renderscene.SetOrtho(-shadowbox, shadowbox);
-				renderscene.SetCameraInfo(campos+shadowoffset, lightdirection, camfov, 10000.0, w, h);
+				FRUSTUM <float> frustum = renderscene.SetCameraInfo(campos+shadowoffset, lightdirection, camfov, 10000.0, w, h);
+				
+				// do fast culling
+				specialcam_static_drawlist.clear();
+				static_drawlist.GetDrawlist().normal_noblend.Query(frustum, specialcam_static_drawlist.normal_noblend);
 
 				#ifdef _SHADOWMAP_DEBUG_
 				renderscene.SetClear(true, true);
@@ -601,7 +592,7 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 				else
 					renderscene.SetDefaultShader(shadermap["depthgen"]);
 				
-				RenderDrawlist(dynamic_drawlist.normal_noblend, renderscene, *i, error_output);
+				RenderDrawlists(dynamic_drawlist.normal_noblend, specialcam_static_drawlist.normal_noblend, renderscene, *i, error_output);
 				RenderDrawlist(dynamic_drawlist.car_noblend, renderscene, *i, error_output);
 				
 				//extract matrices for shadowing.  this is possible because the Render function for RENDER_INPUT_SCENE does not pop matrices at the end
@@ -646,12 +637,12 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 			
 			renderscene.SetCameraInfo(campos, camorient, camfov, 10000.0, w, h); //use very high draw distance for skyboxes
 			renderscene.SetClear(false, true);
-			RenderDrawlist(dynamic_drawlist.skybox_noblend, renderscene, edgecontrastenhancement_depths, error_output);
+			RenderDrawlists(dynamic_drawlist.skybox_noblend, normalcam_static_drawlist.skybox_noblend, renderscene, edgecontrastenhancement_depths, error_output);
 			renderscene.SetClear(false, false);
-			RenderDrawlist(dynamic_drawlist.skybox_blend, renderscene, edgecontrastenhancement_depths, error_output);
+			RenderDrawlists(dynamic_drawlist.skybox_blend, normalcam_static_drawlist.skybox_blend, renderscene, edgecontrastenhancement_depths, error_output);
 			
 			renderscene.SetCameraInfo(campos, camorient, camfov, view_distance, w, h);
-			RenderDrawlist(dynamic_drawlist.normal_noblend, renderscene, edgecontrastenhancement_depths, error_output);
+			RenderDrawlists(dynamic_drawlist.normal_noblend, normalcam_static_drawlist.normal_noblend, renderscene, edgecontrastenhancement_depths, error_output);
 			RenderDrawlist(dynamic_drawlist.car_noblend, renderscene, edgecontrastenhancement_depths, error_output);
 			
 			//load the texture
@@ -669,6 +660,8 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 			FBTEXTURE_GL & reflection_fbo = dynamic_reflection.RenderToFBO();
 			
 			const float pi = 3.141593;
+			
+			DRAWABLE_CONTAINER <PTRVECTOR> specialcam_static_drawlist;
 			
 			for (int i = 0; i < 6; i++)
 			{
@@ -725,11 +718,17 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 				renderscene.SetDefaultShader(shadermap["simple"]);
 				renderscene.SetCameraInfo(dynamic_reflection_sample_position, orient, fov, 10000.0, rw, rh); //use very high draw distance for skyboxes
 				renderscene.SetClear(true, true);
-				RenderDrawlist(dynamic_drawlist.skybox_noblend, renderscene, dynamic_reflection, error_output);
+				RenderDrawlists(dynamic_drawlist.skybox_noblend, normalcam_static_drawlist.skybox_noblend, renderscene, dynamic_reflection, error_output);
 				renderscene.SetClear(false, false);
-				RenderDrawlist(dynamic_drawlist.skybox_blend, renderscene, dynamic_reflection, error_output);
-				renderscene.SetCameraInfo(dynamic_reflection_sample_position, orient, fov, 100.0, rw, rh); //use a smaller draw distance than normal
-				RenderDrawlist(dynamic_drawlist.normal_noblend, renderscene, dynamic_reflection, error_output);
+				RenderDrawlists(dynamic_drawlist.skybox_blend, normalcam_static_drawlist.skybox_blend, renderscene, dynamic_reflection, error_output);
+				
+				// do fast culling
+				FRUSTUM <float> frustum = renderscene.SetCameraInfo(dynamic_reflection_sample_position, orient, fov, 100.0, rw, rh); //use a smaller draw distance than normal
+				specialcam_static_drawlist.clear();
+				static_drawlist.GetDrawlist().normal_noblend.Query(frustum, specialcam_static_drawlist.normal_noblend);
+				
+				// continue rendering
+				RenderDrawlists(dynamic_drawlist.normal_noblend, specialcam_static_drawlist.normal_noblend, renderscene, dynamic_reflection, error_output);
 			}
 			
 			OPENGL_UTILITY::CheckForOpenGLErrors("reflection map generation: end", error_output);
@@ -744,10 +743,8 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 		renderscene.SetShader(RENDER_INPUT_SCENE::SHADER_SIMPLE, shadermap["simple"]);
 		renderscene.SetShader(RENDER_INPUT_SCENE::SHADER_SKYBOX, shadermap["less_simple"]);
 		renderscene.SetShader(RENDER_INPUT_SCENE::SHADER_FULL, shadermap["full_noblend"]);
-		//renderscene.SetShader(RENDER_INPUT_SCENE::SHADER_FULLBLEND, shadermap["full"]);
 
 		renderscene.SetCameraInfo(campos, camorient, camfov, 10000.0, w, h); //use very high draw distance for skyboxes
-		//std::reverse(drawlist_map[&skyboxes].begin(), drawlist_map[&skyboxes].end());
 
 		renderscene.SetClear(true, true);
 
@@ -756,10 +753,9 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 		if (bloom)
 			scenebuffer = full_scene_buffer;
 
-		RenderDrawlist(dynamic_drawlist.skybox_noblend, renderscene, *scenebuffer, error_output);
+		RenderDrawlists(dynamic_drawlist.skybox_noblend, normalcam_static_drawlist.skybox_noblend, renderscene, *scenebuffer, error_output);
 		renderscene.SetClear(false, true);
-		RenderDrawlist(dynamic_drawlist.skybox_blend, renderscene, *scenebuffer, error_output);
-		renderscene.SetCameraInfo(campos, camorient, camfov, view_distance, w, h);
+		RenderDrawlists(dynamic_drawlist.skybox_blend, normalcam_static_drawlist.skybox_blend, renderscene, *scenebuffer, error_output);
 
 		//debug shadow camera positioning
 		/*int csm_count = 0;
@@ -776,40 +772,30 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 		renderscene.SetCameraInfo(campos+shadowoffset, ldir, camfov, 10000.0, w, h);*/
 
 		renderscene.SetClear(false, true);
-		RenderDrawlist(dynamic_drawlist.normal_noblend, renderscene, *scenebuffer, error_output);
+		//RenderDrawlist(dynamic_drawlist.normal_noblend, renderscene, *scenebuffer, error_output);
+		RenderDrawlists(dynamic_drawlist.normal_noblend, normalcam_static_drawlist.normal_noblend, renderscene, *scenebuffer, error_output);
 		renderscene.SetClear(false, false);
 		RenderDrawlist(dynamic_drawlist.car_noblend, renderscene, *scenebuffer, error_output);
-		RenderDrawlist(dynamic_drawlist.normal_blend, renderscene, *scenebuffer, error_output);
+		RenderDrawlists(dynamic_drawlist.normal_blend, normalcam_static_drawlist.normal_blend, renderscene, *scenebuffer, error_output);
 		RenderDrawlist(dynamic_drawlist.particle, renderscene, *scenebuffer, error_output);
 		
 		if (bloom) //do bloom post-processing
 		{
-			RENDER_INPUT_POSTPROCESS bloom_postprocess;
-
 			//create a map of highlights
-			bloom_postprocess.SetShader(&shadermap["bloompass"]);
-			bloom_postprocess.SetSourceTexture(full_scene_buffer.RenderToFBO());
-			//Render(&bloom_postprocess, final, error_output); //testing bloom processing
-			Render(&bloom_postprocess, bloom_buffer, error_output);
+			RenderPostProcess("bloompass", full_scene_buffer.RenderToFBO(), bloom_buffer, error_output);
 
 			//blur horizontally
-			bloom_postprocess.SetShader(&shadermap["gaussian_blur_horizontal"]);
-			bloom_postprocess.SetSourceTexture(bloom_buffer.RenderToFBO());
-			Render(&bloom_postprocess, blur_buffer, error_output);
+			RenderPostProcess("gaussian_blur_horizontal", bloom_buffer.RenderToFBO(), blur_buffer, error_output);
 
 			//blur vertically and ping-pong back to the bloom buffer
-			bloom_postprocess.SetShader(&shadermap["gaussian_blur_vertical"]);
-			bloom_postprocess.SetSourceTexture(blur_buffer.RenderToFBO());
-			Render(&bloom_postprocess, bloom_buffer, error_output);
-
+			RenderPostProcess("gaussian_blur_vertical", blur_buffer.RenderToFBO(), bloom_buffer, error_output);
+			
 			//composite the final results
-			bloom_postprocess.SetShader(&shadermap["bloomcomposite"]);
-			bloom_postprocess.SetSourceTexture(full_scene_buffer.RenderToFBO());
 			glActiveTexture(GL_TEXTURE1);
 			glEnable(GL_TEXTURE_2D);
 			bloom_buffer.RenderToFBO().Activate();
 			glActiveTexture(GL_TEXTURE0);
-			Render(&bloom_postprocess, final, error_output);
+			RenderPostProcess("bloomcomposite", full_scene_buffer.RenderToFBO(), final, error_output);
 		}
 
 		//debug shadow texture drawing
@@ -850,17 +836,17 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 		// render skybox
 		renderscene.SetClear(false, true);
 		renderscene.SetCameraInfo(campos, camorient, camfov, 10000.0, w, h); //use very high draw distance for skyboxes
-		RenderDrawlist(dynamic_drawlist.skybox_noblend, renderscene, framebuffer, error_output);
+		RenderDrawlists(dynamic_drawlist.skybox_noblend, normalcam_static_drawlist.skybox_noblend, renderscene, framebuffer, error_output);
 		renderscene.SetClear(false, true);
-		RenderDrawlist(dynamic_drawlist.skybox_blend, renderscene, framebuffer, error_output);
+		RenderDrawlists(dynamic_drawlist.skybox_blend, normalcam_static_drawlist.skybox_blend, renderscene, framebuffer, error_output);
 
 		// render most 3d stuff
 		renderscene.SetClear(false, true);
 		renderscene.SetCameraInfo(campos, camorient, camfov, view_distance, w, h);
-		RenderDrawlist(dynamic_drawlist.normal_noblend, renderscene, framebuffer, error_output);
+		RenderDrawlists(dynamic_drawlist.normal_noblend, normalcam_static_drawlist.normal_noblend, renderscene, framebuffer, error_output);
 		renderscene.SetClear(false, false);
 		RenderDrawlist(dynamic_drawlist.car_noblend, renderscene, framebuffer, error_output);
-		RenderDrawlist(dynamic_drawlist.normal_blend, renderscene, framebuffer, error_output);
+		RenderDrawlists(dynamic_drawlist.normal_blend, normalcam_static_drawlist.normal_blend, renderscene, framebuffer, error_output);
 		RenderDrawlist(dynamic_drawlist.particle, renderscene, framebuffer, error_output);
 		RenderDrawlist(dynamic_drawlist.twodim, renderscene, framebuffer, error_output);
 		RenderDrawlist(dynamic_drawlist.text, renderscene, framebuffer, error_output);
@@ -879,8 +865,32 @@ void GRAPHICS_SDLGL::RenderDrawlist(std::vector <DRAWABLE*> & drawlist,
 						RENDER_OUTPUT & render_output, 
 						std::ostream & error_output)
 {
-	render_scene.SetDrawList(drawlist);
+	std::vector <DRAWABLE*> empty;
+	render_scene.SetDrawLists(drawlist, empty);
 	Render(&render_scene, render_output, error_output);
+}
+
+void GRAPHICS_SDLGL::RenderDrawlists(std::vector <DRAWABLE*> & dynamic_drawlist,
+						std::vector <DRAWABLE*> & static_drawlist,
+						RENDER_INPUT_SCENE & render_scene, 
+						RENDER_OUTPUT & render_output, 
+						std::ostream & error_output)
+{
+	render_scene.SetDrawLists(dynamic_drawlist, static_drawlist);
+	Render(&render_scene, render_output, error_output);
+}
+
+void GRAPHICS_SDLGL::RenderPostProcess(const std::string & shadername,
+						FBTEXTURE_GL & texture0, 
+						RENDER_OUTPUT & render_output, 
+						std::ostream & error_output)
+{
+	RENDER_INPUT_POSTPROCESS postprocess;
+	std::map <std::string, SHADER_GLSL>::iterator s = shadermap.find(shadername);
+	assert(s != shadermap.end());
+	postprocess.SetShader(&s->second);
+	postprocess.SetSourceTexture(texture0);
+	Render(&postprocess, render_output, error_output);
 }
 
 void GRAPHICS_SDLGL::DrawBox(const MATHVECTOR <float, 3> & corner1, const MATHVECTOR <float, 3> & corner2) const
@@ -955,6 +965,11 @@ void GRAPHICS_SDLGL::Render(RENDER_INPUT * input, RENDER_OUTPUT & output, std::o
 	output.End(error_output);
 
 	OPENGL_UTILITY::CheckForOpenGLErrors("render output end", error_output);
+}
+
+void GRAPHICS_SDLGL::AddStaticNode(SCENENODE & node, bool clearcurrent)
+{
+	static_drawlist.Generate(node, clearcurrent);
 }
 
 void GRAPHICS_SDLGL::Screenshot(std::string filename)
