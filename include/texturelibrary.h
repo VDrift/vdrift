@@ -3,6 +3,7 @@
 
 #include <string>
 #include <iostream>
+
 #include "texture.h"
 #include "reseatable_reference.h"
 

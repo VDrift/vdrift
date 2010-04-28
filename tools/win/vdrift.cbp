@@ -391,9 +391,12 @@
 		<Unit filename="..\..\include\fbtexture.h" />
 		<Unit filename="..\..\include\font.h" />
 		<Unit filename="..\..\include\forcefeedback.h" />
+		<Unit filename="..\..\include\frustum.h" />
 		<Unit filename="..\..\include\game.h" />
 		<Unit filename="..\..\include\game_render.h" />
+		<Unit filename="..\..\include\glstatemanager.h" />
 		<Unit filename="..\..\include\graphics.h" />
+		<Unit filename="..\..\include\graphics_renderers.h" />
 		<Unit filename="..\..\include\gui.h" />
 		<Unit filename="..\..\include\guioption.h" />
 		<Unit filename="..\..\include\guipage.h" />
@@ -403,6 +406,7 @@
 		<Unit filename="..\..\include\joepack.h" />
 		<Unit filename="..\..\include\joeserialize.h" />
 		<Unit filename="..\..\include\k1999.h" />
+		<Unit filename="..\..\include\keyed_container.h" />
 		<Unit filename="..\..\include\linearframe.h" />
 		<Unit filename="..\..\include\linearinterp.h" />
 		<Unit filename="..\..\include\loadingscreen.h" />
@@ -446,6 +450,8 @@
 		<Unit filename="..\..\include\suspensionbumpdetection.h" />
 		<Unit filename="..\..\include\text_draw.h" />
 		<Unit filename="..\..\include\texture.h" />
+		<Unit filename="..\..\include\texture_interface.h" />
+		<Unit filename="..\..\include\textureinfo.h" />
 		<Unit filename="..\..\include\texturelibrary.h" />
 		<Unit filename="..\..\include\timer.h" />
 		<Unit filename="..\..\include\tobullet.h" />
@@ -495,6 +501,7 @@
 		<Unit filename="..\..\src\game.cpp" />
 		<Unit filename="..\..\src\game_render.cpp" />
 		<Unit filename="..\..\src\graphics.cpp" />
+		<Unit filename="..\..\src\graphics_renderers.cpp" />
 		<Unit filename="..\..\src\gui.cpp" />
 		<Unit filename="..\..\src\guipage.cpp" />
 		<Unit filename="..\..\src\httpget.cpp" />
@@ -502,11 +509,14 @@
 		<Unit filename="..\..\src\joepack.cpp" />
 		<Unit filename="..\..\src\joeserialize.cpp" />
 		<Unit filename="..\..\src\k1999.cpp" />
+		<Unit filename="..\..\src\keyed_container.cpp" />
 		<Unit filename="..\..\src\linearframe.cpp" />
 		<Unit filename="..\..\src\linearinterp.cpp" />
 		<Unit filename="..\..\src\main.cpp" />
 		<Unit filename="..\..\src\mathplane.cpp" />
 		<Unit filename="..\..\src\mathvector.cpp" />
+		<Unit filename="..\..\src\matrix4.cpp" />
+		<Unit filename="..\..\src\mesh_gen.cpp" />
 		<Unit filename="..\..\src\model.cpp" />
 		<Unit filename="..\..\src\model_joe03.cpp" />
 		<Unit filename="..\..\src\model_obj.cpp" />

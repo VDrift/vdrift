@@ -1,14 +1,8 @@
 #include "texture.h"
 
 #include <string>
-using std::string;
-
 #include <iostream>
-using std::cerr;
-using std::endl;
-
 #include <vector>
-
 #include <cassert>
 
 #ifdef __APPLE__
@@ -129,7 +123,7 @@ void PreMultiplyAlpha(SDL_Surface * surface)
 
 bool TEXTURE_GL::LoadCubeVerticalCross(std::ostream & error_output)
 {
-	string cubefile = texture_info.GetName();
+	std::string cubefile = texture_info.GetName();
 
 	GLuint new_handle = 0;
 	glGenTextures(1, &new_handle);
@@ -164,7 +158,7 @@ bool TEXTURE_GL::LoadCubeVerticalCross(std::ostream & error_output)
 					format = GL_RGBA;
 					break;
 				default:
-					error_output << "Texture has unknown format: " + texture_info.GetName() << endl;
+					error_output << "Texture has unknown format: " + texture_info.GetName() << std::endl;
 					return false;
 					break;
 			}
@@ -217,7 +211,7 @@ bool TEXTURE_GL::LoadCubeVerticalCross(std::ostream & error_output)
 			}
 			else
 			{
-				error_output << "Texture has unknown format: " + texture_info.GetName() << endl;
+				error_output << "Texture has unknown format: " + texture_info.GetName() << std::endl;
 				return false;
 			}
 
@@ -262,7 +256,7 @@ bool TEXTURE_GL::LoadCubeVerticalCross(std::ostream & error_output)
 	}
 	else
 	{
-		error_output << "Error loading texture file: " + texture_info.GetName() << endl;
+		error_output << "Error loading texture file: " + texture_info.GetName() << std::endl;
 	}
 
 	if (texture_surface)
@@ -296,7 +290,7 @@ bool TEXTURE_GL::LoadCube(std::ostream & error_output)
 		return LoadCubeVerticalCross(error_output);
 	}
 
-	string cubefiles[6];
+	std::string cubefiles[6];
 
 	cubefiles[0] = texture_info.GetName()+"-xp.png";
 	cubefiles[1] = texture_info.GetName()+"-xn.png";
@@ -323,7 +317,7 @@ bool TEXTURE_GL::LoadCube(std::ostream & error_output)
 			//store dimensions
 			if (i != 0 && (w != (unsigned int) texture_surface->w || h != (unsigned int) texture_surface->h))
 			{
-				error_output << "Cube map sides aren't equal sizes" << endl;
+				error_output << "Cube map sides aren't equal sizes" << std::endl;
 				return false;
 			}
 			w = texture_surface->w;
@@ -346,14 +340,14 @@ bool TEXTURE_GL::LoadCube(std::ostream & error_output)
 					format = GL_RGBA;
 					break;
 				default:
-					error_output << "Texture has unknown format: " + texture_info.GetName() + " (" + cubefiles[i] + ")" << endl;
+					error_output << "Texture has unknown format: " + texture_info.GetName() + " (" + cubefiles[i] + ")" << std::endl;
 					return false;
 					break;
 			}
 
 			if (format != GL_RGB)
 			{
-				error_output << "Cube map texture format isn't GL_RGB (this causes problems for some reason): " + texture_info.GetName() + " (" + cubefiles[i] + ")" << endl;
+				error_output << "Cube map texture format isn't GL_RGB (this causes problems for some reason): " + texture_info.GetName() + " (" + cubefiles[i] + ")" << std::endl;
 				return false;
 			}
 
@@ -374,7 +368,7 @@ bool TEXTURE_GL::LoadCube(std::ostream & error_output)
 				targetparam = GL_TEXTURE_CUBE_MAP_POSITIVE_Z_ARB;
 			else
 			{
-				error_output << "Iterated too far: " + texture_info.GetName() + " (" + cubefiles[i] + ")" << endl;
+				error_output << "Iterated too far: " + texture_info.GetName() + " (" + cubefiles[i] + ")" << std::endl;
 				assert(0);
 			}
 
@@ -382,7 +376,7 @@ bool TEXTURE_GL::LoadCube(std::ostream & error_output)
 		}
 		else
 		{
-			error_output << "Error loading texture file: " + texture_info.GetName() + " (" + cubefiles[i] + ")" << endl;
+			error_output << "Error loading texture file: " + texture_info.GetName() + " (" + cubefiles[i] + ")" << std::endl;
 			return false;
 		}
 
@@ -413,13 +407,13 @@ bool TEXTURE_GL::Load(std::ostream & error_output, const std::string & texsize)
 {
 	if (texture_info.GetName().empty() && !texture_info.GetSurface())
 	{
-		 error_output << "Tried to load a texture with an empty name" << endl;
+		 error_output << "Tried to load a texture with an empty name" << std::endl;
 		 return false;
 	}
 
 	if (loaded)
 	{
-		error_output << "Tried to double load texture " << texture_info.GetName() << endl;
+		error_output << "Tried to double load texture " << texture_info.GetName() << std::endl;
 		return false;
 	}
 
@@ -442,7 +436,7 @@ bool TEXTURE_GL::Load(std::ostream & error_output, const std::string & texsize)
 		orig_surface = IMG_Load(filepath.c_str());
 	}
 
-	string texture_size (texsize);
+	std::string texture_size (texsize);
 
 	SDL_Surface * texture_surface(orig_surface);
 
@@ -614,7 +608,7 @@ bool TEXTURE_GL::Load(std::ostream & error_output, const std::string & texsize)
 	}
 	else
 	{
-		error_output << "Error loading texture file: " + texture_info.GetName() << endl;
+		error_output << "Error loading texture file: " + texture_info.GetName() << std::endl;
 		return false;
 	}
 
