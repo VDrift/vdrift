@@ -332,7 +332,14 @@ protected:
 	SOUNDSOURCE grasssound[4]; //added grass & gravel
 	SOUNDSOURCE gravelsound[4];
 	SOUNDSOURCE crashsound;
+	SOUNDSOURCE gearsound;
+	SOUNDSOURCE brakesound;
+	SOUNDSOURCE handbrakesound;
 	SOUNDSOURCE roadnoise;
+	
+	int gearsound_check;
+	bool brakesound_check;
+	bool handbrakesound_check;
 	
 	CAMERA_SYSTEM cameras;
 	

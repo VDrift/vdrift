@@ -282,6 +282,9 @@ bool GAME::InitializeSound()
 		if (!generic_sounds.Load("bump_rear", sound.GetDeviceInfo(), error_output)) return false;
 		if (!generic_sounds.Load("wind", sound.GetDeviceInfo(), error_output)) return false;
 		if (!generic_sounds.Load("crash", sound.GetDeviceInfo(), error_output)) return false;
+		if (!generic_sounds.Load("gear", sound.GetDeviceInfo(), error_output)) return false; //TODO: Make this "per car", using carpath+"/"+carname+ in a correct form
+		if (!generic_sounds.Load("brake", sound.GetDeviceInfo(), error_output)) return false; //TODO: Make this "per car", using carpath+"/"+carname+ in a correct form
+		if (!generic_sounds.Load("handbrake", sound.GetDeviceInfo(), error_output)) return false; //TODO: Make this "per car", using carpath+"/"+carname+ in a correct form
 		
 		sound.SetMasterVolume(settings.GetMasterVolume());
 		sound.Pause(false);

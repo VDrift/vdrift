@@ -721,6 +721,7 @@ class TextInputSerializer : public SerializerInput
 		TreeMap <std::string> parsed_data_tree_;
 		std::deque <std::string> serialization_location_;
 		std::ostream * error_output_;
+		bool allow_missing_;
 		
 		void ConsumeWhitespace(std::istream & in) const
 		{
@@ -783,7 +784,7 @@ class TextInputSerializer : public SerializerInput
 		{
 			serialization_location_.push_back(name);
 			std::string string_representation;
-			if (!parsed_data_tree_.GetLeaf(serialization_location_, string_representation))
+			if (!parsed_data_tree_.GetLeaf(serialization_location_, string_representation) && !allow_missing_)
 			{
 				if (error_output_)
 				{
@@ -806,7 +807,7 @@ class TextInputSerializer : public SerializerInput
 		bool ReadStringData(const std::string & name, std::string & i)
 		{
 			serialization_location_.push_back(name);
-			if (!parsed_data_tree_.GetLeaf(serialization_location_, i))
+			if (!parsed_data_tree_.GetLeaf(serialization_location_, i) && !allow_missing_)
 			{
 				if (error_output_)
 				{
@@ -842,6 +843,11 @@ class TextInputSerializer : public SerializerInput
 		void set_error_output(std::ostream & value)
 		{
 			error_output_ = &value;
+		}
+		
+		void set_allow_missing(bool allow_missing)
+		{
+			allow_missing_ = allow_missing;
 		}
 		
 		///this must be done before an object is serialized. returns true on success

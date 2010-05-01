@@ -26,10 +26,13 @@ bool isnan(double number) {return (number != number);}
 #endif
 
 CAR::CAR()
-: last_steer(0),
-  debug_wheel_draw(false),
-  sector(-1),
-  applied_brakes(0)
+:	gearsound_check(0),
+	brakesound_check(false),
+	handbrakesound_check(false),
+	last_steer(0),
+	debug_wheel_draw(false),
+	sector(-1),
+	applied_brakes(0)
 {
 }
 
@@ -539,6 +542,48 @@ bool CAR::LoadSounds(
 		crashsound.SetGain(1.0);
 	}
 
+	//set up gear sound
+	{
+		const SOUNDBUFFER * buf = soundbufferlibrary.GetBuffer("gear"); //TODO: Make this "per car", using carpath+"/"+carname+ in a correct form
+		if (!buf)
+		{
+			error_output << "Can't load gear sound" << std::endl;
+			return false;
+		}
+		gearsound.SetBuffer(*buf);
+		gearsound.Set3DEffects(true);
+		gearsound.SetLoop(false);
+		gearsound.SetGain(1.0);
+	}
+
+	//set up brake sound
+	{
+		const SOUNDBUFFER * buf = soundbufferlibrary.GetBuffer("brake"); //TODO: Make this "per car", using carpath+"/"+carname+ in a correct form
+		if (!buf)
+		{
+			error_output << "Can't load brake sound" << std::endl;
+			return false;
+		}
+		brakesound.SetBuffer(*buf);
+		brakesound.Set3DEffects(true);
+		brakesound.SetLoop(false);
+		brakesound.SetGain(1.0);
+	}
+
+	//set up handbrake sound
+	{
+		const SOUNDBUFFER * buf = soundbufferlibrary.GetBuffer("handbrake"); //TODO: Make this "per car", using carpath+"/"+carname+ in a correct form
+		if (!buf)
+		{
+			error_output << "Can't load handbrake sound" << std::endl;
+			return false;
+		}
+		handbrakesound.SetBuffer(*buf);
+		handbrakesound.Set3DEffects(true);
+		handbrakesound.SetLoop(false);
+		handbrakesound.SetGain(1.0);
+	}
+
 	{
 		const SOUNDBUFFER * buf = soundbufferlibrary.GetBuffer("wind");
 		if (!buf)
@@ -683,6 +728,9 @@ void CAR::CopyPhysicsResultsIntoDisplay()
 	vec = dynamics.GetCenterOfMassPosition();
 	roadnoise.SetPosition(vec[0],vec[1],vec[2]);
 	crashsound.SetPosition(vec[0],vec[1],vec[2]);
+	gearsound.SetPosition(vec[0],vec[1],vec[2]);
+	brakesound.SetPosition(vec[0],vec[1],vec[2]);
+	handbrakesound.SetPosition(vec[0],vec[1],vec[2]);
 
 	QUATERNION <float> quat;
 	quat = dynamics.GetOrientation();
@@ -778,6 +826,12 @@ void CAR::GetSoundList(std::list <SOUNDSOURCE *> & outputlist)
 		outputlist.push_back(&tirebump[i]);
 
 	outputlist.push_back(&crashsound);
+	
+	outputlist.push_back(&gearsound);
+	
+	outputlist.push_back(&brakesound);
+	
+	outputlist.push_back(&handbrakesound);
 
 	outputlist.push_back(&roadnoise);
 }
@@ -866,6 +920,42 @@ void CAR::HandleInputs(const std::vector <float> & inputs, float dt)
 	else
 	{
 		lookbehind = false;
+	}
+
+	//update brake sound
+	{
+		if (inputs[CARINPUT::BRAKE] > 0 && !brakesound_check)
+		{
+			float gain = 0.1;
+
+			if (!brakesound.Audible())
+			{
+				brakesound.SetGain(gain);
+				brakesound.Stop();
+				brakesound.Play();
+			}
+			brakesound_check = true;
+		}
+		if(inputs[CARINPUT::BRAKE] <= 0)
+			brakesound_check = false;
+	}
+
+	//update handbrake sound
+	{
+		if (inputs[CARINPUT::HANDBRAKE] > 0 && !handbrakesound_check)
+		{
+			float gain = 0.1;
+
+			if (!handbrakesound.Audible())
+			{
+				handbrakesound.SetGain(gain);
+				handbrakesound.Stop();
+				handbrakesound.Play();
+			}
+			handbrakesound_check = true;
+		}
+		if(inputs[CARINPUT::HANDBRAKE] <= 0)
+			handbrakesound_check = false;
 	}
 }
 
@@ -1064,6 +1154,26 @@ void CAR::UpdateSounds(float dt)
 				crashsound.Stop();
 				crashsound.Play();
 			}
+		}
+	}
+
+	//update gear sound
+	{
+		if (gearsound_check != GetGear())
+		{
+			float gain = GetEngineRPMLimit() / GetEngineRPM();
+			if (gain > 0.05)
+				gain = 0.05;
+			if (gain < 0.025)
+				gain = 0.025;
+
+			if (!gearsound.Audible())
+			{
+				gearsound.SetGain(gain);
+				gearsound.Stop();
+				gearsound.Play();
+			}
+			gearsound_check = GetGear();
 		}
 	}
 }
