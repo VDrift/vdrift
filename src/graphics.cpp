@@ -397,7 +397,7 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 
 	shader_load_success = shader_load_success && LoadShader(shaderpath, "simple", info_output, error_output);
 	shader_load_success = shader_load_success && LoadShader(shaderpath, "simplecube", info_output, error_output);
-	shader_load_success = shader_load_success && LoadShader(shaderpath, "less_simple", info_output, error_output);
+	shader_load_success = shader_load_success && LoadShader(shaderpath, "skybox", info_output, error_output);
 	//shader_load_success = shader_load_success && LoadShader(shaderpath, "full", info_output, error_output, "_noblend", "_ALPHATEST_");
 	shader_load_success = shader_load_success && LoadShader(shaderpath, "full", info_output, error_output, "_noblend", "_ALPHATEST_");
 	shader_load_success = shader_load_success && LoadShader(shaderpath, "full", info_output, error_output);
@@ -745,46 +745,51 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 		}
 
 		renderscene.SetSunDirection(lightposition);
-		renderscene.SetDefaultShader(shadermap["full"]);
-		renderscene.SetShader(RENDER_INPUT_SCENE::SHADER_DISTANCEFIELD, shadermap["distancefield"]);
-		renderscene.SetShader(RENDER_INPUT_SCENE::SHADER_SIMPLE, shadermap["simple"]);
-		renderscene.SetShader(RENDER_INPUT_SCENE::SHADER_SKYBOX, shadermap["less_simple"]);
-		renderscene.SetShader(RENDER_INPUT_SCENE::SHADER_FULL, shadermap["full_noblend"]);
-
+		
 		renderscene.SetCameraInfo(campos, camorient, camfov, 10000.0, w, h); //use very high draw distance for skyboxes
-
-		renderscene.SetClear(true, true);
 
 		//determine render output for the full scene
 		reseatable_reference <RENDER_OUTPUT> scenebuffer = final;
 		if (bloom)
 			scenebuffer = full_scene_buffer;
 
+		renderscene.SetClear(true, true);
+		renderscene.SetDefaultShader(shadermap["skybox"]);
 		RenderDrawlists(dynamic_drawlist.skybox_noblend, normalcam_static_drawlist.skybox_noblend, renderscene, *scenebuffer, error_output);
-		renderscene.SetClear(false, true);
+		renderscene.SetClear(false, false);
 		RenderDrawlists(dynamic_drawlist.skybox_blend, normalcam_static_drawlist.skybox_blend, renderscene, *scenebuffer, error_output);
 
-		//debug shadow camera positioning
-		/*int csm_count = 0;
-		float closeshadow = 5.0;
-		float shadow_radius = (1<<csm_count)*closeshadow+(csm_count)*20.0; //5,30
-		MATHVECTOR <float, 3> shadowbox(1,1,1);
-		shadowbox = shadowbox * (shadow_radius*sqrt(2));
-		MATHVECTOR <float, 3> shadowoffset(0,0,1);
-		shadowoffset = shadowoffset * shadow_radius;
-		camorient.RotateVector(shadowoffset);
-		MATHVECTOR <float, 3> orthomin = -shadowbox;
-		orthomin[2] -= 20.0;
-		renderscene.SetOrtho(orthomin, shadowbox);
-		renderscene.SetCameraInfo(campos+shadowoffset, ldir, camfov, 10000.0, w, h);*/
-
+		
+		// render normal opaque geometry using a z-prepass to avoid costly pixel computations for overdrawn geometry
+		const bool enable_z_prepass = false;
+		
+		// z only prepass
 		renderscene.SetClear(false, true);
-		//RenderDrawlist(dynamic_drawlist.normal_noblend, renderscene, *scenebuffer, error_output);
+		if (enable_z_prepass)
+		{
+			renderscene.SetWriteColor(false);
+			renderscene.SetDefaultShader(shadermap["depthgen"]);
+			RenderDrawlists(dynamic_drawlist.normal_noblend, normalcam_static_drawlist.normal_noblend, renderscene, *scenebuffer, error_output);
+			renderscene.SetClear(false, false);
+			RenderDrawlist(dynamic_drawlist.car_noblend, renderscene, *scenebuffer, error_output);
+			renderscene.SetWriteColor(true);
+		}
+		
+		// color pass
+		renderscene.SetDefaultShader(shadermap["full"]);
+		renderscene.SetShader(RENDER_INPUT_SCENE::SHADER_DISTANCEFIELD, shadermap["distancefield"]);
+		renderscene.SetShader(RENDER_INPUT_SCENE::SHADER_SIMPLE, shadermap["simple"]);
+		renderscene.SetShader(RENDER_INPUT_SCENE::SHADER_SKYBOX, shadermap["skybox"]);
+		renderscene.SetShader(RENDER_INPUT_SCENE::SHADER_FULL, shadermap["full_noblend"]);
 		RenderDrawlists(dynamic_drawlist.normal_noblend, normalcam_static_drawlist.normal_noblend, renderscene, *scenebuffer, error_output);
-		renderscene.SetClear(false, false);
+		renderscene.SetClear(false,false);
 		RenderDrawlist(dynamic_drawlist.car_noblend, renderscene, *scenebuffer, error_output);
+		
+		
 		RenderDrawlists(dynamic_drawlist.normal_blend, normalcam_static_drawlist.normal_blend, renderscene, *scenebuffer, error_output);
+		renderscene.SetWriteDepth(false);
 		RenderDrawlist(dynamic_drawlist.particle, renderscene, *scenebuffer, error_output);
+		renderscene.SetWriteDepth(true);
 		
 		if (bloom) //do bloom post-processing
 		{

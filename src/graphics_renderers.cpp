@@ -470,14 +470,8 @@ void RENDER_INPUT_SCENE::SelectFlags(DRAWABLE & forme, GLSTATEMANAGER & glstate)
 		//}
 	}
 
-	if (i->GetSmoke())// || i->GetDraw()->GetSkybox()) // commented out because the depth buffer will now be cleared after rendering skyboxes
-	{
-		glstate.SetDepthMask(false);
-	}
-	else
-	{
-		glstate.SetDepthMask(true);
-	}
+	glstate.SetDepthMask(writedepth);
+	glstate.SetColorMask(writecolor);
 
 	//if (i->GetDraw()->GetSmoke() || i->GetDraw()->Get2D() || i->GetDraw()->GetSkybox())
 	if (i->GetSmoke() || i->Get2D())
@@ -843,7 +837,16 @@ void RENDER_INPUT_SCENE::ExtractFrustum()
 	frustum.frustum[5][3] /= t;
 }
 
-RENDER_INPUT_SCENE::RENDER_INPUT_SCENE() : last_transform_valid(false), shaders(false), clearcolor(false), cleardepth(false), orthomode(false), contrast(1.0), depth_mode_equal(false)
+RENDER_INPUT_SCENE::RENDER_INPUT_SCENE()
+:	last_transform_valid(false), 
+	shaders(false), 
+	clearcolor(false), 
+	cleardepth(false), 
+	orthomode(false), 
+	contrast(1.0), 
+	depth_mode_equal(false),
+	writecolor(true),
+	writedepth(true)
 {
 	shadermap.resize(SHADER_NONE, NULL);
 	MATHVECTOR <float, 3> front(1,0,0);

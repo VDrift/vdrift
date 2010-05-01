@@ -15,7 +15,8 @@ public:
 		alphavalue(0), 
 		blendsource(GL_ZERO), 
 		blenddest(GL_ZERO), 
-		cullmode(GL_BACK)
+		cullmode(GL_BACK),
+		colormask(true)
 	{
 	}
 	
@@ -44,6 +45,16 @@ public:
 		{
 			depthmask = newdepthmask;
 			glDepthMask(depthmask ? 1 : 0);
+		}
+	}
+	
+	void SetColorMask(bool newcolormask)
+	{
+		if (newcolormask != colormask)
+		{
+			depthmask = newcolormask;
+			GLboolean val = colormask ? GL_TRUE : GL_FALSE;
+			glColorMask(val, val, val, val);
 		}
 	}
 	
@@ -87,6 +98,7 @@ private:
 	GLenum blendsource;
 	GLenum blenddest;
 	GLenum cullmode;
+	bool colormask;
 	
 	void Set(int stateid, bool newval)
 	{

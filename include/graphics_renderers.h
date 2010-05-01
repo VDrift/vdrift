@@ -81,6 +81,8 @@ public:
 	void SetAmbient ( TEXTURE_INTERFACE & value ) {ambient = value;}
 	void SetContrast ( float value ) {contrast = value;}
 	void SetDepthModeEqual ( bool value ) {depth_mode_equal = value;}
+	void SetWriteDepth(bool write) {writedepth = write;}
+	void SetWriteColor(bool write) {writecolor = write;}
 
 private:
 	reseatable_reference <std::vector <DRAWABLE*> > dynamic_drawlist_ptr;
@@ -106,6 +108,8 @@ private:
 	unsigned int fsaa;
 	float contrast;
 	bool depth_mode_equal;
+	bool writecolor;
+	bool writedepth;
 	
 	void DrawList(GLSTATEMANAGER & glstate, std::vector <DRAWABLE*> & drawlist, bool preculled);
 	bool FrustumCull(DRAWABLE & tocull);
