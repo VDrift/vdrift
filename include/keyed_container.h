@@ -246,7 +246,8 @@ public:
 
 #else // don't use boost, don't use counting int
 
-#ifndef USE_TYPED_HANDLE
+#define TRACK_CONTAINERS
+
 class keyed_container_handle
 {
 template <typename> friend class keyed_container;
@@ -257,16 +258,26 @@ private:
 	typedef int VERSION;
 	INDEX index;
 	VERSION version;
+	#ifdef TRACK_CONTAINERS
+	int containerid;
+	#endif
 	keyed_container_handle(INDEX newidx, VERSION newver) : index(newidx),version(newver) {}
 	
 public:
-	keyed_container_handle() : index(-1),version(-1) {}
+	keyed_container_handle() : index(-1),version(-1)
+	#ifdef TRACK_CONTAINERS
+	,containerid(-1)
+	#endif
+	{}
 	bool operator==(const keyed_container_handle & other) const {return (index == other.index) && (version == other.version);}
 	bool operator!=(const keyed_container_handle & other) const {return !(operator==(other));}
 	bool Serialize(joeserialize::Serializer & s)
 	{
 		_SERIALIZE_(s,index);
 		_SERIALIZE_(s,version);
+		#ifdef TRACK_CONTAINERS
+		_SERIALIZE_(s,containerid);
+		#endif
 		return true;
 	}
 	bool operator<(const keyed_container_handle & other) const
@@ -284,12 +295,18 @@ public:
 	
 	friend std::ostream & operator<< (std::ostream & os, const keyed_container_handle & other)
 	{
+		#ifdef TRACK_CONTAINERS
+		os << other.containerid << " ";
+		#endif
 		os << other.index << " " << other.version;
 		return os;
 	}
 	
 	friend std::istream & operator>> (std::istream & is, keyed_container_handle & other)
 	{
+		#ifdef TRACK_CONTAINERS
+		is >> other.containerid;
+		#endif
 		is >> other.index >> other.version;
 		return is;
 	}
@@ -298,29 +315,33 @@ public:
 	{
 		return (index >= 0) && (version >= 0);
 	}
+	
+	void invalidate()
+	{
+		index = -1;
+		version = -1;
+		#ifdef TRACK_CONTAINERS
+		containerid = -1;
+		#endif
+	}
 };
-
-class keyed_container_hash
+struct keyed_container_hash
 {
-public:
 	unsigned int operator()(const keyed_container_handle & h) const
 	{
 		long long key = h.index;
 		key = key << 32;
 		key = key | h.version;
 		
-		key = (~key) + (key << 18); // key = (key << 18) - key - 1;
+		key = (~key) + (key << 18);
 		key = key ^ (key >> 31);
-		key = key * 21; // key = (key + (key << 2)) + (key << 4);
+		key = key * 21;
 		key = key ^ (key >> 11);
 		key = key + (key << 6);
 		key = key ^ (key >> 22);
 		return (int) key;
 	}
 };
-#endif //#ifndef USE_TYPED_HANDLE
-
-#define TRACK_CONTAINERS
 
 /// This implementation uses a vector pool with allocated handles that have an extra layer of abstraction.
 /// This is designed for fast lookup, extremely fast iteration, and low memory fragmentation, at the expense
@@ -346,99 +367,8 @@ private:
 		}
 	};
 public:
-	#ifdef USE_TYPED_HANDLE
-	class handle
-	{
-	friend class keyed_container;
-	friend class joeserialize::Serializer;
-	friend class keyed_container_hash;
-	private:
-		typedef int INDEX;
-		typedef int VERSION;
-		INDEX index;
-		VERSION version;
-		#ifdef TRACK_CONTAINERS
-		int containerid;
-		#endif
-		handle(INDEX newidx, VERSION newver) : index(newidx),version(newver) {}
-		
-	public:
-		handle() : index(-1),version(-1)
-		#ifdef TRACK_CONTAINERS
-		,containerid(-1)
-		#endif
-		{}
-		bool operator==(const handle & other) const {return (index == other.index) && (version == other.version);}
-		bool operator!=(const handle & other) const {return !(operator==(other));}
-		bool Serialize(joeserialize::Serializer & s)
-		{
-			_SERIALIZE_(s,index);
-			_SERIALIZE_(s,version);
-			#ifdef TRACK_CONTAINERS
-			_SERIALIZE_(s,containerid);
-			#endif
-			return true;
-		}
-		bool operator<(const handle & other) const
-		{
-			long long mykey = index;
-			mykey = mykey << 32;
-			mykey = mykey | version;
-			
-			long long otherkey = other.index;
-			otherkey = otherkey << 32;
-			otherkey = otherkey | other.version;
-			
-			return (mykey < otherkey);
-		}
-		
-		friend std::ostream & operator<< (std::ostream & os, const handle & other)
-		{
-			os << other.index << " " << other.version;
-			return os;
-		}
-		
-		friend std::istream & operator>> (std::istream & is, handle & other)
-		{
-			is >> other.index >> other.version;
-			return is;
-		}
-		
-		bool valid() const
-		{
-			return (index >= 0) && (version >= 0);
-		}
-		
-		void invalidate()
-		{
-			index = -1;
-			version = -1;
-			#ifdef TRACK_CONTAINERS
-			containerid = -1;
-			#endif
-		}
-	};
-	class hash
-	{
-	public:
-		unsigned int operator()(const handle & h) const
-		{
-			long long key = h.index;
-			key = key << 32;
-			key = key | h.version;
-			
-			key = (~key) + (key << 18); // key = (key << 18) - key - 1;
-			key = key ^ (key >> 31);
-			key = key * 21; // key = (key + (key << 2)) + (key << 4);
-			key = key ^ (key >> 11);
-			key = key + (key << 6);
-			key = key ^ (key >> 22);
-			return (int) key;
-		}
-	};
-	#else //#ifdef USE_TYPED_HANDLE
 	typedef keyed_container_handle handle;
-	#endif
+	typedef keyed_container_hash hash;
 	
 	typedef std::vector <INDEX> rmap_type;
 	typedef std::vector <DATATYPE> container_type;
