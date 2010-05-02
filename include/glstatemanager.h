@@ -98,9 +98,27 @@ public:
 		}
 	}
 	
+	void BindTexture2D(unsigned int tu, const TEXTURE_INTERFACE * texture)
+	{
+		if (tu >= tex2d.size())
+			tex2d.resize(tu+1,0);
+		
+		GLuint & curid = tex2d[tu];
+		GLuint id = 0;
+		if (texture)
+			id = texture->GetID();
+		if (curid != id)
+		{
+			glActiveTextureARB(GL_TEXTURE0+tu);
+			glBindTexture(GL_TEXTURE_2D, id);
+			curid = id;
+		}
+	}
+	
 private:
 	std::vector <bool> used; //on modern compilers this should result in a lower memory usage bit_vector-type arrangement
 	std::vector <bool> state;
+	std::vector <GLuint> tex2d;
 	
 	float r, g, b, a;
 	bool depthmask;

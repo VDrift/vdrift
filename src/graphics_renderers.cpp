@@ -500,71 +500,29 @@ void RENDER_INPUT_SCENE::SelectTexturing(DRAWABLE & forme, GLSTATEMANAGER & glst
 
 	if (!enabletex)
 	{
-		glActiveTextureARB(GL_TEXTURE0_ARB);
-		glstate.Disable(GL_TEXTURE_2D);
-		glBindTexture(GL_TEXTURE_2D, 0);
+		glstate.BindTexture2D(0,NULL);
 		return;
 	}
 	
-	//if (!enabletex) std::cout << "Unloaded texture error: " << i->GetDraw()->GetDiffuseMap()->GetTextureInfo().GetName() << std::endl;
+	//if (!enabletex) std::cout << "Unloaded texture error: " << forme.GetDiffuseMap()->GetTextureInfo().GetName() << std::endl;
 	//assert(enabletex); //don't draw without a texture
 
 	if (enabletex)
 	{
-		//if (current_diffusemap != &(i->GetDraw()->diffuse_map.GetPtr()->GetTexture()))
 		{
-			glActiveTextureARB(GL_TEXTURE0_ARB);
-
-			glstate.Enable(GL_TEXTURE_2D);
-
-			i->GetDiffuseMap()->Activate();
-
-			//cout << "boop" << endl;
-
-			//current_diffusemap = &(i->GetDraw()->GetDiffuseMap()->GetTexture());
+			glstate.BindTexture2D(0,i->GetDiffuseMap());
 
 			if (shaders)
 			{
-				//send the width and height to the shader in pixels.  we don't check for success of the upload, because some shaders may not want the parameter.
-				//shadermap[activeshader]->UploadActiveShaderParameter1f("diffuse_texture_width", i->GetDraw()->GetDiffuseMap()->GetW());
-				//shadermap[activeshader]->UploadActiveShaderParameter1f("diffuse_texture_height", i->GetDraw()->GetDiffuseMap()->GetH());
-
-				glActiveTextureARB(GL_TEXTURE1_ARB);
-				if (i->GetMiscMap1())
-					i->GetMiscMap1()->Activate();
-				else
-					glBindTexture(GL_TEXTURE_2D,0);
-
-				glActiveTextureARB(GL_TEXTURE8_ARB);
-				if (i->GetAdditiveMap1())
-				{
-					if (i->GetSelfIllumination())
-						i->GetAdditiveMap1()->Activate();
-					else
-						i->GetAdditiveMap1()->Deactivate();
-				}
-				else
-					glBindTexture(GL_TEXTURE_2D,0);
-				
-				glActiveTextureARB(GL_TEXTURE7_ARB);
-				if (i->GetAdditiveMap2())
-				{
-					if (i->GetSelfIllumination())
-						i->GetAdditiveMap2()->Activate();
-	                else
-	                    i->GetAdditiveMap2()->Deactivate();
-				}
-				else
-					glBindTexture(GL_TEXTURE_2D,0);
-
-                glActiveTextureARB(GL_TEXTURE0_ARB);
+				glstate.BindTexture2D(1, i->GetMiscMap1());
+				glstate.BindTexture2D(8, i->GetSelfIllumination() ? i->GetAdditiveMap1() : NULL);
+				glstate.BindTexture2D(7, i->GetSelfIllumination() ? i->GetAdditiveMap2() : NULL);
 			}
 		}
 	}
 	else
 	{
 		glstate.Disable(GL_TEXTURE_2D);
-		//current_diffusemap = NULL;
 	}
 }
 

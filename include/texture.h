@@ -87,6 +87,9 @@ public:
 		return scale;
 	}
 	
+protected:
+	virtual GLuint GetID() const {return tex_id;}
+	
 private:
 	TEXTUREINFO texture_info;
 	GLuint tex_id;

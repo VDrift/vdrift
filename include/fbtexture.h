@@ -33,7 +33,10 @@ class FBTEXTURE_GL : public TEXTURE_INTERFACE
 			POSZ = GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
 			NEGZ = GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
 		};
-	
+		
+	protected:
+		virtual GLuint GetID() const {return single_sample_FBO_for_multisampling ? single_sample_FBO_for_multisampling->fbtexture : fbtexture;}
+		
 	private:
 		GLuint fbtexture;
 		GLuint renderbuffer_depth;
