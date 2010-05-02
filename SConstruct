@@ -125,6 +125,7 @@ elif ( 'win32' == sys.platform or 'cygwin' == sys.platform ):
         CCFLAGS = ['-Wall', '-Wextra', '-Wno-unused-parameters', '-O2', '-pipe', '-mwindows', '-mno-cygwin'],
         CPPPATH = ['#include', '#tools/win/include', '#bullet'],
         LIBPATH = ['#tools/win/dll'],
+		LINKFLAGS = ['-static-libgcc'],
         CPPDEFINES = ['_REENTRANT'],
         CC = 'gcc', CXX = 'g++',
         options = opts)
