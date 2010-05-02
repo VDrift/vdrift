@@ -83,6 +83,7 @@ public:
 	void SetDepthModeEqual ( bool value ) {depth_mode_equal = value;}
 	void SetWriteDepth(bool write) {writedepth = write;}
 	void SetWriteColor(bool write) {writecolor = write;}
+	std::pair <bool, bool> GetClear() const {return std::make_pair(clearcolor, cleardepth);}
 
 private:
 	reseatable_reference <std::vector <DRAWABLE*> > dynamic_drawlist_ptr;
@@ -140,10 +141,12 @@ public:
 		target = RENDER_TO_FRAMEBUFFER;
 	}
 	
-	void Begin(std::ostream & error_output)
+	void Begin(GLSTATEMANAGER & glstate, std::ostream & error_output)
 	{
 		if (target == RENDER_TO_FBO)
-			fbo.Begin(error_output);
+			fbo.Begin(glstate, error_output);
+		else if (target == RENDER_TO_FRAMEBUFFER)
+			glstate.BindFramebuffer(0);
 	}
 	
 	void End(std::ostream & error_output)

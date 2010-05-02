@@ -10,6 +10,7 @@
 #endif
 
 #include "texture.h"
+#include "glstatemanager.h"
 
 #include <iostream>
 
@@ -61,12 +62,12 @@ class FBTEXTURE_GL : public TEXTURE_INTERFACE
 		~FBTEXTURE_GL() {DeInit();}
 		void Init(int sizex, int sizey, TARGET target, bool newdepth, bool filternearest, bool newalpha, bool usemipmap, std::ostream & error_output, int newmultisample = 0);
 		void DeInit();
-		void Begin(std::ostream & error_output, float viewscale = 1.0);
+		void Begin(GLSTATEMANAGER & glstate, std::ostream & error_output, float viewscale = 1.0);
 		void End(std::ostream & error_output);
 		virtual void Activate() const;
 		virtual void Deactivate() const;
 		virtual bool Loaded() const {return inited;}
-		void Screenshot(const std::string & filename, std::ostream & error_output);
+		void Screenshot(GLSTATEMANAGER & glstate, const std::string & filename, std::ostream & error_output);
 		void SetCubeSide(CUBE_SIDE side); ///< attach a specified cube side to the texture_attachment. for cube map FBOs only.
 		int GetWidth() const {return sizew;}
 		int GetHeight() const {return sizeh;}

@@ -2,6 +2,7 @@
 #define _GLSTATEMANAGER_H
 
 #include <vector>
+#include <cassert>
 
 class GLSTATEMANAGER
 {
@@ -16,7 +17,8 @@ public:
 		blendsource(GL_ZERO), 
 		blenddest(GL_ZERO), 
 		cullmode(GL_BACK),
-		colormask(true)
+		colormask(true),
+		framebuffer(0)
 	{
 	}
 	
@@ -87,6 +89,15 @@ public:
 		}
 	}
 	
+	void BindFramebuffer(GLuint fbid)
+	{
+		if (fbid != framebuffer)
+		{
+			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fbid);
+			framebuffer = fbid;
+		}
+	}
+	
 private:
 	std::vector <bool> used; //on modern compilers this should result in a lower memory usage bit_vector-type arrangement
 	std::vector <bool> state;
@@ -99,6 +110,7 @@ private:
 	GLenum blenddest;
 	GLenum cullmode;
 	bool colormask;
+	GLuint framebuffer;
 	
 	void Set(int stateid, bool newval)
 	{

@@ -223,11 +223,11 @@ void FBTEXTURE_GL::DeInit()
 	inited = false;
 }
 
-void FBTEXTURE_GL::Begin(std::ostream & error_output, float viewscale)
+void FBTEXTURE_GL::Begin(GLSTATEMANAGER & glstate, std::ostream & error_output, float viewscale)
 {
 	OPENGL_UTILITY::CheckForOpenGLErrors("before FBO begin", error_output);
 	
-	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, framebuffer_object);
+	glstate.BindFramebuffer(framebuffer_object);
 	
 	OPENGL_UTILITY::CheckForOpenGLErrors("FBO bind to framebuffer", error_output);
 	
@@ -270,7 +270,6 @@ void FBTEXTURE_GL::End(std::ostream & error_output)
 	OPENGL_UTILITY::CheckForOpenGLErrors("FBO end multisample block", error_output);
 	
 	glPopAttrib();
-	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 	
 	// optionally rebuild mipmaps
 	if (mipmap)
@@ -293,7 +292,7 @@ void FBTEXTURE_GL::Activate() const
 		glBindTexture(texture_target, fbtexture);
 }
 
-void FBTEXTURE_GL::Screenshot(const std::string & filename, std::ostream & error_output)
+void FBTEXTURE_GL::Screenshot(GLSTATEMANAGER & glstate, const std::string & filename, std::ostream & error_output)
 {
 	if (depth)
 	{
@@ -319,9 +318,9 @@ void FBTEXTURE_GL::Screenshot(const std::string & filename, std::ostream & error
 	assert(pixels);
 
 	if (single_sample_FBO_for_multisampling)
-		single_sample_FBO_for_multisampling->Begin(error_output);
+		single_sample_FBO_for_multisampling->Begin(glstate, error_output);
 	else
-		Begin(error_output);
+		Begin(glstate, error_output);
 	glReadPixels(0, 0, sizew, sizeh, GL_RGB, GL_UNSIGNED_BYTE, pixels);
 	if (single_sample_FBO_for_multisampling)
 		single_sample_FBO_for_multisampling->End(error_output);

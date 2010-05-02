@@ -877,6 +877,8 @@ void GRAPHICS_SDLGL::RenderDrawlist(std::vector <DRAWABLE*> & drawlist,
 						RENDER_OUTPUT & render_output, 
 						std::ostream & error_output)
 {
+	if (drawlist.empty() && !render_scene.GetClear().first && !render_scene.GetClear().second)
+		return;
 	std::vector <DRAWABLE*> empty;
 	render_scene.SetDrawLists(drawlist, empty);
 	Render(&render_scene, render_output, error_output);
@@ -888,6 +890,9 @@ void GRAPHICS_SDLGL::RenderDrawlists(std::vector <DRAWABLE*> & dynamic_drawlist,
 						RENDER_OUTPUT & render_output, 
 						std::ostream & error_output)
 {
+	if (dynamic_drawlist.empty() && static_drawlist.empty() && !render_scene.GetClear().first && !render_scene.GetClear().second)
+		return;
+	
 	render_scene.SetDrawLists(dynamic_drawlist, static_drawlist);
 	Render(&render_scene, render_output, error_output);
 }
@@ -966,7 +971,7 @@ void GRAPHICS_SDLGL::DrawBox(const MATHVECTOR <float, 3> & corner1, const MATHVE
 
 void GRAPHICS_SDLGL::Render(RENDER_INPUT * input, RENDER_OUTPUT & output, std::ostream & error_output)
 {
-	output.Begin(error_output);
+	output.Begin(glstate, error_output);
 
 	OPENGL_UTILITY::CheckForOpenGLErrors("render output begin", error_output);
 
