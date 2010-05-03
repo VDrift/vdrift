@@ -48,6 +48,22 @@ class MATHPLANE
 		{
 			v = MATHPLANE_ABCD(a,b,c,d);
 		}
+		
+		/// set from a normal and point
+		void Set(const MATHVECTOR <T, 3> & normal, const MATHVECTOR <T, 3> & point)
+		{
+			v.a = normal[0];
+			v.b = normal[1];
+			v.c = normal[2];
+			v.d = -v.a*point[0]-v.b*point[1]-v.c*point[2];
+		}
+		
+		/// set from the three corners of a triangle
+		void Set(const MATHVECTOR <T, 3> & v0, const MATHVECTOR <T, 3> & v1, const MATHVECTOR <T, 3> & v2)
+		{
+			MATHVECTOR <T, 3> normal = (v1-v0).cross(v2-v0);
+			Set(normal, v0);
+		}
 	
 		///careful, there's no way to check the bounds of the array
 		inline void Set(const T * array_pointer)

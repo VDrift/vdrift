@@ -756,7 +756,7 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 		renderscene.SetClear(true, true);
 		renderscene.SetDefaultShader(shadermap["skybox"]);
 		RenderDrawlists(dynamic_drawlist.skybox_noblend, normalcam_static_drawlist.skybox_noblend, renderscene, *scenebuffer, error_output);
-		renderscene.SetClear(false, false);
+		renderscene.SetClear(false, true);
 		RenderDrawlists(dynamic_drawlist.skybox_blend, normalcam_static_drawlist.skybox_blend, renderscene, *scenebuffer, error_output);
 
 		
