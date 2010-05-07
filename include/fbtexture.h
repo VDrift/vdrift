@@ -14,7 +14,7 @@
 
 #include <iostream>
 
-class FBTEXTURE_GL : public TEXTURE_INTERFACE
+class FBTEXTURE : public TEXTURE_INTERFACE
 {
 	public:
 		enum TARGET
@@ -42,7 +42,7 @@ class FBTEXTURE_GL : public TEXTURE_INTERFACE
 		GLuint renderbuffer_depth;
 		GLuint renderbuffer_multisample;
 		GLuint framebuffer_object;
-		FBTEXTURE_GL * single_sample_FBO_for_multisampling;
+		FBTEXTURE * single_sample_FBO_for_multisampling;
 		bool loaded;
 		bool inited;
 		int sizew, sizeh;
@@ -59,10 +59,10 @@ class FBTEXTURE_GL : public TEXTURE_INTERFACE
 		bool CheckStatus(std::ostream & error_output);
 
 	public:
-		FBTEXTURE_GL() : single_sample_FBO_for_multisampling(NULL),loaded(false),inited(false),sizew(0),sizeh(0),
+		FBTEXTURE() : single_sample_FBO_for_multisampling(NULL),loaded(false),inited(false),sizew(0),sizeh(0),
 			texture_target(NORMAL),depth(false),alpha(false),mipmap(false),multisample(0),
 			texture_attachment(GL_COLOR_ATTACHMENT0_EXT),cur_side(POSX) {}
-		~FBTEXTURE_GL() {DeInit();}
+		~FBTEXTURE() {DeInit();}
 		void Init(int sizex, int sizey, TARGET target, bool newdepth, bool filternearest, bool newalpha, bool usemipmap, std::ostream & error_output, int newmultisample = 0);
 		void DeInit();
 		void Begin(GLSTATEMANAGER & glstate, std::ostream & error_output, float viewscale = 1.0);

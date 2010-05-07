@@ -13,7 +13,7 @@
 #include <iostream>
 #include <sstream>
 
-class TEXTURE_GL;
+class TEXTURE;
 
 class WIDGET_SLIDER : public WIDGET
 {
@@ -52,7 +52,7 @@ private:
 public:
 	virtual WIDGET * clone() const {return new WIDGET_SLIDER(*this);};
 	
-	void SetupDrawable(SCENENODE & scene, TEXTURE_GL * wedgetex, TEXTURE_GL * cursortex, 
+	void SetupDrawable(SCENENODE & scene, TEXTUREPTR wedgetex, TEXTUREPTR cursortex, 
 		float x, float y, float nw, float nh, float newmin, float newmax,
 		bool ispercentage, const std::string & newsetting,
   		FONT * font, float fontscalex, float fontscaley, std::ostream & error_output, int draworder=1)

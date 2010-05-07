@@ -5,7 +5,7 @@
 #include <sstream>
 #include <string>
 
-void FBTEXTURE_GL::Init(int sizex, int sizey, TARGET target, bool newdepth, bool filternearest, bool newalpha, bool usemipmap, std::ostream & error_output, int newmultisample)
+void FBTEXTURE::Init(int sizex, int sizey, TARGET target, bool newdepth, bool filternearest, bool newalpha, bool usemipmap, std::ostream & error_output, int newmultisample)
 {
 	assert(!(newalpha && newdepth)); //not allowed; depth maps don't have alpha
 	
@@ -118,7 +118,7 @@ void FBTEXTURE_GL::Init(int sizex, int sizey, TARGET target, bool newdepth, bool
 	}
 	else
 	{
-		single_sample_FBO_for_multisampling = new FBTEXTURE_GL;
+		single_sample_FBO_for_multisampling = new FBTEXTURE;
 		single_sample_FBO_for_multisampling->Init(sizex, sizey, texture_target, depth, filternearest, alpha, mipmap, error_output, 0);
 	}
 	
@@ -179,13 +179,13 @@ void FBTEXTURE_GL::Init(int sizex, int sizey, TARGET target, bool newdepth, bool
 	OPENGL_UTILITY::CheckForOpenGLErrors("FBO creation", error_output);
 }
 
-bool FBTEXTURE_GL::CheckStatus(std::ostream & error_output)
+bool FBTEXTURE::CheckStatus(std::ostream & error_output)
 {
 	GLenum status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER_EXT);
 	
 	if (status == GL_FRAMEBUFFER_UNSUPPORTED_EXT)
 	{
-		error_output << "Unsupported framebuffer format in FBTEXTURE_GL " << sizew << ", " << sizeh << ", " << texture_target << ", " << depth << ", " << alpha << std::endl;
+		error_output << "Unsupported framebuffer format in FBTEXTURE " << sizew << ", " << sizeh << ", " << texture_target << ", " << depth << ", " << alpha << std::endl;
 		return false;
 	}
 
@@ -198,13 +198,13 @@ bool FBTEXTURE_GL::CheckStatus(std::ostream & error_output)
 	return true;
 }
 
-void FBTEXTURE_GL::SetCubeSide(CUBE_SIDE side)
+void FBTEXTURE::SetCubeSide(CUBE_SIDE side)
 {
 	assert(texture_target == CUBEMAP);
 	cur_side = side;
 }
 
-void FBTEXTURE_GL::DeInit()
+void FBTEXTURE::DeInit()
 {
 	if (inited)
 	{
@@ -223,7 +223,7 @@ void FBTEXTURE_GL::DeInit()
 	inited = false;
 }
 
-void FBTEXTURE_GL::Begin(GLSTATEMANAGER & glstate, std::ostream & error_output, float viewscale)
+void FBTEXTURE::Begin(GLSTATEMANAGER & glstate, std::ostream & error_output, float viewscale)
 {
 	OPENGL_UTILITY::CheckForOpenGLErrors("before FBO begin", error_output);
 	
@@ -246,7 +246,7 @@ void FBTEXTURE_GL::Begin(GLSTATEMANAGER & glstate, std::ostream & error_output, 
 	OPENGL_UTILITY::CheckForOpenGLErrors("during FBO begin", error_output);
 }
 
-void FBTEXTURE_GL::End(std::ostream & error_output)
+void FBTEXTURE::End(std::ostream & error_output)
 {
 	OPENGL_UTILITY::CheckForOpenGLErrors("start of FBO end", error_output);
 	
@@ -282,7 +282,7 @@ void FBTEXTURE_GL::End(std::ostream & error_output)
 	OPENGL_UTILITY::CheckForOpenGLErrors("end of FBO end", error_output);
 }
 
-void FBTEXTURE_GL::Activate() const
+void FBTEXTURE::Activate() const
 {
 	if (single_sample_FBO_for_multisampling)
 	{
@@ -292,11 +292,11 @@ void FBTEXTURE_GL::Activate() const
 		glBindTexture(texture_target, fbtexture);
 }
 
-void FBTEXTURE_GL::Screenshot(GLSTATEMANAGER & glstate, const std::string & filename, std::ostream & error_output)
+void FBTEXTURE::Screenshot(GLSTATEMANAGER & glstate, const std::string & filename, std::ostream & error_output)
 {
 	if (depth)
 	{
-		error_output << "FBTEXTURE_GL::Screenshot not supported for depth FBOs" << std::endl;
+		error_output << "FBTEXTURE::Screenshot not supported for depth FBOs" << std::endl;
 		return;
 	}
 	
@@ -335,7 +335,7 @@ void FBTEXTURE_GL::Screenshot(GLSTATEMANAGER & glstate, const std::string & file
 	SDL_FreeSurface(temp);
 }
 
-void FBTEXTURE_GL::Deactivate() const
+void FBTEXTURE::Deactivate() const
 {
     glDisable(texture_target);
     glBindTexture(texture_target,0);

@@ -1,6 +1,5 @@
 #include "roadpatch.h"
-
-#include "scenegraph.h"
+#include "scenenode.h"
 
 bool ROADPATCH::Collide(
 	const MATHVECTOR <float, 3> & origin,
@@ -21,7 +20,7 @@ bool ROADPATCH::Collide(
 }
 
 void ROADPATCH::AddRacinglineScenenode(SCENENODE & node, ROADPATCH * nextpatch,
-		TEXTURE_GL & racingline_texture, std::ostream & error_output)
+		TEXTUREPTR racingline_texture, std::ostream & error_output)
 {
 	if (!nextpatch)
 		return;
@@ -30,7 +29,7 @@ void ROADPATCH::AddRacinglineScenenode(SCENENODE & node, ROADPATCH * nextpatch,
 	keyed_container <DRAWABLE>::handle drawhandle = node.GetDrawlist().normal_blend.insert(DRAWABLE());
 	DRAWABLE & draw = node.GetDrawlist().normal_blend.get(drawhandle);
 
-	draw.SetDiffuseMap(&racingline_texture);
+	draw.SetDiffuseMap(racingline_texture);
 	draw.SetLit(false);
 	draw.SetPartialTransparency(true);
 	draw.SetDecal(true);

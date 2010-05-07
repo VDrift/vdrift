@@ -1,11 +1,6 @@
 #ifndef _TRACKMAP_H
 #define _TRACKMAP_H
 
-#include "mathvector.h"
-#include "texture.h"
-#include "track.h"
-#include "scenegraph.h"
-
 #include <ostream>
 #include <list>
 #include <string>
@@ -13,6 +8,11 @@
 #include <map>
 
 #include <SDL/SDL.h>
+
+#include "mathvector.h"
+#include "texturemanager.h"
+#include "track.h"
+#include "scenenode.h"
 
 class TRACKMAP
 {
@@ -38,11 +38,11 @@ private:
 	MATHVECTOR <float, 2> dot_size;
 
 	SDL_Surface* surface;
-	TEXTURE_GL track_map;
-	TEXTURE_GL cardot0;
-	TEXTURE_GL cardot1;
-	TEXTURE_GL cardot0_focused;
-	TEXTURE_GL cardot1_focused;
+
+	TEXTUREPTR cardot0;
+	TEXTUREPTR cardot1;
+	TEXTUREPTR cardot0_focused;
+	TEXTUREPTR cardot1_focused;
 	
 	SCENENODE mapnode;
 	keyed_container <DRAWABLE>::handle mapdraw;
@@ -61,7 +61,7 @@ private:
 			
 		public:
 			void Init(SCENENODE & topnode, 
-					  TEXTURE_GL & tex, 
+					  TEXTUREPTR tex, 
 					  const MATHVECTOR <float, 2> & corner1, 
 					  const MATHVECTOR <float, 2> & corner2)
 			{
@@ -76,10 +76,10 @@ private:
 				Retexture(topnode, tex);
 				Reposition(corner1, corner2);
 			}
-			void Retexture(SCENENODE & topnode, TEXTURE_GL & newtex)
+			void Retexture(SCENENODE & topnode, TEXTUREPTR newtex)
 			{
-				assert(newtex.Loaded());
-				GetDrawable(topnode).SetDiffuseMap(&newtex);
+				assert(newtex->Loaded());
+				GetDrawable(topnode).SetDiffuseMap(newtex);
 			}
 			void Reposition(const MATHVECTOR <float, 2> & corner1, const MATHVECTOR <float, 2> & corner2)
 			{
@@ -108,11 +108,23 @@ private:
 public:
 	TRACKMAP();
 	~TRACKMAP();
+	
 	///w and h are the display device dimensions in pixels.  returns true if successful.
-	bool BuildMap(const std::list <ROADSTRIP> & roads, int w, int h, const std::string & texturepath, const std::string & texsize, std::ostream & error_output);
+	bool BuildMap(
+		const std::list <ROADSTRIP> & roads,
+		int w,
+		int h,
+		const std::string & trackname,
+		const std::string & texturepath,
+		const std::string & texsize,
+		TEXTUREMANAGER & textures,
+		std::ostream & error_output);
+	
 	void Unload();
+	
 	///update the map with provided information for map visibility, as well as a list of car positions and whether or not they're the player car
 	void Update(bool mapvisible, const std::list <std::pair<MATHVECTOR <float, 3>, bool> > & carpositions);
+	
 	SCENENODE & GetNode() {return mapnode;}
 };
 

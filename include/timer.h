@@ -1,7 +1,6 @@
 #ifndef _TIMER_H
 #define _TIMER_H
 
-#include "scenegraph.h"
 #include "texture.h"
 #include "vertexarray.h"
 #include "configfile.h"

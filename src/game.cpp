@@ -41,6 +41,8 @@ using std::sort;
 
 #define USE_STATIC_OPTIMIZATION_FOR_TRACK
 
+//#define DEBUG_TEXTURES
+
 ///start the game with the given arguments
 void GAME::Start(list <string> & args)
 {
@@ -82,7 +84,7 @@ void GAME::Start(list <string> & args)
 
 	//load loading screen assets
 	if (!loadingscreen.Initialize(pathmanager.GetGUITexturePath(settings.GetSkin()),
-				 graphics.GetW(), graphics.GetH(), settings.GetTextureSize(), error_output))
+				 graphics.GetW(), graphics.GetH(), settings.GetTextureSize(), textures, error_output))
 	{
 		error_output << "Error loading the loading screen" << endl; //ironic
 		return;
@@ -109,7 +111,7 @@ void GAME::Start(list <string> & args)
 	}
 
 	//initialize HUD
-	if (!hud.Init(pathmanager.GetGUITexturePath(settings.GetSkin()), fonts["lcd"], fonts["futuresans"], error_output, graphics.GetW(), graphics.GetH(), settings.GetTextureSize(), debugmode))
+	if (!hud.Init(pathmanager.GetGUITexturePath(settings.GetSkin()), settings.GetTextureSize(), textures, fonts["lcd"], fonts["futuresans"], graphics.GetW(), graphics.GetH(), debugmode, error_output))
 	{
 		error_output << "Error initializing HUD" << endl;
 		return;
@@ -117,7 +119,7 @@ void GAME::Start(list <string> & args)
 	hud.Hide();
 
 	//initialise input graph
-	if (!inputgraph.Init(pathmanager.GetGUITexturePath(settings.GetSkin()), error_output, settings.GetTextureSize()))
+	if (!inputgraph.Init(pathmanager.GetGUITexturePath(settings.GetSkin()), settings.GetTextureSize(), textures, error_output))
 	{
 		error_output << "Error initializing input graph" << endl;
 		return;
@@ -148,12 +150,16 @@ void GAME::Start(list <string> & args)
 	pathmanager.GetFolderIndex(pathmanager.GetTireSmokeTexturePath(), smoketexlist, ".png");
 	for (list <string>::iterator i = smoketexlist.begin(); i != smoketexlist.end(); ++i)
 		*i = pathmanager.GetTireSmokeTexturePath() + "/" + *i;
-	if (!tire_smoke.Load(smoketexlist, settings.GetAnisotropy(), settings.GetTextureSize(), error_output))
+	if (!tire_smoke.Load(smoketexlist, settings.GetAnisotropy(), settings.GetTextureSize(), &textures, error_output))
 	{
 		error_output << "Error loading tire smoke particle system" << endl;
 		return;
 	}
 	tire_smoke.SetParameters(0.125,0.25, 5,14, 0.3,1, 0.5,1, MATHVECTOR<float,3>(0,0,1));
+	
+#ifdef DEBUG_TEXTURES
+	textures.DebugPrint(info_output);
+#endif
 
 	//initialize force feedback
 #ifdef ENABLE_FORCE_FEEDBACK
@@ -255,7 +261,9 @@ bool GAME::InitializeGUI()
 	}
 	std::map<std::string, std::list <std::pair <std::string, std::string> > > valuelists;
 	PopulateValueLists(valuelists);
-	if (!gui.Load(menufiles, valuelists, pathmanager.GetOptionsFile(), pathmanager.GetCarControlsFile(), menufolder, pathmanager.GetGUITexturePath(settings.GetSkin()), pathmanager.GetDataPath(), fonts, (float)graphics.GetH()/graphics.GetW(), settings.GetTextureSize(), info_output, error_output))
+	if (!gui.Load(menufiles, valuelists, pathmanager.GetOptionsFile(), pathmanager.GetCarControlsFile(), menufolder,
+		pathmanager.GetGUITexturePath(settings.GetSkin()), pathmanager.GetDataPath(), fonts, (float)graphics.GetH()/graphics.GetW(),
+		settings.GetTextureSize(), textures, info_output, error_output))
 	{
 		error_output << "Error loading GUI files" << endl;
 		return false;
@@ -493,10 +501,7 @@ void GAME::End()
 
 	settings.Save(pathmanager.GetSettingsFile()); //save settings first incase later deinits cause crashes
 
-	collision.Clear();
-	track.Clear();
-	trackmap.Unload();
-
+	textures.Sweep(); // release textures
 	graphics.Deinit();
 }
 
@@ -1058,10 +1063,10 @@ void GAME::LoadControlsIntoGUIPage(const std::string & pagename)
 	PopulateValueLists(valuelists);
 	CONFIGFILE controlfile;
 	carcontrols_local.second.Save(controlfile, info_output, error_output);
-	bool loaded = gui.GetPage(pagename).Load(pathmanager.GetGUIMenuPath(settings.GetSkin())+"/"+pagename,
-		    pathmanager.GetGUITexturePath(settings.GetSkin()), pathmanager.GetDataPath(),
-		    controlfile, gui.GetPageNode(pagename), gui.GetTextureMap(), fonts,
-		    gui.GetOptionMap(), (float)graphics.GetH()/graphics.GetW(), settings.GetTextureSize(), error_output, true);
+	bool loaded = gui.GetPage(pagename).Load(
+			pathmanager.GetGUIMenuPath(settings.GetSkin())+"/"+pagename, pathmanager.GetGUITexturePath(settings.GetSkin()), pathmanager.GetDataPath(),
+		    controlfile, gui.GetPageNode(pagename), fonts, gui.GetOptionMap(), (float)graphics.GetH()/graphics.GetW(),
+			settings.GetTextureSize(), textures, error_output, true);
 	assert(loaded);
 }
 
@@ -1623,6 +1628,10 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 		replay.StartRecording(carcontrols_local.first->GetCarType(), settings.GetCarPaint(), pathmanager.GetCarPath()+"/"+carcontrols_local.first->GetCarType()+"/"+carcontrols_local.first->GetCarType()+".car", settings.GetTrack(), error_output);
 	}
 
+	textures.Sweep();
+#ifdef DEBUG_TEXTURES
+	textures.DebugPrint(info_output);
+#endif
 	return true;
 }
 
@@ -1664,13 +1673,10 @@ void GAME::LeaveGame()
 		replay.StopPlaying();
 
 	gui.SetInGame(false);
-	track.Unload();
 	
 	// clear out the static drawables
 	SCENENODE empty;
 	graphics.AddStaticNode(empty, true);
-	
-	collision.Clear();
 
 	if (sound.Enabled())
 	{
@@ -1684,6 +1690,9 @@ void GAME::LeaveGame()
 			}
 		}
 	}
+	
+	collision.Clear();
+	track.Unload();
 	cars.clear();
 	hud.Hide();
 	inputgraph.Hide();
@@ -1698,10 +1707,12 @@ void GAME::LeaveGame()
 bool GAME::LoadCar(const std::string & carname, const std::string & carpaint, const MATHVECTOR <float, 3> & start_position,
 		   const QUATERNION <float> & start_orientation, bool islocal, bool isai, const string & carfile)
 {
+	std::string carpath = pathmanager.GetCarPath()+"/"+carname;
+	
 	CONFIGFILE carconf;
 	if (carfile.empty()) //if no file is passed in, then load it from disk
 	{
-		if ( !carconf.Load ( pathmanager.GetCarPath()+"/"+carname+"/"+carname+".car" ) )
+		if ( !carconf.Load ( carpath + "/" + carname + ".car" ) )
 			return false;
 	}
 	else
@@ -1710,14 +1721,19 @@ bool GAME::LoadCar(const std::string & carname, const std::string & carpaint, co
 		if ( !carconf.Load ( carstream ) )
 			return false;
 	}
+	
+	MATHVECTOR <float, 4> carcolor(0);
 
 	cars.push_back(CAR());
 
 	if (!cars.back().Load(
-		carconf, pathmanager.GetCarPath(),
+		carconf,
+		carpath,
 		pathmanager.GetDriverPath()+"/driver2",
 		carname,
+		textures,
 		carpaint,
+		carcolor,
 		start_position,
 		start_orientation,
 		&collision,
@@ -1770,9 +1786,10 @@ bool GAME::LoadTrack(const std::string & trackname)
 	if (!track.DeferredLoad(
 			pathmanager.GetTrackPath()+"/"+trackname,
 			pathmanager.GetEffectsTexturePath(),
-			settings.GetTrackReverse(),
-			settings.GetAnisotropy(),
 			settings.GetTextureSize(),
+			settings.GetAnisotropy(),
+			textures,
+			settings.GetTrackReverse(),
 			graphics.GetShadows(),
 			false))
 	{
@@ -1788,7 +1805,7 @@ bool GAME::LoadTrack(const std::string & trackname)
 		{
 			LoadingScreen(count, track.DeferredLoadTotalObjects());
 		}
-		success = track.ContinueDeferredLoad();
+		success = track.ContinueDeferredLoad(textures);
 		count++;
 	}
 	
@@ -1802,7 +1819,7 @@ bool GAME::LoadTrack(const std::string & trackname)
 	track.SetRacingLineVisibility(settings.GetRacingline());
 
 	//generate the track map
-	if (!trackmap.BuildMap(track.GetRoadList(), graphics.GetW(), graphics.GetH(), pathmanager.GetHUDTexturePath(), settings.GetTextureSize(), error_output))
+	if (!trackmap.BuildMap(track.GetRoadList(), graphics.GetW(), graphics.GetH(), trackname, pathmanager.GetHUDTexturePath(), settings.GetTextureSize(), textures, error_output))
 	{
 		error_output << "Error loading track map: " << trackname << endl;
 		return false;
@@ -1826,15 +1843,15 @@ bool GAME::LoadFonts()
 
 	if (graphics.GetUsingShaders())
 	{
-		if (!fonts["freesans"].Load(fontbase+"/freesans.txt",fontbase+"/freesans.png", settings.GetTextureSize(), error_output)) return false;
-		if (!fonts["lcd"].Load(fontbase+"/lcd.txt",fontbase+"/lcd.png", settings.GetTextureSize(), error_output)) return false;
-		if (!fonts["futuresans"].Load(fontbase+"/futuresans.txt",fontbase+"/futuresans.png", settings.GetTextureSize(), error_output)) return false;
+		if (!fonts["freesans"].Load(fontbase+"/freesans.txt",fontbase+"/freesans.png", settings.GetTextureSize(), textures, error_output)) return false;
+		if (!fonts["lcd"].Load(fontbase+"/lcd.txt",fontbase+"/lcd.png", settings.GetTextureSize(), textures, error_output)) return false;
+		if (!fonts["futuresans"].Load(fontbase+"/futuresans.txt",fontbase+"/futuresans.png", settings.GetTextureSize(), textures, error_output)) return false;
 	}
 	else
 	{
-		if (!fonts["freesans"].Load(fontbase+"/freesans.txt",fontbase+"/freesans_noshaders.png", settings.GetTextureSize(), error_output)) return false;
-		if (!fonts["lcd"].Load(fontbase+"/lcd.txt",fontbase+"/lcd_noshaders.png", settings.GetTextureSize(), error_output)) return false;
-		if (!fonts["futuresans"].Load(fontbase+"/futuresans.txt",fontbase+"/futuresans_noshaders.png", settings.GetTextureSize(), error_output)) return false;
+		if (!fonts["freesans"].Load(fontbase+"/freesans.txt",fontbase+"/freesans_noshaders.png", settings.GetTextureSize(), textures, error_output)) return false;
+		if (!fonts["lcd"].Load(fontbase+"/lcd.txt",fontbase+"/lcd_noshaders.png", settings.GetTextureSize(), textures,  error_output)) return false;
+		if (!fonts["futuresans"].Load(fontbase+"/futuresans.txt",fontbase+"/futuresans_noshaders.png", settings.GetTextureSize(), textures, error_output)) return false;
 	}
 
 	info_output << "Loaded fonts successfully" << endl;

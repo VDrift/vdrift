@@ -52,7 +52,7 @@ bool SKY::Load(const std::string & path)
 		datetime = *localtime(&seconds);
 	}
 	
-	sky_texture.Init(512, 512, FBTEXTURE_GL::NORMAL, false, false, false, true, error_output);
+	sky_texture.Init(512, 512, FBTEXTURE::NORMAL, false, false, false, true, error_output);
 	
 	Update();
 	
@@ -151,7 +151,7 @@ void SKY::UpdateSkyTexture()
 	//sky_texture.Screenshot("sky.bmp", error_output);*/
 }
 
-void SKY::Draw(MATRIX4<float> & iviewproj, FBTEXTURE_GL * output)
+void SKY::Draw(MATRIX4<float> & iviewproj, FBTEXTURE * output)
 {/*
 	SHADER_GLSL & shader = graphics.GetShader("sky_draw");
 	shader.UploadMat16("iviewproj", iviewproj.GetArray());

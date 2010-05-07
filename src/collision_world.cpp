@@ -89,6 +89,10 @@ void COLLISION_WORLD::SetTrack(TRACK * t)
 	}
 	// can not use QuantizedAabbCompression because of the track size
 	btCollisionShape * trackShape = new btBvhTriangleMeshShape(trackMesh, false);
+	//btVector3 normal(0,0,1);
+	//btScalar distance(-25);
+	//btCollisionShape * trackShape = new btStaticPlaneShape(normal, distance);
+	
 	trackObject = new btCollisionObject();
 	trackObject->setCollisionShape(trackShape);
 	trackObject->setUserPointer(NULL);
@@ -133,7 +137,7 @@ btCollisionShape * COLLISION_WORLD::AddMeshShape(const MODEL & model)
 struct MyRayResultCallback : public btCollisionWorld::RayResultCallback
 {
 	MyRayResultCallback(const btVector3 & rayFromWorld, const btVector3 & rayToWorld, const btCollisionObject * exclude)
-	:m_rayFromWorld(rayFromWorld), m_rayToWorld(rayToWorld), m_exclude(exclude)
+	:m_rayFromWorld(rayFromWorld), m_rayToWorld(rayToWorld), m_shapeId(0), m_exclude(exclude)
 	{
 	}
 
@@ -156,7 +160,10 @@ struct MyRayResultCallback : public btCollisionWorld::RayResultCallback
 
 		m_closestHitFraction = rayResult.m_hitFraction;
 		m_collisionObject = rayResult.m_collisionObject;
-		m_shapeId = rayResult.m_localShapeInfo->m_shapePart;
+		if(rayResult.m_localShapeInfo)
+		{
+			m_shapeId = rayResult.m_localShapeInfo->m_shapePart;
+		}
 		if (normalInWorldSpace)
 		{
 			m_hitNormalWorld = rayResult.m_hitNormalLocal;
@@ -186,6 +193,7 @@ bool COLLISION_WORLD::CastRay(
 	MATHVECTOR <float, 3> n;
 	float d;
 	const TRACKSURFACE * s = TRACKSURFACE::None();
+	//const TRACKSURFACE * s = track->GetRoadSurface();
 	const BEZIER * b = NULL;
 	btCollisionObject * c = NULL;
 

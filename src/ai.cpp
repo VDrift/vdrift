@@ -7,7 +7,6 @@
 #include "carwheelposition.h"
 #include "optional.h"
 #include "unittest.h"
-#include "scenegraph.h"
 
 #include <cassert>
 #include <cmath>

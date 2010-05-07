@@ -10,28 +10,39 @@ DRAWABLE & GetDrawable(SCENENODE & node, keyed_container <DRAWABLE>::handle & dr
 	return node.GetDrawlist().twodim.get(drawhandle);
 }
 
-bool HUD::Init(const std::string & texturepath, FONT & lcdfont, FONT & sansfont, std::ostream & error_output, float displaywidth, float displayheight, const std::string & texsize, bool debugon)
+bool HUD::Init(
+	const std::string & texturepath,
+	const std::string & texsize,
+	TEXTUREMANAGER & textures, 
+	FONT & lcdfont,
+	FONT & sansfont,
+	float displaywidth,
+	float displayheight,
+	bool debugon,
+	std::ostream & error_output)
 {
     float opacity = 0.8;
 
     TEXTUREINFO bartexinfo(texturepath+"/hudbox.png");
     bartexinfo.SetMipMap(false);
     bartexinfo.SetRepeat(false, false);
-    if (!bartex.Load(bartexinfo, error_output, texsize))
-        return false;
+    bartexinfo.SetSize(texsize);
+    TEXTUREPTR bartex = textures.Get(bartexinfo);
+    if (!bartex->Loaded()) return false;
 
     TEXTUREINFO progbartexinfo(texturepath+"/progressbar.png");
     progbartexinfo.SetMipMap(false);
     progbartexinfo.SetRepeat(false, false);
-    if (!progbartex.Load(progbartexinfo, error_output, texsize))
-        return false;
+    progbartexinfo.SetSize(texsize);
+    TEXTUREPTR progbartex = textures.Get(progbartexinfo);
+    if (!progbartex->Loaded()) return false;
 
     rpmbar = AddDrawable(hudroot);
     rpmredbar = AddDrawable(hudroot);
     rpmbox = AddDrawable(hudroot);
     
 	DRAWABLE & rpmboxref = GetDrawable(hudroot, rpmbox);
-	rpmboxref.SetDiffuseMap(&progbartex);
+	rpmboxref.SetDiffuseMap(progbartex);
     rpmboxref.SetVertArray(&rpmboxverts);
     rpmboxref.SetDrawOrder(2);
     rpmboxref.SetLit(false);
@@ -40,7 +51,7 @@ bool HUD::Init(const std::string & texturepath, FONT & lcdfont, FONT & sansfont,
     rpmboxref.SetColor(0.3, 0.3, 0.3, 0.4);
     
 	DRAWABLE & rpmbarref = GetDrawable(hudroot, rpmbar);
-	rpmbarref.SetDiffuseMap(&progbartex);
+	rpmbarref.SetDiffuseMap(progbartex);
     rpmbarref.SetVertArray(&rpmbarverts);
     rpmbarref.SetDrawOrder(3);
     rpmbarref.SetLit(false);
@@ -49,7 +60,7 @@ bool HUD::Init(const std::string & texturepath, FONT & lcdfont, FONT & sansfont,
     rpmbarref.SetColor(1.0, 1.0, 1.0, 0.7);
     
 	DRAWABLE & rpmredbarref = GetDrawable(hudroot, rpmredbar);
-	rpmredbarref.SetDiffuseMap(&progbartex);
+	rpmredbarref.SetDiffuseMap(progbartex);
     rpmredbarref.SetVertArray(&rpmredbarverts);
     rpmredbarref.SetColor(1.0, 0.2, 0.2, 0.7);
     rpmredbarref.SetDrawOrder(3);
@@ -84,8 +95,9 @@ bool HUD::Init(const std::string & texturepath, FONT & lcdfont, FONT & sansfont,
         TEXTUREINFO timerboxtexinfo(texturepath+"/timerbox.png");
         timerboxtexinfo.SetMipMap(false);
         timerboxtexinfo.SetRepeat(true, false);
-        if (!timerboxtex.Load(timerboxtexinfo, error_output, texsize))
-            return false;
+        timerboxtexinfo.SetSize(texsize);
+        TEXTUREPTR timerboxtex = textures.Get(timerboxtexinfo);
+        if (!timerboxtex->Loaded()) return false;
 
         float totalsizex = timerboxdimx*6.05;
         float totalsizey = timerboxdimy*2.0;
@@ -95,7 +107,7 @@ bool HUD::Init(const std::string & texturepath, FONT & lcdfont, FONT & sansfont,
                      timerboxdimx,timerboxdimy);
         timerbox_lowery = y+timerboxdimy*0.5;
 
-        timerboxdrawref.SetDiffuseMap(&timerboxtex);
+        timerboxdrawref.SetDiffuseMap(timerboxtex);
         timerboxdrawref.SetVertArray(&timerboxverts);
         timerboxdrawref.SetLit(false);
         timerboxdrawref.Set2D(true);

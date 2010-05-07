@@ -3,7 +3,7 @@
 
 #include "widget.h"
 #include "mathvector.h"
-#include "scenegraph.h"
+#include "scenenode.h"
 #include "vertexarray.h"
 #include "text_draw.h"
 #include "font.h"
@@ -11,7 +11,7 @@
 #include <string>
 #include <cassert>
 
-class TEXTURE_GL;
+class TEXTURE;
 
 class WIDGET_LABEL : public WIDGET
 {

@@ -1,7 +1,7 @@
 #ifndef _FONT_H
 #define _FONT_H
 
-#include "texture.h"
+#include "texturemanager.h"
 #include "optional.h"
 
 #include <ostream>
@@ -25,7 +25,7 @@ public:
 	};
 		
 private:
-	TEXTURE_GL font_texture;
+	TEXTUREPTR font_texture;
 	
 	std::vector <CHARINFO> charinfo;
 	
@@ -47,9 +47,15 @@ private:
 	}
 	
 public:
-	bool Load(const std::string & fontinfopath, const std::string & fonttexturepath, const std::string & texsize, std::ostream & error_output, bool mipmap=false);
+	bool Load(
+		const std::string & fontinfopath,
+		const std::string & fonttexturepath,
+		const std::string & texsize,
+		TEXTUREMANAGER & textures,
+		std::ostream & error_output,
+		bool mipmap = false);
 
-	const TEXTURE_GL & GetFontTexture() const
+	const TEXTUREPTR GetFontTexture() const
 	{
 		return font_texture;
 	}
@@ -80,7 +86,7 @@ public:
 			{
 				optional <const FONT::CHARINFO *> cinfo = GetCharInfo(newtext[i]);
 				if (cinfo)
-					cursorx += (cinfo.get()->xadvance/GetFontTexture().GetW())*newscale;
+					cursorx += (cinfo.get()->xadvance/GetFontTexture()->GetW())*newscale;
 			}
 		}
 	

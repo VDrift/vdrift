@@ -13,7 +13,7 @@
 #include "model_joe03.h"
 #include "texture.h"
 #include "joepack.h"
-#include "scenegraph.h"
+#include "scenenode.h"
 #include "tracksurface.h"
 #include "mathvector.h"
 #include "quaternion.h"
@@ -40,21 +40,23 @@ public:
 	bool Load(
 		const std::string & trackpath,
 		const std::string & effects_texturepath,
-		bool reverse,
+		const std::string & texsize,
 		int anisotropy,
-		const std::string & texsize);
+		TEXTUREMANAGER & textures,
+		bool reverse);
 	
 	///returns true if successful.  only begins loading the track; the track won't be loaded until more calls to ContinueDeferredLoad().  use Loaded() to see if loading is complete yet.
 	bool DeferredLoad(
 		const std::string & trackpath,
 		const std::string & effects_texturepath,
-		bool reverse,
-		int anisotropy,
 		const std::string & texsize,
-		bool shadows,
+		int anisotropy,
+		TEXTUREMANAGER & textures,
+		bool reverse,
+		bool dynamicshadowsenabled,
 		bool doagressivecombining);
 	
-	bool ContinueDeferredLoad();
+	bool ContinueDeferredLoad(TEXTUREMANAGER & textures);
 	
 	int DeferredLoadTotalObjects();
 
@@ -127,7 +129,7 @@ private:
 
 	std::string texture_size;
 	std::map <std::string, MODEL_JOE03> model_library;
-	std::map <std::string, TEXTURE_GL> texture_library;
+	std::map <std::string, TEXTURE> texture_library;
 	std::list <TRACK_OBJECT> objects;
 	bool vertical_tracking_skyboxes;
 	std::vector <std::pair <MATHVECTOR <float, 3>, QUATERNION <float> > > start_positions;
@@ -156,7 +158,7 @@ private:
 	//racing line data
 	SCENENODE racingline_node;
 	SCENENODE empty_node;
-	TEXTURE_GL racingline_texture;
+	TEXTUREPTR racingline_texture;
 	bool racingline_visible;
 	
 	SCENENODE tracknode;
@@ -164,8 +166,10 @@ private:
 	bool loaded;
 	bool cull;
 	
-	
-	bool CreateRacingLines(const std::string & texturepath, const std::string & texsize);
+	bool CreateRacingLines(
+		const std::string & texturepath,
+		const std::string & texsize,
+		TEXTUREMANAGER & textures);
 	
 	bool LoadParameters(const std::string & trackpath);
 	
@@ -174,7 +178,8 @@ private:
 	bool LoadObjects(
 		const std::string & trackpath,
 		SCENENODE & sceneroot,
-		int anisotropy);
+		int anisotropy,
+		TEXTUREMANAGER & textures);
 	
 	std::auto_ptr <OBJECTLOADER> objload;
 	
@@ -187,7 +192,7 @@ private:
 		bool doagressivecombining);
 	
 	///returns a pair of bools: the first bool is true if there was an error, the second bool is true if an object was loaded
-	std::pair <bool, bool> ContinueObjectLoad();
+	std::pair <bool, bool> ContinueObjectLoad(TEXTUREMANAGER & textures);
 	
 	bool LoadRoads(const std::string & trackpath, bool reverse);
 	

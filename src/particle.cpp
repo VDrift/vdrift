@@ -3,19 +3,23 @@
 
 using std::endl;
 
-bool PARTICLE_SYSTEM::Load(const std::list <std::string> & texlist, int anisotropy, const std::string & texsize, std::ostream & error_output)
+bool PARTICLE_SYSTEM::Load(
+	const std::list <std::string> & texlist,
+	int anisotropy,
+	const std::string & texsize,
+	TEXTUREMANAGER * texturemanager,
+	std::ostream & error_output)
 {
+	if (!texturemanager) return false;
 	for (std::list <std::string>::const_iterator i = texlist.begin(); i != texlist.end(); ++i)
 	{
-		textures.push_back(TEXTURE_GL());
 		TEXTUREINFO texinfo(*i);
+		texinfo.SetSize(texsize);
 		texinfo.SetAnisotropy(anisotropy);
-		if (!textures.back().Load(texinfo, error_output, texsize))
-			textures.pop_back();
+		TEXTUREPTR texture = texturemanager->Get(texinfo);
+		textures.push_back(texture);
 	}
-	
 	cur_texture = textures.end();
-	
 	return !textures.empty();
 }
 
@@ -82,15 +86,11 @@ void PARTICLE_SYSTEM::AddParticle(const MATHVECTOR <float,3> & position, float n
 	if (cur_texture == textures.end())
 		cur_texture = textures.begin();
 	
-	TEXTURE_GL * tex = &(*cur_texture);
-	if (testonly)
-	{
-		tex = NULL;
-	}
-	else
+	TEXTUREPTR tex;
+	if (!testonly)
 	{
 		assert(cur_texture != textures.end()); //this should only happen if the textures array is empty, which should never happen unless we're doing a unit test
-		assert(tex);
+		tex = *cur_texture;
 	}
 	
 	const unsigned int max_particles = 128;
@@ -103,7 +103,7 @@ void PARTICLE_SYSTEM::AddParticle(const MATHVECTOR <float,3> & position, float n
 			    transparency_range.first+newspeed*(transparency_range.second-transparency_range.first),
 			    longevity_range.first+newspeed*(longevity_range.second-longevity_range.first),
 			    size_range.first+newspeed*(size_range.second-size_range.first),
-			    *tex));
+				tex));
 	
 	if (cur_texture != textures.end())
 		cur_texture++;
@@ -139,7 +139,7 @@ QT_TEST(particle_test)
 	PARTICLE_SYSTEM s;
 	s.SetParameters(1.0,1.0,0.5,1.0,1.0,1.0,1.0,1.0,MATHVECTOR<float,3>(0,1,0));
 	std::stringstream out;
-	s.Load(std::list<std::string> (), 0, "large", out);
+	s.Load(std::list<std::string> (), 0, "large", NULL, out);
 	
 	//test basic particle management:  adding particles and letting them expire and get removed over time
 	QT_CHECK_EQUAL(s.NumParticles(),0);

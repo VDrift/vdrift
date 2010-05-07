@@ -36,11 +36,6 @@ void TRACKMAP::Unload()
 		SDL_FreeSurface(surface);
 		surface = NULL;
 	}
-	if (track_map.Loaded()) track_map.Unload();
-	if (cardot0.Loaded()) cardot0.Unload();
-	if (cardot1.Loaded()) cardot1.Unload();
-	if (cardot0_focused.Loaded()) cardot0_focused.Unload();
-	if (cardot1_focused.Loaded()) cardot1_focused.Unload();
 }
 
 void TRACKMAP::CalcPosition(int w, int h)
@@ -51,11 +46,19 @@ void TRACKMAP::CalcPosition(int w, int h)
 	position[1] = 0.12;
 	size[0] = MAP_WIDTH / screen[0];
 	size[1] = MAP_HEIGHT / screen[1];
-	dot_size[0] = cardot0.GetW() / 2.0 / screen[0]; 
-	dot_size[1] = cardot0.GetH() / 2.0 / screen[1]; 
+	dot_size[0] = cardot0->GetW() / 2.0 / screen[0]; 
+	dot_size[1] = cardot0->GetH() / 2.0 / screen[1]; 
 }
 
-bool TRACKMAP::BuildMap(const std::list <ROADSTRIP> & roads, int w, int h, const std::string & texturepath, const std::string & texsize, std::ostream & error_output)
+bool TRACKMAP::BuildMap(
+	const std::list <ROADSTRIP> & roads,
+	int w,
+	int h,
+	const std::string & trackname,
+	const std::string & texturepath,
+	const std::string & texsize,
+	TEXTUREMANAGER & textures,
+	std::ostream & error_output)
 {
 	Unload();
 	
@@ -208,25 +211,40 @@ bool TRACKMAP::BuildMap(const std::list <ROADSTRIP> & roads, int w, int h, const
 			}
 		}
 	}
-	
+
 	TEXTUREINFO texinfo;
+	texinfo.SetName(trackname);
 	texinfo.SetSurface(surface);
 	texinfo.SetRepeat(false, false);
-	
-	if (!track_map.Load(texinfo, error_output, texsize)) return false;
+	texinfo.SetSize(texsize);
+	TEXTUREPTR track_map = textures.Get(texinfo);
+	if (!track_map->Loaded()) return false;
 	
 	//std::cout << "Loading track map dots" << std::endl;
-	if (!cardot0.Load(TEXTUREINFO(texturepath+"/cardot0.png"), error_output, texsize)) return false;
-	if (!cardot1.Load(TEXTUREINFO(texturepath+"/cardot1.png"), error_output, texsize)) return false;
-	if (!cardot0_focused.Load(TEXTUREINFO(texturepath+"/cardot0_focused.png"), error_output, texsize)) return false;
-	if (!cardot1_focused.Load(TEXTUREINFO(texturepath+"/cardot1_focused.png"), error_output, texsize)) return false;
-	//std::cout << "Done loading track map dots" << std::endl;
+	TEXTUREINFO dotinfo;
+	dotinfo.SetSize(texsize);
+	
+	dotinfo.SetName(texturepath+"/cardot0.png");
+	cardot0 = textures.Get(dotinfo);
+	if (!cardot0->Loaded()) return false;
+	
+	dotinfo.SetName(texturepath+"/cardot1.png");
+	cardot1 = textures.Get(dotinfo);
+	if (!cardot1->Loaded()) return false;
+	
+	dotinfo.SetName(texturepath+"/cardot0_focused.png");
+	cardot0_focused = textures.Get(dotinfo);
+	if (!cardot0_focused->Loaded()) return false;
+	
+	dotinfo.SetName(texturepath+"/cardot1_focused.png");
+	cardot1_focused = textures.Get(dotinfo);
+	if (!cardot1_focused->Loaded()) return false;
 	
 	CalcPosition(w, h);
 	
 	mapdraw = mapnode.GetDrawlist().twodim.insert(DRAWABLE());
 	DRAWABLE & mapdrawref = mapnode.GetDrawlist().twodim.get(mapdraw);
-	mapdrawref.SetDiffuseMap(&track_map);
+	mapdrawref.SetDiffuseMap(track_map);
 	mapdrawref.SetVertArray(&mapverts);
 	mapdrawref.SetLit(false);
 	mapdrawref.Set2D(true);
@@ -249,9 +267,9 @@ void TRACKMAP::Update(bool mapvisible, const std::list <std::pair<MATHVECTOR <fl
 		while (car != carpositions.end())
 		{
 			//determine which texture to use
-			TEXTURE_GL * tex = &cardot0_focused;
+			TEXTUREPTR tex = cardot0_focused;
 			if (!car->second)
-				tex = &cardot1;
+				tex = cardot1;
 			
 			//find the coordinates of the dot
 			MATHVECTOR <float, 2> dotpos = position;
@@ -264,7 +282,7 @@ void TRACKMAP::Update(bool mapvisible, const std::list <std::pair<MATHVECTOR <fl
 			{
 				//need to insert a new dot
 				dotlist.push_back(CARDOT());
-				dotlist.back().Init(mapnode, *tex, corner1, corner2);
+				dotlist.back().Init(mapnode, tex, corner1, corner2);
 				dot = dotlist.end();
 				
 				//std::cout << count << ". inserting new dot: " << corner1 << " || " << corner2 << endl;
@@ -272,7 +290,7 @@ void TRACKMAP::Update(bool mapvisible, const std::list <std::pair<MATHVECTOR <fl
 			else
 			{
 				//update existing dot
-				dot->Retexture(mapnode, *tex);
+				dot->Retexture(mapnode, tex);
 				dot->Reposition(corner1, corner2);
 				
 				//std::cout << count << ". reusing existing dot: " << corner1 << " || " << corner2 << endl;

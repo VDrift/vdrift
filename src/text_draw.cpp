@@ -9,7 +9,7 @@ void TEXT_DRAW::Set(DRAWABLE & draw, const FONT & font, const std::string & newt
 	
 	text=newtext;
 	
-	draw.SetDiffuseMap(&font.GetFontTexture());
+	draw.SetDiffuseMap(font.GetFontTexture());
 	draw.SetLit(false);
 	draw.Set2D(true);
 	draw.SetVertArray(&output_array);
@@ -31,7 +31,7 @@ void TEXT_DRAW::Set(DRAWABLE & draw, const FONT & font, const std::string & newt
 		{
 			optional <const FONT::CHARINFO *> cinfo = font.GetCharInfo(text[i]);
 			if (cinfo)
-				cursorx += RenderCharacter(output_array, font.GetFontTexture().GetW(), font.GetFontTexture().GetH(), cursorx, cursory, newscalex,newscaley, *cinfo.get());
+				cursorx += RenderCharacter(output_array, font.GetFontTexture()->GetW(), font.GetFontTexture()->GetH(), cursorx, cursory, newscalex,newscaley, *cinfo.get());
 		}
 	}
 	
@@ -45,19 +45,8 @@ void TEXT_DRAW::Set(DRAWABLE & draw, const FONT & font, const std::string & newt
 
 void TEXT_DRAW::Revise(const FONT & font, const std::string & newtext, float x, float y, float scalex, float scaley, VERTEXARRAY & output_array)
 {
-	text=newtext;
-	
+	text = newtext;
 	output_array.Clear();
-	
-	//draw.SetDiffuseMap(&font.GetFontTexture());
-	//draw.SetLit(false);
-	//draw.Set2D(true);
-	//draw.SetVertArray(&output_array);
-	//draw.SetCull(false, false);
-	//draw.SetDistanceField(true);
-	//draw.SetColor(r,g,b,1.0);
-	//draw.SetDrawOrderFont();
-	
 	float cursorx = x;
 	float cursory = y;
 	
@@ -72,7 +61,7 @@ void TEXT_DRAW::Revise(const FONT & font, const std::string & newtext, float x, 
 		{
 			optional <const FONT::CHARINFO *> cinfo = font.GetCharInfo(text[i]);
 			if (cinfo)
-				cursorx += RenderCharacter(output_array, font.GetFontTexture().GetW(), font.GetFontTexture().GetH(), cursorx, cursory, scalex, scaley, *cinfo.get());
+				cursorx += RenderCharacter(output_array, font.GetFontTexture()->GetW(), font.GetFontTexture()->GetH(), cursorx, cursory, scalex, scaley, *cinfo.get());
 		}
 	}
 	
@@ -165,7 +154,7 @@ float TEXT_DRAW::GetWidth(const FONT & font, const std::string & newtext, const 
 		{
 			optional <const FONT::CHARINFO *> cinfo = font.GetCharInfo(newtext[i]);
 			if (cinfo)
-				cursorx += (cinfo.get()->xadvance/font.GetFontTexture().GetW())*newscale;
+				cursorx += (cinfo.get()->xadvance/font.GetFontTexture()->GetW())*newscale;
 		}
 	}
 	

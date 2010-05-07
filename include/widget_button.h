@@ -4,14 +4,14 @@
 #include "widget.h"
 #include "widget_label.h"
 #include "widget_image.h"
-#include "scenegraph.h"
 #include "font.h"
 #include "mathvector.h"
 
 #include <string>
 #include <cassert>
 
-class TEXTURE_GL;
+class SCENENODE;
+class TEXTURE;
 
 class WIDGET_BUTTON : public WIDGET
 {
@@ -42,7 +42,7 @@ public:
 		action = newaction;
 	}
 	
-	void SetupDrawable(SCENENODE & scene, TEXTURE_GL * teximage_up, TEXTURE_GL * teximage_down, TEXTURE_GL * teximage_selected, FONT * font, const std::string & text, float centerx, float centery, float scalex, float scaley, const float r, const float g, const float b)
+	void SetupDrawable(SCENENODE & scene, TEXTUREPTR teximage_up, TEXTUREPTR teximage_down, TEXTUREPTR teximage_selected, FONT * font, const std::string & text, float centerx, float centery, float scalex, float scaley, const float r, const float g, const float b)
 	{
 		assert(teximage_up);
 		assert(teximage_down);

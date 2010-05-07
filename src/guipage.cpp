@@ -1,5 +1,6 @@
 #include "guipage.h"
 #include "configfile.h"
+#include "texturemanager.h"
 
 #include "widget.h"
 #include "widget_image.h"
@@ -31,10 +32,19 @@ using std::endl;
 #include <sstream>
 using std::stringstream;
 
-bool GUIPAGE::Load(const std::string & path, const std::string & texpath, const std::string & datapath,
-	CONFIGFILE & controlsconfig, SCENENODE & parentnode, std::map<std::string, TEXTURE_GL> & textures,
- 	std::map <std::string, FONT> & fonts, std::map<std::string, GUIOPTION> & optionmap,
-  	float screenhwratio, const std::string & texsize, std::ostream & error_output, bool reloadcontrolsonly)
+bool GUIPAGE::Load(
+	const std::string & path,
+	const std::string & texpath,
+	const std::string & datapath,
+	CONFIGFILE & controlsconfig,
+	SCENENODE & parentnode,
+	std::map <std::string, FONT> & fonts,
+	std::map<std::string, GUIOPTION> & optionmap,
+  	float screenhwratio,
+  	const std::string & texsize,
+  	TEXTUREMANAGER & textures,
+  	std::ostream & error_output,
+  	bool reloadcontrolsonly)
 {
 	if (reloadcontrolsonly)
 		assert(s.valid());
@@ -74,8 +84,9 @@ bool GUIPAGE::Load(const std::string & path, const std::string & texpath, const 
 	{
 		//generate background
 		WIDGET_IMAGE * bg_widget = NewWidget<WIDGET_IMAGE>();
-		if (!EnsureTextureIsLoaded(background, texpath, textures, texsize, error_output)) return false;
-		bg_widget->SetupDrawable(sref, &textures[background], 0.5, 0.5, 1.0, 1.0, -1);
+		TEXTUREPTR texture_back = GetTexture(background, texpath, textures, texsize, error_output);
+		if (!texture_back->Loaded()) return false;
+		bg_widget->SetupDrawable(sref, texture_back, 0.5, 0.5, 1.0, 1.0, -1);
 	}
 	
 	//remove existing controlgrabs
@@ -163,11 +174,13 @@ bool GUIPAGE::Load(const std::string & path, const std::string & texpath, const 
 				if (!pagefile.GetParam(widgetstr.str()+".width", w)) return false;
 				if (!pagefile.GetParam(widgetstr.str()+".height", h)) return false;
 				
-				WIDGET_IMAGE * new_widget = NewWidget<WIDGET_IMAGE>();
 				string texfn;
 				if (!pagefile.GetParam(widgetstr.str()+".filename", texfn)) return false;
-				if (!EnsureTextureIsLoaded(texfn, texpath, textures, texsize, error_output)) return false;
-				new_widget->SetupDrawable(sref, &textures[texfn], xy[0], xy[1], w, h);
+				TEXTUREPTR texture = GetTexture(texfn, texpath, textures, texsize, error_output);
+				if(!texture->Loaded()) return false;
+				
+				WIDGET_IMAGE * new_widget = NewWidget<WIDGET_IMAGE>();
+				new_widget->SetupDrawable(sref, texture, xy[0], xy[1], w, h);
 			}
 			else if (wtype == "button")
 			{
@@ -186,16 +199,16 @@ bool GUIPAGE::Load(const std::string & path, const std::string & texpath, const 
 				if (!pagefile.GetParam(widgetstr.str()+".cancel", cancel)) return false;
 				if (!pagefile.GetParam(widgetstr.str()+".tip", description)) description = "";
 				
-				WIDGET_BUTTON * new_widget = NewWidget<WIDGET_BUTTON>();
-				string texfn_up = "widgets/btn_up_unsel.png";
-				string texfn_down = "widgets/btn_down.png";
-				string texfn_sel = "widgets/btn_up.png";
-				if (!EnsureTextureIsLoaded(texfn_up, texpath, textures, texsize, error_output)) return false;
-				if (!EnsureTextureIsLoaded(texfn_down, texpath, textures, texsize, error_output)) return false;
-				if (!EnsureTextureIsLoaded(texfn_sel, texpath, textures, texsize, error_output)) return false;
+				TEXTUREPTR texture_up = GetTexture("widgets/btn_up_unsel.png", texpath, textures, texsize, error_output);
+				TEXTUREPTR texture_down = GetTexture("widgets/btn_down.png", texpath, textures, texsize, error_output);
+				TEXTUREPTR texture_sel = GetTexture("widgets/btn_up.png", texpath, textures, texsize, error_output);
+				if (!texture_up->Loaded() || !texture_down->Loaded() || !texture_sel->Loaded()) return false;
 				float fontscaley = ((((float) fontsize - 7.0f) * 0.25f) + 1.0f)*0.25;
 				float fontscalex = fontscaley*screenhwratio;
-				new_widget->SetupDrawable(sref, &textures[texfn_up], &textures[texfn_down], &textures[texfn_sel], &fonts["futuresans"], text, xy[0],xy[1], fontscalex,fontscaley, color[0],color[1],color[2]);
+				
+				WIDGET_BUTTON * new_widget = NewWidget<WIDGET_BUTTON>();
+				new_widget->SetupDrawable(sref, texture_up, texture_down, texture_sel,
+						&fonts["futuresans"], text, xy[0],xy[1], fontscalex,fontscaley, color[0],color[1],color[2]);
 				new_widget->SetAction(action);
 				new_widget->SetDescription(description);
 				new_widget->SetCancel(cancel);
@@ -270,27 +283,22 @@ bool GUIPAGE::Load(const std::string & path, const std::string & texpath, const 
 				
 				//generate toggle
 				{
-					WIDGET_TOGGLE * new_widget = NewWidget<WIDGET_TOGGLE>();
-					string texfn_up = "widgets/tog_off_up_unsel.png";
-					string texfn_down = "widgets/tog_on_up_unsel.png";
-					string texfn_upsel = "widgets/tog_off_up.png";
-					string texfn_downsel = "widgets/tog_on_up.png";
-					string texfn_trans = "widgets/tog_off_down.png";
-					if (!EnsureTextureIsLoaded(texfn_up, texpath, textures, texsize, error_output)) return false;
-					if (!EnsureTextureIsLoaded(texfn_down, texpath, textures, texsize, error_output)) return false;
-					if (!EnsureTextureIsLoaded(texfn_upsel, texpath, textures, texsize, error_output)) return false;
-					if (!EnsureTextureIsLoaded(texfn_downsel, texpath, textures, texsize, error_output)) return false;
-					if (!EnsureTextureIsLoaded(texfn_trans, texpath, textures, texsize, error_output)) return false;
+					TEXTUREPTR texture_up = GetTexture("widgets/tog_off_up_unsel.png", texpath, textures, texsize, error_output);
+					TEXTUREPTR texture_down = GetTexture("widgets/tog_on_up_unsel.png", texpath, textures, texsize, error_output);
+					TEXTUREPTR texture_upsel = GetTexture("widgets/tog_off_up.png", texpath, textures, texsize, error_output);
+					TEXTUREPTR texture_downsel = GetTexture("widgets/tog_on_up.png", texpath, textures, texsize, error_output);
+					TEXTUREPTR texture_trans = GetTexture("widgets/tog_off_down.png", texpath, textures, texsize, error_output);
+					if (!texture_up->Loaded() || !texture_down->Loaded() || !texture_upsel->Loaded() || 
+						!texture_downsel->Loaded() || !texture_trans->Loaded()) return false;
 					float h = 0.025;
 					float w = h*screenhwratio;
 					
-					new_widget->SetupDrawable(sref, &textures[texfn_up], &textures[texfn_down], &textures[texfn_upsel], 
-							&textures[texfn_downsel], &textures[texfn_trans], xy[0]-0.02,xy[1], w, h);
+					WIDGET_TOGGLE * new_widget = NewWidget<WIDGET_TOGGLE>();
+					new_widget->SetupDrawable(sref, texture_up, texture_down, texture_upsel, 
+							texture_downsel, texture_trans, xy[0]-0.02,xy[1], w, h);
 					//new_widget->SetAction(action);
 					new_widget->SetDescription(description);
-					
 					new_widget->SetSetting(setting);
-					
 					new_widget->UpdateOptions(sref, false, optionmap, error_output);
 				}
 			}
@@ -325,27 +333,22 @@ bool GUIPAGE::Load(const std::string & path, const std::string & texpath, const 
 					error_output << "Widget " << widgetstr << ": unknown value type " << values << endl;
 				}
 				
-				WIDGET_STRINGWHEEL * new_widget = NewWidget<WIDGET_STRINGWHEEL>();
-				string texfn_up_l = "widgets/wheel_up_l.png";
-				string texfn_down_l = "widgets/wheel_down_l.png";
-				string texfn_up_r = "widgets/wheel_up_r.png";
-				string texfn_down_r = "widgets/wheel_down_r.png";
-				if (!EnsureTextureIsLoaded(texfn_up_l, texpath, textures, texsize, error_output)) return false;
-				if (!EnsureTextureIsLoaded(texfn_down_l, texpath, textures, texsize, error_output)) return false;
-				if (!EnsureTextureIsLoaded(texfn_up_r, texpath, textures, texsize, error_output)) return false;
-				if (!EnsureTextureIsLoaded(texfn_down_r, texpath, textures, texsize, error_output)) return false;
+				TEXTUREPTR up_left = GetTexture("widgets/wheel_up_l.png", texpath, textures, texsize, error_output);
+				TEXTUREPTR down_left = GetTexture("widgets/wheel_down_l.png", texpath, textures, texsize, error_output);
+				TEXTUREPTR up_right = GetTexture("widgets/wheel_up_r.png", texpath, textures, texsize, error_output);
+				TEXTUREPTR down_right = GetTexture("widgets/wheel_down_r.png", texpath, textures, texsize, error_output);
+				if (!up_left->Loaded() || !down_left->Loaded() || !up_right->Loaded() || !down_right->Loaded()) return false;
 				//float w = 0.02;
 				//float h = w*(4.0/3.0);
 				float fontscaley = ((((float) fontsize - 7.0f) * 0.25f) + 1.0f)*0.25;
 				float fontscalex = fontscaley*screenhwratio;
-				new_widget->SetupDrawable(sref, title+":", &textures[texfn_up_l], &textures[texfn_down_l], 
-						&textures[texfn_up_r], &textures[texfn_down_r], &fonts["futuresans"],
-						fontscalex,fontscaley, xy[0], xy[1]);
+				
+				WIDGET_STRINGWHEEL * new_widget = NewWidget<WIDGET_STRINGWHEEL>();
+				new_widget->SetupDrawable(sref, title+":", up_left, down_left, up_right, down_right,
+						&fonts["futuresans"], fontscalex, fontscaley, xy[0], xy[1]);
 				new_widget->SetAction(action);
 				new_widget->SetDescription(description);
-					
 				new_widget->SetSetting(setting);
-				
 				new_widget->UpdateOptions(sref, false, optionmap, error_output);
 				
 				string name;
@@ -386,22 +389,20 @@ bool GUIPAGE::Load(const std::string & path, const std::string & texpath, const 
 					error_output << "Widget " << widgetstr << ": unknown value type " << values << endl;
 				}
 				
-				WIDGET_DOUBLESTRINGWHEEL * new_widget = NewWidget<WIDGET_DOUBLESTRINGWHEEL>();
-				string texfn_up_l = "widgets/wheel_up_l.png";
-				string texfn_down_l = "widgets/wheel_down_l.png";
-				string texfn_up_r = "widgets/wheel_up_r.png";
-				string texfn_down_r = "widgets/wheel_down_r.png";
-				if (!EnsureTextureIsLoaded(texfn_up_l, texpath, textures, texsize, error_output)) return false;
-				if (!EnsureTextureIsLoaded(texfn_down_l, texpath, textures, texsize, error_output)) return false;
-				if (!EnsureTextureIsLoaded(texfn_up_r, texpath, textures, texsize, error_output)) return false;
-				if (!EnsureTextureIsLoaded(texfn_down_r, texpath, textures, texsize, error_output)) return false;
+				
+				TEXTUREPTR up_left = GetTexture("widgets/wheel_up_l.png", texpath, textures, texsize, error_output);
+				TEXTUREPTR down_left = GetTexture("widgets/wheel_down_l.png", texpath, textures, texsize, error_output);
+				TEXTUREPTR up_right = GetTexture("widgets/wheel_up_r.png", texpath, textures, texsize, error_output);
+				TEXTUREPTR down_right = GetTexture("widgets/wheel_down_r.png", texpath, textures, texsize, error_output);
+				if (!up_left->Loaded() || !down_left->Loaded() || !up_right->Loaded() || !down_right->Loaded()) return false;
 				//float w = 0.02;
 				//float h = w*(4.0/3.0);
 				float fontscaley = ((((float) fontsize - 7.0f) * 0.25f) + 1.0f)*0.25;
 				float fontscalex = fontscaley*screenhwratio;
-				new_widget->SetupDrawable(sref, title+":", &textures[texfn_up_l], &textures[texfn_down_l], 
-						&textures[texfn_up_r], &textures[texfn_down_r], &fonts["futuresans"],
-						fontscalex,fontscaley, xy[0], xy[1]);
+				
+				WIDGET_DOUBLESTRINGWHEEL * new_widget = NewWidget<WIDGET_DOUBLESTRINGWHEEL>();
+				new_widget->SetupDrawable(sref, title+":", up_left, down_left, up_right, down_right,
+						&fonts["futuresans"], fontscalex, fontscaley, xy[0], xy[1]);
 				//new_widget->SetAction(action);
 				new_widget->SetDescription(description);
 					
@@ -410,7 +411,6 @@ bool GUIPAGE::Load(const std::string & path, const std::string & texpath, const 
 				const std::list <std::pair<std::string,std::string> > & valuelist1 = optionmap[setting1].GetValueList();
 				const std::list <std::pair<std::string,std::string> > & valuelist2 = optionmap[setting2].GetValueList();
 				new_widget->SetValueList(valuelist1, valuelist2);
-					
 				new_widget->UpdateOptions(sref, false, optionmap, error_output);
 			}
 			else if (wtype == "multi-image")
@@ -428,7 +428,7 @@ bool GUIPAGE::Load(const std::string & path, const std::string & texpath, const 
 				if (!pagefile.GetParam(widgetstr.str()+".postfix", postfix)) return false;
 				
 				WIDGET_MULTIIMAGE * new_widget = NewWidget<WIDGET_MULTIIMAGE>();
-				new_widget->SetupDrawable(sref, texsize, datapath, prefix, postfix, xy[0],xy[1], width, height, error_output, 102);
+				new_widget->SetupDrawable(sref, texsize, textures, datapath, prefix, postfix, xy[0],xy[1], width, height, error_output, 102);
 				
 				if (pagefile.GetParam(widgetstr.str()+".name", name)) namemap[name] = new_widget;
 			}
@@ -458,11 +458,6 @@ bool GUIPAGE::Load(const std::string & path, const std::string & texpath, const 
 					title = optionmap[setting].GetText();
 					description = optionmap[setting].GetDescription();
 				}
-				
-				string texfn_cursor = "widgets/sld_cursor.png";
-				string texfn_wedge = "widgets/sld_wedge.png";
-				if (!EnsureTextureIsLoaded(texfn_cursor, texpath, textures, texsize, error_output)) return false;
-				if (!EnsureTextureIsLoaded(texfn_wedge, texpath, textures, texsize, error_output)) return false;
 				
 				if (values == "manual")
 				{
@@ -507,10 +502,13 @@ bool GUIPAGE::Load(const std::string & path, const std::string & texpath, const 
 				float fontscaley = ((((float) fontsize - 7.0f) * 0.25f) + 1.0f)*0.25;
 				float fontscalex = fontscaley*screenhwratio;
 				FONT * font = &fonts["lcd"];
+
+				TEXTUREPTR cursor = GetTexture("widgets/sld_cursor.png", texpath, textures, texsize, error_output);
+				TEXTUREPTR wedge = GetTexture("widgets/sld_wedge.png", texpath, textures, texsize, error_output);
+				if (!cursor->Loaded() || !wedge->Loaded()) return false;
 				
 				WIDGET_SLIDER * new_widget = NewWidget<WIDGET_SLIDER>();
-				new_widget->SetupDrawable(sref, &textures[texfn_wedge], &textures[texfn_cursor],
-					xy[0], xy[1], w, h, min, max, percentage, setting,
+				new_widget->SetupDrawable(sref, wedge, cursor, xy[0], xy[1], w, h, min, max, percentage, setting,
      					font, fontscalex, fontscaley, error_output, 102);
 				new_widget->SetDescription(description);
 			}
@@ -525,7 +523,7 @@ bool GUIPAGE::Load(const std::string & path, const std::string & texpath, const 
 				if (!pagefile.GetParam(widgetstr.str()+".values", values)) return false;
 				
 				WIDGET_SPINNINGCAR * new_widget = NewWidget<WIDGET_SPINNINGCAR>();
-				new_widget->SetupDrawable(sref, texsize, datapath, centerxy[0],centerxy[1], MATHVECTOR <float, 3> (carposxy[0], carposxy[1], carposxy[2]), error_output, 110);
+				new_widget->SetupDrawable(sref, texsize, datapath, centerxy[0], centerxy[1], MATHVECTOR <float, 3> (carposxy[0], carposxy[1], carposxy[2]), textures, error_output, 110);
 				
 				if (pagefile.GetParam(widgetstr.str()+".name", name)) namemap[name] = new_widget;
 			}
@@ -554,42 +552,26 @@ bool GUIPAGE::Load(const std::string & path, const std::string & texpath, const 
 			WIDGET_CONTROLGRAB * new_widget = NewWidget<WIDGET_CONTROLGRAB>();
 			controlgrabs.push_back(new_widget);
 			
-			string texfn_add = "widgets/controls/add.png";
-			string texfn_add_sel = "widgets/controls/add_sel.png";
-			string texfn_joy_axis = "widgets/controls/joy_axis.png";
-			string texfn_joy_axis_sel = "widgets/controls/joy_axis_sel.png";
-			string texfn_joy_btn = "widgets/controls/joy_btn.png";
-			string texfn_joy_btn_sel = "widgets/controls/joy_btn_sel.png";
-			string texfn_key = "widgets/controls/key.png";
-			string texfn_key_sel = "widgets/controls/key_sel.png";
-			string texfn_mouse = "widgets/controls/mouse.png";
-			string texfn_mouse_sel = "widgets/controls/mouse_sel.png";
-			if (!EnsureTextureIsLoaded(texfn_add, texpath, textures, texsize, error_output)) return false;
-			if (!EnsureTextureIsLoaded(texfn_add_sel, texpath, textures, texsize, error_output)) return false;
-			if (!EnsureTextureIsLoaded(texfn_joy_axis, texpath, textures, texsize, error_output)) return false;
-			if (!EnsureTextureIsLoaded(texfn_joy_axis_sel, texpath, textures, texsize, error_output)) return false;
-			if (!EnsureTextureIsLoaded(texfn_joy_btn, texpath, textures, texsize, error_output)) return false;
-			if (!EnsureTextureIsLoaded(texfn_joy_btn_sel, texpath, textures, texsize, error_output)) return false;
-			if (!EnsureTextureIsLoaded(texfn_key, texpath, textures, texsize, error_output)) return false;
-			if (!EnsureTextureIsLoaded(texfn_key_sel, texpath, textures, texsize, error_output)) return false;
-			if (!EnsureTextureIsLoaded(texfn_mouse, texpath, textures, texsize, error_output)) return false;
-			if (!EnsureTextureIsLoaded(texfn_mouse_sel, texpath, textures, texsize, error_output)) return false;
-			
-			std::vector <TEXTURE_GL *> controltex(WIDGET_CONTROLGRAB::END, NULL);
-			controltex[WIDGET_CONTROLGRAB::ADD] = &textures[texfn_add];
-			controltex[WIDGET_CONTROLGRAB::ADDSEL] = &textures[texfn_add_sel];
-			controltex[WIDGET_CONTROLGRAB::JOYAXIS] = &textures[texfn_joy_axis];
-			controltex[WIDGET_CONTROLGRAB::JOYAXISSEL] = &textures[texfn_joy_axis_sel];
-			controltex[WIDGET_CONTROLGRAB::JOYBTN] = &textures[texfn_joy_btn];
-			controltex[WIDGET_CONTROLGRAB::JOYBTNSEL] = &textures[texfn_joy_btn_sel];
-			controltex[WIDGET_CONTROLGRAB::KEY] = &textures[texfn_key];
-			controltex[WIDGET_CONTROLGRAB::KEYSEL] = &textures[texfn_key_sel];
-			controltex[WIDGET_CONTROLGRAB::MOUSE] = &textures[texfn_mouse];
-			controltex[WIDGET_CONTROLGRAB::MOUSESEL] = &textures[texfn_mouse_sel];
+			std::vector <TEXTUREPTR> control(WIDGET_CONTROLGRAB::END);
+			control[WIDGET_CONTROLGRAB::ADD] = GetTexture("widgets/controls/add.png", texpath, textures, texsize, error_output);
+			control[WIDGET_CONTROLGRAB::ADDSEL] = GetTexture("widgets/controls/add_sel.png", texpath, textures, texsize, error_output);
+			control[WIDGET_CONTROLGRAB::JOYAXIS] = GetTexture("widgets/controls/joy_axis.png", texpath, textures, texsize, error_output);
+			control[WIDGET_CONTROLGRAB::JOYAXISSEL] = GetTexture("widgets/controls/joy_axis_sel.png", texpath, textures, texsize, error_output);
+			control[WIDGET_CONTROLGRAB::JOYBTN] = GetTexture("widgets/controls/joy_btn.png", texpath, textures, texsize, error_output);
+			control[WIDGET_CONTROLGRAB::JOYBTNSEL] = GetTexture("widgets/controls/joy_btn_sel.png", texpath, textures, texsize, error_output);
+			control[WIDGET_CONTROLGRAB::KEY] = GetTexture("widgets/controls/key.png", texpath, textures, texsize, error_output);
+			control[WIDGET_CONTROLGRAB::KEYSEL] = GetTexture("widgets/controls/key_sel.png", texpath, textures, texsize, error_output);
+			control[WIDGET_CONTROLGRAB::MOUSE] = GetTexture("widgets/controls/mouse.png", texpath, textures, texsize, error_output);
+			control[WIDGET_CONTROLGRAB::MOUSESEL] = GetTexture("widgets/controls/mouse_sel.png", texpath, textures, texsize, error_output);
+			std::vector <TEXTUREPTR>::iterator it;
+			for (it = control.begin(); it < control.end(); it++)
+			{
+				if (!it->get()->Loaded()) return false;
+			}
 			
 			float fontscaley = ((((float) fontsize - 7.0f) * 0.25f) + 1.0f)*0.25;
 			float fontscalex = fontscaley*screenhwratio;
-			new_widget->SetupDrawable(sref, controlsconfig, setting, controltex, 
+			new_widget->SetupDrawable(sref, controlsconfig, setting, control, 
 					&fonts["futuresans"], text, xy[0],xy[1], fontscalex,fontscaley,
 					analog, only_one);
 			new_widget->SetDescription(description);

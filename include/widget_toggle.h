@@ -3,7 +3,6 @@
 
 #include "widget.h"
 #include "widget_image.h"
-#include "scenegraph.h"
 #include "mathvector.h"
 #include "guioption.h"
 
@@ -13,7 +12,8 @@
 #include <map>
 #include <iostream>
 
-class TEXTURE_GL;
+class SCENENODE;
+class TEXTURE;
 
 class WIDGET_TOGGLE : public WIDGET
 {
@@ -50,9 +50,9 @@ public:
 		action = newaction;
 	}*/
 	
-	void SetupDrawable(SCENENODE & scene, TEXTURE_GL * teximage_up, TEXTURE_GL * teximage_down, 
-		TEXTURE_GL * teximage_upselected, TEXTURE_GL * teximage_downselected, 
-      		TEXTURE_GL * teximage_transition, float centerx, float centery, float w, float h)
+	void SetupDrawable(SCENENODE & scene, TEXTUREPTR teximage_up, TEXTUREPTR teximage_down, 
+		TEXTUREPTR teximage_upselected, TEXTUREPTR teximage_downselected, 
+      		TEXTUREPTR teximage_transition, float centerx, float centery, float w, float h)
 	{
 		assert(teximage_up);
 		assert(teximage_down);

@@ -8,10 +8,10 @@
 
 #include "derived.h"
 #include "widget.h"
-#include "texture.h"
+#include "texturemanager.h"
 #include "font.h"
 #include "guioption.h"
-#include "scenegraph.h"
+#include "scenenode.h"
 #include "configfile.h"
 #include "reseatable_reference.h"
 
@@ -38,17 +38,13 @@ private:
 		return (T*) widgets.back().Get();
 	}
 	
-	bool EnsureTextureIsLoaded(const std::string & texname, const std::string & texpath, std::map<std::string, TEXTURE_GL> & textures, const std::string & texsize, std::ostream & error_output)
+	TEXTUREPTR GetTexture(const std::string & texname, const std::string & texpath, TEXTUREMANAGER & textures, const std::string & texsize, std::ostream & error_output)
 	{
-		if (!textures[texname].Loaded())
-		{
-			TEXTUREINFO texinfo(texpath + "/" + texname);
-			texinfo.SetMipMap(false);
-			texinfo.SetRepeat(false, false);
-			if (!textures[texname].Load(texinfo, error_output, texsize)) return false;
-		}
-		
-		return true;
+		TEXTUREINFO texinfo(texpath + "/" + texname);
+		texinfo.SetMipMap(false);
+		texinfo.SetRepeat(false, false);
+		texinfo.SetSize(texsize);
+		return textures.Get(texinfo);
 	}
 	
 	void Clear(SCENENODE & parentnode)
@@ -74,11 +70,20 @@ public:
 		return parentnode.GetNode(s);
 	}
 	
-	bool Load(const std::string & path, const std::string & texpath, const std::string & datapath,
-		  CONFIGFILE & controlsconfig, SCENENODE & parentnode, std::map<std::string, TEXTURE_GL> & textures,
-    		  std::map <std::string, FONT> & fonts, std::map<std::string, GUIOPTION> & optionmap,
-		  float screenhwratio, const std::string & texsize, std::ostream & error_output, bool reloadcontrolsonly=false);
-		  
+	bool Load(
+		const std::string & path,
+		const std::string & texpath,
+		const std::string & datapath,
+		CONFIGFILE & controlsconfig,
+		SCENENODE & parentnode,
+		std::map <std::string, FONT> & fonts,
+		std::map<std::string, GUIOPTION> & optionmap,
+		float screenhwratio,
+		const std::string & texsize,
+		TEXTUREMANAGER & textures,
+		std::ostream & error_output,
+		bool reloadcontrolsonly = false);
+  	
 	void SetVisible(SCENENODE & parent, const bool newvis)
 	{
 		SCENENODE & sref = GetNode(parent);

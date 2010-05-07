@@ -2,8 +2,8 @@
 
 #include <string>
 #include <fstream>
-#include "texture.h"
-#include "reseatable_reference.h"
+
+#include "texturemanager.h"
 
 OBJECTLOADER::OBJECTLOADER(
 	const std::string & ntrackpath,
@@ -83,23 +83,14 @@ void OBJECTLOADER::CalculateNumObjects()
 	//info_output << "!!!!!!! " << numobjects << endl;
 }
 
-bool OBJECTLOADER::GetSurfacesBool()
-{
-	info_output << "calling Get Surfaces Bool when we shouldn't!!! " << std::endl;
-	if (params_per_object >= 17)
-		return true;
-	else
-		return false;
-}
-
 std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad(
 	std::map <std::string, MODEL_JOE03> & model_library,
-	std::map <std::string, TEXTURE_GL> & texture_library,
 	std::list <TRACK_OBJECT> & objects,
 	std::list <TRACKSURFACE> & surfaces,
 	bool usesurfaces,
  	bool vertical_tracking_skyboxes,
- 	const std::string & texture_size)
+ 	const std::string & texture_size,
+ 	TEXTUREMANAGER & textures)
 {
 	std::string model_name;
 
@@ -108,9 +99,7 @@ std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad(
 
 	if (!(GetParam(objectfile, model_name)))
 	{
-		info_output << "Track loading was successful: " << model_library.size() << " unique models, " << texture_library.size() << " unique textures" << std::endl;
-		Optimize();
-		info_output << "Objects before optimization: " << unoptimized_scene.GetDrawlist().size() << ", objects after optimization: " << sceneroot.GetDrawlist().size() << std::endl;
+		sceneroot = unoptimized_scene;
 		unoptimized_scene.Clear();
 		return std::make_pair(false, false);
 	}
@@ -133,7 +122,6 @@ std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad(
 	bool isashadow(false);
 	int clamptexture(0);
 	int surface_type(2);
-
 	std::string otherjunk;
 
 	GetParam(objectfile, diffuse_texture_name);
@@ -192,54 +180,40 @@ std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad(
 	if (dynamicshadowsenabled && isashadow)
 		skip = true;
 
-	if (texture_library.find(diffuse_texture_name) == texture_library.end())
+	TEXTUREINFO texinfo;
+	texinfo.SetName(objectpath + "/" + diffuse_texture_name);
+	texinfo.SetMipMap(mipmap || anisotropy); //always mipmap if anisotropy is on
+	texinfo.SetAnisotropy(anisotropy);
+	bool clampu = clamptexture == 1 || clamptexture == 2;
+	bool clampv = clamptexture == 1 || clamptexture == 3;
+	texinfo.SetRepeat(!clampu, !clampv);
+	texinfo.SetSize(texture_size);
+	TEXTUREPTR diffuse_texture = textures.Get(texinfo);
+	if (!diffuse_texture->Loaded())
 	{
-		TEXTUREINFO texinfo;
-		texinfo.SetName(objectpath + "/" + diffuse_texture_name);
-		texinfo.SetMipMap(mipmap || anisotropy); //always mipmap if anisotropy is on
-		texinfo.SetAnisotropy(anisotropy);
-		bool clampu = clamptexture == 1 || clamptexture == 2;
-		bool clampv = clamptexture == 1 || clamptexture == 3;
-		texinfo.SetRepeat(!clampu, !clampv);
-		if (!texture_library[diffuse_texture_name].Load(texinfo, error_output, texture_size))
-		{
-			error_output << "Error loading texture: " << objectpath + "/" + diffuse_texture_name << ", skipping object " << model_name << " and continuing" << std::endl;
-			skip = true; //fail the loading of this model only
-		}
+		error_output << "Error loading texture: " << objectpath + "/" + diffuse_texture_name << ", skipping object " << model_name << " and continuing" << std::endl;
+		skip = true; //fail the loading of this model only
 	}
 
 	if (!skip)
 	{
-		reseatable_reference <TEXTURE_GL> miscmap1;
-		std::string miscmap1_texture_name = diffuse_texture_name.substr(0,std::max(0,(int)diffuse_texture_name.length()-4));
-		miscmap1_texture_name += "-misc1.png";
-		if (texture_library.find(miscmap1_texture_name) == texture_library.end())
+		TEXTUREPTR miscmap1_texture;
+		std::string miscmap1_texture_name = diffuse_texture_name.substr(0, std::max(0, (int)diffuse_texture_name.length()-4)) + "-misc1.png";
+		std::string filepath = objectpath + "/" + miscmap1_texture_name;
+		std::ifstream filecheck(filepath.c_str());
+		if (filecheck)
 		{
 			TEXTUREINFO texinfo;
-			std::string filepath = objectpath + "/" + miscmap1_texture_name;
 			texinfo.SetName(filepath);
 			texinfo.SetMipMap(mipmap);
 			texinfo.SetAnisotropy(anisotropy);
-
-			std::ifstream filecheck(filepath.c_str());
-			if (filecheck)
+			texinfo.SetSize(texture_size);
+			miscmap1_texture = textures.Get(texinfo);
+			if (!miscmap1_texture->Loaded())
 			{
-				if (!texture_library[miscmap1_texture_name].Load(texinfo, error_output, texture_size))
-				{
-					error_output << "Error loading texture: " << objectpath + "/" + miscmap1_texture_name << " for object " << model_name << ", continuing" << std::endl;
-					texture_library.erase(miscmap1_texture_name);
-					//don't fail, this isn't a critical error
-				}
-				else
-					miscmap1 = texture_library[miscmap1_texture_name];
+				error_output << "Error loading texture: " << objectpath + "/" + miscmap1_texture_name << " for object " << model_name << ", continuing" << std::endl;
 			}
 		}
-		else
-			miscmap1 = texture_library.find(miscmap1_texture_name)->second;
-
-		TEXTURE_GL * diffuse = &texture_library[diffuse_texture_name];
-
-		//info_output << "Loading " << model_name << endl;
 
 		//use a different drawlist layer where necessary
 		bool transparent = (transparent_blend==1);
@@ -254,21 +228,21 @@ std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad(
 				dlist = &unoptimized_scene.GetDrawlist().skybox_noblend;
 		}
 		keyed_container <DRAWABLE>::handle dref = dlist->insert(DRAWABLE());
-		DRAWABLE & d = dlist->get(dref);
+		DRAWABLE & drawable = dlist->get(dref);
 		
-		d.AddDrawList(model->GetListID());
-		d.SetDiffuseMap(diffuse);
-		if (miscmap1)
-			d.SetMiscMap1(&miscmap1.get());
-		d.SetLit(!nolighting);
-		d.SetPartialTransparency(transparent);
-		d.SetCull(cull && (transparent_blend!=2), false);
-		d.SetRadius(model->GetRadius());
-		d.SetObjectCenter(model->GetCenter());
-		d.SetSkybox(skybox);
+		drawable.AddDrawList(model->GetListID());
+		drawable.SetDiffuseMap(diffuse_texture);
+		//if (miscmap1_texture) drawable.SetMiscMap1(miscmap1_texture);
+		drawable.SetMiscMap1(miscmap1_texture);
+		drawable.SetLit(!nolighting);
+		drawable.SetPartialTransparency(transparent);
+		drawable.SetCull(cull && (transparent_blend!=2), false);
+		drawable.SetRadius(model->GetRadius());
+		drawable.SetObjectCenter(model->GetCenter());
+		drawable.SetSkybox(skybox);
 		if (skybox && vertical_tracking_skyboxes)
 		{
-			d.SetVerticalTrack(true);
+			drawable.SetVerticalTrack(true);
 		}
 
 		const TRACKSURFACE * surfacePtr = NULL;
@@ -307,127 +281,9 @@ std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad(
 			}
 		}
 
-		TRACK_OBJECT object(model, diffuse, surfacePtr);
+		TRACK_OBJECT object(model, surfacePtr);
 		objects.push_back(object);
 	}
 
 	return std::make_pair(false, true);
-}
-
-std::string booltostr(bool val)
-{
-	if (val)
-		return "Y";
-	else return "N";
-}
-
-std::string GetDrawableSortString(const DRAWABLE & d)
-{
-	std::string s = d.GetDiffuseMap()->GetTextureInfo().GetName();
-	s.append(booltostr(d.GetLit()));
-	s.append(booltostr(d.GetSkybox()));
-	s.append(booltostr(d.GetPartialTransparency()));
-	s.append(booltostr(d.GetCull()));
-	return s;
-}
-
-bool DrawableOptimizeLessThan(const DRAWABLE & d1, const DRAWABLE & d2)
-{
-	/*return (d1.GetDiffuseMap() < d2.GetDiffuseMap()) ||
-			(d1.GetLit() < d2.GetLit()) ||
-			(d1.GetSkybox() < d2.GetSkybox()) ||
-			(d1.GetPartialTransparency() < d2.GetPartialTransparency()) ||
-			(d1.GetCull() < d2.GetCull());*/
-	
-	//return (d1.GetDiffuseMap() < d2.GetDiffuseMap());
-	
-	return GetDrawableSortString(d1) < GetDrawableSortString(d2);
-	
-	/* ||
-			(d1.GetObjectCenter()[0] < d2.GetObjectCenter()[0]) ||
-			(d1.GetObjectCenter()[1] < d2.GetObjectCenter()[1]);*/
-}
-
-bool DrawableOptimizeEqual(const DRAWABLE & d1, const DRAWABLE & d2)
-{
-	return (d1.GetDiffuseMap() == d2.GetDiffuseMap()) &&
-			(d1.GetLit() == d2.GetLit()) &&
-			(d1.GetSkybox() == d2.GetSkybox()) &&
-			(d1.GetPartialTransparency() == d2.GetPartialTransparency()) &&
-			(d1.GetCull() == d2.GetCull());
-}
-
-void OBJECTLOADER::Optimize()
-{
-	//TODO: re-implement or do away with in favor of generic static drawlists
-	sceneroot = unoptimized_scene;
-	
-	/*unoptimized_scene.GetDrawableList().sort(DrawableOptimizeLessThan);
-
-	DRAWABLE lastmatch;
-	DRAWABLE * lastdrawable = NULL;
-
-	bool optimize = false;
-	const float optimizemetric = 10.0; //this seems like a ridiculous metric, but *doubles* framerates on my ATI 4850
-	//if (unoptimized_scene.GetDrawableList().size() > 2500) optimize = true;
-	if (agressivecombine) optimize = true; //framerate only gained here for ATI cards, so we leave agressivecombine false for NVIDIA
-
-	for (std::list <DRAWABLE>::const_iterator i = unoptimized_scene.GetDrawableList().begin();
-		i != unoptimized_scene.GetDrawableList().end(); ++i)
-	{
-		if (optimize)
-		{
-			if (DrawableOptimizeEqual(lastmatch, *i))
-			{
-				assert(i->IsDrawList());
-				assert(lastdrawable);
-
-				//combine culling spheres
-				MATHVECTOR <float, 3> center1(lastdrawable->GetObjectCenter()), center2(i->GetObjectCenter());
-				float radius1(lastdrawable->GetRadius()), radius2(i->GetRadius());
-
-				//find the new center point by taking the halfway point of the two centers
-				MATHVECTOR <float, 3> newcenter((center2+center1)*0.5);
-
-				float maxradius = std::max(radius1, radius2);
-
-				//find the new radius by taking half the distance between the centers plus the max radius
-				//float newradius = (center2-center1).Magnitude()*0.5+maxradius;
-				float newradius = (center2-center1).Magnitude()*0.5+maxradius;
-				
-				if (newradius > (radius1+radius2)*optimizemetric) //don't combine if it's not worth it
-				//if (0)
-				{
-					lastmatch = *i;
-
-					DRAWABLE & d = sceneroot.AddDrawable();
-					d = *i;
-					lastdrawable = &d;
-					
-					//std::cout << "Not optimizing: " << i->GetRadius() << " and " << lastdrawable->GetRadius() << " to " << newradius << std::endl;
-				}
-				else
-				{
-					lastdrawable->AddDrawList(i->GetDrawLists()[0]);
-					lastdrawable->SetObjectCenter(newcenter);
-					lastdrawable->SetRadius(newradius);
-					
-					//std::cout << "Optimizing: " << i->GetRadius() << " and " << lastdrawable->GetRadius() << " to " << newradius << std::endl;
-				}
-			}
-			else if (i->IsDrawList())
-			{
-				lastmatch = *i;
-
-				DRAWABLE & d = sceneroot.AddDrawable();
-				d = *i;
-				lastdrawable = &d;
-			}
-		}
-		else
-		{
-			DRAWABLE & d = sceneroot.AddDrawable();
-			d = *i;
-		}
-	}*/
 }

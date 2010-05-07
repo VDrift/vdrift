@@ -80,7 +80,7 @@ src = Split("""aabb.cpp
 		roadpatch.cpp
 		roadstrip.cpp
 		rotationalframe.cpp
-		scenegraph.cpp
+		scenenode.cpp
 		settings.cpp
 		shader.cpp
 		sky.cpp
@@ -92,7 +92,6 @@ src = Split("""aabb.cpp
 		toggle.cpp
 		track.cpp
 		trackmap.cpp
-		track_object.cpp
 		vertexarray.cpp""")
 
 src.sort(lambda x, y: cmp(x.lower(),y.lower()))

@@ -8,7 +8,6 @@
 #include <sstream>
 
 #include "guipage.h"
-#include "scenegraph.h"
 #include "texture.h"
 #include "font.h"
 #include "guioption.h"
@@ -25,7 +24,7 @@ private:
 	std::map<std::string, PAGEINFO> pages;
 	std::map<std::string, PAGEINFO>::iterator active_page;
 	std::map<std::string, PAGEINFO>::iterator last_active_page;
-	std::map<std::string, TEXTURE_GL> textures;
+	std::map<std::string, TEXTURE> textures;
 	std::map<std::string, GUIOPTION> optionmap;
 	SCENENODE node;
 	float animation_counter;
@@ -35,20 +34,40 @@ private:
 	bool control_load;
 	bool ingame;
 	
-	bool LoadPage(const std::string & pagename, const std::string & path, const std::string & texpath,
-				  const std::string & datapath, CONFIGFILE & carcontrolsfile, SCENENODE & s,
-				  std::map <std::string, FONT> & fonts, std::map<std::string, GUIOPTION> & optionmap,
-				  float screenhwratio, const std::string & texsize, std::ostream & error_output)
+	bool LoadPage(
+		const std::string & pagename,
+		const std::string & path,
+		const std::string & texpath,
+		const std::string & datapath,
+		CONFIGFILE & carcontrolsfile,
+		SCENENODE & scenenode,
+		std::map <std::string, FONT> & fonts,
+		std::map<std::string, GUIOPTION> & optionmap,
+		float screenhwratio,
+		const std::string & texsize,
+		TEXTUREMANAGER & texturemanager,
+		std::ostream & error_output)
 	{
 		PAGEINFO & p = pages[pagename];
 		if (!p.node.valid())
 		{
-			p.node = s.AddNode();
+			p.node = scenenode.AddNode();
 		}
-		SCENENODE & pnoderef = s.GetNode(p.node);
-		if (!p.page.Load(path+"/"+pagename, texpath, datapath, carcontrolsfile, pnoderef, textures, fonts, optionmap, screenhwratio, texsize, error_output)) return false;
+		SCENENODE & pnoderef = scenenode.GetNode(p.node);
+		if (!p.page.Load(
+				path+"/"+pagename, texpath, datapath,
+				carcontrolsfile, pnoderef, fonts,
+				optionmap, screenhwratio,
+				texsize, texturemanager,
+				error_output))
+		{
+			return false;
+		}
+		else
+		{
+			return true;
+		}
 		
-		return true;
 	}
 	
 	///returns a string showing where the error occurred, or an empty string if no error
@@ -61,11 +80,6 @@ private:
 		{
 			i->second.page.UpdateOptions(node.GetNode(i->second.node), false, optionmap, error_output);
 		}
-		
-		/*if (last_active_page != pages.end())
-			last_active_page->second.page.UpdateOptions(false, optionmap, error_output);
-		if (active_page != pages.end())
-			active_page->second.page.UpdateOptions(false, optionmap, error_output);*/
 	}
 
 public:
@@ -80,8 +94,6 @@ public:
 	std::string GetActivePageName() {if (active_page == pages.end()) return ""; else return active_page->first;}
 	std::string GetLastPageName() {if (last_active_page == pages.end()) return ""; else return last_active_page->first;}
 	
-	std::map<std::string, TEXTURE_GL> & GetTextureMap() {return textures;}
-	
 	std::map<std::string, GUIOPTION> & GetOptionMap() {return optionmap;}
 	
 	SCENENODE & GetNode() {return node;}
@@ -92,12 +104,21 @@ public:
 		return node.GetNode(pages[pagename].node);
 	}
 	
-	bool Load(const std::list <std::string> & pagelist, const std::map<std::string, 
+	bool Load(
+		const std::list <std::string> & pagelist,
+		const std::map<std::string, 
 		std::list <std::pair <std::string, std::string> > > & valuelists, 
-		const std::string & optionsfile, const std::string & carcontrolsfile,
-  		const std::string & menupath, const std::string & texpath, 
-		const std::string & datapath, std::map <std::string, FONT> & fonts, 
-		float screenhwratio, const std::string & texsize, std::ostream & info_output, std::ostream & error_output)
+		const std::string & optionsfile,
+		const std::string & carcontrolsfile,
+  		const std::string & menupath,
+  		const std::string & texpath, 
+		const std::string & datapath,
+		std::map <std::string, FONT> & fonts, 
+		float screenhwratio,
+		const std::string & texsize,
+		TEXTUREMANAGER & textures,
+		std::ostream & info_output,
+		std::ostream & error_output)
 	{
 		std::string optionresult(LoadOptions(optionsfile, valuelists, error_output));
 		if (!optionresult.empty())
@@ -115,7 +136,7 @@ public:
 		{
 			if (*i != "SConscript")
 			{
-				if (!LoadPage(*i, menupath, texpath, datapath, controlsconfig, node, fonts, optionmap, screenhwratio, texsize, error_output))
+				if (!LoadPage(*i, menupath, texpath, datapath, controlsconfig, node, fonts, optionmap, screenhwratio, texsize, textures, error_output))
 				{
 					error_output << "Error loading GUI page: " << menupath << "/" << *i << std::endl;
 					return false;

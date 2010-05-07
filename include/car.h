@@ -8,7 +8,7 @@
 
 #include "cardynamics.h"
 #include "model_joe03.h"
-#include "texture.h"
+#include "texturemanager.h"
 #include "carinput.h"
 #include "sound.h"
 #include "camera_system.h"
@@ -17,7 +17,7 @@
 #include "suspensionbumpdetection.h"
 #include "crashdetection.h"
 #include "enginesoundinfo.h"
-#include "scenegraph.h"
+#include "scenenode.h"
 
 class BEZIER;
 class PERFORMANCE_TESTING;
@@ -36,7 +36,9 @@ public:
 		const std::string & carpath,
 		const std::string & driverpath,
 		const std::string & carname,
+		TEXTUREMANAGER & textures,
 		const std::string & carpaint,
+		const MATHVECTOR <float, 4> & carcolor,
 		const MATHVECTOR <float, 3> & initial_position,
 		const QUATERNION <float> & initial_orientation,
 		COLLISION_WORLD * world,
@@ -277,7 +279,6 @@ public:
 		return dynamics.GetMaxSteeringAngle();
 	}
 
-
 	SCENENODE & GetNode() {return topnode;}
 	
 protected:
@@ -291,18 +292,10 @@ protected:
 	MODEL_JOE03 bodymodel;
 	MODEL_JOE03 interiormodel;
 	MODEL_JOE03 glassmodel;
-	TEXTURE_GL bodytexture;
-	TEXTURE_GL bodytexture_misc1;
-	TEXTURE_GL interiortexture;
-	TEXTURE_GL interiortexture_misc1;
-	TEXTURE_GL glasstexture;
-	TEXTURE_GL glasstexture_misc1;
 	
 	keyed_container <DRAWABLE>::handle driverdraw;
 	keyed_container <SCENENODE>::handle drivernode;
 	MODEL_JOE03 drivermodel;
-	TEXTURE_GL drivertexture;
-	TEXTURE_GL drivertexture_misc1;
 	
 	SUSPENSIONBUMPDETECTION suspensionbumpdetection[4];
 	CRASHDETECTION crashdetection;
@@ -320,12 +313,6 @@ protected:
 	MODEL_JOE03 wheelmodelrear;
 	MODEL_JOE03 floatingmodelfront;
 	MODEL_JOE03 floatingmodelrear;
-	TEXTURE_GL wheeltexturefront;
-	TEXTURE_GL wheeltexturerear;
-	TEXTURE_GL wheeltexturefront_misc1;
-	TEXTURE_GL wheeltexturerear_misc1;
-	TEXTURE_GL braketexture;
-	TEXTURE_GL reversetexture;
 
 	SOUNDSOURCE tiresqueal[4];
 	SOUNDSOURCE tirebump[4];
@@ -356,15 +343,23 @@ protected:
 	
 	float mz_nominalmax; //the nominal maximum Mz force, used to scale force feedback
 
-	///take the parentnode, add a scenenode (if output_scenenode isn't yet valid), add a drawable to the
+	/// take the parentnode, add a scenenode (if output_scenenode isn't yet valid), add a drawable to the
 	/// scenenode, load a model, load a texture, and set up the drawable with the model and texture.
-	/// the given TEXTURE_GL textures will not be reloaded if they are already loaded
+	/// the given TEXTURE textures will not be reloaded if they are already loaded
 	/// returns true if successful
-	bool LoadInto(SCENENODE & parentnode, keyed_container <SCENENODE>::handle & output_scenenode,
-		keyed_container <DRAWABLE>::handle & output_drawable, const std::string & joefile,
-		MODEL_JOE03 & output_model, const std::string & texfile, TEXTURE_GL & output_texture_diffuse,
-		const std::string & misc1texfile, TEXTURE_GL & output_texture_misc1,
-  		int anisotropy, const std::string & texsize, bool blend, std::ostream & error_output);
+	bool LoadInto(
+		SCENENODE & parentnode,
+		keyed_container <SCENENODE>::handle & output_scenenode,
+		keyed_container <DRAWABLE>::handle & output_drawable,
+		const std::string & joefile,
+		MODEL_JOE03 & output_model,
+		TEXTUREMANAGER & textures,
+		const std::string & texfile,
+		const std::string & misc1texfile,
+		const std::string & texsize,
+		int anisotropy,
+		bool blend,
+		std::ostream & error_output);
 	
 	void UpdateSounds(float dt);
 	

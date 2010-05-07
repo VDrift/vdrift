@@ -5,7 +5,6 @@
 #include "widget_label.h"
 #include "widget_image.h"
 #include "widget_button.h"
-#include "scenegraph.h"
 #include "font.h"
 #include "mathvector.h"
 #include "configfile.h"
@@ -17,7 +16,8 @@
 #include <list>
 #include <vector>
 
-class TEXTURE_GL;
+class SCENENODE;
+class TEXTURE;
 
 class WIDGET_CONTROLGRAB : public WIDGET
 {
@@ -56,7 +56,7 @@ private:
 	bool analog;
 	bool only_one;
 	
-	void AddButton(SCENENODE & scene, TEXTURE_GL * tex_unsel, TEXTURE_GL * tex_sel, FONT * font, 
+	void AddButton(SCENENODE & scene, TEXTUREPTR tex_unsel, TEXTUREPTR tex_sel, FONT * font, 
 		       const std::string & type, const std::string & name, float scalex, float scaley,
 		       float y, bool once, bool down, const std::string & key, const std::string & keycode, const std::string & joy_type,
 		       int joy_index, int joy_button, int joy_axis, const std::string & joy_axis_type,
@@ -119,7 +119,7 @@ public:
 		return topnode;
 	}
 	
-	void SetupDrawable(SCENENODE & scene, CONFIGFILE & c, const std::string & newsetting, const std::vector <TEXTURE_GL *> & texturevector, FONT * font, const std::string & text, float centerx, float centery, float scalex, float scaley, bool newanalog, bool newonly_one)
+	void SetupDrawable(SCENENODE & scene, CONFIGFILE & c, const std::string & newsetting, const std::vector <TEXTUREPTR> & texturevector, FONT * font, const std::string & text, float centerx, float centery, float scalex, float scaley, bool newanalog, bool newonly_one)
 	{
 		assert(texturevector.size() == END);
 		assert(font);
@@ -159,7 +159,7 @@ public:
 		LoadControls(topnoderef, c, texturevector, font);
 	}
 	
-	void LoadControls(SCENENODE & scene, CONFIGFILE & c, const std::vector <TEXTURE_GL *> & texturevector, FONT * font)
+	void LoadControls(SCENENODE & scene, CONFIGFILE & c, const std::vector <TEXTUREPTR> & texturevector, FONT * font)
 	{
 		assert(!setting.empty()); //ensure that we've already done a SetupDrawable
 

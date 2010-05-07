@@ -9,8 +9,8 @@
 
 #include "shader.h"
 #include "mathvector.h"
+#include "quaternion.h"
 #include "fbtexture.h"
-#include "scenegraph.h"
 #include "matrix4.h"
 #include "texture.h"
 #include "reseatable_reference.h"
@@ -21,6 +21,7 @@
 #include <SDL/SDL.h>
 
 class SCENENODE;
+class DRAWABLE;
 
 ///purely abstract base class
 class RENDER_INPUT
@@ -34,7 +35,7 @@ class RENDER_INPUT_POSTPROCESS : public RENDER_INPUT
 public:
 	RENDER_INPUT_POSTPROCESS() : source_texture(NULL), shader(NULL) {}
 	
-	void SetSourceTexture(FBTEXTURE_GL & newsource)
+	void SetSourceTexture(FBTEXTURE & newsource)
 	{
 		source_texture = &newsource;
 	}
@@ -43,7 +44,7 @@ public:
 	virtual void Render(GLSTATEMANAGER & glstate);
 	
 private:
-	const FBTEXTURE_GL * source_texture;
+	const FBTEXTURE * source_texture;
 	SHADER_GLSL * shader;
 };
 
@@ -130,7 +131,7 @@ public:
 	RENDER_OUTPUT() : target(RENDER_TO_FRAMEBUFFER) {}
 	
 	///returns the FBO that the user should set up as necessary
-	FBTEXTURE_GL & RenderToFBO()
+	FBTEXTURE & RenderToFBO()
 	{
 		target = RENDER_TO_FBO;
 		return fbo;
@@ -156,7 +157,7 @@ public:
 	}
 	
 private:
-	FBTEXTURE_GL fbo;
+	FBTEXTURE fbo;
 	enum
 	{
 		RENDER_TO_FBO,

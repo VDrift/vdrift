@@ -1,6 +1,6 @@
 #include <string>
 #include "sprite2d.h"
-#include "scenegraph.h"
+#include "scenenode.h"
 
 class INPUTGRAPH
 {
@@ -18,7 +18,7 @@ private:
 		graphroot.SetChildVisibility(newvis);
 	}
 public:
-	bool Init(const std::string & texturepath, std::ostream & error_output, const std::string & texsize)
+	bool Init(const std::string & texturepath, const std::string & texsize, TEXTUREMANAGER & textures, std::ostream & error_output)
 	{
 		float hheight, hball_scale, hx_pos, hy_pos;
 		float vwidth, vx_pos, vy_pos;
@@ -29,10 +29,10 @@ public:
 		hy_pos = 0.8;
 		hball_scale = 4.0;
 		
-		if(!hslider.Load(graphroot, texturepath+"/slider2.png", texsize, 1, error_output))
+		if(!hslider.Load(graphroot, texturepath+"/slider2.png", texsize, textures, 1, error_output))
 			return false;
 		hslider.SetToBillboard(hx_pos, hy_pos, hwidth, hheight);
-		if(!hball.Load(graphroot, texturepath+"/ball2.png", texsize, 2, error_output))
+		if(!hball.Load(graphroot, texturepath+"/ball2.png", texsize, textures, 2, error_output))
 			return false;
 		hball.SetToBillboard(hx_pos+hwidth/2-hwidth/(2.0*hball_scale), hy_pos+hheight/2-hheight/(2*hball_scale), hwidth/hball_scale, hheight/hball_scale);
 		
@@ -40,10 +40,10 @@ public:
 		vheight = hheight/2;
 		vx_pos = 0.35-vwidth/2;
 		vy_pos = 0.87;
-		if(!vslider.Load(graphroot, texturepath+"/accdec-slider.png", texsize, 1, error_output))
+		if(!vslider.Load(graphroot, texturepath+"/accdec-slider.png", texsize, textures, 1, error_output))
 			return false;
 		vslider.SetToBillboard(vx_pos, vy_pos, vwidth, vheight);
-		if(!vball.Load(graphroot, texturepath+"/accdec-marker.png", texsize, 2, error_output))
+		if(!vball.Load(graphroot, texturepath+"/accdec-marker.png", texsize, textures, 2, error_output))
 			return false;
 		vball.SetToBillboard(vx_pos, vy_pos, vwidth, vheight);
 		return true;

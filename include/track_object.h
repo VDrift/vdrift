@@ -1,17 +1,19 @@
 #ifndef _TRACK_OBJECT_H
 #define _TRACK_OBJECT_H
 
+#include "assert.h"
+
 class MODEL;
-class TEXTURE_GL;
 class TRACKSURFACE;
 
 class TRACK_OBJECT
 {
 public:
-	TRACK_OBJECT(
-		MODEL * model,
-		TEXTURE_GL * texture,
-		const TRACKSURFACE * surface);
+	TRACK_OBJECT(MODEL * m, const TRACKSURFACE * s) 
+	: model(m), surface(s)
+	{
+		assert(model);
+	}
 	
 	MODEL * GetModel() const
 	{
@@ -25,7 +27,6 @@ public:
 
 private:
 	MODEL * model;
-	TEXTURE_GL * texture;
 	const TRACKSURFACE * surface;
 };
 

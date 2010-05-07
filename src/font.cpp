@@ -11,7 +11,13 @@ using std::endl;
 
 #include <algorithm>
 
-bool FONT::Load(const std::string & fontinfopath, const std::string & fonttexturepath, const std::string & texsize, std::ostream & error_output, bool mipmap)
+bool FONT::Load(
+	const std::string & fontinfopath,
+	const std::string & fonttexturepath,
+	const std::string & texsize,
+	TEXTUREMANAGER & textures,
+	std::ostream & error_output,
+	bool mipmap)
 {
 	ifstream fontinfo(fontinfopath.c_str());
 	if (!fontinfo)
@@ -62,20 +68,23 @@ bool FONT::Load(const std::string & fontinfopath, const std::string & fonttextur
 	TEXTUREINFO texinfo(fonttexturepath);
 	texinfo.SetMipMap(mipmap);
 	texinfo.SetRepeat(false, false);
-	if (!font_texture.Load(texinfo, error_output, texsize)) return false;
+	texinfo.SetSize(texsize);
+	font_texture = textures.Get(texinfo);
+	if (!font_texture->Loaded()) return false;
 	
-	if (font_texture.GetScale() != 1.0)
+	float scale = font_texture->GetScale();
+	if (scale != 1.0)
 	{
 		for (std::vector <CHARINFO>::iterator i = charinfo.begin(); i != charinfo.end(); ++i)
 		{
 			CHARINFO & char_to_scale = *i;
-			char_to_scale.x *= font_texture.GetScale();
-			char_to_scale.y *= font_texture.GetScale();
-			char_to_scale.width *= font_texture.GetScale();
-			char_to_scale.height *= font_texture.GetScale();
-			char_to_scale.xoffset *= font_texture.GetScale();
-			char_to_scale.yoffset *= font_texture.GetScale();
-			char_to_scale.xadvance *= font_texture.GetScale();
+			char_to_scale.x *= scale;
+			char_to_scale.y *= scale;
+			char_to_scale.width *= scale;
+			char_to_scale.height *= scale;
+			char_to_scale.xoffset *= scale;
+			char_to_scale.yoffset *= scale;
+			char_to_scale.xadvance *= scale;
 		}
 	}
 	

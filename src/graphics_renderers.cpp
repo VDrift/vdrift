@@ -11,7 +11,6 @@
 #endif
 
 #include "opengl_utility.h"
-#include "scenegraph.h"
 #include "matrix4.h"
 #include "mathvector.h"
 #include "model.h"
@@ -20,6 +19,7 @@
 #include "reseatable_reference.h"
 #include "definitions.h"
 #include "containeralgorithm.h"
+#include "drawable.h"
 
 #include <cassert>
 
@@ -490,7 +490,7 @@ void RENDER_INPUT_SCENE::SelectTexturing(DRAWABLE & forme, GLSTATEMANAGER & glst
 
 	bool enabletex = true;
 
-	const TEXTURE_GL * diffusetexture = i->GetDiffuseMap();
+	const TEXTURE * diffusetexture = i->GetDiffuseMap();
 
 	if (!diffusetexture)
 		enabletex = false;
@@ -503,9 +503,6 @@ void RENDER_INPUT_SCENE::SelectTexturing(DRAWABLE & forme, GLSTATEMANAGER & glst
 		glstate.BindTexture2D(0,NULL);
 		return;
 	}
-	
-	//if (!enabletex) std::cout << "Unloaded texture error: " << forme.GetDiffuseMap()->GetTextureInfo().GetName() << std::endl;
-	//assert(enabletex); //don't draw without a texture
 
 	if (enabletex)
 	{

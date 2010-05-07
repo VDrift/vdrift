@@ -5,7 +5,7 @@
 #include <cassert>
 
 #include "font.h"
-#include "scenegraph.h"
+#include "scenenode.h"
 #include "vertexarray.h"
 
 class TEXT_DRAW

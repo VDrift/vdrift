@@ -55,9 +55,10 @@ TRACK::~TRACK()
 bool TRACK::Load(
 	const std::string & trackpath,
 	const std::string & effects_texturepath,
-	bool reverse,
+	const std::string & texsize,
 	int anisotropy,
-	const std::string & texsize)
+	TEXTUREMANAGER & textures,
+	bool reverse)
 {
 	Clear();
 
@@ -87,13 +88,13 @@ bool TRACK::Load(
 		return false;
 	}
 
-	if (!CreateRacingLines(effects_texturepath, texsize))
+	if (!CreateRacingLines(effects_texturepath, texsize, textures))
 	{
 		return false;
 	}
 
 	//load objects
-	if (!LoadObjects(trackpath, tracknode, anisotropy))
+	if (!LoadObjects(trackpath, tracknode, anisotropy, textures))
 	{
 		return false;
 	}
@@ -177,13 +178,15 @@ bool TRACK::LoadLapSequence(const std::string & trackpath, bool reverse)
 	return true;
 }
 
-bool TRACK::DeferredLoad(const std::string & trackpath, 
-						 const std::string & effects_texturepath, 
-						 bool reverse, 
-						 int anisotropy, 
-						 const std::string & texsize, 
-						 bool dynamicshadowsenabled, 
-						 bool doagressivecombining)
+bool TRACK::DeferredLoad(
+	const std::string & trackpath,
+	const std::string & effects_texturepath,
+	const std::string & texsize,
+	int anisotropy,
+	TEXTUREMANAGER & textures,
+	bool reverse,
+	bool dynamicshadowsenabled,
+	bool doagressivecombining)
 {
 	Clear();
 
@@ -213,7 +216,7 @@ bool TRACK::DeferredLoad(const std::string & trackpath,
 		return false;
 	}
 
-	if (!CreateRacingLines(effects_texturepath, texsize))
+	if (!CreateRacingLines(effects_texturepath, texsize, textures))
 	{
 		return false;
 	}
@@ -225,12 +228,12 @@ bool TRACK::DeferredLoad(const std::string & trackpath,
 	return true;
 }
 
-bool TRACK::ContinueDeferredLoad()
+bool TRACK::ContinueDeferredLoad(TEXTUREMANAGER & textures)
 {
 	if (Loaded())
 		return true;
 
-	pair <bool,bool> loadstatus = ContinueObjectLoad();
+	pair <bool,bool> loadstatus = ContinueObjectLoad(textures);
 	if (loadstatus.first)
 		return false;
 	if (!loadstatus.second)
@@ -263,15 +266,14 @@ void TRACK::Clear()
 
 bool TRACK::CreateRacingLines(
 	const std::string & texturepath,
-	const std::string & texsize)
+	const std::string & texsize,
+	TEXTUREMANAGER & textures)
 {
-	if (!racingline_texture.Loaded())
-	{
-		TEXTUREINFO tex; 
-		tex.SetName(texturepath + "/racingline.png");
-		if (!racingline_texture.Load(tex, error_output, texsize))
-			return false;
-	}
+	TEXTUREINFO texinfo; 
+	texinfo.SetName(texturepath + "/racingline.png");
+	texinfo.SetSize(texsize);
+	racingline_texture = textures.Get(texinfo);
+	if (!racingline_texture->Loaded()) return false;
 	
 	K1999 k1999data;
 	int n = 0;
@@ -419,25 +421,25 @@ bool TRACK::BeginObjectLoad(
 	return true;
 }
 
-std::pair <bool,bool> TRACK::ContinueObjectLoad()
+std::pair <bool,bool> TRACK::ContinueObjectLoad(TEXTUREMANAGER & textures)
 {
 	assert(objload.get());
 	return objload->ContinueObjectLoad(model_library,
-									   texture_library,
 									   objects,
 									   tracksurfaces,
 									   usesurfaces,
 									   vertical_tracking_skyboxes, 
-									   texture_size);
+									   texture_size,
+									   textures);
 }
 
-bool TRACK::LoadObjects(const std::string & trackpath, SCENENODE & sceneroot, int anisotropy)
+bool TRACK::LoadObjects(const std::string & trackpath, SCENENODE & sceneroot, int anisotropy, TEXTUREMANAGER & textures)
 {
 	BeginObjectLoad(trackpath, sceneroot, anisotropy, false, false);
-	pair <bool,bool> loadstatus = ContinueObjectLoad();
+	pair <bool,bool> loadstatus = ContinueObjectLoad(textures);
 	while (!loadstatus.first && loadstatus.second)
 	{
-		loadstatus = ContinueObjectLoad();
+		loadstatus = ContinueObjectLoad(textures);
 	}
 	return !loadstatus.first;
 }

@@ -2,7 +2,7 @@
 #define _LOADINGSCREEN_H
 
 #include "texture.h"
-#include "scenegraph.h"
+#include "scenenode.h"
 #include "vertexarray.h"
 
 #include <ostream>
@@ -12,12 +12,10 @@ class LOADINGSCREEN
 {
 private:
 	SCENENODE root;
-	TEXTURE_GL bartex;
 	keyed_container <DRAWABLE>::handle bardraw;
 	VERTEXARRAY barverts;
 	keyed_container <DRAWABLE>::handle barbackdraw;
 	VERTEXARRAY barbackverts;
-	TEXTURE_GL boxtex;
 	keyed_container <DRAWABLE>::handle boxdraw;
 	VERTEXARRAY boxverts;
 	float w, h, hscale;
@@ -26,11 +24,13 @@ public:
 	SCENENODE & GetNode() {return root;}
 	
 	///initialize the loading screen given the root node for the loading screen
-	bool Initialize(const std::string & texturepath, int displayw, int displayh, const std::string & texsize, std::ostream & error_output)
+	bool Initialize(const std::string & texturepath, int displayw, int displayh, const std::string & texsize, TEXTUREMANAGER & textures, std::ostream & error_output)
 	{
 		TEXTUREINFO boxtexinfo(texturepath+"/loadingbox.png");
 		boxtexinfo.SetMipMap(false);
-		if (!boxtex.Load(boxtexinfo, error_output, texsize))
+		boxtexinfo.SetSize(texsize);
+		TEXTUREPTR boxtex = textures.Get(boxtexinfo);
+		if (!boxtex->Loaded())
 		{
 			error_output << "Error loading graphic for loading screen." << std::endl;
 			return false;
@@ -38,7 +38,9 @@ public:
 		
 		TEXTUREINFO bartexinfo(texturepath+"/loadingbar.png");
 		bartexinfo.SetMipMap(false);
-		if (!bartex.Load(bartexinfo, error_output, texsize))
+		bartexinfo.SetSize(texsize);
+		TEXTUREPTR bartex = textures.Get(bartexinfo);
+		if (!bartex->Loaded())
 		{
 			error_output << "Error loading graphic for loading screen." << std::endl;
 			return false;
@@ -51,7 +53,7 @@ public:
 		DRAWABLE & boxdrawref = root.GetDrawlist().twodim.get(boxdraw);
 		DRAWABLE & barbackdrawref = root.GetDrawlist().twodim.get(barbackdraw);
 		
-		boxdrawref.SetDiffuseMap(&boxtex);
+		boxdrawref.SetDiffuseMap(boxtex);
 		boxdrawref.SetVertArray(&boxverts);
 		boxdrawref.SetDrawOrder(0);
 		boxdrawref.SetLit(false);
@@ -63,7 +65,7 @@ public:
 		h = 128.0/displayw;
 		boxverts.SetTo2DButton(0.5,0.5,w,h,w*0.5,false);
 		
-		barbackdrawref.SetDiffuseMap(&bartex);
+		barbackdrawref.SetDiffuseMap(bartex);
 		barbackdrawref.SetVertArray(&barbackverts);
 		barbackdrawref.SetDrawOrder(1);
 		barbackdrawref.SetLit(false);
@@ -74,7 +76,7 @@ public:
 		hscale = 0.3;
 		barbackverts.SetToBillboard(0.5-w*0.5,0.5-h*0.5*hscale,0.5+w*0.5, 0.5+h*0.5*hscale);
 		
-		bardrawref.SetDiffuseMap(&bartex);
+		bardrawref.SetDiffuseMap(bartex);
 		bardrawref.SetVertArray(&barverts);
 		bardrawref.SetDrawOrder(2);
 		bardrawref.SetLit(false);

@@ -1,15 +1,14 @@
 #ifndef _OBJECTLOADER_H
 #define _OBJECTLOADER_H
 
-#include "scenegraph.h"
+
+#include <map> // for std::pair
+
+#include "scenenode.h"
 #include "model_joe03.h"
 #include "track_object.h"
 #include "tracksurface.h"
-
-// for std::pair
-#include <map>
-
-class TEXTURE_GL;
+#include "texturemanager.h"
 
 class OBJECTLOADER
 {
@@ -40,16 +39,12 @@ public:
 	///returns a pair of bools: the first bool is true if there was an error, the second bool is true if an object was loaded
 	std::pair <bool,bool> ContinueObjectLoad(
 		std::map <std::string, MODEL_JOE03> & model_library,
-		std::map <std::string, TEXTURE_GL> & texture_library,
 		std::list <TRACK_OBJECT> & objects,
 		std::list <TRACKSURFACE> & surfaces,
 		bool usesurfaces,
 		bool vertical_tracking_skyboxes,
-		const std::string & texture_size);
-	
-	///optimize the drawables by grouping them
-	void Optimize();
-	bool GetSurfacesBool();
+		const std::string & texture_size,
+		TEXTUREMANAGER & textures);
 	
 private:
 	const std::string & trackpath;

@@ -5,7 +5,6 @@
 #include "widget_label.h"
 #include "widget_button.h"
 #include "guioption.h"
-#include "scenegraph.h"
 #include "font.h"
 
 #include <string>
@@ -13,7 +12,8 @@
 #include <list>
 #include <map>
 
-class TEXTURE_GL;
+class SCENENODE;
+class TEXTURE;
 
 class WIDGET_STRINGWHEEL : public WIDGET
 {
@@ -43,8 +43,8 @@ public:
 	WIDGET_STRINGWHEEL() : option(NULL) {}
 	virtual WIDGET * clone() const {return new WIDGET_STRINGWHEEL(*this);};
 	
-	void SetupDrawable(SCENENODE & scene, const std::string & newtitle, TEXTURE_GL * teximage_left_up, TEXTURE_GL * teximage_left_down, 
-			   TEXTURE_GL * teximage_right_up, TEXTURE_GL * teximage_right_down,
+	void SetupDrawable(SCENENODE & scene, const std::string & newtitle, TEXTUREPTR teximage_left_up, TEXTUREPTR teximage_left_down, 
+			   TEXTUREPTR teximage_right_up, TEXTUREPTR teximage_right_down,
 			   FONT * font, float scalex, float scaley, float centerx, float centery)
 	{
 		assert(teximage_left_up);

@@ -8,9 +8,9 @@
 #include <sstream>
 #include <algorithm>
 
-#include "scenegraph.h"
+#include "scenenode.h"
 #include "font.h"
-#include "texture.h"
+#include "texturemanager.h"
 #include "text_draw.h"
 
 class HUDBAR
@@ -20,12 +20,12 @@ class HUDBAR
 		VERTEXARRAY verts;
 
 	public:
-		void Set(SCENENODE & parent, TEXTURE_GL & bartex, float x, float y, float w, float h, float opacity, bool flip)
+		void Set(SCENENODE & parent, TEXTUREPTR bartex, float x, float y, float w, float h, float opacity, bool flip)
 		{
 			draw = parent.GetDrawlist().twodim.insert(DRAWABLE());
 			DRAWABLE & drawref = parent.GetDrawlist().twodim.get(draw);
 			
-			drawref.SetDiffuseMap(&bartex);
+			drawref.SetDiffuseMap(bartex);
 			drawref.SetVertArray(&verts);
 			drawref.SetLit(false);
 			drawref.Set2D(true);
@@ -46,11 +46,11 @@ class HUDBAR
 class HUD
 {
 private:
-	TEXTURE_GL bartex;
+	TEXTURE bartex;
 	SCENENODE hudroot;
 	std::list <HUDBAR> bars;
 
-	TEXTURE_GL progbartex;
+	TEXTURE progbartex;
 	keyed_container <DRAWABLE>::handle rpmbar;
 	keyed_container <DRAWABLE>::handle rpmredbar;
 	VERTEXARRAY rpmbarverts;
@@ -60,10 +60,10 @@ private:
 
 	//variables for drawing the timer
 	keyed_container <SCENENODE>::handle timernode;
-	TEXTURE_GL timerboxtex;
+	TEXTURE timerboxtex;
 	keyed_container <DRAWABLE>::handle timerboxdraw;
 	VERTEXARRAY timerboxverts;
-	/*TEXTURE_GL timerbartex;
+	/*TEXTURE timerbartex;
 	DRAWABLE * timerbardraw;
 	VERTEXARRAY timerbarverts;*/
 	TEXT_DRAWABLE laptime_label;
@@ -136,9 +136,16 @@ private:
 public:
 	HUD() : debug_hud_info(false), racecomplete(false) {}
 
-	bool Init(const std::string & texturepath, FONT & lcdfont, FONT & sansfont,
-			  std::ostream & error_output, float displaywidth, float displayheight,
-			  const std::string & texsize, bool debugon);
+	bool Init(
+		const std::string & texturepath,
+		const std::string & texsize,
+		TEXTUREMANAGER & textures, 
+		FONT & lcdfont,
+		FONT & sansfont,
+		float displaywidth,
+		float displayheight,
+		bool debugon,
+		std::ostream & error_output);
 
 	void Hide()
 	{

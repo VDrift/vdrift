@@ -3,8 +3,8 @@
 
 #include "widget.h"
 #include "model_joe03.h"
-#include "texture.h"
-#include "scenegraph.h"
+#include "texturemanager.h"
+#include "scenenode.h"
 #include "mathvector.h"
 #include "sprite2d.h"
 #include "configfile.h"
@@ -39,123 +39,30 @@ public:
 		}
 	};
 	
-private:
-	std::string data;
-	std::string tsize;
-	MATHVECTOR <float, 2> center;
-	MATHVECTOR <float, 3> carpos;
-	int draworder;
-	std::ostream * errptr;
-	float rotation;
-	std::string lastcarname;
-	std::string carname;
-	std::string lastcarpaint;
-	bool wasvisible;
-	
-	keyed_container <SCENENODE>::handle carnode;
-	
-	std::list <CAR> car; ///< only ever one element, please
-	
-	SCENENODE & GetCarNode(SCENENODE & parent)
-	{
-		return parent.GetNode(carnode);
-	}
-	
-	void Unload(SCENENODE & parent)
-	{
-		if (carnode.valid())
-			GetCarNode(parent).Clear();
-		car.clear();
-	}
-	
-	void Load(SCENENODE & parent, const std::string & carname, const std::string & paintstr)
-	{
-		Unload(parent);
-		
-		//std::cout << "Loading car " << carname << ", " << paintstr << std::endl;
-		
-		std::string carpath = data+"/cars/";
-		
-		std::stringstream loadlog;
-		
-		if (!carnode.valid())
-		{
-			carnode = parent.AddNode();
-		}
-		
-		SCENENODE & carnoderef = GetCarNode(parent);
-		
-		car.push_back(CAR());
-		
-		assert(errptr);
-		
-		CONFIGFILE carconf;
-		if (!carconf.Load(carpath+carname+"/"+carname+".car"))
-		{
-			*errptr << "Error loading car's configfile: " << carpath+carname+"/"+carname+".car" << std::endl;
-			return;
-		}
-		
-		MATHVECTOR <float, 3> cartrans = carpos;
-		cartrans[0] += center[0];
-		cartrans[1] += center[1];
-		
-		QUATERNION <float> carrot;
-		
-		if (!car.back().Load(carconf, carpath, "",
-			carname, paintstr,
-			cartrans, carrot,
-			NULL,
-			false, SOUNDINFO(0,0,0,0),
-			SOUNDBUFFERLIBRARY(),
-			0, true, true, "large", 0,
-			false, loadlog, loadlog))
-		{
-			*errptr << "Couldn't load spinning car: " << carname << std::endl;
-			if (!loadlog.str().empty())
-				*errptr << "Loading log: " << loadlog.str() << std::endl;
-			Unload(parent);
-			return;
-		}
-		
-		// this puts the wheels where they should be
-		car.back().CopyPhysicsResultsIntoDisplay();
-		
-		//copy the car's scene to our scene
-		carnoderef = car.back().GetNode();
-		
-		//move all of the drawables to the nocamtrans layer and disable camera transform
-		carnoderef.ApplyDrawableContainerFunctor(CAMTRANS_FUNCTOR());
-		carnoderef.ApplyDrawableFunctor(CAMTRANS_DRAWABLE_FUNCTOR());
-		
-		carnoderef.GetTransform().SetTranslation(cartrans);
-		
-		//set initial rotation
-		Update(parent, 0);
-		
-		carnoderef.SetChildVisibility(wasvisible);
-		
-		//if (!loadlog.str().empty()) *errptr << "Loading log: " << loadlog.str() << std::endl;
-	}
-	
-public:
-	WIDGET_SPINNINGCAR() : errptr(NULL),rotation(0),wasvisible(false)
+	WIDGET_SPINNINGCAR()
+	: errptr(NULL), rotation(0), wasvisible(false), textures(NULL)
 	{
 	}
+	
 	virtual WIDGET * clone() const {return new WIDGET_SPINNINGCAR(*this);};
 	
-	void SetupDrawable(SCENENODE & scene, const std::string & texturesize, const std::string & datapath,
-      			   float x, float y, const MATHVECTOR <float, 3> & newcarpos, std::ostream & error_output, int order=0)
+	void SetupDrawable(
+		SCENENODE & scene,
+		const std::string & texturesize,
+		const std::string & datapath,
+		float x,
+		float y,
+		const MATHVECTOR <float, 3> & newcarpos,
+		TEXTUREMANAGER & textures,
+		std::ostream & error_output,
+		int order = 0)
 	{
-		data = datapath;
 		tsize = texturesize;
-		
-		errptr = &error_output;
-		
+		data = datapath;
 		center.Set(x,y);
-		
 		carpos = newcarpos;
-		
+		this->textures = &textures;
+		errptr = &error_output;
 		draworder = order;
 	}
 	
@@ -180,7 +87,8 @@ public:
 		{
 			if (!lastcarpaint.empty() && !carname.empty())
 			{
-				Load(scene, carname, lastcarpaint);
+				assert(textures);
+				Load(scene, *textures, carname, lastcarpaint);
 			}
 			else
 			{
@@ -227,11 +135,8 @@ public:
 			//std::cout << carname << "/" << lastcarname << ", " << paintstr << "/" << lastcarpaint << std::endl;
 			return;
 		}
-		else
-		{
-			//std::cout << "Car/paint change:" << std::endl;
-			//std::cout << carname << "/" << lastcarname << ", " << paintstr << "/" << lastcarpaint << std::endl;
-		}
+		//std::cout << "Car/paint change:" << std::endl;
+		//std::cout << carname << "/" << lastcarname << ", " << paintstr << "/" << lastcarpaint << std::endl;
 		
 		lastcarpaint = paintstr;
 		
@@ -240,8 +145,8 @@ public:
 			//std::cout << "Not visible, returning" << std::endl;
 			return;
 		}
-		
-		Load(scene, carname, paintstr);
+		assert(textures);
+		Load(scene, *textures, carname, paintstr);
 	}
 	
 	virtual void Update(SCENENODE & scene, float dt)
@@ -251,10 +156,114 @@ public:
 		
 		rotation += dt;
 		QUATERNION <float> q;
-		q.Rotate(3.141593*1.5,1,0,0);
-		q.Rotate(rotation,0,1,0);
-		q.Rotate(3.141593*0.1,1,0,0);
+		q.Rotate(3.141593*1.5, 1, 0, 0);
+		q.Rotate(rotation, 0, 1, 0);
+		q.Rotate(3.141593*0.1, 1, 0, 0);
 		GetCarNode(scene).GetTransform().SetRotation(q);
+	}
+	
+private:
+	std::string data;
+	std::string tsize;
+	MATHVECTOR <float, 2> center;
+	MATHVECTOR <float, 3> carpos;
+	int draworder;
+	std::ostream * errptr;
+	float rotation;
+	std::string carname;
+	std::string lastcarname;
+	std::string lastcarpaint;
+	bool wasvisible;
+	
+	keyed_container <SCENENODE>::handle carnode;
+	TEXTUREMANAGER * textures;
+	
+	std::list <CAR> car; ///< only ever one element, please
+	
+	SCENENODE & GetCarNode(SCENENODE & parent)
+	{
+		return parent.GetNode(carnode);
+	}
+	
+	void Unload(SCENENODE & parent)
+	{
+		if (carnode.valid()) GetCarNode(parent).Clear();
+		car.clear();
+	}
+	
+	void Load(SCENENODE & parent, TEXTUREMANAGER & textures, const std::string & carname, const std::string & paintstr)
+	{
+		Unload(parent);
+		
+		//std::cout << "Loading car " << carname << ", " << paintstr << std::endl;
+		
+		std::string carpath = data + "/cars/" + carname;
+		
+		std::stringstream loadlog;
+		
+		if (!carnode.valid())
+		{
+			carnode = parent.AddNode();
+		}
+		
+		SCENENODE & carnoderef = GetCarNode(parent);
+		
+		car.push_back(CAR());
+		
+		assert(errptr);
+		
+		CONFIGFILE carconf;
+		if (!carconf.Load(carpath + "/" + carname + ".car"))
+		{
+			*errptr << "Error loading car's configfile: " << carpath + "/" + carname + ".car" << std::endl;
+			return;
+		}
+		
+		MATHVECTOR <float, 4> carcolor(0);
+		
+		MATHVECTOR <float, 3> cartrans = carpos;
+		cartrans[0] += center[0];
+		cartrans[1] += center[1];
+		
+		QUATERNION <float> carrot;
+		
+		if (!car.back().Load(
+			carconf, carpath, "", carname, 
+			textures, paintstr, carcolor,
+			cartrans, carrot,
+			NULL,
+			false, SOUNDINFO(0,0,0,0),
+			SOUNDBUFFERLIBRARY(),
+			0, true, true, "large", 0,
+			false, loadlog, loadlog))
+		{
+			*errptr << "Couldn't load spinning car: " << carname << std::endl;
+			if (!loadlog.str().empty())
+			{
+				*errptr << "Loading log: " << loadlog.str() << std::endl;
+			}
+			Unload(parent);
+			return;
+		}
+		
+		// this puts the wheels where they should be
+		car.back().CopyPhysicsResultsIntoDisplay();
+		
+		//copy the car's scene to our scene
+		carnoderef = car.back().GetNode();
+		
+		//move all of the drawables to the nocamtrans layer and disable camera transform
+		carnoderef.ApplyDrawableContainerFunctor(CAMTRANS_FUNCTOR());
+		carnoderef.ApplyDrawableFunctor(CAMTRANS_DRAWABLE_FUNCTOR());
+		
+		carnoderef.GetTransform().SetTranslation(cartrans);
+		
+		//set initial rotation
+		Update(parent, 0);
+		
+		carnoderef.SetChildVisibility(wasvisible);
+		
+		//if (!loadlog.str().empty()) *errptr << "Loading log: " << loadlog.str() << std::endl;
 	}
 };
 

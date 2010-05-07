@@ -385,6 +385,8 @@
 		<Unit filename="..\..\include\crashdetection.h" />
 		<Unit filename="..\..\include\definitions.h" />
 		<Unit filename="..\..\include\derived.h" />
+		<Unit filename="..\..\include\drawable.h" />
+		<Unit filename="..\..\include\drawable_container.h" />
 		<Unit filename="..\..\include\endian_utility.h" />
 		<Unit filename="..\..\include\enginesoundinfo.h" />
 		<Unit filename="..\..\include\eventsystem.h" />
@@ -421,6 +423,7 @@
 		<Unit filename="..\..\include\model_obj.h" />
 		<Unit filename="..\..\include\numprocessors.h" />
 		<Unit filename="..\..\include\objectloader.h" />
+		<Unit filename="..\..\include\objectmanager.h" />
 		<Unit filename="..\..\include\opengl_utility.h" />
 		<Unit filename="..\..\include\optional.h" />
 		<Unit filename="..\..\include\pairsort.h" />
@@ -438,7 +441,7 @@
 		<Unit filename="..\..\include\roadpatch.h" />
 		<Unit filename="..\..\include\roadstrip.h" />
 		<Unit filename="..\..\include\rotationalframe.h" />
-		<Unit filename="..\..\include\scenegraph.h" />
+		<Unit filename="..\..\include\scenenode.h" />
 		<Unit filename="..\..\include\settings.h" />
 		<Unit filename="..\..\include\shader.h" />
 		<Unit filename="..\..\include\signalprocessing.h" />
@@ -447,12 +450,13 @@
 		<Unit filename="..\..\include\sound.h" />
 		<Unit filename="..\..\include\spline.h" />
 		<Unit filename="..\..\include\sprite2d.h" />
+		<Unit filename="..\..\include\staticdrawables.h" />
 		<Unit filename="..\..\include\suspensionbumpdetection.h" />
 		<Unit filename="..\..\include\text_draw.h" />
 		<Unit filename="..\..\include\texture.h" />
 		<Unit filename="..\..\include\texture_interface.h" />
 		<Unit filename="..\..\include\textureinfo.h" />
-		<Unit filename="..\..\include\texturelibrary.h" />
+		<Unit filename="..\..\include\texturemanager.h" />
 		<Unit filename="..\..\include\timer.h" />
 		<Unit filename="..\..\include\tobullet.h" />
 		<Unit filename="..\..\include\toggle.h" />
@@ -460,6 +464,7 @@
 		<Unit filename="..\..\include\track_object.h" />
 		<Unit filename="..\..\include\trackmap.h" />
 		<Unit filename="..\..\include\tracksurface.h" />
+		<Unit filename="..\..\include\transform.h" />
 		<Unit filename="..\..\include\unittest.h" />
 		<Unit filename="..\..\include\vertexarray.h" />
 		<Unit filename="..\..\include\widget.h" />
@@ -535,7 +540,7 @@
 		<Unit filename="..\..\src\roadpatch.cpp" />
 		<Unit filename="..\..\src\roadstrip.cpp" />
 		<Unit filename="..\..\src\rotationalframe.cpp" />
-		<Unit filename="..\..\src\scenegraph.cpp" />
+		<Unit filename="..\..\src\scenenode.cpp" />
 		<Unit filename="..\..\src\settings.cpp" />
 		<Unit filename="..\..\src\shader.cpp" />
 		<Unit filename="..\..\src\sky.cpp" />
@@ -546,7 +551,6 @@
 		<Unit filename="..\..\src\timer.cpp" />
 		<Unit filename="..\..\src\toggle.cpp" />
 		<Unit filename="..\..\src\track.cpp" />
-		<Unit filename="..\..\src\track_object.cpp" />
 		<Unit filename="..\..\src\trackmap.cpp" />
 		<Unit filename="..\..\src\vertexarray.cpp" />
 		<Unit filename="strptime.cpp" />

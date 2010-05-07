@@ -3,7 +3,7 @@
 
 #include "carinput.h"
 #include "reseatable_reference.h"
-#include "scenegraph.h"
+#include "scenenode.h"
 
 #include <vector>
 #include <list>

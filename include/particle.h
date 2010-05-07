@@ -2,11 +2,11 @@
 #define _PARTICLE_H
 
 #include "mathvector.h"
-#include "reseatable_reference.h"
+//#include "reseatable_reference.h"
 #include "optional.h"
-#include "scenegraph.h"
+#include "scenenode.h"
 #include "vertexarray.h"
-#include "texture.h"
+#include "texturemanager.h"
 
 #include <ostream>
 #include <vector>
@@ -51,15 +51,11 @@ private:
 			node = other.node;
 			draw = other.draw;
 			varray = other.varray;
-			
-			//reseat the drawable's varray reference
-			//draw->SetVertArray(&varray);
-			// this is now done in Update
 		}
 
 	public:
 		PARTICLE(SCENENODE & parentnode, const VEC & new_start_position, const VEC & new_dir,
-			 float newspeed, float newtrans, float newlong, float newsize, TEXTURE_GL & tex)
+			 float newspeed, float newtrans, float newlong, float newsize, TEXTUREPTR texture)
 			: transparency(newtrans), longevity(newlong), start_position(new_start_position),
 			  speed(newspeed), direction(new_dir), size(newsize), time(0)
 		{
@@ -70,7 +66,7 @@ private:
 			DRAWABLE & drawref = GetDrawlist(noderef).get(draw);
 			drawref.SetDrawEnable(false);
 			drawref.SetVertArray(&varray);
-			drawref.SetDiffuseMap(&tex);
+			drawref.SetDiffuseMap(texture);
 			drawref.SetSmoke(true);
 			drawref.SetCull(false,false);
 			drawref.SetPartialTransparency(true);
@@ -101,13 +97,6 @@ private:
 			drawref.SetVertArray(&varray);
 			
 			noderef.GetTransform().SetTranslation(start_position + direction * time * speed);
-			//std::cout << "particle position: " << start_position << std::endl;
-			//MATHVECTOR <float,3> v(0,1,0);
-			//camdir_conjugate.RotateVector(v);
-			//std::cout << v << std::endl;
-			//QUATERNION <float> rot = camdir_conjugate;
-			//rot = rot * camdir_conjugate;
-			//rot.Rotate(3.141593*0.5,1,0,0);
 			noderef.GetTransform().SetRotation(camdir_conjugate);
 			
 			float sizescale = 1.0;
@@ -133,8 +122,8 @@ private:
 	};
 	
 	std::vector <PARTICLE> particles;
-	std::list <TEXTURE_GL> textures;
-	std::list <TEXTURE_GL>::iterator cur_texture;
+	std::list <TEXTUREPTR> textures;
+	std::list <TEXTUREPTR>::iterator cur_texture;
 	
 	std::pair <float,float> transparency_range;
 	std::pair <float,float> longevity_range;
@@ -152,7 +141,13 @@ public:
 	}
 	
 	///returns true if at least one particle texture was loaded
-	bool Load(const std::list <std::string> & texlist, int anisotropy, const std::string & texsize, std::ostream & error_output);
+	bool Load(
+		const std::list <std::string> & texlist,
+		int anisotropy,
+		const std::string & texsize,
+		TEXTUREMANAGER * texturemanager,
+		std::ostream & error_output);
+	
 	void Update(float dt, const QUATERNION <float> & camdir);
 	
 	/// all of the parameters are from 0.0 to 1.0 and scale to the ranges set with SetParameters.  testonly should be kept false and is only used for unit testing.

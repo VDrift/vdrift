@@ -11,7 +11,6 @@
 #endif
 
 #include "opengl_utility.h"
-#include "scenegraph.h"
 #include "matrix4.h"
 #include "mathvector.h"
 #include "model.h"
@@ -180,7 +179,8 @@ void GRAPHICS_SDLGL::Init(const std::string shaderpath, const std::string & wind
 		t.SetCube(true, true);
 		t.SetMipMap(false);
 		t.SetAnisotropy(anisotropy);
-		static_reflection.Load(t, error_output, texturesize);
+		t.SetSize(texturesize);
+		static_reflection.Load(t, error_output);
 	}
 	
 	if (!static_ambientmap_file.empty())
@@ -190,7 +190,8 @@ void GRAPHICS_SDLGL::Init(const std::string shaderpath, const std::string & wind
 		t.SetCube(true, true);
 		t.SetMipMap(false);
 		t.SetAnisotropy(anisotropy);
-		static_ambient.Load(t, error_output, texturesize);
+		t.SetSize(texturesize);
+		static_ambient.Load(t, error_output);
 	}
 
 	initialized = true;
@@ -429,14 +430,14 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 			int count = 0;
 			for (std::list <RENDER_OUTPUT>::iterator i = shadow_depthtexturelist.begin(); i != shadow_depthtexturelist.end(); ++i)
 			{
-				FBTEXTURE_GL & depthFBO = i->RenderToFBO();
+				FBTEXTURE & depthFBO = i->RenderToFBO();
 #ifdef _SHADOWMAP_DEBUG_
-				depthFBO.Init(shadow_resolution, shadow_resolution, FBTEXTURE_GL::NORMAL, false, false, false, false, error_output);
+				depthFBO.Init(shadow_resolution, shadow_resolution, FBTEXTURE::NORMAL, false, false, false, false, error_output);
 #else
 				if (shadow_quality < 4 || count > 0)
-					depthFBO.Init(shadow_resolution, shadow_resolution, FBTEXTURE_GL::NORMAL, true, false, false, false, error_output); //depth texture
+					depthFBO.Init(shadow_resolution, shadow_resolution, FBTEXTURE::NORMAL, true, false, false, false, error_output); //depth texture
 				else
-					depthFBO.Init(shadow_resolution, shadow_resolution, FBTEXTURE_GL::NORMAL, false, true, false, false, error_output); //RGBA texture w/ nearest neighbor filtering
+					depthFBO.Init(shadow_resolution, shadow_resolution, FBTEXTURE::NORMAL, false, true, false, false, error_output); //RGBA texture w/ nearest neighbor filtering
 #endif
 				count++;
 			}
@@ -445,31 +446,31 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 		if (lighting == 1)
 		{
 			int map_size = 1024;
-			FBTEXTURE_GL & depthFBO = edgecontrastenhancement_depths.RenderToFBO();
-			depthFBO.Init(map_size, map_size, FBTEXTURE_GL::NORMAL, true, false, false, false, error_output);
+			FBTEXTURE & depthFBO = edgecontrastenhancement_depths.RenderToFBO();
+			depthFBO.Init(map_size, map_size, FBTEXTURE::NORMAL, true, false, false, false, error_output);
 		}
 
 		if (bloom) //generate a screen-sized rectangular FBO
 		{
-			FBTEXTURE_GL & sceneFBO = full_scene_buffer.RenderToFBO();
-			sceneFBO.Init(w, h, FBTEXTURE_GL::RECTANGLE, false, false, true, false, error_output);
+			FBTEXTURE & sceneFBO = full_scene_buffer.RenderToFBO();
+			sceneFBO.Init(w, h, FBTEXTURE::RECTANGLE, false, false, true, false, error_output);
 		}
 
 		if (bloom) //generate a buffer to store the bloom result plus a buffer for separable blur intermediate step
 		{
 			int bloom_size = 512;
-			FBTEXTURE_GL & bloomFBO = bloom_buffer.RenderToFBO();
-			bloomFBO.Init(bloom_size, bloom_size, FBTEXTURE_GL::NORMAL, false, false, false, false, error_output);
+			FBTEXTURE & bloomFBO = bloom_buffer.RenderToFBO();
+			bloomFBO.Init(bloom_size, bloom_size, FBTEXTURE::NORMAL, false, false, false, false, error_output);
 
-			FBTEXTURE_GL & blurFBO = blur_buffer.RenderToFBO();
-			blurFBO.Init(bloom_size, bloom_size, FBTEXTURE_GL::NORMAL, false, false, false, false, error_output);
+			FBTEXTURE & blurFBO = blur_buffer.RenderToFBO();
+			blurFBO.Init(bloom_size, bloom_size, FBTEXTURE::NORMAL, false, false, false, false, error_output);
 		}
 		
 		if (reflection_status == REFLECTION_DYNAMIC)
 		{
 			int reflection_size = 256;
-			FBTEXTURE_GL & reflection_cubemap = dynamic_reflection.RenderToFBO();
-			reflection_cubemap.Init(reflection_size, reflection_size, FBTEXTURE_GL::CUBEMAP, false, false, false, false, error_output);
+			FBTEXTURE & reflection_cubemap = dynamic_reflection.RenderToFBO();
+			reflection_cubemap.Init(reflection_size, reflection_size, FBTEXTURE::CUBEMAP, false, false, false, false, error_output);
 		}
 
 		final.RenderToFramebuffer();
@@ -664,7 +665,7 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 		{
 			OPENGL_UTILITY::CheckForOpenGLErrors("reflection map generation: begin", error_output);
 			
-			FBTEXTURE_GL & reflection_fbo = dynamic_reflection.RenderToFBO();
+			FBTEXTURE & reflection_fbo = dynamic_reflection.RenderToFBO();
 			
 			const float pi = 3.141593;
 			
@@ -678,32 +679,32 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 				switch (i)
 				{
 					case 0:
-					reflection_fbo.SetCubeSide(FBTEXTURE_GL::POSX);
+					reflection_fbo.SetCubeSide(FBTEXTURE::POSX);
 					orient.Rotate(pi*0.5, 0,1,0);
 					break;
 					
 					case 1:
-					reflection_fbo.SetCubeSide(FBTEXTURE_GL::NEGX);
+					reflection_fbo.SetCubeSide(FBTEXTURE::NEGX);
 					orient.Rotate(-pi*0.5, 0,1,0);
 					break;
 					
 					case 2:
-					reflection_fbo.SetCubeSide(FBTEXTURE_GL::POSY);
+					reflection_fbo.SetCubeSide(FBTEXTURE::POSY);
 					orient.Rotate(pi*0.5, 1,0,0);
 					break;
 					
 					case 3:
-					reflection_fbo.SetCubeSide(FBTEXTURE_GL::NEGY);
+					reflection_fbo.SetCubeSide(FBTEXTURE::NEGY);
 					orient.Rotate(-pi*0.5, 1,0,0);
 					break;
 					
 					case 4:
-					reflection_fbo.SetCubeSide(FBTEXTURE_GL::POSZ);
+					reflection_fbo.SetCubeSide(FBTEXTURE::POSZ);
 					// orient is already set up for us!
 					break;
 					
 					case 5:
-					reflection_fbo.SetCubeSide(FBTEXTURE_GL::NEGZ);
+					reflection_fbo.SetCubeSide(FBTEXTURE::NEGZ);
 					orient.Rotate(pi, 0,1,0);
 					break;
 					
@@ -823,7 +824,7 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 		#ifdef _DYNAMIC_REFLECT_DEBUG_
 		if (reflection_status == REFLECTION_DYNAMIC)
 		{
-			FBTEXTURE_GL & reflection_fbo = dynamic_reflection.RenderToFBO();
+			FBTEXTURE & reflection_fbo = dynamic_reflection.RenderToFBO();
 			RENDER_INPUT_POSTPROCESS cubelookup;
 			cubelookup.SetShader(&shadermap["simplecube"]);
 			cubelookup.SetSourceTexture(reflection_fbo);
@@ -898,7 +899,7 @@ void GRAPHICS_SDLGL::RenderDrawlists(std::vector <DRAWABLE*> & dynamic_drawlist,
 }
 
 void GRAPHICS_SDLGL::RenderPostProcess(const std::string & shadername,
-						FBTEXTURE_GL & texture0, 
+						FBTEXTURE & texture0, 
 						RENDER_OUTPUT & render_output, 
 						std::ostream & error_output)
 {
@@ -1029,7 +1030,7 @@ void GRAPHICS_SDLGL::Screenshot(std::string filename)
 
 bool TextureSort(const DRAWABLE & draw1, const DRAWABLE & draw2)
 {
-	return (draw1.GetDiffuseMap()->GetTextureInfo().GetName() < draw2.GetDiffuseMap()->GetTextureInfo().GetName());
+	return (draw1.GetDiffuseMap()->GetID() < draw2.GetDiffuseMap()->GetID());
 }
 
 /*void GRAPHICS_SDLGL::OptimizeStaticDrawlistmap()

@@ -3,7 +3,6 @@
 
 #include <time.h>
 #include "fbtexture.h"
-#include "scenegraph.h"
 #include "camera.h"
 #include "mathvector.h"
 #include "matrix4.h"
@@ -16,7 +15,7 @@ public:
 	SKY(GRAPHICS_SDLGL & gs, std::ostream & info, std::ostream & error);
 	bool Load(const std::string & path);
 	void Update();
-	void Draw(MATRIX4<float> & iviewproj, FBTEXTURE_GL * output); // iviewproj is the inverse view projection matrix without translation!
+	void Draw(MATRIX4<float> & iviewproj, FBTEXTURE * output); // iviewproj is the inverse view projection matrix without translation!
 
 	typedef MATHVECTOR<float, 3> VEC3;
 	VEC3 GetSunColor() const {return suncolor;}
@@ -33,7 +32,7 @@ protected:
 	std::ostream & info_output;
 	std::ostream & error_output;
 	
-	FBTEXTURE_GL sky_texture;
+	FBTEXTURE sky_texture;
 	//DRAWABLE * quad;
 	//SCENENODE * node;
 	

@@ -10,7 +10,8 @@
 #include "shader.h"
 #include "mathvector.h"
 #include "fbtexture.h"
-#include "scenegraph.h"
+#include "scenenode.h"
+#include "staticdrawables.h"
 #include "matrix4.h"
 #include "texture.h"
 #include "reseatable_reference.h"
@@ -37,8 +38,8 @@ private:
 	int shadow_quality;
 	float closeshadow;
 	enum {REFLECTION_DISABLED, REFLECTION_STATIC, REFLECTION_DYNAMIC} reflection_status;
-	TEXTURE_GL static_reflection;
-	TEXTURE_GL static_ambient;
+	TEXTURE static_reflection;
+	TEXTURE static_ambient;
 	
 	std::map <std::string, SHADER_GLSL> shadermap;
 	std::map <std::string, SHADER_GLSL>::iterator activeshader;
@@ -87,7 +88,7 @@ private:
 						RENDER_OUTPUT & render_output, 
 						std::ostream & error_output);
 	void RenderPostProcess(const std::string & shadername,
-						FBTEXTURE_GL & texture0, 
+						FBTEXTURE & texture0, 
 						RENDER_OUTPUT & render_output, 
 						std::ostream & error_output);
 	

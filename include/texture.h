@@ -1,9 +1,6 @@
 #ifndef _TEXTURE_H
 #define _TEXTURE_H
 
-#include <string>
-#include <iostream>
-
 #ifdef __APPLE__
 #include <GLExtensionWrangler/glew.h>
 #else
@@ -13,91 +10,48 @@
 #include "textureinfo.h"
 #include "texture_interface.h"
 
-class TEXTURE_GL : public TEXTURE_INTERFACE
+class TEXTURE : public TEXTURE_INTERFACE
 {
 public:
-	TEXTURE_GL()
-	{
-		Init();
-	}
+	TEXTURE() {Init();}
 	
-	~TEXTURE_GL()
-	{
-		Unload();
-	}
+	TEXTURE(const TEXTUREINFO & info, std::ostream & error) {Init(); Load(info, error);}
 	
-	virtual bool Loaded() const
-	{
-		return loaded;
-	}
-
+	virtual ~TEXTURE() {Unload();}
+	
+	virtual GLuint GetID() const {return tex_id;}
+	
 	virtual void Activate() const;
 	
 	virtual void Deactivate() const;
 
-	void SetInfo(const TEXTUREINFO & texinfo)
-	{
-		texture_info.CopyFrom(texinfo);
-	}
+	virtual bool Loaded() const {return loaded;}
 	
-	bool Load(const TEXTUREINFO & texinfo, std::ostream & error_output, const std::string & texsize)
-	{
-		SetInfo(texinfo);
-		return Load(error_output, texsize);
-	}
+	bool Load(const TEXTUREINFO & info, std::ostream & error);
 	
 	void Unload();
 	
-	unsigned short int GetW() const
-	{
-		return w;
-	}
+	unsigned short int GetW() const {return w;}
 	
-	unsigned short int GetH() const
-	{
-		return h;
-	}
+	unsigned short int GetH() const {return h;}
 	
-	unsigned short int GetOriginalW() const
-	{
-		return origw;
-	}
+	unsigned short int GetOriginalW() const {return origw;}
 	
-	unsigned short int GetOriginalH() const
-	{
-		return origh;
-	}
-	
-	bool IsEqualTo(const TEXTURE_GL & othertex) const
-	{
-		return IsEqualTo(othertex.GetTextureInfo());
-	}
-	
-	bool IsEqualTo(const TEXTUREINFO & texinfo) const;
-	
-	const TEXTUREINFO & GetTextureInfo() const
-	{
-		return texture_info;
-	}
+	unsigned short int GetOriginalH() const {return origh;}
 
 	///scale factor from original size.  allows the user to determine
 	///what the texture size scaling did to the texture dimensions
-	float GetScale() const
-	{
-		return scale;
-	}
-	
-protected:
-	virtual GLuint GetID() const {return tex_id;}
+	float GetScale() const {return scale;}
 	
 private:
-	TEXTUREINFO texture_info;
+	TEXTUREINFO texture_info; // can be removed eventually
 	GLuint tex_id;
 	bool loaded;
 	unsigned int w, h; ///< w and h are post-texture-size transform
 	unsigned int origw, origh; ///< w and h are pre-texture-size transform
 	float scale; ///< gets the amount of scaling applied by the texture-size transform, so the original w and h can be backed out
 	bool alphachannel;
+	bool cube;
 	
 	void Init()
 	{
@@ -108,18 +62,12 @@ private:
 		origh = 0;
 		scale = 1.0;
 		alphachannel = false;
+		cube = false;
 	}
 	
-	bool IsPowerOfTwo(int x)
-	{
-	    return ((x != 0) && !(x & (x - 1)));
-	}
+	bool LoadCube(const TEXTUREINFO & info, std::ostream & error);
 	
-	bool LoadCube(std::ostream & error_output);
-	
-	bool LoadCubeVerticalCross(std::ostream & error_output);
-	
-	bool Load(std::ostream & error_output, const std::string & texsize);
+	bool LoadCubeVerticalCross(const TEXTUREINFO & info, std::ostream & error);
 };
 
 #endif //_TEXTURE_H

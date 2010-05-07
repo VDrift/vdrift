@@ -4,10 +4,11 @@
 #include "widget.h"
 #include "mathvector.h"
 #include "sprite2d.h"
-#include "scenegraph.h"
 
 #include <string>
 #include <cassert>
+
+class SCENENODE;
 
 class WIDGET_MULTIIMAGE : public WIDGET
 {
@@ -22,20 +23,23 @@ private:
 	std::ostream * errptr;
 	SPRITE2D s1;
 	bool wasvisible;
-	/*SPRITE2D s2;
-	SPRITE2D * lastsprite;
-	SPRITE2D * activesprite;
-	float transtime;*/
+	TEXTUREMANAGER * textures;
 	
 public:
-	WIDGET_MULTIIMAGE() : errptr(NULL),wasvisible(false) {}
-	//~WIDGET_MULTIIMAGE() {s1.Unload(parentnode);}
+	WIDGET_MULTIIMAGE() : errptr(NULL), wasvisible(false), textures(NULL) {}
+
 	virtual WIDGET * clone() const {return new WIDGET_MULTIIMAGE(*this);};
 	
-	void SetupDrawable(SCENENODE & scene, const std::string & texturesize, const std::string & datapath,
-			   const std::string & newprefix, const std::string & newpostfix, 
-      			   float x, float y, float w, float h, std::ostream & error_output,
-	    		   int order=0)
+	void SetupDrawable(
+		SCENENODE & scene,
+		const std::string & texturesize,
+		TEXTUREMANAGER & textures,
+		const std::string & datapath,
+		const std::string & newprefix,
+		const std::string & newpostfix, 
+      	float x, float y, float w, float h,
+      	std::ostream & error_output,
+	    int order=0)
 	{
 		data = datapath;
 		prefix = newprefix;
@@ -43,6 +47,7 @@ public:
 		tsize = texturesize;
 		
 		errptr = &error_output;
+		this->textures = &textures;
 		
 		center.Set(x,y);
 		dim.Set(w,h);
@@ -52,10 +57,6 @@ public:
 	
 	virtual void SetAlpha(SCENENODE & scene, float newalpha)
 	{
-		/*if (lastsprite)
-			lastsprite->SetAlpha(newalpha);
-		if (activesprite)
-			activesprite->SetAlpha(newalpha);*/
 		if (s1.Loaded())
 			s1.SetAlpha(scene, newalpha);
 	}
@@ -63,10 +64,6 @@ public:
 	virtual void SetVisible(SCENENODE & scene, bool newvis)
 	{
 		wasvisible = newvis;
-		/*if (lastsprite)
-			lastsprite->SetVisible(newvis);
-		if (activesprite)
-			activesprite->SetVisible(newvis);*/
 		if (s1.Loaded())
 			s1.SetVisible(scene, newvis);
 	}
@@ -74,41 +71,15 @@ public:
 	virtual void HookMessage(SCENENODE & scene, const std::string & message)
 	{
 		assert(errptr);
+		assert(textures);
 		
-		std::string filename = data+"/"+prefix+message+postfix;
-		//std::cout << "Will load: " << filename << std::endl;
-		/*lastsprite = activesprite;
-		
-		//find a free sprite to use
-		if (lastsprite == &s1)
-			activesprite = &s2;
-		else
-			activesprite = &s1;
-		
-		activesprite->Load(parentnode, filename, tsize, draworder, *errptr);
-		activesprite->SetToBillboard(center[0],center[1],dim[0],dim[1]);*/
-		s1.Load(scene, filename, tsize, draworder, *errptr);
+		std::string filename = data + "/" + prefix + message + postfix;
+		s1.Load(scene, filename, tsize, *textures, draworder, *errptr);
 		s1.SetToBillboard(center[0]-dim[0]*0.5,center[1]-dim[1]*0.5,dim[0],dim[1]);
 		
 		if (s1.Loaded())
 			s1.SetVisible(scene, wasvisible);
 	}
-	
-	/*virtual bool ProcessInput(float cursorx, float cursory, bool cursordown, bool cursorjustup)
-	{
-		float trans = transtime/0.5;
-		if (transtime < 0)
-			trans = 0.0;
-		else
-			transtime -= 0.004;
-		
-		if (lastsprite)
-			lastsprite->SetAlpha(trans);
-		if (activesprite)
-			activesprite->SetAlpha(1.0-trans);
-		
-		return false;
-	}*/
 };
 
 #endif

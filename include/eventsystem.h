@@ -185,8 +185,10 @@ public:
 		}
 		else
 		{
+#ifdef _DEBUG_
 			SDL_ShowCursor(SDL_DISABLE);
 			SDL_WM_GrabInput(SDL_GRAB_ON);
+#endif
 		}
 	}
 	

@@ -5,16 +5,16 @@
 #include <cassert>
 #include <iostream>
 
-#include "scenegraph.h"
+#include "scenenode.h"
 #include "vertexarray.h"
-#include "texture.h"
+#include "texturemanager.h"
 
 ///a higher level class that takes care of using the TEXTURE, DRAWABLE, and VERTEXARRAY objects to create a 2D sprite
 class SPRITE2D
 {
 private:
 	VERTEXARRAY varray;
-	TEXTURE_GL texture;
+	TEXTURE texture;
 	keyed_container <DRAWABLE>::handle draw;
 	keyed_container <SCENENODE>::handle node;
 	float r,g,b,a;
@@ -83,7 +83,7 @@ public:
 		varray.Clear();
 	}
 
-	bool Load(SCENENODE & parent, const std::string & texturefile, const std::string & texturesize,
+	bool Load(SCENENODE & parent, const std::string & texturefile, const std::string & texturesize, TEXTUREMANAGER & textures,
 		  float draworder, std::ostream & error_output)
 	{
 		Unload(parent);
@@ -95,7 +95,9 @@ public:
 		texinfo.SetMipMap(false);
 		texinfo.SetRepeat(false, false);
 		texinfo.SetAllowNonPowerOfTwo(false);
-		if (!texture.Load(texinfo, error_output, texturesize))
+		texinfo.SetSize(texturesize);
+		TEXTUREPTR texture = textures.Get(texinfo); 
+		if (!texture->Loaded())
 			return false;
 
 		node = parent.AddNode();
@@ -103,7 +105,7 @@ public:
 		draw = noderef.GetDrawlist().twodim.insert(DRAWABLE());
 		DRAWABLE & drawref = GetDrawableFromNode(noderef);
 
-		drawref.SetDiffuseMap(&texture);
+		drawref.SetDiffuseMap(texture);
 		drawref.SetVertArray(&varray);
 		drawref.SetDrawOrder(draworder);
 		drawref.SetLit(false);
@@ -119,19 +121,19 @@ public:
 
 	///get the transformation data associated with this sprite's scenenode.
 	///this can be used to get the current translation and rotation or set new ones.
-	SCENETRANSFORM & GetTransform(SCENENODE & parent)
+	TRANSFORM & GetTransform(SCENENODE & parent)
 	{
 		SCENENODE & noderef = GetNode(parent);
 		return noderef.GetTransform();
 	}
-	const SCENETRANSFORM & GetTransform(const SCENENODE & parent) const
+	const TRANSFORM & GetTransform(const SCENENODE & parent) const
 	{
 		const SCENENODE & noderef = GetNode(parent);
 		return noderef.GetTransform();
 	}
 
 	///use the provided texture
-	bool Load(SCENENODE & parent, TEXTURE_GL * texture2d, float draworder, std::ostream & error_output)
+	bool Load(SCENENODE & parent, TEXTUREPTR texture2d, float draworder, std::ostream & error_output)
 	{
 		Unload(parent);
 
