@@ -92,7 +92,10 @@ src = Split("""aabb.cpp
 		toggle.cpp
 		track.cpp
 		trackmap.cpp
-		vertexarray.cpp""")
+		vertexarray.cpp
+		widget_slider.cpp
+		widget_spinningcar.cpp
+		widget_stringwheel.cpp""")
 
 src.sort(lambda x, y: cmp(x.lower(),y.lower()))
 

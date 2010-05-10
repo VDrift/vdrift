@@ -68,7 +68,7 @@ public:
 			s1.SetVisible(scene, newvis);
 	}
 	
-	virtual void HookMessage(SCENENODE & scene, const std::string & message)
+	virtual void HookMessage(SCENENODE & scene, const std::string & message, const std::string & from)
 	{
 		assert(errptr);
 		assert(textures);

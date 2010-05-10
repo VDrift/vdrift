@@ -38,7 +38,7 @@ private:
 		return (T*) widgets.back().Get();
 	}
 	
-	TEXTUREPTR GetTexture(const std::string & texname, const std::string & texpath, TEXTUREMANAGER & textures, const std::string & texsize, std::ostream & error_output)
+	TEXTUREPTR GetTexture(const std::string & texname, const std::string & texpath, TEXTUREMANAGER & textures, const std::string & texsize)
 	{
 		TEXTUREINFO texinfo(texpath + "/" + texname);
 		texinfo.SetMipMap(false);

@@ -84,7 +84,7 @@ bool GUIPAGE::Load(
 	{
 		//generate background
 		WIDGET_IMAGE * bg_widget = NewWidget<WIDGET_IMAGE>();
-		TEXTUREPTR texture_back = GetTexture(background, texpath, textures, texsize, error_output);
+		TEXTUREPTR texture_back = GetTexture(background, texpath, textures, texsize);
 		if (!texture_back->Loaded()) return false;
 		bg_widget->SetupDrawable(sref, texture_back, 0.5, 0.5, 1.0, 1.0, -1);
 	}
@@ -176,7 +176,7 @@ bool GUIPAGE::Load(
 				
 				string texfn;
 				if (!pagefile.GetParam(widgetstr.str()+".filename", texfn)) return false;
-				TEXTUREPTR texture = GetTexture(texfn, texpath, textures, texsize, error_output);
+				TEXTUREPTR texture = GetTexture(texfn, texpath, textures, texsize);
 				if(!texture->Loaded()) return false;
 				
 				WIDGET_IMAGE * new_widget = NewWidget<WIDGET_IMAGE>();
@@ -199,9 +199,9 @@ bool GUIPAGE::Load(
 				if (!pagefile.GetParam(widgetstr.str()+".cancel", cancel)) return false;
 				if (!pagefile.GetParam(widgetstr.str()+".tip", description)) description = "";
 				
-				TEXTUREPTR texture_up = GetTexture("widgets/btn_up_unsel.png", texpath, textures, texsize, error_output);
-				TEXTUREPTR texture_down = GetTexture("widgets/btn_down.png", texpath, textures, texsize, error_output);
-				TEXTUREPTR texture_sel = GetTexture("widgets/btn_up.png", texpath, textures, texsize, error_output);
+				TEXTUREPTR texture_up = GetTexture("widgets/btn_up_unsel.png", texpath, textures, texsize);
+				TEXTUREPTR texture_down = GetTexture("widgets/btn_down.png", texpath, textures, texsize);
+				TEXTUREPTR texture_sel = GetTexture("widgets/btn_up.png", texpath, textures, texsize);
 				if (!texture_up->Loaded() || !texture_down->Loaded() || !texture_sel->Loaded()) return false;
 				float fontscaley = ((((float) fontsize - 7.0f) * 0.25f) + 1.0f)*0.25;
 				float fontscalex = fontscaley*screenhwratio;
@@ -283,11 +283,11 @@ bool GUIPAGE::Load(
 				
 				//generate toggle
 				{
-					TEXTUREPTR texture_up = GetTexture("widgets/tog_off_up_unsel.png", texpath, textures, texsize, error_output);
-					TEXTUREPTR texture_down = GetTexture("widgets/tog_on_up_unsel.png", texpath, textures, texsize, error_output);
-					TEXTUREPTR texture_upsel = GetTexture("widgets/tog_off_up.png", texpath, textures, texsize, error_output);
-					TEXTUREPTR texture_downsel = GetTexture("widgets/tog_on_up.png", texpath, textures, texsize, error_output);
-					TEXTUREPTR texture_trans = GetTexture("widgets/tog_off_down.png", texpath, textures, texsize, error_output);
+					TEXTUREPTR texture_up = GetTexture("widgets/tog_off_up_unsel.png", texpath, textures, texsize);
+					TEXTUREPTR texture_down = GetTexture("widgets/tog_on_up_unsel.png", texpath, textures, texsize);
+					TEXTUREPTR texture_upsel = GetTexture("widgets/tog_off_up.png", texpath, textures, texsize);
+					TEXTUREPTR texture_downsel = GetTexture("widgets/tog_on_up.png", texpath, textures, texsize);
+					TEXTUREPTR texture_trans = GetTexture("widgets/tog_off_down.png", texpath, textures, texsize);
 					if (!texture_up->Loaded() || !texture_down->Loaded() || !texture_upsel->Loaded() || 
 						!texture_downsel->Loaded() || !texture_trans->Loaded()) return false;
 					float h = 0.025;
@@ -333,10 +333,10 @@ bool GUIPAGE::Load(
 					error_output << "Widget " << widgetstr << ": unknown value type " << values << endl;
 				}
 				
-				TEXTUREPTR up_left = GetTexture("widgets/wheel_up_l.png", texpath, textures, texsize, error_output);
-				TEXTUREPTR down_left = GetTexture("widgets/wheel_down_l.png", texpath, textures, texsize, error_output);
-				TEXTUREPTR up_right = GetTexture("widgets/wheel_up_r.png", texpath, textures, texsize, error_output);
-				TEXTUREPTR down_right = GetTexture("widgets/wheel_down_r.png", texpath, textures, texsize, error_output);
+				TEXTUREPTR up_left = GetTexture("widgets/wheel_up_l.png", texpath, textures, texsize);
+				TEXTUREPTR down_left = GetTexture("widgets/wheel_down_l.png", texpath, textures, texsize);
+				TEXTUREPTR up_right = GetTexture("widgets/wheel_up_r.png", texpath, textures, texsize);
+				TEXTUREPTR down_right = GetTexture("widgets/wheel_down_r.png", texpath, textures, texsize);
 				if (!up_left->Loaded() || !down_left->Loaded() || !up_right->Loaded() || !down_right->Loaded()) return false;
 				//float w = 0.02;
 				//float h = w*(4.0/3.0);
@@ -346,16 +346,21 @@ bool GUIPAGE::Load(
 				WIDGET_STRINGWHEEL * new_widget = NewWidget<WIDGET_STRINGWHEEL>();
 				new_widget->SetupDrawable(sref, title+":", up_left, down_left, up_right, down_right,
 						&fonts["futuresans"], fontscalex, fontscaley, xy[0], xy[1]);
-				new_widget->SetAction(action);
 				new_widget->SetDescription(description);
 				new_widget->SetSetting(setting);
 				new_widget->UpdateOptions(sref, false, optionmap, error_output);
 				
-				string name;
-				if (pagefile.GetParam(widgetstr.str()+".name", name)) namemap[name] = new_widget;
+				std::string name;
+				if (pagefile.GetParam(widgetstr.str()+".name", name))
+				{
+					new_widget->SetName(name);
+					namemap[name] = new_widget;
+				}
 				
 				for (list <string>::iterator n = hooklist.begin(); n != hooklist.end(); n++)
+				{
 					hookmap[new_widget].push_back(*n);
+				}
 			}
 			else if (wtype == "intintwheel")
 			{
@@ -390,10 +395,10 @@ bool GUIPAGE::Load(
 				}
 				
 				
-				TEXTUREPTR up_left = GetTexture("widgets/wheel_up_l.png", texpath, textures, texsize, error_output);
-				TEXTUREPTR down_left = GetTexture("widgets/wheel_down_l.png", texpath, textures, texsize, error_output);
-				TEXTUREPTR up_right = GetTexture("widgets/wheel_up_r.png", texpath, textures, texsize, error_output);
-				TEXTUREPTR down_right = GetTexture("widgets/wheel_down_r.png", texpath, textures, texsize, error_output);
+				TEXTUREPTR up_left = GetTexture("widgets/wheel_up_l.png", texpath, textures, texsize);
+				TEXTUREPTR down_left = GetTexture("widgets/wheel_down_l.png", texpath, textures, texsize);
+				TEXTUREPTR up_right = GetTexture("widgets/wheel_up_r.png", texpath, textures, texsize);
+				TEXTUREPTR down_right = GetTexture("widgets/wheel_down_r.png", texpath, textures, texsize);
 				if (!up_left->Loaded() || !down_left->Loaded() || !up_right->Loaded() || !down_right->Loaded()) return false;
 				//float w = 0.02;
 				//float h = w*(4.0/3.0);
@@ -403,9 +408,7 @@ bool GUIPAGE::Load(
 				WIDGET_DOUBLESTRINGWHEEL * new_widget = NewWidget<WIDGET_DOUBLESTRINGWHEEL>();
 				new_widget->SetupDrawable(sref, title+":", up_left, down_left, up_right, down_right,
 						&fonts["futuresans"], fontscalex, fontscaley, xy[0], xy[1]);
-				//new_widget->SetAction(action);
 				new_widget->SetDescription(description);
-					
 				new_widget->SetSetting(setting1, setting2);
 				
 				const std::list <std::pair<std::string,std::string> > & valuelist1 = optionmap[setting1].GetValueList();
@@ -437,9 +440,10 @@ bool GUIPAGE::Load(
 				float xy[3];
 				float min(0), max(1);
 				bool percentage(false);
-				string setting, values;
+				string name, setting, values;
 				int fontsize;
 				
+				if (!pagefile.GetParam(widgetstr.str()+".name", name)) return false;
 				if (!pagefile.GetParam(widgetstr.str()+".center", xy)) return false;
 				if (!pagefile.GetParam(widgetstr.str()+".setting", setting)) return false;
 				if (!pagefile.GetParam(widgetstr.str()+".values", values)) return false;
@@ -478,8 +482,12 @@ bool GUIPAGE::Load(
 					}
 				}
 				
-				float h = 0.05;
-				float w = h*screenhwratio;
+				float h = 0;
+				float w = 0;
+				pagefile.GetParam(widgetstr.str()+".width", w);
+				pagefile.GetParam(widgetstr.str()+".height", h);
+				if (h < 0.01) h = 0.05;
+				if (w < h * screenhwratio) w = h * screenhwratio;
 				
 				float spacing(0.3);
 				pagefile.GetParam(widgetstr.str()+".spacing", spacing);
@@ -503,14 +511,24 @@ bool GUIPAGE::Load(
 				float fontscalex = fontscaley*screenhwratio;
 				FONT * font = &fonts["lcd"];
 
-				TEXTUREPTR cursor = GetTexture("widgets/sld_cursor.png", texpath, textures, texsize, error_output);
-				TEXTUREPTR wedge = GetTexture("widgets/sld_wedge.png", texpath, textures, texsize, error_output);
+				TEXTUREPTR cursor = GetTexture("widgets/sld_cursor.png", texpath, textures, texsize);
+				TEXTUREPTR wedge = GetTexture("widgets/sld_wedge.png", texpath, textures, texsize);
 				if (!cursor->Loaded() || !wedge->Loaded()) return false;
 				
 				WIDGET_SLIDER * new_widget = NewWidget<WIDGET_SLIDER>();
 				new_widget->SetupDrawable(sref, wedge, cursor, xy[0], xy[1], w, h, min, max, percentage, setting,
      					font, fontscalex, fontscaley, error_output, 102);
+				new_widget->SetName(name);
 				new_widget->SetDescription(description);
+				
+				float color[] = {1, 1, 1};
+				pagefile.GetParam(widgetstr.str()+".color", color);
+				new_widget->SetColor(sref, color[0], color[1], color[2]);
+				
+				for (list <string>::iterator n = hooklist.begin(); n != hooklist.end(); n++)
+				{
+					hookmap[new_widget].push_back(*n);
+				}
 			}
 			else if (wtype == "spinningcar")
 			{
@@ -553,16 +571,16 @@ bool GUIPAGE::Load(
 			controlgrabs.push_back(new_widget);
 			
 			std::vector <TEXTUREPTR> control(WIDGET_CONTROLGRAB::END);
-			control[WIDGET_CONTROLGRAB::ADD] = GetTexture("widgets/controls/add.png", texpath, textures, texsize, error_output);
-			control[WIDGET_CONTROLGRAB::ADDSEL] = GetTexture("widgets/controls/add_sel.png", texpath, textures, texsize, error_output);
-			control[WIDGET_CONTROLGRAB::JOYAXIS] = GetTexture("widgets/controls/joy_axis.png", texpath, textures, texsize, error_output);
-			control[WIDGET_CONTROLGRAB::JOYAXISSEL] = GetTexture("widgets/controls/joy_axis_sel.png", texpath, textures, texsize, error_output);
-			control[WIDGET_CONTROLGRAB::JOYBTN] = GetTexture("widgets/controls/joy_btn.png", texpath, textures, texsize, error_output);
-			control[WIDGET_CONTROLGRAB::JOYBTNSEL] = GetTexture("widgets/controls/joy_btn_sel.png", texpath, textures, texsize, error_output);
-			control[WIDGET_CONTROLGRAB::KEY] = GetTexture("widgets/controls/key.png", texpath, textures, texsize, error_output);
-			control[WIDGET_CONTROLGRAB::KEYSEL] = GetTexture("widgets/controls/key_sel.png", texpath, textures, texsize, error_output);
-			control[WIDGET_CONTROLGRAB::MOUSE] = GetTexture("widgets/controls/mouse.png", texpath, textures, texsize, error_output);
-			control[WIDGET_CONTROLGRAB::MOUSESEL] = GetTexture("widgets/controls/mouse_sel.png", texpath, textures, texsize, error_output);
+			control[WIDGET_CONTROLGRAB::ADD] = GetTexture("widgets/controls/add.png", texpath, textures, texsize);
+			control[WIDGET_CONTROLGRAB::ADDSEL] = GetTexture("widgets/controls/add_sel.png", texpath, textures, texsize);
+			control[WIDGET_CONTROLGRAB::JOYAXIS] = GetTexture("widgets/controls/joy_axis.png", texpath, textures, texsize);
+			control[WIDGET_CONTROLGRAB::JOYAXISSEL] = GetTexture("widgets/controls/joy_axis_sel.png", texpath, textures, texsize);
+			control[WIDGET_CONTROLGRAB::JOYBTN] = GetTexture("widgets/controls/joy_btn.png", texpath, textures, texsize);
+			control[WIDGET_CONTROLGRAB::JOYBTNSEL] = GetTexture("widgets/controls/joy_btn_sel.png", texpath, textures, texsize);
+			control[WIDGET_CONTROLGRAB::KEY] = GetTexture("widgets/controls/key.png", texpath, textures, texsize);
+			control[WIDGET_CONTROLGRAB::KEYSEL] = GetTexture("widgets/controls/key_sel.png", texpath, textures, texsize);
+			control[WIDGET_CONTROLGRAB::MOUSE] = GetTexture("widgets/controls/mouse.png", texpath, textures, texsize);
+			control[WIDGET_CONTROLGRAB::MOUSESEL] = GetTexture("widgets/controls/mouse_sel.png", texpath, textures, texsize);
 			std::vector <TEXTUREPTR>::iterator it;
 			for (it = control.begin(); it < control.end(); it++)
 			{
