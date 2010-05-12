@@ -248,23 +248,6 @@ bool CAR::Load (
 	// get coordinate system version
 	int version = 1;
 	carconf.GetParam("version", version);
-
-	// load cardynamics
-	{
-		if (!dynamics.Load(carconf, error_output)) return false;
-		
-		MATHVECTOR<double, 3> position;
-		QUATERNION<double> orientation;
-		position = initial_position;
-		orientation = initial_orientation;
-		
-		if (world)
-		{
-			dynamics.Init(*world, bodymodel, wheelmodelfront, wheelmodelrear, position, orientation);
-		}
-		dynamics.SetABS(defaultabs);
-		dynamics.SetTCS(defaulttcs);
-	}
 	
 	//load wheel graphics
 	for (int i = 0; i < 2; i++) //front pair
@@ -325,6 +308,24 @@ bool CAR::Load (
 			textures, carpath + "/textures/body" + carpaint + ".png", carpath + "/textures/body-misc1.png",
       		texsize, anisotropy, false, MATHVECTOR <float, 3>(1,1,1), nullout );
 	}
+	
+	// load cardynamics(needs wheel models loaded)
+	{
+		if (!dynamics.Load(carconf, error_output)) return false;
+		
+		MATHVECTOR<double, 3> position;
+		QUATERNION<double> orientation;
+		position = initial_position;
+		orientation = initial_orientation;
+		
+		if (world)
+		{
+			dynamics.Init(*world, bodymodel, wheelmodelfront, wheelmodelrear, position, orientation);
+		}
+		dynamics.SetABS(defaultabs);
+		dynamics.SetTCS(defaulttcs);
+	}
+	
 
 	// load driver
 	{
