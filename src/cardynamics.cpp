@@ -274,7 +274,7 @@ bool CARDYNAMICS::Load(CONFIGFILE & c, std::ostream & error_output)
 				posr = REAR_RIGHT;
 			}
 
-			float spring_constant, bounce, rebound, travel, camber, caster, toe, anti_roll, maxcompvel;
+			float spring_constant, bounce, rebound, travel, camber, caster, toe, anti_roll;
 			float hinge[3];
 			MATHVECTOR <double, 3> tempvec;
 
@@ -480,11 +480,49 @@ bool CARDYNAMICS::Load(CONFIGFILE & c, std::ostream & error_output)
 			tire[leftside].SetRollingResistance(rolling_resistance[0], rolling_resistance[1]);
 			tire[rightside].SetRollingResistance(rolling_resistance[0], rolling_resistance[1]);
 
+			std::string size;
+			if (c.GetParam("tire-"+posstr+".size", size))
+			{
+				// parse tire size
+				
+				std::string modsize = size;
+				for (unsigned int i = 0; i < modsize.length(); i++)
+				{
+					if (modsize[i] < '0' || modsize[i] > '9')
+						modsize[i] = ' ';
+				}
+				std::stringstream parser(modsize);
+				float section_width(0);
+				float aspect_ratio(0);
+				float rim_diameter(0);
+				parser >> section_width >> aspect_ratio >> rim_diameter;
+				if (section_width <= 0 || aspect_ratio <= 0 || rim_diameter <= 0)
+				{
+					error_output << "Error parsing tire-" << posstr << ".size, expected something like 225/50r16 but got: " << size << std::endl;
+					return false;
+				}
+				
+				float radius = section_width*0.001f * aspect_ratio*0.01f + rim_diameter*0.0254f*0.5;
+				
+				int sides[2];
+				sides[0] = leftside;
+				sides[1] = rightside;
+				for (int i = 0; i < 2; i++)
+				{
+					tire[sides[i]].SetRadius(radius);
+					tire[sides[i]].SetSidewallWidth(section_width*0.001f);
+					tire[sides[i]].SetAspectRatio(aspect_ratio*0.01f);
+				}
+			}
+			else
+			{
+				float radius;
+				if (!c.GetParam("tire-"+posstr+".radius", radius, error_output)) return false;
+				tire[leftside].SetRadius(radius);
+				tire[rightside].SetRadius(radius);
+			}
+			
 			float tread;
-			float radius;
-			if (!c.GetParam("tire-"+posstr+".radius", radius, error_output)) return false;
-			tire[leftside].SetRadius(radius);
-			tire[rightside].SetRadius(radius);
 			if (!c.GetParam("tire-"+posstr+".tread", tread, error_output)) return false;
 			tire[leftside].SetTread(tread);
 			tire[rightside].SetTread(tread);

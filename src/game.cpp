@@ -1746,6 +1746,7 @@ bool GAME::LoadCar(const std::string & carname, const std::string & carpaint, co
 		settings.GetTextureSize(),
 		settings.GetCameraBounce(),
 		debugmode,
+		pathmanager.GetCarSharedPath(),
 		info_output,
 		error_output))
 	{

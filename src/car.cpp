@@ -5,6 +5,7 @@
 #include "collision_world.h"
 #include "tracksurface.h"
 #include "configfile.h"
+#include "mesh_gen.h"
 
 #include "camera_fixed.h"
 #include "camera_free.h"
@@ -29,10 +30,112 @@ CAR::CAR()
 	brakesound_check(false),
 	handbrakesound_check(false),
 	last_steer(0),
-	debug_wheel_draw(false),
 	sector(-1),
 	applied_brakes(0)
 {
+}
+
+bool CAR::GenerateWheelMesh(CONFIGFILE & carconf,
+							const CARTIRE<double> & tire,
+							SCENENODE & topnode,
+							keyed_container <SCENENODE>::handle & output_scenenode,
+							keyed_container <DRAWABLE>::handle & output_drawable,
+							VERTEXARRAY & output_varray,
+							TEXTUREMANAGER & textures,
+							const std::string & confsection,
+							const std::string & sharedpartspath,
+							int anisotropy,
+							const std::string & texsize,
+							MODEL_JOE03 & output_rim_model,
+							std::ostream & error_output)
+{
+	output_scenenode = topnode.AddNode();
+	SCENENODE & node = topnode.GetNode(output_scenenode);
+
+	// create the drawable in the correct layer depending on blend status
+	output_drawable = GetDrawlistNoBlend(node).insert(DRAWABLE());
+	DRAWABLE & draw = GetDrawlistNoBlend(node).get(output_drawable);
+	
+	// load model
+	//float radius = section_width*0.001f * aspect_ratio*0.01f + rim_diameter*0.0254f*0.5;
+	float rimDiameter_in = (tire.GetRadius() - tire.GetSidewallWidth()*tire.GetAspectRatio())/(0.0254f*0.5);
+	float rim_diameter = (tire.GetRadius() - tire.GetSidewallWidth()*tire.GetAspectRatio())*2.f;
+	float rim_width = 0.1f;
+	MESHGEN::mesh_gen_tire(&output_varray, tire.GetSidewallWidth()*1000.f, tire.GetAspectRatio()*100.f, rimDiameter_in);
+	draw.SetVertArray(&output_varray);
+	
+	// car mesh orientation fixer
+	//output_model.Rotate(-M_PI_2, 0, 0, 1);
+	//draw.SetObjectCenter(wheelmeshgen[i].GetCenter());
+
+	// load textures
+	std::string modelpath = sharedpartspath+"/wheel/";
+	std::string texpath = sharedpartspath+"/wheel/textures/";
+	
+	std::string tiretex;
+	if (!carconf.GetParam(confsection + ".tiretexture", tiretex, error_output))
+		return false;
+	
+	{
+		TEXTUREINFO texinfo;
+		texinfo.SetName(texpath + tiretex + ".png");
+		texinfo.SetMipMap(true);
+		texinfo.SetAnisotropy(anisotropy);
+		texinfo.SetSize(texsize);
+		TEXTUREPTR texture = textures.Get(texinfo);
+		if (!texture->Loaded())
+		{
+			error_output << "Tire texture couldn't be loaded: " << texpath + tiretex + ".png" << std::endl;
+			return false;
+		}
+		draw.SetDiffuseMap(texture);
+	}
+	
+	{
+		std::string misc1texfile = texpath + tiretex + "-misc1.png";
+		
+		std::ifstream filecheck(misc1texfile.c_str());
+		if (filecheck)
+		{
+			TEXTUREINFO texinfo;
+			texinfo.SetName(misc1texfile);
+			texinfo.SetMipMap(true);
+			texinfo.SetAnisotropy(anisotropy);
+			texinfo.SetSize(texsize);
+			TEXTUREPTR misc1 = textures.Get(texinfo);
+			if (!misc1->Loaded())
+			{
+				error_output << "Error loading tire misc texture: " << misc1texfile << std::endl;
+				return false;
+			}
+			draw.SetMiscMap1(misc1);
+		}
+	}
+	
+	draw.SetBlur(false);
+	draw.SetPartialTransparency(false);
+	
+	// now load the rim
+	std::string wheelname;
+	if (!carconf.GetParam(confsection + ".wheel", wheelname, error_output))
+		return false;
+	keyed_container <DRAWABLE>::handle rim_draw;
+	if (!LoadInto(node,
+			 output_scenenode,
+			 rim_draw, 
+			 modelpath+wheelname+".joe",
+			 output_rim_model,
+			 textures,
+			 texpath+wheelname+".png",
+			 texpath+wheelname+"-misc1.png",
+			 texsize,
+			 anisotropy,
+			 false,
+			 MATHVECTOR <float, 3>(rim_width/0.1,rim_diameter,rim_diameter),
+			 error_output))
+		return false;
+	
+	return true;
 }
 
 bool CAR::Load (
@@ -54,18 +157,18 @@ bool CAR::Load (
 	bool defaulttcs,
 	const std::string & texsize,
 	float camerabounce,
-  	bool debugmode,
-  	std::ostream & info_output,
-  	std::ostream & error_output)
+	bool debugmode,
+	const std::string & sharedpartspath,
+	std::ostream & info_output,
+	std::ostream & error_output)
 {
-	debug_wheel_draw = debugmode;
 	cartype = carname;
 	std::stringstream nullout;
 
 	//load car body graphics
 	if ( !LoadInto ( topnode, bodynode, bodydraw, carpath + "/body.joe", bodymodel,
 			textures, carpath + "/textures/body" + carpaint + ".png", carpath + "/textures/body-misc1.png",
-			texsize, anisotropy, false, error_output ) )
+			texsize, anisotropy, false, MATHVECTOR <float, 3>(1,1,1), error_output ) )
 	{
 		return false;
 	}
@@ -78,7 +181,7 @@ bool CAR::Load (
 	{
 		if (!LoadInto(topnode.GetNode(bodynode), drivernode, driverdraw, driverpath + "/body.joe", drivermodel,
 				textures, driverpath + "/textures/body.png", driverpath + "/textures/body-misc1.png",
-				texsize, anisotropy, false, error_output))
+				texsize, anisotropy, false, MATHVECTOR <float, 3>(1,1,1), error_output))
 		{
 			drivernode.invalidate();
 			error_output << "Error loading driver graphics: " << driverpath << std::endl;
@@ -126,7 +229,7 @@ bool CAR::Load (
 	//load car interior graphics
 	if ( !LoadInto ( topnode.GetNode(bodynode), bodynode, interiordraw, carpath + "/interior.joe", interiormodel,
 			textures, carpath + "/textures/interior.png", carpath + "/textures/interior-misc1.png",
-			texsize, anisotropy, false, nullout ) )
+			texsize, anisotropy, false, MATHVECTOR <float, 3>(1,1,1), nullout ) )
 	{
 		info_output << "No car interior model exists, continuing without one" << std::endl;
 	}
@@ -134,58 +237,9 @@ bool CAR::Load (
 	//load car glass graphics
 	if ( !LoadInto ( topnode.GetNode(bodynode), bodynode, glassdraw, carpath + "/glass.joe", glassmodel,
 			textures, carpath + "/textures/glass.png", carpath + "/textures/glass-misc1.png",
-			texsize, anisotropy, true, nullout ) )
+			texsize, anisotropy, true, MATHVECTOR <float, 3>(1,1,1), nullout ) )
 	{
 		info_output << "No car glass model exists, continuing without one" << std::endl;
-	}
-
-	//load wheel graphics
-	for (int i = 0; i < 2; i++) //front pair
-	{
-		if ( !LoadInto ( topnode, wheelnode[i], wheeldraw[i], carpath + "/wheel_front.joe", wheelmodelfront,
-			textures, carpath + "/textures/wheel_front.png", carpath + "/textures/wheel_front-misc1.png",
-			texsize, anisotropy, false, error_output ) )
-			return false;
-
-		//load floating elements
-		std::stringstream nullout;
-		LoadInto ( topnode, floatingnode[i], floatingdraw[i], carpath + "/floating_front.joe", floatingmodelfront,
-			textures, carpath + "/textures/body" + carpaint + ".png", carpath + "/textures/body-misc1.png",
-      		texsize, anisotropy, false, nullout );
-	}
-	for (int i = 2; i < 4; i++) //rear pair
-	{
-		if ( !LoadInto ( topnode, wheelnode[i], wheeldraw[i], carpath + "/wheel_rear.joe", wheelmodelrear,
-			textures, carpath + "/textures/wheel_rear.png", carpath + "/textures/wheel_rear-misc1.png",
-			texsize, anisotropy, false, error_output ) )
-			return false;
-
-		//load floating elements
-		std::stringstream nullout;
-		LoadInto ( topnode, floatingnode[i], floatingdraw[i],
-			carpath + "/floating_rear.joe", floatingmodelrear,
-			textures, carpath + "/textures/body" + carpaint + ".png", carpath + "/textures/body-misc1.png",
-      		texsize, anisotropy, false, nullout );
-	}
-
-	//load debug wheel graphics
-	if (debug_wheel_draw)
-	{
-		for (int w = 0; w < 4; w++)
-		{
-			SCENENODE & wheelnoderef = topnode.GetNode(wheelnode[w]);
-			DRAWABLE wheeldrawable = GetDrawlistNoBlend(wheelnoderef).get(wheeldraw[w]);
-			for (int i = 0; i < 10; i++)
-			{
-				debugwheelnode[w*10+i] = topnode.AddNode();
-				SCENENODE & node = topnode.GetNode(debugwheelnode[w*10+i]);
-				debugwheeldraw[w*10+i] = GetDrawlistBlend(node).insert(wheeldrawable);
-				DRAWABLE & draw = GetDrawlistBlend(node).get(debugwheeldraw[w*10+i]);
-				draw.SetColor(1, 1, 1, 0.25);
-				draw.SetPartialTransparency(true);
-				draw.SetBlur(false);
-			}
-		}
 	}
 
 	// get coordinate system version
@@ -207,6 +261,66 @@ bool CAR::Load (
 		}
 		dynamics.SetABS(defaultabs);
 		dynamics.SetTCS(defaulttcs);
+	}
+	
+	//load wheel graphics
+	for (int i = 0; i < 2; i++) //front pair
+	{
+		if (dynamics.GetTire(WHEEL_POSITION(i)).GetSidewallWidth() <= 0)
+		{
+			// fallback to premodeled wheels
+			if ( !LoadInto ( topnode, wheelnode[i], wheeldraw[i], carpath + "/wheel_front.joe", wheelmodelfront,
+				textures, carpath + "/textures/wheel_front.png", carpath + "/textures/wheel_front-misc1.png",
+				texsize, anisotropy, false, MATHVECTOR <float, 3>(1,1,1), error_output ) )
+				return false;
+		}
+		else
+		{
+			if (!GenerateWheelMesh(carconf, dynamics.GetTire(WHEEL_POSITION(i)), topnode,
+					wheelnode[i], wheeldraw[i], wheelmeshgen[i], textures, "tire-front", sharedpartspath,
+					anisotropy, texsize, wheelrim[i], error_output))
+			{
+				error_output << "Error generating wheel mesh for wheel " << i << std::endl;
+				return false;
+			}
+		}
+		
+		//load floating elements
+		std::stringstream nullout;
+		LoadInto ( topnode, floatingnode[i], floatingdraw[i], carpath + "/floating_front.joe", floatingmodelfront,
+			textures, carpath + "/textures/body" + carpaint + ".png", carpath + "/textures/body-misc1.png",
+      		texsize, anisotropy, false, MATHVECTOR <float, 3>(1,1,1), nullout );
+	}
+	for (int i = 2; i < 4; i++) //rear pair
+	{
+		if (dynamics.GetTire(WHEEL_POSITION(i)).GetSidewallWidth() <= 0)
+		{
+			if (dynamics.GetTire(WHEEL_POSITION(REAR_LEFT)).GetSidewallWidth() <= 0 ||
+				dynamics.GetTire(WHEEL_POSITION(REAR_RIGHT)).GetSidewallWidth() <= 0)
+			{
+				if ( !LoadInto ( topnode, wheelnode[i], wheeldraw[i], carpath + "/wheel_rear.joe", wheelmodelrear,
+					textures, carpath + "/textures/wheel_rear.png", carpath + "/textures/wheel_rear-misc1.png",
+					texsize, anisotropy, false, MATHVECTOR <float, 3>(1,1,1), error_output ) )
+					return false;
+			}
+		}
+		else
+		{
+			if (!GenerateWheelMesh(carconf, dynamics.GetTire(WHEEL_POSITION(i)), topnode,
+					wheelnode[i], wheeldraw[i], wheelmeshgen[i], textures, "tire-rear", sharedpartspath,
+					anisotropy, texsize, wheelrim[i], error_output))
+			{
+				error_output << "Error generating wheel mesh for wheel " << i << std::endl;
+				return false;
+			}
+		}
+
+		//load floating elements
+		std::stringstream nullout;
+		LoadInto ( topnode, floatingnode[i], floatingdraw[i],
+			carpath + "/floating_rear.joe", floatingmodelrear,
+			textures, carpath + "/textures/body" + carpaint + ".png", carpath + "/textures/body-misc1.png",
+      		texsize, anisotropy, false, MATHVECTOR <float, 3>(1,1,1), nullout );
 	}
 
 	// load driver
@@ -591,6 +705,7 @@ bool CAR::LoadInto (
 	const std::string & texsize,
 	int anisotropy,
 	bool blend,
+	const MATHVECTOR <float, 3> & scale,
 	std::ostream & error_output )
 {
 	SCENENODE * node = &parentnode;
@@ -626,6 +741,7 @@ bool CAR::LoadInto (
 				return false;
 			}
 			// car mesh orientation fixer
+			output_model.Scale(scale[0], scale[1], scale[2]);
 			output_model.Rotate(-M_PI_2, 0, 0, 1);
  			output_model.GenerateMeshMetrics();
 			output_model.GenerateListID(error_output);
@@ -727,18 +843,6 @@ void CAR::CopyPhysicsResultsIntoDisplay()
 			QUATERNION <float> floatquat;
 			floatquat = dynamics.GetUprightOrientation(WHEEL_POSITION(i));
 			floatingnoderef.GetTransform().SetRotation(floatquat);
-		}
-
-		//update debug wheel drawing
-		if (debug_wheel_draw)
-		{
-			for (int n = 0; n < 10; n++)
-			{
-				vec = dynamics.GetWheelPosition(WHEEL_POSITION(i), n/9.0);
-				SCENENODE & debugwheelnoderef = topnode.GetNode(debugwheelnode[i*10+n]);
-				debugwheelnoderef.GetTransform().SetTranslation(vec);
-				debugwheelnoderef.GetTransform().SetRotation(wheelquat);
-			}
 		}
 	}
 	

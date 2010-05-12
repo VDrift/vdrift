@@ -655,6 +655,18 @@ void VERTEXARRAY::Rotate(float a, float x, float y, float z)
     }
 }
 
+void VERTEXARRAY::Scale(float x, float y, float z)
+{
+	assert(vertices.size() % 3 == 0);
+	for (std::vector <float>::iterator i = vertices.begin(); i != vertices.end(); i += 3)
+	{
+		float * vert = &*i;
+		vert[0] *= x;
+		vert[1] *= y;
+		vert[2] *= z;
+    }
+}
+
 QT_TEST(vertexarray_buldfromfaces_test)
 {	
 	std::vector <VERTEXARRAY::TRIFLOAT> verts;

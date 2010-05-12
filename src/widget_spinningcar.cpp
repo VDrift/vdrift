@@ -242,7 +242,7 @@ void WIDGET_SPINNINGCAR::Load(SCENENODE & parent, TEXTUREMANAGER & textures, con
 		false, SOUNDINFO(0,0,0,0),
 		SOUNDBUFFERLIBRARY(),
 		0, true, true, "large", 0,
-		false, loadlog, loadlog))
+		false, data + "/carparts", loadlog, loadlog))
 	{
 		*errptr << "Couldn't load spinning car: " << carname << std::endl;
 		if (!loadlog.str().empty())

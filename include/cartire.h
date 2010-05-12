@@ -21,7 +21,9 @@ class CARTIRE
 friend class joeserialize::Serializer;
 private:
 	//constants (not actually declared as const because they can be changed after object creation)
-	T radius; ///< the total radius of the tire
+	T radius; ///< the total tread radius of the tire in meters
+	T aspect_ratio; ///< 0..1 percentage value
+	T sidewall_width; /// in meters
 	T tread; ///< 1.0 means a pure off-road tire, 0.0 is a pure road tire
 	T rolling_resistance_linear; ///< linear rolling resistance on a hard surface
 	T rolling_resistance_quadratic; ///< quadratic rolling resistance on a hard surface
@@ -68,7 +70,7 @@ private:
 
 public:
 	//default constructor makes an S2000-like car
-	CARTIRE() : slide(0),slip(0) {longitudinal_parameters.resize(11);transverse_parameters.resize(15);aligning_parameters.resize(18);}
+	CARTIRE() : aspect_ratio(0),sidewall_width(0),slide(0),slip(0) {longitudinal_parameters.resize(11);transverse_parameters.resize(15);aligning_parameters.resize(18);}
 
 	void DebugPrint(std::ostream & out)
 	{
@@ -478,6 +480,20 @@ public:
 	{
 		return std::make_pair(slideratio, slipratio);
 	}
+	
+	void SetAspectRatio(T aspect)
+	{
+		aspect_ratio = aspect;
+	}
+	
+	T GetAspectRatio() const {return aspect_ratio;}
+	
+	void SetSidewallWidth(T width)
+	{
+		sidewall_width = width;
+	}
+	
+	T GetSidewallWidth() const {return sidewall_width;}
 };
 
 #endif

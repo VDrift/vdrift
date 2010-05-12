@@ -51,6 +51,7 @@ public:
 		const std::string & texsize,
 		float camerabounce,
 		bool debugmode,
+		const std::string & sharedpartspath,
 		std::ostream & info_output,
 		std::ostream & error_output);
 	
@@ -305,10 +306,10 @@ protected:
 
 	keyed_container <DRAWABLE>::handle wheeldraw[4];
 	keyed_container <SCENENODE>::handle wheelnode[4];
+	MODEL_JOE03 wheelrim[4];
+	VERTEXARRAY wheelmeshgen[4];
 	keyed_container <DRAWABLE>::handle floatingdraw[4];
 	keyed_container <SCENENODE>::handle floatingnode[4];
-	keyed_container <DRAWABLE>::handle debugwheeldraw[40]; //10 debug wheels per wheel
-	keyed_container <SCENENODE>::handle debugwheelnode[40]; //10 debug wheels per wheel
 	MODEL_JOE03 wheelmodelfront;
 	MODEL_JOE03 wheelmodelrear;
 	MODEL_JOE03 floatingmodelfront;
@@ -333,7 +334,6 @@ protected:
 	//internal variables that might change during driving (so, they need to be serialized)
 	float last_steer;
 	bool lookbehind;
-	bool debug_wheel_draw;
 
 	std::string cartype;
 	int sector; //the last lap timing sector that the car hit
@@ -359,7 +359,22 @@ protected:
 		const std::string & texsize,
 		int anisotropy,
 		bool blend,
+		const MATHVECTOR <float, 3> & scale,
 		std::ostream & error_output);
+		
+	bool GenerateWheelMesh(CONFIGFILE & carconf,
+						   const CARTIRE<double> & tire,
+						   SCENENODE & topnode,
+						   keyed_container <SCENENODE>::handle & output_scenenode,
+						   keyed_container <DRAWABLE>::handle & output_drawable,
+						   VERTEXARRAY & output_varray,
+						   TEXTUREMANAGER & textures,
+						   const std::string & confsection,
+						   const std::string & sharedpartspath,
+						   int anisotropy,
+						   const std::string & texsize,
+						   MODEL_JOE03 & output_rim_model,
+						   std::ostream & error_output);
 	
 	void UpdateSounds(float dt);
 	

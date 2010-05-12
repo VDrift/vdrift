@@ -95,6 +95,8 @@ public:
 
 	void Rotate(float a, float x, float y, float z) {mesh.Rotate(a, x, y, z);}
 	
+	void Scale(float x, float y, float z) {mesh.Scale(x,y,z);}
+	
 	AABB <float> GetAABB() const
 	{
 		assert(generatedmetrics);

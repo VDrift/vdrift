@@ -66,6 +66,7 @@ class PATHMANAGER
 		std::string GetLogFile() const {return settings_path+"/log.txt";}
 		std::string GetTrackPath() const {return data_directory+"/tracks";}
 		std::string GetCarPath() const {return data_directory+"/cars";}
+		std::string GetCarSharedPath() const {return data_directory+"/carparts";}
 		void Init(std::ostream & info_output, std::ostream & error_output);
 		std::string GetFontPath(const std::string & skinname) const {return data_directory+"/skins/"+skinname+"/fonts";}
 		std::string GetGUIMenuPath(const std::string & skinname) const {return data_directory+"/skins/"+skinname+"/menus";}

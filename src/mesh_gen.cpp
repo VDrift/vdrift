@@ -4,20 +4,18 @@
 
 #define PI 3.14159265
 
-
-
-
-double sinD(double degrees)
+static double sinD(double degrees)
 {
 	return (double) sin(degrees * PI / 180.000f);
 }
 
-double cosD(double degrees)
+static double cosD(double degrees)
 {
 	return (double) cos(degrees * PI / 180.000f);
 }
 
-
+namespace MESHGEN
+{
 
 
 
@@ -110,7 +108,7 @@ void mesh_gen_tire(VERTEXARRAY *tire, float sectionWidth_mm, float aspectRatio, 
 
 	/////////////////////////////////////
 	//
-	// vertexes (temporary data)
+	// vertices (temporary data)
 	//
 	unsigned int vertexCount = segmentsAround * vertexRings;
 	unsigned int vertexFloatCount = vertexCount * 3;	// * 3 cause there are 3 floats in a vertex
@@ -216,7 +214,7 @@ void mesh_gen_tire(VERTEXARRAY *tire, float sectionWidth_mm, float aspectRatio, 
 
 	/////////////////////////////////////
 	//
-	//  now lets build triangles
+	//  now let's build triangles
 	//
 	unsigned int triVIndexCount = 2 * segmentsAround * (vertexRings-1) * 3;	// 2 * triangles make a square,   * 3 indexes in a triangle
 	unsigned int *triData = new unsigned int [ triVIndexCount ];
@@ -523,7 +521,8 @@ void mesh_gen_tire(VERTEXARRAY *tire, float sectionWidth_mm, float aspectRatio, 
 
 	// VERTEXARRAY will copy this data
 	tire->SetVertices(vertexData, vertexFloatCount);
-	tire->SetFaces((int *)triData, triVIndexCount);
+	tire->SetFaces((int*)triData, triVIndexCount);
+	tire->SetTexCoordSets(1);
 	tire->SetTexCoords(0, texData, texCoordFloats);
 
 
@@ -534,3 +533,6 @@ void mesh_gen_tire(VERTEXARRAY *tire, float sectionWidth_mm, float aspectRatio, 
 	delete texData;
 
 }
+
+
+}; //namespace
