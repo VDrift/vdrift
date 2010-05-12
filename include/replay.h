@@ -174,6 +174,9 @@ private:
 	std::string carpaint; //car paint id string
 	std::string carfile; //entire contents of the car file (e.g. XS.car)
 	std::string track;
+	float carcolor_r;
+	float carcolor_g;
+	float carcolor_b;
 	std::vector <INPUTFRAME> inputframes;
 	std::vector <STATEFRAME> stateframes;
 	
@@ -209,7 +212,7 @@ public:
 	const std::vector <float> & PlayFrame(CAR & car);
 	
 	//recording
-	void StartRecording(const std::string & newcartype, const std::string & newcarpaint, const std::string & carfilename, const std::string & trackname, std::ostream & error_log);
+	void StartRecording(const std::string & newcartype, const std::string & newcarpaint, float r, float g, float b, const std::string & carfilename, const std::string & trackname, std::ostream & error_log);
 	void StopRecording(const std::string & replayfilename); ///< if replayfilename is empty, do not save the data
 	bool GetRecording() const {return (replaymode == RECORDING);} ///< returns true if the replay system is currently recording
 	void RecordFrame(const std::vector <float> & inputs, CAR & car);
@@ -220,6 +223,9 @@ public:
 		_SERIALIZE_(s, carpaint);
 		_SERIALIZE_(s, carfile);
 		_SERIALIZE_(s, track);
+		_SERIALIZE_(s, carcolor_r);
+		_SERIALIZE_(s, carcolor_g);
+		_SERIALIZE_(s, carcolor_b);
 		//_SERIALIZE_(s, inputframes);
 		//_SERIALIZE_(s, stateframes);
 		return true;
@@ -243,6 +249,13 @@ public:
 	std::string GetCarPaint() const
 	{
 		return carpaint;
+	}
+	
+	void GetCarColor(float & r, float & g, float & b) const
+	{
+		r = carcolor_r;
+		g = carcolor_g;
+		b = carcolor_b;
 	}
 	
 };

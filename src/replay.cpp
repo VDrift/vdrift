@@ -88,11 +88,14 @@ void REPLAY::GetReadyToRecord()
 	inputbuffer.resize(CARINPUT::GAME_ONLY_INPUTS_START_HERE, 0);
 }
 
-void REPLAY::StartRecording(const std::string & newcartype, const std::string & newcarpaint, const std::string & carfilename, const std::string & trackname, ostream & error_log)
+void REPLAY::StartRecording(const std::string & newcartype, const std::string & newcarpaint, float r, float g, float b, const std::string & carfilename, const std::string & trackname, ostream & error_log)
 {
 	track = trackname;
 	cartype = newcartype;
 	carpaint = newcarpaint;
+	carcolor_r = r;
+	carcolor_g = g;
+	carcolor_b = b;
 	
 	GetReadyToRecord();
 	

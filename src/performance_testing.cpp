@@ -1,6 +1,7 @@
 #include "performance_testing.h"
 #include "configfile.h"
 #include "tracksurface.h"
+#include "carinput.h"
 
 #include <vector>
 using std::vector;

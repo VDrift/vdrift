@@ -44,8 +44,9 @@ private:
 	float rotation;
 	std::string carname;
 	std::string lastcarname;
-	std::string lastcarpaint;
+	std::string carpaint;
 	bool wasvisible;
+	bool newcolor;
 	float r, g, b;
 	
 	keyed_container <SCENENODE>::handle carnode;
@@ -57,11 +58,7 @@ private:
 	
 	void Unload(SCENENODE & parent);
 	
-	void Load(
-		SCENENODE & parent,
-		TEXTUREMANAGER & textures,
-		const std::string & carname,
-		const std::string & paintstr);
+	void Load(SCENENODE & parent);
 };
 
 #endif // _WIDGET_SPINNINGCAR_H

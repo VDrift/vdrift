@@ -7,97 +7,24 @@
 
 class SETTINGS
 {
-private:
-	bool res_override;
-	
-	int resolution_x;
-	int resolution_y;
-	int bpp;
-	int depthbpp;
-	bool fullscreen;
-	bool shaders;
-	std::string skin;
-	bool show_fps;
-	float mastervolume;
-	bool mph; //if false, KPH
-	std::string selected_car;
-	std::string track;
-	int antialiasing; //0 or 1 mean off
-	int anisotropic; //0 or 1 mean off
-	bool trackmap;
-	bool show_hud;
-	float FOV;
-	bool abs;
-	bool tcs;
-	std::string joytype;
-	bool joy200;
-	float speed_sensitivity;
-	bool joystick_calibrated;
-	float view_distance;
-	bool autoclutch;
-	bool autoshift;
-	bool racingline;
-	bool mousegrab;
-	bool recordreplay;
-	int selected_replay;
-	std::string carpaint;
-	std::string texturesize;
-	float button_ramp;
-	std::string ff_device;
-	float ff_gain;
-	bool ff_invert;
-	bool trackreverse;
-	bool shadows;
-	int shadow_distance;
-	int shadow_quality;
-	int reflections;
-	bool input_graph;
-	int lighting;
-	bool bloom;
-	std::string opponent_car;
-	std::string opponent_car_paint;
-	float camerabounce;
-	int number_of_laps;
-	float contrast;
-	std::string camera_mode;
-	bool hgateshifter;
-	float ai_difficulty;
-
-	//void LoadDefaults();
-
-	template <typename T>
-	bool Param(CONFIGFILE & conf, bool write, std::string pname, T & value)
-	{
-		if (write)
-		{
-			conf.SetParam(pname, value);
-			return true;
-		}
-		else
-			return conf.GetParam(pname, value);
-	}
-
 public:
-	SETTINGS() : res_override(false),
-		resolution_x(800),resolution_y(600),bpp(16),depthbpp(24),fullscreen(false),
-		shaders(true),skin("simple"),show_fps(false),mastervolume(1.0),mph(true),
-		selected_car("XS"), track("paulricard88"), antialiasing(0), anisotropic(0),
-		trackmap(true), show_hud(true), FOV(45.0), abs(true), tcs(true), joytype("joystick"),
-		joy200(false), speed_sensitivity(1.0), joystick_calibrated(false), view_distance(1000.0),
-		autoclutch(true), autoshift(true), racingline(false), mousegrab(true),
-		recordreplay(false), selected_replay(0), carpaint("00"), texturesize("large"),
-		button_ramp(5), ff_device("/dev/input/event0"),
-		ff_gain(2.0), ff_invert(false), trackreverse(false), shadows(false),
-		shadow_distance(1), shadow_quality(1),
-		reflections(1), input_graph(false), lighting(0), bloom(false),
-		opponent_car("XS"), opponent_car_paint("00"), camerabounce(1.0),
-		number_of_laps(1), contrast(1.0), camera_mode("chase"), hgateshifter(false),
-		ai_difficulty(1.0)
-		{}
+	SETTINGS();
 
 	void Serialize(bool write, CONFIGFILE & config);
-	void Load(std::string settingsfile) {CONFIGFILE config;config.Load(settingsfile);Serialize(false, config);}
-	void Save(std::string settingsfile) {CONFIGFILE config;config.Load(settingsfile);Serialize(true, config);config.Write();}
+	
+	void Load(std::string settingsfile)
+	{
+		CONFIGFILE config;
+		config.Load(settingsfile);
+		Serialize(false, config);
+	}
+	
+	void Save(std::string settingsfile)
+	{
+		CONFIGFILE config;
+		config.Load(settingsfile);
+		Serialize(true, config);config.Write();
+	}
 
 	void SetResolution_x ( unsigned int theValue )
 	{
@@ -197,11 +124,6 @@ public:
 	bool GetMPH() const
 	{
 		return mph;
-	}
-
-	std::string GetSelectedCar() const
-	{
-		return selected_car;
 	}
 
 	std::string GetTrack() const
@@ -311,11 +233,6 @@ public:
 		return selected_replay;
 	}
 
-	std::string GetCarPaint() const
-	{
-		return carpaint;
-	}
-
 	void SetSelectedReplay ( int value )
 	{
 		selected_replay = value;
@@ -385,15 +302,39 @@ public:
 	{
 		return bloom;
 	}
+	
+	std::string GetSelectedCar() const
+	{
+		return player;
+	}
+	
+	std::string GetCarPaint() const
+	{
+		return player_paint;
+	}
+	
+	void GetCarColor(float & r, float & g, float & b) const
+	{
+		r = player_color_red;
+		g = player_color_green;
+		b = player_color_blue;
+	}
 
 	std::string GetOpponentCar() const
 	{
-		return opponent_car;
+		return opponent;
 	}
 
 	std::string GetOpponentCarPaint() const
 	{
-		return opponent_car_paint;
+		return opponent_paint;
+	}
+	
+	void GetOpponentColor(float & r, float & g, float & b) const
+	{
+		r = opponent_color_red;
+		g = opponent_color_green;
+		b = opponent_color_blue;
 	}
 
 	float GetCameraBounce() const
@@ -448,6 +389,82 @@ public:
 	float GetAIDifficulty() const
 	{
 		return ai_difficulty;
+	}
+	
+private:
+	bool res_override;
+	
+	int resolution_x;
+	int resolution_y;
+	int bpp;
+	int depthbpp;
+	bool fullscreen;
+	bool shaders;
+	std::string skin;
+	bool show_fps;
+	float mastervolume;
+	bool mph; //if false, KPH
+	std::string track;
+	int antialiasing; //0 or 1 mean off
+	int anisotropic; //0 or 1 mean off
+	bool trackmap;
+	bool show_hud;
+	float FOV;
+	bool abs;
+	bool tcs;
+	std::string joytype;
+	bool joy200;
+	float speed_sensitivity;
+	bool joystick_calibrated;
+	float view_distance;
+	bool autoclutch;
+	bool autoshift;
+	bool racingline;
+	bool mousegrab;
+	bool recordreplay;
+	int selected_replay;
+	std::string texturesize;
+	float button_ramp;
+	std::string ff_device;
+	float ff_gain;
+	bool ff_invert;
+	bool trackreverse;
+	bool shadows;
+	int shadow_distance;
+	int shadow_quality;
+	int reflections;
+	bool input_graph;
+	int lighting;
+	bool bloom;
+	std::string player;
+	std::string player_paint;
+	float player_color_red;
+	float player_color_green;
+	float player_color_blue;
+	std::string opponent;
+	std::string opponent_paint;
+	float opponent_color_red;
+	float opponent_color_green;
+	float opponent_color_blue;
+	float camerabounce;
+	int number_of_laps;
+	float contrast;
+	std::string camera_mode;
+	bool hgateshifter;
+	float ai_difficulty;
+
+	//void LoadDefaults();
+
+	template <typename T>
+	bool Param(CONFIGFILE & conf, bool write, std::string pname, T & value)
+	{
+		if (write)
+		{
+			conf.SetParam(pname, value);
+			return true;
+		}
+		else
+			return conf.GetParam(pname, value);
 	}
 	
 };

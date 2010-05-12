@@ -1,17 +1,42 @@
 #include "settings.h"
 
+SETTINGS::SETTINGS() :
+	res_override(false),
+	resolution_x(800),resolution_y(600),bpp(16),depthbpp(24),fullscreen(false),
+	shaders(true),skin("simple"),show_fps(false),mastervolume(1.0),mph(true),track("paulricard88"), antialiasing(0), anisotropic(0),
+	trackmap(true), show_hud(true), FOV(45.0), abs(true), tcs(true), joytype("joystick"),
+	joy200(false), speed_sensitivity(1.0), joystick_calibrated(false), view_distance(1000.0),
+	autoclutch(true), autoshift(true), racingline(false), mousegrab(true),
+	recordreplay(false), selected_replay(0), texturesize("large"), button_ramp(5),
+	ff_device("/dev/input/event0"), ff_gain(2.0), ff_invert(false), trackreverse(false),
+	shadows(false), shadow_distance(1), shadow_quality(1),
+	reflections(1), input_graph(false), lighting(0), bloom(false),
+	player("XS"), player_paint("00"), player_color_red(1), player_color_green(0), player_color_blue(0),
+	opponent("XS"), opponent_paint("00"), opponent_color_red(0), opponent_color_green(0), opponent_color_blue(1),
+	camerabounce(1.0), number_of_laps(1), contrast(1.0), camera_mode("chase"), hgateshifter(false),
+	ai_difficulty(1.0)
+{
+
+}
+
 void SETTINGS::Serialize(bool write, CONFIGFILE & config)
 {
-	Param(config, write, "game.selected_car", selected_car);
-	Param(config, write, "game.opponent", opponent_car);
 	Param(config, write, "game.ai_difficulty", ai_difficulty);
 	Param(config, write, "game.track", track);
 	Param(config, write, "game.antilock", abs);
 	Param(config, write, "game.traction_control", tcs);
 	Param(config, write, "game.record", recordreplay);
 	Param(config, write, "game.selected_replay", selected_replay);
-	Param(config, write, "game.car_paint", carpaint);
-	Param(config, write, "game.opponent_car_paint", opponent_car_paint);
+	Param(config, write, "game.player", player);
+	Param(config, write, "game.player_paint", player_paint);
+	Param(config, write, "game.player_color_red", player_color_red);
+	Param(config, write, "game.player_color_green", player_color_green);
+	Param(config, write, "game.player_color_blue", player_color_blue);
+	Param(config, write, "game.opponent", opponent);
+	Param(config, write, "game.opponent_paint", opponent_paint);
+	Param(config, write, "game.opponent_color_red", opponent_color_red);
+	Param(config, write, "game.opponent_color_green", opponent_color_green);
+	Param(config, write, "game.opponent_color_blue", opponent_color_blue);
 	Param(config, write, "game.reverse", trackreverse);
 	Param(config, write, "game.number_of_laps", number_of_laps);
 	Param(config, write, "game.camera_mode", camera_mode);

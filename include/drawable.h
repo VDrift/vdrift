@@ -157,7 +157,8 @@ private:
 		linesize = 1.0;
 		objcenter.Set(0.0);
 		radius = 0.0;
-		r = g = b = a = 1.0;
+		r = g = b = 1.0;
+		a = 0.5; // use texture transparency
 		draw_order = 0;
 		decal = false;
 		lit = true;

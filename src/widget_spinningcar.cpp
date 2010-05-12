@@ -4,7 +4,7 @@
 #include "configfile.h"
 
 WIDGET_SPINNINGCAR::WIDGET_SPINNINGCAR()
-: errptr(NULL), rotation(0), wasvisible(false), r(1), g(1), b(1), textures(NULL)
+: errptr(NULL), rotation(0), wasvisible(false), newcolor(false), r(1), g(1), b(1), textures(NULL)
 {
 	
 }
@@ -33,10 +33,9 @@ void WIDGET_SPINNINGCAR::SetVisible(SCENENODE & scene, bool newvis)
 	
 	if (newvis && car.empty())
 	{
-		if (!lastcarpaint.empty() && !carname.empty())
+		if (!carpaint.empty() && !carname.empty())
 		{
-			assert(textures);
-			Load(scene, *textures, carname, lastcarpaint);
+			Load(scene);
 		}
 		else
 		{
@@ -57,21 +56,14 @@ void WIDGET_SPINNINGCAR::HookMessage(SCENENODE & scene, const std::string & mess
 {
 	assert(errptr);
 	
-	//std::cout << "Message: " << message << std::endl;
-	
-	bool newcolor(false);
 	std::stringstream s;
-	std::string paintstr;
-	if (from.find("Paint") != std::string::npos)
+	if (from.find("CarWheel") != std::string::npos)
 	{
-		paintstr = message;
-	}
-	else if (from.find("CarWheel") != std::string::npos)
-	{
-		lastcarname = carname;
 		carname = message;
-		//the paint should come in as the second message; that's when we do the actual load
-		return;
+	}
+	else if (from.find("PaintWheel") != std::string::npos)
+	{
+		carpaint = message;
 	}
 	else if (from.find("Red") != std::string::npos)
 	{
@@ -107,33 +99,26 @@ void WIDGET_SPINNINGCAR::HookMessage(SCENENODE & scene, const std::string & mess
 		}	
 	}
 	
-	assert(!carname.empty());
-	
-	//if everything is exactly the same don't re-load.  if we're not visible, don't load.
-	if ((carname == lastcarname && paintstr == lastcarpaint) || paintstr.empty())
-	{
-		//std::cout << "Not loading car because it's already loaded:" << std::endl;
-		//std::cout << carname << "/" << lastcarname << ", " << paintstr << "/" << lastcarpaint << std::endl;
-		return;
-	}
-	//std::cout << "Car/paint change:" << std::endl;
-	//std::cout << carname << "/" << lastcarname << ", " << paintstr << "/" << lastcarpaint << std::endl;
-	
-	lastcarpaint = paintstr;
-	
 	if (!wasvisible)
 	{
-		//std::cout << "Not visible, returning" << std::endl;
 		return;
 	}
-	assert(textures);
-	Load(scene, *textures, carname, paintstr);
+	
+	if (!car.empty() && newcolor)
+	{
+		car.back().SetColor(r, g, b);
+		newcolor = false;
+	}
+	
+	if (!carpaint.empty() && !carname.empty())
+	{
+		Load(scene);
+	}
 }
 
 void WIDGET_SPINNINGCAR::Update(SCENENODE & scene, float dt)
 {
-	if (car.empty())
-		return;
+	if (car.empty()) return;
 	
 	rotation += dt;
 	QUATERNION <float> q;
@@ -198,26 +183,23 @@ struct CAMTRANS_DRAWABLE_FUNCTOR
 	}
 };
 
-void WIDGET_SPINNINGCAR::Load(SCENENODE & parent, TEXTUREMANAGER & textures, const std::string & carname, const std::string & paintstr)
+void WIDGET_SPINNINGCAR::Load(SCENENODE & parent)
 {
+	assert(errptr);
+	assert(textures);
+	
 	Unload(parent);
 	
-	//std::cout << "Loading car " << carname << ", " << paintstr << std::endl;
-	
 	std::string carpath = data + "/cars/" + carname;
-	
 	std::stringstream loadlog;
-	
+
 	if (!carnode.valid())
 	{
 		carnode = parent.AddNode();
 	}
 	
 	SCENENODE & carnoderef = GetCarNode(parent);
-	
 	car.push_back(CAR());
-	
-	assert(errptr);
 	
 	CONFIGFILE carconf;
 	if (!carconf.Load(carpath + "/" + carname + ".car"))
@@ -226,7 +208,7 @@ void WIDGET_SPINNINGCAR::Load(SCENENODE & parent, TEXTUREMANAGER & textures, con
 		return;
 	}
 	
-	MATHVECTOR <float, 4> carcolor(0);
+	MATHVECTOR <float, 3> carcolor(r, g, b);
 	
 	MATHVECTOR <float, 3> cartrans = carpos;
 	cartrans[0] += center[0];
@@ -236,13 +218,12 @@ void WIDGET_SPINNINGCAR::Load(SCENENODE & parent, TEXTUREMANAGER & textures, con
 	
 	if (!car.back().Load(
 		carconf, carpath, "", carname, 
-		textures, paintstr, carcolor,
-		cartrans, carrot,
-		NULL,
+		*textures, carpaint, carcolor,
+		cartrans, carrot, NULL,
 		false, SOUNDINFO(0,0,0,0),
 		SOUNDBUFFERLIBRARY(),
 		0, true, true, "large", 0,
-		false, data + "/carparts", loadlog, loadlog))
+		false, data + "carparts", loadlog, loadlog))
 	{
 		*errptr << "Couldn't load spinning car: " << carname << std::endl;
 		if (!loadlog.str().empty())
@@ -269,6 +250,10 @@ void WIDGET_SPINNINGCAR::Load(SCENENODE & parent, TEXTUREMANAGER & textures, con
 	Update(parent, 0);
 	
 	carnoderef.SetChildVisibility(wasvisible);
+	
+	// reset state
+	carpaint.clear();
+	newcolor = false;
 	
 	//if (!loadlog.str().empty()) *errptr << "Loading log: " << loadlog.str() << std::endl;
 }

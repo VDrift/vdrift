@@ -1282,7 +1282,7 @@ void GAME::ProcessGUIAction(const std::string & action)
 		//re-populate gui option list for car paints
 		std::list <std::pair <std::string, std::string> > carpaintlist;
 		PopulateCarPaintList(settings.GetSelectedCar(), carpaintlist);
-		gui.ReplaceOptionMapValues("game.car_paint", carpaintlist, error_output);
+		gui.ReplaceOptionMapValues("game.player_paint", carpaintlist, error_output);
 		//std::cout << "Player car changed" << endl;
 	}
 	else if (action == "OpponentCarChange") //this means the player clicked the GUI to change the opponent car
@@ -1290,20 +1290,29 @@ void GAME::ProcessGUIAction(const std::string & action)
 		//re-populate gui option list for car paints
 		std::list <std::pair <std::string, std::string> > carpaintlist;
 		PopulateCarPaintList(settings.GetOpponentCar(), carpaintlist);
-		gui.ReplaceOptionMapValues("game.opponent_car_paint", carpaintlist, error_output);
+		gui.ReplaceOptionMapValues("game.opponent_paint", carpaintlist, error_output);
 	}
 	else if (action == "AddOpponent")
 	{
 		if (opponents.size() == 3)
+		{
 			opponents.clear();
-		opponents.push_back(std::make_pair(settings.GetOpponentCar(), settings.GetOpponentCarPaint()));
+			opponents_paint.clear();
+			opponents_color.clear();
+		}
+		
+		opponents.push_back(settings.GetOpponentCar());
+		opponents_paint.push_back(settings.GetOpponentCarPaint());
+		MATHVECTOR <float, 3> color(0);
+		settings.GetOpponentColor(color[0], color[1], color[2]);
+		opponents_color.push_back(color);
 
 		std::string opponentstr = "Opponents: ";
-		for (std::vector <std::pair<std::string, std::string> >::iterator i = opponents.begin(); i != opponents.end(); ++i)
+		for (std::vector<std::string>::iterator i = opponents.begin(); i != opponents.end(); ++i)
 		{
 			if (i != opponents.begin())
 				opponentstr += ", ";
-			opponentstr += i->first;
+			opponentstr += *i;
 		}
 		SCENENODE & pagenode = gui.GetPage("SingleRace").GetNode(gui.GetNode());
 		gui.GetPage("SingleRace").GetLabel("OpponentsLabel").get().SetText(pagenode, opponentstr);
@@ -1531,33 +1540,26 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	//start out with no camera
 	active_camera = NULL;
 
-	//set the car name
-	string carname;
-	if (playreplay)
-		carname = replay.GetCarType();
-	else
-		carname = settings.GetSelectedCar();
-
-	//set the car paint
-	string carpaint("00");
-	if (playreplay)
-		carpaint = replay.GetCarPaint();
-	else
-		carpaint = settings.GetCarPaint();
-
 	//load the local player's car
 	//cout << "About to load car..." << endl;
+	MATHVECTOR<float, 3> carcolor(0);
+	string carname, carpaint("00"), carfile;
 	if (playreplay)
 	{
-		if (!LoadCar(carname, carpaint, track.GetStart(0).first, track.GetStart(0).second, true, false, replay.GetCarFile()))
-			return false;
+		carname = replay.GetCarType();
+		carpaint = replay.GetCarPaint();
+		carfile = replay.GetCarFile();
+		replay.GetCarColor(carcolor[0], carcolor[1], carcolor[2]);
 	}
 	else
 	{
-		//cout << "Not playing replay..." << endl;
-		if (!LoadCar(carname, carpaint, track.GetStart(0).first, track.GetStart(0).second, true, false))
-			return false;
-		//cout << "Loaded car successfully" << endl;
+		carname = settings.GetSelectedCar();
+		carpaint = settings.GetCarPaint();
+		settings.GetCarColor(carcolor[0], carcolor[1], carcolor[2]);
+	}
+	if (!LoadCar(carname, carpaint, carcolor, track.GetStart(0).first, track.GetStart(0).second, true, false, carfile))
+	{
+		return false;
 	}
 	//cout << "After load car: " << carcontrols_local.first << endl;
 
@@ -1567,18 +1569,20 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	if (addopponents)
 	{
 		int carcount = 1;
-		for (std::vector <std::pair<std::string, std::string> >::iterator i = opponents.begin(); i != opponents.end(); ++i)
+		for (unsigned int i = 0; i < opponents.size(); ++i)
 		{
 			//int startplace = std::min(carcount, track.GetNumStartPositions()-1);
 			int startplace = carcount;
-			if (!LoadCar(i->first, i->second, track.GetStart(startplace).first, track.GetStart(startplace).second, false, true))
+			if (!LoadCar(opponents[i], opponents_paint[i], opponents_color[i], track.GetStart(startplace).first, track.GetStart(startplace).second, false, true))
 				return false;
 			ai.add_car(&cars.back(), settings.GetAIDifficulty());
 			carcount++;
 		}
 	}
 	else
+	{
 		opponents.clear();
+	}
 
 	//send car sounds to the sound subsystem
 	for (std::list <CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
@@ -1624,8 +1628,9 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	if (settings.GetRecordReplay() && !playreplay)
 	{
 		assert(carcontrols_local.first);
-
-		replay.StartRecording(carcontrols_local.first->GetCarType(), settings.GetCarPaint(), pathmanager.GetCarPath()+"/"+carcontrols_local.first->GetCarType()+"/"+carcontrols_local.first->GetCarType()+".car", settings.GetTrack(), error_output);
+		float r(0), g(0), b(0);
+		settings.GetCarColor(r, g, b);
+		replay.StartRecording(carcontrols_local.first->GetCarType(), settings.GetCarPaint(), r, g, b, pathmanager.GetCarPath()+"/"+carcontrols_local.first->GetCarType()+"/"+carcontrols_local.first->GetCarType()+".car", settings.GetTrack(), error_output);
 	}
 
 	textures.Sweep();
@@ -1704,8 +1709,10 @@ void GAME::LeaveGame()
 }
 
 ///add a car, optionally controlled by the local player
-bool GAME::LoadCar(const std::string & carname, const std::string & carpaint, const MATHVECTOR <float, 3> & start_position,
-		   const QUATERNION <float> & start_orientation, bool islocal, bool isai, const string & carfile)
+bool GAME::LoadCar(
+	const std::string & carname, const std::string & carpaint, const MATHVECTOR <float, 3> & carcolor,
+	const MATHVECTOR <float, 3> & start_position, const QUATERNION <float> & start_orientation,
+	bool islocal, bool isai, const string & carfile)
 {
 	std::string carpath = pathmanager.GetCarPath()+"/"+carname;
 	
@@ -1721,8 +1728,6 @@ bool GAME::LoadCar(const std::string & carname, const std::string & carpaint, co
 		if ( !carconf.Load ( carstream ) )
 			return false;
 	}
-	
-	MATHVECTOR <float, 4> carcolor(0);
 
 	cars.push_back(CAR());
 
@@ -2011,8 +2016,8 @@ void GAME::PopulateValueLists(std::map<std::string, std::list <std::pair <std::s
 
 	//populate car paints
 	{
-		PopulateCarPaintList(settings.GetSelectedCar(), valuelists["car_paints"]);
-		PopulateCarPaintList(settings.GetOpponentCar(), valuelists["opponent_car_paints"]);
+		PopulateCarPaintList(settings.GetSelectedCar(), valuelists["player_paints"]);
+		PopulateCarPaintList(settings.GetOpponentCar(), valuelists["opponent_paints"]);
 	}
 
 	//populate video mode list

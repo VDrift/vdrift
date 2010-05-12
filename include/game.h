@@ -62,7 +62,11 @@ private:
 	bool NewGame(bool playreplay=false, bool opponents=false, int num_laps=0);
 	void LeaveGame();
 	bool LoadTrack(const std::string & trackname);
-	bool LoadCar(const std::string & carname, const std::string & carpaint, const MATHVECTOR <float, 3> & start_position, const QUATERNION <float> & start_orientation, bool islocal, bool isai, const std::string & carfile=""); ///< carfile is a string containing an entire .car file (e.g. XS.car) and is used instead of reading from disk.  this is optional
+	///< carfile is a string containing an entire .car file (e.g. XS.car) and is used instead of reading from disk.  this is optional
+	bool LoadCar(
+		const std::string & carname, const std::string & carpaint, const MATHVECTOR <float, 3> & carcolor,
+		const MATHVECTOR <float, 3> & start_position, const QUATERNION <float> & start_orientation,
+		bool islocal, bool isai, const std::string & carfile=""); 
 	bool LoadFonts();
 	void CalculateFPS();
 	void PopulateValueLists(std::map<std::string, std::list <std::pair<std::string,std::string> > > & valuelists);
@@ -112,7 +116,9 @@ private:
 	CAMERA * active_camera;
 	bool pause;
 	unsigned int particle_timer;
-	std::vector <std::pair<std::string, std::string> > opponents; //pairs of car names and car paints for opponents
+	std::vector <std::string> opponents;
+	std::vector <std::string> opponents_paint;
+	std::vector < MATHVECTOR <float, 3> > opponents_color;
 	int race_laps;
 	bool debugmode;
 	bool profilingmode;

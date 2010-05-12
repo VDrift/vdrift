@@ -553,6 +553,9 @@
 		<Unit filename="..\..\src\track.cpp" />
 		<Unit filename="..\..\src\trackmap.cpp" />
 		<Unit filename="..\..\src\vertexarray.cpp" />
+		<Unit filename="..\..\src\widget_slider.cpp" />
+		<Unit filename="..\..\src\widget_spinningcar.cpp" />
+		<Unit filename="..\..\src\widget_stringwheel.cpp" />
 		<Unit filename="strptime.cpp" />
 		<Unit filename="strptime.h" />
 		<Extensions>

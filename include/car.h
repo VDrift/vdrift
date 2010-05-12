@@ -9,7 +9,6 @@
 #include "cardynamics.h"
 #include "model_joe03.h"
 #include "texturemanager.h"
-#include "carinput.h"
 #include "sound.h"
 #include "camera_system.h"
 #include "joeserialize.h"
@@ -38,7 +37,7 @@ public:
 		const std::string & carname,
 		TEXTUREMANAGER & textures,
 		const std::string & carpaint,
-		const MATHVECTOR <float, 4> & carcolor,
+		const MATHVECTOR <float, 3> & carcolor,
 		const MATHVECTOR <float, 3> & initial_position,
 		const QUATERNION <float> & initial_orientation,
 		COLLISION_WORLD * world,
@@ -54,6 +53,9 @@ public:
 		const std::string & sharedpartspath,
 		std::ostream & info_output,
 		std::ostream & error_output);
+	
+	// change car color
+	void SetColor(float r, float g, float b);
 	
 	// will align car relative to track surface
 	void SetPosition(const MATHVECTOR <float, 3> & position);

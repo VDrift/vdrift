@@ -1,17 +1,4 @@
 #include "car.h"
-#include "carwheelposition.h"
-#include "configfile.h"
-#include "coordinatesystems.h"
-#include "collision_world.h"
-#include "tracksurface.h"
-#include "configfile.h"
-#include "mesh_gen.h"
-
-#include "camera_fixed.h"
-#include "camera_free.h"
-#include "camera_chase.h"
-#include "camera_orbit.h"
-#include "camera_mount.h"
 
 #include <fstream>
 #include <map>
@@ -19,6 +6,21 @@
 #include <vector>
 #include <sstream>
 #include <string>
+
+#include "carwheelposition.h"
+#include "configfile.h"
+#include "coordinatesystems.h"
+#include "collision_world.h"
+#include "tracksurface.h"
+#include "configfile.h"
+#include "carinput.h"
+#include "mesh_gen.h"
+
+#include "camera_fixed.h"
+#include "camera_free.h"
+#include "camera_chase.h"
+#include "camera_orbit.h"
+#include "camera_mount.h"
 
 #ifdef _WIN32
 bool isnan(float number) {return (number != number);}
@@ -145,7 +147,7 @@ bool CAR::Load (
 	const std::string & carname,
 	TEXTUREMANAGER & textures,
 	const std::string & carpaint,
-	const MATHVECTOR <float, 4> & carcolor,
+	const MATHVECTOR <float, 3> & carcolor,
 	const MATHVECTOR <float, 3> & initial_position,
 	const QUATERNION <float> & initial_orientation,
 	COLLISION_WORLD * world,
@@ -175,6 +177,7 @@ bool CAR::Load (
 	SCENENODE & bodynoderef = topnode.GetNode(bodynode);
 	DRAWABLE & bodydrawref = GetDrawlistNoBlend(bodynoderef).get(bodydraw);
 	bodydrawref.SetSelfIllumination(false);
+	bodydrawref.SetColor(carcolor[0], carcolor[1], carcolor[2], 1); // set alpha to 1, body non transparent
 	
 	//load driver graphics
 	if (!driverpath.empty())
@@ -399,8 +402,7 @@ bool CAR::Load (
 
 			MATHVECTOR <float, 3> view_offset;
 			view_offset.Set(pos);
-			//view_offset = dynamics.CarLocalToRigidBodyLocal(view_offset);
-
+			
 			next_view->SetOffset(view_offset);
 			next_view->SetRotation(angle[0] * 3.141593/180.0, angle[1] * 3.141593/180.0);
 			cameras.Add(next_view);
@@ -790,6 +792,13 @@ bool CAR::LoadInto (
 	draw->SetBlur(false);
 	draw->SetPartialTransparency(blend);
 	return true;
+}
+
+void CAR::SetColor(float r, float g, float b)
+{
+	SCENENODE & bodynoderef = topnode.GetNode(bodynode);
+	DRAWABLE & bodydrawref = GetDrawlistNoBlend(bodynoderef).get(bodydraw);
+	bodydrawref.SetColor(r, g, b, 1);
 }
 
 void CAR::SetPosition(const MATHVECTOR <float, 3> & new_position)
