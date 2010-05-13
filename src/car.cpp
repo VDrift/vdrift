@@ -64,10 +64,9 @@ bool CAR::GenerateWheelMesh(CONFIGFILE & carconf,
 	float rim_diameter = (tire.GetRadius() - tire.GetSidewallWidth()*tire.GetAspectRatio())*2.f;
 	float rim_width = 1;
 	MESHGEN::mesh_gen_tire(&output_varray, tire.GetSidewallWidth()*1000.f, tire.GetAspectRatio()*100.f, rimDiameter_in);
+	output_varray.Rotate(-M_PI_2, 0, 0, 1);
 	draw.SetVertArray(&output_varray);
 	
-	// car mesh orientation fixer
-	//output_model.Rotate(-M_PI_2, 0, 0, 1);
 	//draw.SetObjectCenter(wheelmeshgen[i].GetCenter());
 
 	// load textures
@@ -312,16 +311,21 @@ bool CAR::Load (
       		texsize, anisotropy, false, MATHVECTOR <float, 3>(1,1,1), nullout );
 	}
 	
-	//init dynamics(needs wheel models loaded)
+	//init dynamics
+	if (world)
 	{
 		MATHVECTOR<double, 3> position;
 		QUATERNION<double> orientation;
 		position = initial_position;
 		orientation = initial_orientation;
-		if (world)
-		{
-			dynamics.Init(*world, bodymodel, wheelmodelfront, wheelmodelrear, position, orientation);
-		}
+
+		// temporary hack for cardynamics
+		wheelmodelfront.SetVertexArray(wheelmeshgen[0]);
+		wheelmodelrear.SetVertexArray(wheelmeshgen[2]);
+		wheelmodelfront.GenerateMeshMetrics();
+		wheelmodelrear.GenerateMeshMetrics();
+
+		dynamics.Init(*world, bodymodel, wheelmodelfront, wheelmodelrear, position, orientation);
 		dynamics.SetABS(defaultabs);
 		dynamics.SetTCS(defaulttcs);
 	}
