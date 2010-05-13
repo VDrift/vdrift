@@ -1,17 +1,17 @@
-#include <math.h>
+#include "mesh_gen.h"
+
+#include <cmath>
 
 #include "vertexarray.h"
 
-#define PI 3.14159265
-
 static double sinD(double degrees)
 {
-	return (double) sin(degrees * PI / 180.000f);
+	return (double) sin(degrees * M_PI / 180.000f);
 }
 
 static double cosD(double degrees)
 {
-	return (double) cos(degrees * PI / 180.000f);
+	return (double) cos(degrees * M_PI / 180.000f);
 }
 
 namespace MESHGEN
@@ -44,7 +44,7 @@ void mesh_gen_tire(VERTEXARRAY *tire, float sectionWidth_mm, float aspectRatio, 
 	{
 		// use function parameters - comment out this section
 		float sectionWidth_m = sectionWidth_mm / 1000.0f;
-		float rimRadius_m = rimDiameter_in * 0.0254f;
+		float rimRadius_m = rimDiameter_in * 0.0254f * 0.5;
 
 
 		innerRadius = rimRadius_m;
@@ -120,9 +120,9 @@ void mesh_gen_tire(VERTEXARRAY *tire, float sectionWidth_mm, float aspectRatio, 
 	// Right-side, Inner Ring
 	for (lv=0 ; lv<segmentsAround ; lv++)
 	{
-		float *x = &vertexData[lv+segmentsAround * 0 + 0];
-		float *y = &vertexData[lv+segmentsAround * 0 + 1];
-		float *z = &vertexData[lv+segmentsAround * 0 + 2];
+		float *x = &vertexData[(lv+segmentsAround * 0) * 3 + 0];
+		float *y = &vertexData[(lv+segmentsAround * 0) * 3 + 1];
+		float *z = &vertexData[(lv+segmentsAround * 0) * 3 + 2];
 
 		*x = innerWidth / 2.0f;
 		*y = innerRadius * cosD(angleIncrement * lv);
@@ -131,9 +131,9 @@ void mesh_gen_tire(VERTEXARRAY *tire, float sectionWidth_mm, float aspectRatio, 
 	// Right-side, Sidewall Ring
 	for (lv=0 ; lv<segmentsAround ; lv++)
 	{
-		float *x = &vertexData[lv+segmentsAround * 1 + 0];
-		float *y = &vertexData[lv+segmentsAround * 1 + 1];
-		float *z = &vertexData[lv+segmentsAround * 1 + 2];
+		float *x = &vertexData[(lv+segmentsAround * 1) * 3 + 0];
+		float *y = &vertexData[(lv+segmentsAround * 1) * 3 + 1];
+		float *z = &vertexData[(lv+segmentsAround * 1) * 3 + 2];
 
 		*x = treadWidth / 2.0f + sidewallBulge;
 		*y = sidewallRadius * cosD(angleIncrement * lv);
@@ -142,9 +142,9 @@ void mesh_gen_tire(VERTEXARRAY *tire, float sectionWidth_mm, float aspectRatio, 
 	// Right-side, Shoulder Ring
 	for (lv=0 ; lv<segmentsAround ; lv++)
 	{
-		float *x = &vertexData[lv+segmentsAround * 2 + 0];
-		float *y = &vertexData[lv+segmentsAround * 2 + 1];
-		float *z = &vertexData[lv+segmentsAround * 2 + 2];
+		float *x = &vertexData[(lv+segmentsAround * 2) * 3 + 0];
+		float *y = &vertexData[(lv+segmentsAround * 2) * 3 + 1];
+		float *z = &vertexData[(lv+segmentsAround * 2) * 3 + 2];
 
 		*x = treadWidth / 2.0f + shoulderBulge;
 		*y = shoulderRadius * cosD(angleIncrement * lv);
@@ -153,9 +153,9 @@ void mesh_gen_tire(VERTEXARRAY *tire, float sectionWidth_mm, float aspectRatio, 
 	// Right-side, Tread Ring
 	for (lv=0 ; lv<segmentsAround ; lv++)
 	{
-		float *x = &vertexData[lv+segmentsAround * 3 + 0];
-		float *y = &vertexData[lv+segmentsAround * 3 + 1];
-		float *z = &vertexData[lv+segmentsAround * 3 + 2];
+		float *x = &vertexData[(lv+segmentsAround * 3) * 3 + 0];
+		float *y = &vertexData[(lv+segmentsAround * 3) * 3 + 1];
+		float *z = &vertexData[(lv+segmentsAround * 3) * 3 + 2];
 
 		*x = treadWidth / 2.0f;
 		*y = treadRadius * cosD(angleIncrement * lv);
@@ -166,9 +166,9 @@ void mesh_gen_tire(VERTEXARRAY *tire, float sectionWidth_mm, float aspectRatio, 
 	// Left-side, Tread Ring
 	for (lv=0 ; lv<segmentsAround ; lv++)
 	{
-		float *x = &vertexData[lv+segmentsAround * 4 + 0];
-		float *y = &vertexData[lv+segmentsAround * 4 + 1];
-		float *z = &vertexData[lv+segmentsAround * 4 + 2];
+		float *x = &vertexData[(lv+segmentsAround * 4) * 3 + 0];
+		float *y = &vertexData[(lv+segmentsAround * 4) * 3 + 1];
+		float *z = &vertexData[(lv+segmentsAround * 4) * 3 + 2];
 
 		*x = -1.0f * treadWidth / 2.0f;
 		*y = treadRadius * cosD(angleIncrement * lv);
@@ -177,9 +177,9 @@ void mesh_gen_tire(VERTEXARRAY *tire, float sectionWidth_mm, float aspectRatio, 
 	// Left-side, Shoulder Ring
 	for (lv=0 ; lv<segmentsAround ; lv++)
 	{
-		float *x = &vertexData[lv+segmentsAround * 5 + 0];
-		float *y = &vertexData[lv+segmentsAround * 5 + 1];
-		float *z = &vertexData[lv+segmentsAround * 5 + 2];
+		float *x = &vertexData[(lv+segmentsAround * 5) * 3 + 0];
+		float *y = &vertexData[(lv+segmentsAround * 5) * 3 + 1];
+		float *z = &vertexData[(lv+segmentsAround * 5) * 3 + 2];
 
 		*x = -1.0f * treadWidth / 2.0f + shoulderBulge;
 		*y = shoulderRadius * cosD(angleIncrement * lv);
@@ -188,9 +188,9 @@ void mesh_gen_tire(VERTEXARRAY *tire, float sectionWidth_mm, float aspectRatio, 
 	// Left-side, Sidewall Ring
 	for (lv=0 ; lv<segmentsAround ; lv++)
 	{
-		float *x = &vertexData[lv+segmentsAround * 6 + 0];
-		float *y = &vertexData[lv+segmentsAround * 6 + 1];
-		float *z = &vertexData[lv+segmentsAround * 6 + 2];
+		float *x = &vertexData[(lv+segmentsAround * 6) * 3 + 0];
+		float *y = &vertexData[(lv+segmentsAround * 6) * 3 + 1];
+		float *z = &vertexData[(lv+segmentsAround * 6) * 3 + 2];
 
 		*x = -1.0f * treadWidth / 2.0f + sidewallBulge;
 		*y = sidewallRadius * cosD(angleIncrement * lv);
@@ -199,9 +199,9 @@ void mesh_gen_tire(VERTEXARRAY *tire, float sectionWidth_mm, float aspectRatio, 
 	// Left-side, Inner Ring
 	for (lv=0 ; lv<segmentsAround ; lv++)
 	{
-		float *x = &vertexData[lv+segmentsAround * 7 + 0];
-		float *y = &vertexData[lv+segmentsAround * 7 + 1];
-		float *z = &vertexData[lv+segmentsAround * 7 + 2];
+		float *x = &vertexData[(lv+segmentsAround * 7) * 3 + 0];
+		float *y = &vertexData[(lv+segmentsAround * 7) * 3 + 1];
+		float *z = &vertexData[(lv+segmentsAround * 7) * 3 + 2];
 
 		*x = -1.0f * innerWidth / 2.0f;
 		*y = innerRadius * cosD(angleIncrement * lv);

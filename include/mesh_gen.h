@@ -1,5 +1,7 @@
-#ifndef MESHGEN_H
-#define MESHGEN_H
+#ifndef _MESHGEN_H
+#define _MESHGEN_H
+
+class VERTEXARRAY;
 
 namespace MESHGEN
 {

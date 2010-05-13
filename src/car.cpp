@@ -62,7 +62,7 @@ bool CAR::GenerateWheelMesh(CONFIGFILE & carconf,
 	//float radius = section_width*0.001f * aspect_ratio*0.01f + rim_diameter*0.0254f*0.5;
 	float rimDiameter_in = (tire.GetRadius() - tire.GetSidewallWidth()*tire.GetAspectRatio())/(0.0254f*0.5);
 	float rim_diameter = (tire.GetRadius() - tire.GetSidewallWidth()*tire.GetAspectRatio())*2.f;
-	float rim_width = 0.1f;
+	float rim_width = 1;
 	MESHGEN::mesh_gen_tire(&output_varray, tire.GetSidewallWidth()*1000.f, tire.GetAspectRatio()*100.f, rimDiameter_in);
 	draw.SetVertArray(&output_varray);
 	
@@ -133,7 +133,7 @@ bool CAR::GenerateWheelMesh(CONFIGFILE & carconf,
 			 texsize,
 			 anisotropy,
 			 false,
-			 MATHVECTOR <float, 3>(rim_width/0.1,rim_diameter,rim_diameter),
+			 MATHVECTOR <float, 3>(rim_width,rim_diameter,rim_diameter),
 			 error_output))
 		return false;
 	
@@ -177,7 +177,7 @@ bool CAR::Load (
 	SCENENODE & bodynoderef = topnode.GetNode(bodynode);
 	DRAWABLE & bodydrawref = GetDrawlistNoBlend(bodynoderef).get(bodydraw);
 	bodydrawref.SetSelfIllumination(false);
-	bodydrawref.SetColor(carcolor[0], carcolor[1], carcolor[2], 1); // set alpha to 1, body non transparent
+	bodydrawref.SetColor(carcolor[0], carcolor[1], carcolor[2], 1); // set alpha to 1, body opaque
 	
 	//load driver graphics
 	if (!driverpath.empty())
