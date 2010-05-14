@@ -89,9 +89,6 @@ void COLLISION_WORLD::SetTrack(TRACK * t)
 	}
 	// can not use QuantizedAabbCompression because of the track size
 	btCollisionShape * trackShape = new btBvhTriangleMeshShape(trackMesh, false);
-	//btVector3 normal(0,0,1);
-	//btScalar distance(-25);
-	//btCollisionShape * trackShape = new btStaticPlaneShape(normal, distance);
 	
 	trackObject = new btCollisionObject();
 	trackObject->setCollisionShape(trackShape);
@@ -193,7 +190,6 @@ bool COLLISION_WORLD::CastRay(
 	MATHVECTOR <float, 3> n;
 	float d;
 	const TRACKSURFACE * s = TRACKSURFACE::None();
-	//const TRACKSURFACE * s = track->GetRoadSurface();
 	const BEZIER * b = NULL;
 	btCollisionObject * c = NULL;
 
@@ -222,7 +218,7 @@ bool COLLISION_WORLD::CastRay(
 				s = trackSurface[shapeId];
 			}
 		}
-
+		
 		// track bezierpatch collision
 		if (track != NULL)
 		{
@@ -237,7 +233,7 @@ bool COLLISION_WORLD::CastRay(
 				p = MATHVECTOR <float, 3> (colpoint[2], colpoint[0], colpoint[1]);
 				n = MATHVECTOR <float, 3> (colnormal[2], colnormal[0], colnormal[1]);
 				d = (colpoint - bezierspace_raystart).Magnitude();
-				s = track->GetRoadSurface();
+				//s = track->GetRoadSurface(); use track geometry surfaces
 				b = colpatch;
 				c = NULL;
 			}
