@@ -1314,7 +1314,7 @@ void GAME::ProcessGUIAction(const std::string & action)
 				opponentstr += ", ";
 			opponentstr += *i;
 		}
-		SCENENODE & pagenode = gui.GetPage("SingleRace").GetNode(gui.GetNode());
+		SCENENODE & pagenode = gui.GetPageNode("SingleRace");
 		gui.GetPage("SingleRace").GetLabel("OpponentsLabel").get().SetText(pagenode, opponentstr);
 	}
 	else if (action == "RestartGame")

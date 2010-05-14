@@ -59,6 +59,7 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate)
 	glLoadIdentity();
 
 	glColor4f(1,1,1,1);
+	glstate.SetColor(1,1,1,1);
 	glstate.Disable(GL_BLEND);
 	glstate.Disable(GL_DEPTH_TEST);
 	glstate.Enable(GL_TEXTURE_2D);

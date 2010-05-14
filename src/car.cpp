@@ -803,6 +803,7 @@ void CAR::SetColor(float r, float g, float b)
 	SCENENODE & bodynoderef = topnode.GetNode(bodynode);
 	DRAWABLE & bodydrawref = GetDrawlistNoBlend(bodynoderef).get(bodydraw);
 	bodydrawref.SetColor(r, g, b, 1);
+	//std::cout << "color: " << r << ", " << g << ", " << b << std::endl;
 }
 
 void CAR::SetPosition(const MATHVECTOR <float, 3> & new_position)
