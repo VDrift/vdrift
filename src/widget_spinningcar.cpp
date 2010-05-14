@@ -106,7 +106,7 @@ void WIDGET_SPINNINGCAR::HookMessage(SCENENODE & scene, const std::string & mess
 	
 	if (!car.empty() && newcolor)
 	{
-		car.back().SetColor(r, g, b);
+		SetColor(scene, r, g, b);
 		newcolor = false;
 	}
 	
@@ -256,4 +256,24 @@ void WIDGET_SPINNINGCAR::Load(SCENENODE & parent)
 	newcolor = false;
 	
 	//if (!loadlog.str().empty()) *errptr << "Loading log: " << loadlog.str() << std::endl;
+}
+
+void WIDGET_SPINNINGCAR::SetColor(SCENENODE & scene, float r, float g, float b)
+{
+	// save the current state of the transform
+	SCENENODE & carnoderef = GetCarNode(scene);
+	TRANSFORM oldtrans = carnoderef.GetTransform();
+	
+	// set the new car color
+	car.back().SetColor(r,g,b);
+	
+	// re-copy nodes from the car to our GUI node
+	carnoderef = car.back().GetNode();
+	carnoderef.ApplyDrawableContainerFunctor(CAMTRANS_FUNCTOR());
+	carnoderef.ApplyDrawableFunctor(CAMTRANS_DRAWABLE_FUNCTOR());
+	
+	// restore the original state
+	carnoderef.SetTransform(oldtrans);
+	Update(scene, 0);
+	carnoderef.SetChildVisibility(wasvisible);
 }

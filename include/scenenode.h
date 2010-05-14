@@ -19,6 +19,7 @@ public:
 	const DRAWABLE_CONTAINER <keyed_container> & GetDrawlist() const {return drawlist;}
 	
 	TRANSFORM & GetTransform() {return transform;}
+	void SetTransform(const TRANSFORM & newtransform) {transform=newtransform;}
 	const TRANSFORM & GetTransform() const {return transform;}
 	unsigned int Nodes() const {return childlist.size();}
 	unsigned int Drawables() const {return drawlist.size();}

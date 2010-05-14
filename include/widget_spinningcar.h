@@ -56,6 +56,8 @@ private:
 	
 	SCENENODE & GetCarNode(SCENENODE & parent);
 	
+	void SetColor(SCENENODE & scene, float r, float g, float b);
+	
 	void Unload(SCENENODE & parent);
 	
 	void Load(SCENENODE & parent);
