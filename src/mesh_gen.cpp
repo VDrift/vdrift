@@ -125,7 +125,7 @@ void mesh_gen_tire(VERTEXARRAY *tire, float sectionWidth_mm, float aspectRatio, 
 		float *y = &vertexData[(lv+vertexesAround * 0) * 3 + 1];
 		float *z = &vertexData[(lv+vertexesAround * 0) * 3 + 2];
 
-		*x = innerWidth / 2.0f;
+		*x = 1.0f * (innerWidth / 2.0f);
 		*y = innerRadius * cosD(angleIncrement * lv);
 		*z = innerRadius * sinD(angleIncrement * lv);
 	}
@@ -136,7 +136,7 @@ void mesh_gen_tire(VERTEXARRAY *tire, float sectionWidth_mm, float aspectRatio, 
 		float *y = &vertexData[(lv+vertexesAround * 1) * 3 + 1];
 		float *z = &vertexData[(lv+vertexesAround * 1) * 3 + 2];
 
-		*x = treadWidth / 2.0f + sidewallBulge;
+		*x = 1.0f * (treadWidth / 2.0f + sidewallBulge);
 		*y = sidewallRadius * cosD(angleIncrement * lv);
 		*z = sidewallRadius * sinD(angleIncrement * lv);
 	}
@@ -147,7 +147,7 @@ void mesh_gen_tire(VERTEXARRAY *tire, float sectionWidth_mm, float aspectRatio, 
 		float *y = &vertexData[(lv+vertexesAround * 2) * 3 + 1];
 		float *z = &vertexData[(lv+vertexesAround * 2) * 3 + 2];
 
-		*x = treadWidth / 2.0f + shoulderBulge;
+		*x = 1.0f * (treadWidth / 2.0f + shoulderBulge);
 		*y = shoulderRadius * cosD(angleIncrement * lv);
 		*z = shoulderRadius * sinD(angleIncrement * lv);
 	}
@@ -158,7 +158,7 @@ void mesh_gen_tire(VERTEXARRAY *tire, float sectionWidth_mm, float aspectRatio, 
 		float *y = &vertexData[(lv+vertexesAround * 3) * 3 + 1];
 		float *z = &vertexData[(lv+vertexesAround * 3) * 3 + 2];
 
-		*x = treadWidth / 2.0f;
+		*x = 1.0f * (treadWidth / 2.0f);
 		*y = treadRadius * cosD(angleIncrement * lv);
 		*z = treadRadius * sinD(angleIncrement * lv);
 	}
@@ -171,7 +171,7 @@ void mesh_gen_tire(VERTEXARRAY *tire, float sectionWidth_mm, float aspectRatio, 
 		float *y = &vertexData[(lv+vertexesAround * 4) * 3 + 1];
 		float *z = &vertexData[(lv+vertexesAround * 4) * 3 + 2];
 
-		*x = -1.0f * treadWidth / 2.0f;
+		*x = -1.0f * (treadWidth / 2.0f);
 		*y = treadRadius * cosD(angleIncrement * lv);
 		*z = treadRadius * sinD(angleIncrement * lv);
 	}
@@ -182,7 +182,7 @@ void mesh_gen_tire(VERTEXARRAY *tire, float sectionWidth_mm, float aspectRatio, 
 		float *y = &vertexData[(lv+vertexesAround * 5) * 3 + 1];
 		float *z = &vertexData[(lv+vertexesAround * 5) * 3 + 2];
 
-		*x = -1.0f * treadWidth / 2.0f - shoulderBulge;
+		*x = -1.0f * (treadWidth / 2.0f + shoulderBulge);
 		*y = shoulderRadius * cosD(angleIncrement * lv);
 		*z = shoulderRadius * sinD(angleIncrement * lv);
 	}
@@ -193,7 +193,7 @@ void mesh_gen_tire(VERTEXARRAY *tire, float sectionWidth_mm, float aspectRatio, 
 		float *y = &vertexData[(lv+vertexesAround * 6) * 3 + 1];
 		float *z = &vertexData[(lv+vertexesAround * 6) * 3 + 2];
 
-		*x = -1.0f * treadWidth / 2.0f - sidewallBulge;
+		*x = -1.0f * (treadWidth / 2.0f + sidewallBulge);
 		*y = sidewallRadius * cosD(angleIncrement * lv);
 		*z = sidewallRadius * sinD(angleIncrement * lv);
 	}
@@ -204,7 +204,7 @@ void mesh_gen_tire(VERTEXARRAY *tire, float sectionWidth_mm, float aspectRatio, 
 		float *y = &vertexData[(lv+vertexesAround * 7) * 3 + 1];
 		float *z = &vertexData[(lv+vertexesAround * 7) * 3 + 2];
 
-		*x = -1.0f * innerWidth / 2.0f;
+		*x = -1.0f * (innerWidth / 2.0f);
 		*y = innerRadius * cosD(angleIncrement * lv);
 		*z = innerRadius * sinD(angleIncrement * lv);
 	}
@@ -409,19 +409,85 @@ void mesh_gen_tire(VERTEXARRAY *tire, float sectionWidth_mm, float aspectRatio, 
 	}
 
 
+
+
+	//////////////////////////////////////////////
+	// should build some normals
+	float *normalData = new float[vertexFloatCount];
+
+	// refresher
+	// a cross b = 
+	//  x = a.y * b.z - a.z * b.y
+	//  y = a.z * b.x - a.x * b.z
+	//  z = a.x * b.y - a.y * b.x
+
+	for (unsigned int nlv=0 ; nlv<vertexCount ; nlv++)
+	{
+		
+		// one way, not too bad, but not accurate
+		// this one is messed up
+		normalData[nlv*3 + 0] = 0.5f;
+
+		// these other 2 are actually in the correct direction since its a cylinder
+		normalData[nlv*3 + 1] = vertexData[nlv*3+1];
+		normalData[nlv*3 + 2] = vertexData[nlv*3+2];
+
+
+
+
+
+		// gotta get them down to a consistent length if i'm going to be able to set the other one though
+		/*if ( nlv < vertexesAround*1 )
+		{
+			normalData[nlv*3 + 0] = ;
+		}
+		else if ( nlv < vertexesAround*2 )
+		{
+			normalData[nlv*3 + 0] = ;
+		}
+		else if ( nlv < vertexesAround*3 )
+		{
+			normalData[nlv*3 + 0] = ;
+		}
+		else if ( nlv < vertexesAround*4 )
+		{
+			normalData[nlv*3 + 0] = ;
+		}
+		else if ( nlv < vertexesAround*5 )
+		{
+			normalData[nlv*3 + 0] = ;
+		}
+		else if ( nlv < vertexesAround*6 )
+		{
+			normalData[nlv*3 + 0] = ;
+		}
+		else if ( nlv < vertexesAround*7 )
+		{
+			normalData[nlv*3 + 0] = ;
+		}
+		else
+		{								// if ( nlv < vertexesAround*8 )
+			normalData[nlv*3 + 0] = ;
+		}*/
+		
+	}
+
+
+
+	//////////////////////////////////////////////
 	// VERTEXARRAY will copy this data
 	tire->SetVertices(vertexData, vertexFloatCount);
 	tire->SetFaces((int*)triData, triVIndexCount);
 	tire->SetTexCoordSets(1);
 	tire->SetTexCoords(0, texData, texCoordFloats);
-
+	tire->SetNormals(normalData, vertexFloatCount);
 
 
 	// free up the temp data
 	delete vertexData;
 	delete triData;
 	delete texData;
-
+	delete normalData;
 }
 
 
