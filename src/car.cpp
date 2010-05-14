@@ -271,6 +271,12 @@ bool CAR::Load (
 				error_output << "Error generating wheel mesh for wheel " << i << std::endl;
 				return false;
 			}
+			// temporary hack for cardynamics
+			if(!wheelmodelfront.HaveMeshData())
+			{
+				wheelmodelfront.SetVertexArray(wheelmeshgen[0]);
+				wheelmodelfront.GenerateMeshMetrics();
+			}
 		}
 		
 		//load floating elements
@@ -301,6 +307,12 @@ bool CAR::Load (
 				error_output << "Error generating wheel mesh for wheel " << i << std::endl;
 				return false;
 			}
+			// temporary hack for cardynamics
+			if(!wheelmodelrear.HaveMeshData())
+			{
+				wheelmodelrear.SetVertexArray(wheelmeshgen[i]);
+				wheelmodelrear.GenerateMeshMetrics();
+			}
 		}
 
 		//load floating elements
@@ -318,12 +330,6 @@ bool CAR::Load (
 		QUATERNION<double> orientation;
 		position = initial_position;
 		orientation = initial_orientation;
-
-		// temporary hack for cardynamics
-		wheelmodelfront.SetVertexArray(wheelmeshgen[0]);
-		wheelmodelrear.SetVertexArray(wheelmeshgen[2]);
-		wheelmodelfront.GenerateMeshMetrics();
-		wheelmodelrear.GenerateMeshMetrics();
 
 		dynamics.Init(*world, bodymodel, wheelmodelfront, wheelmodelrear, position, orientation);
 		dynamics.SetABS(defaultabs);
