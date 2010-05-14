@@ -99,7 +99,7 @@ public:
 	
 	AABB <float> GetAABB() const
 	{
-		assert(generatedmetrics);
+//		assert(generatedmetrics);
 		AABB <float> output;
 		output.SetFromCorners(bboxmin, bboxmax);
 		return output;

@@ -1,5 +1,7 @@
 #include "game.h"
 
+#include <fenv.h>
+
 #include <list>
 using std::list;
 
@@ -28,6 +30,9 @@ void release_mouse(int a)
 int main (int argc, char * argv[])
 {
 #ifndef _WIN32
+// catch fpe exceptions.
+//      feenableexcept(FE_INVALID|FE_DIVBYZERO|FE_OVERFLOW);
+//      feenableexcept(FE_ALL_EXCEPT);
 	//handle an ABORT so we can release the mouse
 	struct sigaction act;
 	act.sa_handler = release_mouse;
