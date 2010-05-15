@@ -121,7 +121,7 @@ std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad(
 	float rolling_drag;
 	bool isashadow(false);
 	int clamptexture(0);
-	int surface_type(2);
+	int surface_type(TRACKSURFACE::ASPHALT);
 	std::string otherjunk;
 
 	GetParam(objectfile, diffuse_texture_name);
