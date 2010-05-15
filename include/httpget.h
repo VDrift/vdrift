@@ -4,7 +4,7 @@
 #include <ostream>
 #include <string>
 
-#include <boost/asio.hpp>
+#include <asio.hpp>
 #include <boost/bind.hpp>
 
 namespace httpget
@@ -24,21 +24,21 @@ class Getter
 		};
 		
 	private:
-		boost::asio::io_service io_service_;
-		boost::asio::ip::tcp::resolver resolver_;
-		boost::asio::ip::tcp::socket socket_;
-		boost::asio::streambuf request_;
-		boost::asio::streambuf response_;
+		asio::io_service io_service_;
+		asio::ip::tcp::resolver resolver_;
+		asio::ip::tcp::socket socket_;
+		asio::streambuf request_;
+		asio::streambuf response_;
 		std::stringstream result_;
 		STATUS state;
 		std::stringstream error_output_;
 		
-		void handle_resolve(const boost::system::error_code& err, boost::asio::ip::tcp::resolver::iterator endpoint_iterator);
-		void handle_connect(const boost::system::error_code& err, boost::asio::ip::tcp::resolver::iterator endpoint_iterator);
-		void handle_write_request(const boost::system::error_code& err);
-		void handle_read_status_line(const boost::system::error_code& err);
-		void handle_read_headers(const boost::system::error_code& err);
-		void handle_read_content(const boost::system::error_code& err);
+		void handle_resolve(const asio::error_code& err, asio::ip::tcp::resolver::iterator endpoint_iterator);
+		void handle_connect(const asio::error_code& err, asio::ip::tcp::resolver::iterator endpoint_iterator);
+		void handle_write_request(const asio::error_code& err);
+		void handle_read_status_line(const asio::error_code& err);
+		void handle_read_headers(const asio::error_code& err);
+		void handle_read_content(const asio::error_code& err);
 		void Error();
 		
 	public:
