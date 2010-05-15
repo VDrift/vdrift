@@ -640,6 +640,39 @@ bool CARDYNAMICS::Load(CONFIGFILE & c, std::ostream & error_output)
 	return true;
 }
 
+void CARDYNAMICS::GetCollisionBox(
+	const MODEL & chassisModel,
+	const MODEL & wheelModelFront,
+	const MODEL & wheelModelRear,
+	btVector3 & center,
+	btVector3 & size)
+{
+	AABB <float> box = chassisModel.GetAABB();
+	float bottom = box.GetCenter()[2] - box.GetSize()[2] * 0.5;
+	for (int i = 0; i < 4; i++)
+	{
+		MATHVECTOR <float, 3> wheelpos = GetLocalWheelPosition(WHEEL_POSITION(i), 0);
+
+		const MODEL * wheelmodel = &wheelModelFront;
+		if (i > 1) wheelmodel = &wheelModelRear;
+
+		float sidefactor = 1.0;
+		if (i == 1 || i == 3) sidefactor = -1.0;
+
+		AABB <float> wheelaabb;
+		wheelaabb.SetFromCorners(
+			wheelpos - wheelmodel->GetAABB().GetSize() * 0.5 * sidefactor,
+			wheelpos + wheelmodel->GetAABB().GetSize() * 0.5 * sidefactor);
+		box.CombineWith(wheelaabb);
+	}
+	float bottom_new = box.GetCenter()[2] - box.GetSize()[2] * 0.5;
+	const float delta = 0.1;
+	MATHVECTOR <T, 3> offset(0, 0, bottom - bottom_new + delta);
+
+	center = ToBulletVector(box.GetCenter() + offset * 0.5 - center_of_mass);
+	size = ToBulletVector(box.GetSize() - offset);
+}
+
 void CARDYNAMICS::Init(
 	COLLISION_WORLD & world,
 	const MODEL & chassisModel,
@@ -660,47 +693,6 @@ void CARDYNAMICS::Init(
 	engine.SetInitialConditions();
 
 	// init chassis
-	btTransform localtransform;
-	localtransform.setIdentity();
-/*
-	// convex hull collision shape (one order of magnitude framerate drop)
-	localtransform.setOrigin(ToBulletVector(-center_of_mass));
-	const float * vertices = NULL;
-	int vertices_size = 0;
-	chassisModel.GetVertexArray().GetVertices(vertices, vertices_size);
-	btConvexHullShape * hull = new btConvexHullShape(vertices, vertices_size / 3, 3 * sizeof(float));
-*/
-	AABB <float> box = chassisModel.GetAABB();
-	float bottom = box.GetCenter()[2] - box.GetSize()[2] * 0.5;
-	for (int i = 0; i < 4; i++)
-	{
-		MATHVECTOR <float, 3> wheelpos = GetLocalWheelPosition(WHEEL_POSITION(i), 0);
-
-		const MODEL * wheelmodel = &wheelModelFront;
-		if (i > 1) wheelmodel = &wheelModelRear;
-
-		float sidefactor = 1.0;
-		if (i == 1 || i == 3) sidefactor = -1.0;
-
-		AABB <float> wheelaabb;
-		wheelaabb.SetFromCorners(
-			wheelpos - wheelmodel->GetAABB().GetSize() * 0.5 * sidefactor,
-			wheelpos + wheelmodel->GetAABB().GetSize() * 0.5 * sidefactor);
-		box.CombineWith(wheelaabb);
-	}
-	float bottom_new = box.GetCenter()[2] - box.GetSize()[2] * 0.5;
-	const float delta = 0.25;
-	MATHVECTOR <T, 3> offset(0, 0, bottom - bottom_new + delta);
-
-	btVector3 origin = ToBulletVector(box.GetCenter() + offset * 0.5 - center_of_mass);
-	btVector3 size = ToBulletVector(box.GetSize() - offset);
-
-	localtransform.setOrigin(origin);
-	btBoxShape * hull = new btBoxShape(size * 0.5);
-
-	btCompoundShape * chassisShape = new btCompoundShape(false);
-	chassisShape->addChildShape(localtransform, hull);
-
 	T chassisMass = body.GetMass();
 	MATRIX3 <T> inertia = body.GetInertia();
 	btVector3 chassisInertia(inertia[0], inertia[4], inertia[8]);
@@ -710,11 +702,35 @@ void CARDYNAMICS::Init(
 	transform.setRotation(ToBulletQuaternion(orientation));
 	btDefaultMotionState * chassisState = new btDefaultMotionState();
 	chassisState->setWorldTransform(transform);
+	
+	btVector3 origin, size;
+	GetCollisionBox(chassisModel, wheelModelFront, wheelModelRear, origin, size);
 
+	// use two capsules to approximate collision box
+	// assume x(length) > y(width) > z(height), fixme
+	assert(size[0] > size[1] && size[1] > size[2]);
+	btScalar radius = size[2] * 0.5;
+	btScalar height = size[0] - size[2];
+	btVector3 sideOffset(0, size[1] * 0.5 - size[2] * 0.5, 0);
+	btCollisionShape * hull0 = new btCapsuleShapeX(radius, height);
+	btCollisionShape * hull1 = new btCapsuleShapeX(radius, height);
+	btVector3 origin0 = origin + sideOffset;
+	btVector3 origin1 = origin - sideOffset;
+
+	btTransform localtransform;
+	localtransform.setIdentity();
+	localtransform.setOrigin(origin0);
+	btCompoundShape * chassisShape = new btCompoundShape(false);
+	chassisShape->addChildShape(localtransform, hull0);
+	localtransform.setOrigin(origin1);
+	chassisShape->addChildShape(localtransform, hull1);
+	
+	// create rigid body
 	btRigidBody::btRigidBodyConstructionInfo info(chassisMass, chassisState, chassisShape, chassisInertia);
 	info.m_angularDamping = 0.5;
-	info.m_friction = 0.75;
+	info.m_friction = 0.5;
 	chassis = world.AddRigidBody(info);
+	chassis->setContactProcessingThreshold(0); // internal edge workaround(capsule shape required)
 	world.AddAction(this);
 
 #ifdef _BULLET_

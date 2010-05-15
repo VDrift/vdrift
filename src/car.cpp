@@ -274,7 +274,7 @@ bool CAR::Load (
 			// temporary hack for cardynamics
 			if(!wheelmodelfront.HaveMeshData())
 			{
-				wheelmodelfront.SetVertexArray(wheelmeshgen[0]);
+				wheelmodelfront.SetVertexArray(wheelmeshgen[i]);
 				wheelmodelfront.GenerateMeshMetrics();
 			}
 		}

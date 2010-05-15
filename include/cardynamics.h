@@ -304,6 +304,13 @@ protected:
 	void DoABS(int i, T normal_force);
 
 // cardynamics initialization
+	void GetCollisionBox(
+		const MODEL & chassisModel,
+		const MODEL & wheelModelFront,
+		const MODEL & wheelModelRear,
+		btVector3 & center,
+		btVector3 & size);
+	
 	//Set the maximum steering angle in degrees
 	void SetMaxSteeringAngle(T newangle);
 	
