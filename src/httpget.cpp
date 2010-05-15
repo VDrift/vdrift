@@ -1,15 +1,17 @@
 #include "httpget.h"
 #include "unittest.h"
 
+#include <asio.hpp>
+
 using std::endl;
-using boost::asio::ip::tcp;
+using asio::ip::tcp;
 
 namespace httpget
 {
 
 bool Get(const std::string & server, const std::string & path, std::ostream & result, std::ostream & error_output)
 {
-	boost::asio::io_service io_service;
+	asio::io_service io_service;
 
 	// Get a list of endpoints corresponding to the server name.
 	tcp::resolver resolver(io_service);
@@ -19,7 +21,7 @@ bool Get(const std::string & server, const std::string & path, std::ostream & re
 
 	// Try each endpoint until we successfully establish a connection.
 	tcp::socket socket(io_service);
-	boost::system::error_code error = boost::asio::error::host_not_found;
+	asio::error_code error = asio::error::host_not_found;
 	while (error && endpoint_iterator != end)
 	{
 		socket.close();
@@ -34,7 +36,7 @@ bool Get(const std::string & server, const std::string & path, std::ostream & re
 	// Form the request. We specify the "Connection: close" header so that the
 	// server will close the socket after transmitting the response. This will
 	// allow us to treat all data up until the EOF as the content.
-	boost::asio::streambuf request;
+	asio::streambuf request;
 	std::ostream request_stream(&request);
 	request_stream << "GET " << path << " HTTP/1.0\r\n";
 	request_stream << "Host: " << server << "\r\n";
@@ -42,11 +44,11 @@ bool Get(const std::string & server, const std::string & path, std::ostream & re
 	request_stream << "Connection: close\r\n\r\n";
 
 	// Send the request.
-	boost::asio::write(socket, request);
+	asio::write(socket, request);
 
 	// Read the response status line.
-	boost::asio::streambuf response;
-	boost::asio::read_until(socket, response, "\r\n");
+	asio::streambuf response;
+	asio::read_until(socket, response, "\r\n");
 
 	// Check that response is OK.
 	std::istream response_stream(&response);
@@ -68,7 +70,7 @@ bool Get(const std::string & server, const std::string & path, std::ostream & re
 	}
 
 	// Read the response headers, which are terminated by a blank line.
-	boost::asio::read_until(socket, response, "\r\n\r\n");
+	asio::read_until(socket, response, "\r\n\r\n");
 
 	// Process the response headers.
 	std::string header;
@@ -83,10 +85,10 @@ bool Get(const std::string & server, const std::string & path, std::ostream & re
 		result << &response;
 
 	// Read until EOF, writing data to output as we go.
-	while (boost::asio::read(socket, response,
-		boost::asio::transfer_at_least(1), error))
+	while (asio::read(socket, response,
+		asio::transfer_at_least(1), error))
 		result << &response;
-	if (error != boost::asio::error::eof)
+	if (error != asio::error::eof)
 	{
 		error_output << "Unexpected transfer error" << endl;
 		return false;
@@ -95,7 +97,7 @@ bool Get(const std::string & server, const std::string & path, std::ostream & re
 	return true;
 }
 
-void Getter::handle_resolve(const boost::system::error_code& err,
+void Getter::handle_resolve(const asio::error_code& err,
 							tcp::resolver::iterator endpoint_iterator)
 {
 	if (!err)
@@ -105,7 +107,7 @@ void Getter::handle_resolve(const boost::system::error_code& err,
 		tcp::endpoint endpoint = *endpoint_iterator;
 		socket_.async_connect(endpoint,
 			boost::bind(&Getter::handle_connect, this,
-			boost::asio::placeholders::error, ++endpoint_iterator));
+			asio::placeholders::error, ++endpoint_iterator));
 	}
 	else
 	{
@@ -114,15 +116,15 @@ void Getter::handle_resolve(const boost::system::error_code& err,
 	}
 }
 
-void Getter::handle_connect(const boost::system::error_code& err,
+void Getter::handle_connect(const asio::error_code& err,
 					tcp::resolver::iterator endpoint_iterator)
 {
 	if (!err)
 	{
 		// The connection was successful. Send the request.
-		boost::asio::async_write(socket_, request_,
+		asio::async_write(socket_, request_,
 			boost::bind(&Getter::handle_write_request, this,
-			boost::asio::placeholders::error));
+			asio::placeholders::error));
 	}
 	else if (endpoint_iterator != tcp::resolver::iterator())
 	{
@@ -131,7 +133,7 @@ void Getter::handle_connect(const boost::system::error_code& err,
 		tcp::endpoint endpoint = *endpoint_iterator;
 		socket_.async_connect(endpoint,
 			boost::bind(&Getter::handle_connect, this,
-			boost::asio::placeholders::error, ++endpoint_iterator));
+			asio::placeholders::error, ++endpoint_iterator));
 	}
 	else
 	{
@@ -140,14 +142,14 @@ void Getter::handle_connect(const boost::system::error_code& err,
 	}
 }
 
-void Getter::handle_write_request(const boost::system::error_code& err)
+void Getter::handle_write_request(const asio::error_code& err)
 {
 	if (!err)
 	{
 		// Read the response status line.
-		boost::asio::async_read_until(socket_, response_, "\r\n",
+		asio::async_read_until(socket_, response_, "\r\n",
 			boost::bind(&Getter::handle_read_status_line, this,
-			boost::asio::placeholders::error));
+			asio::placeholders::error));
 	}
 	else
 	{
@@ -156,7 +158,7 @@ void Getter::handle_write_request(const boost::system::error_code& err)
 	}
 }
 
-void Getter::handle_read_status_line(const boost::system::error_code& err)
+void Getter::handle_read_status_line(const asio::error_code& err)
 {
 	if (!err)
 	{
@@ -183,9 +185,9 @@ void Getter::handle_read_status_line(const boost::system::error_code& err)
 		}
 
 		// Read the response headers, which are terminated by a blank line.
-		boost::asio::async_read_until(socket_, response_, "\r\n\r\n",
+		asio::async_read_until(socket_, response_, "\r\n\r\n",
 			boost::bind(&Getter::handle_read_headers, this,
-			boost::asio::placeholders::error));
+			asio::placeholders::error));
 	}
 	else
 	{
@@ -194,7 +196,7 @@ void Getter::handle_read_status_line(const boost::system::error_code& err)
 	}
 }
 
-void Getter::handle_read_headers(const boost::system::error_code& err)
+void Getter::handle_read_headers(const asio::error_code& err)
 {
 	if (!err)
 	{
@@ -212,10 +214,10 @@ void Getter::handle_read_headers(const boost::system::error_code& err)
 			result_ << &response_;
 
 		// Start reading remaining data until EOF.
-		boost::asio::async_read(socket_, response_,
-			boost::asio::transfer_at_least(1),
+		asio::async_read(socket_, response_,
+			asio::transfer_at_least(1),
 			boost::bind(&Getter::handle_read_content, this,
-			boost::asio::placeholders::error));
+			asio::placeholders::error));
 	}
 	else
 	{
@@ -224,7 +226,7 @@ void Getter::handle_read_headers(const boost::system::error_code& err)
 	}
 }
 
-void Getter::handle_read_content(const boost::system::error_code& err)
+void Getter::handle_read_content(const asio::error_code& err)
 {
 	if (!err)
 	{
@@ -232,12 +234,12 @@ void Getter::handle_read_content(const boost::system::error_code& err)
 		result_ << &response_;
 
 		// Continue reading remaining data until EOF.
-		boost::asio::async_read(socket_, response_,
-			boost::asio::transfer_at_least(1),
+		asio::async_read(socket_, response_,
+			asio::transfer_at_least(1),
 			boost::bind(&Getter::handle_read_content, this,
-			boost::asio::placeholders::error));
+			asio::placeholders::error));
 	}
-	else if (err != boost::asio::error::eof)
+	else if (err != asio::error::eof)
 	{
 		error_output_ << "Error: " << err << endl;
 		Error();
@@ -289,8 +291,8 @@ Getter::Getter(const std::string& server, const std::string& path)
 	tcp::resolver::query query(server, "http");
 	resolver_.async_resolve(query,
 		boost::bind(&Getter::handle_resolve, this,
-		boost::asio::placeholders::error,
-		boost::asio::placeholders::iterator));
+		asio::placeholders::error,
+		asio::placeholders::iterator));
 }
 
 };
