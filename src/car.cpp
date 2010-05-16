@@ -22,7 +22,7 @@
 #include "camera_orbit.h"
 #include "camera_mount.h"
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__APPLE__)
 bool isnan(float number) {return (number != number);}
 bool isnan(double number) {return (number != number);}
 #endif

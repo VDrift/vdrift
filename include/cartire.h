@@ -10,7 +10,7 @@
 
 #include <cmath>
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__APPLE__)
 bool isnan(float number);
 bool isnan(double number);
 #endif
