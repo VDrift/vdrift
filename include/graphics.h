@@ -78,8 +78,8 @@ private:
 	DRAWABLE_CONTAINER <PTRVECTOR> dynamic_drawlist; //used for objects that move or change
 	STATICDRAWABLES static_drawlist; //used for objects that will never change
 	
-	// postprocess inputs
-	std::map <std::string, reseatable_reference <FBTEXTURE> > postprocess_inputs;
+	// outputs used as inputs
+	std::map <std::string, reseatable_reference <FBTEXTURE> > output_inputs;
 	
 	// render pipeline data
 	RENDER_INPUT_SCENE renderscene;
@@ -105,11 +105,12 @@ private:
 						std::ostream & error_output);
 	void RenderDrawlists(std::vector <DRAWABLE*> & dynamic_drawlist,
 						std::vector <DRAWABLE*> & static_drawlist,
-						RENDER_INPUT_SCENE & render_scene, 
+						const std::vector <TEXTURE_INTERFACE*> & extra_textures,
+						RENDER_INPUT_SCENE & render_scene,
 						RENDER_OUTPUT & render_output, 
 						std::ostream & error_output);
 	void RenderPostProcess(const std::string & shadername,
-						FBTEXTURE & texture0, 
+						const std::vector <TEXTURE_INTERFACE*> & textures,
 						RENDER_OUTPUT & render_output, 
 						std::ostream & error_output);
 	
@@ -140,38 +141,7 @@ public:
 	DRAWABLE_CONTAINER <PTRVECTOR> & GetDynamicDrawlist() {return dynamic_drawlist;}
 	void AddStaticNode(SCENENODE & node, bool clearcurrent = true);
 	void SetupScene(float fov, float new_view_distance, const MATHVECTOR <float, 3> cam_position, const QUATERNION <float> & cam_rotation,
-					const MATHVECTOR <float, 3> & dynamic_reflection_sample_pos)
-	{
-		{
-			GRAPHICS_CAMERA & cam = cameras["default"];
-			cam.fov = fov;
-			cam.pos = cam_position;
-			cam.orient = cam_rotation;
-			cam.view_distance = new_view_distance;
-			cam.w = w;
-			cam.h = h;
-		}
-		
-		{
-			GRAPHICS_CAMERA & cam = cameras["ui3d"];
-			cam.fov = 45;
-			cam.pos = cam_position;
-			cam.orient = cam_rotation;
-			cam.view_distance = new_view_distance;
-			cam.w = w;
-			cam.h = h;
-		}
-		
-		{
-			GRAPHICS_CAMERA & cam = cameras["dynamic reflection"];
-			cam.pos = dynamic_reflection_sample_pos;
-			cam.fov = 90;
-			cam.orient = cam_rotation;
-			cam.view_distance = 100.f;
-			cam.w = 1.f;
-			cam.h = 1.f;
-		}
-	}
+					const MATHVECTOR <float, 3> & dynamic_reflection_sample_pos);
 	void DrawScene(std::ostream & error_output);
 	void EndScene(std::ostream & error_output);
 	void Screenshot(std::string filename);

@@ -43,7 +43,6 @@ using std::vector;
 
 void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate)
 {
-	assert(source_texture);
 	assert(shader);
 	
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -67,7 +66,11 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate)
 	glActiveTextureARB(GL_TEXTURE0_ARB);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE_ARB, GL_NONE);
 	glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_LUMINANCE);
-	source_texture->Activate();
+	
+	for (unsigned int i = 0; i < source_textures.size(); i++)
+	{
+		glstate.BindTexture2D(i, source_textures[i]);
+	}
 
 	glBegin(GL_QUADS);
 	glTexCoord2f(0.0f, 0.0f); glVertex3f( 0.0f,  0.0f,  0.0f);

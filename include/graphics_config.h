@@ -69,11 +69,20 @@ struct GRAPHICS_CONFIG_OUTPUT
 	bool Load(std::istream & f, std::ostream & error_output, int & linecount);
 };
 
+struct GRAPHICS_CONFIG_INPUTS
+{
+	/// this maps texture units to output names (to be used as inputs)
+	std::map <unsigned int, std::string> tu;
+	
+	/// str should be a space-delimited lists of the form tunumber:outputname where tunumber: is optional
+	void Parse(const std::string & str);
+};
+
 struct GRAPHICS_CONFIG_PASS
 {
 	std::string camera; ///< the name of the camera
 	std::string draw; ///< can be "postprocess" or the name of a drawable layer
-	std::string postprocess_input; ///< only used if draw is "postprocess"
+	GRAPHICS_CONFIG_INPUTS inputs; ///< assigns outputs of other passes to inputs
 	std::string light; ///< the name of the scene-wide directional light
 	std::string output; ///< must correspond to a GRAPHICS_CONFIG_OUTPUT
 	std::string shader; ///< the name of the shader to use

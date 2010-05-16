@@ -320,6 +320,40 @@ bool GRAPHICS_CONFIG_OUTPUT::Load(std::istream & f, std::ostream & error_output,
 	return true;
 }
 
+void GRAPHICS_CONFIG_INPUTS::Parse(const std::string & str)
+{
+	int tucount = 0;
+	std::stringstream parser(str);
+	while (parser)
+	{
+		std::string raw;
+		parser >> raw;
+		raw = strTrim(raw);
+		size_t pos = raw.find(':');
+		if (pos == std::string::npos)
+		{
+			// no colon
+			if (!raw.empty())
+			{
+				tu[tucount] = raw;
+				tucount++;
+			}
+		}
+		else
+		{
+			// colon
+			std::stringstream parser2(raw.substr(0, pos));
+			parser2 >> tucount;
+			std::string texname = raw.substr(pos+1);
+			if (!texname.empty())
+			{
+				tu[tucount] = raw.substr(pos+1);
+				tucount++;
+			}
+		}
+	}
+}
+
 bool GRAPHICS_CONFIG_PASS::Load(std::istream & f, std::ostream & error_output, int & line)
 {
 	std::vector <std::string> reqd;
@@ -346,7 +380,7 @@ bool GRAPHICS_CONFIG_PASS::Load(std::istream & f, std::ostream & error_output, i
 	ASSIGNVAR(light);
 	ASSIGNVAR(output);
 	ASSIGNVAR(shader);
-	ASSIGNVAR(postprocess_input);
+	ASSIGNPARSE(inputs);
 	ASSIGNBOOL(clear_color);
 	ASSIGNBOOL(clear_depth);
 	ASSIGNBOOL(write_depth);

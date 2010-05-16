@@ -407,7 +407,7 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 	shadermap.clear();
 	activeshader = shadermap.end();
 	cameras.clear();
-	postprocess_inputs.clear();
+	output_inputs.clear();
 	render_outputs.clear();
 	
 	std::string renderconfigfile = shaderpath+"/render.conf";
@@ -467,7 +467,7 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 						   error_output,
 						   fbms);
 						   
-				postprocess_inputs[i->name] = fbtex;
+				output_inputs[i->name] = fbtex;
 				
 				info_output << "Initialized FBO: " << i->name << std::endl;
 			}
@@ -507,6 +507,43 @@ void GRAPHICS_SDLGL::EndScene(std::ostream & error_output)
 	SDL_GL_SwapBuffers();
 
 	OPENGL_UTILITY::CheckForOpenGLErrors("SDL_GL buffer swap", error_output);
+}
+
+void GRAPHICS_SDLGL::SetupScene(float fov, float new_view_distance, const MATHVECTOR <float, 3> cam_position, const QUATERNION <float> & cam_rotation,
+					const MATHVECTOR <float, 3> & dynamic_reflection_sample_pos)
+{
+	// setup the default camera from the passed-in parameters
+	{
+		GRAPHICS_CAMERA & cam = cameras["default"];
+		cam.fov = fov;
+		cam.pos = cam_position;
+		cam.orient = cam_rotation;
+		cam.view_distance = new_view_distance;
+		cam.w = w;
+		cam.h = h;
+	}
+	
+	// create a camera for 3d ui elements that has a fixed FOV
+	{
+		GRAPHICS_CAMERA & cam = cameras["ui3d"];
+		cam.fov = 45;
+		cam.pos = cam_position;
+		cam.orient = cam_rotation;
+		cam.view_distance = new_view_distance;
+		cam.w = w;
+		cam.h = h;
+	}
+	
+	// create a camera for the dynamic reflections
+	{
+		GRAPHICS_CAMERA & cam = cameras["dynamic reflection"];
+		cam.pos = dynamic_reflection_sample_pos;
+		cam.fov = 90;
+		cam.orient.LoadIdentity();
+		cam.view_distance = 100.f;
+		cam.w = 1.f;
+		cam.h = 1.f;
+	}
 }
 
 bool SortDraworder(DRAWABLE * d1, DRAWABLE * d2)
@@ -576,9 +613,31 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 		{
 			if (i->conditions.Satisfied(conditions))
 			{
+				// convert "inputs" into a vector form
+				std::vector <TEXTURE_INTERFACE*> input_textures;
+				for (std::map <unsigned int, std::string>::const_iterator t = i->inputs.tu.begin(); t != i->inputs.tu.end(); t++)
+				{
+					unsigned int tuid = t->first;
+					
+					unsigned int cursize = input_textures.size();
+					for (unsigned int extra = cursize; extra < tuid; extra++)
+						input_textures.push_back(NULL);
+					
+					std::string texname = t->second;
+					
+					// quietly ignore invalid names
+					// this allows us to specify outputs that are only present for certain conditions
+					// and then always specify those outputs as inputs to later stages, and have
+					// them be ignored if the conditions aren't met
+					if (output_inputs.find(texname) != output_inputs.end())
+						input_textures.push_back(&*output_inputs[texname]);
+					else
+						input_textures.push_back(NULL);
+				}
+				
 				if (i->draw == "postprocess")
 				{
-					RenderPostProcess(i->shader, *postprocess_inputs[i->postprocess_input], render_outputs[i->output], error_output);
+					RenderPostProcess(i->shader, input_textures, render_outputs[i->output], error_output);
 				}
 				else
 				{
@@ -589,6 +648,7 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 					renderscene.SetWriteDepth(i->write_depth);
 					RenderDrawlists(*dynamic_drawlist.GetByName(i->draw),
 										culled_static_drawlist[BuildKey(i->camera,i->draw)],
+										input_textures,
 										renderscene,
 										render_outputs[i->output],
 										error_output);
@@ -915,17 +975,17 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 		// render skybox
 		renderscene.SetClear(false, true);
 		renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, 10000.0, cam.w, cam.h); //use very high draw distance for skyboxes
-		RenderDrawlists(dynamic_drawlist.skybox_noblend, normalcam_static_drawlist.skybox_noblend, renderscene, framebuffer, error_output);
+		RenderDrawlists(dynamic_drawlist.skybox_noblend, normalcam_static_drawlist.skybox_noblend, std::vector <TEXTURE_INTERFACE*>(), renderscene, framebuffer, error_output);
 		renderscene.SetClear(false, true);
-		RenderDrawlists(dynamic_drawlist.skybox_blend, normalcam_static_drawlist.skybox_blend, renderscene, framebuffer, error_output);
+		RenderDrawlists(dynamic_drawlist.skybox_blend, normalcam_static_drawlist.skybox_blend, std::vector <TEXTURE_INTERFACE*>(), renderscene, framebuffer, error_output);
 
 		// render most 3d stuff
 		renderscene.SetClear(false, true);
 		renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h);
-		RenderDrawlists(dynamic_drawlist.normal_noblend, normalcam_static_drawlist.normal_noblend, renderscene, framebuffer, error_output);
+		RenderDrawlists(dynamic_drawlist.normal_noblend, normalcam_static_drawlist.normal_noblend, std::vector <TEXTURE_INTERFACE*>(), renderscene, framebuffer, error_output);
 		renderscene.SetClear(false, false);
 		RenderDrawlist(dynamic_drawlist.car_noblend, renderscene, framebuffer, error_output);
-		RenderDrawlists(dynamic_drawlist.normal_blend, normalcam_static_drawlist.normal_blend, renderscene, framebuffer, error_output);
+		RenderDrawlists(dynamic_drawlist.normal_blend, normalcam_static_drawlist.normal_blend, std::vector <TEXTURE_INTERFACE*>(), renderscene, framebuffer, error_output);
 		RenderDrawlist(dynamic_drawlist.particle, renderscene, framebuffer, error_output);
 		RenderDrawlist(dynamic_drawlist.twodim, renderscene, framebuffer, error_output);
 		RenderDrawlist(dynamic_drawlist.text, renderscene, framebuffer, error_output);
@@ -953,6 +1013,7 @@ void GRAPHICS_SDLGL::RenderDrawlist(std::vector <DRAWABLE*> & drawlist,
 
 void GRAPHICS_SDLGL::RenderDrawlists(std::vector <DRAWABLE*> & dynamic_drawlist,
 						std::vector <DRAWABLE*> & static_drawlist,
+						const std::vector <TEXTURE_INTERFACE*> & extra_textures,
 						RENDER_INPUT_SCENE & render_scene, 
 						RENDER_OUTPUT & render_output, 
 						std::ostream & error_output)
@@ -960,12 +1021,18 @@ void GRAPHICS_SDLGL::RenderDrawlists(std::vector <DRAWABLE*> & dynamic_drawlist,
 	if (dynamic_drawlist.empty() && static_drawlist.empty() && !render_scene.GetClear().first && !render_scene.GetClear().second)
 		return;
 	
+	for (unsigned int i = 0; i < extra_textures.size(); i++)
+	{
+		if (extra_textures[i])
+			glstate.BindTexture2D(i, extra_textures[i]);
+	}
+	
 	render_scene.SetDrawLists(dynamic_drawlist, static_drawlist);
 	Render(&render_scene, render_output, error_output);
 }
 
 void GRAPHICS_SDLGL::RenderPostProcess(const std::string & shadername,
-						FBTEXTURE & texture0, 
+						const std::vector <TEXTURE_INTERFACE*> & textures,
 						RENDER_OUTPUT & render_output, 
 						std::ostream & error_output)
 {
@@ -973,7 +1040,7 @@ void GRAPHICS_SDLGL::RenderPostProcess(const std::string & shadername,
 	std::map <std::string, SHADER_GLSL>::iterator s = shadermap.find(shadername);
 	assert(s != shadermap.end());
 	postprocess.SetShader(&s->second);
-	postprocess.SetSourceTexture(texture0);
+	postprocess.SetSourceTextures(textures);
 	Render(&postprocess, render_output, error_output);
 }
 

@@ -33,18 +33,18 @@ public:
 class RENDER_INPUT_POSTPROCESS : public RENDER_INPUT
 {
 public:
-	RENDER_INPUT_POSTPROCESS() : source_texture(NULL), shader(NULL) {}
+	RENDER_INPUT_POSTPROCESS() : shader(NULL) {}
 	
-	void SetSourceTexture(FBTEXTURE & newsource)
+	void SetSourceTextures(const std::vector <TEXTURE_INTERFACE*> & textures)
 	{
-		source_texture = &newsource;
+		source_textures = textures;
 	}
 	
 	void SetShader(SHADER_GLSL * newshader) {shader = newshader;}
 	virtual void Render(GLSTATEMANAGER & glstate);
 	
 private:
-	const FBTEXTURE * source_texture;
+	std::vector <TEXTURE_INTERFACE*> source_textures;
 	SHADER_GLSL * shader;
 };
 
