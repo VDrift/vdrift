@@ -402,7 +402,14 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 		info_output << "Texture units: " << tufull << " full, " << tu << " partial" << std::endl;
 	}
 	
-	GRAPHICS_CONFIG config;
+	// not sure all of this clearing is really necessary
+	config = GRAPHICS_CONFIG();
+	shadermap.clear();
+	activeshader = shadermap.end();
+	cameras.clear();
+	postprocess_inputs.clear();
+	render_outputs.clear();
+	
 	std::string renderconfigfile = shaderpath+"/render.conf";
 	if (!config.Load(renderconfigfile, error_output))
 	{
@@ -429,7 +436,7 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 		bool edge_contrast_enhancement = (lighting == 1);
 		bool reflection_dynamic = (reflection_status == REFLECTION_DYNAMIC);
 		
-		std::set <std::string> conditions;
+		conditions.clear();
 		#define ADDCONDITION(x) if (x) conditions.insert(#x)
 		ADDCONDITION(bloom);
 		ADDCONDITION(edge_contrast_enhancement);
@@ -460,69 +467,12 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 						   error_output,
 						   fbms);
 						   
+				postprocess_inputs[i->name] = fbtex;
+				
 				info_output << "Initialized FBO: " << i->name << std::endl;
 			}
 		}
 
-		/*//set up the rendering pipeline
-		shadow_depthtexturelist.clear();
-		if (shadows)
-		{
-			for (int i = 0; i < shadow_distance+1; i++)
-				shadow_depthtexturelist.push_back(RENDER_OUTPUT());
-			int shadow_resolution = 512;
-			if (shadow_quality == 1)
-				shadow_resolution = 1024;
-			if (shadow_quality >= 2)
-				shadow_resolution = 2048;
-			int count = 0;
-			for (std::list <RENDER_OUTPUT>::iterator i = shadow_depthtexturelist.begin(); i != shadow_depthtexturelist.end(); ++i)
-			{
-				FBTEXTURE & depthFBO = i->RenderToFBO();
-#ifdef _SHADOWMAP_DEBUG_
-				depthFBO.Init(shadow_resolution, shadow_resolution, FBTEXTURE::NORMAL, false, false, false, false, error_output);
-#else
-				if (shadow_quality < 4 || count > 0)
-					depthFBO.Init(shadow_resolution, shadow_resolution, FBTEXTURE::NORMAL, true, false, false, false, error_output); //depth texture
-				else
-					depthFBO.Init(shadow_resolution, shadow_resolution, FBTEXTURE::NORMAL, false, true, false, false, error_output); //RGBA texture w/ nearest neighbor filtering
-#endif
-				count++;
-			}
-		}
-
-		if (lighting == 1)
-		{
-			int map_size = 1024;
-			FBTEXTURE & depthFBO = edgecontrastenhancement_depths.RenderToFBO();
-			depthFBO.Init(map_size, map_size, FBTEXTURE::NORMAL, true, false, false, false, error_output);
-		}
-
-		if (bloom) //generate a screen-sized rectangular FBO
-		{
-			FBTEXTURE & sceneFBO = full_scene_buffer.RenderToFBO();
-			sceneFBO.Init(w, h, FBTEXTURE::RECTANGLE, false, false, true, false, error_output);
-		}
-
-		if (bloom) //generate a buffer to store the bloom result plus a buffer for separable blur intermediate step
-		{
-			int bloom_size = 512;
-			FBTEXTURE & bloomFBO = bloom_buffer.RenderToFBO();
-			bloomFBO.Init(bloom_size, bloom_size, FBTEXTURE::NORMAL, false, false, false, false, error_output);
-
-			FBTEXTURE & blurFBO = blur_buffer.RenderToFBO();
-			blurFBO.Init(bloom_size, bloom_size, FBTEXTURE::NORMAL, false, false, false, false, error_output);
-		}
-		
-		if (reflection_status == REFLECTION_DYNAMIC)
-		{
-			int reflection_size = 256;
-			FBTEXTURE & reflection_cubemap = dynamic_reflection.RenderToFBO();
-			reflection_cubemap.Init(reflection_size, reflection_size, FBTEXTURE::CUBEMAP, false, false, false, false, error_output);
-		}
-
-		final.RenderToFramebuffer();*/
-		
 		render_outputs["framebuffer"].RenderToFramebuffer();
 	}
 	else
@@ -565,30 +515,23 @@ bool SortDraworder(DRAWABLE * d1, DRAWABLE * d2)
 	return (d1->GetDrawOrder() < d2->GetDrawOrder());
 }
 
+std::string BuildKey(const std::string & camera, const std::string & draw)
+{
+	return camera + ";" + draw;
+}
+
 void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 {
 	renderscene.SetFlags(using_shaders);
 	renderscene.SetFSAA(fsaa);
-	renderscene.SetCameraInfo(campos, camorient, camfov, view_distance, w, h);
 
 	if (reflection_status == REFLECTION_STATIC)
 		renderscene.SetReflection(&static_reflection);
 	renderscene.SetAmbient(static_ambient);
 	renderscene.SetContrast(contrast);
 
-	//pre-process the drawlists
+	//sort the two dimentional drawlist so we get correct ordering
 	std::sort(dynamic_drawlist.twodim.begin(),dynamic_drawlist.twodim.end(),&SortDraworder);
-
-	//do fast culling for the normal camera frustum
-	FRUSTUM normalcam = renderscene.SetCameraInfo(campos, camorient, camfov, view_distance, w, h);
-	DRAWABLE_CONTAINER <PTRVECTOR> normalcam_static_drawlist;
-	//normalcam_static_drawlist.normal_noblend.reserve(static_drawlist.GetDrawlist().normal_noblend.size());
-	static_drawlist.GetDrawlist().normal_noblend.Query(normalcam, normalcam_static_drawlist.normal_noblend);
-	//std::cout << "Fast cull from " << static_drawlist.GetDrawlist().normal_noblend.size() << " to " << normalcam_static_drawlist.normal_noblend.size() << std::endl;
-	static_drawlist.GetDrawlist().normal_blend.Query(normalcam, normalcam_static_drawlist.normal_blend);
-	//note that all skybox objects go in, no frustum culling for them
-	static_drawlist.GetDrawlist().skybox_blend.Query(AABB<float>::INTERSECT_ALWAYS(), normalcam_static_drawlist.skybox_blend);
-	static_drawlist.GetDrawlist().skybox_noblend.Query(AABB<float>::INTERSECT_ALWAYS(), normalcam_static_drawlist.skybox_noblend);
 	
 	/*int objectcount = 0;
 	static_drawlist.GetDrawlist().normal_noblend.GetTree().DebugPrint(0, objectcount, true, std::cout);
@@ -598,11 +541,62 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 	//shader path
 	if (using_shaders)
 	{
+		//do fast culling queries for static geometry, but only where necessary
+		//for each pass, we have which camera and which draw layer to use
+		//we want to do culling for each unique camera and draw layer combination
+		//use camera/layer as the unique key
+		std::map <std::string, PTRVECTOR <DRAWABLE> > culled_static_drawlist;
+		for (std::vector <GRAPHICS_CONFIG_PASS>::const_iterator i = config.passes.begin(); i != config.passes.end(); i++)
+		{
+			if (i->draw != "postprocess")
+			{
+				std::string key = BuildKey(i->camera, i->draw);
+				if (i->cull)
+				{
+					GRAPHICS_CAMERA & cam = cameras[i->camera];
+					if (culled_static_drawlist.find(key) == culled_static_drawlist.end())
+					{
+						FRUSTUM frustum = renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h);
+						static_drawlist.GetDrawlist().GetByName(i->draw)->Query(frustum, culled_static_drawlist[key]);
+					}
+				}
+				else
+				{
+					static_drawlist.GetDrawlist().GetByName(i->draw)->Query(AABB<float>::INTERSECT_ALWAYS(), culled_static_drawlist[key]);
+				}
+			}
+		}
+		
 		//construct light position
 		MATHVECTOR <float, 3> lightposition(0,0,1);
 		(-lightdirection).RotateVector(lightposition);
+		renderscene.SetSunDirection(lightposition);
 		
-		//shadow pre-passes
+		for (std::vector <GRAPHICS_CONFIG_PASS>::const_iterator i = config.passes.begin(); i != config.passes.end(); i++)
+		{
+			if (i->conditions.Satisfied(conditions))
+			{
+				if (i->draw == "postprocess")
+				{
+					RenderPostProcess(i->shader, *postprocess_inputs[i->postprocess_input], render_outputs[i->output], error_output);
+				}
+				else
+				{
+					GRAPHICS_CAMERA & cam = cameras[i->camera];
+					renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h);
+					renderscene.SetDefaultShader(shadermap[i->shader]);
+					renderscene.SetClear(i->clear_color, i->clear_depth);
+					renderscene.SetWriteDepth(i->write_depth);
+					RenderDrawlists(*dynamic_drawlist.GetByName(i->draw),
+										culled_static_drawlist[BuildKey(i->camera,i->draw)],
+										renderscene,
+										render_outputs[i->output],
+										error_output);
+				}
+			}
+		}
+		
+		/*//shadow pre-passes
 		if (shadows)
 		{
 			DRAWABLE_CONTAINER <PTRVECTOR> specialcam_static_drawlist;
@@ -618,11 +612,11 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 				//	closeshadow = 2.0;
 				float shadow_radius = (1<<csm_count)*closeshadow+(csm_count)*20.0; //5,30,60
 
-				/*float lambda = 0.75;
-				float nd = 0.1;
-				float fd = 30.0;
-				float si = (csm_count+1.0)/shadow_depthtexturelist.size();
-				float shadow_radius = lambda*(nd*powf(fd/nd,si))+(1.0-lambda)*(nd+(fd-nd)*si);*/
+				//float lambda = 0.75;
+				//float nd = 0.1;
+				//float fd = 30.0;
+				//float si = (csm_count+1.0)/shadow_depthtexturelist.size();
+				//float shadow_radius = lambda*(nd*powf(fd/nd,si))+(1.0-lambda)*(nd+(fd-nd)*si);
 
 				// setup the camera
 				MATHVECTOR <float, 3> shadowbox(1,1,1);
@@ -898,23 +892,36 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 		renderscene.SetCameraInfo(campos, camorient, 45.0, view_distance, w, h);
 		RenderDrawlist(dynamic_drawlist.nocamtrans_noblend, renderscene, final, error_output);
 		renderscene.SetClear(false, false);
-		RenderDrawlist(dynamic_drawlist.nocamtrans_blend, renderscene, final, error_output);
+		RenderDrawlist(dynamic_drawlist.nocamtrans_blend, renderscene, final, error_output);*/
 	}
 	else //non-shader path
 	{
+		GRAPHICS_CAMERA & cam = cameras["default"];
+		renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h);
+		
+		//do fast culling for the normal camera frustum
+		FRUSTUM normalcam = renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h);
+		DRAWABLE_CONTAINER <PTRVECTOR> normalcam_static_drawlist;
+		static_drawlist.GetDrawlist().normal_noblend.Query(normalcam, normalcam_static_drawlist.normal_noblend);
+		//std::cout << "Fast cull from " << static_drawlist.GetDrawlist().normal_noblend.size() << " to " << normalcam_static_drawlist.normal_noblend.size() << std::endl;
+		static_drawlist.GetDrawlist().normal_blend.Query(normalcam, normalcam_static_drawlist.normal_blend);
+		//note that all skybox objects go in, no frustum culling for them
+		static_drawlist.GetDrawlist().skybox_blend.Query(AABB<float>::INTERSECT_ALWAYS(), normalcam_static_drawlist.skybox_blend);
+		static_drawlist.GetDrawlist().skybox_noblend.Query(AABB<float>::INTERSECT_ALWAYS(), normalcam_static_drawlist.skybox_noblend);
+		
 		RENDER_OUTPUT framebuffer;
 		framebuffer.RenderToFramebuffer();
 		
 		// render skybox
 		renderscene.SetClear(false, true);
-		renderscene.SetCameraInfo(campos, camorient, camfov, 10000.0, w, h); //use very high draw distance for skyboxes
+		renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, 10000.0, cam.w, cam.h); //use very high draw distance for skyboxes
 		RenderDrawlists(dynamic_drawlist.skybox_noblend, normalcam_static_drawlist.skybox_noblend, renderscene, framebuffer, error_output);
 		renderscene.SetClear(false, true);
 		RenderDrawlists(dynamic_drawlist.skybox_blend, normalcam_static_drawlist.skybox_blend, renderscene, framebuffer, error_output);
 
 		// render most 3d stuff
 		renderscene.SetClear(false, true);
-		renderscene.SetCameraInfo(campos, camorient, camfov, view_distance, w, h);
+		renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h);
 		RenderDrawlists(dynamic_drawlist.normal_noblend, normalcam_static_drawlist.normal_noblend, renderscene, framebuffer, error_output);
 		renderscene.SetClear(false, false);
 		RenderDrawlist(dynamic_drawlist.car_noblend, renderscene, framebuffer, error_output);
@@ -925,7 +932,7 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 
 		// render any viewspace 3d elements
 		renderscene.SetClear(false, true);
-		renderscene.SetCameraInfo(campos, camorient, 45.0, view_distance, w, h);
+		renderscene.SetCameraInfo(cam.pos, cam.orient, 45.0, cam.view_distance, cam.w, cam.h);
 		RenderDrawlist(dynamic_drawlist.nocamtrans_noblend, renderscene, framebuffer, error_output);
 		renderscene.SetClear(false, false);
 		RenderDrawlist(dynamic_drawlist.nocamtrans_blend, renderscene, framebuffer, error_output);

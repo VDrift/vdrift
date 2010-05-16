@@ -236,7 +236,7 @@ void HUD::Update(FONT & lcdfont, FONT & sansfont, float curlap, float lastlap, f
         gearstr << "N";
     else
         gearstr << newgear;
-	DRAWABLE & geartextdrawref = GetDrawable(hudroot,geartextdraw);
+	DRAWABLE & geartextdrawref = hudroot.GetDrawlist().text.get(geartextdraw);
     geartext.Revise(lcdfont, gearstr.str());
     if (newgear == 0)
         geartextdrawref.SetColor(1,1,1,1);

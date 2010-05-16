@@ -18,10 +18,28 @@
 #include "aabb_space_partitioning.h"
 #include "glstatemanager.h"
 #include "graphics_renderers.h"
+#include "graphics_config.h"
 
 #include <SDL/SDL.h>
 
 class SCENENODE;
+
+struct GRAPHICS_CAMERA
+{
+	float fov;
+	float view_distance;
+	MATHVECTOR <float, 3> pos;
+	QUATERNION <float> orient;
+	float w;
+	float h;
+	
+	GRAPHICS_CAMERA() :
+		fov(45),
+		view_distance(10000),
+		w(1),
+		h(1)
+		{}
+};
 
 class GRAPHICS_SDLGL
 {
@@ -48,6 +66,10 @@ private:
 	TEXTURE static_reflection;
 	TEXTURE static_ambient;
 	
+	// configuration variables in a data-driven friendly format
+	std::set <std::string> conditions;
+	GRAPHICS_CONFIG config;
+	
 	// shaders
 	std::map <std::string, SHADER_GLSL> shadermap;
 	std::map <std::string, SHADER_GLSL>::iterator activeshader;
@@ -56,25 +78,19 @@ private:
 	DRAWABLE_CONTAINER <PTRVECTOR> dynamic_drawlist; //used for objects that move or change
 	STATICDRAWABLES static_drawlist; //used for objects that will never change
 	
+	// postprocess inputs
+	std::map <std::string, reseatable_reference <FBTEXTURE> > postprocess_inputs;
+	
 	// render pipeline data
 	RENDER_INPUT_SCENE renderscene;
 	//RENDER_OUTPUT scene_depthtexture;
 	std::list <RENDER_OUTPUT> shadow_depthtexturelist;
 	std::map <std::string, RENDER_OUTPUT> render_outputs;
-	/*RENDER_OUTPUT final;
-	RENDER_OUTPUT edgecontrastenhancement_depths;
-	RENDER_OUTPUT full_scene_buffer;
-	RENDER_OUTPUT bloom_buffer;
-	RENDER_OUTPUT blur_buffer;
-	RENDER_OUTPUT dynamic_reflection;*/
 	
 	// camera data
-	float camfov;
-	float view_distance;
-	MATHVECTOR <float, 3> campos;
-	QUATERNION <float> camorient;
+	std::map <std::string, GRAPHICS_CAMERA> cameras;
+	
 	QUATERNION <float> lightdirection;
-	MATHVECTOR <float, 3> dynamic_reflection_sample_position;
 	
 	void ChangeDisplay(const int width, const int height, const int bpp, const int dbpp, const bool fullscreen, 
 			   unsigned int antialiasing, std::ostream & info_output, std::ostream & error_output);
@@ -101,8 +117,7 @@ private:
 public:
 	GRAPHICS_SDLGL() : surface(NULL),initialized(false),using_shaders(false),max_anisotropy(0),shadows(false),
 		       	closeshadow(5.0), fsaa(1),lighting(0),bloom(false),contrast(1.0), aticard(false), 
-		       	reflection_status(REFLECTION_DISABLED),camfov(45),
-		       	view_distance(10000)
+		       	reflection_status(REFLECTION_DISABLED)
 			{activeshader = shadermap.end();}
 	~GRAPHICS_SDLGL() {}
 	
@@ -127,11 +142,35 @@ public:
 	void SetupScene(float fov, float new_view_distance, const MATHVECTOR <float, 3> cam_position, const QUATERNION <float> & cam_rotation,
 					const MATHVECTOR <float, 3> & dynamic_reflection_sample_pos)
 	{
-		camfov = fov;
-		campos = cam_position;
-		camorient = cam_rotation;
-		view_distance = new_view_distance;
-		dynamic_reflection_sample_position = dynamic_reflection_sample_pos;
+		{
+			GRAPHICS_CAMERA & cam = cameras["default"];
+			cam.fov = fov;
+			cam.pos = cam_position;
+			cam.orient = cam_rotation;
+			cam.view_distance = new_view_distance;
+			cam.w = w;
+			cam.h = h;
+		}
+		
+		{
+			GRAPHICS_CAMERA & cam = cameras["ui3d"];
+			cam.fov = 45;
+			cam.pos = cam_position;
+			cam.orient = cam_rotation;
+			cam.view_distance = new_view_distance;
+			cam.w = w;
+			cam.h = h;
+		}
+		
+		{
+			GRAPHICS_CAMERA & cam = cameras["dynamic reflection"];
+			cam.pos = dynamic_reflection_sample_pos;
+			cam.fov = 90;
+			cam.orient = cam_rotation;
+			cam.view_distance = 100.f;
+			cam.w = 1.f;
+			cam.h = 1.f;
+		}
 	}
 	void DrawScene(std::ostream & error_output);
 	void EndScene(std::ostream & error_output);

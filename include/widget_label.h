@@ -25,7 +25,7 @@ private:
 	
 	DRAWABLE & GetDrawable(SCENENODE & scene)
 	{
-		return scene.GetDrawlist().twodim.get(draw);
+		return scene.GetDrawlist().text.get(draw);
 	}
 	
 public:
@@ -51,7 +51,7 @@ public:
 		if (!centered)
 			w = 0;
 
-		draw = scene.GetDrawlist().twodim.insert(DRAWABLE());
+		draw = scene.GetDrawlist().text.insert(DRAWABLE());
 		DRAWABLE & drawref = GetDrawable(scene);
 		text_draw.Set(drawref, *font, text, x-w*0.5, y, scalex, scaley, r,g,b);
 		drawref.SetDrawOrder(order+100);

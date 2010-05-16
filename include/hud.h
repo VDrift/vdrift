@@ -111,8 +111,8 @@ private:
 
 	keyed_container <DRAWABLE>::handle SetupText(SCENENODE & parent, FONT & font, TEXT_DRAW & textdraw, const std::string & str, const float x, const float y, const float scalex, const float scaley, const float r, const float g, const float b, float zorder = 0)
 	{
-		keyed_container <DRAWABLE>::handle draw = parent.GetDrawlist().twodim.insert(DRAWABLE());
-		DRAWABLE & drawref = parent.GetDrawlist().twodim.get(draw);
+		keyed_container <DRAWABLE>::handle draw = parent.GetDrawlist().text.insert(DRAWABLE());
+		DRAWABLE & drawref = parent.GetDrawlist().text.get(draw);
 		textdraw.Set(drawref, font, str, x, y, scalex,scaley, r, g, b);
 		drawref.SetDrawOrder(zorder);
 		return draw;

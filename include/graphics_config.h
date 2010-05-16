@@ -69,10 +69,28 @@ struct GRAPHICS_CONFIG_OUTPUT
 	bool Load(std::istream & f, std::ostream & error_output, int & linecount);
 };
 
+struct GRAPHICS_CONFIG_PASS
+{
+	std::string camera; ///< the name of the camera
+	std::string draw; ///< can be "postprocess" or the name of a drawable layer
+	std::string postprocess_input; ///< only used if draw is "postprocess"
+	std::string light; ///< the name of the scene-wide directional light
+	std::string output; ///< must correspond to a GRAPHICS_CONFIG_OUTPUT
+	std::string shader; ///< the name of the shader to use
+	bool clear_color; ///< whether or not to clear the color buffer before rendering
+	bool clear_depth; ///< whether or not to clear the depth buffer before rendering
+	bool write_depth; ///< whether or not to write to the depth buffer during rendering
+	bool cull; ///< whether or not to do frustum and distance culling
+	GRAPHICS_CONFIG_CONDITION conditions;
+	
+	bool Load(std::istream & f, std::ostream & error_output, int & linecount);
+};
+
 struct GRAPHICS_CONFIG
 {
 	std::vector <GRAPHICS_CONFIG_SHADER> shaders;
 	std::vector <GRAPHICS_CONFIG_OUTPUT> outputs;
+	std::vector <GRAPHICS_CONFIG_PASS> passes;
 	
 	bool Load(const std::string & filename, std::ostream & error_output)
 	{

@@ -152,7 +152,19 @@ struct DRAWABLE_CONTAINER
 	reseatable_reference <CONTAINER <DRAWABLE> > GetByName(const std::string & name)
 	{
 		reseatable_reference <CONTAINER <DRAWABLE> > ref;
+		#define TEXTIFY(x) else if (name == #x) ref = x
 		if (name == "twodim") ref = twodim;
+		TEXTIFY(text);
+		TEXTIFY(normal_noblend);
+		TEXTIFY(car_noblend);
+		TEXTIFY(normal_blend);
+		TEXTIFY(skybox_blend);
+		TEXTIFY(skybox_noblend);
+		TEXTIFY(particle);
+		TEXTIFY(nocamtrans_blend);
+		TEXTIFY(nocamtrans_noblend);
+		#undef TEXTIFY
+		assert(ref);
 		return ref;
 	}
 	

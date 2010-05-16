@@ -137,6 +137,7 @@ bool readSection(std::istream & f, std::ostream & error_output, int & line, cons
 #define ASSIGNVAR(x) x = vars[#x]
 #define ASSIGNPARSE(x) x.Parse(vars[#x])
 #define ASSIGNOTHER(x) {std::stringstream defparser(vars[#x]);defparser >> x;}
+#define ASSIGNBOOL(x) {x = (vars[#x] == "true");}
 
 bool GRAPHICS_CONFIG_SHADER::Load(std::istream & f, std::ostream & error_output, int & line)
 {
@@ -312,8 +313,44 @@ bool GRAPHICS_CONFIG_OUTPUT::Load(std::istream & f, std::ostream & error_output,
 	if (!isOf(vars, "filter", "linear nearest", &error_output, sectionstart)) return false;
 	ASSIGNVAR(format);
 	if (!isOf(vars, "format", "RGB RGBA depth", &error_output, sectionstart)) return false;
-	ASSIGNOTHER(mipmap);
+	ASSIGNBOOL(mipmap);
 	ASSIGNOTHER(multisample);
+	ASSIGNPARSE(conditions);
+	
+	return true;
+}
+
+bool GRAPHICS_CONFIG_PASS::Load(std::istream & f, std::ostream & error_output, int & line)
+{
+	std::vector <std::string> reqd;
+	//reqd.push_back("camera");
+	reqd.push_back("draw");
+	//reqd.push_back("light");
+	reqd.push_back("output");
+	reqd.push_back("shader");
+	
+	std::map <std::string, std::string> vars;
+	if (!readSection(f, error_output, line, reqd, vars))
+		return false;
+	
+	// fill in defaults
+	fillDefault(vars, "light", "sun");
+	fillDefault(vars, "clear_color", "false");
+	fillDefault(vars, "clear_depth", "false");
+	fillDefault(vars, "write_depth", "true");
+	fillDefault(vars, "cull", "true");
+	fillDefault(vars, "camera", "default");
+	
+	ASSIGNVAR(camera);
+	ASSIGNVAR(draw);
+	ASSIGNVAR(light);
+	ASSIGNVAR(output);
+	ASSIGNVAR(shader);
+	ASSIGNVAR(postprocess_input);
+	ASSIGNBOOL(clear_color);
+	ASSIGNBOOL(clear_depth);
+	ASSIGNBOOL(write_depth);
+	ASSIGNBOOL(cull);
 	ASSIGNPARSE(conditions);
 	
 	return true;
@@ -356,6 +393,13 @@ bool GRAPHICS_CONFIG::Load(std::istream & f, std::ostream & error_output)
 				return false;
 			outputs.push_back(newsection);
 		}
+		else if (type == "pass")
+		{
+			GRAPHICS_CONFIG_PASS newsection;
+			if (!newsection.Load(f, error_output, line))
+				return false;
+			passes.push_back(newsection);
+		}
 		else
 		{
 			error_output << "Unexpected section header type \"" << type << "\" on line " << line << std::endl;
@@ -372,3 +416,4 @@ bool GRAPHICS_CONFIG::Load(std::istream & f, std::ostream & error_output)
 #undef ASSIGNVAR
 #undef ASSIGNPARSE
 #undef ASSIGNOTHER
+#undef ASSIGNBOOL
