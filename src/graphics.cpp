@@ -1109,7 +1109,7 @@ void GRAPHICS_SDLGL::Render(RENDER_INPUT * input, RENDER_OUTPUT & output, std::o
 
 	OPENGL_UTILITY::CheckForOpenGLErrors("render output begin", error_output);
 
-	input->Render(glstate);
+	input->Render(glstate, error_output);
 
 	OPENGL_UTILITY::CheckForOpenGLErrors("render finish", error_output);
 

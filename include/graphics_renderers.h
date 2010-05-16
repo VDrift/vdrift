@@ -27,7 +27,7 @@ class DRAWABLE;
 class RENDER_INPUT
 {
 public:
-	virtual void Render(GLSTATEMANAGER & glstate) = 0; ///< must be implemented by derived classes
+	virtual void Render(GLSTATEMANAGER & glstate, std::ostream & error_output) = 0; ///< must be implemented by derived classes
 };
 
 class RENDER_INPUT_POSTPROCESS : public RENDER_INPUT
@@ -41,7 +41,7 @@ public:
 	}
 	
 	void SetShader(SHADER_GLSL * newshader) {shader = newshader;}
-	virtual void Render(GLSTATEMANAGER & glstate);
+	virtual void Render(GLSTATEMANAGER & glstate, std::ostream & error_output);
 	
 private:
 	std::vector <TEXTURE_INTERFACE*> source_textures;
@@ -76,7 +76,7 @@ public:
 	void SetDefaultShader(SHADER_GLSL & newdefault) {assert(newdefault.GetLoaded());shadermap.clear();shadermap.resize(SHADER_NONE, &newdefault);}
 	void SetShader(SHADER_TYPE stype, SHADER_GLSL & newshader) {assert((unsigned int)stype < shadermap.size());shadermap[stype]=&newshader;}
 	void SetClear(bool newclearcolor, bool newcleardepth) {clearcolor = newclearcolor;cleardepth = newcleardepth;}
-	virtual void Render(GLSTATEMANAGER & glstate);
+	virtual void Render(GLSTATEMANAGER & glstate, std::ostream & error_output);
 	void SetReflection ( TEXTURE_INTERFACE * value ) {if (!value) reflection.clear(); else reflection = value;}
 	void SetFSAA ( unsigned int value ) {fsaa = value;}
 	void SetAmbient ( TEXTURE_INTERFACE & value ) {ambient = value;}

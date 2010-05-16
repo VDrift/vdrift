@@ -41,13 +41,17 @@ using std::vector;
 
 #include <algorithm>
 
-void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate)
+void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & error_output)
 {
 	assert(shader);
+	
+	OPENGL_UTILITY::CheckForOpenGLErrors("postprocess begin", error_output);
 	
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	
 	shader->Enable();
+	
+	OPENGL_UTILITY::CheckForOpenGLErrors("postprocess shader enable", error_output);
 	
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
@@ -67,10 +71,17 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE_ARB, GL_NONE);
 	glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_LUMINANCE);
 	
+	OPENGL_UTILITY::CheckForOpenGLErrors("postprocess flag set", error_output);
+	
 	for (unsigned int i = 0; i < source_textures.size(); i++)
 	{
-		glstate.BindTexture2D(i, source_textures[i]);
+		//std::cout << i << ": " << source_textures[i] << std::endl;
+		glActiveTextureARB(GL_TEXTURE0+i);
+		if (source_textures[i])
+			source_textures[i]->Activate();
 	}
+	
+	OPENGL_UTILITY::CheckForOpenGLErrors("postprocess texture set", error_output);
 
 	glBegin(GL_QUADS);
 	glTexCoord2f(0.0f, 0.0f); glVertex3f( 0.0f,  0.0f,  0.0f);
@@ -78,6 +89,8 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate)
 	glTexCoord2f(1.0, 1.0); glVertex3f( 1.0f,  1.0f,  0.0f);
 	glTexCoord2f(0.0f, 1.0); glVertex3f( 0.0f,  1.0f,  0.0f);
 	glEnd();
+	
+	OPENGL_UTILITY::CheckForOpenGLErrors("postprocess draw", error_output);
 
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
@@ -86,6 +99,8 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate)
 
 	glstate.Enable(GL_DEPTH_TEST);
 	glstate.Disable(GL_TEXTURE_2D);
+	
+	OPENGL_UTILITY::CheckForOpenGLErrors("postprocess end", error_output);
 }
 
 void RENDER_INPUT_SCENE::SetActiveShader(const SHADER_TYPE & newshader)
@@ -104,7 +119,7 @@ void RENDER_INPUT_SCENE::SetActiveShader(const SHADER_TYPE & newshader)
 	activeshader = newshader;
 }
 
-void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate)
+void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_output)
 {
 	glMatrixMode( GL_PROJECTION );
 	glLoadIdentity();
