@@ -26,8 +26,10 @@ class SCENENODE;
 class GRAPHICS_SDLGL
 {
 private:
+	// avoids sending excessive state changes to OpenGL
 	GLSTATEMANAGER glstate;
 	
+	// configuration variables, internal data
 	int w, h;
 	SDL_Surface * surface;
 	bool initialized;
@@ -37,39 +39,42 @@ private:
 	int shadow_distance;
 	int shadow_quality;
 	float closeshadow;
+	unsigned int fsaa;
+	int lighting; ///<lighting quality; see data/settings/options.config for definition of values
+	bool bloom;
+	float contrast;
+	bool aticard;
 	enum {REFLECTION_DISABLED, REFLECTION_STATIC, REFLECTION_DYNAMIC} reflection_status;
 	TEXTURE static_reflection;
 	TEXTURE static_ambient;
 	
+	// shaders
 	std::map <std::string, SHADER_GLSL> shadermap;
 	std::map <std::string, SHADER_GLSL>::iterator activeshader;
 	
+	// scenegraph output
 	DRAWABLE_CONTAINER <PTRVECTOR> dynamic_drawlist; //used for objects that move or change
 	STATICDRAWABLES static_drawlist; //used for objects that will never change
 	
-	//render pipeline info
+	// render pipeline data
 	RENDER_INPUT_SCENE renderscene;
 	//RENDER_OUTPUT scene_depthtexture;
 	std::list <RENDER_OUTPUT> shadow_depthtexturelist;
-	RENDER_OUTPUT final;
+	std::map <std::string, RENDER_OUTPUT> render_outputs;
+	/*RENDER_OUTPUT final;
 	RENDER_OUTPUT edgecontrastenhancement_depths;
 	RENDER_OUTPUT full_scene_buffer;
 	RENDER_OUTPUT bloom_buffer;
 	RENDER_OUTPUT blur_buffer;
-	RENDER_OUTPUT dynamic_reflection;
+	RENDER_OUTPUT dynamic_reflection;*/
 	
+	// camera data
 	float camfov;
 	float view_distance;
 	MATHVECTOR <float, 3> campos;
 	QUATERNION <float> camorient;
 	QUATERNION <float> lightdirection;
 	MATHVECTOR <float, 3> dynamic_reflection_sample_position;
-	
-	unsigned int fsaa;
-	int lighting; ///<lighting quality; see data/settings/options.config for definition of values
-	bool bloom;
-	float contrast;
-	bool aticard;
 	
 	void ChangeDisplay(const int width, const int height, const int bpp, const int dbpp, const bool fullscreen, 
 			   unsigned int antialiasing, std::ostream & info_output, std::ostream & error_output);
@@ -95,8 +100,9 @@ private:
 	void Render(RENDER_INPUT * input, RENDER_OUTPUT & output, std::ostream & error_output);
 public:
 	GRAPHICS_SDLGL() : surface(NULL),initialized(false),using_shaders(false),max_anisotropy(0),shadows(false),
-		       	closeshadow(5.0), reflection_status(REFLECTION_DISABLED),camfov(45),
-			view_distance(10000),fsaa(1),lighting(0),bloom(false),contrast(1.0), aticard(false)
+		       	closeshadow(5.0), fsaa(1),lighting(0),bloom(false),contrast(1.0), aticard(false), 
+		       	reflection_status(REFLECTION_DISABLED),camfov(45),
+		       	view_distance(10000)
 			{activeshader = shadermap.end();}
 	~GRAPHICS_SDLGL() {}
 	

@@ -46,6 +46,7 @@ src = Split("""aabb.cpp
 		game.cpp
 		game_render.cpp
 		graphics.cpp
+		graphics_config.cpp
 		graphics_renderers.cpp
 		gui.cpp
 		guipage.cpp

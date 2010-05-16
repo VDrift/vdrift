@@ -37,6 +37,7 @@ public:
 	bool UploadActiveShaderParameter1i(const std::string & param, int val);
 	bool UploadActiveShaderParameter1f(const std::string & param, float val);
 	bool UploadActiveShaderParameter3f(const std::string & param, float val1, float val2, float val3);
+	bool GetLoaded() const {return loaded;}
 };
 
 #endif

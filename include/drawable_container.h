@@ -2,6 +2,7 @@
 #define _DRAWABLE_CONTAINER_H
 
 #include "drawable.h"
+#include "reseatable_reference.h"
 
 // drawable container helper functions
 namespace DRAWABLE_CONTAINER_HELPER
@@ -104,7 +105,7 @@ struct DRAWABLE_CONTAINER
 	CONTAINER <DRAWABLE> particle;
 	CONTAINER <DRAWABLE> nocamtrans_blend;
 	CONTAINER <DRAWABLE> nocamtrans_noblend;
-	// don't forget to add new members to the ForEach function and the AppendTo function
+	// don't forget to add new members to the ForEach, AppendTo, and GetByName functions
 	
 	template <typename T> 
 	void ForEach(T func)
@@ -145,6 +146,14 @@ struct DRAWABLE_CONTAINER
 			(nocamtrans_blend, dest.nocamtrans_blend, transform);
 		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,CONTAINERU<DRAWABLE>,use_transform>
 			(nocamtrans_noblend, dest.nocamtrans_noblend, transform);
+	}
+	
+	/// this is slow, don't do it often
+	reseatable_reference <CONTAINER <DRAWABLE> > GetByName(const std::string & name)
+	{
+		reseatable_reference <CONTAINER <DRAWABLE> > ref;
+		if (name == "twodim") ref = twodim;
+		return ref;
 	}
 	
 	/// apply this functor to all drawables

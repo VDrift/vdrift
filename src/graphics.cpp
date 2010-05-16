@@ -19,6 +19,7 @@
 #include "reseatable_reference.h"
 #include "definitions.h"
 #include "containeralgorithm.h"
+#include "graphics_config.h"
 
 #include <cassert>
 
@@ -305,7 +306,7 @@ void GRAPHICS_SDLGL::BeginScene(std::ostream & error_output)
 	OPENGL_UTILITY::CheckForOpenGLErrors("BeginScene", error_output);
 }
 
-///note that if variant is passed in, it is appended to the shader name and the shader is also loaded with the variant_defines set
+///note that if variant is passed in, it is used as the shader name and the shader is also loaded with the variant_defines set
 ///this allows loading multiple shaders from the same shader file, just with different defines set
 ///variant_defines is a space delimited list of defines
 bool GRAPHICS_SDLGL::LoadShader(const std::string & shaderpath, const std::string & name, std::ostream & info_output, std::ostream & error_output, std::string variant, std::string variant_defines)
@@ -356,7 +357,7 @@ bool GRAPHICS_SDLGL::LoadShader(const std::string & shaderpath, const std::strin
 	std::string shadername = name;
 	if (!variant.empty())
 	{
-		shadername = name + variant;
+		shadername = variant;
 		if (!variant_defines.empty())
 		{
 			stringstream s(variant_defines);
@@ -378,7 +379,12 @@ bool GRAPHICS_SDLGL::LoadShader(const std::string & shaderpath, const std::strin
 		success = i->second.Load(shaderpath+"/"+name+"/vertex.glsl", shaderpath+"/"+name+"/fragment.glsl",
 					 defines, info_output, error_output);
 		if (success)
-			info_output << "Loaded shader package "+name << endl;
+		{
+			info_output << "Loaded shader package "+name;
+			if (!variant.empty() && variant != name)
+				info_output << ", variant " << variant;
+			info_output << endl;
+		}
 	}
 
 	return success;
@@ -395,28 +401,70 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 		glGetIntegerv( GL_MAX_TEXTURE_UNITS_ARB,&tufull );
 		info_output << "Texture units: " << tufull << " full, " << tu << " partial" << std::endl;
 	}
+	
+	GRAPHICS_CONFIG config;
+	std::string renderconfigfile = shaderpath+"/render.conf";
+	if (!config.Load(renderconfigfile, error_output))
+	{
+		error_output << "Error loading render configuration file: " << renderconfigfile << std::endl;
+		shader_load_success = false;
+	}
 
-	shader_load_success = shader_load_success && LoadShader(shaderpath, "simple", info_output, error_output);
-	shader_load_success = shader_load_success && LoadShader(shaderpath, "simplecube", info_output, error_output);
-	shader_load_success = shader_load_success && LoadShader(shaderpath, "skybox", info_output, error_output);
-	//shader_load_success = shader_load_success && LoadShader(shaderpath, "full", info_output, error_output, "_noblend", "_ALPHATEST_");
-	shader_load_success = shader_load_success && LoadShader(shaderpath, "full", info_output, error_output, "_noblend", "_ALPHATEST_");
-	shader_load_success = shader_load_success && LoadShader(shaderpath, "full", info_output, error_output);
-	shader_load_success = shader_load_success && LoadShader(shaderpath, "depthgen", info_output, error_output);
-	shader_load_success = shader_load_success && LoadShader(shaderpath, "depthgen2", info_output, error_output);
-	shader_load_success = shader_load_success && LoadShader(shaderpath, "depthonly", info_output, error_output);
-	shader_load_success = shader_load_success && LoadShader(shaderpath, "distancefield", info_output, error_output);
-	shader_load_success = shader_load_success && LoadShader(shaderpath, "bloompass", info_output, error_output);
-	shader_load_success = shader_load_success && LoadShader(shaderpath, "bloomcomposite", info_output, error_output);
-	shader_load_success = shader_load_success && LoadShader(shaderpath, "gaussian_blur", info_output, error_output, "_horizontal", "_HORIZONTAL_");
-	shader_load_success = shader_load_success && LoadShader(shaderpath, "gaussian_blur", info_output, error_output, "_vertical", "_VERTICAL_");
-
+	for (std::vector <GRAPHICS_CONFIG_SHADER>::const_iterator s = config.shaders.begin(); s != config.shaders.end(); s++)
+	{
+		shader_load_success = shader_load_success && LoadShader(shaderpath, s->folder, info_output, error_output, s->name, s->defines);
+	}
+	
 	if (shader_load_success)
 	{
 		using_shaders = true;
 		info_output << "Successfully enabled shaders" << endl;
+		
+		for (std::map <std::string, RENDER_OUTPUT>::iterator i = render_outputs.begin(); i != render_outputs.end(); i++)
+		{
+			i->second.RenderToFBO().DeInit();
+		}
+		render_outputs.clear();
+		
+		bool edge_contrast_enhancement = (lighting == 1);
+		bool reflection_dynamic = (reflection_status == REFLECTION_DYNAMIC);
+		
+		std::set <std::string> conditions;
+		#define ADDCONDITION(x) if (x) conditions.insert(#x)
+		ADDCONDITION(bloom);
+		ADDCONDITION(edge_contrast_enhancement);
+		ADDCONDITION(reflection_dynamic);
+		#undef ADDCONDITION
+		
+		for (std::vector <GRAPHICS_CONFIG_OUTPUT>::const_iterator i = config.outputs.begin(); i != config.outputs.end(); i++)
+		{
+			if (i->conditions.Satisfied(conditions))
+			{
+				FBTEXTURE & fbtex = render_outputs[i->name].RenderToFBO();
+				FBTEXTURE::TARGET type = FBTEXTURE::NORMAL;
+				if (i->type == "rectangle")
+					type = FBTEXTURE::RECTANGLE;
+				else if (i->type == "cube")
+					type = FBTEXTURE::CUBEMAP;
+				int fbms = 0;
+				if (i->multisample < 0)
+					fbms = fsaa;
+				
+				fbtex.Init(i->width.GetSize(w),
+						   i->height.GetSize(h),
+						   type,
+						   (i->format == "depth"),
+						   (i->filter == "nearest"),
+						   (i->format == "RGBA"),
+						   i->mipmap,
+						   error_output,
+						   fbms);
+						   
+				info_output << "Initialized FBO: " << i->name << std::endl;
+			}
+		}
 
-		//set up the rendering pipeline
+		/*//set up the rendering pipeline
 		shadow_depthtexturelist.clear();
 		if (shadows)
 		{
@@ -473,7 +521,9 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 			reflection_cubemap.Init(reflection_size, reflection_size, FBTEXTURE::CUBEMAP, false, false, false, false, error_output);
 		}
 
-		final.RenderToFramebuffer();
+		final.RenderToFramebuffer();*/
+		
+		render_outputs["framebuffer"].RenderToFramebuffer();
 	}
 	else
 	{
@@ -643,6 +693,8 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 		{
 			renderscene.SetDefaultShader(shadermap["depthonly"]);
 			
+			RENDER_OUTPUT & edgecontrastenhancement_depths = render_outputs["edgecontrastenhancement_depths"];
+			
 			renderscene.SetCameraInfo(campos, camorient, camfov, 10000.0, w, h); //use very high draw distance for skyboxes
 			renderscene.SetClear(false, true);
 			RenderDrawlists(dynamic_drawlist.skybox_noblend, normalcam_static_drawlist.skybox_noblend, renderscene, edgecontrastenhancement_depths, error_output);
@@ -665,6 +717,7 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 		{
 			OPENGL_UTILITY::CheckForOpenGLErrors("reflection map generation: begin", error_output);
 			
+			RENDER_OUTPUT & dynamic_reflection = render_outputs["dynamic_reflection"];
 			FBTEXTURE & reflection_fbo = dynamic_reflection.RenderToFBO();
 			
 			const float pi = 3.141593;
@@ -750,9 +803,9 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 		renderscene.SetCameraInfo(campos, camorient, camfov, 10000.0, w, h); //use very high draw distance for skyboxes
 
 		//determine render output for the full scene
-		reseatable_reference <RENDER_OUTPUT> scenebuffer = final;
+		reseatable_reference <RENDER_OUTPUT> scenebuffer = render_outputs["framebuffer"];
 		if (bloom)
-			scenebuffer = full_scene_buffer;
+			scenebuffer = render_outputs["full_scene_buffer"];
 
 		renderscene.SetClear(true, true);
 		renderscene.SetDefaultShader(shadermap["skybox"]);
@@ -794,6 +847,10 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 		
 		if (bloom) //do bloom post-processing
 		{
+			RENDER_OUTPUT & full_scene_buffer = render_outputs["full_scene_buffer"];
+			RENDER_OUTPUT & bloom_buffer = render_outputs["bloom_buffer"];
+			RENDER_OUTPUT & blur_buffer = render_outputs["blur_buffer"];
+			
 			//create a map of highlights
 			RenderPostProcess("bloompass", full_scene_buffer.RenderToFBO(), bloom_buffer, error_output);
 
@@ -808,8 +865,10 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 			glEnable(GL_TEXTURE_2D);
 			bloom_buffer.RenderToFBO().Activate();
 			glActiveTexture(GL_TEXTURE0);
-			RenderPostProcess("bloomcomposite", full_scene_buffer.RenderToFBO(), final, error_output);
+			RenderPostProcess("bloomcomposite", full_scene_buffer.RenderToFBO(), render_outputs["framebuffer"], error_output);
 		}
+		
+		RENDER_OUTPUT & final = render_outputs["framebuffer"];
 
 		//debug shadow texture drawing
 		#ifdef _SHADOWMAP_DEBUG_

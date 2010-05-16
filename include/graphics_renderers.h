@@ -73,7 +73,7 @@ public:
 	FRUSTUM SetCameraInfo(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newrot, float newfov, float newlodfar, float neww, float newh);
 	void SetSunDirection(const MATHVECTOR <float, 3> & newsun) {lightposition = newsun;}
 	void SetFlags(bool newshaders) {shaders=newshaders;}
-	void SetDefaultShader(SHADER_GLSL & newdefault) {shadermap.clear();shadermap.resize(SHADER_NONE, &newdefault);}
+	void SetDefaultShader(SHADER_GLSL & newdefault) {assert(newdefault.GetLoaded());shadermap.clear();shadermap.resize(SHADER_NONE, &newdefault);}
 	void SetShader(SHADER_TYPE stype, SHADER_GLSL & newshader) {assert((unsigned int)stype < shadermap.size());shadermap[stype]=&newshader;}
 	void SetClear(bool newclearcolor, bool newcleardepth) {clearcolor = newclearcolor;cleardepth = newcleardepth;}
 	virtual void Render(GLSTATEMANAGER & glstate);
