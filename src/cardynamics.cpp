@@ -640,6 +640,7 @@ bool CARDYNAMICS::Load(CONFIGFILE & c, std::ostream & error_output)
 	return true;
 }
 
+// calculate bounding box from chassis, wheel meshes
 void CARDYNAMICS::GetCollisionBox(
 	const MODEL & chassisModel,
 	const MODEL & wheelModelFront,
@@ -671,6 +672,48 @@ void CARDYNAMICS::GetCollisionBox(
 
 	center = ToBulletVector(box.GetCenter() + offset * 0.5 - center_of_mass);
 	size = ToBulletVector(box.GetSize() - offset);
+}
+
+// create collision shape from bounding box
+btCollisionShape * CreateCollisionShape(const btVector3 & center, const btVector3 & size)
+{
+/*	// use two capsules to approximate collision box
+	assert(size[0] > size[1] && size[1] > size[2]);
+	btScalar radius = size[2] * 0.5;
+	btScalar height = size[0] - size[2];
+	btVector3 sideOffset(0, size[1] * 0.5 - size[2] * 0.5, 0);
+	btCollisionShape * hull0 = new btCapsuleShapeX(radius, height);
+	btCollisionShape * hull1 = new btCapsuleShapeX(radius, height);
+	btVector3 origin0 = center + sideOffset;
+	btVector3 origin1 = center - sideOffset;
+	
+	btCompoundShape * shape = new btCompoundShape(false);
+	btTransform localtransform;
+	localtransform.setIdentity();
+	localtransform.setOrigin(origin0);
+	shape->addChildShape(localtransform, hull0);
+	localtransform.setOrigin(origin1);
+	shape->addChildShape(localtransform, hull1);*/
+	
+	// use btMultiSphereShape(4 spheres) to approximate bounding box
+	btVector3 hsize = 0.5 * size;
+	int min = hsize.minAxis();
+	int max = hsize.maxAxis();
+	btVector3 maxAxis(0, 0, 0);
+	maxAxis[max] = 1;
+	int numSpheres = 4;
+	btScalar radius = hsize[min];
+	btScalar radii[4] = {radius, radius, radius, radius};
+	btVector3 positions[4];
+	btVector3 offset0 = hsize - btVector3(radius, radius, radius);
+	btVector3 offset1 = offset0 - 2 * offset0[max] * maxAxis;
+	positions[0] = center + offset0;
+	positions[1] = center + offset1;
+	positions[2] = center - offset0;
+	positions[3] = center - offset1;
+	btMultiSphereShape * shape = new btMultiSphereShape(positions, radii, numSpheres);
+	
+	return shape;
 }
 
 void CARDYNAMICS::Init(
@@ -705,32 +748,16 @@ void CARDYNAMICS::Init(
 	
 	btVector3 origin, size;
 	GetCollisionBox(chassisModel, wheelModelFront, wheelModelRear, origin, size);
-
-	// use two capsules to approximate collision box
-	// assume x(length) > y(width) > z(height), fixme
-	assert(size[0] > size[1] && size[1] > size[2]);
-	btScalar radius = size[2] * 0.5;
-	btScalar height = size[0] - size[2];
-	btVector3 sideOffset(0, size[1] * 0.5 - size[2] * 0.5, 0);
-	btCollisionShape * hull0 = new btCapsuleShapeX(radius, height);
-	btCollisionShape * hull1 = new btCapsuleShapeX(radius, height);
-	btVector3 origin0 = origin + sideOffset;
-	btVector3 origin1 = origin - sideOffset;
-
-	btTransform localtransform;
-	localtransform.setIdentity();
-	localtransform.setOrigin(origin0);
-	btCompoundShape * chassisShape = new btCompoundShape(false);
-	chassisShape->addChildShape(localtransform, hull0);
-	localtransform.setOrigin(origin1);
-	chassisShape->addChildShape(localtransform, hull1);
+	
+	btCollisionShape * chassisShape = NULL;
+	chassisShape = CreateCollisionShape(origin, size);
 	
 	// create rigid body
 	btRigidBody::btRigidBodyConstructionInfo info(chassisMass, chassisState, chassisShape, chassisInertia);
 	info.m_angularDamping = 0.5;
 	info.m_friction = 0.5;
 	chassis = world.AddRigidBody(info);
-	chassis->setContactProcessingThreshold(0); // internal edge workaround(capsule shape required)
+	chassis->setContactProcessingThreshold(0); // internal edge workaround(swept sphere shape required)
 	world.AddAction(this);
 
 #ifdef _BULLET_
@@ -1199,6 +1226,7 @@ void CARDYNAMICS::DebugPrint ( std::ostream & out, bool p1, bool p2, bool p3, bo
 	{
 		out.precision ( 2 );
 		out << "---Body---" << std::endl;
+		out << "Position: " << chassisPosition << std::endl;
 		out << "Center of mass: " << center_of_mass << std::endl;
 		out.precision ( 6 );
 		out << "Total mass: " << body.GetMass() << std::endl;
