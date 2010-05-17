@@ -1,13 +1,13 @@
 #ifndef _OBJECTMANAGER_H
 #define _OBJECTMANAGER_H
 
+#include <map>
 #include <string>
 #include <iostream>
 #include <tr1/memory>
-#include <tr1/unordered_map>
 
 /// object T has to have a constructor taking Tinfo and std::ostream & error as parameter
-template < class Tinfo, class T, class Hash = std::tr1::hash<Tinfo>, class Pred = std::equal_to<Tinfo> >
+template < class Tinfo, class T, class Pred = std::less<Tinfo> >
 class OBJECTMANAGER
 {
 public:
@@ -59,8 +59,8 @@ public:
 	}
 	
 protected:
-	typedef typename std::tr1::unordered_map<Tinfo, std::tr1::shared_ptr<T> >::iterator iterator;
-	std::tr1::unordered_map<Tinfo, std::tr1::shared_ptr<T>, Hash, Pred> objectmap;
+	typedef typename std::map<Tinfo, std::tr1::shared_ptr<T> >::iterator iterator;
+	std::map<Tinfo, std::tr1::shared_ptr<T>, Pred> objectmap;
 	std::ostream & error;
 	unsigned int created, reused, deleted;
 };

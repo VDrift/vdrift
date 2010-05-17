@@ -4,31 +4,21 @@
 #include "texture.h"
 #include "objectmanager.h"
 
-struct TextureInfoHash
-{
-	std::size_t operator() (const TEXTUREINFO & info) const
-	{
-		std::tr1::hash<std::string> hashString;
-		return hashString(info.GetName());
-	}
-};
-
-struct TextureInfoEqual
+struct TextureInfoLess
 {
 	bool operator()(const TEXTUREINFO & x, const TEXTUREINFO & y) const
 	{
-		return x.GetName() == y.GetName();
+		return x.GetName() < y.GetName();
 	}
 };
 
 typedef std::tr1::shared_ptr <TEXTURE> TEXTUREPTR;
 
-//typedef OBJECTMANAGER<TEXTUREINFO, TEXTURE, TextureInfoHash, TextureInfoEqual> TEXTUREMANAGER;
-class TEXTUREMANAGER : public OBJECTMANAGER <TEXTUREINFO, TEXTURE, TextureInfoHash, TextureInfoEqual>
+class TEXTUREMANAGER : public OBJECTMANAGER <TEXTUREINFO, TEXTURE, TextureInfoLess>
 {
 public:
 	TEXTUREMANAGER(std::ostream & error)
-	: OBJECTMANAGER <TEXTUREINFO, TEXTURE, TextureInfoHash, TextureInfoEqual> (error)
+	: OBJECTMANAGER <TEXTUREINFO, TEXTURE, TextureInfoLess> (error)
 	{
 	}
 	
@@ -44,7 +34,7 @@ public:
 			out << " Texture: " << it->first.GetName()  << std::endl;
 		}
 		out << "References count: " << refcount << std::endl;
-		OBJECTMANAGER<TEXTUREINFO, TEXTURE, TextureInfoHash, TextureInfoEqual>::DebugPrint(out);
+		OBJECTMANAGER<TEXTUREINFO, TEXTURE, TextureInfoLess>::DebugPrint(out);
 		out << "Texture manager debug print end." << std::endl;
 	}
 };
