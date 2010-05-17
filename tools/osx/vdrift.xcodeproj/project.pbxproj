@@ -279,7 +279,6 @@
 		B9E9802A11A06A0300648DA7 /* graphics.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B9E97FDB11A06A0300648DA7 /* graphics.cpp */; };
 		B9E9802B11A06A0300648DA7 /* gui.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B9E97FDC11A06A0300648DA7 /* gui.cpp */; };
 		B9E9802C11A06A0300648DA7 /* guipage.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B9E97FDD11A06A0300648DA7 /* guipage.cpp */; };
-		B9E9802D11A06A0300648DA7 /* httpget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B9E97FDE11A06A0300648DA7 /* httpget.cpp */; };
 		B9E9802E11A06A0300648DA7 /* hud.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B9E97FDF11A06A0300648DA7 /* hud.cpp */; };
 		B9E9802F11A06A0300648DA7 /* joepack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B9E97FE011A06A0300648DA7 /* joepack.cpp */; };
 		B9E9803011A06A0300648DA7 /* joeserialize.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B9E97FE111A06A0300648DA7 /* joeserialize.cpp */; };
@@ -381,7 +380,6 @@
 		B9E9811411A06A2C00648DA7 /* gui.h in Headers */ = {isa = PBXBuildFile; fileRef = B9E9809011A06A2B00648DA7 /* gui.h */; };
 		B9E9811511A06A2C00648DA7 /* guioption.h in Headers */ = {isa = PBXBuildFile; fileRef = B9E9809111A06A2B00648DA7 /* guioption.h */; };
 		B9E9811611A06A2C00648DA7 /* guipage.h in Headers */ = {isa = PBXBuildFile; fileRef = B9E9809211A06A2B00648DA7 /* guipage.h */; };
-		B9E9811711A06A2C00648DA7 /* httpget.h in Headers */ = {isa = PBXBuildFile; fileRef = B9E9809311A06A2B00648DA7 /* httpget.h */; };
 		B9E9811811A06A2C00648DA7 /* hud.h in Headers */ = {isa = PBXBuildFile; fileRef = B9E9809411A06A2B00648DA7 /* hud.h */; };
 		B9E9811911A06A2C00648DA7 /* inputgraph.h in Headers */ = {isa = PBXBuildFile; fileRef = B9E9809511A06A2B00648DA7 /* inputgraph.h */; };
 		B9E9811A11A06A2C00648DA7 /* joepack.h in Headers */ = {isa = PBXBuildFile; fileRef = B9E9809611A06A2B00648DA7 /* joepack.h */; };
@@ -755,7 +753,6 @@
 		B9E97FDB11A06A0300648DA7 /* graphics.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = graphics.cpp; sourceTree = "<group>"; };
 		B9E97FDC11A06A0300648DA7 /* gui.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gui.cpp; sourceTree = "<group>"; };
 		B9E97FDD11A06A0300648DA7 /* guipage.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = guipage.cpp; sourceTree = "<group>"; };
-		B9E97FDE11A06A0300648DA7 /* httpget.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = httpget.cpp; sourceTree = "<group>"; };
 		B9E97FDF11A06A0300648DA7 /* hud.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = hud.cpp; sourceTree = "<group>"; };
 		B9E97FE011A06A0300648DA7 /* joepack.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = joepack.cpp; sourceTree = "<group>"; };
 		B9E97FE111A06A0300648DA7 /* joeserialize.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = joeserialize.cpp; sourceTree = "<group>"; };
@@ -857,7 +854,6 @@
 		B9E9809011A06A2B00648DA7 /* gui.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = gui.h; sourceTree = "<group>"; };
 		B9E9809111A06A2B00648DA7 /* guioption.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = guioption.h; sourceTree = "<group>"; };
 		B9E9809211A06A2B00648DA7 /* guipage.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = guipage.h; sourceTree = "<group>"; };
-		B9E9809311A06A2B00648DA7 /* httpget.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = httpget.h; sourceTree = "<group>"; };
 		B9E9809411A06A2B00648DA7 /* hud.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = hud.h; sourceTree = "<group>"; };
 		B9E9809511A06A2B00648DA7 /* inputgraph.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = inputgraph.h; sourceTree = "<group>"; };
 		B9E9809611A06A2B00648DA7 /* joepack.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = joepack.h; sourceTree = "<group>"; };
@@ -1069,7 +1065,6 @@
 				B9E97FDB11A06A0300648DA7 /* graphics.cpp */,
 				B9E97FDC11A06A0300648DA7 /* gui.cpp */,
 				B9E97FDD11A06A0300648DA7 /* guipage.cpp */,
-				B9E97FDE11A06A0300648DA7 /* httpget.cpp */,
 				B9E97FDF11A06A0300648DA7 /* hud.cpp */,
 				B9E97FE011A06A0300648DA7 /* joepack.cpp */,
 				B9E97FE111A06A0300648DA7 /* joeserialize.cpp */,
@@ -1180,7 +1175,6 @@
 				B9E9809011A06A2B00648DA7 /* gui.h */,
 				B9E9809111A06A2B00648DA7 /* guioption.h */,
 				B9E9809211A06A2B00648DA7 /* guipage.h */,
-				B9E9809311A06A2B00648DA7 /* httpget.h */,
 				B9E9809411A06A2B00648DA7 /* hud.h */,
 				B9E9809511A06A2B00648DA7 /* inputgraph.h */,
 				B9E9809611A06A2B00648DA7 /* joepack.h */,
@@ -1750,7 +1744,6 @@
 				B9E9811411A06A2C00648DA7 /* gui.h in Headers */,
 				B9E9811511A06A2C00648DA7 /* guioption.h in Headers */,
 				B9E9811611A06A2C00648DA7 /* guipage.h in Headers */,
-				B9E9811711A06A2C00648DA7 /* httpget.h in Headers */,
 				B9E9811811A06A2C00648DA7 /* hud.h in Headers */,
 				B9E9811911A06A2C00648DA7 /* inputgraph.h in Headers */,
 				B9E9811A11A06A2C00648DA7 /* joepack.h in Headers */,
@@ -2041,7 +2034,6 @@
 				B9E9802A11A06A0300648DA7 /* graphics.cpp in Sources */,
 				B9E9802B11A06A0300648DA7 /* gui.cpp in Sources */,
 				B9E9802C11A06A0300648DA7 /* guipage.cpp in Sources */,
-				B9E9802D11A06A0300648DA7 /* httpget.cpp in Sources */,
 				B9E9802E11A06A0300648DA7 /* hud.cpp in Sources */,
 				B9E9802F11A06A0300648DA7 /* joepack.cpp in Sources */,
 				B9E9803011A06A0300648DA7 /* joeserialize.cpp in Sources */,
