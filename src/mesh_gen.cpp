@@ -41,7 +41,7 @@ void mesh_gen_tire(VERTEXARRAY *tire, float sectionWidth_mm, float aspectRatio, 
 	float treadRadius = 1.00f;
 	float treadWidth = 0.60f;
 
-	float vertexNormalLength = 0.025f;
+	float vertexNormalLength = 1.0f;
 
 
 
