@@ -3,6 +3,7 @@
 #include <cmath>
 
 #include "vertexarray.h"
+#include "mathvector.h"
 
 static double sinD(double degrees)
 {
@@ -16,6 +17,10 @@ static double cosD(double degrees)
 
 namespace MESHGEN
 {
+
+
+
+
 
 
 
@@ -35,6 +40,8 @@ void mesh_gen_tire(VERTEXARRAY *tire, float sectionWidth_mm, float aspectRatio, 
 
 	float treadRadius = 1.00f;
 	float treadWidth = 0.60f;
+
+	float vertexNormalLength = 0.025f;
 
 
 
@@ -222,7 +229,7 @@ void mesh_gen_tire(VERTEXARRAY *tire, float sectionWidth_mm, float aspectRatio, 
 
 	unsigned int triIndex = 0;
 	unsigned int circleSegment = 0;
-	
+
 	unsigned int *triVIndex0;
 	unsigned int *triVIndex1;
 	unsigned int *triVIndex2;
@@ -340,7 +347,7 @@ void mesh_gen_tire(VERTEXARRAY *tire, float sectionWidth_mm, float aspectRatio, 
 		*triVIndex2 = circleSegment+vertexesAround*6 +1;
 
 		triIndex +=14;
-	} 
+	}
 
 
 	///////////////////////////////////////////////////////////
@@ -363,7 +370,7 @@ void mesh_gen_tire(VERTEXARRAY *tire, float sectionWidth_mm, float aspectRatio, 
 	for ( unsigned int uvl=0 ; uvl< vertexCount ; uvl++ )
 	{
 		// U coord
-	
+
 		float *u = &texData[ uvl * 2 ];
 		*u = uvl % vertexesAround;
 		*u = *u / segmentsAround;
@@ -373,7 +380,7 @@ void mesh_gen_tire(VERTEXARRAY *tire, float sectionWidth_mm, float aspectRatio, 
 
 		// *v = floor ( uvl * + 1 / vertexesAround );
 		// *v = *v / (vertexRings-1);
-		
+
 		if ( uvl < vertexesAround*1 )
 			*v = 0.00f;
 		else if ( uvl < vertexesAround*2 )
@@ -411,65 +418,320 @@ void mesh_gen_tire(VERTEXARRAY *tire, float sectionWidth_mm, float aspectRatio, 
 
 
 
+
+
+
+
+
+
 	//////////////////////////////////////////////
-	// should build some normals
+	// build some vertex normals
 	float *normalData = new float[vertexFloatCount];
 
-	// refresher
-	// a cross b = 
-	//  x = a.y * b.z - a.z * b.y
-	//  y = a.z * b.x - a.x * b.z
-	//  z = a.x * b.y - a.y * b.x
+
+    MATHVECTOR <float, 3> tri1Edge;        // one of the edges of a triangle that goes around the tire's circle
+    MATHVECTOR <float, 3> tri2Edge;        // one of the edges of a triangle that goes around the tire's circle
+    MATHVECTOR <float, 3> triUpEdge;       // one of the edges that wraps around the tire's tread which both faces share, not used on the last vertex ring
+    MATHVECTOR <float, 3> triDownEdge;     // the other edges that wraps around the tire's tread which both faces share, not used on the first vertex ring
 
 	for (unsigned int nlv=0 ; nlv<vertexCount ; nlv++)
 	{
-		
-		// one way, not too bad, but not accurate
+
+		/*// one way, not too too bad, but not accurate
 		// this one is messed up
-		normalData[nlv*3 + 0] = 0.5f;
-
+		normalData[nlv*3 + 0] = vertexData[nlv*3 +0] * 0.15f;
 		// these other 2 are actually in the correct direction since its a cylinder
-		normalData[nlv*3 + 1] = vertexData[nlv*3+1];
-		normalData[nlv*3 + 2] = vertexData[nlv*3+2];
+		normalData[nlv*3 + 1] = vertexData[nlv*3 + 1] * 0.15f;
+		normalData[nlv*3 + 2] = vertexData[nlv*3 + 2] * 0.15f;
+		continue;*/
 
 
 
 
+        // this is gonna be grizzly
+        if ( nlv < vertexesAround*1 )       // first ring of vertexes
+		{
+            ///////////////////////////////////////////////////
+            // first ring of vertexes
+		    if ((nlv % vertexesAround) == 0 )           // first vertex
+		    {
+                tri1Edge.Set(
+                    vertexData[nlv*3   ] - vertexData[(nlv+1)*3   ],
+                    vertexData[nlv*3 +1] - vertexData[(nlv+1)*3 +1],
+                    vertexData[nlv*3 +2] - vertexData[(nlv+1)*3 +2]
+                    );
 
-		// gotta get them down to a consistent length if i'm going to be able to set the other one though
-		/*if ( nlv < vertexesAround*1 )
-		{
-			normalData[nlv*3 + 0] = ;
+                tri2Edge.Set(
+                    vertexData[nlv*3   ] - vertexData[(nlv+segmentsAround-1)*3   ],
+                    vertexData[nlv*3 +1] - vertexData[(nlv+segmentsAround-1)*3 +1],
+                    vertexData[nlv*3 +2] - vertexData[(nlv+segmentsAround-1)*3 +2]
+                    );
+
+                triUpEdge.Set(
+                    vertexData[nlv*3   ] - vertexData[(nlv+segmentsAround+1)*3   ],
+                    vertexData[nlv*3 +1] - vertexData[(nlv+segmentsAround+1)*3 +1],
+                    vertexData[nlv*3 +2] - vertexData[(nlv+segmentsAround+1)*3 +2]
+                    );
+		    }
+		    else if ((nlv % vertexesAround) == segmentsAround )          // first ring, last vertex
+		    {
+                tri1Edge.Set(
+                    vertexData[nlv*3   ] - vertexData[(nlv-segmentsAround+1)*3   ],
+                    vertexData[nlv*3 +1] - vertexData[(nlv-segmentsAround+1)*3 +1],
+                    vertexData[nlv*3 +2] - vertexData[(nlv-segmentsAround+1)*3 +2]
+                    );
+
+                tri2Edge.Set(
+                    vertexData[nlv*3   ] - vertexData[(nlv-1)*3   ],
+                    vertexData[nlv*3 +1] - vertexData[(nlv-1)*3 +1],
+                    vertexData[nlv*3 +2] - vertexData[(nlv-1)*3 +2]
+                    );
+
+                triUpEdge.Set(
+                    vertexData[nlv*3   ] - vertexData[(nlv+segmentsAround+1)*3   ],
+                    vertexData[nlv*3 +1] - vertexData[(nlv+segmentsAround+1)*3 +1],
+                    vertexData[nlv*3 +2] - vertexData[(nlv+segmentsAround+1)*3 +2]
+                    );
+		    }
+		    else                        // first ring, most vertexes
+		    {
+
+                tri1Edge.Set(
+                    vertexData[nlv*3   ] - vertexData[(nlv+1)*3   ],
+                    vertexData[nlv*3 +1] - vertexData[(nlv+1)*3 +1],
+                    vertexData[nlv*3 +2] - vertexData[(nlv+1)*3 +2]
+                    );
+
+                tri2Edge.Set(
+                    vertexData[nlv*3   ] - vertexData[(nlv-1)*3   ],
+                    vertexData[nlv*3 +1] - vertexData[(nlv-1)*3 +1],
+                    vertexData[nlv*3 +2] - vertexData[(nlv-1)*3 +2]
+                    );
+
+                triUpEdge.Set(
+                    vertexData[nlv*3   ] - vertexData[(nlv+segmentsAround+1)*3   ],
+                    vertexData[nlv*3 +1] - vertexData[(nlv+segmentsAround+1)*3 +1],
+                    vertexData[nlv*3 +2] - vertexData[(nlv+segmentsAround+1)*3 +2]
+                    );
+		    }
+
+
+		    MATHVECTOR <float, 3> faceNormal1 = triUpEdge.cross(tri1Edge);
+            MATHVECTOR <float, 3> faceNormal2 = tri2Edge.cross(triUpEdge);
+
+            MATHVECTOR <float, 3> vNormal = faceNormal1 + faceNormal2;
+            vNormal = vNormal.Normalize();
+            vNormal = vNormal * vertexNormalLength;
+
+            normalData[nlv*3 + 0] = vNormal[0];
+            normalData[nlv*3 + 1] = vNormal[1];
+            normalData[nlv*3 + 2] = vNormal[2];
+
 		}
-		else if ( nlv < vertexesAround*2 )
+
+
+		///////////////////////////////////////////////////
+		// last ring of vertexes
+		else if ( nlv >= vertexesAround*7 )
 		{
-			normalData[nlv*3 + 0] = ;
+
+		    if ((nlv % vertexesAround) == 0 )		    // last ring, first vertex
+		    {
+                tri1Edge.Set(
+                    vertexData[nlv*3   ] - vertexData[(nlv+1)*3   ],
+                    vertexData[nlv*3 +1] - vertexData[(nlv+1)*3 +1],
+                    vertexData[nlv*3 +2] - vertexData[(nlv+1)*3 +2]
+                    );
+
+                tri2Edge.Set(
+                    vertexData[nlv*3   ] - vertexData[(nlv+segmentsAround-1)*3   ],
+                    vertexData[nlv*3 +1] - vertexData[(nlv+segmentsAround-1)*3 +1],
+                    vertexData[nlv*3 +2] - vertexData[(nlv+segmentsAround-1)*3 +2]
+                    );
+
+                triUpEdge.Set(
+                    vertexData[nlv*3   ] - vertexData[(nlv-segmentsAround-1)*3   ],
+                    vertexData[nlv*3 +1] - vertexData[(nlv-segmentsAround-1)*3 +1],
+                    vertexData[nlv*3 +2] - vertexData[(nlv-segmentsAround-1)*3 +2]
+                    );
+		    }
+            else if ( nlv == vertexCount-1 )          // last ring, last vertex (last vertex in mesh)
+		    {
+                tri2Edge.Set(
+                    vertexData[nlv*3   ] - vertexData[(nlv-1)*3   ],
+                    vertexData[nlv*3 +1] - vertexData[(nlv-1)*3 +1],
+                    vertexData[nlv*3 +2] - vertexData[(nlv-1)*3 +2]
+                    );
+
+                tri1Edge.Set(
+                    vertexData[nlv*3   ] - vertexData[(nlv-segmentsAround+1)*3   ],
+                    vertexData[nlv*3 +1] - vertexData[(nlv-segmentsAround+1)*3 +1],
+                    vertexData[nlv*3 +2] - vertexData[(nlv-segmentsAround+1)*3 +2]
+                    );
+
+                triUpEdge.Set(
+                    vertexData[nlv*3   ] - vertexData[(nlv-segmentsAround-1)*3   ],
+                    vertexData[nlv*3 +1] - vertexData[(nlv-segmentsAround-1)*3 +1],
+                    vertexData[nlv*3 +2] - vertexData[(nlv-segmentsAround-1)*3 +2]
+                    );
+		    }
+		    else                                              // last ring, most vertexes
+		    {
+
+                tri2Edge.Set(
+                    vertexData[nlv*3   ] - vertexData[(nlv+1)*3   ],
+                    vertexData[nlv*3 +1] - vertexData[(nlv+1)*3 +1],
+                    vertexData[nlv*3 +2] - vertexData[(nlv+1)*3 +2]
+                    );
+
+                tri1Edge.Set(
+                    vertexData[nlv*3   ] - vertexData[(nlv-1)*3   ],
+                    vertexData[nlv*3 +1] - vertexData[(nlv-1)*3 +1],
+                    vertexData[nlv*3 +2] - vertexData[(nlv-1)*3 +2]
+                    );
+
+                triUpEdge.Set(
+                    vertexData[nlv*3   ] - vertexData[(nlv+segmentsAround+1)*3   ],
+                    vertexData[nlv*3 +1] - vertexData[(nlv+segmentsAround+1)*3 +1],
+                    vertexData[nlv*3 +2] - vertexData[(nlv+segmentsAround+1)*3 +2]
+                    );
+
+		    }
+
+
+
+
+            // all actual normal calculation takes place here
+            MATHVECTOR <float, 3> faceNormal1 = tri1Edge.cross(triUpEdge);
+            MATHVECTOR <float, 3> faceNormal2 = triUpEdge.cross(tri2Edge);
+
+            MATHVECTOR <float, 3> vNormal = faceNormal1 + faceNormal2;
+            vNormal = vNormal.Normalize();
+            vNormal = vNormal * vertexNormalLength;
+
+            normalData[nlv*3 + 0] = vNormal[0];
+            normalData[nlv*3 + 1] = vNormal[1];
+            normalData[nlv*3 + 2] = vNormal[2];
+
+
+
+
 		}
-		else if ( nlv < vertexesAround*3 )
-		{
-			normalData[nlv*3 + 0] = ;
-		}
-		else if ( nlv < vertexesAround*4 )
-		{
-			normalData[nlv*3 + 0] = ;
-		}
-		else if ( nlv < vertexesAround*5 )
-		{
-			normalData[nlv*3 + 0] = ;
-		}
-		else if ( nlv < vertexesAround*6 )
-		{
-			normalData[nlv*3 + 0] = ;
-		}
-		else if ( nlv < vertexesAround*7 )
-		{
-			normalData[nlv*3 + 0] = ;
-		}
+
+
+        ///////////////////////////////////////////////////
+        // this is for the majority of the rings
 		else
-		{								// if ( nlv < vertexesAround*8 )
-			normalData[nlv*3 + 0] = ;
-		}*/
-		
+		{
+            ///////////////////////////////////////////////////
+            // first vertex in ring
+		    if ((nlv % vertexesAround) == 0 )
+		    {
+                tri1Edge.Set(
+                    vertexData[nlv*3   ] - vertexData[(nlv+1)*3   ],
+                    vertexData[nlv*3 +1] - vertexData[(nlv+1)*3 +1],
+                    vertexData[nlv*3 +2] - vertexData[(nlv+1)*3 +2]
+                    );
+
+                tri2Edge.Set(
+                    vertexData[nlv*3   ] - vertexData[(nlv+segmentsAround-1)*3   ],
+                    vertexData[nlv*3 +1] - vertexData[(nlv+segmentsAround-1)*3 +1],
+                    vertexData[nlv*3 +2] - vertexData[(nlv+segmentsAround-1)*3 +2]
+                    );
+
+                triUpEdge.Set(
+                    vertexData[nlv*3   ] - vertexData[(nlv+segmentsAround+1)*3   ],
+                    vertexData[nlv*3 +1] - vertexData[(nlv+segmentsAround+1)*3 +1],
+                    vertexData[nlv*3 +2] - vertexData[(nlv+segmentsAround+1)*3 +2]
+                    );
+
+                triDownEdge.Set(
+                    vertexData[(nlv-segmentsAround-1)*3   ] - vertexData[nlv*3   ],
+                    vertexData[(nlv-segmentsAround-1)*3 +1] - vertexData[nlv*3 +1],
+                    vertexData[(nlv-segmentsAround-1)*3 +2] - vertexData[nlv*3 +2]
+                    );
+
+
+		    }
+		    else if ((nlv % vertexesAround ) == segmentsAround )          // last vertex in ring
+		    {
+                tri1Edge.Set(
+                    vertexData[nlv*3   ] - vertexData[(nlv-segmentsAround+1)*3   ],
+                    vertexData[nlv*3 +1] - vertexData[(nlv-segmentsAround+1)*3 +1],
+                    vertexData[nlv*3 +2] - vertexData[(nlv-segmentsAround+1)*3 +2]
+                    );
+
+                tri2Edge.Set(
+                    vertexData[nlv*3   ] - vertexData[(nlv-1)*3   ],
+                    vertexData[nlv*3 +1] - vertexData[(nlv-1)*3 +1],
+                    vertexData[nlv*3 +2] - vertexData[(nlv-1)*3 +2]
+                    );
+
+                triUpEdge.Set(
+                    vertexData[nlv*3   ] - vertexData[(nlv+segmentsAround+1)*3   ],
+                    vertexData[nlv*3 +1] - vertexData[(nlv+segmentsAround+1)*3 +1],
+                    vertexData[nlv*3 +2] - vertexData[(nlv+segmentsAround+1)*3 +2]
+                    );
+
+                triDownEdge.Set(
+                    vertexData[(nlv-segmentsAround-1)*3   ] - vertexData[nlv*3   ],
+                    vertexData[(nlv-segmentsAround-1)*3 +1] - vertexData[nlv*3 +1],
+                    vertexData[(nlv-segmentsAround-1)*3 +2] - vertexData[nlv*3 +2]
+                    );
+
+		    }
+		    else                        // most vertexes
+		    {
+
+                tri1Edge.Set(
+                    vertexData[nlv*3   ] - vertexData[(nlv+1)*3   ],
+                    vertexData[nlv*3 +1] - vertexData[(nlv+1)*3 +1],
+                    vertexData[nlv*3 +2] - vertexData[(nlv+1)*3 +2]
+                    );
+
+                tri2Edge.Set(
+                    vertexData[nlv*3   ] - vertexData[(nlv-1)*3   ],
+                    vertexData[nlv*3 +1] - vertexData[(nlv-1)*3 +1],
+                    vertexData[nlv*3 +2] - vertexData[(nlv-1)*3 +2]
+                    );
+
+                triUpEdge.Set(
+                    vertexData[nlv*3   ] - vertexData[(nlv+segmentsAround+1)*3   ],
+                    vertexData[nlv*3 +1] - vertexData[(nlv+segmentsAround+1)*3 +1],
+                    vertexData[nlv*3 +2] - vertexData[(nlv+segmentsAround+1)*3 +2]
+                    );
+                triDownEdge.Set(
+                    vertexData[(nlv-segmentsAround-1)*3   ] - vertexData[nlv*3   ],
+                    vertexData[(nlv-segmentsAround-1)*3 +1] - vertexData[nlv*3 +1],
+                    vertexData[(nlv-segmentsAround-1)*3 +2] - vertexData[nlv*3 +2]
+                    );
+
+
+		    }
+
+
+		    MATHVECTOR <float, 3> faceNormal1 = triUpEdge.cross(tri1Edge);
+            MATHVECTOR <float, 3> faceNormal2 = tri2Edge.cross(triUpEdge);
+            MATHVECTOR <float, 3> faceNormal3 = triDownEdge.cross(tri1Edge);
+            MATHVECTOR <float, 3> faceNormal4 = tri2Edge.cross(triDownEdge);
+
+            MATHVECTOR <float, 3> vNormal = faceNormal1 + faceNormal2 + faceNormal3 + faceNormal4;
+            vNormal = vNormal.Normalize();
+            vNormal = vNormal * vertexNormalLength;
+
+            normalData[nlv*3 + 0] = vNormal[0];
+            normalData[nlv*3 + 1] = vNormal[1];
+            normalData[nlv*3 + 2] = vNormal[2];
+
+
+
+		}
+
+
+
+
+
+
 	}
 
 
@@ -489,6 +751,10 @@ void mesh_gen_tire(VERTEXARRAY *tire, float sectionWidth_mm, float aspectRatio, 
 	delete texData;
 	delete normalData;
 }
+
+
+
+
 
 
 }; //namespace
