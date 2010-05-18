@@ -585,7 +585,7 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 		std::map <std::string, PTRVECTOR <DRAWABLE> > culled_static_drawlist;
 		for (std::vector <GRAPHICS_CONFIG_PASS>::const_iterator i = config.passes.begin(); i != config.passes.end(); i++)
 		{
-			if (i->draw != "postprocess")
+			if (i->draw != "postprocess" && i->conditions.Satisfied(conditions))
 			{
 				std::string key = BuildKey(i->camera, i->draw);
 				if (i->cull)
