@@ -29,29 +29,37 @@ private:
 	T caster; ///< caster angle in degrees. sign convention depends on the side
 	T toe; ///< toe angle in degrees. sign convention depends on the side
 
-	//variables
-	T overtravel; ///< the amount past the travel that the suspension was requested to compress
-	T displacement; ///< a linear representation of the suspension displacement.  in actuality the displacement is about the arc formed by the hinge
-	T velocity;
-	T force;
-	
+	// suspension
 	T spring_force;
 	T damp_force;
+	T force;
+	
+	// wheel
+	T wheel_displacement;
+	T wheel_velocity;
+	T wheel_force;
+	T tire_deflection;
 
 public:
 	//default constructor makes an S2000-like car
-	CARSUSPENSION() : spring_constant(50000.0), bounce(2588), rebound(2600), travel(0.19),
-			anti_roll_k(8000), damper_factors(1), spring_factors(1),
-			camber(-0.5), caster(0.28), toe(0),
-			overtravel(0), displacement(0), velocity(0), force(0), spring_force(0), damp_force(0) {}
+	CARSUSPENSION() :
+		spring_constant(50000.0), bounce(2588), rebound(2600), travel(0.19),
+		anti_roll_k(8000), damper_factors(1), spring_factors(1),
+		camber(-0.5), caster(0.28), toe(0),
+		spring_force(0), damp_force(0), force(0),
+		wheel_displacement(0), wheel_velocity(0), wheel_force(0), tire_deflection(0)
+	{
+		
+	}
 
 	void DebugPrint(std::ostream & out)
 	{
 		out << "---Suspension---" << std::endl;
-		out << "Displacement: " << displacement << std::endl;
-		out << "Velocity: " << velocity << std::endl;
-		out << "Spring force: " << spring_force << std::endl;
-		out << "Damp force: " << damp_force << std::endl;
+		out << "Displacement: " << wheel_displacement << std::endl;
+		out << "Velocity: " << wheel_velocity << std::endl;
+		out << "Force: " << force << std::endl;
+		//out << "Spring force: " << spring_force << std::endl;
+		//out << "Damp force: " << damp_force << std::endl;
 		//out << "Spring factor: " << spring_factors.Interpolate(displacement) << std::endl;
 		//out << "Damp factor: " << damper_factors.Interpolate(std::abs(velocity)) << std::endl;
 	}
@@ -148,49 +156,53 @@ public:
 
 	const T & GetDisplacement() const
 	{
-		return displacement;
+		return wheel_displacement;
 	}
 
 	///Return the displacement in percent of max travel where 0.0 is fully extended and 1.0 is fully compressed
 	T GetDisplacementPercent() const
 	{
-		return displacement / travel;
+		return wheel_displacement / travel;
 	}
 
-	///compute the suspension force for the given time interval and external displacement
-	T Update(T dt, T displacement_ext)
+	// road_displacement(relative to wheel)
+	T Update(T dt, T road_displacement)
 	{
-		overtravel = displacement_ext - travel;
-		if (overtravel < 0) overtravel = 0;
+		// wheel properties
+		const T inv_wheel_mass = 1 / 20.0; 	// 20kg wheel
+		const T tire_stiffness = 2E5;		// [N/m] http://www.hunter.com/pub/undercar/SAEATS13/
+		const T tire_deflection_max = 0.1;	// [m] maximum vertical tire deflection
 		
-		// clamp external displacement
-		if (displacement_ext > travel)
-			displacement_ext = travel;
-		else if (displacement_ext < 0)
-			displacement_ext = 0;
-/*		
-		const T inv_mass = 1/20.0;
-		T displacement_new = displacement + velocity * dt + force * inv_mass * dt * dt;
+		// clamp tire sidewall deflection
+		T tire_deflection = road_displacement;
+		if (tire_deflection > tire_deflection_max)
+			tire_deflection = tire_deflection_max;
+		else if (tire_deflection < 0)
+			tire_deflection = 0;
 		
-		// clamp new displacement
-		if (displacement_new > travel)
-			displacement_new = travel;
-		else if (displacement_new < displacement_ext)
-			displacement_new = displacement_ext;
-*/
-		T displacement_new = displacement_ext;
+		// update wheel velocity
+		wheel_velocity = wheel_velocity + wheel_force * inv_wheel_mass * dt;
 		
-		velocity = (displacement_new - displacement) / dt;
-
-		displacement = displacement_new;
+		// update wheel displacement
+		wheel_displacement = wheel_displacement + wheel_velocity * dt;
 		
-		force = GetForce(displacement, velocity);
+		// clamp wheel displacement
+		if (wheel_displacement > travel)
+		{
+			wheel_displacement = travel;
+			wheel_velocity = 0;
+		}
+		else if (wheel_displacement < 0)
+		{
+			wheel_displacement = 0;
+			wheel_velocity = 0;
+		}
 		
-		// account for suspension overtravel
-		//const T bump_stiffness = 500000;
-		//new_force = new_force - overtravel * bump_stiffness;
+		// update wheel force
+		force = GetForce(wheel_displacement, wheel_velocity);
+		wheel_force = -force + tire_stiffness * tire_deflection;
 		
-		return -force;
+		return force;
 	}
 
 	const T GetForce(T displacement, T velocity)
@@ -198,14 +210,12 @@ public:
 		T damping = bounce;
 		if (velocity < 0) damping = rebound;
 		
-		//compute damper factor based on curve
+		//compute damper/spring factor based on curve
 		T dampfactor = damper_factors.Interpolate(std::abs(velocity));
-
-		//compute spring factor based on curve
 		T springfactor = spring_factors.Interpolate(displacement);
 
-		spring_force = -displacement * spring_constant * springfactor; //when compressed, the spring force will push the car in the positive z direction
-		damp_force = -velocity * damping * dampfactor; //when compression is increasing, the damp force will push the car in the positive z direction
+		spring_force = displacement * spring_constant * springfactor; 
+		damp_force = velocity * damping * dampfactor;
 		T force = spring_force + damp_force;
 
 		return force;
@@ -213,25 +223,25 @@ public:
 
 	const T & GetVelocity() const
 	{
-		return velocity;
+		return wheel_velocity;
 	}
-
-	//void SetAntiRollInfo(const T value)
-	//{
-	//	antiroll_force = value;
-	//}
-
+/*
+	void SetAntiRollInfo(const T value)
+	{
+		antiroll_force = value;
+	}
+*/
 	bool Serialize(joeserialize::Serializer & s)
 	{
-		_SERIALIZE_(s,displacement);
+		_SERIALIZE_(s, wheel_displacement);
 		return true;
 	}
-
+/*
 	T GetOvertravel() const
 	{
 		return overtravel;
 	}
-
+*/
 	void SetDamperFactorPoints(std::vector <std::pair <T, T> > & curve)
 	{
 		//std::cout << "Damper factors: " << std::endl;
