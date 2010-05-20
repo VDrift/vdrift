@@ -31,10 +31,10 @@ public:
 		iterator it = objectmap.find(info);
 		if (it != objectmap.end())
 		{
-			reused++;
+			++reused;
 			return it->second;
 		}
-		created++;
+		++created;
 		std::tr1::shared_ptr<T> sp(new T(info, error));
 		objectmap[info] = sp;
 		return sp;
@@ -43,12 +43,17 @@ public:
 	// clear expired objects
 	void Sweep()
 	{
-		for(iterator it = objectmap.begin(); it != objectmap.end(); it++)
+		iterator it = objectmap.begin();
+		while(it != objectmap.end())
 		{
 			if(it->second.unique())
 			{
-				deleted++;
-				objectmap.erase(it);
+				++deleted;
+				objectmap.erase(it++);
+			}
+			else
+			{
+				++it;
 			}
 		}
 	}
