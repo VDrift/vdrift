@@ -467,7 +467,7 @@ void RENDER_INPUT_SCENE::SelectFlags(DRAWABLE & forme, GLSTATEMANAGER & glstate)
 	}
 	else
 	{
-		if (fsaa > 1)
+		if (fsaa > 1 && shaders)
 		{
 			glstate.Enable(GL_SAMPLE_ALPHA_TO_COVERAGE_ARB);
 		}
