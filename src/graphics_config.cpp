@@ -285,10 +285,10 @@ bool GRAPHICS_CONFIG_OUTPUT::Load(std::istream & f, std::ostream & error_output,
 	
 	std::vector <std::string> reqd;
 	reqd.push_back("name");
-	reqd.push_back("width");
-	reqd.push_back("height");
+	//reqd.push_back("width");
+	//reqd.push_back("height");
 	reqd.push_back("type");
-	reqd.push_back("format");
+	//reqd.push_back("format");
 	//reqd.push_back("filter");
 	//reqd.push_back("mipmap");
 	//reqd.push_back("multisample");
@@ -301,6 +301,9 @@ bool GRAPHICS_CONFIG_OUTPUT::Load(std::istream & f, std::ostream & error_output,
 	fillDefault(vars, "filter", "linear");
 	fillDefault(vars, "mipmap", "false");
 	fillDefault(vars, "multisample", "0");
+	fillDefault(vars, "width", "framebuffer");
+	fillDefault(vars, "height", "framebuffer");
+	fillDefault(vars, "format", "RGB");
 	if (vars["multisample"] == "framebuffer")
 		vars["multisample"] = "-1";
 	
@@ -308,7 +311,7 @@ bool GRAPHICS_CONFIG_OUTPUT::Load(std::istream & f, std::ostream & error_output,
 	ASSIGNPARSE(width);
 	ASSIGNPARSE(height);
 	ASSIGNVAR(type);
-	if (!isOf(vars, "type", "2D rectangle cube", &error_output, sectionstart)) return false;
+	if (!isOf(vars, "type", "2D rectangle cube framebuffer", &error_output, sectionstart)) return false;
 	ASSIGNVAR(filter);
 	if (!isOf(vars, "filter", "linear nearest", &error_output, sectionstart)) return false;
 	ASSIGNVAR(format);

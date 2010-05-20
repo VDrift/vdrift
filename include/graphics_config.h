@@ -59,7 +59,7 @@ struct GRAPHICS_CONFIG_OUTPUT
 	std::string name; ///< the name of the output
 	SIZE width; ///< sizes can be absolute numbers, "framebuffer", "framebuffer/X" (where X is an int), or "framebuffer*X"
 	SIZE height;
-	std::string type; ///< can be "2D", "rectangle", "cube"
+	std::string type; ///< can be "2D", "rectangle", "cube", or "framebuffer" -- note that if it's framebuffer, the other fields are ignored
 	std::string filter; ///< can be "linear" or "nearest"
 	std::string format; ///< can be "RGB", "RGBA", or "depth"
 	bool mipmap;

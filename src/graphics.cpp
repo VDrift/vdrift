@@ -417,8 +417,11 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 		shader_load_success = false;
 	}
 
+	std::set <std::string> shadernames;
 	for (std::vector <GRAPHICS_CONFIG_SHADER>::const_iterator s = config.shaders.begin(); s != config.shaders.end(); s++)
 	{
+		assert(shadernames.find(s->name) == shadernames.end());
+		shadernames.insert(s->name);
 		shader_load_success = shader_load_success && LoadShader(shaderpath, s->folder, info_output, error_output, s->name, s->defines);
 	}
 	
@@ -447,29 +450,38 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 		{
 			if (i->conditions.Satisfied(conditions))
 			{
-				FBTEXTURE & fbtex = render_outputs[i->name].RenderToFBO();
-				FBTEXTURE::TARGET type = FBTEXTURE::NORMAL;
-				if (i->type == "rectangle")
-					type = FBTEXTURE::RECTANGLE;
-				else if (i->type == "cube")
-					type = FBTEXTURE::CUBEMAP;
-				int fbms = 0;
-				if (i->multisample < 0)
-					fbms = fsaa;
+				assert(render_outputs.find(i->name) == render_outputs.end());
 				
-				fbtex.Init(i->width.GetSize(w),
-						   i->height.GetSize(h),
-						   type,
-						   (i->format == "depth"),
-						   (i->filter == "nearest"),
-						   (i->format == "RGBA"),
-						   i->mipmap,
-						   error_output,
-						   fbms);
-						   
-				output_inputs[i->name] = fbtex;
+				if (i->type == "framebuffer")
+				{
+					render_outputs[i->name].RenderToFramebuffer();
+				}
+				else
+				{
+					FBTEXTURE & fbtex = render_outputs[i->name].RenderToFBO();
+					FBTEXTURE::TARGET type = FBTEXTURE::NORMAL;
+					if (i->type == "rectangle")
+						type = FBTEXTURE::RECTANGLE;
+					else if (i->type == "cube")
+						type = FBTEXTURE::CUBEMAP;
+					int fbms = 0;
+					if (i->multisample < 0)
+						fbms = fsaa;
+					
+					fbtex.Init(i->width.GetSize(w),
+							   i->height.GetSize(h),
+							   type,
+							   (i->format == "depth"),
+							   (i->filter == "nearest"),
+							   (i->format == "RGBA"),
+							   i->mipmap,
+							   error_output,
+							   fbms);
+							   
+					output_inputs[i->name] = fbtex;
+				}
 				
-				info_output << "Initialized FBO: " << i->name << std::endl;
+				info_output << "Initialized render output: " << i->name << (i->type != "framebuffer" ? "(FBO)" : "") << std::endl;
 			}
 		}
 
