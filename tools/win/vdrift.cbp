@@ -27,15 +27,12 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O3" />
-					<Add option="-pg" />
 				</Compiler>
-				<Linker>
-					<Add option="-pg -lgmon" />
-				</Linker>
 			</Target>
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
+			<Add option="-pg" />
 			<Add option="-fexceptions" />
 			<Add option="-mwindows" />
 			<Add directory="include" />
@@ -43,6 +40,7 @@
 			<Add directory="..\..\bullet" />
 		</Compiler>
 		<Linker>
+			<Add option="-pg -lgmon" />
 			<Add library="opengl32" />
 			<Add library="glu32" />
 			<Add library="glew32" />
@@ -398,6 +396,7 @@
 		<Unit filename="..\..\include\game_render.h" />
 		<Unit filename="..\..\include\glstatemanager.h" />
 		<Unit filename="..\..\include\graphics.h" />
+		<Unit filename="..\..\include\graphics_config.h" />
 		<Unit filename="..\..\include\graphics_renderers.h" />
 		<Unit filename="..\..\include\gui.h" />
 		<Unit filename="..\..\include\guioption.h" />
@@ -418,6 +417,7 @@
 		<Unit filename="..\..\include\mathvector.h" />
 		<Unit filename="..\..\include\matrix3.h" />
 		<Unit filename="..\..\include\matrix4.h" />
+		<Unit filename="..\..\include\mesh_gen.h" />
 		<Unit filename="..\..\include\model.h" />
 		<Unit filename="..\..\include\model_joe03.h" />
 		<Unit filename="..\..\include\model_obj.h" />
@@ -506,6 +506,7 @@
 		<Unit filename="..\..\src\game.cpp" />
 		<Unit filename="..\..\src\game_render.cpp" />
 		<Unit filename="..\..\src\graphics.cpp" />
+		<Unit filename="..\..\src\graphics_config.cpp" />
 		<Unit filename="..\..\src\graphics_renderers.cpp" />
 		<Unit filename="..\..\src\gui.cpp" />
 		<Unit filename="..\..\src\guipage.cpp" />
@@ -556,8 +557,6 @@
 		<Unit filename="..\..\src\widget_slider.cpp" />
 		<Unit filename="..\..\src\widget_spinningcar.cpp" />
 		<Unit filename="..\..\src\widget_stringwheel.cpp" />
-		<Unit filename="strptime.cpp" />
-		<Unit filename="strptime.h" />
 		<Extensions>
 			<code_completion />
 			<envvars />

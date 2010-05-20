@@ -1,3 +1,6 @@
+#ifndef _STRPTIME_H
+#define _STRPTIME_H
+
 // Part of the ht://Dig package   <http://www.htdig.org/>
 // Copyright (c) 1999-2004 The ht://Dig Group
 // For copyright details, see the file COPYING in your distribution
@@ -50,7 +53,7 @@ static char sccsid[] = "@(#)strptime.c	1.0 (Powerdog) 94/03/27";
 #include <locale.h>
 #include <string.h>
 
-#if defined(WIN32) || defined(WIN64)
+#if _MSC_VER
 #define strncasecmp _strnicmp
 #endif
 
@@ -376,4 +379,6 @@ strptime(const char *buf, const char *fmt, struct tm *tm)
 
     return (char *) buf;
 }
+
+#endif //_STRPTIME_H
 

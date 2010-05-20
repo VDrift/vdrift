@@ -4,7 +4,11 @@
 #include <map>
 #include <string>
 #include <iostream>
+#ifdef _MSC_VER
+#include <memory>
+#else
 #include <tr1/memory>
+#endif
 
 /// object T has to have a constructor taking Tinfo and std::ostream & error as parameter
 template < class Tinfo, class T, class Pred = std::less<Tinfo> >
@@ -59,7 +63,7 @@ public:
 	}
 	
 protected:
-	typedef typename std::map<Tinfo, std::tr1::shared_ptr<T> >::iterator iterator;
+	typedef typename std::map<Tinfo, std::tr1::shared_ptr<T>, Pred>::iterator iterator;
 	std::map<Tinfo, std::tr1::shared_ptr<T>, Pred> objectmap;
 	std::ostream & error;
 	unsigned int created, reused, deleted;

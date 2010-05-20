@@ -2,12 +2,13 @@
 #define _MATHVECTOR_H
 
 #include <vector>
+#include <iostream>
+#include <sstream>
+
+#include <cstring> // memcpy
 #include <cassert>
 #define _USE_MATH_DEFINES
 #include <cmath>
-#include <iostream>
-#include <cstring>
-#include <sstream>
 
 #include "joeserialize.h"
 

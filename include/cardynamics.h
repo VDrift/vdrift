@@ -188,6 +188,7 @@ protected:
 	std::vector <int> tcs_active;
 	
 // cardynamics state
+	std::vector <T> normal_force;
 	std::vector <MATHVECTOR <T, 3> > wheel_velocity;
 	std::vector <MATHVECTOR <T, 3> > wheel_position;
 	std::vector <QUATERNION <T> > wheel_orientation;

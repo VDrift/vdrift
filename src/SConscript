@@ -280,7 +280,6 @@ elif ( 'darwin' == sys.platform ):
 elif ( 'win32' == sys.platform or 'cygwin' == sys.platform ):
 	local_env.Append(LIBPATH = ['/usr/lib/mingw', '#tools/win/lib', '#build'])
 	libs_link = ['opengl32', 'glu32', 'glew32', 'mingw32', 'SDLmain', 'SDL', 'ws2_32', common_libs ]
-	src.append('../tools/win/strptime.cpp')
 else:
     local_env.ParseConfig('sdl-config --cflags --libs')
     local_env.Append(LIBPATH = ['/usr/X11R6/lib'])

@@ -1,7 +1,5 @@
 #include "game.h"
 
-#include <fenv.h>
-
 #include <list>
 using std::list;
 

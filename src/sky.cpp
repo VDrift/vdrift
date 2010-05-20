@@ -2,8 +2,8 @@
 #include "configfile.h"
 #include "graphics.h"
 
-#ifdef WIN32
-#include "../tools/win/strptime.h"
+#ifdef _WIN32
+#include "strptime.h"
 #endif
 
 #define pi 3.14159265358979323846f

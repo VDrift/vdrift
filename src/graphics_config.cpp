@@ -241,7 +241,7 @@ void GRAPHICS_CONFIG_CONDITION::Parse(const std::string & str)
 
 bool GRAPHICS_CONFIG_CONDITION::Satisfied(const std::set <std::string> & conditions) const
 {
-	for (std::set <std::string>::iterator i = positive_conditions.begin(); i != positive_conditions.end(); i++)
+	for (std::set <std::string>::const_iterator i = positive_conditions.begin(); i != positive_conditions.end(); i++)
 	{
 		if (conditions.find(*i) == conditions.end())
 		{
@@ -249,7 +249,7 @@ bool GRAPHICS_CONFIG_CONDITION::Satisfied(const std::set <std::string> & conditi
 		}
 	}
 	
-	for (std::set <std::string>::iterator i = negated_conditions.begin(); i != negated_conditions.end(); i++)
+	for (std::set <std::string>::const_iterator i = negated_conditions.begin(); i != negated_conditions.end(); i++)
 	{
 		if (conditions.find(*i) != conditions.end())
 		{

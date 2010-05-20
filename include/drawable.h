@@ -2,14 +2,18 @@
 #define _DRAWABLE_H
 
 #include <vector>
+#ifdef _MSC_VER
+#include <memory>
+#else
 #include <tr1/memory>
+#endif
 
 #include "matrix4.h"
 #include "mathvector.h"
 
 class TEXTURE;
-class VERTEXARRAY;
 typedef std::tr1::shared_ptr<TEXTURE> TEXTUREPTR;
+class VERTEXARRAY;
 
 class DRAWABLE
 {
