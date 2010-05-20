@@ -85,6 +85,7 @@ public:
 	void SetWriteDepth(bool write) {writedepth = write;}
 	void SetWriteColor(bool write) {writecolor = write;}
 	std::pair <bool, bool> GetClear() const {return std::make_pair(clearcolor, cleardepth);}
+	void SetCarPaintHack(bool hack) {carpainthack = hack;}
 
 private:
 	reseatable_reference <std::vector <DRAWABLE*> > dynamic_drawlist_ptr;
@@ -112,6 +113,7 @@ private:
 	bool depth_mode_equal;
 	bool writecolor;
 	bool writedepth;
+	bool carpainthack;
 	
 	void DrawList(GLSTATEMANAGER & glstate, std::vector <DRAWABLE*> & drawlist, bool preculled);
 	bool FrustumCull(DRAWABLE & tocull);

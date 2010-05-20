@@ -996,7 +996,11 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 		renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h);
 		RenderDrawlists(dynamic_drawlist.normal_noblend, normalcam_static_drawlist.normal_noblend, std::vector <TEXTURE_INTERFACE*>(), renderscene, framebuffer, error_output);
 		renderscene.SetClear(false, false);
+		
+		renderscene.SetCarPaintHack(true);
 		RenderDrawlist(dynamic_drawlist.car_noblend, renderscene, framebuffer, error_output);
+		renderscene.SetCarPaintHack(false);
+		
 		RenderDrawlists(dynamic_drawlist.normal_blend, normalcam_static_drawlist.normal_blend, std::vector <TEXTURE_INTERFACE*>(), renderscene, framebuffer, error_output);
 		RenderDrawlist(dynamic_drawlist.particle, renderscene, framebuffer, error_output);
 		RenderDrawlist(dynamic_drawlist.twodim, renderscene, framebuffer, error_output);
@@ -1005,7 +1009,9 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 		// render any viewspace 3d elements
 		renderscene.SetClear(false, true);
 		renderscene.SetCameraInfo(cam.pos, cam.orient, 45.0, cam.view_distance, cam.w, cam.h);
+		renderscene.SetCarPaintHack(true);
 		RenderDrawlist(dynamic_drawlist.nocamtrans_noblend, renderscene, framebuffer, error_output);
+		renderscene.SetCarPaintHack(false);
 		renderscene.SetClear(false, false);
 		RenderDrawlist(dynamic_drawlist.nocamtrans_blend, renderscene, framebuffer, error_output);
 	}
