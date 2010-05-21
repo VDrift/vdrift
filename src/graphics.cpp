@@ -456,6 +456,16 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 		bool shadows_near = shadows;
 		bool shadows_medium = shadows && shadow_distance > 0;
 		bool shadows_far = shadows && shadow_distance > 1;
+		bool shadow_quality_low = shadows && (shadow_quality == 0);
+		bool shadow_quality_medium = shadows && (shadow_quality == 1);
+		bool shadow_quality_high = shadows && (shadow_quality == 2);
+		bool shadow_quality_vhigh = shadows && (shadow_quality == 3);
+		bool shadow_quality_ultra = shadows && (shadow_quality == 4);
+		
+		// for now, map vhigh and ultra to high
+		shadow_quality_high = shadow_quality_high || shadow_quality_vhigh || shadow_quality_ultra;
+		shadow_quality_vhigh = false;
+		shadow_quality_ultra = false;
 		
 		conditions.clear();
 		#define ADDCONDITION(x) if (x) conditions.insert(#x)
@@ -465,13 +475,18 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 		ADDCONDITION(shadows_near);
 		ADDCONDITION(shadows_medium);
 		ADDCONDITION(shadows_far);
+		ADDCONDITION(shadow_quality_low);
+		ADDCONDITION(shadow_quality_medium);
+		ADDCONDITION(shadow_quality_high);
+		ADDCONDITION(shadow_quality_vhigh);
+		ADDCONDITION(shadow_quality_ultra);
 		#undef ADDCONDITION
 		
 		for (std::vector <GRAPHICS_CONFIG_OUTPUT>::const_iterator i = config.outputs.begin(); i != config.outputs.end(); i++)
 		{
 			if (i->conditions.Satisfied(conditions))
 			{
-				assert(render_outputs.find(i->name) == render_outputs.end());
+				assert(render_outputs.find(i->name) == render_outputs.end()); //TODO: add a friendly error message
 				
 				if (i->type == "framebuffer")
 				{
