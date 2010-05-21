@@ -1096,6 +1096,7 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 	else //non-shader path
 	{
 		GRAPHICS_CAMERA & cam = cameras["default"];
+		renderscene.DisableOrtho();
 		renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h);
 		
 		//do fast culling for the normal camera frustum
