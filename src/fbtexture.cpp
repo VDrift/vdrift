@@ -9,9 +9,13 @@ void FBTEXTURE::Init(int sizex, int sizey, TARGET target, bool newdepth, bool fi
 {
 	assert(!(newalpha && newdepth)); //not allowed; depth maps don't have alpha
 	
+	OPENGL_UTILITY::CheckForOpenGLErrors("FBO init start", error_output);
+	
 	if (inited)
 	{
 		DeInit();
+		
+		OPENGL_UTILITY::CheckForOpenGLErrors("FBO deinit", error_output);
 	}
 	
 	depth = newdepth;
@@ -30,9 +34,13 @@ void FBTEXTURE::Init(int sizex, int sizey, TARGET target, bool newdepth, bool fi
 	if (!(GL_EXT_framebuffer_multisample && GL_EXT_framebuffer_blit))
 		multisample = 0;
 	
+	OPENGL_UTILITY::CheckForOpenGLErrors("FBO generation", error_output);
+	
 	//initialize framebuffer object (FBO)
 	assert(GLEW_EXT_framebuffer_object);
 	glGenFramebuffersEXT(1, &framebuffer_object);
+	
+	OPENGL_UTILITY::CheckForOpenGLErrors("FBO generation", error_output);
 	
 	//set texture info
 	if (texture_target == GL_TEXTURE_RECTANGLE_ARB)
@@ -61,6 +69,8 @@ void FBTEXTURE::Init(int sizex, int sizey, TARGET target, bool newdepth, bool fi
 		glGenTextures(1, &fbtexture);
 		glBindTexture(texture_target, fbtexture);
 		
+		OPENGL_UTILITY::CheckForOpenGLErrors("FBO texture generation", error_output);
+		
 		if (texture_target == CUBEMAP)
 		{
 			// generate storage for each of the six sides
@@ -73,6 +83,8 @@ void FBTEXTURE::Init(int sizex, int sizey, TARGET target, bool newdepth, bool fi
 		{
 			glTexImage2D(texture_target, 0, texture_format1, sizex, sizey, 0, texture_format2, texture_format3, NULL);
 		}
+		
+		OPENGL_UTILITY::CheckForOpenGLErrors("FBO texture initialization", error_output);
 		
 		//glTexParameteri(texture_target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 		//glTexParameteri(texture_target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
@@ -109,27 +121,39 @@ void FBTEXTURE::Init(int sizex, int sizey, TARGET target, bool newdepth, bool fi
 			//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE_ARB, GL_NONE);
 		}
 		
+		OPENGL_UTILITY::CheckForOpenGLErrors("FBO texture setup", error_output);
+		
 		if (mipmap)
 		{
 			glGenerateMipmapEXT(texture_target);
 		}
 		
+		OPENGL_UTILITY::CheckForOpenGLErrors("FBO mipmap generation", error_output);
+		
 		glBindTexture(texture_target, 0); // don't leave the texture bound
+		
+		OPENGL_UTILITY::CheckForOpenGLErrors("FBO texture unbinding", error_output);
 	}
 	else
 	{
 		single_sample_FBO_for_multisampling = new FBTEXTURE;
 		single_sample_FBO_for_multisampling->Init(sizex, sizey, texture_target, depth, filternearest, alpha, mipmap, error_output, 0);
+		
+		OPENGL_UTILITY::CheckForOpenGLErrors("FBO multisample creation", error_output);
 	}
 	
 	//bind the framebuffer
 	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, framebuffer_object);
+	
+	OPENGL_UTILITY::CheckForOpenGLErrors("FBO binding", error_output);
 	
 	//initialize renderbuffer object that's used for our depth buffer when rendering to a texture
 	if (!depth)
 	{
 		glGenRenderbuffersEXT(1, &renderbuffer_depth);
 		glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, renderbuffer_depth);
+		
+		OPENGL_UTILITY::CheckForOpenGLErrors("FBO renderbuffer generation", error_output);
 		
 		if (multisample > 0)
 		{
@@ -145,13 +169,19 @@ void FBTEXTURE::Init(int sizex, int sizey, TARGET target, bool newdepth, bool fi
 		else
 			glRenderbufferStorageEXT(GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT, sizew, sizeh);
 		
+		OPENGL_UTILITY::CheckForOpenGLErrors("FBO renderbuffer initialization", error_output);
+		
 		//attach the render buffer to the FBO
 		glFramebufferRenderbufferEXT(GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, renderbuffer_depth);
+		
+		OPENGL_UTILITY::CheckForOpenGLErrors("FBO renderbuffer attachment", error_output);
 	}
 	else
 	{
 		glDrawBuffer(GL_NONE); // no color buffer dest
 		glReadBuffer(GL_NONE); // no color buffer src
+		
+		OPENGL_UTILITY::CheckForOpenGLErrors("FBO color buffer mask set", error_output);
 	}
 	
 	//attach the texture to the FBO
@@ -171,12 +201,14 @@ void FBTEXTURE::Init(int sizex, int sizey, TARGET target, bool newdepth, bool fi
 		}
 	}
 	
+	OPENGL_UTILITY::CheckForOpenGLErrors("FBO attachment", error_output);
+	
 	bool status_ok = CheckStatus(error_output);
 	assert(status_ok);
 	
 	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 	
-	OPENGL_UTILITY::CheckForOpenGLErrors("FBO creation", error_output);
+	OPENGL_UTILITY::CheckForOpenGLErrors("FBO unbinding", error_output);
 }
 
 bool FBTEXTURE::CheckStatus(std::ostream & error_output)

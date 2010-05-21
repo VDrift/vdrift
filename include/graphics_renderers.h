@@ -70,7 +70,7 @@ public:
 	}
 	void DisableOrtho() {orthomode = false;}
 	void SetOrtho(const MATHVECTOR <float, 3> & neworthomin, const MATHVECTOR <float, 3> & neworthomax) {orthomode = true; orthomin = neworthomin; orthomax = neworthomax;}
-	FRUSTUM SetCameraInfo(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newrot, float newfov, float newlodfar, float neww, float newh);
+	FRUSTUM SetCameraInfo(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newrot, float newfov, float newlodfar, float neww, float newh, bool restore_matrices = true);
 	void SetSunDirection(const MATHVECTOR <float, 3> & newsun) {lightposition = newsun;}
 	void SetFlags(bool newshaders) {shaders=newshaders;}
 	void SetDefaultShader(SHADER_GLSL & newdefault) {assert(newdefault.GetLoaded());shadermap.clear();shadermap.resize(SHADER_NONE, &newdefault);}
@@ -143,6 +143,8 @@ public:
 	{
 		target = RENDER_TO_FRAMEBUFFER;
 	}
+	
+	bool IsFBO() const {return target == RENDER_TO_FBO;}
 	
 	void Begin(GLSTATEMANAGER & glstate, std::ostream & error_output)
 	{

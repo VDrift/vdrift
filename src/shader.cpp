@@ -164,6 +164,7 @@ void SHADER_GLSL::LoadFileIntoString(const std::string & filepath, std::string &
 void SHADER_GLSL::Unload()
 {
 	if (loaded) glDeleteObjectARB(program);
+	loaded = false;
 }
 
 void SHADER_GLSL::Enable()

@@ -359,6 +359,8 @@ void GRAPHICS_CONFIG_INPUTS::Parse(const std::string & str)
 
 bool GRAPHICS_CONFIG_PASS::Load(std::istream & f, std::ostream & error_output, int & line)
 {
+	int sectionstart = line;
+	
 	std::vector <std::string> reqd;
 	//reqd.push_back("camera");
 	reqd.push_back("draw");
@@ -378,8 +380,30 @@ bool GRAPHICS_CONFIG_PASS::Load(std::istream & f, std::ostream & error_output, i
 	fillDefault(vars, "cull", "true");
 	fillDefault(vars, "camera", "default");
 	
+	// process draw as a comma delimited list
+	{
+		bool postprocess = (vars["draw"] == "postprocess");
+		if (postprocess)
+			draw.push_back("postprocess");
+		else
+		{
+			std::stringstream parser(vars["draw"]);
+			std::string layer;
+			while (parser)
+			{
+				parser >> layer;
+				if (layer == "postprocess")
+				{
+					error_output << "Error: postprocess must be the only item in the draw list in the section starting on line " << sectionstart << std::endl;
+					return false;
+				}
+				if (!layer.empty())
+					draw.push_back(layer);
+			}
+		}
+	}
+	
 	ASSIGNVAR(camera);
-	ASSIGNVAR(draw);
 	ASSIGNVAR(light);
 	ASSIGNVAR(output);
 	ASSIGNVAR(shader);

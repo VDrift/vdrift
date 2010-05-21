@@ -164,7 +164,6 @@ struct DRAWABLE_CONTAINER
 		TEXTIFY(nocamtrans_blend);
 		TEXTIFY(nocamtrans_noblend);
 		#undef TEXTIFY
-		assert(ref);
 		return ref;
 	}
 	

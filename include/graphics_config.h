@@ -81,13 +81,13 @@ struct GRAPHICS_CONFIG_INPUTS
 struct GRAPHICS_CONFIG_PASS
 {
 	std::string camera; ///< the name of the camera
-	std::string draw; ///< can be "postprocess" or the name of a drawable layer
+	std::vector <std::string> draw; ///< can be "postprocess" or a comma delimited list of drawable layers
 	GRAPHICS_CONFIG_INPUTS inputs; ///< assigns outputs of other passes to inputs
 	std::string light; ///< the name of the scene-wide directional light
 	std::string output; ///< must correspond to a GRAPHICS_CONFIG_OUTPUT
 	std::string shader; ///< the name of the shader to use
-	bool clear_color; ///< whether or not to clear the color buffer before rendering
-	bool clear_depth; ///< whether or not to clear the depth buffer before rendering
+	bool clear_color; ///< whether or not to clear the color buffer before rendering, note that this happens at the beginning of the pass, not for each drawable layer in draw
+	bool clear_depth; ///< whether or not to clear the depth buffer before rendering, note that this happens at the beginning of the pass, not for each drawable layer in draw
 	bool write_depth; ///< whether or not to write to the depth buffer during rendering
 	bool cull; ///< whether or not to do frustum and distance culling
 	GRAPHICS_CONFIG_CONDITION conditions;

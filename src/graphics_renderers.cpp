@@ -697,7 +697,12 @@ void RENDER_INPUT_SCENE::SelectTransformEnd(DRAWABLE & forme, bool need_pop)
 }
 
 FRUSTUM RENDER_INPUT_SCENE::SetCameraInfo(const MATHVECTOR <float, 3> & newpos,
-		const QUATERNION <float> & newrot, float newfov, float newlodfar, float neww, float newh)
+										  const QUATERNION <float> & newrot,
+										  float newfov,
+										  float newlodfar,
+										  float neww,
+										  float newh,
+										  bool restore_matrices)
 {
 	cam_position = newpos;
 	cam_rotation = newrot;
@@ -707,7 +712,8 @@ FRUSTUM RENDER_INPUT_SCENE::SetCameraInfo(const MATHVECTOR <float, 3> & newpos,
 	h = newh;
 	
 	glMatrixMode( GL_PROJECTION );
-	glPushMatrix();
+	if (restore_matrices)
+		glPushMatrix();
 	glLoadIdentity();
 	if (orthomode)
 	{
@@ -718,16 +724,19 @@ FRUSTUM RENDER_INPUT_SCENE::SetCameraInfo(const MATHVECTOR <float, 3> & newpos,
 		gluPerspective( camfov, w/(float)h, 0.1f, lod_far );
 	}
 	glMatrixMode( GL_MODELVIEW );
-	glPushMatrix();
+	if (restore_matrices)
+		glPushMatrix();
 	float temp_matrix[16];
 	(cam_rotation).GetMatrix4(temp_matrix);
 	glLoadMatrixf(temp_matrix);
 	glTranslatef(-cam_position[0],-cam_position[1],-cam_position[2]);
 	ExtractFrustum();
 	glMatrixMode( GL_PROJECTION );
-	glPopMatrix();
+	if (restore_matrices)
+		glPopMatrix();
 	glMatrixMode( GL_MODELVIEW );
-	glPopMatrix();
+	if (restore_matrices)
+		glPopMatrix();
 	return frustum;
 }
 

@@ -402,14 +402,21 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 		info_output << "Texture units: " << tufull << " full, " << tu << " partial" << std::endl;
 	}
 	
-	// not sure all of this clearing is really necessary
-	config = GRAPHICS_CONFIG();
+	OPENGL_UTILITY::CheckForOpenGLErrors("EnableShaders: start", error_output);
+	
+	// unload current shaders
+	glUseProgramObjectARB(0);
+	for (shader_map_type::iterator i = shadermap.begin(); i != shadermap.end(); i++)
+	{
+		i->second.Unload();
+	}
 	shadermap.clear();
 	activeshader = shadermap.end();
-	cameras.clear();
-	output_inputs.clear();
-	render_outputs.clear();
 	
+	OPENGL_UTILITY::CheckForOpenGLErrors("EnableShaders: shader unload", error_output);
+	
+	// reload configuration
+	config = GRAPHICS_CONFIG();
 	std::string renderconfigfile = shaderpath+"/render.conf";
 	if (!config.Load(renderconfigfile, error_output))
 	{
@@ -417,6 +424,7 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 		shader_load_success = false;
 	}
 
+	// reload shaders
 	std::set <std::string> shadernames;
 	for (std::vector <GRAPHICS_CONFIG_SHADER>::const_iterator s = config.shaders.begin(); s != config.shaders.end(); s++)
 	{
@@ -425,25 +433,38 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 		shader_load_success = shader_load_success && LoadShader(shaderpath, s->folder, info_output, error_output, s->name, s->defines);
 	}
 	
+	OPENGL_UTILITY::CheckForOpenGLErrors("EnableShaders: shader loading", error_output);
+	
 	if (shader_load_success)
 	{
 		using_shaders = true;
 		info_output << "Successfully enabled shaders" << endl;
 		
+		// unload current outputs
 		for (std::map <std::string, RENDER_OUTPUT>::iterator i = render_outputs.begin(); i != render_outputs.end(); i++)
 		{
-			i->second.RenderToFBO().DeInit();
+			if (i->second.IsFBO())
+				i->second.RenderToFBO().DeInit();
 		}
 		render_outputs.clear();
+		texture_inputs.clear();
+		
+		OPENGL_UTILITY::CheckForOpenGLErrors("EnableShaders: FBO deinit", error_output);
 		
 		bool edge_contrast_enhancement = (lighting == 1);
 		bool reflection_dynamic = (reflection_status == REFLECTION_DYNAMIC);
+		bool shadows_near = shadows;
+		bool shadows_medium = shadows && shadow_distance > 0;
+		bool shadows_far = shadows && shadow_distance > 1;
 		
 		conditions.clear();
 		#define ADDCONDITION(x) if (x) conditions.insert(#x)
 		ADDCONDITION(bloom);
 		ADDCONDITION(edge_contrast_enhancement);
 		ADDCONDITION(reflection_dynamic);
+		ADDCONDITION(shadows_near);
+		ADDCONDITION(shadows_medium);
+		ADDCONDITION(shadows_far);
 		#undef ADDCONDITION
 		
 		for (std::vector <GRAPHICS_CONFIG_OUTPUT>::const_iterator i = config.outputs.begin(); i != config.outputs.end(); i++)
@@ -478,10 +499,10 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 							   error_output,
 							   fbms);
 							   
-					output_inputs[i->name] = fbtex;
+					texture_inputs[i->name] = fbtex;
 				}
 				
-				info_output << "Initialized render output: " << i->name << (i->type != "framebuffer" ? "(FBO)" : "") << std::endl;
+				info_output << "Initialized render output: " << i->name << (i->type != "framebuffer" ? " (FBO)" : " (framebuffer alias)") << std::endl;
 			}
 		}
 
@@ -556,6 +577,53 @@ void GRAPHICS_SDLGL::SetupScene(float fov, float new_view_distance, const MATHVE
 		cam.w = 1.f;
 		cam.h = 1.f;
 	}
+	
+	// create cameras for shadow passes
+	std::vector <std::string> shadow_names;
+	shadow_names.push_back("near");
+	shadow_names.push_back("medium");
+	shadow_names.push_back("far");
+	for (int i = 0; i < 3; i++)
+	{
+		float shadow_radius = (1<<i)*closeshadow+(i)*20.0; //5,30,60
+		
+		MATHVECTOR <float, 3> shadowbox(1,1,1);
+		shadowbox = shadowbox * (shadow_radius*sqrt(2.0));
+		MATHVECTOR <float, 3> shadowoffset(0,0,-1);
+		shadowoffset = shadowoffset * shadow_radius;
+		(-cam_rotation).RotateVector(shadowoffset);
+		shadowbox[2] += 60.0;
+		
+		GRAPHICS_CAMERA & cam = cameras["shadows_"+shadow_names[i]];
+		cam = cameras["default"];
+		cam.orthomode = true;
+		cam.orthomin = -shadowbox;
+		cam.orthomax = shadowbox;
+		cam.pos = cam.pos + shadowoffset;
+		cam.orient = lightdirection;
+		
+		// go through and extract the clip matrix, storing it in a texture matrix
+		renderscene.SetOrtho(cam.orthomin, cam.orthomax);
+		renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h, false);
+		float mv[16], mp[16], clipmat[16];
+		glGetFloatv( GL_PROJECTION_MATRIX, mp );
+		glGetFloatv( GL_MODELVIEW_MATRIX, mv );
+		glMatrixMode( GL_TEXTURE );
+		glPushMatrix();
+		glLoadIdentity();
+		glTranslatef (0.5, 0.5, 0.5);
+		glScalef (0.5, 0.5, 0.5);
+		glMultMatrixf(mp);
+		glMultMatrixf(mv);
+		glGetFloatv(GL_TEXTURE_MATRIX, clipmat);
+		glPopMatrix();
+		glMatrixMode( GL_MODELVIEW );
+		glActiveTextureARB(GL_TEXTURE4_ARB+i);
+		glMatrixMode( GL_TEXTURE );
+		glLoadMatrixf(clipmat);
+		glMatrixMode( GL_MODELVIEW );
+		glActiveTextureARB(GL_TEXTURE0_ARB);
+	}
 }
 
 bool SortDraworder(DRAWABLE * d1, DRAWABLE * d2)
@@ -582,11 +650,6 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 	//sort the two dimentional drawlist so we get correct ordering
 	std::sort(dynamic_drawlist.twodim.begin(),dynamic_drawlist.twodim.end(),&SortDraworder);
 	
-	/*int objectcount = 0;
-	static_drawlist.GetDrawlist().normal_noblend.GetTree().DebugPrint(0, objectcount, true, std::cout);
-	std::cout << std::endl;
-	std::cout << std::endl;*/
-	
 	//shader path
 	if (using_shaders)
 	{
@@ -597,21 +660,38 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 		std::map <std::string, PTRVECTOR <DRAWABLE> > culled_static_drawlist;
 		for (std::vector <GRAPHICS_CONFIG_PASS>::const_iterator i = config.passes.begin(); i != config.passes.end(); i++)
 		{
-			if (i->draw != "postprocess" && i->conditions.Satisfied(conditions))
+			assert(!i->draw.empty());
+			if (i->draw.back() != "postprocess" && i->conditions.Satisfied(conditions))
 			{
-				std::string key = BuildKey(i->camera, i->draw);
-				if (i->cull)
+				for (std::vector <std::string>::const_iterator d = i->draw.begin(); d != i->draw.end(); d++)
 				{
-					GRAPHICS_CAMERA & cam = cameras[i->camera];
-					if (culled_static_drawlist.find(key) == culled_static_drawlist.end())
+					std::string key = BuildKey(i->camera, *d);
+					if (i->cull)
 					{
-						FRUSTUM frustum = renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h);
-						static_drawlist.GetDrawlist().GetByName(i->draw)->Query(frustum, culled_static_drawlist[key]);
+						camera_map_type::iterator ci = cameras.find(i->camera);
+						assert(ci != cameras.end()); //TODO: replace with friendly error message
+						GRAPHICS_CAMERA & cam = ci->second;
+						if (culled_static_drawlist.find(key) == culled_static_drawlist.end())
+						{
+							if (cam.orthomode)
+								renderscene.SetOrtho(cam.orthomin, cam.orthomax);
+							else
+								renderscene.DisableOrtho();
+							FRUSTUM frustum = renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h);
+							reseatable_reference <AABB_SPACE_PARTITIONING_NODE_ADAPTER <DRAWABLE> > container =
+								static_drawlist.GetDrawlist().GetByName(*d);
+							assert(container); //TODO: replace with friendly error message
+							container->Query(frustum, culled_static_drawlist[key]);
+							renderscene.DisableOrtho();
+						}
 					}
-				}
-				else
-				{
-					static_drawlist.GetDrawlist().GetByName(i->draw)->Query(AABB<float>::INTERSECT_ALWAYS(), culled_static_drawlist[key]);
+					else
+					{
+						reseatable_reference <AABB_SPACE_PARTITIONING_NODE_ADAPTER <DRAWABLE> > container =
+							static_drawlist.GetDrawlist().GetByName(*d);
+						assert(container); //TODO: replace with friendly error message
+						container->Query(AABB<float>::INTERSECT_ALWAYS(), culled_static_drawlist[key]);
+					}
 				}
 			}
 		}
@@ -641,29 +721,61 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 					// this allows us to specify outputs that are only present for certain conditions
 					// and then always specify those outputs as inputs to later stages, and have
 					// them be ignored if the conditions aren't met
-					if (output_inputs.find(texname) != output_inputs.end())
-						input_textures.push_back(&*output_inputs[texname]);
+					if (texture_inputs.find(texname) != texture_inputs.end())
+					{
+						input_textures.push_back(&*texture_inputs[texname]);
+					}
 					else
+					{
+						//TODO: decide if i want to do fancier error detection here to catch typos in render.conf
+						//std::cout << "warning: " << texname << " not found" << std::endl;
 						input_textures.push_back(NULL);
+					}
 				}
 				
-				if (i->draw == "postprocess")
+				assert(!i->draw.empty());
+				if (i->draw.back() == "postprocess")
 				{
 					RenderPostProcess(i->shader, input_textures, render_outputs[i->output], error_output);
 				}
 				else
 				{
-					GRAPHICS_CAMERA & cam = cameras[i->camera];
-					renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h);
-					renderscene.SetDefaultShader(shadermap[i->shader]);
-					renderscene.SetClear(i->clear_color, i->clear_depth);
-					renderscene.SetWriteDepth(i->write_depth);
-					RenderDrawlists(*dynamic_drawlist.GetByName(i->draw),
-										culled_static_drawlist[BuildKey(i->camera,i->draw)],
-										input_textures,
-										renderscene,
-										render_outputs[i->output],
-										error_output);
+					for (std::vector <std::string>::const_iterator d = i->draw.begin(); d != i->draw.end(); d++)
+					{
+						camera_map_type::iterator ci = cameras.find(i->camera);
+						assert(ci != cameras.end()); //TODO: replace with friendly error message
+						GRAPHICS_CAMERA & cam = ci->second;
+						if (cam.orthomode)
+							renderscene.SetOrtho(cam.orthomin, cam.orthomax);
+						else
+							renderscene.DisableOrtho();
+						renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h);
+						
+						shader_map_type::iterator si = shadermap.find(i->shader);
+						assert(si != shadermap.end()); //TODO: replace with friendly error message
+						renderscene.SetDefaultShader(si->second);
+						
+						if (d == i->draw.begin())
+							renderscene.SetClear(i->clear_color, i->clear_depth);
+						else
+							renderscene.SetClear(false, false);
+						renderscene.SetWriteDepth(i->write_depth);
+						
+						reseatable_reference <PTRVECTOR <DRAWABLE> > container = dynamic_drawlist.GetByName(*d);
+						assert(container); //TODO: replace with friendly error message
+						
+						render_output_map_type::iterator oi = render_outputs.find(i->output);
+						assert(oi != render_outputs.end()); //TODO: replace with friendly error message
+						
+						RenderDrawlists(*container,
+											culled_static_drawlist[BuildKey(i->camera,*d)],
+											input_textures,
+											renderscene,
+											oi->second,
+											error_output);
+											
+						renderscene.DisableOrtho();
+					}
 				}
 			}
 		}

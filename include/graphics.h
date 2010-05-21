@@ -33,11 +33,16 @@ struct GRAPHICS_CAMERA
 	float w;
 	float h;
 	
+	bool orthomode;
+	MATHVECTOR <float, 3> orthomin;
+	MATHVECTOR <float, 3> orthomax;
+	
 	GRAPHICS_CAMERA() :
 		fov(45),
 		view_distance(10000),
 		w(1),
-		h(1)
+		h(1),
+		orthomode(false)
 		{}
 };
 
@@ -71,24 +76,27 @@ private:
 	GRAPHICS_CONFIG config;
 	
 	// shaders
-	std::map <std::string, SHADER_GLSL> shadermap;
-	std::map <std::string, SHADER_GLSL>::iterator activeshader;
+	typedef std::map <std::string, SHADER_GLSL> shader_map_type;
+	shader_map_type shadermap;
+	shader_map_type::iterator activeshader;
 	
 	// scenegraph output
 	DRAWABLE_CONTAINER <PTRVECTOR> dynamic_drawlist; //used for objects that move or change
 	STATICDRAWABLES static_drawlist; //used for objects that will never change
 	
-	// outputs used as inputs
-	std::map <std::string, reseatable_reference <FBTEXTURE> > output_inputs;
+	// render outputs
+	typedef std::map <std::string, RENDER_OUTPUT> render_output_map_type;
+	render_output_map_type render_outputs;
 	
-	// render pipeline data
+	// outputs and other textures used as inputs
+	std::map <std::string, reseatable_reference <FBTEXTURE> > texture_inputs;
+	
+	// scene
 	RENDER_INPUT_SCENE renderscene;
-	//RENDER_OUTPUT scene_depthtexture;
-	std::list <RENDER_OUTPUT> shadow_depthtexturelist;
-	std::map <std::string, RENDER_OUTPUT> render_outputs;
 	
 	// camera data
-	std::map <std::string, GRAPHICS_CAMERA> cameras;
+	typedef std::map <std::string, GRAPHICS_CAMERA> camera_map_type;
+	camera_map_type cameras;
 	
 	QUATERNION <float> lightdirection;
 	
