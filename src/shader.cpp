@@ -63,22 +63,22 @@ bool SHADER_GLSL::Load(const std::string & vertex_filename, const std::string & 
 	GLcharARB * vertshad = new GLcharARB[vertexshader_source.length()+1];
 	strcpy(vertshad, vertexshader_source.c_str());
 	const GLcharARB * vertshad2 = vertshad;
-	glShaderSourceARB(vertex_shader, 1, &vertshad2, NULL);
+	glShaderSource(vertex_shader, 1, &vertshad2, NULL);
 	delete [] vertshad;
 
 	GLcharARB * fragshad = new GLcharARB[fragmentshader_source.length()+1];
 	strcpy(fragshad, fragmentshader_source.c_str());
 	const GLcharARB * fragshad2 = fragshad;
-	glShaderSourceARB(fragment_shader, 1, &fragshad2, NULL);
+	glShaderSource(fragment_shader, 1, &fragshad2, NULL);
 	delete [] fragshad;
 	
 	//compile the shaders
 	GLint vertex_compiled(0);
 	GLint fragment_compiled(0);
 	
-	glCompileShaderARB(vertex_shader);
+	glCompileShader(vertex_shader);
 	PrintShaderLog(vertex_shader, vertex_filename, info_output);
-	glCompileShaderARB(fragment_shader);
+	glCompileShader(fragment_shader);
 	PrintShaderLog(fragment_shader, fragment_filename, info_output);
 	
 	glGetObjectParameterivARB(vertex_shader, GL_OBJECT_COMPILE_STATUS_ARB, &vertex_compiled);
@@ -89,7 +89,7 @@ bool SHADER_GLSL::Load(const std::string & vertex_filename, const std::string & 
 	glAttachObjectARB(program, fragment_shader);
 	
 	//link the program
-	glLinkProgramARB(program);
+	glLinkProgram(program);
 	GLint program_linked(0);
 	glGetProgramiv(program, GL_LINK_STATUS, &program_linked);
 	
@@ -119,16 +119,16 @@ bool SHADER_GLSL::Load(const std::string & vertex_filename, const std::string & 
 			stringstream tustring;
 			tustring << "tu" << i;
 			int tu_loc;
-			tu_loc = glGetUniformLocationARB(program, (tustring.str()+"_2D").c_str());
-			if (tu_loc >= 0) glUniform1iARB(tu_loc, i);
+			tu_loc = glGetUniformLocation(program, (tustring.str()+"_2D").c_str());
+			if (tu_loc >= 0) glUniform1i(tu_loc, i);
 				
-			tu_loc = glGetUniformLocationARB(program, (tustring.str()+"_2DRect").c_str());
-			if (tu_loc >= 0) glUniform1iARB(tu_loc, i);
+			tu_loc = glGetUniformLocation(program, (tustring.str()+"_2DRect").c_str());
+			if (tu_loc >= 0) glUniform1i(tu_loc, i);
 				
-			tu_loc = glGetUniformLocationARB(program, (tustring.str()+"_cube").c_str());
+			tu_loc = glGetUniformLocation(program, (tustring.str()+"_cube").c_str());
 			if (tu_loc >= 0)
 			{
-				glUniform1iARB(tu_loc, i);
+				glUniform1i(tu_loc, i);
 			}
 		}
 	}
@@ -178,7 +178,7 @@ bool SHADER_GLSL::UploadMat16(const string & varname, float * mat16)
 {
 	Enable();
 	
-	int mat_loc = glGetUniformLocationARB(program, varname.c_str());
+	int mat_loc = glGetUniformLocation(program, varname.c_str());
 	if (mat_loc >= 0) glUniformMatrix4fv(mat_loc, 1, GL_FALSE, mat16);
 	return (mat_loc >= 0);
 }
@@ -188,7 +188,7 @@ bool SHADER_GLSL::UploadActiveShaderParameter1i(const string & param, int val)
 {
 	Enable();
 	
-	int loc = glGetUniformLocationARB(program, param.c_str());
+	int loc = glGetUniformLocation(program, param.c_str());
 	if (loc >= 0) glUniform1i(loc, val);
 	return (loc >= 0);
 }
@@ -198,7 +198,7 @@ bool SHADER_GLSL::UploadActiveShaderParameter1f(const string & param, float val)
 {
 	Enable();
 	
-	int loc = glGetUniformLocationARB(program, param.c_str());
+	int loc = glGetUniformLocation(program, param.c_str());
 	if (loc >= 0) glUniform1f(loc, val);
 	return (loc >= 0);
 }
@@ -208,7 +208,7 @@ bool SHADER_GLSL::UploadActiveShaderParameter3f(const std::string & param, float
 {
 	Enable();
 	
-	int loc = glGetUniformLocationARB(program, param.c_str());
+	int loc = glGetUniformLocation(program, param.c_str());
 	if (loc >= 0) glUniform3f(loc, val1, val2, val3);
 	return (loc >= 0);
 }

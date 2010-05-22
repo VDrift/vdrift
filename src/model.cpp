@@ -45,7 +45,7 @@ void MODEL::GenerateListID(std::ostream & error_output)
 				///tex array bounds are not checked but it is assumed to be of size 2
 				std::vector <float> tex = mesh.GetTextureCoordinate(j, whichVertex, 0);
 				
-				glMultiTexCoord2fARB(GL_TEXTURE0, tex[0], tex[1]);
+				glMultiTexCoord2f(GL_TEXTURE0, tex[0], tex[1]);
 			}
 
 			glNormal3fv(&norm[0]);

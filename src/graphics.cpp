@@ -639,11 +639,11 @@ void GRAPHICS_SDLGL::SetupScene(float fov, float new_view_distance, const MATHVE
 		glGetFloatv(GL_TEXTURE_MATRIX, clipmat);
 		glPopMatrix();
 		glMatrixMode( GL_MODELVIEW );
-		glActiveTextureARB(GL_TEXTURE4+i);
+		glActiveTexture(GL_TEXTURE4+i);
 		glMatrixMode( GL_TEXTURE );
 		glLoadMatrixf(clipmat);
 		glMatrixMode( GL_MODELVIEW );
-		glActiveTextureARB(GL_TEXTURE0);
+		glActiveTexture(GL_TEXTURE0);
 	}
 }
 
@@ -1031,7 +1031,7 @@ void GRAPHICS_SDLGL::RenderDrawlists(std::vector <DRAWABLE*> & dynamic_drawlist,
 	{
 		if (extra_textures[i])
 		{
-			glActiveTextureARB(GL_TEXTURE0+i);
+			glActiveTexture(GL_TEXTURE0+i);
 			extra_textures[i]->Activate();
 			
 			if (OPENGL_UTILITY::CheckForOpenGLErrors("RenderDrawlists extra texture bind", error_output))
@@ -1041,7 +1041,7 @@ void GRAPHICS_SDLGL::RenderDrawlists(std::vector <DRAWABLE*> & dynamic_drawlist,
 		}
 	}
 	
-	glActiveTextureARB(GL_TEXTURE0);
+	glActiveTexture(GL_TEXTURE0);
 	
 	render_scene.SetDrawLists(dynamic_drawlist, static_drawlist);
 	
@@ -1053,7 +1053,7 @@ void GRAPHICS_SDLGL::RenderDrawlists(std::vector <DRAWABLE*> & dynamic_drawlist,
 	{
 		if (extra_textures[i])
 		{
-			glActiveTextureARB(GL_TEXTURE0+i);
+			glActiveTexture(GL_TEXTURE0+i);
 			extra_textures[i]->Deactivate();
 			
 			if (OPENGL_UTILITY::CheckForOpenGLErrors("RenderDrawlists extra texture unbind", error_output))
@@ -1063,7 +1063,7 @@ void GRAPHICS_SDLGL::RenderDrawlists(std::vector <DRAWABLE*> & dynamic_drawlist,
 		}
 	}
 	
-	glActiveTextureARB(GL_TEXTURE0);
+	glActiveTexture(GL_TEXTURE0);
 }
 
 void GRAPHICS_SDLGL::RenderPostProcess(const std::string & shadername,

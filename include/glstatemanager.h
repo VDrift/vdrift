@@ -109,7 +109,7 @@ public:
 			id = texture->GetID();
 		if (curid != id)
 		{
-			glActiveTextureARB(GL_TEXTURE0+tu);
+			glActiveTexture(GL_TEXTURE0+tu);
 			glBindTexture(GL_TEXTURE_2D, id);
 			curid = id;
 			Enable(GL_TEXTURE_2D);
