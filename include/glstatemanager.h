@@ -93,7 +93,7 @@ public:
 	{
 		if (fbid != framebuffer)
 		{
-			glBindFramebufferEXT(GL_FRAMEBUFFER, fbid);
+			glBindFramebuffer(GL_FRAMEBUFFER, fbid);
 			framebuffer = fbid;
 		}
 	}

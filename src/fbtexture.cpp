@@ -38,7 +38,7 @@ void FBTEXTURE::Init(int sizex, int sizey, TARGET target, bool newdepth, bool fi
 	
 	//initialize framebuffer object (FBO)
 	assert(GLEW_ARB_framebuffer_object);
-	glGenFramebuffersEXT(1, &framebuffer_object);
+	glGenFramebuffers(1, &framebuffer_object);
 	
 	OPENGL_UTILITY::CheckForOpenGLErrors("FBO generation", error_output);
 	
@@ -125,7 +125,7 @@ void FBTEXTURE::Init(int sizex, int sizey, TARGET target, bool newdepth, bool fi
 		
 		if (mipmap)
 		{
-			glGenerateMipmapEXT(texture_target);
+			glGenerateMipmap(texture_target);
 		}
 		
 		OPENGL_UTILITY::CheckForOpenGLErrors("FBO mipmap generation", error_output);
@@ -143,36 +143,36 @@ void FBTEXTURE::Init(int sizex, int sizey, TARGET target, bool newdepth, bool fi
 	}
 	
 	//bind the framebuffer
-	glBindFramebufferEXT(GL_FRAMEBUFFER, framebuffer_object);
+	glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_object);
 	
 	OPENGL_UTILITY::CheckForOpenGLErrors("FBO binding", error_output);
 	
 	//initialize renderbuffer object that's used for our depth buffer when rendering to a texture
 	if (!depth)
 	{
-		glGenRenderbuffersEXT(1, &renderbuffer_depth);
-		glBindRenderbufferEXT(GL_RENDERBUFFER, renderbuffer_depth);
+		glGenRenderbuffers(1, &renderbuffer_depth);
+		glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer_depth);
 		
 		OPENGL_UTILITY::CheckForOpenGLErrors("FBO renderbuffer generation", error_output);
 		
 		if (multisample > 0)
 		{
 			// need a separate multisample color buffer; can't use our nice single sample texture, unfortunately
-			glGenRenderbuffersEXT(1, &renderbuffer_multisample);
-			glBindRenderbufferEXT(GL_RENDERBUFFER, renderbuffer_multisample);
-			glRenderbufferStorageMultisampleEXT(GL_RENDERBUFFER, multisample, texture_format1, sizew, sizeh);
-			glFramebufferRenderbufferEXT(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, renderbuffer_multisample);
+			glGenRenderbuffers(1, &renderbuffer_multisample);
+			glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer_multisample);
+			glRenderbufferStorageMultisample(GL_RENDERBUFFER, multisample, texture_format1, sizew, sizeh);
+			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, renderbuffer_multisample);
 			
-			glBindRenderbufferEXT(GL_RENDERBUFFER, renderbuffer_depth);
-			glRenderbufferStorageMultisampleEXT(GL_RENDERBUFFER, multisample, GL_DEPTH_COMPONENT, sizew, sizeh);
+			glBindRenderbuffer(GL_RENDERBUFFER, renderbuffer_depth);
+			glRenderbufferStorageMultisample(GL_RENDERBUFFER, multisample, GL_DEPTH_COMPONENT, sizew, sizeh);
 		}
 		else
-			glRenderbufferStorageEXT(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, sizew, sizeh);
+			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, sizew, sizeh);
 		
 		OPENGL_UTILITY::CheckForOpenGLErrors("FBO renderbuffer initialization", error_output);
 		
 		//attach the render buffer to the FBO
-		glFramebufferRenderbufferEXT(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, renderbuffer_depth);
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, renderbuffer_depth);
 		
 		OPENGL_UTILITY::CheckForOpenGLErrors("FBO renderbuffer attachment", error_output);
 	}
@@ -193,11 +193,11 @@ void FBTEXTURE::Init(int sizex, int sizey, TARGET target, bool newdepth, bool fi
 		if (texture_target == CUBEMAP)
 		{
 			// if we're using a cubemap, arbitrarily pick one of the faces to activate so we can check that the FBO is complete
-			glFramebufferTexture2DEXT(GL_FRAMEBUFFER, texture_attachment, GL_TEXTURE_CUBE_MAP_POSITIVE_X, fbtexture, 0);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, texture_attachment, GL_TEXTURE_CUBE_MAP_POSITIVE_X, fbtexture, 0);
 		}
 		else
 		{
-			glFramebufferTexture2DEXT(GL_FRAMEBUFFER, texture_attachment, texture_target, fbtexture, 0);
+			glFramebufferTexture2D(GL_FRAMEBUFFER, texture_attachment, texture_target, fbtexture, 0);
 		}
 	}
 	
@@ -206,14 +206,14 @@ void FBTEXTURE::Init(int sizex, int sizey, TARGET target, bool newdepth, bool fi
 	bool status_ok = CheckStatus(error_output);
 	assert(status_ok);
 	
-	glBindFramebufferEXT(GL_FRAMEBUFFER, 0);
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	
 	OPENGL_UTILITY::CheckForOpenGLErrors("FBO unbinding", error_output);
 }
 
 bool FBTEXTURE::CheckStatus(std::ostream & error_output)
 {
-	GLenum status = glCheckFramebufferStatusEXT(GL_FRAMEBUFFER);
+	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 	
 	if (status == GL_FRAMEBUFFER_UNSUPPORTED)
 	{
@@ -242,11 +242,11 @@ void FBTEXTURE::DeInit()
 	{
 		if (multisample == 0)
 			glDeleteTextures(1, &fbtexture);
-		glDeleteFramebuffersEXT(1, &framebuffer_object);
+		glDeleteFramebuffers(1, &framebuffer_object);
 		if (!depth)
-			glDeleteRenderbuffersEXT(1, &renderbuffer_depth);
+			glDeleteRenderbuffers(1, &renderbuffer_depth);
 		if (multisample > 0)
-			glDeleteRenderbuffersEXT(1, &renderbuffer_multisample);
+			glDeleteRenderbuffers(1, &renderbuffer_multisample);
 		if (single_sample_FBO_for_multisampling)
 			delete single_sample_FBO_for_multisampling;
 	}
@@ -265,7 +265,7 @@ void FBTEXTURE::Begin(GLSTATEMANAGER & glstate, std::ostream & error_output, flo
 	
 	if (texture_target == CUBEMAP)
 	{
-		glFramebufferTexture2DEXT(GL_FRAMEBUFFER, texture_attachment, cur_side, fbtexture, 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, texture_attachment, cur_side, fbtexture, 0);
 		OPENGL_UTILITY::CheckForOpenGLErrors("FBO cubemap side attachment", error_output);
 	}
 	
@@ -284,19 +284,19 @@ void FBTEXTURE::End(std::ostream & error_output)
 	
 	if (single_sample_FBO_for_multisampling)
 	{
-		glBindFramebufferEXT(GL_READ_FRAMEBUFFER, framebuffer_object);
-		glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER, single_sample_FBO_for_multisampling->framebuffer_object);
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer_object);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, single_sample_FBO_for_multisampling->framebuffer_object);
 		
-		assert(glCheckFramebufferStatusEXT(GL_READ_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
-		assert(glCheckFramebufferStatusEXT(GL_DRAW_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+		assert(glCheckFramebufferStatus(GL_READ_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
+		assert(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
 		
 		OPENGL_UTILITY::CheckForOpenGLErrors("FBO end multisample binding", error_output);
 		
-		glBlitFramebufferEXT(0, 0, sizew, sizeh, 0, 0, sizew, sizeh, GL_COLOR_BUFFER_BIT, GL_NEAREST);
+		glBlitFramebuffer(0, 0, sizew, sizeh, 0, 0, sizew, sizeh, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 		
 		OPENGL_UTILITY::CheckForOpenGLErrors("FBO end multisample blit", error_output);
 		
-		glBindFramebufferEXT(GL_DRAW_FRAMEBUFFER, renderbuffer_multisample);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, renderbuffer_multisample);
 	}
 	
 	OPENGL_UTILITY::CheckForOpenGLErrors("FBO end multisample block", error_output);
