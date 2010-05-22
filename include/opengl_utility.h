@@ -6,7 +6,8 @@
 
 namespace OPENGL_UTILITY
 {
-	void CheckForOpenGLErrors(std::string activity_description, std::ostream & error_output);
+	/// returns true on error
+	bool CheckForOpenGLErrors(std::string activity_description, std::ostream & error_output);
 }
 
 #endif

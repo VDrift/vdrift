@@ -8,7 +8,7 @@
 #include <GL/glew.h>
 #endif
 
-void OPENGL_UTILITY::CheckForOpenGLErrors(std::string activity_description, std::ostream & error_output)
+bool OPENGL_UTILITY::CheckForOpenGLErrors(std::string activity_description, std::ostream & error_output)
 {
 #if defined(WIN32) || defined(_WIN32) || defined (__WIN32) || defined(__WIN32__) \
 	|| defined (_WIN64) || defined(__CYGWIN__) || defined(__MINGW32__)
@@ -20,6 +20,9 @@ void OPENGL_UTILITY::CheckForOpenGLErrors(std::string activity_description, std:
 		const GLubyte *err_string = gluErrorString(gl_error);
 		error_output << "OpenGL error \"" << err_string << "\" during: " << activity_description << std::endl;
 		//assert (gl_error == GL_NO_ERROR);
+		return true;
 	}
+	else
+		return false;
 #endif
 }

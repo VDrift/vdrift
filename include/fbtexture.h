@@ -74,6 +74,7 @@ class FBTEXTURE : public TEXTURE_INTERFACE
 		void SetCubeSide(CUBE_SIDE side); ///< attach a specified cube side to the texture_attachment. for cube map FBOs only.
 		int GetWidth() const {return sizew;}
 		int GetHeight() const {return sizeh;}
+		bool IsCubemap() const {return (texture_target == CUBEMAP);}
 };
 
 #endif

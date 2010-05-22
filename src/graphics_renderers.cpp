@@ -189,14 +189,14 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 		lightarray[i] = lightvec[i];
 		glLightfv(GL_LIGHT0, GL_POSITION, lightarray);*/
 
-		glActiveTextureARB(GL_TEXTURE2_ARB);
+		// if we have no reflection texture supplied, don't touch the TU because
+		// someone else may be supplying one
 		if (reflection && reflection->Loaded())
 		{
+			glActiveTextureARB(GL_TEXTURE2_ARB);
 			reflection->Activate();
+			glActiveTextureARB(GL_TEXTURE0_ARB);
 		}
-		else
-			glBindTexture(GL_TEXTURE_CUBE_MAP_ARB,0);
-		glActiveTextureARB(GL_TEXTURE0_ARB);
 		
 		glActiveTextureARB(GL_TEXTURE3_ARB);
 		if (ambient && ambient->Loaded())
