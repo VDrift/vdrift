@@ -61,7 +61,7 @@ class FBTEXTURE : public TEXTURE_INTERFACE
 	public:
 		FBTEXTURE() : single_sample_FBO_for_multisampling(NULL),loaded(false),inited(false),sizew(0),sizeh(0),
 			texture_target(NORMAL),depth(false),alpha(false),mipmap(false),multisample(0),
-			texture_attachment(GL_COLOR_ATTACHMENT0_EXT),cur_side(POSX) {}
+			texture_attachment(GL_COLOR_ATTACHMENT0),cur_side(POSX) {}
 		~FBTEXTURE() {DeInit();}
 		void Init(int sizex, int sizey, TARGET target, bool newdepth, bool filternearest, bool newalpha, bool usemipmap, std::ostream & error_output, int newmultisample = 0);
 		void DeInit();

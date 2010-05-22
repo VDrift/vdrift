@@ -138,7 +138,7 @@ void GRAPHICS_SDLGL::Init(const std::string shaderpath, const std::string & wind
 		info_output << "Your video card doesn't support cube maps.  Disabling shaders." << endl;
 		DisableShaders();
 	}
-	else if (!GLEW_EXT_framebuffer_object)
+	else if (!GLEW_ARB_framebuffer_object)
 	{
 		info_output << "Your video card doesn't support framebuffer objects.  Disabling shaders." << endl;
 		DisableShaders();
