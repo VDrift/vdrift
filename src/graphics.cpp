@@ -150,11 +150,17 @@ void GRAPHICS_SDLGL::Init(const std::string shaderpath, const std::string & wind
 	}
 	else
 	{
-		GLint mrt;
-		glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &mrt);
-		info_output << "Maximum color attachments: " << mrt << endl;
+		GLint maxattach;
+		glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxattach);
+		info_output << "Maximum color attachments: " << maxattach << endl;
 		
-		if (GLEW_ARB_shading_language_100 && GLEW_VERSION_2_0 && shaders && GLEW_ARB_fragment_shader)
+		const GLint reqmrt = 1;
+		
+		GLint mrt;
+		glGetIntegerv(GL_MAX_DRAW_BUFFERS, &mrt);
+		info_output << "Maximum draw buffers (" << reqmrt << " required): " << mrt << endl;
+		
+		if (GLEW_ARB_shading_language_100 && GLEW_VERSION_2_0 && shaders && GLEW_ARB_fragment_shader && mrt >= reqmrt && maxattach >= reqmrt)
 		{
 			EnableShaders(shaderpath, info_output, error_output);
 		}
