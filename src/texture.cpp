@@ -130,7 +130,7 @@ bool TEXTURE::LoadCubeVerticalCross(const TEXTUREINFO & info, std::ostream & err
 	OPENGL_UTILITY::CheckForOpenGLErrors("Cubemap ID generation", error);
 	tex_id = new_handle;
 
-	glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, new_handle);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, new_handle);
 
 	SDL_Surface * texture_surface = NULL;
 
@@ -175,37 +175,37 @@ bool TEXTURE::LoadCubeVerticalCross(const TEXTUREINFO & info, std::ostream & err
 			GLenum targetparam;
 			if (i == 0)
 			{
-				targetparam = GL_TEXTURE_CUBE_MAP_NEGATIVE_X_ARB;
+				targetparam = GL_TEXTURE_CUBE_MAP_NEGATIVE_X;
 				offsetx = 0;
 				offsety = h;
 			}
 			else if (i == 1)
 			{
-				targetparam = GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB;
+				targetparam = GL_TEXTURE_CUBE_MAP_POSITIVE_X;
 				offsetx = w*2;
 				offsety = h;
 			}
 			else if (i == 2)
 			{
-				targetparam = GL_TEXTURE_CUBE_MAP_NEGATIVE_Y_ARB;
+				targetparam = GL_TEXTURE_CUBE_MAP_NEGATIVE_Y;
 				offsetx = w;
 				offsety = h*2;
 			}
 			else if (i == 3)
 			{
-				targetparam = GL_TEXTURE_CUBE_MAP_POSITIVE_Y_ARB;
+				targetparam = GL_TEXTURE_CUBE_MAP_POSITIVE_Y;
 				offsetx = w;
 				offsety = 0;
 			}
 			else if (i == 4)
 			{
-				targetparam = GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_ARB;
+				targetparam = GL_TEXTURE_CUBE_MAP_NEGATIVE_Z;
 				offsetx = w;
 				offsety = h*3;
 			}
 			else if (i == 5)
 			{
-				targetparam = GL_TEXTURE_CUBE_MAP_POSITIVE_Z_ARB;
+				targetparam = GL_TEXTURE_CUBE_MAP_POSITIVE_Z;
 				offsetx = w;
 				offsety = h;
 			}
@@ -266,14 +266,14 @@ bool TEXTURE::LoadCubeVerticalCross(const TEXTUREINFO & info, std::ostream & err
 		texture_surface = NULL;
 	}
 
-	glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
 	loaded = true;
-	glDisable(GL_TEXTURE_CUBE_MAP_ARB);
+	glDisable(GL_TEXTURE_CUBE_MAP);
 
 	OPENGL_UTILITY::CheckForOpenGLErrors("Cubemap creation", error);
 
@@ -300,7 +300,7 @@ bool TEXTURE::LoadCube(const TEXTUREINFO & info, std::ostream & error)
 	OPENGL_UTILITY::CheckForOpenGLErrors("Cubemap texture ID generation", error);
 	tex_id = new_handle;
 
-	glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, new_handle);
+	glBindTexture(GL_TEXTURE_CUBE_MAP, new_handle);
 
 	for (unsigned int i = 0; i < 6; i++)
 	{
@@ -349,17 +349,17 @@ bool TEXTURE::LoadCube(const TEXTUREINFO & info, std::ostream & error)
 
 			GLenum targetparam;
 			if (i == 0)
-				targetparam = GL_TEXTURE_CUBE_MAP_NEGATIVE_X_ARB;
+				targetparam = GL_TEXTURE_CUBE_MAP_NEGATIVE_X;
 			else if (i == 1)
-				targetparam = GL_TEXTURE_CUBE_MAP_POSITIVE_X_ARB;
+				targetparam = GL_TEXTURE_CUBE_MAP_POSITIVE_X;
 			else if (i == 2)
-				targetparam = GL_TEXTURE_CUBE_MAP_NEGATIVE_Y_ARB;
+				targetparam = GL_TEXTURE_CUBE_MAP_NEGATIVE_Y;
 			else if (i == 3)
-				targetparam = GL_TEXTURE_CUBE_MAP_POSITIVE_Y_ARB;
+				targetparam = GL_TEXTURE_CUBE_MAP_POSITIVE_Y;
 			else if (i == 4)
-				targetparam = GL_TEXTURE_CUBE_MAP_NEGATIVE_Z_ARB;
+				targetparam = GL_TEXTURE_CUBE_MAP_NEGATIVE_Z;
 			else if (i == 5)
-				targetparam = GL_TEXTURE_CUBE_MAP_POSITIVE_Z_ARB;
+				targetparam = GL_TEXTURE_CUBE_MAP_POSITIVE_Z;
 			else
 			{
 				error << "Iterated too far: " + info.GetName() + " (" + cubefiles[i] + ")" << std::endl;
@@ -382,14 +382,14 @@ bool TEXTURE::LoadCube(const TEXTUREINFO & info, std::ostream & error)
 		}
 	}
 
-	glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP_ARB, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
 	loaded = true;
-	glDisable(GL_TEXTURE_CUBE_MAP_ARB);
+	glDisable(GL_TEXTURE_CUBE_MAP);
 
 	OPENGL_UTILITY::CheckForOpenGLErrors("Cubemap creation", error);
 
@@ -593,7 +593,7 @@ void TEXTURE::Activate() const
 	assert(loaded);
 	if (cube)
 	{
-		glBindTexture(GL_TEXTURE_CUBE_MAP_ARB, tex_id);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, tex_id);
 	}
 	else
 	{

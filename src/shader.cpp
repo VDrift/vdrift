@@ -56,8 +56,8 @@ bool SHADER_GLSL::Load(const std::string & vertex_filename, const std::string & 
 	
 	//create shader objects
 	program = glCreateProgramObjectARB();
-	vertex_shader = glCreateShaderObjectARB(GL_VERTEX_SHADER_ARB);
-	fragment_shader = glCreateShaderObjectARB(GL_FRAGMENT_SHADER_ARB);
+	vertex_shader = glCreateShaderObjectARB(GL_VERTEX_SHADER);
+	fragment_shader = glCreateShaderObjectARB(GL_FRAGMENT_SHADER);
 	
 	//load shader sources
 	GLcharARB * vertshad = new GLcharARB[vertexshader_source.length()+1];

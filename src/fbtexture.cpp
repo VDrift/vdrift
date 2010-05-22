@@ -43,7 +43,7 @@ void FBTEXTURE::Init(int sizex, int sizey, TARGET target, bool newdepth, bool fi
 	OPENGL_UTILITY::CheckForOpenGLErrors("FBO generation", error_output);
 	
 	//set texture info
-	if (texture_target == GL_TEXTURE_RECTANGLE_ARB)
+	if (texture_target == GL_TEXTURE_RECTANGLE)
 	{
 		assert(GLEW_ARB_texture_rectangle);
 	}
@@ -114,11 +114,11 @@ void FBTEXTURE::Init(int sizex, int sizey, TARGET target, bool newdepth, bool fi
 		if (depth)
 		{
 			glTexParameteri(texture_target, GL_DEPTH_TEXTURE_MODE, GL_LUMINANCE);
-			glTexParameteri(texture_target, GL_TEXTURE_COMPARE_FUNC_ARB, GL_LEQUAL);
+			glTexParameteri(texture_target, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
 			//if (depthcomparisonenabled)
-				glTexParameteri(texture_target, GL_TEXTURE_COMPARE_MODE_ARB, GL_COMPARE_R_TO_TEXTURE_ARB);
+				glTexParameteri(texture_target, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
 			//else
-			//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE_ARB, GL_NONE);
+			//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE);
 		}
 		
 		OPENGL_UTILITY::CheckForOpenGLErrors("FBO texture setup", error_output);

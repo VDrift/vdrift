@@ -229,7 +229,7 @@ void GRAPHICS_SDLGL::ChangeDisplay(const int width, const int height, const int 
 	SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, dbpp );
 
 	fsaa = 1;
-	//if (antialiasing > 1 && GLEW_ARB_multisample) //can't check this because OpenGL and GLEW aren't initialized
+	//if (antialiasing > 1 && GLEW_multisample) //can't check this because OpenGL and GLEW aren't initialized
 	if (antialiasing > 1)
 	{
 		fsaa = antialiasing;
@@ -402,9 +402,9 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 	
 	{
 		GLint tu;
-		glGetIntegerv( GL_MAX_TEXTURE_IMAGE_UNITS_ARB,&tu );
+		glGetIntegerv( GL_MAX_TEXTURE_IMAGE_UNITS,&tu );
 		GLint tufull;
-		glGetIntegerv( GL_MAX_TEXTURE_UNITS_ARB,&tufull );
+		glGetIntegerv( GL_MAX_TEXTURE_UNITS,&tufull );
 		info_output << "Texture units: " << tufull << " full, " << tu << " partial" << std::endl;
 	}
 	
@@ -639,11 +639,11 @@ void GRAPHICS_SDLGL::SetupScene(float fov, float new_view_distance, const MATHVE
 		glGetFloatv(GL_TEXTURE_MATRIX, clipmat);
 		glPopMatrix();
 		glMatrixMode( GL_MODELVIEW );
-		glActiveTextureARB(GL_TEXTURE4_ARB+i);
+		glActiveTextureARB(GL_TEXTURE4+i);
 		glMatrixMode( GL_TEXTURE );
 		glLoadMatrixf(clipmat);
 		glMatrixMode( GL_MODELVIEW );
-		glActiveTextureARB(GL_TEXTURE0_ARB);
+		glActiveTextureARB(GL_TEXTURE0);
 	}
 }
 

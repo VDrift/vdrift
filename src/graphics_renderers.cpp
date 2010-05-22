@@ -67,8 +67,8 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 	glstate.Disable(GL_DEPTH_TEST);
 	glstate.Enable(GL_TEXTURE_2D);
 	
-	glActiveTextureARB(GL_TEXTURE0_ARB);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE_ARB, GL_NONE);
+	glActiveTextureARB(GL_TEXTURE0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE);
 	glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_LUMINANCE);
 	
 	OPENGL_UTILITY::CheckForOpenGLErrors("postprocess flag set", error_output);
@@ -143,7 +143,7 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 	if (shaders)
 	{
 		//camera transform goes in texture3
-		glActiveTextureARB(GL_TEXTURE3_ARB);
+		glActiveTextureARB(GL_TEXTURE3);
 		glMatrixMode(GL_TEXTURE);
 		glLoadIdentity();
 		(cam_rotation).GetMatrix4(temp_matrix);
@@ -151,7 +151,7 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 		glTranslatef(-cam_position[0],-cam_position[1],-cam_position[2]);
 
 		//cubemap transform goes in texture2
-		glActiveTextureARB(GL_TEXTURE2_ARB);
+		glActiveTextureARB(GL_TEXTURE2);
 		glMatrixMode(GL_TEXTURE);
 		glLoadIdentity();
 		QUATERNION <float> camlook;
@@ -165,14 +165,14 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 		//glTranslatef(-cam_position[0],-cam_position[1],-cam_position[2]);
 		//glLoadIdentity();
 
-		/*glActiveTextureARB(GL_TEXTURE3_ARB);
+		/*glActiveTextureARB(GL_TEXTURE3);
 		glMatrixMode(GL_TEXTURE);
 		glLoadIdentity();
 		(cam_rotation).GetMatrix4(temp_matrix);
 		glLoadMatrixf(temp_matrix);
 		glTranslatef(-cam_position[0],-cam_position[1],-cam_position[2]);*/
 
-		glActiveTextureARB(GL_TEXTURE0_ARB);
+		glActiveTextureARB(GL_TEXTURE0);
 		glMatrixMode(GL_MODELVIEW);
 
 		//send light position to the shaders
@@ -193,22 +193,22 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 		// someone else may be supplying one
 		if (reflection && reflection->Loaded())
 		{
-			glActiveTextureARB(GL_TEXTURE2_ARB);
+			glActiveTextureARB(GL_TEXTURE2);
 			reflection->Activate();
-			glActiveTextureARB(GL_TEXTURE0_ARB);
+			glActiveTextureARB(GL_TEXTURE0);
 		}
 		
-		glActiveTextureARB(GL_TEXTURE3_ARB);
+		glActiveTextureARB(GL_TEXTURE3);
 		if (ambient && ambient->Loaded())
 		{
 			ambient->Activate();
 		}
 		else
 		{
-			glBindTexture(GL_TEXTURE_CUBE_MAP_ARB,0);
+			glBindTexture(GL_TEXTURE_CUBE_MAP,0);
 			//assert(0);
 		}
-		glActiveTextureARB(GL_TEXTURE0_ARB);
+		glActiveTextureARB(GL_TEXTURE0);
 	}
 
 	if (clearcolor && cleardepth)
@@ -440,7 +440,7 @@ void RENDER_INPUT_SCENE::SelectFlags(DRAWABLE & forme, GLSTATEMANAGER & glstate)
 	{
 		if (fsaa > 1)
 		{
-			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE_ARB);
+			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
 		}
 
 		//if (!shaders && i->GetDraw()->GetDistanceField())
@@ -469,7 +469,7 @@ void RENDER_INPUT_SCENE::SelectFlags(DRAWABLE & forme, GLSTATEMANAGER & glstate)
 	{
 		if (fsaa > 1 && shaders)
 		{
-			glstate.Enable(GL_SAMPLE_ALPHA_TO_COVERAGE_ARB);
+			glstate.Enable(GL_SAMPLE_ALPHA_TO_COVERAGE);
 		}
 			/*glstate.Enable(GL_BLEND);
 			glstate.Disable(GL_ALPHA_TEST);
@@ -609,11 +609,11 @@ bool RENDER_INPUT_SCENE::SelectTransformStart(DRAWABLE & forme, GLSTATEMANAGER &
 					glPopMatrix();
 				last_transform_valid = false;
 
-				glActiveTextureARB(GL_TEXTURE1_ARB);
+				glActiveTextureARB(GL_TEXTURE1);
 				glMatrixMode(GL_TEXTURE);
 				glPushMatrix();
 				glLoadIdentity();
-				glActiveTextureARB(GL_TEXTURE0_ARB);
+				glActiveTextureARB(GL_TEXTURE0);
 				glMatrixMode(GL_MODELVIEW);
 
 				glPushMatrix();
@@ -680,10 +680,10 @@ void RENDER_INPUT_SCENE::SelectTransformEnd(DRAWABLE & forme, bool need_pop)
 	{
 		if (!i->GetCameraTransformEnable())
 		{
-			glActiveTextureARB(GL_TEXTURE1_ARB);
+			glActiveTextureARB(GL_TEXTURE1);
 			glMatrixMode(GL_TEXTURE);
 			glPopMatrix();
-			glActiveTextureARB(GL_TEXTURE0_ARB);
+			glActiveTextureARB(GL_TEXTURE0);
 			glMatrixMode(GL_MODELVIEW);
 		}
 
