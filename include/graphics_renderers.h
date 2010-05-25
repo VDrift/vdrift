@@ -10,7 +10,7 @@
 #include "shader.h"
 #include "mathvector.h"
 #include "quaternion.h"
-#include "fbtexture.h"
+#include "fbobject.h"
 #include "matrix4.h"
 #include "texture.h"
 #include "reseatable_reference.h"
@@ -133,7 +133,7 @@ public:
 	RENDER_OUTPUT() : target(RENDER_TO_FRAMEBUFFER) {}
 	
 	///returns the FBO that the user should set up as necessary
-	FBTEXTURE & RenderToFBO()
+	FBOBJECT & RenderToFBO()
 	{
 		target = RENDER_TO_FBO;
 		return fbo;
@@ -154,14 +154,14 @@ public:
 			glstate.BindFramebuffer(0);
 	}
 	
-	void End(std::ostream & error_output)
+	void End(GLSTATEMANAGER & glstate, std::ostream & error_output)
 	{
 		if (target == RENDER_TO_FBO)
-			fbo.End(error_output);
+			fbo.End(glstate, error_output);
 	}
 	
 private:
-	FBTEXTURE fbo;
+	FBOBJECT fbo;
 	enum
 	{
 		RENDER_TO_FBO,

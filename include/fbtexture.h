@@ -14,8 +14,11 @@
 
 #include <iostream>
 
+class FBOBJECT;
+
 class FBTEXTURE : public TEXTURE_INTERFACE
 {
+	friend class FBOBJECT;
 	public:
 		enum TARGET
 		{
@@ -34,17 +37,41 @@ class FBTEXTURE : public TEXTURE_INTERFACE
 			NEGZ = GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
 		};
 		
+		FBTEXTURE() : 
+			fbtexture(0),
+			renderbuffer_multisample(0),
+			inited(false),
+			attached(false),
+			sizew(0),
+			sizeh(0),
+			texture_target(NORMAL),
+			depth(false),
+			alpha(false),
+			mipmap(false),
+			multisample(0),
+			texture_attachment(GL_COLOR_ATTACHMENT0),
+			texture_format1(0),
+			cur_side(POSX)
+			{}
+		~FBTEXTURE() {DeInit();}
+		void Init(GLSTATEMANAGER & glstate, int sizex, int sizey, TARGET target, bool newdepth, bool filternearest, bool newalpha, bool usemipmap, std::ostream & error_output, int newmultisample = 0);
+		void DeInit();
+		virtual void Activate() const;
+		virtual void Deactivate() const;
+		virtual bool Loaded() const {return inited;}
+		//void Screenshot(GLSTATEMANAGER & glstate, const std::string & filename, std::ostream & error_output);
+		int GetWidth() const {return sizew;}
+		int GetHeight() const {return sizeh;}
+		bool IsCubemap() const {return (texture_target == CUBEMAP);}
+		
 	protected:
-		virtual GLuint GetID() const {return single_sample_FBO_for_multisampling ? single_sample_FBO_for_multisampling->fbtexture : fbtexture;}
+		virtual GLuint GetID() const {return fbtexture;}
 		
 	private:
 		GLuint fbtexture;
-		GLuint renderbuffer_depth;
 		GLuint renderbuffer_multisample;
-		GLuint framebuffer_object;
-		FBTEXTURE * single_sample_FBO_for_multisampling;
-		bool loaded;
 		bool inited;
+		bool attached;
 		int sizew, sizeh;
 		
 		TARGET texture_target;
@@ -53,28 +80,8 @@ class FBTEXTURE : public TEXTURE_INTERFACE
 		bool mipmap;
 		int multisample;
 		int texture_attachment;
+		int texture_format1;
 		CUBE_SIDE cur_side;
-		
-		/// returns true if statis is good
-		bool CheckStatus(std::ostream & error_output);
-
-	public:
-		FBTEXTURE() : single_sample_FBO_for_multisampling(NULL),loaded(false),inited(false),sizew(0),sizeh(0),
-			texture_target(NORMAL),depth(false),alpha(false),mipmap(false),multisample(0),
-			texture_attachment(GL_COLOR_ATTACHMENT0),cur_side(POSX) {}
-		~FBTEXTURE() {DeInit();}
-		void Init(int sizex, int sizey, TARGET target, bool newdepth, bool filternearest, bool newalpha, bool usemipmap, std::ostream & error_output, int newmultisample = 0);
-		void DeInit();
-		void Begin(GLSTATEMANAGER & glstate, std::ostream & error_output, float viewscale = 1.0);
-		void End(std::ostream & error_output);
-		virtual void Activate() const;
-		virtual void Deactivate() const;
-		virtual bool Loaded() const {return inited;}
-		void Screenshot(GLSTATEMANAGER & glstate, const std::string & filename, std::ostream & error_output);
-		void SetCubeSide(CUBE_SIDE side); ///< attach a specified cube side to the texture_attachment. for cube map FBOs only.
-		int GetWidth() const {return sizew;}
-		int GetHeight() const {return sizeh;}
-		bool IsCubemap() const {return (texture_target == CUBEMAP);}
 };
 
 #endif

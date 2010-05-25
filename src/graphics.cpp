@@ -447,12 +447,8 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 		info_output << "Successfully enabled shaders" << endl;
 		
 		// unload current outputs
-		for (std::map <std::string, RENDER_OUTPUT>::iterator i = render_outputs.begin(); i != render_outputs.end(); i++)
-		{
-			if (i->second.IsFBO())
-				i->second.RenderToFBO().DeInit();
-		}
 		render_outputs.clear();
+		texture_outputs.clear();
 		texture_inputs.clear();
 		
 		OPENGL_UTILITY::CheckForOpenGLErrors("EnableShaders: FBO deinit", error_output);
@@ -492,7 +488,7 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 		{
 			if (i->conditions.Satisfied(conditions))
 			{
-				assert(render_outputs.find(i->name) == render_outputs.end()); //TODO: add a friendly error message
+				assert(texture_outputs.find(i->name) == texture_outputs.end()); //TODO: add a friendly error message
 				
 				if (i->type == "framebuffer")
 				{
@@ -500,7 +496,7 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 				}
 				else
 				{
-					FBTEXTURE & fbtex = render_outputs[i->name].RenderToFBO();
+					FBTEXTURE & fbtex = texture_outputs[i->name];
 					FBTEXTURE::TARGET type = FBTEXTURE::NORMAL;
 					if (i->type == "rectangle")
 						type = FBTEXTURE::RECTANGLE;
@@ -510,7 +506,9 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 					if (i->multisample < 0)
 						fbms = fsaa;
 					
-					fbtex.Init(i->width.GetSize(w),
+					// initialize fbtexture
+					fbtex.Init(glstate,
+							   i->width.GetSize(w),
 							   i->height.GetSize(h),
 							   type,
 							   (i->format == "depth"),
@@ -520,6 +518,13 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 							   error_output,
 							   fbms);
 							   
+					// initialize fbo
+					std::vector <FBTEXTURE*> fbotex;
+					fbotex.push_back(&fbtex);
+					FBOBJECT & fbo = render_outputs[i->name].RenderToFBO();
+					fbo.Init(glstate, fbotex, error_output);
+					
+					// map to input texture
 					texture_inputs[i->name] = fbtex;
 				}
 				
@@ -697,7 +702,7 @@ QUATERNION <float> GetCubeSideOrientation(int i, const QUATERNION <float> & orig
 	return orient;
 }
 
-void AttachCubeSide(int i, FBTEXTURE & reflection_fbo, std::ostream & error_output)
+void AttachCubeSide(int i, FBOBJECT & reflection_fbo, std::ostream & error_output)
 {
 	switch (i)
 	{
@@ -794,9 +799,10 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 							// set the sub-camera's properties
 							cam.orient = GetCubeSideOrientation(cubeside, cam.orient, error_output);
 							cam.fov = 90;
-							const FBTEXTURE & reflection_fbo = oi->second.RenderToFBO();
-							cam.w = reflection_fbo.GetWidth();
-							cam.h = reflection_fbo.GetHeight();
+							assert(oi->second.IsFBO());
+							const FBOBJECT & fbo = oi->second.RenderToFBO();
+							cam.w = fbo.GetWidth();
+							cam.h = fbo.GetHeight();
 						}
 						
 						std::string key = BuildKey(cameraname, *d);
@@ -1148,7 +1154,7 @@ void GRAPHICS_SDLGL::Render(RENDER_INPUT * input, RENDER_OUTPUT & output, std::o
 
 	OPENGL_UTILITY::CheckForOpenGLErrors("render finish", error_output);
 
-	output.End(error_output);
+	output.End(glstate, error_output);
 
 	OPENGL_UTILITY::CheckForOpenGLErrors("render output end", error_output);
 }

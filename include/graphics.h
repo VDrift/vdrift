@@ -10,6 +10,7 @@
 #include "shader.h"
 #include "mathvector.h"
 #include "fbtexture.h"
+#include "fbobject.h"
 #include "scenenode.h"
 #include "staticdrawables.h"
 #include "matrix4.h"
@@ -87,6 +88,8 @@ private:
 	// render outputs
 	typedef std::map <std::string, RENDER_OUTPUT> render_output_map_type;
 	render_output_map_type render_outputs;
+	typedef std::map <std::string, FBTEXTURE> texture_output_map_type;
+	texture_output_map_type texture_outputs;
 	
 	// outputs and other textures used as inputs
 	std::map <std::string, reseatable_reference <FBTEXTURE> > texture_inputs;

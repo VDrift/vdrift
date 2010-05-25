@@ -34,7 +34,7 @@
 #include "particle.h"
 #include "ai.h"
 #include "quickmp.h"
-#include "sky.h"
+//#include "sky.h"
 #include "texturemanager.h"
 
 class GAME
@@ -155,7 +155,7 @@ private:
 	PARTICLE_SYSTEM tire_smoke;
 	AI ai;
 	
-	SKY sky;
+	//SKY sky;
 
 #ifdef ENABLE_FORCE_FEEDBACK
 	std::auto_ptr <FORCEFEEDBACK> forcefeedback;
@@ -186,8 +186,8 @@ public:
 		profilingmode(false),
 		textures(err_out),
 		track(info_out, err_out),
-		replay(framerate),
-		sky(graphics, info_out, err_out)
+		replay(framerate)
+		//sky(graphics, info_out, err_out)
 	{
 		carcontrols_local.first = NULL;
 	}
