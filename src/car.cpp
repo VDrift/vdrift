@@ -63,7 +63,7 @@ bool CAR::GenerateWheelMesh(CONFIGFILE & carconf,
 	float rimDiameter_in = (tire.GetRadius() - tire.GetSidewallWidth()*tire.GetAspectRatio())/(0.0254f*0.5);
 	float rim_diameter = (tire.GetRadius() - tire.GetSidewallWidth()*tire.GetAspectRatio())*2.f;
 	float rim_width = 1;
-	MESHGEN::mesh_gen_tire(&output_varray, tire.GetSidewallWidth()*1000.f, tire.GetAspectRatio()*100.f, rimDiameter_in);
+	MESHGEN::mg_tire(&output_varray, tire.GetSidewallWidth()*1000.f, tire.GetAspectRatio()*100.f, rimDiameter_in);
 	output_varray.Rotate(-M_PI_2, 0, 0, 1);
 	draw.SetVertArray(&output_varray);
 	

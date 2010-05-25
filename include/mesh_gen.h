@@ -5,7 +5,7 @@ class VERTEXARRAY;
 
 namespace MESHGEN
 {
-void mesh_gen_tire(VERTEXARRAY *tire, float sectionWidth_mm, float aspectRatio, float rimDiameter_in);
+void mg_tire(VERTEXARRAY *tire, float sectionWidth_mm, float aspectRatio, float rimDiameter_in);
 };
 
 #endif
