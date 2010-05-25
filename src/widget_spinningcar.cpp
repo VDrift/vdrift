@@ -234,9 +234,6 @@ void WIDGET_SPINNINGCAR::Load(SCENENODE & parent)
 		return;
 	}
 	
-	// this puts the wheels where they should be
-	car.back().CopyPhysicsResultsIntoDisplay();
-	
 	//copy the car's scene to our scene
 	carnoderef = car.back().GetNode();
 	

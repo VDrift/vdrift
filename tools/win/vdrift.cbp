@@ -13,7 +13,6 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Option use_console_runner="0" />
-				<Option parameters="-debug" />
 				<Compiler>
 					<Add option="-Wall" />
 					<Add option="-g" />
@@ -365,6 +364,7 @@
 		<Unit filename="..\..\include\carclutch.h" />
 		<Unit filename="..\..\include\carcontrolmap_local.h" />
 		<Unit filename="..\..\include\cardifferential.h" />
+		<Unit filename="..\..\include\cardriveline.h" />
 		<Unit filename="..\..\include\cardynamics.h" />
 		<Unit filename="..\..\include\carengine.h" />
 		<Unit filename="..\..\include\carfueltank.h" />
@@ -388,6 +388,7 @@
 		<Unit filename="..\..\include\endian_utility.h" />
 		<Unit filename="..\..\include\enginesoundinfo.h" />
 		<Unit filename="..\..\include\eventsystem.h" />
+		<Unit filename="..\..\include\fbobject.h" />
 		<Unit filename="..\..\include\fbtexture.h" />
 		<Unit filename="..\..\include\font.h" />
 		<Unit filename="..\..\include\forcefeedback.h" />
@@ -492,6 +493,7 @@
 		<Unit filename="..\..\src\camera_system.cpp" />
 		<Unit filename="..\..\src\car.cpp" />
 		<Unit filename="..\..\src\carcontrolmap_local.cpp" />
+		<Unit filename="..\..\src\cardriveline.cpp" />
 		<Unit filename="..\..\src\cardynamics.cpp" />
 		<Unit filename="..\..\src\collision_world.cpp" />
 		<Unit filename="..\..\src\configfile.cpp" />
@@ -500,6 +502,7 @@
 		<Unit filename="..\..\src\crashdetection.cpp" />
 		<Unit filename="..\..\src\endian_utility.cpp" />
 		<Unit filename="..\..\src\eventsystem.cpp" />
+		<Unit filename="..\..\src\fbobject.cpp" />
 		<Unit filename="..\..\src\fbtexture.cpp" />
 		<Unit filename="..\..\src\font.cpp" />
 		<Unit filename="..\..\src\forcefeedback.cpp" />
@@ -544,7 +547,6 @@
 		<Unit filename="..\..\src\scenenode.cpp" />
 		<Unit filename="..\..\src\settings.cpp" />
 		<Unit filename="..\..\src\shader.cpp" />
-		<Unit filename="..\..\src\sky.cpp" />
 		<Unit filename="..\..\src\sound.cpp" />
 		<Unit filename="..\..\src\suspensionbumpdetection.cpp" />
 		<Unit filename="..\..\src\text_draw.cpp" />

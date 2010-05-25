@@ -37,19 +37,20 @@ CAR::CAR()
 {
 }
 
-bool CAR::GenerateWheelMesh(CONFIGFILE & carconf,
-							const CARTIRE<double> & tire,
-							SCENENODE & topnode,
-							keyed_container <SCENENODE>::handle & output_scenenode,
-							keyed_container <DRAWABLE>::handle & output_drawable,
-							VERTEXARRAY & output_varray,
-							TEXTUREMANAGER & textures,
-							const std::string & confsection,
-							const std::string & sharedpartspath,
-							int anisotropy,
-							const std::string & texsize,
-							MODEL_JOE03 & output_rim_model,
-							std::ostream & error_output)
+bool CAR::GenerateWheelMesh(
+	CONFIGFILE & carconf,
+	const CARTIRE<double> & tire,
+	SCENENODE & topnode,
+	keyed_container <SCENENODE>::handle & output_scenenode,
+	keyed_container <DRAWABLE>::handle & output_drawable,
+	MODEL_JOE03 & output_tire_model,
+	TEXTUREMANAGER & textures,
+	const std::string & confsection,
+	const std::string & sharedpartspath,
+	int anisotropy,
+	const std::string & texsize,
+	MODEL_JOE03 & output_rim_model,
+	std::ostream & error_output)
 {
 	output_scenenode = topnode.AddNode();
 	SCENENODE & node = topnode.GetNode(output_scenenode);
@@ -59,15 +60,20 @@ bool CAR::GenerateWheelMesh(CONFIGFILE & carconf,
 	DRAWABLE & draw = GetDrawlistNoBlend(node).get(output_drawable);
 	
 	// load model
-	//float radius = section_width*0.001f * aspect_ratio*0.01f + rim_diameter*0.0254f*0.5;
 	float rimDiameter_in = (tire.GetRadius() - tire.GetSidewallWidth()*tire.GetAspectRatio())/(0.0254f*0.5);
 	float rim_diameter = (tire.GetRadius() - tire.GetSidewallWidth()*tire.GetAspectRatio())*2.f;
 	float rim_width = 1;
-	MESHGEN::mg_tire(&output_varray, tire.GetSidewallWidth()*1000.f, tire.GetAspectRatio()*100.f, rimDiameter_in);
-	output_varray.Rotate(-M_PI_2, 0, 0, 1);
-	draw.SetVertArray(&output_varray);
 	
-	//draw.SetObjectCenter(wheelmeshgen[i].GetCenter());
+	// don't generate tire if we already have one
+	if(!output_tire_model.HaveMeshData())
+	{
+		VERTEXARRAY output_varray;
+		MESHGEN::mg_tire(output_varray, tire.GetSidewallWidth()*1000.f, tire.GetAspectRatio()*100.f, rimDiameter_in);
+		output_varray.Rotate(-M_PI_2, 0, 0, 1);
+		output_tire_model.SetVertexArray(output_varray);
+		output_tire_model.GenerateMeshMetrics();
+	}
+	draw.SetVertArray(&output_tire_model.GetVertexArray());
 
 	// load textures
 	std::string modelpath = sharedpartspath+"/wheel/";
@@ -94,7 +100,6 @@ bool CAR::GenerateWheelMesh(CONFIGFILE & carconf,
 	
 	{
 		std::string misc1texfile = texpath + tiretex + "-misc1.png";
-		
 		std::ifstream filecheck(misc1texfile.c_str());
 		if (filecheck)
 		{
@@ -265,25 +270,19 @@ bool CAR::Load (
 		else
 		{
 			if (!GenerateWheelMesh(carconf, dynamics.GetTire(WHEEL_POSITION(i)), topnode,
-					wheelnode[i], wheeldraw[i], wheelmeshgen[i], textures, "tire-front", sharedpartspath,
+					wheelnode[i], wheeldraw[i], wheelmodelfront, textures, "tire-front", sharedpartspath,
 					anisotropy, texsize, wheelrim[i], error_output))
 			{
 				error_output << "Error generating wheel mesh for wheel " << i << std::endl;
 				return false;
 			}
-			// temporary hack for cardynamics
-			if(!wheelmodelfront.HaveMeshData())
-			{
-				wheelmodelfront.SetVertexArray(wheelmeshgen[i]);
-				wheelmodelfront.GenerateMeshMetrics();
-			}
 		}
-		
+
 		//load floating elements
 		std::stringstream nullout;
-		LoadInto ( topnode, floatingnode[i], floatingdraw[i], carpath + "/floating_front.joe", floatingmodelfront,
+		LoadInto(topnode, floatingnode[i], floatingdraw[i], carpath + "/floating_front.joe", floatingmodelfront,
 			textures, carpath + "/textures/body" + carpaint + ".png", carpath + "/textures/body-misc1.png",
-      		texsize, anisotropy, false, MATHVECTOR <float, 3>(1,1,1), nullout );
+      		texsize, anisotropy, false, MATHVECTOR <float, 3>(1,1,1), nullout);
 	}
 	for (int i = 2; i < 4; i++) //rear pair
 	{
@@ -292,35 +291,47 @@ bool CAR::Load (
 			if (dynamics.GetTire(WHEEL_POSITION(REAR_LEFT)).GetSidewallWidth() <= 0 ||
 				dynamics.GetTire(WHEEL_POSITION(REAR_RIGHT)).GetSidewallWidth() <= 0)
 			{
-				if ( !LoadInto ( topnode, wheelnode[i], wheeldraw[i], carpath + "/wheel_rear.joe", wheelmodelrear,
+				if (!LoadInto(topnode, wheelnode[i], wheeldraw[i], carpath + "/wheel_rear.joe", wheelmodelrear,
 					textures, carpath + "/textures/wheel_rear.png", carpath + "/textures/wheel_rear-misc1.png",
-					texsize, anisotropy, false, MATHVECTOR <float, 3>(1,1,1), error_output ) )
+					texsize, anisotropy, false, MATHVECTOR <float, 3>(1,1,1), error_output))
 					return false;
 			}
 		}
 		else
 		{
 			if (!GenerateWheelMesh(carconf, dynamics.GetTire(WHEEL_POSITION(i)), topnode,
-					wheelnode[i], wheeldraw[i], wheelmeshgen[i], textures, "tire-rear", sharedpartspath,
+					wheelnode[i], wheeldraw[i], wheelmodelrear, textures, "tire-rear", sharedpartspath,
 					anisotropy, texsize, wheelrim[i], error_output))
 			{
 				error_output << "Error generating wheel mesh for wheel " << i << std::endl;
 				return false;
 			}
-			// temporary hack for cardynamics
-			if(!wheelmodelrear.HaveMeshData())
-			{
-				wheelmodelrear.SetVertexArray(wheelmeshgen[i]);
-				wheelmodelrear.GenerateMeshMetrics();
-			}
 		}
 
 		//load floating elements
 		std::stringstream nullout;
-		LoadInto ( topnode, floatingnode[i], floatingdraw[i],
-			carpath + "/floating_rear.joe", floatingmodelrear,
+		LoadInto(topnode, floatingnode[i], floatingdraw[i], carpath + "/floating_rear.joe", floatingmodelrear,
 			textures, carpath + "/textures/body" + carpaint + ".png", carpath + "/textures/body-misc1.png",
-      		texsize, anisotropy, false, MATHVECTOR <float, 3>(1,1,1), nullout );
+      		texsize, anisotropy, false, MATHVECTOR <float, 3>(1,1,1), nullout);
+	}
+
+	//set wheel positions(for widget_spinningcar)
+	for (int i = 0; i < 4; i++)
+	{
+		MATHVECTOR <float, 3> wheelpos = dynamics.GetWheelPosition(WHEEL_POSITION(i), 0);
+		QUATERNION <float> wheelrot;
+		if(i == FRONT_RIGHT || i == REAR_RIGHT)
+			wheelrot.Rotate(3.141593, 0, 0, 1);
+		
+		SCENENODE & wheelnoderef = topnode.GetNode(wheelnode[i]);
+		wheelnoderef.GetTransform().SetTranslation(wheelpos);
+		wheelnoderef.GetTransform().SetRotation(wheelrot);
+		if (floatingnode[i].valid())
+		{
+			SCENENODE & floatingnoderef = topnode.GetNode(floatingnode[i]);
+			floatingnoderef.GetTransform().SetTranslation(wheelpos);
+			floatingnoderef.GetTransform().SetRotation(wheelrot);
+		}
 	}
 	
 	//init dynamics

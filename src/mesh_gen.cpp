@@ -1,8 +1,5 @@
 #include "mesh_gen.h"
 
-#define _USE_MATH_DEFINES
-#include <cmath>
-
 #include "vertexarray.h"
 #include "mathvector.h"
 
@@ -25,7 +22,7 @@ namespace MESHGEN
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 // mg_tire
-void mg_tire(VERTEXARRAY *tire, float sectionWidth_mm, float aspectRatio, float rimDiameter_in)
+void mg_tire(VERTEXARRAY & tire, float sectionWidth_mm, float aspectRatio, float rimDiameter_in)
 {
 	// configurable parameters - set to defaults
 	unsigned int segmentsAround = 32;
@@ -788,11 +785,11 @@ void mg_tire(VERTEXARRAY *tire, float sectionWidth_mm, float aspectRatio, float 
 
 	//////////////////////////////////////////////
 	// VERTEXARRAY will copy this data
-	tire->SetVertices(vertexData, vertexFloatCount);
-	tire->SetFaces((int*)triData, triVIndexCount);
-	tire->SetTexCoordSets(1);
-	tire->SetTexCoords(0, texData, texCoordFloats);
-	tire->SetNormals(normalData, vertexFloatCount);
+	tire.SetVertices(vertexData, vertexFloatCount);
+	tire.SetFaces((int*)triData, triVIndexCount);
+	tire.SetTexCoordSets(1);
+	tire.SetTexCoords(0, texData, texCoordFloats);
+	tire.SetNormals(normalData, vertexFloatCount);
 
 
 	// free up the temp data
@@ -823,7 +820,7 @@ void mg_tire(VERTEXARRAY *tire, float sectionWidth_mm, float aspectRatio, float 
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 // mg_wheelEdge
-void mg_wheelEdge(VERTEXARRAY *wheelEdge, float sectionWidth_mm, float aspectRatio, float rimDiameter_in, float flangeDisplacement_mm)
+void mg_wheelEdge(VERTEXARRAY & wheelEdge, float sectionWidth_mm, float aspectRatio, float rimDiameter_in, float flangeDisplacement_mm)
 {
     unsigned int segmentsAround = 32;
 
@@ -1326,12 +1323,12 @@ void mg_wheelEdge(VERTEXARRAY *wheelEdge, float sectionWidth_mm, float aspectRat
 
 	//////////////////////////////////////////////
 	// VERTEXARRAY will copy this data
-	wheelEdge->SetVertices(vertexData, vertexFloatCount);
-	wheelEdge->SetFaces((int*)triData, triVIndexCount);
+	wheelEdge.SetVertices(vertexData, vertexFloatCount);
+	wheelEdge.SetFaces((int*)triData, triVIndexCount);
 
-	wheelEdge->SetTexCoordSets(1);
-	wheelEdge->SetTexCoords(0, texData, texCoordFloats);
-	wheelEdge->SetNormals(normalData, vertexFloatCount);
+	wheelEdge.SetTexCoordSets(1);
+	wheelEdge.SetTexCoords(0, texData, texCoordFloats);
+	wheelEdge.SetNormals(normalData, vertexFloatCount);
 
 
 	// free up the temp data

@@ -5,7 +5,11 @@ class VERTEXARRAY;
 
 namespace MESHGEN
 {
-void mg_tire(VERTEXARRAY *tire, float sectionWidth_mm, float aspectRatio, float rimDiameter_in);
+
+void mg_tire(VERTEXARRAY & tire, float sectionWidth_mm, float aspectRatio, float rimDiameter_in);
+
+void mg_wheelEdge(VERTEXARRAY & wheelEdge, float sectionWidth_mm, float aspectRatio, float rimDiameter_in, float flangeDisplacement_mm);
+
 };
 
 #endif

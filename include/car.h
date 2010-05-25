@@ -308,10 +308,9 @@ protected:
 
 	keyed_container <DRAWABLE>::handle wheeldraw[4];
 	keyed_container <SCENENODE>::handle wheelnode[4];
-	MODEL_JOE03 wheelrim[4];
-	VERTEXARRAY wheelmeshgen[4];
 	keyed_container <DRAWABLE>::handle floatingdraw[4];
 	keyed_container <SCENENODE>::handle floatingnode[4];
+	MODEL_JOE03 wheelrim[4];
 	MODEL_JOE03 wheelmodelfront;
 	MODEL_JOE03 wheelmodelrear;
 	MODEL_JOE03 floatingmodelfront;
@@ -364,19 +363,20 @@ protected:
 		const MATHVECTOR <float, 3> & scale,
 		std::ostream & error_output);
 		
-	bool GenerateWheelMesh(CONFIGFILE & carconf,
-						   const CARTIRE<double> & tire,
-						   SCENENODE & topnode,
-						   keyed_container <SCENENODE>::handle & output_scenenode,
-						   keyed_container <DRAWABLE>::handle & output_drawable,
-						   VERTEXARRAY & output_varray,
-						   TEXTUREMANAGER & textures,
-						   const std::string & confsection,
-						   const std::string & sharedpartspath,
-						   int anisotropy,
-						   const std::string & texsize,
-						   MODEL_JOE03 & output_rim_model,
-						   std::ostream & error_output);
+	bool GenerateWheelMesh(
+		CONFIGFILE & carconf,
+		const CARTIRE<double> & tire,
+		SCENENODE & topnode,
+		keyed_container <SCENENODE>::handle & output_scenenode,
+		keyed_container <DRAWABLE>::handle & output_drawable,
+		MODEL_JOE03 & output_tire_model,
+		TEXTUREMANAGER & textures,
+		const std::string & confsection,
+		const std::string & sharedpartspath,
+		int anisotropy,
+		const std::string & texsize,
+		MODEL_JOE03 & output_rim_model,
+		std::ostream & error_output);
 	
 	void UpdateSounds(float dt);
 	
