@@ -25,7 +25,7 @@ namespace MESHGEN
 void mg_tire(VERTEXARRAY & tire, float sectionWidth_mm, float aspectRatio, float rimDiameter_in)
 {
 	// configurable parameters - set to defaults
-	unsigned int segmentsAround = 32;
+	int segmentsAround = 32;
 	float innerRadius = 0.65f;
 	float innerWidth = 0.60f;
 
@@ -116,110 +116,76 @@ void mg_tire(VERTEXARRAY & tire, float sectionWidth_mm, float aspectRatio, float
 
 
 	// non-configurable parameters
-	unsigned int vertexRings = 8;
+	int vertexRings = 8;
 	float angleIncrement = 360.0f / (float) segmentsAround;
 
 	/////////////////////////////////////
 	//
 	// vertices (temporary data)
 	//
-	unsigned int vertexesAround = segmentsAround + 1;
-	unsigned int vertexCount = vertexesAround * vertexRings;
-	unsigned int vertexFloatCount = vertexCount * 3;	// * 3 cause there are 3 floats in a vertex
-	float *vertexData = new float [ vertexFloatCount ];
-
-	// a re-used for loop variable
-	unsigned int lv;
+	int vertexesAround = segmentsAround + 1;
+	int vertexCount = vertexesAround * vertexRings;
+	int vertexFloatCount = vertexCount * 3;	// * 3 cause there are 3 floats in a vertex
+	std::vector<float> vertexData;
+	vertexData.resize(vertexFloatCount);
 
 	// Right-side, Inner Ring
-	for (lv=0 ; lv<vertexesAround ; lv++)
+	for (int lv=0 ; lv<vertexesAround ; lv++)
 	{
-		float *x = &vertexData[(lv+vertexesAround * 0) * 3 + 0];
-		float *y = &vertexData[(lv+vertexesAround * 0) * 3 + 1];
-		float *z = &vertexData[(lv+vertexesAround * 0) * 3 + 2];
-
-		*x = 1.0f * (innerWidth / 2.0f);
-		*y = innerRadius * cosD(angleIncrement * lv);
-		*z = innerRadius * sinD(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 0) * 3 + 0] = 1.0f * (innerWidth / 2.0f);
+		vertexData[(lv+vertexesAround * 0) * 3 + 1] = innerRadius * cosD(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 0) * 3 + 2] = innerRadius * sinD(angleIncrement * lv);
 	}
 	// Right-side, Sidewall Ring
-	for (lv=0 ; lv<vertexesAround ; lv++)
+	for (int lv=0 ; lv<vertexesAround ; lv++)
 	{
-		float *x = &vertexData[(lv+vertexesAround * 1) * 3 + 0];
-		float *y = &vertexData[(lv+vertexesAround * 1) * 3 + 1];
-		float *z = &vertexData[(lv+vertexesAround * 1) * 3 + 2];
-
-		*x = 1.0f * (treadWidth / 2.0f + sidewallBulge);
-		*y = sidewallRadius * cosD(angleIncrement * lv);
-		*z = sidewallRadius * sinD(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 1) * 3 + 0] = 1.0f * (treadWidth / 2.0f + sidewallBulge);
+		vertexData[(lv+vertexesAround * 1) * 3 + 1] = sidewallRadius * cosD(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 1) * 3 + 2] = sidewallRadius * sinD(angleIncrement * lv);
 	}
 	// Right-side, Shoulder Ring
-	for (lv=0 ; lv<vertexesAround ; lv++)
+	for (int lv=0 ; lv<vertexesAround ; lv++)
 	{
-		float *x = &vertexData[(lv+vertexesAround * 2) * 3 + 0];
-		float *y = &vertexData[(lv+vertexesAround * 2) * 3 + 1];
-		float *z = &vertexData[(lv+vertexesAround * 2) * 3 + 2];
-
-		*x = 1.0f * (treadWidth / 2.0f + shoulderBulge);
-		*y = shoulderRadius * cosD(angleIncrement * lv);
-		*z = shoulderRadius * sinD(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 2) * 3 + 0] = 1.0f * (treadWidth / 2.0f + shoulderBulge);
+		vertexData[(lv+vertexesAround * 2) * 3 + 1] = shoulderRadius * cosD(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 2) * 3 + 2] = shoulderRadius * sinD(angleIncrement * lv);
 	}
 	// Right-side, Tread Ring
-	for (lv=0 ; lv<vertexesAround ; lv++)
+	for (int lv=0 ; lv<vertexesAround ; lv++)
 	{
-		float *x = &vertexData[(lv+vertexesAround * 3) * 3 + 0];
-		float *y = &vertexData[(lv+vertexesAround * 3) * 3 + 1];
-		float *z = &vertexData[(lv+vertexesAround * 3) * 3 + 2];
-
-		*x = 1.0f * (treadWidth / 2.0f);
-		*y = treadRadius * cosD(angleIncrement * lv);
-		*z = treadRadius * sinD(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 3) * 3 + 0] = 1.0f * (treadWidth / 2.0f);
+		vertexData[(lv+vertexesAround * 3) * 3 + 1] = treadRadius * cosD(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 3) * 3 + 2] = treadRadius * sinD(angleIncrement * lv);
 	}
 
 
 	// Left-side, Tread Ring
-	for (lv=0 ; lv<vertexesAround ; lv++)
+	for (int lv=0 ; lv<vertexesAround ; lv++)
 	{
-		float *x = &vertexData[(lv+vertexesAround * 4) * 3 + 0];
-		float *y = &vertexData[(lv+vertexesAround * 4) * 3 + 1];
-		float *z = &vertexData[(lv+vertexesAround * 4) * 3 + 2];
-
-		*x = -1.0f * (treadWidth / 2.0f);
-		*y = treadRadius * cosD(angleIncrement * lv);
-		*z = treadRadius * sinD(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 4) * 3 + 0] = -1.0f * (treadWidth / 2.0f);
+		vertexData[(lv+vertexesAround * 4) * 3 + 1] = treadRadius * cosD(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 4) * 3 + 2] = treadRadius * sinD(angleIncrement * lv);
 	}
 	// Left-side, Shoulder Ring
-	for (lv=0 ; lv<vertexesAround ; lv++)
+	for (int lv=0 ; lv<vertexesAround ; lv++)
 	{
-		float *x = &vertexData[(lv+vertexesAround * 5) * 3 + 0];
-		float *y = &vertexData[(lv+vertexesAround * 5) * 3 + 1];
-		float *z = &vertexData[(lv+vertexesAround * 5) * 3 + 2];
-
-		*x = -1.0f * (treadWidth / 2.0f + shoulderBulge);
-		*y = shoulderRadius * cosD(angleIncrement * lv);
-		*z = shoulderRadius * sinD(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 5) * 3 + 0] = -1.0f * (treadWidth / 2.0f + shoulderBulge);
+		vertexData[(lv+vertexesAround * 5) * 3 + 1] = shoulderRadius * cosD(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 5) * 3 + 2] = shoulderRadius * sinD(angleIncrement * lv);
 	}
 	// Left-side, Sidewall Ring
-	for (lv=0 ; lv<vertexesAround ; lv++)
+	for (int lv=0 ; lv<vertexesAround ; lv++)
 	{
-		float *x = &vertexData[(lv+vertexesAround * 6) * 3 + 0];
-		float *y = &vertexData[(lv+vertexesAround * 6) * 3 + 1];
-		float *z = &vertexData[(lv+vertexesAround * 6) * 3 + 2];
-
-		*x = -1.0f * (treadWidth / 2.0f + sidewallBulge);
-		*y = sidewallRadius * cosD(angleIncrement * lv);
-		*z = sidewallRadius * sinD(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 6) * 3 + 0] = -1.0f * (treadWidth / 2.0f + sidewallBulge);
+		vertexData[(lv+vertexesAround * 6) * 3 + 1] = sidewallRadius * cosD(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 6) * 3 + 2] = sidewallRadius * sinD(angleIncrement * lv);
 	}
 	// Left-side, Inner Ring
-	for (lv=0 ; lv<vertexesAround ; lv++)
+	for (int lv=0 ; lv<vertexesAround ; lv++)
 	{
-		float *x = &vertexData[(lv+vertexesAround * 7) * 3 + 0];
-		float *y = &vertexData[(lv+vertexesAround * 7) * 3 + 1];
-		float *z = &vertexData[(lv+vertexesAround * 7) * 3 + 2];
-
-		*x = -1.0f * (innerWidth / 2.0f);
-		*y = innerRadius * cosD(angleIncrement * lv);
-		*z = innerRadius * sinD(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 7) * 3 + 0] = -1.0f * (innerWidth / 2.0f);
+		vertexData[(lv+vertexesAround * 7) * 3 + 1] = innerRadius * cosD(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 7) * 3 + 2] = innerRadius * sinD(angleIncrement * lv);
 	}
 
 
@@ -230,127 +196,85 @@ void mg_tire(VERTEXARRAY & tire, float sectionWidth_mm, float aspectRatio, float
 	//
 	//  now let's build triangles
 	//
-	unsigned int triVIndexCount = 2 * segmentsAround * (vertexRings-1) * 3;	// 2 * triangles make a square,   * 3 indexes in a triangle
-	unsigned int *triData = new unsigned int [ triVIndexCount ];
+	int triVIndexCount = 2 * segmentsAround * (vertexRings-1) * 3;	// 2 * triangles make a square,   * 3 indexes in a triangle
+	std::vector<int> triData;
+	triData.resize(triVIndexCount);
 
-	unsigned int triIndex = 0;
-	unsigned int circleSegment = 0;
-
-	unsigned int *triVIndex0;
-	unsigned int *triVIndex1;
-	unsigned int *triVIndex2;
-
-	for (circleSegment=0 ; circleSegment<segmentsAround; circleSegment++)
+	int triIndex = 0;
+	for (int circleSegment=0; circleSegment<segmentsAround; circleSegment++)
 	{
 		// 1st triangle (Right-side - Inner to Sidewall)
-		triVIndex0 = &triData[ (triIndex+0)*3 + 0 ];
-		triVIndex1 = &triData[ (triIndex+0)*3 + 1 ];
-		triVIndex2 = &triData[ (triIndex+0)*3 + 2 ];
-		*triVIndex0 = circleSegment;
-		*triVIndex1 = circleSegment + vertexesAround;
-		*triVIndex2 = circleSegment +1;
+		triData[ (triIndex+0)*3 + 0 ] = circleSegment;
+		triData[ (triIndex+0)*3 + 1 ] = circleSegment+vertexesAround;
+		triData[ (triIndex+0)*3 + 2 ] = circleSegment+1;
+
 		// 2nd triangle
-		triVIndex0 = &triData[ (triIndex+1)*3 + 0 ];
-		triVIndex1 = &triData[ (triIndex+1)*3 + 1 ];
-		triVIndex2 = &triData[ (triIndex+1)*3 + 2 ];
-		*triVIndex0 = circleSegment+vertexesAround;
-		*triVIndex1 = circleSegment+vertexesAround+1;
-		*triVIndex2 = circleSegment +1;
+		triData[ (triIndex+1)*3 + 0 ] = circleSegment+vertexesAround;
+		triData[ (triIndex+1)*3 + 1 ] = circleSegment+vertexesAround+1;
+		triData[ (triIndex+1)*3 + 2 ] = circleSegment+1;
 
 		// 3rd triangle (Right-side - Sidewall to shoulder)
-		triVIndex0 = &triData[ (triIndex+2)*3 + 0 ];
-		triVIndex1 = &triData[ (triIndex+2)*3 + 1 ];
-		triVIndex2 = &triData[ (triIndex+2)*3 + 2 ];
-		*triVIndex0 = circleSegment+vertexesAround*1;
-		*triVIndex1 = circleSegment+vertexesAround*2;
-		*triVIndex2 = circleSegment+vertexesAround*1 +1;
-		// 4th triangle
-		triVIndex0 = &triData[ (triIndex+3)*3 + 0 ];
-		triVIndex1 = &triData[ (triIndex+3)*3 + 1 ];
-		triVIndex2 = &triData[ (triIndex+3)*3 + 2 ];
-		*triVIndex0 = circleSegment+vertexesAround*2;
-		*triVIndex1 = circleSegment+vertexesAround*2 +1;
-		*triVIndex2 = circleSegment+vertexesAround*1 +1;
+		triData[ (triIndex+2)*3 + 0 ] = circleSegment+vertexesAround*1;
+		triData[ (triIndex+2)*3 + 1 ] = circleSegment+vertexesAround*2;
+		triData[ (triIndex+2)*3 + 2 ] = circleSegment+vertexesAround*1+1;
 
+		// 4th triangle
+		triData[ (triIndex+3)*3 + 0 ] = circleSegment+vertexesAround*2;
+		triData[ (triIndex+3)*3 + 1 ] = circleSegment+vertexesAround*2+1;
+		triData[ (triIndex+3)*3 + 2 ] = circleSegment+vertexesAround*1+1;
 
 		// 5th triangle (Right-side - Shoulder to Tread)
-		triVIndex0 = &triData[ (triIndex+4)*3 + 0 ];
-		triVIndex1 = &triData[ (triIndex+4)*3 + 1 ];
-		triVIndex2 = &triData[ (triIndex+4)*3 + 2 ];
-		*triVIndex0 = circleSegment+vertexesAround*2;
-		*triVIndex1 = circleSegment+vertexesAround*3;
-		*triVIndex2 = circleSegment+vertexesAround*2 +1;
+		triData[ (triIndex+4)*3 + 0 ] = circleSegment+vertexesAround*2;
+		triData[ (triIndex+4)*3 + 1 ] = circleSegment+vertexesAround*3;
+		triData[ (triIndex+4)*3 + 2 ] = circleSegment+vertexesAround*2+1;
+
 		// 6th triangle
-		triVIndex0 = &triData[ (triIndex+5)*3 + 0 ];
-		triVIndex1 = &triData[ (triIndex+5)*3 + 1 ];
-		triVIndex2 = &triData[ (triIndex+5)*3 + 2 ];
-		*triVIndex0 = circleSegment+vertexesAround*3;
-		*triVIndex1 = circleSegment+vertexesAround*3 +1;
-		*triVIndex2 = circleSegment+vertexesAround*2 +1;
+		triData[ (triIndex+5)*3 + 0 ] = circleSegment+vertexesAround*3;
+		triData[ (triIndex+5)*3 + 1 ] = circleSegment+vertexesAround*3+1;
+		triData[ (triIndex+5)*3 + 2 ] = circleSegment+vertexesAround*2+1;
 
 		//////////////////////////////////////////////////////////////
 		// 7th triangle (Right-side Tread to Left-side Tread)
-		triVIndex0 = &triData[ (triIndex+6)*3 + 0 ];
-		triVIndex1 = &triData[ (triIndex+6)*3 + 1 ];
-		triVIndex2 = &triData[ (triIndex+6)*3 + 2 ];
-		*triVIndex0 = circleSegment+vertexesAround*3;
-		*triVIndex1 = circleSegment+vertexesAround*4;
-		*triVIndex2 = circleSegment+vertexesAround*3 +1;
+		triData[ (triIndex+6)*3 + 0 ] = circleSegment+vertexesAround*3;
+		triData[ (triIndex+6)*3 + 1 ] = circleSegment+vertexesAround*4;
+		triData[ (triIndex+6)*3 + 2 ] = circleSegment+vertexesAround*3+1;
+
 		// 8th triangle
-		triVIndex0 = &triData[ (triIndex+7)*3 + 0 ];
-		triVIndex1 = &triData[ (triIndex+7)*3 + 1 ];
-		triVIndex2 = &triData[ (triIndex+7)*3 + 2 ];
-		*triVIndex0 = circleSegment+vertexesAround*4;
-		*triVIndex1 = circleSegment+vertexesAround*4 +1;
-		*triVIndex2 = circleSegment+vertexesAround*3 +1;
+		triData[ (triIndex+7)*3 + 0 ] = circleSegment+vertexesAround*4;
+		triData[ (triIndex+7)*3 + 1 ] = circleSegment+vertexesAround*4+1;
+		triData[ (triIndex+7)*3 + 2 ] = circleSegment+vertexesAround*3+1;
+
+
 		/////////////////////////////////////////////////////////////
-
-
 		// 9th triangle (Left-side - Tread to Shoulder)
-		triVIndex0 = &triData[ (triIndex+8)*3 + 0 ];
-		triVIndex1 = &triData[ (triIndex+8)*3 + 1 ];
-		triVIndex2 = &triData[ (triIndex+8)*3 + 2 ];
-		*triVIndex0 = circleSegment+vertexesAround*4;
-		*triVIndex1 = circleSegment+vertexesAround*5;
-		*triVIndex2 = circleSegment+vertexesAround*4 +1;
-		// 10th triangle
-		triVIndex0 = &triData[ (triIndex+9)*3 + 0 ];
-		triVIndex1 = &triData[ (triIndex+9)*3 + 1 ];
-		triVIndex2 = &triData[ (triIndex+9)*3 + 2 ];
-		*triVIndex0 = circleSegment+vertexesAround*5;
-		*triVIndex1 = circleSegment+vertexesAround*5 +1;
-		*triVIndex2 = circleSegment+vertexesAround*4 +1;
+		triData[ (triIndex+8)*3 + 0 ] = circleSegment+vertexesAround*4;
+		triData[ (triIndex+8)*3 + 1 ] = circleSegment+vertexesAround*5;
+		triData[ (triIndex+8)*3 + 2 ] = circleSegment+vertexesAround*4+1;
 
+		// 10th triangle
+		triData[ (triIndex+9)*3 + 0 ] = circleSegment+vertexesAround*5;
+		triData[ (triIndex+9)*3 + 1 ] = circleSegment+vertexesAround*5+1;
+		triData[ (triIndex+9)*3 + 2 ] = circleSegment+vertexesAround*4+1;
 
 		// 11th triangle (Left-side - Shoulder to Sidewall)
-		triVIndex0 = &triData[ (triIndex+10)*3 + 0 ];
-		triVIndex1 = &triData[ (triIndex+10)*3 + 1 ];
-		triVIndex2 = &triData[ (triIndex+10)*3 + 2 ];
-		*triVIndex0 = circleSegment+vertexesAround*5;
-		*triVIndex1 = circleSegment+vertexesAround*6;
-		*triVIndex2 = circleSegment+vertexesAround*5 +1;
+		triData[ (triIndex+10)*3 + 0 ] = circleSegment+vertexesAround*5;
+		triData[ (triIndex+10)*3 + 1 ] = circleSegment+vertexesAround*6;
+		triData[ (triIndex+10)*3 + 2 ] = circleSegment+vertexesAround*5+1;
+
 		// 12th triangle
-		triVIndex0 = &triData[ (triIndex+11)*3 + 0 ];
-		triVIndex1 = &triData[ (triIndex+11)*3 + 1 ];
-		triVIndex2 = &triData[ (triIndex+11)*3 + 2 ];
-		*triVIndex0 = circleSegment+vertexesAround*6;
-		*triVIndex1 = circleSegment+vertexesAround*6 +1;
-		*triVIndex2 = circleSegment+vertexesAround*5 +1;
+		triData[ (triIndex+11)*3 + 0 ] = circleSegment+vertexesAround*6;
+		triData[ (triIndex+11)*3 + 1 ] = circleSegment+vertexesAround*6+1;
+		triData[ (triIndex+11)*3 + 2 ] = circleSegment+vertexesAround*5+1;
 
 		// 13th triangle (Left-side - Sidewall to Inner)
-		triVIndex0 = &triData[ (triIndex+12)*3 + 0 ];
-		triVIndex1 = &triData[ (triIndex+12)*3 + 1 ];
-		triVIndex2 = &triData[ (triIndex+12)*3 + 2 ];
-		*triVIndex0 = circleSegment+vertexesAround*6;
-		*triVIndex1 = circleSegment+vertexesAround*7;
-		*triVIndex2 = circleSegment+vertexesAround*6 +1;
+		triData[ (triIndex+12)*3 + 0 ] = circleSegment+vertexesAround*6;
+		triData[ (triIndex+12)*3 + 1 ] = circleSegment+vertexesAround*7;
+		triData[ (triIndex+12)*3 + 2 ] = circleSegment+vertexesAround*6+1;
+
 		// 14th triangle
-		triVIndex0 = &triData[ (triIndex+13)*3 + 0 ];
-		triVIndex1 = &triData[ (triIndex+13)*3 + 1 ];
-		triVIndex2 = &triData[ (triIndex+13)*3 + 2 ];
-		*triVIndex0 = circleSegment+vertexesAround*7;
-		*triVIndex1 = circleSegment+vertexesAround*7 +1;
-		*triVIndex2 = circleSegment+vertexesAround*6 +1;
+		triData[ (triIndex+13)*3 + 0 ] = circleSegment+vertexesAround*7;
+		triData[ (triIndex+13)*3 + 1 ] = circleSegment+vertexesAround*7+1;
+		triData[ (triIndex+13)*3 + 2 ] = circleSegment+vertexesAround*6+1;
 
 		triIndex +=14;
 	}
@@ -369,48 +293,46 @@ void mg_tire(VERTEXARRAY & tire, float sectionWidth_mm, float aspectRatio, float
 	// though wider tires will experience more tread stretching
 	// unless they also have a texture with a more appropriate
 	// resolution.
-	unsigned int texCoordFloats = vertexCount * 2;
-	float *texData = new float [ texCoordFloats ];
+	int texCoordFloats = vertexCount * 2;
+	std::vector<float> texData;
+	texData.resize(texCoordFloats);
 
 
-	for ( unsigned int uvl=0 ; uvl< vertexCount ; uvl++ )
+	for ( int uvl=0 ; uvl< vertexCount ; uvl++ )
 	{
 		// U coord
+		float u = uvl % vertexesAround;
+		u = u / segmentsAround;
+        texData[ uvl * 2 ] = u;
 
-		float *u = &texData[ uvl * 2 ];
-		*u = uvl % vertexesAround;
-		*u = *u / segmentsAround;
-
-		float *v = &texData[ uvl * 2 + 1 ];
-
-
-		// *v = floor ( uvl * + 1 / vertexesAround );
-		// *v = *v / (vertexRings-1);
-
+		// V coord
+		float v = 0.00f;
+		// v = floor ( uvl * + 1 / vertexesAround );
+		// v = v / (vertexRings-1);
 		if ( uvl < vertexesAround*1 )
-			*v = 0.00f;
+			v = 0.00f;
 		else if ( uvl < vertexesAround*2 )
-			*v = 0.10f;
+			v = 0.10f;
 		else if ( uvl < vertexesAround*3 )
-			*v = 0.25f;
+			v = 0.25f;
 		else if ( uvl < vertexesAround*4 )
-			*v = 0.333333333f;
+			v = 0.333333333f;
 		else if ( uvl < vertexesAround*5 )
-			*v = 0.666666666f;
+			v = 0.666666666f;
 		else if ( uvl < vertexesAround*6 )
-			*v = 0.75f;
+			v = 0.75f;
 		else if ( uvl < vertexesAround*7 )
-			*v = 0.90f;
+			v = 0.90f;
 		else if ( uvl < vertexesAround*8 )
-			*v = 1.00f;
+			v = 1.00f;
 		else
 		{
 			// shouldn't be able to get here
 			// maybe put an error message here
 			//  "tiregen error: accessing code that shouldn't be reachable"
-			//*v = 0.00f;
+			assert(0);
 		}
-
+		texData[ uvl * 2 + 1 ] = v;
 
 		// so for the very last segment it will need something a little special
 		// otherwise it draws the entire texture in that tiny last segment space
@@ -430,7 +352,8 @@ void mg_tire(VERTEXARRAY & tire, float sectionWidth_mm, float aspectRatio, float
 
 	//////////////////////////////////////////////
 	// build some vertex normals
-	float *normalData = new float[vertexFloatCount];
+	std::vector<float> normalData;
+	normalData.resize(vertexFloatCount);
 
 
     MATHVECTOR <float, 3> tri1Edge;        // one of the edges of a triangle that goes around the tire's circle
@@ -438,7 +361,7 @@ void mg_tire(VERTEXARRAY & tire, float sectionWidth_mm, float aspectRatio, float
     MATHVECTOR <float, 3> triUpEdge;       // one of the edges that wraps around the tire's tread which both faces share, not used on the last vertex ring
     MATHVECTOR <float, 3> triDownEdge;     // the other edges that wraps around the tire's tread which both faces share, not used on the first vertex ring
 
-	for (unsigned int nlv=0 ; nlv<vertexCount ; nlv++)
+	for (int nlv=0 ; nlv<vertexCount ; nlv++)
 	{
 
 		/*// one way, not too bad, but not accurate
@@ -554,9 +477,9 @@ void mg_tire(VERTEXARRAY & tire, float sectionWidth_mm, float aspectRatio, float
                     );
 
                 tri2Edge.Set(
-                    vertexData[nlv*3   ] - vertexData[(nlv+segmentsAround-1)*3   ],
-                    vertexData[nlv*3 +1] - vertexData[(nlv+segmentsAround-1)*3 +1],
-                    vertexData[nlv*3 +2] - vertexData[(nlv+segmentsAround-1)*3 +2]
+                    vertexData[nlv*3   ] - vertexData[(nlv+segmentsAround)*3   ],
+                    vertexData[nlv*3 +1] - vertexData[(nlv+segmentsAround)*3 +1],
+                    vertexData[nlv*3 +2] - vertexData[(nlv+segmentsAround)*3 +2]
                     );
 
                 triUpEdge.Set(
@@ -574,9 +497,9 @@ void mg_tire(VERTEXARRAY & tire, float sectionWidth_mm, float aspectRatio, float
                     );
 
                 tri1Edge.Set(
-                    vertexData[nlv*3   ] - vertexData[(nlv-segmentsAround+1)*3   ],
-                    vertexData[nlv*3 +1] - vertexData[(nlv-segmentsAround+1)*3 +1],
-                    vertexData[nlv*3 +2] - vertexData[(nlv-segmentsAround+1)*3 +2]
+                    vertexData[nlv*3   ] - vertexData[(nlv-segmentsAround)*3   ],
+                    vertexData[nlv*3 +1] - vertexData[(nlv-segmentsAround)*3 +1],
+                    vertexData[nlv*3 +2] - vertexData[(nlv-segmentsAround)*3 +2]
                     );
 
                 triUpEdge.Set(
@@ -601,9 +524,9 @@ void mg_tire(VERTEXARRAY & tire, float sectionWidth_mm, float aspectRatio, float
                     );
 
                 triUpEdge.Set(
-                    vertexData[nlv*3   ] - vertexData[(nlv+segmentsAround+1)*3   ],
-                    vertexData[nlv*3 +1] - vertexData[(nlv+segmentsAround+1)*3 +1],
-                    vertexData[nlv*3 +2] - vertexData[(nlv+segmentsAround+1)*3 +2]
+                    vertexData[nlv*3   ] - vertexData[(nlv-segmentsAround+1)*3   ],
+                    vertexData[nlv*3 +1] - vertexData[(nlv-segmentsAround+1)*3 +1],
+                    vertexData[nlv*3 +2] - vertexData[(nlv-segmentsAround+1)*3 +2]
                     );
 
 		        /*normalData[nlv*3 + 0] = vertexData[nlv*3 +0] * 0.015f;  //0.05f;
@@ -746,8 +669,6 @@ void mg_tire(VERTEXARRAY & tire, float sectionWidth_mm, float aspectRatio, float
 		    MATHVECTOR <float, 3> faceNormal1 = triUpEdge.cross(tri1Edge);
             MATHVECTOR <float, 3> faceNormal2 = tri2Edge.cross(triUpEdge);
             MATHVECTOR <float, 3> faceNormal3 = triDownEdge.cross(tri1Edge);
-            //MATHVECTOR faceNormal4;
-            //faceNormal4.Set(0,0,0);
             MATHVECTOR <float, 3> faceNormal4 = tri2Edge.cross(triDownEdge);
 
 
@@ -785,18 +706,11 @@ void mg_tire(VERTEXARRAY & tire, float sectionWidth_mm, float aspectRatio, float
 
 	//////////////////////////////////////////////
 	// VERTEXARRAY will copy this data
-	tire.SetVertices(vertexData, vertexFloatCount);
-	tire.SetFaces((int*)triData, triVIndexCount);
+	tire.SetVertices(&vertexData.front(), vertexFloatCount);
+	tire.SetFaces(&triData.front(), triVIndexCount);
 	tire.SetTexCoordSets(1);
-	tire.SetTexCoords(0, texData, texCoordFloats);
-	tire.SetNormals(normalData, vertexFloatCount);
-
-
-	// free up the temp data
-	delete vertexData;
-	delete triData;
-	delete texData;
-	delete normalData;
+	tire.SetTexCoords(0, &texData.front(), texCoordFloats);
+	tire.SetNormals(&normalData.front(), vertexFloatCount);
 
 	//printf("tire created: v=%u, tri=%u\n", vertexCount, (triVIndexCount/3));
 }
@@ -822,7 +736,7 @@ void mg_tire(VERTEXARRAY & tire, float sectionWidth_mm, float aspectRatio, float
 // mg_wheelEdge
 void mg_wheelEdge(VERTEXARRAY & wheelEdge, float sectionWidth_mm, float aspectRatio, float rimDiameter_in, float flangeDisplacement_mm)
 {
-    unsigned int segmentsAround = 32;
+    int segmentsAround = 32;
 
     float vertexNormalLength = 0.025f;
 
@@ -862,91 +776,63 @@ void mg_wheelEdge(VERTEXARRAY & wheelEdge, float sectionWidth_mm, float aspectRa
 
 
 	// non-configurable parameters
-	unsigned int vertexRings = 6;
+	int vertexRings = 6;
 	float angleIncrement = 360.0f / (float) segmentsAround;
 
 	/////////////////////////////////////
 	//
 	// vertices (temporary data)
 	//
-	unsigned int vertexesAround = segmentsAround + 1;
-	unsigned int vertexCount = vertexesAround * vertexRings;
-	unsigned int vertexFloatCount = vertexCount * 3;	// * 3 cause there are 3 floats in a vertex
-	float *vertexData = new float [ vertexFloatCount ];
-
-	// a re-used for loop variable
-	unsigned int lv;
+	int vertexesAround = segmentsAround + 1;
+	int vertexCount = vertexesAround * vertexRings;
+	int vertexFloatCount = vertexCount * 3;	// * 3 cause there are 3 floats in a vertex
+	std::vector<float> vertexData;
+	vertexData.resize(vertexFloatCount);
 
 	// Right-side bevel, outer lip
-	for (lv=0 ; lv<vertexesAround ; lv++)
+	for (int lv=0 ; lv<vertexesAround ; lv++)
 	{
-		float *x = &vertexData[(lv+vertexesAround * 0) * 3 + 0];
-		float *y = &vertexData[(lv+vertexesAround * 0) * 3 + 1];
-		float *z = &vertexData[(lv+vertexesAround * 0) * 3 + 2];
-
-		*x = 1.0f * (flangeOutsideWidth / 2.0f);
-		*y = flangeOuterRadius * cosD(angleIncrement * lv);
-		*z = flangeOuterRadius * sinD(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 0) * 3 + 0] = 1.0f * (flangeOutsideWidth / 2.0f);
+		vertexData[(lv+vertexesAround * 0) * 3 + 1] = flangeOuterRadius * cosD(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 0) * 3 + 2] = flangeOuterRadius * sinD(angleIncrement * lv);
 	}
 	// Right-side bevel, inner lip
-	for (lv=0 ; lv<vertexesAround ; lv++)
+	for (int lv=0 ; lv<vertexesAround ; lv++)
 	{
-		float *x = &vertexData[(lv+vertexesAround * 1) * 3 + 0];
-		float *y = &vertexData[(lv+vertexesAround * 1) * 3 + 1];
-		float *z = &vertexData[(lv+vertexesAround * 1) * 3 + 2];
-
-		*x = 1.0f * (innerWidth / 2.0f);
-		*y = (innerRadius) * cosD(angleIncrement * lv);
-		*z = (innerRadius) * sinD(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 1) * 3 + 0] = 1.0f * (innerWidth / 2.0f);
+		vertexData[(lv+vertexesAround * 1) * 3 + 1] = (innerRadius) * cosD(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 1) * 3 + 2] = (innerRadius) * sinD(angleIncrement * lv);
 	}
 
 
 	// Right-side of main cylinder
-	for (lv=0 ; lv<vertexesAround ; lv++)
+	for (int lv=0 ; lv<vertexesAround ; lv++)
 	{
-		float *x = &vertexData[(lv+vertexesAround * 2) * 3 + 0];
-		float *y = &vertexData[(lv+vertexesAround * 2) * 3 + 1];
-		float *z = &vertexData[(lv+vertexesAround * 2) * 3 + 2];
-
-		*x = 1.0f * (innerWidth / 2.0f);
-		*y = (innerRadius) * cosD(angleIncrement * lv);
-		*z = (innerRadius) * sinD(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 2) * 3 + 0] = 1.0f * (innerWidth / 2.0f);
+		vertexData[(lv+vertexesAround * 2) * 3 + 1] = (innerRadius) * cosD(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 2) * 3 + 2] = (innerRadius) * sinD(angleIncrement * lv);
 	}
 	// Left-side of main cylinder,
-	for (lv=0 ; lv<vertexesAround ; lv++)
+	for (int lv=0 ; lv<vertexesAround ; lv++)
 	{
-		float *x = &vertexData[(lv+vertexesAround * 3) * 3 + 0];
-		float *y = &vertexData[(lv+vertexesAround * 3) * 3 + 1];
-		float *z = &vertexData[(lv+vertexesAround * 3) * 3 + 2];
-
-		*x = -1.0f * (innerWidth / 2.0f);
-		*y = (innerRadius) * cosD(angleIncrement * lv);
-		*z = (innerRadius) * sinD(angleIncrement * lv);
-
-
+		vertexData[(lv+vertexesAround * 3) * 3 + 0] = -1.0f * (innerWidth / 2.0f);
+		vertexData[(lv+vertexesAround * 3) * 3 + 1] = (innerRadius) * cosD(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 3) * 3 + 2] = (innerRadius) * sinD(angleIncrement * lv);
 	}
 
 	// Left-side bevel, inner lip
-	for (lv=0 ; lv<vertexesAround ; lv++)
+	for (int lv=0 ; lv<vertexesAround ; lv++)
 	{
-		float *x = &vertexData[(lv+vertexesAround * 4) * 3 + 0];
-		float *y = &vertexData[(lv+vertexesAround * 4) * 3 + 1];
-		float *z = &vertexData[(lv+vertexesAround * 4) * 3 + 2];
-
-        *x = -1.0f * (innerWidth / 2.0f);
-		*y = innerRadius * cosD(angleIncrement * lv);
-		*z = innerRadius * sinD(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 4) * 3 + 0] = -1.0f * (innerWidth / 2.0f);
+		vertexData[(lv+vertexesAround * 4) * 3 + 1] = innerRadius * cosD(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 4) * 3 + 2] = innerRadius * sinD(angleIncrement * lv);
 	}
 	// Left-side bevel, outer lip
-	for (lv=0 ; lv<vertexesAround ; lv++)
+	for (int lv=0 ; lv<vertexesAround ; lv++)
 	{
-		float *x = &vertexData[(lv+vertexesAround * 5) * 3 + 0];
-		float *y = &vertexData[(lv+vertexesAround * 5) * 3 + 1];
-		float *z = &vertexData[(lv+vertexesAround * 5) * 3 + 2];
-
-		*x = -1.0f * (flangeOutsideWidth / 2.0f);
-		*y = (flangeOuterRadius) * cosD(angleIncrement * lv);
-		*z = (flangeOuterRadius) * sinD(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 5) * 3 + 0] = -1.0f * (flangeOutsideWidth / 2.0f);
+		vertexData[(lv+vertexesAround * 5) * 3 + 1] = (flangeOuterRadius) * cosD(angleIncrement * lv);
+		vertexData[(lv+vertexesAround * 5) * 3 + 2] = (flangeOuterRadius) * sinD(angleIncrement * lv);
 	}
 
 
@@ -959,83 +845,52 @@ void mg_wheelEdge(VERTEXARRAY & wheelEdge, float sectionWidth_mm, float aspectRa
 	//  build triangles
 	//  different from the last one
     //                            2 triangles * segmentsAround * 3 VertexIndexes * 3 completely separate tubes
-	unsigned int triVIndexCount = 2 * segmentsAround * 3 * 3;
-	unsigned int *triData = new unsigned int [ triVIndexCount ];
+	int triVIndexCount = 2 * segmentsAround * 3 * 3;
+	std::vector<int> triData(triVIndexCount, 0);
+	//triData.resize(triVIndexCount);
 
-	unsigned int triIndex = 0;
-	unsigned int circleSegment = 0;
-
-	unsigned int *triVIndex0;
-	unsigned int *triVIndex1;
-	unsigned int *triVIndex2;
-
-
-    // set them all to zero for the time being
-    for ( unsigned int trilv=0 ; trilv<triVIndexCount ; trilv++ )
-    {
-        triData[trilv] = 0;
-    }
-
-
-	for (circleSegment=0 ; circleSegment<segmentsAround; circleSegment++)
+	int triIndex = 0;
+	for (int circleSegment=0 ; circleSegment<segmentsAround; circleSegment++)
 	{
 		// 1st triangle (Right-side - Inner to Sidewall)
-		triVIndex0 = &triData[ (triIndex+0)*3 + 0 ];
-		triVIndex1 = &triData[ (triIndex+0)*3 + 1 ];
-		triVIndex2 = &triData[ (triIndex+0)*3 + 2 ];
-		*triVIndex0 = circleSegment;
-		*triVIndex1 = circleSegment +1;
-		*triVIndex2 = circleSegment +vertexesAround;
+		triData[ (triIndex+0)*3 + 0 ] = circleSegment;
+		triData[ (triIndex+0)*3 + 1 ] = circleSegment+1;
+		triData[ (triIndex+0)*3 + 2 ] = circleSegment+vertexesAround;
 
 		// 2nd triangle
-		triVIndex0 = &triData[ (triIndex+1)*3 + 0 ];
-		triVIndex1 = &triData[ (triIndex+1)*3 + 1 ];
-		triVIndex2 = &triData[ (triIndex+1)*3 + 2 ];
-		*triVIndex0 = circleSegment+vertexesAround;
-		*triVIndex1 = circleSegment+1;
-		*triVIndex2 = circleSegment+vertexesAround +1;
+		triData[ (triIndex+1)*3 + 0 ] = circleSegment+vertexesAround;
+		triData[ (triIndex+1)*3 + 1 ] = circleSegment+1;
+		triData[ (triIndex+1)*3 + 2 ] = circleSegment+vertexesAround+1;
 
 		triIndex +=2;
 	}
 
-	for (circleSegment=0 ; circleSegment<segmentsAround; circleSegment++)
+	for (int circleSegment=0 ; circleSegment<segmentsAround; circleSegment++)
 	{
 		// 1st triangle (Right-side - Inner to Sidewall)
-		triVIndex0 = &triData[ (triIndex+0)*3 + 0 ];
-		triVIndex1 = &triData[ (triIndex+0)*3 + 1 ];
-		triVIndex2 = &triData[ (triIndex+0)*3 + 2 ];
-		*triVIndex0 = (2*vertexesAround) + circleSegment;
-		*triVIndex1 = (2*vertexesAround) + circleSegment +1;
-		*triVIndex2 = (2*vertexesAround) + circleSegment +vertexesAround;
+		triData[ (triIndex+0)*3 + 0 ] = (2*vertexesAround)+circleSegment;
+		triData[ (triIndex+0)*3 + 1 ] = (2*vertexesAround)+circleSegment+1;
+		triData[ (triIndex+0)*3 + 2 ] = (2*vertexesAround)+circleSegment+vertexesAround;
 
 		// 2nd triangle
-		triVIndex0 = &triData[ (triIndex+1)*3 + 0 ];
-		triVIndex1 = &triData[ (triIndex+1)*3 + 1 ];
-		triVIndex2 = &triData[ (triIndex+1)*3 + 2 ];
-		*triVIndex0 = (2*vertexesAround) + circleSegment+vertexesAround;
-		*triVIndex1 = (2*vertexesAround) + circleSegment+1;
-		*triVIndex2 = (2*vertexesAround) + circleSegment+vertexesAround +1;
+		triData[ (triIndex+1)*3 + 0 ] = (2*vertexesAround)+circleSegment+vertexesAround;
+		triData[ (triIndex+1)*3 + 1 ] = (2*vertexesAround)+circleSegment+1;
+		triData[ (triIndex+1)*3 + 2 ] = (2*vertexesAround)+circleSegment+vertexesAround+1;
 
 		triIndex +=2;
 	}
 
-	for (circleSegment=0 ; circleSegment<segmentsAround; circleSegment++)
+	for (int circleSegment=0 ; circleSegment<segmentsAround; circleSegment++)
 	{
 		// 1st triangle (Right-side - Inner to Sidewall)
-		triVIndex0 = &triData[ (triIndex+0)*3 + 0 ];
-		triVIndex1 = &triData[ (triIndex+0)*3 + 1 ];
-		triVIndex2 = &triData[ (triIndex+0)*3 + 2 ];
-		*triVIndex0 = (4*vertexesAround) + circleSegment +0;
-		*triVIndex1 = (4*vertexesAround) + circleSegment +1;
-		*triVIndex2 = (4*vertexesAround) + circleSegment +vertexesAround;
+		triData[ (triIndex+0)*3 + 0 ] = (4*vertexesAround)+circleSegment+0;
+		triData[ (triIndex+0)*3 + 1 ] = (4*vertexesAround)+circleSegment+1;
+		triData[ (triIndex+0)*3 + 2 ] = (4*vertexesAround)+circleSegment+vertexesAround;
 
 		// 2nd triangle
-		triVIndex0 = &triData[ (triIndex+1)*3 + 0 ];
-		triVIndex1 = &triData[ (triIndex+1)*3 + 1 ];
-		triVIndex2 = &triData[ (triIndex+1)*3 + 2 ];
-		*triVIndex0 = (4*vertexesAround) + circleSegment+vertexesAround;
-		*triVIndex1 = (4*vertexesAround) + circleSegment+1;
-		*triVIndex2 = (4*vertexesAround) + circleSegment+vertexesAround +1;
+		triData[ (triIndex+1)*3 + 0 ] = (4*vertexesAround)+circleSegment+vertexesAround;
+		triData[ (triIndex+1)*3 + 1 ] = (4*vertexesAround)+circleSegment+1;
+		triData[ (triIndex+1)*3 + 2 ] = (4*vertexesAround)+circleSegment+vertexesAround+1;
 
 		triIndex +=2;
 	}
@@ -1049,49 +904,43 @@ void mg_wheelEdge(VERTEXARRAY & wheelEdge, float sectionWidth_mm, float aspectRa
 
     //////////////////////////////////////////////
     // Texture Coordinates
-	unsigned int texCoordFloats = vertexCount * 2;
-	float *texData = new float [ texCoordFloats ];
+	int texCoordFloats = vertexCount * 2;
+	std::vector<float> texData;
+	texData.resize(texCoordFloats);
 
     // set them all to zero for the time being
-    for ( unsigned int tlv=0 ; tlv< vertexCount ; tlv++ )
+    for ( int tlv=0 ; tlv< vertexCount ; tlv++ )
     {
-        float *u = &texData[ tlv * 2 ];
-		*u = tlv % vertexesAround;
-		*u = *u / segmentsAround;
+        float u = tlv % vertexesAround;
+		u = u / segmentsAround;
+        texData[ tlv * 2 ] = u;
 
-		float *v = &texData[ tlv * 2 + 1 ];
-
-
-
+		float v = 0;
         if ( tlv < vertexesAround*1 )
         {
-            *v = 1.0 - 0.0f;
+            v = 1.0 - 0.0f;
         }
         else if ( tlv < vertexesAround*2 )
         {
-            *v = 1.0 - 0.125f;
+            v = 1.0 - 0.125f;
         }
-
-
         else if ( tlv < vertexesAround*3 )
         {
-            *v = 1.0 - 0.125f;
+            v = 1.0 - 0.125f;
         }
         else if ( tlv < vertexesAround*4 )
         {
-            *v = 1.0 - 0.25f;
+            v = 1.0 - 0.25f;
         }
-
-
         else if ( tlv < vertexesAround*5 )
         {
-            *v = 1.0 - 0.125f;
+            v = 1.0 - 0.125f;
         }
         else            //if ( tlv < vertexesAround*6 )
         {
-            *v = 1.0 - 0.25f;
+            v = 1.0 - 0.25f;
         }
-
+        texData[ tlv * 2 + 1 ] = v;
     }
 
 
@@ -1101,13 +950,14 @@ void mg_wheelEdge(VERTEXARRAY & wheelEdge, float sectionWidth_mm, float aspectRa
 
     ///////////////////////////////////////////////////////
     // time for normals
-    float *normalData = new float [vertexFloatCount];
+	std::vector<float> normalData;
+	normalData.resize(vertexFloatCount);
 
     MATHVECTOR <float, 3> tri1Edge;        // one of the edges of a triangle that goes around the tire's circle
     MATHVECTOR <float, 3> tri2Edge;        // one of the edges of a triangle that goes around the tire's circle
     MATHVECTOR <float, 3> triUpEdge;
 
-    for (unsigned int nlv=0 ; nlv<vertexCount ; nlv++)
+    for (int nlv=0 ; nlv<vertexCount ; nlv++)
     {
         normalData[nlv*3+0] = 0.1;
         normalData[nlv*3+1] = 0;
@@ -1115,7 +965,7 @@ void mg_wheelEdge(VERTEXARRAY & wheelEdge, float sectionWidth_mm, float aspectRa
     }
 
 
-    for (unsigned int nlv=0 ; nlv<vertexCount ; nlv++)
+    for (int nlv=0 ; nlv<vertexCount ; nlv++)
     {
         if ( nlv < vertexesAround*1 )       // first ring of vertexes
 		{
@@ -1323,19 +1173,12 @@ void mg_wheelEdge(VERTEXARRAY & wheelEdge, float sectionWidth_mm, float aspectRa
 
 	//////////////////////////////////////////////
 	// VERTEXARRAY will copy this data
-	wheelEdge.SetVertices(vertexData, vertexFloatCount);
-	wheelEdge.SetFaces((int*)triData, triVIndexCount);
+	wheelEdge.SetVertices(&vertexData.front(), vertexFloatCount);
+	wheelEdge.SetFaces(&triData.front(), triVIndexCount);
 
 	wheelEdge.SetTexCoordSets(1);
-	wheelEdge.SetTexCoords(0, texData, texCoordFloats);
-	wheelEdge.SetNormals(normalData, vertexFloatCount);
-
-
-	// free up the temp data
-	delete vertexData;
-	delete triData;
-	delete texData;
-	delete normalData;
+	wheelEdge.SetTexCoords(0, &texData.front(), texCoordFloats);
+	wheelEdge.SetNormals(&normalData.front(), vertexFloatCount);
 
 	//	printf("wheel_edge created: v=%u, tri=%u\n", vertexCount, (triVIndexCount/3) );
 
