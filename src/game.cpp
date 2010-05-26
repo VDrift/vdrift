@@ -11,6 +11,7 @@
 #include "widget_label.h"
 #include "quickprof.h"
 #include "tracksurface.h"
+#include "macros.h"
 
 #include <fstream>
 using std::ifstream;

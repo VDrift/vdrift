@@ -80,6 +80,7 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 		if (source_textures[i])
 			source_textures[i]->Activate();
 	}
+	glActiveTexture(GL_TEXTURE0);
 	
 	OPENGL_UTILITY::CheckForOpenGLErrors("postprocess texture set", error_output);
 
@@ -99,6 +100,15 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 
 	glstate.Enable(GL_DEPTH_TEST);
 	glstate.Disable(GL_TEXTURE_2D);
+	
+	for (unsigned int i = 0; i < source_textures.size(); i++)
+	{
+		//std::cout << i << ": " << source_textures[i] << std::endl;
+		glActiveTexture(GL_TEXTURE0+i);
+		if (source_textures[i])
+			source_textures[i]->Deactivate();
+	}
+	glActiveTexture(GL_TEXTURE0);
 	
 	OPENGL_UTILITY::CheckForOpenGLErrors("postprocess end", error_output);
 }

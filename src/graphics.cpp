@@ -517,12 +517,6 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 							   i->mipmap,
 							   error_output,
 							   fbms);
-							   
-					// initialize fbo
-					std::vector <FBTEXTURE*> fbotex;
-					fbotex.push_back(&fbtex);
-					FBOBJECT & fbo = render_outputs[i->name].RenderToFBO();
-					fbo.Init(glstate, fbotex, error_output);
 					
 					// map to input texture
 					texture_inputs[i->name] = fbtex;
@@ -531,8 +525,41 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 				info_output << "Initialized render output: " << i->name << (i->type != "framebuffer" ? " (FBO)" : " (framebuffer alias)") << std::endl;
 			}
 		}
-
+		
 		render_outputs["framebuffer"].RenderToFramebuffer();
+		
+		// go through all pass outputs and construct the actual FBOs, which can consist of one or more fbtextures
+		for (std::vector <GRAPHICS_CONFIG_PASS>::const_iterator i = config.passes.begin(); i != config.passes.end(); i++)
+		{
+			if (i->conditions.Satisfied(conditions))
+			{
+				// see if it already exists
+				std::string outname = i->output;
+				render_output_map_type::iterator curout = render_outputs.find(outname);
+				if (curout == render_outputs.end())
+				{
+					// tokenize the output list
+					std::vector <std::string> outputs = Tokenize(outname, " ");
+					
+					// collect a list of textures for the outputs
+					std::vector <FBTEXTURE*> fbotex;
+					for (std::vector <std::string>::const_iterator o = outputs.begin(); o != outputs.end(); o++)
+					{
+						texture_output_map_type::iterator to = texture_outputs.find(*o);
+						if (to != texture_outputs.end())
+						{
+							fbotex.push_back(&to->second);
+						}
+					}
+					
+					assert(!fbotex.empty()); //TODO: replace with friendly error message
+					
+					// initialize fbo
+					FBOBJECT & fbo = render_outputs[outname].RenderToFBO();
+					fbo.Init(glstate, fbotex, error_output);
+				}
+			}
+		}
 	}
 	else
 	{
