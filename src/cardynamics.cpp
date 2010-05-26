@@ -667,7 +667,7 @@ void CARDYNAMICS::GetCollisionBox(
 		box.CombineWith(wheelaabb);
 	}
 	float bottom_new = box.GetCenter()[2] - box.GetSize()[2] * 0.5;
-	const float delta = 0.1;
+	const float delta = 0.05; //collision shape bottom margin
 	MATHVECTOR <T, 3> offset(0, 0, bottom - bottom_new + delta);
 
 	center = ToBulletVector(box.GetCenter() + offset * 0.5 - center_of_mass);
@@ -677,24 +677,6 @@ void CARDYNAMICS::GetCollisionBox(
 // create collision shape from bounding box
 btCollisionShape * CreateCollisionShape(const btVector3 & center, const btVector3 & size)
 {
-/*	// use two capsules to approximate collision box
-	assert(size[0] > size[1] && size[1] > size[2]);
-	btScalar radius = size[2] * 0.5;
-	btScalar height = size[0] - size[2];
-	btVector3 sideOffset(0, size[1] * 0.5 - size[2] * 0.5, 0);
-	btCollisionShape * hull0 = new btCapsuleShapeX(radius, height);
-	btCollisionShape * hull1 = new btCapsuleShapeX(radius, height);
-	btVector3 origin0 = center + sideOffset;
-	btVector3 origin1 = center - sideOffset;
-	
-	btCompoundShape * shape = new btCompoundShape(false);
-	btTransform localtransform;
-	localtransform.setIdentity();
-	localtransform.setOrigin(origin0);
-	shape->addChildShape(localtransform, hull0);
-	localtransform.setOrigin(origin1);
-	shape->addChildShape(localtransform, hull1);*/
-	
 	// use btMultiSphereShape(4 spheres) to approximate bounding box
 	btVector3 hsize = 0.5 * size;
 	int min = hsize.minAxis();
@@ -727,7 +709,7 @@ void CARDYNAMICS::Init(
 	this->world = &world;
 
 	MATHVECTOR <T, 3> zero(0, 0, 0);
-	body.SetPosition(position);
+	body.SetPosition(position - center_of_mass);
 	body.SetOrientation(orientation);
 	body.SetInitialForce(zero);
 	body.SetInitialTorque(zero);
@@ -738,10 +720,13 @@ void CARDYNAMICS::Init(
 	// init chassis
 	T chassisMass = body.GetMass();
 	MATRIX3 <T> inertia = body.GetInertia();
+	//MATRIX3 <T> inertia_basis;
+	//MATHVECTOR <T, 3> inertia_vector;
+	//MATRIX3<T>::Diagonalize(inertia, inertia_basis, inertia_vector);
 	btVector3 chassisInertia(inertia[0], inertia[4], inertia[8]);
 
 	btTransform transform;
-	transform.setOrigin(ToBulletVector(position));
+	transform.setOrigin(ToBulletVector(position-center_of_mass));
 	transform.setRotation(ToBulletQuaternion(orientation));
 	btDefaultMotionState * chassisState = new btDefaultMotionState();
 	chassisState->setWorldTransform(transform);
@@ -786,7 +771,7 @@ void CARDYNAMICS::Init(
 		wheelInfo.m_friction = 0;
 		wheelBody[i] = world.AddRigidBody(wheelInfo);
 
-		// suspension(hinge)
+		// suspension(slider)
 		btGeneric6DofSpringConstraint * joint = NULL;
 		bool useLinearReferenceFrameA = true;
 		bool disableCollisionsBetweenLinked = true;
@@ -794,24 +779,20 @@ void CARDYNAMICS::Init(
 		btTransform chassisFrame;
 		btTransform wheelFrame;
 		chassisFrame.setIdentity();
-		chassisFrame.setOrigin(ToBulletVector(suspension[i].GetHinge() - center_of_mass));
+		chassisFrame.setOrigin(ToBulletVector(GetLocalWheelPosition(WHEEL_POSITION(i), 0)));
 		wheelFrame.setIdentity();
-		wheelFrame.setOrigin(ToBulletVector(suspension[i].GetHinge() - wheel[i].GetExtendedPosition()));
+		wheelFrame.setOrigin(btVector3(0, 0, 0));
 
 		joint = new btGeneric6DofSpringConstraint(*chassis, *wheelBody[i], chassisFrame, wheelFrame, useLinearReferenceFrameA);
 		joint->setAngularLowerLimit(btVector3(0, 0, 0));
 		joint->setAngularUpperLimit(btVector3(0, 0, 0));
 		joint->setLinearLowerLimit(btVector3(0, 0, 0));
-		joint->setLinearUpperLimit(btVector3(0, 0, 0));
-		
-		// hinge radial limit
-		if (i%2) joint->setAngularUpperLimit(btVector3(0.15, 0, 0));
-		else joint->setAngularLowerLimit(btVector3(-0.15, 0, 0));
+		joint->setLinearUpperLimit(btVector3(0, 0, suspension[i].GetTravel()));
 		
 		// spring/damper
-		joint->enableSpring(3, true);
-		joint->setStiffness(3, suspension[i].GetSpringConstant()*3);
-		joint->setDamping(3, suspension[i].GetBounce()*3);
+		joint->enableSpring(2, true);
+		joint->setStiffness(2, suspension[i].GetSpringConstant()*3);
+		joint->setDamping(2, suspension[i].GetBounce()*3);
 		joint->setEquilibriumPoint();
 
 		world.AddConstraint(joint, disableCollisionsBetweenLinked);
@@ -904,7 +885,7 @@ QUATERNION <T> CARDYNAMICS::GetWheelOrientation(WHEEL_POSITION wp) const
 	QUATERNION <T> siderot;
 	if(wp == FRONT_RIGHT || wp == REAR_RIGHT)
 	{
-		siderot.Rotate(3.141593, 0, 0, 1);
+		siderot.Rotate(M_PI, 0, 0, 1);
 	}
 	
 #ifdef _BULLET_
@@ -1568,8 +1549,9 @@ MATHVECTOR <T, 3> CARDYNAMICS::ApplyTireForce(int i, const T normal_force, const
 
 	// camber relative to surface(clockwise in wheel heading direction)
 	MATHVECTOR <T, 3> wheel_axis(0, 1, 0);
-	wheel_space.RotateVector(wheel_axis); // wheel axis in world space (wheel plane normal)
-	T camber_sin = wheel_axis.dot(surface_normal);
+	wheel_space.RotateVector(wheel_axis);	// wheel axis in world space (wheel plane normal)
+	T camber_sin = -wheel_axis.dot(surface_normal);
+	if (i&1) camber_sin = -camber_sin;		// wheel axis is pointing in the same direction
 	T camber_rad = asin(camber_sin);
 	wheel.SetCamberDeg(camber_rad * 180.0/3.141593);
 

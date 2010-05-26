@@ -13,6 +13,7 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Option use_console_runner="0" />
+				<Option parameters="-debug" />
 				<Compiler>
 					<Add option="-Wall" />
 					<Add option="-g" />
@@ -31,7 +32,6 @@
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
-			<Add option="-pg" />
 			<Add option="-fexceptions" />
 			<Add option="-mwindows" />
 			<Add directory="include" />
@@ -39,7 +39,6 @@
 			<Add directory="..\..\bullet" />
 		</Compiler>
 		<Linker>
-			<Add option="-pg -lgmon" />
 			<Add library="opengl32" />
 			<Add library="glu32" />
 			<Add library="glew32" />
@@ -364,7 +363,6 @@
 		<Unit filename="..\..\include\carclutch.h" />
 		<Unit filename="..\..\include\carcontrolmap_local.h" />
 		<Unit filename="..\..\include\cardifferential.h" />
-		<Unit filename="..\..\include\cardriveline.h" />
 		<Unit filename="..\..\include\cardynamics.h" />
 		<Unit filename="..\..\include\carengine.h" />
 		<Unit filename="..\..\include\carfueltank.h" />
@@ -493,7 +491,6 @@
 		<Unit filename="..\..\src\camera_system.cpp" />
 		<Unit filename="..\..\src\car.cpp" />
 		<Unit filename="..\..\src\carcontrolmap_local.cpp" />
-		<Unit filename="..\..\src\cardriveline.cpp" />
 		<Unit filename="..\..\src\cardynamics.cpp" />
 		<Unit filename="..\..\src\collision_world.cpp" />
 		<Unit filename="..\..\src\configfile.cpp" />

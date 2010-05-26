@@ -19,12 +19,7 @@
 #include "macros.h"
 #include "collision_contact.h"
 #include "cartelemetry.h"
-#include "btBulletDynamicsCommon.h"
-
-#include <vector>
-#include <list>
-#include <iostream>
-#include <utility>
+#include "BulletDynamics/Dynamics/btActionInterface.h"
 
 //#define _BULLET_
 
