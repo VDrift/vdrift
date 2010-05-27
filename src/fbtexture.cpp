@@ -5,7 +5,7 @@
 #include <sstream>
 #include <string>
 
-void FBTEXTURE::Init(GLSTATEMANAGER & glstate, int sizex, int sizey, TARGET target, bool newdepth, bool filternearest, bool newalpha, bool usemipmap, std::ostream & error_output, int newmultisample)
+void FBTEXTURE::Init(GLSTATEMANAGER & glstate, int sizex, int sizey, TARGET target, bool newdepth, bool filternearest, bool newalpha, bool usemipmap, std::ostream & error_output, int newmultisample, bool newdepthcomparisonenabled)
 {
 	assert(!(newalpha && newdepth)); //not allowed; depth maps don't have alpha
 	
@@ -21,6 +21,8 @@ void FBTEXTURE::Init(GLSTATEMANAGER & glstate, int sizex, int sizey, TARGET targ
 	}
 	
 	depth = newdepth;
+	depthcomparisonenabled = newdepthcomparisonenabled;
+	
 	alpha = newalpha;
 	
 	inited = true;
@@ -106,10 +108,10 @@ void FBTEXTURE::Init(GLSTATEMANAGER & glstate, int sizex, int sizey, TARGET targ
 	{
 		glTexParameteri(texture_target, GL_DEPTH_TEXTURE_MODE, GL_LUMINANCE);
 		glTexParameteri(texture_target, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
-		//if (depthcomparisonenabled)
+		if (depthcomparisonenabled)
 			glTexParameteri(texture_target, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
-		//else
-		//	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE);
+		else
+			glTexParameteri(texture_target, GL_TEXTURE_COMPARE_MODE, GL_NONE);
 	}
 	
 	OPENGL_UTILITY::CheckForOpenGLErrors("FBTEX texture setup", error_output);

@@ -51,17 +51,19 @@ class FBTEXTURE : public TEXTURE_INTERFACE
 			multisample(0),
 			texture_attachment(GL_COLOR_ATTACHMENT0),
 			texture_format1(0),
-			cur_side(POSX)
+			cur_side(POSX),
+			depthcomparisonenabled(true)
 			{}
 		~FBTEXTURE() {DeInit();}
-		void Init(GLSTATEMANAGER & glstate, int sizex, int sizey, TARGET target, bool newdepth, bool filternearest, bool newalpha, bool usemipmap, std::ostream & error_output, int newmultisample = 0);
+		void Init(GLSTATEMANAGER & glstate, int sizex, int sizey, TARGET target, bool newdepth, bool filternearest, bool newalpha, bool usemipmap, std::ostream & error_output, int newmultisample = 0, bool newdepthcomparisonenabled = true);
 		void DeInit();
 		virtual void Activate() const;
 		virtual void Deactivate() const;
 		virtual bool Loaded() const {return inited;}
 		//void Screenshot(GLSTATEMANAGER & glstate, const std::string & filename, std::ostream & error_output);
-		int GetWidth() const {return sizew;}
-		int GetHeight() const {return sizeh;}
+		virtual bool IsRect() const {return (texture_target == RECTANGLE);}
+		virtual unsigned int GetW() const {return sizew;}
+		virtual unsigned int GetH() const {return sizeh;}
 		bool IsCubemap() const {return (texture_target == CUBEMAP);}
 		
 	protected:
@@ -82,6 +84,7 @@ class FBTEXTURE : public TEXTURE_INTERFACE
 		int texture_attachment;
 		int texture_format1;
 		CUBE_SIDE cur_side;
+		bool depthcomparisonenabled;
 };
 
 #endif

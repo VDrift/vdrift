@@ -41,6 +41,119 @@ using std::vector;
 
 #include <algorithm>
 
+void ExtractFrustum(FRUSTUM & frustum)
+{
+	float   proj[16];
+	float   modl[16];
+	float   clip[16];
+	float   t;
+
+	/* Get the current PROJECTION matrix from OpenGL */
+	glGetFloatv( GL_PROJECTION_MATRIX, proj );
+
+	/* Get the current MODELVIEW matrix from OpenGL */
+	glGetFloatv( GL_MODELVIEW_MATRIX, modl );
+
+	/* Combine the two matrices (multiply projection by modelview) */
+	clip[ 0] = modl[ 0] * proj[ 0] + modl[ 1] * proj[ 4] + modl[ 2] * proj[ 8] + modl[ 3] * proj[12];
+	clip[ 1] = modl[ 0] * proj[ 1] + modl[ 1] * proj[ 5] + modl[ 2] * proj[ 9] + modl[ 3] * proj[13];
+	clip[ 2] = modl[ 0] * proj[ 2] + modl[ 1] * proj[ 6] + modl[ 2] * proj[10] + modl[ 3] * proj[14];
+	clip[ 3] = modl[ 0] * proj[ 3] + modl[ 1] * proj[ 7] + modl[ 2] * proj[11] + modl[ 3] * proj[15];
+
+	clip[ 4] = modl[ 4] * proj[ 0] + modl[ 5] * proj[ 4] + modl[ 6] * proj[ 8] + modl[ 7] * proj[12];
+	clip[ 5] = modl[ 4] * proj[ 1] + modl[ 5] * proj[ 5] + modl[ 6] * proj[ 9] + modl[ 7] * proj[13];
+	clip[ 6] = modl[ 4] * proj[ 2] + modl[ 5] * proj[ 6] + modl[ 6] * proj[10] + modl[ 7] * proj[14];
+	clip[ 7] = modl[ 4] * proj[ 3] + modl[ 5] * proj[ 7] + modl[ 6] * proj[11] + modl[ 7] * proj[15];
+
+	clip[ 8] = modl[ 8] * proj[ 0] + modl[ 9] * proj[ 4] + modl[10] * proj[ 8] + modl[11] * proj[12];
+	clip[ 9] = modl[ 8] * proj[ 1] + modl[ 9] * proj[ 5] + modl[10] * proj[ 9] + modl[11] * proj[13];
+	clip[10] = modl[ 8] * proj[ 2] + modl[ 9] * proj[ 6] + modl[10] * proj[10] + modl[11] * proj[14];
+	clip[11] = modl[ 8] * proj[ 3] + modl[ 9] * proj[ 7] + modl[10] * proj[11] + modl[11] * proj[15];
+
+	clip[12] = modl[12] * proj[ 0] + modl[13] * proj[ 4] + modl[14] * proj[ 8] + modl[15] * proj[12];
+	clip[13] = modl[12] * proj[ 1] + modl[13] * proj[ 5] + modl[14] * proj[ 9] + modl[15] * proj[13];
+	clip[14] = modl[12] * proj[ 2] + modl[13] * proj[ 6] + modl[14] * proj[10] + modl[15] * proj[14];
+	clip[15] = modl[12] * proj[ 3] + modl[13] * proj[ 7] + modl[14] * proj[11] + modl[15] * proj[15];
+	
+	/* Extract the numbers for the RIGHT plane */
+	frustum.frustum[0][0] = clip[ 3] - clip[ 0];
+	frustum.frustum[0][1] = clip[ 7] - clip[ 4];
+	frustum.frustum[0][2] = clip[11] - clip[ 8];
+	frustum.frustum[0][3] = clip[15] - clip[12];
+
+	/* Normalize the result */
+	t = sqrt( frustum.frustum[0][0] * frustum.frustum[0][0] + frustum.frustum[0][1] * frustum.frustum[0][1] + frustum.frustum[0][2] * frustum.frustum[0][2] );
+	frustum.frustum[0][0] /= t;
+	frustum.frustum[0][1] /= t;
+	frustum.frustum[0][2] /= t;
+	frustum.frustum[0][3] /= t;
+
+	/* Extract the numbers for the LEFT plane */
+	frustum.frustum[1][0] = clip[ 3] + clip[ 0];
+	frustum.frustum[1][1] = clip[ 7] + clip[ 4];
+	frustum.frustum[1][2] = clip[11] + clip[ 8];
+	frustum.frustum[1][3] = clip[15] + clip[12];
+
+	/* Normalize the result */
+	t = sqrt( frustum.frustum[1][0] * frustum.frustum[1][0] + frustum.frustum[1][1] * frustum.frustum[1][1] + frustum.frustum[1][2] * frustum.frustum[1][2] );
+	frustum.frustum[1][0] /= t;
+	frustum.frustum[1][1] /= t;
+	frustum.frustum[1][2] /= t;
+	frustum.frustum[1][3] /= t;
+
+	/* Extract the BOTTOM plane */
+	frustum.frustum[2][0] = clip[ 3] + clip[ 1];
+	frustum.frustum[2][1] = clip[ 7] + clip[ 5];
+	frustum.frustum[2][2] = clip[11] + clip[ 9];
+	frustum.frustum[2][3] = clip[15] + clip[13];
+
+	/* Normalize the result */
+	t = sqrt( frustum.frustum[2][0] * frustum.frustum[2][0] + frustum.frustum[2][1] * frustum.frustum[2][1] + frustum.frustum[2][2] * frustum.frustum[2][2] );
+	frustum.frustum[2][0] /= t;
+	frustum.frustum[2][1] /= t;
+	frustum.frustum[2][2] /= t;
+	frustum.frustum[2][3] /= t;
+
+	/* Extract the TOP plane */
+	frustum.frustum[3][0] = clip[ 3] - clip[ 1];
+	frustum.frustum[3][1] = clip[ 7] - clip[ 5];
+	frustum.frustum[3][2] = clip[11] - clip[ 9];
+	frustum.frustum[3][3] = clip[15] - clip[13];
+
+	/* Normalize the result */
+	t = sqrt( frustum.frustum[3][0] * frustum.frustum[3][0] + frustum.frustum[3][1] * frustum.frustum[3][1] + frustum.frustum[3][2] * frustum.frustum[3][2] );
+	frustum.frustum[3][0] /= t;
+	frustum.frustum[3][1] /= t;
+	frustum.frustum[3][2] /= t;
+	frustum.frustum[3][3] /= t;
+
+	/* Extract the FAR plane */
+	frustum.frustum[4][0] = clip[ 3] - clip[ 2];
+	frustum.frustum[4][1] = clip[ 7] - clip[ 6];
+	frustum.frustum[4][2] = clip[11] - clip[10];
+	frustum.frustum[4][3] = clip[15] - clip[14];
+
+	/* Normalize the result */
+	t = sqrt( frustum.frustum[4][0] * frustum.frustum[4][0] + frustum.frustum[4][1] * frustum.frustum[4][1] + frustum.frustum[4][2] * frustum.frustum[4][2] );
+	frustum.frustum[4][0] /= t;
+	frustum.frustum[4][1] /= t;
+	frustum.frustum[4][2] /= t;
+	frustum.frustum[4][3] /= t;
+
+	/* Extract the NEAR plane */
+	frustum.frustum[5][0] = clip[ 3] + clip[ 2];
+	frustum.frustum[5][1] = clip[ 7] + clip[ 6];
+	frustum.frustum[5][2] = clip[11] + clip[10];
+	frustum.frustum[5][3] = clip[15] + clip[14];
+
+	/* Normalize the result */
+	t = sqrt( frustum.frustum[5][0] * frustum.frustum[5][0] + frustum.frustum[5][1] * frustum.frustum[5][1] + frustum.frustum[5][2] * frustum.frustum[5][2] );
+	frustum.frustum[5][0] /= t;
+	frustum.frustum[5][1] /= t;
+	frustum.frustum[5][2] /= t;
+	frustum.frustum[5][3] /= t;
+}
+
 void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & error_output)
 {
 	assert(shader);
@@ -71,24 +184,82 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE);
 	glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_LUMINANCE);
 	
+	glstate.SetColorMask(writecolor, writealpha);
+	
 	OPENGL_UTILITY::CheckForOpenGLErrors("postprocess flag set", error_output);
 	
+	// send shader parameters
+	{
+		MATHVECTOR <float, 3> lightvec = lightposition;
+		cam_rotation.RotateVector(lightvec);
+		shader->UploadActiveShaderParameter3f("directlight_eyespace_direction", lightvec[0], lightvec[1], lightvec[2]);
+		//std::cout << lightvec << std::endl;
+	}
+	
+	OPENGL_UTILITY::CheckForOpenGLErrors("shader parameter upload", error_output);
+	
+	float maxu = 1.f;
+	float maxv = 1.f;
+	
+	int num_nonnull = 0;
 	for (unsigned int i = 0; i < source_textures.size(); i++)
 	{
 		//std::cout << i << ": " << source_textures[i] << std::endl;
 		glActiveTexture(GL_TEXTURE0+i);
 		if (source_textures[i])
+		{
 			source_textures[i]->Activate();
+			num_nonnull++;
+			if (source_textures[i]->IsRect())
+			{
+				maxu = source_textures[i]->GetW();
+				maxv = source_textures[i]->GetH();
+			}
+		}
 	}
+	assert(num_nonnull != 0); //TODO: replace with friendlier error message?
 	glActiveTexture(GL_TEXTURE0);
 	
 	OPENGL_UTILITY::CheckForOpenGLErrors("postprocess texture set", error_output);
 
+	// build the frustum corners
+	float Hfar = 2*tan(camfov / 2) * lod_far; //height of the far plane
+	float Wfar = Hfar * w/h; //width of the far plane
+	MATHVECTOR <float, 3> d(0,0,-1); //camera direction vector
+	MATHVECTOR <float, 3> up(0,1,0); //camera up vector
+	MATHVECTOR <float, 3> right(1,0,0); //camera right vector
+	QUATERNION <float> orient;// = cam_rotation;
+	orient.RotateVector(d);
+	orient.RotateVector(up);
+	orient.RotateVector(right);
+	MATHVECTOR <float, 3> pos;// = cam_position;
+	MATHVECTOR <float, 3> fc = pos + d*lod_far; //far plane center
+	std::vector <MATHVECTOR <float, 3> > frustum_corners(4);
+	frustum_corners[3] = fc + (up * Hfar/2) - (right * Wfar/2); //far frustum top left
+	frustum_corners[2] = fc + (up * Hfar/2) + (right * Wfar/2); //far frustum top right
+	frustum_corners[0] = fc - (up * Hfar/2) - (right * Wfar/2); //far frustum bottom left
+	frustum_corners[1] = fc - (up * Hfar/2) + (right * Wfar/2); //far frustum bottom right
+	
 	glBegin(GL_QUADS);
-	glTexCoord2f(0.0f, 0.0f); glVertex3f( 0.0f,  0.0f,  0.0f);
-	glTexCoord2f(1.0, 0.0f); glVertex3f( 1.0f,  0.0f,  0.0f);
-	glTexCoord2f(1.0, 1.0); glVertex3f( 1.0f,  1.0f,  0.0f);
-	glTexCoord2f(0.0f, 1.0); glVertex3f( 0.0f,  1.0f,  0.0f);
+	
+	// send the UV corners in UV set 0, send the frustum corners in UV set 1
+	
+	glMultiTexCoord2f(GL_TEXTURE0, 0.0f, 0.0f);
+	glMultiTexCoord3f(GL_TEXTURE1, frustum_corners[0][0], frustum_corners[0][1], frustum_corners[0][2]);
+	glVertex3f( 0.0f,  0.0f,  0.0f);
+	
+	glMultiTexCoord2f(GL_TEXTURE0, maxu, 0.0f);
+	glMultiTexCoord3f(GL_TEXTURE1, frustum_corners[1][0], frustum_corners[1][1], frustum_corners[1][2]);
+	glVertex3f( 1.0f,  0.0f,  0.0f);
+	
+	glMultiTexCoord2f(GL_TEXTURE0, maxu, maxv);
+	glMultiTexCoord3f(GL_TEXTURE1, frustum_corners[2][0], frustum_corners[2][1], frustum_corners[2][2]);
+	glVertex3f( 1.0f,  1.0f,  0.0f);
+	
+	glMultiTexCoord2f(GL_TEXTURE0, 0.0f, maxv);
+	glMultiTexCoord3f(GL_TEXTURE1, frustum_corners[3][0], frustum_corners[3][1], frustum_corners[3][2]);
+	glVertex3f( 0.0f,  1.0f,  0.0f);
+	
 	glEnd();
 	
 	OPENGL_UTILITY::CheckForOpenGLErrors("postprocess draw", error_output);
@@ -111,6 +282,49 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 	glActiveTexture(GL_TEXTURE0);
 	
 	OPENGL_UTILITY::CheckForOpenGLErrors("postprocess end", error_output);
+}
+
+void RENDER_INPUT_POSTPROCESS::SetCameraInfo(const MATHVECTOR <float, 3> & newpos,
+										  const QUATERNION <float> & newrot,
+										  float newfov,
+										  float newlodfar,
+										  float neww,
+										  float newh)
+{
+	cam_position = newpos;
+	cam_rotation = newrot;
+	camfov = newfov;
+	lod_far = newlodfar;
+	w = neww;
+	h = newh;
+	
+	const bool restore_matrices = true;
+	glMatrixMode( GL_PROJECTION );
+	if (restore_matrices)
+		glPushMatrix();
+	glLoadIdentity();
+	/*if (orthomode)
+	{
+		glOrtho(orthomin[0], orthomax[0], orthomin[1], orthomax[1], orthomin[2], orthomax[2]);
+	}
+	else*/
+	{
+		gluPerspective( camfov, w/(float)h, 0.1f, lod_far );
+	}
+	glMatrixMode( GL_MODELVIEW );
+	if (restore_matrices)
+		glPushMatrix();
+	float temp_matrix[16];
+	(cam_rotation).GetMatrix4(temp_matrix);
+	glLoadMatrixf(temp_matrix);
+	glTranslatef(-cam_position[0],-cam_position[1],-cam_position[2]);
+	ExtractFrustum(frustum);
+	glMatrixMode( GL_PROJECTION );
+	if (restore_matrices)
+		glPopMatrix();
+	glMatrixMode( GL_MODELVIEW );
+	if (restore_matrices)
+		glPopMatrix();
 }
 
 void RENDER_INPUT_SCENE::SetActiveShader(const SHADER_TYPE & newshader)
@@ -147,7 +361,7 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 	(cam_rotation).GetMatrix4(temp_matrix);
 	glLoadMatrixf(temp_matrix);
 	glTranslatef(-cam_position[0],-cam_position[1],-cam_position[2]);
-	ExtractFrustum();
+	ExtractFrustum(frustum);
 
 	//send information to the shaders
 	if (shaders)
@@ -228,10 +442,7 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 	else if (cleardepth)
 		glClear(GL_DEPTH_BUFFER_BIT);
 	
-	if (depth_mode_equal)
-		glDepthFunc( GL_EQUAL );
-	else
-		glDepthFunc( GL_LEQUAL );
+	glDepthFunc( depth_mode );
 	
 	last_transform_valid = false;
 	activeshader = SHADER_NONE;
@@ -443,64 +654,73 @@ void RENDER_INPUT_SCENE::SelectFlags(DRAWABLE & forme, GLSTATEMANAGER & glstate)
 	else
 		glstate.Disable(GL_CULL_FACE);
 
-	bool blend = (i->GetDecal() || i->Get2D() ||
-			i->GetPartialTransparency() || i->GetDistanceField());
-
-	if (blend && !i->GetForceAlphaTest())
+	if (!enablealpha)
 	{
-		if (fsaa > 1)
-		{
-			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-		}
-
-		//if (!shaders && i->GetDraw()->GetDistanceField())
-		//{
-		//	glstate.Enable(GL_ALPHA_TEST);
-		//	glAlphaFunc(GL_GREATER, 0.5f);
-		//}
-		//else
 		glstate.Disable(GL_ALPHA_TEST);
-		glstate.Enable(GL_BLEND);
-		
-		//glstate.SetBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-		
-		/*if (shaders)
-		{
-			glstate.SetBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-		}
-		else*/
-		{
-			glstate.SetBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			if (i->GetSmoke())
-				glstate.SetBlendFunc(GL_SRC_ALPHA, GL_ONE);
-		}
+		glstate.Disable(GL_BLEND);
+		glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
 	}
 	else
 	{
-		if (fsaa > 1 && shaders)
-		{
-			glstate.Enable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-		}
-			/*glstate.Enable(GL_BLEND);
-			glstate.Disable(GL_ALPHA_TEST);
+		bool blend = (i->GetDecal() || i->Get2D() ||
+				i->GetPartialTransparency() || i->GetDistanceField());
 
-			glstate.Disable(GL_BLEND);
-			glstate.Enable(GL_ALPHA_TEST);*/
-		/*}
+		if (blend && !i->GetForceAlphaTest())
+		{
+			if (fsaa > 1)
+			{
+				glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+			}
+
+			//if (!shaders && i->GetDraw()->GetDistanceField())
+			//{
+			//	glstate.Enable(GL_ALPHA_TEST);
+			//	glAlphaFunc(GL_GREATER, 0.5f);
+			//}
+			//else
+			glstate.Disable(GL_ALPHA_TEST);
+			glstate.Enable(GL_BLEND);
+			
+			//glstate.SetBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+			
+			/*if (shaders)
+			{
+				glstate.SetBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+			}
+			else*/
+			{
+				glstate.SetBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+				if (i->GetSmoke())
+					glstate.SetBlendFunc(GL_SRC_ALPHA, GL_ONE);
+			}
+		}
 		else
-		{*/
-			//glstate.Enable(GL_BLEND);
-			glstate.Disable(GL_BLEND);
-			if (i->GetDistanceField())
-				glstate.SetAlphaFunc(GL_GREATER, 0.5f);
+		{
+			if (fsaa > 1 && shaders)
+			{
+				glstate.Enable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+			}
+				/*glstate.Enable(GL_BLEND);
+				glstate.Disable(GL_ALPHA_TEST);
+
+				glstate.Disable(GL_BLEND);
+				glstate.Enable(GL_ALPHA_TEST);*/
+			/*}
 			else
-				glstate.SetAlphaFunc(GL_GREATER, 0.25f);
-			glstate.Enable(GL_ALPHA_TEST);
-		//}
+			{*/
+				//glstate.Enable(GL_BLEND);
+				glstate.Disable(GL_BLEND);
+				if (i->GetDistanceField())
+					glstate.SetAlphaFunc(GL_GREATER, 0.5f);
+				else
+					glstate.SetAlphaFunc(GL_GREATER, 0.25f);
+				glstate.Enable(GL_ALPHA_TEST);
+			//}
+		}
 	}
 
 	glstate.SetDepthMask(writedepth);
-	glstate.SetColorMask(writecolor);
+	glstate.SetColorMask(writecolor, writealpha);
 
 	//if (i->GetDraw()->GetSmoke() || i->GetDraw()->Get2D() || i->GetDraw()->GetSkybox())
 	if (i->GetSmoke() || i->Get2D())
@@ -740,7 +960,7 @@ FRUSTUM RENDER_INPUT_SCENE::SetCameraInfo(const MATHVECTOR <float, 3> & newpos,
 	(cam_rotation).GetMatrix4(temp_matrix);
 	glLoadMatrixf(temp_matrix);
 	glTranslatef(-cam_position[0],-cam_position[1],-cam_position[2]);
-	ExtractFrustum();
+	ExtractFrustum(frustum);
 	glMatrixMode( GL_PROJECTION );
 	if (restore_matrices)
 		glPopMatrix();
@@ -750,119 +970,6 @@ FRUSTUM RENDER_INPUT_SCENE::SetCameraInfo(const MATHVECTOR <float, 3> & newpos,
 	return frustum;
 }
 
-void RENDER_INPUT_SCENE::ExtractFrustum()
-{
-	float   proj[16];
-	float   modl[16];
-	float   clip[16];
-	float   t;
-
-	/* Get the current PROJECTION matrix from OpenGL */
-	glGetFloatv( GL_PROJECTION_MATRIX, proj );
-
-	/* Get the current MODELVIEW matrix from OpenGL */
-	glGetFloatv( GL_MODELVIEW_MATRIX, modl );
-
-	/* Combine the two matrices (multiply projection by modelview) */
-	clip[ 0] = modl[ 0] * proj[ 0] + modl[ 1] * proj[ 4] + modl[ 2] * proj[ 8] + modl[ 3] * proj[12];
-	clip[ 1] = modl[ 0] * proj[ 1] + modl[ 1] * proj[ 5] + modl[ 2] * proj[ 9] + modl[ 3] * proj[13];
-	clip[ 2] = modl[ 0] * proj[ 2] + modl[ 1] * proj[ 6] + modl[ 2] * proj[10] + modl[ 3] * proj[14];
-	clip[ 3] = modl[ 0] * proj[ 3] + modl[ 1] * proj[ 7] + modl[ 2] * proj[11] + modl[ 3] * proj[15];
-
-	clip[ 4] = modl[ 4] * proj[ 0] + modl[ 5] * proj[ 4] + modl[ 6] * proj[ 8] + modl[ 7] * proj[12];
-	clip[ 5] = modl[ 4] * proj[ 1] + modl[ 5] * proj[ 5] + modl[ 6] * proj[ 9] + modl[ 7] * proj[13];
-	clip[ 6] = modl[ 4] * proj[ 2] + modl[ 5] * proj[ 6] + modl[ 6] * proj[10] + modl[ 7] * proj[14];
-	clip[ 7] = modl[ 4] * proj[ 3] + modl[ 5] * proj[ 7] + modl[ 6] * proj[11] + modl[ 7] * proj[15];
-
-	clip[ 8] = modl[ 8] * proj[ 0] + modl[ 9] * proj[ 4] + modl[10] * proj[ 8] + modl[11] * proj[12];
-	clip[ 9] = modl[ 8] * proj[ 1] + modl[ 9] * proj[ 5] + modl[10] * proj[ 9] + modl[11] * proj[13];
-	clip[10] = modl[ 8] * proj[ 2] + modl[ 9] * proj[ 6] + modl[10] * proj[10] + modl[11] * proj[14];
-	clip[11] = modl[ 8] * proj[ 3] + modl[ 9] * proj[ 7] + modl[10] * proj[11] + modl[11] * proj[15];
-
-	clip[12] = modl[12] * proj[ 0] + modl[13] * proj[ 4] + modl[14] * proj[ 8] + modl[15] * proj[12];
-	clip[13] = modl[12] * proj[ 1] + modl[13] * proj[ 5] + modl[14] * proj[ 9] + modl[15] * proj[13];
-	clip[14] = modl[12] * proj[ 2] + modl[13] * proj[ 6] + modl[14] * proj[10] + modl[15] * proj[14];
-	clip[15] = modl[12] * proj[ 3] + modl[13] * proj[ 7] + modl[14] * proj[11] + modl[15] * proj[15];
-	
-	/* Extract the numbers for the RIGHT plane */
-	frustum.frustum[0][0] = clip[ 3] - clip[ 0];
-	frustum.frustum[0][1] = clip[ 7] - clip[ 4];
-	frustum.frustum[0][2] = clip[11] - clip[ 8];
-	frustum.frustum[0][3] = clip[15] - clip[12];
-
-	/* Normalize the result */
-	t = sqrt( frustum.frustum[0][0] * frustum.frustum[0][0] + frustum.frustum[0][1] * frustum.frustum[0][1] + frustum.frustum[0][2] * frustum.frustum[0][2] );
-	frustum.frustum[0][0] /= t;
-	frustum.frustum[0][1] /= t;
-	frustum.frustum[0][2] /= t;
-	frustum.frustum[0][3] /= t;
-
-	/* Extract the numbers for the LEFT plane */
-	frustum.frustum[1][0] = clip[ 3] + clip[ 0];
-	frustum.frustum[1][1] = clip[ 7] + clip[ 4];
-	frustum.frustum[1][2] = clip[11] + clip[ 8];
-	frustum.frustum[1][3] = clip[15] + clip[12];
-
-	/* Normalize the result */
-	t = sqrt( frustum.frustum[1][0] * frustum.frustum[1][0] + frustum.frustum[1][1] * frustum.frustum[1][1] + frustum.frustum[1][2] * frustum.frustum[1][2] );
-	frustum.frustum[1][0] /= t;
-	frustum.frustum[1][1] /= t;
-	frustum.frustum[1][2] /= t;
-	frustum.frustum[1][3] /= t;
-
-	/* Extract the BOTTOM plane */
-	frustum.frustum[2][0] = clip[ 3] + clip[ 1];
-	frustum.frustum[2][1] = clip[ 7] + clip[ 5];
-	frustum.frustum[2][2] = clip[11] + clip[ 9];
-	frustum.frustum[2][3] = clip[15] + clip[13];
-
-	/* Normalize the result */
-	t = sqrt( frustum.frustum[2][0] * frustum.frustum[2][0] + frustum.frustum[2][1] * frustum.frustum[2][1] + frustum.frustum[2][2] * frustum.frustum[2][2] );
-	frustum.frustum[2][0] /= t;
-	frustum.frustum[2][1] /= t;
-	frustum.frustum[2][2] /= t;
-	frustum.frustum[2][3] /= t;
-
-	/* Extract the TOP plane */
-	frustum.frustum[3][0] = clip[ 3] - clip[ 1];
-	frustum.frustum[3][1] = clip[ 7] - clip[ 5];
-	frustum.frustum[3][2] = clip[11] - clip[ 9];
-	frustum.frustum[3][3] = clip[15] - clip[13];
-
-	/* Normalize the result */
-	t = sqrt( frustum.frustum[3][0] * frustum.frustum[3][0] + frustum.frustum[3][1] * frustum.frustum[3][1] + frustum.frustum[3][2] * frustum.frustum[3][2] );
-	frustum.frustum[3][0] /= t;
-	frustum.frustum[3][1] /= t;
-	frustum.frustum[3][2] /= t;
-	frustum.frustum[3][3] /= t;
-
-	/* Extract the FAR plane */
-	frustum.frustum[4][0] = clip[ 3] - clip[ 2];
-	frustum.frustum[4][1] = clip[ 7] - clip[ 6];
-	frustum.frustum[4][2] = clip[11] - clip[10];
-	frustum.frustum[4][3] = clip[15] - clip[14];
-
-	/* Normalize the result */
-	t = sqrt( frustum.frustum[4][0] * frustum.frustum[4][0] + frustum.frustum[4][1] * frustum.frustum[4][1] + frustum.frustum[4][2] * frustum.frustum[4][2] );
-	frustum.frustum[4][0] /= t;
-	frustum.frustum[4][1] /= t;
-	frustum.frustum[4][2] /= t;
-	frustum.frustum[4][3] /= t;
-
-	/* Extract the NEAR plane */
-	frustum.frustum[5][0] = clip[ 3] + clip[ 2];
-	frustum.frustum[5][1] = clip[ 7] + clip[ 6];
-	frustum.frustum[5][2] = clip[11] + clip[10];
-	frustum.frustum[5][3] = clip[15] + clip[14];
-
-	/* Normalize the result */
-	t = sqrt( frustum.frustum[5][0] * frustum.frustum[5][0] + frustum.frustum[5][1] * frustum.frustum[5][1] + frustum.frustum[5][2] * frustum.frustum[5][2] );
-	frustum.frustum[5][0] /= t;
-	frustum.frustum[5][1] /= t;
-	frustum.frustum[5][2] /= t;
-	frustum.frustum[5][3] /= t;
-}
-
 RENDER_INPUT_SCENE::RENDER_INPUT_SCENE()
 :	last_transform_valid(false), 
 	shaders(false), 
@@ -870,10 +977,11 @@ RENDER_INPUT_SCENE::RENDER_INPUT_SCENE()
 	cleardepth(false), 
 	orthomode(false), 
 	contrast(1.0), 
-	depth_mode_equal(false),
+	depth_mode(GL_LEQUAL),
 	writecolor(true),
 	writedepth(true),
-	carpainthack(false)
+	carpainthack(false),
+	enablealpha(true)
 {
 	shadermap.resize(SHADER_NONE, NULL);
 	MATHVECTOR <float, 3> front(1,0,0);

@@ -13,6 +13,9 @@ class TEXTURE_INTERFACE
 		virtual bool Loaded() const = 0;
 		virtual void Activate() const = 0;
 		virtual void Deactivate() const = 0;
+		virtual bool IsRect() const {return false;}
+		virtual unsigned int GetW() const = 0;
+		virtual unsigned int GetH() const = 0;
 	
 	protected:
 		virtual GLuint GetID() const = 0;

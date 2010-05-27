@@ -511,12 +511,13 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 							   i->width.GetSize(w),
 							   i->height.GetSize(h),
 							   type,
-							   (i->format == "depth"),
+							   (i->format == "depth") || (i->format == "depthshadow"),
 							   (i->filter == "nearest"),
 							   (i->format == "RGBA"),
 							   i->mipmap,
 							   error_output,
-							   fbms);
+							   fbms,
+							   (i->format == "depthshadow"));
 					
 					// map to input texture
 					texture_inputs[i->name] = fbtex;
@@ -766,6 +767,22 @@ void AttachCubeSide(int i, FBOBJECT & reflection_fbo, std::ostream & error_outpu
 	OPENGL_UTILITY::CheckForOpenGLErrors("cubemap generation: FBO cube side attachment", error_output);
 }
 
+GLint DepthModeFromString(const std::string & mode)
+{
+	if (mode == "lequal")
+		return GL_LEQUAL;
+	else if (mode == "equal")
+		return GL_EQUAL;
+	else if (mode == "gequal")
+		return GL_GEQUAL;
+	else if (mode == "disabled")
+		return GL_ALWAYS;
+	else
+		assert(0);
+	
+	return GL_LEQUAL;
+}
+
 void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 {
 	renderscene.SetFlags(using_shaders);
@@ -868,7 +885,9 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 		MATHVECTOR <float, 3> lightposition(0,0,1);
 		(-lightdirection).RotateVector(lightposition);
 		renderscene.SetSunDirection(lightposition);
+		postprocess.SetSunDirection(lightposition);
 		
+		// draw the passes
 		for (std::vector <GRAPHICS_CONFIG_PASS>::const_iterator i = config.passes.begin(); i != config.passes.end(); i++)
 		{
 			if (i->conditions.Satisfied(conditions))
@@ -904,10 +923,13 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 				assert(!i->draw.empty());
 				if (i->draw.back() == "postprocess")
 				{
-					RenderPostProcess(i->shader, input_textures, render_outputs[i->output], error_output);
+					RenderPostProcess(i->shader, input_textures, render_outputs[i->output], i->write_color, i->write_alpha, error_output);
 				}
 				else
 				{
+					renderscene.SetEnableAlpha(i->alpha);
+					renderscene.SetDepthMode(DepthModeFromString(i->depthtest));
+					
 					for (std::vector <std::string>::const_iterator d = i->draw.begin(); d != i->draw.end(); d++)
 					{
 						// setup render output
@@ -944,6 +966,7 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 							if (!i->cull) //override view distance to a very large value if culling is off
 								view_distance = 10000.f;
 							renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, view_distance, cam.w, cam.h);
+							postprocess.SetCameraInfo(cam.pos, cam.orient, cam.fov, view_distance, cam.w, cam.h); //so we have this later if we want
 							
 							// setup shader
 							shader_map_type::iterator si = shadermap.find(i->shader);
@@ -955,6 +978,8 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 								renderscene.SetClear(i->clear_color, i->clear_depth);
 							else
 								renderscene.SetClear(false, false);
+							renderscene.SetWriteColor(i->write_color);
+							renderscene.SetWriteAlpha(i->write_alpha);
 							renderscene.SetWriteDepth(i->write_depth);
 							
 							// setup dynamic drawlist
@@ -1101,10 +1126,13 @@ void GRAPHICS_SDLGL::RenderDrawlists(std::vector <DRAWABLE*> & dynamic_drawlist,
 
 void GRAPHICS_SDLGL::RenderPostProcess(const std::string & shadername,
 						const std::vector <TEXTURE_INTERFACE*> & textures,
-						RENDER_OUTPUT & render_output, 
+						RENDER_OUTPUT & render_output,
+						bool write_color,
+						bool write_alpha,
 						std::ostream & error_output)
 {
-	RENDER_INPUT_POSTPROCESS postprocess;
+	postprocess.SetWriteColor(write_color);
+	postprocess.SetWriteAlpha(write_alpha);
 	std::map <std::string, SHADER_GLSL>::iterator s = shadermap.find(shadername);
 	assert(s != shadermap.end());
 	postprocess.SetShader(&s->second);

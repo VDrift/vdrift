@@ -88,8 +88,12 @@ struct GRAPHICS_CONFIG_PASS
 	std::string shader; ///< the name of the shader to use
 	bool clear_color; ///< whether or not to clear the color buffer before rendering, note that this happens at the beginning of the pass, not for each drawable layer in draw
 	bool clear_depth; ///< whether or not to clear the depth buffer before rendering, note that this happens at the beginning of the pass, not for each drawable layer in draw
+	bool write_color; ///< whether or not to write to the RGB parts of the color buffer during rendering
+	bool write_alpha; ///< whether or not to write to the alpha part of the color buffer during rendering
 	bool write_depth; ///< whether or not to write to the depth buffer during rendering
 	bool cull; ///< whether or not to do frustum and distance culling
+	bool alpha; ///< if this is false, all alpha operations (alpha test, alpha blend) are forced off
+	std::string depthtest; ///< values: lequal, equal, gequal, disabled
 	GRAPHICS_CONFIG_CONDITION conditions;
 	
 	bool Load(std::istream & f, std::ostream & error_output, int & linecount);

@@ -94,8 +94,9 @@ private:
 	// outputs and other textures used as inputs
 	std::map <std::string, reseatable_reference <FBTEXTURE> > texture_inputs;
 	
-	// scene
+	// render input objects
 	RENDER_INPUT_SCENE renderscene;
+	RENDER_INPUT_POSTPROCESS postprocess;
 	
 	// camera data
 	typedef std::map <std::string, GRAPHICS_CAMERA> camera_map_type;
@@ -123,6 +124,8 @@ private:
 	void RenderPostProcess(const std::string & shadername,
 						const std::vector <TEXTURE_INTERFACE*> & textures,
 						RENDER_OUTPUT & render_output, 
+						bool write_color,
+						bool write_alpha,
 						std::ostream & error_output);
 	
 	void Render(RENDER_INPUT * input, RENDER_OUTPUT & output, std::ostream & error_output);

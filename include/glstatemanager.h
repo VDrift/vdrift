@@ -18,6 +18,7 @@ public:
 		blenddest(GL_ZERO), 
 		cullmode(GL_BACK),
 		colormask(true),
+		alphamask(true),
 		framebuffer(0)
 	{
 	}
@@ -50,13 +51,14 @@ public:
 		}
 	}
 	
-	void SetColorMask(bool newcolormask)
+	void SetColorMask(bool newcolormask, bool newalphamask)
 	{
-		if (newcolormask != colormask)
+		if (newcolormask != colormask || newalphamask != alphamask)
 		{
 			depthmask = newcolormask;
+			alphamask = newalphamask;
 			GLboolean val = colormask ? GL_TRUE : GL_FALSE;
-			glColorMask(val, val, val, val);
+			glColorMask(val, val, val, alphamask ? GL_TRUE : GL_FALSE);
 		}
 	}
 	
@@ -129,6 +131,7 @@ private:
 	GLenum blenddest;
 	GLenum cullmode;
 	bool colormask;
+	bool alphamask;
 	GLuint framebuffer;
 	
 	void Set(int stateid, bool newval)

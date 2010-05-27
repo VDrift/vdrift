@@ -31,9 +31,9 @@ public:
 	
 	void Unload();
 	
-	unsigned short int GetW() const {return w;}
+	virtual unsigned int GetW() const {return w;}
 	
-	unsigned short int GetH() const {return h;}
+	virtual unsigned int GetH() const {return h;}
 	
 	unsigned short int GetOriginalW() const {return origw;}
 	

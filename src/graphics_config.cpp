@@ -315,7 +315,7 @@ bool GRAPHICS_CONFIG_OUTPUT::Load(std::istream & f, std::ostream & error_output,
 	ASSIGNVAR(filter);
 	if (!isOf(vars, "filter", "linear nearest", &error_output, sectionstart)) return false;
 	ASSIGNVAR(format);
-	if (!isOf(vars, "format", "RGB RGBA depth", &error_output, sectionstart)) return false;
+	if (!isOf(vars, "format", "RGB RGBA depthshadow depth", &error_output, sectionstart)) return false;
 	ASSIGNBOOL(mipmap);
 	ASSIGNOTHER(multisample);
 	ASSIGNPARSE(conditions);
@@ -376,9 +376,15 @@ bool GRAPHICS_CONFIG_PASS::Load(std::istream & f, std::ostream & error_output, i
 	fillDefault(vars, "light", "sun");
 	fillDefault(vars, "clear_color", "false");
 	fillDefault(vars, "clear_depth", "false");
+	fillDefault(vars, "write_color", "true");
+	fillDefault(vars, "write_alpha", "true");
 	fillDefault(vars, "write_depth", "true");
 	fillDefault(vars, "cull", "true");
 	fillDefault(vars, "camera", "default");
+	fillDefault(vars, "alpha", "true");
+	fillDefault(vars, "depthtest", "lequal");
+	
+	if (!isOf(vars, "depthtest", "lequal equal gequal disabled", &error_output, sectionstart)) return false;
 	
 	// process draw as a comma delimited list
 	{
@@ -410,9 +416,13 @@ bool GRAPHICS_CONFIG_PASS::Load(std::istream & f, std::ostream & error_output, i
 	ASSIGNPARSE(inputs);
 	ASSIGNBOOL(clear_color);
 	ASSIGNBOOL(clear_depth);
+	ASSIGNBOOL(write_color);
+	ASSIGNBOOL(write_alpha);
 	ASSIGNBOOL(write_depth);
 	ASSIGNBOOL(cull);
 	ASSIGNPARSE(conditions);
+	ASSIGNBOOL(alpha);
+	ASSIGNVAR(depthtest);
 	
 	return true;
 }

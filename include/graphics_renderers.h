@@ -33,7 +33,7 @@ public:
 class RENDER_INPUT_POSTPROCESS : public RENDER_INPUT
 {
 public:
-	RENDER_INPUT_POSTPROCESS() : shader(NULL) {}
+	RENDER_INPUT_POSTPROCESS() : shader(NULL), writealpha(true), writecolor(true) {}
 	
 	void SetSourceTextures(const std::vector <TEXTURE_INTERFACE*> & textures)
 	{
@@ -42,10 +42,25 @@ public:
 	
 	void SetShader(SHADER_GLSL * newshader) {shader = newshader;}
 	virtual void Render(GLSTATEMANAGER & glstate, std::ostream & error_output);
+	void SetWriteColor(bool write) {writecolor = write;}
+	void SetWriteAlpha(bool write) {writealpha = write;}
+	
+	// these are used only to upload uniforms to the shaders
+	void SetCameraInfo(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newrot, float newfov, float newlodfar, float neww, float newh);
+	void SetSunDirection(const MATHVECTOR <float, 3> & newsun) {lightposition = newsun;}
 	
 private:
 	std::vector <TEXTURE_INTERFACE*> source_textures;
 	SHADER_GLSL * shader;
+	bool writealpha;
+	bool writecolor;
+	MATHVECTOR <float, 3> lightposition;
+	QUATERNION <float> cam_rotation;
+	MATHVECTOR <float, 3> cam_position;
+	float w, h;
+	float camfov;
+	float lod_far;
+	FRUSTUM frustum;
 };
 
 class RENDER_INPUT_SCENE : public RENDER_INPUT
@@ -81,11 +96,13 @@ public:
 	void SetFSAA ( unsigned int value ) {fsaa = value;}
 	void SetAmbient ( TEXTURE_INTERFACE & value ) {ambient = value;}
 	void SetContrast ( float value ) {contrast = value;}
-	void SetDepthModeEqual ( bool value ) {depth_mode_equal = value;}
+	void SetDepthMode ( int mode ) {depth_mode = mode;}
 	void SetWriteDepth(bool write) {writedepth = write;}
 	void SetWriteColor(bool write) {writecolor = write;}
+	void SetWriteAlpha(bool write) {writealpha = write;}
 	std::pair <bool, bool> GetClear() const {return std::make_pair(clearcolor, cleardepth);}
 	void SetCarPaintHack(bool hack) {carpainthack = hack;}
+	void SetEnableAlpha(bool a) {enablealpha = a;}
 
 private:
 	reseatable_reference <std::vector <DRAWABLE*> > dynamic_drawlist_ptr;
@@ -110,10 +127,12 @@ private:
 	bool orthomode;
 	unsigned int fsaa;
 	float contrast;
-	bool depth_mode_equal;
+	int depth_mode;
 	bool writecolor;
+	bool writealpha;
 	bool writedepth;
 	bool carpainthack;
+	bool enablealpha;
 	
 	void DrawList(GLSTATEMANAGER & glstate, std::vector <DRAWABLE*> & drawlist, bool preculled);
 	bool FrustumCull(DRAWABLE & tocull);
@@ -122,7 +141,6 @@ private:
 	void SelectTexturing(DRAWABLE & forme, GLSTATEMANAGER & glstate);
 	bool SelectTransformStart(DRAWABLE & forme, GLSTATEMANAGER & glstate);
 	void SelectTransformEnd(DRAWABLE & forme, bool need_pop);
-	void ExtractFrustum();
 	//unsigned int CombineDrawlists(); ///< returns the number of scenedraw elements that have already gone through culling
 	void SetActiveShader(const SHADER_TYPE & newshader);
 };
