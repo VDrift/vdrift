@@ -35,6 +35,7 @@ private:
 	T force;
 	
 	// wheel
+	T overtravel;
 	T wheel_displacement;
 	T wheel_velocity;
 	T wheel_force;
@@ -56,10 +57,10 @@ public:
 	{
 		out << "---Suspension---" << std::endl;
 		out << "Displacement: " << wheel_displacement << std::endl;
-		out << "Velocity: " << wheel_velocity << std::endl;
-		out << "Force: " << force << std::endl;
-		//out << "Spring force: " << spring_force << std::endl;
-		//out << "Damp force: " << damp_force << std::endl;
+		//out << "Velocity: " << wheel_velocity << std::endl;
+		//out << "Force: " << force << std::endl;
+		out << "Spring force: " << spring_force << std::endl;
+		out << "Damp force: " << damp_force << std::endl;
 		//out << "Spring factor: " << spring_factors.Interpolate(displacement) << std::endl;
 		//out << "Damp factor: " << damper_factors.Interpolate(std::abs(velocity)) << std::endl;
 	}
@@ -172,6 +173,7 @@ public:
 		const T inv_wheel_mass = 1 / 20.0; 	// 20kg wheel
 		const T tire_stiffness = 2E5;		// [N/m] http://www.hunter.com/pub/undercar/SAEATS13/
 		const T tire_deflection_max = 0.1;	// [m] maximum vertical tire deflection
+		const T bump_stiffness = 5E5;		// hard rubber bump (todo: replace with bullet constraint)
 		
 		// clamp tire sidewall deflection
 		T tire_deflection = road_displacement;
@@ -187,8 +189,10 @@ public:
 		wheel_displacement = wheel_displacement + wheel_velocity * dt;
 		
 		// clamp wheel displacement
+		T bump_force = 0;
 		if (wheel_displacement > travel)
 		{
+			bump_force += bump_stiffness * (wheel_displacement - travel);
 			wheel_displacement = travel;
 			wheel_velocity = 0;
 		}
@@ -199,7 +203,7 @@ public:
 		}
 		
 		// update wheel force
-		force = GetForce(wheel_displacement, wheel_velocity);
+		force = GetForce(wheel_displacement, wheel_velocity) + bump_force;
 		wheel_force = -force + tire_stiffness * tire_deflection;
 		
 		return force;
