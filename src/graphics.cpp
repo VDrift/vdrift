@@ -797,6 +797,22 @@ GLint DepthModeFromString(const std::string & mode)
 	return GL_LEQUAL;
 }
 
+BLENDMODE::BLENDMODE BlendModeFromString(const std::string & mode)
+{
+	if (mode == "disabled")
+		return BLENDMODE::DISABLED;
+	else if (mode == "auto")
+		return BLENDMODE::AUTO;
+	else if (mode == "add")
+		return BLENDMODE::ADD;
+	else if (mode == "alphablend")
+		return BLENDMODE::ALPHABLEND;
+	else
+		assert(0);
+	
+	return BLENDMODE::DISABLED;
+}
+
 void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 {
 	renderscene.SetFlags(using_shaders);
@@ -940,11 +956,12 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 					postprocess.SetDepthMode(DepthModeFromString(i->depthtest));
 					postprocess.SetWriteDepth(i->write_depth);
 					postprocess.SetClear(i->clear_color, i->clear_depth);
+					postprocess.SetBlendMode(BlendModeFromString(i->blendmode));
 					RenderPostProcess(i->shader, input_textures, render_outputs[i->output], i->write_color, i->write_alpha, error_output);
 				}
 				else
 				{
-					renderscene.SetEnableAlpha(i->alpha);
+					renderscene.SetBlendMode(BlendModeFromString(i->blendmode));
 					renderscene.SetDepthMode(DepthModeFromString(i->depthtest));
 					
 					for (std::vector <std::string>::const_iterator d = i->draw.begin(); d != i->draw.end(); d++)

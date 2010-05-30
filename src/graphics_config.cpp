@@ -372,23 +372,26 @@ bool GRAPHICS_CONFIG_PASS::Load(std::istream & f, std::ostream & error_output, i
 	if (!readSection(f, error_output, line, reqd, vars))
 		return false;
 	
+	bool postprocess = (vars["draw"] == "postprocess");
+	
 	// fill in defaults
 	fillDefault(vars, "light", "sun");
 	fillDefault(vars, "clear_color", "false");
 	fillDefault(vars, "clear_depth", "false");
 	fillDefault(vars, "write_color", "true");
 	fillDefault(vars, "write_alpha", "true");
-	fillDefault(vars, "write_depth", (vars["draw"] == "postprocess") ? "false" : "true");
+	fillDefault(vars, "write_depth", postprocess ? "false" : "true");
 	fillDefault(vars, "cull", "true");
 	fillDefault(vars, "camera", "default");
-	fillDefault(vars, "alpha", "true");
-	fillDefault(vars, "depthtest", (vars["draw"] == "postprocess") ? "disabled" : "lequal");
+	fillDefault(vars, "blendmode", postprocess ? "disabled" : "auto");
+	fillDefault(vars, "depthtest", postprocess ? "disabled" : "lequal");
 	
+	if (!isOf(vars, "blendmode", postprocess ? "disabled alphablend add" : "disabled auto alphablend add", &error_output, sectionstart)) return false;
 	if (!isOf(vars, "depthtest", "lequal equal gequal disabled", &error_output, sectionstart)) return false;
+	
 	
 	// process draw as a comma delimited list
 	{
-		bool postprocess = (vars["draw"] == "postprocess");
 		if (postprocess)
 			draw.push_back("postprocess");
 		else
@@ -421,7 +424,7 @@ bool GRAPHICS_CONFIG_PASS::Load(std::istream & f, std::ostream & error_output, i
 	ASSIGNBOOL(write_depth);
 	ASSIGNBOOL(cull);
 	ASSIGNPARSE(conditions);
-	ASSIGNBOOL(alpha);
+	ASSIGNVAR(blendmode);
 	ASSIGNVAR(depthtest);
 	
 	return true;

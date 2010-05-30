@@ -92,7 +92,7 @@ struct GRAPHICS_CONFIG_PASS
 	bool write_alpha; ///< whether or not to write to the alpha part of the color buffer during rendering
 	bool write_depth; ///< whether or not to write to the depth buffer during rendering
 	bool cull; ///< whether or not to do frustum and distance culling
-	bool alpha; ///< if this is false, all alpha operations (alpha test, alpha blend) are forced off
+	std::string blendmode; ///< which blending mode to use. if "auto", use drawable settings to decide, otherwise this can be: "disabled" "add" "alphablend"
 	std::string depthtest; ///< values: lequal, equal, gequal, disabled
 	GRAPHICS_CONFIG_CONDITION conditions;
 	

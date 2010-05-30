@@ -181,7 +181,41 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 
 	glColor4f(1,1,1,1);
 	glstate.SetColor(1,1,1,1);
-	glstate.Disable(GL_BLEND);
+	
+	assert(blendmode != BLENDMODE::AUTO);
+	switch (blendmode)
+	{
+		case BLENDMODE::DISABLED:
+		{
+			glstate.Disable(GL_ALPHA_TEST);
+			glstate.Disable(GL_BLEND);
+			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+		}
+		break;
+		
+		case BLENDMODE::ADD:
+		{
+			glstate.Disable(GL_ALPHA_TEST);
+			glstate.Enable(GL_BLEND);
+			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+			glstate.SetBlendFunc(GL_ONE, GL_ONE);
+		}
+		break;
+		
+		case BLENDMODE::ALPHABLEND:
+		{
+			glstate.Disable(GL_ALPHA_TEST);
+			glstate.Enable(GL_BLEND);
+			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+			glstate.SetBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		}
+		break;
+		
+		default:
+		assert(0);
+		break;
+	}
+	
 	if (writedepth || depth_mode != GL_ALWAYS)
 		glstate.Enable(GL_DEPTH_TEST);
 	else
@@ -702,69 +736,97 @@ void RENDER_INPUT_SCENE::SelectFlags(DRAWABLE & forme, GLSTATEMANAGER & glstate)
 	else
 		glstate.Disable(GL_CULL_FACE);
 
-	if (!enablealpha)
+	switch (blendmode)
 	{
-		glstate.Disable(GL_ALPHA_TEST);
-		glstate.Disable(GL_BLEND);
-		glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-	}
-	else
-	{
-		bool blend = (i->GetDecal() || i->Get2D() ||
-				i->GetPartialTransparency() || i->GetDistanceField());
-
-		if (blend && !i->GetForceAlphaTest())
+		case BLENDMODE::DISABLED:
 		{
-			if (fsaa > 1)
-			{
-				glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-			}
-
-			//if (!shaders && i->GetDraw()->GetDistanceField())
-			//{
-			//	glstate.Enable(GL_ALPHA_TEST);
-			//	glAlphaFunc(GL_GREATER, 0.5f);
-			//}
-			//else
+			glstate.Disable(GL_ALPHA_TEST);
+			glstate.Disable(GL_BLEND);
+			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+		}
+		break;
+		
+		case BLENDMODE::ADD:
+		{
 			glstate.Disable(GL_ALPHA_TEST);
 			glstate.Enable(GL_BLEND);
-			
-			//glstate.SetBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-			
-			/*if (shaders)
-			{
-				glstate.SetBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-			}
-			else*/
-			{
-				glstate.SetBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-				if (i->GetSmoke())
-					glstate.SetBlendFunc(GL_SRC_ALPHA, GL_ONE);
-			}
+			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+			glstate.SetBlendFunc(GL_ONE, GL_ONE);
 		}
-		else
+		break;
+		
+		case BLENDMODE::ALPHABLEND:
 		{
-			if (fsaa > 1 && shaders)
-			{
-				glstate.Enable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-			}
-				/*glstate.Enable(GL_BLEND);
-				glstate.Disable(GL_ALPHA_TEST);
-
-				glstate.Disable(GL_BLEND);
-				glstate.Enable(GL_ALPHA_TEST);*/
-			/*}
-			else
-			{*/
-				//glstate.Enable(GL_BLEND);
-				glstate.Disable(GL_BLEND);
-				if (i->GetDistanceField())
-					glstate.SetAlphaFunc(GL_GREATER, 0.5f);
-				else
-					glstate.SetAlphaFunc(GL_GREATER, 0.25f);
-				glstate.Enable(GL_ALPHA_TEST);
-			//}
+			glstate.Disable(GL_ALPHA_TEST);
+			glstate.Enable(GL_BLEND);
+			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+			glstate.SetBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		}
+		break;
+		
+		case BLENDMODE::AUTO:
+		{
+			bool blend = (i->GetDecal() || i->Get2D() ||
+					i->GetPartialTransparency() || i->GetDistanceField());
+
+			if (blend && !i->GetForceAlphaTest())
+			{
+				if (fsaa > 1)
+				{
+					glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+				}
+
+				//if (!shaders && i->GetDraw()->GetDistanceField())
+				//{
+				//	glstate.Enable(GL_ALPHA_TEST);
+				//	glAlphaFunc(GL_GREATER, 0.5f);
+				//}
+				//else
+				glstate.Disable(GL_ALPHA_TEST);
+				glstate.Enable(GL_BLEND);
+				
+				//glstate.SetBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+				
+				/*if (shaders)
+				{
+					glstate.SetBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+				}
+				else*/
+				{
+					glstate.SetBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+					if (i->GetSmoke())
+						glstate.SetBlendFunc(GL_SRC_ALPHA, GL_ONE);
+				}
+			}
+			else
+			{
+				if (fsaa > 1 && shaders)
+				{
+					glstate.Enable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+				}
+					/*glstate.Enable(GL_BLEND);
+					glstate.Disable(GL_ALPHA_TEST);
+
+					glstate.Disable(GL_BLEND);
+					glstate.Enable(GL_ALPHA_TEST);*/
+				/*}
+				else
+				{*/
+					//glstate.Enable(GL_BLEND);
+					glstate.Disable(GL_BLEND);
+					if (i->GetDistanceField())
+						glstate.SetAlphaFunc(GL_GREATER, 0.5f);
+					else
+						glstate.SetAlphaFunc(GL_GREATER, 0.25f);
+					glstate.Enable(GL_ALPHA_TEST);
+				//}
+			}
+		}
+		break;
+		
+		default:
+		assert(0);
+		break;
 	}
 
 	glstate.SetDepthMask(writedepth);
@@ -1029,7 +1091,7 @@ RENDER_INPUT_SCENE::RENDER_INPUT_SCENE()
 	writecolor(true),
 	writedepth(true),
 	carpainthack(false),
-	enablealpha(true)
+	blendmode(BLENDMODE::AUTO)
 {
 	shadermap.resize(SHADER_NONE, NULL);
 	MATHVECTOR <float, 3> front(1,0,0);

@@ -23,6 +23,17 @@
 class SCENENODE;
 class DRAWABLE;
 
+namespace BLENDMODE
+{
+enum BLENDMODE
+{
+	DISABLED,
+	ADD,
+	ALPHABLEND,
+	AUTO
+};
+};
+
 ///purely abstract base class
 class RENDER_INPUT
 {
@@ -33,7 +44,16 @@ public:
 class RENDER_INPUT_POSTPROCESS : public RENDER_INPUT
 {
 public:
-	RENDER_INPUT_POSTPROCESS() : shader(NULL), writealpha(true), writecolor(true), writedepth(false), depth_mode(GL_LEQUAL), clearcolor(false), cleardepth(false) {}
+	RENDER_INPUT_POSTPROCESS() : 
+		shader(NULL), 
+		writealpha(true), 
+		writecolor(true), 
+		writedepth(false), 
+		depth_mode(GL_LEQUAL), 
+		clearcolor(false), 
+		cleardepth(false),
+		blendmode(BLENDMODE::DISABLED)
+		{}
 	
 	void SetSourceTextures(const std::vector <TEXTURE_INTERFACE*> & textures)
 	{
@@ -47,6 +67,7 @@ public:
 	void SetWriteDepth(bool write) {writedepth = write;}
 	void SetDepthMode ( int mode ) {depth_mode = mode;}
 	void SetClear(bool newclearcolor, bool newcleardepth) {clearcolor = newclearcolor;cleardepth = newcleardepth;}
+	void SetBlendMode(BLENDMODE::BLENDMODE mode) {blendmode = mode;}
 	
 	// these are used only to upload uniforms to the shaders
 	void SetCameraInfo(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newrot, float newfov, float newlodfar, float neww, float newh);
@@ -67,6 +88,7 @@ private:
 	FRUSTUM frustum;
 	int depth_mode;
 	bool clearcolor, cleardepth;
+	BLENDMODE::BLENDMODE blendmode;
 };
 
 class RENDER_INPUT_SCENE : public RENDER_INPUT
@@ -108,7 +130,7 @@ public:
 	void SetWriteAlpha(bool write) {writealpha = write;}
 	std::pair <bool, bool> GetClear() const {return std::make_pair(clearcolor, cleardepth);}
 	void SetCarPaintHack(bool hack) {carpainthack = hack;}
-	void SetEnableAlpha(bool a) {enablealpha = a;}
+	void SetBlendMode(BLENDMODE::BLENDMODE mode) {blendmode = mode;}
 
 private:
 	reseatable_reference <std::vector <DRAWABLE*> > dynamic_drawlist_ptr;
@@ -138,7 +160,7 @@ private:
 	bool writealpha;
 	bool writedepth;
 	bool carpainthack;
-	bool enablealpha;
+	BLENDMODE::BLENDMODE blendmode;
 	
 	void DrawList(GLSTATEMANAGER & glstate, std::vector <DRAWABLE*> & drawlist, bool preculled);
 	bool FrustumCull(DRAWABLE & tocull);
