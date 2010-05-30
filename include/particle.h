@@ -88,7 +88,13 @@ private:
 			return node;
 		}
 		
-		void Update(SCENENODE & parent, float dt, const QUATERNION <float> & camdir_conjugate)
+		float lerp(float x, float y, float s)
+		{
+			float sclamp = std::max(0.f,std::min(1.0f,s));
+			return x + sclamp*(y-x);
+		}
+		
+		void Update(SCENENODE & parent, float dt, const QUATERNION <float> & camdir_conjugate, const MATHVECTOR <float, 3> & campos)
 		{
 			time += dt;
 			
@@ -96,7 +102,8 @@ private:
 			DRAWABLE & drawref = GetDrawlist(noderef).get(draw);
 			drawref.SetVertArray(&varray);
 			
-			noderef.GetTransform().SetTranslation(start_position + direction * time * speed);
+			MATHVECTOR <float, 3> curpos = start_position + direction * time * speed;
+			noderef.GetTransform().SetTranslation(curpos);
 			noderef.GetTransform().SetRotation(camdir_conjugate);
 			
 			float sizescale = 1.0;
@@ -111,8 +118,22 @@ private:
 			
 			varray.SetToBillboard(-sizescale,-sizescale,sizescale,sizescale);
 			drawref.SetRadius(sizescale);
+			
+			bool drawenable = true;
+			
+			// scale the alpha by the closeness to the camera
+			// if we get too close, don't draw
+			// this prevents major slowdown when there are a lot of particles right next to the camera
+			float camdist = (curpos - campos).Magnitude();
+			//std::cout << camdist << std::endl;
+			const float camdist_off = 3.0;
+			const float camdist_full = 4.0;
+			trans = lerp(0.f,trans,(camdist-camdist_off)/(camdist_full-camdist_off));
+			if (trans <= 0)
+				drawenable = false;
+			
 			drawref.SetColor(1,1,1,trans);
-			drawref.SetDrawEnable(true);
+			drawref.SetDrawEnable(drawenable);
 		}
 		
 		bool Expired() const
@@ -148,7 +169,7 @@ public:
 		TEXTUREMANAGER * texturemanager,
 		std::ostream & error_output);
 	
-	void Update(float dt, const QUATERNION <float> & camdir);
+	void Update(float dt, const QUATERNION <float> & camdir, const MATHVECTOR <float, 3> & campos);
 	
 	/// all of the parameters are from 0.0 to 1.0 and scale to the ranges set with SetParameters.  testonly should be kept false and is only used for unit testing.
 	void AddParticle(const MATHVECTOR <float,3> & position, float newspeed, float newtrans, float newlong, float newsize, bool testonly=false);

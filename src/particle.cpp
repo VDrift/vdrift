@@ -28,7 +28,7 @@ bool inverseorder(int i1, int i2)
 	return i2 < i1;
 }
 
-void PARTICLE_SYSTEM::Update(float dt, const QUATERNION <float> & camdir)
+void PARTICLE_SYSTEM::Update(float dt, const QUATERNION <float> & camdir, const MATHVECTOR <float, 3> & campos)
 {
 	QUATERNION <float> camdir_conj = -camdir;
 	
@@ -36,7 +36,7 @@ void PARTICLE_SYSTEM::Update(float dt, const QUATERNION <float> & camdir)
 	
 	for (unsigned int i = 0; i < particles.size(); i++)
 	{
-		particles[i].Update(node, dt, camdir_conj);
+		particles[i].Update(node, dt, camdir_conj, campos);
 		if (particles[i].Expired())
 			expired_list.push_back(i);
 	}
@@ -148,10 +148,11 @@ QT_TEST(particle_test)
 	s.AddParticle(MATHVECTOR<float,3>(0,0,0),1,1,1,1,true);
 	QT_CHECK_EQUAL(s.NumParticles(),2);
 	QUATERNION <float> dir;
-	s.Update(0.45, dir);
+	MATHVECTOR <float, 3> pos;
+	s.Update(0.45, dir, pos);
 	QT_CHECK_EQUAL(s.NumParticles(),2);
-	s.Update(0.1, dir);
+	s.Update(0.1, dir, pos);
 	QT_CHECK_EQUAL(s.NumParticles(),1);
-	s.Update(0.5, dir);
+	s.Update(0.5, dir, pos);
 	QT_CHECK_EQUAL(s.NumParticles(),0);
 }

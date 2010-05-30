@@ -2227,7 +2227,7 @@ void GAME::UpdateParticleSystems(float dt)
 			camlook.Rotate(-3.141593*0.5,0,0,1);
 			QUATERNION <float> camorient = -(active_camera->GetOrientation()*camlook);
 
-			tire_smoke.Update(dt, camorient);
+			tire_smoke.Update(dt, camorient, active_camera->GetPosition());
 		}
 	}
 
