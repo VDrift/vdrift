@@ -40,7 +40,7 @@ void FBOBJECT::Init(GLSTATEMANAGER & glstate, std::vector <FBTEXTURE*> newtextur
 		else
 			color_textures.push_back(*i);
 		
-		assert(!(*i)->attached || (force_multisample_off && (*i)->renderbuffer_multisample != 0));
+		//assert(!(*i)->attached || (force_multisample_off && (*i)->renderbuffer_multisample != 0));
 		(*i)->attached = true;
 	}
 	

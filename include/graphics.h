@@ -71,6 +71,7 @@ private:
 	enum {REFLECTION_DISABLED, REFLECTION_STATIC, REFLECTION_DYNAMIC} reflection_status;
 	TEXTURE static_reflection;
 	TEXTURE static_ambient;
+	std::string renderconfigfile;
 	
 	// configuration variables in a data-driven friendly format
 	std::set <std::string> conditions;
@@ -92,7 +93,7 @@ private:
 	texture_output_map_type texture_outputs;
 	
 	// outputs and other textures used as inputs
-	std::map <std::string, reseatable_reference <FBTEXTURE> > texture_inputs;
+	std::map <std::string, reseatable_reference <TEXTURE_INTERFACE> > texture_inputs;
 	
 	// render input objects
 	RENDER_INPUT_SCENE renderscene;
@@ -132,7 +133,7 @@ private:
 public:
 	GRAPHICS_SDLGL() : surface(NULL),initialized(false),using_shaders(false),max_anisotropy(0),shadows(false),
 		       	closeshadow(5.0), fsaa(1),lighting(0),bloom(false),contrast(1.0), aticard(false), 
-		       	reflection_status(REFLECTION_DISABLED)
+		       	reflection_status(REFLECTION_DISABLED), renderconfigfile("render.conf")
 			{activeshader = shadermap.end();}
 	~GRAPHICS_SDLGL() {}
 	
@@ -149,6 +150,7 @@ public:
 				const std::string & static_ambientmap_file,
 				int anisotropy, const std::string & texturesize,
 				int lighting_quality, bool newbloom,
+				const std::string & renderconfig,
 				std::ostream & info_output, std::ostream & error_output);
 	void Deinit();
 	void BeginScene(std::ostream & error_output);

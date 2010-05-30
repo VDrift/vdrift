@@ -48,7 +48,7 @@ void FBTEXTURE::Init(GLSTATEMANAGER & glstate, int sizex, int sizey, TARGET targ
 	int texture_format3(GL_UNSIGNED_BYTE);
 	if (depth)
 	{
-		texture_format1 = GL_DEPTH_COMPONENT16;
+		texture_format1 = GL_DEPTH_COMPONENT24;
 		texture_format2 = GL_DEPTH_COMPONENT;
 		texture_format3 = GL_UNSIGNED_INT;
 	}

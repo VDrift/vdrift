@@ -39,7 +39,8 @@ public:
 	
 	virtual void HookMessage(SCENENODE & scene, const std::string & message, const std::string & from);
 	
-	//void SetAction(const std::string & newaction);
+	void SetAction(const std::string & newaction) {action = newaction;}
+	virtual std::string GetAction() const {return active_action;}
 
 	void SetSetting(const std::string & newsetting);
 	
@@ -66,6 +67,8 @@ private:
 	std::string description;
 	std::string setting;
 	std::list <WIDGET *> hooks;
+	std::string action;
+	std::string active_action;
 	
 	void SyncOption(SCENENODE & scene);
 };

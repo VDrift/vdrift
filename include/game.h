@@ -122,6 +122,7 @@ private:
 	int race_laps;
 	bool debugmode;
 	bool profilingmode;
+	std::string renderconfigfile;
 
 	std::string controlgrab_page;
 	std::string controlgrab_input;
@@ -184,6 +185,7 @@ public:
 		race_laps(0),
 		debugmode(false),
 		profilingmode(false),
+		renderconfigfile("render.conf.deferred"),
 		textures(err_out),
 		track(info_out, err_out),
 		replay(framerate)

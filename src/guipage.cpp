@@ -349,6 +349,7 @@ bool GUIPAGE::Load(
 				new_widget->SetDescription(description);
 				new_widget->SetSetting(setting);
 				new_widget->UpdateOptions(sref, false, optionmap, error_output);
+				new_widget->SetAction(action);
 				
 				std::string name;
 				if (pagefile.GetParam(widgetstr.str()+".name", name))

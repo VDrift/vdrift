@@ -110,7 +110,7 @@ struct GRAPHICS_CONFIG
 		std::ifstream f(filename.c_str());
 		if (!f)
 		{
-			error_output << "Unable to open graphics config file: " << filename;
+			error_output << "Unable to open graphics config file: " << filename << std::endl;
 			return false;
 		}
 		return Load(f, error_output);

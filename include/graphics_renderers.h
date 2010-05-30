@@ -33,7 +33,7 @@ public:
 class RENDER_INPUT_POSTPROCESS : public RENDER_INPUT
 {
 public:
-	RENDER_INPUT_POSTPROCESS() : shader(NULL), writealpha(true), writecolor(true) {}
+	RENDER_INPUT_POSTPROCESS() : shader(NULL), writealpha(true), writecolor(true), writedepth(false), depth_mode(GL_LEQUAL), clearcolor(false), cleardepth(false) {}
 	
 	void SetSourceTextures(const std::vector <TEXTURE_INTERFACE*> & textures)
 	{
@@ -44,6 +44,9 @@ public:
 	virtual void Render(GLSTATEMANAGER & glstate, std::ostream & error_output);
 	void SetWriteColor(bool write) {writecolor = write;}
 	void SetWriteAlpha(bool write) {writealpha = write;}
+	void SetWriteDepth(bool write) {writedepth = write;}
+	void SetDepthMode ( int mode ) {depth_mode = mode;}
+	void SetClear(bool newclearcolor, bool newcleardepth) {clearcolor = newclearcolor;cleardepth = newcleardepth;}
 	
 	// these are used only to upload uniforms to the shaders
 	void SetCameraInfo(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newrot, float newfov, float newlodfar, float neww, float newh);
@@ -54,6 +57,7 @@ private:
 	SHADER_GLSL * shader;
 	bool writealpha;
 	bool writecolor;
+	bool writedepth;
 	MATHVECTOR <float, 3> lightposition;
 	QUATERNION <float> cam_rotation;
 	MATHVECTOR <float, 3> cam_position;
@@ -61,6 +65,8 @@ private:
 	float camfov;
 	float lod_far;
 	FRUSTUM frustum;
+	int depth_mode;
+	bool clearcolor, cleardepth;
 };
 
 class RENDER_INPUT_SCENE : public RENDER_INPUT

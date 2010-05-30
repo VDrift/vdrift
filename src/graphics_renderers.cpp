@@ -160,7 +160,12 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 	
 	OPENGL_UTILITY::CheckForOpenGLErrors("postprocess begin", error_output);
 	
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	if (clearcolor && cleardepth)
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	else if (clearcolor)
+		glClear(GL_COLOR_BUFFER_BIT);
+	else if (cleardepth)
+		glClear(GL_DEPTH_BUFFER_BIT);
 	
 	shader->Enable();
 	
@@ -177,7 +182,11 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 	glColor4f(1,1,1,1);
 	glstate.SetColor(1,1,1,1);
 	glstate.Disable(GL_BLEND);
-	glstate.Disable(GL_DEPTH_TEST);
+	if (writedepth || depth_mode != GL_ALWAYS)
+		glstate.Enable(GL_DEPTH_TEST);
+	else
+		glstate.Disable(GL_DEPTH_TEST);
+	glDepthFunc( depth_mode );
 	glstate.Enable(GL_TEXTURE_2D);
 	
 	glActiveTexture(GL_TEXTURE0);
@@ -185,6 +194,7 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 	glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_LUMINANCE);
 	
 	glstate.SetColorMask(writecolor, writealpha);
+	glstate.SetDepthMask(writedepth);
 	
 	OPENGL_UTILITY::CheckForOpenGLErrors("postprocess flag set", error_output);
 	
@@ -223,22 +233,57 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 	OPENGL_UTILITY::CheckForOpenGLErrors("postprocess texture set", error_output);
 
 	// build the frustum corners
-	float Hfar = 2*tan(camfov / 2) * lod_far; //height of the far plane
-	float Wfar = Hfar * w/h; //width of the far plane
-	MATHVECTOR <float, 3> d(0,0,-1); //camera direction vector
-	MATHVECTOR <float, 3> up(0,1,0); //camera up vector
-	MATHVECTOR <float, 3> right(1,0,0); //camera right vector
-	QUATERNION <float> orient;// = cam_rotation;
-	orient.RotateVector(d);
-	orient.RotateVector(up);
-	orient.RotateVector(right);
-	MATHVECTOR <float, 3> pos;// = cam_position;
-	MATHVECTOR <float, 3> fc = pos + d*lod_far; //far plane center
+	float ratio = w/h;
 	std::vector <MATHVECTOR <float, 3> > frustum_corners(4);
-	frustum_corners[3] = fc + (up * Hfar/2) - (right * Wfar/2); //far frustum top left
-	frustum_corners[2] = fc + (up * Hfar/2) + (right * Wfar/2); //far frustum top right
-	frustum_corners[0] = fc - (up * Hfar/2) - (right * Wfar/2); //far frustum bottom left
-	frustum_corners[1] = fc - (up * Hfar/2) + (right * Wfar/2); //far frustum bottom right
+	frustum_corners[0].Set(-lod_far,-lod_far,-lod_far);	//BL
+	frustum_corners[1].Set(lod_far,-lod_far,-lod_far);	//BR
+	frustum_corners[2].Set(lod_far,lod_far,-lod_far);	//TR
+	frustum_corners[3].Set(-lod_far,lod_far,-lod_far);	//TL
+	MATRIX4 <float> invproj = MATRIX4<float>::InvPerspective(camfov, ratio, 0.1, lod_far);
+	for (int i = 0; i < 4; i++)
+	{
+		invproj.TransformVectorOut(frustum_corners[i][0], frustum_corners[i][1], frustum_corners[i][2]);
+		frustum_corners[i][2] = -lod_far;
+	}
+	
+	const bool debug = false;
+	if (debug)
+	{
+		std::cout << "fov="<<camfov<<", lod_far="<<lod_far<<", w="<<w<<", h="<<h<<", ratio="<<ratio<<std::endl;
+		for (int i = 0; i < 4; i++)
+			std::cout << "frustum_corners["<<i<<"]="<<frustum_corners[i]<<std::endl;
+		
+		glMatrixMode( GL_PROJECTION );
+		glPushMatrix();
+		glLoadIdentity();
+		gluPerspective( camfov, w/(float)h, 0.1f, lod_far );
+		
+		float   proj[16];
+		glGetFloatv( GL_PROJECTION_MATRIX, proj );
+		MATRIX4 <float> glmat;
+		glmat.Set(proj);
+		MATRIX4 <float> joemat = MATRIX4<float>::Perspective(camfov, ratio, 0.1, lod_far);
+		MATHVECTOR <float, 3> glcorner = frustum_corners[0];
+		MATHVECTOR <float, 3> joecorner = frustum_corners[0];
+		glmat.TransformVectorOut(glcorner[0], glcorner[1], glcorner[2]);
+		joemat.TransformVectorOut(joecorner[0], joecorner[1], joecorner[2]);
+		float vec4[4];
+		for (int i = 0; i < 3; i++)
+			vec4[i] = frustum_corners[0][i];
+		vec4[3] = 1;
+		glmat.MultiplyVector4(vec4);
+		std::cout << "glmat:  " << glcorner << std::endl;
+		std::cout << "joemat: " << joecorner << std::endl;
+		std::cout << "glmat4: " << vec4[0] << ", " << vec4[1] << ", " << vec4[2] << ", " << vec4[3] << std::endl;
+		MATRIX4 <float> joematinv = MATRIX4<float>::InvPerspective(camfov, ratio, 0.1, lod_far);
+		MATHVECTOR <float, 3> invcorner(-lod_far,-lod_far,lod_far);
+		joematinv.TransformVectorOut(invcorner[0], invcorner[1], invcorner[2]);
+		std::cout << "inv:    " << invcorner << std::endl;
+		
+		glPopMatrix();
+		glMatrixMode( GL_MODELVIEW );
+	}
+	
 	
 	glBegin(GL_QUADS);
 	
@@ -446,6 +491,9 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 	
 	last_transform_valid = false;
 	activeshader = SHADER_NONE;
+	
+	glColor4f(1,1,1,1);
+	glstate.SetColor(1,1,1,1);
 	
 	DrawList(glstate, *dynamic_drawlist_ptr, false);
 	DrawList(glstate, *static_drawlist_ptr, true);

@@ -378,11 +378,11 @@ bool GRAPHICS_CONFIG_PASS::Load(std::istream & f, std::ostream & error_output, i
 	fillDefault(vars, "clear_depth", "false");
 	fillDefault(vars, "write_color", "true");
 	fillDefault(vars, "write_alpha", "true");
-	fillDefault(vars, "write_depth", "true");
+	fillDefault(vars, "write_depth", (vars["draw"] == "postprocess") ? "false" : "true");
 	fillDefault(vars, "cull", "true");
 	fillDefault(vars, "camera", "default");
 	fillDefault(vars, "alpha", "true");
-	fillDefault(vars, "depthtest", "lequal");
+	fillDefault(vars, "depthtest", (vars["draw"] == "postprocess") ? "disabled" : "lequal");
 	
 	if (!isOf(vars, "depthtest", "lequal equal gequal disabled", &error_output, sectionstart)) return false;
 	

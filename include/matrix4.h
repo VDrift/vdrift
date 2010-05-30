@@ -56,6 +56,28 @@ class MATRIX4
 			return out;
 		}
 		
+		/// multiply the vector by this matrix and store the result in the vector
+		/// the vector must be of length 4 but its bounds are not enforced, so
+		/// be careful
+		template <typename U>
+		void MultiplyVector4(U * vector) const
+		{
+			U in[4];
+			for (int i = 0; i < 4; i++)
+			{
+				in[i] = vector[i];
+				vector[i] = 0;
+			}
+			
+			for (int r = 0; r < 4; r++)
+			{
+				for (int i = 0; i < 4; i++)
+				{
+					vector[r] += in[i]*data[i*4+r];
+				}
+			}
+		}
+		
 		void LoadIdentity()
 		{
 			data[0] = data[5] = data[10] = data[15] = 1;

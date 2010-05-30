@@ -220,6 +220,8 @@ std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad(
 		keyed_container <DRAWABLE> * dlist = &unoptimized_scene.GetDrawlist().normal_noblend;
 		if (transparent)
 			dlist = &unoptimized_scene.GetDrawlist().normal_blend;
+		else if (nolighting)
+			dlist = &unoptimized_scene.GetDrawlist().normal_noblend_nolighting;
 		if (skybox)
 		{
 			if (transparent)

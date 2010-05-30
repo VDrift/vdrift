@@ -162,7 +162,7 @@ private:
 		objcenter.Set(0.0);
 		radius = 0.0;
 		r = g = b = 1.0;
-		a = 0.5; // use texture transparency
+		a = 1.0;
 		draw_order = 0;
 		decal = false;
 		lit = true;

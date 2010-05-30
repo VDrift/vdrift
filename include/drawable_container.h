@@ -97,6 +97,7 @@ struct DRAWABLE_CONTAINER
 	// all of the layers of the scene
 	CONTAINER <DRAWABLE> twodim;
 	CONTAINER <DRAWABLE> normal_noblend;
+	CONTAINER <DRAWABLE> normal_noblend_nolighting;
 	CONTAINER <DRAWABLE> car_noblend;
 	CONTAINER <DRAWABLE> normal_blend;
 	CONTAINER <DRAWABLE> skybox_blend;
@@ -112,6 +113,7 @@ struct DRAWABLE_CONTAINER
 	{
 		func(twodim);
 		func(normal_noblend);
+		func(normal_noblend_nolighting);
 		func(car_noblend);
 		func(normal_blend);
 		func(skybox_blend);
@@ -130,6 +132,8 @@ struct DRAWABLE_CONTAINER
 			(twodim, dest.twodim, transform);
 		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,CONTAINERU<DRAWABLE>,use_transform>
 			(normal_noblend, dest.normal_noblend, transform);
+		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,CONTAINERU<DRAWABLE>,use_transform>
+			(normal_noblend_nolighting, dest.normal_noblend_nolighting, transform);
 		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,CONTAINERU<DRAWABLE>,use_transform>
 			(car_noblend, dest.car_noblend, transform);
 		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,CONTAINERU<DRAWABLE>,use_transform>
@@ -156,6 +160,7 @@ struct DRAWABLE_CONTAINER
 		if (name == "twodim") ref = twodim;
 		TEXTIFY(text);
 		TEXTIFY(normal_noblend);
+		TEXTIFY(normal_noblend_nolighting);
 		TEXTIFY(car_noblend);
 		TEXTIFY(normal_blend);
 		TEXTIFY(skybox_blend);

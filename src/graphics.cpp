@@ -47,12 +47,13 @@ using std::vector;
 void GRAPHICS_SDLGL::Init(const std::string shaderpath, const std::string & windowcaption,
 	unsigned int resx, unsigned int resy, unsigned int bpp,
 	unsigned int depthbpp, bool fullscreen, bool shaders,
- 	unsigned int antialiasing, bool enableshadows, int new_shadow_distance,
-  	int new_shadow_quality, int reflection_type,
- 	const std::string & static_reflectionmap_file,
-  	const std::string & static_ambientmap_file,
- 	int anisotropy, const std::string & texturesize,
-  	int lighting_quality, bool newbloom,
+	unsigned int antialiasing, bool enableshadows, int new_shadow_distance,
+	int new_shadow_quality, int reflection_type,
+	const std::string & static_reflectionmap_file,
+	const std::string & static_ambientmap_file,
+	int anisotropy, const std::string & texturesize,
+	int lighting_quality, bool newbloom,
+	const std::string & renderconfig,
 	std::ostream & info_output, std::ostream & error_output)
 {
 	shadows = enableshadows;
@@ -60,6 +61,7 @@ void GRAPHICS_SDLGL::Init(const std::string shaderpath, const std::string & wind
 	shadow_quality = new_shadow_quality;
 	lighting = lighting_quality;
 	bloom = newbloom;
+	renderconfigfile = renderconfig;
 
 	if (reflection_type == 1)
 		reflection_status = REFLECTION_STATIC;
@@ -115,7 +117,7 @@ void GRAPHICS_SDLGL::Init(const std::string shaderpath, const std::string & wind
 	{
 		aticard = true;
 	}
-
+	
 	//initialize GLEW
 	GLenum glew_err = glewInit();
 	if ( glew_err != GLEW_OK )
@@ -148,6 +150,11 @@ void GRAPHICS_SDLGL::Init(const std::string shaderpath, const std::string & wind
 		info_output << "Your video card doesn't support multiple draw buffers.  Disabling shaders." << endl;
 		DisableShaders();
 	}
+	else if (!GL_ARB_texture_non_power_of_two)
+	{
+		info_output << "Your video card doesn't support non-power-of-two textures.  Disabling shaders." << endl;
+		DisableShaders();
+	}
 	else
 	{
 		GLint maxattach;
@@ -170,21 +177,14 @@ void GRAPHICS_SDLGL::Init(const std::string shaderpath, const std::string & wind
 			DisableShaders();
 		}
 	}
-
-	if (GLEW_EXT_texture_filter_anisotropic)
-		glGetIntegerv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &max_anisotropy);
-
-	info_output << "Maximum anisotropy: " << max_anisotropy << endl;
-
-	OPENGL_UTILITY::CheckForOpenGLErrors("Shader loading", error_output);
-
+	
 	//load static reflection map for dynamic reflections too, since we may need it
 	if ((reflection_status == REFLECTION_STATIC || reflection_status == REFLECTION_DYNAMIC) && !static_reflectionmap_file.empty())
 	{
 		TEXTUREINFO t;
 		t.SetName(static_reflectionmap_file);
 		t.SetCube(true, true);
-		t.SetMipMap(false);
+		t.SetMipMap(true);
 		t.SetAnisotropy(anisotropy);
 		t.SetSize(texturesize);
 		static_reflection.Load(t, error_output);
@@ -200,6 +200,13 @@ void GRAPHICS_SDLGL::Init(const std::string shaderpath, const std::string & wind
 		t.SetSize(texturesize);
 		static_ambient.Load(t, error_output);
 	}
+
+	if (GLEW_EXT_texture_filter_anisotropic)
+		glGetIntegerv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &max_anisotropy);
+
+	info_output << "Maximum anisotropy: " << max_anisotropy << endl;
+
+	OPENGL_UTILITY::CheckForOpenGLErrors("Shader loading", error_output);
 
 	initialized = true;
 }
@@ -423,10 +430,10 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 	
 	// reload configuration
 	config = GRAPHICS_CONFIG();
-	std::string renderconfigfile = shaderpath+"/render.conf";
-	if (!config.Load(renderconfigfile, error_output))
+	std::string rcpath = shaderpath+"/" + renderconfigfile;
+	if (!config.Load(rcpath, error_output))
 	{
-		error_output << "Error loading render configuration file: " << renderconfigfile << std::endl;
+		error_output << "Error loading render configuration file: " << rcpath << std::endl;
 		shader_load_success = false;
 	}
 
@@ -454,6 +461,7 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 		OPENGL_UTILITY::CheckForOpenGLErrors("EnableShaders: FBO deinit", error_output);
 		
 		bool edge_contrast_enhancement = (lighting == 1);
+		bool reflection_disabled = (reflection_status == REFLECTION_DISABLED);
 		bool reflection_dynamic = (reflection_status == REFLECTION_DYNAMIC);
 		bool shadows_near = shadows;
 		bool shadows_medium = shadows && shadow_distance > 0;
@@ -470,9 +478,11 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 		shadow_quality_ultra = false;
 		
 		conditions.clear();
+		if (fsaa > 1) conditions.insert("fsaa");
 		#define ADDCONDITION(x) if (x) conditions.insert(#x)
 		ADDCONDITION(bloom);
 		ADDCONDITION(edge_contrast_enhancement);
+		ADDCONDITION(reflection_disabled);
 		ADDCONDITION(reflection_dynamic);
 		ADDCONDITION(shadows_near);
 		ADDCONDITION(shadows_medium);
@@ -483,6 +493,10 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 		ADDCONDITION(shadow_quality_vhigh);
 		ADDCONDITION(shadow_quality_ultra);
 		#undef ADDCONDITION
+		
+		// add some common textures
+		if (reflection_status == REFLECTION_STATIC)
+			texture_inputs["reflection_cube"] = static_reflection;
 		
 		for (std::vector <GRAPHICS_CONFIG_OUTPUT>::const_iterator i = config.outputs.begin(); i != config.outputs.end(); i++)
 		{
@@ -923,6 +937,9 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 				assert(!i->draw.empty());
 				if (i->draw.back() == "postprocess")
 				{
+					postprocess.SetDepthMode(DepthModeFromString(i->depthtest));
+					postprocess.SetWriteDepth(i->write_depth);
+					postprocess.SetClear(i->clear_color, i->clear_depth);
 					RenderPostProcess(i->shader, input_textures, render_outputs[i->output], i->write_color, i->write_alpha, error_output);
 				}
 				else

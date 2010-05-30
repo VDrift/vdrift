@@ -33,6 +33,8 @@ void WIDGET_STRINGWHEEL::SetVisible(SCENENODE & scene, bool newvis)
 
 bool WIDGET_STRINGWHEEL::ProcessInput(SCENENODE & scene, float cursorx, float cursory, bool cursordown, bool cursorjustup)
 {
+	active_action.clear();
+	
 	bool left = button_left.ProcessInput(scene, cursorx, cursory, cursordown, cursorjustup);
 	bool right = button_right.ProcessInput(scene, cursorx, cursory, cursordown, cursorjustup);
 	
@@ -42,12 +44,14 @@ bool WIDGET_STRINGWHEEL::ProcessInput(SCENENODE & scene, float cursorx, float cu
 		{
 			option->Decrement();
 			SyncOption(scene);
+			active_action = action;
 		}
 		
 		if (right && cursorjustup)
 		{
 			option->Increment();
 			SyncOption(scene);
+			active_action = action;
 		}
 	}
 	

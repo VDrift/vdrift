@@ -209,6 +209,7 @@ void GAME::InitializeCoreSubsystems()
 		pathmanager.GetStaticAmbientMap(),
 		settings.GetAnisotropic(), settings.GetTextureSize(),
 		settings.GetLighting(), settings.GetBloom(),
+		renderconfigfile,
 		info_output, error_output);
 	
 	QUATERNION <float> ldir;
@@ -381,7 +382,7 @@ bool GAME::ParseArguments(std::list <std::string> & args)
 	{
 		pathmanager.SetProfile(argmap["-profile"]);
 	}
-	arghelp["-profile PROFILENAME"] = "Store settings, controls, and records under a separate profile.";
+	arghelp["-profile NAME"] = "Store settings, controls, and records under a separate profile.";
 	
 	if (argmap.find("-profiling") != argmap.end() || argmap.find("-benchmark") != argmap.end())
 	{
@@ -455,6 +456,12 @@ bool GAME::ParseArguments(std::list <std::string> & args)
 		benchmode = true;
 	}
 	arghelp["-benchmark"] = "Run in benchmark mode.";
+	
+	arghelp["-render FILE"] = "Load the specified render configuration file instead of the default " + renderconfigfile + ".";
+	if (!argmap["-render"].empty())
+	{
+		renderconfigfile = argmap["-render"];
+	}
 	
 	
 	arghelp["-help"] = "Display command-line help.";
@@ -1967,12 +1974,13 @@ void GAME::PopulateCarPaintList(const std::string & carname, std::list <std::pai
 		paintstr << paintnum;
 
 		std::string cartexfile = cartexfolder+"/body"+paintstr.str()+".png";
-			//std::cout << cartexfile << std::endl;
+		//std::cout << cartexfile << std::endl;
 		ifstream check(cartexfile.c_str());
 		if (check)
 		{
 			exists = true;
 			carpaintlist.push_back(pair<string,string>(paintstr.str(),paintstr.str()));
+			//std::cout << carname << ": " << paintstr.str() << std::endl;
 			paintnum++;
 		}
 	}
