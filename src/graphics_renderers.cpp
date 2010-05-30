@@ -494,14 +494,14 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 
 		// if we have no reflection texture supplied, don't touch the TU because
 		// someone else may be supplying one
-		if (reflection && reflection->Loaded())
+		/*if (reflection && reflection->Loaded())
 		{
 			glActiveTexture(GL_TEXTURE2);
 			reflection->Activate();
 			glActiveTexture(GL_TEXTURE0);
-		}
+		}*/
 		
-		glActiveTexture(GL_TEXTURE3);
+		/*glActiveTexture(GL_TEXTURE3);
 		if (ambient && ambient->Loaded())
 		{
 			ambient->Activate();
@@ -510,7 +510,7 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 		{
 			glBindTexture(GL_TEXTURE_CUBE_MAP,0);
 			//assert(0);
-		}
+		}*/
 		glActiveTexture(GL_TEXTURE0);
 	}
 
