@@ -56,8 +56,6 @@ public:
 		boxdrawref.SetDiffuseMap(boxtex);
 		boxdrawref.SetVertArray(&boxverts);
 		boxdrawref.SetDrawOrder(0);
-		boxdrawref.SetLit(false);
-		boxdrawref.Set2D(true);
 		boxdrawref.SetCull(false, false);
 		boxdrawref.SetColor(1,1,1,1);
 		
@@ -68,8 +66,6 @@ public:
 		barbackdrawref.SetDiffuseMap(bartex);
 		barbackdrawref.SetVertArray(&barbackverts);
 		barbackdrawref.SetDrawOrder(1);
-		barbackdrawref.SetLit(false);
-		barbackdrawref.Set2D(true);
 		barbackdrawref.SetCull(false, false);
 		barbackdrawref.SetColor(0.3, 0.3, 0.3, 0.4);
 		
@@ -79,8 +75,6 @@ public:
 		bardrawref.SetDiffuseMap(bartex);
 		bardrawref.SetVertArray(&barverts);
 		bardrawref.SetDrawOrder(2);
-		bardrawref.SetLit(false);
-		bardrawref.Set2D(true);
 		bardrawref.SetCull(false, false);
 		bardrawref.SetColor(1,1,1, 0.7);
 		

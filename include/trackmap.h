@@ -68,8 +68,6 @@ private:
 				dotdraw = topnode.GetDrawlist().twodim.insert(DRAWABLE());
 				DRAWABLE & drawref = GetDrawable(topnode);
 				drawref.SetVertArray(&dotverts);
-				drawref.SetLit(false);
-				drawref.Set2D(true);
 				drawref.SetCull(false, false);
 				drawref.SetColor(1,1,1,0.7);
 				drawref.SetDrawOrder(0.1);

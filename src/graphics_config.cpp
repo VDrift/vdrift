@@ -383,10 +383,12 @@ bool GRAPHICS_CONFIG_PASS::Load(std::istream & f, std::ostream & error_output, i
 	fillDefault(vars, "write_depth", postprocess ? "false" : "true");
 	fillDefault(vars, "cull", "true");
 	fillDefault(vars, "camera", "default");
-	fillDefault(vars, "blendmode", postprocess ? "disabled" : "auto");
+	fillDefault(vars, "blendmode", postprocess ? "disabled" : "disabled");
 	fillDefault(vars, "depthtest", postprocess ? "disabled" : "lequal");
 	
-	if (!isOf(vars, "blendmode", postprocess ? "disabled alphablend add" : "disabled auto alphablend add", &error_output, sectionstart)) return false;
+	std::string blendmodes = "disabled alphablend add alphablend_premultiplied";
+	
+	if (!isOf(vars, "blendmode", postprocess ? blendmodes : blendmodes + " alphatest", &error_output, sectionstart)) return false;
 	if (!isOf(vars, "depthtest", "lequal equal gequal disabled", &error_output, sectionstart)) return false;
 	
 	

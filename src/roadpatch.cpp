@@ -30,8 +30,6 @@ void ROADPATCH::AddRacinglineScenenode(SCENENODE & node, ROADPATCH * nextpatch,
 	DRAWABLE & draw = node.GetDrawlist().normal_blend.get(drawhandle);
 
 	draw.SetDiffuseMap(racingline_texture);
-	draw.SetLit(false);
-	draw.SetPartialTransparency(true);
 	draw.SetDecal(true);
 	draw.SetVertArray(&racingline_vertexarray);
 

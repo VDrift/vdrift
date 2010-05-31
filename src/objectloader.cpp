@@ -236,8 +236,7 @@ std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad(
 		drawable.SetDiffuseMap(diffuse_texture);
 		//if (miscmap1_texture) drawable.SetMiscMap1(miscmap1_texture);
 		drawable.SetMiscMap1(miscmap1_texture);
-		drawable.SetLit(!nolighting);
-		drawable.SetPartialTransparency(transparent);
+		drawable.SetDecal(transparent);
 		drawable.SetCull(cull && (transparent_blend!=2), false);
 		drawable.SetRadius(model->GetRadius());
 		drawable.SetObjectCenter(model->GetCenter());

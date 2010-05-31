@@ -118,9 +118,6 @@ bool CAR::GenerateWheelMesh(
 		}
 	}
 	
-	draw.SetBlur(false);
-	draw.SetPartialTransparency(false);
-	
 	// now load the rim
 	std::string wheelname;
 	if (!carconf.GetParam(confsection + ".wheel", wheelname, error_output))
@@ -810,8 +807,6 @@ bool CAR::LoadInto (
 		}
 	}
 	
-	draw->SetBlur(false);
-	draw->SetPartialTransparency(blend);
 	return true;
 }
 

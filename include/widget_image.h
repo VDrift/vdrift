@@ -40,12 +40,9 @@ public:
 		DRAWABLE & drawref = GetDrawable(scene);
 		drawref.SetDiffuseMap(teximage);
 		drawref.SetVertArray(&varray);
-		drawref.SetLit(false);
-		drawref.Set2D(true);
 		drawref.SetCull(false, false);
 		drawref.SetColor(1,1,1,1);
 		drawref.SetDrawOrder(order+100);
-		drawref.SetPartialTransparency(true);
 		
 		if (button_mode)
 			varray.SetTo2DButton(x, y, w, h, h/(screenhwratio*3.0));

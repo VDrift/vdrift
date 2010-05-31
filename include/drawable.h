@@ -68,7 +68,6 @@ public:
 	
 	float GetDrawOrder() const {return draw_order;}
 	void SetDrawOrder(float value) {draw_order = value;}
-	void SetDrawOrderSmoke() {SetDrawOrder(1);}
 	void SetDrawOrderFont() {SetDrawOrder(5);}
 	void SetDrawOrderCursor() {SetDrawOrder(10);}
 	void SetDrawOrderGUIBackground() {SetDrawOrder(2);}
@@ -77,24 +76,12 @@ public:
 	bool GetDecal() const {return decal;}
 	void SetDecal(bool newdecal) {decal = newdecal;}
 	
-	bool GetLit() const {return lit;}
-	void SetLit(bool value) {lit = value;}
-	
 	bool GetDrawEnable() const {return drawenabled;}
 	void SetDrawEnable(bool value) {drawenabled = value;}
-	
-	bool Get2D() const {return is2d;}
-	void Set2D(bool value) {is2d = value;}
-
-	bool GetPartialTransparency() const {return partial_transparency;}
-	void SetPartialTransparency(bool value) {partial_transparency = value;}
 	
 	bool GetCull() const {return cull;}
 	bool GetCullFront() const {return cull_front;}
 	void SetCull(bool newcull, bool newcullfront) {cull = newcull; cull_front = newcullfront;}
-	
-	bool GetBlur() const {return blur;}
-	void SetBlur(bool value) {blur = value;}
 	
 	bool GetSkybox() const {return skybox;}
 	void SetSkybox(bool value) {skybox = value;}
@@ -106,54 +93,38 @@ public:
 	/// when true, the additive maps will be applied
 	bool GetSelfIllumination() const {return self_illumination;}
 	void SetSelfIllumination(bool value) {self_illumination = value;}
-	
-	bool GetSmoke() const {return issmoke;}
-	void SetSmoke(bool value) {issmoke = value;}
-	
-	bool GetDistanceField() const {return distance_field;}
-	void SetDistanceField(bool value) {distance_field = value;}
 
 	/// true for normal objects; if false camera transform and orientation aren't applied when the object is rendered
 	bool GetCameraTransformEnable() const {return cameratransform;}
 	void SetCameraTransformEnable(bool value) {cameratransform = value;}
 	
-	bool GetForceAlphaTest() const {return forcealphatest;}
-	void SetForceAlphaTest(bool value) {forcealphatest = value;}
-	
 	void EnableAdditiveMap1(bool value) {if(additive_map1) additive1 = value;}
 	void EnableAdditiveMap2(bool value) {if(additive_map2) additive2 = value;}
 	
 private:
-	TEXTUREPTR diffuse_map;
-	TEXTUREPTR misc_map1;
-	TEXTUREPTR additive_map1;
-	TEXTUREPTR additive_map2;
-	std::vector <int> list_ids;
-	const VERTEXARRAY * vert_array;
-	std::vector <MATHVECTOR <float, 3> > lineverts;
-	float linesize;
-	MATRIX4 <float> transform;
-	MATHVECTOR <float, 3> objcenter;
-	float radius;
-	float r, g, b, a;
-	float draw_order;
-	bool decal;
-	bool lit;
-	bool drawenabled;
-	bool is2d;
-	bool partial_transparency;
-	bool cull;
-	bool cull_front;
-	bool blur;
-	bool skybox;
-	bool vertical_track;
-	bool self_illumination;
-	bool issmoke;
-	bool distance_field;
-	bool cameratransform;
-	bool forcealphatest;
-	bool additive1;
-	bool additive2;
+	TEXTUREPTR diffuse_map; //ok
+	TEXTUREPTR misc_map1; //ok
+	TEXTUREPTR additive_map1; //remove: use separate geometry in an emmissive drawable group
+	TEXTUREPTR additive_map2; //remove: use separate geometry in an emmissive drawable group
+	std::vector <int> list_ids; //ok
+	const VERTEXARRAY * vert_array; //ok
+	std::vector <MATHVECTOR <float, 3> > lineverts; //ok
+	float linesize; //ok
+	MATRIX4 <float> transform; //ok
+	MATHVECTOR <float, 3> objcenter; //ok
+	float radius; //ok
+	float r, g, b, a; //ok
+	float draw_order; //ok
+	bool decal; //ok
+	bool drawenabled; //ok
+	bool cull; //ok
+	bool cull_front; //ok
+	bool skybox; //ok
+	bool vertical_track; //ok
+	bool self_illumination; //remove: use separate geometry in an emmissive drawable group
+	bool cameratransform; //ok
+	bool additive1; //remove: use separate geometry in an emmissive drawable group
+	bool additive2; //remove: use separate geometry in an emmissive drawable group
 	
 	void Init()
 	{
@@ -165,20 +136,13 @@ private:
 		a = 1.0;
 		draw_order = 0;
 		decal = false;
-		lit = true;
 		drawenabled = true;
-		is2d = false;
-		partial_transparency = false;
 		cull = false;
 		cull_front = false;
-		blur = true;
 		skybox = false;
 		vertical_track = false;
 		self_illumination = false;
-		issmoke = false;
-		distance_field = false;
 		cameratransform = true;
-		forcealphatest = false;
 		additive1 = false;
 		additive2 = false;
 	}

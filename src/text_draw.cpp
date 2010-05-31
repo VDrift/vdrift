@@ -10,11 +10,8 @@ void TEXT_DRAW::Set(DRAWABLE & draw, const FONT & font, const std::string & newt
 	text=newtext;
 	
 	draw.SetDiffuseMap(font.GetFontTexture());
-	draw.SetLit(false);
-	draw.Set2D(true);
 	draw.SetVertArray(&output_array);
 	draw.SetCull(false, false);
-	draw.SetDistanceField(true);
 	draw.SetColor(r,g,b,1.0);
 	
 	float cursorx = x;

@@ -27,8 +27,6 @@ class HUDBAR
 			
 			drawref.SetDiffuseMap(bartex);
 			drawref.SetVertArray(&verts);
-			drawref.SetLit(false);
-			drawref.Set2D(true);
 			drawref.SetCull(false, false);
 			drawref.SetColor(1,1,1,opacity);
 			drawref.SetDrawOrder(1);

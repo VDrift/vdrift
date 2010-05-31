@@ -45,8 +45,6 @@ bool HUD::Init(
 	rpmboxref.SetDiffuseMap(progbartex);
     rpmboxref.SetVertArray(&rpmboxverts);
     rpmboxref.SetDrawOrder(2);
-    rpmboxref.SetLit(false);
-    rpmboxref.Set2D(true);
     rpmboxref.SetCull(false, false);
     rpmboxref.SetColor(0.3, 0.3, 0.3, 0.4);
     
@@ -54,8 +52,6 @@ bool HUD::Init(
 	rpmbarref.SetDiffuseMap(progbartex);
     rpmbarref.SetVertArray(&rpmbarverts);
     rpmbarref.SetDrawOrder(3);
-    rpmbarref.SetLit(false);
-    rpmbarref.Set2D(true);
     rpmbarref.SetCull(false, false);
     rpmbarref.SetColor(1.0, 1.0, 1.0, 0.7);
     
@@ -64,8 +60,6 @@ bool HUD::Init(
     rpmredbarref.SetVertArray(&rpmredbarverts);
     rpmredbarref.SetColor(1.0, 0.2, 0.2, 0.7);
     rpmredbarref.SetDrawOrder(3);
-    rpmredbarref.SetLit(false);
-    rpmredbarref.Set2D(true);
     rpmredbarref.SetCull(false, false);
 
     float barheight = 64.0/displayheight;
@@ -109,8 +103,6 @@ bool HUD::Init(
 
         timerboxdrawref.SetDiffuseMap(timerboxtex);
         timerboxdrawref.SetVertArray(&timerboxverts);
-        timerboxdrawref.SetLit(false);
-        timerboxdrawref.Set2D(true);
         timerboxdrawref.SetCull(false, false);
         timerboxdrawref.SetColor(1,1,1,opacity);
         timerboxdrawref.SetDrawOrder(0.1);

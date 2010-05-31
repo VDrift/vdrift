@@ -67,9 +67,7 @@ private:
 			drawref.SetDrawEnable(false);
 			drawref.SetVertArray(&varray);
 			drawref.SetDiffuseMap(texture);
-			drawref.SetSmoke(true);
 			drawref.SetCull(false,false);
-			drawref.SetPartialTransparency(true);
 		}
 		
 		PARTICLE(const PARTICLE & other)
@@ -159,6 +157,7 @@ public:
 		size_range(0.5,1), direction(0,1,0)
 	{
 		particles.reserve(128);
+		cur_texture = textures.end();
 	}
 	
 	///returns true if at least one particle texture was loaded

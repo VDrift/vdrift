@@ -646,6 +646,18 @@ void GRAPHICS_SDLGL::SetupScene(float fov, float new_view_distance, const MATHVE
 		cam.h = 1.f; // this gets automatically overridden with the cubemap dimensions
 	}
 	
+	// create an ortho camera for 2d drawing
+	{
+		GRAPHICS_CAMERA & cam = cameras["2d"];
+		
+		// this is the glOrtho call we want:
+		//glOrtho( 0, 1, 1, 0, -1, 1 );
+		
+		cam.orthomode = true;
+		cam.orthomin = MATHVECTOR <float, 3> (0,1,-1);
+		cam.orthomax = MATHVECTOR <float, 3> (1,0,1);
+	}
+	
 	// create cameras for shadow passes
 	std::vector <std::string> shadow_names;
 	shadow_names.push_back("near");
@@ -801,12 +813,14 @@ BLENDMODE::BLENDMODE BlendModeFromString(const std::string & mode)
 {
 	if (mode == "disabled")
 		return BLENDMODE::DISABLED;
-	else if (mode == "auto")
-		return BLENDMODE::AUTO;
 	else if (mode == "add")
 		return BLENDMODE::ADD;
 	else if (mode == "alphablend")
 		return BLENDMODE::ALPHABLEND;
+	else if (mode == "alphablend_premultiplied")
+		return BLENDMODE::PREMULTIPLIED_ALPHA;
+	else if (mode == "alphatest")
+		return BLENDMODE::ALPHATEST;
 	else
 		assert(0);
 	

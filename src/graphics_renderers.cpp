@@ -182,7 +182,7 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 	glColor4f(1,1,1,1);
 	glstate.SetColor(1,1,1,1);
 	
-	assert(blendmode != BLENDMODE::AUTO);
+	assert(blendmode != BLENDMODE::ALPHATEST);
 	switch (blendmode)
 	{
 		case BLENDMODE::DISABLED:
@@ -208,6 +208,15 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 			glstate.Enable(GL_BLEND);
 			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
 			glstate.SetBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		}
+		break;
+		
+		case BLENDMODE::PREMULTIPLIED_ALPHA:
+		{
+			glstate.Disable(GL_ALPHA_TEST);
+			glstate.Enable(GL_BLEND);
+			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+			glstate.SetBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 		}
 		break;
 		
@@ -686,34 +695,13 @@ bool RENDER_INPUT_SCENE::FrustumCull(DRAWABLE & tocull)
 
 void RENDER_INPUT_SCENE::SelectAppropriateShader(DRAWABLE & forme)
 {
-	if (forme.Get2D())
-	{
-		if (forme.GetDistanceField())
-			SetActiveShader(SHADER_DISTANCEFIELD);
-		else
-			SetActiveShader(SHADER_SIMPLE);
-	}
-	else
-	{
-		if (forme.GetSkybox() || !forme.GetLit())
-			SetActiveShader(SHADER_SKYBOX);
-		else if (forme.GetSmoke())
-			SetActiveShader(SHADER_SIMPLE);
-		else
-		{
-			bool blend = (forme.GetDecal() || forme.GetPartialTransparency());
-			if (blend)
-				SetActiveShader(SHADER_FULLBLEND);
-			else
-				SetActiveShader(SHADER_FULL);
-		}
-	}
+	// deprecated! put the appropriate shader for the drawable group in your render.conf
 }
 
 void RENDER_INPUT_SCENE::SelectFlags(DRAWABLE & forme, GLSTATEMANAGER & glstate)
 {
 	DRAWABLE * i(&forme);
-	if (i->GetDecal() || i->GetPartialTransparency())
+	if (i->GetDecal())
 	{
 		glstate.Enable(GL_POLYGON_OFFSET_FILL);
 	}
@@ -764,63 +752,24 @@ void RENDER_INPUT_SCENE::SelectFlags(DRAWABLE & forme, GLSTATEMANAGER & glstate)
 		}
 		break;
 		
-		case BLENDMODE::AUTO:
+		case BLENDMODE::PREMULTIPLIED_ALPHA:
 		{
-			bool blend = (i->GetDecal() || i->Get2D() ||
-					i->GetPartialTransparency() || i->GetDistanceField());
-
-			if (blend && !i->GetForceAlphaTest())
+			glstate.Disable(GL_ALPHA_TEST);
+			glstate.Enable(GL_BLEND);
+			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+			glstate.SetBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+		}
+		break;
+		
+		case BLENDMODE::ALPHATEST:
+		{
+			glstate.Enable(GL_ALPHA_TEST);
+			glstate.Disable(GL_BLEND);
+			if (fsaa > 1 && shaders)
 			{
-				if (fsaa > 1)
-				{
-					glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-				}
-
-				//if (!shaders && i->GetDraw()->GetDistanceField())
-				//{
-				//	glstate.Enable(GL_ALPHA_TEST);
-				//	glAlphaFunc(GL_GREATER, 0.5f);
-				//}
-				//else
-				glstate.Disable(GL_ALPHA_TEST);
-				glstate.Enable(GL_BLEND);
-				
-				//glstate.SetBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-				
-				/*if (shaders)
-				{
-					glstate.SetBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-				}
-				else*/
-				{
-					glstate.SetBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-					if (i->GetSmoke())
-						glstate.SetBlendFunc(GL_SRC_ALPHA, GL_ONE);
-				}
+				glstate.Enable(GL_SAMPLE_ALPHA_TO_COVERAGE);
 			}
-			else
-			{
-				if (fsaa > 1 && shaders)
-				{
-					glstate.Enable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-				}
-					/*glstate.Enable(GL_BLEND);
-					glstate.Disable(GL_ALPHA_TEST);
-
-					glstate.Disable(GL_BLEND);
-					glstate.Enable(GL_ALPHA_TEST);*/
-				/*}
-				else
-				{*/
-					//glstate.Enable(GL_BLEND);
-					glstate.Disable(GL_BLEND);
-					if (i->GetDistanceField())
-						glstate.SetAlphaFunc(GL_GREATER, 0.5f);
-					else
-						glstate.SetAlphaFunc(GL_GREATER, 0.25f);
-					glstate.Enable(GL_ALPHA_TEST);
-				//}
-			}
+			glstate.SetAlphaFunc(GL_GREATER, 0.5f);
 		}
 		break;
 		
@@ -831,12 +780,6 @@ void RENDER_INPUT_SCENE::SelectFlags(DRAWABLE & forme, GLSTATEMANAGER & glstate)
 
 	glstate.SetDepthMask(writedepth);
 	glstate.SetColorMask(writecolor, writealpha);
-
-	//if (i->GetDraw()->GetSmoke() || i->GetDraw()->Get2D() || i->GetDraw()->GetSkybox())
-	if (i->GetSmoke() || i->Get2D())
-		glstate.Disable(GL_DEPTH_TEST);
-	else
-		glstate.Enable(GL_DEPTH_TEST);
 
 	float r,g,b,a;
 	i->GetColor(r,g,b,a);
@@ -921,118 +864,82 @@ bool RENDER_INPUT_SCENE::SelectTransformStart(DRAWABLE & forme, GLSTATEMANAGER &
 	bool need_a_pop = true;
 
 	DRAWABLE * i(&forme);
-	if (i->Get2D())
+	if (!i->GetCameraTransformEnable()) //do our own transform only and ignore the camera position / orientation
 	{
 		if (last_transform_valid)
 			glPopMatrix();
 		last_transform_valid = false;
 
-		glMatrixMode(GL_PROJECTION);
+		glActiveTexture(GL_TEXTURE1);
+		glMatrixMode(GL_TEXTURE);
 		glPushMatrix();
 		glLoadIdentity();
-		//glOrtho( 0, 1, 0, 1, -1, 1 );
-		glOrtho( 0, 1, 1, 0, -1, 1 );
-		//glOrtho( -5, 5, -5, 5, -100, 100 );
+		glActiveTexture(GL_TEXTURE0);
 		glMatrixMode(GL_MODELVIEW);
+
 		glPushMatrix();
-		glLoadIdentity();
+		glLoadMatrixf(i->GetTransform().GetArray());
+	}
+	else if (i->GetSkybox())
+	{
+		if (last_transform_valid)
+			glPopMatrix();
+		last_transform_valid = false;
+
+		glPushMatrix();
+		float temp_matrix[16];
+		cam_rotation.GetMatrix4(temp_matrix);
+		glLoadMatrixf(temp_matrix);
+		if (i->GetVerticalTrack())
+		{
+			MATHVECTOR< float, 3 > objpos(i->GetObjectCenter());
+			//std::cout << "Vertical offset: " << objpos;
+			i->GetTransform().TransformVectorOut(objpos[0],objpos[1],objpos[2]);
+			//std::cout << " || " << objpos << endl;
+			//glTranslatef(-objpos.x,-objpos.y,-objpos.z);
+			//glTranslatef(0,game.cam.position.y,0);
+			glTranslatef(0.0,0.0,-objpos[2]);
+		}
 		glMultMatrixf(i->GetTransform().GetArray());
 	}
 	else
 	{
-		glstate.Enable(GL_DEPTH_TEST);
-
+		bool need_new_transform = !last_transform_valid;
+		if (last_transform_valid)
+			need_new_transform = (!last_transform.Equals(i->GetTransform()));
+		if (need_new_transform)
 		{
-			if (!i->GetCameraTransformEnable()) //do our own transform only and ignore the camera position / orientation
-			{
-				if (last_transform_valid)
-					glPopMatrix();
-				last_transform_valid = false;
+			if (last_transform_valid)
+				glPopMatrix();
 
-				glActiveTexture(GL_TEXTURE1);
-				glMatrixMode(GL_TEXTURE);
-				glPushMatrix();
-				glLoadIdentity();
-				glActiveTexture(GL_TEXTURE0);
-				glMatrixMode(GL_MODELVIEW);
+			glPushMatrix();
+			glMultMatrixf(i->GetTransform().GetArray());
+			last_transform = i->GetTransform();
+			last_transform_valid = true;
 
-				glPushMatrix();
-				glLoadMatrixf(i->GetTransform().GetArray());
-			}
-			else if (i->GetSkybox())
-			{
-				if (last_transform_valid)
-					glPopMatrix();
-				last_transform_valid = false;
-
-				glPushMatrix();
-				float temp_matrix[16];
-				cam_rotation.GetMatrix4(temp_matrix);
-				glLoadMatrixf(temp_matrix);
-				if (i->GetVerticalTrack())
-				{
-					MATHVECTOR< float, 3 > objpos(i->GetObjectCenter());
-					//std::cout << "Vertical offset: " << objpos;
-					i->GetTransform().TransformVectorOut(objpos[0],objpos[1],objpos[2]);
-					//std::cout << " || " << objpos << endl;
-					//glTranslatef(-objpos.x,-objpos.y,-objpos.z);
-					//glTranslatef(0,game.cam.position.y,0);
-					glTranslatef(0.0,0.0,-objpos[2]);
-				}
-				glMultMatrixf(i->GetTransform().GetArray());
-			}
-			else
-			{
-				bool need_new_transform = !last_transform_valid;
-				if (last_transform_valid)
-					need_new_transform = (!last_transform.Equals(i->GetTransform()));
-				if (need_new_transform)
-				{
-					if (last_transform_valid)
-						glPopMatrix();
-
-					glPushMatrix();
-					glMultMatrixf(i->GetTransform().GetArray());
-					last_transform = i->GetTransform();
-					last_transform_valid = true;
-
-					need_a_pop = false;
-				}
-				else need_a_pop = false;
-			}
+			need_a_pop = false;
 		}
+		else need_a_pop = false;
 	}
-
+	
 	return need_a_pop;
 }
 
 void RENDER_INPUT_SCENE::SelectTransformEnd(DRAWABLE & forme, bool need_pop)
 {
 	DRAWABLE * i(&forme);
-	if (i->Get2D() && need_pop)
+	if (!i->GetCameraTransformEnable())
 	{
-		glMatrixMode(GL_PROJECTION);
+		glActiveTexture(GL_TEXTURE1);
+		glMatrixMode(GL_TEXTURE);
 		glPopMatrix();
+		glActiveTexture(GL_TEXTURE0);
 		glMatrixMode(GL_MODELVIEW);
-		glPopMatrix();
 	}
-	else
-	{
-		if (!i->GetCameraTransformEnable())
-		{
-			glActiveTexture(GL_TEXTURE1);
-			glMatrixMode(GL_TEXTURE);
-			glPopMatrix();
-			glActiveTexture(GL_TEXTURE0);
-			glMatrixMode(GL_MODELVIEW);
-		}
 
-		if (need_pop)
-		{
-			glPopMatrix();
-			//cout << "popping" << endl;
-		}
-		//else cout << "not popping" << endl;
+	if (need_pop)
+	{
+		glPopMatrix();
 	}
 }
 
@@ -1091,7 +998,7 @@ RENDER_INPUT_SCENE::RENDER_INPUT_SCENE()
 	writecolor(true),
 	writedepth(true),
 	carpainthack(false),
-	blendmode(BLENDMODE::AUTO)
+	blendmode(BLENDMODE::DISABLED)
 {
 	shadermap.resize(SHADER_NONE, NULL);
 	MATHVECTOR <float, 3> front(1,0,0);

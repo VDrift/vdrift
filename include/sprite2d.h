@@ -108,10 +108,7 @@ public:
 		drawref.SetDiffuseMap(texture);
 		drawref.SetVertArray(&varray);
 		drawref.SetDrawOrder(draworder);
-		drawref.SetLit(false);
-		drawref.Set2D(true);
 		drawref.SetCull(false, false);
-		drawref.SetPartialTransparency(true);
 		drawref.SetColor(r,g,b,a);
 
 		//std::cout << "Sprite draworder: " << draworder << std::endl;
@@ -148,10 +145,7 @@ public:
 		drawref.SetDiffuseMap(texture2d);
 		drawref.SetVertArray(&varray);
 		drawref.SetDrawOrder(draworder);
-		drawref.SetLit(false);
-		drawref.Set2D(true);
 		drawref.SetCull(false, false);
-		drawref.SetPartialTransparency(true);
 		drawref.SetColor(r,g,b,a);
 		
 		return true;

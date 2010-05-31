@@ -893,7 +893,6 @@ void ConfigureDrawable(keyed_container <DRAWABLE>::handle & ref, SCENENODE & top
 		ref = topnode.GetDrawlist().normal_noblend.insert(DRAWABLE());
 		DRAWABLE & d = topnode.GetDrawlist().normal_noblend.get(ref);
 		d.SetColor(r,g,b,1);
-		d.SetLit(false);
 		d.SetDecal(true);
 	}
 }
