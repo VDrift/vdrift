@@ -814,8 +814,6 @@ void RENDER_INPUT_SCENE::SelectTexturing(DRAWABLE & forme, GLSTATEMANAGER & glst
 			if (shaders)
 			{
 				glstate.BindTexture2D(1, i->GetMiscMap1());
-				glstate.BindTexture2D(8, i->GetSelfIllumination() ? i->GetAdditiveMap1() : NULL);
-				glstate.BindTexture2D(7, i->GetSelfIllumination() ? i->GetAdditiveMap2() : NULL);
 			}
 			else
 			{

@@ -106,6 +106,7 @@ struct DRAWABLE_CONTAINER
 	CONTAINER <DRAWABLE> particle;
 	CONTAINER <DRAWABLE> nocamtrans_blend;
 	CONTAINER <DRAWABLE> nocamtrans_noblend;
+	CONTAINER <DRAWABLE> lights_emissive;
 	// don't forget to add new members to the ForEach, AppendTo, and GetByName functions
 	
 	template <typename T> 
@@ -122,34 +123,27 @@ struct DRAWABLE_CONTAINER
 		func(particle);
 		func(nocamtrans_blend);
 		func(nocamtrans_noblend);
+		func(lights_emissive);
 	}
 	
 	/// adds elements from the first drawable container to the second
 	template <template <typename UU> class CONTAINERU, bool use_transform>
 	void AppendTo(DRAWABLE_CONTAINER <CONTAINERU> & dest, const MATRIX4 <float> & transform)
 	{
-		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,CONTAINERU<DRAWABLE>,use_transform>
-			(twodim, dest.twodim, transform);
-		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,CONTAINERU<DRAWABLE>,use_transform>
-			(normal_noblend, dest.normal_noblend, transform);
-		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,CONTAINERU<DRAWABLE>,use_transform>
-			(normal_noblend_nolighting, dest.normal_noblend_nolighting, transform);
-		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,CONTAINERU<DRAWABLE>,use_transform>
-			(car_noblend, dest.car_noblend, transform);
-		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,CONTAINERU<DRAWABLE>,use_transform>
-			(normal_blend, dest.normal_blend, transform);
-		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,CONTAINERU<DRAWABLE>,use_transform>
-			(skybox_blend, dest.skybox_blend, transform);
-		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,CONTAINERU<DRAWABLE>,use_transform>
-			(skybox_noblend, dest.skybox_noblend, transform);
-		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,CONTAINERU<DRAWABLE>,use_transform>
-			(text, dest.text, transform);
-		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,CONTAINERU<DRAWABLE>,use_transform>
-			(particle, dest.particle, transform);
-		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,CONTAINERU<DRAWABLE>,use_transform>
-			(nocamtrans_blend, dest.nocamtrans_blend, transform);
-		DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,CONTAINERU<DRAWABLE>,use_transform>
-			(nocamtrans_noblend, dest.nocamtrans_noblend, transform);
+		#define ADDTOCONTAINER(x) DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,CONTAINERU<DRAWABLE>,use_transform> (x, dest.x, transform);
+		ADDTOCONTAINER(twodim);
+		ADDTOCONTAINER(normal_noblend);
+		ADDTOCONTAINER(normal_noblend_nolighting);
+		ADDTOCONTAINER(car_noblend);
+		ADDTOCONTAINER(normal_blend);
+		ADDTOCONTAINER(skybox_blend);
+		ADDTOCONTAINER(skybox_noblend);
+		ADDTOCONTAINER(text);
+		ADDTOCONTAINER(particle);
+		ADDTOCONTAINER(nocamtrans_blend);
+		ADDTOCONTAINER(nocamtrans_noblend);
+		ADDTOCONTAINER(lights_emissive);
+		#undef ADDTOCONTAINER
 	}
 	
 	/// this is slow, don't do it often
@@ -168,6 +162,7 @@ struct DRAWABLE_CONTAINER
 		TEXTIFY(particle);
 		TEXTIFY(nocamtrans_blend);
 		TEXTIFY(nocamtrans_noblend);
+		TEXTIFY(lights_emissive);
 		#undef TEXTIFY
 		return ref;
 	}

@@ -290,6 +290,8 @@ protected:
 	SCENENODE topnode;
 	keyed_container <DRAWABLE>::handle bodydraw;
 	keyed_container <DRAWABLE>::handle interiordraw;
+	keyed_container <DRAWABLE>::handle brakelights_emissive;
+	keyed_container <DRAWABLE>::handle reverselights_emissive;
 	keyed_container <DRAWABLE>::handle glassdraw;
 	keyed_container <SCENENODE>::handle bodynode;
 	MODEL_JOE03 bodymodel;
@@ -344,25 +346,6 @@ protected:
 	
 	float mz_nominalmax; //the nominal maximum Mz force, used to scale force feedback
 
-	/// take the parentnode, add a scenenode (if output_scenenode isn't yet valid), add a drawable to the
-	/// scenenode, load a model, load a texture, and set up the drawable with the model and texture.
-	/// the given TEXTURE textures will not be reloaded if they are already loaded
-	/// returns true if successful
-	bool LoadInto(
-		SCENENODE & parentnode,
-		keyed_container <SCENENODE>::handle & output_scenenode,
-		keyed_container <DRAWABLE>::handle & output_drawable,
-		const std::string & joefile,
-		MODEL_JOE03 & output_model,
-		TEXTUREMANAGER & textures,
-		const std::string & texfile,
-		const std::string & misc1texfile,
-		const std::string & texsize,
-		int anisotropy,
-		bool blend,
-		const MATHVECTOR <float, 3> & scale,
-		std::ostream & error_output);
-		
 	bool GenerateWheelMesh(
 		CONFIGFILE & carconf,
 		const CARTIRE<double> & tire,
@@ -391,9 +374,49 @@ protected:
 		const SOUNDBUFFERLIBRARY & soundbufferlibrary,
 		std::ostream & info_output,
 		std::ostream & error_output);
-		
-	keyed_container <DRAWABLE> & GetDrawlistNoBlend(SCENENODE & node) {return node.GetDrawlist().car_noblend;}
-	keyed_container <DRAWABLE> & GetDrawlistBlend(SCENENODE & node) {return node.GetDrawlist().normal_blend;}
+	
+	enum WHICHDRAWLIST
+	{
+		BLEND,
+		NOBLEND,
+		EMISSIVE
+	};
+	
+	/// take the parentnode, add a scenenode (if output_scenenode isn't yet valid), add a drawable to the
+	/// scenenode, load a model, load a texture, and set up the drawable with the model and texture.
+	/// the given TEXTURE textures will not be reloaded if they are already loaded
+	/// returns true if successful
+	bool LoadInto(
+		SCENENODE & parentnode,
+		keyed_container <SCENENODE>::handle & output_scenenode,
+		keyed_container <DRAWABLE>::handle & output_drawable,
+		const std::string & joefile,
+		MODEL_JOE03 & output_model,
+		TEXTUREMANAGER & textures,
+		const std::string & texfile,
+		const std::string & misc1texfile,
+		const std::string & texsize,
+		int anisotropy,
+		WHICHDRAWLIST whichdrawlist,
+		const MATHVECTOR <float, 3> & scale,
+		std::ostream & error_output);
+	
+	keyed_container <DRAWABLE> & GetDrawlist(SCENENODE & node, WHICHDRAWLIST which)
+	{
+		switch (which)
+		{
+			case BLEND:
+			return node.GetDrawlist().normal_blend;
+			
+			case NOBLEND:
+			return node.GetDrawlist().car_noblend;
+			
+			case EMISSIVE:
+			return node.GetDrawlist().lights_emissive;
+		};
+		assert(0);
+		return node.GetDrawlist().car_noblend;
+	}
 };
 
 #endif

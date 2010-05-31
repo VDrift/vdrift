@@ -33,12 +33,6 @@ public:
 	
 	const TEXTURE * GetMiscMap1() const {return misc_map1.get();}
 	void SetMiscMap1(TEXTUREPTR value) {misc_map1 = value;}
-
-	const TEXTURE * GetAdditiveMap1() const {return (additive1 ? additive_map1.get() : NULL);}
-	void SetAdditiveMap1(TEXTUREPTR value) {additive_map1 = value;}
-	
-	const TEXTURE * GetAdditiveMap2() const {return (additive2 ? additive_map2.get() : NULL);}
-	void SetAdditiveMap2(TEXTUREPTR value) {additive_map2 = value;}
 	
 	const VERTEXARRAY * GetVertArray() const {return vert_array;}
 	void SetVertArray(const VERTEXARRAY* value) {vert_array = value;}
@@ -89,42 +83,30 @@ public:
 	/// used for so called "vertical tracking skyboxes"
 	bool GetVerticalTrack() const {return vertical_track;}
 	void SetVerticalTrack(bool value) {vertical_track = value;}
-	
-	/// when true, the additive maps will be applied
-	bool GetSelfIllumination() const {return self_illumination;}
-	void SetSelfIllumination(bool value) {self_illumination = value;}
 
 	/// true for normal objects; if false camera transform and orientation aren't applied when the object is rendered
 	bool GetCameraTransformEnable() const {return cameratransform;}
 	void SetCameraTransformEnable(bool value) {cameratransform = value;}
 	
-	void EnableAdditiveMap1(bool value) {if(additive_map1) additive1 = value;}
-	void EnableAdditiveMap2(bool value) {if(additive_map2) additive2 = value;}
-	
 private:
-	TEXTUREPTR diffuse_map; //ok
-	TEXTUREPTR misc_map1; //ok
-	TEXTUREPTR additive_map1; //remove: use separate geometry in an emmissive drawable group
-	TEXTUREPTR additive_map2; //remove: use separate geometry in an emmissive drawable group
-	std::vector <int> list_ids; //ok
-	const VERTEXARRAY * vert_array; //ok
-	std::vector <MATHVECTOR <float, 3> > lineverts; //ok
-	float linesize; //ok
-	MATRIX4 <float> transform; //ok
-	MATHVECTOR <float, 3> objcenter; //ok
-	float radius; //ok
-	float r, g, b, a; //ok
-	float draw_order; //ok
-	bool decal; //ok
-	bool drawenabled; //ok
-	bool cull; //ok
-	bool cull_front; //ok
-	bool skybox; //ok
-	bool vertical_track; //ok
-	bool self_illumination; //remove: use separate geometry in an emmissive drawable group
-	bool cameratransform; //ok
-	bool additive1; //remove: use separate geometry in an emmissive drawable group
-	bool additive2; //remove: use separate geometry in an emmissive drawable group
+	TEXTUREPTR diffuse_map;
+	TEXTUREPTR misc_map1;
+	std::vector <int> list_ids;
+	const VERTEXARRAY * vert_array;
+	std::vector <MATHVECTOR <float, 3> > lineverts;
+	float linesize;
+	MATRIX4 <float> transform;
+	MATHVECTOR <float, 3> objcenter;
+	float radius;
+	float r, g, b, a;
+	float draw_order;
+	bool decal;
+	bool drawenabled;
+	bool cull;
+	bool cull_front;
+	bool skybox;
+	bool vertical_track;
+	bool cameratransform;
 	
 	void Init()
 	{
@@ -141,10 +123,7 @@ private:
 		cull_front = false;
 		skybox = false;
 		vertical_track = false;
-		self_illumination = false;
 		cameratransform = true;
-		additive1 = false;
-		additive2 = false;
 	}
 };
 
