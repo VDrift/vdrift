@@ -37,6 +37,13 @@ class FBTEXTURE : public TEXTURE_INTERFACE
 			NEGZ = GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
 		};
 		
+		enum FORMAT
+		{
+			RGB8 = GL_RGB,
+			RGBA8 = GL_RGBA,
+			DEPTH24 = GL_DEPTH_COMPONENT24
+		};
+		
 		FBTEXTURE() : 
 			fbtexture(0),
 			renderbuffer_multisample(0),
@@ -45,17 +52,15 @@ class FBTEXTURE : public TEXTURE_INTERFACE
 			sizew(0),
 			sizeh(0),
 			texture_target(NORMAL),
-			depth(false),
-			alpha(false),
 			mipmap(false),
 			multisample(0),
 			texture_attachment(GL_COLOR_ATTACHMENT0),
-			texture_format1(0),
+			texture_format(RGB8),
 			cur_side(POSX),
 			depthcomparisonenabled(true)
 			{}
 		~FBTEXTURE() {DeInit();}
-		void Init(GLSTATEMANAGER & glstate, int sizex, int sizey, TARGET target, bool newdepth, bool filternearest, bool newalpha, bool usemipmap, std::ostream & error_output, int newmultisample = 0, bool newdepthcomparisonenabled = true);
+		void Init(GLSTATEMANAGER & glstate, int sizex, int sizey, TARGET target, FORMAT newformat, bool filternearest, bool usemipmap, std::ostream & error_output, int newmultisample = 0, bool newdepthcomparisonenabled = true);
 		void DeInit();
 		virtual void Activate() const;
 		virtual void Deactivate() const;
@@ -77,12 +82,10 @@ class FBTEXTURE : public TEXTURE_INTERFACE
 		int sizew, sizeh;
 		
 		TARGET texture_target;
-		bool depth;
-		bool alpha;
 		bool mipmap;
 		int multisample;
 		int texture_attachment;
-		int texture_format1;
+		FORMAT texture_format;
 		CUBE_SIDE cur_side;
 		bool depthcomparisonenabled;
 };

@@ -35,7 +35,7 @@ void FBOBJECT::Init(GLSTATEMANAGER & glstate, std::vector <FBTEXTURE*> newtextur
 	
 	for (std::vector <FBTEXTURE*>::iterator i = textures.begin(); i != textures.end(); i++)
 	{
-		if ((*i)->depth)
+		if ((*i)->texture_format == FBTEXTURE::DEPTH24)
 			depth_textures.push_back(*i);
 		else
 			color_textures.push_back(*i);
@@ -181,7 +181,7 @@ void FBOBJECT::Init(GLSTATEMANAGER & glstate, std::vector <FBTEXTURE*> newtextur
 			// need a separate multisample color buffer
 			glGenRenderbuffers(1, &(*i)->renderbuffer_multisample);
 			glBindRenderbuffer(GL_RENDERBUFFER, (*i)->renderbuffer_multisample);
-			glRenderbufferStorageMultisample(GL_RENDERBUFFER, multisample, (*i)->texture_format1, width, height);
+			glRenderbufferStorageMultisample(GL_RENDERBUFFER, multisample, (*i)->texture_format, width, height);
 			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0+count, GL_RENDERBUFFER, (*i)->renderbuffer_multisample);
 			
 			if (verbose) error_output << "INFO: generating separate multisample color buffer " << count << std::endl;

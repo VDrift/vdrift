@@ -5,10 +5,8 @@
 #include <sstream>
 #include <string>
 
-void FBTEXTURE::Init(GLSTATEMANAGER & glstate, int sizex, int sizey, TARGET target, bool newdepth, bool filternearest, bool newalpha, bool usemipmap, std::ostream & error_output, int newmultisample, bool newdepthcomparisonenabled)
+void FBTEXTURE::Init(GLSTATEMANAGER & glstate, int sizex, int sizey, TARGET target, FORMAT newformat, bool filternearest, bool usemipmap, std::ostream & error_output, int newmultisample, bool newdepthcomparisonenabled)
 {
-	assert(!(newalpha && newdepth)); //not allowed; depth maps don't have alpha
-	
 	assert(!attached);
 	
 	OPENGL_UTILITY::CheckForOpenGLErrors("FBTEX init start", error_output);
@@ -20,10 +18,9 @@ void FBTEXTURE::Init(GLSTATEMANAGER & glstate, int sizex, int sizey, TARGET targ
 		OPENGL_UTILITY::CheckForOpenGLErrors("FBTEX deinit", error_output);
 	}
 	
-	depth = newdepth;
 	depthcomparisonenabled = newdepthcomparisonenabled;
 	
-	alpha = newalpha;
+	texture_format = newformat;
 	
 	inited = true;
 	
@@ -43,19 +40,34 @@ void FBTEXTURE::Init(GLSTATEMANAGER & glstate, int sizex, int sizey, TARGET targ
 	{
 		assert(GLEW_ARB_texture_rectangle);
 	}
-	texture_format1 = GL_RGB;
+	
+	int texture_format1 = GL_RGB;
 	int texture_format2(GL_RGB);
 	int texture_format3(GL_UNSIGNED_BYTE);
-	if (depth)
+	
+	switch (texture_format)
 	{
+		case RGB8:
+		texture_format1 = GL_RGB;
+		texture_format2 = GL_RGB;
+		texture_format3 = GL_UNSIGNED_BYTE;
+		break;
+		
+		case RGBA8:
+		texture_format1 = GL_RGBA;
+		texture_format2 = GL_RGBA;
+		texture_format3 = GL_UNSIGNED_BYTE;
+		break;
+		
+		case DEPTH24:
 		texture_format1 = GL_DEPTH_COMPONENT24;
 		texture_format2 = GL_DEPTH_COMPONENT;
 		texture_format3 = GL_UNSIGNED_INT;
-	}
-	else if (alpha)
-	{
-		texture_format1 = GL_RGBA;
-		texture_format2 = GL_RGBA;
+		break;
+		
+		default:
+		assert(0);
+		break;
 	}
 	
 	//initialize the texture
@@ -104,7 +116,7 @@ void FBTEXTURE::Init(GLSTATEMANAGER & glstate, int sizex, int sizey, TARGET targ
 		glTexParameteri(texture_target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	}
 	
-	if (depth)
+	if (texture_format2 == GL_DEPTH_COMPONENT)
 	{
 		glTexParameteri(texture_target, GL_DEPTH_TEXTURE_MODE, GL_LUMINANCE);
 		glTexParameteri(texture_target, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
@@ -142,49 +154,6 @@ void FBTEXTURE::Activate() const
 	
 	glBindTexture(texture_target, fbtexture);
 }
-
-/*void FBTEXTURE::Screenshot(GLSTATEMANAGER & glstate, const std::string & filename, std::ostream & error_output)
-{
-	if (depth)
-	{
-		error_output << "FBTEXTURE::Screenshot not supported for depth FBOs" << std::endl;
-		return;
-	}
-	
-	SDL_Surface *temp = NULL;
-	unsigned char *pixels;
-	int i;
-
-	temp = SDL_CreateRGBSurface(SDL_SWSURFACE, sizew, sizeh, 24,
-#if SDL_BYTEORDER == SDL_LIL_ENDIAN
-		0x000000FF, 0x0000FF00, 0x00FF0000, 0
-#else
-		0x00FF0000, 0x0000FF00, 0x000000FF, 0
-#endif
-		);
-
-	assert(temp);
-
-	pixels = (unsigned char *) malloc(3 * sizew * sizeh);
-	assert(pixels);
-
-	if (single_sample_FBO_for_multisampling)
-		single_sample_FBO_for_multisampling->Begin(glstate, error_output);
-	else
-		Begin(glstate, error_output);
-	glReadPixels(0, 0, sizew, sizeh, GL_RGB, GL_UNSIGNED_BYTE, pixels);
-	if (single_sample_FBO_for_multisampling)
-		single_sample_FBO_for_multisampling->End(error_output);
-	else
-		End(error_output);
-
-	for (i=0; i<sizeh; i++)
-		memcpy(((char *) temp->pixels) + temp->pitch * i, pixels + 3*sizew * (sizeh-i-1), sizew*3);
-	free(pixels);
-
-	SDL_SaveBMP(temp, filename.c_str());
-	SDL_FreeSurface(temp);
-}*/
 
 void FBTEXTURE::Deactivate() const
 {

@@ -403,6 +403,20 @@ bool GRAPHICS_SDLGL::LoadShader(const std::string & shaderpath, const std::strin
 	return success;
 }
 
+FBTEXTURE::FORMAT TextureFormatFromString(const std::string & format)
+{
+	if (format == "depth" || format == "depthshadow")
+		return FBTEXTURE::DEPTH24;
+	else if (format == "RGBA")
+		return FBTEXTURE::RGBA8;
+	else if (format == "RGB")
+		return FBTEXTURE::RGB8;
+	else
+		assert(0);
+	
+	return FBTEXTURE::RGB8;
+}
+
 void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream & info_output, std::ostream & error_output)
 {
 	bool shader_load_success = true;
@@ -525,9 +539,8 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 							   i->width.GetSize(w),
 							   i->height.GetSize(h),
 							   type,
-							   (i->format == "depth") || (i->format == "depthshadow"),
+							   TextureFormatFromString(i->format),
 							   (i->filter == "nearest"),
-							   (i->format == "RGBA"),
 							   i->mipmap,
 							   error_output,
 							   fbms,
