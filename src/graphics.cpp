@@ -44,6 +44,18 @@ using std::vector;
 //#define _SHADOWMAP_DEBUG_
 //#define _DYNAMIC_REFLECT_DEBUG_
 
+void ReportOnce(const void * id, const std::string & message, std::ostream & output)
+{
+	static std::map <const void*, std::string> prev_messages;
+	
+	std::map <const void*, std::string>::iterator i = prev_messages.find(id);
+	if (i == prev_messages.end() || i->second != message)
+	{
+		prev_messages[id] = message;
+		output << message << std::endl;
+	}
+}
+
 void GRAPHICS_SDLGL::Init(const std::string shaderpath, const std::string & windowcaption,
 	unsigned int resx, unsigned int resy, unsigned int bpp,
 	unsigned int depthbpp, bool fullscreen, bool shaders,
@@ -133,27 +145,27 @@ void GRAPHICS_SDLGL::Init(const std::string shaderpath, const std::string & wind
 	if (!GLEW_ARB_multitexture)
 	{
 		info_output << "Your video card doesn't support multitexturing.  Disabling shaders." << endl;
-		DisableShaders();
+		DisableShaders(shaderpath, error_output);
 	}
 	else if (!GLEW_ARB_texture_cube_map)
 	{
 		info_output << "Your video card doesn't support cube maps.  Disabling shaders." << endl;
-		DisableShaders();
+		DisableShaders(shaderpath, error_output);
 	}
 	else if (!GLEW_ARB_framebuffer_object)
 	{
 		info_output << "Your video card doesn't support framebuffer objects.  Disabling shaders." << endl;
-		DisableShaders();
+		DisableShaders(shaderpath, error_output);
 	}
 	else if (!GLEW_ARB_draw_buffers)
 	{
 		info_output << "Your video card doesn't support multiple draw buffers.  Disabling shaders." << endl;
-		DisableShaders();
+		DisableShaders(shaderpath, error_output);
 	}
 	else if (!GL_ARB_texture_non_power_of_two)
 	{
 		info_output << "Your video card doesn't support non-power-of-two textures.  Disabling shaders." << endl;
-		DisableShaders();
+		DisableShaders(shaderpath, error_output);
 	}
 	else
 	{
@@ -174,7 +186,7 @@ void GRAPHICS_SDLGL::Init(const std::string shaderpath, const std::string & wind
 		else
 		{
 			info_output << "Disabling shaders" << endl;
-			DisableShaders();
+			DisableShaders(shaderpath, error_output);
 		}
 	}
 	
@@ -516,7 +528,11 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 		{
 			if (i->conditions.Satisfied(conditions))
 			{
-				assert(texture_outputs.find(i->name) == texture_outputs.end()); //TODO: add a friendly error message
+				if (texture_outputs.find(i->name) != texture_outputs.end())
+				{
+					error_output << "Detected duplicate output name in render config: " << i->name << ", only the first output will be constructed." << std::endl;
+					continue;
+				}
 				
 				if (i->type == "framebuffer")
 				{
@@ -580,7 +596,11 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 						}
 					}
 					
-					assert(!fbotex.empty()); //TODO: replace with friendly error message
+					if (fbotex.empty())
+					{
+						error_output << "None of these outputs are active: " << error_output << ", this pass will not have an output." << std::endl;
+						continue;
+					}
 					
 					// initialize fbo
 					FBOBJECT & fbo = render_outputs[outname].RenderToFBO();
@@ -592,7 +612,7 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 	else
 	{
 		error_output << "Disabling shaders due to shader loading error" << endl;
-		DisableShaders();
+		DisableShaders(shaderpath, error_output);
 	}
 }
 
@@ -603,7 +623,7 @@ bool GRAPHICS_SDLGL::ReloadShaders(const std::string & shaderpath, std::ostream 
 	return GetUsingShaders();
 }
 
-void GRAPHICS_SDLGL::DisableShaders()
+void GRAPHICS_SDLGL::DisableShaders(const std::string & shaderpath, std::ostream & error_output)
 {
 	shadermap.clear();
 	using_shaders = false;
@@ -612,6 +632,19 @@ void GRAPHICS_SDLGL::DisableShaders()
 	{
 		glUseProgramObjectARB(0);
 	}
+	
+	// load non-shader configuration
+	config = GRAPHICS_CONFIG();
+	std::string rcpath = shaderpath+"/render.conf.noshaders";
+	if (!config.Load(rcpath, error_output))
+	{
+		error_output << "Error loading non-shader render configuration file: " << rcpath << std::endl;
+		
+		// uh oh, now we're really boned
+		assert(0);
+	}
+	
+	render_outputs["framebuffer"].RenderToFramebuffer();
 }
 
 void GRAPHICS_SDLGL::EndScene(std::ostream & error_output)
@@ -849,30 +882,188 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 		renderscene.SetReflection(&static_reflection);
 	renderscene.SetAmbient(static_ambient);
 	renderscene.SetContrast(contrast);
+	postprocess.SetContrast(contrast);
 
 	//sort the two dimentional drawlist so we get correct ordering
 	std::sort(dynamic_drawlist.twodim.begin(),dynamic_drawlist.twodim.end(),&SortDraworder);
 	
-	//shader path
-	if (using_shaders)
+	//do fast culling queries for static geometry, but only where necessary
+	//for each pass, we have which camera and which draw layer to use
+	//we want to do culling for each unique camera and draw layer combination
+	//use camera/layer as the unique key
+	std::map <std::string, PTRVECTOR <DRAWABLE> > culled_static_drawlist;
+	for (std::vector <GRAPHICS_CONFIG_PASS>::const_iterator i = config.passes.begin(); i != config.passes.end(); i++)
 	{
-		//do fast culling queries for static geometry, but only where necessary
-		//for each pass, we have which camera and which draw layer to use
-		//we want to do culling for each unique camera and draw layer combination
-		//use camera/layer as the unique key
-		std::map <std::string, PTRVECTOR <DRAWABLE> > culled_static_drawlist;
-		for (std::vector <GRAPHICS_CONFIG_PASS>::const_iterator i = config.passes.begin(); i != config.passes.end(); i++)
+		assert(!i->draw.empty());
+		if (i->draw.back() != "postprocess" && i->conditions.Satisfied(conditions))
 		{
-			assert(!i->draw.empty());
-			if (i->draw.back() != "postprocess" && i->conditions.Satisfied(conditions))
+			for (std::vector <std::string>::const_iterator d = i->draw.begin(); d != i->draw.end(); d++)
 			{
+				// determine if we're dealing with a cubemap
+				render_output_map_type::iterator oi = render_outputs.find(i->output);
+				
+				if (oi == render_outputs.end())
+				{
+					ReportOnce(&*i, "Render output "+i->output+" couldn't be found", error_output);
+					continue;
+				}
+				
+				bool cubemap = (oi->second.IsFBO() && oi->second.RenderToFBO().IsCubemap());
+				
+				std::string cameraname = i->camera;
+				const int cubesides = cubemap ? 6 : 1;
+				
+				for (int cubeside = 0; cubeside < cubesides; cubeside++)
+				{
+					if (cubemap)
+					{
+						// build sub-camera
+						
+						// build a name for the sub camera
+						{
+							std::stringstream converter;
+							converter << i->camera << "_cubeside" << cubeside;
+							cameraname = converter.str();
+						}
+						
+						// get the base camera
+						camera_map_type::iterator bci = cameras.find(i->camera);
+						
+						if (bci == cameras.end())
+						{
+							ReportOnce(&*i, "Camera "+i->camera+" couldn't be found", error_output);
+							continue;
+						}
+						
+						// create our sub-camera
+						GRAPHICS_CAMERA & cam = cameras[cameraname];
+						cam = bci->second;
+						
+						// set the sub-camera's properties
+						cam.orient = GetCubeSideOrientation(cubeside, cam.orient, error_output);
+						cam.fov = 90;
+						assert(oi->second.IsFBO());
+						const FBOBJECT & fbo = oi->second.RenderToFBO();
+						cam.w = fbo.GetWidth();
+						cam.h = fbo.GetHeight();
+					}
+					
+					std::string key = BuildKey(cameraname, *d);
+					if (i->cull)
+					{
+						camera_map_type::iterator ci = cameras.find(cameraname);
+						
+						if (ci == cameras.end())
+						{
+							ReportOnce(&*i, "Camera "+cameraname+" couldn't be found", error_output);
+							continue;
+						}
+						
+						GRAPHICS_CAMERA & cam = ci->second;
+						if (culled_static_drawlist.find(key) == culled_static_drawlist.end())
+						{
+							if (cam.orthomode)
+								renderscene.SetOrtho(cam.orthomin, cam.orthomax);
+							else
+								renderscene.DisableOrtho();
+							FRUSTUM frustum = renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h);
+							reseatable_reference <AABB_SPACE_PARTITIONING_NODE_ADAPTER <DRAWABLE> > container =
+								static_drawlist.GetDrawlist().GetByName(*d);
+							
+							if (!container)
+							{
+								ReportOnce(&*i, "Drawable container "+*d+" couldn't be found", error_output);
+								continue;
+							}
+							
+							container->Query(frustum, culled_static_drawlist[key]);
+							renderscene.DisableOrtho();
+						}
+					}
+					else
+					{
+						reseatable_reference <AABB_SPACE_PARTITIONING_NODE_ADAPTER <DRAWABLE> > container =
+							static_drawlist.GetDrawlist().GetByName(*d);
+							
+						if (!container)
+						{
+							ReportOnce(&*i, "Drawable container "+*d+" couldn't be found", error_output);
+							continue;
+						}
+						
+						container->Query(AABB<float>::INTERSECT_ALWAYS(), culled_static_drawlist[key]);
+					}
+				}
+			}
+		}
+	}
+	
+	//construct light position
+	MATHVECTOR <float, 3> lightposition(0,0,1);
+	(-lightdirection).RotateVector(lightposition);
+	renderscene.SetSunDirection(lightposition);
+	postprocess.SetSunDirection(lightposition);
+	
+	// draw the passes
+	for (std::vector <GRAPHICS_CONFIG_PASS>::const_iterator i = config.passes.begin(); i != config.passes.end(); i++)
+	{
+		if (i->conditions.Satisfied(conditions))
+		{
+			// convert "inputs" into a vector form
+			std::vector <TEXTURE_INTERFACE*> input_textures;
+			for (std::map <unsigned int, std::string>::const_iterator t = i->inputs.tu.begin(); t != i->inputs.tu.end(); t++)
+			{
+				unsigned int tuid = t->first;
+				
+				unsigned int cursize = input_textures.size();
+				for (unsigned int extra = cursize; extra < tuid; extra++)
+					input_textures.push_back(NULL);
+				
+				std::string texname = t->second;
+				
+				// quietly ignore invalid names
+				// this allows us to specify outputs that are only present for certain conditions
+				// and then always specify those outputs as inputs to later stages, and have
+				// them be ignored if the conditions aren't met
+				if (texture_inputs.find(texname) != texture_inputs.end())
+				{
+					input_textures.push_back(&*texture_inputs[texname]);
+				}
+				else
+				{
+					//TODO: decide if i want to do fancier error detection here to catch typos in render.conf
+					//std::cout << "warning: " << texname << " not found" << std::endl;
+					input_textures.push_back(NULL);
+				}
+			}
+			
+			assert(!i->draw.empty());
+			if (i->draw.back() == "postprocess")
+			{
+				postprocess.SetDepthMode(DepthModeFromString(i->depthtest));
+				postprocess.SetWriteDepth(i->write_depth);
+				postprocess.SetClear(i->clear_color, i->clear_depth);
+				postprocess.SetBlendMode(BlendModeFromString(i->blendmode));
+				RenderPostProcess(i->shader, input_textures, render_outputs[i->output], i->write_color, i->write_alpha, error_output);
+			}
+			else
+			{
+				renderscene.SetBlendMode(BlendModeFromString(i->blendmode));
+				renderscene.SetDepthMode(DepthModeFromString(i->depthtest));
+				
 				for (std::vector <std::string>::const_iterator d = i->draw.begin(); d != i->draw.end(); d++)
 				{
-					// determine if we're dealing with a cubemap
+					// setup render output
 					render_output_map_type::iterator oi = render_outputs.find(i->output);
-					assert(oi != render_outputs.end()); //TODO: replace with friendly error message
-					bool cubemap = (oi->second.IsFBO() && oi->second.RenderToFBO().IsCubemap());
 					
+					if (oi == render_outputs.end())
+					{
+						ReportOnce(&*i, "Render output "+i->output+" couldn't be found", error_output);
+						continue;
+					}
+					
+					// handle the cubemap case
+					bool cubemap = (oi->second.IsFBO() && oi->second.RenderToFBO().IsCubemap());
 					std::string cameraname = i->camera;
 					const int cubesides = cubemap ? 6 : 1;
 					
@@ -880,245 +1071,99 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 					{
 						if (cubemap)
 						{
-							// build sub-camera
-							
 							// build a name for the sub camera
-							{
-								std::stringstream converter;
-								converter << i->camera << "_cubeside" << cubeside;
-								cameraname = converter.str();
-							}
+							std::stringstream converter;
+							converter << i->camera << "_cubeside" << cubeside;
+							cameraname = converter.str();
 							
-							// get the base camera
-							camera_map_type::iterator bci = cameras.find(i->camera);
-							assert(bci != cameras.end()); //TODO: replace with friendly error message
-							
-							// create our sub-camera
-							GRAPHICS_CAMERA & cam = cameras[cameraname];
-							cam = bci->second;
-							
-							// set the sub-camera's properties
-							cam.orient = GetCubeSideOrientation(cubeside, cam.orient, error_output);
-							cam.fov = 90;
-							assert(oi->second.IsFBO());
-							const FBOBJECT & fbo = oi->second.RenderToFBO();
-							cam.w = fbo.GetWidth();
-							cam.h = fbo.GetHeight();
+							// attach the correct cube side on the render output
+							AttachCubeSide(cubeside, oi->second.RenderToFBO(), error_output);
 						}
 						
-						std::string key = BuildKey(cameraname, *d);
-						if (i->cull)
+						// setup camera
+						camera_map_type::iterator ci = cameras.find(cameraname);
+						
+						if (ci == cameras.end())
 						{
-							camera_map_type::iterator ci = cameras.find(cameraname);
-							assert(ci != cameras.end()); //TODO: replace with friendly error message
-							GRAPHICS_CAMERA & cam = ci->second;
-							if (culled_static_drawlist.find(key) == culled_static_drawlist.end())
+							ReportOnce(&*i, "Camera "+cameraname+" couldn't be found", error_output);
+							continue;
+						}
+						
+						GRAPHICS_CAMERA & cam = ci->second;
+						if (cam.orthomode)
+							renderscene.SetOrtho(cam.orthomin, cam.orthomax);
+						else
+							renderscene.DisableOrtho();
+						float view_distance = cam.view_distance;
+						if (!i->cull) //override view distance to a very large value if culling is off
+							view_distance = 10000.f;
+						renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, view_distance, cam.w, cam.h);
+						postprocess.SetCameraInfo(cam.pos, cam.orient, cam.fov, view_distance, cam.w, cam.h); //so we have this later if we want
+						
+						// setup shader
+						if (using_shaders)
+						{
+							shader_map_type::iterator si = shadermap.find(i->shader);
+							if (si == shadermap.end())
 							{
-								if (cam.orthomode)
-									renderscene.SetOrtho(cam.orthomin, cam.orthomax);
-								else
-									renderscene.DisableOrtho();
-								FRUSTUM frustum = renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h);
-								reseatable_reference <AABB_SPACE_PARTITIONING_NODE_ADAPTER <DRAWABLE> > container =
-									static_drawlist.GetDrawlist().GetByName(*d);
-								assert(container); //TODO: replace with friendly error message
-								container->Query(frustum, culled_static_drawlist[key]);
-								renderscene.DisableOrtho();
+								ReportOnce(&*i, "Shader "+i->shader+" couldn't be found", error_output);
+								continue;
 							}
+							renderscene.SetDefaultShader(si->second);
+						}
+						
+						// setup other flags
+						if (d == i->draw.begin())
+							renderscene.SetClear(i->clear_color, i->clear_depth);
+						else
+							renderscene.SetClear(false, false);
+						renderscene.SetWriteColor(i->write_color);
+						renderscene.SetWriteAlpha(i->write_alpha);
+						renderscene.SetWriteDepth(i->write_depth);
+						
+						// setup dynamic drawlist
+						reseatable_reference <PTRVECTOR <DRAWABLE> > container = dynamic_drawlist.GetByName(*d);
+						
+						if (!container)
+						{
+							ReportOnce(&*i, "Drawable container "+*d+" couldn't be found", error_output);
+							continue;
+						}
+						
+						// setup static drawlist
+						std::map <std::string, PTRVECTOR <DRAWABLE> >::iterator container_static =
+									culled_static_drawlist.find(BuildKey(cameraname,*d));
+						
+						if (container_static == culled_static_drawlist.end())
+						{
+							ReportOnce(&*i, "Couldn't find culled static drawlist for camera/draw combination: "+BuildKey(cameraname,*d), error_output);
+							continue;
+						}
+						
+						OPENGL_UTILITY::CheckForOpenGLErrors("render setup", error_output);
+						
+						// car paint hack for non-shader path
+						if (!using_shaders && (*d == "nocamtrans_noblend" || *d == "car_noblend"))
+						{
+							renderscene.SetCarPaintHack(true);
 						}
 						else
-						{
-							reseatable_reference <AABB_SPACE_PARTITIONING_NODE_ADAPTER <DRAWABLE> > container =
-								static_drawlist.GetDrawlist().GetByName(*d);
-							assert(container); //TODO: replace with friendly error message
-							container->Query(AABB<float>::INTERSECT_ALWAYS(), culled_static_drawlist[key]);
-						}
+							renderscene.SetCarPaintHack(false);
+						
+						// render
+						RenderDrawlists(*container,
+											container_static->second,
+											input_textures,
+											renderscene,
+											oi->second,
+											error_output);
+						
+						// cleanup
+						renderscene.DisableOrtho();
 					}
 				}
 			}
 		}
-		
-		//construct light position
-		MATHVECTOR <float, 3> lightposition(0,0,1);
-		(-lightdirection).RotateVector(lightposition);
-		renderscene.SetSunDirection(lightposition);
-		postprocess.SetSunDirection(lightposition);
-		
-		// draw the passes
-		for (std::vector <GRAPHICS_CONFIG_PASS>::const_iterator i = config.passes.begin(); i != config.passes.end(); i++)
-		{
-			if (i->conditions.Satisfied(conditions))
-			{
-				// convert "inputs" into a vector form
-				std::vector <TEXTURE_INTERFACE*> input_textures;
-				for (std::map <unsigned int, std::string>::const_iterator t = i->inputs.tu.begin(); t != i->inputs.tu.end(); t++)
-				{
-					unsigned int tuid = t->first;
-					
-					unsigned int cursize = input_textures.size();
-					for (unsigned int extra = cursize; extra < tuid; extra++)
-						input_textures.push_back(NULL);
-					
-					std::string texname = t->second;
-					
-					// quietly ignore invalid names
-					// this allows us to specify outputs that are only present for certain conditions
-					// and then always specify those outputs as inputs to later stages, and have
-					// them be ignored if the conditions aren't met
-					if (texture_inputs.find(texname) != texture_inputs.end())
-					{
-						input_textures.push_back(&*texture_inputs[texname]);
-					}
-					else
-					{
-						//TODO: decide if i want to do fancier error detection here to catch typos in render.conf
-						//std::cout << "warning: " << texname << " not found" << std::endl;
-						input_textures.push_back(NULL);
-					}
-				}
-				
-				assert(!i->draw.empty());
-				if (i->draw.back() == "postprocess")
-				{
-					postprocess.SetDepthMode(DepthModeFromString(i->depthtest));
-					postprocess.SetWriteDepth(i->write_depth);
-					postprocess.SetClear(i->clear_color, i->clear_depth);
-					postprocess.SetBlendMode(BlendModeFromString(i->blendmode));
-					RenderPostProcess(i->shader, input_textures, render_outputs[i->output], i->write_color, i->write_alpha, error_output);
-				}
-				else
-				{
-					renderscene.SetBlendMode(BlendModeFromString(i->blendmode));
-					renderscene.SetDepthMode(DepthModeFromString(i->depthtest));
-					
-					for (std::vector <std::string>::const_iterator d = i->draw.begin(); d != i->draw.end(); d++)
-					{
-						// setup render output
-						render_output_map_type::iterator oi = render_outputs.find(i->output);
-						assert(oi != render_outputs.end()); //TODO: replace with friendly error message
-						
-						// handle the cubemap case
-						bool cubemap = (oi->second.IsFBO() && oi->second.RenderToFBO().IsCubemap());
-						std::string cameraname = i->camera;
-						const int cubesides = cubemap ? 6 : 1;
-						
-						for (int cubeside = 0; cubeside < cubesides; cubeside++)
-						{
-							if (cubemap)
-							{
-								// build a name for the sub camera
-								std::stringstream converter;
-								converter << i->camera << "_cubeside" << cubeside;
-								cameraname = converter.str();
-								
-								// attach the correct cube side on the render output
-								AttachCubeSide(cubeside, oi->second.RenderToFBO(), error_output);
-							}
-							
-							// setup camera
-							camera_map_type::iterator ci = cameras.find(cameraname);
-							assert(ci != cameras.end()); //TODO: replace with friendly error message
-							GRAPHICS_CAMERA & cam = ci->second;
-							if (cam.orthomode)
-								renderscene.SetOrtho(cam.orthomin, cam.orthomax);
-							else
-								renderscene.DisableOrtho();
-							float view_distance = cam.view_distance;
-							if (!i->cull) //override view distance to a very large value if culling is off
-								view_distance = 10000.f;
-							renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, view_distance, cam.w, cam.h);
-							postprocess.SetCameraInfo(cam.pos, cam.orient, cam.fov, view_distance, cam.w, cam.h); //so we have this later if we want
-							
-							// setup shader
-							shader_map_type::iterator si = shadermap.find(i->shader);
-							assert(si != shadermap.end()); //TODO: replace with friendly error message
-							renderscene.SetDefaultShader(si->second);
-							
-							// setup other flags
-							if (d == i->draw.begin())
-								renderscene.SetClear(i->clear_color, i->clear_depth);
-							else
-								renderscene.SetClear(false, false);
-							renderscene.SetWriteColor(i->write_color);
-							renderscene.SetWriteAlpha(i->write_alpha);
-							renderscene.SetWriteDepth(i->write_depth);
-							
-							// setup dynamic drawlist
-							reseatable_reference <PTRVECTOR <DRAWABLE> > container = dynamic_drawlist.GetByName(*d);
-							assert(container); //TODO: replace with friendly error message
-							
-							// setup static drawlist
-							std::map <std::string, PTRVECTOR <DRAWABLE> >::iterator container_static =
-										culled_static_drawlist.find(BuildKey(cameraname,*d));
-							assert(container_static != culled_static_drawlist.end()); //TODO: replace with friendly error message
-							
-							OPENGL_UTILITY::CheckForOpenGLErrors("render setup", error_output);
-							
-							// render
-							RenderDrawlists(*container,
-												container_static->second,
-												input_textures,
-												renderscene,
-												oi->second,
-												error_output);
-							
-							// cleanup
-							renderscene.DisableOrtho();
-						}
-					}
-				}
-			}
-		}
-	}
-	else //non-shader path
-	{
-		GRAPHICS_CAMERA & cam = cameras["default"];
-		renderscene.DisableOrtho();
-		renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h);
-		
-		//do fast culling for the normal camera frustum
-		FRUSTUM normalcam = renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h);
-		DRAWABLE_CONTAINER <PTRVECTOR> normalcam_static_drawlist;
-		static_drawlist.GetDrawlist().normal_noblend.Query(normalcam, normalcam_static_drawlist.normal_noblend);
-		//std::cout << "Fast cull from " << static_drawlist.GetDrawlist().normal_noblend.size() << " to " << normalcam_static_drawlist.normal_noblend.size() << std::endl;
-		static_drawlist.GetDrawlist().normal_blend.Query(normalcam, normalcam_static_drawlist.normal_blend);
-		//note that all skybox objects go in, no frustum culling for them
-		static_drawlist.GetDrawlist().skybox_blend.Query(AABB<float>::INTERSECT_ALWAYS(), normalcam_static_drawlist.skybox_blend);
-		static_drawlist.GetDrawlist().skybox_noblend.Query(AABB<float>::INTERSECT_ALWAYS(), normalcam_static_drawlist.skybox_noblend);
-		
-		RENDER_OUTPUT framebuffer;
-		framebuffer.RenderToFramebuffer();
-		
-		// render skybox
-		renderscene.SetClear(false, true);
-		renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, 10000.0, cam.w, cam.h); //use very high draw distance for skyboxes
-		RenderDrawlists(dynamic_drawlist.skybox_noblend, normalcam_static_drawlist.skybox_noblend, std::vector <TEXTURE_INTERFACE*>(), renderscene, framebuffer, error_output);
-		renderscene.SetClear(false, true);
-		RenderDrawlists(dynamic_drawlist.skybox_blend, normalcam_static_drawlist.skybox_blend, std::vector <TEXTURE_INTERFACE*>(), renderscene, framebuffer, error_output);
-
-		// render most 3d stuff
-		renderscene.SetClear(false, true);
-		renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h);
-		RenderDrawlists(dynamic_drawlist.normal_noblend, normalcam_static_drawlist.normal_noblend, std::vector <TEXTURE_INTERFACE*>(), renderscene, framebuffer, error_output);
-		renderscene.SetClear(false, false);
-		
-		renderscene.SetCarPaintHack(true);
-		RenderDrawlist(dynamic_drawlist.car_noblend, renderscene, framebuffer, error_output);
-		renderscene.SetCarPaintHack(false);
-		
-		RenderDrawlists(dynamic_drawlist.normal_blend, normalcam_static_drawlist.normal_blend, std::vector <TEXTURE_INTERFACE*>(), renderscene, framebuffer, error_output);
-		RenderDrawlist(dynamic_drawlist.particle, renderscene, framebuffer, error_output);
-		RenderDrawlist(dynamic_drawlist.twodim, renderscene, framebuffer, error_output);
-		RenderDrawlist(dynamic_drawlist.text, renderscene, framebuffer, error_output);
-
-		// render any viewspace 3d elements
-		renderscene.SetClear(false, true);
-		renderscene.SetCameraInfo(cam.pos, cam.orient, 45.0, cam.view_distance, cam.w, cam.h);
-		renderscene.SetCarPaintHack(true);
-		RenderDrawlist(dynamic_drawlist.nocamtrans_noblend, renderscene, framebuffer, error_output);
-		renderscene.SetCarPaintHack(false);
-		renderscene.SetClear(false, false);
-		RenderDrawlist(dynamic_drawlist.nocamtrans_blend, renderscene, framebuffer, error_output);
 	}
 }
 
@@ -1322,34 +1367,3 @@ bool TextureSort(const DRAWABLE & draw1, const DRAWABLE & draw2)
 {
 	return (draw1.GetDiffuseMap()->GetID() < draw2.GetDiffuseMap()->GetID());
 }
-
-/*void GRAPHICS_SDLGL::OptimizeStaticDrawlistmap()
-{
-	static_object_partitioning.clear();
-	
-	for (std::map < DRAWABLE_FILTER *, std::vector <SCENEDRAW> >::iterator i = static_drawlist_map.begin(); i != static_drawlist_map.end(); ++i)
-	{
-		AABB_SPACE_PARTITIONING_NODE <SCENEDRAW*> & partition = static_object_partitioning[i->first];
-		
-		for (std::vector <SCENEDRAW>::iterator s = i->second.begin(); s != i->second.end(); s++)
-		{
-			const DRAWABLE * draw = s->GetDraw();
-			assert(draw);
-			MATHVECTOR <float, 3> objpos(draw->GetObjectCenter());
-			if (s->IsCollapsed())
-				s->GetMatrix4()->TransformVectorOut(objpos[0],objpos[1],objpos[2]);
-			else if (draw->GetParent() != NULL)
-				objpos = draw->GetParent()->TransformIntoWorldSpace(objpos);
-			float radius = draw->GetRadius()*1.732051;
-			AABB <float> bbox;
-			bbox.SetFromCorners(objpos-MATHVECTOR<float,3>(radius), objpos+MATHVECTOR<float,3>(radius));
-			SCENEDRAW * newsd = &(*s);
-			partition.Add(newsd, bbox);
-		}
-		
-		partition.Optimize();
-		
-		//std::sort(i->second.begin(), i->second.end(), TextureSort);
-	}
-	//TODO: update/remove OptimizeStaticDrawlistmap
-}*/

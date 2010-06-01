@@ -53,7 +53,8 @@ public:
 		depth_mode(GL_LEQUAL), 
 		clearcolor(false), 
 		cleardepth(false),
-		blendmode(BLENDMODE::DISABLED)
+		blendmode(BLENDMODE::DISABLED),
+		contrast(1.0)
 		{}
 	
 	void SetSourceTextures(const std::vector <TEXTURE_INTERFACE*> & textures)
@@ -69,6 +70,7 @@ public:
 	void SetDepthMode ( int mode ) {depth_mode = mode;}
 	void SetClear(bool newclearcolor, bool newcleardepth) {clearcolor = newclearcolor;cleardepth = newcleardepth;}
 	void SetBlendMode(BLENDMODE::BLENDMODE mode) {blendmode = mode;}
+	void SetContrast ( float value ) {contrast = value;}
 	
 	// these are used only to upload uniforms to the shaders
 	void SetCameraInfo(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newrot, float newfov, float newlodfar, float neww, float newh);
@@ -90,21 +92,12 @@ private:
 	int depth_mode;
 	bool clearcolor, cleardepth;
 	BLENDMODE::BLENDMODE blendmode;
+	float contrast;
 };
 
 class RENDER_INPUT_SCENE : public RENDER_INPUT
 {
 public:
-	enum SHADER_TYPE
-	{
-		SHADER_SIMPLE,
-		SHADER_DISTANCEFIELD,
-		SHADER_FULL,
-		SHADER_FULLBLEND,
-		SHADER_SKYBOX,
-		SHADER_NONE
-	};
-	
 	RENDER_INPUT_SCENE();
 	
 	void SetDrawLists(std::vector <DRAWABLE*> & dl_dynamic, std::vector <DRAWABLE*> & dl_static)
@@ -117,8 +110,7 @@ public:
 	FRUSTUM SetCameraInfo(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newrot, float newfov, float newlodfar, float neww, float newh, bool restore_matrices = true);
 	void SetSunDirection(const MATHVECTOR <float, 3> & newsun) {lightposition = newsun;}
 	void SetFlags(bool newshaders) {shaders=newshaders;}
-	void SetDefaultShader(SHADER_GLSL & newdefault) {assert(newdefault.GetLoaded());shadermap.clear();shadermap.resize(SHADER_NONE, &newdefault);}
-	void SetShader(SHADER_TYPE stype, SHADER_GLSL & newshader) {assert((unsigned int)stype < shadermap.size());shadermap[stype]=&newshader;}
+	void SetDefaultShader(SHADER_GLSL & newdefault) {assert(newdefault.GetLoaded());shader = newdefault;}
 	void SetClear(bool newclearcolor, bool newcleardepth) {clearcolor = newclearcolor;cleardepth = newcleardepth;}
 	virtual void Render(GLSTATEMANAGER & glstate, std::ostream & error_output);
 	void SetReflection ( TEXTURE_INTERFACE * value ) {if (!value) reflection.clear(); else reflection = value;}
@@ -149,8 +141,7 @@ private:
 	float lod_far; //used for distance culling
 	bool shaders;
 	bool clearcolor, cleardepth;
-	std::vector <SHADER_GLSL *> shadermap;
-	SHADER_TYPE activeshader;
+	reseatable_reference <SHADER_GLSL> shader;
 	reseatable_reference <TEXTURE_INTERFACE> reflection;
 	reseatable_reference <TEXTURE_INTERFACE> ambient;
 	bool orthomode;
@@ -170,8 +161,6 @@ private:
 	void SelectTexturing(DRAWABLE & forme, GLSTATEMANAGER & glstate);
 	bool SelectTransformStart(DRAWABLE & forme, GLSTATEMANAGER & glstate);
 	void SelectTransformEnd(DRAWABLE & forme, bool need_pop);
-	//unsigned int CombineDrawlists(); ///< returns the number of scenedraw elements that have already gone through culling
-	void SetActiveShader(const SHADER_TYPE & newshader);
 };
 
 class RENDER_OUTPUT

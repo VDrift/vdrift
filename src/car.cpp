@@ -187,7 +187,8 @@ bool CAR::Load (
 		{
 			info_output << "No car brake texture exists, continuing without one" << std::endl;
 		}
-		GetDrawlist(topnode.GetNode(bodynode), EMISSIVE).get(brakelights_emissive).SetDrawEnable(false);
+		else
+			GetDrawlist(topnode.GetNode(bodynode), EMISSIVE).get(brakelights_emissive).SetDrawEnable(false);
 	}
 
 	//load car reverse light texture
@@ -198,7 +199,8 @@ bool CAR::Load (
 		{
 			info_output << "No car reverse light texture exists, continuing without one" << std::endl;
 		}
-		GetDrawlist(topnode.GetNode(bodynode), EMISSIVE).get(reverselights_emissive).SetDrawEnable(false);
+		else
+			GetDrawlist(topnode.GetNode(bodynode), EMISSIVE).get(reverselights_emissive).SetDrawEnable(false);
 	}
 	
 	//load driver graphics
@@ -734,6 +736,7 @@ bool CAR::LoadInto (
 			{
 				error_output << "Error loading model: " << joefile << std::endl;
 				GetDrawlist(*node, whichdrawlist).erase(output_drawable);
+				output_drawable.invalidate();
 				return false;
 			}
 			// car mesh orientation fixer
@@ -762,8 +765,10 @@ bool CAR::LoadInto (
 		{
 			error_output << "Error loading texture: " << texfile << std::endl;
 			GetDrawlist(*node, whichdrawlist).erase(output_drawable);
+			output_drawable.invalidate();
 			return false;
 		}
+		//else std::cout << "Loaded texture: " << texfile << std::endl;
 		draw->SetDiffuseMap(diffuse);
 	}
 
@@ -853,8 +858,10 @@ void CAR::CopyPhysicsResultsIntoDisplay()
 	}
 	
 	// update brake/reverse lights
-	GetDrawlist(bodynoderef, EMISSIVE).get(brakelights_emissive).SetDrawEnable(applied_brakes > 0);
-	GetDrawlist(bodynoderef, EMISSIVE).get(reverselights_emissive).SetDrawEnable(GetGear() < 0);
+	if (brakelights_emissive.valid())
+		GetDrawlist(bodynoderef, EMISSIVE).get(brakelights_emissive).SetDrawEnable(applied_brakes > 0);
+	if (reverselights_emissive.valid())
+		GetDrawlist(bodynoderef, EMISSIVE).get(reverselights_emissive).SetDrawEnable(GetGear() < 0);
 }
 
 void CAR::UpdateCameras(float dt)

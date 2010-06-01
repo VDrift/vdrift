@@ -110,7 +110,7 @@ private:
 	void SetActiveShader(const std::string name);
 	bool LoadShader(const std::string & shaderpath, const std::string & name, std::ostream & info_output, std::ostream & error_output, std::string variant="", std::string variant_defines="");
 	void EnableShaders(const std::string & shaderpath, std::ostream & info_output, std::ostream & error_output);
-	void DisableShaders();
+	void DisableShaders(const std::string & shaderpath, std::ostream & error_output);
 	void DrawBox(const MATHVECTOR <float, 3> & corner1, const MATHVECTOR <float, 3> & corner2) const;
 	void RenderDrawlist(std::vector <DRAWABLE*> & drawlist,
 						RENDER_INPUT_SCENE & render_scene, 

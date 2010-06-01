@@ -246,6 +246,7 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 		MATHVECTOR <float, 3> lightvec = lightposition;
 		cam_rotation.RotateVector(lightvec);
 		shader->UploadActiveShaderParameter3f("directlight_eyespace_direction", lightvec[0], lightvec[1], lightvec[2]);
+		shader->UploadActiveShaderParameter1f("contrast", contrast);
 		//std::cout << lightvec << std::endl;
 	}
 	
@@ -270,7 +271,11 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 			}
 		}
 	}
-	assert(num_nonnull != 0); //TODO: replace with friendlier error message?
+	if (num_nonnull <= 0)
+	{
+		error_output << "Out of the " << source_textures.size() << " input textures provided as inputs to this postprocess stage, zero are available. This stage will have no effect." << std::endl;
+		return;
+	}
 	glActiveTexture(GL_TEXTURE0);
 	
 	OPENGL_UTILITY::CheckForOpenGLErrors("postprocess texture set", error_output);
@@ -415,24 +420,11 @@ void RENDER_INPUT_POSTPROCESS::SetCameraInfo(const MATHVECTOR <float, 3> & newpo
 		glPopMatrix();
 }
 
-void RENDER_INPUT_SCENE::SetActiveShader(const SHADER_TYPE & newshader)
-{
-	if (newshader == activeshader)
-		return;
-
-	assert(GLEW_ARB_shading_language_100);
-
-	size_t shaderindex = newshader;
-
-	assert(shaderindex < shadermap.size());
-	assert(shadermap[shaderindex] != NULL);
-
-	shadermap[shaderindex]->Enable();
-	activeshader = newshader;
-}
-
 void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_output)
 {
+	if (shaders)
+		assert(shader);
+	
 	glMatrixMode( GL_PROJECTION );
 	glLoadIdentity();
 	if (orthomode)
@@ -491,11 +483,9 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 		MATHVECTOR <float, 3> lightvec = lightposition;
 		(cam_rotation).RotateVector(lightvec);
 		//(cuberotation).RotateVector(lightvec);
-		shadermap[SHADER_FULL]->UploadActiveShaderParameter3f("lightposition", lightvec[0], lightvec[1], lightvec[2]);
-		shadermap[SHADER_FULL]->UploadActiveShaderParameter1f("contrast", contrast);
-		shadermap[SHADER_FULLBLEND]->UploadActiveShaderParameter3f("lightposition", lightvec[0], lightvec[1], lightvec[2]);
-		shadermap[SHADER_FULLBLEND]->UploadActiveShaderParameter1f("contrast", contrast);
-		shadermap[SHADER_SKYBOX]->UploadActiveShaderParameter1f("contrast", contrast);
+		shader->Enable();
+		shader->UploadActiveShaderParameter3f("lightposition", lightvec[0], lightvec[1], lightvec[2]);
+		shader->UploadActiveShaderParameter1f("contrast", contrast);
 		/*float lightarray[3];
 		for (int i = 0; i < 3; i++)
 		lightarray[i] = lightvec[i];
@@ -533,7 +523,6 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 	glDepthFunc( depth_mode );
 	
 	last_transform_valid = false;
-	activeshader = SHADER_NONE;
 	
 	glColor4f(1,1,1,1);
 	glstate.SetColor(1,1,1,1);
@@ -998,7 +987,6 @@ RENDER_INPUT_SCENE::RENDER_INPUT_SCENE()
 	carpainthack(false),
 	blendmode(BLENDMODE::DISABLED)
 {
-	shadermap.resize(SHADER_NONE, NULL);
 	MATHVECTOR <float, 3> front(1,0,0);
 	lightposition = front;
 	QUATERNION <float> ldir;

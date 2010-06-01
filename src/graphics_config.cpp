@@ -366,7 +366,7 @@ bool GRAPHICS_CONFIG_PASS::Load(std::istream & f, std::ostream & error_output, i
 	reqd.push_back("draw");
 	//reqd.push_back("light");
 	reqd.push_back("output");
-	reqd.push_back("shader");
+	//reqd.push_back("shader"); //not required because non-shader path is specified using these files
 	
 	std::map <std::string, std::string> vars;
 	if (!readSection(f, error_output, line, reqd, vars))
@@ -375,6 +375,7 @@ bool GRAPHICS_CONFIG_PASS::Load(std::istream & f, std::ostream & error_output, i
 	bool postprocess = (vars["draw"] == "postprocess");
 	
 	// fill in defaults
+	fillDefault(vars, "shader", "NO SHADER SPECIFIED");
 	fillDefault(vars, "light", "sun");
 	fillDefault(vars, "clear_color", "false");
 	fillDefault(vars, "clear_depth", "false");

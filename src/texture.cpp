@@ -257,6 +257,7 @@ bool TEXTURE::LoadCubeVerticalCross(const TEXTUREINFO & info, std::ostream & err
 	else
 	{
 		error << "Error loading texture file: " + info.GetName() << std::endl;
+		return false;
 	}
 
 	if (texture_surface)
@@ -521,6 +522,11 @@ bool TEXTURE::Load(const TEXTUREINFO & info, std::ostream & error)
 	if (!orig_surface)
 	{
 		orig_surface = IMG_Load(info.GetName().c_str());
+		if (!orig_surface)
+		{
+			error << "Error loading texture file: " << info.GetName() << std::endl;
+			return false;
+		}
 	}
 
 	SDL_Surface * texture_surface(orig_surface);
