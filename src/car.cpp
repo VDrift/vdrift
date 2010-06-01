@@ -49,7 +49,7 @@ bool CAR::GenerateWheelMesh(
 	const std::string & sharedpartspath,
 	int anisotropy,
 	const std::string & texsize,
-	MODEL_JOE03 & output_rim_model,
+	MODEL_JOE03 & output_wheel_model,
 	std::ostream & error_output)
 {
 	output_scenenode = topnode.AddNode();
@@ -118,7 +118,7 @@ bool CAR::GenerateWheelMesh(
 		}
 	}
 	
-	// now load the rim
+	// load wheel
 	std::string wheelname;
 	if (!carconf.GetParam(confsection + ".wheel", wheelname, error_output))
 		return false;
@@ -127,7 +127,7 @@ bool CAR::GenerateWheelMesh(
 			 output_scenenode,
 			 rim_draw, 
 			 modelpath+wheelname+".joe",
-			 output_rim_model,
+			 output_wheel_model,
 			 textures,
 			 texpath+wheelname+".png",
 			 texpath+wheelname+"-misc1.png",
@@ -137,6 +137,25 @@ bool CAR::GenerateWheelMesh(
 			 MATHVECTOR <float, 3>(rim_width,rim_diameter,rim_diameter),
 			 error_output))
 		return false;
+	
+	// add rim
+	float flangeDisplacement_mm = 10;
+	VERTEXARRAY rim_varray;
+	MESHGEN::mg_rim(
+		rim_varray,
+		tire.GetSidewallWidth()*1000.f,
+		tire.GetAspectRatio()*100.f,
+		rimDiameter_in,
+		flangeDisplacement_mm);
+	rim_varray.Rotate(-M_PI_2, 0, 0, 1);
+	rim_varray = rim_varray + output_wheel_model.GetVertexArray();
+	output_wheel_model.SetVertexArray(rim_varray);
+	output_wheel_model.GenerateListID(error_output);
+	output_wheel_model.GenerateMeshMetrics();
+
+	DRAWABLE * rim_drawable = &GetDrawlist(node, NOBLEND).get(rim_draw);
+	rim_drawable->SetDrawList(0, output_wheel_model.GetListID());
+	rim_drawable->SetObjectCenter(output_wheel_model.GetCenter());
 	
 	return true;
 }
@@ -244,7 +263,7 @@ bool CAR::Load (
 		if (dynamics.GetTire(WHEEL_POSITION(i)).GetSidewallWidth() <= 0)
 		{
 			// fallback to premodeled wheels
-			if ( !LoadInto ( topnode, wheelnode[i], wheeldraw[i], carpath + "/wheel_front.joe", wheelmodelfront,
+			if ( !LoadInto ( topnode, wheelnode[i], wheeldraw[i], carpath + "/wheel_front.joe", tiremodelfront,
 				textures, carpath + "/textures/wheel_front.png", carpath + "/textures/wheel_front-misc1.png",
 				texsize, anisotropy, NOBLEND, MATHVECTOR <float, 3>(1,1,1), error_output ) )
 				return false;
@@ -252,8 +271,8 @@ bool CAR::Load (
 		else
 		{
 			if (!GenerateWheelMesh(carconf, dynamics.GetTire(WHEEL_POSITION(i)), topnode,
-					wheelnode[i], wheeldraw[i], wheelmodelfront, textures, "tire-front", sharedpartspath,
-					anisotropy, texsize, wheelrim[i], error_output))
+					wheelnode[i], wheeldraw[i], tiremodelfront, textures, "tire-front", sharedpartspath,
+					anisotropy, texsize, wheelmodel[i], error_output))
 			{
 				error_output << "Error generating wheel mesh for wheel " << i << std::endl;
 				return false;
@@ -273,7 +292,7 @@ bool CAR::Load (
 			if (dynamics.GetTire(WHEEL_POSITION(REAR_LEFT)).GetSidewallWidth() <= 0 ||
 				dynamics.GetTire(WHEEL_POSITION(REAR_RIGHT)).GetSidewallWidth() <= 0)
 			{
-				if (!LoadInto(topnode, wheelnode[i], wheeldraw[i], carpath + "/wheel_rear.joe", wheelmodelrear,
+				if (!LoadInto(topnode, wheelnode[i], wheeldraw[i], carpath + "/wheel_rear.joe", tiremodelrear,
 					textures, carpath + "/textures/wheel_rear.png", carpath + "/textures/wheel_rear-misc1.png",
 					texsize, anisotropy, NOBLEND, MATHVECTOR <float, 3>(1,1,1), error_output))
 					return false;
@@ -282,8 +301,8 @@ bool CAR::Load (
 		else
 		{
 			if (!GenerateWheelMesh(carconf, dynamics.GetTire(WHEEL_POSITION(i)), topnode,
-					wheelnode[i], wheeldraw[i], wheelmodelrear, textures, "tire-rear", sharedpartspath,
-					anisotropy, texsize, wheelrim[i], error_output))
+					wheelnode[i], wheeldraw[i], tiremodelrear, textures, "tire-rear", sharedpartspath,
+					anisotropy, texsize, wheelmodel[i], error_output))
 			{
 				error_output << "Error generating wheel mesh for wheel " << i << std::endl;
 				return false;
@@ -324,7 +343,7 @@ bool CAR::Load (
 		position = initial_position;
 		orientation = initial_orientation;
 
-		dynamics.Init(*world, bodymodel, wheelmodelfront, wheelmodelrear, position, orientation);
+		dynamics.Init(*world, bodymodel, tiremodelfront, tiremodelrear, position, orientation);
 		dynamics.SetABS(defaultabs);
 		dynamics.SetTCS(defaulttcs);
 	}

@@ -312,9 +312,9 @@ protected:
 	keyed_container <SCENENODE>::handle wheelnode[4];
 	keyed_container <DRAWABLE>::handle floatingdraw[4];
 	keyed_container <SCENENODE>::handle floatingnode[4];
-	MODEL_JOE03 wheelrim[4];
-	MODEL_JOE03 wheelmodelfront;
-	MODEL_JOE03 wheelmodelrear;
+	MODEL_JOE03 wheelmodel[4];
+	MODEL_JOE03 tiremodelfront;
+	MODEL_JOE03 tiremodelrear;
 	MODEL_JOE03 floatingmodelfront;
 	MODEL_JOE03 floatingmodelrear;
 
@@ -358,7 +358,7 @@ protected:
 		const std::string & sharedpartspath,
 		int anisotropy,
 		const std::string & texsize,
-		MODEL_JOE03 & output_rim_model,
+		MODEL_JOE03 & output_wheel_model,
 		std::ostream & error_output);
 	
 	void UpdateSounds(float dt);

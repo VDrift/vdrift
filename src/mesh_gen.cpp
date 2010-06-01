@@ -734,7 +734,7 @@ void mg_tire(VERTEXARRAY & tire, float sectionWidth_mm, float aspectRatio, float
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 // mg_wheelEdge
-void mg_wheelEdge(VERTEXARRAY & wheelEdge, float sectionWidth_mm, float aspectRatio, float rimDiameter_in, float flangeDisplacement_mm)
+void mg_rim(VERTEXARRAY & rim, float sectionWidth_mm, float aspectRatio, float rimDiameter_in, float flangeDisplacement_mm)
 {
     int segmentsAround = 32;
 
@@ -1173,12 +1173,12 @@ void mg_wheelEdge(VERTEXARRAY & wheelEdge, float sectionWidth_mm, float aspectRa
 
 	//////////////////////////////////////////////
 	// VERTEXARRAY will copy this data
-	wheelEdge.SetVertices(&vertexData.front(), vertexFloatCount);
-	wheelEdge.SetFaces(&triData.front(), triVIndexCount);
+	rim.SetVertices(&vertexData.front(), vertexFloatCount);
+	rim.SetFaces(&triData.front(), triVIndexCount);
 
-	wheelEdge.SetTexCoordSets(1);
-	wheelEdge.SetTexCoords(0, &texData.front(), texCoordFloats);
-	wheelEdge.SetNormals(&normalData.front(), vertexFloatCount);
+	rim.SetTexCoordSets(1);
+	rim.SetTexCoords(0, &texData.front(), texCoordFloats);
+	rim.SetNormals(&normalData.front(), vertexFloatCount);
 
 	//	printf("wheel_edge created: v=%u, tri=%u\n", vertexCount, (triVIndexCount/3) );
 
