@@ -60,15 +60,15 @@ void FBTEXTURE::Init(GLSTATEMANAGER & glstate, int sizex, int sizey, TARGET targ
 		break;
 		
 		case RGB16:
-		texture_format1 = GL_RGB16;
+		texture_format1 = GL_RGB16F;
 		texture_format2 = GL_RGB;
-		texture_format3 = GL_FLOAT;
+		texture_format3 = GL_HALF_FLOAT;
 		break;
 		
 		case RGBA16:
-		texture_format1 = GL_RGBA16;
+		texture_format1 = GL_RGBA16F;
 		texture_format2 = GL_RGBA;
-		texture_format3 = GL_FLOAT;
+		texture_format3 = GL_HALF_FLOAT;
 		break;
 		
 		case DEPTH24:

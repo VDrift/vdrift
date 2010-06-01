@@ -167,6 +167,16 @@ void GRAPHICS_SDLGL::Init(const std::string shaderpath, const std::string & wind
 		info_output << "Your video card doesn't support non-power-of-two textures.  Disabling shaders." << endl;
 		DisableShaders(shaderpath, error_output);
 	}
+	else if (!GL_ARB_texture_float)
+	{
+		info_output << "Your video card doesn't support floating point textures.  Disabling shaders." << endl;
+		DisableShaders(shaderpath, error_output);
+	}
+	else if (!GL_ARB_half_float_pixel)
+	{
+		info_output << "Your video card doesn't support 16-bit floats.  Disabling shaders." << endl;
+		DisableShaders(shaderpath, error_output);
+	}
 	else
 	{
 		GLint maxattach;
