@@ -303,7 +303,7 @@ bool GRAPHICS_CONFIG_OUTPUT::Load(std::istream & f, std::ostream & error_output,
 	fillDefault(vars, "multisample", "0");
 	fillDefault(vars, "width", "framebuffer");
 	fillDefault(vars, "height", "framebuffer");
-	fillDefault(vars, "format", "RGB");
+	fillDefault(vars, "format", "RGB8");
 	if (vars["multisample"] == "framebuffer")
 		vars["multisample"] = "-1";
 	
@@ -315,7 +315,7 @@ bool GRAPHICS_CONFIG_OUTPUT::Load(std::istream & f, std::ostream & error_output,
 	ASSIGNVAR(filter);
 	if (!isOf(vars, "filter", "linear nearest", &error_output, sectionstart)) return false;
 	ASSIGNVAR(format);
-	if (!isOf(vars, "format", "RGB RGBA depthshadow depth", &error_output, sectionstart)) return false;
+	if (!isOf(vars, "format", "RGB8 RGBA8 RGB16 RGBA16 depthshadow depth", &error_output, sectionstart)) return false;
 	ASSIGNBOOL(mipmap);
 	ASSIGNOTHER(multisample);
 	ASSIGNPARSE(conditions);

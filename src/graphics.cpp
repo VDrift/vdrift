@@ -419,10 +419,14 @@ FBTEXTURE::FORMAT TextureFormatFromString(const std::string & format)
 {
 	if (format == "depth" || format == "depthshadow")
 		return FBTEXTURE::DEPTH24;
-	else if (format == "RGBA")
+	else if (format == "RGBA8")
 		return FBTEXTURE::RGBA8;
-	else if (format == "RGB")
+	else if (format == "RGB8")
 		return FBTEXTURE::RGB8;
+	else if (format == "RGBA16")
+		return FBTEXTURE::RGBA16;
+	else if (format == "RGB16")
+		return FBTEXTURE::RGB16;
 	else
 		assert(0);
 	
