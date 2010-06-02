@@ -7,6 +7,36 @@
 #include <sstream>
 #include <string>
 
+#define _CASE_(x) case FBTEXTURE::x:\
+return #x;
+
+std::string TargetToString(FBTEXTURE::TARGET value)
+{
+	switch (value)
+	{
+		_CASE_(NORMAL);
+		_CASE_(RECTANGLE);
+		_CASE_(CUBEMAP);
+	}
+	return "UNKNOWN";
+}
+
+std::string FormatToString(FBTEXTURE::FORMAT value)
+{
+	switch (value)
+	{
+		_CASE_(LUM8);
+		_CASE_(RGB8);
+		_CASE_(RGBA8);
+		_CASE_(RGB16);
+		_CASE_(RGBA16);
+		_CASE_(DEPTH24);
+	}
+	return "UNKNOWN";
+}
+
+#undef _CASE_
+
 void FBOBJECT::Init(GLSTATEMANAGER & glstate, std::vector <FBTEXTURE*> newtextures, std::ostream & error_output, bool force_multisample_off)
 {
 	OPENGL_UTILITY::CheckForOpenGLErrors("FBO init start", error_output);
@@ -211,6 +241,7 @@ void FBOBJECT::Init(GLSTATEMANAGER & glstate, std::vector <FBTEXTURE*> newtextur
 					
 					if (verbose) error_output << "INFO: attaching texture to color attachment " << count << std::endl;
 				}
+				(*i)->texture_attachment = texture_attachment;
 			}
 		}
 	}
@@ -244,7 +275,13 @@ void FBOBJECT::Init(GLSTATEMANAGER & glstate, std::vector <FBTEXTURE*> newtextur
 	bool status_ok = CheckStatus(error_output);
 	if (!status_ok)
 	{
-		error_output << "Error initializing FBO" << std::endl;
+		error_output << "Error initializing FBO:" << std::endl;
+		int count = 0;
+		for (std::vector <FBTEXTURE*>::iterator i = textures.begin(); i != textures.end(); i++)
+		{
+			error_output << "\t" << count << ". " << TargetToString((*i)->texture_target) << ": " << FormatToString((*i)->texture_format) << std::endl;
+			count++;
+		}
 	}
 	assert(status_ok);
 	
@@ -263,19 +300,45 @@ void FBOBJECT::Init(GLSTATEMANAGER & glstate, std::vector <FBTEXTURE*> newtextur
 	}
 }
 
+std::string GetStatusString(GLenum status)
+{
+	switch (status)
+	{
+		case GL_FRAMEBUFFER_UNDEFINED:
+		return "framebuffer undefined";
+		
+		case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT:
+		return "incomplete attachment";
+		
+		case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER:
+		return "incomplete draw buffer";
+		
+		case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER:
+		return "incomplete read buffer";
+		
+		case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT:
+		return "missing attachments";
+		
+		case GL_FRAMEBUFFER_UNSUPPORTED:
+		return "unsupported format";
+		
+		case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE:
+		return "incomplete multisample";
+		
+		case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS:
+		return "incomplete layer targets";
+	}
+	
+	return "unknown error";
+}
+
 bool FBOBJECT::CheckStatus(std::ostream & error_output)
 {
 	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
 	
-	if (status == GL_FRAMEBUFFER_UNSUPPORTED)
-	{
-		error_output << "Unsupported framebuffer format: " << status << std::endl;
-		return false;
-	}
-
 	if (status != GL_FRAMEBUFFER_COMPLETE)
 	{
-		error_output << "Framebuffer is not complete: " << status << std::endl;
+		error_output << "Framebuffer is not complete: " << GetStatusString(status) << std::endl;
 		return false;
 	}
 	

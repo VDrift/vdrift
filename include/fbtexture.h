@@ -39,6 +39,7 @@ class FBTEXTURE : public TEXTURE_INTERFACE
 		
 		enum FORMAT
 		{
+			LUM8 = GL_LUMINANCE8,
 			RGB8 = GL_RGB,
 			RGBA8 = GL_RGBA,
 			RGB16 = GL_RGB16,

@@ -315,7 +315,7 @@ bool GRAPHICS_CONFIG_OUTPUT::Load(std::istream & f, std::ostream & error_output,
 	ASSIGNVAR(filter);
 	if (!isOf(vars, "filter", "linear nearest", &error_output, sectionstart)) return false;
 	ASSIGNVAR(format);
-	if (!isOf(vars, "format", "RGB8 RGBA8 RGB16 RGBA16 depthshadow depth", &error_output, sectionstart)) return false;
+	if (!isOf(vars, "format", "luminance8 RGB8 RGBA8 RGB16 RGBA16 depthshadow depth", &error_output, sectionstart)) return false;
 	ASSIGNBOOL(mipmap);
 	ASSIGNOTHER(multisample);
 	ASSIGNPARSE(conditions);

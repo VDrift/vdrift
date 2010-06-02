@@ -47,6 +47,12 @@ void FBTEXTURE::Init(GLSTATEMANAGER & glstate, int sizex, int sizey, TARGET targ
 	
 	switch (texture_format)
 	{
+		case LUM8:
+		texture_format1 = GL_LUMINANCE8;
+		texture_format2 = GL_LUMINANCE;
+		texture_format3 = GL_UNSIGNED_BYTE;
+		break;
+		
 		case RGB8:
 		texture_format1 = GL_RGB;
 		texture_format2 = GL_RGB;
