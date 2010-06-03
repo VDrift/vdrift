@@ -107,7 +107,7 @@ struct GRAPHICS_CONFIG
 	
 	bool Load(const std::string & filename, std::ostream & error_output)
 	{
-		std::ifstream f(filename.c_str());
+		std::ifstream f(filename.c_str(), std::ifstream::binary); // binary mode to avoid newline/seekg issues
 		if (!f)
 		{
 			error_output << "Unable to open graphics config file: " << filename << std::endl;

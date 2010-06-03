@@ -86,7 +86,7 @@ std::string skipUntil(std::istream & in, const std::string & skipchars, int * li
 		else
 		{
 			cruft.push_back(in.get());
-			if (*cruft.rend() == '\n' && linecount)
+			if (*cruft.rbegin() == '\n' && linecount) // last character a newline
 				*linecount++;
 			next = in.peek();
 		}
