@@ -1187,4 +1187,343 @@ void mg_rim(VERTEXARRAY & rim, float sectionWidth_mm, float aspectRatio, float r
 
 
 
+
+
+
+//////////////////////////////////////////////////////////////////////
+// Brake Rotor
+void mg_brake_rotor(VERTEXARRAY *rotor, float diameter_mm, float thickness_mm)
+{
+    // tweak-able
+    unsigned int segmentsAround = 32;
+    float normalLength = 1.00f;
+
+
+
+    // non-tweakable
+    float radius_m = diameter_mm;
+    radius_m /= 2;      // now a radius
+    radius_m /= 1000;   // now in meters
+
+    float thickness_m = thickness_mm / 1000.0f;
+
+    unsigned int vertexesAround = segmentsAround + 1;
+    float angleIncrement = 360.0f / segmentsAround ;
+
+
+
+    unsigned int vertexCount = vertexesAround*4;            // the two caps have 1 extra vertex in the center.  each ring of the sides has one extra dupe vertex for the texture map to wrap correctly
+    unsigned int vertexFloatCount = vertexCount *3;
+
+    float *vertexData = new float[vertexFloatCount];
+
+
+    // first cap, first vertex
+    vertexData[0+0] = -1.0f * thickness_m / 2.0f;
+    vertexData[0+1] = 0.0f;
+    vertexData[0+2] = 0.0f;
+
+    // first cap, most vertexes
+	for (unsigned int vlv=0 ; vlv<segmentsAround ; vlv++)
+	{
+		float *x = &vertexData[3 + (vlv + vertexesAround*0) * 3 + 0];
+		float *y = &vertexData[3 + (vlv + vertexesAround*0) * 3 + 1];
+		float *z = &vertexData[3 + (vlv + vertexesAround*0) * 3 + 2];
+
+		*x = -1.0f * (thickness_m / 2.0f);
+		*y = radius_m * cosD( angleIncrement * vlv);
+		*z = radius_m * sinD( angleIncrement * vlv);
+	}
+
+    // strip in the center, first ring
+    for (unsigned int vlv=0 ; vlv<vertexesAround ; vlv++)
+    {
+		float *x = &vertexData[(vlv + vertexesAround*1) * 3 + 0];
+		float *y = &vertexData[(vlv + vertexesAround*1) * 3 + 1];
+		float *z = &vertexData[(vlv + vertexesAround*1) * 3 + 2];
+
+		*x = -1.0f * (thickness_m / 2.0f) + 0.00f;
+		*y = radius_m * cosD( angleIncrement * vlv);
+		*z = radius_m * sinD( angleIncrement * vlv);
+
+    }
+    // strip in the center, second ring
+    for (unsigned int vlv=0 ; vlv<vertexesAround ; vlv++)
+    {
+		float *x = &vertexData[(vlv + vertexesAround*2) * 3 + 0];
+		float *y = &vertexData[(vlv + vertexesAround*2) * 3 + 1];
+		float *z = &vertexData[(vlv + vertexesAround*2) * 3 + 2];
+
+		*x = 1.0f * (thickness_m / 2.0f) + 0.00f;
+		*y = radius_m * cosD( angleIncrement * vlv);
+		*z = radius_m * sinD( angleIncrement * vlv);
+
+    }
+
+    // last cap, most vertexes
+	for (unsigned int vlv=0 ; vlv<segmentsAround ; vlv++)
+	{
+		float *x = &vertexData[(vlv + vertexesAround*3) * 3 + 0];
+		float *y = &vertexData[(vlv + vertexesAround*3) * 3 + 1];
+		float *z = &vertexData[(vlv + vertexesAround*3) * 3 + 2];
+
+		*x = 1.0f * (thickness_m / 2.0f) + 0.00f;
+		*y = radius_m * cosD( angleIncrement * vlv);
+		*z = radius_m * sinD( angleIncrement * vlv);
+	}
+
+    // last cap, last vertex
+    vertexData[ (vertexCount-1)*3 +0] = thickness_m / 2.0f + 0.0f;
+    vertexData[ (vertexCount-1)*3 +1] = 0.0f;
+    vertexData[ (vertexCount-1)*3 +2] = 0.0f;
+
+
+
+    //////////////////////////////////////////////////
+    // triangles
+    unsigned int trianglesPerCap = segmentsAround;
+    unsigned int trianglesPerStrip = segmentsAround * 2;
+
+	unsigned int triVIndexCount = (2*trianglesPerCap + 2*trianglesPerStrip) * 3;
+	unsigned int *triData = new unsigned int [ triVIndexCount ];
+
+	unsigned int triIndex = 0;
+
+	unsigned int *triVIndex0;
+	unsigned int *triVIndex1;
+	unsigned int *triVIndex2;
+
+
+
+    // clear all data - good for when building the following loops
+    for (unsigned int tlv=0 ; tlv<triVIndexCount ; tlv++)
+    {
+        triData[tlv] = 0;
+    }
+
+    // first cap
+    for ( unsigned int tlv=0 ; tlv<segmentsAround ; tlv++)
+    {
+        triVIndex0 = &triData[ tlv * 3 + 0];
+        triVIndex1 = &triData[ tlv * 3 + 1];
+        triVIndex2 = &triData[ tlv * 3 + 2];
+
+        if (tlv == segmentsAround-1)      // last triangle
+        {
+            *triVIndex0 = 0;
+            *triVIndex1 = 1;
+            *triVIndex2 = segmentsAround;
+        }
+        else
+        {
+            *triVIndex0 = 0;
+            *triVIndex1 = tlv+2;
+            *triVIndex2 = tlv+1;
+        }
+    }
+
+    // strip in the center
+    triIndex = segmentsAround;
+    for ( unsigned int tlv=0 ; tlv<segmentsAround ; tlv++ )
+    {
+            // 1st tri
+            triVIndex0 = &triData[ triIndex * 3 + 0];
+            triVIndex1 = &triData[ triIndex * 3 + 1];
+            triVIndex2 = &triData[ triIndex * 3 + 2];
+
+            *triVIndex0 = vertexesAround+tlv+0;
+            *triVIndex1 = vertexesAround+tlv+1;
+            *triVIndex2 = vertexesAround+tlv+segmentsAround+1;
+
+            triIndex++;
+
+            // 2nd tri
+            triVIndex0 = &triData[ triIndex * 3 + 0];
+            triVIndex1 = &triData[ triIndex * 3 + 1];
+            triVIndex2 = &triData[ triIndex * 3 + 2];
+
+            *triVIndex0 = vertexesAround+tlv+0+1;
+            *triVIndex2 = vertexesAround+tlv+segmentsAround+1;
+            *triVIndex1 = vertexesAround+tlv+segmentsAround+1+1;
+
+            triIndex++;
+    }
+
+
+    triIndex+=2;            // skip the last two vertexes in the strip, cause we had to make them duplicates to get the texcoords in different spots
+
+    // 2nd cap
+    for ( unsigned int tlv=0 ; tlv<segmentsAround ; tlv++)
+    {
+        triVIndex0 = &triData[ (triIndex + tlv) * 3 + 0];
+        triVIndex1 = &triData[ (triIndex + tlv) * 3 + 1];
+        triVIndex2 = &triData[ (triIndex + tlv) * 3 + 2];
+
+        if (tlv == segmentsAround-1)      // last triangle
+        {
+            *triVIndex1 = triIndex*0 + vertexCount-1;
+            *triVIndex0 = triIndex + 1;
+            *triVIndex2 = triIndex + segmentsAround;
+        }
+        else
+        {
+            *triVIndex1 = triIndex*0 + vertexCount-1;
+            *triVIndex0 = triIndex + tlv+2;
+            *triVIndex2 = triIndex + tlv+1;
+        }
+    }
+
+
+
+
+
+
+    ///////////////////////////////////////////
+    // texture coordinates
+    unsigned int texCoordFloats = vertexCount * 2;
+    float *texData = new float[ texCoordFloats ];
+
+
+    // first cap, first texcoord
+    texData[0+0] = 7.0f / 16.0f;
+    texData[0+1] = 7.0f / 16.0f;
+
+    // first cap, most texcoords
+	for (unsigned int vlv=0 ; vlv<segmentsAround ; vlv++)
+	{
+		float *u = &texData[2 + (vlv + vertexesAround*0) * 2 + 0];
+		float *v = &texData[2 + (vlv + vertexesAround*0) * 2 + 1];
+
+		*u = 0.5f  * cosD( angleIncrement * vlv) + 0.5f;
+		*v = 0.5f  * sinD( angleIncrement * vlv) + 0.5f;
+
+		*u = *u * 14.0f / 16.0f;
+		*v = *v * 14.0f / 16.0f;
+
+		/**u = *u + 0.5f / 16.0f;
+		*v = *v + 0.5f / 16.0f;*/
+	}
+
+    // strip in the center, first ring
+    for (unsigned int vlv=0 ; vlv<vertexesAround ; vlv++)
+    {
+		float *u = &texData[(vlv + vertexesAround*1) * 2 + 0];
+		float *v = &texData[(vlv + vertexesAround*1) * 2 + 1];
+
+		*u = (float)vlv / (float)segmentsAround;
+		*v = 1.0f - 1.0f/8.0f;
+
+    }
+    // strip in the center, second ring
+    for (unsigned int vlv=0 ; vlv<vertexesAround ; vlv++)
+    {
+		float *u = &texData[(vlv + vertexesAround*2) * 2 + 0];
+		float *v = &texData[(vlv + vertexesAround*2) * 2 + 1];
+
+		*u = (float)vlv / (float)segmentsAround;
+		*v = 1.0f;
+
+    }
+
+    // last cap, most texcoords
+	for (unsigned int vlv=0 ; vlv<segmentsAround ; vlv++)
+	{
+		float *u = &texData[(vlv + vertexesAround*3) * 2 + 0];
+		float *v = &texData[(vlv + vertexesAround*3) * 2 + 1];
+
+		*u = 0.5f  * cosD( angleIncrement * vlv) + 0.5f;
+		*v = 0.5f  * sinD( angleIncrement * vlv) + 0.5f;
+
+		*u = *u * 14.0f / 16.0f;
+		*v = *v * 14.0f / 16.0f;
+
+		/**u = *u + 0.5f / 16.0f;
+		*v = *v + 0.5f / 16.0f;*/
+	}
+
+    // last cap, last texcoord
+    texData[ (vertexCount-1)*2 +0] = 7.0f / 16.0f;
+    texData[ (vertexCount-1)*2 +1] = 7.0f / 16.0f;
+
+
+
+
+
+    /////////////////////////////////////////
+    // finally vertex normals
+    float *normalData = new float[vertexFloatCount];
+
+
+
+    //////////////////////
+    // zero everything out
+    /*for ( unsigned int nzlv=0 ; nzlv<vertexFloatCount ; nzlv++)
+    {
+        normalData[nzlv] = 0;
+    }*/
+
+
+
+
+    for ( unsigned int nlv=0 ; nlv<vertexCount ; nlv++ )
+    {
+        if ( nlv < vertexesAround )
+        {
+            normalData[nlv*3+0] = -1.0f * normalLength;
+            normalData[nlv*3+1] = 0.0f;
+            normalData[nlv*3+2] = 0.0f;
+        }
+
+        else if ( nlv < vertexesAround* 3 )
+        {
+            MATHVECTOR <float, 3> normal;
+
+            normal.Set(   0.0f,
+                vertexData[nlv*3+1],
+                vertexData[nlv*3+2]     );
+
+            normal = normal.Normalize();
+            normal = normal * normalLength;
+
+            normalData[nlv*3+0] = normal[0];
+            normalData[nlv*3+1] = normal[1];
+            normalData[nlv*3+2] = normal[2];
+        }
+
+        else
+        {
+            normalData[nlv*3+0] = 1.0f * normalLength;
+            normalData[nlv*3+1] = 0.0f;
+            normalData[nlv*3+2] = 0.0f;
+        }
+    }
+
+
+
+
+    rotor->SetVertices(vertexData, vertexFloatCount);
+	rotor->SetFaces((int*)triData, triVIndexCount);
+	rotor->SetTexCoordSets(1);
+	rotor->SetTexCoords(0, texData, texCoordFloats);
+	rotor->SetNormals(normalData, vertexFloatCount);
+
+
+	// free up the temp data
+	delete vertexData;
+	delete triData;
+	delete texData;
+	delete normalData;
+
+}
+
+
+
+
+
+
+
+
+
+
+
 }; //namespace
