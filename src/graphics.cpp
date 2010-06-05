@@ -114,6 +114,9 @@ void GRAPHICS_SDLGL::Init(const std::string shaderpath, const std::string & wind
 	GLint texSize;
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &texSize);
 	cardinfo << "Maximum texture size: " << texSize << endl;
+	GLint maxfloats(0);
+	glGetIntegerv(GL_MAX_VARYING_FLOATS_ARB, &maxfloats);
+	cardinfo << "Maximum varying floats: " << maxfloats << endl;
 	info_output << cardinfo.str();
 	if (cardinfo.str().find("NVIDIA") == string::npos &&
 		cardinfo.str().find("ATI") == string::npos &&

@@ -247,6 +247,7 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 		cam_rotation.RotateVector(lightvec);
 		shader->UploadActiveShaderParameter3f("directlight_eyespace_direction", lightvec[0], lightvec[1], lightvec[2]);
 		shader->UploadActiveShaderParameter1f("contrast", contrast);
+		shader->UploadActiveShaderParameter1f("znear", 0.1);
 		//std::cout << lightvec << std::endl;
 	}
 	
@@ -292,44 +293,6 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 	{
 		invproj.TransformVectorOut(frustum_corners[i][0], frustum_corners[i][1], frustum_corners[i][2]);
 		frustum_corners[i][2] = -lod_far;
-	}
-	
-	const bool debug = false;
-	if (debug)
-	{
-		std::cout << "fov="<<camfov<<", lod_far="<<lod_far<<", w="<<w<<", h="<<h<<", ratio="<<ratio<<std::endl;
-		for (int i = 0; i < 4; i++)
-			std::cout << "frustum_corners["<<i<<"]="<<frustum_corners[i]<<std::endl;
-		
-		glMatrixMode( GL_PROJECTION );
-		glPushMatrix();
-		glLoadIdentity();
-		gluPerspective( camfov, w/(float)h, 0.1f, lod_far );
-		
-		float   proj[16];
-		glGetFloatv( GL_PROJECTION_MATRIX, proj );
-		MATRIX4 <float> glmat;
-		glmat.Set(proj);
-		MATRIX4 <float> joemat = MATRIX4<float>::Perspective(camfov, ratio, 0.1, lod_far);
-		MATHVECTOR <float, 3> glcorner = frustum_corners[0];
-		MATHVECTOR <float, 3> joecorner = frustum_corners[0];
-		glmat.TransformVectorOut(glcorner[0], glcorner[1], glcorner[2]);
-		joemat.TransformVectorOut(joecorner[0], joecorner[1], joecorner[2]);
-		float vec4[4];
-		for (int i = 0; i < 3; i++)
-			vec4[i] = frustum_corners[0][i];
-		vec4[3] = 1;
-		glmat.MultiplyVector4(vec4);
-		std::cout << "glmat:  " << glcorner << std::endl;
-		std::cout << "joemat: " << joecorner << std::endl;
-		std::cout << "glmat4: " << vec4[0] << ", " << vec4[1] << ", " << vec4[2] << ", " << vec4[3] << std::endl;
-		MATRIX4 <float> joematinv = MATRIX4<float>::InvPerspective(camfov, ratio, 0.1, lod_far);
-		MATHVECTOR <float, 3> invcorner(-lod_far,-lod_far,lod_far);
-		joematinv.TransformVectorOut(invcorner[0], invcorner[1], invcorner[2]);
-		std::cout << "inv:    " << invcorner << std::endl;
-		
-		glPopMatrix();
-		glMatrixMode( GL_MODELVIEW );
 	}
 	
 	
