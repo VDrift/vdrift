@@ -149,6 +149,7 @@ class MATRIX4
 		}
 		
 		const T * GetArray() const {return data;}
+		T * GetArray() {return data;}
 		
 		static MATRIX4<T> Perspective(T fovy, T aspect, T znear, T zfar)
 		{

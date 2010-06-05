@@ -139,14 +139,44 @@ bool readSection(std::istream & f, std::ostream & error_output, int & line, cons
 #define ASSIGNOTHER(x) {std::stringstream defparser(vars[#x]);defparser >> x;}
 #define ASSIGNBOOL(x) {x = (vars[#x] == "true");}
 
+bool isOf(const std::string & val, const std::string & list, std::ostream * error_output, int line)
+{
+	std::stringstream parser(list);
+	while (parser)
+	{
+		std::string item;
+		parser >> item;
+		if (val == item)
+			return true;
+	}
+	
+	if (error_output)
+	{
+		*error_output << "Expected one of these values: \"" << list << "\" but got value \"" << val << "\" in section starting on line " << line << std::endl;
+	}
+	return false;
+}
+
+bool isOf(std::map <std::string, std::string> & vars, const std::string & name, const std::string & list, std::ostream * error_output, int line)
+{
+	return isOf(vars[name], list, error_output, line);
+}
+
 bool GRAPHICS_CONFIG_SHADER::Load(std::istream & f, std::ostream & error_output, int & line)
 {
 	std::vector <std::string> reqd;
 	reqd.push_back("name");
 	
+	int sectionstart = line;
+	
 	std::map <std::string, std::string> vars;
 	if (!readSection(f, error_output, line, reqd, vars))
 		return false;
+	
+	for (std::map <std::string, std::string>::const_iterator i = vars.begin(); i != vars.end(); i++)
+	{
+		if (!isOf(i->first, "name folder defines", &error_output, sectionstart)) return false;
+	}
 	
 	// fill in defaults
 	if (vars["folder"].empty())
@@ -260,25 +290,6 @@ bool GRAPHICS_CONFIG_CONDITION::Satisfied(const std::set <std::string> & conditi
 	return true;
 }
 
-bool isOf(std::map <std::string, std::string> & vars, const std::string & name, const std::string & list, std::ostream * error_output, int line)
-{
-	std::stringstream parser(list);
-	std::string val = strTrim(vars[name]);
-	while (parser)
-	{
-		std::string item;
-		parser >> item;
-		if (val == item)
-			return true;
-	}
-	
-	if (error_output)
-	{
-		*error_output << "Expected variable \"" << name << "\" to have one of these values: \"" << list << "\" but it had value \"" << val << "\" in section starting on line " << line << std::endl;
-	}
-	return false;
-}
-
 bool GRAPHICS_CONFIG_OUTPUT::Load(std::istream & f, std::ostream & error_output, int & line)
 {
 	int sectionstart = line;
@@ -296,6 +307,11 @@ bool GRAPHICS_CONFIG_OUTPUT::Load(std::istream & f, std::ostream & error_output,
 	std::map <std::string, std::string> vars;
 	if (!readSection(f, error_output, line, reqd, vars))
 		return false;
+	
+	for (std::map <std::string, std::string>::const_iterator i = vars.begin(); i != vars.end(); i++)
+	{
+		if (!isOf(i->first, "name width height type filter format mipmap multisample conditions", &error_output, sectionstart)) return false;
+	}
 	
 	// fill in defaults
 	fillDefault(vars, "filter", "linear");
@@ -371,6 +387,11 @@ bool GRAPHICS_CONFIG_PASS::Load(std::istream & f, std::ostream & error_output, i
 	std::map <std::string, std::string> vars;
 	if (!readSection(f, error_output, line, reqd, vars))
 		return false;
+	
+	for (std::map <std::string, std::string>::const_iterator i = vars.begin(); i != vars.end(); i++)
+	{
+		if (!isOf(i->first, "draw camera light output shader inputs clear_color clear_depth write_color write_alpha write_depth cull conditions blendmode depthtest", &error_output, sectionstart)) return false;
+	}
 	
 	bool postprocess = (vars["draw"] == "postprocess");
 	

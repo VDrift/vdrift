@@ -190,3 +190,21 @@ bool MODEL::ReadFromFile(const std::string & filepath, std::ostream & error_outp
 	
 	return true;
 }
+
+void MODEL::SetVertexArray(const VERTEXARRAY & newmesh)
+{
+	Clear();
+	
+	mesh = newmesh;
+}
+
+void MODEL::BuildFromVertexArray(const VERTEXARRAY & newmesh, std::ostream & error_output)
+{
+	SetVertexArray(newmesh);
+	
+	//generate metrics such as bounding box, etc
+	GenerateMeshMetrics();
+	
+	//optimize into a static display list
+	GenerateListID(error_output);
+}

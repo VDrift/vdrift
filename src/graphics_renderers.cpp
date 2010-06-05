@@ -520,8 +520,68 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 	else if (cleardepth)
 		glClear(GL_DEPTH_BUFFER_BIT);
 	
+	if (writedepth || depth_mode != GL_ALWAYS)
+		glstate.Enable(GL_DEPTH_TEST);
+	else
+		glstate.Disable(GL_DEPTH_TEST);
+	glstate.SetDepthMask(writedepth);
+	glstate.SetColorMask(writecolor, writealpha);
 	glDepthFunc( depth_mode );
 	
+	switch (blendmode)
+	{
+		case BLENDMODE::DISABLED:
+		{
+			glstate.Disable(GL_ALPHA_TEST);
+			glstate.Disable(GL_BLEND);
+			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+		}
+		break;
+		
+		case BLENDMODE::ADD:
+		{
+			glstate.Disable(GL_ALPHA_TEST);
+			glstate.Enable(GL_BLEND);
+			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+			glstate.SetBlendFunc(GL_ONE, GL_ONE);
+		}
+		break;
+		
+		case BLENDMODE::ALPHABLEND:
+		{
+			glstate.Disable(GL_ALPHA_TEST);
+			glstate.Enable(GL_BLEND);
+			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+			glstate.SetBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		}
+		break;
+		
+		case BLENDMODE::PREMULTIPLIED_ALPHA:
+		{
+			glstate.Disable(GL_ALPHA_TEST);
+			glstate.Enable(GL_BLEND);
+			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+			glstate.SetBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+		}
+		break;
+		
+		case BLENDMODE::ALPHATEST:
+		{
+			glstate.Enable(GL_ALPHA_TEST);
+			glstate.Disable(GL_BLEND);
+			if (fsaa > 1 && shaders)
+			{
+				glstate.Enable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+			}
+			glstate.SetAlphaFunc(GL_GREATER, 0.5f);
+		}
+		break;
+		
+		default:
+		assert(0);
+		break;
+	}
+
 	last_transform_valid = false;
 	
 	glColor4f(1,1,1,1);
@@ -542,101 +602,80 @@ void RENDER_INPUT_SCENE::DrawList(GLSTATEMANAGER & glstate, std::vector <DRAWABL
 	for (vector <DRAWABLE*>::iterator ptr = drawlist.begin(); ptr != drawlist.end(); ptr++, loopcount++)
 	{
 		DRAWABLE * i = *ptr;
-		//if (i->IsDraw())
+		if (preculled || !FrustumCull(*i))
 		{
-			//if (loopcount < already_culled || !FrustumCull(*i))
-			if (preculled || !FrustumCull(*i))
+			drawcount++;
+			
+			SelectFlags(*i, glstate);
+
+			if (shaders) SelectAppropriateShader(*i);
+
+			SelectTexturing(*i, glstate);
+
+			bool need_pop = SelectTransformStart(*i, glstate);
+
+			//assert(i->GetDraw()->GetVertArray() || i->GetDraw()->IsDrawList() || !i->GetDraw()->GetLine().empty());
+
+			if (i->IsDrawList())
 			{
-				drawcount++;
-				
-				SelectFlags(*i, glstate);
-
-				if (shaders) SelectAppropriateShader(*i);
-
-				SelectTexturing(*i, glstate);
-
-				bool need_pop = SelectTransformStart(*i, glstate);
-
-				//assert(i->GetDraw()->GetVertArray() || i->GetDraw()->IsDrawList() || !i->GetDraw()->GetLine().empty());
-
-				if (i->IsDrawList())
-				{
-					//cout << "beep" << endl;
-					//assert(i->GetDraw()->GetModel()->HaveListID());
-					//glCallList(i->GetDraw()->GetModel()->GetListID());
-					const unsigned int numlists = i->GetDrawLists().size();
-					for (unsigned int n = 0; n < numlists; ++n)
-						glCallList(i->GetDrawLists()[n]);
-				}
-				else if (i->GetVertArray())
-				{
-					glEnableClientState(GL_VERTEX_ARRAY);
-
-					const float * verts;
-					int vertcount;
-					i->GetVertArray()->GetVertices(verts, vertcount);
-					glVertexPointer(3, GL_FLOAT, 0, verts);
-
-					const float * norms;
-					int normcount;
-					i->GetVertArray()->GetNormals(norms, normcount);
-					glNormalPointer(GL_FLOAT, 0, norms);
-					if (normcount > 0)
-						glEnableClientState(GL_NORMAL_ARRAY);
-
-					//const float * tc[i->GetDraw()->varray.GetTexCoordSets()];
-					//int tccount[i->GetDraw()->varray.GetTexCoordSets()];
-					const float * tc[1];
-					int tccount[1];
-					if (i->GetVertArray()->GetTexCoordSets() > 0)
-					{
-						i->GetVertArray()->GetTexCoords(0, tc[0], tccount[0]);
-						glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-						glTexCoordPointer(2, GL_FLOAT, 0, tc[0]);
-					}
-
-					const int * faces;
-					int facecount;
-					i->GetVertArray()->GetFaces(faces, facecount);
-
-					glDrawElements(GL_TRIANGLES, facecount, GL_UNSIGNED_INT, faces);
-
-					glDisableClientState(GL_VERTEX_ARRAY);
-					glDisableClientState(GL_NORMAL_ARRAY);
-					glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-				}
-				else if (!i->GetLine().empty())
-				{
-					glstate.Enable(GL_LINE_SMOOTH);
-					glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-					glLineWidth(i->GetLinesize());
-					glBegin(GL_LINE_STRIP);
-					const std::vector< MATHVECTOR < float , 3 > > & line = i->GetLine();
-					for (std::vector< MATHVECTOR < float , 3 > >::const_iterator i = line.begin(); i != line.end(); ++i)
-						glVertex3f((*i)[0],(*i)[1],(*i)[2]);
-					glEnd();
-				}
-
-				SelectTransformEnd(*i, need_pop);
+				//cout << "beep" << endl;
+				//assert(i->GetDraw()->GetModel()->HaveListID());
+				//glCallList(i->GetDraw()->GetModel()->GetListID());
+				const unsigned int numlists = i->GetDrawLists().size();
+				for (unsigned int n = 0; n < numlists; ++n)
+					glCallList(i->GetDrawLists()[n]);
 			}
+			else if (i->GetVertArray())
+			{
+				glEnableClientState(GL_VERTEX_ARRAY);
+
+				const float * verts;
+				int vertcount;
+				i->GetVertArray()->GetVertices(verts, vertcount);
+				glVertexPointer(3, GL_FLOAT, 0, verts);
+
+				const float * norms;
+				int normcount;
+				i->GetVertArray()->GetNormals(norms, normcount);
+				glNormalPointer(GL_FLOAT, 0, norms);
+				if (normcount > 0)
+					glEnableClientState(GL_NORMAL_ARRAY);
+
+				//const float * tc[i->GetDraw()->varray.GetTexCoordSets()];
+				//int tccount[i->GetDraw()->varray.GetTexCoordSets()];
+				const float * tc[1];
+				int tccount[1];
+				if (i->GetVertArray()->GetTexCoordSets() > 0)
+				{
+					i->GetVertArray()->GetTexCoords(0, tc[0], tccount[0]);
+					glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+					glTexCoordPointer(2, GL_FLOAT, 0, tc[0]);
+				}
+
+				const int * faces;
+				int facecount;
+				i->GetVertArray()->GetFaces(faces, facecount);
+
+				glDrawElements(GL_TRIANGLES, facecount, GL_UNSIGNED_INT, faces);
+
+				glDisableClientState(GL_VERTEX_ARRAY);
+				glDisableClientState(GL_NORMAL_ARRAY);
+				glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+			}
+			else if (!i->GetLine().empty())
+			{
+				glstate.Enable(GL_LINE_SMOOTH);
+				glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+				glLineWidth(i->GetLinesize());
+				glBegin(GL_LINE_STRIP);
+				const std::vector< MATHVECTOR < float , 3 > > & line = i->GetLine();
+				for (std::vector< MATHVECTOR < float , 3 > >::const_iterator i = line.begin(); i != line.end(); ++i)
+					glVertex3f((*i)[0],(*i)[1],(*i)[2]);
+				glEnd();
+			}
+
+			SelectTransformEnd(*i, need_pop);
 		}
-		/*else if (i->IsTransform())
-		{
-			//cout << "is transform" << endl;
-			float mat[16];
-			glPushMatrix();
-			MATHVECTOR <float, 3> translation;
-			translation = i->GetTransform()->GetTranslation();
-			glTranslatef(translation[0],translation[1],translation[2]);
-			i->GetTransform()->GetRotation().GetMatrix4(mat);
-			glMultMatrixf(mat);
-			last_transform_valid = false;
-		}
-		else if (i->IsEmpty())
-		{
-			//cout << "is transform pop" << endl;
-			glPopMatrix();
-		}*/
 	}
 	
 	//std::cout << "drew " << drawcount << " of " << drawlist_static->size() + drawlist_dynamic->size() << " ("  << combined_drawlist_cache.size() << "/" << already_culled << ")" << std::endl;
@@ -712,63 +751,6 @@ void RENDER_INPUT_SCENE::SelectFlags(DRAWABLE & forme, GLSTATEMANAGER & glstate)
 	}
 	else
 		glstate.Disable(GL_CULL_FACE);
-
-	switch (blendmode)
-	{
-		case BLENDMODE::DISABLED:
-		{
-			glstate.Disable(GL_ALPHA_TEST);
-			glstate.Disable(GL_BLEND);
-			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-		}
-		break;
-		
-		case BLENDMODE::ADD:
-		{
-			glstate.Disable(GL_ALPHA_TEST);
-			glstate.Enable(GL_BLEND);
-			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-			glstate.SetBlendFunc(GL_ONE, GL_ONE);
-		}
-		break;
-		
-		case BLENDMODE::ALPHABLEND:
-		{
-			glstate.Disable(GL_ALPHA_TEST);
-			glstate.Enable(GL_BLEND);
-			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-			glstate.SetBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		}
-		break;
-		
-		case BLENDMODE::PREMULTIPLIED_ALPHA:
-		{
-			glstate.Disable(GL_ALPHA_TEST);
-			glstate.Enable(GL_BLEND);
-			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-			glstate.SetBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-		}
-		break;
-		
-		case BLENDMODE::ALPHATEST:
-		{
-			glstate.Enable(GL_ALPHA_TEST);
-			glstate.Disable(GL_BLEND);
-			if (fsaa > 1 && shaders)
-			{
-				glstate.Enable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-			}
-			glstate.SetAlphaFunc(GL_GREATER, 0.5f);
-		}
-		break;
-		
-		default:
-		assert(0);
-		break;
-	}
-
-	glstate.SetDepthMask(writedepth);
-	glstate.SetColorMask(writecolor, writealpha);
 
 	float r,g,b,a;
 	i->GetColor(r,g,b,a);
@@ -857,13 +839,6 @@ bool RENDER_INPUT_SCENE::SelectTransformStart(DRAWABLE & forme, GLSTATEMANAGER &
 			glPopMatrix();
 		last_transform_valid = false;
 
-		glActiveTexture(GL_TEXTURE1);
-		glMatrixMode(GL_TEXTURE);
-		glPushMatrix();
-		glLoadIdentity();
-		glActiveTexture(GL_TEXTURE0);
-		glMatrixMode(GL_MODELVIEW);
-
 		glPushMatrix();
 		glLoadMatrixf(i->GetTransform().GetArray());
 	}
@@ -909,21 +884,27 @@ bool RENDER_INPUT_SCENE::SelectTransformStart(DRAWABLE & forme, GLSTATEMANAGER &
 		else need_a_pop = false;
 	}
 	
+	// throw information about the object into the texture 1 matrix
+	/*glActiveTexture(GL_TEXTURE1);
+	glMatrixMode(GL_TEXTURE);
+	glLoadIdentity();
+	static float temp_matrix[16];
+	for (int n = 0; n < 3; n++)
+		temp_matrix[n] = i->GetObjectCenter()[n];
+	temp_matrix[3] = 1.0;
+	MATRIX4<float> m;
+	glGetFloatv (GL_MODELVIEW_MATRIX, m.GetArray());
+	m.MultiplyVector4(temp_matrix); //eyespace light center in 0, 1, 2
+	temp_matrix[3] = 0.1; //attenuation factor in 3
+	glLoadMatrixf(temp_matrix);
+	glActiveTexture(GL_TEXTURE0);
+	glMatrixMode(GL_MODELVIEW);*/
+	
 	return need_a_pop;
 }
 
 void RENDER_INPUT_SCENE::SelectTransformEnd(DRAWABLE & forme, bool need_pop)
 {
-	DRAWABLE * i(&forme);
-	if (!i->GetCameraTransformEnable())
-	{
-		glActiveTexture(GL_TEXTURE1);
-		glMatrixMode(GL_TEXTURE);
-		glPopMatrix();
-		glActiveTexture(GL_TEXTURE0);
-		glMatrixMode(GL_MODELVIEW);
-	}
-
 	if (need_pop)
 	{
 		glPopMatrix();

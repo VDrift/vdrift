@@ -89,7 +89,8 @@ public:
 	void Clear() {ClearMeshData();ClearListID();ClearMetrics();}
 	
 	const VERTEXARRAY & GetVertexArray() const {return mesh;}
-	void SetVertexArray(const VERTEXARRAY & newmesh) {Clear(); mesh = newmesh;}
+	void SetVertexArray(const VERTEXARRAY & newmesh);
+	void BuildFromVertexArray(const VERTEXARRAY & newmesh, std::ostream & error_output);
 	
 	bool Loaded() {return (mesh.GetNumFaces() > 0);}
 

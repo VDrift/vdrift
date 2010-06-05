@@ -441,6 +441,35 @@ bool CAR::Load (
 		if (!LoadSounds(carpath, carname, sound_device_info, soundbufferlibrary, info_output, error_output))
 			return false;
 	}
+	
+	// create brake light point light sources
+	// this is experimental at the moment and uses fixed
+	// coordinates to place the brake lights
+	for (int i = 0; i < 2; i++)
+	{
+		lights.push_back(LIGHT());
+		SCENENODE & bodynoderef = topnode.GetNode(bodynode);
+		lights.back().node = bodynoderef.AddNode();
+		SCENENODE & node = bodynoderef.GetNode(lights.back().node);
+		VERTEXARRAY & varray = lights.back().varray;
+		MODEL & model = lights.back().model;
+		varray.SetToUnitCube();
+		varray.Scale(2.0,2.0,2.0);
+		//varray.SetToBillboard(-1,-1,1,1);
+		node.GetTransform().SetTranslation(MATHVECTOR <float,3>(-2.16,-0.45*(i*2-1),-0.18));
+		model.BuildFromVertexArray(varray, error_output);
+		
+		
+		keyed_container <DRAWABLE> & dlist = GetDrawlist(node, OMNI);
+		lights.back().draw = dlist.insert(DRAWABLE());
+		DRAWABLE & draw = dlist.get(lights.back().draw);
+		draw.SetColor(0.8,0.1,0.1);
+		draw.AddDrawList(model.GetListID());
+		//draw.SetVertArray(&model.GetVertexArray());
+		draw.SetCull(true, true);
+		//draw.SetCull(false, false);
+		draw.SetDrawEnable(false);
+	}
 
 	mz_nominalmax = (GetTireMaxMz(FRONT_LEFT) + GetTireMaxMz(FRONT_RIGHT))*0.5;
 
@@ -879,6 +908,12 @@ void CAR::CopyPhysicsResultsIntoDisplay()
 	// update brake/reverse lights
 	if (brakelights_emissive.valid())
 		GetDrawlist(bodynoderef, EMISSIVE).get(brakelights_emissive).SetDrawEnable(applied_brakes > 0);
+	for (std::list <LIGHT>::iterator i = lights.begin(); i != lights.end(); i++)
+	{
+		SCENENODE & node = bodynoderef.GetNode(i->node);
+		DRAWABLE & draw = GetDrawlist(node,OMNI).get(i->draw);
+		draw.SetDrawEnable(applied_brakes > 0);
+	}
 	if (reverselights_emissive.valid())
 		GetDrawlist(bodynoderef, EMISSIVE).get(reverselights_emissive).SetDrawEnable(GetGear() < 0);
 }

@@ -107,6 +107,7 @@ struct DRAWABLE_CONTAINER
 	CONTAINER <DRAWABLE> nocamtrans_blend;
 	CONTAINER <DRAWABLE> nocamtrans_noblend;
 	CONTAINER <DRAWABLE> lights_emissive;
+	CONTAINER <DRAWABLE> lights_omni;
 	// don't forget to add new members to the ForEach, AppendTo, and GetByName functions
 	
 	template <typename T> 
@@ -124,6 +125,7 @@ struct DRAWABLE_CONTAINER
 		func(nocamtrans_blend);
 		func(nocamtrans_noblend);
 		func(lights_emissive);
+		func(lights_omni);
 	}
 	
 	/// adds elements from the first drawable container to the second
@@ -143,6 +145,7 @@ struct DRAWABLE_CONTAINER
 		ADDTOCONTAINER(nocamtrans_blend);
 		ADDTOCONTAINER(nocamtrans_noblend);
 		ADDTOCONTAINER(lights_emissive);
+		ADDTOCONTAINER(lights_omni);
 		#undef ADDTOCONTAINER
 	}
 	
@@ -163,6 +166,7 @@ struct DRAWABLE_CONTAINER
 		TEXTIFY(nocamtrans_blend);
 		TEXTIFY(nocamtrans_noblend);
 		TEXTIFY(lights_emissive);
+		TEXTIFY(lights_omni);
 		#undef TEXTIFY
 		return ref;
 	}

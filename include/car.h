@@ -297,6 +297,14 @@ protected:
 	MODEL_JOE03 bodymodel;
 	MODEL_JOE03 interiormodel;
 	MODEL_JOE03 glassmodel;
+	struct LIGHT
+	{
+		keyed_container <SCENENODE>::handle node;
+		keyed_container <DRAWABLE>::handle draw;
+		VERTEXARRAY varray;
+		MODEL model;
+	};
+	std::list <LIGHT> lights;
 	
 	keyed_container <DRAWABLE>::handle driverdraw;
 	keyed_container <SCENENODE>::handle drivernode;
@@ -379,7 +387,8 @@ protected:
 	{
 		BLEND,
 		NOBLEND,
-		EMISSIVE
+		EMISSIVE,
+		OMNI
 	};
 	
 	/// take the parentnode, add a scenenode (if output_scenenode isn't yet valid), add a drawable to the
@@ -413,6 +422,9 @@ protected:
 			
 			case EMISSIVE:
 			return node.GetDrawlist().lights_emissive;
+			
+			case OMNI:
+			return node.GetDrawlist().lights_omni;
 		};
 		assert(0);
 		return node.GetDrawlist().car_noblend;

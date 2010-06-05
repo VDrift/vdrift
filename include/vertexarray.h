@@ -87,6 +87,8 @@ public:
 	
 	void SetVertexData2DQuad(float x1, float y1, float x2, float y2, float u1, float v1, float u2, float v2, float * vcorners, float * uvs, int * bfaces, int faceoffset=0) const;
 	
+	void SetToUnitCube();
+	
 	bool Serialize(joeserialize::Serializer & s)
 	{
 		_SERIALIZE_(s,vertices);
@@ -172,6 +174,7 @@ public:
 	void Translate(float x, float y, float z);
 	void Rotate(float a, float x, float y, float z);
 	void Scale(float x, float y, float z);
+	void FlipNormals();
 };
 
 #endif
