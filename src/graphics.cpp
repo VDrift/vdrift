@@ -702,7 +702,7 @@ void GRAPHICS_SDLGL::SetupScene(float fov, float new_view_distance, const MATHVE
 	
 	// create a camera for the dynamic reflections
 	{
-		GRAPHICS_CAMERA & cam = cameras["dynamic reflection"];
+		GRAPHICS_CAMERA & cam = cameras["dynamic_reflection"];
 		cam.pos = dynamic_reflection_sample_pos;
 		cam.fov = 90; // this gets automatically overridden with the correct fov (which is 90 anyway)
 		cam.orient.LoadIdentity(); // this gets automatically rotated for each cube side
@@ -1131,7 +1131,7 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 						
 						if (ci == cameras.end())
 						{
-							ReportOnce(&*i, "Camera "+cameraname+" couldn't be found", error_output);
+							ReportOnce(&*i, "Camera "+i->camera+" couldn't be found", error_output);
 							continue;
 						}
 						
