@@ -32,10 +32,15 @@ class MATRIX4
 		
 		void DebugPrint(std::ostream & out) const
 		{
-			for (size_type i = 0; i < 16; i++)
+			for (size_type row = 0; row < 4; row++)
 			{
-				out << i << ". " << data[i] << std::endl;
+				for (size_type col = 0; col < 4; col++)
+				{
+					out << data[col*4+row] << "\t";
+				}
+				out << std::endl;
 			}
+			out << std::endl;
 		}
 		
 		MATRIX4 <T> Multiply(const MATRIX4 <T> & other) const
@@ -222,5 +227,12 @@ class MATRIX4
 			return Inv;
 		}
 };
+
+template <typename T>
+std::ostream & operator << (std::ostream &os, const MATRIX4 <T> & m)
+{
+	m.DebugPrint(os);
+	return os;
+}
 
 #endif

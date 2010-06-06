@@ -55,7 +55,7 @@ public:
 	{
 		if (newcolormask != colormask || newalphamask != alphamask)
 		{
-			depthmask = newcolormask;
+			colormask = newcolormask;
 			alphamask = newalphamask;
 			GLboolean val = colormask ? GL_TRUE : GL_FALSE;
 			glColorMask(val, val, val, alphamask ? GL_TRUE : GL_FALSE);

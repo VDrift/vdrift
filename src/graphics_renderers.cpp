@@ -154,11 +154,50 @@ void ExtractFrustum(FRUSTUM & frustum)
 	frustum.frustum[5][3] /= t;
 }
 
+/// transform the shadow matrices in texture4-6 by the inverse of the camera transform in texture3
+void PushShadowMatrices()
+{
+	glActiveTexture(GL_TEXTURE3);
+	glMatrixMode(GL_TEXTURE);
+	MATRIX4<float> m;
+	glGetFloatv (GL_TEXTURE_MATRIX, m.GetArray());
+	m = m.Inverse();
+	
+	//std::cout << m << std::endl;
+	
+	for (int i = 0; i < 3; i++)
+	{
+		glActiveTexture(GL_TEXTURE4+i);
+		glPushMatrix();
+		glMultMatrixf(m.GetArray());
+	}
+	
+	glActiveTexture(GL_TEXTURE0);
+	glMatrixMode(GL_MODELVIEW);
+}
+
+void PopShadowMatrices()
+{
+	glMatrixMode(GL_TEXTURE);
+	
+	for (int i = 0; i < 3; i++)
+	{
+		glActiveTexture(GL_TEXTURE4+i);
+		glPopMatrix();
+	}
+	
+	glActiveTexture(GL_TEXTURE0);
+	glMatrixMode(GL_MODELVIEW);
+}
+
 void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & error_output)
 {
 	assert(shader);
 	
 	OPENGL_UTILITY::CheckForOpenGLErrors("postprocess begin", error_output);
+	
+	glstate.SetColorMask(writecolor, writealpha);
+	glstate.SetDepthMask(writedepth);
 	
 	if (clearcolor && cleardepth)
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -236,9 +275,6 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE);
 	glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_LUMINANCE);
 	
-	glstate.SetColorMask(writecolor, writealpha);
-	glstate.SetDepthMask(writedepth);
-	
 	OPENGL_UTILITY::CheckForOpenGLErrors("postprocess flag set", error_output);
 	
 	// send shader parameters
@@ -250,6 +286,20 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 		shader->UploadActiveShaderParameter1f("znear", 0.1);
 		//std::cout << lightvec << std::endl;
 	}
+	
+	// put the camera transform into texture3
+	glActiveTexture(GL_TEXTURE3);
+	glMatrixMode(GL_TEXTURE);
+	glLoadIdentity();
+	float temp_matrix[16];
+	(cam_rotation).GetMatrix4(temp_matrix);
+	glLoadMatrixf(temp_matrix);
+	glTranslatef(-cam_position[0],-cam_position[1],-cam_position[2]);
+	glActiveTexture(GL_TEXTURE0);
+	glMatrixMode(GL_MODELVIEW);
+	
+	//std::cout << "postprocess: " << std::endl;
+	PushShadowMatrices();
 	
 	OPENGL_UTILITY::CheckForOpenGLErrors("shader parameter upload", error_output);
 	
@@ -319,11 +369,13 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 	glEnd();
 	
 	OPENGL_UTILITY::CheckForOpenGLErrors("postprocess draw", error_output);
-
+	
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
 	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
+	
+	PopShadowMatrices();
 
 	glstate.Enable(GL_DEPTH_TEST);
 	glstate.Disable(GL_TEXTURE_2D);
@@ -432,13 +484,6 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 		//glTranslatef(-cam_position[0],-cam_position[1],-cam_position[2]);
 		//glLoadIdentity();
 
-		/*glActiveTexture(GL_TEXTURE3);
-		glMatrixMode(GL_TEXTURE);
-		glLoadIdentity();
-		(cam_rotation).GetMatrix4(temp_matrix);
-		glLoadMatrixf(temp_matrix);
-		glTranslatef(-cam_position[0],-cam_position[1],-cam_position[2]);*/
-
 		glActiveTexture(GL_TEXTURE0);
 		glMatrixMode(GL_MODELVIEW);
 
@@ -475,7 +520,13 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 		}*/
 		glActiveTexture(GL_TEXTURE0);
 	}
+	
+	//std::cout << "scene: " << std::endl;
+	PushShadowMatrices();
 
+	glstate.SetColorMask(writecolor, writealpha);
+	glstate.SetDepthMask(writedepth);
+	
 	if (clearcolor && cleardepth)
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	else if (clearcolor)
@@ -487,8 +538,7 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 		glstate.Enable(GL_DEPTH_TEST);
 	else
 		glstate.Disable(GL_DEPTH_TEST);
-	glstate.SetDepthMask(writedepth);
-	glstate.SetColorMask(writecolor, writealpha);
+	
 	glDepthFunc( depth_mode );
 	
 	switch (blendmode)
@@ -555,6 +605,8 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 	
 	if (last_transform_valid)
 		glPopMatrix();
+	
+	PopShadowMatrices();
 }
 
 void RENDER_INPUT_SCENE::DrawList(GLSTATEMANAGER & glstate, std::vector <DRAWABLE*> & drawlist, bool preculled)

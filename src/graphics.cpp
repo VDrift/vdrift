@@ -1059,6 +1059,25 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 			assert(!i->draw.empty());
 			if (i->draw.back() == "postprocess")
 			{
+				// setup camera, even though we don't use it directly for the post process we want to have some info available
+				std::string cameraname = i->camera;
+				camera_map_type::iterator ci = cameras.find(cameraname);
+				if (ci == cameras.end())
+				{
+					ReportOnce(&*i, "Camera "+cameraname+" couldn't be found", error_output);
+					continue;
+				}
+				GRAPHICS_CAMERA & cam = ci->second;
+				if (cam.orthomode)
+					renderscene.SetOrtho(cam.orthomin, cam.orthomax);
+				else
+					renderscene.DisableOrtho();
+				float view_distance = cam.view_distance;
+				if (!i->cull) //override view distance to a very large value if culling is off
+					view_distance = 10000.f;
+				renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, view_distance, cam.w, cam.h);
+				postprocess.SetCameraInfo(cam.pos, cam.orient, cam.fov, view_distance, cam.w, cam.h); //so we have this later if we want
+				
 				postprocess.SetDepthMode(DepthModeFromString(i->depthtest));
 				postprocess.SetWriteDepth(i->write_depth);
 				postprocess.SetClear(i->clear_color, i->clear_depth);
@@ -1117,7 +1136,6 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 						if (!i->cull) //override view distance to a very large value if culling is off
 							view_distance = 10000.f;
 						renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, view_distance, cam.w, cam.h);
-						postprocess.SetCameraInfo(cam.pos, cam.orient, cam.fov, view_distance, cam.w, cam.h); //so we have this later if we want
 						
 						// setup shader
 						if (using_shaders)
