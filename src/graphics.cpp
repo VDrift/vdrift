@@ -390,7 +390,10 @@ bool GRAPHICS_SDLGL::LoadShader(const std::string & shaderpath, const std::strin
 	}
 
 	if (lighting == 1)
-		defines.push_back("_EDGECONTRASTENHANCEMENT_");
+		defines.push_back("_SSAO_LOW_");
+	
+	if (lighting == 2)
+		defines.push_back("_SSAO_HIGH_")
 
 	std::string shadername = name;
 	if (!variant.empty())
@@ -505,7 +508,9 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 		
 		OPENGL_UTILITY::CheckForOpenGLErrors("EnableShaders: FBO deinit", error_output);
 		
-		bool edge_contrast_enhancement = (lighting == 1);
+		bool ssao = (lighting > 0);
+		bool ssao_low = (lighting == 1);
+		bool ssao_high = (lighting == 2);
 		bool reflection_disabled = (reflection_status == REFLECTION_DISABLED);
 		bool reflection_dynamic = (reflection_status == REFLECTION_DYNAMIC);
 		bool shadows_near = shadows;
@@ -526,7 +531,9 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 		if (fsaa > 1) conditions.insert("fsaa");
 		#define ADDCONDITION(x) if (x) conditions.insert(#x)
 		ADDCONDITION(bloom);
-		ADDCONDITION(edge_contrast_enhancement);
+		ADDCONDITION(ssao);
+		ADDCONDITION(ssao_low);
+		ADDCONDITION(ssao_high);
 		ADDCONDITION(reflection_disabled);
 		ADDCONDITION(reflection_dynamic);
 		ADDCONDITION(shadows_near);
