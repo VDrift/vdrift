@@ -1082,6 +1082,14 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 				postprocess.SetWriteDepth(i->write_depth);
 				postprocess.SetClear(i->clear_color, i->clear_depth);
 				postprocess.SetBlendMode(BlendModeFromString(i->blendmode));
+				
+				shader_map_type::iterator si = shadermap.find(i->shader);
+				if (si == shadermap.end())
+				{
+					ReportOnce(&*i, "Shader "+i->shader+" couldn't be found", error_output);
+					continue;
+				}
+				
 				RenderPostProcess(i->shader, input_textures, render_outputs[i->output], i->write_color, i->write_alpha, error_output);
 			}
 			else

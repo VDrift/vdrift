@@ -277,16 +277,6 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 	
 	OPENGL_UTILITY::CheckForOpenGLErrors("postprocess flag set", error_output);
 	
-	// send shader parameters
-	{
-		MATHVECTOR <float, 3> lightvec = lightposition;
-		cam_rotation.RotateVector(lightvec);
-		shader->UploadActiveShaderParameter3f("directlight_eyespace_direction", lightvec[0], lightvec[1], lightvec[2]);
-		shader->UploadActiveShaderParameter1f("contrast", contrast);
-		shader->UploadActiveShaderParameter1f("znear", 0.1);
-		//std::cout << lightvec << std::endl;
-	}
-	
 	// put the camera transform into texture3
 	glActiveTexture(GL_TEXTURE3);
 	glMatrixMode(GL_TEXTURE);
@@ -343,6 +333,19 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 	{
 		invproj.TransformVectorOut(frustum_corners[i][0], frustum_corners[i][1], frustum_corners[i][2]);
 		frustum_corners[i][2] = -lod_far;
+	}
+	
+	// send shader parameters
+	{
+		MATHVECTOR <float, 3> lightvec = lightposition;
+		cam_rotation.RotateVector(lightvec);
+		shader->UploadActiveShaderParameter3f("directlight_eyespace_direction", lightvec);
+		shader->UploadActiveShaderParameter1f("contrast", contrast);
+		shader->UploadActiveShaderParameter1f("znear", 0.1);
+		//std::cout << lightvec << std::endl;
+		shader->UploadActiveShaderParameter3f("frustum_corner_bl", frustum_corners[0]);
+		shader->UploadActiveShaderParameter3f("frustum_corner_br_delta", frustum_corners[1]-frustum_corners[0]);
+		shader->UploadActiveShaderParameter3f("frustum_corner_tl_delta", frustum_corners[3]-frustum_corners[0]);
 	}
 	
 	
