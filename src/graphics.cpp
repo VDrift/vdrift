@@ -393,7 +393,7 @@ bool GRAPHICS_SDLGL::LoadShader(const std::string & shaderpath, const std::strin
 		defines.push_back("_SSAO_LOW_");
 	
 	if (lighting == 2)
-		defines.push_back("_SSAO_HIGH_")
+		defines.push_back("_SSAO_HIGH_");
 
 	std::string shadername = name;
 	if (!variant.empty())
