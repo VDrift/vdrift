@@ -696,6 +696,13 @@ void GRAPHICS_SDLGL::SetupScene(float fov, float new_view_distance, const MATHVE
 		cam.h = h;
 	}
 	
+	// create a camera for the skybox with a long view distance
+	{
+		GRAPHICS_CAMERA & cam = cameras["skybox"];
+		cam = cameras["default"];
+		cam.view_distance = 10000.0;
+	}
+	
 	// create a camera for 3d ui elements that has a fixed FOV
 	{
 		GRAPHICS_CAMERA & cam = cameras["ui3d"];
@@ -716,6 +723,13 @@ void GRAPHICS_SDLGL::SetupScene(float fov, float new_view_distance, const MATHVE
 		cam.view_distance = 100.f;
 		cam.w = 1.f; // this gets automatically overridden with the cubemap dimensions
 		cam.h = 1.f; // this gets automatically overridden with the cubemap dimensions
+	}
+	
+	// create a camera for the dynamic reflection skybox
+	{
+		GRAPHICS_CAMERA & cam = cameras["dynamic_reflection_skybox"];
+		cam = cameras["dynamic_reflection"];
+		cam.view_distance = 10000.f;
 	}
 	
 	// create an ortho camera for 2d drawing
@@ -1079,11 +1093,8 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 					renderscene.SetOrtho(cam.orthomin, cam.orthomax);
 				else
 					renderscene.DisableOrtho();
-				float view_distance = cam.view_distance;
-				if (!i->cull) //override view distance to a very large value if culling is off
-					view_distance = 10000.f;
-				renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, view_distance, cam.w, cam.h);
-				postprocess.SetCameraInfo(cam.pos, cam.orient, cam.fov, view_distance, cam.w, cam.h); //so we have this later if we want
+				renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h);
+				postprocess.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h); //so we have this later if we want
 				
 				postprocess.SetDepthMode(DepthModeFromString(i->depthtest));
 				postprocess.SetWriteDepth(i->write_depth);
@@ -1147,10 +1158,7 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 							renderscene.SetOrtho(cam.orthomin, cam.orthomax);
 						else
 							renderscene.DisableOrtho();
-						float view_distance = cam.view_distance;
-						if (!i->cull) //override view distance to a very large value if culling is off
-							view_distance = 10000.f;
-						renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, view_distance, cam.w, cam.h);
+						renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h);
 						
 						// setup shader
 						if (using_shaders)
