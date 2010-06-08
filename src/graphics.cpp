@@ -549,6 +549,7 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 		// add some common textures
 		if (reflection_status == REFLECTION_STATIC)
 			texture_inputs["reflection_cube"] = static_reflection;
+		texture_inputs["ambient_cube"] = static_ambient;
 		
 		for (std::vector <GRAPHICS_CONFIG_OUTPUT>::const_iterator i = config.outputs.begin(); i != config.outputs.end(); i++)
 		{
