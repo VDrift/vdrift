@@ -109,7 +109,8 @@ std::map <std::string, std::string> readValuePairs(std::istream & f, std::ostrea
 		std::string name = strTrim(skipUntil(lineparse, "="));
 		if (lineparse)
 		{
-			assert(lineparse.get() == '=');
+			char separator = lineparse.get();
+			assert(separator == '=');
 			std::string value = strTrim(skipUntil(lineparse, ";"));
 			varmap[name] = value;
 		}
@@ -464,7 +465,8 @@ bool GRAPHICS_CONFIG::Load(std::istream & f, std::ostream & error_output)
 	while (f)
 	{
 		// read the section title
-		assert(f.get() == '[');
+		char bracket = f.get();
+		assert(bracket == '[');
 		std::string type = strTrim(skipUntil(f, "]", &line));
 		if (!f)
 		{
