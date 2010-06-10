@@ -346,7 +346,9 @@ public:
 		// rolling resistance should not add energy to system
 		// fake this by using a ramped step function, should be replaced by a constraint
 		T max_force = normal_force * rolling_resistance;
-		T ramp = (velocity < 1 ? velocity : 1) > -1 ? velocity : -1; 
+		T ramp = velocity;
+		if (velocity > 1) ramp = 1;
+		else if (velocity < -1) ramp = -1; 
 		
 		return -ramp * max_force;
 	}
