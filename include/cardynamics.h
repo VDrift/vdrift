@@ -22,6 +22,7 @@
 #include "BulletDynamics/Dynamics/btActionInterface.h"
 
 //#define _BULLET_
+//#include "suspension.h"
 
 class MODEL;
 class CONFIGFILE;
@@ -144,10 +145,6 @@ protected:
 	COLLISION_WORLD * world;
 	btRigidBody * chassis;
 	
-#ifdef _BULLET_
-	std::vector <btRigidBody *> wheelBody;
-#endif
-
 	// interpolated chassis state
 	MATHVECTOR <T, 3> chassisPosition;
 	MATHVECTOR <T, 3> chassisCenterOfMass;
@@ -188,8 +185,11 @@ protected:
 	std::vector <MATHVECTOR <T, 3> > wheel_position;
 	std::vector <QUATERNION <T> > wheel_orientation;
 	std::vector <COLLISION_CONTACT> wheel_contact;
-	
+#ifdef _BULLET_
+	std::vector <Suspension *> suspension_new;
+#endif
 	std::vector <CARSUSPENSION <T> > suspension;
+
 	std::vector <CARTIRE <T> > tire;
 	std::vector <CARAERO <T> > aerodynamics;
 

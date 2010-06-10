@@ -186,7 +186,6 @@ public:
 	MATHVECTOR <T, 3> GetForce(
 					T normal_force,
 					T friction_coeff,
-					T roll_friction_coeff,
 					const MATHVECTOR <T, 3> & hub_velocity,
 					T patch_speed,
 					T current_camber)
@@ -305,9 +304,6 @@ public:
 				Fx = Fx*scale;
 		}*/
 
-		// rolling resistance (broken)
-		//Fx += GetRollingResistance(hub_velocity[0] / radius, normal_force, roll_friction_coeff);
-
 		assert(!isnan(Fx));
 		assert(!isnan(Fy));
 
@@ -338,12 +334,21 @@ public:
 		feedback = aligning_force;
 	}
 
-	T GetRollingResistance(const T ang_velocity, const T normal_force, const T rolling_resistance_factor) const
+	T GetRollingResistance(const T velocity, const T normal_force, const T rolling_resistance_factor) const
 	{
-		// assume constant rolling resistance
+		// surface influence on rolling resistance
 		T rolling_resistance = rolling_resistance_linear * rolling_resistance_factor;
-		T sign = (ang_velocity > 0) - (ang_velocity < 0);
-		return sign * normal_force * rolling_resistance;
+		
+		// heat due to tire deformation increases rolling resistance
+		// approximate by quadratic function
+		rolling_resistance += velocity*velocity*rolling_resistance_quadratic;
+		
+		// rolling resistance should not add energy to system
+		// fake this by using a ramped step function, should be replaced by a constraint
+		T max_force = normal_force * rolling_resistance;
+		T ramp = (velocity < 1 ? velocity : 1) > -1 ? velocity : -1; 
+		
+		return -ramp * max_force;
 	}
 
 	void CalculateSigmaHatAlphaHat(int tablesize=20)

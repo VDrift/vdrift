@@ -26,6 +26,9 @@ CARDYNAMICS::CARDYNAMICS()
   maxangle(45.0),
   telemetry("telemetry")
 {
+#ifdef _BULLET_
+	suspension_new.resize(WHEEL_POSITION_SIZE);
+#endif
 	suspension.resize ( WHEEL_POSITION_SIZE );
 	wheel.resize ( WHEEL_POSITION_SIZE );
 	tire.resize ( WHEEL_POSITION_SIZE );
@@ -36,9 +39,6 @@ CARDYNAMICS::CARDYNAMICS()
 	brake.resize ( WHEEL_POSITION_SIZE );
 	abs_active.resize ( WHEEL_POSITION_SIZE, false );
 	tcs_active.resize ( WHEEL_POSITION_SIZE, false );
-#ifdef _BULLET_
-	wheelBody.resize(WHEEL_POSITION_SIZE);
-#endif
 }
 
 bool CARDYNAMICS::Load(CONFIGFILE & c, std::ostream & error_output)
@@ -299,11 +299,6 @@ bool CARDYNAMICS::Load(CONFIGFILE & c, std::ostream & error_output)
 			c.GetPoints("suspension-"+posstr, "spring-factor", spring_factor_points);
 			suspension[posl].SetSpringFactorPoints(spring_factor_points);
 			suspension[posr].SetSpringFactorPoints(spring_factor_points);
-
-			// deprecated
-			//if (!c.GetParam("suspension-"+posstr+".max-compression-velocity", maxcompvel, error_output)) return false;
-			//suspension[posl].SetMaxCompressionVelocity(maxcompvel);
-			//suspension[posr].SetMaxCompressionVelocity(maxcompvel);
 
 			if (!c.GetParam("suspension-"+posstr+".travel", travel, error_output)) return false;
 			suspension[posl].SetTravel(travel);
@@ -694,7 +689,6 @@ btCollisionShape * CreateCollisionShape(const btVector3 & center, const btVector
 	positions[2] = center - offset0;
 	positions[3] = center - offset1;
 	btMultiSphereShape * shape = new btMultiSphereShape(positions, radii, numSpheres);
-	
 	return shape;
 }
 
@@ -746,58 +740,18 @@ void CARDYNAMICS::Init(
 	world.AddAction(this);
 
 #ifdef _BULLET_
+	bool disableCollisionsBetweenLinked = false;
 	for(unsigned int i = 0; i < WHEEL_POSITION_SIZE; i++)
 	{
-		// wheel: got mass, (y-axis), radius, width is missing
-		btScalar wheelMass = wheel[i].GetMass();
-		btScalar wheelRadius = tire[i].GetRadius();
-		btScalar wheelWidth = 0.3;
-		btScalar inertiaY = wheel[i].GetInertia(); // cylinder: 1/2*M*R^2
-		btScalar inertiaXZ = 1/12.0 * wheelMass * wheelWidth * wheelWidth + 0.5 * inertiaY; // 1/12*M*h^2+1/4*M*R^2
-
-		btVector3 wheelInertia(inertiaXZ, inertiaY, inertiaXZ);
-		btVector3 wheelHalfExtents(wheelRadius, 0.5*wheelWidth, wheelRadius);
-		btVector3 wheelPosition = ToBulletVector(LocalToWorld(wheel[i].GetExtendedPosition()));
-		btQuaternion wheelRotation = ToBulletQuaternion(orientation);
-
-		btCylinderShape * wheelShape = new btCylinderShape(wheelHalfExtents);
-		btTransform wheelTransform;
-		wheelTransform.setOrigin(wheelPosition);
-		wheelTransform.setRotation(wheelRotation);
-		btDefaultMotionState * wheelState = new btDefaultMotionState();
-		wheelState->setWorldTransform(wheelTransform);
-
-		btRigidBody::btRigidBodyConstructionInfo wheelInfo(wheelMass, wheelState, wheelShape, wheelInertia);
-		wheelInfo.m_friction = 0;
-		wheelBody[i] = world.AddRigidBody(wheelInfo);
-
-		// suspension(slider)
-		btGeneric6DofSpringConstraint * joint = NULL;
-		bool useLinearReferenceFrameA = true;
-		bool disableCollisionsBetweenLinked = true;
-
-		btTransform chassisFrame;
-		btTransform wheelFrame;
-		chassisFrame.setIdentity();
-		chassisFrame.setOrigin(ToBulletVector(GetLocalWheelPosition(WHEEL_POSITION(i), 0)));
-		wheelFrame.setIdentity();
-		wheelFrame.setOrigin(btVector3(0, 0, 0));
-
-		joint = new btGeneric6DofSpringConstraint(*chassis, *wheelBody[i], chassisFrame, wheelFrame, useLinearReferenceFrameA);
-		joint->setAngularLowerLimit(btVector3(0, 0, 0));
-		joint->setAngularUpperLimit(btVector3(0, 0, 0));
-		joint->setLinearLowerLimit(btVector3(0, 0, 0));
-		joint->setLinearUpperLimit(btVector3(0, 0, suspension[i].GetTravel()));
-		
-		// spring/damper
-		joint->enableSpring(2, true);
-		joint->setStiffness(2, suspension[i].GetSpringConstant()*3);
-		joint->setDamping(2, suspension[i].GetBounce()*3);
-		joint->setEquilibriumPoint();
-
-		world.AddConstraint(joint, disableCollisionsBetweenLinked);
+		btVector3 pivot = ToBulletVector(wheel[i].GetExtendedPosition() - center_of_mass);
+		suspension_new[i] = new Suspension(world, *chassis, pivot);
+		suspension_new[i]->setRollHeight(wheel[i].GetRollHeight());
+		suspension_new[i]->setTravel(suspension[i].GetTravel());
+		suspension_new[i]->setStiffness(suspension[i].GetSpringConstant());
+		suspension_new[i]->setDamping(suspension[i].GetBounce(), suspension[i].GetRebound());
+		world.AddConstraint(suspension_new[i], disableCollisionsBetweenLinked);
 	}
-#else
+#endif	
 	// init wheels, suspension
 	for (int i = 0; i < WHEEL_POSITION_SIZE; i++)
 	{
@@ -808,7 +762,6 @@ void CARDYNAMICS::Init(
 	}
 	
 	AlignWithGround();
-#endif
 }
 
 // executed as last function(after integration) in bullet singlestepsimulation
@@ -862,15 +815,9 @@ const QUATERNION <T> & CARDYNAMICS::GetOrientation() const
 
 MATHVECTOR <T, 3> CARDYNAMICS::GetWheelPosition(WHEEL_POSITION wp) const
 {
-#ifdef _BULLET_
-	btTransform wheelTrans;
-	wheelBody[WHEEL_POSITION(wp)]->getMotionState()->getWorldTransform(wheelTrans);
-	return ToMathVector<T>(wheelTrans.getOrigin());
-#else
 	MATHVECTOR <T, 3> pos = GetLocalWheelPosition(wp, suspension[wp].GetDisplacementPercent());
 	chassisRotation.RotateVector(pos);
 	return pos + chassisPosition;
-#endif
 }
 
 MATHVECTOR <T, 3> CARDYNAMICS::GetWheelPosition(WHEEL_POSITION wp, T displacement_percent) const
@@ -887,25 +834,12 @@ QUATERNION <T> CARDYNAMICS::GetWheelOrientation(WHEEL_POSITION wp) const
 	{
 		siderot.Rotate(M_PI, 0, 0, 1);
 	}
-	
-#ifdef _BULLET_
-	btTransform wheelTrans;
-	wheelBody[WHEEL_POSITION(wp)]->getMotionState()->getWorldTransform(wheelTrans);
-	return ToMathQuaternion<T>(wheelTrans.getRotation()) * siderot;
-#else
 	return chassisRotation * GetWheelSteeringAndSuspensionOrientation(wp) * wheel[wp].GetOrientation() * siderot;
-#endif
 }
 
 QUATERNION <T> CARDYNAMICS::GetUprightOrientation(WHEEL_POSITION wp) const
 {
-#ifdef _BULLET_
-	btTransform wheelTrans;
-	wheelBody[WHEEL_POSITION(wp)]->getMotionState()->getWorldTransform(wheelTrans);
-	return ToMathQuaternion<T>(wheelTrans.getRotation());
-#else
 	return chassisRotation * GetWheelSteeringAndSuspensionOrientation(wp);
-#endif
 }
 
 /// worldspace wheel center position
@@ -1575,24 +1509,32 @@ MATHVECTOR <T, 3> CARDYNAMICS::ApplyTireForce(int i, const T normal_force, const
 	T roll_friction_coeff = surface.rollResistanceCoefficient;
 	MATHVECTOR <T, 3> friction_force(0);
 	if(friction_coeff > 0)
-		friction_force = tire.GetForce(normal_force, friction_coeff, roll_friction_coeff, hub_velocity, patch_speed, camber_rad);
+		friction_force = tire.GetForce(normal_force, friction_coeff, hub_velocity, patch_speed, camber_rad);
 
 	// set force feedback (aligning torque in tire space)
 	tire.SetFeedback(friction_force[2]);
-
+	
 	// friction force in world space
-	MATHVECTOR <T, 3> world_friction_force = x_axis * friction_force[0] + y_axis * friction_force[1];
-
-	// fake viscous friction (sand, gravel, mud)
+	MATHVECTOR <T, 3> tire_friction = x_axis * friction_force[0] + y_axis * friction_force[1];
+	
+	// fake viscous friction (sand, gravel, mud) proportional to wheel center velocity
 	MATHVECTOR <T, 3> wheel_drag = - (x_axis * hub_velocity[0] + y_axis * hub_velocity[1]) * surface.rollingDrag;
 
-	// apply forces to body
+	// rolling resistance due to tire/surface deformation proportional to normal force
+	MATHVECTOR <T, 3> roll_resistance = 
+		x_axis * tire.GetRollingResistance(hub_velocity[0], normal_force, roll_friction_coeff);
+	
+	// rolling resistance acts on wheel axis
+	MATHVECTOR <T, 3> rel_wheel_pos = wheel_position[WHEEL_POSITION(i)] - Position();
+	ApplyForce(roll_resistance, rel_wheel_pos);
+	
+	// tire friction + tire normal force acts at tire-surface contact(as viscous friction)
 	MATHVECTOR <T, 3> wheel_normal(0, 0, 1);
 	wheel_space.RotateVector(wheel_normal);
-	MATHVECTOR <T, 3> contactpos = wheel_position[WHEEL_POSITION(i)] - wheel_normal * tire.GetRadius();
-	ApplyForce(world_friction_force + surface_normal * normal_force + wheel_drag, contactpos - Position());
+	MATHVECTOR <T, 3> rel_contact_pos = wheel_contact.GetPosition() - Position();
+	ApplyForce(surface_normal * normal_force + tire_friction + wheel_drag, rel_contact_pos);
 
-	return world_friction_force;
+	return tire_friction;
 }
 
 void CARDYNAMICS::ApplyWheelTorque(T dt, T drive_torque, int i, MATHVECTOR <T, 3> tire_friction, const QUATERNION <T> & wheel_space)
