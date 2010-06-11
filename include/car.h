@@ -404,6 +404,7 @@ protected:
 		TEXTUREMANAGER & textures,
 		const std::string & texfile,
 		const std::string & misc1texfile,
+		const std::string & misc2texfile,
 		const std::string & texsize,
 		int anisotropy,
 		WHICHDRAWLIST whichdrawlist,

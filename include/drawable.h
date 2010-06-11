@@ -35,6 +35,9 @@ public:
 	const TEXTURE * GetMiscMap1() const {return misc_map1.get();}
 	void SetMiscMap1(TEXTUREPTR value) {misc_map1 = value;}
 	
+	const TEXTURE * GetMiscMap2() const {return misc_map2.get();}
+	void SetMiscMap2(TEXTUREPTR value) {misc_map2 = value;}
+	
 	const VERTEXARRAY * GetVertArray() const {return vert_array;}
 	void SetVertArray(const VERTEXARRAY* value) {vert_array = value;}
 	
@@ -92,6 +95,7 @@ public:
 private:
 	TEXTUREPTR diffuse_map;
 	TEXTUREPTR misc_map1;
+	TEXTUREPTR misc_map2;
 	std::vector <int> list_ids;
 	const VERTEXARRAY * vert_array;
 	std::vector <MATHVECTOR <float, 3> > lineverts;

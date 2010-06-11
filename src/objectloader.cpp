@@ -198,20 +198,42 @@ std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad(
 	if (!skip)
 	{
 		TEXTUREPTR miscmap1_texture;
-		std::string miscmap1_texture_name = diffuse_texture_name.substr(0, std::max(0, (int)diffuse_texture_name.length()-4)) + "-misc1.png";
-		std::string filepath = objectpath + "/" + miscmap1_texture_name;
-		std::ifstream filecheck(filepath.c_str());
-		if (filecheck)
 		{
-			TEXTUREINFO texinfo;
-			texinfo.SetName(filepath);
-			texinfo.SetMipMap(mipmap);
-			texinfo.SetAnisotropy(anisotropy);
-			texinfo.SetSize(texture_size);
-			miscmap1_texture = textures.Get(texinfo);
-			if (!miscmap1_texture->Loaded())
+			std::string miscmap1_texture_name = diffuse_texture_name.substr(0, std::max(0, (int)diffuse_texture_name.length()-4)) + "-misc1.png";
+			std::string filepath = objectpath + "/" + miscmap1_texture_name;
+			std::ifstream filecheck(filepath.c_str());
+			if (filecheck)
 			{
-				error_output << "Error loading texture: " << objectpath + "/" + miscmap1_texture_name << " for object " << model_name << ", continuing" << std::endl;
+				TEXTUREINFO texinfo;
+				texinfo.SetName(filepath);
+				texinfo.SetMipMap(mipmap);
+				texinfo.SetAnisotropy(anisotropy);
+				texinfo.SetSize(texture_size);
+				miscmap1_texture = textures.Get(texinfo);
+				if (!miscmap1_texture->Loaded())
+				{
+					error_output << "Error loading texture: " << objectpath + "/" + miscmap1_texture_name << " for object " << model_name << ", continuing" << std::endl;
+				}
+			}
+		}
+		
+		TEXTUREPTR miscmap2_texture;
+		{
+			std::string miscmap2_texture_name = diffuse_texture_name.substr(0, std::max(0, (int)diffuse_texture_name.length()-4)) + "-misc2.png";
+			std::string filepath = objectpath + "/" + miscmap2_texture_name;
+			std::ifstream filecheck(filepath.c_str());
+			if (filecheck)
+			{
+				TEXTUREINFO texinfo;
+				texinfo.SetName(filepath);
+				texinfo.SetMipMap(mipmap);
+				texinfo.SetAnisotropy(anisotropy);
+				texinfo.SetSize(texture_size);
+				miscmap2_texture = textures.Get(texinfo);
+				if (!miscmap2_texture->Loaded())
+				{
+					error_output << "Error loading texture: " << objectpath + "/" + miscmap2_texture_name << " for object " << model_name << ", continuing" << std::endl;
+				}
 			}
 		}
 
@@ -236,6 +258,7 @@ std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad(
 		drawable.SetDiffuseMap(diffuse_texture);
 		//if (miscmap1_texture) drawable.SetMiscMap1(miscmap1_texture);
 		drawable.SetMiscMap1(miscmap1_texture);
+		drawable.SetMiscMap2(miscmap2_texture);
 		drawable.SetDecal(transparent);
 		drawable.SetCull(cull && (transparent_blend!=2), false);
 		drawable.SetRadius(model->GetRadius());
