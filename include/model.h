@@ -94,9 +94,11 @@ public:
 	
 	bool Loaded() {return (mesh.GetNumFaces() > 0);}
 
-	void Rotate(float a, float x, float y, float z) {mesh.Rotate(a, x, y, z);}
+	void Translate(float x, float y, float z);
+
+	void Rotate(float a, float x, float y, float z);
 	
-	void Scale(float x, float y, float z) {mesh.Scale(x,y,z);}
+	void Scale(float x, float y, float z);
 	
 	AABB <float> GetAABB() const
 	{

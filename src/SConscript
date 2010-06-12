@@ -35,6 +35,7 @@ src = Split("""aabb.cpp
 		cardynamics.cpp
 		collision_world.cpp
 		configfile.cpp
+		configvariable.cpp
 		containeralgorithm.cpp
 		coordinatesystems.cpp
 		crashdetection.cpp

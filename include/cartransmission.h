@@ -15,6 +15,7 @@ class CARTRANSMISSION
 		std::map <int, T> gear_ratios; ///< gear number and ratio.  reverse gears are negative integers. neutral is zero.
 		int forward_gears; ///< the number of consecutive forward gears
 		int reverse_gears; ///< the number of consecutive reverse gears
+		T shift_time; ///< transmission shift time
 		
 		//variables
 		int gear; ///< the current gear
@@ -26,7 +27,10 @@ class CARTRANSMISSION
 		
 	public:
 		//default constructor makes an S2000-like car
-		CARTRANSMISSION() : gear(0), driveshaft_rpm(0), crankshaft_rpm(0) {gear_ratios [0] = 0.0;}
+		CARTRANSMISSION() : shift_time(0.2), gear(0), driveshaft_rpm(0), crankshaft_rpm(0)
+		{
+			gear_ratios [0] = 0.0;
+		}
 
 		void DebugPrint(std::ostream & out)
 		{
@@ -49,6 +53,16 @@ class CARTRANSMISSION
 		int GetReverseGears() const
 		{
 			return reverse_gears;
+		}
+		
+		void SetShiftTime(T value)
+		{
+			shift_time = value;
+		}
+		
+		T GetShiftTime() const
+		{
+			return shift_time;
 		}
 
 		void Shift(int newgear)

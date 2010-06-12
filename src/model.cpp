@@ -208,3 +208,18 @@ void MODEL::BuildFromVertexArray(const VERTEXARRAY & newmesh, std::ostream & err
 	//optimize into a static display list
 	GenerateListID(error_output);
 }
+
+void MODEL::Translate(float x, float y, float z)
+{
+	mesh.Translate(x, y, z);
+}
+
+void MODEL::Rotate(float a, float x, float y, float z)
+{
+	mesh.Rotate(a, x, y, z);
+}
+	
+void MODEL::Scale(float x, float y, float z)
+{
+	mesh.Scale(x,y,z);
+}

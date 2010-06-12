@@ -37,7 +37,10 @@ public:
 	
 	CARDYNAMICS();
 	
-	bool Load(CONFIGFILE & c, std::ostream & error_output);
+	bool Load(
+		CONFIGFILE & c,
+		const std::string & sharedpartspath,
+		std::ostream & error_output);
 
 	void Init(
 		COLLISION_WORLD & world,
@@ -171,7 +174,6 @@ protected:
 	int shift_gear;
 	T last_auto_clutch;
 	T remaining_shift_time;
-	T shift_time;
 
 // traction control state
 	bool abs;

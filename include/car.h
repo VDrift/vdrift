@@ -320,11 +320,14 @@ protected:
 	keyed_container <SCENENODE>::handle wheelnode[4];
 	keyed_container <DRAWABLE>::handle floatingdraw[4];
 	keyed_container <SCENENODE>::handle floatingnode[4];
-	MODEL_JOE03 wheelmodel[4];
+	MODEL_JOE03 wheelmodelfront;
+	MODEL_JOE03 wheelmodelrear;
 	MODEL_JOE03 tiremodelfront;
 	MODEL_JOE03 tiremodelrear;
 	MODEL_JOE03 floatingmodelfront;
 	MODEL_JOE03 floatingmodelrear;
+	MODEL_JOE03 brakerotorfront;
+	MODEL_JOE03 brakerotorrear;
 
 	SOUNDSOURCE tiresqueal[4];
 	SOUNDSOURCE tirebump[4];
@@ -356,17 +359,19 @@ protected:
 
 	bool GenerateWheelMesh(
 		CONFIGFILE & carconf,
+		const std::string & wheelname,
+		const std::string & sharedpartspath,
 		const CARTIRE<double> & tire,
+		const CARBRAKE<double> & brake,
 		SCENENODE & topnode,
 		keyed_container <SCENENODE>::handle & output_scenenode,
 		keyed_container <DRAWABLE>::handle & output_drawable,
 		MODEL_JOE03 & output_tire_model,
+		MODEL_JOE03 & output_wheel_model,
+		MODEL_JOE03 & output_brake_rotor,
 		TEXTUREMANAGER & textures,
-		const std::string & confsection,
-		const std::string & sharedpartspath,
 		int anisotropy,
 		const std::string & texsize,
-		MODEL_JOE03 & output_wheel_model,
 		std::ostream & error_output);
 	
 	void UpdateSounds(float dt);
@@ -408,9 +413,30 @@ protected:
 		const std::string & texsize,
 		int anisotropy,
 		WHICHDRAWLIST whichdrawlist,
-		const MATHVECTOR <float, 3> & scale,
 		std::ostream & error_output);
-	
+
+	bool LoadModel(
+		const std::string & joefile,
+		MODEL_JOE03 & output_model,
+		std::ostream & error_output,
+		int genlistid = true);
+
+	bool LoadTextures(
+		TEXTUREMANAGER & textures,
+		const std::string & texfile,
+		const std::string & misc1texfile,
+		const std::string & misc2texfile,
+		const std::string & texsize,
+		int anisotropy,
+		DRAWABLE & draw,
+		std::ostream & error_output);
+/*
+	bool InitDrawable(
+		SCENENODE & parentnode,
+		keyed_container <SCENENODE>::handle & output_scenenode,
+		keyed_container <DRAWABLE>::handle & output_drawable,
+		std::ostream & error_output);
+*/
 	keyed_container <DRAWABLE> & GetDrawlist(SCENENODE & node, WHICHDRAWLIST which)
 	{
 		switch (which)

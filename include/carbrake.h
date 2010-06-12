@@ -74,7 +74,6 @@ class CARBRAKE
 		{
 			friction = value;
 		}
-		
 	
 		T GetFriction() const
 		{
@@ -89,6 +88,11 @@ class CARBRAKE
 		void SetRadius ( const T& value )
 		{
 			radius = value;
+		}
+
+		T GetRadius() const
+		{
+			return radius;
 		}
 	
 		void SetArea ( const T& value )

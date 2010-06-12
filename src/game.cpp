@@ -352,7 +352,7 @@ bool GAME::ParseArguments(std::list <std::string> & args)
 	{
 		pathmanager.Init(info_output, error_output);
 		PERFORMANCE_TESTING perftest;
-		perftest.Test(pathmanager.GetCarPath(), argmap["-cartest"], info_output, error_output);
+		perftest.Test(pathmanager.GetCarPath(), argmap["-cartest"], pathmanager.GetCarSharedPath(), info_output, error_output);
 		continue_game = false;
 	}
 	arghelp["-cartest CAR"] = "Run car performance testing on given CAR.";
@@ -1505,14 +1505,16 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	}
 
 	//set the track name
-	string trackname;
+	std::string trackname;
 	if (playreplay)
 	{
 		trackname = replay.GetTrack();
 	}
 	else
+	{
 		trackname = settings.GetTrack();
-
+	}
+	
 	if (!LoadTrack(trackname))
 	{
 		error_output << "Error during track loading: " << trackname << endl;
@@ -1615,9 +1617,18 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	if (settings.GetRecordReplay() && !playreplay)
 	{
 		assert(carcontrols_local.first);
+		std::string cartype = carcontrols_local.first->GetCarType();
+		
 		float r(0), g(0), b(0);
 		settings.GetCarColor(r, g, b);
-		replay.StartRecording(carcontrols_local.first->GetCarType(), settings.GetCarPaint(), r, g, b, pathmanager.GetCarPath()+"/"+carcontrols_local.first->GetCarType()+"/"+carcontrols_local.first->GetCarType()+".car", settings.GetTrack(), error_output);
+		
+		replay.StartRecording(
+			cartype,
+			settings.GetCarPaint(),
+			r, g, b,
+			pathmanager.GetCarPath()+"/"+cartype+"/"+cartype+".car",
+			settings.GetTrack(),
+			error_output);
 	}
 
 	textures.Sweep();

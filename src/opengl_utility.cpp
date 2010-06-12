@@ -22,7 +22,6 @@ bool OPENGL_UTILITY::CheckForOpenGLErrors(std::string activity_description, std:
 		//assert (gl_error == GL_NO_ERROR);
 		return true;
 	}
-	else
-		return false;
 #endif
+	return false;
 }

@@ -1,7 +1,9 @@
 #ifndef _COLLISION_CONTACT_H
 #define _COLLISION_CONTACT_H
 
+#include "mathvector.h"
 #include "tracksurface.h"
+
 class BEZIER;
 class btCollisionObject;
 

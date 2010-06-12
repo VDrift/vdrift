@@ -13,7 +13,6 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Option use_console_runner="0" />
-				<Option parameters="-debug" />
 				<Compiler>
 					<Add option="-Wall" />
 					<Add option="-g" />
@@ -27,11 +26,16 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O3" />
+					<Add option="-pg" />
 				</Compiler>
+				<Linker>
+					<Add option="-pg -lgmon" />
+				</Linker>
 			</Target>
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
+			<Add option="-pg" />
 			<Add option="-fexceptions" />
 			<Add option="-mwindows" />
 			<Add directory="include" />
@@ -39,6 +43,7 @@
 			<Add directory="..\..\bullet" />
 		</Compiler>
 		<Linker>
+			<Add option="-pg -lgmon" />
 			<Add library="opengl32" />
 			<Add library="glu32" />
 			<Add library="glew32" />
@@ -376,6 +381,7 @@
 		<Unit filename="..\..\include\collision_contact.h" />
 		<Unit filename="..\..\include\collision_world.h" />
 		<Unit filename="..\..\include\configfile.h" />
+		<Unit filename="..\..\include\configvariable.h" />
 		<Unit filename="..\..\include\containeralgorithm.h" />
 		<Unit filename="..\..\include\coordinatesystems.h" />
 		<Unit filename="..\..\include\crashdetection.h" />
@@ -450,6 +456,7 @@
 		<Unit filename="..\..\include\spline.h" />
 		<Unit filename="..\..\include\sprite2d.h" />
 		<Unit filename="..\..\include\staticdrawables.h" />
+		<Unit filename="..\..\include\suspension.h" />
 		<Unit filename="..\..\include\suspensionbumpdetection.h" />
 		<Unit filename="..\..\include\text_draw.h" />
 		<Unit filename="..\..\include\texture.h" />
@@ -494,6 +501,7 @@
 		<Unit filename="..\..\src\cardynamics.cpp" />
 		<Unit filename="..\..\src\collision_world.cpp" />
 		<Unit filename="..\..\src\configfile.cpp" />
+		<Unit filename="..\..\src\configvariable.cpp" />
 		<Unit filename="..\..\src\containeralgorithm.cpp" />
 		<Unit filename="..\..\src\coordinatesystems.cpp" />
 		<Unit filename="..\..\src\crashdetection.cpp" />
@@ -545,6 +553,7 @@
 		<Unit filename="..\..\src\settings.cpp" />
 		<Unit filename="..\..\src\shader.cpp" />
 		<Unit filename="..\..\src\sound.cpp" />
+		<Unit filename="..\..\src\suspension.cpp" />
 		<Unit filename="..\..\src\suspensionbumpdetection.cpp" />
 		<Unit filename="..\..\src\text_draw.cpp" />
 		<Unit filename="..\..\src\texture.cpp" />

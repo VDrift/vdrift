@@ -7,57 +7,11 @@
 #include <iostream>
 
 #include "bucketed_hashmap.h"
+#include "configvariable.h"
 
 //see the user's guide at the bottom of the file
-
-class CONFIGVARIABLE
-{
-public:
-	CONFIGVARIABLE();
-	CONFIGVARIABLE(const CONFIGVARIABLE & other) {CopyFrom(other);}
-	CONFIGVARIABLE & operator=(const CONFIGVARIABLE & other) {return CopyFrom(other);}
-	bool operator<(const CONFIGVARIABLE & other);
-	
-	CONFIGVARIABLE & CopyFrom(const CONFIGVARIABLE & other);
-
-	std::string section;
-	std::string name;
-
-	const std::string GetFullName() const;
-
-	std::string val_s;
-	int val_i;
-	float val_f;
-	float val_v[3];
-	bool val_b;
-
-	CONFIGVARIABLE * next;
-
-	void Set(std::string newval);
-
-	void DebugPrint(std::ostream & out);
-
-	std::string strLTrim(std::string instr);
-	std::string strRTrim(std::string instr);
-	std::string strTrim(std::string instr);
-	std::string strLCase(std::string instr);
-
-	bool written;
-};
-
 class CONFIGFILE
 {
-private:
-	std::string filename;
-	bucketed_hashmap <std::string, CONFIGVARIABLE> variables;
-	//std::map <std::string, CONFIGVARIABLE> variables;
-	void Add(std::string & paramname, CONFIGVARIABLE & newvar);
-	std::string Trim(std::string instr);
-	void ProcessLine(std::string & cursection, std::string linestr);
-	std::string Strip(std::string instr, char stripchar);
-	std::string LCase(std::string instr);
-	bool SUPPRESS_ERROR;
-
 public:
 	CONFIGFILE();
 	CONFIGFILE(std::string fname);
@@ -91,7 +45,7 @@ public:
 	}
 	
 	// read points from configfile section
-	void GetPoints(const std::string & sectionname, const std::string & paramprefix, std::vector <std::pair <double, double> > & output_points);
+	void GetPoints(const std::string & sectionname, const std::string & paramprefix, std::vector <std::pair <double, double> > & output_points) const;
 	
 	///a higher level helper function to read to/write from a configfile based on the passed directional boolean.
 	///if set_direction is true, then the param will be set to value.
@@ -127,9 +81,21 @@ public:
 	void SuppressError(bool newse) {SUPPRESS_ERROR = newse;}
 	
 	unsigned int GetNumParams() {return variables.GetTotalObjects();}
-	//unsigned int GetNumParams() {return variables.size();}
+
+private:
+	std::string filename;
+	bucketed_hashmap <std::string, CONFIGVARIABLE> variables;
+	bool SUPPRESS_ERROR;
 	
-	//CONFIGVARIABLE * GetHead() {return vars;}
+	void Add(std::string & paramname, CONFIGVARIABLE & newvar);
+	
+	void ProcessLine(std::string & cursection, std::string linestr);
+	
+	std::string Trim(std::string instr);
+	
+	std::string Strip(std::string instr, char stripchar);
+	
+	std::string LCase(std::string instr);
 };
 
 #endif /* _CONFIGFILE_H */

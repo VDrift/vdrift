@@ -14,7 +14,15 @@ class CARWHEEL
 friend class joeserialize::Serializer;
 public:
 	//default constructor makes an S2000-like car
-	CARWHEEL() : roll_height(0.29), mass(18.14), inertia_cache(10.0), steer_angle(0) {SetInertia(10.0);}
+	CARWHEEL()
+	: 	roll_height(0.29),
+		mass(18.14),
+		orientation(1),
+		inertia_cache(10.0),
+		steer_angle(0)
+	{
+		SetInertia(10.0);
+	}
 
 	void DebugPrint(std::ostream & out)
 	{
@@ -128,7 +136,7 @@ public:
 		rotation.SetTorque(v);
 	}
 
-	const QUATERNION <T> & GetOrientation() const
+	const QUATERNION <T> & GetRotation() const
 	{
 		return rotation.GetOrientation();
 	}
@@ -141,6 +149,16 @@ public:
 	void SetSteerAngle ( const T& value )
 	{
 		steer_angle = value;
+	}
+	
+	T GetOrientation() const
+	{
+		return orientation;
+	}
+
+	void SetOrientation ( const T& value )
+	{
+		orientation = value;
 	}
 
 	bool Serialize(joeserialize::Serializer & s)
@@ -172,7 +190,8 @@ private:
 	T roll_height; ///< how far off the road lateral forces are applied to the chassis
 	T mass; ///< the mass of the wheel
 	ROTATIONALFRAME <T> rotation; ///< a simulation of wheel rotation.  this contains the wheel orientation, angular velocity, angular acceleration, and inertia tensor
-
+	T orientation; ///< relative wheel orientation: 1 == right, -1 == left
+	
 	//variables
 	T additional_inertia;
 	T inertia_cache;

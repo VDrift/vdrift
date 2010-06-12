@@ -26,7 +26,12 @@ PERFORMANCE_TESTING::PERFORMANCE_TESTING()
 	surface.rollingDrag = 0;
 }
 
-void PERFORMANCE_TESTING::Test(const std::string & carpath, const std::string & carname, std::ostream & info_output, std::ostream & error_output)
+void PERFORMANCE_TESTING::Test(
+	const std::string & carpath,
+	const std::string & carname,
+	const std::string & sharedpartspath,
+	std::ostream & info_output,
+	std::ostream & error_output)
 {
 	info_output << "Beginning car performance test on " << carname << endl;
 
@@ -38,7 +43,7 @@ void PERFORMANCE_TESTING::Test(const std::string & carpath, const std::string & 
 		error_output << "Error loading car configuration file: " << carfile << endl;
 		return;
 	}
-	if (!car.dynamics.Load(carconf, error_output))
+	if (!car.dynamics.Load(carconf, sharedpartspath, error_output))
 	{
 		error_output << "Error during car dynamics load: " << carfile << endl;
 		return;

@@ -20,7 +20,6 @@ CARDYNAMICS::CARDYNAMICS()
   shift_gear(0),
   last_auto_clutch(1.0),
   remaining_shift_time(0.0),
-  shift_time(0.2),
   abs(false),
   tcs(false),
   maxangle(45.0),
@@ -41,7 +40,412 @@ CARDYNAMICS::CARDYNAMICS()
 	tcs_active.resize ( WHEEL_POSITION_SIZE, false );
 }
 
-bool CARDYNAMICS::Load(CONFIGFILE & c, std::ostream & error_output)
+bool LoadEngine(
+	const CONFIGFILE & c,
+	CARENGINE<T> & engine,
+	std::ostream & error_output)
+{
+	float mass, redline, rpm_limit, inertia, start_rpm, stall_rpm, fuel_consumption;
+	float temp_vec3[3];
+	MATHVECTOR <double, 3> position;
+	std::vector <std::pair <double, double> > torques;
+	int version(1);
+	
+	c.GetParam("version", version);
+	if (!c.GetParam("engine.peak-engine-rpm", redline, error_output)) return false; //used only for the redline graphics
+	if (!c.GetParam("engine.rpm-limit", rpm_limit, error_output)) return false;
+	if (!c.GetParam("engine.inertia", inertia, error_output)) return false;
+	if (!c.GetParam("engine.start-rpm", start_rpm, error_output)) return false;
+	if (!c.GetParam("engine.stall-rpm", stall_rpm, error_output)) return false;
+	if (!c.GetParam("engine.fuel-consumption", fuel_consumption, error_output)) return false;
+	if (!c.GetParam("engine.mass", mass, error_output)) return false;
+	if (!c.GetParam("engine.position", temp_vec3, error_output)) return false;
+	
+	int curve_num = 0;
+	float torque_point[3];
+	std::string torque_str("engine.torque-curve-00");
+	while (c.GetParam(torque_str, torque_point))
+	{
+		torques.push_back(std::pair <float, float> (torque_point[0], torque_point[1]));
+
+		curve_num++;
+		std::stringstream str;
+		str << "engine.torque-curve-";
+		str.width(2);
+		str.fill('0');
+		str << curve_num;
+		torque_str = str.str();
+	}
+	
+	if (torques.size() <= 1)
+	{
+		error_output << "You must define at least 2 torque curve points." << std::endl;
+		return false;
+	}
+	
+	if (version == 2)
+	{
+		COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(temp_vec3[0],temp_vec3[1],temp_vec3[2]);
+	}
+	position.Set(temp_vec3[0],temp_vec3[1],temp_vec3[2]);
+	
+	engine.SetRedline(redline);
+	engine.SetRPMLimit(rpm_limit);
+	engine.SetInertia(inertia);
+	engine.SetStartRPM(start_rpm);
+	engine.SetStallRPM(stall_rpm);
+	engine.SetFuelConsumption(fuel_consumption);
+	engine.SetMass(mass);
+	engine.SetPosition(position);
+	engine.SetTorqueCurve(redline, torques);
+	
+	return true;
+}
+
+bool LoadClutch(
+	const CONFIGFILE & c,
+	CARCLUTCH<T> & clutch,
+	std::ostream & error_output)
+{
+	float sliding, radius, area, max_pressure;
+
+	if (!c.GetParam("clutch.sliding", sliding, error_output)) return false;
+	if (!c.GetParam("clutch.radius", radius, error_output)) return false;
+	if (!c.GetParam("clutch.area", area, error_output)) return false;
+	if (!c.GetParam("clutch.max-pressure", max_pressure, error_output)) return false;
+	
+	clutch.SetSlidingFriction(sliding);
+	clutch.SetRadius(radius);
+	clutch.SetArea(area);
+	clutch.SetMaxPressure(max_pressure);
+	
+	return true;
+}
+
+bool LoadTransmission(
+	const CONFIGFILE & c,
+	CARTRANSMISSION<T> & transmission,
+	std::ostream & error_output)
+{
+	float shift_time = 0;
+	float ratio;
+	int gears;
+
+	c.GetParam("transmission.shift-time", shift_time);
+	transmission.SetShiftTime(shift_time);
+	
+	if (!c.GetParam("transmission.gear-ratio-r", ratio, error_output)) return false;
+	transmission.SetGearRatio(-1, ratio);
+	
+	if (!c.GetParam("transmission.gears", gears, error_output)) return false;
+	for (int i = 0; i < gears; i++)
+	{
+		std::stringstream s;
+		s << "transmission.gear-ratio-" << i+1;
+		if (!c.GetParam(s.str(), ratio, error_output)) return false;
+		transmission.SetGearRatio(i+1, ratio);
+	}
+	
+	return true;
+}
+
+bool LoadFuelTank(
+	const CONFIGFILE & c,
+	CARFUELTANK<T> & fuel_tank,
+	std::ostream & error_output)
+{
+	float pos[3];
+	MATHVECTOR <double, 3> position;
+	float capacity;
+	float volume;
+	float fuel_density;
+	int version(1);
+	
+	c.GetParam("version", version);
+	if (!c.GetParam("fuel-tank.capacity", capacity, error_output)) return false;
+	if (!c.GetParam("fuel-tank.volume", volume, error_output)) return false;
+	if (!c.GetParam("fuel-tank.fuel-density", fuel_density, error_output)) return false;
+	if (!c.GetParam("fuel-tank.position", pos, error_output)) return false;
+	if (version == 2)
+	{
+		COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0],pos[1],pos[2]);
+	}
+	position.Set(pos[0],pos[1],pos[2]);
+	
+	fuel_tank.SetCapacity(capacity);
+	fuel_tank.SetVolume(volume);
+	fuel_tank.SetDensity(fuel_density);
+	fuel_tank.SetPosition(position);
+	
+	return true;
+}
+
+bool LoadCoilover(
+	const CONFIGFILE & c,
+	const std::string & coilovername,
+	CARSUSPENSION<T> & suspension,
+	std::ostream & error_output)
+{
+	float spring_constant, bounce, rebound, travel, anti_roll;
+	std::vector <std::pair <double, double> > damper_factor_points;
+	std::vector <std::pair <double, double> > spring_factor_points;
+
+	if (!c.GetParam(coilovername+".spring-constant", spring_constant, error_output)) return false;
+	if (!c.GetParam(coilovername+".bounce", bounce, error_output)) return false;
+	if (!c.GetParam(coilovername+".rebound", rebound, error_output)) return false;
+	if (!c.GetParam(coilovername+".travel", travel, error_output)) return false;
+	if (!c.GetParam(coilovername+".anti-roll", anti_roll, error_output)) return false;
+	c.GetPoints(coilovername, "damper-factor", damper_factor_points);
+	c.GetPoints(coilovername, "spring-factor", spring_factor_points);
+
+	suspension.SetSpringConstant(spring_constant);
+	suspension.SetBounce(bounce);
+	suspension.SetRebound(rebound);
+	suspension.SetTravel(travel);
+	suspension.SetAntiRollK(anti_roll);
+	suspension.SetDamperFactorPoints(damper_factor_points);
+	suspension.SetSpringFactorPoints(spring_factor_points);
+
+	return true;
+}
+
+bool LoadSuspension(
+	const CONFIGFILE & c,
+	const std::string & suspensionname,
+	CARSUSPENSION<T> & suspension,
+	std::ostream & error_output)
+{
+	float camber, caster, toe;
+	float hinge[3];
+	MATHVECTOR <double, 3> tempvec;
+	std::string coilovername;
+	int version(1);
+	
+	c.GetParam("version", version);
+	if (!c.GetParam(suspensionname+".coilover", coilovername, error_output)) return false;
+	if (!LoadCoilover(c, coilovername, suspension, error_output)) return false;
+	if (!c.GetParam(suspensionname+".camber", camber, error_output)) return false;
+	if (!c.GetParam(suspensionname+".caster", caster, error_output)) return false;
+	if (!c.GetParam(suspensionname+".toe", toe, error_output)) return false;
+	if (!c.GetParam(suspensionname+".hinge", hinge, error_output)) return false;
+	
+	for (int i = 0; i < 3; i++) //cap hinge to reasonable values
+	{	
+		if (hinge[i] < -100) hinge[i] = -100;
+		if (hinge[i] > 100) hinge[i] = 100;
+	}
+	if (version == 2)
+	{
+		COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(hinge[0],hinge[1],hinge[2]);
+	}
+	tempvec.Set(hinge[0],hinge[1], hinge[2]);
+
+	suspension.SetCamber(camber);
+	suspension.SetCaster(caster);
+	suspension.SetToe(toe);
+	suspension.SetHinge(tempvec);
+
+	return true;
+}
+
+bool LoadBrake(
+	const CONFIGFILE & c,
+	const std::string & brakename,
+	CARBRAKE<T> & brake,
+	std::ostream & error_output)
+{
+	float friction, max_pressure, area, bias, radius, handbrake(0);
+
+	if (!c.GetParam(brakename+".friction", friction, error_output)) return false;
+	if (!c.GetParam(brakename+".area", area, error_output)) return false;
+	if (!c.GetParam(brakename+".radius", radius, error_output)) return false;
+	if (!c.GetParam(brakename+".bias", bias, error_output)) return false;
+	if (!c.GetParam(brakename+".max-pressure", max_pressure, error_output)) return false;
+	c.GetParam(brakename+".handbrake", handbrake);
+	
+	brake.SetFriction(friction);
+	brake.SetArea(area);
+	brake.SetRadius(radius);
+	brake.SetBias(bias);
+	brake.SetMaxPressure(max_pressure*bias);
+	brake.SetHandbrake(handbrake);
+
+	return true;
+}
+
+bool LoadTireParameters(
+	const CONFIGFILE & c,
+	CARTIRE <T> & tire,
+	std::ostream & error_output)
+{
+	float rolling_resistance[3];
+	std::vector <double> longitudinal;
+	std::vector <double> lateral;
+	std::vector <double> aligning;
+	longitudinal.resize(11);
+	lateral.resize(15);
+	aligning.resize(18);
+
+	//read lateral
+	int numinfile;
+	for (int i = 0; i < 15; i++)
+	{
+		numinfile = i;
+		if (i == 11)
+			numinfile = 111;
+		else if (i == 12)
+			numinfile = 112;
+		else if (i > 12)
+			numinfile -= 1;
+		std::stringstream str;
+		str << "a" << numinfile;
+		float value;
+		if (!c.GetParam(str.str(), value, error_output)) return false;
+		lateral[i] = value;
+	}
+
+	//read longitudinal, error_output)) return false;
+	for (int i = 0; i < 11; i++)
+	{
+		std::stringstream str;
+		str << "b" << i;
+		float value;
+		if (!c.GetParam(str.str(), value, error_output)) return false;
+		longitudinal[i] = value;
+	}
+
+	//read aligning, error_output)) return false;
+	for (int i = 0; i < 18; i++)
+	{
+		std::stringstream str;
+		str << "c" << i;
+		float value;
+		if (!c.GetParam(str.str(), value, error_output)) return false;
+		aligning[i] = value;
+	}
+	
+	if (!c.GetParam("rolling-resistance", rolling_resistance, error_output)) return false;
+	
+	tire.SetPacejkaParameters(longitudinal, lateral, aligning);
+	tire.SetRollingResistance(rolling_resistance[0], rolling_resistance[1]);
+	tire.CalculateSigmaHatAlphaHat();
+
+	return true;
+}
+
+bool LoadTire(
+	const CONFIGFILE & c,
+	const std::string & tirename,
+	const std::string & sharedpartspath,
+	CARTIRE<T> & tire,
+	std::ostream & error_output)
+{
+	std::string tiresize;
+	std::string tiretype;
+	CONFIGFILE tc;
+	float section_width(0);
+	float aspect_ratio(0);
+	float rim_diameter(0);
+	float tread(0);
+	
+	if (!c.GetParam(tirename+".size", tiresize, error_output)) return false;
+	if (!c.GetParam(tirename+".type", tiretype, error_output)) return false;
+	if (!tc.Load(sharedpartspath+"/tire/"+tiretype)) return false;
+	if (!LoadTireParameters(tc, tire, error_output)) return false;
+	
+	// tire dimensions
+	std::string modsize = tiresize;
+	for (unsigned int i = 0; i < modsize.length(); i++)
+	{
+		if (modsize[i] < '0' || modsize[i] > '9')
+			modsize[i] = ' ';
+	}
+	std::stringstream parser(modsize);
+	parser >> section_width >> aspect_ratio >> rim_diameter;
+	if (section_width <= 0 || aspect_ratio <= 0 || rim_diameter <= 0)
+	{
+		error_output << "Error parsing " << tirename
+					<< ".size, expected something like 225/50r16 but got: "
+					<< tiresize << std::endl;
+		return false;
+	}
+	float radius = section_width*0.001f * aspect_ratio*0.01f + rim_diameter*0.0254f*0.5;
+	
+	tire.SetRadius(radius);
+	tire.SetSidewallWidth(section_width*0.001f);
+	tire.SetAspectRatio(aspect_ratio*0.01f);
+	tire.SetTread(tread);
+
+	return true;
+}
+
+bool LoadWheel(
+	const CONFIGFILE & c,
+	const std::string & wheelname,
+	const std::string & partspath,
+	CARWHEEL<T> & wheel,
+	CARTIRE<T> & tire,
+	CARBRAKE<T> & brake,
+	std::ostream & error_output)
+{
+	std::string orientation;
+	float orient(1);
+	float temp[3];
+	MATHVECTOR <double, 3> position;
+	int version(1);
+	std::string brakename;
+	std::string tirename;
+	
+	// brake + tire
+	c.GetParam("version", version);
+	if (!c.GetParam(wheelname+".brake", brakename, error_output)) return false;
+	if (!LoadBrake(c, brakename, brake, error_output)) return false;
+	if (!c.GetParam(wheelname+".tire", tirename, error_output)) return false;
+	if (!LoadTire(c, tirename, partspath, tire, error_output)) return false;
+	if (!c.GetParam(wheelname+".position", temp, error_output)) return false;
+	if (!c.GetParam(wheelname+".orientation", orientation, error_output)) return false;
+	
+	if (version == 2)
+	{
+		COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(temp[0],temp[1],temp[2]);
+	}
+	position.Set(temp[0], temp[1], temp[2]);
+	
+	if (orientation != "right")
+	{
+		orient = -1;
+	}
+	
+	// calculate wheel inertia/mass
+	float tire_radius = tire.GetRadius();
+	float tire_width = tire.GetSidewallWidth();
+	float tire_thickness = 0.05;
+	float tire_density = 8E3;
+	
+	float rim_radius = tire_radius - tire_width * tire.GetAspectRatio();
+	float rim_width = tire_width;
+	float rim_thickness = 0.01;
+	float rim_density = 3E5;
+	
+	float tire_volume = tire_width * M_PI * tire_thickness * tire_thickness * (2 * tire_radius  - tire_thickness);
+	float rim_volume = rim_width * M_PI * rim_thickness * rim_thickness * (2 * rim_radius - rim_thickness);
+	float tire_mass = tire_density * tire_volume;
+	float rim_mass = rim_density * rim_volume;
+	float tire_inertia = tire_mass * tire_radius * tire_radius;
+	float rim_inertia = rim_mass * rim_radius * rim_radius;
+	
+	wheel.SetMass(tire_mass + rim_mass);
+	wheel.SetInertia((tire_inertia + rim_inertia)*3); // scale inertia due to nummerical issues
+	wheel.SetOrientation(orient);
+	wheel.SetExtendedPosition(position);
+
+	return true;
+}
+
+bool CARDYNAMICS::Load(
+	CONFIGFILE & c,
+	const std::string & sharedpartspath,
+	std::ostream & error_output)
 {
 	std::string drive = "RWD";
 	int version(1);
@@ -51,107 +455,31 @@ bool CARDYNAMICS::Load(CONFIGFILE & c, std::ostream & error_output)
 		error_output << "Unsupported car version: " << version << std::endl;
 		return false;
 	}
-	float temp_vec3[3];
 
-	//load the engine
+	if (!LoadEngine(c, engine, error_output)) return false;
+	AddMassParticle(engine.GetMass(), engine.GetPosition());
+	
+	if (!LoadFuelTank(c, fuel_tank, error_output)) return false;
+	AddMassParticle(fuel_tank.GetMass(), fuel_tank.GetPosition());
+
+	if (!LoadClutch(c, clutch, error_output)) return false;
+	
+	if (!LoadTransmission(c, transmission, error_output)) return false;
+	
+	//load the wheels (four wheels hardcoded)
+	for (int i = 0; i < 4; i++)
 	{
-		float engine_mass, engine_redline, engine_rpm_limit, engine_inertia,
-			engine_start_rpm, engine_stall_rpm, engine_fuel_consumption;
-		MATHVECTOR <double, 3> engine_position;
-
-		if (!c.GetParam("engine.peak-engine-rpm", engine_redline, error_output)) return false; //used only for the redline graphics
-		engine.SetRedline(engine_redline);
-
-		if (!c.GetParam("engine.rpm-limit", engine_rpm_limit, error_output)) return false;
-		engine.SetRPMLimit(engine_rpm_limit);
-
-		if (!c.GetParam("engine.inertia", engine_inertia, error_output)) return false;
-		engine.SetInertia(engine_inertia);
-
-		if (!c.GetParam("engine.start-rpm", engine_start_rpm, error_output)) return false;
-		engine.SetStartRPM(engine_start_rpm);
-
-		if (!c.GetParam("engine.stall-rpm", engine_stall_rpm, error_output)) return false;
-		engine.SetStallRPM(engine_stall_rpm);
-
-		if (!c.GetParam("engine.fuel-consumption", engine_fuel_consumption, error_output)) return false;
-		engine.SetFuelConsumption(engine_fuel_consumption);
-
-		if (!c.GetParam("engine.mass", engine_mass, error_output)) return false;
-		if (!c.GetParam("engine.position", temp_vec3, error_output)) return false;
-		if (version == 2)
-		{
-			COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(temp_vec3[0],temp_vec3[1],temp_vec3[2]);
-		}
-		engine_position.Set(temp_vec3[0],temp_vec3[1],temp_vec3[2]);
-		engine.SetMass(engine_mass);
-		engine.SetPosition(engine_position);
-		AddMassParticle(engine_mass, engine_position);
-
-		float torque_point[3];
-		std::string torque_str("engine.torque-curve-00");
-		std::vector <std::pair <double, double> > torques;
-		int curve_num = 0;
-		while (c.GetParam(torque_str, torque_point))
-		{
-			torques.push_back(std::pair <float, float> (torque_point[0], torque_point[1]));
-
-			curve_num++;
-			std::stringstream str;
-			str << "engine.torque-curve-";
-			str.width(2);
-			str.fill('0');
-			str << curve_num;
-			torque_str = str.str();
-		}
-		if (torques.size() <= 1)
-		{
-			error_output << "You must define at least 2 torque curve points." << std::endl;
-			return false;
-		}
-		engine.SetTorqueCurve(engine_redline, torques);
+		std::stringstream num;
+		num << i;
+		const std::string suspensionname("suspension-"+num.str());
+		const std::string wheelname("wheel-"+num.str());
+		
+		if (!LoadSuspension(c, suspensionname, suspension[i], error_output)) return false;
+		if (!LoadWheel(c, wheelname, sharedpartspath, wheel[i], tire[i], brake[i], error_output)) return false;
+		
+		AddMassParticle(wheel[i].GetMass(), wheel[i].GetExtendedPosition());
 	}
-
-	//load the clutch
-	{
-		float sliding, radius, area, max_pressure;
-
-		if (!c.GetParam("clutch.sliding", sliding, error_output)) return false;
-		clutch.SetSlidingFriction(sliding);
-
-		if (!c.GetParam("clutch.radius", radius, error_output)) return false;
-		clutch.SetRadius(radius);
-
-		if (!c.GetParam("clutch.area", area, error_output)) return false;
-		clutch.SetArea(area);
-
-		if (!c.GetParam("clutch.max-pressure", max_pressure, error_output)) return false;
-		clutch.SetMaxPressure(max_pressure);
-	}
-
-	//load the transmission
-	{
-		float time = 0;
-		float ratio;
-		int gears;
-
-		c.GetParam("transmission.shift-time", time);
-		shift_time = time;
-
-		if (!c.GetParam("transmission.gear-ratio-r", ratio, error_output)) return false;
-		transmission.SetGearRatio(-1, ratio);
-
-		if (!c.GetParam("transmission.gears", gears, error_output)) return false;
-
-		for (int i = 0; i < gears; i++)
-		{
-			std::stringstream s;
-			s << "transmission.gear-ratio-" << i+1;
-			if (!c.GetParam(s.str(), ratio, error_output)) return false;
-			transmission.SetGearRatio(i+1, ratio);
-		}
-	}
-
+	
 	//load the differential(s)
 	{
 		float final_drive, anti_slip, anti_slip_torque(0), anti_slip_torque_deceleration_factor(0);
@@ -191,370 +519,11 @@ bool CARDYNAMICS::Load(CONFIGFILE & c, std::ostream & error_output)
 		}
 	}
 
-	//load the brake
-	{
-		for (int i = 0; i < 2; i++)
-		{
-			std::string pos = "front";
-			WHEEL_POSITION left = FRONT_LEFT;
-			WHEEL_POSITION right = FRONT_RIGHT;
-			if (i == 1)
-			{
-				left = REAR_LEFT;
-				right = REAR_RIGHT;
-				pos = "rear";
-			}
-
-			float friction, max_pressure, area, bias, radius, handbrake(0);
-
-			if (!c.GetParam("brakes-"+pos+".friction", friction, error_output)) return false;
-			brake[left].SetFriction(friction);
-			brake[right].SetFriction(friction);
-
-			if (!c.GetParam("brakes-"+pos+".area", area, error_output)) return false;
-			brake[left].SetArea(area);
-			brake[right].SetArea(area);
-
-			if (!c.GetParam("brakes-"+pos+".radius", radius, error_output)) return false;
-			brake[left].SetRadius(radius);
-			brake[right].SetRadius(radius);
-
-			c.GetParam("brakes-"+pos+".handbrake", handbrake);
-			brake[left].SetHandbrake(handbrake);
-			brake[right].SetHandbrake(handbrake);
-
-			if (!c.GetParam("brakes-"+pos+".bias", bias, error_output)) return false;
-			brake[left].SetBias(bias);
-			brake[right].SetBias(bias);
-
-			if (!c.GetParam("brakes-"+pos+".max-pressure", max_pressure, error_output)) return false;
-			brake[left].SetMaxPressure(max_pressure*bias);
-			brake[right].SetMaxPressure(max_pressure*bias);
-		}
-	}
-
-	//load the fuel tank
-	{
-		float pos[3];
-		MATHVECTOR <double, 3> position;
-		float capacity;
-		float volume;
-		float fuel_density;
-
-		if (!c.GetParam("fuel-tank.capacity", capacity, error_output)) return false;
-		fuel_tank.SetCapacity(capacity);
-
-		if (!c.GetParam("fuel-tank.volume", volume, error_output)) return false;
-		fuel_tank.SetVolume(volume);
-
-		if (!c.GetParam("fuel-tank.fuel-density", fuel_density, error_output)) return false;
-		fuel_tank.SetDensity(fuel_density);
-
-		if (!c.GetParam("fuel-tank.position", pos, error_output)) return false;
-		if (version == 2)
-			COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0],pos[1],pos[2]);
-		position.Set(pos[0],pos[1],pos[2]);
-		fuel_tank.SetPosition(position);
-		//AddMassParticle(fuel_density*volume, position);
-	}
-
-	//load the suspension
-	{
-		for (int i = 0; i < 2; i++)
-		{
-			std::string posstr = "front";
-			std::string posshortstr = "F";
-			WHEEL_POSITION posl = FRONT_LEFT;
-			WHEEL_POSITION posr = FRONT_RIGHT;
-			if (i == 1)
-			{
-				posstr = "rear";
-				posshortstr = "R";
-				posl = REAR_LEFT;
-				posr = REAR_RIGHT;
-			}
-
-			float spring_constant, bounce, rebound, travel, camber, caster, toe, anti_roll;
-			float hinge[3];
-			MATHVECTOR <double, 3> tempvec;
-
-			if (!c.GetParam("suspension-"+posstr+".spring-constant", spring_constant, error_output)) return false;
-			suspension[posl].SetSpringConstant(spring_constant);
-			suspension[posr].SetSpringConstant(spring_constant);
-
-			if (!c.GetParam("suspension-"+posstr+".bounce", bounce, error_output)) return false;
-			suspension[posl].SetBounce(bounce);
-			suspension[posr].SetBounce(bounce);
-
-			if (!c.GetParam("suspension-"+posstr+".rebound", rebound, error_output)) return false;
-			suspension[posl].SetRebound(rebound);
-			suspension[posr].SetRebound(rebound);
-
-			std::vector <std::pair <double, double> > damper_factor_points;
-			c.GetPoints("suspension-"+posstr, "damper-factor", damper_factor_points);
-			suspension[posl].SetDamperFactorPoints(damper_factor_points);
-			suspension[posr].SetDamperFactorPoints(damper_factor_points);
-
-			std::vector <std::pair <double, double> > spring_factor_points;
-			c.GetPoints("suspension-"+posstr, "spring-factor", spring_factor_points);
-			suspension[posl].SetSpringFactorPoints(spring_factor_points);
-			suspension[posr].SetSpringFactorPoints(spring_factor_points);
-
-			if (!c.GetParam("suspension-"+posstr+".travel", travel, error_output)) return false;
-			suspension[posl].SetTravel(travel);
-			suspension[posr].SetTravel(travel);
-
-			if (!c.GetParam("suspension-"+posstr+".camber", camber, error_output)) return false;
-			suspension[posl].SetCamber(camber);
-			suspension[posr].SetCamber(camber);
-
-			if (!c.GetParam("suspension-"+posstr+".caster", caster, error_output)) return false;
-			suspension[posl].SetCaster(caster);
-			suspension[posr].SetCaster(caster);
-
-			if (!c.GetParam("suspension-"+posstr+".toe", toe, error_output)) return false;
-			suspension[posl].SetToe(toe);
-			suspension[posr].SetToe(toe);
-
-			if (!c.GetParam("suspension-"+posstr+".anti-roll", anti_roll, error_output)) return false;
-			suspension[posl].SetAntiRollK(anti_roll);
-			suspension[posr].SetAntiRollK(anti_roll);
-
-			if (!c.GetParam("suspension-"+posshortstr+"L.hinge", hinge, error_output)) return false;
-			//cap hinge to reasonable values
-			for (int i = 0; i < 3; i++)
-			{
-				if (hinge[i] < -100)
-					hinge[i] = -100;
-				if (hinge[i] > 100)
-					hinge[i] = 100;
-			}
-			if (version == 2)
-				COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(hinge[0],hinge[1],hinge[2]);
-			tempvec.Set(hinge[0],hinge[1], hinge[2]);
-			suspension[posl].SetHinge(tempvec);
-
-			if (!c.GetParam("suspension-"+posshortstr+"R.hinge", hinge, error_output)) return false;
-			for (int i = 0; i < 3; i++)
-			{
-				if (hinge[i] < -100)
-					hinge[i] = -100;
-				if (hinge[i] > 100)
-					hinge[i] = 100;
-			}
-			if (version == 2)
-				COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(hinge[0],hinge[1],hinge[2]);
-			tempvec.Set(hinge[0],hinge[1], hinge[2]);
-			suspension[posr].SetHinge(tempvec);
-		}
-	}
-
-	//load the wheels
-	{
-		for (int i = 0; i < 4; i++)
-		{
-			std::string posstr;
-			WHEEL_POSITION pos;
-			if (i == 0)
-			{
-				posstr = "FL";
-				pos = FRONT_LEFT;
-			}
-			else if (i == 1)
-			{
-				posstr = "FR";
-				pos = FRONT_RIGHT;
-			}
-			else if (i == 2)
-			{
-				posstr = "RL";
-				pos = REAR_LEFT;
-			}
-			else
-			{
-				posstr = "RR";
-				pos = REAR_RIGHT;
-			}
-
-			float roll_height, mass;
-			float position[3];
-			MATHVECTOR <double, 3> tempvec;
-
-			if (!c.GetParam("wheel-"+posstr+".mass", mass, error_output)) return false;
-			wheel[pos].SetMass(mass);
-
-			if (!c.GetParam("wheel-"+posstr+".roll-height", roll_height, error_output)) return false;
-			wheel[pos].SetRollHeight(roll_height);
-
-			if (!c.GetParam("wheel-"+posstr+".position", position, error_output)) return false;
-			if (version == 2)
-				COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(position[0],position[1],position[2]);
-			tempvec.Set(position[0],position[1], position[2]);
-			wheel[pos].SetExtendedPosition(tempvec);
-
-			AddMassParticle(mass, tempvec);
-		}
-
-		//load the rotational inertia parameter from the tire section
-		float front_inertia;
-		float rear_inertia;
-		if (!c.GetParam("tire-front.rotational-inertia", front_inertia, error_output)) return false;
-		wheel[FRONT_LEFT].SetInertia(front_inertia);
-		wheel[FRONT_RIGHT].SetInertia(front_inertia);
-
-		if (!c.GetParam("tire-rear.rotational-inertia", rear_inertia, error_output)) return false;
-		wheel[REAR_LEFT].SetInertia(rear_inertia);
-		wheel[REAR_RIGHT].SetInertia(rear_inertia);
-	}
-
-	//load the tire parameters
-	{
-		WHEEL_POSITION leftside = FRONT_LEFT;
-		WHEEL_POSITION rightside = FRONT_RIGHT;
-		std::string posstr = "front";
-
-		for (int p = 0; p < 2; p++)
-		{
-			if (p == 1)
-			{
-				leftside = REAR_LEFT;
-				rightside = REAR_RIGHT;
-				posstr = "rear";
-			}
-
-			std::vector <double> longitudinal;
-			std::vector <double> lateral;
-			std::vector <double> aligning;
-			longitudinal.resize(11);
-			lateral.resize(15);
-			aligning.resize(18);
-
-			//read lateral
-			int numinfile;
-			for (int i = 0; i < 15; i++)
-			{
-				numinfile = i;
-				if (i == 11)
-					numinfile = 111;
-				else if (i == 12)
-					numinfile = 112;
-				else if (i > 12)
-					numinfile -= 1;
-				std::stringstream str;
-				str << "tire-"+posstr+".a" << numinfile;
-				float value;
-				if (!c.GetParam(str.str(), value, error_output)) return false;
-				lateral[i] = value;
-			}
-
-			//read longitudinal, error_output)) return false;
-			for (int i = 0; i < 11; i++)
-			{
-				std::stringstream str;
-				str << "tire-"+posstr+".b" << i;
-				float value;
-				if (!c.GetParam(str.str(), value, error_output)) return false;
-				longitudinal[i] = value;
-			}
-
-			//read aligning, error_output)) return false;
-			for (int i = 0; i < 18; i++)
-			{
-				std::stringstream str;
-				str << "tire-"+posstr+".c" << i;
-				float value;
-				if (!c.GetParam(str.str(), value, error_output)) return false;
-				aligning[i] = value;
-			}
-
-			tire[leftside].SetPacejkaParameters(longitudinal, lateral, aligning);
-			tire[rightside].SetPacejkaParameters(longitudinal, lateral, aligning);
-
-			float rolling_resistance[3];
-			if (!c.GetParam("tire-"+posstr+".rolling-resistance", rolling_resistance, error_output)) return false;
-			tire[leftside].SetRollingResistance(rolling_resistance[0], rolling_resistance[1]);
-			tire[rightside].SetRollingResistance(rolling_resistance[0], rolling_resistance[1]);
-
-			std::string size;
-			if (c.GetParam("tire-"+posstr+".size", size))
-			{
-				// parse tire size
-				
-				std::string modsize = size;
-				for (unsigned int i = 0; i < modsize.length(); i++)
-				{
-					if (modsize[i] < '0' || modsize[i] > '9')
-						modsize[i] = ' ';
-				}
-				std::stringstream parser(modsize);
-				float section_width(0);
-				float aspect_ratio(0);
-				float rim_diameter(0);
-				parser >> section_width >> aspect_ratio >> rim_diameter;
-				if (section_width <= 0 || aspect_ratio <= 0 || rim_diameter <= 0)
-				{
-					error_output << "Error parsing tire-" << posstr << ".size, expected something like 225/50r16 but got: " << size << std::endl;
-					return false;
-				}
-				
-				float radius = section_width*0.001f * aspect_ratio*0.01f + rim_diameter*0.0254f*0.5;
-				
-				int sides[2];
-				sides[0] = leftside;
-				sides[1] = rightside;
-				for (int i = 0; i < 2; i++)
-				{
-					tire[sides[i]].SetRadius(radius);
-					tire[sides[i]].SetSidewallWidth(section_width*0.001f);
-					tire[sides[i]].SetAspectRatio(aspect_ratio*0.01f);
-				}
-			}
-			else
-			{
-				float radius;
-				if (!c.GetParam("tire-"+posstr+".radius", radius, error_output)) return false;
-				tire[leftside].SetRadius(radius);
-				tire[rightside].SetRadius(radius);
-			}
-			
-			float tread;
-			if (!c.GetParam("tire-"+posstr+".tread", tread, error_output)) return false;
-			tire[leftside].SetTread(tread);
-			tire[rightside].SetTread(tread);
-		}
-
-		for (int i = 0; i < 4; i++)
-		{
-			tire[WHEEL_POSITION(i)].CalculateSigmaHatAlphaHat();
-		}
-	}
-
 	//load the mass-only particles
 	{
 		MATHVECTOR <double, 3> position;
 		float pos[3];
 		float mass;
-
-		if (c.GetParam("contact-points.mass", mass))
-		{
-			int paramnum(0);
-			std::string paramname("contact-points.position-00");
-			std::stringstream output_supression;
-			while (c.GetParam(paramname, pos))
-			{
-				if (version == 2)
-					COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0],pos[1],pos[2]);
-				position.Set(pos[0],pos[1],pos[2]);
-				AddMassParticle(mass, position);
-				paramnum++;
-				std::stringstream str;
-				str << "contact-points.position-";
-				str.width(2);
-				str.fill('0');
-				str << paramnum;
-				paramname = str.str();
-			}
-		}
 
 		std::string paramname = "particle-00";
 		int paramnum = 0;
@@ -562,7 +531,9 @@ bool CARDYNAMICS::Load(CONFIGFILE & c, std::ostream & error_output)
 		{
 			if (!c.GetParam(paramname+".position", pos, error_output)) return false;
 			if (version == 2)
+			{
 				COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0],pos[1],pos[2]);
+			}
 			position.Set(pos[0],pos[1],pos[2]);
 			AddMassParticle(mass, position);
 			paramnum++;
@@ -598,7 +569,7 @@ bool CARDYNAMICS::Load(CONFIGFILE & c, std::ostream & error_output)
 		AddMassParticle(mass, position);
 	}
 
-	//load the aerodynamics
+	//load the aerodynamics(10 wings maximum)
 	{
 		float drag_area, drag_c, lift_area, lift_c, lift_eff;
 		float pos[3];
@@ -608,24 +579,31 @@ bool CARDYNAMICS::Load(CONFIGFILE & c, std::ostream & error_output)
 		if (!c.GetParam("drag.drag-coefficient", drag_c, error_output)) return false;
 		if (!c.GetParam("drag.position", pos, error_output)) return false;
 		if (version == 2)
-			COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0],pos[1],pos[2]);
-		position.Set(pos[0], pos[1], pos[2]);
-		AddAerodynamicDevice(position, drag_area, drag_c, 0,0,0);
-
-		for (int i = 0; i < 2; i++)
 		{
-			std::string wingpos = "front";
-			if (i == 1)
-				wingpos = "rear";
-			if (!c.GetParam("wing-"+wingpos+".frontal-area", drag_area, error_output)) return false;
-			if (!c.GetParam("wing-"+wingpos+".drag-coefficient", drag_c, error_output)) return false;
-			if (!c.GetParam("wing-"+wingpos+".surface-area", lift_area, error_output)) return false;
-			if (!c.GetParam("wing-"+wingpos+".lift-coefficient", lift_c, error_output)) return false;
-			if (!c.GetParam("wing-"+wingpos+".efficiency", lift_eff, error_output)) return false;
-			if (!c.GetParam("wing-"+wingpos+".position", pos, error_output)) return false;
+			COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0],pos[1],pos[2]);
+		}
+		position.Set(pos[0], pos[1], pos[2]);
+		AddAerodynamicDevice(position, drag_area, drag_c, 0, 0, 0);
+
+		for (int i = 0; i < 10; i++)
+		{
+			std::stringstream num;
+			num << i;
+			
+			const std::string wingname("wing"+num.str());
+			if (!c.GetParam(wingname+".frontal-area", drag_area)) break;
+			if (!c.GetParam(wingname+".drag-coefficient", drag_c, error_output)) return false;
+			if (!c.GetParam(wingname+".surface-area", lift_area, error_output)) return false;
+			if (!c.GetParam(wingname+".lift-coefficient", lift_c, error_output)) return false;
+			if (!c.GetParam(wingname+".efficiency", lift_eff, error_output)) return false;
+			if (!c.GetParam(wingname+".position", pos, error_output)) return false;
+			
 			if (version == 2)
+			{
 				COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0],pos[1],pos[2]);
+			}
 			position.Set(pos[0], pos[1], pos[2]);
+			
 			AddAerodynamicDevice(position, drag_area, drag_c, lift_area, lift_c, lift_eff);
 		}
 	}
@@ -635,7 +613,7 @@ bool CARDYNAMICS::Load(CONFIGFILE & c, std::ostream & error_output)
 	return true;
 }
 
-// calculate bounding box from chassis, wheel meshes
+// calculate bounding box from chassis, wheels
 void CARDYNAMICS::GetCollisionBox(
 	const MODEL & chassisModel,
 	const MODEL & wheelModelFront,
@@ -834,7 +812,7 @@ QUATERNION <T> CARDYNAMICS::GetWheelOrientation(WHEEL_POSITION wp) const
 	{
 		siderot.Rotate(M_PI, 0, 0, 1);
 	}
-	return chassisRotation * GetWheelSteeringAndSuspensionOrientation(wp) * wheel[wp].GetOrientation() * siderot;
+	return chassisRotation * GetWheelSteeringAndSuspensionOrientation(wp) * wheel[wp].GetRotation() * siderot;
 }
 
 QUATERNION <T> CARDYNAMICS::GetUprightOrientation(WHEEL_POSITION wp) const
@@ -895,7 +873,7 @@ void CARDYNAMICS::ShiftGear(int value)
 	{
 		if (value <= transmission.GetForwardGears() && value >= -transmission.GetReverseGears())
 		{
-			remaining_shift_time = shift_time;
+			remaining_shift_time = transmission.GetShiftTime();
 			shift_gear = value;
 			shifted = false;
 		}
@@ -1865,7 +1843,7 @@ void CARDYNAMICS::UpdateTransmission(T dt)
 	remaining_shift_time -= dt;
 	if (remaining_shift_time < 0) remaining_shift_time = 0;
 
-	if (remaining_shift_time <= shift_time * 0.5 && !shifted)
+	if (remaining_shift_time <= transmission.GetShiftTime() * 0.5 && !shifted)
 	{
 		shifted = true;
 		transmission.Shift(shift_gear);
@@ -1971,6 +1949,7 @@ T CARDYNAMICS::AutoClutch(T last_clutch, T dt) const
 
 T CARDYNAMICS::ShiftAutoClutch() const
 {
+	const T shift_time = transmission.GetShiftTime();
 	T shift_clutch = 1.0;
 	if (remaining_shift_time > shift_time * 0.5)
 	    shift_clutch = 0.0;
