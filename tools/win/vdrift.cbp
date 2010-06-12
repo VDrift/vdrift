@@ -456,7 +456,6 @@
 		<Unit filename="..\..\include\spline.h" />
 		<Unit filename="..\..\include\sprite2d.h" />
 		<Unit filename="..\..\include\staticdrawables.h" />
-		<Unit filename="..\..\include\suspension.h" />
 		<Unit filename="..\..\include\suspensionbumpdetection.h" />
 		<Unit filename="..\..\include\text_draw.h" />
 		<Unit filename="..\..\include\texture.h" />
@@ -553,7 +552,6 @@
 		<Unit filename="..\..\src\settings.cpp" />
 		<Unit filename="..\..\src\shader.cpp" />
 		<Unit filename="..\..\src\sound.cpp" />
-		<Unit filename="..\..\src\suspension.cpp" />
 		<Unit filename="..\..\src\suspensionbumpdetection.cpp" />
 		<Unit filename="..\..\src\text_draw.cpp" />
 		<Unit filename="..\..\src\texture.cpp" />
