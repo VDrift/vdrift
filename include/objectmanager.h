@@ -58,6 +58,16 @@ public:
 		}
 	}
 	
+	void Clear()
+	{
+		Sweep();
+		if (!objectmap.empty())
+		{
+			error << "Texture Leak: ";
+			DebugPrint(error);
+		}
+	}
+	
 	void DebugPrint(std::ostream & out)
 	{
 		out << "Objects count: " << objectmap.size();

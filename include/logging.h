@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <string>
+#include <list>
 
 namespace logging
 {
@@ -15,11 +16,14 @@ namespace logging
 		protected:
 			std::string buffer;
 			const std::string prefix;
-			std::ostream & forwardstream;
+			std::list <std::ostream*> forwardstream;
 
 		public:
+			logstreambuf() {}
+			logstreambuf(const std::string & newprefix) : 
+				prefix(newprefix) {}
 			logstreambuf(const std::string & newprefix, std::ostream & forwardee) : 
-				prefix(newprefix),forwardstream(forwardee) {}
+				prefix(newprefix) {forwardstream.push_back(&forwardee);}
 			
 			std::string str() const
 			{
@@ -31,6 +35,12 @@ namespace logging
 				else
 					ret = buffer;
 				return ret;
+			}
+			
+			void forward(std::ostream & forwardee)
+			{
+				forwardstream.clear();
+				forwardstream.push_back(&forwardee);
 			}
 
 		protected:
@@ -91,7 +101,8 @@ namespace logging
 						myoutput.insert(i+1,prefix.length(),' ');
 				}
 			
-				forwardstream << myoutput << std::flush;
+				if (!forwardstream.empty())
+					(**forwardstream.begin()) << myoutput << std::flush;
 				char * newbasep = const_cast<char_type*>(buffer.data());
 				this->setp(newbasep, newbasep+buffer.capacity());
 				pbump(newbasep-this->pptr());
@@ -184,6 +195,19 @@ namespace logging
 				pbump(newbasep-this->pptr());
 				return 0;
 			}
+	};
+	
+	class redirect_ostream : public std::ostream
+	{
+		public:
+			redirect_ostream() : std::ostream(&redirector) {}
+			void redirect(std::ostream & newostream)
+			{
+				redirector.forward(newostream);
+			}
+		
+		private:
+			logstreambuf redirector;
 	};
 }
 
