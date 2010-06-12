@@ -208,7 +208,7 @@ void GAME::InitializeCoreSubsystems()
 		settings.GetReflections(), pathmanager.GetStaticReflectionMap(),
 		pathmanager.GetStaticAmbientMap(),
 		settings.GetAnisotropic(), settings.GetTextureSize(),
-		settings.GetLighting(), settings.GetBloom(),
+		settings.GetLighting(), settings.GetBloom(), settings.GetNormalMaps(),
 		renderconfigfile,
 		info_output, error_output);
 	

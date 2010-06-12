@@ -303,6 +303,11 @@ public:
 		return bloom;
 	}
 	
+	bool GetNormalMaps() const
+	{
+		return normalmaps;
+	}
+	
 	std::string GetSelectedCar() const
 	{
 		return player;
@@ -436,6 +441,7 @@ private:
 	bool input_graph;
 	int lighting;
 	bool bloom;
+	bool normalmaps;
 	std::string player;
 	std::string player_paint;
 	float player_color_red;

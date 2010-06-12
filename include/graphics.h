@@ -66,6 +66,7 @@ private:
 	unsigned int fsaa;
 	int lighting; ///<lighting quality; see data/settings/options.config for definition of values
 	bool bloom;
+	bool normalmaps;
 	float contrast;
 	bool aticard;
 	enum {REFLECTION_DISABLED, REFLECTION_STATIC, REFLECTION_DYNAMIC} reflection_status;
@@ -132,7 +133,7 @@ private:
 	void Render(RENDER_INPUT * input, RENDER_OUTPUT & output, std::ostream & error_output);
 public:
 	GRAPHICS_SDLGL() : surface(NULL),initialized(false),using_shaders(false),max_anisotropy(0),shadows(false),
-		       	closeshadow(5.0), fsaa(1),lighting(0),bloom(false),contrast(1.0), aticard(false), 
+		       	closeshadow(5.0), fsaa(1),lighting(0),bloom(false),normalmaps(false),contrast(1.0), aticard(false), 
 		       	reflection_status(REFLECTION_DISABLED), renderconfigfile("render.conf")
 			{activeshader = shadermap.end();}
 	~GRAPHICS_SDLGL() {}
@@ -149,7 +150,7 @@ public:
 				const std::string & static_reflectionmap_file,
 				const std::string & static_ambientmap_file,
 				int anisotropy, const std::string & texturesize,
-				int lighting_quality, bool newbloom,
+				int lighting_quality, bool newbloom, bool newnormalmaps,
 				const std::string & renderconfig,
 				std::ostream & info_output, std::ostream & error_output);
 	void Deinit();

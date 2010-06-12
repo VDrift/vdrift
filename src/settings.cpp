@@ -10,7 +10,7 @@ SETTINGS::SETTINGS() :
 	recordreplay(false), selected_replay(0), texturesize("large"), button_ramp(5),
 	ff_device("/dev/input/event0"), ff_gain(2.0), ff_invert(false), trackreverse(false),
 	shadows(false), shadow_distance(1), shadow_quality(1),
-	reflections(1), input_graph(false), lighting(0), bloom(false),
+	reflections(1), input_graph(false), lighting(0), bloom(false), normalmaps(false),
 	player("XS"), player_paint("00"), player_color_red(1), player_color_green(0), player_color_blue(0),
 	opponent("XS"), opponent_paint("00"), opponent_color_red(0), opponent_color_green(0), opponent_color_blue(1),
 	camerabounce(1.0), number_of_laps(1), contrast(1.0), camera_mode("chase"), hgateshifter(false),
@@ -68,6 +68,7 @@ void SETTINGS::Serialize(bool write, CONFIGFILE & config)
 	Param(config, write, "display.input_graph", input_graph);
 	Param(config, write, "display.lighting", lighting);
 	Param(config, write, "display.bloom", bloom);
+	Param(config, write, "display.normalmaps", normalmaps);
 	Param(config, write, "display.camerabounce", camerabounce);
 	Param(config, write, "display.contrast", contrast);
 

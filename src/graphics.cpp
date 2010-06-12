@@ -64,7 +64,7 @@ void GRAPHICS_SDLGL::Init(const std::string shaderpath, const std::string & wind
 	const std::string & static_reflectionmap_file,
 	const std::string & static_ambientmap_file,
 	int anisotropy, const std::string & texturesize,
-	int lighting_quality, bool newbloom,
+	int lighting_quality, bool newbloom, bool newnormalmaps,
 	const std::string & renderconfig,
 	std::ostream & info_output, std::ostream & error_output)
 {
@@ -73,6 +73,7 @@ void GRAPHICS_SDLGL::Init(const std::string shaderpath, const std::string & wind
 	shadow_quality = new_shadow_quality;
 	lighting = lighting_quality;
 	bloom = newbloom;
+	normalmaps = newnormalmaps;
 	renderconfigfile = renderconfig;
 
 	if (reflection_type == 1)
@@ -388,6 +389,9 @@ bool GRAPHICS_SDLGL::LoadShader(const std::string & shaderpath, const std::strin
 		if (shadow_quality == 4)
 			defines.push_back("_SHADOWSULTRA_");
 	}
+	
+	if (normalmaps)
+		defines.push_back("_NORMALMAPS_");
 
 	if (lighting == 1)
 		defines.push_back("_SSAO_LOW_");
@@ -531,6 +535,7 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 		if (fsaa > 1) conditions.insert("fsaa");
 		#define ADDCONDITION(x) if (x) conditions.insert(#x)
 		ADDCONDITION(bloom);
+		ADDCONDITION(normalmaps);
 		ADDCONDITION(ssao);
 		ADDCONDITION(ssao_low);
 		ADDCONDITION(ssao_high);
