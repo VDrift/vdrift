@@ -81,6 +81,12 @@ public:
 		else if (value == "small")
 			size = small;
 	}
+	
+	friend std::ostream & operator << (std::ostream &os, const TEXTUREINFO & t)
+	{
+		os << t.GetName();// << std::endl;
+		return os;
+	}
 
 private:
 	std::string name;

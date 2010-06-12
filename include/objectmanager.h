@@ -65,6 +65,11 @@ public:
 		{
 			error << "Texture Leak: ";
 			DebugPrint(error);
+			
+			for (iterator it = objectmap.begin(); it != objectmap.end(); it++)
+			{
+				error << "Leaked: " << it->first << std::endl;
+			}
 		}
 	}
 	
