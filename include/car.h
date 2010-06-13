@@ -407,36 +407,37 @@ protected:
 		const std::string & joefile,
 		MODEL_JOE03 & output_model,
 		TEXTUREMANAGER & textures,
-		const std::string & texfile,
-		const std::string & misc1texfile,
-		const std::string & misc2texfile,
+		const std::string & texname,
 		const std::string & texsize,
 		int anisotropy,
 		WHICHDRAWLIST whichdrawlist,
 		std::ostream & error_output);
 
+	/// load joefile, if draw != NULL generate list and assign to draw
 	bool LoadModel(
 		const std::string & joefile,
 		MODEL_JOE03 & output_model,
-		std::ostream & error_output,
-		int genlistid = true);
-
+		DRAWABLE * draw,
+		std::ostream & error_output);
+	
+	/// will load texname+".png"
+	/// will attempt to load texname+"-misc1.png, texname+"-misc2.png if loadmisc true
 	bool LoadTextures(
 		TEXTUREMANAGER & textures,
-		const std::string & texfile,
-		const std::string & misc1texfile,
-		const std::string & misc2texfile,
+		const std::string & texname,
 		const std::string & texsize,
 		int anisotropy,
 		DRAWABLE & draw,
 		std::ostream & error_output);
-/*
-	bool InitDrawable(
+	
+	void AddDrawable(
+		WHICHDRAWLIST whichdrawlist,
 		SCENENODE & parentnode,
+		DRAWABLE & draw,
 		keyed_container <SCENENODE>::handle & output_scenenode,
 		keyed_container <DRAWABLE>::handle & output_drawable,
 		std::ostream & error_output);
-*/
+	
 	keyed_container <DRAWABLE> & GetDrawlist(SCENENODE & node, WHICHDRAWLIST which)
 	{
 		switch (which)

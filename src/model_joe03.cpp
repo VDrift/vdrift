@@ -37,7 +37,7 @@ int MODEL_JOE03::BinaryRead ( void * buffer, unsigned int size, unsigned int cou
 	return bytesread;
 }
 
-bool MODEL_JOE03::Load ( string filename, JOEPACK * pack, ostream & err_output )
+bool MODEL_JOE03::Load ( string filename, JOEPACK * pack, ostream & err_output, bool genlist)
 {
 	modelpath = filename;
 
@@ -71,6 +71,12 @@ bool MODEL_JOE03::Load ( string filename, JOEPACK * pack, ostream & err_output )
 		fclose ( m_FilePointer );
 	else
 		pack->Pack_fclose();
+		
+	if (val && genlist)
+	{
+		//optimize into a static display list
+		GenerateListID(err_output);
+	}
 
 	return val;
 }
@@ -116,9 +122,6 @@ bool MODEL_JOE03::LoadFromHandle ( FILE * m_FilePointer, JOEPACK * pack, std::os
 
 	//generate metrics such as bounding box, etc
 	GenerateMeshMetrics();
-	
-	//optimize into a static display list
-	GenerateListID(err_output);
 
 	// Return a success
 	return true;

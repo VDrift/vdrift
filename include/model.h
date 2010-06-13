@@ -52,7 +52,7 @@ public:
 	MODEL() : generatedlistid(false),generatedmetrics(false),radius(0),radiusxz(0) {}
 	virtual ~MODEL() {Clear();}
 	
-	virtual bool Load(const std::string & strFileName, std::ostream & error_output) {return false;}
+	virtual bool Load(const std::string & strFileName, std::ostream & error_output, bool genlist = true) {return false;}
 	virtual bool CanSave() const {return false;}  ///< returns true if the model format is capable of saving to a file
 	virtual bool Save(const std::string & strFileName, std::ostream & error_output) const {return false;} ///< optional capability
 	

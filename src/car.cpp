@@ -94,61 +94,8 @@ bool CAR::GenerateWheelMesh(
 	draw.SetVertArray(&output_tire_model.GetVertexArray());
 
 	// load tire textures
-	std::string tiretexpath(sharedpartspath + "/tire/textures/" + tiretex);
-	{
-		TEXTUREINFO texinfo;
-		texinfo.SetName(tiretexpath + ".png");
-		texinfo.SetMipMap(true);
-		texinfo.SetAnisotropy(anisotropy);
-		texinfo.SetSize(texsize);
-		TEXTUREPTR texture = textures.Get(texinfo);
-		if (!texture->Loaded())
-		{
-			error_output << "Tire texture couldn't be loaded: " << tiretexpath + ".png" << std::endl;
-			return false;
-		}
-		draw.SetDiffuseMap(texture);
-	}
-
-	{
-		std::string misc1texfile = tiretexpath + "-misc1.png";
-		std::ifstream filecheck(misc1texfile.c_str());
-		if (filecheck)
-		{
-			TEXTUREINFO texinfo;
-			texinfo.SetName(misc1texfile);
-			texinfo.SetMipMap(true);
-			texinfo.SetAnisotropy(anisotropy);
-			texinfo.SetSize(texsize);
-			TEXTUREPTR misc1 = textures.Get(texinfo);
-			if (!misc1->Loaded())
-			{
-				error_output << "Error loading tire misc1 texture: " << misc1texfile << std::endl;
-				return false;
-			}
-			draw.SetMiscMap1(misc1);
-		}
-	}
-
-	{
-		std::string misc2texfile = tiretexpath + "-misc2.png";
-		std::ifstream filecheck(misc2texfile.c_str());
-		if (filecheck)
-		{
-			TEXTUREINFO texinfo;
-			texinfo.SetName(misc2texfile);
-			texinfo.SetMipMap(true);
-			texinfo.SetAnisotropy(anisotropy);
-			texinfo.SetSize(texsize);
-			TEXTUREPTR misc2 = textures.Get(texinfo);
-			if (!misc2->Loaded())
-			{
-				error_output << "Error loading tire misc2 texture: " << misc2texfile << std::endl;
-				return false;
-			}
-			draw.SetMiscMap2(misc2);
-		}
-	}
+	std::string tiretexname(sharedpartspath + "/tire/textures/" + tiretex);
+	if(!LoadTextures(textures, tiretexname, texsize, anisotropy, draw, error_output)) return false;
 	
 	// load wheel
 	std::string modelpath = sharedpartspath+"/wheel/";
@@ -156,7 +103,7 @@ bool CAR::GenerateWheelMesh(
 	if (!output_wheel_model.HaveMeshData())
 	{
 		// load wheel mesh, scale and translate(wheel model offset rim_width/2)
-		if (!LoadModel(modelpath+rimname+".joe", output_wheel_model, error_output, false)) return false;
+		if (!LoadModel(modelpath+rimname+".joe", output_wheel_model, NULL, error_output)) return false;
 		output_wheel_model.Scale(rim_diameter, rim_diameter, rim_diameter);
 		output_wheel_model.Translate(0, rim_width*0.75*0.5, 0);
 
@@ -178,19 +125,9 @@ bool CAR::GenerateWheelMesh(
 
 	keyed_container <DRAWABLE>::handle rim_draw;
 	if (!LoadInto(
-			node,
-			output_scenenode,
-			rim_draw, 
-			modelpath+rimname+".joe",
-			output_wheel_model,
-			textures,
-			wheeltexpath+rimname+".png",
-			wheeltexpath+rimname+"-misc1.png",
-			wheeltexpath+rimname+"-misc2.png",
-			texsize,
-			anisotropy,
-			NOBLEND,
-			error_output))
+			node, output_scenenode, rim_draw, modelpath+rimname+".joe", output_wheel_model,
+			textures, wheeltexpath+rimname, texsize, anisotropy,
+			NOBLEND, error_output))
 		return false;
 	
 	// create brake rotor
@@ -261,9 +198,8 @@ bool CAR::Load (
 
 	//load car body graphics
 	if ( !LoadInto ( topnode, bodynode, bodydraw, carpath + "/body.joe", bodymodel,
-			textures, carpath + "/textures/body" + carpaint + ".png", carpath + "/textures/body-misc1.png",
-			carpath + "/textures/body-misc2.png",
-			texsize, anisotropy, NOBLEND, error_output ) )
+			textures, carpath + "/textures/body" + carpaint, texsize, anisotropy,
+			NOBLEND, error_output ) )
 	{
 		return false;
 	}
@@ -273,35 +209,41 @@ bool CAR::Load (
 	
 	//load car brake light emissive texture
 	{
-		if ( !LoadInto ( topnode.GetNode(bodynode), bodynode, brakelights_emissive, carpath + "/body.joe", bodymodel,
-			textures, carpath + "/textures/brake.png", "", "",
-			texsize, anisotropy, EMISSIVE, nullout ) )
+		if ( !LoadInto (
+				topnode.GetNode(bodynode), bodynode, brakelights_emissive, carpath + "/body.joe", bodymodel,
+				textures, carpath + "/textures/brake", texsize, anisotropy,
+				EMISSIVE, nullout ) )
 		{
 			info_output << "No car brake texture exists, continuing without one" << std::endl;
 		}
 		else
+		{
 			GetDrawlist(topnode.GetNode(bodynode), EMISSIVE).get(brakelights_emissive).SetDrawEnable(false);
+		}
 	}
 
 	//load car reverse light texture
 	{
-		if ( !LoadInto ( topnode.GetNode(bodynode), bodynode, reverselights_emissive, carpath + "/body.joe", bodymodel,
-			textures, carpath + "/textures/reverse.png", "", "",
-			texsize, anisotropy, EMISSIVE, nullout ) )
+		if ( !LoadInto (
+				topnode.GetNode(bodynode), bodynode, reverselights_emissive, carpath + "/body.joe", bodymodel,
+				textures, carpath + "/textures/reverse", texsize, anisotropy,
+				EMISSIVE, nullout ) )
 		{
 			info_output << "No car reverse light texture exists, continuing without one" << std::endl;
 		}
 		else
+		{
 			GetDrawlist(topnode.GetNode(bodynode), EMISSIVE).get(reverselights_emissive).SetDrawEnable(false);
+		}
 	}
 	
 	//load driver graphics
 	if (!driverpath.empty())
 	{
-		if (!LoadInto(topnode.GetNode(bodynode), drivernode, driverdraw, driverpath + "/body.joe", drivermodel,
-				textures, driverpath + "/textures/body.png", driverpath + "/textures/body-misc1.png",
-				driverpath + "/textures/body-misc2.png",
-				texsize, anisotropy, NOBLEND, error_output))
+		if (!LoadInto(
+				topnode.GetNode(bodynode), drivernode, driverdraw, driverpath + "/body.joe", drivermodel,
+				textures, driverpath + "/textures/body", texsize, anisotropy,
+				NOBLEND, error_output))
 		{
 			drivernode.invalidate();
 			error_output << "Error loading driver graphics: " << driverpath << std::endl;
@@ -309,19 +251,18 @@ bool CAR::Load (
 	}
 
 	//load car interior graphics
-	if ( !LoadInto ( topnode.GetNode(bodynode), bodynode, interiordraw, carpath + "/interior.joe", interiormodel,
-			textures, carpath + "/textures/interior.png", carpath + "/textures/interior-misc1.png",
-			carpath + "/textures/interior-misc2.png",
-			texsize, anisotropy, NOBLEND, nullout ) )
+	if ( !LoadInto (
+			topnode.GetNode(bodynode), bodynode, interiordraw, carpath + "/interior.joe", interiormodel,
+			textures, carpath + "/textures/interior", texsize, anisotropy,
+			NOBLEND, nullout ) )
 	{
 		info_output << "No car interior model exists, continuing without one" << std::endl;
 	}
 
 	//load car glass graphics
-	if ( !LoadInto ( topnode.GetNode(bodynode), bodynode, glassdraw, carpath + "/glass.joe", glassmodel,
-			textures, carpath + "/textures/glass.png", carpath + "/textures/glass-misc1.png",
-			carpath + "/textures/glass-misc2.png",
-			texsize, anisotropy, BLEND, nullout ) )
+	if ( !LoadInto (
+			topnode.GetNode(bodynode), bodynode, glassdraw, carpath + "/glass.joe", glassmodel,
+			textures, carpath + "/textures/glass", texsize, anisotropy, BLEND, nullout ) )
 	{
 		info_output << "No car glass model exists, continuing without one" << std::endl;
 	}
@@ -339,10 +280,10 @@ bool CAR::Load (
 		if (dynamics.GetTire(WHEEL_POSITION(i)).GetSidewallWidth() <= 0)
 		{
 			// fallback to premodeled wheels
-			if ( !LoadInto ( topnode, wheelnode[i], wheeldraw[i], carpath + "/wheel_front.joe", tiremodelfront,
-				textures, carpath + "/textures/wheel_front.png", carpath + "/textures/wheel_front-misc1.png",
-				carpath + "/textures/wheel_front-misc2.png",
-				texsize, anisotropy, NOBLEND, error_output ) )
+			if ( !LoadInto (
+				topnode, wheelnode[i], wheeldraw[i], carpath + "/wheel_front.joe", tiremodelfront,
+				textures, carpath + "/textures/wheel_front", texsize, anisotropy,
+				NOBLEND, error_output ) )
 				return false;
 		}
 		else
@@ -364,10 +305,10 @@ bool CAR::Load (
 
 		//load floating elements
 		std::stringstream nullout;
-		LoadInto(topnode, floatingnode[i], floatingdraw[i], carpath + "/floating_front.joe", floatingmodelfront,
-			textures, carpath + "/textures/body" + carpaint + ".png", carpath + "/textures/body-misc1.png",
-			carpath + "/textures/body-misc2.png",
-      		texsize, anisotropy, NOBLEND, nullout);
+		LoadInto(
+			topnode, floatingnode[i], floatingdraw[i], carpath + "/floating_front.joe", floatingmodelfront,
+			textures, carpath + "/textures/body" + carpaint, texsize,
+			anisotropy, NOBLEND, nullout);
 	}
 	for (int i = 2; i < 4; i++) //rear pair
 	{
@@ -376,10 +317,10 @@ bool CAR::Load (
 			if (dynamics.GetTire(WHEEL_POSITION(REAR_LEFT)).GetSidewallWidth() <= 0 ||
 				dynamics.GetTire(WHEEL_POSITION(REAR_RIGHT)).GetSidewallWidth() <= 0)
 			{
-				if (!LoadInto(topnode, wheelnode[i], wheeldraw[i], carpath + "/wheel_rear.joe", tiremodelrear,
-					textures, carpath + "/textures/wheel_rear.png", carpath + "/textures/wheel_rear-misc1.png",
-					carpath + "/textures/wheel_rear-misc2.png",
-					texsize, anisotropy, NOBLEND, error_output))
+				if (!LoadInto(
+					topnode, wheelnode[i], wheeldraw[i], carpath + "/wheel_rear.joe", tiremodelrear,
+					textures, carpath + "/textures/wheel_rear", texsize,
+					anisotropy, NOBLEND, error_output))
 					return false;
 			}
 		}
@@ -402,10 +343,10 @@ bool CAR::Load (
 
 		//load floating elements
 		std::stringstream nullout;
-		LoadInto(topnode, floatingnode[i], floatingdraw[i], carpath + "/floating_rear.joe", floatingmodelrear,
-			textures, carpath + "/textures/body" + carpaint + ".png", carpath + "/textures/body-misc1.png",
-			carpath + "/textures/body-misc2.png",
-      		texsize, anisotropy, NOBLEND, nullout);
+		LoadInto(
+			topnode, floatingnode[i], floatingdraw[i], carpath + "/floating_rear.joe", floatingmodelrear,
+			textures, carpath + "/textures/body" + carpaint, texsize,
+			anisotropy, NOBLEND, nullout);
 	}
 
 	//set wheel positions(for widget_spinningcar)
@@ -423,7 +364,7 @@ bool CAR::Load (
 		{
 			SCENENODE & floatingnoderef = topnode.GetNode(floatingnode[i]);
 			floatingnoderef.GetTransform().SetTranslation(wheelpos);
-			floatingnoderef.GetTransform().SetRotation(wheelrot);
+			//floatingnoderef.GetTransform().SetRotation(wheelrot);
 		}
 	}
 	
@@ -845,39 +786,17 @@ bool CAR::LoadInto (
 	const std::string & joefile,
 	MODEL_JOE03 & output_model,
 	TEXTUREMANAGER & textures,
-	const std::string & texfile,
-	const std::string & misc1texfile,
-	const std::string & misc2texfile,
+	const std::string & texname,
 	const std::string & texsize,
 	int anisotropy,
 	WHICHDRAWLIST whichdrawlist,
 	std::ostream & error_output)
 {
-	if (!LoadModel(joefile, output_model, error_output)) return false;
+	DRAWABLE drawtemp;
 	
-	DRAWABLE temp_draw;
-	if (!LoadTextures(textures, texfile, misc1texfile, misc2texfile, texsize, anisotropy, temp_draw, error_output)) return false;
-
-	SCENENODE * node = &parentnode;
-	if (!output_scenenode.valid())
-	{
-		output_scenenode = parentnode.AddNode();
-		node = &parentnode.GetNode(output_scenenode);
-	}
-
-	// create the drawable in the correct layer depending on blend status
-	DRAWABLE * draw = NULL;
-	output_drawable = GetDrawlist(*node, whichdrawlist).insert(temp_draw);
-	draw = &GetDrawlist(*node, whichdrawlist).get(output_drawable);
-	assert(draw);
-	
-	draw->AddDrawList(output_model.GetListID());
-	draw->SetObjectCenter(output_model.GetCenter());
-	
-	if (whichdrawlist == EMISSIVE)
-	{
-		draw->SetDecal(true);
-	}
+	if (!LoadModel(joefile, output_model, &drawtemp, error_output)) return false;
+	if (!LoadTextures(textures, texname, texsize, anisotropy, drawtemp, error_output)) return false;
+	AddDrawable(whichdrawlist, parentnode, drawtemp, output_scenenode, output_drawable, error_output);
 	
 	return true;
 }
@@ -885,15 +804,16 @@ bool CAR::LoadInto (
 bool CAR::LoadModel(
 	const std::string & joefile,
 	MODEL_JOE03 & output_model,
-	std::ostream & error_output,
-	int genlistid)
+	DRAWABLE * draw,
+	std::ostream & error_output)
 {
 	if (!output_model.Loaded())
 	{
 		std::stringstream nullout;
 		if (!output_model.ReadFromFile(joefile.substr(0,std::max((long unsigned int)0,(long unsigned int) joefile.size()-3))+"ova", nullout))
 		{
-			if (!output_model.Load(joefile, error_output))
+			bool genlist = false;
+			if (!output_model.Load(joefile, error_output, genlist))
 			{
 				error_output << "Error loading model: " << joefile << std::endl;
 				return false;
@@ -902,12 +822,14 @@ bool CAR::LoadModel(
 			// mesh orientation fixer
 			output_model.Rotate(-M_PI_2, 0, 0, 1);
  			output_model.GenerateMeshMetrics();
-
-			if (genlistid)
-			{
-				output_model.GenerateListID(error_output);
-			}
 		}
+	}
+	
+	if (draw)
+	{
+		if (!output_model.HaveListID()) output_model.GenerateListID(error_output);
+		draw->AddDrawList(output_model.GetListID());
+		draw->SetObjectCenter(output_model.GetCenter());
 	}
 
 	return true;
@@ -915,77 +837,70 @@ bool CAR::LoadModel(
 
 bool CAR::LoadTextures(
 	TEXTUREMANAGER & textures,
-	const std::string & texfile,
-	const std::string & misc1texfile,
-	const std::string & misc2texfile,
+	const std::string & texname,
 	const std::string & texsize,
 	int anisotropy,
 	DRAWABLE & draw,
 	std::ostream & error_output)
 {
-	if(!texfile.empty())
+	std::string texdiff = texname + ".png";
 	{
 		TEXTUREINFO texinfo;
-		texinfo.SetName(texfile);
+		texinfo.SetName(texdiff);
 		texinfo.SetMipMap(true);
 		texinfo.SetAnisotropy(anisotropy);
 		texinfo.SetSize(texsize);
 		TEXTUREPTR diffuse = textures.Get(texinfo);
 		if (!diffuse->Loaded())
 		{
-			error_output << "Error loading texture: " << texfile << std::endl;
+			error_output << "Error loading texture: " << texdiff << std::endl;
 			return false;
 		}
 		draw.SetDiffuseMap(diffuse);
 	}
-
-	if (!misc1texfile.empty())
+	
+	std::string	texmisc1 = texname + "-misc1.png";
+	if (std::ifstream(texmisc1.c_str()))
 	{
-		std::ifstream filecheck(misc1texfile.c_str());
-		if (filecheck)
+		TEXTUREINFO texinfo;
+		texinfo.SetName(texmisc1);
+		texinfo.SetMipMap(true);
+		texinfo.SetAnisotropy(anisotropy);
+		texinfo.SetSize(texsize);
+		TEXTUREPTR misc1 = textures.Get(texinfo);
+		if (!misc1->Loaded())
 		{
-			TEXTUREINFO texinfo;
-			texinfo.SetName(misc1texfile);
-			texinfo.SetMipMap(true);
-			texinfo.SetAnisotropy(anisotropy);
-			texinfo.SetSize(texsize);
-			TEXTUREPTR misc1 = textures.Get(texinfo);
-			if (!misc1->Loaded())
-			{
-				error_output << "Error loading texture: " << texfile << std::endl;
-				return false;
-			}
-			draw.SetMiscMap1(misc1);
+			error_output << "Error loading texture: " << texmisc1 << std::endl;
+			return false;
 		}
+		draw.SetMiscMap1(misc1);
 	}
 	
-	if (!misc2texfile.empty())
+	std::string	texmisc2 = texname + "-misc2.png";
+	if (std::ifstream(texmisc2.c_str()))
 	{
-		std::ifstream filecheck(misc2texfile.c_str());
-		if (filecheck)
+		TEXTUREINFO texinfo;
+		texinfo.SetName(texmisc2);
+		texinfo.SetMipMap(true);
+		texinfo.SetAnisotropy(anisotropy);
+		texinfo.SetSize(texsize);
+		TEXTUREPTR misc2 = textures.Get(texinfo);
+		if (!misc2->Loaded())
 		{
-			TEXTUREINFO texinfo;
-			texinfo.SetName(misc2texfile);
-			texinfo.SetMipMap(true);
-			texinfo.SetAnisotropy(anisotropy);
-			texinfo.SetSize(texsize);
-			TEXTUREPTR misc2 = textures.Get(texinfo);
-			if (!misc2->Loaded())
-			{
-				error_output << "Error loading texture: " << texfile << std::endl;
-				return false;
-			}
-			draw.SetMiscMap2(misc2);
+			error_output << "Error loading texture: " << texmisc2 << std::endl;
+			return false;
 		}
+		draw.SetMiscMap2(misc2);
 	}
 
 	return true;
 }
-/*
+
 // takes a initialized drawable => mesh+textures (copies it into corresponding drawlist)
-void CAR::InitDrawable(
+void CAR::AddDrawable(
+	WHICHDRAWLIST whichdrawlist,
 	SCENENODE & parentnode,
-	DRAWABLE & drawable,
+	DRAWABLE & draw,
 	keyed_container <SCENENODE>::handle & output_scenenode,
 	keyed_container <DRAWABLE>::handle & output_drawable,
 	std::ostream & error_output)
@@ -996,17 +911,16 @@ void CAR::InitDrawable(
 		output_scenenode = parentnode.AddNode();
 		node = &parentnode.GetNode(output_scenenode);
 	}
-
-	// copy the drawable into the correct layer depending on blend status
-	DRAWABLE * draw = NULL;
-	output_drawable = GetDrawlist(*node, whichdrawlist).insert(drawable);
-	draw = &GetDrawlist(*node, whichdrawlist).get(output_drawable);
-	assert(draw);
 	
 	if (whichdrawlist == EMISSIVE)
-		draw->SetDecal(true);
+	{
+		draw.SetDecal(true);
+	}
+
+	// create the drawable in the correct layer depending on blend status
+	output_drawable = GetDrawlist(*node, whichdrawlist).insert(draw);
+	assert(&GetDrawlist(*node, whichdrawlist).get(output_drawable));
 }
-*/
 
 void CAR::SetColor(float r, float g, float b)
 {
@@ -1530,4 +1444,3 @@ bool CAR::Serialize(joeserialize::Serializer & s)
 	_SERIALIZE_(s,last_steer);
 	return true;
 }
-

@@ -60,11 +60,24 @@ class MODEL_JOE03 : public MODEL
 {
 public:
 	MODEL_JOE03() : JOE_MAX_FACES(32000),JOE_VERSION(3),MODEL_SCALE(1.0) {}
-	virtual ~MODEL_JOE03() {Clear();}
+	
+	virtual ~MODEL_JOE03()
+	{
+		Clear();
+	}
 
-	virtual bool Load(const std::string & strFileName, std::ostream & error_output) {return Load(strFileName, NULL, error_output);}
-	virtual bool CanSave() const {return false;}
-	bool Load(std::string strFileName, JOEPACK * pack, std::ostream & error_output);
+	virtual bool Load(const std::string & strFileName, std::ostream & error_output, bool genlist=true)
+	{
+		return Load(strFileName, NULL, error_output, genlist);
+	}
+	
+	virtual bool CanSave() const
+	{
+		return false;
+	}
+	
+	bool Load(std::string strFileName, JOEPACK * pack, std::ostream & error_output, bool genlist=true);
+	
 	bool LoadFromHandle(FILE * f, JOEPACK * pack, std::ostream & error_output);
 
 private:
