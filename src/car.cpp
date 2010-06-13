@@ -83,15 +83,16 @@ bool CAR::GenerateWheelMesh(
 	float rim_width = tire.GetSidewallWidth();
 	
 	// create tire
-	if(!output_tire_model.HaveMeshData())
+	if(!output_tire_model.Loaded())
 	{
 		VERTEXARRAY output_varray;
 		MESHGEN::mg_tire(output_varray, sectionWidth_mm, aspectRatio, rimDiameter_in);
 		output_varray.Rotate(-M_PI_2, 0, 0, 1);
 		output_tire_model.SetVertexArray(output_varray);
 		output_tire_model.GenerateMeshMetrics();
+		output_tire_model.GenerateListID(error_output);
 	}
-	draw.SetVertArray(&output_tire_model.GetVertexArray());
+	draw.AddDrawList(output_tire_model.GetListID());
 
 	// load tire textures
 	std::string tiretexname(sharedpartspath + "/tire/textures/" + tiretex);
@@ -100,7 +101,7 @@ bool CAR::GenerateWheelMesh(
 	// load wheel
 	std::string modelpath = sharedpartspath+"/wheel/";
 	std::string wheeltexpath = sharedpartspath+"/wheel/textures/";
-	if (!output_wheel_model.HaveMeshData())
+	if (!output_wheel_model.Loaded())
 	{
 		// load wheel mesh, scale and translate(wheel model offset rim_width/2)
 		if (!LoadModel(modelpath+rimname+".joe", output_wheel_model, NULL, error_output)) return false;
@@ -131,8 +132,7 @@ bool CAR::GenerateWheelMesh(
 		return false;
 	
 	// create brake rotor
-/*
-	if(!output_brake_rotor.HaveMeshData())
+	if(!output_brake_rotor.Loaded())
 	{
 		float diameter_mm = brake.GetRadius() * 2 * 1000;
 		float thickness_mm = 0.05;
@@ -140,32 +140,19 @@ bool CAR::GenerateWheelMesh(
 		MESHGEN::mg_brake_rotor(&rotor_varray, diameter_mm, thickness_mm);
 		output_brake_rotor.SetVertexArray(rotor_varray);
 		output_brake_rotor.Rotate(-M_PI_2, 0, 0, 1);
-		output_brake_rotor.GenerateMeshMetrics();
+		//output_brake_rotor.GenerateMeshMetrics();
+		output_brake_rotor.GenerateListID(error_output);
 	}
 	
-	// create brake rotor drawable
-	{
+	// add brake rotor drawable
+	std::string rotortexname(sharedpartspath + "/brake/textures/" + rotortex);
+	keyed_container <DRAWABLE>::handle rotor_draw;
+	if (!LoadInto(
+			node, output_scenenode, rotor_draw, "", output_brake_rotor,
+			textures, rotortexname, texsize, anisotropy,
+			NOBLEND, error_output))
+		return false;
 
-	}
-	
-	// load brake rotor texture
-	{
-		std::string rotortexpath(sharedpartspath + "/brake/textures/" + rotortex);
-
-		TEXTUREINFO texinfo;
-		texinfo.SetName(rotortexpath + ".png");
-		texinfo.SetMipMap(true);
-		texinfo.SetAnisotropy(anisotropy);
-		texinfo.SetSize(texsize);
-		TEXTUREPTR texture = textures.Get(texinfo);
-		if (!texture->Loaded())
-		{
-			error_output << "Brake rotor texture couldn't be loaded: " << rotortexpath + ".png" << std::endl;
-			return false;
-		}
-		draw.SetDiffuseMap(texture);
-	}
-*/
 	return true;
 }
 
@@ -916,7 +903,7 @@ void CAR::AddDrawable(
 	{
 		draw.SetDecal(true);
 	}
-
+	
 	// create the drawable in the correct layer depending on blend status
 	output_drawable = GetDrawlist(*node, whichdrawlist).insert(draw);
 	assert(&GetDrawlist(*node, whichdrawlist).get(output_drawable));
