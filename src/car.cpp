@@ -67,11 +67,13 @@ bool CAR::GenerateWheelMesh(
 	std::string brakename;
 	std::string rimname;
 	std::string tiretex;
+	std::string orient;
 
 	if (!carconf.GetParam(wheelname + ".tire", tirename, error_output)) return false;
 	if (!carconf.GetParam(wheelname + ".brake", brakename, error_output)) return false;
 	if (!carconf.GetParam(wheelname + ".rim", rimname, error_output)) return false;
 	if (!carconf.GetParam(tirename + ".texture", tiretex, error_output)) return false;
+	carconf.GetParam(wheelname + ".orientation", orient, error_output);
 	
 	// wheel/tire parameters
 	float aspectRatio = tire.GetAspectRatio() * 100.f;
@@ -79,6 +81,8 @@ bool CAR::GenerateWheelMesh(
 	float rim_diameter = (tire.GetRadius() - tire.GetSidewallWidth() * tire.GetAspectRatio()) * 2.f;
 	float rimDiameter_in = rim_diameter / 0.0254f;
 	float rim_width = tire.GetSidewallWidth();
+	float orientation = 1;
+	if(!orient.empty() && orient != "left") orientation = -1;
 	
 	// create tire
 	if(!output_tire_model.Loaded())
@@ -86,6 +90,7 @@ bool CAR::GenerateWheelMesh(
 		VERTEXARRAY output_varray;
 		MESHGEN::mg_tire(output_varray, sectionWidth_mm, aspectRatio, rimDiameter_in);
 		output_varray.Rotate(-M_PI_2, 0, 0, 1);
+		if (orientation < 0) output_varray.Scale(1, orientation, 1); // mirror mesh
 		output_tire_model.SetVertexArray(output_varray);
 		output_tire_model.GenerateMeshMetrics();
 		output_tire_model.GenerateListID(error_output);
@@ -114,6 +119,7 @@ bool CAR::GenerateWheelMesh(
 		
 		// add rim to wheel mesh
 		rim_varray = rim_varray + output_wheel_model.GetVertexArray();
+		if (orientation < 0) rim_varray.Scale(1, orientation, 1); // mirror mesh
 		output_wheel_model.SetVertexArray(rim_varray);
 		output_wheel_model.GenerateMeshMetrics();
 		output_wheel_model.GenerateListID(error_output);
@@ -142,6 +148,7 @@ bool CAR::GenerateWheelMesh(
 		MESHGEN::mg_brake_rotor(&rotor_varray, diameter_mm, thickness_mm);
 		output_brake_rotor.SetVertexArray(rotor_varray);
 		output_brake_rotor.Rotate(-M_PI_2, 0, 0, 1);
+		if (orientation < 0) output_brake_rotor.Scale(1, orientation, 1); // mirror mesh
 		output_brake_rotor.GenerateMeshMetrics();
 		output_brake_rotor.GenerateListID(error_output);
 	}
@@ -262,9 +269,9 @@ bool CAR::Load (
 	if (!dynamics.Load(carconf, sharedpartspath, error_output)) return false;
 	
 	// load wheel graphics
-	for (int i = 0; i < 2; i++) // front pair
+	for (int i = 0; i < WHEEL_POSITION_SIZE; i++)
 	{
-		// create wheel
+		// load wheel
 		std::stringstream wheelstr;
 		wheelstr << "wheel-" << i;
 		std::string wheelname(wheelstr.str());
@@ -272,41 +279,29 @@ bool CAR::Load (
 				carconf, wheelname, sharedpartspath,
 				dynamics.GetTire(WHEEL_POSITION(i)), dynamics.GetBrake(WHEEL_POSITION(i)),
 				topnode, wheelnode[i], wheeldraw[i],
-				tiremodelfront, wheelmodelfront, brakerotorfront,
+				tiremodel[i], wheelmodel[i], brakemodel[i],
 				textures, anisotropy, texsize, error_output))
 		{
 			error_output << "Error generating wheel mesh for wheel " << i << std::endl;
 			return false;
 		}
 
-		// load floating elements
+		// load floating element
 		std::stringstream nullout;
-		LoadInto(
-			topnode, floatingnode[i], floatingdraw[i], carpath + "/floating_front.joe", floatingmodelfront,
-			textures, carpath + "/textures/body" + carpaint, texsize,
-			anisotropy, NOBLEND, nullout);
-	}
-	for (int i = 2; i < 4; i++) // rear pair
-	{
-
-		std::stringstream wheelstr;
-		wheelstr << "wheel-" << i;
-		std::string wheelname(wheelstr.str());
-		if (!GenerateWheelMesh(
-				carconf, wheelname, sharedpartspath,
-				dynamics.GetTire(WHEEL_POSITION(i)), dynamics.GetBrake(WHEEL_POSITION(i)),
-				topnode, wheelnode[i], wheeldraw[i],
-				tiremodelrear, wheelmodelrear, brakerotorrear,
-				textures, anisotropy, texsize, error_output))
+		std::string floatingname;
+		MODEL_JOE03 * floatingmodel;
+		if (i < 2)
 		{
-			error_output << "Error generating wheel mesh for wheel " << i << std::endl;
-			return false;
+			floatingmodel = &floatingmodelfront;
+			floatingname = carpath + "/floating_front.joe";
 		}
-
-		// load floating elements
-		std::stringstream nullout;
+		else
+		{
+			floatingmodel = &floatingmodelrear;
+			floatingname = carpath + "/floating_rear.joe";
+		}
 		LoadInto(
-			topnode, floatingnode[i], floatingdraw[i], carpath + "/floating_rear.joe", floatingmodelrear,
+			topnode, floatingnode[i], floatingdraw[i], floatingname, *floatingmodel,
 			textures, carpath + "/textures/body" + carpaint, texsize,
 			anisotropy, NOBLEND, nullout);
 	}
@@ -315,18 +310,16 @@ bool CAR::Load (
 	for (int i = 0; i < 4; i++)
 	{
 		MATHVECTOR <float, 3> wheelpos = dynamics.GetWheelPosition(WHEEL_POSITION(i), 0);
-		QUATERNION <float> wheelrot;
-		if(i == FRONT_RIGHT || i == REAR_RIGHT)
-			wheelrot.Rotate(3.141593, 0, 0, 1);
+		//QUATERNION <float> wheelrot;
+		//if(i == FRONT_RIGHT || i == REAR_RIGHT) wheelrot.Rotate(3.141593, 0, 0, 1);
 		
 		SCENENODE & wheelnoderef = topnode.GetNode(wheelnode[i]);
 		wheelnoderef.GetTransform().SetTranslation(wheelpos);
-		wheelnoderef.GetTransform().SetRotation(wheelrot);
+		//wheelnoderef.GetTransform().SetRotation(wheelrot);
 		if (floatingnode[i].valid())
 		{
 			SCENENODE & floatingnoderef = topnode.GetNode(floatingnode[i]);
 			floatingnoderef.GetTransform().SetTranslation(wheelpos);
-			//floatingnoderef.GetTransform().SetRotation(wheelrot);
 		}
 	}
 	
@@ -936,6 +929,7 @@ void CAR::CopyPhysicsResultsIntoDisplay()
 		SCENENODE & wheelnoderef = topnode.GetNode(wheelnode[i]);
 		wheelnoderef.GetTransform().SetTranslation(vec);
 		tirebump[i].SetPosition(vec[0],vec[1],vec[2]);
+		
 		QUATERNION <float> wheelquat;
 		wheelquat = dynamics.GetWheelOrientation(WHEEL_POSITION(i));
 		wheelnoderef.GetTransform().SetRotation(wheelquat);
@@ -944,6 +938,7 @@ void CAR::CopyPhysicsResultsIntoDisplay()
 		{
 			SCENENODE & floatingnoderef = topnode.GetNode(floatingnode[i]);
 			floatingnoderef.GetTransform().SetTranslation(vec);
+			
 			QUATERNION <float> floatquat;
 			floatquat = dynamics.GetUprightOrientation(WHEEL_POSITION(i));
 			floatingnoderef.GetTransform().SetRotation(floatquat);

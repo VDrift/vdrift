@@ -316,23 +316,20 @@ protected:
 	std::map <std::string, SOUNDBUFFER> soundbuffers;
 	std::list <std::pair <ENGINESOUNDINFO, SOUNDSOURCE> > enginesounds;
 
-	keyed_container <DRAWABLE>::handle wheeldraw[4];
-	keyed_container <SCENENODE>::handle wheelnode[4];
-	keyed_container <DRAWABLE>::handle floatingdraw[4];
-	keyed_container <SCENENODE>::handle floatingnode[4];
-	MODEL_JOE03 wheelmodelfront;
-	MODEL_JOE03 wheelmodelrear;
-	MODEL_JOE03 tiremodelfront;
-	MODEL_JOE03 tiremodelrear;
+	keyed_container <DRAWABLE>::handle wheeldraw[WHEEL_POSITION_SIZE];
+	keyed_container <SCENENODE>::handle wheelnode[WHEEL_POSITION_SIZE];
+	keyed_container <DRAWABLE>::handle floatingdraw[WHEEL_POSITION_SIZE];
+	keyed_container <SCENENODE>::handle floatingnode[WHEEL_POSITION_SIZE];
+	MODEL_JOE03 wheelmodel[WHEEL_POSITION_SIZE];
+	MODEL_JOE03 tiremodel[WHEEL_POSITION_SIZE];
+	MODEL_JOE03 brakemodel[WHEEL_POSITION_SIZE];
 	MODEL_JOE03 floatingmodelfront;
 	MODEL_JOE03 floatingmodelrear;
-	MODEL_JOE03 brakerotorfront;
-	MODEL_JOE03 brakerotorrear;
 
-	SOUNDSOURCE tiresqueal[4];
-	SOUNDSOURCE tirebump[4];
-	SOUNDSOURCE grasssound[4]; //added grass & gravel
-	SOUNDSOURCE gravelsound[4];
+	SOUNDSOURCE tiresqueal[WHEEL_POSITION_SIZE];
+	SOUNDSOURCE tirebump[WHEEL_POSITION_SIZE];
+	SOUNDSOURCE grasssound[WHEEL_POSITION_SIZE]; //added grass & gravel
+	SOUNDSOURCE gravelsound[WHEEL_POSITION_SIZE];
 	SOUNDSOURCE crashsound;
 	SOUNDSOURCE gearsound;
 	SOUNDSOURCE brakesound;
@@ -351,7 +348,7 @@ protected:
 
 	std::string cartype;
 	int sector; //the last lap timing sector that the car hit
-	const BEZIER * curpatch[4]; //the last bezier patch that each wheel hit
+	const BEZIER * curpatch[WHEEL_POSITION_SIZE]; //the last bezier patch that each wheel hit
 	
 	float applied_brakes; ///< cached so we can update the brake light
 	
