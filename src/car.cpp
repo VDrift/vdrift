@@ -258,77 +258,52 @@ bool CAR::Load (
 	int version(1);
 	carconf.GetParam("version", version);
 	
-	//load dynamics
+	// load car dynamics
 	if (!dynamics.Load(carconf, sharedpartspath, error_output)) return false;
 	
-	//load wheel graphics
-	for (int i = 0; i < 2; i++) //front pair
+	// load wheel graphics
+	for (int i = 0; i < 2; i++) // front pair
 	{
-		if (dynamics.GetTire(WHEEL_POSITION(i)).GetSidewallWidth() <= 0)
+		// create wheel
+		std::stringstream wheelstr;
+		wheelstr << "wheel-" << i;
+		std::string wheelname(wheelstr.str());
+		if (!GenerateWheelMesh(
+				carconf, wheelname, sharedpartspath,
+				dynamics.GetTire(WHEEL_POSITION(i)), dynamics.GetBrake(WHEEL_POSITION(i)),
+				topnode, wheelnode[i], wheeldraw[i],
+				tiremodelfront, wheelmodelfront, brakerotorfront,
+				textures, anisotropy, texsize, error_output))
 		{
-			// fallback to premodeled wheels
-			if ( !LoadInto (
-				topnode, wheelnode[i], wheeldraw[i], carpath + "/wheel_front.joe", tiremodelfront,
-				textures, carpath + "/textures/wheel_front", texsize, anisotropy,
-				NOBLEND, error_output ) )
-				return false;
-		}
-		else
-		{
-			std::stringstream wheelstr;
-			wheelstr << "wheel-" << i;
-			std::string wheelname(wheelstr.str());
-			if (!GenerateWheelMesh(
-					carconf, wheelname, sharedpartspath,
-					dynamics.GetTire(WHEEL_POSITION(i)), dynamics.GetBrake(WHEEL_POSITION(i)),
-					topnode, wheelnode[i], wheeldraw[i],
-					tiremodelfront, wheelmodelfront, brakerotorfront,
-					textures, anisotropy, texsize, error_output))
-			{
-				error_output << "Error generating wheel mesh for wheel " << i << std::endl;
-				return false;
-			}
+			error_output << "Error generating wheel mesh for wheel " << i << std::endl;
+			return false;
 		}
 
-		//load floating elements
+		// load floating elements
 		std::stringstream nullout;
 		LoadInto(
 			topnode, floatingnode[i], floatingdraw[i], carpath + "/floating_front.joe", floatingmodelfront,
 			textures, carpath + "/textures/body" + carpaint, texsize,
 			anisotropy, NOBLEND, nullout);
 	}
-	for (int i = 2; i < 4; i++) //rear pair
+	for (int i = 2; i < 4; i++) // rear pair
 	{
-		if (dynamics.GetTire(WHEEL_POSITION(i)).GetSidewallWidth() <= 0)
+
+		std::stringstream wheelstr;
+		wheelstr << "wheel-" << i;
+		std::string wheelname(wheelstr.str());
+		if (!GenerateWheelMesh(
+				carconf, wheelname, sharedpartspath,
+				dynamics.GetTire(WHEEL_POSITION(i)), dynamics.GetBrake(WHEEL_POSITION(i)),
+				topnode, wheelnode[i], wheeldraw[i],
+				tiremodelrear, wheelmodelrear, brakerotorrear,
+				textures, anisotropy, texsize, error_output))
 		{
-			if (dynamics.GetTire(WHEEL_POSITION(REAR_LEFT)).GetSidewallWidth() <= 0 ||
-				dynamics.GetTire(WHEEL_POSITION(REAR_RIGHT)).GetSidewallWidth() <= 0)
-			{
-				if (!LoadInto(
-					topnode, wheelnode[i], wheeldraw[i], carpath + "/wheel_rear.joe", tiremodelrear,
-					textures, carpath + "/textures/wheel_rear", texsize,
-					anisotropy, NOBLEND, error_output))
-					return false;
-			}
-		}
-		else
-		{
-			std::stringstream wheelstr;
-			wheelstr << "wheel-" << i;
-			std::string wheelname(wheelstr.str());
-			if (!GenerateWheelMesh(
-					carconf, wheelname, sharedpartspath,
-					dynamics.GetTire(WHEEL_POSITION(i)), dynamics.GetBrake(WHEEL_POSITION(i)),
-					topnode, wheelnode[i], wheeldraw[i],
-					tiremodelrear, wheelmodelrear, brakerotorrear,
-					textures, anisotropy, texsize, error_output))
-			{
-				error_output << "Error generating wheel mesh for wheel " << i << std::endl;
-				return false;
-			}
+			error_output << "Error generating wheel mesh for wheel " << i << std::endl;
+			return false;
 		}
 
-		//load floating elements
+		// load floating elements
 		std::stringstream nullout;
 		LoadInto(
 			topnode, floatingnode[i], floatingdraw[i], carpath + "/floating_rear.joe", floatingmodelrear,
@@ -336,7 +311,7 @@ bool CAR::Load (
 			anisotropy, NOBLEND, nullout);
 	}
 
-	//set wheel positions(for widget_spinningcar)
+	// set wheel positions(for widget_spinningcar)
 	for (int i = 0; i < 4; i++)
 	{
 		MATHVECTOR <float, 3> wheelpos = dynamics.GetWheelPosition(WHEEL_POSITION(i), 0);
@@ -355,7 +330,7 @@ bool CAR::Load (
 		}
 	}
 	
-	//init dynamics
+	// init dynamics
 	if (world)
 	{
 		MATHVECTOR <double, 3> size;
