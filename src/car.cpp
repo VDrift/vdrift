@@ -67,13 +67,11 @@ bool CAR::GenerateWheelMesh(
 	std::string brakename;
 	std::string rimname;
 	std::string tiretex;
-	std::string rotortex;
 
 	if (!carconf.GetParam(wheelname + ".tire", tirename, error_output)) return false;
 	if (!carconf.GetParam(wheelname + ".brake", brakename, error_output)) return false;
 	if (!carconf.GetParam(wheelname + ".rim", rimname, error_output)) return false;
 	if (!carconf.GetParam(tirename + ".texture", tiretex, error_output)) return false;
-	if (!carconf.GetParam(brakename + ".rotor", rotortex, error_output)) return false;
 	
 	// wheel/tire parameters
 	float aspectRatio = tire.GetAspectRatio() * 100.f;
@@ -123,7 +121,6 @@ bool CAR::GenerateWheelMesh(
 		obj.BuildFromVertexArray(rim_varray, error_output);
 		obj.Save(modelpath+wheelname+".obj", error_output);*/
 	}
-
 	keyed_container <DRAWABLE>::handle rim_draw;
 	if (!LoadInto(
 			node, output_scenenode, rim_draw, modelpath+rimname+".joe", output_wheel_model,
@@ -131,7 +128,12 @@ bool CAR::GenerateWheelMesh(
 			NOBLEND, error_output))
 		return false;
 	
-	// create brake rotor
+	// create brake rotor(optional)
+	std::string rotortex;
+	if (!carconf.GetParam(brakename + ".rotor", rotortex, error_output))
+	{
+		return true;
+	}
 	if(!output_brake_rotor.Loaded())
 	{
 		float diameter_mm = brake.GetRadius() * 2 * 1000;
@@ -140,11 +142,9 @@ bool CAR::GenerateWheelMesh(
 		MESHGEN::mg_brake_rotor(&rotor_varray, diameter_mm, thickness_mm);
 		output_brake_rotor.SetVertexArray(rotor_varray);
 		output_brake_rotor.Rotate(-M_PI_2, 0, 0, 1);
-		//output_brake_rotor.GenerateMeshMetrics();
+		output_brake_rotor.GenerateMeshMetrics();
 		output_brake_rotor.GenerateListID(error_output);
 	}
-	
-	// add brake rotor drawable
 	std::string rotortexname(sharedpartspath + "/brake/textures/" + rotortex);
 	keyed_container <DRAWABLE>::handle rotor_draw;
 	if (!LoadInto(
@@ -358,12 +358,16 @@ bool CAR::Load (
 	//init dynamics
 	if (world)
 	{
-		MATHVECTOR<double, 3> position;
-		QUATERNION<double> orientation;
+		MATHVECTOR <double, 3> size;
+		MATHVECTOR <double, 3> center;
+		MATHVECTOR <double, 3> position;
+		QUATERNION <double> orientation;
+		size = bodymodel.GetAABB().GetSize();
+		center = bodymodel.GetAABB().GetCenter();
 		position = initial_position;
 		orientation = initial_orientation;
 
-		dynamics.Init(*world, bodymodel, tiremodelfront, tiremodelrear, position, orientation);
+		dynamics.Init(*world, size, center, position, orientation);
 		dynamics.SetABS(defaultabs);
 		dynamics.SetTCS(defaulttcs);
 	}

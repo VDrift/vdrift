@@ -21,9 +21,6 @@
 #include "cartelemetry.h"
 #include "BulletDynamics/Dynamics/btActionInterface.h"
 
-//#define _BULLET_
-//#include "suspension.h"
-
 class MODEL;
 class CONFIGFILE;
 class COLLISION_WORLD;
@@ -42,11 +39,10 @@ public:
 		const std::string & sharedpartspath,
 		std::ostream & error_output);
 
-	void Init(
+	void CARDYNAMICS::Init(
 		COLLISION_WORLD & world,
-		const MODEL & chassisModel,
-		const MODEL & wheelModelFront,
-		const MODEL & wheelModelRear,
+		const MATHVECTOR <T, 3> chassisSize,
+		const MATHVECTOR <T, 3> chassisCenter,
 		const MATHVECTOR <T, 3> & position,
 		const QUATERNION <T> & orientation);
 
@@ -187,9 +183,6 @@ protected:
 	std::vector <MATHVECTOR <T, 3> > wheel_position;
 	std::vector <QUATERNION <T> > wheel_orientation;
 	std::vector <COLLISION_CONTACT> wheel_contact;
-#ifdef _BULLET_
-	std::vector <Suspension *> suspension_new;
-#endif
 	std::vector <CARSUSPENSION <T> > suspension;
 
 	std::vector <CARTIRE <T> > tire;
@@ -302,14 +295,12 @@ protected:
 	void DoABS(int i, T normal_force);
 
 // cardynamics initialization
-	void GetCollisionBox(
-		const MODEL & chassisModel,
-		const MODEL & wheelModelFront,
-		const MODEL & wheelModelRear,
+	void CARDYNAMICS::GetCollisionBox(
+		const btVector3 & chassisSize,
+		const btVector3 & chassisCenter,
 		btVector3 & center,
 		btVector3 & size);
 	
-	//Set the maximum steering angle in degrees
 	void SetMaxSteeringAngle(T newangle);
 	
 	void SetDrive(const std::string & newdrive);

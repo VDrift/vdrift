@@ -25,9 +25,6 @@ CARDYNAMICS::CARDYNAMICS()
   maxangle(45.0),
   telemetry("telemetry")
 {
-#ifdef _BULLET_
-	suspension_new.resize(WHEEL_POSITION_SIZE);
-#endif
 	suspension.resize ( WHEEL_POSITION_SIZE );
 	wheel.resize ( WHEEL_POSITION_SIZE );
 	tire.resize ( WHEEL_POSITION_SIZE );
@@ -456,15 +453,13 @@ bool CARDYNAMICS::Load(
 		return false;
 	}
 
-	if (!LoadEngine(c, engine, error_output)) return false;
-	AddMassParticle(engine.GetMass(), engine.GetPosition());
-	
-	if (!LoadFuelTank(c, fuel_tank, error_output)) return false;
-	AddMassParticle(fuel_tank.GetMass(), fuel_tank.GetPosition());
-
 	if (!LoadClutch(c, clutch, error_output)) return false;
-	
 	if (!LoadTransmission(c, transmission, error_output)) return false;
+	if (!LoadEngine(c, engine, error_output)) return false;
+	if (!LoadFuelTank(c, fuel_tank, error_output)) return false;
+
+	AddMassParticle(engine.GetMass(), engine.GetPosition());
+	AddMassParticle(fuel_tank.GetMass(), fuel_tank.GetPosition());
 	
 	//load the wheels (four wheels hardcoded)
 	for (int i = 0; i < 4; i++)
@@ -536,6 +531,7 @@ bool CARDYNAMICS::Load(
 			}
 			position.Set(pos[0],pos[1],pos[2]);
 			AddMassParticle(mass, position);
+			
 			paramnum++;
 			std::stringstream str;
 			str << "particle-";
@@ -544,13 +540,6 @@ bool CARDYNAMICS::Load(
 			str << paramnum;
 			paramname = str.str();
 		}
-	}
-
-	//load the max steering angle
-	{
-		float maxangle = 45.0;
-		if (!c.GetParam("steering.max-angle", maxangle, error_output)) return false;
-		SetMaxSteeringAngle ( maxangle );
 	}
 
 	//load the driver
@@ -567,6 +556,13 @@ bool CARDYNAMICS::Load(
 		}
 		position.Set(pos[0], pos[1], pos[2]);
 		AddMassParticle(mass, position);
+	}
+
+	//load the max steering angle
+	{
+		float maxangle = 45.0;
+		if (!c.GetParam("steering.max-angle", maxangle, error_output)) return false;
+		SetMaxSteeringAngle ( maxangle );
 	}
 
 	//load the aerodynamics(10 wings maximum)
@@ -615,36 +611,27 @@ bool CARDYNAMICS::Load(
 
 // calculate bounding box from chassis, wheels
 void CARDYNAMICS::GetCollisionBox(
-	const MODEL & chassisModel,
-	const MODEL & wheelModelFront,
-	const MODEL & wheelModelRear,
+	const btVector3 & chassisMin,
+	const btVector3 & chassisMax,
 	btVector3 & center,
 	btVector3 & size)
 {
-	AABB <float> box = chassisModel.GetAABB();
-	float bottom = box.GetCenter()[2] - box.GetSize()[2] * 0.5;
+	btVector3 min = chassisMin - ToBulletVector(center_of_mass);
+	btVector3 max = chassisMax - ToBulletVector(center_of_mass);
+	float minHeight = min.z() + 0.05; // add collision shape bottom margin
 	for (int i = 0; i < 4; i++)
 	{
-		MATHVECTOR <float, 3> wheelpos = GetLocalWheelPosition(WHEEL_POSITION(i), 0);
-
-		const MODEL * wheelmodel = &wheelModelFront;
-		if (i > 1) wheelmodel = &wheelModelRear;
-
-		float sidefactor = 1.0;
-		if (i == 1 || i == 3) sidefactor = -1.0;
-
-		AABB <float> wheelaabb;
-		wheelaabb.SetFromCorners(
-			wheelpos - wheelmodel->GetAABB().GetSize() * 0.5 * sidefactor,
-			wheelpos + wheelmodel->GetAABB().GetSize() * 0.5 * sidefactor);
-		box.CombineWith(wheelaabb);
+		btVector3 wheelHSize(tire[i].GetRadius(), tire[i].GetSidewallWidth()*0.5, tire[i].GetRadius()); 
+		btVector3 wheelPos = ToBulletVector(GetLocalWheelPosition(WHEEL_POSITION(i), 0));
+		btVector3 wheelMin = wheelPos - wheelHSize;
+		btVector3 wheelMax = wheelPos + wheelHSize;
+		min.setMin(wheelMin);
+		max.setMax(wheelMax);
 	}
-	float bottom_new = box.GetCenter()[2] - box.GetSize()[2] * 0.5;
-	const float delta = 0.05; //collision shape bottom margin
-	MATHVECTOR <T, 3> offset(0, 0, bottom - bottom_new + delta);
+	min.setZ(minHeight);
 
-	center = ToBulletVector(box.GetCenter() + offset * 0.5 - center_of_mass);
-	size = ToBulletVector(box.GetSize() - offset);
+	center = (max + min) * 0.5;
+	size = max - min;
 }
 
 // create collision shape from bounding box
@@ -672,9 +659,8 @@ btCollisionShape * CreateCollisionShape(const btVector3 & center, const btVector
 
 void CARDYNAMICS::Init(
 	COLLISION_WORLD & world,
-	const MODEL & chassisModel,
-	const MODEL & wheelModelFront,
-	const MODEL & wheelModelRear,
+	const MATHVECTOR <T, 3> chassisSize,
+	const MATHVECTOR <T, 3> chassisCenter,
 	const MATHVECTOR <T, 3> & position,
 	const QUATERNION <T> & orientation)
 {
@@ -703,8 +689,10 @@ void CARDYNAMICS::Init(
 	btDefaultMotionState * chassisState = new btDefaultMotionState();
 	chassisState->setWorldTransform(transform);
 	
+	btVector3 chassisMin = ToBulletVector(chassisCenter - chassisSize * 0.5);
+	btVector3 chassisMax = ToBulletVector(chassisCenter + chassisSize * 0.5);
 	btVector3 origin, size;
-	GetCollisionBox(chassisModel, wheelModelFront, wheelModelRear, origin, size);
+	GetCollisionBox(chassisMin, chassisMax, origin, size);
 	
 	btCollisionShape * chassisShape = NULL;
 	chassisShape = CreateCollisionShape(origin, size);
@@ -717,19 +705,6 @@ void CARDYNAMICS::Init(
 	chassis->setContactProcessingThreshold(0); // internal edge workaround(swept sphere shape required)
 	world.AddAction(this);
 
-#ifdef _BULLET_
-	bool disableCollisionsBetweenLinked = false;
-	for(unsigned int i = 0; i < WHEEL_POSITION_SIZE; i++)
-	{
-		btVector3 pivot = ToBulletVector(wheel[i].GetExtendedPosition() - center_of_mass);
-		suspension_new[i] = new Suspension(world, *chassis, pivot);
-		suspension_new[i]->setRollHeight(wheel[i].GetRollHeight());
-		suspension_new[i]->setTravel(suspension[i].GetTravel());
-		suspension_new[i]->setStiffness(suspension[i].GetSpringConstant());
-		suspension_new[i]->setDamping(suspension[i].GetBounce(), suspension[i].GetRebound());
-		world.AddConstraint(suspension_new[i], disableCollisionsBetweenLinked);
-	}
-#endif	
 	// init wheels, suspension
 	for (int i = 0; i < WHEEL_POSITION_SIZE; i++)
 	{
