@@ -39,7 +39,7 @@ public:
 		const std::string & sharedpartspath,
 		std::ostream & error_output);
 
-	void CARDYNAMICS::Init(
+	void Init(
 		COLLISION_WORLD & world,
 		const MATHVECTOR <T, 3> chassisSize,
 		const MATHVECTOR <T, 3> chassisCenter,
@@ -295,7 +295,7 @@ protected:
 	void DoABS(int i, T normal_force);
 
 // cardynamics initialization
-	void CARDYNAMICS::GetCollisionBox(
+	void GetCollisionBox(
 		const btVector3 & chassisSize,
 		const btVector3 & chassisCenter,
 		btVector3 & center,
