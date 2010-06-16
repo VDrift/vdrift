@@ -773,9 +773,9 @@ MATHVECTOR <T, 3> CARDYNAMICS::GetWheelPosition(WHEEL_POSITION wp, T displacemen
 
 QUATERNION <T> CARDYNAMICS::GetWheelOrientation(WHEEL_POSITION wp) const
 {
-	QUATERNION <T> siderot;
-	if(wp == FRONT_RIGHT || wp == REAR_RIGHT) siderot.Rotate(M_PI, 0, 0, 1);
-	return chassisRotation * GetWheelSteeringAndSuspensionOrientation(wp) * wheel[wp].GetRotation() * siderot;
+	//QUATERNION <T> siderot;
+	//if(wp == FRONT_RIGHT || wp == REAR_RIGHT) siderot.Rotate(M_PI, 0, 0, 1);
+	return chassisRotation * GetWheelSteeringAndSuspensionOrientation(wp) * wheel[wp].GetRotation();// * siderot;
 }
 
 QUATERNION <T> CARDYNAMICS::GetUprightOrientation(WHEEL_POSITION wp) const
