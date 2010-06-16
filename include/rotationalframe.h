@@ -78,7 +78,7 @@ public:
 	
 	const MATRIX3 <T> & GetInertia() const
 	{
-		return world_inertia_tensor;
+		return inertia_tensor;
 	}
 	
 	void SetOrientation(const QUATERNION <T> & neworient)

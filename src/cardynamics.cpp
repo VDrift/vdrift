@@ -275,6 +275,7 @@ bool LoadTireParameters(
 	CARTIRE <T> & tire,
 	std::ostream & error_output)
 {
+	float tread(0);
 	float rolling_resistance[3];
 	std::vector <double> longitudinal;
 	std::vector <double> lateral;
@@ -322,9 +323,11 @@ bool LoadTireParameters(
 	}
 	
 	if (!c.GetParam("rolling-resistance", rolling_resistance, error_output)) return false;
+	if (!c.GetParam("tread", tread, error_output)) return false;
 	
 	tire.SetPacejkaParameters(longitudinal, lateral, aligning);
 	tire.SetRollingResistance(rolling_resistance[0], rolling_resistance[1]);
+	tire.SetTread(tread);
 	tire.CalculateSigmaHatAlphaHat();
 
 	return true;
@@ -343,7 +346,6 @@ bool LoadTire(
 	float section_width(0);
 	float aspect_ratio(0);
 	float rim_diameter(0);
-	float tread(0);
 	
 	if (!c.GetParam(tirename+".size", tiresize, error_output)) return false;
 	if (!c.GetParam(tirename+".type", tiretype, error_output)) return false;
@@ -371,7 +373,6 @@ bool LoadTire(
 	tire.SetRadius(radius);
 	tire.SetSidewallWidth(section_width*0.001f);
 	tire.SetAspectRatio(aspect_ratio*0.01f);
-	tire.SetTread(tread);
 
 	return true;
 }
@@ -385,33 +386,24 @@ bool LoadWheel(
 	CARBRAKE<T> & brake,
 	std::ostream & error_output)
 {
-	std::string orientation;
-	float orient(1);
 	float temp[3];
 	MATHVECTOR <double, 3> position;
 	int version(1);
 	std::string brakename;
 	std::string tirename;
 	
-	// brake + tire
 	c.GetParam("version", version);
 	if (!c.GetParam(wheelname+".brake", brakename, error_output)) return false;
 	if (!LoadBrake(c, brakename, brake, error_output)) return false;
 	if (!c.GetParam(wheelname+".tire", tirename, error_output)) return false;
 	if (!LoadTire(c, tirename, partspath, tire, error_output)) return false;
 	if (!c.GetParam(wheelname+".position", temp, error_output)) return false;
-	if (!c.GetParam(wheelname+".orientation", orientation, error_output)) return false;
 	
 	if (version == 2)
 	{
 		COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(temp[0],temp[1],temp[2]);
 	}
 	position.Set(temp[0], temp[1], temp[2]);
-	
-	if (orientation != "right")
-	{
-		orient = -1;
-	}
 	
 	// calculate wheel inertia/mass
 	float tire_radius = tire.GetRadius();
@@ -432,8 +424,7 @@ bool LoadWheel(
 	float rim_inertia = rim_mass * rim_radius * rim_radius;
 	
 	wheel.SetMass(tire_mass + rim_mass);
-	wheel.SetInertia((tire_inertia + rim_inertia)*3); // scale inertia due to nummerical issues
-	wheel.SetOrientation(orient);
+	wheel.SetInertia((tire_inertia + rim_inertia)*2); // scale inertia fixme
 	wheel.SetExtendedPosition(position);
 
 	return true;
@@ -586,7 +577,7 @@ bool CARDYNAMICS::Load(
 			std::stringstream num;
 			num << i;
 			
-			const std::string wingname("wing"+num.str());
+			const std::string wingname("wing-"+num.str());
 			if (!c.GetParam(wingname+".frontal-area", drag_area)) break;
 			if (!c.GetParam(wingname+".drag-coefficient", drag_c, error_output)) return false;
 			if (!c.GetParam(wingname+".surface-area", lift_area, error_output)) return false;
@@ -782,9 +773,9 @@ MATHVECTOR <T, 3> CARDYNAMICS::GetWheelPosition(WHEEL_POSITION wp, T displacemen
 
 QUATERNION <T> CARDYNAMICS::GetWheelOrientation(WHEEL_POSITION wp) const
 {
-	//QUATERNION <T> siderot;
-	//if(wp == FRONT_RIGHT || wp == REAR_RIGHT) siderot.Rotate(M_PI, 0, 0, 1);
-	return chassisRotation * GetWheelSteeringAndSuspensionOrientation(wp) * wheel[wp].GetRotation();// * siderot;
+	QUATERNION <T> siderot;
+	if(wp == FRONT_RIGHT || wp == REAR_RIGHT) siderot.Rotate(M_PI, 0, 0, 1);
+	return chassisRotation * GetWheelSteeringAndSuspensionOrientation(wp) * wheel[wp].GetRotation() * siderot;
 }
 
 QUATERNION <T> CARDYNAMICS::GetUprightOrientation(WHEEL_POSITION wp) const

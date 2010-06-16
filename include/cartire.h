@@ -70,7 +70,17 @@ private:
 
 public:
 	//default constructor makes an S2000-like car
-	CARTIRE() : aspect_ratio(0),sidewall_width(0),slide(0),slip(0) {longitudinal_parameters.resize(11);transverse_parameters.resize(15);aligning_parameters.resize(18);}
+	CARTIRE()
+	: 	aspect_ratio(0),
+		sidewall_width(0),
+		tread(0),
+		slide(0),
+		slip(0)
+	{
+		longitudinal_parameters.resize(11);
+		transverse_parameters.resize(15);
+		aligning_parameters.resize(18);
+	}
 
 	void DebugPrint(std::ostream & out)
 	{

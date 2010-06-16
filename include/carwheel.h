@@ -15,10 +15,7 @@ friend class joeserialize::Serializer;
 public:
 	//default constructor makes an S2000-like car
 	CARWHEEL()
-	: 	roll_height(0.29),
-		mass(18.14),
-		orientation(1),
-		inertia_cache(10.0),
+	: 	mass(18.14),
 		steer_angle(0)
 	{
 		SetInertia(10.0);
@@ -64,16 +61,6 @@ public:
 		return extended_position;
 	}
 
-	void SetRollHeight ( const T& value )
-	{
-		roll_height = value;
-	}
-
-	T GetRollHeight() const
-	{
-		return roll_height;
-	}
-
 	void SetMass ( const T& value )
 	{
 		mass = value;
@@ -86,7 +73,6 @@ public:
 
 	void SetInertia(T new_inertia)
 	{
-		inertia_cache = new_inertia;
 		MATRIX3 <T> inertia;
 		inertia.Scale(new_inertia);
 		rotation.SetInertia(inertia);
@@ -94,7 +80,7 @@ public:
 
 	T GetInertia() const
 	{
-		return inertia_cache;
+		return rotation.GetInertia()[0];
 	}
 
 	void SetInitialConditions()
@@ -150,33 +136,13 @@ public:
 	{
 		steer_angle = value;
 	}
-	
-	T GetOrientation() const
-	{
-		return orientation;
-	}
-
-	void SetOrientation ( const T& value )
-	{
-		orientation = value;
-	}
 
 	bool Serialize(joeserialize::Serializer & s)
 	{
-		_SERIALIZE_(s,inertia_cache);
+		T inertia = rotation.GetInertia()[0];
+		_SERIALIZE_(s,inertia);
 		_SERIALIZE_(s,steer_angle);
 		return true;
-	}
-
-	void SetAdditionalInertia ( const T& value )
-	{
-		additional_inertia = value;
-
-		MATRIX3 <T> inertia;
-		inertia.Scale(inertia_cache + additional_inertia);
-		rotation.SetInertia(inertia);
-
-		//std::cout << inertia_cache << " + " << additional_inertia << " = " << inertia_cache + additional_inertia << std::endl;
 	}
 
 	void SetCamberDeg ( const T& value )
@@ -187,14 +153,10 @@ public:
 private:
 	//constants (not actually declared as const because they can be changed after object creation)
 	MATHVECTOR <T, 3> extended_position; ///< the position of the wheel when the suspension is fully extended (zero g)
-	T roll_height; ///< how far off the road lateral forces are applied to the chassis
 	T mass; ///< the mass of the wheel
 	ROTATIONALFRAME <T> rotation; ///< a simulation of wheel rotation.  this contains the wheel orientation, angular velocity, angular acceleration, and inertia tensor
-	T orientation; ///< relative wheel orientation: 1 == right, -1 == left
 	
 	//variables
-	T additional_inertia;
-	T inertia_cache;
 	T steer_angle; ///<negative values cause steering to the left
 
 	//for info only
