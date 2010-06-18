@@ -166,6 +166,7 @@ public:
 						break;
 					default:
 						assert(0);
+						return v1;	//never reached
 						break;
 				}
 			}

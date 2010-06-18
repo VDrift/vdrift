@@ -121,6 +121,53 @@ bool CONFIGFILE::GetParam(std::string param, float * outvar) const
 	return true;
 }
 
+bool CONFIGFILE::GetParam(std::string param, double & outvar) const
+{
+	std::string::size_type ppos;
+	ppos = param.find(".", 0);
+	if (ppos < param.length())
+	{
+		if (param.substr(0, ppos).empty())
+		{
+			ppos++;
+			param = param.substr(ppos, param.length() - ppos);
+		}
+	}
+	
+	const CONFIGVARIABLE * v = variables.Get(param);
+	
+	if (!v)
+		return false;
+	
+	outvar = v->val_f;
+	
+	return true;
+}
+
+bool CONFIGFILE::GetParam(std::string param, double * outvar) const
+{
+	std::string::size_type ppos;
+	ppos = param.find(".", 0);
+	if (ppos < param.length())
+	{
+		if (param.substr(0, ppos).empty())
+		{
+			ppos++;
+			param = param.substr(ppos, param.length() - ppos);
+		}
+	}
+	
+	const CONFIGVARIABLE * v = variables.Get(param);
+	
+	if (!v)
+		return false;
+	
+	for (int i = 0; i < 3; i++)
+		outvar[i] = v->val_v[i];
+	
+	return true;
+}
+
 bool CONFIGFILE::GetParam(std::string param, std::string & outvar) const
 {
 	std::string::size_type ppos;

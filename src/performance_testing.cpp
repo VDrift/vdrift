@@ -129,6 +129,9 @@ void PERFORMANCE_TESTING::TestMaxSpeed(std::ostream & info_output, std::ostream 
 
 	string downforcestr = "N/A";
 
+	MATHVECTOR <double, 3> ext_torque(0);
+	MATHVECTOR <double, 3> ext_force(0, 0, -9.81 * car.GetMass());
+
 	while (t < maxtime)
 	{
 		SimulateFlatRoad();
@@ -140,7 +143,7 @@ void PERFORMANCE_TESTING::TestMaxSpeed(std::ostream & info_output, std::ostream 
 
 		car.HandleInputs(inputs, dt);
 
-		car.dynamics.Tick(dt);
+		car.dynamics.Tick(ext_force, ext_torque, dt);
 
 		if (car.dynamics.GetSpeed() > maxspeed.second)
 		{
@@ -218,6 +221,9 @@ void PERFORMANCE_TESTING::TestStoppingDistance(bool abs, std::ostream & info_out
 	float brakestartspeed = 26.82; //speed at which to start braking, in m/s (26.82 m/s is 60 mph)
 
 	bool accelerating = true; //switches to false once 60 mph is reached
+	
+	MATHVECTOR <double, 3> ext_torque(0);
+	MATHVECTOR <double, 3> ext_force(0, 0, -9.81 * car.GetMass());
 
 	while (t < maxtime)
 	{
@@ -242,7 +248,7 @@ void PERFORMANCE_TESTING::TestStoppingDistance(bool abs, std::ostream & info_out
 
 		car.HandleInputs(inputs, dt);
 
-		car.dynamics.Tick(dt);
+		car.dynamics.Tick(ext_force, ext_torque, dt);
 
 		if (car.dynamics.GetSpeed() >= brakestartspeed && accelerating) //stop accelerating and hit the brakes
 		{

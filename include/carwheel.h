@@ -113,7 +113,8 @@ public:
 
 	T GetLockUpTorque(const T dt) const
 	{
-	    return rotation.GetLockUpTorque(dt)[1];
+		const MATHVECTOR<T, 3> w(0);
+	    return rotation.GetTorque(w, dt)[1];
 	}
 
 	void ZeroForces()

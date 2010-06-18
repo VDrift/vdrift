@@ -54,6 +54,11 @@ public:
 		return 1.0 / inverse_mass;
 	}
 	
+	const T GetInvMass() const
+	{
+		return inverse_mass;
+	}
+	
 	void SetPosition(const MATHVECTOR <T, 3> & newpos)
 	{
 		position = newpos;

@@ -15,7 +15,6 @@ private:
 	T radius; ///< torque on the clutch is found by dividing the clutch pressure by the value in the area tag and multiplying by the radius and sliding (friction) parameters
 	T area; ///< torque on the clutch is found by dividing the clutch pressure by the value in the area tag and multiplying by the radius and sliding (friction) parameters
 	T max_pressure; ///< maximum allowed pressure on the plates
-	T threshold; ///< the clutch pretends to be fully engaged when engine speed - transmission speeds is less than m_threshold * normal force
 	
 	//variables
 	T clutch_position;
@@ -29,8 +28,14 @@ private:
 		
 public:
 	//default constructor makes an S2000-like car
-	CARCLUTCH() : sliding_friction(0.27), radius(0.15), area(0.75), max_pressure(11079.26), 
-		  threshold(0.001), clutch_position(0.0), locked(false){}
+	CARCLUTCH() : 
+		sliding_friction(0.27),
+		radius(0.15),
+		area(0.75),
+		max_pressure(11079.26),
+		clutch_position(0.0),
+		locked(false)
+	{}
 
 	void DebugPrint(std::ostream & out)
 	{
@@ -73,25 +78,25 @@ public:
 		return clutch_position;
 	}
 	
-	// clutch is modeled as limited higly viscous coupling
-	T GetTorque ( T n_engine_speed, T n_drive_speed )
+	// maximum friction torque
+	T GetTorqueMax(T n_engine_speed, T n_drive_speed)
 	{
 		engine_speed = n_engine_speed;
 		drive_speed = n_drive_speed;
-		T new_speed_diff = engine_speed - drive_speed;
+		T new_speed_diff = drive_speed - engine_speed;
         locked = true;
-	
+		
         T torque_capacity = sliding_friction * max_pressure * area * radius; // constant
 		T max_torque = clutch_position * torque_capacity;
-		T friction_torque = max_torque * new_speed_diff;    // viscous coupling (locked clutch)
-		if (friction_torque > max_torque)
+		T friction_torque = max_torque * new_speed_diff;    // highly viscous coupling (locked clutch)
+		if (friction_torque > max_torque)					// slipping clutch
 		{
-		    friction_torque  = max_torque;
-		    locked = false;                                 // slipping clutch
+		    friction_torque = max_torque;
+		    locked = false;
 		}
 		else if (friction_torque < -max_torque)
 		{
-		    friction_torque  = -max_torque;
+		    friction_torque = -max_torque;
 		    locked = false;
 		}
 		

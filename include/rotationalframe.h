@@ -80,6 +80,16 @@ public:
 	{
 		return inertia_tensor;
 	}
+
+	const MATRIX3 <T> & GetWorldInertia() const
+	{
+		return world_inertia_tensor;
+	}
+	
+	const MATRIX3 <T> & GetInvWorldInertia() const
+	{
+		return world_inverse_inertia_tensor;
+	}
 	
 	void SetOrientation(const QUATERNION <T> & neworient)
 	{
@@ -125,7 +135,6 @@ public:
 #endif
 		
 #ifdef NSV
-		//simple NSV integration
 		angular_momentum = angular_momentum + torque * dt;
 		orientation = orientation + GetSpinFromMomentum(angular_momentum)*dt;
 		orientation.Normalize();
@@ -138,7 +147,6 @@ public:
 #endif
 		
 #ifdef SUVAT
-		//orientation = orientation + GetSpinFromMomentum(angular_momentum)*dt + GetSpinFromMomentum(torque)*dt*dt*0.5;
 		orientation = orientation + GetSpinFromMomentum(angular_momentum + torque*dt*0.5)*dt;
 		orientation.Normalize();
 		angular_momentum = angular_momentum + torque * dt;
@@ -161,13 +169,19 @@ public:
 		torque.Set(0.0);
 	}
 	
-    ///this must only be called between integrate1 and integrate2 steps
-	const MATHVECTOR<T, 3> GetLockUpTorque(const T dt) const
+    /// get torque needed to reach a certain angular velocity
+	const MATHVECTOR<T, 3> GetTorque(const MATHVECTOR<T, 3> & angvel_target, const T dt) const
 	{
+		// dL = I * dw
+		T damping = 0.75; // fighting oscillations
+		MATHVECTOR<T, 3> angvel_delta = angvel_target - angular_velocity; 
+		MATHVECTOR<T, 3> angmom_delta = world_inertia_tensor.Multiply(angvel_delta);
+		angmom_delta = angmom_delta * damping;
+
 #ifdef MODIFIEDVERLET
-	    return -angular_momentum * 2 / dt;
+	    return angmom_delta * 2 / dt;
 #else
-        return -angular_momentum / dt;
+        return angmom_delta / dt;
 #endif
 	}
 	

@@ -30,6 +30,8 @@ public:
 	bool GetParam(std::string param, int & outvar) const;
 	bool GetParam(std::string param, float & outvar) const;
 	bool GetParam(std::string param, float * outvar) const; //for float[3]
+	bool GetParam(std::string param, double & outvar) const;
+	bool GetParam(std::string param, double * outvar) const; //for double[3]
 	bool GetParam(std::string param, bool & outvar) const;
 	
 	///a higher level helper function to read from a configfile or print out an error

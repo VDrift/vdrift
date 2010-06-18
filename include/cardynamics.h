@@ -226,40 +226,48 @@ protected:
 	// apply engine torque to chassis
 	void ApplyEngineTorqueToBody();
 	
-	// apply aerodynamic forces / torques to chassis
-	void ApplyAerodynamicsToBody(T dt);
+	// add aerodynamic force / torque to force, torque
+	void AddAerodynamics(MATHVECTOR<T, 3> & force, MATHVECTOR<T, 3> & torque);
 
-	// update suspension diplacement, return suspension force
-	MATHVECTOR <T, 3> UpdateSuspension(int i, T dt);
+	// update suspension, return suspension force
+	T UpdateSuspension(int i, T dt);
 
 	// apply tire friction to body, return friction in world space
-	MATHVECTOR <T, 3> ApplyTireForce(int i, const T normal_force, const QUATERNION <T> & wheel_space);
+	MATHVECTOR <T, 3> ApplyTireForce(
+		int i,
+		const T normal_force,
+		const QUATERNION <T> & wheel_space);
 
 	// apply wheel torque to chassis
-	void ApplyWheelTorque(T dt, T drive_torque, int i, MATHVECTOR <T, 3> tire_friction, const QUATERNION <T> & wheel_space);
+	void ApplyWheelTorque(
+		int i,
+		MATHVECTOR <T, 3> tire_friction,
+		const QUATERNION <T> & wheel_space,
+		T drive_torque,
+		T dt);
 
 	// advance chassis(body, suspension, wheels) simulation by dt
-	void UpdateBody(T dt, T drive_torque[]);
+	void UpdateBody(
+		const MATHVECTOR <T, 3> & ext_force,
+		const MATHVECTOR <T, 3> & ext_torque,
+		T drive_torque[],
+		T dt);
 
 	// cardynamics
-	void Tick(T dt);
-
-	void SynchronizeBody();
-
-	void SynchronizeChassis();
+	void Tick(
+		MATHVECTOR<T, 3> ext_force,
+		MATHVECTOR<T, 3> ext_torque,
+		T dt);
 
 	void UpdateWheelContacts();
 
-	void InterpolateWheelContacts(T dt);
+	void InterpolateWheelContacts();
 
 	void UpdateMass();
 
 // driveline
 	// update engine, return wheel drive torque
-	void UpdateDriveline(T dt, T drive_torque[]);
-	
-	// apply clutch torque to engine
-	void ApplyClutchTorque(T engine_drag, T clutch_speed);
+	void UpdateDriveline(T drive_torque[], T dt);
 
 	// calculate wheel drive torque
 	void CalculateDriveTorque(T wheel_drive_torque[], T clutch_torque);
@@ -295,16 +303,18 @@ protected:
 	void DoABS(int i, T normal_force);
 
 // cardynamics initialization
+	void Init();
+
 	void GetCollisionBox(
 		const btVector3 & chassisSize,
 		const btVector3 & chassisCenter,
 		btVector3 & center,
 		btVector3 & size);
-	
+
 	void SetMaxSteeringAngle(T newangle);
-	
+
 	void SetDrive(const std::string & newdrive);
-	
+
 	void InitializeWheelVelocity();
 
 	void AddMassParticle(T newmass, MATHVECTOR <T, 3> newpos);

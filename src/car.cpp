@@ -1289,7 +1289,7 @@ void CAR::UpdateSounds(float dt)
 		for (int i = 0; i < 4; i++)
 		{
 			suspensionbumpdetection[i].Update(dynamics.GetSuspension(WHEEL_POSITION(i)).GetVelocity(),
-											  dynamics.GetSuspension(WHEEL_POSITION(i)).GetDisplacementPercent(), dt);
+											  dynamics.GetSuspension(WHEEL_POSITION(i)).GetDisplacementFraction(), dt);
 			if (suspensionbumpdetection[i].JustSettled())
 			{
 				float bumpsize = suspensionbumpdetection[i].GetTotalBumpSize();

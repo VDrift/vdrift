@@ -1,6 +1,8 @@
 #ifndef _CARTELEMETRY_H
 #define _CARTELEMETRY_H
 
+#include <fstream>
+
 class CARTELEMETRY
 {
 	private:

@@ -13,6 +13,7 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Option use_console_runner="0" />
+				<Option parameters="-debug" />
 				<Compiler>
 					<Add option="-Wall" />
 					<Add option="-g" />
@@ -24,13 +25,10 @@
 				<Option object_output="obj\Release" />
 				<Option type="1" />
 				<Option compiler="gcc" />
+				<Option parameters="-debug" />
 				<Compiler>
 					<Add option="-O3" />
-					<Add option="-pg" />
 				</Compiler>
-				<Linker>
-					<Add option="-pg -lgmon" />
-				</Linker>
 			</Target>
 		</Build>
 		<Compiler>
@@ -498,6 +496,7 @@
 		<Unit filename="..\..\src\car.cpp" />
 		<Unit filename="..\..\src\carcontrolmap_local.cpp" />
 		<Unit filename="..\..\src\cardynamics.cpp" />
+		<Unit filename="..\..\src\carengine.cpp" />
 		<Unit filename="..\..\src\collision_world.cpp" />
 		<Unit filename="..\..\src\configfile.cpp" />
 		<Unit filename="..\..\src\configvariable.cpp" />

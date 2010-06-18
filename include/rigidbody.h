@@ -34,6 +34,7 @@ public:
 	void SetTorque(const MATHVECTOR <T, 3> & torque) {rotation.SetTorque(torque);}
 	void SetInertia(const MATRIX3 <T> & inertia) {rotation.SetInertia(inertia);}
 	const MATRIX3 <T> & GetInertia() {return rotation.GetInertia();}
+	const MATRIX3 <T> & GetWorldInertia() {return rotation.GetWorldInertia();}
 	void SetOrientation(const QUATERNION <T> & orientation) {rotation.SetOrientation(orientation);}
 	const QUATERNION <T> & GetOrientation() const {return rotation.GetOrientation();}
 	void SetAngularVelocity(const MATHVECTOR <T, 3> & newangvel) {rotation.SetAngularVelocity(newangvel);}
@@ -74,6 +75,15 @@ public:
 	void ApplyTorque(const MATHVECTOR <T, 3> & torque)
 	{
 		rotation.ApplyTorque(torque);
+	}
+	
+	T GetInvEffectiveMass(const MATHVECTOR <T, 3> & normal, const MATHVECTOR <T, 3> & offset)
+	{
+		MATHVECTOR <T, 3> t0 = offset.cross(normal);
+		MATHVECTOR <T, 3> t1 = rotation.GetInvWorldInertia().Multiply(t0);
+		MATHVECTOR <T, 3> t2 = t1.cross(offset);
+		T inv_mass = linear.GetInvMass() + t2.dot(normal);
+		return inv_mass;
 	}
 	
 	bool Serialize(joeserialize::Serializer & s)
