@@ -818,7 +818,10 @@ bool CAR::LoadTextures(
 		draw.SetDiffuseMap(diffuse);
 	}
 	
-	std::string	texmisc1 = texname + "-misc1.png";
+	std::string texmiscbase = texname;
+	if (texname.size() > 7 && texname.substr(texname.size()-7,5) == "/body")
+		texmiscbase = texname.substr(0,texname.size()-2);
+	std::string texmisc1 = texmiscbase + "-misc1.png";
 	if (std::ifstream(texmisc1.c_str()))
 	{
 		TEXTUREINFO texinfo;
@@ -835,7 +838,7 @@ bool CAR::LoadTextures(
 		draw.SetMiscMap1(misc1);
 	}
 	
-	std::string	texmisc2 = texname + "-misc2.png";
+	std::string texmisc2 = texmiscbase + "-misc2.png";
 	if (std::ifstream(texmisc2.c_str()))
 	{
 		TEXTUREINFO texinfo;
