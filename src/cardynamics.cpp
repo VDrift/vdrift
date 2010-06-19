@@ -419,7 +419,7 @@ bool LoadWheel(
 	float rim_inertia = rim_mass * rim_radius * rim_radius;
 	
 	wheel.SetMass(tire_mass + rim_mass);
-	wheel.SetInertia((tire_inertia + rim_inertia)*2); // scale inertia fixme
+	wheel.SetInertia((tire_inertia + rim_inertia)*3); // scale inertia fixme
 	wheel.SetExtendedPosition(position);
 
 	return true;
@@ -1405,6 +1405,15 @@ T CARDYNAMICS::UpdateSuspension(int i, T dt)
 	else otheri--;
 	T antirollforce = suspension[i].GetAntiRollK() * (suspension[i].GetDisplacement() - suspension[otheri].GetDisplacement());
 
+	/* hack, replace with constraint
+	T max_normal_force = body.GetMass() * 9.81;
+	T cosn = -GetDownVector().dot(wheel_contact[i].GetNormal());
+	normal_force[i] = suspension_force / cosn;
+	if (normal_force[i] > max_normal_force) normal_force[i] = max_normal_force;
+	else if (normal_force[i] < 0) normal_force[i] = 0;*/
+	T suspension_force = suspension[i].GetForce() + antirollforce;
+	if (suspension_force < 0) suspension_force = 0;
+
 	// overtravel constraint (calculate impulse to reduce relative velocity to zero)
 	T normal_force = 0;
 	if (suspension[i].GetOvertravel() > 0)
@@ -1412,9 +1421,7 @@ T CARDYNAMICS::UpdateSuspension(int i, T dt)
 		MATHVECTOR <T, 3> normal = wheel_contact[i].GetNormal();
 		MATHVECTOR <T, 3> offset = wheel_contact[i].GetPosition() - body.GetPosition();
 
-		T velocity_error = 0.9 * wheel_velocity[i].dot(normal);
-		T overtravel_error = -0.1 * suspension[i].GetOvertravel() / dt;
-		velocity_error = velocity_error + overtravel_error;
+		T velocity_error = wheel_velocity[i].dot(normal);
 		if (velocity_error < 0)
 		{
 			T mass = 1.0 / body.GetInvEffectiveMass(normal, offset);
@@ -1422,20 +1429,8 @@ T CARDYNAMICS::UpdateSuspension(int i, T dt)
 			normal_force = impulse / dt;
 		}
 	}
-	else
-	{
-		/* hack, replace with constraint
-		T max_normal_force = body.GetMass() * 9.81;
-		T cosn = -GetDownVector().dot(wheel_contact[i].GetNormal());
-		normal_force[i] = suspension_force / cosn;
-		if (normal_force[i] > max_normal_force) normal_force[i] = max_normal_force;
-		else if (normal_force[i] < 0) normal_force[i] = 0;*/
-		normal_force = suspension[i].GetForce() + antirollforce;
-		if (normal_force < 0) normal_force = 0;
-	}
 
-	assert(normal_force == normal_force);
-	return normal_force;
+	return normal_force + suspension_force;
 }
 
 // aplies tire friction  to car, returns friction in world space

@@ -96,7 +96,6 @@ public:
 			wheel_velocity = 0;
 			wheel_displacement = 0;
 		}
-		assert(force_error == force_error);
 		
 		force = force_error;
 	}
