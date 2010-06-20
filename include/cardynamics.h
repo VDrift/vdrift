@@ -209,8 +209,11 @@ protected:
 	
 	MATHVECTOR <T, 3> GetLocalWheelPosition(WHEEL_POSITION wp, T displacement_percent) const;
 
+	/// orientation of the wheel due only to steering and suspension
 	QUATERNION <T> GetWheelSteeringAndSuspensionOrientation(WHEEL_POSITION wp) const;
 
+	/// worldspace position of the center of the wheel when the suspension is compressed
+	/// by the displacement_percent where 1.0 is fully compressed
 	MATHVECTOR <T, 3> GetWheelPositionAtDisplacement(WHEEL_POSITION wp, T displacement_percent) const;
 	
 	void ApplyForce(const MATHVECTOR <T, 3> & force);

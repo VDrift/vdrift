@@ -949,7 +949,6 @@ void CARDYNAMICS::SetPosition(const MATHVECTOR<T, 3> & position)
 	chassis->translate(ToBulletVector(position) - chassis->getCenterOfMassPosition());
 }
 
-//find the precise starting position for the car (trim out the extra space)
 void CARDYNAMICS::AlignWithGround()
 {
 	UpdateWheelTransform();
@@ -969,6 +968,7 @@ void CARDYNAMICS::AlignWithGround()
 	
 	MATHVECTOR <T, 3> trimmed_position = Position() + GetDownVector() * min_height;
 	SetPosition(trimmed_position);
+	UpdateWheelTransform();
 }
 
 // ugh, ugly code
@@ -1278,7 +1278,6 @@ MATHVECTOR <T, 3> CARDYNAMICS::GetLocalWheelPosition(WHEEL_POSITION wp, T displa
 	return localwheelpos + hinge;
 }
 
-///returns the orientation of the wheel due only to steering and suspension
 QUATERNION <T> CARDYNAMICS::GetWheelSteeringAndSuspensionOrientation ( WHEEL_POSITION wp ) const
 {
 	QUATERNION <T> steer;
@@ -1299,7 +1298,6 @@ QUATERNION <T> CARDYNAMICS::GetWheelSteeringAndSuspensionOrientation ( WHEEL_POS
 	return camber * toe * steer;
 }
 
-/// worldspace position of the center of the wheel when the suspension is compressed by the displacement_percent where 1.0 is fully compressed
 MATHVECTOR <T, 3> CARDYNAMICS::GetWheelPositionAtDisplacement(WHEEL_POSITION wp, T displacement_percent) const
 {
 	return LocalToWorld(GetLocalWheelPosition(wp, displacement_percent));
@@ -1383,7 +1381,7 @@ void CARDYNAMICS::AddAerodynamics(MATHVECTOR<T, 3> & force, MATHVECTOR<T, 3> & t
 // returns normal force(wheel force)
 T CARDYNAMICS::UpdateSuspension(int i, T dt)
 {
-	T displacement = 2 * tire[i].GetRadius() - wheel_contact[i].GetDepth();
+	T displacement = 2.0 * tire[i].GetRadius() - wheel_contact[i].GetDepth();
 	
 	// adjust displacement due to surface bumpiness
 	const TRACKSURFACE & surface = wheel_contact[i].GetSurface();
@@ -1391,7 +1389,7 @@ T CARDYNAMICS::UpdateSuspension(int i, T dt)
 	{
 		T posx = wheel_contact[i].GetPosition()[0];
 		T posz = wheel_contact[i].GetPosition()[2];
-		T phase = 2 * 3.141593 * (posx + posz) / surface.bumpWaveLength;
+		T phase = 2.0 * 3.141593 * (posx + posz) / surface.bumpWaveLength;
 		T shift = 2.0 * sin(phase * 1.414214);
 		T amplitude = 0.25 * surface.bumpAmplitude;
 		T bumpoffset = amplitude * (sin(phase + shift) + sin(1.414214 * phase) - 2.0);
@@ -1405,24 +1403,30 @@ T CARDYNAMICS::UpdateSuspension(int i, T dt)
 	else otheri--;
 	T antirollforce = suspension[i].GetAntiRollK() * (suspension[i].GetDisplacement() - suspension[otheri].GetDisplacement());
 
-	/* hack, replace with constraint
-	T max_normal_force = body.GetMass() * 9.81;
-	T cosn = -GetDownVector().dot(wheel_contact[i].GetNormal());
-	normal_force[i] = suspension_force / cosn;
-	if (normal_force[i] > max_normal_force) normal_force[i] = max_normal_force;
-	else if (normal_force[i] < 0) normal_force[i] = 0;*/
 	T suspension_force = suspension[i].GetForce() + antirollforce;
-	if (suspension_force < 0) suspension_force = 0;
-
+	if (suspension_force < 0.0) suspension_force = 0.0;
+/*
+	// attempt to simulate force perpendicular to suspension axis, only for angles < 60 degrees
+	// quite hacky, need a constraint here too
+	T cosn = -GetDownVector().dot(wheel_contact[i].GetNormal());
+	if (cosn < 0.5)
+	{
+		suspension_force = suspension_force / cosn;
+	}
+	else if(cosn > 0.5)
+	{
+		suspension_force = 2.0 * suspension_force;
+	}
+*/
 	// overtravel constraint (calculate impulse to reduce relative velocity to zero)
-	T normal_force = 0;
-	if (suspension[i].GetOvertravel() > 0)
+	T normal_force = 0.0;
+	if (suspension[i].GetOvertravel() > 0.0)
 	{
 		MATHVECTOR <T, 3> normal = wheel_contact[i].GetNormal();
 		MATHVECTOR <T, 3> offset = wheel_contact[i].GetPosition() - body.GetPosition();
 
 		T velocity_error = wheel_velocity[i].dot(normal);
-		if (velocity_error < 0)
+		if (velocity_error < 0.0)
 		{
 			T mass = 1.0 / body.GetInvEffectiveMass(normal, offset);
 			T impulse = -velocity_error * mass;
