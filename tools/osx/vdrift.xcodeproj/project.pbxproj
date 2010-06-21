@@ -60,6 +60,11 @@
 		B90DC8E211A324220070B6D7 /* btWheelInfo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B90DC8B211A324220070B6D7 /* btWheelInfo.cpp */; };
 		B90DC8E311A324220070B6D7 /* btWheelInfo.h in Headers */ = {isa = PBXBuildFile; fileRef = B90DC8B311A324220070B6D7 /* btWheelInfo.h */; };
 		B937D144091BC36000EF8096 /* config_mac.mm in Sources */ = {isa = PBXBuildFile; fileRef = B937D143091BC36000EF8096 /* config_mac.mm */; };
+		B944FA7A11CF963500E758A5 /* configvariable.h in Headers */ = {isa = PBXBuildFile; fileRef = B944FA7911CF963500E758A5 /* configvariable.h */; };
+		B944FA7C11CF964700E758A5 /* fbobject.h in Headers */ = {isa = PBXBuildFile; fileRef = B944FA7B11CF964700E758A5 /* fbobject.h */; };
+		B944FA7E11CF969100E758A5 /* configvariable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B944FA7D11CF969100E758A5 /* configvariable.cpp */; };
+		B944FA8011CF96A300E758A5 /* fbobject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B944FA7F11CF96A300E758A5 /* fbobject.cpp */; };
+		B944FA8211CF96BC00E758A5 /* carengine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B944FA8111CF96BC00E758A5 /* carengine.cpp */; };
 		B99293AD091BB71F00648CFC /* vdrift.icns in Resources */ = {isa = PBXBuildFile; fileRef = B99293AC091BB71F00648CFC /* vdrift.icns */; };
 		B9ADD11A0907CF9C00D55A16 /* SDLMain.h in Headers */ = {isa = PBXBuildFile; fileRef = F5A47A9D01A0482F01D3D55B /* SDLMain.h */; };
 		B9ADD1680907CF9C00D55A16 /* SDLMain.m in Sources */ = {isa = PBXBuildFile; fileRef = F5A47A9E01A0483001D3D55B /* SDLMain.m */; };
@@ -583,6 +588,11 @@
 		B90DC8B211A324220070B6D7 /* btWheelInfo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = btWheelInfo.cpp; sourceTree = "<group>"; };
 		B90DC8B311A324220070B6D7 /* btWheelInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = btWheelInfo.h; sourceTree = "<group>"; };
 		B937D143091BC36000EF8096 /* config_mac.mm */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.objcpp; path = config_mac.mm; sourceTree = "<group>"; };
+		B944FA7911CF963500E758A5 /* configvariable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = configvariable.h; sourceTree = "<group>"; };
+		B944FA7B11CF964700E758A5 /* fbobject.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fbobject.h; sourceTree = "<group>"; };
+		B944FA7D11CF969100E758A5 /* configvariable.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = configvariable.cpp; sourceTree = "<group>"; };
+		B944FA7F11CF96A300E758A5 /* fbobject.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = fbobject.cpp; sourceTree = "<group>"; };
+		B944FA8111CF96BC00E758A5 /* carengine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = carengine.cpp; sourceTree = "<group>"; };
 		B9653A8C091E84FE00006133 /* ReadMe.rtf */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; path = ReadMe.rtf; sourceTree = "<group>"; };
 		B99293AC091BB71F00648CFC /* vdrift.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = vdrift.icns; sourceTree = "<group>"; };
 		B9ADD1AE0907CF9C00D55A16 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -1231,13 +1241,16 @@
 				B9E97FCA11A06A0300648DA7 /* car.cpp */,
 				B9E97FCB11A06A0300648DA7 /* carcontrolmap_local.cpp */,
 				B9E97FCC11A06A0300648DA7 /* cardynamics.cpp */,
+				B944FA8111CF96BC00E758A5 /* carengine.cpp */,
 				B9E97FCD11A06A0300648DA7 /* collision_world.cpp */,
 				B9E97FCE11A06A0300648DA7 /* configfile.cpp */,
+				B944FA7D11CF969100E758A5 /* configvariable.cpp */,
 				B9E97FCF11A06A0300648DA7 /* containeralgorithm.cpp */,
 				B9E97FD011A06A0300648DA7 /* coordinatesystems.cpp */,
 				B9E97FD111A06A0300648DA7 /* crashdetection.cpp */,
 				B9E97FD211A06A0300648DA7 /* endian_utility.cpp */,
 				B9E97FD311A06A0300648DA7 /* eventsystem.cpp */,
+				B944FA7F11CF96A300E758A5 /* fbobject.cpp */,
 				B9E97FD411A06A0300648DA7 /* fbtexture.cpp */,
 				B9E97FD511A06A0300648DA7 /* font.cpp */,
 				B9E97FD611A06A0300648DA7 /* forcefeedback.cpp */,
@@ -1335,6 +1348,7 @@
 				B9E9807911A06A2B00648DA7 /* collision_contact.h */,
 				B9E9807A11A06A2B00648DA7 /* collision_world.h */,
 				B9E9807B11A06A2B00648DA7 /* configfile.h */,
+				B944FA7911CF963500E758A5 /* configvariable.h */,
 				B9E9807C11A06A2B00648DA7 /* containeralgorithm.h */,
 				B9E9807D11A06A2B00648DA7 /* coordinatesystems.h */,
 				B9E9807E11A06A2B00648DA7 /* crashdetection.h */,
@@ -1345,6 +1359,7 @@
 				B9E9808311A06A2B00648DA7 /* endian_utility.h */,
 				B9E9808411A06A2B00648DA7 /* enginesoundinfo.h */,
 				B9E9808511A06A2B00648DA7 /* eventsystem.h */,
+				B944FA7B11CF964700E758A5 /* fbobject.h */,
 				B9E9808611A06A2B00648DA7 /* fbtexture.h */,
 				B9E9808711A06A2B00648DA7 /* font.h */,
 				B9E9808811A06A2B00648DA7 /* forcefeedback.h */,
@@ -2032,6 +2047,8 @@
 				B90DC8E011A324220070B6D7 /* btRaycastVehicle.h in Headers */,
 				B90DC8E111A324220070B6D7 /* btVehicleRaycaster.h in Headers */,
 				B90DC8E311A324220070B6D7 /* btWheelInfo.h in Headers */,
+				B944FA7A11CF963500E758A5 /* configvariable.h in Headers */,
+				B944FA7C11CF964700E758A5 /* fbobject.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2312,6 +2329,9 @@
 				B90DC8DE11A324220070B6D7 /* Bullet-C-API.cpp in Sources */,
 				B90DC8DF11A324220070B6D7 /* btRaycastVehicle.cpp in Sources */,
 				B90DC8E211A324220070B6D7 /* btWheelInfo.cpp in Sources */,
+				B944FA7E11CF969100E758A5 /* configvariable.cpp in Sources */,
+				B944FA8011CF96A300E758A5 /* fbobject.cpp in Sources */,
+				B944FA8211CF96BC00E758A5 /* carengine.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
