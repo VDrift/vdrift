@@ -24,6 +24,7 @@
 class MODEL;
 class CONFIGFILE;
 class COLLISION_WORLD;
+//class SuspensionConstraint;
 
 class CARDYNAMICS : public btActionInterface
 {
@@ -184,11 +185,12 @@ protected:
 	std::vector <QUATERNION <T> > wheel_orientation;
 	std::vector <COLLISION_CONTACT> wheel_contact;
 	std::vector <CARSUSPENSION <T> > suspension;
+	//std::vector <SuspensionConstraint*> new_suspension;
 
 	std::vector <CARTIRE <T> > tire;
 	std::vector <CARAERO <T> > aerodynamics;
 
-	std::list <std::pair <T, MATHVECTOR <T, 3> > > mass_only_particles;
+	std::list <std::pair <T, MATHVECTOR <T, 3> > > mass_particles;
 	
 	T maxangle;
 	
@@ -206,15 +208,6 @@ protected:
 	MATHVECTOR <T, 3> Position() const;
 
 	MATHVECTOR <T, 3> LocalToWorld(const MATHVECTOR <T, 3> & local) const;
-	
-	MATHVECTOR <T, 3> GetLocalWheelPosition(WHEEL_POSITION wp, T displacement_percent) const;
-
-	/// orientation of the wheel due only to steering and suspension
-	QUATERNION <T> GetWheelSteeringAndSuspensionOrientation(WHEEL_POSITION wp) const;
-
-	/// worldspace position of the center of the wheel when the suspension is compressed
-	/// by the displacement_percent where 1.0 is fully compressed
-	MATHVECTOR <T, 3> GetWheelPositionAtDisplacement(WHEEL_POSITION wp, T displacement_percent) const;
 	
 	void ApplyForce(const MATHVECTOR <T, 3> & force);
 	
@@ -314,21 +307,11 @@ protected:
 		btVector3 & center,
 		btVector3 & size);
 
-	void SetMaxSteeringAngle(T newangle);
-
 	void SetDrive(const std::string & newdrive);
 
 	void InitializeWheelVelocity();
 
-	void AddMassParticle(T newmass, MATHVECTOR <T, 3> newpos);
-
-	void AddAerodynamicDevice(
-		const MATHVECTOR <T, 3> & newpos,
-		T drag_frontal_area,
-		T drag_coefficient,
-		T lift_surface_area,
-		T lift_coefficient,
-		T lift_efficiency);
+	void AddMassParticle(T mass, MATHVECTOR <T, 3> pos);
 };
 
 #endif

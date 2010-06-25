@@ -310,12 +310,8 @@ bool CAR::Load (
 	for (int i = 0; i < 4; i++)
 	{
 		MATHVECTOR <float, 3> wheelpos = dynamics.GetWheelPosition(WHEEL_POSITION(i), 0);
-		//QUATERNION <float> wheelrot;
-		//if(i == FRONT_RIGHT || i == REAR_RIGHT) wheelrot.Rotate(3.141593, 0, 0, 1);
-		
 		SCENENODE & wheelnoderef = topnode.GetNode(wheelnode[i]);
 		wheelnoderef.GetTransform().SetTranslation(wheelpos);
-		//wheelnoderef.GetTransform().SetRotation(wheelrot);
 		if (floatingnode[i].valid())
 		{
 			SCENENODE & floatingnoderef = topnode.GetNode(floatingnode[i]);
@@ -1080,7 +1076,7 @@ void CAR::HandleInputs(const std::vector <float> & inputs, float dt)
 	applied_brakes = inputs[CARINPUT::BRAKE];
 
 	float throttle = inputs[CARINPUT::THROTTLE];
-	float clutch = 1 - inputs[CARINPUT::CLUTCH]; // 
+	float clutch = 1 - inputs[CARINPUT::CLUTCH];
 
 	dynamics.ShiftGear(new_gear);
 	dynamics.SetThrottle(throttle);

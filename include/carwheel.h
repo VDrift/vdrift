@@ -14,9 +14,7 @@ class CARWHEEL
 friend class joeserialize::Serializer;
 public:
 	//default constructor makes an S2000-like car
-	CARWHEEL()
-	: 	mass(18.14),
-		steer_angle(0)
+	CARWHEEL() : mass(18.14)
 	{
 		SetInertia(10.0);
 	}
@@ -25,13 +23,7 @@ public:
 	{
 		out << "---Wheel---" << std::endl;
 		out << "Wheel speed: " << GetRPM() << std::endl;
-		out << "Steer angle: " << steer_angle << std::endl;
 		out << "Camber angle: " << camber_deg << std::endl;
-	}
-
-	void SetExtendedPosition ( const MATHVECTOR< T, 3 >& value )
-	{
-		extended_position = value;
 	}
 
 	T GetRPM() const
@@ -54,11 +46,6 @@ public:
 	{
 		MATHVECTOR <T, 3> v(0, angvel, 0);
 		return rotation.SetAngularVelocity(v);
-	}
-
-	MATHVECTOR< T, 3 > GetExtendedPosition() const
-	{
-		return extended_position;
 	}
 
 	void SetMass ( const T& value )
@@ -128,21 +115,10 @@ public:
 		return rotation.GetOrientation();
 	}
 
-	T GetSteerAngle() const
-	{
-		return steer_angle;
-	}
-
-	void SetSteerAngle ( const T& value )
-	{
-		steer_angle = value;
-	}
-
 	bool Serialize(joeserialize::Serializer & s)
 	{
 		T inertia = rotation.GetInertia()[0];
 		_SERIALIZE_(s,inertia);
-		_SERIALIZE_(s,steer_angle);
 		return true;
 	}
 
@@ -153,12 +129,8 @@ public:
 
 private:
 	//constants (not actually declared as const because they can be changed after object creation)
-	MATHVECTOR <T, 3> extended_position; ///< the position of the wheel when the suspension is fully extended (zero g)
 	T mass; ///< the mass of the wheel
 	ROTATIONALFRAME <T> rotation; ///< a simulation of wheel rotation.  this contains the wheel orientation, angular velocity, angular acceleration, and inertia tensor
-	
-	//variables
-	T steer_angle; ///<negative values cause steering to the left
 
 	//for info only
 	T angvel;
