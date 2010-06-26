@@ -181,28 +181,21 @@ bool LoadFuelTank(
 bool LoadCoilover(
 	const CONFIGFILE & c,
 	const std::string & coilovername,
-	CARSUSPENSION<T> & suspension,
+	CARSUSPENSIONINFO <T> & info,
 	std::ostream & error_output)
 {
-	float spring_constant, bounce, rebound, travel, anti_roll;
 	std::vector <std::pair <double, double> > damper_factor_points;
 	std::vector <std::pair <double, double> > spring_factor_points;
 
-	if (!c.GetParam(coilovername+".spring-constant", spring_constant, error_output)) return false;
-	if (!c.GetParam(coilovername+".bounce", bounce, error_output)) return false;
-	if (!c.GetParam(coilovername+".rebound", rebound, error_output)) return false;
-	if (!c.GetParam(coilovername+".travel", travel, error_output)) return false;
-	if (!c.GetParam(coilovername+".anti-roll", anti_roll, error_output)) return false;
+	if (!c.GetParam(coilovername+".spring-constant", info.spring_constant, error_output)) return false;
+	if (!c.GetParam(coilovername+".bounce", info.bounce, error_output)) return false;
+	if (!c.GetParam(coilovername+".rebound", info.rebound, error_output)) return false;
+	if (!c.GetParam(coilovername+".travel", info.travel, error_output)) return false;
+	if (!c.GetParam(coilovername+".anti-roll", info.anti_roll, error_output)) return false;
 	c.GetPoints(coilovername, "damper-factor", damper_factor_points);
 	c.GetPoints(coilovername, "spring-factor", spring_factor_points);
-
-	suspension.SetSpringConstant(spring_constant);
-	suspension.SetBounce(bounce);
-	suspension.SetRebound(rebound);
-	suspension.SetTravel(travel);
-	suspension.SetAntiRollK(anti_roll);
-	suspension.SetDamperFactorPoints(damper_factor_points);
-	suspension.SetSpringFactorPoints(spring_factor_points);
+	info.SetDamperFactorPoints(damper_factor_points);
+	info.SetSpringFactorPoints(spring_factor_points);
 
 	return true;
 }
@@ -213,20 +206,19 @@ bool LoadSuspension(
 	CARSUSPENSION<T> & suspension,
 	std::ostream & error_output)
 {
-	float camber, caster, toe, ackermann = 0, steering = 0;
+	CARSUSPENSIONINFO <T> info;
 	float h[3], p[3];
-	MATHVECTOR <double, 3> hinge, position;
 	std::string coilovername;
 	
-	c.GetParam(suspensionname+".steering", steering);
-	c.GetParam(suspensionname+".ackermann", ackermann);
-	if (!c.GetParam(suspensionname+".toe", toe, error_output)) return false;
-	if (!c.GetParam(suspensionname+".caster", caster, error_output)) return false;
-	if (!c.GetParam(suspensionname+".camber", camber, error_output)) return false;
+	c.GetParam(suspensionname+".steering", info.max_steering_angle);
+	c.GetParam(suspensionname+".ackermann", info.ackermann);
+	if (!c.GetParam(suspensionname+".toe", info.toe, error_output)) return false;
+	if (!c.GetParam(suspensionname+".caster", info.caster, error_output)) return false;
+	if (!c.GetParam(suspensionname+".camber", info.camber, error_output)) return false;
 	if (!c.GetParam(suspensionname+".hinge", h, error_output)) return false;
 	if (!c.GetParam(suspensionname+".wheel-hub", p, error_output)) return false;
 	if (!c.GetParam(suspensionname+".coilover", coilovername, error_output)) return false;
-	if (!LoadCoilover(c, coilovername, suspension, error_output)) return false;
+	if (!LoadCoilover(c, coilovername, info, error_output)) return false;
 	
 	int version(1);
 	c.GetParam("version", version);
@@ -235,16 +227,9 @@ bool LoadSuspension(
 		COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(h[0], h[1], h[2]);
 		COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(p[0], p[1], p[2]);
 	}
-	hinge.Set(h[0], h[1], h[2]);
-	position.Set(p[0], p[1], p[2]);
-
-	suspension.SetMaxSteeringAngle(steering);
-	suspension.SetAckermannAngle(ackermann);
-	suspension.SetToe(toe);
-	suspension.SetCaster(caster);
-	suspension.SetCamber(camber);
-	suspension.SetHinge(hinge);
-	suspension.SetExtendedPosition(position);
+	info.hinge.Set(h[0], h[1], h[2]);
+	info.extended_position.Set(p[0], p[1], p[2]);
+	suspension.Init(info);
 
 	return true;
 }
@@ -529,7 +514,7 @@ bool CARDYNAMICS::Load(
 		
 		if (suspension[i].GetMaxSteeringAngle() > maxangle) maxangle = suspension[i].GetMaxSteeringAngle();
 
-		AddMassParticle(wheel[i].GetMass(), suspension[i].GetExtendedPosition());
+		AddMassParticle(wheel[i].GetMass(), suspension[i].GetWheelPosition());
 	}
 
 	//load the differential(s)
@@ -1323,7 +1308,7 @@ T CARDYNAMICS::UpdateSuspension(int i, T dt)
 	int otheri = i;
 	if ( i == 0 || i == 2 ) otheri++;
 	else otheri--;
-	T antirollforce = suspension[i].GetAntiRollK() * (suspension[i].GetDisplacement() - suspension[otheri].GetDisplacement());
+	T antirollforce = suspension[i].GetAntiRoll() * (suspension[i].GetDisplacement() - suspension[otheri].GetDisplacement());
 
 	T suspension_force = suspension[i].GetForce() + antirollforce;
 	if (suspension_force < 0.0) suspension_force = 0.0;
@@ -1395,13 +1380,11 @@ MATHVECTOR <T, 3> CARDYNAMICS::ApplyTireForce(int i, const T normal_force, const
 	MATHVECTOR <T, 3> tire_friction = x_axis * friction_force[0] + y_axis * friction_force[1];
 	
 	// fake viscous friction (sand, gravel, mud) proportional to wheel center velocity
-	MATHVECTOR <T, 3> wheel_drag =
-		-(x_axis * hub_velocity[0] + y_axis * hub_velocity[1]) * surface.rollingDrag * 0.25; // scale wheel drag by 1/4
+	MATHVECTOR <T, 3> wheel_drag = -(x_axis * hub_velocity[0] + y_axis * hub_velocity[1]) * surface.rollingDrag * 0.25; // scale wheel drag by 1/4
 
 	// rolling resistance due to tire/surface deformation proportional to normal force
 	T roll_friction_coeff = surface.rollResistanceCoefficient;
-	MATHVECTOR <T, 3> roll_resistance = 
-		x_axis * tire.GetRollingResistance(hub_velocity[0], normal_force, roll_friction_coeff);
+	MATHVECTOR <T, 3> roll_resistance = x_axis * tire.GetRollingResistance(hub_velocity[0], normal_force, roll_friction_coeff);
 	
 	// rolling resistance
 	MATHVECTOR <T, 3> rel_wheel_pos = wheel_position[i] - Position();
