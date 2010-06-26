@@ -65,7 +65,7 @@ void CARSUSPENSION<T>::SetSteering(const T & value)
 	steering_angle = 0.0;
 	if(alpha != 0.0)
 	{
-		steering_angle = atan(1.0 / (1.0 / tan(alpha) - tan(info.ackermann)));
+		steering_angle = atan(1.0 / (1.0 / tan(alpha) - tan(info.ackermann * M_PI / 180.0)));
 	}
 	
 	QUATERNION <T> s;
