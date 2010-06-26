@@ -152,7 +152,7 @@ void CARSUSPENSION<T>::Update(T ext_displacement, T ext_velocity, T dt)
 	T displacement_error = ext_displacement - displacement_delta;
 	if (displacement_error > 0)
 	{
-		if (displacement_error > 0.05) displacement_error = 0.05;
+		if (displacement_error > 0.01) displacement_error = 0.01;
 		
 		velocity_error = displacement_error / dt;
 		force_error = velocity_error / (inv_wheel_mass * dt);

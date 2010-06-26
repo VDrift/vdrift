@@ -64,8 +64,8 @@ void MODEL::GenerateListID(std::ostream & error_output)
 
 void MODEL::GenerateMeshMetrics()
 {
-	float maxv[3];
-	float minv[3];
+	float maxv[3] = {0, 0, 0};
+	float minv[3] = {0, 0, 0};
 	bool havevals[6];
 	for ( int n = 0; n < 6; n++ )
 		havevals[n] = false;
