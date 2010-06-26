@@ -434,6 +434,50 @@ class SerializerInput : public Serializer
 		virtual Direction GetIODirection() {return DIRECTION_INPUT;}
 };
 
+// helper functions
+
+struct StringHelpers
+{
+	template <typename T>
+	static void ConvertStringToOther(const std::string & string_representation, T & i)
+	{
+		std::stringstream converter(string_representation);
+		converter >> i;
+	}
+
+	static void ConvertStringToOther(const std::string & string_representation, std::string & i)
+	{
+		i = string_representation;
+	}
+
+	template <typename T>
+	static std::string ConvertOtherToString(T & i)
+	{
+		std::stringstream converter;
+		converter << i;
+		return converter.str();
+	}
+
+	static std::string ConvertOtherToString(float & i)
+	{
+		std::stringstream converter;
+		converter << std::scientific << std::setprecision (20) << i;
+		return converter.str();
+	}
+
+	static std::string ConvertOtherToString(double & i)
+	{
+		std::stringstream converter;
+		converter << std::scientific << std::setprecision (20) << i;
+		return converter.str();
+	}
+
+	static std::string ConvertOtherToString(std::string & i)
+	{
+		return i;
+	}
+};
+
 ///handy utility class for (key,value) style parsed serializers that parse an entire input file before doing any serialization. provides functionality for keeping track of where we are in the serialization process.
 template <typename T>
 class TreeMap
@@ -884,6 +928,25 @@ class TextInputSerializer : public SerializerInput
 					}
 					else
 					{
+						// special case handling for multiple items
+						// this allows us to have a nice format for vectors
+						if (name == "*item")
+						{
+							// get the current item count
+							std::deque <std::string> tree_location_temp = tree_location;
+							tree_location_temp.push_back("size");
+							int curcount = 0;
+							std::string curcountstr = "0";
+							parsed_data_tree_.GetLeaf(tree_location_temp, curcountstr);
+							StringHelpers::ConvertStringToOther(curcountstr, curcount);
+							curcount++;
+							parsed_data_tree_.SetLeaf(tree_location_temp, StringHelpers::ConvertOtherToString(curcount));
+							
+							std::stringstream newname;
+							newname << "item" << curcount;
+							name = newname.str();
+						}
+						
 						tree_location.push_back(name);
 					}
 				}
@@ -1118,45 +1181,6 @@ class ReflectionSerializer : public Serializer
 		std::ostream * error_output_;
 		
 		template <typename T>
-		void ConvertStringToOther(const std::string & string_representation, T & i) const
-		{
-			std::stringstream converter(string_representation);
-			converter >> i;
-		}
-		
-		void ConvertStringToOther(const std::string & string_representation, std::string & i) const
-		{
-			i = string_representation;
-		}
-		
-		template <typename T>
-		std::string ConvertOtherToString(T & i) const
-		{
-			std::stringstream converter;
-			converter << i;
-			return converter.str();
-		}
-		
-		std::string ConvertOtherToString(float & i) const
-		{
-			std::stringstream converter;
-			converter << std::scientific << std::setprecision (20) << i;
-			return converter.str();
-		}
-		
-		std::string ConvertOtherToString(double & i) const
-		{
-			std::stringstream converter;
-			converter << std::scientific << std::setprecision (20) << i;
-			return converter.str();
-		}
-		
-		std::string ConvertOtherToString(std::string & i) const
-		{
-			return i;
-		}
-		
-		template <typename T>
 		bool ReadWriteData(const std::string & name, T & i)
 		{
 			serialization_location_.push_back(name);
@@ -1176,11 +1200,11 @@ class ReflectionSerializer : public Serializer
 					return false;
 				}
 				
-				ConvertStringToOther(string_representation, i);
+				StringHelpers::ConvertStringToOther(string_representation, i);
 			}
 			else if (direction_ == DIRECTION_OUTPUT)
 			{
-				std::string string_representation = ConvertOtherToString(i);
+				std::string string_representation = StringHelpers::ConvertOtherToString(i);
 				reflection_data_tree_.SetLeaf(serialization_location_, string_representation);
 			}
 			
@@ -1278,7 +1302,7 @@ class ReflectionSerializer : public Serializer
 			std::string string_representation;
 			if (!GetString(location, string_representation))
 				return false;
-			ConvertStringToOther(string_representation, output);
+			StringHelpers::ConvertStringToOther(string_representation, output);
 			
 			return true;
 		}
@@ -1308,7 +1332,7 @@ class ReflectionSerializer : public Serializer
 		template <typename T>
 		bool Set ( const std::deque <std::string> & location, const T & value )
 		{
-			std::string string_representation = ConvertOtherToString(value);
+			std::string string_representation = StringHelpers::ConvertOtherToString(value);
 			return SetString(location, string_representation);
 		}
 		
@@ -1338,7 +1362,7 @@ class ReflectionSerializer : public Serializer
 		template <typename T>
 		bool Add ( const std::deque <std::string> & location, const T & value )
 		{
-			return AddString(location, ConvertOtherToString(value));
+			return AddString(location, StringHelpers::ConvertOtherToString(value));
 		}
 		
 		///alternative to Add that takes a string representation.  returns true on success.
