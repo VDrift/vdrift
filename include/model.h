@@ -50,9 +50,17 @@ protected:
 
 public:
 	MODEL() : generatedlistid(false),generatedmetrics(false),radius(0),radiusxz(0) {}
+	MODEL(const std::string & filepath, std::ostream & error_output) :
+		generatedlistid(false),generatedmetrics(false),radius(0),radiusxz(0) 
+	{
+		if (filepath.size() > 4 && filepath.substr(filepath.size()-4) == ".ova")
+			ReadFromFile(filepath, error_output, false);
+		else
+			Load(filepath, error_output, false);
+	}
 	virtual ~MODEL() {Clear();}
 	
-	virtual bool Load(const std::string & strFileName, std::ostream & error_output, bool genlist = true) {return false;}
+	virtual bool Load(const std::string & strFileName, std::ostream & error_output, bool genlist) {return false;}
 	virtual bool CanSave() const {return false;}  ///< returns true if the model format is capable of saving to a file
 	virtual bool Save(const std::string & strFileName, std::ostream & error_output) const {return false;} ///< optional capability
 	

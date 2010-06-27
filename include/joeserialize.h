@@ -827,7 +827,7 @@ class TextInputSerializer : public SerializerInput
 		bool ReadData(const std::string & name, T & i)
 		{
 			serialization_location_.push_back(name);
-			std::string string_representation;
+			std::string string_representation("0");
 			if (!parsed_data_tree_.GetLeaf(serialization_location_, string_representation) && !allow_missing_)
 			{
 				if (error_output_)

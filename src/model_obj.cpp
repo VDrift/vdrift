@@ -110,7 +110,7 @@ bool BuildVertex(VERTEXARRAY::VERTEXDATA & outputvert, vector <VERTEXARRAY::TRIF
 	return true;
 }
 
-bool MODEL_OBJ::Load(const std::string & filepath, std::ostream & error_log)
+bool MODEL_OBJ::Load(const std::string & filepath, std::ostream & error_log, bool genlist)
 {
 	ifstream f(filepath.c_str());
 	if (!f)
@@ -165,7 +165,8 @@ bool MODEL_OBJ::Load(const std::string & filepath, std::ostream & error_log)
 	
 	mesh.BuildFromFaces(faces);
 	GenerateMeshMetrics();
-	GenerateListID(error_log);
+	if (genlist)
+		GenerateListID(error_log);
 	
 	return true;
 }

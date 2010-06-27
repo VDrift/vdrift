@@ -63,7 +63,7 @@ public:
 		Sweep();
 		if (!objectmap.empty())
 		{
-			error << "Texture Leak: ";
+			error << "Leak: ";
 			DebugPrint(error);
 			
 			for (iterator it = objectmap.begin(); it != objectmap.end(); it++)
@@ -75,6 +75,17 @@ public:
 	
 	void DebugPrint(std::ostream & out)
 	{
+		int refcount = 0;
+		out << "Object manager " << this << " debug print " << std::endl;
+		for(iterator it = objectmap.begin(); it != objectmap.end(); it++)
+		{
+			int references = it->second.use_count() - 1; // subtract our reference
+			refcount += references;
+			out << "References: " << references;
+			out << " Object: " << it->first << std::endl;
+		}
+		out << "References count: " << refcount << std::endl;
+		
 		out << "Objects count: " << objectmap.size();
 		out << ", created: " << created;
 		out << ", reused: " << reused;

@@ -12,6 +12,9 @@
 
 void MODEL::GenerateListID(std::ostream & error_output)
 {
+	if (HaveListID())
+		return;
+	
 	ClearListID();
 	
 	listid = glGenLists(1);
@@ -148,6 +151,10 @@ bool MODEL::WriteToFile(const std::string & filepath)
 
 bool MODEL::ReadFromFile(const std::string & filepath, std::ostream & error_output, bool generatelistid)
 {
+	const bool verbose = false;
+	
+	if (verbose) std::cout << filepath << ": starting mesh read" << std::endl;
+	
 	std::ifstream filein(filepath.c_str(), std::ios_base::binary);
 	if (!filein)
 	{
@@ -174,7 +181,20 @@ bool MODEL::ReadFromFile(const std::string & filepath, std::ostream & error_outp
 		return false;
 	}
 	
+	if (verbose) std::cout << filepath << ": serializing" << std::endl;
+	
+	/*// read the entire file into the memfile stream
+	std::streampos start = filein.tellg();
+	filein.seekg(0,std::ios::end);
+	std::streampos length = filein.tellg() - start;
+	filein.seekg(start);
+	std::vector <char> buffer(length);
+	filein.read(&buffer[0],length);
+	std::stringstream memfile;
+	memfile.rdbuf()->pubsetbuf(&buffer[0],length);*/
+	
 	joeserialize::BinaryInputSerializer s(filein);
+	//joeserialize::BinaryInputSerializer s(memfile);
 	if (!Serialize(s))
 	{
 		error_output << "Serialization error: " << filepath << std::endl;
@@ -182,11 +202,16 @@ bool MODEL::ReadFromFile(const std::string & filepath, std::ostream & error_outp
 		return false;
 	}
 	
+	if (verbose) std::cout << filepath << ": generating metrics" << std::endl;
+	
 	ClearListID();
 	ClearMetrics();
 	GenerateMeshMetrics();
+	if (verbose) std::cout << filepath << ": generating list id" << std::endl;
 	if (generatelistid)
 		GenerateListID(error_output);
+	
+	if (verbose) std::cout << filepath << ": done" << std::endl;
 	
 	return true;
 }
