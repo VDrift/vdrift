@@ -85,7 +85,7 @@ class Serializer
 			if (this->GetIODirection() == DIRECTION_OUTPUT)
 			{
 				int listsize = t.size();
-				if (!this->Serialize("size", listsize)) return false;
+				if (!this->Serialize("*size", listsize)) return false;
 				
 				int count = 1;
 				for (typename std::list <T>::iterator i = t.begin(); i != t.end(); ++i, ++count)
@@ -100,7 +100,7 @@ class Serializer
 				t.clear();
 
 				int listsize(0);
-				if (!this->Serialize("size", listsize)) return false;
+				if (!this->Serialize("*size", listsize)) return false;
 
 				for (int i = 0; i < listsize; i++)
 				{
@@ -123,7 +123,7 @@ class Serializer
 			if (this->GetIODirection() == DIRECTION_OUTPUT)
 			{
 				int listsize = t.size();
-				if (!this->Serialize("size", listsize)) return false;
+				if (!this->Serialize("*size", listsize)) return false;
 				
 				int count = 1;
 				for (typename std::set <T>::iterator i = t.begin(); i != t.end(); ++i, ++count)
@@ -138,7 +138,7 @@ class Serializer
 				t.clear();
 
 				int listsize(0);
-				if (!this->Serialize("size", listsize)) return false;
+				if (!this->Serialize("*size", listsize)) return false;
 
 				for (int i = 0; i < listsize; i++)
 				{
@@ -164,7 +164,7 @@ class Serializer
 			if (this->GetIODirection() == DIRECTION_OUTPUT)
 			{
 				int listsize = t.size();
-				if (!this->Serialize("size", listsize)) return false;
+				if (!this->Serialize("*size", listsize)) return false;
 				
 				int count = 1;
 				for (typename std::vector <T>::iterator i = t.begin(); i != t.end(); ++i, ++count)
@@ -178,7 +178,7 @@ class Serializer
 			{
 				//t.clear();
 				int listsize;
-				if (!this->Serialize("size", listsize)) return false;
+				if (!this->Serialize("*size", listsize)) return false;
 				t.resize(listsize); //only resize, don't clear; we don't want to throw away information
 
 				for (int i = 0; i < listsize; i++)
@@ -201,7 +201,7 @@ class Serializer
 			if (this->GetIODirection() == DIRECTION_OUTPUT)
 			{
 				int listsize = t.size();
-				if (!this->Serialize("size", listsize)) return false;
+				if (!this->Serialize("*size", listsize)) return false;
 				
 				int count = 1;
 				for (std::vector <bool>::iterator i = t.begin(); i != t.end(); ++i, ++count)
@@ -216,7 +216,7 @@ class Serializer
 			{
 				//t.clear();
 				int listsize;
-				if (!this->Serialize("size", listsize)) return false;
+				if (!this->Serialize("*size", listsize)) return false;
 				t.resize(listsize); //only resize, don't clear; we don't want to throw away information
 
 				for (int i = 0; i < listsize; i++)
@@ -243,7 +243,7 @@ class Serializer
 			if (this->GetIODirection() == DIRECTION_OUTPUT)
 			{
 				int listsize = t.size();
-				if (!this->Serialize("size", listsize)) return false;
+				if (!this->Serialize("*size", listsize)) return false;
 				
 				int count = 1;
 				for (typename std::deque <T>::iterator i = t.begin(); i != t.end(); ++i, ++count)
@@ -257,7 +257,7 @@ class Serializer
 			{
 				//t.clear();
 				int listsize;
-				if (!this->Serialize("size", listsize)) return false;
+				if (!this->Serialize("*size", listsize)) return false;
 				t.resize(listsize); //only resize, don't clear; we don't want to throw away information
 
 				for (int i = 0; i < listsize; i++)
@@ -282,7 +282,7 @@ class Serializer
 			if (this->GetIODirection() == DIRECTION_OUTPUT)
 			{
 				int listsize = t.size();
-				if (!this->Serialize("size", listsize)) return false;
+				if (!this->Serialize("*size", listsize)) return false;
 				
 				int count = 1;
 				for (typename std::map <U,T>::iterator i = t.begin(); i != t.end(); ++i, ++count)
@@ -303,7 +303,7 @@ class Serializer
 				t.clear();
 
 				int listsize;
-				if (!this->Serialize("size", listsize)) return false;
+				if (!this->Serialize("*size", listsize)) return false;
 
 				for (int i = 0; i < listsize; i++)
 				{
@@ -332,7 +332,7 @@ class Serializer
 			if (this->GetIODirection() == DIRECTION_OUTPUT)
 			{
 				int listsize = t.size();
-				if (!this->Serialize("size", listsize)) return false;
+				if (!this->Serialize("*size", listsize)) return false;
 				
 				int count = 1;
 				for (typename std::tr1::unordered_map <U,T>::iterator i = t.begin(); i != t.end(); ++i, ++count)
@@ -353,7 +353,7 @@ class Serializer
 				t.clear();
 
 				int listsize;
-				if (!this->Serialize("size", listsize)) return false;
+				if (!this->Serialize("*size", listsize)) return false;
 
 				for (int i = 0; i < listsize; i++)
 				{
@@ -381,7 +381,7 @@ class Serializer
 			if (this->GetIODirection() == DIRECTION_OUTPUT)
 			{
 				int listsize = t.size();
-				if (!this->Serialize("size", listsize)) return false;
+				if (!this->Serialize("*size", listsize)) return false;
 				
 				int count = 1;
 				for (typename std::tr1::unordered_set <T>::iterator i = t.begin(); i != t.end(); ++i, ++count)
@@ -396,7 +396,7 @@ class Serializer
 				t.clear();
 
 				int listsize(0);
-				if (!this->Serialize("size", listsize)) return false;
+				if (!this->Serialize("*size", listsize)) return false;
 
 				for (int i = 0; i < listsize; i++)
 				{
@@ -827,7 +827,12 @@ class TextInputSerializer : public SerializerInput
 		bool ReadData(const std::string & name, T & i)
 		{
 			serialization_location_.push_back(name);
-			std::string string_representation("0");
+			std::string string_representation;
+			
+			// zomg hack for missing fields because we want to omit lists entirely and have them serialize correctly
+			if (name == "*size" && allow_missing_)
+				string_representation = "0";
+			
 			if (!parsed_data_tree_.GetLeaf(serialization_location_, string_representation) && !allow_missing_)
 			{
 				if (error_output_)
@@ -914,7 +919,7 @@ class TextInputSerializer : public SerializerInput
 				{
 					// get the current item count
 					std::deque <std::string> tree_location_temp = tree_location;
-					tree_location_temp.push_back("size");
+					tree_location_temp.push_back("*size");
 					int curcount = 0;
 					std::string curcountstr = "0";
 					parsed_data_tree_.GetLeaf(tree_location_temp, curcountstr);
@@ -930,7 +935,7 @@ class TextInputSerializer : public SerializerInput
 				{
 					// get the current item count
 					std::deque <std::string> tree_location_temp = tree_location;
-					tree_location_temp.push_back("size");
+					tree_location_temp.push_back("*size");
 					int curcount = 0;
 					std::string curcountstr = "0";
 					parsed_data_tree_.GetLeaf(tree_location_temp, curcountstr);
@@ -946,7 +951,7 @@ class TextInputSerializer : public SerializerInput
 				{
 					// get the current item count
 					std::deque <std::string> tree_location_temp = tree_location;
-					tree_location_temp.push_back("size");
+					tree_location_temp.push_back("*size");
 					int curcount = 0;
 					std::string curcountstr = "0";
 					parsed_data_tree_.GetLeaf(tree_location_temp, curcountstr);
@@ -1468,7 +1473,7 @@ bool WriteObjectToFile(const std::string & path, T & object, std::ostream & info
 
 ///returns true on success
 template <typename T>
-bool LoadObjectFromFile(const std::string & path, T & object, std::ostream & info_output, bool binary=false)
+bool LoadObjectFromFile(const std::string & path, T & object, std::ostream & info_output, bool binary, bool allow_missing)
 {
 	info_output << "Loading " << path << "..." << std::endl;
 
@@ -1493,6 +1498,7 @@ bool LoadObjectFromFile(const std::string & path, T & object, std::ostream & inf
 		{
 			joeserialize::TextInputSerializer in;
 			in.set_error_output(info_output);
+			in.set_allow_missing(allow_missing);
 			std::istream & i = infile;
 			if (!in.Parse(i))
 			{
