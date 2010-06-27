@@ -290,8 +290,8 @@ class Serializer
 					std::stringstream countstr;
 					countstr << count;
 					
-					std::string keystr = "Key" + countstr.str();
-					std::string valstr = "Value" + countstr.str();
+					std::string keystr = "key" + countstr.str();
+					std::string valstr = "value" + countstr.str();
 
 					U tempkey = i->first;
 					if (!this->Serialize(keystr, tempkey)) return false;
@@ -310,8 +310,8 @@ class Serializer
 					std::stringstream countstr;
 					countstr << i+1;
 
-					std::string keystr = "Key" + countstr.str();
-					std::string valstr = "Value" + countstr.str();
+					std::string keystr = "key" + countstr.str();
+					std::string valstr = "value" + countstr.str();
 
 					U tempkey;
 					if (!this->Serialize(keystr, tempkey)) return false;
@@ -340,8 +340,8 @@ class Serializer
 					std::stringstream countstr;
 					countstr << count;
 					
-					std::string keystr = "Key" + countstr.str();
-					std::string valstr = "Value" + countstr.str();
+					std::string keystr = "key" + countstr.str();
+					std::string valstr = "value" + countstr.str();
 
 					U tempkey = i->first;
 					if (!this->Serialize(keystr, tempkey)) return false;
@@ -360,8 +360,8 @@ class Serializer
 					std::stringstream countstr;
 					countstr << i+1;
 
-					std::string keystr = "Key" + countstr.str();
-					std::string valstr = "Value" + countstr.str();
+					std::string keystr = "key" + countstr.str();
+					std::string valstr = "value" + countstr.str();
 
 					U tempkey;
 					if (!this->Serialize(keystr, tempkey)) return false;
@@ -906,9 +906,59 @@ class TextInputSerializer : public SerializerInput
 				std::string line = SeekTo(in, '\n'); //read in this line
 				std::stringstream linestream(line);
 				std::string name = SeekTo(linestream, '=');
+				name = strTrim(name);
+				
+				// special case handling for multiple items
+				// this allows us to have a nice format for vectors
+				if (name == "*item")
+				{
+					// get the current item count
+					std::deque <std::string> tree_location_temp = tree_location;
+					tree_location_temp.push_back("size");
+					int curcount = 0;
+					std::string curcountstr = "0";
+					parsed_data_tree_.GetLeaf(tree_location_temp, curcountstr);
+					StringHelpers::ConvertStringToOther(curcountstr, curcount);
+					curcount++;
+					parsed_data_tree_.SetLeaf(tree_location_temp, StringHelpers::ConvertOtherToString(curcount));
+					
+					std::stringstream newname;
+					newname << "item" << curcount;
+					name = newname.str();
+				}
+				else if (name == "*key") //allows nice format for maps
+				{
+					// get the current item count
+					std::deque <std::string> tree_location_temp = tree_location;
+					tree_location_temp.push_back("size");
+					int curcount = 0;
+					std::string curcountstr = "0";
+					parsed_data_tree_.GetLeaf(tree_location_temp, curcountstr);
+					StringHelpers::ConvertStringToOther(curcountstr, curcount);
+					curcount++;
+					parsed_data_tree_.SetLeaf(tree_location_temp, StringHelpers::ConvertOtherToString(curcount));
+					
+					std::stringstream newname;
+					newname << "key" << curcount;
+					name = newname.str();
+				}
+				else if (name == "*value") //allows nice format for maps
+				{
+					// get the current item count
+					std::deque <std::string> tree_location_temp = tree_location;
+					tree_location_temp.push_back("size");
+					int curcount = 0;
+					std::string curcountstr = "0";
+					parsed_data_tree_.GetLeaf(tree_location_temp, curcountstr);
+					StringHelpers::ConvertStringToOther(curcountstr, curcount);
+					
+					std::stringstream newname;
+					newname << "value" << curcount;
+					name = newname.str();
+				}
+				
 				if (name.length() == line.length()) //no assignment, so this must be the start or end of a complex type
 				{
-					name = strTrim(name);
 					if (name == "{")
 					{
 						//ignore redundant information
@@ -928,25 +978,6 @@ class TextInputSerializer : public SerializerInput
 					}
 					else
 					{
-						// special case handling for multiple items
-						// this allows us to have a nice format for vectors
-						if (name == "*item")
-						{
-							// get the current item count
-							std::deque <std::string> tree_location_temp = tree_location;
-							tree_location_temp.push_back("size");
-							int curcount = 0;
-							std::string curcountstr = "0";
-							parsed_data_tree_.GetLeaf(tree_location_temp, curcountstr);
-							StringHelpers::ConvertStringToOther(curcountstr, curcount);
-							curcount++;
-							parsed_data_tree_.SetLeaf(tree_location_temp, StringHelpers::ConvertOtherToString(curcount));
-							
-							std::stringstream newname;
-							newname << "item" << curcount;
-							name = newname.str();
-						}
-						
 						tree_location.push_back(name);
 					}
 				}
