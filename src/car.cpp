@@ -433,6 +433,8 @@ bool CAR::Load (
 	// create brake light point light sources
 	// this is experimental at the moment and uses fixed
 	// coordinates to place the brake lights
+	if (0) // disabled for release
+	{
 	for (int i = 0; i < 2; i++)
 	{
 		lights.push_back(LIGHT());
@@ -457,6 +459,7 @@ bool CAR::Load (
 		draw.SetCull(true, true);
 		//draw.SetCull(false, false);
 		draw.SetDrawEnable(false);
+	}
 	}
 
 	mz_nominalmax = (GetTireMaxMz(FRONT_LEFT) + GetTireMaxMz(FRONT_RIGHT))*0.5;
