@@ -27,7 +27,6 @@ public:
 	
 	const std::vector <int> & GetDrawLists() const {return list_ids;}
 	void AddDrawList(int value) {list_ids.push_back(value);}
-	void SetDrawList(int index, int value) {list_ids[index] = value;}
 	
 	const TEXTURE * GetDiffuseMap() const {return diffuse_map.get();}
 	void SetDiffuseMap(TEXTUREPTR value) {diffuse_map = value;}

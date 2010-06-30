@@ -402,7 +402,7 @@ bool LoadWheel(
 	float rim_inertia = rim_mass * rim_radius * rim_radius;
 	
 	wheel.SetMass(tire_mass + rim_mass);
-	wheel.SetInertia((tire_inertia + rim_inertia)*3); // scale inertia fixme
+	wheel.SetInertia((tire_inertia + rim_inertia)*4); // scale inertia fixme
 
 	return true;
 }
@@ -502,7 +502,7 @@ bool CARDYNAMICS::Load(
 
 	//load wheels (four wheels hardcoded)
 	maxangle = 0.0;
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < WHEEL_POSITION_SIZE; i++)
 	{
 		std::stringstream num;
 		num << i;
@@ -883,6 +883,16 @@ T CARDYNAMICS::GetSpeedMPS() const
 
 	assert ( 0 );
 	return 0;
+/*
+	// use max wheel speed
+	T speed = 0;
+	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
+	{
+		T wheel_speed = wheel[i].GetAngularVelocity() * tire[i].GetRadius();
+		if(speed < wheel_speed) speed = wheel_speed;
+	}
+	return speed;
+*/
 }
 
 T CARDYNAMICS::GetTachoRPM() const
@@ -1458,13 +1468,17 @@ void CARDYNAMICS::UpdateBody(
 	body.ApplyTorque(ext_torque);
 
 	// update suspension/wheels
+	//static int count = 0;
 	T normal_force[WHEEL_POSITION_SIZE];
 	for(int i = 0; i < WHEEL_POSITION_SIZE; i++)
 	{
 		normal_force[i] = UpdateSuspension(i, dt);
 		MATHVECTOR <T, 3> tire_friction = ApplyTireForce(i, normal_force[i], wheel_orientation[i]);
 		ApplyWheelTorque(i, tire_friction, wheel_orientation[i], drive_torque[i], dt);
+		//std::cerr << std::setw(4) << count << "; " << std::setw(7) << tire_friction[0] << " ";
 	}
+	//std::cerr << "\n";
+	//count++;
 
 	body.Integrate2(dt);
 	
@@ -1853,23 +1867,23 @@ T CARDYNAMICS::DownshiftRPM(int gear) const
 }
 
 ///do traction control system (wheelspin prevention) calculations and modify the throttle position if necessary
-void CARDYNAMICS::DoTCS ( int i, T suspension_force )
+void CARDYNAMICS::DoTCS(int i, T suspension_force)
 {
 	T gasthresh = 0.1;
 	T gas = engine.GetThrottle();
 
 	//only active if throttle commanded past threshold
-	if ( gas > gasthresh )
+	if (gas > gasthresh)
 	{
 		//see if we're spinning faster than the rest of the wheels
 		T maxspindiff = 0;
-		T myrotationalspeed = wheel[WHEEL_POSITION ( i ) ].GetAngularVelocity();
-		for ( int i2 = 0; i2 < WHEEL_POSITION_SIZE; i2++ )
+		T myrotationalspeed = wheel[i].GetAngularVelocity();
+		for (int i2 = 0; i2 < WHEEL_POSITION_SIZE; i2++)
 		{
-			T spindiff = myrotationalspeed - wheel[WHEEL_POSITION ( i2 ) ].GetAngularVelocity();
-			if ( spindiff < 0 )
+			T spindiff = myrotationalspeed - wheel[i2].GetAngularVelocity();
+			if (spindiff < 0)
 				spindiff = -spindiff;
-			if ( spindiff > maxspindiff )
+			if (spindiff > maxspindiff)
 				maxspindiff = spindiff;
 		}
 
@@ -1877,33 +1891,33 @@ void CARDYNAMICS::DoTCS ( int i, T suspension_force )
 		if ( maxspindiff > 1.0 )
 		{
 			//sp is the ideal slip ratio given tire loading
-			T sp ( 0 ), ah ( 0 );
-			tire[WHEEL_POSITION ( i ) ].LookupSigmaHatAlphaHat ( suspension_force, sp, ah );
+			T sp(0), ah(0);
+			tire[i].LookupSigmaHatAlphaHat(suspension_force, sp, ah);
 
 			T sense = 1.0;
-			if ( transmission.GetGear() < 0 )
+			if (transmission.GetGear() < 0)
 				sense = -1.0;
 
-			T error = tire[WHEEL_POSITION ( i ) ].GetSlide() * sense - sp;
+			T error = tire[i].GetSlide() * sense - sp;
 			T thresholdeng = 0.0;
 			T thresholddis = -sp/2.0;
 
-			if ( error > thresholdeng && ! tcs_active[i] )
+			if (error > thresholdeng && !tcs_active[i])
 				tcs_active[i] = true;
 
-			if ( error < thresholddis && tcs_active[i] )
+			if (error < thresholddis && tcs_active[i])
 				tcs_active[i] = false;
 
-			if ( tcs_active[i] )
+			if (tcs_active[i])
 			{
 				T curclutch = clutch.GetClutch();
-				if ( curclutch > 1 ) curclutch = 1;
-				if ( curclutch < 0 ) curclutch = 0;
+				if (curclutch > 1) curclutch = 1;
+				if (curclutch < 0) curclutch = 0;
 
 				gas = gas - error * 10.0 * curclutch;
-				if ( gas < 0 ) gas = 0;
-				if ( gas > 1 ) gas = 1;
-				engine.SetThrottle ( gas );
+				if (gas < 0) gas = 0;
+				if (gas > 1) gas = 1;
+				engine.SetThrottle(gas);
 			}
 		}
 		else
@@ -1914,36 +1928,36 @@ void CARDYNAMICS::DoTCS ( int i, T suspension_force )
 }
 
 ///do anti-lock brake system calculations and modify the brake force if necessary
-void CARDYNAMICS::DoABS ( int i, T suspension_force )
+void CARDYNAMICS::DoABS(int i, T suspension_force)
 {
 	T braketresh = 0.1;
-	T brakesetting = brake[WHEEL_POSITION ( i ) ].GetBrakeFactor();
+	T brakesetting = brake[i].GetBrakeFactor();
 
 	//only active if brakes commanded past threshold
-	if ( brakesetting > braketresh )
+	if (brakesetting > braketresh)
 	{
 		T maxspeed = 0;
-		for ( int i2 = 0; i2 < WHEEL_POSITION_SIZE; i2++ )
+		for (int i2 = 0; i2 < WHEEL_POSITION_SIZE; i2++)
 		{
-			if ( wheel[WHEEL_POSITION ( i2 ) ].GetAngularVelocity() > maxspeed )
-				maxspeed = wheel[WHEEL_POSITION ( i2 ) ].GetAngularVelocity();
+			if (wheel[i2].GetAngularVelocity() > maxspeed)
+				maxspeed = wheel[i2].GetAngularVelocity();
 		}
 
 		//don't engage ABS if all wheels are moving slowly
-		if ( maxspeed > 6.0 )
+		if (maxspeed > 6.0)
 		{
 			//sp is the ideal slip ratio given tire loading
-			T sp ( 0 ), ah ( 0 );
-			tire[WHEEL_POSITION ( i ) ].LookupSigmaHatAlphaHat ( suspension_force, sp, ah );
+			T sp(0), ah(0);
+			tire[i].LookupSigmaHatAlphaHat(suspension_force, sp, ah);
 
-			T error = - tire[WHEEL_POSITION ( i ) ].GetSlide() - sp;
+			T error = - tire[i].GetSlide() - sp;
 			T thresholdeng = 0.0;
 			T thresholddis = -sp/2.0;
 
-			if ( error > thresholdeng && ! abs_active[i] )
+			if (error > thresholdeng && !abs_active[i])
 				abs_active[i] = true;
 
-			if ( error < thresholddis && abs_active[i] )
+			if (error < thresholddis && abs_active[i])
 				abs_active[i] = false;
 		}
 		else
@@ -1952,8 +1966,8 @@ void CARDYNAMICS::DoABS ( int i, T suspension_force )
 	else
 		abs_active[i] = false;
 
-	if ( abs_active[i] )
-		brake[WHEEL_POSITION ( i ) ].SetBrakeFactor ( 0.0 );
+	if (abs_active[i])
+		brake[i].SetBrakeFactor(0.0);
 }
 
 void CARDYNAMICS::SetDrive ( const std::string & newdrive )

@@ -32,8 +32,8 @@ BEZIER::~BEZIER()
 
 AABB <float> BEZIER::GetAABB() const
 {
-	float maxv[3];
-	float minv[3];
+	float maxv[3] = {0, 0, 0};
+	float minv[3] = {0, 0, 0};
 	bool havevals[6];
 	for (int n = 0; n < 6; n++)
 		havevals[n] = false;
@@ -142,6 +142,146 @@ void BEZIER::SetFromCorners(const MATHVECTOR <float, 3> & fl, const MATHVECTOR <
 	//CheckForProblems();
 }
 
+// Basis functions
+inline float B0(float t) { return t*t*t; }
+inline float B1(float t) { return 3*t*t*(1-t); }
+inline float B2(float t) { return 3*t*(1-t)*(1-t); }
+inline float B3(float t) { return (1-t)*(1-t)*(1-t); }
+
+inline float T0(float t) { return 3*t*t; }
+inline float T1(float t) { return 6*t-9*t*t; }
+inline float T2(float t) { return 3-12*t+9*t*t; }
+inline float T3(float t) { return -3*(1-t)*(1-t); }
+
+inline float N0(float t) { return 6*t; }
+inline float N1(float t) { return 6-18*t; }
+inline float N2(float t) { return 18*t-12; }
+inline float N3(float t) { return 6-6*t; }
+
+// Shortest cubic spline through 4 on-curve points(chord approximation)
+void BEZIER::FitSpline(MATHVECTOR <float, 3> p[])
+{
+	// use chord length for shortest(best) cubic spline approximation
+	float c3 = (p[1] - p[0]).Magnitude();
+	float c2 = (p[2] - p[1]).Magnitude();
+	float c1 = (p[3] - p[2]).Magnitude();
+	
+	// cases where p[1] is close to p[2] might lead to instabilities(need some heuristic)
+	if (50 * c2 < c1 + c3)
+	{
+		p[1] = p[0] + (p[1] - p[0]) * 0.98;
+		p[2] = p[3] + (p[2] - p[3]) * 0.98;
+		c3 = c3 * 0.98;
+		c2 = (p[2] - p[1]).Magnitude();
+		c1 = c1 * 0.98;
+	}
+	
+	float t1 = c1 / (c1 + c2 + c3);
+	float t2 = (c1 + c2) / (c1 + c2 + c3);
+	
+	// Solve M * x = y
+	float m00 = B1(t1);
+	float m01 = B2(t1);
+	float m10 = B1(t2);
+	float m11 = B2(t2);
+	
+	float detM = m00 * m11 - m01 * m10;
+	if (fabs(detM) > 1E-3)
+	{
+		// y = p - p0 * B0(t) - p3 * B3(t)
+		MATHVECTOR <float, 3> y1 = p[1] - p[0] * B0(t1) - p[3] * B3(t1);
+		MATHVECTOR <float, 3> y2 = p[2] - p[0] * B0(t2) - p[3] * B3(t2);
+		
+		// Minv
+		float s = 1 / detM;
+		float n00 = s * m11;
+		float n01 = -s * m01;
+		float n10 = -s * m10;
+		float n11 = s * m00;
+		
+		// x = Minv * y
+		MATHVECTOR <float, 3> x1 = y1 * n00 + y2 * n01;
+		MATHVECTOR <float, 3> x2 = y1 * n10 + y2 * n11;
+		
+		p[1] = x1;
+		p[2] = x2;
+	}
+}
+
+// adjust spline to go through p1, p2 for p1 == p2
+void BEZIER::FitMidPoint(MATHVECTOR <float, 3> p[])
+{
+	p[0].Set(-150, 0, 0);
+	p[1].Set(100, 60, 0);
+	p[2].Set(100, 60, 0);
+	p[3].Set(200, 0, 0);
+	
+	MATHVECTOR <float, 3> d3 = p[0] - p[1];
+	MATHVECTOR <float, 3> d2 = p[1] - p[2];
+	MATHVECTOR <float, 3> d1 = p[2] - p[3];
+	float c3 = d3.Magnitude();
+	float c2 = d2.Magnitude();
+	float c1 = d1.Magnitude();
+	
+	if (100 * c2 > c1 + c3) return;
+	
+	// chord length approximation(doesn't work that good)
+	// pm for p = p1 = p2
+	// p = p0 * B0(t) + pm * (B1(t) + B2(t)) + p3 * B3(t)
+	//float t = c1 / (c1 + c3);
+	//MATHVECTOR <float, 3> pm = (p[1] - p[0] * B0(t) - p[3] * B3(t)) / (B1(t) + B2(t));
+
+	// extrude along midpoint normal
+	// nm = p0 * N0 + pm * (N1 + N2) + p3 * N3 with  pm = p1 + nm * s
+	MATHVECTOR <float, 3> nm = (d2 - d3).Normalize();
+	MATHVECTOR <float, 3> y = nm / 6.0 + p[1] - p[3];
+	MATHVECTOR <float, 3> a = p[0] - p[3];
+	MATHVECTOR <float, 3> b = -nm;
+
+	// y = a * t + b * s
+	// y = M * x with x = (t, s) and M = (a, b)
+	// x = Minv * y
+	float s;//, t;
+	MATHVECTOR <float, 3> det = a.cross(b);
+	if (det[0] != 0.0)
+	{
+		float m00 = a[1];
+		//float m01 = b[1];
+		float m10 = a[2];
+		//float m11 = b[2];
+		
+		// Minv
+		float d = 1.0 / det[0];
+		//float n00 = d * m11;
+		//float n01 = -d * m01;
+		float n10 = -d * m10;
+		float n11 = d * m00;
+	
+		// x = Minv * y
+		//t = y[1] * n00 + y[2] * n01; // need s only
+		s = y[1] * n10 + y[2] * n11;
+	}
+	else if (det[1] != 0.0)
+	{
+		//m00 = a[2]; m01 = b[2]; m10 = a[0]; m11 = b[0];
+		s = 1.0 / det[1] * (-y[2] * a[0] + y[0] * a[2]);
+	}
+	else if (det[2] != 0.0)
+	{
+		//m00 = a[0]; m01 = b[0]; m10 = a[1]; m11 = b[1];
+		s = 1.0 / det[2] * (-y[0] * a[1] + y[1] * a[0]);
+	}
+	else
+	{
+		return;	// failure
+	}
+	
+	MATHVECTOR <float, 3> pm = p[1] + nm * s;
+
+	p[1] = pm;
+	p[2] = pm;
+}
+
 void BEZIER::Attach(BEZIER & other, bool reverse)
 {
 	/*if (!reverse)
@@ -237,17 +377,23 @@ void BEZIER::Reverse()
 			points[n][i] = oldpoints[3-n][3-i];
 }
 
-MATHVECTOR <float, 3> BEZIER::Bernstein(float u, MATHVECTOR <float, 3> *p) const
+MATHVECTOR <float, 3> BEZIER::Bernstein(float u, MATHVECTOR <float, 3> p[]) const
 {
 	float oneminusu(1.0f-u);
-	
-	MATHVECTOR <float, 3> a = p[0] * (u*u*u);
-	MATHVECTOR <float, 3> b = p[1] * (3*u*u*oneminusu);
-	MATHVECTOR <float, 3> c = p[2] * (3*u*oneminusu*oneminusu);
-	MATHVECTOR <float, 3> d = p[3] * (oneminusu*oneminusu*oneminusu);
+	MATHVECTOR <float, 3> a = p[0]*(u*u*u);
+	MATHVECTOR <float, 3> b = p[1]*(3*u*u*oneminusu);
+	MATHVECTOR <float, 3> c = p[2]*(3*u*oneminusu*oneminusu);
+	MATHVECTOR <float, 3> d = p[3]*(oneminusu*oneminusu*oneminusu);
+	return a+b+c+d;
+}
 
-	//return a+b+c+d;
-	return MATHVECTOR <float, 3> (a[0]+b[0]+c[0]+d[0],a[1]+b[1]+c[1]+d[1],a[2]+b[2]+c[2]+d[2]);
+MATHVECTOR <float, 3> BEZIER::BernsteinTangent(float u, MATHVECTOR <float, 3> p[]) const
+{
+	float oneminusu(1.0f-u);
+	MATHVECTOR <float, 3> a = (p[1]-p[0])*(3*u*u);
+	MATHVECTOR <float, 3> b = (p[2]-p[1])*(3*2*u*oneminusu);
+	MATHVECTOR <float, 3> c = (p[3]-p[2])*(3*oneminusu*oneminusu);
+	return a+b+c;
 }
 
 MATHVECTOR <float, 3> BEZIER::SurfCoord(float px, float py) const
@@ -301,15 +447,6 @@ MATHVECTOR <float, 3> BEZIER::SurfNorm(float px, float py) const
 	return -(BernsteinTangent(px, tempx).cross(BernsteinTangent(py, temp)).Normalize());
 }
 
-MATHVECTOR <float, 3> BEZIER::BernsteinTangent(float u, MATHVECTOR <float, 3> *p) const
-{
-	MATHVECTOR <float, 3> a = (p[1]-p[0])*(3*pow(u,2));
-	MATHVECTOR <float, 3> b = (p[2]-p[1])*(3*2*u*(1-u));
-	MATHVECTOR <float, 3> c = (p[3]-p[2])*(3*pow((1-u),2));
-
-	return a+b+c;
-}
-
 BEZIER & BEZIER::CopyFrom(const BEZIER &other)
 {
 	for (int x = 0; x < 4; x++)
@@ -338,8 +475,6 @@ void BEZIER::ReadFrom(std::istream &openfile)
 {
 	assert(openfile);
 	
-	//MATHVECTOR <float, 3> npoints[4][4];
-	
 	for (int x = 0; x < 4; x++)
 	{
 		for (int y = 0; y < 4; y++)
@@ -348,6 +483,8 @@ void BEZIER::ReadFrom(std::istream &openfile)
 			openfile >> points[x][y][1];
 			openfile >> points[x][y][2];
 		}
+		//FitSpline(points[x]);
+		//FitMidPoint(points[x]);
 	}
 }
 
@@ -376,7 +513,7 @@ bool BEZIER::CollideSubDivQuadSimpleNorm(const MATHVECTOR <float, 3> & origin, c
 {
 	bool col = false;
 	const int COLLISION_QUAD_DIVS = 6;
-	const bool QUAD_DIV_FAST_DISCARD = true;
+	const float areacut = 0.5;
 	
 	float t, u, v;
 	
@@ -388,20 +525,12 @@ bool BEZIER::CollideSubDivQuadSimpleNorm(const MATHVECTOR <float, 3> & origin, c
 	float vmin = 0;
 	float vmax = 1;
 	
-	//const float fuzziness = 0.13;
-	
 	MATHVECTOR <float, 3> ul = points[3][3];
 	MATHVECTOR <float, 3> ur = points[3][0];
 	MATHVECTOR <float, 3> br = points[0][0];
 	MATHVECTOR <float, 3> bl = points[0][3];
 	
-	//int subdivnum = 0;
-
-	bool loop = true;
-	
-	float areacut = 0.5;
-
-	for (int i = 0; i < COLLISION_QUAD_DIVS && loop; i++)
+	for (int i = 0; i < COLLISION_QUAD_DIVS; i++)
 	{
 		float tu[2];
 		float tv[2];
@@ -429,12 +558,8 @@ bool BEZIER::CollideSubDivQuadSimpleNorm(const MATHVECTOR <float, 3> & origin, c
 			br = SurfCoord(tu[1], tv[1]);
 			bl = SurfCoord(tu[0], tv[1]);
 		}
-		
-		//u = v = 0.0;
 
-		col = IntersectQuadrilateralF(origin, direction,
-			ul, ur, br, bl,
-			t, u, v);
+		col = IntersectQuadrilateralF(origin, direction, ul, ur, br, bl, t, u, v);
 		
 		if (col)
 		{
@@ -446,55 +571,21 @@ bool BEZIER::CollideSubDivQuadSimpleNorm(const MATHVECTOR <float, 3> & origin, c
 			sv = v * (tv[1] - tv[0]) + tv[0];
 			
 			//place max and min according to area hit
-			vmax = sv + (0.5*areacut)*(vmax-vmin);
-			vmin = sv - (0.5*areacut)*(vmax-vmin);
-			umax = su + (0.5*areacut)*(umax-umin);
-			umin = su - (0.5*areacut)*(umax-umin);
+			vmax = sv + (0.5*areacut)*(vmax - vmin);
+			vmin = sv - (0.5*areacut)*(vmax - vmin);
+			umax = su + (0.5*areacut)*(umax - umin);
+			umin = su - (0.5*areacut)*(umax - umin);
 		}
 		else
 		{
-			if ((i == 0) && QUAD_DIV_FAST_DISCARD)
-			//if (QUAD_DIV_FAST_DISCARD)
-			{
-				outtri = origin;
-				return false;
-			}
-			else
-			{
-				/*if (verbose)
-				{
-					cout << "<" << i << ": nocol " << su << "," << sv << ">" << endl;
-					cout << "<" << umin << "," << umax << ";" << vmin << "," << vmax << ">" << endl;
-					
-					ul.DebugPrint();
-					ur.DebugPrint();
-					bl.DebugPrint();
-					br.DebugPrint();
-					
-					cout << endl;
-				}*/
-				
-				loop = false;
-			}
+			outtri = origin;
+			return false;
 		}
 	}
 	
-	if (col)// || QUAD_DIV_FAST_DISCARD)
-	//if (col)
-	{
-		/*if (!col)
-			cout << "blip " << su << "," << sv << ": " << u << "," << v << endl;*/
-		outtri = SurfCoord(su, sv);
-		normal = SurfNorm(su, sv);
-		//if (verbose)
-			//cout << "<" << i << ">" << endl;
-		return true;
-	}
-	else
-	{
-		outtri = origin;
-		return false;
-	}
+	outtri = SurfCoord(su, sv);
+	normal = SurfNorm(su, sv);
+	return true;
 }
 
 void BEZIER::DeCasteljauHalveCurve(MATHVECTOR <float, 3> * points4, MATHVECTOR <float, 3> * left4, MATHVECTOR <float, 3> * right4) const
@@ -513,8 +604,6 @@ void BEZIER::DeCasteljauHalveCurve(MATHVECTOR <float, 3> * points4, MATHVECTOR <
 
 bool BEZIER::CheckForProblems() const
 {
-	//MATHVECTOR <float, 3> fl (points[0][0]), fr(points[0][3]), br(points[3][3]), bl(points[3][0]);
-	
 	MATHVECTOR <float, 3> corners[4];
 	corners[0] = points[0][0];
 	corners[1] = points[0][3];
@@ -560,33 +649,11 @@ bool BEZIER::CheckForProblems() const
 	return problem;
 }
 
-QT_TEST(bezier_test)
-{
-	MATHVECTOR <float, 3> p[4], l[4], r[4];
-	p[0].Set(-1,0,0);
-	p[1].Set(-1,1,0);
-	p[2].Set(1,1,0);
-	p[3].Set(1,0,0);
-	BEZIER b;
-	b.DeCasteljauHalveCurve(p,l,r);
-	QT_CHECK_EQUAL(l[0],(MATHVECTOR <float, 3>(-1,0,0)));
-	QT_CHECK_EQUAL(l[1],(MATHVECTOR <float, 3>(-1,0.5,0)));
-	QT_CHECK_EQUAL(l[2],(MATHVECTOR <float, 3>(-0.5,0.75,0)));
-	QT_CHECK_EQUAL(l[3],(MATHVECTOR <float, 3>(0,0.75,0)));
-	
-	QT_CHECK_EQUAL(r[3],(MATHVECTOR <float, 3>(1,0,0)));
-	QT_CHECK_EQUAL(r[2],(MATHVECTOR <float, 3>(1,0.5,0)));
-	QT_CHECK_EQUAL(r[1],(MATHVECTOR <float, 3>(0.5,0.75,0)));
-	QT_CHECK_EQUAL(r[0],(MATHVECTOR <float, 3>(0,0.75,0)));
-	
-	b.SetFromCorners(MATHVECTOR <float, 3>(1,0,1),MATHVECTOR <float, 3>(-1,0,1),MATHVECTOR <float, 3>(1,0,-1),MATHVECTOR <float, 3>(-1,0,-1));
-	QT_CHECK(!b.CheckForProblems());
-}
-
-bool BEZIER::IntersectQuadrilateralF(const MATHVECTOR <float, 3> & orig, const MATHVECTOR <float, 3> & dir,
-				     const MATHVECTOR <float, 3> & v_00, const MATHVECTOR <float, 3> & v_10,
-				     const MATHVECTOR <float, 3> & v_11, const MATHVECTOR <float, 3> & v_01,
-				     float &t, float &u, float &v) const
+bool BEZIER::IntersectQuadrilateralF(
+	const MATHVECTOR <float, 3> & orig, const MATHVECTOR <float, 3> & dir,
+	const MATHVECTOR <float, 3> & v_00, const MATHVECTOR <float, 3> & v_10,
+	const MATHVECTOR <float, 3> & v_11, const MATHVECTOR <float, 3> & v_01,
+	float &t, float &u, float &v) const
 {
 	const float EPSILON = 0.000001;
 	
@@ -696,4 +763,27 @@ bool BEZIER::IntersectQuadrilateralF(const MATHVECTOR <float, 3> & orig, const M
 	}
 	
 	return true;
+}
+
+QT_TEST(bezier_test)
+{
+	MATHVECTOR <float, 3> p[4], l[4], r[4];
+	p[0].Set(-1,0,0);
+	p[1].Set(-1,1,0);
+	p[2].Set(1,1,0);
+	p[3].Set(1,0,0);
+	BEZIER b;
+	b.DeCasteljauHalveCurve(p,l,r);
+	QT_CHECK_EQUAL(l[0],(MATHVECTOR <float, 3>(-1,0,0)));
+	QT_CHECK_EQUAL(l[1],(MATHVECTOR <float, 3>(-1,0.5,0)));
+	QT_CHECK_EQUAL(l[2],(MATHVECTOR <float, 3>(-0.5,0.75,0)));
+	QT_CHECK_EQUAL(l[3],(MATHVECTOR <float, 3>(0,0.75,0)));
+	
+	QT_CHECK_EQUAL(r[3],(MATHVECTOR <float, 3>(1,0,0)));
+	QT_CHECK_EQUAL(r[2],(MATHVECTOR <float, 3>(1,0.5,0)));
+	QT_CHECK_EQUAL(r[1],(MATHVECTOR <float, 3>(0.5,0.75,0)));
+	QT_CHECK_EQUAL(r[0],(MATHVECTOR <float, 3>(0,0.75,0)));
+	
+	b.SetFromCorners(MATHVECTOR <float, 3>(1,0,1),MATHVECTOR <float, 3>(-1,0,1),MATHVECTOR <float, 3>(1,0,-1),MATHVECTOR <float, 3>(-1,0,-1));
+	QT_CHECK(!b.CheckForProblems());
 }

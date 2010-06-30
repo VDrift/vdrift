@@ -30,6 +30,14 @@ public:
 	///initialize this bezier to the quad defined by the given corner points
 	void SetFromCorners(const MATHVECTOR <float, 3> & fl, const MATHVECTOR <float, 3> & fr, const MATHVECTOR <float, 3> & bl, const MATHVECTOR <float, 3> & br);
 
+	///shortest cubic spline through 4 on-curve points(chord approximation)
+	///will modify point[1] and point[2] if fit possible
+	void FitSpline(MATHVECTOR <float, 3> p[]);
+
+	///shortest cubic spline through 3 on-curve points(p1 == p2)
+	///will modify point[1] and point[2]
+	void FitMidPoint(MATHVECTOR <float, 3> p[]);
+	
 	///attach this bezier and the other bezier by moving them and adjusting control points as necessary.
 	/// note that the other patch will be modified
 	void Attach(BEZIER & other, bool reverse);
@@ -77,6 +85,12 @@ public:
 		assert(y < 4);
 		return points[x][y];
 	}
+	
+	///return the 3D point on the bezier surface at the given normalized coordinates px and py
+	MATHVECTOR <float, 3> SurfCoord(float px, float py) const;
+
+	///return the normal of the bezier surface at the given normalized coordinates px and py
+	MATHVECTOR <float, 3> SurfNorm(float px, float py) const;
 
 	BEZIER* GetNextPatch() const
 	{
@@ -100,16 +114,10 @@ public:
 
 private:
 	///return the bernstein given the normalized coordinate u (zero to one) and an array of four points p
-	MATHVECTOR <float, 3> Bernstein(float u, MATHVECTOR <float, 3> *p) const;
+	MATHVECTOR <float, 3> Bernstein(float u, MATHVECTOR <float, 3> p[]) const;
 
-	///return the bernstein tangent (normal) given the normalized coordinate u (zero to one) and an array of four points p
-	MATHVECTOR <float, 3> BernsteinTangent(float u, MATHVECTOR <float, 3> *p) const;
-
-	///return the 3D point on the bezier surface at the given normalized coordinates px and py
-	MATHVECTOR <float, 3> SurfCoord(float px, float py) const;
-
-	///return the normal of the bezier surface at the given normalized coordinates px and py
-	MATHVECTOR <float, 3> SurfNorm(float px, float py) const;
+	///return the bernstein tangent given the normalized coordinate u (zero to one) and an array of four points p
+	MATHVECTOR <float, 3> BernsteinTangent(float u, MATHVECTOR <float, 3> p[]) const;
 
 	///return true if the ray at orig with direction dir intersects the given quadrilateral.
 	/// also put the collision depth in t and the collision coordinates in u,v

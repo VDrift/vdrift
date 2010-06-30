@@ -194,85 +194,64 @@ public:
 	/// current_camber is expected in radians.
 	/// normal_force is in units N.
 	MATHVECTOR <T, 3> GetForce(
-					T normal_force,
-					T friction_coeff,
-					const MATHVECTOR <T, 3> & hub_velocity,
-					T patch_speed,
-					T current_camber)
-
+		T normal_force,
+		T friction_coeff,
+		const MATHVECTOR <T, 3> & hub_velocity,
+		T patch_speed,
+		T current_camber)
 	{
 		assert(friction_coeff > 0);
 
+		// tire off ground
+		if (normal_force < 1e-3) return MATHVECTOR <T, 3> (0);
+
+		// get ideal slip ratio
 		T sigma_hat(0);
 		T alpha_hat(0);
-
 		LookupSigmaHatAlphaHat(normal_force, sigma_hat, alpha_hat);
 
-		//std::cout << hub_velocity << " -- " << patch_speed << std::endl;
-
+		// cap Fz at a magic number to prevent explosions
 		T Fz = normal_force * 0.001;
-
-		//cap Fz at a magic number to prevent explosions
-		if (Fz > 30)
-			Fz = 30;
-
-		//std::cout << normal_force << std::endl;
-		const T EPSILON = 1e-6;
-		if (Fz < EPSILON)
-		{
-			MATHVECTOR <T, 3> zero(0);
-			//std::cout << "Tire off ground detected: " << normal_force << ", " << Fz << std::endl;
-			return zero;
-		}
-
-		T sigma = 0.0;
-		T tan_alpha = 0.0;
-		T alpha = 0.0;
+		if (Fz > 30) Fz = 30;
 
 		T V = hub_velocity[0];
-
-		T denom = std::max ( std::abs ( V ), 0.1 );
-
-		sigma = ( patch_speed - V ) /denom;
-
-		tan_alpha = hub_velocity [1] / denom;
-
-		alpha = - ( atan2 ( hub_velocity[1],denom ) ) * 180.0/3.141593;
+		T gamma = current_camber * 180.0 / M_PI;
+		T denom = std::max(std::abs(V), 0.1);
+		T sigma = (patch_speed - V) / denom;
+		T alpha = -atan2(hub_velocity[1], denom) * 180.0 / M_PI;
 		assert(!isnan(alpha));
-
-		T gamma = ( current_camber ) * 180.0/3.141593;
-
-		//beckman method for pre-combining longitudinal and lateral forces
+		
+		// beckman method for pre-combining longitudinal and lateral forces
 		T s = sigma / sigma_hat;
-		assert(!isnan(s));
 		T a = alpha / alpha_hat;
+		T rho = std::max(sqrt(s * s + a * a), 0.0001); // avoid divide-by-zero
+		assert(!isnan(s));
 		assert(!isnan(a));
-		T rho = std::max ( sqrt ( s*s+a*a ), 0.0001); //the constant is arbitrary; just trying to avoid divide-by-zero
 		assert(!isnan(rho));
-
+		
 		T max_Fx(0);
-		T Fx = ( s / rho ) *Pacejka_Fx ( rho*sigma_hat, Fz, friction_coeff, max_Fx );
-		//std::cout << "s=" << s << ", rho=" << rho << ", sigma_hat=" << sigma_hat << ", Fz=" << Fz << ", friction_coeff=" << friction_coeff << ", Fx=" << Fx << std::endl;
-		assert(!isnan(Fx));
 		T max_Fy(0);
-		T Fy = ( a / rho ) *Pacejka_Fy ( rho*alpha_hat, Fz, gamma, friction_coeff, max_Fy );
-		//std::cout << "s=" << s << ", a=" << a << ", rho=" << rho << ", Fy=" << Fy << std::endl;
-		assert(!isnan(Fy));
 		T max_Mz(0);
-		T Mz = Pacejka_Mz ( sigma, alpha, Fz, gamma, friction_coeff, max_Mz );
-
+		T Fx = (s / rho) * Pacejka_Fx(rho * sigma_hat, Fz, friction_coeff, max_Fx);
+		T Fy = (a / rho) * Pacejka_Fy(rho * alpha_hat, Fz, gamma, friction_coeff, max_Fy);
+		T Mz = Pacejka_Mz(sigma, alpha, Fz, gamma, friction_coeff, max_Mz);
+		
+		//std::cout << "s=" << s << ", rho=" << rho << ", sigma_hat=" << sigma_hat;
+		//std::cout << ", Fz=" << Fz << ", friction_coeff=" << friction_coeff << ", Fx=" << Fx << std::endl;
+		//std::cout << "s=" << s << ", a=" << a << ", rho=" << rho << ", Fy=" << Fy << std::endl;
+		
+		//T tan_alpha = hub_velocity [1] / denom;
 		//T slip_x = -sigma / ( 1.0 + generic_abs ( sigma ) );
 		//T slip_y = tan_alpha / ( 1.0+generic_abs ( sigma-1.0 ) );
 		//T total_slip = std::sqrt ( slip_x * slip_x + slip_y * slip_y );
-
 		//T maxforce = longitudinal_parameters[2] * 7.0;
 		//std::cout << maxforce << ", " << max_Fx << ", " << max_Fy << ", " << Fx << ", " << Fy << std::endl;
 
 		//combining method 0: no combining! :-)
 
-		//combining method 1: traction circle
+/*		//combining method 1: traction circle
 		//determine to what extent the tires are long (x) gripping vs lat (y) gripping
-		/*float longfactor = 1.0;
+		float longfactor = 1.0;
 		float combforce = std::abs(Fx)+std::abs(Fy);
 		if (combforce > 1) //avoid divide by zero (assume longfactor = 1 for this case)
 			longfactor = std::abs(Fx)/combforce; //1.0 when Fy is zero, 0.0 when Fx is zero
@@ -283,24 +262,22 @@ public:
 			//scale down forces to fit into the maximum
 			Fx *= maxforce / combforce;
 			Fy *= maxforce / combforce;
-			assert(!isnan(Fx));
-			assert(!isnan(Fy));
 			//std::cout << "Limiting " << combforce << " to " << maxforce << std::endl;
 		}*/
 
-		//combining method 2: traction ellipse (prioritize Fx)
+/*		//combining method 2: traction ellipse (prioritize Fx)
 		//std::cout << "Fy0=" << Fy << ", ";
-		/*if (Fx >= max_Fx)
+		if (Fx >= max_Fx)
 		{
 			Fx = max_Fx;
 			Fy = 0;
 		}
 		else
-			Fy = Fy*sqrt(1.0-(Fx/max_Fx)*(Fx/max_Fx));*/
-		//std::cout << "Fy=" << Fy << ", Fx=Fx0=" << Fx << ", Fxmax=" << max_Fx << ", Fymax=" << max_Fy << std::endl;
+			Fy = Fy*sqrt(1.0-(Fx/max_Fx)*(Fx/max_Fx));
+		//std::cout << "Fy=" << Fy << ", Fx=Fx0=" << Fx << ", Fxmax=" << max_Fx << ", Fymax=" << max_Fy << std::endl;*/
 
-		//combining method 3: traction ellipse (prioritize Fy)
-		/*if (Fy >= max_Fy)
+/*		//combining method 3: traction ellipse (prioritize Fy)
+		if (Fy >= max_Fy)
 		{
 			Fy = max_Fy;
 			Fx = 0;
@@ -317,26 +294,12 @@ public:
 		assert(!isnan(Fx));
 		assert(!isnan(Fy));
 
-		/*if ( hub_velocity.Magnitude () < 0.1 )
-		{
-			slide = 0.0;
-		}
-		else
-		{
-			slide = total_slip;
-			if ( slide > 1.0 )
-				slide = 1.0;
-		}*/
-
 		slide = sigma;
 		slip = alpha;
 		slideratio = s;
 		slipratio = a;
 
-		//std::cout << slide << ", " << slip << std::endl;
-
-		MATHVECTOR <T, 3> outvec(Fx, Fy, Mz);
-		return outvec;
+		return MATHVECTOR <T, 3> (Fx, Fy, Mz);
 	}
 
 	void SetFeedback(T aligning_force)
@@ -351,7 +314,7 @@ public:
 		
 		// heat due to tire deformation increases rolling resistance
 		// approximate by quadratic function
-		rolling_resistance += velocity*velocity*rolling_resistance_quadratic;
+		rolling_resistance += velocity * velocity * rolling_resistance_quadratic;
 		
 		// rolling resistance should not add energy to system
 		// fake this by using a ramped step function, should be replaced by a constraint
@@ -498,17 +461,11 @@ public:
 		return std::make_pair(slideratio, slipratio);
 	}
 	
-	void SetAspectRatio(T aspect)
-	{
-		aspect_ratio = aspect;
-	}
+	void SetAspectRatio(T aspect) {aspect_ratio = aspect;}
 	
 	T GetAspectRatio() const {return aspect_ratio;}
 	
-	void SetSidewallWidth(T width)
-	{
-		sidewall_width = width;
-	}
+	void SetSidewallWidth(T width) {sidewall_width = width;}
 	
 	T GetSidewallWidth() const {return sidewall_width;}
 };

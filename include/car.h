@@ -356,8 +356,9 @@ protected:
 
 	bool GenerateWheelMesh(
 		CONFIGFILE & carconf,
+		const std::string & carpath,
 		const std::string & wheelname,
-		const std::string & sharedpartspath,
+		const std::string & partspath,
 		const CARTIRE<double> & tire,
 		const CARBRAKE<double> & brake,
 		SCENENODE & topnode,

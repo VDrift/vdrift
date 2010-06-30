@@ -41,8 +41,9 @@ CAR::CAR()
 
 bool CAR::GenerateWheelMesh(
 	CONFIGFILE & carconf,
+	const std::string & carpath,
 	const std::string & wheelname,
-	const std::string & sharedpartspath,
+	const std::string & partspath,
 	const CARTIRE<double> & tire,
 	const CARBRAKE<double> & brake,
 	SCENENODE & topnode,
@@ -71,7 +72,7 @@ bool CAR::GenerateWheelMesh(
 
 	if (!carconf.GetParam(wheelname + ".tire", tirename, error_output)) return false;
 	if (!carconf.GetParam(wheelname + ".brake", brakename, error_output)) return false;
-	if (!carconf.GetParam(wheelname + ".rim", rimname, error_output)) return false;
+	if (!carconf.GetParam(wheelname + ".model", rimname, error_output)) return false;
 	if (!carconf.GetParam(tirename + ".texture", tiretex, error_output)) return false;
 	carconf.GetParam(wheelname + ".orientation", orient, error_output);
 	
@@ -98,21 +99,26 @@ bool CAR::GenerateWheelMesh(
 	draw.AddDrawList(output_tire_model.GetListID());
 
 	// load tire textures
-	std::string tiretexname(sharedpartspath + "/tire/textures/" + tiretex);
+	std::string tiretexname(partspath + "/tire/textures/" + tiretex);
 	if(!LoadTextures(textures, tiretexname, texsize, anisotropy, draw, error_output)) return false;
 	
-	// load wheel
-	std::string modelpath = sharedpartspath+"/wheel/";
-	std::string wheeltexpath = sharedpartspath+"/wheel/textures/";
+	// load wheel(oem_wheel hack)
+	std::string wheelmodelname(carpath + "/" + rimname + ".joe");
+	std::string wheeltexname(carpath + "/textures/" + rimname);
+	if(!std::ifstream(wheelmodelname.c_str()))
+	{
+		wheelmodelname = partspath + "/wheel/" + rimname + ".joe";
+		wheeltexname = partspath + "/wheel/textures/" + rimname;
+	}
 	if (!output_wheel_model.Loaded())
 	{
 		// load wheel mesh, scale and translate(wheel model offset rim_width/2)
-		if (!LoadModel(modelpath+rimname+".joe", output_wheel_model, NULL, error_output)) return false;
+		if (!LoadModel(wheelmodelname, output_wheel_model, NULL, error_output)) return false;
 		output_wheel_model.Scale(rim_diameter, rim_diameter, rim_diameter);
 		output_wheel_model.Translate(0, rim_width*0.75*0.5, 0);
 
 		// create wheel rim
-		float flangeDisplacement_mm = 10;
+		const float flangeDisplacement_mm = 10;
 		VERTEXARRAY rim_varray;
 		MESHGEN::mg_rim(rim_varray, sectionWidth_mm, aspectRatio, rimDiameter_in, flangeDisplacement_mm);
 		rim_varray.Rotate(-M_PI_2, 0, 0, 1);
@@ -129,8 +135,8 @@ bool CAR::GenerateWheelMesh(
 	}
 	keyed_container <DRAWABLE>::handle rim_draw;
 	if (!LoadInto(
-			node, output_scenenode, rim_draw, modelpath+rimname+".joe", output_wheel_model,
-			textures, wheeltexpath+rimname, texsize, anisotropy,
+			node, output_scenenode, rim_draw, wheelmodelname, output_wheel_model,
+			textures, wheeltexname, texsize, anisotropy,
 			NOBLEND, error_output))
 		return false;
 	
@@ -152,7 +158,7 @@ bool CAR::GenerateWheelMesh(
 		output_brake_rotor.GenerateMeshMetrics();
 		output_brake_rotor.GenerateListID(error_output);
 	}
-	std::string rotortexname(sharedpartspath + "/brake/textures/" + rotortex);
+	std::string rotortexname(partspath + "/brake/textures/" + rotortex);
 	keyed_container <DRAWABLE>::handle rotor_draw;
 	if (!LoadInto(
 			node, output_scenenode, rotor_draw, "", output_brake_rotor,
@@ -276,7 +282,7 @@ bool CAR::Load (
 		wheelstr << "wheel-" << i;
 		std::string wheelname(wheelstr.str());
 		if (!GenerateWheelMesh(
-				carconf, wheelname, sharedpartspath,
+				carconf, carpath, wheelname, sharedpartspath,
 				dynamics.GetTire(WHEEL_POSITION(i)), dynamics.GetBrake(WHEEL_POSITION(i)),
 				topnode, wheelnode[i], wheeldraw[i],
 				tiremodel[i], wheelmodel[i], brakemodel[i],
