@@ -58,17 +58,20 @@ void WIDGET_SPINNINGCAR::HookMessage(SCENENODE & scene, const std::string & mess
 {
 	assert(errptr);
 	
+	bool reload(false);
 	std::stringstream s;
 	if (from.find("CarWheel") != std::string::npos)
 	{
 		if (carname == message) return;
 		carpaint.clear();	// car changed reset paint
 		carname = message;
+		reload = true;
 	}
 	else if (from.find("PaintWheel") != std::string::npos)
 	{
 		if (carpaint == message) return;
 		carpaint = message;
+		reload = true;
 	}
 	else if (from.find("Red") != std::string::npos)
 	{
@@ -101,7 +104,7 @@ void WIDGET_SPINNINGCAR::HookMessage(SCENENODE & scene, const std::string & mess
 		return;
 	}
 
-	if (!carpaint.empty() && !carname.empty())
+	if (!carpaint.empty() && !carname.empty() && reload)
 	{
 		Load(scene);
 	}
