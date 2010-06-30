@@ -43,10 +43,8 @@ private:
 	std::ostream * errptr;
 	float rotation;
 	std::string carname;
-	std::string lastcarname;
 	std::string carpaint;
 	bool wasvisible;
-	bool newcolor;
 	float r, g, b;
 	
 	keyed_container <SCENENODE>::handle carnode;

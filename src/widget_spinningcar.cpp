@@ -3,8 +3,8 @@
 #include "car.h"
 #include "configfile.h"
 
-WIDGET_SPINNINGCAR::WIDGET_SPINNINGCAR()
-: errptr(NULL), rotation(0), wasvisible(false), newcolor(false), r(1), g(1), b(1), textures(NULL)
+WIDGET_SPINNINGCAR::WIDGET_SPINNINGCAR():
+	errptr(NULL), rotation(0), wasvisible(false), r(1), g(1), b(1), textures(NULL)
 {
 	
 }
@@ -36,20 +36,22 @@ void WIDGET_SPINNINGCAR::SetVisible(SCENENODE & scene, bool newvis)
 		if (!carpaint.empty() && !carname.empty())
 		{
 			Load(scene);
+			//std::cout << "Loading car on visibility change:" << std::endl;
 		}
 		else
 		{
 			//std::cout << "Not loading car on visibility change since no carname or carpaint are present:" << std::endl;
-			//std::cout << carname << std::endl;
-			//std::cout << lastcarpaint << std::endl;
 		}
 	}
 	
-	if (!newvis)
+	if (!newvis && !car.empty())
 	{
 		//std::cout << "Unloading spinning car due to visibility" << std::endl;
 		Unload(scene);
 	}
+	
+	//std::cout << carname << std::endl;
+	//std::cout << carpaint << std::endl;
 }
 
 void WIDGET_SPINNINGCAR::HookMessage(SCENENODE & scene, const std::string & message, const std::string & from)
@@ -59,10 +61,13 @@ void WIDGET_SPINNINGCAR::HookMessage(SCENENODE & scene, const std::string & mess
 	std::stringstream s;
 	if (from.find("CarWheel") != std::string::npos)
 	{
+		if (carname == message) return;
+		carpaint.clear();	// car changed reset paint
 		carname = message;
 	}
 	else if (from.find("PaintWheel") != std::string::npos)
 	{
+		if (carpaint == message) return;
 		carpaint = message;
 	}
 	else if (from.find("Red") != std::string::npos)
@@ -70,49 +75,40 @@ void WIDGET_SPINNINGCAR::HookMessage(SCENENODE & scene, const std::string & mess
 		float value;
 		s << message;
 		s >> value;
-		if (fabs(value - r) > 1/128.)
-		{
-			r = value;
-			newcolor = true;
-		}	
+		if (fabs(value - r) < 1.0/128.0) return;
+		r = value;	
 	}
 	else if (from.find("Green") != std::string::npos)
 	{
 		float value;
 		s << message;
 		s >> value;
-		if (fabs(value - g) > 1/128.)
-		{
-			g = value;
-			newcolor = true;
-		}	
+		if (fabs(value - g) < 1.0/128.0) return;
+		g = value;
+			
 	}
 	else if (from.find("Blue") != std::string::npos)
 	{
 		float value;
 		s << message;
 		s >> value;
-		if (fabs(value - b) > 1/128.)
-		{
-			b = value;
-			newcolor = true;
-		}	
+		if (fabs(value - b) < 1.0/128.0) return;
+		b = value;	
 	}
-	
+
 	if (!wasvisible)
 	{
 		return;
 	}
-	
-	if (!car.empty() && newcolor)
-	{
-		SetColor(scene, r, g, b);
-		newcolor = false;
-	}
-	
+
 	if (!carpaint.empty() && !carname.empty())
 	{
 		Load(scene);
+	}
+	
+	if (!car.empty())
+	{
+		SetColor(scene, r, g, b);
 	}
 }
 
@@ -247,11 +243,7 @@ void WIDGET_SPINNINGCAR::Load(SCENENODE & parent)
 	Update(parent, 0);
 	
 	carnoderef.SetChildVisibility(wasvisible);
-	
-	// reset state
-	carpaint.clear();
-	newcolor = false;
-	
+
 	//if (!loadlog.str().empty()) *errptr << "Loading log: " << loadlog.str() << std::endl;
 }
 
