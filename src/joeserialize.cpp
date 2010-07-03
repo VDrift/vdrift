@@ -345,7 +345,7 @@ QT_TEST(ReflectionSerializer_test)
 		QT_CHECK(reflection.Get(reflection.Explode("position.x"), testfloat));
 		QT_CHECK_EQUAL(testfloat, 1);
 		
-		QT_CHECK(reflection.Get(reflection.Explode("simplelist.size"), testint));
+		QT_CHECK(reflection.Get(reflection.Explode("simplelist.*size"), testint));
 		QT_CHECK_EQUAL(testint, 2);
 		
 		QT_CHECK(reflection.Get(reflection.Explode("player_description"), teststr));
