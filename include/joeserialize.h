@@ -1473,7 +1473,7 @@ bool WriteObjectToFile(const std::string & path, T & object, std::ostream & info
 
 ///returns true on success
 template <typename T>
-bool LoadObjectFromFile(const std::string & path, T & object, std::ostream & info_output, bool binary, bool allow_missing)
+bool LoadObjectFromFile(const std::string & name, const std::string & path, T & object, bool binary, bool allow_missing, std::ostream & info_output, std::ostream & error_output)
 {
 	info_output << "Loading " << path << "..." << std::endl;
 
@@ -1484,7 +1484,8 @@ bool LoadObjectFromFile(const std::string & path, T & object, std::ostream & inf
 		if (binary)
 		{
 			joeserialize::BinaryInputSerializer in(infile);
-			if (object.Serialize(in))
+			joeserialize::Serializer & s = in;
+			if (s.Serialize(name, object))
 			{
 				info_output << "Loaded " << path << std::endl;
 			}
@@ -1507,13 +1508,14 @@ bool LoadObjectFromFile(const std::string & path, T & object, std::ostream & inf
 			}
 			else
 			{
-				if (object.Serialize(in))
+				joeserialize::Serializer & s = in;
+				if (s.Serialize(name, object))
 				{
 					info_output << "Loaded " << path << std::endl;
 				}
 				else
 				{
-					info_output << "File " << path << " had serialization errors; trying to upgrade it" << std::endl;
+					info_output << "File " << path << " had serialization errors" << std::endl;
 					error = true;
 				}
 			}
