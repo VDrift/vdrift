@@ -28,12 +28,12 @@
 				<Option parameters="-debug" />
 				<Compiler>
 					<Add option="-O3" />
+					<Add option="-march=native" />
 				</Compiler>
 			</Target>
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
-			<Add option="-pg" />
 			<Add option="-fexceptions" />
 			<Add option="-mwindows" />
 			<Add directory="include" />
@@ -41,7 +41,6 @@
 			<Add directory="..\..\bullet" />
 		</Compiler>
 		<Linker>
-			<Add option="-pg -lgmon" />
 			<Add library="opengl32" />
 			<Add library="glu32" />
 			<Add library="glew32" />

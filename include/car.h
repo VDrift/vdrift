@@ -273,7 +273,7 @@ public:
 	// optimum steering angle in degrees
 	float GetOptimumSteeringAngle() const
 	{
-		return dynamics.GetTire(FRONT_LEFT).GetOptimumSteeringAngle(GetMass()*0.25*9.81);
+		return dynamics.GetTire(FRONT_LEFT).GetIdealSlip();
 	}
 
 	// maximum steering angle in degrees

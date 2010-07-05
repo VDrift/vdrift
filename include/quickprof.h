@@ -37,8 +37,6 @@
 
 #if defined(WIN32) || defined(_WIN32)
 	#define USE_WINDOWS_TIMERS
-	#undef NOMINMAX
-	#define NOMINMAX 1
 	#include <windows.h>
 	#include <time.h>
 #else

@@ -7,6 +7,11 @@
 #include "tobullet.h"
 #include "model.h"
 
+#if defined(_WIN32) || defined(__APPLE__)
+bool isnan(float number);
+bool isnan(double number);
+#endif
+
 //#define _BULLET_
 //#include "suspensionconstraint.h"
 
@@ -261,18 +266,9 @@ bool LoadBrake(
 
 bool LoadTireParameters(
 	const CONFIGFILE & c,
-	CARTIRE <T> & tire,
+	CARTIREINFO <T> & info,
 	std::ostream & error_output)
 {
-	float tread(0);
-	float rolling_resistance[3];
-	std::vector <double> longitudinal;
-	std::vector <double> lateral;
-	std::vector <double> aligning;
-	longitudinal.resize(11);
-	lateral.resize(15);
-	aligning.resize(18);
-
 	//read lateral
 	int numinfile;
 	for (int i = 0; i < 15; i++)
@@ -288,7 +284,7 @@ bool LoadTireParameters(
 		str << "a" << numinfile;
 		float value;
 		if (!c.GetParam(str.str(), value, error_output)) return false;
-		lateral[i] = value;
+		info.lateral[i] = value;
 	}
 
 	//read longitudinal, error_output)) return false;
@@ -298,7 +294,7 @@ bool LoadTireParameters(
 		str << "b" << i;
 		float value;
 		if (!c.GetParam(str.str(), value, error_output)) return false;
-		longitudinal[i] = value;
+		info.longitudinal[i] = value;
 	}
 
 	//read aligning, error_output)) return false;
@@ -308,16 +304,15 @@ bool LoadTireParameters(
 		str << "c" << i;
 		float value;
 		if (!c.GetParam(str.str(), value, error_output)) return false;
-		aligning[i] = value;
+		info.aligning[i] = value;
 	}
-	
+
+	float rolling_resistance[3];
 	if (!c.GetParam("rolling-resistance", rolling_resistance, error_output)) return false;
-	if (!c.GetParam("tread", tread, error_output)) return false;
-	
-	tire.SetPacejkaParameters(longitudinal, lateral, aligning);
-	tire.SetRollingResistance(rolling_resistance[0], rolling_resistance[1]);
-	tire.SetTread(tread);
-	tire.CalculateSigmaHatAlphaHat();
+	info.rolling_resistance_linear = rolling_resistance[0];
+	info.rolling_resistance_quadratic = rolling_resistance[1];
+
+	if (!c.GetParam("tread", info.tread, error_output)) return false;
 
 	return true;
 }
@@ -332,6 +327,7 @@ bool LoadTire(
 	std::string tiresize;
 	std::string tiretype;
 	CONFIGFILE tc;
+	CARTIREINFO <T> info;
 	float section_width(0);
 	float aspect_ratio(0);
 	float rim_diameter(0);
@@ -339,7 +335,7 @@ bool LoadTire(
 	if (!c.GetParam(tirename+".size", tiresize, error_output)) return false;
 	if (!c.GetParam(tirename+".type", tiretype, error_output)) return false;
 	if (!tc.Load(sharedpartspath+"/tire/"+tiretype)) return false;
-	if (!LoadTireParameters(tc, tire, error_output)) return false;
+	if (!LoadTireParameters(tc, info, error_output)) return false;
 	
 	// tire dimensions
 	std::string modsize = tiresize;
@@ -357,12 +353,12 @@ bool LoadTire(
 					<< tiresize << std::endl;
 		return false;
 	}
-	float radius = section_width*0.001f * aspect_ratio*0.01f + rim_diameter*0.0254f*0.5;
 	
-	tire.SetRadius(radius);
-	tire.SetSidewallWidth(section_width*0.001f);
-	tire.SetAspectRatio(aspect_ratio*0.01f);
-
+	info.radius = section_width * 0.001 * aspect_ratio * 0.01 + rim_diameter * 0.0254 * 0.5;
+	info.sidewall_width = section_width * 0.001;
+	info.aspect_ratio = aspect_ratio * 0.01;
+	tire.Init(info);
+	
 	return true;
 }
 
@@ -560,6 +556,12 @@ bool CARDYNAMICS::Load(
 
 	UpdateMass();
 
+	// init body, powertrain, wheels for performance testing
+	body.SetInitialForce(MATHVECTOR <T, 3> (0));
+	body.SetInitialTorque(MATHVECTOR <T, 3> (0));
+	engine.SetInitialConditions();
+	for (int i = 0; i < WHEEL_POSITION_SIZE; i++) wheel[i].SetInitialConditions();
+
 	return true;
 }
 
@@ -693,6 +695,9 @@ void CARDYNAMICS::updateAction(btCollisionWorld * collisionWorld, btScalar dt)
 	MATHVECTOR<T, 3> dw = w1 - w0;
 	MATHVECTOR<T, 3> ext_force = dv * body.GetMass() / dt;
 	MATHVECTOR<T, 3> ext_torque = body.GetWorldInertia().Multiply(w1 - w0) / dt;
+
+	// wheel ray cast
+	UpdateWheelContacts();
 
 	// run internal simulation
 	Tick(ext_force, ext_torque, dt);
@@ -933,7 +938,7 @@ bool CARDYNAMICS::GetTCSActive() const
 void CARDYNAMICS::SetPosition(const MATHVECTOR<T, 3> & position)
 {
 	body.SetPosition(position);
-	chassis->translate(ToBulletVector(position) - chassis->getCenterOfMassPosition());
+	//chassis->translate(ToBulletVector(position) - chassis->getCenterOfMassPosition());
 }
 
 void CARDYNAMICS::AlignWithGround()
@@ -1343,8 +1348,7 @@ T CARDYNAMICS::UpdateSuspension(int i, T dt)
 	return normal_force + suspension_force;
 }
 
-// aplies tire friction  to car, returns friction in world space
-MATHVECTOR <T, 3> CARDYNAMICS::ApplyTireForce(int i, const T normal_force, const QUATERNION <T> & wheel_space)
+T CARDYNAMICS::ApplyTireForce(int i, const T normal_force, const QUATERNION <T> & wheel_space)
 {
 	CARWHEEL<T> & wheel = this->wheel[i];
 	CARTIRE<T> & tire = this->tire[i];
@@ -1357,8 +1361,7 @@ MATHVECTOR <T, 3> CARDYNAMICS::ApplyTireForce(int i, const T normal_force, const
 	wheel_space.RotateVector(wheel_axis);	// wheel axis in world space (wheel plane normal)
 	T camber_sin = -wheel_axis.dot(surface_normal);
 	if (i&1) camber_sin = -camber_sin;		// wheel axis is pointing in the same direction
-	T camber_rad = asin(camber_sin);
-	wheel.SetCamberDeg(camber_rad * 180.0/3.141593);
+	T camber = asin(camber_sin)  * 180.0 / M_PI;
 	
 	// tire space(SAE Tire Coordinate System)
 	// surface normal is z-axis
@@ -1367,10 +1370,9 @@ MATHVECTOR <T, 3> CARDYNAMICS::ApplyTireForce(int i, const T normal_force, const
 	MATHVECTOR <T, 3> x_axis = y_axis.cross(surface_normal);
 	
 	// wheel center velocity in tire space
-	MATHVECTOR <T, 3> hub_velocity;
-	hub_velocity[0] = x_axis.dot(wheel_velocity[i]);
-	hub_velocity[1] = y_axis.dot(wheel_velocity[i]);
-	hub_velocity[2] = 0; // unused
+	MATHVECTOR <T, 3> velocity;
+	velocity[0] = x_axis.dot(wheel_velocity[i]);
+	velocity[1] = y_axis.dot(wheel_velocity[i]);
 	
 	// rearward speed of the contact patch
 	T patch_speed = wheel.GetAngularVelocity() * tire.GetRadius();
@@ -1380,15 +1382,12 @@ MATHVECTOR <T, 3> CARDYNAMICS::ApplyTireForce(int i, const T normal_force, const
 	MATHVECTOR <T, 3> friction_force(0);
 	if(friction_coeff > 0)
 	{
-		friction_force = tire.GetForce(normal_force, friction_coeff, hub_velocity, patch_speed, camber_rad);
+		friction_force = tire.GetForce(normal_force, friction_coeff, velocity, patch_speed, camber);
 	}
-	
-	// set force feedback (aligning torque in tire space)
-	tire.SetFeedback(friction_force[2]);
 	
 	// rolling resistance due to tire/surface deformation proportional to normal force
 	T roll_friction_coeff = surface.rollResistanceCoefficient;
-	MATHVECTOR <T, 3> roll_resistance = x_axis * tire.GetRollingResistance(hub_velocity[0], normal_force, roll_friction_coeff);
+	MATHVECTOR <T, 3> roll_resistance = x_axis * tire.GetRollingResistance(velocity[0], normal_force, roll_friction_coeff);
 	MATHVECTOR <T, 3> rel_wheel_pos = wheel_position[i] - Position();
 	ApplyForce(roll_resistance, rel_wheel_pos);
 	
@@ -1396,19 +1395,18 @@ MATHVECTOR <T, 3> CARDYNAMICS::ApplyTireForce(int i, const T normal_force, const
 	MATHVECTOR <T, 3> tire_friction = x_axis * friction_force[0] + y_axis * friction_force[1];
 	
 	// fake viscous friction (sand, gravel, mud) proportional to wheel center velocity
-	MATHVECTOR <T, 3> wheel_drag = -(x_axis * hub_velocity[0] + y_axis * hub_velocity[1]) * surface.rollingDrag * 0.25; // scale wheel drag by 1/4
+	MATHVECTOR <T, 3> wheel_drag = -(x_axis * velocity[0] + y_axis * velocity[1]) * surface.rollingDrag * 0.25; // scale wheel drag by 1/4
 	
 	// tire friction + tire normal force
 	MATHVECTOR <T, 3> rel_contact_pos = wheel_contact.GetPosition() - Position();
 	ApplyForce(surface_normal * normal_force + tire_friction + wheel_drag, rel_contact_pos);
 	
-	return tire_friction;
+	return friction_force[0];
 }
 
-void CARDYNAMICS::ApplyWheelTorque(
+T CARDYNAMICS::CalculateWheelTorque(
 	int i,
-	MATHVECTOR <T, 3> tire_friction,
-	const QUATERNION <T> & wheel_space,
+	const T tire_friction,
 	T drive_torque,
 	T dt)
 {
@@ -1416,13 +1414,10 @@ void CARDYNAMICS::ApplyWheelTorque(
 	CARTIRE<T> & tire = this->tire[i];
 	CARBRAKE<T> & brake = this->brake[i];
 
-	// tire force / torque
 	wheel.Integrate1(dt);
 
-	(-wheel_space).RotateVector(tire_friction);
-
 	// torques acting on wheel
-	T friction_torque = tire_friction[0] * tire.GetRadius();
+	T friction_torque = tire_friction * tire.GetRadius();
 	T wheel_torque = drive_torque - friction_torque;
 	T lock_up_torque = wheel.GetLockUpTorque(dt) - wheel_torque;	// torque needed to lock the wheel
 	T brake_torque = brake.GetTorque();
@@ -1447,10 +1442,7 @@ void CARDYNAMICS::ApplyWheelTorque(
 	wheel.SetTorque(wheel_torque);
 	wheel.Integrate2(dt);
 
-	// apply torque to body
-	MATHVECTOR <T, 3> world_wheel_torque(0, -wheel_torque, 0);
-	wheel_space.RotateVector(world_wheel_torque);
-	ApplyTorque(world_wheel_torque);
+	return wheel_torque;
 }
 
 void CARDYNAMICS::UpdateBody(
@@ -1473,8 +1465,14 @@ void CARDYNAMICS::UpdateBody(
 	for(int i = 0; i < WHEEL_POSITION_SIZE; i++)
 	{
 		normal_force[i] = UpdateSuspension(i, dt);
-		MATHVECTOR <T, 3> tire_friction = ApplyTireForce(i, normal_force[i], wheel_orientation[i]);
-		ApplyWheelTorque(i, tire_friction, wheel_orientation[i], drive_torque[i], dt);
+		T tire_friction = ApplyTireForce(i, normal_force[i], wheel_orientation[i]);
+		T wheel_torque = CalculateWheelTorque(i, tire_friction, drive_torque[i], dt);
+		
+		// apply wheel torque to body
+		MATHVECTOR <T, 3> world_wheel_torque(0, -wheel_torque, 0);
+		wheel_orientation[i].RotateVector(world_wheel_torque);
+		ApplyTorque(world_wheel_torque);
+		
 		//std::cerr << std::setw(4) << count << "; " << std::setw(7) << tire_friction[0] << " ";
 	}
 	//std::cerr << "\n";
@@ -1495,8 +1493,6 @@ void CARDYNAMICS::UpdateBody(
 
 void CARDYNAMICS::Tick(MATHVECTOR<T, 3> ext_force, MATHVECTOR<T, 3> ext_torque, T dt)
 {
-	UpdateWheelContacts();
-
 	// has to happen before UpdateDriveline, overrides clutch, throttle
 	UpdateTransmission(dt);
 
@@ -1890,9 +1886,8 @@ void CARDYNAMICS::DoTCS(int i, T suspension_force)
 		//don't engage if all wheels are moving at the same rate
 		if ( maxspindiff > 1.0 )
 		{
-			//sp is the ideal slip ratio given tire loading
-			T sp(0), ah(0);
-			tire[i].LookupSigmaHatAlphaHat(suspension_force, sp, ah);
+			T sp = tire[i].GetIdealSlide();
+			//T ah = tire[i].GetIdealSlip();
 
 			T sense = 1.0;
 			if (transmission.GetGear() < 0)
@@ -1946,9 +1941,8 @@ void CARDYNAMICS::DoABS(int i, T suspension_force)
 		//don't engage ABS if all wheels are moving slowly
 		if (maxspeed > 6.0)
 		{
-			//sp is the ideal slip ratio given tire loading
-			T sp(0), ah(0);
-			tire[i].LookupSigmaHatAlphaHat(suspension_force, sp, ah);
+			T sp = tire[i].GetIdealSlide();
+			//T ah = tire[i].GetIdealSlip();
 
 			T error = - tire[i].GetSlide() - sp;
 			T thresholdeng = 0.0;

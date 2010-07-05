@@ -1385,8 +1385,9 @@ float CAR::GetTireSquealAmount(WHEEL_POSITION i) const
 	groundvel[2] = 0;
 	float squeal = (groundvel.Magnitude() - 3.0) * 0.2;
 
-	std::pair <double, double> slideslip = dynamics.GetTire(i).GetSlideSlipRatios();
-	double maxratio = std::max(std::abs(slideslip.first), std::abs(slideslip.second));
+	double slide = dynamics.GetTire(i).GetSlide() / dynamics.GetTire(i).GetIdealSlide();
+	double slip = dynamics.GetTire(i).GetSlip() / dynamics.GetTire(i).GetIdealSlip();
+	double maxratio = std::max(std::abs(slide), std::abs(slip));
 	float squealfactor = std::max(0.0, maxratio - 1.0);
 	squeal *= squealfactor;
 	if (squeal < 0)

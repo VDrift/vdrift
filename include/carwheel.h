@@ -23,7 +23,6 @@ public:
 	{
 		out << "---Wheel---" << std::endl;
 		out << "Wheel speed: " << GetRPM() << std::endl;
-		out << "Camber angle: " << camber_deg << std::endl;
 	}
 
 	T GetRPM() const
@@ -122,11 +121,6 @@ public:
 		return true;
 	}
 
-	void SetCamberDeg ( const T& value )
-	{
-		camber_deg = value;
-	}
-
 private:
 	//constants (not actually declared as const because they can be changed after object creation)
 	T mass; ///< the mass of the wheel
@@ -134,7 +128,6 @@ private:
 
 	//for info only
 	T angvel;
-	T camber_deg;
 };
 
 #endif

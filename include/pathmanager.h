@@ -10,8 +10,6 @@
 
 //includes for listing folder contents
 #ifdef _WIN32
-#undef NOMINMAX
-#define NOMINMAX 1
 #include <windows.h>
 #include <tchar.h>
 #include <cstdio>

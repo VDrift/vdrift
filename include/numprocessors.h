@@ -6,8 +6,6 @@ namespace NUMPROCESSORS
 
 #if defined(WIN32) || defined(_WIN32) || defined (__WIN32) || defined(__WIN32__) \
 	|| defined (_WIN64) || defined(__CYGWIN__) || defined(__MINGW32__)
-	#undef NOMINMAX
-	#define NOMINMAX 1
 	#include <windows.h>
 	#include <process.h>
 #elif defined(__APPLE__) || defined (__FreeBSD__)

@@ -13,6 +13,12 @@
 #include <algorithm>
 #include <iostream>
 
+
+#if defined(_WIN32) || defined(__APPLE__)
+bool isnan(float number);
+bool isnan(double number);
+#endif
+
 #define GRAVITY 9.8
 
 //used to calculate brake value

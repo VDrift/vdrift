@@ -228,17 +228,16 @@ protected:
 	// update suspension, return suspension force
 	T UpdateSuspension(int i, T dt);
 
-	// apply tire friction to body, return friction in world space
-	MATHVECTOR <T, 3> ApplyTireForce(
+	// apply tire friction to body, return longitudinal tire friction
+	T ApplyTireForce(
 		int i,
 		const T normal_force,
 		const QUATERNION <T> & wheel_space);
 
-	// apply wheel torque to chassis
-	void ApplyWheelTorque(
+	// calculate wheel torque
+	T CalculateWheelTorque(
 		int i,
-		MATHVECTOR <T, 3> tire_friction,
-		const QUATERNION <T> & wheel_space,
+		const T tire_friction,
 		T drive_torque,
 		T dt);
 

@@ -35,6 +35,7 @@ src = Split("""aabb.cpp
 		cardynamics.cpp
 		carengine.cpp
 		carsuspension.cpp
+		cartire.cpp
 		collision_world.cpp
 		configfile.cpp
 		configvariable.cpp
