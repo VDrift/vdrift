@@ -23,7 +23,7 @@
 SetCompressor /FINAL /SOLID lzma
 SetCompressorDictSize 64
 
-!define version "2009-06-15"
+!define version "2010-06-30"
 !define setup "vdrift-setup-${version}.exe"
 
 ; change this to wherever the files to be packaged reside
@@ -190,11 +190,13 @@ Section "Install VDrift" SEC_VDRIFT
 	SetOutPath "$INSTDIR\data"
 	     File /a /r /x .* /x SConscript /x vdrift-*x*.png /x cars /x tracks "${srcdir}\data\"
 	SetOutPath "$INSTDIR\data\cars"
+		File /a /r /x .* /x SConscript /x vdrift-*x*.png "${srcdir}\data\cars\350Z"
 		File /a /r /x .* /x SConscript /x vdrift-*x*.png "${srcdir}\data\cars\360"
 		File /a /r /x .* /x SConscript /x vdrift-*x*.png "${srcdir}\data\cars\CO"
 		File /a /r /x .* /x SConscript /x vdrift-*x*.png "${srcdir}\data\cars\CS"
 		File /a /r /x .* /x SConscript /x vdrift-*x*.png "${srcdir}\data\cars\F1-02"
 		File /a /r /x .* /x SConscript /x vdrift-*x*.png "${srcdir}\data\cars\G4"
+		File /a /r /x .* /x SConscript /x vdrift-*x*.png "${srcdir}\data\cars\LE"
 		File /a /r /x .* /x SConscript /x vdrift-*x*.png "${srcdir}\data\cars\M7"
 		File /a /r /x .* /x SConscript /x vdrift-*x*.png "${srcdir}\data\cars\MC"
 		File /a /r /x .* /x SConscript /x vdrift-*x*.png "${srcdir}\data\cars\MI"
