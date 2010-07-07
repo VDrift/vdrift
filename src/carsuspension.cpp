@@ -17,7 +17,6 @@ CARSUSPENSIONINFO<T>::CARSUSPENSIONINFO()
 	toe = 0;
 }
 
-
 template <typename T>
 void CARSUSPENSIONINFO<T>::SetDamperFactorPoints(std::vector <std::pair <T, T> > & curve)
 {
@@ -103,75 +102,42 @@ template <typename T>
 void CARSUSPENSION<T>::Update(T ext_displacement, T ext_velocity, T dt)
 {
 	const T inv_wheel_mass = 1 / 20.0; 	// 20kg wheel
+	const T tire_stiffness = 3E5;
 	
 	// deal with overtravel outside of suspension
 	overtravel = ext_displacement + displacement - info.travel;
 	if(overtravel < 0) overtravel = 0;
-/*	
-	// tire simulate (clamped spring)
-	const T tire_stiffness = 3E5;
-	T tire_deflection = ext_displacement;
-	if (tire_deflection > 0.03) tire_deflection = 0.03;
-	else if (tire_deflection < 0.0) tire_deflection = 0.0;
-	T tire_force = tire_stiffness * tire_deflection;
 	
-	// wheel simulation (symplectic euler)
-	force = -GetForce(displacement, wheel_velocity - ext_velocity);
-	wheel_force = tire_force - force;
-	
-	T velocity_delta = wheel_force * inv_wheel_mass * dt;
-	wheel_velocity += velocity_delta;
-	
-	T displacement_delta = (wheel_velocity - ext_velocity) * dt;
-	displacement += displacement_delta;
-	
-	// clamp wheel displacement
-	if (displacement > travel)
-	{
-		wheel_velocity = ext_velocity;
-		displacement = travel;
-	}
-	else if (displacement < 0)
-	{
-		wheel_velocity = ext_velocity;
-		displacement = 0;
-	}
-*/
 	// update wheel (symplectic euler)
-	wheel_force = GetForce(displacement, wheel_velocity);
+	wheel_force = GetForce(displacement, wheel_velocity) + force;
 	
 	T velocity_delta = wheel_force * inv_wheel_mass * dt;
 	wheel_velocity += velocity_delta;
 
 	T displacement_delta = wheel_velocity * dt;
 	displacement += displacement_delta;
-
-	// external displacement correction
-	T force_error = 0;
-	T velocity_error = 0;
-	T displacement_error = ext_displacement - displacement_delta;
-	if (displacement_error > 0)
-	{
-		if (displacement_error > 0.01) displacement_error = 0.01;
-		
-		velocity_error = displacement_error / dt;
-		force_error = velocity_error / (inv_wheel_mass * dt);
-		
-		displacement += displacement_error;
-		wheel_velocity += velocity_error;
-	}
-	force = force_error;
-
+	
 	// clamp displacement
 	if (displacement > info.travel)
 	{
 		wheel_velocity = 0;
+		displacement_delta -= (displacement - info.travel);
 		displacement = info.travel;
 	}
 	else if (displacement < 0)
 	{
 		wheel_velocity = 0;
+		displacement_delta -= displacement;
 		displacement = 0;
+	}
+
+	// external displacement
+	force = 0;
+	T tire_deflection = ext_displacement - displacement_delta;
+	if (tire_deflection > 0)
+	{
+		if (tire_deflection > 0.03) tire_deflection = 0.03;
+		force = tire_stiffness * tire_deflection;
 	}
 
 	// update wheel position

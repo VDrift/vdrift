@@ -1330,7 +1330,6 @@ T CARDYNAMICS::UpdateSuspension(int i, T dt)
 	assert(suspension_force == suspension_force);
 
 	// overtravel constraint (calculate impulse to reduce relative velocity to zero)
-	T normal_force = 0.0;
 	if (suspension[i].GetOvertravel() > 0.0)
 	{
 		MATHVECTOR <T, 3> normal = wheel_contact[i].GetNormal();
@@ -1341,11 +1340,12 @@ T CARDYNAMICS::UpdateSuspension(int i, T dt)
 		{
 			T mass = 1.0 / body.GetInvEffectiveMass(normal, offset);
 			T impulse = -velocity_error * mass;
-			normal_force = impulse / dt;
+			T constraint_force = impulse / dt;
+			if (constraint_force > suspension_force) suspension_force = constraint_force;
 		}
 	}
 
-	return normal_force + suspension_force;
+	return suspension_force;
 }
 
 T CARDYNAMICS::ApplyTireForce(int i, const T normal_force, const QUATERNION <T> & wheel_space)
@@ -1356,46 +1356,47 @@ T CARDYNAMICS::ApplyTireForce(int i, const T normal_force, const QUATERNION <T> 
 	const TRACKSURFACE & surface = wheel_contact.GetSurface();
 	const MATHVECTOR <T, 3> surface_normal = wheel_contact.GetNormal();
 	
-	// camber relative to surface(clockwise in wheel heading direction)
-	MATHVECTOR <T, 3> wheel_axis(0, 1, 0);
-	wheel_space.RotateVector(wheel_axis);	// wheel axis in world space (wheel plane normal)
-	T camber_sin = -wheel_axis.dot(surface_normal);
-	if (i&1) camber_sin = -camber_sin;		// wheel axis is pointing in the same direction
-	T camber = asin(camber_sin)  * 180.0 / M_PI;
+	// spin axis is the wheel plane normal
+	// positive inclination is in clockwise direction
+	MATHVECTOR <T, 3> spin_axis(0, 1, 0);	
+	wheel_space.RotateVector(spin_axis);
+	T axis_proj = spin_axis.dot(surface_normal);
+	T inclination = 90 - acos(axis_proj)  * 180.0 / M_PI;
+	if (!(i&1)) inclination = -inclination; // ????
 	
 	// tire space(SAE Tire Coordinate System)
-	// surface normal is z-axis
-	// wheel axis projected on surface plane is y-axis
-	MATHVECTOR <T, 3> y_axis = wheel_axis - surface_normal * camber_sin;
-	MATHVECTOR <T, 3> x_axis = y_axis.cross(surface_normal);
+	// surface normal is negative z-axis
+	// negative spin axis projected onto surface plane is y-axis
+	MATHVECTOR <T, 3> y = -(spin_axis - surface_normal * axis_proj).Normalize();
+	MATHVECTOR <T, 3> x = -y.cross(surface_normal);
 	
-	// wheel center velocity in tire space
+	// wheel velocity in tire space
 	MATHVECTOR <T, 3> velocity;
-	velocity[0] = x_axis.dot(wheel_velocity[i]);
-	velocity[1] = y_axis.dot(wheel_velocity[i]);
+	velocity[0] = x.dot(wheel_velocity[i]);
+	velocity[1] = y.dot(wheel_velocity[i]);
 	
-	// rearward speed of the contact patch
-	T patch_speed = wheel.GetAngularVelocity() * tire.GetRadius();
+	// wheel angular velocity
+	T ang_velocity = wheel.GetAngularVelocity();
 	
 	// friction force in tire space
 	T friction_coeff = tire.GetTread() * surface.frictionTread + (1.0 - tire.GetTread()) * surface.frictionNonTread;
 	MATHVECTOR <T, 3> friction_force(0);
 	if(friction_coeff > 0)
 	{
-		friction_force = tire.GetForce(normal_force, friction_coeff, velocity, patch_speed, camber);
+		friction_force = tire.GetForce(normal_force, friction_coeff, velocity, ang_velocity, inclination);
 	}
 	
 	// rolling resistance due to tire/surface deformation proportional to normal force
 	T roll_friction_coeff = surface.rollResistanceCoefficient;
-	MATHVECTOR <T, 3> roll_resistance = x_axis * tire.GetRollingResistance(velocity[0], normal_force, roll_friction_coeff);
+	MATHVECTOR <T, 3> roll_resistance = x * tire.GetRollingResistance(velocity[0], normal_force, roll_friction_coeff);
 	MATHVECTOR <T, 3> rel_wheel_pos = wheel_position[i] - Position();
 	ApplyForce(roll_resistance, rel_wheel_pos);
 	
 	// friction force in world space
-	MATHVECTOR <T, 3> tire_friction = x_axis * friction_force[0] + y_axis * friction_force[1];
+	MATHVECTOR <T, 3> tire_friction = x * friction_force[0] + y * friction_force[1];
 	
 	// fake viscous friction (sand, gravel, mud) proportional to wheel center velocity
-	MATHVECTOR <T, 3> wheel_drag = -(x_axis * velocity[0] + y_axis * velocity[1]) * surface.rollingDrag * 0.25; // scale wheel drag by 1/4
+	MATHVECTOR <T, 3> wheel_drag = -(x * velocity[0] + y * velocity[1]) * surface.rollingDrag * 0.25; // scale wheel drag by 1/4
 	
 	// tire friction + tire normal force
 	MATHVECTOR <T, 3> rel_contact_pos = wheel_contact.GetPosition() - Position();

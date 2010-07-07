@@ -45,16 +45,16 @@ public:
 	T GetIdealSlip() const	{return ideal_slip;}
 
 	/// Return the friction vector calculated from the magic formula.
-	/// velocity: is the velocity vector of the wheel's reference frame in m/s.
-	/// patch_speed: is the rearward speed of the contact patch with respect to the wheel's frame in m/s.
-	/// camber: is expected in degrees.
-	/// normal_force: tire load in newton.
+	/// velocity: velocity vector of the wheel's reference frame in m/s
+	/// ang_velocity: wheel angular veloity in rad/s
+	/// inclination: wheel inclination in degrees
+	/// normal_force: tire load in newton
 	MATHVECTOR <T, 3> GetForce(
 		const T normal_force,
 		const T friction_coeff,
 		const MATHVECTOR <T, 3> & velocity,
-		const T patch_speed,
-		const T camber);
+		const T ang_velocity,
+		const T inclination);
 
 	/// return rolling resistance maximum
 	T GetRollingResistance(
@@ -80,7 +80,7 @@ public:
 	void DebugPrint(std::ostream & out)
 	{
 		out << "---Tire---" << "\n";
-		out << "Camber: " << camber << "\n";
+		out << "Inclination: " << camber << "\n";
 		out << "Slide ratio: " << slide  << "\n";
 		out << "Slip angle: " << slip  << "\n";
 	}
