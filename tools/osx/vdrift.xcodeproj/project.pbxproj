@@ -300,6 +300,7 @@
 		B9DE327809A4FA2B003B34CD /* SDL_net.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B9DE324E09A4FA2B003B34CD /* SDL_net.framework */; };
 		B9DE327909A4FA2B003B34CD /* SDL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B9DE324F09A4FA2B003B34CD /* SDL.framework */; };
 		B9DE335809A4FC81003B34CD /* AppKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B9DE32B309A4FC81003B34CD /* AppKit.framework */; };
+		B9E30CD311F1B195006096BD /* carsuspension.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B9E30CD211F1B195006096BD /* carsuspension.cpp */; };
 		B9E9800D11A06A0300648DA7 /* aabb_space_partitioning.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B9E97FBE11A06A0300648DA7 /* aabb_space_partitioning.cpp */; };
 		B9E9800E11A06A0300648DA7 /* aabb.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B9E97FBF11A06A0300648DA7 /* aabb.cpp */; };
 		B9E9800F11A06A0300648DA7 /* ai.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B9E97FC011A06A0300648DA7 /* ai.cpp */; };
@@ -365,7 +366,6 @@
 		B9E9804C11A06A0300648DA7 /* scenenode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B9E97FFD11A06A0300648DA7 /* scenenode.cpp */; };
 		B9E9804D11A06A0300648DA7 /* settings.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B9E97FFE11A06A0300648DA7 /* settings.cpp */; };
 		B9E9804E11A06A0300648DA7 /* shader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B9E97FFF11A06A0300648DA7 /* shader.cpp */; };
-		B9E9804F11A06A0300648DA7 /* sky.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B9E9800011A06A0300648DA7 /* sky.cpp */; };
 		B9E9805011A06A0300648DA7 /* sound.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B9E9800111A06A0300648DA7 /* sound.cpp */; };
 		B9E9805111A06A0300648DA7 /* suspensionbumpdetection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B9E9800211A06A0300648DA7 /* suspensionbumpdetection.cpp */; };
 		B9E9805211A06A0300648DA7 /* text_draw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B9E9800311A06A0300648DA7 /* text_draw.cpp */; };
@@ -827,6 +827,7 @@
 		B9DE324E09A4FA2B003B34CD /* SDL_net.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SDL_net.framework; sourceTree = "<group>"; };
 		B9DE324F09A4FA2B003B34CD /* SDL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SDL.framework; sourceTree = "<group>"; };
 		B9DE32B309A4FC81003B34CD /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
+		B9E30CD211F1B195006096BD /* carsuspension.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = carsuspension.cpp; sourceTree = "<group>"; };
 		B9E97FBE11A06A0300648DA7 /* aabb_space_partitioning.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = aabb_space_partitioning.cpp; sourceTree = "<group>"; };
 		B9E97FBF11A06A0300648DA7 /* aabb.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = aabb.cpp; sourceTree = "<group>"; };
 		B9E97FC011A06A0300648DA7 /* ai.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ai.cpp; sourceTree = "<group>"; };
@@ -892,7 +893,6 @@
 		B9E97FFD11A06A0300648DA7 /* scenenode.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = scenenode.cpp; sourceTree = "<group>"; };
 		B9E97FFE11A06A0300648DA7 /* settings.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = settings.cpp; sourceTree = "<group>"; };
 		B9E97FFF11A06A0300648DA7 /* shader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = shader.cpp; sourceTree = "<group>"; };
-		B9E9800011A06A0300648DA7 /* sky.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = sky.cpp; sourceTree = "<group>"; };
 		B9E9800111A06A0300648DA7 /* sound.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = sound.cpp; sourceTree = "<group>"; };
 		B9E9800211A06A0300648DA7 /* suspensionbumpdetection.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = suspensionbumpdetection.cpp; sourceTree = "<group>"; };
 		B9E9800311A06A0300648DA7 /* text_draw.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = text_draw.cpp; sourceTree = "<group>"; };
@@ -1238,6 +1238,7 @@
 				B9E97FC711A06A0300648DA7 /* camera_simplemount.cpp */,
 				B9E97FC811A06A0300648DA7 /* camera_system.cpp */,
 				B9E97FC911A06A0300648DA7 /* camera.cpp */,
+				B9E30CD211F1B195006096BD /* carsuspension.cpp */,
 				B9E97FCA11A06A0300648DA7 /* car.cpp */,
 				B9E97FCB11A06A0300648DA7 /* carcontrolmap_local.cpp */,
 				B9E97FCC11A06A0300648DA7 /* cardynamics.cpp */,
@@ -1294,7 +1295,6 @@
 				B9E97FFD11A06A0300648DA7 /* scenenode.cpp */,
 				B9E97FFE11A06A0300648DA7 /* settings.cpp */,
 				B9E97FFF11A06A0300648DA7 /* shader.cpp */,
-				B9E9800011A06A0300648DA7 /* sky.cpp */,
 				B9E9800111A06A0300648DA7 /* sound.cpp */,
 				B9E9800211A06A0300648DA7 /* suspensionbumpdetection.cpp */,
 				B9E9800311A06A0300648DA7 /* text_draw.cpp */,
@@ -2131,7 +2131,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 1;
 			shellPath = /bin/sh;
-			shellScript = "cd $TARGET_BUILD_DIR\n#make the directory which our disk image will be made of\nmkdir vdrift\n\n#copy vdrift there\n/Developer/Tools/CpMac -r $TARGET_BUILD_DIR/vdrift.app vdrift/\n\n#copy readme and docs\n/Developer/Tools/CpMac -r $SRCROOT/../../docs vdrift/\n/Developer/Tools/CpMac $SRCROOT/ReadMe.rtf vdrift/ReadMe.rtf\n\n#make copy for minimal\n/Developer/Tools/CpMac -r vdrift vdrift-minimal\n\n#copy data for full version and remove unnecessary stuff\n/Developer/Tools/CpMac -r $SRCROOT/../../data vdrift/data\nfind vdrift/ -type f -name SConscript -exec rm {} ';'\nfind vdrift/ -type f -name \\.DS_Store -exec rm -f {} ';'\nfind -d vdrift/ -type d -name \\.svn -exec rm -rf {} ';'\n\n#copy data for minimal version and remove unnecessary stuff\nmkdir vdrift-minimal/data\n/Developer/Tools/CpMac -r $SRCROOT/../../data/carparts vdrift-minimal/data/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/drivers vdrift-minimal/data/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/music vdrift-minimal/data/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/lists vdrift-minimal/data/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/settings vdrift-minimal/data/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/shaders vdrift-minimal/data/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/skins vdrift-minimal/data/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/sounds vdrift-minimal/data/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/textures vdrift-minimal/data/\nmkdir vdrift-minimal/data/cars\nmkdir vdrift-minimal/data/tracks\n/Developer/Tools/CpMac -r $SRCROOT/../../data/cars/360 vdrift-minimal/data/cars/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/cars/CO vdrift-minimal/data/cars/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/cars/CS vdrift-minimal/data/cars/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/cars/F1-02 vdrift-minimal/data/cars/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/cars/G4 vdrift-minimal/data/cars/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/cars/M7 vdrift-minimal/data/cars/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/cars/MC vdrift-minimal/data/cars/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/cars/MI vdrift-minimal/data/cars/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/cars/SV vdrift-minimal/data/cars/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/cars/T73 vdrift-minimal/data/cars/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/cars/TC6 vdrift-minimal/data/cars/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/cars/TL2 vdrift-minimal/data/cars/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/cars/XS vdrift-minimal/data/cars/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/tracks/bahrain vdrift-minimal/data/tracks/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/tracks/estoril88 vdrift-minimal/data/tracks/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/tracks/hungaroring06 vdrift-minimal/data/tracks/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/tracks/jerez88 vdrift-minimal/data/tracks/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/tracks/monaco88 vdrift-minimal/data/tracks/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/tracks/monza88 vdrift-minimal/data/tracks/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/tracks/paulricard88 vdrift-minimal/data/tracks/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/tracks/vir vdrift-minimal/data/tracks/\nfind vdrift-minimal/ -type f -name SConscript -exec rm {} ';'\nfind vdrift-minimal/ -type f -name \\.DS_Store -exec rm -f {} ';'\nfind -d vdrift-minimal/ -type d -name \\.svn -exec rm -rf {} ';'\n\n#finally make a disk image out of the stuff\nhdiutil create -srcfolder vdrift vdrift-full.dmg\nhdiutil internet-enable -yes vdrift-full.dmg\nhdiutil create -srcfolder vdrift-minimal vdrift-minimal.dmg\nhdiutil internet-enable -yes vdrift-minimal.dmg\n\n#cleanup\nrm -r vdrift\nrm -r vdrift-minimal";
+			shellScript = "cd $TARGET_BUILD_DIR\n#make the directory which our disk image will be made of\nmkdir vdrift\n\n#copy vdrift there\n/Developer/Tools/CpMac -r $TARGET_BUILD_DIR/vdrift.app vdrift/\n\n#copy readme and docs\n/Developer/Tools/CpMac -r $SRCROOT/../../docs vdrift/\n/Developer/Tools/CpMac $SRCROOT/ReadMe.rtf vdrift/ReadMe.rtf\n\n#make copy for minimal\n/Developer/Tools/CpMac -r vdrift vdrift-minimal\n\n#copy data for full version and remove unnecessary stuff\n/Developer/Tools/CpMac -r $SRCROOT/../../data vdrift/data\nfind vdrift/ -type f -name SConscript -exec rm {} ';'\nfind vdrift/ -type f -name \\.DS_Store -exec rm -f {} ';'\nfind -d vdrift/ -type d -name \\.svn -exec rm -rf {} ';'\n\n#copy data for minimal version and remove unnecessary stuff\nmkdir vdrift-minimal/data\n/Developer/Tools/CpMac -r $SRCROOT/../../data/carparts vdrift-minimal/data/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/drivers vdrift-minimal/data/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/music vdrift-minimal/data/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/lists vdrift-minimal/data/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/settings vdrift-minimal/data/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/shaders vdrift-minimal/data/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/skins vdrift-minimal/data/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/sounds vdrift-minimal/data/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/textures vdrift-minimal/data/\nmkdir vdrift-minimal/data/cars\nmkdir vdrift-minimal/data/tracks\n/Developer/Tools/CpMac -r $SRCROOT/../../data/cars/350Z vdrift-minimal/data/cars/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/cars/360 vdrift-minimal/data/cars/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/cars/CO vdrift-minimal/data/cars/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/cars/CS vdrift-minimal/data/cars/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/cars/F1-02 vdrift-minimal/data/cars/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/cars/G4 vdrift-minimal/data/cars/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/cars/LE vdrift-minimal/data/cars/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/cars/M7 vdrift-minimal/data/cars/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/cars/MC vdrift-minimal/data/cars/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/cars/MI vdrift-minimal/data/cars/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/cars/SV vdrift-minimal/data/cars/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/cars/T73 vdrift-minimal/data/cars/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/cars/TC6 vdrift-minimal/data/cars/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/cars/TL2 vdrift-minimal/data/cars/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/cars/XS vdrift-minimal/data/cars/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/tracks/bahrain vdrift-minimal/data/tracks/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/tracks/estoril88 vdrift-minimal/data/tracks/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/tracks/hungaroring06 vdrift-minimal/data/tracks/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/tracks/jerez88 vdrift-minimal/data/tracks/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/tracks/monaco88 vdrift-minimal/data/tracks/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/tracks/monza88 vdrift-minimal/data/tracks/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/tracks/paulricard88 vdrift-minimal/data/tracks/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/tracks/rouen vdrift-minimal/data/tracks/\n/Developer/Tools/CpMac -r $SRCROOT/../../data/tracks/vir vdrift-minimal/data/tracks/\nfind vdrift-minimal/ -type f -name SConscript -exec rm {} ';'\nfind vdrift-minimal/ -type f -name \\.DS_Store -exec rm -f {} ';'\nfind -d vdrift-minimal/ -type d -name \\.svn -exec rm -rf {} ';'\n\n#finally make a disk image out of the stuff\nhdiutil create -srcfolder vdrift vdrift-full.dmg\nhdiutil internet-enable -yes vdrift-full.dmg\nhdiutil create -srcfolder vdrift-minimal vdrift-minimal.dmg\nhdiutil internet-enable -yes vdrift-minimal.dmg\n\n#cleanup\nrm -r vdrift\nrm -r vdrift-minimal";
 		};
 /* End PBXShellScriptBuildPhase section */
 
@@ -2296,7 +2296,6 @@
 				B9E9804C11A06A0300648DA7 /* scenenode.cpp in Sources */,
 				B9E9804D11A06A0300648DA7 /* settings.cpp in Sources */,
 				B9E9804E11A06A0300648DA7 /* shader.cpp in Sources */,
-				B9E9804F11A06A0300648DA7 /* sky.cpp in Sources */,
 				B9E9805011A06A0300648DA7 /* sound.cpp in Sources */,
 				B9E9805111A06A0300648DA7 /* suspensionbumpdetection.cpp in Sources */,
 				B9E9805211A06A0300648DA7 /* text_draw.cpp in Sources */,
@@ -2332,6 +2331,7 @@
 				B944FA7E11CF969100E758A5 /* configvariable.cpp in Sources */,
 				B944FA8011CF96A300E758A5 /* fbobject.cpp in Sources */,
 				B944FA8211CF96BC00E758A5 /* carengine.cpp in Sources */,
+				B9E30CD311F1B195006096BD /* carsuspension.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
