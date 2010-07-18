@@ -114,7 +114,7 @@ bool CAR::GenerateWheelMesh(
 	{
 		// load wheel mesh, scale and translate(wheel model offset rim_width/2)
 		if (!LoadModel(wheelmodelname, output_wheel_model, NULL, error_output)) return false;
-		output_wheel_model.Scale(rim_diameter, rim_diameter, rim_diameter);
+		output_wheel_model.Scale(rim_diameter, rim_width, rim_diameter);
 		output_wheel_model.Translate(0, rim_width*0.75*0.5, 0);
 
 		// create wheel rim
@@ -149,7 +149,7 @@ bool CAR::GenerateWheelMesh(
 	if(!output_brake_rotor.Loaded())
 	{
 		float diameter_mm = brake.GetRadius() * 2 * 1000;
-		float thickness_mm = 0.05;
+		float thickness_mm = 25;
 		VERTEXARRAY rotor_varray;
 		MESHGEN::mg_brake_rotor(&rotor_varray, diameter_mm, thickness_mm);
 		output_brake_rotor.SetVertexArray(rotor_varray);
