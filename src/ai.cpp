@@ -44,7 +44,7 @@ bool isnan(double number);
 
 float clamp(float val, float min, float max)
 {
-	assert(min < max);
+	assert(min <= max);
 	return std::min(max,std::max(min,val));
 }
 

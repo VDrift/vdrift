@@ -51,50 +51,50 @@ void PreMultiplyAlpha(SDL_Surface * surface)
 		//std::cout << "No alpha channel: " << surface->format->Amask << std::endl;
 		return; //no alpha channel
 	}
-	
+
 	int error = SDL_LockSurface(surface);
 	assert(!error);
-	
+
 	std::vector <struct COMPONENTINFO> channelinfo(4);
 	std::vector <Uint8> channels(4);
-	
+
 	for (int y = 0; y < surface->h; ++y)
 	{
 		for (int x = 0; x < surface->w; ++x)
 		{
 			/*char* pixeladdy = & ( ((char*)surface->pixels)[surface->format->BytesPerPixel*x+y*surface->pitch] );
-			
+
 			Uint32 pixel = 0;
 			for (int i = 0; i < surface->format->BytesPerPixel; ++i)
 				pixel = pixel | ((Uint32)(*(pixeladdy+i)) << 8*i); //little endian
 				//pixel = (pixel << 8*i) | (Uint32)(*(pixeladdy+i)); //big endian*/
-			
+
 			Uint32* pixeladdy = & ( ((Uint32*)surface->pixels)[x+y*surface->w] );
 			Uint32 pixel = *((Uint32 *)pixeladdy);
-			
+
 			//fill our channel info structs
 			channelinfo[0].mask = surface->format->Rmask;
 			channelinfo[0].shift = surface->format->Rshift;
 			channelinfo[0].loss = surface->format->Rloss;
-			
+
 			channelinfo[1].mask = surface->format->Gmask;
 			channelinfo[1].shift = surface->format->Gshift;
 			channelinfo[1].loss = surface->format->Gloss;
-			
+
 			channelinfo[2].mask = surface->format->Bmask;
 			channelinfo[2].shift = surface->format->Bshift;
 			channelinfo[2].loss = surface->format->Bloss;
-			
+
 			channelinfo[3].mask = surface->format->Amask;
 			channelinfo[3].shift = surface->format->Ashift;
 			channelinfo[3].loss = surface->format->Aloss;
-			
+
 			//extract channels
 			for (unsigned int i = 0; i < channelinfo.size(); ++i)
 			{
 				channels[i] = ExtractComponent(pixel, channelinfo[i].mask, channelinfo[i].shift, channelinfo[i].loss);
 			}
-			
+
 			//pre-multiply alpha channel to color channels
 			float r = (float)channels[0]/255.0;
 			float g = (float)channels[1]/255.0;
@@ -103,21 +103,21 @@ void PreMultiplyAlpha(SDL_Surface * surface)
 			channels[0] = a*r*255.0;
 			channels[1] = a*g*255.0;
 			channels[2] = a*b*255.0;
-			
+
 			/*channels[0] *= channels[3];
 			channels[1] *= channels[3];
 			channels[2] *= channels[3];*/
-			
+
 			//save back to the pixel
 			for (unsigned int i = 0; i < channelinfo.size(); ++i)
 			{
 				pixel = InsertComponent(pixel, channels[i], channelinfo[i].mask, channelinfo[i].shift, channelinfo[i].loss);
 			}
-			
+
 			*((Uint32 *)pixeladdy) = pixel;
 		}
 	}
-	
+
 	SDL_UnlockSurface(surface);
 }
 
@@ -272,13 +272,13 @@ bool TEXTURE::LoadCubeVerticalCross(const TEXTUREINFO & info, std::ostream & err
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	
+
 	if (info.GetMipMap())
 	{
 		glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
 		
-		glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
+		glGenerateMipmapEXT(GL_TEXTURE_CUBE_MAP);
 	}
 
 	loaded = true;
@@ -482,7 +482,7 @@ void GenTexture(const SDL_Surface * surface, const TEXTUREINFO & info, GLuint & 
 		glTexImage2D( GL_TEXTURE_2D, 0, internalformat, surface->w, surface->h, 0, format, GL_UNSIGNED_BYTE, surface->pixels );
 	}
 	OPENGL_UTILITY::CheckForOpenGLErrors("Texture creation", error);
-	
+
 	//check for anisotropy
 	if (info.GetAnisotropy() > 1)
 	{
@@ -502,13 +502,13 @@ bool TEXTURE::Load(const TEXTUREINFO & info, std::ostream & error)
 		error << "Tried to double load texture " << info.GetName() << std::endl;
 		return false;
 	}
-	
+
 	if (info.GetName().empty() && !info.GetSurface())
 	{
 		error << "Tried to load a texture with an empty name" << std::endl;
 		return false;
 	}
-	
+
 	texture_info = info;
 	tex_id = 0;
 
@@ -576,7 +576,7 @@ bool TEXTURE::Load(const TEXTUREINFO & info, std::ostream & error)
 		{
 			texture_surface = zoomSurface (orig_surface, scale, scale, SMOOTHING_ON);
 		}
-		
+
 		//PreMultiplyAlpha(texture_surface);
 
 		//store dimensions
@@ -628,7 +628,7 @@ void TEXTURE::Unload()
 		glDeleteTextures(1, &tex_id);
 #ifndef NDEBUG
 		OPENGL_UTILITY::CheckForOpenGLErrors("Texture ID deletion ("+texture_info.GetName()+")", std::cerr);
-#endif	
+#endif
 	}
 	loaded = false;
 }
