@@ -6,45 +6,24 @@
 #include "objectloader.h"
 
 #include <functional>
-
 #include <algorithm>
-
 #include <list>
-using std::list;
-
 #include <map>
-using std::pair;
-
 #include <string>
-using std::string;
-
 #include <iostream>
-using std::cout;
-using std::endl;
-
 #include <fstream>
-using std::ifstream;
-
 #include <sstream>
-using std::stringstream;
 
 TRACK::TRACK(std::ostream & info, std::ostream & error) 
 : info_output(info),
   error_output(error),
   texture_size("large"),
   vertical_tracking_skyboxes(false),
-  usesurfaces(false),
   racingline_visible(false),
   loaded(false),
   cull(false)
 {
-	surface.type = TRACKSURFACE::ASPHALT;
-	surface.bumpWaveLength = 1;
-	surface.bumpAmplitude = 0;
-	surface.frictionNonTread = 1;
-	surface.frictionTread = 1;
-	surface.rollResistanceCoefficient = 1;
-	surface.rollingDrag = 0;
+
 }
 
 TRACK::~TRACK()
@@ -62,7 +41,7 @@ bool TRACK::Load(
 {
 	Clear();
 
-	info_output << "Loading track from path: " << trackpath << endl;
+	info_output << "Loading track from path: " << trackpath << std::endl;
 
 	//load parameters
 	if (!LoadParameters(trackpath))
@@ -72,7 +51,8 @@ bool TRACK::Load(
 	
 	if (!LoadSurfaces(trackpath))
 	{
-		info_output << "No surfaces file. Continuing with standard surfaces" << endl;
+		info_output << "Error loading: " << trackpath << std::endl;
+		return false;
 	}
 
 	//load roads
@@ -99,18 +79,18 @@ bool TRACK::Load(
 		return false;
 	}
 
-	info_output << "Track loading was successful: " << model_library.size() << " unique models, " << texture_library.size() << " unique textures" << endl;
+	info_output << "Track loading was successful: " << model_library.size() << " unique models, " << texture_library.size() << " unique textures" << std::endl;
 
 	return true;
 }
 
 bool TRACK::LoadLapSequence(const std::string & trackpath, bool reverse)
 {
-	string parampath = trackpath + "/track.txt";
+	std::string parampath = trackpath + "/track.txt";
 	CONFIGFILE trackconfig;
 	if (!trackconfig.Load(parampath))
 	{
-		error_output << "Can't find track configfile: " << parampath << endl;
+		error_output << "Can't find track configfile: " << parampath << std::endl;
 		return false;
 	}
 	
@@ -122,7 +102,7 @@ bool TRACK::LoadLapSequence(const std::string & trackpath, bool reverse)
 		for (int l = 0; l < lapmarkers; l++)
 		{
 			float lapraw[3];
-			stringstream lapname;
+			std::stringstream lapname;
 			lapname << "lap sequence " << l;
 			trackconfig.GetParam(lapname.str(), lapraw);
 			int roadid = lapraw[0];
@@ -131,12 +111,12 @@ bool TRACK::LoadLapSequence(const std::string & trackpath, bool reverse)
 			//info_output << "Looking for lap sequence: " << roadid << ", " << patchid << endl;
 
 			int curroad = 0;
-			for (list <ROADSTRIP>::iterator i = roads.begin(); i != roads.end(); ++i)
+			for (std::list <ROADSTRIP>::iterator i = roads.begin(); i != roads.end(); ++i)
 			{
 				if (curroad == roadid)
 				{
 					int curpatch = 0;
-					for (list <ROADPATCH>::const_iterator p = i->GetPatchList().begin(); p != i->GetPatchList().end(); ++p)
+					for (std::list <ROADPATCH>::const_iterator p = i->GetPatchList().begin(); p != i->GetPatchList().end(); ++p)
 					{
 						if (curpatch == patchid)
 						{
@@ -173,7 +153,7 @@ bool TRACK::LoadLapSequence(const std::string & trackpath, bool reverse)
 	if (lapmarkers == 0)
 		info_output << "No lap sequence found; lap timing will not be possible" << std::endl;
 	else
-		info_output << "Track timing sectors: " << lapmarkers << endl;
+		info_output << "Track timing sectors: " << lapmarkers << std::endl;
 
 	return true;
 }
@@ -192,7 +172,7 @@ bool TRACK::DeferredLoad(
 
 	texture_size = texsize;
 
-	info_output << "Loading track from path: " << trackpath << endl;
+	info_output << "Loading track from path: " << trackpath << std::endl;
 
 	//load parameters
 	if (!LoadParameters(trackpath))
@@ -200,7 +180,7 @@ bool TRACK::DeferredLoad(
 
 	if (!LoadSurfaces(trackpath))
 	{
-		info_output << "No Surfaces File. Continuing with standard surfaces" << endl;
+		info_output << "No Surfaces File. Continuing with standard surfaces" << std::endl;
 	}
 	
 	//load roads
@@ -233,7 +213,7 @@ bool TRACK::ContinueDeferredLoad(TEXTUREMANAGER & textures)
 	if (Loaded())
 		return true;
 
-	pair <bool,bool> loadstatus = ContinueObjectLoad(textures);
+	std::pair <bool, bool> loadstatus = ContinueObjectLoad(textures);
 	if (loadstatus.first)
 		return false;
 	if (!loadstatus.second)
@@ -261,7 +241,6 @@ void TRACK::Clear()
 	racingline_node.Clear();
 	tracknode.Clear();
 	loaded = false;
-	usesurfaces = false;
 }
 
 bool TRACK::CreateRacingLines(
@@ -294,20 +273,19 @@ bool TRACK::CreateRacingLines(
 
 bool TRACK::LoadParameters(const std::string & trackpath)
 {
-	string parampath = trackpath + "/track.txt";
+	std::string parampath = trackpath + "/track.txt";
 	CONFIGFILE param;
 	if (!param.Load(parampath))
 	{
-		error_output << "Can't find track configfile: " << parampath << endl;
+		error_output << "Can't find track configfile: " << parampath << std::endl;
 		return false;
 	}
 
 	vertical_tracking_skyboxes = false; //default to false
 	param.GetParam("vertical tracking skyboxes", vertical_tracking_skyboxes);
-	//cout << vertical_tracking_skyboxes << endl;
 
 	int sp_num = 0;
-	stringstream sp_name;
+	std::stringstream sp_name;
 	sp_name << "start position " << sp_num;
 	float f3[3];
 	float f1;
@@ -319,14 +297,14 @@ bool TRACK::LoadParameters(const std::string & trackpath)
 		sp_name << "start orientation-xyz " << sp_num;
 		if (!param.GetParam(sp_name.str(), f3))
 		{
-			error_output << "No matching orientation xyz for start position " << sp_num << endl;
+			error_output << "No matching orientation xyz for start position " << sp_num << std::endl;
 			return false;
 		}
 		sp_name.str("");
 		sp_name << "start orientation-w " << sp_num;
 		if (!param.GetParam(sp_name.str(), f1))
 		{
-			error_output << "No matching orientation w for start position " << sp_num << endl;
+			error_output << "No matching orientation w for start position " << sp_num << std::endl;
 			return false;
 		}
 
@@ -351,32 +329,26 @@ bool TRACK::LoadParameters(const std::string & trackpath)
 
 bool TRACK::LoadSurfaces(const std::string & trackpath)
 {
-	string path = trackpath + "/surfaces.txt";
+	std::string path = trackpath + "/surfaces.txt";
 	CONFIGFILE param;
 	if (!param.Load(path))
 	{
-		info_output << "Can't find surfaces configfile: " << path << endl;
+		info_output << "Can't find surfaces configfile: " << path << std::endl;
 		return false;
 	}
 	
-	usesurfaces = true;
-	
-	list <string> sectionlist;
+	std::list <std::string> sectionlist;
 	param.GetSectionList(sectionlist);
-		
-	TRACKSURFACE tempsurface;
 	
-	// set the size of track surfaces to hold new elements
+	int surface_id = 0;
 	tracksurfaces.resize(sectionlist.size());
-	
-	for (list<string>::const_iterator section = sectionlist.begin(); section != sectionlist.end(); ++section)
+	for (std::list<std::string>::const_iterator section = sectionlist.begin(); section != sectionlist.end(); ++section)
 	{
-		tempsurface.name = *section;
-		
-		int indexnum;
-		param.GetParam(*section + ".ID", indexnum);
-		assert(indexnum >= 0 && indexnum < (int)tracksurfaces.size());
-		tempsurface.setType(indexnum);
+		TRACKSURFACE & tempsurface = tracksurfaces[surface_id++];
+
+		std::string type;
+		param.GetParam(*section + ".Type", type);
+		tempsurface.setType(type);
 		
 		float temp = 0.0;
 		param.GetParam(*section + ".BumpWaveLength", temp, error_output);
@@ -396,12 +368,8 @@ bool TRACK::LoadSurfaces(const std::string & trackpath)
 		
 		param.GetParam(*section + ".RollingDrag", temp, error_output);
 		tempsurface.rollingDrag = temp;
-		
-		std::list<TRACKSURFACE>::iterator it = tracksurfaces.begin();
-		while(indexnum-- > 0) it++;
-		*it = tempsurface;
 	}
-	info_output << "Found and loaded surfaces file" << endl;
+	info_output << "Found and loaded surfaces file" << std::endl;
 	
 	return true;
 }
@@ -427,7 +395,6 @@ std::pair <bool,bool> TRACK::ContinueObjectLoad(TEXTUREMANAGER & textures)
 	return objload->ContinueObjectLoad(model_library,
 									   objects,
 									   tracksurfaces,
-									   usesurfaces,
 									   vertical_tracking_skyboxes, 
 									   texture_size,
 									   textures);
@@ -436,7 +403,7 @@ std::pair <bool,bool> TRACK::ContinueObjectLoad(TEXTUREMANAGER & textures)
 bool TRACK::LoadObjects(const std::string & trackpath, SCENENODE & sceneroot, int anisotropy, TEXTUREMANAGER & textures)
 {
 	BeginObjectLoad(trackpath, sceneroot, anisotropy, false, false);
-	pair <bool,bool> loadstatus = ContinueObjectLoad(textures);
+	std::pair <bool, bool> loadstatus = ContinueObjectLoad(textures);
 	while (!loadstatus.first && loadstatus.second)
 	{
 		loadstatus = ContinueObjectLoad(textures);
@@ -494,7 +461,7 @@ bool TRACK::LoadRoads(const std::string & trackpath, bool reverse)
 {
 	ClearRoads();
 
-	ifstream trackfile;
+	std::ifstream trackfile;
 	trackfile.open((trackpath + "/roads.trk").c_str());
 	if (!trackfile)
 	{

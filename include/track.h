@@ -109,19 +109,24 @@ public:
 	{
 		return direction == DIRECTION_REVERSE;
 	}
-
-	const TRACKSURFACE * GetRoadSurface() const
-	{
-		return &surface;
-	}
 	
 	const std::list<TRACK_OBJECT> & GetTrackObjects()
 	{
 		return objects;
 	}
 	
-	SCENENODE & GetRacinglineNode() {if (racingline_visible) return racingline_node; else return empty_node;}
-	SCENENODE & GetTrackNode() {return tracknode;}
+	SCENENODE & GetRacinglineNode()
+	{
+		if (racingline_visible)
+			return racingline_node;
+		else 
+			return empty_node;
+	}
+
+	SCENENODE & GetTrackNode()
+	{
+		return tracknode;
+	}
 
 private:
 	std::ostream & info_output;
@@ -133,15 +138,7 @@ private:
 	std::list <TRACK_OBJECT> objects;
 	bool vertical_tracking_skyboxes;
 	std::vector <std::pair <MATHVECTOR <float, 3>, QUATERNION <float> > > start_positions;
-
-	// does the track use Surface types (surfaces.txt)
-	bool usesurfaces;
-	
-	// using list to avoid reallocation
-	std::list <TRACKSURFACE> tracksurfaces;
-	
-	// default road surface (asphalt)
-	TRACKSURFACE surface;
+	std::vector <TRACKSURFACE> tracksurfaces;
 	
 	enum
 	{

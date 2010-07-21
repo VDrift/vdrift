@@ -497,6 +497,7 @@
 		<Unit filename="..\..\src\cardynamics.cpp" />
 		<Unit filename="..\..\src\carengine.cpp" />
 		<Unit filename="..\..\src\carsuspension.cpp" />
+		<Unit filename="..\..\src\cartire.cpp" />
 		<Unit filename="..\..\src\collision_world.cpp" />
 		<Unit filename="..\..\src\configfile.cpp" />
 		<Unit filename="..\..\src\configvariable.cpp" />

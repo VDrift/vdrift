@@ -1293,8 +1293,10 @@ void CAR::UpdateSounds(float dt)
 	{
 		for (int i = 0; i < 4; i++)
 		{
-			suspensionbumpdetection[i].Update(dynamics.GetSuspension(WHEEL_POSITION(i)).GetVelocity(),
-											  dynamics.GetSuspension(WHEEL_POSITION(i)).GetDisplacementFraction(), dt);
+//			suspensionbumpdetection[i].Update(
+//				dynamics.GetSuspension(WHEEL_POSITION(i)).GetVelocity(),
+//				dynamics.GetSuspension(WHEEL_POSITION(i)).GetDisplacementFraction(),
+//				dt);
 			if (suspensionbumpdetection[i].JustSettled())
 			{
 				float bumpsize = suspensionbumpdetection[i].GetTotalBumpSize();
@@ -1346,7 +1348,9 @@ void CAR::UpdateSounds(float dt)
 	{
 		if (gearsound_check != GetGear())
 		{
-			float gain = GetEngineRPMLimit() / GetEngineRPM();
+			float gain = 0.0;
+			if (GetEngineRPM() != 0.0)
+				gain = GetEngineRPMLimit() / GetEngineRPM();
 			if (gain > 0.05)
 				gain = 0.05;
 			if (gain < 0.025)

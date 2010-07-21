@@ -40,9 +40,8 @@ public:
 	std::pair <bool,bool> ContinueObjectLoad(
 		std::map <std::string, MODEL_JOE03> & model_library,
 		std::list <TRACK_OBJECT> & objects,
-		std::list <TRACKSURFACE> & surfaces,
-		bool usesurfaces,
-		bool vertical_tracking_skyboxes,
+		const std::vector <TRACKSURFACE> & surfaces,
+		const bool vertical_tracking_skyboxes,
 		const std::string & texture_size,
 		TEXTUREMANAGER & textures);
 	

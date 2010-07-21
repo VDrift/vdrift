@@ -278,15 +278,7 @@ class MATHVECTOR <T, 3>
 		MATHVECTOR(const T x, const T y, const T z) : v(x,y,z)
 		{
 		}
-		
-		MATHVECTOR(const MATHVECTOR <T, 3> & other)
-		{
-			std::memcpy(&v,&other.v,sizeof(MATHVECTOR_XYZ)); //high performance, but portability issues?
-			/*v.x = other.v.x;
-			v.y = other.v.y;
-			v.z = other.v.z;*/
-		}
-		
+
 		template <typename T2>
 		MATHVECTOR (const MATHVECTOR <T2, 3> & other)
 		{

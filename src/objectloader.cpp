@@ -86,9 +86,8 @@ void OBJECTLOADER::CalculateNumObjects()
 std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad(
 	std::map <std::string, MODEL_JOE03> & model_library,
 	std::list <TRACK_OBJECT> & objects,
-	std::list <TRACKSURFACE> & surfaces,
-	bool usesurfaces,
- 	bool vertical_tracking_skyboxes,
+	const std::vector <TRACKSURFACE> & surfaces,
+ 	const bool vertical_tracking_skyboxes,
  	const std::string & texture_size,
  	TEXTUREMANAGER & textures)
 {
@@ -121,7 +120,7 @@ std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad(
 	float rolling_drag;
 	bool isashadow(false);
 	int clamptexture(0);
-	int surface_type(TRACKSURFACE::ASPHALT);
+	int surface_id(0);
 	std::string otherjunk;
 
 	GetParam(objectfile, diffuse_texture_name);
@@ -145,7 +144,7 @@ std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad(
 		GetParam(objectfile, clamptexture);
 	
 	if (params_per_object >= 17)
-		GetParam(objectfile, surface_type);
+		GetParam(objectfile, surface_id);
 		
 		
 	for (int i = 0; i < params_per_object - expected_params; i++)
@@ -256,7 +255,6 @@ std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad(
 		
 		drawable.AddDrawList(model->GetListID());
 		drawable.SetDiffuseMap(diffuse_texture);
-		//if (miscmap1_texture) drawable.SetMiscMap1(miscmap1_texture);
 		drawable.SetMiscMap1(miscmap1_texture);
 		drawable.SetMiscMap2(miscmap2_texture);
 		drawable.SetDecal(transparent);
@@ -272,37 +270,8 @@ std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad(
 		const TRACKSURFACE * surfacePtr = NULL;
 		if (collideable || driveable)
 		{
-			if(usesurfaces)
-			{
-				assert(surface_type >= 0 && surface_type < (int)surfaces.size());
-				std::list<TRACKSURFACE>::iterator it = surfaces.begin();
-				while(surface_type-- > 0) it++;
-				surfacePtr = &*it;
-			}
-			else
-			{
-				TRACKSURFACE surface;
-				surface.setType(surface_type);
-				surface.bumpWaveLength = bump_wavelength;
-				surface.bumpAmplitude = bump_amplitude;
-				surface.frictionNonTread = friction_notread;
-				surface.frictionTread = friction_tread;
-				surface.rollResistanceCoefficient = rolling_resistance;
-				surface.rollingDrag = rolling_drag;
-
-				// could use hash here(assume we dont have many surfaces)
-				std::list<TRACKSURFACE>::reverse_iterator ri;
-				for(ri = surfaces.rbegin() ; ri != surfaces.rend(); ++ri)
-				{
-					if (*ri == surface) break;
-				}
-				if (ri == surfaces.rend())
-				{
-					surfaces.push_back(surface);
-					ri = surfaces.rbegin();
-				}
-				surfacePtr = &*ri;
-			}
+			assert(surface_id >= 0 && surface_id < (int)surfaces.size());
+			surfacePtr = &surfaces[surface_id];
 		}
 
 		TRACK_OBJECT object(model, surfacePtr);
