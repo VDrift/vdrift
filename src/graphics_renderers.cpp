@@ -559,7 +559,7 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 			glstate.Disable(GL_ALPHA_TEST);
 			glstate.Enable(GL_BLEND);
 			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-			glstate.SetBlendFunc(GL_ONE, GL_ONE);
+			glstate.SetBlendFunc(GL_SRC_ALPHA, GL_ONE);
 		}
 		break;
 		
