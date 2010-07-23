@@ -21,7 +21,7 @@ public:
 	
 	void Clear() {state = false; laststate = false;}
 	
-	void DebugPrint(std::ostream & out);
+	void DebugPrint(std::ostream & out) const;
 
 	void Tick();
 };

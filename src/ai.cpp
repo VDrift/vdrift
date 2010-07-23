@@ -15,8 +15,7 @@
 
 
 #if defined(_WIN32) || defined(__APPLE__)
-bool isnan(float number);
-bool isnan(double number);
+template <typename T> bool isnan(T number) {return (number != number);}
 #endif
 
 #define GRAVITY 9.8

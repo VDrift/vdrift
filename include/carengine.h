@@ -108,7 +108,7 @@ public:
 	}
 	
 	///return the sum of all torques acting on the engine (except clutch forces)
-	T GetTorque()
+	T GetTorque() const
 	{
 		return combustion_torque + friction_torque;
 	}
@@ -122,13 +122,6 @@ public:
 	bool GetCombustion() const
 	{
 		return !stalled;
-	}
-	
-	void SetInitialConditions()
-	{
-		MATHVECTOR <T, 3> v;
-		crankshaft.SetInitialTorque(v);
-		StartEngine();
 	}
 	
 	void StartEngine()
@@ -162,7 +155,7 @@ public:
 	///to be caled between Integrate1() and Integrate2()
 	T ComputeForces(T clutch_drag, T clutch_angvel, T dt);
 	
-	void DebugPrint(std::ostream & out);
+	void DebugPrint(std::ostream & out) const;
 	
 	bool Serialize(joeserialize::Serializer & s);
 	

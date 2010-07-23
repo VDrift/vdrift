@@ -17,7 +17,6 @@ QT_TEST(linearframe_test)
 	frame.SetVelocity(initv);
 	MATHVECTOR <double, 3> gravity;
 	gravity.Set(0,-9.81,0);
-	frame.SetInitialForce(gravity);
 	
 	double t = 0.0;
 	
@@ -44,8 +43,6 @@ QT_TEST(linearframe_test)
 	initv.Set(0,0,0);
 	frame.SetVelocity(initv);
 	MATHVECTOR <double, 3> force;
-	force.Set(0,0,0);
-	frame.SetInitialForce(force);
 	
 	t = 0.0;
 	

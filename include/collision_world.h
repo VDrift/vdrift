@@ -42,7 +42,7 @@ public:
 	
 	void Draw();
 	
-	void DebugPrint(std::ostream & out);
+	void DebugPrint(std::ostream & out) const;
 	
 	void Clear();
 	

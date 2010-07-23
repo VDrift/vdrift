@@ -255,7 +255,7 @@ void COLLISION_WORLD::Update(float dt)
 	world.stepSimulation(dt, maxSubSteps, fixedTimeStep);
 }
 
-void COLLISION_WORLD::DebugPrint(std::ostream & out)
+void COLLISION_WORLD::DebugPrint(std::ostream & out) const
 {
 	out << "Collision objects: " << world.getNumCollisionObjects() << std::endl;
 }

@@ -16,8 +16,7 @@ QT_TEST(rotationalframe_test)
 		initv.Set(0,0,0);
 		frame.SetAngularVelocity(initv);
 		MATHVECTOR <double, 3> torque;
-		torque.Set(0,0,0);
-		frame.SetInitialTorque(torque);
+		torque.Set(0,1,0);
 		
 		//integrate for 10 seconds
 		for (int i = 0; i < 1000; i++)
@@ -46,7 +45,6 @@ QT_TEST(rotationalframe_test)
 		frame.SetAngularVelocity(initv);
 		MATHVECTOR <double, 3> torque;
 		torque.Set(0,1,0);
-		frame.SetInitialTorque(torque);
 		MATRIX3 <double> inertia;
 		inertia.Scale(0.1);
 		frame.SetInertia(inertia);

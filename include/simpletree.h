@@ -8,7 +8,7 @@ template<typename KEYTYPE, typename VALUETYPE>
 class SIMPLETREE
 {
 private:
-	void DebugPrint(int level, std::ostream & mystream)
+	void DebugPrint(int level, std::ostream & mystream) const
 	{
 		mystream << value << endl;
 		
@@ -30,7 +30,7 @@ public:
 	VALUETYPE value;
 	std::map <KEYTYPE, SIMPLETREE> branch;
 	
-	void DebugPrint() {DebugPrint(0,cout);}
+	void DebugPrint() const {DebugPrint(0,cout);}
 };
 
 

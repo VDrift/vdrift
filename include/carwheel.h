@@ -19,12 +19,6 @@ public:
 		SetInertia(10.0);
 	}
 
-	void DebugPrint(std::ostream & out)
-	{
-		out << "---Wheel---" << std::endl;
-		out << "Wheel speed: " << GetRPM() << std::endl;
-	}
-
 	T GetRPM() const
 	{
 		return rotation.GetAngularVelocity()[1] * 30.0 / 3.141593;
@@ -69,12 +63,6 @@ public:
 		return rotation.GetInertia()[0];
 	}
 
-	void SetInitialConditions()
-	{
-		MATHVECTOR <T, 3> v;
-		rotation.SetInitialTorque(v);
-	}
-
 	void Integrate1(const T dt)
 	{
 		rotation.Integrate1(dt);
@@ -112,6 +100,13 @@ public:
 	const QUATERNION <T> & GetRotation() const
 	{
 		return rotation.GetOrientation();
+	}
+
+	
+	void DebugPrint(std::ostream & out) const
+	{
+		out << "---Wheel---" << std::endl;
+		out << "Wheel speed: " << GetRPM() << std::endl;
 	}
 
 	bool Serialize(joeserialize::Serializer & s)

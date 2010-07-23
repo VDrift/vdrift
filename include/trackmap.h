@@ -53,8 +53,13 @@ private:
 		private:
 			keyed_container <DRAWABLE>::handle dotdraw;
 			VERTEXARRAY dotverts;
-			
+
 			DRAWABLE & GetDrawable(SCENENODE & topnode)
+			{
+				return topnode.GetDrawlist().twodim.get(dotdraw);
+			}
+			
+			const DRAWABLE & GetDrawable(SCENENODE & topnode) const
 			{
 				return topnode.GetDrawlist().twodim.get(dotdraw);
 			}
@@ -87,9 +92,9 @@ private:
 			{
 				GetDrawable(topnode).SetDrawEnable(visible);
 			}
-			void DebugPrint(SCENENODE & topnode, std::ostream & out)
+			void DebugPrint(SCENENODE & topnode, std::ostream & out) const
 			{
-				DRAWABLE & drawref = GetDrawable(topnode);
+				const DRAWABLE & drawref = GetDrawable(topnode);
 				out << &drawref << ": enable=" << drawref.GetDrawEnable() << ", tex=" << drawref.GetDiffuseMap() << ", verts=" << drawref.GetVertArray() << std::endl;
 			}
 			keyed_container <DRAWABLE>::handle & GetDrawableHandle()

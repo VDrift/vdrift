@@ -34,7 +34,7 @@ class CARDIFFERENTIAL
 		//default constructor makes an S2000-like car
 		CARDIFFERENTIAL() : final_drive(4.1), anti_slip(600.0), anti_slip_torque(0), anti_slip_torque_deceleration_factor(0), torque_split(0.5), side1_speed(0), side2_speed(0), side1_torque(0), side2_torque(0) {}
 
-		void DebugPrint(std::ostream & out)
+		void DebugPrint(std::ostream & out) const
 		{
 			out << "---Differential---" << std::endl;
 			out << "Side 1 RPM: " << side1_speed * 30.0 / 3.141593 << std::endl;

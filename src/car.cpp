@@ -25,12 +25,11 @@
 #include "model_obj.h"
 
 #if defined(_WIN32) || defined(__APPLE__)
-bool isnan(float number) {return (number != number);}
-bool isnan(double number) {return (number != number);}
+template <typename T> bool isnan(T number) {return (number != number);}
 #endif
 
-CAR::CAR()
-:	gearsound_check(0),
+CAR::CAR() :
+	gearsound_check(0),
 	brakesound_check(false),
 	handbrakesound_check(false),
 	last_steer(0),

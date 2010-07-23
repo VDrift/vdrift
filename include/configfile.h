@@ -74,7 +74,7 @@ public:
 	
 	void ChangeSectionName(std::string oldname, std::string newname);
 
-	void DebugPrint(std::ostream & out);
+	void DebugPrint(std::ostream & out) const;
 
 	bool Write();
 	bool Write(bool with_brackets);

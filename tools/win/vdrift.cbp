@@ -369,6 +369,7 @@
 		<Unit filename="..\..\include\carengine.h" />
 		<Unit filename="..\..\include\carfueltank.h" />
 		<Unit filename="..\..\include\carinput.h" />
+		<Unit filename="..\..\include\carpowertrain.h" />
 		<Unit filename="..\..\include\carsuspension.h" />
 		<Unit filename="..\..\include\cartelemetry.h" />
 		<Unit filename="..\..\include\cartire.h" />
@@ -496,6 +497,7 @@
 		<Unit filename="..\..\src\carcontrolmap_local.cpp" />
 		<Unit filename="..\..\src\cardynamics.cpp" />
 		<Unit filename="..\..\src\carengine.cpp" />
+		<Unit filename="..\..\src\carpowertrain.cpp" />
 		<Unit filename="..\..\src\carsuspension.cpp" />
 		<Unit filename="..\..\src\cartire.cpp" />
 		<Unit filename="..\..\src\collision_world.cpp" />
@@ -525,6 +527,7 @@
 		<Unit filename="..\..\src\keyed_container.cpp" />
 		<Unit filename="..\..\src\linearframe.cpp" />
 		<Unit filename="..\..\src\linearinterp.cpp" />
+		<Unit filename="..\..\src\loadingscreen.cpp" />
 		<Unit filename="..\..\src\main.cpp" />
 		<Unit filename="..\..\src\mathplane.cpp" />
 		<Unit filename="..\..\src\mathvector.cpp" />

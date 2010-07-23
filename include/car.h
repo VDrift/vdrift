@@ -194,7 +194,7 @@ public:
 	
 	void EnableGlass(bool enable);
 
-	void DebugPrint(std::ostream & out, bool p1, bool p2, bool p3, bool p4)
+	void DebugPrint(std::ostream & out, bool p1, bool p2, bool p3, bool p4) const
 	{
 		dynamics.DebugPrint(out, p1, p2, p3, p4);
 	}
