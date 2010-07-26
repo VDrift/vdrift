@@ -1,21 +1,24 @@
 #include "trackmap.h"
 
+#include "contentmanager.h"
+#include "textureloader.h"
+#include "texture.h"
+
+#include "float.h"
+#include <SDL/SDL.h>
 #ifdef __APPLE__
 #include <SDL_gfx/SDL_gfxPrimitives.h>
 #else
 #include <SDL/SDL_gfxPrimitives.h> //part of the SDL_gfx package
 #endif
 
-#include "float.h"
-
-using std::endl;
-using std::string;
-using std::ostream;
-using std::list;
-using std::pair;
-
-TRACKMAP::TRACKMAP() : scale(1.0), MAP_WIDTH(256),MAP_HEIGHT(256),surface(NULL)
+TRACKMAP::TRACKMAP() :
+	scale(1.0),
+	MAP_WIDTH(256),
+	MAP_HEIGHT(256),
+	surface(NULL)
 {
+	// ctor
 }
 
 TRACKMAP::~TRACKMAP()
@@ -57,7 +60,7 @@ bool TRACKMAP::BuildMap(
 	const std::string & trackname,
 	const std::string & texturepath,
 	const std::string & texsize,
-	TEXTUREMANAGER & textures,
+	ContentManager & content,
 	std::ostream & error_output)
 {
 	Unload();
@@ -90,9 +93,9 @@ bool TRACKMAP::BuildMap(
 	map_h_min = FLT_MAX;
 	map_h_max = FLT_MIN;
 
-	for (list <ROADSTRIP>::const_iterator road = roads.begin(); road != roads.end(); road++)
+	for (std::list <ROADSTRIP>::const_iterator road = roads.begin(); road != roads.end(); road++)
 	{
-		for (list <ROADPATCH>::const_iterator curp = road->GetPatchList().begin();
+		for (std::list <ROADPATCH>::const_iterator curp = road->GetPatchList().begin();
 		     curp != road->GetPatchList().end(); curp++)
 		{
 			for (int i = 0; i < 4; i++)
@@ -132,9 +135,9 @@ bool TRACKMAP::BuildMap(
 
 	boxRGBA(surface, 0, 0, outsizex-1, outsizey-1, 0, 0, 0, 0);
 
-	for (list <ROADSTRIP>::const_iterator road = roads.begin(); road != roads.end(); road++)
+	for (std::list <ROADSTRIP>::const_iterator road = roads.begin(); road != roads.end(); road++)
 	{
-		for (list <ROADPATCH>::const_iterator curp = road->GetPatchList().begin();
+		for (std::list <ROADPATCH>::const_iterator curp = road->GetPatchList().begin();
 		     curp != road->GetPatchList().end(); curp++)
 		{
 			Sint16 x[4], y[4];
@@ -212,33 +215,34 @@ bool TRACKMAP::BuildMap(
 		}
 	}
 
-	TEXTUREINFO texinfo;
-	texinfo.SetName(trackname);
-	texinfo.SetSurface(surface);
-	texinfo.SetRepeat(false, false);
-	texinfo.SetSize(texsize);
-	TEXTUREPTR track_map = textures.Get(texinfo);
-	if (!track_map->Loaded()) return false;
+	TextureLoader texload;
+	texload.surface = surface;
+	texload.repeatu = false;
+	texload.repeatv = false;
+	texload.setSize(texsize);
+
+	texload.name = trackname;
+	TexturePtr track_map = content.get<TEXTURE>(texload);
+	if (!track_map.get()) return false;
 	
 	//std::cout << "Loading track map dots" << std::endl;
-	TEXTUREINFO dotinfo;
-	dotinfo.SetSize(texsize);
+	texload.surface = NULL;
 	
-	dotinfo.SetName(texturepath+"/cardot0.png");
-	cardot0 = textures.Get(dotinfo);
-	if (!cardot0->Loaded()) return false;
+	texload.name = texturepath + "/cardot0.png";
+	cardot0 = content.get<TEXTURE>(texload);
+	if (!cardot0.get()) return false;
 	
-	dotinfo.SetName(texturepath+"/cardot1.png");
-	cardot1 = textures.Get(dotinfo);
-	if (!cardot1->Loaded()) return false;
+	texload.name = texturepath + "/cardot1.png";
+	cardot1 = content.get<TEXTURE>(texload);
+	if (!cardot1.get()) return false;
 	
-	dotinfo.SetName(texturepath+"/cardot0_focused.png");
-	cardot0_focused = textures.Get(dotinfo);
-	if (!cardot0_focused->Loaded()) return false;
+	texload.name = texturepath + "/cardot0_focused.png";
+	cardot0_focused = content.get<TEXTURE>(texload);
+	if (!cardot0_focused.get()) return false;
 	
-	dotinfo.SetName(texturepath+"/cardot1_focused.png");
-	cardot1_focused = textures.Get(dotinfo);
-	if (!cardot1_focused->Loaded()) return false;
+	texload.name = texturepath + "/cardot1_focused.png";
+	cardot1_focused = content.get<TEXTURE>(texload);
+	if (!cardot1_focused.get()) return false;
 	
 	CalcPosition(w, h);
 	
@@ -265,7 +269,7 @@ void TRACKMAP::Update(bool mapvisible, const std::list <std::pair<MATHVECTOR <fl
 		while (car != carpositions.end())
 		{
 			//determine which texture to use
-			TEXTUREPTR tex = cardot0_focused;
+			TexturePtr tex = cardot0_focused;
 			if (!car->second)
 				tex = cardot1;
 			
@@ -299,7 +303,7 @@ void TRACKMAP::Update(bool mapvisible, const std::list <std::pair<MATHVECTOR <fl
 			car++;
 			count++;
 		}
-		for (list <CARDOT>::iterator i = dot; i != dotlist.end(); ++i)
+		for (std::list <CARDOT>::iterator i = dot; i != dotlist.end(); ++i)
 			mapnode.GetDrawlist().twodim.erase(i->GetDrawableHandle());
 		dotlist.erase(dot,dotlist.end());
 	}
@@ -309,10 +313,47 @@ void TRACKMAP::Update(bool mapvisible, const std::list <std::pair<MATHVECTOR <fl
 		DRAWABLE & mapdrawref = mapnode.GetDrawlist().twodim.get(mapdraw);
 		mapdrawref.SetDrawEnable(mapvisible);
 	}
-	for (list <CARDOT>::iterator i = dotlist.begin(); i != dotlist.end(); ++i)
+	for (std::list <CARDOT>::iterator i = dotlist.begin(); i != dotlist.end(); ++i)
 		i->SetVisible(mapnode, mapvisible);
 	
-	/*for (list <CARDOT>::iterator i = dotlist.begin(); i != dotlist.end(); i++)
+	/*for (std::list <CARDOT>::iterator i = dotlist.begin(); i != dotlist.end(); i++)
 		i->DebugPrint(std::cout);*/
 }
 
+void TRACKMAP::CARDOT::Init(
+	SCENENODE & topnode, 
+	TexturePtr tex, 
+	const MATHVECTOR <float, 2> & corner1, 
+	const MATHVECTOR <float, 2> & corner2)
+{
+	dotdraw = topnode.GetDrawlist().twodim.insert(DRAWABLE());
+	DRAWABLE & drawref = GetDrawable(topnode);
+	drawref.SetVertArray(&dotverts);
+	drawref.SetCull(false, false);
+	drawref.SetColor(1,1,1,0.7);
+	drawref.SetDrawOrder(0.1);
+	Retexture(topnode, tex);
+	Reposition(corner1, corner2);
+}
+
+void TRACKMAP::CARDOT::Retexture(SCENENODE & topnode, TexturePtr newtex)
+{
+	assert(newtex.get());
+	GetDrawable(topnode).SetDiffuseMap(newtex);
+}
+
+void TRACKMAP::CARDOT::Reposition(const MATHVECTOR <float, 2> & corner1, const MATHVECTOR <float, 2> & corner2)
+{
+	dotverts.SetToBillboard(corner1[0], corner1[1], corner2[0], corner2[1]);
+}
+
+void TRACKMAP::CARDOT::SetVisible(SCENENODE & topnode, bool visible)
+{
+	GetDrawable(topnode).SetDrawEnable(visible);
+}
+
+void TRACKMAP::CARDOT::DebugPrint(SCENENODE & topnode, std::ostream & out) const
+{
+	const DRAWABLE & drawref = GetDrawable(topnode);
+	out << &drawref << ": enable=" << drawref.GetDrawEnable() << ", tex=" << drawref.GetDiffuseMap() << ", verts=" << drawref.GetVertArray() << std::endl;
+}

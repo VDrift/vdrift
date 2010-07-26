@@ -8,7 +8,7 @@
 #include <ostream>
 #include <string>
 
-class TEXTUREMANAGER;
+class ContentManager;
 
 class LOADINGSCREEN
 {
@@ -23,7 +23,7 @@ public:
 		int displayw,
 		int displayh,
 		const std::string & texsize,
-		TEXTUREMANAGER & textures);
+		ContentManager & content);
 
 private:
 	SCENENODE root;

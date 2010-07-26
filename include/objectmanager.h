@@ -1,47 +1,58 @@
 #ifndef _OBJECTMANAGER_H
 #define _OBJECTMANAGER_H
 
+#include "objectloader.h"
+
 #include <map>
 #include <string>
 #include <iostream>
+#include <cassert>
+
 #ifdef _MSC_VER
 #include <memory>
 #else
 #include <tr1/memory>
 #endif
 
-/// object T has to have a constructor taking Tinfo and std::ostream & error as parameter
-template < class Tinfo, class T, class Pred = std::less<Tinfo> >
-class OBJECTMANAGER
+/// shared object manager
+template <typename T>
+class ObjectManager
 {
 public:
-	OBJECTMANAGER(std::ostream & error)
-	: error(error), created(0), reused(0), deleted(0)
+	ObjectManager(std::ostream & error) :
+		error(error), created(0), reused(0), deleted(0)
 	{
 	}
-	
-	~OBJECTMANAGER()
+
+	~ObjectManager()
 	{
-		objectmap.clear();
 	}
-	
-	// get/create object
-	std::tr1::shared_ptr<T> Get(const Tinfo & info)
+
+	std::tr1::shared_ptr<T> get(const ObjectLoader<T> & loader)
 	{
-		iterator it = objectmap.find(info);
+		const std::string & id = loader.id();
+		
+		iterator it = objectmap.find(id);
 		if (it != objectmap.end())
 		{
 			++reused;
 			return it->second;
 		}
 		++created;
-		std::tr1::shared_ptr<T> sp(new T(info, error));
-		objectmap[info] = sp;
-		return sp;
+		
+		T * object = loader.load(error);
+		if (!object)
+		{
+			return std::tr1::shared_ptr<T>();
+		}
+
+		std::tr1::shared_ptr<T> ptr(object);
+		objectmap[id] = ptr;
+		return ptr;
 	}
 
 	// clear expired objects
-	void Sweep()
+	void sweep()
 	{
 		iterator it = objectmap.begin();
 		while(it != objectmap.end())
@@ -57,27 +68,27 @@ public:
 			}
 		}
 	}
-	
-	void Clear()
+
+	void clear()
 	{
-		Sweep();
+		sweep();
 		if (!objectmap.empty())
 		{
 			error << "Leak: ";
-			DebugPrint(error);
+			debugPrint(error);
 			
-			for (iterator it = objectmap.begin(); it != objectmap.end(); it++)
+			for (iterator it = objectmap.begin(); it != objectmap.end(); ++it)
 			{
 				error << "Leaked: " << it->first << std::endl;
 			}
 		}
 	}
-	
-	void DebugPrint(std::ostream & out)
+
+	void debugPrint(std::ostream & out)
 	{
 		int refcount = 0;
 		out << "Object manager " << this << " debug print " << std::endl;
-		for(iterator it = objectmap.begin(); it != objectmap.end(); it++)
+		for(iterator it = objectmap.begin(); it != objectmap.end(); ++it)
 		{
 			int references = it->second.use_count() - 1; // subtract our reference
 			refcount += references;
@@ -92,10 +103,10 @@ public:
 		out << ", deleted: " << deleted << std::endl;
 		created = 0; reused = 0; deleted = 0; // reset counters
 	}
-	
+
 protected:
-	typedef typename std::map<Tinfo, std::tr1::shared_ptr<T>, Pred>::iterator iterator;
-	std::map<Tinfo, std::tr1::shared_ptr<T>, Pred> objectmap;
+	typedef typename std::map<std::string, std::tr1::shared_ptr<T> >::iterator iterator;
+	std::map<std::string,  std::tr1::shared_ptr<T> > objectmap;
 	std::ostream & error;
 	unsigned int created, reused, deleted;
 };

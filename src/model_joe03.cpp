@@ -37,7 +37,7 @@ int MODEL_JOE03::BinaryRead ( void * buffer, unsigned int size, unsigned int cou
 	return bytesread;
 }
 
-bool MODEL_JOE03::Load ( string filename, JOEPACK * pack, ostream & err_output, bool genlist)
+bool MODEL_JOE03::Load ( string filename, JOEPACK * pack, ostream & error_output, bool genlist)
 {
 	modelpath = filename;
 
@@ -57,14 +57,16 @@ bool MODEL_JOE03::Load ( string filename, JOEPACK * pack, ostream & err_output, 
 	// Make sure we have a valid file pointer (we found the file)
 	if ( ( pack == NULL && !m_FilePointer ) || ( pack != NULL && !fileinpack ) )
 	{
-		// Display an error message and don't load anything if no file was found
-		// throw EXCEPTION ( __FILE__, __LINE__, "Unable to find file "+filename );
-		
-		//print an error message?
+		error_output << "Error loading model: " << filename;
+		if (pack)
+		{
+			error_output << " from pack " << pack->getName();
+		}
+		error_output << std::endl;
 		return false;
 	}
 
-	bool val = LoadFromHandle ( m_FilePointer, pack, err_output );
+	bool val = LoadFromHandle ( m_FilePointer, pack, error_output );
 
 	// Clean up after everything
 	if ( pack == NULL )
@@ -75,7 +77,7 @@ bool MODEL_JOE03::Load ( string filename, JOEPACK * pack, ostream & err_output, 
 	if (val && genlist)
 	{
 		//optimize into a static display list
-		GenerateListID(err_output);
+		GenerateListID(error_output);
 	}
 
 	return val;

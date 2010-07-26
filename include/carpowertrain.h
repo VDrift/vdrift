@@ -140,7 +140,7 @@ private:
 	/// calculate downshift point based on gear, engine rpm
 	T DownshiftRPM(int gear) const;
 
-	/// FWD, RWD, or AWD
+	/// FWD, RWD or AWD
 	void SetDrive(const std::string & value);
 };
 

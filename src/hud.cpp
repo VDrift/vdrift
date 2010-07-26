@@ -1,5 +1,13 @@
 #include "hud.h"
 
+#include "contentmanager.h"
+#include "textureloader.h"
+#include "texture.h"
+
+#include <cassert>
+#include <sstream>
+#include <algorithm>
+
 keyed_container <DRAWABLE>::handle AddDrawable(SCENENODE & node)
 {
 	return node.GetDrawlist().twodim.insert(DRAWABLE());
@@ -10,10 +18,17 @@ DRAWABLE & GetDrawable(SCENENODE & node, keyed_container <DRAWABLE>::handle & dr
 	return node.GetDrawlist().twodim.get(drawhandle);
 }
 
+HUD::HUD() : 
+	debug_hud_info(false),
+	racecomplete(false)	
+{
+	// ctor
+}
+
 bool HUD::Init(
 	const std::string & texturepath,
 	const std::string & texsize,
-	TEXTUREMANAGER & textures, 
+	ContentManager & content, 
 	FONT & lcdfont,
 	FONT & sansfont,
 	float displaywidth,
@@ -23,19 +38,19 @@ bool HUD::Init(
 {
     float opacity = 0.8;
 
-    TEXTUREINFO bartexinfo(texturepath+"/hudbox.png");
-    bartexinfo.SetMipMap(false);
-    bartexinfo.SetRepeat(false, false);
-    bartexinfo.SetSize(texsize);
-    TEXTUREPTR bartex = textures.Get(bartexinfo);
-    if (!bartex->Loaded()) return false;
+    TextureLoader texload;
+    texload.mipmap = false;
+    texload.repeatu = false;
+	texload.repeatv = false;
+    texload.setSize(texsize);
+    
+	texload.name = texturepath + "/hudbox.png";
+	TexturePtr bartex = content.get<TEXTURE>(texload);
+    if (!bartex.get()) return false;
 
-    TEXTUREINFO progbartexinfo(texturepath+"/progressbar.png");
-    progbartexinfo.SetMipMap(false);
-    progbartexinfo.SetRepeat(false, false);
-    progbartexinfo.SetSize(texsize);
-    TEXTUREPTR progbartex = textures.Get(progbartexinfo);
-    if (!progbartex->Loaded()) return false;
+	texload.name = texturepath + "/progressbar.png";
+    TexturePtr progbartex = content.get<TEXTURE>(texload);
+    if (!progbartex.get()) return false;
 
     rpmbar = AddDrawable(hudroot);
     rpmredbar = AddDrawable(hudroot);
@@ -86,12 +101,14 @@ bool HUD::Init(
         timerboxdraw = AddDrawable(timernoderef);
 		DRAWABLE & timerboxdrawref = GetDrawable(timernoderef, timerboxdraw);
 
-        TEXTUREINFO timerboxtexinfo(texturepath+"/timerbox.png");
-        timerboxtexinfo.SetMipMap(false);
-        timerboxtexinfo.SetRepeat(true, false);
-        timerboxtexinfo.SetSize(texsize);
-        TEXTUREPTR timerboxtex = textures.Get(timerboxtexinfo);
-        if (!timerboxtex->Loaded()) return false;
+        TextureLoader texload;
+        texload.name = texturepath + "/timerbox.png";
+		texload.mipmap = false;
+        texload.repeatu = true;
+		texload.repeatv = false;
+        texload.setSize(texsize);
+        TexturePtr timerboxtex = content.get<TEXTURE>(texload);
+        if (!timerboxtex.get()) return false;
 
         float totalsizex = timerboxdimx*6.05;
         float totalsizey = timerboxdimy*2.0;
@@ -202,13 +219,37 @@ bool HUD::Init(
     return true;
 }
 
-void HUD::Update(FONT & lcdfont, FONT & sansfont, float curlap, float lastlap, float bestlap, float stagingtimeleft, int curlapnum,
-		int numlaps, int curplace, int numcars, float clutch, int newgear, int newrpm, int redrpm, int maxrpm,
-		float meterspersecond,
-		bool mph, const std::string & debug_string1, const std::string & debug_string2,
-		const std::string & debug_string3, const std::string & debug_string4, float displaywidth,
-		float displayheight, bool absenabled, bool absactive, bool tcsenabled, bool tcsactive,
-		bool drifting, float driftscore, float thisdriftscore)
+void HUD::Update(
+	FONT & lcdfont,
+	FONT & sansfont,
+	float curlap,
+	float lastlap,
+	float bestlap,
+	float stagingtimeleft,
+	int curlapnum,
+	int numlaps,
+	int curplace,
+	int numcars,
+	float clutch,
+	int newgear,
+	int newrpm,
+	int redrpm,
+	int maxrpm,
+	float meterspersecond,
+	bool mph,
+	const std::string & debug_string1,
+	const std::string & debug_string2,
+	const std::string & debug_string3,
+	const std::string & debug_string4,
+	float displaywidth,
+	float displayheight,
+	bool absenabled,
+	bool absactive,
+	bool tcsenabled,
+	bool tcsactive,
+	bool drifting,
+	float driftscore,
+	float thisdriftscore)
 {
     float screenhwratio = displayheight/displaywidth;
 
@@ -383,4 +424,52 @@ void HUD::Update(FONT & lcdfont, FONT & sansfont, float curlap, float lastlap, f
     }
     else
         raceprompt.SetDrawEnable(hudroot, false);
+}
+
+void HUD::SetDebugVisibility(bool show)
+{
+	SCENENODE & debugnoderef = hudroot.GetNode(debugnode);
+	debugnoderef.SetChildVisibility(show);
+}
+
+void HUD::SetVisible(bool newvis)
+{
+	hudroot.SetChildVisibility(newvis);
+	SetDebugVisibility(newvis && debug_hud_info);
+}
+
+keyed_container <DRAWABLE>::handle HUD::SetupText(
+	SCENENODE & parent,
+	FONT & font,
+	TEXT_DRAW & textdraw,
+	const std::string & str,
+	const float x,
+	const float y,
+	const float scalex,
+	const float scaley,
+	const float r,
+	const float g,
+	const float b,
+	float zorder)
+{
+	keyed_container <DRAWABLE>::handle draw = parent.GetDrawlist().text.insert(DRAWABLE());
+	DRAWABLE & drawref = parent.GetDrawlist().text.get(draw);
+	textdraw.Set(drawref, font, str, x, y, scalex,scaley, r, g, b);
+	drawref.SetDrawOrder(zorder);
+	return draw;
+}
+
+void HUD::GetTimeString(float time, std::string & outtime) const
+{
+	int min = (int) time / 60;
+	float secs = time - min*60;
+
+	if (time != 0.0)
+	{
+		char tempchar[128];
+		sprintf(tempchar, "%02d:%06.3f", min, secs);
+		outtime = tempchar;
+	}
+	else
+		outtime = "--:--.---";
 }

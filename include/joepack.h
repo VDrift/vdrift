@@ -26,6 +26,7 @@ public:
 	JOEPACK() : versionstr("JPK01.00") {curfa = fat.end();}
 	~JOEPACK() {ClosePack();}
 	
+	const std::string & getName() const {return packpath;}
 	bool LoadPack(const std::string & fn);
 	void ClosePack();
 	

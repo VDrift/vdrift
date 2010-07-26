@@ -1,18 +1,10 @@
 #ifndef _DRAWABLE_H
 #define _DRAWABLE_H
 
-#include <vector>
-#ifdef _MSC_VER
-#include <memory>
-#else
-#include <tr1/memory>
-#endif
-
 #include "matrix4.h"
 #include "mathvector.h"
+#include "textureptr.h"
 
-class TEXTURE;
-typedef std::tr1::shared_ptr<TEXTURE> TEXTUREPTR;
 class VERTEXARRAY;
 
 class DRAWABLE
@@ -29,13 +21,13 @@ public:
 	void AddDrawList(int value) {list_ids.push_back(value);}
 	
 	const TEXTURE * GetDiffuseMap() const {return diffuse_map.get();}
-	void SetDiffuseMap(TEXTUREPTR value) {diffuse_map = value;}
+	void SetDiffuseMap(TexturePtr value) {diffuse_map = value;}
 	
 	const TEXTURE * GetMiscMap1() const {return misc_map1.get();}
-	void SetMiscMap1(TEXTUREPTR value) {misc_map1 = value;}
+	void SetMiscMap1(TexturePtr value) {misc_map1 = value;}
 	
 	const TEXTURE * GetMiscMap2() const {return misc_map2.get();}
-	void SetMiscMap2(TEXTUREPTR value) {misc_map2 = value;}
+	void SetMiscMap2(TexturePtr value) {misc_map2 = value;}
 	
 	const VERTEXARRAY * GetVertArray() const {return vert_array;}
 	void SetVertArray(const VERTEXARRAY* value) {vert_array = value;}
@@ -92,9 +84,9 @@ public:
 	void SetCameraTransformEnable(bool value) {cameratransform = value;}
 	
 private:
-	TEXTUREPTR diffuse_map;
-	TEXTUREPTR misc_map1;
-	TEXTUREPTR misc_map2;
+	TexturePtr diffuse_map;
+	TexturePtr misc_map1;
+	TexturePtr misc_map2;
 	std::vector <int> list_ids;
 	const VERTEXARRAY * vert_array;
 	std::vector <MATHVECTOR <float, 3> > lineverts;

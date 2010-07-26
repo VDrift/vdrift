@@ -1,5 +1,7 @@
 #include "text_draw.h"
 
+#include "texture.h"
+
 #include <iostream>
 #include <algorithm>
 

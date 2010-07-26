@@ -1,24 +1,23 @@
 #ifndef _TEXTURE_INTERFACE_H
 #define _TEXTURE_INTERFACE_H
 
-class GLSTATEMANAGER;
-class GRAPHICS_SDLGL;
+#ifdef __APPLE__
+#include <GLExtensionWrangler/glew.h>
+#else
+#include <GL/glew.h>
+#endif
 
 /// an abstract base class for a simple texture interface
 class TEXTURE_INTERFACE
 {
-	friend class GLSTATEMANAGER;
-	friend class GRAPHICS_SDLGL;
 	public:
 		virtual bool Loaded() const = 0;
 		virtual void Activate() const = 0;
 		virtual void Deactivate() const = 0;
-		virtual bool IsRect() const {return false;}
 		virtual unsigned int GetW() const = 0;
 		virtual unsigned int GetH() const = 0;
-	
-	protected:
 		virtual GLuint GetID() const = 0;
+		virtual bool IsRect() const {return false;}
 };
 
 #endif // _TEXTURE_INTERFACE_H

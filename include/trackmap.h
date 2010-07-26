@@ -1,21 +1,44 @@
 #ifndef _TRACKMAP_H
 #define _TRACKMAP_H
 
-#include <ostream>
-#include <list>
-#include <string>
-#include <iostream>
-#include <map>
-
-#include <SDL/SDL.h>
-
 #include "mathvector.h"
-#include "texturemanager.h"
 #include "track.h"
 #include "scenenode.h"
 
+#include <ostream>
+#include <list>
+#include <string>
+
+class SDL_Surface;
+
 class TRACKMAP
 {
+public:
+	TRACKMAP();
+	
+	~TRACKMAP();
+	
+	///w and h are the display device dimensions in pixels.  returns true if successful.
+	bool BuildMap(
+		const std::list <ROADSTRIP> & roads,
+		int w,
+		int h,
+		const std::string & trackname,
+		const std::string & texturepath,
+		const std::string & texsize,
+		ContentManager & content,
+		std::ostream & error_output);
+	
+	void Unload();
+	
+	///update the map with provided information for map visibility, as well as a list of car positions and whether or not they're the player car
+	void Update(bool mapvisible, const std::list <std::pair<MATHVECTOR <float, 3>, bool> > & carpositions);
+	
+	SCENENODE & GetNode()
+	{
+		return mapnode;
+	}
+
 private:
 	//track map size in real world 
 	MATHVECTOR <float, 2> mapsize;
@@ -39,10 +62,10 @@ private:
 
 	SDL_Surface* surface;
 
-	TEXTUREPTR cardot0;
-	TEXTUREPTR cardot1;
-	TEXTUREPTR cardot0_focused;
-	TEXTUREPTR cardot1_focused;
+	TexturePtr cardot0;
+	TexturePtr cardot1;
+	TexturePtr cardot0_focused;
+	TexturePtr cardot1_focused;
 	
 	SCENENODE mapnode;
 	keyed_container <DRAWABLE>::handle mapdraw;
@@ -50,6 +73,26 @@ private:
 	
 	class CARDOT
 	{
+		public:
+			void Init(
+				SCENENODE & topnode, 
+				TexturePtr tex, 
+				const MATHVECTOR <float, 2> & corner1, 
+				const MATHVECTOR <float, 2> & corner2);
+			
+			void Retexture(SCENENODE & topnode, TexturePtr newtex);
+			
+			void Reposition(const MATHVECTOR <float, 2> & corner1, const MATHVECTOR <float, 2> & corner2);
+			
+			void SetVisible(SCENENODE & topnode, bool visible);
+			
+			void DebugPrint(SCENENODE & topnode, std::ostream & out) const;
+			
+			keyed_container <DRAWABLE>::handle & GetDrawableHandle()
+			{
+				return dotdraw;
+			}
+		
 		private:
 			keyed_container <DRAWABLE>::handle dotdraw;
 			VERTEXARRAY dotverts;
@@ -63,72 +106,12 @@ private:
 			{
 				return topnode.GetDrawlist().twodim.get(dotdraw);
 			}
-			
-		public:
-			void Init(SCENENODE & topnode, 
-					  TEXTUREPTR tex, 
-					  const MATHVECTOR <float, 2> & corner1, 
-					  const MATHVECTOR <float, 2> & corner2)
-			{
-				dotdraw = topnode.GetDrawlist().twodim.insert(DRAWABLE());
-				DRAWABLE & drawref = GetDrawable(topnode);
-				drawref.SetVertArray(&dotverts);
-				drawref.SetCull(false, false);
-				drawref.SetColor(1,1,1,0.7);
-				drawref.SetDrawOrder(0.1);
-				Retexture(topnode, tex);
-				Reposition(corner1, corner2);
-			}
-			void Retexture(SCENENODE & topnode, TEXTUREPTR newtex)
-			{
-				assert(newtex->Loaded());
-				GetDrawable(topnode).SetDiffuseMap(newtex);
-			}
-			void Reposition(const MATHVECTOR <float, 2> & corner1, const MATHVECTOR <float, 2> & corner2)
-			{
-				dotverts.SetToBillboard(corner1[0], corner1[1], corner2[0], corner2[1]);
-			}
-			void SetVisible(SCENENODE & topnode, bool visible)
-			{
-				GetDrawable(topnode).SetDrawEnable(visible);
-			}
-			void DebugPrint(SCENENODE & topnode, std::ostream & out) const
-			{
-				const DRAWABLE & drawref = GetDrawable(topnode);
-				out << &drawref << ": enable=" << drawref.GetDrawEnable() << ", tex=" << drawref.GetDiffuseMap() << ", verts=" << drawref.GetVertArray() << std::endl;
-			}
-			keyed_container <DRAWABLE>::handle & GetDrawableHandle()
-			{
-				return dotdraw;
-			}
 	};
 	
 	std::list <CARDOT> dotlist;
 	
 	///w and h are the display device dimensions in pixels
 	void CalcPosition(int w, int h);
-
-public:
-	TRACKMAP();
-	~TRACKMAP();
-	
-	///w and h are the display device dimensions in pixels.  returns true if successful.
-	bool BuildMap(
-		const std::list <ROADSTRIP> & roads,
-		int w,
-		int h,
-		const std::string & trackname,
-		const std::string & texturepath,
-		const std::string & texsize,
-		TEXTUREMANAGER & textures,
-		std::ostream & error_output);
-	
-	void Unload();
-	
-	///update the map with provided information for map visibility, as well as a list of car positions and whether or not they're the player car
-	void Update(bool mapvisible, const std::list <std::pair<MATHVECTOR <float, 3>, bool> > & carpositions);
-	
-	SCENENODE & GetNode() {return mapnode;}
 };
 
 #endif

@@ -1,29 +1,28 @@
 #include "track.h"
 
+#include "k1999.h"
 #include "configfile.h"
 #include "reseatable_reference.h"
 #include "tracksurface.h"
-#include "objectloader.h"
+#include "trackloader.h"
+#include "contentmanager.h"
+#include "textureloader.h"
+#include "texture.h"
 
 #include <functional>
 #include <algorithm>
-#include <list>
-#include <map>
-#include <string>
-#include <iostream>
 #include <fstream>
-#include <sstream>
 
-TRACK::TRACK(std::ostream & info, std::ostream & error) 
-: info_output(info),
-  error_output(error),
-  texture_size("large"),
-  vertical_tracking_skyboxes(false),
-  racingline_visible(false),
-  loaded(false),
-  cull(false)
+TRACK::TRACK(std::ostream & info, std::ostream & error) :
+	info_output(info),
+	error_output(error),
+	texture_size("large"),
+	vertical_tracking_skyboxes(false),
+	racingline_visible(false),
+	loaded(false),
+	cull(false)
 {
-
+	// ctor
 }
 
 TRACK::~TRACK()
@@ -36,7 +35,7 @@ bool TRACK::Load(
 	const std::string & effects_texturepath,
 	const std::string & texsize,
 	int anisotropy,
-	TEXTUREMANAGER & textures,
+	ContentManager & content,
 	bool reverse)
 {
 	Clear();
@@ -68,18 +67,19 @@ bool TRACK::Load(
 		return false;
 	}
 
-	if (!CreateRacingLines(effects_texturepath, texsize, textures))
+	if (!CreateRacingLines(effects_texturepath, texsize, content))
 	{
 		return false;
 	}
 
 	//load objects
-	if (!LoadObjects(trackpath, tracknode, anisotropy, textures))
+	if (!LoadObjects(trackpath, tracknode, anisotropy, content))
 	{
 		return false;
 	}
 
-	info_output << "Track loading was successful: " << model_library.size() << " unique models, " << texture_library.size() << " unique textures" << std::endl;
+	// fixme add counters
+//  info_output << "Track loading was successful: " << model_library.size() << " unique models, " << texture_library.size() << " unique textures" << std::endl;
 
 	return true;
 }
@@ -163,7 +163,7 @@ bool TRACK::DeferredLoad(
 	const std::string & effects_texturepath,
 	const std::string & texsize,
 	int anisotropy,
-	TEXTUREMANAGER & textures,
+	ContentManager & content,
 	bool reverse,
 	bool dynamicshadowsenabled,
 	bool doagressivecombining)
@@ -196,7 +196,7 @@ bool TRACK::DeferredLoad(
 		return false;
 	}
 
-	if (!CreateRacingLines(effects_texturepath, texsize, textures))
+	if (!CreateRacingLines(effects_texturepath, texsize, content))
 	{
 		return false;
 	}
@@ -208,12 +208,12 @@ bool TRACK::DeferredLoad(
 	return true;
 }
 
-bool TRACK::ContinueDeferredLoad(TEXTUREMANAGER & textures)
+bool TRACK::ContinueDeferredLoad(ContentManager & content)
 {
 	if (Loaded())
 		return true;
 
-	std::pair <bool, bool> loadstatus = ContinueObjectLoad(textures);
+	std::pair <bool, bool> loadstatus = ContinueObjectLoad(content);
 	if (loadstatus.first)
 		return false;
 	if (!loadstatus.second)
@@ -233,8 +233,6 @@ void TRACK::Clear()
 {
 	objects.clear();
 	tracksurfaces.clear();
-	model_library.clear();
-	texture_library.clear();
 	ClearRoads();
 	lapsequence.clear();
 	start_positions.clear();
@@ -246,13 +244,13 @@ void TRACK::Clear()
 bool TRACK::CreateRacingLines(
 	const std::string & texturepath,
 	const std::string & texsize,
-	TEXTUREMANAGER & textures)
+	ContentManager & content)
 {
-	TEXTUREINFO texinfo; 
-	texinfo.SetName(texturepath + "/racingline.png");
-	texinfo.SetSize(texsize);
-	racingline_texture = textures.Get(texinfo);
-	if (!racingline_texture->Loaded()) return false;
+	TextureLoader texload; 
+	texload.name = texturepath + "/racingline.png";
+	texload.setSize(texsize);
+	racingline_texture = content.get<TEXTURE>(texload);
+	if (!racingline_texture.get()) return false;
 	
 	K1999 k1999data;
 	int n = 0;
@@ -381,7 +379,7 @@ bool TRACK::BeginObjectLoad(
 	bool dynamicshadowsenabled,
 	bool doagressivecombining)
 {
-	objload.reset(new OBJECTLOADER(trackpath, sceneroot, anisotropy, dynamicshadowsenabled, info_output, error_output, cull, doagressivecombining));
+	objload.reset(new TrackLoader(trackpath, sceneroot, anisotropy, dynamicshadowsenabled, info_output, error_output, cull, doagressivecombining));
 
 	if (!objload->BeginObjectLoad())
 		return false;
@@ -389,24 +387,24 @@ bool TRACK::BeginObjectLoad(
 	return true;
 }
 
-std::pair <bool,bool> TRACK::ContinueObjectLoad(TEXTUREMANAGER & textures)
+std::pair <bool,bool> TRACK::ContinueObjectLoad(ContentManager & content)
 {
 	assert(objload.get());
-	return objload->ContinueObjectLoad(model_library,
-									   objects,
-									   tracksurfaces,
-									   vertical_tracking_skyboxes, 
-									   texture_size,
-									   textures);
+	return objload->ContinueObjectLoad(
+		objects,
+		tracksurfaces,
+		vertical_tracking_skyboxes, 
+		texture_size,
+		content);
 }
 
-bool TRACK::LoadObjects(const std::string & trackpath, SCENENODE & sceneroot, int anisotropy, TEXTUREMANAGER & textures)
+bool TRACK::LoadObjects(const std::string & trackpath, SCENENODE & sceneroot, int anisotropy, ContentManager & content)
 {
 	BeginObjectLoad(trackpath, sceneroot, anisotropy, false, false);
-	std::pair <bool, bool> loadstatus = ContinueObjectLoad(textures);
+	std::pair <bool, bool> loadstatus = ContinueObjectLoad(content);
 	while (!loadstatus.first && loadstatus.second)
 	{
-		loadstatus = ContinueObjectLoad(textures);
+		loadstatus = ContinueObjectLoad(content);
 	}
 	return !loadstatus.first;
 }
@@ -482,10 +480,10 @@ bool TRACK::LoadRoads(const std::string & trackpath, bool reverse)
 	if (reverse)
 	{
 		Reverse();
-		direction = DIRECTION_REVERSE;
+		direction = REVERSE;
 	}
 	else
-		direction = DIRECTION_FORWARD;
+		direction = FORWARD;
 
 	return true;
 }

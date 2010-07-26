@@ -693,6 +693,7 @@ void CARPOWERTRAIN<T>::DebugPrint(std::ostream & out, bool p1, bool p2) const
 		out << std::endl;
 		out << "(rear right)" << std::endl;
 		wheel[REAR_RIGHT].DebugPrint ( out );
+		out << std::endl;
 
 		out << std::endl;
 		out << "(front left)" << std::endl;

@@ -2,17 +2,17 @@
 #define _PARTICLE_H
 
 #include "mathvector.h"
-//#include "reseatable_reference.h"
 #include "optional.h"
 #include "scenenode.h"
 #include "vertexarray.h"
-#include "texturemanager.h"
 
 #include <ostream>
 #include <vector>
 #include <cmath>
 #include <algorithm>
 #include <map>
+
+class ContentManager;
 
 class PARTICLE_SYSTEM
 {
@@ -55,7 +55,7 @@ private:
 
 	public:
 		PARTICLE(SCENENODE & parentnode, const VEC & new_start_position, const VEC & new_dir,
-			 float newspeed, float newtrans, float newlong, float newsize, TEXTUREPTR texture)
+			 float newspeed, float newtrans, float newlong, float newsize, TexturePtr texture)
 			: transparency(newtrans), longevity(newlong), start_position(new_start_position),
 			  speed(newspeed), direction(new_dir), size(newsize), time(0)
 		{
@@ -141,8 +141,8 @@ private:
 	};
 	
 	std::vector <PARTICLE> particles;
-	std::list <TEXTUREPTR> textures;
-	std::list <TEXTUREPTR>::iterator cur_texture;
+	std::list <TexturePtr> textures;
+	std::list <TexturePtr>::iterator cur_texture;
 	
 	std::pair <float,float> transparency_range;
 	std::pair <float,float> longevity_range;
@@ -165,7 +165,7 @@ public:
 		const std::list <std::string> & texlist,
 		int anisotropy,
 		const std::string & texsize,
-		TEXTUREMANAGER * texturemanager,
+		ContentManager * ContentManager,
 		std::ostream & error_output);
 	
 	void Update(float dt, const QUATERNION <float> & camdir, const MATHVECTOR <float, 3> & campos);

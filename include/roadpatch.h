@@ -4,7 +4,7 @@
 #include "bezier.h"
 #include "mathvector.h"
 #include "vertexarray.h"
-#include "texturemanager.h"
+#include "textureptr.h"
 
 class SCENENODE;
 
@@ -51,7 +51,7 @@ public:
 	void AddRacinglineScenenode(
 		SCENENODE & node,
 		ROADPATCH * nextpatch, 
-		TEXTUREPTR racingline_texture,
+		TexturePtr racingline_texture,
 		std::ostream & error_output);
 	
 private:

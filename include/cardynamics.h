@@ -14,7 +14,6 @@
 #include "macros.h"
 #include "BulletDynamics/Dynamics/btActionInterface.h"
 
-class MODEL;
 class CONFIGFILE;
 class COLLISION_WORLD;
 

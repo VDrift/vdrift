@@ -8,32 +8,20 @@
 #include <string>
 #include <cassert>
 
+class ContentManager;
 class SCENENODE;
 
 class WIDGET_MULTIIMAGE : public WIDGET
 {
-private:
-	std::string data;
-	std::string prefix;
-	std::string postfix;
-	std::string tsize;
-	MATHVECTOR <float, 2> center;
-	MATHVECTOR <float, 2> dim;
-	int draworder;
-	std::ostream * errptr;
-	SPRITE2D s1;
-	bool wasvisible;
-	TEXTUREMANAGER * textures;
-	
 public:
-	WIDGET_MULTIIMAGE() : errptr(NULL), wasvisible(false), textures(NULL) {}
+	WIDGET_MULTIIMAGE() : errptr(NULL), wasvisible(false), content(NULL) {}
 
 	virtual WIDGET * clone() const {return new WIDGET_MULTIIMAGE(*this);};
 	
 	void SetupDrawable(
 		SCENENODE & scene,
 		const std::string & texturesize,
-		TEXTUREMANAGER & textures,
+		ContentManager & content,
 		const std::string & datapath,
 		const std::string & newprefix,
 		const std::string & newpostfix, 
@@ -47,7 +35,7 @@ public:
 		tsize = texturesize;
 		
 		errptr = &error_output;
-		this->textures = &textures;
+		this->content = &content;
 		
 		center.Set(x,y);
 		dim.Set(w,h);
@@ -71,15 +59,28 @@ public:
 	virtual void HookMessage(SCENENODE & scene, const std::string & message, const std::string & from)
 	{
 		assert(errptr);
-		assert(textures);
+		assert(content);
 		
 		std::string filename = data + "/" + prefix + message + postfix;
-		s1.Load(scene, filename, tsize, *textures, draworder, *errptr);
+		s1.Load(scene, filename, tsize, *content, draworder, *errptr);
 		s1.SetToBillboard(center[0]-dim[0]*0.5,center[1]-dim[1]*0.5,dim[0],dim[1]);
 		
 		if (s1.Loaded())
 			s1.SetVisible(scene, wasvisible);
 	}
+	
+private:
+	std::string data;
+	std::string prefix;
+	std::string postfix;
+	std::string tsize;
+	MATHVECTOR <float, 2> center;
+	MATHVECTOR <float, 2> dim;
+	int draworder;
+	std::ostream * errptr;
+	SPRITE2D s1;
+	bool wasvisible;
+	ContentManager * content;
 };
 
 #endif

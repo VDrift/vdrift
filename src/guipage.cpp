@@ -1,7 +1,6 @@
 #include "guipage.h"
-#include "configfile.h"
-#include "texturemanager.h"
 
+#include "configfile.h"
 #include "widget.h"
 #include "widget_image.h"
 #include "widget_multiimage.h"
@@ -14,23 +13,38 @@
 #include "widget_spinningcar.h"
 #include "widget_controlgrab.h"
 
+#include "contentmanager.h"
+#include "textureloader.h"
+
 #include <list>
-using std::list;
-
 #include <string>
-using std::string;
-
 #include <map>
-using std::map;
-
 #include <fstream>
-using std::ifstream;
-
 #include <iostream>
-using std::endl;
-
 #include <sstream>
-using std::stringstream;
+
+GUIPAGE::GUIPAGE() :
+	tooltip_widget(NULL),
+	fontmap(NULL),
+	dialog(false)
+{
+	// ctor
+}
+
+TexturePtr GetTexture(
+	const std::string & texname,
+	const std::string & texpath,
+	const std::string & texsize,
+	ContentManager & content)
+{
+	TextureLoader texload;
+	texload.name = texpath + "/" + texname;
+	texload.mipmap = false;
+	texload.repeatu = false;
+	texload.repeatv = false;
+	texload.setSize(texsize);
+	return content.get<TEXTURE>(texload);
+}
 
 bool GUIPAGE::Load(
 	const std::string & path,
@@ -39,10 +53,10 @@ bool GUIPAGE::Load(
 	CONFIGFILE & controlsconfig,
 	SCENENODE & parentnode,
 	std::map <std::string, FONT> & fonts,
-	std::map<std::string, GUIOPTION> & optionmap,
+	std::map <std::string, GUIOPTION> & optionmap,
   	float screenhwratio,
   	const std::string & texsize,
-  	TEXTUREMANAGER & textures,
+  	ContentManager & content,
   	std::ostream & error_output,
   	bool reloadcontrolsonly)
 {
@@ -64,12 +78,12 @@ bool GUIPAGE::Load(
 	
 	SCENENODE & sref = GetNode(parentnode);
 	
-	//error_output << "Loading " << path << endl;
+	//error_output << "Loading " << path << std::endl;
 	
 	CONFIGFILE pagefile;
 	if (!pagefile.Load(path))
 	{
-		error_output << "Couldn't find GUI page file: " << path << endl;
+		error_output << "Couldn't find GUI page file: " << path << std::endl;
 		return false;
 	}
 	
@@ -77,15 +91,15 @@ bool GUIPAGE::Load(
 	//if (!pagefile.GetParam("widgets", widgetnum)) return false;
 	if (!pagefile.GetParam("dialog", dialog)) return false;
 	
-	string background;
+	std::string background;
 	if (!pagefile.GetParam("background", background)) return false;
 	
 	if (!reloadcontrolsonly)
 	{
 		//generate background
 		WIDGET_IMAGE * bg_widget = NewWidget<WIDGET_IMAGE>();
-		TEXTUREPTR texture_back = GetTexture(background, texpath, textures, texsize);
-		if (!texture_back->Loaded()) return false;
+		TexturePtr texture_back = GetTexture(background, texpath, texsize, content);
+		if (!texture_back.get()) return false;
 		bg_widget->SetupDrawable(sref, texture_back, 0.5, 0.5, 1.0, 1.0, -1);
 	}
 	
@@ -120,8 +134,8 @@ bool GUIPAGE::Load(
 	}
 	
 	//keep track of hooks for a second pass
-	map <WIDGET *, list <string> > hookmap;
-	map <string, WIDGET *> namemap;
+	std::map <WIDGET *, std::list <std::string> > hookmap;
+	std::map <std::string, WIDGET *> namemap;
 	
 	std::list <std::string> sectionlist;
 	pagefile.GetSectionList(sectionlist);
@@ -130,7 +144,7 @@ bool GUIPAGE::Load(
 			sectionlist.pop_front();
 	for (std::list <std::string>::iterator i = sectionlist.begin(); i != sectionlist.end(); ++i)
 	{
-		stringstream widgetstr;
+		std::stringstream widgetstr;
 		widgetstr.str(*i);
 		/*widgetstr << "widget-";
 		widgetstr.width(2);
@@ -139,18 +153,18 @@ bool GUIPAGE::Load(
 		
 		//std::cout << *i << ": " << widgetstr.str()+".type" << std::endl;
 		
-		string wtype;
+		std::string wtype;
 		if (!pagefile.GetParam(widgetstr.str()+".type", wtype)) return false;
 		
 		//process hooks
-		list <string> hooklist;
+		std::list <std::string> hooklist;
 		{
-			string hookstr;
+			std::string hookstr;
 			if (!pagefile.GetParam(widgetstr.str()+".hook", hookstr)) hookstr = "";
-			stringstream hookstream(hookstr);
+			std::stringstream hookstream(hookstr);
 			while (hookstream)
 			{
-				string hook;
+				std::string hook;
 				const int bufsize(256);
 				char hookbuf[bufsize];
 				hookstream.getline(hookbuf, bufsize, ',');
@@ -160,7 +174,7 @@ bool GUIPAGE::Load(
 			}
 		}
 		
-		//std::cout << widgetstr.str() << ": " << wtype << endl;
+		//std::cout << widgetstr.str() << ": " << wtype << std::endl;
 		
 		assert(s.valid());
 		
@@ -174,10 +188,10 @@ bool GUIPAGE::Load(
 				if (!pagefile.GetParam(widgetstr.str()+".width", w)) return false;
 				if (!pagefile.GetParam(widgetstr.str()+".height", h)) return false;
 				
-				string texfn;
+				std::string texfn;
 				if (!pagefile.GetParam(widgetstr.str()+".filename", texfn)) return false;
-				TEXTUREPTR texture = GetTexture(texfn, texpath, textures, texsize);
-				if(!texture->Loaded()) return false;
+				TexturePtr texture = GetTexture(texfn, texpath, texsize, content);
+				if(!texture.get()) return false;
 				
 				WIDGET_IMAGE * new_widget = NewWidget<WIDGET_IMAGE>();
 				new_widget->SetupDrawable(sref, texture, xy[0], xy[1], w, h);
@@ -185,11 +199,11 @@ bool GUIPAGE::Load(
 			else if (wtype == "button")
 			{
 				float xy[3];
-				string text;
+				std::string text;
 				int fontsize;
 				float color[3];
-				string action;
-				string description;
+				std::string action;
+				std::string description;
 				bool cancel;
 				if (!pagefile.GetParam(widgetstr.str()+".center", xy)) return false;
 				if (!pagefile.GetParam(widgetstr.str()+".text", text)) return false;
@@ -199,10 +213,10 @@ bool GUIPAGE::Load(
 				if (!pagefile.GetParam(widgetstr.str()+".cancel", cancel)) return false;
 				if (!pagefile.GetParam(widgetstr.str()+".tip", description)) description = "";
 				
-				TEXTUREPTR texture_up = GetTexture("widgets/btn_up_unsel.png", texpath, textures, texsize);
-				TEXTUREPTR texture_down = GetTexture("widgets/btn_down.png", texpath, textures, texsize);
-				TEXTUREPTR texture_sel = GetTexture("widgets/btn_up.png", texpath, textures, texsize);
-				if (!texture_up->Loaded() || !texture_down->Loaded() || !texture_sel->Loaded()) return false;
+				TexturePtr texture_up = GetTexture("widgets/btn_up_unsel.png", texpath, texsize, content);
+				TexturePtr texture_down = GetTexture("widgets/btn_down.png", texpath, texsize, content);
+				TexturePtr texture_sel = GetTexture("widgets/btn_up.png", texpath, texsize, content);
+				if (!texture_up.get() || !texture_down.get() || !texture_sel.get()) return false;
 				float fontscaley = ((((float) fontsize - 7.0f) * 0.25f) + 1.0f)*0.25;
 				float fontscalex = fontscaley*screenhwratio;
 				
@@ -216,7 +230,7 @@ bool GUIPAGE::Load(
 			else if (wtype == "label")
 			{
 				float xy[3];
-				string text;
+				std::string text;
 				int fontsize;
 				float color[3];
 				if (!pagefile.GetParam(widgetstr.str()+".center", xy)) return false;
@@ -235,24 +249,24 @@ bool GUIPAGE::Load(
 				float fontscalex = fontscaley*screenhwratio;
 				new_widget->SetupDrawable(sref, &fonts["futuresans"], text, xy[0],xy[1], fontscalex,fontscaley, color[0],color[1],color[2], 2);
 				
-				string name;
+				std::string name;
 				if (pagefile.GetParam(widgetstr.str()+".name", name)) label_widgets[name] = *new_widget;
 			}
 			else if (wtype == "toggle")
 			{
 				float xy[3];
-				string setting;
+				std::string setting;
 				float spacing(0.3);
 				int fontsize;
-				string valuetype;
+				std::string valuetype;
 				if (!pagefile.GetParam(widgetstr.str()+".center", xy)) return false;
 				if (!pagefile.GetParam(widgetstr.str()+".setting", setting)) return false;
 				pagefile.GetParam(widgetstr.str()+".spacing", spacing);
 				if (!pagefile.GetParam(widgetstr.str()+".fontsize", fontsize)) return false;
 				if (!pagefile.GetParam(widgetstr.str()+".values", valuetype)) return false;
 				
-				string title = "<invalid>";
-				string description = "<invalid>";
+				std::string title = "<invalid>";
+				std::string description = "<invalid>";
 				
 				if (valuetype == "options")
 				{
@@ -262,7 +276,7 @@ bool GUIPAGE::Load(
 				else if (valuetype == "manual")
 				{
 					if (!pagefile.GetParam(widgetstr.str()+".tip", description)) return false;
-					string truestr, falsestr;
+					std::string truestr, falsestr;
 					if (!pagefile.GetParam(widgetstr.str()+".true", truestr)) return false;
 					if (!pagefile.GetParam(widgetstr.str()+".false", falsestr)) return false;
 					title = truestr;
@@ -283,13 +297,13 @@ bool GUIPAGE::Load(
 				
 				//generate toggle
 				{
-					TEXTUREPTR texture_up = GetTexture("widgets/tog_off_up_unsel.png", texpath, textures, texsize);
-					TEXTUREPTR texture_down = GetTexture("widgets/tog_on_up_unsel.png", texpath, textures, texsize);
-					TEXTUREPTR texture_upsel = GetTexture("widgets/tog_off_up.png", texpath, textures, texsize);
-					TEXTUREPTR texture_downsel = GetTexture("widgets/tog_on_up.png", texpath, textures, texsize);
-					TEXTUREPTR texture_trans = GetTexture("widgets/tog_off_down.png", texpath, textures, texsize);
-					if (!texture_up->Loaded() || !texture_down->Loaded() || !texture_upsel->Loaded() || 
-						!texture_downsel->Loaded() || !texture_trans->Loaded()) return false;
+					TexturePtr texture_up = GetTexture("widgets/tog_off_up_unsel.png", texpath, texsize, content);
+					TexturePtr texture_down = GetTexture("widgets/tog_on_up_unsel.png", texpath, texsize, content);
+					TexturePtr texture_upsel = GetTexture("widgets/tog_off_up.png", texpath, texsize, content);
+					TexturePtr texture_downsel = GetTexture("widgets/tog_on_up.png", texpath, texsize, content);
+					TexturePtr texture_trans = GetTexture("widgets/tog_off_down.png", texpath, texsize, content);
+					if (!texture_up.get() || !texture_down.get() || !texture_upsel.get() || 
+						!texture_downsel.get() || !texture_trans.get()) return false;
 					float h = 0.025;
 					float w = h*screenhwratio;
 					
@@ -304,9 +318,9 @@ bool GUIPAGE::Load(
 			}
 			else if (wtype == "stringwheel" || wtype == "intwheel" || wtype == "floatwheel")
 			{
-				string setting;
-				string values;
-				string action;
+				std::string setting;
+				std::string values;
+				std::string action;
 				float xy[3];
 				float spacing;
 				int fontsize;
@@ -320,8 +334,8 @@ bool GUIPAGE::Load(
 				
 				xy[0] -= spacing*.5;
 				
-				string title = "<invalid>";
-				string description = "<invalid>";
+				std::string title = "<invalid>";
+				std::string description = "<invalid>";
 				
 				if (values == "options")
 				{
@@ -330,14 +344,14 @@ bool GUIPAGE::Load(
 				}
 				else
 				{
-					error_output << "Widget " << widgetstr << ": unknown value type " << values << endl;
+					error_output << "Widget " << widgetstr << ": unknown value type " << values << std::endl;
 				}
 				
-				TEXTUREPTR up_left = GetTexture("widgets/wheel_up_l.png", texpath, textures, texsize);
-				TEXTUREPTR down_left = GetTexture("widgets/wheel_down_l.png", texpath, textures, texsize);
-				TEXTUREPTR up_right = GetTexture("widgets/wheel_up_r.png", texpath, textures, texsize);
-				TEXTUREPTR down_right = GetTexture("widgets/wheel_down_r.png", texpath, textures, texsize);
-				if (!up_left->Loaded() || !down_left->Loaded() || !up_right->Loaded() || !down_right->Loaded()) return false;
+				TexturePtr up_left = GetTexture("widgets/wheel_up_l.png", texpath, texsize, content);
+				TexturePtr down_left = GetTexture("widgets/wheel_down_l.png", texpath, texsize, content);
+				TexturePtr up_right = GetTexture("widgets/wheel_up_r.png", texpath, texsize, content);
+				TexturePtr down_right = GetTexture("widgets/wheel_down_r.png", texpath, texsize, content);
+				if (!up_left.get() || !down_left.get() || !up_right.get() || !down_right.get()) return false;
 				//float w = 0.02;
 				//float h = w*(4.0/3.0);
 				float fontscaley = ((((float) fontsize - 7.0f) * 0.25f) + 1.0f)*0.25;
@@ -358,16 +372,16 @@ bool GUIPAGE::Load(
 					namemap[name] = new_widget;
 				}
 				
-				for (list <string>::iterator n = hooklist.begin(); n != hooklist.end(); n++)
+				for (std::list <std::string>::iterator n = hooklist.begin(); n != hooklist.end(); n++)
 				{
 					hookmap[new_widget].push_back(*n);
 				}
 			}
 			else if (wtype == "intintwheel")
 			{
-				string setting1, setting2;
-				string values;
-				string hook;
+				std::string setting1, setting2;
+				std::string values;
+				std::string hook;
 				float xy[3];
 				float spacing;
 				int fontsize;
@@ -382,8 +396,8 @@ bool GUIPAGE::Load(
 				
 				xy[0] -= spacing*.5;
 				
-				string title = "<invalid>";
-				string description = "<invalid>";
+				std::string title = "<invalid>";
+				std::string description = "<invalid>";
 				
 				if (values == "options")
 				{
@@ -392,15 +406,15 @@ bool GUIPAGE::Load(
 				}
 				else
 				{
-					error_output << "Widget " << widgetstr << ": unknown value type " << values << endl;
+					error_output << "Widget " << widgetstr << ": unknown value type " << values << std::endl;
 				}
 				
 				
-				TEXTUREPTR up_left = GetTexture("widgets/wheel_up_l.png", texpath, textures, texsize);
-				TEXTUREPTR down_left = GetTexture("widgets/wheel_down_l.png", texpath, textures, texsize);
-				TEXTUREPTR up_right = GetTexture("widgets/wheel_up_r.png", texpath, textures, texsize);
-				TEXTUREPTR down_right = GetTexture("widgets/wheel_down_r.png", texpath, textures, texsize);
-				if (!up_left->Loaded() || !down_left->Loaded() || !up_right->Loaded() || !down_right->Loaded()) return false;
+				TexturePtr up_left = GetTexture("widgets/wheel_up_l.png", texpath, texsize, content);
+				TexturePtr down_left = GetTexture("widgets/wheel_down_l.png", texpath, texsize, content);
+				TexturePtr up_right = GetTexture("widgets/wheel_up_r.png", texpath, texsize, content);
+				TexturePtr down_right = GetTexture("widgets/wheel_down_r.png", texpath, texsize, content);
+				if (!up_left.get() || !down_left.get() || !up_right.get() || !down_right.get()) return false;
 				//float w = 0.02;
 				//float h = w*(4.0/3.0);
 				float fontscaley = ((((float) fontsize - 7.0f) * 0.25f) + 1.0f)*0.25;
@@ -421,7 +435,7 @@ bool GUIPAGE::Load(
 			{
 				float xy[3];
 				float width, height;
-				string setting, values, name, prefix, postfix;
+				std::string setting, values, name, prefix, postfix;
 				
 				if (!pagefile.GetParam(widgetstr.str()+".center", xy)) return false;
 				if (!pagefile.GetParam(widgetstr.str()+".width", width)) return false;
@@ -432,7 +446,7 @@ bool GUIPAGE::Load(
 				if (!pagefile.GetParam(widgetstr.str()+".postfix", postfix)) return false;
 				
 				WIDGET_MULTIIMAGE * new_widget = NewWidget<WIDGET_MULTIIMAGE>();
-				new_widget->SetupDrawable(sref, texsize, textures, datapath, prefix, postfix, xy[0],xy[1], width, height, error_output, 102);
+				new_widget->SetupDrawable(sref, texsize, content, datapath, prefix, postfix, xy[0],xy[1], width, height, error_output, 102);
 				
 				if (pagefile.GetParam(widgetstr.str()+".name", name)) namemap[name] = new_widget;
 			}
@@ -441,7 +455,7 @@ bool GUIPAGE::Load(
 				float xy[3];
 				float min(0), max(1);
 				bool percentage(false);
-				string name, setting, values;
+				std::string name, setting, values;
 				int fontsize;
 				
 				if (!pagefile.GetParam(widgetstr.str()+".name", name)) return false;
@@ -450,8 +464,8 @@ bool GUIPAGE::Load(
 				if (!pagefile.GetParam(widgetstr.str()+".values", values)) return false;
 				if (!pagefile.GetParam(widgetstr.str()+".fontsize", fontsize)) return false;
 				
-				string title = "<invalid>";
-				string description = "<invalid>";
+				std::string title = "<invalid>";
+				std::string description = "<invalid>";
 				
 				if (values == "manual")
 				{
@@ -473,7 +487,7 @@ bool GUIPAGE::Load(
 				{
 					if (optionmap.find(setting) == optionmap.end())
 					{
-						error_output << path << ": slider widget option " << setting << " not found, assuming default min/max/percentage values" << endl;
+						error_output << path << ": slider widget option " << setting << " not found, assuming default min/max/percentage values" << std::endl;
 					}
 					else
 					{
@@ -512,9 +526,9 @@ bool GUIPAGE::Load(
 				float fontscalex = fontscaley*screenhwratio;
 				FONT * font = &fonts["lcd"];
 
-				TEXTUREPTR cursor = GetTexture("widgets/sld_cursor.png", texpath, textures, texsize);
-				TEXTUREPTR wedge = GetTexture("widgets/sld_wedge.png", texpath, textures, texsize);
-				if (!cursor->Loaded() || !wedge->Loaded()) return false;
+				TexturePtr cursor = GetTexture("widgets/sld_cursor.png", texpath, texsize, content);
+				TexturePtr wedge = GetTexture("widgets/sld_wedge.png", texpath, texsize, content);
+				if (!cursor.get() || !wedge.get()) return false;
 				
 				WIDGET_SLIDER * new_widget = NewWidget<WIDGET_SLIDER>();
 				new_widget->SetupDrawable(sref, wedge, cursor, xy[0], xy[1], w, h, min, max, percentage, setting,
@@ -526,7 +540,7 @@ bool GUIPAGE::Load(
 				pagefile.GetParam(widgetstr.str()+".color", color);
 				new_widget->SetColor(sref, color[0], color[1], color[2]);
 				
-				for (list <string>::iterator n = hooklist.begin(); n != hooklist.end(); n++)
+				for (std::list <std::string>::iterator n = hooklist.begin(); n != hooklist.end(); n++)
 				{
 					hookmap[new_widget].push_back(*n);
 				}
@@ -534,7 +548,7 @@ bool GUIPAGE::Load(
 			else if (wtype == "spinningcar")
 			{
 				float centerxy[3], carposxy[3];
-				string setting, values, name, prefix, postfix;
+				std::string setting, values, name, prefix, postfix;
 				
 				if (!pagefile.GetParam(widgetstr.str()+".center", centerxy)) return false;
 				if (!pagefile.GetParam(widgetstr.str()+".carpos", carposxy)) return false;
@@ -542,23 +556,23 @@ bool GUIPAGE::Load(
 				if (!pagefile.GetParam(widgetstr.str()+".values", values)) return false;
 				
 				WIDGET_SPINNINGCAR * new_widget = NewWidget<WIDGET_SPINNINGCAR>();
-				new_widget->SetupDrawable(sref, texsize, datapath, centerxy[0], centerxy[1], MATHVECTOR <float, 3> (carposxy[0], carposxy[1], carposxy[2]), textures, error_output, 110);
+				new_widget->SetupDrawable(sref, texsize, datapath, centerxy[0], centerxy[1], MATHVECTOR <float, 3> (carposxy[0], carposxy[1], carposxy[2]), content, error_output, 110);
 				
 				if (pagefile.GetParam(widgetstr.str()+".name", name)) namemap[name] = new_widget;
 			}
 			else if (wtype != "controlgrab")
 			{
-				error_output << path << ": unknown " << widgetstr.str() << " type: " << wtype << ", ignoring" << endl;
+				error_output << path << ": unknown " << widgetstr.str() << " type: " << wtype << ", ignoring" << std::endl;
 			}
 		}
 		
 		if (wtype == "controlgrab")
 		{
 			float xy[3];
-			string text;
+			std::string text;
 			int fontsize;
-			string setting;
-			string description;
+			std::string setting;
+			std::string description;
 			bool analog, only_one;
 			if (!pagefile.GetParam(widgetstr.str()+".center", xy)) return false;
 			if (!pagefile.GetParam(widgetstr.str()+".text", text)) return false;
@@ -571,21 +585,21 @@ bool GUIPAGE::Load(
 			WIDGET_CONTROLGRAB * new_widget = NewWidget<WIDGET_CONTROLGRAB>();
 			controlgrabs.push_back(new_widget);
 			
-			std::vector <TEXTUREPTR> control(WIDGET_CONTROLGRAB::END);
-			control[WIDGET_CONTROLGRAB::ADD] = GetTexture("widgets/controls/add.png", texpath, textures, texsize);
-			control[WIDGET_CONTROLGRAB::ADDSEL] = GetTexture("widgets/controls/add_sel.png", texpath, textures, texsize);
-			control[WIDGET_CONTROLGRAB::JOYAXIS] = GetTexture("widgets/controls/joy_axis.png", texpath, textures, texsize);
-			control[WIDGET_CONTROLGRAB::JOYAXISSEL] = GetTexture("widgets/controls/joy_axis_sel.png", texpath, textures, texsize);
-			control[WIDGET_CONTROLGRAB::JOYBTN] = GetTexture("widgets/controls/joy_btn.png", texpath, textures, texsize);
-			control[WIDGET_CONTROLGRAB::JOYBTNSEL] = GetTexture("widgets/controls/joy_btn_sel.png", texpath, textures, texsize);
-			control[WIDGET_CONTROLGRAB::KEY] = GetTexture("widgets/controls/key.png", texpath, textures, texsize);
-			control[WIDGET_CONTROLGRAB::KEYSEL] = GetTexture("widgets/controls/key_sel.png", texpath, textures, texsize);
-			control[WIDGET_CONTROLGRAB::MOUSE] = GetTexture("widgets/controls/mouse.png", texpath, textures, texsize);
-			control[WIDGET_CONTROLGRAB::MOUSESEL] = GetTexture("widgets/controls/mouse_sel.png", texpath, textures, texsize);
-			std::vector <TEXTUREPTR>::iterator it;
+			std::vector <TexturePtr> control(WIDGET_CONTROLGRAB::END);
+			control[WIDGET_CONTROLGRAB::ADD] = GetTexture("widgets/controls/add.png", texpath, texsize, content);
+			control[WIDGET_CONTROLGRAB::ADDSEL] = GetTexture("widgets/controls/add_sel.png", texpath, texsize, content);
+			control[WIDGET_CONTROLGRAB::JOYAXIS] = GetTexture("widgets/controls/joy_axis.png", texpath, texsize, content);
+			control[WIDGET_CONTROLGRAB::JOYAXISSEL] = GetTexture("widgets/controls/joy_axis_sel.png", texpath, texsize, content);
+			control[WIDGET_CONTROLGRAB::JOYBTN] = GetTexture("widgets/controls/joy_btn.png", texpath, texsize, content);
+			control[WIDGET_CONTROLGRAB::JOYBTNSEL] = GetTexture("widgets/controls/joy_btn_sel.png", texpath, texsize, content);
+			control[WIDGET_CONTROLGRAB::KEY] = GetTexture("widgets/controls/key.png", texpath, texsize, content);
+			control[WIDGET_CONTROLGRAB::KEYSEL] = GetTexture("widgets/controls/key_sel.png", texpath, texsize, content);
+			control[WIDGET_CONTROLGRAB::MOUSE] = GetTexture("widgets/controls/mouse.png", texpath, texsize, content);
+			control[WIDGET_CONTROLGRAB::MOUSESEL] = GetTexture("widgets/controls/mouse_sel.png", texpath, texsize, content);
+			std::vector <TexturePtr>::const_iterator it;
 			for (it = control.begin(); it < control.end(); it++)
 			{
-				if (!it->get()->Loaded()) return false;
+				if (!(*it).get()) return false;
 			}
 			
 			float fontscaley = ((((float) fontsize - 7.0f) * 0.25f) + 1.0f)*0.25;
@@ -600,15 +614,15 @@ bool GUIPAGE::Load(
 	if (!reloadcontrolsonly)
 	{
 		//do a second pass to assign hooks
-		for (map <WIDGET *, list <string> >::iterator i = hookmap.begin(); i != hookmap.end(); ++i)
+		for (std::map <WIDGET *, std::list <std::string> >::iterator i = hookmap.begin(); i != hookmap.end(); ++i)
 		{
-			for (list <string>::iterator n = i->second.begin(); n != i->second.end(); ++n)
+			for (std::list <std::string>::iterator n = i->second.begin(); n != i->second.end(); ++n)
 			{
-				map <string, WIDGET *>::iterator hookee = namemap.find(*n);
+				std::map <std::string, WIDGET *>::iterator hookee = namemap.find(*n);
 				if (hookee != namemap.end())
 					i->first->AddHook(hookee->second);
 				else
-					error_output << path << ": unknown hook reference to " << *n << endl;
+					error_output << path << ": unknown hook reference to " << *n << std::endl;
 			}
 		}
 		
@@ -621,23 +635,62 @@ bool GUIPAGE::Load(
 	return true;
 }
 
-std::list <std::pair <std::string, bool> > GUIPAGE::ProcessInput(SCENENODE & parent, bool movedown, bool moveup, float cursorx, float cursory,
-		bool cursordown, bool cursorjustup, float screenhwratio)
+void GUIPAGE::SetVisible(SCENENODE & parent, const bool newvis)
+{
+	SCENENODE & sref = GetNode(parent);
+	for (std::list <DERIVED <WIDGET> >::iterator i = widgets.begin(); i != widgets.end(); ++i)
+	{
+		(*i)->SetVisible(sref, newvis);
+	}
+}
+
+void GUIPAGE::SetAlpha(SCENENODE & parent, const float newalpha)
+{
+	SCENENODE & sref = parent.GetNode(s);
+	for (std::list <DERIVED <WIDGET> >::iterator i = widgets.begin(); i != widgets.end(); ++i)
+	{
+		(*i)->SetAlpha(sref, newalpha);
+	}
+}
+
+///tell all child widgets to update to/from the option map
+void GUIPAGE::UpdateOptions(
+	SCENENODE & parent,
+	bool save_to_options,
+	std::map<std::string, GUIOPTION> & optionmap,
+	std::ostream & error_output)
+{
+	SCENENODE & sref = parent.GetNode(s);
+	for (std::list <DERIVED <WIDGET> >::iterator i = widgets.begin(); i != widgets.end(); ++i)
+	{
+		(*i)->UpdateOptions(sref, save_to_options, optionmap, error_output);
+	}
+}
+
+std::list <std::pair <std::string, bool> > GUIPAGE::ProcessInput(
+	SCENENODE & parent,
+	bool movedown,
+	bool moveup,
+	float cursorx,
+	float cursory,
+	bool cursordown,
+	bool cursorjustup,
+	float screenhwratio)
 {
 	assert(fontmap);
 	assert(tooltip_widget);
 	
 	SCENENODE & sref = parent.GetNode(s);
 	
-	list <std::pair <std::string, bool> > actions;
-	string tooltip;
+	std::list <std::pair <std::string, bool> > actions;
+	std::string tooltip;
 	
 	for (std::list <DERIVED <WIDGET> >::iterator i = widgets.begin(); i != widgets.end(); ++i)
 	{
 		bool mouseover = (*i)->ProcessInput(sref, cursorx, cursory, cursordown, cursorjustup);
 		if (mouseover)
 			tooltip = (*i)->GetDescription();
-		string action = (*i)->GetAction();
+		std::string action = (*i)->GetAction();
 		if (!action.empty())
 			actions.push_back(std::pair <std::string, bool> (action, !(*i)->GetCancel()));
 	}
@@ -649,3 +702,28 @@ std::list <std::pair <std::string, bool> > GUIPAGE::ProcessInput(SCENENODE & par
 	
 	return actions;
 }
+
+void GUIPAGE::Update(SCENENODE & parent, float dt)
+{
+	SCENENODE & sref = parent.GetNode(s);
+	for (std::list <DERIVED <WIDGET> >::iterator i = widgets.begin(); i != widgets.end(); ++i)
+	{
+		(*i)->Update(sref, dt);
+	}
+}
+
+void GUIPAGE::Clear(SCENENODE & parentnode)
+{
+	controlgrabs.clear();
+	tooltip_widget = NULL;
+	fontmap = NULL;
+	dialog = false;
+	widgets.clear();
+	if (s.valid())
+	{
+		SCENENODE & sref = parentnode.GetNode(s);
+		sref.Clear();
+	}
+	s.invalidate();
+}
+

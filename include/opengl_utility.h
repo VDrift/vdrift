@@ -7,7 +7,7 @@
 namespace OPENGL_UTILITY
 {
 	/// returns true on error
-	bool CheckForOpenGLErrors(std::string activity_description, std::ostream & error_output);
+	bool CheckForOpenGLErrors(const std::string & activity_description, std::ostream & error_output);
 }
 
 #endif

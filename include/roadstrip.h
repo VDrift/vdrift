@@ -28,7 +28,7 @@ public:
 	
 	void CreateRacingLine(
 		SCENENODE & parentnode, 
-		TEXTUREPTR racingline_texture,
+		TexturePtr racingline_texture,
 		std::ostream & error_output);
 
 	bool GetClosed() const

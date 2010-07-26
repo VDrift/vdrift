@@ -8,68 +8,21 @@
 
 #include "derived.h"
 #include "widget.h"
-#include "texturemanager.h"
 #include "font.h"
 #include "guioption.h"
 #include "scenenode.h"
 #include "configfile.h"
 #include "reseatable_reference.h"
 
+class ContentManager;
 class WIDGET_LABEL;
 class WIDGET_CONTROLGRAB;
 
 class GUIPAGE
 {
-private:
-	std::list <DERIVED <WIDGET> > widgets;
-	std::map <std::string, reseatable_reference <WIDGET_LABEL> > label_widgets;
-	std::list <WIDGET_CONTROLGRAB *> controlgrabs;
-	WIDGET_LABEL * tooltip_widget;
-	std::map <std::string, FONT> * fontmap;
-	keyed_container <SCENENODE>::handle s;
-	
-	bool dialog;
-	
-	///hides some of the ugliness behind this method
-	template <typename T>
-	T * NewWidget()
-	{
-		widgets.push_back(DERIVED <WIDGET> (new T()));
-		return (T*) widgets.back().Get();
-	}
-	
-	TEXTUREPTR GetTexture(const std::string & texname, const std::string & texpath, TEXTUREMANAGER & textures, const std::string & texsize)
-	{
-		TEXTUREINFO texinfo(texpath + "/" + texname);
-		texinfo.SetMipMap(false);
-		texinfo.SetRepeat(false, false);
-		texinfo.SetSize(texsize);
-		return textures.Get(texinfo);
-	}
-	
-	void Clear(SCENENODE & parentnode)
-	{
-		controlgrabs.clear();
-		tooltip_widget = NULL;
-		fontmap = NULL;
-		dialog = false;
-		widgets.clear();
-		if (s.valid())
-		{
-			SCENENODE & sref = parentnode.GetNode(s);
-			sref.Clear();
-		}
-		s.invalidate();
-	}
-	
 public:
-	GUIPAGE() : tooltip_widget(NULL),fontmap(NULL),dialog(false) {}
-	
-	SCENENODE & GetNode(SCENENODE & parentnode)
-	{
-		return parentnode.GetNode(s);
-	}
-	
+	GUIPAGE();
+
 	bool Load(
 		const std::string & path,
 		const std::string & texpath,
@@ -80,56 +33,64 @@ public:
 		std::map<std::string, GUIOPTION> & optionmap,
 		float screenhwratio,
 		const std::string & texsize,
-		TEXTUREMANAGER & textures,
+		ContentManager & content,
 		std::ostream & error_output,
 		bool reloadcontrolsonly = false);
-  	
-	void SetVisible(SCENENODE & parent, const bool newvis)
-	{
-		SCENENODE & sref = GetNode(parent);
-		for (std::list <DERIVED <WIDGET> >::iterator i = widgets.begin(); i != widgets.end(); ++i)
-		{
-			(*i)->SetVisible(sref, newvis);
-		}
-	}
-	
-	void SetAlpha(SCENENODE & parent, const float newalpha)
-	{
-		SCENENODE & sref = parent.GetNode(s);
-		for (std::list <DERIVED <WIDGET> >::iterator i = widgets.begin(); i != widgets.end(); ++i)
-		{
-			(*i)->SetAlpha(sref, newalpha);
-		}
-	}
-	
+
+	void SetVisible(SCENENODE & parent, const bool newvis);
+
+	void SetAlpha(SCENENODE & parent, const float newalpha);
+
 	///tell all child widgets to update to/from the option map
-	void UpdateOptions(SCENENODE & parent, bool save_to_options, std::map<std::string, GUIOPTION> & optionmap, std::ostream & error_output)
-	{
-		SCENENODE & sref = parent.GetNode(s);
-		for (std::list <DERIVED <WIDGET> >::iterator i = widgets.begin(); i != widgets.end(); ++i)
-		{
-			(*i)->UpdateOptions(sref, save_to_options, optionmap, error_output);
-		}
-	}
-	
+	void UpdateOptions(
+		SCENENODE & parent,
+		bool save_to_options,
+		std::map<std::string, GUIOPTION> & optionmap,
+		std::ostream & error_output);
+
 	///returns a list of actions that were generated
-	std::list <std::pair <std::string, bool> > ProcessInput(SCENENODE & parent, bool movedown, bool moveup, float cursorx, float cursory,
-			bool cursordown, bool cursorjustup, float screenhwratio);
-			
+	std::list <std::pair <std::string, bool> > ProcessInput(
+		SCENENODE & parent,
+		bool movedown,
+		bool moveup,
+		float cursorx,
+		float cursory,
+		bool cursordown,
+		bool cursorjustup,
+		float screenhwratio);
+
 	///tell all child widgets to do as update tick
-	void Update(SCENENODE & parent, float dt)
+	void Update(SCENENODE & parent, float dt);
+
+	SCENENODE & GetNode(SCENENODE & parentnode)
 	{
-		SCENENODE & sref = parent.GetNode(s);
-		for (std::list <DERIVED <WIDGET> >::iterator i = widgets.begin(); i != widgets.end(); ++i)
-		{
-			(*i)->Update(sref, dt);
-		}
+		return parentnode.GetNode(s);
 	}
-	
+
 	reseatable_reference <WIDGET_LABEL> GetLabel(const std::string & label_widget_name)
 	{
 		return label_widgets[label_widget_name];
 	}
+
+private:
+	std::list <DERIVED <WIDGET> > widgets;
+	std::map <std::string, reseatable_reference <WIDGET_LABEL> > label_widgets;
+	std::list <WIDGET_CONTROLGRAB *> controlgrabs;
+	WIDGET_LABEL * tooltip_widget;
+	std::map <std::string, FONT> * fontmap;
+	keyed_container <SCENENODE>::handle s;
+
+	bool dialog;
+
+	///hides some of the ugliness behind this method
+	template <typename T>
+	T * NewWidget()
+	{
+		widgets.push_back(DERIVED <WIDGET> (new T()));
+		return (T*) widgets.back().Get();
+	}
+
+	void Clear(SCENENODE & parentnode);
 };
 
 #endif

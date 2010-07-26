@@ -5,7 +5,6 @@
 #include "coordinatesystems.h"
 #include "collision_world.h"
 #include "tobullet.h"
-#include "model.h"
 
 #if defined(_WIN32) || defined(__APPLE__)
 template <typename T> bool isnan(T number) {return (number != number);}

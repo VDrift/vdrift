@@ -228,23 +228,23 @@ void GRAPHICS_SDLGL::Init(const std::string shaderpath, const std::string & wind
 	//load static reflection map for dynamic reflections too, since we may need it
 	if ((reflection_status == REFLECTION_STATIC || reflection_status == REFLECTION_DYNAMIC) && !static_reflectionmap_file.empty())
 	{
-		TEXTUREINFO t;
-		t.SetName(static_reflectionmap_file);
-		t.SetCube(true, true);
-		t.SetMipMap(true);
-		t.SetAnisotropy(anisotropy);
-		t.SetSize(texturesize);
+		TextureInfo t;
+		t.name = static_reflectionmap_file;
+		t.verticalcross = true;
+		t.mipmap = true;
+		t.anisotropy = anisotropy;
+		t.setSize(texturesize);
 		static_reflection.Load(t, error_output);
 	}
 	
 	if (!static_ambientmap_file.empty())
 	{
-		TEXTUREINFO t;
-		t.SetName(static_ambientmap_file);
-		t.SetCube(true, true);
-		t.SetMipMap(false);
-		t.SetAnisotropy(anisotropy);
-		t.SetSize(texturesize);
+		TextureInfo t;
+		t.name = static_ambientmap_file;
+		t.verticalcross = true;
+		t.mipmap = false;
+		t.anisotropy = anisotropy;
+		t.setSize(texturesize);
 		static_ambient.Load(t, error_output);
 	}
 

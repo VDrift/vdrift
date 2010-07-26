@@ -1,24 +1,30 @@
 #ifndef _TEXTURE_H
 #define _TEXTURE_H
 
-#ifdef __APPLE__
-#include <GLExtensionWrangler/glew.h>
-#else
-#include <GL/glew.h>
-#endif
-
-#include "textureinfo.h"
 #include "texture_interface.h"
+#include "textureinfo.h"
 
 class TEXTURE : public TEXTURE_INTERFACE
 {
 public:
-	TEXTURE() {Init();}
+	TEXTURE() :
+		loaded(false),
+		w(0),
+		h(0),
+		origw(0),
+		origh(0),
+		scale(1.0),
+		alphachannel(false),
+		cube(false)
+	{
+		// ctor
+	}
 	
-	TEXTURE(const TEXTUREINFO & info, std::ostream & error) {Init(); Load(info, error);}
-	
-	virtual ~TEXTURE() {Unload();}
-	
+	virtual ~TEXTURE()
+	{
+		Unload();
+	}
+
 	virtual GLuint GetID() const {return tex_id;}
 	
 	virtual void Activate() const;
@@ -26,10 +32,6 @@ public:
 	virtual void Deactivate() const;
 
 	virtual bool Loaded() const {return loaded;}
-	
-	bool Load(const TEXTUREINFO & info, std::ostream & error);
-	
-	void Unload();
 	
 	virtual unsigned int GetW() const {return w;}
 	
@@ -39,12 +41,12 @@ public:
 	
 	unsigned short int GetOriginalH() const {return origh;}
 
-	///scale factor from original size.  allows the user to determine
-	///what the texture size scaling did to the texture dimensions
+	/// allows the user to determine what the texture size scaling did to the texture dimensions
 	float GetScale() const {return scale;}
+
+	bool Load(const TextureInfo & info, std::ostream & error);
 	
 private:
-	TEXTUREINFO texture_info; // can be removed eventually
 	GLuint tex_id;
 	bool loaded;
 	unsigned int w, h; ///< w and h are post-texture-size transform
@@ -53,21 +55,11 @@ private:
 	bool alphachannel;
 	bool cube;
 	
-	void Init()
-	{
-		loaded = false;
-		w = 0;
-		h = 0;
-		origw = 0;
-		origh = 0;
-		scale = 1.0;
-		alphachannel = false;
-		cube = false;
-	}
+	bool LoadCube(const TextureInfo & info, std::ostream & error);
 	
-	bool LoadCube(const TEXTUREINFO & info, std::ostream & error);
-	
-	bool LoadCubeVerticalCross(const TEXTUREINFO & info, std::ostream & error);
+	bool LoadCubeVerticalCross(const TextureInfo & info, std::ostream & error);
+
+	void Unload();
 };
 
 #endif //_TEXTURE_H

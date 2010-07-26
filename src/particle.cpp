@@ -1,22 +1,24 @@
 #include "particle.h"
-#include "unittest.h"
 
-using std::endl;
+#include "unittest.h"
+#include "contentmanager.h"
+#include "textureloader.h"
 
 bool PARTICLE_SYSTEM::Load(
 	const std::list <std::string> & texlist,
 	int anisotropy,
 	const std::string & texsize,
-	TEXTUREMANAGER * texturemanager,
+	ContentManager * ContentManager,
 	std::ostream & error_output)
 {
-	if (!texturemanager) return false;
+	if (!ContentManager) return false;
 	for (std::list <std::string>::const_iterator i = texlist.begin(); i != texlist.end(); ++i)
 	{
-		TEXTUREINFO texinfo(*i);
-		texinfo.SetSize(texsize);
-		texinfo.SetAnisotropy(anisotropy);
-		TEXTUREPTR texture = texturemanager->Get(texinfo);
+		TextureLoader texload;
+		texload.name = *i;
+		texload.anisotropy = anisotropy;
+		texload.setSize(texsize);
+		TexturePtr texture = ContentManager->get<TEXTURE>(texload);
 		textures.push_back(texture);
 	}
 	cur_texture = textures.end();
@@ -86,7 +88,7 @@ void PARTICLE_SYSTEM::AddParticle(const MATHVECTOR <float,3> & position, float n
 	if (cur_texture == textures.end())
 		cur_texture = textures.begin();
 	
-	TEXTUREPTR tex;
+	TexturePtr tex;
 	if (!testonly)
 	{
 		assert(cur_texture != textures.end()); //this should only happen if the textures array is empty, which should never happen unless we're doing a unit test

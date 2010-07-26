@@ -20,7 +20,7 @@ bool ROADPATCH::Collide(
 }
 
 void ROADPATCH::AddRacinglineScenenode(SCENENODE & node, ROADPATCH * nextpatch,
-		TEXTUREPTR racingline_texture, std::ostream & error_output)
+		TexturePtr racingline_texture, std::ostream & error_output)
 {
 	if (!nextpatch)
 		return;

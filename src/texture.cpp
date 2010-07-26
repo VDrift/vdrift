@@ -121,9 +121,9 @@ void PreMultiplyAlpha(SDL_Surface * surface)
 	SDL_UnlockSurface(surface);
 }
 
-bool TEXTURE::LoadCubeVerticalCross(const TEXTUREINFO & info, std::ostream & error)
+bool TEXTURE::LoadCubeVerticalCross(const TextureInfo & info, std::ostream & error)
 {
-	std::string cubefile = info.GetName();
+	std::string cubefile = info.name;
 
 	GLuint new_handle = 0;
 	glGenTextures(1, &new_handle);
@@ -158,7 +158,7 @@ bool TEXTURE::LoadCubeVerticalCross(const TEXTUREINFO & info, std::ostream & err
 					format = GL_RGBA;
 					break;
 				default:
-					error << "Texture has unknown format: " + info.GetName() << std::endl;
+					error << "Texture has unknown format: " + info.name << std::endl;
 					return false;
 					break;
 			}
@@ -211,7 +211,7 @@ bool TEXTURE::LoadCubeVerticalCross(const TEXTUREINFO & info, std::ostream & err
 			}
 			else
 			{
-				error << "Texture has unknown format: " + info.GetName() << std::endl;
+				error << "Texture has unknown format: " + info.name << std::endl;
 				return false;
 			}
 
@@ -256,7 +256,7 @@ bool TEXTURE::LoadCubeVerticalCross(const TEXTUREINFO & info, std::ostream & err
 	}
 	else
 	{
-		error << "Error loading texture file: " + info.GetName() << std::endl;
+		error << "Error loading texture file: " + info.name << std::endl;
 		return false;
 	}
 
@@ -273,7 +273,7 @@ bool TEXTURE::LoadCubeVerticalCross(const TEXTUREINFO & info, std::ostream & err
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-	if (info.GetMipMap())
+	if (info.mipmap)
 	{
 		glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
@@ -289,20 +289,20 @@ bool TEXTURE::LoadCubeVerticalCross(const TEXTUREINFO & info, std::ostream & err
 	return true;
 }
 
-bool TEXTURE::LoadCube(const TEXTUREINFO & info, std::ostream & error)
+bool TEXTURE::LoadCube(const TextureInfo & info, std::ostream & error)
 {
-	if (info.GetVerticalCross())
+	if (info.verticalcross)
 	{
 		return LoadCubeVerticalCross(info, error);
 	}
 
 	std::string cubefiles[6];
-	cubefiles[0] = info.GetName()+"-xp.png";
-	cubefiles[1] = info.GetName()+"-xn.png";
-	cubefiles[2] = info.GetName()+"-yn.png";
-	cubefiles[3] = info.GetName()+"-yp.png";
-	cubefiles[4] = info.GetName()+"-zn.png";
-	cubefiles[5] = info.GetName()+"-zp.png";
+	cubefiles[0] = info.name + "-xp.png";
+	cubefiles[1] = info.name + "-xn.png";
+	cubefiles[2] = info.name + "-yn.png";
+	cubefiles[3] = info.name + "-yp.png";
+	cubefiles[4] = info.name + "-zn.png";
+	cubefiles[5] = info.name + "-zp.png";
 
 	GLuint new_handle = 0;
 	glGenTextures(1, &new_handle);
@@ -320,7 +320,7 @@ bool TEXTURE::LoadCube(const TEXTUREINFO & info, std::ostream & error)
 			//store dimensions
 			if (i != 0 && (w != (unsigned int) texture_surface->w || h != (unsigned int) texture_surface->h))
 			{
-				error << "Cube map sides aren't equal sizes" << std::endl;
+				error << "Cube map sides aren't equal sizes: " << info.name << std::endl;
 				return false;
 			}
 			w = texture_surface->w;
@@ -343,14 +343,14 @@ bool TEXTURE::LoadCube(const TEXTUREINFO & info, std::ostream & error)
 					format = GL_RGBA;
 					break;
 				default:
-					error << "Texture has unknown format: " + info.GetName() + " (" + cubefiles[i] + ")" << std::endl;
+					error << "Texture has unknown format: " + info.name + " (" + cubefiles[i] + ")" << std::endl;
 					return false;
 					break;
 			}
 
 			if (format != GL_RGB)
 			{
-				error << "Cube map texture format isn't GL_RGB (this causes problems for some reason): " + info.GetName() + " (" + cubefiles[i] + ")" << std::endl;
+				error << "Cube map texture format isn't GL_RGB (this causes problems for some reason): " + info.name + " (" + cubefiles[i] + ")" << std::endl;
 				return false;
 			}
 
@@ -371,7 +371,7 @@ bool TEXTURE::LoadCube(const TEXTUREINFO & info, std::ostream & error)
 				targetparam = GL_TEXTURE_CUBE_MAP_POSITIVE_Z;
 			else
 			{
-				error << "Iterated too far: " + info.GetName() + " (" + cubefiles[i] + ")" << std::endl;
+				error << "Iterated too far: " + info.name + " (" + cubefiles[i] + ")" << std::endl;
 				assert(0);
 			}
 
@@ -379,7 +379,7 @@ bool TEXTURE::LoadCube(const TEXTUREINFO & info, std::ostream & error)
 		}
 		else
 		{
-			error << "Error loading texture file: " + info.GetName() + " (" + cubefiles[i] + ")" << std::endl;
+			error << "Error loading texture file: " + info.name + " (" + cubefiles[i] + ")" << std::endl;
 			return false;
 		}
 
@@ -405,7 +405,7 @@ bool TEXTURE::LoadCube(const TEXTUREINFO & info, std::ostream & error)
 	return true;
 }
 
-void GenTexture(const SDL_Surface * surface, const TEXTUREINFO & info, GLuint & tex_id, bool & alphachannel, std::ostream & error)
+void GenTexture(const SDL_Surface * surface, const TextureInfo & info, GLuint & tex_id, bool & alphachannel, std::ostream & error)
 {
 	//detect channels
 	bool compression = (surface->w > 512 || surface->h > 512);
@@ -442,18 +442,18 @@ void GenTexture(const SDL_Surface * surface, const TEXTUREINFO & info, GLuint & 
 
 	// Create MipMapped Texture
 	glBindTexture(GL_TEXTURE_2D, tex_id);
-	if (info.GetRepeatU())
+	if (info.repeatu)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	else
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	if (info.GetRepeatV())
+	if (info.repeatv)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	else
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-	if (info.GetMipMap())
+	if (info.mipmap)
 	{
-		if (info.GetNearest())
+		if (info.nearest)
 		{
 			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST_MIPMAP_NEAREST);
 			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
@@ -469,7 +469,7 @@ void GenTexture(const SDL_Surface * surface, const TEXTUREINFO & info, GLuint & 
 	}
 	else
 	{
-		if (info.GetNearest())
+		if (info.nearest)
 		{
 			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_NEAREST);
 			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_NEAREST);
@@ -484,9 +484,9 @@ void GenTexture(const SDL_Surface * surface, const TEXTUREINFO & info, GLuint & 
 	OPENGL_UTILITY::CheckForOpenGLErrors("Texture creation", error);
 
 	//check for anisotropy
-	if (info.GetAnisotropy() > 1)
+	if (info.anisotropy > 1)
 	{
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, (float)info.GetAnisotropy());
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, (float)info.anisotropy);
 	}
 }
 
@@ -495,36 +495,36 @@ bool IsPowerOfTwo(int x)
 	return ((x != 0) && !(x & (x - 1)));
 }
 
-bool TEXTURE::Load(const TEXTUREINFO & info, std::ostream & error)
+bool TEXTURE::Load(const TextureInfo & info, std::ostream & error)
 {
 	if (loaded)
 	{
-		error << "Tried to double load texture " << info.GetName() << std::endl;
+		error << "Tried to double load texture " << info.name << std::endl;
 		return false;
 	}
 
-	if (info.GetName().empty() && !info.GetSurface())
+	if (info.name.empty() && !info.surface)
 	{
 		error << "Tried to load a texture with an empty name" << std::endl;
 		return false;
 	}
 
-	texture_info = info;
+	// reset texture id
 	tex_id = 0;
 
-	if (info.GetCube())
+	if (info.cube || info.verticalcross)
 	{
 		cube = true;
 		return LoadCube(info, error);
 	}
 
-	SDL_Surface * orig_surface = info.GetSurface();
+	SDL_Surface * orig_surface = info.surface;
 	if (!orig_surface)
 	{
-		orig_surface = IMG_Load(info.GetName().c_str());
+		orig_surface = IMG_Load(info.name.c_str());
 		if (!orig_surface)
 		{
-			error << "Error loading texture file: " << info.GetName() << std::endl;
+			error << "Error loading texture file: " << info.name << std::endl;
 			return false;
 		}
 	}
@@ -536,7 +536,7 @@ bool TEXTURE::Load(const TEXTUREINFO & info, std::ostream & error)
         origh = texture_surface->h;
 
 	    //scale to power of two if necessary
-	    if (!info.GetAllowNonPowerOfTwo() && (!IsPowerOfTwo(orig_surface->w) || !IsPowerOfTwo(orig_surface->h)))
+	    if (!info.npot && (!IsPowerOfTwo(orig_surface->w) || !IsPowerOfTwo(orig_surface->h)))
 	    {
 	        int newx = orig_surface->w;
 	        int maxsize = 2048;
@@ -571,7 +571,7 @@ bool TEXTURE::Load(const TEXTUREINFO & info, std::ostream & error)
 	    //std::cout << "NPOT: " << texture_info.GetAllowNonPowerOfTwo() << ": " << !IsPowerOfTwo(orig_surface->w) << ", " << !IsPowerOfTwo(orig_surface->h) << std::endl;
 
 		//scale texture down if necessary
-		scale = info.GetScale(orig_surface->w, orig_surface->h);
+		scale = info.getScale(orig_surface->w, orig_surface->h);
 		if (scale < 1.0)
 		{
 			texture_surface = zoomSurface (orig_surface, scale, scale, SMOOTHING_ON);
@@ -593,7 +593,7 @@ bool TEXTURE::Load(const TEXTUREINFO & info, std::ostream & error)
 	}
 
 	//free the original surface if it's not a custom surface (used for the track map)
-	if (!info.GetSurface() && orig_surface)
+	if (!info.surface && orig_surface)
 	{
 		SDL_FreeSurface(orig_surface);
 	}
@@ -626,9 +626,6 @@ void TEXTURE::Unload()
 	if (loaded)
 	{
 		glDeleteTextures(1, &tex_id);
-#ifndef NDEBUG
-		OPENGL_UTILITY::CheckForOpenGLErrors("Texture ID deletion ("+texture_info.GetName()+")", std::cerr);
-#endif
 	}
 	loaded = false;
 }

@@ -75,15 +75,15 @@ void COLLISION_WORLD::SetTrack(TRACK * t)
 	track = t;
 	trackMesh = new btTriangleIndexVertexArray();
 	trackSurface.resize(0);
-	const std::list<TRACK_OBJECT> & objects = track->GetTrackObjects();
-	for(std::list<TRACK_OBJECT>::const_iterator ob = objects.begin(); ob != objects.end(); ob++)
+	const std::list<TrackObject> & objects = track->GetTrackObjects();
+	for(std::list<TrackObject>::const_iterator ob = objects.begin(); ob != objects.end(); ob++)
 	{
-		if(ob->GetSurface() != NULL)
+		if(ob->getSurface() != NULL)
 		{
-			MODEL & model = *ob->GetModel();
+			const MODEL & model = ob->getModel();
 			btIndexedMesh mesh = GetIndexedMesh(model);
 			trackMesh->addIndexedMesh(mesh);
-			const TRACKSURFACE * surface = ob->GetSurface();
+			const TRACKSURFACE * surface = ob->getSurface();
 			trackSurface.push_back(surface);
 		}
 	}
@@ -207,9 +207,9 @@ bool COLLISION_WORLD::CastRay(
 			void * ptr = c->getUserPointer();
 			if(ptr != NULL)
 			{
-				const TRACK_OBJECT * const obj = reinterpret_cast <const TRACK_OBJECT * const> (ptr);
+				const TrackObject * const obj = reinterpret_cast <const TrackObject * const> (ptr);
 				assert(obj);
-				s = obj->GetSurface();
+				s = obj->getSurface();
 			}
 			else //track geometry
 			{

@@ -11,8 +11,7 @@
 #define _K1999_H
 
 #include <vector>
-#include <iostream>
-#include <fstream>
+#include <ostream>
 
 class ROADSTRIP;
 

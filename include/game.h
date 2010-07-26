@@ -35,7 +35,7 @@
 #include "ai.h"
 #include "quickmp.h"
 //#include "sky.h"
-#include "texturemanager.h"
+#include "contentmanager.h"
 
 class GAME
 {
@@ -138,7 +138,7 @@ private:
 	SOUNDBUFFERLIBRARY generic_sounds;
 	SETTINGS settings;
 	PATHMANAGER pathmanager;
-	TEXTUREMANAGER textures;
+	ContentManager content;
 	TRACKMAP trackmap;
 	TRACK track;
 	GUI gui;
@@ -186,7 +186,7 @@ public:
 		debugmode(false),
 		profilingmode(false),
 		renderconfigfile("render.conf.deferred"),
-		textures(err_out),
+		content(err_out),
 		track(info_out, err_out),
 		replay(framerate)
 		//sky(graphics, info_out, err_out)

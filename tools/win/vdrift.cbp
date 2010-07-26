@@ -41,6 +41,7 @@
 			<Add directory="..\..\bullet" />
 		</Compiler>
 		<Linker>
+			<Add option="-static-libgcc" />
 			<Add library="opengl32" />
 			<Add library="glu32" />
 			<Add library="glew32" />
