@@ -14,7 +14,6 @@
 #include "matrix4.h"
 #include "mathvector.h"
 #include "model.h"
-#include "texture.h"
 #include "vertexarray.h"
 #include "reseatable_reference.h"
 #include "definitions.h"
@@ -228,23 +227,23 @@ void GRAPHICS_SDLGL::Init(const std::string shaderpath, const std::string & wind
 	//load static reflection map for dynamic reflections too, since we may need it
 	if ((reflection_status == REFLECTION_STATIC || reflection_status == REFLECTION_DYNAMIC) && !static_reflectionmap_file.empty())
 	{
-		TextureInfo t;
+		TextureCubeInfo t;
 		t.name = static_reflectionmap_file;
 		t.verticalcross = true;
 		t.mipmap = true;
-		t.anisotropy = anisotropy;
-		t.setSize(texturesize);
+		//t.anisotropy = anisotropy;
+		//t.setSize(texturesize);
 		static_reflection.Load(t, error_output);
 	}
 	
 	if (!static_ambientmap_file.empty())
 	{
-		TextureInfo t;
+		TextureCubeInfo t;
 		t.name = static_ambientmap_file;
 		t.verticalcross = true;
 		t.mipmap = false;
-		t.anisotropy = anisotropy;
-		t.setSize(texturesize);
+		//t.anisotropy = anisotropy;
+		//t.setSize(texturesize);
 		static_ambient.Load(t, error_output);
 	}
 

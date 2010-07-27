@@ -31,7 +31,7 @@
 #include "timer.h"
 #include "replay.h"
 #include "forcefeedback.h"
-#include "particle.h"
+#include "particlesystem.h"
 #include "ai.h"
 #include "quickmp.h"
 //#include "sky.h"
@@ -153,7 +153,7 @@ private:
 	LOADINGSCREEN loadingscreen;
 	TIMER timer;
 	REPLAY replay;
-	PARTICLE_SYSTEM tire_smoke;
+	ParticleSystem tire_smoke;
 	AI ai;
 	
 	//SKY sky;

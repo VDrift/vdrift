@@ -144,8 +144,8 @@ std::pair <bool, bool> TrackLoader::ContinueObjectLoad(
 	
 	if (params_per_object >= 17)
 		GetParam(objectfile, surface_id);
-		
-		
+	
+	
 	for (int i = 0; i < params_per_object - expected_params; i++)
 		GetParam(objectfile, otherjunk);
 
@@ -154,7 +154,7 @@ std::pair <bool, bool> TrackLoader::ContinueObjectLoad(
 	{
 		joeload.pack = &pack;
 	}
-		
+	
 	joeload.name = model_name;
 	ModelPtr model = content.get<MODEL>(joeload);
 	if (!model.get())
@@ -163,16 +163,17 @@ std::pair <bool, bool> TrackLoader::ContinueObjectLoad(
 	}
 
 	bool skip = (dynamicshadowsenabled && isashadow);
-	
-	TextureLoader texload;
-	texload.name = objectpath + "/" + diffuse_texture_name;
-	texload.mipmap = mipmap || anisotropy; //always mipmap if anisotropy is on
-	texload.anisotropy = anisotropy;
 	bool clampu = clamptexture == 1 || clamptexture == 2;
 	bool clampv = clamptexture == 1 || clamptexture == 3;
+	
+	TextureLoader texload;
+	texload.mipmap = mipmap || anisotropy;
+	texload.anisotropy = anisotropy;
 	texload.repeatu = !clampu;
 	texload.repeatv = !clampv;
-	texload.setSize(texture_size);
+	texload.size = texture_size;
+	
+	texload.name = objectpath + "/" + diffuse_texture_name;
 	TexturePtr diffuse_texture = content.get<TEXTURE>(texload);
 	if (!diffuse_texture.get())
 	{
@@ -189,15 +190,11 @@ std::pair <bool, bool> TrackLoader::ContinueObjectLoad(
 			std::ifstream filecheck(filepath.c_str());
 			if (filecheck)
 			{
-				TextureLoader texload;
 				texload.name = filepath;
-				texload.mipmap = mipmap;
-				texload.anisotropy = anisotropy;
-				texload.setSize(texture_size);
 				miscmap1_texture = content.get<TEXTURE>(texload);
 				if (!miscmap1_texture.get())
 				{
-					error_output << "Error loading texture: " << objectpath + "/" + miscmap1_texture_name << " for object " << model_name << ", continuing" << std::endl;
+					error_output << "Error loading texture: " << filepath << " for object " << model_name << ", continuing" << std::endl;
 				}
 			}
 		}
@@ -209,15 +206,11 @@ std::pair <bool, bool> TrackLoader::ContinueObjectLoad(
 			std::ifstream filecheck(filepath.c_str());
 			if (filecheck)
 			{
-				TextureLoader texload;
 				texload.name = filepath;
-				texload.mipmap = mipmap;
-				texload.anisotropy = anisotropy;
-				texload.setSize(texture_size);
 				miscmap2_texture = content.get<TEXTURE>(texload);
 				if (!miscmap2_texture.get())
 				{
-					error_output << "Error loading texture: " << objectpath + "/" + miscmap2_texture_name << " for object " << model_name << ", continuing" << std::endl;
+					error_output << "Error loading texture: " << filepath << " for object " << model_name << ", continuing" << std::endl;
 				}
 			}
 		}

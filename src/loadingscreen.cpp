@@ -2,7 +2,7 @@
 
 #include "contentmanager.h"
 #include "textureloader.h"
-	
+
 void LOADINGSCREEN::Update(float percentage)
 {
 	if (percentage < 0)
@@ -23,9 +23,9 @@ bool LOADINGSCREEN::Init(
 {
 	TextureLoader texload;
 	texload.mipmap = false;
-	texload.setSize(texsize);
+	texload.size = texsize;
 	
-	texload.name = texturepath+"/loadingbox.png";
+	texload.name = texturepath + "/loadingbox.png";
 	TexturePtr boxtex = content.get<TEXTURE>(texload);
 	if (!boxtex.get()) return false;
 	

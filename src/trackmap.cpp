@@ -219,7 +219,7 @@ bool TRACKMAP::BuildMap(
 	texload.surface = surface;
 	texload.repeatu = false;
 	texload.repeatv = false;
-	texload.setSize(texsize);
+	texload.size = texsize;
 
 	texload.name = trackname;
 	TexturePtr track_map = content.get<TEXTURE>(texload);

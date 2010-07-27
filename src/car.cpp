@@ -813,7 +813,7 @@ bool CAR::LoadTextures(
 	TextureLoader texload;
 	texload.mipmap = true;
 	texload.anisotropy = anisotropy;
-	texload.setSize(texsize);
+	texload.size = texsize;
 
 	std::string texdiff = texname + ".png";
 	{

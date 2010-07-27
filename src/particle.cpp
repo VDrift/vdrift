@@ -1,160 +1,81 @@
 #include "particle.h"
 
-#include "unittest.h"
-#include "contentmanager.h"
-#include "textureloader.h"
-
-bool PARTICLE_SYSTEM::Load(
-	const std::list <std::string> & texlist,
-	int anisotropy,
-	const std::string & texsize,
-	ContentManager * ContentManager,
-	std::ostream & error_output)
+Particle::Particle(
+	SCENENODE & parentnode,
+	const MATHVECTOR <float, 3> & new_start_position,
+	const MATHVECTOR <float, 3> & new_dir,
+	float newspeed,
+	float newtrans,
+	float newlong,
+	float newsize,
+	TexturePtr texture) :
+	start_position(new_start_position),
+	direction(new_dir),
+	speed(newspeed),
+	transparency(newtrans),
+	longevity(newlong),
+	size(newsize),
+	time(0)
 {
-	if (!ContentManager) return false;
-	for (std::list <std::string>::const_iterator i = texlist.begin(); i != texlist.end(); ++i)
-	{
-		TextureLoader texload;
-		texload.name = *i;
-		texload.anisotropy = anisotropy;
-		texload.setSize(texsize);
-		TexturePtr texture = ContentManager->get<TEXTURE>(texload);
-		textures.push_back(texture);
-	}
-	cur_texture = textures.end();
-	return !textures.empty();
+	node = parentnode.AddNode();
+	SCENENODE & noderef = parentnode.GetNode(node);
+	//std::cout << "Created node: " << &node.get() << endl;
+	draw = GetDrawlist(noderef).insert(DRAWABLE());
+	DRAWABLE & drawref = GetDrawlist(noderef).get(draw);
+	drawref.SetDrawEnable(false);
+	drawref.SetVertArray(&varray);
+	drawref.SetDiffuseMap(texture);
+	drawref.SetCull(false,false);
 }
 
-bool inverseorder(int i1, int i2)
+float lerp(float x, float y, float s)
 {
-	return i2 < i1;
+	float sclamp = std::max(0.f,std::min(1.0f,s));
+	return x + sclamp*(y-x);
 }
 
-void PARTICLE_SYSTEM::Update(float dt, const QUATERNION <float> & camdir, const MATHVECTOR <float, 3> & campos)
+void Particle::Update(
+	SCENENODE & parent,
+	float dt,
+	const QUATERNION <float> & camdir_conjugate,
+	const MATHVECTOR <float, 3> & campos)
 {
-	QUATERNION <float> camdir_conj = -camdir;
-	
-	std::vector <int> expired_list;
-	
-	for (unsigned int i = 0; i < particles.size(); i++)
-	{
-		particles[i].Update(node, dt, camdir_conj, campos);
-		if (particles[i].Expired())
-			expired_list.push_back(i);
-	}
-	
-	//must sort our expired list so highest numbers come first or swap & pop won't work
-	std::sort(expired_list.begin(), expired_list.end(), inverseorder);
-	
-	if (expired_list.size() == particles.size() && !particles.empty())
-	{
-		//std::cout << "Clearing all nodes" << std::endl;
-		Clear();
-	}
-	else if (!expired_list.empty())
-	{
-		assert(expired_list.size() < particles.size());
-		
-		//std::cout << "Getting ready to delete " << expired_list.size() << "/" << particles.size() << std::endl;
-		
-		//do the old swap & pop trick to remove expired particles quickly.
-		//all swaps must be done before the popping starts, because popping invalidates iterators
-		int newback = particles.size()-1;
-		for (std::vector <int>::iterator i = expired_list.begin(); i != expired_list.end(); ++i)
-		{
-			//only bother to swap if it's not already at the end
-			if (*i != newback)
-			{
-				std::swap(particles[*i], particles[newback]);
-			}
-			
-			//std::cout << "Deleted node: " << &particles[newback].GetNode() << endl;
-			node.Delete(particles[newback].GetNode());
-			
-			newback--;
-		}
-		
-		//do all of the pops
-		//std::cout << expired_list.size() << ", " << particles.size() << ", " << newback << std::endl;
-		assert((int)particles.size() - (int)expired_list.size() == newback + 1);
-		for (unsigned int i = 0; i < expired_list.size(); i++)
-			particles.pop_back();
-		//assert((int)expired_list.size() == (int)particles.size() - newback);
-	}
-}
+	time += dt;
 
-void PARTICLE_SYSTEM::AddParticle(const MATHVECTOR <float,3> & position, float newspeed, float newtrans, float newlong, float newsize, bool testonly)
-{
-	if (cur_texture == textures.end())
-		cur_texture = textures.begin();
-	
-	TexturePtr tex;
-	if (!testonly)
-	{
-		assert(cur_texture != textures.end()); //this should only happen if the textures array is empty, which should never happen unless we're doing a unit test
-		tex = *cur_texture;
-	}
-	
-	const unsigned int max_particles = 128;
-	
-	while (particles.size() >= max_particles)
-		particles.pop_back();
-	
-	particles.push_back(PARTICLE(node, position, direction,
-			    speed_range.first+newspeed*(speed_range.second-speed_range.first),
-			    transparency_range.first+newspeed*(transparency_range.second-transparency_range.first),
-			    longevity_range.first+newspeed*(longevity_range.second-longevity_range.first),
-			    size_range.first+newspeed*(size_range.second-size_range.first),
-				tex));
-	
-	if (cur_texture != textures.end())
-		cur_texture++;
-}
+	SCENENODE & noderef = parent.GetNode(node);
+	DRAWABLE & drawref = GetDrawlist(noderef).get(draw);
+	drawref.SetVertArray(&varray);
 
-void PARTICLE_SYSTEM::Clear()
-{
-	for (std::vector <PARTICLE>::iterator i = particles.begin(); i != particles.end(); ++i)
-	{
-		node.Delete(i->GetNode());
-	}
-	
-	particles.clear();
-}
+	MATHVECTOR <float, 3> curpos = start_position + direction * time * speed;
+	noderef.GetTransform().SetTranslation(curpos);
+	noderef.GetTransform().SetRotation(camdir_conjugate);
 
-void PARTICLE_SYSTEM::SetParameters(float transmin, float transmax, float longmin, float longmax,
-	float speedmin, float speedmax, float sizemin, float sizemax,
-	MATHVECTOR <float,3> newdir)
-{
-	transparency_range.first = transmin;
-	transparency_range.second = transmax;
-	longevity_range.first = longmin;
-	longevity_range.second = longmax;
-	speed_range.first = speedmin;
-	speed_range.second = speedmax;
-	size_range.first = sizemin;
-	size_range.second = sizemax;
-	direction = newdir;
-}
+	float sizescale = 1.0;
+	float trans = transparency*std::pow((double)(1.0-time/longevity),4.0);
+	float transmax = 1.0;
+	if (trans > transmax)
+		trans = transmax;
+	if (trans < 0.0)
+		trans = 0.0;
 
-QT_TEST(particle_test)
-{
-	PARTICLE_SYSTEM s;
-	s.SetParameters(1.0,1.0,0.5,1.0,1.0,1.0,1.0,1.0,MATHVECTOR<float,3>(0,1,0));
-	std::stringstream out;
-	s.Load(std::list<std::string> (), 0, "large", NULL, out);
-	
-	//test basic particle management:  adding particles and letting them expire and get removed over time
-	QT_CHECK_EQUAL(s.NumParticles(),0);
-	s.AddParticle(MATHVECTOR<float,3>(0,0,0),0,0,0,0,true);
-	QT_CHECK_EQUAL(s.NumParticles(),1);
-	s.AddParticle(MATHVECTOR<float,3>(0,0,0),1,1,1,1,true);
-	QT_CHECK_EQUAL(s.NumParticles(),2);
-	QUATERNION <float> dir;
-	MATHVECTOR <float, 3> pos;
-	s.Update(0.45, dir, pos);
-	QT_CHECK_EQUAL(s.NumParticles(),2);
-	s.Update(0.1, dir, pos);
-	QT_CHECK_EQUAL(s.NumParticles(),1);
-	s.Update(0.5, dir, pos);
-	QT_CHECK_EQUAL(s.NumParticles(),0);
+	sizescale = 5.0*(time/longevity)+1.0;
+
+	varray.SetToBillboard(-sizescale,-sizescale,sizescale,sizescale);
+	drawref.SetRadius(sizescale);
+
+	bool drawenable = true;
+
+	// scale the alpha by the closeness to the camera
+	// if we get too close, don't draw
+	// this prevents major slowdown when there are a lot of particles right next to the camera
+	float camdist = (curpos - campos).Magnitude();
+	//std::cout << camdist << std::endl;
+	const float camdist_off = 3.0;
+	const float camdist_full = 4.0;
+	trans = lerp(0.f,trans,(camdist-camdist_off)/(camdist_full-camdist_off));
+	if (trans <= 0)
+		drawenable = false;
+
+	drawref.SetColor(1,1,1,trans);
+	drawref.SetDrawEnable(drawenable);
 }

@@ -39,10 +39,10 @@ TexturePtr GetTexture(
 {
 	TextureLoader texload;
 	texload.name = texpath + "/" + texname;
+	texload.size = texsize;
 	texload.mipmap = false;
 	texload.repeatu = false;
 	texload.repeatv = false;
-	texload.setSize(texsize);
 	return content.get<TEXTURE>(texload);
 }
 
@@ -302,13 +302,13 @@ bool GUIPAGE::Load(
 					TexturePtr texture_upsel = GetTexture("widgets/tog_off_up.png", texpath, texsize, content);
 					TexturePtr texture_downsel = GetTexture("widgets/tog_on_up.png", texpath, texsize, content);
 					TexturePtr texture_trans = GetTexture("widgets/tog_off_down.png", texpath, texsize, content);
-					if (!texture_up.get() || !texture_down.get() || !texture_upsel.get() || 
+					if (!texture_up.get() || !texture_down.get() || !texture_upsel.get() ||
 						!texture_downsel.get() || !texture_trans.get()) return false;
 					float h = 0.025;
 					float w = h*screenhwratio;
 					
 					WIDGET_TOGGLE * new_widget = NewWidget<WIDGET_TOGGLE>();
-					new_widget->SetupDrawable(sref, texture_up, texture_down, texture_upsel, 
+					new_widget->SetupDrawable(sref, texture_up, texture_down, texture_upsel,
 							texture_downsel, texture_trans, xy[0]-0.02,xy[1], w, h);
 					//new_widget->SetAction(action);
 					new_widget->SetDescription(description);
@@ -604,7 +604,7 @@ bool GUIPAGE::Load(
 			
 			float fontscaley = ((((float) fontsize - 7.0f) * 0.25f) + 1.0f)*0.25;
 			float fontscalex = fontscaley*screenhwratio;
-			new_widget->SetupDrawable(sref, controlsconfig, setting, control, 
+			new_widget->SetupDrawable(sref, controlsconfig, setting, control,
 					&fonts["futuresans"], text, xy[0],xy[1], fontscalex,fontscaley,
 					analog, only_one);
 			new_widget->SetDescription(description);

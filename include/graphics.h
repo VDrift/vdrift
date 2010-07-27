@@ -14,7 +14,7 @@
 #include "scenenode.h"
 #include "staticdrawables.h"
 #include "matrix4.h"
-#include "texture.h"
+#include "texturecube.h"
 #include "reseatable_reference.h"
 #include "aabb_space_partitioning.h"
 #include "glstatemanager.h"
@@ -70,8 +70,8 @@ private:
 	float contrast;
 	bool aticard;
 	enum {REFLECTION_DISABLED, REFLECTION_STATIC, REFLECTION_DYNAMIC} reflection_status;
-	TEXTURE static_reflection;
-	TEXTURE static_ambient;
+	TextureCube static_reflection;
+	TextureCube static_ambient;
 	std::string renderconfigfile;
 	
 	// configuration variables in a data-driven friendly format

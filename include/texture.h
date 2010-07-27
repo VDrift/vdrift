@@ -7,24 +7,12 @@
 class TEXTURE : public TEXTURE_INTERFACE
 {
 public:
-	TEXTURE() :
-		loaded(false),
-		w(0),
-		h(0),
-		origw(0),
-		origh(0),
-		scale(1.0),
-		alphachannel(false),
-		cube(false)
-	{
-		// ctor
-	}
+	TEXTURE();
 	
-	virtual ~TEXTURE()
-	{
-		Unload();
-	}
-
+	~TEXTURE();
+	
+	virtual bool Load(const TextureInfo & info, std::ostream & error);
+	
 	virtual GLuint GetID() const {return tex_id;}
 	
 	virtual void Activate() const;
@@ -44,8 +32,6 @@ public:
 	/// allows the user to determine what the texture size scaling did to the texture dimensions
 	float GetScale() const {return scale;}
 
-	bool Load(const TextureInfo & info, std::ostream & error);
-	
 private:
 	GLuint tex_id;
 	bool loaded;
@@ -53,11 +39,6 @@ private:
 	unsigned int origw, origh; ///< w and h are pre-texture-size transform
 	float scale; ///< gets the amount of scaling applied by the texture-size transform, so the original w and h can be backed out
 	bool alphachannel;
-	bool cube;
-	
-	bool LoadCube(const TextureInfo & info, std::ostream & error);
-	
-	bool LoadCubeVerticalCross(const TextureInfo & info, std::ostream & error);
 
 	void Unload();
 };

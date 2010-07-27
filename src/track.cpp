@@ -7,7 +7,6 @@
 #include "trackloader.h"
 #include "contentmanager.h"
 #include "textureloader.h"
-#include "texture.h"
 
 #include <functional>
 #include <algorithm>
@@ -246,9 +245,9 @@ bool TRACK::CreateRacingLines(
 	const std::string & texsize,
 	ContentManager & content)
 {
-	TextureLoader texload; 
+	TextureLoader texload;
 	texload.name = texturepath + "/racingline.png";
-	texload.setSize(texsize);
+	texload.size = texsize;
 	racingline_texture = content.get<TEXTURE>(texload);
 	if (!racingline_texture.get()) return false;
 	

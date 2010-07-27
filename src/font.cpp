@@ -62,10 +62,11 @@ bool FONT::Load(
 	
 	TextureLoader texload;
 	texload.name = fonttexturepath;
+	texload.size = texsize;
 	texload.mipmap = mipmap;
 	texload.repeatu = false;
 	texload.repeatv = false;
-	texload.setSize(texsize);
+	
 	font_texture = content.get<TEXTURE>(texload);
 	if (!font_texture.get()) return false;
 	

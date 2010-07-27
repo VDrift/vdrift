@@ -79,6 +79,7 @@ src = Split("""aabb.cpp
 		optional.cpp
 		parallel_task.cpp
 		particle.cpp
+		particleststem.cpp
 		pathmanager.cpp
 		performance_testing.cpp
 		quaternion.cpp
@@ -96,6 +97,7 @@ src = Split("""aabb.cpp
 		sprite2d.cpp
 		suspensionbumpdetection.cpp
 		texture.cpp
+		texturecube.cpp
 		textureloader.cpp
 		text_draw.cpp
 		timer.cpp

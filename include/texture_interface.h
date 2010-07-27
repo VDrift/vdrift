@@ -10,14 +10,14 @@
 /// an abstract base class for a simple texture interface
 class TEXTURE_INTERFACE
 {
-	public:
-		virtual bool Loaded() const = 0;
-		virtual void Activate() const = 0;
-		virtual void Deactivate() const = 0;
-		virtual unsigned int GetW() const = 0;
-		virtual unsigned int GetH() const = 0;
-		virtual GLuint GetID() const = 0;
-		virtual bool IsRect() const {return false;}
+public:
+	virtual bool Loaded() const = 0;
+	virtual void Activate() const = 0;
+	virtual void Deactivate() const = 0;
+	virtual unsigned int GetW() const = 0;
+	virtual unsigned int GetH() const = 0;
+	virtual GLuint GetID() const = 0;
+	virtual bool IsRect() const {return false;}
 };
 
 #endif // _TEXTURE_INTERFACE_H

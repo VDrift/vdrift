@@ -24,7 +24,7 @@ bool SPRITE2D::Load(
 	texload.repeatu = false;
 	texload.repeatv = false;
 	texload.npot = false;
-	texload.setSize(texturesize);
+	texload.size = texturesize;
 	texture = content.get<TEXTURE>(texload);
 	if (!texture.get()) return false;
 	if (!texture.get()) return false;
