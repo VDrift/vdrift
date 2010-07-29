@@ -79,7 +79,7 @@ src = Split("""aabb.cpp
 		optional.cpp
 		parallel_task.cpp
 		particle.cpp
-		particleststem.cpp
+		particlesystem.cpp
 		pathmanager.cpp
 		performance_testing.cpp
 		quaternion.cpp
