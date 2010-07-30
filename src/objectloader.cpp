@@ -1,13 +1,11 @@
-#include "trackloader.h"
-
-#include "contentmanager.h"
-#include "textureloader.h"
-#include "modeljoeloader.h"
+#include "objectloader.h"
 
 #include <string>
 #include <fstream>
 
-TrackLoader::TrackLoader(
+#include "texturemanager.h"
+
+OBJECTLOADER::OBJECTLOADER(
 	const std::string & ntrackpath,
 	SCENENODE & nsceneroot,
 	int nanisotropy,
@@ -15,8 +13,8 @@ TrackLoader::TrackLoader(
 	std::ostream & ninfo_output,
 	std::ostream & nerror_output,
 	bool newcull,
-	bool doagressivecombining) :
-	trackpath(ntrackpath),
+	bool doagressivecombining)
+: trackpath(ntrackpath),
 	sceneroot(nsceneroot),
 	info_output(ninfo_output),
 	error_output(nerror_output),
@@ -33,7 +31,7 @@ TrackLoader::TrackLoader(
 {
 }
 
-bool TrackLoader::BeginObjectLoad()
+bool OBJECTLOADER::BeginObjectLoad()
 {
 	CalculateNumObjects();
 
@@ -58,7 +56,7 @@ bool TrackLoader::BeginObjectLoad()
 	return true;
 }
 
-void TrackLoader::CalculateNumObjects()
+void OBJECTLOADER::CalculateNumObjects()
 {
 	objectpath = trackpath + "/objects";
 	std::string objectlist = objectpath + "/list.txt";
@@ -81,14 +79,17 @@ void TrackLoader::CalculateNumObjects()
 
 		numobjects++;
 	}
+
+	//info_output << "!!!!!!! " << numobjects << endl;
 }
 
-std::pair <bool, bool> TrackLoader::ContinueObjectLoad(
-	std::list <TrackObject> & objects,
+std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad(
+	std::map <std::string, MODEL_JOE03> & model_library,
+	std::list <TRACK_OBJECT> & objects,
 	const std::vector <TRACKSURFACE> & surfaces,
  	const bool vertical_tracking_skyboxes,
  	const std::string & texture_size,
- 	ContentManager & content)
+ 	TEXTUREMANAGER & textures)
 {
 	std::string model_name;
 
@@ -144,73 +145,93 @@ std::pair <bool, bool> TrackLoader::ContinueObjectLoad(
 	
 	if (params_per_object >= 17)
 		GetParam(objectfile, surface_id);
-	
-	
+		
+		
 	for (int i = 0; i < params_per_object - expected_params; i++)
 		GetParam(objectfile, otherjunk);
 
-	ModelJoeLoader joeload;
-	if (packload)
+	MODEL * model(NULL);
+
+	if (model_library.find(model_name) == model_library.end())
 	{
-		joeload.pack = &pack;
-	}
-	
-	joeload.name = model_name;
-	ModelPtr model = content.get<MODEL>(joeload);
-	if (!model.get())
-	{
-		return std::make_pair(true, false); //fail the entire track loading
+		if (packload)
+		{
+			if (!model_library[model_name].Load(model_name, &pack, error_output))
+			{
+				error_output << "Error loading model: " << objectpath + "/" + model_name << " from pack " << objectpath + "/objects.jpk" << std::endl;
+				return std::make_pair(true, false); //fail the entire track loading
+			}
+		}
+		else
+		{
+			if (!model_library[model_name].Load(objectpath + "/" + model_name, NULL, error_output))
+			{
+				error_output << "Error loading model: " << objectpath + "/" + model_name << std::endl;
+				return std::make_pair(true, false); //fail the entire track loading
+			}
+		}
+
+		model = &model_library[model_name];
 	}
 
-	bool skip = (dynamicshadowsenabled && isashadow);
+	bool skip = false;
+	
+	if (dynamicshadowsenabled && isashadow)
+		skip = true;
+
+	TEXTUREINFO texinfo;
+	texinfo.SetName(objectpath + "/" + diffuse_texture_name);
+	texinfo.SetMipMap(mipmap || anisotropy); //always mipmap if anisotropy is on
+	texinfo.SetAnisotropy(anisotropy);
 	bool clampu = clamptexture == 1 || clamptexture == 2;
 	bool clampv = clamptexture == 1 || clamptexture == 3;
-	
-	TextureLoader texload;
-	texload.mipmap = mipmap || anisotropy;
-	texload.anisotropy = anisotropy;
-	texload.repeatu = !clampu;
-	texload.repeatv = !clampv;
-	texload.size = texture_size;
-	
-	texload.name = objectpath + "/" + diffuse_texture_name;
-	TexturePtr diffuse_texture = content.get<TEXTURE>(texload);
-	if (!diffuse_texture.get())
+	texinfo.SetRepeat(!clampu, !clampv);
+	texinfo.SetSize(texture_size);
+	TEXTUREPTR diffuse_texture = textures.Get(texinfo);
+	if (!diffuse_texture->Loaded())
 	{
-		error_output << "Error loading texture: " << texload.name << ", skipping object " << model_name << " and continuing" << std::endl;
+		error_output << "Error loading texture: " << objectpath + "/" + diffuse_texture_name << ", skipping object " << model_name << " and continuing" << std::endl;
 		skip = true; //fail the loading of this model only
 	}
 
 	if (!skip)
 	{
-		TexturePtr miscmap1_texture;
+		TEXTUREPTR miscmap1_texture;
 		{
 			std::string miscmap1_texture_name = diffuse_texture_name.substr(0, std::max(0, (int)diffuse_texture_name.length()-4)) + "-misc1.png";
 			std::string filepath = objectpath + "/" + miscmap1_texture_name;
 			std::ifstream filecheck(filepath.c_str());
 			if (filecheck)
 			{
-				texload.name = filepath;
-				miscmap1_texture = content.get<TEXTURE>(texload);
-				if (!miscmap1_texture.get())
+				TEXTUREINFO texinfo;
+				texinfo.SetName(filepath);
+				texinfo.SetMipMap(mipmap);
+				texinfo.SetAnisotropy(anisotropy);
+				texinfo.SetSize(texture_size);
+				miscmap1_texture = textures.Get(texinfo);
+				if (!miscmap1_texture->Loaded())
 				{
-					error_output << "Error loading texture: " << filepath << " for object " << model_name << ", continuing" << std::endl;
+					error_output << "Error loading texture: " << objectpath + "/" + miscmap1_texture_name << " for object " << model_name << ", continuing" << std::endl;
 				}
 			}
 		}
 		
-		TexturePtr miscmap2_texture;
+		TEXTUREPTR miscmap2_texture;
 		{
 			std::string miscmap2_texture_name = diffuse_texture_name.substr(0, std::max(0, (int)diffuse_texture_name.length()-4)) + "-misc2.png";
 			std::string filepath = objectpath + "/" + miscmap2_texture_name;
 			std::ifstream filecheck(filepath.c_str());
 			if (filecheck)
 			{
-				texload.name = filepath;
-				miscmap2_texture = content.get<TEXTURE>(texload);
-				if (!miscmap2_texture.get())
+				TEXTUREINFO texinfo;
+				texinfo.SetName(filepath);
+				texinfo.SetMipMap(mipmap);
+				texinfo.SetAnisotropy(anisotropy);
+				texinfo.SetSize(texture_size);
+				miscmap2_texture = textures.Get(texinfo);
+				if (!miscmap2_texture->Loaded())
 				{
-					error_output << "Error loading texture: " << filepath << " for object " << model_name << ", continuing" << std::endl;
+					error_output << "Error loading texture: " << objectpath + "/" + miscmap2_texture_name << " for object " << model_name << ", continuing" << std::endl;
 				}
 			}
 		}
@@ -253,7 +274,8 @@ std::pair <bool, bool> TrackLoader::ContinueObjectLoad(
 			surfacePtr = &surfaces[surface_id];
 		}
 
-		objects.push_back(TrackObject(model, surfacePtr));
+		TRACK_OBJECT object(model, surfacePtr);
+		objects.push_back(object);
 	}
 
 	return std::make_pair(false, true);

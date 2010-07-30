@@ -50,9 +50,9 @@ public:
 		action = newaction;
 	}*/
 	
-	void SetupDrawable(SCENENODE & scene, TexturePtr teximage_up, TexturePtr teximage_down, 
-		TexturePtr teximage_upselected, TexturePtr teximage_downselected, 
-      		TexturePtr teximage_transition, float centerx, float centery, float w, float h)
+	void SetupDrawable(SCENENODE & scene, TEXTUREPTR teximage_up, TEXTUREPTR teximage_down, 
+		TEXTUREPTR teximage_upselected, TEXTUREPTR teximage_downselected, 
+      		TEXTUREPTR teximage_transition, float centerx, float centery, float w, float h)
 	{
 		assert(teximage_up);
 		assert(teximage_down);

@@ -1,8 +1,14 @@
 #ifndef _CAR_H
 #define _CAR_H
 
+#include <string>
+#include <ostream>
+#include <list>
+#include <map>
+
 #include "cardynamics.h"
 #include "model_joe03.h"
+#include "texturemanager.h"
 #include "sound.h"
 #include "camera_system.h"
 #include "joeserialize.h"
@@ -12,14 +18,8 @@
 #include "enginesoundinfo.h"
 #include "scenenode.h"
 
-#include <string>
-#include <ostream>
-#include <list>
-#include <map>
-
 class BEZIER;
 class PERFORMANCE_TESTING;
-class ContentManager;
 
 class CAR 
 {
@@ -35,7 +35,7 @@ public:
 		const std::string & carpath,
 		const std::string & driverpath,
 		const std::string & carname,
-		ContentManager & content,
+		TEXTUREMANAGER & textures,
 		const std::string & carpaint,
 		const MATHVECTOR <float, 3> & carcolor,
 		const MATHVECTOR <float, 3> & initial_position,
@@ -194,7 +194,7 @@ public:
 	
 	void EnableGlass(bool enable);
 
-	void DebugPrint(std::ostream & out, bool p1, bool p2, bool p3, bool p4) const
+	void DebugPrint(std::ostream & out, bool p1, bool p2, bool p3, bool p4)
 	{
 		dynamics.DebugPrint(out, p1, p2, p3, p4);
 	}
@@ -367,7 +367,7 @@ protected:
 		MODEL_JOE03 & output_tire_model,
 		MODEL_JOE03 & output_wheel_model,
 		MODEL_JOE03 & output_brake_rotor,
-		ContentManager & content,
+		TEXTUREMANAGER & textures,
 		int anisotropy,
 		const std::string & texsize,
 		std::ostream & error_output);
@@ -404,7 +404,7 @@ protected:
 		keyed_container <DRAWABLE>::handle & output_drawable,
 		const std::string & joefile,
 		MODEL_JOE03 & output_model,
-		ContentManager & content,
+		TEXTUREMANAGER & textures,
 		const std::string & texname,
 		const std::string & texsize,
 		int anisotropy,
@@ -421,7 +421,7 @@ protected:
 	/// will load texname+".png"
 	/// will attempt to load texname+"-misc1.png, texname+"-misc2.png if loadmisc true
 	bool LoadTextures(
-		ContentManager & content,
+		TEXTUREMANAGER & textures,
 		const std::string & texname,
 		const std::string & texsize,
 		int anisotropy,

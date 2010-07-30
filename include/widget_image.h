@@ -27,7 +27,7 @@ private:
 public:
 	virtual WIDGET * clone() const {return new WIDGET_IMAGE(*this);};
 	
-	void SetupDrawable(SCENENODE & scene, const TexturePtr teximage, float x, float y, float w, float h, int order=0, bool button_mode=false, float screenhwratio=1.0)
+	void SetupDrawable(SCENENODE & scene, const TEXTUREPTR teximage, float x, float y, float w, float h, int order=0, bool button_mode=false, float screenhwratio=1.0)
 	{
 		MATHVECTOR <float, 2> dim;
 		dim.Set(w,h);

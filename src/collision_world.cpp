@@ -75,15 +75,15 @@ void COLLISION_WORLD::SetTrack(TRACK * t)
 	track = t;
 	trackMesh = new btTriangleIndexVertexArray();
 	trackSurface.resize(0);
-	const std::list<TrackObject> & objects = track->GetTrackObjects();
-	for(std::list<TrackObject>::const_iterator ob = objects.begin(); ob != objects.end(); ob++)
+	const std::list<TRACK_OBJECT> & objects = track->GetTrackObjects();
+	for(std::list<TRACK_OBJECT>::const_iterator ob = objects.begin(); ob != objects.end(); ob++)
 	{
-		if(ob->getSurface() != NULL)
+		if(ob->GetSurface() != NULL)
 		{
-			const MODEL & model = ob->getModel();
+			MODEL & model = *ob->GetModel();
 			btIndexedMesh mesh = GetIndexedMesh(model);
 			trackMesh->addIndexedMesh(mesh);
-			const TRACKSURFACE * surface = ob->getSurface();
+			const TRACKSURFACE * surface = ob->GetSurface();
 			trackSurface.push_back(surface);
 		}
 	}
@@ -207,9 +207,9 @@ bool COLLISION_WORLD::CastRay(
 			void * ptr = c->getUserPointer();
 			if(ptr != NULL)
 			{
-				const TrackObject * const obj = reinterpret_cast <const TrackObject * const> (ptr);
+				const TRACK_OBJECT * const obj = reinterpret_cast <const TRACK_OBJECT * const> (ptr);
 				assert(obj);
-				s = obj->getSurface();
+				s = obj->GetSurface();
 			}
 			else //track geometry
 			{
@@ -255,7 +255,7 @@ void COLLISION_WORLD::Update(float dt)
 	world.stepSimulation(dt, maxSubSteps, fixedTimeStep);
 }
 
-void COLLISION_WORLD::DebugPrint(std::ostream & out) const
+void COLLISION_WORLD::DebugPrint(std::ostream & out)
 {
 	out << "Collision objects: " << world.getNumCollisionObjects() << std::endl;
 }

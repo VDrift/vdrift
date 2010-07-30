@@ -25,6 +25,7 @@
 				<Option object_output="obj\Release" />
 				<Option type="1" />
 				<Option compiler="gcc" />
+				<Option parameters="-debug" />
 				<Compiler>
 					<Add option="-O3" />
 					<Add option="-march=native" />
@@ -40,7 +41,6 @@
 			<Add directory="..\..\bullet" />
 		</Compiler>
 		<Linker>
-			<Add option="-static-libgcc" />
 			<Add library="opengl32" />
 			<Add library="glu32" />
 			<Add library="glew32" />
@@ -369,7 +369,6 @@
 		<Unit filename="..\..\include\carengine.h" />
 		<Unit filename="..\..\include\carfueltank.h" />
 		<Unit filename="..\..\include\carinput.h" />
-		<Unit filename="..\..\include\carpowertrain.h" />
 		<Unit filename="..\..\include\carsuspension.h" />
 		<Unit filename="..\..\include\cartelemetry.h" />
 		<Unit filename="..\..\include\cartire.h" />
@@ -381,7 +380,6 @@
 		<Unit filename="..\..\include\configfile.h" />
 		<Unit filename="..\..\include\configvariable.h" />
 		<Unit filename="..\..\include\containeralgorithm.h" />
-		<Unit filename="..\..\include\contentmanager.h" />
 		<Unit filename="..\..\include\coordinatesystems.h" />
 		<Unit filename="..\..\include\crashdetection.h" />
 		<Unit filename="..\..\include\definitions.h" />
@@ -425,8 +423,6 @@
 		<Unit filename="..\..\include\model.h" />
 		<Unit filename="..\..\include\model_joe03.h" />
 		<Unit filename="..\..\include\model_obj.h" />
-		<Unit filename="..\..\include\modeljoeloader.h" />
-		<Unit filename="..\..\include\modelptr.h" />
 		<Unit filename="..\..\include\numprocessors.h" />
 		<Unit filename="..\..\include\objectloader.h" />
 		<Unit filename="..\..\include\objectmanager.h" />
@@ -435,7 +431,6 @@
 		<Unit filename="..\..\include\pairsort.h" />
 		<Unit filename="..\..\include\parallel_task.h" />
 		<Unit filename="..\..\include\particle.h" />
-		<Unit filename="..\..\include\particlesystem.h" />
 		<Unit filename="..\..\include\pathmanager.h" />
 		<Unit filename="..\..\include\performance_testing.h" />
 		<Unit filename="..\..\include\quaternion.h" />
@@ -462,17 +457,14 @@
 		<Unit filename="..\..\include\text_draw.h" />
 		<Unit filename="..\..\include\texture.h" />
 		<Unit filename="..\..\include\texture_interface.h" />
-		<Unit filename="..\..\include\texturecube.h" />
 		<Unit filename="..\..\include\textureinfo.h" />
-		<Unit filename="..\..\include\textureloader.h" />
-		<Unit filename="..\..\include\textureptr.h" />
+		<Unit filename="..\..\include\texturemanager.h" />
 		<Unit filename="..\..\include\timer.h" />
 		<Unit filename="..\..\include\tobullet.h" />
 		<Unit filename="..\..\include\toggle.h" />
 		<Unit filename="..\..\include\track.h" />
-		<Unit filename="..\..\include\trackloader.h" />
+		<Unit filename="..\..\include\track_object.h" />
 		<Unit filename="..\..\include\trackmap.h" />
-		<Unit filename="..\..\include\trackobject.h" />
 		<Unit filename="..\..\include\tracksurface.h" />
 		<Unit filename="..\..\include\transform.h" />
 		<Unit filename="..\..\include\unittest.h" />
@@ -504,14 +496,12 @@
 		<Unit filename="..\..\src\carcontrolmap_local.cpp" />
 		<Unit filename="..\..\src\cardynamics.cpp" />
 		<Unit filename="..\..\src\carengine.cpp" />
-		<Unit filename="..\..\src\carpowertrain.cpp" />
 		<Unit filename="..\..\src\carsuspension.cpp" />
 		<Unit filename="..\..\src\cartire.cpp" />
 		<Unit filename="..\..\src\collision_world.cpp" />
 		<Unit filename="..\..\src\configfile.cpp" />
 		<Unit filename="..\..\src\configvariable.cpp" />
 		<Unit filename="..\..\src\containeralgorithm.cpp" />
-		<Unit filename="..\..\src\contentmanager.cpp" />
 		<Unit filename="..\..\src\coordinatesystems.cpp" />
 		<Unit filename="..\..\src\crashdetection.cpp" />
 		<Unit filename="..\..\src\endian_utility.cpp" />
@@ -535,7 +525,6 @@
 		<Unit filename="..\..\src\keyed_container.cpp" />
 		<Unit filename="..\..\src\linearframe.cpp" />
 		<Unit filename="..\..\src\linearinterp.cpp" />
-		<Unit filename="..\..\src\loadingscreen.cpp" />
 		<Unit filename="..\..\src\main.cpp" />
 		<Unit filename="..\..\src\mathplane.cpp" />
 		<Unit filename="..\..\src\mathvector.cpp" />
@@ -544,12 +533,11 @@
 		<Unit filename="..\..\src\model.cpp" />
 		<Unit filename="..\..\src\model_joe03.cpp" />
 		<Unit filename="..\..\src\model_obj.cpp" />
-		<Unit filename="..\..\src\modeljoeloader.cpp" />
+		<Unit filename="..\..\src\objectloader.cpp" />
 		<Unit filename="..\..\src\opengl_utility.cpp" />
 		<Unit filename="..\..\src\optional.cpp" />
 		<Unit filename="..\..\src\parallel_task.cpp" />
 		<Unit filename="..\..\src\particle.cpp" />
-		<Unit filename="..\..\src\particlesystem.cpp" />
 		<Unit filename="..\..\src\pathmanager.cpp" />
 		<Unit filename="..\..\src\performance_testing.cpp" />
 		<Unit filename="..\..\src\quaternion.cpp" />
@@ -564,16 +552,12 @@
 		<Unit filename="..\..\src\settings.cpp" />
 		<Unit filename="..\..\src\shader.cpp" />
 		<Unit filename="..\..\src\sound.cpp" />
-		<Unit filename="..\..\src\sprite2d.cpp" />
 		<Unit filename="..\..\src\suspensionbumpdetection.cpp" />
 		<Unit filename="..\..\src\text_draw.cpp" />
 		<Unit filename="..\..\src\texture.cpp" />
-		<Unit filename="..\..\src\texturecube.cpp" />
-		<Unit filename="..\..\src\textureloader.cpp" />
 		<Unit filename="..\..\src\timer.cpp" />
 		<Unit filename="..\..\src\toggle.cpp" />
 		<Unit filename="..\..\src\track.cpp" />
-		<Unit filename="..\..\src\trackloader.cpp" />
 		<Unit filename="..\..\src\trackmap.cpp" />
 		<Unit filename="..\..\src\vertexarray.cpp" />
 		<Unit filename="..\..\src\widget_slider.cpp" />

@@ -145,7 +145,7 @@ void CARSUSPENSION<T>::Update(T ext_displacement, T ext_velocity, T dt)
 }
 
 template <typename T>
-void CARSUSPENSION<T>::DebugPrint(std::ostream & out) const
+void CARSUSPENSION<T>::DebugPrint(std::ostream & out)
 {
 	out << "---Suspension---" << "\n";
 	out << "Displacement: " << displacement << "\n";

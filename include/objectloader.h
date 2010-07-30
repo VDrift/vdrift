@@ -1,21 +1,102 @@
 #ifndef _OBJECTLOADER_H
 #define _OBJECTLOADER_H
 
-#include <string>
-#include <ostream>
 
-/// object loader interface
-template <typename T>
-class ObjectLoader
+#include <map> // for std::pair
+
+#include "scenenode.h"
+#include "model_joe03.h"
+#include "track_object.h"
+#include "tracksurface.h"
+#include "texturemanager.h"
+
+class OBJECTLOADER
 {
 public:
-	virtual ~ObjectLoader() {};
+	OBJECTLOADER(
+		const std::string & ntrackpath,
+		SCENENODE & nsceneroot, 
+		int nanisotropy,
+		bool newdynamicshadowsenabled,
+		std::ostream & ninfo_output,
+		std::ostream & nerror_output,
+		bool newcull,
+		bool doagressivecombining);
+
+	bool GetError() const
+	{
+		return error;
+	}
+
+	int GetNumObjects() const
+	{
+		return numobjects;
+	}
 	
-	/// return NULL on error
-	virtual T * load(std::ostream & error) const = 0;
+	///returns false on error
+	bool BeginObjectLoad();
 	
-	/// unique object id
-	virtual const std::string & id() const = 0;
+	///returns a pair of bools: the first bool is true if there was an error, the second bool is true if an object was loaded
+	std::pair <bool,bool> ContinueObjectLoad(
+		std::map <std::string, MODEL_JOE03> & model_library,
+		std::list <TRACK_OBJECT> & objects,
+		const std::vector <TRACKSURFACE> & surfaces,
+		const bool vertical_tracking_skyboxes,
+		const std::string & texture_size,
+		TEXTUREMANAGER & textures);
+	
+private:
+	const std::string & trackpath;
+	std::string objectpath;
+	SCENENODE & sceneroot;
+	SCENENODE unoptimized_scene;
+	std::ostream & info_output;
+	std::ostream & error_output;
+	
+	JOEPACK pack;
+	std::ifstream objectfile;
+	
+	bool error;
+	int numobjects;
+	bool packload;
+	int anisotropy;
+	bool cull;
+	
+	int params_per_object;
+	const int expected_params;
+	const int min_params;
+	
+	bool dynamicshadowsenabled;
+	bool agressivecombine;
+	
+	void CalculateNumObjects();
+	
+	///read from the file stream and put it in "output".
+	/// return true if the get was successful, else false
+	template <typename T>
+	bool GetParam(std::ifstream & f, T & output)
+	{
+		if (!f.good())
+			return false;
+
+		std::string instr;
+		f >> instr;
+		if (instr.empty())
+			return false;
+
+		while (!instr.empty() && instr[0] == '#' && f.good())
+		{
+			f.ignore(1024, '\n');
+			f >> instr;
+		}
+
+		if (!f.good() && !instr.empty() && instr[0] == '#')
+			return false;
+
+		std::stringstream sstr(instr);
+		sstr >> output;
+		return true;
+	}
 };
 
 #endif // _OBJECTLOADER_H

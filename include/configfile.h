@@ -1,13 +1,13 @@
 #ifndef _CONFIGFILE_H
 #define _CONFIGFILE_H
 
-#include "bucketed_hashmap.h"
-#include "configvariable.h"
-
 #include <string>
 #include <map>
 #include <list>
-#include <ostream>
+#include <iostream>
+
+#include "bucketed_hashmap.h"
+#include "configvariable.h"
 
 //see the user's guide at the bottom of the file
 class CONFIGFILE
@@ -74,7 +74,7 @@ public:
 	
 	void ChangeSectionName(std::string oldname, std::string newname);
 
-	void DebugPrint(std::ostream & out) const;
+	void DebugPrint(std::ostream & out);
 
 	bool Write();
 	bool Write(bool with_brackets);

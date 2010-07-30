@@ -37,7 +37,7 @@ public:
 		locked(false)
 	{}
 
-	void DebugPrint(std::ostream & out) const
+	void DebugPrint(std::ostream & out)
 	{
 		out << "---Clutch---" << std::endl;
 		out << "Clutch position: " << clutch_position << std::endl;

@@ -1,15 +1,17 @@
 #ifndef _HUD_H
 #define _HUD_H
 
-#include "scenenode.h"
-#include "font.h"
-#include "text_draw.h"
-
 #include <ostream>
+#include <cassert>
 #include <string>
 #include <list>
+#include <sstream>
+#include <algorithm>
 
-class ContentManager;
+#include "scenenode.h"
+#include "font.h"
+#include "texturemanager.h"
+#include "text_draw.h"
 
 class HUDBAR
 {
@@ -18,7 +20,7 @@ class HUDBAR
 		VERTEXARRAY verts;
 
 	public:
-		void Set(SCENENODE & parent, TexturePtr bartex, float x, float y, float w, float h, float opacity, bool flip)
+		void Set(SCENENODE & parent, TEXTUREPTR bartex, float x, float y, float w, float h, float opacity, bool flip)
 		{
 			draw = parent.GetDrawlist().twodim.insert(DRAWABLE());
 			DRAWABLE & drawref = parent.GetDrawlist().twodim.get(draw);
@@ -41,86 +43,26 @@ class HUDBAR
 
 class HUD
 {
-public:
-	HUD();
-
-	bool Init(
-		const std::string & texturepath,
-		const std::string & texsize,
-		ContentManager & content, 
-		FONT & lcdfont,
-		FONT & sansfont,
-		float displaywidth,
-		float displayheight,
-		bool debugon,
-		std::ostream & error_output);
-
-	void Update(
-		FONT & lcdfont,
-		FONT & sansfont,
-		float curlap,
-		float lastlap,
-		float bestlap,
-		float stagingtimeleft,
-		int curlapnum,
-		int numlaps,
-		int curplace,
-		int numcars,
-		float clutch,
-		int newgear,
-		int newrpm,
-		int redrpm,
-		int maxrpm,
-		float meterspersecond,
-		bool mph,
-		const std::string & debug_string1,
-		const std::string & debug_string2,
-		const std::string & debug_string3,
-		const std::string & debug_string4,
-		float displaywidth,
-		float displayheight,
-		bool absenabled,
-		bool absactive,
-		bool tcsenabled,
-		bool tcsactive,
-		bool drifting,
-		float driftscore,
-		float thisdriftscore);
-
-	void SetDebugVisibility(bool show);
-
-	void Hide()
-	{
-		SetVisible(false);
-	}
-
-	void Show()
-	{
-		SetVisible(true);
-	}
-
-	SCENENODE & GetNode()
-	{
-		return hudroot;
-	}
-
 private:
-	//TexturePtr bartex;
+	TEXTURE bartex;
 	SCENENODE hudroot;
 	std::list <HUDBAR> bars;
 
-	VERTEXARRAY rpmbarverts;
-	VERTEXARRAY rpmredbarverts;
-	VERTEXARRAY rpmboxverts;
+	TEXTURE progbartex;
 	keyed_container <DRAWABLE>::handle rpmbar;
 	keyed_container <DRAWABLE>::handle rpmredbar;
+	VERTEXARRAY rpmbarverts;
+	VERTEXARRAY rpmredbarverts;
 	keyed_container <DRAWABLE>::handle rpmbox;
+	VERTEXARRAY rpmboxverts;
 
 	//variables for drawing the timer
 	keyed_container <SCENENODE>::handle timernode;
+	TEXTURE timerboxtex;
 	keyed_container <DRAWABLE>::handle timerboxdraw;
 	VERTEXARRAY timerboxverts;
-	/*DRAWABLE * timerbardraw;
+	/*TEXTURE timerbartex;
+	DRAWABLE * timerbardraw;
 	VERTEXARRAY timerbarverts;*/
 	TEXT_DRAWABLE laptime_label;
 	TEXT_DRAWABLE laptime;
@@ -155,25 +97,79 @@ private:
 	keyed_container <DRAWABLE>::handle mphtextdraw;
 
 	bool debug_hud_info;
+
 	bool racecomplete;
 
-	void SetVisible(bool newvis);
+	void SetVisible(bool newvis)
+	{
+		hudroot.SetChildVisibility(newvis);
 
-	keyed_container <DRAWABLE>::handle SetupText(
-		SCENENODE & parent,
-		FONT & font,
-		TEXT_DRAW & textdraw,
-		const std::string & str,
-		const float x,
-		const float y,
-		const float scalex,
-		const float scaley,
-		const float r,
-		const float g,
-		const float b,
-		float zorder = 0);
+		SetDebugVisibility(newvis && debug_hud_info);
+	}
 
-	void GetTimeString(float time, std::string & outtime) const;
+	keyed_container <DRAWABLE>::handle SetupText(SCENENODE & parent, FONT & font, TEXT_DRAW & textdraw, const std::string & str, const float x, const float y, const float scalex, const float scaley, const float r, const float g, const float b, float zorder = 0)
+	{
+		keyed_container <DRAWABLE>::handle draw = parent.GetDrawlist().text.insert(DRAWABLE());
+		DRAWABLE & drawref = parent.GetDrawlist().text.get(draw);
+		textdraw.Set(drawref, font, str, x, y, scalex,scaley, r, g, b);
+		drawref.SetDrawOrder(zorder);
+		return draw;
+	}
+
+	void GetTimeString(float time, std::string & outtime) const
+	{
+		int min = (int) time / 60;
+		float secs = time - min*60;
+
+		if (time != 0.0)
+		{
+			char tempchar[128];
+			sprintf(tempchar, "%02d:%06.3f", min, secs);
+			outtime = tempchar;
+		}
+		else
+			outtime = "--:--.---";
+	}
+
+public:
+	HUD() : debug_hud_info(false), racecomplete(false) {}
+
+	bool Init(
+		const std::string & texturepath,
+		const std::string & texsize,
+		TEXTUREMANAGER & textures, 
+		FONT & lcdfont,
+		FONT & sansfont,
+		float displaywidth,
+		float displayheight,
+		bool debugon,
+		std::ostream & error_output);
+
+	void Hide()
+	{
+		SetVisible(false);
+	}
+
+	void Show()
+	{
+		SetVisible(true);
+	}
+
+	void Update(FONT & lcdfont, FONT & sansfont, float curlap, float lastlap, float bestlap, float stagingtimeleft, int curlapnum,
+		int numlaps, int curplace, int numcars, float clutch, int newgear, int newrpm, int redrpm, int maxrpm,
+		float meterspersecond,
+		bool mph, const std::string & debug_string1, const std::string & debug_string2,
+		const std::string & debug_string3, const std::string & debug_string4, float displaywidth,
+		float displayheight, bool absenabled, bool absactive, bool tcsenabled, bool tcsactive,
+		bool drifting, float driftscore, float thisdriftscore);
+
+	void SetDebugVisibility(bool show)
+	{
+		SCENENODE & debugnoderef = hudroot.GetNode(debugnode);
+		debugnoderef.SetChildVisibility(show);
+	}
+	
+	SCENENODE & GetNode() {return hudroot;}
 };
 
 #endif

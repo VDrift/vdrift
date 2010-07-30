@@ -1,8 +1,13 @@
 #include "font.h"
 
-#include "contentmanager.h"
-#include "textureloader.h"
-#include "texture.h"
+#include <fstream>
+using std::ifstream;
+
+#include <string>
+using std::string;
+
+#include <iostream>
+using std::endl;
 
 #include <algorithm>
 
@@ -10,18 +15,18 @@ bool FONT::Load(
 	const std::string & fontinfopath,
 	const std::string & fonttexturepath,
 	const std::string & texsize,
-	ContentManager & content,
+	TEXTUREMANAGER & textures,
 	std::ostream & error_output,
 	bool mipmap)
 {
-	std::ifstream fontinfo(fontinfopath.c_str());
+	ifstream fontinfo(fontinfopath.c_str());
 	if (!fontinfo)
 	{
-		error_output << "Can't find font information file: " << fontinfopath << std::endl;
+		error_output << "Can't find font information file: " << fontinfopath << endl;
 		return false;
 	}
 	
-	std::string curstr;
+	string curstr;
 	while (fontinfo && curstr != "chars")
 		fontinfo >> curstr; //advance to first interesting bit
 	
@@ -41,7 +46,7 @@ bool FONT::Load(
 			if (!Parse("id=", cur_id, fontinfo,fontinfopath, error_output)) return false;
 			if (cur_id >= charinfo.size())
 			{
-				error_output << "Font info file " << fontinfopath << ": ID is out of range: " << cur_id << std::endl;
+				error_output << "Font info file " << fontinfopath << ": ID is out of range: " << cur_id << endl;
 				return false;
 			}
 			//std::cout << "Parsing ID " << cur_id << endl;
@@ -60,15 +65,12 @@ bool FONT::Load(
 		}
 	}
 	
-	TextureLoader texload;
-	texload.name = fonttexturepath;
-	texload.size = texsize;
-	texload.mipmap = mipmap;
-	texload.repeatu = false;
-	texload.repeatv = false;
-	
-	font_texture = content.get<TEXTURE>(texload);
-	if (!font_texture.get()) return false;
+	TEXTUREINFO texinfo(fonttexturepath);
+	texinfo.SetMipMap(mipmap);
+	texinfo.SetRepeat(false, false);
+	texinfo.SetSize(texsize);
+	font_texture = textures.Get(texinfo);
+	if (!font_texture->Loaded()) return false;
 	
 	float scale = font_texture->GetScale();
 	if (scale != 1.0)
@@ -89,45 +91,13 @@ bool FONT::Load(
 	return true;
 }
 
-bool FONT::VerifyParse(
-	const std::string & expected,
-	const std::string & actual,
-	const std::string & fontinfopath,
-	std::ostream & error_output) const
+bool FONT::VerifyParse(const std::string & expected, const std::string & actual, const std::string & fontinfopath, std::ostream & error_output) const
 {
 	if (expected != actual)
 	{
-		error_output << "Font info file " << fontinfopath << ": expected " << expected << ", got " << actual << std::endl;
+		error_output << "Font info file " << fontinfopath << ": expected " << expected << ", got " << actual << endl;
 		return false;
 	}
 	else
 		return true;
-}
-
-float FONT::GetWidth(const std::string & newtext, const float newscale) const
-{
-	float cursorx(0);
-
-	std::vector <float> linewidth;
-
-	for (unsigned int i = 0; i < newtext.size(); i++)
-	{
-		if (newtext[i] == '\n')
-		{
-			linewidth.push_back(cursorx);
-			cursorx = 0;
-		}
-		else
-		{
-			optional <const FONT::CHARINFO *> cinfo = GetCharInfo(newtext[i]);
-			if (cinfo)
-				cursorx += (cinfo.get()->xadvance/GetFontTexture()->GetW())*newscale;
-		}
-	}
-
-	linewidth.push_back(cursorx);
-
-	float maxwidth = *std::max_element(linewidth.begin(), linewidth.end());
-
-	return maxwidth;
 }

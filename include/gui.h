@@ -24,7 +24,7 @@ private:
 	std::map<std::string, PAGEINFO> pages;
 	std::map<std::string, PAGEINFO>::iterator active_page;
 	std::map<std::string, PAGEINFO>::iterator last_active_page;
-	//std::map<std::string, TEXTURE> textures;
+	std::map<std::string, TEXTURE> textures;
 	std::map<std::string, GUIOPTION> optionmap;
 	SCENENODE node;
 	float animation_counter;
@@ -45,7 +45,7 @@ private:
 		std::map<std::string, GUIOPTION> & optionmap,
 		float screenhwratio,
 		const std::string & texsize,
-		ContentManager & ContentManager,
+		TEXTUREMANAGER & texturemanager,
 		std::ostream & error_output)
 	{
 		PAGEINFO & p = pages[pagename];
@@ -58,7 +58,7 @@ private:
 				path+"/"+pagename, texpath, datapath,
 				carcontrolsfile, pnoderef, fonts,
 				optionmap, screenhwratio,
-				texsize, ContentManager,
+				texsize, texturemanager,
 				error_output))
 		{
 			return false;
@@ -116,7 +116,7 @@ public:
 		std::map <std::string, FONT> & fonts, 
 		float screenhwratio,
 		const std::string & texsize,
-		ContentManager & content,
+		TEXTUREMANAGER & textures,
 		std::ostream & info_output,
 		std::ostream & error_output)
 	{
@@ -136,7 +136,7 @@ public:
 		{
 			if (*i != "SConscript")
 			{
-				if (!LoadPage(*i, menupath, texpath, datapath, controlsconfig, node, fonts, optionmap, screenhwratio, texsize, content, error_output))
+				if (!LoadPage(*i, menupath, texpath, datapath, controlsconfig, node, fonts, optionmap, screenhwratio, texsize, textures, error_output))
 				{
 					error_output << "Error loading GUI page: " << menupath << "/" << *i << std::endl;
 					return false;

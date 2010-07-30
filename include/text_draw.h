@@ -1,15 +1,22 @@
 #ifndef _TEXT_DRAW_H
 #define _TEXT_DRAW_H
 
+#include <string>
+#include <cassert>
+
 #include "font.h"
 #include "scenenode.h"
 #include "vertexarray.h"
 
-#include <string>
-#include <cassert>
-
 class TEXT_DRAW
 {
+private:
+	VERTEXARRAY varray;
+	std::string text;
+	float oldx, oldy, oldscalex, oldscaley;
+	
+	float RenderCharacter(VERTEXARRAY & output_array, const float tw, const float th, const float x, const float y, const float scalex, const float scaley, const FONT::CHARINFO & c);
+	
 public:
 	TEXT_DRAW() : oldx(0), oldy(0), oldscalex(1.0), oldscaley(1.0) {}
 	
@@ -40,26 +47,18 @@ public:
 	}
 	
 	const std::pair<float,float> GetCurrentScale() const {return std::pair<float,float>(oldscalex,oldscaley);}
-
-private:
-	VERTEXARRAY varray;
-	std::string text;
-	float oldx, oldy, oldscalex, oldscaley;
-	
-	float RenderCharacter(
-		VERTEXARRAY & output_array,
-		const float tw,
-		const float th,
-		const float x,
-		const float y,
-		const float scalex,
-		const float scaley,
-		const FONT::CHARINFO & c);
 };
 
 ///a slightly higher level class than the TEXT_DRAW Class that contains its own DRAWABLE handle
 class TEXT_DRAWABLE
 {
+private:
+	TEXT_DRAW text;
+	keyed_container <DRAWABLE>::handle draw;
+	const FONT * font;
+	float curx, cury;
+	float cr,cg,cb,ca;
+	
 public:
 	TEXT_DRAWABLE() : font(NULL),curx(0),cury(0),cr(1),cg(1),cb(1),ca(1) {}
 	
@@ -146,13 +145,6 @@ public:
 	
 	DRAWABLE & GetDrawable(SCENENODE & parentnode)
 	{return parentnode.GetDrawlist().text.get(draw);}
-	
-private:
-	TEXT_DRAW text;
-	keyed_container <DRAWABLE>::handle draw;
-	const FONT * font;
-	float curx, cury;
-	float cr,cg,cb,ca;
 };
 
 #endif

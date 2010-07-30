@@ -31,11 +31,11 @@
 #include "timer.h"
 #include "replay.h"
 #include "forcefeedback.h"
-#include "particlesystem.h"
+#include "particle.h"
 #include "ai.h"
 #include "quickmp.h"
 //#include "sky.h"
-#include "contentmanager.h"
+#include "texturemanager.h"
 
 class GAME
 {
@@ -138,7 +138,7 @@ private:
 	SOUNDBUFFERLIBRARY generic_sounds;
 	SETTINGS settings;
 	PATHMANAGER pathmanager;
-	ContentManager content;
+	TEXTUREMANAGER textures;
 	TRACKMAP trackmap;
 	TRACK track;
 	GUI gui;
@@ -153,7 +153,7 @@ private:
 	LOADINGSCREEN loadingscreen;
 	TIMER timer;
 	REPLAY replay;
-	ParticleSystem tire_smoke;
+	PARTICLE_SYSTEM tire_smoke;
 	AI ai;
 	
 	//SKY sky;
@@ -186,7 +186,7 @@ public:
 		debugmode(false),
 		profilingmode(false),
 		renderconfigfile("render.conf.deferred"),
-		content(err_out),
+		textures(err_out),
 		track(info_out, err_out),
 		replay(framerate)
 		//sky(graphics, info_out, err_out)

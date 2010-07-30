@@ -3,7 +3,8 @@
 #include <cmath>
 
 #if defined(_WIN32) || defined(__APPLE__)
-template <typename T> bool isnan(T number) {return (number != number);}
+bool isnan(float number);
+bool isnan(double number);
 #endif
 
 template <typename T>
@@ -166,10 +167,18 @@ T CARTIRE<T>::GetRollingResistance(const T velocity, const T normal_force, const
 	// surface influence on rolling resistance
 	T rolling_resistance = info.rolling_resistance_linear * rolling_resistance_factor;
 	
-	// heat due to tire deformation increases rolling resistance, approximate by quadratic function
+	// heat due to tire deformation increases rolling resistance
+	// approximate by quadratic function
 	rolling_resistance += velocity * velocity * info.rolling_resistance_quadratic;
 	
-	return normal_force * rolling_resistance;
+	// rolling resistance should not add energy to system
+	// fake this by using a ramped step function, should be replaced by a constraint
+	T max_force = normal_force * rolling_resistance;
+	T ramp = velocity;
+	if (velocity > 1) ramp = 1;
+	else if (velocity < -1) ramp = -1; 
+	
+	return -ramp * max_force;
 }
 
 template <typename T>

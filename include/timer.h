@@ -180,7 +180,7 @@ private:
 
 			const std::string & GetCarType() const {return cartype;}
 
-			void DebugPrint(std::ostream & out) const
+			void DebugPrint(std::ostream & out)
 			{
 				out << "car=" << cartype << ", t=" << totaltime << ", tlap=" << time << ", last=" <<
 					lastlap.GetTimeInSeconds() << ", best=" << bestlap.GetTimeInSeconds() <<
@@ -252,7 +252,7 @@ public:
 	    assert(carid < car.size());
 	    car[carid].UpdateLapDistance(newdistance);
 	}
-	void DebugPrint(std::ostream & out) const
+	void DebugPrint(std::ostream & out)
 	{
 		for (unsigned int i = 0; i < car.size(); i++)
 		{

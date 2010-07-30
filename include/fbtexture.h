@@ -9,10 +9,10 @@
 #include <GL/gl.h>
 #endif
 
-#include "texture_interface.h"
+#include "texture.h"
 #include "glstatemanager.h"
 
-#include <ostream>
+#include <iostream>
 
 class FBOBJECT;
 
@@ -73,6 +73,8 @@ class FBTEXTURE : public TEXTURE_INTERFACE
 		virtual unsigned int GetW() const {return sizew;}
 		virtual unsigned int GetH() const {return sizeh;}
 		bool IsCubemap() const {return (texture_target == CUBEMAP);}
+		
+	protected:
 		virtual GLuint GetID() const {return fbtexture;}
 		
 	private:

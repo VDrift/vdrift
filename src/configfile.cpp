@@ -329,18 +329,18 @@ std::string CONFIGFILE::Strip(std::string instr, char stripchar)
 	return outstr;
 }
 
-void CONFIGFILE::DebugPrint(std::ostream & out) const
+void CONFIGFILE::DebugPrint(std::ostream & out)
 {
 	out << "*** " << filename << " ***" << std::endl << std::endl;
 	
 	std::list <CONFIGVARIABLE> vlist;
-	for (bucketed_hashmap <std::string, CONFIGVARIABLE>::const_iterator i = variables.begin(); i != variables.end(); ++i)
+	for (bucketed_hashmap <std::string, CONFIGVARIABLE>::iterator i = variables.begin(); i != variables.end(); ++i)
 	{
 		vlist.push_back(*i);
 	}
 	vlist.sort();
 	
-	for (std::list <CONFIGVARIABLE>::const_iterator i = vlist.begin(); i != vlist.end(); ++i)
+	for (std::list <CONFIGVARIABLE>::iterator i = vlist.begin(); i != vlist.end(); ++i)
 	{
 		i->DebugPrint(out);
 	}

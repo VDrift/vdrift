@@ -4,11 +4,7 @@
 #include "configfile.h"
 
 WIDGET_SPINNINGCAR::WIDGET_SPINNINGCAR():
-	errptr(NULL),
-	rotation(0),
-	wasvisible(false),
-	r(1), g(1), b(1),
-	content(NULL)
+	errptr(NULL), rotation(0), wasvisible(false), r(1), g(1), b(1), textures(NULL)
 {
 	
 }
@@ -138,7 +134,7 @@ void WIDGET_SPINNINGCAR::SetupDrawable(
 	float x,
 	float y,
 	const MATHVECTOR <float, 3> & newcarpos,
-	ContentManager & content,
+	TEXTUREMANAGER & textures,
 	std::ostream & error_output,
 	int order)
 {
@@ -146,7 +142,7 @@ void WIDGET_SPINNINGCAR::SetupDrawable(
 	data = datapath;
 	center.Set(x,y);
 	carpos = newcarpos;
-	this->content = &content;
+	this->textures = &textures;
 	errptr = &error_output;
 	draworder = order;
 }
@@ -189,7 +185,7 @@ struct CAMTRANS_DRAWABLE_FUNCTOR
 void WIDGET_SPINNINGCAR::Load(SCENENODE & parent)
 {
 	assert(errptr);
-	assert(content);
+	assert(textures);
 	
 	Unload(parent);
 	
@@ -221,7 +217,7 @@ void WIDGET_SPINNINGCAR::Load(SCENENODE & parent)
 	
 	if (!car.back().Load(
 		carconf, carpath, "", carname, 
-		*content, carpaint, carcolor,
+		*textures, carpaint, carcolor,
 		cartrans, carrot, NULL,
 		false, SOUNDINFO(0,0,0,0),
 		SOUNDBUFFERLIBRARY(),

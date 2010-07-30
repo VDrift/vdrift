@@ -77,7 +77,7 @@ public:
 		return true;
 	}
 
-	void DebugPrint(std::ostream & out) const
+	void DebugPrint(std::ostream & out)
 	{
 		out << "---Tire---" << "\n";
 		out << "Inclination: " << camber << "\n";

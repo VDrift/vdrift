@@ -34,14 +34,12 @@ src = Split("""aabb.cpp
 		carcontrolmap_local.cpp
 		cardynamics.cpp
 		carengine.cpp
-		carpowertrain.cpp
 		carsuspension.cpp
 		cartire.cpp
 		collision_world.cpp
 		configfile.cpp
 		configvariable.cpp
 		containeralgorithm.cpp
-		contentmanager.cpp
 		coordinatesystems.cpp
 		crashdetection.cpp
 		endian_utility.cpp
@@ -63,7 +61,6 @@ src = Split("""aabb.cpp
 		joeserialize.cpp
 		k1999.cpp
 		keyed_container.cpp
-		loadingscreen.cpp
 		linearframe.cpp
 		linearinterp.cpp
 		main.cpp
@@ -72,14 +69,13 @@ src = Split("""aabb.cpp
 		matrix4.cpp
 		mesh_gen.cpp
 		model.cpp
-		modeljoeloader.cpp
 		model_joe03.cpp
 		model_obj.cpp
+		objectloader.cpp
 		opengl_utility.cpp
 		optional.cpp
 		parallel_task.cpp
 		particle.cpp
-		particlesystem.cpp
 		pathmanager.cpp
 		performance_testing.cpp
 		quaternion.cpp
@@ -94,16 +90,12 @@ src = Split("""aabb.cpp
 		settings.cpp
 		shader.cpp
 		sound.cpp
-		sprite2d.cpp
 		suspensionbumpdetection.cpp
 		texture.cpp
-		texturecube.cpp
-		textureloader.cpp
 		text_draw.cpp
 		timer.cpp
 		toggle.cpp
 		track.cpp
-		trackloader.cpp
 		trackmap.cpp
 		vertexarray.cpp
 		widget_slider.cpp

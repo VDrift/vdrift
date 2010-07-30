@@ -1,10 +1,7 @@
 #include "camera_mount.h"
 
-CAMERA_MOUNT::CAMERA_MOUNT(const std::string & name) :
-	CAMERA(name),
-	effect(0.0),
-	stiffness(0.0),
-	offset_effect_strength(1.0)
+CAMERA_MOUNT::CAMERA_MOUNT(const std::string & name)
+: CAMERA(name), effect(0.0), stiffness(0.0), offset_effect_strength(1.0)
 {
 
 }
@@ -17,6 +14,8 @@ void CAMERA_MOUNT::Reset(const MATHVECTOR <float, 3> & newpos, const QUATERNION 
 	MATRIX3 <float> rotinertia;
 	rotinertia.Scale(mass*length*length/3.0);
 	body.SetInertia(rotinertia);
+	body.SetInitialForce(MATHVECTOR <float, 3> (0));
+	body.SetInitialTorque(MATHVECTOR <float, 3> (0));
 	body.SetPosition(MATHVECTOR <float, 3>(0));
 	
 	MATHVECTOR <float, 3> pos = offset;

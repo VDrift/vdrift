@@ -6,7 +6,7 @@
 #include "mathvector.h"
 
 class CAR;
-class ContentManager;
+class TEXTUREMANAGER;
 
 class WIDGET_SPINNINGCAR : public WIDGET
 {
@@ -30,7 +30,7 @@ public:
 		float x,
 		float y,
 		const MATHVECTOR <float, 3> & newcarpos,
-		ContentManager & content,
+		TEXTUREMANAGER & textures,
 		std::ostream & error_output,
 		int order = 0);
 	
@@ -48,7 +48,7 @@ private:
 	float r, g, b;
 	
 	keyed_container <SCENENODE>::handle carnode;
-	ContentManager * content;
+	TEXTUREMANAGER * textures;
 	
 	std::list <CAR> car; ///< only ever one element, please
 	

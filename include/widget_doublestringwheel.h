@@ -30,8 +30,8 @@ public:
 	WIDGET_DOUBLESTRINGWHEEL() {current1 = values1.end();current2 = values2.end();}
 	virtual WIDGET * clone() const {return new WIDGET_DOUBLESTRINGWHEEL(*this);};
 	
-	void SetupDrawable(SCENENODE & scene, const std::string & newtitle, TexturePtr teximage_left_up, TexturePtr teximage_left_down, 
-			   TexturePtr teximage_right_up, TexturePtr teximage_right_down,
+	void SetupDrawable(SCENENODE & scene, const std::string & newtitle, TEXTUREPTR teximage_left_up, TEXTUREPTR teximage_left_down, 
+			   TEXTUREPTR teximage_right_up, TEXTUREPTR teximage_right_down,
 			   FONT * font, float scalex, float scaley, float centerx, float centery)
 	{
 		assert(teximage_left_up);

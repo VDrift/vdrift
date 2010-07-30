@@ -103,7 +103,7 @@ void CONFIGVARIABLE::Set(std::string newval)
 	}
 }
 
-void CONFIGVARIABLE::DebugPrint(std::ostream & out) const
+void CONFIGVARIABLE::DebugPrint(std::ostream & out)
 {
 	if (section != "")
 		out << section << ".";

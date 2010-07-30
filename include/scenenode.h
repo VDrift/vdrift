@@ -30,7 +30,7 @@ public:
 	VEC3 TransformIntoLocalSpace(const VEC3 & worldspace) const;
 	void SetChildVisibility(bool newvis);
 	void SetChildAlpha(float a);
-	void DebugPrint(std::ostream & out, int curdepth = 0) const;
+	void DebugPrint(std::ostream & out, int curdepth = 0);
 	
 	template <template <typename U> class T>
 	void Traverse(DRAWABLE_CONTAINER <T> & drawlist_output, const MAT4 & prev_transform)

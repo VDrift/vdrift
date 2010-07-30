@@ -38,15 +38,13 @@ void SCENENODE::SetChildAlpha(float a)
 	}
 }
 
-void SCENENODE::DebugPrint(std::ostream & out, int curdepth) const
+void SCENENODE::DebugPrint(std::ostream & out, int curdepth)
 {
 	for (int i = 0; i < curdepth; i++)
-	{
 		out << "-";
-	}
 	out << "Children: " << Nodes() << ", Drawables: " << Drawables() << std::endl;
 	
-	for (keyed_container <SCENENODE>::const_iterator i = childlist.begin(); i != childlist.end(); ++i)
+	for (keyed_container <SCENENODE>::iterator i = childlist.begin(); i != childlist.end(); ++i)
 	{
 		i->DebugPrint(out, curdepth+1);
 	}

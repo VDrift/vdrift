@@ -39,8 +39,8 @@ public:
 	
 	void SetupDrawable(
 		SCENENODE & scene,
-		TexturePtr wedgetex,
-		TexturePtr cursortex,
+		TEXTUREPTR wedgetex,
+		TEXTUREPTR cursortex,
 		float x, float y,
 		float nw, float nh,
 		float newmin, float newmax,

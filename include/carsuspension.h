@@ -82,7 +82,7 @@ public:
 	/// update wheel position
 	void Update(T ext_displacement, T ext_velocity, T dt);
 
-	void DebugPrint(std::ostream & out) const;
+	void DebugPrint(std::ostream & out);
 
 	bool Serialize(joeserialize::Serializer & s)
 	{

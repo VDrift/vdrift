@@ -77,7 +77,7 @@ private:
 			float exponent;
 			float gain;
 			
-			void DebugPrint(std::ostream & out) const
+			void DebugPrint(std::ostream & out)
 			{
 				out << type << " " << onetime << " " << joynum << " " << joyaxis << " " <<
 						joyaxistype << " " << joybutton << " " << joytype << " " <<
