@@ -198,7 +198,7 @@ protected:
 	
 	MATHVECTOR <T, 3> lastbodyforce; //< held so external classes can extract it for things such as applying physics to camera mounts
 	
-	CARTELEMETRY telemetry;
+	std::list <CARTELEMETRY> telemetry;
 
 // chassis, cardynamics
 	MATHVECTOR <T, 3> GetDownVector() const;

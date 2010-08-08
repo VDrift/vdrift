@@ -17,7 +17,7 @@ bool isnan(double number);
 
 typedef CARDYNAMICS::T T;
 
-CARDYNAMICS::CARDYNAMICS() : telemetry("telemetry")
+CARDYNAMICS::CARDYNAMICS()
 {
 	Init();
 }
@@ -561,6 +561,12 @@ bool CARDYNAMICS::Load(
 	body.SetInitialTorque(MATHVECTOR <T, 3> (0));
 	engine.SetInitialConditions();
 	for (int i = 0; i < WHEEL_POSITION_SIZE; i++) wheel[i].SetInitialConditions();
+	
+	// initialize telemetry
+	telemetry.clear();
+	//telemetry.push_back(CARTELEMETRY("brakes"));
+	//telemetry.push_back(CARTELEMETRY("suspension"));
+	//etc
 
 	return true;
 }
@@ -1043,7 +1049,8 @@ T CARDYNAMICS::GetFeedback() const
 
 void CARDYNAMICS::UpdateTelemetry ( float dt )
 {
-	telemetry.Update ( dt );
+	for (std::list <CARTELEMETRY>::iterator i = telemetry.begin(); i != telemetry.end(); i++)
+		i->Update ( dt );
 }
 
 /// print debug info to the given ostream.  set p1, p2, etc if debug info part 1, and/or part 2, etc is desired
