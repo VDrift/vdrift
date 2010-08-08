@@ -17,19 +17,21 @@ class CARTELEMETRY
 		void WriteHeader(const std::string & filename)
 		{
 			std::ofstream f((filename+".plt").c_str());
-			assert(f);
-			f << "plot ";
-			unsigned int count = 0;
-			for (std::vector <std::pair <std::string, T> >::iterator i =
-				variable_names.begin(); i != variable_names.end(); ++i)
+			if (f)
 			{
-				f << "\\" << std::endl << "\"" << filename+".dat" << "\" u 1:" << count+2 << " t '" << i->first << "' w lines";
-				if (count < variable_names.size()-1)
-					f << ",";
-				f << " ";
-				count++;
+				f << "plot ";
+				unsigned int count = 0;
+				for (std::vector <std::pair <std::string, T> >::iterator i =
+					variable_names.begin(); i != variable_names.end(); ++i)
+				{
+					f << "\\" << std::endl << "\"" << filename+".dat" << "\" u 1:" << count+2 << " t '" << i->first << "' w lines";
+					if (count < variable_names.size()-1)
+						f << ",";
+					f << " ";
+					count++;
+				}
+				f << std::endl;
 			}
-			f << std::endl;
 			wroteheader = true;
 		}
 		
@@ -60,12 +62,14 @@ class CARTELEMETRY
 				WriteHeader(telemetryname);
 			time += dt;
 			
-			assert(file);
-			file << time << " ";
-			for (std::vector <std::pair <std::string, T> >::iterator i =
-				variable_names.begin(); i != variable_names.end(); ++i)
-				file << i->second << " ";
-			file << "\n";
+			if (file)
+			{
+				file << time << " ";
+				for (std::vector <std::pair <std::string, T> >::iterator i =
+					variable_names.begin(); i != variable_names.end(); ++i)
+					file << i->second << " ";
+				file << "\n";
+			}
 		}
 };
 
