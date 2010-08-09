@@ -164,7 +164,7 @@ T CARENGINE<T>::ComputeForces(T clutch_drag, T clutch_angvel, T dt)
 }
 
 template <typename T>
-void CARENGINE<T>::DebugPrint(std::ostream & out)
+void CARENGINE<T>::DebugPrint(std::ostream & out) const
 {
 	out << "---Engine---" << "\n";
 	out << "Throttle position: " << throttle_position << "\n";

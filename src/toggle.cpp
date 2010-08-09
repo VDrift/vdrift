@@ -3,7 +3,7 @@
 
 using std::endl;
 
-void TOGGLE::DebugPrint(std::ostream & out)
+void TOGGLE::DebugPrint(std::ostream & out) const
 {
 	out << "State: " << state << "  Last state: " << laststate << endl;
 }

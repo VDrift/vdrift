@@ -32,7 +32,7 @@ class CARFUELTANK
 		//default constructor makes an S2000-like car
 		CARFUELTANK() : capacity(0.0492), density(730.0), mass(730.0*0.0492), volume(0.0492) {}
 
-		void DebugPrint(std::ostream & out)
+		void DebugPrint(std::ostream & out) const
 		{
 			out << "---Fuel Tank---" << std::endl;
 			out << "Current volume: " << volume << std::endl;

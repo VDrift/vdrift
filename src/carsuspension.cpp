@@ -145,7 +145,7 @@ void CARSUSPENSION<T>::Update(T ext_displacement, T ext_velocity, T dt)
 }
 
 template <typename T>
-void CARSUSPENSION<T>::DebugPrint(std::ostream & out)
+void CARSUSPENSION<T>::DebugPrint(std::ostream & out) const
 {
 	out << "---Suspension---" << "\n";
 	out << "Displacement: " << displacement << "\n";
@@ -176,6 +176,5 @@ T CARSUSPENSION<T>::GetForce(T displacement, T velocity)
 /// explicit instantiation
 template class CARSUSPENSIONINFO <float>;
 template class CARSUSPENSIONINFO <double>;
-
 template class CARSUSPENSION <float>;
 template class CARSUSPENSION <double>;

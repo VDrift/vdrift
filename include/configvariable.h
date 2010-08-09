@@ -20,7 +20,7 @@ public:
 	
 	void Set(std::string newval);
 
-	void DebugPrint(std::ostream & out);
+	void DebugPrint(std::ostream & out) const;
 
 	std::string strLTrim(std::string instr);
 	

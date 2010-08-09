@@ -34,7 +34,7 @@ class CARAERO
 		CARAERO() : air_density(1.2), drag_frontal_area(0), drag_coefficient(0),
 			lift_surface_area(0), lift_coefficient(0), lift_efficiency(0) {}
 
-		void DebugPrint(std::ostream & out)
+		void DebugPrint(std::ostream & out) const
 		{
 			out << "---Aerodynamic Device---" << std::endl;
 			out << "Drag: " << drag_vector << std::endl;

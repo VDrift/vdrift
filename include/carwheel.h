@@ -19,7 +19,7 @@ public:
 		SetInertia(10.0);
 	}
 
-	void DebugPrint(std::ostream & out)
+	void DebugPrint(std::ostream & out) const
 	{
 		out << "---Wheel---" << std::endl;
 		out << "Wheel speed: " << GetRPM() << std::endl;

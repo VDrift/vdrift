@@ -32,10 +32,10 @@ class CARTRANSMISSION
 			gear_ratios [0] = 0.0;
 		}
 
-		void DebugPrint(std::ostream & out)
+		void DebugPrint(std::ostream & out) const
 		{
 			out << "---Transmission---" << std::endl;
-			out << "Gear ratio: " << gear_ratios[gear] << std::endl;
+			out << "Gear ratio: " << gear_ratios.at(gear) << std::endl;
 			out << "Crankshaft RPM: " << crankshaft_rpm << std::endl;
 			out << "Driveshaft RPM: " << driveshaft_rpm << std::endl;
 		}
