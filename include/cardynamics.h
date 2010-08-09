@@ -134,7 +134,7 @@ public:
 	void UpdateTelemetry(float dt);
 
 	// print debug info to the given ostream.  set p1, p2, etc if debug info part 1, and/or part 2, etc is desired
-	void DebugPrint(std::ostream & out, bool p1, bool p2, bool p3, bool p4);
+	void DebugPrint(std::ostream & out, bool p1, bool p2, bool p3, bool p4) const;
 
 	bool Serialize(joeserialize::Serializer & s);
 

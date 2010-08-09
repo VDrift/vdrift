@@ -21,13 +21,9 @@ class CARAERO
 		T lift_efficiency; ///the efficiency of the wing, a unitless value from 0.0 to 1.0
 		MATHVECTOR <T, 3> position; ///the position that the drag and lift forces are applied on the body
 		
-		//variables
-
-		
 		//for info only
 		mutable MATHVECTOR <T, 3> lift_vector;
 		mutable MATHVECTOR <T, 3> drag_vector;
-		
 		
 	public:
 		//default constructor makes an aerodynamically transparent device (i.e. no drag or lift)
