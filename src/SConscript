@@ -63,6 +63,7 @@ src = Split("""aabb.cpp
 		keyed_container.cpp
 		linearframe.cpp
 		linearinterp.cpp
+		loadingscreen.cpp
 		main.cpp
 		mathplane.cpp
 		mathvector.cpp

@@ -84,8 +84,8 @@ void GAME::Start(list <string> & args)
 	InitializeCoreSubsystems();
 
 	//load loading screen assets
-	if (!loadingscreen.Initialize(pathmanager.GetGUITexturePath(settings.GetSkin()),
-				 graphics.GetW(), graphics.GetH(), settings.GetTextureSize(), textures, error_output))
+	if (!loadingscreen.Init(pathmanager.GetGUITexturePath(settings.GetSkin()),
+			graphics.GetW(), graphics.GetH(), settings.GetTextureSize(), textures))
 	{
 		error_output << "Error loading the loading screen" << endl; //ironic
 		return;
