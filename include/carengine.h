@@ -124,13 +124,6 @@ public:
 		return !stalled;
 	}
 	
-	void SetInitialConditions()
-	{
-		MATHVECTOR <T, 3> v;
-		crankshaft.SetInitialTorque(v);
-		StartEngine();
-	}
-	
 	void StartEngine()
 	{
 		MATHVECTOR <T, 3> v(info.start_rpm * 3.141593 / 30.0, 0, 0);

@@ -555,12 +555,6 @@ bool CARDYNAMICS::Load(
 	if(!LoadMassParticles(c, mass_particles, error_output)) return false;
 
 	UpdateMass();
-
-	// init body, powertrain, wheels for performance testing
-	body.SetInitialForce(MATHVECTOR <T, 3> (0));
-	body.SetInitialTorque(MATHVECTOR <T, 3> (0));
-	engine.SetInitialConditions();
-	for (int i = 0; i < WHEEL_POSITION_SIZE; i++) wheel[i].SetInitialConditions();
 	
 	// initialize telemetry
 	telemetry.clear();
@@ -631,11 +625,6 @@ void CARDYNAMICS::Init(
 	MATHVECTOR <T, 3> zero(0, 0, 0);
 	body.SetPosition(position - center_of_mass);
 	body.SetOrientation(orientation);
-	body.SetInitialForce(zero);
-	body.SetInitialTorque(zero);
-
-	// init engine
-	engine.SetInitialConditions();
 
 	// init chassis
 	T chassisMass = body.GetMass();
@@ -670,7 +659,6 @@ void CARDYNAMICS::Init(
 	// init wheels
 	for (int i = 0; i < WHEEL_POSITION_SIZE; i++)
 	{
-		wheel[i].SetInitialConditions();
 		wheel_velocity[i].Set(0.0);
 		wheel_position[i] = LocalToWorld(suspension[i].GetWheelPosition(0.0));
 		wheel_orientation[i] = Orientation() * suspension[i].GetWheelOrientation();

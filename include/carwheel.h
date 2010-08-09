@@ -63,12 +63,6 @@ public:
 		return rotation.GetInertia()[0];
 	}
 
-	void SetInitialConditions()
-	{
-		MATHVECTOR <T, 3> v;
-		rotation.SetInitialTorque(v);
-	}
-
 	void Integrate1(const T dt)
 	{
 		rotation.Integrate1(dt);

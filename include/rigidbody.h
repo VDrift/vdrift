@@ -18,7 +18,6 @@ private:
 	
 public:
 	//access to linear frame
-	void SetInitialForce(const MATHVECTOR <T, 3> & force) {linear.SetInitialForce(force);}
 	void SetForce(const MATHVECTOR <T, 3> & force) {linear.SetForce(force);}
 	void SetMass(const T & mass) {linear.SetMass(mass);}
 	const T GetMass() const {return linear.GetMass();}
@@ -30,7 +29,6 @@ public:
 	const MATHVECTOR <T, 3> & GetForce() const {return linear.GetForce();}
 	
 	//access to rotational frame
-	void SetInitialTorque(const MATHVECTOR <T, 3> & torque) {rotation.SetInitialTorque(torque);}
 	void SetTorque(const MATHVECTOR <T, 3> & torque) {rotation.SetTorque(torque);}
 	void SetInertia(const MATRIX3 <T> & inertia) {rotation.SetInertia(inertia);}
 	const MATRIX3 <T> & GetInertia() {return rotation.GetInertia();}
@@ -85,40 +83,6 @@ public:
 		MATHVECTOR <T, 3> t2 = t1.cross(offset);
 		T inv_mass = linear.GetInvMass() + t2.dot(normal);
 		return inv_mass;
-	}
-	
-	// inverse of the effective mass at offset
-	MATRIX3 <T> BuildKMatrix(const MATHVECTOR <T, 3> & offset)
-	{
-		MATRIX3 <T> k;
-
-		float a = offset[0];
-		float b = offset[1];
-		float c = offset[2];
-		
-		float m = linear.GetInvMass();
-		
-		float j0 = rotation.GetInvWorldInertia()[0];
-		float j1 = rotation.GetInvWorldInertia()[1];
-		float j2 = rotation.GetInvWorldInertia()[2];
-		float j3 = rotation.GetInvWorldInertia()[3];
-		float j4 = rotation.GetInvWorldInertia()[4];
-		float j5 = rotation.GetInvWorldInertia()[5];
-		float j6 = rotation.GetInvWorldInertia()[6];
-		float j7 = rotation.GetInvWorldInertia()[7];
-		float j8 = rotation.GetInvWorldInertia()[8];
-		
-		k[0] = c * c * j4 - b * c * (j5 + j7) + b * b * j8 + m;
-		k[1] = -(c * c * j3) + a * c * j5 + b * c * j6 - a * b * j8;
-		k[2] = b * c * j3 - a * c * j4 - b * b * j6 + a * b * j7;
-		k[3] = -(c * c * j1) + b * c * j2 + a * c * j7 - a * b * j8;
-		k[4] = c * c * j0 - a * c * (j2 + j6) + a * a * j8 + m;
-		k[5] = -(b * c * j0) + a * c * j1 + a * b * j6 - a * a * j7;
-		k[6] = b * c * j1 - b * b * j2 - a * c * j4 + a * b * j5;
-		k[7] = -(b * c * j0) + a * b * j2 + a * c * j3 - a * a * j5;
-		k[8] = b * b * j0 - a * b * (j1 + j3) + a * a * j4 + m;
-		
-		return k;
 	}
 	
 	bool Serialize(joeserialize::Serializer & s)
