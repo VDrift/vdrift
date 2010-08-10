@@ -373,33 +373,38 @@ bool LoadWheel(
 {
 	std::string brakename;
 	std::string tirename;
+	float mass, inertia;
 	
 	if (!c.GetParam(wheelname+".brake", brakename, error_output)) return false;
 	if (!LoadBrake(c, brakename, brake, error_output)) return false;
 	if (!c.GetParam(wheelname+".tire", tirename, error_output)) return false;
 	if (!LoadTire(c, tirename, partspath, tire, error_output)) return false;
+	if (!c.GetParam(wheelname+".mass", mass) && !c.GetParam(wheelname+".inertia", inertia))
+	{
+		float tire_radius = tire.GetRadius();
+		float tire_width = tire.GetSidewallWidth();
+		float tire_thickness = 0.05;
+		float tire_density = 8E3;
+		
+		float rim_radius = tire_radius - tire_width * tire.GetAspectRatio();
+		float rim_width = tire_width;
+		float rim_thickness = 0.01;
+		float rim_density = 3E5;
+		
+		float tire_volume = tire_width * M_PI * tire_thickness * tire_thickness * (2 * tire_radius  - tire_thickness);
+		float rim_volume = rim_width * M_PI * rim_thickness * rim_thickness * (2 * rim_radius - rim_thickness);
+		float tire_mass = tire_density * tire_volume;
+		float rim_mass = rim_density * rim_volume;
+		float tire_inertia = tire_mass * tire_radius * tire_radius;
+		float rim_inertia = rim_mass * rim_radius * rim_radius;
+		
+		mass = tire_mass + rim_mass;
+		inertia = (tire_inertia + rim_inertia) * 4;	// scale inertia fixme
+	}
 	
-	// calculate wheel inertia/mass
-	float tire_radius = tire.GetRadius();
-	float tire_width = tire.GetSidewallWidth();
-	float tire_thickness = 0.05;
-	float tire_density = 8E3;
+	wheel.SetMass(mass);
+	wheel.SetInertia(inertia); 
 	
-	float rim_radius = tire_radius - tire_width * tire.GetAspectRatio();
-	float rim_width = tire_width;
-	float rim_thickness = 0.01;
-	float rim_density = 3E5;
-	
-	float tire_volume = tire_width * M_PI * tire_thickness * tire_thickness * (2 * tire_radius  - tire_thickness);
-	float rim_volume = rim_width * M_PI * rim_thickness * rim_thickness * (2 * rim_radius - rim_thickness);
-	float tire_mass = tire_density * tire_volume;
-	float rim_mass = rim_density * rim_volume;
-	float tire_inertia = tire_mass * tire_radius * tire_radius;
-	float rim_inertia = rim_mass * rim_radius * rim_radius;
-	
-	wheel.SetMass(tire_mass + rim_mass);
-	wheel.SetInertia((tire_inertia + rim_inertia)*4); // scale inertia fixme
-
 	return true;
 }
 
