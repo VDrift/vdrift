@@ -13,11 +13,14 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Option use_console_runner="0" />
-				<Option parameters="-debug" />
 				<Compiler>
 					<Add option="-Wall" />
+					<Add option="-pg" />
 					<Add option="-g" />
 				</Compiler>
+				<Linker>
+					<Add option="-pg -lgmon" />
+				</Linker>
 			</Target>
 			<Target title="Release">
 				<Option output="..\..\vdrift" prefix_auto="1" extension_auto="1" />
@@ -25,11 +28,14 @@
 				<Option object_output="obj\Release" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="-debug" />
 				<Compiler>
 					<Add option="-O3" />
+					<Add option="-pg" />
 					<Add option="-march=native" />
 				</Compiler>
+				<Linker>
+					<Add option="-pg -lgmon" />
+				</Linker>
 			</Target>
 		</Build>
 		<Compiler>
@@ -450,6 +456,10 @@
 		<Unit filename="..\..\include\simpletree.h" />
 		<Unit filename="..\..\include\sky.h" />
 		<Unit filename="..\..\include\sound.h" />
+		<Unit filename="..\..\include\soundbuffer.h" />
+		<Unit filename="..\..\include\soundfilter.h" />
+		<Unit filename="..\..\include\soundinfo.h" />
+		<Unit filename="..\..\include\soundsource.h" />
 		<Unit filename="..\..\include\spline.h" />
 		<Unit filename="..\..\include\sprite2d.h" />
 		<Unit filename="..\..\include\staticdrawables.h" />
@@ -525,6 +535,7 @@
 		<Unit filename="..\..\src\keyed_container.cpp" />
 		<Unit filename="..\..\src\linearframe.cpp" />
 		<Unit filename="..\..\src\linearinterp.cpp" />
+		<Unit filename="..\..\src\loadingscreen.cpp" />
 		<Unit filename="..\..\src\main.cpp" />
 		<Unit filename="..\..\src\mathplane.cpp" />
 		<Unit filename="..\..\src\mathvector.cpp" />
@@ -552,6 +563,9 @@
 		<Unit filename="..\..\src\settings.cpp" />
 		<Unit filename="..\..\src\shader.cpp" />
 		<Unit filename="..\..\src\sound.cpp" />
+		<Unit filename="..\..\src\soundbuffer.cpp" />
+		<Unit filename="..\..\src\soundfilter.cpp" />
+		<Unit filename="..\..\src\soundsource.cpp" />
 		<Unit filename="..\..\src\suspensionbumpdetection.cpp" />
 		<Unit filename="..\..\src\text_draw.cpp" />
 		<Unit filename="..\..\src\texture.cpp" />
@@ -568,6 +582,15 @@
 			<envvars />
 			<debugger />
 			<lib_finder disable_auto="1" />
+			<DoxyBlocks>
+				<comment_style block="0" line="0" />
+				<doxyfile_project />
+				<doxyfile_build />
+				<doxyfile_warnings />
+				<doxyfile_output />
+				<doxyfile_dot />
+				<general />
+			</DoxyBlocks>
 		</Extensions>
 	</Project>
 </CodeBlocks_project_file>

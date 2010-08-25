@@ -91,6 +91,9 @@ src = Split("""aabb.cpp
 		settings.cpp
 		shader.cpp
 		sound.cpp
+		soundbuffer.cpp
+		soundfilter.cpp
+		soundsource.cpp
 		suspensionbumpdetection.cpp
 		texture.cpp
 		text_draw.cpp

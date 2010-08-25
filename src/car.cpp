@@ -519,8 +519,8 @@ bool CAR::LoadSounds(
 				info.power = ENGINESOUNDINFO::BOTH;
 
 			sound.SetBuffer(soundbuffers[filename]);
-			sound.Set3DEffects(true);
-			sound.SetLoop(true);
+			sound.Enable3D(true);
+			sound.Loop(true);
 			sound.SetGain(0);
 			sound.Play();
 		}
@@ -592,8 +592,8 @@ bool CAR::LoadSounds(
 		enginesounds.push_back(std::pair <ENGINESOUNDINFO, SOUNDSOURCE> ());
 		SOUNDSOURCE & enginesound = enginesounds.back().second;
 		enginesound.SetBuffer(soundbuffers["engine.wav"]);
-		enginesound.Set3DEffects(true);
-		enginesound.SetLoop(true);
+		enginesound.Enable3D(true);
+		enginesound.Loop(true);
 		enginesound.SetGain(0);
 		enginesound.Play();
 	}
@@ -601,17 +601,17 @@ bool CAR::LoadSounds(
 	//set up tire squeal sounds
 	for (int i = 0; i < 4; i++)
 	{
-		const SOUNDBUFFER * buf = soundbufferlibrary.GetBuffer("tire_squeal");
+		const SOUNDBUFFER * buf = soundbufferlibrary.Get("tire_squeal");
 		if (!buf)
 		{
 			error_output << "Can't load tire_squeal sound" << std::endl;
 			return false;
 		}
 		tiresqueal[i].SetBuffer(*buf);
-		tiresqueal[i].Set3DEffects(true);
-		tiresqueal[i].SetLoop(true);
+		tiresqueal[i].Enable3D(true);
+		tiresqueal[i].Loop(true);
 		tiresqueal[i].SetGain(0);
-		int samples = tiresqueal[i].GetSoundBuffer().GetSoundInfo().GetSamples();
+		int samples = tiresqueal[i].GetSoundTrack().GetSoundInfo().samples;
 		tiresqueal[i].SeekToSample((samples/4)*i);
 		tiresqueal[i].Play();
 	}
@@ -619,17 +619,17 @@ bool CAR::LoadSounds(
 	//set up tire gravel sounds
 	for (int i = 0; i < 4; i++)
 	{
-		const SOUNDBUFFER * buf = soundbufferlibrary.GetBuffer("gravel");
+		const SOUNDBUFFER * buf = soundbufferlibrary.Get("gravel");
 		if (!buf)
 		{
 			error_output << "Can't load gravel sound" << std::endl;
 			return false;
 		}
 		gravelsound[i].SetBuffer(*buf);
-		gravelsound[i].Set3DEffects(true);
-		gravelsound[i].SetLoop(true);
+		gravelsound[i].Enable3D(true);
+		gravelsound[i].Loop(true);
 		gravelsound[i].SetGain(0);
-		int samples = gravelsound[i].GetSoundBuffer().GetSoundInfo().GetSamples();
+		int samples = gravelsound[i].GetSoundTrack().GetSoundInfo().samples;
 		gravelsound[i].SeekToSample((samples/4)*i);
 		gravelsound[i].Play();
 	}
@@ -637,17 +637,17 @@ bool CAR::LoadSounds(
 	//set up tire grass sounds
 	for (int i = 0; i < 4; i++)
 	{
-		const SOUNDBUFFER * buf = soundbufferlibrary.GetBuffer("grass");
+		const SOUNDBUFFER * buf = soundbufferlibrary.Get("grass");
 		if (!buf)
 		{
 			error_output << "Can't load grass sound" << std::endl;
 			return false;
 		}
 		grasssound[i].SetBuffer(*buf);
-		grasssound[i].Set3DEffects(true);
-		grasssound[i].SetLoop(true);
+		grasssound[i].Enable3D(true);
+		grasssound[i].Loop(true);
 		grasssound[i].SetGain(0);
-		int samples = grasssound[i].GetSoundBuffer().GetSoundInfo().GetSamples();
+		int samples = grasssound[i].GetSoundTrack().GetSoundInfo().samples;
 		grasssound[i].SeekToSample((samples/4)*i);
 		grasssound[i].Play();
 	}
@@ -655,86 +655,86 @@ bool CAR::LoadSounds(
 	//set up bump sounds
 	for (int i = 0; i < 4; i++)
 	{
-		const SOUNDBUFFER * buf = soundbufferlibrary.GetBuffer("bump_front");
+		const SOUNDBUFFER * buf = soundbufferlibrary.Get("bump_front");
 		if (i >= 2)
-			buf = soundbufferlibrary.GetBuffer("bump_rear");
+			buf = soundbufferlibrary.Get("bump_rear");
 		if (!buf)
 		{
 			error_output << "Can't load bump sound: " << i << std::endl;
 			return false;
 		}
 		tirebump[i].SetBuffer(*buf);
-		tirebump[i].Set3DEffects(true);
-		tirebump[i].SetLoop(false);
+		tirebump[i].Enable3D(true);
+		tirebump[i].Loop(false);
 		tirebump[i].SetGain(1.0);
 	}
 
 	//set up crash sound
 	{
-		const SOUNDBUFFER * buf = soundbufferlibrary.GetBuffer("crash");
+		const SOUNDBUFFER * buf = soundbufferlibrary.Get("crash");
 		if (!buf)
 		{
 			error_output << "Can't load crash sound" << std::endl;
 			return false;
 		}
 		crashsound.SetBuffer(*buf);
-		crashsound.Set3DEffects(true);
-		crashsound.SetLoop(false);
+		crashsound.Enable3D(true);
+		crashsound.Loop(false);
 		crashsound.SetGain(1.0);
 	}
 
 	//set up gear sound
 	{
-		const SOUNDBUFFER * buf = soundbufferlibrary.GetBuffer("gear"); //TODO: Make this "per car", using carpath+"/"+carname+ in a correct form
+		const SOUNDBUFFER * buf = soundbufferlibrary.Get("gear"); //TODO: Make this "per car", using carpath+"/"+carname+ in a correct form
 		if (!buf)
 		{
 			error_output << "Can't load gear sound" << std::endl;
 			return false;
 		}
 		gearsound.SetBuffer(*buf);
-		gearsound.Set3DEffects(true);
-		gearsound.SetLoop(false);
+		gearsound.Enable3D(true);
+		gearsound.Loop(false);
 		gearsound.SetGain(1.0);
 	}
 
 	//set up brake sound
 	{
-		const SOUNDBUFFER * buf = soundbufferlibrary.GetBuffer("brake"); //TODO: Make this "per car", using carpath+"/"+carname+ in a correct form
+		const SOUNDBUFFER * buf = soundbufferlibrary.Get("brake"); //TODO: Make this "per car", using carpath+"/"+carname+ in a correct form
 		if (!buf)
 		{
 			error_output << "Can't load brake sound" << std::endl;
 			return false;
 		}
 		brakesound.SetBuffer(*buf);
-		brakesound.Set3DEffects(true);
-		brakesound.SetLoop(false);
+		brakesound.Enable3D(true);
+		brakesound.Loop(false);
 		brakesound.SetGain(1.0);
 	}
 
 	//set up handbrake sound
 	{
-		const SOUNDBUFFER * buf = soundbufferlibrary.GetBuffer("handbrake"); //TODO: Make this "per car", using carpath+"/"+carname+ in a correct form
+		const SOUNDBUFFER * buf = soundbufferlibrary.Get("handbrake"); //TODO: Make this "per car", using carpath+"/"+carname+ in a correct form
 		if (!buf)
 		{
 			error_output << "Can't load handbrake sound" << std::endl;
 			return false;
 		}
 		handbrakesound.SetBuffer(*buf);
-		handbrakesound.Set3DEffects(true);
-		handbrakesound.SetLoop(false);
+		handbrakesound.Enable3D(true);
+		handbrakesound.Loop(false);
 		handbrakesound.SetGain(1.0);
 	}
 
 	{
-		const SOUNDBUFFER * buf = soundbufferlibrary.GetBuffer("wind");
+		const SOUNDBUFFER * buf = soundbufferlibrary.Get("wind");
 		if (!buf)
 		{
 			error_output << "Can't load wind sound" << std::endl;
 			return false;
 		}
 		roadnoise.SetBuffer(*buf);
-		roadnoise.Set3DEffects(true);
-		roadnoise.SetLoop(true);
+		roadnoise.Enable3D(true);
+		roadnoise.Loop(true);
 		roadnoise.SetGain(0);
 		roadnoise.SetPitch(1.0);
 		roadnoise.Play();
@@ -1203,7 +1203,7 @@ void CAR::UpdateSounds(float dt)
 		else
 			i->first->SetGain(i->second/total_gain);
 
-		//if (i->second == loudest) std::cout << i->first->GetSoundBuffer().GetName() << ": " << i->second << std::endl;
+		//if (i->second == loudest) std::cout << i->first->GetSoundTrack().GetName() << ": " << i->second << std::endl;
 	}
 
 	//update tire squeal sounds

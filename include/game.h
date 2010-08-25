@@ -39,6 +39,10 @@
 
 class GAME
 {
+public:
+	GAME(std::ostream & info_out, std::ostream & error_out);
+	void Start(std::list <std::string> & args);
+	
 private:
 	float TickPeriod() const {return framerate;}
 	void MainLoop();
@@ -162,39 +166,6 @@ private:
 	std::auto_ptr <FORCEFEEDBACK> forcefeedback;
 	double ff_update_time;
 #endif
-
-public:
-	GAME(std::ostream & info_out, std::ostream & err_out)
-	:	info_output(info_out),
-		error_output(err_out),
-		frame(0),
-		displayframe(0),
-		clocktime(0),
-		target_time(0),
-		framerate(0.01),
-		fps_track(10,0),
-		fps_position(0),
-		fps_min(0),
-		fps_max(0),
-		multithreaded(false),
-		benchmode(false),
-		dumpfps(false),
-		active_camera(NULL),
-		pause(false),
-		particle_timer(0),
-		race_laps(0),
-		debugmode(false),
-		profilingmode(false),
-		renderconfigfile("render.conf.deferred"),
-		textures(err_out),
-		track(info_out, err_out),
-		replay(framerate)
-		//sky(graphics, info_out, err_out)
-	{
-		carcontrols_local.first = NULL;
-	}
-
-	void Start(std::list <std::string> & args);
 };
 
 #endif

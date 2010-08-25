@@ -219,7 +219,7 @@ void WIDGET_SPINNINGCAR::Load(SCENENODE & parent)
 		carconf, carpath, "", carname, 
 		*textures, carpaint, carcolor,
 		cartrans, carrot, NULL,
-		false, SOUNDINFO(0,0,0,0),
+		false, SOUNDINFO(),
 		SOUNDBUFFERLIBRARY(),
 		0, true, true, "large", 0,
 		false, data + "/carparts", loadlog, loadlog))

@@ -44,6 +44,36 @@ using std::sort;
 
 //#define DEBUG_TEXTURES
 
+GAME::GAME(std::ostream & info_out, std::ostream & error_out) :
+	info_output(info_out),
+	error_output(error_out),
+	frame(0),
+	displayframe(0),
+	clocktime(0),
+	target_time(0),
+	framerate(0.01),
+	fps_track(10,0),
+	fps_position(0),
+	fps_min(0),
+	fps_max(0),
+	multithreaded(false),
+	benchmode(false),
+	dumpfps(false),
+	active_camera(NULL),
+	pause(false),
+	particle_timer(0),
+	race_laps(0),
+	debugmode(false),
+	profilingmode(false),
+	renderconfigfile("render.conf.deferred"),
+	textures(error_out),
+	track(info_out, error_out),
+	replay(framerate)
+	//sky(graphics, info_out, err_out)
+{
+	carcontrols_local.first = NULL;
+}
+
 ///start the game with the given arguments
 void GAME::Start(list <string> & args)
 {
@@ -426,7 +456,7 @@ bool GAME::ParseArguments(std::list <std::string> & args)
 	#endif
 
 	if (argmap.find("-nosound") != argmap.end())
-		sound.DisableAllSound();
+		sound.Disable();
 	arghelp["-nosound"] = "Disable all sound.";
 
 	if (argmap.find("-benchmark") != argmap.end())
@@ -1471,8 +1501,7 @@ void GAME::UpdateCarInputs(CAR & car)
 			car.GetEngineSoundList(soundlist);
 			for (std::list <SOUNDSOURCE *>::iterator s = soundlist.begin(); s != soundlist.end(); s++)
 			{
-				(*s)->Set3DEffects(!incar);
-				//cout << "3d effects off" << endl;
+				(*s)->Enable3D(!incar);
 			}
 		}
 		
@@ -2311,4 +2340,3 @@ bool GAME::LastStartWasSuccessful() const
 {
 	return !pathmanager.FileExists(pathmanager.GetStartupFile());
 }
-
