@@ -33,7 +33,7 @@ bool SPRITE2D::Load(
 	texinfo.SetRepeat(false, false);
 	texinfo.SetAllowNonPowerOfTwo(false);
 	texinfo.SetSize(texturesize);
-	std::tr1::shared_ptr<TEXTURE> texture(textures.Get(info)); 
+	std::tr1::shared_ptr<TEXTURE> texture(textures.Get(texinfo)); 
 	if (!texture->Loaded()) return false;
 
 	node = parent.AddNode();
