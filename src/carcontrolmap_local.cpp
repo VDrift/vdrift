@@ -212,22 +212,22 @@ void CARCONTROLMAP_LOCAL::Save(CONFIGFILE & controls_config, std::ostream & info
 			
 			if (curctrl.type == CONTROL::JOY)
 			{
-				controls_config.SetParam( ctrl_id + ".type", "joy");
+				controls_config.SetParam( ctrl_id + ".type", std::string("joy"));
 				controls_config.SetParam( ctrl_id + ".joy_index", curctrl.joynum );
 			
 				if (curctrl.joytype == CONTROL::JOYAXIS)
 				{
-					controls_config.SetParam( ctrl_id + ".joy_type", "axis");
+					controls_config.SetParam( ctrl_id + ".joy_type", std::string("axis"));
 					controls_config.SetParam( ctrl_id + ".joy_axis", curctrl.joyaxis );
 					switch (curctrl.joyaxistype) {
 						case CONTROL::POSITIVE:
-							controls_config.SetParam( ctrl_id + ".joy_axis_type", "positive");
+							controls_config.SetParam( ctrl_id + ".joy_axis_type", std::string("positive"));
 							break;
 						case CONTROL::NEGATIVE:
-							controls_config.SetParam( ctrl_id + ".joy_axis_type", "negative");
+							controls_config.SetParam( ctrl_id + ".joy_axis_type", std::string("negative"));
 							break;
 						case CONTROL::BOTH:
-							controls_config.SetParam( ctrl_id + ".joy_axis_type", "both");
+							controls_config.SetParam( ctrl_id + ".joy_axis_type", std::string("both"));
 							break;
 					}
 					controls_config.SetParam( ctrl_id + ".deadzone", curctrl.deadzone);
@@ -236,7 +236,7 @@ void CARCONTROLMAP_LOCAL::Save(CONFIGFILE & controls_config, std::ostream & info
 				}
 				else if (curctrl.joytype == CONTROL::JOYBUTTON)
 				{
-					controls_config.SetParam(ctrl_id + ".joy_type", "button");
+					controls_config.SetParam(ctrl_id + ".joy_type", std::string("button"));
 					controls_config.SetParam(ctrl_id + ".joy_button", curctrl.joybutton);
 					controls_config.SetParam(ctrl_id + ".once", curctrl.onetime);
 					controls_config.SetParam(ctrl_id + ".down", curctrl.joypushdown);
@@ -244,7 +244,7 @@ void CARCONTROLMAP_LOCAL::Save(CONFIGFILE & controls_config, std::ostream & info
 			}
 			else if (curctrl.type == CONTROL::KEY)
 			{
-				controls_config.SetParam(ctrl_id + ".type", "key");
+				controls_config.SetParam(ctrl_id + ".type", std::string("key"));
 				std::string keyname;
 				for (std::map <std::string, int>::iterator k = legacy_keycodes.begin(); k != legacy_keycodes.end(); k++)
 					if (k->second == curctrl.keycode)
@@ -256,10 +256,10 @@ void CARCONTROLMAP_LOCAL::Save(CONFIGFILE & controls_config, std::ostream & info
 			}
 			else if(curctrl.type == CONTROL::MOUSE)
 			{
-				controls_config.SetParam( ctrl_id + ".type", "mouse");
+				controls_config.SetParam( ctrl_id + ".type", std::string("mouse"));
 				if (curctrl.mousetype == CONTROL::MOUSEBUTTON)
 				{
-					controls_config.SetParam( ctrl_id + ".mouse_type", "button");
+					controls_config.SetParam( ctrl_id + ".mouse_type", std::string("button"));
 					controls_config.SetParam( ctrl_id + ".mouse_button", curctrl.mbutton );
 					controls_config.SetParam( ctrl_id + ".once", curctrl.onetime );
 					controls_config.SetParam( ctrl_id + ".down", curctrl.mouse_push_down );
@@ -285,7 +285,7 @@ void CARCONTROLMAP_LOCAL::Save(CONFIGFILE & controls_config, std::ostream & info
 						direction = "right";
 					}
 
-					controls_config.SetParam( ctrl_id + ".mouse_type", "motion");
+					controls_config.SetParam( ctrl_id + ".mouse_type", std::string("motion"));
 					controls_config.SetParam( ctrl_id + ".mouse_motion", direction );
 					
 					controls_config.SetParam( ctrl_id + ".deadzone", curctrl.deadzone);
