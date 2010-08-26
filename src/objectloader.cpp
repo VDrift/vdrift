@@ -1,9 +1,9 @@
 #include "objectloader.h"
+#include "manager.h"
+#include "texture.h"
 
 #include <string>
 #include <fstream>
-
-#include "texturemanager.h"
 
 OBJECTLOADER::OBJECTLOADER(
 	const std::string & ntrackpath,
@@ -13,8 +13,9 @@ OBJECTLOADER::OBJECTLOADER(
 	std::ostream & ninfo_output,
 	std::ostream & nerror_output,
 	bool newcull,
-	bool doagressivecombining)
-: trackpath(ntrackpath),
+	bool doagressivecombining) :
+	
+	trackpath(ntrackpath),
 	sceneroot(nsceneroot),
 	info_output(ninfo_output),
 	error_output(nerror_output),
@@ -29,6 +30,7 @@ OBJECTLOADER::OBJECTLOADER(
 	dynamicshadowsenabled(newdynamicshadowsenabled),
 	agressivecombine(doagressivecombining)
 {
+	// ctor
 }
 
 bool OBJECTLOADER::BeginObjectLoad()
@@ -89,7 +91,7 @@ std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad(
 	const std::vector <TRACKSURFACE> & surfaces,
  	const bool vertical_tracking_skyboxes,
  	const std::string & texture_size,
- 	TEXTUREMANAGER & textures)
+ 	MANAGER<TEXTURE, TEXTUREINFO> & textures)
 {
 	std::string model_name;
 
@@ -187,7 +189,7 @@ std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad(
 	bool clampv = clamptexture == 1 || clamptexture == 3;
 	texinfo.SetRepeat(!clampu, !clampv);
 	texinfo.SetSize(texture_size);
-	TEXTUREPTR diffuse_texture = textures.Get(texinfo);
+	std::tr1::shared_ptr<TEXTURE> diffuse_texture = textures.Get(texinfo);
 	if (!diffuse_texture->Loaded())
 	{
 		error_output << "Error loading texture: " << objectpath + "/" + diffuse_texture_name << ", skipping object " << model_name << " and continuing" << std::endl;
@@ -196,7 +198,7 @@ std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad(
 
 	if (!skip)
 	{
-		TEXTUREPTR miscmap1_texture;
+		std::tr1::shared_ptr<TEXTURE> miscmap1_texture;
 		{
 			std::string miscmap1_texture_name = diffuse_texture_name.substr(0, std::max(0, (int)diffuse_texture_name.length()-4)) + "-misc1.png";
 			std::string filepath = objectpath + "/" + miscmap1_texture_name;
@@ -216,7 +218,7 @@ std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad(
 			}
 		}
 		
-		TEXTUREPTR miscmap2_texture;
+		std::tr1::shared_ptr<TEXTURE> miscmap2_texture;
 		{
 			std::string miscmap2_texture_name = diffuse_texture_name.substr(0, std::max(0, (int)diffuse_texture_name.length()-4)) + "-misc2.png";
 			std::string filepath = objectpath + "/" + miscmap2_texture_name;

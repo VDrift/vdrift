@@ -1,6 +1,7 @@
 #include "fbobject.h"
 
 #include "opengl_utility.h"
+
 #include <SDL/SDL.h>
 
 #include <cassert>

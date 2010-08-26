@@ -1,4 +1,5 @@
 #include "joeserialize.h"
+#include "unittest.h"
 
 #include <list>
 #include <map>
@@ -10,8 +11,6 @@
 #include <cstring>
 #include <cmath>
 #include <cstdio>
-
-#include "unittest.h"
 
 using std::cout;
 using std::cerr;

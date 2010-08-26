@@ -1,10 +1,10 @@
 #ifndef _MODEL_OBJ_H
 #define _MODEL_OBJ_H
 
+#include "model.h"
+
 #include <string>
 #include <ostream>
-
-#include "model.h"
 
 class MODEL_OBJ : public MODEL
 {

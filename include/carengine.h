@@ -1,14 +1,14 @@
 #ifndef _CARENGINE_H
 #define _CARENGINE_H
 
-#include <iostream>
-#include <vector>
-
 #include "rotationalframe.h"
 #include "mathvector.h"
 #include "spline.h"
 #include "joeserialize.h"
 #include "macros.h"
+
+#include <iostream>
+#include <vector>
 
 template <typename T>
 struct CARENGINEINFO

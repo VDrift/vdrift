@@ -1,12 +1,12 @@
 #ifndef _VERTEXARRAY_H
 #define _VERTEXARRAY_H
 
+#include "joeserialize.h"
+#include "macros.h"
+
 #include <vector>
 #include <cassert>
 #include <cstring>
-
-#include "joeserialize.h"
-#include "macros.h"
 
 class MODEL_OBJ;
 

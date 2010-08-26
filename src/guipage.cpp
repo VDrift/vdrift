@@ -1,7 +1,6 @@
 #include "guipage.h"
 #include "configfile.h"
-#include "texturemanager.h"
-
+#include "manager.h"
 #include "widget.h"
 #include "widget_image.h"
 #include "widget_multiimage.h"
@@ -42,7 +41,7 @@ bool GUIPAGE::Load(
 	std::map<std::string, GUIOPTION> & optionmap,
   	float screenhwratio,
   	const std::string & texsize,
-  	TEXTUREMANAGER & textures,
+  	MANAGER<TEXTURE, TEXTUREINFO> & textures,
   	std::ostream & error_output,
   	bool reloadcontrolsonly)
 {
@@ -84,7 +83,7 @@ bool GUIPAGE::Load(
 	{
 		//generate background
 		WIDGET_IMAGE * bg_widget = NewWidget<WIDGET_IMAGE>();
-		TEXTUREPTR texture_back = GetTexture(background, texpath, textures, texsize);
+		std::tr1::shared_ptr<TEXTURE> texture_back = GetTexture(background, texpath, textures, texsize);
 		if (!texture_back->Loaded()) return false;
 		bg_widget->SetupDrawable(sref, texture_back, 0.5, 0.5, 1.0, 1.0, -1);
 	}
@@ -176,7 +175,7 @@ bool GUIPAGE::Load(
 				
 				string texfn;
 				if (!pagefile.GetParam(widgetstr.str()+".filename", texfn)) return false;
-				TEXTUREPTR texture = GetTexture(texfn, texpath, textures, texsize);
+				std::tr1::shared_ptr<TEXTURE> texture = GetTexture(texfn, texpath, textures, texsize);
 				if(!texture->Loaded()) return false;
 				
 				WIDGET_IMAGE * new_widget = NewWidget<WIDGET_IMAGE>();
@@ -199,9 +198,9 @@ bool GUIPAGE::Load(
 				if (!pagefile.GetParam(widgetstr.str()+".cancel", cancel)) return false;
 				if (!pagefile.GetParam(widgetstr.str()+".tip", description)) description = "";
 				
-				TEXTUREPTR texture_up = GetTexture("widgets/btn_up_unsel.png", texpath, textures, texsize);
-				TEXTUREPTR texture_down = GetTexture("widgets/btn_down.png", texpath, textures, texsize);
-				TEXTUREPTR texture_sel = GetTexture("widgets/btn_up.png", texpath, textures, texsize);
+				std::tr1::shared_ptr<TEXTURE> texture_up = GetTexture("widgets/btn_up_unsel.png", texpath, textures, texsize);
+				std::tr1::shared_ptr<TEXTURE> texture_down = GetTexture("widgets/btn_down.png", texpath, textures, texsize);
+				std::tr1::shared_ptr<TEXTURE> texture_sel = GetTexture("widgets/btn_up.png", texpath, textures, texsize);
 				if (!texture_up->Loaded() || !texture_down->Loaded() || !texture_sel->Loaded()) return false;
 				float fontscaley = ((((float) fontsize - 7.0f) * 0.25f) + 1.0f)*0.25;
 				float fontscalex = fontscaley*screenhwratio;
@@ -283,11 +282,11 @@ bool GUIPAGE::Load(
 				
 				//generate toggle
 				{
-					TEXTUREPTR texture_up = GetTexture("widgets/tog_off_up_unsel.png", texpath, textures, texsize);
-					TEXTUREPTR texture_down = GetTexture("widgets/tog_on_up_unsel.png", texpath, textures, texsize);
-					TEXTUREPTR texture_upsel = GetTexture("widgets/tog_off_up.png", texpath, textures, texsize);
-					TEXTUREPTR texture_downsel = GetTexture("widgets/tog_on_up.png", texpath, textures, texsize);
-					TEXTUREPTR texture_trans = GetTexture("widgets/tog_off_down.png", texpath, textures, texsize);
+					std::tr1::shared_ptr<TEXTURE> texture_up = GetTexture("widgets/tog_off_up_unsel.png", texpath, textures, texsize);
+					std::tr1::shared_ptr<TEXTURE> texture_down = GetTexture("widgets/tog_on_up_unsel.png", texpath, textures, texsize);
+					std::tr1::shared_ptr<TEXTURE> texture_upsel = GetTexture("widgets/tog_off_up.png", texpath, textures, texsize);
+					std::tr1::shared_ptr<TEXTURE> texture_downsel = GetTexture("widgets/tog_on_up.png", texpath, textures, texsize);
+					std::tr1::shared_ptr<TEXTURE> texture_trans = GetTexture("widgets/tog_off_down.png", texpath, textures, texsize);
 					if (!texture_up->Loaded() || !texture_down->Loaded() || !texture_upsel->Loaded() || 
 						!texture_downsel->Loaded() || !texture_trans->Loaded()) return false;
 					float h = 0.025;
@@ -333,10 +332,10 @@ bool GUIPAGE::Load(
 					error_output << "Widget " << widgetstr << ": unknown value type " << values << endl;
 				}
 				
-				TEXTUREPTR up_left = GetTexture("widgets/wheel_up_l.png", texpath, textures, texsize);
-				TEXTUREPTR down_left = GetTexture("widgets/wheel_down_l.png", texpath, textures, texsize);
-				TEXTUREPTR up_right = GetTexture("widgets/wheel_up_r.png", texpath, textures, texsize);
-				TEXTUREPTR down_right = GetTexture("widgets/wheel_down_r.png", texpath, textures, texsize);
+				std::tr1::shared_ptr<TEXTURE> up_left = GetTexture("widgets/wheel_up_l.png", texpath, textures, texsize);
+				std::tr1::shared_ptr<TEXTURE> down_left = GetTexture("widgets/wheel_down_l.png", texpath, textures, texsize);
+				std::tr1::shared_ptr<TEXTURE> up_right = GetTexture("widgets/wheel_up_r.png", texpath, textures, texsize);
+				std::tr1::shared_ptr<TEXTURE> down_right = GetTexture("widgets/wheel_down_r.png", texpath, textures, texsize);
 				if (!up_left->Loaded() || !down_left->Loaded() || !up_right->Loaded() || !down_right->Loaded()) return false;
 				//float w = 0.02;
 				//float h = w*(4.0/3.0);
@@ -396,10 +395,10 @@ bool GUIPAGE::Load(
 				}
 				
 				
-				TEXTUREPTR up_left = GetTexture("widgets/wheel_up_l.png", texpath, textures, texsize);
-				TEXTUREPTR down_left = GetTexture("widgets/wheel_down_l.png", texpath, textures, texsize);
-				TEXTUREPTR up_right = GetTexture("widgets/wheel_up_r.png", texpath, textures, texsize);
-				TEXTUREPTR down_right = GetTexture("widgets/wheel_down_r.png", texpath, textures, texsize);
+				std::tr1::shared_ptr<TEXTURE> up_left = GetTexture("widgets/wheel_up_l.png", texpath, textures, texsize);
+				std::tr1::shared_ptr<TEXTURE> down_left = GetTexture("widgets/wheel_down_l.png", texpath, textures, texsize);
+				std::tr1::shared_ptr<TEXTURE> up_right = GetTexture("widgets/wheel_up_r.png", texpath, textures, texsize);
+				std::tr1::shared_ptr<TEXTURE> down_right = GetTexture("widgets/wheel_down_r.png", texpath, textures, texsize);
 				if (!up_left->Loaded() || !down_left->Loaded() || !up_right->Loaded() || !down_right->Loaded()) return false;
 				//float w = 0.02;
 				//float h = w*(4.0/3.0);
@@ -512,8 +511,8 @@ bool GUIPAGE::Load(
 				float fontscalex = fontscaley*screenhwratio;
 				FONT * font = &fonts["lcd"];
 
-				TEXTUREPTR cursor = GetTexture("widgets/sld_cursor.png", texpath, textures, texsize);
-				TEXTUREPTR wedge = GetTexture("widgets/sld_wedge.png", texpath, textures, texsize);
+				std::tr1::shared_ptr<TEXTURE> cursor = GetTexture("widgets/sld_cursor.png", texpath, textures, texsize);
+				std::tr1::shared_ptr<TEXTURE> wedge = GetTexture("widgets/sld_wedge.png", texpath, textures, texsize);
 				if (!cursor->Loaded() || !wedge->Loaded()) return false;
 				
 				WIDGET_SLIDER * new_widget = NewWidget<WIDGET_SLIDER>();
@@ -571,7 +570,7 @@ bool GUIPAGE::Load(
 			WIDGET_CONTROLGRAB * new_widget = NewWidget<WIDGET_CONTROLGRAB>();
 			controlgrabs.push_back(new_widget);
 			
-			std::vector <TEXTUREPTR> control(WIDGET_CONTROLGRAB::END);
+			std::vector <std::tr1::shared_ptr<TEXTURE> > control(WIDGET_CONTROLGRAB::END);
 			control[WIDGET_CONTROLGRAB::ADD] = GetTexture("widgets/controls/add.png", texpath, textures, texsize);
 			control[WIDGET_CONTROLGRAB::ADDSEL] = GetTexture("widgets/controls/add_sel.png", texpath, textures, texsize);
 			control[WIDGET_CONTROLGRAB::JOYAXIS] = GetTexture("widgets/controls/joy_axis.png", texpath, textures, texsize);
@@ -582,7 +581,7 @@ bool GUIPAGE::Load(
 			control[WIDGET_CONTROLGRAB::KEYSEL] = GetTexture("widgets/controls/key_sel.png", texpath, textures, texsize);
 			control[WIDGET_CONTROLGRAB::MOUSE] = GetTexture("widgets/controls/mouse.png", texpath, textures, texsize);
 			control[WIDGET_CONTROLGRAB::MOUSESEL] = GetTexture("widgets/controls/mouse_sel.png", texpath, textures, texsize);
-			std::vector <TEXTUREPTR>::iterator it;
+			std::vector <std::tr1::shared_ptr<TEXTURE> >::iterator it;
 			for (it = control.begin(); it < control.end(); it++)
 			{
 				if (!it->get()->Loaded()) return false;

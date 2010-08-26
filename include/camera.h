@@ -1,9 +1,10 @@
 #ifndef _CAMERA_H
 #define _CAMERA_H
 
-#include <string>
 #include "mathvector.h"
 #include "quaternion.h"
+
+#include <string>
 
 ///base class for a camera
 class CAMERA

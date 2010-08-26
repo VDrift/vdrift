@@ -5,6 +5,7 @@
 
 #include <SDL/SDL.h>
 #include <SDL/SDL_thread.h>
+
 #include <cassert>
 #include <iostream>
 

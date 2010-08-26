@@ -42,7 +42,20 @@ public:
 		action = newaction;
 	}
 	
-	void SetupDrawable(SCENENODE & scene, TEXTUREPTR teximage_up, TEXTUREPTR teximage_down, TEXTUREPTR teximage_selected, FONT * font, const std::string & text, float centerx, float centery, float scalex, float scaley, const float r, const float g, const float b)
+	void SetupDrawable(
+		SCENENODE & scene,
+		std::tr1::shared_ptr<TEXTURE> teximage_up,
+		std::tr1::shared_ptr<TEXTURE> teximage_down,
+		std::tr1::shared_ptr<TEXTURE> teximage_selected,
+		FONT * font,
+		const std::string & text,
+		float centerx,
+		float centery,
+		float scalex,
+		float scaley,
+		const float r,
+		const float g,
+		const float b)
 	{
 		assert(teximage_up);
 		assert(teximage_down);

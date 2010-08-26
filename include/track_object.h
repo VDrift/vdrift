@@ -1,7 +1,7 @@
 #ifndef _TRACK_OBJECT_H
 #define _TRACK_OBJECT_H
 
-#include "assert.h"
+#include <cassert>
 
 class MODEL;
 class TRACKSURFACE;

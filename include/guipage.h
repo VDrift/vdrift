@@ -1,19 +1,19 @@
 #ifndef _GUIPAGE_H
 #define _GUIPAGE_H
 
-#include <map>
-#include <list>
-#include <string>
-#include <iostream>
-
 #include "derived.h"
 #include "widget.h"
-#include "texturemanager.h"
+#include "manager.h"
 #include "font.h"
 #include "guioption.h"
 #include "scenenode.h"
 #include "configfile.h"
 #include "reseatable_reference.h"
+
+#include <map>
+#include <list>
+#include <string>
+#include <iostream>
 
 class WIDGET_LABEL;
 class WIDGET_CONTROLGRAB;
@@ -38,7 +38,11 @@ private:
 		return (T*) widgets.back().Get();
 	}
 	
-	TEXTUREPTR GetTexture(const std::string & texname, const std::string & texpath, TEXTUREMANAGER & textures, const std::string & texsize)
+	std::tr1::shared_ptr<TEXTURE> GetTexture(
+		const std::string & texname,
+		const std::string & texpath,
+		MANAGER<TEXTURE, TEXTUREINFO> & textures,
+		const std::string & texsize)
 	{
 		TEXTUREINFO texinfo(texpath + "/" + texname);
 		texinfo.SetMipMap(false);
@@ -80,7 +84,7 @@ public:
 		std::map<std::string, GUIOPTION> & optionmap,
 		float screenhwratio,
 		const std::string & texsize,
-		TEXTUREMANAGER & textures,
+		MANAGER<TEXTURE, TEXTUREINFO> & textures,
 		std::ostream & error_output,
 		bool reloadcontrolsonly = false);
   	

@@ -1,15 +1,15 @@
 #include "soundbuffer.h"
-
-#include <fstream>
-#include <cstdio>
-#include <cstring>
-
 #include "endian_utility.h"
+
 #ifdef __APPLE__
 #include <Vorbis/vorbisfile.h>
 #else
 #include <vorbis/vorbisfile.h>
 #endif
+
+#include <fstream>
+#include <cstdio>
+#include <cstring>
 
 SOUNDBUFFER::SOUNDBUFFER() : sound_buffer(NULL)
 {

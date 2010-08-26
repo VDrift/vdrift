@@ -1,7 +1,9 @@
 #include "fbtexture.h"
-#include <cassert>
 #include "opengl_utility.h"
+
 #include <SDL/SDL.h>
+
+#include <cassert>
 #include <sstream>
 #include <string>
 

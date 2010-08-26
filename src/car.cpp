@@ -1,12 +1,5 @@
 #include "car.h"
 
-#include <fstream>
-#include <map>
-#include <list>
-#include <vector>
-#include <sstream>
-#include <string>
-
 #include "carwheelposition.h"
 #include "configfile.h"
 #include "coordinatesystems.h"
@@ -15,7 +8,7 @@
 #include "configfile.h"
 #include "carinput.h"
 #include "mesh_gen.h"
-
+#include "texture.h"
 #include "camera_fixed.h"
 #include "camera_free.h"
 #include "camera_chase.h"
@@ -23,6 +16,13 @@
 #include "camera_mount.h"
 
 #include "model_obj.h"
+
+#include <fstream>
+#include <map>
+#include <list>
+#include <vector>
+#include <sstream>
+#include <string>
 
 #if defined(_WIN32) || defined(__APPLE__)
 bool isnan(float number) {return (number != number);}
@@ -52,7 +52,7 @@ bool CAR::GenerateWheelMesh(
 	MODEL_JOE03 & output_tire_model,
 	MODEL_JOE03 & output_wheel_model,
 	MODEL_JOE03 & output_brake_rotor,
-	TEXTUREMANAGER & textures,
+	MANAGER<TEXTURE, TEXTUREINFO> & textures,
 	int anisotropy,
 	const std::string & texsize,
 	std::ostream & error_output)
@@ -174,7 +174,7 @@ bool CAR::Load (
 	const std::string & carpath,
 	const std::string & driverpath,
 	const std::string & carname,
-	TEXTUREMANAGER & textures,
+	MANAGER<TEXTURE, TEXTUREINFO> & textures,
 	const std::string & carpaint,
 	const MATHVECTOR <float, 3> & carcolor,
 	const MATHVECTOR <float, 3> & initial_position,
@@ -749,7 +749,7 @@ bool CAR::LoadInto (
 	keyed_container <DRAWABLE>::handle & output_drawable,
 	const std::string & joefile,
 	MODEL_JOE03 & output_model,
-	TEXTUREMANAGER & textures,
+	MANAGER<TEXTURE, TEXTUREINFO> & textures,
 	const std::string & texname,
 	const std::string & texsize,
 	int anisotropy,
@@ -800,7 +800,7 @@ bool CAR::LoadModel(
 }
 
 bool CAR::LoadTextures(
-	TEXTUREMANAGER & textures,
+	MANAGER<TEXTURE, TEXTUREINFO> & textures,
 	const std::string & texname,
 	const std::string & texsize,
 	int anisotropy,
@@ -814,7 +814,7 @@ bool CAR::LoadTextures(
 		texinfo.SetMipMap(true);
 		texinfo.SetAnisotropy(anisotropy);
 		texinfo.SetSize(texsize);
-		TEXTUREPTR diffuse = textures.Get(texinfo);
+		std::tr1::shared_ptr<TEXTURE> diffuse = textures.Get(texinfo);
 		if (!diffuse->Loaded())
 		{
 			error_output << "Error loading texture: " << texdiff << std::endl;
@@ -834,7 +834,7 @@ bool CAR::LoadTextures(
 		texinfo.SetMipMap(true);
 		texinfo.SetAnisotropy(anisotropy);
 		texinfo.SetSize(texsize);
-		TEXTUREPTR misc1 = textures.Get(texinfo);
+		std::tr1::shared_ptr<TEXTURE> misc1 = textures.Get(texinfo);
 		if (!misc1->Loaded())
 		{
 			error_output << "Error loading texture: " << texmisc1 << std::endl;
@@ -851,7 +851,7 @@ bool CAR::LoadTextures(
 		texinfo.SetMipMap(true);
 		texinfo.SetAnisotropy(anisotropy);
 		texinfo.SetSize(texsize);
-		TEXTUREPTR misc2 = textures.Get(texinfo);
+		std::tr1::shared_ptr<TEXTURE> misc2 = textures.Get(texinfo);
 		if (!misc2->Loaded())
 		{
 			error_output << "Error loading texture: " << texmisc2 << std::endl;

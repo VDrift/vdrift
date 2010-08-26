@@ -1,6 +1,9 @@
 #ifndef _FBOBJECT_H
 #define _FBOBJECT_H
 
+#include "fbtexture.h"
+#include "glstatemanager.h"
+
 #ifdef __APPLE__
 #include <GLExtensionWrangler/glew.h>
 #include <OpenGL/gl.h>
@@ -8,9 +11,6 @@
 #include <GL/glew.h>
 #include <GL/gl.h>
 #endif
-
-#include "fbtexture.h"
-#include "glstatemanager.h"
 
 #include <iostream>
 #include <vector>

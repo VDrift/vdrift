@@ -1,11 +1,11 @@
 #ifndef _CARAERO_H
 #define _CARAERO_H
 
-#include <iostream>
-
 #include "mathvector.h"
 #include "joeserialize.h"
 #include "macros.h"
+
+#include <iostream>
 
 template <typename T>
 class CARAERO

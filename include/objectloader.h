@@ -1,14 +1,16 @@
 #ifndef _OBJECTLOADER_H
 #define _OBJECTLOADER_H
 
-
-#include <map> // for std::pair
-
 #include "scenenode.h"
 #include "model_joe03.h"
 #include "track_object.h"
 #include "tracksurface.h"
-#include "texturemanager.h"
+
+#include <map> // for std::pair
+
+template <class T, class Tinfo> class MANAGER;
+class TEXTURE;
+class TEXTUREINFO;
 
 class OBJECTLOADER
 {
@@ -43,7 +45,7 @@ public:
 		const std::vector <TRACKSURFACE> & surfaces,
 		const bool vertical_tracking_skyboxes,
 		const std::string & texture_size,
-		TEXTUREMANAGER & textures);
+		MANAGER<TEXTURE, TEXTUREINFO> & textures);
 	
 private:
 	const std::string & trackpath;

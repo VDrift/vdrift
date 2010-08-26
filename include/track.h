@@ -1,17 +1,7 @@
 #ifndef _TRACK_H
 #define _TRACK_H
 
-#include <string>
-#include <fstream>
-#include <sstream>
-#include <iostream>
-#include <map>
-#include <list>
-#include <memory>
-#include <vector>
-
 #include "model_joe03.h"
-#include "texture.h"
 #include "joepack.h"
 #include "scenenode.h"
 #include "tracksurface.h"
@@ -22,10 +12,21 @@
 #include "aabb_space_partitioning.h"
 #include "k1999.h"
 #include "optional.h"
-
 #include "track_object.h"
 #include "roadstrip.h"
 
+#include <string>
+#include <fstream>
+#include <sstream>
+#include <iostream>
+#include <map>
+#include <list>
+#include <memory>
+#include <vector>
+
+template <class T, class Tinfo> class MANAGER;
+class TEXTURE;
+class TEXTUREINFO;
 class OBJECTLOADER;
 
 class TRACK
@@ -42,7 +43,7 @@ public:
 		const std::string & effects_texturepath,
 		const std::string & texsize,
 		int anisotropy,
-		TEXTUREMANAGER & textures,
+		MANAGER<TEXTURE, TEXTUREINFO> & textures,
 		bool reverse);
 	
 	///returns true if successful.  only begins loading the track; the track won't be loaded until more calls to ContinueDeferredLoad().  use Loaded() to see if loading is complete yet.
@@ -51,12 +52,12 @@ public:
 		const std::string & effects_texturepath,
 		const std::string & texsize,
 		int anisotropy,
-		TEXTUREMANAGER & textures,
+		MANAGER<TEXTURE, TEXTUREINFO> & textures,
 		bool reverse,
 		bool dynamicshadowsenabled,
 		bool doagressivecombining);
 	
-	bool ContinueDeferredLoad(TEXTUREMANAGER & textures);
+	bool ContinueDeferredLoad(MANAGER<TEXTURE, TEXTUREINFO> & textures);
 	
 	int DeferredLoadTotalObjects();
 
@@ -155,7 +156,7 @@ private:
 	//racing line data
 	SCENENODE racingline_node;
 	SCENENODE empty_node;
-	TEXTUREPTR racingline_texture;
+	std::tr1::shared_ptr<TEXTURE> racingline_texture;
 	bool racingline_visible;
 	
 	SCENENODE tracknode;
@@ -166,7 +167,7 @@ private:
 	bool CreateRacingLines(
 		const std::string & texturepath,
 		const std::string & texsize,
-		TEXTUREMANAGER & textures);
+		MANAGER<TEXTURE, TEXTUREINFO> & textures);
 	
 	bool LoadParameters(const std::string & trackpath);
 	
@@ -176,7 +177,7 @@ private:
 		const std::string & trackpath,
 		SCENENODE & sceneroot,
 		int anisotropy,
-		TEXTUREMANAGER & textures);
+		MANAGER<TEXTURE, TEXTUREINFO> & textures);
 	
 	std::auto_ptr <OBJECTLOADER> objload;
 	
@@ -189,7 +190,7 @@ private:
 		bool doagressivecombining);
 	
 	///returns a pair of bools: the first bool is true if there was an error, the second bool is true if an object was loaded
-	std::pair <bool, bool> ContinueObjectLoad(TEXTUREMANAGER & textures);
+	std::pair <bool, bool> ContinueObjectLoad(MANAGER<TEXTURE, TEXTUREINFO> & textures);
 	
 	bool LoadRoads(const std::string & trackpath, bool reverse);
 	

@@ -1,12 +1,13 @@
 #ifndef _CARWHEEL_H
 #define _CARWHEEL_H
 
-#include <iostream>
 #include "mathvector.h"
 #include "rotationalframe.h"
 #include "matrix3.h"
 #include "joeserialize.h"
 #include "macros.h"
+
+#include <iostream>
 
 template <typename T>
 class CARWHEEL

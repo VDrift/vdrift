@@ -1,31 +1,27 @@
-#ifndef _OBJECTMANAGER_H
-#define _OBJECTMANAGER_H
+#ifndef _MANAGER_H
+#define _MANAGER_H
 
 #include <map>
 #include <string>
 #include <iostream>
-#ifdef _MSC_VER
-#include <memory>
-#else
 #include <tr1/memory>
-#endif
 
 /// object T has to have a constructor taking Tinfo and std::ostream & error as parameter
-template < class Tinfo, class T, class Pred = std::less<Tinfo> >
-class OBJECTMANAGER
+template <class T, class Tinfo>
+class MANAGER
 {
 public:
-	OBJECTMANAGER(std::ostream & error)
-	: error(error), created(0), reused(0), deleted(0)
+	MANAGER(std::ostream & error) : 
+		error(error), created(0), reused(0), deleted(0)
 	{
 	}
 	
-	~OBJECTMANAGER()
+	~MANAGER()
 	{
 		objectmap.clear();
 	}
 	
-	// get/create object
+	// get object
 	std::tr1::shared_ptr<T> Get(const Tinfo & info)
 	{
 		iterator it = objectmap.find(info);
@@ -40,7 +36,7 @@ public:
 		return sp;
 	}
 
-	// clear expired objects
+	// collect garbage
 	void Sweep()
 	{
 		iterator it = objectmap.begin();
@@ -94,10 +90,10 @@ public:
 	}
 	
 protected:
-	typedef typename std::map<Tinfo, std::tr1::shared_ptr<T>, Pred>::iterator iterator;
-	std::map<Tinfo, std::tr1::shared_ptr<T>, Pred> objectmap;
+	typedef typename std::map<Tinfo, std::tr1::shared_ptr<T> >::iterator iterator;
+	std::map<Tinfo, std::tr1::shared_ptr<T> > objectmap;
 	std::ostream & error;
 	unsigned int created, reused, deleted;
 };
 
-#endif // _OBJECTMANAGER_H
+#endif // _MANAGER_H

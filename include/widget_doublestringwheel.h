@@ -28,11 +28,21 @@ private:
 	
 public:
 	WIDGET_DOUBLESTRINGWHEEL() {current1 = values1.end();current2 = values2.end();}
+	
 	virtual WIDGET * clone() const {return new WIDGET_DOUBLESTRINGWHEEL(*this);};
 	
-	void SetupDrawable(SCENENODE & scene, const std::string & newtitle, TEXTUREPTR teximage_left_up, TEXTUREPTR teximage_left_down, 
-			   TEXTUREPTR teximage_right_up, TEXTUREPTR teximage_right_down,
-			   FONT * font, float scalex, float scaley, float centerx, float centery)
+	void SetupDrawable(
+		SCENENODE & scene,
+		const std::string & newtitle,
+		std::tr1::shared_ptr<TEXTURE> teximage_left_up,
+		std::tr1::shared_ptr<TEXTURE> teximage_left_down, 
+		std::tr1::shared_ptr<TEXTURE> teximage_right_up,
+		std::tr1::shared_ptr<TEXTURE> teximage_right_down,
+		FONT * font,
+		float scalex,
+		float scaley,
+		float centerx,
+		float centery)
 	{
 		assert(teximage_left_up);
 		assert(teximage_left_down);

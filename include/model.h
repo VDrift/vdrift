@@ -1,16 +1,16 @@
 #ifndef _MODEL_H
 #define _MODEL_H
 
-#include <string>
-#include <iostream>
-#include <cassert>
-#include <sstream>
-
 #include "vertexarray.h"
 #include "mathvector.h"
 #include "aabb.h"
 #include "joeserialize.h"
 #include "macros.h"
+
+#include <string>
+#include <iostream>
+#include <cassert>
+#include <sstream>
 
 ///loading data into the mesh vertexarray is implemented by derived classes
 class MODEL

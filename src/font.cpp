@@ -15,7 +15,7 @@ bool FONT::Load(
 	const std::string & fontinfopath,
 	const std::string & fonttexturepath,
 	const std::string & texsize,
-	TEXTUREMANAGER & textures,
+	MANAGER<TEXTURE, TEXTUREINFO> & textures,
 	std::ostream & error_output,
 	bool mipmap)
 {

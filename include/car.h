@@ -1,14 +1,9 @@
 #ifndef _CAR_H
 #define _CAR_H
 
-#include <string>
-#include <ostream>
-#include <list>
-#include <map>
-
 #include "cardynamics.h"
 #include "model_joe03.h"
-#include "texturemanager.h"
+#include "manager.h"
 #include "sound.h"
 #include "camera_system.h"
 #include "joeserialize.h"
@@ -18,8 +13,14 @@
 #include "enginesoundinfo.h"
 #include "scenenode.h"
 
+#include <string>
+#include <ostream>
+#include <list>
+#include <map>
+
 class BEZIER;
 class PERFORMANCE_TESTING;
+class TEXTUREINFO;
 
 class CAR 
 {
@@ -35,7 +36,7 @@ public:
 		const std::string & carpath,
 		const std::string & driverpath,
 		const std::string & carname,
-		TEXTUREMANAGER & textures,
+		MANAGER<TEXTURE, TEXTUREINFO> & textures,
 		const std::string & carpaint,
 		const MATHVECTOR <float, 3> & carcolor,
 		const MATHVECTOR <float, 3> & initial_position,
@@ -367,7 +368,7 @@ protected:
 		MODEL_JOE03 & output_tire_model,
 		MODEL_JOE03 & output_wheel_model,
 		MODEL_JOE03 & output_brake_rotor,
-		TEXTUREMANAGER & textures,
+		MANAGER<TEXTURE, TEXTUREINFO> & textures,
 		int anisotropy,
 		const std::string & texsize,
 		std::ostream & error_output);
@@ -404,7 +405,7 @@ protected:
 		keyed_container <DRAWABLE>::handle & output_drawable,
 		const std::string & joefile,
 		MODEL_JOE03 & output_model,
-		TEXTUREMANAGER & textures,
+		MANAGER<TEXTURE, TEXTUREINFO> & textures,
 		const std::string & texname,
 		const std::string & texsize,
 		int anisotropy,
@@ -421,7 +422,7 @@ protected:
 	/// will load texname+".png"
 	/// will attempt to load texname+"-misc1.png, texname+"-misc2.png if loadmisc true
 	bool LoadTextures(
-		TEXTUREMANAGER & textures,
+		MANAGER<TEXTURE, TEXTUREINFO> & textures,
 		const std::string & texname,
 		const std::string & texsize,
 		int anisotropy,

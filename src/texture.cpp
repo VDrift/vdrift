@@ -1,9 +1,5 @@
 #include "texture.h"
-
-#include <string>
-#include <iostream>
-#include <vector>
-#include <cassert>
+#include "opengl_utility.h"
 
 #ifdef __APPLE__
 #include <SDL_image/SDL_image.h>
@@ -13,7 +9,10 @@
 #include <SDL/SDL_rotozoom.h>
 #endif
 
-#include "opengl_utility.h"
+#include <string>
+#include <iostream>
+#include <vector>
+#include <cassert>
 
 Uint8 ExtractComponent(Uint32 value, Uint32 mask, Uint32 shift, Uint32 loss)
 {

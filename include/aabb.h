@@ -1,11 +1,11 @@
 #ifndef _AABB_H
 #define _AABB_H
 
-#include <ostream>
-
 #include "mathvector.h"
 #include "mathplane.h"
 #include "frustum.h"
+
+#include <ostream>
 
 template <typename T>
 class AABB

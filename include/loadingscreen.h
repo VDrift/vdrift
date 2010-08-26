@@ -1,14 +1,15 @@
 #ifndef _LOADINGSCREEN_H
 #define _LOADINGSCREEN_H
 
-#include "texture.h"
 #include "scenenode.h"
 #include "vertexarray.h"
 
 #include <ostream>
 #include <string>
 
-class TEXTUREMANAGER;
+template <class T, class Tinfo> class MANAGER;
+class TEXTURE;
+class TEXTUREINFO;
 
 class LOADINGSCREEN
 {
@@ -23,7 +24,7 @@ public:
 		int displayw,
 		int displayh,
 		const std::string & texsize,
-		TEXTUREMANAGER & textures);
+		MANAGER<TEXTURE, TEXTUREINFO> & textures);
 
 private:
 	SCENENODE root;

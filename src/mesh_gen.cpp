@@ -1,5 +1,4 @@
 #include "mesh_gen.h"
-
 #include "vertexarray.h"
 #include "mathvector.h"
 

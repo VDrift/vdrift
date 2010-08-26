@@ -1,18 +1,19 @@
 #ifndef _TRACKMAP_H
 #define _TRACKMAP_H
 
+#include "mathvector.h"
+#include "manager.h"
+#include "track.h"
+#include "scenenode.h"
+#include "texture.h"
+
+#include <SDL/SDL.h>
+
 #include <ostream>
 #include <list>
 #include <string>
 #include <iostream>
 #include <map>
-
-#include <SDL/SDL.h>
-
-#include "mathvector.h"
-#include "texturemanager.h"
-#include "track.h"
-#include "scenenode.h"
 
 class TRACKMAP
 {
@@ -39,10 +40,10 @@ private:
 
 	SDL_Surface* surface;
 
-	TEXTUREPTR cardot0;
-	TEXTUREPTR cardot1;
-	TEXTUREPTR cardot0_focused;
-	TEXTUREPTR cardot1_focused;
+	std::tr1::shared_ptr<TEXTURE> cardot0;
+	std::tr1::shared_ptr<TEXTURE> cardot1;
+	std::tr1::shared_ptr<TEXTURE> cardot0_focused;
+	std::tr1::shared_ptr<TEXTURE> cardot1_focused;
 	
 	SCENENODE mapnode;
 	keyed_container <DRAWABLE>::handle mapdraw;
@@ -50,25 +51,12 @@ private:
 	
 	class CARDOT
 	{
-		private:
-			keyed_container <DRAWABLE>::handle dotdraw;
-			VERTEXARRAY dotverts;
-			
-			DRAWABLE & GetDrawable(SCENENODE & topnode)
-			{
-				return topnode.GetDrawlist().twodim.get(dotdraw);
-			}
-			
-			const DRAWABLE & GetDrawable(SCENENODE & topnode) const
-			{
-				return topnode.GetDrawlist().twodim.get(dotdraw);
-			}
-			
 		public:
-			void Init(SCENENODE & topnode, 
-					  TEXTUREPTR tex, 
-					  const MATHVECTOR <float, 2> & corner1, 
-					  const MATHVECTOR <float, 2> & corner2)
+			void Init(
+				SCENENODE & topnode, 
+				std::tr1::shared_ptr<TEXTURE> tex, 
+				const MATHVECTOR <float, 2> & corner1, 
+				const MATHVECTOR <float, 2> & corner2)
 			{
 				dotdraw = topnode.GetDrawlist().twodim.insert(DRAWABLE());
 				DRAWABLE & drawref = GetDrawable(topnode);
@@ -79,7 +67,7 @@ private:
 				Retexture(topnode, tex);
 				Reposition(corner1, corner2);
 			}
-			void Retexture(SCENENODE & topnode, TEXTUREPTR newtex)
+			void Retexture(SCENENODE & topnode, std::tr1::shared_ptr<TEXTURE> newtex)
 			{
 				assert(newtex->Loaded());
 				GetDrawable(topnode).SetDiffuseMap(newtex);
@@ -101,6 +89,20 @@ private:
 			{
 				return dotdraw;
 			}
+		
+		private:
+			keyed_container <DRAWABLE>::handle dotdraw;
+			VERTEXARRAY dotverts;
+			
+			DRAWABLE & GetDrawable(SCENENODE & topnode)
+			{
+				return topnode.GetDrawlist().twodim.get(dotdraw);
+			}
+			
+			const DRAWABLE & GetDrawable(SCENENODE & topnode) const
+			{
+				return topnode.GetDrawlist().twodim.get(dotdraw);
+			}
 	};
 	
 	std::list <CARDOT> dotlist;
@@ -120,7 +122,7 @@ public:
 		const std::string & trackname,
 		const std::string & texturepath,
 		const std::string & texsize,
-		TEXTUREMANAGER & textures,
+		MANAGER<TEXTURE, TEXTUREINFO> & textures,
 		std::ostream & error_output);
 	
 	void Unload();

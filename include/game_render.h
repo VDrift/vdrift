@@ -4,11 +4,11 @@
 #include "parallel_task.h"
 #include "graphics.h"
 
-#include <ostream>
-
 #if defined(unix) || defined(__unix) || defined(__unix__)
 #include <GL/glx.h>
 #endif
+
+#include <ostream>
 
 class GAME_RENDER : public PARALLEL_TASK::TASK
 {

@@ -1,12 +1,6 @@
 #ifndef _TEXTURE_H
 #define _TEXTURE_H
 
-#ifdef __APPLE__
-#include <GLExtensionWrangler/glew.h>
-#else
-#include <GL/glew.h>
-#endif
-
 #include "textureinfo.h"
 #include "texture_interface.h"
 

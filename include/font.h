@@ -1,8 +1,9 @@
 #ifndef _FONT_H
 #define _FONT_H
 
-#include "texturemanager.h"
 #include "optional.h"
+#include "manager.h"
+#include "texture.h"
 
 #include <ostream>
 #include <string>
@@ -25,7 +26,7 @@ public:
 	};
 		
 private:
-	TEXTUREPTR font_texture;
+	std::tr1::shared_ptr<TEXTURE> font_texture;
 	
 	std::vector <CHARINFO> charinfo;
 	
@@ -51,11 +52,11 @@ public:
 		const std::string & fontinfopath,
 		const std::string & fonttexturepath,
 		const std::string & texsize,
-		TEXTUREMANAGER & textures,
+		MANAGER<TEXTURE, TEXTUREINFO> & textures,
 		std::ostream & error_output,
 		bool mipmap = false);
 
-	const TEXTUREPTR GetFontTexture() const
+	const std::tr1::shared_ptr<TEXTURE> GetFontTexture() const
 	{
 		return font_texture;
 	}

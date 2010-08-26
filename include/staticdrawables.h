@@ -1,10 +1,10 @@
 #ifndef _STATICDRAWABLES_H
 #define _STATICDRAWABLES_H
 
-#include <vector>
-
 #include "aabb_space_partitioning.h"
 #include "scenenode.h"
+
+#include <vector>
 
 template <typename T>
 class AABB_SPACE_PARTITIONING_NODE_ADAPTER

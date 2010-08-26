@@ -1,13 +1,6 @@
 #ifndef _GAME_H
 #define _GAME_H
 
-#include <ostream>
-#include <string>
-#include <list>
-#include <map>
-#include <vector>
-#include <memory>
-
 #include "graphics.h"
 #include "eventsystem.h"
 #include "settings.h"
@@ -35,7 +28,14 @@
 #include "ai.h"
 #include "quickmp.h"
 //#include "sky.h"
-#include "texturemanager.h"
+#include "manager.h"
+
+#include <ostream>
+#include <string>
+#include <list>
+#include <map>
+#include <vector>
+#include <memory>
 
 class GAME
 {
@@ -142,7 +142,7 @@ private:
 	SOUNDBUFFERLIBRARY generic_sounds;
 	SETTINGS settings;
 	PATHMANAGER pathmanager;
-	TEXTUREMANAGER textures;
+	MANAGER<TEXTURE, TEXTUREINFO> textures;
 	TRACKMAP trackmap;
 	TRACK track;
 	GUI gui;

@@ -1,16 +1,16 @@
 #ifndef _GUI_H
 #define _GUI_H
 
+#include "guipage.h"
+#include "texture.h"
+#include "font.h"
+#include "guioption.h"
+
 #include <map>
 #include <string>
 #include <iostream>
 #include <list>
 #include <sstream>
-
-#include "guipage.h"
-#include "texture.h"
-#include "font.h"
-#include "guioption.h"
 
 class GUI
 {
@@ -45,7 +45,7 @@ private:
 		std::map<std::string, GUIOPTION> & optionmap,
 		float screenhwratio,
 		const std::string & texsize,
-		TEXTUREMANAGER & texturemanager,
+		MANAGER<TEXTURE, TEXTUREINFO> & texturemanager,
 		std::ostream & error_output)
 	{
 		PAGEINFO & p = pages[pagename];
@@ -116,7 +116,7 @@ public:
 		std::map <std::string, FONT> & fonts, 
 		float screenhwratio,
 		const std::string & texsize,
-		TEXTUREMANAGER & textures,
+		MANAGER<TEXTURE, TEXTUREINFO> & textures,
 		std::ostream & info_output,
 		std::ostream & error_output)
 	{

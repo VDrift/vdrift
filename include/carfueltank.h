@@ -1,11 +1,11 @@
 #ifndef _CARFUELTANK_H
 #define _CARFUELTANK_H
 
-#include <iostream>
-
 #include "mathvector.h"
 #include "joeserialize.h"
 #include "macros.h"
+
+#include <iostream>
 
 template <typename T>
 class CARFUELTANK

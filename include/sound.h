@@ -1,14 +1,14 @@
 #ifndef _SOUND_H
 
+#include "soundsource.h"
+#include "quaternion.h"
+#include "mathvector.h"
+
 #include <iostream>
 #include <string>
 #include <list>
 #include <map>
 #include <fstream>
-
-#include "soundsource.h"
-#include "quaternion.h"
-#include "mathvector.h"
 
 struct SDL_mutex;
 

@@ -1,6 +1,12 @@
 #ifndef _TEXTURE_INTERFACE_H
 #define _TEXTURE_INTERFACE_H
 
+#ifdef __APPLE__
+#include <GLExtensionWrangler/glew.h>
+#else
+#include <GL/glew.h>
+#endif
+
 class GLSTATEMANAGER;
 class GRAPHICS_SDLGL;
 

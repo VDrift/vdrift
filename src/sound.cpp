@@ -1,13 +1,13 @@
 #include "sound.h"
 #include "unittest.h"
 
+#include <SDL/SDL.h>
+
 #include <cassert>
 #include <sstream>
 #include <iostream>
 #include <string>
 #include <list>
-
-#include <SDL/SDL.h>
 
 SOUND::SOUND() :
 	initdone(false),

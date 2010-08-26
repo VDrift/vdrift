@@ -1,8 +1,9 @@
 #ifndef _COLLISION_WORLD_H
 #define _COLLISION_WORLD_H
 
-#include <ostream>
 #include "btBulletDynamicsCommon.h"
+
+#include <ostream>
 
 template <class T, unsigned int dim> class MATHVECTOR;
 class COLLISION_CONTACT;

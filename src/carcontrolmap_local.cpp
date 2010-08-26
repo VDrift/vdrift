@@ -1,24 +1,15 @@
 #include "carcontrolmap_local.h"
 
 #include <iomanip>
-
 #include <sstream>
-using std::stringstream;
-
 #include <iostream>
-using std::endl;
-using std::cout;
-
 #include <string>
-using std::string;
-
 #include <list>
-using std::list;
 
 void CARCONTROLMAP_LOCAL::Load(const std::string & controlfile, std::ostream & info_output, std::ostream & error_output)
 {
 	controls.clear();
-	//info_output << "Loading car controls from: " << controlfile << endl;
+	//info_output << "Loading car controls from: " << controlfile << std::endl;
 	CONFIGFILE controls_config;
 	if (!controls_config.Load(controlfile))
 	{
@@ -27,17 +18,17 @@ void CARCONTROLMAP_LOCAL::Load(const std::string & controlfile, std::ostream & i
 	}
 	else
 	{
-		list<string> sections;
+		std::list<std::string> sections;
 		controls_config.GetSectionList(sections);
 		
-		for (list<string>::const_iterator section = sections.begin(); section != sections.end(); ++section)
+		for (std::list<std::string>::const_iterator section = sections.begin(); section != sections.end(); ++section)
 		{
-			list<string> params;
+			std::list<std::string> params;
 			controls_config.GetParamList( params, *section );
-			string type = "";
-			string name = "";
-			if (!controls_config.GetParam( *section + ".type", type )) {error_output << "Error parsing controls in section " << *section << endl;continue;}
-			if (!controls_config.GetParam( *section + ".name", name )) {error_output << "Error parsing controls in section " << *section << endl;continue;}
+			std::string type = "";
+			std::string name = "";
+			if (!controls_config.GetParam( *section + ".type", type )) {error_output << "Error parsing controls in section " << *section << std::endl;continue;}
+			if (!controls_config.GetParam( *section + ".name", name )) {error_output << "Error parsing controls in section " << *section << std::endl;continue;}
 			CARINPUT::CARINPUT carinput = GetInputFromString(name);
 			CONTROL newctrl;
 			if (carinput != CARINPUT::INVALID)
@@ -47,9 +38,9 @@ void CARCONTROLMAP_LOCAL::Load(const std::string & controlfile, std::ostream & i
 					newctrl.type = CONTROL::JOY;
 					
 					int joy_num = 0;
-					string joy_type = "";
-					if (!controls_config.GetParam( *section + ".joy_index", joy_num )) {error_output << "Error parsing controls in section " << *section << endl;continue;}
-					if (!controls_config.GetParam( *section + ".joy_type", joy_type )) {error_output << "Error parsing controls in section " << *section << endl;continue;}
+					std::string joy_type = "";
+					if (!controls_config.GetParam( *section + ".joy_index", joy_num )) {error_output << "Error parsing controls in section " << *section << std::endl;continue;}
+					if (!controls_config.GetParam( *section + ".joy_type", joy_type )) {error_output << "Error parsing controls in section " << *section << std::endl;continue;}
 					newctrl.joynum = joy_num;
 					if (joy_type == "button")
 					{
@@ -57,9 +48,9 @@ void CARCONTROLMAP_LOCAL::Load(const std::string & controlfile, std::ostream & i
 						int joy_btn = 0;
 						bool joy_btn_down = false;
 						bool joy_btn_once = false;
-						if (!controls_config.GetParam( *section + ".joy_button", joy_btn )) {error_output << "Error parsing controls in section " << *section << endl;continue;}
-						if (!controls_config.GetParam( *section + ".down", joy_btn_down )) {error_output << "Error parsing controls in section " << *section << endl;continue;}
-						if (!controls_config.GetParam( *section + ".once", joy_btn_once )) {error_output << "Error parsing controls in section " << *section << endl;continue;}
+						if (!controls_config.GetParam( *section + ".joy_button", joy_btn )) {error_output << "Error parsing controls in section " << *section << std::endl;continue;}
+						if (!controls_config.GetParam( *section + ".down", joy_btn_down )) {error_output << "Error parsing controls in section " << *section << std::endl;continue;}
+						if (!controls_config.GetParam( *section + ".once", joy_btn_once )) {error_output << "Error parsing controls in section " << *section << std::endl;continue;}
 						newctrl.joybutton = joy_btn;
 						newctrl.joypushdown = joy_btn_down;
 						newctrl.onetime = joy_btn_once;
@@ -68,15 +59,15 @@ void CARCONTROLMAP_LOCAL::Load(const std::string & controlfile, std::ostream & i
 					{
 						newctrl.joytype = CONTROL::JOYAXIS;
 						int joy_axis = 0;
-						string axis_type = "";
+						std::string axis_type = "";
 						float deadzone = 0.0;
 						float exponent = 0.0;
 						float gain = 0.0;
-						if (!controls_config.GetParam( *section + ".joy_axis", joy_axis )) {error_output << "Error parsing controls in section " << *section << endl;continue;}
-						if (!controls_config.GetParam( *section + ".joy_axis_type", axis_type )) {error_output << "Error parsing controls in section " << *section << endl;continue;}
-						if (!controls_config.GetParam( *section + ".deadzone", deadzone )) {error_output << "Error parsing controls in section " << *section << endl;continue;}
-						if (!controls_config.GetParam( *section + ".exponent", exponent )) {error_output << "Error parsing controls in section " << *section << endl;continue;}
-						if (!controls_config.GetParam( *section + ".gain", gain )) {error_output << "Error parsing controls in section " << *section << endl;continue;}
+						if (!controls_config.GetParam( *section + ".joy_axis", joy_axis )) {error_output << "Error parsing controls in section " << *section << std::endl;continue;}
+						if (!controls_config.GetParam( *section + ".joy_axis_type", axis_type )) {error_output << "Error parsing controls in section " << *section << std::endl;continue;}
+						if (!controls_config.GetParam( *section + ".deadzone", deadzone )) {error_output << "Error parsing controls in section " << *section << std::endl;continue;}
+						if (!controls_config.GetParam( *section + ".exponent", exponent )) {error_output << "Error parsing controls in section " << *section << std::endl;continue;}
+						if (!controls_config.GetParam( *section + ".gain", gain )) {error_output << "Error parsing controls in section " << *section << std::endl;continue;}
 						newctrl.joyaxis = ( joy_axis );
 						if( axis_type == "positive" )
 						{
@@ -92,7 +83,7 @@ void CARCONTROLMAP_LOCAL::Load(const std::string & controlfile, std::ostream & i
 						}
 						else
 						{
-							error_output << "Error parsing controls, invalid joystick axis type in section " << *section << endl;
+							error_output << "Error parsing controls, invalid joystick axis type in section " << *section << std::endl;
 							continue;
 						}
 						newctrl.deadzone = ( deadzone );
@@ -101,7 +92,7 @@ void CARCONTROLMAP_LOCAL::Load(const std::string & controlfile, std::ostream & i
 					}
 					else
 					{
-						error_output << "Error parsing controls, invalid joystick type in section " << *section << endl;
+						error_output << "Error parsing controls, invalid joystick type in section " << *section << std::endl;
 						continue;
 					}
 				}
@@ -115,18 +106,18 @@ void CARCONTROLMAP_LOCAL::Load(const std::string & controlfile, std::ostream & i
 					bool key_once = false;
 					if (!controls_config.GetParam( *section + ".keycode", keycode ))
 					{
-						string keyname;
-						if (!controls_config.GetParam( *section + ".key", keyname )) {error_output << "Error parsing controls in section " << *section << endl;continue;}
+						std::string keyname;
+						if (!controls_config.GetParam( *section + ".key", keyname )) {error_output << "Error parsing controls in section " << *section << std::endl;continue;}
 						
 						if (legacy_keycodes.find(keyname) == legacy_keycodes.end())
 						{
-							error_output << "Unknown keyname \"" << keyname << "\" parsing controls in section " << *section << endl;continue;
+							error_output << "Unknown keyname \"" << keyname << "\" parsing controls in section " << *section << std::endl;continue;
 						}
 						else
 							keycode = legacy_keycodes[keyname];
 					}
-					if (!controls_config.GetParam( *section + ".down", key_down )) {error_output << "Error parsing controls in section " << *section << endl;continue;}
-					if (!controls_config.GetParam( *section + ".once", key_once )) {error_output << "Error parsing controls in section " << *section << endl;continue;}
+					if (!controls_config.GetParam( *section + ".down", key_down )) {error_output << "Error parsing controls in section " << *section << std::endl;continue;}
+					if (!controls_config.GetParam( *section + ".once", key_once )) {error_output << "Error parsing controls in section " << *section << std::endl;continue;}
 					if (keycode < SDLK_LAST && keycode > SDLK_FIRST)
 						newctrl.keycode = SDLKey(keycode);
 					newctrl.keypushdown = ( key_down );
@@ -136,8 +127,8 @@ void CARCONTROLMAP_LOCAL::Load(const std::string & controlfile, std::ostream & i
 				{
 					newctrl.type = CONTROL::MOUSE;
 					
-					string mouse_type = "";
-					string mouse_direction = "";
+					std::string mouse_type = "";
+					std::string mouse_direction = "";
 					int mouse_btn = 0;
 					bool mouse_btn_down = false;
 					bool mouse_btn_once = false;
@@ -165,7 +156,7 @@ void CARCONTROLMAP_LOCAL::Load(const std::string & controlfile, std::ostream & i
 						else if (mouse_direction == "down")
 							newctrl.mdir = CONTROL::DOWN;
 						else
-							error_output << "Error parsing controls, invalid mouse direction type " << mouse_direction << " in section " << *section << endl;
+							error_output << "Error parsing controls, invalid mouse direction type " << mouse_direction << " in section " << *section << std::endl;
 						
 						if (!controls_config.GetParam( *section + ".deadzone", newctrl.deadzone )) {newctrl.deadzone=0;}
 						if (!controls_config.GetParam( *section + ".exponent", newctrl.exponent )) {newctrl.exponent=1;}
@@ -173,12 +164,12 @@ void CARCONTROLMAP_LOCAL::Load(const std::string & controlfile, std::ostream & i
 					}
 					else
 					{
-						error_output << "Error parsing controls, invalid mouse type " << mouse_type << " in section " << *section << endl;
+						error_output << "Error parsing controls, invalid mouse type " << mouse_type << " in section " << *section << std::endl;
 					}
 				}
 				else
 				{
-					error_output << "Error parsing controls, invalid control type in section " << *section << endl;
+					error_output << "Error parsing controls, invalid control type in section " << *section << std::endl;
 					continue;
 				}
 			
@@ -186,7 +177,7 @@ void CARCONTROLMAP_LOCAL::Load(const std::string & controlfile, std::ostream & i
 			}
 			else
 			{
-				error_output << "Unknown input type in section " << *section << endl;
+				error_output << "Unknown input type in section " << *section << std::endl;
 			}
 		}
 	}
@@ -203,14 +194,14 @@ void CARCONTROLMAP_LOCAL::Save(CONFIGFILE & controls_config, std::ostream & info
 	{
 		for (std::vector <CONTROL>::iterator i = n->second.begin(); i != n->second.end(); ++i)
 		{
-			stringstream ss;
+			std::stringstream ss;
 			ss << "control mapping ";
 			ss << std::setfill('0') << std::setw(2) << id;
 			
 			CARINPUT::CARINPUT inputid = n->first;
-			string ctrl_id = ss.str();
+			std::string ctrl_id = ss.str();
 			
-			string ctrl_name = "INVALID";
+			std::string ctrl_name = "INVALID";
 			for (std::map <std::string, CARINPUT::CARINPUT>::const_iterator s = carinput_stringmap.begin(); s != carinput_stringmap.end(); ++s)
 				if (s->second == inputid)
 					ctrl_name = s->first;
@@ -221,22 +212,22 @@ void CARCONTROLMAP_LOCAL::Save(CONFIGFILE & controls_config, std::ostream & info
 			
 			if (curctrl.type == CONTROL::JOY)
 			{
-				controls_config.SetParam( ctrl_id + ".type", string("joy") );
+				controls_config.SetParam( ctrl_id + ".type", "joy");
 				controls_config.SetParam( ctrl_id + ".joy_index", curctrl.joynum );
 			
 				if (curctrl.joytype == CONTROL::JOYAXIS)
 				{
-					controls_config.SetParam( ctrl_id + ".joy_type", string("axis") );
+					controls_config.SetParam( ctrl_id + ".joy_type", "axis");
 					controls_config.SetParam( ctrl_id + ".joy_axis", curctrl.joyaxis );
 					switch (curctrl.joyaxistype) {
 						case CONTROL::POSITIVE:
-							controls_config.SetParam( ctrl_id + ".joy_axis_type", string("positive") );
+							controls_config.SetParam( ctrl_id + ".joy_axis_type", "positive");
 							break;
 						case CONTROL::NEGATIVE:
-							controls_config.SetParam( ctrl_id + ".joy_axis_type", string("negative") );
+							controls_config.SetParam( ctrl_id + ".joy_axis_type", "negative");
 							break;
 						case CONTROL::BOTH:
-							controls_config.SetParam( ctrl_id + ".joy_axis_type", string("both") );
+							controls_config.SetParam( ctrl_id + ".joy_axis_type", "both");
 							break;
 					}
 					controls_config.SetParam( ctrl_id + ".deadzone", curctrl.deadzone);
@@ -245,7 +236,7 @@ void CARCONTROLMAP_LOCAL::Save(CONFIGFILE & controls_config, std::ostream & info
 				}
 				else if (curctrl.joytype == CONTROL::JOYBUTTON)
 				{
-					controls_config.SetParam(ctrl_id + ".joy_type", string("button"));
+					controls_config.SetParam(ctrl_id + ".joy_type", "button");
 					controls_config.SetParam(ctrl_id + ".joy_button", curctrl.joybutton);
 					controls_config.SetParam(ctrl_id + ".once", curctrl.onetime);
 					controls_config.SetParam(ctrl_id + ".down", curctrl.joypushdown);
@@ -253,8 +244,8 @@ void CARCONTROLMAP_LOCAL::Save(CONFIGFILE & controls_config, std::ostream & info
 			}
 			else if (curctrl.type == CONTROL::KEY)
 			{
-				controls_config.SetParam(ctrl_id + ".type", string("key"));
-				string keyname;
+				controls_config.SetParam(ctrl_id + ".type", "key");
+				std::string keyname;
 				for (std::map <std::string, int>::iterator k = legacy_keycodes.begin(); k != legacy_keycodes.end(); k++)
 					if (k->second == curctrl.keycode)
 						keyname = k->first;
@@ -265,17 +256,17 @@ void CARCONTROLMAP_LOCAL::Save(CONFIGFILE & controls_config, std::ostream & info
 			}
 			else if(curctrl.type == CONTROL::MOUSE)
 			{
-				controls_config.SetParam( ctrl_id + ".type", string("mouse") );
+				controls_config.SetParam( ctrl_id + ".type", "mouse");
 				if (curctrl.mousetype == CONTROL::MOUSEBUTTON)
 				{
-					controls_config.SetParam( ctrl_id + ".mouse_type", string("button") );
+					controls_config.SetParam( ctrl_id + ".mouse_type", "button");
 					controls_config.SetParam( ctrl_id + ".mouse_button", curctrl.mbutton );
 					controls_config.SetParam( ctrl_id + ".once", curctrl.onetime );
 					controls_config.SetParam( ctrl_id + ".down", curctrl.mouse_push_down );
 				}
 				else if (curctrl.mousetype == CONTROL::MOUSEMOTION)
 				{
-					string direction = "invalid";
+					std::string direction = "invalid";
 					CONTROL::MOUSEDIRECTION mdir = curctrl.mdir;
 					if( mdir == CONTROL::UP )
 					{
@@ -294,7 +285,7 @@ void CARCONTROLMAP_LOCAL::Save(CONFIGFILE & controls_config, std::ostream & info
 						direction = "right";
 					}
 
-					controls_config.SetParam( ctrl_id + ".mouse_type", string("motion") );
+					controls_config.SetParam( ctrl_id + ".mouse_type", "motion");
 					controls_config.SetParam( ctrl_id + ".mouse_motion", direction );
 					
 					controls_config.SetParam( ctrl_id + ".deadzone", curctrl.deadzone);
@@ -326,7 +317,7 @@ const std::vector <float> & CARCONTROLMAP_LOCAL::ProcessInput(const std::string 
 			
 			if (i->type == CONTROL::JOY)
 			{
-				//cout << "type joy" << endl;
+				//cout << "type joy" << std::endl;
 				
 				if (i->joytype == CONTROL::JOYAXIS)
 				{
@@ -381,7 +372,7 @@ const std::vector <float> & CARCONTROLMAP_LOCAL::ProcessInput(const std::string 
 			}
 			else if (i->type == CONTROL::KEY)
 			{
-				//cout << "type key" << endl;
+				//cout << "type key" << std::endl;
 				
 				EVENTSYSTEM_SDL::BUTTON_STATE keystate = eventsystem.GetKeyState(SDLKey(i->keycode));
 					
@@ -413,11 +404,11 @@ const std::vector <float> & CARCONTROLMAP_LOCAL::ProcessInput(const std::string 
 			}
 			else if (i->type == CONTROL::MOUSE)
 			{
-				//cout << "type mouse" << endl;
+				//cout << "type mouse" << std::endl;
 				
 				if (i->mousetype == CONTROL::MOUSEBUTTON)
 				{
-					//cout << "mousebutton" << endl;
+					//cout << "mousebutton" << std::endl;
 					
 					EVENTSYSTEM_SDL::BUTTON_STATE buttonstate = eventsystem.GetMouseButtonState(i->mbutton);
 					
@@ -447,10 +438,10 @@ const std::vector <float> & CARCONTROLMAP_LOCAL::ProcessInput(const std::string 
 				}
 				else if (i->mousetype == CONTROL::MOUSEMOTION)
 				{
-					//cout << "mousemotion" << endl;
+					//cout << "mousemotion" << std::endl;
 					
 					std::vector <int> pos = eventsystem.GetMousePosition();
-					//std::cout << pos[0] << "," << pos[1] << endl;
+					//std::cout << pos[0] << "," << pos[1] << std::endl;
 					
 					float xval = (pos[0]-screenw/2.0)/(screenw/4.0);
 					if (xval < -1) xval = -1;
@@ -502,13 +493,13 @@ const std::vector <float> & CARCONTROLMAP_LOCAL::ProcessInput(const std::string 
 					
 					tempval = val;
 					
-					//cout << val << endl;
+					//cout << val << std::endl;
 					
 					handled = true;
 				}
-				//else cout << "mouse???" << endl;
+				//else cout << "mouse???" << std::endl;
 			}
-			//else cout << "type invalid" << endl;
+			//else cout << "type invalid" << std::endl;
 			
 			if (tempval > newval)
 				newval = tempval;

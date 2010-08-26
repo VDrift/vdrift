@@ -4,6 +4,8 @@
 #include "reseatable_reference.h"
 #include "tracksurface.h"
 #include "objectloader.h"
+#include "manager.h"
+#include "texture.h"
 
 #include <functional>
 #include <algorithm>
@@ -36,7 +38,7 @@ bool TRACK::Load(
 	const std::string & effects_texturepath,
 	const std::string & texsize,
 	int anisotropy,
-	TEXTUREMANAGER & textures,
+	MANAGER<TEXTURE, TEXTUREINFO> & textures,
 	bool reverse)
 {
 	Clear();
@@ -163,7 +165,7 @@ bool TRACK::DeferredLoad(
 	const std::string & effects_texturepath,
 	const std::string & texsize,
 	int anisotropy,
-	TEXTUREMANAGER & textures,
+	MANAGER<TEXTURE, TEXTUREINFO> & textures,
 	bool reverse,
 	bool dynamicshadowsenabled,
 	bool doagressivecombining)
@@ -208,7 +210,7 @@ bool TRACK::DeferredLoad(
 	return true;
 }
 
-bool TRACK::ContinueDeferredLoad(TEXTUREMANAGER & textures)
+bool TRACK::ContinueDeferredLoad(MANAGER<TEXTURE, TEXTUREINFO> & textures)
 {
 	if (Loaded())
 		return true;
@@ -246,7 +248,7 @@ void TRACK::Clear()
 bool TRACK::CreateRacingLines(
 	const std::string & texturepath,
 	const std::string & texsize,
-	TEXTUREMANAGER & textures)
+	MANAGER<TEXTURE, TEXTUREINFO> & textures)
 {
 	TEXTUREINFO texinfo; 
 	texinfo.SetName(texturepath + "/racingline.png");
@@ -389,7 +391,7 @@ bool TRACK::BeginObjectLoad(
 	return true;
 }
 
-std::pair <bool,bool> TRACK::ContinueObjectLoad(TEXTUREMANAGER & textures)
+std::pair <bool,bool> TRACK::ContinueObjectLoad(MANAGER<TEXTURE, TEXTUREINFO> & textures)
 {
 	assert(objload.get());
 	return objload->ContinueObjectLoad(model_library,
@@ -400,7 +402,7 @@ std::pair <bool,bool> TRACK::ContinueObjectLoad(TEXTUREMANAGER & textures)
 									   textures);
 }
 
-bool TRACK::LoadObjects(const std::string & trackpath, SCENENODE & sceneroot, int anisotropy, TEXTUREMANAGER & textures)
+bool TRACK::LoadObjects(const std::string & trackpath, SCENENODE & sceneroot, int anisotropy, MANAGER<TEXTURE, TEXTUREINFO> & textures)
 {
 	BeginObjectLoad(trackpath, sceneroot, anisotropy, false, false);
 	std::pair <bool, bool> loadstatus = ContinueObjectLoad(textures);

@@ -1,10 +1,11 @@
 #ifndef _MODEL_JOE03_H
 #define _MODEL_JOE03_H
 
-#include <string>
-#include <ostream>
 #include "joepack.h"
 #include "model.h"
+
+#include <string>
+#include <ostream>
 
 // This holds the header information that is read in at the beginning of the file
 struct JOEHeader

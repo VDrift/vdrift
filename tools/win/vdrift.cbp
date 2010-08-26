@@ -421,6 +421,7 @@
 		<Unit filename="..\..\include\loadingscreen.h" />
 		<Unit filename="..\..\include\logging.h" />
 		<Unit filename="..\..\include\macros.h" />
+		<Unit filename="..\..\include\manager.h" />
 		<Unit filename="..\..\include\mathplane.h" />
 		<Unit filename="..\..\include\mathvector.h" />
 		<Unit filename="..\..\include\matrix3.h" />
@@ -431,7 +432,6 @@
 		<Unit filename="..\..\include\model_obj.h" />
 		<Unit filename="..\..\include\numprocessors.h" />
 		<Unit filename="..\..\include\objectloader.h" />
-		<Unit filename="..\..\include\objectmanager.h" />
 		<Unit filename="..\..\include\opengl_utility.h" />
 		<Unit filename="..\..\include\optional.h" />
 		<Unit filename="..\..\include\pairsort.h" />
@@ -468,7 +468,6 @@
 		<Unit filename="..\..\include\texture.h" />
 		<Unit filename="..\..\include\texture_interface.h" />
 		<Unit filename="..\..\include\textureinfo.h" />
-		<Unit filename="..\..\include\texturemanager.h" />
 		<Unit filename="..\..\include\timer.h" />
 		<Unit filename="..\..\include\tobullet.h" />
 		<Unit filename="..\..\include\toggle.h" />
@@ -566,6 +565,7 @@
 		<Unit filename="..\..\src\soundbuffer.cpp" />
 		<Unit filename="..\..\src\soundfilter.cpp" />
 		<Unit filename="..\..\src\soundsource.cpp" />
+		<Unit filename="..\..\src\sprite2d.cpp" />
 		<Unit filename="..\..\src\suspensionbumpdetection.cpp" />
 		<Unit filename="..\..\src\text_draw.cpp" />
 		<Unit filename="..\..\src\texture.cpp" />

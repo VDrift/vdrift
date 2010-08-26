@@ -34,8 +34,6 @@ private:
 	WIDGET_IMAGE image_upsel;
 	WIDGET_IMAGE image_downsel;
 	WIDGET_IMAGE image_transition;
-	//std::string action;
-	//std::string active_action;
 	std::string description;
 	TOGGLESTATE state;
 	std::string setting;
@@ -43,16 +41,20 @@ private:
 	
 public:
 	WIDGET_TOGGLE() : wasvisible(false) {}
+	
 	virtual WIDGET * clone() const {return new WIDGET_TOGGLE(*this);};
 	
-	/*void SetAction(const std::string & newaction)
-	{
-		action = newaction;
-	}*/
-	
-	void SetupDrawable(SCENENODE & scene, TEXTUREPTR teximage_up, TEXTUREPTR teximage_down, 
-		TEXTUREPTR teximage_upselected, TEXTUREPTR teximage_downselected, 
-      		TEXTUREPTR teximage_transition, float centerx, float centery, float w, float h)
+	void SetupDrawable(
+		SCENENODE & scene,
+		std::tr1::shared_ptr<TEXTURE> teximage_up,
+		std::tr1::shared_ptr<TEXTURE> teximage_down, 
+		std::tr1::shared_ptr<TEXTURE> teximage_upselected,
+		std::tr1::shared_ptr<TEXTURE> teximage_downselected, 
+		std::tr1::shared_ptr<TEXTURE> teximage_transition,
+		float centerx,
+		float centery,
+		float w,
+		float h)
 	{
 		assert(teximage_up);
 		assert(teximage_down);
@@ -106,8 +108,6 @@ public:
 	
 	virtual bool ProcessInput(SCENENODE & scene, float cursorx, float cursory, bool cursordown, bool cursorjustup)
 	{
-		//active_action.clear();
-		
 		if (cursorx < image_up.GetCorner2()[0] && cursorx > image_up.GetCorner1()[0] &&
 			cursory < image_up.GetCorner2()[1] && cursory > image_up.GetCorner1()[1])
 		{
@@ -133,14 +133,6 @@ public:
 					SetState(scene, DOWNTRANS);
 				}
 			}
-			
-			//std::cout << "hover" << std::endl << std::endl;
-			
-			/*if (cursorjustup)
-			{
-				//take some action
-				active_action = action;
-			}*/
 			
 			return true;
 		}
@@ -175,9 +167,10 @@ public:
 	
 	void SetSetting(const std::string & newsetting) {setting = newsetting;}
 	
-	//virtual std::string GetAction() const {return active_action;}
 	virtual std::string GetDescription() const {return description;}
+	
 	virtual void SetDescription(const std::string & newdesc) {description = newdesc;}
+	
 	virtual void UpdateOptions(SCENENODE & scene, bool save_to_options, std::map<std::string, GUIOPTION> & optionmap, std::ostream & error_output)
 	{
 		if (setting.empty())

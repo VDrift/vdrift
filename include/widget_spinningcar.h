@@ -5,8 +5,10 @@
 #include "scenenode.h"
 #include "mathvector.h"
 
+template <class T, class Tinfo> class MANAGER;
+class TEXTURE;
+class TEXTUREINFO;
 class CAR;
-class TEXTUREMANAGER;
 
 class WIDGET_SPINNINGCAR : public WIDGET
 {
@@ -30,7 +32,7 @@ public:
 		float x,
 		float y,
 		const MATHVECTOR <float, 3> & newcarpos,
-		TEXTUREMANAGER & textures,
+		MANAGER<TEXTURE, TEXTUREINFO> & textures,
 		std::ostream & error_output,
 		int order = 0);
 	
@@ -48,7 +50,7 @@ private:
 	float r, g, b;
 	
 	keyed_container <SCENENODE>::handle carnode;
-	TEXTUREMANAGER * textures;
+	MANAGER<TEXTURE, TEXTUREINFO> * textures;
 	
 	std::list <CAR> car; ///< only ever one element, please
 	

@@ -1,6 +1,11 @@
 #ifndef _CARCONTROLMAP_LOCAL_H
 #define _CARCONTROLMAP_LOCAL_H
 
+#include "configfile.h"
+#include "eventsystem.h"
+#include "carinput.h"
+#include "car.h"
+
 #include <map>
 #include <string>
 #include <iostream>
@@ -8,11 +13,6 @@
 #include <algorithm>
 #include <cstring>
 #include <sstream>
-
-#include "configfile.h"
-#include "eventsystem.h"
-#include "carinput.h"
-#include "car.h"
 
 class WIDGET_CONTROLGRAB;
 class GAME;

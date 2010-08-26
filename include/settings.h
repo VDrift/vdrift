@@ -1,9 +1,9 @@
 #ifndef _SETTINGS_H
 #define _SETTINGS_H
 
-#include <string>
-
 #include "configfile.h"
+
+#include <string>
 
 class SETTINGS
 {

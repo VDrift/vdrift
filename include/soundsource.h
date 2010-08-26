@@ -1,12 +1,12 @@
 #ifndef SOUNDSOURCE_H
 #define SOUNDSOURCE_H
 
-#include <cassert>
-
 #include "soundbuffer.h"
 #include "soundfilter.h"
 #include "mathvector.h"
 #include "quaternion.h"
+
+#include <cassert>
 
 class SOUNDSOURCE
 {

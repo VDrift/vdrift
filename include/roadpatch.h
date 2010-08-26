@@ -4,8 +4,10 @@
 #include "bezier.h"
 #include "mathvector.h"
 #include "vertexarray.h"
-#include "texturemanager.h"
 
+#include <tr1/memory>
+
+class TEXTURE;
 class SCENENODE;
 
 class ROADPATCH
@@ -51,14 +53,13 @@ public:
 	void AddRacinglineScenenode(
 		SCENENODE & node,
 		ROADPATCH * nextpatch, 
-		TEXTUREPTR racingline_texture,
+		std::tr1::shared_ptr<TEXTURE> racingline_texture,
 		std::ostream & error_output);
 	
 private:
 	BEZIER patch;
 	float track_curvature;
 	MATHVECTOR <float, 3> racing_line;
-	
 	VERTEXARRAY racingline_vertexarray;
 };
 

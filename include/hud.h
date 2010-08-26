@@ -1,17 +1,17 @@
 #ifndef _HUD_H
 #define _HUD_H
 
+#include "scenenode.h"
+#include "font.h"
+#include "manager.h"
+#include "text_draw.h"
+
 #include <ostream>
 #include <cassert>
 #include <string>
 #include <list>
 #include <sstream>
 #include <algorithm>
-
-#include "scenenode.h"
-#include "font.h"
-#include "texturemanager.h"
-#include "text_draw.h"
 
 class HUDBAR
 {
@@ -20,7 +20,15 @@ class HUDBAR
 		VERTEXARRAY verts;
 
 	public:
-		void Set(SCENENODE & parent, TEXTUREPTR bartex, float x, float y, float w, float h, float opacity, bool flip)
+		void Set(
+			SCENENODE & parent,
+			std::tr1::shared_ptr<TEXTURE> bartex,
+			float x,
+			float y,
+			float w,
+			float h,
+			float opacity,
+			bool flip)
 		{
 			draw = parent.GetDrawlist().twodim.insert(DRAWABLE());
 			DRAWABLE & drawref = parent.GetDrawlist().twodim.get(draw);
@@ -31,7 +39,7 @@ class HUDBAR
 			drawref.SetColor(1,1,1,opacity);
 			drawref.SetDrawOrder(1);
 
-			verts.SetTo2DButton(x,y,w,h,h*0.75,flip);
+			verts.SetTo2DButton(x, y, w, h, h*0.75, flip);
 		}
 
 		void SetVisible(SCENENODE & parent, bool newvis)
@@ -61,9 +69,6 @@ private:
 	TEXTURE timerboxtex;
 	keyed_container <DRAWABLE>::handle timerboxdraw;
 	VERTEXARRAY timerboxverts;
-	/*TEXTURE timerbartex;
-	DRAWABLE * timerbardraw;
-	VERTEXARRAY timerbarverts;*/
 	TEXT_DRAWABLE laptime_label;
 	TEXT_DRAWABLE laptime;
 	TEXT_DRAWABLE lastlaptime_label;
@@ -137,7 +142,7 @@ public:
 	bool Init(
 		const std::string & texturepath,
 		const std::string & texsize,
-		TEXTUREMANAGER & textures, 
+		MANAGER<TEXTURE, TEXTUREINFO> & textures, 
 		FONT & lcdfont,
 		FONT & sansfont,
 		float displaywidth,

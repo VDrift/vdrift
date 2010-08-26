@@ -1,7 +1,6 @@
 #include "game_render.h"
-#include <cassert>
+
 #include <SDL/SDL.h>
-#include <iostream>
 
 #if defined(WIN32) || defined(_WIN32) || defined (__WIN32) || defined(__WIN32__) \
 	|| defined (_WIN64) || defined(__CYGWIN__) || defined(__MINGW32__)
@@ -12,6 +11,9 @@
 #include <GL/glx.h>
 #include <SDL/SDL_syswm.h>
 #endif
+
+#include <iostream>
+#include <cassert>
 
 void GAME_RENDER::PARALLEL_TASK_SETUP()
 {

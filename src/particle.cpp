@@ -1,5 +1,7 @@
 #include "particle.h"
 #include "unittest.h"
+#include "manager.h"
+#include "texture.h"
 
 using std::endl;
 
@@ -7,7 +9,7 @@ bool PARTICLE_SYSTEM::Load(
 	const std::list <std::string> & texlist,
 	int anisotropy,
 	const std::string & texsize,
-	TEXTUREMANAGER * texturemanager,
+	MANAGER<TEXTURE, TEXTUREINFO> * texturemanager,
 	std::ostream & error_output)
 {
 	if (!texturemanager) return false;
@@ -16,7 +18,7 @@ bool PARTICLE_SYSTEM::Load(
 		TEXTUREINFO texinfo(*i);
 		texinfo.SetSize(texsize);
 		texinfo.SetAnisotropy(anisotropy);
-		TEXTUREPTR texture = texturemanager->Get(texinfo);
+		std::tr1::shared_ptr<TEXTURE> texture = texturemanager->Get(texinfo);
 		textures.push_back(texture);
 	}
 	cur_texture = textures.end();
@@ -81,12 +83,18 @@ void PARTICLE_SYSTEM::Update(float dt, const QUATERNION <float> & camdir, const 
 	}
 }
 
-void PARTICLE_SYSTEM::AddParticle(const MATHVECTOR <float,3> & position, float newspeed, float newtrans, float newlong, float newsize, bool testonly)
+void PARTICLE_SYSTEM::AddParticle(
+	const MATHVECTOR <float,3> & position,
+	float newspeed,
+	float newtrans,
+	float newlong,
+	float newsize,
+	bool testonly)
 {
 	if (cur_texture == textures.end())
 		cur_texture = textures.begin();
 	
-	TEXTUREPTR tex;
+	std::tr1::shared_ptr<TEXTURE> tex;
 	if (!testonly)
 	{
 		assert(cur_texture != textures.end()); //this should only happen if the textures array is empty, which should never happen unless we're doing a unit test

@@ -1,16 +1,16 @@
 #include "suspensionbumpdetection.h"
 
-SUSPENSIONBUMPDETECTION::SUSPENSIONBUMPDETECTION()
-: state(SETTLED),
-  laststate(SETTLED),
-  displacetime(0.01),
-  displacevelocitythreshold(0.5),
-  settletime(0.01),
-  settlevelocitythreshold(0.0),
-  displacetimer(0),
-  settletimer(0),
-  dpstart(0),
-  dpend(0)
+SUSPENSIONBUMPDETECTION::SUSPENSIONBUMPDETECTION() :
+	state(SETTLED),
+	laststate(SETTLED),
+	displacetime(0.01),
+	displacevelocitythreshold(0.5),
+	settletime(0.01),
+  	settlevelocitythreshold(0.0),
+	displacetimer(0),
+  	settletimer(0),
+  	dpstart(0),
+  	dpend(0)
 {
 	
 }

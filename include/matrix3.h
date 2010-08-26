@@ -1,10 +1,9 @@
 #ifndef _MATRIX3_H
 #define _MATRIX3_H
 
-#include <iostream>
-
 #include "mathvector.h"
 
+#include <iostream>
 #include <cstring>
 
 template <typename T>

@@ -57,7 +57,7 @@ bool TRACKMAP::BuildMap(
 	const std::string & trackname,
 	const std::string & texturepath,
 	const std::string & texsize,
-	TEXTUREMANAGER & textures,
+	MANAGER<TEXTURE, TEXTUREINFO> & textures,
 	std::ostream & error_output)
 {
 	Unload();
@@ -217,7 +217,7 @@ bool TRACKMAP::BuildMap(
 	texinfo.SetSurface(surface);
 	texinfo.SetRepeat(false, false);
 	texinfo.SetSize(texsize);
-	TEXTUREPTR track_map = textures.Get(texinfo);
+	std::tr1::shared_ptr<TEXTURE> track_map = textures.Get(texinfo);
 	if (!track_map->Loaded()) return false;
 	
 	//std::cout << "Loading track map dots" << std::endl;
@@ -265,7 +265,7 @@ void TRACKMAP::Update(bool mapvisible, const std::list <std::pair<MATHVECTOR <fl
 		while (car != carpositions.end())
 		{
 			//determine which texture to use
-			TEXTUREPTR tex = cardot0_focused;
+			std::tr1::shared_ptr<TEXTURE> tex = cardot0_focused;
 			if (!car->second)
 				tex = cardot1;
 			

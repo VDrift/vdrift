@@ -19,11 +19,13 @@ bool ROADPATCH::Collide(
 	}
 }
 
-void ROADPATCH::AddRacinglineScenenode(SCENENODE & node, ROADPATCH * nextpatch,
-		TEXTUREPTR racingline_texture, std::ostream & error_output)
+void ROADPATCH::AddRacinglineScenenode(
+	SCENENODE & node,
+	ROADPATCH * nextpatch,
+	std::tr1::shared_ptr<TEXTURE> racingline_texture,
+	std::ostream & error_output)
 {
-	if (!nextpatch)
-		return;
+	if (!nextpatch) return;
 
 	//Create racing line scenenode
 	keyed_container <DRAWABLE>::handle drawhandle = node.GetDrawlist().normal_blend.insert(DRAWABLE());

@@ -2,17 +2,19 @@
 #define _PARTICLE_H
 
 #include "mathvector.h"
-//#include "reseatable_reference.h"
 #include "optional.h"
 #include "scenenode.h"
 #include "vertexarray.h"
-#include "texturemanager.h"
 
 #include <ostream>
 #include <vector>
 #include <cmath>
 #include <algorithm>
 #include <map>
+
+template <class T, class Tinfo> class MANAGER;
+class TEXTURE;
+class TEXTUREINFO;
 
 class PARTICLE_SYSTEM
 {
@@ -54,10 +56,22 @@ private:
 		}
 
 	public:
-		PARTICLE(SCENENODE & parentnode, const VEC & new_start_position, const VEC & new_dir,
-			 float newspeed, float newtrans, float newlong, float newsize, TEXTUREPTR texture)
-			: transparency(newtrans), longevity(newlong), start_position(new_start_position),
-			  speed(newspeed), direction(new_dir), size(newsize), time(0)
+		PARTICLE(
+			SCENENODE & parentnode,
+			const VEC & new_start_position,
+			const VEC & new_dir,
+			float newspeed,
+			float newtrans,
+			float newlong,
+			float newsize,
+			std::tr1::shared_ptr<TEXTURE> texture) :
+			transparency(newtrans),
+			longevity(newlong),
+			start_position(new_start_position),
+			speed(newspeed),
+			direction(new_dir),
+			size(newsize),
+			time(0)
 		{
 			node = parentnode.AddNode();
 			SCENENODE & noderef = parentnode.GetNode(node);
@@ -92,7 +106,11 @@ private:
 			return x + sclamp*(y-x);
 		}
 		
-		void Update(SCENENODE & parent, float dt, const QUATERNION <float> & camdir_conjugate, const MATHVECTOR <float, 3> & campos)
+		void Update(
+			SCENENODE & parent,
+			float dt,
+			const QUATERNION <float> & camdir_conjugate,
+			const MATHVECTOR <float, 3> & campos)
 		{
 			time += dt;
 			
@@ -141,8 +159,8 @@ private:
 	};
 	
 	std::vector <PARTICLE> particles;
-	std::list <TEXTUREPTR> textures;
-	std::list <TEXTUREPTR>::iterator cur_texture;
+	std::list <std::tr1::shared_ptr<TEXTURE> > textures;
+	std::list <std::tr1::shared_ptr<TEXTURE> >::iterator cur_texture;
 	
 	std::pair <float,float> transparency_range;
 	std::pair <float,float> longevity_range;
@@ -153,8 +171,12 @@ private:
 	SCENENODE node;
 	
 public:
-	PARTICLE_SYSTEM() : transparency_range(0.5,1), longevity_range(5,14), speed_range(0.3,1),
-		size_range(0.5,1), direction(0,1,0)
+	PARTICLE_SYSTEM() :
+		transparency_range(0.5,1),
+		longevity_range(5,14),
+		speed_range(0.3,1),
+		size_range(0.5,1),
+		direction(0,1,0)
 	{
 		particles.reserve(128);
 		cur_texture = textures.end();
@@ -165,18 +187,35 @@ public:
 		const std::list <std::string> & texlist,
 		int anisotropy,
 		const std::string & texsize,
-		TEXTUREMANAGER * texturemanager,
+		MANAGER<TEXTURE, TEXTUREINFO> * texturemanager,
 		std::ostream & error_output);
 	
 	void Update(float dt, const QUATERNION <float> & camdir, const MATHVECTOR <float, 3> & campos);
 	
 	/// all of the parameters are from 0.0 to 1.0 and scale to the ranges set with SetParameters.  testonly should be kept false and is only used for unit testing.
-	void AddParticle(const MATHVECTOR <float,3> & position, float newspeed, float newtrans, float newlong, float newsize, bool testonly=false);
+	void AddParticle(
+		const MATHVECTOR <float,3> & position,
+		float newspeed,
+		float newtrans,
+		float newlong,
+		float newsize,
+		bool testonly=false);
+	
 	void Clear();
-	void SetParameters(float transmin, float transmax, float longmin, float longmax,
-		float speedmin, float speedmax, float sizemin, float sizemax,
+	
+	void SetParameters(
+		float transmin,
+		float transmax,
+		float longmin,
+		float longmax,
+		float speedmin,
+		float speedmax,
+		float sizemin,
+		float sizemax,
 		MATHVECTOR <float,3> newdir);
+	
 	unsigned int NumParticles() {return particles.size();}
+	
 	SCENENODE & GetNode() {return node;}
 };
 

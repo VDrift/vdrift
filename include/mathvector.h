@@ -1,6 +1,8 @@
 #ifndef _MATHVECTOR_H
 #define _MATHVECTOR_H
 
+#include "joeserialize.h"
+
 #include <vector>
 #include <iostream>
 #include <sstream>
@@ -9,8 +11,6 @@
 #include <cassert>
 #define _USE_MATH_DEFINES
 #include <cmath>
-
-#include "joeserialize.h"
 
 template <typename T, unsigned int dimension>
 class MATHVECTOR

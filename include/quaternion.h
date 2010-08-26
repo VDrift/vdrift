@@ -1,13 +1,13 @@
 #ifndef _QUATERNION_H
 #define _QUATERNION_H
 
+#include "mathvector.h"
+#include "joeserialize.h"
+
 #include <vector>
 #include <cassert>
 #include <cmath>
 #include <iostream>
-
-#include "mathvector.h"
-#include "joeserialize.h"
 
 template <typename T>
 class QUATERNION

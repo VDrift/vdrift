@@ -1,9 +1,10 @@
 #ifndef _CARCLUTCH_H
 #define _CARCLUTCH_H
 
-#include <iostream>
 #include "joeserialize.h"
 #include "macros.h"
+
+#include <iostream>
 
 template <typename T>
 class CARCLUTCH

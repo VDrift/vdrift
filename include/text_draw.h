@@ -1,12 +1,12 @@
 #ifndef _TEXT_DRAW_H
 #define _TEXT_DRAW_H
 
-#include <string>
-#include <cassert>
-
 #include "font.h"
 #include "scenenode.h"
 #include "vertexarray.h"
+
+#include <string>
+#include <cassert>
 
 class TEXT_DRAW
 {

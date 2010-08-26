@@ -134,7 +134,7 @@ void WIDGET_SPINNINGCAR::SetupDrawable(
 	float x,
 	float y,
 	const MATHVECTOR <float, 3> & newcarpos,
-	TEXTUREMANAGER & textures,
+	MANAGER<TEXTURE, TEXTUREINFO> & textures,
 	std::ostream & error_output,
 	int order)
 {

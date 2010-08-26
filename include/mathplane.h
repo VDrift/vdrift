@@ -1,14 +1,14 @@
 #ifndef _MATHPLANE_H
 #define _MATHPLANE_H
 
+#include "mathvector.h"
+
 #include <vector>
 #include <cassert>
 #include <cmath>
 #include <iostream>
 #include <cstring>
 #include <sstream>
-
-#include "mathvector.h"
 
 template <class T>
 class MATHPLANE

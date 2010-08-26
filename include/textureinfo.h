@@ -82,9 +82,14 @@ public:
 			size = small;
 	}
 	
+	bool operator < (const TEXTUREINFO & rhs) const
+	{
+		return GetName() < rhs.GetName();
+	}
+	
 	friend std::ostream & operator << (std::ostream &os, const TEXTUREINFO & t)
 	{
-		os << t.GetName();// << std::endl;
+		os << t.GetName();
 		return os;
 	}
 

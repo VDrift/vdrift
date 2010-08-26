@@ -13,7 +13,7 @@ DRAWABLE & GetDrawable(SCENENODE & node, keyed_container <DRAWABLE>::handle & dr
 bool HUD::Init(
 	const std::string & texturepath,
 	const std::string & texsize,
-	TEXTUREMANAGER & textures, 
+	MANAGER<TEXTURE, TEXTUREINFO> & textures, 
 	FONT & lcdfont,
 	FONT & sansfont,
 	float displaywidth,
@@ -27,14 +27,14 @@ bool HUD::Init(
     bartexinfo.SetMipMap(false);
     bartexinfo.SetRepeat(false, false);
     bartexinfo.SetSize(texsize);
-    TEXTUREPTR bartex = textures.Get(bartexinfo);
+    std::tr1::shared_ptr<TEXTURE> bartex = textures.Get(bartexinfo);
     if (!bartex->Loaded()) return false;
 
     TEXTUREINFO progbartexinfo(texturepath+"/progressbar.png");
     progbartexinfo.SetMipMap(false);
     progbartexinfo.SetRepeat(false, false);
     progbartexinfo.SetSize(texsize);
-    TEXTUREPTR progbartex = textures.Get(progbartexinfo);
+    std::tr1::shared_ptr<TEXTURE> progbartex = textures.Get(progbartexinfo);
     if (!progbartex->Loaded()) return false;
 
     rpmbar = AddDrawable(hudroot);
@@ -90,7 +90,7 @@ bool HUD::Init(
         timerboxtexinfo.SetMipMap(false);
         timerboxtexinfo.SetRepeat(true, false);
         timerboxtexinfo.SetSize(texsize);
-        TEXTUREPTR timerboxtex = textures.Get(timerboxtexinfo);
+        std::tr1::shared_ptr<TEXTURE> timerboxtex = textures.Get(timerboxtexinfo);
         if (!timerboxtex->Loaded()) return false;
 
         float totalsizex = timerboxdimx*6.05;

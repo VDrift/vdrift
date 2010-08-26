@@ -1,6 +1,5 @@
 #include "model.h"
-
-#include <fstream>
+#include "opengl_utility.h"
 
 #ifdef __APPLE__
 #include <GLExtensionWrangler/glew.h>
@@ -8,7 +7,7 @@
 #include <GL/glew.h>
 #endif
 
-#include "opengl_utility.h"
+#include <fstream>
 
 void MODEL::GenerateListID(std::ostream & error_output)
 {

@@ -2,10 +2,9 @@
 
 #include "guioption.h"
 
-WIDGET_STRINGWHEEL::WIDGET_STRINGWHEEL()
-: option(NULL)
+WIDGET_STRINGWHEEL::WIDGET_STRINGWHEEL() : option(NULL)
 {
-
+	// ctor
 }
 
 WIDGET * WIDGET_STRINGWHEEL::clone() const
@@ -103,10 +102,10 @@ void WIDGET_STRINGWHEEL::SetSetting(const std::string & newsetting)
 void WIDGET_STRINGWHEEL::SetupDrawable(
 	SCENENODE & scene,
 	const std::string & newtitle,
-	TEXTUREPTR teximage_left_up,
-	TEXTUREPTR teximage_left_down, 
-	TEXTUREPTR teximage_right_up,
-	TEXTUREPTR teximage_right_down,
+	std::tr1::shared_ptr<TEXTURE> teximage_left_up,
+	std::tr1::shared_ptr<TEXTURE> teximage_left_down, 
+	std::tr1::shared_ptr<TEXTURE> teximage_right_up,
+	std::tr1::shared_ptr<TEXTURE> teximage_right_down,
 	FONT * font,
 	float scalex,
 	float scaley,

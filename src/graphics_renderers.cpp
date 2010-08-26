@@ -1,15 +1,5 @@
 #include "graphics_renderers.h"
 
-#ifdef __APPLE__
-#include <GLExtensionWrangler/glew.h>
-#include <OpenGL/gl.h>
-#include <OpenGL/glu.h>
-#else
-#include <GL/glew.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
-#endif
-
 #include "opengl_utility.h"
 #include "matrix4.h"
 #include "mathvector.h"
@@ -20,6 +10,16 @@
 #include "definitions.h"
 #include "containeralgorithm.h"
 #include "drawable.h"
+
+#ifdef __APPLE__
+#include <GLExtensionWrangler/glew.h>
+#include <OpenGL/gl.h>
+#include <OpenGL/glu.h>
+#else
+#include <GL/glew.h>
+#include <GL/gl.h>
+#include <GL/glu.h>
+#endif
 
 #include <cassert>
 

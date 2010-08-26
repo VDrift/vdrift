@@ -1,12 +1,6 @@
 #ifndef _GRAPHICS_RENDERERS_H
 #define _GRAPHICS_RENDERERS_H
 
-#include <string>
-#include <ostream>
-#include <map>
-#include <list>
-#include <vector>
-
 #include "shader.h"
 #include "mathvector.h"
 #include "quaternion.h"
@@ -19,6 +13,12 @@
 #include "frustum.h"
 
 #include <SDL/SDL.h>
+
+#include <string>
+#include <ostream>
+#include <map>
+#include <list>
+#include <vector>
 
 class SCENENODE;
 class DRAWABLE;

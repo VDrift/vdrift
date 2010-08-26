@@ -23,7 +23,7 @@ private:
 	std::ostream * errptr;
 	SPRITE2D s1;
 	bool wasvisible;
-	TEXTUREMANAGER * textures;
+	MANAGER<TEXTURE, TEXTUREINFO> * textures;
 	
 public:
 	WIDGET_MULTIIMAGE() : errptr(NULL), wasvisible(false), textures(NULL) {}
@@ -33,7 +33,7 @@ public:
 	void SetupDrawable(
 		SCENENODE & scene,
 		const std::string & texturesize,
-		TEXTUREMANAGER & textures,
+		MANAGER<TEXTURE, TEXTUREINFO> & textures,
 		const std::string & datapath,
 		const std::string & newprefix,
 		const std::string & newpostfix, 

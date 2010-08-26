@@ -1,4 +1,6 @@
 #include "model_joe03.h"
+#include "mathvector.h"
+#include "endian_utility.h"
 
 #include <string>
 using std::string;
@@ -14,10 +16,6 @@ using std::ostream;
 
 #include <vector>
 using std::vector;
-
-#include <mathvector.h>
-
-#include "endian_utility.h"
 
 int MODEL_JOE03::BinaryRead ( void * buffer, unsigned int size, unsigned int count, FILE * f, JOEPACK * pack )
 {

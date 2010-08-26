@@ -37,7 +37,7 @@ void PATHMANAGER::Init(std::ostream & info_output, std::ostream & error_output)
 	}
 	#endif
 	home_directory += homedir;
-	
+
 	//find data dir
 	char *datadir = getenv ( "VDRIFT_DATA_DIRECTORY" );
 	if (datadir == NULL) {
@@ -53,7 +53,7 @@ void PATHMANAGER::Init(std::ostream & info_output, std::ostream & error_output)
 	} else {
 		data_directory = (string) datadir;
 	}
-	
+
 	//find settings file
 	settings_path = home_directory;
 	#ifndef _WIN32
@@ -73,11 +73,11 @@ void PATHMANAGER::Init(std::ostream & info_output, std::ostream & error_output)
 	}
 	#endif
 	#endif
-	
+
 	MakeDir(GetTrackRecordsPath());
 	MakeDir(GetReplayPath());
 	MakeDir(GetScreenshotPath());
-	
+
 	//print diagnostic info
 	info_output << "Home directory: " << home_directory << endl;
 	bool settings_file_present = FileExists(GetSettingsFile());
@@ -128,7 +128,7 @@ bool PATHMANAGER::GetFolderIndex(string folderpath, list <string> & outputfolder
 	// Get the first file
 	hList = FindFirstFile(szDir, &FileData);
 	if (hList == INVALID_HANDLE_VALUE)
-	{ 
+	{
 		//no files found.  that's OK
 	}
 	else
@@ -150,7 +150,7 @@ bool PATHMANAGER::GetFolderIndex(string folderpath, list <string> & outputfolder
 
 	FindClose(hList);
 #endif //------End WIN32 specific folder listing code
-	
+
 	//remove non-matcthing extensions
 	if (!extension.empty())
 	{
@@ -160,11 +160,11 @@ bool PATHMANAGER::GetFolderIndex(string folderpath, list <string> & outputfolder
 			if (i->find(extension) != i->length()-extension.length())
 				todel.push_back(i);
 		}
-		
+
 		for (list <list <string>::iterator>::iterator i = todel.begin(); i != todel.end(); ++i)
 			outputfolderlist.erase(*i);
 	}
-	
+
 	outputfolderlist.sort();
 	return true;
 }

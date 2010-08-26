@@ -1,12 +1,6 @@
 #ifndef _GRAPHICS_H
 #define _GRAPHICS_H
 
-#include <string>
-#include <ostream>
-#include <map>
-#include <list>
-#include <vector>
-
 #include "shader.h"
 #include "mathvector.h"
 #include "fbtexture.h"
@@ -22,6 +16,12 @@
 #include "graphics_config.h"
 
 #include <SDL/SDL.h>
+
+#include <string>
+#include <ostream>
+#include <map>
+#include <list>
+#include <vector>
 
 class SCENENODE;
 

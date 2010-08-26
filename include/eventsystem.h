@@ -1,8 +1,10 @@
 #ifndef _EVENTSYSTEM_H
 #define _EVENTSYSTEM_H
 
-#include <SDL/SDL.h>
 #include "toggle.h"
+
+#include <SDL/SDL.h>
+
 #include <vector>
 #include <map>
 #include <list>

@@ -1,23 +1,23 @@
 #ifndef _SPRITE2D_H
 #define _SPRITE2D_H
 
+#include "scenenode.h"
+#include "vertexarray.h"
+#include "manager.h"
+#include "texture.h"
+
 #include <string>
 #include <cassert>
 #include <iostream>
-
-#include "scenenode.h"
-#include "vertexarray.h"
-#include "texturemanager.h"
 
 ///a higher level class that takes care of using the TEXTURE, DRAWABLE, and VERTEXARRAY objects to create a 2D sprite
 class SPRITE2D
 {
 private:
 	VERTEXARRAY varray;
-	TEXTURE texture;
 	keyed_container <DRAWABLE>::handle draw;
 	keyed_container <SCENENODE>::handle node;
-	float r,g,b,a;
+	float r, g, b, a;
 	
 	DRAWABLE & GetDrawableFromParent(SCENENODE & parent)
 	{
@@ -40,12 +40,18 @@ private:
 	}
 
 public:
-	SPRITE2D() : r(1),g(1),b(1),a(1) {}
+	SPRITE2D() : 
+		r(1), g(1), b(1), a(1)
+	{
+		// ctor
+	}
 
 	DRAWABLE & GetDrawable(SCENENODE & parent) {return GetDrawableFromParent(parent);}
+	
 	SCENENODE & GetNode(SCENENODE & parent) {return parent.GetNode(node);}
+	
 	const SCENENODE & GetNode(const SCENENODE & parent) const {return parent.GetNode(node);}
-
+/*
 	float GetW() const
 	{
 	    return texture.GetW();
@@ -65,56 +71,22 @@ public:
 	{
 	    return texture.GetOriginalH();
 	}
+*/
+	void Unload(SCENENODE & parent);
 
-	void Unload(SCENENODE & parent)
-	{
-		if (node.valid())
-		{
-			SCENENODE & noderef = GetNode(parent);
-			noderef.GetDrawlist().twodim.erase(draw);
-			parent.Delete(node);
-		}
-		node.invalidate();
-		draw.invalidate();
+	bool Load(
+		SCENENODE & parent,
+		const std::string & texturefile,
+		const std::string & texturesize,
+		MANAGER<TEXTURE, TEXTUREINFO> & textures,
+		float draworder,
+		std::ostream & error_output);
 
-		if (texture.Loaded())
-			texture.Unload();
-
-		varray.Clear();
-	}
-
-	bool Load(SCENENODE & parent, const std::string & texturefile, const std::string & texturesize, TEXTUREMANAGER & textures,
-		  float draworder, std::ostream & error_output)
-	{
-		Unload(parent);
-
-		assert(!draw.valid());
-		assert(!node.valid());
-
-		TEXTUREINFO texinfo(texturefile);
-		texinfo.SetMipMap(false);
-		texinfo.SetRepeat(false, false);
-		texinfo.SetAllowNonPowerOfTwo(false);
-		texinfo.SetSize(texturesize);
-		TEXTUREPTR texture = textures.Get(texinfo); 
-		if (!texture->Loaded())
-			return false;
-
-		node = parent.AddNode();
-		SCENENODE & noderef = parent.GetNode(node);
-		draw = noderef.GetDrawlist().twodim.insert(DRAWABLE());
-		DRAWABLE & drawref = GetDrawableFromNode(noderef);
-
-		drawref.SetDiffuseMap(texture);
-		drawref.SetVertArray(&varray);
-		drawref.SetDrawOrder(draworder);
-		drawref.SetCull(false, false);
-		drawref.SetColor(r,g,b,a);
-
-		//std::cout << "Sprite draworder: " << draworder << std::endl;
-
-		return true;
-	}
+	bool Load(
+		SCENENODE & parent,
+		std::tr1::shared_ptr<TEXTURE> texture2d,
+		float draworder,
+		std::ostream & error_output);
 
 	///get the transformation data associated with this sprite's scenenode.
 	///this can be used to get the current translation and rotation or set new ones.
@@ -127,28 +99,6 @@ public:
 	{
 		const SCENENODE & noderef = GetNode(parent);
 		return noderef.GetTransform();
-	}
-
-	///use the provided texture
-	bool Load(SCENENODE & parent, TEXTUREPTR texture2d, float draworder, std::ostream & error_output)
-	{
-		Unload(parent);
-
-		assert(!draw.valid());
-		assert(!node.valid());
-
-		node = parent.AddNode();
-		SCENENODE & noderef = parent.GetNode(node);
-		draw = noderef.GetDrawlist().twodim.insert(DRAWABLE());
-		DRAWABLE & drawref = GetDrawableFromNode(noderef);
-
-		drawref.SetDiffuseMap(texture2d);
-		drawref.SetVertArray(&varray);
-		drawref.SetDrawOrder(draworder);
-		drawref.SetCull(false, false);
-		drawref.SetColor(r,g,b,a);
-		
-		return true;
 	}
 
 	void SetAlpha(SCENENODE & parent, float na)

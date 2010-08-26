@@ -1,11 +1,11 @@
 #ifndef _HTTPGET_H
 #define _HTTPGET_H
 
-#include <ostream>
-#include <string>
-
 #include <asio.hpp>
 #include <boost/bind.hpp>
+
+#include <ostream>
+#include <string>
 
 namespace httpget
 {

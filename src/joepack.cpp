@@ -1,4 +1,6 @@
 #include "joepack.h"
+#include "endian_utility.h"
+#include "unittest.h"
 
 #include <string>
 using std::string;
@@ -10,10 +12,6 @@ using std::map;
 using std::ios_base;
 
 #include <cassert>
-
-#include "endian_utility.h"
-
-#include "unittest.h"
 
 bool JOEPACK::LoadPack(const string & fn)
 {

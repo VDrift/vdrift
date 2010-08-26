@@ -1,10 +1,10 @@
 #ifndef SOUNDBUFFER_H
 #define SOUNDBUFFER_H
 
+#include "soundinfo.h"
+
 #include <string>
 #include <ostream>
-
-#include "soundinfo.h"
 
 class SOUNDBUFFER
 {

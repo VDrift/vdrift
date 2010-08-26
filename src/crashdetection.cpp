@@ -1,6 +1,6 @@
 #include "crashdetection.h"
 
-#include "assert.h"
+#include <cassert>
 
 CRASHDETECTION::CRASHDETECTION()
 : lastvel(0), 

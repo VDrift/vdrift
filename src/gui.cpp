@@ -1,5 +1,4 @@
 #include "gui.h"
-
 #include "configfile.h"
 
 #include <map>

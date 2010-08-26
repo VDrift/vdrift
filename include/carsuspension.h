@@ -1,13 +1,13 @@
 #ifndef _CARSUSPENSION_H
 #define _CARSUSPENSION_H
 
-#include <iostream>
-
 #include "mathvector.h"
 #include "quaternion.h"
 #include "linearinterp.h"
 #include "joeserialize.h"
 #include "macros.h"
+
+#include <iostream>
 
 template <typename T>
 struct CARSUSPENSIONINFO

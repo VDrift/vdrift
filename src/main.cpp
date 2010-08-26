@@ -1,17 +1,4 @@
 #include "game.h"
-
-#include <list>
-using std::list;
-
-#include <string>
-using std::string;
-
-#include <iostream>
-using std::endl;
-
-#include <fstream>
-#include <sstream>
-
 #include "logging.h"
 #include "pathmanager.h"
 
@@ -24,6 +11,18 @@ void release_mouse(int a)
 	SDL_WM_GrabInput(SDL_GRAB_OFF);
 }
 #endif
+
+#include <list>
+using std::list;
+
+#include <string>
+using std::string;
+
+#include <iostream>
+using std::endl;
+
+#include <fstream>
+#include <sstream>
 
 int main (int argc, char * argv[])
 {
