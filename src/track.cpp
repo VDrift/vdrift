@@ -1,5 +1,4 @@
 #include "track.h"
-
 #include "configfile.h"
 #include "reseatable_reference.h"
 #include "tracksurface.h"
@@ -16,16 +15,16 @@
 #include <fstream>
 #include <sstream>
 
-TRACK::TRACK(std::ostream & info, std::ostream & error) 
-: info_output(info),
-  error_output(error),
-  texture_size("large"),
-  vertical_tracking_skyboxes(false),
-  racingline_visible(false),
-  loaded(false),
-  cull(false)
+TRACK::TRACK(std::ostream & info, std::ostream & error) :
+	info_output(info),
+	error_output(error),
+	texture_size("large"),
+	vertical_tracking_skyboxes(false),
+	racingline_visible(false),
+	loaded(false),
+	cull(false)
 {
-
+	// ctor
 }
 
 TRACK::~TRACK()
@@ -273,6 +272,50 @@ bool TRACK::CreateRacingLines(
 	return true;
 }
 
+bool LoadOrientation(
+	const CONFIGFILE & param,
+	const int sp_num,
+	QUATERNION <float> & orient,
+	std::ostream & error_output)
+{
+	float angle[3];
+	std::stringstream sp_name;
+	sp_name << "start orientation " << sp_num;
+	if (!param.GetParam(sp_name.str(), angle))
+	{
+		//error_output << "No matching orientation for start position " << sp_num << std::endl;
+		return false;
+	}
+	orient.SetEulerZYX(angle[0] * M_PI/180, angle[1] * M_PI/180, angle[2] * M_PI/180);
+	return true;
+}
+
+bool LoadOrientationOld(
+	const CONFIGFILE & param,
+	const int sp_num,
+	QUATERNION <float> & orient,
+	std::ostream & error_output)
+{
+	float f3[3];
+	float f1;
+	std::stringstream sp_name;
+	sp_name << "start orientation-xyz " << sp_num;
+	if (!param.GetParam(sp_name.str(), f3))
+	{
+		error_output << "No matching orientation xyz for start position " << sp_num << std::endl;
+		return false;
+	}
+	sp_name.str("");
+	sp_name << "start orientation-w " << sp_num;
+	if (!param.GetParam(sp_name.str(), f1))
+	{
+		error_output << "No matching orientation w for start position " << sp_num << std::endl;
+		return false;
+	}
+	orient = QUATERNION <float> (f3[0], f3[1], f3[2], f1);
+	return true;
+}
+
 bool TRACK::LoadParameters(const std::string & trackpath)
 {
 	std::string parampath = trackpath + "/track.txt";
@@ -290,28 +333,24 @@ bool TRACK::LoadParameters(const std::string & trackpath)
 	std::stringstream sp_name;
 	sp_name << "start position " << sp_num;
 	float f3[3];
-	float f1;
 	while (param.GetParam(sp_name.str(), f3))
 	{
 		MATHVECTOR <float, 3> pos(f3[2], f3[0], f3[1]);
-
-		sp_name.str("");
-		sp_name << "start orientation-xyz " << sp_num;
-		if (!param.GetParam(sp_name.str(), f3))
+		
+		QUATERNION <float> q;
+		if(!LoadOrientation(param, sp_num, q, error_output))
 		{
-			error_output << "No matching orientation xyz for start position " << sp_num << std::endl;
-			return false;
+			if(!LoadOrientationOld(param, sp_num, q, error_output))
+			{
+				return false;
+			}
 		}
-		sp_name.str("");
-		sp_name << "start orientation-w " << sp_num;
-		if (!param.GetParam(sp_name.str(), f1))
-		{
-			error_output << "No matching orientation w for start position " << sp_num << std::endl;
-			return false;
-		}
-
-		QUATERNION <float> orient(f3[2], f3[0], f3[1], f1);
-		//QUATERNION <float> orient(f3[0], f3[1], f3[2], f1);
+		
+		//float angle[3];
+		//q.GetEulerZYX(angle[0], angle[1], angle[2]);
+		//q.SetEulerZYX(angle[0], angle[1], angle[2]);
+		
+		QUATERNION <float> orient(q[2], q[0], q[1], q[3]);
 
 		//due to historical reasons the initial orientation places the car faces the wrong way
 		QUATERNION <float> fixer; 
