@@ -19,7 +19,11 @@ private:
 public:
 	typedef size_t size_type;
 	
-	QUATERNION() {LoadIdentity();}
+	QUATERNION()
+	{
+		LoadIdentity();
+	}
+	
 	QUATERNION(const T & nx, const T & ny, const T & nz, const T & nw)
 	{
 		v[0] = nx;
@@ -27,6 +31,13 @@ public:
 		v[2] = nz;
 		v[3] = nw;
 	}
+	
+	///create quaternion from Euler angles ZYX convention
+	QUATERNION(const T & x, const T & y, const T & z)
+	{
+		SetEulerZYX(x, y, z);
+	}
+	
 	QUATERNION(const QUATERNION <T> & other)
 	{
 		*this = other;
@@ -254,6 +265,28 @@ public:
 		v[1] = ay * sina2;
 		v[2] = az * sina2;
 	}
+	
+	///set the quaternion using Euler angles
+	void SetEulerZYX(const T & x, const T & y, const T & z)
+	{
+		T cosx2 = cos(x/2);
+		T cosy2 = cos(y/2);
+		T cosz2 = cos(z/2);
+		T sinx2 = sin(x/2);
+		T siny2 = sin(y/2);
+		T sinz2 = sin(z/2);
+		v[0] = sinx2 * cosy2 * cosz2 - cosx2 * siny2 * sinz2;
+		v[1] = cosx2 * siny2 * cosz2 + sinx2 * cosy2 * sinz2;
+		v[2] = cosx2 * cosy2 * sinz2 - sinx2 * siny2 * cosz2;
+		v[3] = cosx2 * cosy2 * cosz2 + sinx2 * siny2 * sinz2;
+	}
+	
+	void GetEulerZYX(T & x, T & y, T & z)
+	{
+		x = atan2(2 * (v[1] * v[2] + v[0] * v[3]), -v[0] * v[0] - v[1] * v[1] + v[2] * v[2] + v[3] * v[3]);
+		y = asin(-2 * (v[0] * v[2] - v[1] * v[3]));
+		z = atan2(2 * (v[0] * v[1] + v[2] * v[3]),  v[0] * v[0] - v[1] * v[1] - v[2] * v[2] + v[3] * v[3]);
+	} 
 	
 	///rotate a vector (accessible with []) by this quaternion
 	/// note that the output is saved back to the input vec variable
