@@ -7,7 +7,7 @@
 #include <signal.h>
 void release_mouse(int a)
 {
-	std::cout << "SIGABRT detected, releasing the mouse" << endl;
+	std::cout << "SIGABRT detected, releasing the mouse" << std::endl;
 	SDL_WM_GrabInput(SDL_GRAB_OFF);
 }
 #endif
