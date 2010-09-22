@@ -141,7 +141,7 @@ public:
 	typedef DRAWABLE_CONTAINER <PTRVECTOR> dynamicdrawlist_type;
 	
 	///reflection_type is 0 (low=OFF), 1 (medium=static), 2 (high=dynamic)
-	void Init(const std::string shaderpath, const std::string & windowcaption,
+	void Init(const std::string & shaderpath, const std::string & windowcaption,
 				unsigned int resx, unsigned int resy, unsigned int bpp,
 				unsigned int depthbpp, bool fullscreen, bool shaders,
 				unsigned int antialiasing, bool enableshadows,

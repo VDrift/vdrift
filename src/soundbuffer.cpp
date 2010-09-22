@@ -281,9 +281,6 @@ bool SOUNDBUFFER::Load(const std::string & filename, const SOUNDINFO & device_in
 
 void SOUNDBUFFER::Unload()
 {
-	if (sound_buffer != NULL)
-	{
-		delete [] sound_buffer;
-		sound_buffer = NULL;
-	}
+	delete[] sound_buffer;
+	sound_buffer = NULL;
 }

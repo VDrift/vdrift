@@ -35,8 +35,8 @@ class TEST_VERTEX
 		TEST_VERTEX() : x(0), y(0), z(0) {}
 		TEST_VERTEX(float nx, float ny, float nz) : x(nx),y(ny),z(nz) {}
 		float x,y,z;
-		bool operator==(const TEST_VERTEX & other) {return (memcmp(this,&other,sizeof(TEST_VERTEX)) == 0);}
-		bool operator!=(const TEST_VERTEX & other) {return !operator==(other);}
+		bool operator==(const TEST_VERTEX & other) const {return (memcmp(this,&other,sizeof(TEST_VERTEX)) == 0);}
+		bool operator!=(const TEST_VERTEX & other) const {return !operator==(other);}
 
 		bool Serialize(joeserialize::Serializer & s)
 		{

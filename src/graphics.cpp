@@ -77,7 +77,7 @@ void ReportOnce(const void * id, const std::string & message, std::ostream & out
 	}
 }
 
-void GRAPHICS_SDLGL::Init(const std::string shaderpath, const std::string & windowcaption,
+void GRAPHICS_SDLGL::Init(const std::string & shaderpath, const std::string & windowcaption,
 	unsigned int resx, unsigned int resy, unsigned int bpp,
 	unsigned int depthbpp, bool fullscreen, bool shaders,
 	unsigned int antialiasing, bool enableshadows, int new_shadow_distance,

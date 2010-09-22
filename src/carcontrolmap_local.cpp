@@ -129,12 +129,12 @@ void CARCONTROLMAP_LOCAL::Load(const std::string & controlfile, std::ostream & i
 					
 					std::string mouse_type = "";
 					std::string mouse_direction = "";
-					int mouse_btn = 0;
-					bool mouse_btn_down = false;
-					bool mouse_btn_once = false;
 					controls_config.GetParam( *section + ".mouse_type", mouse_type );
 					if (mouse_type == "button")
 					{
+						int mouse_btn = 0;
+						bool mouse_btn_down = false;
+						bool mouse_btn_once = false;
 						newctrl.mousetype = CONTROL::MOUSEBUTTON;
 						controls_config.GetParam( *section + ".mouse_button", mouse_btn );
 						controls_config.GetParam( *section + ".down", mouse_btn_down );
@@ -584,15 +584,14 @@ void CARCONTROLMAP_LOCAL::ProcessSteering(const std::string & joytype, float ste
 	//do speed sensitivity
 	if( speedsens != 0.0 )
 	{
-		float ratio = 20.0f;
 		float coeff = 1.0;
-		float ssco = speedsens*(1.0f-pow(val,2.0f));
-		
 		if (carmph > 1)
+		{
+			float ratio = 20.0f;
+			float ssco = speedsens*(1.0f-pow(val,2.0f));
 			coeff = ratio*45.0f*(1.0f-atan(carmph*80.0f*ssco)*0.6366198);
-
-		if (coeff > 1.0f)
-			coeff = 1.0f;
+		}
+		if (coeff > 1.0f) coeff = 1.0f;
 		
 		//std::cout << "Speed sensitivity coefficient: " << coeff << std::endl;
 		

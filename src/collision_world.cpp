@@ -262,18 +262,16 @@ void COLLISION_WORLD::DebugPrint(std::ostream & out) const
 
 void COLLISION_WORLD::Clear()
 {
-	track = NULL;
-	if(trackObject)
+	if (trackObject)
 	{
 		delete trackObject->getCollisionShape();
-		trackObject = NULL;
 	}
-	if(trackMesh)
-	{
-		delete trackMesh;
-		trackMesh = NULL;
-	}
+	delete trackMesh;
 	trackSurface.resize(0);
+	
+	track = NULL;
+	trackObject = NULL;
+	trackMesh = NULL;
 
 	// remove constraint before deleting rigid body
 	for(int i = 0; i < constraints.size(); i++)

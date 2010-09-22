@@ -113,8 +113,7 @@ SOUNDFILTER & SOUNDSOURCE::GetFilter(int num)
 	//cerr << __FILE__ << "," << __LINE__ << "Asked for a non-existant filter" << endl;
 	//UNRECOVERABLE_ERROR_FUNCTION(__FILE__,__LINE__,"Asked for a non-existant filter");
 	assert(0);
-	SOUNDFILTER * nullfilt = NULL;
-	return *nullfilt;
+	return *filters.begin();
 }
 
 /*
@@ -303,8 +302,6 @@ void SOUNDSOURCE::SampleAndAdvanceWithPitch16bit(int * chan1, int * chan2, int l
 	float n_remain = sample_pos_remainder; //the fractional portion of the current playback position for this soundsource
 	int n = sample_pos; //the integer portion of the current playback position for this soundsource PER CHANNEL (i.e., this will range from 0 to samples/2)
 
-	float samplecount = 0; //floating point record of how far the playback position has increased during this callback
-
 	const int chan = buffer->info.channels;
 
 	samples -= samples % chan; //correct the number of samples in odd situations where we have stereo channels but an odd number of channels
@@ -332,7 +329,9 @@ void SOUNDSOURCE::SampleAndAdvanceWithPitch16bit(int * chan1, int * chan2, int l
 		const int chaninc = chan - 1; //the offset to use when fetching the second channel from the sound input buffer (yes, this will be zero for a mono sound buffer)
 
 		float gaindiff1(0), gaindiff2(0);//, pitchdiff(0); //allocate memory here so we don't have to in the loop
-
+		
+		float samplecount = 0; //floating point record of how far the playback position has increased during this callback
+		
 		for (int i = 0; i  < len; ++i)
 		{
 			//do gain change rate limiting

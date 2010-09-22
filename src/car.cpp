@@ -1104,10 +1104,9 @@ void CAR::HandleInputs(const std::vector <float> & inputs, float dt)
 	{
 		if (inputs[CARINPUT::BRAKE] > 0 && !brakesound_check)
 		{
-			float gain = 0.1;
-
 			if (!brakesound.Audible())
 			{
+				float gain = 0.1;
 				brakesound.SetGain(gain);
 				brakesound.Stop();
 				brakesound.Play();
@@ -1122,10 +1121,9 @@ void CAR::HandleInputs(const std::vector <float> & inputs, float dt)
 	{
 		if (inputs[CARINPUT::HANDBRAKE] > 0 && !handbrakesound_check)
 		{
-			float gain = 0.1;
-
 			if (!handbrakesound.Audible())
 			{
+				float gain = 0.1;
 				handbrakesound.SetGain(gain);
 				handbrakesound.Stop();
 				handbrakesound.Play();

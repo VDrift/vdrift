@@ -14,8 +14,6 @@ public:
 	
 	bool operator<(const CONFIGVARIABLE & other);
 	
-	CONFIGVARIABLE & CopyFrom(const CONFIGVARIABLE & other);
-	
 	const std::string GetFullName() const;
 	
 	void Set(std::string newval);

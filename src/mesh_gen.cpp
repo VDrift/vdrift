@@ -1508,11 +1508,10 @@ void mg_brake_rotor(VERTEXARRAY *rotor, float diameter_mm, float thickness_mm)
 
 
 	// free up the temp data
-	delete vertexData;
-	delete triData;
-	delete texData;
-	delete normalData;
-
+	delete[] vertexData;
+	delete[] triData;
+	delete[] texData;
+	delete[] normalData;
 }
 
 

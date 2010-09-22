@@ -71,7 +71,7 @@ private:
 	
 	void UpdateText(SCENENODE & scene);
 	
-	void SendMessage(SCENENODE & scene, const std::string message) const;
+	void SendMessage(SCENENODE & scene, const std::string & message) const;
 };
 
 #endif

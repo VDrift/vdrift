@@ -9,29 +9,17 @@ CONFIGVARIABLE::CONFIGVARIABLE()
 	val_i = 0;
 	val_f = 0;
 	val_b = false;
-	int i;
-	for (i = 0; i < 3; i++)
-		val_v[i] = 0;
+	for (int i = 0; i < 3; ++i) val_v[i] = 0;
 	
 	next = NULL;
 }
 
 CONFIGVARIABLE::CONFIGVARIABLE(const CONFIGVARIABLE & other)
 {
-	CopyFrom(other);
+	*this = other;
 }
 
 CONFIGVARIABLE & CONFIGVARIABLE::operator=(const CONFIGVARIABLE & other)
-{
-	return CopyFrom(other);
-}
-
-bool CONFIGVARIABLE::operator<(const CONFIGVARIABLE & other)
-{
-	return (section + "." + name < other.section + "." + other.name);
-}
-
-CONFIGVARIABLE & CONFIGVARIABLE::CopyFrom(const CONFIGVARIABLE & other)
 {
 	section = other.section;
 	name = other.name;
@@ -40,11 +28,17 @@ CONFIGVARIABLE & CONFIGVARIABLE::CopyFrom(const CONFIGVARIABLE & other)
 	val_f = other.val_f;
 	val_b = other.val_b;
 	
-	for (int i = 0; i < 3; i++)
-		val_v[i] = other.val_v[i];
+	for (int i = 0; i < 3; ++i) val_v[i] = other.val_v[i];
 	
 	return *this;
 }
+
+bool CONFIGVARIABLE::operator<(const CONFIGVARIABLE & other)
+{
+	return (section + "." + name < other.section + "." + other.name);
+}
+
+
 
 const std::string CONFIGVARIABLE::GetFullName() const
 {

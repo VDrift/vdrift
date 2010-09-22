@@ -178,7 +178,7 @@ void WIDGET_SLIDER::UpdateText(SCENENODE & scene)
 	text.SetPosition(newx, newy);
 }
 
-void WIDGET_SLIDER::SendMessage(SCENENODE & scene, const std::string message) const
+void WIDGET_SLIDER::SendMessage(SCENENODE & scene, const std::string & message) const
 {
 	for (std::list <WIDGET *>::const_iterator n = hooks.begin(); n != hooks.end(); n++)
 	{
