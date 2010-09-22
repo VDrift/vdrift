@@ -30,8 +30,7 @@ friend class WIDGET_SPINNINGCAR;
 public:
 	CAR();
 	
-	/// world is an optional parameter, if NULL it will load the car's appearance but not the physics
-	bool Load(
+	bool LoadGraphics(
 		CONFIGFILE & carconf,
 		const std::string & carpath,
 		const std::string & driverpath,
@@ -39,19 +38,31 @@ public:
 		MANAGER<TEXTURE, TEXTUREINFO> & textures,
 		const std::string & carpaint,
 		const MATHVECTOR <float, 3> & carcolor,
-		const MATHVECTOR <float, 3> & initial_position,
-		const QUATERNION <float> & initial_orientation,
-		COLLISION_WORLD * world,
-		bool soundenabled,
-		const SOUNDINFO & sound_device_info,
-		const SOUNDBUFFERLIBRARY & soundbufferlibrary,
 		int anisotropy,
-		bool defaultabs,
-		bool defaulttcs,
 		const std::string & texsize,
 		float camerabounce,
 		bool debugmode,
 		const std::string & sharedpartspath,
+		std::ostream & info_output,
+		std::ostream & error_output);
+	
+	bool LoadSounds(
+		const std::string & carpath,
+		const std::string & carname,
+		const SOUNDINFO & sound_device_info,
+		const SOUNDBUFFERLIBRARY & soundbufferlibrary,
+		std::ostream & info_output,
+		std::ostream & error_output);
+	
+	// has to be called after LoadGraphics atm, fixme
+	bool LoadPhysics(
+		CONFIGFILE & carconf,
+		const std::string & sharedpartspath,
+		const MATHVECTOR <float, 3> & initial_position,
+		const QUATERNION <float> & initial_orientation,
+		COLLISION_WORLD & world,
+		bool defaultabs,
+		bool defaulttcs,
 		std::ostream & info_output,
 		std::ostream & error_output);
 	
@@ -360,8 +371,6 @@ protected:
 		const std::string & carpath,
 		const std::string & wheelname,
 		const std::string & partspath,
-		const CARTIRE<double> & tire,
-		const CARBRAKE<double> & brake,
 		SCENENODE & topnode,
 		keyed_container <SCENENODE>::handle & output_scenenode,
 		keyed_container <DRAWABLE>::handle & output_drawable,
@@ -378,14 +387,6 @@ protected:
 	void UpdateCameras(float dt);
 		
 	void CopyPhysicsResultsIntoDisplay();
-	
-	bool LoadSounds(
-		const std::string & carpath,
-		const std::string & carname,
-		const SOUNDINFO & sound_device_info,
-		const SOUNDBUFFERLIBRARY & soundbufferlibrary,
-		std::ostream & info_output,
-		std::ostream & error_output);
 	
 	enum WHICHDRAWLIST
 	{

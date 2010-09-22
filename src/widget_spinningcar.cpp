@@ -209,19 +209,10 @@ void WIDGET_SPINNINGCAR::Load(SCENENODE & parent)
 	
 	MATHVECTOR <float, 3> carcolor(r, g, b);
 	
-	MATHVECTOR <float, 3> cartrans = carpos;
-	cartrans[0] += center[0];
-	cartrans[1] += center[1];
-	
-	QUATERNION <float> carrot;
-	
-	if (!car.back().Load(
+	if (!car.back().LoadGraphics(
 		carconf, carpath, "", carname, 
 		*textures, carpaint, carcolor,
-		cartrans, carrot, NULL,
-		false, SOUNDINFO(),
-		SOUNDBUFFERLIBRARY(),
-		0, true, true, "large", 0,
+		0, "large", 0,
 		false, data + "/carparts", loadlog, loadlog))
 	{
 		*errptr << "Couldn't load spinning car: " << carname << std::endl;
@@ -240,6 +231,9 @@ void WIDGET_SPINNINGCAR::Load(SCENENODE & parent)
 	carnoderef.ApplyDrawableContainerFunctor(CAMTRANS_FUNCTOR());
 	carnoderef.ApplyDrawableFunctor(CAMTRANS_DRAWABLE_FUNCTOR());
 	
+	MATHVECTOR <float, 3> cartrans = carpos;
+	cartrans[0] += center[0];
+	cartrans[1] += center[1];
 	carnoderef.GetTransform().SetTranslation(cartrans);
 	
 	//set initial rotation

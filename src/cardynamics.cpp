@@ -327,36 +327,14 @@ bool LoadTire(
 	std::string tiresize;
 	std::string tiretype;
 	CONFIGFILE tc;
-	CARTIREINFO <T> info;
-	float section_width(0);
-	float aspect_ratio(0);
-	float rim_diameter(0);
+	CARTIREINFO<T> info;
 	
 	if (!c.GetParam(tirename+".size", tiresize, error_output)) return false;
 	if (!c.GetParam(tirename+".type", tiretype, error_output)) return false;
 	if (!tc.Load(sharedpartspath+"/tire/"+tiretype)) return false;
 	if (!LoadTireParameters(tc, info, error_output)) return false;
+	if (!info.Parse(tiresize, error_output)) return false;
 	
-	// tire dimensions
-	std::string modsize = tiresize;
-	for (unsigned int i = 0; i < modsize.length(); i++)
-	{
-		if (modsize[i] < '0' || modsize[i] > '9')
-			modsize[i] = ' ';
-	}
-	std::stringstream parser(modsize);
-	parser >> section_width >> aspect_ratio >> rim_diameter;
-	if (section_width <= 0 || aspect_ratio <= 0 || rim_diameter <= 0)
-	{
-		error_output << "Error parsing " << tirename
-					<< ".size, expected something like 225/50r16 but got: "
-					<< tiresize << std::endl;
-		return false;
-	}
-	
-	info.radius = section_width * 0.001 * aspect_ratio * 0.01 + rim_diameter * 0.0254 * 0.5;
-	info.sidewall_width = section_width * 0.001;
-	info.aspect_ratio = aspect_ratio * 0.01;
 	tire.Init(info);
 	
 	return true;

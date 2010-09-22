@@ -29,14 +29,15 @@ bool isnan(float number) {return (number != number);}
 bool isnan(double number) {return (number != number);}
 #endif
 
-CAR::CAR()
-:	gearsound_check(0),
+CAR::CAR() :
+	gearsound_check(0),
 	brakesound_check(false),
 	handbrakesound_check(false),
 	last_steer(0),
 	sector(-1),
 	applied_brakes(0)
 {
+	// ctor
 }
 
 bool CAR::GenerateWheelMesh(
@@ -44,8 +45,6 @@ bool CAR::GenerateWheelMesh(
 	const std::string & carpath,
 	const std::string & wheelname,
 	const std::string & partspath,
-	const CARTIRE<double> & tire,
-	const CARBRAKE<double> & brake,
 	SCENENODE & topnode,
 	keyed_container <SCENENODE>::handle & output_scenenode,
 	keyed_container <DRAWABLE>::handle & output_drawable,
@@ -64,26 +63,23 @@ bool CAR::GenerateWheelMesh(
 	output_drawable = GetDrawlist(node, NOBLEND).insert(DRAWABLE());
 	DRAWABLE & draw = GetDrawlist(node, NOBLEND).get(output_drawable);
 	
-	std::string tirename;
-	std::string brakename;
-	std::string rimname;
-	std::string tiretex;
-	std::string orient;
-
+	std::string tirename, brakename, rimname, tiretex, tiresize, orientation;
 	if (!carconf.GetParam(wheelname + ".tire", tirename, error_output)) return false;
 	if (!carconf.GetParam(wheelname + ".brake", brakename, error_output)) return false;
 	if (!carconf.GetParam(wheelname + ".model", rimname, error_output)) return false;
 	if (!carconf.GetParam(tirename + ".texture", tiretex, error_output)) return false;
-	carconf.GetParam(wheelname + ".orientation", orient, error_output);
+	if (!carconf.GetParam(tirename + ".size", tiresize, error_output)) return false;
+	carconf.GetParam(wheelname + ".orientation", orientation, error_output);
 	
 	// wheel/tire parameters
-	float aspectRatio = tire.GetAspectRatio() * 100.f;
-	float sectionWidth_mm = tire.GetSidewallWidth() * 1000.f;
-	float rim_diameter = (tire.GetRadius() - tire.GetSidewallWidth() * tire.GetAspectRatio()) * 2.f;
+	CARTIRESIZE<float> tire;
+	if (!tire.Parse(tiresize, error_output)) return false;
+	
+	float aspectRatio = tire.aspect_ratio * 100.f;
+	float sectionWidth_mm = tire.sidewall_width * 1000.f;
+	float rim_diameter = (tire.radius - tire.sidewall_width * tire.aspect_ratio) * 2.f;
 	float rimDiameter_in = rim_diameter / 0.0254f;
-	float rim_width = tire.GetSidewallWidth();
-	float orientation = 1;
-	if(!orient.empty() && orient != "left") orientation = -1;
+	float rim_width = tire.sidewall_width;
 	
 	// create tire
 	if(!output_tire_model.Loaded())
@@ -91,13 +87,13 @@ bool CAR::GenerateWheelMesh(
 		VERTEXARRAY output_varray;
 		MESHGEN::mg_tire(output_varray, sectionWidth_mm, aspectRatio, rimDiameter_in);
 		output_varray.Rotate(-M_PI_2, 0, 0, 1);
-		if (orientation < 0) output_varray.Scale(1, orientation, 1); // mirror mesh
+		if (orientation != "left") output_varray.Scale(1, -1, 1); // mirror mesh
 		output_tire_model.SetVertexArray(output_varray);
 		output_tire_model.GenerateMeshMetrics();
 		output_tire_model.GenerateListID(error_output);
 	}
 	draw.AddDrawList(output_tire_model.GetListID());
-
+	
 	// load tire textures
 	std::string tiretexname(partspath + "/tire/textures/" + tiretex);
 	if(!LoadTextures(textures, tiretexname, texsize, anisotropy, draw, error_output)) return false;
@@ -114,9 +110,9 @@ bool CAR::GenerateWheelMesh(
 	{
 		// load wheel mesh, scale and translate(wheel model offset rim_width/2)
 		if (!LoadModel(wheelmodelname, output_wheel_model, NULL, error_output)) return false;
+		output_wheel_model.Translate(0, 0.75 * 0.5, 0);
 		output_wheel_model.Scale(rim_diameter, rim_width, rim_diameter);
-		output_wheel_model.Translate(0, rim_width*0.75*0.5, 0);
-
+		
 		// create wheel rim
 		const float flangeDisplacement_mm = 10;
 		VERTEXARRAY rim_varray;
@@ -125,7 +121,7 @@ bool CAR::GenerateWheelMesh(
 		
 		// add rim to wheel mesh
 		rim_varray = rim_varray + output_wheel_model.GetVertexArray();
-		if (orientation < 0) rim_varray.Scale(1, orientation, 1); // mirror mesh
+		if (orientation != "left") rim_varray.Scale(1, -1, 1); // mirror mesh
 		output_wheel_model.SetVertexArray(rim_varray);
 		output_wheel_model.GenerateMeshMetrics();
 		output_wheel_model.GenerateListID(error_output);
@@ -148,13 +144,15 @@ bool CAR::GenerateWheelMesh(
 	}
 	if(!output_brake_rotor.Loaded())
 	{
-		float diameter_mm = brake.GetRadius() * 2 * 1000;
+		float radius(0.25);
+		if (!carconf.GetParam(brakename + ".radius", radius, error_output)) return false;
+		float diameter_mm = radius * 2 * 1000;
 		float thickness_mm = 25;
 		VERTEXARRAY rotor_varray;
 		MESHGEN::mg_brake_rotor(&rotor_varray, diameter_mm, thickness_mm);
 		output_brake_rotor.SetVertexArray(rotor_varray);
 		output_brake_rotor.Rotate(-M_PI_2, 0, 0, 1);
-		if (orientation < 0) output_brake_rotor.Scale(1, orientation, 1); // mirror mesh
+		if (orientation != "left") output_brake_rotor.Scale(1, -1, 1); // mirror mesh
 		output_brake_rotor.GenerateMeshMetrics();
 		output_brake_rotor.GenerateListID(error_output);
 	}
@@ -169,7 +167,7 @@ bool CAR::GenerateWheelMesh(
 	return true;
 }
 
-bool CAR::Load (
+bool CAR::LoadGraphics(
 	CONFIGFILE & carconf,
 	const std::string & carpath,
 	const std::string & driverpath,
@@ -177,15 +175,7 @@ bool CAR::Load (
 	MANAGER<TEXTURE, TEXTUREINFO> & textures,
 	const std::string & carpaint,
 	const MATHVECTOR <float, 3> & carcolor,
-	const MATHVECTOR <float, 3> & initial_position,
-	const QUATERNION <float> & initial_orientation,
-	COLLISION_WORLD * world,
-	bool soundenabled,
-	const SOUNDINFO & sound_device_info,
-	const SOUNDBUFFERLIBRARY & soundbufferlibrary,
 	int anisotropy,
-	bool defaultabs,
-	bool defaulttcs,
 	const std::string & texsize,
 	float camerabounce,
 	bool debugmode,
@@ -266,13 +256,10 @@ bool CAR::Load (
 	{
 		info_output << "No car glass model exists, continuing without one" << std::endl;
 	}
-
+	
 	// get coordinate system version
 	int version(1);
 	carconf.GetParam("version", version);
-	
-	// load car dynamics
-	if (!dynamics.Load(carconf, sharedpartspath, error_output)) return false;
 	
 	// load wheel graphics
 	for (int i = 0; i < WHEEL_POSITION_SIZE; i++)
@@ -283,7 +270,6 @@ bool CAR::Load (
 		std::string wheelname(wheelstr.str());
 		if (!GenerateWheelMesh(
 				carconf, carpath, wheelname, sharedpartspath,
-				dynamics.GetTire(WHEEL_POSITION(i)), dynamics.GetBrake(WHEEL_POSITION(i)),
 				topnode, wheelnode[i], wheeldraw[i],
 				tiremodel[i], wheelmodel[i], brakemodel[i],
 				textures, anisotropy, texsize, error_output))
@@ -310,12 +296,15 @@ bool CAR::Load (
 			topnode, floatingnode[i], floatingdraw[i], floatingname, *floatingmodel,
 			textures, carpath + "/textures/body" + carpaint, texsize,
 			anisotropy, NOBLEND, nullout);
-	}
-
-	// set wheel positions(for widget_spinningcar)
-	for (int i = 0; i < 4; i++)
-	{
-		MATHVECTOR <float, 3> wheelpos = dynamics.GetWheelPosition(WHEEL_POSITION(i), 0);
+		
+		// set wheel positions(for widget_spinningcar)
+		float pos[3];
+		std::stringstream suspension;
+		suspension << "suspension-" << i << ".wheel-hub";
+		if (!carconf.GetParam(suspension.str(), pos, error_output)) return false;
+		if (version == 2) COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
+		
+		MATHVECTOR <float, 3> wheelpos(pos[0], pos[1], pos[2]);
 		SCENENODE & wheelnoderef = topnode.GetNode(wheelnode[i]);
 		wheelnoderef.GetTransform().SetTranslation(wheelpos);
 		if (floatingnode[i].valid())
@@ -323,23 +312,6 @@ bool CAR::Load (
 			SCENENODE & floatingnoderef = topnode.GetNode(floatingnode[i]);
 			floatingnoderef.GetTransform().SetTranslation(wheelpos);
 		}
-	}
-	
-	// init dynamics
-	if (world)
-	{
-		MATHVECTOR <double, 3> size;
-		MATHVECTOR <double, 3> center;
-		MATHVECTOR <double, 3> position;
-		QUATERNION <double> orientation;
-		size = bodymodel.GetAABB().GetSize();
-		center = bodymodel.GetAABB().GetCenter();
-		position = initial_position;
-		orientation = initial_orientation;
-
-		dynamics.Init(*world, size, center, position, orientation);
-		dynamics.SetABS(defaultabs);
-		dynamics.SetTCS(defaulttcs);
 	}
 
 	// load driver
@@ -428,13 +400,6 @@ bool CAR::Load (
 			istr = sstr.str();
 		}
 	}
-
-	//load sounds
-	if (soundenabled)
-	{
-		if (!LoadSounds(carpath, carname, sound_device_info, soundbufferlibrary, info_output, error_output))
-			return false;
-	}
 	
 	// create brake light point light sources
 	// this is experimental at the moment and uses fixed
@@ -467,11 +432,39 @@ bool CAR::Load (
 		draw.SetDrawEnable(false);
 	}
 	}
-
+	
 	mz_nominalmax = (GetTireMaxMz(FRONT_LEFT) + GetTireMaxMz(FRONT_RIGHT))*0.5;
-
 	lookbehind = false;
+	
+	return true;
+}
 
+bool CAR::LoadPhysics(
+	CONFIGFILE & carconf,
+	const std::string & sharedpartspath,
+	const MATHVECTOR <float, 3> & initial_position,
+	const QUATERNION <float> & initial_orientation,
+	COLLISION_WORLD & world,
+	bool defaultabs,
+	bool defaulttcs,
+	std::ostream & info_output,
+	std::ostream & error_output)
+{
+	if (!dynamics.Load(carconf, sharedpartspath, error_output)) return false;
+	
+	MATHVECTOR <double, 3> size;
+	MATHVECTOR <double, 3> center;
+	MATHVECTOR <double, 3> position;
+	QUATERNION <double> orientation;
+	size = bodymodel.GetAABB().GetSize();
+	center = bodymodel.GetAABB().GetCenter();
+	position = initial_position;
+	orientation = initial_orientation;
+
+	dynamics.Init(world, size, center, position, orientation);
+	dynamics.SetABS(defaultabs);
+	dynamics.SetTCS(defaulttcs);
+	
 	return true;
 }
 

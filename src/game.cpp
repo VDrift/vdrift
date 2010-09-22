@@ -1755,59 +1755,61 @@ bool GAME::LoadCar(
 		if ( !carconf.Load ( carstream ) )
 			return false;
 	}
-
+	
 	cars.push_back(CAR());
-
-	if (!cars.back().Load(
-		carconf,
-		carpath,
-		pathmanager.GetDriverPath()+"/driver2",
-		carname,
-		textures,
-		carpaint,
-		carcolor,
-		start_position,
-		start_orientation,
-		&collision,
-		sound.Enabled(),
-		sound.GetDeviceInfo(),
-		generic_sounds,
-		settings.GetAnisotropy(),
-		settings.GetABS() || isai,
-		settings.GetTCS() || isai,
-		settings.GetTextureSize(),
+	CAR & car(cars.back());
+	
+	if (!car.LoadGraphics(
+		carconf, carpath, pathmanager.GetDriverPath()+"/driver2", carname,
+		textures, carpaint, carcolor,
+		settings.GetAnisotropy(), settings.GetTextureSize(),
 		settings.GetCameraBounce(),
 		debugmode,
 		pathmanager.GetCarSharedPath(),
-		info_output,
-		error_output))
+		info_output, error_output))
 	{
 		error_output << "Error loading car: " << carname << endl;
 		cars.pop_back();
 		return false;
 	}
-	else
+	
+	if(sound.Enabled())
 	{
-		info_output << "Car loading was successful: " << carname << endl;
-
-		if (islocal)
+		if (!car.LoadSounds(
+			carpath, carname,
+			sound.GetDeviceInfo(), generic_sounds,
+			info_output, error_output))
 		{
-			//load local controls
-			carcontrols_local.first = &cars.back();
-
-			//set the active camera
-			CAR& car = cars.back();
-			active_camera = car.Cameras().Select(settings.GetCameraMode());
-			active_camera->Reset(car.GetPosition(), car.GetOrientation());
-
-			// setup auto clutch and auto shift
-			ProcessNewSettings();
-			// shift into first gear if autoshift enabled
-			if (carcontrols_local.first && settings.GetAutoShift())
-                carcontrols_local.first->SetGear(1);
+			return false;
 		}
 	}
+	
+	if (!car.LoadPhysics(
+		carconf, pathmanager.GetCarSharedPath(),
+		start_position, start_orientation, collision,
+		settings.GetABS() || isai, settings.GetTCS() || isai,
+		info_output, error_output))
+	{
+		return false;
+	}
+	
+	info_output << "Car loading was successful: " << carname << endl;
+	if (islocal)
+	{
+		//load local controls
+		carcontrols_local.first = &cars.back();
 
+		//set the active camera
+		active_camera = car.Cameras().Select(settings.GetCameraMode());
+		active_camera->Reset(car.GetPosition(), car.GetOrientation());
+
+		// setup auto clutch and auto shift
+		ProcessNewSettings();
+		// shift into first gear if autoshift enabled
+		if (carcontrols_local.first && settings.GetAutoShift())
+			carcontrols_local.first->SetGear(1);
+	}
+	
 	return true;
 }
 
