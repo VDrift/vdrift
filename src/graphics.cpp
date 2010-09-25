@@ -569,7 +569,7 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 		ADDCONDITION(shadow_quality_medium);
 		ADDCONDITION(shadow_quality_high);
 		ADDCONDITION(shadow_quality_vhigh);
-		ADDCONDITION(shadow_quality_ultra);
+// 		ADDCONDITION(shadow_quality_ultra);
 		#undef ADDCONDITION
 		
 		// add some common textures
@@ -680,6 +680,7 @@ void GRAPHICS_SDLGL::DisableShaders(const std::string & shaderpath, std::ostream
 {
 	shadermap.clear();
 	using_shaders = false;
+	shadows = false;
 
 	if (GLEW_ARB_shading_language_100)
 	{
@@ -772,50 +773,53 @@ void GRAPHICS_SDLGL::SetupScene(float fov, float new_view_distance, const MATHVE
 	}
 	
 	// create cameras for shadow passes
-	std::vector <std::string> shadow_names;
-	shadow_names.push_back("near");
-	shadow_names.push_back("medium");
-	shadow_names.push_back("far");
-	for (int i = 0; i < 3; i++)
+	if (shadows)
 	{
-		float shadow_radius = (1<<i)*closeshadow+(i)*20.0; //5,30,60
-		
-		MATHVECTOR <float, 3> shadowbox(1,1,1);
-		shadowbox = shadowbox * (shadow_radius*sqrt(2.0));
-		MATHVECTOR <float, 3> shadowoffset(0,0,-1);
-		shadowoffset = shadowoffset * shadow_radius;
-		(-cam_rotation).RotateVector(shadowoffset);
-		shadowbox[2] += 60.0;
-		
-		GRAPHICS_CAMERA & cam = cameras["shadows_"+shadow_names[i]];
-		cam = cameras["default"];
-		cam.orthomode = true;
-		cam.orthomin = -shadowbox;
-		cam.orthomax = shadowbox;
-		cam.pos = cam.pos + shadowoffset;
-		cam.orient = lightdirection;
-		
-		// go through and extract the clip matrix, storing it in a texture matrix
-		renderscene.SetOrtho(cam.orthomin, cam.orthomax);
-		renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h, false);
-		float mv[16], mp[16], clipmat[16];
-		glGetFloatv( GL_PROJECTION_MATRIX, mp );
-		glGetFloatv( GL_MODELVIEW_MATRIX, mv );
-		glMatrixMode( GL_TEXTURE );
-		glPushMatrix();
-		glLoadIdentity();
-		glTranslatef (0.5, 0.5, 0.5);
-		glScalef (0.5, 0.5, 0.5);
-		glMultMatrixf(mp);
-		glMultMatrixf(mv);
-		glGetFloatv(GL_TEXTURE_MATRIX, clipmat);
-		glPopMatrix();
-		glMatrixMode( GL_MODELVIEW );
-		glActiveTexture(GL_TEXTURE4+i);
-		glMatrixMode( GL_TEXTURE );
-		glLoadMatrixf(clipmat);
-		glMatrixMode( GL_MODELVIEW );
-		glActiveTexture(GL_TEXTURE0);
+		std::vector <std::string> shadow_names;
+		shadow_names.push_back("near");
+		shadow_names.push_back("medium");
+		shadow_names.push_back("far");
+		for (int i = 0; i < 3; i++)
+		{
+			float shadow_radius = (1<<i)*closeshadow+(i)*20.0; //5,30,60
+			
+			MATHVECTOR <float, 3> shadowbox(1,1,1);
+			shadowbox = shadowbox * (shadow_radius*sqrt(2.0));
+			MATHVECTOR <float, 3> shadowoffset(0,0,-1);
+			shadowoffset = shadowoffset * shadow_radius;
+			(-cam_rotation).RotateVector(shadowoffset);
+			shadowbox[2] += 60.0;
+			
+			GRAPHICS_CAMERA & cam = cameras["shadows_"+shadow_names[i]];
+			cam = cameras["default"];
+			cam.orthomode = true;
+			cam.orthomin = -shadowbox;
+			cam.orthomax = shadowbox;
+			cam.pos = cam.pos + shadowoffset;
+			cam.orient = lightdirection;
+			
+			// go through and extract the clip matrix, storing it in a texture matrix
+			renderscene.SetOrtho(cam.orthomin, cam.orthomax);
+			renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h, false);
+			float mv[16], mp[16], clipmat[16];
+			glGetFloatv( GL_PROJECTION_MATRIX, mp );
+			glGetFloatv( GL_MODELVIEW_MATRIX, mv );
+			glMatrixMode( GL_TEXTURE );
+			glPushMatrix();
+			glLoadIdentity();
+			glTranslatef (0.5, 0.5, 0.5);
+			glScalef (0.5, 0.5, 0.5);
+			glMultMatrixf(mp);
+			glMultMatrixf(mv);
+			glGetFloatv(GL_TEXTURE_MATRIX, clipmat);
+			glPopMatrix();
+			glMatrixMode( GL_MODELVIEW );
+			glActiveTexture(GL_TEXTURE4+i);
+			glMatrixMode( GL_TEXTURE );
+			glLoadMatrixf(clipmat);
+			glMatrixMode( GL_MODELVIEW );
+			glActiveTexture(GL_TEXTURE0);
+		}
 	}
 }
 
