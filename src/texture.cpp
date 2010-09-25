@@ -277,9 +277,9 @@ bool TEXTURE::LoadCubeVerticalCross(const TEXTUREINFO & info, std::ostream & err
 		glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
 		
-		if (GL_EXT_framebuffer_object)
+		if (GLEW_ARB_framebuffer_object)
 		{
-			glGenerateMipmapEXT(GL_TEXTURE_CUBE_MAP);
+			glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 		}
 	}
 
