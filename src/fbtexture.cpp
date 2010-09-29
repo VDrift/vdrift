@@ -62,7 +62,7 @@ void FBTEXTURE::Init(GLSTATEMANAGER & glstate, int sizex, int sizey, TARGET targ
 		break;
 		
 		case RGBA8:
-		texture_format1 = GL_RGBA;
+		texture_format1 = GL_RGBA8;
 		texture_format2 = GL_RGBA;
 		texture_format3 = GL_UNSIGNED_BYTE;
 		break;

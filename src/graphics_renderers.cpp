@@ -522,10 +522,11 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 			//assert(0);
 		}*/
 		glActiveTexture(GL_TEXTURE0);
+		
+		PushShadowMatrices();
 	}
 	
 	//std::cout << "scene: " << std::endl;
-	PushShadowMatrices();
 
 	glstate.SetColorMask(writecolor, writealpha);
 	glstate.SetDepthMask(writedepth);
@@ -609,7 +610,8 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 	if (last_transform_valid)
 		glPopMatrix();
 	
-	PopShadowMatrices();
+	if (shaders)
+		PopShadowMatrices();
 }
 
 void RENDER_INPUT_SCENE::DrawList(GLSTATEMANAGER & glstate, std::vector <DRAWABLE*> & drawlist, bool preculled)
