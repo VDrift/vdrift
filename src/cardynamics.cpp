@@ -956,7 +956,7 @@ void CARDYNAMICS::RolloverRecover()
 	z_car.normalize();
 	
 	T angle = z_car.angle(z);
-	if (fabs(angle) < M_PI_4) return;
+	if (fabs(angle) < M_PI / 4.0) return;
 	
 	rot.setRotation(y_car, angle);
 	rot = rot * transform.getRotation();
@@ -1726,51 +1726,25 @@ bool CARDYNAMICS::WheelDriven(int i) const
 
 T CARDYNAMICS::AutoClutch(T last_clutch, T dt) const
 {
-	const T threshold = 1000.0;
-	const T margin = 100.0;
-	const T geareffect = 1.0; //zero to 1, defines special consideration of first/reverse gear
-
-	//take into account locked brakes
-	bool willlock(true);
-	for (int i = 0; i < WHEEL_POSITION_SIZE; i++)
-	{
-		if (WheelDriven(WHEEL_POSITION(i)))
-		{
-            willlock = willlock && brake[i].WillLock();
-		}
-	}
-	if (willlock) return 0;
-
-	const T rpm = engine.GetRPM();
-	const T maxrpm = engine.GetRPMLimit();
-	const T stallrpm = engine.GetStallRPM() + margin * (maxrpm / 2000.0);
-	const int gear = transmission.GetGear();
-
-	T gearfactor = 1.0;
-	if (gear <= 1)
-		gearfactor = 2.0;
-	T thresh = threshold * (maxrpm/7000.0) * ((1.0-geareffect)+gearfactor*geareffect) + stallrpm;
-	if (clutch.IsLocked())
-		thresh *= 0.5;
-	T clutch = (rpm-stallrpm) / (thresh-stallrpm);
-
-	//std::cout << rpm << ", " << stallrpm << ", " << threshold << ", " << clutch << std::endl;
-
-	if (clutch < 0)
-		clutch = 0;
-	if (clutch > 1.0)
-		clutch = 1.0;
-
-	T newauto = clutch * ShiftAutoClutch();
-
-	//rate limit the autoclutch
-	const T min_engage_time = 0.05; //the fastest time in seconds for auto-clutch engagement
-	const T engage_rate_limit = 1.0/min_engage_time;
-	const T rate = (last_clutch - newauto)/dt; //engagement rate in clutch units per second
-	if (rate > engage_rate_limit)
-		newauto = last_clutch - engage_rate_limit*dt;
-
-    return newauto;
+	T rpm = engine.GetRPM();
+	T stallrpm = engine.GetStallRPM();
+	T clutchrpm = transmission.GetClutchSpeed(driveshaft_rpm / 60.0 * 2.0 * M_PI);
+	
+	// clutch slip
+	T clutch = (3.0 * rpm + clutchrpm) / (5.0 * stallrpm) - 1.5;
+	if (clutch < 0.0) clutch = 0.0;
+	else if (clutch > 1.0) clutch = 1.0;
+	
+	// shift time
+	clutch *= ShiftAutoClutch();
+	
+	// rate limit the autoclutch
+	const T min_engage_time = 0.05; // fastest time in seconds for auto-clutch engagement
+	const T engage_rate_limit = 1.0 / min_engage_time;
+	const T rate = (last_clutch - clutch) / dt; //engagement rate in clutch units per second
+	if (rate > engage_rate_limit) clutch = last_clutch - engage_rate_limit * dt;
+	
+	return clutch;
 }
 
 T CARDYNAMICS::ShiftAutoClutch() const
