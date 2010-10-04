@@ -1728,10 +1728,10 @@ T CARDYNAMICS::AutoClutch(T last_clutch, T dt) const
 {
 	T rpm = engine.GetRPM();
 	T stallrpm = engine.GetStallRPM();
-	T clutchrpm = transmission.GetClutchSpeed(driveshaft_rpm);
+	T clutchrpm = driveshaft_rpm; //clutch rpm on driveshaft/transmission side
 	
 	// clutch slip
-	T clutch = (6.0 * rpm + clutchrpm) / (10.0 * stallrpm) - 1.5;
+	T clutch = (5.0 * rpm + clutchrpm) / (9.0 * stallrpm) - 1.5;
 	if (clutch < 0.0) clutch = 0.0;
 	else if (clutch > 1.0) clutch = 1.0;
 	
@@ -1762,15 +1762,15 @@ T CARDYNAMICS::ShiftAutoClutchThrottle(T throttle, T dt)
 {
 	if(remaining_shift_time > 0.0)
 	{
-	    if(engine.GetRPM() < driveshaft_rpm && engine.GetRPM() < engine.GetRedline())
-	    {
-	        remaining_shift_time += dt;
-            return 1.0;
-	    }
-	    else
-	    {
-	        return 0.5 * throttle;
-	    }
+		if(engine.GetRPM() < driveshaft_rpm && engine.GetRPM() < engine.GetRedline())
+		{
+			remaining_shift_time += dt;
+			return 1.0;
+		}
+		else
+		{
+			return 0.5 * throttle;
+		}
 	}
 	return throttle;
 }
@@ -1818,6 +1818,8 @@ T CARDYNAMICS::DownshiftRPM(int gear) const
 ///do traction control system (wheelspin prevention) calculations and modify the throttle position if necessary
 void CARDYNAMICS::DoTCS(int i, T suspension_force)
 {
+	if (!WheelDriven(i)) return;
+
 	T gasthresh = 0.1;
 	T gas = engine.GetThrottle();
 
@@ -1837,42 +1839,34 @@ void CARDYNAMICS::DoTCS(int i, T suspension_force)
 		}
 
 		//don't engage if all wheels are moving at the same rate
-		if ( maxspindiff > 1.0 )
+		if (maxspindiff > 1.0)
 		{
-			T sp = tire[i].GetIdealSlide();
-			//T ah = tire[i].GetIdealSlip();
-
-			T sense = 1.0;
-			if (transmission.GetGear() < 0)
-				sense = -1.0;
-
-			T error = tire[i].GetSlide() * sense - sp;
-			T thresholdeng = 0.0;
-			T thresholddis = -sp/2.0;
-
-			if (error > thresholdeng && !tcs_active[i])
-				tcs_active[i] = true;
-
-			if (error < thresholddis && tcs_active[i])
-				tcs_active[i] = false;
-
+			T slide = tire[i].GetSlide() / tire[i].GetIdealSlide();
+			if (transmission.GetGear() < 0.0) slide *= -1.0;
+			
+			if (slide > 1.0) tcs_active[i] = true;
+			else if (slide < 0.5) tcs_active[i] = false;
+			
 			if (tcs_active[i])
 			{
 				T curclutch = clutch.GetClutch();
-				if (curclutch > 1) curclutch = 1;
-				if (curclutch < 0) curclutch = 0;
+				assert(curclutch <= 1.0 && curclutch >= 0.0);
 
-				gas = gas - error * 10.0 * curclutch;
+				gas -= curclutch * (slide - 0.5);
 				if (gas < 0) gas = 0;
 				if (gas > 1) gas = 1;
 				engine.SetThrottle(gas);
 			}
 		}
 		else
+		{
 			tcs_active[i] = false;
+		}
 	}
 	else
+	{
 		tcs_active[i] = false;
+	}
 }
 
 ///do anti-lock brake system calculations and modify the brake force if necessary
