@@ -1728,10 +1728,10 @@ T CARDYNAMICS::AutoClutch(T last_clutch, T dt) const
 {
 	T rpm = engine.GetRPM();
 	T stallrpm = engine.GetStallRPM();
-	T clutchrpm = transmission.GetClutchSpeed(driveshaft_rpm / 60.0 * 2.0 * M_PI);
+	T clutchrpm = transmission.GetClutchSpeed(driveshaft_rpm);
 	
 	// clutch slip
-	T clutch = (3.0 * rpm + clutchrpm) / (5.0 * stallrpm) - 1.5;
+	T clutch = (6.0 * rpm + clutchrpm) / (10.0 * stallrpm) - 1.5;
 	if (clutch < 0.0) clutch = 0.0;
 	else if (clutch > 1.0) clutch = 1.0;
 	
