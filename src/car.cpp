@@ -162,6 +162,43 @@ bool CAR::GenerateWheelMesh(
 	return true;
 }
 
+bool CAR::LoadLight(
+	CONFIGFILE & cfg,
+	const std::string & name,
+	std::ostream & error_output)
+{
+	float pos[] = {0, 0, 0};
+	float col[] = {0, 0, 0};
+	float size;
+	if (!cfg.GetParam(name + ".position", pos, error_output)) return false;
+	if (!cfg.GetParam(name + ".color", col, error_output)) return false;
+	if (!cfg.GetParam(name + ".radius", size, error_output)) return false;
+	
+	lights.push_back(LIGHT());
+	SCENENODE & bodynoderef = topnode.GetNode(bodynode);
+	lights.back().node = bodynoderef.AddNode();
+	SCENENODE & node = bodynoderef.GetNode(lights.back().node);
+	VERTEXARRAY & varray = lights.back().varray;
+	MODEL & model = lights.back().model;
+	varray.SetToUnitCube();
+	varray.Scale(size, size, size);
+	//varray.SetToBillboard(-1,-1,1,1);
+	node.GetTransform().SetTranslation(MATHVECTOR<float,3>(pos[0], pos[1], pos[2]));
+	model.BuildFromVertexArray(varray, error_output);
+	
+	keyed_container <DRAWABLE> & dlist = GetDrawlist(node, OMNI);
+	lights.back().draw = dlist.insert(DRAWABLE());
+	DRAWABLE & draw = dlist.get(lights.back().draw);
+	draw.SetColor(col[0], col[1], col[2]);
+	draw.AddDrawList(model.GetListID());
+	//draw.SetVertArray(&model.GetVertexArray());
+	draw.SetCull(true, true);
+	//draw.SetCull(false, false);
+	draw.SetDrawEnable(false);
+	
+	return true;
+}
+
 bool CAR::LoadGraphics(
 	CONFIGFILE & carconf,
 	const std::string & carpath,
@@ -390,37 +427,31 @@ bool CAR::LoadGraphics(
 			istr = sstr.str();
 		}
 	}
-	
-	// create brake light point light sources
-	// this is experimental at the moment and uses fixed
-	// coordinates to place the brake lights
-	if (0) // disabled for release
 	{
-	for (int i = 0; i < 2; i++)
-	{
-		lights.push_back(LIGHT());
-		SCENENODE & bodynoderef = topnode.GetNode(bodynode);
-		lights.back().node = bodynoderef.AddNode();
-		SCENENODE & node = bodynoderef.GetNode(lights.back().node);
-		VERTEXARRAY & varray = lights.back().varray;
-		MODEL & model = lights.back().model;
-		varray.SetToUnitCube();
-		varray.Scale(2.0,2.0,2.0);
-		//varray.SetToBillboard(-1,-1,1,1);
-		node.GetTransform().SetTranslation(MATHVECTOR <float,3>(-2.16,-0.45*(i*2-1),-0.18));
-		model.BuildFromVertexArray(varray, error_output);
+		// create brake light point light sources
+		int i = 0;
+		std::string istr = "0";
+		std::string light_name;
+		while(carconf.GetParam("light-brake-" + istr, light_name))
+		{
+			if (!LoadLight(carconf, light_name, error_output)) return false;
+			
+			std::stringstream sstr;
+			sstr << ++i;
+			istr = sstr.str();
+		}
 		
-		
-		keyed_container <DRAWABLE> & dlist = GetDrawlist(node, OMNI);
-		lights.back().draw = dlist.insert(DRAWABLE());
-		DRAWABLE & draw = dlist.get(lights.back().draw);
-		draw.SetColor(0.8,0.1,0.1);
-		draw.AddDrawList(model.GetListID());
-		//draw.SetVertArray(&model.GetVertexArray());
-		draw.SetCull(true, true);
-		//draw.SetCull(false, false);
-		draw.SetDrawEnable(false);
-	}
+		// create reverse lights
+		i = 0;
+		istr = "0";
+		while(carconf.GetParam("light-reverse-" + istr, light_name))
+		{
+			if (!LoadLight(carconf, light_name, error_output)) return false;
+			
+			std::stringstream sstr;
+			sstr << ++i;
+			istr = sstr.str();
+		}
 	}
 	
 	mz_nominalmax = (GetTireMaxMz(FRONT_LEFT) + GetTireMaxMz(FRONT_RIGHT))*0.5;
@@ -938,15 +969,19 @@ void CAR::UpdateGraphics()
 	
 	// update brake/reverse lights
 	if (brakelights_emissive.valid())
+	{
 		GetDrawlist(bodynoderef, EMISSIVE).get(brakelights_emissive).SetDrawEnable(applied_brakes > 0);
+	}
 	for (std::list <LIGHT>::iterator i = lights.begin(); i != lights.end(); i++)
 	{
 		SCENENODE & node = bodynoderef.GetNode(i->node);
-		DRAWABLE & draw = GetDrawlist(node,OMNI).get(i->draw);
+		DRAWABLE & draw = GetDrawlist(node, OMNI).get(i->draw);
 		draw.SetDrawEnable(applied_brakes > 0);
 	}
 	if (reverselights_emissive.valid())
+	{
 		GetDrawlist(bodynoderef, EMISSIVE).get(reverselights_emissive).SetDrawEnable(GetGear() < 0);
+	}
 }
 
 void CAR::UpdateCameras(float dt)

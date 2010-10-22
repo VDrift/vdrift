@@ -364,7 +364,13 @@ protected:
 	float applied_brakes; ///< cached so we can update the brake light
 	
 	float mz_nominalmax; //the nominal maximum Mz force, used to scale force feedback
-
+	
+	void UpdateSounds(float dt);
+	
+	void UpdateCameras(float dt);
+		
+	void UpdateGraphics();
+	
 	bool GenerateWheelMesh(
 		CONFIGFILE & carconf,
 		const std::string & carpath,
@@ -381,11 +387,10 @@ protected:
 		const std::string & texsize,
 		std::ostream & error_output);
 	
-	void UpdateSounds(float dt);
-	
-	void UpdateCameras(float dt);
-		
-	void UpdateGraphics();
+	bool LoadLight(
+		CONFIGFILE & cfg,
+		const std::string & name,
+		std::ostream & error_output);
 	
 	enum WHICHDRAWLIST
 	{
