@@ -61,7 +61,6 @@ bool LoadEngine(
 	CARENGINEINFO<T> info;
 	std::vector < std::pair <T, T> > torque;
 	float temp_vec3[3];
-	int version(1);
 	
 	if (!c.GetParam("engine.peak-engine-rpm", info.redline, error_output)) return false; //used only for the redline graphics
 	if (!c.GetParam("engine.rpm-limit", info.rpm_limit, error_output)) return false;
@@ -71,11 +70,8 @@ bool LoadEngine(
 	if (!c.GetParam("engine.fuel-consumption", info.fuel_consumption, error_output)) return false;
 	if (!c.GetParam("engine.mass", info.mass, error_output)) return false;
 	if (!c.GetParam("engine.position", temp_vec3, error_output)) return false;
-	c.GetParam("version", version);
-	if (version == 2)
-	{
-		COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(temp_vec3[0],temp_vec3[1],temp_vec3[2]);
-	}
+	
+	COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(temp_vec3[0],temp_vec3[1],temp_vec3[2]);
 	info.position.Set(temp_vec3[0],temp_vec3[1],temp_vec3[2]);
 	
 	int curve_num = 0;
@@ -162,17 +158,13 @@ bool LoadFuelTank(
 	float capacity;
 	float volume;
 	float fuel_density;
-	int version(1);
 	
-	c.GetParam("version", version);
 	if (!c.GetParam("fuel-tank.capacity", capacity, error_output)) return false;
 	if (!c.GetParam("fuel-tank.volume", volume, error_output)) return false;
 	if (!c.GetParam("fuel-tank.fuel-density", fuel_density, error_output)) return false;
 	if (!c.GetParam("fuel-tank.position", pos, error_output)) return false;
-	if (version == 2)
-	{
-		COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0],pos[1],pos[2]);
-	}
+
+	COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0],pos[1],pos[2]);
 	position.Set(pos[0],pos[1],pos[2]);
 	
 	fuel_tank.SetCapacity(capacity);
@@ -294,9 +286,6 @@ bool LoadWheel(
 	CARSUSPENSION<T> & suspension,
 	std::ostream & error_output)
 {
-	int version(1);
-	c.GetParam("version", version);
-	
 	// load tire
 	CARTIREINFO<T> tinfo;
 	std::string tiresize, tiretype;
@@ -324,11 +313,9 @@ bool LoadWheel(
 	if (!c.GetParam(wheelname+".toe", sinfo.toe, error_output)) return false;
 	c.GetParam(wheelname+".steering", sinfo.max_steering_angle);
 	c.GetParam(wheelname+".ackermann", sinfo.ackermann);
-	if (version == 2)
-	{
-		COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(h[0], h[1], h[2]);
-		COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(p[0], p[1], p[2]);
-	}
+
+	COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(h[0], h[1], h[2]);
+	COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(p[0], p[1], p[2]);
 	sinfo.hinge.Set(h[0], h[1], h[2]);
 	sinfo.extended_position.Set(p[0], p[1], p[2]);
 	suspension.Init(sinfo);
@@ -369,8 +356,6 @@ bool LoadAeroDevices(
 	std::vector< CARAERO <T> > & aerodynamics,
 	std::ostream & error_output)
 {
-	int version(1);
-	c.GetParam("version", version);
 	const std::string aero[] = {"aerodevice-front", "aerodevice-body", "aerodevice-rear"};
 	for(int i = 0; i < 3; i++)
 	{
@@ -384,11 +369,8 @@ bool LoadAeroDevices(
 		c.GetParam(aero[i] + ".surface-area", lift_area);
 		c.GetParam(aero[i] + ".lift-coefficient", lift_coeff);
 		c.GetParam(aero[i] + ".efficiency", lift_eff);
-		
-		if (version == 2)
-		{
-			COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0],pos[1],pos[2]);
-		}
+
+		COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0],pos[1],pos[2]);
 		MATHVECTOR <double, 3> position(pos[0], pos[1], pos[2]);
 		
 		aerodynamics.push_back(CARAERO<T>());
@@ -403,9 +385,6 @@ bool LoadMassParticles(
 	std::list <std::pair <T, MATHVECTOR <T, 3> > > & mass_particles,
 	std::ostream & error_output)
 {
-	int version(1);
-	c.GetParam("version", version);
-
 	int num = 0;
 	while(true)
 	{
@@ -421,10 +400,7 @@ bool LoadMassParticles(
 		if (!c.GetParam(paramstr+".mass", mass)) break;
 		if (!c.GetParam(paramstr+".position", pos, error_output)) return false;
 		
-		if (version == 2)
-		{
-			COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
-		}
+		COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
 		position.Set(pos[0], pos[1], pos[2]);
 		
 		mass_particles.push_back(std::pair <T, MATHVECTOR <T, 3> > (mass, position));

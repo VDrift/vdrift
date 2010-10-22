@@ -174,6 +174,8 @@ bool CAR::LoadLight(
 	if (!cfg.GetParam(name + ".color", col, error_output)) return false;
 	if (!cfg.GetParam(name + ".radius", size, error_output)) return false;
 	
+	COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
+	
 	lights.push_back(LIGHT());
 	SCENENODE & bodynoderef = topnode.GetNode(bodynode);
 	lights.back().node = bodynoderef.AddNode();
@@ -289,10 +291,6 @@ bool CAR::LoadGraphics(
 		info_output << "No car glass model exists, continuing without one" << std::endl;
 	}
 	
-	// get coordinate system version
-	int version(1);
-	carconf.GetParam("version", version);
-	
 	// load wheel graphics
 	const std::string wheelname[] = {"wheel-fl", "wheel-fr", "wheel-rl", "wheel-rr"};
 	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
@@ -329,7 +327,7 @@ bool CAR::LoadGraphics(
 		// set wheel positions(for widget_spinningcar)
 		float pos[3];
 		if (!carconf.GetParam(wheelname[i] + ".position", pos, error_output)) return false;
-		if (version == 2) COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
+		COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
 		
 		MATHVECTOR <float, 3> wheelpos(pos[0], pos[1], pos[2]);
 		SCENENODE & wheelnoderef = topnode.GetNode(wheelnode[i]);
@@ -345,7 +343,7 @@ bool CAR::LoadGraphics(
 	{
 		float pos[3];
 		if (!carconf.GetParam("driver.position", pos, error_output)) return false;
-		if (version == 2) COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
+		COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
 		if (drivernode.valid()) //move the driver model to the coordinates given
 		{
 			SCENENODE & drivernoderef = topnode.GetNode(bodynode).GetNode(drivernode);
@@ -365,7 +363,7 @@ bool CAR::LoadGraphics(
 
 		float pos[3], hoodpos[3];
 		if (!c.GetParam("driver.view-position", pos, error_output)) return false;
-		if (version == 2) COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
+		COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
 		MATHVECTOR <float, 3> cam_offset;
 		cam_offset.Set(pos);
 		driver_cam->SetOffset(cam_offset);
@@ -378,8 +376,7 @@ bool CAR::LoadGraphics(
 		}
 		else
 		{
-			if (version == 2)
-				COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(hoodpos[0],hoodpos[1],hoodpos[2]);
+			COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(hoodpos[0],hoodpos[1],hoodpos[2]);
 			cam_offset.Set(hoodpos);
 		}
 		hood_cam->SetOffset(cam_offset);
@@ -411,7 +408,7 @@ bool CAR::LoadGraphics(
 			float pos[3], angle[3];
 			if (!c.GetParam("view.position-" + istr, pos)) continue;
 			if (!c.GetParam("view.angle-" + istr, angle)) continue;
-			if (version == 2) COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
+			COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
 
 			CAMERA_MOUNT* next_view = new CAMERA_MOUNT(view_name);
 
