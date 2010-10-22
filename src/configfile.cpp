@@ -12,7 +12,6 @@
 
 CONFIGFILE::CONFIGFILE()
 {
-	filename = "";
 	SUPPRESS_ERROR = false;
 }
 
@@ -191,6 +190,21 @@ bool CONFIGFILE::GetParam(std::string param, std::string & outvar) const
 	return true;
 }
 
+bool CONFIGFILE::GetParam(std::string param, std::vector<std::string> & outvar) const
+{
+	std::string values;
+	if (!GetParam(param, values)) return false;
+	
+	std::string value;
+	std::stringstream parse(values);
+	while(getline(parse, value, ','))
+	{
+		value = Trim(value);
+		if (!value.empty()) outvar.push_back(value);
+	}
+	return true;
+}
+
 void CONFIGFILE::GetPoints(const std::string & sectionname, const std::string & paramprefix, std::vector <std::pair <double, double> > & output_points) const
 {
 	std::list <std::string> params;
@@ -221,14 +235,17 @@ void CONFIGFILE::Add(std::string & paramname, CONFIGVARIABLE & newvar)
 
 bool CONFIGFILE::Load(std::string fname)
 {
-	filename = fname;
+	if (filename.length() == 0)
+	{
+		filename = fname;
+	}
+	else if (include.find(fname) != include.end())
+	{
+		return true;
+	}
+	include.insert(fname);
 	
-	//work std::string
-	std::string ws;
-	
-	std::ifstream f;
-	f.open(fname.c_str());
-	
+	std::ifstream f(fname.c_str());
 	if (!f && !SUPPRESS_ERROR)
 	{
 		return false;
@@ -252,11 +269,23 @@ bool CONFIGFILE::Load(std::istream & f)
 	return true;
 }
 
-std::string CONFIGFILE::Trim(std::string instr)
+std::string CONFIGFILE::Trim(std::string instr) const
 {
 	CONFIGVARIABLE trimmer;
 	std::string outstr = trimmer.strTrim(instr);
 	return outstr;
+}
+
+static std::string GetAbsolutePath(std::string dir, std::string relpath)
+{
+	std::string::size_type i, j;
+	while ((i = relpath.find("../")) == 0)
+	{
+		relpath.erase(0, 3);
+		j = dir.rfind('/');
+		if (j != std::string::npos) dir = dir.substr(0, j);
+	}
+	return dir + "/" + relpath;
 }
 
 void CONFIGFILE::ProcessLine(std::string & cursection, std::string linestr)
@@ -302,6 +331,16 @@ void CONFIGFILE::ProcessLine(std::string & cursection, std::string linestr)
 				Add(paramname, newvar);
 			}
 		}
+		else if(linestr.find("include ") == 0)
+		{
+			//configfile include
+			std::string dir;
+			std::string relpath = linestr.erase(0, 8);
+			std::string::size_type pos = filename.rfind('/');
+			if (pos != std::string::npos) dir = filename.substr(0, pos);
+			std::string path = GetAbsolutePath(dir, relpath);
+			Load(path);
+		}
 		else
 		{
 			//section header
@@ -313,7 +352,7 @@ void CONFIGFILE::ProcessLine(std::string & cursection, std::string linestr)
 	}
 }
 
-std::string CONFIGFILE::Strip(std::string instr, char stripchar)
+std::string CONFIGFILE::Strip(std::string instr, char stripchar) const
 {
 	std::string::size_type pos = 0;
 	std::string outstr = "";
@@ -331,7 +370,7 @@ std::string CONFIGFILE::Strip(std::string instr, char stripchar)
 
 void CONFIGFILE::DebugPrint(std::ostream & out) const
 {
-	out << "*** " << filename << " ***" << std::endl << std::endl;
+	out << "*** " << *filename.begin() << " ***" << std::endl << std::endl;
 	
 	std::list <CONFIGVARIABLE> vlist;
 	for (bucketed_hashmap <std::string, CONFIGVARIABLE>::const_iterator i = variables.begin(); i != variables.end(); ++i)
@@ -346,7 +385,7 @@ void CONFIGFILE::DebugPrint(std::ostream & out) const
 	}
 }
 
-std::string CONFIGFILE::LCase(std::string instr)
+std::string CONFIGFILE::LCase(std::string instr) const
 {
 	CONFIGVARIABLE lcaser;
 	std::string outstr = lcaser.strLCase(instr);

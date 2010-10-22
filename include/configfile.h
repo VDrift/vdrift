@@ -6,6 +6,7 @@
 
 #include <string>
 #include <map>
+#include <set>
 #include <list>
 #include <iostream>
 
@@ -14,18 +15,27 @@ class CONFIGFILE
 {
 public:
 	CONFIGFILE();
+	
 	CONFIGFILE(std::string fname);
+	
 	~CONFIGFILE();
 	
 	bool Load(std::string fname);
+	
 	bool Load(std::istream & f);
+	
 	void Clear();
-	std::string LoadedFile() const {return filename;}
+	
+	std::string LoadedFile() const
+	{
+		return filename;
+	}
 	
 	//returns true if the param was found
 	bool ClearParam(std::string param);
 	
 	//returns true if the param was found
+	bool GetParam(std::string param, std::vector<std::string> & outvar) const;
 	bool GetParam(std::string param, std::string & outvar) const;
 	bool GetParam(std::string param, int & outvar) const;
 	bool GetParam(std::string param, float & outvar) const;
@@ -48,18 +58,6 @@ public:
 	
 	// read points from configfile section
 	void GetPoints(const std::string & sectionname, const std::string & paramprefix, std::vector <std::pair <double, double> > & output_points) const;
-	
-	///a higher level helper function to read to/write from a configfile based on the passed directional boolean.
-	///if set_direction is true, then the param will be set to value.
-	///if set_direction is false, then value will be set to the param.
-	template <typename T>
-	bool GetSetParam(const std::string & param, T & value, bool set_direction)
-	{
-		if (set_direction)
-			return SetParam(param, value);
-		else
-			return GetParam(param, value);
-	}
 
 	//always returns true at the moment
 	bool SetParam(std::string param, std::string invar);
@@ -69,35 +67,43 @@ public:
 	bool SetParam(std::string param, bool invar);
 	
 	void GetSectionList(std::list <std::string> & sectionlistoutput) const;
-	void GetParamList(std::list <std::string> & paramlistoutput) const {GetParamList(paramlistoutput, "");}
-	void GetParamList(std::list <std::string> & paramlistoutput, std::string section) const; ///< returns param names only, not their sections
+	
+	void GetParamList(std::list <std::string> & paramlistoutput) const
+	{
+		GetParamList(paramlistoutput, "");
+	}
+	
+	///< returns param names only, not their sections
+	void GetParamList(std::list <std::string> & paramlistoutput, std::string section) const;
 	
 	void ChangeSectionName(std::string oldname, std::string newname);
 
 	void DebugPrint(std::ostream & out) const;
 
 	bool Write();
+	
 	bool Write(bool with_brackets);
+	
 	bool Write(bool with_brackets, std::string save_as);
 	
 	void SuppressError(bool newse) {SUPPRESS_ERROR = newse;}
-	
-	unsigned int GetNumParams() {return variables.GetTotalObjects();}
 
 private:
-	std::string filename;
 	bucketed_hashmap <std::string, CONFIGVARIABLE> variables;
 	bool SUPPRESS_ERROR;
+	
+	std::set<std::string> include;
+	std::string filename;
 	
 	void Add(std::string & paramname, CONFIGVARIABLE & newvar);
 	
 	void ProcessLine(std::string & cursection, std::string linestr);
 	
-	std::string Trim(std::string instr);
+	std::string Trim(std::string instr) const;
 	
-	std::string Strip(std::string instr, char stripchar);
+	std::string Strip(std::string instr, char stripchar) const;
 	
-	std::string LCase(std::string instr);
+	std::string LCase(std::string instr) const;
 };
 
 #endif /* _CONFIGFILE_H */
