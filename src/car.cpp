@@ -426,12 +426,12 @@ bool CAR::LoadGraphics(
 	}
 	{
 		// create brake light point light sources
+		float r;
 		int i = 0;
 		std::string istr = "0";
-		std::string light_name;
-		while(carconf.GetParam("light-brake-" + istr, light_name))
+		while (carconf.GetParam("light-brake-" + istr + ".radius", r))
 		{
-			if (!LoadLight(carconf, light_name, error_output)) return false;
+			if (!LoadLight(carconf, "light-brake-" + istr, error_output)) return false;
 			
 			std::stringstream sstr;
 			sstr << ++i;
@@ -441,9 +441,9 @@ bool CAR::LoadGraphics(
 		// create reverse lights
 		i = 0;
 		istr = "0";
-		while(carconf.GetParam("light-reverse-" + istr, light_name))
+		while (carconf.GetParam("light-reverse-" + istr + ".radius", r))
 		{
-			if (!LoadLight(carconf, light_name, error_output)) return false;
+			if (!LoadLight(carconf, "light-reverse-" + istr, error_output)) return false;
 			
 			std::stringstream sstr;
 			sstr << ++i;
