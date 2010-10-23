@@ -539,15 +539,17 @@ btCollisionShape * CreateCollisionShape(const btVector3 & center, const btVector
 
 void CARDYNAMICS::Init(
 	COLLISION_WORLD & world,
-	const MATHVECTOR <T, 3> chassisSize,
-	const MATHVECTOR <T, 3> chassisCenter,
-	const MATHVECTOR <T, 3> & position,
-	const QUATERNION <T> & orientation)
+	MATHVECTOR <T, 3> chassisSize,
+	MATHVECTOR <T, 3> chassisCenter,
+	MATHVECTOR <T, 3> position,
+	QUATERNION <T> orientation)
 {
 	this->world = &world;
 
-	MATHVECTOR <T, 3> zero(0, 0, 0);
-	body.SetPosition(position - center_of_mass);
+	position = position - center_of_mass;
+	orientation.Normalize();
+	
+	body.SetPosition(position);
 	body.SetOrientation(orientation);
 
 	// init chassis
@@ -559,7 +561,7 @@ void CARDYNAMICS::Init(
 	btVector3 chassisInertia(inertia[0], inertia[4], inertia[8]);
 
 	btTransform transform;
-	transform.setOrigin(ToBulletVector(position-center_of_mass));
+	transform.setOrigin(ToBulletVector(position));
 	transform.setRotation(ToBulletQuaternion(orientation));
 	btDefaultMotionState * chassisState = new btDefaultMotionState();
 	chassisState->setWorldTransform(transform);
@@ -876,9 +878,12 @@ void CARDYNAMICS::AlignWithGround()
 		}
 	}
 	
-	MATHVECTOR <T, 3> trimmed_position = Position() + GetDownVector() * min_height;
+	MATHVECTOR <T, 3> delta = GetDownVector() * min_height;
+	MATHVECTOR <T, 3> trimmed_position = Position() + delta;
 	SetPosition(trimmed_position);
+	
 	UpdateWheelTransform();
+	UpdateWheelContacts();
 }
 
 // ugh, ugly code

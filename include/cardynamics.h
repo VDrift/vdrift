@@ -42,10 +42,10 @@ public:
 
 	void Init(
 		COLLISION_WORLD & world,
-		const MATHVECTOR <T, 3> chassisSize,
-		const MATHVECTOR <T, 3> chassisCenter,
-		const MATHVECTOR <T, 3> & position,
-		const QUATERNION <T> & orientation);
+		MATHVECTOR <T, 3> chassisSize,
+		MATHVECTOR <T, 3> chassisCenter,
+		MATHVECTOR <T, 3> position,
+		QUATERNION <T> orientation);
 
 // bullet interface
 	virtual void updateAction(btCollisionWorld * collisionWorld, btScalar dt);
