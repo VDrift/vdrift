@@ -17,11 +17,6 @@ class SOUNDBUFFERLIBRARY
 	private:
 		std::string librarypath;
 		std::map <std::string, SOUNDBUFFER> buffermap;
-		bool FileExists(const std::string & filename)
-		{
-			std::ifstream f(filename.c_str());
-			return f;
-		}
 		
 	public:
 		///set the path to the sound buffers, minus the trailing /
@@ -31,34 +26,41 @@ class SOUNDBUFFERLIBRARY
 		}
 		
 		///buffername is the path to the sound minus the path prefix and file extension postfix
-		bool Load(const std::string & buffername, const SOUNDINFO & sound_device_info, std::ostream & error_output)
+		const SOUNDBUFFER * Load(const std::string & buffername, const SOUNDINFO & sound_device_info, std::ostream & error_output)
 		{
-			std::map <std::string, SOUNDBUFFER>::iterator existing = buffermap.find(buffername);
-			if (existing != buffermap.end()) //already loaded
-				return true;
+			std::map <std::string, SOUNDBUFFER>::const_iterator i = buffermap.find(buffername);
+			if (i != buffermap.end())
+			{
+				return &i->second;
+			}
 			
 			//prefer ogg
 			std::string filename = librarypath+"/"+buffername+".ogg";
-			if (!FileExists(filename))
-				filename = librarypath+"/"+buffername+".wav";
-			 
-			if (!buffermap[buffername].Load(filename, sound_device_info, error_output))
+			if (!std::ifstream(filename.c_str()))
 			{
-				buffermap.erase(buffername);
-				return false;
+				filename = librarypath+"/"+buffername+".wav";
+			}
+			
+			SOUNDBUFFER & buffer = buffermap[buffername];
+			if (buffer.Load(filename, sound_device_info, error_output))
+			{
+				return &buffer;
 			}
 			else
-				return true;
+			{
+				buffermap.erase(buffername);
+				return 0;
+			}
 		}
 		
-		///returns NULL if the buffer isn't found
+		///returns 0 if the buffer isn't found
 		const SOUNDBUFFER * Get(const std::string & buffername) const
 		{
 			std::map <std::string, SOUNDBUFFER>::const_iterator buff = buffermap.find(buffername);
 			if (buff != buffermap.end())
 				return &(buff->second);
 			else
-				return NULL;
+				return 0;
 		}
 };
 

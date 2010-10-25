@@ -313,19 +313,7 @@ bool GAME::InitializeSound()
 {
 	if (sound.Init(2048, info_output, error_output))
 	{
-		generic_sounds.SetLibraryPath(pathmanager.GetGenericSoundPath());
-		
-		if (!generic_sounds.Load("tire_squeal", sound.GetDeviceInfo(), error_output)) return false;
-		if (!generic_sounds.Load("grass", sound.GetDeviceInfo(), error_output)) return false;
-		if (!generic_sounds.Load("gravel", sound.GetDeviceInfo(), error_output)) return false;
-		if (!generic_sounds.Load("bump_front", sound.GetDeviceInfo(), error_output)) return false;
-		if (!generic_sounds.Load("bump_rear", sound.GetDeviceInfo(), error_output)) return false;
-		if (!generic_sounds.Load("wind", sound.GetDeviceInfo(), error_output)) return false;
-		if (!generic_sounds.Load("crash", sound.GetDeviceInfo(), error_output)) return false;
-		if (!generic_sounds.Load("gear", sound.GetDeviceInfo(), error_output)) return false; //TODO: Make this "per car", using carpath+"/"+carname+ in a correct form
-		if (!generic_sounds.Load("brake", sound.GetDeviceInfo(), error_output)) return false; //TODO: Make this "per car", using carpath+"/"+carname+ in a correct form
-		if (!generic_sounds.Load("handbrake", sound.GetDeviceInfo(), error_output)) return false; //TODO: Make this "per car", using carpath+"/"+carname+ in a correct form
-		
+		generic_sounds.SetLibraryPath(pathmanager.GetDataPath());
 		sound.SetMasterVolume(settings.GetMasterVolume());
 		sound.Pause(false);
 	}
@@ -1777,7 +1765,8 @@ bool GAME::LoadCar(
 	{
 		if (!car.LoadSounds(
 			carpath, carname,
-			sound.GetDeviceInfo(), generic_sounds,
+			sound.GetDeviceInfo(),
+			generic_sounds,
 			info_output, error_output))
 		{
 			return false;
@@ -1785,7 +1774,7 @@ bool GAME::LoadCar(
 	}
 	
 	if (!car.LoadPhysics(
-		carconf, pathmanager.GetCarSharedPath(),
+		carconf, carpath, pathmanager.GetCarSharedPath(),
 		start_position, start_orientation, collision,
 		settings.GetABS() || isai, settings.GetTCS() || isai,
 		info_output, error_output))

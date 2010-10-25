@@ -49,13 +49,13 @@ public:
 		const std::string & carpath,
 		const std::string & carname,
 		const SOUNDINFO & sound_device_info,
-		const SOUNDBUFFERLIBRARY & soundbufferlibrary,
+		SOUNDBUFFERLIBRARY & soundbufferlibrary,
 		std::ostream & info_output,
 		std::ostream & error_output);
 	
-	// has to be called after LoadGraphics atm, fixme
 	bool LoadPhysics(
 		CONFIGFILE & carconf,
+		const std::string & carpath,
 		const std::string & sharedpartspath,
 		const MATHVECTOR <float, 3> & initial_position,
 		const QUATERNION <float> & initial_orientation,
@@ -299,15 +299,21 @@ protected:
 	CARDYNAMICS dynamics;
 
 	SCENENODE topnode;
+	
+	keyed_container <SCENENODE>::handle bodynode;
+	keyed_container <SCENENODE>::handle drivernode;
 	keyed_container <DRAWABLE>::handle bodydraw;
 	keyed_container <DRAWABLE>::handle interiordraw;
+	keyed_container <DRAWABLE>::handle driverdraw;
 	keyed_container <DRAWABLE>::handle brakelights_emissive;
 	keyed_container <DRAWABLE>::handle reverselights_emissive;
 	keyed_container <DRAWABLE>::handle glassdraw;
-	keyed_container <SCENENODE>::handle bodynode;
-	MODEL_JOE03 bodymodel;
-	MODEL_JOE03 interiormodel;
-	MODEL_JOE03 glassmodel;
+	
+	keyed_container <SCENENODE>::handle wheelnode[WHEEL_POSITION_SIZE];
+	keyed_container <SCENENODE>::handle floatingnode[WHEEL_POSITION_SIZE];
+	keyed_container <DRAWABLE>::handle wheeldraw[WHEEL_POSITION_SIZE];
+	keyed_container <DRAWABLE>::handle floatingdraw[WHEEL_POSITION_SIZE];
+	
 	struct LIGHT
 	{
 		keyed_container <SCENENODE>::handle node;
@@ -317,29 +323,17 @@ protected:
 	};
 	std::list <LIGHT> lights;
 	
-	keyed_container <DRAWABLE>::handle driverdraw;
-	keyed_container <SCENENODE>::handle drivernode;
-	MODEL_JOE03 drivermodel;
-	
 	SUSPENSIONBUMPDETECTION suspensionbumpdetection[4];
 	CRASHDETECTION crashdetection;
+	CAMERA_SYSTEM cameras;
 
+	std::map <std::string, MODEL_JOE03> models;
 	std::map <std::string, SOUNDBUFFER> soundbuffers;
+	
 	std::list <std::pair <ENGINESOUNDINFO, SOUNDSOURCE> > enginesounds;
-
-	keyed_container <DRAWABLE>::handle wheeldraw[WHEEL_POSITION_SIZE];
-	keyed_container <SCENENODE>::handle wheelnode[WHEEL_POSITION_SIZE];
-	keyed_container <DRAWABLE>::handle floatingdraw[WHEEL_POSITION_SIZE];
-	keyed_container <SCENENODE>::handle floatingnode[WHEEL_POSITION_SIZE];
-	MODEL_JOE03 wheelmodel[WHEEL_POSITION_SIZE];
-	MODEL_JOE03 tiremodel[WHEEL_POSITION_SIZE];
-	MODEL_JOE03 brakemodel[WHEEL_POSITION_SIZE];
-	MODEL_JOE03 floatingmodelfront;
-	MODEL_JOE03 floatingmodelrear;
-
 	SOUNDSOURCE tiresqueal[WHEEL_POSITION_SIZE];
 	SOUNDSOURCE tirebump[WHEEL_POSITION_SIZE];
-	SOUNDSOURCE grasssound[WHEEL_POSITION_SIZE]; //added grass & gravel
+	SOUNDSOURCE grasssound[WHEEL_POSITION_SIZE];
 	SOUNDSOURCE gravelsound[WHEEL_POSITION_SIZE];
 	SOUNDSOURCE crashsound;
 	SOUNDSOURCE gearsound;
@@ -350,8 +344,6 @@ protected:
 	int gearsound_check;
 	bool brakesound_check;
 	bool handbrakesound_check;
-	
-	CAMERA_SYSTEM cameras;
 	
 	//internal variables that might change during driving (so, they need to be serialized)
 	float last_steer;
@@ -379,9 +371,7 @@ protected:
 		SCENENODE & topnode,
 		keyed_container <SCENENODE>::handle & output_scenenode,
 		keyed_container <DRAWABLE>::handle & output_drawable,
-		MODEL_JOE03 & output_tire_model,
-		MODEL_JOE03 & output_wheel_model,
-		MODEL_JOE03 & output_brake_rotor,
+		std::map <std::string, MODEL_JOE03> & models,
 		MANAGER<TEXTURE, TEXTUREINFO> & textures,
 		int anisotropy,
 		const std::string & texsize,
@@ -409,8 +399,8 @@ protected:
 		keyed_container <SCENENODE>::handle & output_scenenode,
 		keyed_container <DRAWABLE>::handle & output_drawable,
 		const std::string & joefile,
-		MODEL_JOE03 & output_model,
-		MANAGER<TEXTURE, TEXTUREINFO> & textures,
+		std::map <std::string, MODEL_JOE03> & models,
+		MANAGER <TEXTURE, TEXTUREINFO> & textures,
 		const std::string & texname,
 		const std::string & texsize,
 		int anisotropy,
