@@ -32,23 +32,23 @@ public:
 	bool LoadGraphics(
 		CONFIGFILE & carconf,
 		const std::string & carpath,
-		const std::string & driverpath,
 		const std::string & carname,
-		MANAGER<TEXTURE, TEXTUREINFO> & textures,
-		const std::string & carpaint,
+		const std::string & driverpath,
+		const std::string & partspath,
 		const MATHVECTOR <float, 3> & carcolor,
-		int anisotropy,
+		const std::string & carpaint,
+		MANAGER<TEXTURE, TEXTUREINFO> & textures,
 		const std::string & texsize,
+		int anisotropy,
 		float camerabounce,
 		bool debugmode,
-		const std::string & sharedpartspath,
 		std::ostream & info_output,
 		std::ostream & error_output);
 	
 	bool LoadSounds(
 		const std::string & carpath,
 		const std::string & carname,
-		const SOUNDINFO & sound_device_info,
+		const SOUNDINFO & soundinfo,
 		SOUNDBUFFERLIBRARY & soundbufferlibrary,
 		std::ostream & info_output,
 		std::ostream & error_output);
@@ -296,22 +296,19 @@ public:
 	
 protected:
 	CARDYNAMICS dynamics;
-
-	SCENENODE topnode;
 	
+	SCENENODE topnode;
 	keyed_container <SCENENODE>::handle bodynode;
 	keyed_container <SCENENODE>::handle drivernode;
-	keyed_container <DRAWABLE>::handle bodydraw;
-	keyed_container <DRAWABLE>::handle interiordraw;
-	keyed_container <DRAWABLE>::handle driverdraw;
-	keyed_container <DRAWABLE>::handle brakelights_emissive;
-	keyed_container <DRAWABLE>::handle reverselights_emissive;
-	keyed_container <DRAWABLE>::handle glassdraw;
-	
 	keyed_container <SCENENODE>::handle wheelnode[WHEEL_POSITION_SIZE];
 	keyed_container <SCENENODE>::handle floatingnode[WHEEL_POSITION_SIZE];
-	keyed_container <DRAWABLE>::handle wheeldraw[WHEEL_POSITION_SIZE];
-	keyed_container <DRAWABLE>::handle floatingdraw[WHEEL_POSITION_SIZE];
+	
+	keyed_container <DRAWABLE>::handle bodydraw;
+	keyed_container <DRAWABLE>::handle driverdraw;
+	keyed_container <DRAWABLE>::handle interiordraw;
+	keyed_container <DRAWABLE>::handle glassdraw;
+	keyed_container <DRAWABLE>::handle brakelights;
+	keyed_container <DRAWABLE>::handle reverselights;
 	
 	struct LIGHT
 	{

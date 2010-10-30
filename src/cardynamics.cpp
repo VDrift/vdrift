@@ -448,11 +448,8 @@ bool CARDYNAMICS::Load(CONFIGFILE & c, std::ostream & error_output)
 	if (!LoadTransmission(c, transmission, error_output)) return false;
 	if (!LoadEngine(c, engine, error_output)) return false;
 	if (!LoadFuelTank(c, fuel_tank, error_output)) return false;
-
 	AddMassParticle(engine.GetMass(), engine.GetPosition());
-	//AddMassParticle(fuel_tank.GetMass(), fuel_tank.GetPosition()); is added in UpdateMass()
-
-	// load wheels (four wheels hardcoded)
+	
 	maxangle = 0.0;
 	const std::string id[] = {"fl", "fr", "rl", "rr"};
 	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
@@ -465,7 +462,6 @@ bool CARDYNAMICS::Load(CONFIGFILE & c, std::ostream & error_output)
 		AddMassParticle(wheel[i].GetMass(), suspension[i].GetWheelPosition());
 	}
 	
-	// load differentials
 	T temp;
 	drive = NONE;
 	if (c.GetParam("differential-front.final-drive", temp))

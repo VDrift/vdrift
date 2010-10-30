@@ -221,22 +221,26 @@ bool CAR::LoadLight(
 	//draw.SetCull(false, false);
 	draw.SetDrawEnable(false);
 	
+	std::string texture, mesh;
+	cfg.GetParam(name + ".texture", texture);
+	cfg.GetParam(name + ".mesh", mesh);
+	
 	return true;
 }
 
 bool CAR::LoadGraphics(
 	CONFIGFILE & carconf,
 	const std::string & carpath,
-	const std::string & driverpath,
 	const std::string & carname,
-	MANAGER<TEXTURE, TEXTUREINFO> & textures,
-	const std::string & carpaint,
+	const std::string & driverpath,
+	const std::string & partspath,
 	const MATHVECTOR <float, 3> & carcolor,
-	int anisotropy,
+	const std::string & carpaint,
+	MANAGER<TEXTURE, TEXTUREINFO> & textures,
 	const std::string & texsize,
+	int anisotropy,
 	float camerabounce,
 	bool debugmode,
-	const std::string & sharedpartspath,
 	std::ostream & info_output,
 	std::ostream & error_output)
 {
@@ -249,36 +253,6 @@ bool CAR::LoadGraphics(
 			NOBLEND, error_output ) )
 	{
 		return false;
-	}
-	
-	//load car brake light emissive texture
-	{
-		if ( !LoadInto (
-				topnode.GetNode(bodynode), bodynode, brakelights_emissive, carpath + "/body.joe", models,
-				textures, carpath + "/textures/brake", texsize, anisotropy,
-				EMISSIVE, nullout ) )
-		{
-			info_output << "No car brake texture exists, continuing without one" << std::endl;
-		}
-		else
-		{
-			GetDrawlist(topnode.GetNode(bodynode), EMISSIVE).get(brakelights_emissive).SetDrawEnable(false);
-		}
-	}
-
-	//load car reverse light texture
-	{
-		if ( !LoadInto (
-				topnode.GetNode(bodynode), bodynode, reverselights_emissive, carpath + "/body.joe", models,
-				textures, carpath + "/textures/reverse", texsize, anisotropy,
-				EMISSIVE, nullout ) )
-		{
-			info_output << "No car reverse light texture exists, continuing without one" << std::endl;
-		}
-		else
-		{
-			GetDrawlist(topnode.GetNode(bodynode), EMISSIVE).get(reverselights_emissive).SetDrawEnable(false);
-		}
 	}
 	
 	//load driver graphics
@@ -315,9 +289,10 @@ bool CAR::LoadGraphics(
 	const std::string wheelid[] = {"fl", "fr", "rl", "rr"};
 	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
 	{
+		keyed_container <DRAWABLE>::handle wheeldraw;
 		if (!GenerateWheelMesh(
-				carconf, wheelid[i], carpath, sharedpartspath,
-				topnode, wheelnode[i], wheeldraw[i], models,
+				carconf, wheelid[i], carpath, partspath,
+				topnode, wheelnode[i], wheeldraw, models,
 				textures, anisotropy, texsize, error_output))
 		{
 			error_output << "Error generating wheel mesh for wheel " << i << std::endl;
@@ -325,6 +300,7 @@ bool CAR::LoadGraphics(
 		}
 		
 		// load floating element
+		keyed_container <DRAWABLE>::handle floatingdraw;
 		std::stringstream nullout;
 		std::string floatingname;
 		if (i < 2)
@@ -336,7 +312,7 @@ bool CAR::LoadGraphics(
 			floatingname = carpath + "/floating_rear.joe";
 		}
 		LoadInto(
-			topnode, floatingnode[i], floatingdraw[i], floatingname, models,
+			topnode, floatingnode[i], floatingdraw, floatingname, models,
 			textures, carpath + "/textures/body" + carpaint, texsize,
 			anisotropy, NOBLEND, nullout);
 		
@@ -453,6 +429,18 @@ bool CAR::LoadGraphics(
 			sstr << ++i;
 			istr = sstr.str();
 		}
+		// load car reverse light texture
+		if ( !LoadInto (
+			topnode.GetNode(bodynode), bodynode, brakelights, carpath + "/body.joe", models,
+			textures, carpath + "/textures/brake", texsize, anisotropy,
+			EMISSIVE, nullout ) )
+		{
+			info_output << "No car brake texture exists, continuing without one" << std::endl;
+		}
+		else
+		{
+			GetDrawlist(topnode.GetNode(bodynode), EMISSIVE).get(brakelights).SetDrawEnable(false);
+		}
 		
 		// create reverse lights
 		i = 0;
@@ -464,6 +452,18 @@ bool CAR::LoadGraphics(
 			std::stringstream sstr;
 			sstr << ++i;
 			istr = sstr.str();
+		}
+		// load car reverse light texture
+		if ( !LoadInto (
+				topnode.GetNode(bodynode), bodynode, reverselights, carpath + "/body.joe", models,
+				textures, carpath + "/textures/reverse", texsize, anisotropy,
+				EMISSIVE, nullout ) )
+		{
+			info_output << "No car reverse light texture exists, continuing without one" << std::endl;
+		}
+		else
+		{
+			GetDrawlist(topnode.GetNode(bodynode), EMISSIVE).get(reverselights).SetDrawEnable(false);
 		}
 	}
 	
@@ -524,7 +524,7 @@ bool CAR::LoadPhysics(
 bool CAR::LoadSounds(
 	const std::string & carpath,
 	const std::string & carname,
-	const SOUNDINFO & sound_device_info,
+	const SOUNDINFO & soundinfo,
 	SOUNDBUFFERLIBRARY & soundbufferlibrary,
 	std::ostream & info_output,
 	std::ostream & error_output)
@@ -542,7 +542,7 @@ bool CAR::LoadSounds(
 			if (!aud.GetParam(*i+".filename", filename, error_output)) return false;
 			if (!soundbuffers[filename].GetLoaded())
 			{
-				if (!soundbuffers[filename].Load(carpath+"/"+filename, sound_device_info, error_output))
+				if (!soundbuffers[filename].Load(carpath+"/"+filename, soundinfo, error_output))
 				{
 					error_output << "Error loading sound: " << carpath+"/"+filename << std::endl;
 					return false;
@@ -631,7 +631,7 @@ bool CAR::LoadSounds(
 	}
 	else
 	{
-		if (!soundbuffers["engine.wav"].Load(carpath+"/engine.wav", sound_device_info, error_output))
+		if (!soundbuffers["engine.wav"].Load(carpath+"/engine.wav", soundinfo, error_output))
 		{
 			error_output << "Unable to load engine sound: "+carpath+"/engine.wav" << std::endl;
 			return false;
@@ -648,7 +648,7 @@ bool CAR::LoadSounds(
 	//set up tire squeal sounds
 	for (int i = 0; i < 4; i++)
 	{
-		const SOUNDBUFFER * buf = soundbufferlibrary.Load("sounds/tire_squeal", sound_device_info, error_output);
+		const SOUNDBUFFER * buf = soundbufferlibrary.Load("sounds/tire_squeal", soundinfo, error_output);
 		if (!buf)
 		{
 			error_output << "Can't load tire_squeal sound" << std::endl;
@@ -666,7 +666,7 @@ bool CAR::LoadSounds(
 	//set up tire gravel sounds
 	for (int i = 0; i < 4; i++)
 	{
-		const SOUNDBUFFER * buf = soundbufferlibrary.Load("sounds/gravel", sound_device_info, error_output);
+		const SOUNDBUFFER * buf = soundbufferlibrary.Load("sounds/gravel", soundinfo, error_output);
 		if (!buf)
 		{
 			error_output << "Can't load gravel sound" << std::endl;
@@ -684,7 +684,7 @@ bool CAR::LoadSounds(
 	//set up tire grass sounds
 	for (int i = 0; i < 4; i++)
 	{
-		const SOUNDBUFFER * buf = soundbufferlibrary.Load("sounds/grass", sound_device_info, error_output);
+		const SOUNDBUFFER * buf = soundbufferlibrary.Load("sounds/grass", soundinfo, error_output);
 		if (!buf)
 		{
 			error_output << "Can't load grass sound" << std::endl;
@@ -702,9 +702,9 @@ bool CAR::LoadSounds(
 	//set up bump sounds
 	for (int i = 0; i < 4; i++)
 	{
-		const SOUNDBUFFER * buf = soundbufferlibrary.Load("sounds/bump_front", sound_device_info, error_output);
+		const SOUNDBUFFER * buf = soundbufferlibrary.Load("sounds/bump_front", soundinfo, error_output);
 		if (i >= 2)
-			buf = soundbufferlibrary.Load("sounds/bump_rear", sound_device_info, error_output);
+			buf = soundbufferlibrary.Load("sounds/bump_rear", soundinfo, error_output);
 		if (!buf)
 		{
 			error_output << "Can't load bump sound: " << i << std::endl;
@@ -718,7 +718,7 @@ bool CAR::LoadSounds(
 
 	//set up crash sound
 	{
-		const SOUNDBUFFER * buf = soundbufferlibrary.Load("sounds/crash", sound_device_info, error_output);
+		const SOUNDBUFFER * buf = soundbufferlibrary.Load("sounds/crash", soundinfo, error_output);
 		if (!buf)
 		{
 			error_output << "Can't load crash sound" << std::endl;
@@ -732,7 +732,7 @@ bool CAR::LoadSounds(
 
 	//set up gear sound
 	{
-		const SOUNDBUFFER * buf = soundbufferlibrary.Load("sounds/gear", sound_device_info, error_output);
+		const SOUNDBUFFER * buf = soundbufferlibrary.Load("sounds/gear", soundinfo, error_output);
 		if (!buf)
 		{
 			error_output << "Can't load gear sound" << std::endl;
@@ -746,7 +746,7 @@ bool CAR::LoadSounds(
 
 	//set up brake sound
 	{
-		const SOUNDBUFFER * buf = soundbufferlibrary.Load("sounds/brake", sound_device_info, error_output);
+		const SOUNDBUFFER * buf = soundbufferlibrary.Load("sounds/brake", soundinfo, error_output);
 		if (!buf)
 		{
 			error_output << "Can't load brake sound" << std::endl;
@@ -760,7 +760,7 @@ bool CAR::LoadSounds(
 
 	//set up handbrake sound
 	{
-		const SOUNDBUFFER * buf = soundbufferlibrary.Load("sounds/handbrake", sound_device_info, error_output);
+		const SOUNDBUFFER * buf = soundbufferlibrary.Load("sounds/handbrake", soundinfo, error_output);
 		if (!buf)
 		{
 			error_output << "Can't load handbrake sound" << std::endl;
@@ -773,7 +773,7 @@ bool CAR::LoadSounds(
 	}
 
 	{
-		const SOUNDBUFFER * buf = soundbufferlibrary.Load("sounds/wind", sound_device_info, error_output);
+		const SOUNDBUFFER * buf = soundbufferlibrary.Load("sounds/wind", soundinfo, error_output);
 		if (!buf)
 		{
 			error_output << "Can't load wind sound" << std::endl;
@@ -951,15 +951,6 @@ void CAR::SetColor(float r, float g, float b)
 {
 	SCENENODE & bodynoderef = topnode.GetNode(bodynode);
 	GetDrawlist(bodynoderef, NOBLEND).get(bodydraw).SetColor(r, g, b, 1);
-	
-	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
-	{
-		if (floatingdraw[i].valid())
-		{
-			GetDrawlist(bodynoderef, NOBLEND).get(floatingdraw[i]).SetColor(r, g, b, 1);
-		}
-	}
-	
 	//std::cout << "color: " << r << ", " << g << ", " << b << std::endl;
 }
 
@@ -981,23 +972,23 @@ void CAR::UpdateGraphics()
 {
 	if (!bodynode.valid())
 		return;
-
+	
 	MATHVECTOR <float, 3> vec;
 	vec = dynamics.GetPosition();
 	SCENENODE & bodynoderef = topnode.GetNode(bodynode);
 	bodynoderef.GetTransform().SetTranslation(vec);
-
+	
 	vec = dynamics.GetCenterOfMassPosition();
 	roadnoise.SetPosition(vec[0],vec[1],vec[2]);
 	crashsound.SetPosition(vec[0],vec[1],vec[2]);
 	gearsound.SetPosition(vec[0],vec[1],vec[2]);
 	brakesound.SetPosition(vec[0],vec[1],vec[2]);
 	handbrakesound.SetPosition(vec[0],vec[1],vec[2]);
-
+	
 	QUATERNION <float> quat;
 	quat = dynamics.GetOrientation();
 	bodynoderef.GetTransform().SetRotation(quat);
-
+	
 	for (int i = 0; i < 4; i++)
 	{
 		vec = dynamics.GetWheelPosition(WHEEL_POSITION(i));
@@ -1021,9 +1012,9 @@ void CAR::UpdateGraphics()
 	}
 	
 	// update brake/reverse lights
-	if (brakelights_emissive.valid())
+	if (brakelights.valid())
 	{
-		GetDrawlist(bodynoderef, EMISSIVE).get(brakelights_emissive).SetDrawEnable(applied_brakes > 0);
+		GetDrawlist(bodynoderef, EMISSIVE).get(brakelights).SetDrawEnable(applied_brakes > 0);
 	}
 	for (std::list <LIGHT>::iterator i = lights.begin(); i != lights.end(); i++)
 	{
@@ -1031,9 +1022,9 @@ void CAR::UpdateGraphics()
 		DRAWABLE & draw = GetDrawlist(node, OMNI).get(i->draw);
 		draw.SetDrawEnable(applied_brakes > 0);
 	}
-	if (reverselights_emissive.valid())
+	if (reverselights.valid())
 	{
-		GetDrawlist(bodynoderef, EMISSIVE).get(reverselights_emissive).SetDrawEnable(GetGear() < 0);
+		GetDrawlist(bodynoderef, EMISSIVE).get(reverselights).SetDrawEnable(GetGear() < 0);
 	}
 }
 

@@ -1748,12 +1748,11 @@ bool GAME::LoadCar(
 	CAR & car(cars.back());
 	
 	if (!car.LoadGraphics(
-		carconf, carpath, pathmanager.GetDriverPath()+"/driver2", carname,
-		textures, carpaint, carcolor,
-		settings.GetAnisotropy(), settings.GetTextureSize(),
+		carconf, carpath, carname,
+		pathmanager.GetDriverPath()+"/driver2", pathmanager.GetCarSharedPath(),
+		carcolor, carpaint, textures, settings.GetTextureSize(), settings.GetAnisotropy(),
 		settings.GetCameraBounce(),
 		debugmode,
-		pathmanager.GetCarSharedPath(),
 		info_output, error_output))
 	{
 		error_output << "Error loading car: " << carname << endl;

@@ -210,10 +210,9 @@ void WIDGET_SPINNINGCAR::Load(SCENENODE & parent)
 	MATHVECTOR <float, 3> carcolor(r, g, b);
 	
 	if (!car.back().LoadGraphics(
-		carconf, carpath, "", carname, 
-		*textures, carpaint, carcolor,
-		0, "large", 0,
-		false, data + "/carparts", loadlog, loadlog))
+		carconf, carpath, carname, "", data + "/carparts",
+		carcolor, carpaint, *textures, "large", 0,
+		0, false, loadlog, loadlog))
 	{
 		*errptr << "Couldn't load spinning car: " << carname << std::endl;
 		if (!loadlog.str().empty())
