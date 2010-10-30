@@ -155,13 +155,13 @@ protected:
 	CARENGINE <T> engine;
 	CARCLUTCH <T> clutch;
 	CARTRANSMISSION <T> transmission;
-	CARDIFFERENTIAL <T> front_differential;
-	CARDIFFERENTIAL <T> rear_differential;
-	CARDIFFERENTIAL <T> center_differential;
+	CARDIFFERENTIAL <T> differential_front;
+	CARDIFFERENTIAL <T> differential_rear;
+	CARDIFFERENTIAL <T> differential_center;
 	std::vector <CARBRAKE <T> > brake;
 	std::vector <CARWHEEL <T> > wheel;
 	
-	enum { FWD = 3, RWD = 12, AWD = 15 } drive;
+	enum { NONE = 0, FWD = 1, RWD = 2, AWD = 3 } drive;
 	T driveshaft_rpm;
 	T tacho_rpm;
 
@@ -305,8 +305,6 @@ protected:
 		const btVector3 & chassisCenter,
 		btVector3 & center,
 		btVector3 & size);
-
-	void SetDrive(const std::string & newdrive);
 
 	void InitializeWheelVelocity();
 

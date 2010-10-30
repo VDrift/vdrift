@@ -352,7 +352,7 @@ bool LoadWheel(
 
 // max number of aero devices is 8
 bool LoadAeroDevices(
-	CONFIGFILE & c,
+	const CONFIGFILE & c,
 	std::vector< CARAERO <T> > & aerodynamics,
 	std::ostream & error_output)
 {
@@ -377,6 +377,26 @@ bool LoadAeroDevices(
 		aerodynamics.back().Set(position, drag_area, drag_coeff, lift_area, lift_coeff, lift_eff);
 	}
 
+	return true;
+}
+
+//load the differential(s)
+bool LoadDifferential(
+	const CONFIGFILE & c,
+	const std::string & name,
+	CARDIFFERENTIAL<T> & diff,
+	std::ostream & error_output)
+{
+	T final_drive(1), anti_slip(0), anti_slip_torque(0), anti_slip_torque_deceleration_factor(0);
+	
+	if (!c.GetParam(name+".final-drive", final_drive, error_output)) return false;
+	if (!c.GetParam(name+".anti-slip", anti_slip, error_output)) return false;
+	c.GetParam(name+".anti-slip-torque", anti_slip_torque);
+	c.GetParam(name+".anti-slip-torque-deceleration-factor", anti_slip_torque_deceleration_factor);
+	
+	diff.SetFinalDrive(final_drive);
+	diff.SetAntiSlip(anti_slip, anti_slip_torque, anti_slip_torque_deceleration_factor);
+	
 	return true;
 }
 
@@ -416,8 +436,6 @@ bool CARDYNAMICS::Load(
 	const std::string & sharedpartspath,
 	std::ostream & error_output)
 {
-	std::string drive = "RWD";
-
 	if (!LoadAeroDevices(c, aerodynamics, error_output)) return false;
 	if (!LoadClutch(c, clutch, error_output)) return false;
 	if (!LoadTransmission(c, transmission, error_output)) return false;
@@ -427,7 +445,7 @@ bool CARDYNAMICS::Load(
 	AddMassParticle(engine.GetMass(), engine.GetPosition());
 	//AddMassParticle(fuel_tank.GetMass(), fuel_tank.GetPosition()); is added in UpdateMass()
 
-	//load wheels (four wheels hardcoded)
+	// load wheels (four wheels hardcoded)
 	maxangle = 0.0;
 	const std::string wheelname[] = {"wheel-fl", "wheel-fr", "wheel-rl", "wheel-rr"};
 	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
@@ -436,48 +454,31 @@ bool CARDYNAMICS::Load(
 		if (suspension[i].GetMaxSteeringAngle() > maxangle) maxangle = suspension[i].GetMaxSteeringAngle();
 		AddMassParticle(wheel[i].GetMass(), suspension[i].GetWheelPosition());
 	}
-
-	//load the differential(s)
+	
+	// load differentials
+	T temp;
+	drive = NONE;
+	if (c.GetParam("differential-front.final-drive", temp))
 	{
-		float final_drive, anti_slip, anti_slip_torque(0), anti_slip_torque_deceleration_factor(0);
-
-		if (!c.GetParam("differential.final-drive", final_drive, error_output)) return false;
-		if (!c.GetParam("differential.anti-slip", anti_slip, error_output)) return false;
-		c.GetParam("differential.anti-slip-torque", anti_slip_torque);
-		c.GetParam("differential.anti-slip-torque-deceleration-factor", anti_slip_torque_deceleration_factor);
-
-		std::string drivetype;
-		if (!c.GetParam("drive", drivetype, error_output)) return false;
-		SetDrive(drivetype);
-
-		if (drivetype == "RWD")
-		{
-			rear_differential.SetFinalDrive(final_drive);
-			rear_differential.SetAntiSlip(anti_slip, anti_slip_torque, anti_slip_torque_deceleration_factor);
-		}
-		else if (drivetype == "FWD")
-		{
-			front_differential.SetFinalDrive(final_drive);
-			front_differential.SetAntiSlip(anti_slip, anti_slip_torque, anti_slip_torque_deceleration_factor);
-		}
-		else if (drivetype == "AWD")
-		{
-			rear_differential.SetFinalDrive(1.0);
-			rear_differential.SetAntiSlip(anti_slip, anti_slip_torque, anti_slip_torque_deceleration_factor);
-			front_differential.SetFinalDrive(1.0);
-			front_differential.SetAntiSlip(anti_slip, anti_slip_torque, anti_slip_torque_deceleration_factor);
-			center_differential.SetFinalDrive(final_drive);
-			center_differential.SetAntiSlip(anti_slip, anti_slip_torque, anti_slip_torque_deceleration_factor);
-		}
-		else
-		{
-			error_output << "Unknown drive type: " << drive << std::endl;
-			return false;
-		}
+		if (!LoadDifferential(c, "differential-front", differential_front, error_output)) return false;
+		drive = FWD;
 	}
-
+	if (c.GetParam("differential-rear.final-drive", temp))
+	{
+		if (!LoadDifferential(c, "differential-rear", differential_rear, error_output)) return false;
+		drive = (drive == NONE) ? RWD : AWD;
+	}
+	if (c.GetParam("differential-center.final-drive", temp))
+	{
+		if (!LoadDifferential(c, "differential-center", differential_center, error_output)) return false;
+	}
+	if (drive == NONE)
+	{
+		error_output << "No differential declared" << std::endl;
+		return false;
+	}
+	
 	if(!LoadMassParticles(c, mass_particles, error_output)) return false;
-
 	UpdateMass();
 	
 	// initialize telemetry
@@ -993,23 +994,23 @@ void CARDYNAMICS::DebugPrint ( std::ostream & out, bool p1, bool p2, bool p3, bo
 		if ( drive == RWD )
 		{
 			out << "(rear)" << std::endl;
-			rear_differential.DebugPrint ( out );
+			differential_rear.DebugPrint ( out );
 		}
 		else if ( drive == FWD )
 		{
 			out << "(front)" << std::endl;
-			front_differential.DebugPrint ( out );
+			differential_front.DebugPrint ( out );
 		}
 		else if ( drive == AWD )
 		{
 			out << "(center)" << std::endl;
-			center_differential.DebugPrint ( out );
+			differential_center.DebugPrint ( out );
 
 			out << "(front)" << std::endl;
-			front_differential.DebugPrint ( out );
+			differential_front.DebugPrint ( out );
 
 			out << "(rear)" << std::endl;
-			rear_differential.DebugPrint ( out );
+			differential_rear.DebugPrint ( out );
 		}
 		out << std::endl;
 	}
@@ -1087,9 +1088,9 @@ bool CARDYNAMICS::Serialize ( joeserialize::Serializer & s )
 	_SERIALIZE_(s,engine);
 	_SERIALIZE_(s,clutch);
 	_SERIALIZE_(s,transmission);
-	_SERIALIZE_(s,front_differential);
-	_SERIALIZE_(s,rear_differential);
-	_SERIALIZE_(s,center_differential);
+	_SERIALIZE_(s,differential_front);
+	_SERIALIZE_(s,differential_rear);
+	_SERIALIZE_(s,differential_center);
 	_SERIALIZE_(s,fuel_tank);
 	_SERIALIZE_(s,suspension);
 	_SERIALIZE_(s,wheel);
@@ -1552,25 +1553,25 @@ void CARDYNAMICS::CalculateDriveTorque(T * wheel_drive_torque, T clutch_torque)
 
 	if ( drive == RWD )
 	{
-		rear_differential.ComputeWheelTorques(driveshaft_torque);
-		wheel_drive_torque[REAR_LEFT] = rear_differential.GetSide1Torque();
-		wheel_drive_torque[REAR_RIGHT] = rear_differential.GetSide2Torque();
+		differential_rear.ComputeWheelTorques(driveshaft_torque);
+		wheel_drive_torque[REAR_LEFT] = differential_rear.GetSide1Torque();
+		wheel_drive_torque[REAR_RIGHT] = differential_rear.GetSide2Torque();
 	}
 	else if ( drive == FWD )
 	{
-		front_differential.ComputeWheelTorques(driveshaft_torque);
-		wheel_drive_torque[FRONT_LEFT] = front_differential.GetSide1Torque();
-		wheel_drive_torque[FRONT_RIGHT] = front_differential.GetSide2Torque();
+		differential_front.ComputeWheelTorques(driveshaft_torque);
+		wheel_drive_torque[FRONT_LEFT] = differential_front.GetSide1Torque();
+		wheel_drive_torque[FRONT_RIGHT] = differential_front.GetSide2Torque();
 	}
 	else if ( drive == AWD )
 	{
-		center_differential.ComputeWheelTorques(driveshaft_torque);
-		front_differential.ComputeWheelTorques(center_differential.GetSide1Torque());
-		rear_differential.ComputeWheelTorques(center_differential.GetSide2Torque());
-		wheel_drive_torque[FRONT_LEFT] = front_differential.GetSide1Torque();
-		wheel_drive_torque[FRONT_RIGHT] = front_differential.GetSide2Torque();
-		wheel_drive_torque[REAR_LEFT] = rear_differential.GetSide1Torque();
-		wheel_drive_torque[REAR_RIGHT] = rear_differential.GetSide2Torque();
+		differential_center.ComputeWheelTorques(driveshaft_torque);
+		differential_front.ComputeWheelTorques(differential_center.GetSide1Torque());
+		differential_rear.ComputeWheelTorques(differential_center.GetSide2Torque());
+		wheel_drive_torque[FRONT_LEFT] = differential_front.GetSide1Torque();
+		wheel_drive_torque[FRONT_RIGHT] = differential_front.GetSide2Torque();
+		wheel_drive_torque[REAR_LEFT] = differential_rear.GetSide1Torque();
+		wheel_drive_torque[REAR_RIGHT] = differential_rear.GetSide2Torque();
 	}
 
 	for (int i = 0; i < WHEEL_POSITION_SIZE; i++) assert(!isnan(wheel_drive_torque[WHEEL_POSITION(i)]));
@@ -1586,17 +1587,17 @@ T CARDYNAMICS::CalculateDriveshaftSpeed()
 	for ( int i = 0; i < 4; i++ ) assert ( !isnan ( wheel[WHEEL_POSITION ( i ) ].GetAngularVelocity() ) );
 	if ( drive == RWD )
 	{
-		driveshaft_speed = rear_differential.CalculateDriveshaftSpeed ( left_rear_wheel_speed, right_rear_wheel_speed );
+		driveshaft_speed = differential_rear.CalculateDriveshaftSpeed ( left_rear_wheel_speed, right_rear_wheel_speed );
 	}
 	else if ( drive == FWD )
 	{
-		driveshaft_speed = front_differential.CalculateDriveshaftSpeed ( left_front_wheel_speed, right_front_wheel_speed );
+		driveshaft_speed = differential_front.CalculateDriveshaftSpeed ( left_front_wheel_speed, right_front_wheel_speed );
 	}
 	else if ( drive == AWD )
 	{
-		driveshaft_speed = center_differential.CalculateDriveshaftSpeed (
-		                       front_differential.CalculateDriveshaftSpeed ( left_front_wheel_speed, right_front_wheel_speed ),
-		                       rear_differential.CalculateDriveshaftSpeed ( left_rear_wheel_speed, right_rear_wheel_speed ) );
+		driveshaft_speed = differential_center.CalculateDriveshaftSpeed (
+		                       differential_front.CalculateDriveshaftSpeed ( left_front_wheel_speed, right_front_wheel_speed ),
+		                       differential_rear.CalculateDriveshaftSpeed ( left_rear_wheel_speed, right_rear_wheel_speed ) );
 	}
 
 	return driveshaft_speed;
@@ -1649,17 +1650,17 @@ T CARDYNAMICS::CalculateDriveshaftRPM() const
 	for ( int i = 0; i < 4; i++ ) assert ( !isnan ( wheel[WHEEL_POSITION ( i ) ].GetAngularVelocity() ) );
 	if ( drive == RWD )
 	{
-		driveshaft_speed = rear_differential.GetDriveshaftSpeed ( left_rear_wheel_speed, right_rear_wheel_speed );
+		driveshaft_speed = differential_rear.GetDriveshaftSpeed ( left_rear_wheel_speed, right_rear_wheel_speed );
 	}
 	else if ( drive == FWD )
 	{
-		driveshaft_speed = front_differential.GetDriveshaftSpeed ( left_front_wheel_speed, right_front_wheel_speed );
+		driveshaft_speed = differential_front.GetDriveshaftSpeed ( left_front_wheel_speed, right_front_wheel_speed );
 	}
 	else if ( drive == AWD )
 	{
-		T front_speed = front_differential.GetDriveshaftSpeed ( left_front_wheel_speed, right_front_wheel_speed );
-		T rear_speed = rear_differential.GetDriveshaftSpeed ( left_rear_wheel_speed, right_rear_wheel_speed );
-		driveshaft_speed = center_differential.GetDriveshaftSpeed ( front_speed, rear_speed );
+		T front_speed = differential_front.GetDriveshaftSpeed ( left_front_wheel_speed, right_front_wheel_speed );
+		T rear_speed = differential_rear.GetDriveshaftSpeed ( left_rear_wheel_speed, right_rear_wheel_speed );
+		driveshaft_speed = differential_center.GetDriveshaftSpeed ( front_speed, rear_speed );
 	}
 
 	return transmission.GetClutchSpeed ( driveshaft_speed ) * 30.0 / 3.141593;
@@ -1855,18 +1856,6 @@ void CARDYNAMICS::DoABS(int i, T suspension_force)
 
 	if (abs_active[i])
 		brake[i].SetBrakeFactor(0.0);
-}
-
-void CARDYNAMICS::SetDrive ( const std::string & newdrive )
-{
-	if ( newdrive == "RWD" )
-		drive = RWD;
-	else if ( newdrive == "FWD" )
-		drive = FWD;
-	else if ( newdrive == "AWD" )
-		drive = AWD;
-	else
-		assert ( 0 ); //shouldn't ever happen unless there's an error in the code
 }
 
 void CARDYNAMICS::AddMassParticle(T mass, MATHVECTOR <T, 3> pos)
