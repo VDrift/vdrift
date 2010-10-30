@@ -56,7 +56,6 @@ public:
 	bool LoadPhysics(
 		CONFIGFILE & carconf,
 		const std::string & carpath,
-		const std::string & sharedpartspath,
 		const MATHVECTOR <float, 3> & initial_position,
 		const QUATERNION <float> & initial_orientation,
 		COLLISION_WORLD & world,

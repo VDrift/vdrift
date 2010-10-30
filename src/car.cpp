@@ -42,8 +42,8 @@ CAR::CAR() :
 
 bool CAR::GenerateWheelMesh(
 	CONFIGFILE & carconf,
+	const std::string & id,
 	const std::string & carpath,
-	const std::string & wheelname,
 	const std::string & partspath,
 	SCENENODE & topnode,
 	keyed_container <SCENENODE>::handle & output_scenenode,
@@ -62,13 +62,15 @@ bool CAR::GenerateWheelMesh(
 	DRAWABLE & draw = GetDrawlist(node, NOBLEND).get(output_drawable);
 	
 	// wheel/tire parameters
+	std::string rimname, orientation;
+	if (!carconf.GetParam("wheel-"+id+".mesh", rimname, error_output)) return false;
+	carconf.GetParam("wheel-"+id+".orientation", orientation, error_output);
+	
+	std::string tiretex, tiresize;
 	CARTIRESIZE<float> tire;
-	std::string rimname, tiretex, tiresize, orientation;
-	if (!carconf.GetParam(wheelname+".wheel-model", rimname, error_output)) return false;
-	if (!carconf.GetParam(wheelname+".tire-texture", tiretex, error_output)) return false;
-	if (!carconf.GetParam(wheelname+".size", tiresize, error_output)) return false;
+	if (!carconf.GetParam("tire-"+id+".texture", tiretex, error_output)) return false;
+	if (!carconf.GetParam("tire-"+id+".size", tiresize, error_output)) return false;
 	if (!tire.Parse(tiresize, error_output)) return false;
-	carconf.GetParam(wheelname+".orientation", orientation, error_output);
 	
 	float aspectRatio = tire.aspect_ratio * 100.f;
 	float rim_diameter = (tire.radius - tire.sidewall_width * tire.aspect_ratio) * 2.f;
@@ -146,18 +148,19 @@ bool CAR::GenerateWheelMesh(
 		return false;
 	
 	// create brake rotor(optional)
-	std::string brakename, rotortex, radius;
-	if (!carconf.GetParam(wheelname+".brake", brakename, error_output)) return false;
-	if (!carconf.GetParam(brakename+".rotor", rotortex)) return true;
-	if (!carconf.GetParam(brakename+".radius", radius, error_output)) return false;
+	std::string rotortex, radius;
+	if (!carconf.GetParam("brake-"+id+".texture", rotortex)) return true;
+	if (!carconf.GetParam("brake-"+id+".radius", radius, error_output)) return false;
 	
-	std::string rotorname("rotor" + radius + orientation);
+	std::string rotorname("rotor"+radius+orientation);
 	std::map <std::string, MODEL_JOE03>::iterator rm = models.find(rotorname);
 	if (rm == models.end())
 	{
-		float radius(0.25);
-		carconf.GetParam(brakename+".radius", radius);
-		float diameter_mm = radius * 2 * 1000;
+		float r(0.25);
+		std::stringstream s;
+		s << radius;
+		s >> r;
+		float diameter_mm = r * 2 * 1000;
 		float thickness_mm = 25;
 		
 		VERTEXARRAY rotor_varray;
@@ -309,11 +312,11 @@ bool CAR::LoadGraphics(
 	}
 	
 	// load wheel graphics
-	const std::string wheelname[] = {"wheel-fl", "wheel-fr", "wheel-rl", "wheel-rr"};
+	const std::string wheelid[] = {"fl", "fr", "rl", "rr"};
 	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
 	{
 		if (!GenerateWheelMesh(
-				carconf, carpath, wheelname[i], sharedpartspath,
+				carconf, wheelid[i], carpath, sharedpartspath,
 				topnode, wheelnode[i], wheeldraw[i], models,
 				textures, anisotropy, texsize, error_output))
 		{
@@ -339,7 +342,7 @@ bool CAR::LoadGraphics(
 		
 		// set wheel positions(for widget_spinningcar)
 		float pos[3];
-		if (!carconf.GetParam(wheelname[i] + ".position", pos, error_output)) return false;
+		if (!carconf.GetParam("wheel-"+wheelid[i]+".position", pos, error_output)) return false;
 		COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
 		
 		MATHVECTOR <float, 3> wheelpos(pos[0], pos[1], pos[2]);
@@ -476,7 +479,6 @@ bool CAR::LoadGraphics(
 bool CAR::LoadPhysics(
 	CONFIGFILE & carconf,
 	const std::string & carpath,
-	const std::string & sharedpartspath,
 	const MATHVECTOR <float, 3> & initial_position,
 	const QUATERNION <float> & initial_orientation,
 	COLLISION_WORLD & world,
@@ -485,7 +487,7 @@ bool CAR::LoadPhysics(
 	std::ostream & info_output,
 	std::ostream & error_output)
 {
-	if (!dynamics.Load(carconf, sharedpartspath, error_output)) return false;
+	if (!dynamics.Load(carconf, error_output)) return false;
 	
 	// hacky way to get the model, fixme
 	MODEL_JOE03 * model(0);

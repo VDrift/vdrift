@@ -177,20 +177,21 @@ bool LoadFuelTank(
 
 bool LoadCoilover(
 	const CONFIGFILE & c,
-	const std::string & coilovername,
+	const std::string & id,
 	CARSUSPENSIONINFO <T> & info,
 	std::ostream & error_output)
 {
+	const std::string name("coilover-"+id);
 	std::vector <std::pair <double, double> > damper_factor_points;
 	std::vector <std::pair <double, double> > spring_factor_points;
 
-	if (!c.GetParam(coilovername+".spring-constant", info.spring_constant, error_output)) return false;
-	if (!c.GetParam(coilovername+".bounce", info.bounce, error_output)) return false;
-	if (!c.GetParam(coilovername+".rebound", info.rebound, error_output)) return false;
-	if (!c.GetParam(coilovername+".travel", info.travel, error_output)) return false;
-	if (!c.GetParam(coilovername+".anti-roll", info.anti_roll, error_output)) return false;
-	c.GetPoints(coilovername, "damper-factor", damper_factor_points);
-	c.GetPoints(coilovername, "spring-factor", spring_factor_points);
+	if (!c.GetParam(name+".spring-constant", info.spring_constant, error_output)) return false;
+	if (!c.GetParam(name+".bounce", info.bounce, error_output)) return false;
+	if (!c.GetParam(name+".rebound", info.rebound, error_output)) return false;
+	if (!c.GetParam(name+".travel", info.travel, error_output)) return false;
+	if (!c.GetParam(name+".anti-roll", info.anti_roll, error_output)) return false;
+	c.GetPoints(name, "damper-factor", damper_factor_points);
+	c.GetPoints(name, "spring-factor", spring_factor_points);
 	info.SetDamperFactorPoints(damper_factor_points);
 	info.SetSpringFactorPoints(spring_factor_points);
 
@@ -199,18 +200,19 @@ bool LoadCoilover(
 
 bool LoadBrake(
 	const CONFIGFILE & c,
-	const std::string & brakename,
+	const std::string & id,
 	CARBRAKE<T> & brake,
 	std::ostream & error_output)
 {
+	const std::string name("brake-"+id);
 	float friction, max_pressure, area, bias, radius, handbrake(0);
-
-	if (!c.GetParam(brakename+".friction", friction, error_output)) return false;
-	if (!c.GetParam(brakename+".area", area, error_output)) return false;
-	if (!c.GetParam(brakename+".radius", radius, error_output)) return false;
-	if (!c.GetParam(brakename+".bias", bias, error_output)) return false;
-	if (!c.GetParam(brakename+".max-pressure", max_pressure, error_output)) return false;
-	c.GetParam(brakename+".handbrake", handbrake);
+	
+	if (!c.GetParam(name+".friction", friction, error_output)) return false;
+	if (!c.GetParam(name+".area", area, error_output)) return false;
+	if (!c.GetParam(name+".radius", radius, error_output)) return false;
+	if (!c.GetParam(name+".bias", bias, error_output)) return false;
+	if (!c.GetParam(name+".max-pressure", max_pressure, error_output)) return false;
+	c.GetParam(name+".handbrake", handbrake);
 	
 	brake.SetFriction(friction);
 	brake.SetArea(area);
@@ -218,7 +220,7 @@ bool LoadBrake(
 	brake.SetBias(bias);
 	brake.SetMaxPressure(max_pressure*bias);
 	brake.SetHandbrake(handbrake);
-
+	
 	return true;
 }
 
@@ -276,53 +278,61 @@ bool LoadTireParameters(
 	return true;
 }
 
-bool LoadWheel(
+bool LoadTire(
 	const CONFIGFILE & c,
-	const std::string & wheelname,
-	const std::string & partspath,
-	CARWHEEL<T> & wheel,
+	const std::string & id,
 	CARTIRE<T> & tire,
-	CARBRAKE<T> & brake,
+	std::ostream & error_output)
+{
+	CARTIREINFO<T> info;
+	std::string size, type;
+	if (!c.GetParam("tire-"+id+".size",size, error_output)) return false;
+	if (!c.GetParam("tire-"+id+".type", type, error_output)) return false;
+	if (!LoadTireParameters(c, type, info, error_output)) return false;
+	if (!info.Parse(size, error_output)) return false;
+	
+	tire.Init(info);
+	
+	return true;
+}
+
+bool LoadSuspension(
+	const CONFIGFILE & c,
+	const std::string & id,
 	CARSUSPENSION<T> & suspension,
 	std::ostream & error_output)
 {
-	// load tire
-	CARTIREINFO<T> tinfo;
-	std::string tiresize, tiretype;
-	if (!c.GetParam(wheelname+".size", tiresize, error_output)) return false;
-	if (!c.GetParam(wheelname+".tire", tiretype, error_output)) return false;
-	if (!LoadTireParameters(c, tiretype, tinfo, error_output)) return false;
-	if (!tinfo.Parse(tiresize, error_output)) return false;
-	tire.Init(tinfo);
-	
-	// load brake
-	std::string brakename;
-	if (!c.GetParam(wheelname+".brake", brakename, error_output)) return false;
-	if (!LoadBrake(c, brakename, brake, error_output)) return false;
-	
-	// load suspension
 	float h[3], p[3];
-	CARSUSPENSIONINFO<T> sinfo;
-	std::string coilovername;
-	if (!c.GetParam(wheelname+".coilover", coilovername, error_output)) return false;
-	if (!LoadCoilover(c, coilovername, sinfo, error_output)) return false;
-	if (!c.GetParam(wheelname+".position", p, error_output)) return false;
-	if (!c.GetParam(wheelname+".hinge", h, error_output)) return false;
-	if (!c.GetParam(wheelname+".camber", sinfo.camber, error_output)) return false;
-	if (!c.GetParam(wheelname+".caster", sinfo.caster, error_output)) return false;
-	if (!c.GetParam(wheelname+".toe", sinfo.toe, error_output)) return false;
-	c.GetParam(wheelname+".steering", sinfo.max_steering_angle);
-	c.GetParam(wheelname+".ackermann", sinfo.ackermann);
-
+	CARSUSPENSIONINFO<T> info;
+	
+	if (!LoadCoilover(c, id, info, error_output)) return false;
+	if (!c.GetParam("wheel-"+id+".position", p, error_output)) return false;
+	if (!c.GetParam("wheel-"+id+".hinge", h, error_output)) return false;
+	if (!c.GetParam("wheel-"+id+".camber", info.camber, error_output)) return false;
+	if (!c.GetParam("wheel-"+id+".caster", info.caster, error_output)) return false;
+	if (!c.GetParam("wheel-"+id+".toe", info.toe, error_output)) return false;
+	c.GetParam("wheel-"+id+".steering", info.max_steering_angle);
+	c.GetParam("wheel-"+id+".ackermann", info.ackermann);
+	
 	COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(h[0], h[1], h[2]);
 	COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(p[0], p[1], p[2]);
-	sinfo.hinge.Set(h[0], h[1], h[2]);
-	sinfo.extended_position.Set(p[0], p[1], p[2]);
-	suspension.Init(sinfo);
+	info.hinge.Set(h[0], h[1], h[2]);
+	info.extended_position.Set(p[0], p[1], p[2]);
 	
-	// load wheel
+	suspension.Init(info);
+	
+	return true;
+}		
+
+bool LoadWheel(
+	const CONFIGFILE & c,
+	const std::string & id,
+	const CARTIRE<T> & tire,
+	CARWHEEL<T> & wheel,
+	std::ostream & error_output)
+{
 	float mass, inertia;
-	if (!c.GetParam(wheelname+".mass", mass) && !c.GetParam(wheelname+".inertia", inertia))
+	if (!c.GetParam("wheel-"+id+".mass", mass) && !c.GetParam("wheel-"+id+".inertia", inertia))
 	{
 		float tire_radius = tire.GetRadius();
 		float tire_width = tire.GetSidewallWidth();
@@ -431,10 +441,7 @@ bool LoadMassParticles(
 	return true;
 }
 
-bool CARDYNAMICS::Load(
-	CONFIGFILE & c,
-	const std::string & sharedpartspath,
-	std::ostream & error_output)
+bool CARDYNAMICS::Load(CONFIGFILE & c, std::ostream & error_output)
 {
 	if (!LoadAeroDevices(c, aerodynamics, error_output)) return false;
 	if (!LoadClutch(c, clutch, error_output)) return false;
@@ -447,10 +454,13 @@ bool CARDYNAMICS::Load(
 
 	// load wheels (four wheels hardcoded)
 	maxangle = 0.0;
-	const std::string wheelname[] = {"wheel-fl", "wheel-fr", "wheel-rl", "wheel-rr"};
+	const std::string id[] = {"fl", "fr", "rl", "rr"};
 	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
 	{
-		if (!LoadWheel(c, wheelname[i], sharedpartspath, wheel[i], tire[i], brake[i], suspension[i], error_output)) return false;
+		if (!LoadTire(c, id[i], tire[i], error_output)) return false;
+		if (!LoadBrake(c, id[i], brake[i], error_output)) return false;
+		if (!LoadSuspension(c, id[i], suspension[i], error_output)) return false;
+		if (!LoadWheel(c, id[i], tire[i], wheel[i], error_output)) return false;
 		if (suspension[i].GetMaxSteeringAngle() > maxangle) maxangle = suspension[i].GetMaxSteeringAngle();
 		AddMassParticle(wheel[i].GetMass(), suspension[i].GetWheelPosition());
 	}

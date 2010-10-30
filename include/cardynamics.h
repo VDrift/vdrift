@@ -35,10 +35,7 @@ public:
 	
 	CARDYNAMICS();
 	
-	bool Load(
-		CONFIGFILE & c,
-		const std::string & sharedpartspath,
-		std::ostream & error_output);
+	bool Load(CONFIGFILE & c, std::ostream & error_output);
 
 	void Init(
 		COLLISION_WORLD & world,

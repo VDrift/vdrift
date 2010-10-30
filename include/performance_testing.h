@@ -25,7 +25,6 @@ public:
 	void Test(
 		const std::string & carpath,
 		const std::string & carname,
-		const std::string & sharedpartspath,
 		std::ostream & info_output,
 		std::ostream & error_output);
 };

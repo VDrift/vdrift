@@ -370,7 +370,7 @@ bool GAME::ParseArguments(std::list <std::string> & args)
 	{
 		pathmanager.Init(info_output, error_output);
 		PERFORMANCE_TESTING perftest;
-		perftest.Test(pathmanager.GetCarPath(), argmap["-cartest"], pathmanager.GetCarSharedPath(), info_output, error_output);
+		perftest.Test(pathmanager.GetCarPath(), argmap["-cartest"], info_output, error_output);
 		continue_game = false;
 	}
 	arghelp["-cartest CAR"] = "Run car performance testing on given CAR.";
@@ -1774,7 +1774,7 @@ bool GAME::LoadCar(
 	}
 	
 	if (!car.LoadPhysics(
-		carconf, carpath, pathmanager.GetCarSharedPath(),
+		carconf, carpath,
 		start_position, start_orientation, collision,
 		settings.GetABS() || isai, settings.GetTCS() || isai,
 		info_output, error_output))

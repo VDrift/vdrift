@@ -29,7 +29,6 @@ PERFORMANCE_TESTING::PERFORMANCE_TESTING()
 void PERFORMANCE_TESTING::Test(
 	const std::string & carpath,
 	const std::string & carname,
-	const std::string & sharedpartspath,
 	std::ostream & info_output,
 	std::ostream & error_output)
 {
@@ -43,7 +42,7 @@ void PERFORMANCE_TESTING::Test(
 		error_output << "Error loading car configuration file: " << carfile << endl;
 		return;
 	}
-	if (!car.dynamics.Load(carconf, sharedpartspath, error_output))
+	if (!car.dynamics.Load(carconf, error_output))
 	{
 		error_output << "Error during car dynamics load: " << carfile << endl;
 		return;
