@@ -255,19 +255,6 @@ bool CAR::LoadGraphics(
 		return false;
 	}
 	
-	//load driver graphics
-	if (!driverpath.empty())
-	{
-		if (!LoadInto(
-				topnode.GetNode(bodynode), drivernode, driverdraw, driverpath + "/body.joe", models,
-				textures, driverpath + "/textures/body", texsize, anisotropy,
-				NOBLEND, error_output))
-		{
-			drivernode.invalidate();
-			error_output << "Error loading driver graphics: " << driverpath << std::endl;
-		}
-	}
-
 	//load car interior graphics
 	if ( !LoadInto (
 			topnode.GetNode(bodynode), bodynode, interiordraw, carpath + "/interior.joe", models,
@@ -276,13 +263,34 @@ bool CAR::LoadGraphics(
 	{
 		info_output << "No car interior model exists, continuing without one" << std::endl;
 	}
-
+	
 	//load car glass graphics
 	if ( !LoadInto (
 			topnode.GetNode(bodynode), bodynode, glassdraw, carpath + "/glass.joe", models,
 			textures, carpath + "/textures/glass", texsize, anisotropy, BLEND, nullout ) )
 	{
 		info_output << "No car glass model exists, continuing without one" << std::endl;
+	}
+	
+	//load driver graphics
+	if (!driverpath.empty())
+	{
+		if (LoadInto(
+				topnode.GetNode(bodynode), drivernode, driverdraw, driverpath + "/body.joe", models,
+				textures, driverpath + "/textures/body", texsize, anisotropy,
+				NOBLEND, error_output))
+		{
+			float pos[3];
+			if (!carconf.GetParam("driver.position", pos, error_output)) return false;
+			COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
+			SCENENODE & drivernoderef = topnode.GetNode(bodynode).GetNode(drivernode);
+			MATHVECTOR <float, 3> floatpos(pos[0], pos[1], pos[2]);
+			drivernoderef.GetTransform().SetTranslation(floatpos);
+		}
+		else
+		{
+			error_output << "Error loading driver graphics: " << driverpath << std::endl;
+		}
 	}
 	
 	// load wheel graphics
@@ -330,21 +338,7 @@ bool CAR::LoadGraphics(
 			floatingnoderef.GetTransform().SetTranslation(wheelpos);
 		}
 	}
-
-	// load driver
-	{
-		float pos[3];
-		if (!carconf.GetParam("driver.position", pos, error_output)) return false;
-		COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
-		if (drivernode.valid()) //move the driver model to the coordinates given
-		{
-			SCENENODE & drivernoderef = topnode.GetNode(bodynode).GetNode(drivernode);
-			MATHVECTOR <float, 3> floatpos;
-			floatpos.Set(pos[0], pos[1], pos[2]);
-			drivernoderef.GetTransform().SetTranslation(floatpos);
-		}
-	}
-
+	
 	// load views
 	{
 		CONFIGFILE & c = carconf;
@@ -467,11 +461,9 @@ bool CAR::LoadGraphics(
 		}
 	}
 	
-	mz_nominalmax = (GetTireMaxMz(FRONT_LEFT) + GetTireMaxMz(FRONT_RIGHT))*0.5;
-	
-	lookbehind = false;
-	
 	SetColor(carcolor[0], carcolor[1], carcolor[2]);
+	mz_nominalmax = (GetTireMaxMz(FRONT_LEFT) + GetTireMaxMz(FRONT_RIGHT))*0.5;
+	lookbehind = false;
 	
 	return true;
 }

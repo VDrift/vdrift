@@ -360,14 +360,13 @@ bool LoadWheel(
 	return true;
 }
 
-// max number of aero devices is 8
 bool LoadAeroDevices(
 	const CONFIGFILE & c,
 	std::vector< CARAERO <T> > & aerodynamics,
 	std::ostream & error_output)
 {
-	const std::string aero[] = {"aerodevice-front", "aerodevice-body", "aerodevice-rear"};
-	for(int i = 0; i < 3; i++)
+	const std::string aero[] = {"wing-front", "wing-center", "wing-rear"};
+	for(int i = 0; i < 3; ++i)
 	{
 		float pos[] = {0, 0, 0};
 		float drag_area, drag_coeff;
