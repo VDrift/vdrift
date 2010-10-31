@@ -32,7 +32,7 @@ class HUDBAR
 		{
 			draw = parent.GetDrawlist().twodim.insert(DRAWABLE());
 			DRAWABLE & drawref = parent.GetDrawlist().twodim.get(draw);
-			
+
 			drawref.SetDiffuseMap(bartex);
 			drawref.SetVertArray(&verts);
 			drawref.SetCull(false, false);
@@ -79,6 +79,9 @@ private:
 	TEXT_DRAWABLE driftscoreindicator;
 	TEXT_DRAWABLE placeindicator;
 	TEXT_DRAWABLE raceprompt;
+
+	//variable for the feedback message
+	TEXT_DRAWABLE feedbackmessage;
 
 	//variables for the abs/tcs display
 	TEXT_DRAWABLE abs;
@@ -142,7 +145,7 @@ public:
 	bool Init(
 		const std::string & texturepath,
 		const std::string & texsize,
-		MANAGER<TEXTURE, TEXTUREINFO> & textures, 
+		MANAGER<TEXTURE, TEXTUREINFO> & textures,
 		FONT & lcdfont,
 		FONT & sansfont,
 		float displaywidth,
@@ -166,14 +169,15 @@ public:
 		bool mph, const std::string & debug_string1, const std::string & debug_string2,
 		const std::string & debug_string3, const std::string & debug_string4, float displaywidth,
 		float displayheight, bool absenabled, bool absactive, bool tcsenabled, bool tcsactive,
-		bool drifting, float driftscore, float thisdriftscore);
+		bool drifting, float driftscore, float thisdriftscore,
+		bool displayfeedback, const std::string & feedbackmessagetext, float feedbackmessagealpha);
 
 	void SetDebugVisibility(bool show)
 	{
 		SCENENODE & debugnoderef = hudroot.GetNode(debugnode);
 		debugnoderef.SetChildVisibility(show);
 	}
-	
+
 	SCENENODE & GetNode() {return hudroot;}
 };
 

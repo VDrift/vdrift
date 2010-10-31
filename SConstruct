@@ -567,4 +567,4 @@ if env['NLS']:
 
 SConscript('docs/SConscript')
 SConscript('include/SConscript')
-SConscript('src/SConscript', build_dir='build', duplicate = 0)
+SConscript('src/SConscript', variant_dir='build', duplicate = 0)

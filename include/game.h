@@ -16,6 +16,7 @@
 #include "collision_contact.h"
 #include "carcontrolmap_local.h"
 #include "hud.h"
+#include "driverfeedback.h"
 #include "inputgraph.h"
 #include "sound.h"
 #include "camera.h"
@@ -42,7 +43,7 @@ class GAME
 public:
 	GAME(std::ostream & info_out, std::ostream & error_out);
 	void Start(std::list <std::string> & args);
-	
+
 private:
 	float TickPeriod() const {return framerate;}
 	void MainLoop();
@@ -70,7 +71,7 @@ private:
 	bool LoadCar(
 		const std::string & carname, const std::string & carpaint, const MATHVECTOR <float, 3> & carcolor,
 		const MATHVECTOR <float, 3> & start_position, const QUATERNION <float> & start_orientation,
-		bool islocal, bool isai, const std::string & carfile=""); 
+		bool islocal, bool isai, const std::string & carfile="");
 	bool LoadFonts();
 	void CalculateFPS();
 	void PopulateValueLists(std::map<std::string, std::list <std::pair<std::string,std::string> > > & valuelists);
@@ -105,11 +106,11 @@ private:
 	double clocktime; ///< elapsed wall clock time
 	double target_time;
 	const float framerate;
-	
+
 	SCENENODE debugnode;
 	TEXT_DRAWABLE fps_draw;
 	TEXT_DRAWABLE profiling_text;
-	
+
 	std::vector <float> fps_track;
 	int fps_position;
 	float fps_min;
@@ -151,15 +152,16 @@ private:
 	std::map <CAR *, int> cartimerids;
 	std::pair <CAR *, CARCONTROLMAP_LOCAL> carcontrols_local;
 	COLLISION_WORLD collision;
-	
+
 	HUD hud;
+	DRIVERFEEDBACK feedback;
 	INPUTGRAPH inputgraph;
 	LOADINGSCREEN loadingscreen;
 	TIMER timer;
 	REPLAY replay;
 	PARTICLE_SYSTEM tire_smoke;
 	AI ai;
-	
+
 	//SKY sky;
 
 #ifdef ENABLE_FORCE_FEEDBACK

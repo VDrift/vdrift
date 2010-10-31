@@ -13,7 +13,7 @@ DRAWABLE & GetDrawable(SCENENODE & node, keyed_container <DRAWABLE>::handle & dr
 bool HUD::Init(
 	const std::string & texturepath,
 	const std::string & texsize,
-	MANAGER<TEXTURE, TEXTUREINFO> & textures, 
+	MANAGER<TEXTURE, TEXTUREINFO> & textures,
 	FONT & lcdfont,
 	FONT & sansfont,
 	float displaywidth,
@@ -40,21 +40,21 @@ bool HUD::Init(
     rpmbar = AddDrawable(hudroot);
     rpmredbar = AddDrawable(hudroot);
     rpmbox = AddDrawable(hudroot);
-    
+
 	DRAWABLE & rpmboxref = GetDrawable(hudroot, rpmbox);
 	rpmboxref.SetDiffuseMap(progbartex);
     rpmboxref.SetVertArray(&rpmboxverts);
     rpmboxref.SetDrawOrder(2);
     rpmboxref.SetCull(false, false);
     rpmboxref.SetColor(0.3, 0.3, 0.3, 0.4);
-    
+
 	DRAWABLE & rpmbarref = GetDrawable(hudroot, rpmbar);
 	rpmbarref.SetDiffuseMap(progbartex);
     rpmbarref.SetVertArray(&rpmbarverts);
     rpmbarref.SetDrawOrder(3);
     rpmbarref.SetCull(false, false);
     rpmbarref.SetColor(1.0, 1.0, 1.0, 0.7);
-    
+
 	DRAWABLE & rpmredbarref = GetDrawable(hudroot, rpmredbar);
 	rpmredbarref.SetDiffuseMap(progbartex);
     rpmredbarref.SetVertArray(&rpmredbarverts);
@@ -148,7 +148,7 @@ bool HUD::Init(
         float fontscaley = barheight*3.0;
         float fontscalex = screenhwratio*fontscaley;
 
-        geartextdraw = SetupText(hudroot, lcdfont, geartext, "N", screenhwratio*0.02,1.0-0.015, fontscalex,fontscaley, 1,1,1, 4);    
+        geartextdraw = SetupText(hudroot, lcdfont, geartext, "N", screenhwratio*0.02,1.0-0.015, fontscalex,fontscaley, 1,1,1, 4);
         mphtextdraw = SetupText(hudroot, lcdfont, mphtext, "0", 1.0-screenhwratio*0.02,1.0-0.01, fontscalex,fontscaley, 1,1,1, 4);
     }
 
@@ -172,7 +172,7 @@ bool HUD::Init(
         lapindicator.Init(hudroot, sansfont, "", fontscalex*0.1, timerbox_lowery + fontscaley*0.2, fontscalex, fontscaley);
         lapindicator.SetDrawOrder(hudroot, 0.2);
     }
-	
+
 	{
 		float fontscaley = barheight*3.0;
 		float fontscalex = screenhwratio*fontscaley;
@@ -195,8 +195,16 @@ bool HUD::Init(
         raceprompt.SetColor(hudroot, 1,0,0);
     }
 
+    {
+        float fontscaley = barheight*7.0;
+        float fontscalex = screenhwratio*fontscaley;
+        feedbackmessage.Init(hudroot, sansfont, "", 0.5, 0.2, fontscalex, fontscaley);
+        feedbackmessage.SetDrawOrder(hudroot, 1.0);
+        feedbackmessage.SetColor(hudroot, 1,0,0);
+    }
+
     Hide();
-	
+
 	debug_hud_info = debugon;
 
     return true;
@@ -208,7 +216,8 @@ void HUD::Update(FONT & lcdfont, FONT & sansfont, float curlap, float lastlap, f
 		bool mph, const std::string & debug_string1, const std::string & debug_string2,
 		const std::string & debug_string3, const std::string & debug_string4, float displaywidth,
 		float displayheight, bool absenabled, bool absactive, bool tcsenabled, bool tcsactive,
-		bool drifting, float driftscore, float thisdriftscore)
+		bool drifting, float driftscore, float thisdriftscore,
+		bool displayfeedback, const std::string & feedbackmessagetext, float feedbackmessagealpha)
 {
     float screenhwratio = displayheight/displaywidth;
 
@@ -307,7 +316,7 @@ void HUD::Update(FONT & lcdfont, FONT & sansfont, float curlap, float lastlap, f
     }
     else
         placeindicator.SetDrawEnable(hudroot, false);
-	
+
 	//update drift score
 	if (numlaps == 0) //this is how we determine practice mode, for now
 	{
@@ -383,4 +392,18 @@ void HUD::Update(FONT & lcdfont, FONT & sansfont, float curlap, float lastlap, f
     }
     else
         raceprompt.SetDrawEnable(hudroot, false);
+
+
+    if (displayfeedback)
+    {
+        std::stringstream fm;
+        fm << feedbackmessagetext;
+        feedbackmessage.SetColor(hudroot, 0.8, 0.8, 0.8);
+        feedbackmessage.Revise(fm.str());
+        float width = feedbackmessage.GetWidth();
+        feedbackmessage.SetPosition(0.5-width*0.5, 0.7);
+        feedbackmessage.SetAlpha(hudroot, feedbackmessagealpha);
+    }
+    else
+        feedbackmessage.SetDrawEnable(hudroot, false);
 }

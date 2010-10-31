@@ -96,7 +96,7 @@ void GAME::Start(list <string> & args)
 	_PRINTSIZE_(replay);
 	_PRINTSIZE_(tire_smoke);
 	_PRINTSIZE_(ai);*/
-	
+
 	if (!ParseArguments(args))
 	{
 		return;
@@ -167,7 +167,7 @@ void GAME::Start(list <string> & args)
 		fps_draw.Init(debugnode, fonts["futuresans"], "", 0.5-w*0.5,1.0-0.02, screenhwratio*0.2,0.2);
 		fps_draw.SetDrawOrder(debugnode, 150);
 	}
-	
+
 	//initialize profiling text
 	if (profilingmode)
 	{
@@ -187,7 +187,7 @@ void GAME::Start(list <string> & args)
 		return;
 	}
 	tire_smoke.SetParameters(0.125,0.25, 5,14, 0.3,1, 0.5,1, MATHVECTOR<float,3>(0,0,1));
-	
+
 #ifdef DEBUG_TEXTURES
 	textures.DebugPrint(info_output);
 #endif
@@ -205,7 +205,7 @@ void GAME::Start(list <string> & args)
 			error_output << "Error loading benchmark" << endl;
 		}
 	}
-	
+
 	DoneStartingUp();
 
 	//begin
@@ -221,7 +221,7 @@ void GAME::InitializeCoreSubsystems()
 {
 	pathmanager.Init(info_output, error_output);
 	settings.Load(pathmanager.GetSettingsFile());
-	
+
 	if (!LastStartWasSuccessful())
 	{
 		info_output << "The last VDrift startup was unsuccessful.\nSettings have been set to failsafe defaults.\nYour original VDrift.config file was backed up to VDrift.config.backup" << endl;
@@ -229,7 +229,7 @@ void GAME::InitializeCoreSubsystems()
 		settings.SetFailsafeSettings();
 	}
 	BeginStartingUp();
-	
+
 	graphics.Init(pathmanager.GetShaderPath(), "VDrift - open source racing simulation",
 		settings.GetResolution_x(), settings.GetResolution_y(),
 		settings.GetBpp(), settings.GetDepthbpp(), settings.GetFullscreen(),
@@ -241,7 +241,7 @@ void GAME::InitializeCoreSubsystems()
 		settings.GetLighting(), settings.GetBloom(), settings.GetNormalMaps(),
 		renderconfigfile,
 		info_output, error_output);
-	
+
 	QUATERNION <float> ldir;
 	ldir.Rotate(3.141593*0.05,0,1,0);
 	ldir.Rotate(-3.141593*0.1,1,0,0);
@@ -258,10 +258,10 @@ void TraverseScene(SCENENODE & node, GRAPHICS_SDLGL::dynamicdrawlist_type & outp
 	{
 		output.clear();
 	}
-	
+
 	MATRIX4 <float> identity;
 	node.Traverse(output, identity);
-	
+
 	//std::cout << output.size() << std::endl;
 	//std::cout << node.Nodes() << "," << node.Drawables() << std::endl;
 }
@@ -330,7 +330,7 @@ bool GAME::InitializeSound()
 bool GAME::ParseArguments(std::list <std::string> & args)
 {
 	bool continue_game(true);
-	
+
 	map <string, string> arghelp;
 	map <string, string> argmap;
 
@@ -359,7 +359,7 @@ bool GAME::ParseArguments(std::list <std::string> & args)
 		continue_game = false;
 	}
 	arghelp["-test"] = "Run unit tests.";
-	
+
 	if (argmap.find("-debug") != argmap.end())
 	{
 		debugmode = true;
@@ -374,28 +374,28 @@ bool GAME::ParseArguments(std::list <std::string> & args)
 		continue_game = false;
 	}
 	arghelp["-cartest CAR"] = "Run car performance testing on given CAR.";
-	
+
 	if (!argmap["-profile"].empty())
 	{
 		pathmanager.SetProfile(argmap["-profile"]);
 	}
 	arghelp["-profile NAME"] = "Store settings, controls, and records under a separate profile.";
-	
+
 	if (argmap.find("-profiling") != argmap.end() || argmap.find("-benchmark") != argmap.end())
 	{
 		PROFILER.init(20);
 		profilingmode = true;
 	}
 	arghelp["-profiling"] = "Display game performance data.";
-	
+
 	if (argmap.find("-dumpfps") != argmap.end())
 	{
 		info_output << "Dumping the frame-rate to log." << endl;
 		dumpfps = true;
 	}
 	arghelp["-dumpfps"] = "Continually dump the framerate to the log.";
-	
-	
+
+
 	if (!argmap["-resolution"].empty())
 	{
 		string res(argmap["-resolution"]);
@@ -453,14 +453,14 @@ bool GAME::ParseArguments(std::list <std::string> & args)
 		benchmode = true;
 	}
 	arghelp["-benchmark"] = "Run in benchmark mode.";
-	
+
 	arghelp["-render FILE"] = "Load the specified render configuration file instead of the default " + renderconfigfile + ".";
 	if (!argmap["-render"].empty())
 	{
 		renderconfigfile = argmap["-render"];
 	}
-	
-	
+
+
 	arghelp["-help"] = "Display command-line help.";
 	if (argmap.find("-help") != argmap.end() || argmap.find("-h") != argmap.end() || argmap.find("--help") != argmap.end() || argmap.find("-?") != argmap.end())
 	{
@@ -493,10 +493,10 @@ void GAME::End()
 		info_output << "Average frame-rate: " << mean_fps << " frames per second\n";
 		info_output << "Min / Max frame-rate: " << fps_min << " / " << fps_max << " frames per second" << endl;
 	}
-	
+
 	if (profilingmode)
 		info_output << "Profiling summary:\n" << PROFILER.getSummary(quickprof::PERCENT) << endl;
-	
+
 	info_output << "Shutting down..." << endl;
 
 	LeaveGame();
@@ -526,7 +526,7 @@ void GAME::BeginDraw()
 		MATHVECTOR <float, 3> reflection_sample_location = active_camera->GetPosition();
 		if (carcontrols_local.first)
 			reflection_sample_location = carcontrols_local.first->GetCenterOfMassPosition();
-		
+
 		QUATERNION <float> camlook;
 		camlook.Rotate(3.141593*0.5,1,0,0);
 		camlook.Rotate(-3.141593*0.5,0,0,1);
@@ -541,7 +541,7 @@ void GAME::BeginDraw()
 	PROFILER.endBlock("render");
 
 	PROFILER.beginBlock("scenegraph");
-	
+
 	TraverseScene<true>(debugnode, graphics.GetDynamicDrawlist());
 	TraverseScene<false>(gui.GetNode(), graphics.GetDynamicDrawlist());
 	TraverseScene<false>(track.GetRacinglineNode(), graphics.GetDynamicDrawlist());
@@ -556,7 +556,7 @@ void GAME::BeginDraw()
 	{
 		TraverseScene<false>(i->GetNode(), graphics.GetDynamicDrawlist());
 	}
-	
+
 	//gui.GetNode().DebugPrint(info_output);
 	PROFILER.endBlock("scenegraph");
 	PROFILER.beginBlock("render");
@@ -577,22 +577,24 @@ void GAME::MainLoop()
 	while (!eventsystem.GetQuit() && (!benchmode || replay.GetPlaying()))
 	{
 		CalculateFPS();
-		
+
 		clocktime += eventsystem.Get_dt();
 
 		eventsystem.BeginFrame();
 
 		Tick(eventsystem.Get_dt()); //do CPU intensive stuff in parallel with the GPU
 
+        feedback.Update(eventsystem.Get_dt());
+
 		gui.Update(eventsystem.Get_dt());
-		
+
 		FinishDraw(); //sync CPU and GPU (flip the page)
 		BeginDraw();
-		
+
 		eventsystem.EndFrame();
-		
+
 		PROFILER.endCycle();
-		
+
 		displayframe++;
 	}
 }
@@ -629,13 +631,13 @@ void GAME::Tick(float deltat)
 void GAME::AdvanceGameLogic()
 {
 	//PROFILER.beginBlock("input-processing");
-	
+
 	eventsystem.ProcessEvents();
 
 	ProcessGUIInputs();
 
 	ProcessGameInputs();
-	
+
 	//PROFILER.endBlock("input-processing");
 
 	if (track.Loaded())
@@ -661,23 +663,23 @@ void GAME::AdvanceGameLogic()
 			{
 				if (sound.Enabled())
 					sound.Pause(false);
-				
+
 				PROFILER.beginBlock("ai");
 				ai.Visualize();
 				ai.update(TickPeriod(), &track, cars);
 				PROFILER.endBlock("ai");
-				
+
 				PROFILER.beginBlock("physics");
 				collision.Update(TickPeriod());
 				PROFILER.endBlock("physics");
-				
+
 				PROFILER.beginBlock("car-update");
 				for (list <CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
 				{
 					UpdateCar(*i, TickPeriod());
 				}
 				PROFILER.endBlock("car-update");
-				
+
 				//PROFILER.beginBlock("timer");
 				UpdateTimer();
 				//PROFILER.endBlock("timer");
@@ -736,13 +738,13 @@ void GAME::ProcessGameInputs()
 			else
 				error_output << "Couldn't find a file to which to save the captured screenshot" << endl;
 		}
-		
+
 		if (carcontrols_local.second.GetInput(CARINPUT::PAUSE) == 1.0)
 		{
 			//cout << "Pause input; changing " << pause << " to " << !pause << endl;
 			pause = !pause;
 		}
-		
+
 		if (carcontrols_local.second.GetInput(CARINPUT::RELOAD_SHADERS) == 1.0)
 		{
 			info_output << "Reloading shaders" << endl;
@@ -783,8 +785,10 @@ void GAME::UpdateTimer()
 		{
 		    // only count it if the car's current sector isn't -1
 		    // which is the default value when the car is loaded
-			timer.Lap(carid, i->GetSector(), nextsector, (i->GetSector() >= 0)); 
+			timer.Lap(carid, i->GetSector(), nextsector, (i->GetSector() >= 0));
 			i->SetSector(nextsector);
+			std::string finishedlap = "you finished a lap";
+			feedback.SetNewFeedback(finishedlap);
 		}
 
 		//update how far the car is on the track
@@ -814,7 +818,7 @@ void GAME::UpdateTimer()
             MATHVECTOR <float, 3> forwardvec = front_left - back_left;
             MATHVECTOR <float, 3> relative_pos = pos - back_left;
             float dist_from_back = 0;
-			
+
 			if (forwardvec.Magnitude() > 0.0001)
 				dist_from_back = relative_pos.dot(forwardvec.Normalize());
 
@@ -1305,7 +1309,7 @@ void GAME::ProcessGUIAction(const std::string & action)
 			opponents_paint.clear();
 			opponents_color.clear();
 		}
-		
+
 		opponents.push_back(settings.GetOpponentCar());
 		opponents_paint.push_back(settings.GetOpponentCarPaint());
 		MATHVECTOR <float, 3> color(0);
@@ -1429,7 +1433,8 @@ void GAME::UpdateCarInputs(CAR & car)
 			debug_info4.str(), graphics.GetW(), graphics.GetH(), car.GetABSEnabled(),
 			car.GetABSActive(), car.GetTCSEnabled(), car.GetTCSActive(),
 			timer.GetIsDrifting(cartimerids[&car]), timer.GetDriftScore(cartimerids[&car]),
-			timer.GetThisDriftScore(cartimerids[&car]));
+			timer.GetThisDriftScore(cartimerids[&car]),
+            feedback.IsFeedbackDisplayed(), feedback.GetMessageText(), feedback.GetMessageAlpha());
 
 		//handle camera mode change inputs
 		CAMERA * old_camera = active_camera;
@@ -1466,7 +1471,7 @@ void GAME::UpdateCarInputs(CAR & car)
 			active_camera = car.Cameras().Prev();
 		}
 		settings.SetCameraMode(active_camera->GetName());
-		
+
 		if(old_camera != active_camera)
 		{
 			active_camera->Reset(car.GetPosition(), car.GetOrientation());
@@ -1492,10 +1497,10 @@ void GAME::UpdateCarInputs(CAR & car)
 				(*s)->Enable3D(!incar);
 			}
 		}
-		
+
 		//hide glass if we're inside the car
 		car.EnableGlass(!incar);
-		
+
 		//move up the close shadow distance if we're in the cockpit
 		graphics.SetCloseShadow(incar ? 1.0 : 5.0);
 	}
@@ -1531,13 +1536,13 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	{
 		trackname = settings.GetTrack();
 	}
-	
+
 	if (!LoadTrack(trackname))
 	{
 		error_output << "Error during track loading: " << trackname << endl;
 		return false;
 	}
-/*	
+/*
 	if (!sky.Load(pathmanager.GetTrackPath()+"/"+trackname))
 	{
 		info_output << "No sky settings file found. Fall back to sky box." << std::endl;
@@ -1635,10 +1640,10 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	{
 		assert(carcontrols_local.first);
 		std::string cartype = carcontrols_local.first->GetCarType();
-		
+
 		float r(0), g(0), b(0);
 		settings.GetCarColor(r, g, b);
-		
+
 		replay.StartRecording(
 			cartype,
 			settings.GetCarPaint(),
@@ -1693,7 +1698,7 @@ void GAME::LeaveGame()
 		replay.StopPlaying();
 
 	gui.SetInGame(false);
-	
+
 	// clear out the static drawables
 	SCENENODE empty;
 	graphics.AddStaticNode(empty, true);
@@ -1710,7 +1715,7 @@ void GAME::LeaveGame()
 			}
 		}
 	}
-	
+
 	collision.Clear();
 	track.Unload();
 	cars.clear();
@@ -1730,7 +1735,7 @@ bool GAME::LoadCar(
 	bool islocal, bool isai, const string & carfile)
 {
 	std::string carpath = pathmanager.GetCarPath()+"/"+carname;
-	
+
 	CONFIGFILE carconf;
 	if (carfile.empty()) //if no file is passed in, then load it from disk
 	{
@@ -1743,10 +1748,10 @@ bool GAME::LoadCar(
 		if ( !carconf.Load ( carstream ) )
 			return false;
 	}
-	
+
 	cars.push_back(CAR());
 	CAR & car(cars.back());
-	
+
 	if (!car.LoadGraphics(
 		carconf, carpath, pathmanager.GetDriverPath()+"/driver2", carname,
 		textures, carpaint, carcolor,
@@ -1760,7 +1765,7 @@ bool GAME::LoadCar(
 		cars.pop_back();
 		return false;
 	}
-	
+
 	if(sound.Enabled())
 	{
 		if (!car.LoadSounds(
@@ -1772,7 +1777,7 @@ bool GAME::LoadCar(
 			return false;
 		}
 	}
-	
+
 	if (!car.LoadPhysics(
 		carconf, carpath, pathmanager.GetCarSharedPath(),
 		start_position, start_orientation, collision,
@@ -1781,7 +1786,7 @@ bool GAME::LoadCar(
 	{
 		return false;
 	}
-	
+
 	info_output << "Car loading was successful: " << carname << endl;
 	if (islocal)
 	{
@@ -1798,7 +1803,7 @@ bool GAME::LoadCar(
 		if (carcontrols_local.first && settings.GetAutoShift())
 			carcontrols_local.first->SetGear(1);
 	}
-	
+
 	return true;
 }
 
@@ -1832,7 +1837,7 @@ bool GAME::LoadTrack(const std::string & trackname)
 		success = track.ContinueDeferredLoad(textures);
 		count++;
 	}
-	
+
 	if (!success)
 	{
 		error_output << "Error loading track (deferred): " << trackname << endl;
@@ -1852,7 +1857,7 @@ bool GAME::LoadTrack(const std::string & trackname)
 	//setup track collision
 	collision.SetTrack(&track);
 	collision.DebugPrint(info_output);
-	
+
 	//build static drawlist
 	#ifdef USE_STATIC_OPTIMIZATION_FOR_TRACK
 	graphics.AddStaticNode(track.GetTrackNode());
@@ -1926,7 +1931,7 @@ void GAME::CalculateFPS()
 	{
 		fps_draw.SetDrawEnable(debugnode, false);
 	}
-	
+
 	if (profilingmode && frame % 10 == 0)
 	{
 		profiling_text.Revise(PROFILER.getAvgSummary(quickprof::MICROSECONDS));
@@ -2199,7 +2204,7 @@ void GAME::UpdateForceFeedback(float dt)
 			forcefeedback->update(force, &feedback, ffdt, error_output);
 		}
 	}
-	
+
 	if (pause && dt == 0)
 	{
 		double pos=0;
@@ -2281,7 +2286,7 @@ void GAME::UpdateDriftScore(CAR & car, double dt)
 			dotprod = -1.0;
 		car_angle = acos(dotprod);
 	}
-	
+
 	assert(car_angle == car_angle); //assert that car_angle isn't NAN
 	assert(cartimerids.find(&car) != cartimerids.end()); //assert that the car is registered with the timer system
 
@@ -2308,12 +2313,12 @@ void GAME::UpdateDriftScore(CAR & car, double dt)
 
 		//bonus score calculation is now done in TIMER
 		timer.UpdateMaxDriftAngleSpeed(cartimerids[&car], car_angle, car_speed);
-		
+
 		//std::cout << timer.GetDriftScore(cartimerids[&car]) << " + " << timer.GetThisDriftScore(cartimerids[&car]) << endl;
 	}
 
 	timer.SetIsDrifting(cartimerids[&car], is_drifting, on_track && !spin_out);
-	
+
 	//std::cout << is_drifting << ", " << on_track << ", " << car_angle << endl;
 }
 

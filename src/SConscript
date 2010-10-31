@@ -43,6 +43,7 @@ src = Split("""aabb.cpp
 		containeralgorithm.cpp
 		coordinatesystems.cpp
 		crashdetection.cpp
+                driverfeedback.cpp
 		endian_utility.cpp
 		eventsystem.cpp
 		fbobject.cpp
