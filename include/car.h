@@ -304,8 +304,6 @@ protected:
 	keyed_container <SCENENODE>::handle floatingnode[WHEEL_POSITION_SIZE];
 	
 	keyed_container <DRAWABLE>::handle bodydraw;
-	keyed_container <DRAWABLE>::handle driverdraw;
-	keyed_container <DRAWABLE>::handle interiordraw;
 	keyed_container <DRAWABLE>::handle glassdraw;
 	keyed_container <DRAWABLE>::handle brakelights;
 	keyed_container <DRAWABLE>::handle reverselights;
@@ -359,94 +357,10 @@ protected:
 		
 	void UpdateGraphics();
 	
-	bool GenerateWheelMesh(
-		CONFIGFILE & carconf,
-		const std::string & carpath,
-		const std::string & wheelname,
-		const std::string & partspath,
-		SCENENODE & topnode,
-		keyed_container <SCENENODE>::handle & output_scenenode,
-		keyed_container <DRAWABLE>::handle & output_drawable,
-		std::map <std::string, MODEL_JOE03> & models,
-		MANAGER<TEXTURE, TEXTUREINFO> & textures,
-		int anisotropy,
-		const std::string & texsize,
-		std::ostream & error_output);
-	
 	bool LoadLight(
 		CONFIGFILE & cfg,
 		const std::string & name,
 		std::ostream & error_output);
-	
-	enum WHICHDRAWLIST
-	{
-		BLEND,
-		NOBLEND,
-		EMISSIVE,
-		OMNI
-	};
-	
-	/// take the parentnode, add a scenenode (if output_scenenode isn't yet valid), add a drawable to the
-	/// scenenode, load a model, load a texture, and set up the drawable with the model and texture.
-	/// the given TEXTURE textures will not be reloaded if they are already loaded
-	/// returns true if successful
-	bool LoadInto(
-		SCENENODE & parentnode,
-		keyed_container <SCENENODE>::handle & output_scenenode,
-		keyed_container <DRAWABLE>::handle & output_drawable,
-		const std::string & joefile,
-		std::map <std::string, MODEL_JOE03> & models,
-		MANAGER <TEXTURE, TEXTUREINFO> & textures,
-		const std::string & texname,
-		const std::string & texsize,
-		int anisotropy,
-		WHICHDRAWLIST whichdrawlist,
-		std::ostream & error_output);
-
-	/// load joefile, if draw != NULL generate list and assign to draw
-	bool LoadModel(
-		const std::string & joefile,
-		MODEL_JOE03 & output_model,
-		DRAWABLE * draw,
-		std::ostream & error_output);
-	
-	/// will load texname+".png"
-	/// will attempt to load texname+"-misc1.png, texname+"-misc2.png if loadmisc true
-	bool LoadTextures(
-		MANAGER<TEXTURE, TEXTUREINFO> & textures,
-		const std::string & texname,
-		const std::string & texsize,
-		int anisotropy,
-		DRAWABLE & draw,
-		std::ostream & error_output);
-	
-	void AddDrawable(
-		WHICHDRAWLIST whichdrawlist,
-		SCENENODE & parentnode,
-		DRAWABLE & draw,
-		keyed_container <SCENENODE>::handle & output_scenenode,
-		keyed_container <DRAWABLE>::handle & output_drawable,
-		std::ostream & error_output);
-	
-	keyed_container <DRAWABLE> & GetDrawlist(SCENENODE & node, WHICHDRAWLIST which)
-	{
-		switch (which)
-		{
-			case BLEND:
-			return node.GetDrawlist().normal_blend;
-			
-			case NOBLEND:
-			return node.GetDrawlist().car_noblend;
-			
-			case EMISSIVE:
-			return node.GetDrawlist().lights_emissive;
-			
-			case OMNI:
-			return node.GetDrawlist().lights_omni;
-		};
-		assert(0);
-		return node.GetDrawlist().car_noblend;
-	}
 };
 
 #endif
