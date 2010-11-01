@@ -2,8 +2,6 @@
 
 #include <string>
 
-#include <iostream>
-
 DRIVERFEEDBACK::DRIVERFEEDBACK()
 {
     message_show = false;
@@ -66,5 +64,3 @@ void DRIVERFEEDBACK::SetNewFeedback(const std::string & new_message_text, float 
     message_show = true;
     animation_timer = 0.0;
 }
-
-

@@ -154,7 +154,7 @@ private:
 	COLLISION_WORLD collision;
 
 	HUD hud;
-	DRIVERFEEDBACK feedback;
+	DRIVERFEEDBACK driverfeedback;
 	INPUTGRAPH inputgraph;
 	LOADINGSCREEN loadingscreen;
 	TIMER timer;

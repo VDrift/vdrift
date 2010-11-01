@@ -584,8 +584,6 @@ void GAME::MainLoop()
 
 		Tick(eventsystem.Get_dt()); //do CPU intensive stuff in parallel with the GPU
 
-        feedback.Update(eventsystem.Get_dt());
-
 		gui.Update(eventsystem.Get_dt());
 
 		FinishDraw(); //sync CPU and GPU (flip the page)
@@ -687,6 +685,9 @@ void GAME::AdvanceGameLogic()
 				//PROFILER.beginBlock("particles");
 				UpdateParticleSystems(TickPeriod());
 				//PROFILER.endBlock("particles");
+
+                driverfeedback.Update(eventsystem.Get_dt());
+
 			}
 		}
 	}
@@ -785,10 +786,14 @@ void GAME::UpdateTimer()
 		{
 		    // only count it if the car's current sector isn't -1
 		    // which is the default value when the car is loaded
+		    //bool lap_counts = ;
 			timer.Lap(carid, i->GetSector(), nextsector, (i->GetSector() >= 0));
 			i->SetSector(nextsector);
-			std::string finishedlap = "you finished a lap";
-			feedback.SetNewFeedback(finishedlap);
+			if (i->GetSector() == 0)
+			{
+                std::string finishedlap = "crossed finish line";
+                driverfeedback.SetNewFeedback(finishedlap);
+			}
 		}
 
 		//update how far the car is on the track
@@ -1434,7 +1439,7 @@ void GAME::UpdateCarInputs(CAR & car)
 			car.GetABSActive(), car.GetTCSEnabled(), car.GetTCSActive(),
 			timer.GetIsDrifting(cartimerids[&car]), timer.GetDriftScore(cartimerids[&car]),
 			timer.GetThisDriftScore(cartimerids[&car]),
-            feedback.IsFeedbackDisplayed(), feedback.GetMessageText(), feedback.GetMessageAlpha());
+            driverfeedback.IsFeedbackDisplayed(), driverfeedback.GetMessageText(), driverfeedback.GetMessageAlpha());
 
 		//handle camera mode change inputs
 		CAMERA * old_camera = active_camera;

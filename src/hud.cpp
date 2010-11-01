@@ -199,7 +199,7 @@ bool HUD::Init(
         float fontscaley = barheight*7.0;
         float fontscalex = screenhwratio*fontscaley;
         feedbackmessage.Init(hudroot, sansfont, "", 0.5, 0.2, fontscalex, fontscaley);
-        feedbackmessage.SetDrawOrder(hudroot, 1.0);
+        feedbackmessage.SetDrawOrder(hudroot, 10);
         feedbackmessage.SetColor(hudroot, 1,0,0);
     }
 
@@ -393,7 +393,7 @@ void HUD::Update(FONT & lcdfont, FONT & sansfont, float curlap, float lastlap, f
     else
         raceprompt.SetDrawEnable(hudroot, false);
 
-
+    //update driver feedback message
     if (displayfeedback)
     {
         std::stringstream fm;
@@ -401,8 +401,9 @@ void HUD::Update(FONT & lcdfont, FONT & sansfont, float curlap, float lastlap, f
         feedbackmessage.SetColor(hudroot, 0.8, 0.8, 0.8);
         feedbackmessage.Revise(fm.str());
         float width = feedbackmessage.GetWidth();
-        feedbackmessage.SetPosition(0.5-width*0.5, 0.7);
+        feedbackmessage.SetPosition(0.5 - width * 0.5, 0.8);
         feedbackmessage.SetAlpha(hudroot, feedbackmessagealpha);
+        feedbackmessage.SetDrawEnable(hudroot, true);
     }
     else
         feedbackmessage.SetDrawEnable(hudroot, false);
