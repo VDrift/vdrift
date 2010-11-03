@@ -9,8 +9,8 @@
 #define pi 3.14159265358979323846f
 
 // default parameters are for laguna seca raceway
-SKY::SKY(GRAPHICS_SDLGL & gs, std::ostream & info, std::ostream & error)
-: graphics(gs), info_output(info), error_output(error)
+SKY::SKY(GRAPHICS_SDLGL & gs, std::ostream & info, std::ostream & error) :
+	graphics(gs), info_output(info), error_output(error)
 {
 	wavelength.Set(0.65f, 0.57f, 0.475f);
 	turbidity = 4;
@@ -52,7 +52,7 @@ bool SKY::Load(const std::string & path)
 		datetime = *localtime(&seconds);
 	}
 	
-	sky_texture.Init(512, 512, FBTEXTURE::NORMAL, false, false, false, true, error_output);
+	//sky_texture.Init(512, 512, FBTEXTURE::NORMAL, false, false, false, true, error_output);
 	
 	Update();
 	
