@@ -2,6 +2,7 @@
 #include "endian_utility.h"
 
 #ifdef __APPLE__
+#define __MACOSX__
 #include <Vorbis/vorbisfile.h>
 #else
 #include <vorbis/vorbisfile.h>
