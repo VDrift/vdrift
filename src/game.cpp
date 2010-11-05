@@ -2090,7 +2090,14 @@ void GAME::PopulateValueLists(std::map<std::string, std::list <std::pair <std::s
 
 	//populate other lists
 	valuelists["joy_indeces"].push_back(pair<string,string>("0","0"));
-	valuelists["skins"].push_back(pair<string,string>("simple","simple"));
+	
+	list <string> skinlist;
+	pathmanager.GetFolderIndex(pathmanager.GetSkinPath(),skinlist);
+	for (list <string>::iterator i = skinlist.begin(); i != skinlist.end(); ++i)
+	{
+		if (pathmanager.FileExists(pathmanager.GetSkinPath()+*i+"/menus/Main"))
+			valuelists["skins"].push_back(pair<string,string>(*i,*i));
+	}
 }
 
 void GAME::LoadSaveOptions(OPTION_ACTION action, std::map<std::string, std::string> & options)

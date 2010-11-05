@@ -69,6 +69,7 @@ class PATHMANAGER
 		std::string GetFontPath(const std::string & skinname) const {return data_directory+"/skins/"+skinname+"/fonts";}
 		std::string GetGUIMenuPath(const std::string & skinname) const {return data_directory+"/skins/"+skinname+"/menus";}
 		std::string GetGUITexturePath(const std::string & skinname) const {return data_directory+"/skins/"+skinname+"/textures";}
+		std::string GetSkinPath() const {return data_directory+"/skins/";}
 		bool GetFolderIndex(std::string folderpath, std::list <std::string> & outputfolderlist, std::string extension="") const; ///<optionally filter for the given extension
 		std::string GetOptionsFile() const {return data_directory + "/settings/options.config";}
 		std::string GetVideoModeFile() const {return data_directory + "/lists/videomodes";}
