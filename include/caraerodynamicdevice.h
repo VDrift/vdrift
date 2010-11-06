@@ -32,9 +32,9 @@ class CARAERO
 
 		void DebugPrint(std::ostream & out) const
 		{
-			out << "---Aerodynamic Device---" << std::endl;
-			out << "Drag: " << drag_vector << std::endl;
-			out << "Lift: " << lift_vector << std::endl;
+			out << "---Aerodynamic Device---" << "\n";
+			out << "Drag: " << drag_vector << "\n";
+			out << "Lift: " << lift_vector << "\n";
 		}
 		
 		void Set(const MATHVECTOR <T, 3> & newpos, T new_drag_frontal_area, T new_drag_coefficient, T new_lift_surface_area,

@@ -13,7 +13,7 @@ class SCENENODE;
 class WIDGET_MULTIIMAGE : public WIDGET
 {
 private:
-	std::string data;
+	//std::string data;
 	std::string prefix;
 	std::string postfix;
 	std::string tsize;
@@ -23,7 +23,7 @@ private:
 	std::ostream * errptr;
 	SPRITE2D s1;
 	bool wasvisible;
-	MANAGER<TEXTURE, TEXTUREINFO> * textures;
+	TEXTUREMANAGER * textures;
 	
 public:
 	WIDGET_MULTIIMAGE() : errptr(NULL), wasvisible(false), textures(NULL) {}
@@ -32,16 +32,16 @@ public:
 	
 	void SetupDrawable(
 		SCENENODE & scene,
+		TEXTUREMANAGER & textures,
 		const std::string & texturesize,
-		MANAGER<TEXTURE, TEXTUREINFO> & textures,
-		const std::string & datapath,
+		//const std::string & datapath,
 		const std::string & newprefix,
 		const std::string & newpostfix, 
       	float x, float y, float w, float h,
       	std::ostream & error_output,
 	    int order=0)
 	{
-		data = datapath;
+		//data = datapath;
 		prefix = newprefix;
 		postfix = newpostfix;
 		tsize = texturesize;
@@ -73,7 +73,8 @@ public:
 		assert(errptr);
 		assert(textures);
 		
-		std::string filename = data + "/" + prefix + message + postfix;
+		//std::string filename = data + "/" + prefix + message + postfix;
+		std::string filename = prefix + message + postfix;
 		s1.Load(scene, filename, tsize, *textures, draworder, *errptr);
 		s1.SetToBillboard(center[0]-dim[0]*0.5,center[1]-dim[1]*0.5,dim[0],dim[1]);
 		

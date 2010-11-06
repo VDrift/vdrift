@@ -6,6 +6,7 @@
 #include "mathvector.h"
 #include "quaternion.h"
 
+#include <tr1/memory>
 #include <cassert>
 
 class SOUNDSOURCE
@@ -13,9 +14,10 @@ class SOUNDSOURCE
 public:
 	SOUNDSOURCE();
 	
-	void SetBuffer(const SOUNDBUFFER & newbuf)
+	void SetBuffer(const std::tr1::shared_ptr<SOUNDBUFFER> newbuf)
 	{
-		buffer = &newbuf;
+		assert(newbuf.get());
+		buffer = newbuf;
 		Loop(false);
 		Stop();
 	}
@@ -34,7 +36,7 @@ public:
 	
 	void SeekToSample(const unsigned int newpos)
 	{
-		assert(buffer);
+		assert(buffer.get());
 		assert((unsigned int)newpos < buffer->info.samples / buffer->info.channels);
 		sample_pos = newpos;
 		sample_pos_remainder = 0;
@@ -86,12 +88,13 @@ public:
 	
 	const std::string GetName() const
 	{
-		if (buffer == NULL) return "NULL";
-		else return buffer->GetName();
+		if (!buffer.get()) return "NULL";
+		return buffer->GetName();
 	}
 	
 	const SOUNDBUFFER & GetSoundTrack() const
 	{
+		assert(buffer.get());
 		return *buffer;
 	}
 	
@@ -136,8 +139,7 @@ private:
 
 	float relative_gain;
 
-	const SOUNDBUFFER * buffer;
-
+	std::tr1::shared_ptr<SOUNDBUFFER> buffer;
 	std::list <SOUNDFILTER> filters;
 };
 

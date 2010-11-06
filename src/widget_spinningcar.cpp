@@ -1,5 +1,4 @@
 #include "widget_spinningcar.h"
-
 #include "car.h"
 #include "configfile.h"
 
@@ -129,12 +128,13 @@ void WIDGET_SPINNINGCAR::Update(SCENENODE & scene, float dt)
 
 void WIDGET_SPINNINGCAR::SetupDrawable(
 	SCENENODE & scene,
+	TEXTUREMANAGER & textures,
+	MODELMANAGER & models,
 	const std::string & texturesize,
 	const std::string & datapath,
-	float x,
-	float y,
+	const float x,
+	const float y,
 	const MATHVECTOR <float, 3> & newcarpos,
-	MANAGER<TEXTURE, TEXTUREINFO> & textures,
 	std::ostream & error_output,
 	int order)
 {
@@ -143,6 +143,7 @@ void WIDGET_SPINNINGCAR::SetupDrawable(
 	center.Set(x,y);
 	carpos = newcarpos;
 	this->textures = &textures;
+	this->models = &models;
 	errptr = &error_output;
 	draworder = order;
 }
@@ -186,11 +187,16 @@ void WIDGET_SPINNINGCAR::Load(SCENENODE & parent)
 {
 	assert(errptr);
 	assert(textures);
+	assert(models);
 	
 	Unload(parent);
 	
-	std::string carpath = data + "/cars/" + carname;
 	std::stringstream loadlog;
+	std::string texsize = "large";
+	int anisotropy = 0;
+	float camerabounce = 0;
+	bool loaddriver = false;
+	bool debugmode = false;
 
 	if (!carnode.valid())
 	{
@@ -201,18 +207,29 @@ void WIDGET_SPINNINGCAR::Load(SCENENODE & parent)
 	car.push_back(CAR());
 	
 	CONFIGFILE carconf;
-	if (!carconf.Load(carpath + "/" + carname + ".car"))
+	std::string carconfpath = data + "/cars/" + carname + "/" + carname + ".car";
+	if (!carconf.Load(carconfpath))
 	{
-		*errptr << "Error loading car's configfile: " << carpath + "/" + carname + ".car" << std::endl;
+		*errptr << "Error loading car's configfile: " << carconfpath << std::endl;
 		return;
 	}
 	
-	MATHVECTOR <float, 3> carcolor(r, g, b);
-	
 	if (!car.back().LoadGraphics(
-		carconf, carpath, carname, "", data + "/carparts",
-		carcolor, carpaint, *textures, "large", 0,
-		0, false, loadlog, loadlog))
+			carconf,
+			"cars/" + carname,
+			carname,
+			"carparts",
+			MATHVECTOR<float, 3>(r, g, b),
+			carpaint,
+			texsize,
+			anisotropy,
+			camerabounce,
+			loaddriver,
+			debugmode,
+			*textures,
+			*models,
+			loadlog,
+			loadlog))
 	{
 		*errptr << "Couldn't load spinning car: " << carname << std::endl;
 		if (!loadlog.str().empty())

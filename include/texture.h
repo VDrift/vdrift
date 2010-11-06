@@ -1,27 +1,71 @@
 #ifndef _TEXTURE_H
 #define _TEXTURE_H
 
-#include "textureinfo.h"
 #include "texture_interface.h"
+#include <string>
+
+struct SDL_Surface;
+
+struct TEXTUREINFO
+{
+	std::string size;
+	SDL_Surface * surface;
+	unsigned char anisotropy;
+	bool mipmap;
+	bool cube;
+	bool verticalcross;
+	bool normalmap;
+	bool repeatu;
+	bool repeatv;
+	bool npot;
+	bool nearest;
+	bool premultiply_alpha; ///< pre-multiply the color by the alpha value; allows using glstate.SetBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA); when drawing the texture to get correct blending
+	
+	TEXTUREINFO() :
+		size("large"),
+		surface(0),
+		anisotropy(0),
+		mipmap(true),
+		cube(false),
+		verticalcross(false),
+		normalmap(false),
+		repeatu(true),
+		repeatv(true),
+		npot(true),
+		nearest(false),
+		premultiply_alpha(false)
+	{
+		// ctor
+	}
+};
 
 class TEXTURE : public TEXTURE_INTERFACE
 {
 public:
-	TEXTURE() {Init();}
-	
-	TEXTURE(const TEXTUREINFO & info, std::ostream & error) {Init(); Load(info, error);}
+	TEXTURE():
+		id(0),
+		w(0),
+		h(0),
+		origw(0),
+		origh(0),
+		scale(1.0),
+		alpha(false),
+		cube(false)
+	{
+		// ctor
+	}
 	
 	virtual ~TEXTURE() {Unload();}
 	
-	virtual GLuint GetID() const {return tex_id;}
+	virtual GLuint GetID() const {return id;}
 	
 	virtual void Activate() const;
 	
 	virtual void Deactivate() const;
 
-	virtual bool Loaded() const {return loaded;}
+	virtual bool Loaded() const {return id;}
 	
-	bool Load(const TEXTUREINFO & info, std::ostream & error);
+	bool Load(const std::string & path, const TEXTUREINFO & info, std::ostream & error);
 	
 	void Unload();
 	
@@ -38,30 +82,16 @@ public:
 	float GetScale() const {return scale;}
 	
 private:
-	TEXTUREINFO texture_info; // can be removed eventually
-	GLuint tex_id;
-	bool loaded;
+	GLuint id;
 	unsigned int w, h; ///< w and h are post-texture-size transform
 	unsigned int origw, origh; ///< w and h are pre-texture-size transform
 	float scale; ///< gets the amount of scaling applied by the texture-size transform, so the original w and h can be backed out
-	bool alphachannel;
+	bool alpha;
 	bool cube;
 	
-	void Init()
-	{
-		loaded = false;
-		w = 0;
-		h = 0;
-		origw = 0;
-		origh = 0;
-		scale = 1.0;
-		alphachannel = false;
-		cube = false;
-	}
+	bool LoadCube(const std::string & path, const TEXTUREINFO & info, std::ostream & error);
 	
-	bool LoadCube(const TEXTUREINFO & info, std::ostream & error);
-	
-	bool LoadCubeVerticalCross(const TEXTUREINFO & info, std::ostream & error);
+	bool LoadCubeVerticalCross(const std::string & path, const TEXTUREINFO & info, std::ostream & error);
 };
 
 #endif //_TEXTURE_H

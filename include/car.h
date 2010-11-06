@@ -2,8 +2,8 @@
 #define _CAR_H
 
 #include "cardynamics.h"
-#include "model_joe03.h"
-#include "manager.h"
+#include "scenenode.h"
+#include "model.h"
 #include "sound.h"
 #include "camera_system.h"
 #include "joeserialize.h"
@@ -11,7 +11,6 @@
 #include "suspensionbumpdetection.h"
 #include "crashdetection.h"
 #include "enginesoundinfo.h"
-#include "scenenode.h"
 
 #include <string>
 #include <ostream>
@@ -20,7 +19,10 @@
 
 class BEZIER;
 class PERFORMANCE_TESTING;
-class TEXTUREINFO;
+class TEXTUREMANAGER;
+class MODELMANAGER;
+class SOUNDMANAGER;
+class MODEL_JOE03;
 
 class CAR 
 {
@@ -30,18 +32,19 @@ public:
 	CAR();
 	
 	bool LoadGraphics(
-		CONFIGFILE & carconf,
+		const CONFIGFILE & carconf,
 		const std::string & carpath,
 		const std::string & carname,
-		const std::string & driverpath,
 		const std::string & partspath,
 		const MATHVECTOR <float, 3> & carcolor,
 		const std::string & carpaint,
-		MANAGER<TEXTURE, TEXTUREINFO> & textures,
 		const std::string & texsize,
-		int anisotropy,
-		float camerabounce,
-		bool debugmode,
+		const int anisotropy,
+		const float camerabounce,
+		const bool loaddriver,
+		const bool debugmode,
+		TEXTUREMANAGER & textures,
+		MODELMANAGER & models,
 		std::ostream & info_output,
 		std::ostream & error_output);
 	
@@ -49,18 +52,19 @@ public:
 		const std::string & carpath,
 		const std::string & carname,
 		const SOUNDINFO & soundinfo,
-		SOUNDBUFFERLIBRARY & soundbufferlibrary,
+		SOUNDMANAGER & sounds,
 		std::ostream & info_output,
 		std::ostream & error_output);
 	
 	bool LoadPhysics(
-		CONFIGFILE & carconf,
+		const CONFIGFILE & carconf,
 		const std::string & carpath,
 		const MATHVECTOR <float, 3> & initial_position,
 		const QUATERNION <float> & initial_orientation,
+		const bool defaultabs,
+		const bool defaulttcs,
+		MODELMANAGER & models,
 		COLLISION_WORLD & world,
-		bool defaultabs,
-		bool defaulttcs,
 		std::ostream & info_output,
 		std::ostream & error_output);
 	
@@ -296,6 +300,7 @@ public:
 	
 protected:
 	CARDYNAMICS dynamics;
+	QUATERNION <float> modelrotation; // const model rotation fix
 	
 	SCENENODE topnode;
 	keyed_container <SCENENODE>::handle bodynode;
@@ -316,13 +321,11 @@ protected:
 		MODEL model;
 	};
 	std::list <LIGHT> lights;
+	std::list <std::tr1::shared_ptr<MODEL_JOE03> > modellist;
 	
 	SUSPENSIONBUMPDETECTION suspensionbumpdetection[4];
 	CRASHDETECTION crashdetection;
 	CAMERA_SYSTEM cameras;
-
-	std::map <std::string, MODEL_JOE03> models;
-	std::map <std::string, SOUNDBUFFER> soundbuffers;
 	
 	std::list <std::pair <ENGINESOUNDINFO, SOUNDSOURCE> > enginesounds;
 	SOUNDSOURCE tiresqueal[WHEEL_POSITION_SIZE];
@@ -358,7 +361,7 @@ protected:
 	void UpdateGraphics();
 	
 	bool LoadLight(
-		CONFIGFILE & cfg,
+		const CONFIGFILE & cfg,
 		const std::string & name,
 		std::ostream & error_output);
 };

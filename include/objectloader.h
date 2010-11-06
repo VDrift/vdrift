@@ -2,28 +2,34 @@
 #define _OBJECTLOADER_H
 
 #include "scenenode.h"
-#include "model_joe03.h"
-#include "track_object.h"
-#include "tracksurface.h"
+#include "joepack.h"
 
 #include <map> // for std::pair
 
-template <class T, class Tinfo> class MANAGER;
-class TEXTURE;
-class TEXTUREINFO;
+class TEXTUREMANAGER;
+class MODELMANAGER;
+class TRACKSURFACE;
+class TRACKOBJECT;
 
 class OBJECTLOADER
 {
 public:
 	OBJECTLOADER(
-		const std::string & ntrackpath,
-		SCENENODE & nsceneroot, 
-		int nanisotropy,
-		bool newdynamicshadowsenabled,
-		std::ostream & ninfo_output,
-		std::ostream & nerror_output,
-		bool newcull,
-		bool doagressivecombining);
+		SCENENODE & sceneroot,
+		TEXTUREMANAGER & textures,
+		MODELMANAGER & models,
+		std::list<TRACKOBJECT> & objects,
+		std::ostream & info_output,
+		std::ostream & error_output,
+		const std::vector<TRACKSURFACE> & surfaces,
+		const std::string & trackpath,
+		const std::string & trackdir,
+		const std::string & texsize,
+		const int anisotropy,
+		const bool vertical_tracking_skyboxes,
+		const bool dynamicshadowsenabled,
+		const bool agressivecombine,
+		const bool cull);
 
 	bool GetError() const
 	{
@@ -39,37 +45,38 @@ public:
 	bool BeginObjectLoad();
 	
 	///returns a pair of bools: the first bool is true if there was an error, the second bool is true if an object was loaded
-	std::pair <bool,bool> ContinueObjectLoad(
-		std::map <std::string, MODEL_JOE03> & model_library,
-		std::list <TRACK_OBJECT> & objects,
-		const std::vector <TRACKSURFACE> & surfaces,
-		const bool vertical_tracking_skyboxes,
-		const std::string & texture_size,
-		MANAGER<TEXTURE, TEXTUREINFO> & textures);
+	std::pair <bool,bool> ContinueObjectLoad();
 	
 private:
-	const std::string & trackpath;
-	std::string objectpath;
 	SCENENODE & sceneroot;
-	SCENENODE unoptimized_scene;
+	TEXTUREMANAGER & textures;
+	MODELMANAGER & models;
+	std::list<TRACKOBJECT> & objects;
 	std::ostream & info_output;
 	std::ostream & error_output;
 	
-	JOEPACK pack;
-	std::ifstream objectfile;
+	const std::vector<TRACKSURFACE> & surfaces;
+	const std::string & trackpath;
+	const std::string & trackdir;
+	const std::string & texsize;
+	const int anisotropy;
+	const bool vertical_tracking_skyboxes;
+	const bool dynamicshadowsenabled;
+	const bool agressivecombine;
+	const bool cull;
 	
-	bool error;
-	int numobjects;
+	SCENENODE unoptimized_scene;
+	std::string objectpath;
+	std::string objectdir;
+	std::ifstream objectfile;
+	JOEPACK pack;
 	bool packload;
-	int anisotropy;
-	bool cull;
+	int numobjects;
 	
 	int params_per_object;
 	const int expected_params;
 	const int min_params;
-	
-	bool dynamicshadowsenabled;
-	bool agressivecombine;
+	bool error;
 	
 	void CalculateNumObjects();
 	

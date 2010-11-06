@@ -3,7 +3,7 @@
 
 #include "scenenode.h"
 #include "font.h"
-#include "manager.h"
+#include "texture.h"
 #include "text_draw.h"
 
 #include <ostream>
@@ -124,16 +124,21 @@ private:
 	void GetTimeString(float time, std::string & outtime) const
 	{
 		int min = (int) time / 60;
-		float secs = time - min*60;
+		float secs = time - min * 60;
 
 		if (time != 0.0)
 		{
-			char tempchar[128];
-			sprintf(tempchar, "%02d:%06.3f", min, secs);
-			outtime = tempchar;
+			std::stringstream s;
+			s << std::setfill('0');
+			s << std::setw(2) << min << ":";
+			s << std::fixed << std::setprecision(3) << std::setw(6) << secs;
+			//sprintf(tempchar, "%02d:%06.3f", min, secs);
+			outtime = s.str();
 		}
 		else
+		{
 			outtime = "--:--.---";
+		}
 	}
 
 public:
@@ -142,7 +147,7 @@ public:
 	bool Init(
 		const std::string & texturepath,
 		const std::string & texsize,
-		MANAGER<TEXTURE, TEXTUREINFO> & textures, 
+		TEXTUREMANAGER & textures, 
 		FONT & lcdfont,
 		FONT & sansfont,
 		float displaywidth,

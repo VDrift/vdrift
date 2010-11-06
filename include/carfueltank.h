@@ -34,10 +34,10 @@ class CARFUELTANK
 
 		void DebugPrint(std::ostream & out) const
 		{
-			out << "---Fuel Tank---" << std::endl;
-			out << "Current volume: " << volume << std::endl;
-			out << "Capacity: " << capacity << std::endl;
-			out << "Mass: " << mass << std::endl;
+			out << "---Fuel Tank---" << "\n";
+			out << "Current volume: " << volume << "\n";
+			out << "Capacity: " << capacity << "\n";
+			out << "Mass: " << mass << "\n";
 		}
 
 	void SetCapacity ( const T& value )

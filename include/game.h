@@ -28,7 +28,9 @@
 #include "ai.h"
 #include "quickmp.h"
 //#include "sky.h"
-#include "manager.h"
+#include "texturemanager.h"
+#include "modelmanager.h"
+#include "soundmanager.h"
 
 #include <ostream>
 #include <string>
@@ -42,15 +44,15 @@ class GAME
 public:
 	GAME(std::ostream & info_out, std::ostream & error_out);
 	void Start(std::list <std::string> & args);
-	
+
 private:
 	float TickPeriod() const {return framerate;}
 	void MainLoop();
 	bool ParseArguments(std::list <std::string> & args);
-	void InitializeCoreSubsystems();
-	void InitializeThreading();
-	bool InitializeSound();
-	bool InitializeGUI();
+	void InitCoreSubsystems();
+	void InitThreading();
+	bool InitSound();
+	bool InitGUI();
 	void End();
 	void Test();
 	void Tick(float dt);
@@ -70,7 +72,7 @@ private:
 	bool LoadCar(
 		const std::string & carname, const std::string & carpaint, const MATHVECTOR <float, 3> & carcolor,
 		const MATHVECTOR <float, 3> & start_position, const QUATERNION <float> & start_orientation,
-		bool islocal, bool isai, const std::string & carfile=""); 
+		bool islocal, bool isai, const std::string & carfile="");
 	bool LoadFonts();
 	void CalculateFPS();
 	void PopulateValueLists(std::map<std::string, std::list <std::pair<std::string,std::string> > > & valuelists);
@@ -105,11 +107,20 @@ private:
 	double clocktime; ///< elapsed wall clock time
 	double target_time;
 	const float framerate;
-	
+
+	PATHMANAGER pathmanager;
+	TEXTUREMANAGER textures;
+	MODELMANAGER models;
+	SOUNDMANAGER sounds;
+	GRAPHICS_SDLGL graphics;
+	EVENTSYSTEM_SDL eventsystem;
+	SOUND sound;
+	SETTINGS settings;
+
 	SCENENODE debugnode;
 	TEXT_DRAWABLE fps_draw;
 	TEXT_DRAWABLE profiling_text;
-	
+
 	std::vector <float> fps_track;
 	int fps_position;
 	float fps_min;
@@ -136,22 +147,15 @@ private:
 	CARCONTROLMAP_LOCAL::CONTROL controlgrab_editcontrol;
 	std::vector <EVENTSYSTEM_SDL::JOYSTICK> controlgrab_joystick_state;
 
-	GRAPHICS_SDLGL graphics;
-	EVENTSYSTEM_SDL eventsystem;
-	SOUND sound;
-	SOUNDBUFFERLIBRARY generic_sounds;
-	SETTINGS settings;
-	PATHMANAGER pathmanager;
-	MANAGER<TEXTURE, TEXTUREINFO> textures;
-	TRACKMAP trackmap;
-	TRACK track;
-	GUI gui;
 	std::map <std::string, FONT> fonts;
 	std::list <CAR> cars;
 	std::map <CAR *, int> cartimerids;
 	std::pair <CAR *, CARCONTROLMAP_LOCAL> carcontrols_local;
+
 	COLLISION_WORLD collision;
-	
+	TRACKMAP trackmap;
+	TRACK track;
+	GUI gui;
 	HUD hud;
 	INPUTGRAPH inputgraph;
 	LOADINGSCREEN loadingscreen;
@@ -159,7 +163,6 @@ private:
 	REPLAY replay;
 	PARTICLE_SYSTEM tire_smoke;
 	AI ai;
-	
 	//SKY sky;
 
 #ifdef ENABLE_FORCE_FEEDBACK

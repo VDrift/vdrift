@@ -3,8 +3,8 @@
 #include "reseatable_reference.h"
 #include "tracksurface.h"
 #include "objectloader.h"
-#include "manager.h"
-#include "texture.h"
+#include "texturemanager.h"
+#include "k1999.h"
 
 #include <functional>
 #include <algorithm>
@@ -18,7 +18,6 @@
 TRACK::TRACK(std::ostream & info, std::ostream & error) :
 	info_output(info),
 	error_output(error),
-	texture_size("large"),
 	vertical_tracking_skyboxes(false),
 	racingline_visible(false),
 	loaded(false),
@@ -33,12 +32,14 @@ TRACK::~TRACK()
 }
 
 bool TRACK::Load(
+	TEXTUREMANAGER & textures,
+	MODELMANAGER & models,
 	const std::string & trackpath,
+	const std::string & trackdir,
 	const std::string & effects_texturepath,
 	const std::string & texsize,
-	int anisotropy,
-	MANAGER<TEXTURE, TEXTUREINFO> & textures,
-	bool reverse)
+	const int anisotropy,
+	const bool reverse)
 {
 	Clear();
 
@@ -75,12 +76,10 @@ bool TRACK::Load(
 	}
 
 	//load objects
-	if (!LoadObjects(trackpath, tracknode, anisotropy, textures))
+	if (!LoadObjects(tracknode, textures, models, trackpath, trackdir, texsize, anisotropy))
 	{
 		return false;
 	}
-
-	info_output << "Track loading was successful: " << model_library.size() << " unique models, " << texture_library.size() << " unique textures" << std::endl;
 
 	return true;
 }
@@ -160,18 +159,18 @@ bool TRACK::LoadLapSequence(const std::string & trackpath, bool reverse)
 }
 
 bool TRACK::DeferredLoad(
+	TEXTUREMANAGER & textures,
+	MODELMANAGER & models,
 	const std::string & trackpath,
-	const std::string & effects_texturepath,
+	const std::string & trackdir,
+	const std::string & effects_texturedir,
 	const std::string & texsize,
-	int anisotropy,
-	MANAGER<TEXTURE, TEXTUREINFO> & textures,
-	bool reverse,
-	bool dynamicshadowsenabled,
-	bool doagressivecombining)
+	const int anisotropy,
+	const bool reverse,
+	const bool dynamicshadowsenabled,
+	const bool doagressivecombining)
 {
 	Clear();
-
-	texture_size = texsize;
 
 	info_output << "Loading track from path: " << trackpath << std::endl;
 
@@ -197,24 +196,24 @@ bool TRACK::DeferredLoad(
 		return false;
 	}
 
-	if (!CreateRacingLines(effects_texturepath, texsize, textures))
+	if (!CreateRacingLines(effects_texturedir, texsize, textures))
 	{
 		return false;
 	}
 
 	//load objects
-	if (!BeginObjectLoad(trackpath, tracknode, anisotropy, dynamicshadowsenabled, doagressivecombining))
+	if (!BeginObjectLoad(tracknode, textures, models, trackpath, trackdir, texsize, anisotropy, dynamicshadowsenabled, doagressivecombining))
 		return false;
 
 	return true;
 }
 
-bool TRACK::ContinueDeferredLoad(MANAGER<TEXTURE, TEXTUREINFO> & textures)
+bool TRACK::ContinueDeferredLoad()
 {
 	if (Loaded())
 		return true;
 
-	std::pair <bool, bool> loadstatus = ContinueObjectLoad(textures);
+	std::pair <bool, bool> loadstatus = ContinueObjectLoad();
 	if (loadstatus.first)
 		return false;
 	if (!loadstatus.second)
@@ -234,8 +233,6 @@ void TRACK::Clear()
 {
 	objects.clear();
 	tracksurfaces.clear();
-	model_library.clear();
-	texture_library.clear();
 	ClearRoads();
 	lapsequence.clear();
 	start_positions.clear();
@@ -247,13 +244,11 @@ void TRACK::Clear()
 bool TRACK::CreateRacingLines(
 	const std::string & texturepath,
 	const std::string & texsize,
-	MANAGER<TEXTURE, TEXTUREINFO> & textures)
+	TEXTUREMANAGER & textures)
 {
 	TEXTUREINFO texinfo; 
-	texinfo.SetName(texturepath + "/racingline.png");
-	texinfo.SetSize(texsize);
-	racingline_texture = textures.Get(texinfo);
-	if (!racingline_texture->Loaded()) return false;
+	texinfo.size = texsize;
+	if (!textures.Load(texturepath+"/racingline.png", texinfo, racingline_texture)) return false;
 	
 	K1999 k1999data;
 	int n = 0;
@@ -416,38 +411,60 @@ bool TRACK::LoadSurfaces(const std::string & trackpath)
 }
 
 bool TRACK::BeginObjectLoad(
-	const std::string & trackpath,
 	SCENENODE & sceneroot,
+	TEXTUREMANAGER & textures,
+	MODELMANAGER & models,
+	const std::string & trackpath,
+	const std::string & trackdir,
+	const std::string & texsize,
 	int anisotropy,
 	bool dynamicshadowsenabled,
 	bool doagressivecombining)
 {
-	objload.reset(new OBJECTLOADER(trackpath, sceneroot, anisotropy, dynamicshadowsenabled, info_output, error_output, cull, doagressivecombining));
+	objload.reset(
+		new OBJECTLOADER(
+			sceneroot,
+			textures,
+			models,
+			objects,
+			info_output,
+			error_output,
+			tracksurfaces,
+			trackpath,
+			trackdir,
+			texsize,
+			anisotropy,
+			vertical_tracking_skyboxes,
+			dynamicshadowsenabled,
+			doagressivecombining,
+			cull));
 
-	if (!objload->BeginObjectLoad())
-		return false;
+	if (!objload->BeginObjectLoad()) return false;
 
 	return true;
 }
 
-std::pair <bool,bool> TRACK::ContinueObjectLoad(MANAGER<TEXTURE, TEXTUREINFO> & textures)
+std::pair <bool,bool> TRACK::ContinueObjectLoad()
 {
 	assert(objload.get());
-	return objload->ContinueObjectLoad(model_library,
-									   objects,
-									   tracksurfaces,
-									   vertical_tracking_skyboxes, 
-									   texture_size,
-									   textures);
+	return objload->ContinueObjectLoad();
 }
 
-bool TRACK::LoadObjects(const std::string & trackpath, SCENENODE & sceneroot, int anisotropy, MANAGER<TEXTURE, TEXTUREINFO> & textures)
+bool TRACK::LoadObjects(
+	SCENENODE & sceneroot,
+	TEXTUREMANAGER & textures,
+	MODELMANAGER & models,
+	const std::string & trackpath,
+	const std::string & trackdir,
+	const std::string & texsize,
+	const int anisotropy)
 {
-	BeginObjectLoad(trackpath, sceneroot, anisotropy, false, false);
-	std::pair <bool, bool> loadstatus = ContinueObjectLoad(textures);
+	BeginObjectLoad(sceneroot, textures, models, trackpath, trackdir, texsize, anisotropy, false, false);
+	
+	std::pair <bool, bool> loadstatus = ContinueObjectLoad();
 	while (!loadstatus.first && loadstatus.second)
 	{
-		loadstatus = ContinueObjectLoad(textures);
+		loadstatus = ContinueObjectLoad();
 	}
 	return !loadstatus.first;
 }
@@ -534,7 +551,8 @@ bool TRACK::LoadRoads(const std::string & trackpath, bool reverse)
 bool TRACK::CastRay(
 	const MATHVECTOR <float, 3> & origin,
 	const MATHVECTOR <float, 3> & direction,
-	float seglen, MATHVECTOR <float, 3> & outtri,
+	float seglen,
+	MATHVECTOR <float, 3> & outtri,
 	const BEZIER * & colpatch,
 	MATHVECTOR <float, 3> & normal) const
 {

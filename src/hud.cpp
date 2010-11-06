@@ -1,4 +1,5 @@
 #include "hud.h"
+#include "texturemanager.h"
 
 keyed_container <DRAWABLE>::handle AddDrawable(SCENENODE & node)
 {
@@ -13,7 +14,7 @@ DRAWABLE & GetDrawable(SCENENODE & node, keyed_container <DRAWABLE>::handle & dr
 bool HUD::Init(
 	const std::string & texturepath,
 	const std::string & texsize,
-	MANAGER<TEXTURE, TEXTUREINFO> & textures, 
+	TEXTUREMANAGER & textures, 
 	FONT & lcdfont,
 	FONT & sansfont,
 	float displaywidth,
@@ -23,19 +24,15 @@ bool HUD::Init(
 {
     float opacity = 0.8;
 
-    TEXTUREINFO bartexinfo(texturepath+"/hudbox.png");
-    bartexinfo.SetMipMap(false);
-    bartexinfo.SetRepeat(false, false);
-    bartexinfo.SetSize(texsize);
-    std::tr1::shared_ptr<TEXTURE> bartex = textures.Get(bartexinfo);
-    if (!bartex->Loaded()) return false;
-
-    TEXTUREINFO progbartexinfo(texturepath+"/progressbar.png");
-    progbartexinfo.SetMipMap(false);
-    progbartexinfo.SetRepeat(false, false);
-    progbartexinfo.SetSize(texsize);
-    std::tr1::shared_ptr<TEXTURE> progbartex = textures.Get(progbartexinfo);
-    if (!progbartex->Loaded()) return false;
+    TEXTUREINFO texinfo;
+	texinfo.mipmap = false;
+	texinfo.repeatu = false;
+	texinfo.repeatv = false;
+    texinfo.size = texsize;
+    
+    std::tr1::shared_ptr<TEXTURE> bartex, progbartex;
+    if (!textures.Load(texturepath+"/hudbox.png", texinfo, bartex)) return false;
+    if (!textures.Load(texturepath+"/progressbar.png", texinfo, progbartex)) return false;
 
     rpmbar = AddDrawable(hudroot);
     rpmredbar = AddDrawable(hudroot);
@@ -86,12 +83,13 @@ bool HUD::Init(
         timerboxdraw = AddDrawable(timernoderef);
 		DRAWABLE & timerboxdrawref = GetDrawable(timernoderef, timerboxdraw);
 
-        TEXTUREINFO timerboxtexinfo(texturepath+"/timerbox.png");
-        timerboxtexinfo.SetMipMap(false);
-        timerboxtexinfo.SetRepeat(true, false);
-        timerboxtexinfo.SetSize(texsize);
-        std::tr1::shared_ptr<TEXTURE> timerboxtex = textures.Get(timerboxtexinfo);
-        if (!timerboxtex->Loaded()) return false;
+        TEXTUREINFO timerboxtexinfo;
+		timerboxtexinfo.mipmap = false;
+		timerboxtexinfo.repeatu = true;
+		timerboxtexinfo.repeatv = false;
+        timerboxtexinfo.size = texsize;
+        std::tr1::shared_ptr<TEXTURE> timerboxtex;
+        if (!textures.Load(texturepath+"/timerbox.png", timerboxtexinfo, timerboxtex)) return false;
 
         float totalsizex = timerboxdimx*6.05;
         float totalsizey = timerboxdimy*2.0;

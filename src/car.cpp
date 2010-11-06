@@ -8,14 +8,14 @@
 #include "configfile.h"
 #include "carinput.h"
 #include "mesh_gen.h"
-#include "texture.h"
+#include "texturemanager.h"
+#include "modelmanager.h"
+#include "soundmanager.h"
 #include "camera_fixed.h"
 #include "camera_free.h"
 #include "camera_chase.h"
 #include "camera_orbit.h"
 #include "camera_mount.h"
-
-#include "model_obj.h"
 
 #include <fstream>
 #include <map>
@@ -59,7 +59,7 @@ static keyed_container <DRAWABLE> & GetDrawlist(SCENENODE & node, WHICHDRAWLIST 
 
 // load textures, order diffuse, misc1, misc2
 static bool LoadTextures(
-	MANAGER<TEXTURE, TEXTUREINFO> & textures,
+	TEXTUREMANAGER & textures,
 	const std::vector<std::string> & texname,
 	const std::string & texpath,
 	const std::string & texsize,
@@ -67,73 +67,34 @@ static bool LoadTextures(
 	DRAWABLE & draw,
 	std::ostream & error_output)
 {
-	TEXTUREINFO info;
-	info.SetMipMap(true);
-	info.SetAnisotropy(anisotropy);
-	info.SetSize(texsize);
-	
 	if(texname.size() == 0)
 	{
 		error_output << "No texture defined" << std::endl;
 		return false;
 	}
+	
+	TEXTUREINFO info;
+	info.mipmap = true;
+	info.anisotropy = anisotropy;
+	info.size = texsize;
+	
+	std::tr1::shared_ptr<TEXTURE> tex;
 	if(texname.size() > 0)
 	{
-		info.SetName(texpath + texname[0]);
-		std::tr1::shared_ptr<TEXTURE> diffuse = textures.Get(info);
-		if (!diffuse->Loaded()) return false;
-		draw.SetDiffuseMap(diffuse);
+		if (!textures.Load(texpath + texname[0], info, tex)) return false;
+		draw.SetDiffuseMap(tex);
 	}
 	if(texname.size() > 1)
 	{
-		info.SetName(texpath + texname[1]);
-		std::tr1::shared_ptr<TEXTURE> misc1 = textures.Get(info);
-		if (!misc1->Loaded()) return false;
-		draw.SetMiscMap1(misc1);
+		if (!textures.Load(texpath + texname[1], info, tex)) return false;
+		draw.SetMiscMap1(tex);
 	}
 	if(texname.size() > 2)
 	{
-		info.SetName(texpath + texname[2]);
-		std::tr1::shared_ptr<TEXTURE> misc2 = textures.Get(info);
-		if (!misc2->Loaded()) return false;
-		draw.SetMiscMap2(misc2);
+		if (!textures.Load(texpath + texname[1], info, tex)) return false;
+		draw.SetMiscMap2(tex);
 	}
 	
-	return true;
-}
-
-/// load joefile, if draw != NULL generate list and assign to draw
-static bool LoadModel(
-	const std::string & joefile,
-	MODEL_JOE03 & output_model,
-	DRAWABLE * draw,
-	std::ostream & error_output)
-{
-	if (!output_model.Loaded())
-	{
-		std::stringstream nullout;
-		if (!output_model.ReadFromFile(joefile.substr(0,std::max((long unsigned int)0,(long unsigned int) joefile.size()-3))+"ova", nullout))
-		{
-			bool genlist = false;
-			if (!output_model.Load(joefile, error_output, genlist))
-			{
-				error_output << "Error loading model: " << joefile << std::endl;
-				return false;
-			}
-
-			// mesh orientation fixer
-			output_model.Rotate(-M_PI_2, 0, 0, 1);
- 			output_model.GenerateMeshMetrics();
-		}
-	}
-	
-	if (draw)
-	{
-		if (!output_model.HaveListID()) output_model.GenerateListID(error_output);
-		draw->AddDrawList(output_model.GetListID());
-		draw->SetObjectCenter(output_model.GetCenter());
-	}
-
 	return true;
 }
 
@@ -168,33 +129,26 @@ static void AddDrawable(
 /// the given TEXTURE textures will not be reloaded if they are already loaded
 /// returns true if successful
 static bool LoadInto(
-	SCENENODE & parentnode,
-	keyed_container <SCENENODE>::handle & output_scenenode,
-	keyed_container <DRAWABLE>::handle & output_drawable,
-	const std::string & joefile,
-	std::map <std::string, MODEL_JOE03> & models,
-	MANAGER <TEXTURE, TEXTUREINFO> & textures,
+	const WHICHDRAWLIST whichdrawlist,
+	const std::string & modelname,
 	const std::vector<std::string> & texname,
 	const std::string & texpath,
 	const std::string & texsize,
-	int anisotropy,
-	WHICHDRAWLIST whichdrawlist,
+	const int anisotropy,
+	SCENENODE & parentnode,
+	TEXTUREMANAGER & textures,
+	MODELMANAGER & models,
+	std::list <std::tr1::shared_ptr<MODEL_JOE03> > & modellist,
+	keyed_container <SCENENODE>::handle & output_scenenode,
+	keyed_container <DRAWABLE>::handle & output_drawable,
 	std::ostream & error_output)
 {
-	DRAWABLE draw;
-	std::map <std::string, MODEL_JOE03>::iterator m = models.find(joefile);
-	if (m != models.end())
-	{
-		MODEL_JOE03 & model = m->second;
-		if (!model.Loaded()) return false;
-		draw.AddDrawList(model.GetListID());
-	}
-	else
-	{
-		MODEL_JOE03 & model = models[joefile];
-		if (!LoadModel(joefile, model, &draw, error_output)) return false;
-	}
+	std::tr1::shared_ptr<MODEL_JOE03> model;
+	if (!models.Load(modelname, model)) return false;
+	modellist.push_back(model);
 	
+	DRAWABLE draw;
+	draw.AddDrawList(model->GetListID());
 	if (!LoadTextures(textures, texname, texpath, texsize, anisotropy, draw, error_output)) return false;
 	AddDrawable(whichdrawlist, parentnode, draw, output_scenenode, output_drawable, error_output);
 	
@@ -202,25 +156,22 @@ static bool LoadInto(
 }
 
 static bool GenerateWheelMesh(
-	CONFIGFILE & carconf,
+	const CONFIGFILE & carconf,
 	const std::string & id,
 	const std::string & carpath,
 	const std::string & partspath,
+	const std::string & texsize,
+	const int anisotropy,
 	SCENENODE & topnode,
+	TEXTUREMANAGER & textures,
+	MODELMANAGER & models,
+	std::list <std::tr1::shared_ptr<MODEL_JOE03> > & modellist,
 	keyed_container <SCENENODE>::handle & output_scenenode,
 	keyed_container <DRAWABLE>::handle & output_drawable,
-	std::map <std::string, MODEL_JOE03> & models,
-	MANAGER<TEXTURE, TEXTUREINFO> & textures,
-	int anisotropy,
-	const std::string & texsize,
 	std::ostream & error_output)
 {
 	output_scenenode = topnode.AddNode();
 	SCENENODE & node = topnode.GetNode(output_scenenode);
-	
-	// create the drawable in the correct layer depending on blend status
-	output_drawable = GetDrawlist(node, NOBLEND).insert(DRAWABLE());
-	DRAWABLE & draw = GetDrawlist(node, NOBLEND).get(output_drawable);
 	
 	std::string orientation;
 	carconf.GetParam("wheel-"+id+".orientation", orientation, error_output);
@@ -237,30 +188,28 @@ static bool GenerateWheelMesh(
 	float rimDiameter_in = rim_diameter / 0.0254f;
 	
 	// create tire
+	std::vector<std::string> tiretexname;
+	if (!carconf.GetParam("tire-"+id+".texture", tiretexname, error_output)) return false;
+	
 	const std::string tiremodelname(tiresize + orientation);
-	std::map <std::string, MODEL_JOE03>::iterator tm = models.find(tiremodelname);
-	if(tm != models.end())
-	{
-		MODEL_JOE03 & model = tm->second;
-		draw.AddDrawList(model.GetListID());
-	}
-	else
+	std::tr1::shared_ptr<MODEL_JOE03> tiremodel;
+	if (!models.Get(tiremodelname, tiremodel))
 	{
 		VERTEXARRAY output_varray;
 		MESHGEN::mg_tire(output_varray, sectionWidth_mm, aspectRatio, rimDiameter_in);
-		output_varray.Rotate(-M_PI_2, 0, 0, 1);
-		if (orientation != "left") output_varray.Scale(1, -1, 1); // mirror mesh
+		//output_varray.Rotate(-M_PI_2, 0, 0, 1);
+		if (orientation != "left") output_varray.Scale(-1, 1, 1); // mirror mesh
 		
-		MODEL_JOE03 & model = models[tiremodelname];
-		model.SetVertexArray(output_varray);
-		model.GenerateMeshMetrics();
-		model.GenerateListID(error_output);
-		draw.AddDrawList(model.GetListID());
+		tiremodel.reset(new MODEL_JOE03());
+		tiremodel->SetVertexArray(output_varray);
+		tiremodel->GenerateMeshMetrics();
+		tiremodel->GenerateListID(error_output);
+		models.Set(tiremodelname, tiremodel);
 	}
-	// load tire textures
-	std::vector<std::string> tiretex;
-	if (!carconf.GetParam("tire-"+id+".texture", tiretex, error_output)) return false;
-	if (!LoadTextures(textures, tiretex, partspath + "/tire/textures/", texsize, anisotropy, draw, error_output)) return false;
+	if (!LoadInto(
+		NOBLEND, tiremodelname, tiretexname, partspath + "/tire/textures/", texsize, anisotropy,
+		node, textures, models, modellist, output_scenenode, output_drawable,
+		error_output)) return false;
 	
 	// wheel parameters
 	std::string rimmodelname;
@@ -269,48 +218,51 @@ static bool GenerateWheelMesh(
 	if (!carconf.GetParam("wheel-"+id+".texture", wheeltexname, error_output)) return false;
 	
 	// create wheel
-	keyed_container <DRAWABLE>::handle rim_draw;
+	std::tr1::shared_ptr<MODEL_JOE03> wheelmodel;
 	std::string wheeltexpath(carpath + "/textures/");
 	std::string wheelmodelname(carpath + rimmodelname + tiresize + orientation);
-	std::map <std::string, MODEL_JOE03>::iterator wm = models.find(wheelmodelname);
-	if (wm == models.end())
+	if (!models.Get(wheelmodelname, wheelmodel))
 	{
 		std::string modelname(carpath + "/" + rimmodelname);
-		if (!std::ifstream(modelname.c_str()))
+		if (!std::ifstream((models.GetPath() + "/" + modelname).c_str()))
 		{
 			modelname = partspath + "/wheel/" + rimmodelname;
 			wheeltexpath = partspath + "/wheel/textures/";
 			wheelmodelname = rimmodelname + tiresize + orientation;
-			wm = models.find(wheelmodelname);
 		}
-		if (wm == models.end())
+		if (!models.Get(wheelmodelname, wheelmodel))
 		{
-			MODEL_JOE03 & model = models[wheelmodelname];
-			
 			// load wheel mesh, scale and translate(wheel model offset rim_width/2)
-			if (!LoadModel(modelname, model, 0, error_output)) return false;
-			model.Translate(0, 0.75 * 0.5, 0);
-			model.Scale(rim_diameter, rim_width, rim_diameter);
+			std::tr1::shared_ptr<MODEL_JOE03> temp;
+			if (!models.Load(modelname, temp)) return false;
+			
+			// create a new wheel model
+			wheelmodel.reset(new MODEL_JOE03());
+			wheelmodel->SetVertexArray(temp->GetVertexArray());
+			wheelmodel->Translate(-0.75 * 0.5, 0, 0);
+			wheelmodel->Scale(rim_width, rim_diameter, rim_diameter);
 			
 			// create wheel rim
 			const float flangeDisplacement_mm = 10;
-			VERTEXARRAY rim_varray;
-			MESHGEN::mg_rim(rim_varray, sectionWidth_mm, aspectRatio, rimDiameter_in, flangeDisplacement_mm);
-			rim_varray.Rotate(-M_PI_2, 0, 0, 1);
+			VERTEXARRAY varray;
+			MESHGEN::mg_rim(varray, sectionWidth_mm, aspectRatio, rimDiameter_in, flangeDisplacement_mm);
+			//rim_varray.Rotate(-M_PI_2, 0, 0, 1);
 			
 			// add rim to wheel mesh
-			rim_varray = rim_varray + model.GetVertexArray();
-			if (orientation != "left") rim_varray.Scale(1, -1, 1); // mirror mesh
+			varray = varray + wheelmodel->GetVertexArray();
+			if (orientation != "left") varray.Scale(-1, 1, 1); // mirror mesh
 			
-			model.SetVertexArray(rim_varray);
-			model.GenerateMeshMetrics();
-			model.GenerateListID(error_output);
+			wheelmodel->SetVertexArray(varray);
+			wheelmodel->GenerateMeshMetrics();
+			wheelmodel->GenerateListID(error_output);
+			models.Set(wheelmodelname, wheelmodel);
 		}
 	}
+	keyed_container <DRAWABLE>::handle wheeldraw;
 	if (!LoadInto(
-		node, output_scenenode, rim_draw, wheelmodelname, models,
-		textures, wheeltexname, wheeltexpath, texsize, anisotropy,
-		NOBLEND, error_output)) return false;
+		NOBLEND, wheelmodelname, wheeltexname, wheeltexpath, texsize, anisotropy,
+		node, textures, models, modellist, output_scenenode, wheeldraw,
+		error_output)) return false;
 	
 	// create brake rotor(optional)
 	std::string radius;
@@ -318,9 +270,9 @@ static bool GenerateWheelMesh(
 	if (!carconf.GetParam("brake-"+id+".texture", rotortexname)) return true;
 	if (!carconf.GetParam("brake-"+id+".radius", radius, error_output)) return false;
 	
+	std::tr1::shared_ptr<MODEL_JOE03> brakemodel;
 	std::string rotorname("rotor"+radius+orientation);
-	std::map <std::string, MODEL_JOE03>::iterator rm = models.find(rotorname);
-	if (rm == models.end())
+	if (!models.Get(rotorname, brakemodel))
 	{
 		float r(0.25);
 		std::stringstream s;
@@ -331,28 +283,28 @@ static bool GenerateWheelMesh(
 		
 		VERTEXARRAY rotor_varray;
 		MESHGEN::mg_brake_rotor(&rotor_varray, diameter_mm, thickness_mm);
+		if (orientation != "left") rotor_varray.Scale(-1, 1, 1); // mirror mesh
+		//rotor_varray->Rotate(-M_PI_2, 0, 0, 1);
 		
-		MODEL_JOE03 & model = models[rotorname];
-		model.SetVertexArray(rotor_varray);
-		model.Rotate(-M_PI_2, 0, 0, 1);
-		if (orientation != "left") model.Scale(1, -1, 1); // mirror mesh
-		
-		model.GenerateMeshMetrics();
-		model.GenerateListID(error_output);
+		brakemodel.reset(new MODEL_JOE03());
+		brakemodel->SetVertexArray(rotor_varray);
+		brakemodel->GenerateMeshMetrics();
+		brakemodel->GenerateListID(error_output);
+		models.Set(rotorname, brakemodel);
 	}
 	keyed_container <DRAWABLE>::handle rotor_draw;
 	std::string rotortexpath(partspath + "/brake/textures/");
 	if (!LoadInto(
-		node, output_scenenode, rotor_draw, rotorname, models,
-		textures, rotortexname, rotortexpath, texsize, anisotropy,
-		NOBLEND, error_output)) return false;
+		NOBLEND, rotorname, rotortexname, rotortexpath, texsize, anisotropy,
+		node, textures, models, modellist, output_scenenode, rotor_draw, 
+		error_output)) return false;
 
 	return true;
 }
 
 bool LoadCameras(
 	const CONFIGFILE & cfg,
-	float camerabounce,
+	const float camerabounce,
 	CAMERA_SYSTEM & cameras,
 	std::ostream & error_output)
 {
@@ -362,13 +314,13 @@ bool LoadCameras(
 	hood_cam->SetEffectStrength(camerabounce);
 
 	float pos[3], hoodpos[3];
-	if (!cfg.GetParam("driver.view-position", pos, error_output)) return false;
-	COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
+	if (!cfg.GetParam("camera.view-position", pos, error_output)) return false;
+//	COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
 	MATHVECTOR <float, 3> cam_offset;
 	cam_offset.Set(pos);
 	driver_cam->SetOffset(cam_offset);
 
-	if (!cfg.GetParam("driver.hood-mounted-view-position", hoodpos, error_output))
+	if (!cfg.GetParam("camera.hood-mounted-view-position", hoodpos, error_output))
 	{
 		pos[1] = 0;
 		pos[0] += 1.0;
@@ -376,13 +328,13 @@ bool LoadCameras(
 	}
 	else
 	{
-		COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(hoodpos[0],hoodpos[1],hoodpos[2]);
+//		COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(hoodpos[0],hoodpos[1],hoodpos[2]);
 		cam_offset.Set(hoodpos);
 	}
 	hood_cam->SetOffset(cam_offset);
 
 	float view_stiffness = 0.0;
-	cfg.GetParam("driver.view-stiffness", view_stiffness);
+	cfg.GetParam("camera.view-stiffness", view_stiffness);
 	driver_cam->SetStiffness(view_stiffness);
 	hood_cam->SetStiffness(view_stiffness);
 	cameras.Add(hood_cam);
@@ -398,7 +350,7 @@ bool LoadCameras(
 
 	cameras.Add(new CAMERA_ORBIT("orbit"));
 	cameras.Add(new CAMERA_FREE("free"));
-
+/*
 	// load additional views
 	int i = 1;
 	std::string istr = "1";
@@ -423,7 +375,7 @@ bool LoadCameras(
 		sstr << ++i;
 		istr = sstr.str();
 	}
-	
+*/
 	return true;
 }
 
@@ -436,10 +388,11 @@ CAR::CAR() :
 	applied_brakes(0)
 {
 	// ctor
+	modelrotation.Rotate(-M_PI_2, 0, 0, 1);
 }
 
 bool CAR::LoadLight(
-	CONFIGFILE & cfg,
+	const CONFIGFILE & cfg,
 	const std::string & name,
 	std::ostream & error_output)
 {
@@ -450,7 +403,7 @@ bool CAR::LoadLight(
 	if (!cfg.GetParam(name + ".color", col, error_output)) return false;
 	if (!cfg.GetParam(name + ".radius", size, error_output)) return false;
 	
-	COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
+//	COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
 	
 	lights.push_back(LIGHT());
 	SCENENODE & bodynoderef = topnode.GetNode(bodynode);
@@ -478,23 +431,23 @@ bool CAR::LoadLight(
 }
 
 bool CAR::LoadGraphics(
-	CONFIGFILE & carconf,
+	const CONFIGFILE & carconf,
 	const std::string & carpath,
 	const std::string & carname,
-	const std::string & driverpath,
 	const std::string & partspath,
 	const MATHVECTOR <float, 3> & carcolor,
 	const std::string & carpaint,
-	MANAGER<TEXTURE, TEXTUREINFO> & textures,
 	const std::string & texsize,
-	int anisotropy,
-	float camerabounce,
-	bool debugmode,
+	const int anisotropy,
+	const float camerabounce,
+	const bool loaddriver,
+	const bool debugmode,
+	TEXTUREMANAGER & textures,
+	MODELMANAGER & models,
 	std::ostream & info_output,
 	std::ostream & error_output)
 {
 	cartype = carname;
-	//std::stringstream nullout;
 	std::string texpath(carpath + "/textures/");
 	
 	//load car body graphics
@@ -503,20 +456,11 @@ bool CAR::LoadGraphics(
 	if (!carconf.GetParam("body.mesh", bodymodelname, error_output)) return false;
 	if (!carconf.GetParam("body.texture", bodytexname, error_output)) return false;
 	
-	// overrride carpaint, widget shoud modify carconfig?
-	if (bodytexname.size() < 1)
-	{
-		error_output << "No body texture." << std::endl;
-		return false;
-	}
-	bodytexname[0] = "body" + carpaint + ".png"; 
+	bodytexname[0] = "body"+carpaint+".png"; 
 	if (!LoadInto(
-		topnode, bodynode, bodydraw, carpath + "/" + bodymodelname, models,
-		textures, bodytexname, texpath, texsize, anisotropy,
-		NOBLEND, error_output))
-	{
-		return false;
-	}
+		NOBLEND, carpath+"/"+bodymodelname, bodytexname, texpath, texsize, anisotropy,
+		topnode, textures, models, modellist, bodynode, bodydraw,
+		error_output)) return false;
 	
 	//load car interior graphics (optional)
 	std::string intmodelname;
@@ -526,13 +470,9 @@ bool CAR::LoadGraphics(
 		std::vector<std::string> texname;
 		if (!carconf.GetParam("interior.texture", texname, error_output)) return false;
 		if (!LoadInto(
-			topnode.GetNode(bodynode), bodynode, interiordraw, carpath + "/" + intmodelname, models,
-			textures, texname, texpath, texsize, anisotropy,
-			NOBLEND, error_output)) return false;
-	}
-	else
-	{
-		info_output << "No car interior model, continuing without." << std::endl;
+			NOBLEND, carpath+"/"+intmodelname, texname, texpath, texsize, anisotropy,
+			topnode.GetNode(bodynode), textures, models, modellist, bodynode, interiordraw,
+			error_output)) return false;
 	}
 	
 	//load car glass graphics (optional)
@@ -542,101 +482,67 @@ bool CAR::LoadGraphics(
 		std::vector<std::string> texname;
 		if (!carconf.GetParam("glass.texture", texname, error_output)) return false;
 		if (!LoadInto(
-			topnode.GetNode(bodynode), bodynode, glassdraw, carpath + "/" + glassmodelname, models,
-			textures, texname, texpath, texsize, anisotropy,
-			BLEND, error_output)) return false;
-	}
-	else
-	{
-		info_output << "No car glass model, continuing without." << std::endl;
+			BLEND, carpath+"/"+glassmodelname, texname, texpath, texsize, anisotropy,
+			topnode.GetNode(bodynode), textures, models, modellist, bodynode, glassdraw,
+			error_output)) return false;
 	}
 	
-	// load driver graphics
-	if (!driverpath.empty())
+	// load driver graphics (optional)
+	if (loaddriver)
 	{
-		keyed_container <DRAWABLE>::handle driverdraw;
-		std::vector<std::string> texname(1, "body.png");
-		if (LoadInto(
-				topnode.GetNode(bodynode), drivernode, driverdraw, driverpath + "/body.joe", models,
-				textures, texname, driverpath + "/textures/", texsize, anisotropy,
-				NOBLEND, error_output))
+		std::string drivermodelname;
+		if (carconf.GetParam("driver.mesh", drivermodelname))
 		{
-			float pos[3];
-			if (!carconf.GetParam("driver.position", pos, error_output)) return false;
-			COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
-			SCENENODE & drivernoderef = topnode.GetNode(bodynode).GetNode(drivernode);
-			MATHVECTOR <float, 3> floatpos(pos[0], pos[1], pos[2]);
-			drivernoderef.GetTransform().SetTranslation(floatpos);
-		}
-		else
-		{
-			error_output << "Error loading driver graphics: " << driverpath << std::endl;
+			keyed_container <DRAWABLE>::handle driverdraw;
+			std::vector<std::string> texname;
+			if (!carconf.GetParam("driver.texture", texname, error_output)) return false;
+			if (LoadInto(
+				NOBLEND, partspath+"/driver/"+drivermodelname, texname, partspath+"/driver/textures/", texsize, anisotropy,
+				topnode.GetNode(bodynode), textures, models, modellist, drivernode, driverdraw,
+				error_output))
+			{
+				float pos[3] = {0, 0, 0};
+				if (!carconf.GetParam("driver.position", pos, error_output)) return false;
+				//COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
+				SCENENODE & drivernoderef = topnode.GetNode(bodynode).GetNode(drivernode);
+				MATHVECTOR <float, 3> floatpos(pos[0], pos[1], pos[2]);
+				drivernoderef.GetTransform().SetTranslation(floatpos);
+			}
+			else
+			{
+				error_output << "Error loading driver graphics: " << partspath + "/driver/" + drivermodelname << std::endl;
+			}
 		}
 	}
-	/*load car driver graphics (optional)
-	std::string drivermodelname;
-	if (carconf.GetParam("driver.mesh", drivermodelname))
-	{
-		keyed_container <DRAWABLE>::handle driverdraw;
-		std::vector<std::string> texname;
-		if (!carconf.GetParam("driver.texture", texname, error_output)) return false;
-		if (LoadInto(
-			topnode.GetNode(bodynode), drivernode, driverdraw, driverpath + "/" + drivermodelname, models,
-			textures, texname, driverpath + "/textures/", texsize, anisotropy,
-			NOBLEND, error_output))
-		{
-			float pos[3] = {0, 0, 0};
-			if (!carconf.GetParam("driver.position", pos, error_output)) return false;
-			COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
-			SCENENODE & drivernoderef = topnode.GetNode(bodynode).GetNode(drivernode);
-			MATHVECTOR <float, 3> floatpos(pos[0], pos[1], pos[2]);
-			drivernoderef.GetTransform().SetTranslation(floatpos);
-		}
-		else
-		{
-			error_output << "Error loading driver graphics: " << driverpath << std::endl;
-		}
-	}
-	else
-	{
-		info_output << "No driver model, continuing without." << std::endl;
-	}
-	*/
+	
 	// load wheel graphics
 	const std::string wheelid[] = {"fl", "fr", "rl", "rr"};
 	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
 	{
 		keyed_container <DRAWABLE>::handle wheeldraw;
 		if (!GenerateWheelMesh(
-			carconf, wheelid[i], carpath, partspath,
-			topnode, wheelnode[i], wheeldraw, models,
-			textures, anisotropy, texsize, error_output))
+			carconf, wheelid[i], carpath, partspath, texsize, anisotropy, 
+			topnode, textures, models, modellist, wheelnode[i], wheeldraw, error_output))
 		{
 			error_output << "Error generating wheel mesh for wheel " << i << std::endl;
 			return false;
 		}
 		
-		// load floating element
-		keyed_container <DRAWABLE>::handle floatingdraw;
-		std::stringstream nullout;
-		std::string floatingname;
-		if (i < 2)
+		std::string fendermodel;
+		if (carconf.GetParam("cycle-fender-"+wheelid[i]+".mesh", fendermodel))
 		{
-			floatingname = carpath + "/floating_front.joe";
+			keyed_container <DRAWABLE>::handle fenderdraw;
+			std::vector<std::string> fendertex;
+			if (!carconf.GetParam("cycle-fender-"+wheelid[i]+".texture", fendertex)) return false;
+			LoadInto(
+				NOBLEND, carpath+"/"+fendermodel, fendertex, texpath, texsize, anisotropy,
+				topnode, textures, models, modellist, floatingnode[i], fenderdraw, error_output);
 		}
-		else
-		{
-			floatingname = carpath + "/floating_rear.joe";
-		}
-		LoadInto(
-			topnode, floatingnode[i], floatingdraw, floatingname, models,
-			textures, bodytexname, texpath, texsize,
-			anisotropy, NOBLEND, nullout);
 		
 		// set wheel positions(for widget_spinningcar)
 		float pos[3];
 		if (!carconf.GetParam("wheel-"+wheelid[i]+".position", pos, error_output)) return false;
-		COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
+		//COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
 		
 		MATHVECTOR <float, 3> wheelpos(pos[0], pos[1], pos[2]);
 		SCENENODE & wheelnoderef = topnode.GetNode(wheelnode[i]);
@@ -669,13 +575,9 @@ bool CAR::LoadGraphics(
 			std::vector<std::string> texname;
 			if (!carconf.GetParam("light-brake.texture", texname, error_output)) return false;
 			if (!LoadInto(
-				topnode.GetNode(bodynode), bodynode, brakelights, carpath + "/" + brakemodelname, models,
-				textures, texname, texpath, texsize, anisotropy,
-				EMISSIVE, error_output)) return false;
-		}
-		else
-		{
-			info_output << "No car brake model, continuing without one" << std::endl;
+				EMISSIVE, carpath+"/"+brakemodelname, texname, texpath, texsize, anisotropy,
+				topnode.GetNode(bodynode), textures, models, modellist, bodynode, brakelights,
+				error_output)) return false;
 		}
 		
 		// load reverse lights (optional)
@@ -697,13 +599,9 @@ bool CAR::LoadGraphics(
 			std::vector<std::string> texname;
 			if (!carconf.GetParam("light-reverse.texture", texname, error_output)) return false;
 			if (!LoadInto(
-				topnode.GetNode(bodynode), bodynode, reverselights, carpath + "/" + revmodelname, models,
-				textures, texname, texpath, texsize, anisotropy,
-				EMISSIVE, error_output)) return false;
-		}
-		else
-		{
-			info_output << "No car reverse light model, continuing without one" << std::endl;
+				EMISSIVE, carpath+"/"+revmodelname, texname, texpath, texsize, anisotropy,
+				topnode.GetNode(bodynode), textures, models, modellist, bodynode, reverselights,
+				error_output)) return false;
 		}
 	}
 	
@@ -719,31 +617,23 @@ bool CAR::LoadGraphics(
 }
 
 bool CAR::LoadPhysics(
-	CONFIGFILE & carconf,
+	const CONFIGFILE & carconf,
 	const std::string & carpath,
 	const MATHVECTOR <float, 3> & initial_position,
 	const QUATERNION <float> & initial_orientation,
+	const bool defaultabs,
+	const bool defaulttcs,
+	MODELMANAGER & models,
 	COLLISION_WORLD & world,
-	bool defaultabs,
-	bool defaulttcs,
 	std::ostream & info_output,
 	std::ostream & error_output)
 {
 	if (!dynamics.Load(carconf, error_output)) return false;
 	
-	// hacky way to get the model, fixme
-	MODEL_JOE03 * model(0);
-	const std::string carname(carpath + "/body.joe");
-	std::map <std::string, MODEL_JOE03>::iterator rm = models.find(carname);
-	if (rm != models.end())
-	{
-		model = &rm->second;
-	}
-	else
-	{
-		model = &models[carname];
-		if (!LoadModel(carname, *model, 0, error_output)) return false;
-	}
+	std::string carmodel;
+	std::tr1::shared_ptr<MODEL_JOE03> modelptr;
+	if (!carconf.GetParam("body.mesh", carmodel, error_output)) return false;
+	if (!models.Load(carpath+"/"+carmodel, modelptr)) return false;
 	
 	typedef CARDYNAMICS::T T;
 	MATHVECTOR <T, 3> size;
@@ -751,11 +641,15 @@ bool CAR::LoadPhysics(
 	MATHVECTOR <T, 3> position;
 	QUATERNION <T> orientation;
 	
-	size = model->GetAABB().GetSize();
-	center = model->GetAABB().GetCenter();
 	position = initial_position;
 	orientation = initial_orientation;
-
+	size = modelptr->GetAABB().GetSize();
+	center = modelptr->GetAABB().GetCenter();
+	
+	// fix model rotation
+	modelrotation.RotateVector(size);
+	modelrotation.RotateVector(center);
+	
 	dynamics.Init(world, size, center, position, orientation);
 	dynamics.SetABS(defaultabs);
 	dynamics.SetTCS(defaulttcs);
@@ -767,7 +661,7 @@ bool CAR::LoadSounds(
 	const std::string & carpath,
 	const std::string & carname,
 	const SOUNDINFO & soundinfo,
-	SOUNDBUFFERLIBRARY & soundbufferlibrary,
+	SOUNDMANAGER & sounds,
 	std::ostream & info_output,
 	std::ostream & error_output)
 {
@@ -781,15 +675,10 @@ bool CAR::LoadSounds(
 		{
 			//load the buffer
 			std::string filename;
+			std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
 			if (!aud.GetParam(*i+".filename", filename, error_output)) return false;
-			if (!soundbuffers[filename].GetLoaded())
-			{
-				if (!soundbuffers[filename].Load(carpath+"/"+filename, soundinfo, error_output))
-				{
-					error_output << "Error loading sound: " << carpath+"/"+filename << std::endl;
-					return false;
-				}
-			}
+			if (!sounds.Load(carpath+"/"+filename, soundinfo, soundptr)) return false;
+
 			enginesounds.push_back(std::pair <ENGINESOUNDINFO, SOUNDSOURCE> ());
 			ENGINESOUNDINFO & info = enginesounds.back().first;
 			SOUNDSOURCE & sound = enginesounds.back().second;
@@ -807,7 +696,7 @@ bool CAR::LoadSounds(
 			else //assume it's used in both ways
 				info.power = ENGINESOUNDINFO::BOTH;
 
-			sound.SetBuffer(soundbuffers[filename]);
+			sound.SetBuffer(soundptr);
 			sound.Enable3D(true);
 			sound.Loop(true);
 			sound.SetGain(0);
@@ -873,14 +762,11 @@ bool CAR::LoadSounds(
 	}
 	else
 	{
-		if (!soundbuffers["engine.wav"].Load(carpath+"/engine.wav", soundinfo, error_output))
-		{
-			error_output << "Unable to load engine sound: "+carpath+"/engine.wav" << std::endl;
-			return false;
-		}
+		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
+		if (!sounds.Load(carpath+"/engine", soundinfo, soundptr)) return false;
 		enginesounds.push_back(std::pair <ENGINESOUNDINFO, SOUNDSOURCE> ());
 		SOUNDSOURCE & enginesound = enginesounds.back().second;
-		enginesound.SetBuffer(soundbuffers["engine.wav"]);
+		enginesound.SetBuffer(soundptr);
 		enginesound.Enable3D(true);
 		enginesound.Loop(true);
 		enginesound.SetGain(0);
@@ -888,15 +774,11 @@ bool CAR::LoadSounds(
 	}
 
 	//set up tire squeal sounds
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < 4; ++i)
 	{
-		const SOUNDBUFFER * buf = soundbufferlibrary.Load("sounds/tire_squeal", soundinfo, error_output);
-		if (!buf)
-		{
-			error_output << "Can't load tire_squeal sound" << std::endl;
-			return false;
-		}
-		tiresqueal[i].SetBuffer(*buf);
+		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
+		if (!sounds.Load("sounds/tire_squeal", soundinfo, soundptr)) return false;
+		tiresqueal[i].SetBuffer(soundptr);
 		tiresqueal[i].Enable3D(true);
 		tiresqueal[i].Loop(true);
 		tiresqueal[i].SetGain(0);
@@ -906,15 +788,11 @@ bool CAR::LoadSounds(
 	}
 
 	//set up tire gravel sounds
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < 4; ++i)
 	{
-		const SOUNDBUFFER * buf = soundbufferlibrary.Load("sounds/gravel", soundinfo, error_output);
-		if (!buf)
-		{
-			error_output << "Can't load gravel sound" << std::endl;
-			return false;
-		}
-		gravelsound[i].SetBuffer(*buf);
+		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
+		if (!sounds.Load("sounds/gravel", soundinfo, soundptr)) return false;
+		gravelsound[i].SetBuffer(soundptr);
 		gravelsound[i].Enable3D(true);
 		gravelsound[i].Loop(true);
 		gravelsound[i].SetGain(0);
@@ -924,15 +802,11 @@ bool CAR::LoadSounds(
 	}
 
 	//set up tire grass sounds
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < 4; ++i)
 	{
-		const SOUNDBUFFER * buf = soundbufferlibrary.Load("sounds/grass", soundinfo, error_output);
-		if (!buf)
-		{
-			error_output << "Can't load grass sound" << std::endl;
-			return false;
-		}
-		grasssound[i].SetBuffer(*buf);
+		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
+		if (!sounds.Load("sounds/grass", soundinfo, soundptr)) return false;
+		grasssound[i].SetBuffer(soundptr);
 		grasssound[i].Enable3D(true);
 		grasssound[i].Loop(true);
 		grasssound[i].SetGain(0);
@@ -942,17 +816,18 @@ bool CAR::LoadSounds(
 	}
 
 	//set up bump sounds
-	for (int i = 0; i < 4; i++)
+	for (int i = 0; i < 4; ++i)
 	{
-		const SOUNDBUFFER * buf = soundbufferlibrary.Load("sounds/bump_front", soundinfo, error_output);
+		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
 		if (i >= 2)
-			buf = soundbufferlibrary.Load("sounds/bump_rear", soundinfo, error_output);
-		if (!buf)
 		{
-			error_output << "Can't load bump sound: " << i << std::endl;
-			return false;
+			if (!sounds.Load("sounds/bump_rear", soundinfo, soundptr)) return false;
 		}
-		tirebump[i].SetBuffer(*buf);
+		else
+		{
+			if (!sounds.Load("sounds/bump_front", soundinfo, soundptr)) return false;
+		}
+		tirebump[i].SetBuffer(soundptr);
 		tirebump[i].Enable3D(true);
 		tirebump[i].Loop(false);
 		tirebump[i].SetGain(1.0);
@@ -960,13 +835,9 @@ bool CAR::LoadSounds(
 
 	//set up crash sound
 	{
-		const SOUNDBUFFER * buf = soundbufferlibrary.Load("sounds/crash", soundinfo, error_output);
-		if (!buf)
-		{
-			error_output << "Can't load crash sound" << std::endl;
-			return false;
-		}
-		crashsound.SetBuffer(*buf);
+		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
+		if (!sounds.Load("sounds/crash", soundinfo, soundptr)) return false;
+		crashsound.SetBuffer(soundptr);
 		crashsound.Enable3D(true);
 		crashsound.Loop(false);
 		crashsound.SetGain(1.0);
@@ -974,13 +845,9 @@ bool CAR::LoadSounds(
 
 	//set up gear sound
 	{
-		const SOUNDBUFFER * buf = soundbufferlibrary.Load("sounds/gear", soundinfo, error_output);
-		if (!buf)
-		{
-			error_output << "Can't load gear sound" << std::endl;
-			return false;
-		}
-		gearsound.SetBuffer(*buf);
+		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
+		if (!sounds.Load("sounds/gear", soundinfo, soundptr)) return false;
+		gearsound.SetBuffer(soundptr);
 		gearsound.Enable3D(true);
 		gearsound.Loop(false);
 		gearsound.SetGain(1.0);
@@ -988,13 +855,9 @@ bool CAR::LoadSounds(
 
 	//set up brake sound
 	{
-		const SOUNDBUFFER * buf = soundbufferlibrary.Load("sounds/brake", soundinfo, error_output);
-		if (!buf)
-		{
-			error_output << "Can't load brake sound" << std::endl;
-			return false;
-		}
-		brakesound.SetBuffer(*buf);
+		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
+		if (!sounds.Load("sounds/brake", soundinfo, soundptr)) return false;
+		brakesound.SetBuffer(soundptr);
 		brakesound.Enable3D(true);
 		brakesound.Loop(false);
 		brakesound.SetGain(1.0);
@@ -1002,26 +865,18 @@ bool CAR::LoadSounds(
 
 	//set up handbrake sound
 	{
-		const SOUNDBUFFER * buf = soundbufferlibrary.Load("sounds/handbrake", soundinfo, error_output);
-		if (!buf)
-		{
-			error_output << "Can't load handbrake sound" << std::endl;
-			return false;
-		}
-		handbrakesound.SetBuffer(*buf);
+		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
+		if (!sounds.Load("sounds/handbrake", soundinfo, soundptr)) return false;
+		handbrakesound.SetBuffer(soundptr);
 		handbrakesound.Enable3D(true);
 		handbrakesound.Loop(false);
 		handbrakesound.SetGain(1.0);
 	}
 
 	{
-		const SOUNDBUFFER * buf = soundbufferlibrary.Load("sounds/wind", soundinfo, error_output);
-		if (!buf)
-		{
-			error_output << "Can't load wind sound" << std::endl;
-			return false;
-		}
-		roadnoise.SetBuffer(*buf);
+		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
+		if (!sounds.Load("sounds/wind", soundinfo, soundptr)) return false;
+		roadnoise.SetBuffer(soundptr);
 		roadnoise.Enable3D(true);
 		roadnoise.Loop(true);
 		roadnoise.SetGain(0);
@@ -1072,6 +927,7 @@ void CAR::UpdateGraphics()
 	
 	QUATERNION <float> quat;
 	quat = dynamics.GetOrientation();
+	quat = quat * modelrotation;
 	bodynoderef.GetTransform().SetRotation(quat);
 	
 	for (int i = 0; i < 4; i++)
@@ -1083,6 +939,7 @@ void CAR::UpdateGraphics()
 		
 		QUATERNION <float> wheelquat;
 		wheelquat = dynamics.GetWheelOrientation(WHEEL_POSITION(i));
+		wheelquat = wheelquat * modelrotation;
 		wheelnoderef.GetTransform().SetRotation(wheelquat);
 
 		if (floatingnode[i].valid())
@@ -1092,6 +949,7 @@ void CAR::UpdateGraphics()
 			
 			QUATERNION <float> floatquat;
 			floatquat = dynamics.GetUprightOrientation(WHEEL_POSITION(i));
+			floatquat = floatquat * modelrotation;
 			floatingnoderef.GetTransform().SetRotation(floatquat);
 		}
 	}
@@ -1115,17 +973,19 @@ void CAR::UpdateGraphics()
 
 void CAR::UpdateCameras(float dt)
 {
-	QUATERNION <float> rot;
-	rot = dynamics.GetOrientation();
+	
 	MATHVECTOR <float, 3> pos = dynamics.GetPosition();
 	MATHVECTOR <float, 3> acc = dynamics.GetLastBodyForce() / dynamics.GetMass();
-
+	
+	QUATERNION <float> rot;
+	rot = dynamics.GetOrientation();
+	
 	// reverse the camera direction
 	if (lookbehind)
 	{
-		rot.Rotate(3.141593, 0, 0, 1);
+		rot.Rotate(M_PI, 0, 0, 1);
 	}
-
+	
 	cameras.Active()->Update(pos, rot, acc, dt);
 }
 

@@ -165,6 +165,39 @@ public:
 		destmat[8] = 1.0-2.0*(xx+yy);
 	}
 	
+	MATHVECTOR<T, 3> AxisX() const
+	{
+		T xy = v[0]*v[1];
+		T xz = v[0]*v[2];
+		T yy = v[1]*v[1];
+		T yw = v[1]*v[3];
+		T zz = v[2]*v[2];
+		T zw = v[2]*v[3];
+		return MATHVECTOR<T, 3>(1.0-2.0*(yy+zz), 2.0*(xy+zw), 2.0*(xz-yw));
+	}
+	
+	MATHVECTOR<T, 3> AxisY() const
+	{
+		T xx = v[0]*v[0];
+		T xy = v[0]*v[1];
+		T xw = v[0]*v[3];
+		T yz = v[1]*v[2];
+		T zz = v[2]*v[2];
+		T zw = v[2]*v[3];
+		return MATHVECTOR<T, 3>(2.0*(xy-zw), 1.0-2.0*(xx+zz), 2.0*(yz+xw));
+	}
+	
+	MATHVECTOR<T, 3> AxisZ() const
+	{
+		T xx = v[0]*v[0];
+		T xz = v[0]*v[2];
+		T xw = v[0]*v[3];
+		T yy = v[1]*v[1];
+		T yz = v[1]*v[2];
+		T yw = v[1]*v[3];
+		return MATHVECTOR<T, 3>(2.0*(xz+yw), 2.0*(yz-xw), 1.0-2.0*(xx+yy));
+	}
+	
 	///has the potential to return a un-normalized quaternion
 	QUATERNION <T> operator*(const QUATERNION <T> & quat2 ) const
 	{

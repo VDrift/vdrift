@@ -30,11 +30,11 @@ public:
 	void SetupDrawable(
 		SCENENODE & scene,
 		const std::tr1::shared_ptr<TEXTURE> teximage,
-		float x,
-		float y,
-		float w,
-		float h,
-		int order=0,
+		const float x,
+		const float y,
+		const float w,
+		const float h,
+		const int order=0,
 		bool button_mode=false,
 		float screenhwratio=1.0)
 	{

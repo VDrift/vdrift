@@ -3,12 +3,12 @@
 
 #include "scenenode.h"
 #include "vertexarray.h"
-#include "manager.h"
-#include "texture.h"
 
 #include <string>
 #include <cassert>
 #include <iostream>
+
+class TEXTUREMANAGER;
 
 ///a higher level class that takes care of using the TEXTURE, DRAWABLE, and VERTEXARRAY objects to create a 2D sprite
 class SPRITE2D
@@ -47,38 +47,18 @@ public:
 	}
 
 	DRAWABLE & GetDrawable(SCENENODE & parent) {return GetDrawableFromParent(parent);}
-	
+
 	SCENENODE & GetNode(SCENENODE & parent) {return parent.GetNode(node);}
-	
+
 	const SCENENODE & GetNode(const SCENENODE & parent) const {return parent.GetNode(node);}
-/*
-	float GetW() const
-	{
-	    return texture.GetW();
-	}
 
-	float GetH() const
-	{
-	    return texture.GetH();
-	}
-
-	float GetOriginalW() const
-	{
-	    return texture.GetOriginalW();
-	}
-
-	float GetOriginalH() const
-	{
-	    return texture.GetOriginalH();
-	}
-*/
 	void Unload(SCENENODE & parent);
 
 	bool Load(
 		SCENENODE & parent,
 		const std::string & texturefile,
 		const std::string & texturesize,
-		MANAGER<TEXTURE, TEXTUREINFO> & textures,
+		TEXTUREMANAGER & textures,
 		float draworder,
 		std::ostream & error_output);
 

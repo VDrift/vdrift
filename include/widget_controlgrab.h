@@ -60,27 +60,27 @@ private:
 		SCENENODE & scene,
 		std::tr1::shared_ptr<TEXTURE> tex_unsel,
 		std::tr1::shared_ptr<TEXTURE> tex_sel,
-		FONT * font, 
+		const FONT * font, 
 		const std::string & type,
 		const std::string & name,
-		float scalex,
-		float scaley,
-		float y,
-		bool once,
-		bool down,
+		const float scalex,
+		const float scaley,
+		const float y,
+		const bool once,
+		const bool down,
 		const std::string & key,
 		const std::string & keycode,
 		const std::string & joy_type,
-		int joy_index,
-		int joy_button,
-		int joy_axis,
+		const int joy_index,
+		const int joy_button,
+		const int joy_axis,
 		const std::string & joy_axis_type,
 		const std::string & mouse_type,
 		const std::string & mouse_motion,
-		int mouse_button,
-		float deadzone,
-		float exponent,
-		float gain)
+		const int mouse_button,
+		const float deadzone,
+		const float exponent,
+		const float gain)
 	{
 		controlbuttons.push_back(CONTROLWIDGET());
 		controlbuttons.back().type = type;
@@ -140,15 +140,15 @@ public:
 	
 	void SetupDrawable(
 		SCENENODE & scene,
-		CONFIGFILE & c,
+		const CONFIGFILE & c,
 		const std::string & newsetting,
 		const std::vector <std::tr1::shared_ptr<TEXTURE> > & texturevector,
-		FONT * font,
+		const FONT * font,
 		const std::string & text,
-		float centerx,
-		float centery,
-		float scalex,
-		float scaley,
+		const float centerx,
+		const float centery,
+		const float scalex,
+		const float scaley,
 		bool newanalog,
 		bool newonly_one)
 	{
@@ -192,9 +192,9 @@ public:
 	
 	void LoadControls(
 		SCENENODE & scene,
-		CONFIGFILE & c,
+		const CONFIGFILE & c,
 		const std::vector <std::tr1::shared_ptr<TEXTURE> > & texturevector,
-		FONT * font)
+		const FONT * font)
 	{
 		assert(!setting.empty()); //ensure that we've already done a SetupDrawable
 

@@ -1,4 +1,5 @@
 #include "sprite2d.h"
+#include "texturemanager.h"
 
 void SPRITE2D::Unload(SCENENODE & parent)
 {
@@ -18,7 +19,7 @@ bool SPRITE2D::Load(
 	SCENENODE & parent,
 	const std::string & texturefile,
 	const std::string & texturesize,
-	MANAGER<TEXTURE, TEXTUREINFO> & textures,
+	TEXTUREMANAGER & textures,
 	float draworder,
 	std::ostream & error_output)
 {
@@ -28,13 +29,13 @@ bool SPRITE2D::Load(
 	assert(!node.valid());
 
 	TEXTUREINFO texinfo;
-	texinfo.SetName(texturefile);
-	texinfo.SetMipMap(false);
-	texinfo.SetRepeat(false, false);
-	texinfo.SetAllowNonPowerOfTwo(false);
-	texinfo.SetSize(texturesize);
-	std::tr1::shared_ptr<TEXTURE> texture(textures.Get(texinfo)); 
-	if (!texture->Loaded()) return false;
+	texinfo.mipmap = false;
+	texinfo.repeatu = false;
+	texinfo.repeatv = false;
+	texinfo.npot = false;
+	texinfo.size = texturesize;
+	std::tr1::shared_ptr<TEXTURE> texture;
+	if (!textures.Load(texturefile, texinfo, texture)) return false;
 
 	node = parent.AddNode();
 	SCENENODE & noderef = parent.GetNode(node);

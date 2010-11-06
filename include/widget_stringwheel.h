@@ -51,11 +51,11 @@ public:
 		std::tr1::shared_ptr<TEXTURE> teximage_left_down,
 		std::tr1::shared_ptr<TEXTURE> teximage_right_up,
 		std::tr1::shared_ptr<TEXTURE> teximage_right_down,
-		FONT * font,
-		float scalex,
-		float scaley,
-		float centerx,
-		float centery);
+		const FONT * font,
+		const float scalex,
+		const float scaley,
+		const float centerx,
+		const float centery);
 	
 private:
 	WIDGET_LABEL title;

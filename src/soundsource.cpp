@@ -1,5 +1,4 @@
 #include "soundsource.h"
-
 #include "stdint.h"
 
 SOUNDSOURCE::SOUNDSOURCE() :
@@ -16,8 +15,7 @@ SOUNDSOURCE::SOUNDSOURCE() :
 	last_computed_gain1(0.0),
 	last_computed_gain2(0.0),
 	enable3d(true),
-	relative_gain(1.0),
-	buffer(NULL) 
+	relative_gain(1.0)
 {
 	// ctor
 }

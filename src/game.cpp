@@ -42,8 +42,6 @@ using std::sort;
 
 #define USE_STATIC_OPTIMIZATION_FOR_TRACK
 
-//#define DEBUG_TEXTURES
-
 GAME::GAME(std::ostream & info_out, std::ostream & error_out) :
 	info_output(info_out),
 	error_output(error_out),
@@ -66,7 +64,6 @@ GAME::GAME(std::ostream & info_out, std::ostream & error_out) :
 	debugmode(false),
 	profilingmode(false),
 	renderconfigfile("render.conf.deferred"),
-	textures(error_out),
 	track(info_out, error_out),
 	replay(framerate)
 	//sky(graphics, info_out, err_out)
@@ -111,11 +108,15 @@ void GAME::Start(list <string> & args)
 	info_output << "Unix-like" << endl;
 #endif
 
-	InitializeCoreSubsystems();
+	InitCoreSubsystems();
 
 	//load loading screen assets
-	if (!loadingscreen.Init(pathmanager.GetGUITexturePath(settings.GetSkin()),
-			graphics.GetW(), graphics.GetH(), settings.GetTextureSize(), textures))
+	if (!loadingscreen.Init(
+			pathmanager.GetGUITextureDir(settings.GetSkin()),
+			graphics.GetW(),
+			graphics.GetH(),
+			settings.GetTextureSize(),
+			textures))
 	{
 		error_output << "Error loading the loading screen" << endl; //ironic
 		return;
@@ -130,9 +131,11 @@ void GAME::Start(list <string> & args)
 		carcontrols_local.second.Save(pathmanager.GetCarControlsFile(), info_output, error_output);
 	}
 	else
+	{
 		carcontrols_local.second.Load(pathmanager.GetCarControlsFile(), info_output, error_output);
-
-	InitializeSound(); //if sound initialization fails, that's okay, it'll disable itself
+	}
+	
+	InitSound(); //if sound initialization fails, that's okay, it'll disable itself
 
 	//load font data
 	if (!LoadFonts())
@@ -142,7 +145,7 @@ void GAME::Start(list <string> & args)
 	}
 
 	//initialize HUD
-	if (!hud.Init(pathmanager.GetGUITexturePath(settings.GetSkin()), settings.GetTextureSize(), textures, fonts["lcd"], fonts["futuresans"], graphics.GetW(), graphics.GetH(), debugmode, error_output))
+	if (!hud.Init(pathmanager.GetGUITextureDir(settings.GetSkin()), settings.GetTextureSize(), textures, fonts["lcd"], fonts["futuresans"], graphics.GetW(), graphics.GetH(), debugmode, error_output))
 	{
 		error_output << "Error initializing HUD" << endl;
 		return;
@@ -150,7 +153,7 @@ void GAME::Start(list <string> & args)
 	hud.Hide();
 
 	//initialise input graph
-	if (!inputgraph.Init(pathmanager.GetGUITexturePath(settings.GetSkin()), settings.GetTextureSize(), textures, error_output))
+	if (!inputgraph.Init(pathmanager.GetGUITextureDir(settings.GetSkin()), settings.GetTextureSize(), textures, error_output))
 	{
 		error_output << "Error initializing input graph" << endl;
 		return;
@@ -158,7 +161,7 @@ void GAME::Start(list <string> & args)
 	inputgraph.Hide();
 
 	//initialize GUI
-	if (!InitializeGUI()) return;
+	if (!InitGUI()) return;
 
 	//initialize FPS counter
 	{
@@ -178,19 +181,18 @@ void GAME::Start(list <string> & args)
 
 	//load particle systems
 	list <string> smoketexlist;
-	pathmanager.GetFolderIndex(pathmanager.GetTireSmokeTexturePath(), smoketexlist, ".png");
+	string smoketexpath = pathmanager.GetDataPath()+"/"+pathmanager.GetTireSmokeTextureDir();
+	pathmanager.GetFolderIndex(smoketexpath, smoketexlist, ".png");
 	for (list <string>::iterator i = smoketexlist.begin(); i != smoketexlist.end(); ++i)
-		*i = pathmanager.GetTireSmokeTexturePath() + "/" + *i;
+	{
+		*i = pathmanager.GetTireSmokeTextureDir()+"/"+*i;
+	}
 	if (!tire_smoke.Load(smoketexlist, settings.GetAnisotropy(), settings.GetTextureSize(), &textures, error_output))
 	{
 		error_output << "Error loading tire smoke particle system" << endl;
 		return;
 	}
 	tire_smoke.SetParameters(0.125,0.25, 5,14, 0.3,1, 0.5,1, MATHVECTOR<float,3>(0,0,1));
-	
-#ifdef DEBUG_TEXTURES
-	textures.DebugPrint(info_output);
-#endif
 
 	//initialize force feedback
 #ifdef ENABLE_FORCE_FEEDBACK
@@ -217,9 +219,12 @@ void GAME::Start(list <string> & args)
 #include <SDL/SDL_syswm.h>
 #endif
 ///initialize the most important, basic subsystems
-void GAME::InitializeCoreSubsystems()
+void GAME::InitCoreSubsystems()
 {
 	pathmanager.Init(info_output, error_output);
+	textures.Init(pathmanager.GetDataPath(), error_output);
+	models.Init(pathmanager.GetDataPath(), error_output);
+	sounds.Init(pathmanager.GetDataPath(), error_output);
 	settings.Load(pathmanager.GetSettingsFile());
 	
 	if (!LastStartWasSuccessful())
@@ -266,7 +271,7 @@ void TraverseScene(SCENENODE & node, GRAPHICS_SDLGL::dynamicdrawlist_type & outp
 	//std::cout << node.Nodes() << "," << node.Drawables() << std::endl;
 }
 
-bool GAME::InitializeGUI()
+bool GAME::InitGUI()
 {
 	list <string> menufiles;
 	string menufolder = pathmanager.GetGUIMenuPath(settings.GetSkin());
@@ -289,17 +294,34 @@ bool GAME::InitializeGUI()
 		}
 
 		for (list <list <string>::iterator>::iterator i = todel.begin(); i != todel.end(); ++i)
+		{
 			menufiles.erase(*i);
+		}
 	}
+	
 	std::map<std::string, std::list <std::pair <std::string, std::string> > > valuelists;
 	PopulateValueLists(valuelists);
-	if (!gui.Load(menufiles, valuelists, pathmanager.GetOptionsFile(), pathmanager.GetCarControlsFile(), menufolder,
-		pathmanager.GetGUITexturePath(settings.GetSkin()), pathmanager.GetDataPath(), fonts, (float)graphics.GetH()/graphics.GetW(),
-		settings.GetTextureSize(), textures, info_output, error_output))
+	
+	if (!gui.Load(
+			menufiles,
+			valuelists,
+			pathmanager.GetOptionsFile(),
+			pathmanager.GetCarControlsFile(),
+			menufolder,
+			pathmanager.GetGUITextureDir(settings.GetSkin()),
+			pathmanager.GetDataPath(),
+			settings.GetTextureSize(),
+			(float)graphics.GetH()/graphics.GetW(),
+			fonts,
+			textures,
+			models,
+			info_output,
+			error_output))
 	{
 		error_output << "Error loading GUI files" << endl;
 		return false;
 	}
+	
 	std::map<std::string, std::string> optionmap;
 	LoadSaveOptions(LOAD, optionmap);
 	gui.SyncOptions(true, optionmap, error_output);
@@ -309,11 +331,10 @@ bool GAME::InitializeGUI()
 	return true;
 }
 
-bool GAME::InitializeSound()
+bool GAME::InitSound()
 {
 	if (sound.Init(2048, info_output, error_output))
 	{
-		generic_sounds.SetLibraryPath(pathmanager.GetDataPath());
 		sound.SetMasterVolume(settings.GetMasterVolume());
 		sound.Pause(false);
 	}
@@ -505,8 +526,7 @@ void GAME::End()
 		sound.Pause(true); //stop the sound thread
 
 	settings.Save(pathmanager.GetSettingsFile()); //save settings first incase later deinits cause crashes
-
-	textures.Sweep(); // release textures
+	
 	graphics.Deinit();
 }
 
@@ -1068,10 +1088,22 @@ void GAME::LoadControlsIntoGUIPage(const std::string & pagename)
 	PopulateValueLists(valuelists);
 	CONFIGFILE controlfile;
 	carcontrols_local.second.Save(controlfile, info_output, error_output);
+		
 	bool loaded = gui.GetPage(pagename).Load(
-			pathmanager.GetGUIMenuPath(settings.GetSkin())+"/"+pagename, pathmanager.GetGUITexturePath(settings.GetSkin()), pathmanager.GetDataPath(),
-		    controlfile, gui.GetPageNode(pagename), fonts, gui.GetOptionMap(), (float)graphics.GetH()/graphics.GetW(),
-			settings.GetTextureSize(), textures, error_output, true);
+		pathmanager.GetGUIMenuPath(settings.GetSkin())+"/"+pagename,
+		pathmanager.GetGUITextureDir(settings.GetSkin()),
+		pathmanager.GetDataPath(),
+		settings.GetTextureSize(),
+		(float)graphics.GetH()/graphics.GetW(),
+		controlfile,
+		fonts,
+		gui.GetOptionMap(),
+		gui.GetPageNode(pagename),
+		textures,
+		models,
+		error_output,
+		true);
+	
 	assert(loaded);
 }
 
@@ -1635,6 +1667,7 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	{
 		assert(carcontrols_local.first);
 		std::string cartype = carcontrols_local.first->GetCarType();
+		std::string carpath = pathmanager.GetCarPath()+"/"+cartype+"/"+cartype+".car";
 		
 		float r(0), g(0), b(0);
 		settings.GetCarColor(r, g, b);
@@ -1643,15 +1676,14 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 			cartype,
 			settings.GetCarPaint(),
 			r, g, b,
-			pathmanager.GetCarPath()+"/"+cartype+"/"+cartype+".car",
+			carpath,
 			settings.GetTrack(),
 			error_output);
 	}
 
 	textures.Sweep();
-#ifdef DEBUG_TEXTURES
-	textures.DebugPrint(info_output);
-#endif
+	models.Sweep();
+	sounds.Sweep();
 	return true;
 }
 
@@ -1729,31 +1761,29 @@ bool GAME::LoadCar(
 	const MATHVECTOR <float, 3> & start_position, const QUATERNION <float> & start_orientation,
 	bool islocal, bool isai, const string & carfile)
 {
-	std::string carpath = pathmanager.GetCarPath()+"/"+carname;
-	
 	CONFIGFILE carconf;
 	if (carfile.empty()) //if no file is passed in, then load it from disk
 	{
-		if ( !carconf.Load ( carpath + "/" + carname + ".car" ) )
+		if (!carconf.Load(pathmanager.GetCarPath()+"/"+carname+"/"+carname+".car"))
 			return false;
 	}
 	else
 	{
 		stringstream carstream(carfile);
-		if ( !carconf.Load ( carstream ) )
+		if (!carconf.Load(carstream))
 			return false;
 	}
 	
 	cars.push_back(CAR());
-	CAR & car(cars.back());
+	CAR & car = cars.back();
+	bool loaddriver = true;
+	std::string carpath = pathmanager.GetCarDir()+"/"+carname;
 	
 	if (!car.LoadGraphics(
-		carconf, carpath, carname,
-		pathmanager.GetDriverPath()+"/driver2", pathmanager.GetCarSharedPath(),
-		carcolor, carpaint, textures, settings.GetTextureSize(), settings.GetAnisotropy(),
-		settings.GetCameraBounce(),
-		debugmode,
-		info_output, error_output))
+			carconf, carpath, carname, pathmanager.GetCarSharedDir(),
+			carcolor, carpaint, settings.GetTextureSize(), settings.GetAnisotropy(),
+			settings.GetCameraBounce(), loaddriver, debugmode,
+			textures, models, info_output, error_output))
 	{
 		error_output << "Error loading car: " << carname << endl;
 		cars.pop_back();
@@ -1763,20 +1793,20 @@ bool GAME::LoadCar(
 	if(sound.Enabled())
 	{
 		if (!car.LoadSounds(
-			carpath, carname,
-			sound.GetDeviceInfo(),
-			generic_sounds,
-			info_output, error_output))
+				carpath, carname,
+				sound.GetDeviceInfo(), sounds,
+				info_output, error_output))
 		{
 			return false;
 		}
 	}
 	
 	if (!car.LoadPhysics(
-		carconf, carpath,
-		start_position, start_orientation, collision,
-		settings.GetABS() || isai, settings.GetTCS() || isai,
-		info_output, error_output))
+			carconf, carpath,
+			start_position, start_orientation,
+			settings.GetABS() || isai, settings.GetTCS() || isai,
+			models,  collision,
+			info_output, error_output))
 	{
 		return false;
 	}
@@ -1803,15 +1833,17 @@ bool GAME::LoadCar(
 
 bool GAME::LoadTrack(const std::string & trackname)
 {
-	LoadingScreen(0.0,1.0);
+	LoadingScreen(0.0, 1.0);
 
 	//load the track
 	if (!track.DeferredLoad(
+			textures,
+			models,
 			pathmanager.GetTrackPath()+"/"+trackname,
-			pathmanager.GetEffectsTexturePath(),
+			pathmanager.GetTrackDir()+"/"+trackname,
+			pathmanager.GetEffectsTextureDir(),
 			settings.GetTextureSize(),
 			settings.GetAnisotropy(),
-			textures,
 			settings.GetTrackReverse(),
 			graphics.GetShadows(),
 			false))
@@ -1828,7 +1860,7 @@ bool GAME::LoadTrack(const std::string & trackname)
 		{
 			LoadingScreen(count, track.DeferredLoadTotalObjects());
 		}
-		success = track.ContinueDeferredLoad(textures);
+		success = track.ContinueDeferredLoad();
 		count++;
 	}
 	
@@ -1842,7 +1874,15 @@ bool GAME::LoadTrack(const std::string & trackname)
 	track.SetRacingLineVisibility(settings.GetRacingline());
 
 	//generate the track map
-	if (!trackmap.BuildMap(track.GetRoadList(), graphics.GetW(), graphics.GetH(), trackname, pathmanager.GetHUDTexturePath(), settings.GetTextureSize(), textures, error_output))
+	if (!trackmap.BuildMap(
+			track.GetRoadList(),
+			graphics.GetW(),
+			graphics.GetH(),
+			trackname,
+			pathmanager.GetHUDTextureDir(),
+			settings.GetTextureSize(),
+			textures,
+			error_output))
 	{
 		error_output << "Error loading track map: " << trackname << endl;
 		return false;
@@ -1862,19 +1902,20 @@ bool GAME::LoadTrack(const std::string & trackname)
 
 bool GAME::LoadFonts()
 {
-	string fontbase = pathmanager.GetFontPath(settings.GetSkin());
+	string fontdir = pathmanager.GetFontDir(settings.GetSkin());
+	string fontpath = pathmanager.GetDataPath()+"/"+fontdir;
 
 	if (graphics.GetUsingShaders())
 	{
-		if (!fonts["freesans"].Load(fontbase+"/freesans.txt",fontbase+"/freesans.png", settings.GetTextureSize(), textures, error_output)) return false;
-		if (!fonts["lcd"].Load(fontbase+"/lcd.txt",fontbase+"/lcd.png", settings.GetTextureSize(), textures, error_output)) return false;
-		if (!fonts["futuresans"].Load(fontbase+"/futuresans.txt",fontbase+"/futuresans.png", settings.GetTextureSize(), textures, error_output)) return false;
+		if (!fonts["freesans"].Load(fontpath+"/freesans.txt",fontdir+"/freesans.png", settings.GetTextureSize(), textures, error_output)) return false;
+		if (!fonts["lcd"].Load(fontpath+"/lcd.txt",fontdir+"/lcd.png", settings.GetTextureSize(), textures, error_output)) return false;
+		if (!fonts["futuresans"].Load(fontpath+"/futuresans.txt",fontdir+"/futuresans.png", settings.GetTextureSize(), textures, error_output)) return false;
 	}
 	else
 	{
-		if (!fonts["freesans"].Load(fontbase+"/freesans.txt",fontbase+"/freesans_noshaders.png", settings.GetTextureSize(), textures, error_output)) return false;
-		if (!fonts["lcd"].Load(fontbase+"/lcd.txt",fontbase+"/lcd_noshaders.png", settings.GetTextureSize(), textures,  error_output)) return false;
-		if (!fonts["futuresans"].Load(fontbase+"/futuresans.txt",fontbase+"/futuresans_noshaders.png", settings.GetTextureSize(), textures, error_output)) return false;
+		if (!fonts["freesans"].Load(fontpath+"/freesans.txt",fontdir+"/freesans_noshaders.png", settings.GetTextureSize(), textures, error_output)) return false;
+		if (!fonts["lcd"].Load(fontpath+"/lcd.txt",fontdir+"/lcd_noshaders.png", settings.GetTextureSize(), textures,  error_output)) return false;
+		if (!fonts["futuresans"].Load(fontpath+"/futuresans.txt",fontdir+"/futuresans_noshaders.png", settings.GetTextureSize(), textures, error_output)) return false;
 	}
 
 	info_output << "Loaded fonts successfully" << endl;
@@ -2001,10 +2042,10 @@ void GAME::PopulateValueLists(std::map<std::string, std::list <std::pair <std::s
 	{
 		list <pair<string,string> > tracklist;
 		list <string> trackfolderlist;
-		pathmanager.GetFolderIndex(pathmanager.GetTrackPath(),trackfolderlist);
+		pathmanager.GetFolderIndex(pathmanager.GetTrackPath(), trackfolderlist);
 		for (list <string>::iterator i = trackfolderlist.begin(); i != trackfolderlist.end(); ++i)
 		{
-			ifstream check((pathmanager.GetTrackPath() + "/" + *i + "/about.txt").c_str());
+			ifstream check((pathmanager.GetTrackPath()+"/"+*i+"/about.txt").c_str());
 			if (check)
 			{
 				string displayname;
@@ -2020,10 +2061,10 @@ void GAME::PopulateValueLists(std::map<std::string, std::list <std::pair <std::s
 	{
 		list <pair<string,string> > carlist;
 		list <string> carfolderlist;
-		pathmanager.GetFolderIndex(pathmanager.GetCarPath(),carfolderlist);
+		pathmanager.GetFolderIndex(pathmanager.GetCarPath(), carfolderlist);
 		for (list <string>::iterator i = carfolderlist.begin(); i != carfolderlist.end(); ++i)
 		{
-			ifstream check((pathmanager.GetCarPath() + "/" + *i + "/about.txt").c_str());
+			ifstream check((pathmanager.GetCarPath()+"/"+*i+"/about.txt").c_str());
 			if (check)
 			{
 				carlist.push_back(pair<string,string>(*i,*i));
@@ -2090,7 +2131,6 @@ void GAME::PopulateValueLists(std::map<std::string, std::list <std::pair <std::s
 
 	//populate other lists
 	valuelists["joy_indeces"].push_back(pair<string,string>("0","0"));
-	
 	list <string> skinlist;
 	pathmanager.GetFolderIndex(pathmanager.GetSkinPath(),skinlist);
 	for (list <string>::iterator i = skinlist.begin(); i != skinlist.end(); ++i)
@@ -2266,8 +2306,7 @@ void GAME::UpdateDriftScore(CAR & car, double dt)
 	bool on_track = ( wheel_count > 1 );
 
 	//car's direction on the horizontal plane
-	MATHVECTOR <float, 3> car_orientation(1,0,0);
-	car.GetOrientation().RotateVector(car_orientation);
+	MATHVECTOR <float, 3> car_orientation = car.GetOrientation().AxisX();
 	car_orientation[2] = 0;
 
 	//car's velocity on the horizontal plane

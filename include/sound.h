@@ -12,58 +12,6 @@
 
 struct SDL_mutex;
 
-class SOUNDBUFFERLIBRARY
-{
-	private:
-		std::string librarypath;
-		std::map <std::string, SOUNDBUFFER> buffermap;
-		
-	public:
-		///set the path to the sound buffers, minus the trailing /
-		void SetLibraryPath(const std::string & newpath)
-		{
-			librarypath = newpath;
-		}
-		
-		///buffername is the path to the sound minus the path prefix and file extension postfix
-		const SOUNDBUFFER * Load(const std::string & buffername, const SOUNDINFO & sound_device_info, std::ostream & error_output)
-		{
-			std::map <std::string, SOUNDBUFFER>::const_iterator i = buffermap.find(buffername);
-			if (i != buffermap.end())
-			{
-				return &i->second;
-			}
-			
-			//prefer ogg
-			std::string filename = librarypath+"/"+buffername+".ogg";
-			if (!std::ifstream(filename.c_str()))
-			{
-				filename = librarypath+"/"+buffername+".wav";
-			}
-			
-			SOUNDBUFFER & buffer = buffermap[buffername];
-			if (buffer.Load(filename, sound_device_info, error_output))
-			{
-				return &buffer;
-			}
-			else
-			{
-				buffermap.erase(buffername);
-				return 0;
-			}
-		}
-		
-		///returns 0 if the buffer isn't found
-		const SOUNDBUFFER * Get(const std::string & buffername) const
-		{
-			std::map <std::string, SOUNDBUFFER>::const_iterator buff = buffermap.find(buffername);
-			if (buff != buffermap.end())
-				return &(buff->second);
-			else
-				return 0;
-		}
-};
-
 class SOUND
 {
 public:

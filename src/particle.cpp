@@ -1,7 +1,6 @@
 #include "particle.h"
+#include "texturemanager.h"
 #include "unittest.h"
-#include "manager.h"
-#include "texture.h"
 
 using std::endl;
 
@@ -9,17 +8,19 @@ bool PARTICLE_SYSTEM::Load(
 	const std::list <std::string> & texlist,
 	int anisotropy,
 	const std::string & texsize,
-	MANAGER<TEXTURE, TEXTUREINFO> * texturemanager,
+	TEXTUREMANAGER * texturemanager,
 	std::ostream & error_output)
 {
 	if (!texturemanager) return false;
+	
+	TEXTUREINFO texinfo;
+	texinfo.size = texsize;
+	texinfo.anisotropy = anisotropy;
 	for (std::list <std::string>::const_iterator i = texlist.begin(); i != texlist.end(); ++i)
 	{
-		TEXTUREINFO texinfo(*i);
-		texinfo.SetSize(texsize);
-		texinfo.SetAnisotropy(anisotropy);
-		std::tr1::shared_ptr<TEXTURE> texture = texturemanager->Get(texinfo);
-		textures.push_back(texture);
+		std::tr1::shared_ptr<TEXTURE> tex;
+		texturemanager->Load(*i, texinfo, tex);
+		textures.push_back(tex);
 	}
 	cur_texture = textures.end();
 	return !textures.empty();

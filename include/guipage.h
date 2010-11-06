@@ -3,7 +3,6 @@
 
 #include "derived.h"
 #include "widget.h"
-#include "manager.h"
 #include "font.h"
 #include "guioption.h"
 #include "scenenode.h"
@@ -17,55 +16,10 @@
 
 class WIDGET_LABEL;
 class WIDGET_CONTROLGRAB;
+class MODELMANAGER;
 
 class GUIPAGE
 {
-private:
-	std::list <DERIVED <WIDGET> > widgets;
-	std::map <std::string, reseatable_reference <WIDGET_LABEL> > label_widgets;
-	std::list <WIDGET_CONTROLGRAB *> controlgrabs;
-	WIDGET_LABEL * tooltip_widget;
-	std::map <std::string, FONT> * fontmap;
-	keyed_container <SCENENODE>::handle s;
-	
-	bool dialog;
-	
-	///hides some of the ugliness behind this method
-	template <typename T>
-	T * NewWidget()
-	{
-		widgets.push_back(DERIVED <WIDGET> (new T()));
-		return (T*) widgets.back().Get();
-	}
-	
-	std::tr1::shared_ptr<TEXTURE> GetTexture(
-		const std::string & texname,
-		const std::string & texpath,
-		MANAGER<TEXTURE, TEXTUREINFO> & textures,
-		const std::string & texsize)
-	{
-		TEXTUREINFO texinfo(texpath + "/" + texname);
-		texinfo.SetMipMap(false);
-		texinfo.SetRepeat(false, false);
-		texinfo.SetSize(texsize);
-		return textures.Get(texinfo);
-	}
-	
-	void Clear(SCENENODE & parentnode)
-	{
-		controlgrabs.clear();
-		tooltip_widget = NULL;
-		fontmap = NULL;
-		dialog = false;
-		widgets.clear();
-		if (s.valid())
-		{
-			SCENENODE & sref = parentnode.GetNode(s);
-			sref.Clear();
-		}
-		s.invalidate();
-	}
-	
 public:
 	GUIPAGE() : tooltip_widget(NULL),fontmap(NULL),dialog(false) {}
 	
@@ -78,13 +32,14 @@ public:
 		const std::string & path,
 		const std::string & texpath,
 		const std::string & datapath,
-		CONFIGFILE & controlsconfig,
-		SCENENODE & parentnode,
-		std::map <std::string, FONT> & fonts,
-		std::map<std::string, GUIOPTION> & optionmap,
-		float screenhwratio,
 		const std::string & texsize,
-		MANAGER<TEXTURE, TEXTUREINFO> & textures,
+		const float screenhwratio,
+		const CONFIGFILE & controlsconfig,
+		const std::map <std::string, FONT> & fonts,
+		std::map <std::string, GUIOPTION> & optionmap,
+		SCENENODE & parentnode,
+		TEXTUREMANAGER & textures,
+		MODELMANAGER & models,
 		std::ostream & error_output,
 		bool reloadcontrolsonly = false);
   	
@@ -117,8 +72,12 @@ public:
 	}
 	
 	///returns a list of actions that were generated
-	std::list <std::pair <std::string, bool> > ProcessInput(SCENENODE & parent, bool movedown, bool moveup, float cursorx, float cursory,
-			bool cursordown, bool cursorjustup, float screenhwratio);
+	std::list <std::pair <std::string, bool> > ProcessInput(
+		SCENENODE & parent,
+		bool movedown, bool moveup,
+		float cursorx, float cursory,
+		bool cursordown, bool cursorjustup,
+		float screenhwratio);
 			
 	///tell all child widgets to do as update tick
 	void Update(SCENENODE & parent, float dt)
@@ -133,6 +92,39 @@ public:
 	reseatable_reference <WIDGET_LABEL> GetLabel(const std::string & label_widget_name)
 	{
 		return label_widgets[label_widget_name];
+	}
+	
+private:
+	std::list <DERIVED <WIDGET> > widgets;
+	std::map <std::string, reseatable_reference <WIDGET_LABEL> > label_widgets;
+	std::list <WIDGET_CONTROLGRAB *> controlgrabs;
+	WIDGET_LABEL * tooltip_widget;
+	const std::map <std::string, FONT> * fontmap;
+	keyed_container <SCENENODE>::handle s;
+	
+	bool dialog;
+	
+	///hides some of the ugliness behind this method
+	template <typename T>
+	T * NewWidget()
+	{
+		widgets.push_back(DERIVED <WIDGET> (new T()));
+		return (T*) widgets.back().Get();
+	}
+	
+	void Clear(SCENENODE & parentnode)
+	{
+		controlgrabs.clear();
+		tooltip_widget = NULL;
+		fontmap = NULL;
+		dialog = false;
+		widgets.clear();
+		if (s.valid())
+		{
+			SCENENODE & sref = parentnode.GetNode(s);
+			sref.Clear();
+		}
+		s.invalidate();
 	}
 };
 

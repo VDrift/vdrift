@@ -18,7 +18,7 @@ class WIDGET_LABEL : public WIDGET
 private:
 	TEXT_DRAW text_draw;
 	keyed_container <DRAWABLE>::handle draw;
-	FONT * savedfont;
+	const FONT * savedfont;
 	float r,g,b;
 	float saved_x, saved_y, saved_scalex, saved_scaley;
 	bool saved_centered;
@@ -32,7 +32,19 @@ public:
 	WIDGET_LABEL() : savedfont(NULL),r(1),g(1),b(1) {}
 	virtual WIDGET * clone() const {return new WIDGET_LABEL(*this);};
 	
-	void SetupDrawable(SCENENODE & scene, FONT * font, const std::string & text, float x, float y, float scalex, float scaley, const float nr, const float ng, const float nb, int order=0, bool centered=true)
+	void SetupDrawable(
+		SCENENODE & scene,
+		const FONT * font,
+		const std::string & text,
+		const float x,
+		const float y,
+		const float scalex,
+		const float scaley,
+		const float nr,
+		const float ng,
+		const float nb,
+		const int order=0,
+		const bool centered=true)
 	{
 		assert(font);
 		savedfont = font;
@@ -57,7 +69,15 @@ public:
 		drawref.SetDrawOrder(order+100);
 	}
 	
-	void ReviseDrawable(SCENENODE & scene, FONT * font, const std::string & text, float x, float y, float scalex, float scaley, bool centered=true)
+	void ReviseDrawable(
+		SCENENODE & scene,
+		const FONT * font,
+		const std::string & text,
+		const float x,
+		const float y,
+		const float scalex,
+		const float scaley,
+		bool centered=true)
 	{
 		assert(font);
 		
@@ -95,7 +115,7 @@ public:
 		text_draw.Revise(*savedfont, text);
 	}
 	
-	float GetWidth(FONT * font, const std::string & text, float scale) const
+	float GetWidth(const FONT * font, const std::string & text, float scale) const
 	{
 		assert(font);
 		//assert(!text.empty());
