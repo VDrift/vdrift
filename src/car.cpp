@@ -315,7 +315,7 @@ bool LoadCameras(
 
 	float pos[3], hoodpos[3];
 	if (!cfg.GetParam("camera.view-position", pos, error_output)) return false;
-//	COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
+	COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
 	MATHVECTOR <float, 3> cam_offset;
 	cam_offset.Set(pos);
 	driver_cam->SetOffset(cam_offset);
@@ -328,7 +328,7 @@ bool LoadCameras(
 	}
 	else
 	{
-//		COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(hoodpos[0],hoodpos[1],hoodpos[2]);
+		COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(hoodpos[0],hoodpos[1],hoodpos[2]);
 		cam_offset.Set(hoodpos);
 	}
 	hood_cam->SetOffset(cam_offset);
