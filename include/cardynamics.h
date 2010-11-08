@@ -18,7 +18,7 @@
 #include "joeserialize.h"
 #include "macros.h"
 #include "collision_contact.h"
-#include "cartelemetry.h"
+#include "cardatalog.h"
 #include "BulletDynamics/Dynamics/btActionInterface.h"
 
 class MODEL;
@@ -32,9 +32,9 @@ friend class PERFORMANCE_TESTING;
 friend class joeserialize::Serializer;
 public:
 	typedef double T;
-	
+
 	CARDYNAMICS();
-	
+
 	bool Load(
 		CONFIGFILE & c,
 		const std::string & sharedpartspath,
@@ -102,12 +102,16 @@ public:
 	bool GetTCSEnabled() const;
 	bool GetTCSActive() const;
 
+// data logging
+	void EnableDataLogging(std::string const& directory, std::string const& name, std::vector< std::string > const& column_names, float frequency_Hz=100.0);
+	void UpdateDataLog(float dt);
+
 // cardynamics
 	void SetPosition(const MATHVECTOR<T, 3> & pos);
 
 	// move the car along z-axis until it is touching the ground
 	void AlignWithGround();
-	
+
 	// rotate car back onto it's wheels after rollover
 	void RolloverRecover();
 
@@ -118,20 +122,18 @@ public:
 	T GetMaxSteeringAngle() const;
 
 	const CARTIRE <T> & GetTire(WHEEL_POSITION pos) const {return tire[pos];}
-	
+
 	const CARSUSPENSION <T> & GetSuspension(WHEEL_POSITION pos) const {return suspension[pos];}
 
 	MATHVECTOR <T, 3> GetTotalAero() const;
-	
+
 	T GetAerodynamicDownforceCoefficient() const;
-	
+
 	T GetAeordynamicDragCoefficient() const;
 
 	MATHVECTOR< T, 3 > GetLastBodyForce() const;
-	
-	T GetFeedback() const;
 
-	void UpdateTelemetry(float dt);
+	T GetFeedback() const;
 
 	// print debug info to the given ostream.  set p1, p2, etc if debug info part 1, and/or part 2, etc is desired
 	void DebugPrint(std::ostream & out, bool p1, bool p2, bool p3, bool p4) const;
@@ -144,7 +146,7 @@ protected:
 	MATHVECTOR <T, 3> center_of_mass;
 	COLLISION_WORLD * world;
 	btRigidBody * chassis;
-	
+
 	// interpolated chassis state
 	MATHVECTOR <T, 3> chassisPosition;
 	MATHVECTOR <T, 3> chassisCenterOfMass;
@@ -160,7 +162,8 @@ protected:
 	CARDIFFERENTIAL <T> center_differential;
 	std::vector <CARBRAKE <T> > brake;
 	std::vector <CARWHEEL <T> > wheel;
-	
+	double last_brake_input_value;
+
 	enum { FWD = 3, RWD = 12, AWD = 15 } drive;
 	T driveshaft_rpm;
 	T tacho_rpm;
@@ -177,7 +180,7 @@ protected:
 	bool tcs;
 	std::vector <int> abs_active;
 	std::vector <int> tcs_active;
-	
+
 // cardynamics state
 	std::vector <T> normal_force;
 	std::vector <MATHVECTOR <T, 3> > wheel_velocity;
@@ -191,14 +194,18 @@ protected:
 	std::vector <CARAERO <T> > aerodynamics;
 
 	std::list <std::pair <T, MATHVECTOR <T, 3> > > mass_particles;
-	
+
 	T maxangle;
-	
+
 	T feedback;
-	
+
 	MATHVECTOR <T, 3> lastbodyforce; //< held so external classes can extract it for things such as applying physics to camera mounts
-	
-	std::list <CARTELEMETRY> telemetry;
+
+// data logging
+	CARDATALOG data_log;
+	bool enable_data_logging;
+	double data_logging_frequency;
+	double time_since_last_logentry;
 
 // chassis, cardynamics
 	MATHVECTOR <T, 3> GetDownVector() const;
@@ -208,20 +215,20 @@ protected:
 	MATHVECTOR <T, 3> Position() const;
 
 	MATHVECTOR <T, 3> LocalToWorld(const MATHVECTOR <T, 3> & local) const;
-	
+
 	void ApplyForce(const MATHVECTOR <T, 3> & force);
-	
+
 	void ApplyForce(const MATHVECTOR <T, 3> & force, const MATHVECTOR <T, 3> & offset);
-	
+
 	void ApplyTorque(const MATHVECTOR <T, 3> & torque);
 
 	void UpdateWheelVelocity();
-	
+
 	void UpdateWheelTransform();
 
 	// apply engine torque to chassis
 	void ApplyEngineTorqueToBody();
-	
+
 	// add aerodynamic force / torque to force, torque
 	void AddAerodynamics(MATHVECTOR<T, 3> & force, MATHVECTOR<T, 3> & torque);
 
@@ -277,16 +284,16 @@ protected:
 	T CalculateDriveshaftRPM() const;
 
 	bool WheelDriven(int i) const;
-	
+
 	T AutoClutch(T last_clutch, T dt) const;
-	
+
 	T ShiftAutoClutch() const;
-	
+
 	T ShiftAutoClutchThrottle(T throttle, T dt);
-	
+
 	// calculate next gear based on engine rpm
 	int NextGear() const;
-	
+
 	// calculate downshift point based on gear, engine rpm
 	T DownshiftRPM(int gear) const;
 

@@ -12,6 +12,7 @@
 #include "crashdetection.h"
 #include "enginesoundinfo.h"
 #include "scenenode.h"
+//#include "cardatalog.h"
 
 #include <string>
 #include <ostream>
@@ -22,13 +23,13 @@ class BEZIER;
 class PERFORMANCE_TESTING;
 class TEXTUREINFO;
 
-class CAR 
+class CAR
 {
 friend class PERFORMANCE_TESTING;
 friend class joeserialize::Serializer;
 public:
 	CAR();
-	
+
 	bool LoadGraphics(
 		CONFIGFILE & carconf,
 		const std::string & carpath,
@@ -44,7 +45,7 @@ public:
 		const std::string & sharedpartspath,
 		std::ostream & info_output,
 		std::ostream & error_output);
-	
+
 	bool LoadSounds(
 		const std::string & carpath,
 		const std::string & carname,
@@ -52,7 +53,7 @@ public:
 		SOUNDBUFFERLIBRARY & soundbufferlibrary,
 		std::ostream & info_output,
 		std::ostream & error_output);
-	
+
 	bool LoadPhysics(
 		CONFIGFILE & carconf,
 		const std::string & carpath,
@@ -64,17 +65,17 @@ public:
 		bool defaulttcs,
 		std::ostream & info_output,
 		std::ostream & error_output);
-	
+
 	// change car color
 	void SetColor(float r, float g, float b);
-	
+
 	// will align car relative to track surface
 	void SetPosition(const MATHVECTOR <float, 3> & position);
-	
+
 	void Update(double dt);
 
 	void GetSoundList(std::list <SOUNDSOURCE *> & outputlist);
-	
+
 	void GetEngineSoundList(std::list <SOUNDSOURCE *> & outputlist);
 
 	const MATHVECTOR <float, 3> GetWheelPosition(const WHEEL_POSITION wpos) const
@@ -95,7 +96,7 @@ public:
 	}
 
 	void HandleInputs(const std::vector <float> & inputs, float dt);
-	
+
 	CAMERA_SYSTEM & Cameras()
 	{
 		return cameras;
@@ -115,12 +116,12 @@ public:
 	{
 		return dynamics.GetTransmission().GetGear();
 	}
-	
+
     void SetGear(int gear)
 	{
 	    dynamics.ShiftGear(gear);
 	}
-	
+
 	float GetClutch()
 	{
 		return dynamics.GetClutch().GetClutch();
@@ -155,7 +156,7 @@ public:
 	{
 		return dynamics.GetTCSActive();
 	}
-	
+
 	/// return the speedometer reading (based on the driveshaft speed) in m/s
 	float GetSpeedometer()
 	{
@@ -192,7 +193,7 @@ public:
 	{
 		return dynamics.GetSpeed();
 	}
-	
+
 	MATHVECTOR <float, 3> GetTotalAero() const
 	{
 		return dynamics.GetTotalAero();
@@ -202,14 +203,14 @@ public:
 
 	// returns a float from 0.0 to 1.0 with the amount of tire squealing going on
 	float GetTireSquealAmount(WHEEL_POSITION i) const;
-	
+
 	void EnableGlass(bool enable);
 
 	void DebugPrint(std::ostream & out, bool p1, bool p2, bool p3, bool p4) const
 	{
 		dynamics.DebugPrint(out, p1, p2, p3, p4);
 	}
-	
+
 	bool Serialize(joeserialize::Serializer & s);
 
 /// AI interface
@@ -265,7 +266,7 @@ public:
 		vel = dynamics.GetVelocity();
 		return vel;
 	}
-	
+
 	float GetTireMaxFx(WHEEL_POSITION tire_index) const
 	{
 		return dynamics.GetTire(tire_index).GetMaximumFx(GetMass()*0.25*9.81);
@@ -275,12 +276,12 @@ public:
 	{
 		return dynamics.GetTire(tire_index).GetMaximumFy(GetMass()*0.25*9.81, 0.0);
 	}
-	
+
 	float GetTireMaxMz(WHEEL_POSITION tire_index) const
 	{
 		return dynamics.GetTire(tire_index).GetMaximumMz(GetMass()*0.25*9.81, 0.0);
 	}
-	
+
 	// optimum steering angle in degrees
 	float GetOptimumSteeringAngle() const
 	{
@@ -294,12 +295,15 @@ public:
 	}
 
 	SCENENODE & GetNode() {return topnode;}
-	
+
+	/// turn on data logging in dynamics
+	void EnableDataLogging(std::string const& directory, std::string const& name, std::vector< std::string > const& column_names, float frequency_Hz=100.0);
+
 protected:
 	CARDYNAMICS dynamics;
 
 	SCENENODE topnode;
-	
+
 	keyed_container <SCENENODE>::handle bodynode;
 	keyed_container <SCENENODE>::handle drivernode;
 	keyed_container <DRAWABLE>::handle bodydraw;
@@ -308,12 +312,12 @@ protected:
 	keyed_container <DRAWABLE>::handle brakelights_emissive;
 	keyed_container <DRAWABLE>::handle reverselights_emissive;
 	keyed_container <DRAWABLE>::handle glassdraw;
-	
+
 	keyed_container <SCENENODE>::handle wheelnode[WHEEL_POSITION_SIZE];
 	keyed_container <SCENENODE>::handle floatingnode[WHEEL_POSITION_SIZE];
 	keyed_container <DRAWABLE>::handle wheeldraw[WHEEL_POSITION_SIZE];
 	keyed_container <DRAWABLE>::handle floatingdraw[WHEEL_POSITION_SIZE];
-	
+
 	struct LIGHT
 	{
 		keyed_container <SCENENODE>::handle node;
@@ -322,14 +326,14 @@ protected:
 		MODEL model;
 	};
 	std::list <LIGHT> lights;
-	
+
 	SUSPENSIONBUMPDETECTION suspensionbumpdetection[4];
 	CRASHDETECTION crashdetection;
 	CAMERA_SYSTEM cameras;
 
 	std::map <std::string, MODEL_JOE03> models;
 	std::map <std::string, SOUNDBUFFER> soundbuffers;
-	
+
 	std::list <std::pair <ENGINESOUNDINFO, SOUNDSOURCE> > enginesounds;
 	SOUNDSOURCE tiresqueal[WHEEL_POSITION_SIZE];
 	SOUNDSOURCE tirebump[WHEEL_POSITION_SIZE];
@@ -340,11 +344,11 @@ protected:
 	SOUNDSOURCE brakesound;
 	SOUNDSOURCE handbrakesound;
 	SOUNDSOURCE roadnoise;
-	
+
 	int gearsound_check;
 	bool brakesound_check;
 	bool handbrakesound_check;
-	
+
 	//internal variables that might change during driving (so, they need to be serialized)
 	float last_steer;
 	bool lookbehind;
@@ -352,17 +356,17 @@ protected:
 	std::string cartype;
 	int sector; //the last lap timing sector that the car hit
 	const BEZIER * curpatch[WHEEL_POSITION_SIZE]; //the last bezier patch that each wheel hit
-	
+
 	float applied_brakes; ///< cached so we can update the brake light
-	
+
 	float mz_nominalmax; //the nominal maximum Mz force, used to scale force feedback
-	
+
 	void UpdateSounds(float dt);
-	
+
 	void UpdateCameras(float dt);
-		
+
 	void UpdateGraphics();
-	
+
 	bool GenerateWheelMesh(
 		CONFIGFILE & carconf,
 		const std::string & carpath,
@@ -376,12 +380,12 @@ protected:
 		int anisotropy,
 		const std::string & texsize,
 		std::ostream & error_output);
-	
+
 	bool LoadLight(
 		CONFIGFILE & cfg,
 		const std::string & name,
 		std::ostream & error_output);
-	
+
 	enum WHICHDRAWLIST
 	{
 		BLEND,
@@ -389,7 +393,7 @@ protected:
 		EMISSIVE,
 		OMNI
 	};
-	
+
 	/// take the parentnode, add a scenenode (if output_scenenode isn't yet valid), add a drawable to the
 	/// scenenode, load a model, load a texture, and set up the drawable with the model and texture.
 	/// the given TEXTURE textures will not be reloaded if they are already loaded
@@ -413,7 +417,7 @@ protected:
 		MODEL_JOE03 & output_model,
 		DRAWABLE * draw,
 		std::ostream & error_output);
-	
+
 	/// will load texname+".png"
 	/// will attempt to load texname+"-misc1.png, texname+"-misc2.png if loadmisc true
 	bool LoadTextures(
@@ -423,7 +427,7 @@ protected:
 		int anisotropy,
 		DRAWABLE & draw,
 		std::ostream & error_output);
-	
+
 	void AddDrawable(
 		WHICHDRAWLIST whichdrawlist,
 		SCENENODE & parentnode,
@@ -431,20 +435,20 @@ protected:
 		keyed_container <SCENENODE>::handle & output_scenenode,
 		keyed_container <DRAWABLE>::handle & output_drawable,
 		std::ostream & error_output);
-	
+
 	keyed_container <DRAWABLE> & GetDrawlist(SCENENODE & node, WHICHDRAWLIST which)
 	{
 		switch (which)
 		{
 			case BLEND:
 			return node.GetDrawlist().normal_blend;
-			
+
 			case NOBLEND:
 			return node.GetDrawlist().car_noblend;
-			
+
 			case EMISSIVE:
 			return node.GetDrawlist().lights_emissive;
-			
+
 			case OMNI:
 			return node.GetDrawlist().lights_omni;
 		};

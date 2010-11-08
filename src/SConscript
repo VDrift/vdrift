@@ -32,6 +32,7 @@ src = Split("""aabb.cpp
 		camera_system.cpp
 		car.cpp
 		carcontrolmap_local.cpp
+		cardatalog.cpp
 		cardynamics.cpp
 		carengine.cpp
 		carsuspension.cpp

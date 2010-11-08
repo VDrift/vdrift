@@ -56,11 +56,11 @@ bool CAR::GenerateWheelMesh(
 {
 	output_scenenode = topnode.AddNode();
 	SCENENODE & node = topnode.GetNode(output_scenenode);
-	
+
 	// create the drawable in the correct layer depending on blend status
 	output_drawable = GetDrawlist(node, NOBLEND).insert(DRAWABLE());
 	DRAWABLE & draw = GetDrawlist(node, NOBLEND).get(output_drawable);
-	
+
 	// wheel/tire parameters
 	CARTIRESIZE<float> tire;
 	std::string rimname, tiretex, tiresize, orientation;
@@ -69,13 +69,13 @@ bool CAR::GenerateWheelMesh(
 	if (!carconf.GetParam(wheelname+".size", tiresize, error_output)) return false;
 	if (!tire.Parse(tiresize, error_output)) return false;
 	carconf.GetParam(wheelname+".orientation", orientation, error_output);
-	
+
 	float aspectRatio = tire.aspect_ratio * 100.f;
 	float rim_diameter = (tire.radius - tire.sidewall_width * tire.aspect_ratio) * 2.f;
 	float rim_width = tire.sidewall_width;
 	float sectionWidth_mm = tire.sidewall_width * 1000.f;
 	float rimDiameter_in = rim_diameter / 0.0254f;
-	
+
 	// create tire
 	const std::string tiremodelname(tiresize + orientation);
 	std::map <std::string, MODEL_JOE03>::iterator tm = models.find(tiremodelname);
@@ -90,7 +90,7 @@ bool CAR::GenerateWheelMesh(
 		MESHGEN::mg_tire(output_varray, sectionWidth_mm, aspectRatio, rimDiameter_in);
 		output_varray.Rotate(-M_PI_2, 0, 0, 1);
 		if (orientation != "left") output_varray.Scale(1, -1, 1); // mirror mesh
-		
+
 		MODEL_JOE03 & model = models[tiremodelname];
 		model.SetVertexArray(output_varray);
 		model.GenerateMeshMetrics();
@@ -99,7 +99,7 @@ bool CAR::GenerateWheelMesh(
 	}
 	const std::string tiretexname(partspath + "/tire/textures/" + tiretex);
 	if(!LoadTextures(textures, tiretexname, texsize, anisotropy, draw, error_output)) return false;
-	
+
 	// create wheel
 	keyed_container <DRAWABLE>::handle rim_draw;
 	std::string wheeltexname(carpath + "/textures/" + rimname);
@@ -118,22 +118,22 @@ bool CAR::GenerateWheelMesh(
 		if (wm == models.end())
 		{
 			MODEL_JOE03 & model = models[wheelmodelname];
-			
+
 			// load wheel mesh, scale and translate(wheel model offset rim_width/2)
 			if (!LoadModel(modelname, model, 0, error_output)) return false;
 			model.Translate(0, 0.75 * 0.5, 0);
 			model.Scale(rim_diameter, rim_width, rim_diameter);
-			
+
 			// create wheel rim
 			const float flangeDisplacement_mm = 10;
 			VERTEXARRAY rim_varray;
 			MESHGEN::mg_rim(rim_varray, sectionWidth_mm, aspectRatio, rimDiameter_in, flangeDisplacement_mm);
 			rim_varray.Rotate(-M_PI_2, 0, 0, 1);
-			
+
 			// add rim to wheel mesh
 			rim_varray = rim_varray + model.GetVertexArray();
 			if (orientation != "left") rim_varray.Scale(1, -1, 1); // mirror mesh
-			
+
 			model.SetVertexArray(rim_varray);
 			model.GenerateMeshMetrics();
 			model.GenerateListID(error_output);
@@ -144,13 +144,13 @@ bool CAR::GenerateWheelMesh(
 			textures, wheeltexname, texsize, anisotropy,
 			NOBLEND, error_output))
 		return false;
-	
+
 	// create brake rotor(optional)
 	std::string brakename, rotortex, radius;
 	if (!carconf.GetParam(wheelname+".brake", brakename, error_output)) return false;
 	if (!carconf.GetParam(brakename+".rotor", rotortex)) return true;
 	if (!carconf.GetParam(brakename+".radius", radius, error_output)) return false;
-	
+
 	std::string rotorname("rotor" + radius + orientation);
 	std::map <std::string, MODEL_JOE03>::iterator rm = models.find(rotorname);
 	if (rm == models.end())
@@ -159,15 +159,15 @@ bool CAR::GenerateWheelMesh(
 		carconf.GetParam(brakename+".radius", radius);
 		float diameter_mm = radius * 2 * 1000;
 		float thickness_mm = 25;
-		
+
 		VERTEXARRAY rotor_varray;
 		MESHGEN::mg_brake_rotor(&rotor_varray, diameter_mm, thickness_mm);
-		
+
 		MODEL_JOE03 & model = models[rotorname];
 		model.SetVertexArray(rotor_varray);
 		model.Rotate(-M_PI_2, 0, 0, 1);
 		if (orientation != "left") model.Scale(1, -1, 1); // mirror mesh
-		
+
 		model.GenerateMeshMetrics();
 		model.GenerateListID(error_output);
 	}
@@ -193,9 +193,9 @@ bool CAR::LoadLight(
 	if (!cfg.GetParam(name + ".position", pos, error_output)) return false;
 	if (!cfg.GetParam(name + ".color", col, error_output)) return false;
 	if (!cfg.GetParam(name + ".radius", size, error_output)) return false;
-	
+
 	COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
-	
+
 	lights.push_back(LIGHT());
 	SCENENODE & bodynoderef = topnode.GetNode(bodynode);
 	lights.back().node = bodynoderef.AddNode();
@@ -207,7 +207,7 @@ bool CAR::LoadLight(
 	//varray.SetToBillboard(-1,-1,1,1);
 	node.GetTransform().SetTranslation(MATHVECTOR<float,3>(pos[0], pos[1], pos[2]));
 	model.BuildFromVertexArray(varray, error_output);
-	
+
 	keyed_container <DRAWABLE> & dlist = GetDrawlist(node, OMNI);
 	lights.back().draw = dlist.insert(DRAWABLE());
 	DRAWABLE & draw = dlist.get(lights.back().draw);
@@ -217,7 +217,7 @@ bool CAR::LoadLight(
 	draw.SetCull(true, true);
 	//draw.SetCull(false, false);
 	draw.SetDrawEnable(false);
-	
+
 	return true;
 }
 
@@ -247,7 +247,7 @@ bool CAR::LoadGraphics(
 	{
 		return false;
 	}
-	
+
 	//load car brake light emissive texture
 	{
 		if ( !LoadInto (
@@ -277,7 +277,7 @@ bool CAR::LoadGraphics(
 			GetDrawlist(topnode.GetNode(bodynode), EMISSIVE).get(reverselights_emissive).SetDrawEnable(false);
 		}
 	}
-	
+
 	//load driver graphics
 	if (!driverpath.empty())
 	{
@@ -307,7 +307,7 @@ bool CAR::LoadGraphics(
 	{
 		info_output << "No car glass model exists, continuing without one" << std::endl;
 	}
-	
+
 	// load wheel graphics
 	const std::string wheelname[] = {"wheel-fl", "wheel-fr", "wheel-rl", "wheel-rr"};
 	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
@@ -320,7 +320,7 @@ bool CAR::LoadGraphics(
 			error_output << "Error generating wheel mesh for wheel " << i << std::endl;
 			return false;
 		}
-		
+
 		// load floating element
 		std::stringstream nullout;
 		std::string floatingname;
@@ -336,12 +336,12 @@ bool CAR::LoadGraphics(
 			topnode, floatingnode[i], floatingdraw[i], floatingname, models,
 			textures, carpath + "/textures/body" + carpaint, texsize,
 			anisotropy, NOBLEND, nullout);
-		
+
 		// set wheel positions(for widget_spinningcar)
 		float pos[3];
 		if (!carconf.GetParam(wheelname[i] + ".position", pos, error_output)) return false;
 		COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
-		
+
 		MATHVECTOR <float, 3> wheelpos(pos[0], pos[1], pos[2]);
 		SCENENODE & wheelnoderef = topnode.GetNode(wheelnode[i]);
 		wheelnoderef.GetTransform().SetTranslation(wheelpos);
@@ -427,7 +427,7 @@ bool CAR::LoadGraphics(
 
 			MATHVECTOR <float, 3> view_offset;
 			view_offset.Set(pos);
-			
+
 			next_view->SetOffset(view_offset);
 			next_view->SetRotation(angle[0] * 3.141593/180.0, angle[1] * 3.141593/180.0);
 			cameras.Add(next_view);
@@ -445,31 +445,31 @@ bool CAR::LoadGraphics(
 		while (carconf.GetParam("light-brake-" + istr + ".radius", r))
 		{
 			if (!LoadLight(carconf, "light-brake-" + istr, error_output)) return false;
-			
+
 			std::stringstream sstr;
 			sstr << ++i;
 			istr = sstr.str();
 		}
-		
+
 		// create reverse lights
 		i = 0;
 		istr = "0";
 		while (carconf.GetParam("light-reverse-" + istr + ".radius", r))
 		{
 			if (!LoadLight(carconf, "light-reverse-" + istr, error_output)) return false;
-			
+
 			std::stringstream sstr;
 			sstr << ++i;
 			istr = sstr.str();
 		}
 	}
-	
+
 	mz_nominalmax = (GetTireMaxMz(FRONT_LEFT) + GetTireMaxMz(FRONT_RIGHT))*0.5;
-	
+
 	lookbehind = false;
-	
+
 	SetColor(carcolor[0], carcolor[1], carcolor[2]);
-	
+
 	return true;
 }
 
@@ -486,7 +486,7 @@ bool CAR::LoadPhysics(
 	std::ostream & error_output)
 {
 	if (!dynamics.Load(carconf, sharedpartspath, error_output)) return false;
-	
+
 	// hacky way to get the model, fixme
 	MODEL_JOE03 * model(0);
 	const std::string carname(carpath + "/body.joe");
@@ -500,13 +500,13 @@ bool CAR::LoadPhysics(
 		model = &models[carname];
 		if (!LoadModel(carname, *model, 0, error_output)) return false;
 	}
-	
+
 	typedef CARDYNAMICS::T T;
 	MATHVECTOR <T, 3> size;
 	MATHVECTOR <T, 3> center;
 	MATHVECTOR <T, 3> position;
 	QUATERNION <T> orientation;
-	
+
 	size = model->GetAABB().GetSize();
 	center = model->GetAABB().GetCenter();
 	position = initial_position;
@@ -515,7 +515,7 @@ bool CAR::LoadPhysics(
 	dynamics.Init(world, size, center, position, orientation);
 	dynamics.SetABS(defaultabs);
 	dynamics.SetTCS(defaulttcs);
-	
+
 	return true;
 }
 
@@ -814,10 +814,10 @@ bool CAR::LoadInto (
 		MODEL_JOE03 & model = models[joefile];
 		if (!LoadModel(joefile, model, &draw, error_output)) return false;
 	}
-	
+
 	if (!LoadTextures(textures, texname, texsize, anisotropy, draw, error_output)) return false;
 	AddDrawable(whichdrawlist, parentnode, draw, output_scenenode, output_drawable, error_output);
-	
+
 	return true;
 }
 
@@ -844,7 +844,7 @@ bool CAR::LoadModel(
  			output_model.GenerateMeshMetrics();
 		}
 	}
-	
+
 	if (draw)
 	{
 		if (!output_model.HaveListID()) output_model.GenerateListID(error_output);
@@ -878,7 +878,7 @@ bool CAR::LoadTextures(
 		}
 		draw.SetDiffuseMap(diffuse);
 	}
-	
+
 	std::string texmiscbase = texname;
 	if (texname.size() > 7 && texname.substr(texname.size()-7,5) == "/body")
 		texmiscbase = texname.substr(0,texname.size()-2);
@@ -898,7 +898,7 @@ bool CAR::LoadTextures(
 		}
 		draw.SetMiscMap1(misc1);
 	}
-	
+
 	std::string texmisc2 = texmiscbase + "-misc2.png";
 	if (std::ifstream(texmisc2.c_str()))
 	{
@@ -934,12 +934,12 @@ void CAR::AddDrawable(
 		output_scenenode = parentnode.AddNode();
 		node = &parentnode.GetNode(output_scenenode);
 	}
-	
+
 	if (whichdrawlist == EMISSIVE)
 	{
 		draw.SetDecal(true);
 	}
-	
+
 	// create the drawable in the correct layer depending on blend status
 	output_drawable = GetDrawlist(*node, whichdrawlist).insert(draw);
 	assert(&GetDrawlist(*node, whichdrawlist).get(output_drawable));
@@ -949,7 +949,7 @@ void CAR::SetColor(float r, float g, float b)
 {
 	SCENENODE & bodynoderef = topnode.GetNode(bodynode);
 	GetDrawlist(bodynoderef, NOBLEND).get(bodydraw).SetColor(r, g, b, 1);
-	
+
 	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
 	{
 		if (floatingdraw[i].valid())
@@ -957,7 +957,7 @@ void CAR::SetColor(float r, float g, float b)
 			GetDrawlist(bodynoderef, NOBLEND).get(floatingdraw[i]).SetColor(r, g, b, 1);
 		}
 	}
-	
+
 	//std::cout << "color: " << r << ", " << g << ", " << b << std::endl;
 }
 
@@ -966,12 +966,12 @@ void CAR::SetPosition(const MATHVECTOR <float, 3> & new_position)
 	MATHVECTOR <double,3> newpos;
 	newpos = new_position;
 	dynamics.SetPosition(newpos);
-	
+
 	dynamics.AlignWithGround();
-	
+
 	QUATERNION <float> rot;
 	rot = dynamics.GetOrientation();
-	
+
 	cameras.Active()->Reset(newpos, rot);
 }
 
@@ -1002,7 +1002,7 @@ void CAR::UpdateGraphics()
 		SCENENODE & wheelnoderef = topnode.GetNode(wheelnode[i]);
 		wheelnoderef.GetTransform().SetTranslation(vec);
 		tirebump[i].SetPosition(vec[0],vec[1],vec[2]);
-		
+
 		QUATERNION <float> wheelquat;
 		wheelquat = dynamics.GetWheelOrientation(WHEEL_POSITION(i));
 		wheelnoderef.GetTransform().SetRotation(wheelquat);
@@ -1011,13 +1011,13 @@ void CAR::UpdateGraphics()
 		{
 			SCENENODE & floatingnoderef = topnode.GetNode(floatingnode[i]);
 			floatingnoderef.GetTransform().SetTranslation(vec);
-			
+
 			QUATERNION <float> floatquat;
 			floatquat = dynamics.GetUprightOrientation(WHEEL_POSITION(i));
 			floatingnoderef.GetTransform().SetRotation(floatquat);
 		}
 	}
-	
+
 	// update brake/reverse lights
 	if (brakelights_emissive.valid())
 	{
@@ -1051,6 +1051,12 @@ void CAR::UpdateCameras(float dt)
 	cameras.Active()->Update(pos, rot, acc, dt);
 }
 
+void CAR::EnableDataLogging(std::string const& directory, std::string const& name, std::vector< std::string > const& column_names, float frequency_Hz)
+{
+	// this function just passes all the data on to dynamics function of the same name
+	dynamics.EnableDataLogging(directory, name, column_names, frequency_Hz);
+}
+
 void CAR::Update(double dt)
 {
 	dynamics.Update();
@@ -1080,11 +1086,11 @@ void CAR::GetSoundList(std::list <SOUNDSOURCE *> & outputlist)
 		outputlist.push_back(&tirebump[i]);
 
 	outputlist.push_back(&crashsound);
-	
+
 	outputlist.push_back(&gearsound);
-	
+
 	outputlist.push_back(&brakesound);
-	
+
 	outputlist.push_back(&handbrakesound);
 
 	outputlist.push_back(&roadnoise);
@@ -1105,7 +1111,7 @@ void CAR::HandleInputs(const std::vector <float> & inputs, float dt)
 
 	//std::cout << "Throttle: " << inputs[CARINPUT::THROTTLE] << std::endl;
 	//std::cout << "Shift up: " << inputs[CARINPUT::SHIFT_UP] << std::endl;
-	
+
 	// recover from a rollover
 	if(inputs[CARINPUT::ROLLOVER_RECOVER])
 		dynamics.RolloverRecover();
@@ -1473,7 +1479,7 @@ void CAR::EnableGlass(bool enable)
 {
 	if (!glassdraw.valid())
 		return;
-	
+
 	SCENENODE & bodynoderef = topnode.GetNode(bodynode);
 	DRAWABLE & glassdrawref = GetDrawlist(bodynoderef, BLEND).get(glassdraw);
 	glassdrawref.SetDrawEnable(enable);
