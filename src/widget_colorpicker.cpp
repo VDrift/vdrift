@@ -12,7 +12,7 @@ static void HSVtoRGB(float h, float s, float v, float & r, float & g, float & b)
     }
     else
     {
-        float hi = std::floor(h * 6);
+        float hi = std::floor(h * 6 + 1.0E-5); // add eps to avoid nummerical precision issues
         float f = h * 6 - hi;
         float p = v * (1 - s);
         float q = v * (1 - (s * f));
@@ -157,7 +157,12 @@ bool WIDGET_COLORPICKER::ProcessInput(SCENENODE & scene, float cursorx, float cu
 		{
 			// vertical hue bar
 			h_cursor.SetToBillboard(max[0] - csize, cursory - csize / 2, csize, csize);
-			hsv[0] = (cursory - min[1] - margin) / h;
+			
+			// hue calculation
+			float hue = (cursory - min[1] - margin) / h;
+			//if (hue > 1) hue = 1;
+			//else if (hue < 0) hue = 0;
+			hsv[0] = hue;
 			
 			float r, g, b;
 			HSVtoRGB(hsv[0], 1, 1, r, g, b);
@@ -172,8 +177,16 @@ bool WIDGET_COLORPICKER::ProcessInput(SCENENODE & scene, float cursorx, float cu
 			sv_cursor.SetToBillboard(cursorx - csize / 2, cursory - csize / 2, csize, csize);
 			
 			// lower left corner is 0, 0
-			hsv[1] = (cursorx - min[0] - margin) / w;
-			hsv[2] = (max[1] - margin - cursory) / h;
+			float saturation = (cursorx - min[0] - margin) / w;
+			//if (saturation > 1) saturation = 1;
+			//else if (saturation < 0) saturation = 0;
+			
+			float value = (max[1] - margin - cursory) / h;
+			//if (value > 1) value = 1;
+			//else if (value < 0) value = 0;
+			
+			hsv[1] = saturation;
+			hsv[2] = value;
 		}
 		
 		HSVtoRGB(hsv[0], hsv[1], hsv[2], rgb[0], rgb[1], rgb[2]);
