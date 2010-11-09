@@ -102,10 +102,6 @@ public:
 	bool GetTCSEnabled() const;
 	bool GetTCSActive() const;
 
-// data logging
-	void EnableDataLogging(std::string const& directory, std::string const& name, std::vector< std::string > const& column_names, float frequency_Hz=100.0);
-	void UpdateDataLog(float dt);
-
 // cardynamics
 	void SetPosition(const MATHVECTOR<T, 3> & pos);
 
@@ -162,7 +158,6 @@ protected:
 	CARDIFFERENTIAL <T> center_differential;
 	std::vector <CARBRAKE <T> > brake;
 	std::vector <CARWHEEL <T> > wheel;
-	double last_brake_input_value;
 
 	enum { FWD = 3, RWD = 12, AWD = 15 } drive;
 	T driveshaft_rpm;
@@ -200,12 +195,6 @@ protected:
 	T feedback;
 
 	MATHVECTOR <T, 3> lastbodyforce; //< held so external classes can extract it for things such as applying physics to camera mounts
-
-// data logging
-	CARDATALOG data_log;
-	bool enable_data_logging;
-	double data_logging_frequency;
-	double time_since_last_logentry;
 
 // chassis, cardynamics
 	MATHVECTOR <T, 3> GetDownVector() const;

@@ -35,7 +35,9 @@ CAR::CAR() :
 	handbrakesound_check(false),
 	last_steer(0),
 	sector(-1),
-	applied_brakes(0)
+	applied_brakes(0),
+	enable_data_logging(false),
+	data_logging_frequency(0.01)
 {
 	// ctor
 }
@@ -1051,18 +1053,15 @@ void CAR::UpdateCameras(float dt)
 	cameras.Active()->Update(pos, rot, acc, dt);
 }
 
-void CAR::EnableDataLogging(std::string const& directory, std::string const& name, std::vector< std::string > const& column_names, float frequency_Hz)
-{
-	// this function just passes all the data on to dynamics function of the same name
-	dynamics.EnableDataLogging(directory, name, column_names, frequency_Hz);
-}
-
 void CAR::Update(double dt)
 {
 	dynamics.Update();
 	UpdateGraphics();
 	UpdateCameras(dt);
 	UpdateSounds(dt);
+
+	if (enable_data_logging)
+		UpdateDataLog(dt);
 }
 
 void CAR::GetSoundList(std::list <SOUNDSOURCE *> & outputlist)
@@ -1490,4 +1489,52 @@ bool CAR::Serialize(joeserialize::Serializer & s)
 	_SERIALIZE_(s,dynamics);
 	_SERIALIZE_(s,last_steer);
 	return true;
+}
+
+void CAR::EnableDataLogging(std::string const& directory, std::string const& name, std::vector< std::string > const& column_names, float frequency_Hz)
+{
+	enable_data_logging = true;
+	data_logging_frequency = 1.0 / frequency_Hz;
+	data_log.Init(directory, name, column_names, "csv");
+}
+
+void CAR::UpdateDataLog(float dt)
+{
+	time_since_last_logentry += dt;
+
+	if (time_since_last_logentry >= data_logging_frequency)
+	{
+		std::vector< std::pair< std::string, boost::any > > new_entry;
+		std::vector< std::string >::const_iterator column;
+
+		for (column = data_log.GetColumns().begin(); column != data_log.GetColumns().end(); ++column)
+		{
+			if (*column == "Time")
+			{
+				// do nothing - time is automatically added to every entry in CARDATALOG
+				continue;
+			}
+			else if (*column == "Velocity")
+			{
+				new_entry.push_back(std::make_pair("Velocity", dynamics.GetSpeed()));
+			}
+			else if (*column == "Brake")
+			{
+				new_entry.push_back(std::make_pair("Brake", applied_brakes));
+			}
+			else if (*column == "Sector")
+			{
+				new_entry.push_back(std::make_pair("Sector", sector));
+			}
+			/*
+			else
+			{
+				TODO: throw exception: unknown column
+			}
+			*/
+		}
+
+		data_log.AddEntry(time_since_last_logentry, new_entry);
+		time_since_last_logentry = 0.0;
+	}
 }

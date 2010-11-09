@@ -1584,7 +1584,8 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	data_log_column_names.push_back("Time");
 	data_log_column_names.push_back("Velocity");
 	data_log_column_names.push_back("Brake");
-	cars.front().EnableDataLogging(".", "playercarlog", data_log_column_names, 10.0);
+	data_log_column_names.push_back("Sector");
+	cars.front().EnableDataLogging(".", "playercarlog", data_log_column_names, 30.0);
 
     race_laps = num_laps;
 

@@ -1,6 +1,5 @@
 #include "cardatalog.h"
 #include <algorithm>
-#include "boost/lexical_cast.hpp"
 #include <sstream>
 
 CARDATALOG::CARDATALOG() :
@@ -82,6 +81,8 @@ bool CARDATALOG::AnyTypeOK(boost::any const& val)
 		return true;
 	else if (val.type() == typeid(double))
 		return true;
+	else if (val.type() == typeid(float))
+		return true;
 	else if (val.type() == typeid(std::string))
 		return true;
 	else
@@ -106,6 +107,13 @@ std::string CARDATALOG::AnyToString(boost::any const& val)
 	else if (val.type() == typeid(double))
 	{
 		double temp = boost::any_cast< double >(val);
+		std::stringstream ss;
+		ss << temp;
+		result = ss.str();
+	}
+	else if (val.type() == typeid(float))
+	{
+		float temp = boost::any_cast< float >(val);
 		std::stringstream ss;
 		ss << temp;
 		result = ss.str();

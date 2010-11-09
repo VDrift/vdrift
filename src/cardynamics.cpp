@@ -37,9 +37,6 @@ void CARDYNAMICS::Init()
 	abs = false;
 	tcs = false;
 	maxangle = 45.0;
-	last_brake_input_value = 0.0;
-	enable_data_logging = false;
-	data_logging_frequency = 0.01;
 
 #ifdef _BULLET_
 	new_suspension.resize(WHEEL_POSITION_SIZE);
@@ -758,7 +755,6 @@ void CARDYNAMICS::SetClutch(float value)
 
 void CARDYNAMICS::SetBrake(float value)
 {
-	last_brake_input_value = value;
 	for(unsigned int i = 0; i < brake.size(); i++)
 	{
 		brake[i].SetBrakeFactor(value);
@@ -960,50 +956,6 @@ MATHVECTOR< T, 3 > CARDYNAMICS::GetLastBodyForce() const
 T CARDYNAMICS::GetFeedback() const
 {
 	return feedback;
-}
-
-void CARDYNAMICS::EnableDataLogging(std::string const& directory, std::string const& name, std::vector< std::string > const& column_names, float frequency_Hz)
-{
-	enable_data_logging = true;
-	data_logging_frequency = 1.0 / frequency_Hz;
-	data_log.Init(directory, name, column_names, "csv");
-}
-
-void CARDYNAMICS::UpdateDataLog(float dt)
-{
-	time_since_last_logentry += dt;
-
-	if (time_since_last_logentry >= data_logging_frequency)
-	{
-		std::vector< std::pair< std::string, boost::any > > new_entry;
-		std::vector< std::string >::const_iterator column;
-
-		for (column = data_log.GetColumns().begin(); column != data_log.GetColumns().end(); ++column)
-		{
-			if (*column == "Time")
-			{
-				// do nothing - time is automatically added to every entry in CARDATALOG
-				continue;
-			}
-			else if (*column == "Velocity")
-			{
-				new_entry.push_back(std::make_pair("Velocity", GetSpeed()));
-			}
-			else if (*column == "Brake")
-			{
-				new_entry.push_back(std::make_pair("Brake", last_brake_input_value));
-			}
-			/*
-			else
-			{
-				TODO: throw exception: unknown column
-			}
-			*/
-		}
-
-		data_log.AddEntry(time_since_last_logentry, new_entry);
-		time_since_last_logentry = 0.0;
-	}
 }
 
 /// print debug info to the given ostream.  set p1, p2, etc if debug info part 1, and/or part 2, etc is desired
@@ -1479,9 +1431,6 @@ void CARDYNAMICS::Tick(MATHVECTOR<T, 3> ext_force, MATHVECTOR<T, 3> ext_torque, 
 
 	const float tacho_factor = 0.1;
 	tacho_rpm = engine.GetRPM() * tacho_factor + tacho_rpm * (1.0 - tacho_factor);
-
-	if (enable_data_logging)
-		UpdateDataLog(dt);
 }
 
 void CARDYNAMICS::UpdateWheelContacts()
