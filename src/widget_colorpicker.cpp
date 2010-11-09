@@ -12,48 +12,48 @@ static void HSVtoRGB(float h, float s, float v, float & r, float & g, float & b)
     }
     else
     {
-        float i = std::floor(h * 6);
-        float f = h * 6 - i;
+        float hi = std::floor(h * 6);
+        float f = h * 6 - hi;
         float p = v * (1 - s);
         float q = v * (1 - (s * f));
         float t = v * (1 - (s * (1 - f)));
 
-        if (i == 0)
-        {
-            r = v;
-            g = t;
-            b = p;
-        }
-        else if (i == 1)
+        if (hi == 1)
         {
             r = q;
             g = v;
             b = p;
         }
-        else if (i == 2)
+        else if (hi == 2)
         {
             r = p;
             g = v;
             b = t;
         }
-        else if (i == 3)
+        else if (hi == 3)
         {
             r = p;
             g = q;
             b = v;
         }
-        else if (i == 4)
+        else if (hi == 4)
         {
             r = t;
             g = p;
             b = v;
         }
-        else
+        else if (hi == 5)
         {
             r = v;
             g = p;
             b = q;
         }
+        else
+		{
+			r = v;
+            g = t;
+            b = p;
+		}
     }
 }
 
