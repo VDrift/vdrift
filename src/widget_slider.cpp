@@ -1,5 +1,4 @@
 #include "widget_slider.h"
-
 #include "guioption.h"
 
 WIDGET * WIDGET_SLIDER::clone() const

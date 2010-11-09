@@ -11,12 +11,12 @@ SETTINGS::SETTINGS() :
 	ff_device("/dev/input/event0"), ff_gain(2.0), ff_invert(false), trackreverse(false),
 	shadows(false), shadow_distance(1), shadow_quality(1),
 	reflections(1), input_graph(false), lighting(0), bloom(false), normalmaps(false),
-	player("XS"), player_paint("00"), player_color_red(1), player_color_green(0), player_color_blue(0),
-	opponent("XS"), opponent_paint("00"), opponent_color_red(0), opponent_color_green(0), opponent_color_blue(1),
+	player("XS"), opponent("XS"), player_paint("00"), opponent_paint("00"), 
 	camerabounce(1.0), number_of_laps(1), contrast(1.0), camera_mode("chase"), hgateshifter(false),
 	ai_difficulty(1.0)
 {
-
+	player_color[0] = player_color[1] = player_color[2] = 1;
+	opponent_color[0] = opponent_color[1] = opponent_color[2] = 1;
 }
 
 void SETTINGS::Serialize(bool write, CONFIGFILE & config)
@@ -29,14 +29,10 @@ void SETTINGS::Serialize(bool write, CONFIGFILE & config)
 	Param(config, write, "game.selected_replay", selected_replay);
 	Param(config, write, "game.player", player);
 	Param(config, write, "game.player_paint", player_paint);
-	Param(config, write, "game.player_color_red", player_color_red);
-	Param(config, write, "game.player_color_green", player_color_green);
-	Param(config, write, "game.player_color_blue", player_color_blue);
+	Param(config, write, "game.player_color", player_color);
 	Param(config, write, "game.opponent", opponent);
 	Param(config, write, "game.opponent_paint", opponent_paint);
-	Param(config, write, "game.opponent_color_red", opponent_color_red);
-	Param(config, write, "game.opponent_color_green", opponent_color_green);
-	Param(config, write, "game.opponent_color_blue", opponent_color_blue);
+	Param(config, write, "game.opponent_color", opponent_color);
 	Param(config, write, "game.reverse", trackreverse);
 	Param(config, write, "game.number_of_laps", number_of_laps);
 	Param(config, write, "game.camera_mode", camera_mode);

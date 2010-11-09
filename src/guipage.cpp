@@ -12,6 +12,7 @@
 #include "widget_slider.h"
 #include "widget_spinningcar.h"
 #include "widget_controlgrab.h"
+#include "widget_colorpicker.h"
 
 #include <list>
 using std::list;
@@ -125,47 +126,22 @@ bool GUIPAGE::Load(
 		controlgrabs.clear();
 	}
 	
-	//keep track of hooks for a second pass
-	map <WIDGET *, list <string> > hookmap;
+	// widget map for hooks
 	map <string, WIDGET *> namemap;
 	
 	std::list <std::string> sectionlist;
 	pagefile.GetSectionList(sectionlist);
-	if (!sectionlist.empty())
-		if (sectionlist.front() == "")
-			sectionlist.pop_front();
+	if (!sectionlist.empty() && sectionlist.front() == "")
+	{
+		sectionlist.pop_front();
+	}
 	for (std::list <std::string>::iterator i = sectionlist.begin(); i != sectionlist.end(); ++i)
 	{
 		stringstream widgetstr;
 		widgetstr.str(*i);
-		/*widgetstr << "widget-";
-		widgetstr.width(2);
-		widgetstr.fill('0');
-		widgetstr << i;*/
-		
-		//std::cout << *i << ": " << widgetstr.str()+".type" << std::endl;
 		
 		string wtype;
 		if (!pagefile.GetParam(widgetstr.str()+".type", wtype)) return false;
-		
-		//process hooks
-		list <string> hooklist;
-		{
-			string hookstr;
-			if (!pagefile.GetParam(widgetstr.str()+".hook", hookstr)) hookstr = "";
-			stringstream hookstream(hookstr);
-			while (hookstream)
-			{
-				string hook;
-				const int bufsize(256);
-				char hookbuf[bufsize];
-				hookstream.getline(hookbuf, bufsize, ',');
-				hook = hookbuf;
-				if (!hook.empty())
-					hooklist.push_back(hook);
-			}
-		}
-		
 		//std::cout << widgetstr.str() << ": " << wtype << endl;
 		
 		assert(s.valid());
@@ -358,18 +334,6 @@ bool GUIPAGE::Load(
 				new_widget->SetSetting(setting);
 				new_widget->UpdateOptions(sref, false, optionmap, error_output);
 				new_widget->SetAction(action);
-				
-				std::string name;
-				if (pagefile.GetParam(widgetstr.str()+".name", name))
-				{
-					new_widget->SetName(name);
-					namemap[name] = new_widget;
-				}
-				
-				for (list <string>::iterator n = hooklist.begin(); n != hooklist.end(); n++)
-				{
-					hookmap[new_widget].push_back(*n);
-				}
 			}
 			else if (wtype == "intintwheel")
 			{
@@ -440,8 +404,27 @@ bool GUIPAGE::Load(
 				
 				WIDGET_MULTIIMAGE * new_widget = NewWidget<WIDGET_MULTIIMAGE>();
 				new_widget->SetupDrawable(sref, textures, texsize, prefix, postfix, xy[0],xy[1], width, height, error_output, 102);
+			}
+			else if (wtype == "colorpicker")
+			{
+				float xy[3];
+				float width, height;
+				string setting, name;
+				std::tr1::shared_ptr<TEXTURE> cursor, hue, satval, bg;
 				
-				if (pagefile.GetParam(widgetstr.str()+".name", name)) namemap[name] = new_widget;
+				if (!pagefile.GetParam(widgetstr.str()+".center", xy)) return false;
+				if (!pagefile.GetParam(widgetstr.str()+".width", width)) return false;
+				if (!pagefile.GetParam(widgetstr.str()+".height", height)) return false;
+				if (!pagefile.GetParam(widgetstr.str()+".setting", setting)) return false;
+				
+				if (!textures.Load(texpath+"/widgets/color_cursor.png", texinfo, cursor)) return false;
+				if (!textures.Load(texpath+"/widgets/color_hue.png", texinfo, hue)) return false;
+				if (!textures.Load(texpath+"/widgets/color_saturation.png", texinfo, satval)) return false;
+				if (!textures.Load(texpath+"/widgets/color_value.png", texinfo, bg)) return false;
+				
+				WIDGET_COLORPICKER * new_widget = NewWidget<WIDGET_COLORPICKER>();
+				new_widget->SetupDrawable(sref, cursor, hue, satval, bg,
+					xy[0]-width/2, xy[1]-height/2, width, height, setting, error_output, 102);
 			}
 			else if (wtype == "slider")
 			{
@@ -533,11 +516,6 @@ bool GUIPAGE::Load(
 				float color[] = {1, 1, 1};
 				pagefile.GetParam(widgetstr.str()+".color", color);
 				new_widget->SetColor(sref, color[0], color[1], color[2]);
-				
-				for (list <string>::iterator n = hooklist.begin(); n != hooklist.end(); n++)
-				{
-					hookmap[new_widget].push_back(*n);
-				}
 			}
 			else if (wtype == "spinningcar")
 			{
@@ -551,12 +529,36 @@ bool GUIPAGE::Load(
 				
 				WIDGET_SPINNINGCAR * new_widget = NewWidget<WIDGET_SPINNINGCAR>();
 				new_widget->SetupDrawable(sref, textures, models, texsize, datapath, centerxy[0], centerxy[1], MATHVECTOR <float, 3> (carposxy[0], carposxy[1], carposxy[2]), error_output, 110);
-				
-				if (pagefile.GetParam(widgetstr.str()+".name", name)) namemap[name] = new_widget;
 			}
 			else if (wtype != "controlgrab")
 			{
 				error_output << path << ": unknown " << widgetstr.str() << " type: " << wtype << ", ignoring" << endl;
+			}
+			
+			// process hooks
+			std::string widget_name;
+			if (pagefile.GetParam(widgetstr.str()+".name", widget_name))
+			{
+				widgets.back().Get()->SetName(widget_name);
+				
+				map <string, WIDGET *>::iterator widget = namemap.find(widget_name);
+				if (widget != namemap.end())
+				{
+					error_output << widget_name << " defined twice." << endl;
+					return false;
+				}
+				namemap[widget_name] = widgets.back().Get();
+			}
+			
+			std::vector<std::string> hooks;
+			pagefile.GetParam(widgetstr.str()+".hook", hooks);
+			for (std::vector<std::string>::iterator n = hooks.begin(); n != hooks.end(); ++n)
+			{
+				map <string, WIDGET *>::iterator hookee = namemap.find(*n);
+				if (hookee != namemap.end())
+					widgets.back().Get()->AddHook(hookee->second); // last widget added
+				else
+					error_output << path << ": unknown hook reference to " << *n << endl;
 			}
 		}
 		
@@ -602,21 +604,9 @@ bool GUIPAGE::Load(
 		}
 	}
 	
+	// tooltip widget
 	if (!reloadcontrolsonly)
 	{
-		//do a second pass to assign hooks
-		for (map <WIDGET *, list <string> >::iterator i = hookmap.begin(); i != hookmap.end(); ++i)
-		{
-			for (list <string>::iterator n = i->second.begin(); n != i->second.end(); ++n)
-			{
-				map <string, WIDGET *>::iterator hookee = namemap.find(*n);
-				if (hookee != namemap.end())
-					i->first->AddHook(hookee->second);
-				else
-					error_output << path << ": unknown hook reference to " << *n << endl;
-			}
-		}
-		
 		tooltip_widget = NewWidget<WIDGET_LABEL>();
 		assert(tooltip_widget);
 		assert(fonts.find("futuresans") != fonts.end());
@@ -640,12 +630,20 @@ std::list <std::pair <std::string, bool> > GUIPAGE::ProcessInput(SCENENODE & par
 	
 	for (std::list <DERIVED <WIDGET> >::iterator i = widgets.begin(); i != widgets.end(); ++i)
 	{
-		bool mouseover = (*i)->ProcessInput(sref, cursorx, cursory, cursordown, cursorjustup);
+		WIDGET * w = i->Get();
+		
+		bool mouseover = w->ProcessInput(sref, cursorx, cursory, cursordown, cursorjustup);
 		if (mouseover)
-			tooltip = (*i)->GetDescription();
-		string action = (*i)->GetAction();
+		{
+			tooltip = w->GetDescription();
+		}
+		
+		string action = w->GetAction();
+		bool cancel = w->GetCancel();
 		if (!action.empty())
-			actions.push_back(std::pair <std::string, bool> (action, !(*i)->GetCancel()));
+		{
+			actions.push_back(std::pair <std::string, bool> (action, !cancel));
+		}
 	}
 	
 	if (tooltip != tooltip_widget->GetText())

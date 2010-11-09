@@ -104,6 +104,7 @@ src = Split("""aabb.cpp
 		track.cpp
 		trackmap.cpp
 		vertexarray.cpp
+		widget_colorpicker.cpp
 		widget_slider.cpp
 		widget_spinningcar.cpp
 		widget_stringwheel.cpp""")

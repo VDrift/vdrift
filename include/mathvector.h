@@ -445,8 +445,20 @@ std::ostream & operator << (std::ostream &os, const MATHVECTOR <T, dimension> & 
 	{
 		os << v[i] << ", ";
 	}
-	os << v[dimension-1];// << std::endl;
+	os << v[dimension-1];
 	return os;
+}
+
+template <typename T, unsigned int dimension>
+std::istream & operator >> (std::istream &is, MATHVECTOR <T, dimension> & v)
+{
+	std::string value;
+	for (size_t i = 0; i < dimension && std::getline(is, value, ','); ++i)
+	{
+		std::stringstream s(value);
+		s >> v[i];
+	}
+	return is;
 }
 
 #endif

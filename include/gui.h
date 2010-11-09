@@ -105,92 +105,9 @@ public:
 		bool cursordown,
 		bool cursorjustup,
 		float screenhwratio,
-		std::ostream & error_output)
-	{
-		std::list <std::pair <std::string, bool> > actions;
-		
-		if (active_page != pages.end())
-		{
-			actions = active_page->second.page.ProcessInput(node.GetNode(active_page->second.node),
-					movedown, moveup, cursorx, cursory,
-					cursordown, cursorjustup, screenhwratio);
-		}
-		
-		std::list <std::string> gameactions;
-		
-		std::string newpage;
-		bool save_options = false;
-		
-		//process resulting actions
-		for (std::list <std::pair <std::string, bool> >::iterator i = actions.begin(); i != actions.end(); ++i)
-		{
-			std::string actionname = i->first;
-			
-			//if the action is the same as a page name, just switch to that page
-			//decide which main page to use
-			if (actionname == "Main")
-			{
-				if (ingame)
-				{
-					actionname = "InGameMenu";
-				}
-			}
-			
-			if (pages.find(actionname) != pages.end())
-			{
-				newpage = actionname;
-				save_options = i->second;
-				if (!newpage.empty())
-					ActivatePage(newpage, 0.25, error_output, save_options);
-			}
-			else
-			{
-				gameactions.push_back(actionname);
-				if (i->second)
-				{
-					//std::cout << "Processing input" << std::endl;
-					active_page->second.page.UpdateOptions(node.GetNode(active_page->second.node), true, optionmap, error_output);
-					//std::cout << "Done processing options" << std::endl;
-					syncme = true;
-				}
-			}
-		}
-		
-		return gameactions;
-	}
+		std::ostream & error_output);
 	
-	void Update(float dt)
-	{
-		animation_counter -= dt;
-		if (animation_counter < 0)
-			animation_counter = 0;
-		
-		if (active_page != pages.end())
-		{
-			//ease curve: 3*p^2-2*p^3
-			float p = 1.0-animation_counter/animation_count_start;
-			active_page->second.page.SetAlpha(node.GetNode(active_page->second.node), 3*p*p-2*p*p*p);
-		}
-		
-		if (last_active_page != pages.end())
-		{
-			if (animation_counter > 0)
-			{
-				float p = animation_counter/animation_count_start;
-				last_active_page->second.page.SetAlpha(node.GetNode(last_active_page->second.node), 3*p*p-2*p*p*p);
-			}
-			else
-			{
-				last_active_page->second.page.SetVisible(node.GetNode(last_active_page->second.node), false);
-				last_active_page = pages.end();
-			}
-		}
-		
-		if (active_page != pages.end())
-			active_page->second.page.Update(node.GetNode(active_page->second.node), dt);
-		if (last_active_page != pages.end())
-			last_active_page->second.page.Update(node.GetNode(last_active_page->second.node), dt);
-	}
+	void Update(float dt);
 	
 	bool Active() const
 	{
@@ -199,83 +116,20 @@ public:
 	
 	///if settings_are_newer is true, then this function will revise its internal options
 	/// to match the settings passed in.  otherwise, it'll operate the other way around
-	void SyncOptions(const bool external_settings_are_newer, std::map <std::string, std::string> & external_options, std::ostream & error_output)
-	{
-		//std::cout << "Syncing options: " << external_settings_are_newer << ", " << syncme_from_external << std::endl;
-		
-		for (std::map <std::string, std::string>::iterator i = external_options.begin(); i != external_options.end(); ++i)
-		{
-			if (external_settings_are_newer || syncme_from_external)
-			{
-				std::map<std::string, GUIOPTION>::iterator option = optionmap.find(i->first);
-				if (option == optionmap.end())
-				{
-					//error_output << "External option \"" << i->first << "\" has no internal GUI counterpart" << std::endl;
-				}
-				else //if (i->first.find("controledit.") != 0)
-				{
-					//std::cout << i->first << std::endl;
-					//if (option->first == "game.car_paint") error_output << "Setting GUI option \"" << option->first << "\" to GAME value \"" << i->second << "\"" << std::endl;
-					if (!option->second.SetCurrentValue(i->second))
-						error_output << "Error setting GUI option \"" << option->first << "\" to GAME value \"" << i->second << "\"" << std::endl;
-				}
-				//else std::cout << "Ignoring controledit value: " << i->first << std::endl;
-			}
-			else
-			{
-				std::map<std::string, GUIOPTION>::iterator option = optionmap.find(i->first);
-				if (option == optionmap.end())
-				{
-					//error_output << "External option \"" << i->first << "\" has no internal GUI counterpart" << std::endl;
-				}
-				else
-				{
-					//if (option->first == "game.car_paint") error_output << "Setting GAME option \"" << i->first << "\" to GUI value \"" << option->second.GetCurrentStorageValue() << "\"" << std::endl;
-					i->second = option->second.GetCurrentStorageValue();
-				}
-			}
-		}
-		
-		if (external_settings_are_newer)
-			UpdateOptions(error_output);
-		
-		if (syncme_from_external)
-		{
-			//UpdateOptions(error_output);
-			if (last_active_page != pages.end())
-				last_active_page->second.page.UpdateOptions(node.GetNode(last_active_page->second.node), false, optionmap, error_output);
-			//std::cout << "About to update" << std::endl;
-			if (active_page != pages.end())
-				active_page->second.page.UpdateOptions(node.GetNode(active_page->second.node), false, optionmap, error_output);
-			//std::cout << "Done updating" << std::endl;
-		}
-		
-		syncme = false;
-		
-		//std::cout << "Done syncing options" << std::endl;
-	}
+	void SyncOptions(
+		const bool external_settings_are_newer,
+		std::map <std::string, std::string> & external_options,
+		std::ostream & error_output);
 
 	void SetInGame ( bool value )
 	{
 		ingame = value;
 	}
 	
-	void ReplaceOptionMapValues(const std::string & optionname, std::list <std::pair <std::string, std::string> > & newvalues, std::ostream & error_output)
-	{
-		//std::cout << "Replacing option map values" << std::endl;
-		
-		if (optionmap.find(optionname) == optionmap.end())
-		{
-			error_output << "Can't find option named " << optionname << " when replacing optionmap values" << std::endl;
-		}
-		else
-		{
-			optionmap[optionname].ReplaceValues(newvalues);
-			UpdateOptions(error_output);
-		}
-		
-		//std::cout << "Done replacing option map values" << std::endl;
-	}
+	void ReplaceOptionMapValues(
+		const std::string & optionname,
+		std::list <std::pair <std::string, std::string> > & newvalues,
+		std::ostream & error_output);
 
 private:
 	struct PAGEINFO

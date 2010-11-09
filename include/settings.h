@@ -26,12 +26,12 @@ public:
 		Serialize(true, config);config.Write();
 	}
 
-	void SetResolution_x ( unsigned int theValue )
+	void SetResolutionX ( unsigned int theValue )
 	{
 		resolution_x = theValue;
 	}
 
-	unsigned int GetResolution_x() const
+	unsigned int GetResolutionX() const
 	{
 		return resolution_x;
 	}
@@ -66,12 +66,12 @@ public:
 		return fullscreen;
 	}
 
-	void SetResolution_y ( unsigned int value )
+	void SetResolutionY ( unsigned int value )
 	{
 		resolution_y = value;
 	}
 
-	unsigned int GetResolution_y() const
+	unsigned int GetResolutionY() const
 	{
 		return resolution_y;
 	}
@@ -313,16 +313,16 @@ public:
 		return player;
 	}
 	
-	std::string GetCarPaint() const
+	std::string GetPlayerCarPaint() const
 	{
 		return player_paint;
 	}
 	
-	void GetCarColor(float & r, float & g, float & b) const
+	void GetPlayerColor(float & r, float & g, float & b) const
 	{
-		r = player_color_red;
-		g = player_color_green;
-		b = player_color_blue;
+		r = player_color[0];
+		g = player_color[1];
+		b = player_color[2];
 	}
 
 	std::string GetOpponentCar() const
@@ -337,9 +337,9 @@ public:
 	
 	void GetOpponentColor(float & r, float & g, float & b) const
 	{
-		r = opponent_color_red;
-		g = opponent_color_green;
-		b = opponent_color_blue;
+		r = opponent_color[0];
+		g = opponent_color[1];
+		b = opponent_color[2];
 	}
 
 	float GetCameraBounce() const
@@ -443,15 +443,11 @@ private:
 	bool bloom;
 	bool normalmaps;
 	std::string player;
-	std::string player_paint;
-	float player_color_red;
-	float player_color_green;
-	float player_color_blue;
 	std::string opponent;
+	std::string player_paint;
 	std::string opponent_paint;
-	float opponent_color_red;
-	float opponent_color_green;
-	float opponent_color_blue;
+	float player_color[3];	// should be replaced with a vector
+	float opponent_color[3];
 	float camerabounce;
 	int number_of_laps;
 	float contrast;

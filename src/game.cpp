@@ -236,7 +236,7 @@ void GAME::InitCoreSubsystems()
 	BeginStartingUp();
 	
 	graphics.Init(pathmanager.GetShaderPath(), "VDrift - open source racing simulation",
-		settings.GetResolution_x(), settings.GetResolution_y(),
+		settings.GetResolutionX(), settings.GetResolutionY(),
 		settings.GetBpp(), settings.GetDepthbpp(), settings.GetFullscreen(),
 		settings.GetShaders(), settings.GetAntialiasing(), settings.GetShadows(),
 		settings.GetShadowDistance(), settings.GetShadowQuality(),
@@ -433,8 +433,8 @@ bool GAME::ParseArguments(std::list <std::string> & args)
 			int xres, yres;
 			sx >> xres;
 			sy >> yres;
-			settings.SetResolution_x(xres);
-			settings.SetResolution_y(yres);
+			settings.SetResolutionX(xres);
+			settings.SetResolutionY(yres);
 			settings.SetResolutionOverride(true);
 		}
 	}
@@ -1592,8 +1592,8 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	else
 	{
 		carname = settings.GetSelectedCar();
-		carpaint = settings.GetCarPaint();
-		settings.GetCarColor(carcolor[0], carcolor[1], carcolor[2]);
+		carpaint = settings.GetPlayerCarPaint();
+		settings.GetPlayerColor(carcolor[0], carcolor[1], carcolor[2]);
 	}
 	if (!LoadCar(carname, carpaint, carcolor, track.GetStart(0).first, track.GetStart(0).second, true, false, carfile))
 	{
@@ -1670,11 +1670,11 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 		std::string carpath = pathmanager.GetCarPath()+"/"+cartype+"/"+cartype+".car";
 		
 		float r(0), g(0), b(0);
-		settings.GetCarColor(r, g, b);
+		settings.GetPlayerColor(r, g, b);
 		
 		replay.StartRecording(
 			cartype,
-			settings.GetCarPaint(),
+			settings.GetPlayerCarPaint(),
 			r, g, b,
 			carpath,
 			settings.GetTrack(),

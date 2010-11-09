@@ -59,43 +59,35 @@ void WIDGET_SPINNINGCAR::HookMessage(SCENENODE & scene, const std::string & mess
 	
 	bool reload(false);
 	std::stringstream s;
-	if (from.find("CarWheel") != std::string::npos)
+	if (from.find("Car") != std::string::npos)
 	{
 		if (carname == message) return;
 		carpaint.clear();	// car changed reset paint
 		carname = message;
 		reload = true;
 	}
-	else if (from.find("PaintWheel") != std::string::npos)
+	else if (from.find("Paint") != std::string::npos)
 	{
 		if (carpaint == message) return;
 		carpaint = message;
 		reload = true;
 	}
-	else if (from.find("Red") != std::string::npos)
+	else if (from.find("Color") != std::string::npos)
 	{
-		float value;
+		MATHVECTOR<float, 3> rgb;
 		s << message;
-		s >> value;
-		if (fabs(value - r) < 1.0/128.0) return;
-		r = value;	
-	}
-	else if (from.find("Green") != std::string::npos)
-	{
-		float value;
-		s << message;
-		s >> value;
-		if (fabs(value - g) < 1.0/128.0) return;
-		g = value;
-			
-	}
-	else if (from.find("Blue") != std::string::npos)
-	{
-		float value;
-		s << message;
-		s >> value;
-		if (fabs(value - b) < 1.0/128.0) return;
-		b = value;	
+		s >> rgb;
+		
+		if (fabs(rgb[0] - r) < 1.0/128.0 &&
+			fabs(rgb[1] - g) < 1.0/128.0 &&
+			fabs(rgb[2] - b) < 1.0/128.0)
+		{
+			return;
+		}
+		
+		r = rgb[0];
+		g = rgb[1];
+		b = rgb[2];
 	}
 
 	if (!wasvisible)
