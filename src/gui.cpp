@@ -210,7 +210,7 @@ void GUI::SyncOptions(
 			}
 			else //if (i->first.find("controledit.") != 0)
 			{
-				std::cout << i->first << std::endl;
+				//std::cout << i->first << std::endl;
 				//if (option->first == "game.player_paint") error_output << "Setting GUI option \"" << option->first << "\" to GAME value \"" << i->second << "\"" << std::endl;
 				//if (option->first == "game.player_color") error_output << "Setting GUI option \"" << option->first << "\" to GAME value \"" << i->second << "\"" << std::endl;
 				if (!option->second.SetCurrentValue(i->second))

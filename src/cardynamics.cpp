@@ -1704,11 +1704,16 @@ T CARDYNAMICS::AutoClutch(T last_clutch, T dt) const
 	// shift time
 	clutch *= ShiftAutoClutch();
 
+	// brakes fully engaged (declutch)
+	if (brake[0].GetBrakeFactor() == 1.0) clutch = 0.0;
+
 	// rate limit the autoclutch
-	const T min_engage_time = 0.05; // fastest time in seconds for auto-clutch engagement
-	const T engage_rate_limit = 1.0 / min_engage_time;
-	const T rate = (last_clutch - clutch) / dt; //engagement rate in clutch units per second
-	if (rate > engage_rate_limit) clutch = last_clutch - engage_rate_limit * dt;
+	T min_engage_time = 0.05;
+	T engage_limit = dt / min_engage_time;
+	if (last_clutch - clutch > engage_limit)
+	{
+		clutch = last_clutch - engage_limit;
+	}
 
 	return clutch;
 }
