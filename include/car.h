@@ -12,7 +12,6 @@
 #include "crashdetection.h"
 #include "enginesoundinfo.h"
 #include "scenenode.h"
-//#include "cardatalog.h"
 
 #include <string>
 #include <ostream>
@@ -296,8 +295,6 @@ public:
 
 	SCENENODE & GetNode() {return topnode;}
 
-	void EnableDataLogging(std::string const& directory, std::string const& name, std::vector< std::string > const& column_names, float frequency_Hz=100.0);
-
 protected:
 	CARDYNAMICS dynamics;
 
@@ -359,14 +356,6 @@ protected:
 	float applied_brakes; ///< cached so we can update the brake light
 
 	float mz_nominalmax; //the nominal maximum Mz force, used to scale force feedback
-
-	// data logging
-	CARDATALOG data_log;
-	bool enable_data_logging;
-	double data_logging_frequency;
-	double time_since_last_logentry;
-
-	void UpdateDataLog(float dt);
 
 	void UpdateSounds(float dt);
 

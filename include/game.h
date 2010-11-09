@@ -30,6 +30,7 @@
 #include "quickmp.h"
 //#include "sky.h"
 #include "manager.h"
+#include "datalog.h"
 
 #include <ostream>
 #include <string>
@@ -98,6 +99,8 @@ private:
 	void BeginStartingUp();
 	void DoneStartingUp();
 	bool LastStartWasSuccessful() const;
+	void EnableDataLogging(std::string const& directory, std::string const& name, std::vector< std::string > const& column_names, std::string const& format="csv", float frequency_Hz=100.0);
+	void UpdateDataLog(float dt);
 
 	std::ostream & info_output;
 	std::ostream & error_output;
@@ -161,6 +164,12 @@ private:
 	REPLAY replay;
 	PARTICLE_SYSTEM tire_smoke;
 	AI ai;
+
+	// data logging
+	DATALOG data_log;
+	bool enable_data_logging;
+	float data_logging_frequency;
+	float time_since_last_logentry;
 
 	//SKY sky;
 

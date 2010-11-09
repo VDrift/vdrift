@@ -1,8 +1,9 @@
-#include "cardatalog.h"
+#include "datalog.h"
 #include <algorithm>
 #include <sstream>
+#include <iostream>
 
-CARDATALOG::CARDATALOG() :
+DATALOG::DATALOG() :
 	time(0.0),
 	log_directory("."),
 	log_name("uninitialized_datalog"),
@@ -11,7 +12,7 @@ CARDATALOG::CARDATALOG() :
 
 }
 
-CARDATALOG::CARDATALOG(CARDATALOG const& other) :
+DATALOG::DATALOG(DATALOG const& other) :
 	data(other.data),
 	time(other.time),
 	log_directory(other.log_directory),
@@ -22,12 +23,12 @@ CARDATALOG::CARDATALOG(CARDATALOG const& other) :
 
 }
 
-CARDATALOG::~CARDATALOG()
+DATALOG::~DATALOG()
 {
 	Write();
 }
 
-void CARDATALOG::Init(std::string const& directory, std::string const& name, std::vector< std::string > const& columns, std::string const& format)
+void DATALOG::Init(std::string const& directory, std::string const& name, std::vector< std::string > const& columns, std::string const& format)
 {
 	log_directory = directory;
 	log_name = name;
@@ -35,14 +36,14 @@ void CARDATALOG::Init(std::string const& directory, std::string const& name, std
 	file_format = format;
 }
 
-bool CARDATALOG::HasColumn(std::string const& column_name)
+bool DATALOG::HasColumn(std::string const& column_name)
 {
 	std::vector< std::string >::const_iterator result;
 	result = std::find(column_names.begin(), column_names.end(), column_name);
 	return result != column_names.end();
 }
 
-void CARDATALOG::AddEntry(double dt, std::vector< std::pair< std::string, boost::any > > const& records)
+void DATALOG::AddEntry(float dt, std::vector< std::pair< std::string, boost::any > > const& records)
 {
 	time += dt;
 
@@ -73,7 +74,7 @@ void CARDATALOG::AddEntry(double dt, std::vector< std::pair< std::string, boost:
  * kind of capability built-in. Perhaps even a class derived from any could
  * meet the requirements.
  */
-bool CARDATALOG::AnyTypeOK(boost::any const& val)
+bool DATALOG::AnyTypeOK(boost::any const& val)
 {
 	if (val.empty())
 		return true;
@@ -89,7 +90,7 @@ bool CARDATALOG::AnyTypeOK(boost::any const& val)
 		return false;
 }
 
-std::string CARDATALOG::AnyToString(boost::any const& val)
+std::string DATALOG::AnyToString(boost::any const& val)
 {
 	std::string result;
 
@@ -128,7 +129,7 @@ std::string CARDATALOG::AnyToString(boost::any const& val)
 	return result;
 }
 
-void CARDATALOG::Write()
+void DATALOG::Write()
 {
 	if (file_format == "none")
 		return;
@@ -162,17 +163,22 @@ void CARDATALOG::Write()
 
 		// put "header" information in a .plt file containing gnuplot commands
 		std::string sep = ",";
-		unsigned int column_idx = 0;
+		unsigned int column_idx = -1;
 
+		plt_file << "set term png size 1280, 960" << std::endl;
+		plt_file << "set output \"" << log_directory << "/" << log_name << ".png\"" << std::endl;
 		plt_file << "plot ";
 		for (column_name = column_names.begin(); column_name != column_names.end(); ++column_name)
 		{
+			column_idx++;
+			if (*column_name == "Time")
+				continue;
+
 			if (column_idx == column_names.size() - 1)
 				sep = "";
 
-			plt_file << "\\" << std::endl << "\"" << filename + ".dat" << "\" u 1:" << column_idx + 2 << " t '" << *column_name << "' w lines" << sep << " ";
+			plt_file << "\\" << std::endl << "\"" << filename << "\" using 1:" << column_idx + 1 << " title '" << *column_name << "' with lines" << sep << " ";
 
-			column_idx++;
 		}
 		plt_file << std::endl;
 

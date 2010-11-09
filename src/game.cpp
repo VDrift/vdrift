@@ -68,7 +68,9 @@ GAME::GAME(std::ostream & info_out, std::ostream & error_out) :
 	renderconfigfile("render.conf.deferred"),
 	textures(error_out),
 	track(info_out, error_out),
-	replay(framerate)
+	replay(framerate),
+	enable_data_logging(false),
+	data_logging_frequency(0.01)
 	//sky(graphics, info_out, err_out)
 {
 	carcontrols_local.first = NULL;
@@ -677,6 +679,13 @@ void GAME::AdvanceGameLogic()
 					UpdateCar(*i, TickPeriod());
 				}
 				PROFILER.endBlock("car-update");
+
+				if (enable_data_logging)
+				{
+					PROFILER.beginBlock("datalog");
+					UpdateDataLog(TickPeriod());
+					PROFILER.endBlock("datalog");
+				}
 
 				//PROFILER.beginBlock("timer");
 				UpdateTimer();
@@ -1557,6 +1566,7 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	active_camera = NULL;
 
 	//load the local player's car
+	//load the local player's car
 	//cout << "About to load car..." << endl;
 	MATHVECTOR<float, 3> carcolor(0);
 	string carname, carpaint("00"), carfile;
@@ -1580,12 +1590,13 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	//cout << "After load car: " << carcontrols_local.first << endl;
 
 	//enable data logging for player car
-	std::vector<std::string> data_log_column_names;
+	std::vector<std::string> data_log_column_names;//Velocity Sector  Throttle Brake  Handbrake Clutch Steering
 	data_log_column_names.push_back("Time");
-	data_log_column_names.push_back("Velocity");
+	//data_log_column_names.push_back("Velocity");
+	data_log_column_names.push_back("Throttle");
 	data_log_column_names.push_back("Brake");
-	data_log_column_names.push_back("Sector");
-	cars.front().EnableDataLogging(".", "playercarlog", data_log_column_names, 30.0);
+	data_log_column_names.push_back("Steering");
+	EnableDataLogging(pathmanager.GetDataLogPath(), "playercarlog", data_log_column_names, "gnuplot", 60.0);
 
     race_laps = num_laps;
 
@@ -2348,4 +2359,68 @@ void GAME::DoneStartingUp()
 bool GAME::LastStartWasSuccessful() const
 {
 	return !pathmanager.FileExists(pathmanager.GetStartupFile());
+}
+
+void GAME::EnableDataLogging(std::string const& directory, std::string const& name, std::vector< std::string > const& column_names, std::string const& format, float frequency_Hz)
+{
+	enable_data_logging = true;
+	data_logging_frequency = 1.0 / frequency_Hz;
+	data_log.Init(directory, name, column_names, format);
+}
+
+void GAME::UpdateDataLog(float dt)
+{
+	time_since_last_logentry += dt;
+
+	while (time_since_last_logentry >= data_logging_frequency)
+	{
+		std::vector< std::pair< std::string, boost::any > > new_entry;
+		std::vector< std::string >::const_iterator column;
+
+		for (column = data_log.GetColumns().begin(); column != data_log.GetColumns().end(); ++column)
+		{
+			if (*column == "Time")
+			{
+				// do nothing - time is automatically added to every entry in DATALOG
+				continue;
+			}
+			else if (*column == "Velocity")
+			{
+				new_entry.push_back(std::make_pair(*column, cars.front().GetSpeed()));
+			}
+			else if (*column == "Sector")
+			{
+				new_entry.push_back(std::make_pair(*column, cars.front().GetSector()));
+			}
+			else if (*column == "Throttle")
+			{
+				new_entry.push_back(std::make_pair(*column, carcontrols_local.second.GetInput(CARINPUT::THROTTLE)));
+			}
+			else if (*column == "Brake")
+			{
+				new_entry.push_back(std::make_pair(*column, carcontrols_local.second.GetInput(CARINPUT::BRAKE)));
+			}
+			else if (*column == "Handbrake")
+			{
+				new_entry.push_back(std::make_pair(*column, carcontrols_local.second.GetInput(CARINPUT::HANDBRAKE)));
+			}
+			else if (*column == "Clutch")
+			{
+				new_entry.push_back(std::make_pair(*column, carcontrols_local.second.GetInput(CARINPUT::CLUTCH)));
+			}
+			else if (*column == "Steering")
+			{
+				new_entry.push_back(std::make_pair(*column, carcontrols_local.second.GetInput(CARINPUT::STEER_RIGHT) - carcontrols_local.second.GetInput(CARINPUT::STEER_LEFT)));
+			}
+			/*
+			else
+			{
+				TODO: throw exception: unknown column
+			}
+			*/
+		}
+
+		data_log.AddEntry(time_since_last_logentry, new_entry);
+		time_since_last_logentry -= data_logging_frequency;
+	}
 }

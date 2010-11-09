@@ -32,7 +32,6 @@ src = Split("""aabb.cpp
 		camera_system.cpp
 		car.cpp
 		carcontrolmap_local.cpp
-		cardatalog.cpp
 		cardynamics.cpp
 		carengine.cpp
 		carsuspension.cpp
@@ -44,6 +43,7 @@ src = Split("""aabb.cpp
 		containeralgorithm.cpp
 		coordinatesystems.cpp
 		crashdetection.cpp
+		datalog.cpp
                 driverfeedback.cpp
 		endian_utility.cpp
 		eventsystem.cpp

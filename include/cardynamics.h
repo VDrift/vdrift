@@ -18,7 +18,6 @@
 #include "joeserialize.h"
 #include "macros.h"
 #include "collision_contact.h"
-#include "cardatalog.h"
 #include "BulletDynamics/Dynamics/btActionInterface.h"
 
 class MODEL;

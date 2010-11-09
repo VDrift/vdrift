@@ -32,7 +32,7 @@ class PATHMANAGER
 		std::string settings_path;
 		std::string data_directory;
 		std::string profile_suffix;
-		
+
 		#ifndef _WIN32
 		bool DirectoryExists(std::string filename) const
 		{
@@ -46,7 +46,7 @@ class PATHMANAGER
 			}
 		}
 		#endif
-		
+
 		void MakeDir(const std::string & dir)
 		{
 #ifndef _WIN32
@@ -55,7 +55,7 @@ class PATHMANAGER
 			mkdir(dir.c_str());
 #endif
 		}
-	
+
 	public:
 		std::string GetDataPath() const {return data_directory;}
 		std::string GetStartupFile() const {return settings_path+"/startingup.txt";}
@@ -84,7 +84,8 @@ class PATHMANAGER
 		std::string GetStaticReflectionMap() const {return data_directory + "/textures/weather/cubereflection-nosun.png";}
 		std::string GetStaticAmbientMap() const {return data_directory + "/textures/weather/cubelighting.png";}
 		std::string GetShaderPath() const {return data_directory + "/shaders";}
-		
+		std::string GetDataLogPath() const {return settings_path+"/datalog";}
+
 		bool FileExists(const std::string & filename) const
 		{
 			std::ifstream test;
@@ -104,7 +105,7 @@ class PATHMANAGER
 			assert(data_directory.empty()); //assert that Init() hasn't been called yet
 			profile_suffix = "."+value;
 		}
-	
+
 };
 
 #endif
