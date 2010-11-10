@@ -22,8 +22,7 @@ void WIDGET_STRINGWHEEL::SetAlpha(SCENENODE & scene, float newalpha)
 
 void WIDGET_STRINGWHEEL::SetVisible(SCENENODE & scene, bool newvis)
 {
-	if (newvis)
-		SyncOption(scene);
+	if (newvis) SyncOption(scene);
 	title.SetVisible(scene, newvis);
 	label.SetVisible(scene, newvis);
 	button_left.SetVisible(scene, newvis);
@@ -103,14 +102,14 @@ void WIDGET_STRINGWHEEL::SetupDrawable(
 	SCENENODE & scene,
 	const std::string & newtitle,
 	std::tr1::shared_ptr<TEXTURE> teximage_left_up,
-	std::tr1::shared_ptr<TEXTURE> teximage_left_down, 
+	std::tr1::shared_ptr<TEXTURE> teximage_left_down,
 	std::tr1::shared_ptr<TEXTURE> teximage_right_up,
 	std::tr1::shared_ptr<TEXTURE> teximage_right_down,
-	FONT * font,
-	float scalex,
-	float scaley,
-	float centerx,
-	float centery)
+	const FONT * font,
+	const float scalex,
+	const float scaley,
+	const float centerx,
+	const float centery)
 {
 	assert(teximage_left_up);
 	assert(teximage_left_down);

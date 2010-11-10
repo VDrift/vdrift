@@ -36,11 +36,11 @@ class CARDIFFERENTIAL
 
 		void DebugPrint(std::ostream & out) const
 		{
-			out << "---Differential---" << std::endl;
-			out << "Side 1 RPM: " << side1_speed * 30.0 / 3.141593 << std::endl;
-			out << "Side 2 RPM: " << side2_speed * 30.0 / 3.141593 << std::endl;
-			out << "Side 1 Torque: " << side1_torque << std::endl;
-			out << "Side 2 Torque: " << side2_torque << std::endl;
+			out << "---Differential---" << "\n";
+			out << "Side 1 RPM: " << side1_speed * 30.0 / 3.141593 << "\n";
+			out << "Side 2 RPM: " << side2_speed * 30.0 / 3.141593 << "\n";
+			out << "Side 1 Torque: " << side1_torque << "\n";
+			out << "Side 2 Torque: " << side2_torque << "\n";
 		}
 
 		void SetFinalDrive ( const T& value )

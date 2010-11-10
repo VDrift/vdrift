@@ -22,7 +22,7 @@ private:
 		graphroot.SetChildVisibility(newvis);
 	}
 public:
-	bool Init(const std::string & texturepath, const std::string & texsize, MANAGER<TEXTURE, TEXTUREINFO> & textures, std::ostream & error_output)
+	bool Init(const std::string & texturepath, const std::string & texsize, TEXTUREMANAGER & textures, std::ostream & error_output)
 	{
 		float hheight, hball_scale, hx_pos, hy_pos;
 		float vwidth, vx_pos, vy_pos;

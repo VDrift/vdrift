@@ -114,10 +114,10 @@ public:
 	
 	void DebugPrint(std::ostream & out) const
 	{
-		out << "---Transmission---" << std::endl;
-		out << "Gear ratio: " << gear_ratios.at(gear) << std::endl;
-		out << "Crankshaft RPM: " << crankshaft_rpm << std::endl;
-		out << "Driveshaft RPM: " << driveshaft_rpm << std::endl;
+		out << "---Transmission---" << "\n";
+		//out << "Gear ratio: " << gear_ratios.at(gear) << "\n";
+		out << "Crankshaft RPM: " << crankshaft_rpm << "\n";
+		out << "Driveshaft RPM: " << driveshaft_rpm << "\n";
 	}
 	
 	bool Serialize(joeserialize::Serializer & s)

@@ -12,9 +12,7 @@
 #include <algorithm>
 #include <map>
 
-template <class T, class Tinfo> class MANAGER;
-class TEXTURE;
-class TEXTUREINFO;
+class TEXTUREMANAGER;
 
 class PARTICLE_SYSTEM
 {
@@ -187,7 +185,7 @@ public:
 		const std::list <std::string> & texlist,
 		int anisotropy,
 		const std::string & texsize,
-		MANAGER<TEXTURE, TEXTUREINFO> * texturemanager,
+		TEXTUREMANAGER * texturemanager,
 		std::ostream & error_output);
 	
 	void Update(float dt, const QUATERNION <float> & camdir, const MATHVECTOR <float, 3> & campos);

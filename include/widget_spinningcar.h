@@ -5,9 +5,8 @@
 #include "scenenode.h"
 #include "mathvector.h"
 
-template <class T, class Tinfo> class MANAGER;
-class TEXTURE;
-class TEXTUREINFO;
+class TEXTUREMANAGER;
+class MODELMANAGER;
 class CAR;
 
 class WIDGET_SPINNINGCAR : public WIDGET
@@ -27,12 +26,13 @@ public:
 	
 	void SetupDrawable(
 		SCENENODE & scene,
+		TEXTUREMANAGER & textures,
+		MODELMANAGER & models,
 		const std::string & texturesize,
 		const std::string & datapath,
-		float x,
-		float y,
+		const float x,
+		const float y,
 		const MATHVECTOR <float, 3> & newcarpos,
-		MANAGER<TEXTURE, TEXTUREINFO> & textures,
 		std::ostream & error_output,
 		int order = 0);
 	
@@ -50,7 +50,8 @@ private:
 	float r, g, b;
 	
 	keyed_container <SCENENODE>::handle carnode;
-	MANAGER<TEXTURE, TEXTUREINFO> * textures;
+	TEXTUREMANAGER * textures;
+	MODELMANAGER * models;
 	
 	std::list <CAR> car; ///< only ever one element, please
 	

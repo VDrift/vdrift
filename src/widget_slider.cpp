@@ -1,5 +1,4 @@
 #include "widget_slider.h"
-
 #include "guioption.h"
 
 WIDGET * WIDGET_SLIDER::clone() const
@@ -119,15 +118,18 @@ void WIDGET_SLIDER::SetSetting(const std::string & newsetting)
 void WIDGET_SLIDER::SetupDrawable(
 	SCENENODE & scene,
 	std::tr1::shared_ptr<TEXTURE> wedgetex,
-	std::tr1::shared_ptr<TEXTURE> cursortex, 
-	float x, float y,
-	float nw, float nh,
-	float newmin, float newmax,
-	bool ispercentage,
+	std::tr1::shared_ptr<TEXTURE> cursortex,
+	const float x,
+	const float y,
+	const float nw,
+	const float nh,
+	const float newmin,
+	const float newmax,
+	const bool ispercentage,
 	const std::string & newsetting,
-	FONT * font,
-	float fontscalex,
-	float fontscaley,
+	const FONT * font,
+	const float fontscalex,
+	const float fontscaley,
 	std::ostream & error_output,
 	int draworder)
 {

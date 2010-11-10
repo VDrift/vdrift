@@ -1,32 +1,67 @@
 #include "font.h"
-
-#include <fstream>
-using std::ifstream;
+#include "texturemanager.h"
 
 #include <string>
-using std::string;
-
+#include <sstream>
+#include <fstream>
 #include <iostream>
-using std::endl;
-
 #include <algorithm>
+
+template <typename T>
+static void GetNumber(const std::string & numberstr, T & num_output)
+{
+	std::stringstream s(numberstr);
+	s >> num_output;
+}
+
+static bool VerifyParse(
+	const std::string & expected,
+	const std::string & actual,
+	const std::string & fontinfopath,
+	std::ostream & error_output)
+{
+	if (expected != actual)
+	{
+		error_output << "Font info file " << fontinfopath << ": expected " << expected << ", got " << actual << std::endl;
+		return false;
+	}
+	else
+	{
+		return true;	
+	}
+}
+
+template <typename T>
+static bool Parse(
+	const std::string & parameter,
+	T & num_output,
+	std::ifstream & f,
+	const std::string & fontinfopath,
+	std::ostream & error_output)
+{
+	std::string curstr;
+	f >> curstr;
+	if (!VerifyParse(parameter, curstr.substr(0,parameter.size()), fontinfopath, error_output)) return false;
+	GetNumber(curstr.substr(parameter.size()), num_output);
+	return true;
+}
 
 bool FONT::Load(
 	const std::string & fontinfopath,
 	const std::string & fonttexturepath,
 	const std::string & texsize,
-	MANAGER<TEXTURE, TEXTUREINFO> & textures,
+	TEXTUREMANAGER & textures,
 	std::ostream & error_output,
 	bool mipmap)
 {
-	ifstream fontinfo(fontinfopath.c_str());
+	std::ifstream fontinfo(fontinfopath.c_str());
 	if (!fontinfo)
 	{
-		error_output << "Can't find font information file: " << fontinfopath << endl;
+		error_output << "Can't find font information file: " << fontinfopath << std::endl;
 		return false;
 	}
 	
-	string curstr;
+	std::string curstr;
 	while (fontinfo && curstr != "chars")
 		fontinfo >> curstr; //advance to first interesting bit
 	
@@ -46,7 +81,7 @@ bool FONT::Load(
 			if (!Parse("id=", cur_id, fontinfo,fontinfopath, error_output)) return false;
 			if (cur_id >= charinfo.size())
 			{
-				error_output << "Font info file " << fontinfopath << ": ID is out of range: " << cur_id << endl;
+				error_output << "Font info file " << fontinfopath << ": ID is out of range: " << cur_id << std::endl;
 				return false;
 			}
 			//std::cout << "Parsing ID " << cur_id << endl;
@@ -65,12 +100,12 @@ bool FONT::Load(
 		}
 	}
 	
-	TEXTUREINFO texinfo(fonttexturepath);
-	texinfo.SetMipMap(mipmap);
-	texinfo.SetRepeat(false, false);
-	texinfo.SetSize(texsize);
-	font_texture = textures.Get(texinfo);
-	if (!font_texture->Loaded()) return false;
+	TEXTUREINFO texinfo;
+	texinfo.mipmap = mipmap;
+	texinfo.repeatu = false;
+	texinfo.repeatv = false;
+	texinfo.size = texsize;
+	if (!textures.Load(fonttexturepath, texinfo, font_texture)) return false;
 	
 	float scale = font_texture->GetScale();
 	if (scale != 1.0)
@@ -91,13 +126,30 @@ bool FONT::Load(
 	return true;
 }
 
-bool FONT::VerifyParse(const std::string & expected, const std::string & actual, const std::string & fontinfopath, std::ostream & error_output) const
+float FONT::GetWidth(const std::string & newtext, const float newscale) const
 {
-	if (expected != actual)
+	float cursorx(0);
+
+	std::vector <float> linewidth;
+
+	for (unsigned int i = 0; i < newtext.size(); i++)
 	{
-		error_output << "Font info file " << fontinfopath << ": expected " << expected << ", got " << actual << endl;
-		return false;
+		if (newtext[i] == '\n')
+		{
+			linewidth.push_back(cursorx);
+			cursorx = 0;
+		}
+		else
+		{
+			optional <const FONT::CHARINFO *> cinfo = GetCharInfo(newtext[i]);
+			if (cinfo)
+				cursorx += (cinfo.get()->xadvance/GetFontTexture()->GetW())*newscale;
+		}
 	}
-	else
-		return true;
+
+	linewidth.push_back(cursorx);
+
+	float maxwidth = *std::max_element(linewidth.begin(),linewidth.end());
+
+	return maxwidth;
 }

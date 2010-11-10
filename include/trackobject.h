@@ -6,18 +6,18 @@
 class MODEL;
 class TRACKSURFACE;
 
-class TRACK_OBJECT
+class TRACKOBJECT
 {
 public:
-	TRACK_OBJECT(MODEL * m, const TRACKSURFACE * s) 
-	: model(m), surface(s)
+	TRACKOBJECT(std::tr1::shared_ptr<MODEL_JOE03> model, const TRACKSURFACE * s) :
+		model(model), surface(s)
 	{
-		assert(model);
+		assert(model.get());
 	}
 	
-	MODEL * GetModel() const
+	const MODEL * GetModel() const
 	{
-		return model;
+		return model.get();
 	}
 
 	const TRACKSURFACE * GetSurface() const
@@ -26,7 +26,7 @@ public:
 	}
 
 private:
-	MODEL * model;
+	std::tr1::shared_ptr<MODEL_JOE03> model;
 	const TRACKSURFACE * surface;
 };
 

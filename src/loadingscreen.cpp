@@ -1,7 +1,5 @@
 #include "loadingscreen.h"
-
-#include "manager.h"
-#include "texture.h"
+#include "texturemanager.h"
 	
 void LOADINGSCREEN::Update(float percentage)
 {
@@ -19,19 +17,15 @@ bool LOADINGSCREEN::Init(
 	int displayw,
 	int displayh,
 	const std::string & texsize,
-	MANAGER<TEXTURE, TEXTUREINFO> & textures)
+	TEXTUREMANAGER & textures)
 {
-	TEXTUREINFO boxtexinfo(texturepath+"/loadingbox.png");
-	boxtexinfo.SetMipMap(false);
-	boxtexinfo.SetSize(texsize);
-	std::tr1::shared_ptr<TEXTURE> boxtex = textures.Get(boxtexinfo);
-	if (!boxtex->Loaded()) return false;
+	TEXTUREINFO texinfo;
+	texinfo.mipmap = false;
+	texinfo.size = texsize;
 	
-	TEXTUREINFO bartexinfo(texturepath+"/loadingbar.png");
-	bartexinfo.SetMipMap(false);
-	bartexinfo.SetSize(texsize);
-	std::tr1::shared_ptr<TEXTURE> bartex = textures.Get(bartexinfo);
-	if (!bartex->Loaded()) return false;
+	std::tr1::shared_ptr<TEXTURE> boxtex, bartex;
+	if (!textures.Load(texturepath+"/loadingbox.png", texinfo, boxtex)) return false;
+	if (!textures.Load(texturepath+"/loadingbar.png", texinfo, bartex)) return false;
 	
 	bardraw = root.GetDrawlist().twodim.insert(DRAWABLE());
 	boxdraw = root.GetDrawlist().twodim.insert(DRAWABLE());

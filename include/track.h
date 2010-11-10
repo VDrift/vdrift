@@ -1,18 +1,13 @@
 #ifndef _TRACK_H
 #define _TRACK_H
 
-#include "model_joe03.h"
-#include "joepack.h"
 #include "scenenode.h"
+#include "model_joe03.h"
+#include "trackobject.h"
 #include "tracksurface.h"
 #include "mathvector.h"
 #include "quaternion.h"
 #include "bezier.h"
-#include "aabb.h"
-#include "aabb_space_partitioning.h"
-#include "k1999.h"
-#include "optional.h"
-#include "track_object.h"
 #include "roadstrip.h"
 
 #include <string>
@@ -24,40 +19,44 @@
 #include <memory>
 #include <vector>
 
-template <class T, class Tinfo> class MANAGER;
-class TEXTURE;
-class TEXTUREINFO;
+class TEXTUREMANAGER;
+class MODELMANAGER;
 class OBJECTLOADER;
 
 class TRACK
 {
 public:
 	TRACK(std::ostream & info, std::ostream & error);
+	
 	~TRACK();
 	
 	void Clear();
 	
 	///returns true if successful.  loads the entire track with this one function call.
 	bool Load(
+		TEXTUREMANAGER & textures,
+		MODELMANAGER & models,
 		const std::string & trackpath,
+		const std::string & trackdir,
 		const std::string & effects_texturepath,
 		const std::string & texsize,
-		int anisotropy,
-		MANAGER<TEXTURE, TEXTUREINFO> & textures,
-		bool reverse);
+		const int anisotropy,
+		const bool reverse);
 	
 	///returns true if successful.  only begins loading the track; the track won't be loaded until more calls to ContinueDeferredLoad().  use Loaded() to see if loading is complete yet.
 	bool DeferredLoad(
+		TEXTUREMANAGER & textures,
+		MODELMANAGER & models,
 		const std::string & trackpath,
+		const std::string & trackdir,
 		const std::string & effects_texturepath,
 		const std::string & texsize,
-		int anisotropy,
-		MANAGER<TEXTURE, TEXTUREINFO> & textures,
-		bool reverse,
-		bool dynamicshadowsenabled,
-		bool doagressivecombining);
+		const int anisotropy,
+		const bool reverse,
+		const bool dynamicshadowsenabled,
+		const bool doagressivecombining);
 	
-	bool ContinueDeferredLoad(MANAGER<TEXTURE, TEXTUREINFO> & textures);
+	bool ContinueDeferredLoad();
 	
 	int DeferredLoadTotalObjects();
 
@@ -76,7 +75,8 @@ public:
 	bool CastRay(
 		const MATHVECTOR <float, 3> & origin,
 		const MATHVECTOR <float, 3> & direction,
-		float seglen, MATHVECTOR <float, 3> & outtri,
+		float seglen,
+		MATHVECTOR <float, 3> & outtri,
 		const BEZIER * & colpatch,
 		MATHVECTOR <float, 3> & normal) const;
 	
@@ -111,7 +111,7 @@ public:
 		return direction == DIRECTION_REVERSE;
 	}
 	
-	const std::list<TRACK_OBJECT> & GetTrackObjects()
+	const std::list<TRACKOBJECT> & GetTrackObjects()
 	{
 		return objects;
 	}
@@ -132,14 +132,10 @@ public:
 private:
 	std::ostream & info_output;
 	std::ostream & error_output;
-
-	std::string texture_size;
-	std::map <std::string, MODEL_JOE03> model_library;
-	std::map <std::string, TEXTURE> texture_library;
-	std::list <TRACK_OBJECT> objects;
-	bool vertical_tracking_skyboxes;
 	std::vector <std::pair <MATHVECTOR <float, 3>, QUATERNION <float> > > start_positions;
 	std::vector <TRACKSURFACE> tracksurfaces;
+	std::list <TRACKOBJECT> objects;
+	bool vertical_tracking_skyboxes;
 	
 	enum
 	{
@@ -164,33 +160,40 @@ private:
 	bool loaded;
 	bool cull;
 	
+	std::auto_ptr <OBJECTLOADER> objload;
+	
 	bool CreateRacingLines(
 		const std::string & texturepath,
 		const std::string & texsize,
-		MANAGER<TEXTURE, TEXTUREINFO> & textures);
+		TEXTUREMANAGER & textures);
 	
 	bool LoadParameters(const std::string & trackpath);
 	
 	bool LoadSurfaces(const std::string & trackpath);
 	
 	bool LoadObjects(
-		const std::string & trackpath,
 		SCENENODE & sceneroot,
-		int anisotropy,
-		MANAGER<TEXTURE, TEXTUREINFO> & textures);
-	
-	std::auto_ptr <OBJECTLOADER> objload;
+		TEXTUREMANAGER & textures,
+		MODELMANAGER & models,
+		const std::string & trackpath,
+		const std::string & trackdir,
+		const std::string & texsize,
+		const int anisotropy);
 	
 	///returns false on error
 	bool BeginObjectLoad(
-		const std::string & trackpath,
 		SCENENODE & sceneroot,
-		int anisotropy,
-		bool dynamicshadowsenabled,
-		bool doagressivecombining);
+		TEXTUREMANAGER & textures,
+		MODELMANAGER & models,
+		const std::string & trackpath,
+		const std::string & trackdir,
+		const std::string & texsize,
+		const int anisotropy,
+		const bool dynamicshadowsenabled,
+		const bool doagressivecombining);
 	
 	///returns a pair of bools: the first bool is true if there was an error, the second bool is true if an object was loaded
-	std::pair <bool, bool> ContinueObjectLoad(MANAGER<TEXTURE, TEXTUREINFO> & textures);
+	std::pair <bool, bool> ContinueObjectLoad();
 	
 	bool LoadRoads(const std::string & trackpath, bool reverse);
 	

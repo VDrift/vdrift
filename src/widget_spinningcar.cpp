@@ -1,5 +1,4 @@
 #include "widget_spinningcar.h"
-
 #include "car.h"
 #include "configfile.h"
 
@@ -60,43 +59,35 @@ void WIDGET_SPINNINGCAR::HookMessage(SCENENODE & scene, const std::string & mess
 	
 	bool reload(false);
 	std::stringstream s;
-	if (from.find("CarWheel") != std::string::npos)
+	if (from.find("Car") != std::string::npos)
 	{
 		if (carname == message) return;
 		carpaint.clear();	// car changed reset paint
 		carname = message;
 		reload = true;
 	}
-	else if (from.find("PaintWheel") != std::string::npos)
+	else if (from.find("Paint") != std::string::npos)
 	{
 		if (carpaint == message) return;
 		carpaint = message;
 		reload = true;
 	}
-	else if (from.find("Red") != std::string::npos)
+	else if (from.find("Color") != std::string::npos)
 	{
-		float value;
+		MATHVECTOR<float, 3> rgb;
 		s << message;
-		s >> value;
-		if (fabs(value - r) < 1.0/128.0) return;
-		r = value;	
-	}
-	else if (from.find("Green") != std::string::npos)
-	{
-		float value;
-		s << message;
-		s >> value;
-		if (fabs(value - g) < 1.0/128.0) return;
-		g = value;
-			
-	}
-	else if (from.find("Blue") != std::string::npos)
-	{
-		float value;
-		s << message;
-		s >> value;
-		if (fabs(value - b) < 1.0/128.0) return;
-		b = value;	
+		s >> rgb;
+		
+		if (fabs(rgb[0] - r) < 1.0/128.0 &&
+			fabs(rgb[1] - g) < 1.0/128.0 &&
+			fabs(rgb[2] - b) < 1.0/128.0)
+		{
+			return;
+		}
+		
+		r = rgb[0];
+		g = rgb[1];
+		b = rgb[2];
 	}
 
 	if (!wasvisible)
@@ -129,12 +120,13 @@ void WIDGET_SPINNINGCAR::Update(SCENENODE & scene, float dt)
 
 void WIDGET_SPINNINGCAR::SetupDrawable(
 	SCENENODE & scene,
+	TEXTUREMANAGER & textures,
+	MODELMANAGER & models,
 	const std::string & texturesize,
 	const std::string & datapath,
-	float x,
-	float y,
+	const float x,
+	const float y,
 	const MATHVECTOR <float, 3> & newcarpos,
-	MANAGER<TEXTURE, TEXTUREINFO> & textures,
 	std::ostream & error_output,
 	int order)
 {
@@ -143,6 +135,7 @@ void WIDGET_SPINNINGCAR::SetupDrawable(
 	center.Set(x,y);
 	carpos = newcarpos;
 	this->textures = &textures;
+	this->models = &models;
 	errptr = &error_output;
 	draworder = order;
 }
@@ -186,11 +179,16 @@ void WIDGET_SPINNINGCAR::Load(SCENENODE & parent)
 {
 	assert(errptr);
 	assert(textures);
+	assert(models);
 	
 	Unload(parent);
 	
-	std::string carpath = data + "/cars/" + carname;
 	std::stringstream loadlog;
+	std::string texsize = "large";
+	int anisotropy = 0;
+	float camerabounce = 0;
+	bool loaddriver = false;
+	bool debugmode = false;
 
 	if (!carnode.valid())
 	{
@@ -201,19 +199,29 @@ void WIDGET_SPINNINGCAR::Load(SCENENODE & parent)
 	car.push_back(CAR());
 	
 	CONFIGFILE carconf;
-	if (!carconf.Load(carpath + "/" + carname + ".car"))
+	std::string carconfpath = data + "/cars/" + carname + "/" + carname + ".car";
+	if (!carconf.Load(carconfpath))
 	{
-		*errptr << "Error loading car's configfile: " << carpath + "/" + carname + ".car" << std::endl;
+		*errptr << "Error loading car's configfile: " << carconfpath << std::endl;
 		return;
 	}
 	
-	MATHVECTOR <float, 3> carcolor(r, g, b);
-	
 	if (!car.back().LoadGraphics(
-		carconf, carpath, "", carname, 
-		*textures, carpaint, carcolor,
-		0, "large", 0,
-		false, data + "/carparts", loadlog, loadlog))
+			carconf,
+			"cars/" + carname,
+			carname,
+			"carparts",
+			MATHVECTOR<float, 3>(r, g, b),
+			carpaint,
+			texsize,
+			anisotropy,
+			camerabounce,
+			loaddriver,
+			debugmode,
+			*textures,
+			*models,
+			loadlog,
+			loadlog))
 	{
 		*errptr << "Couldn't load spinning car: " << carname << std::endl;
 		if (!loadlog.str().empty())

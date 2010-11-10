@@ -1,6 +1,6 @@
 #include "guipage.h"
 #include "configfile.h"
-#include "manager.h"
+#include "texturemanager.h"
 #include "widget.h"
 #include "widget_image.h"
 #include "widget_multiimage.h"
@@ -12,6 +12,7 @@
 #include "widget_slider.h"
 #include "widget_spinningcar.h"
 #include "widget_controlgrab.h"
+#include "widget_colorpicker.h"
 
 #include <list>
 using std::list;
@@ -35,16 +36,23 @@ bool GUIPAGE::Load(
 	const std::string & path,
 	const std::string & texpath,
 	const std::string & datapath,
-	CONFIGFILE & controlsconfig,
+	const std::string & texsize,
+	const float screenhwratio,
+	const CONFIGFILE & controlsconfig,
+	const std::map <std::string, FONT> & fonts,
+	std::map <std::string, GUIOPTION> & optionmap,
 	SCENENODE & parentnode,
-	std::map <std::string, FONT> & fonts,
-	std::map<std::string, GUIOPTION> & optionmap,
-  	float screenhwratio,
-  	const std::string & texsize,
-  	MANAGER<TEXTURE, TEXTUREINFO> & textures,
-  	std::ostream & error_output,
-  	bool reloadcontrolsonly)
+	TEXTUREMANAGER & textures,
+	MODELMANAGER & models,
+	std::ostream & error_output,
+	bool reloadcontrolsonly)
 {
+	TEXTUREINFO texinfo;
+	texinfo.mipmap = false;
+	texinfo.repeatu = false;
+	texinfo.repeatv = false;
+	texinfo.size = texsize;
+	
 	if (reloadcontrolsonly)
 		assert(s.valid());
 	else
@@ -83,9 +91,9 @@ bool GUIPAGE::Load(
 	{
 		//generate background
 		WIDGET_IMAGE * bg_widget = NewWidget<WIDGET_IMAGE>();
-		std::tr1::shared_ptr<TEXTURE> texture_back = GetTexture(background, texpath, textures, texsize);
-		if (!texture_back->Loaded()) return false;
-		bg_widget->SetupDrawable(sref, texture_back, 0.5, 0.5, 1.0, 1.0, -1);
+		std::tr1::shared_ptr<TEXTURE> texture;
+		if (!textures.Load(texpath+"/"+background, texinfo, texture)) return false;
+		bg_widget->SetupDrawable(sref, texture, 0.5, 0.5, 1.0, 1.0, -1);
 	}
 	
 	//remove existing controlgrabs
@@ -118,47 +126,22 @@ bool GUIPAGE::Load(
 		controlgrabs.clear();
 	}
 	
-	//keep track of hooks for a second pass
-	map <WIDGET *, list <string> > hookmap;
+	// widget map for hooks
 	map <string, WIDGET *> namemap;
 	
 	std::list <std::string> sectionlist;
 	pagefile.GetSectionList(sectionlist);
-	if (!sectionlist.empty())
-		if (sectionlist.front() == "")
-			sectionlist.pop_front();
+	if (!sectionlist.empty() && sectionlist.front() == "")
+	{
+		sectionlist.pop_front();
+	}
 	for (std::list <std::string>::iterator i = sectionlist.begin(); i != sectionlist.end(); ++i)
 	{
 		stringstream widgetstr;
 		widgetstr.str(*i);
-		/*widgetstr << "widget-";
-		widgetstr.width(2);
-		widgetstr.fill('0');
-		widgetstr << i;*/
-		
-		//std::cout << *i << ": " << widgetstr.str()+".type" << std::endl;
 		
 		string wtype;
 		if (!pagefile.GetParam(widgetstr.str()+".type", wtype)) return false;
-		
-		//process hooks
-		list <string> hooklist;
-		{
-			string hookstr;
-			if (!pagefile.GetParam(widgetstr.str()+".hook", hookstr)) hookstr = "";
-			stringstream hookstream(hookstr);
-			while (hookstream)
-			{
-				string hook;
-				const int bufsize(256);
-				char hookbuf[bufsize];
-				hookstream.getline(hookbuf, bufsize, ',');
-				hook = hookbuf;
-				if (!hook.empty())
-					hooklist.push_back(hook);
-			}
-		}
-		
 		//std::cout << widgetstr.str() << ": " << wtype << endl;
 		
 		assert(s.valid());
@@ -173,10 +156,10 @@ bool GUIPAGE::Load(
 				if (!pagefile.GetParam(widgetstr.str()+".width", w)) return false;
 				if (!pagefile.GetParam(widgetstr.str()+".height", h)) return false;
 				
-				string texfn;
-				if (!pagefile.GetParam(widgetstr.str()+".filename", texfn)) return false;
-				std::tr1::shared_ptr<TEXTURE> texture = GetTexture(texfn, texpath, textures, texsize);
-				if(!texture->Loaded()) return false;
+				string texname;
+				if (!pagefile.GetParam(widgetstr.str()+".filename", texname)) return false;
+				std::tr1::shared_ptr<TEXTURE> texture;
+				if (!textures.Load(texpath+"/"+texname, texinfo, texture)) return false;
 				
 				WIDGET_IMAGE * new_widget = NewWidget<WIDGET_IMAGE>();
 				new_widget->SetupDrawable(sref, texture, xy[0], xy[1], w, h);
@@ -198,16 +181,19 @@ bool GUIPAGE::Load(
 				if (!pagefile.GetParam(widgetstr.str()+".cancel", cancel)) return false;
 				if (!pagefile.GetParam(widgetstr.str()+".tip", description)) description = "";
 				
-				std::tr1::shared_ptr<TEXTURE> texture_up = GetTexture("widgets/btn_up_unsel.png", texpath, textures, texsize);
-				std::tr1::shared_ptr<TEXTURE> texture_down = GetTexture("widgets/btn_down.png", texpath, textures, texsize);
-				std::tr1::shared_ptr<TEXTURE> texture_sel = GetTexture("widgets/btn_up.png", texpath, textures, texsize);
-				if (!texture_up->Loaded() || !texture_down->Loaded() || !texture_sel->Loaded()) return false;
+				std::tr1::shared_ptr<TEXTURE> texture_up, texture_down, texture_sel;
+				if (!textures.Load(texpath+"/widgets/btn_up_unsel.png", texinfo, texture_sel)) return false;
+				if (!textures.Load(texpath+"/widgets/btn_down.png", texinfo, texture_down)) return false;
+				if (!textures.Load(texpath+"/widgets/btn_up.png", texinfo, texture_up)) return false;
 				float fontscaley = ((((float) fontsize - 7.0f) * 0.25f) + 1.0f)*0.25;
 				float fontscalex = fontscaley*screenhwratio;
 				
+				const FONT * font = &fonts.find("futuresans")->second;
 				WIDGET_BUTTON * new_widget = NewWidget<WIDGET_BUTTON>();
-				new_widget->SetupDrawable(sref, texture_up, texture_down, texture_sel,
-						&fonts["futuresans"], text, xy[0],xy[1], fontscalex,fontscaley, color[0],color[1],color[2]);
+				new_widget->SetupDrawable(
+						sref, texture_up, texture_down, texture_sel,
+						font, text, xy[0], xy[1], fontscalex, fontscaley,
+						color[0], color[1], color[2]);
 				new_widget->SetAction(action);
 				new_widget->SetDescription(description);
 				new_widget->SetCancel(cancel);
@@ -228,11 +214,11 @@ bool GUIPAGE::Load(
 				{
 					color[0] = color[1] = color[2] = 1.0;
 				}
-				
-				WIDGET_LABEL * new_widget = NewWidget<WIDGET_LABEL>();
 				float fontscaley = ((((float) fontsize - 7.0f) * 0.25f) + 1.0f)*0.25;
 				float fontscalex = fontscaley*screenhwratio;
-				new_widget->SetupDrawable(sref, &fonts["futuresans"], text, xy[0],xy[1], fontscalex,fontscaley, color[0],color[1],color[2], 2);
+				const FONT * font = &fonts.find("futuresans")->second;
+				WIDGET_LABEL * new_widget = NewWidget<WIDGET_LABEL>();
+				new_widget->SetupDrawable(sref, font, text, xy[0],xy[1], fontscalex,fontscaley, color[0],color[1],color[2], 2);
 				
 				string name;
 				if (pagefile.GetParam(widgetstr.str()+".name", name)) label_widgets[name] = *new_widget;
@@ -273,28 +259,27 @@ bool GUIPAGE::Load(
 				
 				//generate label
 				{
-					WIDGET_LABEL * new_widget = NewWidget<WIDGET_LABEL>();
 					float fontscaley = ((((float) fontsize - 7.0f) * 0.25f) + 1.0f)*0.25;
 					float fontscalex = fontscaley*screenhwratio;
-					float fw = new_widget->GetWidth(&fonts["futuresans"], title, fontscalex);
-					new_widget->SetupDrawable(sref, &fonts["futuresans"], title, xy[0]+fw*0.5,xy[1]+(0.02*0.25*4.0/3.0), fontscalex,fontscaley, 1,1,1, 2);
+					const FONT * font = &fonts.find("futuresans")->second;
+					WIDGET_LABEL * new_widget = NewWidget<WIDGET_LABEL>();
+					float fw = new_widget->GetWidth(font, title, fontscalex);
+					new_widget->SetupDrawable(sref, font, title, xy[0]+fw*0.5,xy[1]+(0.02*0.25*4.0/3.0), fontscalex,fontscaley, 1,1,1, 2);
 				}
 				
 				//generate toggle
 				{
-					std::tr1::shared_ptr<TEXTURE> texture_up = GetTexture("widgets/tog_off_up_unsel.png", texpath, textures, texsize);
-					std::tr1::shared_ptr<TEXTURE> texture_down = GetTexture("widgets/tog_on_up_unsel.png", texpath, textures, texsize);
-					std::tr1::shared_ptr<TEXTURE> texture_upsel = GetTexture("widgets/tog_off_up.png", texpath, textures, texsize);
-					std::tr1::shared_ptr<TEXTURE> texture_downsel = GetTexture("widgets/tog_on_up.png", texpath, textures, texsize);
-					std::tr1::shared_ptr<TEXTURE> texture_trans = GetTexture("widgets/tog_off_down.png", texpath, textures, texsize);
-					if (!texture_up->Loaded() || !texture_down->Loaded() || !texture_upsel->Loaded() || 
-						!texture_downsel->Loaded() || !texture_trans->Loaded()) return false;
+					std::tr1::shared_ptr<TEXTURE> up, down, upsel, downsel, trans;
+					if (!textures.Load(texpath+"/widgets/tog_off_up_unsel.png", texinfo, up)) return false;
+					if (!textures.Load(texpath+"/widgets/tog_on_up_unsel.png", texinfo, down)) return false;
+					if (!textures.Load(texpath+"/widgets/tog_off_up.png", texinfo, upsel)) return false;
+					if (!textures.Load(texpath+"/widgets/tog_on_up.png", texinfo, downsel)) return false;
+					if (!textures.Load(texpath+"/widgets/tog_off_down.png", texinfo, trans)) return false;
+					
 					float h = 0.025;
 					float w = h*screenhwratio;
-					
 					WIDGET_TOGGLE * new_widget = NewWidget<WIDGET_TOGGLE>();
-					new_widget->SetupDrawable(sref, texture_up, texture_down, texture_upsel, 
-							texture_downsel, texture_trans, xy[0]-0.02,xy[1], w, h);
+					new_widget->SetupDrawable(sref, up, down,upsel, downsel, trans, xy[0]-0.02, xy[1], w, h);
 					//new_widget->SetAction(action);
 					new_widget->SetDescription(description);
 					new_widget->SetSetting(setting);
@@ -332,35 +317,23 @@ bool GUIPAGE::Load(
 					error_output << "Widget " << widgetstr << ": unknown value type " << values << endl;
 				}
 				
-				std::tr1::shared_ptr<TEXTURE> up_left = GetTexture("widgets/wheel_up_l.png", texpath, textures, texsize);
-				std::tr1::shared_ptr<TEXTURE> down_left = GetTexture("widgets/wheel_down_l.png", texpath, textures, texsize);
-				std::tr1::shared_ptr<TEXTURE> up_right = GetTexture("widgets/wheel_up_r.png", texpath, textures, texsize);
-				std::tr1::shared_ptr<TEXTURE> down_right = GetTexture("widgets/wheel_down_r.png", texpath, textures, texsize);
-				if (!up_left->Loaded() || !down_left->Loaded() || !up_right->Loaded() || !down_right->Loaded()) return false;
-				//float w = 0.02;
-				//float h = w*(4.0/3.0);
-				float fontscaley = ((((float) fontsize - 7.0f) * 0.25f) + 1.0f)*0.25;
-				float fontscalex = fontscaley*screenhwratio;
+				std::tr1::shared_ptr<TEXTURE> up_left, down_left, up_right, down_right;
+				if (!textures.Load(texpath+"/widgets/wheel_up_l.png", texinfo, up_left)) return false;
+				if (!textures.Load(texpath+"/widgets/wheel_down_l.png", texinfo, down_left)) return false;
+				if (!textures.Load(texpath+"/widgets/wheel_up_r.png", texinfo, up_right)) return false;
+				if (!textures.Load(texpath+"/widgets/wheel_down_r.png", texinfo, down_right)) return false;
 				
+				float fontscaley = ((((float) fontsize - 7.0f) * 0.25f) + 1.0f) * 0.25;
+				float fontscalex = fontscaley * screenhwratio;
+				const FONT * font = &fonts.find("futuresans")->second;
 				WIDGET_STRINGWHEEL * new_widget = NewWidget<WIDGET_STRINGWHEEL>();
-				new_widget->SetupDrawable(sref, title+":", up_left, down_left, up_right, down_right,
-						&fonts["futuresans"], fontscalex, fontscaley, xy[0], xy[1]);
+				new_widget->SetupDrawable(
+						sref, title+":", up_left, down_left, up_right, down_right,
+						font, fontscalex, fontscaley, xy[0], xy[1]);
 				new_widget->SetDescription(description);
 				new_widget->SetSetting(setting);
 				new_widget->UpdateOptions(sref, false, optionmap, error_output);
 				new_widget->SetAction(action);
-				
-				std::string name;
-				if (pagefile.GetParam(widgetstr.str()+".name", name))
-				{
-					new_widget->SetName(name);
-					namemap[name] = new_widget;
-				}
-				
-				for (list <string>::iterator n = hooklist.begin(); n != hooklist.end(); n++)
-				{
-					hookmap[new_widget].push_back(*n);
-				}
 			}
 			else if (wtype == "intintwheel")
 			{
@@ -394,20 +367,19 @@ bool GUIPAGE::Load(
 					error_output << "Widget " << widgetstr << ": unknown value type " << values << endl;
 				}
 				
+				std::tr1::shared_ptr<TEXTURE> up_left, down_left, up_right, down_right;
+				if (!textures.Load(texpath+"/widgets/wheel_up_l.png", texinfo, up_left)) return false;
+				if (!textures.Load(texpath+"/widgets/wheel_down_l.png", texinfo, down_left)) return false;
+				if (!textures.Load(texpath+"/widgets/wheel_up_r.png", texinfo, up_right)) return false;
+				if (!textures.Load(texpath+"/widgets/wheel_down_r.png", texinfo, down_right)) return false;
 				
-				std::tr1::shared_ptr<TEXTURE> up_left = GetTexture("widgets/wheel_up_l.png", texpath, textures, texsize);
-				std::tr1::shared_ptr<TEXTURE> down_left = GetTexture("widgets/wheel_down_l.png", texpath, textures, texsize);
-				std::tr1::shared_ptr<TEXTURE> up_right = GetTexture("widgets/wheel_up_r.png", texpath, textures, texsize);
-				std::tr1::shared_ptr<TEXTURE> down_right = GetTexture("widgets/wheel_down_r.png", texpath, textures, texsize);
-				if (!up_left->Loaded() || !down_left->Loaded() || !up_right->Loaded() || !down_right->Loaded()) return false;
-				//float w = 0.02;
-				//float h = w*(4.0/3.0);
-				float fontscaley = ((((float) fontsize - 7.0f) * 0.25f) + 1.0f)*0.25;
-				float fontscalex = fontscaley*screenhwratio;
-				
+				float fontscaley = ((((float) fontsize - 7.0f) * 0.25f) + 1.0f) * 0.25;
+				float fontscalex = fontscaley * screenhwratio;
+				const FONT * font = &fonts.find("futuresans")->second;
 				WIDGET_DOUBLESTRINGWHEEL * new_widget = NewWidget<WIDGET_DOUBLESTRINGWHEEL>();
-				new_widget->SetupDrawable(sref, title+":", up_left, down_left, up_right, down_right,
-						&fonts["futuresans"], fontscalex, fontscaley, xy[0], xy[1]);
+				new_widget->SetupDrawable(
+						sref, title+":", up_left, down_left, up_right, down_right,
+						font, fontscalex, fontscaley, xy[0], xy[1]);
 				new_widget->SetDescription(description);
 				new_widget->SetSetting(setting1, setting2);
 				
@@ -431,9 +403,28 @@ bool GUIPAGE::Load(
 				if (!pagefile.GetParam(widgetstr.str()+".postfix", postfix)) return false;
 				
 				WIDGET_MULTIIMAGE * new_widget = NewWidget<WIDGET_MULTIIMAGE>();
-				new_widget->SetupDrawable(sref, texsize, textures, datapath, prefix, postfix, xy[0],xy[1], width, height, error_output, 102);
+				new_widget->SetupDrawable(sref, textures, texsize, prefix, postfix, xy[0],xy[1], width, height, error_output, 102);
+			}
+			else if (wtype == "colorpicker")
+			{
+				float xy[3];
+				float width, height;
+				string setting, name;
+				std::tr1::shared_ptr<TEXTURE> cursor, hue, satval, bg;
 				
-				if (pagefile.GetParam(widgetstr.str()+".name", name)) namemap[name] = new_widget;
+				if (!pagefile.GetParam(widgetstr.str()+".center", xy)) return false;
+				if (!pagefile.GetParam(widgetstr.str()+".width", width)) return false;
+				if (!pagefile.GetParam(widgetstr.str()+".height", height)) return false;
+				if (!pagefile.GetParam(widgetstr.str()+".setting", setting)) return false;
+				
+				if (!textures.Load(texpath+"/widgets/color_cursor.png", texinfo, cursor)) return false;
+				if (!textures.Load(texpath+"/widgets/color_hue.png", texinfo, hue)) return false;
+				if (!textures.Load(texpath+"/widgets/color_saturation.png", texinfo, satval)) return false;
+				if (!textures.Load(texpath+"/widgets/color_value.png", texinfo, bg)) return false;
+				
+				WIDGET_COLORPICKER * new_widget = NewWidget<WIDGET_COLORPICKER>();
+				new_widget->SetupDrawable(sref, cursor, hue, satval, bg,
+					xy[0]-width/2, xy[1]-height/2, width, height, setting, error_output, 102);
 			}
 			else if (wtype == "slider")
 			{
@@ -496,11 +487,12 @@ bool GUIPAGE::Load(
 				//generate label
 				float fw = 0;
 				{
-					WIDGET_LABEL * new_widget = NewWidget<WIDGET_LABEL>();
 					float fontscaley = ((((float) fontsize - 7.0f) * 0.25f) + 1.0f)*0.25;
 					float fontscalex = fontscaley*screenhwratio;
-					fw = new_widget->GetWidth(&fonts["futuresans"], title, fontscalex);
-					new_widget->SetupDrawable(sref, &fonts["futuresans"], title, xy[0]+fw*0.5,xy[1]+(0.02*0.25*4.0/3.0), fontscalex,fontscaley, 1,1,1, 2);
+					const FONT * font = &fonts.find("futuresans")->second;
+					WIDGET_LABEL * new_widget = NewWidget<WIDGET_LABEL>();
+					fw = new_widget->GetWidth(font, title, fontscalex);
+					new_widget->SetupDrawable(sref, font, title, xy[0]+fw*0.5,xy[1]+(0.02*0.25*4.0/3.0), fontscalex,fontscaley, 1,1,1, 2);
 				}
 				
 				//xy[0] += fw+w*4.0*0.5+0.01;
@@ -509,11 +501,11 @@ bool GUIPAGE::Load(
 				//font settings for % display
 				float fontscaley = ((((float) fontsize - 7.0f) * 0.25f) + 1.0f)*0.25;
 				float fontscalex = fontscaley*screenhwratio;
-				FONT * font = &fonts["lcd"];
-
-				std::tr1::shared_ptr<TEXTURE> cursor = GetTexture("widgets/sld_cursor.png", texpath, textures, texsize);
-				std::tr1::shared_ptr<TEXTURE> wedge = GetTexture("widgets/sld_wedge.png", texpath, textures, texsize);
-				if (!cursor->Loaded() || !wedge->Loaded()) return false;
+				const FONT * font = &fonts.find("lcd")->second;
+				
+				std::tr1::shared_ptr<TEXTURE> cursor, wedge;
+				if (!textures.Load(texpath+"/widgets/sld_cursor.png", texinfo, cursor)) return false;
+				if (!textures.Load(texpath+"/widgets/sld_wedge.png", texinfo, wedge)) return false;
 				
 				WIDGET_SLIDER * new_widget = NewWidget<WIDGET_SLIDER>();
 				new_widget->SetupDrawable(sref, wedge, cursor, xy[0], xy[1], w, h, min, max, percentage, setting,
@@ -524,11 +516,6 @@ bool GUIPAGE::Load(
 				float color[] = {1, 1, 1};
 				pagefile.GetParam(widgetstr.str()+".color", color);
 				new_widget->SetColor(sref, color[0], color[1], color[2]);
-				
-				for (list <string>::iterator n = hooklist.begin(); n != hooklist.end(); n++)
-				{
-					hookmap[new_widget].push_back(*n);
-				}
 			}
 			else if (wtype == "spinningcar")
 			{
@@ -541,13 +528,37 @@ bool GUIPAGE::Load(
 				if (!pagefile.GetParam(widgetstr.str()+".values", values)) return false;
 				
 				WIDGET_SPINNINGCAR * new_widget = NewWidget<WIDGET_SPINNINGCAR>();
-				new_widget->SetupDrawable(sref, texsize, datapath, centerxy[0], centerxy[1], MATHVECTOR <float, 3> (carposxy[0], carposxy[1], carposxy[2]), textures, error_output, 110);
-				
-				if (pagefile.GetParam(widgetstr.str()+".name", name)) namemap[name] = new_widget;
+				new_widget->SetupDrawable(sref, textures, models, texsize, datapath, centerxy[0], centerxy[1], MATHVECTOR <float, 3> (carposxy[0], carposxy[1], carposxy[2]), error_output, 110);
 			}
 			else if (wtype != "controlgrab")
 			{
 				error_output << path << ": unknown " << widgetstr.str() << " type: " << wtype << ", ignoring" << endl;
+			}
+			
+			// process hooks
+			std::string widget_name;
+			if (pagefile.GetParam(widgetstr.str()+".name", widget_name))
+			{
+				widgets.back().Get()->SetName(widget_name);
+				
+				map <string, WIDGET *>::iterator widget = namemap.find(widget_name);
+				if (widget != namemap.end())
+				{
+					error_output << widget_name << " defined twice." << endl;
+					return false;
+				}
+				namemap[widget_name] = widgets.back().Get();
+			}
+			
+			std::vector<std::string> hooks;
+			pagefile.GetParam(widgetstr.str()+".hook", hooks);
+			for (std::vector<std::string>::iterator n = hooks.begin(); n != hooks.end(); ++n)
+			{
+				map <string, WIDGET *>::iterator hookee = namemap.find(*n);
+				if (hookee != namemap.end())
+					widgets.back().Get()->AddHook(hookee->second); // last widget added
+				else
+					error_output << path << ": unknown hook reference to " << *n << endl;
 			}
 		}
 		
@@ -567,54 +578,40 @@ bool GUIPAGE::Load(
 			if (!pagefile.GetParam(widgetstr.str()+".analog", analog)) analog = false;
 			if (!pagefile.GetParam(widgetstr.str()+".only_one", only_one)) only_one = false;
 			
-			WIDGET_CONTROLGRAB * new_widget = NewWidget<WIDGET_CONTROLGRAB>();
-			controlgrabs.push_back(new_widget);
-			
 			std::vector <std::tr1::shared_ptr<TEXTURE> > control(WIDGET_CONTROLGRAB::END);
-			control[WIDGET_CONTROLGRAB::ADD] = GetTexture("widgets/controls/add.png", texpath, textures, texsize);
-			control[WIDGET_CONTROLGRAB::ADDSEL] = GetTexture("widgets/controls/add_sel.png", texpath, textures, texsize);
-			control[WIDGET_CONTROLGRAB::JOYAXIS] = GetTexture("widgets/controls/joy_axis.png", texpath, textures, texsize);
-			control[WIDGET_CONTROLGRAB::JOYAXISSEL] = GetTexture("widgets/controls/joy_axis_sel.png", texpath, textures, texsize);
-			control[WIDGET_CONTROLGRAB::JOYBTN] = GetTexture("widgets/controls/joy_btn.png", texpath, textures, texsize);
-			control[WIDGET_CONTROLGRAB::JOYBTNSEL] = GetTexture("widgets/controls/joy_btn_sel.png", texpath, textures, texsize);
-			control[WIDGET_CONTROLGRAB::KEY] = GetTexture("widgets/controls/key.png", texpath, textures, texsize);
-			control[WIDGET_CONTROLGRAB::KEYSEL] = GetTexture("widgets/controls/key_sel.png", texpath, textures, texsize);
-			control[WIDGET_CONTROLGRAB::MOUSE] = GetTexture("widgets/controls/mouse.png", texpath, textures, texsize);
-			control[WIDGET_CONTROLGRAB::MOUSESEL] = GetTexture("widgets/controls/mouse_sel.png", texpath, textures, texsize);
-			std::vector <std::tr1::shared_ptr<TEXTURE> >::iterator it;
-			for (it = control.begin(); it < control.end(); it++)
-			{
-				if (!it->get()->Loaded()) return false;
-			}
+			if (!textures.Load(texpath+"/widgets/controls/add.png", texinfo, control[WIDGET_CONTROLGRAB::ADD])) return false;
+			if (!textures.Load(texpath+"/widgets/controls/add_sel.png", texinfo, control[WIDGET_CONTROLGRAB::ADDSEL])) return false;
+			if (!textures.Load(texpath+"/widgets/controls/joy_axis.png", texinfo, control[WIDGET_CONTROLGRAB::JOYAXIS])) return false;
+			if (!textures.Load(texpath+"/widgets/controls/joy_axis_sel.png", texinfo, control[WIDGET_CONTROLGRAB::JOYAXISSEL])) return false;
+			if (!textures.Load(texpath+"/widgets/controls/joy_btn.png", texinfo, control[WIDGET_CONTROLGRAB::JOYBTN])) return false;
+			if (!textures.Load(texpath+"/widgets/controls/joy_btn_sel.png", texinfo, control[WIDGET_CONTROLGRAB::JOYBTNSEL])) return false;
+			if (!textures.Load(texpath+"/widgets/controls/key.png", texinfo, control[WIDGET_CONTROLGRAB::KEY])) return false;
+			if (!textures.Load(texpath+"/widgets/controls/key_sel.png", texinfo, control[WIDGET_CONTROLGRAB::KEYSEL])) return false;
+			if (!textures.Load(texpath+"/widgets/controls/mouse.png", texinfo, control[WIDGET_CONTROLGRAB::MOUSE])) return false;
+			if (!textures.Load(texpath+"/widgets/controls/mouse_sel.png", texinfo, control[WIDGET_CONTROLGRAB::MOUSESEL])) return false;
 			
 			float fontscaley = ((((float) fontsize - 7.0f) * 0.25f) + 1.0f)*0.25;
 			float fontscalex = fontscaley*screenhwratio;
-			new_widget->SetupDrawable(sref, controlsconfig, setting, control, 
-					&fonts["futuresans"], text, xy[0],xy[1], fontscalex,fontscaley,
+			const FONT * font = &fonts.find("lcd")->second;
+			
+			WIDGET_CONTROLGRAB * new_widget = NewWidget<WIDGET_CONTROLGRAB>();
+			new_widget->SetupDrawable(
+					sref, controlsconfig, setting, control, 
+					font, text, xy[0],xy[1], fontscalex,fontscaley,
 					analog, only_one);
 			new_widget->SetDescription(description);
+			controlgrabs.push_back(new_widget);
 		}
 	}
 	
+	// tooltip widget
 	if (!reloadcontrolsonly)
 	{
-		//do a second pass to assign hooks
-		for (map <WIDGET *, list <string> >::iterator i = hookmap.begin(); i != hookmap.end(); ++i)
-		{
-			for (list <string>::iterator n = i->second.begin(); n != i->second.end(); ++n)
-			{
-				map <string, WIDGET *>::iterator hookee = namemap.find(*n);
-				if (hookee != namemap.end())
-					i->first->AddHook(hookee->second);
-				else
-					error_output << path << ": unknown hook reference to " << *n << endl;
-			}
-		}
-		
 		tooltip_widget = NewWidget<WIDGET_LABEL>();
 		assert(tooltip_widget);
 		assert(fonts.find("futuresans") != fonts.end());
-		tooltip_widget->SetupDrawable(sref, &fonts["futuresans"], "", 0.5,0.95, 0.2*screenhwratio,0.2, 1,1,1, 1);
+		const FONT * font = &fonts.find("futuresans")->second;
+		tooltip_widget->SetupDrawable(sref, font, "", 0.5,0.95, 0.2*screenhwratio,0.2, 1,1,1, 1);
 	}
 	
 	return true;
@@ -633,17 +630,27 @@ std::list <std::pair <std::string, bool> > GUIPAGE::ProcessInput(SCENENODE & par
 	
 	for (std::list <DERIVED <WIDGET> >::iterator i = widgets.begin(); i != widgets.end(); ++i)
 	{
-		bool mouseover = (*i)->ProcessInput(sref, cursorx, cursory, cursordown, cursorjustup);
+		WIDGET * w = i->Get();
+		
+		bool mouseover = w->ProcessInput(sref, cursorx, cursory, cursordown, cursorjustup);
 		if (mouseover)
-			tooltip = (*i)->GetDescription();
-		string action = (*i)->GetAction();
+		{
+			tooltip = w->GetDescription();
+		}
+		
+		string action = w->GetAction();
+		bool cancel = w->GetCancel();
 		if (!action.empty())
-			actions.push_back(std::pair <std::string, bool> (action, !(*i)->GetCancel()));
+		{
+			actions.push_back(std::pair <std::string, bool> (action, !cancel));
+		}
 	}
 	
 	if (tooltip != tooltip_widget->GetText())
 	{
-		tooltip_widget->ReviseDrawable(sref, &(*fontmap)["futuresans"], tooltip, 0.5,0.95, 0.2*screenhwratio,0.2);
+		//assert(fontmap->find("futuresans") != fontmap->end());
+		const FONT * font = &fontmap->find("futuresans")->second;
+		tooltip_widget->ReviseDrawable(sref, font, tooltip, 0.5,0.95, 0.2*screenhwratio,0.2);
 	}
 	
 	return actions;

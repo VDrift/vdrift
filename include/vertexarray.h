@@ -47,7 +47,7 @@ public:
 	//C++ style interface functions
 	inline int GetNumFaces() const {return faces.size();}
 	///array bounds are not checked
-	inline std::vector <float> GetVertex(int face_number, int vertex_number)
+	inline std::vector <float> GetVertex(int face_number, int vertex_number) const
 	{
 		std::vector <float> v3(3);
 		
@@ -57,7 +57,7 @@ public:
 		return v3;
 	}
 	///array bounds are not checked
-	inline std::vector <float> GetNormal(int face_number, int vertex_number)
+	inline std::vector <float> GetNormal(int face_number, int vertex_number) const
 	{
 		std::vector <float> n3(3);
 		
@@ -67,7 +67,7 @@ public:
 		return n3;
 	}
 	///array bounds are not checked
-	inline std::vector <float> GetTextureCoordinate(int face_number, int vertex_number, int tc_set)
+	inline std::vector <float> GetTextureCoordinate(int face_number, int vertex_number, int tc_set) const
 	{
 		std::vector <float> t2(2);
 		

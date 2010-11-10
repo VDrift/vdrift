@@ -29,7 +29,9 @@
 #include "ai.h"
 #include "quickmp.h"
 //#include "sky.h"
-#include "manager.h"
+#include "texturemanager.h"
+#include "modelmanager.h"
+#include "soundmanager.h"
 #include "datalog.h"
 
 #include <ostream>
@@ -49,10 +51,10 @@ private:
 	float TickPeriod() const {return framerate;}
 	void MainLoop();
 	bool ParseArguments(std::list <std::string> & args);
-	void InitializeCoreSubsystems();
-	void InitializeThreading();
-	bool InitializeSound();
-	bool InitializeGUI();
+	void InitCoreSubsystems();
+	void InitThreading();
+	bool InitSound();
+	bool InitGUI();
 	void End();
 	void Test();
 	void Tick(float dt);
@@ -110,6 +112,15 @@ private:
 	double target_time;
 	const float framerate;
 
+	PATHMANAGER pathmanager;
+	TEXTUREMANAGER textures;
+	MODELMANAGER models;
+	SOUNDMANAGER sounds;
+	GRAPHICS_SDLGL graphics;
+	EVENTSYSTEM_SDL eventsystem;
+	SOUND sound;
+	SETTINGS settings;
+
 	SCENENODE debugnode;
 	TEXT_DRAWABLE fps_draw;
 	TEXT_DRAWABLE profiling_text;
@@ -140,22 +151,15 @@ private:
 	CARCONTROLMAP_LOCAL::CONTROL controlgrab_editcontrol;
 	std::vector <EVENTSYSTEM_SDL::JOYSTICK> controlgrab_joystick_state;
 
-	GRAPHICS_SDLGL graphics;
-	EVENTSYSTEM_SDL eventsystem;
-	SOUND sound;
-	SOUNDBUFFERLIBRARY generic_sounds;
-	SETTINGS settings;
-	PATHMANAGER pathmanager;
-	MANAGER<TEXTURE, TEXTUREINFO> textures;
-	TRACKMAP trackmap;
-	TRACK track;
-	GUI gui;
 	std::map <std::string, FONT> fonts;
 	std::list <CAR> cars;
 	std::map <CAR *, int> cartimerids;
 	std::pair <CAR *, CARCONTROLMAP_LOCAL> carcontrols_local;
-	COLLISION_WORLD collision;
 
+	COLLISION_WORLD collision;
+	TRACKMAP trackmap;
+	TRACK track;
+	GUI gui;
 	HUD hud;
 	DRIVERFEEDBACK driverfeedback;
 	INPUTGRAPH inputgraph;

@@ -40,12 +40,12 @@ public:
 
 	void DebugPrint(std::ostream & out) const
 	{
-		out << "---Clutch---" << std::endl;
-		out << "Clutch position: " << clutch_position << std::endl;
-		out << "Locked: " << locked << std::endl;
-		out << "Torque: " << last_torque << std::endl;
-		out << "Engine speed: " << engine_speed << std::endl;
-		out << "Drive speed: " << drive_speed << std::endl;
+		out << "---Clutch---" << "\n";
+		out << "Clutch position: " << clutch_position << "\n";
+		out << "Locked: " << locked << "\n";
+		out << "Torque: " << last_torque << "\n";
+		out << "Engine speed: " << engine_speed << "\n";
+		out << "Drive speed: " << drive_speed << "\n";
 	}
 
 	void SetSlidingFriction ( const T& value )

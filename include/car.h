@@ -2,8 +2,8 @@
 #define _CAR_H
 
 #include "cardynamics.h"
-#include "model_joe03.h"
-#include "manager.h"
+#include "scenenode.h"
+#include "model.h"
 #include "sound.h"
 #include "camera_system.h"
 #include "joeserialize.h"
@@ -11,7 +11,6 @@
 #include "suspensionbumpdetection.h"
 #include "crashdetection.h"
 #include "enginesoundinfo.h"
-#include "scenenode.h"
 
 #include <string>
 #include <ostream>
@@ -20,7 +19,10 @@
 
 class BEZIER;
 class PERFORMANCE_TESTING;
-class TEXTUREINFO;
+class TEXTUREMANAGER;
+class MODELMANAGER;
+class SOUNDMANAGER;
+class MODEL_JOE03;
 
 class CAR
 {
@@ -30,38 +32,39 @@ public:
 	CAR();
 
 	bool LoadGraphics(
-		CONFIGFILE & carconf,
+		const CONFIGFILE & carconf,
 		const std::string & carpath,
-		const std::string & driverpath,
 		const std::string & carname,
-		MANAGER<TEXTURE, TEXTUREINFO> & textures,
-		const std::string & carpaint,
+		const std::string & partspath,
 		const MATHVECTOR <float, 3> & carcolor,
-		int anisotropy,
+		const std::string & carpaint,
 		const std::string & texsize,
-		float camerabounce,
-		bool debugmode,
-		const std::string & sharedpartspath,
+		const int anisotropy,
+		const float camerabounce,
+		const bool loaddriver,
+		const bool debugmode,
+		TEXTUREMANAGER & textures,
+		MODELMANAGER & models,
 		std::ostream & info_output,
 		std::ostream & error_output);
 
 	bool LoadSounds(
 		const std::string & carpath,
 		const std::string & carname,
-		const SOUNDINFO & sound_device_info,
-		SOUNDBUFFERLIBRARY & soundbufferlibrary,
+		const SOUNDINFO & soundinfo,
+		SOUNDMANAGER & sounds,
 		std::ostream & info_output,
 		std::ostream & error_output);
 
 	bool LoadPhysics(
-		CONFIGFILE & carconf,
+		const CONFIGFILE & carconf,
 		const std::string & carpath,
-		const std::string & sharedpartspath,
 		const MATHVECTOR <float, 3> & initial_position,
 		const QUATERNION <float> & initial_orientation,
+		const bool defaultabs,
+		const bool defaulttcs,
+		MODELMANAGER & models,
 		COLLISION_WORLD & world,
-		bool defaultabs,
-		bool defaulttcs,
 		std::ostream & info_output,
 		std::ostream & error_output);
 
@@ -297,23 +300,19 @@ public:
 
 protected:
 	CARDYNAMICS dynamics;
+	QUATERNION <float> modelrotation; // const model rotation fix
 
 	SCENENODE topnode;
-
 	keyed_container <SCENENODE>::handle bodynode;
 	keyed_container <SCENENODE>::handle drivernode;
-	keyed_container <DRAWABLE>::handle bodydraw;
-	keyed_container <DRAWABLE>::handle interiordraw;
-	keyed_container <DRAWABLE>::handle driverdraw;
-	keyed_container <DRAWABLE>::handle brakelights_emissive;
-	keyed_container <DRAWABLE>::handle reverselights_emissive;
-	keyed_container <DRAWABLE>::handle glassdraw;
-
 	keyed_container <SCENENODE>::handle wheelnode[WHEEL_POSITION_SIZE];
 	keyed_container <SCENENODE>::handle floatingnode[WHEEL_POSITION_SIZE];
-	keyed_container <DRAWABLE>::handle wheeldraw[WHEEL_POSITION_SIZE];
-	keyed_container <DRAWABLE>::handle floatingdraw[WHEEL_POSITION_SIZE];
 
+	keyed_container <DRAWABLE>::handle bodydraw;
+	keyed_container <DRAWABLE>::handle glassdraw;
+	keyed_container <DRAWABLE>::handle brakelights;
+	keyed_container <DRAWABLE>::handle reverselights;
+	
 	struct LIGHT
 	{
 		keyed_container <SCENENODE>::handle node;
@@ -322,13 +321,11 @@ protected:
 		MODEL model;
 	};
 	std::list <LIGHT> lights;
-
+	std::list <std::tr1::shared_ptr<MODEL_JOE03> > modellist;
+	
 	SUSPENSIONBUMPDETECTION suspensionbumpdetection[4];
 	CRASHDETECTION crashdetection;
 	CAMERA_SYSTEM cameras;
-
-	std::map <std::string, MODEL_JOE03> models;
-	std::map <std::string, SOUNDBUFFER> soundbuffers;
 
 	std::list <std::pair <ENGINESOUNDINFO, SOUNDSOURCE> > enginesounds;
 	SOUNDSOURCE tiresqueal[WHEEL_POSITION_SIZE];
@@ -363,94 +360,10 @@ protected:
 
 	void UpdateGraphics();
 
-	bool GenerateWheelMesh(
-		CONFIGFILE & carconf,
-		const std::string & carpath,
-		const std::string & wheelname,
-		const std::string & partspath,
-		SCENENODE & topnode,
-		keyed_container <SCENENODE>::handle & output_scenenode,
-		keyed_container <DRAWABLE>::handle & output_drawable,
-		std::map <std::string, MODEL_JOE03> & models,
-		MANAGER<TEXTURE, TEXTUREINFO> & textures,
-		int anisotropy,
-		const std::string & texsize,
-		std::ostream & error_output);
-
 	bool LoadLight(
-		CONFIGFILE & cfg,
+		const CONFIGFILE & cfg,
 		const std::string & name,
 		std::ostream & error_output);
-
-	enum WHICHDRAWLIST
-	{
-		BLEND,
-		NOBLEND,
-		EMISSIVE,
-		OMNI
-	};
-
-	/// take the parentnode, add a scenenode (if output_scenenode isn't yet valid), add a drawable to the
-	/// scenenode, load a model, load a texture, and set up the drawable with the model and texture.
-	/// the given TEXTURE textures will not be reloaded if they are already loaded
-	/// returns true if successful
-	bool LoadInto(
-		SCENENODE & parentnode,
-		keyed_container <SCENENODE>::handle & output_scenenode,
-		keyed_container <DRAWABLE>::handle & output_drawable,
-		const std::string & joefile,
-		std::map <std::string, MODEL_JOE03> & models,
-		MANAGER <TEXTURE, TEXTUREINFO> & textures,
-		const std::string & texname,
-		const std::string & texsize,
-		int anisotropy,
-		WHICHDRAWLIST whichdrawlist,
-		std::ostream & error_output);
-
-	/// load joefile, if draw != NULL generate list and assign to draw
-	bool LoadModel(
-		const std::string & joefile,
-		MODEL_JOE03 & output_model,
-		DRAWABLE * draw,
-		std::ostream & error_output);
-
-	/// will load texname+".png"
-	/// will attempt to load texname+"-misc1.png, texname+"-misc2.png if loadmisc true
-	bool LoadTextures(
-		MANAGER<TEXTURE, TEXTUREINFO> & textures,
-		const std::string & texname,
-		const std::string & texsize,
-		int anisotropy,
-		DRAWABLE & draw,
-		std::ostream & error_output);
-
-	void AddDrawable(
-		WHICHDRAWLIST whichdrawlist,
-		SCENENODE & parentnode,
-		DRAWABLE & draw,
-		keyed_container <SCENENODE>::handle & output_scenenode,
-		keyed_container <DRAWABLE>::handle & output_drawable,
-		std::ostream & error_output);
-
-	keyed_container <DRAWABLE> & GetDrawlist(SCENENODE & node, WHICHDRAWLIST which)
-	{
-		switch (which)
-		{
-			case BLEND:
-			return node.GetDrawlist().normal_blend;
-
-			case NOBLEND:
-			return node.GetDrawlist().car_noblend;
-
-			case EMISSIVE:
-			return node.GetDrawlist().lights_emissive;
-
-			case OMNI:
-			return node.GetDrawlist().lights_omni;
-		};
-		assert(0);
-		return node.GetDrawlist().car_noblend;
-	}
 };
 
 #endif

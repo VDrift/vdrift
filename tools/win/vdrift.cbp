@@ -2,7 +2,7 @@
 <CodeBlocks_project_file>
 	<FileVersion major="1" minor="6" />
 	<Project>
-		<Option title="vdrift" />
+		<Option title="win32" />
 		<Option pch_mode="2" />
 		<Option compiler="gcc" />
 		<Build>
@@ -15,12 +15,8 @@
 				<Option use_console_runner="0" />
 				<Compiler>
 					<Add option="-Wall" />
-					<Add option="-pg" />
 					<Add option="-g" />
 				</Compiler>
-				<Linker>
-					<Add option="-pg -lgmon" />
-				</Linker>
 			</Target>
 			<Target title="Release">
 				<Option output="..\..\vdrift" prefix_auto="1" extension_auto="1" />
@@ -30,12 +26,8 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O3" />
-					<Add option="-pg" />
 					<Add option="-march=native" />
 				</Compiler>
-				<Linker>
-					<Add option="-pg -lgmon" />
-				</Linker>
 			</Target>
 		</Build>
 		<Compiler>
@@ -431,6 +423,7 @@
 		<Unit filename="..\..\include\model.h" />
 		<Unit filename="..\..\include\model_joe03.h" />
 		<Unit filename="..\..\include\model_obj.h" />
+		<Unit filename="..\..\include\modelmanager.h" />
 		<Unit filename="..\..\include\numprocessors.h" />
 		<Unit filename="..\..\include\objectloader.h" />
 		<Unit filename="..\..\include\opengl_utility.h" />
@@ -460,6 +453,7 @@
 		<Unit filename="..\..\include\soundbuffer.h" />
 		<Unit filename="..\..\include\soundfilter.h" />
 		<Unit filename="..\..\include\soundinfo.h" />
+		<Unit filename="..\..\include\soundmanager.h" />
 		<Unit filename="..\..\include\soundsource.h" />
 		<Unit filename="..\..\include\spline.h" />
 		<Unit filename="..\..\include\sprite2d.h" />
@@ -468,19 +462,20 @@
 		<Unit filename="..\..\include\text_draw.h" />
 		<Unit filename="..\..\include\texture.h" />
 		<Unit filename="..\..\include\texture_interface.h" />
-		<Unit filename="..\..\include\textureinfo.h" />
+		<Unit filename="..\..\include\texturemanager.h" />
 		<Unit filename="..\..\include\timer.h" />
 		<Unit filename="..\..\include\tobullet.h" />
 		<Unit filename="..\..\include\toggle.h" />
 		<Unit filename="..\..\include\track.h" />
-		<Unit filename="..\..\include\track_object.h" />
 		<Unit filename="..\..\include\trackmap.h" />
+		<Unit filename="..\..\include\trackobject.h" />
 		<Unit filename="..\..\include\tracksurface.h" />
 		<Unit filename="..\..\include\transform.h" />
 		<Unit filename="..\..\include\unittest.h" />
 		<Unit filename="..\..\include\vertexarray.h" />
 		<Unit filename="..\..\include\widget.h" />
 		<Unit filename="..\..\include\widget_button.h" />
+		<Unit filename="..\..\include\widget_colorpicker.h" />
 		<Unit filename="..\..\include\widget_controlgrab.h" />
 		<Unit filename="..\..\include\widget_doublestringwheel.h" />
 		<Unit filename="..\..\include\widget_image.h" />
@@ -528,7 +523,6 @@
 		<Unit filename="..\..\src\graphics_renderers.cpp" />
 		<Unit filename="..\..\src\gui.cpp" />
 		<Unit filename="..\..\src\guipage.cpp" />
-		<Unit filename="..\..\src\httpget.cpp" />
 		<Unit filename="..\..\src\hud.cpp" />
 		<Unit filename="..\..\src\joepack.cpp" />
 		<Unit filename="..\..\src\joeserialize.cpp" />
@@ -576,6 +570,7 @@
 		<Unit filename="..\..\src\track.cpp" />
 		<Unit filename="..\..\src\trackmap.cpp" />
 		<Unit filename="..\..\src\vertexarray.cpp" />
+		<Unit filename="..\..\src\widget_colorpicker.cpp" />
 		<Unit filename="..\..\src\widget_slider.cpp" />
 		<Unit filename="..\..\src\widget_spinningcar.cpp" />
 		<Unit filename="..\..\src\widget_stringwheel.cpp" />

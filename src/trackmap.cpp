@@ -1,4 +1,5 @@
 #include "trackmap.h"
+#include "texturemanager.h"
 
 #ifdef __APPLE__
 #include <SDL_gfx/SDL_gfxPrimitives.h>
@@ -38,18 +39,6 @@ void TRACKMAP::Unload()
 	}
 }
 
-void TRACKMAP::CalcPosition(int w, int h)
-{
-	screen[0] = (float)w;
-	screen[1] = (float)h;
-	position[0] = 1.0 - MAP_WIDTH / screen[0];
-	position[1] = 0.12;
-	size[0] = MAP_WIDTH / screen[0];
-	size[1] = MAP_HEIGHT / screen[1];
-	dot_size[0] = cardot0->GetW() / 2.0 / screen[0]; 
-	dot_size[1] = cardot0->GetH() / 2.0 / screen[1]; 
-}
-
 bool TRACKMAP::BuildMap(
 	const std::list <ROADSTRIP> & roads,
 	int w,
@@ -57,7 +46,7 @@ bool TRACKMAP::BuildMap(
 	const std::string & trackname,
 	const std::string & texturepath,
 	const std::string & texsize,
-	MANAGER<TEXTURE, TEXTUREINFO> & textures,
+	TEXTUREMANAGER & textures,
 	std::ostream & error_output)
 {
 	Unload();
@@ -213,34 +202,30 @@ bool TRACKMAP::BuildMap(
 	}
 
 	TEXTUREINFO texinfo;
-	texinfo.SetName(trackname);
-	texinfo.SetSurface(surface);
-	texinfo.SetRepeat(false, false);
-	texinfo.SetSize(texsize);
-	std::tr1::shared_ptr<TEXTURE> track_map = textures.Get(texinfo);
-	if (!track_map->Loaded()) return false;
+	texinfo.surface = surface;
+	texinfo.repeatu = false;
+	texinfo.repeatv = false;
+	texinfo.size = texsize;
+	std::tr1::shared_ptr<TEXTURE> track_map;
+	if (!textures.Load(trackname, texinfo, track_map)) return false;
 	
 	//std::cout << "Loading track map dots" << std::endl;
 	TEXTUREINFO dotinfo;
-	dotinfo.SetSize(texsize);
+	dotinfo.size = texsize;
+	if (!textures.Load(texturepath+"/cardot0.png", dotinfo, cardot0)) return false;
+	if (!textures.Load(texturepath+"/cardot1.png", dotinfo, cardot1)) return false;
+	if (!textures.Load(texturepath+"/cardot0_focused.png", dotinfo, cardot0_focused)) return false;
+	if (!textures.Load(texturepath+"/cardot1_focused.png", dotinfo, cardot1_focused)) return false;
 	
-	dotinfo.SetName(texturepath+"/cardot0.png");
-	cardot0 = textures.Get(dotinfo);
-	if (!cardot0->Loaded()) return false;
-	
-	dotinfo.SetName(texturepath+"/cardot1.png");
-	cardot1 = textures.Get(dotinfo);
-	if (!cardot1->Loaded()) return false;
-	
-	dotinfo.SetName(texturepath+"/cardot0_focused.png");
-	cardot0_focused = textures.Get(dotinfo);
-	if (!cardot0_focused->Loaded()) return false;
-	
-	dotinfo.SetName(texturepath+"/cardot1_focused.png");
-	cardot1_focused = textures.Get(dotinfo);
-	if (!cardot1_focused->Loaded()) return false;
-	
-	CalcPosition(w, h);
+	// calculate map position, size
+	screen[0] = (float)w;
+	screen[1] = (float)h;
+	position[0] = 1.0 - MAP_WIDTH / screen[0];
+	position[1] = 0.12;
+	size[0] = MAP_WIDTH / screen[0];
+	size[1] = MAP_HEIGHT / screen[1];
+	dot_size[0] = cardot0->GetW() / 2.0 / screen[0]; 
+	dot_size[1] = cardot0->GetH() / 2.0 / screen[1]; 
 	
 	mapdraw = mapnode.GetDrawlist().twodim.insert(DRAWABLE());
 	DRAWABLE & mapdrawref = mapnode.GetDrawlist().twodim.get(mapdraw);

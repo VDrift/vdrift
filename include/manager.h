@@ -6,46 +6,62 @@
 #include <iostream>
 #include <tr1/memory>
 
-/// object T has to have a constructor taking Tinfo and std::ostream & error as parameter
-template <class T, class Tinfo>
+template <class T>
 class MANAGER
 {
 public:
-	MANAGER(std::ostream & error) : 
-		error(error), created(0), reused(0), deleted(0)
+	MANAGER() : error(0)
 	{
+		// ctor
 	}
 	
 	~MANAGER()
 	{
-		objectmap.clear();
+		Clear();
 	}
 	
-	// get object
-	std::tr1::shared_ptr<T> Get(const Tinfo & info)
+	void Init(const std::string & path, std::ostream & error)
 	{
-		iterator it = objectmap.find(info);
-		if (it != objectmap.end())
+		this->path = path;
+		this->error = &error;
+	}
+	
+	bool Get(const std::string & name, std::tr1::shared_ptr<T> & sp)
+	{
+		assert(error);
+		iterator it = objects.find(name);
+		if (it == objects.end())
 		{
-			++reused;
-			return it->second;
+			return false;
 		}
-		++created;
-		std::tr1::shared_ptr<T> sp(new T(info, error));
-		objectmap[info] = sp;
-		return sp;
+		sp = it->second;
+		return true;
+	}
+	
+	void Set(const std::string & name, const std::tr1::shared_ptr<T> & sp)
+	{
+		objects[name] = sp;
+	}
+	
+	unsigned int Size() const
+	{
+		return objects.size();
+	}
+	
+	const std::string & GetPath() const
+	{
+		return path;
 	}
 
 	// collect garbage
 	void Sweep()
 	{
-		iterator it = objectmap.begin();
-		while(it != objectmap.end())
+		iterator it = objects.begin();
+		while(it != objects.end())
 		{
 			if(it->second.unique())
 			{
-				++deleted;
-				objectmap.erase(it++);
+				objects.erase(it++);
 			}
 			else
 			{
@@ -57,14 +73,14 @@ public:
 	void Clear()
 	{
 		Sweep();
-		if (!objectmap.empty())
+		if (!objects.empty())
 		{
-			error << "Leak: ";
-			DebugPrint(error);
-			
-			for (iterator it = objectmap.begin(); it != objectmap.end(); it++)
+			assert(error);
+			*error << "Leak: ";
+			DebugPrint(*error);
+			for (iterator it = objects.begin(); it != objects.end(); it++)
 			{
-				error << "Leaked: " << it->first << std::endl;
+				*error << "Leaked: " << it->first << std::endl;
 			}
 		}
 	}
@@ -73,27 +89,21 @@ public:
 	{
 		int refcount = 0;
 		out << "Object manager " << this << " debug print " << std::endl;
-		for(iterator it = objectmap.begin(); it != objectmap.end(); it++)
+		for(iterator it = objects.begin(); it != objects.end(); it++)
 		{
-			int references = it->second.use_count() - 1; // subtract our reference
+			int references = it->second.use_count() - 1;
 			refcount += references;
 			out << "References: " << references;
 			out << " Object: " << it->first << std::endl;
 		}
 		out << "References count: " << refcount << std::endl;
-		
-		out << "Objects count: " << objectmap.size();
-		out << ", created: " << created;
-		out << ", reused: " << reused;
-		out << ", deleted: " << deleted << std::endl;
-		created = 0; reused = 0; deleted = 0; // reset counters
 	}
 	
 protected:
-	typedef typename std::map<Tinfo, std::tr1::shared_ptr<T> >::iterator iterator;
-	std::map<Tinfo, std::tr1::shared_ptr<T> > objectmap;
-	std::ostream & error;
-	unsigned int created, reused, deleted;
+	typedef typename std::map<const std::string, std::tr1::shared_ptr<T> >::iterator iterator;
+	std::map<const std::string, std::tr1::shared_ptr<T> > objects;
+	std::string path;
+	std::ostream * error;
 };
 
 #endif // _MANAGER_H

@@ -2,18 +2,50 @@
 #include "definitions.h"
 
 #include <string>
-using std::string;
-
 #include <iostream>
-using std::endl;
+#include <fstream>
+#include <cassert>
+#include <cstdlib> //getenv
 
-#include <list>
-using std::list;
+//includes for listing folder contents
+#ifdef _WIN32
+#include <windows.h>
+#include <tchar.h>
+#include <direct.h>
+#else
+#include <sys/types.h>
+#include <dirent.h>
+#include <sys/stat.h>
+#include <errno.h>
+#endif
+
+#ifndef _WIN32
+static bool DirectoryExists(const std::string & filename)
+{
+	DIR *dp;
+	dp = opendir(filename.c_str());
+	if (dp != NULL) {
+		closedir(dp);
+		return true;
+	} else {
+		return false;
+	}
+}
+#endif
+
+static void MakeDir(const std::string & dir)
+{
+#ifndef _WIN32
+	mkdir(dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+#else
+	mkdir(dir.c_str());
+#endif
+}
 
 void PATHMANAGER::Init(std::ostream & info_output, std::ostream & error_output)
 {
 	//figure out the user's home directory
-	char *homedir;
+	const char* homedir;
 	#ifndef _WIN32
 	homedir = getenv ( "HOME" );
 	if ( homedir == NULL )
@@ -24,14 +56,14 @@ void PATHMANAGER::Init(std::ostream & info_output, std::ostream & error_output)
 			homedir = getenv ( "USERNAME" );
 			if ( homedir == NULL )
 			{
-				error_output << "Could not find user's home directory!" << endl;
+				error_output << "Could not find user's home directory!" << std::endl;
 			}
 		}
 		home_directory = "/home/";
 	}
 	#else
 	homedir = getenv ( "USERPROFILE" );
-	if ( homedir == NULL )
+	if (homedir == NULL)
 	{
 		homedir = "data"; // WIN 9x/Me
 	}
@@ -39,7 +71,7 @@ void PATHMANAGER::Init(std::ostream & info_output, std::ostream & error_output)
 	home_directory += homedir;
 
 	//find data dir
-	char *datadir = getenv ( "VDRIFT_DATA_DIRECTORY" );
+	const char * datadir = getenv ( "VDRIFT_DATA_DIRECTORY" );
 	if (datadir == NULL) {
 		#ifndef _WIN32
 		if (FileExists("data/settings/options.config")) {
@@ -51,7 +83,7 @@ void PATHMANAGER::Init(std::ostream & info_output, std::ostream & error_output)
 		data_directory = "data";
 		#endif
 	} else {
-		data_directory = (string) datadir;
+		data_directory = std::string(datadir);
 	}
 
 	//find settings file
@@ -79,23 +111,23 @@ void PATHMANAGER::Init(std::ostream & info_output, std::ostream & error_output)
 	MakeDir(GetScreenshotPath());
 
 	//print diagnostic info
-	info_output << "Home directory: " << home_directory << endl;
+	info_output << "Home directory: " << home_directory << std::endl;
 	bool settings_file_present = FileExists(GetSettingsFile());
 	info_output << "Settings file: " << GetSettingsFile();
 	if (!settings_file_present)
 		info_output << " (does not exist, will be created)";
-	info_output << endl;
+	info_output << std::endl;
 	info_output << "Data directory: " << data_directory;
 	if (datadir)
 		info_output << "\nVDRIFT_DATA_DIRECTORY: " << datadir;
 #ifndef _WIN32
 	info_output << "\nDATA_DIR: " << DATA_DIR;
 #endif
-	info_output << endl;
-	info_output << "Log file: " << GetLogFile() << endl;
+	info_output << std::endl;
+	info_output << "Log file: " << GetLogFile() << std::endl;
 }
 
-bool PATHMANAGER::GetFolderIndex(string folderpath, list <string> & outputfolderlist, std::string extension) const
+bool PATHMANAGER::GetFolderIndex(std::string folderpath, std::list <std::string> & outputfolderlist, std::string extension) const
 {
 //------Folder listing code for POSIX
 #ifndef _WIN32
@@ -107,7 +139,7 @@ bool PATHMANAGER::GetFolderIndex(string folderpath, list <string> & outputfolder
 		while ( ( ep = readdir( dp ) ) )
 		{
 			//puts (ep->d_name);
-			string newname = ep->d_name;
+			std::string newname = ep->d_name;
 			if (newname[0] != '.')
 			{
 				outputfolderlist.push_back(newname);
@@ -154,17 +186,37 @@ bool PATHMANAGER::GetFolderIndex(string folderpath, list <string> & outputfolder
 	//remove non-matcthing extensions
 	if (!extension.empty())
 	{
-		list <list <string>::iterator> todel;
-		for (list <string>::iterator i = outputfolderlist.begin(); i != outputfolderlist.end(); ++i)
+		std::list <std::list <std::string>::iterator> todel;
+		for (std::list <std::string>::iterator i = outputfolderlist.begin(); i != outputfolderlist.end(); ++i)
 		{
 			if (i->find(extension) != i->length()-extension.length())
 				todel.push_back(i);
 		}
 
-		for (list <list <string>::iterator>::iterator i = todel.begin(); i != todel.end(); ++i)
+		for (std::list <std::list <std::string>::iterator>::iterator i = todel.begin(); i != todel.end(); ++i)
 			outputfolderlist.erase(*i);
 	}
 
 	outputfolderlist.sort();
 	return true;
+}
+
+bool PATHMANAGER::FileExists(const std::string & filename) const
+{
+	std::ifstream test;
+	test.open(filename.c_str());
+	if (test)
+	{
+		test.close();
+		return true;
+	}
+	else
+		return false;
+}
+
+///only call this before Init()
+void PATHMANAGER::SetProfile(const std::string & value)
+{
+	assert(data_directory.empty()); //assert that Init() hasn't been called yet
+	profile_suffix = "."+value;
 }

@@ -2,60 +2,34 @@
 #define _FONT_H
 
 #include "optional.h"
-#include "manager.h"
-#include "texture.h"
 
-#include <ostream>
-#include <string>
 #include <vector>
-#include <sstream>
-#include <fstream>
-#include <cassert>
-#include <algorithm>
+#include <string>
+#include <ostream>
+#include <tr1/memory>
+
+class TEXTUREMANAGER;
+class TEXTURE;
 
 class FONT
 {
 public:
-	class CHARINFO
+	struct CHARINFO
 	{
-		public:
-			CHARINFO() : loaded(false) {}
-			bool loaded;
-			float x, y, width, height;
-			float xoffset, yoffset, xadvance;
+		CHARINFO() : loaded(false) {}
+		bool loaded;
+		float x, y, width, height;
+		float xoffset, yoffset, xadvance;
 	};
-		
-private:
-	std::tr1::shared_ptr<TEXTURE> font_texture;
 	
-	std::vector <CHARINFO> charinfo;
-	
-	bool VerifyParse(const std::string & expected, const std::string & actual, const std::string & fontinfopath, std::ostream & error_output) const;
-	template <typename T>
-	void GetNumber(const std::string & numberstr, T & num_output) const
-	{
-		std::stringstream s(numberstr);
-		s >> num_output;
-	}
-	template <typename T>
-	bool Parse(const std::string & parameter, T & num_output, std::ifstream & f, const std::string & fontinfopath, std::ostream & error_output)
-	{
-		std::string curstr;
-		f >> curstr;
-		if (!VerifyParse(parameter, curstr.substr(0,parameter.size()), fontinfopath, error_output)) return false;
-		GetNumber(curstr.substr(parameter.size()), num_output);
-		return true;
-	}
-	
-public:
 	bool Load(
 		const std::string & fontinfopath,
 		const std::string & fonttexturepath,
 		const std::string & texsize,
-		MANAGER<TEXTURE, TEXTUREINFO> & textures,
+		TEXTUREMANAGER & textures,
 		std::ostream & error_output,
 		bool mipmap = false);
-
+	
 	const std::tr1::shared_ptr<TEXTURE> GetFontTexture() const
 	{
 		return font_texture;
@@ -70,33 +44,11 @@ public:
 			return optional <const CHARINFO *> ();
 	}
 	
-	float GetWidth(const std::string & newtext, const float newscale) const
-	{
-		float cursorx(0);
-	
-		std::vector <float> linewidth;
-	
-		for (unsigned int i = 0; i < newtext.size(); i++)
-		{
-			if (newtext[i] == '\n')
-			{
-				linewidth.push_back(cursorx);
-				cursorx = 0;
-			}
-			else
-			{
-				optional <const FONT::CHARINFO *> cinfo = GetCharInfo(newtext[i]);
-				if (cinfo)
-					cursorx += (cinfo.get()->xadvance/GetFontTexture()->GetW())*newscale;
-			}
-		}
-	
-		linewidth.push_back(cursorx);
-	
-		float maxwidth = *std::max_element(linewidth.begin(),linewidth.end());
-	
-		return maxwidth;
-	}
+	float GetWidth(const std::string & newtext, const float newscale) const;
+		
+private:
+	std::tr1::shared_ptr<TEXTURE> font_texture;
+	std::vector <CHARINFO> charinfo;
 };
 
 #endif

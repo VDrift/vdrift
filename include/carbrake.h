@@ -35,11 +35,11 @@ class CARBRAKE
 
 		void DebugPrint(std::ostream & out) const
 		{
-			out << "---Brake---" << std::endl;
-			out << "Brake control: " << brake_factor << std::endl;
-			out << "Handbrake control: " << handbrake_factor << std::endl;
-			out << "Braking torque: " << lasttorque << std::endl;
-			out << "Locked: " << locked << std::endl;
+			out << "---Brake---" << "\n";
+			out << "Brake control: " << brake_factor << "\n";
+			out << "Handbrake control: " << handbrake_factor << "\n";
+			out << "Braking torque: " << lasttorque << "\n";
+			out << "Locked: " << locked << "\n";
 		}
 		
 		///brake_factor ranges from 0.0 (no brakes applied) to 1.0 (brakes applied)

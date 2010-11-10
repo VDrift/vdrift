@@ -106,8 +106,8 @@ public:
 	
 	void DebugPrint(std::ostream & out) const
 	{
-		out << "---Wheel---" << std::endl;
-		out << "Wheel speed: " << GetRPM() << std::endl;
+		out << "---Wheel---" << "\n";
+		out << "Wheel speed: " << GetRPM() << "\n";
 	}
 
 	bool Serialize(joeserialize::Serializer & s)

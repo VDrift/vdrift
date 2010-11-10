@@ -1,4 +1,5 @@
 #include "model_joe03.h"
+#include "joepack.h"
 #include "mathvector.h"
 #include "endian_utility.h"
 
@@ -16,6 +17,100 @@ using std::ostream;
 
 #include <vector>
 using std::vector;
+
+const int MODEL_JOE03::JOE_MAX_FACES = 32000;
+const int MODEL_JOE03::JOE_VERSION = 3;
+const float MODEL_JOE03::MODEL_SCALE = 1.0;
+
+// This holds the header information that is read in at the beginning of the file
+struct JOEHeader
+{ 
+	int magic;                   // This is used to identify the file
+	int version;                 // The version number of the file
+	int num_faces;	            // The number of faces (polygons)
+	int num_frames;               // The number of animation frames
+};
+
+// This is used to store the vertices that are read in for the current frame
+struct JOEVertex
+{
+	float vertex[3];
+};
+
+// This stores the indices into the vertex and texture coordinate arrays
+struct JOEFace
+{
+	short vertexIndex[3];
+	short normalIndex[3];
+	short textureIndex[3];
+};
+
+// This stores UV coordinates
+struct JOETexCoord
+{
+	float u, v;
+};
+
+// This stores the frames vertices after they have been transformed
+struct JOEFrame
+{
+	int num_verts;
+	int num_texcoords;
+	int num_normals;
+	
+	JOEFace * faces;
+	JOEVertex * verts;
+	JOEVertex * normals;
+	JOETexCoord * texcoords;
+};
+
+// This holds all the information for our model/scene. 
+struct JOEObject 
+{
+	JOEHeader info;
+	JOEFrame * frames;
+};
+
+struct VERT_ENTRY
+{
+	VERT_ENTRY() : original_index(-1) {}
+	int original_index;
+	int norm_index;
+	int tex_index;
+};
+
+static void CorrectEndian(struct JOEFace * p, int num)
+{
+	for (int i = 0; i < num; i++ )
+	{
+		for (int d = 0; d < 3; d++ )
+		{
+			p[i].vertexIndex[d] = ENDIAN_SWAP_16 ( p[i].vertexIndex[d] );
+			p[i].normalIndex[d] = ENDIAN_SWAP_16 ( p[i].normalIndex[d] );
+			p[i].textureIndex[d] = ENDIAN_SWAP_16 ( p[i].textureIndex[d] );
+		}
+	}	
+}
+
+static void CorrectEndian(struct JOEVertex *p, int num)
+{
+	for (int i = 0; i < num; i++ )
+	{
+		for (int d = 0; d < 3; d++ )
+		{
+			p[i].vertex[d] = ENDIAN_SWAP_FLOAT ( p[i].vertex[d] );
+		}
+	}
+}
+
+static void CorrectEndian(struct JOETexCoord *p, int num)
+{
+	for (int i = 0; i < num; i++ )
+	{
+		p[i].u = ENDIAN_SWAP_FLOAT ( p[i].u );
+		p[i].v = ENDIAN_SWAP_FLOAT ( p[i].v );
+	}	
+}
 
 int MODEL_JOE03::BinaryRead ( void * buffer, unsigned int size, unsigned int count, FILE * f, JOEPACK * pack )
 {
@@ -44,22 +139,22 @@ bool MODEL_JOE03::Load ( string filename, JOEPACK * pack, ostream & err_output, 
 	FILE * m_FilePointer = NULL;
 
 	//open file
-	bool fileinpack = false;
 	if ( pack == NULL )
 	{
-		m_FilePointer = fopen ( filename.c_str(), "rb" );
+		m_FilePointer = fopen(filename.c_str(), "rb");
+		if (!m_FilePointer)
+		{
+			err_output << "Failed to open file " << filename << std::endl;
+			return false;
+		}
 	}
 	else
-		fileinpack = pack->Pack_fopen ( filename );
-
-	// Make sure we have a valid file pointer (we found the file)
-	if ( ( pack == NULL && !m_FilePointer ) || ( pack != NULL && !fileinpack ) )
 	{
-		// Display an error message and don't load anything if no file was found
-		// throw EXCEPTION ( __FILE__, __LINE__, "Unable to find file "+filename );
-		
-		//print an error message?
-		return false;
+		if (!pack->Pack_fopen(filename))
+		{
+			err_output << "Failed to open file " << filename << " in " << pack->GetPath() << std::endl;
+			return false;
+		}
 	}
 
 	bool val = LoadFromHandle ( m_FilePointer, pack, err_output );
@@ -335,47 +430,6 @@ void MODEL_JOE03::ReadData ( FILE *m_FilePointer, JOEPACK * pack, JOEObject * pO
 	mesh.SetNormals(&v_normals[0], v_normals.size());
 	mesh.SetTexCoordSets(1);
 	mesh.SetTexCoords(0, &v_texcoords[0], v_texcoords.size());
-}
-
-void MODEL_JOE03::CorrectEndian ( struct JOEFace * p, int num )
-{
-	int i;
-
-	for ( i = 0; i < num; i++ )
-	{
-		int d;
-		for ( d = 0; d < 3; d++ )
-		{
-			p[i].vertexIndex[d] = ENDIAN_SWAP_16 ( p[i].vertexIndex[d] );
-			p[i].normalIndex[d] = ENDIAN_SWAP_16 ( p[i].normalIndex[d] );
-			p[i].textureIndex[d] = ENDIAN_SWAP_16 ( p[i].textureIndex[d] );
-		}
-	}
-}
-
-void MODEL_JOE03::CorrectEndian ( struct JOEVertex *p, int num )
-{
-	int i;
-
-	for ( i = 0; i < num; i++ )
-	{
-		int d;
-		for ( d = 0; d < 3; d++ )
-		{
-			p[i].vertex[d] = ENDIAN_SWAP_FLOAT ( p[i].vertex[d] );
-		}
-	}
-}
-
-void MODEL_JOE03::CorrectEndian ( struct JOETexCoord *p, int num )
-{
-	int i;
-
-	for ( i = 0; i < num; i++ )
-	{
-		p[i].u = ENDIAN_SWAP_FLOAT ( p[i].u );
-		p[i].v = ENDIAN_SWAP_FLOAT ( p[i].v );
-	}
 }
 
 ///fix invalid normals (my own fault, i suspect.  the DOF converter i wrote may have flipped Y & Z normals)

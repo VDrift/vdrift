@@ -2,6 +2,7 @@
 #include "endian_utility.h"
 
 #ifdef __APPLE__
+#define __MACOSX__
 #include <Vorbis/vorbisfile.h>
 #else
 #include <vorbis/vorbisfile.h>
@@ -251,6 +252,7 @@ bool SOUNDBUFFER::Load(const std::string & filename, const SOUNDINFO & device_in
 	else
 	{
 		error_output << "Unable to determine file type from filename: " << filename << std::endl;
+		return false;
 	}
 	
 	if(!soundfile->open(filename, info, error_output))
