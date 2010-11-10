@@ -14,20 +14,17 @@ class DATALOG
 		std::string log_name;
 		std::vector< std::string > column_names;
 		std::string file_format;
-/*
-		bool AnyTypeOK(boost::any const& val);
-		std::string AnyToString(boost::any const& val);
-*/
-		void Write();
 
 	public:
 		DATALOG();
 		DATALOG(DATALOG const& other);
-		~DATALOG();
+		//~DATALOG();
 
 		void Init(std::string const& directory, std::string const& name, std::vector< std::string > const& columns, std::string const& format="none");
 
-		void AddEntry(float dt, std::map< std::string, double > & values);
+		void Write();
+
+		void AddEntry(std::map< std::string, double > & values);
 
 		bool HasColumn(std::string const& column_name);
 

@@ -22,12 +22,12 @@ DATALOG::DATALOG(DATALOG const& other) :
 {
 
 }
-
+/*
 DATALOG::~DATALOG()
 {
 	Write();
 }
-
+*/
 void DATALOG::Init(std::string const& directory, std::string const& name, std::vector< std::string > const& columns, std::string const& format)
 {
 	log_directory = directory;
@@ -44,12 +44,9 @@ bool DATALOG::HasColumn(std::string const& column_name)
 	return result != column_names.end();
 }
 
-void DATALOG::AddEntry(float dt, std::map< std::string, double > & values)
+void DATALOG::AddEntry(std::map< std::string, double > & values)
 {
-	time += dt;
-	data["Time"].push_back(time);
-
-	std::vector< std::string >::iterator column_name;
+	std::vector< std::string >::const_iterator column_name;
 
 	for (column_name = column_names.begin(); column_name != column_names.end(); ++column_name)
 	{
@@ -113,7 +110,7 @@ void DATALOG::Write()
 		}
 		plt_file << std::endl;
 
-		// write the rows of data to a space-separated .dat file
+		// write rows of space-separated data
 		bool finished = false;
 
 		while (!finished)
@@ -127,7 +124,7 @@ void DATALOG::Write()
 					break;
 				}
 
-				log_file << sep << *column_iters[*column_name];
+				log_file << sep << *(column_iters[*column_name]);
 
 				if (sep == "")
 					sep = " ";
@@ -167,7 +164,7 @@ void DATALOG::Write()
 					break;
 				}
 
-				log_file << sep << *column_iters[*column_name];
+				log_file << sep << *(column_iters[*column_name]);
 
 				if (sep == "")
 					sep = ",";

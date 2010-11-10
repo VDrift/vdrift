@@ -136,7 +136,7 @@ void GAME::Start(list <string> & args)
 	{
 		carcontrols_local.second.Load(pathmanager.GetCarControlsFile(), info_output, error_output);
 	}
-	
+
 	InitSound(); //if sound initialization fails, that's okay, it'll disable itself
 
 	//load font data
@@ -300,10 +300,10 @@ bool GAME::InitGUI()
 			menufiles.erase(*i);
 		}
 	}
-	
+
 	std::map<std::string, std::list <std::pair <std::string, std::string> > > valuelists;
 	PopulateValueLists(valuelists);
-	
+
 	if (!gui.Load(
 			menufiles,
 			valuelists,
@@ -323,7 +323,7 @@ bool GAME::InitGUI()
 		error_output << "Error loading GUI files" << endl;
 		return false;
 	}
-	
+
 	std::map<std::string, std::string> optionmap;
 	LoadSaveOptions(LOAD, optionmap);
 	gui.SyncOptions(true, optionmap, error_output);
@@ -528,7 +528,7 @@ void GAME::End()
 		sound.Pause(true); //stop the sound thread
 
 	settings.Save(pathmanager.GetSettingsFile()); //save settings first incase later deinits cause crashes
-	
+
 	graphics.Deinit();
 }
 
@@ -1106,7 +1106,7 @@ void GAME::LoadControlsIntoGUIPage(const std::string & pagename)
 	PopulateValueLists(valuelists);
 	CONFIGFILE controlfile;
 	carcontrols_local.second.Save(controlfile, info_output, error_output);
-		
+
 	bool loaded = gui.GetPage(pagename).Load(
 		pathmanager.GetGUIMenuPath(settings.GetSkin())+"/"+pagename,
 		pathmanager.GetGUITextureDir(settings.GetSkin()),
@@ -1121,7 +1121,7 @@ void GAME::LoadControlsIntoGUIPage(const std::string & pagename)
 		models,
 		error_output,
 		true);
-	
+
 	assert(loaded);
 }
 
@@ -1697,7 +1697,7 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 		assert(carcontrols_local.first);
 		std::string cartype = carcontrols_local.first->GetCarType();
 		std::string carpath = pathmanager.GetCarPath()+"/"+cartype+"/"+cartype+".car";
-		
+
 		float r(0), g(0), b(0);
 		settings.GetPlayerColor(r, g, b);
 
@@ -1738,6 +1738,12 @@ std::string GAME::GetReplayRecordingFilename()
 ///clean up all game data
 void GAME::LeaveGame()
 {
+	if (enable_data_logging)
+	{
+		info_output << "Writing log..." << endl;
+		data_log.Write();
+	}
+
 	ai.clear_cars();
 
 	carcontrols_local.first = NULL;
@@ -2424,38 +2430,38 @@ void GAME::UpdateDataLog(float dt)
 
 		for (column = data_log.GetColumnNames().begin(); column != data_log.GetColumnNames().end(); ++column)
 		{
+			double value;
 			if (*column == "Time")
 			{
-				// do nothing - time is automatically added to every entry in DATALOG
-				continue;
+				value = clocktime;
 			}
 			else if (*column == "Velocity")
 			{
-				new_entry[*column] = cars.front().GetSpeed();
+				value = cars.front().GetSpeed();
 			}
 			else if (*column == "Sector")
 			{
-				new_entry[*column] = cars.front().GetSector();
+				value = cars.front().GetSector();
 			}
 			else if (*column == "Throttle")
 			{
-				new_entry[*column] = carcontrols_local.second.GetInput(CARINPUT::THROTTLE);
+				value = carcontrols_local.second.GetInput(CARINPUT::THROTTLE);
 			}
 			else if (*column == "Brake")
 			{
-				new_entry[*column] = carcontrols_local.second.GetInput(CARINPUT::BRAKE);
+				value = carcontrols_local.second.GetInput(CARINPUT::BRAKE);
 			}
 			else if (*column == "Handbrake")
 			{
-				new_entry[*column] = carcontrols_local.second.GetInput(CARINPUT::HANDBRAKE);
+				value = carcontrols_local.second.GetInput(CARINPUT::HANDBRAKE);
 			}
 			else if (*column == "Clutch")
 			{
-				new_entry[*column] = carcontrols_local.second.GetInput(CARINPUT::CLUTCH);
+				value = carcontrols_local.second.GetInput(CARINPUT::CLUTCH);
 			}
 			else if (*column == "Steering")
 			{
-				new_entry[*column] = carcontrols_local.second.GetInput(CARINPUT::STEER_RIGHT) - carcontrols_local.second.GetInput(CARINPUT::STEER_LEFT);
+				value = carcontrols_local.second.GetInput(CARINPUT::STEER_RIGHT) - carcontrols_local.second.GetInput(CARINPUT::STEER_LEFT);
 			}
 			/*
 			else
@@ -2463,9 +2469,11 @@ void GAME::UpdateDataLog(float dt)
 				TODO: throw exception: unknown column
 			}
 			*/
+
+			new_entry[*column] = value;
 		}
 
-		data_log.AddEntry(time_since_last_logentry, new_entry);
+		data_log.AddEntry(new_entry);
 		time_since_last_logentry -= data_logging_frequency;
 	}
 }
