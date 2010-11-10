@@ -22,12 +22,7 @@ DATALOG::DATALOG(DATALOG const& other) :
 {
 
 }
-/*
-DATALOG::~DATALOG()
-{
-	Write();
-}
-*/
+
 void DATALOG::Init(std::string const& directory, std::string const& name, std::vector< std::string > const& columns, std::string const& format)
 {
 	log_directory = directory;
@@ -50,7 +45,9 @@ void DATALOG::AddEntry(std::map< std::string, double > & values)
 
 	for (column_name = column_names.begin(); column_name != column_names.end(); ++column_name)
 	{
+		//std::cout << "Adding value: " << values[*column_name] << " to column: " << *column_name << std::endl;
 		data[*column_name].push_back(values[*column_name]);
+		//std::cout << "Added value: " << data[*column_name].back() << " to column: " << *column_name << std::endl;
 	}
 }
 
@@ -68,12 +65,25 @@ void DATALOG::Write()
 	std::string filename(log_directory + "/" + log_name + "." + file_extension);
 	std::ofstream log_file(filename.c_str());
 	std::vector< std::string >::const_iterator column_name;
-	std::map< std::string, std::vector< double >::const_iterator > column_iters;
+	//std::map< std::string, std::vector< double >::const_iterator > column_iters;
+	std::vector< double >::const_iterator data_point;
 	std::string sep;
 
 	if (!log_file)
 	{
 		// TODO: throw exception: couldn't open file. is directory writable?
+		return;
+	}
+
+	if (data.size() == 0)
+	{
+		// no columns, bail out.
+		return;
+	}
+
+	if (data.find("Time") == data.end())
+	{
+		// code below depends on existence of the time column. if it's missing, bail out.
 		return;
 	}
 
@@ -96,40 +106,29 @@ void DATALOG::Write()
 		plt_file << "plot ";
 		for (column_name = column_names.begin(); column_name != column_names.end(); ++column_name)
 		{
-			column_idx++;
+			// skip the time column - that is the y-axis, so no need to plot it.
 			if (*column_name == "Time")
 				continue;
+
+			column_idx++;
 
 			if (column_idx == column_names.size() - 1)
 				sep = "";
 
 			plt_file << "\\" << std::endl << "\"" << filename << "\" using 1:" << column_idx + 1 << " title '" << *column_name << "' with lines" << sep << " ";
-
-			// this will populate a map of iterators for each column, to be used below when writing data rows
-			column_iters[*column_name] = data[*column_name].begin();
 		}
 		plt_file << std::endl;
 
 		// write rows of space-separated data
-		bool finished = false;
-
-		while (!finished)
+		for (unsigned int row_idx = 0; row_idx < data["Time"].size(); row_idx++)
 		{
 			sep = "";
 			for (column_name = column_names.begin(); column_name != column_names.end(); ++column_name)
 			{
-				if (column_iters[*column_name] == data[*column_name].end())
-				{
-					finished = true;
-					break;
-				}
-
-				log_file << sep << *(column_iters[*column_name]);
+				log_file << sep << data[*column_name][row_idx];
 
 				if (sep == "")
 					sep = " ";
-
-				++column_iters[*column_name];
 			}
 			log_file << std::endl;
 		}
@@ -144,32 +143,19 @@ void DATALOG::Write()
 
 			if (sep == "")
 				sep = ",";
-
-			// this will populate a map of iterators for each column, to be used below when writing data rows
-			column_iters[*column_name] = data[*column_name].begin();
 		}
 		log_file << std::endl;
 
 		// write the rows of comma-separated data
-		bool finished = false;
-
-		while (!finished)
+		for (unsigned int row_idx = 0; row_idx < data["Time"].size(); row_idx++)
 		{
 			sep = "";
 			for (column_name = column_names.begin(); column_name != column_names.end(); ++column_name)
 			{
-				if (column_iters[*column_name] == data[*column_name].end())
-				{
-					finished = true;
-					break;
-				}
-
-				log_file << sep << *(column_iters[*column_name]);
+				log_file << sep << data[*column_name][row_idx];
 
 				if (sep == "")
 					sep = ",";
-
-				++column_iters[*column_name];
 			}
 			log_file << std::endl;
 		}
