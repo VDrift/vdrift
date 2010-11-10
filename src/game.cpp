@@ -2374,10 +2374,10 @@ void GAME::UpdateDataLog(float dt)
 
 	while (time_since_last_logentry >= data_logging_frequency)
 	{
-		std::vector< std::pair< std::string, boost::any > > new_entry;
+		std::map< std::string, double > new_entry;
 		std::vector< std::string >::const_iterator column;
 
-		for (column = data_log.GetColumns().begin(); column != data_log.GetColumns().end(); ++column)
+		for (column = data_log.GetColumnNames().begin(); column != data_log.GetColumnNames().end(); ++column)
 		{
 			if (*column == "Time")
 			{
@@ -2386,31 +2386,31 @@ void GAME::UpdateDataLog(float dt)
 			}
 			else if (*column == "Velocity")
 			{
-				new_entry.push_back(std::make_pair(*column, cars.front().GetSpeed()));
+				new_entry[*column] = cars.front().GetSpeed();
 			}
 			else if (*column == "Sector")
 			{
-				new_entry.push_back(std::make_pair(*column, cars.front().GetSector()));
+				new_entry[*column] = cars.front().GetSector();
 			}
 			else if (*column == "Throttle")
 			{
-				new_entry.push_back(std::make_pair(*column, carcontrols_local.second.GetInput(CARINPUT::THROTTLE)));
+				new_entry[*column] = carcontrols_local.second.GetInput(CARINPUT::THROTTLE);
 			}
 			else if (*column == "Brake")
 			{
-				new_entry.push_back(std::make_pair(*column, carcontrols_local.second.GetInput(CARINPUT::BRAKE)));
+				new_entry[*column] = carcontrols_local.second.GetInput(CARINPUT::BRAKE);
 			}
 			else if (*column == "Handbrake")
 			{
-				new_entry.push_back(std::make_pair(*column, carcontrols_local.second.GetInput(CARINPUT::HANDBRAKE)));
+				new_entry[*column] = carcontrols_local.second.GetInput(CARINPUT::HANDBRAKE);
 			}
 			else if (*column == "Clutch")
 			{
-				new_entry.push_back(std::make_pair(*column, carcontrols_local.second.GetInput(CARINPUT::CLUTCH)));
+				new_entry[*column] = carcontrols_local.second.GetInput(CARINPUT::CLUTCH);
 			}
 			else if (*column == "Steering")
 			{
-				new_entry.push_back(std::make_pair(*column, carcontrols_local.second.GetInput(CARINPUT::STEER_RIGHT) - carcontrols_local.second.GetInput(CARINPUT::STEER_LEFT)));
+				new_entry[*column] = carcontrols_local.second.GetInput(CARINPUT::STEER_RIGHT) - carcontrols_local.second.GetInput(CARINPUT::STEER_LEFT);
 			}
 			/*
 			else
