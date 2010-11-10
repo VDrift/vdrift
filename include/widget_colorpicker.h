@@ -7,6 +7,8 @@
 class WIDGET_COLORPICKER : public WIDGET
 {
 public:
+	WIDGET_COLORPICKER();
+	
 	virtual WIDGET * clone() const;
 	
 	virtual void SetAlpha(SCENENODE & scene, float newalpha);
@@ -54,14 +56,22 @@ private:
 	std::string name;
 	std::string description;
 	std::string setting;
-	MATHVECTOR <float, 2> min;
-	MATHVECTOR <float, 2> max;
+	MATHVECTOR <float, 2> sv_min;
+	MATHVECTOR <float, 2> sv_max;
+	MATHVECTOR <float, 2> h_min;
+	MATHVECTOR <float, 2> h_max;
+	MATHVECTOR <float, 2> h_pos;
+	MATHVECTOR <float, 2> sv_pos;
 	MATHVECTOR <float, 3> rgb;
 	MATHVECTOR <float, 3> hsv;
+	bool h_select;
+	bool sv_select;
 	float margin;
-	float csize;
+	float size2;
 	std::list <WIDGET *> hooks;
 	
+	void UpdatePosition();
+	bool SetColor(SCENENODE & scene, float x, float y);
 	void SendMessage(SCENENODE & scene, const std::string & message) const;
 };
 

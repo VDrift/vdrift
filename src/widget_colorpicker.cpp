@@ -96,6 +96,13 @@ static void RGBtoHSV(float r, float g, float b, float & h, float & s, float & v)
     }
 }
 
+WIDGET_COLORPICKER::WIDGET_COLORPICKER() :
+	h_select(false),
+	sv_select(false)
+{
+	// ctor
+}
+
 WIDGET * WIDGET_COLORPICKER::clone() const
 {
 	return new WIDGET_COLORPICKER(*this);
@@ -139,62 +146,74 @@ void WIDGET_COLORPICKER::AddHook(WIDGET * other)
 	hooks.push_back(other);
 }
 
-bool WIDGET_COLORPICKER::ProcessInput(SCENENODE & scene, float cursorx, float cursory, bool cursordown, bool cursorjustup)
+bool WIDGET_COLORPICKER::ProcessInput(SCENENODE & scene, float x, float y, bool down, bool justup)
 {
-	if (cursordown &&
-		cursorx < max[0] &&
-		cursorx > min[0] &&
-		cursory < max[1] &&
-		cursory > min[1])
+	if (!down)
 	{
-		float h = max[1] - min[1] - 2 * margin;
-		float w = max[0] - min[0] - csize - 2 * margin;
+		h_select = false;
+		sv_select = false;
+		return false;
+	}
+	
+	if (!h_select &&
+		x > sv_min[0] - size2 &&
+		x < sv_max[0] + size2 &&
+		y > sv_min[1] - size2 &&
+		y < sv_max[1] + size2)
+	{
+		h_select = false;
+		sv_select = true;
 		
-		if (cursory < min[1] + margin) cursory = min[1] + margin;
-		else if (cursory > max[1] - margin) cursory = max[1] - margin;
+		if (x > sv_max[0]) x = sv_max[0];
+		else if (x < sv_min[0]) x = sv_min[0];
 		
-		if (cursorx > max[0] - csize)
-		{
-			// vertical hue bar
-			h_cursor.SetToBillboard(max[0] - csize, cursory - csize / 2, csize, csize);
-			
-			// hue calculation
-			float hue = (cursory - min[1] - margin) / h;
-			//if (hue > 1) hue = 1;
-			//else if (hue < 0) hue = 0;
-			hsv[0] = hue;
-			
-			float r, g, b;
-			HSVtoRGB(hsv[0], 1, 1, r, g, b);
-			sv_bg.SetColor(scene, r, g, b);
-		}
-		else
-		{
-			if (cursorx < min[0] + margin) cursorx = min[0] + margin;
-			else if (cursorx > max[0] - csize - margin) cursorx = max[0] - csize - margin;
-			
-			// saturation value plane
-			sv_cursor.SetToBillboard(cursorx - csize / 2, cursory - csize / 2, csize, csize);
-			
-			// lower left corner is 0, 0
-			float saturation = (cursorx - min[0] - margin) / w;
-			//if (saturation > 1) saturation = 1;
-			//else if (saturation < 0) saturation = 0;
-			
-			float value = (max[1] - margin - cursory) / h;
-			//if (value > 1) value = 1;
-			//else if (value < 0) value = 0;
-			
-			hsv[1] = saturation;
-			hsv[2] = value;
-		}
+		if (y > sv_max[1]) y = sv_max[1];
+		else if (y < sv_min[1]) y = sv_min[1];
 		
+		float h = hsv[0];
+		float s = (x - sv_min[0]) / (sv_max[0] - sv_min[0]);
+		float v = (sv_max[1] - y) / (sv_max[1] - sv_min[1]);
+		
+		hsv.Set(h, s, v);
 		HSVtoRGB(hsv[0], hsv[1], hsv[2], rgb[0], rgb[1], rgb[2]);
-		std::stringstream s;
-		s << rgb;
-		SendMessage(scene, s.str());
+		UpdatePosition();
+		
+		std::stringstream str;
+		str << rgb;
+		SendMessage(scene, str.str());
 		
 		return true;
+	}
+	
+	if (!sv_select &&
+		x > h_min[0] - size2 &&
+		x < h_max[0] + size2 &&
+		y > h_min[1] - size2 &&
+		y < h_max[1] + size2)
+	{
+		h_select = true;
+		sv_select = false;
+	
+		if (y > h_max[1]) y = h_max[1];
+		else if (y < h_min[1] - margin) y = h_min[1];
+		
+		float h = (y - h_min[1]) / (h_max[1] - h_min[1]);
+		float s = hsv[1];
+		float v = hsv[2];
+		
+		float r, g, b;
+		HSVtoRGB(hsv[0], 1, 1, r, g, b);
+		sv_bg.SetColor(scene, r, g, b);
+		
+		hsv.Set(h, s, v);
+		HSVtoRGB(hsv[0], hsv[1], hsv[2], rgb[0], rgb[1], rgb[2]);
+		UpdatePosition();
+		
+		std::stringstream str;
+		str << rgb;
+		SendMessage(scene, str.str());
+		
+		return true;	
 	}
 	
 	return false;
@@ -229,16 +248,7 @@ void WIDGET_COLORPICKER::UpdateOptions(
 			HSVtoRGB(hsv[0], 1, 1, r, g, b);
 			sv_bg.SetColor(scene, r, g, b);
 			
-			float h = max[1] - min[1] - 2 * margin;
-			float w = max[0] - min[0] - csize - 2 * margin;
-			
-			float x0 = min[0] + margin - csize / 2 + hsv[1] * w;
-			float y0 = max[1] - margin - csize / 2 - hsv[2] * h;
-			sv_cursor.SetToBillboard(x0, y0, csize, csize);
-			
-			float x1 = max[0] - csize;
-			float y1 = min[1] + margin - csize / 2 + hsv[0] * h;
-			h_cursor.SetToBillboard(x1, y1, csize, csize);
+			UpdatePosition();
 			
 			SendMessage(scene, value);
 		}
@@ -268,32 +278,41 @@ void WIDGET_COLORPICKER::SetupDrawable(
 	sv_cursor.Load(scene, cursortex, draworder+1, error_output);
 	h_cursor.Load(scene, cursortex, draworder+1, error_output);
 	
-	min[0] = x;
-	min[1] = y;
-	max[0] = x + w;
-	max[1] = y + h;
-	csize = h / 8;
-	margin = csize / 3;
+	size2 = h / 16;
+	h_min[0] = x + w - 3 * size2;
+	h_min[1] = y + size2;
+	h_max[0] = x + w - size2;
+	h_max[1] = y + h - size2;
+	sv_min[0] = x + size2;
+	sv_min[1] = y + size2;
+	sv_max[0] = x + w - 4 * size2;
+	sv_max[1] = y + h - size2;
 	
-	float x0 = x + margin;
-	float y0 = y + margin;
-	float w0 = w - csize - 2 * margin;
-	float h0 = h - 2 * margin;
-	float x1 = x + w - csize + margin / 2;
-	float w1 = csize - margin;
-	
-	sv_bg.SetToBillboard(x0, y0, w0, h0);
-	sv_plane.SetToBillboard(x0, y0, w0, h0);
-	h_bar.SetToBillboard(x1, y0, w1, h0);
-	
-	sv_cursor.SetToBillboard(x, y, csize, csize);
-	h_cursor.SetToBillboard(x + w - csize, y, csize, csize);
+	sv_bg.SetToBillboard(sv_min[0], sv_min[1], sv_max[0] - sv_min[0], sv_max[1] - sv_min[1]);
+	sv_plane.SetToBillboard(sv_min[0], sv_min[1], sv_max[0] - sv_min[0], sv_max[1] - sv_min[1]);
+	h_bar.SetToBillboard(h_min[0] + size2/2, h_min[1], h_max[0] - h_min[0] - size2, h_max[1] - h_min[1]);
 	
 	hsv.Set(1, 0, 1);
 	HSVtoRGB(hsv[0], hsv[1], hsv[2], rgb[0], rgb[1], rgb[2]);
 	
-	sv_bg.SetColor(scene, rgb[0], rgb[1], rgb[2]);
+	float r, g, b;
+	HSVtoRGB(hsv[0], 1, 1, r, g, b);
+	sv_bg.SetColor(scene, r, g, b);
 	sv_plane.SetColor(scene, 1, 1, 1);
+	
+	UpdatePosition();
+}
+
+void WIDGET_COLORPICKER::UpdatePosition()
+{
+	h_pos[0] = h_max[0] - size2;
+	h_pos[1] = h_min[1] + hsv[0] * (h_max[1] - h_min[1]);
+	
+	sv_pos[0] = sv_min[0] + hsv[1] * (sv_max[0] - sv_min[0]);
+	sv_pos[1] = sv_max[1] - hsv[2] * (sv_max[1] - sv_min[1]);
+	
+	h_cursor.SetToBillboard(h_pos[0] - size2, h_pos[1] - size2, 2*size2, 2*size2);
+	sv_cursor.SetToBillboard(sv_pos[0] - size2, sv_pos[1] - size2, 2*size2, 2*size2);
 }
 
 void WIDGET_COLORPICKER::SendMessage(SCENENODE & scene, const std::string & message) const
