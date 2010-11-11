@@ -67,7 +67,8 @@ GAME::GAME(std::ostream & info_out, std::ostream & error_out) :
 	track(info_out, error_out),
 	replay(framerate),
 	enable_data_logging(false),
-	data_logging_frequency(0.01)
+	data_logging_frequency(0.01),
+	time_since_last_logentry(0.0)
 	//sky(graphics, info_out, err_out)
 {
 	carcontrols_local.first = NULL;
@@ -1622,12 +1623,14 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	//cout << "After load car: " << carcontrols_local.first << endl;
 
 	//enable data logging for player car
-	std::vector<std::string> data_log_column_names;//Velocity Sector  Throttle Brake  Handbrake Clutch Steering
+	std::vector<std::string> data_log_column_names;
 	data_log_column_names.push_back("Time");
+	// TODO: read the list of columns to log, log format, and logging frequency from settings.
 	//data_log_column_names.push_back("Velocity");
 	data_log_column_names.push_back("Throttle");
 	data_log_column_names.push_back("Brake");
 	data_log_column_names.push_back("Steering");
+	// TODO: instead of a static log name, encode the date/time (move this functionality to DATALOG)
 	EnableDataLogging(pathmanager.GetDataLogPath(), "playercarlog", data_log_column_names, "gnuplot", 60.0);
 
     race_laps = num_laps;
@@ -2431,6 +2434,7 @@ void GAME::UpdateDataLog(float dt)
 		for (column = data_log.GetColumnNames().begin(); column != data_log.GetColumnNames().end(); ++column)
 		{
 			double value;
+
 			if (*column == "Time")
 			{
 				value = clocktime;

@@ -39,6 +39,19 @@ bool DATALOG::HasColumn(std::string const& column_name)
 	return result != column_names.end();
 }
 
+std::vector< double > const& DATALOG::GetColumn(std::string const& column_name) const
+{
+	if (HasColumn(column_name))
+	{
+		return data[column_name];
+	}
+	/*else
+	{
+		// TODO: throw exception: no such column
+	}
+	*/
+}
+
 void DATALOG::AddEntry(std::map< std::string, double > & values)
 {
 	std::vector< std::string >::const_iterator column_name;

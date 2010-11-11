@@ -32,11 +32,8 @@ class DATALOG
 		{
 			return column_names;
 		}
-/*
-		std::map< std::string, boost::any > const& GetLastEntry() const
-		{
-			return data.back();
-		}*/
+
+		std::vector< double > const& GetColumn(std::string const& column_name);
 };
 
-#endif //_CARTELEMETRY_H
+#endif //_DATALOG_H
