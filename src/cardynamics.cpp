@@ -53,7 +53,7 @@ void CARDYNAMICS::Init()
 	tcs_active.resize ( WHEEL_POSITION_SIZE, false );
 }
 
-bool LoadEngine(
+static bool LoadEngine(
 	const CONFIG & c,
 	CARENGINE<T> & engine,
 	std::ostream & error_output)
@@ -103,7 +103,7 @@ bool LoadEngine(
 	return true;
 }
 
-bool LoadClutch(
+static bool LoadClutch(
 	const CONFIG & c,
 	CARCLUTCH<T> & clutch,
 	std::ostream & error_output)
@@ -125,7 +125,7 @@ bool LoadClutch(
 	return true;
 }
 
-bool LoadTransmission(
+static bool LoadTransmission(
 	const CONFIG & c,
 	CARTRANSMISSION<T> & transmission,
 	std::ostream & error_output)
@@ -153,7 +153,7 @@ bool LoadTransmission(
 	return true;
 }
 
-bool LoadFuelTank(
+static bool LoadFuelTank(
 	const CONFIG & c,
 	CARFUELTANK<T> & fuel_tank,
 	std::ostream & error_output)
@@ -181,7 +181,25 @@ bool LoadFuelTank(
 	return true;
 }
 
-bool LoadCoilover(
+static void LoadPoints(
+	const CONFIG & c,
+	const CONFIG::const_iterator & it,
+	const std::string & name,
+	std::vector <std::pair <T, T> > & points)
+{
+	int i = 0;
+	std::stringstream s;
+	s << std::setw(2) << std::setfill('0') << i;
+	std::vector<T> point(2);
+	while(c.GetParam(it, name+s.str(), point))
+	{
+		s.clear();
+		s << std::setw(2) << std::setfill('0') << i;
+		points.push_back(std::pair<T, T>(point[0], point[1]));
+	}
+}
+
+static bool LoadCoilover(
 	const CONFIG & c,
 	const std::string & id,
 	CARSUSPENSIONINFO <T> & info,
@@ -195,17 +213,17 @@ bool LoadCoilover(
 	if (!c.GetParam(it, "travel", info.travel, error_output)) return false;
 	if (!c.GetParam(it, "anti-roll", info.anti_roll, error_output)) return false;
 	
-	//std::vector <std::pair <double, double> > damper_factor_points;
-	//std::vector <std::pair <double, double> > spring_factor_points;
-	//c.GetPoints(name, "damper-factor", damper_factor_points);
-	//c.GetPoints(name, "spring-factor", spring_factor_points);
-	//info.SetDamperFactorPoints(damper_factor_points);
-	//info.SetSpringFactorPoints(spring_factor_points);
-
+	std::vector <std::pair <T, T> > damper_factor_points;
+	std::vector <std::pair <T, T> > spring_factor_points;
+	LoadPoints(c, it, "damper-factor-", damper_factor_points);
+	LoadPoints(c, it, "spring-factor-", spring_factor_points);
+	info.SetDamperFactorPoints(damper_factor_points);
+	info.SetSpringFactorPoints(spring_factor_points);
+	
 	return true;
 }
 
-bool LoadBrake(
+static bool LoadBrake(
 	const CONFIG & c,
 	const std::string & id,
 	CARBRAKE<T> & brake,
@@ -232,7 +250,7 @@ bool LoadBrake(
 	return true;
 }
 
-bool LoadTireParameters(
+static bool LoadTireParameters(
 	const CONFIG & c,
 	const std::string & tire,
 	CARTIREINFO <T> & info,
@@ -283,7 +301,7 @@ bool LoadTireParameters(
 	return true;
 }
 
-bool LoadTire(
+static bool LoadTire(
 	const CONFIG & c,
 	const std::string & id,
 	CARTIRE<T> & tire,
@@ -304,7 +322,7 @@ bool LoadTire(
 	return true;
 }
 
-bool LoadSuspension(
+static bool LoadSuspension(
 	const CONFIG & c,
 	const std::string & id,
 	CARSUSPENSION<T> & suspension,
@@ -333,7 +351,7 @@ bool LoadSuspension(
 	return true;
 }
 
-bool LoadWheel(
+static bool LoadWheel(
 	const CONFIG & c,
 	const std::string & id,
 	const CARTIRE<T> & tire,
@@ -369,7 +387,7 @@ bool LoadWheel(
 	return true;
 }
 
-bool LoadAeroDevices(
+static bool LoadAeroDevices(
 	const CONFIG & c,
 	std::vector< CARAERO <T> > & aerodynamics,
 	std::ostream & error_output)
@@ -400,8 +418,7 @@ bool LoadAeroDevices(
 	return true;
 }
 
-//load the differential(s)
-bool LoadDifferential(
+static bool LoadDifferential(
 	const CONFIG & c,
 	const CONFIG::const_iterator & it,
 	CARDIFFERENTIAL<T> & diff,
@@ -420,7 +437,7 @@ bool LoadDifferential(
 	return true;
 }
 
-bool LoadMassParticles(
+static bool LoadMassParticles(
 	const CONFIG & c,
 	std::list <std::pair <T, MATHVECTOR <T, 3> > > & mass_particles,
 	std::ostream & error_output)
