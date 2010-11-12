@@ -181,20 +181,21 @@ static bool LoadFuelTank(
 	return true;
 }
 
+// 1-9 points
 static void LoadPoints(
 	const CONFIG & c,
 	const CONFIG::const_iterator & it,
 	const std::string & name,
 	std::vector <std::pair <T, T> > & points)
 {
-	int i = 0;
+	int i = 1;
 	std::stringstream s;
-	s << std::setw(2) << std::setfill('0') << i;
+	s << std::setw(1) << i;
 	std::vector<T> point(2);
-	while(c.GetParam(it, name+s.str(), point))
+	while(c.GetParam(it, name+s.str(), point) && i < 10)
 	{
 		s.clear();
-		s << std::setw(2) << std::setfill('0') << i;
+		s << std::setw(1) << ++i;
 		points.push_back(std::pair<T, T>(point[0], point[1]));
 	}
 }
@@ -213,8 +214,8 @@ static bool LoadCoilover(
 	if (!c.GetParam(it, "travel", info.travel, error_output)) return false;
 	if (!c.GetParam(it, "anti-roll", info.anti_roll, error_output)) return false;
 	
-	std::vector <std::pair <T, T> > damper_factor_points;
-	std::vector <std::pair <T, T> > spring_factor_points;
+	std::vector<std::pair <T, T> > damper_factor_points;
+	std::vector<std::pair <T, T> > spring_factor_points;
 	LoadPoints(c, it, "damper-factor-", damper_factor_points);
 	LoadPoints(c, it, "spring-factor-", spring_factor_points);
 	info.SetDamperFactorPoints(damper_factor_points);

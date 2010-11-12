@@ -207,7 +207,7 @@ void GUI::SyncOptions(
 			std::map<std::string, GUIOPTION>::iterator option = optionmap.find(i->first);
 			if (option == optionmap.end())
 			{
-				error_output << "External option \"" << i->first << "\" has no internal GUI counterpart" << std::endl;
+				//error_output << "External option \"" << i->first << "\" has no internal GUI counterpart" << std::endl;
 			}
 			else //if (i->first.find("controledit.") != 0)
 			{
