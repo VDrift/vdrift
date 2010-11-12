@@ -23,7 +23,7 @@ public:
 	
 	void SetupDrawable(
 		SCENENODE & scene,
-		const FONT * font,
+		const FONT & font,
 		const std::string & text,
 		float x, float y,
 		float scalex, float scaley,
@@ -33,7 +33,7 @@ public:
 	
 	void ReviseDrawable(
 		SCENENODE & scene,
-		const FONT * font,
+		const FONT & font,
 		const std::string & text,
 		float x, float y,
 		float scalex, float scaley,
@@ -41,7 +41,7 @@ public:
 	
 	void ReviseDrawable(SCENENODE & scene, const std::string & text);
 	
-	float GetWidth(const FONT * font, const std::string & text, float scale) const;
+	float GetWidth(const FONT & font, const std::string & text, float scale) const;
 	
 	void SetText(SCENENODE & scene, const std::string & text);
 	

@@ -47,7 +47,7 @@ public:
 		std::tr1::shared_ptr<TEXTURE> teximage_left_down, 
 		std::tr1::shared_ptr<TEXTURE> teximage_right_up,
 		std::tr1::shared_ptr<TEXTURE> teximage_right_down,
-		const FONT * font,
+		const FONT & font,
 		const float scalex,
 		const float scaley,
 		const float centerx,

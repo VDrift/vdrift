@@ -43,7 +43,7 @@ public:
 	void SetAlpha(SCENENODE & parent, const float newalpha);
 	
 	///tell all child widgets to update to/from the option map
-	void UpdateOptions(SCENENODE & parent, bool save_to_options, std::map<std::string, GUIOPTION> & optionmap, std::ostream & error_output);
+	void UpdateOptions(SCENENODE & parent, bool save_to, std::map<std::string, GUIOPTION> & optionmap, std::ostream & error_output);
 	
 	///returns a list of actions that were generated
 	std::list <std::pair <std::string, bool> > ProcessInput(

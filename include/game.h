@@ -78,12 +78,6 @@ private:
 	void PopulateValueLists(std::map<std::string, std::list <std::pair<std::string,std::string> > > & valuelists);
 	void PopulateReplayList(std::list <std::pair <std::string, std::string> > & replaylist);
 	void PopulateCarPaintList(const std::string & carname, std::list <std::pair <std::string, std::string> > & carpaintlist);
-	enum OPTION_ACTION
-	{
-		SAVE,
-		LOAD
-	};
-	void LoadSaveOptions(OPTION_ACTION action, std::map<std::string, std::string> & options);
 	void UpdateTrackMap();
 	void LoadingScreen(float progress, float max);
 	void ProcessNewSettings();
@@ -99,6 +93,10 @@ private:
 	void BeginStartingUp();
 	void DoneStartingUp();
 	bool LastStartWasSuccessful() const;
+	
+	// move to settings
+	void GetOptions(std::map<std::string, std::string> & options);
+	void SetOptions(const std::map<std::string, std::string> & options);
 
 	std::ostream & info_output;
 	std::ostream & error_output;

@@ -19,7 +19,6 @@ public:
 		animation_counter(0),
 		animation_count_start(0),
 		syncme(false),
-		syncme_from_external(false),
 		control_load(false),
 		ingame(false)
 	{
@@ -111,21 +110,22 @@ public:
 		return (active_page != pages.end());
 	}
 	
-	///if settings_are_newer is true, then this function will revise its internal options
-	/// to match the settings passed in.  otherwise, it'll operate the other way around
-	void SyncOptions(
-		const bool external_settings_are_newer,
-		std::map <std::string, std::string> & external_options,
-		std::ostream & error_output);
-
 	void SetInGame ( bool value )
 	{
 		ingame = value;
 	}
 	
-	void ReplaceOptionMapValues(
+	void SetOptions(
+		const std::map <std::string, std::string> & options,
+		std::ostream & error_output);
+	
+	void GetOptions(
+		std::map <std::string, std::string> & options,
+		std::ostream & error_output);
+	
+	void SetOption(
 		const std::string & optionname,
-		std::list <std::pair <std::string, std::string> > & newvalues,
+		const std::list <std::pair <std::string, std::string> > & newvalues,
 		std::ostream & error_output);
 
 private:
@@ -143,7 +143,6 @@ private:
 	float animation_counter;
 	float animation_count_start;
 	bool syncme; ///<true if a sync is needed
-	bool syncme_from_external; ///<true if an OK button was pressed
 	bool control_load;
 	bool ingame;
 	
@@ -165,8 +164,7 @@ private:
 	///returns a string showing where the error occurred, or an empty string if no error
 	std::string LoadOptions(
 		const std::string & optionfile,
-		const std::map<std::string,
-		std::list <std::pair <std::string, std::string> > > & valuelists,
+		const std::map<std::string, std::list <std::pair <std::string, std::string> > > & valuelists,
 		std::ostream & error_output);
 	
 	///send options from the optionmap to the widgets

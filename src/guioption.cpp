@@ -2,6 +2,8 @@
 
 #include <sstream>
 
+const std::string GUIOPTION::null;
+
 GUIOPTION::GUIOPTION() : 
 	current_valid(false),
 	min(0),
@@ -147,24 +149,36 @@ void GUIOPTION::SetToFirstValue()
 	current_valid = !values.empty();
 }
 
-const std::string GUIOPTION::GetCurrentDisplayValue() const
+const std::string & GUIOPTION::GetCurrentDisplayValue() const
 {
 	if (values.empty())
+	{
 		return non_value_data;
+	}
 	else if (current_value == values.end() || !current_valid)
-		return "";
+	{
+		return null;
+	}
 	else
+	{
 		return current_value->second;
+	}
 }
 
-const std::string GUIOPTION::GetCurrentStorageValue() const
+const std::string & GUIOPTION::GetCurrentStorageValue() const
 {
 	if (values.empty())
+	{
 		return non_value_data;
+	}
 	else if (current_value == values.end() || !current_valid)
-		return "";
+	{
+		return null;
+	}
 	else
+	{
 		return current_value->first;
+	}
 }
 
 const std::list <std::pair<std::string,std::string> > & GUIOPTION::GetValueList() const

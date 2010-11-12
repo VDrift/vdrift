@@ -189,73 +189,56 @@ void GUI::Update(float dt)
 		last_active_page->second.page.Update(node.GetNode(last_active_page->second.node), dt);
 }
 
-void GUI::SyncOptions(
-	const bool external_settings_are_newer,
-	std::map <std::string, std::string> & external_options,
-	std::ostream & error_output)
+void GUI::SetOptions(const std::map <std::string, std::string> & options, std::ostream & error_output)
 {
-	//std::cout << "Syncing options: " << external_settings_are_newer << ", " << syncme_from_external << std::endl;
-	
-	for (std::map <std::string, std::string>::iterator i = external_options.begin(); i != external_options.end(); ++i)
+	for (std::map <std::string, std::string>::const_iterator i = options.begin(); i != options.end(); ++i)
 	{
-		if (external_settings_are_newer || syncme_from_external)
+		std::map<std::string, GUIOPTION>::iterator option = optionmap.find(i->first);
+		if (option == optionmap.end())
 		{
-			std::map<std::string, GUIOPTION>::iterator option = optionmap.find(i->first);
-			if (option == optionmap.end())
-			{
-				error_output << "External option \"" << i->first << "\" has no internal GUI counterpart" << std::endl;
-			}
-			else //if (i->first.find("controledit.") != 0)
-			{
-				//std::cout << i->first << std::endl;
-				//if (option->first == "game.player_paint") error_output << "Setting GUI option \"" << option->first << "\" to GAME value \"" << i->second << "\"" << std::endl;
-				//if (option->first == "game.player_color") error_output << "Setting GUI option \"" << option->first << "\" to GAME value \"" << i->second << "\"" << std::endl;
-				if (!option->second.SetCurrentValue(i->second))
-					error_output << "Error setting GUI option \"" << option->first << "\" to GAME value \"" << i->second << "\"" << std::endl;
-			}
-			//else std::cout << "Ignoring controledit value: " << i->first << std::endl;
+			error_output << "External option \"" << i->first << "\" has no internal GUI counterpart" << std::endl;
 		}
 		else
 		{
-			std::map<std::string, GUIOPTION>::iterator option = optionmap.find(i->first);
-			if (option == optionmap.end())
+			if (!option->second.SetCurrentValue(i->second))
 			{
-				//error_output << "External option \"" << i->first << "\" has no internal GUI counterpart" << std::endl;
-			}
-			else
-			{
-				//if (option->first == "game.car_paint") error_output << "Setting GAME option \"" << i->first << "\" to GUI value \"" << option->second.GetCurrentStorageValue() << "\"" << std::endl;
-				i->second = option->second.GetCurrentStorageValue();
+				error_output << "Error setting GUI option \"" << option->first << "\" to GAME value \"" << i->second << "\"" << std::endl;
 			}
 		}
 	}
 	
-	if (external_settings_are_newer)
-		UpdateOptions(error_output);
+	UpdateOptions(error_output);
 	
-	if (syncme_from_external)
+	bool save_to = false;
+	if (last_active_page != pages.end())
 	{
-		//UpdateOptions(error_output);
-		if (last_active_page != pages.end())
-			last_active_page->second.page.UpdateOptions(node.GetNode(last_active_page->second.node), false, optionmap, error_output);
-		//std::cout << "About to update" << std::endl;
-		if (active_page != pages.end())
-			active_page->second.page.UpdateOptions(node.GetNode(active_page->second.node), false, optionmap, error_output);
-		//std::cout << "Done updating" << std::endl;
+		SCENENODE & parent = node.GetNode(last_active_page->second.node);
+		last_active_page->second.page.UpdateOptions(parent, save_to, optionmap, error_output);
+	}
+	if (active_page != pages.end())
+	{
+		SCENENODE & parent = node.GetNode(last_active_page->second.node);
+		active_page->second.page.UpdateOptions(parent, save_to, optionmap, error_output);
 	}
 	
 	syncme = false;
-	
-	//std::cout << "Done syncing options" << std::endl;
 }
 
-void GUI::ReplaceOptionMapValues(
+void GUI::GetOptions(std::map <std::string, std::string> & options, std::ostream & error_output)
+{
+	for (std::map<std::string, GUIOPTION>::const_iterator i = optionmap.begin(); i != optionmap.end(); ++i)
+	{
+		options[i->first] = i->second.GetCurrentStorageValue();
+	}
+	
+	syncme = false;
+}
+
+void GUI::SetOption(
 	const std::string & optionname,
-	std::list <std::pair <std::string, std::string> > & newvalues,
+	const std::list <std::pair <std::string, std::string> > & newvalues,
 	std::ostream & error_output)
 {
-	//std::cout << "Replacing option map values" << std::endl;
-	
 	if (optionmap.find(optionname) == optionmap.end())
 	{
 		error_output << "Can't find option named " << optionname << " when replacing optionmap values" << std::endl;
@@ -265,8 +248,6 @@ void GUI::ReplaceOptionMapValues(
 		optionmap[optionname].ReplaceValues(newvalues);
 		UpdateOptions(error_output);
 	}
-	
-	//std::cout << "Done replacing option map values" << std::endl;
 }
 
 void GUI::ActivatePage(
@@ -275,37 +256,41 @@ void GUI::ActivatePage(
 	std::ostream & error_output,
 	bool save_options)
 {
-	if (last_active_page != pages.end())
-		last_active_page->second.page.SetVisible(node.GetNode(last_active_page->second.node), false);
-	
-	bool ok = save_options;
 	syncme = true;
-	syncme_from_external = !ok;
-	if (!ok)
+	
+	if (!save_options)
 		control_load = true;
 	
-	//save options from widgets to internal optionmap array, which will then later be saved to the game options via SyncOptions
-	if (active_page != pages.end() && ok)
-		active_page->second.page.UpdateOptions(node.GetNode(active_page->second.node), true, optionmap, error_output);
+	// hide last active page
+	if (last_active_page != pages.end())
+	{
+		PAGEINFO & info = last_active_page->second;
+		info.page.SetVisible(node.GetNode(info.node), false);
+	}
 	
-	//purge controledit parameters from the optionmap
+	// save options from widgets to internal optionmap array
+	if (active_page != pages.end() && save_options)
+	{
+		active_page->second.page.UpdateOptions(node.GetNode(active_page->second.node), true, optionmap, error_output);
+	}
+	
+	// purge controledit parameters from the optionmap
 	optionmap.erase("controledit.analog.deadzone");
 	optionmap.erase("controledit.analog.gain");
 	optionmap.erase("controledit.analog.exponent");
 	optionmap.erase("controledit.button.held_once");
 	optionmap.erase("controledit.button.up_down");
 	
-	//if (active_page != pages.end()) active_page->second.page.UpdateOptions(ok, optionmap, error_output);
-	
+	// set new page
 	last_active_page = active_page;
 	active_page = pages.find(pagename);
+	
+	// show new page
 	assert(active_page != pages.end());
 	active_page->second.page.SetVisible(node.GetNode(active_page->second.node), true);
-	//std::cout << "Moving to page " << active_page->first << std::endl;
-	//active_page->second.page.UpdateOptions(false, optionmap, error_output);
-	animation_counter = animation_count_start = activation_time;
 	
-	//std::cout << "Done activating page" << std::endl;
+	// reset animation
+	animation_counter = animation_count_start = activation_time;
 }
 
 bool GUI::LoadPage(
@@ -463,8 +448,9 @@ string GUI::LoadOptions(const std::string & optionfile, const std::map<std::stri
 
 void GUI::UpdateOptions(std::ostream & error_output)
 {
+	bool save_to = false;
 	for (std::map<std::string, PAGEINFO>::iterator i = pages.begin(); i != pages.end(); ++i)
 	{
-		i->second.page.UpdateOptions(node.GetNode(i->second.node), false, optionmap, error_output);
+		i->second.page.UpdateOptions(node.GetNode(i->second.node), save_to, optionmap, error_output);
 	}
 }

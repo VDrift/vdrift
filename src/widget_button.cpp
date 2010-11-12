@@ -117,7 +117,7 @@ void WIDGET_BUTTON::SetupDrawable(
 	std::tr1::shared_ptr<TEXTURE> teximage_up,
 	std::tr1::shared_ptr<TEXTURE> teximage_down,
 	std::tr1::shared_ptr<TEXTURE> teximage_selected,
-	const FONT * font,
+	const FONT & font,
 	const std::string & text,
 	const float centerx,
 	const float centery,
@@ -130,8 +130,6 @@ void WIDGET_BUTTON::SetupDrawable(
 	assert(teximage_up);
 	assert(teximage_down);
 	assert(teximage_selected);
-	assert(font);
-	//assert(!text.empty());
 	
 	float w = label.GetWidth(font, text, scalex);//*(scaley/scalex);
 	//h = 0.06*scaley*4.0;

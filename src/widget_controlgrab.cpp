@@ -199,7 +199,7 @@ void WIDGET_CONTROLGRAB::SetupDrawable(
 	const CONFIG & c,
 	const std::string & newsetting,
 	const std::vector <std::tr1::shared_ptr<TEXTURE> > & texturevector,
-	const FONT * font,
+	const FONT & font,
 	const std::string & text,
 	const float centerx,
 	const float centery,
@@ -209,7 +209,6 @@ void WIDGET_CONTROLGRAB::SetupDrawable(
 	bool newonly_one)
 {
 	assert(texturevector.size() == END);
-	assert(font);
 	assert(!newsetting.empty());
 	for (int i = 0; i < END; i++)
 		assert(texturevector[i]);
@@ -250,7 +249,7 @@ void WIDGET_CONTROLGRAB::LoadControls(
 	SCENENODE & scene,
 	const CONFIG & c,
 	const std::vector <std::tr1::shared_ptr<TEXTURE> > & texturevector,
-	const FONT * font)
+	const FONT & font)
 {
 	assert(!setting.empty()); //ensure that we've already done a SetupDrawable
 	
@@ -323,7 +322,7 @@ void WIDGET_CONTROLGRAB::AddButton(
 	SCENENODE & scene,
 	std::tr1::shared_ptr<TEXTURE> tex_unsel,
 	std::tr1::shared_ptr<TEXTURE> tex_sel,
-	const FONT * font, 
+	const FONT & font, 
 	const std::string & type,
 	const std::string & name,
 	const float scalex,

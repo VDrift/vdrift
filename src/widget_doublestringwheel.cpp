@@ -104,7 +104,7 @@ void WIDGET_DOUBLESTRINGWHEEL::SetupDrawable(
 	std::tr1::shared_ptr<TEXTURE> teximage_left_down, 
 	std::tr1::shared_ptr<TEXTURE> teximage_right_up,
 	std::tr1::shared_ptr<TEXTURE> teximage_right_down,
-	const FONT * font,
+	const FONT & font,
 	const float scalex,
 	const float scaley,
 	const float centerx,
@@ -114,7 +114,6 @@ void WIDGET_DOUBLESTRINGWHEEL::SetupDrawable(
 	assert(teximage_left_down);
 	assert(teximage_right_up);
 	assert(teximage_right_down);
-	assert(font);
 	
 	float titlewidth = title.GetWidth(font, newtitle, scalex);
 	float labeloffsetx = 0.04+titlewidth;

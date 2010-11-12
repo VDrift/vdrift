@@ -174,8 +174,8 @@ bool GUIPAGE::Load(
 				if (!textures.Load(texpath+"/widgets/btn_up.png", texinfo, texture_up)) return false;
 				float fontscaley = ((((float) fontsize - 7.0f) * 0.25f) + 1.0f)*0.25;
 				float fontscalex = fontscaley*screenhwratio;
-				
-				const FONT * font = &fonts.find("futuresans")->second;
+				assert(fonts.find("futuresans") != fonts.end());
+				const FONT & font = fonts.find("futuresans")->second;
 				WIDGET_BUTTON * new_widget = NewWidget<WIDGET_BUTTON>();
 				new_widget->SetupDrawable(
 						sref, texture_up, texture_down, texture_sel,
@@ -203,7 +203,8 @@ bool GUIPAGE::Load(
 				}
 				float fontscaley = ((((float) fontsize - 7.0f) * 0.25f) + 1.0f)*0.25;
 				float fontscalex = fontscaley*screenhwratio;
-				const FONT * font = &fonts.find("futuresans")->second;
+				assert(fonts.find("futuresans") != fonts.end());
+				const FONT & font = fonts.find("futuresans")->second;
 				WIDGET_LABEL * new_widget = NewWidget<WIDGET_LABEL>();
 				new_widget->SetupDrawable(sref, font, text, xy[0],xy[1], fontscalex,fontscaley, color[0],color[1],color[2], 2);
 				
@@ -251,7 +252,8 @@ bool GUIPAGE::Load(
 				{
 					float fontscaley = ((((float) fontsize - 7.0f) * 0.25f) + 1.0f)*0.25;
 					float fontscalex = fontscaley*screenhwratio;
-					const FONT * font = &fonts.find("futuresans")->second;
+					assert(fonts.find("futuresans") != fonts.end());
+					const FONT & font = fonts.find("futuresans")->second;
 					WIDGET_LABEL * new_widget = NewWidget<WIDGET_LABEL>();
 					float fw = new_widget->GetWidth(font, title, fontscalex);
 					new_widget->SetupDrawable(sref, font, title, xy[0]+fw*0.5,xy[1]+(0.02*0.25*4.0/3.0), fontscalex,fontscaley, 1,1,1, 2);
@@ -315,7 +317,8 @@ bool GUIPAGE::Load(
 				
 				float fontscaley = ((((float) fontsize - 7.0f) * 0.25f) + 1.0f) * 0.25;
 				float fontscalex = fontscaley * screenhwratio;
-				const FONT * font = &fonts.find("futuresans")->second;
+				assert(fonts.find("futuresans") != fonts.end());
+				const FONT & font = fonts.find("futuresans")->second;
 				WIDGET_STRINGWHEEL * new_widget = NewWidget<WIDGET_STRINGWHEEL>();
 				new_widget->SetupDrawable(
 						sref, title+":", up_left, down_left, up_right, down_right,
@@ -365,7 +368,8 @@ bool GUIPAGE::Load(
 				
 				float fontscaley = ((((float) fontsize - 7.0f) * 0.25f) + 1.0f) * 0.25;
 				float fontscalex = fontscaley * screenhwratio;
-				const FONT * font = &fonts.find("futuresans")->second;
+				assert(fonts.find("futuresans") != fonts.end());
+				const FONT & font = fonts.find("futuresans")->second;
 				WIDGET_DOUBLESTRINGWHEEL * new_widget = NewWidget<WIDGET_DOUBLESTRINGWHEEL>();
 				new_widget->SetupDrawable(
 						sref, title+":", up_left, down_left, up_right, down_right,
@@ -478,7 +482,8 @@ bool GUIPAGE::Load(
 				{
 					float fontscaley = ((((float) fontsize - 7.0f) * 0.25f) + 1.0f)*0.25;
 					float fontscalex = fontscaley*screenhwratio;
-					const FONT * font = &fonts.find("futuresans")->second;
+					assert(fonts.find("futuresans") != fonts.end());
+					const FONT & font = fonts.find("futuresans")->second;
 					WIDGET_LABEL * new_widget = NewWidget<WIDGET_LABEL>();
 					fw = new_widget->GetWidth(font, title, fontscalex);
 					new_widget->SetupDrawable(sref, font, title, xy[0]+fw*0.5,xy[1]+(0.02*0.25*4.0/3.0), fontscalex,fontscaley, 1,1,1, 2);
@@ -490,6 +495,7 @@ bool GUIPAGE::Load(
 				//font settings for % display
 				float fontscaley = ((((float) fontsize - 7.0f) * 0.25f) + 1.0f)*0.25;
 				float fontscalex = fontscaley*screenhwratio;
+				assert(fonts.find("lcd") != fonts.end());
 				const FONT * font = &fonts.find("lcd")->second;
 				
 				std::tr1::shared_ptr<TEXTURE> cursor, wedge;
@@ -588,7 +594,8 @@ bool GUIPAGE::Load(
 			
 			float fontscaley = ((((float) fontsize - 7.0f) * 0.25f) + 1.0f)*0.25;
 			float fontscalex = fontscaley*screenhwratio;
-			const FONT * font = &fonts.find("lcd")->second;
+			assert(fonts.find("lcd") != fonts.end());
+			const FONT & font = fonts.find("lcd")->second;
 			
 			WIDGET_CONTROLGRAB * new_widget = NewWidget<WIDGET_CONTROLGRAB>();
 			new_widget->SetupDrawable(
@@ -606,7 +613,7 @@ bool GUIPAGE::Load(
 		tooltip_widget = NewWidget<WIDGET_LABEL>();
 		assert(tooltip_widget);
 		assert(fonts.find("futuresans") != fonts.end());
-		const FONT * font = &fonts.find("futuresans")->second;
+		const FONT & font = fonts.find("futuresans")->second;
 		tooltip_widget->SetupDrawable(sref, font, "", 0.5,0.95, 0.2*screenhwratio,0.2, 1,1,1, 1);
 	}
 	
@@ -632,12 +639,12 @@ void GUIPAGE::SetAlpha(SCENENODE & parent, const float newalpha)
 }
 
 ///tell all child widgets to update to/from the option map
-void GUIPAGE::UpdateOptions(SCENENODE & parent, bool save_to_options, std::map<std::string, GUIOPTION> & optionmap, std::ostream & error_output)
+void GUIPAGE::UpdateOptions(SCENENODE & parent, bool save_to, std::map<std::string, GUIOPTION> & optionmap, std::ostream & error_output)
 {
 	SCENENODE & sref = parent.GetNode(s);
 	for (std::list <DERIVED <WIDGET> >::iterator i = widgets.begin(); i != widgets.end(); ++i)
 	{
-		(*i)->UpdateOptions(sref, save_to_options, optionmap, error_output);
+		(*i)->UpdateOptions(sref, save_to, optionmap, error_output);
 	}
 }
 
@@ -673,8 +680,8 @@ std::list <std::pair <std::string, bool> > GUIPAGE::ProcessInput(
 	
 	if (tooltip != tooltip_widget->GetText())
 	{
-		//assert(fontmap->find("futuresans") != fontmap->end());
-		const FONT * font = &fontmap->find("futuresans")->second;
+		assert(fontmap->find("futuresans") != fontmap->end());
+		const FONT & font = fontmap->find("futuresans")->second;
 		tooltip_widget->ReviseDrawable(sref, font, tooltip, 0.5,0.95, 0.2*screenhwratio,0.2);
 	}
 	

@@ -27,7 +27,7 @@ void WIDGET_LABEL::SetVisible(SCENENODE & scene, bool newvis)
 
 void WIDGET_LABEL::SetupDrawable(
 	SCENENODE & scene,
-	const FONT * font,
+	const FONT & font,
 	const std::string & text,
 	float x, float y,
 	float scalex, float scaley,
@@ -35,8 +35,7 @@ void WIDGET_LABEL::SetupDrawable(
 	int order,
 	bool centered)
 {
-	assert(font);
-	savedfont = font;
+	savedfont = &font;
 	
 	r = nr;
 	b = nb;
@@ -48,38 +47,36 @@ void WIDGET_LABEL::SetupDrawable(
 	saved_scaley = scaley;
 	saved_centered = centered;
 	
-	float w = text_draw.GetWidth(*font, text, scalex);
+	float w = text_draw.GetWidth(font, text, scalex);
 	if (!centered)
 		w = 0;
 
 	draw = scene.GetDrawlist().text.insert(DRAWABLE());
 	DRAWABLE & drawref = GetDrawable(scene);
-	text_draw.Set(drawref, *font, text, x-w*0.5, y, scalex, scaley, r,g,b);
+	text_draw.Set(drawref, font, text, x-w*0.5, y, scalex, scaley, r,g,b);
 	drawref.SetDrawOrder(order+100);
 }
 
 void WIDGET_LABEL::ReviseDrawable(
 	SCENENODE & scene,
-	const FONT * font,
+	const FONT & font,
 	const std::string & text,
 	float x, float y,
 	float scalex, float scaley,
 	bool centered)
 {
-	assert(font);
-	
-	savedfont = font;
+	savedfont = &font;
 	saved_x = x;
 	saved_y = y;
 	saved_scalex = scalex;
 	saved_scaley = scaley;
 	saved_centered = centered;
 	
-	float w = text_draw.GetWidth(*font, text, scalex);
+	float w = text_draw.GetWidth(font, text, scalex);
 	if (!centered)
 		w = 0;
 	
-	text_draw.Revise(*font, text, x-w*0.5, y, scalex, scaley);
+	text_draw.Revise(font, text, x-w*0.5, y, scalex, scaley);
 }
 
 void WIDGET_LABEL::ReviseDrawable(SCENENODE & scene, const std::string & text)
@@ -91,11 +88,9 @@ void WIDGET_LABEL::ReviseDrawable(SCENENODE & scene, const std::string & text)
 	text_draw.Revise(*savedfont, text);
 }
 
-float WIDGET_LABEL::GetWidth(const FONT * font, const std::string & text, float scale) const
+float WIDGET_LABEL::GetWidth(const FONT & font, const std::string & text, float scale) const
 {
-	assert(font);
-	//assert(!text.empty());
-	return text_draw.GetWidth(*font, text, scale);
+	return text_draw.GetWidth(font, text, scale);
 }
 
 void WIDGET_LABEL::SetText(SCENENODE & scene, const std::string & text)

@@ -323,8 +323,9 @@ bool GAME::InitGUI()
 	}
 	
 	std::map<std::string, std::string> optionmap;
-	LoadSaveOptions(LOAD, optionmap);
-	gui.SyncOptions(true, optionmap, error_output);
+	GetOptions(optionmap);
+	gui.SetOptions(optionmap, error_output);
+	
 	gui.ActivatePage("Main", 0.5, error_output); //nice, slow fade-in
 	if (settings.GetMouseGrab()) eventsystem.SetMouseCursorVisibility(true);
 
@@ -1043,12 +1044,8 @@ void GAME::ProcessGUIInputs()
 		if (gui.OptionsNeedSync())
 		{
 			std::map<std::string, std::string> optionmap;
-			LoadSaveOptions(LOAD, optionmap);
-			//std::cout << "!!!before: " << optionmap["track"] << std::endl;
-			gui.SyncOptions(false, optionmap, error_output);
-			LoadSaveOptions(SAVE, optionmap);
-			//std::cout << "!!!after: " << optionmap["track"] << std::endl;
-
+			gui.GetOptions(optionmap, error_output);
+			SetOptions(optionmap);
 			neededsync = true;
 		}
 
@@ -1066,11 +1063,12 @@ void GAME::ProcessGUIInputs()
 			ProcessGUIAction(*i);
 		}
 
-		if (neededsync && gui.GetActivePageName() != "AssignControl" &&
-				  gui.GetActivePageName() != "EditButtonControl" &&
-				  gui.GetLastPageName() != "EditButtonControl" &&
-				  gui.GetActivePageName() != "EditAnalogControl" &&
-				  gui.GetLastPageName() != "EditAnalogControl")
+		if (neededsync &&
+			gui.GetActivePageName() != "AssignControl" &&
+			gui.GetActivePageName() != "EditButtonControl" &&
+			gui.GetLastPageName() != "EditButtonControl" &&
+			gui.GetActivePageName() != "EditAnalogControl" &&
+			gui.GetLastPageName() != "EditAnalogControl")
 		{
 			//write out controls
 			carcontrols_local.second.Save(pathmanager.GetCarControlsFile(), info_output, error_output);
@@ -1333,7 +1331,7 @@ void GAME::ProcessGUIAction(const std::string & action)
 		std::list <std::pair <std::string, std::string> > carpaintlist;
 		PopulateCarPaintList(settings.GetSelectedCar(), carpaintlist);
 		
-		gui.ReplaceOptionMapValues("game.player_paint", carpaintlist, error_output);
+		gui.SetOption("game.player_paint", carpaintlist, error_output);
 		//std::cout << "Player car changed" << endl;
 	}
 	else if (action == "OpponentCarChange") //this means the player clicked the GUI to change the opponent car
@@ -1342,7 +1340,7 @@ void GAME::ProcessGUIAction(const std::string & action)
 		std::list <std::pair <std::string, std::string> > carpaintlist;
 		PopulateCarPaintList(settings.GetOpponentCar(), carpaintlist);
 		
-		gui.ReplaceOptionMapValues("game.opponent_paint", carpaintlist, error_output);
+		gui.SetOption("game.opponent_paint", carpaintlist, error_output);
 	}
 	else if (action == "AddOpponent")
 	{
@@ -1759,9 +1757,10 @@ void GAME::LeaveGame()
 	{
 		info_output << "Saving replay to " << GetReplayRecordingFilename() << endl;
 		replay.StopRecording(GetReplayRecordingFilename());
+		
 		std::list <std::pair <std::string, std::string> > replaylist;
 		PopulateReplayList(replaylist);
-		gui.ReplaceOptionMapValues("game.selected_replay", replaylist, error_output);
+		gui.SetOption("game.selected_replay", replaylist, error_output);
 	}
 	if (replay.GetPlaying())
 		replay.StopPlaying();
@@ -2183,47 +2182,48 @@ void GAME::PopulateValueLists(std::map<std::string, std::list <std::pair <std::s
 	}
 }
 
-void GAME::LoadSaveOptions(OPTION_ACTION action, std::map<std::string, std::string> & options)
+// read options from settings
+void GAME::GetOptions(std::map<std::string, std::string> & options)
 {
-	if (action == LOAD) //load from the settings class to the options map
+	bool write_to = true;
+	CONFIG tempconfig;
+	settings.Serialize(write_to, tempconfig);
+	
+	for (CONFIG::const_iterator ic = tempconfig.begin(); ic != tempconfig.end(); ++ic)
 	{
-		// get parameter list
-		CONFIG tempconfig;
-		settings.Serialize(true, tempconfig);
-		for (CONFIG::const_iterator ic = tempconfig.begin(); ic != tempconfig.end(); ++ic)
+		std::string section = ic->first;
+		for (CONFIG::SECTION::const_iterator is = ic->second.begin(); is != ic->second.end(); ++is)
 		{
-			std::string section = ic->first;
-			for (CONFIG::SECTION::const_iterator is = ic->second.begin(); is != ic->second.end(); ++is)
-			{
-				if (section.length() > 0)
-					options[section + "." + is->first] = is->second;
-				else
-					options[is->first] = is->second;
-				//std::cerr << "LOAD - PARAM: " << section + "." + is->first << " = " << is->second << endl;
-			}
+			if (section.length() > 0)
+				options[section + "." + is->first] = is->second;
+			else
+				options[is->first] = is->second;
 		}
 	}
-	else //save from the options map to the settings class
-	{
-		CONFIG tempconfig;
-		for (map<string, string>::iterator i = options.begin(); i != options.end(); ++i)
-		{
-			std::string section;
-			std::string param = i->first;
-			size_t n = param.find(".");
-			if (n < param.length())
-			{
-				section = param.substr(0, n);
-				param.erase(0, n + 1);
-			}
-			tempconfig.SetParam(section, param, i->second);
-			//std::cerr << "SAVE - PARAM: " << section + "." + param << " = " << i->second << endl;
-		}
-		settings.Serialize(false, tempconfig);
+}
 
-		//account for new settings
-		ProcessNewSettings();
+// write options to settings
+void GAME::SetOptions(const std::map<std::string, std::string> & options)
+{
+	CONFIG tempconfig;
+	for (map<string, string>::const_iterator i = options.begin(); i != options.end(); ++i)
+	{
+		std::string section;
+		std::string param = i->first;
+		size_t n = param.find(".");
+		if (n < param.length())
+		{
+			section = param.substr(0, n);
+			param.erase(0, n + 1);
+		}
+		tempconfig.SetParam(section, param, i->second);
 	}
+	
+	bool write_to = false;
+	settings.Serialize(write_to, tempconfig);
+	
+	// account for new settings
+	ProcessNewSettings();
 }
 
 ///update the game with any new setting changes that have just been made

@@ -29,9 +29,9 @@ public:
 	
 	void SetToFirstValue();
 	
-	const std::string GetCurrentDisplayValue() const;
+	const std::string & GetCurrentDisplayValue() const;
 	
-	const std::string GetCurrentStorageValue() const;
+	const std::string & GetCurrentStorageValue() const;
 
 	const std::list <std::pair<std::string,std::string> > & GetValueList() const;
 
@@ -56,6 +56,8 @@ private:
 	float min;
 	float max;
 	bool percentage;
+	
+	static const std::string null; // returned if current value is not valid
 };
 
 #endif

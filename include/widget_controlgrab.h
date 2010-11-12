@@ -39,7 +39,7 @@ public:
 		const CONFIG & c,
 		const std::string & newsetting,
 		const std::vector <std::tr1::shared_ptr<TEXTURE> > & texturevector,
-		const FONT * font,
+		const FONT & font,
 		const std::string & text,
 		const float centerx,
 		const float centery,
@@ -52,7 +52,7 @@ public:
 		SCENENODE & scene,
 		const CONFIG & c,
 		const std::vector <std::tr1::shared_ptr<TEXTURE> > & texturevector,
-		const FONT * font);
+		const FONT & font);
 		
 	keyed_container <SCENENODE>::handle GetNode()
 	{
@@ -115,7 +115,7 @@ private:
 		SCENENODE & scene,
 		std::tr1::shared_ptr<TEXTURE> tex_unsel,
 		std::tr1::shared_ptr<TEXTURE> tex_sel,
-		const FONT * font, 
+		const FONT & font, 
 		const std::string & type,
 		const std::string & name,
 		const float scalex,

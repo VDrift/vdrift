@@ -32,9 +32,8 @@ public:
 	///set the local option pointer to the associated optionmap
 	virtual void UpdateOptions(
 		SCENENODE & scene,
-		bool save_to_options,
-		std::map<std::string,
-		GUIOPTION> & optionmap,
+		bool save_to,
+		std::map<std::string, GUIOPTION> & optionmap,
 		std::ostream & error_output);
 	
 	virtual void AddHook(WIDGET * other);
@@ -54,7 +53,7 @@ public:
 		std::tr1::shared_ptr<TEXTURE> teximage_left_down,
 		std::tr1::shared_ptr<TEXTURE> teximage_right_up,
 		std::tr1::shared_ptr<TEXTURE> teximage_right_down,
-		const FONT * font,
+		const FONT & font,
 		const float scalex,
 		const float scaley,
 		const float centerx,
@@ -69,6 +68,7 @@ private:
 	std::string name;
 	std::string description;
 	std::string setting;
+	std::string value;
 	std::list <WIDGET *> hooks;
 	std::string action;
 	std::string active_action;
