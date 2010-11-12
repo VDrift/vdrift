@@ -1,7 +1,6 @@
 #ifndef _WIDGET_STRINGWHEEL_H
 #define _WIDGET_STRINGWHEEL_H
 
-#include "widget.h"
 #include "widget_label.h"
 #include "widget_button.h"
 
@@ -19,13 +18,16 @@ public:
 	
 	virtual void SetVisible(SCENENODE & scene, bool newvis);
 	
-	virtual bool ProcessInput(SCENENODE & scene, float cursorx, float cursory, bool cursordown, bool cursorjustup);
-	
 	virtual void SetName(const std::string & newname);
 	
 	virtual std::string GetDescription() const;
 	
 	virtual void SetDescription(const std::string & newdesc);
+	
+	virtual bool ProcessInput(
+		SCENENODE & scene,
+		float cursorx, float cursory,
+		bool cursordown, bool cursorjustup);
 	
 	///set the local option pointer to the associated optionmap
 	virtual void UpdateOptions(

@@ -1,8 +1,6 @@
 #ifndef _CARDYNAMICS_H
 #define _CARDYNAMICS_H
 
-#include "mathvector.h"
-#include "quaternion.h"
 #include "rigidbody.h"
 #include "carengine.h"
 #include "carclutch.h"
@@ -22,7 +20,7 @@
 #include "BulletDynamics/Dynamics/btActionInterface.h"
 
 class MODEL;
-class CONFIGFILE;
+class CONFIG;
 class COLLISION_WORLD;
 //class SuspensionConstraint;
 
@@ -35,7 +33,7 @@ public:
 	
 	CARDYNAMICS();
 	
-	bool Load(const CONFIGFILE & c, std::ostream & error_output);
+	bool Load(const CONFIG & c, std::ostream & error_output);
 
 	void Init(
 		COLLISION_WORLD & world,

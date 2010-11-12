@@ -32,7 +32,7 @@ public:
 	CAR();
 	
 	bool LoadGraphics(
-		const CONFIGFILE & carconf,
+		const CONFIG & cfg,
 		const std::string & carpath,
 		const std::string & carname,
 		const std::string & partspath,
@@ -57,7 +57,7 @@ public:
 		std::ostream & error_output);
 	
 	bool LoadPhysics(
-		const CONFIGFILE & carconf,
+		const CONFIG & carconf,
 		const std::string & carpath,
 		const MATHVECTOR <float, 3> & initial_position,
 		const QUATERNION <float> & initial_orientation,
@@ -361,7 +361,7 @@ protected:
 	void UpdateGraphics();
 	
 	bool LoadLight(
-		const CONFIGFILE & cfg,
+		const CONFIG & cfg,
 		const std::string & name,
 		std::ostream & error_output);
 };

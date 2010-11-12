@@ -1,5 +1,5 @@
 #include "gui.h"
-#include "configfile.h"
+#include "config.h"
 
 #include <map>
 using std::map;
@@ -32,7 +32,7 @@ bool GUI::Load(
 	std::ostream & info_output,
 	std::ostream & error_output)
 {
-	std::string optionresult(LoadOptions(optionsfile, valuelists, error_output));
+	std::string optionresult = LoadOptions(optionsfile, valuelists, error_output);
 	if (!optionresult.empty())
 	{
 		error_output << "Options file loading failed here: " << optionresult << std::endl;
@@ -41,7 +41,7 @@ bool GUI::Load(
 	
 	bool foundmain = false;
 	
-	CONFIGFILE controlsconfig;
+	CONFIG controlsconfig;
 	controlsconfig.Load(carcontrolsfile); //pre-load controls file so that each individual widget doesn't have to reload it
 	
 	for (std::list <std::string>::const_iterator i = pagelist.begin(); i != pagelist.end(); ++i)
@@ -98,12 +98,9 @@ void GUI::DeactivateAll()
 }
 
 std::list <std::string> GUI::ProcessInput(
-	bool movedown,
-	bool moveup,
-	float cursorx,
-	float cursory,
-	bool cursordown,
-	bool cursorjustup,
+	bool movedown, bool moveup,
+	float cursorx, float cursory,
+	bool cursordown, bool cursorjustup,
 	float screenhwratio,
 	std::ostream & error_output)
 {
@@ -206,7 +203,7 @@ void GUI::SyncOptions(
 			std::map<std::string, GUIOPTION>::iterator option = optionmap.find(i->first);
 			if (option == optionmap.end())
 			{
-				//error_output << "External option \"" << i->first << "\" has no internal GUI counterpart" << std::endl;
+				error_output << "External option \"" << i->first << "\" has no internal GUI counterpart" << std::endl;
 			}
 			else //if (i->first.find("controledit.") != 0)
 			{
@@ -318,7 +315,7 @@ bool GUI::LoadPage(
 	const std::string & datapath,
 	const std::string & texsize,
 	const float screenhwratio,
-	const CONFIGFILE & carcontrolsfile,
+	const CONFIG & carcontrolsfile,
 	const std::map <std::string, FONT> & fonts,
 	std::map<std::string, GUIOPTION> & optionmap,
 	SCENENODE & scenenode,
@@ -357,45 +354,45 @@ bool GUI::LoadPage(
 
 string GUI::LoadOptions(const std::string & optionfile, const std::map<std::string, std::list <std::pair <std::string, std::string> > > & valuelists, std::ostream & error_output)
 {
-	CONFIGFILE o;
-	
-	if (!o.Load(optionfile))
+	CONFIG opt;
+	if (!opt.Load(optionfile))
 	{
 		error_output << "Can't find options file: " << optionfile << endl;
 		return "File loading";
 	}
 	
-	std::list <std::string> sectionlist;
-	o.GetSectionList(sectionlist);
-	for (std::list <std::string>::iterator i = sectionlist.begin(); i != sectionlist.end(); ++i)
+	//opt.DebugPrint(error_output);
+	
+	for (CONFIG::const_iterator i = opt.begin(); i != opt.end(); ++i)
 	{
-		if (!i->empty())
+		if (!i->first.empty())
 		{
 			string cat, name, defaultval, values, text, desc, type;
-			if (!o.GetParam(*i+".cat", cat)) return *i+".cat";
-			if (!o.GetParam(*i+".name", name)) return *i+".name";
-			if (!o.GetParam(*i+".default", defaultval)) return *i+".default";
-			if (!o.GetParam(*i+".values", values)) return *i+".values";
-			if (!o.GetParam(*i+".title", text)) return *i+".title";
-			if (!o.GetParam(*i+".desc", desc)) return *i+".desc";
-			if (!o.GetParam(*i+".type", type)) return *i+".type";
+			if (!opt.GetParam(i, "cat", cat)) return i->first+".cat";
+			if (!opt.GetParam(i, "name", name)) return i->first+".name";
+			if (!opt.GetParam(i, "default", defaultval)) return i->first+".default";
+			if (!opt.GetParam(i, "values", values)) return i->first+".values";
+			if (!opt.GetParam(i, "title", text)) return i->first+".title";
+			if (!opt.GetParam(i, "desc", desc)) return i->first+".desc";
+			if (!opt.GetParam(i, "type", type)) return i->first+".type";
 			
 			float min(0),max(1);
 			bool percentage(true);
-			o.GetParam(*i+".min",min);
-			o.GetParam(*i+".max",max);
-			o.GetParam(*i+".percentage",percentage);
+			opt.GetParam(i, "min",min);
+			opt.GetParam(i, "max",max);
+			opt.GetParam(i, "percentage",percentage);
 			
 			string optionname = cat+"."+name;
+			GUIOPTION & option = optionmap[optionname];
 			
-			optionmap[optionname].SetInfo(text, desc, type);
-			optionmap[optionname].SetMinMaxPercentage(min, max, percentage);
+			option.SetInfo(text, desc, type);
+			option.SetMinMaxPercentage(min, max, percentage);
 			
 			//different ways to populate the options
 			if (values == "list")
 			{
 				int valuenum;
-				if (!o.GetParam(*i+".num_vals", valuenum)) return *i+".num_vals";
+				if (!opt.GetParam(i, "num_vals", valuenum)) return i->first+".num_vals";
 				
 				for (int n = 0; n < valuenum; n++)
 				{
@@ -405,20 +402,20 @@ string GUI::LoadOptions(const std::string & optionfile, const std::map<std::stri
 					tstr << n;
 					
 					string displaystr, storestr;
-					if (!o.GetParam(*i+".opt"+tstr.str(), displaystr)) return *i+".opt"+tstr.str();
-					if (!o.GetParam(*i+".val"+tstr.str(), storestr)) return *i+".val"+tstr.str();
+					if (!opt.GetParam(i, "opt"+tstr.str(), displaystr)) return i->first+".opt"+tstr.str();
+					if (!opt.GetParam(i, "val"+tstr.str(), storestr)) return i->first+".val"+tstr.str();
 					
-					optionmap[optionname].Insert(storestr, displaystr);
+					option.Insert(storestr, displaystr);
 				}
 			}
 			else if (values == "bool")
 			{
 				string truestr, falsestr;
-				if (!o.GetParam(*i+".true", truestr)) return *i+".true";
-				if (!o.GetParam(*i+".false", falsestr)) return *i+".false";
-					
-				optionmap[optionname].Insert("true", truestr);
-				optionmap[optionname].Insert("false", falsestr);
+				if (!opt.GetParam(i, "true", truestr)) return i->first+".true";
+				if (!opt.GetParam(i, "false", falsestr)) return i->first+".false";
+				
+				option.Insert("true", truestr);
+				option.Insert("false", falsestr);
 			}
 			else if (values == "ip_valid")
 			{
@@ -436,7 +433,7 @@ string GUI::LoadOptions(const std::string & optionfile, const std::map<std::stri
 			{
 				
 			}
-			else //assume it's "values", meaning the GAME populates the values
+			else //assume it's "values", mefaning the GAME populates the values
 			{
 				std::map<std::string, std::list <std::pair<std::string,std::string> > >::const_iterator vlist = valuelists.find(values);
 				if (vlist == valuelists.end())
@@ -450,16 +447,24 @@ string GUI::LoadOptions(const std::string & optionfile, const std::map<std::stri
 					for (std::list <std::pair<std::string,std::string> >::const_iterator n = vlist->second.begin(); n != vlist->second.end(); n++)
 					{
 						//std::cout << "\t" << n->second << endl;
-						optionmap[optionname].Insert(n->first, n->second);
+						option.Insert(n->first, n->second);
 					}
 				}
 			}
 			
-			optionmap[optionname].SetCurrentValue(defaultval);
+			option.SetCurrentValue(defaultval);
 		}
 	}
 	
 	UpdateOptions(error_output);
 	
 	return "";
+}
+
+void GUI::UpdateOptions(std::ostream & error_output)
+{
+	for (std::map<std::string, PAGEINFO>::iterator i = pages.begin(); i != pages.end(); ++i)
+	{
+		i->second.page.UpdateOptions(node.GetNode(i->second.node), false, optionmap, error_output);
+	}
 }

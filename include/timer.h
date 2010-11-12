@@ -3,7 +3,7 @@
 
 #include "texture.h"
 #include "vertexarray.h"
-#include "configfile.h"
+#include "config.h"
 #include "font.h"
 
 #include <ostream>
@@ -230,7 +230,7 @@ private:
 	//variables for drawing text
 
 	bool loaded;
-	CONFIGFILE trackrecords; //the track records configfile
+	CONFIG trackrecords; //the track records configfile
 	std::string trackrecordsfile; //the filename for the track records
 	float pretime; //amount of time left in staging
 	unsigned int playercarindex; //the index for the player's car; defaults to zero
@@ -267,7 +267,7 @@ public:
 		assert(playercarindex<car.size());
 		float curbestlap = car[playercarindex].GetBestLap();
 		float prevbest(0);
-		bool haveprevbest = trackrecords.GetParam(car[playercarindex].GetCarType() + ".sector 0", prevbest);
+		bool haveprevbest = trackrecords.GetParam(car[playercarindex].GetCarType(), "sector 0", prevbest);
 		if (haveprevbest)
 		{
 			if (curbestlap == 0)

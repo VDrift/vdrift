@@ -73,13 +73,13 @@ void TIMER::Lap(const unsigned int carid, const int prevsector, const int nextse
 			if (lastcar != car[carid].GetCarType()) //clear last lap time
 			trackrecords.SetParam("last.sector 0", (float)0.0);
 		}*/
-		trackrecords.SetParam("last." + secstr.str(), (float) car[carid].GetTime());
-		trackrecords.SetParam("last.car", car[carid].GetCarType());
+		trackrecords.SetParam("last", secstr.str(), (float) car[carid].GetTime());
+		trackrecords.SetParam("last", "car", car[carid].GetCarType());
 
 		float prevbest = 0;
-		bool haveprevbest = trackrecords.GetParam(car[carid].GetCarType() + "." + secstr.str(), prevbest);
+		bool haveprevbest = trackrecords.GetParam(car[carid].GetCarType(), secstr.str(), prevbest);
 		if (car[carid].GetTime() < prevbest || !haveprevbest)
-			trackrecords.SetParam(car[carid].GetCarType() + "." + secstr.str(), (float) car[carid].GetTime());
+			trackrecords.SetParam(car[carid].GetCarType(), secstr.str(), (float) car[carid].GetTime());
 	}
 
 	if (nextsector == 0)

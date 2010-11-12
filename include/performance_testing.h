@@ -3,9 +3,8 @@
 
 #include "car.h"
 
-#include <ostream>
 #include <string>
-#include <sstream>
+#include <ostream>
 
 class PERFORMANCE_TESTING
 {

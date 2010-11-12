@@ -1,11 +1,10 @@
 #include "car.h"
 
 #include "carwheelposition.h"
-#include "configfile.h"
 #include "coordinatesystems.h"
 #include "collision_world.h"
 #include "tracksurface.h"
-#include "configfile.h"
+#include "config.h"
 #include "carinput.h"
 #include "mesh_gen.h"
 #include "texturemanager.h"
@@ -156,7 +155,7 @@ static bool LoadInto(
 }
 
 static bool GenerateWheelMesh(
-	const CONFIGFILE & carconf,
+	const CONFIG & carconf,
 	const std::string & id,
 	const std::string & carpath,
 	const std::string & partspath,
@@ -174,12 +173,12 @@ static bool GenerateWheelMesh(
 	SCENENODE & node = topnode.GetNode(output_scenenode);
 	
 	std::string orientation;
-	carconf.GetParam("wheel-"+id+".orientation", orientation, error_output);
+	carconf.GetParam("wheel-"+id, "orientation", orientation, error_output);
 	
 	// tire parameters
 	std::string tiresize;
 	CARTIRESIZE<float> tire;
-	if (!carconf.GetParam("tire-"+id+".size", tiresize, error_output)) return false;
+	if (!carconf.GetParam("tire-"+id, "size", tiresize, error_output)) return false;
 	if (!tire.Parse(tiresize, error_output)) return false;
 	float aspectRatio = tire.aspect_ratio * 100.f;
 	float rim_diameter = (tire.radius - tire.sidewall_width * tire.aspect_ratio) * 2.f;
@@ -189,7 +188,7 @@ static bool GenerateWheelMesh(
 	
 	// create tire
 	std::vector<std::string> tiretexname;
-	if (!carconf.GetParam("tire-"+id+".texture", tiretexname, error_output)) return false;
+	if (!carconf.GetParam("tire-"+id, "texture", tiretexname, error_output)) return false;
 	
 	const std::string tiremodelname(tiresize + orientation);
 	std::tr1::shared_ptr<MODEL_JOE03> tiremodel;
@@ -197,7 +196,6 @@ static bool GenerateWheelMesh(
 	{
 		VERTEXARRAY output_varray;
 		MESHGEN::mg_tire(output_varray, sectionWidth_mm, aspectRatio, rimDiameter_in);
-		//output_varray.Rotate(-M_PI_2, 0, 0, 1);
 		if (orientation != "left") output_varray.Scale(-1, 1, 1); // mirror mesh
 		
 		tiremodel.reset(new MODEL_JOE03());
@@ -214,8 +212,8 @@ static bool GenerateWheelMesh(
 	// wheel parameters
 	std::string rimmodelname;
 	std::vector<std::string> wheeltexname;
-	if (!carconf.GetParam("wheel-"+id+".mesh", rimmodelname, error_output)) return false;
-	if (!carconf.GetParam("wheel-"+id+".texture", wheeltexname, error_output)) return false;
+	if (!carconf.GetParam("wheel-"+id, "mesh", rimmodelname, error_output)) return false;
+	if (!carconf.GetParam("wheel-"+id, "texture", wheeltexname, error_output)) return false;
 	
 	// create wheel
 	std::tr1::shared_ptr<MODEL_JOE03> wheelmodel;
@@ -246,7 +244,6 @@ static bool GenerateWheelMesh(
 			const float flangeDisplacement_mm = 10;
 			VERTEXARRAY varray;
 			MESHGEN::mg_rim(varray, sectionWidth_mm, aspectRatio, rimDiameter_in, flangeDisplacement_mm);
-			//rim_varray.Rotate(-M_PI_2, 0, 0, 1);
 			
 			// add rim to wheel mesh
 			varray = varray + wheelmodel->GetVertexArray();
@@ -267,8 +264,8 @@ static bool GenerateWheelMesh(
 	// create brake rotor(optional)
 	std::string radius;
 	std::vector<std::string> rotortexname;
-	if (!carconf.GetParam("brake-"+id+".texture", rotortexname)) return true;
-	if (!carconf.GetParam("brake-"+id+".radius", radius, error_output)) return false;
+	if (!carconf.GetParam("brake-"+id, "texture", rotortexname)) return true;
+	if (!carconf.GetParam("brake-"+id, "radius", radius, error_output)) return false;
 	
 	std::tr1::shared_ptr<MODEL_JOE03> brakemodel;
 	std::string rotorname("rotor"+radius+orientation);
@@ -284,7 +281,6 @@ static bool GenerateWheelMesh(
 		VERTEXARRAY rotor_varray;
 		MESHGEN::mg_brake_rotor(&rotor_varray, diameter_mm, thickness_mm);
 		if (orientation != "left") rotor_varray.Scale(-1, 1, 1); // mirror mesh
-		//rotor_varray->Rotate(-M_PI_2, 0, 0, 1);
 		
 		brakemodel.reset(new MODEL_JOE03());
 		brakemodel->SetVertexArray(rotor_varray);
@@ -303,7 +299,7 @@ static bool GenerateWheelMesh(
 }
 
 bool LoadCameras(
-	const CONFIGFILE & cfg,
+	const CONFIG & cfg,
 	const float camerabounce,
 	CAMERA_SYSTEM & cameras,
 	std::ostream & error_output)
@@ -313,28 +309,25 @@ bool LoadCameras(
 	driver_cam->SetEffectStrength(camerabounce);
 	hood_cam->SetEffectStrength(camerabounce);
 
-	float pos[3], hoodpos[3];
-	if (!cfg.GetParam("camera.view-position", pos, error_output)) return false;
+	std::vector<float> pos(3, 0.0), hoodpos(3, 0.0);
+	if (!cfg.GetParam("camera", "view-position", pos, error_output)) return false;
 	COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
-	MATHVECTOR <float, 3> cam_offset;
-	cam_offset.Set(pos);
+	MATHVECTOR <float, 3> cam_offset(pos[0], pos[1], pos[2]);
 	driver_cam->SetOffset(cam_offset);
 
-	if (!cfg.GetParam("camera.hood-mounted-view-position", hoodpos, error_output))
+	if (!cfg.GetParam("camera", "hood-mounted-view-position", hoodpos, error_output))
 	{
-		pos[1] = 0;
-		pos[0] += 1.0;
-		cam_offset.Set(pos);
+		cam_offset.Set(pos[0] + 1, 0, pos[2]);
 	}
 	else
 	{
 		COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(hoodpos[0],hoodpos[1],hoodpos[2]);
-		cam_offset.Set(hoodpos);
+		cam_offset.Set(hoodpos[0], hoodpos[1], hoodpos[2]);
 	}
 	hood_cam->SetOffset(cam_offset);
 
 	float view_stiffness = 0.0;
-	cfg.GetParam("camera.view-stiffness", view_stiffness);
+	cfg.GetParam("camera", "view-stiffness", view_stiffness);
 	driver_cam->SetStiffness(view_stiffness);
 	hood_cam->SetStiffness(view_stiffness);
 	cameras.Add(hood_cam);
@@ -387,21 +380,19 @@ CAR::CAR() :
 	sector(-1),
 	applied_brakes(0)
 {
-	// ctor
 	modelrotation.Rotate(-M_PI_2, 0, 0, 1);
 }
 
 bool CAR::LoadLight(
-	const CONFIGFILE & cfg,
+	const CONFIG & cfg,
 	const std::string & name,
 	std::ostream & error_output)
 {
-	float pos[] = {0, 0, 0};
-	float col[] = {0, 0, 0};
 	float size;
-	if (!cfg.GetParam(name + ".position", pos, error_output)) return false;
-	if (!cfg.GetParam(name + ".color", col, error_output)) return false;
-	if (!cfg.GetParam(name + ".radius", size, error_output)) return false;
+	std::vector<float> pos(3, 0.0), col(3, 0.0);
+	if (!cfg.GetParam(name, "position", pos, error_output)) return false;
+	if (!cfg.GetParam(name, "color", col, error_output)) return false;
+	if (!cfg.GetParam(name, "radius", size, error_output)) return false;
 	
 //	COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
 	
@@ -431,7 +422,7 @@ bool CAR::LoadLight(
 }
 
 bool CAR::LoadGraphics(
-	const CONFIGFILE & carconf,
+	const CONFIG & carconf,
 	const std::string & carpath,
 	const std::string & carname,
 	const std::string & partspath,
@@ -453,10 +444,11 @@ bool CAR::LoadGraphics(
 	//load car body graphics
 	std::string bodymodelname;
 	std::vector<std::string> bodytexname;
-	if (!carconf.GetParam("body.mesh", bodymodelname, error_output)) return false;
-	if (!carconf.GetParam("body.texture", bodytexname, error_output)) return false;
+	if (!carconf.GetParam("body", "mesh", bodymodelname, error_output)) return false;
+	if (!carconf.GetParam("body", "texture", bodytexname, error_output)) return false;
 	
-	bodytexname[0] = "body"+carpaint+".png"; 
+	assert(bodymodelname.size());
+	bodytexname[0] = "body"+carpaint+".png";
 	if (!LoadInto(
 		NOBLEND, carpath+"/"+bodymodelname, bodytexname, texpath, texsize, anisotropy,
 		topnode, textures, models, modellist, bodynode, bodydraw,
@@ -464,11 +456,11 @@ bool CAR::LoadGraphics(
 	
 	//load car interior graphics (optional)
 	std::string intmodelname;
-	if (carconf.GetParam("interior.mesh", intmodelname))
+	if (carconf.GetParam("interior", "mesh", intmodelname))
 	{
 		keyed_container <DRAWABLE>::handle interiordraw;
 		std::vector<std::string> texname;
-		if (!carconf.GetParam("interior.texture", texname, error_output)) return false;
+		if (!carconf.GetParam("interior", "texture", texname, error_output)) return false;
 		if (!LoadInto(
 			NOBLEND, carpath+"/"+intmodelname, texname, texpath, texsize, anisotropy,
 			topnode.GetNode(bodynode), textures, models, modellist, bodynode, interiordraw,
@@ -477,10 +469,10 @@ bool CAR::LoadGraphics(
 	
 	//load car glass graphics (optional)
 	std::string glassmodelname;
-	if (carconf.GetParam("glass.mesh", glassmodelname))
+	if (carconf.GetParam("glass", "mesh", glassmodelname))
 	{
 		std::vector<std::string> texname;
-		if (!carconf.GetParam("glass.texture", texname, error_output)) return false;
+		if (!carconf.GetParam("glass", "texture", texname, error_output)) return false;
 		if (!LoadInto(
 			BLEND, carpath+"/"+glassmodelname, texname, texpath, texsize, anisotropy,
 			topnode.GetNode(bodynode), textures, models, modellist, bodynode, glassdraw,
@@ -491,19 +483,18 @@ bool CAR::LoadGraphics(
 	if (loaddriver)
 	{
 		std::string drivermodelname;
-		if (carconf.GetParam("driver.mesh", drivermodelname))
+		if (carconf.GetParam("driver", "mesh", drivermodelname))
 		{
 			keyed_container <DRAWABLE>::handle driverdraw;
 			std::vector<std::string> texname;
-			if (!carconf.GetParam("driver.texture", texname, error_output)) return false;
+			if (!carconf.GetParam("driver", "texture", texname, error_output)) return false;
 			if (LoadInto(
 				NOBLEND, partspath+"/driver/"+drivermodelname, texname, partspath+"/driver/textures/", texsize, anisotropy,
 				topnode.GetNode(bodynode), textures, models, modellist, drivernode, driverdraw,
 				error_output))
 			{
-				float pos[3] = {0, 0, 0};
-				if (!carconf.GetParam("driver.position", pos, error_output)) return false;
-				//COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
+				std::vector<float> pos(3, 0.0);
+				if (!carconf.GetParam("driver", "position", pos, error_output)) return false;
 				SCENENODE & drivernoderef = topnode.GetNode(bodynode).GetNode(drivernode);
 				MATHVECTOR <float, 3> floatpos(pos[0], pos[1], pos[2]);
 				drivernoderef.GetTransform().SetTranslation(floatpos);
@@ -529,19 +520,19 @@ bool CAR::LoadGraphics(
 		}
 		
 		std::string fendermodel;
-		if (carconf.GetParam("cycle-fender-"+wheelid[i]+".mesh", fendermodel))
+		if (carconf.GetParam("cycle-fender-"+wheelid[i], "mesh", fendermodel))
 		{
 			keyed_container <DRAWABLE>::handle fenderdraw;
 			std::vector<std::string> fendertex;
-			if (!carconf.GetParam("cycle-fender-"+wheelid[i]+".texture", fendertex)) return false;
+			if (!carconf.GetParam("cycle-fender-"+wheelid[i], "texture", fendertex)) return false;
 			LoadInto(
 				NOBLEND, carpath+"/"+fendermodel, fendertex, texpath, texsize, anisotropy,
 				topnode, textures, models, modellist, floatingnode[i], fenderdraw, error_output);
 		}
 		
 		// set wheel positions(for widget_spinningcar)
-		float pos[3];
-		if (!carconf.GetParam("wheel-"+wheelid[i]+".position", pos, error_output)) return false;
+		std::vector<float> pos(3, 0.0);
+		if (!carconf.GetParam("wheel-"+wheelid[i], "position", pos, error_output)) return false;
 		//COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
 		
 		MATHVECTOR <float, 3> wheelpos(pos[0], pos[1], pos[2]);
@@ -559,9 +550,9 @@ bool CAR::LoadGraphics(
 		float r;
 		int i = 0;
 		std::string istr = "0";
-		while (carconf.GetParam("light-brake-" + istr + ".radius", r))
+		while (carconf.GetParam("light-brake-"+istr, "radius", r))
 		{
-			if (!LoadLight(carconf, "light-brake-" + istr, error_output)) return false;
+			if (!LoadLight(carconf, "light-brake-"+istr, error_output)) return false;
 			
 			std::stringstream sstr;
 			sstr << ++i;
@@ -570,10 +561,10 @@ bool CAR::LoadGraphics(
 		
 		// load car brake graphics (optional)
 		std::string brakemodelname;
-		if (carconf.GetParam("light-brake.mesh", brakemodelname))
+		if (carconf.GetParam("light-brake", "mesh", brakemodelname))
 		{
 			std::vector<std::string> texname;
-			if (!carconf.GetParam("light-brake.texture", texname, error_output)) return false;
+			if (!carconf.GetParam("light-brake", "texture", texname, error_output)) return false;
 			if (!LoadInto(
 				EMISSIVE, carpath+"/"+brakemodelname, texname, texpath, texsize, anisotropy,
 				topnode.GetNode(bodynode), textures, models, modellist, bodynode, brakelights,
@@ -583,9 +574,9 @@ bool CAR::LoadGraphics(
 		// load reverse lights (optional)
 		i = 0;
 		istr = "0";
-		while (carconf.GetParam("light-reverse-" + istr + ".radius", r))
+		while (carconf.GetParam("light-reverse-"+istr, "radius", r))
 		{
-			if (!LoadLight(carconf, "light-reverse-" + istr, error_output)) return false;
+			if (!LoadLight(carconf, "light-reverse-"+istr, error_output)) return false;
 			
 			std::stringstream sstr;
 			sstr << ++i;
@@ -594,10 +585,10 @@ bool CAR::LoadGraphics(
 		
 		// load car reverse graphics (optional)
 		std::string revmodelname;
-		if (carconf.GetParam("light-reverse.mesh", revmodelname))
+		if (carconf.GetParam("light-reverse", "mesh", revmodelname))
 		{
 			std::vector<std::string> texname;
-			if (!carconf.GetParam("light-reverse.texture", texname, error_output)) return false;
+			if (!carconf.GetParam("light-reverse", "texture", texname, error_output)) return false;
 			if (!LoadInto(
 				EMISSIVE, carpath+"/"+revmodelname, texname, texpath, texsize, anisotropy,
 				topnode.GetNode(bodynode), textures, models, modellist, bodynode, reverselights,
@@ -617,7 +608,7 @@ bool CAR::LoadGraphics(
 }
 
 bool CAR::LoadPhysics(
-	const CONFIGFILE & carconf,
+	const CONFIG & carconf,
 	const std::string & carpath,
 	const MATHVECTOR <float, 3> & initial_position,
 	const QUATERNION <float> & initial_orientation,
@@ -632,7 +623,7 @@ bool CAR::LoadPhysics(
 	
 	std::string carmodel;
 	std::tr1::shared_ptr<MODEL_JOE03> modelptr;
-	if (!carconf.GetParam("body.mesh", carmodel, error_output)) return false;
+	if (!carconf.GetParam("body", "mesh", carmodel, error_output)) return false;
 	if (!models.Load(carpath+"/"+carmodel, modelptr)) return false;
 	
 	typedef CARDYNAMICS::T T;
@@ -666,29 +657,26 @@ bool CAR::LoadSounds(
 	std::ostream & error_output)
 {
 	//check for sound specification file
-	CONFIGFILE aud;
+	CONFIG aud;
 	if (aud.Load(carpath+"/"+carname+".aud"))
 	{
-		std::list <std::string> sections;
-		aud.GetSectionList(sections);
-		for (std::list <std::string>::iterator i = sections.begin(); i != sections.end(); ++i)
+		for (CONFIG::const_iterator i = aud.begin(); i != aud.end(); ++i)
 		{
-			//load the buffer
 			std::string filename;
 			std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
-			if (!aud.GetParam(*i+".filename", filename, error_output)) return false;
+			if (!aud.GetParam(i, "filename", filename, error_output)) return false;
 			if (!sounds.Load(carpath+"/"+filename, soundinfo, soundptr)) return false;
 
 			enginesounds.push_back(std::pair <ENGINESOUNDINFO, SOUNDSOURCE> ());
 			ENGINESOUNDINFO & info = enginesounds.back().first;
 			SOUNDSOURCE & sound = enginesounds.back().second;
 
-			if (!aud.GetParam(*i+".MinimumRPM", info.minrpm, error_output)) return false;
-			if (!aud.GetParam(*i+".MaximumRPM", info.maxrpm, error_output)) return false;
-			if (!aud.GetParam(*i+".NaturalRPM", info.naturalrpm, error_output)) return false;
+			if (!aud.GetParam(i, "MinimumRPM", info.minrpm, error_output)) return false;
+			if (!aud.GetParam(i, "MaximumRPM", info.maxrpm, error_output)) return false;
+			if (!aud.GetParam(i, "NaturalRPM", info.naturalrpm, error_output)) return false;
 
 			std::string powersetting;
-			if (!aud.GetParam(*i+".power", powersetting, error_output)) return false;
+			if (!aud.GetParam(i, "power", powersetting, error_output)) return false;
 			if (powersetting == "on")
 				info.power = ENGINESOUNDINFO::POWERON;
 			else if (powersetting == "off")
@@ -973,7 +961,6 @@ void CAR::UpdateGraphics()
 
 void CAR::UpdateCameras(float dt)
 {
-	
 	MATHVECTOR <float, 3> pos = dynamics.GetPosition();
 	MATHVECTOR <float, 3> acc = dynamics.GetLastBodyForce() / dynamics.GetMass();
 	

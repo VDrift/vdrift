@@ -38,8 +38,7 @@ src = Split("""aabb.cpp
 		cartire.cpp
 		cartireinfo.cpp
 		collision_world.cpp
-		configfile.cpp
-		configvariable.cpp
+		config.cpp
 		containeralgorithm.cpp
 		coordinatesystems.cpp
 		crashdetection.cpp
@@ -55,6 +54,7 @@ src = Split("""aabb.cpp
 		graphics_config.cpp
 		graphics_renderers.cpp
 		gui.cpp
+		guioption.cpp
 		guipage.cpp
 		httpget.cpp
 		hud.cpp
@@ -104,10 +104,17 @@ src = Split("""aabb.cpp
 		track.cpp
 		trackmap.cpp
 		vertexarray.cpp
+		widget_button.cpp
 		widget_colorpicker.cpp
+		widget_controlgrab.cpp
+		widget_doublestringwheel.cpp
+		widget_image.cpp
+		widget_label.cpp
+		widget_multiimage.cpp		
 		widget_slider.cpp
 		widget_spinningcar.cpp
-		widget_stringwheel.cpp""")
+		widget_stringwheel.cpp
+		widget_toggle.cpp""")
 
 src.sort(lambda x, y: cmp(x.lower(),y.lower()))
 

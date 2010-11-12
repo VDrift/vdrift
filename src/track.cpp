@@ -1,5 +1,5 @@
 #include "track.h"
-#include "configfile.h"
+#include "config.h"
 #include "reseatable_reference.h"
 #include "tracksurface.h"
 #include "objectloader.h"
@@ -87,24 +87,26 @@ bool TRACK::Load(
 bool TRACK::LoadLapSequence(const std::string & trackpath, bool reverse)
 {
 	std::string parampath = trackpath + "/track.txt";
-	CONFIGFILE trackconfig;
+	CONFIG trackconfig;
 	if (!trackconfig.Load(parampath))
 	{
 		error_output << "Can't find track configfile: " << parampath << std::endl;
 		return false;
 	}
 	
-	trackconfig.GetParam("cull faces", cull);
+	CONFIG::const_iterator section;
+	trackconfig.GetSection("", section);
+	trackconfig.GetParam(section, "cull faces", cull);
 
 	int lapmarkers = 0;
-	if (trackconfig.GetParam("lap sequences", lapmarkers))
+	if (trackconfig.GetParam(section, "lap sequences", lapmarkers))
 	{
 		for (int l = 0; l < lapmarkers; l++)
 		{
-			float lapraw[3];
+			std::vector<float> lapraw(3);
 			std::stringstream lapname;
 			lapname << "lap sequence " << l;
-			trackconfig.GetParam(lapname.str(), lapraw);
+			trackconfig.GetParam(section, lapname.str(), lapraw);
 			int roadid = lapraw[0];
 			int patchid = lapraw[1];
 
@@ -267,90 +269,46 @@ bool TRACK::CreateRacingLines(
 	return true;
 }
 
-bool LoadOrientation(
-	const CONFIGFILE & param,
-	const int sp_num,
-	QUATERNION <float> & orient,
-	std::ostream & error_output)
-{
-	float angle[3];
-	std::stringstream sp_name;
-	sp_name << "start orientation " << sp_num;
-	if (!param.GetParam(sp_name.str(), angle))
-	{
-		//error_output << "No matching orientation for start position " << sp_num << std::endl;
-		return false;
-	}
-	orient.SetEulerZYX(angle[0] * M_PI/180, angle[1] * M_PI/180, angle[2] * M_PI/180);
-	return true;
-}
-
-bool LoadOrientationOld(
-	const CONFIGFILE & param,
-	const int sp_num,
-	QUATERNION <float> & orient,
-	std::ostream & error_output)
-{
-	float f3[3];
-	float f1;
-	std::stringstream sp_name;
-	sp_name << "start orientation-xyz " << sp_num;
-	if (!param.GetParam(sp_name.str(), f3))
-	{
-		error_output << "No matching orientation xyz for start position " << sp_num << std::endl;
-		return false;
-	}
-	sp_name.str("");
-	sp_name << "start orientation-w " << sp_num;
-	if (!param.GetParam(sp_name.str(), f1))
-	{
-		error_output << "No matching orientation w for start position " << sp_num << std::endl;
-		return false;
-	}
-	orient = QUATERNION <float> (f3[0], f3[1], f3[2], f1);
-	return true;
-}
-
 bool TRACK::LoadParameters(const std::string & trackpath)
 {
 	std::string parampath = trackpath + "/track.txt";
-	CONFIGFILE param;
+	CONFIG param;
 	if (!param.Load(parampath))
 	{
 		error_output << "Can't find track configfile: " << parampath << std::endl;
 		return false;
 	}
+	
+	CONFIG::const_iterator section;
+	param.GetSection("", section);
 
 	vertical_tracking_skyboxes = false; //default to false
-	param.GetParam("vertical tracking skyboxes", vertical_tracking_skyboxes);
+	param.GetParam(section, "vertical tracking skyboxes", vertical_tracking_skyboxes);
 
 	int sp_num = 0;
 	std::stringstream sp_name;
 	sp_name << "start position " << sp_num;
-	float f3[3];
-	while (param.GetParam(sp_name.str(), f3))
+	std::vector<float> f3(3);
+	while(param.GetParam(section, sp_name.str(), f3))
 	{
-		MATHVECTOR <float, 3> pos(f3[2], f3[0], f3[1]);
-		
+		std::stringstream so_name;
+		so_name << "start orientation " << sp_num;
 		QUATERNION <float> q;
-		if(!LoadOrientation(param, sp_num, q, error_output))
+		std::vector <float> angle(3, 0.0);
+		if(param.GetParam(section, so_name.str(), angle, error_output))
 		{
-			if(!LoadOrientationOld(param, sp_num, q, error_output))
-			{
-				return false;
-			}
+			q.SetEulerZYX(angle[0] * M_PI/180, angle[1] * M_PI/180, angle[2] * M_PI/180);
 		}
 		
-		//float angle[3];
-		//q.GetEulerZYX(angle[0], angle[1], angle[2]);
-		//q.SetEulerZYX(angle[0], angle[1], angle[2]);
-		
+		// wtf ?
 		QUATERNION <float> orient(q[2], q[0], q[1], q[3]);
 
 		//due to historical reasons the initial orientation places the car faces the wrong way
 		QUATERNION <float> fixer; 
 		fixer.Rotate(3.141593, 0, 0, 1);
 		orient = fixer * orient;
+
+		MATHVECTOR <float, 3> pos(f3[2], f3[0], f3[1]);
 
 		start_positions.push_back(std::pair <MATHVECTOR <float, 3>, QUATERNION <float> >
 				(pos, orient));
@@ -366,46 +324,44 @@ bool TRACK::LoadParameters(const std::string & trackpath)
 bool TRACK::LoadSurfaces(const std::string & trackpath)
 {
 	std::string path = trackpath + "/surfaces.txt";
-	CONFIGFILE param;
+	CONFIG param;
 	if (!param.Load(path))
 	{
 		info_output << "Can't find surfaces configfile: " << path << std::endl;
 		return false;
 	}
 	
-	std::list <std::string> sectionlist;
-	param.GetSectionList(sectionlist);
-	
-	int surface_id = 0;
-	tracksurfaces.resize(sectionlist.size());
-	for (std::list<std::string>::const_iterator section = sectionlist.begin(); section != sectionlist.end(); ++section)
+	for (CONFIG::const_iterator section = param.begin(); section != param.end(); ++section)
 	{
-		TRACKSURFACE & tempsurface = tracksurfaces[surface_id++];
+		if (section->first.find("surface") != 0) continue;
+		
+		tracksurfaces.push_back(TRACKSURFACE());
+		TRACKSURFACE & surface = tracksurfaces.back();
 
 		std::string type;
-		param.GetParam(*section + ".Type", type);
-		tempsurface.setType(type);
+		param.GetParam(section, "Type", type);
+		surface.setType(type);
 		
 		float temp = 0.0;
-		param.GetParam(*section + ".BumpWaveLength", temp, error_output);
-		tempsurface.bumpWaveLength = temp;
+		param.GetParam(section, "BumpWaveLength", temp, error_output);
+		surface.bumpWaveLength = temp;
 		
-		param.GetParam(*section + ".BumpAmplitude", temp, error_output);
-		tempsurface.bumpAmplitude = temp;
+		param.GetParam(section, "BumpAmplitude", temp, error_output);
+		surface.bumpAmplitude = temp;
 		
-		param.GetParam(*section + ".FrictionNonTread", temp, error_output);
-		tempsurface.frictionNonTread = temp;
+		param.GetParam(section, "FrictionNonTread", temp, error_output);
+		surface.frictionNonTread = temp;
 		
-		param.GetParam(*section + ".FrictionTread", temp, error_output);
-		tempsurface.frictionTread = temp;
+		param.GetParam(section, "FrictionTread", temp, error_output);
+		surface.frictionTread = temp;
 		
-		param.GetParam(*section + ".RollResistanceCoefficient", temp, error_output);
-		tempsurface.rollResistanceCoefficient = temp;
+		param.GetParam(section, "RollResistanceCoefficient", temp, error_output);
+		surface.rollResistanceCoefficient = temp;
 		
-		param.GetParam(*section + ".RollingDrag", temp, error_output);
-		tempsurface.rollingDrag = temp;
+		param.GetParam(section, "RollingDrag", temp, error_output);
+		surface.rollingDrag = temp;
 	}
-	info_output << "Found and loaded surfaces file" << std::endl;
+	info_output << "Loaded surfaces file, " << tracksurfaces.size() << " surfaces." << std::endl;
 	
 	return true;
 }

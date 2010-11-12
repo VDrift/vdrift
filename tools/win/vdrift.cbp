@@ -376,8 +376,7 @@
 		<Unit filename="..\..\include\carwheelposition.h" />
 		<Unit filename="..\..\include\collision_contact.h" />
 		<Unit filename="..\..\include\collision_world.h" />
-		<Unit filename="..\..\include\configfile.h" />
-		<Unit filename="..\..\include\configvariable.h" />
+		<Unit filename="..\..\include\config.h" />
 		<Unit filename="..\..\include\containeralgorithm.h" />
 		<Unit filename="..\..\include\coordinatesystems.h" />
 		<Unit filename="..\..\include\crashdetection.h" />
@@ -505,8 +504,7 @@
 		<Unit filename="..\..\src\cartire.cpp" />
 		<Unit filename="..\..\src\cartireinfo.cpp" />
 		<Unit filename="..\..\src\collision_world.cpp" />
-		<Unit filename="..\..\src\configfile.cpp" />
-		<Unit filename="..\..\src\configvariable.cpp" />
+		<Unit filename="..\..\src\config.cpp" />
 		<Unit filename="..\..\src\containeralgorithm.cpp" />
 		<Unit filename="..\..\src\coordinatesystems.cpp" />
 		<Unit filename="..\..\src\crashdetection.cpp" />
@@ -522,6 +520,7 @@
 		<Unit filename="..\..\src\graphics_config.cpp" />
 		<Unit filename="..\..\src\graphics_renderers.cpp" />
 		<Unit filename="..\..\src\gui.cpp" />
+		<Unit filename="..\..\src\guioption.cpp" />
 		<Unit filename="..\..\src\guipage.cpp" />
 		<Unit filename="..\..\src\hud.cpp" />
 		<Unit filename="..\..\src\joepack.cpp" />
@@ -570,10 +569,17 @@
 		<Unit filename="..\..\src\track.cpp" />
 		<Unit filename="..\..\src\trackmap.cpp" />
 		<Unit filename="..\..\src\vertexarray.cpp" />
+		<Unit filename="..\..\src\widget_button.cpp" />
 		<Unit filename="..\..\src\widget_colorpicker.cpp" />
+		<Unit filename="..\..\src\widget_controlgrab.cpp" />
+		<Unit filename="..\..\src\widget_doublestringwheel.cpp" />
+		<Unit filename="..\..\src\widget_image.cpp" />
+		<Unit filename="..\..\src\widget_label.cpp" />
+		<Unit filename="..\..\src\widget_multiimage.cpp" />
 		<Unit filename="..\..\src\widget_slider.cpp" />
 		<Unit filename="..\..\src\widget_spinningcar.cpp" />
 		<Unit filename="..\..\src\widget_stringwheel.cpp" />
+		<Unit filename="..\..\src\widget_toggle.cpp" />
 		<Extensions>
 			<code_completion />
 			<envvars />
