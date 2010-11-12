@@ -15,15 +15,7 @@
 class GUI
 {
 public:
-	GUI() : 
-		animation_counter(0),
-		animation_count_start(0),
-		syncme(false),
-		control_load(false),
-		ingame(false)
-	{
-		active_page = last_active_page = pages.end();
-	}
+	GUI();
 	
 	GUIPAGE & GetPage(const std::string & pagename)
 	{
@@ -110,20 +102,19 @@ public:
 		return (active_page != pages.end());
 	}
 	
+	///if settings_are_newer is true, then this function will revise its internal options
+	/// to match the settings passed in.  otherwise, it'll operate the other way around
+	void SyncOptions(
+		const bool external_settings_are_newer,
+		std::map <std::string, std::string> & external_options,
+		std::ostream & error_output);
+
 	void SetInGame ( bool value )
 	{
 		ingame = value;
 	}
 	
-	void SetOptions(
-		const std::map <std::string, std::string> & options,
-		std::ostream & error_output);
-	
-	void GetOptions(
-		std::map <std::string, std::string> & options,
-		std::ostream & error_output);
-	
-	void SetOption(
+	void ReplaceOptionValues(
 		const std::string & optionname,
 		const std::list <std::pair <std::string, std::string> > & newvalues,
 		std::ostream & error_output);
@@ -143,6 +134,7 @@ private:
 	float animation_counter;
 	float animation_count_start;
 	bool syncme; ///<true if a sync is needed
+	bool syncme_from_external;
 	bool control_load;
 	bool ingame;
 	

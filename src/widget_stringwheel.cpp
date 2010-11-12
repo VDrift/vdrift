@@ -79,11 +79,7 @@ void WIDGET_STRINGWHEEL::UpdateOptions(
 	std::ostream & error_output)
 {
 	option = &(optionmap[setting]);
-	if (value != option->GetCurrentDisplayValue())
-	{
-		value = option->GetCurrentDisplayValue();
-		if (!save_to) SyncOption(scene);
-	}
+	if (!save_to) SyncOption(scene);
 }
 
 void WIDGET_STRINGWHEEL::AddHook(WIDGET * other)
@@ -119,7 +115,6 @@ void WIDGET_STRINGWHEEL::SetupDrawable(
 	//assert(teximage_left_down);
 	//assert(teximage_right_up);
 	//assert(teximage_right_down);
-	//assert(font);
 	
 	float titlewidth = title.GetWidth(font, newtitle, scalex);
 	float labeloffsetx = 0.04+titlewidth;

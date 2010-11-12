@@ -324,7 +324,7 @@ bool GAME::InitGUI()
 	
 	std::map<std::string, std::string> optionmap;
 	GetOptions(optionmap);
-	gui.SetOptions(optionmap, error_output);
+	gui.SyncOptions(true, optionmap, error_output);
 	
 	gui.ActivatePage("Main", 0.5, error_output); //nice, slow fade-in
 	if (settings.GetMouseGrab()) eventsystem.SetMouseCursorVisibility(true);
@@ -1044,7 +1044,8 @@ void GAME::ProcessGUIInputs()
 		if (gui.OptionsNeedSync())
 		{
 			std::map<std::string, std::string> optionmap;
-			gui.GetOptions(optionmap, error_output);
+			GetOptions(optionmap);
+			gui.SyncOptions(false, optionmap, error_output);
 			SetOptions(optionmap);
 			neededsync = true;
 		}
@@ -1327,20 +1328,15 @@ void GAME::ProcessGUIAction(const std::string & action)
 	}
 	else if (action == "PlayerCarChange") //this means the player clicked the GUI to change their car
 	{
-		//re-populate gui option list for car paints
 		std::list <std::pair <std::string, std::string> > carpaintlist;
 		PopulateCarPaintList(settings.GetSelectedCar(), carpaintlist);
-		
-		gui.SetOption("game.player_paint", carpaintlist, error_output);
-		//std::cout << "Player car changed" << endl;
+		gui.ReplaceOptionValues("game.player_paint", carpaintlist, error_output);
 	}
 	else if (action == "OpponentCarChange") //this means the player clicked the GUI to change the opponent car
 	{
-		//re-populate gui option list for car paints
 		std::list <std::pair <std::string, std::string> > carpaintlist;
 		PopulateCarPaintList(settings.GetOpponentCar(), carpaintlist);
-		
-		gui.SetOption("game.opponent_paint", carpaintlist, error_output);
+		gui.ReplaceOptionValues("game.opponent_paint", carpaintlist, error_output);
 	}
 	else if (action == "AddOpponent")
 	{
@@ -1760,7 +1756,7 @@ void GAME::LeaveGame()
 		
 		std::list <std::pair <std::string, std::string> > replaylist;
 		PopulateReplayList(replaylist);
-		gui.SetOption("game.selected_replay", replaylist, error_output);
+		gui.ReplaceOptionValues("game.selected_replay", replaylist, error_output);
 	}
 	if (replay.GetPlaying())
 		replay.StopPlaying();
