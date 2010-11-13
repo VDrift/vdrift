@@ -299,19 +299,18 @@ public:
 	SCENENODE & GetNode() {return topnode;}
 	
 protected:
+	SCENENODE topnode;
 	CARDYNAMICS dynamics;
 	QUATERNION <float> modelrotation; // const model rotation fix
 	
-	SCENENODE topnode;
-	keyed_container <SCENENODE>::handle bodynode;
-	keyed_container <SCENENODE>::handle drivernode;
-	keyed_container <SCENENODE>::handle wheelnode[WHEEL_POSITION_SIZE];
-	keyed_container <SCENENODE>::handle floatingnode[WHEEL_POSITION_SIZE];
+	keyed_container<SCENENODE>::handle bodynode;
+	std::vector<keyed_container<SCENENODE>::handle> wheelnode;
+	std::vector<keyed_container<SCENENODE>::handle> floatingnode;
 	
-	keyed_container <DRAWABLE>::handle bodydraw;
-	keyed_container <DRAWABLE>::handle glassdraw;
-	keyed_container <DRAWABLE>::handle brakelights;
-	keyed_container <DRAWABLE>::handle reverselights;
+	keyed_container<DRAWABLE>::handle bodydraw;
+	keyed_container<DRAWABLE>::handle glassdraw;
+	keyed_container<DRAWABLE>::handle brakelights;
+	keyed_container<DRAWABLE>::handle reverselights;
 	
 	struct LIGHT
 	{

@@ -161,6 +161,15 @@ void CONFIG::ProcessLine(CONFIG::iterator & section, std::string & linestr)
 			linestr = Strip(linestr, '[');
 			linestr = Strip(linestr, ']');
 			linestr = Trim(linestr);
+			
+			// subsection
+			size_t n = linestr.rfind('/');
+			if (n != std::string::npos)
+			{
+				std::string parent = linestr.substr(0, n);
+				std::string child = linestr.substr(n+1);
+				sections[parent][child] = linestr;
+			}
 			section = sections.insert(std::pair<std::string, SECTION>(linestr, SECTION())).first;
 		}
 	}

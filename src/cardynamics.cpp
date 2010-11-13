@@ -17,38 +17,34 @@ bool isnan(double number);
 
 typedef CARDYNAMICS::T T;
 
-CARDYNAMICS::CARDYNAMICS()
+CARDYNAMICS::CARDYNAMICS() :
+	world(0),
+	chassis(0),
+	drive(RWD),
+	tacho_rpm(0),
+	autoclutch(true),
+	autoshift(false),
+	shifted(true),
+	shift_gear(0),
+	last_auto_clutch(1),
+	remaining_shift_time(0),
+	abs(false),
+	tcs(false),
+	maxangle(0)
 {
-	Init();
-}
-
-void CARDYNAMICS::Init()
-{
-	world = NULL;
-	chassis = NULL;
-	drive = RWD;
-	tacho_rpm = 0;
-	autoclutch = true;
-	autoshift = false;
-	shifted = true;
-	shift_gear = 0;
-	last_auto_clutch = 1.0;
-	remaining_shift_time = 0.0;
-	abs = false;
-	tcs = false;
-	maxangle = 45.0;
-
 #ifdef _BULLET_
 	new_suspension.resize(WHEEL_POSITION_SIZE);
 #endif
-	suspension.resize ( WHEEL_POSITION_SIZE );
-	wheel.resize ( WHEEL_POSITION_SIZE );
-	tire.resize ( WHEEL_POSITION_SIZE );
+	
+	suspension.reserve(WHEEL_POSITION_SIZE);
+	wheel.reserve(WHEEL_POSITION_SIZE);
+	tire.reserve(WHEEL_POSITION_SIZE);
+	brake.reserve(WHEEL_POSITION_SIZE);
+	
 	wheel_velocity.resize (WHEEL_POSITION_SIZE);
 	wheel_position.resize ( WHEEL_POSITION_SIZE );
 	wheel_orientation.resize ( WHEEL_POSITION_SIZE );
 	wheel_contact.resize ( WHEEL_POSITION_SIZE );
-	brake.resize ( WHEEL_POSITION_SIZE );
 	abs_active.resize ( WHEEL_POSITION_SIZE, false );
 	tcs_active.resize ( WHEEL_POSITION_SIZE, false );
 }
@@ -202,12 +198,15 @@ static void LoadPoints(
 
 static bool LoadCoilover(
 	const CONFIG & c,
-	const std::string & id,
+	const CONFIG::const_iterator & iwheel,
 	CARSUSPENSIONINFO <T> & info,
 	std::ostream & error_output)
 {
+	std::string coilovername;
+	if (!c.GetParam(iwheel, "coilover", coilovername, error_output)) return false;
+	
 	CONFIG::const_iterator it;
-	if (!c.GetSection("coilover-"+id, it, error_output)) return false;
+	if (!c.GetSection(coilovername, it, error_output)) return false;
 	if (!c.GetParam(it, "spring-constant", info.spring_constant, error_output)) return false;
 	if (!c.GetParam(it, "bounce", info.bounce, error_output)) return false;
 	if (!c.GetParam(it, "rebound", info.rebound, error_output)) return false;
@@ -226,14 +225,16 @@ static bool LoadCoilover(
 
 static bool LoadBrake(
 	const CONFIG & c,
-	const std::string & id,
+	const CONFIG::const_iterator & iwheel,
 	CARBRAKE<T> & brake,
 	std::ostream & error_output)
 {
+	std::string brakename;
+	if (!c.GetParam(iwheel, "brake", brakename, error_output)) return false;
+	
 	float friction, max_pressure, area, bias, radius, handbrake(0);
-
 	CONFIG::const_iterator it;
-	if (!c.GetSection("brake-"+id, it, error_output)) return false;
+	if (!c.GetSection(brakename, it, error_output)) return false;
 	if (!c.GetParam(it, "friction", friction, error_output)) return false;
 	if (!c.GetParam(it, "area", area, error_output)) return false;
 	if (!c.GetParam(it, "radius", radius, error_output)) return false;
@@ -304,15 +305,17 @@ static bool LoadTireParameters(
 
 static bool LoadTire(
 	const CONFIG & c,
-	const std::string & id,
+	const CONFIG::const_iterator & iwheel,
 	CARTIRE<T> & tire,
 	std::ostream & error_output)
 {
+	std::string tirename;
+	if (!c.GetParam(iwheel, "tire", tirename, error_output)) return false;
+	
 	CARTIREINFO<T> info;
 	std::string size, type;
-	
 	CONFIG::const_iterator it;
-	if (!c.GetSection("tire-"+id, it, error_output)) return false;
+	if (!c.GetSection(tirename, it, error_output)) return false;
 	if (!c.GetParam(it, "size",size, error_output)) return false;
 	if (!c.GetParam(it, "type", type, error_output)) return false;
 	if (!LoadTireParameters(c, type, info, error_output)) return false;
@@ -325,22 +328,20 @@ static bool LoadTire(
 
 static bool LoadSuspension(
 	const CONFIG & c,
-	const std::string & id,
+	const CONFIG::const_iterator & iwheel,
 	CARSUSPENSION<T> & suspension,
 	std::ostream & error_output)
 {
 	std::vector<float> h(3), p(3);
-	CONFIG::const_iterator it;
 	CARSUSPENSIONINFO<T> info;
-	if (!LoadCoilover(c, id, info, error_output)) return false;
-	if (!c.GetSection("wheel-"+id, it, error_output)) return false;
-	if (!c.GetParam(it, "position", p, error_output)) return false;
-	if (!c.GetParam(it, "hinge", h, error_output)) return false;
-	if (!c.GetParam(it, "camber", info.camber, error_output)) return false;
-	if (!c.GetParam(it, "caster", info.caster, error_output)) return false;
-	if (!c.GetParam(it, "toe", info.toe, error_output)) return false;
-	c.GetParam(it, "steering", info.max_steering_angle);
-	c.GetParam(it, "ackermann", info.ackermann);
+	if (!LoadCoilover(c, iwheel, info, error_output)) return false;
+	if (!c.GetParam(iwheel, "position", p, error_output)) return false;
+	if (!c.GetParam(iwheel, "hinge", h, error_output)) return false;
+	if (!c.GetParam(iwheel, "camber", info.camber, error_output)) return false;
+	if (!c.GetParam(iwheel, "caster", info.caster, error_output)) return false;
+	if (!c.GetParam(iwheel, "toe", info.toe, error_output)) return false;
+	c.GetParam(iwheel, "steering", info.max_steering_angle);
+	c.GetParam(iwheel, "ackermann", info.ackermann);
 
 	COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(h[0], h[1], h[2]);
 	COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(p[0], p[1], p[2]);
@@ -354,13 +355,13 @@ static bool LoadSuspension(
 
 static bool LoadWheel(
 	const CONFIG & c,
-	const std::string & id,
+	const CONFIG::const_iterator & iwheel,
 	const CARTIRE<T> & tire,
 	CARWHEEL<T> & wheel,
 	std::ostream & error_output)
 {
 	float mass, inertia;
-	if (!c.GetParam("wheel-"+id, "mass", mass) && !c.GetParam("wheel-"+id, "inertia", inertia))
+	if (!c.GetParam(iwheel, "mass", mass) && !c.GetParam(iwheel, "inertia", inertia))
 	{
 		float tire_radius = tire.GetRadius();
 		float tire_width = tire.GetSidewallWidth();
@@ -479,17 +480,31 @@ bool CARDYNAMICS::Load(const CONFIG & c, std::ostream & error_output)
 	if (!LoadEngine(c, engine, error_output)) return false;
 	if (!LoadFuelTank(c, fuel_tank, error_output)) return false;
 	AddMassParticle(engine.GetMass(), engine.GetPosition());
-
-	maxangle = 0.0;
-	const std::string id[] = {"fl", "fr", "rl", "rr"};
-	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
+	
+	CONFIG::const_iterator is;
+	if (!c.GetSection("wheel", is, error_output)) return false;
+	
+	assert(is->second.size() == WHEEL_POSITION_SIZE); // temporary restriction
+	for (CONFIG::SECTION::const_iterator iw = is->second.begin(); iw != is->second.end(); ++iw)
 	{
-		if (!LoadTire(c, id[i], tire[i], error_output)) return false;
-		if (!LoadBrake(c, id[i], brake[i], error_output)) return false;
-		if (!LoadSuspension(c, id[i], suspension[i], error_output)) return false;
-		if (!LoadWheel(c, id[i], tire[i], wheel[i], error_output)) return false;
-		if (suspension[i].GetMaxSteeringAngle() > maxangle) maxangle = suspension[i].GetMaxSteeringAngle();
-		AddMassParticle(wheel[i].GetMass(), suspension[i].GetWheelPosition());
+		CONFIG::const_iterator iwheel;
+		if (!c.GetSection(iw->second, iwheel, error_output)) return false;
+		
+		tire.push_back(CARTIRE<T>());
+		brake.push_back(CARBRAKE<T>());
+		wheel.push_back(CARWHEEL<T>());
+		suspension.push_back(CARSUSPENSION<T>());
+		
+		if (!LoadTire(c, iwheel, tire.back(), error_output)) return false;
+		if (!LoadBrake(c, iwheel, brake.back(), error_output)) return false;
+		if (!LoadSuspension(c, iwheel, suspension.back(), error_output)) return false;
+		if (!LoadWheel(c, iwheel, tire.back(), wheel.back(), error_output)) return false;
+		
+		if (suspension.back().GetMaxSteeringAngle() > maxangle)
+		{
+			maxangle = suspension.back().GetMaxSteeringAngle();
+		}
+		AddMassParticle(wheel.back().GetMass(), suspension.back().GetWheelPosition());
 	}
 
 	drive = NONE;
