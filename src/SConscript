@@ -54,7 +54,6 @@ src = Split("""aabb.cpp
 		gui.cpp
 		guioption.cpp
 		guipage.cpp
-		httpget.cpp
 		hud.cpp
 		joepack.cpp
 		joeserialize.cpp
