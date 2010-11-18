@@ -1,11 +1,17 @@
 #include "cartire.h"
 
-//#include <cmath>
-
 #if defined(_WIN32) || defined(__APPLE__)
 bool isnan(float number);
 bool isnan(double number);
 #endif
+
+template <typename T>
+void CARTIREINFO<T>::SetDimensions(T width_mm, T ratio_percent, T diameter_in)
+{
+	radius = width_mm * 0.001 * ratio_percent * 0.01 + diameter_in * 0.0254 * 0.5;
+	aspect_ratio = ratio_percent * 0.01;
+	sidewall_width =width_mm * 0.001;
+}
 
 template <typename T>
 CARTIRE<T>::CARTIRE() :
@@ -364,5 +370,7 @@ void CARTIRE<T>::CalculateSigmaHatAlphaHat(int tablesize)
 }
 
 /// explicit instantiation
+template class CARTIREINFO<float>;
+template class CARTIREINFO<double>;
 template class CARTIRE <float>;
 template class CARTIRE <double>;

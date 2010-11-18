@@ -64,7 +64,7 @@ static void RGBtoHSV(float r, float g, float b, float & h, float & s, float & v)
 	float delta = max - min;
 
     v = max;
-    
+
     if (delta == 0)
     {
         h = 0;
@@ -86,9 +86,9 @@ static void RGBtoHSV(float r, float g, float b, float & h, float & s, float & v)
         {
             h = 4 + (r - g) / delta;
         }
-		
+
 		h = h / 6;
-        
+
         if (h < 0)
         {
             h += 1;
@@ -154,7 +154,7 @@ bool WIDGET_COLORPICKER::ProcessInput(SCENENODE & scene, float x, float y, bool 
 		sv_select = false;
 		return false;
 	}
-	
+
 	if (!h_select &&
 		x > sv_min[0] - size2 &&
 		x < sv_max[0] + size2 &&
@@ -163,28 +163,28 @@ bool WIDGET_COLORPICKER::ProcessInput(SCENENODE & scene, float x, float y, bool 
 	{
 		h_select = false;
 		sv_select = true;
-		
+
 		if (x > sv_max[0]) x = sv_max[0];
 		else if (x < sv_min[0]) x = sv_min[0];
-		
+
 		if (y > sv_max[1]) y = sv_max[1];
 		else if (y < sv_min[1]) y = sv_min[1];
-		
+
 		float h = hsv[0];
 		float s = (x - sv_min[0]) / (sv_max[0] - sv_min[0]);
 		float v = (sv_max[1] - y) / (sv_max[1] - sv_min[1]);
-		
+
 		hsv.Set(h, s, v);
 		HSVtoRGB(hsv[0], hsv[1], hsv[2], rgb[0], rgb[1], rgb[2]);
 		UpdatePosition();
-		
+
 		std::stringstream str;
 		str << rgb;
 		SendMessage(scene, str.str());
-		
+
 		return true;
 	}
-	
+
 	if (!sv_select &&
 		x > h_min[0] - size2 &&
 		x < h_max[0] + size2 &&
@@ -193,29 +193,29 @@ bool WIDGET_COLORPICKER::ProcessInput(SCENENODE & scene, float x, float y, bool 
 	{
 		h_select = true;
 		sv_select = false;
-	
+
 		if (y > h_max[1]) y = h_max[1];
-		else if (y < h_min[1] - margin) y = h_min[1];
-		
+		else if (y < h_min[1]) y = h_min[1];
+
 		float h = (y - h_min[1]) / (h_max[1] - h_min[1]);
 		float s = hsv[1];
 		float v = hsv[2];
-		
+
 		float r, g, b;
 		HSVtoRGB(hsv[0], 1, 1, r, g, b);
 		sv_bg.SetColor(scene, r, g, b);
-		
+
 		hsv.Set(h, s, v);
 		HSVtoRGB(hsv[0], hsv[1], hsv[2], rgb[0], rgb[1], rgb[2]);
 		UpdatePosition();
-		
+
 		std::stringstream str;
 		str << rgb;
 		SendMessage(scene, str.str());
-		
-		return true;	
+
+		return true;
 	}
-	
+
 	return false;
 }
 
@@ -226,7 +226,7 @@ void WIDGET_COLORPICKER::UpdateOptions(
 	std::ostream & error_output)
 {
 	if (setting.empty()) return;
-	
+
 	if (save_to_options)
 	{
 		std::stringstream s;
@@ -241,15 +241,15 @@ void WIDGET_COLORPICKER::UpdateOptions(
 		{
 			std::stringstream s(value);
 			s >> rgb;
-			
+
 			RGBtoHSV(rgb[0], rgb[1], rgb[2], hsv[0], hsv[1], hsv[2]);
-			
+
 			float r, g, b;
 			HSVtoRGB(hsv[0], 1, 1, r, g, b);
 			sv_bg.SetColor(scene, r, g, b);
-			
+
 			UpdatePosition();
-			
+
 			SendMessage(scene, value);
 		}
 	}
@@ -269,15 +269,15 @@ void WIDGET_COLORPICKER::SetupDrawable(
 	assert(htex);
 	assert(svtex);
 	assert(cursortex);
-	
+
 	setting = set;
-	
+
 	sv_bg.Load(scene, bgtex, draworder-1, error_output);
 	sv_plane.Load(scene, svtex, draworder, error_output);
 	h_bar.Load(scene, htex, draworder, error_output);
 	sv_cursor.Load(scene, cursortex, draworder+1, error_output);
 	h_cursor.Load(scene, cursortex, draworder+1, error_output);
-	
+
 	size2 = h / 16;
 	h_min[0] = x + w - 3 * size2;
 	h_min[1] = y + size2;
@@ -287,19 +287,19 @@ void WIDGET_COLORPICKER::SetupDrawable(
 	sv_min[1] = y + size2;
 	sv_max[0] = x + w - 4 * size2;
 	sv_max[1] = y + h - size2;
-	
+
 	sv_bg.SetToBillboard(sv_min[0], sv_min[1], sv_max[0] - sv_min[0], sv_max[1] - sv_min[1]);
 	sv_plane.SetToBillboard(sv_min[0], sv_min[1], sv_max[0] - sv_min[0], sv_max[1] - sv_min[1]);
 	h_bar.SetToBillboard(h_min[0] + size2/2, h_min[1], h_max[0] - h_min[0] - size2, h_max[1] - h_min[1]);
-	
+
 	hsv.Set(1, 0, 1);
 	HSVtoRGB(hsv[0], hsv[1], hsv[2], rgb[0], rgb[1], rgb[2]);
-	
+
 	float r, g, b;
 	HSVtoRGB(hsv[0], 1, 1, r, g, b);
 	sv_bg.SetColor(scene, r, g, b);
 	sv_plane.SetColor(scene, 1, 1, 1);
-	
+
 	UpdatePosition();
 }
 
@@ -307,10 +307,10 @@ void WIDGET_COLORPICKER::UpdatePosition()
 {
 	h_pos[0] = h_max[0] - size2;
 	h_pos[1] = h_min[1] + hsv[0] * (h_max[1] - h_min[1]);
-	
+
 	sv_pos[0] = sv_min[0] + hsv[1] * (sv_max[0] - sv_min[0]);
 	sv_pos[1] = sv_max[1] - hsv[2] * (sv_max[1] - sv_min[1]);
-	
+
 	h_cursor.SetToBillboard(h_pos[0] - size2, h_pos[1] - size2, 2*size2, 2*size2);
 	sv_cursor.SetToBillboard(sv_pos[0] - size2, sv_pos[1] - size2, 2*size2, 2*size2);
 }

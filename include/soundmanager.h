@@ -13,19 +13,29 @@ public:
 	{
 		if (Get(name, sptr)) return true;
 		
-		//prefer ogg
-		std::string filename = path+"/"+name+".ogg";
-		if (!std::ifstream(filename.c_str()))
+		// prefer ogg
+		std::string filepath = path + "/" + name + ".ogg";
+		if (!std::ifstream(filepath.c_str()))
 		{
-			filename = path+"/"+name+".wav";
+			filepath = path + "/" + name + ".wav";
 		}
-		
 		std::tr1::shared_ptr<SOUNDBUFFER> temp(new SOUNDBUFFER());
-		if (temp->Load(filename, info, *error))
+		if (std::ifstream(filepath.c_str()) && temp->Load(filepath, info, *error))
 		{
 			objects[name] = temp;
 			sptr = temp;
 			return true;
+		}
+		else
+		{
+			size_t n = filepath.rfind("/");
+			if (n != std::string::npos) filepath.erase(0, n + 1);
+			if (temp->Load(sharedpath + "/" + filepath, info, *error))
+			{
+				objects[filepath] = temp;
+				sptr = temp;
+				return true;
+			}
 		}
 		
 		return false;

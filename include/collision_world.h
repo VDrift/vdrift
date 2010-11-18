@@ -47,7 +47,7 @@ public:
 	
 	void Clear();
 	
-private:
+protected:
 	btDefaultCollisionConfiguration collisionconfig;
 	btCollisionDispatcher collisiondispatcher;
 	bt32BitAxisSweep3 collisionbroadphase;

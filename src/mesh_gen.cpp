@@ -1191,7 +1191,7 @@ void mg_rim(VERTEXARRAY & rim, float sectionWidth_mm, float aspectRatio, float r
 
 //////////////////////////////////////////////////////////////////////
 // Brake Rotor
-void mg_brake_rotor(VERTEXARRAY *rotor, float diameter_mm, float thickness_mm)
+void mg_brake_rotor(VERTEXARRAY & rotor, float diameter_mm, float thickness_mm)
 {
     // tweak-able
     unsigned int segmentsAround = 32;
@@ -1500,11 +1500,11 @@ void mg_brake_rotor(VERTEXARRAY *rotor, float diameter_mm, float thickness_mm)
 
 
 
-    rotor->SetVertices(vertexData, vertexFloatCount);
-	rotor->SetFaces((int*)triData, triVIndexCount);
-	rotor->SetTexCoordSets(1);
-	rotor->SetTexCoords(0, texData, texCoordFloats);
-	rotor->SetNormals(normalData, vertexFloatCount);
+    rotor.SetVertices(vertexData, vertexFloatCount);
+	rotor.SetFaces((int*)triData, triVIndexCount);
+	rotor.SetTexCoordSets(1);
+	rotor.SetTexCoords(0, texData, texCoordFloats);
+	rotor.SetNormals(normalData, vertexFloatCount);
 
 
 	// free up the temp data

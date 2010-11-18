@@ -3,6 +3,7 @@
 
 #include "manager.h"
 #include "texture.h"
+#include <fstream>
 
 class TEXTUREMANAGER : public MANAGER<TEXTURE>
 {
@@ -13,12 +14,25 @@ public:
 	{
 		if (Get(name, sptr)) return true;
 		
+		std::string filepath = path + "/" + name;
 		std::tr1::shared_ptr<TEXTURE> temp(new TEXTURE());
-		if (temp->Load(path + "/" + name, info, *error))
+		if (std::ifstream(filepath.c_str()) && temp->Load(filepath, info, *error))
 		{
 			objects[name] = temp;
 			sptr = temp;
 			return true;
+		}
+		else
+		{
+			std::string filename = name;
+			size_t n = name.rfind("/");
+			if (n != std::string::npos) filename.erase(0, n + 1);
+			if (temp->Load(sharedpath + "/" + filename, info, *error))
+			{
+				objects[filename] = temp;
+				sptr = temp;
+				return true;
+			}
 		}
 		
 		return false;

@@ -66,7 +66,6 @@ private:
 	MATHVECTOR <float, 3> hsv;
 	bool h_select;
 	bool sv_select;
-	float margin;
 	float size2;
 	std::list <WIDGET *> hooks;
 	

@@ -204,7 +204,9 @@ void WIDGET_SPINNINGCAR::Load(SCENENODE & parent)
 	car.push_back(CAR());
 	
 	CONFIG carconf;
-	std::string carconfpath = data + "/cars/" + carname + "/" + carname + ".car";
+	std::string partspath = "carparts";
+	std::string carpath = "cars/"+carname;
+	std::string carconfpath = data+"/"+carpath+"/"+carname+".car";
 	if (!carconf.Load(carconfpath))
 	{
 		*errptr << "Error loading car's configfile: " << carconfpath << std::endl;
@@ -212,8 +214,7 @@ void WIDGET_SPINNINGCAR::Load(SCENENODE & parent)
 	}
 	
 	if (!car.back().LoadGraphics(
-			carconf,
-			"cars/" + carname, carname, "carparts",
+			carconf, carpath, carname, partspath,
 			MATHVECTOR<float, 3>(r, g, b),
 			carpaint, texsize, anisotropy,
 			camerabounce, loaddriver, debugmode,

@@ -78,8 +78,10 @@ public:
 	void SetAutoClutch(bool value);
 	void SetAutoShift(bool value);
 
-	// speedometer/tachometer based on driveshaft rpm
+	// first wheel velocity
 	T GetSpeedMPS() const;
+	
+	// engine rpm
 	T GetTachoRPM() const;
 
 	// driveline state access
@@ -155,6 +157,7 @@ protected:
 	CARDIFFERENTIAL <T> differential_center;
 	std::vector <CARBRAKE <T> > brake;
 	std::vector <CARWHEEL <T> > wheel;
+	std::vector <CARTIRE <T> > tire;
 	
 	enum { NONE = 0, FWD = 1, RWD = 2, AWD = 3 } drive;
 	T driveshaft_rpm;
@@ -174,7 +177,6 @@ protected:
 	std::vector <int> tcs_active;
 	
 // cardynamics state
-	std::vector <T> normal_force;
 	std::vector <MATHVECTOR <T, 3> > wheel_velocity;
 	std::vector <MATHVECTOR <T, 3> > wheel_position;
 	std::vector <QUATERNION <T> > wheel_orientation;
@@ -182,9 +184,7 @@ protected:
 	std::vector <CARSUSPENSION <T> > suspension;
 	//std::vector <SuspensionConstraint*> new_suspension;
 
-	std::vector <CARTIRE <T> > tire;
 	std::vector <CARAERO <T> > aerodynamics;
-
 	std::list <std::pair <T, MATHVECTOR <T, 3> > > mass_particles;
 	
 	T maxangle;
@@ -267,9 +267,6 @@ protected:
 
 	// calculate throttle, clutch, gear
 	void UpdateTransmission(T dt);
-
-	// calculate clutch driveshaft rpm
-	T CalculateDriveshaftRPM() const;
 
 	bool WheelDriven(int i) const;
 	

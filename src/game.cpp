@@ -222,9 +222,9 @@ void GAME::Start(list <string> & args)
 void GAME::InitCoreSubsystems()
 {
 	pathmanager.Init(info_output, error_output);
-	textures.Init(pathmanager.GetDataPath(), error_output);
-	models.Init(pathmanager.GetDataPath(), error_output);
-	sounds.Init(pathmanager.GetDataPath(), error_output);
+	textures.Init(pathmanager.GetDataPath(), pathmanager.GetSharedDataPath(), error_output);
+	models.Init(pathmanager.GetDataPath(), pathmanager.GetSharedDataPath(), error_output);
+	sounds.Init(pathmanager.GetDataPath(), pathmanager.GetSharedDataPath(), error_output);
 	settings.Load(pathmanager.GetSettingsFile(), error_output);
 	
 	if (!LastStartWasSuccessful())
@@ -1794,56 +1794,53 @@ void GAME::LeaveGame()
 
 ///add a car, optionally controlled by the local player
 bool GAME::LoadCar(
-	const std::string & carname, const std::string & carpaint, const MATHVECTOR <float, 3> & carcolor,
-	const MATHVECTOR <float, 3> & start_position, const QUATERNION <float> & start_orientation,
+	const std::string & carname, const std::string & carpaint,
+	const MATHVECTOR <float, 3> & carcolor,
+	const MATHVECTOR <float, 3> & start_position,
+	const QUATERNION <float> & start_orientation,
 	bool islocal, bool isai, const string & carfile)
 {
+	std::string partspath = pathmanager.GetCarSharedDir();
+	std::string carpath = pathmanager.GetCarDir()+"/"+carname;
+	std::string cfgpath = pathmanager.GetDataPath()+"/"+carpath+"/"+carname+".car";
+	
 	CONFIG carconf;
 	if (carfile.empty()) //if no file is passed in, then load it from disk
 	{
-		if (!carconf.Load(pathmanager.GetCarPath()+"/"+carname+"/"+carname+".car"))
-			return false;
+		if (!carconf.Load(cfgpath)) return false;
 	}
 	else
 	{
 		stringstream carstream(carfile);
-		if (!carconf.Load(carstream))
-			return false;
+		if (!carconf.Load(carstream)) return false;
 	}
 	
 	cars.push_back(CAR());
 	CAR & car = cars.back();
 	bool loaddriver = true;
-	std::string carpath = pathmanager.GetCarDir()+"/"+carname;
 	
 	if (!car.LoadGraphics(
-			carconf, carpath, carname, pathmanager.GetCarSharedDir(),
-			carcolor, carpaint, settings.GetTextureSize(), settings.GetAnisotropy(),
-			settings.GetCameraBounce(), loaddriver, debugmode,
-			textures, models, info_output, error_output))
+		carconf, carpath, carname, partspath,
+		carcolor, carpaint, settings.GetTextureSize(), settings.GetAnisotropy(),
+		settings.GetCameraBounce(), loaddriver, debugmode,
+		textures, models, info_output, error_output))
 	{
 		error_output << "Error loading car: " << carname << endl;
 		cars.pop_back();
 		return false;
 	}
 	
-	if(sound.Enabled())
+	if(sound.Enabled() && !car.LoadSounds(carpath, carname, sound.GetDeviceInfo(), sounds, info_output, error_output))
 	{
-		if (!car.LoadSounds(
-				carpath, carname,
-				sound.GetDeviceInfo(), sounds,
-				info_output, error_output))
-		{
-			return false;
-		}
+		return false;
 	}
 	
 	if (!car.LoadPhysics(
-			carconf, carpath,
-			start_position, start_orientation,
-			settings.GetABS() || isai, settings.GetTCS() || isai,
-			models,  collision,
-			info_output, error_output))
+		carconf, carpath,
+		start_position, start_orientation,
+		settings.GetABS() || isai, settings.GetTCS() || isai,
+		models,  collision,
+		info_output, error_output))
 	{
 		return false;
 	}
@@ -2049,7 +2046,6 @@ void GAME::PopulateReplayList(std::list <std::pair <std::string, std::string> > 
 void GAME::PopulateCarPaintList(const std::string & carname, std::list <std::pair <std::string, std::string> > & carpaintlist)
 {
 	carpaintlist.clear();
-	string cartexfolder = pathmanager.GetCarPath()+"/"+carname+"/textures";
 	bool exists = true;
 	int paintnum = 0;
 	while (exists)
@@ -2061,7 +2057,7 @@ void GAME::PopulateCarPaintList(const std::string & carname, std::list <std::pai
 		paintstr.fill('0');
 		paintstr << paintnum;
 
-		std::string cartexfile = cartexfolder+"/body"+paintstr.str()+".png";
+		std::string cartexfile =pathmanager.GetCarPath()+"/"+carname+"/body"+paintstr.str()+".png";
 		//std::cout << cartexfile << std::endl;
 		ifstream check(cartexfile.c_str());
 		if (check)

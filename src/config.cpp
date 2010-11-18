@@ -163,7 +163,7 @@ void CONFIG::ProcessLine(CONFIG::iterator & section, std::string & linestr)
 			linestr = Trim(linestr);
 			
 			// subsection
-			size_t n = linestr.rfind('/');
+			size_t n = linestr.rfind('.');
 			if (n != std::string::npos)
 			{
 				std::string parent = linestr.substr(0, n);

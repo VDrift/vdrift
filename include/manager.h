@@ -10,6 +10,10 @@ template <class T>
 class MANAGER
 {
 public:
+	typedef std::map<const std::string, std::tr1::shared_ptr<T> > container;
+	typedef typename container::iterator iterator;
+	typedef typename container::const_iterator const_iterator;
+	
 	MANAGER() : error(0)
 	{
 		// ctor
@@ -20,27 +24,43 @@ public:
 		Clear();
 	}
 	
-	void Init(const std::string & path, std::ostream & error)
+	void Init(const std::string & path, const std::string & sharedpath, std::ostream & error)
 	{
 		this->path = path;
+		this->sharedpath = sharedpath;
 		this->error = &error;
+	}
+	
+	bool Get(const std::string & name, const_iterator & it)
+	{
+		assert(error);
+		const_iterator i = objects.find(name);
+		if (i == objects.end())
+		{
+			size_t n = name.rfind("/");
+			std::string shared = name;
+			if (n != std::string::npos) shared.erase(0, n + 1);
+			i = objects.find(shared);
+			if (i == objects.end()) return false;
+		}
+		it = i;
+		return true;
 	}
 	
 	bool Get(const std::string & name, std::tr1::shared_ptr<T> & sp)
 	{
-		assert(error);
-		iterator it = objects.find(name);
-		if (it == objects.end())
+		const_iterator it;
+		if (Get(name, it))
 		{
-			return false;
+			sp = it->second;
+			return true;
 		}
-		sp = it->second;
-		return true;
+		return false;
 	}
 	
-	void Set(const std::string & name, const std::tr1::shared_ptr<T> & sp)
+	const_iterator Set(const std::string & name, const std::tr1::shared_ptr<T> & sp)
 	{
-		objects[name] = sp;
+		return objects.insert(std::pair<std::string, std::tr1::shared_ptr<T> >(name, sp)).first;
 	}
 	
 	unsigned int Size() const
@@ -52,7 +72,12 @@ public:
 	{
 		return path;
 	}
-
+	
+	const std::string & GetSharedPath() const
+	{
+		return sharedpath;
+	}
+	
 	// collect garbage
 	void Sweep()
 	{
@@ -100,9 +125,9 @@ public:
 	}
 	
 protected:
-	typedef typename std::map<const std::string, std::tr1::shared_ptr<T> >::iterator iterator;
-	std::map<const std::string, std::tr1::shared_ptr<T> > objects;
+	container objects;
 	std::string path;
+	std::string sharedpath;
 	std::ostream * error;
 };
 

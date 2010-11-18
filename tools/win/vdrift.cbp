@@ -370,7 +370,6 @@
 		<Unit filename="..\..\include\carsuspension.h" />
 		<Unit filename="..\..\include\cartelemetry.h" />
 		<Unit filename="..\..\include\cartire.h" />
-		<Unit filename="..\..\include\cartireinfo.h" />
 		<Unit filename="..\..\include\cartransmission.h" />
 		<Unit filename="..\..\include\carwheel.h" />
 		<Unit filename="..\..\include\carwheelposition.h" />
@@ -401,7 +400,6 @@
 		<Unit filename="..\..\include\gui.h" />
 		<Unit filename="..\..\include\guioption.h" />
 		<Unit filename="..\..\include\guipage.h" />
-		<Unit filename="..\..\include\httpget.h" />
 		<Unit filename="..\..\include\hud.h" />
 		<Unit filename="..\..\include\inputgraph.h" />
 		<Unit filename="..\..\include\joepack.h" />
@@ -502,7 +500,6 @@
 		<Unit filename="..\..\src\carengine.cpp" />
 		<Unit filename="..\..\src\carsuspension.cpp" />
 		<Unit filename="..\..\src\cartire.cpp" />
-		<Unit filename="..\..\src\cartireinfo.cpp" />
 		<Unit filename="..\..\src\collision_world.cpp" />
 		<Unit filename="..\..\src\config.cpp" />
 		<Unit filename="..\..\src\containeralgorithm.cpp" />

@@ -313,16 +313,16 @@ static bool LoadTire(
 	if (!c.GetParam(iwheel, "tire", tirename, error_output)) return false;
 	
 	CARTIREINFO<T> info;
-	std::string size, type;
+	std::string type;
+	std::vector<T> size(3, 0);
 	CONFIG::const_iterator it;
 	if (!c.GetSection(tirename, it, error_output)) return false;
 	if (!c.GetParam(it, "size",size, error_output)) return false;
 	if (!c.GetParam(it, "type", type, error_output)) return false;
 	if (!LoadTireParameters(c, type, info, error_output)) return false;
-	if (!info.Parse(size, error_output)) return false;
-
+	info.SetDimensions(size[0], size[1], size[2]);
 	tire.Init(info);
-
+	
 	return true;
 }
 
@@ -394,16 +394,17 @@ static bool LoadAeroDevices(
 	std::vector< CARAERO <T> > & aerodynamics,
 	std::ostream & error_output)
 {
-	const std::string aero[] = {"wing-front", "wing-center", "wing-rear"};
-	for(int i = 0; i < 3; ++i)
+	CONFIG::const_iterator is;
+	if (!c.GetSection("wing", is, error_output)) return true;
+	for (CONFIG::SECTION::const_iterator iw = is->second.begin(); iw != is->second.end(); ++iw)
 	{
 		std::vector<float> pos(3);
 		float drag_area, drag_coeff;
 		float lift_area = 0, lift_coeff = 0, lift_eff = 0;
 		
 		CONFIG::const_iterator it;
-		if (!c.GetSection(aero[i], it)) continue;
-		if (!c.GetParam(it, "frontal-area", drag_area)) return false;
+		if (!c.GetSection(iw->second, it, error_output)) return false;
+		if (!c.GetParam(it, "frontal-area", drag_area, error_output)) return false;
 		if (!c.GetParam(it, "drag-coefficient", drag_coeff, error_output)) return false;
 		if (!c.GetParam(it, "position", pos, error_output)) return false;
 		c.GetParam(it, "surface-area", lift_area);
@@ -852,37 +853,7 @@ void CARDYNAMICS::SetAutoShift(bool value)
 
 T CARDYNAMICS::GetSpeedMPS() const
 {
-	T left_front_wheel_speed = wheel[FRONT_LEFT].GetAngularVelocity();
-	T right_front_wheel_speed = wheel[FRONT_RIGHT].GetAngularVelocity();
-	T left_rear_wheel_speed = wheel[REAR_LEFT].GetAngularVelocity();
-	T right_rear_wheel_speed = wheel[REAR_RIGHT].GetAngularVelocity();
-	for ( int i = 0; i < 4; i++ ) assert ( !isnan ( wheel[WHEEL_POSITION ( i ) ].GetAngularVelocity() ) );
-	if ( drive == RWD )
-	{
-		return ( left_rear_wheel_speed+right_rear_wheel_speed ) * 0.5 * tire[REAR_LEFT].GetRadius();
-	}
-	else if ( drive == FWD )
-	{
-		return ( left_front_wheel_speed+right_front_wheel_speed ) * 0.5 * tire[FRONT_LEFT].GetRadius();
-	}
-	else if ( drive == AWD )
-	{
-		return ( ( left_rear_wheel_speed+right_rear_wheel_speed ) * 0.5 * tire[REAR_LEFT].GetRadius() +
-		         ( left_front_wheel_speed+right_front_wheel_speed ) * 0.5 * tire[FRONT_LEFT].GetRadius() ) *0.5;
-	}
-
-	assert ( 0 );
-	return 0;
-/*
-	// use max wheel speed
-	T speed = 0;
-	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
-	{
-		T wheel_speed = wheel[i].GetAngularVelocity() * tire[i].GetRadius();
-		if(speed < wheel_speed) speed = wheel_speed;
-	}
-	return speed;
-*/
+	return tire[0].GetRadius() * wheel[0].GetAngularVelocity();
 }
 
 T CARDYNAMICS::GetTachoRPM() const
@@ -1640,7 +1611,8 @@ void CARDYNAMICS::CalculateDriveTorque(T * wheel_drive_torque, T clutch_torque)
 		wheel_drive_torque[REAR_RIGHT] = differential_rear.GetSide2Torque();
 	}
 
-	for (int i = 0; i < WHEEL_POSITION_SIZE; i++) assert(!isnan(wheel_drive_torque[WHEEL_POSITION(i)]));
+	for (int i = 0; i < WHEEL_POSITION_SIZE; i++)
+		assert(!isnan(wheel_drive_torque[WHEEL_POSITION(i)]));
 }
 
 T CARDYNAMICS::CalculateDriveshaftSpeed()
@@ -1650,20 +1622,23 @@ T CARDYNAMICS::CalculateDriveshaftSpeed()
 	T right_front_wheel_speed = wheel[FRONT_RIGHT].GetAngularVelocity();
 	T left_rear_wheel_speed = wheel[REAR_LEFT].GetAngularVelocity();
 	T right_rear_wheel_speed = wheel[REAR_RIGHT].GetAngularVelocity();
-	for ( int i = 0; i < 4; i++ ) assert ( !isnan ( wheel[WHEEL_POSITION ( i ) ].GetAngularVelocity() ) );
-	if ( drive == RWD )
+	
+	for ( int i = 0; i < 4; i++ )
+		assert ( !isnan ( wheel[WHEEL_POSITION ( i ) ].GetAngularVelocity() ) );
+	
+	if (drive == RWD)
 	{
 		driveshaft_speed = differential_rear.CalculateDriveshaftSpeed ( left_rear_wheel_speed, right_rear_wheel_speed );
 	}
-	else if ( drive == FWD )
+	else if (drive == FWD)
 	{
 		driveshaft_speed = differential_front.CalculateDriveshaftSpeed ( left_front_wheel_speed, right_front_wheel_speed );
 	}
-	else if ( drive == AWD )
+	else if (drive == AWD)
 	{
-		driveshaft_speed = differential_center.CalculateDriveshaftSpeed (
-		                       differential_front.CalculateDriveshaftSpeed ( left_front_wheel_speed, right_front_wheel_speed ),
-		                       differential_rear.CalculateDriveshaftSpeed ( left_rear_wheel_speed, right_rear_wheel_speed ) );
+		T front_speed = differential_front.GetDriveshaftSpeed ( left_front_wheel_speed, right_front_wheel_speed );
+		T rear_speed = differential_rear.GetDriveshaftSpeed ( left_rear_wheel_speed, right_rear_wheel_speed );
+		driveshaft_speed = differential_center.GetDriveshaftSpeed ( front_speed, rear_speed );
 	}
 
 	return driveshaft_speed;
@@ -1671,7 +1646,9 @@ T CARDYNAMICS::CalculateDriveshaftSpeed()
 
 void CARDYNAMICS::UpdateTransmission(T dt)
 {
-	driveshaft_rpm = CalculateDriveshaftRPM();
+	T driveshaft_speed = CalculateDriveshaftSpeed();
+	
+	driveshaft_rpm = transmission.GetClutchSpeed(driveshaft_speed) * 30.0 / 3.141593;
 
 	if (autoshift)
 	{
@@ -1704,32 +1681,6 @@ void CARDYNAMICS::UpdateTransmission(T dt)
 		clutch.SetClutch(new_clutch);
 		last_auto_clutch = new_clutch;
 	}
-}
-
-T CARDYNAMICS::CalculateDriveshaftRPM() const
-{
-	T driveshaft_speed = 0.0;
-	T left_front_wheel_speed = wheel[FRONT_LEFT].GetAngularVelocity();
-	T right_front_wheel_speed = wheel[FRONT_RIGHT].GetAngularVelocity();
-	T left_rear_wheel_speed = wheel[REAR_LEFT].GetAngularVelocity();
-	T right_rear_wheel_speed = wheel[REAR_RIGHT].GetAngularVelocity();
-	for ( int i = 0; i < 4; i++ ) assert ( !isnan ( wheel[WHEEL_POSITION ( i ) ].GetAngularVelocity() ) );
-	if ( drive == RWD )
-	{
-		driveshaft_speed = differential_rear.GetDriveshaftSpeed ( left_rear_wheel_speed, right_rear_wheel_speed );
-	}
-	else if ( drive == FWD )
-	{
-		driveshaft_speed = differential_front.GetDriveshaftSpeed ( left_front_wheel_speed, right_front_wheel_speed );
-	}
-	else if ( drive == AWD )
-	{
-		T front_speed = differential_front.GetDriveshaftSpeed ( left_front_wheel_speed, right_front_wheel_speed );
-		T rear_speed = differential_rear.GetDriveshaftSpeed ( left_rear_wheel_speed, right_rear_wheel_speed );
-		driveshaft_speed = differential_center.GetDriveshaftSpeed ( front_speed, rear_speed );
-	}
-
-	return transmission.GetClutchSpeed ( driveshaft_speed ) * 30.0 / 3.141593;
 }
 
 bool CARDYNAMICS::WheelDriven(int i) const
