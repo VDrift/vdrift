@@ -835,7 +835,7 @@ void CAR::SetColor(float r, float g, float b)
 {
 	SCENENODE & bodynoderef = topnode.GetNode(bodynode);
 	keyed_container<DRAWABLE> & car_noblend = bodynoderef.GetDrawlist().car_noblend;
-	for (typename keyed_container<DRAWABLE>::iterator i = car_noblend.begin(); i != car_noblend.end(); ++i)
+	for (keyed_container<DRAWABLE>::iterator i = car_noblend.begin(); i != car_noblend.end(); ++i)
 	{
 		i->SetColor(r, g, b, 1);
 	}
@@ -1355,7 +1355,7 @@ void CAR::EnableGlass(bool enable)
 {
 	SCENENODE & bodynoderef = topnode.GetNode(bodynode);
 	keyed_container<DRAWABLE> & normal_blend = bodynoderef.GetDrawlist().normal_blend;
-	for (typename keyed_container<DRAWABLE>::iterator i = normal_blend.begin(); i != normal_blend.end(); ++i)
+	for (keyed_container<DRAWABLE>::iterator i = normal_blend.begin(); i != normal_blend.end(); ++i)
 	{
 		i->SetDrawEnable(enable);
 	}
