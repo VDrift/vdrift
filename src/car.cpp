@@ -357,7 +357,7 @@ static bool LoadCameras(
 
 	std::vector<float> pos(3, 0.0), hoodpos(3, 0.0);
 	if (!cfg.GetParam("camera", "view-position", pos, error_output)) return false;
-	COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
+	COORDINATESYSTEMS::ConvertV2toV1(pos[0], pos[1], pos[2]);
 	MATHVECTOR <float, 3> cam_offset(pos[0], pos[1], pos[2]);
 	driver_cam->SetOffset(cam_offset);
 
@@ -367,7 +367,7 @@ static bool LoadCameras(
 	}
 	else
 	{
-		COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(hoodpos[0],hoodpos[1],hoodpos[2]);
+		COORDINATESYSTEMS::ConvertV2toV1(hoodpos[0],hoodpos[1],hoodpos[2]);
 		cam_offset.Set(hoodpos[0], hoodpos[1], hoodpos[2]);
 	}
 	hood_cam->SetOffset(cam_offset);
@@ -399,7 +399,7 @@ static bool LoadCameras(
 		float pos[3], angle[3];
 		if (!cfg.GetParam("view.position-" + istr, pos)) continue;
 		if (!cfg.GetParam("view.angle-" + istr, angle)) continue;
-		COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
+		COORDINATESYSTEMS::ConvertV2toV1(pos[0], pos[1], pos[2]);
 
 		CAMERA_MOUNT* next_view = new CAMERA_MOUNT(view_name);
 
@@ -503,13 +503,12 @@ bool CAR::LoadGraphics(
 		if (!LoadWheel(cfg, i->second, load_drawable, topnode,
 			wheelnode.back(), floatingnode.back(), error_output)) return false;
 	}
-
+	
 	// load drawables
 	SCENENODE & bodynoderef = topnode.GetNode(bodynode);
 	for(CONFIG::const_iterator section = cfg.begin(); section != cfg.end(); ++section)
 	{
-		if (section->first == "" ||
-			section->first == "body" ||
+		if (section->first == "body" ||
 			section->first == "light-brake" ||
 			section->first == "light-reverse" ||
 			section->first.find("wheel") == 0) continue;

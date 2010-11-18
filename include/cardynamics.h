@@ -62,7 +62,7 @@ public:
 	COLLISION_CONTACT & GetWheelContact(WHEEL_POSITION wp);
 
 // chassis
-	float GetMass() const;
+	T GetMass() const;
 	T GetSpeed() const;
 	MATHVECTOR <T, 3> GetVelocity() const;
 	MATHVECTOR <T, 3> GetEnginePosition() const;
@@ -71,10 +71,10 @@ public:
 	// driveline input
 	void StartEngine();
 	void ShiftGear(int value);
-	void SetThrottle(float value);
-	void SetClutch(float value);
-	void SetBrake(float value);
-	void SetHandBrake(float value);
+	void SetThrottle(T value);
+	void SetClutch(T value);
+	void SetBrake(T value);
+	void SetHandBrake(T value);
 	void SetAutoClutch(bool value);
 	void SetAutoShift(bool value);
 
@@ -124,11 +124,11 @@ public:
 	
 	T GetAeordynamicDragCoefficient() const;
 
-	MATHVECTOR< T, 3 > GetLastBodyForce() const;
+	MATHVECTOR <T, 3> GetLastBodyForce() const;
 	
 	T GetFeedback() const;
 
-	void UpdateTelemetry(float dt);
+	void UpdateTelemetry(T dt);
 
 	// print debug info to the given ostream.  set p1, p2, etc if debug info part 1, and/or part 2, etc is desired
 	void DebugPrint(std::ostream & out, bool p1, bool p2, bool p3, bool p4) const;

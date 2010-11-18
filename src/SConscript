@@ -39,7 +39,6 @@ src = Split("""aabb.cpp
 		collision_world.cpp
 		config.cpp
 		containeralgorithm.cpp
-		coordinatesystems.cpp
 		crashdetection.cpp
 		endian_utility.cpp
 		eventsystem.cpp

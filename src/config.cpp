@@ -96,9 +96,7 @@ bool CONFIG::Load(std::string fname)
 
 bool CONFIG::Load(std::istream & f)
 {
-	// create a base section (unnamed)
-	CONFIG::iterator section = sections.insert(std::pair<std::string, SECTION>("", SECTION())).first;
-	
+	iterator section = sections.insert(std::pair<std::string, SECTION>("", SECTION())).first;
 	std::string line;
 	while (f && !f.eof())
 	{

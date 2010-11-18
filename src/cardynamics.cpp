@@ -1,5 +1,4 @@
 #include "cardynamics.h"
-
 #include "config.h"
 #include "tracksurface.h"
 #include "coordinatesystems.h"
@@ -69,7 +68,7 @@ static bool LoadEngine(
 	if (!c.GetParam(it, "mass", info.mass, error_output)) return false;
 	if (!c.GetParam(it, "position", pos, error_output)) return false;
 
-	COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
+	COORDINATESYSTEMS::ConvertV2toV1(pos[0], pos[1], pos[2]);
 	info.position.Set(pos[0], pos[1], pos[2]);
 
 	int curve_num = 0;
@@ -166,7 +165,7 @@ static bool LoadFuelTank(
 	if (!c.GetParam(it, "fuel-density", fuel_density, error_output)) return false;
 	if (!c.GetParam(it, "position", pos, error_output)) return false;
 
-	COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0],pos[1],pos[2]);
+	COORDINATESYSTEMS::ConvertV2toV1(pos[0],pos[1],pos[2]);
 	MATHVECTOR<double, 3> position(pos[0],pos[1],pos[2]);
 
 	fuel_tank.SetCapacity(capacity);
@@ -343,8 +342,8 @@ static bool LoadSuspension(
 	c.GetParam(iwheel, "steering", info.max_steering_angle);
 	c.GetParam(iwheel, "ackermann", info.ackermann);
 
-	COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(h[0], h[1], h[2]);
-	COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(p[0], p[1], p[2]);
+	COORDINATESYSTEMS::ConvertV2toV1(h[0], h[1], h[2]);
+	COORDINATESYSTEMS::ConvertV2toV1(p[0], p[1], p[2]);
 	info.hinge.Set(h[0], h[1], h[2]);
 	info.extended_position.Set(p[0], p[1], p[2]);
 
@@ -360,25 +359,25 @@ static bool LoadWheel(
 	CARWHEEL<T> & wheel,
 	std::ostream & error_output)
 {
-	float mass, inertia;
+	T mass, inertia;
 	if (!c.GetParam(iwheel, "mass", mass) && !c.GetParam(iwheel, "inertia", inertia))
 	{
-		float tire_radius = tire.GetRadius();
-		float tire_width = tire.GetSidewallWidth();
-		float tire_thickness = 0.05;
-		float tire_density = 8E3;
+		T tire_radius = tire.GetRadius();
+		T tire_width = tire.GetSidewallWidth();
+		T tire_thickness = 0.05;
+		T tire_density = 8E3;
 
-		float rim_radius = tire_radius - tire_width * tire.GetAspectRatio();
-		float rim_width = tire_width;
-		float rim_thickness = 0.01;
-		float rim_density = 3E5;
+		T rim_radius = tire_radius - tire_width * tire.GetAspectRatio();
+		T rim_width = tire_width;
+		T rim_thickness = 0.01;
+		T rim_density = 3E5;
 
-		float tire_volume = tire_width * M_PI * tire_thickness * tire_thickness * (2 * tire_radius  - tire_thickness);
-		float rim_volume = rim_width * M_PI * rim_thickness * rim_thickness * (2 * rim_radius - rim_thickness);
-		float tire_mass = tire_density * tire_volume;
-		float rim_mass = rim_density * rim_volume;
-		float tire_inertia = tire_mass * tire_radius * tire_radius;
-		float rim_inertia = rim_mass * rim_radius * rim_radius;
+		T tire_volume = tire_width * M_PI * tire_thickness * tire_thickness * (2 * tire_radius  - tire_thickness);
+		T rim_volume = rim_width * M_PI * rim_thickness * rim_thickness * (2 * rim_radius - rim_thickness);
+		T tire_mass = tire_density * tire_volume;
+		T rim_mass = rim_density * rim_volume;
+		T tire_inertia = tire_mass * tire_radius * tire_radius;
+		T rim_inertia = rim_mass * rim_radius * rim_radius;
 
 		mass = tire_mass + rim_mass;
 		inertia = (tire_inertia + rim_inertia) * 4;	// scale inertia fixme
@@ -398,9 +397,9 @@ static bool LoadAeroDevices(
 	if (!c.GetSection("wing", is, error_output)) return true;
 	for (CONFIG::SECTION::const_iterator iw = is->second.begin(); iw != is->second.end(); ++iw)
 	{
-		std::vector<float> pos(3);
-		float drag_area, drag_coeff;
-		float lift_area = 0, lift_coeff = 0, lift_eff = 0;
+		std::vector<T> pos(3);
+		T drag_area, drag_coeff;
+		T lift_area = 0, lift_coeff = 0, lift_eff = 0;
 		
 		CONFIG::const_iterator it;
 		if (!c.GetSection(iw->second, it, error_output)) return false;
@@ -411,7 +410,7 @@ static bool LoadAeroDevices(
 		c.GetParam(it, "lift-coefficient", lift_coeff);
 		c.GetParam(it, "efficiency", lift_eff);
 
-		COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0],pos[1],pos[2]);
+		COORDINATESYSTEMS::ConvertV2toV1(pos[0],pos[1],pos[2]);
 		MATHVECTOR <double, 3> position(pos[0], pos[1], pos[2]);
 
 		aerodynamics.push_back(CARAERO<T>());
@@ -448,8 +447,8 @@ static bool LoadMassParticles(
 	int num = 0;
 	while(true)
 	{
-		float mass;
-		std::vector<float> pos(3);
+		T mass;
+		std::vector<T> pos(3);
 		
 		std::stringstream str;
 		str.width(2);
@@ -462,7 +461,7 @@ static bool LoadMassParticles(
 		if (!c.GetParam(it, "position", pos, error_output)) return false;
 		if (!c.GetParam(it, "mass", mass)) return false;
 
-		COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
+		COORDINATESYSTEMS::ConvertV2toV1(pos[0], pos[1], pos[2]);
 		MATHVECTOR<double, 3> position(pos[0], pos[1], pos[2]);
 
 		mass_particles.push_back(std::pair <T, MATHVECTOR <T, 3> > (mass, position));
@@ -533,11 +532,11 @@ bool CARDYNAMICS::Load(const CONFIG & c, std::ostream & error_output)
 	// load driver mass, todo unify for all car components
 	if (c.GetSection("driver", it))
 	{
-		float mass;
-		std::vector<float> pos(3);
+		T mass;
+		std::vector<T> pos(3);
 		if (!c.GetParam(it, "position", pos, error_output)) return false;
 		if (!c.GetParam(it, "mass", mass, error_output)) return false;
-		COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
+		COORDINATESYSTEMS::ConvertV2toV1(pos[0], pos[1], pos[2]);
 		MATHVECTOR<T, 3> position(pos[0], pos[1], pos[2]);
 		AddMassParticle(mass, position);
 	}
@@ -564,7 +563,7 @@ void CARDYNAMICS::GetCollisionBox(
 {
 	btVector3 min = chassisMin - ToBulletVector(center_of_mass);
 	btVector3 max = chassisMax - ToBulletVector(center_of_mass);
-	float minHeight = min.z() + 0.05; // add collision shape bottom margin
+	T minHeight = min.z() + 0.05; // add collision shape bottom margin
 	for (int i = 0; i < 4; i++)
 	{
 		btVector3 wheelHSize(tire[i].GetRadius(), tire[i].GetSidewallWidth()*0.5, tire[i].GetRadius());
@@ -771,7 +770,7 @@ COLLISION_CONTACT & CARDYNAMICS::GetWheelContact(WHEEL_POSITION wp)
 	return wheel_contact[wp];
 }
 
-float CARDYNAMICS::GetMass() const
+T CARDYNAMICS::GetMass() const
 {
 	return body.GetMass();
 }
@@ -815,17 +814,17 @@ void CARDYNAMICS::ShiftGear(int value)
 	}
 }
 
-void CARDYNAMICS::SetThrottle(float value)
+void CARDYNAMICS::SetThrottle(T value)
 {
 	engine.SetThrottle(value);
 }
 
-void CARDYNAMICS::SetClutch(float value)
+void CARDYNAMICS::SetClutch(T value)
 {
 	clutch.SetClutch(value);
 }
 
-void CARDYNAMICS::SetBrake(float value)
+void CARDYNAMICS::SetBrake(T value)
 {
 	for(unsigned int i = 0; i < brake.size(); i++)
 	{
@@ -833,7 +832,7 @@ void CARDYNAMICS::SetBrake(float value)
 	}
 }
 
-void CARDYNAMICS::SetHandBrake(float value)
+void CARDYNAMICS::SetHandBrake(T value)
 {
 	for(unsigned int i = 0; i < brake.size(); i++)
 	{
@@ -1000,9 +999,9 @@ T CARDYNAMICS::GetFeedback() const
 	return feedback;
 }
 
-void CARDYNAMICS::UpdateTelemetry ( float dt )
+void CARDYNAMICS::UpdateTelemetry(T dt)
 {
-	for (std::list <CARTELEMETRY>::iterator i = telemetry.begin(); i != telemetry.end(); i++)
+	for (std::list<CARTELEMETRY>::iterator i = telemetry.begin(); i != telemetry.end(); i++)
 		i->Update ( dt );
 }
 
@@ -1462,7 +1461,7 @@ void CARDYNAMICS::Tick(MATHVECTOR<T, 3> ext_force, MATHVECTOR<T, 3> ext_torque, 
 	AddAerodynamics(ext_force, ext_torque);
 
 	const int num_repeats = 10;
-	const float internal_dt = dt / num_repeats;
+	const T internal_dt = dt / num_repeats;
 	for(int i = 0; i < num_repeats; ++i)
 	{
 		T drive_torque[WHEEL_POSITION_SIZE];
@@ -1479,7 +1478,7 @@ void CARDYNAMICS::Tick(MATHVECTOR<T, 3> ext_force, MATHVECTOR<T, 3> ext_torque, 
 	fuel_tank.Consume(engine.FuelRate() * dt);
 	engine.SetOutOfGas(fuel_tank.Empty());
 
-	const float tacho_factor = 0.1;
+	const T tacho_factor = 0.1;
 	tacho_rpm = engine.GetRPM() * tacho_factor + tacho_rpm * (1.0 - tacho_factor);
 
 	UpdateTelemetry(dt);
