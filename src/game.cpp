@@ -1476,20 +1476,16 @@ void GAME::UpdateCarInputs(CAR & car)
 				settings.GetButtonRamp(),
 				settings.GetHGateShifter());
 		}
-
-		stringstream debug_info1;
-		car.DebugPrint(debug_info1, true, false, false, false);
-
-		stringstream debug_info2;
-		car.DebugPrint(debug_info2, false, true, false, false);
-
-		stringstream debug_info3;
-		car.DebugPrint(debug_info3, false, false, true, false);
-
-		stringstream debug_info4;
-		car.DebugPrint(debug_info4, false, false, false, true);
-
-        std::pair <int, int> curplace = timer.GetPlayerPlace();
+		
+		stringstream debug_info1, debug_info2, debug_info3, debug_info4;
+		if (debugmode)
+		{
+			car.DebugPrint(debug_info1, true, false, false, false);
+			car.DebugPrint(debug_info2, false, true, false, false);
+			car.DebugPrint(debug_info3, false, false, true, false);
+			car.DebugPrint(debug_info4, false, false, false, true);
+		}
+		std::pair <int, int> curplace = timer.GetPlayerPlace();
 		hud.Update(fonts["lcd"], fonts["futuresans"], timer.GetPlayerTime(), timer.GetLastLap(),
 			timer.GetBestLap(), timer.GetStagingTimeLeft(),
 			timer.GetPlayerCurrentLap(), race_laps, curplace.first, curplace.second,

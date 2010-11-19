@@ -84,7 +84,7 @@ void AddDrawablesToContainer(CONTAINERT & source, U & dest, const MATRIX4 <float
 		AddDrawableToContainer<DRAWABLE_TYPE,U,use_transform>(*i, dest, transform);
 	}
 }
-};
+}
 
 /// pointer vector, drawable_container template parameter
 template <typename T>

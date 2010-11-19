@@ -14,13 +14,8 @@
 				<Option compiler="gcc" />
 				<Option use_console_runner="0" />
 				<Compiler>
-					<Add option="-Wall" />
-					<Add option="-pg" />
 					<Add option="-g" />
 				</Compiler>
-				<Linker>
-					<Add option="-pg -lgmon" />
-				</Linker>
 			</Target>
 			<Target title="Release">
 				<Option output="..\..\vdrift" prefix_auto="1" extension_auto="1" />
@@ -30,12 +25,8 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O3" />
-					<Add option="-pg" />
 					<Add option="-march=native" />
 				</Compiler>
-				<Linker>
-					<Add option="-pg -lgmon" />
-				</Linker>
 			</Target>
 		</Build>
 		<Compiler>
@@ -513,7 +504,6 @@
 		<Unit filename="..\..\src\collision_world.cpp" />
 		<Unit filename="..\..\src\config.cpp" />
 		<Unit filename="..\..\src\containeralgorithm.cpp" />
-		<Unit filename="..\..\src\coordinatesystems.cpp" />
 		<Unit filename="..\..\src\crashdetection.cpp" />
 		<Unit filename="..\..\src\endian_utility.cpp" />
 		<Unit filename="..\..\src\eventsystem.cpp" />

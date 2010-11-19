@@ -1,5 +1,4 @@
 #include "car.h"
-
 #include "carwheelposition.h"
 #include "coordinatesystems.h"
 #include "collision_world.h"
@@ -16,7 +15,6 @@
 #include "camera_orbit.h"
 #include "camera_mount.h"
 
-#include <fstream>
 #include <map>
 #include <list>
 #include <vector>

@@ -58,9 +58,10 @@ private:
 			bool drifting;
 			float max_angle;
 			float max_speed;
-			
+		
 		public:
-			DRIFTSCORE() {Reset();}
+			DRIFTSCORE() : score(0), thisdriftscore(0), drifting(false), max_angle(0), max_speed(0) {}
+			
 			void Reset()
 			{
 				score = 0;

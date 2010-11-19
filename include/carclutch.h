@@ -29,13 +29,16 @@ private:
 		
 public:
 	//default constructor makes an S2000-like car
-	CARCLUTCH() : 
+	CARCLUTCH() :
 		sliding_friction(0.27),
 		radius(0.15),
 		area(0.75),
 		max_pressure(11079.26),
-		clutch_position(0.0),
-		locked(false)
+		clutch_position(0),
+		locked(false),
+		last_torque(0),
+		engine_speed(0),
+		drive_speed(0)
 	{}
 
 	void DebugPrint(std::ostream & out) const
@@ -85,20 +88,20 @@ public:
 		engine_speed = n_engine_speed;
 		drive_speed = n_drive_speed;
 		T new_speed_diff = drive_speed - engine_speed;
-        locked = true;
+		locked = true;
 		
-        T torque_capacity = sliding_friction * max_pressure * area * radius; // constant
+		T torque_capacity = sliding_friction * max_pressure * area * radius; // constant
 		T max_torque = clutch_position * torque_capacity;
-		T friction_torque = max_torque * new_speed_diff;    // highly viscous coupling (locked clutch)
+		T friction_torque = max_torque * new_speed_diff;	// highly viscous coupling (locked clutch)
 		if (friction_torque > max_torque)					// slipping clutch
 		{
-		    friction_torque = max_torque;
-		    locked = false;
+			friction_torque = max_torque;
+			locked = false;
 		}
 		else if (friction_torque < -max_torque)
 		{
-		    friction_torque = -max_torque;
-		    locked = false;
+			friction_torque = -max_torque;
+			locked = false;
 		}
 		
 		T torque = friction_torque;

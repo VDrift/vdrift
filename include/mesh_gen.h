@@ -12,6 +12,6 @@ void mg_rim(VERTEXARRAY & rim, float sectionWidth_mm, float aspectRatio, float r
 
 void mg_brake_rotor(VERTEXARRAY & rotor, float diameter_mm, float thickness_mm);
 
-};
+}
 
 #endif
