@@ -99,47 +99,52 @@ MATHVECTOR <T, 3> CARSUSPENSION<T>::GetWheelPosition(T displacement_fraction) co
 }
 
 template <typename T>
-void CARSUSPENSION<T>::Update(T ext_displacement, T ext_velocity, T dt)
+void CARSUSPENSION<T>::Update(T ext_mass, T ext_velocity, T ext_displacement, T dt)
 {
-	const T inv_wheel_mass = 1 / 20.0; 	// 20kg wheel
-	const T tire_stiffness = 3E5;
-	
-	// deal with overtravel outside of suspension
-	overtravel = ext_displacement + displacement - info.travel;
-	if(overtravel < 0) overtravel = 0;
-	
-	// update wheel (symplectic euler)
-	wheel_force = GetForce(displacement, wheel_velocity) + force;
-	
-	T velocity_delta = wheel_force * inv_wheel_mass * dt;
-	wheel_velocity += velocity_delta;
-
-	T displacement_delta = wheel_velocity * dt;
-	displacement += displacement_delta;
-	
-	// clamp displacement
+	overtravel = 0;
+	displacement = displacement + ext_displacement;
+	T velocity = ext_velocity;
 	if (displacement > info.travel)
 	{
-		wheel_velocity = 0;
-		displacement_delta -= (displacement - info.travel);
+		overtravel = displacement - info.travel;
 		displacement = info.travel;
 	}
 	else if (displacement < 0)
 	{
-		wheel_velocity = 0;
-		displacement_delta -= displacement;
 		displacement = 0;
+		velocity = 0;
 	}
-
-	// external displacement
-	force = 0;
-	T tire_deflection = ext_displacement - displacement_delta;
-	if (tire_deflection > 0)
+	
+	T spring = info.spring_constant;
+	T springfactor = info.spring_factors.Interpolate(displacement);
+	spring_force = displacement * spring * springfactor; 
+	
+	T damping = (velocity > 0) ? info.bounce : info.rebound;
+	T dampfactor = info.damper_factors.Interpolate(std::abs(velocity));
+	damp_force = -velocity * damping * dampfactor;
+	
+	force = spring_force + damp_force;
+	
+	// limit damping force (should never add energy)
+	T force_limit = -ext_velocity / dt * ext_mass;
+	if (force < 0)
 	{
-		if (tire_deflection > 0.03) tire_deflection = 0.03;
-		force = tire_stiffness * tire_deflection;
+		force = 0;
 	}
-
+	if (spring_force > force_limit)
+	{
+		force = spring_force;
+	}
+	else if (spring_force < force_limit && force > force_limit)
+	{
+		force = force_limit;
+	}
+	// suspension bump
+	if (force < force_limit && overtravel > 0)
+	{
+		force = force_limit;
+	}
+	
 	// update wheel position
 	position = GetWheelPosition(displacement / info.travel);
 }
@@ -150,9 +155,6 @@ void CARSUSPENSION<T>::DebugPrint(std::ostream & out) const
 	out << "---Suspension---" << "\n";
 	out << "Displacement: " << displacement << "\n";
 	out << "Force: " << force << "\n";
-	//out << "Velocity: " << wheel_velocity << "\n";
-	//out << "Wheel force: " << wheel_force << "\n";
-	//out << "Damp force: " << damp_force << "\n";
 	out << "Steering angle: " << steering_angle * 180 / M_PI << "\n";
 }
 

@@ -79,8 +79,8 @@ public:
 	/// steering: -1.0 is maximum right lock and 1.0 is maximum left lock
 	void SetSteering(const T & value);
 
-	/// update wheel position
-	void Update(T ext_displacement, T ext_velocity, T dt);
+	/// mass, velocity, displacement along suspension vector
+	void Update(T mass, T velocity, T displacement, T dt);
 
 	void DebugPrint(std::ostream & out) const;
 

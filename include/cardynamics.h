@@ -10,8 +10,8 @@
 #include "carsuspension.h"
 #include "carwheel.h"
 #include "cartire.h"
-#include "carwheelposition.h"
 #include "carbrake.h"
+#include "carwheelposition.h"
 #include "caraerodynamicdevice.h"
 #include "joeserialize.h"
 #include "macros.h"
@@ -22,7 +22,6 @@
 class MODEL;
 class CONFIG;
 class COLLISION_WORLD;
-//class SuspensionConstraint;
 
 class CARDYNAMICS : public btActionInterface
 {
@@ -182,18 +181,17 @@ protected:
 	std::vector <QUATERNION <T> > wheel_orientation;
 	std::vector <COLLISION_CONTACT> wheel_contact;
 	std::vector <CARSUSPENSION <T> > suspension;
-	//std::vector <SuspensionConstraint*> new_suspension;
 
 	std::vector <CARAERO <T> > aerodynamics;
 	std::list <std::pair <T, MATHVECTOR <T, 3> > > mass_particles;
+	std::list <CARTELEMETRY> telemetry;
 	
 	T maxangle;
-	
 	T feedback;
 	
-	MATHVECTOR <T, 3> lastbodyforce; //< held so external classes can extract it for things such as applying physics to camera mounts
+	//< held so external classes can extract it for things such as applying physics to camera mounts
+	MATHVECTOR <T, 3> lastbodyforce;
 	
-	std::list <CARTELEMETRY> telemetry;
 
 // chassis, cardynamics
 	MATHVECTOR <T, 3> GetDownVector() const;
@@ -297,8 +295,6 @@ protected:
 		const btVector3 & chassisCenter,
 		btVector3 & center,
 		btVector3 & size);
-
-	void InitializeWheelVelocity();
 
 	void AddMassParticle(T mass, MATHVECTOR <T, 3> pos);
 };

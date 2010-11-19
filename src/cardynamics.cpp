@@ -12,7 +12,6 @@ bool isnan(double number);
 #endif
 
 //#define _BULLET_
-//#include "suspensionconstraint.h"
 
 typedef CARDYNAMICS::T T;
 
@@ -31,10 +30,6 @@ CARDYNAMICS::CARDYNAMICS() :
 	tcs(false),
 	maxangle(0)
 {
-#ifdef _BULLET_
-	new_suspension.resize(WHEEL_POSITION_SIZE);
-#endif
-	
 	suspension.reserve(WHEEL_POSITION_SIZE);
 	wheel.reserve(WHEEL_POSITION_SIZE);
 	tire.reserve(WHEEL_POSITION_SIZE);
@@ -653,17 +648,8 @@ void CARDYNAMICS::Init(
 		wheel_velocity[i].Set(0.0);
 		wheel_position[i] = LocalToWorld(suspension[i].GetWheelPosition(0.0));
 		wheel_orientation[i] = Orientation() * suspension[i].GetWheelOrientation();
-#ifdef _BULLET_
-		new_suspension[i] = new SuspensionConstraint(world, *chassis);
-		new_suspension[i]->setPosition(ToBulletVector(suspension[i].GetWheelPosition(0.0)));
-		new_suspension[i]->setTravel(suspension[i].GetTravel());
-		new_suspension[i]->setOffset(tire[i].GetRadius());
-		new_suspension[i]->setStiffness(10000);//25000);
-		new_suspension[i]->setDamping(5000);
-		world.AddConstraint(new_suspension[i]);
-#endif
 	}
-
+	
 	AlignWithGround();
 }
 
@@ -679,7 +665,7 @@ void CARDYNAMICS::updateAction(btCollisionWorld * collisionWorld, btScalar dt)
 	MATHVECTOR<T, 3> dv = v1 - v0;
 	MATHVECTOR<T, 3> dw = w1 - w0;
 	MATHVECTOR<T, 3> ext_force = dv * body.GetMass() / dt;
-	MATHVECTOR<T, 3> ext_torque = body.GetWorldInertia().Multiply(w1 - w0) / dt;
+	MATHVECTOR<T, 3> ext_torque = body.GetWorldInertia().Multiply(dw) / dt;
 
 	// wheel ray cast
 	UpdateWheelContacts();
@@ -1262,8 +1248,10 @@ void CARDYNAMICS::AddAerodynamics(MATHVECTOR<T, 3> & force, MATHVECTOR<T, 3> & t
 // returns normal force(wheel force)
 T CARDYNAMICS::UpdateSuspension(int i, T dt)
 {
-	// velocity, displacment along wheel ray
-	T velocity = 0;//-GetDownVector().dot(wheel_velocity[i]);
+	MATHVECTOR <T, 3> normal = wheel_contact[i].GetNormal();
+	MATHVECTOR <T, 3> offset = wheel_contact[i].GetPosition() - body.GetPosition();
+	T mass = 1.0 / body.GetInvEffectiveMass(normal, offset);
+	T velocity = wheel_velocity[i].dot(normal);
 	T displacement = 2.0 * tire[i].GetRadius() - wheel_contact[i].GetDepth();
 
 	// adjust displacement due to surface bumpiness
@@ -1279,7 +1267,7 @@ T CARDYNAMICS::UpdateSuspension(int i, T dt)
 		displacement += bumpoffset;
 	}
 
-	suspension[i].Update(displacement, velocity, dt);
+	suspension[i].Update(mass, velocity, displacement, dt);
 
 	int otheri = i;
 	if ( i == 0 || i == 2 ) otheri++;
@@ -1288,25 +1276,12 @@ T CARDYNAMICS::UpdateSuspension(int i, T dt)
 
 	T suspension_force = suspension[i].GetForce() + antirollforce;
 	if (suspension_force < 0.0) suspension_force = 0.0;
-	assert(suspension_force == suspension_force);
 
-	// overtravel constraint (calculate impulse to reduce relative velocity to zero)
-	if (suspension[i].GetOvertravel() > 0.0)
-	{
-		MATHVECTOR <T, 3> normal = wheel_contact[i].GetNormal();
-		MATHVECTOR <T, 3> offset = wheel_contact[i].GetPosition() - body.GetPosition();
+	T nproj = Orientation().AxisZ().dot(wheel_contact[i].GetNormal());
+	T normal_force = suspension_force * nproj;
+	assert(!isnan(normal_force));
 
-		T velocity_error = wheel_velocity[i].dot(normal);
-		if (velocity_error < 0.0)
-		{
-			T mass = 1.0 / body.GetInvEffectiveMass(normal, offset);
-			T impulse = -velocity_error * mass;
-			T constraint_force = impulse / dt;
-			if (constraint_force > suspension_force) suspension_force = constraint_force;
-		}
-	}
-
-	return suspension_force;
+	return normal_force;
 }
 
 T CARDYNAMICS::ApplyTireForce(int i, const T normal_force, const QUATERNION <T> & wheel_space)
@@ -1387,17 +1362,14 @@ T CARDYNAMICS::CalculateWheelTorque(
 	// brake and rolling resistance torque should never exceed lock up torque
 	if(lock_up_torque >= 0 && lock_up_torque > brake_torque)
 	{
-		brake.WillLock(false);
 		wheel_torque += brake_torque;   // brake torque has same direction as lock up torque
 	}
 	else if(lock_up_torque < 0 && lock_up_torque < -brake_torque)
 	{
-		brake.WillLock(false);
 		wheel_torque -= brake_torque;
 	}
 	else
 	{
-		brake.WillLock(true);
 		wheel_torque = wheel.GetLockUpTorque(dt);
 	}
 
