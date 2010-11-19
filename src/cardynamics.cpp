@@ -879,7 +879,7 @@ bool CARDYNAMICS::GetTCSActive() const
 void CARDYNAMICS::SetPosition(const MATHVECTOR<T, 3> & position)
 {
 	body.SetPosition(position);
-	//chassis->translate(ToBulletVector(position) - chassis->getCenterOfMassPosition());
+	chassis->translate(ToBulletVector(position) - chassis->getCenterOfMassPosition());
 }
 
 void CARDYNAMICS::AlignWithGround()
@@ -902,6 +902,10 @@ void CARDYNAMICS::AlignWithGround()
 	MATHVECTOR <T, 3> delta = GetDownVector() * min_height;
 	MATHVECTOR <T, 3> trimmed_position = Position() + delta;
 	SetPosition(trimmed_position);
+	
+	// reset velocities
+	chassis->setAngularVelocity(btVector3(0,0,0));
+	chassis->setLinearVelocity(btVector3(0,0,0));
 
 	UpdateWheelTransform();
 	UpdateWheelContacts();
@@ -1394,7 +1398,6 @@ void CARDYNAMICS::UpdateBody(
 	body.ApplyTorque(ext_torque);
 
 	// update suspension/wheels
-	//static int count = 0;
 	T normal_force[WHEEL_POSITION_SIZE];
 	for(int i = 0; i < WHEEL_POSITION_SIZE; i++)
 	{
@@ -1406,11 +1409,7 @@ void CARDYNAMICS::UpdateBody(
 		MATHVECTOR <T, 3> world_wheel_torque(0, -wheel_torque, 0);
 		wheel_orientation[i].RotateVector(world_wheel_torque);
 		ApplyTorque(world_wheel_torque);
-
-		//std::cerr << std::setw(4) << count << "; " << std::setw(7) << tire_friction[0] << " ";
 	}
-	//std::cerr << "\n";
-	//count++;
 
 	body.Integrate2(dt);
 
@@ -1721,24 +1720,21 @@ int CARDYNAMICS::NextGear() const
 	int gear = transmission.GetGear();
 
 	// only autoshift if a shift is not in progress
-	if (shifted)
+	if (shifted && clutch.GetClutch() == 1.0)
 	{
-        if (clutch.GetClutch() == 1.0)
-        {
-            // shift up when driveshaft speed exceeds engine redline
-            // we do not shift up from neutral/reverse
-            if (driveshaft_rpm > engine.GetRedline() && gear > 0)
-            {
-                return gear + 1;
-            }
-            // shift down when driveshaft speed below shift_down_point
-            // we do not auto shift down from 1st gear to neutral
-            if(driveshaft_rpm < DownshiftRPM(gear) && gear > 1)
-            {
-                return gear - 1;
-            }
-        }
-    }
+		// shift up when driveshaft speed exceeds engine redline
+		// we do not shift up from neutral/reverse
+		if (driveshaft_rpm > engine.GetRedline() && gear > 0)
+		{
+			return gear + 1;
+		}
+		// shift down when driveshaft speed below shift_down_point
+		// we do not auto shift down from 1st gear to neutral
+		if(driveshaft_rpm < DownshiftRPM(gear) && gear > 1)
+		{
+			return gear - 1;
+		}
+	}
 	return gear;
 }
 
@@ -1772,10 +1768,8 @@ void CARDYNAMICS::DoTCS(int i, T suspension_force)
 		for (int i2 = 0; i2 < WHEEL_POSITION_SIZE; i2++)
 		{
 			T spindiff = myrotationalspeed - wheel[i2].GetAngularVelocity();
-			if (spindiff < 0)
-				spindiff = -spindiff;
-			if (spindiff > maxspindiff)
-				maxspindiff = spindiff;
+			if (spindiff < 0) spindiff = -spindiff;
+			if (spindiff > maxspindiff) maxspindiff = spindiff;
 		}
 
 		//don't engage if all wheels are moving at the same rate
@@ -1790,11 +1784,11 @@ void CARDYNAMICS::DoTCS(int i, T suspension_force)
 			if (tcs_active[i])
 			{
 				T curclutch = clutch.GetClutch();
-				assert(curclutch <= 1.0 && curclutch >= 0.0);
+				assert(curclutch <= 1 && curclutch >= 0);
 
 				gas -= curclutch * (slide - 0.5);
 				if (gas < 0) gas = 0;
-				if (gas > 1) gas = 1;
+				assert(gas <= 1);
 				engine.SetThrottle(gas);
 			}
 		}
