@@ -6,7 +6,7 @@
 #include "linearinterp.h"
 #include "joeserialize.h"
 #include "macros.h"
-
+#include "config.h"
 #include <iostream>
 
 template <typename T>
@@ -43,8 +43,6 @@ class CARSUSPENSION
 public:
 	CARSUSPENSION();
 
-	void Init(const CARSUSPENSIONINFO <T> & info);
-
 	const T & GetAntiRoll() const	{return info.anti_roll;}
 
 	const T & GetMaxSteeringAngle() const {return info.max_steering_angle;}
@@ -56,7 +54,7 @@ public:
 	const MATHVECTOR <T, 3> & GetWheelPosition() const {return position;}
 
 	/// displacement: fraction of suspension travel
-	MATHVECTOR <T, 3> GetWheelPosition(T displacement) const;
+	virtual MATHVECTOR <T, 3> GetWheelPosition(T displacement) = 0;
 
 	/// force acting onto wheel
 	const T & GetWheelForce() const {return wheel_force;}
@@ -74,10 +72,10 @@ public:
 	const T & GetDisplacement() const {return displacement;}
 
 	/// displacement fraction: 0.0 fully extended, 1.0 fully compressed
-	T GetDisplacementFraction() const	{return displacement / info.travel;}
+	T GetDisplacementFraction() const {return displacement / info.travel;}
 
 	/// steering: -1.0 is maximum right lock and 1.0 is maximum left lock
-	void SetSteering(const T & value);
+	virtual void SetSteering(const T & value);
 
 	/// mass, velocity, displacement along suspension vector
 	void Update(T mass, T velocity, T displacement, T dt);
@@ -90,10 +88,17 @@ public:
 		return true;
 	}
 
-friend class joeserialize::Serializer;
-private:
-	CARSUSPENSIONINFO <T> info;
+	static bool LoadSuspension(
+		const CONFIG &,
+		const CONFIG::const_iterator &,
+		CARSUSPENSION<T> *&,
+		std::ostream &);
 
+	friend class joeserialize::Serializer;
+
+protected:
+	CARSUSPENSIONINFO <T> info;
+	
 	// suspension
 	QUATERNION <T> orientation;
 	MATHVECTOR <T, 3> position;
@@ -107,8 +112,8 @@ private:
 	T displacement;
 	T wheel_velocity;
 	T wheel_force;
-
-	T GetForce(T displacement, T velocity);
+	
+	void Init(const CARSUSPENSIONINFO <T> & info);
 };
 
 #endif

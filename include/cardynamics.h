@@ -19,6 +19,8 @@
 #include "cartelemetry.h"
 #include "BulletDynamics/Dynamics/btActionInterface.h"
 
+#include <tr1/memory> // shared_ptr
+
 class MODEL;
 class CONFIG;
 class COLLISION_WORLD;
@@ -115,7 +117,7 @@ public:
 
 	const CARTIRE <T> & GetTire(WHEEL_POSITION pos) const {return tire[pos];}
 	
-	const CARSUSPENSION <T> & GetSuspension(WHEEL_POSITION pos) const {return suspension[pos];}
+	const CARSUSPENSION <T> & GetSuspension(WHEEL_POSITION pos) const {return *suspension[pos];}
 
 	MATHVECTOR <T, 3> GetTotalAero() const;
 	
@@ -180,7 +182,7 @@ protected:
 	std::vector <MATHVECTOR <T, 3> > wheel_position;
 	std::vector <QUATERNION <T> > wheel_orientation;
 	std::vector <COLLISION_CONTACT> wheel_contact;
-	std::vector <CARSUSPENSION <T> > suspension;
+	std::vector <std::tr1::shared_ptr<CARSUSPENSION<T> > > suspension;
 
 	std::vector <CARAERO <T> > aerodynamics;
 	std::list <std::pair <T, MATHVECTOR <T, 3> > > mass_particles;

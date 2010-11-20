@@ -171,52 +171,6 @@ static bool LoadFuelTank(
 	return true;
 }
 
-// 1-9 points
-static void LoadPoints(
-	const CONFIG & c,
-	const CONFIG::const_iterator & it,
-	const std::string & name,
-	std::vector <std::pair <T, T> > & points)
-{
-	int i = 1;
-	std::stringstream s;
-	s << std::setw(1) << i;
-	std::vector<T> point(2);
-	while(c.GetParam(it, name+s.str(), point) && i < 10)
-	{
-		s.clear();
-		s << std::setw(1) << ++i;
-		points.push_back(std::pair<T, T>(point[0], point[1]));
-	}
-}
-
-static bool LoadCoilover(
-	const CONFIG & c,
-	const CONFIG::const_iterator & iwheel,
-	CARSUSPENSIONINFO <T> & info,
-	std::ostream & error_output)
-{
-	std::string coilovername;
-	if (!c.GetParam(iwheel, "coilover", coilovername, error_output)) return false;
-	
-	CONFIG::const_iterator it;
-	if (!c.GetSection(coilovername, it, error_output)) return false;
-	if (!c.GetParam(it, "spring-constant", info.spring_constant, error_output)) return false;
-	if (!c.GetParam(it, "bounce", info.bounce, error_output)) return false;
-	if (!c.GetParam(it, "rebound", info.rebound, error_output)) return false;
-	if (!c.GetParam(it, "travel", info.travel, error_output)) return false;
-	if (!c.GetParam(it, "anti-roll", info.anti_roll, error_output)) return false;
-	
-	std::vector<std::pair <T, T> > damper_factor_points;
-	std::vector<std::pair <T, T> > spring_factor_points;
-	LoadPoints(c, it, "damper-factor-", damper_factor_points);
-	LoadPoints(c, it, "spring-factor-", spring_factor_points);
-	info.SetDamperFactorPoints(damper_factor_points);
-	info.SetSpringFactorPoints(spring_factor_points);
-	
-	return true;
-}
-
 static bool LoadBrake(
 	const CONFIG & c,
 	const CONFIG::const_iterator & iwheel,
@@ -317,33 +271,6 @@ static bool LoadTire(
 	info.SetDimensions(size[0], size[1], size[2]);
 	tire.Init(info);
 	
-	return true;
-}
-
-static bool LoadSuspension(
-	const CONFIG & c,
-	const CONFIG::const_iterator & iwheel,
-	CARSUSPENSION<T> & suspension,
-	std::ostream & error_output)
-{
-	std::vector<float> h(3), p(3);
-	CARSUSPENSIONINFO<T> info;
-	if (!LoadCoilover(c, iwheel, info, error_output)) return false;
-	if (!c.GetParam(iwheel, "position", p, error_output)) return false;
-	if (!c.GetParam(iwheel, "hinge", h, error_output)) return false;
-	if (!c.GetParam(iwheel, "camber", info.camber, error_output)) return false;
-	if (!c.GetParam(iwheel, "caster", info.caster, error_output)) return false;
-	if (!c.GetParam(iwheel, "toe", info.toe, error_output)) return false;
-	c.GetParam(iwheel, "steering", info.max_steering_angle);
-	c.GetParam(iwheel, "ackermann", info.ackermann);
-
-	COORDINATESYSTEMS::ConvertV2toV1(h[0], h[1], h[2]);
-	COORDINATESYSTEMS::ConvertV2toV1(p[0], p[1], p[2]);
-	info.hinge.Set(h[0], h[1], h[2]);
-	info.extended_position.Set(p[0], p[1], p[2]);
-
-	suspension.Init(info);
-
 	return true;
 }
 
@@ -480,26 +407,28 @@ bool CARDYNAMICS::Load(const CONFIG & c, std::ostream & error_output)
 	if (!c.GetSection("wheel", is, error_output)) return false;
 	
 	assert(is->second.size() == WHEEL_POSITION_SIZE); // temporary restriction
+	
 	for (CONFIG::SECTION::const_iterator iw = is->second.begin(); iw != is->second.end(); ++iw)
 	{
+		CARSUSPENSION<T> * sptr = 0;
 		CONFIG::const_iterator iwheel;
 		if (!c.GetSection(iw->second, iwheel, error_output)) return false;
 		
 		tire.push_back(CARTIRE<T>());
 		brake.push_back(CARBRAKE<T>());
 		wheel.push_back(CARWHEEL<T>());
-		suspension.push_back(CARSUSPENSION<T>());
 		
 		if (!LoadTire(c, iwheel, tire.back(), error_output)) return false;
 		if (!LoadBrake(c, iwheel, brake.back(), error_output)) return false;
-		if (!LoadSuspension(c, iwheel, suspension.back(), error_output)) return false;
 		if (!LoadWheel(c, iwheel, tire.back(), wheel.back(), error_output)) return false;
+		if (!CARSUSPENSION<T>::LoadSuspension(c, iwheel, sptr, error_output)) return false;
 		
-		if (suspension.back().GetMaxSteeringAngle() > maxangle)
+		suspension.push_back(std::tr1::shared_ptr<CARSUSPENSION<T> >(sptr));
+		if (suspension.back()->GetMaxSteeringAngle() > maxangle)
 		{
-			maxangle = suspension.back().GetMaxSteeringAngle();
+			maxangle = suspension.back()->GetMaxSteeringAngle();
 		}
-		AddMassParticle(wheel.back().GetMass(), suspension.back().GetWheelPosition());
+		AddMassParticle(wheel.back().GetMass(), suspension.back()->GetWheelPosition());
 	}
 
 	drive = NONE;
@@ -562,7 +491,7 @@ void CARDYNAMICS::GetCollisionBox(
 	for (int i = 0; i < 4; i++)
 	{
 		btVector3 wheelHSize(tire[i].GetRadius(), tire[i].GetSidewallWidth()*0.5, tire[i].GetRadius());
-		btVector3 wheelPos = ToBulletVector(suspension[i].GetWheelPosition(0.0));
+		btVector3 wheelPos = ToBulletVector(suspension[i]->GetWheelPosition(0.0));
 		btVector3 wheelMin = wheelPos - wheelHSize;
 		btVector3 wheelMax = wheelPos + wheelHSize;
 		min.setMin(wheelMin);
@@ -646,8 +575,8 @@ void CARDYNAMICS::Init(
 	for (int i = 0; i < WHEEL_POSITION_SIZE; i++)
 	{
 		wheel_velocity[i].Set(0.0);
-		wheel_position[i] = LocalToWorld(suspension[i].GetWheelPosition(0.0));
-		wheel_orientation[i] = Orientation() * suspension[i].GetWheelOrientation();
+		wheel_position[i] = LocalToWorld(suspension[i]->GetWheelPosition(0.0));
+		wheel_orientation[i] = Orientation() * suspension[i]->GetWheelOrientation();
 	}
 	
 	AlignWithGround();
@@ -718,26 +647,26 @@ const QUATERNION <T> & CARDYNAMICS::GetOrientation() const
 
 MATHVECTOR <T, 3> CARDYNAMICS::GetWheelPosition(WHEEL_POSITION wp) const
 {
-	MATHVECTOR <T, 3> pos = suspension[wp].GetWheelPosition();
+	MATHVECTOR <T, 3> pos = suspension[wp]->GetWheelPosition();
 	chassisRotation.RotateVector(pos);
 	return pos + chassisPosition;
 }
 
 MATHVECTOR <T, 3> CARDYNAMICS::GetWheelPosition(WHEEL_POSITION wp, T displacement_fraction) const
 {
-	MATHVECTOR <T, 3> pos = suspension[wp].GetWheelPosition(displacement_fraction);
+	MATHVECTOR <T, 3> pos = suspension[wp]->GetWheelPosition(displacement_fraction);
 	chassisRotation.RotateVector(pos);
 	return pos + chassisPosition;
 }
 
 QUATERNION <T> CARDYNAMICS::GetWheelOrientation(WHEEL_POSITION wp) const
 {
-	return chassisRotation * suspension[wp].GetWheelOrientation() * wheel[wp].GetRotation();
+	return chassisRotation * suspension[wp]->GetWheelOrientation() * wheel[wp].GetRotation();
 }
 
 QUATERNION <T> CARDYNAMICS::GetUprightOrientation(WHEEL_POSITION wp) const
 {
-	return chassisRotation * suspension[wp].GetWheelOrientation();
+	return chassisRotation * suspension[wp]->GetWheelOrientation();
 }
 
 /// worldspace wheel center position
@@ -944,7 +873,7 @@ void CARDYNAMICS::SetSteering(const T value)
 {
 	for(int i = 0; i < WHEEL_POSITION_SIZE; i++)
 	{
-		suspension[i].SetSteering(value);
+		suspension[i]->SetSteering(value);
 	}
 }
 
@@ -1042,16 +971,16 @@ void CARDYNAMICS::DebugPrint ( std::ostream & out, bool p1, bool p2, bool p3, bo
 	{
 		out << std::fixed << std::setprecision(3);
 		out << "(front left)" << "\n";
-		suspension[FRONT_LEFT].DebugPrint ( out );
+		suspension[FRONT_LEFT]->DebugPrint ( out );
 		out << "\n";
 		out << "(front right)" << "\n";
-		suspension[FRONT_RIGHT].DebugPrint ( out );
+		suspension[FRONT_RIGHT]->DebugPrint ( out );
 		out << "\n";
 		out << "(rear left)" << "\n";
-		suspension[REAR_LEFT].DebugPrint ( out );
+		suspension[REAR_LEFT]->DebugPrint ( out );
 		out << "\n";
 		out << "(rear right)" << "\n";
-		suspension[REAR_RIGHT].DebugPrint ( out );
+		suspension[REAR_RIGHT]->DebugPrint ( out );
 		out << "\n";
 
 		out << "(front left)" << "\n";
@@ -1118,7 +1047,7 @@ bool CARDYNAMICS::Serialize ( joeserialize::Serializer & s )
 	_SERIALIZE_(s,differential_rear);
 	_SERIALIZE_(s,differential_center);
 	_SERIALIZE_(s,fuel_tank);
-	_SERIALIZE_(s,suspension);
+	//_SERIALIZE_(s,suspension);
 	_SERIALIZE_(s,wheel);
 	_SERIALIZE_(s,brake);
 	_SERIALIZE_(s,tire);
@@ -1219,8 +1148,8 @@ void CARDYNAMICS::UpdateWheelTransform()
 {
 	for(int i = 0; i < WHEEL_POSITION_SIZE; i++)
 	{
-		wheel_position[i] = LocalToWorld(suspension[i].GetWheelPosition());
-		wheel_orientation[i] = Orientation() * suspension[i].GetWheelOrientation();
+		wheel_position[i] = LocalToWorld(suspension[i]->GetWheelPosition());
+		wheel_orientation[i] = Orientation() * suspension[i]->GetWheelOrientation();
 	}
 }
 
@@ -1271,14 +1200,14 @@ T CARDYNAMICS::UpdateSuspension(int i, T dt)
 		displacement += bumpoffset;
 	}
 
-	suspension[i].Update(mass, velocity, displacement, dt);
+	suspension[i]->Update(mass, velocity, displacement, dt);
 
 	int otheri = i;
 	if ( i == 0 || i == 2 ) otheri++;
 	else otheri--;
-	T antirollforce = suspension[i].GetAntiRoll() * (suspension[i].GetDisplacement() - suspension[otheri].GetDisplacement());
+	T antirollforce = suspension[i]->GetAntiRoll() * (suspension[i]->GetDisplacement() - suspension[otheri]->GetDisplacement());
 
-	T suspension_force = suspension[i].GetForce() + antirollforce;
+	T suspension_force = suspension[i]->GetForce() + antirollforce;
 	if (suspension_force < 0.0) suspension_force = 0.0;
 
 	T nproj = Orientation().AxisZ().dot(wheel_contact[i].GetNormal());
