@@ -286,6 +286,76 @@ private:
 	QUATERNION<T> mountrot;
 };
 
+template <typename T>
+class MACPHERSONSUSPENSION : public CARSUSPENSION<T>
+{
+public:
+	MATHVECTOR<T, 3> GetWheelPosition(T displacement_fraction)
+	{
+		MATHVECTOR<T, 3> up (0, 0, 1);
+		MATHVECTOR<T, 3> hinge_end = strut.end - strut.hinge;
+		MATHVECTOR<T, 3> end_top = strut.top - strut.end;
+		MATHVECTOR<T, 3> hinge_top = strut.top - strut.hinge;
+
+		MATHVECTOR<T, 3> rotaxis = up.cross(hinge_end.Normalize());
+		MATHVECTOR<T, 3> localwheelpos = this->info.extended_position - strut.end;
+
+		T hingeradius = hinge_end.Magnitude();
+		T disp_rad = asin(displacement_fraction * this->info.travel / hingeradius);
+
+		QUATERNION<T> hingerotate;
+		hingerotate.Rotate(-disp_rad, rotaxis[0], rotaxis[1], rotaxis[2]);
+
+		T e_angle = angle_from_sides(end_top.Magnitude(), hinge_end.Magnitude(), hinge_top.Magnitude());
+	
+		hingerotate.RotateVector(hinge_end);
+
+		T e_angle_disp = angle_from_sides(end_top.Magnitude(), hinge_end.Magnitude(), hinge_top.Magnitude());
+
+		rotaxis = up.cross(end_top.Normalize());
+
+		mountrot.LoadIdentity();
+		mountrot.Rotate(e_angle_disp - e_angle, rotaxis[0], rotaxis[1], rotaxis[2]);
+		mountrot.RotateVector(localwheelpos);
+
+		return localwheelpos + strut.hinge + hinge_end;
+	}
+
+	void Init(
+		const CARSUSPENSIONINFO<T> & info,
+		const std::vector<T> & top,
+		const std::vector<T> & end,
+		const std::vector<T> & hinge)
+	{
+		CARSUSPENSION<T>::Init(info);
+		strut.top.Set(top[0], top[1], top[2]);
+		strut.end.Set(end[0], end[1], end[2]);
+		strut.hinge.Set(hinge[0], hinge[1], hinge[2]);
+	}
+
+	void SetSteering(const T & value)
+	{
+		CARSUSPENSION<T>::SetSteering(value);
+		this->orientation = this->orientation * mountrot;
+	}
+
+private:
+	enum {
+		UPPER_CHASSIS = 0,
+		LOWER_CHASSIS,
+		UPPER_HUB,
+		LOWER_HUB
+	};
+
+	struct {
+		MATHVECTOR<T, 3> top;
+		MATHVECTOR<T, 3> end;
+		MATHVECTOR<T, 3> hinge;
+	} strut;
+
+	QUATERNION<T> mountrot;
+};
+
 // 1-9 points
 template <typename T>
 static void LoadPoints(
@@ -356,7 +426,31 @@ bool CARSUSPENSION<T>::LoadSuspension(
 	COORDINATESYSTEMS::ConvertV2toV1(p[0], p[1], p[2]);
 	info.extended_position.Set(p[0], p[1], p[2]);
 
-	if (c.GetParam(iwheel, "double-wishbone",  s_type))
+	if(c.GetParam(iwheel, "macpherson-strut", s_type))
+	{
+		std::vector<T> strut_top(3), strut_end(3), hinge(3);
+		CONFIG::const_iterator iwb;
+
+		if (!c.GetSection(s_type, iwb, error_output)) return false;
+		if(!c.GetParam(iwb, "hinge", hinge, error_output)) return false;
+		if(!c.GetParam(iwb, "strut-top", strut_top, error_output)) return false;
+		if(!c.GetParam(iwb, "strut-end", strut_end))
+		{
+			strut_end = p;
+		}
+		else
+		{
+			COORDINATESYSTEMS::ConvertV2toV1(strut_end[0], strut_end[1], strut_end[2]);
+		}
+
+		COORDINATESYSTEMS::ConvertV2toV1(hinge[0], hinge[1], hinge[2]);
+		COORDINATESYSTEMS::ConvertV2toV1(strut_top[0], strut_top[1], strut_top[2]);
+
+		suspension = new MACPHERSONSUSPENSION<T>();
+		dynamic_cast<MACPHERSONSUSPENSION<T>* >(suspension)->Init(
+			info, strut_top, strut_end, hinge);
+	}
+	else if (c.GetParam(iwheel, "double-wishbone",  s_type))
 	{
 		std::vector<T> up_ch0(3), up_ch1(3), lo_ch0(3), lo_ch1(3), up_hub(3), lo_hub(3);
 		CONFIG::const_iterator iwb;
