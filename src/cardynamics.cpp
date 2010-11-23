@@ -594,7 +594,7 @@ void CARDYNAMICS::updateAction(btCollisionWorld * collisionWorld, btScalar dt)
 	MATHVECTOR<T, 3> dv = v1 - v0;
 	MATHVECTOR<T, 3> dw = w1 - w0;
 	MATHVECTOR<T, 3> ext_force = dv * body.GetMass() / dt;
-	MATHVECTOR<T, 3> ext_torque;// = body.GetWorldInertia().Multiply(dw) / dt;
+	MATHVECTOR<T, 3> ext_torque = body.GetWorldInertia().Multiply(dw) / dt;
 
 	// wheel ray cast
 	UpdateWheelContacts();
