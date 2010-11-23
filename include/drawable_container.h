@@ -95,79 +95,37 @@ template <template <typename U> class CONTAINER>
 struct DRAWABLE_CONTAINER
 {
 	// all of the layers of the scene
-	CONTAINER <DRAWABLE> twodim;
-	CONTAINER <DRAWABLE> normal_noblend;
-	CONTAINER <DRAWABLE> normal_noblend_nolighting;
-	CONTAINER <DRAWABLE> car_noblend;
-	CONTAINER <DRAWABLE> normal_blend;
-	CONTAINER <DRAWABLE> skybox_blend;
-	CONTAINER <DRAWABLE> skybox_noblend;
-	CONTAINER <DRAWABLE> text;
-	CONTAINER <DRAWABLE> particle;
-	CONTAINER <DRAWABLE> nocamtrans_blend;
-	CONTAINER <DRAWABLE> nocamtrans_noblend;
-	CONTAINER <DRAWABLE> lights_emissive;
-	CONTAINER <DRAWABLE> lights_omni;
-	// don't forget to add new members to the ForEach, AppendTo, and GetByName functions
+	
+	#define X(Y) CONTAINER <DRAWABLE> Y;
+	#include "drawables.def"
+	#undef X
+	// you can add new drawable containers by modifying drawables.def
+	// see http://en.wikipedia.org/wiki/C_preprocessor#X-Macros
 	
 	template <typename T> 
 	void ForEach(T func)
 	{
-		func(twodim);
-		func(normal_noblend);
-		func(normal_noblend_nolighting);
-		func(car_noblend);
-		func(normal_blend);
-		func(skybox_blend);
-		func(skybox_noblend);
-		func(text);
-		func(particle);
-		func(nocamtrans_blend);
-		func(nocamtrans_noblend);
-		func(lights_emissive);
-		func(lights_omni);
+		#define X(Y) func(Y);
+		#include "drawables.def"
+		#undef X
 	}
 	
 	/// adds elements from the first drawable container to the second
 	template <template <typename UU> class CONTAINERU, bool use_transform>
 	void AppendTo(DRAWABLE_CONTAINER <CONTAINERU> & dest, const MATRIX4 <float> & transform)
 	{
-		#define ADDTOCONTAINER(x) DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,CONTAINERU<DRAWABLE>,use_transform> (x, dest.x, transform);
-		ADDTOCONTAINER(twodim);
-		ADDTOCONTAINER(normal_noblend);
-		ADDTOCONTAINER(normal_noblend_nolighting);
-		ADDTOCONTAINER(car_noblend);
-		ADDTOCONTAINER(normal_blend);
-		ADDTOCONTAINER(skybox_blend);
-		ADDTOCONTAINER(skybox_noblend);
-		ADDTOCONTAINER(text);
-		ADDTOCONTAINER(particle);
-		ADDTOCONTAINER(nocamtrans_blend);
-		ADDTOCONTAINER(nocamtrans_noblend);
-		ADDTOCONTAINER(lights_emissive);
-		ADDTOCONTAINER(lights_omni);
-		#undef ADDTOCONTAINER
+		#define X(Y) DRAWABLE_CONTAINER_HELPER::AddDrawablesToContainer<DRAWABLE,CONTAINER<DRAWABLE>,CONTAINERU<DRAWABLE>,use_transform> (Y, dest.Y, transform);
+		#include "drawables.def"
+		#undef X
 	}
 	
 	/// this is slow, don't do it often
 	reseatable_reference <CONTAINER <DRAWABLE> > GetByName(const std::string & name)
 	{
 		reseatable_reference <CONTAINER <DRAWABLE> > ref;
-		#define TEXTIFY(x) else if (name == #x) ref = x
-		if (name == "twodim") ref = twodim;
-		TEXTIFY(text);
-		TEXTIFY(normal_noblend);
-		TEXTIFY(normal_noblend_nolighting);
-		TEXTIFY(car_noblend);
-		TEXTIFY(normal_blend);
-		TEXTIFY(skybox_blend);
-		TEXTIFY(skybox_noblend);
-		TEXTIFY(particle);
-		TEXTIFY(nocamtrans_blend);
-		TEXTIFY(nocamtrans_noblend);
-		TEXTIFY(lights_emissive);
-		TEXTIFY(lights_omni);
-		#undef TEXTIFY
+		#define X(Y) if (name == #Y) return Y;
+		#include "drawables.def"
+		#undef X
 		return ref;
 	}
 	
