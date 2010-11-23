@@ -226,7 +226,8 @@ protected:
 	// apply tire friction to body, return longitudinal tire friction
 	T ApplyTireForce(
 		int i,
-		const T normal_force,
+		const T dt,
+		const T suspension_force,
 		const QUATERNION <T> & wheel_space);
 
 	// calculate wheel torque
@@ -284,10 +285,10 @@ protected:
 
 // traction control
 	// do traction control system calculations and modify the throttle position if necessary
-	void DoTCS(int i, T normal_force);
+	void DoTCS(int i);
 
 	// do anti-lock brake system calculations and modify the brake force if necessary
-	void DoABS(int i, T normal_force);
+	void DoABS(int i);
 
 // cardynamics initialization
 	void Init();

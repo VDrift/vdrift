@@ -105,13 +105,13 @@ private:
 	void LookupSigmaHatAlphaHat(T load, T & sh, T & ah) const;
 
 	/// pacejka magic formula function, longitudinal
-	T Pacejka_Fx(T sigma, T Fz, T friction_coeff, T & max_Fx);
+	T PacejkaFx(T sigma, T Fz, T friction_coeff, T & max_Fx);
 
 	/// pacejka magic formula function, lateral
-	T Pacejka_Fy(T alpha, T Fz, T gamma, T friction_coeff, T & max_Fy);
+	T PacejkaFy(T alpha, T Fz, T gamma, T friction_coeff, T & max_Fy);
 
 	/// pacejka magic formula function, aligning
-	T Pacejka_Mz(T sigma, T alpha, T Fz, T gamma, T friction_coeff, T & max_Mz);
+	T PacejkaMz(T sigma, T alpha, T Fz, T gamma, T friction_coeff, T & max_Mz);
 
 	void FindSigmaHatAlphaHat(T load, T & output_sigmahat, T & output_alphahat, int iterations=400);
 

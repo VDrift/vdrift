@@ -113,13 +113,14 @@ void CARSUSPENSION<T>::Update(T ext_mass, T ext_velocity, T ext_displacement, T 
 	{
 		force = 0;
 	}
-	else if (spring_force < force_limit && force > force_limit)
+	// limit damping
+	else if (force_limit >= 0 && force > force_limit && spring_force < force_limit)
 	{
 		//std::cerr << "clamp damping: " << spring_force << " " << damp_force << " " << force_limit << std::endl;
 		force = force_limit;
 	}
 	// suspension bump
-	else if (force < force_limit && overtravel > 0)
+	else if (force_limit >= 0 && force < force_limit && overtravel > 0)
 	{
 		//std::cerr << "bump: " << spring_force << " " << damp_force << " " << force_limit << std::endl;
 		force = force_limit;
