@@ -1181,10 +1181,10 @@ void CARDYNAMICS::AddAerodynamics(MATHVECTOR<T, 3> & force, MATHVECTOR<T, 3> & t
 // returns normal force(wheel force)
 T CARDYNAMICS::UpdateSuspension(int i, T dt)
 {
-	MATHVECTOR <T, 3> normal = wheel_contact[i].GetNormal();
+	MATHVECTOR <T, 3> up = Orientation().AxisZ();
 	MATHVECTOR <T, 3> offset = wheel_contact[i].GetPosition() - body.GetPosition();
-	T mass = 1.0 / body.GetInvEffectiveMass(normal, offset);
-	T velocity = wheel_velocity[i].dot(normal);
+	T mass = 1.0 / body.GetInvEffectiveMass(up, offset);
+	T velocity = wheel_velocity[i].dot(up);
 	T displacement = 2.0 * tire[i].GetRadius() - wheel_contact[i].GetDepth();
 
 	// adjust displacement due to surface bumpiness
@@ -1210,7 +1210,7 @@ T CARDYNAMICS::UpdateSuspension(int i, T dt)
 	T suspension_force = suspension[i]->GetForce() + antirollforce;
 	if (suspension_force < 0.0) suspension_force = 0.0;
 
-	T nproj = Orientation().AxisZ().dot(wheel_contact[i].GetNormal());
+	T nproj = up.dot(wheel_contact[i].GetNormal());
 	T normal_force = suspension_force * nproj;
 	assert(!isnan(normal_force));
 
