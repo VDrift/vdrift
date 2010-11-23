@@ -834,7 +834,6 @@ void CARDYNAMICS::AlignWithGround()
 	
 	// reset velocities
 	chassis->setAngularVelocity(btVector3(0,0,0));
-	chassis->setLinearVelocity(btVector3(0,0,0));
 
 	UpdateWheelTransform();
 	UpdateWheelContacts();
