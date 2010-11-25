@@ -132,7 +132,24 @@ public:
 		}
 		return false;
 	}
-		
+	
+	bool GetParam(const const_iterator & section, const std::string & param, bool & output) const
+	{
+		SECTION::const_iterator i = section->second.find(param);
+		if (i != section->second.end())
+		{
+			output = false;
+			if (i->second == "1")
+				output = true;
+			else if (i->second == "true")
+				output = true;
+			else if (i->second == "on")
+				output = true;
+			return true;
+		}
+		return false;
+	}
+	
 	template <typename T>
 	bool GetParam(const const_iterator & section, const std::string & param, T & output, std::ostream & error_output) const
 	{
