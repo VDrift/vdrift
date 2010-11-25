@@ -223,19 +223,13 @@ protected:
 	// update suspension, return suspension force
 	T UpdateSuspension(int i, T dt);
 
-	// apply tire friction to body, return longitudinal tire friction
-	T ApplyTireForce(
-		int i,
+	// apply tire friction to body
+	void UpdateWheel(
+		const int i,
 		const T dt,
-		const T suspension_force,
+		const T normal_force,
+		const T drive_torque,
 		const QUATERNION <T> & wheel_space);
-
-	// calculate wheel torque
-	T CalculateWheelTorque(
-		int i,
-		const T tire_friction,
-		T drive_torque,
-		T dt);
 
 	// advance chassis(body, suspension, wheels) simulation by dt
 	void UpdateBody(

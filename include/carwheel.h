@@ -81,14 +81,14 @@ public:
 		angvel = GetAngularVelocity();
 	}
 
-	T GetTorque()
+	T GetTorque() const
 	{
 		return rotation.GetTorque()[1];
 	}
 
-	T GetLockUpTorque(const T dt) const
+	T GetTorque(const T w_new, const T dt) const
 	{
-		const MATHVECTOR<T, 3> w(0);
+		MATHVECTOR <T, 3> w(0, w_new, 0);
 	    return rotation.GetTorque(w, dt)[1];
 	}
 
@@ -107,7 +107,7 @@ public:
 	void DebugPrint(std::ostream & out) const
 	{
 		out << "---Wheel---" << "\n";
-		out << "Wheel speed: " << GetRPM() << "\n";
+		out << "RPM: " << GetRPM() << "\n";
 	}
 
 	bool Serialize(joeserialize::Serializer & s)

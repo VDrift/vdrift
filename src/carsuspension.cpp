@@ -81,7 +81,7 @@ void CARSUSPENSION<T>::SetSteering(const T & value)
 }
 
 template <typename T>
-void CARSUSPENSION<T>::Update(T ext_mass, T ext_velocity, T ext_displacement, T dt)
+void CARSUSPENSION<T>::Update(T force_limit, T ext_velocity, T ext_displacement)
 {
 	overtravel = 0;
 	displacement = displacement + ext_displacement;
@@ -106,9 +106,6 @@ void CARSUSPENSION<T>::Update(T ext_mass, T ext_velocity, T ext_displacement, T 
 	damp_force = -velocity * damping * dampfactor;
 	
 	force = spring_force + damp_force;
-	
-	// limit damping force (should never add energy)
-	T force_limit = -ext_velocity / dt * ext_mass;
 	if (force < 0)
 	{
 		force = 0;

@@ -77,13 +77,14 @@ public:
 	/// steering: -1.0 is maximum right lock and 1.0 is maximum left lock
 	virtual void SetSteering(const T & value);
 
-	/// mass, velocity, displacement along suspension vector
-	void Update(T mass, T velocity, T displacement, T dt);
+	/// velocity, displacement along suspension vector
+	void Update(T force_limit, T velocity, T displacement);
 
 	void DebugPrint(std::ostream & out) const;
 
 	bool Serialize(joeserialize::Serializer & s)
 	{
+		_SERIALIZE_(s, steering_angle);
 		_SERIALIZE_(s, displacement);
 		return true;
 	}

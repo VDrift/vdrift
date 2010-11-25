@@ -23,9 +23,17 @@ public:
 	{
 	}
 
-	const MATHVECTOR <T, 3> & GetTorque()
+	const MATHVECTOR <T, 3> & GetTorque() const
 	{
 		return torque;
+	}
+	
+	/// get torque needed to reach a new angular velocity
+	const MATHVECTOR <T, 3> GetTorque(const MATHVECTOR<T, 3> & angvel_new, const T dt) const
+	{
+		MATHVECTOR<T, 3> angvel_delta = angvel_new - angular_velocity; 
+		MATHVECTOR<T, 3> angmom_delta = world_inertia_tensor.Multiply(angvel_delta);
+		return angmom_delta / dt;
 	}
 
 	const MATHVECTOR <T, 3> GetAngularVelocity() const
@@ -150,14 +158,6 @@ public:
 #endif
 
 		halfstep = false;
-	}
-	
-    /// get torque needed to reach a new angular velocity
-	const MATHVECTOR <T, 3> GetTorque(const MATHVECTOR<T, 3> & angvel_new, const T dt) const
-	{
-		MATHVECTOR<T, 3> angvel_delta = angvel_new - angular_velocity; 
-		MATHVECTOR<T, 3> angmom_delta = world_inertia_tensor.Multiply(angvel_delta);
-        return angmom_delta / dt;
 	}
 	
 	bool Serialize(joeserialize::Serializer & s)

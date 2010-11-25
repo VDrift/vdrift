@@ -171,14 +171,11 @@ T CARTIRE<T>::GetRollingResistance(const T velocity, const T normal_force, const
 	// approximate by quadratic function
 	rolling_resistance += velocity * velocity * info.rolling_resistance_quadratic;
 	
-	// rolling resistance should not add energy to system
-	// fake this by using a ramped step function, should be replaced by a constraint
-	T max_force = normal_force * rolling_resistance;
-	T ramp = velocity;
-	if (velocity > 1) ramp = 1;
-	else if (velocity < -1) ramp = -1; 
+	// rolling resistance magnitude
+	T resistance = -normal_force * rolling_resistance;
+	if (velocity < 0) resistance = -resistance;
 	
-	return -ramp * max_force;
+	return resistance;
 }
 
 template <typename T>

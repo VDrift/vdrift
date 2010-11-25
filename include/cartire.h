@@ -59,7 +59,7 @@ public:
 		const T ang_velocity,
 		const T inclination);
 
-	/// return rolling resistance maximum
+	/// return max rolling resistance
 	T GetRollingResistance(
 		const T velocity,
 		const T normal_force,
