@@ -54,20 +54,20 @@ MATHVECTOR <T, 3> CARTIRE<T>::GetForce(
 	LookupSigmaHatAlphaHat(normal_force, sigma_hat, alpha_hat);
 	
 	T gamma = inclination;											// positive when tire top tilts to the right, viewed from rear
-	T denom = std::max(std::abs(velocity[0]), T(0.1));
+	T denom = std::max(std::abs(velocity[0]), T(1E-3));
 	T sigma = (ang_velocity * info.radius - velocity[0]) / denom;	// longitudinal slip: negative in braking, positive in traction
 	T alpha = -atan2(velocity[1], denom) * 180.0 / M_PI; 			// sideslip angle: positive in a right turn(opposite to SAE tire coords)	
 	T max_Fx(0), max_Fy(0), max_Mz(0);
-
-	//combining method 0: beckman method for pre-combining longitudinal and lateral forces
+	
+	//combining method 1: beckman method for pre-combining longitudinal and lateral forces
 	T s = sigma / sigma_hat;
 	T a = alpha / alpha_hat;
 	T rho = std::max(T(sqrt(s * s + a * a)), T(0.0001)); // avoid divide-by-zero
 	T Fx = (s / rho) * PacejkaFx(rho * sigma_hat, Fz, friction_coeff, max_Fx);
 	T Fy = (a / rho) * PacejkaFy(rho * alpha_hat, Fz, gamma, friction_coeff, max_Fy);
-
+	
 /*
-	//combining method 0.1: orangutan
+	//combining method 2: orangutan
 	T alpha_rad = alpha * M_PI / 180.0;
 	T Fx = PacejkaFx(sigma, Fz, friction_coeff, max_Fx);
 	T Fy = PacejkaFy(alpha, Fz, gamma, friction_coeff, max_Fy);
@@ -95,24 +95,22 @@ MATHVECTOR <T, 3> CARTIRE<T>::GetForce(
 	}
 */
 /*
-	//combining method 1: traction circle
+	//combining method 3: traction circle
 	//determine to what extent the tires are long (x) gripping vs lat (y) gripping
 	float longfactor = 1.0;
 	float combforce = std::abs(Fx)+std::abs(Fy);
-	if (combforce > 1) //avoid divide by zero (assume longfactor = 1 for this case)
-		longfactor = std::abs(Fx)/combforce; //1.0 when Fy is zero, 0.0 when Fx is zero
+	if (combforce > 1) longfactor = std::abs(Fx)/combforce; //1.0 when Fy is zero, 0.0 when Fx is zero
 	//determine the maximum force for this amount of long vs lat grip
-	float maxforce = std::abs(max_Fx)*longfactor + (1.0-longfactor)*std::abs(max_Fy); //linear interpolation
+	float maxforce = std::abs(max_Fx)*longfactor+(1.0-longfactor)*std::abs(max_Fy); //linear interpolation
 	if (combforce > maxforce) //cap forces
 	{
 		//scale down forces to fit into the maximum
-		Fx *= maxforce / combforce;
-		Fy *= maxforce / combforce;
-		//std::cout << "Limiting " << combforce << " to " << maxforce << std::endl;
+		Fx *= maxforce/combforce;
+		Fy *= maxforce/combforce;
 	}
 */
 /*	
-	//combining method 2: traction ellipse (prioritize Fx)
+	//combining method 4: traction ellipse (prioritize Fx)
 	//std::cout << "Fy0=" << Fy << ", ";
 	if (Fx >= max_Fx)
 	{
@@ -124,7 +122,7 @@ MATHVECTOR <T, 3> CARTIRE<T>::GetForce(
 	//std::cout << "Fy=" << Fy << ", Fx=Fx0=" << Fx << ", Fxmax=" << max_Fx << ", Fymax=" << max_Fy << std::endl;
 */
 /*
-	//combining method 3: traction ellipse (prioritize Fy)
+	//combining method 5: traction ellipse (prioritize Fy)
 	if (Fy >= max_Fy)
 	{
 		Fy = max_Fy;
@@ -199,8 +197,8 @@ T CARTIRE<T>::GetMaximumFy(T load, T camber) const
 	T gamma = camber;
 
 	T D = (a[1] * Fz + a[2]) * Fz;
-	//T Sv = a[11] * Fz * gamma + a[12] * Fz + a[13]; // pacejka89
-	T Sv = ((a[11] * Fz + a[12]) * gamma + a[13] ) * Fz + a[14]; // pacejka96 ?
+	T Sv = a[11] * Fz * gamma + a[12] * Fz + a[13]; // pacejka89
+	//T Sv = ((a[11] * Fz + a[12]) * gamma + a[13] ) * Fz + a[14]; // pacejka96 ?
 
 	return D + Sv;
 }
@@ -267,8 +265,11 @@ T CARTIRE<T>::PacejkaFx(T sigma, T Fz, T friction_coeff, T & max_Fx)
 	// curvature factor
 	T E = (b[6] * Fz * Fz + b[7] * Fz + b[8]);
 	
-	// slip + horizontal shift
-	T S = (100 * sigma + b[9] * Fz + b[10]);
+	// horizontal shift
+	T Sh = 0;//beckmann//b[9] * Fz + b[10];
+	
+	// composite
+	T S = 100 * sigma + Sh;
 	
 	// longitudinal force
 	T Fx = D * sin(b[0] * atan(B * S - E * (B * S - atan(B * S))));
@@ -299,11 +300,11 @@ T CARTIRE<T>::PacejkaFy(T alpha, T Fz, T gamma, T friction_coeff, T & max_Fy)
 	T E = a[6] * Fz + a[7];
 	
 	// horizontal shift
-	T Sh = a[8] * gamma + a[9] * Fz + a[10];
+	T Sh = 0;//beckmann//a[8] * gamma + a[9] * Fz + a[10];
 	
 	// vertical shift
-	//T Sv = a[11] * Fz * gamma + a[12] * Fz + a[13]; // pacejka89
-	T Sv = ((a[11] * Fz + a[12]) * gamma + a[13]) * Fz + a[14]; // pacejka96?
+	T Sv = a[11] * Fz * gamma + a[12] * Fz + a[13]; // pacejka89
+	//T Sv = ((a[11] * Fz + a[12]) * gamma + a[13]) * Fz + a[14]; // pacejka96?
 	
 	// composite
 	T S = alpha + Sh;
