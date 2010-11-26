@@ -2481,3 +2481,12 @@ void GAME::UpdateDataLog(float dt)
 		time_since_last_logentry -= data_logging_frequency;
 	}
 }
+
+void GAME::UpdateDataMetrics(float dt)
+{
+	// for each metric object
+		// for each column on a metric object
+			// get required columns from datalog
+			// pass to metric.Update
+}
+

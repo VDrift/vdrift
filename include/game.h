@@ -103,6 +103,7 @@ private:
 	bool LastStartWasSuccessful() const;
 	void EnableDataLogging(std::string const& directory, std::string const& name, std::vector< std::string > const& column_names, std::string const& format="csv", float frequency_Hz=100.0);
 	void UpdateDataLog(float dt);
+	void UpdateDataMetrics(float dt);
 
 	std::ostream & info_output;
 	std::ostream & error_output;

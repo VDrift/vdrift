@@ -26,6 +26,11 @@ class DATALOG
 
 		void AddEntry(std::map< std::string, double > & values);
 
+		void ModifyLastEntry(std::string const& column_name, double value)
+		{
+			data[column_name].back() = value;
+		}
+
 		bool HasColumn(std::string const& column_name);
 
 		std::vector< std::string > const& GetColumnNames() const
