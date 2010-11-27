@@ -26,6 +26,12 @@ bool TIMER::Load(const std::string & trackrecordspath, float stagingtime, std::o
 	return true;
 }
 
+int TIMER::AddCar(const std::string & cartype)
+{
+	car.push_back(LAPINFO(cartype));
+	return car.size()-1;
+}
+
 void TIMER::Unload()
 {
 	if (loaded)
@@ -84,6 +90,21 @@ void TIMER::Lap(const unsigned int carid, const int prevsector, const int nextse
 
 	if (nextsector == 0)
 		car[carid].Lap(countit);
+}
+
+void TIMER::UpdateDistance(const unsigned int carid, const double newdistance)
+{
+	assert(carid < car.size());
+	car[carid].UpdateLapDistance(newdistance);
+}
+
+void TIMER::DebugPrint(std::ostream & out) const
+{
+	for (unsigned int i = 0; i < car.size(); ++i)
+	{
+		out << i << ". ";
+		car[i].DebugPrint(out);
+	}
 }
 
 class PLACE

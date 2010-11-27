@@ -183,11 +183,13 @@ void GAME::Start(list <string> & args)
 	list <string> smoketexlist;
 	string smoketexpath = pathmanager.GetDataPath()+"/"+pathmanager.GetTireSmokeTextureDir();
 	pathmanager.GetFolderIndex(smoketexpath, smoketexlist, ".png");
-	for (list <string>::iterator i = smoketexlist.begin(); i != smoketexlist.end(); ++i)
-	{
-		*i = pathmanager.GetTireSmokeTextureDir()+"/"+*i;
-	}
-	if (!tire_smoke.Load(smoketexlist, settings.GetAnisotropy(), settings.GetTextureSize(), &textures, error_output))
+	if (!tire_smoke.Load(
+			smoketexlist,
+			pathmanager.GetTireSmokeTextureDir(),
+			settings.GetTextureSize(),
+			settings.GetAnisotropy(),
+			textures,
+			error_output))
 	{
 		error_output << "Error loading tire smoke particle system" << endl;
 		return;
@@ -1938,15 +1940,15 @@ bool GAME::LoadFonts()
 
 	if (graphics.GetUsingShaders())
 	{
-		if (!fonts["freesans"].Load(fontpath+"/freesans.txt",fontdir+"/freesans.png", settings.GetTextureSize(), textures, error_output)) return false;
-		if (!fonts["lcd"].Load(fontpath+"/lcd.txt",fontdir+"/lcd.png", settings.GetTextureSize(), textures, error_output)) return false;
-		if (!fonts["futuresans"].Load(fontpath+"/futuresans.txt",fontdir+"/futuresans.png", settings.GetTextureSize(), textures, error_output)) return false;
+		if (!fonts["freesans"].Load(fontpath+"/freesans.txt",fontdir, "freesans.png", settings.GetTextureSize(), textures, error_output)) return false;
+		if (!fonts["lcd"].Load(fontpath+"/lcd.txt",fontdir, "lcd.png", settings.GetTextureSize(), textures, error_output)) return false;
+		if (!fonts["futuresans"].Load(fontpath+"/futuresans.txt",fontdir, "futuresans.png", settings.GetTextureSize(), textures, error_output)) return false;
 	}
 	else
 	{
-		if (!fonts["freesans"].Load(fontpath+"/freesans.txt",fontdir+"/freesans_noshaders.png", settings.GetTextureSize(), textures, error_output)) return false;
-		if (!fonts["lcd"].Load(fontpath+"/lcd.txt",fontdir+"/lcd_noshaders.png", settings.GetTextureSize(), textures,  error_output)) return false;
-		if (!fonts["futuresans"].Load(fontpath+"/futuresans.txt",fontdir+"/futuresans_noshaders.png", settings.GetTextureSize(), textures, error_output)) return false;
+		if (!fonts["freesans"].Load(fontpath+"/freesans.txt",fontdir, "freesans_noshaders.png", settings.GetTextureSize(), textures, error_output)) return false;
+		if (!fonts["lcd"].Load(fontpath+"/lcd.txt",fontdir, "lcd_noshaders.png", settings.GetTextureSize(), textures,  error_output)) return false;
+		if (!fonts["futuresans"].Load(fontpath+"/futuresans.txt",fontdir, "futuresans_noshaders.png", settings.GetTextureSize(), textures, error_output)) return false;
 	}
 
 	info_output << "Loaded fonts successfully" << endl;

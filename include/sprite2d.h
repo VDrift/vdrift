@@ -56,7 +56,8 @@ public:
 
 	bool Load(
 		SCENENODE & parent,
-		const std::string & texturefile,
+		const std::string & texturepath,
+		const std::string & texturename,
 		const std::string & texturesize,
 		TEXTUREMANAGER & textures,
 		float draworder,

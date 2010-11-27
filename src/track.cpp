@@ -250,7 +250,7 @@ bool TRACK::CreateRacingLines(
 {
 	TEXTUREINFO texinfo; 
 	texinfo.size = texsize;
-	if (!textures.Load(texturepath+"/racingline.png", texinfo, racingline_texture)) return false;
+	if (!textures.Load(texturepath, "racingline.png", texinfo, racingline_texture)) return false;
 	
 	K1999 k1999data;
 	int n = 0;

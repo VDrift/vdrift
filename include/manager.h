@@ -24,33 +24,30 @@ public:
 		Clear();
 	}
 	
-	void Init(const std::string & path, const std::string & sharedpath, std::ostream & error)
+	void Init(const std::string & basepath, const std::string & sharedpath, std::ostream & error)
 	{
-		this->path = path;
+		this->basepath = basepath;
 		this->sharedpath = sharedpath;
 		this->error = &error;
 	}
 	
-	bool Get(const std::string & name, const_iterator & it)
+	bool Get(const std::string & path, const std::string & name, const_iterator & it)
 	{
 		assert(error);
-		const_iterator i = objects.find(name);
+		const_iterator i = objects.find(path + "/" + name);
 		if (i == objects.end())
 		{
-			size_t n = name.rfind("/");
-			std::string shared = name;
-			if (n != std::string::npos) shared.erase(0, n + 1);
-			i = objects.find(shared);
+			i = objects.find(name); // shared objects
 			if (i == objects.end()) return false;
 		}
 		it = i;
 		return true;
 	}
 	
-	bool Get(const std::string & name, std::tr1::shared_ptr<T> & sp)
+	bool Get(const std::string & path, const std::string & name, std::tr1::shared_ptr<T> & sp)
 	{
 		const_iterator it;
-		if (Get(name, it))
+		if (Get(path, name, it))
 		{
 			sp = it->second;
 			return true;
@@ -58,9 +55,9 @@ public:
 		return false;
 	}
 	
-	const_iterator Set(const std::string & name, const std::tr1::shared_ptr<T> & sp)
+	const_iterator Set(const std::string & path, const std::tr1::shared_ptr<T> & sp)
 	{
-		return objects.insert(std::pair<std::string, std::tr1::shared_ptr<T> >(name, sp)).first;
+		return objects.insert(std::pair<std::string, std::tr1::shared_ptr<T> >(path, sp)).first;
 	}
 	
 	unsigned int Size() const
@@ -68,9 +65,9 @@ public:
 		return objects.size();
 	}
 	
-	const std::string & GetPath() const
+	const std::string & GetBasePath() const
 	{
-		return path;
+		return basepath;
 	}
 	
 	const std::string & GetSharedPath() const
@@ -126,7 +123,7 @@ public:
 	
 protected:
 	container objects;
-	std::string path;
+	std::string basepath;
 	std::string sharedpath;
 	std::ostream * error;
 };

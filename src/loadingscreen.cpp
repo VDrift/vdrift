@@ -24,8 +24,8 @@ bool LOADINGSCREEN::Init(
 	texinfo.size = texsize;
 	
 	std::tr1::shared_ptr<TEXTURE> boxtex, bartex;
-	if (!textures.Load(texturepath+"/loadingbox.png", texinfo, boxtex)) return false;
-	if (!textures.Load(texturepath+"/loadingbar.png", texinfo, bartex)) return false;
+	if (!textures.Load(texturepath, "loadingbox.png", texinfo, boxtex)) return false;
+	if (!textures.Load(texturepath, "loadingbar.png", texinfo, bartex)) return false;
 	
 	bardraw = root.GetDrawlist().twodim.insert(DRAWABLE());
 	boxdraw = root.GetDrawlist().twodim.insert(DRAWABLE());

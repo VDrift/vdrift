@@ -31,8 +31,8 @@ bool HUD::Init(
     texinfo.size = texsize;
     
     std::tr1::shared_ptr<TEXTURE> bartex, progbartex;
-    if (!textures.Load(texturepath+"/hudbox.png", texinfo, bartex)) return false;
-    if (!textures.Load(texturepath+"/progressbar.png", texinfo, progbartex)) return false;
+    if (!textures.Load(texturepath, "hudbox.png", texinfo, bartex)) return false;
+    if (!textures.Load(texturepath, "progressbar.png", texinfo, progbartex)) return false;
 
     rpmbar = AddDrawable(hudroot);
     rpmredbar = AddDrawable(hudroot);
@@ -89,7 +89,7 @@ bool HUD::Init(
 		timerboxtexinfo.repeatv = false;
         timerboxtexinfo.size = texsize;
         std::tr1::shared_ptr<TEXTURE> timerboxtex;
-        if (!textures.Load(texturepath+"/timerbox.png", timerboxtexinfo, timerboxtex)) return false;
+        if (!textures.Load(texturepath, "timerbox.png", timerboxtexinfo, timerboxtex)) return false;
 
         float totalsizex = timerboxdimx*6.05;
         float totalsizey = timerboxdimy*2.0;
@@ -155,6 +155,7 @@ bool HUD::Init(
         float fontscaley = barheight*3.0*0.5;
         float fontscalex = screenhwratio*fontscaley;
 		float xpos = barwidth * 0.63;
+        
         abs.Init(hudroot, sansfont, "ABS", 1.0-xpos,1.0-0.025, fontscalex,fontscaley);
         abs.SetDrawOrder(hudroot, 4);
         abs.SetColor(hudroot, 0,1,0);

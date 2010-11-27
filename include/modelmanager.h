@@ -7,10 +7,10 @@
 class MODELMANAGER: public MANAGER<MODEL_JOE03>
 {
 public:
-	bool Load(const std::string & name, std::tr1::shared_ptr<MODEL_JOE03> & sptr)
+	bool Load(const std::string & path, const std::string & name, std::tr1::shared_ptr<MODEL_JOE03> & sptr)
 	{
 		const_iterator it;
-		if (Load(name, it))
+		if (Load(path, name, it))
 		{
 			sptr = it->second;
 			return true;
@@ -18,26 +18,23 @@ public:
 		return false;
 	}
 	
-	bool Load(const std::string & name, const_iterator & it)
+	bool Load(const std::string & path, const std::string & name, const_iterator & it)
 	{
-		if (Get(name, it)) return true;
+		if (Get(path, name, it)) return true;
 		
-		std::string filepath = path + "/" + name;
+		std::string filepath = basepath + "/" + path + "/" + name;
 		std::tr1::shared_ptr<MODEL_JOE03> temp(new MODEL_JOE03());
 		if (std::ifstream(filepath.c_str()) && temp->Load(filepath, *error))
 		{
-			it = Set(name, temp);
+			it = Set(path + "/" + name, temp);
 			return true;
 		}
 		else
 		{
-			std::string fname = name;
-			size_t n = fname.rfind("/");
-			if (n != std::string::npos) fname.erase(0, n + 1);
-			filepath = sharedpath + "/" + fname;
+			filepath = sharedpath + "/" + name;
 			if (temp->Load(filepath, *error))
 			{
-				it = Set(fname, temp);
+				it = Set(name, temp);
 				return true;
 			}
 		}
@@ -46,7 +43,7 @@ public:
 	
 	bool Load(const std::string & name, std::tr1::shared_ptr<MODEL_JOE03> & sptr, JOEPACK * pack)
 	{
-		if (Get(name, sptr)) return true;
+		if (Get("", name, sptr)) return true;
 		
 		std::tr1::shared_ptr<MODEL_JOE03> temp(new MODEL_JOE03());
 		if (temp->Load(name, *error, true, pack))

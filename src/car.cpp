@@ -124,17 +124,17 @@ struct LoadDrawable
 		}
 		if(texname.size() > 0)
 		{
-			if (!textures.Load(path+"/"+texname[0], info, tex)) return false;
+			if (!textures.Load(path, texname[0], info, tex)) return false;
 			drawable.SetDiffuseMap(tex);
 		}
 		if(texname.size() > 1)
 		{
-			if (!textures.Load(path+"/"+texname[1], info, tex)) return false;
+			if (!textures.Load(path, texname[1], info, tex)) return false;
 			drawable.SetMiscMap1(tex);
 		}
 		if(texname.size() > 2)
 		{
-			if (!textures.Load(path+"/"+texname[2], info, tex)) return false;
+			if (!textures.Load(path, texname[2], info, tex)) return false;
 			drawable.SetMiscMap2(tex);
 		}
 
@@ -143,12 +143,12 @@ struct LoadDrawable
 		std::tr1::shared_ptr<MODEL_JOE03> mesh;
 		if (!cfg.GetParam(section, "scale", scale))
 		{
-			if (!models.Load(path+"/"+meshname, mesh)) return false;
+			if (!models.Load(path, meshname, mesh)) return false;
 		}
-		else if (!models.Get(path+"/"+meshname+scale, mesh))
+		else if (!models.Get(path, meshname+scale, mesh))
 		{
 			MODELMANAGER::const_iterator it;
-			if (!models.Load(path+"/"+meshname, it)) return false;
+			if (!models.Load(path, meshname, it)) return false;
 			
 			std::vector<float> sc;
 			std::stringstream s(scale);
@@ -165,6 +165,7 @@ struct LoadDrawable
 		}
 		
 		drawable.AddDrawList(mesh->GetListID());
+		//drawable.SetObjectCenter(mesh->GetCenter());
 		modellist.push_back(mesh);
 		
 		// set color
@@ -257,9 +258,9 @@ static bool LoadWheel(
 	MODELMANAGER::const_iterator it;
 	if (!cfg.GetParam(wheelsect, "mesh", meshname, error_output)) return false;
 	if (!cfg.GetParam(wheelsect, "texture", texname, error_output)) return false;
-	if (!models.Get(load_drawable.path+"/"+meshname+tiredim, it))
+	if (!models.Get(load_drawable.path, meshname+tiredim, it))
 	{
-		if (!models.Load(load_drawable.path+"/"+meshname, it)) return false;
+		if (!models.Load(load_drawable.path, meshname, it)) return false;
 		
 		std::vector<float> d;
 		std::stringstream s(tiredim);
@@ -284,7 +285,7 @@ static bool LoadWheel(
 	// load tire
 	texname.clear();
 	if (!cfg.GetParam(tiresect, "texture", texname, error_output)) return false;
-	if (!models.Get("tire"+tiredim, it))
+	if (!models.Get("", "tire"+tiredim, it))
 	{
 		std::vector<float> d;
 		std::stringstream s(tiredim);
@@ -320,7 +321,7 @@ static bool LoadWheel(
 	std::string radius;
 	cfg.GetParam(brakesect, "radius", radius);
 	if (!cfg.GetParam(brakesect, "texture", texname)) return true;
-	if (!models.Get("brake"+radius, it))
+	if (!models.Get("", "brake"+radius, it))
 	{
 		float r;
 		std::stringstream s(radius);
@@ -415,7 +416,6 @@ static bool LoadCameras(
 */
 	return true;
 }
-
 
 CAR::CAR() :
 	gearsound_check(0),
@@ -576,7 +576,7 @@ bool CAR::LoadPhysics(
 	std::string carmodel;
 	std::tr1::shared_ptr<MODEL_JOE03> modelptr;
 	if (!cfg.GetParam("body", "mesh", carmodel, error_output)) return false;
-	if (!models.Load(carpath+"/"+carmodel, modelptr)) return false;
+	if (!models.Load(carpath, carmodel, modelptr)) return false;
 	
 	typedef CARDYNAMICS::T T;
 	MATHVECTOR <T, 3> size;
@@ -619,7 +619,7 @@ bool CAR::LoadSounds(
 			std::string filename;
 			std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
 			if (!aud.GetParam(i, "filename", filename, error_output)) return false;
-			if (!sounds.Load(carpath+"/"+filename, soundinfo, soundptr)) return false;
+			if (!sounds.Load(carpath, filename, soundinfo, soundptr)) return false;
 
 			enginesounds.push_back(std::pair <ENGINESOUNDINFO, SOUNDSOURCE> ());
 			ENGINESOUNDINFO & info = enginesounds.back().first;
@@ -705,7 +705,7 @@ bool CAR::LoadSounds(
 	else
 	{
 		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
-		if (!sounds.Load(carpath+"/engine", soundinfo, soundptr)) return false;
+		if (!sounds.Load(carpath, "engine", soundinfo, soundptr)) return false;
 		enginesounds.push_back(std::pair <ENGINESOUNDINFO, SOUNDSOURCE> ());
 		SOUNDSOURCE & enginesound = enginesounds.back().second;
 		enginesound.SetBuffer(soundptr);
@@ -719,7 +719,7 @@ bool CAR::LoadSounds(
 	for (int i = 0; i < 4; ++i)
 	{
 		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
-		if (!sounds.Load("sounds/tire_squeal", soundinfo, soundptr)) return false;
+		if (!sounds.Load(carpath, "tire_squeal", soundinfo, soundptr)) return false;
 		tiresqueal[i].SetBuffer(soundptr);
 		tiresqueal[i].Enable3D(true);
 		tiresqueal[i].Loop(true);
@@ -733,7 +733,7 @@ bool CAR::LoadSounds(
 	for (int i = 0; i < 4; ++i)
 	{
 		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
-		if (!sounds.Load("sounds/gravel", soundinfo, soundptr)) return false;
+		if (!sounds.Load(carpath, "gravel", soundinfo, soundptr)) return false;
 		gravelsound[i].SetBuffer(soundptr);
 		gravelsound[i].Enable3D(true);
 		gravelsound[i].Loop(true);
@@ -747,7 +747,7 @@ bool CAR::LoadSounds(
 	for (int i = 0; i < 4; ++i)
 	{
 		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
-		if (!sounds.Load("sounds/grass", soundinfo, soundptr)) return false;
+		if (!sounds.Load(carpath, "grass", soundinfo, soundptr)) return false;
 		grasssound[i].SetBuffer(soundptr);
 		grasssound[i].Enable3D(true);
 		grasssound[i].Loop(true);
@@ -763,11 +763,11 @@ bool CAR::LoadSounds(
 		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
 		if (i >= 2)
 		{
-			if (!sounds.Load("sounds/bump_rear", soundinfo, soundptr)) return false;
+			if (!sounds.Load(carpath, "bump_rear", soundinfo, soundptr)) return false;
 		}
 		else
 		{
-			if (!sounds.Load("sounds/bump_front", soundinfo, soundptr)) return false;
+			if (!sounds.Load(carpath, "bump_front", soundinfo, soundptr)) return false;
 		}
 		tirebump[i].SetBuffer(soundptr);
 		tirebump[i].Enable3D(true);
@@ -778,7 +778,7 @@ bool CAR::LoadSounds(
 	//set up crash sound
 	{
 		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
-		if (!sounds.Load("sounds/crash", soundinfo, soundptr)) return false;
+		if (!sounds.Load(carpath, "crash", soundinfo, soundptr)) return false;
 		crashsound.SetBuffer(soundptr);
 		crashsound.Enable3D(true);
 		crashsound.Loop(false);
@@ -788,7 +788,7 @@ bool CAR::LoadSounds(
 	//set up gear sound
 	{
 		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
-		if (!sounds.Load("sounds/gear", soundinfo, soundptr)) return false;
+		if (!sounds.Load(carpath, "gear", soundinfo, soundptr)) return false;
 		gearsound.SetBuffer(soundptr);
 		gearsound.Enable3D(true);
 		gearsound.Loop(false);
@@ -798,7 +798,7 @@ bool CAR::LoadSounds(
 	//set up brake sound
 	{
 		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
-		if (!sounds.Load("sounds/brake", soundinfo, soundptr)) return false;
+		if (!sounds.Load(carpath, "brake", soundinfo, soundptr)) return false;
 		brakesound.SetBuffer(soundptr);
 		brakesound.Enable3D(true);
 		brakesound.Loop(false);
@@ -808,7 +808,7 @@ bool CAR::LoadSounds(
 	//set up handbrake sound
 	{
 		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
-		if (!sounds.Load("sounds/handbrake", soundinfo, soundptr)) return false;
+		if (!sounds.Load(carpath, "handbrake", soundinfo, soundptr)) return false;
 		handbrakesound.SetBuffer(soundptr);
 		handbrakesound.Enable3D(true);
 		handbrakesound.Loop(false);
@@ -817,7 +817,7 @@ bool CAR::LoadSounds(
 
 	{
 		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
-		if (!sounds.Load("sounds/wind", soundinfo, soundptr)) return false;
+		if (!sounds.Load(carpath, "wind", soundinfo, soundptr)) return false;
 		roadnoise.SetBuffer(soundptr);
 		roadnoise.Enable3D(true);
 		roadnoise.Loop(true);

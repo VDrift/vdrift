@@ -9,31 +9,35 @@ class SOUNDMANAGER : public MANAGER<SOUNDBUFFER>
 public:
 	SOUNDMANAGER() {}
 	
-	bool Load(const std::string & name, const SOUNDINFO & info, std::tr1::shared_ptr<SOUNDBUFFER> & sptr)
+	bool Load(const std::string & path, const std::string & name, const SOUNDINFO & info, std::tr1::shared_ptr<SOUNDBUFFER> & sptr)
 	{
-		if (Get(name, sptr)) return true;
+		if (Get(path, name, sptr)) return true;
 		
 		// prefer ogg
-		std::string filepath = path + "/" + name + ".ogg";
+		std::string filepath = basepath + "/" + path + "/" +  name + ".ogg";
 		if (!std::ifstream(filepath.c_str()))
 		{
-			filepath = path + "/" + name + ".wav";
+			filepath = basepath + "/" + path + "/" + name + ".wav";
 		}
+		
 		std::tr1::shared_ptr<SOUNDBUFFER> temp(new SOUNDBUFFER());
 		if (std::ifstream(filepath.c_str()) && temp->Load(filepath, info, *error))
 		{
-			objects[name] = temp;
-			sptr = temp;
+			sptr = Set(path + "/" + name, temp)->second;
 			return true;
 		}
 		else
 		{
-			size_t n = filepath.rfind("/");
-			if (n != std::string::npos) filepath.erase(0, n + 1);
-			if (temp->Load(sharedpath + "/" + filepath, info, *error))
+			// prefer ogg
+			std::string filepath = sharedpath + "/" + name + ".ogg";
+			if (!std::ifstream(filepath.c_str()))
 			{
-				objects[filepath] = temp;
-				sptr = temp;
+				filepath = sharedpath + "/" + name + ".wav";
+			}
+			
+			if (temp->Load(filepath, info, *error))
+			{
+				sptr = Set(name, temp)->second;
 				return true;
 			}
 		}

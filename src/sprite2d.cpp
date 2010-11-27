@@ -17,7 +17,8 @@ void SPRITE2D::Unload(SCENENODE & parent)
 
 bool SPRITE2D::Load(
 	SCENENODE & parent,
-	const std::string & texturefile,
+	const std::string & texturepath,
+	const std::string & texturename,
 	const std::string & texturesize,
 	TEXTUREMANAGER & textures,
 	float draworder,
@@ -35,7 +36,7 @@ bool SPRITE2D::Load(
 	texinfo.npot = false;
 	texinfo.size = texturesize;
 	std::tr1::shared_ptr<TEXTURE> texture;
-	if (!textures.Load(texturefile, texinfo, texture)) return false;
+	if (!textures.Load(texturepath, texturename, texinfo, texture)) return false;
 
 	node = parent.AddNode();
 	SCENENODE & noderef = parent.GetNode(node);
