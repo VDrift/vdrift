@@ -26,6 +26,9 @@ using std::pair;
 #include <list>
 using std::list;
 
+#include <vector>
+using std::vector;
+
 #include <iostream>
 using std::cout;
 using std::endl;
@@ -35,6 +38,7 @@ using std::stringstream;
 
 #include <algorithm>
 using std::sort;
+using std::find;
 
 #include <cstdio>
 
@@ -705,6 +709,7 @@ void GAME::AdvanceGameLogic()
 				{
 					PROFILER.beginBlock("datalog");
 					UpdateDataLog(TickPeriod());
+					UpdateDataMetrics(TickPeriod());
 					PROFILER.endBlock("datalog");
 				}
 
@@ -1622,16 +1627,32 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	}
 	//cout << "After load car: " << carcontrols_local.first << endl;
 
-	//enable data logging for player car
-	std::vector<std::string> data_log_column_names;
-	data_log_column_names.push_back("Time");
-	// TODO: read the list of columns to log, log format, and logging frequency from settings.
-	//data_log_column_names.push_back("Velocity");
-	data_log_column_names.push_back("Throttle");
-	data_log_column_names.push_back("Brake");
-	data_log_column_names.push_back("Steering");
-	// TODO: instead of a static log name, encode the date/time (move this functionality to DATALOG)
-	EnableDataLogging(pathmanager.GetDataLogPath(), "playercarlog", data_log_column_names, "gnuplot", 60.0);
+	// setup data logging
+	CONFIGFILE data_settings(pathmanager.GetDataSettingsFile());
+	data_settings.GetParam("datalog.enable", enable_data_logging);
+
+	if (enable_data_logging)
+	{
+		float data_log_update_frequency_Hz = 60.0;
+		vector<string> data_log_column_names;
+		string data_log_name("unnamed_datalog");
+		string data_log_format("csv");
+		data_settings.GetParam("datalog.frequency", data_log_update_frequency_Hz);
+		data_settings.GetParam("datalog.columns", data_log_column_names);
+		data_settings.GetParam("datalog.name", data_log_name);
+		data_settings.GetParam("datalog.type", data_log_format);
+		if (find(data_log_column_names.begin(), data_log_column_names.end(), "Time") == data_log_column_names.end())
+		{
+			// couldn't find the Time column, die
+			return false;
+		}
+		data_logging_frequency = 1.0 / data_log_update_frequency_Hz;
+		data_log.Init(pathmanager.GetDataLogPath(), data_log_name, data_log_column_names, data_log_format);
+
+		// setup metrics
+		metric_manager.Init(data_settings, data_log);
+	}
+
 
     race_laps = num_laps;
 
@@ -1745,6 +1766,9 @@ void GAME::LeaveGame()
 	{
 		info_output << "Writing log..." << endl;
 		data_log.Write();
+
+		// clean up the metrics
+		delete &metric_manager;
 	}
 
 	ai.clear_cars();
@@ -2415,13 +2439,6 @@ bool GAME::LastStartWasSuccessful() const
 	return !pathmanager.FileExists(pathmanager.GetStartupFile());
 }
 
-void GAME::EnableDataLogging(std::string const& directory, std::string const& name, std::vector< std::string > const& column_names, std::string const& format, float frequency_Hz)
-{
-	enable_data_logging = true;
-	data_logging_frequency = 1.0 / frequency_Hz;
-	data_log.Init(directory, name, column_names, format);
-}
-
 void GAME::UpdateDataLog(float dt)
 {
 	time_since_last_logentry += dt;
@@ -2484,9 +2501,5 @@ void GAME::UpdateDataLog(float dt)
 
 void GAME::UpdateDataMetrics(float dt)
 {
-	// for each metric object
-		// for each column on a metric object
-			// get required columns from datalog
-			// pass to metric.Update
+	metric_manager.Update(dt);
 }
-

@@ -32,24 +32,27 @@ void DATALOG::Init(std::string const& directory, std::string const& name, std::v
 
 }
 
-bool DATALOG::HasColumn(std::string const& column_name)
+bool DATALOG::HasColumn(std::string const& column_name) const
 {
 	std::vector< std::string >::const_iterator result;
 	result = std::find(column_names.begin(), column_names.end(), column_name);
 	return result != column_names.end();
 }
 
-std::vector< double > const& DATALOG::GetColumn(std::string const& column_name)
+bool DATALOG::GetColumn(std::string column_name, std::vector< double > const* column_ref) const
 {
-	//if (HasColumn(column_name))
-	//{
-		return data[column_name];
-	//}
-	/*else
+	std::map< std::string, std::vector< double > >::const_iterator column;
+	//column = data.find(column_name);
+	for (column = data.begin(); column != data.end(); ++column)
 	{
-		// TODO: throw exception: no such column
+		if (column->first == column_name)
+			break;
 	}
-	*/
+	if (column == data.end())
+		return false;
+
+	column_ref = &column->second;
+	return true;
 }
 
 void DATALOG::AddEntry(std::map< std::string, double > & values)
@@ -229,3 +232,4 @@ void DATALOG::Write()
 	// close the log file
 	log_file.close();
 }
+

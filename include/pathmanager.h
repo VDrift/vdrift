@@ -17,6 +17,7 @@ class PATHMANAGER
 		std::string GetStartupFile() const {return settings_path+"/startingup.txt";}
 		std::string GetTrackRecordsPath() const {return settings_path+"/records"+profile_suffix;}
 		std::string GetSettingsFile() const {return settings_path+"/VDrift.config"+profile_suffix;}
+		std::string GetDataSettingsFile() const {return settings_path+"/data.config"+profile_suffix;}
 		std::string GetLogFile() const {return settings_path+"/log.txt";}
 		std::string GetTrackPath() const {return data_directory+"/"+GetTrackDir();}
 		std::string GetCarPath() const {return data_directory+"/"+GetCarDir();}
@@ -44,7 +45,7 @@ class PATHMANAGER
 		std::string GetHUDTextureDir() const {return "textures/hud";}
 		std::string GetEffectsTextureDir() const {return "textures/effects";}
 		std::string GetTireSmokeTextureDir() const {return "textures/smoke";}
-		
+
 		bool FileExists(const std::string & filename) const;
 
 		///only call this before Init()

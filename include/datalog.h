@@ -31,14 +31,14 @@ class DATALOG
 			data[column_name].back() = value;
 		}
 
-		bool HasColumn(std::string const& column_name);
+		bool HasColumn(std::string const& column_name) const;
 
 		std::vector< std::string > const& GetColumnNames() const
 		{
 			return column_names;
 		}
 
-		std::vector< double > const& GetColumn(std::string const& column_name);
+		bool GetColumn(std::string column_name, std::vector< double > const* column_ref) const;
 };
 
 #endif //_DATALOG_H

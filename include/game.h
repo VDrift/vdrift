@@ -33,6 +33,7 @@
 #include "modelmanager.h"
 #include "soundmanager.h"
 #include "datalog.h"
+#include "datametric.h"
 
 #include <ostream>
 #include <string>
@@ -175,6 +176,7 @@ private:
 	bool enable_data_logging;
 	float data_logging_frequency;
 	float time_since_last_logentry;
+	METRICMANAGER metric_manager;
 
 	//SKY sky;
 

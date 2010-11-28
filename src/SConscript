@@ -44,6 +44,7 @@ src = Split("""aabb.cpp
 		coordinatesystems.cpp
 		crashdetection.cpp
 		datalog.cpp
+                datametric.cpp
                 driverfeedback.cpp
 		endian_utility.cpp
 		eventsystem.cpp
