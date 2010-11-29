@@ -4,18 +4,13 @@
 #include "cardynamics.h"
 #include "scenenode.h"
 #include "model.h"
-#include "sound.h"
+#include "soundsource.h"
 #include "camera_system.h"
 #include "joeserialize.h"
 #include "macros.h"
 #include "suspensionbumpdetection.h"
 #include "crashdetection.h"
 #include "enginesoundinfo.h"
-
-#include <string>
-#include <ostream>
-#include <list>
-#include <map>
 
 class BEZIER;
 class PERFORMANCE_TESTING;
@@ -32,7 +27,7 @@ public:
 	CAR();
 
 	bool LoadGraphics(
-		const CONFIGFILE & carconf,
+		const CONFIG & cfg,
 		const std::string & carpath,
 		const std::string & carname,
 		const std::string & partspath,
@@ -57,7 +52,7 @@ public:
 		std::ostream & error_output);
 
 	bool LoadPhysics(
-		const CONFIGFILE & carconf,
+		const CONFIG & cfg,
 		const std::string & carpath,
 		const MATHVECTOR <float, 3> & initial_position,
 		const QUATERNION <float> & initial_orientation,
@@ -299,35 +294,31 @@ public:
 	SCENENODE & GetNode() {return topnode;}
 
 protected:
-	CARDYNAMICS dynamics;
-	QUATERNION <float> modelrotation; // const model rotation fix
-
 	SCENENODE topnode;
-	keyed_container <SCENENODE>::handle bodynode;
-	keyed_container <SCENENODE>::handle drivernode;
-	keyed_container <SCENENODE>::handle wheelnode[WHEEL_POSITION_SIZE];
-	keyed_container <SCENENODE>::handle floatingnode[WHEEL_POSITION_SIZE];
+	CARDYNAMICS dynamics;
+	QUATERNION<float> modelrotation; // const model rotation fix
 
-	keyed_container <DRAWABLE>::handle bodydraw;
-	keyed_container <DRAWABLE>::handle glassdraw;
-	keyed_container <DRAWABLE>::handle brakelights;
-	keyed_container <DRAWABLE>::handle reverselights;
+	keyed_container<SCENENODE>::handle bodynode;
+	std::vector<keyed_container<SCENENODE>::handle> wheelnode;
+	std::vector<keyed_container<SCENENODE>::handle> floatingnode;
+
+	keyed_container<DRAWABLE>::handle brakelights;
+	keyed_container<DRAWABLE>::handle reverselights;
 	
 	struct LIGHT
 	{
-		keyed_container <SCENENODE>::handle node;
-		keyed_container <DRAWABLE>::handle draw;
-		VERTEXARRAY varray;
+		keyed_container<SCENENODE>::handle node;
+		keyed_container<DRAWABLE>::handle draw;
 		MODEL model;
 	};
-	std::list <LIGHT> lights;
-	std::list <std::tr1::shared_ptr<MODEL_JOE03> > modellist;
+	std::list<LIGHT> lights;
+	std::list<std::tr1::shared_ptr<MODEL_JOE03> > modellist;
 	
 	SUSPENSIONBUMPDETECTION suspensionbumpdetection[4];
 	CRASHDETECTION crashdetection;
 	CAMERA_SYSTEM cameras;
 
-	std::list <std::pair <ENGINESOUNDINFO, SOUNDSOURCE> > enginesounds;
+	std::list<std::pair <ENGINESOUNDINFO, SOUNDSOURCE> > enginesounds;
 	SOUNDSOURCE tiresqueal[WHEEL_POSITION_SIZE];
 	SOUNDSOURCE tirebump[WHEEL_POSITION_SIZE];
 	SOUNDSOURCE grasssound[WHEEL_POSITION_SIZE];
@@ -361,7 +352,7 @@ protected:
 	void UpdateGraphics();
 
 	bool LoadLight(
-		const CONFIGFILE & cfg,
+		const CONFIG & cfg,
 		const std::string & name,
 		std::ostream & error_output);
 };

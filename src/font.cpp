@@ -48,7 +48,8 @@ static bool Parse(
 
 bool FONT::Load(
 	const std::string & fontinfopath,
-	const std::string & fonttexturepath,
+	const std::string & texpath,
+	const std::string & texname,
 	const std::string & texsize,
 	TEXTUREMANAGER & textures,
 	std::ostream & error_output,
@@ -78,7 +79,7 @@ bool FONT::Load(
 			if (!VerifyParse("char", curstr, fontinfopath, error_output)) return false;
 			
 			unsigned int cur_id(0);
-			if (!Parse("id=", cur_id, fontinfo,fontinfopath, error_output)) return false;
+			if (!Parse("id=", cur_id, fontinfo, fontinfopath, error_output)) return false;
 			if (cur_id >= charinfo.size())
 			{
 				error_output << "Font info file " << fontinfopath << ": ID is out of range: " << cur_id << std::endl;
@@ -105,7 +106,7 @@ bool FONT::Load(
 	texinfo.repeatu = false;
 	texinfo.repeatv = false;
 	texinfo.size = texsize;
-	if (!textures.Load(fonttexturepath, texinfo, font_texture)) return false;
+	if (!textures.Load(texpath, texname, texinfo, font_texture)) return false;
 	
 	float scale = font_texture->GetScale();
 	if (scale != 1.0)

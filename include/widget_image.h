@@ -6,13 +6,29 @@
 #include "scenenode.h"
 #include "vertexarray.h"
 
-#include <string>
-#include <cassert>
-
 class TEXTURE;
 
 class WIDGET_IMAGE : public WIDGET
 {
+public:
+	virtual WIDGET * clone() const;
+	
+	virtual void SetAlpha(SCENENODE & node, float newalpha);
+	
+	virtual void SetVisible(SCENENODE & node, bool newvis);
+	
+	const MATHVECTOR <float, 2> & GetCorner1() const {return corner1;}
+	
+	const MATHVECTOR <float, 2> & GetCorner2() const {return corner2;}
+	
+	void SetupDrawable(
+		SCENENODE & scene,
+		const std::tr1::shared_ptr<TEXTURE> teximage,
+		float x, float y, float w, float h,
+		int order = 0,
+		bool button_mode = false,
+		float screenhwratio = 1.0);
+	
 private:
 	MATHVECTOR <float, 2> corner1;
 	MATHVECTOR <float, 2> corner2;
@@ -23,55 +39,6 @@ private:
 	{
 		return scene.GetDrawlist().twodim.get(draw);
 	}
-	
-public:
-	virtual WIDGET * clone() const {return new WIDGET_IMAGE(*this);};
-	
-	void SetupDrawable(
-		SCENENODE & scene,
-		const std::tr1::shared_ptr<TEXTURE> teximage,
-		const float x,
-		const float y,
-		const float w,
-		const float h,
-		const int order=0,
-		bool button_mode=false,
-		float screenhwratio=1.0)
-	{
-		MATHVECTOR <float, 2> dim;
-		dim.Set(w,h);
-		MATHVECTOR <float, 2> center;
-		center.Set(x,y);
-		corner1 = center - dim*0.5;
-		corner2 = center + dim*0.5;
-		
-		draw = scene.GetDrawlist().twodim.insert(DRAWABLE());
-		DRAWABLE & drawref = GetDrawable(scene);
-		drawref.SetDiffuseMap(teximage);
-		drawref.SetVertArray(&varray);
-		drawref.SetCull(false, false);
-		drawref.SetColor(1,1,1,1);
-		drawref.SetDrawOrder(order+100);
-		
-		if (button_mode)
-			varray.SetTo2DButton(x, y, w, h, h/(screenhwratio*3.0));
-			//varray.SetTo2DButton(x, y, w, h, h*0.25);
-		else
-			varray.SetToBillboard(corner1[0], corner1[1], corner2[0], corner2[1]);
-	}
-	
-	virtual void SetAlpha(SCENENODE & node, float newalpha)
-	{
-		GetDrawable(node).SetColor(1,1,1,newalpha);
-	}
-	
-	virtual void SetVisible(SCENENODE & node, bool newvis)
-	{
-		GetDrawable(node).SetDrawEnable(newvis);
-	}
-	
-	const MATHVECTOR <float, 2> & GetCorner1() const {return corner1;}
-	const MATHVECTOR <float, 2> & GetCorner2() const {return corner2;}
 };
 
 #endif

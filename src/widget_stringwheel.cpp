@@ -1,8 +1,8 @@
 #include "widget_stringwheel.h"
-
 #include "guioption.h"
 
-WIDGET_STRINGWHEEL::WIDGET_STRINGWHEEL() : option(NULL)
+WIDGET_STRINGWHEEL::WIDGET_STRINGWHEEL() :
+	option(0)
 {
 	// ctor
 }
@@ -72,12 +72,14 @@ void WIDGET_STRINGWHEEL::SetDescription(const std::string & newdesc)
 }
 
 ///set the local option pointer to the associated optionmap
-void WIDGET_STRINGWHEEL::UpdateOptions(SCENENODE & scene, bool save_to_options, std::map<std::string, GUIOPTION> & optionmap, std::ostream & error_output)
+void WIDGET_STRINGWHEEL::UpdateOptions(
+	SCENENODE & scene,
+	bool save_to,
+	std::map<std::string, GUIOPTION> & optionmap,
+	std::ostream & error_output)
 {
 	option = &(optionmap[setting]);
-	
-	if (!save_to_options)
-		SyncOption(scene);
+	if (!save_to) SyncOption(scene);
 }
 
 void WIDGET_STRINGWHEEL::AddHook(WIDGET * other)
@@ -87,9 +89,7 @@ void WIDGET_STRINGWHEEL::AddHook(WIDGET * other)
 
 void WIDGET_STRINGWHEEL::HookMessage(SCENENODE & scene, const std::string & message, const std::string & from)
 {
-	if (option)
-		option->SetToFirstValue();
-	
+	if (option) option->SetToFirstValue();
 	SyncOption(scene);
 }
 
@@ -105,17 +105,16 @@ void WIDGET_STRINGWHEEL::SetupDrawable(
 	std::tr1::shared_ptr<TEXTURE> teximage_left_down,
 	std::tr1::shared_ptr<TEXTURE> teximage_right_up,
 	std::tr1::shared_ptr<TEXTURE> teximage_right_down,
-	const FONT * font,
+	const FONT & font,
 	const float scalex,
 	const float scaley,
 	const float centerx,
 	const float centery)
 {
-	assert(teximage_left_up);
-	assert(teximage_left_down);
-	assert(teximage_right_up);
-	assert(teximage_right_down);
-	assert(font);
+	//assert(teximage_left_up);
+	//assert(teximage_left_down);
+	//assert(teximage_right_up);
+	//assert(teximage_right_down);
 	
 	float titlewidth = title.GetWidth(font, newtitle, scalex);
 	float labeloffsetx = 0.04+titlewidth;

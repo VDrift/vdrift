@@ -3,7 +3,17 @@
 
 namespace COORDINATESYSTEMS
 {
-	void ConvertCarCoordinateSystemV2toV1(float & x, float & y, float & z);
+	template <typename T>
+	void ConvertV2toV1(T & x, T & y, T & z)
+	{
+		T tempx = x;
+		T tempy = y;
+		T tempz = z;
+		
+		x = tempy;
+		y = -tempx;
+		z = tempz;
+	}
 }
 
 #endif

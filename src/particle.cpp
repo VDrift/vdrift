@@ -2,24 +2,21 @@
 #include "texturemanager.h"
 #include "unittest.h"
 
-using std::endl;
-
 bool PARTICLE_SYSTEM::Load(
 	const std::list <std::string> & texlist,
-	int anisotropy,
+	const std::string & texpath,
 	const std::string & texsize,
-	TEXTUREMANAGER * texturemanager,
+	int anisotropy,
+	TEXTUREMANAGER & texturemanager,
 	std::ostream & error_output)
 {
-	if (!texturemanager) return false;
-	
 	TEXTUREINFO texinfo;
 	texinfo.size = texsize;
 	texinfo.anisotropy = anisotropy;
 	for (std::list <std::string>::const_iterator i = texlist.begin(); i != texlist.end(); ++i)
 	{
 		std::tr1::shared_ptr<TEXTURE> tex;
-		texturemanager->Load(*i, texinfo, tex);
+		texturemanager.Load(texpath, *i, texinfo, tex);
 		textures.push_back(tex);
 	}
 	cur_texture = textures.end();
@@ -146,9 +143,10 @@ void PARTICLE_SYSTEM::SetParameters(float transmin, float transmax, float longmi
 QT_TEST(particle_test)
 {
 	PARTICLE_SYSTEM s;
+	TEXTUREMANAGER t;
 	s.SetParameters(1.0,1.0,0.5,1.0,1.0,1.0,1.0,1.0,MATHVECTOR<float,3>(0,1,0));
 	std::stringstream out;
-	s.Load(std::list<std::string> (), 0, "large", NULL, out);
+	s.Load(std::list<std::string> (), std::string(), "large", 0, t, out);
 	
 	//test basic particle management:  adding particles and letting them expire and get removed over time
 	QT_CHECK_EQUAL(s.NumParticles(),0);

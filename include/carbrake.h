@@ -31,7 +31,7 @@ class CARBRAKE
 		
 	public:
 		//default constructor makes an S2000-like car
-		CARBRAKE() : friction(0.73),max_pressure(4e6),radius(0.14),area(0.015),threshold(2e-4),brake_factor(0),locked(false) {}
+		CARBRAKE() : friction(0.73),max_pressure(4e6),radius(0.14),area(0.015),threshold(2e-4),brake_factor(0),locked(false),lasttorque(0) {}
 
 		void DebugPrint(std::ostream & out) const
 		{
@@ -58,17 +58,6 @@ class CARBRAKE
 			lasttorque = torque;
 			return torque;
 		}
-		
-		///used by the autoclutch system to determine if the brakes are about to lock up
-		bool WillLock() const
-		{
-		    return locked;
-		}
-		
-        void WillLock(T lock)
-		{
-		    locked = lock;
-        }
 
 		void SetFriction ( const T& value )
 		{

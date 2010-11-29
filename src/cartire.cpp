@@ -1,11 +1,17 @@
 #include "cartire.h"
 
-//#include <cmath>
-
 #if defined(_WIN32) || defined(__APPLE__)
 bool isnan(float number);
 bool isnan(double number);
 #endif
+
+template <typename T>
+void CARTIREINFO<T>::SetDimensions(T width_mm, T ratio_percent, T diameter_in)
+{
+	radius = width_mm * 0.001 * ratio_percent * 0.01 + diameter_in * 0.0254 * 0.5;
+	aspect_ratio = ratio_percent * 0.01;
+	sidewall_width =width_mm * 0.001;
+}
 
 template <typename T>
 CARTIRE<T>::CARTIRE() :
@@ -37,67 +43,74 @@ MATHVECTOR <T, 3> CARTIRE<T>::GetForce(
 
 	// tire off ground
 	if (normal_force < 1e-3) return MATHVECTOR <T, 3> (0);
+	
+	// cap Fz at a magic number to prevent explosions
+	T Fz = normal_force * 0.001;
+	if (Fz > 30) Fz = 30;
 
 	// get ideal slip ratio
 	T sigma_hat(0);
 	T alpha_hat(0);
 	LookupSigmaHatAlphaHat(normal_force, sigma_hat, alpha_hat);
-
-	// cap Fz at a magic number to prevent explosions
-	T Fz = normal_force * 0.001;
-	if (Fz > 30) Fz = 30;
-
-	T gamma = inclination;
-	T denom = std::max(std::abs(velocity[0]), T(0.1));
-	T sigma = (ang_velocity * info.radius - velocity[0]) / denom;
-	T alpha = -atan2(velocity[1], denom) * 180.0 / M_PI;
-
-	// beckman method for pre-combining longitudinal and lateral forces
+	
+	T gamma = inclination;											// positive when tire top tilts to the right, viewed from rear
+	T denom = std::max(std::abs(velocity[0]), T(1E-3));
+	T sigma = (ang_velocity * info.radius - velocity[0]) / denom;	// longitudinal slip: negative in braking, positive in traction
+	T alpha = -atan2(velocity[1], denom) * 180.0 / M_PI; 			// sideslip angle: positive in a right turn(opposite to SAE tire coords)	
+	T max_Fx(0), max_Fy(0), max_Mz(0);
+	
+	//combining method 1: beckman method for pre-combining longitudinal and lateral forces
 	T s = sigma / sigma_hat;
 	T a = alpha / alpha_hat;
 	T rho = std::max(T(sqrt(s * s + a * a)), T(0.0001)); // avoid divide-by-zero
-	assert(!isnan(s));
-	assert(!isnan(a));
-	assert(!isnan(rho));
+	T Fx = (s / rho) * PacejkaFx(rho * sigma_hat, Fz, friction_coeff, max_Fx);
+	T Fy = (a / rho) * PacejkaFy(rho * alpha_hat, Fz, gamma, friction_coeff, max_Fy);
 	
-	T max_Fx(0);
-	T max_Fy(0);
-	T max_Mz(0);
-	T Fx = (s / rho) * Pacejka_Fx(rho * sigma_hat, Fz, friction_coeff, max_Fx);
-	T Fy = (a / rho) * Pacejka_Fy(rho * alpha_hat, Fz, gamma, friction_coeff, max_Fy);
-
-	//std::cout << "s=" << s << ", rho=" << rho << ", sigma_hat=" << sigma_hat;
-	//std::cout << ", Fz=" << Fz << ", friction_coeff=" << friction_coeff << ", Fx=" << Fx << std::endl;
-	//std::cout << "s=" << s << ", a=" << a << ", rho=" << rho << ", Fy=" << Fy << std::endl;
-	
-	//T tan_alpha = hub_velocity [1] / denom;
-	//T slip_x = -sigma / ( 1.0 + generic_abs ( sigma ) );
-	//T slip_y = tan_alpha / ( 1.0+generic_abs ( sigma-1.0 ) );
-	//T total_slip = std::sqrt ( slip_x * slip_x + slip_y * slip_y );
-	//T maxforce = longitudinal_parameters[2] * 7.0;
-	//std::cout << maxforce << ", " << max_Fx << ", " << max_Fy << ", " << Fx << ", " << Fy << std::endl;
-
-	//combining method 0: no combining! :-)
-
 /*
-	//combining method 1: traction circle
+	//combining method 2: orangutan
+	T alpha_rad = alpha * M_PI / 180.0;
+	T Fx = PacejkaFx(sigma, Fz, friction_coeff, max_Fx);
+	T Fy = PacejkaFy(alpha, Fz, gamma, friction_coeff, max_Fy);
+	T x = cos(alpha_rad);
+	x = fabs(Fx) / (fabs(Fx) + fabs(Fy));
+	T y = 1.0 - x;
+	T one = 1.0;
+	if(sigma < 0.0) one = -1.0;
+	T pure_sigma = sigma / (one + sigma);
+	T pure_alpha = tan(alpha_rad) / (one + sigma);
+	T pure_combined = sqrt(pure_sigma * pure_sigma + pure_alpha * pure_alpha);
+	T kappa_combined = pure_combined / (1.0 - pure_combined);
+	T alpha_combined = atan((one + sigma) * pure_combined);
+	T Flimit_lng = PacejkaFx(kappa_combined, Fz, friction_coeff, max_Fx);
+	T Flimit_lat = PacejkaFy(alpha_combined * 180.0 / M_PI, Fz, gamma, friction_coeff, max_Fy);
+
+	T Flimit = (fabs(x * Flimit_lng) + fabs(y * Flimit_lat));
+	T Fmag = sqrt(Fx * Fx + Fy * Fy);
+
+	if(Fmag > Flimit)
+	{
+		T scale = Flimit / Fmag;
+		Fx *= scale;
+		Fy *= scale;
+	}
+*/
+/*
+	//combining method 3: traction circle
 	//determine to what extent the tires are long (x) gripping vs lat (y) gripping
 	float longfactor = 1.0;
 	float combforce = std::abs(Fx)+std::abs(Fy);
-	if (combforce > 1) //avoid divide by zero (assume longfactor = 1 for this case)
-		longfactor = std::abs(Fx)/combforce; //1.0 when Fy is zero, 0.0 when Fx is zero
+	if (combforce > 1) longfactor = std::abs(Fx)/combforce; //1.0 when Fy is zero, 0.0 when Fx is zero
 	//determine the maximum force for this amount of long vs lat grip
-	float maxforce = std::abs(max_Fx)*longfactor + (1.0-longfactor)*std::abs(max_Fy); //linear interpolation
+	float maxforce = std::abs(max_Fx)*longfactor+(1.0-longfactor)*std::abs(max_Fy); //linear interpolation
 	if (combforce > maxforce) //cap forces
 	{
 		//scale down forces to fit into the maximum
-		Fx *= maxforce / combforce;
-		Fy *= maxforce / combforce;
-		//std::cout << "Limiting " << combforce << " to " << maxforce << std::endl;
+		Fx *= maxforce/combforce;
+		Fy *= maxforce/combforce;
 	}
 */
 /*	
-	//combining method 2: traction ellipse (prioritize Fx)
+	//combining method 4: traction ellipse (prioritize Fx)
 	//std::cout << "Fy0=" << Fy << ", ";
 	if (Fx >= max_Fx)
 	{
@@ -109,7 +122,7 @@ MATHVECTOR <T, 3> CARTIRE<T>::GetForce(
 	//std::cout << "Fy=" << Fy << ", Fx=Fx0=" << Fx << ", Fxmax=" << max_Fx << ", Fymax=" << max_Fy << std::endl;
 */
 /*
-	//combining method 3: traction ellipse (prioritize Fy)
+	//combining method 5: traction ellipse (prioritize Fy)
 	if (Fy >= max_Fy)
 	{
 		Fy = max_Fy;
@@ -126,8 +139,8 @@ MATHVECTOR <T, 3> CARTIRE<T>::GetForce(
 */
 /*
 	// modified Nicolas-Comstock Model(Modeling Combined Braking and Steering Tire Forces)
-	T Fx0 = Pacejka_Fx(sigma, Fz, friction_coeff, max_Fx);
-	T Fy0 = Pacejka_Fy(alpha, Fz, gamma, friction_coeff, max_Fy);
+	T Fx0 = PacejkaFx(sigma, Fz, friction_coeff, max_Fx);
+	T Fy0 = PacejkaFy(alpha, Fz, gamma, friction_coeff, max_Fy);
 	// 0 <= a <= pi/2 and 0 <= s <= 1
 	// Cs = a0 and Ca = b0 longitudinal and lateral slip stiffness ?
 	T Fc = Fx0 * Fy0 / sqrt(s * s * Fy0 * Fy0 + Fx0 * Fx0 * tana * tana);
@@ -135,9 +148,7 @@ MATHVECTOR <T, 3> CARTIRE<T>::GetForce(
 	T Fy = Fc * sqrt((1-s) * (1-s) * cosa * cosa * Fy0 * Fy0 + sina * sina * Cs * Cs) / (Cs * cosa);
 */
 
-	T Mz = Pacejka_Mz(sigma, alpha, Fz, gamma, friction_coeff, max_Mz);
-	assert(!isnan(Fx));
-	assert(!isnan(Fy));
+	T Mz = PacejkaMz(sigma, alpha, Fz, gamma, friction_coeff, max_Mz);
 
 	feedback = Mz;
 	camber = inclination;
@@ -146,6 +157,7 @@ MATHVECTOR <T, 3> CARTIRE<T>::GetForce(
 	ideal_slide = sigma_hat;
 	ideal_slip = alpha_hat;
 
+	// Fx positive during traction, Fy positive in a right turn, Mz positive in a left turn
 	return MATHVECTOR <T, 3> (Fx, Fy, Mz);
 }
 
@@ -159,14 +171,11 @@ T CARTIRE<T>::GetRollingResistance(const T velocity, const T normal_force, const
 	// approximate by quadratic function
 	rolling_resistance += velocity * velocity * info.rolling_resistance_quadratic;
 	
-	// rolling resistance should not add energy to system
-	// fake this by using a ramped step function, should be replaced by a constraint
-	T max_force = normal_force * rolling_resistance;
-	T ramp = velocity;
-	if (velocity > 1) ramp = 1;
-	else if (velocity < -1) ramp = -1; 
+	// rolling resistance magnitude
+	T resistance = -normal_force * rolling_resistance;
+	if (velocity < 0) resistance = -resistance;
 	
-	return -ramp * max_force;
+	return resistance;
 }
 
 template <typename T>
@@ -185,8 +194,8 @@ T CARTIRE<T>::GetMaximumFy(T load, T camber) const
 	T gamma = camber;
 
 	T D = (a[1] * Fz + a[2]) * Fz;
-	//T Sv = a[11] * Fz * gamma + a[12] * Fz + a[13]; // pacejka89
-	T Sv = ((a[11] * Fz + a[12]) * gamma + a[13] ) * Fz + a[14]; // pacejka96 ?
+	T Sv = a[11] * Fz * gamma + a[12] * Fz + a[13]; // pacejka89
+	//T Sv = ((a[11] * Fz + a[12]) * gamma + a[13] ) * Fz + a[14]; // pacejka96 ?
 
 	return D + Sv;
 }
@@ -240,7 +249,7 @@ void CARTIRE<T>::LookupSigmaHatAlphaHat(T load, T & sh, T & ah) const
 }
 
 template <typename T>
-T CARTIRE<T>::Pacejka_Fx(T sigma, T Fz, T friction_coeff, T & max_Fx)
+T CARTIRE<T>::PacejkaFx(T sigma, T Fz, T friction_coeff, T & max_Fx)
 {
 	const std::vector <T> & b = info.longitudinal;
 
@@ -253,8 +262,11 @@ T CARTIRE<T>::Pacejka_Fx(T sigma, T Fz, T friction_coeff, T & max_Fx)
 	// curvature factor
 	T E = (b[6] * Fz * Fz + b[7] * Fz + b[8]);
 	
-	// slip + horizontal shift
-	T S = (100 * sigma + b[9] * Fz + b[10]);
+	// horizontal shift
+	T Sh = 0;//beckmann//b[9] * Fz + b[10];
+	
+	// composite
+	T S = 100 * sigma + Sh;
 	
 	// longitudinal force
 	T Fx = D * sin(b[0] * atan(B * S - E * (B * S - atan(B * S))));
@@ -266,28 +278,39 @@ T CARTIRE<T>::Pacejka_Fx(T sigma, T Fz, T friction_coeff, T & max_Fx)
 }
 
 template <typename T>
-T CARTIRE<T>::Pacejka_Fy(T alpha, T Fz, T gamma, T friction_coeff, T & max_Fy)
+T CARTIRE<T>::PacejkaFy(T alpha, T Fz, T gamma, T friction_coeff, T & max_Fy)
 {
 	const std::vector <T> & a = info.lateral;
-
+	
+	// shape factor
+	T C = a[0];
+	
 	// peak factor
-	T D = (a[1] * Fz + a[2]) * Fz * friction_coeff;
+	T D = (a[1] * Fz + a[2]) * Fz;
+	
+	T BCD = a[3] * sin(2.0 * atan(Fz / a[4])) * (1.0 - a[5] * std::abs(gamma));
 	
 	// stiffness factor
-	T B = a[3] * sin(2.0 * atan(Fz / a[4])) * (1.0 - a[5] * std::abs(gamma)) / (a[0] * (a[1] * Fz + a[2]) * Fz);
+	T B = BCD / (C * D);
 	
 	// curvature factor
 	T E = a[6] * Fz + a[7];
 	
-	// slip angle + horizontal shift
-	T S = alpha + a[8] * gamma + a[9] * Fz + a[10];
+	// horizontal shift
+	T Sh = 0;//beckmann//a[8] * gamma + a[9] * Fz + a[10];
 	
 	// vertical shift
-	//T Sv = a[11] * Fz * gamma + a[12] * Fz + a[13]; // pacejka89
-	T Sv = ((a[11] * Fz + a[12]) * gamma + a[13]) * Fz + a[14]; // pacejka96?
+	T Sv = a[11] * Fz * gamma + a[12] * Fz + a[13]; // pacejka89
+	//T Sv = ((a[11] * Fz + a[12]) * gamma + a[13]) * Fz + a[14]; // pacejka96?
+	
+	// composite
+	T S = alpha + Sh;
+	
+	// scale peak facor by friction coefficient
+	D *= friction_coeff;
 	
 	// lateral force
-	T Fy = D * sin(a[0] * atan(B * S - E * (B * S - atan(B * S)))) + Sv;
+	T Fy = D * sin(C * atan(B * S - E * (B * S - atan(B * S)))) + Sv;
 
 	max_Fy = D + Sv;
 
@@ -296,7 +319,7 @@ T CARTIRE<T>::Pacejka_Fy(T alpha, T Fz, T gamma, T friction_coeff, T & max_Fy)
 }
 
 template <typename T>
-T CARTIRE<T>::Pacejka_Mz(T sigma, T alpha, T Fz, T gamma, T friction_coeff, T & max_Mz)
+T CARTIRE<T>::PacejkaMz(T sigma, T alpha, T Fz, T gamma, T friction_coeff, T & max_Mz)
 {
 	const std::vector <T> & c = info.aligning;
 
@@ -331,7 +354,7 @@ void CARTIRE<T>::FindSigmaHatAlphaHat(T load, T & output_sigmahat, T & output_al
 	ymax = 0;
 	for (x = -2; x < 2; x += 4.0/iterations)
 	{
-		y = Pacejka_Fx(x, load, 1.0, junk);
+		y = PacejkaFx(x, load, 1.0, junk);
 		if (y > ymax)
 		{
 			output_sigmahat = x;
@@ -342,7 +365,7 @@ void CARTIRE<T>::FindSigmaHatAlphaHat(T load, T & output_sigmahat, T & output_al
 	ymax = 0;
 	for (x = -20; x < 20; x += 40.0/iterations)
 	{
-		y = Pacejka_Fy(x, load, 0, 1.0, junk);
+		y = PacejkaFy(x, load, 0, 1.0, junk);
 		if (y > ymax)
 		{
 			output_alphahat = x;
@@ -364,5 +387,7 @@ void CARTIRE<T>::CalculateSigmaHatAlphaHat(int tablesize)
 }
 
 /// explicit instantiation
+template class CARTIREINFO<float>;
+template class CARTIREINFO<double>;
 template class CARTIRE <float>;
 template class CARTIRE <double>;

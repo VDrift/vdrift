@@ -33,7 +33,7 @@ enum BLENDMODE
 	PREMULTIPLIED_ALPHA,
 	ALPHATEST
 };
-};
+}
 
 ///purely abstract base class
 class RENDER_INPUT

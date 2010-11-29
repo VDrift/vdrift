@@ -6,7 +6,7 @@
 #include <map>
 #include <queue>
 #include "datalog.h"
-#include "configfile.h"
+#include "config.h"
 
 #define DATAMETRIC_CTOR_PARAMS_TYPES std::map< std::string, std::vector< double > const* > &, std::vector<std::string> &, std::vector< std::string > &, std::string &
 #define DATAMETRIC_CTOR_PARAMS_DEF std::map< std::string, std::vector< double > const* > & input_columns, std::vector<std::string> & outvar_names, std::vector< std::string > & opts, std::string & desc
@@ -198,7 +198,7 @@ class METRICMANAGER
 		 * \param filename name of file to load metric definitions from
 		 * \param data_log a reference to the datalog object which holds the columns of data
 		 */
-		void Init(CONFIGFILE const& data_settings, DATALOG const& data_log);
+		void Init(CONFIG const& data_settings, DATALOG const& data_log);
 		/** Update all the managed metrics
 		 * \param dt the amount of seconds passed since last update
 		 */

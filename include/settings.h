@@ -1,30 +1,22 @@
 #ifndef _SETTINGS_H
 #define _SETTINGS_H
 
-#include "configfile.h"
-
 #include <string>
+#include <vector>
+#include <ostream>
+
+class CONFIG;
 
 class SETTINGS
 {
 public:
 	SETTINGS();
 
-	void Serialize(bool write, CONFIGFILE & config);
-	
-	void Load(std::string settingsfile)
-	{
-		CONFIGFILE config;
-		config.Load(settingsfile);
-		Serialize(false, config);
-	}
-	
-	void Save(std::string settingsfile)
-	{
-		CONFIGFILE config;
-		config.Load(settingsfile);
-		Serialize(true, config);config.Write();
-	}
+	void Serialize(bool write, CONFIG & config);
+
+	void Load(const std::string & settingsfile, std::ostream & error);
+
+	void Save(const std::string & settingsfile, std::ostream & error);
 
 	void SetResolutionX ( unsigned int theValue )
 	{
@@ -398,7 +390,6 @@ public:
 	
 private:
 	bool res_override;
-	
 	int resolution_x;
 	int resolution_y;
 	int bpp;
@@ -446,29 +437,14 @@ private:
 	std::string opponent;
 	std::string player_paint;
 	std::string opponent_paint;
-	float player_color[3];	// should be replaced with a vector
-	float opponent_color[3];
+	std::vector<float> player_color;
+	std::vector<float> opponent_color;
 	float camerabounce;
 	int number_of_laps;
 	float contrast;
 	std::string camera_mode;
 	bool hgateshifter;
 	float ai_difficulty;
-
-	//void LoadDefaults();
-
-	template <typename T>
-	bool Param(CONFIGFILE & conf, bool write, std::string pname, T & value)
-	{
-		if (write)
-		{
-			conf.SetParam(pname, value);
-			return true;
-		}
-		else
-			return conf.GetParam(pname, value);
-	}
-	
 };
 
 #endif

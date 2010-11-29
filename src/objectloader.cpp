@@ -169,7 +169,7 @@ std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad()
 	}
 	else
 	{
-		if (!models.Load(objectdir + "/" + model_name, model))
+		if (!models.Load(objectdir, model_name, model))
 		{
 			return std::make_pair(true, false);
 		}
@@ -183,8 +183,7 @@ std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad()
 	texinfo.size = texsize;
 
 	std::tr1::shared_ptr<TEXTURE> diffuse_texture;
-	std::string texpath = objectdir + "/" + diffuse_texture_name;
-	if (!textures.Load(texpath, texinfo, diffuse_texture))
+	if (!textures.Load(objectdir, diffuse_texture_name, texinfo, diffuse_texture))
 	{
 		error_output << "Skipping object " << model_name << " and continuing" << std::endl;
 		return std::make_pair(false, true);
@@ -196,7 +195,7 @@ std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad()
 		std::string filepath = objectpath + "/" + texture_name;
 		if (std::ifstream(filepath.c_str()))
 		{
-			if (!textures.Load(objectdir + "/" + texture_name, texinfo, miscmap1_texture))
+			if (!textures.Load(objectdir, texture_name, texinfo, miscmap1_texture))
 			{
 				error_output << "Error loading texture: " << filepath << " for object " << model_name << ", continuing" << std::endl;
 			}
@@ -209,7 +208,7 @@ std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad()
 		std::string filepath = objectpath + "/" + texture_name;
 		if (std::ifstream(filepath.c_str()))
 		{
-			if (!textures.Load(objectdir + "/" + texture_name, texinfo, miscmap2_texture))
+			if (!textures.Load(objectdir, texture_name, texinfo, miscmap2_texture))
 			{
 				error_output << "Error loading texture: " << filepath << " for object " << model_name << ", continuing" << std::endl;
 			}

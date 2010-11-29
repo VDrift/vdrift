@@ -6,7 +6,6 @@
 #include "font.h"
 #include "guioption.h"
 #include "scenenode.h"
-#include "configfile.h"
 #include "reseatable_reference.h"
 
 #include <map>
@@ -17,16 +16,12 @@
 class WIDGET_LABEL;
 class WIDGET_CONTROLGRAB;
 class MODELMANAGER;
+class CONFIG;
 
 class GUIPAGE
 {
 public:
-	GUIPAGE() : tooltip_widget(NULL),fontmap(NULL),dialog(false) {}
-	
-	SCENENODE & GetNode(SCENENODE & parentnode)
-	{
-		return parentnode.GetNode(s);
-	}
+	GUIPAGE();
 	
 	bool Load(
 		const std::string & path,
@@ -34,7 +29,7 @@ public:
 		const std::string & datapath,
 		const std::string & texsize,
 		const float screenhwratio,
-		const CONFIGFILE & controlsconfig,
+		const CONFIG & controlsconfig,
 		const std::map <std::string, FONT> & fonts,
 		std::map <std::string, GUIOPTION> & optionmap,
 		SCENENODE & parentnode,
@@ -43,33 +38,12 @@ public:
 		std::ostream & error_output,
 		bool reloadcontrolsonly = false);
   	
-	void SetVisible(SCENENODE & parent, const bool newvis)
-	{
-		SCENENODE & sref = GetNode(parent);
-		for (std::list <DERIVED <WIDGET> >::iterator i = widgets.begin(); i != widgets.end(); ++i)
-		{
-			(*i)->SetVisible(sref, newvis);
-		}
-	}
+	void SetVisible(SCENENODE & parent, const bool newvis);
 	
-	void SetAlpha(SCENENODE & parent, const float newalpha)
-	{
-		SCENENODE & sref = parent.GetNode(s);
-		for (std::list <DERIVED <WIDGET> >::iterator i = widgets.begin(); i != widgets.end(); ++i)
-		{
-			(*i)->SetAlpha(sref, newalpha);
-		}
-	}
+	void SetAlpha(SCENENODE & parent, const float newalpha);
 	
 	///tell all child widgets to update to/from the option map
-	void UpdateOptions(SCENENODE & parent, bool save_to_options, std::map<std::string, GUIOPTION> & optionmap, std::ostream & error_output)
-	{
-		SCENENODE & sref = parent.GetNode(s);
-		for (std::list <DERIVED <WIDGET> >::iterator i = widgets.begin(); i != widgets.end(); ++i)
-		{
-			(*i)->UpdateOptions(sref, save_to_options, optionmap, error_output);
-		}
-	}
+	void UpdateOptions(SCENENODE & parent, bool save_to, std::map<std::string, GUIOPTION> & optionmap, std::ostream & error_output);
 	
 	///returns a list of actions that were generated
 	std::list <std::pair <std::string, bool> > ProcessInput(
@@ -78,20 +52,18 @@ public:
 		float cursorx, float cursory,
 		bool cursordown, bool cursorjustup,
 		float screenhwratio);
-			
+	
 	///tell all child widgets to do as update tick
-	void Update(SCENENODE & parent, float dt)
-	{
-		SCENENODE & sref = parent.GetNode(s);
-		for (std::list <DERIVED <WIDGET> >::iterator i = widgets.begin(); i != widgets.end(); ++i)
-		{
-			(*i)->Update(sref, dt);
-		}
-	}
+	void Update(SCENENODE & parent, float dt);
 	
 	reseatable_reference <WIDGET_LABEL> GetLabel(const std::string & label_widget_name)
 	{
 		return label_widgets[label_widget_name];
+	}
+	
+	SCENENODE & GetNode(SCENENODE & parentnode)
+	{
+		return parentnode.GetNode(s);
 	}
 	
 private:
@@ -101,7 +73,6 @@ private:
 	WIDGET_LABEL * tooltip_widget;
 	const std::map <std::string, FONT> * fontmap;
 	keyed_container <SCENENODE>::handle s;
-	
 	bool dialog;
 	
 	///hides some of the ugliness behind this method
@@ -112,20 +83,7 @@ private:
 		return (T*) widgets.back().Get();
 	}
 	
-	void Clear(SCENENODE & parentnode)
-	{
-		controlgrabs.clear();
-		tooltip_widget = NULL;
-		fontmap = NULL;
-		dialog = false;
-		widgets.clear();
-		if (s.valid())
-		{
-			SCENENODE & sref = parentnode.GetNode(s);
-			sref.Clear();
-		}
-		s.invalidate();
-	}
+	void Clear(SCENENODE & parentnode);
 };
 
 #endif

@@ -1,8 +1,6 @@
 #ifndef _CARDYNAMICS_H
 #define _CARDYNAMICS_H
 
-#include "mathvector.h"
-#include "quaternion.h"
 #include "rigidbody.h"
 #include "carengine.h"
 #include "carclutch.h"
@@ -12,18 +10,19 @@
 #include "carsuspension.h"
 #include "carwheel.h"
 #include "cartire.h"
-#include "carwheelposition.h"
 #include "carbrake.h"
+#include "carwheelposition.h"
 #include "caraerodynamicdevice.h"
 #include "joeserialize.h"
 #include "macros.h"
 #include "collision_contact.h"
 #include "BulletDynamics/Dynamics/btActionInterface.h"
 
+#include <tr1/memory> // shared_ptr
+
 class MODEL;
-class CONFIGFILE;
+class CONFIG;
 class COLLISION_WORLD;
-//class SuspensionConstraint;
 
 class CARDYNAMICS : public btActionInterface
 {
@@ -34,7 +33,7 @@ public:
 
 	CARDYNAMICS();
 
-	bool Load(const CONFIGFILE & c, std::ostream & error_output);
+	bool Load(const CONFIG & c, std::ostream & error_output);
 
 	void Init(
 		COLLISION_WORLD & world,
@@ -63,7 +62,7 @@ public:
 	COLLISION_CONTACT & GetWheelContact(WHEEL_POSITION wp);
 
 // chassis
-	float GetMass() const;
+	T GetMass() const;
 	T GetSpeed() const;
 	MATHVECTOR <T, 3> GetVelocity() const;
 	MATHVECTOR <T, 3> GetEnginePosition() const;
@@ -72,15 +71,17 @@ public:
 	// driveline input
 	void StartEngine();
 	void ShiftGear(int value);
-	void SetThrottle(float value);
-	void SetClutch(float value);
-	void SetBrake(float value);
-	void SetHandBrake(float value);
+	void SetThrottle(T value);
+	void SetClutch(T value);
+	void SetBrake(T value);
+	void SetHandBrake(T value);
 	void SetAutoClutch(bool value);
 	void SetAutoShift(bool value);
 
-	// speedometer/tachometer based on driveshaft rpm
+	// first wheel velocity
 	T GetSpeedMPS() const;
+	
+	// engine rpm
 	T GetTachoRPM() const;
 
 	// driveline state access
@@ -115,7 +116,7 @@ public:
 
 	const CARTIRE <T> & GetTire(WHEEL_POSITION pos) const {return tire[pos];}
 
-	const CARSUSPENSION <T> & GetSuspension(WHEEL_POSITION pos) const {return suspension[pos];}
+	const CARSUSPENSION <T> & GetSuspension(WHEEL_POSITION pos) const {return *suspension[pos];}
 
 	MATHVECTOR <T, 3> GetTotalAero() const;
 
@@ -123,9 +124,11 @@ public:
 
 	T GetAeordynamicDragCoefficient() const;
 
-	MATHVECTOR< T, 3 > GetLastBodyForce() const;
+	MATHVECTOR <T, 3> GetLastBodyForce() const;
 
 	T GetFeedback() const;
+
+	//void UpdateTelemetry(T dt);
 
 	// print debug info to the given ostream.  set p1, p2, etc if debug info part 1, and/or part 2, etc is desired
 	void DebugPrint(std::ostream & out, bool p1, bool p2, bool p3, bool p4) const;
@@ -154,7 +157,8 @@ protected:
 	CARDIFFERENTIAL <T> differential_center;
 	std::vector <CARBRAKE <T> > brake;
 	std::vector <CARWHEEL <T> > wheel;
-
+	std::vector <CARTIRE <T> > tire;
+	
 	enum { NONE = 0, FWD = 1, RWD = 2, AWD = 3 } drive;
 	T driveshaft_rpm;
 	T tacho_rpm;
@@ -173,24 +177,22 @@ protected:
 	std::vector <int> tcs_active;
 
 // cardynamics state
-	std::vector <T> normal_force;
 	std::vector <MATHVECTOR <T, 3> > wheel_velocity;
 	std::vector <MATHVECTOR <T, 3> > wheel_position;
 	std::vector <QUATERNION <T> > wheel_orientation;
 	std::vector <COLLISION_CONTACT> wheel_contact;
-	std::vector <CARSUSPENSION <T> > suspension;
-	//std::vector <SuspensionConstraint*> new_suspension;
+	std::vector <std::tr1::shared_ptr<CARSUSPENSION<T> > > suspension;
 
-	std::vector <CARTIRE <T> > tire;
 	std::vector <CARAERO <T> > aerodynamics;
-
 	std::list <std::pair <T, MATHVECTOR <T, 3> > > mass_particles;
-
+	//std::list <CARTELEMETRY> telemetry;
+	
 	T maxangle;
-
 	T feedback;
 
-	MATHVECTOR <T, 3> lastbodyforce; //< held so external classes can extract it for things such as applying physics to camera mounts
+	//< held so external classes can extract it for things such as applying physics to camera mounts
+	MATHVECTOR <T, 3> lastbodyforce;
+	
 
 // chassis, cardynamics
 	MATHVECTOR <T, 3> GetDownVector() const;
@@ -220,18 +222,13 @@ protected:
 	// update suspension, return suspension force
 	T UpdateSuspension(int i, T dt);
 
-	// apply tire friction to body, return longitudinal tire friction
-	T ApplyTireForce(
-		int i,
+	// apply tire friction to body
+	void UpdateWheel(
+		const int i,
+		const T dt,
 		const T normal_force,
+		const T drive_torque,
 		const QUATERNION <T> & wheel_space);
-
-	// calculate wheel torque
-	T CalculateWheelTorque(
-		int i,
-		const T tire_friction,
-		T drive_torque,
-		T dt);
 
 	// advance chassis(body, suspension, wheels) simulation by dt
 	void UpdateBody(
@@ -265,9 +262,6 @@ protected:
 	// calculate throttle, clutch, gear
 	void UpdateTransmission(T dt);
 
-	// calculate clutch driveshaft rpm
-	T CalculateDriveshaftRPM() const;
-
 	bool WheelDriven(int i) const;
 
 	T AutoClutch(T last_clutch, T dt) const;
@@ -284,10 +278,10 @@ protected:
 
 // traction control
 	// do traction control system calculations and modify the throttle position if necessary
-	void DoTCS(int i, T normal_force);
+	void DoTCS(int i);
 
 	// do anti-lock brake system calculations and modify the brake force if necessary
-	void DoABS(int i, T normal_force);
+	void DoABS(int i);
 
 // cardynamics initialization
 	void Init();
@@ -297,8 +291,6 @@ protected:
 		const btVector3 & chassisCenter,
 		btVector3 & center,
 		btVector3 & size);
-
-	void InitializeWheelVelocity();
 
 	void AddMassParticle(T mass, MATHVECTOR <T, 3> pos);
 };

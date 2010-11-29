@@ -1,5 +1,5 @@
 #include "sky.h"
-#include "configfile.h"
+#include "config.h"
 #include "graphics.h"
 
 #ifdef _WIN32
@@ -25,23 +25,23 @@ SKY::SKY(GRAPHICS_SDLGL & gs, std::ostream & info, std::ostream & error) :
 bool SKY::Load(const std::string & path)
 {
 	std::string cpath = path + "/sky.txt";
-	CONFIGFILE c;
+	CONFIG c;
 	if (!c.Load(cpath))
 	{
 		error_output << "Can't find configfile: " << cpath << std::endl;
 		return false;
 	}
-	
-	c.GetParam("longitude", longitude);
-	c.GetParam("latitude", latitude);
-	c.GetParam("timezone", timezone);
-	c.GetParam("azimuth", azdelta);
+
+	c.GetParam("", "longitude", longitude);
+	c.GetParam("", "latitude", latitude);
+	c.GetParam("", "timezone", timezone);
+	c.GetParam("", "azimuth", azdelta);
 	azdelta = azdelta / 180 * pi;
-	c.GetParam("turbidity", turbidity);
-	c.GetParam("exposure", exposure);
-	
+	c.GetParam("", "turbidity", turbidity);
+	c.GetParam("", "exposure", exposure);
+
 	std::string timestr;
-	if(c.GetParam("time", timestr))
+	if(c.GetParam("", "time", timestr))
 	{
 		strptime(timestr.c_str(), "%Y-%m-%d %H:%M:%S", &datetime);
 		mktime(&datetime);
@@ -51,11 +51,11 @@ bool SKY::Load(const std::string & path)
 		time_t seconds = time(NULL);
 		datetime = *localtime(&seconds);
 	}
-	
+
 	//sky_texture.Init(512, 512, FBTEXTURE::NORMAL, false, false, false, true, error_output);
-	
+
 	Update();
-	
+
 	return true;
 }
 
@@ -107,7 +107,7 @@ void SKY::UpdateSunDir()
 		if (ha < 0) az = pi - az;
 		else az = pi + az;
 	}
-	
+
 	az += azdelta;
 	sundir[0] = sin(az) * sin(ze);   // east
 	sundir[1] = cos(ze);             // up
@@ -122,10 +122,10 @@ void SKY::UpdateSunColor()
 	{
 		m = 1 / (cos(ze) + 0.50572f * pow(96.07995f - ze / pi * 180.0f, -1.6364f));
 	}
-	
+
 	// angstrom turbidity coefficient (0-0.5)
 	float beta = 0.04608365822050f * turbidity - 0.04586025928522f;
-	
+
 	// rayleigh scattering + aerosol transmittance
 	float tau[] = { 0, 0, 0 };
 	for (int i = 0; i < 3; i++)

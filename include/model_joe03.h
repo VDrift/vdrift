@@ -20,7 +20,7 @@ public:
 
 	virtual bool Load(const std::string & strFileName, std::ostream & error_output, bool genlist=true)
 	{
-		return Load(strFileName, NULL, error_output, genlist);
+		return Load(strFileName, error_output, genlist, 0);
 	}
 	
 	virtual bool CanSave() const
@@ -28,7 +28,7 @@ public:
 		return false;
 	}
 	
-	bool Load(std::string strFileName, JOEPACK * pack, std::ostream & error_output, bool genlist=true);
+	bool Load(const std::string & strFileName, std::ostream & error_output, bool genlist, JOEPACK * pack);
 	
 	bool LoadFromHandle(FILE * f, JOEPACK * pack, std::ostream & error_output);
 

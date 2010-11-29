@@ -15,13 +15,6 @@ public:
 
 class JOEPACK
 {
-private:
-	std::map <std::string, JOEPACK_FADATA> fat;
-	std::ifstream f;
-	std::map <std::string, JOEPACK_FADATA>::iterator curfa;
-	std::string packpath;
-	const std::string versionstr;
-	
 public:
 	JOEPACK() : versionstr("JPK01.00") {curfa = fat.end();}
 	
@@ -40,6 +33,13 @@ public:
 	int Pack_fread(void * buffer, const unsigned int size, const unsigned int count);
 	
 	const std::map <std::string, JOEPACK_FADATA> & GetFAT() const {return fat;}
+
+private:
+	std::map <std::string, JOEPACK_FADATA> fat;
+	std::map <std::string, JOEPACK_FADATA>::iterator curfa;
+	const std::string versionstr;
+	std::string packpath;
+	std::ifstream f;
 };
 
 #endif

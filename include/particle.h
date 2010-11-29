@@ -183,12 +183,16 @@ public:
 	///returns true if at least one particle texture was loaded
 	bool Load(
 		const std::list <std::string> & texlist,
-		int anisotropy,
+		const std::string & texpath,
 		const std::string & texsize,
-		TEXTUREMANAGER * texturemanager,
+		int anisotropy,
+		TEXTUREMANAGER & texturemanager,
 		std::ostream & error_output);
 	
-	void Update(float dt, const QUATERNION <float> & camdir, const MATHVECTOR <float, 3> & campos);
+	void Update(
+		float dt,
+		const QUATERNION <float> & camdir,
+		const MATHVECTOR <float, 3> & campos);
 	
 	/// all of the parameters are from 0.0 to 1.0 and scale to the ranges set with SetParameters.  testonly should be kept false and is only used for unit testing.
 	void AddParticle(

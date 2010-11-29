@@ -1,11 +1,16 @@
 #include "widget_spinningcar.h"
 #include "car.h"
-#include "configfile.h"
+#include "config.h"
 
 WIDGET_SPINNINGCAR::WIDGET_SPINNINGCAR():
-	errptr(NULL), rotation(0), wasvisible(false), r(1), g(1), b(1), textures(NULL)
+	errptr(0),
+	rotation(0),
+	wasvisible(false),
+	r(1), g(1), b(1),
+	textures(0),
+	models(0)
 {
-	
+	// ctor
 }
 
 WIDGET * WIDGET_SPINNINGCAR::clone() const
@@ -198,8 +203,10 @@ void WIDGET_SPINNINGCAR::Load(SCENENODE & parent)
 	SCENENODE & carnoderef = GetCarNode(parent);
 	car.push_back(CAR());
 	
-	CONFIGFILE carconf;
-	std::string carconfpath = data + "/cars/" + carname + "/" + carname + ".car";
+	CONFIG carconf;
+	std::string partspath = "carparts";
+	std::string carpath = "cars/"+carname;
+	std::string carconfpath = data+"/"+carpath+"/"+carname+".car";
 	if (!carconf.Load(carconfpath))
 	{
 		*errptr << "Error loading car's configfile: " << carconfpath << std::endl;
@@ -207,21 +214,12 @@ void WIDGET_SPINNINGCAR::Load(SCENENODE & parent)
 	}
 	
 	if (!car.back().LoadGraphics(
-			carconf,
-			"cars/" + carname,
-			carname,
-			"carparts",
+			carconf, carpath, carname, partspath,
 			MATHVECTOR<float, 3>(r, g, b),
-			carpaint,
-			texsize,
-			anisotropy,
-			camerabounce,
-			loaddriver,
-			debugmode,
-			*textures,
-			*models,
-			loadlog,
-			loadlog))
+			carpaint, texsize, anisotropy,
+			camerabounce, loaddriver, debugmode,
+			*textures, *models,
+			loadlog, loadlog))
 	{
 		*errptr << "Couldn't load spinning car: " << carname << std::endl;
 		if (!loadlog.str().empty())

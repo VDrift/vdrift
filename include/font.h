@@ -24,7 +24,8 @@ public:
 	
 	bool Load(
 		const std::string & fontinfopath,
-		const std::string & fonttexturepath,
+		const std::string & texpath,
+		const std::string & texname,
 		const std::string & texsize,
 		TEXTUREMANAGER & textures,
 		std::ostream & error_output,
@@ -45,7 +46,7 @@ public:
 	}
 	
 	float GetWidth(const std::string & newtext, const float newscale) const;
-		
+	
 private:
 	std::tr1::shared_ptr<TEXTURE> font_texture;
 	std::vector <CHARINFO> charinfo;

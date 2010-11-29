@@ -14,7 +14,6 @@
 				<Option compiler="gcc" />
 				<Option use_console_runner="0" />
 				<Compiler>
-					<Add option="-Wall" />
 					<Add option="-g" />
 				</Compiler>
 			</Target>
@@ -32,6 +31,7 @@
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
+			<Add option="-pg" />
 			<Add option="-fexceptions" />
 			<Add option="-mwindows" />
 			<Add directory="include" />
@@ -39,6 +39,7 @@
 			<Add directory="..\..\bullet" />
 		</Compiler>
 		<Linker>
+			<Add option="-pg -lgmon" />
 			<Add library="opengl32" />
 			<Add library="glu32" />
 			<Add library="glew32" />
@@ -370,14 +371,12 @@
 		<Unit filename="..\..\include\carsuspension.h" />
 		<Unit filename="..\..\include\cartelemetry.h" />
 		<Unit filename="..\..\include\cartire.h" />
-		<Unit filename="..\..\include\cartireinfo.h" />
 		<Unit filename="..\..\include\cartransmission.h" />
 		<Unit filename="..\..\include\carwheel.h" />
 		<Unit filename="..\..\include\carwheelposition.h" />
 		<Unit filename="..\..\include\collision_contact.h" />
 		<Unit filename="..\..\include\collision_world.h" />
-		<Unit filename="..\..\include\configfile.h" />
-		<Unit filename="..\..\include\configvariable.h" />
+		<Unit filename="..\..\include\config.h" />
 		<Unit filename="..\..\include\containeralgorithm.h" />
 		<Unit filename="..\..\include\coordinatesystems.h" />
 		<Unit filename="..\..\include\crashdetection.h" />
@@ -402,7 +401,6 @@
 		<Unit filename="..\..\include\gui.h" />
 		<Unit filename="..\..\include\guioption.h" />
 		<Unit filename="..\..\include\guipage.h" />
-		<Unit filename="..\..\include\httpget.h" />
 		<Unit filename="..\..\include\hud.h" />
 		<Unit filename="..\..\include\inputgraph.h" />
 		<Unit filename="..\..\include\joepack.h" />
@@ -503,12 +501,9 @@
 		<Unit filename="..\..\src\carengine.cpp" />
 		<Unit filename="..\..\src\carsuspension.cpp" />
 		<Unit filename="..\..\src\cartire.cpp" />
-		<Unit filename="..\..\src\cartireinfo.cpp" />
 		<Unit filename="..\..\src\collision_world.cpp" />
-		<Unit filename="..\..\src\configfile.cpp" />
-		<Unit filename="..\..\src\configvariable.cpp" />
+		<Unit filename="..\..\src\config.cpp" />
 		<Unit filename="..\..\src\containeralgorithm.cpp" />
-		<Unit filename="..\..\src\coordinatesystems.cpp" />
 		<Unit filename="..\..\src\crashdetection.cpp" />
 		<Unit filename="..\..\src\endian_utility.cpp" />
 		<Unit filename="..\..\src\eventsystem.cpp" />
@@ -522,6 +517,7 @@
 		<Unit filename="..\..\src\graphics_config.cpp" />
 		<Unit filename="..\..\src\graphics_renderers.cpp" />
 		<Unit filename="..\..\src\gui.cpp" />
+		<Unit filename="..\..\src\guioption.cpp" />
 		<Unit filename="..\..\src\guipage.cpp" />
 		<Unit filename="..\..\src\hud.cpp" />
 		<Unit filename="..\..\src\joepack.cpp" />
@@ -570,10 +566,17 @@
 		<Unit filename="..\..\src\track.cpp" />
 		<Unit filename="..\..\src\trackmap.cpp" />
 		<Unit filename="..\..\src\vertexarray.cpp" />
+		<Unit filename="..\..\src\widget_button.cpp" />
 		<Unit filename="..\..\src\widget_colorpicker.cpp" />
+		<Unit filename="..\..\src\widget_controlgrab.cpp" />
+		<Unit filename="..\..\src\widget_doublestringwheel.cpp" />
+		<Unit filename="..\..\src\widget_image.cpp" />
+		<Unit filename="..\..\src\widget_label.cpp" />
+		<Unit filename="..\..\src\widget_multiimage.cpp" />
 		<Unit filename="..\..\src\widget_slider.cpp" />
 		<Unit filename="..\..\src\widget_spinningcar.cpp" />
 		<Unit filename="..\..\src\widget_stringwheel.cpp" />
+		<Unit filename="..\..\src\widget_toggle.cpp" />
 		<Extensions>
 			<code_completion />
 			<envvars />

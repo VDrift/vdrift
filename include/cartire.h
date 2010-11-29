@@ -1,13 +1,31 @@
 #ifndef _CARTIRE_H
 #define _CARTIRE_H
 
-#include "cartireinfo.h"
 #include "mathvector.h"
 #include "joeserialize.h"
 #include "macros.h"
 
+#include <string>
 #include <iostream>
 #include <vector>
+
+template <typename T>
+struct CARTIREINFO
+{
+	T radius; ///< the total tread radius of the tire in meters
+	T aspect_ratio; ///< 0..1 percentage value
+	T sidewall_width; /// in meters
+	T tread; ///< 1.0 means a pure off-road tire, 0.0 is a pure road tire
+	T rolling_resistance_linear; ///< linear rolling resistance on a hard surface
+	T rolling_resistance_quadratic; ///< quadratic rolling resistance on a hard surface
+	std::vector <T> longitudinal; ///< the parameters of the longitudinal pacejka equation.  this is series b
+	std::vector <T> lateral; ///< the parameters of the lateral pacejka equation.  this is series a
+	std::vector <T> aligning; ///< the parameters of the aligning moment pacejka equation.  this is series c
+	
+	CARTIREINFO() : radius(0.3), aspect_ratio(0.5), sidewall_width(0.185), tread(0), longitudinal(11), lateral(15), aligning(18) {}
+	
+	void SetDimensions(T width_mm, T ratio_percent, T diameter_in);
+};
 
 template <typename T>
 class CARTIRE
@@ -41,7 +59,7 @@ public:
 		const T ang_velocity,
 		const T inclination);
 
-	/// return rolling resistance maximum
+	/// return max rolling resistance
 	T GetRollingResistance(
 		const T velocity,
 		const T normal_force,
@@ -87,13 +105,13 @@ private:
 	void LookupSigmaHatAlphaHat(T load, T & sh, T & ah) const;
 
 	/// pacejka magic formula function, longitudinal
-	T Pacejka_Fx(T sigma, T Fz, T friction_coeff, T & max_Fx);
+	T PacejkaFx(T sigma, T Fz, T friction_coeff, T & max_Fx);
 
 	/// pacejka magic formula function, lateral
-	T Pacejka_Fy(T alpha, T Fz, T gamma, T friction_coeff, T & max_Fy);
+	T PacejkaFy(T alpha, T Fz, T gamma, T friction_coeff, T & max_Fy);
 
 	/// pacejka magic formula function, aligning
-	T Pacejka_Mz(T sigma, T alpha, T Fz, T gamma, T friction_coeff, T & max_Mz);
+	T PacejkaMz(T sigma, T alpha, T Fz, T gamma, T friction_coeff, T & max_Mz);
 
 	void FindSigmaHatAlphaHat(T load, T & output_sigmahat, T & output_alphahat, int iterations=400);
 

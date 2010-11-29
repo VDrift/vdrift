@@ -23,10 +23,7 @@ class HUDBAR
 		void Set(
 			SCENENODE & parent,
 			std::tr1::shared_ptr<TEXTURE> bartex,
-			float x,
-			float y,
-			float w,
-			float h,
+			float x, float y, float w, float h,
 			float opacity,
 			bool flip)
 		{
@@ -51,6 +48,46 @@ class HUDBAR
 
 class HUD
 {
+public:
+	HUD() : debug_hud_info(false), racecomplete(false) {}
+
+	bool Init(
+		const std::string & texturepath,
+		const std::string & texsize,
+		TEXTUREMANAGER & textures, 
+		FONT & lcdfont,
+		FONT & sansfont,
+		float displaywidth,
+		float displayheight,
+		bool debugon,
+		std::ostream & error_output);
+
+	void Hide()
+	{
+		SetVisible(false);
+	}
+
+	void Show()
+	{
+		SetVisible(true);
+	}
+
+	void Update(FONT & lcdfont, FONT & sansfont, float curlap, float lastlap, float bestlap, float stagingtimeleft, int curlapnum,
+		int numlaps, int curplace, int numcars, float clutch, int newgear, int newrpm, int redrpm, int maxrpm,
+		float meterspersecond,
+		bool mph, const std::string & debug_string1, const std::string & debug_string2,
+		const std::string & debug_string3, const std::string & debug_string4, float displaywidth,
+		float displayheight, bool absenabled, bool absactive, bool tcsenabled, bool tcsactive,
+		bool drifting, float driftscore, float thisdriftscore);
+
+	void SetDebugVisibility(bool show)
+	{
+		SCENENODE & debugnoderef = hudroot.GetNode(debugnode);
+		debugnoderef.SetChildVisibility(show);
+	}
+	
+	SCENENODE & GetNode() {return hudroot;}
+	
 private:
 	TEXTURE bartex;
 	SCENENODE hudroot;
@@ -83,9 +120,11 @@ private:
 	//variable for the feedback message
 	TEXT_DRAWABLE feedbackmessage;
 
-	//variables for the abs/tcs display
+	// variables for abs/tcs/gas/n2o indicators
 	TEXT_DRAWABLE abs;
 	TEXT_DRAWABLE tcs;
+	TEXT_DRAWABLE gas;
+	TEXT_DRAWABLE n2o;
 
 	//debug info
 	keyed_container <SCENENODE>::handle debugnode;
@@ -111,7 +150,6 @@ private:
 	void SetVisible(bool newvis)
 	{
 		hudroot.SetChildVisibility(newvis);
-
 		SetDebugVisibility(newvis && debug_hud_info);
 	}
 
@@ -135,7 +173,6 @@ private:
 			s << std::setfill('0');
 			s << std::setw(2) << min << ":";
 			s << std::fixed << std::setprecision(3) << std::setw(6) << secs;
-			//sprintf(tempchar, "%02d:%06.3f", min, secs);
 			outtime = s.str();
 		}
 		else
@@ -143,47 +180,6 @@ private:
 			outtime = "--:--.---";
 		}
 	}
-
-public:
-	HUD() : debug_hud_info(false), racecomplete(false) {}
-
-	bool Init(
-		const std::string & texturepath,
-		const std::string & texsize,
-		TEXTUREMANAGER & textures, 
-		FONT & lcdfont,
-		FONT & sansfont,
-		float displaywidth,
-		float displayheight,
-		bool debugon,
-		std::ostream & error_output);
-
-	void Hide()
-	{
-		SetVisible(false);
-	}
-
-	void Show()
-	{
-		SetVisible(true);
-	}
-
-	void Update(FONT & lcdfont, FONT & sansfont, float curlap, float lastlap, float bestlap, float stagingtimeleft, int curlapnum,
-		int numlaps, int curplace, int numcars, float clutch, int newgear, int newrpm, int redrpm, int maxrpm,
-		float meterspersecond,
-		bool mph, const std::string & debug_string1, const std::string & debug_string2,
-		const std::string & debug_string3, const std::string & debug_string4, float displaywidth,
-		float displayheight, bool absenabled, bool absactive, bool tcsenabled, bool tcsactive,
-		bool drifting, float driftscore, float thisdriftscore,
-		bool displayfeedback, const std::string & feedbackmessagetext, float feedbackmessagealpha);
-
-	void SetDebugVisibility(bool show)
-	{
-		SCENENODE & debugnoderef = hudroot.GetNode(debugnode);
-		debugnoderef.SetChildVisibility(show);
-	}
-
-	SCENENODE & GetNode() {return hudroot;}
 };
 
 #endif

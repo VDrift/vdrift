@@ -12,9 +12,6 @@ class VERTEXARRAY;
 class DRAWABLE
 {
 public:
-	DRAWABLE() {Init();}
-	virtual ~DRAWABLE() {};
-	
 	bool operator < (const DRAWABLE & other) const {return draw_order < other.draw_order;}
 	
 	bool IsDrawList() const {return !list_ids.empty();}
@@ -85,6 +82,23 @@ public:
 	bool GetCameraTransformEnable() const {return cameratransform;}
 	void SetCameraTransformEnable(bool value) {cameratransform = value;}
 	
+	DRAWABLE() :
+		vert_array(0),
+		linesize(1),
+		radius(0),
+		r(1), g(1), b(1), a(1),
+		draw_order(0),
+		decal(false),
+		drawenabled(true),
+		cull(false),
+		cull_front(false),
+		skybox(false),
+		vertical_track(false),
+		cameratransform(true)
+	{
+		objcenter.Set(0.0);
+	}
+	
 private:
 	std::tr1::shared_ptr<TEXTURE> diffuse_map;
 	std::tr1::shared_ptr<TEXTURE> misc_map1;
@@ -105,24 +119,6 @@ private:
 	bool skybox;
 	bool vertical_track;
 	bool cameratransform;
-	
-	void Init()
-	{
-		vert_array = NULL;
-		linesize = 1.0;
-		objcenter.Set(0.0);
-		radius = 0.0;
-		r = g = b = 1.0;
-		a = 1.0;
-		draw_order = 0;
-		decal = false;
-		drawenabled = true;
-		cull = false;
-		cull_front = false;
-		skybox = false;
-		vertical_track = false;
-		cameratransform = true;
-	}
 };
 
 #endif // _DRAWABLE_H

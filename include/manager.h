@@ -10,6 +10,10 @@ template <class T>
 class MANAGER
 {
 public:
+	typedef std::map<const std::string, std::tr1::shared_ptr<T> > container;
+	typedef typename container::iterator iterator;
+	typedef typename container::const_iterator const_iterator;
+	
 	MANAGER() : error(0)
 	{
 		// ctor
@@ -20,27 +24,40 @@ public:
 		Clear();
 	}
 	
-	void Init(const std::string & path, std::ostream & error)
+	void Init(const std::string & basepath, const std::string & sharedpath, std::ostream & error)
 	{
-		this->path = path;
+		this->basepath = basepath;
+		this->sharedpath = sharedpath;
 		this->error = &error;
 	}
 	
-	bool Get(const std::string & name, std::tr1::shared_ptr<T> & sp)
+	bool Get(const std::string & path, const std::string & name, const_iterator & it)
 	{
 		assert(error);
-		iterator it = objects.find(name);
-		if (it == objects.end())
+		const_iterator i = objects.find(path + "/" + name);
+		if (i == objects.end())
 		{
-			return false;
+			i = objects.find(name); // shared objects
+			if (i == objects.end()) return false;
 		}
-		sp = it->second;
+		it = i;
 		return true;
 	}
 	
-	void Set(const std::string & name, const std::tr1::shared_ptr<T> & sp)
+	bool Get(const std::string & path, const std::string & name, std::tr1::shared_ptr<T> & sp)
 	{
-		objects[name] = sp;
+		const_iterator it;
+		if (Get(path, name, it))
+		{
+			sp = it->second;
+			return true;
+		}
+		return false;
+	}
+	
+	const_iterator Set(const std::string & path, const std::tr1::shared_ptr<T> & sp)
+	{
+		return objects.insert(std::pair<std::string, std::tr1::shared_ptr<T> >(path, sp)).first;
 	}
 	
 	unsigned int Size() const
@@ -48,11 +65,16 @@ public:
 		return objects.size();
 	}
 	
-	const std::string & GetPath() const
+	const std::string & GetBasePath() const
 	{
-		return path;
+		return basepath;
 	}
-
+	
+	const std::string & GetSharedPath() const
+	{
+		return sharedpath;
+	}
+	
 	// collect garbage
 	void Sweep()
 	{
@@ -100,9 +122,9 @@ public:
 	}
 	
 protected:
-	typedef typename std::map<const std::string, std::tr1::shared_ptr<T> >::iterator iterator;
-	std::map<const std::string, std::tr1::shared_ptr<T> > objects;
-	std::string path;
+	container objects;
+	std::string basepath;
+	std::string sharedpath;
 	std::ostream * error;
 };
 

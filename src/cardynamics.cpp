@@ -1,6 +1,5 @@
 #include "cardynamics.h"
-
-#include "configfile.h"
+#include "config.h"
 #include "tracksurface.h"
 #include "coordinatesystems.h"
 #include "collision_world.h"
@@ -13,77 +12,70 @@ bool isnan(double number);
 #endif
 
 //#define _BULLET_
-//#include "suspensionconstraint.h"
 
 typedef CARDYNAMICS::T T;
 
-CARDYNAMICS::CARDYNAMICS()
+CARDYNAMICS::CARDYNAMICS() :
+	world(0),
+	chassis(0),
+	drive(RWD),
+	tacho_rpm(0),
+	autoclutch(true),
+	autoshift(false),
+	shifted(true),
+	shift_gear(0),
+	last_auto_clutch(1),
+	remaining_shift_time(0),
+	abs(false),
+	tcs(false),
+	maxangle(0)
 {
-	Init();
-}
-
-void CARDYNAMICS::Init()
-{
-	world = NULL;
-	chassis = NULL;
-	drive = RWD;
-	tacho_rpm = 0;
-	autoclutch = true;
-	autoshift = false;
-	shifted = true;
-	shift_gear = 0;
-	last_auto_clutch = 1.0;
-	remaining_shift_time = 0.0;
-	abs = false;
-	tcs = false;
-	maxangle = 45.0;
-
-#ifdef _BULLET_
-	new_suspension.resize(WHEEL_POSITION_SIZE);
-#endif
-	suspension.resize ( WHEEL_POSITION_SIZE );
-	wheel.resize ( WHEEL_POSITION_SIZE );
-	tire.resize ( WHEEL_POSITION_SIZE );
+	suspension.reserve(WHEEL_POSITION_SIZE);
+	wheel.reserve(WHEEL_POSITION_SIZE);
+	tire.reserve(WHEEL_POSITION_SIZE);
+	brake.reserve(WHEEL_POSITION_SIZE);
+	
 	wheel_velocity.resize (WHEEL_POSITION_SIZE);
 	wheel_position.resize ( WHEEL_POSITION_SIZE );
 	wheel_orientation.resize ( WHEEL_POSITION_SIZE );
 	wheel_contact.resize ( WHEEL_POSITION_SIZE );
-	brake.resize ( WHEEL_POSITION_SIZE );
 	abs_active.resize ( WHEEL_POSITION_SIZE, false );
 	tcs_active.resize ( WHEEL_POSITION_SIZE, false );
 }
 
-bool LoadEngine(
-	const CONFIGFILE & c,
+static bool LoadEngine(
+	const CONFIG & c,
 	CARENGINE<T> & engine,
 	std::ostream & error_output)
 {
 	CARENGINEINFO<T> info;
-	std::vector < std::pair <T, T> > torque;
-	float temp_vec3[3];
+	std::vector< std::pair <T, T> > torque;
+	std::vector<float> pos(3);
+	
+	CONFIG::const_iterator it;
+	if (!c.GetSection("engine", it, error_output)) return false;
+	if (!c.GetParam(it, "peak-engine-rpm", info.redline, error_output)) return false; //used only for the redline graphics
+	if (!c.GetParam(it, "rpm-limit", info.rpm_limit, error_output)) return false;
+	if (!c.GetParam(it, "inertia", info.inertia, error_output)) return false;
+	if (!c.GetParam(it, "start-rpm", info.start_rpm, error_output)) return false;
+	if (!c.GetParam(it, "stall-rpm", info.stall_rpm, error_output)) return false;
+	if (!c.GetParam(it, "fuel-consumption", info.fuel_consumption, error_output)) return false;
+	if (!c.GetParam(it, "mass", info.mass, error_output)) return false;
+	if (!c.GetParam(it, "position", pos, error_output)) return false;
 
-	if (!c.GetParam("engine.peak-engine-rpm", info.redline, error_output)) return false; //used only for the redline graphics
-	if (!c.GetParam("engine.rpm-limit", info.rpm_limit, error_output)) return false;
-	if (!c.GetParam("engine.inertia", info.inertia, error_output)) return false;
-	if (!c.GetParam("engine.start-rpm", info.start_rpm, error_output)) return false;
-	if (!c.GetParam("engine.stall-rpm", info.stall_rpm, error_output)) return false;
-	if (!c.GetParam("engine.fuel-consumption", info.fuel_consumption, error_output)) return false;
-	if (!c.GetParam("engine.mass", info.mass, error_output)) return false;
-	if (!c.GetParam("engine.position", temp_vec3, error_output)) return false;
-
-	COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(temp_vec3[0],temp_vec3[1],temp_vec3[2]);
-	info.position.Set(temp_vec3[0],temp_vec3[1],temp_vec3[2]);
+	COORDINATESYSTEMS::ConvertV2toV1(pos[0], pos[1], pos[2]);
+	info.position.Set(pos[0], pos[1], pos[2]);
 
 	int curve_num = 0;
-	float torque_point[3];
-	std::string torque_str("engine.torque-curve-00");
-	while (c.GetParam(torque_str, torque_point))
+	std::vector<float> torque_point(2);
+	std::string torque_str("torque-curve-00");
+	while (c.GetParam(it, torque_str, torque_point))
 	{
 		torque.push_back(std::pair <float, float> (torque_point[0], torque_point[1]));
 
 		curve_num++;
 		std::stringstream str;
-		str << "engine.torque-curve-";
+		str << "torque-curve-";
 		str.width(2);
 		str.fill('0');
 		str << curve_num;
@@ -101,17 +93,19 @@ bool LoadEngine(
 	return true;
 }
 
-bool LoadClutch(
-	const CONFIGFILE & c,
+static bool LoadClutch(
+	const CONFIG & c,
 	CARCLUTCH<T> & clutch,
 	std::ostream & error_output)
 {
 	float sliding, radius, area, max_pressure;
 
-	if (!c.GetParam("clutch.sliding", sliding, error_output)) return false;
-	if (!c.GetParam("clutch.radius", radius, error_output)) return false;
-	if (!c.GetParam("clutch.area", area, error_output)) return false;
-	if (!c.GetParam("clutch.max-pressure", max_pressure, error_output)) return false;
+	CONFIG::const_iterator it;
+	if (!c.GetSection("clutch", it, error_output)) return false;
+	if (!c.GetParam(it, "sliding", sliding, error_output)) return false;
+	if (!c.GetParam(it, "radius", radius, error_output)) return false;
+	if (!c.GetParam(it, "area", area, error_output)) return false;
+	if (!c.GetParam(it, "max-pressure", max_pressure, error_output)) return false;
 
 	clutch.SetSlidingFriction(sliding);
 	clutch.SetRadius(radius);
@@ -121,8 +115,8 @@ bool LoadClutch(
 	return true;
 }
 
-bool LoadTransmission(
-	const CONFIGFILE & c,
+static bool LoadTransmission(
+	const CONFIG & c,
 	CARTRANSMISSION<T> & transmission,
 	std::ostream & error_output)
 {
@@ -130,42 +124,44 @@ bool LoadTransmission(
 	float ratio;
 	int gears;
 
-	c.GetParam("transmission.shift-time", shift_time);
-	transmission.SetShiftTime(shift_time);
-
-	if (!c.GetParam("transmission.gear-ratio-r", ratio, error_output)) return false;
-	transmission.SetGearRatio(-1, ratio);
-
-	if (!c.GetParam("transmission.gears", gears, error_output)) return false;
+	CONFIG::const_iterator it;
+	if (!c.GetSection("transmission", it, error_output)) return false;
+	if (!c.GetParam(it, "gears", gears, error_output)) return false;
 	for (int i = 0; i < gears; i++)
 	{
 		std::stringstream s;
-		s << "transmission.gear-ratio-" << i+1;
-		if (!c.GetParam(s.str(), ratio, error_output)) return false;
+		s << "gear-ratio-" << i+1;
+		if (!c.GetParam(it, s.str(), ratio, error_output)) return false;
 		transmission.SetGearRatio(i+1, ratio);
 	}
+	if (!c.GetParam(it, "gear-ratio-r", ratio, error_output)) return false;
+	c.GetParam(it, "shift-time", shift_time);
+	
+	transmission.SetGearRatio(-1, ratio);
+	transmission.SetShiftTime(shift_time);
 
 	return true;
 }
 
-bool LoadFuelTank(
-	const CONFIGFILE & c,
+static bool LoadFuelTank(
+	const CONFIG & c,
 	CARFUELTANK<T> & fuel_tank,
 	std::ostream & error_output)
 {
-	float pos[3];
-	MATHVECTOR <double, 3> position;
 	float capacity;
 	float volume;
 	float fuel_density;
+	std::vector<float> pos(3);
 
-	if (!c.GetParam("fuel-tank.capacity", capacity, error_output)) return false;
-	if (!c.GetParam("fuel-tank.volume", volume, error_output)) return false;
-	if (!c.GetParam("fuel-tank.fuel-density", fuel_density, error_output)) return false;
-	if (!c.GetParam("fuel-tank.position", pos, error_output)) return false;
+	CONFIG::const_iterator it;
+	if (!c.GetSection("fuel-tank", it, error_output)) return false;
+	if (!c.GetParam(it, "capacity", capacity, error_output)) return false;
+	if (!c.GetParam(it, "volume", volume, error_output)) return false;
+	if (!c.GetParam(it, "fuel-density", fuel_density, error_output)) return false;
+	if (!c.GetParam(it, "position", pos, error_output)) return false;
 
-	COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0],pos[1],pos[2]);
-	position.Set(pos[0],pos[1],pos[2]);
+	COORDINATESYSTEMS::ConvertV2toV1(pos[0],pos[1],pos[2]);
+	MATHVECTOR<double, 3> position(pos[0],pos[1],pos[2]);
 
 	fuel_tank.SetCapacity(capacity);
 	fuel_tank.SetVolume(volume);
@@ -175,44 +171,24 @@ bool LoadFuelTank(
 	return true;
 }
 
-bool LoadCoilover(
-	const CONFIGFILE & c,
-	const std::string & id,
-	CARSUSPENSIONINFO <T> & info,
-	std::ostream & error_output)
-{
-	const std::string name("coilover-"+id);
-	std::vector <std::pair <double, double> > damper_factor_points;
-	std::vector <std::pair <double, double> > spring_factor_points;
-
-	if (!c.GetParam(name+".spring-constant", info.spring_constant, error_output)) return false;
-	if (!c.GetParam(name+".bounce", info.bounce, error_output)) return false;
-	if (!c.GetParam(name+".rebound", info.rebound, error_output)) return false;
-	if (!c.GetParam(name+".travel", info.travel, error_output)) return false;
-	if (!c.GetParam(name+".anti-roll", info.anti_roll, error_output)) return false;
-	c.GetPoints(name, "damper-factor", damper_factor_points);
-	c.GetPoints(name, "spring-factor", spring_factor_points);
-	info.SetDamperFactorPoints(damper_factor_points);
-	info.SetSpringFactorPoints(spring_factor_points);
-
-	return true;
-}
-
-bool LoadBrake(
-	const CONFIGFILE & c,
-	const std::string & id,
+static bool LoadBrake(
+	const CONFIG & c,
+	const CONFIG::const_iterator & iwheel,
 	CARBRAKE<T> & brake,
 	std::ostream & error_output)
 {
-	const std::string name("brake-"+id);
+	std::string brakename;
+	if (!c.GetParam(iwheel, "brake", brakename, error_output)) return false;
+	
 	float friction, max_pressure, area, bias, radius, handbrake(0);
-
-	if (!c.GetParam(name+".friction", friction, error_output)) return false;
-	if (!c.GetParam(name+".area", area, error_output)) return false;
-	if (!c.GetParam(name+".radius", radius, error_output)) return false;
-	if (!c.GetParam(name+".bias", bias, error_output)) return false;
-	if (!c.GetParam(name+".max-pressure", max_pressure, error_output)) return false;
-	c.GetParam(name+".handbrake", handbrake);
+	CONFIG::const_iterator it;
+	if (!c.GetSection(brakename, it, error_output)) return false;
+	if (!c.GetParam(it, "friction", friction, error_output)) return false;
+	if (!c.GetParam(it, "area", area, error_output)) return false;
+	if (!c.GetParam(it, "radius", radius, error_output)) return false;
+	if (!c.GetParam(it, "bias", bias, error_output)) return false;
+	if (!c.GetParam(it, "max-pressure", max_pressure, error_output)) return false;
+	c.GetParam(it, "handbrake", handbrake);
 
 	brake.SetFriction(friction);
 	brake.SetArea(area);
@@ -224,12 +200,15 @@ bool LoadBrake(
 	return true;
 }
 
-bool LoadTireParameters(
-	const CONFIGFILE & c,
+static bool LoadTireParameters(
+	const CONFIG & c,
 	const std::string & tire,
 	CARTIREINFO <T> & info,
 	std::ostream & error_output)
 {
+	CONFIG::const_iterator it;
+	if (!c.GetSection(tire, it, error_output)) return false;
+	
 	//read lateral
 	int numinfile;
 	for (int i = 0; i < 15; i++)
@@ -241,115 +220,86 @@ bool LoadTireParameters(
 			numinfile = 112;
 		else if (i > 12)
 			numinfile -= 1;
-		std::stringstream str;
-		str << ".a" << numinfile;
-		float value;
-		if (!c.GetParam(tire + str.str(), value, error_output)) return false;
-		info.lateral[i] = value;
+		std::stringstream st;
+		st << "a" << numinfile;
+		if (!c.GetParam(it, st.str(), info.lateral[i], error_output)) return false;
 	}
 
 	//read longitudinal, error_output)) return false;
 	for (int i = 0; i < 11; i++)
 	{
-		std::stringstream str;
-		str << ".b" << i;
-		float value;
-		if (!c.GetParam(tire + str.str(), value, error_output)) return false;
-		info.longitudinal[i] = value;
+		std::stringstream st;
+		st << "b" << i;
+		if (!c.GetParam(it, st.str(), info.longitudinal[i], error_output)) return false;
 	}
 
 	//read aligning, error_output)) return false;
 	for (int i = 0; i < 18; i++)
 	{
-		std::stringstream str;
-		str << ".c" << i;
-		float value;
-		if (!c.GetParam(tire + str.str(), value, error_output)) return false;
-		info.aligning[i] = value;
+		std::stringstream st;
+		st << "c" << i;
+		if (!c.GetParam(it, st.str(), info.aligning[i], error_output)) return false;
 	}
 
-	float rolling_resistance[3];
-	if (!c.GetParam(tire + ".rolling-resistance", rolling_resistance, error_output)) return false;
+	std::vector<float> rolling_resistance(3);
+	if (!c.GetParam(it, "rolling-resistance", rolling_resistance, error_output)) return false;
 	info.rolling_resistance_linear = rolling_resistance[0];
 	info.rolling_resistance_quadratic = rolling_resistance[1];
 
-	if (!c.GetParam(tire + ".tread", info.tread, error_output)) return false;
+	if (!c.GetParam(it, "tread", info.tread, error_output)) return false;
 
 	return true;
 }
 
-bool LoadTire(
-	const CONFIGFILE & c,
-	const std::string & id,
+static bool LoadTire(
+	const CONFIG & c,
+	const CONFIG::const_iterator & iwheel,
 	CARTIRE<T> & tire,
 	std::ostream & error_output)
 {
+	std::string tirename;
+	if (!c.GetParam(iwheel, "tire", tirename, error_output)) return false;
+	
 	CARTIREINFO<T> info;
-	std::string size, type;
-	if (!c.GetParam("tire-"+id+".size",size, error_output)) return false;
-	if (!c.GetParam("tire-"+id+".type", type, error_output)) return false;
+	std::string type;
+	std::vector<T> size(3, 0);
+	CONFIG::const_iterator it;
+	if (!c.GetSection(tirename, it, error_output)) return false;
+	if (!c.GetParam(it, "size",size, error_output)) return false;
+	if (!c.GetParam(it, "type", type, error_output)) return false;
 	if (!LoadTireParameters(c, type, info, error_output)) return false;
-	if (!info.Parse(size, error_output)) return false;
-
+	info.SetDimensions(size[0], size[1], size[2]);
 	tire.Init(info);
-
+	
 	return true;
 }
 
-bool LoadSuspension(
-	const CONFIGFILE & c,
-	const std::string & id,
-	CARSUSPENSION<T> & suspension,
-	std::ostream & error_output)
-{
-	float h[3], p[3];
-	CARSUSPENSIONINFO<T> info;
-
-	if (!LoadCoilover(c, id, info, error_output)) return false;
-	if (!c.GetParam("wheel-"+id+".position", p, error_output)) return false;
-	if (!c.GetParam("wheel-"+id+".hinge", h, error_output)) return false;
-	if (!c.GetParam("wheel-"+id+".camber", info.camber, error_output)) return false;
-	if (!c.GetParam("wheel-"+id+".caster", info.caster, error_output)) return false;
-	if (!c.GetParam("wheel-"+id+".toe", info.toe, error_output)) return false;
-	c.GetParam("wheel-"+id+".steering", info.max_steering_angle);
-	c.GetParam("wheel-"+id+".ackermann", info.ackermann);
-
-	COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(h[0], h[1], h[2]);
-	COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(p[0], p[1], p[2]);
-	info.hinge.Set(h[0], h[1], h[2]);
-	info.extended_position.Set(p[0], p[1], p[2]);
-
-	suspension.Init(info);
-
-	return true;
-}
-
-bool LoadWheel(
-	const CONFIGFILE & c,
-	const std::string & id,
+static bool LoadWheel(
+	const CONFIG & c,
+	const CONFIG::const_iterator & iwheel,
 	const CARTIRE<T> & tire,
 	CARWHEEL<T> & wheel,
 	std::ostream & error_output)
 {
-	float mass, inertia;
-	if (!c.GetParam("wheel-"+id+".mass", mass) && !c.GetParam("wheel-"+id+".inertia", inertia))
+	T mass, inertia;
+	if (!c.GetParam(iwheel, "mass", mass) && !c.GetParam(iwheel, "inertia", inertia))
 	{
-		float tire_radius = tire.GetRadius();
-		float tire_width = tire.GetSidewallWidth();
-		float tire_thickness = 0.05;
-		float tire_density = 8E3;
+		T tire_radius = tire.GetRadius();
+		T tire_width = tire.GetSidewallWidth();
+		T tire_thickness = 0.05;
+		T tire_density = 8E3;
 
-		float rim_radius = tire_radius - tire_width * tire.GetAspectRatio();
-		float rim_width = tire_width;
-		float rim_thickness = 0.01;
-		float rim_density = 3E5;
+		T rim_radius = tire_radius - tire_width * tire.GetAspectRatio();
+		T rim_width = tire_width;
+		T rim_thickness = 0.01;
+		T rim_density = 3E5;
 
-		float tire_volume = tire_width * M_PI * tire_thickness * tire_thickness * (2 * tire_radius  - tire_thickness);
-		float rim_volume = rim_width * M_PI * rim_thickness * rim_thickness * (2 * rim_radius - rim_thickness);
-		float tire_mass = tire_density * tire_volume;
-		float rim_mass = rim_density * rim_volume;
-		float tire_inertia = tire_mass * tire_radius * tire_radius;
-		float rim_inertia = rim_mass * rim_radius * rim_radius;
+		T tire_volume = tire_width * M_PI * tire_thickness * tire_thickness * (2 * tire_radius  - tire_thickness);
+		T rim_volume = rim_width * M_PI * rim_thickness * rim_thickness * (2 * rim_radius - rim_thickness);
+		T tire_mass = tire_density * tire_volume;
+		T rim_mass = rim_density * rim_volume;
+		T tire_inertia = tire_mass * tire_radius * tire_radius;
+		T rim_inertia = rim_mass * rim_radius * rim_radius;
 
 		mass = tire_mass + rim_mass;
 		inertia = (tire_inertia + rim_inertia) * 4;	// scale inertia fixme
@@ -360,26 +310,29 @@ bool LoadWheel(
 	return true;
 }
 
-bool LoadAeroDevices(
-	const CONFIGFILE & c,
+static bool LoadAeroDevices(
+	const CONFIG & c,
 	std::vector< CARAERO <T> > & aerodynamics,
 	std::ostream & error_output)
 {
-	const std::string aero[] = {"wing-front", "wing-center", "wing-rear"};
-	for(int i = 0; i < 3; ++i)
+	CONFIG::const_iterator is;
+	if (!c.GetSection("wing", is, error_output)) return true;
+	for (CONFIG::SECTION::const_iterator iw = is->second.begin(); iw != is->second.end(); ++iw)
 	{
-		float pos[] = {0, 0, 0};
-		float drag_area, drag_coeff;
-		float lift_area = 0, lift_coeff = 0, lift_eff = 0;
+		std::vector<T> pos(3);
+		T drag_area, drag_coeff;
+		T lift_area = 0, lift_coeff = 0, lift_eff = 0;
+		
+		CONFIG::const_iterator it;
+		if (!c.GetSection(iw->second, it, error_output)) return false;
+		if (!c.GetParam(it, "frontal-area", drag_area, error_output)) return false;
+		if (!c.GetParam(it, "drag-coefficient", drag_coeff, error_output)) return false;
+		if (!c.GetParam(it, "position", pos, error_output)) return false;
+		c.GetParam(it, "surface-area", lift_area);
+		c.GetParam(it, "lift-coefficient", lift_coeff);
+		c.GetParam(it, "efficiency", lift_eff);
 
-		if (!c.GetParam(aero[i] + ".frontal-area", drag_area)) break;
-		if (!c.GetParam(aero[i] + ".drag-coefficient", drag_coeff, error_output)) return false;
-		if (!c.GetParam(aero[i] + ".position", pos, error_output)) return false;
-		c.GetParam(aero[i] + ".surface-area", lift_area);
-		c.GetParam(aero[i] + ".lift-coefficient", lift_coeff);
-		c.GetParam(aero[i] + ".efficiency", lift_eff);
-
-		COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0],pos[1],pos[2]);
+		COORDINATESYSTEMS::ConvertV2toV1(pos[0],pos[1],pos[2]);
 		MATHVECTOR <double, 3> position(pos[0], pos[1], pos[2]);
 
 		aerodynamics.push_back(CARAERO<T>());
@@ -389,19 +342,18 @@ bool LoadAeroDevices(
 	return true;
 }
 
-//load the differential(s)
-bool LoadDifferential(
-	const CONFIGFILE & c,
-	const std::string & name,
+static bool LoadDifferential(
+	const CONFIG & c,
+	const CONFIG::const_iterator & it,
 	CARDIFFERENTIAL<T> & diff,
 	std::ostream & error_output)
 {
 	T final_drive(1), anti_slip(0), anti_slip_torque(0), anti_slip_torque_deceleration_factor(0);
-
-	if (!c.GetParam(name+".final-drive", final_drive, error_output)) return false;
-	if (!c.GetParam(name+".anti-slip", anti_slip, error_output)) return false;
-	c.GetParam(name+".anti-slip-torque", anti_slip_torque);
-	c.GetParam(name+".anti-slip-torque-deceleration-factor", anti_slip_torque_deceleration_factor);
+	
+	if (!c.GetParam(it, "final-drive", final_drive, error_output)) return false;
+	if (!c.GetParam(it, "anti-slip", anti_slip, error_output)) return false;
+	c.GetParam(it, "anti-slip-torque", anti_slip_torque);
+	c.GetParam(it, "anti-slip-torque-deceleration-factor", anti_slip_torque_deceleration_factor);
 
 	diff.SetFinalDrive(final_drive);
 	diff.SetAntiSlip(anti_slip, anti_slip_torque, anti_slip_torque_deceleration_factor);
@@ -409,28 +361,30 @@ bool LoadDifferential(
 	return true;
 }
 
-bool LoadMassParticles(
-	const CONFIGFILE & c,
+static bool LoadMassParticles(
+	const CONFIG & c,
 	std::list <std::pair <T, MATHVECTOR <T, 3> > > & mass_particles,
 	std::ostream & error_output)
 {
 	int num = 0;
 	while(true)
 	{
-		float mass;
-		float pos[3];
-		MATHVECTOR <double, 3> position;
+		T mass;
+		std::vector<T> pos(3);
+		
 		std::stringstream str;
 		str.width(2);
 		str.fill('0');
 		str << num;
-		std::string paramstr = "particle-"+str.str();
+		std::string name = "particle-"+str.str();
+		
+		CONFIG::const_iterator it;
+		if (!c.GetSection(name, it)) break;
+		if (!c.GetParam(it, "position", pos, error_output)) return false;
+		if (!c.GetParam(it, "mass", mass)) return false;
 
-		if (!c.GetParam(paramstr+".mass", mass)) break;
-		if (!c.GetParam(paramstr+".position", pos, error_output)) return false;
-
-		COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
-		position.Set(pos[0], pos[1], pos[2]);
+		COORDINATESYSTEMS::ConvertV2toV1(pos[0], pos[1], pos[2]);
+		MATHVECTOR<double, 3> position(pos[0], pos[1], pos[2]);
 
 		mass_particles.push_back(std::pair <T, MATHVECTOR <T, 3> > (mass, position));
 
@@ -440,7 +394,7 @@ bool LoadMassParticles(
 	return true;
 }
 
-bool CARDYNAMICS::Load(const CONFIGFILE & c, std::ostream & error_output)
+bool CARDYNAMICS::Load(const CONFIG & c, std::ostream & error_output)
 {
 	if (!LoadAeroDevices(c, aerodynamics, error_output)) return false;
 	if (!LoadClutch(c, clutch, error_output)) return false;
@@ -448,34 +402,50 @@ bool CARDYNAMICS::Load(const CONFIGFILE & c, std::ostream & error_output)
 	if (!LoadEngine(c, engine, error_output)) return false;
 	if (!LoadFuelTank(c, fuel_tank, error_output)) return false;
 	AddMassParticle(engine.GetMass(), engine.GetPosition());
-
-	maxangle = 0.0;
-	const std::string id[] = {"fl", "fr", "rl", "rr"};
-	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
+	
+	CONFIG::const_iterator is;
+	if (!c.GetSection("wheel", is, error_output)) return false;
+	
+	assert(is->second.size() == WHEEL_POSITION_SIZE); // temporary restriction
+	
+	for (CONFIG::SECTION::const_iterator iw = is->second.begin(); iw != is->second.end(); ++iw)
 	{
-		if (!LoadTire(c, id[i], tire[i], error_output)) return false;
-		if (!LoadBrake(c, id[i], brake[i], error_output)) return false;
-		if (!LoadSuspension(c, id[i], suspension[i], error_output)) return false;
-		if (!LoadWheel(c, id[i], tire[i], wheel[i], error_output)) return false;
-		if (suspension[i].GetMaxSteeringAngle() > maxangle) maxangle = suspension[i].GetMaxSteeringAngle();
-		AddMassParticle(wheel[i].GetMass(), suspension[i].GetWheelPosition());
+		CARSUSPENSION<T> * sptr = 0;
+		CONFIG::const_iterator iwheel;
+		if (!c.GetSection(iw->second, iwheel, error_output)) return false;
+		
+		tire.push_back(CARTIRE<T>());
+		brake.push_back(CARBRAKE<T>());
+		wheel.push_back(CARWHEEL<T>());
+		
+		if (!LoadTire(c, iwheel, tire.back(), error_output)) return false;
+		if (!LoadBrake(c, iwheel, brake.back(), error_output)) return false;
+		if (!LoadWheel(c, iwheel, tire.back(), wheel.back(), error_output)) return false;
+		if (!CARSUSPENSION<T>::LoadSuspension(c, iwheel, sptr, error_output)) return false;
+		
+		suspension.push_back(std::tr1::shared_ptr<CARSUSPENSION<T> >(sptr));
+		if (suspension.back()->GetMaxSteeringAngle() > maxangle)
+		{
+			maxangle = suspension.back()->GetMaxSteeringAngle();
+		}
+		AddMassParticle(wheel.back().GetMass(), suspension.back()->GetWheelPosition());
 	}
 
-	T temp;
 	drive = NONE;
-	if (c.GetParam("differential-front.final-drive", temp))
+	CONFIG::const_iterator it;
+	if (c.GetSection("differential-front", it))
 	{
-		if (!LoadDifferential(c, "differential-front", differential_front, error_output)) return false;
+		if (!LoadDifferential(c, it, differential_front, error_output)) return false;
 		drive = FWD;
 	}
-	if (c.GetParam("differential-rear.final-drive", temp))
+	if (c.GetSection("differential-rear", it))
 	{
-		if (!LoadDifferential(c, "differential-rear", differential_rear, error_output)) return false;
+		if (!LoadDifferential(c, it, differential_rear, error_output)) return false;
 		drive = (drive == NONE) ? RWD : AWD;
 	}
-	if (c.GetParam("differential-center.final-drive", temp))
+	if (c.GetSection("differential-center", it))
 	{
-		if (!LoadDifferential(c, "differential-center", differential_center, error_output)) return false;
+		if (!LoadDifferential(c, it, differential_center, error_output)) return false;
 	}
 	if (drive == NONE)
 	{
@@ -484,12 +454,13 @@ bool CARDYNAMICS::Load(const CONFIGFILE & c, std::ostream & error_output)
 	}
 
 	// load driver mass, todo unify for all car components
-	float mass;
-	if (c.GetParam("driver.mass", mass))
+	if (c.GetSection("driver", it))
 	{
-		float pos[3];
-		if (!c.GetParam("driver.position", pos, error_output)) return false;
-		COORDINATESYSTEMS::ConvertCarCoordinateSystemV2toV1(pos[0], pos[1], pos[2]);
+		T mass;
+		std::vector<T> pos(3);
+		if (!c.GetParam(it, "position", pos, error_output)) return false;
+		if (!c.GetParam(it, "mass", mass, error_output)) return false;
+		COORDINATESYSTEMS::ConvertV2toV1(pos[0], pos[1], pos[2]);
 		MATHVECTOR<T, 3> position(pos[0], pos[1], pos[2]);
 		AddMassParticle(mass, position);
 	}
@@ -510,11 +481,11 @@ void CARDYNAMICS::GetCollisionBox(
 {
 	btVector3 min = chassisMin - ToBulletVector(center_of_mass);
 	btVector3 max = chassisMax - ToBulletVector(center_of_mass);
-	float minHeight = min.z() + 0.05; // add collision shape bottom margin
+	T minHeight = min.z() + 0.05; // add collision shape bottom margin
 	for (int i = 0; i < 4; i++)
 	{
 		btVector3 wheelHSize(tire[i].GetRadius(), tire[i].GetSidewallWidth()*0.5, tire[i].GetRadius());
-		btVector3 wheelPos = ToBulletVector(suspension[i].GetWheelPosition(0.0));
+		btVector3 wheelPos = ToBulletVector(suspension[i]->GetWheelPosition(0.0));
 		btVector3 wheelMin = wheelPos - wheelHSize;
 		btVector3 wheelMax = wheelPos + wheelHSize;
 		min.setMin(wheelMin);
@@ -598,19 +569,10 @@ void CARDYNAMICS::Init(
 	for (int i = 0; i < WHEEL_POSITION_SIZE; i++)
 	{
 		wheel_velocity[i].Set(0.0);
-		wheel_position[i] = LocalToWorld(suspension[i].GetWheelPosition(0.0));
-		wheel_orientation[i] = Orientation() * suspension[i].GetWheelOrientation();
-#ifdef _BULLET_
-		new_suspension[i] = new SuspensionConstraint(world, *chassis);
-		new_suspension[i]->setPosition(ToBulletVector(suspension[i].GetWheelPosition(0.0)));
-		new_suspension[i]->setTravel(suspension[i].GetTravel());
-		new_suspension[i]->setOffset(tire[i].GetRadius());
-		new_suspension[i]->setStiffness(10000);//25000);
-		new_suspension[i]->setDamping(5000);
-		world.AddConstraint(new_suspension[i]);
-#endif
+		wheel_position[i] = LocalToWorld(suspension[i]->GetWheelPosition(0.0));
+		wheel_orientation[i] = Orientation() * suspension[i]->GetWheelOrientation();
 	}
-
+	
 	AlignWithGround();
 }
 
@@ -626,7 +588,7 @@ void CARDYNAMICS::updateAction(btCollisionWorld * collisionWorld, btScalar dt)
 	MATHVECTOR<T, 3> dv = v1 - v0;
 	MATHVECTOR<T, 3> dw = w1 - w0;
 	MATHVECTOR<T, 3> ext_force = dv * body.GetMass() / dt;
-	MATHVECTOR<T, 3> ext_torque = body.GetWorldInertia().Multiply(w1 - w0) / dt;
+	MATHVECTOR<T, 3> ext_torque = body.GetWorldInertia().Multiply(dw) / dt;
 
 	// wheel ray cast
 	UpdateWheelContacts();
@@ -679,26 +641,26 @@ const QUATERNION <T> & CARDYNAMICS::GetOrientation() const
 
 MATHVECTOR <T, 3> CARDYNAMICS::GetWheelPosition(WHEEL_POSITION wp) const
 {
-	MATHVECTOR <T, 3> pos = suspension[wp].GetWheelPosition();
+	MATHVECTOR <T, 3> pos = suspension[wp]->GetWheelPosition();
 	chassisRotation.RotateVector(pos);
 	return pos + chassisPosition;
 }
 
 MATHVECTOR <T, 3> CARDYNAMICS::GetWheelPosition(WHEEL_POSITION wp, T displacement_fraction) const
 {
-	MATHVECTOR <T, 3> pos = suspension[wp].GetWheelPosition(displacement_fraction);
+	MATHVECTOR <T, 3> pos = suspension[wp]->GetWheelPosition(displacement_fraction);
 	chassisRotation.RotateVector(pos);
 	return pos + chassisPosition;
 }
 
 QUATERNION <T> CARDYNAMICS::GetWheelOrientation(WHEEL_POSITION wp) const
 {
-	return chassisRotation * suspension[wp].GetWheelOrientation() * wheel[wp].GetRotation();
+	return chassisRotation * suspension[wp]->GetWheelOrientation() * wheel[wp].GetRotation();
 }
 
 QUATERNION <T> CARDYNAMICS::GetUprightOrientation(WHEEL_POSITION wp) const
 {
-	return chassisRotation * suspension[wp].GetWheelOrientation();
+	return chassisRotation * suspension[wp]->GetWheelOrientation();
 }
 
 /// worldspace wheel center position
@@ -717,7 +679,7 @@ COLLISION_CONTACT & CARDYNAMICS::GetWheelContact(WHEEL_POSITION wp)
 	return wheel_contact[wp];
 }
 
-float CARDYNAMICS::GetMass() const
+T CARDYNAMICS::GetMass() const
 {
 	return body.GetMass();
 }
@@ -761,17 +723,17 @@ void CARDYNAMICS::ShiftGear(int value)
 	}
 }
 
-void CARDYNAMICS::SetThrottle(float value)
+void CARDYNAMICS::SetThrottle(T value)
 {
 	engine.SetThrottle(value);
 }
 
-void CARDYNAMICS::SetClutch(float value)
+void CARDYNAMICS::SetClutch(T value)
 {
 	clutch.SetClutch(value);
 }
 
-void CARDYNAMICS::SetBrake(float value)
+void CARDYNAMICS::SetBrake(T value)
 {
 	for(unsigned int i = 0; i < brake.size(); i++)
 	{
@@ -779,7 +741,7 @@ void CARDYNAMICS::SetBrake(float value)
 	}
 }
 
-void CARDYNAMICS::SetHandBrake(float value)
+void CARDYNAMICS::SetHandBrake(T value)
 {
 	for(unsigned int i = 0; i < brake.size(); i++)
 	{
@@ -799,37 +761,7 @@ void CARDYNAMICS::SetAutoShift(bool value)
 
 T CARDYNAMICS::GetSpeedMPS() const
 {
-	T left_front_wheel_speed = wheel[FRONT_LEFT].GetAngularVelocity();
-	T right_front_wheel_speed = wheel[FRONT_RIGHT].GetAngularVelocity();
-	T left_rear_wheel_speed = wheel[REAR_LEFT].GetAngularVelocity();
-	T right_rear_wheel_speed = wheel[REAR_RIGHT].GetAngularVelocity();
-	for ( int i = 0; i < 4; i++ ) assert ( !isnan ( wheel[WHEEL_POSITION ( i ) ].GetAngularVelocity() ) );
-	if ( drive == RWD )
-	{
-		return ( left_rear_wheel_speed+right_rear_wheel_speed ) * 0.5 * tire[REAR_LEFT].GetRadius();
-	}
-	else if ( drive == FWD )
-	{
-		return ( left_front_wheel_speed+right_front_wheel_speed ) * 0.5 * tire[FRONT_LEFT].GetRadius();
-	}
-	else if ( drive == AWD )
-	{
-		return ( ( left_rear_wheel_speed+right_rear_wheel_speed ) * 0.5 * tire[REAR_LEFT].GetRadius() +
-		         ( left_front_wheel_speed+right_front_wheel_speed ) * 0.5 * tire[FRONT_LEFT].GetRadius() ) *0.5;
-	}
-
-	assert ( 0 );
-	return 0;
-/*
-	// use max wheel speed
-	T speed = 0;
-	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
-	{
-		T wheel_speed = wheel[i].GetAngularVelocity() * tire[i].GetRadius();
-		if(speed < wheel_speed) speed = wheel_speed;
-	}
-	return speed;
-*/
+	return tire[0].GetRadius() * wheel[0].GetAngularVelocity();
 }
 
 T CARDYNAMICS::GetTachoRPM() const
@@ -870,7 +802,7 @@ bool CARDYNAMICS::GetTCSActive() const
 void CARDYNAMICS::SetPosition(const MATHVECTOR<T, 3> & position)
 {
 	body.SetPosition(position);
-	//chassis->translate(ToBulletVector(position) - chassis->getCenterOfMassPosition());
+	chassis->translate(ToBulletVector(position) - chassis->getCenterOfMassPosition());
 }
 
 void CARDYNAMICS::AlignWithGround()
@@ -890,10 +822,17 @@ void CARDYNAMICS::AlignWithGround()
 		}
 	}
 
-	MATHVECTOR <T, 3> delta = GetDownVector() * min_height;
-	MATHVECTOR <T, 3> trimmed_position = Position() + delta;
+	MATHVECTOR<T, 3> delta = GetDownVector() * min_height;
+	MATHVECTOR<T, 3> trimmed_position = Position() + delta;
 	SetPosition(trimmed_position);
-
+	
+	// reset angular and linear velocity
+	chassis->setAngularVelocity(btVector3(0, 0, 0));
+	chassis->setLinearVelocity(btVector3(0, 0, 0));
+	body.SetAngularVelocity(MATHVECTOR<T, 3>(0));
+	body.SetVelocity(MATHVECTOR<T, 3>(0));
+	
+	UpdateWheelVelocity();
 	UpdateWheelTransform();
 	UpdateWheelContacts();
 }
@@ -931,7 +870,7 @@ void CARDYNAMICS::SetSteering(const T value)
 {
 	for(int i = 0; i < WHEEL_POSITION_SIZE; i++)
 	{
-		suspension[i].SetSteering(value);
+		suspension[i]->SetSteering(value);
 	}
 }
 
@@ -975,6 +914,14 @@ T CARDYNAMICS::GetFeedback() const
 {
 	return feedback;
 }
+
+/*
+void CARDYNAMICS::UpdateTelemetry(T dt)
+{
+	for (std::list<CARTELEMETRY>::iterator i = telemetry.begin(); i != telemetry.end(); i++)
+		i->Update ( dt );
+}
+*/
 
 /// print debug info to the given ostream.  set p1, p2, etc if debug info part 1, and/or part 2, etc is desired
 void CARDYNAMICS::DebugPrint ( std::ostream & out, bool p1, bool p2, bool p3, bool p4 ) const
@@ -1023,16 +970,16 @@ void CARDYNAMICS::DebugPrint ( std::ostream & out, bool p1, bool p2, bool p3, bo
 	{
 		out << std::fixed << std::setprecision(3);
 		out << "(front left)" << "\n";
-		suspension[FRONT_LEFT].DebugPrint ( out );
+		suspension[FRONT_LEFT]->DebugPrint ( out );
 		out << "\n";
 		out << "(front right)" << "\n";
-		suspension[FRONT_RIGHT].DebugPrint ( out );
+		suspension[FRONT_RIGHT]->DebugPrint ( out );
 		out << "\n";
 		out << "(rear left)" << "\n";
-		suspension[REAR_LEFT].DebugPrint ( out );
+		suspension[REAR_LEFT]->DebugPrint ( out );
 		out << "\n";
 		out << "(rear right)" << "\n";
-		suspension[REAR_RIGHT].DebugPrint ( out );
+		suspension[REAR_RIGHT]->DebugPrint ( out );
 		out << "\n";
 
 		out << "(front left)" << "\n";
@@ -1099,7 +1046,7 @@ bool CARDYNAMICS::Serialize ( joeserialize::Serializer & s )
 	_SERIALIZE_(s,differential_rear);
 	_SERIALIZE_(s,differential_center);
 	_SERIALIZE_(s,fuel_tank);
-	_SERIALIZE_(s,suspension);
+	//_SERIALIZE_(s,suspension);
 	_SERIALIZE_(s,wheel);
 	_SERIALIZE_(s,brake);
 	_SERIALIZE_(s,tire);
@@ -1200,8 +1147,8 @@ void CARDYNAMICS::UpdateWheelTransform()
 {
 	for(int i = 0; i < WHEEL_POSITION_SIZE; i++)
 	{
-		wheel_position[i] = LocalToWorld(suspension[i].GetWheelPosition());
-		wheel_orientation[i] = Orientation() * suspension[i].GetWheelOrientation();
+		wheel_position[i] = LocalToWorld(suspension[i]->GetWheelPosition());
+		wheel_orientation[i] = Orientation() * suspension[i]->GetWheelOrientation();
 	}
 }
 
@@ -1233,11 +1180,19 @@ void CARDYNAMICS::AddAerodynamics(MATHVECTOR<T, 3> & force, MATHVECTOR<T, 3> & t
 // returns normal force(wheel force)
 T CARDYNAMICS::UpdateSuspension(int i, T dt)
 {
-	// velocity, displacment along wheel ray
-	T velocity = 0;//-GetDownVector().dot(wheel_velocity[i]);
+	MATHVECTOR<T, 3> offset = wheel_contact[i].GetPosition() - body.GetPosition();
+	MATHVECTOR<T, 3> upright = Orientation().AxisZ();
+	MATHVECTOR<T, 3> normal = wheel_contact[i].GetNormal();
+	T cosn = upright.dot(normal);
+	if (cosn < 0) return 0;	// negative normal
+	if (cosn > 1) cosn = 1; // make sure cosn <= 1
+	
+	T normal_mass = 1 / body.GetInvEffectiveMass(normal, offset);
+	T normal_velocity = wheel_velocity[i].dot(normal);
+	T normal_force_limit = -normal_velocity * normal_mass / dt;
 	T displacement = 2.0 * tire[i].GetRadius() - wheel_contact[i].GetDepth();
-
-	// adjust displacement due to surface bumpiness
+	
+	// adjust displacement due to surface bumpiness ,should take normal angle into account
 	const TRACKSURFACE & surface = wheel_contact[i].GetSurface();
 	if (surface.bumpWaveLength > 0.0001)
 	{
@@ -1249,61 +1204,53 @@ T CARDYNAMICS::UpdateSuspension(int i, T dt)
 		T bumpoffset = amplitude * (sin(phase + shift) + sin(1.414214 * phase) - 2.0);
 		displacement += bumpoffset;
 	}
-
-	suspension[i].Update(displacement, velocity, dt);
-
+	
+	suspension[i]->Update(normal_force_limit * cosn, normal_velocity * cosn, displacement * cosn);
+	
 	int otheri = i;
 	if ( i == 0 || i == 2 ) otheri++;
 	else otheri--;
-	T antirollforce = suspension[i].GetAntiRoll() * (suspension[i].GetDisplacement() - suspension[otheri].GetDisplacement());
-
-	T suspension_force = suspension[i].GetForce() + antirollforce;
-	if (suspension_force < 0.0) suspension_force = 0.0;
-	assert(suspension_force == suspension_force);
-
-	// overtravel constraint (calculate impulse to reduce relative velocity to zero)
-	if (suspension[i].GetOvertravel() > 0.0)
-	{
-		MATHVECTOR <T, 3> normal = wheel_contact[i].GetNormal();
-		MATHVECTOR <T, 3> offset = wheel_contact[i].GetPosition() - body.GetPosition();
-
-		T velocity_error = wheel_velocity[i].dot(normal);
-		if (velocity_error < 0.0)
-		{
-			T mass = 1.0 / body.GetInvEffectiveMass(normal, offset);
-			T impulse = -velocity_error * mass;
-			T constraint_force = impulse / dt;
-			if (constraint_force > suspension_force) suspension_force = constraint_force;
-		}
-	}
-
-	return suspension_force;
+	T antirollforce = suspension[i]->GetAntiRoll() * (suspension[i]->GetDisplacement() - suspension[otheri]->GetDisplacement());
+	T suspension_force = suspension[i]->GetForce() + antirollforce;
+	
+	// clamp suspension force and normal component of the larteral force
+	if (suspension_force < 0) suspension_force = 0;
+	if (suspension[i]->GetDisplacement() <= 0 || normal_force_limit < 0) normal_force_limit = 0;
+	
+	// combine lateral and suspension force
+	T normal_force = normal_force_limit * sqrt(1 - cosn * cosn) + suspension_force * cosn;
+	assert(normal_force == normal_force);
+	
+	return normal_force;
 }
 
-T CARDYNAMICS::ApplyTireForce(int i, const T normal_force, const QUATERNION <T> & wheel_space)
+void CARDYNAMICS::UpdateWheel(
+	const int i,
+	const T dt,
+	const T normal_force,
+	const T drive_torque,
+	const QUATERNION <T> & wheel_space)
 {
 	CARWHEEL<T> & wheel = this->wheel[i];
 	CARTIRE<T> & tire = this->tire[i];
+	CARBRAKE<T> & brake = this->brake[i];
 	const COLLISION_CONTACT & wheel_contact = this->wheel_contact[i];
 	const TRACKSURFACE & surface = wheel_contact.GetSurface();
-	const MATHVECTOR <T, 3> surface_normal = wheel_contact.GetNormal();
+	const MATHVECTOR<T, 3> surface_normal = wheel_contact.GetNormal();
 
-	// spin axis is the wheel plane normal
-	// positive inclination is in clockwise direction
-	MATHVECTOR <T, 3> spin_axis(0, 1, 0);
-	wheel_space.RotateVector(spin_axis);
-	T axis_proj = spin_axis.dot(surface_normal);
-	T inclination = 90 - acos(axis_proj)  * 180.0 / M_PI;
-	if (!(i&1)) inclination = -inclination; // ????
+	// inclination positive when tire top tilts to right viewed from rear
+	MATHVECTOR<T, 3> wheel_axis = wheel_space.AxisY();
+	T axis_proj = wheel_axis.dot(surface_normal);
+	T inclination = 90 - acos(axis_proj) * 180.0 / M_PI;
 
 	// tire space(SAE Tire Coordinate System)
 	// surface normal is negative z-axis
 	// negative spin axis projected onto surface plane is y-axis
-	MATHVECTOR <T, 3> y = -(spin_axis - surface_normal * axis_proj).Normalize();
-	MATHVECTOR <T, 3> x = -y.cross(surface_normal);
+	MATHVECTOR<T, 3> y = -(wheel_axis - surface_normal * axis_proj).Normalize();
+	MATHVECTOR<T, 3> x = surface_normal.cross(y);
 
 	// wheel velocity in tire space
-	MATHVECTOR <T, 3> velocity;
+	MATHVECTOR<T, 3> velocity(0);
 	velocity[0] = x.dot(wheel_velocity[i]);
 	velocity[1] = y.dot(wheel_velocity[i]);
 
@@ -1312,70 +1259,68 @@ T CARDYNAMICS::ApplyTireForce(int i, const T normal_force, const QUATERNION <T> 
 
 	// friction force in tire space
 	T friction_coeff = tire.GetTread() * surface.frictionTread + (1.0 - tire.GetTread()) * surface.frictionNonTread;
-	MATHVECTOR <T, 3> friction_force(0);
+	MATHVECTOR<T, 3> friction(0);
 	if(friction_coeff > 0)
 	{
-		friction_force = tire.GetForce(normal_force, friction_coeff, velocity, ang_velocity, inclination);
+		friction = tire.GetForce(normal_force, friction_coeff, velocity, ang_velocity, inclination);
 	}
 
-	// rolling resistance due to tire/surface deformation proportional to normal force
-	T roll_friction_coeff = surface.rollResistanceCoefficient;
-	MATHVECTOR <T, 3> roll_resistance = x * tire.GetRollingResistance(velocity[0], normal_force, roll_friction_coeff);
-	MATHVECTOR <T, 3> rel_wheel_pos = wheel_position[i] - Position();
-	ApplyForce(roll_resistance, rel_wheel_pos);
+	// rolling resistance
+	//T roll_friction_coeff = surface.rollResistanceCoefficient;
+	//friction[0] += tire.GetRollingResistance(velocity[0], normal_force, roll_friction_coeff);
+	
+	// viscous surface drag
+	//friction[0] -= (ang_velocity * tire.GetRadius() - velocity[0]) * surface.rollingDrag;
+	//friction[1] -= velocity[1] * surface.rollingDrag;
 
-	// friction force in world space
-	MATHVECTOR <T, 3> tire_friction = x * friction_force[0] + y * friction_force[1];
-
-	// fake viscous friction (sand, gravel, mud) proportional to wheel center velocity
-	MATHVECTOR <T, 3> wheel_drag = -(x * velocity[0] + y * velocity[1]) * surface.rollingDrag * 0.25; // scale wheel drag by 1/4
-
-	// tire friction + tire normal force
-	MATHVECTOR <T, 3> rel_contact_pos = wheel_contact.GetPosition() - Position();
-	ApplyForce(surface_normal * normal_force + tire_friction + wheel_drag, rel_contact_pos);
-
-	return friction_force[0];
-}
-
-T CARDYNAMICS::CalculateWheelTorque(
-	int i,
-	const T tire_friction,
-	T drive_torque,
-	T dt)
-{
-	CARWHEEL<T> & wheel = this->wheel[i];
-	CARTIRE<T> & tire = this->tire[i];
-	CARBRAKE<T> & brake = this->brake[i];
-
-	wheel.Integrate1(dt);
-
-	// torques acting on wheel
-	T friction_torque = tire_friction * tire.GetRadius();
-	T wheel_torque = drive_torque - friction_torque;
-	T lock_up_torque = wheel.GetLockUpTorque(dt) - wheel_torque;	// torque needed to lock the wheel
+	// wheel torque
 	T brake_torque = brake.GetTorque();
-
-	// brake and rolling resistance torque should never exceed lock up torque
-	if(lock_up_torque >= 0 && lock_up_torque > brake_torque)
+	T friction_torque = tire.GetRadius() * friction[0];
+	T wheel_torque = drive_torque - friction_torque;
+	
+	wheel.Integrate1(dt);
+	T torque_limit = wheel.GetTorque(0, dt);
+	T max_torque = torque_limit - wheel_torque;
+	
+	// limit brake torque
+	if(max_torque >= 0 && max_torque > brake_torque)
 	{
-		brake.WillLock(false);
-		wheel_torque += brake_torque;   // brake torque has same direction as lock up torque
+		wheel_torque += brake_torque;
 	}
-	else if(lock_up_torque < 0 && lock_up_torque < -brake_torque)
+	else if(max_torque < 0 && max_torque < -brake_torque)
 	{
-		brake.WillLock(false);
 		wheel_torque -= brake_torque;
 	}
 	else
 	{
-		brake.WillLock(true);
-		wheel_torque = wheel.GetLockUpTorque(dt);
+		wheel_torque = torque_limit;
 	}
-
 	wheel.SetTorque(wheel_torque);
 	wheel.Integrate2(dt);
+	
+	// apply wheel torque to body
+	MATHVECTOR <T, 3> world_wheel_torque(0, -wheel_torque, 0);
+	wheel_space.RotateVector(world_wheel_torque);
+	ApplyTorque(world_wheel_torque);
+	
+	// apply friction to body
+	MATHVECTOR<T, 3> contact_offset = wheel_contact.GetPosition() - Position();
+/*	
+	// limit lateral friction
+	T mass = 1 / body.GetInvEffectiveMass(y, contact_offset);
+	T friction_limit = -velocity[1] * mass / dt;
+	if ((friction[1] > 0 && friction_limit > 0 && friction[1] > friction_limit) ||
+		(friction[1] < 0 && friction_limit < 0 && friction[1] < friction_limit))
+	{
+		//std::cerr << "lateral friction limit: " << friction[1] << " " << friction_limit << " " << velocity[1] << std::endl;
+		friction[1] = friction_limit;
+	}
+*/
+	// friction force in world space
+	MATHVECTOR<T, 3> tire_friction = x * friction[0] + y * friction[1];
 
-	return wheel_torque;
+	// tire friction + tire normal force
+	ApplyForce(surface_normal * normal_force + tire_friction, contact_offset);
 }
 
 void CARDYNAMICS::UpdateBody(
@@ -1393,46 +1338,35 @@ void CARDYNAMICS::UpdateBody(
 	body.ApplyTorque(ext_torque);
 
 	// update suspension/wheels
-	//static int count = 0;
-	T normal_force[WHEEL_POSITION_SIZE];
 	for(int i = 0; i < WHEEL_POSITION_SIZE; i++)
 	{
-		normal_force[i] = UpdateSuspension(i, dt);
-		T tire_friction = ApplyTireForce(i, normal_force[i], wheel_orientation[i]);
-		T wheel_torque = CalculateWheelTorque(i, tire_friction, drive_torque[i], dt);
-
-		// apply wheel torque to body
-		MATHVECTOR <T, 3> world_wheel_torque(0, -wheel_torque, 0);
-		wheel_orientation[i].RotateVector(world_wheel_torque);
-		ApplyTorque(world_wheel_torque);
-
-		//std::cerr << std::setw(4) << count << "; " << std::setw(7) << tire_friction[0] << " ";
+		T force = UpdateSuspension(i, dt);
+		UpdateWheel(i, dt, force, drive_torque[i], wheel_orientation[i]);
 	}
-	//std::cerr << "\n";
-	//count++;
 
 	body.Integrate2(dt);
 
 	UpdateWheelVelocity();
 	UpdateWheelTransform();
 	InterpolateWheelContacts();
-
-	for(int i = 0; i < WHEEL_POSITION_SIZE; i++)
-	{
-		if (abs) DoABS(i, normal_force[i]);
-		if (tcs) DoTCS(i, normal_force[i]);
-	}
 }
 
 void CARDYNAMICS::Tick(MATHVECTOR<T, 3> ext_force, MATHVECTOR<T, 3> ext_torque, T dt)
 {
-	// has to happen before UpdateDriveline, overrides clutch, throttle
+	// call before UpdateDriveline, overrides clutch, throttle
 	UpdateTransmission(dt);
+	
+	// overrides throttle/brakes
+	for(int i = 0; i < WHEEL_POSITION_SIZE; i++)
+	{
+		if (abs) DoABS(i);
+		if (tcs) DoTCS(i);
+	}
 
 	AddAerodynamics(ext_force, ext_torque);
 
 	const int num_repeats = 10;
-	const float internal_dt = dt / num_repeats;
+	const T internal_dt = dt / num_repeats;
 	for(int i = 0; i < num_repeats; ++i)
 	{
 		T drive_torque[WHEEL_POSITION_SIZE];
@@ -1449,7 +1383,7 @@ void CARDYNAMICS::Tick(MATHVECTOR<T, 3> ext_force, MATHVECTOR<T, 3> ext_torque, 
 	fuel_tank.Consume(engine.FuelRate() * dt);
 	engine.SetOutOfGas(fuel_tank.Empty());
 
-	const float tacho_factor = 0.1;
+	const T tacho_factor = 0.1;
 	tacho_rpm = engine.GetRPM() * tacho_factor + tacho_rpm * (1.0 - tacho_factor);
 }
 
@@ -1579,7 +1513,8 @@ void CARDYNAMICS::CalculateDriveTorque(T * wheel_drive_torque, T clutch_torque)
 		wheel_drive_torque[REAR_RIGHT] = differential_rear.GetSide2Torque();
 	}
 
-	for (int i = 0; i < WHEEL_POSITION_SIZE; i++) assert(!isnan(wheel_drive_torque[WHEEL_POSITION(i)]));
+	for (int i = 0; i < WHEEL_POSITION_SIZE; i++)
+		assert(!isnan(wheel_drive_torque[WHEEL_POSITION(i)]));
 }
 
 T CARDYNAMICS::CalculateDriveshaftSpeed()
@@ -1589,20 +1524,23 @@ T CARDYNAMICS::CalculateDriveshaftSpeed()
 	T right_front_wheel_speed = wheel[FRONT_RIGHT].GetAngularVelocity();
 	T left_rear_wheel_speed = wheel[REAR_LEFT].GetAngularVelocity();
 	T right_rear_wheel_speed = wheel[REAR_RIGHT].GetAngularVelocity();
-	for ( int i = 0; i < 4; i++ ) assert ( !isnan ( wheel[WHEEL_POSITION ( i ) ].GetAngularVelocity() ) );
-	if ( drive == RWD )
+	
+	for ( int i = 0; i < 4; i++ )
+		assert ( !isnan ( wheel[WHEEL_POSITION ( i ) ].GetAngularVelocity() ) );
+	
+	if (drive == RWD)
 	{
 		driveshaft_speed = differential_rear.CalculateDriveshaftSpeed ( left_rear_wheel_speed, right_rear_wheel_speed );
 	}
-	else if ( drive == FWD )
+	else if (drive == FWD)
 	{
 		driveshaft_speed = differential_front.CalculateDriveshaftSpeed ( left_front_wheel_speed, right_front_wheel_speed );
 	}
-	else if ( drive == AWD )
+	else if (drive == AWD)
 	{
-		driveshaft_speed = differential_center.CalculateDriveshaftSpeed (
-		                       differential_front.CalculateDriveshaftSpeed ( left_front_wheel_speed, right_front_wheel_speed ),
-		                       differential_rear.CalculateDriveshaftSpeed ( left_rear_wheel_speed, right_rear_wheel_speed ) );
+		T front_speed = differential_front.GetDriveshaftSpeed ( left_front_wheel_speed, right_front_wheel_speed );
+		T rear_speed = differential_rear.GetDriveshaftSpeed ( left_rear_wheel_speed, right_rear_wheel_speed );
+		driveshaft_speed = differential_center.GetDriveshaftSpeed ( front_speed, rear_speed );
 	}
 
 	return driveshaft_speed;
@@ -1610,7 +1548,9 @@ T CARDYNAMICS::CalculateDriveshaftSpeed()
 
 void CARDYNAMICS::UpdateTransmission(T dt)
 {
-	driveshaft_rpm = CalculateDriveshaftRPM();
+	T driveshaft_speed = CalculateDriveshaftSpeed();
+	
+	driveshaft_rpm = transmission.GetClutchSpeed(driveshaft_speed) * 30.0 / 3.141593;
 
 	if (autoshift)
 	{
@@ -1632,7 +1572,7 @@ void CARDYNAMICS::UpdateTransmission(T dt)
 		if (!engine.GetCombustion())
 		{
 		    engine.StartEngine();
-		    std::cout << "start engine" << std::endl;
+		    //std::cout << "start engine" << std::endl;
 		}
 
 		T throttle = engine.GetThrottle();
@@ -1643,32 +1583,6 @@ void CARDYNAMICS::UpdateTransmission(T dt)
 		clutch.SetClutch(new_clutch);
 		last_auto_clutch = new_clutch;
 	}
-}
-
-T CARDYNAMICS::CalculateDriveshaftRPM() const
-{
-	T driveshaft_speed = 0.0;
-	T left_front_wheel_speed = wheel[FRONT_LEFT].GetAngularVelocity();
-	T right_front_wheel_speed = wheel[FRONT_RIGHT].GetAngularVelocity();
-	T left_rear_wheel_speed = wheel[REAR_LEFT].GetAngularVelocity();
-	T right_rear_wheel_speed = wheel[REAR_RIGHT].GetAngularVelocity();
-	for ( int i = 0; i < 4; i++ ) assert ( !isnan ( wheel[WHEEL_POSITION ( i ) ].GetAngularVelocity() ) );
-	if ( drive == RWD )
-	{
-		driveshaft_speed = differential_rear.GetDriveshaftSpeed ( left_rear_wheel_speed, right_rear_wheel_speed );
-	}
-	else if ( drive == FWD )
-	{
-		driveshaft_speed = differential_front.GetDriveshaftSpeed ( left_front_wheel_speed, right_front_wheel_speed );
-	}
-	else if ( drive == AWD )
-	{
-		T front_speed = differential_front.GetDriveshaftSpeed ( left_front_wheel_speed, right_front_wheel_speed );
-		T rear_speed = differential_rear.GetDriveshaftSpeed ( left_rear_wheel_speed, right_rear_wheel_speed );
-		driveshaft_speed = differential_center.GetDriveshaftSpeed ( front_speed, rear_speed );
-	}
-
-	return transmission.GetClutchSpeed ( driveshaft_speed ) * 30.0 / 3.141593;
 }
 
 bool CARDYNAMICS::WheelDriven(int i) const
@@ -1738,24 +1652,21 @@ int CARDYNAMICS::NextGear() const
 	int gear = transmission.GetGear();
 
 	// only autoshift if a shift is not in progress
-	if (shifted)
+	if (shifted && clutch.GetClutch() == 1.0)
 	{
-        if (clutch.GetClutch() == 1.0)
-        {
-            // shift up when driveshaft speed exceeds engine redline
-            // we do not shift up from neutral/reverse
-            if (driveshaft_rpm > engine.GetRedline() && gear > 0)
-            {
-                return gear + 1;
-            }
-            // shift down when driveshaft speed below shift_down_point
-            // we do not auto shift down from 1st gear to neutral
-            if(driveshaft_rpm < DownshiftRPM(gear) && gear > 1)
-            {
-                return gear - 1;
-            }
-        }
-    }
+		// shift up when driveshaft speed exceeds engine redline
+		// we do not shift up from neutral/reverse
+		if (driveshaft_rpm > engine.GetRedline() && gear > 0)
+		{
+			return gear + 1;
+		}
+		// shift down when driveshaft speed below shift_down_point
+		// we do not auto shift down from 1st gear to neutral
+		if(driveshaft_rpm < DownshiftRPM(gear) && gear > 1)
+		{
+			return gear - 1;
+		}
+	}
 	return gear;
 }
 
@@ -1773,7 +1684,7 @@ T CARDYNAMICS::DownshiftRPM(int gear) const
 }
 
 ///do traction control system (wheelspin prevention) calculations and modify the throttle position if necessary
-void CARDYNAMICS::DoTCS(int i, T suspension_force)
+void CARDYNAMICS::DoTCS(int i)
 {
 	//if (!WheelDriven(i)) return;
 
@@ -1789,10 +1700,8 @@ void CARDYNAMICS::DoTCS(int i, T suspension_force)
 		for (int i2 = 0; i2 < WHEEL_POSITION_SIZE; i2++)
 		{
 			T spindiff = myrotationalspeed - wheel[i2].GetAngularVelocity();
-			if (spindiff < 0)
-				spindiff = -spindiff;
-			if (spindiff > maxspindiff)
-				maxspindiff = spindiff;
+			if (spindiff < 0) spindiff = -spindiff;
+			if (spindiff > maxspindiff) maxspindiff = spindiff;
 		}
 
 		//don't engage if all wheels are moving at the same rate
@@ -1807,11 +1716,11 @@ void CARDYNAMICS::DoTCS(int i, T suspension_force)
 			if (tcs_active[i])
 			{
 				T curclutch = clutch.GetClutch();
-				assert(curclutch <= 1.0 && curclutch >= 0.0);
+				assert(curclutch <= 1 && curclutch >= 0);
 
 				gas -= curclutch * (slide - 0.5);
 				if (gas < 0) gas = 0;
-				if (gas > 1) gas = 1;
+				assert(gas <= 1);
 				engine.SetThrottle(gas);
 			}
 		}
@@ -1827,7 +1736,7 @@ void CARDYNAMICS::DoTCS(int i, T suspension_force)
 }
 
 ///do anti-lock brake system calculations and modify the brake force if necessary
-void CARDYNAMICS::DoABS(int i, T suspension_force)
+void CARDYNAMICS::DoABS(int i)
 {
 	T braketresh = 0.1;
 	T brakesetting = brake[i].GetBrakeFactor();

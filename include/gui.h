@@ -15,16 +15,7 @@
 class GUI
 {
 public:
-	GUI() : 
-		animation_counter(0),
-		animation_count_start(0),
-		syncme(false),
-		syncme_from_external(false),
-		control_load(false),
-		ingame(false)
-	{
-		active_page = last_active_page = pages.end();
-	}
+	GUI();
 	
 	GUIPAGE & GetPage(const std::string & pagename)
 	{
@@ -98,12 +89,9 @@ public:
 	/// or joystick, while the cursor variables are set for mouse navigation.
 	/// returns a list of actions for processing by the game.
 	std::list <std::string> ProcessInput(
-		bool movedown,
-		bool moveup,
-		float cursorx,
-		float cursory,
-		bool cursordown,
-		bool cursorjustup,
+		bool movedown, bool moveup,
+		float cursorx, float cursory,
+		bool cursordown, bool cursorjustup,
 		float screenhwratio,
 		std::ostream & error_output);
 	
@@ -126,9 +114,9 @@ public:
 		ingame = value;
 	}
 	
-	void ReplaceOptionMapValues(
+	void ReplaceOptionValues(
 		const std::string & optionname,
-		std::list <std::pair <std::string, std::string> > & newvalues,
+		const std::list <std::pair <std::string, std::string> > & newvalues,
 		std::ostream & error_output);
 
 private:
@@ -146,7 +134,7 @@ private:
 	float animation_counter;
 	float animation_count_start;
 	bool syncme; ///<true if a sync is needed
-	bool syncme_from_external; ///<true if an OK button was pressed
+	bool syncme_from_external;
 	bool control_load;
 	bool ingame;
 	
@@ -157,7 +145,7 @@ private:
 		const std::string & datapath,
 		const std::string & texsize,
 		const float screenhwratio,
-		const CONFIGFILE & carcontrolsfile,
+		const CONFIG & carcontrolsfile,
 		const std::map <std::string, FONT> & fonts,
 		std::map<std::string, GUIOPTION> & optionmap,
 		SCENENODE & scenenode,
@@ -168,18 +156,11 @@ private:
 	///returns a string showing where the error occurred, or an empty string if no error
 	std::string LoadOptions(
 		const std::string & optionfile,
-		const std::map<std::string,
-		std::list <std::pair <std::string, std::string> > > & valuelists,
+		const std::map<std::string, std::list <std::pair <std::string, std::string> > > & valuelists,
 		std::ostream & error_output);
 	
 	///send options from the optionmap to the widgets
-	void UpdateOptions(std::ostream & error_output)
-	{
-		for (std::map<std::string, PAGEINFO>::iterator i = pages.begin(); i != pages.end(); ++i)
-		{
-			i->second.page.UpdateOptions(node.GetNode(i->second.node), false, optionmap, error_output);
-		}
-	}
+	void UpdateOptions(std::ostream & error_output);
 };
 
 #endif

@@ -1,19 +1,11 @@
 #include "performance_testing.h"
-#include "configfile.h"
 #include "tracksurface.h"
 #include "carinput.h"
+#include "config.h"
 
 #include <vector>
-using std::vector;
-
 #include <iostream>
-using std::endl;
-
-#include <string>
-using std::string;
-
 #include <sstream>
-using std::stringstream;
 
 PERFORMANCE_TESTING::PERFORMANCE_TESTING()
 {
@@ -32,32 +24,31 @@ void PERFORMANCE_TESTING::Test(
 	std::ostream & info_output,
 	std::ostream & error_output)
 {
-	info_output << "Beginning car performance test on " << carname << endl;
+	info_output << "Beginning car performance test on " << carname << std::endl;
 
 	//load the car dynamics
-	CONFIGFILE carconf;
-	string carfile = carpath+"/"+carname+"/"+carname+".car";
+	CONFIG carconf;
+	std::string carfile = carpath+"/"+carname+"/"+carname+".car";
 	if ( !carconf.Load ( carfile ) )
 	{
-		error_output << "Error loading car configuration file: " << carfile << endl;
+		error_output << "Error loading car configuration file: " << carfile << std::endl;
 		return;
 	}
 	if (!car.dynamics.Load(carconf, error_output))
 	{
-		error_output << "Error during car dynamics load: " << carfile << endl;
+		error_output << "Error during car dynamics load: " << carfile << std::endl;
 		return;
 	}
-	info_output << "Car dynamics loaded" << endl;
+	info_output << "Car dynamics loaded" << std::endl;
 
 	info_output << carname << " Summary:\n" <<
 			"Mass (kg) including driver and fuel: " << car.dynamics.GetMass() << "\n" <<
-			"Center of mass (m): " << car.dynamics.center_of_mass <<
-			endl;
+			"Center of mass (m): " << car.dynamics.center_of_mass << std::endl;
 
 	std::stringstream statestream;
 	joeserialize::BinaryOutputSerializer serialize_output(statestream);
 	if (!car.Serialize(serialize_output))
-		error_output << "Serialization error" << endl;
+		error_output << "Serialization error" << std::endl;
 	//else info_output << "Car state: " << statestream.str();
 	carstate = statestream.str();
 
@@ -65,7 +56,7 @@ void PERFORMANCE_TESTING::Test(
 	TestStoppingDistance(false, info_output, error_output);
 	TestStoppingDistance(true, info_output, error_output);
 
-	info_output << "Car performance test complete." << endl;
+	info_output << "Car performance test complete." << std::endl;
 }
 
 void PERFORMANCE_TESTING::ResetCar()
@@ -99,7 +90,7 @@ void PERFORMANCE_TESTING::SimulateFlatRoad()
 
 void PERFORMANCE_TESTING::TestMaxSpeed(std::ostream & info_output, std::ostream & error_output)
 {
-	info_output << "Testing maximum speed" << endl;
+	info_output << "Testing maximum speed" << std::endl;
 
 	ResetCar();
 
@@ -108,7 +99,7 @@ void PERFORMANCE_TESTING::TestMaxSpeed(std::ostream & info_output, std::ostream 
 	double dt = .004;
 	int i = 0;
 
-	vector <float> inputs(CARINPUT::INVALID, 0.0);
+	std::vector <float> inputs(CARINPUT::INVALID, 0.0);
 
 	inputs[CARINPUT::THROTTLE] = 1.0;
 
@@ -126,7 +117,7 @@ void PERFORMANCE_TESTING::TestMaxSpeed(std::ostream & info_output, std::ostream 
 	float timetoquarter = maxtime;
 	float quarterspeed = 0;
 
-	string downforcestr = "N/A";
+	std::string downforcestr = "N/A";
 
 	MATHVECTOR <double, 3> ext_torque(0);
 	MATHVECTOR <double, 3> ext_force(0, 0, -9.81 * car.GetMass());
@@ -148,7 +139,7 @@ void PERFORMANCE_TESTING::TestMaxSpeed(std::ostream & info_output, std::ostream 
 		{
 			maxspeed.first = t;
 			maxspeed.second = car.dynamics.GetSpeed();
-			stringstream dfs;
+			std::stringstream dfs;
 			dfs << -car.GetTotalAero()[2] << " N; " << -car.GetTotalAero()[2]/car.GetTotalAero()[0] << ":1 lift/drag";
 			downforcestr = dfs.str();
 		}
@@ -176,12 +167,12 @@ void PERFORMANCE_TESTING::TestMaxSpeed(std::ostream & info_output, std::ostream 
 			{
 				if (car.dynamics.GetSpeed() - lastsecondspeed < stopthreshold && car.dynamics.GetSpeed() > 26.0)
 				{
-					//info_output << "Maximum speed attained at " << maxspeed.first << " s" << endl;
+					//info_output << "Maximum speed attained at " << maxspeed.first << " s" << std::endl;
 					break;
 				}
 				if (car.GetEngineRPM() < 1)
 				{
-					error_output << "Car stalled during launch, t=" << t << endl;
+					error_output << "Car stalled during launch, t=" << t << std::endl;
 					break;
 				}
 			}
@@ -193,15 +184,15 @@ void PERFORMANCE_TESTING::TestMaxSpeed(std::ostream & info_output, std::ostream 
 		i++;
 	}
 
-	info_output << "Maximum speed: " << ConvertToMPH(maxspeed.second) << " MPH at " << maxspeed.first << " s" << endl;
-	info_output << "Downforce at maximum speed: " << downforcestr << endl;
-	info_output << "0-60 MPH time: " << timeto60-timeto60start << " s" << endl;
-	info_output << "1/4 mile time: " << timetoquarter << " s" << " at " << ConvertToMPH(quarterspeed) << " MPH" << endl;
+	info_output << "Maximum speed: " << ConvertToMPH(maxspeed.second) << " MPH at " << maxspeed.first << " s" << std::endl;
+	info_output << "Downforce at maximum speed: " << downforcestr << std::endl;
+	info_output << "0-60 MPH time: " << timeto60-timeto60start << " s" << std::endl;
+	info_output << "1/4 mile time: " << timetoquarter << " s" << " at " << ConvertToMPH(quarterspeed) << " MPH" << std::endl;
 }
 
 void PERFORMANCE_TESTING::TestStoppingDistance(bool abs, std::ostream & info_output, std::ostream & error_output)
 {
-	info_output << "Testing stopping distance" << endl;
+	info_output << "Testing stopping distance" << std::endl;
 
 	ResetCar();
 	car.dynamics.SetABS(abs);
@@ -211,7 +202,7 @@ void PERFORMANCE_TESTING::TestStoppingDistance(bool abs, std::ostream & info_out
 	double dt = .004;
 	int i = 0;
 
-	vector <float> inputs(CARINPUT::INVALID, 0.0);
+	std::vector <float> inputs(CARINPUT::INVALID, 0.0);
 
 	inputs[CARINPUT::THROTTLE] = 1.0;
 
@@ -263,7 +254,7 @@ void PERFORMANCE_TESTING::TestStoppingDistance(bool abs, std::ostream & info_out
 
 		if (car.GetEngineRPM() < 1)
 		{
-			error_output << "Car stalled during launch, t=" << t << endl;
+			error_output << "Car stalled during launch, t=" << t << std::endl;
 			break;
 		}
 /* fixme
@@ -287,5 +278,5 @@ void PERFORMANCE_TESTING::TestStoppingDistance(bool abs, std::ostream & info_out
 		info_output << "(ABS)";
 	else
 		info_output << "(no ABS)";
-	info_output << ": " << ConvertToFeet((stopend-stopstart).Magnitude()) << " ft" << endl;
+	info_output << ": " << ConvertToFeet((stopend-stopstart).Magnitude()) << " ft" << std::endl;
 }
