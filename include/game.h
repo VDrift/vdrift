@@ -96,10 +96,9 @@ private:
 	void BeginStartingUp();
 	void DoneStartingUp();
 	bool LastStartWasSuccessful() const;
-	void EnableDataLogging(std::string const& directory, std::string const& name, std::vector< std::string > const& column_names, std::string const& format="csv", float frequency_Hz=100.0);
-	void UpdateDataLog(float dt);
-	void UpdateDataMetrics(float dt);
-	
+	bool QueryLogData(DATALOG::log_entry_T * new_entry);
+	void UpdateDataManager(float dt);
+
 	// move to settings
 	void GetOptions(std::map<std::string, std::string> & options);
 	void SetOptions(const std::map<std::string, std::string> & options);
@@ -168,13 +167,7 @@ private:
 	REPLAY replay;
 	PARTICLE_SYSTEM tire_smoke;
 	AI ai;
-
-	// data logging
-	DATALOG data_log;
-	bool enable_data_logging;
-	float data_logging_frequency;
-	float time_since_last_logentry;
-	METRICMANAGER metric_manager;
+	DATAMANAGER data_manager;
 
 	//SKY sky;
 

@@ -54,7 +54,7 @@ public:
 	bool Init(
 		const std::string & texturepath,
 		const std::string & texsize,
-		TEXTUREMANAGER & textures, 
+		TEXTUREMANAGER & textures,
 		FONT & lcdfont,
 		FONT & sansfont,
 		float displaywidth,
@@ -78,16 +78,17 @@ public:
 		bool mph, const std::string & debug_string1, const std::string & debug_string2,
 		const std::string & debug_string3, const std::string & debug_string4, float displaywidth,
 		float displayheight, bool absenabled, bool absactive, bool tcsenabled, bool tcsactive,
-		bool drifting, float driftscore, float thisdriftscore);
+		bool drifting, float driftscore, float thisdriftscore,
+		bool displayfeedback, const std::string & feedbackmessagetext, float feedbackmessagealpha);
 
 	void SetDebugVisibility(bool show)
 	{
 		SCENENODE & debugnoderef = hudroot.GetNode(debugnode);
 		debugnoderef.SetChildVisibility(show);
 	}
-	
+
 	SCENENODE & GetNode() {return hudroot;}
-	
+
 private:
 	TEXTURE bartex;
 	SCENENODE hudroot;

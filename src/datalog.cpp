@@ -1,27 +1,19 @@
-#include "datalog.h"
 #include <algorithm>
 #include <sstream>
 #include <iostream>
+#include <fstream>
+#include <assert.h>
 
-DATALOG::DATALOG() :
-	time(0.0),
-	log_directory("."),
-	log_name("uninitialized_datalog"),
-	file_format("none")
-{
+#include "datalog.h"
 
-}
+using std::vector;
+using std::string;
+using std::ofstream;
+using std::sort;
 
-DATALOG::DATALOG(DATALOG const& other) :
-	data(other.data),
-	time(other.time),
-	log_directory(other.log_directory),
-	log_name(other.log_name),
-	column_names(other.column_names),
-	file_format(other.file_format)
-{
+using std::cout;
+using std::endl;
 
-}
 
 void DATALOG::Init(std::string const& directory, std::string const& name, std::vector< std::string > const& columns, std::string const& format)
 {
@@ -29,74 +21,58 @@ void DATALOG::Init(std::string const& directory, std::string const& name, std::v
 	log_name = name;
 	column_names = columns;
 	file_format = format;
-
 }
 
 bool DATALOG::HasColumn(std::string const& column_name) const
 {
-	std::vector< std::string >::const_iterator result;
-	result = std::find(column_names.begin(), column_names.end(), column_name);
+	vector< string >::const_iterator result;
+	result = find(column_names.begin(), column_names.end(), column_name);
 	return result != column_names.end();
 }
 
-bool DATALOG::GetColumn(std::string column_name, std::vector< double > const* column_ref) const
+bool DATALOG::GetColumn(std::string column_name, log_column_T const* column_ref) const
 {
-	std::map< std::string, std::vector< double > >::const_iterator column;
-	//column = data.find(column_name);
-	for (column = data.begin(); column != data.end(); ++column)
+	log_map_T::const_iterator column;
+	column = data.find(column_name);
+	if (column != data.end())
 	{
-		if (column->first == column_name)
-			break;
+		column_ref = &column->second;
+		return true;
 	}
-	if (column == data.end())
-		return false;
-
-	column_ref = &column->second;
-	return true;
+	return false;
 }
 
-void DATALOG::AddEntry(std::map< std::string, double > & values)
+void DATALOG::AddEntry(log_entry_T const* values)
 {
-	std::vector< std::string >::const_iterator column_name;
-	std::vector< std::string > missing_values(column_names.size());
-	std::vector< std::string >::iterator mv_iter;
-	std::vector< std::string > sorted_values;
-	std::map< std::string, double >::const_iterator value_iter;
-	for (value_iter = values.begin(); value_iter != values.end(); ++value_iter)
+	assert(values != NULL);
+	vector< string > missing_values(column_names.size());
+	vector< string >::iterator mv_iter;
+	vector< string > sorted_values;
+
+	for (log_entry_T::const_iterator value = values->begin(); value != values->end(); ++value)
 	{
-		//std::cout << "value named " << value_iter->first << " = " << value_iter->second << std::endl;
-		sorted_values.push_back(value_iter->first);
+		sorted_values.push_back(value->first);
 	}
-	std::vector< std::string > sorted_column_names = column_names;
-	std::sort(sorted_values.begin(), sorted_values.end());
-	/*std::vector< std::string >::const_iterator sv_iter;
-	for (sv_iter = sorted_values.begin(); sv_iter != sorted_values.end(); ++sv_iter)
-	{
-		std::cout << "sorted value " << *sv_iter << std::endl;
-	}*/
-	std::sort(sorted_column_names.begin(), sorted_column_names.end());
-	/*std::vector< std::string >::const_iterator scn_iter;
-	for (scn_iter = sorted_column_names.begin(); scn_iter != sorted_column_names.end(); ++scn_iter)
-	{
-		std::cout << "sorted column named " << *scn_iter << std::endl;
-	}*/
+	vector< string > sorted_column_names = column_names;
+	sort(sorted_values.begin(), sorted_values.end());
+	sort(sorted_column_names.begin(), sorted_column_names.end());
 	mv_iter = std::set_difference(sorted_column_names.begin(), sorted_column_names.end(), sorted_values.begin(), sorted_values.end(), missing_values.begin());
 
-	for (column_name = sorted_values.begin(); column_name != sorted_values.end(); ++column_name)
+	for (vector< string >::const_iterator column_name = sorted_values.begin(); column_name != sorted_values.end(); ++column_name)
 	{
-		//std::cout << "Adding value " << *column_name << " = " << values[*column_name] << std::endl;
-		data[*column_name].push_back(values[*column_name]);
-		//std::cout << "Added value " << *column_name << " = " << data[*column_name].back() << std::endl;
+		log_entry_T::const_iterator value = values->find(*column_name);
+		assert(value != values->end());
+		data[*column_name].push_back(value->second);
 	}
-	for (column_name = missing_values.begin(); column_name != missing_values.end(); ++column_name)
+	for (vector< string >::const_iterator column_name = missing_values.begin(); column_name != missing_values.end(); ++column_name)
 	{
-		// if the column name is empty, we have run out of missing values, bail out
 		if (*column_name == "")
 			break;
 
 		// for missing columns, add NULL values (i would prefer NaN...how?) to the data stream
 		data[*column_name].push_back(NULL);
 	}
+	cout << "Added entry" << endl;
 }
 
 void DATALOG::Write()
@@ -104,17 +80,17 @@ void DATALOG::Write()
 	if (file_format == "none")
 		return;
 
-	std::string file_extension = file_format;
+	string file_extension = file_format;
 	if (file_format == "gnuplot")
 		file_extension = "dat";
 	else if (file_format == "XML")
 		file_extension = "xml";
 
-	std::string filename(log_directory + "/" + log_name + "." + file_extension);
-	std::ofstream log_file(filename.c_str());
-	std::vector< std::string >::const_iterator column_name;
-	std::vector< double >::const_iterator data_point;
-	std::string sep;
+	string filename(log_directory + "/" + log_name + "." + file_extension);
+	ofstream log_file(filename.c_str());
+	vector< string >::const_iterator column_name;
+	log_column_T::const_iterator data_point;
+	string sep;
 
 	if (!log_file)
 	{
@@ -139,8 +115,8 @@ void DATALOG::Write()
 
 	if (file_format == "gnuplot")
 	{
-		std::string log_filename = log_directory + "/" + log_name + ".plt";
-		std::ofstream plt_file(log_filename.c_str());
+		string log_filename = log_directory + "/" + log_name + ".plt";
+		ofstream plt_file(log_filename.c_str());
 
 		if (!plt_file)
 		{

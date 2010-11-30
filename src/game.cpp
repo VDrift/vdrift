@@ -69,10 +69,7 @@ GAME::GAME(std::ostream & info_out, std::ostream & error_out) :
 	profilingmode(false),
 	renderconfigfile("render.conf.deferred"),
 	track(info_out, error_out),
-	replay(framerate),
-	enable_data_logging(false),
-	data_logging_frequency(0.01),
-	time_since_last_logentry(0.0)
+	replay(framerate)
 	//sky(graphics, info_out, err_out)
 {
 	carcontrols_local.first = NULL;
@@ -334,7 +331,7 @@ bool GAME::InitGUI()
 	std::map<std::string, std::string> optionmap;
 	GetOptions(optionmap);
 	gui.SyncOptions(true, optionmap, error_output);
-	
+
 	gui.ActivatePage("Main", 0.5, error_output); //nice, slow fade-in
 	if (settings.GetMouseGrab()) eventsystem.SetMouseCursorVisibility(true);
 
@@ -718,13 +715,9 @@ void GAME::AdvanceGameLogic()
 				}
 				PROFILER.endBlock("car-update");
 
-				if (enable_data_logging)
-				{
-					PROFILER.beginBlock("datalog");
-					UpdateDataLog(TickPeriod());
-					UpdateDataMetrics(TickPeriod());
-					PROFILER.endBlock("datalog");
-				}
+				PROFILER.beginBlock("data");
+				UpdateDataManager(TickPeriod());
+				PROFILER.endBlock("data");
 
 				//PROFILER.beginBlock("timer");
 				UpdateTimer();
@@ -1164,7 +1157,7 @@ void GAME::ProcessGUIAction(const std::string & action)
 		controlgrab_input = setting;
 		controlgrab_analog = (action.substr(15,1) == "y");
 		controlgrab_only_one = (action.substr(17,1) == "y");
-		
+
 		//info_output << "Controlgrab action: " << action << ", " << action.substr(12,1) << ", " << action.substr(14,1) << endl;
 		controlgrab_mouse_coords = std::pair <int,int> (eventsystem.GetMousePosition()[0],eventsystem.GetMousePosition()[1]);
 		controlgrab_joystick_state = eventsystem.GetJoysticks();
@@ -1256,11 +1249,11 @@ void GAME::ProcessGUIAction(const std::string & action)
 				controlgrab_editcontrol.onetime = true;
 			else
 				controlgrab_editcontrol.onetime = false;
-			
+
 			bool down = false;
 			if (tempoptionmap["controledit.button.up_down"].GetCurrentDisplayValue() == "true")
 				down = true;
-			
+
 			controlgrab_editcontrol.joypushdown = down;
 			controlgrab_editcontrol.keypushdown = down;
 			controlgrab_editcontrol.mouse_push_down = down;
@@ -1502,7 +1495,7 @@ void GAME::UpdateCarInputs(CAR & car)
 				settings.GetButtonRamp(),
 				settings.GetHGateShifter());
 		}
-		
+
 		stringstream debug_info1, debug_info2, debug_info3, debug_info4;
 		if (debugmode)
 		{
@@ -1661,32 +1654,8 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	}
 	//cout << "After load car: " << carcontrols_local.first << endl;
 
-	// setup data logging
-	CONFIGFILE data_settings(pathmanager.GetDataSettingsFile());
-	data_settings.GetParam("datalog.enable", enable_data_logging);
-
-	if (enable_data_logging)
-	{
-		float data_log_update_frequency_Hz = 60.0;
-		vector<string> data_log_column_names;
-		string data_log_name("unnamed_datalog");
-		string data_log_format("csv");
-		data_settings.GetParam("datalog.frequency", data_log_update_frequency_Hz);
-		data_settings.GetParam("datalog.columns", data_log_column_names);
-		data_settings.GetParam("datalog.name", data_log_name);
-		data_settings.GetParam("datalog.type", data_log_format);
-		if (find(data_log_column_names.begin(), data_log_column_names.end(), "Time") == data_log_column_names.end())
-		{
-			// couldn't find the Time column, die
-			return false;
-		}
-		data_logging_frequency = 1.0 / data_log_update_frequency_Hz;
-		data_log.Init(pathmanager.GetDataLogPath(), data_log_name, data_log_column_names, data_log_format);
-
-		// setup metrics
-		metric_manager.Init(data_settings, data_log);
-	}
-
+	// setup data logging and metrics
+	data_manager.Init(pathmanager.GetDataSettingsFile(), pathmanager.GetDataLogPath());
 
     race_laps = num_laps;
 
@@ -1796,13 +1765,11 @@ std::string GAME::GetReplayRecordingFilename()
 ///clean up all game data
 void GAME::LeaveGame()
 {
-	if (enable_data_logging)
+	if (data_manager.IsEnabled())
 	{
 		info_output << "Writing log..." << endl;
-		data_log.Write();
-
-		// clean up the metrics
-		delete &metric_manager;
+		// this will trigger the log writing and clean up the metrics
+		delete &data_manager;
 	}
 
 	ai.clear_cars();
@@ -1813,7 +1780,7 @@ void GAME::LeaveGame()
 	{
 		info_output << "Saving replay to " << GetReplayRecordingFilename() << endl;
 		replay.StopRecording(GetReplayRecordingFilename());
-		
+
 		std::list <std::pair <std::string, std::string> > replaylist;
 		PopulateReplayList(replaylist);
 		gui.ReplaceOptionValues("game.selected_replay", replaylist, error_output);
@@ -1863,7 +1830,7 @@ bool GAME::LoadCar(
 	std::string partspath = pathmanager.GetCarSharedDir();
 	std::string carpath = pathmanager.GetCarDir()+"/"+carname;
 	std::string cfgpath = pathmanager.GetDataPath()+"/"+carpath+"/"+carname+".car";
-	
+
 	CONFIG carconf;
 	if (carfile.empty()) //if no file is passed in, then load it from disk
 	{
@@ -1917,7 +1884,7 @@ bool GAME::LoadCar(
 
 		// setup auto clutch and auto shift
 		ProcessNewSettings();
-		
+
 		// shift into first gear if autoshift enabled
 		if (carcontrols_local.first && settings.GetAutoShift())
 			carcontrols_local.first->SetGear(1);
@@ -2240,7 +2207,7 @@ void GAME::GetOptions(std::map<std::string, std::string> & options)
 	bool write_to = true;
 	CONFIG tempconfig;
 	settings.Serialize(write_to, tempconfig);
-	
+
 	for (CONFIG::const_iterator ic = tempconfig.begin(); ic != tempconfig.end(); ++ic)
 	{
 		std::string section = ic->first;
@@ -2270,10 +2237,10 @@ void GAME::SetOptions(const std::map<std::string, std::string> & options)
 		}
 		tempconfig.SetParam(section, param, i->second);
 	}
-	
+
 	bool write_to = false;
 	settings.Serialize(write_to, tempconfig);
-	
+
 	// account for new settings
 	ProcessNewSettings();
 }
@@ -2484,67 +2451,87 @@ bool GAME::LastStartWasSuccessful() const
 	return !pathmanager.FileExists(pathmanager.GetStartupFile());
 }
 
-void GAME::UpdateDataLog(float dt)
+bool GAME::QueryLogData(DATALOG::log_entry_T * new_entry)
 {
-	time_since_last_logentry += dt;
-
-	while (time_since_last_logentry >= data_logging_frequency)
+	for (vector< string >::const_iterator column = data_manager.GetLogColumnNames().begin(); column != data_manager.GetLogColumnNames().end(); ++column)
 	{
-		std::map< std::string, double > new_entry;
-		std::vector< std::string >::const_iterator column;
+		double value;
+		bool found = true;
 
-		for (column = data_log.GetColumnNames().begin(); column != data_log.GetColumnNames().end(); ++column)
+		if (*column == "Time")
 		{
-			double value;
-
-			if (*column == "Time")
-			{
-				value = clocktime;
-			}
-			else if (*column == "Velocity")
-			{
-				value = cars.front().GetSpeed();
-			}
-			else if (*column == "Sector")
-			{
-				value = cars.front().GetSector();
-			}
-			else if (*column == "Throttle")
-			{
-				value = carcontrols_local.second.GetInput(CARINPUT::THROTTLE);
-			}
-			else if (*column == "Brake")
-			{
-				value = carcontrols_local.second.GetInput(CARINPUT::BRAKE);
-			}
-			else if (*column == "Handbrake")
-			{
-				value = carcontrols_local.second.GetInput(CARINPUT::HANDBRAKE);
-			}
-			else if (*column == "Clutch")
-			{
-				value = carcontrols_local.second.GetInput(CARINPUT::CLUTCH);
-			}
-			else if (*column == "Steering")
-			{
-				value = carcontrols_local.second.GetInput(CARINPUT::STEER_RIGHT) - carcontrols_local.second.GetInput(CARINPUT::STEER_LEFT);
-			}
-			/*
-			else
-			{
-				TODO: throw exception: unknown column
-			}
-			*/
-
-			new_entry[*column] = value;
+			value = clocktime;
+		}
+		else if (*column == "Velocity")
+		{
+			value = cars.front().GetSpeed();
+		}
+		else if (*column == "Sector")
+		{
+			value = cars.front().GetSector();
+		}
+		else if (*column == "Throttle")
+		{
+			value = carcontrols_local.second.GetInput(CARINPUT::THROTTLE);
+		}
+		else if (*column == "Brake")
+		{
+			value = carcontrols_local.second.GetInput(CARINPUT::BRAKE);
+		}
+		else if (*column == "Handbrake")
+		{
+			value = carcontrols_local.second.GetInput(CARINPUT::HANDBRAKE);
+		}
+		else if (*column == "Clutch")
+		{
+			value = carcontrols_local.second.GetInput(CARINPUT::CLUTCH);
+		}
+		else if (*column == "Steering")
+		{
+			value = carcontrols_local.second.GetInput(CARINPUT::STEER_RIGHT) - carcontrols_local.second.GetInput(CARINPUT::STEER_LEFT);
+		}
+		else
+		{
+			found = false;
 		}
 
-		data_log.AddEntry(new_entry);
-		time_since_last_logentry -= data_logging_frequency;
+		if (found)
+			new_entry->insert(std::make_pair(*column, value));
 	}
+
+	return true;
 }
 
-void GAME::UpdateDataMetrics(float dt)
+void GAME::UpdateDataManager(float dt)
 {
-	metric_manager.Update(dt);
+	if (data_manager.IsEnabled())
+	{
+		cout << "data manager is enabled" << endl;
+		/// This pointer is a bit of a messy hack to support QueryLogData.
+		DATALOG::log_entry_T * new_log_entry = NULL;
+		if (data_manager.NeedsUpdate())
+		{
+			cout << "data manager needs update" << endl;
+			new_log_entry = new DATALOG::log_entry_T();
+			bool query_log_data_success = QueryLogData(new_log_entry);
+			cout << "queried log data: " << new_log_entry << endl;
+			assert(query_log_data_success);
+			data_manager.SetNextLogEntry(new_log_entry);
+			cout << "set next log entry" << endl;
+		}
+
+		cout << "updating data manager" << endl;
+		data_manager.Update(dt);
+
+		if (new_log_entry)
+			delete new_log_entry;
+
+		/// check for new events and process them
+		METRICEVENT event;
+		if (data_manager.PollEvents(event))
+		{
+			assert(event.GetType() != "");
+			cout << "event type: " << event.GetType() << ", data: " << event.GetData() << endl;
+		}
+	}
 }
