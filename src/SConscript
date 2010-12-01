@@ -41,7 +41,7 @@ src = Split("""aabb.cpp
 		containeralgorithm.cpp
 		crashdetection.cpp
 		datalog.cpp
-                datametric.cpp
+                datamanager.cpp
                 datametric_test.cpp
                 driverfeedback.cpp
 		endian_utility.cpp

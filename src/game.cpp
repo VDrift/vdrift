@@ -1768,8 +1768,9 @@ void GAME::LeaveGame()
 	if (data_manager.IsEnabled())
 	{
 		info_output << "Writing log..." << endl;
+		data_manager.WriteLog();
 		// this will trigger the log writing and clean up the metrics
-		delete &data_manager;
+		data_manager.Clear();
 	}
 
 	ai.clear_cars();
@@ -2506,21 +2507,21 @@ void GAME::UpdateDataManager(float dt)
 {
 	if (data_manager.IsEnabled())
 	{
-		cout << "data manager is enabled" << endl;
+		//cout << "data manager is enabled" << endl;
 		/// This pointer is a bit of a messy hack to support QueryLogData.
 		DATALOG::log_entry_T * new_log_entry = NULL;
 		if (data_manager.NeedsUpdate())
 		{
-			cout << "data manager needs update" << endl;
+			//cout << "data manager needs update" << endl;
 			new_log_entry = new DATALOG::log_entry_T();
 			bool query_log_data_success = QueryLogData(new_log_entry);
-			cout << "queried log data: " << new_log_entry << endl;
+			//cout << "queried log data: " << new_log_entry << endl;
 			assert(query_log_data_success);
 			data_manager.SetNextLogEntry(new_log_entry);
-			cout << "set next log entry" << endl;
+			//cout << "set next log entry" << endl;
 		}
 
-		cout << "updating data manager" << endl;
+		//cout << "updating data manager" << endl;
 		data_manager.Update(dt);
 
 		if (new_log_entry)
@@ -2531,7 +2532,7 @@ void GAME::UpdateDataManager(float dt)
 		if (data_manager.PollEvents(event))
 		{
 			assert(event.GetType() != "");
-			cout << "event type: " << event.GetType() << ", data: " << event.GetData() << endl;
+			//cout << "event type: " << event.GetType() << ", data: " << event.GetData() << endl;
 		}
 	}
 }

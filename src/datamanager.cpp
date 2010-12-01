@@ -1,9 +1,8 @@
 #include <assert.h>
 #include <algorithm>
-#include "datametric.h"
+#include "datamanager.h"
 
 using std::string;
-using std::map;
 using std::vector;
 using std::find;
 using std::sort;
@@ -14,7 +13,38 @@ using std::cout;
 using std::endl;
 
 /** static class member declaration */
-TYPEDMETRICFACTORY::metric_map_T * TYPEDMETRICFACTORY::metric_types;
+TYPEDMETRICFACTORY::metric_ctor_map_T * TYPEDMETRICFACTORY::metric_types;
+
+DATAMETRIC::DATAMETRIC(DATAMETRIC_CTOR_PARAMS_DEF)
+ : run(false),
+   name(nom),
+   description(desc),
+   input_data_columns(input_columns),
+   output_variable_names(outvar_names),
+   options(opts)
+{
+
+}
+
+bool DATAMETRIC::GetOutputVariable(std::string const& var_name, DATALOG::log_data_T & output_variable) const
+{
+	metric_output_map_T::const_iterator outvar(output_data.find(var_name));
+	if (outvar != output_data.end())
+	{
+		output_variable = outvar->second;
+		return true;
+	}
+	return false;
+}
+
+DATALOG::log_column_T const* DATAMETRIC::GetColumn(std::string const& column_name) const
+{
+	metric_input_map_T::const_iterator column;
+	column = input_data_columns.find(column_name);
+	assert(column != input_data_columns.end());
+	assert(column->second != NULL);
+	return column->second;
+}
 
 void DATAMANAGER::Init(std::string const& data_config_filename, std::string const& log_path)
 {
@@ -23,75 +53,98 @@ void DATAMANAGER::Init(std::string const& data_config_filename, std::string cons
 	if (!enabled)
 		return;
 
+	//cout << "DataManager enabled" << endl;
 	/// Set up the datalog
 	float update_frequency_Hz = 60.0;
 	vector<string> log_column_names;
 	string log_name("unnamed_datalog");
 	string log_format("csv");
+
 	data_settings.GetParam("datalog", "frequency", update_frequency_Hz);
-	data_settings.GetParam("datalog", "columns", log_column_names);
-	data_settings.GetParam("datalog", "name", log_name);
+	update_frequency = 1.0 / update_frequency_Hz;
+	//cout << "Update frequency: " << update_frequency << endl;
+
+	bool required_settings = true;
+	required_settings &= data_settings.GetParam("datalog", "columns", log_column_names);
+	required_settings &= data_settings.GetParam("datalog", "name", log_name);
+	assert(required_settings);
+	//cout << "Got required settings" << endl;
+
 	data_settings.GetParam("datalog", "format", log_format);
 	assert(find(log_column_names.begin(), log_column_names.end(), "Time") != log_column_names.end());
-	update_frequency = 1.0 / update_frequency_Hz;
-	data_log.Init(log_path, log_name, log_column_names, log_format);
+	//cout << "Time column is present" << endl;
+
+	//cout << "init data log" << endl;
+	data_log.Init(log_column_names, log_path, log_name, log_format);
+	//cout << "data log init complete" << endl;
 
 	vector<string> metric_names;
-	data_settings.GetParam("datametrics", "load_order", metric_names);
-	vector<string>::const_iterator metric_name;
-	for (metric_name = metric_names.begin(); metric_name != metric_names.end(); ++metric_name)
+	assert(data_settings.GetParam("datametrics", "load_order", metric_names));
+
+	for (vector<string>::const_iterator metric_name = metric_names.begin(); metric_name != metric_names.end(); ++metric_name)
 	{
 		// collect up all the settings for this metric from the config file
 		string metric_section_name("datametric." + *metric_name);
+		string metric_type("undefined type");
+		string metric_description("empty description");
 		vector<string> metric_required_columns;
 		vector<string> metric_output_vars;
 		vector<string> metric_options;
-		string metric_type("undefined type");
-		string metric_description("empty description");
-		data_settings.GetParam(metric_section_name, "required_columns", metric_required_columns);
-		data_settings.GetParam(metric_section_name, "output_vars", metric_output_vars);
-		data_settings.GetParam(metric_section_name, "options", metric_options);
-		data_settings.GetParam(metric_section_name, "type", metric_type);
-		data_settings.GetParam(metric_section_name, "description", metric_description);
-		assert(metric_type != "undefined type");
 
+		//cout << "Setting up metric '" << *metric_name << "'" << endl;
+		required_settings = true;
+		required_settings &= data_settings.GetParam(metric_section_name, "required_columns", metric_required_columns);
+		required_settings &= data_settings.GetParam(metric_section_name, "output_vars", metric_output_vars);
+		required_settings &= data_settings.GetParam(metric_section_name, "type", metric_type);
+		assert(required_settings);
+		assert(TYPEDMETRICFACTORY::IsValidType(metric_type));
+		//cout << "got required settings and metric type '" << metric_type << "' is valid" << endl;
+
+		data_settings.GetParam(metric_section_name, "options", metric_options);
+		data_settings.GetParam(metric_section_name, "description", metric_description);
+
+		//cout << "Creating " << metric_required_columns.size() << " input_data_columns" << endl;
+		// create map of pointers to log columns.
 		vector<string>::const_iterator col_name;
-		map< string, vector<double> const* > input_data_columns;
+		DATAMETRIC::metric_input_map_T input_data_columns;
 		for (col_name = metric_required_columns.begin(); col_name != metric_required_columns.end(); ++col_name)
 		{
+			//cout << "making sure we have a log column named " << *col_name << endl;
 			// the following assert makes sure the requested column name is actually in the data log
 			assert (find(log_column_names.begin(), log_column_names.end(), *col_name) != log_column_names.end());
-			vector< double > * column = NULL;
-			string column_name = *col_name;
-			if (data_log.GetColumn(column_name, column))
-			{
-				input_data_columns[*col_name] = column;
-			}
+			//cout << "trying to get column named " << *col_name << endl;
+			DATALOG::log_column_T const* column = data_log.GetColumn(*col_name);
+			//cout << "Found column pointer value " << column << endl;
+			input_data_columns[*col_name] = column;
+			//cout << "Set input data column '" << *col_name << "' to " << input_data_columns[*col_name] << endl;
 		}
 
+		//cout << "Done creating input data columns, creating new instance" << endl;
 		// look up the type of the metric by name and get an instance of it
-		DATAMETRIC * new_data_metric = TYPEDMETRICFACTORY::CreateInstance(metric_type, input_data_columns, metric_output_vars, metric_options, metric_description);
-		assert (new_data_metric != 0);
+		DATAMETRIC * new_data_metric = TYPEDMETRICFACTORY::CreateInstance(metric_type, *metric_name, metric_description, input_data_columns, metric_output_vars, metric_options);
+		assert (new_data_metric != NULL);
+		//cout << "Created new data metric at " << new_data_metric << endl;
 		data_metrics[*metric_name] = new_data_metric;
+		//cout << "Mapped new data metric named '" << *metric_name << "', value " << data_metrics[*metric_name] << endl;
 	}
 }
 
 void DATAMANAGER::Clear()
 {
-	// write out the data log, if necessary
-	data_log.Write();
-
+	//cout << "Clearing Datamanager" << endl;
 	// clean up the metrics
-	map< string, DATAMETRIC* >::iterator metric_iter;
-	for (metric_iter = data_metrics.begin(); metric_iter != data_metrics.end(); ++metric_iter)
+	for (metric_map_T::iterator metric_iter = data_metrics.begin(); metric_iter != data_metrics.end(); ++metric_iter)
 	{
+		//cout << "Metric '" << metric_iter->first << "' at " << metric_iter->second << endl;
 		assert(metric_iter->second != NULL);
 		delete metric_iter->second;
 		metric_iter->second = NULL;
 	}
+	data_metrics.clear();
 
 	// turn it off until next Init()
 	enabled = false;
+	//cout << "All clear" << endl;
 }
 
 void DATAMANAGER::Update(float dt)
@@ -105,32 +158,35 @@ void DATAMANAGER::Update(float dt)
 	if (must_return)
 		return;
 
-	cout << "time since update " << time_since_update << endl;
+	//cout << "time since update " << time_since_update << endl;
 
-	cout << "add next log entry" << endl;
+	//cout << "add next log entry" << endl;
 
 	// the next log entry had better be valid, so it can be added.
 	assert(next_log_entry != NULL);
 	data_log.AddEntry(next_log_entry);
 	next_log_entry = NULL;
 
-	cout << "visit all metrics" << endl;
+	//cout << "visit all metrics" << endl;
 
 	// iterate over all metrics in the map
 	for (metric_map_T::iterator metric = data_metrics.begin(); metric != data_metrics.end(); ++metric)
 	{
-		cout << "  metric " << metric->first << " update" << endl;
+		//cout << "  metric " << metric->first << " update" << endl;
 		// run the update function for the metric
 		metric->second->Update(dt);
 
-		cout << "  metric " << metric->first << " datalog feedback" << endl;
+		//cout << "  metric " << metric->first << " datalog feedback" << endl;
 		// update the data log with the new values from the metric's output variables
 		for (vector<string>::const_iterator output_var = metric->second->GetOutputVariableNames().begin();
 		     output_var != metric->second->GetOutputVariableNames().end(); ++output_var)
 		{
-			cout << "    output var " << *output_var << " value " << metric->second->GetOutputVariable(*output_var) << endl;
+			DATALOG::log_data_T val;
+			bool get_output_value_success = metric->second->GetOutputVariable(*output_var, val);
+			assert(get_output_value_success);
+			//cout << "    output var " << *output_var << " value " << val << endl;
 			// add the output data to the datalog
-			data_log.ModifyLastEntry(*output_var, metric->second->GetOutputVariable(*output_var));
+			data_log.ModifyLastEntry(*output_var, val);
 		}
 	}
 

@@ -14,13 +14,37 @@ using std::sort;
 using std::cout;
 using std::endl;
 
-
-void DATALOG::Init(std::string const& directory, std::string const& name, std::vector< std::string > const& columns, std::string const& format)
+DATALOG::~DATALOG()
 {
+	for (log_map_T::iterator column = data.begin(); column != data.end(); ++column)
+	{
+		assert(column->second != NULL);
+		delete column->second;
+		column->second = NULL;
+	}
+}
+
+void DATALOG::Init(std::vector< std::string > const& columns, std::string const& directory, std::string const& name, std::string const& format)
+{
+	//cout << "Initializing datalog" << endl;
 	log_directory = directory;
 	log_name = name;
-	column_names = columns;
 	file_format = format;
+	column_names = columns;
+
+	//cout << "Sorting column names" << endl;
+	// store column names sorted to improve AddEntry performance
+	sorted_column_names = column_names;
+	sort(sorted_column_names.begin(), sorted_column_names.end());
+
+	//cout << "Creating columns" << endl;
+	// initialize the map with the column names and create the columns
+	for (vector<string>::const_iterator column_name = column_names.begin(); column_name != column_names.end(); ++column_name)
+	{
+		//cout << "creating new log column '" << *column_name << "'" << endl;
+		data[*column_name] = new log_column_T;
+		//cout << "created new column '" << *column_name << "' at " << data[*column_name] << endl;
+	}
 }
 
 bool DATALOG::HasColumn(std::string const& column_name) const
@@ -30,52 +54,71 @@ bool DATALOG::HasColumn(std::string const& column_name) const
 	return result != column_names.end();
 }
 
-bool DATALOG::GetColumn(std::string column_name, log_column_T const* column_ref) const
+DATALOG::log_column_T const* DATALOG::GetColumn(std::string const& column_name) const
 {
 	log_map_T::const_iterator column;
 	column = data.find(column_name);
-	if (column != data.end())
-	{
-		column_ref = &column->second;
-		return true;
-	}
-	return false;
+	assert(column != data.end());
+	return column->second;
+}
+
+void DATALOG::AppendToColumn(std::string const& column_name, log_data_T value)
+{
+	log_map_T::iterator column;
+	column = data.find(column_name);
+	assert(column != data.end());
+	column->second->push_back(value);
 }
 
 void DATALOG::AddEntry(log_entry_T const* values)
 {
 	assert(values != NULL);
-	vector< string > missing_values(column_names.size());
-	vector< string >::iterator mv_iter;
-	vector< string > sorted_values;
 
+	// append the values to respective columns, storing the column names encountered
+	vector< string > input_colnames;
 	for (log_entry_T::const_iterator value = values->begin(); value != values->end(); ++value)
 	{
-		sorted_values.push_back(value->first);
+		AppendToColumn(value->first, value->second);
+		input_colnames.push_back(value->first);
 	}
-	vector< string > sorted_column_names = column_names;
-	sort(sorted_values.begin(), sorted_values.end());
-	sort(sorted_column_names.begin(), sorted_column_names.end());
-	mv_iter = std::set_difference(sorted_column_names.begin(), sorted_column_names.end(), sorted_values.begin(), sorted_values.end(), missing_values.begin());
 
-	for (vector< string >::const_iterator column_name = sorted_values.begin(); column_name != sorted_values.end(); ++column_name)
-	{
-		log_entry_T::const_iterator value = values->find(*column_name);
-		assert(value != values->end());
-		data[*column_name].push_back(value->second);
-	}
-	for (vector< string >::const_iterator column_name = missing_values.begin(); column_name != missing_values.end(); ++column_name)
-	{
-		if (*column_name == "")
-			break;
+	// get the difference between the data log's column names and the input
+	// column names, in missing_values, padded to column_names.size() with ""s
+	sort(input_colnames.begin(), input_colnames.end());
+	vector< string > missing_values(column_names.size());
+	std::set_difference(sorted_column_names.begin(), sorted_column_names.end(), input_colnames.begin(), input_colnames.end(), missing_values.begin());
 
-		// for missing columns, add NULL values (i would prefer NaN...how?) to the data stream
-		data[*column_name].push_back(NULL);
+	// for missing columns, add an empty value to the column, until padding
+	for (vector< string >::const_iterator column_name = missing_values.begin(); (column_name != missing_values.end()) && (*column_name != ""); ++column_name)
+	{
+		AppendToColumn(*column_name, NULL);
 	}
-	cout << "Added entry" << endl;
+
+	//cout << "Added entry" << endl;
 }
 
-void DATALOG::Write()
+void DATALOG::WriteDelimitedRows(std::ofstream & os, std::string const& delim) const
+{
+	string sep;
+	log_column_T const* time_col = GetColumn("Time");
+	for (unsigned int row_idx = 0; row_idx < time_col->size(); row_idx++)
+	{
+		sep = "";
+		for (vector< string >::const_iterator column_name = column_names.begin(); column_name != column_names.end(); ++column_name)
+		{
+			log_column_T const* column = GetColumn(*column_name);
+			os << sep << column->at(row_idx);
+
+			if (sep == "")
+				sep = delim;
+		}
+		os << std::endl;
+	}
+	os << std::endl;
+}
+
+
+void DATALOG::Write() const
 {
 	if (file_format == "none")
 		return;
@@ -88,7 +131,6 @@ void DATALOG::Write()
 
 	string filename(log_directory + "/" + log_name + "." + file_extension);
 	ofstream log_file(filename.c_str());
-	vector< string >::const_iterator column_name;
 	log_column_T::const_iterator data_point;
 	string sep;
 
@@ -132,7 +174,7 @@ void DATALOG::Write()
 		plt_file << "set term png size 1280, 960" << std::endl;
 		plt_file << "set output \"" << log_directory << "/" << log_name << ".png\"" << std::endl;
 		plt_file << "plot ";
-		for (column_name = column_names.begin(); column_name != column_names.end(); ++column_name)
+		for (vector< string >::const_iterator column_name = column_names.begin(); column_name != column_names.end(); ++column_name)
 		{
 			// skip the time column - that is the y-axis, so no need to plot it.
 			if (*column_name == "Time")
@@ -151,24 +193,13 @@ void DATALOG::Write()
 		plt_file.close();
 
 		// write rows of space-separated data
-		for (unsigned int row_idx = 0; row_idx < data["Time"].size(); row_idx++)
-		{
-			sep = "";
-			for (column_name = column_names.begin(); column_name != column_names.end(); ++column_name)
-			{
-				log_file << sep << data[*column_name][row_idx];
-
-				if (sep == "")
-					sep = " ";
-			}
-			log_file << std::endl;
-		}
+		WriteDelimitedRows(log_file, " ");
 	}
 	else if (file_format == "csv")
 	{
 		// write a comma-separated column header
 		sep = "";
-		for (column_name = column_names.begin(); column_name != column_names.end(); ++column_name)
+		for (vector< string >::const_iterator column_name = column_names.begin(); column_name != column_names.end(); ++column_name)
 		{
 			log_file << sep << *column_name;
 
@@ -178,18 +209,7 @@ void DATALOG::Write()
 		log_file << std::endl;
 
 		// write the rows of comma-separated data
-		for (unsigned int row_idx = 0; row_idx < data["Time"].size(); row_idx++)
-		{
-			sep = "";
-			for (column_name = column_names.begin(); column_name != column_names.end(); ++column_name)
-			{
-				log_file << sep << data[*column_name][row_idx];
-
-				if (sep == "")
-					sep = ",";
-			}
-			log_file << std::endl;
-		}
+		WriteDelimitedRows(log_file, ",");
 	}
 	else if (file_format == "XML")
 	{

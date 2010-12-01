@@ -9,12 +9,9 @@ using std::endl;
 METRICTYPEREGISTER<TESTMETRIC> TESTMETRIC::reg("Test");
 
 TESTMETRIC::TESTMETRIC(DATAMETRIC_CTOR_PARAMS_DEF)
+ : DATAMETRIC(DATAMETRIC_CTOR_PARAMS)
 {
 	DATAMETRIC::run = true;
-	DATAMETRIC::input_data_columns = input_columns;
-	DATAMETRIC::output_variable_names = outvar_names;
-	DATAMETRIC::options = opts;
-	DATAMETRIC::description = desc;
 }
 
 TESTMETRIC::~TESTMETRIC()
@@ -24,17 +21,19 @@ TESTMETRIC::~TESTMETRIC()
 
 void TESTMETRIC::Update(float dt)
 {
-	cout << "Updating metric dt=" << dt << endl;
+	//cout << "Updating metric dt=" << dt << endl;
 	if (!run)
 		return;
 
-	cout << "Getting Velocity column" << endl;
-	assert(DATAMETRIC::input_data_columns.find("Velocity") != DATAMETRIC::input_data_columns.end());
-	DATALOG::log_column_T const* velocity_col = DATAMETRIC::input_data_columns["Velocity"];
-	cout << "velocity column size: " << velocity_col->size() << endl;
-	cout << "Getting Velocity value" << endl;
-	double velocity = velocity_col->back();
+	//cout << "Getting Velocity column" << endl;
+	DATALOG::log_column_T const* velocity_col = DATAMETRIC::GetColumn("Velocity");
 
-	cout << "Got velocity=" << velocity << ", setting output Test to velocity*2" << endl;
+
+	//cout << "Velocity column size: " << velocity_col->size() << endl;
+	//cout << "Getting Velocity value" << endl;
+	DATALOG::log_data_T velocity = velocity_col->back();
+
+	//cout << "Got Velocity=" << velocity << ", setting output Test to Velocity*2" << endl;
 	output_data["Test"] = velocity * 2.0;
+	//cout << "The result is " << output_data["Test"] << ". All done, g'bye" << endl;
 }

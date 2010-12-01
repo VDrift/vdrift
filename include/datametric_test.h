@@ -1,7 +1,7 @@
 #ifndef TESTMETRIC_H
 #define TESTMETRIC_H
 
-#include <datametric.h>
+#include "datamanager.h"
 
 
 class TESTMETRIC : public DATAMETRIC

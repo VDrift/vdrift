@@ -33,7 +33,7 @@
 #include "modelmanager.h"
 #include "soundmanager.h"
 #include "datalog.h"
-#include "datametric.h"
+#include "datamanager.h"
 
 #include <ostream>
 #include <string>
