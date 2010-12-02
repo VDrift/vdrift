@@ -58,7 +58,11 @@ class DATAMETRIC
 		 * \return true if var_name was found, false otherwise
 		 */
 		bool GetOutputVariable(std::string const& var_name, DATALOG::log_data_T & output_variable) const;
-
+		/** Retrieve an event from this metric, if it has one
+		 * \param type a reference to the place to put the event type
+		 * \param data a reference to the place to put the event data
+		 * \return true if there is an event, false otherwise
+		 */
 		bool GetEvent(std::string & type, METRICEVENT::event_data_T & data);
 		/** Update the metric's calculations (must be overridden) */
 		virtual void Update(float dt) = 0;
@@ -68,9 +72,15 @@ class DATAMETRIC
 		 * \return a pointer to the data column with the given name
 		 */
 		DATALOG::log_column_T const* GetColumn(std::string const& column_name) const;
-
+		/** Get the last value in the named data column
+		 * \param column_name the name of the column from which to get the last value
+		 * \return the last value in the colum named
+		 */
 		DATALOG::log_data_T GetLastInColumn(std::string const& column_name) const;
-
+		/** Setup an event for this metric
+		 * \param new_event_type the new event's type
+		 * \param new_event_data the new event's data
+		 */
 		void SetEvent(std::string new_event_type, METRICEVENT::event_data_T new_event_data);
 
 		bool run; //!< whether to perform calculations or not

@@ -1,6 +1,14 @@
 #!/usr/bin/env python
 
-# Generate a new DATAMETRIC-derived class for VDrift's data management system.
+"""
+
+Generate a new DATAMETRIC-derived class for VDrift's data management system.
+
+Usage: python create_new_metric.py "Metric Name"
+where "Metric Name" is the name of the new metric type, including quotation
+marks, with each word capitalized, with words separated by spaces.
+
+"""
 
 import sys
 import re
