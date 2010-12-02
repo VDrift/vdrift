@@ -1,10 +1,8 @@
 #include "font.h"
 #include "texturemanager.h"
 
-#include <string>
 #include <sstream>
 #include <fstream>
-#include <iostream>
 #include <algorithm>
 
 template <typename T>
@@ -62,15 +60,12 @@ bool FONT::Load(
 		return false;
 	}
 	
+	charinfo.resize(char_count);
+	
 	std::string curstr;
-	while (fontinfo && curstr != "chars")
-		fontinfo >> curstr; //advance to first interesting bit
+	while (fontinfo && curstr != "chars") fontinfo >> curstr; //advance to first interesting bit
 	
 	fontinfo >> curstr;
-	//if (!VerifyParse("count=96", curstr, fontinfopath, error_output)) return false;
-	
-	charinfo.resize(128);
-	
 	while (fontinfo.good())
 	{
 		fontinfo >> curstr;
@@ -80,13 +75,6 @@ bool FONT::Load(
 			
 			unsigned int cur_id(0);
 			if (!Parse("id=", cur_id, fontinfo, fontinfopath, error_output)) return false;
-			if (cur_id >= charinfo.size())
-			{
-				error_output << "Font info file " << fontinfopath << ": ID is out of range: " << cur_id << std::endl;
-				return false;
-			}
-			//std::cout << "Parsing ID " << cur_id << endl;
-			
 			if (!Parse("x=", charinfo[cur_id].x, fontinfo,fontinfopath, error_output)) return false;
 			if (!Parse("y=", charinfo[cur_id].y, fontinfo,fontinfopath, error_output)) return false;
 			if (!Parse("width=", charinfo[cur_id].width, fontinfo,fontinfopath, error_output)) return false;

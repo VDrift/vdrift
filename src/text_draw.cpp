@@ -8,8 +8,7 @@ void TEXT_DRAW::Set(DRAWABLE & draw, const FONT & font, const std::string & newt
 {
 	output_array.Clear();
 	
-	text=newtext;
-	
+	text = newtext;
 	draw.SetDiffuseMap(font.GetFontTexture());
 	draw.SetVertArray(&output_array);
 	draw.SetCull(false, false);
@@ -29,7 +28,9 @@ void TEXT_DRAW::Set(DRAWABLE & draw, const FONT & font, const std::string & newt
 		{
 			optional <const FONT::CHARINFO *> cinfo = font.GetCharInfo(text[i]);
 			if (cinfo)
-				cursorx += RenderCharacter(output_array, font.GetFontTexture()->GetW(), font.GetFontTexture()->GetH(), cursorx, cursory, newscalex,newscaley, *cinfo.get());
+			{
+				cursorx += RenderCharacter(output_array, font.GetFontTexture()->GetW(), font.GetFontTexture()->GetH(), cursorx, cursory, newscalex, newscaley, *cinfo.get());
+			}
 		}
 	}
 	
@@ -59,7 +60,9 @@ void TEXT_DRAW::Revise(const FONT & font, const std::string & newtext, float x, 
 		{
 			optional <const FONT::CHARINFO *> cinfo = font.GetCharInfo(text[i]);
 			if (cinfo)
+			{
 				cursorx += RenderCharacter(output_array, font.GetFontTexture()->GetW(), font.GetFontTexture()->GetH(), cursorx, cursory, scalex, scaley, *cinfo.get());
+			}
 		}
 	}
 	
@@ -74,15 +77,15 @@ float TEXT_DRAW::RenderCharacter(VERTEXARRAY & output_array, const float tw, con
 	//float x1, y1, x2, y2;
 	//float u1, v1, u2, v2;
 	
-	float x1 = x + (float)c.xoffset/tw*scalex;
-	float x2 = x1 + (float)c.width/tw*scalex;
-	float y1 = y - (float)c.yoffset/th*scaley;
-	float y2 = y1 + (float)c.height/th*scaley;
+	float x1 = x + (float)c.xoffset / tw * scalex;
+	float x2 = x1 + (float)c.width / tw * scalex;
+	float y1 = y - (float)c.yoffset / th * scaley;
+	float y2 = y1 + (float)c.height / th * scaley;
 	
-	float u1 = (float)c.x/tw;
-	float u2 = u1 + (float)c.width/tw;
-	float v1 = (float)c.y/th;
-	float v2 = v1 + (float)c.height/th;
+	float u1 = (float)c.x / tw;
+	float u2 = u1 + (float)c.width / tw;
+	float v1 = (float)c.y / th;
+	float v2 = v1 + (float)c.height / th;
 	
 	//std::cout << x1 << "," << x2 << "," << y1 << "," << y2 << std::endl;
 	//std::cout << u1 << "," << u2 << "," << v1 << "," << v2 << std::endl;
@@ -152,7 +155,9 @@ float TEXT_DRAW::GetWidth(const FONT & font, const std::string & newtext, const 
 		{
 			optional <const FONT::CHARINFO *> cinfo = font.GetCharInfo(newtext[i]);
 			if (cinfo)
+			{
 				cursorx += (cinfo.get()->xadvance/font.GetFontTexture()->GetW())*newscale;
+			}
 		}
 	}
 	

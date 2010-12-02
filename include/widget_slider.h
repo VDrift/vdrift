@@ -49,7 +49,7 @@ public:
 		const float newmax,
 		const bool ispercentage,
 		const std::string & newsetting,
-  		const FONT * font,
+  		const FONT & font,
   		const float fontscalex,
   		const float fontscaley,
   		std::ostream & error_output,

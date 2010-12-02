@@ -127,7 +127,7 @@ void WIDGET_SLIDER::SetupDrawable(
 	const float newmax,
 	const bool ispercentage,
 	const std::string & newsetting,
-	const FONT * font,
+	const FONT & font,
 	const float fontscalex,
 	const float fontscaley,
 	std::ostream & error_output,
@@ -135,7 +135,6 @@ void WIDGET_SLIDER::SetupDrawable(
 {
 	assert(wedgetex);
 	assert(cursortex);
-	assert(font);
 	
 	current = 0.0;
 	percentage = ispercentage;
@@ -151,7 +150,7 @@ void WIDGET_SLIDER::SetupDrawable(
 	corner1.Set(x-w*4.0*0.5, y-h*0.5);
 	corner2.Set(x+w*4.0*0.5*0.5, y+h*0.5);
 	
-	text.Init(scene, *font, "", corner1[0], (corner1[1]+corner2[1])*0.5, fontscalex, fontscaley);
+	text.Init(scene, font, "", corner1[0], (corner1[1]+corner2[1])*0.5, fontscalex, fontscaley);
 	UpdateText(scene);
 	text.SetDrawOrder(scene, draworder);
 	

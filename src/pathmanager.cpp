@@ -19,20 +19,6 @@
 #include <errno.h>
 #endif
 
-#ifndef _WIN32
-static bool DirectoryExists(const std::string & filename)
-{
-	DIR *dp;
-	dp = opendir(filename.c_str());
-	if (dp != NULL) {
-		closedir(dp);
-		return true;
-	} else {
-		return false;
-	}
-}
-#endif
-
 static void MakeDir(const std::string & dir)
 {
 #ifndef _WIN32
@@ -127,7 +113,7 @@ void PATHMANAGER::Init(std::ostream & info_output, std::ostream & error_output)
 	info_output << "Log file: " << GetLogFile() << std::endl;
 }
 
-bool PATHMANAGER::GetFolderIndex(std::string folderpath, std::list <std::string> & outputfolderlist, std::string extension) const
+bool PATHMANAGER::GetFileList(std::string folderpath, std::list <std::string> & outputfolderlist, std::string extension) const
 {
 //------Folder listing code for POSIX
 #ifndef _WIN32
@@ -138,7 +124,6 @@ bool PATHMANAGER::GetFolderIndex(std::string folderpath, std::list <std::string>
 	{
 		while ( ( ep = readdir( dp ) ) )
 		{
-			//puts (ep->d_name);
 			std::string newname = ep->d_name;
 			if (newname[0] != '.')
 			{
@@ -148,7 +133,9 @@ bool PATHMANAGER::GetFolderIndex(std::string folderpath, std::list <std::string>
 		(void) closedir (dp);
 	}
 	else
+	{
 		return false;
+	}
 #else 	//------End POSIX-specific folder listing code ---- Start WIN32 Specific code
 	HANDLE          hList;
 	TCHAR           szDir[MAX_PATH+1];
@@ -159,23 +146,15 @@ bool PATHMANAGER::GetFolderIndex(std::string folderpath, std::list <std::string>
 
 	// Get the first file
 	hList = FindFirstFile(szDir, &FileData);
-	if (hList == INVALID_HANDLE_VALUE)
-	{
-		//no files found.  that's OK
-	}
-	else
+	if (hList != INVALID_HANDLE_VALUE)
 	{
 		// Traverse through the directory structure
 		while (FindNextFile(hList, &FileData))
 		{
-			// Check the object is a directory or not
-			if (FileData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
-			{} else
+			if (!(FileData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) && 
+				(FileData.cFileName[0] != '.'))
 			{
-				if (FileData.cFileName[0] != '.')
-				{
-					outputfolderlist.push_back (FileData.cFileName);
-				}
+				outputfolderlist.push_back (FileData.cFileName);
 			}
 		}
 	}
@@ -189,12 +168,13 @@ bool PATHMANAGER::GetFolderIndex(std::string folderpath, std::list <std::string>
 		std::list <std::list <std::string>::iterator> todel;
 		for (std::list <std::string>::iterator i = outputfolderlist.begin(); i != outputfolderlist.end(); ++i)
 		{
-			if (i->find(extension) != i->length()-extension.length())
-				todel.push_back(i);
+			if (i->find(extension) != i->length()-extension.length()) todel.push_back(i);
 		}
 
 		for (std::list <std::list <std::string>::iterator>::iterator i = todel.begin(); i != todel.end(); ++i)
+		{
 			outputfolderlist.erase(*i);
+		}
 	}
 
 	outputfolderlist.sort();

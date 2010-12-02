@@ -110,10 +110,11 @@ private:
 	TEXTUREMANAGER textures;
 	MODELMANAGER models;
 	SOUNDMANAGER sounds;
+	SETTINGS settings;
+
 	GRAPHICS_SDLGL graphics;
 	EVENTSYSTEM_SDL eventsystem;
 	SOUND sound;
-	SETTINGS settings;
 
 	SCENENODE debugnode;
 	TEXT_DRAWABLE fps_draw;

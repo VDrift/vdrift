@@ -156,6 +156,7 @@ void GRAPHICS_SDLGL::Init(const std::string & shaderpath, const std::string & wi
 	}
 	
 	//initialize GLEW
+	//glewExperimental = GL_TRUE; // expose all avaiable extensions
 	GLenum glew_err = glewInit();
 	if ( glew_err != GLEW_OK )
 	{

@@ -3,8 +3,6 @@
 
 #include "derived.h"
 #include "widget.h"
-#include "font.h"
-#include "guioption.h"
 #include "scenenode.h"
 #include "reseatable_reference.h"
 
@@ -15,8 +13,10 @@
 
 class WIDGET_LABEL;
 class WIDGET_CONTROLGRAB;
+class TEXTUREMANAGER;
 class MODELMANAGER;
 class CONFIG;
+class FONT;
 
 class GUIPAGE
 {
@@ -30,7 +30,8 @@ public:
 		const std::string & texsize,
 		const float screenhwratio,
 		const CONFIG & controlsconfig,
-		const std::map <std::string, FONT> & fonts,
+		const FONT & fonts,
+		const std::map <std::string, std::string> & languagemap,
 		std::map <std::string, GUIOPTION> & optionmap,
 		SCENENODE & parentnode,
 		TEXTUREMANAGER & textures,
@@ -44,6 +45,9 @@ public:
 	
 	///tell all child widgets to update to/from the option map
 	void UpdateOptions(SCENENODE & parent, bool save_to, std::map<std::string, GUIOPTION> & optionmap, std::ostream & error_output);
+	
+	///update controlgrab widgets
+	void UpdateControls(SCENENODE & parentnode, const CONFIG & controls, const FONT & font);
 	
 	///returns a list of actions that were generated
 	std::list <std::pair <std::string, bool> > ProcessInput(
@@ -71,7 +75,6 @@ private:
 	std::map <std::string, reseatable_reference <WIDGET_LABEL> > label_widgets;
 	std::list <WIDGET_CONTROLGRAB *> controlgrabs;
 	WIDGET_LABEL * tooltip_widget;
-	const std::map <std::string, FONT> * fontmap;
 	keyed_container <SCENENODE>::handle s;
 	bool dialog;
 	
