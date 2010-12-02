@@ -26,6 +26,8 @@ public:
 	
 	WIDGET_TOGGLE();
 	
+	~WIDGET_TOGGLE() {};
+	
 	virtual WIDGET * clone() const;
 	
 	virtual void SetAlpha(SCENENODE & scene, float newalpha);

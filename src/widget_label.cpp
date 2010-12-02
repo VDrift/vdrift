@@ -60,8 +60,6 @@ void WIDGET_LABEL::ReviseDrawable(SCENENODE & scene, const std::string & text)
 {
 	assert(savedfont);
 	
-	//float w = text_draw.GetWidth(*savedfont, text, scale);
-	
 	text_draw.Revise(*savedfont, text);
 }
 

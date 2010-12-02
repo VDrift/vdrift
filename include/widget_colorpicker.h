@@ -9,6 +9,8 @@ class WIDGET_COLORPICKER : public WIDGET
 public:
 	WIDGET_COLORPICKER();
 	
+	~WIDGET_COLORPICKER() {};
+	
 	virtual WIDGET * clone() const;
 	
 	virtual void SetAlpha(SCENENODE & scene, float newalpha);

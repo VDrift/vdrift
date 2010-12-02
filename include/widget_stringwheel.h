@@ -12,6 +12,8 @@ class WIDGET_STRINGWHEEL : public WIDGET
 public:
 	WIDGET_STRINGWHEEL();
 	
+	~WIDGET_STRINGWHEEL() {};
+	
 	virtual WIDGET * clone() const;
 	
 	virtual void SetAlpha(SCENENODE & scene, float newalpha);

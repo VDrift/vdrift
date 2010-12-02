@@ -17,6 +17,10 @@ class FONT;
 class WIDGET_CONTROLGRAB : public WIDGET
 {
 public:
+	WIDGET_CONTROLGRAB() {};
+	
+	~WIDGET_CONTROLGRAB();
+	
 	virtual WIDGET * clone() const;
 	
 	virtual void SetAlpha(SCENENODE & scene, float newalpha);
@@ -59,15 +63,15 @@ public:
 	{
 		ADD,
 		ADDSEL,
-			JOYAXIS,
-			JOYAXISSEL,
+		JOYAXIS,
+		JOYAXISSEL,
 		JOYBTN,
 		JOYBTNSEL,
-			KEY,
-			KEYSEL,
+		KEY,
+		KEYSEL,
 		MOUSE,
 		MOUSESEL,
-			END
+		END
 	};
 	
 private:

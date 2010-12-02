@@ -38,8 +38,6 @@ public:
 	}
 	
 	void Revise(const FONT & font, const std::string & newtext, float x, float y, float scalex, float scaley, VERTEXARRAY & output_array);
-	
-	float GetWidth(const FONT & font, const std::string & newtext, const float newscale) const;
 
 	const std::string & GetText() const
 	{
@@ -47,6 +45,8 @@ public:
 	}
 	
 	const std::pair<float,float> GetCurrentScale() const {return std::pair<float,float>(oldscalex,oldscaley);}
+	
+	static float GetWidth(const FONT & font, const std::string & newtext, const float newscale);
 };
 
 ///a slightly higher level class than the TEXT_DRAW Class that contains its own DRAWABLE handle

@@ -4,6 +4,11 @@
 
 #include <cassert>
 
+WIDGET_CONTROLGRAB::~WIDGET_CONTROLGRAB()
+{
+	//std::clog << "ControlGrab Destructor: " << setting << ", " << description << std::endl;
+}
+
 WIDGET * WIDGET_CONTROLGRAB::clone() const
 {
 	return new WIDGET_CONTROLGRAB(*this);

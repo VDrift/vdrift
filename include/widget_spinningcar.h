@@ -4,15 +4,17 @@
 #include "widget.h"
 #include "scenenode.h"
 #include "mathvector.h"
+#include "car.h"
 
 class TEXTUREMANAGER;
 class MODELMANAGER;
-class CAR;
 
 class WIDGET_SPINNINGCAR : public WIDGET
 {
 public:
 	WIDGET_SPINNINGCAR();
+	
+	~WIDGET_SPINNINGCAR() {};
 	
 	virtual WIDGET * clone() const;
 	

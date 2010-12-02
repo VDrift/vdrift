@@ -138,10 +138,9 @@ float TEXT_DRAW::RenderCharacter(VERTEXARRAY & output_array, const float tw, con
 	return ((float)c.xadvance/tw)*scalex;
 }
 
-float TEXT_DRAW::GetWidth(const FONT & font, const std::string & newtext, const float newscale) const
+float TEXT_DRAW::GetWidth(const FONT & font, const std::string & newtext, const float newscale)
 {
 	float cursorx(0);
-	
 	std::vector <float> linewidth;
 	
 	for (unsigned int i = 0; i < newtext.size(); i++)

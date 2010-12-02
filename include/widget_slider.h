@@ -11,6 +11,10 @@ class FONT;
 class WIDGET_SLIDER : public WIDGET
 {
 public:
+	WIDGET_SLIDER() {};
+	
+	~WIDGET_SLIDER() {};
+	
 	virtual WIDGET * clone() const;
 	
 	virtual void SetAlpha(SCENENODE & scene, float newalpha);
