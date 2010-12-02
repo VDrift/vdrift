@@ -58,17 +58,17 @@ struct JOEFrame
 	int num_texcoords;
 	int num_normals;
 	
-	JOEFace * faces;
-	JOEVertex * verts;
-	JOEVertex * normals;
-	JOETexCoord * texcoords;
+	std::vector<JOEFace> faces;
+	std::vector<JOEVertex> verts;
+	std::vector<JOEVertex> normals;
+	std::vector<JOETexCoord> texcoords;
 };
 
 // This holds all the information for our model/scene. 
 struct JOEObject 
 {
 	JOEHeader info;
-	JOEFrame * frames;
+	std::vector<JOEFrame> frames;
 };
 
 struct VERT_ENTRY
@@ -79,11 +79,11 @@ struct VERT_ENTRY
 	int tex_index;
 };
 
-static void CorrectEndian(struct JOEFace * p, int num)
+static void CorrectEndian(std::vector<JOEFace> & p)
 {
-	for (int i = 0; i < num; i++ )
+	for (unsigned int i = 0; i < p.size(); ++i)
 	{
-		for (int d = 0; d < 3; d++ )
+		for (int d = 0; d < 3; ++d)
 		{
 			p[i].vertexIndex[d] = ENDIAN_SWAP_16 ( p[i].vertexIndex[d] );
 			p[i].normalIndex[d] = ENDIAN_SWAP_16 ( p[i].normalIndex[d] );
@@ -92,27 +92,27 @@ static void CorrectEndian(struct JOEFace * p, int num)
 	}	
 }
 
-static void CorrectEndian(struct JOEVertex *p, int num)
+static void CorrectEndian(std::vector<JOEVertex> & p)
 {
-	for (int i = 0; i < num; i++ )
+	for (unsigned int i = 0; i < p.size(); ++i)
 	{
-		for (int d = 0; d < 3; d++ )
+		for (int d = 0; d < 3; ++d)
 		{
 			p[i].vertex[d] = ENDIAN_SWAP_FLOAT ( p[i].vertex[d] );
 		}
 	}
 }
 
-static void CorrectEndian(struct JOETexCoord *p, int num)
+static void CorrectEndian(std::vector<JOETexCoord> & p)
 {
-	for (int i = 0; i < num; i++ )
+	for (unsigned int i = 0; i < p.size(); ++i)
 	{
 		p[i].u = ENDIAN_SWAP_FLOAT ( p[i].u );
 		p[i].v = ENDIAN_SWAP_FLOAT ( p[i].v );
 	}	
 }
 
-int MODEL_JOE03::BinaryRead ( void * buffer, unsigned int size, unsigned int count, FILE * f, JOEPACK * pack )
+static int BinaryRead ( void * buffer, unsigned int size, unsigned int count, FILE * f, JOEPACK * pack )
 {
 	unsigned int bytesread = 0;
 	
@@ -225,14 +225,14 @@ void MODEL_JOE03::ReadData ( FILE *m_FilePointer, JOEPACK * pack, JOEObject * pO
 	int num_frames = pObject->info.num_frames;
 	int num_faces = pObject->info.num_faces;
 
-	pObject->frames = new JOEFrame [num_frames];
+	pObject->frames.resize(num_frames);
 
 	for ( int i = 0; i < num_frames; i++ )
 	{
-		pObject->frames[i].faces = new JOEFace [num_faces];
+		pObject->frames[i].faces.resize(num_faces);
 
-		BinaryRead ( pObject->frames[i].faces, sizeof ( JOEFace ), num_faces, m_FilePointer, pack );
-		CorrectEndian ( pObject->frames[i].faces, num_faces );
+		BinaryRead ( &pObject->frames[i].faces[0], sizeof ( JOEFace ), num_faces, m_FilePointer, pack );
+		CorrectEndian ( pObject->frames[i].faces );
 
 		BinaryRead ( &pObject->frames[i].num_verts, sizeof ( int ), 1, m_FilePointer, pack );
 		pObject->frames[i].num_verts = ENDIAN_SWAP_32 ( pObject->frames[i].num_verts );
@@ -241,16 +241,16 @@ void MODEL_JOE03::ReadData ( FILE *m_FilePointer, JOEPACK * pack, JOEObject * pO
 		BinaryRead ( &pObject->frames[i].num_normals, sizeof ( int ), 1, m_FilePointer, pack );
 		pObject->frames[i].num_normals = ENDIAN_SWAP_32 ( pObject->frames[i].num_normals );
 
-		pObject->frames[i].verts = new JOEVertex [pObject->frames[i].num_verts];
-		pObject->frames[i].normals = new JOEVertex [pObject->frames[i].num_normals];
-		pObject->frames[i].texcoords = new JOETexCoord [pObject->frames[i].num_texcoords];
+		pObject->frames[i].verts.resize(pObject->frames[i].num_verts);
+		pObject->frames[i].normals.resize(pObject->frames[i].num_normals);
+		pObject->frames[i].texcoords.resize(pObject->frames[i].num_texcoords);
 
-		BinaryRead ( pObject->frames[i].verts, sizeof ( JOEVertex ), pObject->frames[i].num_verts, m_FilePointer, pack );
-		CorrectEndian ( pObject->frames[i].verts, pObject->frames[i].num_verts );
-		BinaryRead ( pObject->frames[i].normals, sizeof ( JOEVertex ), pObject->frames[i].num_normals, m_FilePointer, pack );
-		CorrectEndian ( pObject->frames[i].normals, pObject->frames[i].num_normals );
-		BinaryRead ( pObject->frames[i].texcoords, sizeof ( JOETexCoord ), pObject->frames[i].num_texcoords, m_FilePointer, pack );
-		CorrectEndian ( pObject->frames[i].texcoords, pObject->frames[i].num_texcoords );
+		BinaryRead ( &pObject->frames[i].verts[0], sizeof ( JOEVertex ), pObject->frames[i].num_verts, m_FilePointer, pack );
+		CorrectEndian ( pObject->frames[i].verts );
+		BinaryRead ( &pObject->frames[i].normals[0], sizeof ( JOEVertex ), pObject->frames[i].num_normals, m_FilePointer, pack );
+		CorrectEndian ( pObject->frames[i].normals );
+		BinaryRead ( &pObject->frames[i].texcoords[0], sizeof ( JOETexCoord ), pObject->frames[i].num_texcoords, m_FilePointer, pack );
+		CorrectEndian ( pObject->frames[i].texcoords );
 	}
 
 	//cout << "!!! loading " << modelpath << endl;
@@ -430,6 +430,9 @@ void MODEL_JOE03::ReadData ( FILE *m_FilePointer, JOEPACK * pack, JOEObject * pO
 	mesh.SetNormals(&v_normals[0], v_normals.size());
 	mesh.SetTexCoordSets(1);
 	mesh.SetTexCoords(0, &v_texcoords[0], v_texcoords.size());
+	
+	// free pObject
+	
 }
 
 ///fix invalid normals (my own fault, i suspect.  the DOF converter i wrote may have flipped Y & Z normals)
