@@ -24,6 +24,7 @@ class FULLSTOPMETRIC : public DATAMETRIC
 
 		state_T state; //!< current car state w.r.t. braking
 		state_T last_state; //!< the state from the last update (to check for state changes)
+		DATALOG::log_data_T braking_start_velocity; //!< the velocity of the car when it began to brake
 		DATALOG::log_data_T braking_stimulus_time; //!< the time at which the braking stimulus was given
 		DATALOG::log_data_T braking_start_time; //!< the time at which braking began
 		static METRICTYPEREGISTER<FULLSTOPMETRIC> reg; //!< object registering this type for creation by name

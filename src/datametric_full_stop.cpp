@@ -83,17 +83,21 @@ void FULLSTOPMETRIC::Update(float dt)
 		else if (state == braking)
 		{
 			braking_start_time = DATAMETRIC::GetLastInColumn("Time");
+			braking_start_velocity = DATAMETRIC::GetLastInColumn("Velocity");
 			//cout << "started braking at " << braking_start_time << endl;
 		}
 		else if (state == stopped)
 		{
+			DATALOG::log_data_T current_velocity = DATAMETRIC::GetLastInColumn("Velocity");
 			DATALOG::log_data_T current_time = DATAMETRIC::GetLastInColumn("Time");
 			DATALOG::log_data_T stopping_time = current_time - braking_start_time;
 			DATALOG::log_data_T reaction_time = braking_start_time - braking_stimulus_time;
+			DATALOG::log_data_T acceleration = ((current_velocity - braking_start_velocity) / stopping_time) / 9.81;
 			//cout << "stopped braking at " << current_time << ", stopping time: " << stopping_time << ", delay: " << reaction_time << endl;
 			ostringstream os;
 			os << "You stopped in " << stopping_time << " seconds" << endl;
 			os << "after a " << reaction_time << " second delay." << endl;
+			os << "with acceleration of " << acceleration << " Gs " << endl;
 			METRICEVENT::event_data_T event_data;
 			event_data["Message"] = os.str();
 			DATAMETRIC::SetEvent("DriverFeedbackMessage", event_data);

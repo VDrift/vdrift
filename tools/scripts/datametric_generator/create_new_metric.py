@@ -56,7 +56,7 @@ def main():
   template_directory = "."
   template_object_filename = "src/datametric___metric_type__.cpp"
   template_header_filename = "include/datametric___metric_type__.h"
-  output_directory = "/home/thelusiv/code/vdrift-branches/driver-training"
+  output_directory = "/home/vdrift/code/vdrift/branches/driver-training"
   # load the data
   data = {}
   assert len(sys.argv) > 1, "not enough arguments"
