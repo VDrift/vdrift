@@ -61,7 +61,7 @@ GAME::GAME(std::ostream & info_out, std::ostream & error_out) :
 	multithreaded(false),
 	benchmode(false),
 	dumpfps(false),
-	active_camera(NULL),
+	active_camera(0),
 	pause(false),
 	particle_timer(0),
 	race_laps(0),
@@ -72,7 +72,7 @@ GAME::GAME(std::ostream & info_out, std::ostream & error_out) :
 	replay(framerate)
 	//sky(graphics, info_out, err_out)
 {
-	carcontrols_local.first = NULL;
+	carcontrols_local.first = 0;
 }
 
 ///start the game with the given arguments
@@ -186,7 +186,7 @@ void GAME::Start(list <string> & args)
 	//load particle systems
 	list <string> smoketexlist;
 	string smoketexpath = pathmanager.GetDataPath()+"/"+pathmanager.GetTireSmokeTextureDir();
-	pathmanager.GetFolderIndex(smoketexpath, smoketexlist, ".png");
+	pathmanager.GetFileList(smoketexpath, smoketexlist, ".png");
 	if (!tire_smoke.Load(
 			smoketexlist,
 			pathmanager.GetTireSmokeTextureDir(),
@@ -281,7 +281,7 @@ bool GAME::InitGUI()
 {
 	list <string> menufiles;
 	string menufolder = pathmanager.GetGUIMenuPath(settings.GetSkin());
-	if (!pathmanager.GetFolderIndex(menufolder, menufiles))
+	if (!pathmanager.GetFileList(menufolder, menufiles))
 	{
 		error_output << "Error retreiving contents of folder: " << menufolder << endl;
 		return false;
@@ -290,7 +290,6 @@ bool GAME::InitGUI()
 	{
 		//remove any pages that have ~ characters
 		list <list <string>::iterator> todel;
-
 		for (list <string>::iterator i = menufiles.begin(); i != menufiles.end(); ++i)
 		{
 			if (i->find("~") != string::npos)
@@ -298,7 +297,6 @@ bool GAME::InitGUI()
 				todel.push_back(i);
 			}
 		}
-
 		for (list <list <string>::iterator>::iterator i = todel.begin(); i != todel.end(); ++i)
 		{
 			menufiles.erase(*i);
@@ -314,6 +312,8 @@ bool GAME::InitGUI()
 			pathmanager.GetOptionsFile(),
 			pathmanager.GetCarControlsFile(),
 			menufolder,
+			pathmanager.GetGUILanguageDir(settings.GetSkin()),
+			settings.GetLanguage(),
 			pathmanager.GetGUITextureDir(settings.GetSkin()),
 			pathmanager.GetDataPath(),
 			settings.GetTextureSize(),
@@ -331,7 +331,6 @@ bool GAME::InitGUI()
 	std::map<std::string, std::string> optionmap;
 	GetOptions(optionmap);
 	gui.SyncOptions(true, optionmap, error_output);
-
 	gui.ActivatePage("Main", 0.5, error_output); //nice, slow fade-in
 	if (settings.GetMouseGrab()) eventsystem.SetMouseCursorVisibility(true);
 
@@ -1074,7 +1073,9 @@ void GAME::ProcessGUIInputs()
 			carcontrols_local.second.Load(pathmanager.GetCarControlsFile(), info_output, error_output);
 			//std::cout << "Control files are being loaded: " << gui.GetActivePageName() << ", " << gui.GetLastPageName() << std::endl;
 			if (!gui.GetLastPageName().empty())
+			{
 				LoadControlsIntoGUIPage(gui.GetLastPageName());
+			}
 		}
 
 		//process gui actions
@@ -1100,7 +1101,9 @@ void GAME::ProcessGUIInputs()
 void GAME::RedisplayControlPage()
 {
 	if (controlgrab_page.empty())
+	{
 		gui.ActivatePage("Main", 0.25, error_output); //uh, dunno what to do so go to the main menu
+	}
 	else
 	{
 		gui.ActivatePage(controlgrab_page, 0.25, error_output);
@@ -1112,27 +1115,11 @@ void GAME::RedisplayControlPage()
 
 void GAME::LoadControlsIntoGUIPage(const std::string & pagename)
 {
+	CONFIG controlfile;
 	std::map<std::string, std::list <std::pair <std::string, std::string> > > valuelists;
 	PopulateValueLists(valuelists);
-	CONFIG controlfile;
 	carcontrols_local.second.Save(controlfile, info_output, error_output);
-
-	bool loaded = gui.GetPage(pagename).Load(
-		pathmanager.GetGUIMenuPath(settings.GetSkin())+"/"+pagename,
-		pathmanager.GetGUITextureDir(settings.GetSkin()),
-		pathmanager.GetDataPath(),
-		settings.GetTextureSize(),
-		(float)graphics.GetH()/graphics.GetW(),
-		controlfile,
-		fonts,
-		gui.GetOptionMap(),
-		gui.GetPageNode(pagename),
-		textures,
-		models,
-		error_output,
-		true);
-
-	assert(loaded);
+	gui.UpdateControls(pagename, controlfile);
 }
 
 ///process the action string from the GUI
@@ -2046,7 +2033,7 @@ void GAME::PopulateReplayList(std::list <std::pair <std::string, std::string> > 
 	replaylist.clear();
 	int numreplays = 0;
 	std::list <std::string> replayfoldercontents;
-	if (pathmanager.GetFolderIndex(pathmanager.GetReplayPath(),replayfoldercontents))
+	if (pathmanager.GetFileList(pathmanager.GetReplayPath(),replayfoldercontents))
 	{
 		for (std::list <std::string>::iterator i = replayfoldercontents.begin(); i != replayfoldercontents.end(); ++i)
 		{
@@ -2104,7 +2091,7 @@ void GAME::PopulateValueLists(std::map<std::string, std::list <std::pair <std::s
 	{
 		list <pair<string,string> > tracklist;
 		list <string> trackfolderlist;
-		pathmanager.GetFolderIndex(pathmanager.GetTrackPath(), trackfolderlist);
+		pathmanager.GetFileList(pathmanager.GetTrackPath(), trackfolderlist);
 		for (list <string>::iterator i = trackfolderlist.begin(); i != trackfolderlist.end(); ++i)
 		{
 			ifstream check((pathmanager.GetTrackPath()+"/"+*i+"/about.txt").c_str());
@@ -2123,7 +2110,7 @@ void GAME::PopulateValueLists(std::map<std::string, std::list <std::pair <std::s
 	{
 		list <pair<string,string> > carlist;
 		list <string> carfolderlist;
-		pathmanager.GetFolderIndex(pathmanager.GetCarPath(), carfolderlist);
+		pathmanager.GetFileList(pathmanager.GetCarPath(), carfolderlist);
 		for (list <string>::iterator i = carfolderlist.begin(); i != carfolderlist.end(); ++i)
 		{
 			ifstream check((pathmanager.GetCarPath()+"/"+*i+"/about.txt").c_str());
@@ -2185,20 +2172,38 @@ void GAME::PopulateValueLists(std::map<std::string, std::list <std::pair <std::s
 		valuelists["antialiasing"].push_back(pair<string,string>("2","2X"));
 		valuelists["antialiasing"].push_back(pair<string,string>("4","4X"));
 	}
-
+	
 	//populate replays list
 	{
 		PopulateReplayList(valuelists["replays"]);
 	}
-
+	
 	//populate other lists
 	valuelists["joy_indeces"].push_back(pair<string,string>("0","0"));
+	
+	//populate skins
 	list <string> skinlist;
-	pathmanager.GetFolderIndex(pathmanager.GetSkinPath(),skinlist);
+	pathmanager.GetFileList(pathmanager.GetSkinPath(), skinlist);
 	for (list <string>::iterator i = skinlist.begin(); i != skinlist.end(); ++i)
 	{
 		if (pathmanager.FileExists(pathmanager.GetSkinPath()+*i+"/menus/Main"))
+		{
 			valuelists["skins"].push_back(pair<string,string>(*i,*i));
+		}
+	}
+	
+	//populate languages
+	list <string> languages;
+	string skinfolder = pathmanager.GetDataPath() + "/" + pathmanager.GetGUILanguageDir(settings.GetSkin()) + "/";
+	pathmanager.GetFileList(skinfolder, languages, ".lng");
+	for (list <string>::iterator i = languages.begin(); i != languages.end(); ++i)
+	{
+		if (pathmanager.FileExists(skinfolder + *i))
+		{
+			size_t n = i->rfind(".lng");
+			string value = i->substr(0, n);
+			valuelists["languages"].push_back(pair<string,string>(value, value));
+		}
 	}
 }
 

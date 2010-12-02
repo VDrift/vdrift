@@ -48,12 +48,8 @@ public:
 		const bool newanalog,
 		const bool newonly_one);
 	
-	void LoadControls(
-		SCENENODE & scene,
-		const CONFIG & c,
-		const std::vector <std::tr1::shared_ptr<TEXTURE> > & texturevector,
-		const FONT & font);
-		
+	void LoadControls(SCENENODE & parent, const CONFIG & c, const FONT & font);
+	
 	keyed_container <SCENENODE>::handle GetNode()
 	{
 		return topnode;
@@ -105,6 +101,8 @@ private:
 	std::string tempdescription;
 	std::string active_action;
 	keyed_container <SCENENODE>::handle topnode;
+	keyed_container <SCENENODE>::handle ctrlnode;
+	std::vector <std::tr1::shared_ptr<TEXTURE> > textures;
 	float x, y;
 	float scale_x, scale_y;
 	float w, h;

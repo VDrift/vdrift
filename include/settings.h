@@ -18,49 +18,9 @@ public:
 
 	void Save(const std::string & settingsfile, std::ostream & error);
 
-	void SetResolutionX ( unsigned int theValue )
-	{
-		resolution_x = theValue;
-	}
-
 	unsigned int GetResolutionX() const
 	{
 		return resolution_x;
-	}
-
-	void SetBpp ( unsigned int theValue )
-	{
-		bpp = theValue;
-	}
-
-	unsigned int GetBpp() const
-	{
-		return bpp;
-	}
-
-	void SetDepthbpp ( unsigned int theValue )
-	{
-		depthbpp = theValue;
-	}
-
-	unsigned int GetDepthbpp() const
-	{
-		return depthbpp;
-	}
-
-	void SetFullscreen ( bool theValue )
-	{
-		fullscreen = theValue;
-	}
-
-	bool GetFullscreen() const
-	{
-		return fullscreen;
-	}
-
-	void SetResolutionY ( unsigned int value )
-	{
-		resolution_y = value;
 	}
 
 	unsigned int GetResolutionY() const
@@ -68,9 +28,19 @@ public:
 		return resolution_y;
 	}
 
-	void SetShaders ( bool value )
+	unsigned int GetBpp() const
 	{
-		shaders = value;
+		return bpp;
+	}
+
+	unsigned int GetDepthbpp() const
+	{
+		return depthbpp;
+	}
+
+	bool GetFullscreen() const
+	{
+		return fullscreen;
 	}
 
 	bool GetShaders() const
@@ -78,19 +48,14 @@ public:
 		return shaders;
 	}
 
-	void SetSkin ( const std::string& value )
-	{
-		skin = value;
-	}
-
 	std::string GetSkin() const
 	{
 		return skin;
 	}
 
-	void SetShowFps ( bool value )
+	std::string GetLanguage() const
 	{
-		show_fps = value;
+		return language;
 	}
 
 	bool GetShowFps() const
@@ -98,19 +63,9 @@ public:
 		return show_fps;
 	}
 
-	void SetMasterVolume ( float value )
-	{
-		mastervolume = value;
-	}
-
 	float GetMasterVolume() const
 	{
 		return mastervolume;
-	}
-
-	void SetMPH ( bool value )
-	{
-		mph = value;
 	}
 
 	bool GetMPH() const
@@ -180,11 +135,6 @@ public:
 		return speed_sensitivity;
 	}
 
-	void SetJoystickCalibrated ( bool value )
-	{
-		joystick_calibrated = value;
-	}
-
 	bool GetJoystickCalibrated() const
 	{
 		return joystick_calibrated;
@@ -223,11 +173,6 @@ public:
 	int GetSelectedReplay() const
 	{
 		return selected_replay;
-	}
-
-	void SetSelectedReplay ( int value )
-	{
-		selected_replay = value;
 	}
 
 	std::string GetTextureSize() const
@@ -344,25 +289,49 @@ public:
 	    return number_of_laps;
 	}
 
-	void SetContrast ( float value )
-	{
-		contrast = value;
-	}
-
 	float GetContrast() const
 	{
 		return contrast;
 	}
-
-	void SetCameraMode ( const std::string& value )
-	{
-		//std::cout << "Camera mode set to " << value << std::endl;
-		camera_mode = value;
-	}
-
+	
 	std::string GetCameraMode() const
 	{
 		return camera_mode;
+	}
+	
+	bool GetHGateShifter() const
+	{
+		return hgateshifter;
+	}
+
+	float GetAIDifficulty() const
+	{
+		return ai_difficulty;
+	}
+
+	void SetResolutionX ( unsigned int theValue )
+	{
+		resolution_x = theValue;
+	}
+
+	void SetResolutionY ( unsigned int value )
+	{
+		resolution_y = value;
+	}
+
+	void SetMasterVolume ( float value )
+	{
+		mastervolume = value;
+	}
+
+	void SetSelectedReplay ( int value )
+	{
+		selected_replay = value;
+	}
+
+	void SetCameraMode ( const std::string& value )
+	{
+		camera_mode = value;
 	}
 
 	void SetResolutionOverride ( bool value )
@@ -370,22 +339,12 @@ public:
 		res_override = value;
 	}
 
-	bool GetHGateShifter() const
-	{
-		return hgateshifter;
-	}
-	
 	void SetFailsafeSettings()
 	{
 		*this = SETTINGS();
 		depthbpp = 16;
 		shaders = false;
 		texturesize = "medium";
-	}
-
-	float GetAIDifficulty() const
-	{
-		return ai_difficulty;
 	}
 	
 private:
@@ -397,6 +356,7 @@ private:
 	bool fullscreen;
 	bool shaders;
 	std::string skin;
+	std::string language;
 	bool show_fps;
 	float mastervolume;
 	bool mph; //if false, KPH

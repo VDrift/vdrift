@@ -5,7 +5,7 @@
 
 #include <vector>
 #include <string>
-#include <ostream>
+#include <iostream>
 #include <tr1/memory>
 
 class TEXTUREMANAGER;
@@ -37,10 +37,11 @@ public:
 	}
 	
 	///returns the charinfo or nothing if the character is out of range
-	optional <const CHARINFO *> GetCharInfo(unsigned int id) const
+	optional <const CHARINFO *> GetCharInfo(char id) const
 	{
-		if (id < charinfo.size() && charinfo[id].loaded)
-			return &charinfo[id];
+		unsigned int cur_id = *((unsigned char*)&id);
+		if (cur_id < char_count && charinfo[cur_id].loaded)
+			return &charinfo[cur_id];
 		else
 			return optional <const CHARINFO *> ();
 	}
@@ -50,6 +51,7 @@ public:
 private:
 	std::tr1::shared_ptr<TEXTURE> font_texture;
 	std::vector <CHARINFO> charinfo;
+	static const unsigned int char_count = 256;
 };
 
 #endif

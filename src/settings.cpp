@@ -28,6 +28,7 @@ SETTINGS::SETTINGS() :
 	fullscreen(false),
 	shaders(true),
 	skin("simple"),
+	language("English"),
 	show_fps(false),
 	mastervolume(1.0),
 	mph(true),
@@ -112,6 +113,7 @@ void SETTINGS::Serialize(bool write, CONFIG & config)
 	Param(config, write, section, "fullscreen", fullscreen);
 	Param(config, write, section, "shaders", shaders);
 	Param(config, write, section, "skin", skin);
+	Param(config, write, section, "language", language);
 	Param(config, write, section, "show_fps", show_fps);
 	Param(config, write, section, "anisotropic", anisotropic);
 	Param(config, write, section, "antialiasing", antialiasing);

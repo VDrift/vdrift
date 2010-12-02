@@ -14,9 +14,11 @@ void WIDGET_CONTROLGRAB::SetAlpha(SCENENODE & scene, float newalpha)
 	SCENENODE & topnoderef = scene.GetNode(topnode);
 	label.SetAlpha(topnoderef, newalpha);
 	addbutton.SetAlpha(topnoderef, newalpha);
+	
+	SCENENODE & ctrlnoderef = topnoderef.GetNode(ctrlnode);
 	for (std::list <CONTROLWIDGET>::iterator i = controlbuttons.begin(); i != controlbuttons.end(); ++i)
 	{
-		i->widget.SetAlpha(topnoderef, newalpha);
+		i->widget.SetAlpha(ctrlnoderef, newalpha);
 	}
 }
 
@@ -25,9 +27,11 @@ void WIDGET_CONTROLGRAB::SetVisible(SCENENODE & scene, bool newvis)
 	SCENENODE & topnoderef = scene.GetNode(topnode);
 	label.SetVisible(topnoderef, newvis);
 	addbutton.SetVisible(topnoderef, newvis);
+	
+	SCENENODE & ctrlnoderef = topnoderef.GetNode(ctrlnode);
 	for (std::list <CONTROLWIDGET>::iterator i = controlbuttons.begin(); i != controlbuttons.end(); ++i)
 	{
-		i->widget.SetVisible(topnoderef, newvis);
+		i->widget.SetVisible(ctrlnoderef, newvis);
 	}
 }
 
@@ -55,12 +59,10 @@ bool WIDGET_CONTROLGRAB::ProcessInput(
 	bool cursordown, bool cursorjustup)
 {
 	active_action.clear();
-	
 	tempdescription.clear();
 	
-	SCENENODE & topnoderef = scene.GetNode(topnode);
-	
 	//generate the add input tooltip, check to see if we pressed the add input button, generate an action
+	SCENENODE & topnoderef = scene.GetNode(topnode);
 	if (addbutton.ProcessInput(topnoderef, cursorx, cursory, cursordown, cursorjustup))
 	{
 		tempdescription = "Add a new input";
@@ -70,9 +72,10 @@ bool WIDGET_CONTROLGRAB::ProcessInput(
 	}
 	
 	//generate the input tooltip, check to see if we clicked, generate an action
+	SCENENODE & ctrlnoderef = topnoderef.GetNode(ctrlnode);
 	for (std::list <CONTROLWIDGET>::iterator i = controlbuttons.begin(); i != controlbuttons.end(); ++i)
 	{
-		if (i->widget.ProcessInput(topnoderef, cursorx, cursory, cursordown, cursorjustup))
+		if (i->widget.ProcessInput(ctrlnoderef, cursorx, cursory, cursordown, cursorjustup))
 		{
 			if (i->type == "key")
 			{
@@ -208,13 +211,14 @@ void WIDGET_CONTROLGRAB::SetupDrawable(
 	bool newanalog,
 	bool newonly_one)
 {
-	assert(texturevector.size() == END);
 	assert(!newsetting.empty());
-	for (int i = 0; i < END; i++)
-		assert(texturevector[i]);
+	assert(texturevector.size() == END);
+	for (int i = 0; i < END; ++i) assert(texturevector[i]);
+	textures = texturevector;
 	
 	topnode = scene.AddNode();
 	SCENENODE & topnoderef = scene.GetNode(topnode);
+	ctrlnode = topnoderef.AddNode();
 	
 	setting = newsetting;
 	
@@ -238,23 +242,22 @@ void WIDGET_CONTROLGRAB::SetupDrawable(
 	//std::cout << scalex << "," << scaley << std::endl;
 	
 	label.SetupDrawable(topnoderef, font, text, textx, y, scalex, scaley, r, g, b, 2);
-	addbutton.SetupDrawable(topnoderef, texturevector[ADD], texturevector[ADDSEL], texturevector[ADDSEL],
+	addbutton.SetupDrawable(topnoderef, textures[ADD], textures[ADDSEL], textures[ADDSEL],
 		font, "", x, y, scalex*0.8*(4.0/3.0), scaley*0.8, r,g,b);
 	
 	//add control buttons as necessary
-	LoadControls(topnoderef, c, texturevector, font);
+	LoadControls(scene, c, font);
 }
 
-void WIDGET_CONTROLGRAB::LoadControls(
-	SCENENODE & scene,
-	const CONFIG & c,
-	const std::vector <std::tr1::shared_ptr<TEXTURE> > & texturevector,
-	const FONT & font)
+void WIDGET_CONTROLGRAB::LoadControls(SCENENODE & scene, const CONFIG & c, const FONT & font)
 {
+	assert(textures.size() == END);
 	assert(!setting.empty()); //ensure that we've already done a SetupDrawable
 	
+	SCENENODE & parentnode = scene.GetNode(topnode).GetNode(ctrlnode);
+	parentnode.Clear();
 	controlbuttons.clear();
-
+	
 	for (CONFIG::const_iterator section = c.begin(); section != c.end(); ++section)
 	{
 		std::string controlname;
@@ -274,7 +277,9 @@ void WIDGET_CONTROLGRAB::LoadControls(
 			std::string mouse_type;
 			std::string mouse_motion;
 			int mouse_button(0);
-			float deadzone(0),exponent(1),gain(1);
+			float deadzone(0);
+			float exponent(1);
+			float gain(1);
 			
 			c.GetParam(section, "type", type);
 			c.GetParam(section, "once", once);
@@ -293,26 +298,34 @@ void WIDGET_CONTROLGRAB::LoadControls(
 			c.GetParam(section, "exponent", exponent);
 			c.GetParam(section, "gain", gain);
 			
+			std::tr1::shared_ptr<TEXTURE> tex_unsel;
+			std::tr1::shared_ptr<TEXTURE> tex_sel;
 			if (type == "key")
-				AddButton(scene, texturevector[KEY], texturevector[KEYSEL], font, type, controlname, scale_x, scale_y, y,
-					once, down, key, keycode, joy_type, joy_index, joy_button, joy_axis, joy_axis_type,
-					mouse_type, mouse_motion, mouse_button, deadzone,exponent,gain);
+			{
+				tex_unsel = textures[KEY];
+				tex_sel = textures[KEYSEL];
+			}
 			else if (type == "joy")
 			{
 				if (joy_type == "button")
-					AddButton(scene, texturevector[JOYBTN], texturevector[JOYBTNSEL], font, type, controlname, scale_x, scale_y, y,
-						once, down, key, keycode, joy_type, joy_index, joy_button, joy_axis, joy_axis_type,
-						mouse_type, mouse_motion, mouse_button, deadzone,exponent,gain);
+				{
+					tex_unsel = textures[JOYBTN];
+					tex_sel = textures[JOYBTNSEL];
+				}
 				else if (joy_type == "axis")
-					AddButton(scene, texturevector[JOYAXIS], texturevector[JOYAXISSEL], font, type, controlname, scale_x, scale_y, y,
-						once, down, key, keycode, joy_type, joy_index, joy_button, joy_axis, joy_axis_type,
-						mouse_type, mouse_motion, mouse_button, deadzone,exponent,gain);
+				{
+					tex_unsel = textures[JOYAXIS];
+					tex_sel = textures[JOYAXISSEL];
+				}
 			}
 			else if (type == "mouse")
-				AddButton(scene, texturevector[MOUSE], texturevector[MOUSESEL], font, type, controlname, scale_x, scale_y, y,
-					once, down, key, keycode, joy_type, joy_index, joy_button, joy_axis, joy_axis_type,
-					mouse_type, mouse_motion, mouse_button, deadzone,exponent,gain);
-			
+			{
+				tex_unsel = textures[MOUSE];
+				tex_sel = textures[MOUSESEL];
+			}
+			AddButton(parentnode, tex_unsel, tex_sel, font, type, controlname, scale_x, scale_y, y,
+				once, down, key, keycode, joy_type, joy_index, joy_button, joy_axis, joy_axis_type,
+				mouse_type, mouse_motion, mouse_button, deadzone,exponent,gain);
 		}
 		//else std::cout << "Ignoring since " << controlname << " != " << setting << std::endl;
 	}
@@ -345,31 +358,32 @@ void WIDGET_CONTROLGRAB::AddButton(
 	const float gain)
 {
 	controlbuttons.push_back(CONTROLWIDGET());
-	controlbuttons.back().type = type;
-	controlbuttons.back().name = name;
-	controlbuttons.back().once = once;
-	controlbuttons.back().down = down;
-	controlbuttons.back().key = key;
-	controlbuttons.back().keycode = keycode;
-	controlbuttons.back().joy_type = joy_type;
-	controlbuttons.back().joy_index = joy_index;
-	controlbuttons.back().joy_button = joy_button;
-	controlbuttons.back().joy_axis = joy_axis;
-	controlbuttons.back().joy_axis_type = joy_axis_type;
-	controlbuttons.back().mouse_type = mouse_type;
-	controlbuttons.back().mouse_motion = mouse_motion;
-	controlbuttons.back().mouse_button = mouse_button;
-	controlbuttons.back().deadzone = deadzone;
-	controlbuttons.back().exponent = exponent;
-	controlbuttons.back().gain = gain;
+	CONTROLWIDGET & button = controlbuttons.back();
+	
+	button.type = type;
+	button.name = name;
+	button.once = once;
+	button.down = down;
+	button.key = key;
+	button.keycode = keycode;
+	button.joy_type = joy_type;
+	button.joy_index = joy_index;
+	button.joy_button = joy_button;
+	button.joy_axis = joy_axis;
+	button.joy_axis_type = joy_axis_type;
+	button.mouse_type = mouse_type;
+	button.mouse_motion = mouse_motion;
+	button.mouse_button = mouse_button;
+	button.deadzone = deadzone;
+	button.exponent = exponent;
+	button.gain = gain;
 	
 	//float x = 0.5+0.06*scaley*4.0*0.5*(0.2+0.8)*(scaley/scalex)*controlbuttons.size();
 	//float x = 0.5+0.06*scaley*4.0*0.5*(0.2+0.8)*controlbuttons.size();
 	//float x = 0.5+0.06*scaley*4.0*0.5*(0.2+0.8)*(scaley/scalex)*controlbuttons.size();
 	float x = 0.5+1.25*2.0*0.06*scaley*4.0/((scaley/scalex)*3.0)*controlbuttons.size();
+	float r(1), g(1), b(1);
 	
-	float r(1),g(1),b(1);
-	
-	controlbuttons.back().widget.SetupDrawable(scene, tex_unsel, tex_sel, tex_sel,
-		font, "", x, y, scalex*0.8*(4.0/3.0), scaley*0.8, r,g,b);
+	button.widget.SetupDrawable(scene, tex_unsel, tex_sel, tex_sel,
+		font, "", x, y, scalex*0.8*(4.0/3.0), scaley*0.8, r, g, b);
 }

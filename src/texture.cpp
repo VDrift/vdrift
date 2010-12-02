@@ -440,7 +440,7 @@ bool TEXTURE::LoadCube(const std::string & path, const TEXTUREINFO & info, std::
 void GenTexture(const SDL_Surface * surface, const TEXTUREINFO & info, GLuint & id, bool & alphachannel, std::ostream & error)
 {
 	//detect channels
-	bool compression = (surface->w > 512 || surface->h > 512);
+	bool compression = (surface->w > 512 || surface->h > 512) && !info.normalmap;
 	int format = GL_RGB;
 	int internalformat = compression ? GL_COMPRESSED_RGB : GL_RGB;
 	switch (surface->format->BytesPerPixel)

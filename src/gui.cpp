@@ -1,22 +1,9 @@
 #include "gui.h"
 #include "config.h"
 
-#include <map>
-using std::map;
-
-#include <string>
-using std::string;
-
-#include <iostream>
-using std::endl;
-
-#include <list>
-using std::list;
-
 #include <sstream>
-using std::stringstream;
 
-GUI::GUI() : 
+GUI::GUI() :
 	animation_counter(0),
 	animation_count_start(0),
 	syncme(false),
@@ -33,7 +20,9 @@ bool GUI::Load(
 	const std::string & optionsfile,
 	const std::string & carcontrolsfile,
 	const std::string & menupath,
-	const std::string & texpath, 
+	const std::string & languagedir,
+	const std::string & language,
+	const std::string & texpath,
 	const std::string & datapath,
 	const std::string & texsize,
 	const float screenhwratio,
@@ -43,7 +32,27 @@ bool GUI::Load(
 	std::ostream & info_output,
 	std::ostream & error_output)
 {
-	std::string optionresult = LoadOptions(optionsfile, valuelists, error_output);
+	// load language font
+	CONFIG languageconfig;
+	languageconfig.Load(datapath + "/" + languagedir + "/" + language + ".lng");
+	
+	std::string fontinfo, fonttex;
+	if (!languageconfig.GetParam("font", "info", fontinfo, error_output)) return false;
+	if (!languageconfig.GetParam("font", "texture", fonttex, error_output)) return false;
+	
+	std::string fontinfopath = datapath + "/" + languagedir + "/" + fontinfo;
+	if (!font.Load(fontinfopath, languagedir, fonttex, texsize, textures, error_output)) return false;
+	
+	// load language map
+	CONFIG::const_iterator section;
+	std::map<std::string, std::string> languagemap;
+	if (languageconfig.GetSection("strings", section))
+	{
+		languagemap = section->second;
+	}
+	
+	// load options
+	std::string optionresult = LoadOptions(optionsfile, valuelists, languagemap, error_output);
 	if (!optionresult.empty())
 	{
 		error_output << "Options file loading failed here: " << optionresult << std::endl;
@@ -54,26 +63,31 @@ bool GUI::Load(
 	
 	CONFIG controlsconfig;
 	controlsconfig.Load(carcontrolsfile); //pre-load controls file so that each individual widget doesn't have to reload it
-	
+
 	for (std::list <std::string>::const_iterator i = pagelist.begin(); i != pagelist.end(); ++i)
 	{
-		if (*i != "SConscript")
+		const std::string & pagename = *i;
+		
+		if (pagename == "SConscript") continue;
+		
+		PAGEINFO & p = pages[pagename];
+		if (!p.node.valid())
 		{
-			if (!LoadPage(*i,
-				menupath, texpath, datapath,
-				texsize, screenhwratio,
-				controlsconfig, fonts,
-				optionmap, node,
-				textures, models,
-				error_output))
-			{
-				error_output << "Error loading GUI page: " << menupath << "/" << *i << std::endl;
-				return false;
-			}
-			if (*i == "Main")
-			{
-				foundmain = true;
-			}
+			p.node = node.AddNode();
+		}
+		
+		if (!p.page.Load(
+			menupath + "/" + pagename, texpath, datapath, texsize,
+			screenhwratio, carcontrolsfile, font, languagemap, optionmap,
+			node.GetNode(p.node), textures, models, error_output))
+		{
+			error_output << "Error loading GUI page: " << menupath << "/" << *i << std::endl;
+			return false;
+		}
+		
+		if (pagename == "Main")
+		{
+			foundmain = true;
 		}
 	}
 	
@@ -89,6 +103,13 @@ bool GUI::Load(
 	DeactivateAll();
 	
 	return true;
+}
+
+void GUI::UpdateControls(const std::string & pagename, const CONFIG & controlfile)
+{
+	assert(pages.find(pagename) != pages.end());
+	SCENENODE & pagenode = node.GetNode(pages[pagename].node);
+	GetPage(pagename).UpdateControls(pagenode, controlfile, font);
 }
 
 void GUI::DeactivateAll()
@@ -112,9 +133,10 @@ std::list <std::string> GUI::ProcessInput(
 	
 	if (active_page != pages.end())
 	{
-		actions = active_page->second.page.ProcessInput(node.GetNode(active_page->second.node),
-				movedown, moveup, cursorx, cursory,
-				cursordown, cursorjustup, screenhwratio);
+		actions = active_page->second.page.ProcessInput(
+						node.GetNode(active_page->second.node),
+						movedown, moveup, cursorx, cursory,
+						cursordown, cursorjustup, screenhwratio);
 	}
 	
 	std::list <std::string> gameactions;
@@ -142,7 +164,9 @@ std::list <std::string> GUI::ProcessInput(
 			newpage = actionname;
 			save_options = i->second;
 			if (!newpage.empty())
+			{
 				ActivatePage(newpage, 0.25, error_output, save_options);
+			}
 		}
 		else
 		{
@@ -163,8 +187,7 @@ std::list <std::string> GUI::ProcessInput(
 void GUI::Update(float dt)
 {
 	animation_counter -= dt;
-	if (animation_counter < 0)
-		animation_counter = 0;
+	if (animation_counter < 0) animation_counter = 0;
 	
 	if (active_page != pages.end())
 	{
@@ -188,9 +211,14 @@ void GUI::Update(float dt)
 	}
 	
 	if (active_page != pages.end())
+	{
 		active_page->second.page.Update(node.GetNode(active_page->second.node), dt);
+	}
+	
 	if (last_active_page != pages.end())
+	{
 		last_active_page->second.page.Update(node.GetNode(last_active_page->second.node), dt);
+	}
 }
 
 void GUI::SyncOptions(
@@ -235,16 +263,23 @@ void GUI::SyncOptions(
 	}
 	
 	if (external_settings_are_newer)
+	{
 		UpdateOptions(error_output);
+	}
 	
 	if (syncme_from_external)
 	{
 		//UpdateOptions(error_output);
 		if (last_active_page != pages.end())
+		{
 			last_active_page->second.page.UpdateOptions(node.GetNode(last_active_page->second.node), false, optionmap, error_output);
+		}
+		
 		//std::cout << "About to update" << std::endl;
 		if (active_page != pages.end())
+		{
 			active_page->second.page.UpdateOptions(node.GetNode(active_page->second.node), false, optionmap, error_output);
+		}
 		//std::cout << "Done updating" << std::endl;
 	}
 	
@@ -312,59 +347,16 @@ void GUI::ActivatePage(
 	//std::cout << "Done activating page" << std::endl;
 }
 
-bool GUI::LoadPage(
-	const std::string & pagename,
-	const std::string & path,
-	const std::string & texpath,
-	const std::string & datapath,
-	const std::string & texsize,
-	const float screenhwratio,
-	const CONFIG & carcontrolsfile,
-	const std::map <std::string, FONT> & fonts,
-	std::map<std::string, GUIOPTION> & optionmap,
-	SCENENODE & scenenode,
-	TEXTUREMANAGER & textures,
-	MODELMANAGER & models,
-	std::ostream & error_output)
-{
-	PAGEINFO & p = pages[pagename];
-	if (!p.node.valid())
-	{
-		p.node = scenenode.AddNode();
-	}
-	
-	if (!p.page.Load(
-			path+"/"+pagename,
-			texpath,
-			datapath,
-			texsize,
-			screenhwratio,
-			carcontrolsfile,
-			fonts,
-			optionmap,
-			scenenode.GetNode(p.node),
-			textures,
-			models,
-			error_output))
-	{
-		return false;
-	}
-	else
-	{
-		return true;
-	}
-	
-}
-
-string GUI::LoadOptions(
+std::string GUI::LoadOptions(
 	const std::string & optionfile,
 	const std::map<std::string, std::list <std::pair <std::string, std::string> > > & valuelists,
+	const std::map<std::string, std::string> languagemap,
 	std::ostream & error_output)
 {
 	CONFIG opt;
 	if (!opt.Load(optionfile))
 	{
-		error_output << "Can't find options file: " << optionfile << endl;
+		error_output << "Can't find options file: " << optionfile << std::endl;
 		return "File loading";
 	}
 	
@@ -374,7 +366,7 @@ string GUI::LoadOptions(
 	{
 		if (!i->first.empty())
 		{
-			string cat, name, defaultval, values, text, desc, type;
+			std::string cat, name, defaultval, values, text, desc, type;
 			if (!opt.GetParam(i, "cat", cat)) return i->first+".cat";
 			if (!opt.GetParam(i, "name", name)) return i->first+".name";
 			if (!opt.GetParam(i, "default", defaultval)) return i->first+".default";
@@ -383,13 +375,17 @@ string GUI::LoadOptions(
 			if (!opt.GetParam(i, "desc", desc)) return i->first+".desc";
 			if (!opt.GetParam(i, "type", type)) return i->first+".type";
 			
+			std::map<std::string, std::string>::const_iterator li;
+			if ((li = languagemap.find(text)) != languagemap.end()) text = li->second;
+			if ((li = languagemap.find(desc)) != languagemap.end()) desc = li->second;
+			
 			float min(0),max(1);
 			bool percentage(true);
 			opt.GetParam(i, "min",min);
 			opt.GetParam(i, "max",max);
 			opt.GetParam(i, "percentage",percentage);
 			
-			string optionname = cat+"."+name;
+			std::string optionname = cat+"."+name;
 			GUIOPTION & option = optionmap[optionname];
 			
 			option.SetInfo(text, desc, type);
@@ -403,12 +399,12 @@ string GUI::LoadOptions(
 				
 				for (int n = 0; n < valuenum; n++)
 				{
-					stringstream tstr;
+					std::stringstream tstr;
 					tstr.width(2);
 					tstr.fill('0');
 					tstr << n;
 					
-					string displaystr, storestr;
+					std::string displaystr, storestr;
 					if (!opt.GetParam(i, "opt"+tstr.str(), displaystr)) return i->first+".opt"+tstr.str();
 					if (!opt.GetParam(i, "val"+tstr.str(), storestr)) return i->first+".val"+tstr.str();
 					
@@ -417,7 +413,7 @@ string GUI::LoadOptions(
 			}
 			else if (values == "bool")
 			{
-				string truestr, falsestr;
+				std::string truestr, falsestr;
 				if (!opt.GetParam(i, "true", truestr)) return i->first+".true";
 				if (!opt.GetParam(i, "false", falsestr)) return i->first+".false";
 				
@@ -445,15 +441,15 @@ string GUI::LoadOptions(
 				std::map<std::string, std::list <std::pair<std::string,std::string> > >::const_iterator vlist = valuelists.find(values);
 				if (vlist == valuelists.end())
 				{
-					error_output << "Can't find value type \"" << values << "\" in list of GAME values" << endl;
+					error_output << "Can't find value type \"" << values << "\" in list of GAME values" << std::endl;
 					return "GAME valuelist";
 				}
 				else
 				{
-					//std::cout << "Populating values:" << endl;
+					//std::cout << "Populating values:" << std::endl;
 					for (std::list <std::pair<std::string,std::string> >::const_iterator n = vlist->second.begin(); n != vlist->second.end(); n++)
 					{
-						//std::cout << "\t" << n->second << endl;
+						//std::cout << "\t" << n->second << std::endl;
 						option.Insert(n->first, n->second);
 					}
 				}

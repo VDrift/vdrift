@@ -31,14 +31,6 @@ public:
 		int order = 0,
 		bool centered = true);
 	
-	void ReviseDrawable(
-		SCENENODE & scene,
-		const FONT & font,
-		const std::string & text,
-		float x, float y,
-		float scalex, float scaley,
-		bool centered = true);
-	
 	void ReviseDrawable(SCENENODE & scene, const std::string & text);
 	
 	float GetWidth(const FONT & font, const std::string & text, float scale) const;

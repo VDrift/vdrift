@@ -2,15 +2,13 @@
 #define _GUI_H
 
 #include "guipage.h"
-#include "texture.h"
-#include "font.h"
 #include "guioption.h"
+#include "font.h"
 
 #include <map>
+#include <list>
 #include <string>
 #include <iostream>
-#include <list>
-#include <sstream>
 
 class GUI
 {
@@ -51,7 +49,9 @@ public:
 		const std::string & optionsfile,
 		const std::string & carcontrolsfile,
 		const std::string & menupath,
-		const std::string & texpath, 
+		const std::string & languagedir,
+		const std::string & language,
+		const std::string & texpath,
 		const std::string & datapath,
 		const std::string & texsize,
 		const float screenhwratio,
@@ -60,6 +60,8 @@ public:
 		MODELMANAGER & models,
 		std::ostream & info_output,
 		std::ostream & error_output);
+	
+	void UpdateControls(const std::string & pagename, const CONFIG & controlfile);
 	
 	void DeactivateAll();
 	
@@ -108,7 +110,7 @@ public:
 		const bool external_settings_are_newer,
 		std::map <std::string, std::string> & external_options,
 		std::ostream & error_output);
-
+	
 	void SetInGame ( bool value )
 	{
 		ingame = value;
@@ -131,6 +133,7 @@ private:
 	std::map<std::string, PAGEINFO>::iterator last_active_page;
 	std::map<std::string, GUIOPTION> optionmap;
 	SCENENODE node;
+	FONT font;
 	float animation_counter;
 	float animation_count_start;
 	bool syncme; ///<true if a sync is needed
@@ -138,25 +141,11 @@ private:
 	bool control_load;
 	bool ingame;
 	
-	bool LoadPage(
-		const std::string & pagename,
-		const std::string & path,
-		const std::string & texpath,
-		const std::string & datapath,
-		const std::string & texsize,
-		const float screenhwratio,
-		const CONFIG & carcontrolsfile,
-		const std::map <std::string, FONT> & fonts,
-		std::map<std::string, GUIOPTION> & optionmap,
-		SCENENODE & scenenode,
-		TEXTUREMANAGER & textures,
-		MODELMANAGER & models,
-		std::ostream & error_output);
-	
 	///returns a string showing where the error occurred, or an empty string if no error
 	std::string LoadOptions(
 		const std::string & optionfile,
 		const std::map<std::string, std::list <std::pair <std::string, std::string> > > & valuelists,
+		const std::map<std::string, std::string> languagemap,
 		std::ostream & error_output);
 	
 	///send options from the optionmap to the widgets
