@@ -42,7 +42,7 @@ src = Split("""aabb.cpp
 		crashdetection.cpp
 		datalog.cpp
                 datamanager.cpp
-                datametric_test.cpp
+                datametric_full_stop.cpp
                 driverfeedback.cpp
 		endian_utility.cpp
 		eventsystem.cpp

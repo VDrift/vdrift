@@ -2172,15 +2172,15 @@ void GAME::PopulateValueLists(std::map<std::string, std::list <std::pair <std::s
 		valuelists["antialiasing"].push_back(pair<string,string>("2","2X"));
 		valuelists["antialiasing"].push_back(pair<string,string>("4","4X"));
 	}
-	
+
 	//populate replays list
 	{
 		PopulateReplayList(valuelists["replays"]);
 	}
-	
+
 	//populate other lists
 	valuelists["joy_indeces"].push_back(pair<string,string>("0","0"));
-	
+
 	//populate skins
 	list <string> skinlist;
 	pathmanager.GetFileList(pathmanager.GetSkinPath(), skinlist);
@@ -2191,7 +2191,7 @@ void GAME::PopulateValueLists(std::map<std::string, std::list <std::pair <std::s
 			valuelists["skins"].push_back(pair<string,string>(*i,*i));
 		}
 	}
-	
+
 	//populate languages
 	list <string> languages;
 	string skinfolder = pathmanager.GetDataPath() + "/" + pathmanager.GetGUILanguageDir(settings.GetSkin()) + "/";
@@ -2536,7 +2536,22 @@ void GAME::UpdateDataManager(float dt)
 		METRICEVENT event;
 		if (data_manager.PollEvents(event))
 		{
-			assert(event.GetType() != "");
+			std::string event_type = event.GetType();
+			METRICEVENT::event_data_T event_data = event.GetData();
+			assert(event_type != "");
+			if (event_type == "DriverFeedbackMessage")
+			{
+				METRICEVENT::event_data_T::const_iterator msg;
+				msg = event_data.find("Message");
+				assert(msg != event_data.end());
+				driverfeedback.SetNewFeedback(msg->second);
+			}
+			else
+			{
+				cout << "Unrecognized metric event type " << event_type << endl;
+				assert(false);
+			}
+
 			//cout << "event type: " << event.GetType() << ", data: " << event.GetData() << endl;
 		}
 	}

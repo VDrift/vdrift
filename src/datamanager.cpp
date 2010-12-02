@@ -21,7 +21,9 @@ DATAMETRIC::DATAMETRIC(DATAMETRIC_CTOR_PARAMS_DEF)
    description(desc),
    input_data_columns(input_columns),
    output_variable_names(outvar_names),
-   options(opts)
+   options(opts),
+   has_event(false),
+   event_type("")
 {
 
 }
@@ -37,6 +39,27 @@ bool DATAMETRIC::GetOutputVariable(std::string const& var_name, DATALOG::log_dat
 	return false;
 }
 
+void DATAMETRIC::SetEvent(std::string new_event_type, METRICEVENT::event_data_T new_event_data)
+{
+	has_event = true;
+	event_type = new_event_type;
+	event_data = new_event_data;
+}
+
+bool DATAMETRIC::GetEvent(std::string & type, METRICEVENT::event_data_T & data)
+{
+	if (has_event)
+	{
+		type = event_type;
+		data = event_data;
+		has_event = false;
+		event_type = "";
+		event_data.clear();
+		return true;
+	}
+	return false;
+}
+
 DATALOG::log_column_T const* DATAMETRIC::GetColumn(std::string const& column_name) const
 {
 	metric_input_map_T::const_iterator column;
@@ -44,6 +67,11 @@ DATALOG::log_column_T const* DATAMETRIC::GetColumn(std::string const& column_nam
 	assert(column != input_data_columns.end());
 	assert(column->second != NULL);
 	return column->second;
+}
+
+DATALOG::log_data_T DATAMETRIC::GetLastInColumn(std::string const& column_name) const
+{
+	return GetColumn(column_name)->back();
 }
 
 void DATAMANAGER::Init(std::string const& data_config_filename, std::string const& log_path)
@@ -94,7 +122,6 @@ void DATAMANAGER::Init(std::string const& data_config_filename, std::string cons
 		//cout << "Setting up metric '" << *metric_name << "'" << endl;
 		required_settings = true;
 		required_settings &= data_settings.GetParam(metric_section_name, "required_columns", metric_required_columns);
-		required_settings &= data_settings.GetParam(metric_section_name, "output_vars", metric_output_vars);
 		required_settings &= data_settings.GetParam(metric_section_name, "type", metric_type);
 		assert(required_settings);
 		assert(TYPEDMETRICFACTORY::IsValidType(metric_type));
@@ -102,6 +129,7 @@ void DATAMANAGER::Init(std::string const& data_config_filename, std::string cons
 
 		data_settings.GetParam(metric_section_name, "options", metric_options);
 		data_settings.GetParam(metric_section_name, "description", metric_description);
+		data_settings.GetParam(metric_section_name, "output_vars", metric_output_vars);
 
 		//cout << "Creating " << metric_required_columns.size() << " input_data_columns" << endl;
 		// create map of pointers to log columns.
@@ -187,6 +215,13 @@ void DATAMANAGER::Update(float dt)
 			//cout << "    output var " << *output_var << " value " << val << endl;
 			// add the output data to the datalog
 			data_log.ModifyLastEntry(*output_var, val);
+		}
+
+		std::string event_type;
+		METRICEVENT::event_data_T event_data;
+		if (metric->second->GetEvent(event_type, event_data))
+		{
+			events.push(METRICEVENT(event_type, event_data));
 		}
 	}
 

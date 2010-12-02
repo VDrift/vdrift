@@ -7,14 +7,15 @@
 class TESTMETRIC : public DATAMETRIC
 {
 	public:
-		/** Default constructor */
+		/** ctor */
 		TESTMETRIC(DATAMETRIC_CTOR_PARAMS_DEF);
-		/** Default destructor */
+		/** dtor */
 		~TESTMETRIC();
+		/** Update the calculations, add to log, generate events */
 		void Update(float dt);
 	protected:
 	private:
-		static METRICTYPEREGISTER<TESTMETRIC> reg; //!< Member variable "reg"
+		static METRICTYPEREGISTER<TESTMETRIC> reg; //!< object registering this type for creation by name
 };
 
 #endif // TESTMETRIC_H
