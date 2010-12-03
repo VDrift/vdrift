@@ -14,7 +14,6 @@ WIDGET * WIDGET_LABEL::clone() const
 	return new WIDGET_LABEL(*this);
 }
 
-
 void WIDGET_LABEL::SetAlpha(SCENENODE & scene, float newalpha)
 {
 	GetDrawable(scene).SetColor(r, g, b, newalpha);
@@ -47,13 +46,12 @@ void WIDGET_LABEL::SetupDrawable(
 	saved_scaley = scaley;
 	saved_centered = centered;
 	
-	float w = text_draw.GetWidth(font, text, scalex);
-	if (!centered) w = 0;
-
 	draw = scene.GetDrawlist().text.insert(DRAWABLE());
 	DRAWABLE & drawref = GetDrawable(scene);
-	text_draw.Set(drawref, font, text, x-w*0.5, y, scalex, scaley, r,g,b);
-	drawref.SetDrawOrder(order+100);
+	drawref.SetDrawOrder(order + 100);
+	
+	if (centered) x = x - savedfont->GetWidth(text, saved_scalex) * 0.5;
+	text_draw.Set(drawref, font, text, x, y, scalex, scaley, r, g, b);
 }
 
 void WIDGET_LABEL::ReviseDrawable(SCENENODE & scene, const std::string & text)
@@ -65,18 +63,16 @@ void WIDGET_LABEL::ReviseDrawable(SCENENODE & scene, const std::string & text)
 
 float WIDGET_LABEL::GetWidth(const FONT & font, const std::string & text, float scale) const
 {
-	return text_draw.GetWidth(font, text, scale);
+	return font.GetWidth(text, scale);
 }
 
 void WIDGET_LABEL::SetText(SCENENODE & scene, const std::string & text)
 {
 	assert(savedfont);
 	
-	float w = text_draw.GetWidth(*savedfont, text, saved_scalex);
-	if (!saved_centered)
-		w = 0;
-	
-	text_draw.Revise(*savedfont, text, saved_x-w*0.5, saved_y, saved_scalex, saved_scaley);
+	float x = saved_x;
+	if (saved_centered) x = x - savedfont->GetWidth(text, saved_scalex) * 0.5;
+	text_draw.Revise(*savedfont, text, x, saved_y, saved_scalex, saved_scaley);
 }
 
 const std::string & WIDGET_LABEL::GetText()

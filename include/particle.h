@@ -2,15 +2,13 @@
 #define _PARTICLE_H
 
 #include "mathvector.h"
-#include "optional.h"
 #include "scenenode.h"
 #include "vertexarray.h"
 
 #include <ostream>
+#include <utility> // std::pair
 #include <vector>
-#include <cmath>
-#include <algorithm>
-#include <map>
+#include <list>
 
 class TEXTUREMANAGER;
 

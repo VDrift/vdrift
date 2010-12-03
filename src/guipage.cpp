@@ -207,7 +207,7 @@ bool GUIPAGE::Load(
 			
 			//generate label
 			{
-				float textwidth = TEXT_DRAW::GetWidth(font, text, fontscalex);
+				float textwidth = font.GetWidth(text, fontscalex);
 				float x = xy[0] + textwidth * 0.5;
 				float y = xy[1] + (0.02 * 0.25 * 4.0 / 3.0);
 				
@@ -418,7 +418,7 @@ bool GUIPAGE::Load(
 			
 			//generate label
 			{
-				float textwidth = TEXT_DRAW::GetWidth(font, text, fontscalex);
+				float textwidth = font.GetWidth(text, fontscalex);
 				float x = xy[0] + textwidth * 0.5;
 				float y = xy[1] + (0.02 * 0.25 * 4.0 / 3.0);
 				

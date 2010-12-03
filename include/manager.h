@@ -5,6 +5,7 @@
 #include <string>
 #include <iostream>
 #include <tr1/memory>
+#include <cassert>
 
 template <class T>
 class MANAGER

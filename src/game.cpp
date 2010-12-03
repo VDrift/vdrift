@@ -1978,8 +1978,8 @@ void GAME::CalculateFPS()
 	if (settings.GetShowFps())
 	{
 		float w = fps_draw.GetWidth("FPS: 100");
-		float screenhwratio = (float)graphics.GetH()/graphics.GetW();
-		fps_draw.Revise(fpsstr.str(), 0.5-w*0.5,1.0-0.02, screenhwratio*0.2,0.2);
+		float screenhwratio = (float)graphics.GetH() / graphics.GetW();
+		fps_draw.Revise(fpsstr.str(), 0.5 - w * 0.5, 1.0 - 0.02, screenhwratio * 0.2, 0.2);
 		fps_draw.SetDrawEnable(debugnode, true);
 	}
 	else

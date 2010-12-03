@@ -260,7 +260,7 @@ void HUD::Update(FONT & lcdfont, FONT & sansfont, float curlap, float lastlap, f
         speedo << std::abs((int)(2.23693629 * meterspersecond)) << " MPH";
     else
         speedo << std::abs((int)(3.6 * meterspersecond)) << " KPH";
-    float speedotextwidth = mphtext.GetWidth(lcdfont, speedo.str(), mphtext.GetCurrentScale().first);
+    float speedotextwidth = lcdfont.GetWidth(speedo.str(), mphtext.GetCurrentScale().first);
     mphtext.Revise(lcdfont, speedo.str(), 1.0-screenhwratio*0.02-speedotextwidth, 1.0-0.015, mphtext.GetCurrentScale().first, mphtext.GetCurrentScale().second);
 
     //update timer info

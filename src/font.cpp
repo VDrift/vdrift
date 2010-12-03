@@ -60,8 +60,6 @@ bool FONT::Load(
 		return false;
 	}
 	
-	charinfo.resize(char_count);
-	
 	std::string curstr;
 	while (fontinfo && curstr != "chars") fontinfo >> curstr; //advance to first interesting bit
 	
@@ -118,27 +116,23 @@ bool FONT::Load(
 float FONT::GetWidth(const std::string & newtext, const float newscale) const
 {
 	float cursorx(0);
-
-	std::vector <float> linewidth;
-
-	for (unsigned int i = 0; i < newtext.size(); i++)
+	float linewidth(0);
+	for (unsigned int i = 0; i < newtext.size(); ++i)
 	{
 		if (newtext[i] == '\n')
 		{
-			linewidth.push_back(cursorx);
+			if (linewidth < cursorx) linewidth = cursorx;
 			cursorx = 0;
 		}
 		else
 		{
-			optional <const FONT::CHARINFO *> cinfo = GetCharInfo(newtext[i]);
-			if (cinfo)
-				cursorx += (cinfo.get()->xadvance/GetFontTexture()->GetW())*newscale;
+			const CHARINFO * cinfo(0);
+			if (GetCharInfo(newtext[i], cinfo))
+			{
+				cursorx += (cinfo->xadvance / font_texture->GetW()) * newscale;
+			}
 		}
 	}
-
-	linewidth.push_back(cursorx);
-
-	float maxwidth = *std::max_element(linewidth.begin(),linewidth.end());
-
-	return maxwidth;
+	if (linewidth < cursorx) linewidth = cursorx;
+	return linewidth;
 }

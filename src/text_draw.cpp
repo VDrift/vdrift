@@ -1,91 +1,30 @@
 #include "text_draw.h"
 #include "texture.h"
 
-#include <iostream>
-#include <algorithm>
-
-void TEXT_DRAW::Set(DRAWABLE & draw, const FONT & font, const std::string & newtext, const float x, const float y, const float newscalex, const float newscaley, const float r, const float g, const float b, VERTEXARRAY & output_array)
+static float RenderCharacter(
+	VERTEXARRAY & output_array,
+	const float x,
+	const float y,
+	const float scalex,
+	const float scaley,
+	const FONT & font,
+	const char c)
 {
-	output_array.Clear();
+	const FONT::CHARINFO * ci(0);
+	if (!font.GetCharInfo(c, ci)) return 0;
 	
-	text = newtext;
-	draw.SetDiffuseMap(font.GetFontTexture());
-	draw.SetVertArray(&output_array);
-	draw.SetCull(false, false);
-	draw.SetColor(r,g,b,1.0);
+	float tw = font.GetFontTexture()->GetW();
+	float th = font.GetFontTexture()->GetH();
 	
-	float cursorx = x;
-	float cursory = y;
+	float x1 = x + ci->xoffset / tw * scalex;
+	float x2 = x1 + ci->width / tw * scalex;
+	float y1 = y - ci->yoffset / th * scaley;
+	float y2 = y1 + ci->height / th * scaley;
 	
-	for (unsigned int i = 0; i < newtext.size(); i++)
-	{
-		if (text[i] == '\n')
-		{
-			cursorx = x;
-			cursory += newscaley;
-		}
-		else
-		{
-			optional <const FONT::CHARINFO *> cinfo = font.GetCharInfo(text[i]);
-			if (cinfo)
-			{
-				cursorx += RenderCharacter(output_array, font.GetFontTexture()->GetW(), font.GetFontTexture()->GetH(), cursorx, cursory, newscalex, newscaley, *cinfo.get());
-			}
-		}
-	}
-	
-	//std::cout << output_array.GetNumFaces() << std::endl;
-	
-	oldx = x;
-	oldy = y;
-	oldscalex = newscalex;
-	oldscaley = newscaley;
-}
-
-void TEXT_DRAW::Revise(const FONT & font, const std::string & newtext, float x, float y, float scalex, float scaley, VERTEXARRAY & output_array)
-{
-	text = newtext;
-	output_array.Clear();
-	float cursorx = x;
-	float cursory = y;
-	
-	for (unsigned int i = 0; i < newtext.size(); i++)
-	{
-		if (newtext[i] == '\n')
-		{
-			cursorx = x;
-			cursory += scaley*0.15;
-		}
-		else
-		{
-			optional <const FONT::CHARINFO *> cinfo = font.GetCharInfo(text[i]);
-			if (cinfo)
-			{
-				cursorx += RenderCharacter(output_array, font.GetFontTexture()->GetW(), font.GetFontTexture()->GetH(), cursorx, cursory, scalex, scaley, *cinfo.get());
-			}
-		}
-	}
-	
-	oldx = x;
-	oldy = y;
-	oldscalex = scalex;
-	oldscaley = scaley;
-}
-
-float TEXT_DRAW::RenderCharacter(VERTEXARRAY & output_array, const float tw, const float th, const float x, const float y, const float scalex, const float scaley, const FONT::CHARINFO & c)
-{
-	//float x1, y1, x2, y2;
-	//float u1, v1, u2, v2;
-	
-	float x1 = x + (float)c.xoffset / tw * scalex;
-	float x2 = x1 + (float)c.width / tw * scalex;
-	float y1 = y - (float)c.yoffset / th * scaley;
-	float y2 = y1 + (float)c.height / th * scaley;
-	
-	float u1 = (float)c.x / tw;
-	float u2 = u1 + (float)c.width / tw;
-	float v1 = (float)c.y / th;
-	float v2 = v1 + (float)c.height / th;
+	float u1 = ci->x / tw;
+	float u2 = u1 + ci->width / tw;
+	float v1 = ci->y / th;
+	float v2 = v1 + ci->height / th;
 	
 	//std::cout << x1 << "," << x2 << "," << y1 << "," << y2 << std::endl;
 	//std::cout << u1 << "," << u2 << "," << v1 << "," << v2 << std::endl;
@@ -131,38 +70,62 @@ float TEXT_DRAW::RenderCharacter(VERTEXARRAY & output_array, const float tw, con
 	}
 	else
 	{
-		float * norms(NULL);
+		float * norms(0);
 		output_array.Add(norms, 0, vcorners, 12, bfaces, 6, uvs, 8);
 	}
 	
-	return ((float)c.xadvance/tw)*scalex;
+	return ci->xadvance / tw * scalex;
 }
 
-float TEXT_DRAW::GetWidth(const FONT & font, const std::string & newtext, const float newscale)
+void TEXT_DRAW::Set(DRAWABLE & draw, const FONT & font, const std::string & newtext, const float x, const float y, const float scalex, const float scaley, const float r, const float g, const float b, VERTEXARRAY & output_array)
 {
-	float cursorx(0);
-	std::vector <float> linewidth;
+	draw.SetDiffuseMap(font.GetFontTexture());
+	draw.SetVertArray(&output_array);
+	draw.SetCull(false, false);
+	draw.SetColor(r,g,b,1.0);
 	
+	text = newtext;
+	output_array.Clear();
+	float cursorx = x;
+	float cursory = y;
+	for (unsigned int i = 0; i < newtext.size(); i++)
+	{
+		if (text[i] == '\n')
+		{
+			cursorx = x;
+			cursory += scaley;
+		}
+		else
+		{
+			cursorx += RenderCharacter(output_array, cursorx, cursory, scalex, scaley, font, text[i]);
+		}
+	}
+	oldx = x;
+	oldy = y;
+	oldscalex = scalex;
+	oldscaley = scaley;
+}
+
+void TEXT_DRAW::Revise(const FONT & font, const std::string & newtext, float x, float y, float scalex, float scaley, VERTEXARRAY & output_array)
+{
+	text = newtext;
+	output_array.Clear();
+	float cursorx = x;
+	float cursory = y;
 	for (unsigned int i = 0; i < newtext.size(); i++)
 	{
 		if (newtext[i] == '\n')
 		{
-			linewidth.push_back(cursorx);
-			cursorx = 0;
+			cursorx = x;
+			cursory += scaley * 0.15;
 		}
 		else
 		{
-			optional <const FONT::CHARINFO *> cinfo = font.GetCharInfo(newtext[i]);
-			if (cinfo)
-			{
-				cursorx += (cinfo.get()->xadvance/font.GetFontTexture()->GetW())*newscale;
-			}
+			cursorx += RenderCharacter(output_array, cursorx, cursory, scalex, scaley, font, text[i]);
 		}
 	}
-	
-	linewidth.push_back(cursorx);
-	
-	float maxwidth = *std::max_element(linewidth.begin(),linewidth.end());
-	
-	return maxwidth;
+	oldx = x;
+	oldy = y;
+	oldscalex = scalex;
+	oldscaley = scaley;
 }

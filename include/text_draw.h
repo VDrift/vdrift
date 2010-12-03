@@ -10,19 +10,12 @@
 
 class TEXT_DRAW
 {
-private:
-	VERTEXARRAY varray;
-	std::string text;
-	float oldx, oldy, oldscalex, oldscaley;
-	
-	float RenderCharacter(VERTEXARRAY & output_array, const float tw, const float th, const float x, const float y, const float scalex, const float scaley, const FONT::CHARINFO & c);
-	
 public:
 	TEXT_DRAW() : oldx(0), oldy(0), oldscalex(1.0), oldscaley(1.0) {}
 	
 	void Set(DRAWABLE & draw, const FONT & font, const std::string & newtext, const float x, const float y, const float newscalex, const float newscaley, const float r=1, const float g=1, const float b=1)
 	{
-		Set(draw, font, newtext, x, y, newscalex, newscaley, r,g,b,varray);
+		Set(draw, font, newtext, x, y, newscalex, newscaley, r, g, b, varray);
 	}
 	
 	void Set(DRAWABLE & draw, const FONT & font, const std::string & newtext, const float x, const float y, const float newscalex, const float newscaley, const float r, const float g, const float b, VERTEXARRAY & output_array);
@@ -44,21 +37,20 @@ public:
 		return text;
 	}
 	
-	const std::pair<float,float> GetCurrentScale() const {return std::pair<float,float>(oldscalex,oldscaley);}
+	const std::pair<float,float> GetCurrentScale() const
+	{
+		return std::pair<float,float>(oldscalex,oldscaley);
+	}
 	
-	static float GetWidth(const FONT & font, const std::string & newtext, const float newscale);
+private:
+	VERTEXARRAY varray;
+	std::string text;
+	float oldx, oldy, oldscalex, oldscaley;
 };
 
 ///a slightly higher level class than the TEXT_DRAW Class that contains its own DRAWABLE handle
 class TEXT_DRAWABLE
 {
-private:
-	TEXT_DRAW text;
-	keyed_container <DRAWABLE>::handle draw;
-	const FONT * font;
-	float curx, cury;
-	float cr,cg,cb,ca;
-	
 public:
 	TEXT_DRAWABLE() : font(NULL),curx(0),cury(0),cr(1),cg(1),cb(1),ca(1) {}
 	
@@ -116,13 +108,13 @@ public:
 	float GetWidth() const
 	{
 		assert (font);
-		return text.GetWidth(*font, text.GetText(), text.GetCurrentScale().first);
+		return font->GetWidth(text.GetText(), text.GetCurrentScale().first);
 	}
 	
 	float GetWidth(const std::string & newstr) const
 	{
 		assert (font);
-		return text.GetWidth(*font, newstr, text.GetCurrentScale().first);
+		return font->GetWidth(newstr, text.GetCurrentScale().first);
 	}
 	
 	void SetDrawOrder(SCENENODE & parentnode, float newdo)
@@ -144,7 +136,16 @@ public:
 	}
 	
 	DRAWABLE & GetDrawable(SCENENODE & parentnode)
-	{return parentnode.GetDrawlist().text.get(draw);}
+	{
+		return parentnode.GetDrawlist().text.get(draw);
+	}
+	
+private:
+	TEXT_DRAW text;
+	keyed_container <DRAWABLE>::handle draw;
+	const FONT * font;
+	float curx, cury;
+	float cr,cg,cb,ca;
 };
 
 #endif
