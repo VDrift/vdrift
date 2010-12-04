@@ -11,6 +11,10 @@ class TEXTURE;
 class WIDGET_IMAGE : public WIDGET
 {
 public:
+	WIDGET_IMAGE() {};
+	
+	~WIDGET_IMAGE() {};
+	
 	virtual WIDGET * clone() const;
 	
 	virtual void SetAlpha(SCENENODE & node, float newalpha);

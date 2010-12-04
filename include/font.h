@@ -1,8 +1,6 @@
 #ifndef _FONT_H
 #define _FONT_H
 
-#include "optional.h"
-
 #include <vector>
 #include <string>
 #include <iostream>
@@ -14,6 +12,8 @@ class TEXTURE;
 class FONT
 {
 public:
+	FONT() : charinfo(charnum), inv_size(256.0/40.0) {};
+	
 	struct CHARINFO
 	{
 		CHARINFO() : loaded(false) {}
@@ -36,22 +36,27 @@ public:
 		return font_texture;
 	}
 	
-	///returns the charinfo or nothing if the character is out of range
-	optional <const CHARINFO *> GetCharInfo(char id) const
+	bool GetCharInfo(char c, const CHARINFO * & info) const
 	{
-		unsigned int cur_id = *((unsigned char*)&id);
-		if (cur_id < char_count && charinfo[cur_id].loaded)
-			return &charinfo[cur_id];
-		else
-			return optional <const CHARINFO *> ();
+		unsigned int i = *((unsigned char*)&c);
+		if (i < charnum && charinfo[i].loaded)
+		{
+			info = &charinfo[i];
+			return true;
+		}
+		return false;
 	}
 	
-	float GetWidth(const std::string & newtext, const float newscale) const;
+	// get normalized(font height = 1) string width
+	float GetWidth(const std::string & newtext) const;
+	
+	float GetInvSize() const {return inv_size;}
 	
 private:
-	std::tr1::shared_ptr<TEXTURE> font_texture;
-	std::vector <CHARINFO> charinfo;
-	static const unsigned int char_count = 256;
+	std::tr1::shared_ptr<TEXTURE> font_texture;	// font texture
+	std::vector <CHARINFO> charinfo;			// font metrics in texture space
+	float inv_size;								// inverse font size in texture space
+	static const unsigned int charnum = 256;	// character count
 };
 
 #endif

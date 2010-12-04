@@ -185,33 +185,32 @@ class WISHBONESUSPENSION : public CARSUSPENSION<T>
 public:
 	MATHVECTOR<T, 3> GetWheelPosition(T displacement_fraction)
 	{
-		MATHVECTOR <T, 3> up (0, 0, 1);
-		MATHVECTOR <T, 3> relucuh = (hinge[UPPER_HUB] - hinge[UPPER_CHASSIS]),
-			rellclh = (hinge[LOWER_HUB] - hinge[LOWER_CHASSIS]),
-			reluclh = (hinge[LOWER_HUB] - hinge[UPPER_CHASSIS]),
-			rellcuh = (hinge[UPPER_HUB] - hinge[LOWER_CHASSIS]),
-			reluclc = (hinge[LOWER_CHASSIS] - hinge[UPPER_CHASSIS]),
-			rellhuh = (hinge[UPPER_HUB] - hinge[LOWER_HUB]),
+		MATHVECTOR <T, 3> rel_uc_uh = (hinge[UPPER_HUB] - hinge[UPPER_CHASSIS]),
+			rel_lc_lh = (hinge[LOWER_HUB] - hinge[LOWER_CHASSIS]),
+			rel_uc_lh = (hinge[LOWER_HUB] - hinge[UPPER_CHASSIS]),
+			rel_lc_uh = (hinge[UPPER_HUB] - hinge[LOWER_CHASSIS]),
+			rel_uc_lc = (hinge[LOWER_CHASSIS] - hinge[UPPER_CHASSIS]),
+			rel_lh_uh = (hinge[UPPER_HUB] - hinge[LOWER_HUB]),
 			localwheelpos = (this->info.extended_position - hinge[LOWER_HUB]);
 		
-		T radlc = angle_from_sides(rellclh.Magnitude(), reluclc.Magnitude(), reluclh.Magnitude());
-		T lrotrad = -angle_from_sides(rellclh.Magnitude(), rellclh.Magnitude(), displacement_fraction * this->info.travel);
-		T radlcd = lrotrad - radlc;
-		T duclh = side_from_angle(radlcd, rellclh.Magnitude(), reluclc.Magnitude());
-		T radlh = angle_from_sides(rellclh.Magnitude(), rellhuh.Magnitude(), rellcuh.Magnitude());
-		T dradlh = (angle_from_sides(rellclh.Magnitude(), duclh, reluclc.Magnitude()) +
-					angle_from_sides(duclh, rellhuh.Magnitude(), relucuh.Magnitude()));
+		T radlc = angle_from_sides(rel_lc_lh.Magnitude(), rel_uc_lc.Magnitude(), rel_uc_lh.Magnitude());
+		T lrotrad = -displacement_fraction * this->info.travel / rel_lc_lh.Magnitude();
+		T radlcd = radlc + lrotrad;
+		T d_uc_lh = side_from_angle(radlcd, rel_lc_lh.Magnitude(), rel_uc_lc.Magnitude());
+		T radlh = angle_from_sides(rel_lc_lh.Magnitude(), rel_lh_uh.Magnitude(), rel_lc_uh.Magnitude());
+		T dradlh = (angle_from_sides(rel_lc_lh.Magnitude(), d_uc_lh, rel_uc_lc.Magnitude()) +
+								angle_from_sides(d_uc_lh, rel_lh_uh.Magnitude(), rel_uc_uh.Magnitude()));
 		
-		MATHVECTOR<T, 3> axiswd = up.cross(rellhuh.Normalize());
-		
+		MATHVECTOR<T, 3> axiswd = -rel_lc_lh.cross(rel_lh_uh.Normalize());
+
 		QUATERNION<T> hingerot;
 		mountrot.LoadIdentity();
 		hingerot.Rotate(lrotrad, axis[LOWER_CHASSIS][0], axis[LOWER_CHASSIS][1], axis[LOWER_CHASSIS][2]);
 		mountrot.Rotate(radlh - dradlh, axiswd[0], axiswd[1], axiswd[2]);
-		hingerot.RotateVector(rellclh);
+		hingerot.RotateVector(rel_lc_lh);
 		mountrot.RotateVector(localwheelpos);
 
-		return (hinge[LOWER_CHASSIS] + rellclh + localwheelpos);	
+		return hinge[LOWER_CHASSIS] + rel_lc_lh + localwheelpos;	
 	}
 
 	void Init(
@@ -472,8 +471,15 @@ bool CARSUSPENSION<T>::LoadSuspension(
 	}
 	else
 	{
+		CONFIG::const_iterator iarm;
 		std::vector<T> h(3);
-		if (!c.GetParam(iwheel, "hinge", h, error_output)) return false;
+
+		if (!((c.GetParam(iwheel, "arm", s_type, error_output)
+					 && c.GetSection(s_type, iarm, error_output)
+					 && c.GetParam(iarm, "hinge", h, error_output)) ||
+					c.GetParam(iwheel, "hinge", h, error_output))) // Fallback!
+				return false;	
+
 		COORDINATESYSTEMS::ConvertV2toV1(h[0], h[1], h[2]);	
 		
 		suspension = new BASICSUSPENSION<T>();	

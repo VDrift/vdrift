@@ -802,7 +802,7 @@ void GAME::UpdateTimer()
 	//check for cars doing a lap
 	for (list <CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
 	{
-	    int carid = cartimerids[&(*i)];
+		int carid = cartimerids[&(*i)];
 
 		bool advance = false;
 		int nextsector = 0;
@@ -824,8 +824,8 @@ void GAME::UpdateTimer()
 
 		if (advance)
 		{
-		    // only count it if the car's current sector isn't -1
-		    // which is the default value when the car is loaded
+			// only count it if the car's current sector isn't -1
+			// which is the default value when the car is loaded
 		    //bool lap_counts = ;
 			timer.Lap(carid, i->GetSector(), nextsector, (i->GetSector() >= 0));
 			i->SetSector(nextsector);
@@ -839,30 +839,30 @@ void GAME::UpdateTimer()
 		//update how far the car is on the track
 		const BEZIER * curpatch = i->GetCurPatch(0); //find the patch under the front left wheel
 		if (!curpatch)
-            curpatch = i->GetCurPatch(1); //try the other wheel
-        if (curpatch) //only update if car is on track
-        {
-            MATHVECTOR <float, 3> pos = i->GetCenterOfMassPosition();
-            MATHVECTOR <float, 3> back_left, back_right, front_left;
+			curpatch = i->GetCurPatch(1); //try the other wheel
+		if (curpatch) //only update if car is on track
+		{
+			MATHVECTOR <float, 3> pos = i->GetCenterOfMassPosition();
+			MATHVECTOR <float, 3> back_left, back_right, front_left;
 
-            if (!track.IsReversed())
-            {
-                back_left = MATHVECTOR <float, 3> (curpatch->GetBL()[2], curpatch->GetBL()[0], curpatch->GetBL()[1]);
-                back_right = MATHVECTOR <float, 3> (curpatch->GetBR()[2], curpatch->GetBR()[0], curpatch->GetBR()[1]);
-                front_left = MATHVECTOR <float, 3> (curpatch->GetFL()[2], curpatch->GetFL()[0], curpatch->GetFL()[1]);
-            }
-            else
-            {
-                back_left = MATHVECTOR <float, 3> (curpatch->GetFL()[2], curpatch->GetFL()[0], curpatch->GetFL()[1]);
-                back_right = MATHVECTOR <float, 3> (curpatch->GetFR()[2], curpatch->GetFR()[0], curpatch->GetFR()[1]);
-                front_left = MATHVECTOR <float, 3> (curpatch->GetBL()[2], curpatch->GetBL()[0], curpatch->GetBL()[1]);
-            }
+			if (!track.IsReversed())
+			{
+				back_left = MATHVECTOR <float, 3> (curpatch->GetBL()[2], curpatch->GetBL()[0], curpatch->GetBL()[1]);
+				back_right = MATHVECTOR <float, 3> (curpatch->GetBR()[2], curpatch->GetBR()[0], curpatch->GetBR()[1]);
+				front_left = MATHVECTOR <float, 3> (curpatch->GetFL()[2], curpatch->GetFL()[0], curpatch->GetFL()[1]);
+			}
+			else
+			{
+				back_left = MATHVECTOR <float, 3> (curpatch->GetFL()[2], curpatch->GetFL()[0], curpatch->GetFL()[1]);
+				back_right = MATHVECTOR <float, 3> (curpatch->GetFR()[2], curpatch->GetFR()[0], curpatch->GetFR()[1]);
+				front_left = MATHVECTOR <float, 3> (curpatch->GetBL()[2], curpatch->GetBL()[0], curpatch->GetBL()[1]);
+			}
 
-            //float dist_from_back = (back_left - back_right).perp_distance (back_left, pos);
+			//float dist_from_back = (back_left - back_right).perp_distance (back_left, pos);
 
-            MATHVECTOR <float, 3> forwardvec = front_left - back_left;
-            MATHVECTOR <float, 3> relative_pos = pos - back_left;
-            float dist_from_back = 0;
+			MATHVECTOR <float, 3> forwardvec = front_left - back_left;
+			MATHVECTOR <float, 3> relative_pos = pos - back_left;
+			float dist_from_back = 0;
 
 			if (forwardvec.Magnitude() > 0.0001)
 				dist_from_back = relative_pos.dot(forwardvec.Normalize());
@@ -1415,15 +1415,15 @@ void GAME::UpdateCar(CAR & car, double dt)
 
 void GAME::UpdateCarInputs(CAR & car)
 {
-    std::vector <float> carinputs(CARINPUT::INVALID, 0.0f);
+	std::vector <float> carinputs(CARINPUT::INVALID, 0.0f);
 
-    if (carcontrols_local.first == &car)
+	if (carcontrols_local.first == &car)
 	{
-	    if (replay.GetPlaying())
-	    {
-            const std::vector <float> & inputarray = replay.PlayFrame(car);
-            assert(inputarray.size() <= carinputs.size());
-            for (unsigned int i = 0; i < inputarray.size(); i++)
+		if (replay.GetPlaying())
+		{
+			const std::vector <float> & inputarray = replay.PlayFrame(car);
+			assert(inputarray.size() <= carinputs.size());
+			for (unsigned int i = 0; i < inputarray.size(); i++)
 			{
 				carinputs[i] = inputarray[i];
 			}
@@ -1454,7 +1454,7 @@ void GAME::UpdateCarInputs(CAR & car)
 	//force brake and clutch during staging and once the race is over
 	if (timer.Staging() || ((int)timer.GetCurrentLap(cartimerids[&car]) > race_laps && race_laps > 0))
 	{
-        carinputs[CARINPUT::BRAKE] = 1.0;
+		carinputs[CARINPUT::BRAKE] = 1.0;
 	}
 
 	car.HandleInputs(carinputs, TickPeriod());
@@ -1464,7 +1464,7 @@ void GAME::UpdateCarInputs(CAR & car)
 		if (replay.GetRecording())
 			replay.RecordFrame(carinputs, car);
 
-        inputgraph.Update(carinputs);
+		inputgraph.Update(carinputs);
 
 		if (replay.GetPlaying())
 		{
@@ -1644,7 +1644,7 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	// setup data logging and metrics
 	data_manager.Init(pathmanager.GetDataSettingsFile(), pathmanager.GetDataLogPath());
 
-    race_laps = num_laps;
+	race_laps = num_laps;
 
 	//load AI cars
 	if (addopponents)
@@ -1685,7 +1685,7 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	//load the timer
 	float pretime = 0.0f;
 	if (num_laps > 0)
-        pretime = 3.0f;
+		pretime = 3.0f;
 	if (!timer.Load(pathmanager.GetTrackRecordsPath()+"/"+trackname+".txt", pretime, error_output))
 		return false;
 
@@ -2007,9 +2007,13 @@ void GAME::CalculateFPS()
 
 	if (settings.GetShowFps())
 	{
-		float w = fps_draw.GetWidth("FPS: 100");
-		float screenhwratio = (float)graphics.GetH()/graphics.GetW();
-		fps_draw.Revise(fpsstr.str(), 0.5-w*0.5,1.0-0.02, screenhwratio*0.2,0.2);
+		float screenhwratio = (float)graphics.GetH() / graphics.GetW();
+		float scaley = 0.03;
+		float scalex = scaley * screenhwratio;
+		float w = fps_draw.GetWidth("FPS: 100") * screenhwratio;
+		float x = 0.5 - w * 0.5;
+		float y = 1 - scaley;
+		fps_draw.Revise(fpsstr.str(), x, y, scalex, scaley);
 		fps_draw.SetDrawEnable(debugnode, true);
 	}
 	else

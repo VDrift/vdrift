@@ -12,6 +12,8 @@ class WIDGET_STRINGWHEEL : public WIDGET
 public:
 	WIDGET_STRINGWHEEL();
 	
+	~WIDGET_STRINGWHEEL() {};
+	
 	virtual WIDGET * clone() const;
 	
 	virtual void SetAlpha(SCENENODE & scene, float newalpha);
@@ -49,10 +51,10 @@ public:
 	void SetupDrawable(
 		SCENENODE & scene,
 		const std::string & newtitle,
-		std::tr1::shared_ptr<TEXTURE> teximage_left_up,
-		std::tr1::shared_ptr<TEXTURE> teximage_left_down,
-		std::tr1::shared_ptr<TEXTURE> teximage_right_up,
-		std::tr1::shared_ptr<TEXTURE> teximage_right_down,
+		std::tr1::shared_ptr<TEXTURE> left_up,
+		std::tr1::shared_ptr<TEXTURE> left_down,
+		std::tr1::shared_ptr<TEXTURE> right_up,
+		std::tr1::shared_ptr<TEXTURE> right_down,
 		const FONT & font,
 		const float scalex,
 		const float scaley,

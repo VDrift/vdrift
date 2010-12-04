@@ -4,57 +4,57 @@
 
 static void HSVtoRGB(float h, float s, float v, float & r, float & g, float & b)
 {
-    if (s == 0)
-    {
-        r = v;
-        g = v;
-        b = v;
-    }
-    else
-    {
-        float hi = std::floor(h * 6 + 1.0E-5); // add eps to avoid nummerical precision issues
-        float f = h * 6 - hi;
-        float p = v * (1 - s);
-        float q = v * (1 - (s * f));
-        float t = v * (1 - (s * (1 - f)));
+	if (s == 0)
+	{
+		r = v;
+		g = v;
+		b = v;
+	}
+	else
+	{
+		float hi = std::floor(h * 6 + 1.0E-5); // add eps to avoid nummerical precision issues
+		float f = h * 6 - hi;
+		float p = v * (1 - s);
+		float q = v * (1 - (s * f));
+		float t = v * (1 - (s * (1 - f)));
 
-        if (hi == 1)
-        {
-            r = q;
-            g = v;
-            b = p;
-        }
-        else if (hi == 2)
-        {
-            r = p;
-            g = v;
-            b = t;
-        }
-        else if (hi == 3)
-        {
-            r = p;
-            g = q;
-            b = v;
-        }
-        else if (hi == 4)
-        {
-            r = t;
-            g = p;
-            b = v;
-        }
-        else if (hi == 5)
-        {
-            r = v;
-            g = p;
-            b = q;
-        }
-        else
+		if (hi == 1)
+		{
+			r = q;
+			g = v;
+			b = p;
+		}
+		else if (hi == 2)
+		{
+			r = p;
+			g = v;
+			b = t;
+		}
+		else if (hi == 3)
+		{
+			r = p;
+			g = q;
+			b = v;
+		}
+		else if (hi == 4)
+		{
+			r = t;
+			g = p;
+			b = v;
+		}
+		else if (hi == 5)
 		{
 			r = v;
-            g = t;
-            b = p;
+			g = p;
+			b = q;
 		}
-    }
+		else
+		{
+			r = v;
+			g = t;
+			b = p;
+		}
+	}
 }
 
 static void RGBtoHSV(float r, float g, float b, float & h, float & s, float & v)
@@ -63,37 +63,37 @@ static void RGBtoHSV(float r, float g, float b, float & h, float & s, float & v)
 	float min = (r < g  ?  r : g) < b  ?  (r < g  ?  r : g) : b;
 	float delta = max - min;
 
-    v = max;
+	v = max;
 
-    if (delta == 0)
-    {
-        h = 0;
-        s = 0;
-    }
-    else
-    {
-        s = delta / max;
+	if (delta == 0)
+	{
+		h = 0;
+		s = 0;
+	}
+	else
+	{
+		s = delta / max;
 
-        if (r == max)
-        {
-            h = (g - b) / delta;
-        }
-        else if (g == max)
-        {
-            h = 2 + (b - r) / delta;
-        }
-        else
-        {
-            h = 4 + (r - g) / delta;
-        }
+		if (r == max)
+		{
+			h = (g - b) / delta;
+		}
+		else if (g == max)
+		{
+			h = 2 + (b - r) / delta;
+		}
+		else
+		{
+			h = 4 + (r - g) / delta;
+		}
 
 		h = h / 6;
 
-        if (h < 0)
-        {
-            h += 1;
-        }
-    }
+		if (h < 0)
+		{
+			h += 1;
+		}
+	}
 }
 
 WIDGET_COLORPICKER::WIDGET_COLORPICKER() :

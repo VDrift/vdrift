@@ -9,7 +9,7 @@
 #include <map>
 #include <list>
 #include <string>
-#include <iostream>
+#include <ostream>
 
 class WIDGET_LABEL;
 class WIDGET_CONTROLGRAB;
@@ -22,6 +22,8 @@ class GUIPAGE
 {
 public:
 	GUIPAGE();
+	
+	~GUIPAGE();
 	
 	bool Load(
 		const std::string & path,
@@ -36,8 +38,7 @@ public:
 		SCENENODE & parentnode,
 		TEXTUREMANAGER & textures,
 		MODELMANAGER & models,
-		std::ostream & error_output,
-		bool reloadcontrolsonly = false);
+		std::ostream & error_output);
   	
 	void SetVisible(SCENENODE & parent, const bool newvis);
 	
@@ -76,6 +77,7 @@ private:
 	std::list <WIDGET_CONTROLGRAB *> controlgrabs;
 	WIDGET_LABEL * tooltip_widget;
 	keyed_container <SCENENODE>::handle s;
+	std::string name;
 	bool dialog;
 	
 	///hides some of the ugliness behind this method

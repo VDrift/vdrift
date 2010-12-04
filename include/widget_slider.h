@@ -11,6 +11,10 @@ class FONT;
 class WIDGET_SLIDER : public WIDGET
 {
 public:
+	WIDGET_SLIDER() {};
+	
+	~WIDGET_SLIDER() {};
+	
 	virtual WIDGET * clone() const;
 	
 	virtual void SetAlpha(SCENENODE & scene, float newalpha);
@@ -66,7 +70,7 @@ private:
 	MATHVECTOR <float, 2> corner2;
 	float min, max, current;
 	bool percentage;
-	float w, h;
+	float w, h, texty;
 	std::list <WIDGET *> hooks;
 	
 	void UpdateText(SCENENODE & scene);

@@ -16,6 +16,8 @@ class WIDGET_BUTTON : public WIDGET
 public:
 	WIDGET_BUTTON();
 	
+	~WIDGET_BUTTON() {};
+	
 	virtual WIDGET * clone() const;
 	
 	virtual void SetAlpha(SCENENODE & scene, float newalpha);

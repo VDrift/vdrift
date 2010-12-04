@@ -15,6 +15,8 @@ class WIDGET_LABEL : public WIDGET
 public:
 	WIDGET_LABEL();
 	
+	~WIDGET_LABEL() {};
+	
 	virtual WIDGET * clone() const;
 	
 	virtual void SetAlpha(SCENENODE & scene, float newalpha);

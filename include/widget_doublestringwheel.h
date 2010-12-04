@@ -17,6 +17,8 @@ class WIDGET_DOUBLESTRINGWHEEL : public WIDGET
 public:
 	WIDGET_DOUBLESTRINGWHEEL();
 	
+	~WIDGET_DOUBLESTRINGWHEEL() {};
+	
 	virtual WIDGET * clone() const;
 	
 	virtual void SetAlpha(SCENENODE & scene, float newalpha);

@@ -14,6 +14,8 @@ class WIDGET_MULTIIMAGE : public WIDGET
 public:
 	WIDGET_MULTIIMAGE();
 	
+	~WIDGET_MULTIIMAGE() {};
+	
 	virtual WIDGET * clone() const;
 	
 	virtual void SetAlpha(SCENENODE & scene, float newalpha);

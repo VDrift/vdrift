@@ -17,6 +17,10 @@ class FONT;
 class WIDGET_CONTROLGRAB : public WIDGET
 {
 public:
+	WIDGET_CONTROLGRAB() {};
+	
+	~WIDGET_CONTROLGRAB();
+	
 	virtual WIDGET * clone() const;
 	
 	virtual void SetAlpha(SCENENODE & scene, float newalpha);
@@ -59,20 +63,22 @@ public:
 	{
 		ADD,
 		ADDSEL,
-			JOYAXIS,
-			JOYAXISSEL,
+		JOYAXIS,
+		JOYAXISSEL,
 		JOYBTN,
 		JOYBTNSEL,
-			KEY,
-			KEYSEL,
+		KEY,
+		KEYSEL,
 		MOUSE,
 		MOUSESEL,
-			END
+		END
 	};
 	
 private:
 	struct CONTROLWIDGET
 	{
+		CONTROLWIDGET();
+		
 		WIDGET_BUTTON widget;
 		std::string type;
 		std::string name;
@@ -108,32 +114,6 @@ private:
 	float w, h;
 	bool analog;
 	bool only_one;
-	
-	void AddButton(
-		SCENENODE & scene,
-		std::tr1::shared_ptr<TEXTURE> tex_unsel,
-		std::tr1::shared_ptr<TEXTURE> tex_sel,
-		const FONT & font, 
-		const std::string & type,
-		const std::string & name,
-		const float scalex,
-		const float scaley,
-		const float y,
-		const bool once,
-		const bool down,
-		const std::string & key,
-		const std::string & keycode,
-		const std::string & joy_type,
-		const int joy_index,
-		const int joy_button,
-		const int joy_axis,
-		const std::string & joy_axis_type,
-		const std::string & mouse_type,
-		const std::string & mouse_motion,
-		const int mouse_button,
-		const float deadzone,
-		const float exponent,
-		const float gain);
 };
 
 #endif
