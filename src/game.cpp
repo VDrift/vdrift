@@ -2536,15 +2536,22 @@ void GAME::UpdateDataManager(float dt)
 		METRICEVENT event;
 		if (data_manager.PollEvents(event))
 		{
-			std::string event_type = event.GetType();
-			METRICEVENT::event_data_T event_data = event.GetData();
+			string event_name = event.GetName();
+			string event_type = event.GetType();
+			METRICEVENT::event_data_T event_config = event.GetConfig();
 			assert(event_type != "");
 			if (event_type == "DriverFeedbackMessage")
 			{
-				METRICEVENT::event_data_T::const_iterator msg;
-				msg = event_data.find("Message");
-				assert(msg != event_data.end());
-				driverfeedback.SetNewFeedback(msg->second);
+				string message, name;
+				float duration, fadein, fadeout;
+				bool get_feedback_params = true;
+				get_feedback_params &= event_config.GetParam("feedback", "message", message);
+				get_feedback_params &= event_config.GetParam("feedback", "duration", duration);
+				get_feedback_params &= event_config.GetParam("feedback", "fade-in", fadein);
+				get_feedback_params &= event_config.GetParam("feedback", "fade-out", fadeout);
+				assert (get_feedback_params);
+				//cout << "Handling new driver feedback message " << event_name << ": dur " << duration << " fin " << fadein << " fout " << fadeout << endl;
+				driverfeedback.SetNewFeedback(message, duration, fadein, fadeout);
 			}
 			else
 			{

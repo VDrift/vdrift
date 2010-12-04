@@ -19,20 +19,27 @@
 class METRICEVENT
 {
 	public:
-		typedef std::map< std::string, std::string > event_data_T;
+		typedef CONFIG event_data_T;
 
 		/** default ctor */
-		METRICEVENT() : event_type("") {}
+		METRICEVENT() {}
 		/** constructor */
-		METRICEVENT(std::string t, event_data_T d) : event_type(t), event_data(d) {}
-		/** Access event type */
-		std::string const& GetType() const { return event_type; }
-		/** Access event data */
-		event_data_T const& GetData() const { return event_data; }
+		METRICEVENT(event_data_T config) : event_config(config) {}
+		/** Access event configuration data
+		 * \return the config object
+		 */
+		event_data_T const& GetConfig() const { return event_config; }
+		/** Access event type
+		 * \return the name of the event type in the config
+		 */
+		std::string GetType() const;
+		/** Access event name
+		 * \return the name of the event in the config
+		 */
+		std::string GetName() const;
 	protected:
 	private:
-		std::string event_type; //!< a name for the kind of event this is
-		event_data_T event_data; //!< some data about the event
+		event_data_T event_config; //!< some data about the event
 };
 
 /** Base class for metrics, defines the interface for the derived classes and
@@ -48,6 +55,14 @@ class DATAMETRIC
 		DATAMETRIC(DATAMETRIC_CTOR_PARAMS_DEF);
 		/** virtual dtor */
 		virtual ~DATAMETRIC() {}
+		/** Turn off this metric */
+		void Disable() { run = false; }
+		/** Turn on this metric */
+		void Enable() { run = true; }
+		/** Access running state
+		 * \return whether this metric will run or not
+		 */
+		bool IsRunning() { return run; }
 		/** Access names of keys for output_data
 		 * \return a vector of the key values naming the output data variables
 		 */
@@ -59,11 +74,10 @@ class DATAMETRIC
 		 */
 		bool GetOutputVariable(std::string const& var_name, DATALOG::log_data_T & output_variable) const;
 		/** Retrieve an event from this metric, if it has one
-		 * \param type a reference to the place to put the event type
-		 * \param data a reference to the place to put the event data
+		 * \param config a reference to the place to put the event data
 		 * \return true if there is an event, false otherwise
 		 */
-		bool GetEvent(std::string & type, METRICEVENT::event_data_T & data);
+		bool GetEvent(METRICEVENT::event_data_T & config);
 		/** Update the metric's calculations (must be overridden) */
 		virtual void Update(float dt) = 0;
 	protected:
@@ -77,11 +91,23 @@ class DATAMETRIC
 		 * \return the last value in the colum named
 		 */
 		DATALOG::log_data_T GetLastInColumn(std::string const& column_name) const;
-		/** Setup an event for this metric
-		 * \param new_event_type the new event's type
-		 * \param new_event_data the new event's data
+		/** Get the next-to-last value in the named data column
+		 * \param column_name the name of the column from which to get the last value
+		 * \return the last value in the colum named
 		 */
-		void SetEvent(std::string new_event_type, METRICEVENT::event_data_T new_event_data);
+		DATALOG::log_data_T GetNextLastInColumn(std::string const& column_name) const;
+		/** Setup an event for this metric
+		 * \param new_event_config the new event's data
+		 */
+		void SetEvent(METRICEVENT::event_data_T new_event_config);
+		/** Convenience function for creating an event for a FeedbackMessage
+		 * \param name the name of the message (used for logging)
+		 * \param message the text of the message to display
+		 * \param duration how long (sec) to display the message
+		 * \param fadein how long (sec) should the message fade-in last
+		 * \param fadeout how long (sec) should the message fade-out last
+		 */
+		void SetFeedbackMessageEvent(std::string const& name, std::string const& message, float duration=2.0, float fadein=1.0, float fadeout=1.0);
 
 		bool run; //!< whether to perform calculations or not
 		std::string name; //!< user-defined name for the metric
@@ -92,8 +118,7 @@ class DATAMETRIC
 		std::vector< std::string > options; //!< the options set for this metric
 
 		bool has_event; //!< flag for new events
-		std::string event_type; //!< new event type
-		METRICEVENT::event_data_T event_data; //!< new event data
+		METRICEVENT::event_data_T event_config; //!< new event data
 	private:
 };
 
@@ -231,6 +256,12 @@ class DATAMANAGER
 		std::vector< std::string > const& GetLogColumnNames() { return data_log.GetColumnNames(); }
 	protected:
 	private:
+		/** Process new events (handle special events and enqueue the rest)
+		 * \param type the new event's type
+		 * \param data the new event's data
+		 */
+		void HandleNewEvent(METRICEVENT::event_data_T config);
+
 		DATALOG data_log; //!< store the data to be logged
 		metric_map_T data_metrics; //!< map of pointers to DATAMETRIC-derived objects
 		event_queue_T events; //!< event queue for METRICEVENT

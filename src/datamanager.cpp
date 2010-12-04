@@ -15,6 +15,20 @@ using std::endl;
 /** static class member declaration */
 TYPEDMETRICFACTORY::metric_ctor_map_T * TYPEDMETRICFACTORY::metric_types;
 
+std::string METRICEVENT::GetType() const
+{
+	string type;
+	assert (event_config.GetParam("event", "type", type));
+	return type;
+}
+
+std::string METRICEVENT::GetName() const
+{
+	string name;
+	assert (event_config.GetParam("event", "name", name));
+	return name;
+}
+
 DATAMETRIC::DATAMETRIC(DATAMETRIC_CTOR_PARAMS_DEF)
  : run(false),
    name(nom),
@@ -22,8 +36,7 @@ DATAMETRIC::DATAMETRIC(DATAMETRIC_CTOR_PARAMS_DEF)
    input_data_columns(input_columns),
    output_variable_names(outvar_names),
    options(opts),
-   has_event(false),
-   event_type("")
+   has_event(false)
 {
 
 }
@@ -39,22 +52,31 @@ bool DATAMETRIC::GetOutputVariable(std::string const& var_name, DATALOG::log_dat
 	return false;
 }
 
-void DATAMETRIC::SetEvent(std::string new_event_type, METRICEVENT::event_data_T new_event_data)
+void DATAMETRIC::SetEvent(METRICEVENT::event_data_T new_event_config)
 {
 	has_event = true;
-	event_type = new_event_type;
-	event_data = new_event_data;
+	event_config = new_event_config;
 }
 
-bool DATAMETRIC::GetEvent(std::string & type, METRICEVENT::event_data_T & data)
+void DATAMETRIC::SetFeedbackMessageEvent(std::string const& name, std::string const& message, float duration, float fadein, float fadeout)
+{
+	METRICEVENT::event_data_T event_config;
+	event_config.SetParam("event", "name", name);
+	event_config.SetParam("event", "type", "DriverFeedbackMessage");
+	event_config.SetParam("feedback", "message", message);
+	event_config.SetParam("feedback", "duration", duration);
+	event_config.SetParam("feedback", "fade-in", fadein);
+	event_config.SetParam("feedback", "fade-out", fadeout);
+	SetEvent(event_config);
+}
+
+bool DATAMETRIC::GetEvent(METRICEVENT::event_data_T & config)
 {
 	if (has_event)
 	{
-		type = event_type;
-		data = event_data;
+		config = event_config;
 		has_event = false;
-		event_type = "";
-		event_data.clear();
+		event_config.Clear();
 		return true;
 	}
 	return false;
@@ -72,6 +94,18 @@ DATALOG::log_column_T const* DATAMETRIC::GetColumn(std::string const& column_nam
 DATALOG::log_data_T DATAMETRIC::GetLastInColumn(std::string const& column_name) const
 {
 	return GetColumn(column_name)->back();
+}
+
+DATALOG::log_data_T DATAMETRIC::GetNextLastInColumn(std::string const& column_name) const
+{
+	DATALOG::log_column_T const* column = GetColumn(column_name);
+	DATALOG::log_column_T::const_reverse_iterator next_last = column->rbegin();
+	++next_last;
+	if (next_last != column->rend())
+	{
+		return *next_last;
+	}
+	return -1.0;
 }
 
 void DATAMANAGER::Init(std::string const& data_config_filename, std::string const& log_path)
@@ -175,6 +209,45 @@ void DATAMANAGER::Clear()
 	//cout << "All clear" << endl;
 }
 
+using std::stringstream;
+
+void DATAMANAGER::HandleNewEvent(METRICEVENT::event_data_T config)
+{
+	// handle special events that do not need to be added to the queue for
+	// external processing
+	string type;
+	assert (config.GetParam("event", "type", type));
+	if (type == "DisableMetrics")
+	{
+		// this event type calls Disable() on each metric in a list of metric names
+		vector<string> metric_names;
+		assert (config.GetParam("disable", "metrics", metric_names));
+		for (vector<string>::const_iterator metric_name = metric_names.begin(); metric_name != metric_names.end(); ++metric_name)
+		{
+			metric_map_T::iterator metric = data_metrics.find(*metric_name);
+			assert (metric != data_metrics.end());
+			metric->second->Disable();
+		}
+	}
+	if (type == "EnableMetrics")
+	{
+		// this event type calls Enable() on each metric in a list of metric names
+		vector<string> metric_names;
+		assert (config.GetParam("enable", "metrics", metric_names));
+		for (vector<string>::const_iterator metric_name = metric_names.begin(); metric_name != metric_names.end(); ++metric_name)
+		{
+			metric_map_T::iterator metric = data_metrics.find(*metric_name);
+			assert (metric != data_metrics.end());
+			metric->second->Enable();
+		}
+	}
+	else
+	{
+		// all other events are enqueued for external processing
+		events.push(METRICEVENT(config));
+	}
+}
+
 void DATAMANAGER::Update(float dt)
 {
 	bool must_return = false;
@@ -217,11 +290,11 @@ void DATAMANAGER::Update(float dt)
 			data_log.ModifyLastEntry(*output_var, val);
 		}
 
-		std::string event_type;
-		METRICEVENT::event_data_T event_data;
-		if (metric->second->GetEvent(event_type, event_data))
+		// check metric for a new event and process it
+		METRICEVENT::event_data_T event_config;
+		if (metric->second->GetEvent(event_config))
 		{
-			events.push(METRICEVENT(event_type, event_data));
+			HandleNewEvent(event_config);
 		}
 	}
 

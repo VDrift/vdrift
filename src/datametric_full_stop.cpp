@@ -39,9 +39,10 @@ void FULLSTOPMETRIC::DetermineState()
 	}
 	else if (state == braking)
 	{
-		if (DATAMETRIC::GetLastInColumn("Velocity") <= 0.5)
+		double velocity = DATAMETRIC::GetLastInColumn("Velocity");
+		if (velocity <= 0.5)
 			state = stopped;
-		else if (DATAMETRIC::GetLastInColumn("Brake") == 0.0)
+		else if (velocity > DATAMETRIC::GetNextLastInColumn("Velocity"))
 			state = not_braking;
 	}
 	else if (state == stopped)
@@ -76,9 +77,7 @@ void FULLSTOPMETRIC::Update(float dt)
 		{
 			braking_stimulus_time = DATAMETRIC::GetLastInColumn("Time");
 			//cout << "braking stimulus at " << braking_stimulus_time << endl;
-			METRICEVENT::event_data_T event_data;
-			event_data["Message"] = "STOP";
-			DATAMETRIC::SetEvent("DriverFeedbackMessage", event_data);
+			DATAMETRIC::SetFeedbackMessageEvent("Stop Command", "STOP", 2.0, 0.0, 2.0);
 		}
 		else if (state == braking)
 		{
@@ -88,19 +87,17 @@ void FULLSTOPMETRIC::Update(float dt)
 		}
 		else if (state == stopped)
 		{
-			DATALOG::log_data_T current_velocity = DATAMETRIC::GetLastInColumn("Velocity");
-			DATALOG::log_data_T current_time = DATAMETRIC::GetLastInColumn("Time");
-			DATALOG::log_data_T stopping_time = current_time - braking_start_time;
-			DATALOG::log_data_T reaction_time = braking_start_time - braking_stimulus_time;
-			DATALOG::log_data_T acceleration = ((current_velocity - braking_start_velocity) / stopping_time) / 9.81;
+			double current_time = DATAMETRIC::GetLastInColumn("Time");
+			double current_velocity = DATAMETRIC::GetLastInColumn("Velocity");
+			double stopping_time = current_time - braking_start_time;
+			double reaction_time = braking_start_time - braking_stimulus_time;
+			double acceleration = ((current_velocity - braking_start_velocity) / stopping_time) / 9.81;
 			//cout << "stopped braking at " << current_time << ", stopping time: " << stopping_time << ", delay: " << reaction_time << endl;
 			ostringstream os;
 			os << "You stopped in " << stopping_time << " seconds" << endl;
 			os << "after a " << reaction_time << " second delay." << endl;
 			os << "with acceleration of " << acceleration << " Gs " << endl;
-			METRICEVENT::event_data_T event_data;
-			event_data["Message"] = os.str();
-			DATAMETRIC::SetEvent("DriverFeedbackMessage", event_data);
+			DATAMETRIC::SetFeedbackMessageEvent("Full Stop Braking Report", os.str(), 10.0, 1.0, 2.0);
 		}
 		else if (state == not_braking)
 		{
