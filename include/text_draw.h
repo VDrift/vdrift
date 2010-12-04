@@ -108,13 +108,13 @@ public:
 	float GetWidth() const
 	{
 		assert (font);
-		return font->GetWidth(text.GetText(), text.GetCurrentScale().first);
+		return font->GetWidth(text.GetText()) * text.GetCurrentScale().first;
 	}
 	
 	float GetWidth(const std::string & newstr) const
 	{
 		assert (font);
-		return font->GetWidth(newstr, text.GetCurrentScale().first);
+		return font->GetWidth(newstr) * text.GetCurrentScale().first;
 	}
 	
 	void SetDrawOrder(SCENENODE & parentnode, float newdo)

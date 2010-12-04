@@ -3,8 +3,7 @@
 #include <cassert>
 
 WIDGET_LABEL::WIDGET_LABEL() : 
-	savedfont(0),
-	r(1), g(1), b(1)
+	savedfont(0), r(1), g(1), b(1)
 {
 	// ctor
 }
@@ -31,8 +30,7 @@ void WIDGET_LABEL::SetupDrawable(
 	float x, float y,
 	float scalex, float scaley,
 	float nr, float ng, float nb,
-	int order,
-	bool centered)
+	int order, bool centered)
 {
 	savedfont = &font;
 	
@@ -50,8 +48,8 @@ void WIDGET_LABEL::SetupDrawable(
 	DRAWABLE & drawref = GetDrawable(scene);
 	drawref.SetDrawOrder(order + 100);
 	
-	if (centered) x = x - savedfont->GetWidth(text, saved_scalex) * 0.5;
-	text_draw.Set(drawref, font, text, x, y, scalex, scaley, r, g, b);
+	if (centered) x = x - savedfont->GetWidth(text) * saved_scalex * 0.5;
+	text_draw.Set(drawref, font, text, x, y, scalex, scaley , r, g, b);
 }
 
 void WIDGET_LABEL::ReviseDrawable(SCENENODE & scene, const std::string & text)
@@ -63,7 +61,7 @@ void WIDGET_LABEL::ReviseDrawable(SCENENODE & scene, const std::string & text)
 
 float WIDGET_LABEL::GetWidth(const FONT & font, const std::string & text, float scale) const
 {
-	return font.GetWidth(text, scale);
+	return font.GetWidth(text) * scale;
 }
 
 void WIDGET_LABEL::SetText(SCENENODE & scene, const std::string & text)
@@ -71,7 +69,7 @@ void WIDGET_LABEL::SetText(SCENENODE & scene, const std::string & text)
 	assert(savedfont);
 	
 	float x = saved_x;
-	if (saved_centered) x = x - savedfont->GetWidth(text, saved_scalex) * 0.5;
+	if (saved_centered) x = x - savedfont->GetWidth(text) * saved_scalex * 0.5;
 	text_draw.Revise(*savedfont, text, x, saved_y, saved_scalex, saved_scaley);
 }
 

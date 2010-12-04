@@ -3,7 +3,6 @@
 
 #include <sstream>
 #include <fstream>
-#include <algorithm>
 
 template <typename T>
 static void GetNumber(const std::string & numberstr, T & num_output)
@@ -53,40 +52,6 @@ bool FONT::Load(
 	std::ostream & error_output,
 	bool mipmap)
 {
-	std::ifstream fontinfo(fontinfopath.c_str());
-	if (!fontinfo)
-	{
-		error_output << "Can't find font information file: " << fontinfopath << std::endl;
-		return false;
-	}
-	
-	std::string curstr;
-	while (fontinfo && curstr != "chars") fontinfo >> curstr; //advance to first interesting bit
-	
-	fontinfo >> curstr;
-	while (fontinfo.good())
-	{
-		fontinfo >> curstr;
-		if (fontinfo.good())
-		{
-			if (!VerifyParse("char", curstr, fontinfopath, error_output)) return false;
-			
-			unsigned int cur_id(0);
-			if (!Parse("id=", cur_id, fontinfo, fontinfopath, error_output)) return false;
-			if (!Parse("x=", charinfo[cur_id].x, fontinfo,fontinfopath, error_output)) return false;
-			if (!Parse("y=", charinfo[cur_id].y, fontinfo,fontinfopath, error_output)) return false;
-			if (!Parse("width=", charinfo[cur_id].width, fontinfo,fontinfopath, error_output)) return false;
-			if (!Parse("height=", charinfo[cur_id].height, fontinfo,fontinfopath, error_output)) return false;
-			if (!Parse("xoffset=", charinfo[cur_id].xoffset, fontinfo,fontinfopath, error_output)) return false;
-			if (!Parse("yoffset=", charinfo[cur_id].yoffset, fontinfo,fontinfopath, error_output)) return false;
-			if (!Parse("xadvance=", charinfo[cur_id].xadvance, fontinfo,fontinfopath, error_output)) return false;
-			
-			fontinfo >> curstr >> curstr; //don't care
-			
-			charinfo[cur_id].loaded = true;
-		}
-	}
-	
 	TEXTUREINFO texinfo;
 	texinfo.mipmap = mipmap;
 	texinfo.repeatu = false;
@@ -94,26 +59,57 @@ bool FONT::Load(
 	texinfo.size = texsize;
 	if (!textures.Load(texpath, texname, texinfo, font_texture)) return false;
 	
-	float scale = font_texture->GetScale();
-	if (scale != 1.0)
+	std::ifstream fontinfo(fontinfopath.c_str());
+	if (!fontinfo)
 	{
-		for (std::vector <CHARINFO>::iterator i = charinfo.begin(); i != charinfo.end(); ++i)
+		error_output << "Can't find font information file: " << fontinfopath << std::endl;
+		return false;
+	}
+	
+	const std::string sizestr("size=");
+	const float sw = font_texture->GetScale() / font_texture->GetW();
+	const float sh = font_texture->GetScale() / font_texture->GetH();
+	while (fontinfo)
+	{
+		std::string curstr;
+		fontinfo >> curstr;
+		if (curstr == "char")
 		{
-			CHARINFO & char_to_scale = *i;
-			char_to_scale.x *= scale;
-			char_to_scale.y *= scale;
-			char_to_scale.width *= scale;
-			char_to_scale.height *= scale;
-			char_to_scale.xoffset *= scale;
-			char_to_scale.yoffset *= scale;
-			char_to_scale.xadvance *= scale;
+			unsigned int cur_id(0);
+			if (!Parse("id=", cur_id, fontinfo, fontinfopath, error_output)) return false;
+			
+			CHARINFO & info = charinfo[cur_id];
+			if (!Parse("x=", info.x, fontinfo, fontinfopath, error_output)) return false;
+			if (!Parse("y=", info.y, fontinfo, fontinfopath, error_output)) return false;
+			if (!Parse("width=", info.width, fontinfo, fontinfopath, error_output)) return false;
+			if (!Parse("height=", info.height, fontinfo, fontinfopath, error_output)) return false;
+			if (!Parse("xoffset=", info.xoffset, fontinfo, fontinfopath, error_output)) return false;
+			if (!Parse("yoffset=", info.yoffset, fontinfo, fontinfopath, error_output)) return false;
+			if (!Parse("xadvance=", info.xadvance, fontinfo, fontinfopath, error_output)) return false;
+			fontinfo >> curstr >> curstr; //don't care
+			
+			info.x *= sw;
+			info.y *= sh;
+			info.width *= sw;
+			info.height *= sh;
+			info.xoffset *= sw;
+			info.yoffset *= sh;
+			info.xadvance *= sw;
+			info.loaded = true;
+		}
+		else if (curstr.compare(0, sizestr.size(), sizestr) == 0)
+		{
+			float size(0);
+			if (!VerifyParse(sizestr, curstr.substr(0, sizestr.size()), fontinfopath, error_output)) return false;
+			GetNumber(curstr.substr(sizestr.size()), size);
+			inv_size = 1 / (size * sh);
 		}
 	}
 	
 	return true;
 }
 
-float FONT::GetWidth(const std::string & newtext, const float newscale) const
+float FONT::GetWidth(const std::string & newtext) const
 {
 	float cursorx(0);
 	float linewidth(0);
@@ -129,7 +125,7 @@ float FONT::GetWidth(const std::string & newtext, const float newscale) const
 			const CHARINFO * cinfo(0);
 			if (GetCharInfo(newtext[i], cinfo))
 			{
-				cursorx += (cinfo->xadvance / font_texture->GetW()) * newscale;
+				cursorx += cinfo->xadvance * inv_size;
 			}
 		}
 	}

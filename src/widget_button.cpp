@@ -57,8 +57,8 @@ bool WIDGET_BUTTON::ProcessInput(SCENENODE & scene, float cursorx, float cursory
 {
 	active_action.clear();
 	
-	if (cursorx < image_up.GetCorner2()[0] + h / (screenhwratio * 3.0) &&
-		cursorx > image_up.GetCorner1()[0] - h / (screenhwratio * 3.0) &&
+	if (cursorx < image_up.GetCorner2()[0] &&
+		cursorx > image_up.GetCorner1()[0] &&
 		cursory < image_up.GetCorner2()[1] &&
 		cursory > image_up.GetCorner1()[1])
 	{
@@ -133,12 +133,11 @@ void WIDGET_BUTTON::SetupDrawable(
 	assert(teximage_down);
 	assert(teximage_selected);
 	
-	h = 0.06 * scaley * 4.0;
 	screenhwratio = scaley / scalex;
-	float y = centery + 0.007;
-	float w = label.GetWidth(font, text, scalex);
+	h = scaley;// * (1 + 1 / (screenhwratio * 3.0)); // replace with padding
+	float w = font.GetWidth(text) * scalex;
 	
-	label.SetupDrawable(scene, font, text, centerx, y, scalex, scaley, r, g, b, 2);
+	label.SetupDrawable(scene, font, text, centerx, centery, scalex, scaley, r, g, b, 2);
 	image_up.SetupDrawable(scene, teximage_up, centerx, centery, w, h, 1, true, screenhwratio);
 	image_down.SetupDrawable(scene, teximage_down, centerx, centery, w, h, 1, true, screenhwratio);
 	image_selected.SetupDrawable(scene, teximage_selected, centerx, centery, w, h, 1, true, screenhwratio);

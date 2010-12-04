@@ -69,16 +69,28 @@ bool GUIPAGE::Load(
 	if (!pagefile.GetParam("", "dialog", dialog)) return false;
 	
 	//generate background
-	std::string background;
-	std::tr1::shared_ptr<TEXTURE> texture;
-	if (!pagefile.GetParam("", "background", background)) return false;
-	if (!textures.Load(texpath, background, texinfo, texture)) return false;
-	WIDGET_IMAGE * bg_widget = NewWidget<WIDGET_IMAGE>();
-	bg_widget->SetupDrawable(sref, texture, 0.5, 0.5, 1.0, 1.0, -1);
+	{
+		float y = 0.5;
+		float x = 0.5;
+		float yscale = 1.0;
+		float xscale = 1.0;
+		std::string background;
+		std::tr1::shared_ptr<TEXTURE> texture;
+		if (!pagefile.GetParam("", "background", background)) return false;
+		if (!textures.Load(texpath, background, texinfo, texture)) return false;
+		WIDGET_IMAGE * bg_widget = NewWidget<WIDGET_IMAGE>();
+		bg_widget->SetupDrawable(sref, texture, x, y, xscale, yscale, -1);
+	}
 	
 	// tooltip widget
-	tooltip_widget = NewWidget<WIDGET_LABEL>();
-	tooltip_widget->SetupDrawable(sref, font, "", 0.5, 0.95, 0.2 * screenhwratio, 0.2, 1, 1, 1, 1);
+	{
+		float y = 0.95;
+		float x = 0.5;
+		float yscale = 0.03;
+		float xscale = yscale * screenhwratio;
+		tooltip_widget = NewWidget<WIDGET_LABEL>();
+		tooltip_widget->SetupDrawable(sref, font, "", x, y, xscale, yscale, 1, 1, 1, 1);	
+	}
 	
 	// widget map for hooks
 	std::map <std::string, WIDGET *> namemap;
@@ -140,14 +152,12 @@ bool GUIPAGE::Load(
 			if (!textures.Load(texpath, "widgets/btn_down.png", texinfo, texture_down)) return false;
 			if (!textures.Load(texpath, "widgets/btn_up.png", texinfo, texture_up)) return false;
 			
-			float fontscaley = (((fontsize - 7.0) * 0.25) + 1.0) * 0.25;
-			float fontscalex = fontscaley * screenhwratio;
+			float fontscaley = fontsize;
+			float fontscalex = fontsize * screenhwratio;
 			
 			WIDGET_BUTTON * new_widget = NewWidget<WIDGET_BUTTON>();
-			new_widget->SetupDrawable(
-					sref, texture_up, texture_down, texture_sel,
-					font, text, xy[0], xy[1], fontscalex, fontscaley,
-					color[0], color[1], color[2]);
+			new_widget->SetupDrawable(sref, texture_up, texture_down, texture_sel,
+					font, text, xy[0], xy[1], fontscalex, fontscaley, color[0], color[1], color[2]);
 			new_widget->SetAction(action);
 			new_widget->SetDescription(desc);
 			new_widget->SetCancel(cancel);
@@ -162,8 +172,8 @@ bool GUIPAGE::Load(
 			if (!pagefile.GetParam(section, "fontsize", fontsize, error_output)) return false;
 			pagefile.GetParam(section, "color", color);
 
-			float fontscaley = (((fontsize - 7.0) * 0.25) + 1.0) * 0.25;
-			float fontscalex = fontscaley * screenhwratio;
+			float fontscaley = fontsize;
+			float fontscalex = fontsize * screenhwratio;
 			
 			WIDGET_LABEL * new_widget = NewWidget<WIDGET_LABEL>();
 			new_widget->SetupDrawable(sref, font, text, xy[0], xy[1], fontscalex, fontscaley, color[0], color[1], color[2], 2);
@@ -201,15 +211,15 @@ bool GUIPAGE::Load(
 				text = truestr;
 			}
 			
-			float fontscaley = (((fontsize - 7.0) * 0.25) + 1.0) * 0.25;
-			float fontscalex = fontscaley * screenhwratio;
+			float fontscaley = fontsize;
+			float fontscalex = fontsize * screenhwratio;
 			xy[0] -= spacing * 0.5;
 			
 			//generate label
 			{
-				float textwidth = font.GetWidth(text, fontscalex);
+				float textwidth = font.GetWidth(text) * fontscalex;
 				float x = xy[0] + textwidth * 0.5;
-				float y = xy[1] + (0.02 * 0.25 * 4.0 / 3.0);
+				float y = xy[1];
 				
 				WIDGET_LABEL * new_widget = NewWidget<WIDGET_LABEL>();
 				new_widget->SetupDrawable(sref, font, text, x, y, fontscalex, fontscaley, 1, 1, 1, 2);
@@ -224,10 +234,10 @@ bool GUIPAGE::Load(
 				if (!textures.Load(texpath, "widgets/tog_on_up.png", texinfo, downsel)) return false;
 				if (!textures.Load(texpath, "widgets/tog_off_down.png", texinfo, trans)) return false;
 				
-				float x = xy[0] - 0.02;
-				float y = xy[1];
-				float h = 0.025;
+				float h = fontsize * 0.75;
 				float w = h * screenhwratio;
+				float x = xy[0] - w;
+				float y = xy[1];
 				
 				WIDGET_TOGGLE * new_widget = NewWidget<WIDGET_TOGGLE>();
 				new_widget->SetupDrawable(sref, up, down, upsel, downsel, trans, x, y, w, h);
@@ -268,8 +278,8 @@ bool GUIPAGE::Load(
 			if (!textures.Load(texpath, "widgets/wheel_up_r.png", texinfo, up_right)) return false;
 			if (!textures.Load(texpath, "widgets/wheel_down_r.png", texinfo, down_right)) return false;
 			
-			float fontscaley = (((fontsize - 7.0) * 0.25) + 1.0) * 0.25;
-			float fontscalex = fontscaley * screenhwratio;
+			float fontscaley = fontsize;
+			float fontscalex = fontsize * screenhwratio;
 			xy[0] -= spacing * 0.5;
 			
 			WIDGET_STRINGWHEEL * new_widget = NewWidget<WIDGET_STRINGWHEEL>();
@@ -313,8 +323,8 @@ bool GUIPAGE::Load(
 			if (!textures.Load(texpath, "widgets/wheel_up_r.png", texinfo, up_right)) return false;
 			if (!textures.Load(texpath, "widgets/wheel_down_r.png", texinfo, down_right)) return false;
 			
-			float fontscaley = (((fontsize - 7.0) * 0.25) + 1.0) * 0.25;
-			float fontscalex = fontscaley * screenhwratio;
+			float fontscaley = fontsize;
+			float fontscalex = fontsize * screenhwratio;
 			xy[0] -= spacing * 0.5;
 			
 			WIDGET_DOUBLESTRINGWHEEL * new_widget = NewWidget<WIDGET_DOUBLESTRINGWHEEL>();
@@ -403,38 +413,36 @@ bool GUIPAGE::Load(
 				}
 			}
 			
-			float h = 0;
-			float w = 0;
 			float spacing(0.3);
-			pagefile.GetParam(section, "width", w);
-			pagefile.GetParam(section, "height", h);
 			pagefile.GetParam(section, "spacing", spacing);
-			if (h < 0.01) h = 0.05;
-			if (w < h * screenhwratio) w = h * screenhwratio;
 			xy[0] -= spacing * 0.5;
 			
-			float fontscaley = (((fontsize - 7.0) * 0.25) + 1.0) * 0.25;
-			float fontscalex = fontscaley * screenhwratio;
+			float fontscaley = fontsize;
+			float fontscalex = fontsize * screenhwratio;
 			
 			//generate label
 			{
-				float textwidth = font.GetWidth(text, fontscalex);
+				float textwidth = font.GetWidth(text) * fontscalex;
 				float x = xy[0] + textwidth * 0.5;
-				float y = xy[1] + (0.02 * 0.25 * 4.0 / 3.0);
+				float y = xy[1];
 				
 				WIDGET_LABEL * new_widget = NewWidget<WIDGET_LABEL>();
 				new_widget->SetupDrawable(sref, font, text, x, y, fontscalex, fontscaley, 1, 1, 1, 2);
 			}
 			
-			xy[0] -= w * 4.0 * 0.4;
-			
-			//font settings for % display
-			std::tr1::shared_ptr<TEXTURE> cursor, wedge;
-			if (!textures.Load(texpath, "widgets/sld_cursor.png", texinfo, cursor)) return false;
-			if (!textures.Load(texpath, "widgets/sld_wedge.png", texinfo, wedge)) return false;
+			float h(0.0), w(0.0);
+			pagefile.GetParam(section, "width", w);
+			pagefile.GetParam(section, "height", h);
+			if (h == 0.0) h = fontsize;
+			if (w < h * screenhwratio) w = h * screenhwratio;
+			xy[0] = xy[0] - w * 4.0 / 2 - fontscalex; // slider offset
 			
 			std::vector<float> color(3, 1.0);
 			pagefile.GetParam(section, "color", color);
+			
+			std::tr1::shared_ptr<TEXTURE> cursor, wedge;
+			if (!textures.Load(texpath, "widgets/sld_cursor.png", texinfo, cursor)) return false;
+			if (!textures.Load(texpath, "widgets/sld_wedge.png", texinfo, wedge)) return false;
 			
 			WIDGET_SLIDER * new_widget = NewWidget<WIDGET_SLIDER>();
 			new_widget->SetupDrawable(sref, wedge, cursor, xy[0], xy[1], w, h, min, max, 
@@ -483,8 +491,8 @@ bool GUIPAGE::Load(
 			if (!textures.Load(texpath, "widgets/controls/mouse.png", texinfo, control[WIDGET_CONTROLGRAB::MOUSE])) return false;
 			if (!textures.Load(texpath, "widgets/controls/mouse_sel.png", texinfo, control[WIDGET_CONTROLGRAB::MOUSESEL])) return false;
 			
-			float fontscaley = (((fontsize - 7.0) * 0.25) + 1.0) * 0.25;
-			float fontscalex = fontscaley * screenhwratio;
+			float fontscaley = fontsize;
+			float fontscalex = fontsize * screenhwratio;
 			
 			WIDGET_CONTROLGRAB * new_widget = NewWidget<WIDGET_CONTROLGRAB>();
 			new_widget->SetupDrawable(sref, controlsconfig, setting, control, font, 

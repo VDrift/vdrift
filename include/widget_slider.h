@@ -70,7 +70,7 @@ private:
 	MATHVECTOR <float, 2> corner2;
 	float min, max, current;
 	bool percentage;
-	float w, h;
+	float w, h, texty;
 	std::list <WIDGET *> hooks;
 	
 	void UpdateText(SCENENODE & scene);

@@ -32,8 +32,8 @@ void WIDGET_MULTIIMAGE::SetupDrawable(
 	errptr = &error_output;
 	this->textures = &textures;
 	
-	center.Set(x,y);
-	dim.Set(w,h);
+	center.Set(x, y);
+	dim.Set(w, h);
 	
 	draworder = order;
 }

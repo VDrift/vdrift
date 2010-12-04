@@ -12,7 +12,7 @@ class TEXTURE;
 class FONT
 {
 public:
-	FONT() : charinfo(charnum) {};
+	FONT() : charinfo(charnum), inv_size(256.0/40.0) {};
 	
 	struct CHARINFO
 	{
@@ -36,7 +36,6 @@ public:
 		return font_texture;
 	}
 	
-	///returns the charinfo or nothing if the character is out of range
 	bool GetCharInfo(char c, const CHARINFO * & info) const
 	{
 		unsigned int i = *((unsigned char*)&c);
@@ -48,12 +47,16 @@ public:
 		return false;
 	}
 	
-	float GetWidth(const std::string & newtext, const float newscale) const;
+	// get normalized(font height = 1) string width
+	float GetWidth(const std::string & newtext) const;
+	
+	float GetInvSize() const {return inv_size;}
 	
 private:
-	std::tr1::shared_ptr<TEXTURE> font_texture;
-	std::vector <CHARINFO> charinfo;
-	static const unsigned int charnum = 256;
+	std::tr1::shared_ptr<TEXTURE> font_texture;	// font texture
+	std::vector <CHARINFO> charinfo;			// font metrics in texture space
+	float inv_size;								// inverse font size in texture space
+	static const unsigned int charnum = 256;	// character count
 };
 
 #endif
