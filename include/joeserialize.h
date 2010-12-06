@@ -194,7 +194,7 @@ class Serializer
 			return true;
 		}
 		
-		/// vector <bool> is special
+		/// \verbatim vector <bool> is special \endverbatim
 		bool Serialize(const std::string & name, std::vector <bool> & t)
 		{
 			ComplexTypeStart(name);
@@ -685,7 +685,7 @@ class TextOutputSerializer : public SerializerOutput
 				out_ << "  ";
 		}
 		
-		///replaces <CR> with '\n'
+		/// \verbatim replaces <CR> with '\n' \endverbatim
 		std::string Escape(const std::string & input) const
 		{
 			std::string outputstr;
@@ -799,7 +799,7 @@ class TextInputSerializer : public SerializerInput
 			return strLTrim(strRTrim(instr));
 		}
 
-    	///replace "\n" with <CR>
+    	/// \verbatim replace "\n" with <CR> \endverbatim
 		std::string UnEscape(const std::string & input) const
 		{
 			std::string outputstr;
