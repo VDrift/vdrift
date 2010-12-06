@@ -1050,10 +1050,6 @@ bool CARDYNAMICS::Serialize ( joeserialize::Serializer & s )
 	_SERIALIZE_(s,differential_rear);
 	_SERIALIZE_(s,differential_center);
 	_SERIALIZE_(s,fuel_tank);
-	//_SERIALIZE_(s,suspension);
-	_SERIALIZE_(s,wheel);
-	_SERIALIZE_(s,brake);
-	_SERIALIZE_(s,tire);
 	_SERIALIZE_(s,aerodynamics);
 	_SERIALIZE_(s,wheel_velocity);
 	_SERIALIZE_(s,abs);
@@ -1065,6 +1061,16 @@ bool CARDYNAMICS::Serialize ( joeserialize::Serializer & s )
 	_SERIALIZE_(s,shift_gear);
 	_SERIALIZE_(s,shifted);
 	_SERIALIZE_(s,autoshift);
+	//_SERIALIZE_(s,chassisPosition);
+	//_SERIALIZE_(s,chassisCenterOfMass);
+	//_SERIALIZE_(s,chassisRotation);
+	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
+	{
+		_SERIALIZE_(s,*suspension[i]);
+		_SERIALIZE_(s,wheel[i]);
+		_SERIALIZE_(s,brake[i]);
+		_SERIALIZE_(s,tire[i]);
+	}
 	return true;
 }
 

@@ -1,5 +1,6 @@
 #include "replay.h"
 #include "unittest.h"
+#include "config.h"
 
 #include <iostream>
 using std::ostream;
@@ -99,16 +100,11 @@ void REPLAY::StartRecording(const std::string & newcartype, const std::string & 
 	
 	GetReadyToRecord();
 	
-	ifstream carfilestream(carfilename.c_str());
-	if (!carfilestream)
-		error_log << "Unable to open car file to put into replay: " << carfilename << endl;
-	while (carfilestream)
-	{
-		string newline;
-		std::getline(carfilestream, newline);
-		carfile.append(newline);
-		carfile.push_back('\n');
-	}
+	CONFIG carconfig;
+	stringstream carfilestream;
+	carconfig.Load(carfilename);
+	carconfig.DebugPrint(carfilestream);
+	carfile = carfilestream.str();
 }
 
 void REPLAY::GetReadyToPlay()

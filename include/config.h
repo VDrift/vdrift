@@ -60,6 +60,7 @@ public:
 	
 	bool Load(std::string fname);
 	
+	// will fail to process include directives
 	bool Load(std::istream & f);
 	
 	void Clear();
