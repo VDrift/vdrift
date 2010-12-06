@@ -202,6 +202,10 @@ bool GUIPAGE::Load(
 			{
 				text = optionmap[setting].GetText();
 				desc = optionmap[setting].GetDescription();
+				
+				std::map<std::string, std::string>::const_iterator li;
+				if ((li = languagemap.find(text)) != languagemap.end()) text = li->second;
+				if ((li = languagemap.find(desc)) != languagemap.end()) desc = li->second;
 			}
 			else if (valuetype == "manual")
 			{
