@@ -1484,7 +1484,7 @@ void CARDYNAMICS::UpdateDriveline(T drive_torque[], T dt)
 }
 
 ///calculate the drive torque that the engine applies to each wheel, and put the output into the supplied 4-element array
-void CARDYNAMICS::CalculateDriveTorque(T * wheel_drive_torque, T clutch_torque)
+void CARDYNAMICS::CalculateDriveTorque(T wheel_drive_torque[], T clutch_torque)
 {
 	T driveshaft_torque = transmission.GetTorque(clutch_torque);
 	assert(!isnan(driveshaft_torque));
