@@ -407,6 +407,7 @@ std::string GUI::LoadOptions(
 					std::string displaystr, storestr;
 					if (!opt.GetParam(i, "opt"+tstr.str(), displaystr)) return i->first+".opt"+tstr.str();
 					if (!opt.GetParam(i, "val"+tstr.str(), storestr)) return i->first+".val"+tstr.str();
+					if ((li = languagemap.find(displaystr)) != languagemap.end()) displaystr = li->second;
 					
 					option.Insert(storestr, displaystr);
 				}
