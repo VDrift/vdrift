@@ -52,12 +52,7 @@ bool GUI::Load(
 	}
 	
 	// load options
-	std::string optionresult = LoadOptions(optionsfile, valuelists, languagemap, error_output);
-	if (!optionresult.empty())
-	{
-		error_output << "Options file loading failed here: " << optionresult << std::endl;
-		return false;
-	}
+	if (!LoadOptions(optionsfile, valuelists, languagemap, error_output)) return false;
 	
 	bool foundmain = false;
 	
@@ -70,16 +65,10 @@ bool GUI::Load(
 		
 		if (pagename == "SConscript") continue;
 		
-		PAGEINFO & p = pages[pagename];
-		if (!p.node.valid())
-		{
-			p.node = node.AddNode();
-		}
-		
-		if (!p.page.Load(
+		if (!pages[pagename].Load(
 			menupath + "/" + pagename, texpath, datapath, texsize,
 			screenhwratio, carcontrolsfile, font, languagemap, optionmap,
-			node.GetNode(p.node), textures, models, error_output))
+			node, textures, models, error_output))
 		{
 			error_output << "Error loading GUI page: " << menupath << "/" << *i << std::endl;
 			return false;
@@ -108,17 +97,15 @@ bool GUI::Load(
 void GUI::UpdateControls(const std::string & pagename, const CONFIG & controlfile)
 {
 	assert(pages.find(pagename) != pages.end());
-	SCENENODE & pagenode = node.GetNode(pages[pagename].node);
-	GetPage(pagename).UpdateControls(pagenode, controlfile, font);
+	pages[pagename].UpdateControls(node, controlfile, font);
 }
 
 void GUI::DeactivateAll()
 {
-	for (std::map<std::string, PAGEINFO>::iterator i = pages.begin(); i != pages.end(); ++i)
+	for (std::map<std::string, GUIPAGE>::iterator i = pages.begin(); i != pages.end(); ++i)
 	{
-		i->second.page.SetVisible(node.GetNode(i->second.node), false);
+		i->second.SetVisible(node, false);
 	}
-	
 	active_page = pages.end();
 }
 
@@ -133,10 +120,10 @@ std::list <std::string> GUI::ProcessInput(
 	
 	if (active_page != pages.end())
 	{
-		actions = active_page->second.page.ProcessInput(
-						node.GetNode(active_page->second.node),
-						movedown, moveup, cursorx, cursory,
-						cursordown, cursorjustup, screenhwratio);
+		actions = active_page->second.ProcessInput(
+			node,
+			movedown, moveup, cursorx, cursory,
+			cursordown, cursorjustup, screenhwratio);
 	}
 	
 	std::list <std::string> gameactions;
@@ -174,7 +161,7 @@ std::list <std::string> GUI::ProcessInput(
 			if (i->second)
 			{
 				//std::cout << "Processing input" << std::endl;
-				active_page->second.page.UpdateOptions(node.GetNode(active_page->second.node), true, optionmap, error_output);
+				active_page->second.UpdateOptions(node, true, optionmap, error_output);
 				//std::cout << "Done processing options" << std::endl;
 				syncme = true;
 			}
@@ -193,7 +180,7 @@ void GUI::Update(float dt)
 	{
 		//ease curve: 3*p^2-2*p^3
 		float p = 1.0-animation_counter/animation_count_start;
-		active_page->second.page.SetAlpha(node.GetNode(active_page->second.node), 3*p*p-2*p*p*p);
+		active_page->second.SetAlpha(node, 3*p*p-2*p*p*p);
 	}
 	
 	if (last_active_page != pages.end())
@@ -201,23 +188,23 @@ void GUI::Update(float dt)
 		if (animation_counter > 0)
 		{
 			float p = animation_counter/animation_count_start;
-			last_active_page->second.page.SetAlpha(node.GetNode(last_active_page->second.node), 3*p*p-2*p*p*p);
+			last_active_page->second.SetAlpha(node, 3*p*p-2*p*p*p);
 		}
 		else
 		{
-			last_active_page->second.page.SetVisible(node.GetNode(last_active_page->second.node), false);
+			last_active_page->second.SetVisible(node, false);
 			last_active_page = pages.end();
 		}
 	}
 	
 	if (active_page != pages.end())
 	{
-		active_page->second.page.Update(node.GetNode(active_page->second.node), dt);
+		active_page->second.Update(node, dt);
 	}
 	
 	if (last_active_page != pages.end())
 	{
-		last_active_page->second.page.Update(node.GetNode(last_active_page->second.node), dt);
+		last_active_page->second.Update(node, dt);
 	}
 }
 
@@ -272,13 +259,13 @@ void GUI::SyncOptions(
 		//UpdateOptions(error_output);
 		if (last_active_page != pages.end())
 		{
-			last_active_page->second.page.UpdateOptions(node.GetNode(last_active_page->second.node), false, optionmap, error_output);
+			last_active_page->second.UpdateOptions(node, false, optionmap, error_output);
 		}
 		
 		//std::cout << "About to update" << std::endl;
 		if (active_page != pages.end())
 		{
-			active_page->second.page.UpdateOptions(node.GetNode(active_page->second.node), false, optionmap, error_output);
+			active_page->second.UpdateOptions(node, false, optionmap, error_output);
 		}
 		//std::cout << "Done updating" << std::endl;
 	}
@@ -315,17 +302,20 @@ void GUI::ActivatePage(
 	bool save_options)
 {
 	if (last_active_page != pages.end())
-		last_active_page->second.page.SetVisible(node.GetNode(last_active_page->second.node), false);
+	{
+		last_active_page->second.SetVisible(node, false);
+	}
 	
 	bool ok = save_options;
 	syncme = true;
 	syncme_from_external = !ok;
-	if (!ok)
-		control_load = true;
+	if (!ok) control_load = true;
 	
 	//save options from widgets to internal optionmap array, which will then later be saved to the game options via SyncOptions
 	if (active_page != pages.end() && ok)
-		active_page->second.page.UpdateOptions(node.GetNode(active_page->second.node), true, optionmap, error_output);
+	{
+		active_page->second.UpdateOptions(node, true, optionmap, error_output);
+	}
 	
 	//purge controledit parameters from the optionmap
 	optionmap.erase("controledit.analog.deadzone");
@@ -339,7 +329,7 @@ void GUI::ActivatePage(
 	last_active_page = active_page;
 	active_page = pages.find(pagename);
 	assert(active_page != pages.end());
-	active_page->second.page.SetVisible(node.GetNode(active_page->second.node), true);
+	active_page->second.SetVisible(node, true);
 	//std::cout << "Moving to page " << active_page->first << std::endl;
 	//active_page->second.page.UpdateOptions(false, optionmap, error_output);
 	animation_counter = animation_count_start = activation_time;
@@ -347,7 +337,7 @@ void GUI::ActivatePage(
 	//std::cout << "Done activating page" << std::endl;
 }
 
-std::string GUI::LoadOptions(
+bool GUI::LoadOptions(
 	const std::string & optionfile,
 	const std::map<std::string, std::list <std::pair <std::string, std::string> > > & valuelists,
 	const std::map<std::string, std::string> languagemap,
@@ -361,103 +351,101 @@ std::string GUI::LoadOptions(
 	}
 	
 	//opt.DebugPrint(error_output);
-	
 	for (CONFIG::const_iterator i = opt.begin(); i != opt.end(); ++i)
 	{
-		if (!i->first.empty())
+		if (i->first.empty()) continue;
+		
+		std::string cat, name, defaultval, values, text, desc, type;
+		if (!opt.GetParam(i, "cat", cat, error_output)) return false;
+		if (!opt.GetParam(i, "name", name, error_output)) return false;
+		if (!opt.GetParam(i, "default", defaultval, error_output)) return false;
+		if (!opt.GetParam(i, "values", values, error_output)) return false;
+		if (!opt.GetParam(i, "title", text, error_output)) return false;
+		if (!opt.GetParam(i, "desc", desc, error_output)) return false;
+		if (!opt.GetParam(i, "type", type, error_output)) return false;
+		
+		std::map<std::string, std::string>::const_iterator li;
+		if ((li = languagemap.find(text)) != languagemap.end()) text = li->second;
+		if ((li = languagemap.find(desc)) != languagemap.end()) desc = li->second;
+		
+		float min(0),max(1);
+		bool percentage(true);
+		opt.GetParam(i, "min",min);
+		opt.GetParam(i, "max",max);
+		opt.GetParam(i, "percentage",percentage);
+		
+		std::string optionname = cat+"."+name;
+		GUIOPTION & option = optionmap[optionname];
+		
+		option.SetInfo(text, desc, type);
+		option.SetMinMaxPercentage(min, max, percentage);
+		
+		//different ways to populate the options
+		if (values == "list")
 		{
-			std::string cat, name, defaultval, values, text, desc, type;
-			if (!opt.GetParam(i, "cat", cat)) return i->first+".cat";
-			if (!opt.GetParam(i, "name", name)) return i->first+".name";
-			if (!opt.GetParam(i, "default", defaultval)) return i->first+".default";
-			if (!opt.GetParam(i, "values", values)) return i->first+".values";
-			if (!opt.GetParam(i, "title", text)) return i->first+".title";
-			if (!opt.GetParam(i, "desc", desc)) return i->first+".desc";
-			if (!opt.GetParam(i, "type", type)) return i->first+".type";
+			int valuenum;
+			if (!opt.GetParam(i, "num_vals", valuenum, error_output)) return false;
 			
-			std::map<std::string, std::string>::const_iterator li;
-			if ((li = languagemap.find(text)) != languagemap.end()) text = li->second;
-			if ((li = languagemap.find(desc)) != languagemap.end()) desc = li->second;
-			
-			float min(0),max(1);
-			bool percentage(true);
-			opt.GetParam(i, "min",min);
-			opt.GetParam(i, "max",max);
-			opt.GetParam(i, "percentage",percentage);
-			
-			std::string optionname = cat+"."+name;
-			GUIOPTION & option = optionmap[optionname];
-			
-			option.SetInfo(text, desc, type);
-			option.SetMinMaxPercentage(min, max, percentage);
-			
-			//different ways to populate the options
-			if (values == "list")
+			for (int n = 0; n < valuenum; n++)
 			{
-				int valuenum;
-				if (!opt.GetParam(i, "num_vals", valuenum)) return i->first+".num_vals";
+				std::stringstream tstr;
+				tstr.width(2);
+				tstr.fill('0');
+				tstr << n;
 				
-				for (int n = 0; n < valuenum; n++)
-				{
-					std::stringstream tstr;
-					tstr.width(2);
-					tstr.fill('0');
-					tstr << n;
-					
-					std::string displaystr, storestr;
-					if (!opt.GetParam(i, "opt"+tstr.str(), displaystr)) return i->first+".opt"+tstr.str();
-					if (!opt.GetParam(i, "val"+tstr.str(), storestr)) return i->first+".val"+tstr.str();
-					if ((li = languagemap.find(displaystr)) != languagemap.end()) displaystr = li->second;
-					
-					option.Insert(storestr, displaystr);
-				}
-			}
-			else if (values == "bool")
-			{
-				std::string truestr, falsestr;
-				if (!opt.GetParam(i, "true", truestr)) return i->first+".true";
-				if (!opt.GetParam(i, "false", falsestr)) return i->first+".false";
+				std::string displaystr, storestr;
+				if (!opt.GetParam(i, "opt"+tstr.str(), displaystr, error_output)) return false;
+				if (!opt.GetParam(i, "val"+tstr.str(), storestr, error_output)) return false;
+				if ((li = languagemap.find(displaystr)) != languagemap.end()) displaystr = li->second;
 				
-				option.Insert("true", truestr);
-				option.Insert("false", falsestr);
+				option.Insert(storestr, displaystr);
 			}
-			else if (values == "ip_valid")
-			{
-				
-			}
-			else if (values == "port_valid")
-			{
-				
-			}
-			else if (values == "float")
-			{
-				
-			}
-			else if (values == "string")
-			{
-				
-			}
-			else //assume it's "values", meaning the GAME populates the values
-			{
-				std::map<std::string, std::list <std::pair<std::string,std::string> > >::const_iterator vlist = valuelists.find(values);
-				if (vlist == valuelists.end())
-				{
-					error_output << "Can't find value type \"" << values << "\" in list of GAME values" << std::endl;
-					return "GAME valuelist";
-				}
-				else
-				{
-					//std::cout << "Populating values:" << std::endl;
-					for (std::list <std::pair<std::string,std::string> >::const_iterator n = vlist->second.begin(); n != vlist->second.end(); n++)
-					{
-						//std::cout << "\t" << n->second << std::endl;
-						option.Insert(n->first, n->second);
-					}
-				}
-			}
-			
-			option.SetCurrentValue(defaultval);
 		}
+		else if (values == "bool")
+		{
+			std::string truestr, falsestr;
+			if (!opt.GetParam(i, "true", truestr, error_output)) return false;
+			if (!opt.GetParam(i, "false", falsestr, error_output)) return false;
+			
+			option.Insert("true", truestr);
+			option.Insert("false", falsestr);
+		}
+		else if (values == "ip_valid")
+		{
+			
+		}
+		else if (values == "port_valid")
+		{
+			
+		}
+		else if (values == "float")
+		{
+			
+		}
+		else if (values == "string")
+		{
+			
+		}
+		else //assume it's "values", meaning the GAME populates the values
+		{
+			std::map<std::string, std::list <std::pair<std::string,std::string> > >::const_iterator vlist = valuelists.find(values);
+			if (vlist == valuelists.end())
+			{
+				error_output << "Can't find value type \"" << values << "\" in list of GAME values" << std::endl;
+				return "GAME valuelist";
+			}
+			else
+			{
+				//std::cout << "Populating values:" << std::endl;
+				for (std::list <std::pair<std::string,std::string> >::const_iterator n = vlist->second.begin(); n != vlist->second.end(); n++)
+				{
+					//std::cout << "\t" << n->second << std::endl;
+					option.Insert(n->first, n->second);
+				}
+			}
+		}
+		
+		option.SetCurrentValue(defaultval);
 	}
 	
 	UpdateOptions(error_output);
@@ -468,8 +456,8 @@ std::string GUI::LoadOptions(
 void GUI::UpdateOptions(std::ostream & error_output)
 {
 	bool save_to = false;
-	for (std::map<std::string, PAGEINFO>::iterator i = pages.begin(); i != pages.end(); ++i)
+	for (std::map<std::string, GUIPAGE>::iterator i = pages.begin(); i != pages.end(); ++i)
 	{
-		i->second.page.UpdateOptions(node.GetNode(i->second.node), save_to, optionmap, error_output);
+		i->second.UpdateOptions(node, save_to, optionmap, error_output);
 	}
 }

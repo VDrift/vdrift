@@ -1199,7 +1199,7 @@ void GAME::ProcessGUIAction(const std::string & action)
 			tempoptionmap["controledit.analog.gain"].SetCurrentValue(gain);
 		}
 		//std::cout << "Updating options..." << endl;
-		gui.GetPage(gui.GetActivePageName()).UpdateOptions(gui.GetPageNode(gui.GetActivePageName()), false, tempoptionmap, error_output);
+		gui.GetPage(gui.GetActivePageName()).UpdateOptions(gui.GetNode(), false, tempoptionmap, error_output);
 		//std::cout << "Done updating options." << endl;
 		gui.SetControlsNeedLoading(false);
 	}
@@ -1212,7 +1212,7 @@ void GAME::ProcessGUIAction(const std::string & action)
 			//get current GUI state
 			tempoptionmap["controledit.button.held_once"].SetCurrentValue(controlgrab_editcontrol.onetime?"true":"false");
 			tempoptionmap["controledit.button.up_down"].SetCurrentValue(controlgrab_editcontrol.keypushdown?"true":"false");
-			gui.GetPage(gui.GetActivePageName()).UpdateOptions(gui.GetPageNode(gui.GetActivePageName()), true, tempoptionmap, error_output);
+			gui.GetPage(gui.GetActivePageName()).UpdateOptions(gui.GetNode(), true, tempoptionmap, error_output);
 
 			//save GUI state to our control
 			if (tempoptionmap["controledit.button.held_once"].GetCurrentDisplayValue() == "true")
@@ -1234,7 +1234,7 @@ void GAME::ProcessGUIAction(const std::string & action)
 			tempoptionmap["controledit.analog.deadzone"].SetCurrentValue("0");
 			tempoptionmap["controledit.analog.exponent"].SetCurrentValue("1");
 			tempoptionmap["controledit.analog.gain"].SetCurrentValue("1");
-			gui.GetPage(gui.GetActivePageName()).UpdateOptions(gui.GetPageNode(gui.GetActivePageName()), true, tempoptionmap, error_output);
+			gui.GetPage(gui.GetActivePageName()).UpdateOptions(gui.GetNode(), true, tempoptionmap, error_output);
 
 			//save GUI state to our control
 			{
@@ -1342,7 +1342,7 @@ void GAME::ProcessGUIAction(const std::string & action)
 		settings.GetOpponentColor(color[0], color[1], color[2]);
 		opponents_color.push_back(color);
 
-		std::string opponentstr = "Opponents: ";
+		std::string opponentstr;
 		for (std::vector<std::string>::iterator i = opponents.begin(); i != opponents.end(); ++i)
 		{
 			if (i != opponents.begin())
@@ -1352,7 +1352,7 @@ void GAME::ProcessGUIAction(const std::string & action)
 			opponentstr += *i;
 		}
 		SCENENODE & pagenode = gui.GetPageNode("SingleRace");
-		gui.GetPage("SingleRace").GetLabel("OpponentsLabel").get().SetText(pagenode, opponentstr);
+		gui.GetPage("SingleRace").GetLabel("OpponentsList").get().SetText(pagenode, opponentstr);
 	}
 	else if (action == "RestartGame")
 	{

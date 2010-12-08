@@ -51,6 +51,7 @@ bool GUIPAGE::Load(
 	texinfo.size = texsize;
 	
 	assert(!s.valid());
+	
 	Clear(parentnode);
 	
 	s = parentnode.AddNode();
@@ -103,18 +104,13 @@ bool GUIPAGE::Load(
 		std::string type;
 		if (!pagefile.GetParam(section, "type", type, error_output)) return false;
 		
-		std::string text = "<invalid>";
-		std::string desc = "<invalid>";
-		if (pagefile.GetParam(section, "text", text))
-		{
-			std::map<std::string, std::string>::const_iterator li;
-			if ((li = languagemap.find(text)) != languagemap.end()) text = li->second;
-		}
-		if (pagefile.GetParam(section, "tip", desc))
-		{
-			std::map<std::string, std::string>::const_iterator li;
-			if ((li = languagemap.find(desc)) != languagemap.end()) desc = li->second;
-		}
+		std::string text, desc;
+		pagefile.GetParam(section, "text", text);
+		pagefile.GetParam(section, "tip", desc);
+		
+		std::map<std::string, std::string>::const_iterator li;
+		if ((li = languagemap.find(text)) != languagemap.end()) text = li->second;
+		if ((li = languagemap.find(desc)) != languagemap.end()) desc = li->second;
 		
 		if (type == "image")
 		{

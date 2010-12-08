@@ -96,127 +96,129 @@ bool WIDGET_CONTROLGRAB::ProcessInput(
 	SCENENODE & ctrlnoderef = topnoderef.GetNode(ctrlnode);
 	for (std::list <CONTROLWIDGET>::iterator i = controlbuttons.begin(); i != controlbuttons.end(); ++i)
 	{
-		if (i->widget.ProcessInput(ctrlnoderef, cursorx, cursory, cursordown, cursorjustup))
+		if (!i->widget.ProcessInput(ctrlnoderef, cursorx, cursory, cursordown, cursorjustup))
 		{
+			continue;
+		}
+		
+		if (i->type == "key")
+		{
+			if (i->key.empty())
+			{
+				tempdescription = "Edit "+i->type+" #"+i->keycode+" "+(i->down?"press":"release")+
+					" ("+(i->once?"once":"held")+")";
+			}
+			else
+			{
+				tempdescription = "Edit "+i->type+" "+i->key+" "+(i->down?"press":"release")+
+					" ("+(i->once?"once":"held")+")";
+			}
+		}
+		else if (i->type == "joy")
+		{
+			std::stringstream desc;
+			if (i->joy_type == "button")
+			{
+				desc << "Edit "<<i->type<<" "<<i->joy_index<<" "<<i->joy_type<<" "<<i->joy_button<<" "<<(i->down?"press":"release")<<
+					" ("<<(i->once?"once":"held")<<")";
+			}
+			else if (i->joy_type == "axis")
+			{
+				desc << "Edit "<<i->type<<" "<<i->joy_index<<" "<<i->joy_type<<" "<<i->joy_axis<<" "<<
+						"("<<(i->joy_axis_type=="negative"?"-":"+")<<")";
+			}
+			tempdescription = desc.str();
+		}
+		else if (i->type == "mouse")
+		{
+			std::stringstream desc;
+			if (i->mouse_type == "button")
+			{
+				desc << "Edit "<<i->type<<" "<<i->mouse_type<<" "<<i->mouse_button<<" "<<(i->down?"press":"release")<<
+						" ("<<(i->once?"once":"held")<<")";
+			}
+			else if (i->mouse_type == "motion")
+			{
+				desc << "Edit "<<i->type<<" "<<i->mouse_type<<" "<<i->mouse_motion;
+			}
+			tempdescription = desc.str();
+		}
+		
+		//generate an action.  code up an action string based on the DebugPrint string representation of a CONTROL
+		if (cursorjustup)
+		{
+			CARCONTROLMAP_LOCAL::CONTROL newctrl;
+			newctrl.deadzone = i->deadzone;
+			newctrl.exponent = i->exponent;
+			newctrl.gain = i->gain;
+			newctrl.onetime = i->once;
+			newctrl.type = CARCONTROLMAP_LOCAL::CONTROL::UNKNOWN;
+			
 			if (i->type == "key")
 			{
-				if (i->key.empty())
-				{
-					tempdescription = "Edit "+i->type+" #"+i->keycode+" "+(i->down?"press":"release")+
-						" ("+(i->once?"once":"held")+")";
-				}
-				else
-				{
-					tempdescription = "Edit "+i->type+" "+i->key+" "+(i->down?"press":"release")+
-						" ("+(i->once?"once":"held")+")";
-				}
+				newctrl.type = CARCONTROLMAP_LOCAL::CONTROL::KEY;
+				std::stringstream keycodestr(i->keycode);
+				keycodestr >> newctrl.keycode;
+				newctrl.keypushdown = i->down;
 			}
 			else if (i->type == "joy")
 			{
-				std::stringstream desc;
-				if (i->joy_type == "button")
+				newctrl.type = CARCONTROLMAP_LOCAL::CONTROL::JOY;
+				newctrl.joynum = i->joy_index;
+				newctrl.joytype = CARCONTROLMAP_LOCAL::CONTROL::JOYBUTTON;
+				newctrl.joybutton = i->joy_button;
+				newctrl.joypushdown = i->down;
+				
+				if (i->joy_type == "axis")
 				{
-					desc << "Edit "<<i->type<<" "<<i->joy_index<<" "<<i->joy_type<<" "<<i->joy_button<<" "<<(i->down?"press":"release")<<
-						" ("<<(i->once?"once":"held")<<")";
+					newctrl.joytype = CARCONTROLMAP_LOCAL::CONTROL::JOYAXIS;
+					newctrl.joyaxistype = CARCONTROLMAP_LOCAL::CONTROL::POSITIVE;
+					newctrl.joyaxis = i->joy_axis;
+					
+					if (i->joy_axis_type == "negative")
+					{
+						newctrl.joyaxistype = CARCONTROLMAP_LOCAL::CONTROL::NEGATIVE;
+					}
+					else if (i->joy_axis_type == "both")
+					{
+						newctrl.joyaxistype = CARCONTROLMAP_LOCAL::CONTROL::BOTH;
+					}
 				}
-				else if (i->joy_type == "axis")
+				else if (i->joy_type == "hat")
 				{
-					desc << "Edit "<<i->type<<" "<<i->joy_index<<" "<<i->joy_type<<" "<<i->joy_axis<<" "<<
-							"("<<(i->joy_axis_type=="negative"?"-":"+")<<")";
+					newctrl.joytype = CARCONTROLMAP_LOCAL::CONTROL::JOYHAT;
 				}
-				tempdescription = desc.str();
 			}
 			else if (i->type == "mouse")
 			{
-				std::stringstream desc;
-				if (i->mouse_type == "button")
+				newctrl.type = CARCONTROLMAP_LOCAL::CONTROL::MOUSE;
+				newctrl.mousetype = CARCONTROLMAP_LOCAL::CONTROL::MOUSEBUTTON;
+				newctrl.mbutton = i->mouse_button;
+				newctrl.mouse_push_down = i->down;
+				
+				if (i->mouse_type == "motion")
 				{
-					desc << "Edit "<<i->type<<" "<<i->mouse_type<<" "<<i->mouse_button<<" "<<(i->down?"press":"release")<<
-							" ("<<(i->once?"once":"held")<<")";
+					newctrl.mousetype = CARCONTROLMAP_LOCAL::CONTROL::MOUSEMOTION;
+					newctrl.mdir = CARCONTROLMAP_LOCAL::CONTROL::RIGHT;
+					
+					if (i->mouse_motion == "up")
+					{
+						newctrl.mdir = CARCONTROLMAP_LOCAL::CONTROL::UP;
+					}
+					else if (i->mouse_motion == "down")
+					{
+						newctrl.mdir = CARCONTROLMAP_LOCAL::CONTROL::DOWN;
+					}
+					else if (i->mouse_motion == "left")
+					{
+						newctrl.mdir = CARCONTROLMAP_LOCAL::CONTROL::LEFT;
+					}
 				}
-				else if (i->mouse_type == "motion")
-				{
-					desc << "Edit "<<i->type<<" "<<i->mouse_type<<" "<<i->mouse_motion;
-				}
-				tempdescription = desc.str();
 			}
 			
-			//generate an action.  code up an action string based on the DebugPrint string representation of a CONTROL
-			if (cursorjustup)
-			{
-				CARCONTROLMAP_LOCAL::CONTROL newctrl;
-				newctrl.deadzone = i->deadzone;
-				newctrl.exponent = i->exponent;
-				newctrl.gain = i->gain;
-				newctrl.onetime = i->once;
-				newctrl.type = CARCONTROLMAP_LOCAL::CONTROL::UNKNOWN;
-				
-				if (i->type == "key")
-				{
-					newctrl.type = CARCONTROLMAP_LOCAL::CONTROL::KEY;
-					std::stringstream keycodestr(i->keycode);
-					keycodestr >> newctrl.keycode;
-					newctrl.keypushdown = i->down;
-				}
-				else if (i->type == "joy")
-				{
-					newctrl.type = CARCONTROLMAP_LOCAL::CONTROL::JOY;
-					newctrl.joynum = i->joy_index;
-					newctrl.joytype = CARCONTROLMAP_LOCAL::CONTROL::JOYBUTTON;
-					newctrl.joybutton = i->joy_button;
-					newctrl.joypushdown = i->down;
-					
-					if (i->joy_type == "axis")
-					{
-						newctrl.joytype = CARCONTROLMAP_LOCAL::CONTROL::JOYAXIS;
-						newctrl.joyaxistype = CARCONTROLMAP_LOCAL::CONTROL::POSITIVE;
-						newctrl.joyaxis = i->joy_axis;
-						
-						if (i->joy_axis_type == "negative")
-						{
-							newctrl.joyaxistype = CARCONTROLMAP_LOCAL::CONTROL::NEGATIVE;
-						}
-						else if (i->joy_axis_type == "both")
-						{
-							newctrl.joyaxistype = CARCONTROLMAP_LOCAL::CONTROL::BOTH;
-						}
-					}
-					else if (i->joy_type == "hat")
-					{
-						newctrl.joytype = CARCONTROLMAP_LOCAL::CONTROL::JOYHAT;
-					}
-				}
-				else if (i->type == "mouse")
-				{
-					newctrl.type = CARCONTROLMAP_LOCAL::CONTROL::MOUSE;
-					newctrl.mousetype = CARCONTROLMAP_LOCAL::CONTROL::MOUSEBUTTON;
-					newctrl.mbutton = i->mouse_button;
-					newctrl.mouse_push_down = i->down;
-					
-					if (i->mouse_type == "motion")
-					{
-						newctrl.mousetype = CARCONTROLMAP_LOCAL::CONTROL::MOUSEMOTION;
-						newctrl.mdir = CARCONTROLMAP_LOCAL::CONTROL::RIGHT;
-						
-						if (i->mouse_motion == "up")
-						{
-							newctrl.mdir = CARCONTROLMAP_LOCAL::CONTROL::UP;
-						}
-						else if (i->mouse_motion == "down")
-						{
-							newctrl.mdir = CARCONTROLMAP_LOCAL::CONTROL::DOWN;
-						}
-						else if (i->mouse_motion == "left")
-						{
-							newctrl.mdir = CARCONTROLMAP_LOCAL::CONTROL::LEFT;
-						}
-					}
-				}
-				
-				std::stringstream controlstring;
-				newctrl.DebugPrint(controlstring);
-				active_action = "controlgrabedit:" + controlstring.str() + setting;
-			}
+			std::stringstream controlstring;
+			newctrl.DebugPrint(controlstring);
+			active_action = "controlgrabedit:" + controlstring.str() + setting;
 		}
 	}
 	
