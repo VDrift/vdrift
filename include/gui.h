@@ -18,7 +18,7 @@ public:
 	GUIPAGE & GetPage(const std::string & pagename)
 	{
 		assert(pages.find(pagename) != pages.end());
-		return pages[pagename].page;
+		return pages[pagename];
 	}
 	
 	std::string GetActivePageName()
@@ -40,7 +40,7 @@ public:
 	SCENENODE & GetPageNode(const std::string & pagename)
 	{
 		assert(pages.find(pagename) != pages.end());
-		return node.GetNode(pages[pagename].node);
+		return pages[pagename].GetNode(node);
 	}
 	
 	bool Load(
@@ -122,15 +122,9 @@ public:
 		std::ostream & error_output);
 
 private:
-	struct PAGEINFO
-	{
-		GUIPAGE page;
-		keyed_container <SCENENODE>::handle node;
-	};
-	
-	std::map<std::string, PAGEINFO> pages;
-	std::map<std::string, PAGEINFO>::iterator active_page;
-	std::map<std::string, PAGEINFO>::iterator last_active_page;
+	std::map<std::string, GUIPAGE> pages;
+	std::map<std::string, GUIPAGE>::iterator active_page;
+	std::map<std::string, GUIPAGE>::iterator last_active_page;
 	std::map<std::string, GUIOPTION> optionmap;
 	SCENENODE node;
 	FONT font;
@@ -142,7 +136,7 @@ private:
 	bool ingame;
 	
 	///returns a string showing where the error occurred, or an empty string if no error
-	std::string LoadOptions(
+	bool LoadOptions(
 		const std::string & optionfile,
 		const std::map<std::string, std::list <std::pair <std::string, std::string> > > & valuelists,
 		const std::map<std::string, std::string> languagemap,
