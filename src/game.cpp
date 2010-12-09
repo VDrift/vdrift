@@ -202,12 +202,9 @@ void GAME::Start(list <string> & args)
 	ff_update_time = 0;
 #endif
 
-	if (benchmode)
+	if (benchmode && !NewGame(true))
 	{
-		if(!NewGame(true))
-		{
-			error_output << "Error loading benchmark" << endl;
-		}
+		error_output << "Error loading benchmark" << endl;
 	}
 	
 	DoneStartingUp();
@@ -624,12 +621,11 @@ void GAME::Tick(float deltat)
 {
 	const float minfps = 10.0f; //this is the minimum fps the game will run at before it starts slowing down time
 	const unsigned int maxticks = (int) (1.0f / (minfps * framerate)); //slow the game down if we can't process fast enough
-	const float maxtime = 1.0/minfps; //slow the game down if we can't process fast enough
+	const float maxtime = 1.0 / minfps; //slow the game down if we can't process fast enough
 	unsigned int curticks = 0;
 
 	//throw away wall clock time if necessary to keep the framerate above the minimum
-	if (deltat > maxtime)
-		deltat = maxtime;
+	if (deltat > maxtime) deltat = maxtime;
 
 	target_time += deltat;
 
@@ -644,7 +640,9 @@ void GAME::Tick(float deltat)
 	}
 
 	if (dumpfps && curticks > 0 && frame % 100 == 0)
+	{
 		info_output << "Current FPS: " << eventsystem.GetFPS() << endl;
+	}
 }
 
 ///increment game logic by one frame
@@ -1743,8 +1741,7 @@ void GAME::LeaveGame()
 		PopulateReplayList(replaylist);
 		gui.ReplaceOptionValues("game.selected_replay", replaylist, error_output);
 	}
-	if (replay.GetPlaying())
-		replay.StopPlaying();
+	if (replay.GetPlaying()) replay.StopPlaying();
 
 	gui.SetInGame(false);
 	
@@ -1772,7 +1769,7 @@ void GAME::LeaveGame()
 	inputgraph.Hide();
 	trackmap.Unload();
 	timer.Unload();
-	active_camera = NULL;
+	active_camera = 0;
 	pause = false;
 	tire_smoke.Clear();
 }
@@ -1857,8 +1854,7 @@ bool GAME::LoadTrack(const std::string & trackname)
 
 	//load the track
 	if (!track.DeferredLoad(
-			textures,
-			models,
+			textures, models,
 			pathmanager.GetTrackPath()+"/"+trackname,
 			pathmanager.GetTrackDir()+"/"+trackname,
 			pathmanager.GetEffectsTextureDir(),
@@ -1871,6 +1867,7 @@ bool GAME::LoadTrack(const std::string & trackname)
 		error_output << "Error loading track: " << trackname << endl;
 		return false;
 	}
+	
 	bool success = true;
 	int count = 0;
 	while (!track.Loaded() && success)
@@ -2062,70 +2059,59 @@ void GAME::PopulateCarPaintList(const std::string & carname, std::list <std::pai
 void GAME::PopulateValueLists(std::map<std::string, std::list <std::pair <std::string, std::string> > > & valuelists)
 {
 	//populate track list
+	list <pair<string,string> > tracklist;
+	list <string> trackfolderlist;
+	pathmanager.GetFileList(pathmanager.GetTrackPath(), trackfolderlist);
+	for (list <string>::iterator i = trackfolderlist.begin(); i != trackfolderlist.end(); ++i)
 	{
-		list <pair<string,string> > tracklist;
-		list <string> trackfolderlist;
-		pathmanager.GetFileList(pathmanager.GetTrackPath(), trackfolderlist);
-		for (list <string>::iterator i = trackfolderlist.begin(); i != trackfolderlist.end(); ++i)
+		ifstream check((pathmanager.GetTrackPath()+"/"+*i+"/about.txt").c_str());
+		if (check)
 		{
-			ifstream check((pathmanager.GetTrackPath()+"/"+*i+"/about.txt").c_str());
-			if (check)
-			{
-				string displayname;
-				getline(check, displayname);
-				tracklist.push_back(pair<string,string>(*i,displayname));
-			}
+			string displayname;
+			getline(check, displayname);
+			tracklist.push_back(pair<string,string>(*i,displayname));
 		}
-		tracklist.sort(SortStringPairBySecond);
-		valuelists["tracks"] = tracklist;
 	}
+	tracklist.sort(SortStringPairBySecond);
+	valuelists["tracks"] = tracklist;
 
 	//populate car list
+	list <pair<string,string> > carlist;
+	list <string> carfolderlist;
+	pathmanager.GetFileList(pathmanager.GetCarPath(), carfolderlist);
+	for (list <string>::iterator i = carfolderlist.begin(); i != carfolderlist.end(); ++i)
 	{
-		list <pair<string,string> > carlist;
-		list <string> carfolderlist;
-		pathmanager.GetFileList(pathmanager.GetCarPath(), carfolderlist);
-		for (list <string>::iterator i = carfolderlist.begin(); i != carfolderlist.end(); ++i)
+		ifstream check((pathmanager.GetCarPath()+"/"+*i+"/about.txt").c_str());
+		if (check)
 		{
-			ifstream check((pathmanager.GetCarPath()+"/"+*i+"/about.txt").c_str());
-			if (check)
-			{
-				carlist.push_back(pair<string,string>(*i,*i));
-			}
+			carlist.push_back(pair<string,string>(*i,*i));
 		}
-		valuelists["cars"] = carlist;
 	}
+	valuelists["cars"] = carlist;
 
 	//populate car paints
-	{
-		PopulateCarPaintList(settings.GetSelectedCar(), valuelists["player_paints"]);
-		PopulateCarPaintList(settings.GetOpponentCar(), valuelists["opponent_paints"]);
-	}
+	PopulateCarPaintList(settings.GetSelectedCar(), valuelists["player_paints"]);
+	PopulateCarPaintList(settings.GetOpponentCar(), valuelists["opponent_paints"]);
 
 	//populate video mode list
+	list <pair<string,string> > modelistx;
+	list <pair<string,string> > modelisty;
+	ifstream modes(pathmanager.GetVideoModeFile().c_str());
+	while (modes.good())
 	{
-		list <pair<string,string> > modelistx;
-		list <pair<string,string> > modelisty;
-
-		ifstream modes(pathmanager.GetVideoModeFile().c_str());
-		while (modes.good())
+		string x, y;
+		modes >> x;
+		modes >> y;
+		if (!x.empty() && !y.empty())
 		{
-			string x, y;
-			modes >> x;
-			modes >> y;
-			if (!x.empty() && !y.empty())
-			{
-				modelistx.push_back(pair<string,string>(x,x));
-				modelisty.push_back(pair<string,string>(y,y));
-			}
+			modelistx.push_back(pair<string,string>(x,x));
+			modelisty.push_back(pair<string,string>(y,y));
 		}
-
-		modelistx.reverse();
-		modelisty.reverse();
-
-		valuelists["resolution_widths"] = modelistx;
-		valuelists["resolution_heights"] = modelisty;
 	}
+	modelistx.reverse();
+	modelisty.reverse();
+	valuelists["resolution_widths"] = modelistx;
+	valuelists["resolution_heights"] = modelisty;
 
 	//populate anisotropy list
 	int max_aniso = graphics.GetMaxAnisotropy();
@@ -2148,9 +2134,7 @@ void GAME::PopulateValueLists(std::map<std::string, std::list <std::pair <std::s
 	}
 	
 	//populate replays list
-	{
-		PopulateReplayList(valuelists["replays"]);
-	}
+	PopulateReplayList(valuelists["replays"]);
 	
 	//populate other lists
 	valuelists["joy_indeces"].push_back(pair<string,string>("0","0"));
@@ -2328,17 +2312,14 @@ void GAME::AddTireSmokeParticles(float dt, CAR & car)
 
 void GAME::UpdateParticleSystems(float dt)
 {
-	if (track.Loaded())
+	if (track.Loaded() && active_camera)
 	{
-		if (active_camera)
-		{
-			QUATERNION <float> camlook;
-			camlook.Rotate(3.141593*0.5,1,0,0);
-			camlook.Rotate(-3.141593*0.5,0,0,1);
-			QUATERNION <float> camorient = -(active_camera->GetOrientation()*camlook);
+		QUATERNION <float> camlook;
+		camlook.Rotate(3.141593*0.5,1,0,0);
+		camlook.Rotate(-3.141593*0.5,0,0,1);
+		QUATERNION <float> camorient = -(active_camera->GetOrientation() * camlook);
 
-			tire_smoke.Update(dt, camorient, active_camera->GetPosition());
-		}
+		tire_smoke.Update(dt, camorient, active_camera->GetPosition());
 	}
 
 	particle_timer++;
@@ -2347,8 +2328,8 @@ void GAME::UpdateParticleSystems(float dt)
 
 void GAME::UpdateDriftScore(CAR & car, double dt)
 {
-	bool is_drifting = false;
-	bool spin_out = false;
+	//assert that the car is registered with the timer system
+	assert(cartimerids.find(&car) != cartimerids.end());
 
 	//make sure the car is not off track
 	int wheel_count = 0;
@@ -2358,37 +2339,29 @@ void GAME::UpdateDriftScore(CAR & car, double dt)
 	}
 
 	bool on_track = ( wheel_count > 1 );
-
-	//car's direction on the horizontal plane
-	MATHVECTOR <float, 3> car_orientation = car.GetOrientation().AxisX();
-	car_orientation[2] = 0;
-
-	//car's velocity on the horizontal plane
-	MATHVECTOR <float, 3> car_velocity = car.GetVelocity();
-	car_velocity[2] = 0;
-	float car_speed = car_velocity.Magnitude();
-
-	//angle between car's direction and velocity
-	float car_angle = 0;
-	float mag = car_orientation.Magnitude() * car_velocity.Magnitude();
-	if (mag > 0.001)
-	{
-		float dotprod = car_orientation.dot ( car_velocity )/mag;
-		if (dotprod > 1.0)
-			dotprod = 1.0;
-		if (dotprod < -1.0)
-			dotprod = -1.0;
-		car_angle = acos(dotprod);
-	}
-	
-	assert(car_angle == car_angle); //assert that car_angle isn't NAN
-	assert(cartimerids.find(&car) != cartimerids.end()); //assert that the car is registered with the timer system
-
+	bool is_drifting = false;
+	bool spin_out = false;
 	if ( on_track )
 	{
-		//velocity must be above 10 m/s
-		if ( car_speed > 10 )
+		//car's velocity on the horizontal plane(should use surface plane here)
+		MATHVECTOR <float, 3> car_velocity = car.GetVelocity();
+		car_velocity[2] = 0;
+		float car_speed = car_velocity.Magnitude();
+
+		//car's direction on the horizontal plane
+		MATHVECTOR <float, 3> car_orientation = car.GetOrientation().AxisX();
+		car_orientation[2] = 0;
+		float orient_mag = car_orientation.Magnitude();
+
+		//speed must be above 10 m/s and orientation must be valid
+		if ( car_speed > 10 && orient_mag > 0.01)
 		{
+			//angle between car's direction and velocity
+			float cos_angle = car_orientation.dot(car_velocity) / (car_speed * orient_mag);
+			if (cos_angle > 1) cos_angle = 1;
+			else if (cos_angle < -1) cos_angle = -1;
+			float car_angle = acos(cos_angle);
+
 			//drift starts when the angle > 0.2 (around 11.5 degrees)
 			//drift ends when the angle < 0.1 (aournd 5.7 degrees)
 			float angle_threshold(0.2);
@@ -2396,23 +2369,21 @@ void GAME::UpdateDriftScore(CAR & car, double dt)
 
 			is_drifting = ( car_angle > angle_threshold && car_angle <= M_PI/2.0 );
 			spin_out = ( car_angle > M_PI/2.0 );
+
+			//calculate score
+			if ( is_drifting )
+			{
+				//base score is the drift distance
+				timer.IncrementThisDriftScore(cartimerids[&car], dt * car_speed);
+
+				//bonus score calculation is now done in TIMER
+				timer.UpdateMaxDriftAngleSpeed(cartimerids[&car], car_angle, car_speed);
+				//std::cout << timer.GetDriftScore(cartimerids[&car]) << " + " << timer.GetThisDriftScore(cartimerids[&car]) << endl;
+			}
 		}
 	}
 
-	//calculate score
-	if ( is_drifting )
-	{
-		//base score is the drift distance
-		timer.IncrementThisDriftScore(cartimerids[&car], dt * car_speed);
-
-		//bonus score calculation is now done in TIMER
-		timer.UpdateMaxDriftAngleSpeed(cartimerids[&car], car_angle, car_speed);
-		
-		//std::cout << timer.GetDriftScore(cartimerids[&car]) << " + " << timer.GetThisDriftScore(cartimerids[&car]) << endl;
-	}
-
 	timer.SetIsDrifting(cartimerids[&car], is_drifting, on_track && !spin_out);
-	
 	//std::cout << is_drifting << ", " << on_track << ", " << car_angle << endl;
 }
 

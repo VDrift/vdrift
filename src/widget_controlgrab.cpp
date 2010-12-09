@@ -4,6 +4,11 @@
 
 #include <cassert>
 
+std::string WIDGET_CONTROLGRAB::Str[] =
+{
+	"Add a new input", "Edit", "press", "release", "once", "held", "key", "joy", "mouse", "button", "axis", "motion"
+};
+
 WIDGET_CONTROLGRAB::CONTROLWIDGET::CONTROLWIDGET() :
 	once(true),
 	down(false),
@@ -85,7 +90,7 @@ bool WIDGET_CONTROLGRAB::ProcessInput(
 	SCENENODE & topnoderef = scene.GetNode(topnode);
 	if (addbutton.ProcessInput(topnoderef, cursorx, cursory, cursordown, cursorjustup))
 	{
-		tempdescription = "Add a new input";
+		tempdescription = Str[ADDNEW_STR];
 		if (cursorjustup)
 		{
 			active_action = "controlgrabadd:"+std::string(analog?"y":"n")+":"+std::string(only_one?"y":"n")+":"+setting;
@@ -103,43 +108,50 @@ bool WIDGET_CONTROLGRAB::ProcessInput(
 		
 		if (i->type == "key")
 		{
+			std::stringstream desc;
+			desc << Str[EDIT_STR] << " " << Str[KEY_STR];
 			if (i->key.empty())
 			{
-				tempdescription = "Edit "+i->type+" #"+i->keycode+" "+(i->down?"press":"release")+
-					" ("+(i->once?"once":"held")+")";
+				desc << " #" << i->keycode; 
 			}
 			else
 			{
-				tempdescription = "Edit "+i->type+" "+i->key+" "+(i->down?"press":"release")+
-					" ("+(i->once?"once":"held")+")";
+				desc << " " << i->key;
 			}
+			desc << " " << (i->down ? Str[PRESS_STR] : Str[RELEASE_STR]) << 
+					" (" << (i->once ? Str[ONCE_STR] : Str[HELD_STR]) << ")";
+			tempdescription = desc.str();
 		}
 		else if (i->type == "joy")
 		{
 			std::stringstream desc;
+			desc << Str[EDIT_STR] << " " << Str[JOY_STR] << " " << i->joy_index << " ";
 			if (i->joy_type == "button")
 			{
-				desc << "Edit "<<i->type<<" "<<i->joy_index<<" "<<i->joy_type<<" "<<i->joy_button<<" "<<(i->down?"press":"release")<<
-					" ("<<(i->once?"once":"held")<<")";
+				desc << Str[BUTTON_STR] << " " << i->joy_button << 
+					" " << (i->down ? Str[PRESS_STR] : Str[RELEASE_STR]) <<
+					" (" << (i->once ? Str[ONCE_STR] : Str[HELD_STR]) << ")";
 			}
 			else if (i->joy_type == "axis")
 			{
-				desc << "Edit "<<i->type<<" "<<i->joy_index<<" "<<i->joy_type<<" "<<i->joy_axis<<" "<<
-						"("<<(i->joy_axis_type=="negative"?"-":"+")<<")";
+				desc << Str[AXIS_STR] << " " << i->joy_axis << " " << 
+					"(" << (i->joy_axis_type == "negative" ? "-" : "+") << ")";
 			}
 			tempdescription = desc.str();
 		}
 		else if (i->type == "mouse")
 		{
 			std::stringstream desc;
+			desc << Str[EDIT_STR] + " " << Str[MOUSE_STR] << " ";
 			if (i->mouse_type == "button")
 			{
-				desc << "Edit "<<i->type<<" "<<i->mouse_type<<" "<<i->mouse_button<<" "<<(i->down?"press":"release")<<
-						" ("<<(i->once?"once":"held")<<")";
+				desc << Str[BUTTON_STR] << " " << i->mouse_button <<
+					" " << (i->down ? Str[PRESS_STR] : Str[RELEASE_STR]) <<
+					" (" << (i->once ? Str[ONCE_STR] : Str[HELD_STR]) << ")";
 			}
 			else if (i->mouse_type == "motion")
 			{
-				desc << "Edit "<<i->type<<" "<<i->mouse_type<<" "<<i->mouse_motion;
+				desc << Str[MOTION_STR] << " " << i->mouse_motion;
 			}
 			tempdescription = desc.str();
 		}

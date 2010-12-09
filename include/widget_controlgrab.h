@@ -42,7 +42,7 @@ public:
 		SCENENODE & scene,
 		const CONFIG & c,
 		const std::string & newsetting,
-		const std::vector <std::tr1::shared_ptr<TEXTURE> > & texturevector,
+		const std::vector <std::tr1::shared_ptr<TEXTURE> > & textures,
 		const FONT & font,
 		const std::string & text,
 		const float centerx,
@@ -73,6 +73,25 @@ public:
 		MOUSESEL,
 		END
 	};
+	
+	// awfull widget description hack
+	enum STRING
+	{
+		ADDNEW_STR,
+		EDIT_STR,
+		PRESS_STR,
+		RELEASE_STR,
+		ONCE_STR,
+		HELD_STR,
+		KEY_STR,
+		JOY_STR,
+		MOUSE_STR,
+		BUTTON_STR,
+		AXIS_STR,
+		MOTION_STR,
+		END_STR
+	};
+	static std::string Str[END_STR];
 	
 private:
 	struct CONTROLWIDGET
@@ -109,8 +128,8 @@ private:
 	keyed_container <SCENENODE>::handle topnode;
 	keyed_container <SCENENODE>::handle ctrlnode;
 	std::vector <std::tr1::shared_ptr<TEXTURE> > textures;
-	float x, y;
 	float scale_x, scale_y;
+	float x, y;
 	float w, h;
 	bool analog;
 	bool only_one;

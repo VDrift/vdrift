@@ -1,5 +1,6 @@
 #include "gui.h"
 #include "config.h"
+#include "widget_controlgrab.h"
 
 #include <sstream>
 
@@ -50,6 +51,15 @@ bool GUI::Load(
 	{
 		languagemap = section->second;
 	}
+	//languageconfig.DebugPrint(std::clog);
+	
+	// controlgrab description strings translation (ugly hack)
+	for (int i = 0; i < WIDGET_CONTROLGRAB::END_STR; ++i)
+	{
+		std::string & str = WIDGET_CONTROLGRAB::Str[i];
+		std::map<std::string, std::string>::const_iterator li;
+		if ((li = languagemap.find(str)) != languagemap.end()) str = li->second;
+	}
 	
 	// load options
 	if (!LoadOptions(optionsfile, valuelists, languagemap, error_output)) return false;
@@ -58,7 +68,7 @@ bool GUI::Load(
 	
 	CONFIG controlsconfig;
 	controlsconfig.Load(carcontrolsfile); //pre-load controls file so that each individual widget doesn't have to reload it
-
+	
 	for (std::list <std::string>::const_iterator i = pagelist.begin(); i != pagelist.end(); ++i)
 	{
 		const std::string & pagename = *i;

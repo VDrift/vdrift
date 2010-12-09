@@ -24,13 +24,13 @@ public:
 	std::string GetActivePageName()
 	{
 		if (active_page == pages.end()) return "";
-		else return active_page->first;
+		return active_page->first;
 	}
 	
 	std::string GetLastPageName()
 	{
 		if (last_active_page == pages.end()) return "";
-		else return last_active_page->first;
+		return last_active_page->first;
 	}
 	
 	std::map<std::string, GUIOPTION> & GetOptionMap() {return optionmap;}
@@ -81,8 +81,7 @@ public:
 			control_load = false;
 			return true;
 		}
-		else
-			return false;
+		return false;
 	}
 	
 	void SetControlsNeedLoading(bool newcl) {control_load = newcl;}
@@ -99,10 +98,9 @@ public:
 	
 	void Update(float dt);
 	
-	bool Active() const
-	{
-		return (active_page != pages.end());
-	}
+	bool Active() const {return (active_page != pages.end());}
+	
+	void SetInGame(bool value) {ingame = value;}
 	
 	///if settings_are_newer is true, then this function will revise its internal options
 	/// to match the settings passed in.  otherwise, it'll operate the other way around
@@ -110,12 +108,7 @@ public:
 		const bool external_settings_are_newer,
 		std::map <std::string, std::string> & external_options,
 		std::ostream & error_output);
-	
-	void SetInGame ( bool value )
-	{
-		ingame = value;
-	}
-	
+
 	void ReplaceOptionValues(
 		const std::string & optionname,
 		const std::list <std::pair <std::string, std::string> > & newvalues,

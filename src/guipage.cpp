@@ -131,7 +131,7 @@ bool GUIPAGE::Load(
 		}
 		else if (type == "button")
 		{
-			float fontsize;
+			float fontsize(0), h(0), w(0);
 			std::vector<float> xy(2);
 			std::vector<float> color(3, 1.0);
 			std::string action;
@@ -142,6 +142,8 @@ bool GUIPAGE::Load(
 			if (!pagefile.GetParam(section, "color", color, error_output)) return false;
 			if (!pagefile.GetParam(section, "action", action, error_output)) return false;
 			if (!pagefile.GetParam(section, "cancel", cancel, error_output)) return false;
+			pagefile.GetParam(section, "height", h);
+			pagefile.GetParam(section, "width", w);
 			
 			std::tr1::shared_ptr<TEXTURE> texture_up, texture_down, texture_sel;
 			if (!textures.Load(texpath, "widgets/btn_up_unsel.png", texinfo, texture_sel)) return false;
@@ -153,7 +155,8 @@ bool GUIPAGE::Load(
 			
 			WIDGET_BUTTON * new_widget = NewWidget<WIDGET_BUTTON>();
 			new_widget->SetupDrawable(sref, texture_up, texture_down, texture_sel,
-					font, text, xy[0], xy[1], fontscalex, fontscaley, color[0], color[1], color[2]);
+					font, text, xy[0], xy[1], fontscalex, fontscaley,
+					color[0], color[1], color[2], h, w);
 			new_widget->SetAction(action);
 			new_widget->SetDescription(desc);
 			new_widget->SetCancel(cancel);
@@ -493,7 +496,6 @@ bool GUIPAGE::Load(
 			WIDGET_CONTROLGRAB * new_widget = NewWidget<WIDGET_CONTROLGRAB>();
 			new_widget->SetupDrawable(sref, controlsconfig, setting, control, font, 
 					text, xy[0], xy[1], fontscalex, fontscaley, analog, only_one);
-			new_widget->SetDescription(desc);
 			controlgrabs.push_back(new_widget);
 		}
 		else
