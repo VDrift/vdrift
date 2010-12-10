@@ -64,6 +64,7 @@ public:
 // chassis
 	T GetMass() const;
 	T GetSpeed() const;
+	T GetLateralVelocity() const;
 	MATHVECTOR <T, 3> GetVelocity() const;
 	MATHVECTOR <T, 3> GetEnginePosition() const;
 
@@ -80,7 +81,7 @@ public:
 
 	// first wheel velocity
 	T GetSpeedMPS() const;
-	
+
 	// engine rpm
 	T GetTachoRPM() const;
 
@@ -158,7 +159,7 @@ protected:
 	std::vector <CARBRAKE <T> > brake;
 	std::vector <CARWHEEL <T> > wheel;
 	std::vector <CARTIRE <T> > tire;
-	
+
 	enum { NONE = 0, FWD = 1, RWD = 2, AWD = 3 } drive;
 	T driveshaft_rpm;
 	T tacho_rpm;
@@ -186,13 +187,13 @@ protected:
 	std::vector <CARAERO <T> > aerodynamics;
 	std::list <std::pair <T, MATHVECTOR <T, 3> > > mass_particles;
 	//std::list <CARTELEMETRY> telemetry;
-	
+
 	T maxangle;
 	T feedback;
 
 	//< held so external classes can extract it for things such as applying physics to camera mounts
 	MATHVECTOR <T, 3> lastbodyforce;
-	
+
 
 // chassis, cardynamics
 	MATHVECTOR <T, 3> GetDownVector() const;

@@ -34,7 +34,7 @@ CARDYNAMICS::CARDYNAMICS() :
 	wheel.reserve(WHEEL_POSITION_SIZE);
 	tire.reserve(WHEEL_POSITION_SIZE);
 	brake.reserve(WHEEL_POSITION_SIZE);
-	
+
 	wheel_velocity.resize (WHEEL_POSITION_SIZE);
 	wheel_position.resize ( WHEEL_POSITION_SIZE );
 	wheel_orientation.resize ( WHEEL_POSITION_SIZE );
@@ -51,7 +51,7 @@ static bool LoadEngine(
 	CARENGINEINFO<T> info;
 	std::vector< std::pair <T, T> > torque;
 	std::vector<float> pos(3);
-	
+
 	CONFIG::const_iterator it;
 	if (!c.GetSection("engine", it, error_output)) return false;
 	if (!c.GetParam(it, "peak-engine-rpm", info.redline, error_output)) return false; //used only for the redline graphics
@@ -136,7 +136,7 @@ static bool LoadTransmission(
 	}
 	if (!c.GetParam(it, "gear-ratio-r", ratio, error_output)) return false;
 	c.GetParam(it, "shift-time", shift_time);
-	
+
 	transmission.SetGearRatio(-1, ratio);
 	transmission.SetShiftTime(shift_time);
 
@@ -179,7 +179,7 @@ static bool LoadBrake(
 {
 	std::string brakename;
 	if (!c.GetParam(iwheel, "brake", brakename, error_output)) return false;
-	
+
 	float friction, max_pressure, area, bias, radius, handbrake(0);
 	CONFIG::const_iterator it;
 	if (!c.GetSection(brakename, it, error_output)) return false;
@@ -208,7 +208,7 @@ static bool LoadTireParameters(
 {
 	CONFIG::const_iterator it;
 	if (!c.GetSection(tire, it, error_output)) return false;
-	
+
 	//read lateral
 	int numinfile;
 	for (int i = 0; i < 15; i++)
@@ -259,7 +259,7 @@ static bool LoadTire(
 {
 	std::string tirename;
 	if (!c.GetParam(iwheel, "tire", tirename, error_output)) return false;
-	
+
 	CARTIREINFO<T> info;
 	std::string type;
 	std::vector<T> size(3, 0);
@@ -270,7 +270,7 @@ static bool LoadTire(
 	if (!LoadTireParameters(c, type, info, error_output)) return false;
 	info.SetDimensions(size[0], size[1], size[2]);
 	tire.Init(info);
-	
+
 	return true;
 }
 
@@ -322,7 +322,7 @@ static bool LoadAeroDevices(
 		std::vector<T> pos(3);
 		T drag_area, drag_coeff;
 		T lift_area = 0, lift_coeff = 0, lift_eff = 0;
-		
+
 		CONFIG::const_iterator it;
 		if (!c.GetSection(iw->second, it, error_output)) return false;
 		if (!c.GetParam(it, "frontal-area", drag_area, error_output)) return false;
@@ -349,7 +349,7 @@ static bool LoadDifferential(
 	std::ostream & error_output)
 {
 	T final_drive(1), anti_slip(0), anti_slip_torque(0), anti_slip_torque_deceleration_factor(0);
-	
+
 	if (!c.GetParam(it, "final-drive", final_drive, error_output)) return false;
 	if (!c.GetParam(it, "anti-slip", anti_slip, error_output)) return false;
 	c.GetParam(it, "anti-slip-torque", anti_slip_torque);
@@ -371,13 +371,13 @@ static bool LoadMassParticles(
 	{
 		T mass;
 		std::vector<T> pos(3);
-		
+
 		std::stringstream str;
 		str.width(2);
 		str.fill('0');
 		str << num;
 		std::string name = "particle-"+str.str();
-		
+
 		CONFIG::const_iterator it;
 		if (!c.GetSection(name, it)) break;
 		if (!c.GetParam(it, "position", pos, error_output)) return false;
@@ -402,27 +402,27 @@ bool CARDYNAMICS::Load(const CONFIG & c, std::ostream & error_output)
 	if (!LoadEngine(c, engine, error_output)) return false;
 	if (!LoadFuelTank(c, fuel_tank, error_output)) return false;
 	AddMassParticle(engine.GetMass(), engine.GetPosition());
-	
+
 	CONFIG::const_iterator is;
 	if (!c.GetSection("wheel", is, error_output)) return false;
-	
+
 	assert(is->second.size() == WHEEL_POSITION_SIZE); // temporary restriction
-	
+
 	for (CONFIG::SECTION::const_iterator iw = is->second.begin(); iw != is->second.end(); ++iw)
 	{
 		CARSUSPENSION<T> * sptr = 0;
 		CONFIG::const_iterator iwheel;
 		if (!c.GetSection(iw->second, iwheel, error_output)) return false;
-		
+
 		tire.push_back(CARTIRE<T>());
 		brake.push_back(CARBRAKE<T>());
 		wheel.push_back(CARWHEEL<T>());
-		
+
 		if (!LoadTire(c, iwheel, tire.back(), error_output)) return false;
 		if (!LoadBrake(c, iwheel, brake.back(), error_output)) return false;
 		if (!LoadWheel(c, iwheel, tire.back(), wheel.back(), error_output)) return false;
 		if (!CARSUSPENSION<T>::LoadSuspension(c, iwheel, sptr, error_output)) return false;
-		
+
 		suspension.push_back(std::tr1::shared_ptr<CARSUSPENSION<T> >(sptr));
 		if (suspension.back()->GetMaxSteeringAngle() > maxangle)
 		{
@@ -572,7 +572,7 @@ void CARDYNAMICS::Init(
 		wheel_position[i] = LocalToWorld(suspension[i]->GetWheelPosition(0.0));
 		wheel_orientation[i] = Orientation() * suspension[i]->GetWheelOrientation();
 	}
-	
+
 	AlignWithGround();
 }
 
@@ -687,6 +687,13 @@ T CARDYNAMICS::GetMass() const
 T CARDYNAMICS::GetSpeed() const
 {
 	return GetVelocity().Magnitude();
+}
+
+T CARDYNAMICS::GetLateralVelocity() const
+{
+	MATHVECTOR<float, 3> f(GetVelocity());
+	f[2] = 0;
+	return f.Magnitude();
 }
 
 MATHVECTOR <T, 3> CARDYNAMICS::GetVelocity() const
@@ -825,13 +832,13 @@ void CARDYNAMICS::AlignWithGround()
 	MATHVECTOR<T, 3> delta = GetDownVector() * min_height;
 	MATHVECTOR<T, 3> trimmed_position = Position() + delta;
 	SetPosition(trimmed_position);
-	
+
 	// reset angular and linear velocity
 	chassis->setAngularVelocity(btVector3(0, 0, 0));
 	chassis->setLinearVelocity(btVector3(0, 0, 0));
 	body.SetAngularVelocity(MATHVECTOR<T, 3>(0));
 	body.SetVelocity(MATHVECTOR<T, 3>(0));
-	
+
 	UpdateWheelVelocity();
 	UpdateWheelTransform();
 	UpdateWheelContacts();
@@ -1186,12 +1193,12 @@ T CARDYNAMICS::UpdateSuspension(int i, T dt)
 	T cosn = upright.dot(normal);
 	if (cosn < 0) return 0;	// negative normal
 	if (cosn > 1) cosn = 1; // make sure cosn <= 1
-	
+
 	T normal_mass = 1 / body.GetInvEffectiveMass(normal, offset);
 	T normal_velocity = wheel_velocity[i].dot(normal);
 	T normal_force_limit = -normal_velocity * normal_mass / dt;
 	T displacement = 2.0 * tire[i].GetRadius() - wheel_contact[i].GetDepth();
-	
+
 	// adjust displacement due to surface bumpiness
 	const TRACKSURFACE & surface = wheel_contact[i].GetSurface();
 	if (surface.bumpWaveLength > 0.0001)
@@ -1204,23 +1211,23 @@ T CARDYNAMICS::UpdateSuspension(int i, T dt)
 		T bumpoffset = amplitude * (sin(phase + shift) + sin(1.414214 * phase) - 2.0);
 		displacement += bumpoffset;
 	}
-	
+
 	suspension[i]->Update(normal_force_limit * cosn, normal_velocity * cosn, displacement * cosn);
-	
+
 	int otheri = i;
 	if ( i == 0 || i == 2 ) otheri++;
 	else otheri--;
 	T antirollforce = suspension[i]->GetAntiRoll() * (suspension[i]->GetDisplacement() - suspension[otheri]->GetDisplacement());
 	T suspension_force = suspension[i]->GetForce() + antirollforce;
-	
+
 	// clamp suspension force and normal force limit
 	if (suspension_force < 0) suspension_force = 0;
 	if (suspension[i]->GetDisplacement() <= 0 || normal_force_limit < 0) normal_force_limit = 0;
-	
+
 	// combine lateral and suspension force
 	T normal_force = normal_force_limit * sqrt(1 - cosn * cosn) + suspension_force * cosn;
 	assert(normal_force == normal_force);
-	
+
 	return normal_force;
 }
 
@@ -1301,7 +1308,7 @@ void CARDYNAMICS::UpdateWheel(
 
 	// apply friction to body
 	MATHVECTOR<T, 3> contact_offset = contact.GetPosition() - Position();
-/*	
+/*
 	// limit lateral friction
 	T mass = 1 / body.GetInvEffectiveMass(y, contact_offset);
 	T friction_limit = -velocity[1] * mass / dt;
@@ -1351,7 +1358,7 @@ void CARDYNAMICS::Tick(MATHVECTOR<T, 3> ext_force, MATHVECTOR<T, 3> ext_torque, 
 {
 	// call before UpdateDriveline, overrides clutch, throttle
 	UpdateTransmission(dt);
-	
+
 	// overrides throttle/brakes
 	for(int i = 0; i < WHEEL_POSITION_SIZE; i++)
 	{
@@ -1520,10 +1527,10 @@ T CARDYNAMICS::CalculateDriveshaftSpeed()
 	T right_front_wheel_speed = wheel[FRONT_RIGHT].GetAngularVelocity();
 	T left_rear_wheel_speed = wheel[REAR_LEFT].GetAngularVelocity();
 	T right_rear_wheel_speed = wheel[REAR_RIGHT].GetAngularVelocity();
-	
+
 	for ( int i = 0; i < 4; i++ )
 		assert ( !isnan ( wheel[WHEEL_POSITION ( i ) ].GetAngularVelocity() ) );
-	
+
 	if (drive == RWD)
 	{
 		driveshaft_speed = differential_rear.CalculateDriveshaftSpeed ( left_rear_wheel_speed, right_rear_wheel_speed );
@@ -1545,7 +1552,7 @@ T CARDYNAMICS::CalculateDriveshaftSpeed()
 void CARDYNAMICS::UpdateTransmission(T dt)
 {
 	T driveshaft_speed = CalculateDriveshaftSpeed();
-	
+
 	driveshaft_rpm = transmission.GetClutchSpeed(driveshaft_speed) * 30.0 / 3.141593;
 
 	if (autoshift)

@@ -264,6 +264,11 @@ public:
 		return vel;
 	}
 
+	float GetLateralVelocity() const
+	{
+		return dynamics.GetLateralVelocity();
+	}
+
 	float GetTireMaxFx(WHEEL_POSITION tire_index) const
 	{
 		return dynamics.GetTire(tire_index).GetMaximumFx(GetMass()*0.25*9.81);
@@ -304,7 +309,7 @@ protected:
 
 	keyed_container<DRAWABLE>::handle brakelights;
 	keyed_container<DRAWABLE>::handle reverselights;
-	
+
 	struct LIGHT
 	{
 		keyed_container<SCENENODE>::handle node;
@@ -313,7 +318,7 @@ protected:
 	};
 	std::list<LIGHT> lights;
 	std::list<std::tr1::shared_ptr<MODEL_JOE03> > modellist;
-	
+
 	SUSPENSIONBUMPDETECTION suspensionbumpdetection[4];
 	CRASHDETECTION crashdetection;
 	CAMERA_SYSTEM cameras;

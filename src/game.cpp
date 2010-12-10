@@ -2465,7 +2465,7 @@ bool GAME::QueryLogData(DATALOG::log_entry_T * new_entry)
 {
 	for (vector< string >::const_iterator column = data_manager.GetLogColumnNames().begin(); column != data_manager.GetLogColumnNames().end(); ++column)
 	{
-		double value;
+		DATALOG::log_data_T value;
 		bool found = true;
 
 		if (*column == "Time")
@@ -2475,6 +2475,10 @@ bool GAME::QueryLogData(DATALOG::log_entry_T * new_entry)
 		else if (*column == "Velocity")
 		{
 			value = cars.front().GetSpeed();
+		}
+		else if (*column == "LateralVelocity")
+		{
+			value = cars.front().GetLateralVelocity();
 		}
 		else if (*column == "Sector")
 		{
