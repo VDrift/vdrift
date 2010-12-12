@@ -34,7 +34,7 @@ private:
 
 			void Save(std::ostream & outstream)
 			{
-				//write the file format version data manually.  if the serialization functions were used, a variable length string would be written instead, which isns't exactly what we want
+				//write the file format version data manually.  if the serialization functions were used, a variable length string would be written instead, which isn't exactly what we want
 				outstream.write(format_version.data(), format_version.length());
 				
 				//write the rest of the versioning info
@@ -203,7 +203,7 @@ private:
 	void GetReadyToRecord();
 	
 public:
-	REPLAY(float framerate) : version_info("VDRIFTREPLAYV11", CARINPUT::GAME_ONLY_INPUTS_START_HERE, framerate),frame(0),replaymode(IDLE) {inputbuffer.resize(CARINPUT::GAME_ONLY_INPUTS_START_HERE, 0);}
+	REPLAY(float framerate) : version_info("VDRIFTREPLAYV12", CARINPUT::GAME_ONLY_INPUTS_START_HERE, framerate),frame(0),replaymode(IDLE) {inputbuffer.resize(CARINPUT::GAME_ONLY_INPUTS_START_HERE, 0);}
 	
 	//playing
 	bool StartPlaying(const std::string & replayfilename, std::ostream & error_output); ///< returns true on success

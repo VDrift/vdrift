@@ -22,6 +22,9 @@ namespace joeserialize
 ///abstract base class for serializers.
 class Serializer
 {
+	private:
+		vector <bool> user_flags; ///< user-defined boolean flags
+	
 	protected:
 		///optional hints to higher level classes about where we are in the serialization process
 		virtual void ComplexTypeStart(const std::string & name) { (void) name; }
@@ -420,6 +423,21 @@ class Serializer
    			DIRECTION_OUTPUT
 		};
 		virtual Direction GetIODirection() = 0;
+		
+		void SetUserFlag(unsigned int flag, bool value)
+		{
+			assert(flag < 1024); // arbitrarily limit flags to a reasonable number
+			user_flags.resize(std::max(user_flags.size(),flag+1), false);
+			user_flags[flag] = value;
+		}
+		
+		bool GetUserFlag(unsigned int flag)
+		{
+			if (flag < user_flags.size())
+				return user_flags[flag];
+			else
+				return false;
+		}
 };
 
 class SerializerOutput : public Serializer
