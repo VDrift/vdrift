@@ -10,6 +10,7 @@
 #include <sstream>
 #include <vector>
 #include <iomanip>
+#include <cassert>
 
 #ifdef USE_TR1
 #include <tr1/unordered_map>
@@ -23,7 +24,7 @@ namespace joeserialize
 class Serializer
 {
 	private:
-		vector <bool> user_flags; ///< user-defined boolean flags
+		std::vector <bool> user_flags; ///< user-defined boolean flags
 	
 	protected:
 		///optional hints to higher level classes about where we are in the serialization process
