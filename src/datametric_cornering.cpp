@@ -41,7 +41,7 @@ void CORNERINGMETRIC::DetermineState()
 	}
 	else if (state == turning_under_threshold)
 	{
-		if (abs(steering) >= 0.1 /*DATAMETRIC::GetOption("min_steering_angle")*/ )
+		if (abs(steering) >= 0.06 /*DATAMETRIC::GetOption("start_turn_steering_angle")*/ )
 		{
 			state = turning_over_threshold;
 		}
@@ -52,7 +52,7 @@ void CORNERINGMETRIC::DetermineState()
 	}
 	else if (state == turning_over_threshold)
 	{
-		if (abs(steering) < 0.02 /*DATAMETRIC::GetOption("min_steering_angle")*/ )
+		if (abs(steering) < 0.02 /*DATAMETRIC::GetOption("end_turn_steering_angle")*/ )
 		{
 			state = turning_under_threshold;
 		}
@@ -65,9 +65,9 @@ void CORNERINGMETRIC::StateChangeReaction()
 	if (state == last_state)
 		return;
 
-	cout << "Changed state: " << state << endl;
+	//cout << "Changed state: " << state << endl;
 
-	// the state has changed, see what the present state is
+	// the state has changed, see what the present state now is
 	if (state == turning_under_threshold)
 	{
 		if (last_state == not_turning)
@@ -80,21 +80,24 @@ void CORNERINGMETRIC::StateChangeReaction()
 			// a turn was completed, report on it to driver
 			double current_time = DATAMETRIC::GetLastInColumn("Time");
 			double total_turn_time = current_time - turn_start_time;
-			ostringstream os;
-			os << "Turn completed, took " << total_turn_time << " seconds" << endl;
-			os << "Maximum lateral accel: " << (turn_max_lateral_accel / 9.81) << " Gs" << endl;
-			DATAMETRIC::SetFeedbackMessageEvent("Cornering Report", os.str(), 10.0, 1.0, 2.0);
+			if (total_turn_time >= 1.0 /*DATAMETRIC::GetOption("min_turn_time")*/ )
+			{
+				ostringstream os;
+				os << "Turn completed, took " << total_turn_time << " seconds" << endl;
+				os << "Maximum lateral accel: " << (turn_max_lateral_accel / 9.81) << " Gs" << endl;
+				DATAMETRIC::SetFeedbackMessageEvent("Cornering Report", os.str(), 10.0, 1.0, 2.0);
+			}
 			turn_max_lateral_accel = 0.0;
 		}
 	}
 	else if (state == turning_over_threshold)
 	{
 		assert (last_state == turning_under_threshold);
-		double current_time = DATAMETRIC::GetLastInColumn("Time");
+		/*double current_time = DATAMETRIC::GetLastInColumn("Time");
 		ostringstream os;
 		os << "Started turning " << (current_time - turn_start_time) << " seconds ago" << endl;
 		//cout << "started braking at " << braking_start_time << endl;
-		DATAMETRIC::SetFeedbackMessageEvent("Start Turn Message", os.str(), 5.0, 1.0, 1.0);
+		DATAMETRIC::SetFeedbackMessageEvent("Start Turn Message", os.str(), 5.0, 1.0, 1.0);*/
 	}
 	else if (state == not_turning)
 	{

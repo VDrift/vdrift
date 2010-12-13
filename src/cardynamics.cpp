@@ -692,8 +692,10 @@ T CARDYNAMICS::GetSpeed() const
 T CARDYNAMICS::GetLateralVelocity() const
 {
 	MATHVECTOR<float, 3> f(GetVelocity());
-	f[2] = 0;
-	return f.Magnitude();
+	/// zero out the y (forward/back) and z (up/down) axes to get the x (left/right) magnitude
+	/*f[1] = 0;
+	return f.Magnitude();*/
+	return f[0];
 }
 
 MATHVECTOR <T, 3> CARDYNAMICS::GetVelocity() const
