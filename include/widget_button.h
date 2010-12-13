@@ -48,13 +48,10 @@ public:
 		std::tr1::shared_ptr<TEXTURE> teximage_selected,
 		const FONT & font,
 		const std::string & text,
-		const float centerx,
-		const float centery,
-		const float scalex,
-		const float scaley,
-		const float r,
-		const float g,
-		const float b);
+		float centerx, float centery,
+		float scalex, float scaley,
+		float r, float g, float b,
+		float h = 0, float w = 0);
 
 private:
 	WIDGET_LABEL label;
@@ -64,15 +61,8 @@ private:
 	std::string action;
 	std::string active_action;
 	std::string description;
-	enum
-	{
-		UP,
-  		DOWN,
-		SELECTED
-	} state;
+	enum { UP, DOWN, SELECTED } state;
 	bool cancel;
-	float h;
-	float screenhwratio;
 };
 
 #endif

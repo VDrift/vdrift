@@ -2,9 +2,7 @@
 
 #include <cassert>
 
-WIDGET_BUTTON::WIDGET_BUTTON() : 
-	cancel(true),
-	screenhwratio(1)
+WIDGET_BUTTON::WIDGET_BUTTON() : cancel(true)
 {
 	// ctor
 }
@@ -121,26 +119,24 @@ void WIDGET_BUTTON::SetupDrawable(
 	std::tr1::shared_ptr<TEXTURE> teximage_selected,
 	const FONT & font,
 	const std::string & text,
-	const float centerx,
-	const float centery,
-	const float scalex,
-	const float scaley,
-	const float r,
-	const float g,
-	const float b)
+	float centerx, float centery,
+	float scalex, float scaley,
+	float r, float g, float b,
+	float h, float w)
 {
 	assert(teximage_up);
 	assert(teximage_down);
 	assert(teximage_selected);
 	
-	screenhwratio = scaley / scalex;
-	h = scaley;// * (1 + 1 / (screenhwratio * 3.0)); // replace with padding
-	float w = font.GetWidth(text) * scalex;
+	// enlarge button to fit the text contained
+	if (h < scaley) h = scaley;
+	if (w < font.GetWidth(text) * scalex) w = font.GetWidth(text) * scalex;
+	float hwratio = scaley / scalex;
 	
 	label.SetupDrawable(scene, font, text, centerx, centery, scalex, scaley, r, g, b, 2);
-	image_up.SetupDrawable(scene, teximage_up, centerx, centery, w, h, 1, true, screenhwratio);
-	image_down.SetupDrawable(scene, teximage_down, centerx, centery, w, h, 1, true, screenhwratio);
-	image_selected.SetupDrawable(scene, teximage_selected, centerx, centery, w, h, 1, true, screenhwratio);
+	image_up.SetupDrawable(scene, teximage_up, centerx, centery, w, h, 1, true, hwratio);
+	image_down.SetupDrawable(scene, teximage_down, centerx, centery, w, h, 1, true, hwratio);
+	image_selected.SetupDrawable(scene, teximage_selected, centerx, centery, w, h, 1, true, hwratio);
 	image_down.SetVisible(scene, false);
 	image_selected.SetVisible(scene, false);
 	state = UP;

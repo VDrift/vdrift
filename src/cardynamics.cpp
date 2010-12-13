@@ -1055,10 +1055,6 @@ bool CARDYNAMICS::Serialize ( joeserialize::Serializer & s )
 	_SERIALIZE_(s,differential_rear);
 	_SERIALIZE_(s,differential_center);
 	_SERIALIZE_(s,fuel_tank);
-	//_SERIALIZE_(s,suspension);
-	_SERIALIZE_(s,wheel);
-	_SERIALIZE_(s,brake);
-	_SERIALIZE_(s,tire);
 	_SERIALIZE_(s,aerodynamics);
 	_SERIALIZE_(s,wheel_velocity);
 	_SERIALIZE_(s,abs);
@@ -1070,6 +1066,16 @@ bool CARDYNAMICS::Serialize ( joeserialize::Serializer & s )
 	_SERIALIZE_(s,shift_gear);
 	_SERIALIZE_(s,shifted);
 	_SERIALIZE_(s,autoshift);
+	//_SERIALIZE_(s,chassisPosition);
+	//_SERIALIZE_(s,chassisCenterOfMass);
+	//_SERIALIZE_(s,chassisRotation);
+	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
+	{
+		_SERIALIZE_(s,*suspension[i]);
+		_SERIALIZE_(s,wheel[i]);
+		_SERIALIZE_(s,brake[i]);
+		_SERIALIZE_(s,tire[i]);
+	}
 	return true;
 }
 
@@ -1487,7 +1493,7 @@ void CARDYNAMICS::UpdateDriveline(T drive_torque[], T dt)
 }
 
 ///calculate the drive torque that the engine applies to each wheel, and put the output into the supplied 4-element array
-void CARDYNAMICS::CalculateDriveTorque(T * wheel_drive_torque, T clutch_torque)
+void CARDYNAMICS::CalculateDriveTorque(T wheel_drive_torque[], T clutch_torque)
 {
 	T driveshaft_torque = transmission.GetTorque(clutch_torque);
 	assert(!isnan(driveshaft_torque));

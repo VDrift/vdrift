@@ -10,6 +10,8 @@
 #include <sstream>
 #include <vector>
 #include <iomanip>
+#include <cassert>
+#include <cmath>
 
 #ifdef USE_TR1
 #include <tr1/unordered_map>
@@ -22,6 +24,9 @@ namespace joeserialize
 ///abstract base class for serializers.
 class Serializer
 {
+	private:
+		std::vector <bool> user_flags; ///< user-defined boolean flags
+	
 	protected:
 		///optional hints to higher level classes about where we are in the serialization process
 		virtual void ComplexTypeStart(const std::string & name) { (void) name; }
@@ -194,7 +199,7 @@ class Serializer
 			return true;
 		}
 		
-		/// vector <bool> is special
+		/// \verbatim vector <bool> is special \endverbatim
 		bool Serialize(const std::string & name, std::vector <bool> & t)
 		{
 			ComplexTypeStart(name);
@@ -420,6 +425,21 @@ class Serializer
    			DIRECTION_OUTPUT
 		};
 		virtual Direction GetIODirection() = 0;
+		
+		void SetUserFlag(unsigned int flag, bool value)
+		{
+			assert(flag < 1024); // arbitrarily limit flags to a reasonable number
+			user_flags.resize(std::max(int(user_flags.size()),int(flag)+1), false);
+			user_flags[flag] = value;
+		}
+		
+		bool GetUserFlag(unsigned int flag)
+		{
+			if (flag < user_flags.size())
+				return user_flags[flag];
+			else
+				return false;
+		}
 };
 
 class SerializerOutput : public Serializer
@@ -685,7 +705,7 @@ class TextOutputSerializer : public SerializerOutput
 				out_ << "  ";
 		}
 		
-		///replaces <CR> with '\n'
+		/// \verbatim replaces <CR> with '\n' \endverbatim
 		std::string Escape(const std::string & input) const
 		{
 			std::string outputstr;
@@ -799,7 +819,7 @@ class TextInputSerializer : public SerializerInput
 			return strLTrim(strRTrim(instr));
 		}
 
-    	///replace "\n" with <CR>
+    	/// \verbatim replace "\n" with <CR> \endverbatim
 		std::string UnEscape(const std::string & input) const
 		{
 			std::string outputstr;

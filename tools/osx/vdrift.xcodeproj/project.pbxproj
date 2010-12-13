@@ -220,7 +220,6 @@
 		B97D767312AA720E0042C221 /* collision_world.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B97D761212AA720D0042C221 /* collision_world.cpp */; };
 		B97D767412AA720E0042C221 /* config.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B97D761312AA720D0042C221 /* config.cpp */; };
 		B97D767512AA720E0042C221 /* containeralgorithm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B97D761412AA720D0042C221 /* containeralgorithm.cpp */; };
-		B97D767612AA720E0042C221 /* coordinatesystems.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B97D761512AA720D0042C221 /* coordinatesystems.cpp */; };
 		B97D767712AA720E0042C221 /* crashdetection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B97D761612AA720D0042C221 /* crashdetection.cpp */; };
 		B97D767812AA720E0042C221 /* endian_utility.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B97D761712AA720D0042C221 /* endian_utility.cpp */; };
 		B97D767912AA720E0042C221 /* eventsystem.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B97D761812AA720D0042C221 /* eventsystem.cpp */; };
@@ -770,7 +769,6 @@
 		B97D761212AA720D0042C221 /* collision_world.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = collision_world.cpp; sourceTree = "<group>"; };
 		B97D761312AA720D0042C221 /* config.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = config.cpp; sourceTree = "<group>"; };
 		B97D761412AA720D0042C221 /* containeralgorithm.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = containeralgorithm.cpp; sourceTree = "<group>"; };
-		B97D761512AA720D0042C221 /* coordinatesystems.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = coordinatesystems.cpp; sourceTree = "<group>"; };
 		B97D761612AA720D0042C221 /* crashdetection.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = crashdetection.cpp; sourceTree = "<group>"; };
 		B97D761712AA720D0042C221 /* endian_utility.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = endian_utility.cpp; sourceTree = "<group>"; };
 		B97D761812AA720D0042C221 /* eventsystem.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = eventsystem.cpp; sourceTree = "<group>"; };
@@ -1437,7 +1435,6 @@
 				B97D761212AA720D0042C221 /* collision_world.cpp */,
 				B97D761312AA720D0042C221 /* config.cpp */,
 				B97D761412AA720D0042C221 /* containeralgorithm.cpp */,
-				B97D761512AA720D0042C221 /* coordinatesystems.cpp */,
 				B97D761612AA720D0042C221 /* crashdetection.cpp */,
 				B97D761712AA720D0042C221 /* endian_utility.cpp */,
 				B97D761812AA720D0042C221 /* eventsystem.cpp */,
@@ -2348,7 +2345,6 @@
 				B97D767312AA720E0042C221 /* collision_world.cpp in Sources */,
 				B97D767412AA720E0042C221 /* config.cpp in Sources */,
 				B97D767512AA720E0042C221 /* containeralgorithm.cpp in Sources */,
-				B97D767612AA720E0042C221 /* coordinatesystems.cpp in Sources */,
 				B97D767712AA720E0042C221 /* crashdetection.cpp in Sources */,
 				B97D767812AA720E0042C221 /* endian_utility.cpp in Sources */,
 				B97D767912AA720E0042C221 /* eventsystem.cpp in Sources */,
