@@ -428,7 +428,7 @@ class Serializer
 		void SetUserFlag(unsigned int flag, bool value)
 		{
 			assert(flag < 1024); // arbitrarily limit flags to a reasonable number
-			user_flags.resize(std::max(user_flags.size(),flag+1), false);
+			user_flags.resize(std::max(user_flags.size(),(size_t)flag+1), false);
 			user_flags[flag] = value;
 		}
 		
