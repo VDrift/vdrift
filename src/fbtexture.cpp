@@ -34,7 +34,7 @@ void FBTEXTURE::Init(GLSTATEMANAGER & glstate, int sizex, int sizey, TARGET targ
 	texture_target = target;
 	
 	multisample = newmultisample;
-	if (!(GL_EXT_framebuffer_multisample && GL_EXT_framebuffer_blit))
+	if (!(GLEW_EXT_framebuffer_multisample && GLEW_EXT_framebuffer_blit))
 		multisample = 0;
 	
 	//set texture info
