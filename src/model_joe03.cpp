@@ -61,7 +61,7 @@ struct JOEObject
 
 struct VERT_ENTRY
 {
-	VERT_ENTRY() : original_index(-1) {}
+	VERT_ENTRY() : original_index(-1), norm_index(-1), tex_index(-1) {}
 	int original_index;
 	int norm_index;
 	int tex_index;

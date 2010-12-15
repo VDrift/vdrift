@@ -49,8 +49,8 @@ GAME::GAME(std::ostream & info_out, std::ostream & error_out) :
 	displayframe(0),
 	clocktime(0),
 	target_time(0),
-	framerate(0.01),
-	fps_track(10,0),
+	timestep(1/60.0),
+	fps_track(10, 0),
 	fps_position(0),
 	fps_min(0),
 	fps_max(0),
@@ -65,7 +65,7 @@ GAME::GAME(std::ostream & info_out, std::ostream & error_out) :
 	profilingmode(false),
 	renderconfigfile("render.conf.deferred"),
 	track(info_out, error_out),
-	replay(framerate)
+	replay(timestep)
 	//sky(graphics, info_out, err_out)
 {
 	carcontrols_local.first = 0;
@@ -620,7 +620,7 @@ void GAME::MainLoop()
 void GAME::Tick(float deltat)
 {
 	const float minfps = 10.0f; //this is the minimum fps the game will run at before it starts slowing down time
-	const unsigned int maxticks = (int) (1.0f / (minfps * framerate)); //slow the game down if we can't process fast enough
+	const unsigned int maxticks = (int) (1.0f / (minfps * timestep)); //slow the game down if we can't process fast enough
 	const float maxtime = 1.0 / minfps; //slow the game down if we can't process fast enough
 	unsigned int curticks = 0;
 

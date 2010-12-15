@@ -102,8 +102,8 @@ struct LoadDrawable
 	}
 
 	bool operator()(
-		const std::string meshname,
-		const std::vector<std::string> texname,
+		const std::string & meshname,
+		const std::vector<std::string> & texname,
 		const CONFIG::const_iterator section,
 		SCENENODE & topnode,
 		keyed_container<SCENENODE>::handle * nodeptr = 0,

@@ -69,7 +69,8 @@ bool REPLAY::LoadHeader(std::istream & instream, std::ostream & error_output)
 	
 	if (!(stream_version == version_info))
 	{
-		error_output << "Stream version " << stream_version.format_version << "/" << stream_version.inputs_supported << " does not match expected version " << version_info.format_version << "/" << version_info.inputs_supported << endl;
+		error_output << "Stream version " << stream_version.format_version << "/" << stream_version.inputs_supported << "/" << stream_version.framerate <<
+		" does not match expected version " << version_info.format_version << "/" << version_info.inputs_supported << "/" << version_info.framerate << endl;
 		return false;
 	}
 	

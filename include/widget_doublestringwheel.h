@@ -55,9 +55,9 @@ public:
 		const float centerx,
 		const float centery);
 	
-	void SetCurrent(SCENENODE & scene, const std::string newsetting1, const std::string newsetting2);
+	void SetCurrent(SCENENODE & scene, const std::string & newsetting1, const std::string & newsetting2);
 	
-	void SetCurrent(SCENENODE & scene, const std::string newsetting1, const std::string newsetting2, std::ostream & error_output);
+	void SetCurrent(SCENENODE & scene, const std::string & newsetting1, const std::string & newsetting2, std::ostream & error_output);
 	
 	void SetValueList(const std::list <std::pair<std::string,std::string> > & newvaluelist1, const std::list <std::pair<std::string,std::string> > & newvaluelist2);
 	

@@ -46,7 +46,7 @@ public:
 	void Start(std::list <std::string> & args);
 
 private:
-	float TickPeriod() const {return framerate;}
+	float TickPeriod() const {return timestep;}
 	void MainLoop();
 	bool ParseArguments(std::list <std::string> & args);
 	void InitCoreSubsystems();
@@ -104,7 +104,7 @@ private:
 	unsigned int displayframe; ///< display frame counter
 	double clocktime; ///< elapsed wall clock time
 	double target_time;
-	const float framerate;
+	const float timestep; ///< simulation time step
 
 	PATHMANAGER pathmanager;
 	TEXTUREMANAGER textures;

@@ -350,7 +350,7 @@ void GUI::ActivatePage(
 bool GUI::LoadOptions(
 	const std::string & optionfile,
 	const std::map<std::string, std::list <std::pair <std::string, std::string> > > & valuelists,
-	const std::map<std::string, std::string> languagemap,
+	const std::map<std::string, std::string> & languagemap,
 	std::ostream & error_output)
 {
 	CONFIG opt;

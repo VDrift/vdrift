@@ -31,7 +31,21 @@ class CARBRAKE
 		
 	public:
 		//default constructor makes an S2000-like car
-		CARBRAKE() : friction(0.73),max_pressure(4e6),radius(0.14),area(0.015),threshold(2e-4),brake_factor(0),locked(false),lasttorque(0) {}
+		CARBRAKE() : 
+			friction(0.73),
+			max_pressure(4e6),
+			radius(0.14),
+			area(0.015),
+			bias(0),
+			threshold(2e-4),
+			handbrake(0),
+			brake_factor(0),
+			handbrake_factor(0),
+			locked(false),
+			lasttorque(0)
+		{
+			// ctor
+		}
 
 		void DebugPrint(std::ostream & out) const
 		{

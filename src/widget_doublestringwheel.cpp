@@ -126,7 +126,7 @@ void WIDGET_DOUBLESTRINGWHEEL::SetupDrawable(
 	button_right.SetupDrawable(scene, right_up, right_down, right_up, font, "", brx, centery, scalex, scaley, 1, 1, 1);
 }
 
-void WIDGET_DOUBLESTRINGWHEEL::SetCurrent(SCENENODE & scene, const std::string newsetting1, const std::string newsetting2)
+void WIDGET_DOUBLESTRINGWHEEL::SetCurrent(SCENENODE & scene, const std::string & newsetting1, const std::string & newsetting2)
 {
 	current1 = values1.end();
 	current2 = values2.end();
@@ -162,7 +162,7 @@ void WIDGET_DOUBLESTRINGWHEEL::SetCurrent(SCENENODE & scene, const std::string n
 	label.ReviseDrawable(scene, current1->second+","+current2->second);
 }
 
-void WIDGET_DOUBLESTRINGWHEEL::SetCurrent(SCENENODE & scene, const std::string newsetting1, const std::string newsetting2, std::ostream & error_output)
+void WIDGET_DOUBLESTRINGWHEEL::SetCurrent(SCENENODE & scene, const std::string & newsetting1, const std::string & newsetting2, std::ostream & error_output)
 {
 	current1 = values1.end();
 	current2 = values2.end();
