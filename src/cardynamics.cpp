@@ -1197,6 +1197,7 @@ T CARDYNAMICS::UpdateSuspension(int i, T dt)
 	if (cosn < 0) return 0;	// negative normal
 	if (cosn > 1) cosn = 1; // make sure cosn <= 1
 	
+	T velocity = wheel_velocity[i].dot(upright);
 	T normal_mass = 1 / body.GetInvEffectiveMass(normal, offset);
 	T normal_velocity = wheel_velocity[i].dot(normal);
 	T normal_force_limit = -normal_velocity * normal_mass / dt;
@@ -1215,7 +1216,7 @@ T CARDYNAMICS::UpdateSuspension(int i, T dt)
 		displacement += bumpoffset;
 	}
 	
-	suspension[i]->Update(normal_force_limit * cosn, normal_velocity * cosn, displacement);
+	suspension[i]->Update(normal_force_limit * cosn, velocity, displacement);
 	
 	int otheri = i;
 	if ( i == 0 || i == 2 ) otheri++;
@@ -1344,6 +1345,7 @@ void CARDYNAMICS::UpdateBody(
 	body.ApplyTorque(ext_torque);
 
 	// update suspension/wheels
+	
 	for(int i = 0; i < WHEEL_POSITION_SIZE; i++)
 	{
 		T force = UpdateSuspension(i, dt);
@@ -1351,7 +1353,7 @@ void CARDYNAMICS::UpdateBody(
 	}
 
 	body.Integrate2(dt);
-
+	
 	UpdateWheelVelocity();
 	UpdateWheelTransform();
 	InterpolateWheelContacts();
