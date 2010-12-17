@@ -1215,7 +1215,7 @@ T CARDYNAMICS::UpdateSuspension(int i, T dt)
 		displacement += bumpoffset;
 	}
 	
-	suspension[i]->Update(normal_force_limit * cosn, normal_velocity * cosn, displacement * cosn);
+	suspension[i]->Update(normal_force_limit * cosn, normal_velocity * cosn, displacement);
 	
 	int otheri = i;
 	if ( i == 0 || i == 2 ) otheri++;
