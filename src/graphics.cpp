@@ -203,7 +203,7 @@ void GRAPHICS_SDLGL::Init(const std::string & shaderpath, const std::string & wi
 		info_output << "Your video card doesn't support 16-bit floats.  Disabling shaders." << endl;
 		DisableShaders(shaderpath, error_output);
 	}
-	else if (!GLEW_ARB_shader_texture_lod) // texture2DLod in logluminance shader
+	else if (!GLEW_ARB_shader_texture_lod && !GLEW_VERSION_2_1) // texture2DLod in logluminance shader
 	{
 		info_output << "Your video card doesn't texture2DLod.  Disabling shaders." << endl;
 		DisableShaders(shaderpath, error_output);
