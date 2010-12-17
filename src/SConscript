@@ -330,6 +330,16 @@ if not vdrift_install: vdrift_install = vdrift
 install = env.Install(Dir(env.subst("$destdir$prefix/$bindir")), vdrift_install)
 env.Alias("install", install)
 
+#---------#
+# Testing #
+#---------#
+if 'test' in COMMAND_LINE_TARGETS:
+    src.remove("main.cpp")
+    src += ['unittest.cpp']
+
+unit_tests = local_env.Program(target="%svdrift-test" % appdir, source=src)
+env.Alias("test", unit_tests)
+
 #---------------#
 # Python Export #
 #---------------#
