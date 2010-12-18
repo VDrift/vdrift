@@ -1548,9 +1548,9 @@ T CARDYNAMICS::CalculateDriveshaftSpeed()
 	}
 	else if (drive == AWD)
 	{
-		T front_speed = differential_front.GetDriveshaftSpeed ( left_front_wheel_speed, right_front_wheel_speed );
-		T rear_speed = differential_rear.GetDriveshaftSpeed ( left_rear_wheel_speed, right_rear_wheel_speed );
-		driveshaft_speed = differential_center.GetDriveshaftSpeed ( front_speed, rear_speed );
+		T front_speed = differential_front.CalculateDriveshaftSpeed ( left_front_wheel_speed, right_front_wheel_speed );
+		T rear_speed = differential_rear.CalculateDriveshaftSpeed ( left_rear_wheel_speed, right_rear_wheel_speed );
+		driveshaft_speed = differential_center.CalculateDriveshaftSpeed ( front_speed, rear_speed );
 	}
 
 	return driveshaft_speed;
