@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+#include <iterator> // back_inserter
 
 using std::vector;
 using std::string;

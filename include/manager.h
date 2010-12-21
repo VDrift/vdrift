@@ -4,8 +4,13 @@
 #include <map>
 #include <string>
 #include <iostream>
-#include <tr1/memory>
 #include <cassert>
+
+#ifdef _MSC_VER
+#include <memory>
+#else
+#include <tr1/memory>
+#endif
 
 template <class T>
 class MANAGER

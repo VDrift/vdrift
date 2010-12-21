@@ -4,7 +4,11 @@
 #include "matrix4.h"
 #include "mathvector.h"
 
+#ifdef _MSC_VER
+#include <memory>
+#else
 #include <tr1/memory>
+#endif
 
 class TEXTURE;
 class VERTEXARRAY;
