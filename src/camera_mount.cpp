@@ -6,7 +6,7 @@ CAMERA_MOUNT::CAMERA_MOUNT(const std::string & name) :
 	stiffness(0.0),
 	offset_effect_strength(1.0)
 {
-
+	rotation.LoadIdentity();
 }
 
 void CAMERA_MOUNT::Reset(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newquat)
@@ -24,40 +24,36 @@ void CAMERA_MOUNT::Reset(const MATHVECTOR <float, 3> & newpos, const QUATERNION 
 	anchor = pos + newpos;
 	
 	body.SetOrientation(newquat);
+	
+	UpdatePosition();
 }
 
-void CAMERA_MOUNT::Update(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newdir, const MATHVECTOR <float, 3> & accel, float dt)
+void CAMERA_MOUNT::Update(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newdir, float dt)
 {
 	MATHVECTOR <float, 3> pos = offset;
 	newdir.RotateVector(pos);
 	pos = pos + newpos;
+	
 	QUATERNION<float> dir = newdir * rotation;
-	
 	MATHVECTOR <float, 3> vel = pos - anchor;
-	
 	anchor = pos;
 	
 	effect = (vel.Magnitude()-.02)/0.04;
-	if (effect < 0)
-		effect = 0;
-	if (effect > 1)
-		effect = 1;
+	if (effect < 0) effect = 0;
+	else if (effect > 1) effect = 1;
 	//std::cout << vel.Magnitude() << std::endl;
 	
 	float bumpdiff = randgen.Get();
 	float power = pow(bumpdiff, 32);
-	if (power < 0)
-		power = 0;
-	assert(power <= 1.0f);
-	if (power > 0.2)
-		power = 0.2;
+	if (power < 0) power = 0;
+	else if (power > 0.2) power = 0.2;
 	float veleffect = std::min(pow(vel.Magnitude()*(2.0-stiffness),3.0),1.0);
 	float bumpimpulse = power*130.0*veleffect;
 	
 	body.Integrate1(dt);
 
-	MATHVECTOR <float, 3> accellocal = -accel;
-	(-dir).RotateVector(accellocal);
+	MATHVECTOR <float, 3> accellocal;// = -accel;
+	//(-dir).RotateVector(accellocal);
 
 	float k = 800.0+stiffness*800.0*4.0;
 	float c = 2.0*std::sqrt(k*body.GetMass())*0.35;
@@ -75,9 +71,11 @@ void CAMERA_MOUNT::Update(const MATHVECTOR <float, 3> & newpos, const QUATERNION
 	body.Integrate2(dt);
 	
 	body.SetOrientation(dir);
+	
+	UpdatePosition();
 }
 
-MATHVECTOR <float, 3> CAMERA_MOUNT::GetPosition() const
+void CAMERA_MOUNT::UpdatePosition()
 {
 	MATHVECTOR <float, 3> modbody = body.GetPosition();
 	body.GetOrientation().RotateVector(modbody);
@@ -85,18 +83,10 @@ MATHVECTOR <float, 3> CAMERA_MOUNT::GetPosition() const
 	maxallowed = maxallowed * 1.0/(stiffness+1.0);
 	for (int i = 0; i < 3; i++)
 	{
-		if (modbody[i] > maxallowed[i])
-			modbody[i] = maxallowed[i];
-		if (modbody[i] < -maxallowed[i])
-			modbody[i] = -maxallowed[i];
+		if (modbody[i] > maxallowed[i]) modbody[i] = maxallowed[i];
+		if (modbody[i] < -maxallowed[i]) modbody[i] = -maxallowed[i];
 	}
 	modbody[1] *= 0.5;
-
-	return anchor+(modbody*effect)*offset_effect_strength;
+	
+	position = anchor + (modbody * effect) * offset_effect_strength;	
 }
-
-QUATERNION <float> CAMERA_MOUNT::GetOrientation() const
-{
-	return body.GetOrientation();
-}
-

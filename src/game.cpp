@@ -50,7 +50,7 @@ GAME::GAME(std::ostream & info_out, std::ostream & error_out) :
 	displayframe(0),
 	clocktime(0),
 	target_time(0),
-	timestep(1/60.0),
+	timestep(1/90.0),
 	fps_track(10, 0),
 	fps_position(0),
 	fps_min(0),
@@ -65,6 +65,7 @@ GAME::GAME(std::ostream & info_out, std::ostream & error_out) :
 	debugmode(false),
 	profilingmode(false),
 	renderconfigfile("render.conf.deferred"),
+	collision(timestep),
 	track(info_out, error_out),
 	replay(timestep),
 	http("/tmp")

@@ -1,84 +1,80 @@
 #ifndef _CARSUSPENSION_H
 #define _CARSUSPENSION_H
 
-#include "mathvector.h"
-#include "quaternion.h"
+#include "LinearMath/btVector3.h"
+#include "LinearMath/btQuaternion.h"
 #include "linearinterp.h"
 #include "joeserialize.h"
 #include "macros.h"
-#include "config.h"
 #include <iostream>
 
-template <typename T>
+class CONFIG;
+
 struct CARSUSPENSIONINFO
 {
 	// coilover(const)
-	T spring_constant; ///< the suspension spring constant
-	T anti_roll; ///< the spring constant for the anti-roll bar
-	T bounce; ///< suspension compression damping
-	T rebound; ///< suspension decompression damping
-	T travel; ///< how far the suspension can travel from the zero-g fully extended position around the hinge arc before wheel travel is stopped
-	LINEARINTERP <T> damper_factors;
-	LINEARINTERP <T> spring_factors;
+	btScalar spring_constant; ///< the suspension spring constant
+	btScalar anti_roll; ///< the spring constant for the anti-roll bar
+	btScalar bounce; ///< suspension compression damping
+	btScalar rebound; ///< suspension decompression damping
+	btScalar travel; ///< how far the suspension can travel from the zero-g fully extended position around the hinge arc before wheel travel is stopped
+	LINEARINTERP<btScalar> damper_factors;
+	LINEARINTERP<btScalar> spring_factors;
 
 	// suspension geometry(const)
-	MATHVECTOR <T, 3> hinge; ///< the point that the wheels are rotated around as the suspension compresses
-	MATHVECTOR <T, 3> extended_position; ///< the position of the wheel when the suspension is fully extended (zero g)
-	T max_steering_angle; ///< maximum steering angle in degrees
-	T ackermann; ///< /// for ideal ackemann steering_toe = atan(0.5 * steering_axis_length / axes_distance)
-	T camber; ///< camber angle in degrees. sign convention depends on the side
-	T caster; ///< caster angle in degrees. sign convention depends on the side
-	T toe; ///< toe angle in degrees. sign convention depends on the side
+	btVector3 extended_position; ///< the position of the wheel when the suspension is fully extended (zero g)
+	btScalar max_steering_angle; ///< maximum steering angle in degrees
+	btScalar ackermann; ///< /// for ideal ackemann steering_toe = atan(0.5 * steering_axis_length / axes_distance)
+	btScalar camber; ///< camber angle in degrees. sign convention depends on the side
+	btScalar caster; ///< caster angle in degrees. sign convention depends on the side
+	btScalar toe; ///< toe angle in degrees. sign convention depends on the side
 
 	CARSUSPENSIONINFO(); ///< default constructor makes an S2000-like car
-
-	void SetDamperFactorPoints(std::vector <std::pair <T, T> > & curve);
-
-	void SetSpringFactorPoints(std::vector <std::pair <T, T> > & curve);
 };
 
-template <typename T>
 class CARSUSPENSION
 {
 public:
 	CARSUSPENSION();
+	
+	virtual ~CARSUSPENSION() {}
 
-	const T & GetAntiRoll() const	{return info.anti_roll;}
+	const btScalar & GetAntiRoll() const {return info.anti_roll;}
 
-	const T & GetMaxSteeringAngle() const {return info.max_steering_angle;}
+	const btScalar & GetMaxSteeringAngle() const {return info.max_steering_angle;}
 
 	/// wheel orientation relative to car
-	const QUATERNION <T> & GetWheelOrientation() const {return orientation;}
+	const btQuaternion & GetWheelOrientation() const {return orientation;}
 
 	/// wheel position relative to car
-	const MATHVECTOR <T, 3> & GetWheelPosition() const {return position;}
+	const btVector3 & GetWheelPosition() const {return position;}
 
 	/// displacement: fraction of suspension travel
-	virtual MATHVECTOR <T, 3> GetWheelPosition(T displacement) = 0;
+	virtual btVector3 GetWheelPosition(btScalar displacement) = 0;
 
 	/// force acting onto wheel
-	const T & GetWheelForce() const {return wheel_force;}
+	const btScalar & GetWheelForce() const {return wheel_force;}
 
 	/// suspension force acting onto car body
-	const T & GetForce() const {return force;}
+	const btScalar & GetForce() const {return force;}
 
 	/// relative wheel velocity
-	const T & GetVelocity() const	{return wheel_velocity;}
+	const btScalar & GetVelocity() const {return wheel_velocity;}
 
 	/// wheel overtravel
-	const T & GetOvertravel() const	{return overtravel;}
+	const btScalar & GetOvertravel() const {return overtravel;}
 
 	/// wheel displacement
-	const T & GetDisplacement() const {return displacement;}
+	const btScalar & GetDisplacement() const {return displacement;}
 
 	/// displacement fraction: 0.0 fully extended, 1.0 fully compressed
-	T GetDisplacementFraction() const {return displacement / info.travel;}
+	btScalar GetDisplacementFraction() const {return displacement / info.travel;}
 
 	/// steering: -1.0 is maximum right lock and 1.0 is maximum left lock
-	virtual void SetSteering(const T & value);
+	virtual void SetSteering(const btScalar & value);
 
 	/// velocity, displacement along suspension vector
-	void Update(T force_limit, T velocity, T displacement);
+	void Update(btScalar force_limit, btScalar velocity, btScalar displacement);
 
 	void DebugPrint(std::ostream & out) const;
 
@@ -90,31 +86,31 @@ public:
 	}
 
 	static bool LoadSuspension(
-		const CONFIG &,
-		const CONFIG::const_iterator &,
-		CARSUSPENSION<T> *&,
-		std::ostream &);
+		const CONFIG & cfg,
+		const std::string & wheel,
+		CARSUSPENSION *& suspension,
+		std::ostream & error);
 
 	friend class joeserialize::Serializer;
 
 protected:
-	CARSUSPENSIONINFO <T> info;
+	CARSUSPENSIONINFO info;
 	
 	// suspension
-	QUATERNION <T> orientation;
-	MATHVECTOR <T, 3> position;
-	T steering_angle;
-	T spring_force;
-	T damp_force;
-	T force;
+	btQuaternion orientation;
+	btVector3 position;
+	btScalar steering_angle;
+	btScalar spring_force;
+	btScalar damp_force;
+	btScalar force;
 
 	// wheel
-	T overtravel;
-	T displacement;
-	T wheel_velocity;
-	T wheel_force;
+	btScalar overtravel;
+	btScalar displacement;
+	btScalar wheel_velocity;
+	btScalar wheel_force;
 	
-	void Init(const CARSUSPENSIONINFO <T> & info);
+	void Init(const CARSUSPENSIONINFO & info);
 };
 
 #endif

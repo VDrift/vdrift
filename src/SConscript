@@ -21,7 +21,6 @@ src = Split("""aabb.cpp
 		aabb_space_partitioning.cpp
 		ai.cpp
 		bezier.cpp
-		camera.cpp
 		camera_chase.cpp
 		camera_fixed.cpp
 		camera_free.cpp

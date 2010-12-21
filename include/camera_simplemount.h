@@ -10,33 +10,22 @@ class CAMERA_SIMPLEMOUNT : public CAMERA
 public:
 	CAMERA_SIMPLEMOUNT(const std::string & name);
 	
-	virtual MATHVECTOR <float, 3> GetPosition() const
-	{
-		return position;
-	}
+	const MATHVECTOR <float, 3> & GetPosition() const {return position;}
 	
-	virtual QUATERNION <float> GetOrientation() const
-	{
-		return orientation;
-	}
+	const QUATERNION <float> & GetOrientation() const {return rotation;}
 	
-	virtual void Reset(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newquat); 
+	void Reset(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newquat); 
 	
-	virtual void Update(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newdir, const MATHVECTOR <float, 3> & accel, float dt);
+	void Update(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newdir, float dt);
 	
-	MATHVECTOR <float, 3> GetOffset() const
-	{
-		return offset_final;
-	}
+	MATHVECTOR <float, 3> GetOffset() const {return offset_final;}
 	
-	void SetStiffness(float value)
-	{
-		stiffness = value;
-	}
+	void SetStiffness(float value) {stiffness = value;}
 	
 private:
 	MATHVECTOR <float, 3> position;
-	QUATERNION <float> orientation;
+	QUATERNION <float> rotation;
+	
 
 	MATHVECTOR <float, 3> offset_randomwalk;
 	MATHVECTOR <float, 3> offset_filtered;

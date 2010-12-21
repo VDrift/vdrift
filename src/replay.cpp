@@ -16,6 +16,15 @@ using std::stringstream;
 using std::ifstream;
 using std::ofstream;
 
+REPLAY::REPLAY(float framerate) : 
+	version_info("VDRIFTREPLAYV12", CARINPUT::GAME_ONLY_INPUTS_START_HERE, framerate),
+	frame(0),
+	replaymode(IDLE),
+	inputbuffer(CARINPUT::GAME_ONLY_INPUTS_START_HERE, 0)
+{
+	// ctor
+}
+
 void REPLAY::Save(std::ostream & outstream)
 {
 	joeserialize::BinaryOutputSerializer serialize_output(outstream);
@@ -42,8 +51,7 @@ bool REPLAY::Load(std::istream & instream)
 {
 	//peek to ensure we're not at the EOF
 	instream.peek();
-	if (instream.eof())
-		return false;
+	if (instream.eof()) return false;
 	
 	std::vector <INPUTFRAME> newinputframes;
 	std::vector <STATEFRAME> newstateframes;
@@ -75,7 +83,11 @@ bool REPLAY::LoadHeader(std::istream & instream, std::ostream & error_output)
 	}
 	
 	joeserialize::BinaryInputSerializer serialize_input(instream);
-	Serialize(serialize_input);
+	if (!Serialize(serialize_input))
+	{
+		error_output << "Errro loading replay header " << std::endl;
+		return false;
+	}
 	
 	return true;
 }
@@ -90,7 +102,13 @@ void REPLAY::GetReadyToRecord()
 	inputbuffer.resize(CARINPUT::GAME_ONLY_INPUTS_START_HERE, 0);
 }
 
-void REPLAY::StartRecording(const std::string & newcartype, const std::string & newcarpaint, float r, float g, float b, const std::string & carfilename, const std::string & trackname, ostream & error_log)
+void REPLAY::StartRecording(
+	const std::string & newcartype,
+	const std::string & newcarpaint,
+	float r, float g, float b,
+	const std::string & carfilename,
+	const std::string & trackname,
+	ostream & error_log)
 {
 	track = trackname;
 	cartype = newcartype;
@@ -133,8 +151,7 @@ bool REPLAY::StartPlaying(const std::string & replayfilename, std::ostream & err
 	}
 	
 	//load the header info from the file
-	if (!LoadHeader(replaystream, error_output))
-		return false;
+	if (!LoadHeader(replaystream, error_output)) return false;
 	
 	//load all of the input/state frame chunks from the file until we hit the EOF
 	while (Load(replaystream))
@@ -269,6 +286,20 @@ void REPLAY::ProcessPlayStateFrame(const STATEFRAME & frame, CAR & car)
 	joeserialize::BinaryInputSerializer serialize_input(statestream);
 	car.Serialize(serialize_input);
 	//cout << "Played state frame" << endl;
+}
+
+bool REPLAY::Serialize(joeserialize::Serializer & s)
+{
+	_SERIALIZE_(s, track);
+	_SERIALIZE_(s, cartype);
+	_SERIALIZE_(s, carpaint);
+	_SERIALIZE_(s, carfile);
+	_SERIALIZE_(s, carcolor_r);
+	_SERIALIZE_(s, carcolor_g);
+	_SERIALIZE_(s, carcolor_b);
+	//_SERIALIZE_(s, inputframes);
+	//_SERIALIZE_(s, stateframes);
+	return true;
 }
 
 QT_TEST(replay_test)

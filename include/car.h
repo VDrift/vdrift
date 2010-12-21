@@ -2,6 +2,7 @@
 #define _CAR_H
 
 #include "cardynamics.h"
+#include "tobullet.h"
 #include "scenenode.h"
 #include "model.h"
 #include "soundsource.h"
@@ -75,11 +76,10 @@ public:
 	
 	void GetEngineSoundList(std::list <SOUNDSOURCE *> & outputlist);
 
+	// interpolated
 	const MATHVECTOR <float, 3> GetWheelPosition(const WHEEL_POSITION wpos) const
 	{
-		MATHVECTOR <float, 3> v;
-		v = dynamics.GetWheelPosition(wpos);
-		return v;
+		return ToMathVector<float>(dynamics.GetWheelPosition(wpos));
 	}
 
 	float GetTireRadius(const WHEEL_POSITION wpos) const
@@ -193,7 +193,7 @@ public:
 	
 	MATHVECTOR <float, 3> GetTotalAero() const
 	{
-		return dynamics.GetTotalAero();
+		return ToMathVector<float>(dynamics.GetTotalAero());
 	}
 
 	float GetFeedback();
@@ -220,26 +220,23 @@ public:
 	{
 		return dynamics.GetEngine().GetStallRPM();
 	}
-
+	
+	// interpoated position
 	MATHVECTOR <float, 3> GetCenterOfMassPosition() const
 	{
-		MATHVECTOR <float,3> pos;
-		pos = dynamics.GetCenterOfMassPosition();
-		return pos;
+		return ToMathVector<float>(dynamics.GetCenterOfMassPosition());
 	}
-
+	
+	// interpolated position
 	MATHVECTOR <float, 3> GetPosition() const
 	{
-		MATHVECTOR <float,3> pos;
-		pos = dynamics.GetPosition();
-		return pos;
+		return ToMathVector<float>(dynamics.GetPosition());
 	}
-
+	
+	// interpolated orientation
 	QUATERNION <float> GetOrientation() const
 	{
-		QUATERNION <float> q;
-		q = dynamics.GetOrientation();
-		return q;
+		return ToMathQuaternion<float>(dynamics.GetOrientation());
 	}
 
 	float GetAerodynamicDownforceCoefficient() const
@@ -252,33 +249,31 @@ public:
 		return dynamics.GetAeordynamicDragCoefficient();
 	}
 
-	float GetMass() const
+	float GetInvMass() const
 	{
-		return dynamics.GetMass();
+		return dynamics.GetInvMass();
 	}
 
 	MATHVECTOR <float, 3> GetVelocity() const
 	{
-		MATHVECTOR <float, 3> vel;
-		vel = dynamics.GetVelocity();
-		return vel;
+		return ToMathVector<float>(dynamics.GetVelocity());
 	}
-	
+
 	float GetTireMaxFx(WHEEL_POSITION tire_index) const
 	{
-		return dynamics.GetTire(tire_index).GetMaximumFx(GetMass()*0.25*9.81);
+		return dynamics.GetTire(tire_index).GetMaxFx(0.25*9.81/GetInvMass());
 	}
 
 	float GetTireMaxFy(WHEEL_POSITION tire_index) const
 	{
-		return dynamics.GetTire(tire_index).GetMaximumFy(GetMass()*0.25*9.81, 0.0);
+		return dynamics.GetTire(tire_index).GetMaxFy(0.25*9.81/GetInvMass(), 0.0);
 	}
-	
+
 	float GetTireMaxMz(WHEEL_POSITION tire_index) const
 	{
-		return dynamics.GetTire(tire_index).GetMaximumMz(GetMass()*0.25*9.81, 0.0);
+		return dynamics.GetTire(tire_index).GetMaxMz(0.25*9.81/GetInvMass(), 0.0);
 	}
-	
+
 	// optimum steering angle in degrees
 	float GetOptimumSteeringAngle() const
 	{

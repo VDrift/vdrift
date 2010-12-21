@@ -456,8 +456,8 @@ void AI::calcMu(AI_Car *c, TRACK* track_p)
 		lat_friction += c->car->GetTireMaxFy(WHEEL_POSITION(i));
 	}
 
-	float long_mu = FRICTION_FACTOR_LONG * long_friction / c->car->GetMass() / GRAVITY;
-	float lat_mu = FRICTION_FACTOR_LAT * lat_friction / c->car->GetMass() / GRAVITY;
+	float long_mu = FRICTION_FACTOR_LONG * long_friction * c->car->GetInvMass() / GRAVITY;
+	float lat_mu = FRICTION_FACTOR_LAT * lat_friction * c->car->GetInvMass() / GRAVITY;
 	if (!isnan(long_mu)) c->longitude_mu = long_mu;
 	if (!isnan(lat_mu)) c->lateral_mu = lat_mu;
 }
@@ -483,7 +483,7 @@ float AI::calcSpeedLimit(AI_Car *c, const BEZIER* patch, const BEZIER * nextpatc
 	//float v1 = sqrt(friction * GRAVITY * adjusted_radius);
 
 	//take into account downforce
-	double denom = (1.0 - std::min(1.01, adjusted_radius * -(c->car->GetAerodynamicDownforceCoefficient()) * friction / c->car->GetMass()));
+	double denom = (1.0 - std::min(1.01, adjusted_radius * -(c->car->GetAerodynamicDownforceCoefficient()) * friction * c->car->GetInvMass()));
 	double real = (friction * GRAVITY * adjusted_radius) / denom;
 	double v2 = 1000.0; //some really big number
 	if (real > 0)
@@ -497,8 +497,8 @@ float AI::calcSpeedLimit(AI_Car *c, const BEZIER* patch, const BEZIER * nextpatc
 float AI::calcBrakeDist(AI_Car *ai_car, float current_speed, float allowed_speed, float friction)
 {
 	float c = friction * GRAVITY;
-	float d = (-(ai_car->car->GetAerodynamicDownforceCoefficient()) * friction + ai_car->car->GetAeordynamicDragCoefficient())
-			 / ai_car->car->GetMass();
+	float d = (-(ai_car->car->GetAerodynamicDownforceCoefficient()) * friction + 
+				ai_car->car->GetAeordynamicDragCoefficient()) * ai_car->car->GetInvMass();
 	float v1sqr = current_speed * current_speed;
 	float v2sqr = allowed_speed * allowed_speed;
 	return -log((c + v2sqr*d)/(c + v1sqr*d))/(2.0*d);

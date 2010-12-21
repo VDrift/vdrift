@@ -170,10 +170,10 @@ private:
 	REPLAYVERSIONING version_info;
 	
 	//serialized
+	std::string track;
 	std::string cartype; //car type, used for loading graphics and sound
 	std::string carpaint; //car paint id string
 	std::string carfile; //entire contents of the car file (e.g. XS.car)
-	std::string track;
 	float carcolor_r;
 	float carcolor_g;
 	float carcolor_b;
@@ -203,33 +203,37 @@ private:
 	void GetReadyToRecord();
 	
 public:
-	REPLAY(float framerate) : version_info("VDRIFTREPLAYV12", CARINPUT::GAME_ONLY_INPUTS_START_HERE, framerate),frame(0),replaymode(IDLE) {inputbuffer.resize(CARINPUT::GAME_ONLY_INPUTS_START_HERE, 0);}
+	REPLAY(float framerate);
 	
-	//playing
-	bool StartPlaying(const std::string & replayfilename, std::ostream & error_output); ///< returns true on success
+	///< returns true on success
+	bool StartPlaying(
+		const std::string & replayfilename,
+		std::ostream & error_output);
+	
 	void StopPlaying();
-	bool GetPlaying() const {return (replaymode == PLAYING);} ///< returns true if the replay system is currently playing
+	
+	///< returns true if the replay system is currently playing
+	bool GetPlaying() const {return (replaymode == PLAYING);} 
+	
 	const std::vector <float> & PlayFrame(CAR & car);
 	
-	//recording
-	void StartRecording(const std::string & newcartype, const std::string & newcarpaint, float r, float g, float b, const std::string & carfilename, const std::string & trackname, std::ostream & error_log);
-	void StopRecording(const std::string & replayfilename); ///< if replayfilename is empty, do not save the data
-	bool GetRecording() const {return (replaymode == RECORDING);} ///< returns true if the replay system is currently recording
+	void StartRecording(
+		const std::string & newcartype,
+		const std::string & newcarpaint,
+		float r, float g, float b,
+		const std::string & carfilename,
+		const std::string & trackname,
+		std::ostream & error_log);
+	
+	///< if replayfilename is empty, do not save the data
+	void StopRecording(const std::string & replayfilename);
+	
+	///< returns true if the replay system is currently recording
+	bool GetRecording() const {return (replaymode == RECORDING);}
+	
 	void RecordFrame(const std::vector <float> & inputs, CAR & car);
 	
-	bool Serialize(joeserialize::Serializer & s)
-	{
-		_SERIALIZE_(s, cartype);
-		_SERIALIZE_(s, carpaint);
-		_SERIALIZE_(s, carfile);
-		_SERIALIZE_(s, track);
-		_SERIALIZE_(s, carcolor_r);
-		_SERIALIZE_(s, carcolor_g);
-		_SERIALIZE_(s, carcolor_b);
-		//_SERIALIZE_(s, inputframes);
-		//_SERIALIZE_(s, stateframes);
-		return true;
-	}
+	bool Serialize(joeserialize::Serializer & s);
 
 	std::string GetCarType() const
 	{
@@ -257,7 +261,6 @@ public:
 		g = carcolor_g;
 		b = carcolor_b;
 	}
-	
 };
 
 #endif

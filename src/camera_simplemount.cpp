@@ -2,6 +2,7 @@
 
 CAMERA_SIMPLEMOUNT::CAMERA_SIMPLEMOUNT(const std::string & name) : CAMERA(name)
 {
+	rotation.LoadIdentity();
 	randgen.ReSeed(0);
 }
 
@@ -23,7 +24,7 @@ float CAMERA_SIMPLEMOUNT::Distribution(float input)
 	return power * sign * 8.0;
 }
 
-void CAMERA_SIMPLEMOUNT::Update(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newdir, const MATHVECTOR <float, 3> &, float dt)
+void CAMERA_SIMPLEMOUNT::Update(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newdir, float dt)
 {
 	MATHVECTOR <float, 3> vel = newpos - position;
 
@@ -58,7 +59,7 @@ void CAMERA_SIMPLEMOUNT::Update(const MATHVECTOR <float, 3> & newpos, const QUAT
 	offset_final = offset_filtered*effect;
 
 	position = newpos + offset_final;
-	orientation = orientation.QuatSlerp(newdir, dt*40.0);
+	rotation = rotation.QuatSlerp(newdir, dt*40.0);
 }
 
 void CAMERA_SIMPLEMOUNT::Reset(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newquat)
@@ -74,6 +75,6 @@ void CAMERA_SIMPLEMOUNT::Reset(const MATHVECTOR <float, 3> & newpos, const QUATE
 	}
 
 	position = newpos;
-	orientation = newquat;
+	rotation = newquat;
 	offset_randomwalk.Set(0,0,0);
 }

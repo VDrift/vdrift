@@ -1,73 +1,62 @@
 #ifndef _CARFUELTANK_H
 #define _CARFUELTANK_H
 
-#include "mathvector.h"
+#include "LinearMath/btVector3.h"
 #include "joeserialize.h"
 #include "macros.h"
 
 #include <iostream>
 
-template <typename T>
 class CARFUELTANK
 {
-	friend class joeserialize::Serializer;
-	private:
-		//constants (not actually declared as const because they can be changed after object creation)
-		T capacity;
-		T density;
-		MATHVECTOR <T, 3> position;
-		
-		//variables
-		T mass;
-		T volume;
-		
-		//for info only
-		
-		void UpdateMass()
-		{
-			mass = density * volume;
-		}
-		
-	public:
-		//default constructor makes an S2000-like car
-		CARFUELTANK() : capacity(0.0492), density(730.0), mass(730.0*0.0492), volume(0.0492) {}
+friend class joeserialize::Serializer;
+public:
+	//default constructor makes an S2000-like car
+	CARFUELTANK() :
+		capacity(0.0492),
+		density(730.0),
+		mass(730.0*0.0492),
+		volume(0.0492)
+	{
+		// ctor
+	}
 
-		void DebugPrint(std::ostream & out) const
-		{
-			out << "---Fuel Tank---" << "\n";
-			out << "Current volume: " << volume << "\n";
-			out << "Capacity: " << capacity << "\n";
-			out << "Mass: " << mass << "\n";
-		}
+	void DebugPrint(std::ostream & out) const
+	{
+		out << "---Fuel Tank---" << "\n";
+		out << "Current volume: " << volume << "\n";
+		out << "Capacity: " << capacity << "\n";
+		out << "Mass: " << mass << "\n";
+	}
 
-	void SetCapacity ( const T& value )
+	void SetCapacity(const btScalar & value)
 	{
 		capacity = value;
 	}
 
-	void SetDensity ( const T& value )
+	void SetDensity(const btScalar & value)
 	{
 		density = value;
 		UpdateMass();
 	}
 
-	void SetPosition ( const MATHVECTOR< T, 3 >& value )
+	void SetPosition(const btVector3 & value)
 	{
 		position = value;
 	}
 	
 
-	MATHVECTOR< T, 3 > GetPosition() const
+	const btVector3 & GetPosition() const
 	{
 		return position;
 	}
 
-	T GetMass() const
+	btScalar GetMass() const
 	{
 		return mass;
 	}
 
-	void SetVolume ( const T& value )
+	void SetVolume(const btScalar & value)
 	{
 		volume = value;
 		UpdateMass();
@@ -78,26 +67,44 @@ class CARFUELTANK
 		volume = capacity;
 	}
 	
-	bool Empty () const {return (volume <= 0.0);}
+	bool Empty() const
+	{
+		return (volume <= 0.0);
+	}
 	
-	T FuelPercent() const {return volume / capacity;}
+	btScalar FuelPercent() const
+	{
+		return volume / capacity;
+	}
 	
-	void Consume(T amount)
+	void Consume(btScalar amount)
 	{
 		volume -= amount;
-		if (volume < 0.0)
-		{
-			volume = 0.0;
-		}
-
+		if (volume < 0.0) volume = 0.0;
+		
 		UpdateMass();
 	}
 	
 	bool Serialize(joeserialize::Serializer & s)
 	{
-		_SERIALIZE_(s,mass);
-		_SERIALIZE_(s,volume);
+		_SERIALIZE_(s, mass);
+		_SERIALIZE_(s, volume);
 		return true;
+	}
+	
+private:
+	//constants (not actually declared as const because they can be changed after object creation)
+	btScalar capacity;
+	btScalar density;
+	btVector3 position;
+	
+	//variables
+	btScalar mass;
+	btScalar volume;
+	
+	void UpdateMass()
+	{
+		mass = density * volume;
 	}
 };
 

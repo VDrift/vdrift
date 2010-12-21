@@ -18,81 +18,87 @@
 #include "collision_contact.h"
 #include "cartelemetry.h"
 #include "BulletDynamics/Dynamics/btActionInterface.h"
+#include "LinearMath/btDefaultMotionState.h"
 
-#include <tr1/memory> // shared_ptr
+#ifdef _MSC_VER
+#include <memory>
+#else
+#include <tr1/memory>
+#endif
 
 class MODEL;
 class CONFIG;
 class COLLISION_WORLD;
+class btMultiSphereShape;
 
 class CARDYNAMICS : public btActionInterface
 {
 friend class PERFORMANCE_TESTING;
 friend class joeserialize::Serializer;
 public:
-	typedef double T;
-	
 	CARDYNAMICS();
 	
-	bool Load(const CONFIG & c, std::ostream & error_output);
-
-	void Init(
+	~CARDYNAMICS();
+	
+	bool Load(
+		const CONFIG & cfg,
+		const btVector3 & size,
+		const btVector3 & center,
+		const btVector3 & position,
+		const btQuaternion & rotation,
 		COLLISION_WORLD & world,
-		MATHVECTOR <T, 3> chassisSize,
-		MATHVECTOR <T, 3> chassisCenter,
-		MATHVECTOR <T, 3> position,
-		QUATERNION <T> orientation);
+		std::ostream & error_output);
+	
+	// bullet interface
+	void updateAction(btCollisionWorld * collisionWorld, btScalar dt);
+	void debugDraw(btIDebugDraw * debugDrawer);
 
-// bullet interface
-	virtual void updateAction(btCollisionWorld * collisionWorld, btScalar dt);
-	virtual void debugDraw(btIDebugDraw * debugDrawer);
+	// graphics interpolated
+	void Update();
+	const btVector3 & GetPosition() const;
+	const btQuaternion & GetOrientation() const;
+	btVector3 GetEnginePosition() const;
+	btVector3 GetWheelPosition(WHEEL_POSITION wp) const;
+	btVector3 GetWheelPosition(WHEEL_POSITION wp, btScalar displacement_percent) const; // for debugging
+	btQuaternion GetWheelOrientation(WHEEL_POSITION wp) const;
+	btQuaternion GetUprightOrientation(WHEEL_POSITION wp) const;
 
-// graphics interface, interpolated!
-	void Update(); // update interpolated chassis state
-	const MATHVECTOR <T, 3> & GetCenterOfMassPosition() const;
-	const MATHVECTOR <T, 3> & GetPosition() const;
-	const QUATERNION <T> & GetOrientation() const;
-	MATHVECTOR <T, 3> GetWheelPosition(WHEEL_POSITION wp) const;
-	MATHVECTOR <T, 3> GetWheelPosition(WHEEL_POSITION wp, T displacement_percent) const; // for debugging
-	QUATERNION <T> GetWheelOrientation(WHEEL_POSITION wp) const;
-	QUATERNION <T> GetUprightOrientation(WHEEL_POSITION wp) const;
-	MATHVECTOR <T, 3> GetWheelVelocity(WHEEL_POSITION wp) const;
-
-// collision world interface
+	// collision world interface
 	const COLLISION_CONTACT & GetWheelContact(WHEEL_POSITION wp) const;
 	COLLISION_CONTACT & GetWheelContact(WHEEL_POSITION wp);
 
-// chassis
-	T GetMass() const;
-	T GetSpeed() const;
-	MATHVECTOR <T, 3> GetVelocity() const;
-	MATHVECTOR <T, 3> GetEnginePosition() const;
+	// body
+	const btVector3 & GetWheelVelocity(WHEEL_POSITION wp) const;
+	const btVector3 & GetCenterOfMassPosition() const;
+	const btVector3 & GetVelocity() const;
+	btScalar GetInvMass() const;
+	btScalar GetSpeed() const;
 
-// driveline
-	// driveline input
+	// driveline control
 	void StartEngine();
 	void ShiftGear(int value);
-	void SetThrottle(T value);
-	void SetClutch(T value);
-	void SetBrake(T value);
-	void SetHandBrake(T value);
+	void SetThrottle(btScalar value);
+	void SetClutch(btScalar value);
+	void SetBrake(btScalar value);
+	void SetHandBrake(btScalar value);
 	void SetAutoClutch(bool value);
 	void SetAutoShift(bool value);
 
 	// first wheel velocity
-	T GetSpeedMPS() const;
+	btScalar GetSpeedMPS() const;
 	
 	// engine rpm
-	T GetTachoRPM() const;
+	btScalar GetTachoRPM() const;
 
 	// driveline state access
-	const CARENGINE <T> & GetEngine() const {return engine;}
-	const CARCLUTCH <T> & GetClutch() const {return clutch;}
-	const CARTRANSMISSION <T> & GetTransmission() const {return transmission;}
-	const CARBRAKE <T> & GetBrake(WHEEL_POSITION pos) const {return brake[pos];}
-	const CARWHEEL <T> & GetWheel(WHEEL_POSITION pos) const {return wheel[pos];}
+	const CARENGINE & GetEngine() const {return engine;}
+	const CARCLUTCH & GetClutch() const {return clutch;}
+	const CARTRANSMISSION & GetTransmission() const {return transmission;}
+	const CARBRAKE & GetBrake(WHEEL_POSITION pos) const {return brake[pos];}
+	const CARWHEEL & GetWheel(WHEEL_POSITION pos) const {return wheel[pos];}
+	const CARTIRE & GetTire(WHEEL_POSITION pos) const {return tire[pos];}
 
-// traction control
+	// traction control
 	void SetABS(const bool newabs);
 	bool GetABSEnabled() const;
 	bool GetABSActive() const;
@@ -100,8 +106,8 @@ public:
 	bool GetTCSEnabled() const;
 	bool GetTCSActive() const;
 
-// cardynamics
-	void SetPosition(const MATHVECTOR<T, 3> & pos);
+	// set body position
+	void SetPosition(const btVector3 & pos);
 
 	// move the car along z-axis until it is touching the ground
 	void AlignWithGround();
@@ -110,26 +116,22 @@ public:
 	void RolloverRecover();
 
 	// set the steering angle to "value", where 1.0 is maximum right lock and -1.0 is maximum left lock.
-	void SetSteering(const T value);
+	void SetSteering(const btScalar value);
 
 	// get the maximum steering angle in degrees
-	T GetMaxSteeringAngle() const;
-
-	const CARTIRE <T> & GetTire(WHEEL_POSITION pos) const {return tire[pos];}
+	btScalar GetMaxSteeringAngle() const;
 	
-	const CARSUSPENSION <T> & GetSuspension(WHEEL_POSITION pos) const {return *suspension[pos];}
-
-	MATHVECTOR <T, 3> GetTotalAero() const;
+	const CARSUSPENSION & GetSuspension(WHEEL_POSITION pos) const {return *suspension[pos];}
 	
-	T GetAerodynamicDownforceCoefficient() const;
+	btScalar GetAerodynamicDownforceCoefficient() const;
 	
-	T GetAeordynamicDragCoefficient() const;
-
-	MATHVECTOR <T, 3> GetLastBodyForce() const;
+	btScalar GetAeordynamicDragCoefficient() const;
 	
-	T GetFeedback() const;
+	btVector3 GetTotalAero() const;
+	
+	btScalar GetFeedback() const;
 
-	void UpdateTelemetry(T dt);
+	void UpdateTelemetry(btScalar dt);
 
 	// print debug info to the given ostream.  set p1, p2, etc if debug info part 1, and/or part 2, etc is desired
 	void DebugPrint(std::ostream & out, bool p1, bool p2, bool p3, bool p4) const;
@@ -137,163 +139,154 @@ public:
 	bool Serialize(joeserialize::Serializer & s);
 
 protected:
-// chassis state
-	RIGIDBODY <T> body;
-	MATHVECTOR <T, 3> center_of_mass;
+	// body state
 	COLLISION_WORLD * world;
-	btRigidBody * chassis;
+	btMultiSphereShape * shape;
+	btRigidBody * body;
+	btDefaultMotionState motionState;	// common implementation to synchronize world transforms with offsets
+	btVector3 center_of_mass;
+	btTransform transform;				// last body transform
 	
-	// interpolated chassis state
-	MATHVECTOR <T, 3> chassisPosition;
-	MATHVECTOR <T, 3> chassisCenterOfMass;
-	QUATERNION <T> chassisRotation;
+	// interpolated state
+	btVector3 bodyPosition;
+	btQuaternion bodyRotation;
 
-// driveline state
-	CARFUELTANK <T> fuel_tank;
-	CARENGINE <T> engine;
-	CARCLUTCH <T> clutch;
-	CARTRANSMISSION <T> transmission;
-	CARDIFFERENTIAL <T> differential_front;
-	CARDIFFERENTIAL <T> differential_rear;
-	CARDIFFERENTIAL <T> differential_center;
-	std::vector <CARBRAKE <T> > brake;
-	std::vector <CARWHEEL <T> > wheel;
-	std::vector <CARTIRE <T> > tire;
+	// driveline state
+	CARENGINE engine;
+	CARFUELTANK fuel_tank;
+	CARCLUTCH clutch;
+	CARTRANSMISSION transmission;
+	CARDIFFERENTIAL differential_front;
+	CARDIFFERENTIAL differential_rear;
+	CARDIFFERENTIAL differential_center;
+	btAlignedObjectArray<CARBRAKE> brake;
+	btAlignedObjectArray<CARWHEEL> wheel;
+	btAlignedObjectArray<CARTIRE> tire;
 	
 	enum { NONE = 0, FWD = 1, RWD = 2, AWD = 3 } drive;
-	T driveshaft_rpm;
-	T tacho_rpm;
+	btScalar driveshaft_rpm;
+	btScalar tacho_rpm;
 
 	bool autoclutch;
 	bool autoshift;
 	bool shifted;
 	int shift_gear;
-	T last_auto_clutch;
-	T remaining_shift_time;
+	btScalar last_auto_clutch;
+	btScalar remaining_shift_time;
 
-// traction control state
+	// traction control state
 	bool abs;
 	bool tcs;
 	std::vector <int> abs_active;
 	std::vector <int> tcs_active;
 	
-// cardynamics state
-	std::vector <MATHVECTOR <T, 3> > wheel_velocity;
-	std::vector <MATHVECTOR <T, 3> > wheel_position;
-	std::vector <QUATERNION <T> > wheel_orientation;
-	std::vector <COLLISION_CONTACT> wheel_contact;
-	std::vector <std::tr1::shared_ptr<CARSUSPENSION<T> > > suspension;
+	// suspension
+	btAlignedObjectArray<btVector3> wheel_velocity;
+	btAlignedObjectArray<btVector3> wheel_position;
+	btAlignedObjectArray<btQuaternion> wheel_orientation;
+	btAlignedObjectArray<COLLISION_CONTACT> wheel_contact;
+	std::vector<std::tr1::shared_ptr<CARSUSPENSION> > suspension;
 
-	std::vector <CARAERO <T> > aerodynamics;
-	std::list <std::pair <T, MATHVECTOR <T, 3> > > mass_particles;
-	std::list <CARTELEMETRY> telemetry;
+	btAlignedObjectArray<CARAERO> aerodynamics;
+	btAlignedObjectArray<std::pair<btScalar, btVector3> > mass_particles;
+	std::list<CARTELEMETRY> telemetry;
 	
-	T maxangle;
-	T feedback;
-	
-	//< held so external classes can extract it for things such as applying physics to camera mounts
-	MATHVECTOR <T, 3> lastbodyforce;
-	
+	btScalar maxangle;
+	btScalar feedback;
 
-// chassis, cardynamics
-	MATHVECTOR <T, 3> GetDownVector() const;
-
-	// wrappers (to be removed)
-	QUATERNION <T> Orientation() const;
-	MATHVECTOR <T, 3> Position() const;
-
-	MATHVECTOR <T, 3> LocalToWorld(const MATHVECTOR <T, 3> & local) const;
+	btVector3 GetDownVector() const;
 	
-	void ApplyForce(const MATHVECTOR <T, 3> & force);
+	btVector3 LocalToWorld(const btVector3 & local) const;
 	
-	void ApplyForce(const MATHVECTOR <T, 3> & force, const MATHVECTOR <T, 3> & offset);
-	
-	void ApplyTorque(const MATHVECTOR <T, 3> & torque);
+	btQuaternion LocalToWorld(const btQuaternion & local) const;
 
 	void UpdateWheelVelocity();
 	
 	void UpdateWheelTransform();
 
-	// apply engine torque to chassis
+	// apply engine torque to body
 	void ApplyEngineTorqueToBody();
 	
 	// add aerodynamic force / torque to force, torque
-	void AddAerodynamics(MATHVECTOR<T, 3> & force, MATHVECTOR<T, 3> & torque);
+	void AddAerodynamics(btVector3 & force, btVector3 & torque);
 
-	// update suspension, return suspension force
-	T UpdateSuspension(int i, T dt);
+	// update suspension, sets normal force
+	void UpdateSuspension(btScalar normal_force[], btScalar dt);
 
 	// apply tire friction to body
 	void UpdateWheel(
 		const int i,
-		const T dt,
-		const T normal_force,
-		const T drive_torque,
-		const QUATERNION <T> & wheel_space);
+		const btScalar dt,
+		const btScalar normal_force,
+		const btScalar drive_torque,
+		const btQuaternion & wheel_space);
 
-	// advance chassis(body, suspension, wheels) simulation by dt
+	// advance body(body, suspension, wheels) simulation by dt
 	void UpdateBody(
-		const MATHVECTOR <T, 3> & ext_force,
-		const MATHVECTOR <T, 3> & ext_torque,
-		T drive_torque[],
-		T dt);
+		const btVector3 & ext_force,
+		const btVector3 & ext_torque,
+		const btScalar drive_torque[],
+		const btScalar dt);
 
 	// cardynamics
-	void Tick(
-		MATHVECTOR<T, 3> ext_force,
-		MATHVECTOR<T, 3> ext_torque,
-		T dt);
+	void Tick(const btScalar dt);
 
 	void UpdateWheelContacts();
 
 	void InterpolateWheelContacts();
 
-	void UpdateMass();
+	void CalculateMass(
+		btVector3 & center,
+		btVector3 & inertia,
+		btScalar & mass);
 
-// driveline
 	// update engine, return wheel drive torque
-	void UpdateDriveline(T drive_torque[], T dt);
+	void UpdateDriveline(btScalar drive_torque[], btScalar dt);
 
 	// calculate wheel drive torque
-	void CalculateDriveTorque(T wheel_drive_torque[], T clutch_torque);
+	void CalculateDriveTorque(btScalar drive_torque[], btScalar clutch_torque);
 
 	// calculate driveshaft speed given wheel angular velocity
-	T CalculateDriveshaftSpeed();
+	btScalar CalculateDriveshaftSpeed();
 
 	// calculate throttle, clutch, gear
-	void UpdateTransmission(T dt);
+	void UpdateTransmission(btScalar dt);
 
 	bool WheelDriven(int i) const;
 	
-	T AutoClutch(T last_clutch, T dt) const;
+	btScalar AutoClutch(btScalar last_clutch, btScalar dt) const;
 	
-	T ShiftAutoClutch() const;
+	btScalar ShiftAutoClutch() const;
 	
-	T ShiftAutoClutchThrottle(T throttle, T dt);
+	btScalar ShiftAutoClutchThrottle(btScalar throttle, btScalar dt);
 	
 	// calculate next gear based on engine rpm
 	int NextGear() const;
 	
 	// calculate downshift point based on gear, engine rpm
-	T DownshiftRPM(int gear) const;
+	btScalar DownshiftRPM(int gear) const;
 
-// traction control
 	// do traction control system calculations and modify the throttle position if necessary
 	void DoTCS(int i);
 
 	// do anti-lock brake system calculations and modify the brake force if necessary
 	void DoABS(int i);
 
-// cardynamics initialization
-	void Init();
-
+	// cardynamics initialization
 	void GetCollisionBox(
-		const btVector3 & chassisSize,
-		const btVector3 & chassisCenter,
+		const btVector3 & bodySize,
+		const btVector3 & bodyCenter,
 		btVector3 & center,
 		btVector3 & size);
 
-	void AddMassParticle(T mass, MATHVECTOR <T, 3> pos);
+	void Init(
+		COLLISION_WORLD & world,
+		const btVector3 & bodySize,
+		const btVector3 & bodyCenter,
+		const btVector3 & position,
+		const btQuaternion & rotation);
+
+	void AddMassParticle(const btScalar mass, const btVector3 & pos);
 };
 
 #endif

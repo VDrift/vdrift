@@ -8,40 +8,34 @@ class CAMERA_CHASE : public CAMERA
 public:
 	CAMERA_CHASE(const std::string & name);
 	
-	virtual MATHVECTOR <float, 3> GetPosition() const
-	{
-		return position;
-	}
+	const MATHVECTOR <float, 3> & GetPosition() const {return position;}
 	
-	virtual QUATERNION <float> GetOrientation() const
-	{
-		return orientation;
-	}
+	const QUATERNION <float> & GetOrientation() const {return rotation;}
 	
-	virtual void Reset(const MATHVECTOR <float, 3> & newfocus, const QUATERNION <float> & focus_facing);
+	void Reset(const MATHVECTOR <float, 3> & newfocus, const QUATERNION <float> & focus_facing);
 	
-	virtual void Update(const MATHVECTOR <float, 3> & newfocus, const QUATERNION <float> & focus_facing, const MATHVECTOR <float, 3> & accel, float dt);
+	void Update(const MATHVECTOR <float, 3> & newfocus, const QUATERNION <float> & focus_facing, float dt);
 
-	void SetChaseDistance ( float value )
+	void SetChaseDistance(float value)
 	{
 		chase_distance = value;
 	}
 	
-	void SetChaseHeight ( float value )
+	void SetChaseHeight(float value)
 	{
 		chase_height = value;
 	}
 
-	void SetPositionBlending ( bool value )
+	void SetPositionBlending(bool value)
 	{
 		posblend_on = value;
 	}
 	
 private:
 	MATHVECTOR <float, 3> position;
+	QUATERNION <float> rotation;
+	
 	MATHVECTOR <float, 3> focus;
-	QUATERNION <float> orientation;
-
 	float chase_distance;
 	float chase_height;
 	bool posblend_on;

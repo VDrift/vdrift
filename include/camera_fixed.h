@@ -8,26 +8,22 @@ class CAMERA_FIXED : public CAMERA
 public:
 	CAMERA_FIXED(const std::string & name);
 	
-	virtual MATHVECTOR <float, 3> GetPosition() const
-	{
-		return position;
-	}
+	const MATHVECTOR <float, 3> & GetPosition() const {return position;}
 	
-	virtual QUATERNION <float> GetOrientation() const
-	{
-		return orientation;
-	}
+	const QUATERNION <float> & GetOrientation() const {return rotation;}
 
-	virtual void Reset(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newquat);
+	void Reset(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newquat);
 	
-	virtual void Update(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newquat, const MATHVECTOR <float, 3> & accel, float dt);
+	void Update(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newquat, float dt);
 
 	void SetOffset(float x, float y, float z);
 
 private:
 	MATHVECTOR <float, 3> position;
+	QUATERNION <float> rotation;
+	
 	MATHVECTOR <float, 3> offset;
-	QUATERNION <float> orientation;
+	
 };
 
 #endif // _CAMERA_FIXED_H

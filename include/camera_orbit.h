@@ -8,19 +8,22 @@ class CAMERA_ORBIT : public CAMERA
 public:
 	CAMERA_ORBIT(const std::string & name);
 	
-	virtual MATHVECTOR <float, 3> GetPosition() const;
+	const MATHVECTOR <float, 3> & GetPosition() const {return position;}
 	
-	virtual QUATERNION <float> GetOrientation() const;
+	const QUATERNION <float> & GetOrientation() const {return rotation;}
 
-	virtual void Reset(const MATHVECTOR <float, 3> & newfocus, const QUATERNION <float> & newquat);
+	void Reset(const MATHVECTOR <float, 3> & newfocus, const QUATERNION <float> & newquat);
 
-	virtual void Update(const MATHVECTOR <float, 3> & newfocus, const QUATERNION <float> & newquat, const MATHVECTOR <float, 3> & accel, float dt);
+	void Update(const MATHVECTOR <float, 3> & newfocus, const QUATERNION <float> & newquat, float dt);
 	
-	virtual void Rotate(float up, float left);
+	void Rotate(float up, float left);
 	
-	virtual void Move(float dx, float dy, float dz);
+	void Move(float dx, float dy, float dz);
 
 private:
+	MATHVECTOR <float, 3> position;
+	QUATERNION <float> rotation;
+	
 	MATHVECTOR <float, 3> focus;
 	float leftright_rotation;
 	float updown_rotation;

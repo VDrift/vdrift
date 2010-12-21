@@ -1,30 +1,30 @@
 #ifndef _CARCLUTCH_H
 #define _CARCLUTCH_H
 
+#include "LinearMath/btScalar.h"
 #include "joeserialize.h"
 #include "macros.h"
 
 #include <iostream>
 
-template <typename T>
 class CARCLUTCH
 {
 friend class joeserialize::Serializer;
 private:
 	//constants (not actually declared as const because they can be changed after object creation)
-	T sliding_friction; ///< torque on the clutch is found by dividing the clutch pressure by the value in the area tag and multiplying by the radius and sliding (friction) parameters
-	T radius; ///< torque on the clutch is found by dividing the clutch pressure by the value in the area tag and multiplying by the radius and sliding (friction) parameters
-	T area; ///< torque on the clutch is found by dividing the clutch pressure by the value in the area tag and multiplying by the radius and sliding (friction) parameters
-	T max_pressure; ///< maximum allowed pressure on the plates
+	btScalar sliding_friction; ///< torque on the clutch is found by dividing the clutch pressure by the value in the area tag and multiplying by the radius and sliding (friction) parameters
+	btScalar radius; ///< torque on the clutch is found by dividing the clutch pressure by the value in the area tag and multiplying by the radius and sliding (friction) parameters
+	btScalar area; ///< torque on the clutch is found by dividing the clutch pressure by the value in the area tag and multiplying by the radius and sliding (friction) parameters
+	btScalar max_pressure; ///< maximum allowed pressure on the plates
 	
 	//variables
-	T clutch_position;
+	btScalar clutch_position;
 	bool locked;
 	
 	//for info only
-	T last_torque;
-	T engine_speed;
-	T drive_speed;
+	btScalar last_torque;
+	btScalar engine_speed;
+	btScalar drive_speed;
 		
 		
 public:
@@ -51,48 +51,48 @@ public:
 		out << "Drive speed: " << drive_speed << "\n";
 	}
 
-	void SetSlidingFriction ( const T& value )
+	void SetSlidingFriction ( const btScalar& value )
 	{
 		sliding_friction = value;
 	}
 
-	void SetRadius ( const T& value )
+	void SetRadius ( const btScalar& value )
 	{
 		radius = value;
 	}
 
-	void SetArea ( const T& value )
+	void SetArea ( const btScalar& value )
 	{
 		area = value;
 	}
 
-	void SetMaxPressure ( const T& value )
+	void SetMaxPressure ( const btScalar& value )
 	{
 		max_pressure = value;
 	}
 	
 	///set the clutch engagement, where 1.0 is fully engaged
-	void SetClutch ( const T& value )
+	void SetClutch ( const btScalar& value )
 	{
 		clutch_position = value;
 	}
 	
-	T GetClutch() const
+	btScalar GetClutch() const
 	{
 		return clutch_position;
 	}
 	
 	// maximum friction torque
-	T GetTorqueMax(T n_engine_speed, T n_drive_speed)
+	btScalar GetTorqueMax(btScalar n_engine_speed, btScalar n_drive_speed)
 	{
 		engine_speed = n_engine_speed;
 		drive_speed = n_drive_speed;
-		T new_speed_diff = drive_speed - engine_speed;
+		btScalar new_speed_diff = drive_speed - engine_speed;
 		locked = true;
 		
-		T torque_capacity = sliding_friction * max_pressure * area * radius; // constant
-		T max_torque = clutch_position * torque_capacity;
-		T friction_torque = max_torque * new_speed_diff;	// highly viscous coupling (locked clutch)
+		btScalar torque_capacity = sliding_friction * max_pressure * area * radius; // constant
+		btScalar max_torque = clutch_position * torque_capacity;
+		btScalar friction_torque = max_torque * new_speed_diff;	// highly viscous coupling (locked clutch)
 		if (friction_torque > max_torque)					// slipping clutch
 		{
 			friction_torque = max_torque;
@@ -104,7 +104,7 @@ public:
 			locked = false;
 		}
 		
-		T torque = friction_torque;
+		btScalar torque = friction_torque;
 		last_torque = torque;
 		return torque;
 	}
@@ -114,15 +114,15 @@ public:
 		return locked;
 	}
 
-	T GetLastTorque() const
+	btScalar GetLastTorque() const
 	{
 		return last_torque;
 	}
 
 	bool Serialize(joeserialize::Serializer & s)
 	{
-		_SERIALIZE_(s,clutch_position);
-		_SERIALIZE_(s,locked);
+		_SERIALIZE_(s, clutch_position);
+		_SERIALIZE_(s, locked);
 		return true;
 	}
 };

@@ -1,43 +1,26 @@
 #include "carsuspension.h"
 #include "coordinatesystems.h"
+#include "tobullet.h"
+#include "config.h"
 
-template <typename T>
-CARSUSPENSIONINFO<T>::CARSUSPENSIONINFO()
+CARSUSPENSIONINFO::CARSUSPENSIONINFO() :
+	spring_constant(50000.0),
+	anti_roll(8000),
+	bounce(2500),
+	rebound(4000),
+	travel(0.2),
+	damper_factors(1),
+	spring_factors(1),
+	max_steering_angle(0),
+	ackermann(0),
+	camber(0),
+	caster(0),
+	toe(0)
 {
-	spring_constant = 50000.0;
-	bounce = 2500;
-	rebound = 4000;
-	travel = 0.2;
-	anti_roll = 8000;
-	damper_factors = 1;
-	spring_factors = 1;
-	max_steering_angle = 0;
-	ackermann = 0; 
-	camber = 0;
-	caster = 0;
-	toe = 0;
+	// ctor
 }
 
-template <typename T>
-void CARSUSPENSIONINFO<T>::SetDamperFactorPoints(std::vector <std::pair <T, T> > & curve)
-{
-	for (typename std::vector <std::pair <T, T> >::iterator i = curve.begin(); i != curve.end(); ++i)
-	{
-		damper_factors.AddPoint(i->first, i->second);
-	}
-}
-
-template <typename T>
-void CARSUSPENSIONINFO<T>::SetSpringFactorPoints(std::vector <std::pair <T, T> > & curve)
-{
-	for (typename std::vector <std::pair <T, T> >::iterator i = curve.begin(); i != curve.end(); ++i)
-	{
-		spring_factors.AddPoint(i->first, i->second);
-	}
-}
-
-template <typename T>
-CARSUSPENSION<T>::CARSUSPENSION()
+CARSUSPENSION::CARSUSPENSION()
 {
 	steering_angle = 0;
 	spring_force = 0;
@@ -50,42 +33,33 @@ CARSUSPENSION<T>::CARSUSPENSION()
 	wheel_force = 0;
 }
 
-template <typename T>
-void CARSUSPENSION<T>::Init(const CARSUSPENSIONINFO <T> & info)
+void CARSUSPENSION::Init(const CARSUSPENSIONINFO & info)
 {
 	this->info = info;
 	position = info.extended_position;
-	orientation.LoadIdentity();
+	orientation = btQuaternion::getIdentity();
 }
 
-template <typename T>
-void CARSUSPENSION<T>::SetSteering(const T & value)
+void CARSUSPENSION::SetSteering(const btScalar & value)
 {
-	T alpha = -value * info.max_steering_angle * M_PI / 180.0;
+	btScalar alpha = -value * info.max_steering_angle * M_PI / 180.0;
 	steering_angle = 0.0;
 	if(alpha != 0.0)
 	{
 		steering_angle = atan(1.0 / (1.0 / tan(alpha) - tan(info.ackermann * M_PI / 180.0)));
 	}
 	
-	QUATERNION <T> s;
-	s.Rotate(steering_angle, sin(-info.caster * M_PI / 180.0), 0, cos(-info.caster * M_PI / 180.0));
-	
-	QUATERNION <T> t;
-	t.Rotate(info.toe * M_PI / 180.0, 0, 0, 1);
-	
-	QUATERNION <T> c;
-	c.Rotate(-info.camber * M_PI / 180.0, 1, 0, 0);
-	
+	btQuaternion s(btVector3(sin(-info.caster * M_PI / 180.0), 0, cos(-info.caster * M_PI / 180.0)), steering_angle);
+	btQuaternion t(btVector3(0, 0, 1), info.toe * M_PI / 180.0);
+	btQuaternion c(btVector3(1, 0, 0), -info.camber * M_PI / 180.0);
 	orientation = c * t * s;
 }
 
-template <typename T>
-void CARSUSPENSION<T>::Update(T force_limit, T ext_velocity, T ext_displacement)
+void CARSUSPENSION::Update(btScalar force_limit, btScalar ext_velocity, btScalar ext_displacement)
 {
 	overtravel = 0;
 	displacement = displacement + ext_displacement;
-	T velocity = ext_velocity;
+	btScalar velocity = ext_velocity;
 	if (displacement > info.travel)
 	{
 		overtravel = displacement - info.travel;
@@ -97,12 +71,12 @@ void CARSUSPENSION<T>::Update(T force_limit, T ext_velocity, T ext_displacement)
 		velocity = 0;
 	}
 	
-	T spring = info.spring_constant;
-	T springfactor = info.spring_factors.Interpolate(displacement);
+	btScalar spring = info.spring_constant;
+	btScalar springfactor = info.spring_factors.Interpolate(displacement);
 	spring_force = displacement * spring * springfactor; 
 	
-	T damping = (velocity > 0) ? info.bounce : info.rebound;
-	T dampfactor = info.damper_factors.Interpolate(std::abs(velocity));
+	btScalar damping = (velocity > 0) ? info.bounce : info.rebound;
+	btScalar dampfactor = info.damper_factors.Interpolate(btFabs(velocity));
 	damp_force = -velocity * damping * dampfactor;
 	
 	force = spring_force + damp_force;
@@ -120,15 +94,15 @@ void CARSUSPENSION<T>::Update(T force_limit, T ext_velocity, T ext_displacement)
 	else if (force_limit >= 0 && force < force_limit && overtravel > 0)
 	{
 		//std::cerr << "bump: " << spring_force << " " << damp_force << " " << force_limit << std::endl;
-		force = force_limit;
+		btScalar bump = 0.0;//springfactor * overtravel; // resolving overtravel, hack
+		force = force_limit + bump;
 	}
 	
 	// update wheel position
 	position = GetWheelPosition(displacement / info.travel);
 }
 
-template <typename T>
-void CARSUSPENSION<T>::DebugPrint(std::ostream & out) const
+void CARSUSPENSION::DebugPrint(std::ostream & out) const
 {
 	out << "---Suspension---" << "\n";
 	out << "Displacement: " << displacement << "\n";
@@ -136,137 +110,131 @@ void CARSUSPENSION<T>::DebugPrint(std::ostream & out) const
 	out << "Steering angle: " << steering_angle * 180 / M_PI << "\n";
 }
 
-template <typename T>
-class BASICSUSPENSION : public CARSUSPENSION<T> 
+class BASICSUSPENSION : public CARSUSPENSION
 {
 public:
-	MATHVECTOR <T, 3> GetWheelPosition(T displacement_fraction)
-	{
-		//const
-		MATHVECTOR <T, 3> up (0, 0, 1);
-		MATHVECTOR <T, 3> relwheelext = CARSUSPENSION<T>::info.extended_position - hinge;
-		MATHVECTOR <T, 3> rotaxis = up.cross(relwheelext.Normalize());
-		T hingeradius = relwheelext.Magnitude();
-		//const
-		
-		T displacementradians = displacement_fraction * CARSUSPENSION<T>::info.travel / hingeradius;
-		QUATERNION <T> hingerotate;
-		hingerotate.Rotate(-displacementradians, rotaxis[0], rotaxis[1], rotaxis[2]);
-		MATHVECTOR <T, 3> localwheelpos = relwheelext;
-		hingerotate.RotateVector(localwheelpos);
-		return localwheelpos + hinge;
+	btVector3 GetWheelPosition(btScalar displacement_fraction)
+	{	
+		btVector3 up(0, 0, 1);
+		btVector3 hinge = hinge_arm + up * displacement_fraction * info.travel;
+		hinge = hinge.normalized() * hinge_radius;
+		return hinge_anchor + hinge;
 	}
 
-	void Init(const CARSUSPENSIONINFO<T> & info, const std::vector<T> & h)
+	void Init(const CARSUSPENSIONINFO & info, const std::vector<btScalar> & h)
 	{
-		CARSUSPENSION<T>::Init(info);
-		hinge.Set(h[0], h[1], h[2]);
+		CARSUSPENSION::Init(info);
+		hinge_anchor.setValue(h[0], h[1], h[2]);
+		hinge_arm = info.extended_position - hinge_anchor;
+		hinge_radius = hinge_arm.length();
+		//btVector3 up(0, 0, 1);
+		//hinge_axis = up.cross(relwheelext).normalized();
 	}
 
-private: 
-	MATHVECTOR <T, 3> hinge; ///< the point that the wheels are rotated around as the suspension compresses
+private:
+	btVector3 hinge_anchor; ///< the point that the wheels are rotated around as the suspension compresses
+	btVector3 hinge_arm;	///< vector from anchor towards extended position
+	btScalar hinge_radius; ///< length of the hinge arm
+	//btVector3 hinge_axis;	///< hinge rotation axis 
 };
 
-template<typename T>
-inline T angle_from_sides(T a, T h, T o)
+inline btScalar angle_from_sides(btScalar a, btScalar h, btScalar o)
 {
 	return acos((a * a + h * h - o * o) / (2 * a * h));
 }
 
-template<typename T>
-inline T side_from_angle(T theta, T a, T h)
+inline btScalar side_from_angle(btScalar theta, btScalar a, btScalar h)
 {
 	return sqrt(a * a + h * h - 2 * a * h * cos(theta));
 }
 
-template <typename T>
-class WISHBONESUSPENSION : public CARSUSPENSION<T>
+class WISHBONESUSPENSION : public CARSUSPENSION
 {
 public:
-	MATHVECTOR<T, 3> GetWheelPosition(T displacement_fraction)
+	WISHBONESUSPENSION() : mountrot(btQuaternion::getIdentity()) {}
+	
+	btVector3 GetWheelPosition(btScalar displacement_fraction)
 	{
-		MATHVECTOR <T, 3> rel_uc_uh = (hinge[UPPER_HUB] - hinge[UPPER_CHASSIS]),
+		btVector3 rel_uc_uh = (hinge[UPPER_HUB] - hinge[UPPER_CHASSIS]),
 			rel_lc_lh = (hinge[LOWER_HUB] - hinge[LOWER_CHASSIS]),
 			rel_uc_lh = (hinge[LOWER_HUB] - hinge[UPPER_CHASSIS]),
 			rel_lc_uh = (hinge[UPPER_HUB] - hinge[LOWER_CHASSIS]),
 			rel_uc_lc = (hinge[LOWER_CHASSIS] - hinge[UPPER_CHASSIS]),
 			rel_lh_uh = (hinge[UPPER_HUB] - hinge[LOWER_HUB]),
-			localwheelpos = (this->info.extended_position - hinge[LOWER_HUB]);
+			localwheelpos = (info.extended_position - hinge[LOWER_HUB]);
 		
-		T radlc = angle_from_sides(rel_lc_lh.Magnitude(), rel_uc_lc.Magnitude(), rel_uc_lh.Magnitude());
-		T lrotrad = -displacement_fraction * this->info.travel / rel_lc_lh.Magnitude();
-		T radlcd = radlc + lrotrad;
-		T d_uc_lh = side_from_angle(radlcd, rel_lc_lh.Magnitude(), rel_uc_lc.Magnitude());
-		T radlh = angle_from_sides(rel_lc_lh.Magnitude(), rel_lh_uh.Magnitude(), rel_lc_uh.Magnitude());
-		T dradlh = (angle_from_sides(rel_lc_lh.Magnitude(), d_uc_lh, rel_uc_lc.Magnitude()) +
-								angle_from_sides(d_uc_lh, rel_lh_uh.Magnitude(), rel_uc_uh.Magnitude()));
+		btScalar radlc = angle_from_sides(rel_lc_lh.length(), rel_uc_lc.length(), rel_uc_lh.length());
+		btScalar lrotrad = -displacement_fraction * info.travel / rel_lc_lh.length();
+		btScalar radlcd = radlc + lrotrad;
+		btScalar d_uc_lh = side_from_angle(radlcd, rel_lc_lh.length(), rel_uc_lc.length());
+		btScalar radlh = angle_from_sides(rel_lc_lh.length(), rel_lh_uh.length(), rel_lc_uh.length());
+		btScalar dradlh = (angle_from_sides(rel_lc_lh.length(), d_uc_lh, rel_uc_lc.length()) +
+								angle_from_sides(d_uc_lh, rel_lh_uh.length(), rel_uc_uh.length()));
 		
-		MATHVECTOR<T, 3> axiswd = -rel_lc_lh.cross(rel_lh_uh.Normalize());
+		btVector3 axiswd = -rel_lc_lh.cross(rel_lh_uh);
 
-		QUATERNION<T> hingerot;
-		mountrot.LoadIdentity();
-		hingerot.Rotate(lrotrad, axis[LOWER_CHASSIS][0], axis[LOWER_CHASSIS][1], axis[LOWER_CHASSIS][2]);
-		mountrot.Rotate(radlh - dradlh, axiswd[0], axiswd[1], axiswd[2]);
-		hingerot.RotateVector(rel_lc_lh);
-		mountrot.RotateVector(localwheelpos);
+		btQuaternion hingerot(axis[LOWER_CHASSIS], lrotrad);
+		mountrot.setRotation(axiswd, radlh - dradlh);
+		rel_lc_lh = quatRotate(hingerot, rel_lc_lh);
+		localwheelpos = quatRotate(mountrot, localwheelpos);
 
 		return hinge[LOWER_CHASSIS] + rel_lc_lh + localwheelpos;	
 	}
 
 	void Init(
-		const CARSUSPENSIONINFO<T> & info,
-		const std::vector<T> & up_ch0, const std::vector<T> & up_ch1,
-		const std::vector<T> & lo_ch0, const std::vector<T> & lo_ch1,
-		const std::vector<T> & up_hub, const std::vector<T> & lo_hub)
+		const CARSUSPENSIONINFO & info,
+		const std::vector<btScalar> & up_ch0, const std::vector<btScalar> & up_ch1,
+		const std::vector<btScalar> & lo_ch0, const std::vector<btScalar> & lo_ch1,
+		const std::vector<btScalar> & up_hub, const std::vector<btScalar> & lo_hub)
 	{
-		static MATHVECTOR<T, 3> hingev[3];
-		static T innerangle[2];
+		btVector3 hingev[3];
+		btScalar innerangle[2];
 
-		CARSUSPENSION<T>::Init(info);
+		CARSUSPENSION::Init(info);
 
-		hingev[0].Set(up_ch0[0], up_ch0[1], up_ch0[2]);
-		hingev[1].Set(up_ch1[0], up_ch1[1], up_ch1[2]);
-		hingev[2].Set(up_hub[0], up_hub[1], up_hub[2]);
+		hingev[0].setValue(up_ch0[0], up_ch0[1], up_ch0[2]);
+		hingev[1].setValue(up_ch1[0], up_ch1[1], up_ch1[2]);
+		hingev[2].setValue(up_hub[0], up_hub[1], up_hub[2]);
 
-		axis[UPPER_CHASSIS] = (hingev[1] - hingev[0]).Normalize();
+		axis[UPPER_CHASSIS] = (hingev[1] - hingev[0]).normalized();
 
 		innerangle[0] = angle_from_sides(
-								(hingev[2] - hingev[0]).Magnitude(),
-								(hingev[1] - hingev[0]).Magnitude(),
-								(hingev[2] - hingev[1]).Magnitude());
+								(hingev[2] - hingev[0]).length(),
+								(hingev[1] - hingev[0]).length(),
+								(hingev[2] - hingev[1]).length());
 
 		hinge[UPPER_CHASSIS] = hingev[0] + (axis[UPPER_CHASSIS]	* 
-				((hingev[2] - hingev[0]).Magnitude() * cos(innerangle[0])));
+				((hingev[2] - hingev[0]).length() * cos(innerangle[0])));
 
 		if (up_hub[1] < hinge[UPPER_CHASSIS][1])
 			axis[UPPER_CHASSIS] = -axis[UPPER_CHASSIS];
 
-		hingev[0].Set(lo_ch0[0], lo_ch0[1], lo_ch0[2]);
-		hingev[1].Set(lo_ch1[0], lo_ch1[1], lo_ch1[2]);
-		hingev[2].Set(lo_hub[0], lo_hub[1], lo_hub[2]);
+		hingev[0].setValue(lo_ch0[0], lo_ch0[1], lo_ch0[2]);
+		hingev[1].setValue(lo_ch1[0], lo_ch1[1], lo_ch1[2]);
+		hingev[2].setValue(lo_hub[0], lo_hub[1], lo_hub[2]);
 
-		axis[LOWER_CHASSIS] = (hingev[1] - hingev[0]).Normalize();
+		axis[LOWER_CHASSIS] = (hingev[1] - hingev[0]).normalized();
 
 		innerangle[1] = angle_from_sides(
-								(hingev[2] - hingev[0]).Magnitude(),
-								(hingev[1] - hingev[0]).Magnitude(),
-								(hingev[2] - hingev[1]).Magnitude());
+								(hingev[2] - hingev[0]).length(),
+								(hingev[1] - hingev[0]).length(),
+								(hingev[2] - hingev[1]).length());
 
 		hinge[LOWER_CHASSIS] = hingev[0] + (axis[LOWER_CHASSIS]	* 
-				((hingev[2] - hingev[0]).Magnitude() * cos(innerangle[1])));
+				((hingev[2] - hingev[0]).length() * cos(innerangle[1])));
 
 		if (lo_hub[1] < hinge[LOWER_CHASSIS][1])			
 			axis[LOWER_CHASSIS] = -axis[LOWER_CHASSIS];
 
-		hinge[UPPER_HUB].Set(up_hub[0], up_hub[1], up_hub[2]);
-		hinge[LOWER_HUB].Set(lo_hub[0], lo_hub[1], lo_hub[2]);
+		hinge[UPPER_HUB].setValue(up_hub[0], up_hub[1], up_hub[2]);
+		hinge[LOWER_HUB].setValue(lo_hub[0], lo_hub[1], lo_hub[2]);
 
 	}
 
-	void SetSteering(const T & value)
+	void SetSteering(const btScalar & value)
 	{
-		CARSUSPENSION<T>::SetSteering(value);
-		this->orientation = this->orientation * mountrot;
+		CARSUSPENSION::SetSteering(value);
+		orientation = orientation * mountrot;
 	}
 
 private:
@@ -277,61 +245,58 @@ private:
 		LOWER_HUB
 	};
 
-	MATHVECTOR<T, 3> hinge[4], axis[2];
-	QUATERNION<T> mountrot;
+	btVector3 hinge[4], axis[2];
+	btQuaternion mountrot;
 };
 
-template <typename T>
-class MACPHERSONSUSPENSION : public CARSUSPENSION<T>
+class MACPHERSONSUSPENSION : public CARSUSPENSION
 {
 public:
-	MATHVECTOR<T, 3> GetWheelPosition(T displacement_fraction)
+	btVector3 GetWheelPosition(btScalar displacement_fraction)
 	{
-		MATHVECTOR<T, 3> up (0, 0, 1);
-		MATHVECTOR<T, 3> hinge_end = strut.end - strut.hinge;
-		MATHVECTOR<T, 3> end_top = strut.top - strut.end;
-		MATHVECTOR<T, 3> hinge_top = strut.top - strut.hinge;
+		btVector3 up (0, 0, 1);
+		btVector3 hinge_end = strut.end - strut.hinge;
+		btVector3 end_top = strut.top - strut.end;
+		btVector3 hinge_top = strut.top - strut.hinge;
 
-		MATHVECTOR<T, 3> rotaxis = up.cross(hinge_end.Normalize());
-		MATHVECTOR<T, 3> localwheelpos = this->info.extended_position - strut.end;
+		btVector3 rotaxis = up.cross(hinge_end).normalized();
+		btVector3 localwheelpos = info.extended_position - strut.end;
 
-		T hingeradius = hinge_end.Magnitude();
-		T disp_rad = asin(displacement_fraction * this->info.travel / hingeradius);
+		btScalar hingeradius = hinge_end.length();
+		btScalar disp_rad = asin(displacement_fraction * info.travel / hingeradius);
 
-		QUATERNION<T> hingerotate;
-		hingerotate.Rotate(-disp_rad, rotaxis[0], rotaxis[1], rotaxis[2]);
+		btQuaternion hingerotate(rotaxis, -disp_rad);
 
-		T e_angle = angle_from_sides(end_top.Magnitude(), hinge_end.Magnitude(), hinge_top.Magnitude());
-	
-		hingerotate.RotateVector(hinge_end);
+		btScalar e_angle = angle_from_sides(end_top.length(), hinge_end.length(), hinge_top.length());
 
-		T e_angle_disp = angle_from_sides(end_top.Magnitude(), hinge_end.Magnitude(), hinge_top.Magnitude());
+		hinge_end = quatRotate(hingerotate, hinge_end);
 
-		rotaxis = up.cross(end_top.Normalize());
+		btScalar e_angle_disp = angle_from_sides(end_top.length(), hinge_end.length(), hinge_top.length());
 
-		mountrot.LoadIdentity();
-		mountrot.Rotate(e_angle_disp - e_angle, rotaxis[0], rotaxis[1], rotaxis[2]);
-		mountrot.RotateVector(localwheelpos);
+		rotaxis = up.cross(end_top).normalized();
+
+		mountrot.setRotation(rotaxis, e_angle_disp - e_angle);
+		localwheelpos = quatRotate(mountrot, localwheelpos);
 
 		return localwheelpos + strut.hinge + hinge_end;
 	}
 
 	void Init(
-		const CARSUSPENSIONINFO<T> & info,
-		const std::vector<T> & top,
-		const std::vector<T> & end,
-		const std::vector<T> & hinge)
+		const CARSUSPENSIONINFO & info,
+		const std::vector<btScalar> & top,
+		const std::vector<btScalar> & end,
+		const std::vector<btScalar> & hinge)
 	{
-		CARSUSPENSION<T>::Init(info);
-		strut.top.Set(top[0], top[1], top[2]);
-		strut.end.Set(end[0], end[1], end[2]);
-		strut.hinge.Set(hinge[0], hinge[1], hinge[2]);
+		CARSUSPENSION::Init(info);
+		strut.top.setValue(top[0], top[1], top[2]);
+		strut.end.setValue(end[0], end[1], end[2]);
+		strut.hinge.setValue(hinge[0], hinge[1], hinge[2]);
 	}
 
-	void SetSteering(const T & value)
+	void SetSteering(const btScalar & value)
 	{
-		CARSUSPENSION<T>::SetSteering(value);
-		this->orientation = this->orientation * mountrot;
+		CARSUSPENSION::SetSteering(value);
+		orientation = orientation * mountrot;
 	}
 
 private:
@@ -343,39 +308,37 @@ private:
 	};
 
 	struct {
-		MATHVECTOR<T, 3> top;
-		MATHVECTOR<T, 3> end;
-		MATHVECTOR<T, 3> hinge;
+		btVector3 top;
+		btVector3 end;
+		btVector3 hinge;
 	} strut;
 
-	QUATERNION<T> mountrot;
+	btQuaternion mountrot;
 };
 
 // 1-9 points
-template <typename T>
 static void LoadPoints(
 	const CONFIG & c,
 	const CONFIG::const_iterator & it,
 	const std::string & name,
-	std::vector <std::pair <T, T> > & points)
+	LINEARINTERP<btScalar> & points)
 {
 	int i = 1;
 	std::stringstream s;
 	s << std::setw(1) << i;
-	std::vector<T> point(2);
+	std::vector<btScalar> point(2);
 	while(c.GetParam(it, name+s.str(), point) && i < 10)
 	{
 		s.clear();
 		s << std::setw(1) << ++i;
-		points.push_back(std::pair<T, T>(point[0], point[1]));
+		points.AddPoint(point[0], point[1]);
 	}
 }
 
-template <typename T>
 static bool LoadCoilover(
 	const CONFIG & c,
 	const CONFIG::const_iterator & iwheel,
-	CARSUSPENSIONINFO <T> & info,
+	CARSUSPENSIONINFO & info,
 	std::ostream & error_output)
 {
 	std::string coilovername;
@@ -388,28 +351,24 @@ static bool LoadCoilover(
 	if (!c.GetParam(it, "rebound", info.rebound, error_output)) return false;
 	if (!c.GetParam(it, "travel", info.travel, error_output)) return false;
 	if (!c.GetParam(it, "anti-roll", info.anti_roll, error_output)) return false;
-	
-	std::vector<std::pair <T, T> > damper_factor_points;
-	std::vector<std::pair <T, T> > spring_factor_points;
-	LoadPoints(c, it, "damper-factor-", damper_factor_points);
-	LoadPoints(c, it, "spring-factor-", spring_factor_points);
-	info.SetDamperFactorPoints(damper_factor_points);
-	info.SetSpringFactorPoints(spring_factor_points);
+	LoadPoints(c, it, "damper-factor-", info.damper_factors);
+	LoadPoints(c, it, "spring-factor-", info.spring_factors);
 	
 	return true;
 }
 
-template <typename T>
-bool CARSUSPENSION<T>::LoadSuspension(
+bool CARSUSPENSION::LoadSuspension(
 	const CONFIG & c,
-	const CONFIG::const_iterator & iwheel,
-	CARSUSPENSION<T> *& suspension,
+	const std::string & wheel,
+	CARSUSPENSION *& suspension,
 	std::ostream & error_output)
 {
-	CARSUSPENSIONINFO<T> info;
-	std::vector<T> p(3);
+	CARSUSPENSIONINFO info;
+	std::vector<btScalar> p(3);
 	std::string s_type = "basic";
-
+	
+	CONFIG::const_iterator iwheel;
+	if (!c.GetSection(wheel, iwheel ,error_output)) return false;
 	if (!LoadCoilover(c, iwheel, info, error_output)) return false;
 	if (!c.GetParam(iwheel, "position", p, error_output)) return false;
 	if (!c.GetParam(iwheel, "camber", info.camber, error_output)) return false;
@@ -419,17 +378,17 @@ bool CARSUSPENSION<T>::LoadSuspension(
 	c.GetParam(iwheel, "ackermann", info.ackermann);
 
 	COORDINATESYSTEMS::ConvertV2toV1(p[0], p[1], p[2]);
-	info.extended_position.Set(p[0], p[1], p[2]);
+	info.extended_position.setValue(p[0], p[1], p[2]);
 
-	if(c.GetParam(iwheel, "macpherson-strut", s_type))
+	if (c.GetParam(iwheel, "macpherson-strut", s_type))
 	{
-		std::vector<T> strut_top(3), strut_end(3), hinge(3);
+		std::vector<btScalar> strut_top(3), strut_end(3), hinge(3);
 		CONFIG::const_iterator iwb;
 
 		if (!c.GetSection(s_type, iwb, error_output)) return false;
-		if(!c.GetParam(iwb, "hinge", hinge, error_output)) return false;
-		if(!c.GetParam(iwb, "strut-top", strut_top, error_output)) return false;
-		if(!c.GetParam(iwb, "strut-end", strut_end))
+		if (!c.GetParam(iwb, "hinge", hinge, error_output)) return false;
+		if (!c.GetParam(iwb, "strut-top", strut_top, error_output)) return false;
+		if (!c.GetParam(iwb, "strut-end", strut_end))
 		{
 			strut_end = p;
 		}
@@ -440,14 +399,14 @@ bool CARSUSPENSION<T>::LoadSuspension(
 
 		COORDINATESYSTEMS::ConvertV2toV1(hinge[0], hinge[1], hinge[2]);
 		COORDINATESYSTEMS::ConvertV2toV1(strut_top[0], strut_top[1], strut_top[2]);
-
-		suspension = new MACPHERSONSUSPENSION<T>();
-		dynamic_cast<MACPHERSONSUSPENSION<T>* >(suspension)->Init(
-			info, strut_top, strut_end, hinge);
+		
+		MACPHERSONSUSPENSION * mps = new MACPHERSONSUSPENSION();
+		mps->Init(info, strut_top, strut_end, hinge);
+		suspension = mps;
 	}
-	else if (c.GetParam(iwheel, "double-wishbone",  s_type))
+/*	else if (c.GetParam(iwheel, "double-wishbone",  s_type))
 	{
-		std::vector<T> up_ch0(3), up_ch1(3), lo_ch0(3), lo_ch1(3), up_hub(3), lo_hub(3);
+		std::vector<btScalar> up_ch0(3), up_ch1(3), lo_ch0(3), lo_ch1(3), up_hub(3), lo_hub(3);
 		CONFIG::const_iterator iwb;
 
 		if (!c.GetSection(s_type, iwb, error_output)) return false;
@@ -465,32 +424,26 @@ bool CARSUSPENSION<T>::LoadSuspension(
 		COORDINATESYSTEMS::ConvertV2toV1(up_hub[0], up_hub[1], up_hub[2]);
 		COORDINATESYSTEMS::ConvertV2toV1(lo_hub[0], lo_hub[1], lo_hub[2]);
 		
-		suspension = new WISHBONESUSPENSION<T>();
-		dynamic_cast<WISHBONESUSPENSION<T> *>(suspension)->Init(
-			info, up_ch0, up_ch1, lo_ch0, lo_ch1, up_hub, lo_hub);
-	}
+		WISHBONESUSPENSION * wbs = new WISHBONESUSPENSION();
+		wbs->Init(info, up_ch0, up_ch1, lo_ch0, lo_ch1, up_hub, lo_hub);
+		suspension = wbs;
+	}*/
 	else
 	{
 		CONFIG::const_iterator iarm;
-		std::vector<T> h(3);
-
-		if (!((c.GetParam(iwheel, "arm", s_type, error_output)
-					 && c.GetSection(s_type, iarm, error_output)
-					 && c.GetParam(iarm, "hinge", h, error_output)) ||
-					c.GetParam(iwheel, "hinge", h, error_output))) // Fallback!
+		std::vector<btScalar> h(3, 0);
+		if (!((c.GetParam(iwheel, "arm", s_type, error_output) && 
+				c.GetSection(s_type, iarm, error_output) &&
+				c.GetParam(iarm, "hinge", h, error_output)) ||
+				c.GetParam(iwheel, "hinge", h, error_output))) // Fallback!
 				return false;	
 
 		COORDINATESYSTEMS::ConvertV2toV1(h[0], h[1], h[2]);	
 		
-		suspension = new BASICSUSPENSION<T>();	
-		dynamic_cast<BASICSUSPENSION<T>* >(suspension)->Init(info, h);
+		BASICSUSPENSION * bs = new BASICSUSPENSION();
+		bs->Init(info, h);
+		suspension = bs;
 	}
 
 	return true;
 }
-
-/// explicit instantiation
-template class CARSUSPENSIONINFO <float>;
-template class CARSUSPENSIONINFO <double>;
-template class CARSUSPENSION <float>;
-template class CARSUSPENSION <double>;

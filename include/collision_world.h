@@ -15,26 +15,28 @@ class TRACKSURFACE;
 class COLLISION_WORLD
 {
 public:
-	COLLISION_WORLD();
+	COLLISION_WORLD(btScalar timeStep = 1/60.0, int maxSubSteps = 10);
 	
 	~COLLISION_WORLD();
 	
 	btCollisionObject * AddCollisionObject(const MODEL & model);
 	
-	btRigidBody * AddRigidBody(const btRigidBody::btRigidBodyConstructionInfo & info);
-
+	void AddRigidBody(btRigidBody * body);
+	
 	void AddAction(btActionInterface * action);
-
-	void AddConstraint(btTypedConstraint * constraint, bool disableCollisionsBetweenLinked=false);
+	
+	void RemoveRigidBody(btRigidBody * body);
+	
+	void RemoveAction(btActionInterface * action);
 	
 	// add track to collision world (unloads previous track)
 	void SetTrack(TRACK * t);
 	
 	// cast ray into collision world, returns first hit, caster is excluded fom hits
 	bool CastRay(
-		const MATHVECTOR <float, 3> & position,
-		const MATHVECTOR <float, 3> & direction,
-		const float length,
+		const btVector3 & position,
+		const btVector3 & direction,
+		const btScalar length,
 		const btCollisionObject * caster,
 		COLLISION_CONTACT & contact) const;
 	
@@ -53,17 +55,16 @@ protected:
 	bt32BitAxisSweep3 collisionbroadphase;
 	btSequentialImpulseConstraintSolver constraintsolver;
 	btDiscreteDynamicsWorld world;
-	
-	btAlignedObjectArray<btCollisionShape *> shapes;
-	btAlignedObjectArray<btActionInterface *> actions;
-	btAlignedObjectArray<btTypedConstraint *> constraints;
-	btAlignedObjectArray<btTriangleIndexVertexArray *> meshes;
+	btScalar timeStep;
+	int maxSubSteps;
 	
 	//todo: cleanup here
 	TRACK * track;
 	btCollisionObject * trackObject;
 	btTriangleIndexVertexArray * trackMesh;
 	btAlignedObjectArray<const TRACKSURFACE *> trackSurface;
+	btAlignedObjectArray<btCollisionShape *> shapes;
+	btAlignedObjectArray<btTriangleIndexVertexArray *> meshes;
 	
 	btCollisionShape * AddMeshShape(const MODEL & model);
 	btIndexedMesh GetIndexedMesh(const MODEL & model);
