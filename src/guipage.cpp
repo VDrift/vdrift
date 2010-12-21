@@ -498,7 +498,7 @@ bool GUIPAGE::Load(
 					text, xy[0], xy[1], fontscalex, fontscaley, analog, only_one);
 			controlgrabs.push_back(new_widget);
 		}
-		else
+		else if (type != "disabled")
 		{
 			error_output << path << ": unknown " << section->first << " type: " << type << ", ignoring" << std::endl;
 		}

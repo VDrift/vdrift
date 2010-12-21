@@ -12,6 +12,7 @@
 #include "quickprof.h"
 #include "tracksurface.h"
 #include "macros.h"
+#include "utils.h"
 
 #include <fstream>
 using std::ifstream;
@@ -65,7 +66,8 @@ GAME::GAME(std::ostream & info_out, std::ostream & error_out) :
 	profilingmode(false),
 	renderconfigfile("render.conf.deferred"),
 	track(info_out, error_out),
-	replay(timestep)
+	replay(timestep),
+	http("/tmp")
 	//sky(graphics, info_out, err_out)
 {
 	carcontrols_local.first = 0;
@@ -110,18 +112,6 @@ void GAME::Start(list <string> & args)
 
 	InitCoreSubsystems();
 
-	//load loading screen assets
-	if (!loadingscreen.Init(
-			pathmanager.GetGUITextureDir(settings.GetSkin()),
-			graphics.GetW(),
-			graphics.GetH(),
-			settings.GetTextureSize(),
-			textures))
-	{
-		error_output << "Error loading the loading screen" << endl; //ironic
-		return;
-	}
-
 	//load controls
 	info_output << "Loading car controls from: " << pathmanager.GetCarControlsFile() << endl;
 	if (!pathmanager.FileExists(pathmanager.GetCarControlsFile()))
@@ -141,6 +131,19 @@ void GAME::Start(list <string> & args)
 	if (!LoadFonts())
 	{
 		error_output << "Error loading fonts" << endl;
+		return;
+	}
+	
+	//load loading screen assets
+	if (!loadingscreen.Init(
+			pathmanager.GetGUITextureDir(settings.GetSkin()),
+			graphics.GetW(),
+			graphics.GetH(),
+			settings.GetTextureSize(),
+			textures,
+			fonts["futuresans"]))
+	{
+		error_output << "Error loading the loading screen" << endl; //ironic
 		return;
 	}
 
@@ -221,6 +224,7 @@ void GAME::Start(list <string> & args)
 void GAME::InitCoreSubsystems()
 {
 	pathmanager.Init(info_output, error_output);
+	http.SetTemporaryFolder(pathmanager.GetTemporaryFolder());
 	textures.Init(pathmanager.GetDataPath(), pathmanager.GetSharedDataPath(), error_output);
 	models.Init(pathmanager.GetDataPath(), pathmanager.GetSharedDataPath(), error_output);
 	sounds.Init(pathmanager.GetDataPath(), pathmanager.GetSharedDataPath(), error_output);
@@ -628,6 +632,8 @@ void GAME::Tick(float deltat)
 	if (deltat > maxtime) deltat = maxtime;
 
 	target_time += deltat;
+	
+	http.Tick();
 
 	//increment game logic by however many tick periods have passed since the last GAME::Tick
 	while (target_time - TickPeriod()*frame > TickPeriod() && curticks < maxticks)
@@ -1379,6 +1385,32 @@ void GAME::ProcessGUIAction(const std::string & action)
 			}
 		}
 	}
+	else if (action == "HandleOnlineClicked")
+	{
+		std::string motdUrl = "vdrift.net/online/motd.txt";
+		bool success = Download(motdUrl);
+		if (success)
+		{
+			gui.ActivatePage("Online", 0.25, error_output);
+			std::string motdFile = http.GetDownloadPath(motdUrl);
+			std::string motd = UTILS::LoadFileIntoString(motdFile, error_output);
+			gui.SetLabelText("Online", "Motd", motd);
+		}
+	}
+	else if (action == "StartDataManager")
+	{
+		gui.ActivatePage("Downloading", 0.25, error_output);
+		std::string url = "http://vdrift.svn.sourceforge.net/viewvc/vdrift/vdrift-data/cars/350Z/?view=tar";
+		bool success = Download(url);
+		if (success)
+		{
+			gui.ActivatePage("DataManager", 0.25, error_output);
+		}
+		else
+		{
+			gui.ActivatePage("DataConnectionError", 0.25, error_output);
+		}
+	}
 	else
 	{
 		error_output << "Unhandled GUI event: " << action << endl;
@@ -1850,7 +1882,7 @@ bool GAME::LoadCar(
 
 bool GAME::LoadTrack(const std::string & trackname)
 {
-	LoadingScreen(0.0, 1.0);
+	LoadingScreen(0.0, 1.0, false, "", 0.5, 0.5);
 
 	//load the track
 	if (!track.DeferredLoad(
@@ -1875,7 +1907,7 @@ bool GAME::LoadTrack(const std::string & trackname)
 		int displayevery = track.DeferredLoadTotalObjects() / 50;
 		if (displayevery == 0 || count % displayevery == 0)
 		{
-			LoadingScreen(count, track.DeferredLoadTotalObjects());
+			LoadingScreen(count, track.DeferredLoadTotalObjects(), false, "", 0.5, 0.5);
 		}
 		success = track.ContinueDeferredLoad();
 		count++;
@@ -2236,18 +2268,95 @@ void GAME::ProcessNewSettings()
 	sound.SetMasterVolume(settings.GetMasterVolume());
 }
 
-void GAME::LoadingScreen(float progress, float max)
+void GAME::LoadingScreen(float progress, float max, bool drawGui, const std::string & optionalText, float x, float y)
 {
 	assert(max > 0);
-	loadingscreen.Update(progress/max);
+	loadingscreen.Update(progress/max, optionalText, x, y);
 
-	TraverseScene<true>(loadingscreen.GetNode(), graphics.GetDynamicDrawlist());
+	graphics.GetDynamicDrawlist().clear();
+	if (drawGui)
+		TraverseScene<false>(gui.GetNode(), graphics.GetDynamicDrawlist());
+	TraverseScene<false>(loadingscreen.GetNode(), graphics.GetDynamicDrawlist());
 
 	graphics.SetupScene(45.0, 100.0, MATHVECTOR <float, 3> (), QUATERNION <float> (), MATHVECTOR <float, 3> ());
 
 	graphics.BeginScene(error_output);
 	graphics.DrawScene(error_output);
 	graphics.EndScene(error_output);
+}
+
+bool GAME::Download(const std::string & file)
+{
+	std::vector <std::string> files;
+	files.push_back(file);
+	return Download(files);
+}
+
+bool GAME::Download(const std::vector <std::string> & urls)
+{
+	// make sure we're not currently downloading something in the background
+	if (http.Downloading())
+	{
+		error_output << "Unable to download additional files; currently already downloading something in the background." << std::endl;
+		return false;
+	}
+	
+	for (unsigned int i = 0; i < urls.size(); i++)
+	{
+		std::string url = urls[i];
+		bool requestSuccess = http.Request(url, error_output);
+		if (!requestSuccess)
+		{
+			http.CancelAllRequests();
+			return false;
+		}
+		bool userCancel = false;
+		while (http.Tick() && !userCancel)
+		{
+			eventsystem.ProcessEvents();
+			if (eventsystem.GetKeyState(SDLK_ESCAPE).just_down || eventsystem.GetQuit())
+			{
+				http.CancelAllRequests();
+				return false;
+			}
+			
+			HTTPINFO info;
+			http.GetRequestInfo(url, info);
+			
+			if (info.state == HTTPINFO::FAILED)
+			{
+				http.CancelAllRequests();
+				error_output << "Failed when downloading URL: " << url << std::endl;
+				return false;
+			}
+			
+			std::stringstream text;
+			text << HTTPINFO::GetString(info.state);
+			if (info.state == HTTPINFO::DOWNLOADING)
+				text << " " << HTTP::ExtractFilenameFromUrl(url) << " " << HTTPINFO::FormatSpeed(info.speed);
+			float total = 1000000;
+			if (info.totalsize > 0)
+				total = info.totalsize;
+			
+			// tick the GUI
+			eventsystem.BeginFrame();
+			gui.Update(eventsystem.Get_dt());
+			eventsystem.EndFrame();
+			
+			LoadingScreen(fmod(info.downloaded,total), total, true, text.str(), 0.5, 0.5);
+		}
+		
+		HTTPINFO info;
+		http.GetRequestInfo(url, info);
+		if (info.state == HTTPINFO::FAILED)
+		{
+			http.CancelAllRequests();
+			error_output << "Failed when downloading URL: " << url << std::endl;
+			return false;
+		}
+	}
+	
+	return true;
 }
 
 void GAME::UpdateForceFeedback(float dt)

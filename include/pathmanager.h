@@ -38,6 +38,8 @@ public:
 	std::string GetEffectsTextureDir() const {return "textures/effects";}
 	std::string GetTireSmokeTextureDir() const {return "textures/smoke";}
 	
+	std::string GetTemporaryFolder() const {return temporary_folder;}
+	
 	bool FileExists(const std::string & filename) const;
 	
 	///<optionally filter for the given extension
@@ -53,6 +55,7 @@ private:
 	std::string settings_path;
 	std::string data_directory;
 	std::string profile_suffix;
+	std::string temporary_folder;
 };
 
 #endif

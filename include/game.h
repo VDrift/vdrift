@@ -31,6 +31,7 @@
 #include "texturemanager.h"
 #include "modelmanager.h"
 #include "soundmanager.h"
+#include "http.h"
 
 #include <ostream>
 #include <string>
@@ -79,7 +80,7 @@ private:
 	void PopulateReplayList(std::list <std::pair <std::string, std::string> > & replaylist);
 	void PopulateCarPaintList(const std::string & carname, std::list <std::pair <std::string, std::string> > & carpaintlist);
 	void UpdateTrackMap();
-	void LoadingScreen(float progress, float max);
+	void LoadingScreen(float progress, float max, bool drawGui, const std::string & optionalText, float x, float y);
 	void ProcessNewSettings();
 	void RedisplayControlPage();
 	void LoadControlsIntoGUIPage(const std::string & pagename);
@@ -93,6 +94,8 @@ private:
 	void BeginStartingUp();
 	void DoneStartingUp();
 	bool LastStartWasSuccessful() const;
+	bool Download(const std::string & file);
+	bool Download(const std::vector <std::string> & files);
 	
 	// move to settings
 	void GetOptions(std::map<std::string, std::string> & options);
@@ -163,6 +166,7 @@ private:
 	PARTICLE_SYSTEM tire_smoke;
 	AI ai;
 	//SKY sky;
+	HTTP http;
 
 #ifdef ENABLE_FORCE_FEEDBACK
 	std::auto_ptr <FORCEFEEDBACK> forcefeedback;

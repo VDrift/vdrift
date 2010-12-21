@@ -39,6 +39,7 @@ src = Split("""aabb.cpp
 		config.cpp
 		containeralgorithm.cpp
 		crashdetection.cpp
+		downloadable.cpp
 		endian_utility.cpp
 		eventsystem.cpp
 		fbobject.cpp
@@ -53,6 +54,7 @@ src = Split("""aabb.cpp
 		gui.cpp
 		guioption.cpp
 		guipage.cpp
+		http.cpp
 		hud.cpp
 		joepack.cpp
 		joeserialize.cpp
@@ -93,12 +95,14 @@ src = Split("""aabb.cpp
 		soundsource.cpp
 		sprite2d.cpp
 		suspensionbumpdetection.cpp
+		svn_sourceforge.cpp
 		texture.cpp
 		text_draw.cpp
 		timer.cpp
 		toggle.cpp
 		track.cpp
 		trackmap.cpp
+		utils.cpp
 		vertexarray.cpp
 		widget_button.cpp
 		widget_colorpicker.cpp
@@ -243,7 +247,7 @@ SConsignFile()
 #--------------------------#
 appdir = ""
 vdrift_install = None
-common_libs = ['SDL_image', 'SDL_gfx', 'vorbisfile', 'vdriftbullet']
+common_libs = ['SDL_image', 'SDL_gfx', 'vorbisfile', 'vdriftbullet', 'curl']
 
 if (sys.platform == 'freebsd6') or (sys.platform == 'freebsd7') or (sys.platform == 'freebsd8') or (sys.platform == 'freebsd9'):
     common_libs.append('libLinearMath')

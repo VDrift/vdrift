@@ -21,7 +21,6 @@ private:
 	GLhandleARB vertex_shader;
 	GLhandleARB fragment_shader;
 	
-	void LoadFileIntoString(const std::string & filepath, std::string & filestring, std::ostream & error_output) const;
 	void PrintShaderLog(GLhandleARB & shader, const std::string & name, std::ostream & out);
 	void PrintProgramLog(GLhandleARB & program, const std::string & name, std::ostream & out);
 

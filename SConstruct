@@ -142,7 +142,7 @@ else:
         LINKFLAGS = ['-pthread'],
         CC = 'gcc', CXX = 'g++',
         options = opts)
-    check_headers = ['asio.hpp', 'boost/bind.hpp', 'GL/gl.h', 'GL/glu.h', 'SDL/SDL.h', 'SDL/SDL_image.h', 'SDL/SDL_rotozoom.h', 'vorbis/vorbisfile.h', 'GL/glew.h']
+    check_headers = ['asio.hpp', 'boost/bind.hpp', 'GL/gl.h', 'GL/glu.h', 'SDL/SDL.h', 'SDL/SDL_image.h', 'SDL/SDL_rotozoom.h', 'vorbis/vorbisfile.h', 'GL/glew.h', 'curl/curl.h']
 
 if ARGUMENTS.get('verbose') != "1":
        env['ARCOMSTR'] = "\tARCH $TARGET"

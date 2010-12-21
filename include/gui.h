@@ -113,6 +113,9 @@ public:
 		const std::string & optionname,
 		const std::list <std::pair <std::string, std::string> > & newvalues,
 		std::ostream & error_output);
+	
+	/// returns false if the specified page/label does not exist
+	bool SetLabelText(const std::string & page, const std::string & label, const std::string & text);
 
 private:
 	std::map<std::string, GUIPAGE> pages;

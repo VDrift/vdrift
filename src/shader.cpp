@@ -1,4 +1,5 @@
 #include "shader.h"
+#include "utils.h"
 
 #include <cassert>
 #include <sstream>
@@ -39,9 +40,10 @@ bool SHADER_GLSL::Load(const std::string & vertex_filename, const std::string & 
 	
 	Unload();
 	
-	string vertexshader_source, fragmentshader_source;
-	LoadFileIntoString(vertex_filename, vertexshader_source, error_output);
-	LoadFileIntoString(fragment_filename, fragmentshader_source, error_output);
+	string vertexshader_source = UTILS::LoadFileIntoString(vertex_filename, error_output);
+	string fragmentshader_source = UTILS::LoadFileIntoString(fragment_filename, error_output);
+	assert(!vertexshader_source.empty());
+	assert(!fragmentshader_source.empty());
 	
 	//prepend #define values
 	for (std::vector <std::string>::const_iterator i = preprocessor_defines.begin(); i != preprocessor_defines.end(); ++i)
@@ -136,29 +138,6 @@ bool SHADER_GLSL::Load(const std::string & vertex_filename, const std::string & 
 	loaded = success;
 	
 	return success;
-}
-
-void SHADER_GLSL::LoadFileIntoString(const std::string & filepath, std::string & filestring, ostream & error_output) const
-{
-	ifstream f;
-	f.open(filepath.c_str());
-	if (f)
-	{
-		char c[1024];
-		
-		while (f.good())
-		{
-			f.get(c, 1024, 0);
-			filestring = filestring + c;
-		}
-		
-		f.close();
-	}
-	else
-	{
-		error_output << "Shader file not found: " + filepath << endl;
-		assert(f);
-	}
 }
 
 void SHADER_GLSL::Unload()
