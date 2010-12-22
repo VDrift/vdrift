@@ -7,6 +7,7 @@
 #include <string>
 #include <sstream>
 #include <iostream>
+#include <cassert>
 
 template <class T>
 void operator << (std::ostream & lhs, const std::vector<T> & rhs)
@@ -91,10 +92,9 @@ public:
 		
 	bool GetSection(const std::string & section, const_iterator & it) const
 	{
-		const_iterator i = sections.find(section);
-		if (i != sections.end())
+		it = sections.find(section);
+		if (it != sections.end())
 		{
-			it = i;
 			return true;
 		}
 		return false;
@@ -112,6 +112,7 @@ public:
 	
 	bool GetParam(const const_iterator & section, const std::string & param, std::string & output) const
 	{
+		assert(section != sections.end());
 		SECTION::const_iterator i = section->second.find(param);
 		if (i != section->second.end())
 		{
@@ -124,6 +125,7 @@ public:
 	template <typename T>
 	bool GetParam(const const_iterator & section, const std::string & param, T & output) const
 	{
+		assert(section != sections.end());
 		SECTION::const_iterator i = section->second.find(param);
 		if (i != section->second.end())
 		{
@@ -136,6 +138,7 @@ public:
 	
 	bool GetParam(const const_iterator & section, const std::string & param, bool & output) const
 	{
+		assert(section != sections.end());
 		SECTION::const_iterator i = section->second.find(param);
 		if (i != section->second.end())
 		{
@@ -154,6 +157,7 @@ public:
 	template <typename T>
 	bool GetParam(const const_iterator & section, const std::string & param, T & output, std::ostream & error_output) const
 	{
+		assert(section != sections.end());
 		if (!GetParam(section, param, output))
 		{
 			error_output << "Couldn't get parameter \"" << section->first << "." << param << "\" from \"" << filename << "\"" << std::endl;
