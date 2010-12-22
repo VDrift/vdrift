@@ -270,3 +270,35 @@ QT_TEST(configfile_test)
 	}
 }
 
+#include "pathmanager.h"
+QT_TEST(config_include)
+{
+	std::stringbuf log;
+	std::ostream info(&log), error(&log);
+	PATHMANAGER path;
+	path.Init(info, error);
+	
+	std::string test_file = path.GetDataPath() + "/test/test.cfg";
+	std::string verify_file = path.GetDataPath() + "/test/verify.cfg";
+	
+	CONFIG cfg_test;
+	cfg_test.Load(test_file);
+	cfg_test.DebugPrint(std::cerr);
+	
+	CONFIG cfg_verify;
+	cfg_verify.Load(verify_file);
+	cfg_verify.DebugPrint(std::cerr);
+	
+	for (CONFIG::const_iterator s = cfg_verify.begin(); s != cfg_verify.end(); ++s)
+	{
+		CONFIG::const_iterator ts;
+		QT_CHECK(cfg_test.GetSection(s->first, ts, error));
+		for (CONFIG::SECTION::const_iterator p = s->second.begin(); p != s->second.end(); ++p)
+		{
+			std::string value;
+			QT_CHECK(cfg_test.GetParam(ts, p->first, value, error));
+			QT_CHECK(p->second == value);
+		}
+	}
+}
+
