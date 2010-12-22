@@ -283,11 +283,11 @@ QT_TEST(config_include)
 	
 	CONFIG cfg_test;
 	cfg_test.Load(test_file);
-	cfg_test.DebugPrint(std::cerr);
+	//cfg_test.DebugPrint(std::cerr);
 	
 	CONFIG cfg_verify;
 	cfg_verify.Load(verify_file);
-	cfg_verify.DebugPrint(std::cerr);
+	//cfg_verify.DebugPrint(std::cerr);
 	
 	for (CONFIG::const_iterator s = cfg_verify.begin(); s != cfg_verify.end(); ++s)
 	{
