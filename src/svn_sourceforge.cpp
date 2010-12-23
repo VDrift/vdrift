@@ -57,6 +57,8 @@ QT_TEST(svn_sourceforge)
 	std::string page = UTILS::LoadFileIntoString(http.GetDownloadPath(testurl), std::cerr);
 	std::map <std::string, int> res = svn.ParseFolderView(page);
 	
+	QT_CHECK(res.size() > 10);
+	
 	/*std::cout << "svn_sourceforge test result: " << res.size() << std::endl;
 	for (std::map <std::string, int>::const_iterator i = res.begin(); i != res.end(); i++)
 	{

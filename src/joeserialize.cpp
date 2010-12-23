@@ -627,6 +627,7 @@ QT_TEST(serialization_high_level_object_read_write_test)
 	
 	{
 		ofstream f("test.txt");
+		QT_CHECK(f);
 		f << "filename = customfile.png";
 	}
 	
