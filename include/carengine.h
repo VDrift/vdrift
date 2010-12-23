@@ -102,7 +102,7 @@ public:
 		return info.mass;
 	}
 	
-	const btScalar GetRPM() const
+	btScalar GetRPM() const
 	{
 		return shaft.ang_velocity * 30.0 / 3.141593;
 	}
