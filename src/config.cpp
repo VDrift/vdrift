@@ -224,7 +224,8 @@ QT_TEST(configfile_test)
 		"this is a duplicate = 0\n"
 		"this is a duplicate = 1\n"
 		"random = intermediary\n"
-		"this is a duplicate = 2\n";
+		"this is a duplicate = 2\n"
+		"unterminated line = good?";
 	
 	CONFIG testconfig;
 	testconfig.Load(instream);
@@ -246,6 +247,9 @@ QT_TEST(configfile_test)
 	QT_CHECK_EQUAL(vec[0], 2.1f);
 	QT_CHECK_EQUAL(vec[1], 0.9f);
 	QT_CHECK_EQUAL(vec[2], 0.f);
+	tstr = "notfound";
+	QT_CHECK(testconfig.GetParam("what about", "unterminated line", tstr));
+	QT_CHECK_EQUAL(tstr, "good?");
 	//testconfig.DebugPrint(std::cout);
 	
 	{
