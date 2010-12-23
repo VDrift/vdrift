@@ -2,7 +2,6 @@
 #define _TRACKSURFACE_H
 
 #include <string>
-#include <map>
 
 class TRACKSURFACE
 {
@@ -21,29 +20,13 @@ public:
 	
 	void setType(const std::string & value)
 	{
-		static const std::pair<std::string, TYPE> type_name[] =
-		{
-			std::pair<std::string, TYPE>("none", NONE),
-			std::pair<std::string, TYPE>("asphalt", ASPHALT),
-			std::pair<std::string, TYPE>("grass", GRASS),
-			std::pair<std::string, TYPE>("gravel", GRAVEL),
-			std::pair<std::string, TYPE>("concrete", CONCRETE),
-			std::pair<std::string, TYPE>("sand", SAND),
-			std::pair<std::string, TYPE>("cobbles", COBBLES)
-		};
-		static const std::map<std::string, TYPE> type_map(
-			type_name,
-			type_name + sizeof(type_name) / sizeof(type_name[0]));
-		
-		std::map<std::string, TYPE>::const_iterator i = type_map.find(value);
-		if (i != type_map.end())
-		{
-			type = i->second;
-		}
-		else
-		{
-			type = NONE;
-		}
+		if (value == "asphalt")			type = ASPHALT;
+		else if (value == "grass")		type = GRASS;
+		else if (value == "gravel")		type = GRAVEL;
+		else if (value == "concrete") 	type = CONCRETE;
+		else if (value == "sand")		type = SAND;
+		else if (value == "cobbles")	type = COBBLES;
+		else							type = NONE;
 	}
 	
 	static const TRACKSURFACE * None()

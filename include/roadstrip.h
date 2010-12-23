@@ -15,16 +15,17 @@ public:
 	bool Collide(
 		const MATHVECTOR <float, 3> & origin,
 		const MATHVECTOR <float, 3> & direction,
-		float seglen,
+		const float seglen,
+		int & patch_id,
 		MATHVECTOR <float, 3> & outtri,
 		const BEZIER * & colpatch,
 		MATHVECTOR <float, 3> & normal) const;
 	
 	void Reverse();
 	
-	const std::list <ROADPATCH> & GetPatchList() const {return patches;}
+	const std::vector<ROADPATCH> & GetPatches() const {return patches;}
 	
-	std::list <ROADPATCH> & GetPatchList() {return patches;}
+	std::vector<ROADPATCH> & GetPatches() {return patches;}
 	
 	void CreateRacingLine(
 		SCENENODE & parentnode, 
@@ -40,8 +41,8 @@ public:
 	optional <const BEZIER *> FindBezierAtOffset(const BEZIER * bezier, int offset=0) const;
 
 private:
-	std::list <ROADPATCH> patches;
-	AABB_SPACE_PARTITIONING_NODE <ROADPATCH *> aabb_part;
+	std::vector<ROADPATCH> patches;
+	AABB_SPACE_PARTITIONING_NODE <int> aabb_part;
 	bool closed;
 	
 	void GenerateSpacePartitioning();

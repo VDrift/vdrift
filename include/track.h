@@ -2,7 +2,6 @@
 #define _TRACK_H
 
 #include "scenenode.h"
-#include "model_joe03.h"
 #include "trackobject.h"
 #include "tracksurface.h"
 #include "mathvector.h"
@@ -11,10 +10,7 @@
 #include "roadstrip.h"
 
 #include <string>
-#include <fstream>
-#include <sstream>
 #include <iostream>
-#include <map>
 #include <list>
 #include <memory>
 #include <vector>
@@ -58,11 +54,11 @@ public:
 	
 	bool ContinueDeferredLoad();
 	
-	int DeferredLoadTotalObjects();
+	int DeferredLoadTotalObjects() const;
 
-	std::pair <MATHVECTOR <float, 3>, QUATERNION <float> > GetStart(unsigned int index);
+	std::pair <MATHVECTOR <float, 3>, QUATERNION <float> > GetStart(unsigned int index) const;
 	
-	int GetNumStartPositions()
+	int GetNumStartPositions() const
 	{
 		return start_positions.size();
 	}
@@ -75,7 +71,8 @@ public:
 	bool CastRay(
 		const MATHVECTOR <float, 3> & origin,
 		const MATHVECTOR <float, 3> & direction,
-		float seglen,
+		const float seglen,
+		int & patch_id,
 		MATHVECTOR <float, 3> & outtri,
 		const BEZIER * & colpatch,
 		MATHVECTOR <float, 3> & normal) const;
@@ -90,7 +87,7 @@ public:
 		return lapsequence.size();
 	}
 	
-	const BEZIER * GetLapSequence(unsigned int sector)
+	const BEZIER * GetLapSequence(unsigned int sector) const
 	{
 		assert (sector < lapsequence.size());
 		return lapsequence[sector];
@@ -111,7 +108,7 @@ public:
 		return direction == DIRECTION_REVERSE;
 	}
 	
-	const std::list<TRACKOBJECT> & GetTrackObjects()
+	const std::vector<TRACKOBJECT> & GetTrackObjects() const
 	{
 		return objects;
 	}
@@ -134,7 +131,8 @@ private:
 	std::ostream & error_output;
 	std::vector <std::pair <MATHVECTOR <float, 3>, QUATERNION <float> > > start_positions;
 	std::vector <TRACKSURFACE> tracksurfaces;
-	std::list <TRACKOBJECT> objects;
+	std::vector <TRACKOBJECT> objects;
+	std::vector <std::tr1::shared_ptr<MODEL> > models;
 	bool vertical_tracking_skyboxes;
 	
 	enum
@@ -202,33 +200,6 @@ private:
 	void ClearRoads() {roads.clear();}
 	
 	void Reverse();
-	
-	///read from the file stream and put it in "output".
-	/// return true if the get was successful, else false
-	template <typename T>
-	bool GetParam(std::ifstream & f, T & output)
-	{
-		if (!f.good())
-			return false;
-		
-		std::string instr;
-		f >> instr;
-		if (instr.empty())
-			return false;
-		
-		while (!instr.empty() && instr[0] == '#' && f.good())
-		{
-			f.ignore(1024, '\n');
-			f >> instr;
-		}
-		
-		if (!f.good() && !instr.empty() && instr[0] == '#')
-			return false;
-		
-		std::stringstream sstr(instr);
-		sstr >> output;
-		return true;
-	}
 };
 
 #endif

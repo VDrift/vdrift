@@ -12,11 +12,31 @@ class COLLISION_CONTACT
 public:
 	COLLISION_CONTACT() :
 		depth(0),
+		patchid(-1),
+		patch(0),
 		surface(TRACKSURFACE::None()),
-		patch(NULL),
-		col(NULL)
+		col(0)
 	{
 		// ctor
+	}
+	
+	COLLISION_CONTACT(
+		const btVector3 & p,
+		const btVector3 & n,
+		const btScalar d,
+		const int i,
+		const BEZIER * b,
+		const TRACKSURFACE * s,
+		const btCollisionObject * c) :
+		position(p),
+		normal(n),
+		depth(d),
+		patchid(i),
+		patch(b),
+		surface(s),
+		col(c)
+	{
+		assert(s != NULL);
 	}
 	
 	const btVector3 & GetPosition() const
@@ -39,6 +59,11 @@ public:
 		return *surface;
 	}
 	
+	int GetPatchId() const
+	{
+		return patchid;
+	}
+	
 	const BEZIER * GetPatch() const
 	{
 		return patch;
@@ -47,24 +72,6 @@ public:
 	const btCollisionObject * GetObject() const
 	{
 		return col;
-	}
-	
-	void Set(
-		const btVector3 & p,
-		const btVector3 & n,
-		const btScalar d,
-		const TRACKSURFACE * s,
-		const BEZIER * b,
-		const btCollisionObject * c)
-	{
-		assert(s != NULL);
-		
-		position = p;
-		normal = n;
-		depth = d;
-		patch = b;
-		surface = s;
-		col = c;
 	}
 	
 	// update/interpolate contact
@@ -90,8 +97,9 @@ private:
 	btVector3 position;
 	btVector3 normal;
 	btScalar depth;
-	const TRACKSURFACE * surface;
+	int patchid;
 	const BEZIER * patch;
+	const TRACKSURFACE * surface;
 	const btCollisionObject * col;
 };
 

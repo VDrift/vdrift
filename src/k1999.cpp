@@ -276,12 +276,12 @@ bool K1999::LoadData(ROADSTRIP* road)
 	tyRight.clear();
 	tLane.clear();
 
-	const std::list <ROADPATCH> & patchlist = road->GetPatchList();
+	const std::vector<ROADPATCH> & patchlist = road->GetPatches();
 	Divs = patchlist.size();
 	
 	int count = 0;
 
-	for (std::list <ROADPATCH>::const_iterator i = patchlist.begin(); i != patchlist.end(); ++i)
+	for (std::vector<ROADPATCH>::const_iterator i = patchlist.begin(); i != patchlist.end(); ++i)
 	{
 		txLeft.push_back(i->GetPatch().GetPoint(3,0)[0]);
 		tyLeft.push_back(-i->GetPatch().GetPoint(3,0)[2]);//this originally looked at the z coordinate -JDV
@@ -304,10 +304,10 @@ bool K1999::LoadData(ROADSTRIP* road)
 
 void K1999::UpdateRoadStrip(ROADSTRIP* road)
 {
-	std::list <ROADPATCH> & patchlist = road->GetPatchList();
+	std::vector<ROADPATCH> & patchlist = road->GetPatches();
 	int count = 0;
 	
-	for (std::list <ROADPATCH>::iterator i = patchlist.begin(); i != patchlist.end(); ++i)
+	for (std::vector<ROADPATCH>::iterator i = patchlist.begin(); i != patchlist.end(); ++i)
 	{
 		i->SetTrackCurvature(tRInverse[count]);
 		i->SetRacingLine(i->GetPatch().GetPoint(3,0)*(1.0-tLane[count]) + i->GetPatch().GetPoint(3,3)*(tLane[count]));

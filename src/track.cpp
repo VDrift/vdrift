@@ -15,6 +15,30 @@
 #include <fstream>
 #include <sstream>
 
+/// read from the file stream and put it in "output".
+/// return true if the get was successful, else false
+template <typename T>
+static bool GetParam(std::ifstream & f, T & output)
+{
+	if (!f.good()) return false;
+	
+	std::string instr;
+	f >> instr;
+	if (instr.empty()) return false;
+	
+	while (!instr.empty() && instr[0] == '#' && f.good())
+	{
+		f.ignore(1024, '\n');
+		f >> instr;
+	}
+	
+	if (!f.good() && !instr.empty() && instr[0] == '#') return false;
+	
+	std::stringstream sstr(instr);
+	sstr >> output;
+	return true;
+}
+
 TRACK::TRACK(std::ostream & info, std::ostream & error) :
 	info_output(info),
 	error_output(error),
@@ -118,7 +142,7 @@ bool TRACK::LoadLapSequence(const std::string & trackpath, bool reverse)
 				if (curroad == roadid)
 				{
 					int curpatch = 0;
-					for (std::list <ROADPATCH>::const_iterator p = i->GetPatchList().begin(); p != i->GetPatchList().end(); ++p)
+					for (std::vector<ROADPATCH>::const_iterator p = i->GetPatches().begin(); p != i->GetPatches().end(); ++p)
 					{
 						if (curpatch == patchid)
 						{
@@ -225,7 +249,7 @@ bool TRACK::ContinueDeferredLoad()
 	return true;
 }
 
-int TRACK::DeferredLoadTotalObjects()
+int TRACK::DeferredLoadTotalObjects() const
 {
 	assert(objload.get());
 	return objload->GetNumObjects();
@@ -234,6 +258,7 @@ int TRACK::DeferredLoadTotalObjects()
 void TRACK::Clear()
 {
 	objects.clear();
+	models.clear();
 	tracksurfaces.clear();
 	ClearRoads();
 	lapsequence.clear();
@@ -368,8 +393,8 @@ bool TRACK::LoadSurfaces(const std::string & trackpath)
 
 bool TRACK::BeginObjectLoad(
 	SCENENODE & sceneroot,
-	TEXTUREMANAGER & textures,
-	MODELMANAGER & models,
+	TEXTUREMANAGER & texture_manager,
+	MODELMANAGER & model_manager,
 	const std::string & trackpath,
 	const std::string & trackdir,
 	const std::string & texsize,
@@ -380,7 +405,8 @@ bool TRACK::BeginObjectLoad(
 	objload.reset(
 		new OBJECTLOADER(
 			sceneroot,
-			textures,
+			texture_manager,
+			model_manager,
 			models,
 			objects,
 			info_output,
@@ -507,7 +533,8 @@ bool TRACK::LoadRoads(const std::string & trackpath, bool reverse)
 bool TRACK::CastRay(
 	const MATHVECTOR <float, 3> & origin,
 	const MATHVECTOR <float, 3> & direction,
-	float seglen,
+	const float seglen,
+	int & patch_id,
 	MATHVECTOR <float, 3> & outtri,
 	const BEZIER * & colpatch,
 	MATHVECTOR <float, 3> & normal) const
@@ -517,7 +544,7 @@ bool TRACK::CastRay(
 	{
 		MATHVECTOR <float, 3> coltri, colnorm;
 		const BEZIER * colbez = NULL;
-		if (i->Collide(origin, direction, seglen, coltri, colbez, colnorm))
+		if (i->Collide(origin, direction, seglen, patch_id, coltri, colbez, colnorm))
 		{
 			if (!col || (coltri-origin).Magnitude() < (outtri-origin).Magnitude())
 			{
@@ -535,10 +562,10 @@ bool TRACK::CastRay(
 
 optional <const BEZIER *> ROADSTRIP::FindBezierAtOffset(const BEZIER * bezier, int offset) const
 {
-	std::list <ROADPATCH>::const_iterator it = patches.end(); //this iterator will hold the found ROADPATCH
+	std::vector<ROADPATCH>::const_iterator it = patches.end(); //this iterator will hold the found ROADPATCH
 
 	//search for the roadpatch containing the bezier and store an iterator to it in "it"
-	for (std::list <ROADPATCH>::const_iterator i = patches.begin(); i != patches.end(); ++i)
+	for (std::vector<ROADPATCH>::const_iterator i = patches.begin(); i != patches.end(); ++i)
 	{
 		if (&i->GetPatch() == bezier)
 		{
@@ -558,7 +585,7 @@ optional <const BEZIER *> ROADSTRIP::FindBezierAtOffset(const BEZIER * bezier, i
 			if (curoffset < 0)
 			{
 				//why is this so difficult?  all i'm trying to do is make the iterator loop around
-				std::list <ROADPATCH>::const_reverse_iterator rit(it);
+				std::vector<ROADPATCH>::const_reverse_iterator rit(it);
 				if (rit == patches.rend())
 					rit = patches.rbegin();
 				rit++;
@@ -585,7 +612,7 @@ optional <const BEZIER *> ROADSTRIP::FindBezierAtOffset(const BEZIER * bezier, i
 	}
 }
 
-std::pair <MATHVECTOR <float, 3>, QUATERNION <float> > TRACK::GetStart(unsigned int index)
+std::pair <MATHVECTOR <float, 3>, QUATERNION <float> > TRACK::GetStart(unsigned int index) const
 {
 	assert(!start_positions.empty());
 	unsigned int laststart = start_positions.size()-1;

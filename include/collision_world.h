@@ -5,11 +5,10 @@
 
 #include <ostream>
 
-template <class T, unsigned int dim> class MATHVECTOR;
-class COLLISION_CONTACT;
 class MODEL;
 class TRACK;
 class TRACKSURFACE;
+class COLLISION_CONTACT;
 
 // manages bodies / collision objects / collision shapes
 class COLLISION_WORLD
@@ -30,7 +29,7 @@ public:
 	void RemoveAction(btActionInterface * action);
 	
 	// add track to collision world (unloads previous track)
-	void SetTrack(TRACK * t);
+	void SetTrack(const TRACK * t);
 	
 	// cast ray into collision world, returns first hit, caster is excluded fom hits
 	bool CastRay(
@@ -59,10 +58,9 @@ protected:
 	int maxSubSteps;
 	
 	//todo: cleanup here
-	TRACK * track;
+	const TRACK * track;
 	btCollisionObject * trackObject;
 	btTriangleIndexVertexArray * trackMesh;
-	btAlignedObjectArray<const TRACKSURFACE *> trackSurface;
 	btAlignedObjectArray<btCollisionShape *> shapes;
 	btAlignedObjectArray<btTriangleIndexVertexArray *> meshes;
 	
