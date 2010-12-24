@@ -1597,7 +1597,18 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 		if(benchmode)
 			replayfilenamestream << pathmanager.GetReplayPath() << "/benchmark.vdr";
 		else
-			replayfilenamestream << pathmanager.GetReplayPath() << "/" << settings.GetSelectedReplay() << ".vdr";
+		{
+			std::list <std::pair <std::string, std::string> > replaylist;
+
+			unsigned sel_index = settings.GetSelectedReplay() - 1;
+
+			PopulateReplayList(replaylist);
+
+			std::list<std::pair <std::string, std::string> >::iterator it = replaylist.begin();
+			advance(it, sel_index);
+
+			replayfilenamestream << pathmanager.GetReplayPath() << "/" << it->second;
+		}
 
 		string replayfilename = replayfilenamestream.str();
 		info_output << "Loading replay file " << replayfilename << endl;
@@ -2032,6 +2043,33 @@ bool SortStringPairBySecond (const pair<string,string> & first, const pair<strin
 	return first.second < second.second;
 }
 
+bool UnsignedNumericSort (const string a, const string b)
+{
+	unsigned i = 0;
+	while ((i < a.length()) && (i < b.length()))
+	{
+		if(a[i] >= '0' && a[i] <= '9' && b[i] >= '0' && b[i] <= '9')
+		{
+			int an = atoi(a.c_str() + i),	bn = atoi(b.c_str() + i);
+			
+			if (an < bn)
+				return true;
+			else if (an > bn)
+				return false;
+			
+			for(; bn; i++, bn/=10);
+
+			continue;
+		}
+		if(a[i] < b[i])
+			return true;
+		else if(a[i] > b[i])
+			return false;
+		i++;
+	}
+	return true;
+}
+
 void GAME::PopulateReplayList(std::list <std::pair <std::string, std::string> > & replaylist)
 {
 	replaylist.clear();
@@ -2039,6 +2077,7 @@ void GAME::PopulateReplayList(std::list <std::pair <std::string, std::string> > 
 	std::list <std::string> replayfoldercontents;
 	if (pathmanager.GetFileList(pathmanager.GetReplayPath(),replayfoldercontents))
 	{
+		replayfoldercontents.sort(UnsignedNumericSort);
 		for (std::list <std::string>::iterator i = replayfoldercontents.begin(); i != replayfoldercontents.end(); ++i)
 		{
 			if (*i != "benchmark.vdr" && i->find(".vdr") == i->length()-4)
