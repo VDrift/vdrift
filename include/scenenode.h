@@ -11,11 +11,13 @@ public:
 	typedef MATRIX4<float> MAT4;
 	typedef MATHVECTOR<float,3> VEC3;
 	
+	SCENENODE() : emptydrawlist(true),not_empty_count(0) {}
+	
 	keyed_container <SCENENODE>::handle AddNode() {return childlist.insert(SCENENODE());}
 	SCENENODE & GetNode(keyed_container <SCENENODE>::handle handle) {return childlist.get(handle);}
 	const SCENENODE & GetNode(keyed_container <SCENENODE>::handle handle) const {return childlist.get(handle);}
 	
-	DRAWABLE_CONTAINER <keyed_container> & GetDrawlist() {return drawlist;}
+	DRAWABLE_CONTAINER <keyed_container> & GetDrawlist() {emptydrawlist=false;return drawlist;}
 	const DRAWABLE_CONTAINER <keyed_container> & GetDrawlist() const {return drawlist;}
 	
 	TRANSFORM & GetTransform() {return transform;}
@@ -23,7 +25,7 @@ public:
 	const TRANSFORM & GetTransform() const {return transform;}
 	unsigned int Nodes() const {return childlist.size();}
 	unsigned int Drawables() const {return drawlist.size();}
-	void Clear() {drawlist.clear();childlist.clear();}
+	void Clear() {drawlist.clear();childlist.clear();emptydrawlist=true;}
 	void Delete(keyed_container <SCENENODE>::handle handle) {childlist.erase(handle);}
 	VEC3 TransformIntoWorldSpace() const {VEC3 zero;return TransformIntoWorldSpace(zero);}
 	VEC3 TransformIntoWorldSpace(const VEC3 & localspace) const;
@@ -35,8 +37,29 @@ public:
 	template <template <typename U> class T>
 	void Traverse(DRAWABLE_CONTAINER <T> & drawlist_output, const MAT4 & prev_transform)
 	{
-		if (drawlist.empty() && childlist.empty())
-			return;
+		// emptydrawlist is a cached value that if true says _for sure_ our drawlist is empty.
+		// if emptydrawlist is false, we don't know for sure whether or not the list is empty,
+		// so we must get the actual value. as an additional optimization, stop trying to
+		// early-out if we've failed to early-out at least a certain number of times.
+		if (not_empty_count < 5)
+		{
+			if (childlist.empty())
+			{
+				if (emptydrawlist)
+				{
+					return;
+				}
+				else if (drawlist.empty())
+				{
+					emptydrawlist = true;
+					return;
+				}
+				else
+					not_empty_count++;
+			}
+			else
+				not_empty_count++;
+		}
 		
 		MAT4 this_transform(prev_transform);
 		
@@ -90,6 +113,8 @@ public:
 private:
 	keyed_container <SCENENODE> childlist;
 	DRAWABLE_CONTAINER <keyed_container> drawlist;
+	bool emptydrawlist;
+	int not_empty_count;
 	TRANSFORM transform;
 	MAT4 cached_transform;
 };
