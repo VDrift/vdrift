@@ -54,42 +54,42 @@ class CONFIG
 {
 public:
 	CONFIG();
-	
+
 	CONFIG(std::string fname);
-	
+
 	~CONFIG();
-	
+
 	bool Load(std::string fname);
-	
+
 	// will fail to process include directives
 	bool Load(std::istream & f);
-	
+
 	void Clear();
-	
+
 	void DebugPrint(std::ostream & out, bool with_brackets = true) const;
-	
+
 	bool Write(bool with_brackets = true) const;
-	
+
 	bool Write(bool with_brackets, std::string save_as) const;
-	
+
 	void SuppressError(bool newse) {SUPPRESS_ERROR = newse;}
-	
+
 	const std::string & GetName() const {return filename;}
-	
+
 	typedef std::map<std::string, std::string> SECTION;
-	
+
 	typedef std::map<std::string, SECTION> SECTIONMAP;
-	
+
 	typedef SECTIONMAP::const_iterator const_iterator;
-	
+
 	typedef SECTIONMAP::iterator iterator;
-	
+
 	const_iterator begin() const {return sections.begin();}
-	
+
 	const_iterator end() const {return sections.end();}
-	
+
 	size_t size() const {return sections.size();}
-		
+
 	bool GetSection(const std::string & section, const_iterator & it) const
 	{
 		it = sections.find(section);
@@ -99,7 +99,7 @@ public:
 		}
 		return false;
 	}
-	
+
 	bool GetSection(const std::string & section, const_iterator & it, std::ostream & error_output) const
 	{
 		if (!GetSection(section, it))
@@ -109,7 +109,7 @@ public:
 		}
 		return true;
 	}
-	
+
 	bool GetParam(const const_iterator & section, const std::string & param, std::string & output) const
 	{
 		assert(section != sections.end());
@@ -135,7 +135,7 @@ public:
 		}
 		return false;
 	}
-	
+
 	bool GetParam(const const_iterator & section, const std::string & param, bool & output) const
 	{
 		assert(section != sections.end());
@@ -153,7 +153,7 @@ public:
 		}
 		return false;
 	}
-	
+
 	template <typename T>
 	bool GetParam(const const_iterator & section, const std::string & param, T & output, std::ostream & error_output) const
 	{
@@ -172,20 +172,20 @@ public:
 		const_iterator it = end();
 		return GetSection(section, it) && GetParam(it, param, output);
 	}
-	
+
 	template <typename T>
 	bool GetParam(const std::string & section, const std::string & param, T & output, std::ostream & error_output) const
 	{
 		const_iterator it = end();
 		return GetSection(section, it, error_output) && GetParam(it, param, output, error_output);
 	}
-	
+
 	/// will create section if not available
 	void GetSection(const std::string & section, iterator & it)
 	{
 		it = sections.insert(std::pair<const std::string, SECTION>(section, SECTION())).first;
 	}
-	
+
 	/// will create param if not available
 	void SetParam(iterator section, const std::string & param, const std::string & invar)
 	{
@@ -194,7 +194,7 @@ public:
 			section->second[param] = invar;
 		}
 	}
-	
+
 	/// will create param if not available
 	template <typename T>
 	void SetParam(iterator section, const std::string & param, const T & invar)
@@ -214,14 +214,14 @@ public:
 		GetSection(section, it);
 		SetParam(it, param, invar);
 	}
-	
+
 private:
 	SECTIONMAP sections;
 	std::set<std::string> include;
 	std::string filename;
 	bool SUPPRESS_ERROR;
-	
-	void ProcessLine(CONFIG::iterator & section, std::string & linestr);
+
+	bool ProcessLine(CONFIG::iterator & section, std::string & linestr);
 };
 
 #endif /* _CONFIG_H */
@@ -245,7 +245,7 @@ Paste the file included below somewhere, then run this code:
 
 your output should be the debug print of all sections, then:
 
-	!!! test vectors: 
+	!!! test vectors:
 	a section
 	a section
 	2.1,0.9,0
@@ -257,7 +257,7 @@ your output should be the debug print of all sections, then:
 
 #comment on the FIRST LINE??
 
-		variable outside of=a section  
+		variable outside of=a section
 
 test section numero UNO
 look at me = 23.4

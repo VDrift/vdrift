@@ -25,14 +25,14 @@ class Serializer
 {
 	private:
 		std::vector <bool> user_flags; ///< user-defined boolean flags
-	
+
 	protected:
 		///optional hints to higher level classes about where we are in the serialization process
 		virtual void ComplexTypeStart(const std::string & name) { (void) name; }
-		
+
 		///optional hints to higher level classes about where we are in the serialization process
 		virtual void ComplexTypeEnd(const std::string & name) { (void) name; }
-	
+
 	public:
 		///generic serialization function that will be called for complex types; this is a branch. returns true on success
 		template <typename T>
@@ -43,14 +43,14 @@ class Serializer
 			ComplexTypeEnd(name);
 			return success;
 		}
-		
+
 		///shortcut function for anonymously serializing the top-most object. returns true on success
 		template <typename T>
 		bool Serialize(T & t)
 		{
 			return t.Serialize(*this);
 		}
-		
+
 		///serialization overload for a simple type; this is a leaf.
 		///a serializer must implement this function. note that in some cases (if the format has IDs implied by the order of data) the name might be ignored. returns true on success
 		virtual bool Serialize(const std::string & name, int & t) = 0;
@@ -58,7 +58,7 @@ class Serializer
 		virtual bool Serialize(const std::string & name, float & t) = 0;
 		virtual bool Serialize(const std::string & name, double & t) = 0;
 		virtual bool Serialize(const std::string & name, std::string & t) = 0;
-		
+
 		///treat bools like ints
 		virtual bool Serialize(const std::string & name, bool & t)
 		{
@@ -67,7 +67,7 @@ class Serializer
 			t = boolint;
 			return true;
 		}
-		
+
 		///serialization overload for a complex type that we don't have the ability to change,
 		/// so we explicitly define the serialization process here. returns true on success
 		template <typename U, typename T>
@@ -79,7 +79,7 @@ class Serializer
 			ComplexTypeEnd(name);
 			return true;
 		}
-		
+
 		///serialization overload for a complex type that we don't have the ability to change,
 		/// so we explicitly define the serialization process here. returns true on success
 		template <typename T>
@@ -90,7 +90,7 @@ class Serializer
 			{
 				int listsize = t.size();
 				if (!this->Serialize("*size", listsize)) return false;
-				
+
 				int count = 1;
 				for (typename std::list <T>::iterator i = t.begin(); i != t.end(); ++i, ++count)
 				{
@@ -117,7 +117,7 @@ class Serializer
 			ComplexTypeEnd(name);
 			return true;
 		}
-		
+
 		///serialization overload for a complex type that we don't have the ability to change,
 		/// so we explicitly define the serialization process here. returns true on success
 		template <typename T>
@@ -128,7 +128,7 @@ class Serializer
 			{
 				int listsize = t.size();
 				if (!this->Serialize("*size", listsize)) return false;
-				
+
 				int count = 1;
 				for (typename std::set <T>::iterator i = t.begin(); i != t.end(); ++i, ++count)
 				{
@@ -158,7 +158,7 @@ class Serializer
 			ComplexTypeEnd(name);
 			return true;
 		}
-		
+
 		///serialization overload for a complex type that we don't have the ability to change,
 		/// so we explicitly define the serialization process here. returns true on success
 		template <typename T>
@@ -169,7 +169,7 @@ class Serializer
 			{
 				int listsize = t.size();
 				if (!this->Serialize("*size", listsize)) return false;
-				
+
 				int count = 1;
 				for (typename std::vector <T>::iterator i = t.begin(); i != t.end(); ++i, ++count)
 				{
@@ -197,7 +197,7 @@ class Serializer
 			ComplexTypeEnd(name);
 			return true;
 		}
-		
+
 		/// \verbatim vector <bool> is special \endverbatim
 		bool Serialize(const std::string & name, std::vector <bool> & t)
 		{
@@ -206,7 +206,7 @@ class Serializer
 			{
 				int listsize = t.size();
 				if (!this->Serialize("*size", listsize)) return false;
-				
+
 				int count = 1;
 				for (std::vector <bool>::iterator i = t.begin(); i != t.end(); ++i, ++count)
 				{
@@ -237,7 +237,7 @@ class Serializer
 			ComplexTypeEnd(name);
 			return true;
 		}
-		
+
 		///serialization overload for a complex type that we don't have the ability to change,
 		/// so we explicitly define the serialization process here. returns true on success
 		template <typename T>
@@ -248,7 +248,7 @@ class Serializer
 			{
 				int listsize = t.size();
 				if (!this->Serialize("*size", listsize)) return false;
-				
+
 				int count = 1;
 				for (typename std::deque <T>::iterator i = t.begin(); i != t.end(); ++i, ++count)
 				{
@@ -276,7 +276,7 @@ class Serializer
 			ComplexTypeEnd(name);
 			return true;
 		}
-		
+
 		///serialization overload for a complex type that we don't have the ability to change,
 		/// so we explicitly define the serialization process here. returns true on success
 		template <typename U, typename T>
@@ -287,13 +287,13 @@ class Serializer
 			{
 				int listsize = t.size();
 				if (!this->Serialize("*size", listsize)) return false;
-				
+
 				int count = 1;
 				for (typename std::map <U,T>::iterator i = t.begin(); i != t.end(); ++i, ++count)
 				{
 					std::stringstream countstr;
 					countstr << count;
-					
+
 					std::string keystr = "key" + countstr.str();
 					std::string valstr = "value" + countstr.str();
 
@@ -325,7 +325,7 @@ class Serializer
 			ComplexTypeEnd(name);
 			return true;
 		}
-		
+
 #ifdef USE_TR1
 		///serialization overload for a complex type that we don't have the ability to change,
 		/// so we explicitly define the serialization process here. returns true on success
@@ -337,13 +337,13 @@ class Serializer
 			{
 				int listsize = t.size();
 				if (!this->Serialize("*size", listsize)) return false;
-				
+
 				int count = 1;
 				for (typename std::tr1::unordered_map <U,T>::iterator i = t.begin(); i != t.end(); ++i, ++count)
 				{
 					std::stringstream countstr;
 					countstr << count;
-					
+
 					std::string keystr = "key" + countstr.str();
 					std::string valstr = "value" + countstr.str();
 
@@ -375,7 +375,7 @@ class Serializer
 			ComplexTypeEnd(name);
 			return true;
 		}
-		
+
 		///serialization overload for a complex type that we don't have the ability to change,
 		/// so we explicitly define the serialization process here. returns true on success
 		template <typename T, typename H>
@@ -386,7 +386,7 @@ class Serializer
 			{
 				int listsize = t.size();
 				if (!this->Serialize("*size", listsize)) return false;
-				
+
 				int count = 1;
 				for (typename std::tr1::unordered_set <T>::iterator i = t.begin(); i != t.end(); ++i, ++count)
 				{
@@ -417,21 +417,21 @@ class Serializer
 			return true;
 		}
 #endif
-		
+
 		enum Direction
 		{
 			DIRECTION_INPUT,
    			DIRECTION_OUTPUT
 		};
 		virtual Direction GetIODirection() = 0;
-		
+
 		void SetUserFlag(unsigned int flag, bool value)
 		{
 			assert(flag < 1024); // arbitrarily limit flags to a reasonable number
 			user_flags.resize(std::max(user_flags.size(),(size_t)flag+1), false);
 			user_flags[flag] = value;
 		}
-		
+
 		bool GetUserFlag(unsigned int flag)
 		{
 			if (flag < user_flags.size())
@@ -504,7 +504,7 @@ class TreeMap
 	private:
 		T leaf_;
 		std::map <std::string, TreeMap> branches_;
-		
+
 		void Print(std::ostream & out, std::deque <std::string> & location) const
 		{
 			if (branches_.empty()) //leaf
@@ -532,13 +532,13 @@ class TreeMap
 			}
 			return leavesout;
 		}
-		
+
 		void clear()
 		{
 			branches_.clear();
 			leaf_ = T();
 		}
-		
+
 		const T & leaf() const
 		{
 			return leaf_;
@@ -569,12 +569,12 @@ class TreeMap
 			else
 				return & ( i->second );
 		}
-		
+
 		///gets the branch or NULL if an error occurred.
 		const TreeMap * GetBranch ( const std::deque <std::string> & location ) const
 		{
 			const TreeMap * curmap = this;
-			
+
 			for ( std::deque <std::string>::const_iterator i = location.begin(); i != location.end(); ++i )
 			{
 				curmap = curmap->branch ( *i );
@@ -584,14 +584,14 @@ class TreeMap
 					return NULL;
 				}
 			}
-			
+
 			return curmap;
 		}
-		
+
 		TreeMap * GetBranch ( const std::deque <std::string> & location )
 		{
 			TreeMap * curmap = this;
-			
+
 			for ( std::deque <std::string>::const_iterator i = location.begin(); i != location.end(); ++i )
 			{
 				curmap = curmap->branch ( *i );
@@ -601,7 +601,7 @@ class TreeMap
 					return NULL;
 				}
 			}
-			
+
 			return curmap;
 		}
 
@@ -652,33 +652,33 @@ class TreeMap
 		{
 			return branches_[name];
 		}
-		
+
 		void Print(std::ostream & out) const
 		{
 			std::deque <std::string> location;
 			Print(out, location);
 		}
-		
+
 		///construct a string from a deque of strings, adding the delimiter between each string
 		std::string Implode(const std::deque <std::string> & container, char implode_delimiter='.') const
 		{
 			std::string imploded;
-			
+
 			for (std::deque <std::string>::const_iterator i = container.begin(); i != container.end(); ++i)
 			{
 				if (i != container.begin())
 					imploded.push_back(implode_delimiter);
 				imploded = imploded + *i;
 			}
-			
+
 			return imploded;
 		}
-		
+
 		///add the parameters from the other tree to this tree, over-writing duplicates with the othertree values
 		void Merge(const TreeMap <T> & othertree)
 		{
 			leaf_ = othertree.leaf_;
-			
+
 			for (typename std::map <std::string, TreeMap>::const_iterator i = othertree.branches_.begin();
 				i != othertree.branches_.end(); ++i)
 			{
@@ -697,13 +697,13 @@ class TextOutputSerializer : public SerializerOutput
 	private:
 		std::ostream & out_;
 		int indent_;
-		
+
 		void PrintIndent()
 		{
 			for (int i = 0; i < indent_; i++)
 				out_ << "  ";
 		}
-		
+
 		/// \verbatim replaces <CR> with '\n' \endverbatim
 		std::string Escape(const std::string & input) const
 		{
@@ -717,7 +717,7 @@ class TextOutputSerializer : public SerializerOutput
 			}
 			return outputstr;
 		}
-		
+
 		template <typename T>
 		bool WriteData(const std::string & name, const T & i, bool precise)
 		{
@@ -729,7 +729,7 @@ class TextOutputSerializer : public SerializerOutput
 				out_ << i << std::endl;
 			return true;
 		}
-		
+
 	protected:
 		virtual void ComplexTypeStart(const std::string & name)
 		{
@@ -739,7 +739,7 @@ class TextOutputSerializer : public SerializerOutput
 			out_ << "{" << std::endl;
 			indent_++;
 		}
-		
+
 		virtual void ComplexTypeEnd(const std::string & name)
 		{
 			(void) name;
@@ -747,30 +747,30 @@ class TextOutputSerializer : public SerializerOutput
 			PrintIndent();
 			out_ << "}" << std::endl;
 		}
-		
+
 	public:
 		TextOutputSerializer(std::ostream & newout) : out_(newout),indent_(0) {}
-		
+
 		virtual bool Serialize(const std::string & name, int & i)
 		{
 			return WriteData(name, i, false);
 		}
-		
+
 		virtual bool Serialize(const std::string & name, unsigned int & i)
 		{
 			return WriteData(name, i, false);
 		}
-		
+
 		virtual bool Serialize(const std::string & name, float & i)
 		{
 			return WriteData(name, i, true);
 		}
-		
+
 		virtual bool Serialize(const std::string & name, double & i)
 		{
 			return WriteData(name, i, true);
 		}
-		
+
 		virtual bool Serialize(const std::string & name, std::string & i)
 		{
 			return WriteData(name, Escape(i), false);
@@ -785,13 +785,13 @@ class TextInputSerializer : public SerializerInput
 		std::deque <std::string> serialization_location_;
 		std::ostream * error_output_;
 		bool allow_missing_;
-		
+
 		void ConsumeWhitespace(std::istream & in) const
 		{
 			while (in && (in.peek() == ' ' || in.peek() == '\n' || in.peek() == '\t'))
 				in.get();
 		}
-		
+
 		///seeks to the delimiter return the text minus the delimiter
 		std::string SeekTo(std::istream & in, char delim) const
 		{
@@ -799,7 +799,7 @@ class TextInputSerializer : public SerializerInput
 			std::getline(in,text,delim);
 			return text;
 		}
-		
+
 		std::string strLTrim(std::string instr) const
 		{
 			return instr.erase(0, instr.find_first_not_of(" \t"));
@@ -841,17 +841,17 @@ class TextInputSerializer : public SerializerInput
 			}
 			return outputstr;
 		}
-		
+
 		template <typename T>
 		bool ReadData(const std::string & name, T & i)
 		{
 			serialization_location_.push_back(name);
 			std::string string_representation;
-			
+
 			// zomg hack for missing fields because we want to omit lists entirely and have them serialize correctly
 			if (name == "*size" && allow_missing_)
 				string_representation = "0";
-			
+
 			if (!parsed_data_tree_.GetLeaf(serialization_location_, string_representation) && !allow_missing_)
 			{
 				if (error_output_)
@@ -863,15 +863,15 @@ class TextInputSerializer : public SerializerInput
 				}
 				return false;
 			}
-			
+
 			std::stringstream converter(string_representation);
 			converter >> i;
-			
+
 			serialization_location_.pop_back();
-			
+
 			return true;
 		}
-		
+
 		bool ReadStringData(const std::string & name, std::string & i)
 		{
 			serialization_location_.push_back(name);
@@ -886,43 +886,43 @@ class TextInputSerializer : public SerializerInput
 				}
 				return false;
 			}
-			
+
 			serialization_location_.pop_back();
-			
+
 			return true;
 		}
-		
+
 	protected:
 		virtual void ComplexTypeStart(const std::string & name)
 		{
 			serialization_location_.push_back(name);
 		}
-		
+
 		virtual void ComplexTypeEnd(const std::string & name)
 		{
 			(void) name;
 			serialization_location_.pop_back();
 		}
-		
+
 	public:
 		TextInputSerializer() : error_output_(NULL) {}
 		TextInputSerializer(std::istream & in) : error_output_(NULL) {Parse(in);}
-		
+
 		void set_error_output(std::ostream & value)
 		{
 			error_output_ = &value;
 		}
-		
+
 		void set_allow_missing(bool allow_missing)
 		{
 			allow_missing_ = allow_missing;
 		}
-		
+
 		///this must be done before an object is serialized. returns true on success
 		bool Parse(std::istream & in)
 		{
 			std::deque <std::string> tree_location;
-			
+
 			//the parse loop
 			while (in)
 			{
@@ -931,7 +931,7 @@ class TextInputSerializer : public SerializerInput
 				std::stringstream linestream(line);
 				std::string name = SeekTo(linestream, '=');
 				name = strTrim(name);
-				
+
 				// special case handling for multiple items
 				// this allows us to have a nice format for vectors
 				if (name == "*item")
@@ -945,7 +945,7 @@ class TextInputSerializer : public SerializerInput
 					StringHelpers::ConvertStringToOther(curcountstr, curcount);
 					curcount++;
 					parsed_data_tree_.SetLeaf(tree_location_temp, StringHelpers::ConvertOtherToString(curcount));
-					
+
 					std::stringstream newname;
 					newname << "item" << curcount;
 					name = newname.str();
@@ -961,7 +961,7 @@ class TextInputSerializer : public SerializerInput
 					StringHelpers::ConvertStringToOther(curcountstr, curcount);
 					curcount++;
 					parsed_data_tree_.SetLeaf(tree_location_temp, StringHelpers::ConvertOtherToString(curcount));
-					
+
 					std::stringstream newname;
 					newname << "key" << curcount;
 					name = newname.str();
@@ -975,12 +975,12 @@ class TextInputSerializer : public SerializerInput
 					std::string curcountstr = "0";
 					parsed_data_tree_.GetLeaf(tree_location_temp, curcountstr);
 					StringHelpers::ConvertStringToOther(curcountstr, curcount);
-					
+
 					std::stringstream newname;
 					newname << "value" << curcount;
 					name = newname.str();
 				}
-				
+
 				if (name.length() == line.length()) //no assignment, so this must be the start or end of a complex type
 				{
 					if (name == "{")
@@ -1016,32 +1016,32 @@ class TextInputSerializer : public SerializerInput
 					tree_location.pop_back();
 				}
 			}
-			
+
 			serialization_location_.clear();
-			
+
 			return true;
 		}
-		
+
 		virtual bool Serialize(const std::string & name, int & i)
 		{
 			return ReadData(name, i);
 		}
-		
+
 		virtual bool Serialize(const std::string & name, unsigned int & i)
 		{
 			return ReadData(name, i);
 		}
-		
+
 		virtual bool Serialize(const std::string & name, float & i)
 		{
 			return ReadData(name, i);
 		}
-		
+
 		virtual bool Serialize(const std::string & name, double & i)
 		{
 			return ReadData(name, i);
 		}
-		
+
 		virtual bool Serialize(const std::string & name, std::string & i)
 		{
 			if (!ReadStringData(name, i)) return false;
@@ -1061,7 +1061,7 @@ class BinaryOutputSerializer : public SerializerOutput
 	private:
 		std::ostream & out_;
 		const bool bigendian_;
-		
+
 		bool IsBigEndian() const
 		{
 			short word = 0x4321;
@@ -1070,7 +1070,7 @@ class BinaryOutputSerializer : public SerializerOutput
 			else
 				return false;
 		}
-		
+
 		void ByteSwap(unsigned char * b, int n) const
 		{
 			register int i = 0;
@@ -1081,7 +1081,7 @@ class BinaryOutputSerializer : public SerializerOutput
 				i++, j--;
 			}
 		}
-		
+
 		template <typename T>
 		bool WriteData(const std::string & name, const T & i)
 		{
@@ -1094,10 +1094,10 @@ class BinaryOutputSerializer : public SerializerOutput
 			}
 			else
 				out_.write(reinterpret_cast<const char *>(&i),sizeof(T));
-			
+
 			return !out_.bad();
 		}
-		
+
 		bool WriteStringData(const std::string & name, const std::string & i)
 		{
 			(void) name;
@@ -1106,30 +1106,30 @@ class BinaryOutputSerializer : public SerializerOutput
 			out_.write(i.c_str(),strlen*sizeof(char));
 			return !out_.bad();
 		}
-		
+
 	public:
 		BinaryOutputSerializer(std::ostream & newout) : out_(newout),bigendian_(IsBigEndian()) {}
-		
+
 		virtual bool Serialize(const std::string & name, int & i)
 		{
 			return WriteData(name, i);
 		}
-		
+
 		virtual bool Serialize(const std::string & name, unsigned int & i)
 		{
 			return WriteData(name, i);
 		}
-		
+
 		virtual bool Serialize(const std::string & name, float & i)
 		{
 			return WriteData(name, i);
 		}
-		
+
 		virtual bool Serialize(const std::string & name, double & i)
 		{
 			return WriteData(name, i);
 		}
-		
+
 		virtual bool Serialize(const std::string & name, std::string & i)
 		{
 			return WriteStringData(name, i);
@@ -1142,7 +1142,7 @@ class BinaryInputSerializer : public SerializerInput
 	private:
 		std::istream & in_;
 		const bool bigendian_;
-		
+
 		bool IsBigEndian() const
 		{
 			short word = 0x4321;
@@ -1151,7 +1151,7 @@ class BinaryInputSerializer : public SerializerInput
 			else
 				return false;
 		}
-		
+
 		void ByteSwap(unsigned char * b, int n) const
 		{
 			register int i = 0;
@@ -1162,7 +1162,7 @@ class BinaryInputSerializer : public SerializerInput
 				i++, j--;
 			}
 		}
-		
+
 		template <typename T>
 		bool ReadData(const std::string & name, T & i)
 		{
@@ -1175,10 +1175,10 @@ class BinaryInputSerializer : public SerializerInput
 			{
 				ByteSwap(reinterpret_cast<unsigned char *>(&i),sizeof(T));
 			}
-			
+
 			return true;
 		}
-		
+
 		bool ReadStringData(const std::string & name, std::string & i)
 		{
 			(void) name;
@@ -1196,30 +1196,30 @@ class BinaryInputSerializer : public SerializerInput
 			delete [] inbuffer;
 			return true;
 		}
-		
+
 	public:
 		BinaryInputSerializer(std::istream & newin) : in_(newin),bigendian_(IsBigEndian()) {}
-		
+
 		virtual bool Serialize(const std::string & name, int & i)
 		{
 			return ReadData(name, i);
 		}
-		
+
 		virtual bool Serialize(const std::string & name, unsigned int & i)
 		{
 			return ReadData(name, i);
 		}
-		
+
 		virtual bool Serialize(const std::string & name, float & i)
 		{
 			return ReadData(name, i);
 		}
-		
+
 		virtual bool Serialize(const std::string & name, double & i)
 		{
 			return ReadData(name, i);
 		}
-		
+
 		virtual bool Serialize(const std::string & name, std::string & i)
 		{
 			return ReadStringData(name, i);
@@ -1234,12 +1234,12 @@ class ReflectionSerializer : public Serializer
 		Direction direction_;
 		std::deque <std::string> serialization_location_;
 		std::ostream * error_output_;
-		
+
 		template <typename T>
 		bool ReadWriteData(const std::string & name, T & i)
 		{
 			serialization_location_.push_back(name);
-			
+
 			if (direction_ == DIRECTION_INPUT)
 			{
 				std::string string_representation;
@@ -1254,7 +1254,7 @@ class ReflectionSerializer : public Serializer
 					}
 					return false;
 				}
-				
+
 				StringHelpers::ConvertStringToOther(string_representation, i);
 			}
 			else if (direction_ == DIRECTION_OUTPUT)
@@ -1262,39 +1262,39 @@ class ReflectionSerializer : public Serializer
 				std::string string_representation = StringHelpers::ConvertOtherToString(i);
 				reflection_data_tree_.SetLeaf(serialization_location_, string_representation);
 			}
-			
+
 			serialization_location_.pop_back();
-			
+
 			return true;
 		}
-		
+
 	protected:
 		virtual Direction GetIODirection() {return direction_;}
-		
+
 		virtual void ComplexTypeStart(const std::string & name)
 		{
 			serialization_location_.push_back(name);
 		}
-		
+
 		virtual void ComplexTypeEnd(const std::string & name)
 		{
 			(void) name;
 			serialization_location_.pop_back();
 		}
-		
+
 	public:
 		ReflectionSerializer() : direction_(DIRECTION_INPUT), error_output_(NULL) {}
-		
+
 		void set_error_output(std::ostream & value)
 		{
 			error_output_ = &value;
 		}
-		
+
 		void TurnOffErrorOutput()
 		{
 			error_output_ = NULL;
 		}
-		
+
 		///get a list of branches at the given location.  returns true on success.
 		bool GetBranches(const std::deque <std::string> & location, std::vector <std::string> & output) const
 		{
@@ -1316,40 +1316,40 @@ class ReflectionSerializer : public Serializer
 				return true;
 			}
 		}
-		
+
 		///read from the object into our reflection storage.  return true on success.
 		template <typename T>
 		bool ReadFromObject(T & object) {direction_ = DIRECTION_OUTPUT; reflection_data_tree_.clear(); serialization_location_.clear(); return Serializer::Serialize(object);}
-		
+
 		///write from our reflection storage to the object.  return true on success.
 		template <typename T>
 		bool WriteToObject(T & object) {direction_ = DIRECTION_INPUT; serialization_location_.clear(); return Serializer::Serialize(object);}
-		
+
 		virtual bool Serialize(const std::string & name, int & i)
 		{
 			return ReadWriteData(name, i);
 		}
-		
+
 		virtual bool Serialize(const std::string & name, unsigned int & i)
 		{
 			return ReadWriteData(name, i);
 		}
-		
+
 		virtual bool Serialize(const std::string & name, float & i)
 		{
 			return ReadWriteData(name, i);
 		}
-		
+
 		virtual bool Serialize(const std::string & name, double & i)
 		{
 			return ReadWriteData(name, i);
 		}
-		
+
 		virtual bool Serialize(const std::string & name, std::string & i)
 		{
 			return ReadWriteData(name, i);
 		}
-		
+
 		///gets the requested variable and sets the output argument to it, or if an error occurred, does not modify the output argument. returns true on success.
 		template <typename T>
 		bool Get ( const std::deque <std::string> & location, T & output ) const
@@ -1358,10 +1358,10 @@ class ReflectionSerializer : public Serializer
 			if (!GetString(location, string_representation))
 				return false;
 			StringHelpers::ConvertStringToOther(string_representation, output);
-			
+
 			return true;
 		}
-		
+
 		///gets the requested variable in a string representation and sets the output argument.  returns true on success.
 		bool GetString ( const std::deque <std::string> & location, std::string & output ) const
 		{
@@ -1377,12 +1377,12 @@ class ReflectionSerializer : public Serializer
 				}
 				return false;
 			}
-			
+
 			output = string_representation;
-			
+
 			return true;
 		}
-		
+
 		///sets the requested variable to the given value, or if an error occurred, does not modify it. this Set function only allows setting of existing variables; see Add for an alternative that allows setting of existing or new variables. returns true on success.
 		template <typename T>
 		bool Set ( const std::deque <std::string> & location, const T & value )
@@ -1390,12 +1390,12 @@ class ReflectionSerializer : public Serializer
 			std::string string_representation = StringHelpers::ConvertOtherToString(value);
 			return SetString(location, string_representation);
 		}
-		
+
 		///alternative to Set that takes a string representation of the type.  returns true on success.
 		bool SetString(const std::deque <std::string> & location, const std::string & valuestr)
 		{
 			TreeMap <std::string> * branch = reflection_data_tree_.GetBranch(location);
-			
+
 			if (!branch)
 			{
 				if (error_output_)
@@ -1407,33 +1407,33 @@ class ReflectionSerializer : public Serializer
 				}
 				return false;
 			}
-			
+
 			branch->set_leaf(valuestr);
-			
+
 			return true;
 		}
-		
+
 		///sets the requested variable to the given value, and if it does not exist, creates the variable; note that this may result in errors when serializing back to the object unless you know what you're doing. see the Set function for a version that won't automatically create the variable if it doesn't exist. returns true on success.
 		template <typename T>
 		bool Add ( const std::deque <std::string> & location, const T & value )
 		{
 			return AddString(location, StringHelpers::ConvertOtherToString(value));
 		}
-		
+
 		///alternative to Add that takes a string representation.  returns true on success.
 		bool AddString ( const std::deque <std::string> & location, const std::string & value )
 		{
 			reflection_data_tree_.SetLeaf(location, value);
-			
+
 			return true;
 		}
-		
+
 		///generate a deque of strings from a delimited string
 		std::deque <std::string> Explode(const std::string & delimited_string, char delimiter='.') const
 		{
 			std::deque <std::string> container;
 			std::stringstream instr(delimited_string);
-			
+
 			while (instr)
 			{
 				std::string text;
@@ -1441,16 +1441,16 @@ class ReflectionSerializer : public Serializer
 				if (!text.empty())
 					container.push_back(text);
 			}
-			
+
 			return container;
 		}
-		
+
 		///debug print of the reflection data map
 		void Print(std::ostream & output)
 		{
 			reflection_data_tree_.Print(output);
 		}
-		
+
 		///merge the other tree into our reflection tree
 		void Merge(const TreeMap <std::string> & othertree)
 		{
@@ -1481,12 +1481,12 @@ bool WriteObjectToFile(const std::string & path, T & object, std::ostream & info
 	}
 	else
 		error = true;
-	
+
 	if (error)
 		info_output << "Could not write to file " << path << std::endl;
 	else
 		info_output << "Wrote " << path << std::endl;
-	
+
 	return !error;
 }
 
@@ -1545,10 +1545,13 @@ bool LoadObjectFromFile(const std::string & name, const std::string & path, T & 
 		error = true;
 		info_output << "File " << path << " not found" << std::endl;
 	}
-	
+
 	return !error;
 }
 
+/// \todo this function fails on certain machines when compiled with optimizations turned on. commented out until this is fixed. see test in joeserialize.cpp:614.
+
+/*
 template <typename T>
 void LoadObjectFromFileOrCreateDefault(const std::string & path, T & object, std::ostream & info_output)
 {
@@ -1601,13 +1604,14 @@ void LoadObjectFromFileOrCreateDefault(const std::string & path, T & object, std
 		error = true;
 		info_output << "File " << path << " not found; creating default" << std::endl;
 	}
-	
+
 	if (error)
 	{
 		object = T();
 		WriteObjectToFile(path, object, info_output);
 	}
 }
+*/
 
 }
 

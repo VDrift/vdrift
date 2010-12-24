@@ -25,7 +25,7 @@ static std::string Strip(std::string instr, char stripchar)
 {
 	std::string::size_type pos = 0;
 	std::string outstr = "";
-	
+
 	while (pos < instr.length())
 	{
 		if (instr.c_str()[pos] != stripchar)
@@ -34,7 +34,7 @@ static std::string Strip(std::string instr, char stripchar)
 		}
 		pos++;
 	}
-	
+
 	return outstr;
 }
 
@@ -84,46 +84,50 @@ bool CONFIG::Load(std::string fname)
 		return true;
 	}
 	include.insert(fname);
-	
+
 	std::ifstream f(fname.c_str());
-	if (!f && !SUPPRESS_ERROR)
-	{
-		return false;
-	}
-	
 	return Load(f);
 }
 
 bool CONFIG::Load(std::istream & f)
 {
+	if (!SUPPRESS_ERROR && (!f || f.eof()))
+	{
+		return false;
+	}
+
 	iterator section = sections.insert(std::pair<std::string, SECTION>("", SECTION())).first;
 	std::string line;
 	while (f && !f.eof())
 	{
 		std::getline(f, line, '\n');
-		ProcessLine(section, line);
+		bool process_success = ProcessLine(section, line);
+		if (!process_success)
+		{
+			return false;
+		}
 	}
-	
+
 	//DebugPrint(std::cerr);
-	
+
 	return true;
 }
 
-void CONFIG::ProcessLine(CONFIG::iterator & section, std::string & linestr)
+bool CONFIG::ProcessLine(CONFIG::iterator & section, std::string & linestr)
 {
 	linestr = Trim(linestr);
 	linestr = Strip(linestr, '\r');
 	linestr = Strip(linestr, '\n');
-	
+
 	//remove comments
 	std::string::size_type commentpos = linestr.find("#", 0);
 	if (commentpos < linestr.length())
 	{
 		linestr = linestr.substr(0, commentpos);
 	}
-	
+
 	linestr = Trim(linestr);
-	
+
 	//only continue if not a blank line or comment-only line
 	if (linestr.length() > 0)
 	{
@@ -136,11 +140,17 @@ void CONFIG::ProcessLine(CONFIG::iterator & section, std::string & linestr)
 			std::string val = linestr.substr(equalpos, linestr.length() - equalpos);
 			name = Trim(name);
 			val = Trim(val);
-			
+
 			//only continue if valid
 			if (name.length() > 0 && val.length() > 0)
 			{
 				section->second[name] = val;
+			}
+			else if (!SUPPRESS_ERROR)
+			{
+				//std::cout << "a line started with an equal sign or ended with an equal sign:" << std::endl
+				//          << linestr << std::endl;
+				return false;
 			}
 		}
 		else if(linestr.find("include ") == 0)
@@ -151,26 +161,61 @@ void CONFIG::ProcessLine(CONFIG::iterator & section, std::string & linestr)
 			std::string::size_type pos = filename.rfind('/');
 			if (pos != std::string::npos) dir = filename.substr(0, pos);
 			std::string path = GetAbsolutePath(dir, relpath);
-			Load(path);
+			bool include_load_success = Load(path);
+			if (!SUPPRESS_ERROR && !include_load_success)
+			{
+				//std::cout << "the included file failed to load, bail" << std::endl;
+				return false;
+			}
 		}
 		else
 		{
 			//section header
-			linestr = Strip(linestr, '[');
-			linestr = Strip(linestr, ']');
-			linestr = Trim(linestr);
-			
+			std::string section_name;
+			section_name = Strip(linestr, '[');
+			section_name = Strip(section_name, ']');
+			section_name = Trim(section_name);
+
 			// subsection
-			size_t n = linestr.rfind('.');
+			size_t n = section_name.rfind('.');
 			if (n != std::string::npos)
 			{
-				std::string parent = linestr.substr(0, n);
-				std::string child = linestr.substr(n+1);
-				sections[parent][child] = linestr;
+				std::string parent = section_name.substr(0, n);
+				std::string child = section_name.substr(n+1);
+
+				/*
+				SECTIONMAP::const_iterator parent_iter = sections.find(parent);
+				if (!SUPPRESS_ERROR && (parent_iter == sections.end()))
+				{
+					std::cout << "warning: parent section " << parent << " doesn't exist. adding an empty one." << std::endl;
+					return false;
+				}
+
+				SECTION::const_iterator child_iter = parent_iter->second.find(child);
+				if (!SUPPRESS_ERROR && (child_iter != parent_iter->second.end()))
+				{
+					std::cout << "child already exists, this must be a duplicate section. error" << std::endl;
+					return false;
+				}
+				*/
+				sections[parent][child] = section_name;
 			}
-			section = sections.insert(std::pair<std::string, SECTION>(linestr, SECTION())).first;
+			/*
+			SECTIONMAP::const_iterator already_exists = sections.find(section_name);
+			if (!SUPPRESS_ERROR && (already_exists != sections.end()))
+			{
+				std::cout << "section " << section_name << " already exists, duplicate section in the file, error" << std::endl;
+				return false;
+				/// this shouldn't be an error case because included files will import sections.
+				/// find a way to mark which sections were included, or keep a list of sections imported during this load?
+				/// or perhaps just don't worry about it?
+			}
+			*/
+			section = sections.insert(std::pair<std::string, SECTION>(section_name, SECTION())).first;
 		}
 	}
+
+	return true;
 }
 
 void CONFIG::DebugPrint(std::ostream & out, bool with_brackets) const
@@ -200,16 +245,16 @@ bool CONFIG::Write(bool with_brackets, std::string save_as) const
 {
 	std::ofstream f(save_as.c_str());
 	if (!f) return false;
-	
+
 	DebugPrint(f);
-	
+
 	return true;
 }
 
 QT_TEST(configfile_test)
 {
 	std::stringstream instream;
-	instream << 
+	instream <<
 		"\n#comment on the FIRST LINE??\n\n"
 		"variable outside of=a section\n\n"
 		"test section numero UNO\n"
@@ -226,7 +271,7 @@ QT_TEST(configfile_test)
 		"random = intermediary\n"
 		"this is a duplicate = 2\n"
 		"unterminated line = good?";
-	
+
 	CONFIG testconfig;
 	testconfig.Load(instream);
 	std::string tstr = "notfound";
@@ -251,7 +296,7 @@ QT_TEST(configfile_test)
 	QT_CHECK(testconfig.GetParam("what about", "unterminated line", tstr));
 	QT_CHECK_EQUAL(tstr, "good?");
 	//testconfig.DebugPrint(std::cout);
-	
+
 	{
 		CONFIG::const_iterator i = testconfig.begin();
 		QT_CHECK_EQUAL(i->first, "");
@@ -264,7 +309,7 @@ QT_TEST(configfile_test)
 		i++;
 		QT_CHECK(i == testconfig.end());
 	}
-	
+
 	{
 		std::string value;
 		CONFIG::const_iterator i;
@@ -281,28 +326,37 @@ QT_TEST(config_include)
 	std::ostream info(&log), error(&log);
 	PATHMANAGER path;
 	path.Init(info, error);
-	
+
+	std::string bad_include_file = path.GetDataPath() + "/test/badinclude.cfg";
 	std::string test_file = path.GetDataPath() + "/test/test.cfg";
 	std::string verify_file = path.GetDataPath() + "/test/verify.cfg";
-	bool files_loaded = false;
-	
+
+	bool cfg_bad_include_file_loaded = false;
+	CONFIG cfg_bad_include;
+	cfg_bad_include_file_loaded = cfg_bad_include.Load(bad_include_file);
+	//cfg_bad_include.DebugPrint(std::cerr);
+	QT_CHECK(!cfg_bad_include_file_loaded);
+
+	bool cfg_test_file_loaded = false;
 	CONFIG cfg_test;
-	files_loaded = cfg_test.Load(test_file);
+	cfg_test_file_loaded = cfg_test.Load(test_file);
 	//cfg_test.DebugPrint(std::cerr);
-	
+	QT_CHECK(cfg_test_file_loaded);
+
+	bool cfg_verify_file_loaded = false;
 	CONFIG cfg_verify;
-	files_loaded = files_loaded && cfg_verify.Load(verify_file);
+	cfg_verify_file_loaded = cfg_verify.Load(verify_file);
 	//cfg_verify.DebugPrint(std::cerr);
-	
-	QT_CHECK(files_loaded);
-	if (!files_loaded) return;
-	
+
+	QT_CHECK(cfg_verify_file_loaded);
+	if (!(cfg_test_file_loaded && cfg_verify_file_loaded)) return;
+
 	for (CONFIG::const_iterator s = cfg_verify.begin(); s != cfg_verify.end(); ++s)
 	{
 		CONFIG::const_iterator ts;
 		QT_CHECK(cfg_test.GetSection(s->first, ts, error));
 		if (ts == cfg_test.end()) continue;
-		
+
 		for (CONFIG::SECTION::const_iterator p = s->second.begin(); p != s->second.end(); ++p)
 		{
 			std::string value;
