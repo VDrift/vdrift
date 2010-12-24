@@ -377,7 +377,7 @@ void BEZIER::Reverse()
 			points[n][i] = oldpoints[3-n][3-i];
 }
 
-MATHVECTOR <float, 3> BEZIER::Bernstein(float u, MATHVECTOR <float, 3> p[]) const
+MATHVECTOR <float, 3> BEZIER::Bernstein(float u, const MATHVECTOR <float, 3> p[]) const
 {
 	float oneminusu(1.0f-u);
 	MATHVECTOR <float, 3> a = p[0]*(u*u*u);
@@ -387,7 +387,7 @@ MATHVECTOR <float, 3> BEZIER::Bernstein(float u, MATHVECTOR <float, 3> p[]) cons
 	return a+b+c+d;
 }
 
-MATHVECTOR <float, 3> BEZIER::BernsteinTangent(float u, MATHVECTOR <float, 3> p[]) const
+MATHVECTOR <float, 3> BEZIER::BernsteinTangent(float u, const MATHVECTOR <float, 3> p[]) const
 {
 	float oneminusu(1.0f-u);
 	MATHVECTOR <float, 3> a = (p[1]-p[0])*(3*u*u);
@@ -398,25 +398,11 @@ MATHVECTOR <float, 3> BEZIER::BernsteinTangent(float u, MATHVECTOR <float, 3> p[
 
 MATHVECTOR <float, 3> BEZIER::SurfCoord(float px, float py) const
 {
-	MATHVECTOR <float, 3> temp[4];
-	MATHVECTOR <float, 3> temp2[4];
-	int i, j;
-
-	/*if (px == 0.0 && py == 0.0)
-		return points[3][3];
-	if (px == 1.0 && py == 1.0)
-		return points[0][0];
-	if (px == 1.0 && py == 0.0)
-		return points[0][3];
-	if (px == 0.0 && py == 1.0)
-		return points[3][0];*/
-	
 	//get splines along x axis
-	for (j = 0; j < 4; j++)
+	MATHVECTOR <float, 3> temp[4];
+	for (int j = 0; j < 4; ++j)
 	{
-		for (i = 0; i < 4; i++)
-			temp2[i] = points[j][i];
-		temp[j] = Bernstein(px, temp2);
+		temp[j] = Bernstein(px, points[j]);
 	}
 	
 	return Bernstein(py, temp);
@@ -424,27 +410,31 @@ MATHVECTOR <float, 3> BEZIER::SurfCoord(float px, float py) const
 
 MATHVECTOR <float, 3> BEZIER::SurfNorm(float px, float py) const
 {
-	MATHVECTOR <float, 3> temp[4];
-	MATHVECTOR <float, 3> temp2[4];
+	MATHVECTOR <float, 3> tempy[4];
 	MATHVECTOR <float, 3> tempx[4];
+	MATHVECTOR <float, 3> temp2[4];
 
 	//get splines along x axis
-	for (int j = 0; j < 4; j++)
+	for (int j = 0; j < 4; ++j)
 	{
-		for (int i = 0; i < 4; i++)
-			temp2[i] = points[j][i];
-		temp[j] = Bernstein(px, temp2);
+		tempy[j] = Bernstein(px, points[j]);
 	}
 	
 	//get splines along y axis
-	for (int j = 0; j < 4; j++)
+	for (int j = 0; j < 4; ++j)
 	{
-		for (int i = 0; i < 4; i++)
+		for (int i = 0; i < 4; ++i)
+		{
 			temp2[i] = points[i][j];
+		}
 		tempx[j] = Bernstein(py, temp2);
 	}
+
+	MATHVECTOR <float, 3> tx = BernsteinTangent(px, tempx);
+	MATHVECTOR <float, 3> ty = BernsteinTangent(py, tempy);
+	MATHVECTOR <float, 3> n = -tx.cross(ty).Normalize();
 	
-	return -(BernsteinTangent(px, tempx).cross(BernsteinTangent(py, temp)).Normalize());
+	return n;
 }
 
 BEZIER & BEZIER::CopyFrom(const BEZIER &other)
