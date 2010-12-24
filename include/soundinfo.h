@@ -5,34 +5,24 @@
 
 struct SOUNDINFO
 {
-	unsigned int samples;
-	unsigned int frequency;
-	unsigned int bytespersample;
-	unsigned int channels;
+	int samples, frequency, bytespersample, channels;
 	
-	SOUNDINFO() :
-		samples(0),
-		frequency(0),
-		bytespersample(0),
-		channels(0)
-	{
-		// ctor
-	}
-	
-	bool operator!=(const SOUNDINFO & other) const
-	{
-		return (samples != other.samples) ||
-			(frequency != other.frequency) ||
-			(bytespersample != other.bytespersample) ||
-			(channels != other.channels);
-	}
+	SOUNDINFO(int numsamples, int freq, int chan, int bytespersamp) : samples(numsamples), frequency(freq), bytespersample(bytespersamp), channels(chan) { }
 	
 	void DebugPrint(std::ostream & out) const
 	{
-		out << "Samples: " << samples << "\n";
-		out << "Frequency: " << frequency << "\n";
-		out << "Channels: " << channels << "\n";
-		out << "Bits per sample: " << bytespersample * 8 << "\n";
+		out << "Samples: " << samples << std::endl;
+		out << "Frequency: " << frequency << std::endl;
+		out << "Channels: " << channels << std::endl;
+		out << "Bits per sample: " << bytespersample*8 << std::endl;
+	}
+	
+	bool operator==(const SOUNDINFO & other) const
+	{
+		return (samples == other.samples &&
+				frequency == other.frequency &&
+				channels == other.channels &&
+				bytespersample == other.bytespersample);
 	}
 };
 

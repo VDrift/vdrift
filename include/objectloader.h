@@ -27,11 +27,38 @@ public:
 		const std::string & trackpath,
 		const std::string & trackdir,
 		const std::string & texsize,
-		const int anisotropy,
-		const bool vertical_tracking_skyboxes,
-		const bool dynamicshadowsenabled,
-		const bool agressivecombine,
-		const bool cull);
+		int anisotropy,
+		bool vertical_tracking_skyboxes,
+		bool dynamicshadowsenabled,
+		bool agressivecombine,
+		bool cull) :
+		sceneroot(sceneroot),
+		texture_manager(texture_manager),
+		model_manager(model_manager),
+		models(models),
+		objects(objects),
+		info_output(info_output),
+		error_output(error_output),
+		surfaces(surfaces),
+		trackpath(trackpath),
+		trackdir(trackdir),
+		texsize(texsize),
+		anisotropy(anisotropy),
+		vertical_tracking_skyboxes(vertical_tracking_skyboxes),
+		dynamicshadowsenabled(dynamicshadowsenabled),
+		agressivecombine(agressivecombine),
+		cull(cull),
+		objectpath(trackpath + "/objects"),
+		objectdir(trackdir +  "/objects"),
+		packload(false),
+		numobjects(0),
+		params_per_object(17),
+		expected_params(17),
+		min_params(14),
+		error(false)
+	{
+		// ctor
+	}
 
 	bool GetError() const
 	{

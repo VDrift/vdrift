@@ -8,41 +8,45 @@
 
 class SOUNDBUFFER
 {
-friend class SOUNDSOURCE;
 public:
-	SOUNDBUFFER();
+	SOUNDBUFFER() : info(0,0,0,0),loaded(false),sound_buffer(NULL) {}
+	~SOUNDBUFFER() {Unload();}
 	
-	~SOUNDBUFFER();
-	
-	bool Load(const std::string & filename, const SOUNDINFO & device_info, std::ostream & error_output);
-	
-	void Unload();
-	
-	const SOUNDINFO & GetSoundInfo() const
+	bool Load(const std::string & filename, const SOUNDINFO & sound_device_info, std::ostream & error_output)
 	{
-		return info;
+		if (filename.find(".wav") != std::string::npos)
+			return LoadWAV(filename, sound_device_info, error_output);
+		else if (filename.find(".ogg") != std::string::npos)
+			return LoadOGG(filename, sound_device_info, error_output);
+		else
+		{
+			error_output << "Unable to determine file type from filename: " << filename << std::endl;
+			return false;
+		}
 	}
-	
-	int GetSample16bit(const unsigned int channel, const unsigned int position) const
+	void Unload() {if (loaded && sound_buffer != NULL) delete [] sound_buffer;sound_buffer = NULL;}
+	const SOUNDINFO & GetSoundInfo() const {return info;}
+	inline int GetSample16bit(const unsigned int channel, const unsigned int position) const
 	{
-		return ((short *)sound_buffer)[position * info.channels + (channel - 1) * (info.channels - 1)];
+		return ((short *)sound_buffer)[position*info.channels+(channel-1)*(info.channels-1)];
 	}
-	
-	const std::string & GetName() const
-	{
-		return name;
-	}
-	
+	const std::string & GetName() const {return name;}
+
 	bool GetLoaded() const
 	{
-		return (sound_buffer != NULL);
+		return loaded;
 	}
 	
+friend class SOUNDSOURCE;
 private:
 	SOUNDINFO info;
 	unsigned int size;
+	bool loaded;
 	char * sound_buffer;
 	std::string name;
+	bool LoadWAV(const std::string & filename, const SOUNDINFO & sound_device_info, std::ostream & error_output);
+	bool LoadOGG(const std::string & filename, const SOUNDINFO & sound_device_info, std::ostream & error_output);
+
 };
 
 #endif // SOUNDBUFFER_H

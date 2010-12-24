@@ -12,9 +12,21 @@ class ENGINESOUNDINFO
 			BOTH
 		} power;
 
-		ENGINESOUNDINFO() : minrpm(1.0), maxrpm(100000.0), naturalrpm(7000.0),fullgainrpmstart(minrpm),fullgainrpmend(maxrpm),power(BOTH) {}
+		ENGINESOUNDINFO() :
+			minrpm(1.0),
+			maxrpm(100000.0),
+			naturalrpm(7000.0),
+			fullgainrpmstart(minrpm),
+			fullgainrpmend(maxrpm),
+			power(BOTH)
+		{
+			// ctor
+		}
 
-		bool operator < (const ENGINESOUNDINFO & other) const {return minrpm < other.minrpm;}
+		bool operator < (const ENGINESOUNDINFO & other) const
+		{
+			return minrpm < other.minrpm;
+		}
 };
 
 #endif // _ENGINESOUNDINFO_H

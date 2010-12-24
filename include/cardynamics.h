@@ -146,6 +146,8 @@ protected:
 	btDefaultMotionState motionState;	// common implementation to synchronize world transforms with offsets
 	btVector3 center_of_mass;
 	btTransform transform;				// last body transform
+	btVector3 linear_velocity;
+	btVector3 angular_velocity;
 	
 	// interpolated state
 	btVector3 bodyPosition;
@@ -223,6 +225,8 @@ protected:
 
 	// advance body(body, suspension, wheels) simulation by dt
 	void UpdateBody(
+		const btVector3 & lin_accel,
+		const btVector3 & ang_accel,			
 		const btVector3 & ext_force,
 		const btVector3 & ext_torque,
 		const btScalar drive_torque[],

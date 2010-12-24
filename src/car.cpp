@@ -716,7 +716,7 @@ bool CAR::LoadSounds(
 		tiresqueal[i].Enable3D(true);
 		tiresqueal[i].Loop(true);
 		tiresqueal[i].SetGain(0);
-		int samples = tiresqueal[i].GetSoundTrack().GetSoundInfo().samples;
+		int samples = soundptr->GetSoundInfo().samples;
 		tiresqueal[i].SeekToSample((samples/4)*i);
 		tiresqueal[i].Play();
 	}
@@ -730,7 +730,7 @@ bool CAR::LoadSounds(
 		gravelsound[i].Enable3D(true);
 		gravelsound[i].Loop(true);
 		gravelsound[i].SetGain(0);
-		int samples = gravelsound[i].GetSoundTrack().GetSoundInfo().samples;
+		int samples = soundptr->GetSoundInfo().samples;
 		gravelsound[i].SeekToSample((samples/4)*i);
 		gravelsound[i].Play();
 	}
@@ -744,7 +744,7 @@ bool CAR::LoadSounds(
 		grasssound[i].Enable3D(true);
 		grasssound[i].Loop(true);
 		grasssound[i].SetGain(0);
-		int samples = grasssound[i].GetSoundTrack().GetSoundInfo().samples;
+		int samples = soundptr->GetSoundInfo().samples;
 		grasssound[i].SeekToSample((samples/4)*i);
 		grasssound[i].Play();
 	}
@@ -1095,25 +1095,41 @@ void CAR::UpdateSounds(float dt)
 		float gain = 1.0;
 
 		if (rpm < info.minrpm)
+		{
 			gain = 0;
+		}
 		else if (rpm < info.fullgainrpmstart && info.fullgainrpmstart > info.minrpm)
-			gain *= (rpm - info.minrpm)/(info.fullgainrpmstart-info.minrpm);
-
+		{
+			gain *= (rpm - info.minrpm) / (info.fullgainrpmstart - info.minrpm);
+		}
+		
 		if (rpm > info.maxrpm)
+		{
 			gain = 0;
+		}
 		else if (rpm > info.fullgainrpmend && info.fullgainrpmend < info.maxrpm)
-			gain *= 1.0-(rpm - info.fullgainrpmend)/(info.maxrpm-info.fullgainrpmend);
-
+		{
+			gain *= 1.0 - (rpm - info.fullgainrpmend) / (info.maxrpm - info.fullgainrpmend);
+		}
+		
 		if (info.power == ENGINESOUNDINFO::BOTH)
+		{
 			gain *= throttle * 0.5 + 0.5;
+		}
 		else if (info.power == ENGINESOUNDINFO::POWERON)
+		{
 			gain *= throttle;
+		}
 		else if (info.power == ENGINESOUNDINFO::POWEROFF)
+		{
 			gain *= (1.0-throttle);
+		}
 
 		total_gain += gain;
 		if (gain > loudest)
+		{
 			loudest = gain;
+		}
 		gainlist.push_back(std::pair <SOUNDSOURCE *, float> (&sound, gain));
 
 		float pitch = rpm / info.naturalrpm;
@@ -1127,12 +1143,17 @@ void CAR::UpdateSounds(float dt)
 	for (std::list <std::pair <SOUNDSOURCE *, float> >::iterator i = gainlist.begin(); i != gainlist.end(); ++i)
 	{
 		if (total_gain == 0.0)
+		{
 			i->first->SetGain(0.0);
+		}
 		else if (enginesounds.size() == 1 && enginesounds.back().first.power == ENGINESOUNDINFO::BOTH)
+		{
 			i->first->SetGain(i->second);
+		}
 		else
+		{
 			i->first->SetGain(i->second/total_gain);
-
+		}
 		//if (i->second == loudest) std::cout << i->first->GetSoundTrack().GetName() << ": " << i->second << std::endl;
 	}
 

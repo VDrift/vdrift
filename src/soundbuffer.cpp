@@ -12,277 +12,234 @@
 #include <cstdio>
 #include <cstring>
 
-SOUNDBUFFER::SOUNDBUFFER() : sound_buffer(NULL)
+bool SOUNDBUFFER::LoadWAV(const std::string & filename, const SOUNDINFO & sound_device_info, std::ostream & error_output)
 {
-	// ctor
-}
+	if (loaded)
+		Unload();
 
-SOUNDBUFFER::~SOUNDBUFFER()
-{
-	Unload();
-}
+	name = filename;
 
-class SOUNDFILE
-{
-public:
-	virtual bool open(const std::string & filename, SOUNDINFO & info, std::ostream & error_output) = 0;
-	virtual bool read(char & sound_buffer, unsigned int size) = 0;
-};
+	FILE *fp;
 
-class OGGFILE : public SOUNDFILE
-{
-public:
-	virtual bool open(const std::string & filename, SOUNDINFO & info, std::ostream & error_output)
+	unsigned int size;
+
+	fp = fopen(filename.c_str(), "rb");
+	if (fp)
 	{
-		FILE * fp = fopen(filename.c_str(), "rb");
-		if (!fp)
+		char id[5]; //four bytes to hold 'RIFF'
+
+		if (fread(id,sizeof(char),4,fp) != 4) return false; //read in first four bytes
+		id[4] = '\0';
+		if (!strcmp(id,"RIFF"))
+		{ //we had 'RIFF' let's continue
+			if (fread(&size,sizeof(unsigned int),1,fp) != 1) return false; //read in 32bit size value
+			size = ENDIAN_SWAP_32(size);
+			if (fread(id,sizeof(char),4,fp)!= 4) return false; //read in 4 byte string now
+			if (!strcmp(id,"WAVE"))
+			{ //this is probably a wave file since it contained "WAVE"
+				if (fread(id,sizeof(char),4,fp)!= 4) return false; //read in 4 bytes "fmt ";
+				if (!strcmp(id,"fmt "))
+				{
+					unsigned int format_length, sample_rate, avg_bytes_sec;
+					short format_tag, channels, block_align, bits_per_sample;
+
+					if (fread(&format_length, sizeof(unsigned int),1,fp) != 1) return false;
+					format_length = ENDIAN_SWAP_32(format_length);
+					if (fread(&format_tag, sizeof(short), 1, fp) != 1) return false;
+					format_tag = ENDIAN_SWAP_16(format_tag);
+					if (fread(&channels, sizeof(short),1,fp) != 1) return false;
+					channels = ENDIAN_SWAP_16(channels);
+					if (fread(&sample_rate, sizeof(unsigned int), 1, fp) != 1) return false;
+					sample_rate = ENDIAN_SWAP_32(sample_rate);
+					if (fread(&avg_bytes_sec, sizeof(unsigned int), 1, fp) != 1) return false;
+					avg_bytes_sec = ENDIAN_SWAP_32(avg_bytes_sec);
+					if (fread(&block_align, sizeof(short), 1, fp) != 1) return false;
+					block_align = ENDIAN_SWAP_16(block_align);
+					if (fread(&bits_per_sample, sizeof(short), 1, fp) != 1) return false;
+					bits_per_sample = ENDIAN_SWAP_16(bits_per_sample);
+
+
+					//new wave seeking code
+					//find data chunk
+					bool found_data_chunk = false;
+					long filepos = format_length + 4 + 4 + 4 + 4 + 4;
+					int chunknum = 0;
+					while (!found_data_chunk && chunknum < 10)
+					{
+						fseek(fp, filepos, SEEK_SET); //seek to the next chunk
+						if (fread(id, sizeof(char), 4, fp) != 4) return false; //read in 'data'
+						if (fread(&size, sizeof(unsigned int), 1, fp) != 1) return false; //how many bytes of sound data we have
+						size = ENDIAN_SWAP_32(size);
+						if (!strcmp(id,"data"))
+						{
+							found_data_chunk = true;
+						}
+						else
+						{
+							filepos += size + 4 + 4;
+						}
+
+						chunknum++;
+					}
+
+					if (chunknum >= 10)
+					{
+						//cerr << __FILE__ << "," << __LINE__ << ": Sound file contains more than 10 chunks before the data chunk: " + filename << std::endl;
+						error_output << "Couldn't find wave data in first 10 chunks of " << filename << std::endl;
+						return false;
+					}
+
+					sound_buffer = new char[size];
+
+					if (fread(sound_buffer, sizeof(char), size, fp) != size) return false; //read in our whole sound data chunk
+
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+					if (bits_per_sample == 16)
+					{
+						for (unsigned int i = 0; i < size/2; i++)
+						{
+							//cout << "preswap i: " << sound_buffer[i] << "preswap i+1: " << sound_buffer[i+1] << std::endl;
+							//short preswap = ((short *)sound_buffer)[i];
+							((short *)sound_buffer)[i] = ENDIAN_SWAP_16(((short *)sound_buffer)[i]);
+							//cout << "postswap i: " << sound_buffer[i] << "postswap i+1: " << sound_buffer[i+1] << std::endl;
+							//cout << (int) i << "/" << (int) size << std::endl;
+							//short postswap = ((short *)sound_buffer)[i];
+							//cout << preswap << "/" << postswap << std::endl;
+
+						}
+					}
+					//else if (bits_per_sample != 8)
+					else
+					{
+						error_output << "Sound file with " << bits_per_sample << " bits per sample not supported" << std::endl;
+						return false;
+					}
+#endif
+
+					info = SOUNDINFO(size/(bits_per_sample/8), sample_rate, channels, bits_per_sample/8);
+					SOUNDINFO original_info(size/(bits_per_sample/8), sample_rate, channels, bits_per_sample/8);
+
+					loaded = true;
+					SOUNDINFO desired_info(original_info.samples, sound_device_info.frequency, original_info.channels, sound_device_info.bytespersample);
+					//ConvertTo(desired_info);
+					if (desired_info == original_info)
+					{
+
+					}
+					else
+					{
+						error_output << "SOUND FORMAT:" << std::endl;
+						original_info.DebugPrint(error_output);
+						error_output << "DESIRED FORMAT:" << std::endl;
+						desired_info.DebugPrint(error_output);
+						//throw EXCEPTION(__FILE__, __LINE__, "Sound file isn't in desired format: " + filename);
+						//cerr << __FILE__ << "," << __LINE__ << ": Sound file isn't in desired format: " + filename << std::endl;
+						error_output << "Sound file isn't in desired format: "+filename << std::endl;
+						return false;
+					}
+				}
+				else
+				{
+					//throw EXCEPTION(__FILE__, __LINE__, "Sound file doesn't have \"fmt \" header: " + filename);
+					//cerr << __FILE__ << "," << __LINE__ << ": Sound file doesn't have \"fmt \" header: " + filename << std::endl;
+					error_output << "Sound file doesn't have \"fmt\" header: "+filename << std::endl;
+					return false;
+				}
+			}
+			else
+			{
+				//throw EXCEPTION(__FILE__, __LINE__, "Sound file doesn't have WAVE header: " + filename);
+				//cerr << __FILE__ << "," << __LINE__ << ": Sound file doesn't have WAVE header: " + filename << std::endl;
+				error_output << "Sound file doesn't have WAVE header: "+filename << std::endl;
+				return false;
+			}
+		}
+		else
 		{
-			error_output << "Can't open sound file: " << filename << std::endl;
+			//throw EXCEPTION(__FILE__, __LINE__, "Sound file doesn't have RIFF header: " + filename);
+			//cerr << __FILE__ << "," << __LINE__ << ": Sound file doesn't have WAVE header: " + filename << std::endl;
+			error_output << "Sound file doesn't have RIFF header: "+filename << std::endl;
 			return false;
 		}
-		
-		ov_open_callbacks(fp, &oggFile, NULL, 0, OV_CALLBACKS_DEFAULT);
-		vorbis_info * pInfo = ov_info(&oggFile, -1);
-		unsigned int samples = ov_pcm_total(&oggFile, -1);
-		
-		info.samples = samples * pInfo->channels;
-		info.frequency = pInfo->rate;
-		info.channels = pInfo->channels;
-		info.bytespersample = 2;	// assume ogg is always 16-bit (2 bytes per sample) -Venzon
-		
-		return true;
 	}
-	
-	virtual bool read(char & sound_buffer, unsigned int size)
+	else
 	{
+		//throw EXCEPTION(__FILE__, __LINE__, "Can't open sound file: " + filename);
+		//cerr << __FILE__ << "," << __LINE__ << ": Can't open sound file: " + filename << std::endl;
+		error_output << "Can't open sound file: "+filename << std::endl;
+		return false;
+	}
+
+	//cout << size << std::endl;
+	return true;
+}
+
+bool SOUNDBUFFER::LoadOGG(const std::string & filename, const SOUNDINFO & sound_device_info, std::ostream & error_output)
+{
+	if (loaded)
+		Unload();
+
+	name = filename;
+
+	FILE *fp;
+
+	unsigned int samples;
+
+	fp = fopen(filename.c_str(), "rb");
+	if (fp)
+	{
+		vorbis_info *pInfo;
+		OggVorbis_File oggFile;
+
+		ov_open_callbacks(fp, &oggFile, NULL, 0, OV_CALLBACKS_DEFAULT);
+
+		pInfo = ov_info(&oggFile, -1);
+
+		//I assume ogg is always 16-bit (2 bytes per sample) -Venzon
+		samples = ov_pcm_total(&oggFile,-1);
+		info = SOUNDINFO(samples*pInfo->channels, pInfo->rate, pInfo->channels, 2);
+		
+		SOUNDINFO desired_info(info.samples, sound_device_info.frequency, info.channels, sound_device_info.bytespersample);
+
+		if (!(desired_info == info))
+		{
+			error_output << "SOUND FORMAT:" << std::endl;
+			info.DebugPrint(error_output);
+			error_output << "DESIRED FORMAT:" << std::endl;
+			desired_info.DebugPrint(error_output);
+
+			error_output << "Sound file isn't in desired format: "+filename << std::endl;
+			ov_clear(&oggFile);
+			return false;
+		}
+
+		//allocate space
+		unsigned int size = info.samples*info.channels*info.bytespersample;
+		sound_buffer = new char[size];
 		int bitstream;
 		int endian = 0; //0 for Little-Endian, 1 for Big-Endian
 		int wordsize = 2; //again, assuming ogg is always 16-bits
 		int issigned = 1; //use signed data
+
 		int bytes = 1;
 		unsigned int bufpos = 0;
-		
 		while (bytes > 0)
 		{
-			bytes = ov_read(&oggFile, &sound_buffer+bufpos, size-bufpos, endian, wordsize, issigned, &bitstream);
+			bytes = ov_read(&oggFile, sound_buffer+bufpos, size-bufpos, endian, wordsize, issigned, &bitstream);
 			bufpos += bytes;
+			//cout << bytes << "...";
 		}
-		
-		return true;
-	}
-	
-	OGGFILE()
-	{
-		oggFile.datasource = NULL;
-	}
-	
-	~OGGFILE()
-	{
-		if (oggFile.datasource != NULL) 
-		{
-			ov_clear(&oggFile);
-		}
-	}
-	
-private:
-	OggVorbis_File oggFile;
-};
 
-class WAVFILE : public SOUNDFILE
-{
-public:
-	virtual bool open(const std::string & filename, SOUNDINFO & info, std::ostream & error_output)
-	{
-		fp = fopen(filename.c_str(), "rb");
-		if (!fp) 
-		{
-			error_output << "Can't open sound file: " << filename << std::endl;
-			return false;
-		}
-		
-		// read riff header
-		char id[5];
-		id[4] = '\0';
-		if (fread(id, sizeof(char), 4, fp) != 4) return false;
-		if (strcmp(id, "RIFF"))
-		{
-			error_output << "Sound file doesn't have RIFF header: " << filename << std::endl;
-			return false;
-		}
-		
-		// read size
-		unsigned int size;
-		if (fread(&size, sizeof(unsigned int), 1, fp) != 1) return false;
-		size = ENDIAN_SWAP_32(size);
-		
-		// read wave header
-		if (fread(id, sizeof(char), 4, fp) != 4) return false;
-		if (strcmp(id, "WAVE"))	
-		{
-			error_output << "Sound file doesn't have WAVE header: " << filename << std::endl;
-			return false;
-		}
-		
-		// read fmt header
-		if (fread(id, sizeof(char), 4, fp) != 4) return false;
-		if (strcmp(id, "fmt "))
-		{
-			error_output << "Sound file doesn't have \"fmt\" header: " << filename << std::endl;
-			return false;
-		}
-		
-		unsigned int format_length(0);
-		unsigned int sample_rate(0);
-		unsigned int avg_bytes_sec(0);
-		short format_tag(0);
-		short channels(0);
-		short block_align(0);
-		short bits_per_sample(0);
-		
-		if (fread(&format_length, sizeof(unsigned int), 1, fp) != 1) return false;
-		format_length = ENDIAN_SWAP_32(format_length);
-		
-		if (fread(&format_tag, sizeof(short), 1, fp) != 1) return false;
-		format_tag = ENDIAN_SWAP_16(format_tag);
-		
-		if (fread(&channels, sizeof(short), 1, fp) != 1) return false;
-		channels = ENDIAN_SWAP_16(channels);
-		
-		if (fread(&sample_rate, sizeof(unsigned int), 1, fp) != 1) return false;
-		sample_rate = ENDIAN_SWAP_32(sample_rate);
-		
-		if (fread(&avg_bytes_sec, sizeof(unsigned int), 1, fp) != 1) return false;
-		avg_bytes_sec = ENDIAN_SWAP_32(avg_bytes_sec);
-		
-		if (fread(&block_align, sizeof(short), 1, fp) != 1) return false;
-		block_align = ENDIAN_SWAP_16(block_align);
-		
-		if (fread(&bits_per_sample, sizeof(short), 1, fp) != 1) return false;
-		bits_per_sample = ENDIAN_SWAP_16(bits_per_sample);
-		
-		// find data chunk
-		bool found_data_chunk = false;
-		long filepos = format_length + 4 + 4 + 4 + 4 + 4;
-		int chunknum = 0;
-		while (!found_data_chunk && chunknum < 10)
-		{
-			// seek to the next chunk
-			fseek(fp, filepos, SEEK_SET);
-			
-			// read in 'data'
-			if (fread(id, sizeof(char), 4, fp) != 4) return false; 
-			
-			// how many bytes of sound data we have
-			if (fread(&size, sizeof(unsigned int), 1, fp) != 1) return false; 
-			size = ENDIAN_SWAP_32(size);
-			
-			if (!strcmp(id, "data"))
-			{
-				found_data_chunk = true;
-			}
-			else
-			{
-				filepos += size + 4 + 4;
-			}
+		loaded = true;
 
-			chunknum++;
-		}
-		
-		if (chunknum >= 10)
-		{
-			error_output << "Couldn't find wave data in first 10 chunks of " << filename << std::endl;
-			return false;
-		}
-		
-		info.channels = channels;
-		info.bytespersample = bits_per_sample / 8;
-		info.frequency = sample_rate;
-		info.samples = size / (info.bytespersample * info.channels);
-		
-		return true;
-	}
-	
-	virtual bool read(char & sound_buffer, unsigned int size)
-	{
-		if (fread(&sound_buffer, sizeof(char), size, fp) != size)
-		{
-			return false;
-		}
-		
-		#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-		for (unsigned int i = 0; i < size / 2; i++)
-		{
-			((short *)&sound_buffer)[i] = ENDIAN_SWAP_16(((short *)&sound_buffer)[i]);
-		}
-		#endif
-		
-		return true;
-	}
-	
-	WAVFILE()
-	{
-		fp = NULL;
-	}
-	
-	~WAVFILE()
-	{
-		if (fp != NULL) fclose(fp);
-	}
-	
-private:
-	FILE * fp;
-};
+		//note: no need to call fclose(); ov_clear does it for us
+		ov_clear(&oggFile);
 
-bool SOUNDBUFFER::Load(const std::string & filename, const SOUNDINFO & device_info, std::ostream & error_output)
-{
-	name = filename;
-	
-	SOUNDFILE * soundfile = NULL;
-	WAVFILE wavfile;
-	OGGFILE oggfile;
-	
-	if (filename.find(".wav") != std::string::npos)
-	{
-		soundfile = &wavfile;
-	}
-	else if (filename.find(".ogg") != std::string::npos)
-	{
-		soundfile = &oggfile;
+		return true;
 	}
 	else
 	{
-		error_output << "Unable to determine file type from filename: " << filename << std::endl;
+		error_output << "Can't open sound file: "+filename << std::endl;
 		return false;
 	}
-	
-	if(!soundfile->open(filename, info, error_output))
-	{
-		return false;
-	}
-	
-	SOUNDINFO desired_info;
-	desired_info.samples = info.samples;
-	desired_info.frequency = device_info.frequency;
-	desired_info.channels = info.channels;
-	desired_info.bytespersample = device_info.bytespersample;
-	if (desired_info != info)
-	{
-		error_output << "SOUND FORMAT:" << std::endl;
-		info.DebugPrint(error_output);
-		error_output << "DESIRED FORMAT:" << std::endl;
-		desired_info.DebugPrint(error_output);
-		error_output << "Sound file isn't in desired format: " << filename << std::endl;
-		return false;
-	}
-	
-	unsigned int size = info.samples * info.channels * info.bytespersample;
-	sound_buffer = new char[size];
-	
-	return soundfile->read(*sound_buffer, size);
-}
-
-void SOUNDBUFFER::Unload()
-{
-	delete[] sound_buffer;
-	sound_buffer = NULL;
 }

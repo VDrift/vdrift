@@ -114,10 +114,10 @@ public:
 
 private:
 	///return the bernstein given the normalized coordinate u (zero to one) and an array of four points p
-	MATHVECTOR <float, 3> Bernstein(float u, MATHVECTOR <float, 3> p[]) const;
+	MATHVECTOR <float, 3> Bernstein(float u, const MATHVECTOR <float, 3> p[]) const;
 
 	///return the bernstein tangent given the normalized coordinate u (zero to one) and an array of four points p
-	MATHVECTOR <float, 3> BernsteinTangent(float u, MATHVECTOR <float, 3> p[]) const;
+	MATHVECTOR <float, 3> BernsteinTangent(float u, const MATHVECTOR <float, 3> p[]) const;
 
 	///return true if the ray at orig with direction dir intersects the given quadrilateral.
 	/// also put the collision depth in t and the collision coordinates in u,v
