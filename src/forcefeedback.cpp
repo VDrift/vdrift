@@ -158,7 +158,7 @@ FORCEFEEDBACK::FORCEFEEDBACK( string device, std::ostream & error_output, std::o
 		disable();
 		return;
 	}
-	
+
 	info_output << "Force feedback initialized successfully" << std::endl;
 }
 
@@ -183,8 +183,7 @@ void FORCEFEEDBACK::update(double force, double * position, double dt, std::ostr
         // Set force
 	if (force>1.0) force=1.0;
 	if (force<-1.0) force=-1.0;
-	//effect.direction=0xC000;
-	effect.direction=0;
+	effect.direction=0xC000;
 	//force = -1.0;
 	effect.u.constant.level=(short)(force*32767.0); /* only to be safe */
 	effect.u.constant.envelope.attack_level=effect.u.constant.level;
@@ -195,7 +194,7 @@ void FORCEFEEDBACK::update(double force, double * position, double dt, std::ostr
 	//effect.u.constant.envelope.attack_level=(short)(force*32767.0);*/
 
 	lastforce = force;
-	
+
         // Upload effect
 	if (ioctl(device_handle,EVIOCSFF,&effect)==-1)
 	{
