@@ -616,8 +616,8 @@ class TEST_SETTINGS
 /*
 QT_TEST(serialization_high_level_object_read_write_test)
 {
-	std::ostream & nullout = std::cout;
-
+	std::stringstream nullout;
+	remove("test.txt");
 	{
 		TEST_SETTINGS settings;
 		settings.datapath = "";

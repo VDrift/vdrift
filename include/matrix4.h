@@ -6,6 +6,8 @@
 #include <cmath>
 #include <cassert>
 
+#include "mathvector.h"
+
 template <typename T>
 class MATRIX4
 {
@@ -91,9 +93,14 @@ class MATRIX4
 		
 		inline void Set(const T * newdata)
 		{
-			std::memcpy(data,newdata,sizeof(T)*16); //high performance, but portability issues?
-			/*for (int i = 0; i < 16; i++)
-				data[i] = newdata[i];*/
+			std::memcpy(data,newdata,sizeof(T)*16);
+		}
+		
+		template <typename T2>
+		void Set(const T2 * newdata)
+		{
+			for (int i = 0; i < 16; i++)
+				data[i] = newdata[i];
 		}
 		
 		inline void Set(const MATRIX4 <T> & other) {Set(other.data);}
@@ -162,7 +169,7 @@ class MATRIX4
 			
 			const T pi = 3.14159265;
 			T f = 1.0 / tan(0.5 * fovy * pi / 180.0);
-			mat[0] = f / aspect; mat[1] = 0; mat[2] = 0; mat[3] = 0;				
+			mat[0] = f / aspect; mat[1] = 0; mat[2] = 0; mat[3] = 0;
 			mat[4] = 0; mat[5] = f; mat[6] = 0; mat[7] = 0;
 			mat[8] = 0; mat[9] = 0; mat[10] = (zfar + znear) / (znear - zfar); mat[11] = -1;
 			mat[12] = 0; mat[13] = 0; mat[14] = 2 * zfar * znear / (znear - zfar); mat[15] = 0;
@@ -176,7 +183,7 @@ class MATRIX4
 			
 			const T pi = 3.14159265;
 			T f = 1.0 / tan(0.5 * fovy * pi / 180.0);
-			mat[0] = aspect / f; mat[1] = 0; mat[2] = 0; mat[3] = 0;				
+			mat[0] = aspect / f; mat[1] = 0; mat[2] = 0; mat[3] = 0;
 			mat[4] = 0; mat[5] = 1 / f; mat[6] = 0; mat[7] = 0;
 			mat[8] = 0; mat[9] = 0; mat[10] = 0; mat[11] = (znear - zfar) / (2 * zfar * znear);
 			mat[12] = 0; mat[13] = 0; mat[14] = -1; mat[15] = (zfar + znear) / (2 * zfar * znear);
@@ -225,6 +232,121 @@ class MATRIX4
 			for (int i = 0; i < 16; i++) Inv[i] *= InvDet;
 						
 			return Inv;
+		}
+		
+		void SetFrustum(T left, T right, T bottom, T top, T near, T far)
+		{
+			T A = (right+left)/(right-left);
+			T B = (top+bottom)/(top-bottom);
+			T C = (far+near)/(near-far);
+			T D = 2.0*far*near/(near-far);
+			
+			data[0] = 2.0*near/(right-left);
+			data[1] = 0.0;
+			data[2] = 0.0;
+			data[3] = 0.0;
+			
+			data[4] = 0.0;
+			data[5] = 2.0*near/(top-bottom);
+			data[6] = 0.0;
+			data[7] = 0.0;
+			
+			data[8] = A;
+			data[9] = B;
+			data[10]= C;
+			data[11]= -1.0;
+			
+			data[12]= 0.0;
+			data[13]= 0.0;
+			data[14]= D;
+			data[15]= 0.0;
+		}
+		
+		void SetPerspective(T fovy, T aspect, T zNear, T zFar)
+		{
+			T ymax = zNear * tan(fovy * M_PI / 360.0);
+			T ymin = -ymax;
+
+			T xmin = ymin * aspect;
+			T xmax = ymax * aspect;
+
+			SetFrustum(xmin, xmax, ymin, ymax, zNear, zFar);
+		}
+		
+		void SetOrthographic(T left, T right, T bottom, T top, T near, T far)
+		{
+			T tx = (right+left)/(right-left);
+			T ty = (top+bottom)/(top-bottom);
+			T tz = (far+near)/(far-near);
+			
+			data[0] = 2.0/(right-left);
+			data[1] = 0.0;
+			data[2] = 0.0;
+			data[3] = 0.0;
+			
+			data[4] = 0.0;
+			data[5] = 2.0/(top-bottom);
+			data[6] = 0.0;
+			data[7] = 0.0;
+			
+			data[8] = 0.0;
+			data[9] = 0.0;
+			data[10]= -2.0/(far-near);
+			data[11]= 0.0;
+			
+			data[12]= tx;
+			data[13]= ty;
+			data[14]= tz;
+			data[15]= 1.0;
+		}
+		
+		void OrthoNormalize()
+		{
+			// ensure orthonormal basis vectors
+			
+			// extract and normalize the x basis
+			MATHVECTOR <T, 3> xBasis;
+			xBasis.Set(&data[0]);
+			xBasis = xBasis.Normalize();
+			
+			// extract and normalize the y basis
+			MATHVECTOR <T, 3> yBasis;
+			yBasis.Set(&data[4]);
+			yBasis = yBasis.Normalize();
+			
+			// generate an orthonormal z basis
+			MATHVECTOR <T, 3> zBasis;
+			zBasis = xBasis.cross(yBasis);
+			
+			// save our orthonormal basis vectors back to the matrix
+			std::memcpy(&data[0], &xBasis[0], 3*sizeof(T));
+			std::memcpy(&data[4], &yBasis[0], 3*sizeof(T));
+			std::memcpy(&data[8], &zBasis[0], 3*sizeof(T));
+		}
+		
+		void ForceAffine()
+		{
+			data[3] = data[7] = data[11] = 0.0;
+			data[15] = 1.0;
+		}
+		
+		/// given an axis and a normalized angle, set the rotation portion of this matrix
+		void SetRotation(T angle, T x, T y, T z)
+		{
+			T c = cos(angle);
+			T s = sin(angle);
+			
+			data[0] = x*x+(1-x*x)*c;
+			data[4] = x*y*(1-c)+z*s;
+			data[8] = x*z*(1-c)-y*s;
+			
+			data[1] = x*y*(1-c)-z*s;
+			data[5] = y*y+(1-y*y)*c;
+			data[9] = y*z*(1-c)+x*s;
+			
+			data[2] = x*z*(1-c)+y*s;
+			data[6] = y*z*(1-c)-x*s;
+			data[10]= z*z+(1-z*z)*c;
 		}
 };
 
