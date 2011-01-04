@@ -23,7 +23,6 @@ class CARBRAKE
 		//variables
 		btScalar brake_factor;
 		btScalar handbrake_factor; ///< this is separate so that ABS does not get applied to the handbrake
-		bool locked;
 		
 		//for info only
 		btScalar lasttorque;
@@ -39,7 +38,6 @@ class CARBRAKE
 			threshold(2e-4),
 			brake_factor(0),
 			handbrake_factor(0),
-			locked(false),
 			lasttorque(0)
 		{
 			// ctor
@@ -51,7 +49,6 @@ class CARBRAKE
 			out << "Brake control: " << brake_factor << "\n";
 			out << "Handbrake control: " << handbrake_factor << "\n";
 			out << "Braking torque: " << lasttorque << "\n";
-			out << "Locked: " << locked << "\n";
 		}
 		
 		///brake_factor ranges from 0.0 (no brakes applied) to 1.0 (brakes applied)
@@ -106,11 +103,6 @@ class CARBRAKE
 		{
 			bias = value;
 		}
-	
-		bool GetLocked() const
-		{
-			return locked;
-		}
 
 		btScalar GetBrakeFactor() const
 		{
@@ -121,7 +113,6 @@ class CARBRAKE
 		{
 			_SERIALIZE_(s, brake_factor);
 			_SERIALIZE_(s, handbrake_factor);
-			_SERIALIZE_(s, locked);
 			return true;
 		}
 

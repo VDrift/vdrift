@@ -94,7 +94,7 @@ bool HUD::Init(
 		float totalsizex = timerboxdimx*6.05;
 		float totalsizey = timerboxdimy*2.0;
 		float x = -timerboxdimx*0.65+totalsizex*0.5;
-		float y = totalsizey*0.5-timerboxdimy*0.3;
+		float y = totalsizey*0.5-timerboxdimy*0.25;
 		timerboxverts.SetTo2DBox(x,y,totalsizex-timerboxdimx*2,totalsizey-timerboxdimy*2,
 					 timerboxdimx,timerboxdimy);
 		timerbox_lowery = y+timerboxdimy*0.5;

@@ -2374,7 +2374,7 @@ bool GAME::Download(const std::vector <std::string> & urls)
 			text << HTTPINFO::GetString(info.state);
 			if (info.state == HTTPINFO::DOWNLOADING)
 				text << " " << HTTP::ExtractFilenameFromUrl(url) << " " << HTTPINFO::FormatSpeed(info.speed);
-			float total = 1000000;
+			double total = 1000000;
 			if (info.totalsize > 0)
 				total = info.totalsize;
 			

@@ -780,6 +780,12 @@ void CARDYNAMICS::UpdateTelemetry(btScalar dt)
 	}
 }
 
+std::ostream & operator << (std::ostream & os, const btVector3 & v)
+{
+	os << v[0] << ", " << v[1] << ", " << v[2];
+	return os;
+}
+
 /// print debug info to the given ostream.  set p1, p2, etc if debug info part 1, and/or part 2, etc is desired
 void CARDYNAMICS::DebugPrint ( std::ostream & out, bool p1, bool p2, bool p3, bool p4 ) const
 {
@@ -787,9 +793,9 @@ void CARDYNAMICS::DebugPrint ( std::ostream & out, bool p1, bool p2, bool p3, bo
 	{
 		out << std::fixed << std::setprecision(3);
 		out << "---Body---\n";
-		out << "Velocity: " << ToMathVector<btScalar>(body->getLinearVelocity()) << "\n";
-		out << "Position: " << ToMathVector<btScalar>(bodyPosition) << "\n";
-		out << "Center of mass: " << ToMathVector<btScalar>(center_of_mass) << "\n";
+		out << "Velocity: " << body->getLinearVelocity() << "\n";
+		out << "Position: " << bodyPosition << "\n";
+		out << "Center of mass: " << center_of_mass << "\n";
 		out << "Total mass: " << 1 / body->getInvMass() << "\n";
 		out << "\n";
 		fuel_tank.DebugPrint ( out );
