@@ -1152,9 +1152,6 @@ void CARDYNAMICS::UpdateWheel(
 	btScalar roll_friction_coeff = surface.rollResistanceCoefficient;
 	friction[0] += tire.GetRollingResistance(velocity[0], normal_force, roll_friction_coeff);
 	
-	// add viscous surface drag
-	friction = friction - velocity * surface.rollingDrag * 0.25; // scale down by 4
-	
 	// friction impulse
 	friction[0] = friction[0] * dt;
 	friction[1] = friction[1] * dt;
@@ -1208,6 +1205,9 @@ void CARDYNAMICS::UpdateWheel(
 	// apply wheel torque to body
 	btVector3 world_wheel_torque = quatRotate(wheel_space, btVector3(0, -wheel_torque * dt, 0));
 	body->applyTorqueImpulse(world_wheel_torque);
+	
+	// add viscous surface drag
+	friction = friction - velocity * surface.rollingDrag * dt * 0.25;
 
 	// apply friction force in world space
 	btVector3 tire_friction = x * friction[0] + y * friction[1];
@@ -1240,7 +1240,7 @@ void CARDYNAMICS::UpdateBody(
 	body->predictIntegratedTransform(dt, transform);
 	body->proceedToTransform(transform);
 	
-	UpdateWheelVelocity();
+	//UpdateWheelVelocity();
 	UpdateWheelTransform();
 	InterpolateWheelContacts();
 }
