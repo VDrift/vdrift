@@ -495,7 +495,6 @@
 		<Unit filename="..\..\src\aabb_space_partitioning.cpp" />
 		<Unit filename="..\..\src\ai.cpp" />
 		<Unit filename="..\..\src\bezier.cpp" />
-		<Unit filename="..\..\src\camera.cpp" />
 		<Unit filename="..\..\src\camera_chase.cpp" />
 		<Unit filename="..\..\src\camera_fixed.cpp" />
 		<Unit filename="..\..\src\camera_free.cpp" />
@@ -577,7 +576,6 @@
 		<Unit filename="..\..\src\toggle.cpp" />
 		<Unit filename="..\..\src\track.cpp" />
 		<Unit filename="..\..\src\trackmap.cpp" />
-		<Unit filename="..\..\src\unittest.cpp" />
 		<Unit filename="..\..\src\utils.cpp" />
 		<Unit filename="..\..\src\vertexarray.cpp" />
 		<Unit filename="..\..\src\widget_button.cpp" />

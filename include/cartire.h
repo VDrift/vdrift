@@ -36,11 +36,11 @@ public:
 	/// inclination: wheel inclination in degrees
 	/// normal_force: tire load in newton
 	btVector3 GetForce(
-		const btScalar normal_force,
-		const btScalar friction_coeff,
-		const btVector3 & velocity,
-		const btScalar ang_velocity,
-		const btScalar inclination);
+		btScalar normal_force,
+		btScalar friction_coeff,
+		btScalar inclination,
+		btScalar ang_velocity,
+		const btVector3 & velocity);
 	
 	/// return max rolling resistance
 	btScalar GetRollingResistance(

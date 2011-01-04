@@ -482,7 +482,6 @@ void CARDYNAMICS::updateAction(btCollisionWorld * collisionWorld, btScalar dt)
 	body->setCenterOfMassTransform(transform);
 	
 	UpdateWheelContacts();
-	UpdateWheelVelocity();
 	
 	Tick(dt);
 }
@@ -1082,19 +1081,17 @@ void CARDYNAMICS::UpdateSuspension(btScalar normal_force[], btScalar dt)
 			(suspension[i]->GetDisplacement() - suspension[otheri]->GetDisplacement());
 		
 		btScalar suspension_force = suspension[i]->GetForce() + antirollforce;
-		
-		// clamp suspension force and normal force limit
 		if (suspension_force < 0)
 		{
 			suspension_force = 0;
 		}
+		
+		// combine lateral(suspenion geometry) and suspension force, a bit hacky
+		btScalar force = suspension_force * cosn[i];
 		if (suspension[i]->GetDisplacement() <= 0 || normal_force_limit[i] < 0)
 		{
 			normal_force_limit[i] = 0;
 		}
-		
-		// combine lateral(suspenion geometry) and suspension force, a bit hacky
-		btScalar force = suspension_force * cosn[i];
 		if (force < normal_force_limit[i])
 		{
 			force = suspension_force / cosn[i];
@@ -1105,6 +1102,9 @@ void CARDYNAMICS::UpdateSuspension(btScalar normal_force[], btScalar dt)
 		}
 		assert(force == force);
 		normal_force[i] = force;
+		
+		btVector3 offset = wheel_contact[i].GetPosition() - body->getCenterOfMassPosition();
+		body->applyForce(force * wheel_contact[i].GetNormal(), offset);
 	}
 }
 
@@ -1120,44 +1120,74 @@ void CARDYNAMICS::UpdateWheel(
 	CARBRAKE & brake = this->brake[i];
 	const COLLISION_CONTACT & contact = this->wheel_contact[i];
 	const TRACKSURFACE & surface = contact.GetSurface();
-	btVector3 surface_normal = contact.GetNormal();
-	btVector3 contact_position = contact.GetPosition();
+	const btVector3 & position = contact.GetPosition();
+	const btVector3 & normal = contact.GetNormal();
 
 	// inclination positive when tire top tilts to right viewed from rear
 	btVector3 wheel_axis = quatRotate(wheel_space, btVector3(0, 1, 0));
-	btScalar axis_proj = wheel_axis.dot(surface_normal);
+	btScalar axis_proj = wheel_axis.dot(normal);
 	btScalar inclination = 90 - acos(axis_proj) * 180.0 / M_PI;
-
+	if (!(i&1)) inclination = -inclination;
+	
 	// tire space(SAE Tire Coordinate System)
 	// surface normal is negative z-axis
 	// negative spin axis projected onto surface plane is y-axis
-	btVector3 y = -(wheel_axis - surface_normal * axis_proj).normalized();
-	btVector3 x = surface_normal.cross(y);
+	btVector3 y = -(wheel_axis - normal * axis_proj).normalized();
+	btVector3 x = normal.cross(y);
 
 	// wheel velocity in tire space
 	btVector3 velocity(0, 0, 0);
+	wheel_velocity[i] = body->getVelocityInLocalPoint(wheel_position[i] - body->getCenterOfMassPosition());
 	velocity[0] = x.dot(wheel_velocity[i]);
 	velocity[1] = y.dot(wheel_velocity[i]);
 
 	// wheel angular velocity
 	btScalar ang_velocity = wheel.GetAngularVelocity();
 
-	// friction force in tire space, ignore high camber cases ~70 degrees
+	// friction force in tire space
 	btScalar friction_coeff = tire.GetTread() * surface.frictionTread + (1.0 - tire.GetTread()) * surface.frictionNonTread;
-	btVector3 friction(0, 0, 0);
-	if(friction_coeff > 0 && axis_proj < 0.95) 
-	{
-		friction = tire.GetForce(normal_force, friction_coeff, velocity, ang_velocity, inclination);
-	}
-
+	btVector3 friction = tire.GetForce(normal_force, friction_coeff, inclination, ang_velocity, velocity);
+	
 	// rolling resistance
-	//btScalar roll_friction_coeff = surface.rollResistanceCoefficient;
-	//friction[0] += tire.GetRollingResistance(velocity[0], normal_force, roll_friction_coeff);
+	btScalar roll_friction_coeff = surface.rollResistanceCoefficient;
+	friction[0] += tire.GetRollingResistance(velocity[0], normal_force, roll_friction_coeff);
+	
+	// add viscous surface drag
+	friction = friction - velocity * surface.rollingDrag * 0.25; // scale down by 4
+	
+	// friction impulse
+	friction[0] = friction[0] * dt;
+	friction[1] = friction[1] * dt;
+
+	// limit lateral friction
+	btScalar lat_mass = 1 / body->computeImpulseDenominator(position, y);
+	btScalar lat_limit = -velocity[1] * lat_mass;
+	if (friction[1] * lat_limit < 0)
+	{
+		// shouldn't happen, friction is dissipative
+		//std::cerr << "Lateral friction impulse: " << friction[1] << ", limit: " << lat_limit << std::endl;
+		friction[1] = 0;
+	}
+	if (friction[1] > 0 && friction[1] > lat_limit) friction[1] = lat_limit;
+	else if (friction[1] < 0 && friction[1] < lat_limit) friction[1] = lat_limit;
+	
+	// limit longitudinal friction
+	btScalar lon_mass = 1 / body->computeImpulseDenominator(position, x);
+	btScalar patch_velocity = velocity[0] - ang_velocity * tire.GetRadius();
+	btScalar lon_limit = -patch_velocity * lon_mass;
+	if (friction[0] * lon_limit < 0)
+	{
+		// shouldn't happen, friction is dissipative
+		//std::cerr << "Longitudinal friction impulse: " << friction[1] << ", limit: " << lon_limit << std::endl;
+		friction[0] = 0;
+	}
+	if (friction[0] > 0 && friction[0] > lon_limit) friction[0] = lon_limit;
+	else if (friction[0] < 0 && friction[0] < lon_limit) friction[0] = lon_limit;
 
 	// wheel torque
 	btScalar brake_torque = brake.GetTorque();
 	btScalar brake_limit = wheel.GetTorque(0, dt);
-	btScalar friction_torque = tire.GetRadius() * friction[0];
+	btScalar friction_torque = tire.GetRadius() * friction[0] / dt;
 	btScalar wheel_torque = drive_torque - friction_torque;
 	btScalar max_torque = brake_limit - wheel_torque;
 	if(max_torque >= 0 && max_torque > brake_torque)
@@ -1176,33 +1206,13 @@ void CARDYNAMICS::UpdateWheel(
 	wheel.Integrate(dt);
 
 	// apply wheel torque to body
-	btVector3 world_wheel_torque = quatRotate(wheel_space, btVector3(0, -wheel_torque, 0));
-	body->applyTorque(world_wheel_torque);
+	btVector3 world_wheel_torque = quatRotate(wheel_space, btVector3(0, -wheel_torque * dt, 0));
+	body->applyTorqueImpulse(world_wheel_torque);
 
-	// add viscous surface drag
-	friction = friction - velocity * surface.rollingDrag * 0.25; // scale down by 4
-
-	// apply friction to body
-	btVector3 contact_offset = contact_position - body->getCenterOfMassPosition();
-/*	
-	// limit lateral friction
-	btScalar mass = 1 / body.GetInvEffectiveMass(y, contact_offset);
-	btScalar friction_limit = -velocity[1] * mass / dt;
-	if ((friction[1] > 0 && friction_limit > 0 && friction[1] > friction_limit) ||
-		(friction[1] < 0 && friction_limit < 0 && friction[1] < friction_limit))
-	{
-		//std::cerr << "lateral friction limit: " << friction[1] << " " << friction_limit << " " << velocity[1] << std::endl;
-		friction[1] = friction_limit;
-	}
-*/
-	// friction force in world space
+	// apply friction force in world space
 	btVector3 tire_friction = x * friction[0] + y * friction[1];
-	
-	// contact force in world space
-	btVector3 contact_force = surface_normal * normal_force + tire_friction;
-
-	// apply contact force
-	body->applyForce(contact_force, contact_offset);
+	btVector3 offset = position - body->getCenterOfMassPosition();
+	body->applyImpulse(tire_friction, offset);
 }
 
 void CARDYNAMICS::UpdateBody(
@@ -1217,18 +1227,16 @@ void CARDYNAMICS::UpdateBody(
 	
 	ApplyEngineTorqueToBody();
 	
-	// update suspension/wheels
 	btScalar normal_force[WHEEL_POSITION_SIZE];
 	UpdateSuspension(normal_force, dt);
+	body->integrateVelocities(dt);
+	body->clearForces();
 	
-	// update wheels
-	for(int i = 0; i < WHEEL_POSITION_SIZE; i++)
+	for(int i = 0; i < WHEEL_POSITION_SIZE; ++i)
 	{
 		UpdateWheel(i, dt, normal_force[i], drive_torque[i], wheel_orientation[i]);
 	}
 	
-	// integrate body
-	body->integrateVelocities(dt);
 	body->predictIntegratedTransform(dt, transform);
 	body->proceedToTransform(transform);
 	
@@ -1243,7 +1251,7 @@ void CARDYNAMICS::Tick(const btScalar dt)
 	UpdateTransmission(dt);
 
 	// overrides throttle/brakes
-	for(int i = 0; i < WHEEL_POSITION_SIZE; i++)
+	for(int i = 0; i < WHEEL_POSITION_SIZE; ++i)
 	{
 		if (abs) DoABS(i);
 		if (tcs) DoTCS(i);
@@ -1282,9 +1290,9 @@ void CARDYNAMICS::UpdateWheelContacts()
 	btScalar raylen = 4;
 	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
 	{
-		COLLISION_CONTACT & wheelContact = wheel_contact[WHEEL_POSITION(i)];
+		COLLISION_CONTACT & contact = wheel_contact[WHEEL_POSITION(i)];
 		btVector3 raystart = wheel_position[i] - raydir * tire[i].GetRadius();
-		world->CastRay(raystart, raydir, raylen, body, wheelContact);
+		world->CastRay(raystart, raydir, raylen, body, contact);
 	}
 }
 
