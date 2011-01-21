@@ -69,7 +69,6 @@ GAME::GAME(std::ostream & info_out, std::ostream & error_out) :
 	track(info_out, error_out),
 	replay(timestep),
 	http("/tmp")
-	//sky(graphics, info_out, err_out)
 {
 	carcontrols_local.first = 0;
 }
@@ -1632,12 +1631,7 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 		error_output << "Error during track loading: " << trackname << endl;
 		return false;
 	}
-/*	
-	if (!sky.Load(pathmanager.GetTrackPath()+"/"+trackname))
-	{
-		info_output << "No sky settings file found. Fall back to sky box." << std::endl;
-	}
-*/
+	
 	//start out with no camera
 	active_camera = NULL;
 

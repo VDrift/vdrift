@@ -27,7 +27,6 @@
 #include "particle.h"
 #include "ai.h"
 #include "quickmp.h"
-//#include "sky.h"
 #include "texturemanager.h"
 #include "modelmanager.h"
 #include "soundmanager.h"
@@ -165,7 +164,6 @@ private:
 	REPLAY replay;
 	PARTICLE_SYSTEM tire_smoke;
 	AI ai;
-	//SKY sky;
 	HTTP http;
 
 #ifdef ENABLE_FORCE_FEEDBACK
