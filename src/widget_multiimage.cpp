@@ -23,19 +23,16 @@ void WIDGET_MULTIIMAGE::SetupDrawable(
 	const std::string & newpostfix, 
 	float x, float y, float w, float h,
 	std::ostream & error_output,
-	int order)
+	float z)
 {
 	prefix = newprefix;
 	postfix = newpostfix;
 	tsize = texturesize;
-	
 	errptr = &error_output;
 	this->textures = &textures;
-	
 	center.Set(x, y);
 	dim.Set(w, h);
-	
-	draworder = order;
+	draworder = z;
 }
 
 void WIDGET_MULTIIMAGE::SetAlpha(SCENENODE & scene, float newalpha)
@@ -55,7 +52,7 @@ void WIDGET_MULTIIMAGE::HookMessage(SCENENODE & scene, const std::string & messa
 	assert(textures);
 	
 	s1.Load(scene, prefix, message + postfix, tsize, *textures, draworder, *errptr);
-	s1.SetToBillboard(center[0]-dim[0]*0.5,center[1]-dim[1]*0.5,dim[0],dim[1]);
+	s1.SetToBillboard(center[0] - dim[0] * 0.5, center[1] - dim[1] * 0.5, dim[0], dim[1]);
 	
 	if (s1.Loaded()) s1.SetVisible(scene, wasvisible);
 }

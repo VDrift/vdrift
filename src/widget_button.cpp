@@ -122,7 +122,8 @@ void WIDGET_BUTTON::SetupDrawable(
 	float centerx, float centery,
 	float scalex, float scaley,
 	float r, float g, float b,
-	float h, float w)
+	float h, float w,
+	float order)
 {
 	assert(teximage_up);
 	assert(teximage_down);
@@ -133,10 +134,10 @@ void WIDGET_BUTTON::SetupDrawable(
 	if (w < font.GetWidth(text) * scalex) w = font.GetWidth(text) * scalex;
 	float hwratio = scaley / scalex;
 	
-	label.SetupDrawable(scene, font, text, centerx, centery, scalex, scaley, r, g, b, 2);
-	image_up.SetupDrawable(scene, teximage_up, centerx, centery, w, h, 1, true, hwratio);
-	image_down.SetupDrawable(scene, teximage_down, centerx, centery, w, h, 1, true, hwratio);
-	image_selected.SetupDrawable(scene, teximage_selected, centerx, centery, w, h, 1, true, hwratio);
+	label.SetupDrawable(scene, font, text, centerx, centery, scalex, scaley, r, g, b, order + 1);
+	image_up.SetupDrawable(scene, teximage_up, centerx, centery, w, h, order, true, hwratio);
+	image_down.SetupDrawable(scene, teximage_down, centerx, centery, w, h, order, true, hwratio);
+	image_selected.SetupDrawable(scene, teximage_selected, centerx, centery, w, h, order, true, hwratio);
 	image_down.SetVisible(scene, false);
 	image_selected.SetVisible(scene, false);
 	state = UP;

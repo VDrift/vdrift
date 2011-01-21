@@ -171,7 +171,7 @@ void GAME::Start(list <string> & args)
 	{
 		float screenhwratio = (float)graphics.GetH()/graphics.GetW();
 		float w = 0.06;
-		fps_draw.Init(debugnode, fonts["futuresans"], "", 0.5-w*0.5,1.0-0.02, screenhwratio*0.2,0.2);
+		fps_draw.Init(debugnode, fonts["futuresans"], "", 0.5-w*0.5,1.0-0.02, screenhwratio*0.03,0.03);
 		fps_draw.SetDrawOrder(debugnode, 150);
 	}
 	
@@ -179,7 +179,7 @@ void GAME::Start(list <string> & args)
 	if (profilingmode)
 	{
 		float screenhwratio = (float)graphics.GetH()/graphics.GetW();
-		profiling_text.Init(debugnode, fonts["futuresans"], "", 0.01, 0.25, screenhwratio*0.2,0.2);
+		profiling_text.Init(debugnode, fonts["futuresans"], "", 0.01, 0.25, screenhwratio*0.03, 0.03);
 		profiling_text.SetDrawOrder(debugnode, 150);
 	}
 

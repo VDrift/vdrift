@@ -30,7 +30,7 @@ public:
 		float x, float y,
 		float scalex, float scaley,
 		float nr, float ng, float nb,
-		int order = 0,
+		float z = 0,
 		bool centered = true);
 	
 	void ReviseDrawable(SCENENODE & scene, const std::string & text);

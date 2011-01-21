@@ -61,7 +61,7 @@ public:
 		std::tr1::shared_ptr<TEXTURE> teximage_downselected, 
 		std::tr1::shared_ptr<TEXTURE> teximage_transition,
 		float centerx, float centery,
-		float w,  float h);
+		float w,  float h, float z = 0);
 	
 private:
 	WIDGET_IMAGE image_up;

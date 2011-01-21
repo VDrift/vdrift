@@ -173,10 +173,8 @@ void WIDGET_TOGGLE::SetupDrawable(
 	std::tr1::shared_ptr<TEXTURE> teximage_upselected,
 	std::tr1::shared_ptr<TEXTURE> teximage_downselected, 
 	std::tr1::shared_ptr<TEXTURE> teximage_transition,
-	float centerx,
-	float centery,
-	float w,
-	float h)
+	float centerx, float centery,
+	float w, float h, float z)
 {
 	assert(teximage_up);
 	assert(teximage_down);
@@ -184,11 +182,11 @@ void WIDGET_TOGGLE::SetupDrawable(
 	assert(teximage_downselected);
 	assert(teximage_transition);
 	
-	image_up.SetupDrawable(scene, teximage_up, centerx, centery, w, h, 1);
-	image_down.SetupDrawable(scene, teximage_down, centerx, centery, w, h, 1);
-	image_upsel.SetupDrawable(scene, teximage_upselected, centerx, centery, w, h, 1);
-	image_downsel.SetupDrawable(scene, teximage_downselected, centerx, centery, w, h, 1);
-	image_transition.SetupDrawable(scene, teximage_transition, centerx, centery, w, h, 1);
+	image_up.SetupDrawable(scene, teximage_up, centerx, centery, w, h, z);
+	image_down.SetupDrawable(scene, teximage_down, centerx, centery, w, h, z);
+	image_upsel.SetupDrawable(scene, teximage_upselected, centerx, centery, w, h, z);
+	image_downsel.SetupDrawable(scene, teximage_downselected, centerx, centery, w, h, z);
+	image_transition.SetupDrawable(scene, teximage_transition, centerx, centery, w, h, z);
 	
 	SetState(scene, UP);
 }

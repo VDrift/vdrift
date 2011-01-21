@@ -45,12 +45,13 @@ public:
 		const std::vector <std::tr1::shared_ptr<TEXTURE> > & textures,
 		const FONT & font,
 		const std::string & text,
-		const float centerx,
-		const float centery,
-		const float scalex,
-		const float scaley,
-		const bool newanalog,
-		const bool newonly_one);
+		float centerx,
+		float centery,
+		float scalex,
+		float scaley,
+		bool newanalog,
+		bool newonly_one,
+		float z = 0);
 	
 	void LoadControls(SCENENODE & parent, const CONFIG & c, const FONT & font);
 	

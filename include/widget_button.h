@@ -51,7 +51,8 @@ public:
 		float centerx, float centery,
 		float scalex, float scaley,
 		float r, float g, float b,
-		float h = 0, float w = 0);
+		float h = 0, float w = 0,
+		float order = 0);
 
 private:
 	WIDGET_LABEL label;

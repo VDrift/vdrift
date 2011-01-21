@@ -105,10 +105,11 @@ void WIDGET_DOUBLESTRINGWHEEL::SetupDrawable(
 	std::tr1::shared_ptr<TEXTURE> right_up,
 	std::tr1::shared_ptr<TEXTURE> right_down,
 	const FONT & font,
-	const float scalex,
-	const float scaley,
-	const float centerx,
-	const float centery)
+	float scalex,
+	float scaley,
+	float centerx,
+	float centery,
+	float z)
 {
 	assert(left_up);
 	assert(left_down);
@@ -119,11 +120,12 @@ void WIDGET_DOUBLESTRINGWHEEL::SetupDrawable(
 	float blx = centerx + titlewidth + scalex / 2;
 	float brx = blx + scalex * 3 / 4;
 	float labelx = brx + scalex / 2;
-	
-	title.SetupDrawable(scene, font, newtitle, centerx, centery, scalex, scaley, 1, 1, 1, 1, false);
-	label.SetupDrawable(scene, font, "", labelx, centery, scalex, scaley, 1, 1, 1, 1, false);
-	button_left.SetupDrawable(scene, left_up, left_down, left_up, font, "", blx, centery, scalex, scaley, 1, 1, 1);
-	button_right.SetupDrawable(scene, right_up, right_down, right_up, font, "", brx, centery, scalex, scaley, 1, 1, 1);
+	float r(1), g(1), b(1);
+	float h(0), w(0);
+	title.SetupDrawable(scene, font, newtitle, centerx, centery, scalex, scaley, r, g, b, z, false);
+	label.SetupDrawable(scene, font, "", labelx, centery, scalex, scaley, r, g, b, z, false);
+	button_left.SetupDrawable(scene, left_up, left_down, left_up, font, "", blx, centery, scalex, scaley, r, g, b, h, w, z);
+	button_right.SetupDrawable(scene, right_up, right_down, right_up, font, "", brx, centery, scalex, scaley, r, g, b, h, w, z);
 }
 
 void WIDGET_DOUBLESTRINGWHEEL::SetCurrent(SCENENODE & scene, const std::string & newsetting1, const std::string & newsetting2)

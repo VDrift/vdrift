@@ -50,10 +50,11 @@ public:
 		std::tr1::shared_ptr<TEXTURE> teximage_right_up,
 		std::tr1::shared_ptr<TEXTURE> teximage_right_down,
 		const FONT & font,
-		const float scalex,
-		const float scaley,
-		const float centerx,
-		const float centery);
+		float scalex,
+		float scaley,
+		float centerx,
+		float centery,
+		float z);
 	
 	void SetCurrent(SCENENODE & scene, const std::string & newsetting1, const std::string & newsetting2);
 	

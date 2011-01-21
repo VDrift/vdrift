@@ -32,7 +32,7 @@ public:
 		const std::string & newpostfix, 
       	float x, float y, float w, float h,
       	std::ostream & error_output,
-	    int order=0);
+	    float z = 0);
 	
 private:
 	std::string prefix;
@@ -41,7 +41,7 @@ private:
 	MATHVECTOR <float, 2> center;
 	MATHVECTOR <float, 2> dim;
 	SPRITE2D s1;
-	int draworder;
+	float draworder;
 	bool wasvisible;
 	TEXTUREMANAGER * textures;
 	std::ostream * errptr;

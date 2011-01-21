@@ -18,11 +18,11 @@ void WIDGET_IMAGE::SetVisible(SCENENODE & node, bool newvis)
 void WIDGET_IMAGE::SetupDrawable(
 	SCENENODE & scene,
 	const std::tr1::shared_ptr<TEXTURE> teximage,
-	float x, float y, float w, float h,
-	int order,
+	float x, float y, float w, float h, int z,
 	bool button_mode,
 	float screenhwratio)
 {
+	float r(1), g(1), b(1), a(1);
 	MATHVECTOR <float, 2> dim(w, h);
 	MATHVECTOR <float, 2> center(x, y);
 	corner1 = center - dim * 0.5;
@@ -33,8 +33,8 @@ void WIDGET_IMAGE::SetupDrawable(
 	drawref.SetDiffuseMap(teximage);
 	drawref.SetVertArray(&varray);
 	drawref.SetCull(false, false);
-	drawref.SetColor(1, 1, 1, 1);
-	drawref.SetDrawOrder(order + 100);
+	drawref.SetColor(r, g, b, a);
+	drawref.SetDrawOrder(z);
 	
 	if (button_mode)
 	{

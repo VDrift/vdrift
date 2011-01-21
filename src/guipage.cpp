@@ -69,28 +69,33 @@ bool GUIPAGE::Load(
 	if (!pagefile.GetParam("", "name", name)) return false;
 	if (!pagefile.GetParam("", "dialog", dialog)) return false;
 	
+	// draw order
+	float z = 100;	
+	
 	//generate background
 	{
-		float y = 0.5;
-		float x = 0.5;
-		float yscale = 1.0;
-		float xscale = 1.0;
+		float y(0.5);
+		float x(0.5);
+		float yscale(1.0);
+		float xscale(1.0);
 		std::string background;
 		std::tr1::shared_ptr<TEXTURE> texture;
 		if (!pagefile.GetParam("", "background", background)) return false;
 		if (!textures.Load(texpath, background, texinfo, texture)) return false;
 		WIDGET_IMAGE * bg_widget = NewWidget<WIDGET_IMAGE>();
-		bg_widget->SetupDrawable(sref, texture, x, y, xscale, yscale, -1);
+		bg_widget->SetupDrawable(sref, texture, x, y, xscale, yscale, z-1);
 	}
 	
 	// tooltip widget
 	{
-		float y = 0.95;
-		float x = 0.5;
-		float yscale = 0.03;
-		float xscale = yscale * screenhwratio;
+		std::string text;
+		float y(0.95);
+		float x(0.5);
+		float yscale(0.03);
+		float xscale(yscale * screenhwratio);
+		float r(1), g(1), b(1);
 		tooltip_widget = NewWidget<WIDGET_LABEL>();
-		tooltip_widget->SetupDrawable(sref, font, "", x, y, xscale, yscale, 1, 1, 1, 1);	
+		tooltip_widget->SetupDrawable(sref, font, text, x, y, xscale, yscale, r, g, b, z);	
 	}
 	
 	// widget map for hooks
@@ -127,7 +132,7 @@ bool GUIPAGE::Load(
 			if (!textures.Load(texpath, texname, texinfo, texture)) return false;
 			
 			WIDGET_IMAGE * new_widget = NewWidget<WIDGET_IMAGE>();
-			new_widget->SetupDrawable(sref, texture, xy[0], xy[1], w, h);
+			new_widget->SetupDrawable(sref, texture, xy[0], xy[1], w, h, z);
 		}
 		else if (type == "button")
 		{
@@ -156,7 +161,7 @@ bool GUIPAGE::Load(
 			WIDGET_BUTTON * new_widget = NewWidget<WIDGET_BUTTON>();
 			new_widget->SetupDrawable(sref, texture_up, texture_down, texture_sel,
 					font, text, xy[0], xy[1], fontscalex, fontscaley,
-					color[0], color[1], color[2], h, w);
+					color[0], color[1], color[2], h, w, z);
 			new_widget->SetAction(action);
 			new_widget->SetDescription(desc);
 			new_widget->SetCancel(cancel);
@@ -175,7 +180,7 @@ bool GUIPAGE::Load(
 			float fontscalex = fontsize * screenhwratio;
 			
 			WIDGET_LABEL * new_widget = NewWidget<WIDGET_LABEL>();
-			new_widget->SetupDrawable(sref, font, text, xy[0], xy[1], fontscalex, fontscaley, color[0], color[1], color[2], 2);
+			new_widget->SetupDrawable(sref, font, text, xy[0], xy[1], fontscalex, fontscaley, color[0], color[1], color[2], z);
 			
 			std::string name;
 			if (pagefile.GetParam(section, "name", name))
@@ -219,9 +224,9 @@ bool GUIPAGE::Load(
 				float textwidth = font.GetWidth(text) * fontscalex;
 				float x = xy[0] + textwidth * 0.5;
 				float y = xy[1];
-				
+				float r(1), g(1), b(1);
 				WIDGET_LABEL * new_widget = NewWidget<WIDGET_LABEL>();
-				new_widget->SetupDrawable(sref, font, text, x, y, fontscalex, fontscaley, 1, 1, 1, 2);
+				new_widget->SetupDrawable(sref, font, text, x, y, fontscalex, fontscaley, r, g, b, z);
 			}
 			
 			//generate toggle
@@ -239,7 +244,7 @@ bool GUIPAGE::Load(
 				float y = xy[1];
 				
 				WIDGET_TOGGLE * new_widget = NewWidget<WIDGET_TOGGLE>();
-				new_widget->SetupDrawable(sref, up, down, upsel, downsel, trans, x, y, w, h);
+				new_widget->SetupDrawable(sref, up, down, upsel, downsel, trans, x, y, w, h, z);
 				new_widget->SetDescription(desc);
 				new_widget->SetSetting(setting);
 				new_widget->UpdateOptions(sref, false, optionmap, error_output);
@@ -283,7 +288,7 @@ bool GUIPAGE::Load(
 			
 			WIDGET_STRINGWHEEL * new_widget = NewWidget<WIDGET_STRINGWHEEL>();
 			new_widget->SetupDrawable(sref, text+":", up_left, down_left, up_right, down_right,
-					font, fontscalex, fontscaley, xy[0], xy[1]);
+					font, fontscalex, fontscaley, xy[0], xy[1], z);
 			new_widget->SetDescription(desc);
 			new_widget->SetSetting(setting);
 			new_widget->UpdateOptions(sref, false, optionmap, error_output);
@@ -328,7 +333,7 @@ bool GUIPAGE::Load(
 			
 			WIDGET_DOUBLESTRINGWHEEL * new_widget = NewWidget<WIDGET_DOUBLESTRINGWHEEL>();
 			new_widget->SetupDrawable(sref, text+":", up_left, down_left, up_right, down_right,
-					font, fontscalex, fontscaley, xy[0], xy[1]);
+					font, fontscalex, fontscaley, xy[0], xy[1], z);
 			new_widget->SetDescription(desc);
 			new_widget->SetSetting(setting1, setting2);
 			
@@ -352,7 +357,7 @@ bool GUIPAGE::Load(
 			if (!pagefile.GetParam(section, "postfix", postfix, error_output)) return false;
 			
 			WIDGET_MULTIIMAGE * new_widget = NewWidget<WIDGET_MULTIIMAGE>();
-			new_widget->SetupDrawable(sref, textures, texsize, prefix, postfix, xy[0], xy[1], width, height, error_output, 102);
+			new_widget->SetupDrawable(sref, textures, texsize, prefix, postfix, xy[0], xy[1], width, height, error_output, z);
 		}
 		else if (type == "colorpicker")
 		{
@@ -375,7 +380,7 @@ bool GUIPAGE::Load(
 			float y = xy[1] - height / 2;
 			
 			WIDGET_COLORPICKER * new_widget = NewWidget<WIDGET_COLORPICKER>();
-			new_widget->SetupDrawable(sref, cursor, hue, sat, bg, x, y, width, height, setting, error_output, 102);
+			new_widget->SetupDrawable(sref, cursor, hue, sat, bg, x, y, width, height, setting, error_output, z);
 		}
 		else if (type == "slider")
 		{
@@ -424,9 +429,9 @@ bool GUIPAGE::Load(
 				float textwidth = font.GetWidth(text) * fontscalex;
 				float x = xy[0] + textwidth * 0.5;
 				float y = xy[1];
-				
+				float r(1), g(1), b(1);
 				WIDGET_LABEL * new_widget = NewWidget<WIDGET_LABEL>();
-				new_widget->SetupDrawable(sref, font, text, x, y, fontscalex, fontscaley, 1, 1, 1, 2);
+				new_widget->SetupDrawable(sref, font, text, x, y, fontscalex, fontscaley, r, g, b, z);
 			}
 			
 			float h(0.0), w(0.0);
@@ -445,7 +450,7 @@ bool GUIPAGE::Load(
 			
 			WIDGET_SLIDER * new_widget = NewWidget<WIDGET_SLIDER>();
 			new_widget->SetupDrawable(sref, wedge, cursor, xy[0], xy[1], w, h, min, max, 
-					percentage, setting, font, fontscalex, fontscaley, error_output, 102);
+					percentage, setting, font, fontscalex, fontscaley, error_output, z);
 			new_widget->SetName(name);
 			new_widget->SetDescription(desc);
 			new_widget->SetColor(sref, color[0], color[1], color[2]);
@@ -462,7 +467,7 @@ bool GUIPAGE::Load(
 			
 			WIDGET_SPINNINGCAR * new_widget = NewWidget<WIDGET_SPINNINGCAR>();
 			new_widget->SetupDrawable(sref, textures, models, texsize, datapath, centerxy[0], centerxy[1], 
-				MATHVECTOR<float, 3>(carpos[0], carpos[1], carpos[2]), error_output, 110);
+				MATHVECTOR<float, 3>(carpos[0], carpos[1], carpos[2]), error_output, z+10);
 		}
 		else if (type == "controlgrab")
 		{
@@ -495,7 +500,7 @@ bool GUIPAGE::Load(
 			
 			WIDGET_CONTROLGRAB * new_widget = NewWidget<WIDGET_CONTROLGRAB>();
 			new_widget->SetupDrawable(sref, controlsconfig, setting, control, font, 
-					text, xy[0], xy[1], fontscalex, fontscaley, analog, only_one);
+					text, xy[0], xy[1], fontscalex, fontscaley, analog, only_one, z);
 			controlgrabs.push_back(new_widget);
 		}
 		else if (type != "disabled")

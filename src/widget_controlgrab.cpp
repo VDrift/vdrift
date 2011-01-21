@@ -247,12 +247,13 @@ void WIDGET_CONTROLGRAB::SetupDrawable(
 	const std::vector <std::tr1::shared_ptr<TEXTURE> > & texturevector,
 	const FONT & font,
 	const std::string & text,
-	const float centerx,
-	const float centery,
-	const float scalex,
-	const float scaley,
+	float centerx,
+	float centery,
+	float scalex,
+	float scaley,
 	bool newanalog,
-	bool newonly_one)
+	bool newonly_one,
+	float z)
 {
 	assert(!newsetting.empty());
 	assert(texturevector.size() == END);
@@ -283,9 +284,9 @@ void WIDGET_CONTROLGRAB::SetupDrawable(
 	float bw = scalex * 0.8 * (4.0 / 3.0);
 	float bh = scaley * 0.8;
 	
-	label.SetupDrawable(topnoderef, font, text, lx, ly, scalex, scaley, r, g, b, 2);
+	label.SetupDrawable(topnoderef, font, text, lx, ly, scalex, scaley, r, g, b, z+1);
 	addbutton.SetupDrawable(topnoderef, textures[ADD], textures[ADDSEL], textures[ADDSEL],
-		font, "", x, y, bw, bh, r ,g, b);
+		font, "", x, y, bw, bh, r ,g, b, 0, 0, z);
 	
 	LoadControls(scene, c, font);
 }

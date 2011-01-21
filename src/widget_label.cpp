@@ -30,14 +30,12 @@ void WIDGET_LABEL::SetupDrawable(
 	float x, float y,
 	float scalex, float scaley,
 	float nr, float ng, float nb,
-	int order, bool centered)
+	float z, bool centered)
 {
 	savedfont = &font;
-	
 	r = nr;
 	b = nb;
 	g = ng;
-	
 	saved_x = x;
 	saved_y = y;
 	saved_scalex = scalex;
@@ -46,10 +44,10 @@ void WIDGET_LABEL::SetupDrawable(
 	
 	draw = scene.GetDrawlist().text.insert(DRAWABLE());
 	DRAWABLE & drawref = GetDrawable(scene);
-	drawref.SetDrawOrder(order + 100);
+	drawref.SetDrawOrder(z);
 	
 	if (centered) x = x - savedfont->GetWidth(text) * saved_scalex * 0.5;
-	text_draw.Set(drawref, font, text, x, y, scalex, scaley , r, g, b);
+	text_draw.Set(drawref, font, text, x, y, scalex, scaley, r, g, b);
 }
 
 void WIDGET_LABEL::ReviseDrawable(SCENENODE & scene, const std::string & text)
