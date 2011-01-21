@@ -151,7 +151,7 @@ public:
 	}
 	
 	/// calculate torque acting on crankshaft, update engine angular velocity
-	btScalar Update(btScalar clutch_drag, btScalar clutch_angvel, btScalar dt);
+	btScalar Integrate(btScalar clutch_drag, btScalar clutch_angvel, btScalar dt);
 	
 	void DebugPrint(std::ostream & out) const;
 	

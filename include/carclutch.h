@@ -81,9 +81,8 @@ public:
 	{
 		return clutch_position;
 	}
-	
-	// maximum friction torque
-	btScalar GetTorqueMax(btScalar n_engine_speed, btScalar n_drive_speed)
+
+	btScalar GetTorque(btScalar n_engine_speed, btScalar n_drive_speed)
 	{
 		engine_speed = n_engine_speed;
 		drive_speed = n_drive_speed;

@@ -31,6 +31,9 @@ public:
 	/// load tire from config file
 	bool Load(const CONFIG & cfg, const std::string & name, std::ostream & error);
 	
+	/// look up ideal slide ratio, slip angle
+	void GetSigmaHatAlphaHat(btScalar load, btScalar & sh, btScalar & ah) const;
+	
 	/// velocity vector of the wheel's reference frame in m/s
 	/// velocity_ang: wheel angular veloity in rad/s
 	/// inclination: wheel inclination in degrees
@@ -98,9 +101,6 @@ private:
 	
 	// debugging
 	btScalar fx, fy, fz;
-	
-	/// look up ideal slide ratio, slip angle
-	void GetSigmaHatAlphaHat(btScalar load, btScalar & sh, btScalar & ah) const;
 	
 	/// pacejka magic formula function, longitudinal
 	btScalar PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coeff, btScalar & max_Fx) const;

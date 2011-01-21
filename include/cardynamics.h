@@ -146,6 +146,8 @@ protected:
 	btDefaultMotionState motionState;	// common implementation to synchronize world transforms with offsets
 	btVector3 center_of_mass;
 	btTransform transform;				// last body transform
+	btVector3 linear_velocity;
+	btVector3 angular_velocity;
 	
 	// interpolated state
 	btVector3 bodyPosition;
@@ -181,6 +183,7 @@ protected:
 	std::vector <int> tcs_active;
 	
 	// suspension
+	btAlignedObjectArray<btVector3> suspension_force;
 	btAlignedObjectArray<btVector3> wheel_velocity;
 	btAlignedObjectArray<btVector3> wheel_position;
 	btAlignedObjectArray<btQuaternion> wheel_orientation;
@@ -201,35 +204,29 @@ protected:
 	btQuaternion LocalToWorld(const btQuaternion & local) const;
 
 	void UpdateWheelVelocity();
-	
+
 	void UpdateWheelTransform();
 
-	// apply engine torque to body
-	void ApplyEngineTorqueToBody();
-	
-	// add aerodynamic force / torque to force, torque
-	void AddAerodynamics(btVector3 & force, btVector3 & torque);
+	void ApplyEngineTorqueToBody ( btVector3 & force, btVector3 & torque );
 
-	// update suspension, sets normal force
-	void UpdateSuspension(btScalar normal_force[], btScalar dt);
+	void ApplyAerodynamicsToBody ( btVector3 & force, btVector3 & torque );
 
-	// apply tire friction to body
-	void UpdateWheel(
-		const int i,
-		const btScalar dt,
-		const btScalar normal_force,
-		const btScalar drive_torque,
-		const btQuaternion & wheel_space);
+	void ComputeSuspensionDisplacement ( int i, btScalar dt );
 
-	// advance body(body, suspension, wheels) simulation by dt
-	void UpdateBody(
-		const btVector3 & ext_force,
-		const btVector3 & ext_torque,
-		const btScalar drive_torque[],
-		const btScalar dt);
+	void DoTCS ( int i, btScalar suspension_force );
 
-	// cardynamics
-	void Tick(const btScalar dt);
+	void DoABS ( int i, btScalar suspension_force );
+
+	btVector3 ApplySuspensionForceToBody ( int i, btScalar dt, btVector3 & force, btVector3 & torque );
+
+	btVector3 ComputeTireFrictionForce ( int i, btScalar dt, btScalar normal_force,
+        btScalar angvel, btVector3 & groundvel, const btQuaternion & wheel_orientation );
+
+	void ApplyWheelForces ( btScalar dt, btScalar wheel_drive_torque, int i, const btVector3 & suspension_force, btVector3 & force, btVector3 & torque );
+
+	void ApplyForces ( btScalar dt, const btVector3 & force, const btVector3 & torque);
+
+	void Tick ( btScalar dt, const btVector3 & force, const btVector3 & torque);
 
 	void UpdateWheelContacts();
 
@@ -265,12 +262,6 @@ protected:
 	
 	// calculate downshift point based on gear, engine rpm
 	btScalar DownshiftRPM(int gear) const;
-
-	// do traction control system calculations and modify the throttle position if necessary
-	void DoTCS(int i);
-
-	// do anti-lock brake system calculations and modify the brake force if necessary
-	void DoABS(int i);
 
 	// cardynamics initialization
 	void GetCollisionBox(

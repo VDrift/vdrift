@@ -29,6 +29,7 @@ CARSUSPENSION::CARSUSPENSION()
 	
 	overtravel = 0;
 	displacement = 0;
+	last_displacement = 0;
 	wheel_velocity = 0;
 	wheel_force = 0;
 }
@@ -55,58 +56,58 @@ void CARSUSPENSION::SetSteering(const btScalar & value)
 	orientation = c * t * s;
 }
 
-void CARSUSPENSION::Update(btScalar force_limit, btScalar ext_velocity, btScalar ext_displacement)
+void CARSUSPENSION::SetDisplacement ( const btScalar & value, btScalar dt )
 {
-	overtravel = 0;
-	displacement = displacement + ext_displacement;
-	btScalar velocity = ext_velocity;
+	last_displacement = displacement;
+	displacement = value;
+
 	if (displacement > info.travel)
-	{
-		overtravel = displacement - info.travel;
 		displacement = info.travel;
-	}
-	else if (displacement < 0)
-	{
+	if (displacement < 0)
 		displacement = 0;
-		velocity = 0;
-	}
 	
-	btScalar spring = info.spring_constant;
-	btScalar springfactor = info.spring_factors.Interpolate(displacement);
-	spring_force = displacement * spring * springfactor; 
+	overtravel = value - info.travel;
+	if (overtravel < 0)
+		overtravel = 0;
 	
-	btScalar damping = (velocity > 0) ? info.bounce : info.rebound;
-	btScalar dampfactor = info.damper_factors.Interpolate(btFabs(velocity));
-	damp_force = -velocity * damping * dampfactor;
-	
-	force = spring_force + damp_force;
-	if (force < 0)
-	{
-		force = 0;
-	}
-	// limit damping
-	else if (force_limit >= 0 && force > force_limit && spring_force < force_limit)
-	{
-		//std::cerr << "clamp damping: " << spring_force << " " << damp_force << " " << force_limit << std::endl;
-		force = force_limit;
-	}
-	// suspension bump
-	else if (force_limit >= 0 && force < force_limit && overtravel > 0)
-	{
-		//std::cerr << "bump: " << spring_force << " " << damp_force << " " << force_limit << std::endl;
-		btScalar bump = 0.0;//springfactor * overtravel; // resolving overtravel, hack
-		force = force_limit + bump;
-	}
-	
+	//enforce maximum compression velocity
+	/*if (displacement - last_displacement < -max_compression_velocity*dt)
+		displacement = last_displacement - max_compression_velocity*dt;
+	if (displacement - last_displacement > max_compression_velocity*dt)
+		displacement = last_displacement + max_compression_velocity*dt;*/
+		
 	// update wheel position
 	position = GetWheelPosition(displacement / info.travel);
+}
+
+btScalar CARSUSPENSION::GetForce ( btScalar dt )
+{
+	btScalar damping = info.bounce;
+	//note that displacement is defined opposite to the classical definition (positive values mean compressed instead of extended)
+	btScalar velocity = (displacement - last_displacement) / dt;
+	if (velocity < 0)
+	{
+		damping = info.rebound;
+	}
+	
+	//compute damper factor based on curve
+	btScalar velabs = std::abs(velocity);
+	btScalar dampfactor = info.damper_factors.Interpolate(velabs);
+	
+	//compute spring factor based on curve
+	btScalar springfactor = info.spring_factors.Interpolate(displacement);
+	
+	spring_force = displacement * info.spring_constant * springfactor; //when compressed, the spring force will push the car in the positive z direction
+	damp_force = velocity * damping * dampfactor; //when compression is increasing, the damp force will push the car in the positive z direction
+	return spring_force + damp_force;
 }
 
 void CARSUSPENSION::DebugPrint(std::ostream & out) const
 {
 	out << "---Suspension---" << "\n";
 	out << "Displacement: " << displacement << "\n";
-	out << "Force: " << force << "\n";
+	out << "Spring Force: " << spring_force << "\n";
+	out << "Damping Force: " << damp_force << "\n";
 	out << "Steering angle: " << steering_angle * 180 / M_PI << "\n";
 }
 

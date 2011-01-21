@@ -144,7 +144,7 @@ void CARENGINE::Init(const CARENGINEINFO & info)
 	stalled = false;
 }
 
-btScalar CARENGINE::Update(btScalar clutch_drag, btScalar clutch_angvel, btScalar dt)
+btScalar CARENGINE::Integrate(btScalar clutch_drag, btScalar clutch_angvel, btScalar dt)
 {
 	clutch_torque = clutch_drag;
 	

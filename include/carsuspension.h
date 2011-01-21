@@ -73,8 +73,9 @@ public:
 	/// steering: -1.0 is maximum right lock and 1.0 is maximum left lock
 	virtual void SetSteering(const btScalar & value);
 
-	/// velocity, displacement along suspension vector
-	void Update(btScalar force_limit, btScalar velocity, btScalar displacement);
+	void SetDisplacement ( const btScalar & value, btScalar dt );
+	
+	btScalar GetForce ( btScalar dt );
 
 	void DebugPrint(std::ostream & out) const;
 
@@ -107,6 +108,7 @@ protected:
 	// wheel
 	btScalar overtravel;
 	btScalar displacement;
+	btScalar last_displacement;
 	btScalar wheel_velocity;
 	btScalar wheel_force;
 	
