@@ -1160,13 +1160,6 @@ btVector3 CARDYNAMICS::ApplySuspensionForceToBody ( int i, btScalar dt, btVector
 	btScalar springdampforce = suspension[i]->GetForce ( dt );
 	assert ( !isnan ( springdampforce ) );
 
-	//correct for a bottomed suspension by moving the car body up.  this is sort of a kludge.
-	btScalar overtravel = suspension[i]->GetOvertravel();
-	if ( overtravel > 0 )
-	{
-		// fixme
-	}
-
 	//do anti-roll
 	int otheri = i;
 	if ( i == 0 || i == 2 ) otheri++;
@@ -1184,19 +1177,26 @@ btVector3 CARDYNAMICS::ApplySuspensionForceToBody ( int i, btScalar dt, btVector
 	btVector3 rotaxis = up.cross ( relwheelext.Normalize() );
 	btVector3 forcedirection = relwheelext.Normalize().cross ( rotaxis );
 	//std::cout << i << ". " << forcedirection << std::endl;
-	btVector3 suspension_force = forcedirection* ( antirollforce+springdampforce );
 #else
-	btVector3 suspension_force = btVector3 ( 0,0,1 ) * ( antirollforce+springdampforce );
+	btVector3 forcedirection( 0,0,1 );
 #endif
+	forcedirection = body->getCenterOfMassTransform().getBasis() * forcedirection;
 
-	suspension_force = body->getCenterOfMassTransform().getBasis() * suspension_force; //transform to world space
-	//btVector3 suspension_force_application_point = CarLocalToRigidBodyWorld(suspension[WHEEL_POSITION(i)].GetPosition());
-#ifdef SUSPENSION_FORCE_DIRECTION
-	btVector3 suspension_force_application_point = GetWheelPosition ( WHEEL_POSITION ( i ) ) - GetCenterOfMassPosition();
-#else
-	//btVector3 suspension_force_application_point = CarLocalToWorld(suspension[WHEEL_POSITION(i)].GetPosition()) - GetCenterOfMassPosition();
-	btVector3 suspension_force_application_point = GetWheelPosition ( WHEEL_POSITION ( i ) ) - GetCenterOfMassPosition();
-#endif
+	btVector3 suspension_force = forcedirection * ( antirollforce + springdampforce );
+	btVector3 suspension_force_application_point = wheel_position[i] - body->getCenterOfMassPosition();
+
+	btScalar overtravel = suspension[i]->GetOvertravel();
+	if ( overtravel > 0 )
+	{
+		btScalar correction_factor = 0.1;
+		btScalar dv = body->getVelocityInLocalPoint(suspension_force_application_point).dot(forcedirection);
+		dv -= correction_factor * overtravel / dt;
+		btScalar correction = -1.0 / body->computeImpulseDenominator(wheel_position[i], forcedirection) * dv / dt;
+		if (correction > 0 && correction > antirollforce + springdampforce)
+		{
+			suspension_force = forcedirection * correction;
+		}
+	}
 
 	force = force + suspension_force;
 	torque = torque + suspension_force_application_point.cross(suspension_force);
@@ -1276,14 +1276,14 @@ void CARDYNAMICS::ApplyWheelForces ( btScalar dt, btScalar wheel_drive_torque, i
 	btVector3 tire_torque ( 0, -wheel_torque, -friction_force[2] );
 	
 	// rolling resistance + surface drag
-	tire_force[0] -= tire[i].GetRollingResistance ( wheel[i].GetAngularVelocity(), normal_force, wheel_contact[i].GetSurface().rollResistanceCoefficient );
+	tire_force[0] += tire[i].GetRollingResistance ( wheel[i].GetAngularVelocity(), normal_force, wheel_contact[i].GetSurface().rollResistanceCoefficient );
 	tire_force[0] -= groundvel[0] * wheel_contact[i].GetSurface().rollingDrag;
 	tire_force[1] -= groundvel[1] * wheel_contact[i].GetSurface().rollingDrag;
 
 	//apply forces to body
 	btVector3 world_tire_force = quatRotate ( wheel_orientation[i], tire_force );
 	btVector3 world_tire_torque = quatRotate ( wheel_orientation[i],  tire_torque);
-	btVector3 tirepos = GetWheelPosition ( WHEEL_POSITION ( i ) ) - GetCenterOfMassPosition();
+	btVector3 tirepos = wheel_position[i] - body->getCenterOfMassPosition();
 	force = force + world_tire_force;
 	torque = torque + world_tire_torque + tirepos.cross(world_tire_force);
 }
