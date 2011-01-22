@@ -51,7 +51,7 @@ public:
 		float scaley,
 		bool newanalog,
 		bool newonly_one,
-		float z = 0);
+		float newz = 0);
 	
 	void LoadControls(SCENENODE & parent, const CONFIG & c, const FONT & font);
 	
@@ -130,7 +130,7 @@ private:
 	keyed_container <SCENENODE>::handle ctrlnode;
 	std::vector <std::tr1::shared_ptr<TEXTURE> > textures;
 	float scale_x, scale_y;
-	float x, y;
+	float x, y, z;
 	float w, h;
 	bool analog;
 	bool only_one;

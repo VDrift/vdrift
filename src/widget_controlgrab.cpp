@@ -253,7 +253,7 @@ void WIDGET_CONTROLGRAB::SetupDrawable(
 	float scaley,
 	bool newanalog,
 	bool newonly_one,
-	float z)
+	float newz)
 {
 	assert(!newsetting.empty());
 	assert(texturevector.size() == END);
@@ -268,6 +268,7 @@ void WIDGET_CONTROLGRAB::SetupDrawable(
 	
 	x = centerx;
 	y = centery;
+	z = newz;
 	h = scaley;
 	w = 0.5;
 	
@@ -359,7 +360,7 @@ void WIDGET_CONTROLGRAB::LoadControls(SCENENODE & scene, const CONFIG & c, const
 			float by = y;
 			
 			button.widget.SetupDrawable(parentnode, tex_unsel, tex_sel, tex_sel,
-				font, "", bx, by, bw, bh, r, g, b);
+				font, "", bx, by, bw, bh, r, g, b, 0, 0, z);
 		}
 	}
 }
