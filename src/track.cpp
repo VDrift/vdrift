@@ -369,6 +369,11 @@ bool TRACK::LoadSurfaces(const std::string & trackpath)
 		
 		float temp = 0.0;
 		param.GetParam(section, "BumpWaveLength", temp, error_output);
+		if (temp <= 0.0)
+		{
+			error_output << "Surface Type = " << type << " has BumpWaveLength = 0.0 in " << path << std::endl;
+			temp = 1.0;
+		}
 		surface.bumpWaveLength = temp;
 		
 		param.GetParam(section, "BumpAmplitude", temp, error_output);
