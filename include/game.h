@@ -2,7 +2,7 @@
 #define _GAME_H
 
 #include "window.h"
-#include "graphics_fallback.h"
+#include "graphics_interface.h"
 #include "eventsystem.h"
 #include "settings.h"
 #include "pathmanager.h"
@@ -116,7 +116,7 @@ private:
 	SETTINGS settings;
 
 	WINDOW_SDL window;
-	GRAPHICS_FALLBACK graphics_fallback;
+	GRAPHICS_INTERFACE * graphics_interface;
 	EVENTSYSTEM_SDL eventsystem;
 	SOUND sound;
 

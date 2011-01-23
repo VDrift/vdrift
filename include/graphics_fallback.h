@@ -14,6 +14,7 @@
 #include "glstatemanager.h"
 #include "graphics_renderers.h"
 #include "graphics_config.h"
+#include "graphics_interface.h"
 
 #include <string>
 #include <ostream>
@@ -45,7 +46,7 @@ struct GRAPHICS_CAMERA
 		{}
 };
 
-class GRAPHICS_FALLBACK
+class GRAPHICS_FALLBACK : public GRAPHICS_INTERFACE
 {
 private:
 	// avoids sending excessive state changes to OpenGL
@@ -135,10 +136,8 @@ public:
 			{activeshader = shadermap.end();}
 	~GRAPHICS_FALLBACK() {}
 	
-	typedef DRAWABLE_CONTAINER <PTRVECTOR> dynamicdrawlist_type;
-	
 	///reflection_type is 0 (low=OFF), 1 (medium=static), 2 (high=dynamic)
-	void Init(const std::string & shaderpath,
+	virtual void Init(const std::string & shaderpath,
 				unsigned int resx, unsigned int resy, unsigned int bpp,
 				unsigned int depthbpp, bool fullscreen, bool shaders,
 				unsigned int antialiasing, bool enableshadows,
@@ -150,43 +149,40 @@ public:
 				int lighting_quality, bool newbloom, bool newnormalmaps,
 				const std::string & renderconfig,
 				std::ostream & info_output, std::ostream & error_output);
-	void Deinit();
-	void BeginScene(std::ostream & error_output);
-	DRAWABLE_CONTAINER <PTRVECTOR> & GetDynamicDrawlist() {return dynamic_drawlist;}
-	void AddStaticNode(SCENENODE & node, bool clearcurrent = true);
-	void SetupScene(float fov, float new_view_distance, const MATHVECTOR <float, 3> cam_position, const QUATERNION <float> & cam_rotation,
+	virtual void Deinit();
+	virtual void BeginScene(std::ostream & error_output);
+	virtual DRAWABLE_CONTAINER <PTRVECTOR> & GetDynamicDrawlist() {return dynamic_drawlist;}
+	virtual void AddStaticNode(SCENENODE & node, bool clearcurrent = true);
+	virtual void SetupScene(float fov, float new_view_distance, const MATHVECTOR <float, 3> cam_position, const QUATERNION <float> & cam_rotation,
 					const MATHVECTOR <float, 3> & dynamic_reflection_sample_pos);
-	void DrawScene(std::ostream & error_output);
-	void EndScene(std::ostream & error_output);
-	int GetW() const {return w;}
-	int GetH() const {return h;}
-	float GetWHRatio() const {return (float)w/h;}
-	int GetMaxAnisotropy() const {return max_anisotropy;}
-	bool AntialiasingSupported() {return GLEW_ARB_multisample;}
+	virtual void DrawScene(std::ostream & error_output);
+	virtual void EndScene(std::ostream & error_output);
+	virtual int GetMaxAnisotropy() const {return max_anisotropy;}
+	virtual bool AntialiasingSupported() const {return GLEW_ARB_multisample;}
 
-	bool GetUsingShaders() const
+	virtual bool GetUsingShaders() const
 	{
 		return using_shaders;
 	}
 	
-	bool ReloadShaders(const std::string & shaderpath, std::ostream & info_output, std::ostream & error_output);
+	virtual bool ReloadShaders(const std::string & shaderpath, std::ostream & info_output, std::ostream & error_output);
 
-	void SetCloseShadow ( float value )
+	virtual void SetCloseShadow ( float value )
 	{
 		closeshadow = value;
 	}
 
-	bool GetShadows() const
+	virtual bool GetShadows() const
 	{
 		return shadows;
 	}
 
-	void SetSunDirection ( const QUATERNION< float >& value )
+	virtual void SetSunDirection ( const QUATERNION< float >& value )
 	{
 		lightdirection = value;
 	}
 
-	void SetContrast ( float value )
+	virtual void SetContrast ( float value )
 	{
 		contrast = value;
 	}

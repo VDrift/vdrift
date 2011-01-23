@@ -13,6 +13,7 @@
 #include "tracksurface.h"
 #include "macros.h"
 #include "utils.h"
+#include "graphics_fallback.h"
 
 #include <fstream>
 using std::ifstream;
@@ -51,6 +52,7 @@ GAME::GAME(std::ostream & info_out, std::ostream & error_out) :
 	clocktime(0),
 	target_time(0),
 	timestep(1/90.0),
+	graphics_interface(NULL),
 	fps_track(10, 0),
 	fps_position(0),
 	fps_min(0),
@@ -246,7 +248,8 @@ void GAME::InitCoreSubsystems()
 		settings.GetAntialiasing(),
 		info_output, error_output);
 	
-	graphics_fallback.Init(pathmanager.GetShaderPath(),
+	graphics_interface = new GRAPHICS_FALLBACK();
+	graphics_interface->Init(pathmanager.GetShaderPath(),
 		settings.GetResolutionX(), settings.GetResolutionY(),
 		settings.GetBpp(), settings.GetDepthbpp(), settings.GetFullscreen(),
 		settings.GetShaders(), settings.GetAntialiasing(), settings.GetShadows(),
@@ -261,14 +264,14 @@ void GAME::InitCoreSubsystems()
 	QUATERNION <float> ldir;
 	ldir.Rotate(3.141593*0.05,0,1,0);
 	ldir.Rotate(-3.141593*0.1,1,0,0);
-	graphics_fallback.SetSunDirection(ldir);
+	graphics_interface->SetSunDirection(ldir);
 
 	eventsystem.Init(info_output);
 }
 
 ///write the scenegraph to the output drawlist
 template <bool clearfirst>
-void TraverseScene(SCENENODE & node, GRAPHICS_FALLBACK::dynamicdrawlist_type & output)
+void TraverseScene(SCENENODE & node, GRAPHICS_INTERFACE::dynamicdrawlist_type & output)
 {
 	if (clearfirst)
 	{
@@ -538,7 +541,8 @@ void GAME::End()
 
 	settings.Save(pathmanager.GetSettingsFile(), error_output); //save settings first incase later deinits cause crashes
 	
-	graphics_fallback.Deinit();
+	graphics_interface->Deinit();
+	delete graphics_interface;
 	window.Deinit();
 }
 
@@ -563,43 +567,43 @@ void GAME::BeginDraw()
 		camlook.Rotate(3.141593*0.5,1,0,0);
 		camlook.Rotate(-3.141593*0.5,0,0,1);
 		QUATERNION <float> camorient = -(active_camera->GetOrientation()*camlook);
-		graphics_fallback.SetupScene(settings.GetFOV(), settings.GetViewDistance(), active_camera->GetPosition(), camorient, reflection_sample_location);
+		graphics_interface->SetupScene(settings.GetFOV(), settings.GetViewDistance(), active_camera->GetPosition(), camorient, reflection_sample_location);
 	}
 	else
-		graphics_fallback.SetupScene(settings.GetFOV(), settings.GetViewDistance(), MATHVECTOR <float, 3> (), QUATERNION <float> (), MATHVECTOR <float, 3> ());
+		graphics_interface->SetupScene(settings.GetFOV(), settings.GetViewDistance(), MATHVECTOR <float, 3> (), QUATERNION <float> (), MATHVECTOR <float, 3> ());
 
-	graphics_fallback.SetContrast(settings.GetContrast());
-	graphics_fallback.BeginScene(error_output);
+	graphics_interface->SetContrast(settings.GetContrast());
+	graphics_interface->BeginScene(error_output);
 	PROFILER.endBlock("render");
 
 	PROFILER.beginBlock("scenegraph");
 	
-	TraverseScene<true>(debugnode, graphics_fallback.GetDynamicDrawlist());
-	TraverseScene<false>(gui.GetNode(), graphics_fallback.GetDynamicDrawlist());
-	TraverseScene<false>(track.GetRacinglineNode(), graphics_fallback.GetDynamicDrawlist());
+	TraverseScene<true>(debugnode, graphics_interface->GetDynamicDrawlist());
+	TraverseScene<false>(gui.GetNode(), graphics_interface->GetDynamicDrawlist());
+	TraverseScene<false>(track.GetRacinglineNode(), graphics_interface->GetDynamicDrawlist());
 	#ifndef USE_STATIC_OPTIMIZATION_FOR_TRACK
-	TraverseScene<false>(track.GetTrackNode(), graphics_fallback.GetDynamicDrawlist());
+	TraverseScene<false>(track.GetTrackNode(), graphics_interface->GetDynamicDrawlist());
 	#endif
-	TraverseScene<false>(hud.GetNode(), graphics_fallback.GetDynamicDrawlist());
-	TraverseScene<false>(trackmap.GetNode(), graphics_fallback.GetDynamicDrawlist());
-	TraverseScene<false>(inputgraph.GetNode(), graphics_fallback.GetDynamicDrawlist());
-	TraverseScene<false>(tire_smoke.GetNode(), graphics_fallback.GetDynamicDrawlist());
+	TraverseScene<false>(hud.GetNode(), graphics_interface->GetDynamicDrawlist());
+	TraverseScene<false>(trackmap.GetNode(), graphics_interface->GetDynamicDrawlist());
+	TraverseScene<false>(inputgraph.GetNode(), graphics_interface->GetDynamicDrawlist());
+	TraverseScene<false>(tire_smoke.GetNode(), graphics_interface->GetDynamicDrawlist());
 	for (list <CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
 	{
-		TraverseScene<false>(i->GetNode(), graphics_fallback.GetDynamicDrawlist());
+		TraverseScene<false>(i->GetNode(), graphics_interface->GetDynamicDrawlist());
 	}
 	
 	//gui.GetNode().DebugPrint(info_output);
 	PROFILER.endBlock("scenegraph");
 	PROFILER.beginBlock("render");
-	graphics_fallback.DrawScene(error_output);
+	graphics_interface->DrawScene(error_output);
 	PROFILER.endBlock("render");
 }
 
 void GAME::FinishDraw()
 {
 	PROFILER.beginBlock("render");
-	graphics_fallback.EndScene(error_output);
+	graphics_interface->EndScene(error_output);
 	window.SwapBuffers(error_output);
 	PROFILER.endBlock("render");
 }
@@ -792,7 +796,7 @@ void GAME::ProcessGameInputs()
 		if (carcontrols_local.second.GetInput(CARINPUT::RELOAD_SHADERS) == 1.0)
 		{
 			info_output << "Reloading shaders" << endl;
-			if (!graphics_fallback.ReloadShaders(pathmanager.GetShaderPath(), info_output, error_output))
+			if (!graphics_interface->ReloadShaders(pathmanager.GetShaderPath(), info_output, error_output))
 			{
 				error_output << "Error reloading shaders" << endl;
 			}
@@ -1590,7 +1594,7 @@ void GAME::UpdateCarInputs(CAR & car)
 		car.EnableGlass(!incar);
 		
 		//move up the close shadow distance if we're in the cockpit
-		graphics_fallback.SetCloseShadow(incar ? 1.0 : 5.0);
+		graphics_interface->SetCloseShadow(incar ? 1.0 : 5.0);
 	}
 }
 
@@ -1795,7 +1799,7 @@ void GAME::LeaveGame()
 	
 	// clear out the static drawables
 	SCENENODE empty;
-	graphics_fallback.AddStaticNode(empty, true);
+	graphics_interface->AddStaticNode(empty, true);
 
 	if (sound.Enabled())
 	{
@@ -1909,7 +1913,7 @@ bool GAME::LoadTrack(const std::string & trackname)
 			settings.GetTextureSize(),
 			settings.GetAnisotropy(),
 			settings.GetTrackReverse(),
-			graphics_fallback.GetShadows(),
+			graphics_interface->GetShadows(),
 			false))
 	{
 		error_output << "Error loading track: " << trackname << endl;
@@ -1959,7 +1963,7 @@ bool GAME::LoadTrack(const std::string & trackname)
 	
 	//build static drawlist
 	#ifdef USE_STATIC_OPTIMIZATION_FOR_TRACK
-	graphics_fallback.AddStaticNode(track.GetTrackNode());
+	graphics_interface->AddStaticNode(track.GetTrackNode());
 	#endif
 
 	return true;
@@ -1970,7 +1974,7 @@ bool GAME::LoadFonts()
 	string fontdir = pathmanager.GetFontDir(settings.GetSkin());
 	string fontpath = pathmanager.GetDataPath()+"/"+fontdir;
 
-	if (graphics_fallback.GetUsingShaders())
+	if (graphics_interface->GetUsingShaders())
 	{
 		if (!fonts["freesans"].Load(fontpath+"/freesans.txt",fontdir, "freesans.png", settings.GetTextureSize(), textures, error_output)) return false;
 		if (!fonts["lcd"].Load(fontpath+"/lcd.txt",fontdir, "lcd.png", settings.GetTextureSize(), textures, error_output)) return false;
@@ -2190,7 +2194,7 @@ void GAME::PopulateValueLists(std::map<std::string, std::list <std::pair <std::s
 	valuelists["resolution_heights"] = modelisty;
 
 	//populate anisotropy list
-	int max_aniso = graphics_fallback.GetMaxAnisotropy();
+	int max_aniso = graphics_interface->GetMaxAnisotropy();
 	valuelists["anisotropy"].push_back(pair<string,string>("0","Off"));
 	int cur = 1;
 	while (cur <= max_aniso)
@@ -2203,7 +2207,7 @@ void GAME::PopulateValueLists(std::map<std::string, std::list <std::pair <std::s
 
 	//populate antialiasing list
 	valuelists["antialiasing"].push_back(pair<string,string>("0","Off"));
-	if (graphics_fallback.AntialiasingSupported())
+	if (graphics_interface->AntialiasingSupported())
 	{
 		valuelists["antialiasing"].push_back(pair<string,string>("2","2X"));
 		valuelists["antialiasing"].push_back(pair<string,string>("4","4X"));
@@ -2317,16 +2321,16 @@ void GAME::LoadingScreen(float progress, float max, bool drawGui, const std::str
 	assert(max > 0);
 	loadingscreen.Update(progress/max, optionalText, x, y);
 
-	graphics_fallback.GetDynamicDrawlist().clear();
+	graphics_interface->GetDynamicDrawlist().clear();
 	if (drawGui)
-		TraverseScene<false>(gui.GetNode(), graphics_fallback.GetDynamicDrawlist());
-	TraverseScene<false>(loadingscreen.GetNode(), graphics_fallback.GetDynamicDrawlist());
+		TraverseScene<false>(gui.GetNode(), graphics_interface->GetDynamicDrawlist());
+	TraverseScene<false>(loadingscreen.GetNode(), graphics_interface->GetDynamicDrawlist());
 
-	graphics_fallback.SetupScene(45.0, 100.0, MATHVECTOR <float, 3> (), QUATERNION <float> (), MATHVECTOR <float, 3> ());
+	graphics_interface->SetupScene(45.0, 100.0, MATHVECTOR <float, 3> (), QUATERNION <float> (), MATHVECTOR <float, 3> ());
 
-	graphics_fallback.BeginScene(error_output);
-	graphics_fallback.DrawScene(error_output);
-	graphics_fallback.EndScene(error_output);
+	graphics_interface->BeginScene(error_output);
+	graphics_interface->DrawScene(error_output);
+	graphics_interface->EndScene(error_output);
 	window.SwapBuffers(error_output);
 }
 
