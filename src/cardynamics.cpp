@@ -1164,8 +1164,8 @@ btVector3 CARDYNAMICS::ApplySuspensionForceToBody ( int i, btScalar dt, btVector
 	int otheri = i;
 	if ( i == 0 || i == 2 ) otheri++;
 	else otheri--;
-	btScalar antirollforce = suspension[i]->GetAntiRoll() *
-		( suspension[i]->GetDisplacement()- suspension[WHEEL_POSITION ( otheri ) ]->GetDisplacement() );
+	btScalar antirollforce = suspension[i]->GetAntiRoll() * 
+		( suspension[i]->GetDisplacement() - suspension[WHEEL_POSITION ( otheri ) ]->GetDisplacement() );
 	assert ( !isnan ( antirollforce ) );
 
 	//find the vector direction to apply the suspension force
@@ -1276,7 +1276,7 @@ void CARDYNAMICS::ApplyWheelForces ( btScalar dt, btScalar wheel_drive_torque, i
 	btVector3 tire_torque ( 0, -wheel_torque, -friction_force[2] );
 	
 	// rolling resistance + surface drag
-	tire_force[0] += tire[i].GetRollingResistance ( wheel[i].GetAngularVelocity(), normal_force, wheel_contact[i].GetSurface().rollResistanceCoefficient );
+	tire_force[0] += tire[i].GetRollingResistance ( wheel[i].GetAngularVelocity(), wheel_contact[i].GetSurface().rollResistanceCoefficient );
 	tire_force[0] -= groundvel[0] * wheel_contact[i].GetSurface().rollingDrag;
 	tire_force[1] -= groundvel[1] * wheel_contact[i].GetSurface().rollingDrag;
 
@@ -1314,7 +1314,7 @@ void CARDYNAMICS::ApplyForces ( btScalar dt, const btVector3 & ext_force, const 
 	UpdateDriveline(wheel_drive_torque, dt);
 
 	//apply equal and opposite engine torque to the chassis
-	ApplyEngineTorqueToBody ( force, torque );
+	//ApplyEngineTorqueToBody ( force, torque );
 
 	//apply aerodynamics
 	ApplyAerodynamicsToBody ( force, torque );

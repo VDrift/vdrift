@@ -255,7 +255,7 @@ btVector3 CARTIRE::GetForce(
 	return btVector3(Fx, Fy, Mz);
 }
 
-btScalar CARTIRE::GetRollingResistance(const btScalar velocity, const btScalar normal_force, const btScalar rolling_resistance_factor) const
+btScalar CARTIRE::GetRollingResistance(const btScalar velocity, const btScalar rolling_resistance_factor) const
 {
 	// surface influence on rolling resistance
 	btScalar rolling_resistance = rolling_resistance_linear * rolling_resistance_factor;
@@ -264,8 +264,8 @@ btScalar CARTIRE::GetRollingResistance(const btScalar velocity, const btScalar n
 	// approximate by quadratic function
 	rolling_resistance += velocity * velocity * rolling_resistance_quadratic;
 	
-	// rolling resistance magnitude
-	btScalar resistance = -normal_force * rolling_resistance;
+	// rolling resistance direction
+	btScalar resistance = -rolling_resistance;
 	if (velocity < 0) resistance = -resistance;
 	
 	return resistance;

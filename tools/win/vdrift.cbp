@@ -13,7 +13,7 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Option use_console_runner="0" />
-				<Option parameters="-profiling" />
+				<Option parameters="-debug" />
 				<Compiler>
 					<Add option="-g" />
 				</Compiler>
@@ -453,7 +453,6 @@
 		<Unit filename="..\..\include\shader.h" />
 		<Unit filename="..\..\include\signalprocessing.h" />
 		<Unit filename="..\..\include\simpletree.h" />
-		<Unit filename="..\..\include\sky.h" />
 		<Unit filename="..\..\include\sound.h" />
 		<Unit filename="..\..\include\soundbuffer.h" />
 		<Unit filename="..\..\include\soundfilter.h" />
@@ -563,7 +562,6 @@
 		<Unit filename="..\..\src\scenenode.cpp" />
 		<Unit filename="..\..\src\settings.cpp" />
 		<Unit filename="..\..\src\shader.cpp" />
-		<Unit filename="..\..\src\sky.cpp" />
 		<Unit filename="..\..\src\sound.cpp" />
 		<Unit filename="..\..\src\soundbuffer.cpp" />
 		<Unit filename="..\..\src\soundfilter.cpp" />

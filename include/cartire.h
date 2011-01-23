@@ -45,11 +45,8 @@ public:
 		btScalar ang_velocity,
 		const btVector3 & velocity);
 	
-	/// return max rolling resistance
-	btScalar GetRollingResistance(
-		const btScalar velocity,
-		const btScalar normal_force,
-		const btScalar rolling_resistance_factor) const;
+	/// get rolling resistance
+	btScalar GetRollingResistance(const btScalar velocity, const btScalar rolling_resistance_factor) const;
 	
 	/// load is the normal force in newtons.
 	btScalar GetMaxFx(btScalar load) const;
