@@ -1,4 +1,4 @@
-#include "graphics.h"
+#include "graphics_fallback.h"
 
 #include "opengl_utility.h"
 #include "matrix4.h"
@@ -77,7 +77,7 @@ void ReportOnce(const void * id, const std::string & message, std::ostream & out
 	}
 }
 
-void GRAPHICS_SDLGL::Init(const std::string & shaderpath, const std::string & windowcaption,
+void GRAPHICS_FALLBACK::Init(const std::string & shaderpath,
 	unsigned int resx, unsigned int resy, unsigned int bpp,
 	unsigned int depthbpp, bool fullscreen, bool shaders,
 	unsigned int antialiasing, bool enableshadows, int new_shadow_distance,
@@ -101,32 +101,12 @@ void GRAPHICS_SDLGL::Init(const std::string & shaderpath, const std::string & wi
 		reflection_status = REFLECTION_STATIC;
 	else if (reflection_type == 2)
 		reflection_status = REFLECTION_DYNAMIC;
-
-	if ( SDL_Init( SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK
-/*#ifdef ENABLE_FORCE_FEEDBACK
-			| SDL_INIT_HAPTIC
-#endif*/
-				 ) < 0 )
-	{
-		string err = SDL_GetError();
-		error_output << "SDL initialization failed: " << err << endl;
-		assert(0); //die
-	}
-	else
-		info_output << "SDL initialization successful" << endl;
-
-	//OPENGL_UTILITY::CheckForOpenGLErrors("SDL initialization", error_output);
-
-	//override depth bpp if shadows are enabled
-	if (shadows && depthbpp != 24)
-	{
-		info_output << "Automatictally setting depth buffer to 24-bit because shadows are enabled" << endl;
-		depthbpp = 24;
-	}
-
+	
 	ChangeDisplay(resx, resy, bpp, depthbpp, fullscreen, antialiasing, info_output, error_output);
-
-	SDL_WM_SetCaption(windowcaption.c_str(), NULL);
+	
+	fsaa = 1;
+	if (antialiasing > 1)
+		fsaa = antialiasing;
 
 	stringstream cardinfo;
 	cardinfo << "Video card information:" << endl;
@@ -264,60 +244,10 @@ void GRAPHICS_SDLGL::Init(const std::string & shaderpath, const std::string & wi
 	initialized = true;
 }
 
-void GRAPHICS_SDLGL::ChangeDisplay(const int width, const int height, const int bpp, const int dbpp,
+void GRAPHICS_FALLBACK::ChangeDisplay(const int width, const int height, const int bpp, const int dbpp,
 				   const bool fullscreen, unsigned int antialiasing,
        				   std::ostream & info_output, std::ostream & error_output)
 {
-	const SDL_VideoInfo *videoInfo = SDL_GetVideoInfo();
-
-	if ( !videoInfo )
-	{
-		string err = SDL_GetError();
-		error_output << "SDL video query failed: " << err << endl;
-		assert (0);
-	}
-	else
-		info_output << "SDL video query was successful" << endl;
-
-	int videoFlags;
-	videoFlags  = SDL_OPENGL;
-	videoFlags |= SDL_GL_DOUBLEBUFFER;
-	videoFlags |= SDL_HWPALETTE;
-	//videoFlags |= SDL_RESIZABLE;
-
-	SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
-	SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, dbpp );
-
-	fsaa = 1;
-	//if (antialiasing > 1 && GLEW_multisample) //can't check this because OpenGL and GLEW aren't initialized
-	if (antialiasing > 1)
-	{
-		fsaa = antialiasing;
-		info_output << "Enabling antialiasing: " << fsaa << "X" << endl;
-		SDL_GL_SetAttribute( SDL_GL_MULTISAMPLESAMPLES, fsaa );
-	}
-	else
-		info_output << "Disabling antialiasing" << endl;
-
-	if (fullscreen)
-	{
-		videoFlags |= SDL_HWSURFACE|SDL_ANYFORMAT|SDL_FULLSCREEN;
-	}
-	else
-	{
-		videoFlags |= SDL_SWSURFACE|SDL_ANYFORMAT;
-	}
-
-	//if (SDL_VideoModeOK(game.config.res_x.data, game.config.res_y.data, game.config.bpp.data, videoFlags) != 0)
-
-	if (surface != NULL)
-	{
-		SDL_FreeSurface(surface);
-		surface = NULL;
-	}
-
-	surface = SDL_SetVideoMode(width, height, bpp, videoFlags);
-
 	GLfloat ratio = ( GLfloat )width / ( GLfloat )height;
 	glViewport( 0, 0, ( GLint )width, ( GLint )height );
 	glMatrixMode( GL_PROJECTION );
@@ -325,24 +255,14 @@ void GRAPHICS_SDLGL::ChangeDisplay(const int width, const int height, const int 
 	gluPerspective( 45.0f, ratio, 0.1f, 100.0f );
 	glMatrixMode( GL_MODELVIEW );
 	glLoadIdentity( );
-
-	if (!surface)
-	{
-		string err = SDL_GetError();
-		error_output << "Display change failed: " << width << "x" << height << "x" << bpp << " " << dbpp << "z fullscreen=" << fullscreen << endl;
-		error_output << "Error: " << err << endl;
-		assert (0);
-	}
-	else
-		info_output << "Display change was successful: " << width << "x" << height << "x" << bpp << " " << dbpp << "z fullscreen=" << fullscreen << endl;
-
+	
 	OPENGL_UTILITY::CheckForOpenGLErrors("ChangeDisplay", error_output);
 
 	w = width;
 	h = height;
 }
 
-void GRAPHICS_SDLGL::Deinit()
+void GRAPHICS_FALLBACK::Deinit()
 {
 	if (GLEW_ARB_shading_language_100)
 	{
@@ -350,11 +270,9 @@ void GRAPHICS_SDLGL::Deinit()
 			glUseProgramObjectARB(0);
 		shadermap.clear();
 	}
-	
-	SDL_Quit();
 }
 
-void GRAPHICS_SDLGL::BeginScene(std::ostream & error_output)
+void GRAPHICS_FALLBACK::BeginScene(std::ostream & error_output)
 {
 	glstate.Disable(GL_TEXTURE_2D);
 	glShadeModel( GL_SMOOTH );
@@ -375,7 +293,7 @@ void GRAPHICS_SDLGL::BeginScene(std::ostream & error_output)
 ///note that if variant is passed in, it is used as the shader name and the shader is also loaded with the variant_defines set
 ///this allows loading multiple shaders from the same shader file, just with different defines set
 ///variant_defines is a space delimited list of defines
-bool GRAPHICS_SDLGL::LoadShader(const std::string & shaderpath, const std::string & name, std::ostream & info_output, std::ostream & error_output, std::string variant, std::string variant_defines)
+bool GRAPHICS_FALLBACK::LoadShader(const std::string & shaderpath, const std::string & name, std::ostream & info_output, std::ostream & error_output, std::string variant, std::string variant_defines)
 {
 	//generate preprocessor defines
 	std::vector <std::string> defines;
@@ -482,7 +400,7 @@ FBTEXTURE::FORMAT TextureFormatFromString(const std::string & format)
 	return FBTEXTURE::RGB8;
 }
 
-void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream & info_output, std::ostream & error_output)
+void GRAPHICS_FALLBACK::EnableShaders(const std::string & shaderpath, std::ostream & info_output, std::ostream & error_output)
 {
 	bool shader_load_success = true;
 	
@@ -675,14 +593,14 @@ void GRAPHICS_SDLGL::EnableShaders(const std::string & shaderpath, std::ostream 
 	}
 }
 
-bool GRAPHICS_SDLGL::ReloadShaders(const std::string & shaderpath, std::ostream & info_output, std::ostream & error_output)
+bool GRAPHICS_FALLBACK::ReloadShaders(const std::string & shaderpath, std::ostream & info_output, std::ostream & error_output)
 {
 	EnableShaders(shaderpath, info_output, error_output);
 	
 	return GetUsingShaders();
 }
 
-void GRAPHICS_SDLGL::DisableShaders(const std::string & shaderpath, std::ostream & error_output)
+void GRAPHICS_FALLBACK::DisableShaders(const std::string & shaderpath, std::ostream & error_output)
 {
 	shadermap.clear();
 	using_shaders = false;
@@ -707,16 +625,12 @@ void GRAPHICS_SDLGL::DisableShaders(const std::string & shaderpath, std::ostream
 	render_outputs["framebuffer"].RenderToFramebuffer();
 }
 
-void GRAPHICS_SDLGL::EndScene(std::ostream & error_output)
+void GRAPHICS_FALLBACK::EndScene(std::ostream & error_output)
 {
 	OPENGL_UTILITY::CheckForOpenGLErrors("EndScene", error_output);
-
-	SDL_GL_SwapBuffers();
-
-	OPENGL_UTILITY::CheckForOpenGLErrors("SDL_GL buffer swap", error_output);
 }
 
-void GRAPHICS_SDLGL::SetupScene(float fov, float new_view_distance, const MATHVECTOR <float, 3> cam_position, const QUATERNION <float> & cam_rotation,
+void GRAPHICS_FALLBACK::SetupScene(float fov, float new_view_distance, const MATHVECTOR <float, 3> cam_position, const QUATERNION <float> & cam_rotation,
 					const MATHVECTOR <float, 3> & dynamic_reflection_sample_pos)
 {
 	// setup the default camera from the passed-in parameters
@@ -950,7 +864,7 @@ BLENDMODE::BLENDMODE BlendModeFromString(const std::string & mode)
 	return BLENDMODE::DISABLED;
 }
 
-void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
+void GRAPHICS_FALLBACK::DrawScene(std::ostream & error_output)
 {
 	renderscene.SetFlags(using_shaders);
 	renderscene.SetFSAA(fsaa);
@@ -1264,7 +1178,7 @@ void GRAPHICS_SDLGL::DrawScene(std::ostream & error_output)
 	}
 }
 
-void GRAPHICS_SDLGL::RenderDrawlist(std::vector <DRAWABLE*> & drawlist,
+void GRAPHICS_FALLBACK::RenderDrawlist(std::vector <DRAWABLE*> & drawlist,
 						RENDER_INPUT_SCENE & render_scene, 
 						RENDER_OUTPUT & render_output, 
 						std::ostream & error_output)
@@ -1276,7 +1190,7 @@ void GRAPHICS_SDLGL::RenderDrawlist(std::vector <DRAWABLE*> & drawlist,
 	Render(&render_scene, render_output, error_output);
 }
 
-void GRAPHICS_SDLGL::RenderDrawlists(std::vector <DRAWABLE*> & dynamic_drawlist,
+void GRAPHICS_FALLBACK::RenderDrawlists(std::vector <DRAWABLE*> & dynamic_drawlist,
 						std::vector <DRAWABLE*> & static_drawlist,
 						const std::vector <TEXTURE_INTERFACE*> & extra_textures,
 						RENDER_INPUT_SCENE & render_scene, 
@@ -1327,7 +1241,7 @@ void GRAPHICS_SDLGL::RenderDrawlists(std::vector <DRAWABLE*> & dynamic_drawlist,
 	glActiveTexture(GL_TEXTURE0);
 }
 
-void GRAPHICS_SDLGL::RenderPostProcess(const std::string & shadername,
+void GRAPHICS_FALLBACK::RenderPostProcess(const std::string & shadername,
 						const std::vector <TEXTURE_INTERFACE*> & textures,
 						RENDER_OUTPUT & render_output,
 						bool write_color,
@@ -1343,7 +1257,7 @@ void GRAPHICS_SDLGL::RenderPostProcess(const std::string & shadername,
 	Render(&postprocess, render_output, error_output);
 }
 
-void GRAPHICS_SDLGL::DrawBox(const MATHVECTOR <float, 3> & corner1, const MATHVECTOR <float, 3> & corner2) const
+void GRAPHICS_FALLBACK::DrawBox(const MATHVECTOR <float, 3> & corner1, const MATHVECTOR <float, 3> & corner2) const
 {
 	//enforce corner order
 	MATHVECTOR <float, 3> corner_max;
@@ -1402,7 +1316,7 @@ void GRAPHICS_SDLGL::DrawBox(const MATHVECTOR <float, 3> & corner1, const MATHVE
 	glEnd();
 }
 
-void GRAPHICS_SDLGL::Render(RENDER_INPUT * input, RENDER_OUTPUT & output, std::ostream & error_output)
+void GRAPHICS_FALLBACK::Render(RENDER_INPUT * input, RENDER_OUTPUT & output, std::ostream & error_output)
 {
 	output.Begin(glstate, error_output);
 
@@ -1417,47 +1331,9 @@ void GRAPHICS_SDLGL::Render(RENDER_INPUT * input, RENDER_OUTPUT & output, std::o
 	OPENGL_UTILITY::CheckForOpenGLErrors("render output end", error_output);
 }
 
-void GRAPHICS_SDLGL::AddStaticNode(SCENENODE & node, bool clearcurrent)
+void GRAPHICS_FALLBACK::AddStaticNode(SCENENODE & node, bool clearcurrent)
 {
 	static_drawlist.Generate(node, clearcurrent);
-}
-
-void GRAPHICS_SDLGL::Screenshot(std::string filename)
-{
-	SDL_Surface *screen;
-	SDL_Surface *temp = NULL;
-	unsigned char *pixels;
-	int i;
-
-	screen = surface;
-
-	if (!(screen->flags & SDL_OPENGL))
-	{
-		SDL_SaveBMP(temp, filename.c_str());
-		return;
-	}
-
-	temp = SDL_CreateRGBSurface(SDL_SWSURFACE, screen->w, screen->h, 24,
-#if SDL_BYTEORDER == SDL_LIL_ENDIAN
-		0x000000FF, 0x0000FF00, 0x00FF0000, 0
-#else
-		0x00FF0000, 0x0000FF00, 0x000000FF, 0
-#endif
-		);
-
-	assert(temp);
-
-	pixels = (unsigned char *) malloc(3 * screen->w * screen->h);
-	assert(pixels);
-
-	glReadPixels(0, 0, screen->w, screen->h, GL_RGB, GL_UNSIGNED_BYTE, pixels);
-
-	for (i=0; i<screen->h; i++)
-		memcpy(((char *) temp->pixels) + temp->pitch * i, pixels + 3*screen->w * (screen->h-i-1), screen->w*3);
-	free(pixels);
-
-	SDL_SaveBMP(temp, filename.c_str());
-	SDL_FreeSurface(temp);
 }
 
 bool TextureSort(const DRAWABLE & draw1, const DRAWABLE & draw2)

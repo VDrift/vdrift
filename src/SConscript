@@ -46,8 +46,7 @@ src = Split("""aabb.cpp
 		font.cpp
 		forcefeedback.cpp
 		game.cpp
-		game_render.cpp
-		graphics.cpp
+		graphics_fallback.cpp
 		graphics_config.cpp
 		graphics_renderers.cpp
 		gui.cpp
@@ -113,7 +112,8 @@ src = Split("""aabb.cpp
 		widget_slider.cpp
 		widget_spinningcar.cpp
 		widget_stringwheel.cpp
-		widget_toggle.cpp""")
+		widget_toggle.cpp
+		window.cpp""")
 
 src.sort(lambda x, y: cmp(x.lower(),y.lower()))
 

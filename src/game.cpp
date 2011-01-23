@@ -137,8 +137,8 @@ void GAME::Start(list <string> & args)
 	//load loading screen assets
 	if (!loadingscreen.Init(
 			pathmanager.GetGUITextureDir(settings.GetSkin()),
-			graphics.GetW(),
-			graphics.GetH(),
+			window.GetW(),
+			window.GetH(),
 			settings.GetTextureSize(),
 			textures,
 			fonts["futuresans"]))
@@ -148,7 +148,7 @@ void GAME::Start(list <string> & args)
 	}
 
 	//initialize HUD
-	if (!hud.Init(pathmanager.GetGUITextureDir(settings.GetSkin()), settings.GetTextureSize(), textures, fonts["lcd"], fonts["futuresans"], graphics.GetW(), graphics.GetH(), debugmode, error_output))
+	if (!hud.Init(pathmanager.GetGUITextureDir(settings.GetSkin()), settings.GetTextureSize(), textures, fonts["lcd"], fonts["futuresans"], window.GetW(), window.GetH(), debugmode, error_output))
 	{
 		error_output << "Error initializing HUD" << endl;
 		return;
@@ -168,7 +168,7 @@ void GAME::Start(list <string> & args)
 
 	//initialize FPS counter
 	{
-		float screenhwratio = (float)graphics.GetH()/graphics.GetW();
+		float screenhwratio = (float)window.GetH()/window.GetW();
 		float w = 0.06;
 		fps_draw.Init(debugnode, fonts["futuresans"], "", 0.5-w*0.5,1.0-0.02, screenhwratio*0.03,0.03);
 		fps_draw.SetDrawOrder(debugnode, 150);
@@ -177,7 +177,7 @@ void GAME::Start(list <string> & args)
 	//initialize profiling text
 	if (profilingmode)
 	{
-		float screenhwratio = (float)graphics.GetH()/graphics.GetW();
+		float screenhwratio = (float)window.GetH()/window.GetW();
 		profiling_text.Init(debugnode, fonts["futuresans"], "", 0.01, 0.25, screenhwratio*0.03, 0.03);
 		profiling_text.SetDrawOrder(debugnode, 150);
 	}
@@ -238,7 +238,15 @@ void GAME::InitCoreSubsystems()
 	}
 	BeginStartingUp();
 	
-	graphics.Init(pathmanager.GetShaderPath(), "VDrift - open source racing simulation",
+	window.Init("VDrift - open source racing simulation",
+		settings.GetResolutionX(), settings.GetResolutionY(),
+		settings.GetBpp(),
+		settings.GetShadows() ? 24 : settings.GetDepthbpp(),
+		settings.GetFullscreen(),
+		settings.GetAntialiasing(),
+		info_output, error_output);
+	
+	graphics_fallback.Init(pathmanager.GetShaderPath(),
 		settings.GetResolutionX(), settings.GetResolutionY(),
 		settings.GetBpp(), settings.GetDepthbpp(), settings.GetFullscreen(),
 		settings.GetShaders(), settings.GetAntialiasing(), settings.GetShadows(),
@@ -253,14 +261,14 @@ void GAME::InitCoreSubsystems()
 	QUATERNION <float> ldir;
 	ldir.Rotate(3.141593*0.05,0,1,0);
 	ldir.Rotate(-3.141593*0.1,1,0,0);
-	graphics.SetSunDirection(ldir);
+	graphics_fallback.SetSunDirection(ldir);
 
 	eventsystem.Init(info_output);
 }
 
 ///write the scenegraph to the output drawlist
 template <bool clearfirst>
-void TraverseScene(SCENENODE & node, GRAPHICS_SDLGL::dynamicdrawlist_type & output)
+void TraverseScene(SCENENODE & node, GRAPHICS_FALLBACK::dynamicdrawlist_type & output)
 {
 	if (clearfirst)
 	{
@@ -314,7 +322,7 @@ bool GAME::InitGUI()
 			pathmanager.GetGUITextureDir(settings.GetSkin()),
 			pathmanager.GetDataPath(),
 			settings.GetTextureSize(),
-			(float)graphics.GetH()/graphics.GetW(),
+			(float)window.GetH()/window.GetW(),
 			fonts,
 			textures,
 			models,
@@ -530,7 +538,8 @@ void GAME::End()
 
 	settings.Save(pathmanager.GetSettingsFile(), error_output); //save settings first incase later deinits cause crashes
 	
-	graphics.Deinit();
+	graphics_fallback.Deinit();
+	window.Deinit();
 }
 
 void GAME::Test()
@@ -554,43 +563,44 @@ void GAME::BeginDraw()
 		camlook.Rotate(3.141593*0.5,1,0,0);
 		camlook.Rotate(-3.141593*0.5,0,0,1);
 		QUATERNION <float> camorient = -(active_camera->GetOrientation()*camlook);
-		graphics.SetupScene(settings.GetFOV(), settings.GetViewDistance(), active_camera->GetPosition(), camorient, reflection_sample_location);
+		graphics_fallback.SetupScene(settings.GetFOV(), settings.GetViewDistance(), active_camera->GetPosition(), camorient, reflection_sample_location);
 	}
 	else
-		graphics.SetupScene(settings.GetFOV(), settings.GetViewDistance(), MATHVECTOR <float, 3> (), QUATERNION <float> (), MATHVECTOR <float, 3> ());
+		graphics_fallback.SetupScene(settings.GetFOV(), settings.GetViewDistance(), MATHVECTOR <float, 3> (), QUATERNION <float> (), MATHVECTOR <float, 3> ());
 
-	graphics.SetContrast(settings.GetContrast());
-	graphics.BeginScene(error_output);
+	graphics_fallback.SetContrast(settings.GetContrast());
+	graphics_fallback.BeginScene(error_output);
 	PROFILER.endBlock("render");
 
 	PROFILER.beginBlock("scenegraph");
 	
-	TraverseScene<true>(debugnode, graphics.GetDynamicDrawlist());
-	TraverseScene<false>(gui.GetNode(), graphics.GetDynamicDrawlist());
-	TraverseScene<false>(track.GetRacinglineNode(), graphics.GetDynamicDrawlist());
+	TraverseScene<true>(debugnode, graphics_fallback.GetDynamicDrawlist());
+	TraverseScene<false>(gui.GetNode(), graphics_fallback.GetDynamicDrawlist());
+	TraverseScene<false>(track.GetRacinglineNode(), graphics_fallback.GetDynamicDrawlist());
 	#ifndef USE_STATIC_OPTIMIZATION_FOR_TRACK
-	TraverseScene<false>(track.GetTrackNode(), graphics.GetDynamicDrawlist());
+	TraverseScene<false>(track.GetTrackNode(), graphics_fallback.GetDynamicDrawlist());
 	#endif
-	TraverseScene<false>(hud.GetNode(), graphics.GetDynamicDrawlist());
-	TraverseScene<false>(trackmap.GetNode(), graphics.GetDynamicDrawlist());
-	TraverseScene<false>(inputgraph.GetNode(), graphics.GetDynamicDrawlist());
-	TraverseScene<false>(tire_smoke.GetNode(), graphics.GetDynamicDrawlist());
+	TraverseScene<false>(hud.GetNode(), graphics_fallback.GetDynamicDrawlist());
+	TraverseScene<false>(trackmap.GetNode(), graphics_fallback.GetDynamicDrawlist());
+	TraverseScene<false>(inputgraph.GetNode(), graphics_fallback.GetDynamicDrawlist());
+	TraverseScene<false>(tire_smoke.GetNode(), graphics_fallback.GetDynamicDrawlist());
 	for (list <CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
 	{
-		TraverseScene<false>(i->GetNode(), graphics.GetDynamicDrawlist());
+		TraverseScene<false>(i->GetNode(), graphics_fallback.GetDynamicDrawlist());
 	}
 	
 	//gui.GetNode().DebugPrint(info_output);
 	PROFILER.endBlock("scenegraph");
 	PROFILER.beginBlock("render");
-	graphics.DrawScene(error_output);
+	graphics_fallback.DrawScene(error_output);
 	PROFILER.endBlock("render");
 }
 
 void GAME::FinishDraw()
 {
 	PROFILER.beginBlock("render");
-	graphics.EndScene(error_output);
+	graphics_fallback.EndScene(error_output);
+	window.SwapBuffers(error_output);
 	PROFILER.endBlock("render");
 }
 
@@ -680,8 +690,8 @@ void GAME::AdvanceGameLogic()
 				settings.GetJoy200(),
 				carcontrols_local.first->GetSpeed(),
 				settings.GetSpeedSensitivity(),
-				graphics.GetW(),
-				graphics.GetH(),
+				window.GetW(),
+				window.GetH(),
 				settings.GetButtonRamp(),
 				settings.GetHGateShifter());
 		}
@@ -767,7 +777,7 @@ void GAME::ProcessGameInputs()
 			if (!shotfile.empty())
 			{
 				info_output << "Capturing screenshot to " << shotfile << endl;
-				graphics.Screenshot(shotfile);
+				window.Screenshot(shotfile);
 			}
 			else
 				error_output << "Couldn't find a file to which to save the captured screenshot" << endl;
@@ -782,7 +792,7 @@ void GAME::ProcessGameInputs()
 		if (carcontrols_local.second.GetInput(CARINPUT::RELOAD_SHADERS) == 1.0)
 		{
 			info_output << "Reloading shaders" << endl;
-			if (!graphics.ReloadShaders(pathmanager.GetShaderPath(), info_output, error_output))
+			if (!graphics_fallback.ReloadShaders(pathmanager.GetShaderPath(), info_output, error_output))
 			{
 				error_output << "Error reloading shaders" << endl;
 			}
@@ -1037,8 +1047,8 @@ void GAME::ProcessGUIInputs()
 		{
 			//send input to the gui and get output into the gui_actions list
 			gui_actions = gui.ProcessInput(eventsystem.GetKeyState(SDLK_UP).just_down, eventsystem.GetKeyState(SDLK_DOWN).just_down,
-					eventsystem.GetMousePosition()[0]/(float)graphics.GetW(), eventsystem.GetMousePosition()[1]/(float)graphics.GetH(),
-							eventsystem.GetMouseButtonState(1).down, eventsystem.GetMouseButtonState(1).just_up, (float)graphics.GetH()/graphics.GetW(), error_output);
+					eventsystem.GetMousePosition()[0]/(float)window.GetW(), eventsystem.GetMousePosition()[1]/(float)window.GetH(),
+							eventsystem.GetMouseButtonState(1).down, eventsystem.GetMouseButtonState(1).just_up, (float)window.GetH()/window.GetW(), error_output);
 		}
 	}
 
@@ -1452,8 +1462,8 @@ void GAME::UpdateCarInputs(CAR & car)
 					settings.GetJoy200(),
 					car.GetSpeed(),
 					settings.GetSpeedSensitivity(),
-					graphics.GetW(),
-					graphics.GetH(),
+					window.GetW(),
+					window.GetH(),
 					settings.GetButtonRamp(),
 					settings.GetHGateShifter());
 		}
@@ -1490,8 +1500,8 @@ void GAME::UpdateCarInputs(CAR & car)
 				settings.GetJoy200(),
 				car.GetSpeed(),
 				settings.GetSpeedSensitivity(),
-				graphics.GetW(),
-				graphics.GetH(),
+				window.GetW(),
+				window.GetH(),
 				settings.GetButtonRamp(),
 				settings.GetHGateShifter());
 		}
@@ -1511,7 +1521,7 @@ void GAME::UpdateCarInputs(CAR & car)
 			car.GetClutch(), car.GetGear(), car.GetEngineRPM(),
 			car.GetEngineRedline(), car.GetEngineRPMLimit(), car.GetSpeedometer(),
 			settings.GetMPH(), debug_info1.str(), debug_info2.str(), debug_info3.str(),
-			debug_info4.str(), graphics.GetW(), graphics.GetH(), car.GetABSEnabled(),
+			debug_info4.str(), window.GetW(), window.GetH(), car.GetABSEnabled(),
 			car.GetABSActive(), car.GetTCSEnabled(), car.GetTCSActive(),
 			timer.GetIsDrifting(cartimerids[&car]), timer.GetDriftScore(cartimerids[&car]),
 			timer.GetThisDriftScore(cartimerids[&car]));
@@ -1580,7 +1590,7 @@ void GAME::UpdateCarInputs(CAR & car)
 		car.EnableGlass(!incar);
 		
 		//move up the close shadow distance if we're in the cockpit
-		graphics.SetCloseShadow(incar ? 1.0 : 5.0);
+		graphics_fallback.SetCloseShadow(incar ? 1.0 : 5.0);
 	}
 }
 
@@ -1785,7 +1795,7 @@ void GAME::LeaveGame()
 	
 	// clear out the static drawables
 	SCENENODE empty;
-	graphics.AddStaticNode(empty, true);
+	graphics_fallback.AddStaticNode(empty, true);
 
 	if (sound.Enabled())
 	{
@@ -1899,7 +1909,7 @@ bool GAME::LoadTrack(const std::string & trackname)
 			settings.GetTextureSize(),
 			settings.GetAnisotropy(),
 			settings.GetTrackReverse(),
-			graphics.GetShadows(),
+			graphics_fallback.GetShadows(),
 			false))
 	{
 		error_output << "Error loading track: " << trackname << endl;
@@ -1931,8 +1941,8 @@ bool GAME::LoadTrack(const std::string & trackname)
 	//generate the track map
 	if (!trackmap.BuildMap(
 			track.GetRoadList(),
-			graphics.GetW(),
-			graphics.GetH(),
+			window.GetW(),
+			window.GetH(),
 			trackname,
 			pathmanager.GetHUDTextureDir(),
 			settings.GetTextureSize(),
@@ -1949,7 +1959,7 @@ bool GAME::LoadTrack(const std::string & trackname)
 	
 	//build static drawlist
 	#ifdef USE_STATIC_OPTIMIZATION_FOR_TRACK
-	graphics.AddStaticNode(track.GetTrackNode());
+	graphics_fallback.AddStaticNode(track.GetTrackNode());
 	#endif
 
 	return true;
@@ -1960,7 +1970,7 @@ bool GAME::LoadFonts()
 	string fontdir = pathmanager.GetFontDir(settings.GetSkin());
 	string fontpath = pathmanager.GetDataPath()+"/"+fontdir;
 
-	if (graphics.GetUsingShaders())
+	if (graphics_fallback.GetUsingShaders())
 	{
 		if (!fonts["freesans"].Load(fontpath+"/freesans.txt",fontdir, "freesans.png", settings.GetTextureSize(), textures, error_output)) return false;
 		if (!fonts["lcd"].Load(fontpath+"/lcd.txt",fontdir, "lcd.png", settings.GetTextureSize(), textures, error_output)) return false;
@@ -2012,7 +2022,7 @@ void GAME::CalculateFPS()
 
 	if (settings.GetShowFps())
 	{
-		float screenhwratio = (float)graphics.GetH() / graphics.GetW();
+		float screenhwratio = (float)window.GetH() / window.GetW();
 		float scaley = 0.03;
 		float scalex = scaley * screenhwratio;
 		float w = fps_draw.GetWidth("FPS: 100") * screenhwratio;
@@ -2180,7 +2190,7 @@ void GAME::PopulateValueLists(std::map<std::string, std::list <std::pair <std::s
 	valuelists["resolution_heights"] = modelisty;
 
 	//populate anisotropy list
-	int max_aniso = graphics.GetMaxAnisotropy();
+	int max_aniso = graphics_fallback.GetMaxAnisotropy();
 	valuelists["anisotropy"].push_back(pair<string,string>("0","Off"));
 	int cur = 1;
 	while (cur <= max_aniso)
@@ -2193,7 +2203,7 @@ void GAME::PopulateValueLists(std::map<std::string, std::list <std::pair <std::s
 
 	//populate antialiasing list
 	valuelists["antialiasing"].push_back(pair<string,string>("0","Off"));
-	if (graphics.AntialiasingSupported())
+	if (graphics_fallback.AntialiasingSupported())
 	{
 		valuelists["antialiasing"].push_back(pair<string,string>("2","2X"));
 		valuelists["antialiasing"].push_back(pair<string,string>("4","4X"));
@@ -2307,16 +2317,17 @@ void GAME::LoadingScreen(float progress, float max, bool drawGui, const std::str
 	assert(max > 0);
 	loadingscreen.Update(progress/max, optionalText, x, y);
 
-	graphics.GetDynamicDrawlist().clear();
+	graphics_fallback.GetDynamicDrawlist().clear();
 	if (drawGui)
-		TraverseScene<false>(gui.GetNode(), graphics.GetDynamicDrawlist());
-	TraverseScene<false>(loadingscreen.GetNode(), graphics.GetDynamicDrawlist());
+		TraverseScene<false>(gui.GetNode(), graphics_fallback.GetDynamicDrawlist());
+	TraverseScene<false>(loadingscreen.GetNode(), graphics_fallback.GetDynamicDrawlist());
 
-	graphics.SetupScene(45.0, 100.0, MATHVECTOR <float, 3> (), QUATERNION <float> (), MATHVECTOR <float, 3> ());
+	graphics_fallback.SetupScene(45.0, 100.0, MATHVECTOR <float, 3> (), QUATERNION <float> (), MATHVECTOR <float, 3> ());
 
-	graphics.BeginScene(error_output);
-	graphics.DrawScene(error_output);
-	graphics.EndScene(error_output);
+	graphics_fallback.BeginScene(error_output);
+	graphics_fallback.DrawScene(error_output);
+	graphics_fallback.EndScene(error_output);
+	window.SwapBuffers(error_output);
 }
 
 bool GAME::Download(const std::string & file)

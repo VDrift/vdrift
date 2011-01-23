@@ -1,5 +1,5 @@
-#ifndef _GRAPHICS_H
-#define _GRAPHICS_H
+#ifndef _GRAPHICS_FALLBACK_H
+#define _GRAPHICS_FALLBACK_H
 
 #include "shader.h"
 #include "mathvector.h"
@@ -14,8 +14,6 @@
 #include "glstatemanager.h"
 #include "graphics_renderers.h"
 #include "graphics_config.h"
-
-#include <SDL/SDL.h>
 
 #include <string>
 #include <ostream>
@@ -47,7 +45,7 @@ struct GRAPHICS_CAMERA
 		{}
 };
 
-class GRAPHICS_SDLGL
+class GRAPHICS_FALLBACK
 {
 private:
 	// avoids sending excessive state changes to OpenGL
@@ -55,7 +53,6 @@ private:
 	
 	// configuration variables, internal data
 	int w, h;
-	SDL_Surface * surface;
 	bool initialized;
 	bool using_shaders;
 	GLint max_anisotropy;
@@ -132,16 +129,16 @@ private:
 	
 	void Render(RENDER_INPUT * input, RENDER_OUTPUT & output, std::ostream & error_output);
 public:
-	GRAPHICS_SDLGL() : surface(NULL),initialized(false),using_shaders(false),max_anisotropy(0),shadows(false),
+	GRAPHICS_FALLBACK() : initialized(false),using_shaders(false),max_anisotropy(0),shadows(false),
 		       	closeshadow(5.0), fsaa(1),lighting(0),bloom(false),normalmaps(false),contrast(1.0), aticard(false), 
 		       	reflection_status(REFLECTION_DISABLED), renderconfigfile("render.conf")
 			{activeshader = shadermap.end();}
-	~GRAPHICS_SDLGL() {}
+	~GRAPHICS_FALLBACK() {}
 	
 	typedef DRAWABLE_CONTAINER <PTRVECTOR> dynamicdrawlist_type;
 	
 	///reflection_type is 0 (low=OFF), 1 (medium=static), 2 (high=dynamic)
-	void Init(const std::string & shaderpath, const std::string & windowcaption,
+	void Init(const std::string & shaderpath,
 				unsigned int resx, unsigned int resy, unsigned int bpp,
 				unsigned int depthbpp, bool fullscreen, bool shaders,
 				unsigned int antialiasing, bool enableshadows,
@@ -161,7 +158,6 @@ public:
 					const MATHVECTOR <float, 3> & dynamic_reflection_sample_pos);
 	void DrawScene(std::ostream & error_output);
 	void EndScene(std::ostream & error_output);
-	void Screenshot(std::string filename);
 	int GetW() const {return w;}
 	int GetH() const {return h;}
 	float GetWHRatio() const {return (float)w/h;}

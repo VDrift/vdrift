@@ -1,7 +1,8 @@
 #ifndef _GAME_H
 #define _GAME_H
 
-#include "graphics.h"
+#include "window.h"
+#include "graphics_fallback.h"
 #include "eventsystem.h"
 #include "settings.h"
 #include "pathmanager.h"
@@ -114,7 +115,8 @@ private:
 	SOUNDMANAGER sounds;
 	SETTINGS settings;
 
-	GRAPHICS_SDLGL graphics;
+	WINDOW_SDL window;
+	GRAPHICS_FALLBACK graphics_fallback;
 	EVENTSYSTEM_SDL eventsystem;
 	SOUND sound;
 
