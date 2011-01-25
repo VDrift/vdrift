@@ -1188,10 +1188,11 @@ btVector3 CARDYNAMICS::ApplySuspensionForceToBody ( int i, btScalar dt, btVector
 	btScalar overtravel = suspension[i]->GetOvertravel();
 	if ( overtravel > 0 )
 	{
-		btScalar correction_factor = 0.1;
+		btScalar correction_factor = 0.0;
 		btScalar dv = body->getVelocityInLocalPoint(suspension_force_application_point).dot(forcedirection);
 		dv -= correction_factor * overtravel / dt;
-		btScalar correction = -1.0 / body->computeImpulseDenominator(wheel_position[i], forcedirection) * dv / dt;
+		btScalar effectiveMass = 1.0 / body->computeImpulseDenominator(wheel_position[i], forcedirection);
+		btScalar correction = -effectiveMass * dv / dt;
 		if (correction > 0 && correction > antirollforce + springdampforce)
 		{
 			suspension_force = forcedirection * correction;
@@ -1251,7 +1252,7 @@ void CARDYNAMICS::ApplyWheelForces ( btScalar dt, btScalar wheel_drive_torque, i
 
 	btVector3 friction_force = ComputeTireFrictionForce ( i, dt, normal_force, wheel[i].GetAngularVelocity(), groundvel, wheel_orientation[i] );
 
-	//calculate reaction torque
+	//calculate friction torque
 	btVector3 tire_force ( friction_force[0], friction_force[1], 0 );
 	btScalar tire_friction_torque = tire_force [0] * tire[i].GetRadius();
 	assert ( !isnan ( tire_friction_torque ) );
