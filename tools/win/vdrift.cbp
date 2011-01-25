@@ -26,11 +26,10 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O3" />
-					<Add option="-pg" />
 					<Add option="-march=native" />
 				</Compiler>
 				<Linker>
-					<Add option="-pg -lgmon" />
+					<Add option="-static-libgcc" />
 				</Linker>
 			</Target>
 		</Build>
@@ -399,10 +398,10 @@
 		<Unit filename="..\..\include\forcefeedback.h" />
 		<Unit filename="..\..\include\frustum.h" />
 		<Unit filename="..\..\include\game.h" />
-		<Unit filename="..\..\include\game_render.h" />
 		<Unit filename="..\..\include\glstatemanager.h" />
-		<Unit filename="..\..\include\graphics.h" />
 		<Unit filename="..\..\include\graphics_config.h" />
+		<Unit filename="..\..\include\graphics_fallback.h" />
+		<Unit filename="..\..\include\graphics_interface.h" />
 		<Unit filename="..\..\include\graphics_renderers.h" />
 		<Unit filename="..\..\include\gui.h" />
 		<Unit filename="..\..\include\guioption.h" />
@@ -491,6 +490,7 @@
 		<Unit filename="..\..\include\widget_spinningcar.h" />
 		<Unit filename="..\..\include\widget_stringwheel.h" />
 		<Unit filename="..\..\include\widget_toggle.h" />
+		<Unit filename="..\..\include\window.h" />
 		<Unit filename="..\..\src\aabb.cpp" />
 		<Unit filename="..\..\src\aabb_space_partitioning.cpp" />
 		<Unit filename="..\..\src\ai.cpp" />
@@ -520,9 +520,8 @@
 		<Unit filename="..\..\src\font.cpp" />
 		<Unit filename="..\..\src\forcefeedback.cpp" />
 		<Unit filename="..\..\src\game.cpp" />
-		<Unit filename="..\..\src\game_render.cpp" />
-		<Unit filename="..\..\src\graphics.cpp" />
 		<Unit filename="..\..\src\graphics_config.cpp" />
+		<Unit filename="..\..\src\graphics_fallback.cpp" />
 		<Unit filename="..\..\src\graphics_renderers.cpp" />
 		<Unit filename="..\..\src\gui.cpp" />
 		<Unit filename="..\..\src\guioption.cpp" />
@@ -588,6 +587,7 @@
 		<Unit filename="..\..\src\widget_spinningcar.cpp" />
 		<Unit filename="..\..\src\widget_stringwheel.cpp" />
 		<Unit filename="..\..\src\widget_toggle.cpp" />
+		<Unit filename="..\..\src\window.cpp" />
 		<Extensions>
 			<code_completion />
 			<envvars />
