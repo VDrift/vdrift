@@ -39,8 +39,8 @@ class CARAERO
 		void DebugPrint(std::ostream & out) const
 		{
 			out << "---Aerodynamic Device---" << "\n";
-			out << "Drag: " << drag_vector << "\n";
-			out << "Lift: " << lift_vector << "\n";
+			out << "Drag: " << drag_vector[0] << ", " << drag_vector[1] << ", " << drag_vector[2] << "\n";
+			out << "Lift: " << lift_vector[0] << ", " << lift_vector[1] << ", " << lift_vector[2] << "\n";
 		}
 		
 		void Set(

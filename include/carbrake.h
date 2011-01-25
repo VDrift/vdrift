@@ -46,8 +46,7 @@ class CARBRAKE
 		void DebugPrint(std::ostream & out) const
 		{
 			out << "---Brake---" << "\n";
-			out << "Brake control: " << brake_factor << "\n";
-			out << "Handbrake control: " << handbrake_factor << "\n";
+			out << "Brake control: " << brake_factor << ", " << handbrake_factor << "\n";
 			out << "Braking torque: " << lasttorque << "\n";
 		}
 		
