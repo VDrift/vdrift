@@ -1239,7 +1239,7 @@ btVector3 CARDYNAMICS::ComputeTireFrictionForce ( int i, btScalar dt, btScalar n
 
 void CARDYNAMICS::ApplyWheelForces ( btScalar dt, btScalar wheel_drive_torque, int i, const btVector3 & suspension_force, btVector3 & force, btVector3 & torque )
 {
-	btVector3 groundvel = quatRotate ( wheel_orientation[i].inverse(), GetWheelVelocity ( WHEEL_POSITION ( i ) ) );
+	btVector3 groundvel = quatRotate ( wheel_orientation[i].inverse(), wheel_velocity[i] );
 	btVector3 wheel_normal = quatRotate ( wheel_orientation[i], btVector3 ( 0, 0, 1 ) );
 #ifdef SUSPENSION_FORCE_DIRECTION
 	//btScalar normal_force = suspension_force.dot(wheel_normal);
@@ -1248,37 +1248,47 @@ void CARDYNAMICS::ApplyWheelForces ( btScalar dt, btScalar wheel_drive_torque, i
 	btScalar normal_force = suspension_force.length();
 #endif
 	assert ( !isnan ( normal_force ) );
-	
+
 	btVector3 friction_force = ComputeTireFrictionForce ( i, dt, normal_force, wheel[i].GetAngularVelocity(), groundvel, wheel_orientation[i] );
-	
-	// wheel torque
-	btScalar friction_torque = tire[i].GetRadius() * friction_force[0];
-	btScalar brake_torque = brake[i].GetTorque();
-	btScalar brake_limit = wheel[i].GetTorque(0, dt);
-	btScalar wheel_torque = wheel_drive_torque - friction_torque;
-	btScalar max_torque = brake_limit - wheel_torque;
-	if(max_torque >= 0 && max_torque > brake_torque)
-	{
-		wheel_torque += brake_torque;
-	}
-	else if(max_torque < 0 && max_torque < -brake_torque)
-	{
-		wheel_torque -= brake_torque;
-	}
-	else
-	{
-		wheel_torque = brake_limit;
-	}
-	wheel[i].SetTorque(wheel_torque, dt);
-	wheel[i].Integrate(dt);
-	
+
+	//calculate reaction torque
 	btVector3 tire_force ( friction_force[0], friction_force[1], 0 );
-	btVector3 tire_torque ( 0, -wheel_torque, -friction_force[2] );
-	
-	// rolling resistance + surface drag
-	tire_force[0] += tire[i].GetRollingResistance ( wheel[i].GetAngularVelocity(), wheel_contact[i].GetSurface().rollResistanceCoefficient );
-	tire_force[0] -= groundvel[0] * wheel_contact[i].GetSurface().rollingDrag;
-	tire_force[1] -= groundvel[1] * wheel_contact[i].GetSurface().rollingDrag;
+	btScalar tire_friction_torque = tire_force [0] * tire[i].GetRadius();
+	assert ( !isnan ( tire_friction_torque ) );
+
+	//set wheel drive and brake torques
+	btScalar wheel_brake_torque = (0 - wheel[i].GetAngularVelocity()) / dt * wheel[i].GetInertia();
+	btScalar torque_limit = wheel_drive_torque + tire_friction_torque + wheel_brake_torque;
+	if (torque_limit > 0 && torque_limit > brake[i].GetTorque())
+	{
+		wheel_brake_torque = brake[i].GetTorque();
+	}
+	else if (torque_limit < 0 && torque_limit < -brake[i].GetTorque())
+	{
+		wheel_brake_torque = -brake[i].GetTorque();
+	}
+	assert ( !isnan ( wheel_brake_torque ) );
+
+	//limit the reaction torque to the applied drive and braking torque
+	btScalar reaction_torque = tire_friction_torque;
+	btScalar applied_torque = wheel_drive_torque + wheel_brake_torque;
+	if ( ( applied_torque > 0 && reaction_torque > applied_torque ) ||
+			( applied_torque < 0 && reaction_torque < applied_torque ) )
+		reaction_torque = applied_torque;
+	btVector3 tire_torque ( 0, -reaction_torque, -friction_force[2] );
+
+	//set wheel torque due to tire rolling resistance
+	btScalar tire_rolling_resistance_torque =
+		-tire[i].GetRollingResistance ( wheel[i].GetAngularVelocity(), wheel_contact[i].GetSurface().rollResistanceCoefficient )
+										 * tire[i].GetRadius() - tire_friction_torque;
+		assert ( !isnan ( tire_rolling_resistance_torque ) );
+
+	for ( int axis = 0; axis < 2; axis++ )
+		tire_force[axis] -= groundvel[axis]*wheel_contact[i].GetSurface().rollingDrag;
+
+	//have the wheels internally apply forces, or just forcibly set the wheel speed if the brakes are locked
+	wheel[i].SetTorque ( wheel_drive_torque+wheel_brake_torque+tire_rolling_resistance_torque, dt );
+	wheel[i].Integrate ( dt );
 
 	//apply forces to body
 	btVector3 world_tire_force = quatRotate ( wheel_orientation[i], tire_force );
