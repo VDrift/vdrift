@@ -1257,14 +1257,13 @@ void CARDYNAMICS::ApplyWheelForces ( btScalar dt, btScalar wheel_drive_torque, i
 	btScalar tire_friction_torque = tire_force [0] * tire[i].GetRadius();
 	assert ( !isnan ( tire_friction_torque ) );
 
-	//set wheel drive and brake torques
-	btScalar wheel_brake_torque = (0 - wheel[i].GetAngularVelocity()) / dt * wheel[i].GetInertia();
-	btScalar torque_limit = wheel_drive_torque + tire_friction_torque + wheel_brake_torque;
-	if (torque_limit > 0 && torque_limit > brake[i].GetTorque())
+	//calculate brake torque
+	btScalar wheel_brake_torque = (0 - wheel[i].GetAngularVelocity()) / dt * wheel[i].GetInertia() - wheel_drive_torque + tire_friction_torque;
+	if (wheel_brake_torque > 0 && wheel_brake_torque > brake[i].GetTorque())
 	{
 		wheel_brake_torque = brake[i].GetTorque();
 	}
-	else if (torque_limit < 0 && torque_limit < -brake[i].GetTorque())
+	else if (wheel_brake_torque < 0 && wheel_brake_torque < -brake[i].GetTorque())
 	{
 		wheel_brake_torque = -brake[i].GetTorque();
 	}
