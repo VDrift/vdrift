@@ -110,6 +110,14 @@ struct DRAWABLE_CONTAINER
 		#undef X
 	}
 	
+	template <typename T> 
+	void ForEachWithName(T func)
+	{
+		#define X(Y) func(#Y,Y);
+		#include "drawables.def"
+		#undef X
+	}
+	
 	/// adds elements from the first drawable container to the second
 	template <template <typename UU> class CONTAINERU, bool use_transform>
 	void AppendTo(DRAWABLE_CONTAINER <CONTAINERU> & dest, const MATRIX4 <float> & transform)

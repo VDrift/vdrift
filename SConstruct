@@ -49,7 +49,7 @@ if (sys.platform == 'freebsd6') or (sys.platform == 'freebsd7') or (sys.platform
     else:
         LOCALBASE = '/usr/local/'
     env = Environment(ENV = os.environ,
-        CPPPATH = ['#include',LOCALBASE + '/include',LOCALBASE + '/include/bullet'],
+        CPPPATH = ['#include','#src',LOCALBASE + '/include',LOCALBASE + '/include/bullet'],
         LIBPATH = ['.', '#lib', LOCALBASE + '/lib'],
         LINKFLAGS = ['-pthread','-lintl'],
         options = opts)
@@ -74,7 +74,7 @@ elif sys.platform == 'darwin':
     opts.Add('SDK', 'the path to an SDK directory', '')
 
     env = Environment(ENV = os.environ,
-        CPPPATH = ['#include', '#tools/osx', '#tools/osx/SDL.framework/Headers'],
+        CPPPATH = ['#include', '#src', '#tools/osx', '#tools/osx/SDL.framework/Headers'],
         CCFLAGS = ['-Wall', '-Wextra', '-Wno-unused-parameters'],
         CXXFLAGS = Split("$CCFLAGS -Wno-non-virtual-dtor"),
         LIBPATH = ['.'],
@@ -136,7 +136,7 @@ elif ( 'win32' == sys.platform or 'cygwin' == sys.platform ):
 #-------------#
 else:
     env = Environment(ENV = os.environ,
-        CPPPATH = ['#include', '#bullet'],
+        CPPPATH = ['#include', '#bullet', '#src'],
         CCFLAGS = ['-Wall', '-Wextra', '-Wno-unused-parameter', '-pthread'],
         LIBPATH = ['.', '#lib'],
         LINKFLAGS = ['-pthread'],

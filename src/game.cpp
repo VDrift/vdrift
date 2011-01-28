@@ -14,6 +14,7 @@
 #include "macros.h"
 #include "utils.h"
 #include "graphics_fallback.h"
+#include "graphics_gl3v.h"
 
 #include <fstream>
 using std::ifstream;
@@ -53,6 +54,7 @@ GAME::GAME(std::ostream & info_out, std::ostream & error_out) :
 	target_time(0),
 	timestep(1/90.0),
 	graphics_interface(NULL),
+	enableGL3(false),
 	fps_track(10, 0),
 	fps_position(0),
 	fps_min(0),
@@ -248,18 +250,39 @@ void GAME::InitCoreSubsystems()
 		settings.GetAntialiasing(),
 		info_output, error_output);
 	
-	graphics_interface = new GRAPHICS_FALLBACK();
-	graphics_interface->Init(pathmanager.GetShaderPath(),
-		settings.GetResolutionX(), settings.GetResolutionY(),
-		settings.GetBpp(), settings.GetDepthbpp(), settings.GetFullscreen(),
-		settings.GetShaders(), settings.GetAntialiasing(), settings.GetShadows(),
-		settings.GetShadowDistance(), settings.GetShadowQuality(),
-		settings.GetReflections(), pathmanager.GetStaticReflectionMap(),
-		pathmanager.GetStaticAmbientMap(),
-		settings.GetAnisotropic(), settings.GetTextureSize(),
-		settings.GetLighting(), settings.GetBloom(), settings.GetNormalMaps(),
-		renderconfigfile,
-		info_output, error_output);
+	const int rendererCount = 2;
+	for (int i = 0; i < rendererCount; i++)
+	{
+		// attempt to enable the GL3 renderer
+		if (enableGL3 && i == 0)
+		{
+			graphics_interface = new GRAPHICS_GL3V(stringMap);
+		}
+		else
+			graphics_interface = new GRAPHICS_FALLBACK();
+		
+		bool success = graphics_interface->Init(pathmanager.GetShaderPath(),
+			settings.GetResolutionX(), settings.GetResolutionY(),
+			settings.GetBpp(), settings.GetDepthbpp(), settings.GetFullscreen(),
+			settings.GetShaders(), settings.GetAntialiasing(), settings.GetShadows(),
+			settings.GetShadowDistance(), settings.GetShadowQuality(),
+			settings.GetReflections(), pathmanager.GetStaticReflectionMap(),
+			pathmanager.GetStaticAmbientMap(),
+			settings.GetAnisotropic(), settings.GetTextureSize(),
+			settings.GetLighting(), settings.GetBloom(), settings.GetNormalMaps(),
+			renderconfigfile,
+			info_output, error_output);
+		
+		if (success)
+		{
+			break;
+		}
+		else
+		{
+			delete graphics_interface;
+			graphics_interface = NULL;
+		}
+	}
 	
 	QUATERNION <float> ldir;
 	ldir.Rotate(3.141593*0.05,0,1,0);
@@ -400,6 +423,12 @@ bool GAME::ParseArguments(std::list <std::string> & args)
 		debugmode = true;
 	}
 	arghelp["-debug"] = "Display car debugging information.";
+	
+	if (argmap.find("-gl3") != argmap.end())
+	{
+		enableGL3 = true;
+	}
+	arghelp["-gl3"] = "Attempt to enable OpenGL3 rendering.";
 
 	if (!argmap["-cartest"].empty())
 	{

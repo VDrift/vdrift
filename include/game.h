@@ -32,6 +32,7 @@
 #include "modelmanager.h"
 #include "soundmanager.h"
 #include "http.h"
+#include "gl3v/stringidmap.h"
 
 #include <ostream>
 #include <string>
@@ -117,6 +118,8 @@ private:
 
 	WINDOW_SDL window;
 	GRAPHICS_INTERFACE * graphics_interface;
+	bool enableGL3;
+	StringIdMap stringMap;
 	EVENTSYSTEM_SDL eventsystem;
 	SOUND sound;
 

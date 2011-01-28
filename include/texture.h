@@ -81,6 +81,8 @@ public:
 	///what the texture size scaling did to the texture dimensions
 	float GetScale() const {return scale;}
 	
+	bool IsCube() const {return cube;}
+	
 private:
 	GLuint id;
 	unsigned int w, h; ///< w and h are post-texture-size transform

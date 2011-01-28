@@ -39,6 +39,7 @@ src = Split("""aabb.cpp
 		containeralgorithm.cpp
 		crashdetection.cpp
 		downloadable.cpp
+		drawable.cpp
 		endian_utility.cpp
 		eventsystem.cpp
 		fbobject.cpp
@@ -46,8 +47,9 @@ src = Split("""aabb.cpp
 		font.cpp
 		forcefeedback.cpp
 		game.cpp
-		graphics_fallback.cpp
 		graphics_config.cpp
+		graphics_fallback.cpp
+		graphics_gl3v.cpp
 		graphics_renderers.cpp
 		gui.cpp
 		guioption.cpp
@@ -77,6 +79,7 @@ src = Split("""aabb.cpp
 		pathmanager.cpp
 		performance_testing.cpp
 		quaternion.cpp
+		rendermodelext_drawable.cpp
 		random.cpp
 		replay.cpp
 		reseatable_reference.cpp
@@ -113,7 +116,13 @@ src = Split("""aabb.cpp
 		widget_spinningcar.cpp
 		widget_stringwheel.cpp
 		widget_toggle.cpp
-		window.cpp""")
+		window.cpp
+		gl3v/glwrapper.cpp
+		gl3v/renderdimensions.cpp
+		gl3v/renderer.cpp
+		gl3v/renderpass.cpp
+		gl3v/rendersampler.cpp
+		gl3v/renderstate.cpp""")
 
 src.sort(lambda x, y: cmp(x.lower(),y.lower()))
 

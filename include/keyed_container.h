@@ -21,13 +21,13 @@ friend class joeserialize::Serializer;
 friend class keyed_container_hash;
 private:
 	typedef int INDEX;
-	typedef int VERSION;
+	typedef int DATAVERSION;
 	INDEX index;
-	VERSION version;
+	DATAVERSION version;
 	#ifdef TRACK_CONTAINERS
 	int containerid;
 	#endif
-	keyed_container_handle(INDEX newidx, VERSION newver) : index(newidx),version(newver) {}
+	keyed_container_handle(INDEX newidx, DATAVERSION newver) : index(newidx),version(newver) {}
 	
 public:
 	keyed_container_handle() : index(-1),version(-1)
@@ -118,13 +118,13 @@ class keyed_container
 friend class joeserialize::Serializer;
 private:
 	typedef int INDEX;
-	typedef int VERSION;
+	typedef int DATAVERSION;
 	struct HANDLEDATA
 	{
 		INDEX index;
-		VERSION version;
+		DATAVERSION version;
 		HANDLEDATA() : index(-1), version(-1) {}
-		HANDLEDATA(INDEX newidx, VERSION newver) : index(newidx),version(newver) {}
+		HANDLEDATA(INDEX newidx, DATAVERSION newver) : index(newidx),version(newver) {}
 		bool Serialize(joeserialize::Serializer & s)
 		{
 			_SERIALIZE_(s,index);

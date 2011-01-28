@@ -46,6 +46,7 @@ struct GRAPHICS_CAMERA
 		{}
 };
 
+/// the graphics rendering system used as a fallback
 class GRAPHICS_FALLBACK : public GRAPHICS_INTERFACE
 {
 private:
@@ -137,7 +138,8 @@ public:
 	~GRAPHICS_FALLBACK() {}
 	
 	///reflection_type is 0 (low=OFF), 1 (medium=static), 2 (high=dynamic)
-	virtual void Init(const std::string & shaderpath,
+	/// returns true on success
+	virtual bool Init(const std::string & shaderpath,
 				unsigned int resx, unsigned int resy, unsigned int bpp,
 				unsigned int depthbpp, bool fullscreen, bool shaders,
 				unsigned int antialiasing, bool enableshadows,

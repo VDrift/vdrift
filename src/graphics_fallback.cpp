@@ -77,7 +77,7 @@ void ReportOnce(const void * id, const std::string & message, std::ostream & out
 	}
 }
 
-void GRAPHICS_FALLBACK::Init(const std::string & shaderpath,
+bool GRAPHICS_FALLBACK::Init(const std::string & shaderpath,
 	unsigned int resx, unsigned int resy, unsigned int bpp,
 	unsigned int depthbpp, bool fullscreen, bool shaders,
 	unsigned int antialiasing, bool enableshadows, int new_shadow_distance,
@@ -242,6 +242,8 @@ void GRAPHICS_FALLBACK::Init(const std::string & shaderpath,
 	OPENGL_UTILITY::CheckForOpenGLErrors("Shader loading", error_output);
 
 	initialized = true;
+	
+	return true;
 }
 
 void GRAPHICS_FALLBACK::ChangeDisplay(const int width, const int height, const int bpp, const int dbpp,
@@ -743,7 +745,7 @@ void GRAPHICS_FALLBACK::SetupScene(float fov, float new_view_distance, const MAT
 	}
 }
 
-bool SortDraworder(DRAWABLE * d1, DRAWABLE * d2)
+static bool SortDraworder(DRAWABLE * d1, DRAWABLE * d2)
 {
 	assert(d1 && d2);
 	return (d1->GetDrawOrder() < d2->GetDrawOrder());

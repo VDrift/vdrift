@@ -1,0 +1,120 @@
+#ifndef _RENDERPASSINFO_H
+#define _RENDERPASSINFO_H
+
+#include <string>
+#include <vector>
+
+#include "joeserialize.h"
+#include "macros.h"
+
+struct RealtimeExportPassInfo
+{
+	std::string name;
+	
+	bool clearColor;
+	bool clearDepth;
+	bool clearStencil;
+	std::vector <std::string> drawGroups;
+	
+	std::string vertexShader;
+	std::string fragmentShader;
+	
+	std::vector <std::string> shaderAttributeBindings;
+	
+	struct UniformData
+	{
+		std::vector <float> data;
+		
+		bool Serialize(joeserialize::Serializer & s)
+		{
+			_SERIALIZE_(s,data);
+			return true;
+		}
+	};
+	std::map <std::string, UniformData> uniforms;
+	
+	// render states
+	struct RenderState
+	{
+		std::string type; //ENUM, FLOAT, INT
+		std::string enumdata;
+		std::vector <int> intdata;
+		std::vector <float> floatdata;
+		
+		bool Serialize(joeserialize::Serializer & s)
+		{
+			_SERIALIZE_(s,type);
+			_SERIALIZE_(s,enumdata);
+			_SERIALIZE_(s,intdata);
+			_SERIALIZE_(s,floatdata);
+			return true;
+		}
+	};
+	std::vector <std::string> stateEnable;
+	std::vector <std::string> stateDisable;
+	std::vector <std::pair <std::string, int> > stateEnablei;
+	std::vector <std::pair <std::string, int> > stateDisablei;
+	std::map <std::string, RenderState> stateEnum;
+	
+	// render target information
+	struct RenderTargetInfo
+	{
+		std::string name;
+		std::string format;
+		std::string target;
+		bool autoMipmap;
+		float width, height;
+		bool widthHeightAreMultiples;
+		
+		bool Serialize(joeserialize::Serializer & s)
+		{
+			_SERIALIZE_(s,name);
+			_SERIALIZE_(s,format);
+			_SERIALIZE_(s,target);
+			_SERIALIZE_(s,autoMipmap);
+			_SERIALIZE_(s,width);
+			_SERIALIZE_(s,height);
+			_SERIALIZE_(s,widthHeightAreMultiples);
+			return true;
+		}
+	};
+	std::map <std::string, RenderTargetInfo> renderTargets;
+	
+	// samplers
+	struct Sampler
+	{
+		std::string textureName;
+		std::map <std::string, RenderState> state;
+		
+		bool Serialize(joeserialize::Serializer & s)
+		{
+			_SERIALIZE_(s,textureName);
+			_SERIALIZE_(s,state);
+			return true;
+		}
+	};
+	std::map <std::string, Sampler> samplers;
+	
+	bool Serialize(joeserialize::Serializer & s)
+	{
+		_SERIALIZE_(s,name);
+		_SERIALIZE_(s,clearColor);
+		_SERIALIZE_(s,clearDepth);
+		_SERIALIZE_(s,clearStencil);
+		_SERIALIZE_(s,drawGroups);
+		_SERIALIZE_(s,vertexShader);
+		_SERIALIZE_(s,fragmentShader);
+		_SERIALIZE_(s,shaderAttributeBindings);
+		_SERIALIZE_(s,uniforms);
+		_SERIALIZE_(s,stateEnable);
+		_SERIALIZE_(s,stateDisable);
+		_SERIALIZE_(s,stateEnablei);
+		_SERIALIZE_(s,stateDisablei);
+		_SERIALIZE_(s,stateEnum);
+		_SERIALIZE_(s,renderTargets);
+		_SERIALIZE_(s,samplers);
+		return true;
+	}
+};
+
+#endif

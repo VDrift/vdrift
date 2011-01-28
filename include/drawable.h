@@ -4,6 +4,8 @@
 #include "matrix4.h"
 #include "mathvector.h"
 
+#include "rendermodelext_drawable.h"
+
 #ifdef _MSC_VER
 #include <memory>
 #else
@@ -12,6 +14,8 @@
 
 class TEXTURE;
 class VERTEXARRAY;
+class GLWrapper;
+class StringIdMap;
 
 class DRAWABLE
 {
@@ -24,16 +28,16 @@ public:
 	void AddDrawList(int value) {list_ids.push_back(value);}
 	
 	const TEXTURE * GetDiffuseMap() const {return diffuse_map.get();}
-	void SetDiffuseMap(std::tr1::shared_ptr<TEXTURE> value) {diffuse_map = value;}
+	void SetDiffuseMap(std::tr1::shared_ptr<TEXTURE> value);
 	
 	const TEXTURE * GetMiscMap1() const {return misc_map1.get();}
-	void SetMiscMap1(std::tr1::shared_ptr<TEXTURE> value) {misc_map1 = value;}
+	void SetMiscMap1(std::tr1::shared_ptr<TEXTURE> value);
 	
 	const TEXTURE * GetMiscMap2() const {return misc_map2.get();}
-	void SetMiscMap2(std::tr1::shared_ptr<TEXTURE> value) {misc_map2 = value;}
+	void SetMiscMap2(std::tr1::shared_ptr<TEXTURE> value);
 	
 	const VERTEXARRAY * GetVertArray() const {return vert_array;}
-	void SetVertArray(const VERTEXARRAY* value) {vert_array = value;}
+	void SetVertArray(const VERTEXARRAY* value);
 	
 	const std::vector < MATHVECTOR <float, 3> > & GetLine() const {return lineverts;}
 	void AddLinePoint(const MATHVECTOR <float, 3> & value) {lineverts.push_back(value);}
@@ -86,6 +90,10 @@ public:
 	bool GetCameraTransformEnable() const {return cameratransform;}
 	void SetCameraTransformEnable(bool value) {cameratransform = value;}
 	
+	/// this gets called if we are using the GL3 renderer
+	/// it returns a reference to the RenderModelExternal structure
+	RenderModelExternal & generateRenderModelData(GLWrapper & gl, StringIdMap & stringMap);
+	
 	DRAWABLE() :
 		vert_array(0),
 		linesize(1),
@@ -123,6 +131,8 @@ private:
 	bool skybox;
 	bool vertical_track;
 	bool cameratransform;
+	
+	RenderModelExternalDrawable renderModel;
 };
 
 #endif // _DRAWABLE_H
