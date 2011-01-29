@@ -31,6 +31,7 @@ RenderModelExternal & DRAWABLE::generateRenderModelData(GLWrapper & gl, StringId
 	// cache off the stringId values
 	static StringId diffuseId = stringMap.addStringId("diffuseTexture");
 	static StringId transformId = stringMap.addStringId("modelMatrix");
+	static StringId colorId = stringMap.addStringId("colorTint");
 	
 	if (vert_array)
 	{
@@ -52,6 +53,7 @@ RenderModelExternal & DRAWABLE::generateRenderModelData(GLWrapper & gl, StringId
 	// uniforms
 	renderModel.uniforms.clear();
 	renderModel.uniforms.push_back(RenderUniformEntry(transformId, transform.GetArray(), 16));
+	renderModel.uniforms.push_back(RenderUniformEntry(colorId, &r, 4));
 	
 	return renderModel;
 }

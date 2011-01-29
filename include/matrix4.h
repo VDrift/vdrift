@@ -275,9 +275,9 @@ class MATRIX4
 		
 		void SetOrthographic(T left, T right, T bottom, T top, T near, T far)
 		{
-			T tx = (right+left)/(right-left);
-			T ty = (top+bottom)/(top-bottom);
-			T tz = (far+near)/(far-near);
+			T tx = -(right+left)/(right-left);
+			T ty = -(top+bottom)/(top-bottom);
+			T tz = -(far+near)/(far-near);
 			
 			data[0] = 2.0/(right-left);
 			data[1] = 0.0;
