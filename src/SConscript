@@ -80,6 +80,7 @@ src = Split("""aabb.cpp
 		performance_testing.cpp
 		quaternion.cpp
 		random.cpp
+		rendermodelext_drawable.cpp
 		replay.cpp
 		reseatable_reference.cpp
 		rigidbody.cpp
