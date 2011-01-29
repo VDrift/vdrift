@@ -81,6 +81,7 @@ class GLWrapper
 		void Enablei(GLenum cap, GLuint index) {GLLOG(glEnablei(cap,index));ERROR_CHECK;}
 		void Disablei(GLenum cap, GLuint index) {GLLOG(glDisablei(cap,index));ERROR_CHECK;}
 		void DepthFunc(GLenum param) {GLLOG(glDepthFunc(param));ERROR_CHECK;}
+		void DepthMask(GLboolean mask) {GLLOG(glDepthMask(mask));ERROR_CHECK;}
 		void CullFace(GLenum param) {GLLOG(glCullFace(param));ERROR_CHECK;}
 		void FrontFace(GLenum param) {GLLOG(glFrontFace(param));ERROR_CHECK;}
 		void PolygonMode(GLenum param) {GLLOG(glPolygonMode(GL_FRONT_AND_BACK, param));ERROR_CHECK;}
@@ -126,6 +127,7 @@ class GLWrapper
 		void EnableVertexAttribArray(GLuint i){GLLOG(glEnableVertexAttribArray(i));ERROR_CHECK;}
 		void DisableVertexAttribArray(GLuint i){GLLOG(glDisableVertexAttribArray(i));ERROR_CHECK;}
 		void DrawElements(GLenum mode, GLsizei count, GLenum type, const void * indices) {GLLOG(glDrawElements(mode, count, type, indices));ERROR_CHECK;}
+		
 		
 		/// writes errors to the log
 		/// returns false if there was an error

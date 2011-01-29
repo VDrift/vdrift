@@ -17,6 +17,10 @@ void RenderState::apply(GLWrapper & gl) const
 		gl.DepthFunc(param[0]);
 		break;
 		
+		case GL_DEPTH_WRITEMASK:
+		gl.DepthMask(param[0]);
+		break;
+		
 		case GL_CULL_FACE_MODE:
 		gl.CullFace(param[0]);
 		break;
