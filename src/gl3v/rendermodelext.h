@@ -24,6 +24,7 @@ class RenderModelExternal
 		RenderModelExternal() : vao(0), elementCount(0) {}
 		RenderModelExternal(const RenderModelEntry & m) : vao(m.vao), elementCount(m.elementCount) {}
 		
+		virtual ~RenderModelExternal() {}
 		virtual void draw(GLWrapper & gl) const {gl.drawGeometry(vao, elementCount);}
 		virtual bool drawEnabled() const {return elementCount > 0;}
 };

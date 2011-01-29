@@ -57,6 +57,7 @@ public:
 	virtual void SetContrast ( float value );
 	
 	GRAPHICS_GL3V(StringIdMap & map) : stringMap(map), renderer(gl) {}
+	~GRAPHICS_GL3V() {};
 	
 private:
 	

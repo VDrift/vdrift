@@ -24,6 +24,7 @@
 				<Option object_output="obj\Release" />
 				<Option type="1" />
 				<Option compiler="gcc" />
+				<Option parameters="-debug" />
 				<Compiler>
 					<Add option="-O3" />
 					<Add option="-march=native" />
@@ -40,6 +41,7 @@
 			<Add directory="include" />
 			<Add directory="..\..\include" />
 			<Add directory="..\..\bullet" />
+			<Add directory="..\..\src" />
 		</Compiler>
 		<Linker>
 			<Add library="opengl32" />
@@ -401,6 +403,7 @@
 		<Unit filename="..\..\include\glstatemanager.h" />
 		<Unit filename="..\..\include\graphics_config.h" />
 		<Unit filename="..\..\include\graphics_fallback.h" />
+		<Unit filename="..\..\include\graphics_gl3v.h" />
 		<Unit filename="..\..\include\graphics_interface.h" />
 		<Unit filename="..\..\include\graphics_renderers.h" />
 		<Unit filename="..\..\include\gui.h" />
@@ -441,6 +444,7 @@
 		<Unit filename="..\..\include\quickmp.h" />
 		<Unit filename="..\..\include\quickprof.h" />
 		<Unit filename="..\..\include\random.h" />
+		<Unit filename="..\..\include\rendermodelext_drawable.h" />
 		<Unit filename="..\..\include\replay.h" />
 		<Unit filename="..\..\include\reseatable_reference.h" />
 		<Unit filename="..\..\include\rigidbody.h" />
@@ -513,6 +517,7 @@
 		<Unit filename="..\..\src\containeralgorithm.cpp" />
 		<Unit filename="..\..\src\crashdetection.cpp" />
 		<Unit filename="..\..\src\downloadable.cpp" />
+		<Unit filename="..\..\src\drawable.cpp" />
 		<Unit filename="..\..\src\endian_utility.cpp" />
 		<Unit filename="..\..\src\eventsystem.cpp" />
 		<Unit filename="..\..\src\fbobject.cpp" />
@@ -520,6 +525,30 @@
 		<Unit filename="..\..\src\font.cpp" />
 		<Unit filename="..\..\src\forcefeedback.cpp" />
 		<Unit filename="..\..\src\game.cpp" />
+		<Unit filename="..\..\src\gl3v\glenums.h" />
+		<Unit filename="..\..\src\gl3v\glwrapper.cpp" />
+		<Unit filename="..\..\src\gl3v\glwrapper.h" />
+		<Unit filename="..\..\src\gl3v\renderdimensions.cpp" />
+		<Unit filename="..\..\src\gl3v\renderdimensions.h" />
+		<Unit filename="..\..\src\gl3v\renderer.cpp" />
+		<Unit filename="..\..\src\gl3v\renderer.h" />
+		<Unit filename="..\..\src\gl3v\rendermodel.h" />
+		<Unit filename="..\..\src\gl3v\rendermodelentry.h" />
+		<Unit filename="..\..\src\gl3v\rendermodelext.h" />
+		<Unit filename="..\..\src\gl3v\renderpass.cpp" />
+		<Unit filename="..\..\src\gl3v\renderpass.h" />
+		<Unit filename="..\..\src\gl3v\renderpassinfo.h" />
+		<Unit filename="..\..\src\gl3v\rendersampler.cpp" />
+		<Unit filename="..\..\src\gl3v\rendersampler.h" />
+		<Unit filename="..\..\src\gl3v\rendershader.h" />
+		<Unit filename="..\..\src\gl3v\renderstate.cpp" />
+		<Unit filename="..\..\src\gl3v\renderstate.h" />
+		<Unit filename="..\..\src\gl3v\renderstatusverbosity.h" />
+		<Unit filename="..\..\src\gl3v\rendertexture.h" />
+		<Unit filename="..\..\src\gl3v\rendertextureentry.h" />
+		<Unit filename="..\..\src\gl3v\renderuniform.h" />
+		<Unit filename="..\..\src\gl3v\renderuniformentry.h" />
+		<Unit filename="..\..\src\gl3v\stringidmap.h" />
 		<Unit filename="..\..\src\graphics_config.cpp" />
 		<Unit filename="..\..\src\graphics_fallback.cpp" />
 		<Unit filename="..\..\src\graphics_renderers.cpp" />
