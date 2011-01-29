@@ -79,7 +79,6 @@ src = Split("""aabb.cpp
 		pathmanager.cpp
 		performance_testing.cpp
 		quaternion.cpp
-		rendermodelext_drawable.cpp
 		random.cpp
 		replay.cpp
 		reseatable_reference.cpp
