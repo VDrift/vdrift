@@ -80,6 +80,12 @@ void OBJECTLOADER::CalculateNumObjects()
 	}
 }
 
+void Optimize(const SCENENODE & input, SCENENODE & output)
+{
+	// TODO: weld together nearby geometry
+	output = input;
+}
+
 std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad()
 {
 	if (error)
@@ -90,7 +96,8 @@ std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad()
 	std::string model_name;
 	if (!(GetParam(objectfile, model_name)))
 	{
-		sceneroot = unoptimized_scene;
+		// we're done
+		Optimize(unoptimized_scene, sceneroot); // put the optimized scene in sceneroot
 		unoptimized_scene.Clear();
 		return std::make_pair(false, false);
 	}

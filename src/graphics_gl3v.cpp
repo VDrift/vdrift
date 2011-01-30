@@ -6,6 +6,8 @@
 #include <map>
 #include <tr1/unordered_map>
 
+#define enableContributionCull true
+
 bool GRAPHICS_GL3V::Init(const std::string & shaderpath,
 				unsigned int resx, unsigned int resy, unsigned int bpp,
 				unsigned int depthbpp, bool fullscreen, bool shaders,
@@ -56,6 +58,8 @@ DRAWABLE_CONTAINER <PTRVECTOR> & GRAPHICS_GL3V::GetDynamicDrawlist()
 void GRAPHICS_GL3V::SetupScene(float fov, float new_view_distance, const MATHVECTOR <float, 3> cam_position, const QUATERNION <float> & cam_rotation,
 				const MATHVECTOR <float, 3> & dynamic_reflection_sample_pos)
 {
+	lastCameraPosition = cam_position;
+	
 	MATRIX4 <float> viewMatrix;
 	(cam_rotation).GetMatrix4(viewMatrix);
 	MATHVECTOR <float, 3> rotated_cam_position = cam_position;
@@ -71,28 +75,58 @@ void GRAPHICS_GL3V::SetupScene(float fov, float new_view_distance, const MATHVEC
 	//TODO: more camera setup
 }
 
+// returns true for cull, false for don't-cull
+bool contributionCull(const DRAWABLE * d, const MATHVECTOR <float, 3> & cam)
+{
+	const MATHVECTOR <float, 3> & obj = d->GetObjectCenter();
+	float radius = d->GetRadius();
+	float dist2 = (obj - cam).MagnitudeSquared();
+	float fov = 90; // rough field-of-view estimation
+	float numerator = 2*radius*fov;
+	float pixels = numerator*numerator/dist2; // perspective divide (we square the numerator because we're using squared distance)
+	if (pixels < 1)
+		return true;
+	else
+		return false;
+}
+
 struct DrawGroupAssembler
 {
 	DrawGroupAssembler(StringIdMap & stringIdMap,
 					   GLWrapper & glwrapper,
 					   std::map <StringId, std::vector <RenderModelExternal*> > & output) 
-		: stringMap(stringIdMap), gl(glwrapper), drawGroups(output) {}
+		: stringMap(stringIdMap), gl(glwrapper), drawGroups(output), frustum(NULL), contributionCullCount(0) {}
 		
 	StringIdMap & stringMap;
 	GLWrapper & gl;
 	std::map <StringId, std::vector <RenderModelExternal*> > & drawGroups;
 	FRUSTUM * frustum;
+	MATHVECTOR <float, 3> camPos;
+	int contributionCullCount;
 	
-	void operator()(const std::string & name, const std::vector <DRAWABLE*> & drawables) const
+	void operator()(const std::string & name, const std::vector <DRAWABLE*> & drawables)
 	{
 		std::vector <RenderModelExternal*> & out = drawGroups[stringMap.addStringId(name)];
-		for (std::vector <DRAWABLE*>::const_iterator i = drawables.begin(); i != drawables.end(); i++)
+		if (frustum && enableContributionCull)
 		{
-			out.push_back(&(*i)->generateRenderModelData(gl, stringMap));
+			for (std::vector <DRAWABLE*>::const_iterator i = drawables.begin(); i != drawables.end(); i++)
+			{
+				if (!contributionCull(*i, camPos))
+					out.push_back(&(*i)->generateRenderModelData(gl, stringMap));
+				else
+					contributionCullCount++;
+			}
+		}
+		else
+		{
+			for (std::vector <DRAWABLE*>::const_iterator i = drawables.begin(); i != drawables.end(); i++)
+			{
+				out.push_back(&(*i)->generateRenderModelData(gl, stringMap));
+			}
 		}
 	}
 	
-	void operator()(const std::string & name, const AABB_SPACE_PARTITIONING_NODE_ADAPTER <DRAWABLE> & adapter) const
+	void operator()(const std::string & name, const AABB_SPACE_PARTITIONING_NODE_ADAPTER <DRAWABLE> & adapter)
 	{
 		static std::vector <DRAWABLE*> queryResults;
 		queryResults.clear();
@@ -141,15 +175,17 @@ void GRAPHICS_GL3V::DrawScene(std::ostream & error_output)
 	{
 		frustum.Extract(&proj.data[0], &view.data[0]);
 		assembler.frustum = &frustum;
+		assembler.camPos = lastCameraPosition;
 	}
 	
 	assembler(drawGroupName, *static_drawlist.GetDrawlist().GetByName(drawGroupName));
 	
-	/*for (std::map <StringId, std::vector <RenderModelExternal*> >::iterator i = drawGroups.begin(); i != drawGroups.end(); i++)
+	for (std::map <StringId, std::vector <RenderModelExternal*> >::iterator i = drawGroups.begin(); i != drawGroups.end(); i++)
 	{
 		std::cout << stringMap.getString(i->first) << ": " << i->second.size() << std::endl;
 	}
-	std::cout << "----------" << std::endl;*/
+	std::cout << "----------" << std::endl;
+	if (enableContributionCull) std::cout << "Contribution cull count: " << assembler.contributionCullCount << std::endl;
 	
 	// render!
 	gl.logging(logNextGlFrame);

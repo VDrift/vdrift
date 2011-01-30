@@ -66,6 +66,7 @@ private:
 	Renderer renderer;
 	int w, h;
 	bool logNextGlFrame; // used to take a gl log capture after reloading shaders if gl logging is enabled
+	MATHVECTOR <float, 3> lastCameraPosition;
 	
 	// scenegraph output
 	DRAWABLE_CONTAINER <PTRVECTOR> dynamic_drawlist; //used for objects that move or change
