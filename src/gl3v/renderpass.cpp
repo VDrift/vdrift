@@ -897,6 +897,18 @@ std::ostream & operator<<(std::ostream & out, const std::vector <T> & vector)
 	return out;
 }
 
+template <typename T>
+std::ostream & operator<<(std::ostream & out, const RenderUniformVector <T> & vector)
+{
+	for (typename RenderUniformVector <T>::const_iterator i = vector.begin(); i != vector.end(); i++)
+	{
+		if (i != vector.begin())
+			out << ", ";
+		out << *i;
+	}
+	return out;
+}
+
 std::ostream & operator<<(std::ostream & out, const RenderTexture & tex)
 {
 	out << tex.handle;

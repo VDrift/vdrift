@@ -51,11 +51,6 @@ DRAWABLE_CONTAINER <PTRVECTOR> & GRAPHICS_GL3V::GetDynamicDrawlist()
 	return dynamic_drawlist;
 }
 
-void GRAPHICS_GL3V::AddStaticNode(SCENENODE & node, bool clearcurrent)
-{
-	static_drawlist.Generate(node, clearcurrent);
-}
-
 void GRAPHICS_GL3V::SetupScene(float fov, float new_view_distance, const MATHVECTOR <float, 3> cam_position, const QUATERNION <float> & cam_rotation,
 				const MATHVECTOR <float, 3> & dynamic_reflection_sample_pos)
 {
@@ -187,6 +182,11 @@ bool GRAPHICS_GL3V::ReloadShaders(const std::string & shaderpath, std::ostream &
 	info_output << "GL3 initialization successful" << std::endl;
 	
 	return true;
+}
+
+void GRAPHICS_GL3V::AddStaticNode(SCENENODE & node, bool clearcurrent)
+{
+	static_drawlist.Generate(node, clearcurrent);
 }
 
 void GRAPHICS_GL3V::SetCloseShadow ( float value )

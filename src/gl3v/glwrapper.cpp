@@ -3,30 +3,39 @@
 #include "glenums.h"
 #include "utils.h"
 
-#define ERROR_CHECK checkForOpenGLErrors(std::string(__PRETTY_FUNCTION__)+":"+__FILE__+":"+UTILS::tostr(__LINE__))
+#define ERROR_CHECK checkForOpenGLErrors(__PRETTY_FUNCTION__,__FILE__,__LINE__)
 #define GLLOG(x) (logGlCall(#x),x)
 
-const bool breakOnError = false;
+#define breakOnError false
 #define logEveryGlCall false
+#ifdef DEBUG
+	#define enableErrorChecking true
+#else
+	#define enableErrorChecking false
+#endif
 
 const char * REQUIRED_GL_VERSION = "GL_VERSION_3_3";
 const GLEnums GLEnumHelper;
 
-void GLWrapper::logGlCall(const std::string & msg) const
+void GLWrapper::logGlCall(const char * msg) const
 {
 	if (logEveryGlCall)
 		logOutput(msg);
 }
 
-bool GLWrapper::checkForOpenGLErrors(std::string activity_description) const
+bool GLWrapper::checkForOpenGLErrors(const char * function, const char * file, int line) const
 {
-	GLenum gl_error = glGetError();
-	if (gl_error != GL_NO_ERROR)
+	if (enableErrorChecking)
 	{
-		const GLubyte *err_string = gluErrorString(gl_error);
-		logError(std::string("OpenGL error \"")+UTILS::tostr(err_string)+"\" during: "+activity_description);
-		assert(!breakOnError);
-		return false;
+		GLenum gl_error = glGetError();
+		if (gl_error != GL_NO_ERROR)
+		{
+			const GLubyte *err_string = gluErrorString(gl_error);
+			std::string activity_description = std::string(function)+":"+file+":"+UTILS::tostr(line);
+			logError(std::string("OpenGL error \"")+UTILS::tostr(err_string)+"\" during: "+activity_description);
+			assert(!breakOnError);
+			return false;
+		}
 	}
 	return true;
 }
@@ -57,7 +66,7 @@ bool GLWrapper::initialize()
 		return false;
 	}
 	
-	return checkForOpenGLErrors("initialize");
+	return ERROR_CHECK;
 }
 
 void GLWrapper::logError(const std::string & msg) const
@@ -85,7 +94,7 @@ bool GLWrapper::BindFramebuffer(GLuint fbo)
 		return true;
 }
 
-void GLWrapper::applyUniform(GLint location, const std::vector <float> & data)
+void GLWrapper::applyUniform(GLint location, const RenderUniformVector <float> & data)
 {
 	switch (data.size())
 	{
@@ -115,7 +124,7 @@ void GLWrapper::applyUniform(GLint location, const std::vector <float> & data)
 	};
 }
 
-void GLWrapper::applyUniform(GLint location, const std::vector <int> & data)
+void GLWrapper::applyUniform(GLint location, const RenderUniformVector <int> & data)
 {
 	switch (data.size())
 	{

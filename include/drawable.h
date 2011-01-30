@@ -47,7 +47,7 @@ public:
 	void SetLinesize(float value) {linesize = value;}
 	
 	const MATRIX4 <float> & GetTransform() {return transform;}
-	void SetTransform(const MATRIX4 <float> & value) {transform = value;}
+	void SetTransform(const MATRIX4 <float> & value);
 	
 	/// used for bounding sphere frustum culling
 	const MATHVECTOR <float, 3> & GetObjectCenter() const {return objcenter;}
@@ -58,9 +58,9 @@ public:
 	void SetRadius(float value) {radius = value;}
 	
 	void GetColor(float &nr, float &ng, float &nb, float &na) const {nr = r; ng = g; nb = b; na = a;}
-	void SetColor(float nr, float ng, float nb, float na) {r = nr; g = ng; b = nb; a = na;}
-	void SetColor(float nr, float ng, float nb) {r = nr; g = ng; b = nb;}
-	void SetAlpha(float na) {a = na;}
+	void SetColor(float nr, float ng, float nb, float na);
+	void SetColor(float nr, float ng, float nb);
+	void SetAlpha(float na);
 	
 	float GetDrawOrder() const {return draw_order;}
 	void SetDrawOrder(float value) {draw_order = value;}
@@ -94,11 +94,7 @@ public:
 	/// it returns a reference to the RenderModelExternal structure
 	RenderModelExternal & generateRenderModelData(GLWrapper & gl, StringIdMap & stringMap);
 	
-	void setVertexArrayObject(GLuint vao, unsigned int elementCount)
-	{
-		renderModel.vao = vao;
-		renderModel.elementCount = elementCount;
-	}
+	void setVertexArrayObject(GLuint vao, unsigned int elementCount);
 	
 	DRAWABLE() :
 		vert_array(0),
@@ -112,7 +108,9 @@ public:
 		cull_front(false),
 		skybox(false),
 		vertical_track(false),
-		cameratransform(true)
+		cameratransform(true),
+		texturesChanged(true),
+		uniformsChanged(true)
 	{
 		objcenter.Set(0.0);
 	}
@@ -128,7 +126,7 @@ private:
 	MATRIX4 <float> transform;
 	MATHVECTOR <float, 3> objcenter;
 	float radius;
-	float r, g, b, a;
+	float r, g, b, a; // these can never be reordered or interleaved with other data because we count on (&a == &r+3) and so on
 	float draw_order;
 	bool decal;
 	bool drawenabled;
@@ -137,6 +135,9 @@ private:
 	bool skybox;
 	bool vertical_track;
 	bool cameratransform;
+	
+	bool texturesChanged;
+	bool uniformsChanged;
 	
 	RenderModelExternalDrawable renderModel;
 };

@@ -8,10 +8,11 @@
 #include <GL/gl.h>
 
 #include "utils.h"
+#include "renderuniformvector.h"
 
-#define ERROR_CHECK checkForOpenGLErrors(std::string(__PRETTY_FUNCTION__)+":"+__FILE__+":"+UTILS::tostr(__LINE__))
-#define ERROR_CHECK1(x) checkForOpenGLErrors(std::string(__PRETTY_FUNCTION__)+":"+__FILE__+":"+UTILS::tostr(__LINE__)+" arg1="+UTILS::tostr(x))
-#define ERROR_CHECK2(x1,x2) checkForOpenGLErrors(std::string(__PRETTY_FUNCTION__)+":"+__FILE__+":"+UTILS::tostr(__LINE__)+" arg1="+UTILS::tostr(x1)+",arg2="+UTILS::tostr(x2))
+#define ERROR_CHECK checkForOpenGLErrors(__PRETTY_FUNCTION__,__FILE__,__LINE__)
+#define ERROR_CHECK1(x) checkForOpenGLErrors(__PRETTY_FUNCTION__,__FILE__,__LINE__)
+#define ERROR_CHECK2(x1,x2) checkForOpenGLErrors(__PRETTY_FUNCTION__,__FILE__,__LINE__)
 #define GLLOG(x) (logGlCall(#x),x)
 
 /// a wrapper around all OpenGL functions
@@ -37,8 +38,8 @@ class GLWrapper
 		void setInfoOutput(std::ostream & newOutput) {infoOutput = &newOutput;}
 		
 		/// calls the appropriate glUniform* function
-		void applyUniform(GLint location, const std::vector <float> & data);
-		void applyUniform(GLint location, const std::vector <int> & data);
+		void applyUniform(GLint location, const RenderUniformVector <float> & data);
+		void applyUniform(GLint location, const RenderUniformVector <int> & data);
 		
 		/// draws a vertex array object
 		void drawGeometry(GLuint vao, GLuint elementCount)
@@ -132,7 +133,7 @@ class GLWrapper
 		
 		/// writes errors to the log
 		/// returns false if there was an error
-		bool checkForOpenGLErrors(std::string activity_description) const;
+		bool checkForOpenGLErrors(const char * function, const char * file, int line) const;
 		
 		GLWrapper() : initialized(false), infoOutput(NULL), errorOutput(NULL) {}
 		
@@ -143,7 +144,7 @@ class GLWrapper
 		
 		void logError(const std::string & msg) const;
 		void logOutput(const std::string & msg) const;
-		void logGlCall(const std::string & msg) const;
+		void logGlCall(const char * msg) const;
 		
 		// cached state
 };

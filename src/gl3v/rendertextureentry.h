@@ -10,6 +10,7 @@ struct RenderTextureEntry
 	GLuint handle;
 	GLenum target;
 	
+	RenderTextureEntry() {}
 	RenderTextureEntry(StringId newname, GLuint newhandle, GLenum newtarget) : name(newname), handle(newhandle), target(newtarget) {}
 };
 

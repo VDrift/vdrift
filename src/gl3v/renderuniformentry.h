@@ -1,16 +1,17 @@
 #ifndef _RENDERUNIFORMENTRY
 #define _RENDERUNIFORMENTRY
 
-#include <vector>
+#include "renderuniformvector.h"
 
 #include "stringidmap.h"
 
 struct RenderUniformEntry
 {
 	StringId name;
-	std::vector <float> data;
+	RenderUniformVector <float> data;
 	
-	RenderUniformEntry(StringId newName, float * dataPtr, size_t dataSize) : name(newName), data(dataPtr, dataPtr+dataSize) {}
+	RenderUniformEntry() {}
+	RenderUniformEntry(StringId newName, float * newData, int dataSize) : name(newName), data(newData, dataSize) {}
 };
 
 #endif

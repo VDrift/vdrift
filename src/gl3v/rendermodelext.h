@@ -18,15 +18,28 @@ class RenderModelExternal
 		std::vector <RenderTextureEntry> textures;
 		std::vector <RenderUniformEntry> uniforms;
 		
-		GLuint vao;
-		int elementCount;
-		
-		RenderModelExternal() : vao(0), elementCount(0) {}
-		RenderModelExternal(const RenderModelEntry & m) : vao(m.vao), elementCount(m.elementCount) {}
+		RenderModelExternal() : vao(0), elementCount(0), enabled(false) {}
+		RenderModelExternal(const RenderModelEntry & m) : vao(m.vao), elementCount(m.elementCount)
+		{
+			if (elementCount > 0)
+				enabled = true;
+		}
 		
 		virtual ~RenderModelExternal() {}
 		virtual void draw(GLWrapper & gl) const {gl.drawGeometry(vao, elementCount);}
-		virtual bool drawEnabled() const {return elementCount > 0;}
+		bool drawEnabled() const {return enabled;}
+		void setVertexArrayObject(GLuint newVao, unsigned int newElementCount)
+		{
+			vao = newVao;
+			elementCount = newElementCount;
+			if (elementCount > 0)
+				enabled = true;
+		}
+		
+	protected:
+		GLuint vao;
+		int elementCount;
+		bool enabled;
 };
 
 #endif
