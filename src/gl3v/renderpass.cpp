@@ -33,9 +33,6 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 	// set viewport
 	gl.Viewport(width, height);
 	
-	// clear
-	gl.Clear(clearMask);
-	
 	// bind shader program
 	gl.UseProgram(shaderProgram);
 	
@@ -60,6 +57,10 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 	{
 		s->apply(gl);
 	}
+	
+	// clear
+	// we do this here so our write masks will have already been applied
+	gl.Clear(clearMask);
 
 	// apply default uniforms
 	static std::vector <const RenderUniform*> defaultUniforms; // indexed by location, either NULL or a pointer to the RenderUniform bound to the location
@@ -140,6 +141,8 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 		// see if we are drawing this draw group
 		if (drawGroups.find(i->first) != drawGroups.end())
 		{
+			//std::cout << "renderpass: " << stringMap.getString(i->first) << ": " << i->second.size() << std::endl;
+			
 			// loop through all models in the draw group
 			for (std::vector <RenderModelExternal*>::const_iterator n = i->second.begin(); n != i->second.end(); n++)
 			{
@@ -820,11 +823,11 @@ void RenderPass::removeDefaultTexture(StringId name)
 	}
 }
 
-void RenderPass::setDefaultUniform(StringId name, const RenderUniformEntry & uniform)
+void RenderPass::setDefaultUniform(const RenderUniformEntry & uniform)
 {
 	// see if we have a mapping for this name id
 	// if we don't that's fine, just ignore the change
-	std::tr1::unordered_map <StringId, GLuint>::const_iterator locIter = variableNameToUniformLocation.find(name);
+	std::tr1::unordered_map <StringId, GLuint>::const_iterator locIter = variableNameToUniformLocation.find(uniform.name);
 	if (locIter != variableNameToUniformLocation.end())
 	{
 		GLuint location = locIter->second;

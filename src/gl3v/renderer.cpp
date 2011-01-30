@@ -276,12 +276,12 @@ void Renderer::removePassTexture(StringId passName, StringId textureName)
 	}
 }
 
-void Renderer::setGlobalUniform(StringId name, const RenderUniformEntry & uniform)
+void Renderer::setGlobalUniform(const RenderUniformEntry & uniform)
 {
 	// inform the passes
 	for (std::vector <RenderPass>::iterator i = passes.begin(); i != passes.end(); i++)
 	{
-		i->setDefaultUniform(name, uniform);
+		i->setDefaultUniform(uniform);
 	}
 }
 
@@ -294,13 +294,13 @@ void Renderer::removeGlobalUniform(StringId name)
 	}
 }
 
-void Renderer::setPassUniform(StringId passName, StringId uniformName, const RenderUniformEntry & uniform)
+void Renderer::setPassUniform(StringId passName, const RenderUniformEntry & uniform)
 {
 	std::tr1::unordered_map <StringId, int>::iterator i = passIndexMap.find(passName);
 	if (i != passIndexMap.end())
 	{
 		assert((unsigned int)i->second < passes.size());
-		passes[i->second].setDefaultUniform(uniformName, uniform);
+		passes[i->second].setDefaultUniform(uniform);
 	}
 }
 

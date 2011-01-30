@@ -194,10 +194,18 @@ bool MODEL_JOE03::Load ( const std::string & filename, std::ostream & err_output
 	else
 		pack->Pack_fclose();
 		
-	if (val && genlist)
+	if (val)
 	{
-		//optimize into a static display list
-		GenerateListID(err_output);
+		if (genlist)
+		{
+			//optimize into a static display list
+			GenerateListID(err_output);
+		}
+		else
+		{
+			//optimize into vertex array/buffers
+			GenerateVertexArrayObject(err_output);
+		}
 	}
 
 	return val;

@@ -62,7 +62,7 @@ class RenderPass
 		void removeDefaultTexture(StringId name);
 		
 		// these handle modifications to our defaultUniformBindings
-		void setDefaultUniform(StringId name, const RenderUniformEntry & uniform);
+		void setDefaultUniform(const RenderUniformEntry & uniform);
 		void removeDefaultUniform(StringId name);
 		
 		const std::string & getName() const {return originalConfiguration.name;}

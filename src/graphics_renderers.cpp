@@ -328,7 +328,8 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 	frustum_corners[1].Set(lod_far,-lod_far,-lod_far);	//BR
 	frustum_corners[2].Set(lod_far,lod_far,-lod_far);	//TR
 	frustum_corners[3].Set(-lod_far,lod_far,-lod_far);	//TL
-	MATRIX4 <float> invproj = MATRIX4<float>::InvPerspective(camfov, ratio, 0.1, lod_far);
+	MATRIX4 <float> invproj;
+	invproj.InvPerspective(camfov, ratio, 0.1, lod_far);
 	for (int i = 0; i < 4; i++)
 	{
 		invproj.TransformVectorOut(frustum_corners[i][0], frustum_corners[i][1], frustum_corners[i][2]);

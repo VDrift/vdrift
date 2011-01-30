@@ -26,7 +26,7 @@ public:
 	void clear() {spacetree.Clear();}
 	void Optimize() {spacetree.Optimize();count=spacetree.size();}
 	template <typename U>
-	void Query(const U & object, std::vector <T*> & output) {spacetree.Query(object, output);}
+	void Query(const U & object, std::vector <T*> & output) const {spacetree.Query(object, output);}
 	
 private:
 	AABB_SPACE_PARTITIONING_NODE <T*,1> spacetree;

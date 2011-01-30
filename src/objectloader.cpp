@@ -227,7 +227,18 @@ std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad()
 	}
 	keyed_container <DRAWABLE>::handle dref = dlist->insert(DRAWABLE());
 	DRAWABLE & drawable = dlist->get(dref);
-	drawable.AddDrawList(model->GetListID());
+	if (model->HaveListID())
+	{
+		drawable.AddDrawList(model->GetListID());
+	}
+	else
+	{
+		assert(model->HaveVertexArrayObject());
+		GLuint vao;
+		unsigned int elementCount;
+		model->GetVertexArrayObject(vao, elementCount);
+		drawable.setVertexArrayObject(vao, elementCount);
+	}
 	drawable.SetDiffuseMap(diffuse_texture);
 	drawable.SetMiscMap1(miscmap1_texture);
 	drawable.SetMiscMap2(miscmap2_texture);

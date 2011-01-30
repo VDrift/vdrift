@@ -59,7 +59,19 @@ void GRAPHICS_GL3V::AddStaticNode(SCENENODE & node, bool clearcurrent)
 void GRAPHICS_GL3V::SetupScene(float fov, float new_view_distance, const MATHVECTOR <float, 3> cam_position, const QUATERNION <float> & cam_rotation,
 				const MATHVECTOR <float, 3> & dynamic_reflection_sample_pos)
 {
-	//TODO: camera setup
+	MATRIX4 <float> viewMatrix;
+	(cam_rotation).GetMatrix4(viewMatrix);
+	MATHVECTOR <float, 3> rotated_cam_position = cam_position;
+	cam_rotation.RotateVector(rotated_cam_position);
+	viewMatrix.Translate(-rotated_cam_position[0],-rotated_cam_position[1],-rotated_cam_position[2]);
+	
+	MATRIX4 <float> projectionMatrix;
+	projectionMatrix.Perspective(fov, w/(float)h, 0.1f, new_view_distance);
+	
+	renderer.setPassUniform(stringMap.addStringId("Normal"), RenderUniformEntry(stringMap.addStringId("viewMatrix"), viewMatrix.GetArray(),16));
+	renderer.setPassUniform(stringMap.addStringId("Normal"), RenderUniformEntry(stringMap.addStringId("projectionMatrix"), projectionMatrix.GetArray(),16));
+	
+	//TODO: more camera setup
 }
 
 struct DrawGroupAssembler
@@ -80,6 +92,14 @@ struct DrawGroupAssembler
 		{
 			out.push_back(&(*i)->generateRenderModelData(gl, stringMap));
 		}
+	}
+	
+	void operator()(const std::string & name, const AABB_SPACE_PARTITIONING_NODE_ADAPTER <DRAWABLE> & adapter) const
+	{
+		static std::vector <DRAWABLE*> queryResults;
+		queryResults.clear();
+		adapter.Query(AABB<float>::INTERSECT_ALWAYS(), queryResults);
+		operator()(name, queryResults);
 	}
 };
 
@@ -105,6 +125,13 @@ void GRAPHICS_GL3V::DrawScene(std::ostream & error_output)
 	// for now, just copy these directly over
 	DrawGroupAssembler assembler(stringMap, gl, drawGroups);
 	dynamic_drawlist.ForEachWithName(assembler);
+	static_drawlist.GetDrawlist().ForEachWithName(assembler);
+	
+	/*for (std::map <StringId, std::vector <RenderModelExternal*> >::iterator i = drawGroups.begin(); i != drawGroups.end(); i++)
+	{
+		std::cout << stringMap.getString(i->first) << ": " << i->second.size() << std::endl;
+	}
+	std::cout << "----------" << std::endl;*/
 	
 	// render!
 	renderer.render(w, h, stringMap, drawGroups, error_output);

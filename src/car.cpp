@@ -164,6 +164,7 @@ struct LoadDrawable
 			mesh = temp;
 		}
 		
+		mesh->GenerateListID(error);
 		drawable.AddDrawList(mesh->GetListID());
 		//drawable.SetObjectCenter(mesh->GetCenter());
 		modellist.push_back(mesh);
@@ -449,6 +450,7 @@ bool CAR::LoadLight(
 	varray.Scale(radius, radius, radius);
 	node.GetTransform().SetTranslation(MATHVECTOR<float,3>(pos[0], pos[1], pos[2]));
 	model.BuildFromVertexArray(varray, error_output);
+	model.GenerateListID(error_output);
 	
 	keyed_container <DRAWABLE> & dlist = GetDrawlist(node, OMNI);
 	lights.back().draw = dlist.insert(DRAWABLE());

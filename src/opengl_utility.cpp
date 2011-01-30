@@ -1,11 +1,5 @@
 #include "opengl_utility.h"
 
-#ifdef __APPLE__
-#include <GLExtensionWrangler/glew.h>
-#else
-#include <GL/glew.h>
-#endif
-
 #include <cassert>
 
 bool OPENGL_UTILITY::CheckForOpenGLErrors(std::string activity_description, std::ostream & error_output)

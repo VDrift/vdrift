@@ -18,7 +18,7 @@ public:
 		Clear();
 	}
 
-	virtual bool Load(const std::string & strFileName, std::ostream & error_output, bool genlist=true)
+	virtual bool Load(const std::string & strFileName, std::ostream & error_output, bool genlist)
 	{
 		return Load(strFileName, error_output, genlist, 0);
 	}

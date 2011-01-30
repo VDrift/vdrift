@@ -163,32 +163,24 @@ class MATRIX4
 		const T * GetArray() const {return data;}
 		T * GetArray() {return data;}
 		
-		static MATRIX4<T> Perspective(T fovy, T aspect, T znear, T zfar)
+		void Perspective(T fovy, T aspect, T znear, T zfar)
 		{
-			MATRIX4<T> mat;
-			
 			const T pi = 3.14159265;
 			T f = 1.0 / tan(0.5 * fovy * pi / 180.0);
-			mat[0] = f / aspect; mat[1] = 0; mat[2] = 0; mat[3] = 0;
-			mat[4] = 0; mat[5] = f; mat[6] = 0; mat[7] = 0;
-			mat[8] = 0; mat[9] = 0; mat[10] = (zfar + znear) / (znear - zfar); mat[11] = -1;
-			mat[12] = 0; mat[13] = 0; mat[14] = 2 * zfar * znear / (znear - zfar); mat[15] = 0;
-
-			return mat;
+			data[0] = f / aspect; data[1] = 0; data[2] = 0; data[3] = 0;
+			data[4] = 0; data[5] = f; data[6] = 0; data[7] = 0;
+			data[8] = 0; data[9] = 0; data[10] = (zfar + znear) / (znear - zfar); data[11] = -1;
+			data[12] = 0; data[13] = 0; data[14] = 2 * zfar * znear / (znear - zfar); data[15] = 0;
 		}
 		
-		static MATRIX4<T> InvPerspective(T fovy, T aspect, T znear, T zfar)
+		void InvPerspective(T fovy, T aspect, T znear, T zfar)
 		{
-			MATRIX4<T> mat;
-			
 			const T pi = 3.14159265;
 			T f = 1.0 / tan(0.5 * fovy * pi / 180.0);
-			mat[0] = aspect / f; mat[1] = 0; mat[2] = 0; mat[3] = 0;
-			mat[4] = 0; mat[5] = 1 / f; mat[6] = 0; mat[7] = 0;
-			mat[8] = 0; mat[9] = 0; mat[10] = 0; mat[11] = (znear - zfar) / (2 * zfar * znear);
-			mat[12] = 0; mat[13] = 0; mat[14] = -1; mat[15] = (zfar + znear) / (2 * zfar * znear);
-
-			return mat;
+			data[0] = aspect / f; data[1] = 0; data[2] = 0; data[3] = 0;
+			data[4] = 0; data[5] = 1 / f; data[6] = 0; data[7] = 0;
+			data[8] = 0; data[9] = 0; data[10] = 0; data[11] = (znear - zfar) / (2 * zfar * znear);
+			data[12] = 0; data[13] = 0; data[14] = -1; data[15] = (zfar + znear) / (2 * zfar * znear);
 		}
 		
 		MATRIX4<T> Inverse()

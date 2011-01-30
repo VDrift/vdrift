@@ -122,6 +122,7 @@ class GLWrapper
 		void unbindSampler(GLuint unit) {GLLOG(glBindSampler(unit,0));ERROR_CHECK;}
 		GLuint GenVertexArray() {GLuint result;GLLOG(glGenVertexArrays(1, &result));ERROR_CHECK;return result;}
 		void BindVertexArray(GLuint handle) {GLLOG(glBindVertexArray(handle));ERROR_CHECK;}
+		void unbindVertexArray() {GLLOG(glBindVertexArray(0));ERROR_CHECK;}
 		void DeleteVertexArray(GLuint handle) {GLLOG(glDeleteVertexArrays(1, &handle));ERROR_CHECK;}
 		void VertexAttribPointer(GLuint i, GLint size, GLenum type, GLboolean normalized, GLsizei stride, const void * pointer){GLLOG(glVertexAttribPointer(i, size, type, normalized, stride, pointer));ERROR_CHECK;}
 		void EnableVertexAttribArray(GLuint i){GLLOG(glEnableVertexAttribArray(i));ERROR_CHECK;}

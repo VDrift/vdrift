@@ -8,7 +8,7 @@ class VERTEXARRAY;
 class RenderModelExternalDrawable : public RenderModelExternal
 {
 	public:
-		virtual bool drawEnabled() const {return vert_array;}
+		virtual bool drawEnabled() const {return vert_array || vao != 0;}
 		void SetVertArray(const VERTEXARRAY* value) {vert_array = value;}
 		virtual void draw(GLWrapper & gl) const;
 		

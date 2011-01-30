@@ -1,23 +1,19 @@
 #include "rendermodelext_drawable.h"
 
 #include "vertexarray.h"
-
-enum VERTEX_ATTRIBS
-{
-	VERTEX_POSITION,
-	VERTEX_NORMAL,
-	VERTEX_TANGENT,
-	VERTEX_BITANGENT,
-	VERTEX_COLOR,
-	VERTEX_UV0,
-	VERTEX_UV1,
-	VERTEX_UV2
-};
+#include "vertexattribs.h"
+using namespace VERTEX_ATTRIBS;
 
 void RenderModelExternalDrawable::draw(GLWrapper & gl) const
 {
-	if (vert_array)
+	if (vao != 0)
 	{
+		RenderModelExternal::draw(gl);
+	}
+	else if (vert_array)
+	{
+		gl.unbindVertexArray();
+		
 		const float * verts;
 		int vertcount;
 		vert_array->GetVertices(verts, vertcount);
@@ -38,6 +34,7 @@ void RenderModelExternalDrawable::draw(GLWrapper & gl) const
 		int tccount[1];
 		if (vert_array->GetTexCoordSets() > 0)
 		{
+			// TODO: make this work for UV1 and UV2
 			vert_array->GetTexCoords(0, tc[0], tccount[0]);
 			gl.VertexAttribPointer(VERTEX_UV0, 2, GL_FLOAT, GL_FALSE, 0, tc[0]);
 			gl.EnableVertexAttribArray(VERTEX_UV0);

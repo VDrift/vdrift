@@ -24,7 +24,7 @@ public:
 		
 		std::string filepath = basepath + "/" + path + "/" + name;
 		std::tr1::shared_ptr<MODEL_JOE03> temp(new MODEL_JOE03());
-		if (std::ifstream(filepath.c_str()) && temp->Load(filepath, *error))
+		if (std::ifstream(filepath.c_str()) && temp->Load(filepath, *error, useDrawlists()))
 		{
 			it = Set(path + "/" + name, temp);
 			return true;
@@ -32,7 +32,7 @@ public:
 		else
 		{
 			filepath = sharedpath + "/" + name;
-			if (temp->Load(filepath, *error))
+			if (temp->Load(filepath, *error, useDrawlists()))
 			{
 				it = Set(name, temp);
 				return true;
@@ -46,7 +46,7 @@ public:
 		if (Get("", name, sptr)) return true;
 		
 		std::tr1::shared_ptr<MODEL_JOE03> temp(new MODEL_JOE03());
-		if (temp->Load(name, *error, true, pack))
+		if (temp->Load(name, *error, useDrawlists(), pack))
 		{
 			objects[name] = temp;
 			sptr = temp;
@@ -55,6 +55,14 @@ public:
 		
 		return false;
 	}
+	
+	void setGenerateDrawList(bool genlist) {loadToDrawlists = genlist;}
+	bool useDrawlists() const {return loadToDrawlists;}
+	
+	MODELMANAGER() : loadToDrawlists(true) {}
+	
+private:
+	bool loadToDrawlists; ///< if false, load to vertex array/buffer objects
 };
 
 #endif // _MODELMANAGER_H

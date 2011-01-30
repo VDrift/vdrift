@@ -94,6 +94,12 @@ public:
 	/// it returns a reference to the RenderModelExternal structure
 	RenderModelExternal & generateRenderModelData(GLWrapper & gl, StringIdMap & stringMap);
 	
+	void setVertexArrayObject(GLuint vao, unsigned int elementCount)
+	{
+		renderModel.vao = vao;
+		renderModel.elementCount = elementCount;
+	}
+	
 	DRAWABLE() :
 		vert_array(0),
 		linesize(1),

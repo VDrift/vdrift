@@ -1,6 +1,7 @@
 #ifndef _MODEL_H
 #define _MODEL_H
 
+#include "opengl_utility.h"
 #include "vertexarray.h"
 #include "mathvector.h"
 #include "aabb.h"
@@ -10,6 +11,7 @@
 #include <string>
 #include <iostream>
 #include <cassert>
+#include <vector>
 
 ///loading data into the mesh vertexarray is implemented by derived classes
 class MODEL
@@ -40,6 +42,14 @@ public:
 	
 	void GenerateListID(std::ostream & error_output);
 	
+	void GenerateVertexArrayObject(std::ostream & error_output);
+	bool HaveVertexArrayObject() const {return generatedvao;}
+	void ClearVertexArrayObject();
+	
+	/// returns true if we have a vertex array object and stores the VAO handle and element count in the provided
+	/// arguments; returns false if we have no vertex array object
+	bool GetVertexArrayObject(GLuint & vao_out, unsigned int & elementCount_out);
+	
 	void GenerateMeshMetrics();
 	
 	void ClearMeshData() {mesh.Clear();}
@@ -59,7 +69,7 @@ public:
 	
 	bool HaveListID() const {return generatedlistid;}
 	
-	void Clear() {ClearMeshData();ClearListID();ClearMetrics();}
+	void Clear() {ClearMeshData();ClearListID();ClearVertexArrayObject();ClearMetrics();}
 	
 	const VERTEXARRAY & GetVertexArray() const {return mesh;}
 	
@@ -90,6 +100,12 @@ private:
 	bool generatedlistid;
 	bool generatedmetrics;
 	int listid;
+	
+	bool generatedvao; // vao means vertex array object
+	GLuint vao;
+	std::vector <GLuint> vbos;
+	GLuint elementVbo;
+	unsigned int elementCount;
 	
 	//metrics
 	float radius;

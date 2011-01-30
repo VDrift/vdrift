@@ -245,7 +245,7 @@ void GAME::InitCoreSubsystems()
 	window.Init("VDrift - open source racing simulation",
 		settings.GetResolutionX(), settings.GetResolutionY(),
 		settings.GetBpp(),
-		settings.GetShadows() ? 24 : settings.GetDepthbpp(),
+		settings.GetShadows() ? std::max(settings.GetDepthbpp(),(unsigned int)24) : settings.GetDepthbpp(),
 		settings.GetFullscreen(),
 		settings.GetAntialiasing(),
 		info_output, error_output);
@@ -254,12 +254,16 @@ void GAME::InitCoreSubsystems()
 	for (int i = 0; i < rendererCount; i++)
 	{
 		// attempt to enable the GL3 renderer
-		if (enableGL3 && i == 0)
+		if (enableGL3 && i == 0 && settings.GetShaders())
 		{
 			graphics_interface = new GRAPHICS_GL3V(stringMap);
+			models.setGenerateDrawList(false);
 		}
 		else
+		{
 			graphics_interface = new GRAPHICS_FALLBACK();
+			models.setGenerateDrawList(true);
+		}
 		
 		bool success = graphics_interface->Init(pathmanager.GetShaderPath(),
 			settings.GetResolutionX(), settings.GetResolutionY(),

@@ -97,7 +97,7 @@ class Renderer
 		/// This sets a global uniform mapping that can be used by passes to fill in default uniform bindings.
 		/// The mapping is keyed on the name of the uniform. If the name already exists, the existing
 		/// RenderUniformEntry is overridden with the new one.
-		void setGlobalUniform(StringId name, const RenderUniformEntry & uniform);
+		void setGlobalUniform(const RenderUniformEntry & uniform);
 		
 		/// Remove a uniform mapping previously set
 		void removeGlobalUniform(StringId name);
@@ -105,7 +105,7 @@ class Renderer
 		/// This sets a texture mapping that can be used by the specified pass to fill in default uniform bindings.
 		/// The mapping is keyed on the name of the uniform. If the name already exists, the existing
 		/// RenderUniformEntry is overridden with the new one.
-		void setPassUniform(StringId passName, StringId uniformName, const RenderUniformEntry & uniform);
+		void setPassUniform(StringId passName, const RenderUniformEntry & uniform);
 		
 		/// Remove a uniform mapping previously set
 		void removePassUniform(StringId passName, StringId uniformName);
