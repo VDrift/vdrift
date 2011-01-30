@@ -110,6 +110,10 @@ class Renderer
 		/// Remove a uniform mapping previously set
 		void removePassUniform(StringId passName, StringId uniformName);
 		
+		/// Get a pass uniform to the provided RenderUniform struct.
+		/// Returns true if there is a corresponding uniform for the pass, otherwise returns false.
+		bool getPassUniform(StringId passName, StringId uniformName, RenderUniform & out);
+		
 		/// Print some human readable text showing renderer status information.
 		void printRendererStatus(RendererStatusVerbosity verbosity, const StringIdMap & stringMap, std::ostream & out) const;
 		

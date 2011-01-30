@@ -19,7 +19,7 @@ const GLEnums GLEnumHelper;
 
 void GLWrapper::logGlCall(const char * msg) const
 {
-	if (logEveryGlCall)
+	if (logEveryGlCall && logEnable)
 		logOutput(msg);
 }
 
@@ -96,58 +96,64 @@ bool GLWrapper::BindFramebuffer(GLuint fbo)
 
 void GLWrapper::applyUniform(GLint location, const RenderUniformVector <float> & data)
 {
-	switch (data.size())
+	if (!uniformCache(location, data))
 	{
-		case 1:
-		GLLOG(glUniform1f(location, data[0]));ERROR_CHECK;
-		break;
-		
-		case 2:
-		GLLOG(glUniform2f(location, data[0], data[1]));ERROR_CHECK;
-		break;
-		
-		case 3:
-		GLLOG(glUniform3f(location, data[0], data[1], data[2]));ERROR_CHECK;
-		break;
-		
-		case 4:
-		GLLOG(glUniform4f(location, data[0], data[1], data[2], data[3]));ERROR_CHECK;
-		break;
-		
-		case 16:
-		GLLOG(glUniformMatrix4fv(location, 1, false, &data[0]));ERROR_CHECK;
-		break;
-		
-		default:
-		logError("Encountered unexpected uniform size: " + UTILS::tostr(data.size()) + " location " +UTILS::tostr(location));
-		assert(0 && "unexpected uniform size");
-	};
+		switch (data.size())
+		{
+			case 1:
+			GLLOG(glUniform1f(location, data[0]));ERROR_CHECK;
+			break;
+			
+			case 2:
+			GLLOG(glUniform2f(location, data[0], data[1]));ERROR_CHECK;
+			break;
+			
+			case 3:
+			GLLOG(glUniform3f(location, data[0], data[1], data[2]));ERROR_CHECK;
+			break;
+			
+			case 4:
+			GLLOG(glUniform4f(location, data[0], data[1], data[2], data[3]));ERROR_CHECK;
+			break;
+			
+			case 16:
+			GLLOG(glUniformMatrix4fv(location, 1, false, &data[0]));ERROR_CHECK;
+			break;
+			
+			default:
+			logError("Encountered unexpected uniform size: " + UTILS::tostr(data.size()) + " location " +UTILS::tostr(location));
+			assert(!"unexpected uniform size");
+		};
+	}
 }
 
 void GLWrapper::applyUniform(GLint location, const RenderUniformVector <int> & data)
 {
-	switch (data.size())
+	if (!uniformCache(location, data))
 	{
-		case 1:
-		GLLOG(glUniform1i(location, data[0]));ERROR_CHECK;
-		break;
-		
-		case 2:
-		GLLOG(glUniform2i(location, data[0], data[1]));ERROR_CHECK;
-		break;
-		
-		case 3:
-		GLLOG(glUniform3i(location, data[0], data[1], data[2]));ERROR_CHECK;
-		break;
-		
-		case 4:
-		GLLOG(glUniform4i(location, data[0], data[1], data[2], data[3]));ERROR_CHECK;
-		break;
-		
-		default:
-		logError("Encountered unexpected uniform size: " + UTILS::tostr(data.size()) + " location " +UTILS::tostr(location));
-		assert(0 && "unexpected uniform size");
-	};
+		switch (data.size())
+		{
+			case 1:
+			GLLOG(glUniform1i(location, data[0]));ERROR_CHECK;
+			break;
+			
+			case 2:
+			GLLOG(glUniform2i(location, data[0], data[1]));ERROR_CHECK;
+			break;
+			
+			case 3:
+			GLLOG(glUniform3i(location, data[0], data[1], data[2]));ERROR_CHECK;
+			break;
+			
+			case 4:
+			GLLOG(glUniform4i(location, data[0], data[1], data[2], data[3]));ERROR_CHECK;
+			break;
+			
+			default:
+			logError("Encountered unexpected uniform size: " + UTILS::tostr(data.size()) + " location " +UTILS::tostr(location));
+			assert(0 && "unexpected uniform size");
+		};
+	}
 }
 
 bool GLWrapper::createAndCompileShader(const std::string & shaderSource, GLenum shaderType, GLuint & handle, std::ostream & shaderErrorOutput)

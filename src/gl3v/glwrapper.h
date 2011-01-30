@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <vector>
+#include <cstring>
 
 #include <GL/glew.h>
 #include <GL/gl.h>
@@ -14,6 +15,7 @@
 #define ERROR_CHECK1(x) checkForOpenGLErrors(__PRETTY_FUNCTION__,__FILE__,__LINE__)
 #define ERROR_CHECK2(x1,x2) checkForOpenGLErrors(__PRETTY_FUNCTION__,__FILE__,__LINE__)
 #define GLLOG(x) (logGlCall(#x),x)
+#define CACHED(cachedValue,newValue,statement) {if (cachedValue != newValue) {cachedValue = newValue;statement}}
 
 /// a wrapper around all OpenGL functions
 /// all GL functions should go through this class only; this allows it to cache state changes
@@ -58,7 +60,7 @@ class GLWrapper
 		{
 			BindTexture(target, handle);ERROR_CHECK;
 			GLLOG(glGenerateMipmap(target));ERROR_CHECK;
-			BindTexture(target, 0);ERROR_CHECK;
+			unbindTexture(target);ERROR_CHECK;
 		}
 		
 		/// create and compile a shader of the given shader type.
@@ -76,7 +78,7 @@ class GLWrapper
 		void BindFramebufferWithoutValidation(GLuint fbo) {GLLOG(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo));ERROR_CHECK;}
 		void Viewport(GLuint w, GLuint h) {GLLOG(glViewport(0,0,w,h));ERROR_CHECK;}
 		void Clear(GLbitfield mask) {GLLOG(glClear(mask));ERROR_CHECK;}
-		void UseProgram(GLuint program) {GLLOG(glUseProgram(program));ERROR_CHECK;}
+		void UseProgram(GLuint program) {GLLOG(glUseProgram(program));ERROR_CHECK;clearCaches();}
 		void Enable(GLenum cap) {GLLOG(glEnable(cap));ERROR_CHECK;}
 		void Disable(GLenum cap) {GLLOG(glDisable(cap));ERROR_CHECK;}
 		void Enablei(GLenum cap, GLuint index) {GLLOG(glEnablei(cap,index));ERROR_CHECK;}
@@ -99,7 +101,7 @@ class GLWrapper
 		void SamplerParameteri(GLuint samplerHandle, GLenum pname, GLint param) {GLLOG(glSamplerParameteri(samplerHandle, pname, param));ERROR_CHECK;}
 		void SamplerParameterf(GLuint samplerHandle, GLenum pname, GLfloat param)  {GLLOG(glSamplerParameterf(samplerHandle, pname, param));ERROR_CHECK;}
 		void SamplerParameterfv(GLuint samplerHandle, GLenum pname, const GLfloat * params)  {GLLOG(glSamplerParameterfv(samplerHandle, pname, params));ERROR_CHECK;}
-		void ActiveTexture(unsigned int tu) {GLLOG(glActiveTexture(GL_TEXTURE0+tu));ERROR_CHECK;}
+		void ActiveTexture(unsigned int tu) {CACHED(curActiveTexture,tu,GLLOG(glActiveTexture(GL_TEXTURE0+tu));ERROR_CHECK;)}
 		void deleteFramebufferObject(GLuint handle) {GLLOG(glDeleteFramebuffers(1, &handle));ERROR_CHECK;}
 		void deleteRenderbuffer(GLuint handle) {GLLOG(glDeleteRenderbuffers(1, &handle));ERROR_CHECK;}
 		void DeleteProgram(GLuint handle) {GLLOG(glDeleteProgram(handle));ERROR_CHECK;}
@@ -135,23 +137,77 @@ class GLWrapper
 		/// returns false if there was an error
 		bool checkForOpenGLErrors(const char * function, const char * file, int line) const;
 		
-		GLWrapper() : initialized(false), infoOutput(NULL), errorOutput(NULL) {}
+		void logging(bool log) {logEnable = log;}
+		
+		GLWrapper() : initialized(false), infoOutput(NULL), errorOutput(NULL), logEnable(false) {clearCaches();}
 		
 	private:
 		bool initialized;
 		std::ostream * infoOutput;
 		std::ostream * errorOutput;
+		bool logEnable; // only does anything if logEveryGlCall in glwrapper.cpp is true
 		
+		// cached state
+		unsigned int curActiveTexture;
+		std::vector <RenderUniformVector<float> > cachedUniformFloats; // indexed by location
+		std::vector <RenderUniformVector<int> > cachedUniformInts; // indexed by location
+		
+		void clearCaches()
+		{
+			curActiveTexture = -1;
+			cachedUniformFloats.clear();
+			cachedUniformInts.clear();
+		}
+		
+		// notifies the uniform cache of new data; returns true if the new data matches the old data
+		template <typename T>
+		bool uniformCache(GLint location, const RenderUniformVector <T> & data, std::vector <RenderUniformVector<T> > & cache)
+		{
+			bool match = true;
+			
+			// if we don't have an entry for this location yet, it's definitely not a match
+			if (location >= (int)cache.size())
+			{
+				match = false;
+				cache.resize(location+1);
+			}
+			
+			// look up the cached value
+			RenderUniformVector<T> & cached = cache[location];
+			
+			// check if the sizes of the vectors match
+			if (cached.size() != data.size())
+				match = false;
+			
+			// if we've passed tests so far, check the values themselves
+			if (match)
+			{
+				if (std::memcmp(&cached[0],&data[0],data.size()*sizeof(T)) != 0)
+				{
+					match = false;
+				}
+			}
+			
+			// update the cached value if it has changed
+			if (!match)
+				cached = data;
+			
+			return match;
+		}
+		bool uniformCache(GLint location, const RenderUniformVector <float> & data) {return uniformCache(location, data, cachedUniformFloats);}
+		bool uniformCache(GLint location, const RenderUniformVector <int> & data) {return uniformCache(location, data, cachedUniformInts);}
+		
+		
+		// logging
 		void logError(const std::string & msg) const;
 		void logOutput(const std::string & msg) const;
 		void logGlCall(const char * msg) const;
-		
-		// cached state
 };
 
 #undef ERROR_CHECK
 #undef ERROR_CHECK1
 #undef ERROR_CHECK2
 #undef GLLOG
+#undef CACHED
 
 #endif

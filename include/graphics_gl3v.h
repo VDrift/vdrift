@@ -56,7 +56,7 @@ public:
 	virtual void SetSunDirection ( const QUATERNION< float >& value );
 	virtual void SetContrast ( float value );
 	
-	GRAPHICS_GL3V(StringIdMap & map) : stringMap(map), renderer(gl) {}
+	GRAPHICS_GL3V(StringIdMap & map) : stringMap(map), renderer(gl), logNextGlFrame(false) {}
 	~GRAPHICS_GL3V() {};
 	
 private:
@@ -65,6 +65,7 @@ private:
 	GLWrapper gl;
 	Renderer renderer;
 	int w, h;
+	bool logNextGlFrame; // used to take a gl log capture after reloading shaders if gl logging is enabled
 	
 	// scenegraph output
 	DRAWABLE_CONTAINER <PTRVECTOR> dynamic_drawlist; //used for objects that move or change

@@ -314,6 +314,18 @@ void Renderer::removePassUniform(StringId passName, StringId uniformName)
 	}
 }
 
+bool Renderer::getPassUniform(StringId passName, StringId uniformName, RenderUniform & out)
+{
+	std::tr1::unordered_map <StringId, int>::iterator i = passIndexMap.find(passName);
+	if (i != passIndexMap.end())
+	{
+		assert((unsigned int)i->second < passes.size());
+		return passes[i->second].getDefaultUniform(uniformName, out);
+	}
+	else
+		return false;
+}
+
 void Renderer::printRendererStatus(RendererStatusVerbosity verbosity, const StringIdMap & stringMap, std::ostream & out) const
 {
 	out << "Renderer status" << std::endl;

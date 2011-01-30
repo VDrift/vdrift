@@ -10,6 +10,7 @@ struct RenderUniform
 	GLuint location;
 	RenderUniformVector <float> data;
 	
+	RenderUniform() {}
 	RenderUniform(GLint loc, const RenderUniformEntry & entry) : location(loc), data(entry.data) {}
 	RenderUniform(GLint loc, const std::vector <float> & newdata) : location(loc), data(newdata) {}
 };

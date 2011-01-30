@@ -3,6 +3,7 @@
 #include "glenums.h"
 
 #include <cassert>
+#include <tr1/unordered_set>
 
 const GLEnums GLEnumHelper;
 
@@ -89,15 +90,17 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 	}
 	
 	// for each model
-	std::vector <GLuint> overriddenTextures;
-	std::vector <GLuint> overriddenUniforms;
+	std::tr1::unordered_set <GLuint> overriddenTextures;
+	std::tr1::unordered_set <GLuint> lastOverriddenTextures;
+	std::tr1::unordered_set <GLuint> overriddenUniforms;
+	std::tr1::unordered_set <GLuint> lastOverriddenUniforms;
 	for (keyed_container <RenderModel>::const_iterator m = models.begin(); m != models.end(); m++)
 	{
 		// apply texture overrides, keeping track of which TUs we've overridden
 		overriddenTextures.clear();
 		for (std::vector <RenderTexture>::const_iterator t = m->textureBindingOverrides.begin(); t != m->textureBindingOverrides.end(); t++)
 		{
-			overriddenTextures.push_back(t->tu);
+			overriddenTextures.insert(t->tu);
 			applyTexture(gl, *t);
 		}
 		
@@ -105,7 +108,7 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 		overriddenUniforms.clear();
 		for (std::vector <RenderUniform>::const_iterator u = m->uniformOverrides.begin(); u != m->uniformOverrides.end(); u++)
 		{
-			overriddenUniforms.push_back(u->location);
+			overriddenUniforms.insert(u->location);
 			gl.applyUniform(u->location, u->data);
 		}
 		
@@ -113,7 +116,7 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 		gl.drawGeometry(m->vao, m->elementCount);
 		
 		// restore overridden uniforms
-		for (std::vector <GLuint>::const_iterator location = overriddenUniforms.begin(); location != overriddenUniforms.end(); location++)
+		for (std::tr1::unordered_set <GLuint>::const_iterator location = overriddenUniforms.begin(); location != overriddenUniforms.end(); location++)
 		{
 			if (*location < defaultUniforms.size())
 			{
@@ -124,7 +127,7 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 		}
 		
 		// restore overridden textures
-		for (std::vector <GLuint>::const_iterator tu = overriddenTextures.begin(); tu != overriddenTextures.end(); tu++)
+		for (std::tr1::unordered_set <GLuint>::const_iterator tu = overriddenTextures.begin(); tu != overriddenTextures.end(); tu++)
 		{
 			if (*tu < defaultTextures.size()) // sometimes we override sampler TUs that don't have defaults defined (think of diffuse textures)
 			{
@@ -160,10 +163,23 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 						if (tui != textureNameToTextureUnit.end()) // if the texture isn't used in this pass, it might not be in textureNameToTextureUnit
 						{
 							GLuint tu = tui->second;
-							overriddenTextures.push_back(tu);
+							overriddenTextures.insert(tu);
+							lastOverriddenTextures.erase(tu);
 							applyTexture(gl, tu, t->target, t->handle);
 						}
 					}
+					
+					// restore textures that were overridden the by the previous model but which won't be overridden this frame
+					for (std::tr1::unordered_set <GLuint>::const_iterator tu = lastOverriddenTextures.begin(); tu != lastOverriddenTextures.end(); tu++)
+					{
+						if (*tu < defaultTextures.size()) // sometimes we override sampler TUs that don't have defaults defined (think of diffuse textures)
+						{
+							const RenderTexture * t = defaultTextures[*tu];
+							if (t)
+								applyTexture(gl, *t);
+						}
+					}
+					lastOverriddenTextures.swap(overriddenTextures);
 					
 					// apply uniform overrides, keeping track of which locations we've overridden
 					overriddenUniforms.clear();
@@ -173,16 +189,14 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 						if (loci != variableNameToUniformLocation.end()) // if the texture isn't used in this pass, it might not be in variableNameToUniformLocation
 						{
 							GLuint location = loci->second;
-							overriddenUniforms.push_back(location);
+							overriddenUniforms.insert(location);
+							lastOverriddenUniforms.erase(location);
 							gl.applyUniform(location, u->data);
 						}
 					}
 					
-					// draw geometry
-					m->draw(gl);
-					
 					// restore overridden uniforms
-					for (std::vector <GLuint>::const_iterator location = overriddenUniforms.begin(); location != overriddenUniforms.end(); location++)
+					for (std::tr1::unordered_set <GLuint>::const_iterator location = lastOverriddenUniforms.begin(); location != lastOverriddenUniforms.end(); location++)
 					{
 						if (*location < defaultUniforms.size())
 						{
@@ -191,17 +205,10 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 								gl.applyUniform(u->location, u->data);
 						}
 					}
+					lastOverriddenUniforms.swap(overriddenUniforms);
 					
-					// restore overridden textures
-					for (std::vector <GLuint>::const_iterator tu = overriddenTextures.begin(); tu != overriddenTextures.end(); tu++)
-					{
-						if (*tu < defaultTextures.size()) // sometimes we override sampler TUs that don't have defaults defined (think of diffuse textures)
-						{
-							const RenderTexture * t = defaultTextures[*tu];
-							if (t)
-								applyTexture(gl, *t);
-						}
-					}
+					// draw geometry
+					m->draw(gl);
 				}
 			}
 		}
@@ -875,6 +882,27 @@ void RenderPass::removeDefaultUniform(StringId name)
 		if (foundIndex)
 			UTILS::eraseVectorUseSwapAndPop(indexToErase, defaultUniformBindings);
 	}
+}
+
+bool RenderPass::getDefaultUniform(StringId uniformName, RenderUniform & out)
+{
+	std::tr1::unordered_map <StringId, GLuint>::const_iterator locIter = variableNameToUniformLocation.find(uniformName);
+	if (locIter != variableNameToUniformLocation.end())
+	{
+		GLuint location = locIter->second;
+		
+		// scan defaultUniformBindings to see if there's a uniform with a location that corresponds to this name id
+		for (std::vector <RenderUniform>::iterator i = defaultUniformBindings.begin(); i != defaultUniformBindings.end(); i++)
+		{
+			if (i->location == location)
+			{
+				out = *i;
+				return true;
+			}
+		}
+	}
+	
+	return false;
 }
 
 

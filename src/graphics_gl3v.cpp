@@ -33,7 +33,9 @@ bool GRAPHICS_GL3V::Init(const std::string & shaderpath,
 	h = resy;
 	
 	// initialize the renderer
-	return ReloadShaders(shaderpath, info_output, error_output);
+	bool success = ReloadShaders(shaderpath, info_output, error_output);
+	logNextGlFrame = false; // don't ever log the first frame after first intialization
+	return success;
 }
 
 void GRAPHICS_GL3V::Deinit()
@@ -79,6 +81,7 @@ struct DrawGroupAssembler
 	StringIdMap & stringMap;
 	GLWrapper & gl;
 	std::map <StringId, std::vector <RenderModelExternal*> > & drawGroups;
+	FRUSTUM * frustum;
 	
 	void operator()(const std::string & name, const std::vector <DRAWABLE*> & drawables) const
 	{
@@ -93,7 +96,11 @@ struct DrawGroupAssembler
 	{
 		static std::vector <DRAWABLE*> queryResults;
 		queryResults.clear();
-		adapter.Query(AABB<float>::INTERSECT_ALWAYS(), queryResults);
+		if (frustum)
+			adapter.Query(*frustum, queryResults);
+		else
+			adapter.Query(AABB<float>::INTERSECT_ALWAYS(), queryResults);
+		
 		operator()(name, queryResults);
 	}
 };
@@ -117,10 +124,26 @@ void GRAPHICS_GL3V::DrawScene(std::ostream & error_output)
 		i->second.clear();
 	}
 	
-	// for now, just copy these directly over
 	DrawGroupAssembler assembler(stringMap, gl, drawGroups);
+	
+	// setup the dynamic draw list for rendering
 	dynamic_drawlist.ForEachWithName(assembler);
-	static_drawlist.GetDrawlist().ForEachWithName(assembler);
+	
+	// setup the static draw list for rendering
+	RenderUniform proj, view;
+	bool doCull = true;
+	StringId passName = stringMap.addStringId("Normal");
+	std::string drawGroupName = "normal_noblend";
+	doCull = !(!doCull || !renderer.getPassUniform(passName, stringMap.addStringId("viewMatrix"), view));
+	doCull = !(!doCull || !renderer.getPassUniform(passName, stringMap.addStringId("projectionMatrix"), proj));
+	FRUSTUM frustum;
+	if (doCull)
+	{
+		frustum.Extract(&proj.data[0], &view.data[0]);
+		assembler.frustum = &frustum;
+	}
+	
+	assembler(drawGroupName, *static_drawlist.GetDrawlist().GetByName(drawGroupName));
 	
 	/*for (std::map <StringId, std::vector <RenderModelExternal*> >::iterator i = drawGroups.begin(); i != drawGroups.end(); i++)
 	{
@@ -129,7 +152,11 @@ void GRAPHICS_GL3V::DrawScene(std::ostream & error_output)
 	std::cout << "----------" << std::endl;*/
 	
 	// render!
+	gl.logging(logNextGlFrame);
 	renderer.render(w, h, stringMap, drawGroups, error_output);
+	gl.logging(false);
+	
+	logNextGlFrame = false;
 }
 
 void GRAPHICS_GL3V::EndScene(std::ostream & error_output)
@@ -180,6 +207,8 @@ bool GRAPHICS_GL3V::ReloadShaders(const std::string & shaderpath, std::ostream &
 	}
 	
 	info_output << "GL3 initialization successful" << std::endl;
+	
+	logNextGlFrame = true;
 	
 	return true;
 }
