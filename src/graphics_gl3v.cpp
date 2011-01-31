@@ -180,12 +180,12 @@ void GRAPHICS_GL3V::DrawScene(std::ostream & error_output)
 	
 	assembler(drawGroupName, *static_drawlist.GetDrawlist().GetByName(drawGroupName));
 	
-	for (std::map <StringId, std::vector <RenderModelExternal*> >::iterator i = drawGroups.begin(); i != drawGroups.end(); i++)
+	/*for (std::map <StringId, std::vector <RenderModelExternal*> >::iterator i = drawGroups.begin(); i != drawGroups.end(); i++)
 	{
 		std::cout << stringMap.getString(i->first) << ": " << i->second.size() << std::endl;
 	}
 	std::cout << "----------" << std::endl;
-	if (enableContributionCull) std::cout << "Contribution cull count: " << assembler.contributionCullCount << std::endl;
+	if (enableContributionCull) std::cout << "Contribution cull count: " << assembler.contributionCullCount << std::endl;*/
 	
 	// render!
 	gl.logging(logNextGlFrame);
@@ -228,7 +228,7 @@ bool GRAPHICS_GL3V::ReloadShaders(const std::string & shaderpath, std::ostream &
 		bool initSuccess = renderer.initialize(passInfos, stringMap, shaderpath+"/gl3", w, h, error_output);
 		if (initSuccess)
 		{
-			renderer.printRendererStatus(VERBOSITY_MAXIMUM, stringMap, std::cout);
+			//renderer.printRendererStatus(VERBOSITY_MAXIMUM, stringMap, std::cout);
 		}
 		else
 		{
