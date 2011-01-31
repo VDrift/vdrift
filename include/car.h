@@ -294,6 +294,7 @@ protected:
 	QUATERNION<float> modelrotation; // const model rotation fix
 	
 	keyed_container<SCENENODE>::handle bodynode;
+	keyed_container<SCENENODE>::handle steernode;
 	std::vector<keyed_container<SCENENODE>::handle> wheelnode;
 	std::vector<keyed_container<SCENENODE>::handle> floatingnode;
 	
@@ -327,6 +328,11 @@ protected:
 	int gearsound_check;
 	bool brakesound_check;
 	bool handbrakesound_check;
+	
+	// steering wheel
+	QUATERNION<float> steer_orientation;
+	QUATERNION<float> steer_rotation;
+	float steer_angle_max;
 	
 	//internal variables that might change during driving (so, they need to be serialized)
 	float last_steer;

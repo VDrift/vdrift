@@ -24,7 +24,6 @@
 				<Option object_output="obj\Release" />
 				<Option type="1" />
 				<Option compiler="gcc" />
-				<Option parameters="-debug" />
 				<Compiler>
 					<Add option="-O3" />
 					<Add option="-march=native" />
@@ -60,7 +59,7 @@
 		</Linker>
 		<ExtraCommands>
 			<Add before='cmd /c &quot;if not exist ..\..\include\definitions.h. (echo #ifndef _DEFINITIONS_H&gt; ..\..\include\definitions.h &amp;&amp; echo #define _DEFINITIONS_H&gt;&gt; ..\..\include\definitions.h &amp;&amp; echo #define SETTINGS_DIR &quot;.vdrift&quot;&gt;&gt; ..\..\include\definitions.h &amp;&amp; echo #define DATA_DIR &quot;./data&quot;&gt;&gt; ..\..\include\definitions.h &amp;&amp; echo #define VERSION &quot;$(TODAY)&quot;&gt;&gt; ..\..\include\definitions.h &amp;&amp; echo #define REVISION &quot;latest&quot;&gt;&gt; ..\..\include\definitions.h &amp;&amp; echo #endif&gt;&gt; ..\..\include\definitions.h)&quot;' />
-			<Add after="xcopy /d dll\*.dll ..\..\" />
+			<Add after="xcopy /d /y dll\*.dll ..\..\" />
 		</ExtraCommands>
 		<Unit filename="..\..\bullet\Bullet-C-Api.h" />
 		<Unit filename="..\..\bullet\BulletCollision\BroadphaseCollision\btAxisSweep3.cpp" />
@@ -482,6 +481,7 @@
 		<Unit filename="..\..\include\unittest.h" />
 		<Unit filename="..\..\include\utils.h" />
 		<Unit filename="..\..\include\vertexarray.h" />
+		<Unit filename="..\..\include\vertexattribs.h" />
 		<Unit filename="..\..\include\widget.h" />
 		<Unit filename="..\..\include\widget_button.h" />
 		<Unit filename="..\..\include\widget_colorpicker.h" />
@@ -548,9 +548,11 @@
 		<Unit filename="..\..\src\gl3v\rendertextureentry.h" />
 		<Unit filename="..\..\src\gl3v\renderuniform.h" />
 		<Unit filename="..\..\src\gl3v\renderuniformentry.h" />
+		<Unit filename="..\..\src\gl3v\renderuniformvector.h" />
 		<Unit filename="..\..\src\gl3v\stringidmap.h" />
 		<Unit filename="..\..\src\graphics_config.cpp" />
 		<Unit filename="..\..\src\graphics_fallback.cpp" />
+		<Unit filename="..\..\src\graphics_gl3v.cpp" />
 		<Unit filename="..\..\src\graphics_renderers.cpp" />
 		<Unit filename="..\..\src\gui.cpp" />
 		<Unit filename="..\..\src\guioption.cpp" />
@@ -581,6 +583,7 @@
 		<Unit filename="..\..\src\performance_testing.cpp" />
 		<Unit filename="..\..\src\quaternion.cpp" />
 		<Unit filename="..\..\src\random.cpp" />
+		<Unit filename="..\..\src\rendermodelext_drawable.cpp" />
 		<Unit filename="..\..\src\replay.cpp" />
 		<Unit filename="..\..\src\reseatable_reference.cpp" />
 		<Unit filename="..\..\src\rigidbody.cpp" />

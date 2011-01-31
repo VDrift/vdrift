@@ -189,7 +189,7 @@ struct LoadDrawable
 		}
 		
 		std::vector<float> pos(3, 0), rot(3, 0);
-		if (cfg.GetParam(section, "position", pos) || cfg.GetParam(section, "rotation", rot))
+		if (cfg.GetParam(section, "position", pos) | cfg.GetParam(section, "rotation", rot))
 		{
 			if (node == &topnode)
 			{
@@ -198,7 +198,7 @@ struct LoadDrawable
 				node = &topnode.GetNode(nodehandle);
 			}
 			node->GetTransform().SetTranslation(MATHVECTOR<float, 3>(pos[0], pos[1], pos[2]));
-			node->GetTransform().SetRotation(QUATERNION<float>(rot[0], rot[1], rot[2]));
+			node->GetTransform().SetRotation(QUATERNION<float>(rot[0]/180*M_PI, rot[1]/180*M_PI, rot[2]/180*M_PI));
 		}
 		
 		// set drawable
@@ -422,6 +422,7 @@ CAR::CAR() :
 	gearsound_check(0),
 	brakesound_check(false),
 	handbrakesound_check(false),
+	steer_angle_max(0),
 	last_steer(0),
 	sector(-1),
 	applied_brakes(0)
@@ -509,11 +510,25 @@ bool CAR::LoadGraphics(
 	for(CONFIG::const_iterator section = cfg.begin(); section != cfg.end(); ++section)
 	{
 		if (section->first == "body" ||
+			section->first == "steering" ||
 			section->first == "light-brake" ||
 			section->first == "light-reverse" ||
 			section->first.find("wheel") == 0) continue;
 		
 		if (!load_drawable(section, bodynoderef)) return false;
+	}
+	
+	{
+		// load steering wheel
+		CONFIG::const_iterator i;
+		if (cfg.GetSection("steering", i))
+		{
+			if (!load_drawable(i, bodynoderef, &steernode, 0)) return false;
+			cfg.GetParam(i, "max-angle", steer_angle_max);
+			steer_angle_max = steer_angle_max / 180.0 * M_PI;
+			SCENENODE & steernoderef = bodynoderef.GetNode(steernode);
+			steer_orientation = steernoderef.GetTransform().GetRotation();
+		}
 	}
 	
 	{
@@ -861,6 +876,12 @@ void CAR::UpdateGraphics()
 	quat = quat * modelrotation;
 	bodynoderef.GetTransform().SetRotation(quat);
 	
+	if (steernode.valid())
+	{
+		SCENENODE & steernoderef = bodynoderef.GetNode(steernode);
+		steernoderef.GetTransform().SetRotation(steer_rotation);
+	}
+	
 	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
 	{
 		vec = ToMathVector<float>(dynamics.GetWheelPosition(WHEEL_POSITION(i)));
@@ -970,7 +991,7 @@ void CAR::HandleInputs(const std::vector <float> & inputs, float dt)
 
 	//std::cout << "Throttle: " << inputs[CARINPUT::THROTTLE] << std::endl;
 	//std::cout << "Shift up: " << inputs[CARINPUT::SHIFT_UP] << std::endl;
-	
+
 	// recover from a rollover
 	if(inputs[CARINPUT::ROLLOVER_RECOVER])
 		dynamics.RolloverRecover();
@@ -985,6 +1006,9 @@ void CAR::HandleInputs(const std::vector <float> & inputs, float dt)
 		steer_value = -inputs[CARINPUT::STEER_LEFT];
 	dynamics.SetSteering(steer_value);
 	last_steer = steer_value;
+	QUATERNION<float> steer;
+	steer.Rotate(-steer_value * steer_angle_max, 0, 0, 1);
+	steer_rotation = steer_orientation * steer;
 
     //start the engine if requested
 	if (inputs[CARINPUT::START_ENGINE])
