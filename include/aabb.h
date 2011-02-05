@@ -198,7 +198,7 @@ public:
 	{
 		float rd;
 		const float bound = radius;
-		INTERSECTION intersection = IN; // assume we are fully in until we find an intersection
+		//INTERSECTION intersection = IN; // assume we are fully in until we find an intersection
 		for (int i=0; i<6; i++)
 		{
 			rd=frustum.frustum[i][0]*center[0]+
@@ -211,15 +211,16 @@ public:
 				return OUT;
 			}
 			
-			if(fabs(rd) < bound)
+			/*if(fabs(rd) < bound)
 			{
 				// partially in
 				// we don't return here because we could still be fully out of another frustum plane
 				intersection = INTERSECT;
-			}
+			}*/
 		}
 		
-		return intersection;
+		//return intersection;
+		return INTERSECT;
 	}
 	
 	struct INTERSECT_ALWAYS{};

@@ -188,7 +188,7 @@ void GRAPHICS_GL3V::DrawScene(std::ostream & error_output)
 	}
 	std::cout << "----------" << std::endl;
 	if (enableContributionCull) std::cout << "Contribution cull count: " << assembler.contributionCullCount << std::endl;*/
-	std::cout << "normal_noblend: " << drawGroups[stringMap.addStringId("normal_noblend")].size() << "/" << static_drawlist.GetDrawlist().GetByName("normal_noblend")->size() << std::endl;
+	//std::cout << "normal_noblend: " << drawGroups[stringMap.addStringId("normal_noblend")].size() << "/" << static_drawlist.GetDrawlist().GetByName("normal_noblend")->size() << std::endl;
 	
 	// render!
 	gl.logging(logNextGlFrame);
