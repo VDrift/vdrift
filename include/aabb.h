@@ -14,16 +14,23 @@ private:
 	MATHVECTOR <T, 3> pos; ///< minimum corner (center-size*0.5)
 	MATHVECTOR <T, 3> center; ///< exact center of AABB
 	MATHVECTOR <T, 3> size; ///< size of AABB
+	float radius; ///< size.Magnitude()*0.5
+	
+	void recomputeRadius()
+	{
+		radius = size.Magnitude()*0.5;
+	}
 	
 public:
-	AABB(const AABB <T> & other) : pos(other.pos), center(other.center), size(other.size) {}
-	AABB() {}
+	AABB(const AABB <T> & other) : pos(other.pos), center(other.center), size(other.size), radius(other.radius) {}
+	AABB() : radius(0) {}
 	
 	const AABB <T> & operator = (const AABB <T> & other)
 	{
 		pos = other.pos;
 		center = other.center;
 		size = other.size;
+		radius = other.radius;
 		
 		return *this;
 	}
@@ -44,12 +51,13 @@ public:
 		o << "center: " << center[0] << "," << center[1] << "," << center[2] << " size: " << size[0] << "," << size[1] << "," << size[2] << std::endl;
 	}
 	
-	void SetFromSphere(const MATHVECTOR <T, 3> & newcenter, float radius)
+	void SetFromSphere(const MATHVECTOR <T, 3> & newcenter, float newRadius)
 	{
 		center = newcenter;
-		size.Set(radius,radius,radius);
+		size.Set(newRadius,newRadius,newRadius);
 		size = size * 2.0;
 		pos = center - size*0.5;
+		radius = newRadius;
 	}
 	
 	void SetFromCorners(const MATHVECTOR <T, 3> & c1, const MATHVECTOR <T, 3> & c2)
@@ -85,6 +93,7 @@ public:
 		pos = c1mod;
 		size = c2mod - c1mod;
 		center = pos + size * 0.5;
+		recomputeRadius();
 	}
 	
 	void CombineWith(const AABB <T> & other)
@@ -180,7 +189,7 @@ public:
 	bool Intersect(const FRUSTUM & frustum) const
 	{
 		float rd;
-		const float bound = size.Magnitude()*0.5;
+		const float bound = radius;
 		for (int i=0; i<6; i++)
 		{
 			rd=frustum.frustum[i][0]*center[0]+
