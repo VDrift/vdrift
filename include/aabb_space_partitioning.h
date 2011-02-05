@@ -133,7 +133,7 @@ public:
 	void Query(const T & shape, U &outputlist, bool testChildren=true) const
 	{
 		//if we've got objects, test them
-		if (testChildren)
+		if (objects.size() > 1 && testChildren)
 		{
 			for (typename objectlist_type::const_iterator i = objects.begin(); i != objects.end(); ++i)
 			{
