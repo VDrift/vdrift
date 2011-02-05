@@ -5,13 +5,22 @@
 
 #include "stringidmap.h"
 
-struct RenderUniformEntry
+struct RenderUniformBase
 {
-	StringId name;
 	RenderUniformVector <float> data;
 	
+	RenderUniformBase() {}
+	RenderUniformBase(float * newData, int dataSize) : data(newData, dataSize) {}
+	RenderUniformBase(const std::vector <float> & newdata) : data(newdata) {}
+	RenderUniformBase(const RenderUniformVector <float> & newdata) : data(newdata) {}
+};
+
+struct RenderUniformEntry : public RenderUniformBase
+{
+	StringId name;
+	
 	RenderUniformEntry() {}
-	RenderUniformEntry(StringId newName, float * newData, int dataSize) : name(newName), data(newData, dataSize) {}
+	RenderUniformEntry(StringId newName, float * newData, int dataSize) : RenderUniformBase(newData, dataSize), name(newName) {}
 };
 
 #endif

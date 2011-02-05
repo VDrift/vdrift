@@ -4,14 +4,12 @@
 #include "rendertextureentry.h"
 
 /// The bare minimum required to bind a texture
-struct RenderTexture
+struct RenderTexture : RenderTextureBase
 {
 	GLuint tu;
-	GLuint handle;
-	GLenum target;
 	
-	RenderTexture(GLint newTu, const RenderTextureEntry & entry) : tu(newTu), handle(entry.handle), target(entry.target) {}
-	RenderTexture(GLenum newtarget, GLuint newhandle) : handle(newhandle), target(newtarget) {}
+	RenderTexture(GLint newTu, const RenderTextureEntry & entry) : RenderTextureBase(entry.handle, entry.target), tu(newTu) {}
+	RenderTexture(GLenum newtarget, GLuint newhandle) : RenderTextureBase(newhandle, newtarget) {}
 };
 
 #endif

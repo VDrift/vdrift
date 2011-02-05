@@ -36,7 +36,7 @@ bool GRAPHICS_GL3V::Init(const std::string & shaderpath,
 	
 	// initialize the renderer
 	bool success = ReloadShaders(shaderpath, info_output, error_output);
-	logNextGlFrame = false; // don't ever log the first frame after first intialization
+	initialized = success;
 	return success;
 }
 
@@ -81,10 +81,12 @@ bool contributionCull(const DRAWABLE * d, const MATHVECTOR <float, 3> & cam)
 	const MATHVECTOR <float, 3> & obj = d->GetObjectCenter();
 	float radius = d->GetRadius();
 	float dist2 = (obj - cam).MagnitudeSquared();
-	float fov = 90; // rough field-of-view estimation
+	const float fov = 90; // rough field-of-view estimation
 	float numerator = 2*radius*fov;
-	float pixels = numerator*numerator/dist2; // perspective divide (we square the numerator because we're using squared distance)
-	if (pixels < 1)
+	const float pixelThreshold = 1;
+	//float pixels = numerator*numerator/dist2; // perspective divide (we square the numerator because we're using squared distance)
+	//if (pixels < pixelThreshold)
+	if (numerator*numerator < dist2*pixelThreshold)
 		return true;
 	else
 		return false;
@@ -228,7 +230,8 @@ bool GRAPHICS_GL3V::ReloadShaders(const std::string & shaderpath, std::ostream &
 		bool initSuccess = renderer.initialize(passInfos, stringMap, shaderpath+"/gl3", w, h, error_output);
 		if (initSuccess)
 		{
-			//renderer.printRendererStatus(VERBOSITY_MAXIMUM, stringMap, std::cout);
+			if (initialized)
+				renderer.printRendererStatus(VERBOSITY_MAXIMUM, stringMap, std::cout);
 		}
 		else
 		{
@@ -244,7 +247,8 @@ bool GRAPHICS_GL3V::ReloadShaders(const std::string & shaderpath, std::ostream &
 	
 	info_output << "GL3 initialization successful" << std::endl;
 	
-	logNextGlFrame = true;
+	if (initialized)
+		logNextGlFrame = true;
 	
 	return true;
 }

@@ -4,6 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <cstring>
+#include <climits>
 
 #include <GL/glew.h>
 #include <GL/gl.h>
@@ -39,9 +40,26 @@ class GLWrapper
 		/// for the lifetime of the object
 		void setInfoOutput(std::ostream & newOutput) {infoOutput = &newOutput;}
 		
-		/// calls the appropriate glUniform* function
+		/// calls the appropriate glUniform* function immediately
 		void applyUniform(GLint location, const RenderUniformVector <float> & data);
 		void applyUniform(GLint location, const RenderUniformVector <int> & data);
+		
+		/// this checks the cache before applying the uniform
+		template <typename T>
+		void applyUniformCached(GLint location, const RenderUniformVector <T> & data)
+		{
+			if (!uniformCache(location, data))
+				applyUniform(location, data);
+		}
+		
+		/// this accumulates the uniform changes but delays their application until a draw call
+		/// this approach allows for cache-ing and minimization of GL calls
+		template <typename T>
+		void applyUniformDelayed(GLint location, const RenderUniformVector <T> & data)
+		{
+			if (!uniformCache(location, data))
+				applyUniform(location, data);
+		}
 		
 		/// draws a vertex array object
 		void drawGeometry(GLuint vao, GLuint elementCount)
@@ -53,7 +71,7 @@ class GLWrapper
 		
 		void unbindFramebuffer() {GLLOG(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0));ERROR_CHECK;}
 		
-		void unbindTexture(GLenum target) {GLLOG(glBindTexture(target, 0));ERROR_CHECK;}
+		void unbindTexture(GLenum target) {BindTexture(target,0);}
 		
 		/// generate a mipmap
 		void generateMipmaps(GLenum target, GLuint handle)
@@ -94,7 +112,7 @@ class GLWrapper
 		void Hint(GLenum param0, GLenum param1) {GLLOG(glHint(param0, param1));ERROR_CHECK;}
 		void BlendEquationSeparate(GLenum param0, GLenum param1) {GLLOG(glBlendEquationSeparate(param0,param1));ERROR_CHECK;}
 		void BlendFuncSeparate(GLenum param0, GLenum param1, GLenum param2, GLenum param3) {GLLOG(glBlendFuncSeparate(param0, param1, param2, param3));ERROR_CHECK;}
-		void BindTexture(GLenum target, GLuint handle) {GLLOG(glBindTexture(target,handle));/*logOutput("BindTexture "+UTILS::tostr(handle));*/ERROR_CHECK2(target,handle);}
+		void BindTexture(GLenum target, GLuint handle);
 		void TexParameteri(GLenum target, GLenum pname, GLint param) {GLLOG(glTexParameteri(target, pname, param));ERROR_CHECK;}
 		void TexParameterf(GLenum target, GLenum pname, GLfloat param)  {GLLOG(glTexParameterf(target, pname, param));ERROR_CHECK;}
 		void TexParameterfv(GLenum target, GLenum pname, const GLfloat * params)  {GLLOG(glTexParameterfv(target, pname, params));ERROR_CHECK;}
@@ -149,12 +167,16 @@ class GLWrapper
 		
 		// cached state
 		unsigned int curActiveTexture;
+		std::vector <GLuint> boundTextures;
 		std::vector <RenderUniformVector<float> > cachedUniformFloats; // indexed by location
 		std::vector <RenderUniformVector<int> > cachedUniformInts; // indexed by location
+		std::vector <unsigned int> cachedUniformFloatsToApplyNextDrawCall; // indexed by location
+		std::vector <unsigned int> cachedUniformIntsToApplyNextDrawCall; // indexed by location
 		
 		void clearCaches()
 		{
-			curActiveTexture = -1;
+			curActiveTexture = UINT_MAX;
+			boundTextures.clear();
 			cachedUniformFloats.clear();
 			cachedUniformInts.clear();
 		}

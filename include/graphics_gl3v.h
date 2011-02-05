@@ -56,7 +56,7 @@ public:
 	virtual void SetSunDirection ( const QUATERNION< float >& value );
 	virtual void SetContrast ( float value );
 	
-	GRAPHICS_GL3V(StringIdMap & map) : stringMap(map), renderer(gl), logNextGlFrame(false) {}
+	GRAPHICS_GL3V(StringIdMap & map) : stringMap(map), renderer(gl), logNextGlFrame(false), initialized(false) {}
 	~GRAPHICS_GL3V() {};
 	
 private:
@@ -66,6 +66,7 @@ private:
 	Renderer renderer;
 	int w, h;
 	bool logNextGlFrame; // used to take a gl log capture after reloading shaders if gl logging is enabled
+	bool initialized;
 	MATHVECTOR <float, 3> lastCameraPosition;
 	
 	// scenegraph output

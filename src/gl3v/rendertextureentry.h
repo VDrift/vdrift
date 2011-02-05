@@ -4,14 +4,21 @@
 #include "stringidmap.h"
 #include "glwrapper.h"
 
-struct RenderTextureEntry
+struct RenderTextureBase
 {
-	StringId name;
 	GLuint handle;
 	GLenum target;
 	
+	RenderTextureBase() {}
+	RenderTextureBase(GLuint newhandle, GLenum newtarget) : handle(newhandle), target(newtarget) {}
+};
+
+struct RenderTextureEntry : public RenderTextureBase
+{
+	StringId name;
+	
 	RenderTextureEntry() {}
-	RenderTextureEntry(StringId newname, GLuint newhandle, GLenum newtarget) : name(newname), handle(newhandle), target(newtarget) {}
+	RenderTextureEntry(StringId newname, GLuint newhandle, GLenum newtarget) : RenderTextureBase(newhandle,newtarget), name(newname) {}
 };
 
 #endif

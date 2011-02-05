@@ -7,7 +7,7 @@
 #define GLLOG(x) (logGlCall(#x),x)
 
 #define breakOnError false
-#define logEveryGlCall false
+#define logEveryGlCall true
 #ifdef DEBUG
 	#define enableErrorChecking true
 #else
@@ -96,64 +96,58 @@ bool GLWrapper::BindFramebuffer(GLuint fbo)
 
 void GLWrapper::applyUniform(GLint location, const RenderUniformVector <float> & data)
 {
-	if (!uniformCache(location, data))
+	switch (data.size())
 	{
-		switch (data.size())
-		{
-			case 1:
-			GLLOG(glUniform1f(location, data[0]));ERROR_CHECK;
-			break;
-			
-			case 2:
-			GLLOG(glUniform2f(location, data[0], data[1]));ERROR_CHECK;
-			break;
-			
-			case 3:
-			GLLOG(glUniform3f(location, data[0], data[1], data[2]));ERROR_CHECK;
-			break;
-			
-			case 4:
-			GLLOG(glUniform4f(location, data[0], data[1], data[2], data[3]));ERROR_CHECK;
-			break;
-			
-			case 16:
-			GLLOG(glUniformMatrix4fv(location, 1, false, &data[0]));ERROR_CHECK;
-			break;
-			
-			default:
-			logError("Encountered unexpected uniform size: " + UTILS::tostr(data.size()) + " location " +UTILS::tostr(location));
-			assert(!"unexpected uniform size");
-		};
-	}
+		case 1:
+		GLLOG(glUniform1f(location, data[0]));ERROR_CHECK;
+		break;
+		
+		case 2:
+		GLLOG(glUniform2f(location, data[0], data[1]));ERROR_CHECK;
+		break;
+		
+		case 3:
+		GLLOG(glUniform3f(location, data[0], data[1], data[2]));ERROR_CHECK;
+		break;
+		
+		case 4:
+		GLLOG(glUniform4f(location, data[0], data[1], data[2], data[3]));ERROR_CHECK;
+		break;
+		
+		case 16:
+		GLLOG(glUniformMatrix4fv(location, 1, false, &data[0]));ERROR_CHECK;
+		break;
+		
+		default:
+		logError("Encountered unexpected uniform size: " + UTILS::tostr(data.size()) + " location " +UTILS::tostr(location));
+		assert(!"unexpected uniform size");
+	};
 }
 
 void GLWrapper::applyUniform(GLint location, const RenderUniformVector <int> & data)
 {
-	if (!uniformCache(location, data))
+	switch (data.size())
 	{
-		switch (data.size())
-		{
-			case 1:
-			GLLOG(glUniform1i(location, data[0]));ERROR_CHECK;
-			break;
-			
-			case 2:
-			GLLOG(glUniform2i(location, data[0], data[1]));ERROR_CHECK;
-			break;
-			
-			case 3:
-			GLLOG(glUniform3i(location, data[0], data[1], data[2]));ERROR_CHECK;
-			break;
-			
-			case 4:
-			GLLOG(glUniform4i(location, data[0], data[1], data[2], data[3]));ERROR_CHECK;
-			break;
-			
-			default:
-			logError("Encountered unexpected uniform size: " + UTILS::tostr(data.size()) + " location " +UTILS::tostr(location));
-			assert(0 && "unexpected uniform size");
-		};
-	}
+		case 1:
+		GLLOG(glUniform1i(location, data[0]));ERROR_CHECK;
+		break;
+		
+		case 2:
+		GLLOG(glUniform2i(location, data[0], data[1]));ERROR_CHECK;
+		break;
+		
+		case 3:
+		GLLOG(glUniform3i(location, data[0], data[1], data[2]));ERROR_CHECK;
+		break;
+		
+		case 4:
+		GLLOG(glUniform4i(location, data[0], data[1], data[2], data[3]));ERROR_CHECK;
+		break;
+		
+		default:
+		logError("Encountered unexpected uniform size: " + UTILS::tostr(data.size()) + " location " +UTILS::tostr(location));
+		assert(0 && "unexpected uniform size");
+	};
 }
 
 bool GLWrapper::createAndCompileShader(const std::string & shaderSource, GLenum shaderType, GLuint & handle, std::ostream & shaderErrorOutput)
@@ -224,5 +218,35 @@ bool GLWrapper::linkShaderProgram(const std::vector <std::string> & shaderAttrib
 	else
 	{
 		return true;
+	}
+}
+
+void GLWrapper::BindTexture(GLenum target, GLuint handle)
+{
+	// only cache 2D textures at the moment, so if it's not 2D, then just send it and return
+	// if we don't know what TU is active, then we can't do cache either
+	if (target != GL_TEXTURE_2D || curActiveTexture == UINT_MAX)
+	{
+		GLLOG(glBindTexture(target,handle));ERROR_CHECK;
+		return;
+	}
+	
+	// check the cache
+	bool send = false;
+	if (curActiveTexture < boundTextures.size())
+	{
+		if (boundTextures[curActiveTexture] != handle)
+			send = true;
+	}
+	else
+	{
+		boundTextures.resize(curActiveTexture+1,0);
+		send = true;
+	}
+	
+	if (send)
+	{
+		GLLOG(glBindTexture(target,handle));ERROR_CHECK;
+		boundTextures[curActiveTexture] = handle;
 	}
 }

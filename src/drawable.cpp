@@ -85,8 +85,10 @@ RenderModelExternal & DRAWABLE::generateRenderModelData(GLWrapper & gl, StringId
 	if (uniformsChanged)
 	{
 		renderModel.uniforms.clear();
-		renderModel.uniforms.push_back(RenderUniformEntry(transformId, transform.GetArray(), 16));
-		renderModel.uniforms.push_back(RenderUniformEntry(colorId, &r, 4));
+		if (transform != MATRIX4<float>()) // only add it if it's not the identity matrix
+			renderModel.uniforms.push_back(RenderUniformEntry(transformId, transform.GetArray(), 16));
+		if (r != 1 || g != 1 || b != 1 || a != 1) // only add it if it's not the default
+			renderModel.uniforms.push_back(RenderUniformEntry(colorId, &r, 4));
 		
 		uniformsChanged = false;
 	}
