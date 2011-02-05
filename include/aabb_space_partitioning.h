@@ -133,9 +133,19 @@ public:
 	void Query(const T & shape, U &outputlist, bool testChildren=true) const
 	{
 		//if we've got objects, test them
-		for (typename objectlist_type::const_iterator i = objects.begin(); i != objects.end(); ++i)
+		if (testChildren)
 		{
-			if (!testChildren || i->second.Intersect(shape) != AABB<float>::OUT)
+			for (typename objectlist_type::const_iterator i = objects.begin(); i != objects.end(); ++i)
+			{
+				if (i->second.Intersect(shape) != AABB<float>::OUT)
+				{
+					outputlist.push_back(i->first);
+				}
+			}
+		}
+		else
+		{
+			for (typename objectlist_type::const_iterator i = objects.begin(); i != objects.end(); ++i)
 			{
 				outputlist.push_back(i->first);
 			}

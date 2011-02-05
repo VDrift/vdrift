@@ -6,6 +6,8 @@
 
 #include <vector>
 
+#define OBJECTS_PER_NODE 64
+
 template <typename T>
 class AABB_SPACE_PARTITIONING_NODE_ADAPTER
 {
@@ -29,7 +31,7 @@ public:
 	void Query(const U & object, std::vector <T*> & output) const {spacetree.Query(object, output);}
 	
 private:
-	AABB_SPACE_PARTITIONING_NODE <T*,1> spacetree;
+	AABB_SPACE_PARTITIONING_NODE <T*,OBJECTS_PER_NODE> spacetree;
 	unsigned int count; ///< cached from spacetree.size()
 };
 
@@ -61,5 +63,7 @@ private:
 		}
 	};
 };
+
+#undef OBJECTS_PER_NODE
 
 #endif
