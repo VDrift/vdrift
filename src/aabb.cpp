@@ -2,7 +2,7 @@
 #include "mathvector.h"
 #include "unittest.h"
 
-void distribute(float frustum[][4])
+static void distribute(float frustum[][4])
 {
 	for (int i = 1; i < 6; i++)
 	{

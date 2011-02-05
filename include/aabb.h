@@ -120,6 +120,14 @@ public:
 		SetFromCorners(min, max);
 	}
 	
+	// for intersection test returns
+	enum INTERSECTION
+	{
+		IN,
+		OUT,
+		INTERSECT
+	};
+	
 	class RAY
 	{
 		public:
@@ -130,7 +138,7 @@ public:
 			T seglen;
 	};
 	
-	bool Intersect(const RAY & ray) const
+	INTERSECTION Intersect(const RAY & ray) const
 	{
 		//if (seglen>3e30f) return IntersectRay(orig, dir); // infinite ray
 		MATHVECTOR <T, 3> segdir(ray.dir * (0.5f * ray.seglen));
@@ -142,11 +150,11 @@ public:
 		MATHVECTOR <T, 3> abs_diff(diff);
 		abs_diff.absify();
 		T f = size[0] + abs_segdir[0];
-		if (abs_diff[0] > f) return false;
+		if (abs_diff[0] > f) return OUT;
 		f = size[1] + abs_segdir[1];
-		if (abs_diff[1] > f) return false;
+		if (abs_diff[1] > f) return OUT;
 		f = size[2] + abs_segdir[2];
-		if (abs_diff[2] > f) return false;
+		if (abs_diff[2] > f) return OUT;
 	
 		MATHVECTOR <T, 3> cross(segdir.cross(diff));
 	
@@ -154,18 +162,18 @@ public:
 		abs_cross.absify();
 	
 		f = size[1]*abs_segdir[2] + size[2]*abs_segdir[1];
-		if ( abs_cross[0] > f ) return false;
+		if ( abs_cross[0] > f ) return OUT;
 		
 		f = size[2]*abs_segdir[0] + size[0]*abs_segdir[2];
-		if ( abs_cross[1] > f ) return false;
+		if ( abs_cross[1] > f ) return OUT;
 		
 		f = size[0]*abs_segdir[1] + size[1]*abs_segdir[0];
-		if ( abs_cross[2] > f ) return false;
+		if ( abs_cross[2] > f ) return OUT;
 	
-		return true;
+		return INTERSECT;
 	}
 	
-	bool Intersect(const AABB <T> & other) const
+	INTERSECTION Intersect(const AABB <T> & other) const
 	{
 		MATHVECTOR <T, 3> otherc1 = other.GetPos();
 		MATHVECTOR <T, 3> otherc2 = otherc1 + other.GetSize();
@@ -175,38 +183,47 @@ public:
 	
 		//bias checks for non-collisions
 		if (c1[0] > otherc2[0] || c2[0] < otherc1[0])
-			return false;
+			return OUT;
 	
 		if (c1[2] > otherc2[2] || c2[2] < otherc1[2])
-			return false;
+			return OUT;
 	
 		if (c1[1] > otherc2[1] || c2[1] < otherc1[1])
-			return false;
+			return OUT;
 	
-		return true;
+		return INTERSECT;
 	}
 	
-	bool Intersect(const FRUSTUM & frustum) const
+	INTERSECTION Intersect(const FRUSTUM & frustum) const
 	{
 		float rd;
 		const float bound = radius;
+		INTERSECTION intersection = IN; // assume we are fully in until we find an intersection
 		for (int i=0; i<6; i++)
 		{
 			rd=frustum.frustum[i][0]*center[0]+
 					frustum.frustum[i][1]*center[1]+
 					frustum.frustum[i][2]*center[2]+
 					frustum.frustum[i][3];
-			if (rd <= -bound)
+			if (rd < -bound)
 			{
-				return false;
+				// fully out
+				return OUT;
+			}
+			
+			if(fabs(rd) < bound)
+			{
+				// partially in
+				// we don't return here because we could still be fully out of another frustum plane
+				intersection = INTERSECT;
 			}
 		}
 		
-		return true;
+		return intersection;
 	}
 	
 	struct INTERSECT_ALWAYS{};
-	bool Intersect(INTERSECT_ALWAYS always) const {return true;}
+	INTERSECTION Intersect(INTERSECT_ALWAYS always) const {return IN;}
 };
 
 #endif

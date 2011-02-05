@@ -130,12 +130,12 @@ public:
 	
 	///run a query for objects that collide with the given shape
 	template <typename T, typename U>
-	void Query(const T & shape, U &outputlist) const
+	void Query(const T & shape, U &outputlist, bool testChildren=true) const
 	{
 		//if we've got objects, test them
 		for (typename objectlist_type::const_iterator i = objects.begin(); i != objects.end(); ++i)
 		{
-			if (i->second.Intersect(shape))
+			if (!testChildren || i->second.Intersect(shape) != AABB<float>::OUT)
 			{
 				outputlist.push_back(i->first);
 			}
@@ -144,10 +144,13 @@ public:
 		//if we have children, test them
 		for (typename childrenlist_type::const_iterator i = children.begin(); i != children.end(); ++i)
 		{
-			if (i->GetBBOX().Intersect(shape))
+			AABB<float>::INTERSECTION intersection = i->GetBBOX().Intersect(shape);
+			
+			if (intersection != AABB<float>::OUT)
 			{
 				//our child intersects with the segment, dispatch a query
-				i->Query(shape, outputlist);
+				//only bother to test children if we were partially intersecting (if fully in, then we know all children are fully in too)
+				i->Query(shape, outputlist, intersection == AABB<float>::INTERSECT);
 			}
 		}
 	}
