@@ -164,8 +164,11 @@ struct LoadDrawable
 			mesh = temp;
 		}
 		
-		mesh->GenerateListID(error);
-		drawable.AddDrawList(mesh->GetListID());
+		if (models.useDrawlists())
+			mesh->GenerateListID(error);
+		else
+			mesh->GenerateVertexArrayObject(error);
+		drawable.SetModel(*mesh);
 		//drawable.SetObjectCenter(mesh->GetCenter());
 		modellist.push_back(mesh);
 		
@@ -433,6 +436,7 @@ CAR::CAR() :
 bool CAR::LoadLight(
 	const CONFIG & cfg,
 	const std::string & name,
+	MODELMANAGER & models,
 	std::ostream & error_output)
 {
 	float radius;
@@ -451,13 +455,16 @@ bool CAR::LoadLight(
 	varray.Scale(radius, radius, radius);
 	node.GetTransform().SetTranslation(MATHVECTOR<float,3>(pos[0], pos[1], pos[2]));
 	model.BuildFromVertexArray(varray, error_output);
-	model.GenerateListID(error_output);
+	if (models.useDrawlists())
+		model.GenerateListID(error_output);
+	else
+		model.GenerateVertexArrayObject(error_output);
 	
 	keyed_container <DRAWABLE> & dlist = GetDrawlist(node, OMNI);
 	lights.back().draw = dlist.insert(DRAWABLE());
 	DRAWABLE & draw = dlist.get(lights.back().draw);
 	draw.SetColor(col[0], col[1], col[2]);
-	draw.AddDrawList(model.GetListID());
+	draw.SetModel(model);
 	draw.SetCull(true, true);
 	draw.SetDrawEnable(false);
 	
@@ -538,7 +545,7 @@ bool CAR::LoadGraphics(
 		std::string istr = "0";
 		while (cfg.GetParam("light-brake-"+istr, "radius", r))
 		{
-			if (!LoadLight(cfg, "light-brake-"+istr, error_output)) return false;
+			if (!LoadLight(cfg, "light-brake-"+istr, models, error_output)) return false;
 			
 			std::stringstream sstr;
 			sstr << ++i;
@@ -548,7 +555,7 @@ bool CAR::LoadGraphics(
 		istr = "0";
 		while (cfg.GetParam("light-reverse-"+istr, "radius", r))
 		{
-			if (!LoadLight(cfg, "light-reverse-"+istr, error_output)) return false;
+			if (!LoadLight(cfg, "light-reverse-"+istr, models, error_output)) return false;
 
 			std::stringstream sstr;
 			sstr << ++i;

@@ -3,6 +3,7 @@
 
 #include "matrix4.h"
 #include "mathvector.h"
+#include "model.h"
 
 #include "rendermodelext_drawable.h"
 
@@ -25,7 +26,8 @@ public:
 	bool IsDrawList() const {return !list_ids.empty();}
 	
 	const std::vector <int> & GetDrawLists() const {return list_ids;}
-	void AddDrawList(int value) {list_ids.push_back(value);}
+	
+	void SetModel(const MODEL & model);
 	
 	const TEXTURE * GetDiffuseMap() const {return diffuse_map.get();}
 	void SetDiffuseMap(std::tr1::shared_ptr<TEXTURE> value);
@@ -140,6 +142,8 @@ private:
 	bool uniformsChanged;
 	
 	RenderModelExternalDrawable renderModel;
+	
+	void AddDrawList(int value) {list_ids.push_back(value);}
 };
 
 #endif // _DRAWABLE_H

@@ -95,3 +95,20 @@ RenderModelExternal & DRAWABLE::generateRenderModelData(GLWrapper & gl, StringId
 	
 	return renderModel;
 }
+
+void DRAWABLE::SetModel(const MODEL & model)
+{
+	if (model.HaveListID())
+	{
+		AddDrawList(model.GetListID());
+	}
+	
+	if (model.HaveVertexArrayObject())
+	{
+		GLuint vao;
+		unsigned int elementCount;
+		bool haveVao = model.GetVertexArrayObject(vao, elementCount);
+		if (haveVao)
+			setVertexArrayObject(vao, elementCount);
+	}
+}

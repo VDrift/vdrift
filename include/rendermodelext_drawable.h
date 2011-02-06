@@ -4,9 +4,11 @@
 #include "gl3v/rendermodelext.h"
 
 class VERTEXARRAY;
+class DRAWABLE;
 
 class RenderModelExternalDrawable : public RenderModelExternal
 {
+	friend class DRAWABLE;
 	public:
 		void SetVertArray(const VERTEXARRAY* value) {vert_array = value;if (vert_array) enabled = true;}
 		virtual void draw(GLWrapper & gl) const;

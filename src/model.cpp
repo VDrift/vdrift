@@ -202,7 +202,7 @@ void MODEL::GenerateVertexArrayObject(std::ostream & error_output)
 	generatedvao = true;
 }
 
-bool MODEL::GetVertexArrayObject(GLuint & vao_out, unsigned int & elementCount_out)
+bool MODEL::GetVertexArrayObject(GLuint & vao_out, unsigned int & elementCount_out) const
 {
 	if (!generatedvao)
 		return false;

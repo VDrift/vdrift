@@ -48,7 +48,7 @@ public:
 	
 	/// returns true if we have a vertex array object and stores the VAO handle and element count in the provided
 	/// arguments; returns false if we have no vertex array object
-	bool GetVertexArrayObject(GLuint & vao_out, unsigned int & elementCount_out);
+	bool GetVertexArrayObject(GLuint & vao_out, unsigned int & elementCount_out) const;
 	
 	void GenerateMeshMetrics();
 	

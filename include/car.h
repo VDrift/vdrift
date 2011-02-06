@@ -355,6 +355,7 @@ protected:
 	bool LoadLight(
 		const CONFIG & cfg,
 		const std::string & name,
+		MODELMANAGER & models,
 		std::ostream & error_output);
 };
 
