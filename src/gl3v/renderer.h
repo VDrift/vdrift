@@ -114,6 +114,9 @@ class Renderer
 		/// Returns true if there is a corresponding uniform for the pass, otherwise returns false.
 		bool getPassUniform(StringId passName, StringId uniformName, RenderUniform & out);
 		
+		/// Turn a specific pass on or off
+		void setPassEnabled(StringId passName, bool enable);
+		
 		/// Print some human readable text showing renderer status information.
 		void printRendererStatus(RendererStatusVerbosity verbosity, const StringIdMap & stringMap, std::ostream & out) const;
 		
@@ -122,7 +125,7 @@ class Renderer
 		Renderer(GLWrapper & glwrapper) : gl(glwrapper) {}
 		
 	private:
-		bool loadShader(const std::string & path, const std::string & name, GLenum shaderType, std::ostream & errorOutput);
+		bool loadShader(const std::string & path, const std::string & name, const std::vector <std::string> & defines, GLenum shaderType, std::ostream & errorOutput);
 		
 		GLWrapper & gl;
 		

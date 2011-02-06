@@ -17,7 +17,9 @@ struct RealtimeExportPassInfo
 	std::vector <std::string> drawGroups;
 	
 	std::string vertexShader;
+	std::vector <std::string> vertexShaderDefines;
 	std::string fragmentShader;
+	std::vector <std::string> fragmentShaderDefines;
 	
 	std::vector <std::string> shaderAttributeBindings;
 	
@@ -103,7 +105,9 @@ struct RealtimeExportPassInfo
 		_SERIALIZE_(s,clearStencil);
 		_SERIALIZE_(s,drawGroups);
 		_SERIALIZE_(s,vertexShader);
+		_SERIALIZE_(s,vertexShaderDefines);
 		_SERIALIZE_(s,fragmentShader);
+		_SERIALIZE_(s,fragmentShaderDefines);
 		_SERIALIZE_(s,shaderAttributeBindings);
 		_SERIALIZE_(s,uniforms);
 		_SERIALIZE_(s,stateEnable);

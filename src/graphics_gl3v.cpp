@@ -55,24 +55,74 @@ DRAWABLE_CONTAINER <PTRVECTOR> & GRAPHICS_GL3V::GetDynamicDrawlist()
 	return dynamic_drawlist;
 }
 
+void GRAPHICS_GL3V::setCameraPerspective(const std::string & name, 
+	const MATHVECTOR <float, 3> & position,
+	const QUATERNION <float> & rotation,
+	float fov,
+	float nearDistance,
+	float farDistance,
+	float w,
+	float h)
+{
+	CameraMatrices & matrices = cameras[name];
+	
+	// generate view matrix
+	rotation.GetMatrix4(matrices.viewMatrix);
+	MATHVECTOR <float, 3> rotated_cam_position = position;
+	rotation.RotateVector(rotated_cam_position);
+	matrices.viewMatrix.Translate(-rotated_cam_position[0],-rotated_cam_position[1],-rotated_cam_position[2]);
+	
+	// generate projection matrix
+	matrices.projectionMatrix.Perspective(fov, w/(float)h, nearDistance, farDistance);
+}
+
+void GRAPHICS_GL3V::setCameraOrthographic(const std::string & name,
+	const MATHVECTOR <float, 3> & position,
+	const QUATERNION <float> & rotation,
+	const MATHVECTOR <float, 3> & orthoMin,
+	const MATHVECTOR <float, 3> & orthoMax)
+{
+	CameraMatrices & matrices = cameras[name];
+	
+	// generate view matrix
+	rotation.GetMatrix4(matrices.viewMatrix);
+	MATHVECTOR <float, 3> rotated_cam_position = position;
+	rotation.RotateVector(rotated_cam_position);
+	matrices.viewMatrix.Translate(-rotated_cam_position[0],-rotated_cam_position[1],-rotated_cam_position[2]);
+	
+	// generate projection matrix
+	matrices.projectionMatrix.SetOrthographic(orthoMin[0], orthoMax[0], orthoMin[1], orthoMax[1], orthoMin[2], orthoMax[2]);
+}
+
 void GRAPHICS_GL3V::SetupScene(float fov, float new_view_distance, const MATHVECTOR <float, 3> cam_position, const QUATERNION <float> & cam_rotation,
 				const MATHVECTOR <float, 3> & dynamic_reflection_sample_pos)
 {
 	lastCameraPosition = cam_position;
 	
-	MATRIX4 <float> viewMatrix;
-	(cam_rotation).GetMatrix4(viewMatrix);
-	MATHVECTOR <float, 3> rotated_cam_position = cam_position;
-	cam_rotation.RotateVector(rotated_cam_position);
-	viewMatrix.Translate(-rotated_cam_position[0],-rotated_cam_position[1],-rotated_cam_position[2]);
+	const float nearDistance = 0.1;
 	
-	MATRIX4 <float> projectionMatrix;
-	projectionMatrix.Perspective(fov, w/(float)h, 0.1f, new_view_distance);
-	
-	renderer.setPassUniform(stringMap.addStringId("Normal"), RenderUniformEntry(stringMap.addStringId("viewMatrix"), viewMatrix.GetArray(),16));
-	renderer.setPassUniform(stringMap.addStringId("Normal"), RenderUniformEntry(stringMap.addStringId("projectionMatrix"), projectionMatrix.GetArray(),16));
+	setCameraPerspective("default",
+		cam_position,
+		cam_rotation,
+		fov,
+		nearDistance,
+		new_view_distance,
+		w,
+		h);
 	
 	//TODO: more camera setup
+	
+	// get ready to send cameras to passes by assigning cameras to each pass
+	std::map <std::string, std::string> passNameToCameraName;
+	passNameToCameraName["track opaque"] = "default";
+	passNameToCameraName["car opaque"] = "default";
+	
+	// send cameras to passes
+	for (std::map <std::string, std::string>::const_iterator i = passNameToCameraName.begin(); i != passNameToCameraName.end(); i++)
+	{
+		renderer.setPassUniform(stringMap.addStringId(i->first), RenderUniformEntry(stringMap.addStringId("viewMatrix"), cameras[i->second].viewMatrix.GetArray(),16));
+		renderer.setPassUniform(stringMap.addStringId(i->first), RenderUniformEntry(stringMap.addStringId("projectionMatrix"), cameras[i->second].projectionMatrix.GetArray(),16));
+	}
 }
 
 // returns true for cull, false for don't-cull

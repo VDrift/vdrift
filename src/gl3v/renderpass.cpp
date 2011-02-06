@@ -15,6 +15,9 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 						const std::map <StringId, std::vector <RenderModelExternal*> > & externalModels,
 						std::ostream & errorOutput)
 {
+	if (!enabled)
+		return false;
+	
 	// ensure we've been successfully configured
 	assert(configured);
 	
@@ -334,7 +337,8 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 }
 
 bool RenderPass::initialize(const RealtimeExportPassInfo & config, StringIdMap & stringMap, GLWrapper & gl,
-	const std::map <std::string, RenderShader> & shaders, 
+	RenderShader & vertexShader,
+	RenderShader & fragmentShader,
 	const std::tr1::unordered_map <StringId, RenderTextureEntry, StringId::hash> & sharedTextures,
 	unsigned int w, unsigned int h,
 	std::ostream & errorOutput)
@@ -354,8 +358,6 @@ bool RenderPass::initialize(const RealtimeExportPassInfo & config, StringIdMap &
 	}
 	
 	// the shader program
-	const RenderShader & vertexShader = shaders.find(config.vertexShader)->second;
-	const RenderShader & fragmentShader = shaders.find(config.fragmentShader)->second;
 	if (!createShaderProgram(gl, config.shaderAttributeBindings, vertexShader, fragmentShader, errorOutput))
 	{
 		errorOutput << "Unable to create shader program" << std::endl;

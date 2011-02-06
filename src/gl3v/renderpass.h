@@ -33,7 +33,8 @@ class RenderPass
 		/// The provided StringIdMap will be used to convert strings into unique numeric IDs.
 		/// w and h are the width and height of the application's window and will be used to initialize FBOs.
 		bool initialize(const RealtimeExportPassInfo & config, StringIdMap & stringMap, GLWrapper & gl,
-			const std::map <std::string, RenderShader> & shaders, 
+			RenderShader & vertexShader,
+			RenderShader & fragmentShader,
 			const std::tr1::unordered_map <StringId, RenderTextureEntry, StringId::hash> & sharedTextures,
 			unsigned int w, unsigned int h,
 			std::ostream & errorOutput);
@@ -70,9 +71,11 @@ class RenderPass
 		
 		const std::map <StringId, RenderTexture> & getRenderTargets() const {return renderTargets;}
 		
+		void setEnabled(bool val) {enabled = val;}
+		
 		void printRendererStatus(RendererStatusVerbosity verbosity, const StringIdMap & stringMap, std::ostream & out) const;
 		
-		RenderPass() : configured(false),shaderProgram(0),framebufferObject(0),renderbuffer(0) {}
+		RenderPass() : configured(false),enabled(true),shaderProgram(0),framebufferObject(0),renderbuffer(0) {}
 		
 	private:
 		/// returns true on success
@@ -88,6 +91,7 @@ class RenderPass
 		void applyTexture(GLWrapper & gl, GLuint tu, GLenum target, GLuint handle);
 		
 		bool configured;
+		bool enabled;
 		
 		// the original, verbose configuration data
 		RealtimeExportPassInfo originalConfiguration;

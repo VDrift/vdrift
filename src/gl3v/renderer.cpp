@@ -63,16 +63,32 @@ bool Renderer::initialize(const std::vector <RealtimeExportPassInfo> & config, S
 	// add new passes
 	for (std::vector <RealtimeExportPassInfo>::const_iterator i = config.begin(); i != config.end(); i++)
 	{
+		// create unique names based on the path and define list
+		std::string vertexShaderName = i->vertexShader+" "+UTILS::implode(i->vertexShaderDefines," ");
+		std::string fragmentShaderName = i->fragmentShader+" "+UTILS::implode(i->fragmentShaderDefines," ");
+		
 		// load shaders from the pass if necessary
-		if (shaders.find(i->vertexShader) == shaders.end())
+		if (shaders.find(vertexShaderName) == shaders.end())
 		{
-			if (!loadShader(shaderPath.empty() ? i->vertexShader : shaderPath+"/"+i->vertexShader, i->vertexShader, GL_VERTEX_SHADER, errorOutput))
+			if (!loadShader(shaderPath.empty() ? i->vertexShader : shaderPath+"/"+i->vertexShader, 
+				vertexShaderName, 
+				i->vertexShaderDefines, 
+				GL_VERTEX_SHADER, 
+				errorOutput))
+			{
 				return false;
+			}
 		}
-		if (shaders.find(i->fragmentShader) == shaders.end())
+		if (shaders.find(fragmentShaderName) == shaders.end())
 		{
-			if (!loadShader(shaderPath.empty() ? i->fragmentShader : shaderPath+"/"+i->fragmentShader, i->fragmentShader, GL_FRAGMENT_SHADER, errorOutput))
+			if (!loadShader(shaderPath.empty() ? i->fragmentShader : shaderPath+"/"+i->fragmentShader, 
+				fragmentShaderName, 
+				i->fragmentShaderDefines, 
+				GL_FRAGMENT_SHADER, 
+				errorOutput))
+			{
 				return false;
+			}
 		}
 		
 		// note which draw groups the pass uses
@@ -84,7 +100,7 @@ bool Renderer::initialize(const std::vector <RealtimeExportPassInfo> & config, S
 		// initialize the pass
 		int passIdx = passes.size();
 		passes.push_back(RenderPass());
-		if (!passes.back().initialize(*i, stringMap, gl, shaders, sharedTextures, w, h, errorOutput))
+		if (!passes.back().initialize(*i, stringMap, gl, shaders.find(vertexShaderName)->second, shaders.find(fragmentShaderName)->second, sharedTextures, w, h, errorOutput))
 			return false;
 		
 		// put the pass's output render targets into a map so we can feed them to subsequent passes
@@ -103,13 +119,34 @@ bool Renderer::initialize(const std::vector <RealtimeExportPassInfo> & config, S
 	return true;
 }
 
-bool Renderer::loadShader(const std::string & path, const std::string & name, GLenum shaderType, std::ostream & errorOutput)
+bool Renderer::loadShader(const std::string & path, const std::string & name, const std::vector <std::string> & defines, GLenum shaderType, std::ostream & errorOutput)
 {
 	std::string shaderSource = UTILS::LoadFileIntoString(path, errorOutput);
 	if (shaderSource.empty())
 	{
 		errorOutput << "Couldn't open shader file: "+path << std::endl;
 		return false;
+	}
+	
+	// create a block of #defines
+	std::stringstream blockstream;
+	for (unsigned int i = 0; i < defines.size(); i++)
+	{
+		if (!defines[i].empty())
+		{
+			blockstream << "#define " << defines[i] << std::endl;
+		}
+	}
+	
+	// insert the define block at the top of the shader, but after the "#version" line, if it exists
+	if (shaderSource.substr(0,8) == "#version")
+	{
+		if (shaderSource.find('\n') != std::string::npos && shaderSource.find('\n') + 1 < shaderSource.size())
+			shaderSource.insert(shaderSource.find('\n')+1, blockstream.str());
+	}
+	else
+	{
+		shaderSource = blockstream.str() + shaderSource;
 	}
 	
 	GLuint handle(0);
@@ -326,6 +363,16 @@ bool Renderer::getPassUniform(StringId passName, StringId uniformName, RenderUni
 		return false;
 }
 
+void Renderer::setPassEnabled(StringId passName, bool enable)
+{
+	std::tr1::unordered_map <StringId, int>::iterator i = passIndexMap.find(passName);
+	if (i != passIndexMap.end())
+	{
+		assert((unsigned int)i->second < passes.size());
+		passes[i->second].setEnabled(enable);
+	}
+}
+
 void Renderer::printRendererStatus(RendererStatusVerbosity verbosity, const StringIdMap & stringMap, std::ostream & out) const
 {
 	out << "Renderer status" << std::endl;
@@ -375,3 +422,4 @@ void Renderer::printRendererStatus(RendererStatusVerbosity verbosity, const Stri
 		i->printRendererStatus(verbosity, stringMap, out);
 	}
 }
+

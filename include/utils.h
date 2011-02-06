@@ -5,6 +5,7 @@
 #include <string>
 #include <sstream>
 #include <cassert>
+#include <vector>
 
 namespace UTILS
 {
@@ -50,6 +51,9 @@ void eraseVectorUseSwapAndPop(unsigned int index, T & vector)
 	// pop
 	vector.pop_back();
 }
+
+std::string implode(const std::vector <std::string> & toImplode, const std::string & sep);
+std::vector <std::string> explode(const std::string & toExplode, const std::string & sep);
 
 };
 

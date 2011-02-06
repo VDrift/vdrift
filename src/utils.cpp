@@ -108,4 +108,73 @@ QT_TEST(utils)
 	}
 }
 
+std::string implode(const std::vector <std::string> & toImplode, const std::string & sep)
+{
+	std::string out;
+	
+	for (std::vector <std::string>::const_iterator i = toImplode.begin(); i != toImplode.end(); i++)
+	{
+		if (i != toImplode.begin())
+			out.append(sep);
+		out.append(*i);
+	}
+	
+	return out;
+}
+
+std::vector <std::string> explode(const std::string & toExplode, const std::string & sep)
+{
+	std::vector <std::string> out;
+	size_t lastPos = 0;
+	size_t curPos = 0;
+	
+	curPos = toExplode.find(sep, lastPos);
+	while (curPos != std::string::npos)
+	{
+		out.push_back(toExplode.substr(lastPos, curPos-lastPos));
+		lastPos = curPos+sep.size();
+		curPos = toExplode.find(sep, lastPos);
+	}
+	
+	if (lastPos != curPos && lastPos < toExplode.size())
+		out.push_back(toExplode.substr(lastPos));
+	else
+		out.push_back("");
+	
+	return out;
+}
+
 };
+
+QT_TEST(utils_test)
+{
+	{
+		std::vector <std::string> exploded = UTILS::explode("/home/joe/code/test.hog", "/");
+		QT_CHECK_EQUAL(exploded.size(), 5);
+		if (exploded.size() > 0) QT_CHECK_EQUAL(exploded[0], "");
+		if (exploded.size() > 1) QT_CHECK_EQUAL(exploded[1], "home");
+		if (exploded.size() > 2) QT_CHECK_EQUAL(exploded[2], "joe");
+		if (exploded.size() > 3) QT_CHECK_EQUAL(exploded[3], "code");
+		if (exploded.size() > 4) QT_CHECK_EQUAL(exploded[4], "test.hog");
+	}
+	
+	{
+		std::vector <std::string> exploded = UTILS::explode("/home/joe/code/", "/");
+		QT_CHECK_EQUAL(exploded.size(), 5);
+		if (exploded.size() > 0) QT_CHECK_EQUAL(exploded[0], "");
+		if (exploded.size() > 1) QT_CHECK_EQUAL(exploded[1], "home");
+		if (exploded.size() > 2) QT_CHECK_EQUAL(exploded[2], "joe");
+		if (exploded.size() > 3) QT_CHECK_EQUAL(exploded[3], "code");
+		if (exploded.size() > 4) QT_CHECK_EQUAL(exploded[4], "");
+	}
+	
+	{
+		std::vector <std::string> exploded = UTILS::explode("c:/home/joe/code/test.hog", "/");
+		QT_CHECK_EQUAL(exploded.size(), 5);
+		if (exploded.size() > 0) QT_CHECK_EQUAL(exploded[0], "c:");
+		if (exploded.size() > 1) QT_CHECK_EQUAL(exploded[1], "home");
+		if (exploded.size() > 2) QT_CHECK_EQUAL(exploded[2], "joe");
+		if (exploded.size() > 3) QT_CHECK_EQUAL(exploded[3], "code");
+		if (exploded.size() > 4) QT_CHECK_EQUAL(exploded[4], "test.hog");
+	}
+}

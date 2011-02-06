@@ -123,9 +123,9 @@ public:
 	// for intersection test returns
 	enum INTERSECTION
 	{
-		IN,
 		OUT,
-		INTERSECT
+		INTERSECT,
+		IN
 	};
 	
 	class RAY

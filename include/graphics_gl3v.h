@@ -69,6 +69,26 @@ private:
 	bool initialized;
 	MATHVECTOR <float, 3> lastCameraPosition;
 	
+	struct CameraMatrices
+	{
+		MATRIX4 <float> projectionMatrix;
+		MATRIX4 <float> viewMatrix;
+	};
+	std::map <std::string, CameraMatrices> cameras;
+	void setCameraPerspective(const std::string & name, 
+							  const MATHVECTOR <float, 3> & position,
+							  const QUATERNION <float> & rotation,
+							  float fov,
+							  float nearDistance,
+							  float farDistance,
+							  float w,
+							  float h);
+	void setCameraOrthographic(const std::string & name,
+							   const MATHVECTOR <float, 3> & position,
+							   const QUATERNION <float> & rotation,
+							   const MATHVECTOR <float, 3> & orthoMin,
+							   const MATHVECTOR <float, 3> & orthoMax);
+	
 	// scenegraph output
 	DRAWABLE_CONTAINER <PTRVECTOR> dynamic_drawlist; //used for objects that move or change
 	STATICDRAWABLES static_drawlist; //used for objects that will never change
