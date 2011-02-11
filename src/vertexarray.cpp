@@ -658,12 +658,27 @@ void VERTEXARRAY::Rotate(float a, float x, float y, float z)
 void VERTEXARRAY::Scale(float x, float y, float z)
 {
 	assert(vertices.size() % 3 == 0);
-	for (std::vector <float>::iterator i = vertices.begin(); i != vertices.end(); i += 3)
+	for (std::vector <float>::iterator i = vertices.begin(), e = vertices.end(); i != e; i += 3)
 	{
 		float * vert = &*i;
 		vert[0] *= x;
 		vert[1] *= y;
 		vert[2] *= z;
+    }
+	for (std::vector <float>::iterator i = normals.begin(), e = normals.end(); i != e; i += 3)
+	{
+		float * n = &*i;
+		n[0] *= x;
+		n[1] *= y;
+		n[2] *= z;
+		float len = sqrtf(n[0]*n[0] + n[1]*n[1] + n[2]*n[2]);
+		if (len > 0.0)
+		{
+			len = 1 / len;
+			n[0] *= len;
+			n[1] *= len;
+			n[2] *= len;
+		}
     }
 }
 
