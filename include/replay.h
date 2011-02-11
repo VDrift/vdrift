@@ -2,7 +2,6 @@
 #define _REPLAY_H
 
 #include "car.h"
-#include "carinput.h"
 #include "joeserialize.h"
 #include "macros.h"
 

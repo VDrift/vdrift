@@ -2,17 +2,11 @@
 #define _GRAPHICS_INTERFACE_H
 
 #include "mathvector.h"
-#include "scenenode.h"
-#include "staticdrawables.h"
-#include "matrix4.h"
-#include "texture.h"
-#include "aabb_space_partitioning.h"
+#include "quaternion.h"
+#include "drawable_container.h"
 
 #include <string>
 #include <ostream>
-#include <map>
-#include <list>
-#include <vector>
 
 class SCENENODE;
 

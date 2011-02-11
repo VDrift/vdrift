@@ -2,9 +2,7 @@
 #include "unittest.h"
 #include "mathvector.h"
 #include "quaternion.h"
-#include "matrix4.h"
 
-#include <map>
 #include <cassert>
 
 QT_TEST(vertexarray_test)

@@ -6,7 +6,6 @@
 #include "staticdrawables.h"
 #include "matrix4.h"
 #include "texture.h"
-#include "aabb_space_partitioning.h"
 #include "graphics_interface.h"
 
 #include "gl3v/glwrapper.h"

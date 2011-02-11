@@ -1,6 +1,5 @@
 #include "collision_world.h"
 #include "collision_contact.h"
-#include "tobullet.h"
 #include "model.h"
 #include "track.h"
 
@@ -59,6 +58,28 @@ struct MyRayResultCallback : public btCollisionWorld::RayResultCallback
 		return rayResult.m_hitFraction;
 	}
 };
+
+static btIndexedMesh GetIndexedMesh(const MODEL & model)
+{
+	const float * vertices;
+	int vcount;
+	const int * faces;
+	int fcount;
+	model.GetVertexArray().GetVertices(vertices, vcount);
+	model.GetVertexArray().GetFaces(faces, fcount);
+
+	assert(fcount % 3 == 0); //Face count is not a multiple of 3
+
+	btIndexedMesh mesh;
+	mesh.m_numTriangles = fcount / 3;
+	mesh.m_triangleIndexBase = (const unsigned char *)faces;
+	mesh.m_triangleIndexStride = sizeof(int) * 3;
+	mesh.m_numVertices = vcount;
+	mesh.m_vertexBase = (const unsigned char *)vertices;
+	mesh.m_vertexStride = sizeof(float) * 3;
+	mesh.m_vertexType = PHY_FLOAT;
+	return mesh;
+}
 
 COLLISION_WORLD::COLLISION_WORLD(btScalar timeStep, int maxSubSteps) :
 	collisiondispatcher(&collisionconfig),
@@ -141,28 +162,6 @@ void COLLISION_WORLD::SetTrack(const TRACK * t)
 	trackObject->setUserPointer(0);
 
 	world.addCollisionObject(trackObject);
-}
-
-btIndexedMesh COLLISION_WORLD::GetIndexedMesh(const MODEL & model)
-{
-	const float * vertices;
-	int vcount;
-	const int * faces;
-	int fcount;
-	model.GetVertexArray().GetVertices(vertices, vcount);
-	model.GetVertexArray().GetFaces(faces, fcount);
-
-	assert(fcount % 3 == 0); //Face count is not a multiple of 3
-
-	btIndexedMesh mesh;
-	mesh.m_numTriangles = fcount / 3;
-	mesh.m_triangleIndexBase = (const unsigned char *)faces;
-	mesh.m_triangleIndexStride = sizeof(int) * 3;
-	mesh.m_numVertices = vcount;
-	mesh.m_vertexBase = (const unsigned char *)vertices;
-	mesh.m_vertexStride = sizeof(float) * 3;
-	mesh.m_vertexType = PHY_FLOAT;
-	return mesh;
 }
 
 btCollisionShape * COLLISION_WORLD::AddMeshShape(const MODEL & model)

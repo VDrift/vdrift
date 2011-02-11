@@ -1,29 +1,10 @@
 #ifndef _WINDOW_H
 #define _WINDOW_H
 
-#include "shader.h"
-#include "mathvector.h"
-#include "fbtexture.h"
-#include "fbobject.h"
-#include "scenenode.h"
-#include "staticdrawables.h"
-#include "matrix4.h"
-#include "texture.h"
-#include "reseatable_reference.h"
-#include "aabb_space_partitioning.h"
-#include "glstatemanager.h"
-#include "graphics_renderers.h"
-#include "graphics_config.h"
-
-#include <SDL/SDL.h>
-
 #include <string>
 #include <ostream>
-#include <map>
-#include <list>
-#include <vector>
 
-class SCENENODE;
+class SDL_Surface;
 
 class WINDOW_SDL
 {

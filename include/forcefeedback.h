@@ -1,4 +1,3 @@
-#include "definitions.h"
 #ifdef ENABLE_FORCE_FEEDBACK
 #ifndef _FORCEFEEDBACK_H
 #define _FORCEFEEDBACK_H

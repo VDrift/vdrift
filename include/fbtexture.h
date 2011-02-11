@@ -1,7 +1,7 @@
 #ifndef _FBTEXTURE_H
 #define _FBTEXTURE_H
 
-#include "texture.h"
+#include "texture_interface.h"
 #include "glstatemanager.h"
 
 #ifdef __APPLE__

@@ -1,6 +1,7 @@
 #include "replay.h"
 #include "unittest.h"
 #include "config.h"
+#include "carinput.h"
 
 #include <iostream>
 using std::ostream;

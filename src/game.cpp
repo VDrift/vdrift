@@ -11,7 +11,6 @@
 #include "widget_label.h"
 #include "quickprof.h"
 #include "tracksurface.h"
-#include "macros.h"
 #include "utils.h"
 #include "graphics_fallback.h"
 #include "graphics_gl3v.h"

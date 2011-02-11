@@ -4,10 +4,9 @@
 #include "scenenode.h"
 #include "trackobject.h"
 #include "tracksurface.h"
+#include "roadstrip.h"
 #include "mathvector.h"
 #include "quaternion.h"
-#include "bezier.h"
-#include "roadstrip.h"
 
 #include <string>
 #include <iostream>
@@ -18,6 +17,7 @@
 class TEXTUREMANAGER;
 class MODELMANAGER;
 class OBJECTLOADER;
+class ROADSTRIP;
 
 class TRACK
 {

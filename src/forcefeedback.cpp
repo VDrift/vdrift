@@ -1,13 +1,11 @@
-#include "definitions.h"
 #ifdef ENABLE_FORCE_FEEDBACK
 
 #include "forcefeedback.h"
 
 #include <cstring>
-
 #include <string>
-using std::string;
 
+using std::string;
 using std::endl;
 
 //#define TEST_BIT(bit,bits) (((bits[bit>>5]>>(bit&0x1f))&1)!=0)

@@ -1,13 +1,10 @@
 #include "graphics_fallback.h"
 
 #include "opengl_utility.h"
-#include "matrix4.h"
 #include "mathvector.h"
-#include "model.h"
 #include "texture.h"
 #include "vertexarray.h"
 #include "reseatable_reference.h"
-#include "definitions.h"
 #include "containeralgorithm.h"
 #include "graphics_config.h"
 

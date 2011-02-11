@@ -65,7 +65,6 @@ protected:
 	btAlignedObjectArray<btTriangleIndexVertexArray *> meshes;
 
 	btCollisionShape * AddMeshShape(const MODEL & model);
-	btIndexedMesh GetIndexedMesh(const MODEL & model);
 };
 
 #endif // _COLLISION_WORLD_H

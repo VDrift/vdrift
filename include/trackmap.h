@@ -2,18 +2,16 @@
 #define _TRACKMAP_H
 
 #include "mathvector.h"
-#include "manager.h"
-#include "track.h"
 #include "scenenode.h"
-#include "texture.h"
+#include "roadstrip.h"
 
-#include <SDL/SDL.h>
-
-#include <ostream>
 #include <list>
 #include <string>
 #include <iostream>
-#include <map>
+
+class TEXTUREMANAGER;
+class TEXTURE;
+class SDL_Surface;
 
 class TRACKMAP
 {

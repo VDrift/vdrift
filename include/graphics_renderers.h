@@ -6,9 +6,7 @@
 #include "quaternion.h"
 #include "fbobject.h"
 #include "matrix4.h"
-#include "texture.h"
 #include "reseatable_reference.h"
-#include "aabb_space_partitioning.h"
 #include "glstatemanager.h"
 #include "frustum.h"
 
@@ -22,6 +20,7 @@
 
 class SCENENODE;
 class DRAWABLE;
+class TEXTURE_INTERFACE;
 
 namespace BLENDMODE
 {

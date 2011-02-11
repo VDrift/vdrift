@@ -1,5 +1,4 @@
 #include "window.h"
-
 #include "matrix4.h"
 #include "mathvector.h"
 #include "model.h"
@@ -10,25 +9,22 @@
 #include "containeralgorithm.h"
 #include "graphics_config.h"
 
+#include <SDL/SDL.h>
+
 #include <cassert>
-
 #include <sstream>
-using std::stringstream;
-
 #include <string>
-using std::string;
-
 #include <iostream>
+#include <map>
+#include <vector>
+#include <algorithm>
+
+using std::stringstream;
+using std::string;
 using std::pair;
 using std::endl;
-
-#include <map>
 using std::map;
-
-#include <vector>
 using std::vector;
-
-#include <algorithm>
 
 void WINDOW_SDL::Init(const std::string & windowcaption,
 				unsigned int resx, unsigned int resy, unsigned int bpp,
