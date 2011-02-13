@@ -218,7 +218,7 @@ void GRAPHICS_GL3V::DrawScene(std::ostream & error_output)
 	// setup the static draw list for rendering
 	RenderUniform proj, view;
 	bool doCull = true;
-	StringId passName = stringMap.addStringId("Normal");
+	StringId passName = stringMap.addStringId("track opaque");
 	std::string drawGroupName = "normal_noblend";
 	doCull = !(!doCull || !renderer.getPassUniform(passName, stringMap.addStringId("viewMatrix"), view));
 	doCull = !(!doCull || !renderer.getPassUniform(passName, stringMap.addStringId("projectionMatrix"), proj));

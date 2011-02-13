@@ -61,7 +61,8 @@ bool Renderer::initialize(const std::vector <RealtimeExportPassInfo> & config, S
 	clear();
 	
 	// add new passes
-	for (std::vector <RealtimeExportPassInfo>::const_iterator i = config.begin(); i != config.end(); i++)
+	int passCount = 0;
+	for (std::vector <RealtimeExportPassInfo>::const_iterator i = config.begin(); i != config.end(); i++,passCount++)
 	{
 		// create unique names based on the path and define list
 		std::string vertexShaderName = i->vertexShader+" "+UTILS::implode(i->vertexShaderDefines," ");
@@ -100,7 +101,7 @@ bool Renderer::initialize(const std::vector <RealtimeExportPassInfo> & config, S
 		// initialize the pass
 		int passIdx = passes.size();
 		passes.push_back(RenderPass());
-		if (!passes.back().initialize(*i, stringMap, gl, shaders.find(vertexShaderName)->second, shaders.find(fragmentShaderName)->second, sharedTextures, w, h, errorOutput))
+		if (!passes.back().initialize(passCount, *i, stringMap, gl, shaders.find(vertexShaderName)->second, shaders.find(fragmentShaderName)->second, sharedTextures, w, h, errorOutput))
 			return false;
 		
 		// put the pass's output render targets into a map so we can feed them to subsequent passes

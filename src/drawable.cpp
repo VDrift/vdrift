@@ -72,6 +72,7 @@ RenderModelExternal & DRAWABLE::generateRenderModelData(GLWrapper & gl, StringId
 	// textures
 	if (texturesChanged)
 	{
+		renderModel.clearTextureCache();
 		renderModel.textures.clear();
 		if (diffuse_map && !diffuse_map->IsCube()) // for right now, restrict the diffuse map to 2d textures
 		{
@@ -84,6 +85,7 @@ RenderModelExternal & DRAWABLE::generateRenderModelData(GLWrapper & gl, StringId
 	// uniforms
 	if (uniformsChanged)
 	{
+		renderModel.clearUniformCache();
 		renderModel.uniforms.clear();
 		if (transform != MATRIX4<float>()) // only add it if it's not the identity matrix
 			renderModel.uniforms.push_back(RenderUniformEntry(transformId, transform.GetArray(), 16));

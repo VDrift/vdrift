@@ -32,7 +32,10 @@ class RenderPass
 		/// The provided GLWrapper will be used for OpenGL context.
 		/// The provided StringIdMap will be used to convert strings into unique numeric IDs.
 		/// w and h are the width and height of the application's window and will be used to initialize FBOs.
-		bool initialize(const RealtimeExportPassInfo & config, StringIdMap & stringMap, GLWrapper & gl,
+		bool initialize(int passCount,
+			const RealtimeExportPassInfo & config, 
+			StringIdMap & stringMap,
+			GLWrapper & gl,
 			RenderShader & vertexShader,
 			RenderShader & fragmentShader,
 			const std::tr1::unordered_map <StringId, RenderTextureEntry, StringId::hash> & sharedTextures,
@@ -75,7 +78,7 @@ class RenderPass
 		
 		void printRendererStatus(RendererStatusVerbosity verbosity, const StringIdMap & stringMap, std::ostream & out) const;
 		
-		RenderPass() : configured(false),enabled(true),shaderProgram(0),framebufferObject(0),renderbuffer(0) {}
+		RenderPass() : configured(false),enabled(true),shaderProgram(0),framebufferObject(0),renderbuffer(0),passIndex(0) {}
 		
 	private:
 		/// returns true on success
@@ -140,6 +143,9 @@ class RenderPass
 		
 		// draw groups
 		std::set <StringId> drawGroups;
+		
+		// our index in the renderer's list of passes
+		unsigned int passIndex;
 };
 
 #endif

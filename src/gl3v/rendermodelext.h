@@ -7,6 +7,9 @@
 #include "renderuniformentry.h"
 #include "glwrapper.h"
 #include "rendermodelentry.h"
+#include "rendercachevector.h"
+#include "rendertexture.h"
+#include "renderuniform.h"
 
 class RenderPass;
 
@@ -43,6 +46,14 @@ class RenderModelExternal
 		
 		std::vector <RenderTextureEntry> textures;
 		std::vector <RenderUniformEntry> uniforms;
+		
+		// these need to be called whenever the vectors above are changed
+		void clearTextureCache() {perPassTextureCache.clear();}
+		void clearUniformCache() {perPassUniformCache.clear();}
+		
+	private:
+		RenderCacheVector <std::vector <RenderTexture> > perPassTextureCache; // indexed by pass ID
+		RenderCacheVector <std::vector <RenderUniform> > perPassUniformCache; // indexed by pass ID
 };
 
 #endif
