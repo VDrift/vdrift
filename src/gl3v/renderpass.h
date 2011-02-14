@@ -50,7 +50,7 @@ class RenderPass
 		/// returns true if the framebuffer dimensions have changed, which is a signal that the render targets have been recreated
 		/// externalModels is a map of draw group name ID to a vector array of pointers to external models to be drawn along with models that have been added to the pass with addModel
 		bool render(GLWrapper & gl, unsigned int w, unsigned int h, StringIdMap & stringMap, 
-					const std::map <StringId, std::vector <RenderModelExternal*> > & externalModels, 
+					const std::vector <const std::vector <RenderModelExternal*>*> & externalModels, 
 					std::ostream & errorOutput);
 		
 		// these functions handle modifications to the models container
@@ -71,12 +71,16 @@ class RenderPass
 		void removeDefaultUniform(StringId name);
 		
 		const std::string & getName() const {return originalConfiguration.name;}
+		StringId getNameId() const {return passName;}
 		
 		const std::map <StringId, RenderTexture> & getRenderTargets() const {return renderTargets;}
 		
 		void setEnabled(bool val) {enabled = val;}
+		bool getEnabled() const {return enabled;}
 		
 		void printRendererStatus(RendererStatusVerbosity verbosity, const StringIdMap & stringMap, std::ostream & out) const;
+		
+		const std::set <StringId> & getDrawGroups() const {return drawGroups;}
 		
 		RenderPass() : configured(false),enabled(true),shaderProgram(0),framebufferObject(0),renderbuffer(0),passIndex(0) {}
 		
@@ -146,6 +150,9 @@ class RenderPass
 		
 		// our index in the renderer's list of passes
 		unsigned int passIndex;
+		
+		// our stringId-ified name
+		StringId passName;
 };
 
 #endif

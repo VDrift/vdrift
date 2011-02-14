@@ -7,7 +7,7 @@
 #define GLLOG(x) (logGlCall(#x),x)
 
 #define breakOnError false
-#define logEveryGlCall true
+#define logEveryGlCall false
 #ifdef DEBUG
 	#define enableErrorChecking true
 #else

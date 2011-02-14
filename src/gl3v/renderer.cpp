@@ -41,7 +41,53 @@ void Renderer::render(unsigned int w, unsigned int h, StringIdMap & stringMap,
 {
 	for (std::vector <RenderPass>::iterator i = passes.begin(); i != passes.end(); i++)
 	{
-		if (i->render(gl, w, h, stringMap, externalModels, errorOutput))
+		// extract the appropriate map and generate a drawlist
+		std::vector <const std::vector <RenderModelExternal*>*> drawList; // a vector of pointers to vectors of RenderModelExternal pointers
+		
+		// for each draw group that this pass uses, add its models to the draw list
+		for (std::set <StringId>::const_iterator dg = i->getDrawGroups().begin(); dg != i->getDrawGroups().end(); dg++)
+		{
+			std::map <StringId, std::vector <RenderModelExternal*> >::const_iterator drawGroupIter = externalModels.find(*dg);
+			if (drawGroupIter != externalModels.end())
+				drawList.push_back(&drawGroupIter->second);
+		}
+		
+		if (i->render(gl, w, h, stringMap, drawList, errorOutput))
+		{
+			// render targets have been recreated due to display dimension change
+			// call setGlobalTexture to update sharedTextures and let downstream passes know
+			const std::map <StringId, RenderTexture> & passRTs = passes.back().getRenderTargets();
+			for (std::map <StringId, RenderTexture>::const_iterator rt = passRTs.begin(); rt != passRTs.end(); rt++)
+			{
+				setGlobalTexture(rt->first, RenderTextureEntry(rt->first, rt->second.handle, rt->second.target));
+			}
+		}
+	}
+}
+
+void Renderer::render(unsigned int w, unsigned int h, StringIdMap & stringMap, 
+					  const std::map <StringId, std::map <StringId, std::vector <RenderModelExternal*> *> > & externalModels,
+					  std::ostream & errorOutput)
+{
+	for (std::vector <RenderPass>::iterator i = passes.begin(); i != passes.end(); i++)
+	{
+		// extract the appropriate map and generate a drawlist
+		std::vector <const std::vector <RenderModelExternal*>*> drawList; // a vector of pointers to vectors of RenderModelExternal pointers
+		
+		// find the map appropriate to this pass
+		std::map <StringId, std::map <StringId, std::vector <RenderModelExternal*> *> >::const_iterator drawMapIter = externalModels.find(i->getNameId());
+		if (drawMapIter != externalModels.end())
+		{
+			// for each draw group that this pass uses, add its models to the draw list
+			for (std::set <StringId>::const_iterator dg = i->getDrawGroups().begin(); dg != i->getDrawGroups().end(); dg++)
+			{
+				std::map <StringId, std::vector <RenderModelExternal*> *>::const_iterator drawGroupIter = drawMapIter->second.find(*dg);
+				if (drawGroupIter != drawMapIter->second.end())
+					drawList.push_back(drawGroupIter->second);
+			}
+		}
+		
+		if (i->render(gl, w, h, stringMap, drawList, errorOutput))
 		{
 			// render targets have been recreated due to display dimension change
 			// call setGlobalTexture to update sharedTextures and let downstream passes know
@@ -374,6 +420,43 @@ void Renderer::setPassEnabled(StringId passName, bool enable)
 	}
 }
 
+bool Renderer::getPassEnabled(StringId passName) const
+{
+	std::tr1::unordered_map <StringId, int>::const_iterator i = passIndexMap.find(passName);
+	if (i != passIndexMap.end())
+	{
+		assert((unsigned int)i->second < passes.size());
+		return passes[i->second].getEnabled();
+	}
+	return false;
+}
+
+static const std::set <StringId> emptySet;
+
+const std::set <StringId> & Renderer::getDrawGroups(StringId passName) const
+{
+	std::tr1::unordered_map <StringId, int>::const_iterator i = passIndexMap.find(passName);
+	if (i != passIndexMap.end())
+	{
+		assert((unsigned int)i->second < passes.size());
+		return passes[i->second].getDrawGroups();
+	}
+	return emptySet;
+}
+
+std::vector <StringId> Renderer::getPassNames() const
+{
+	std::vector <StringId> names;
+	names.reserve(passes.size());
+	
+	for (std::vector <RenderPass>::const_iterator i = passes.begin(); i != passes.end(); i++)
+	{
+		names.push_back(i->getNameId());
+	}
+	
+	return names;
+}
+
 void Renderer::printRendererStatus(RendererStatusVerbosity verbosity, const StringIdMap & stringMap, std::ostream & out) const
 {
 	out << "Renderer status" << std::endl;
@@ -423,4 +506,3 @@ void Renderer::printRendererStatus(RendererStatusVerbosity verbosity, const Stri
 		i->printRendererStatus(verbosity, stringMap, out);
 	}
 }
-

@@ -35,9 +35,18 @@ class Renderer
 		
 		/// render all passes
 		/// w and h are the width and height of the application's window
-		/// externalModels is a map of draw group name ID to a vector array of pointers to external models to be drawn along with models that have been added to the pass with addModel
+		/// externalModels is a map of draw group name ID to a vector array of pointers to external models to be
+		/// drawn along with models that have been added to the pass with addModel
 		void render(unsigned int w, unsigned int h, StringIdMap & stringMap, 
 					const std::map <StringId, std::vector <RenderModelExternal*> > & externalModels,
+					std::ostream & errorOutput);
+		
+		/// render all passes
+		/// w and h are the width and height of the application's window
+		/// externalModels is a map of pass ID to a map of draw group name ID and a pointer to a vector array of 
+		/// pointers to external models to be drawn along with models that have been added to the pass with addModel
+		void render(unsigned int w, unsigned int h, StringIdMap & stringMap, 
+					const std::map <StringId, std::map <StringId, std::vector <RenderModelExternal*> *> > & externalModels,
 					std::ostream & errorOutput);
 		
 		/// cleanup all data
@@ -116,6 +125,13 @@ class Renderer
 		
 		/// Turn a specific pass on or off
 		void setPassEnabled(StringId passName, bool enable);
+		bool getPassEnabled(StringId passName) const;
+		
+		/// Get the draw groups that are used by the specified pass
+		const std::set <StringId> & getDrawGroups(StringId passName) const;
+		
+		/// Get a vector of pass name string ids
+		std::vector <StringId> getPassNames() const;
 		
 		/// Print some human readable text showing renderer status information.
 		void printRendererStatus(RendererStatusVerbosity verbosity, const StringIdMap & stringMap, std::ostream & out) const;

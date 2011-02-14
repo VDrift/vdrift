@@ -8,6 +8,14 @@
 
 #define enableContributionCull true
 
+GRAPHICS_GL3V::GRAPHICS_GL3V(StringIdMap & map) : 
+	stringMap(map), renderer(gl), logNextGlFrame(false), initialized(false)
+{
+	// assign cameras to each pass
+	passNameToCameraName["track opaque"] = "default";
+	passNameToCameraName["car opaque"] = "default";
+}
+
 bool GRAPHICS_GL3V::Init(const std::string & shaderpath,
 				unsigned int resx, unsigned int resy, unsigned int bpp,
 				unsigned int depthbpp, bool fullscreen, bool shaders,
@@ -112,11 +120,6 @@ void GRAPHICS_GL3V::SetupScene(float fov, float new_view_distance, const MATHVEC
 	
 	//TODO: more camera setup
 	
-	// get ready to send cameras to passes by assigning cameras to each pass
-	std::map <std::string, std::string> passNameToCameraName;
-	passNameToCameraName["track opaque"] = "default";
-	passNameToCameraName["car opaque"] = "default";
-	
 	// send cameras to passes
 	for (std::map <std::string, std::string>::const_iterator i = passNameToCameraName.begin(); i != passNameToCameraName.end(); i++)
 	{
@@ -126,7 +129,7 @@ void GRAPHICS_GL3V::SetupScene(float fov, float new_view_distance, const MATHVEC
 }
 
 // returns true for cull, false for don't-cull
-bool contributionCull(const DRAWABLE * d, const MATHVECTOR <float, 3> & cam)
+static bool contributionCull(const DRAWABLE * d, const MATHVECTOR <float, 3> & cam)
 {
 	const MATHVECTOR <float, 3> & obj = d->GetObjectCenter();
 	float radius = d->GetRadius();
@@ -142,54 +145,100 @@ bool contributionCull(const DRAWABLE * d, const MATHVECTOR <float, 3> & cam)
 		return false;
 }
 
-struct DrawGroupAssembler
+// returns true for cull, false for don't-cull
+static bool frustumCull(const DRAWABLE * d, const FRUSTUM & frustum)
 {
-	DrawGroupAssembler(StringIdMap & stringIdMap,
-					   GLWrapper & glwrapper,
-					   std::map <StringId, std::vector <RenderModelExternal*> > & output) 
-		: stringMap(stringIdMap), gl(glwrapper), drawGroups(output), frustum(NULL), contributionCullCount(0) {}
-		
-	StringIdMap & stringMap;
-	GLWrapper & gl;
-	std::map <StringId, std::vector <RenderModelExternal*> > & drawGroups;
-	FRUSTUM * frustum;
-	MATHVECTOR <float, 3> camPos;
-	int contributionCullCount;
+	float rd;
+	const float bound = d->GetRadius();
+	const MATHVECTOR <float, 3> & center = d->GetObjectCenter();
 	
-	void operator()(const std::string & name, const std::vector <DRAWABLE*> & drawables)
+	for (int i=0; i<6; i++)
 	{
-		std::vector <RenderModelExternal*> & out = drawGroups[stringMap.addStringId(name)];
-		if (frustum && enableContributionCull)
+		rd=frustum.frustum[i][0]*center[0]+
+				frustum.frustum[i][1]*center[1]+
+				frustum.frustum[i][2]*center[2]+
+				frustum.frustum[i][3];
+		if (rd < -bound)
 		{
-			for (std::vector <DRAWABLE*>::const_iterator i = drawables.begin(); i != drawables.end(); i++)
-			{
-				if (!contributionCull(*i, camPos))
-					out.push_back(&(*i)->generateRenderModelData(gl, stringMap));
-				else
-					contributionCullCount++;
-			}
+			return true;
 		}
-		else
+	}
+	
+	return false;
+}
+
+// if frustum is NULL, don't do frustum or contribution culling
+void GRAPHICS_GL3V::assembleDrawList(const std::vector <DRAWABLE*> & drawables, std::vector <RenderModelExternal*> & out, FRUSTUM * frustum, const MATHVECTOR <float, 3> & camPos)
+{
+	if (frustum && enableContributionCull)
+	{
+		for (std::vector <DRAWABLE*>::const_iterator i = drawables.begin(); i != drawables.end(); i++)
 		{
-			for (std::vector <DRAWABLE*>::const_iterator i = drawables.begin(); i != drawables.end(); i++)
-			{
+			if (!frustumCull(*i, *frustum) && !contributionCull(*i, camPos))
 				out.push_back(&(*i)->generateRenderModelData(gl, stringMap));
-			}
 		}
 	}
-	
-	void operator()(const std::string & name, const AABB_SPACE_PARTITIONING_NODE_ADAPTER <DRAWABLE> & adapter)
+	else if (frustum)
 	{
-		static std::vector <DRAWABLE*> queryResults;
-		queryResults.clear();
-		if (frustum)
-			adapter.Query(*frustum, queryResults);
-		else
-			adapter.Query(AABB<float>::INTERSECT_ALWAYS(), queryResults);
-		
-		operator()(name, queryResults);
+		for (std::vector <DRAWABLE*>::const_iterator i = drawables.begin(); i != drawables.end(); i++)
+		{
+			if (!frustumCull(*i, *frustum))
+				out.push_back(&(*i)->generateRenderModelData(gl, stringMap));
+		}
 	}
-};
+	else
+	{
+		for (std::vector <DRAWABLE*>::const_iterator i = drawables.begin(); i != drawables.end(); i++)
+		{
+			out.push_back(&(*i)->generateRenderModelData(gl, stringMap));
+		}
+	}
+}
+
+// if frustum is NULL, don't do frustum or contribution culling
+void GRAPHICS_GL3V::assembleDrawList(const AABB_SPACE_PARTITIONING_NODE_ADAPTER <DRAWABLE> & adapter, std::vector <RenderModelExternal*> & out, FRUSTUM * frustum, const MATHVECTOR <float, 3> & camPos)
+{
+	static std::vector <DRAWABLE*> queryResults;
+	queryResults.clear();
+	if (frustum)
+		adapter.Query(*frustum, queryResults);
+	else
+		adapter.Query(AABB<float>::INTERSECT_ALWAYS(), queryResults);
+	
+	const std::vector <DRAWABLE*> & drawables = queryResults;
+	
+	if (frustum && enableContributionCull)
+	{
+		for (std::vector <DRAWABLE*>::const_iterator i = drawables.begin(); i != drawables.end(); i++)
+		{
+			if (!contributionCull(*i, camPos))
+				out.push_back(&(*i)->generateRenderModelData(gl, stringMap));
+		}
+	}
+	else
+	{
+		for (std::vector <DRAWABLE*>::const_iterator i = drawables.begin(); i != drawables.end(); i++)
+		{
+			out.push_back(&(*i)->generateRenderModelData(gl, stringMap));
+		}
+	}
+}
+
+// returns empty string if no camera
+std::string GRAPHICS_GL3V::getCameraForPass(StringId pass) const
+{
+	std::string passString = stringMap.getString(pass);
+	std::string cameraString;
+	std::map <std::string, std::string>::const_iterator camIter = passNameToCameraName.find(passString);
+	if (camIter != passNameToCameraName.end())
+		cameraString = camIter->second;
+	return cameraString;
+}
+
+std::string GRAPHICS_GL3V::getCameraDrawGroupKey(StringId pass, StringId group) const
+{
+	return getCameraForPass(pass)+"/"+stringMap.getString(group);
+}
 
 static bool SortDraworder(DRAWABLE * d1, DRAWABLE * d2)
 {
@@ -202,47 +251,91 @@ void GRAPHICS_GL3V::DrawScene(std::ostream & error_output)
 	//sort the two dimentional drawlist so we get correct ordering
 	std::sort(dynamic_drawlist.twodim.begin(),dynamic_drawlist.twodim.end(),&SortDraworder);
 	
-	// put the draw lists into the drawGroups map
-	// this is cached to avoid extra memory allocations, but we need to make sure to clear it out each time we start
-	static std::map <StringId, std::vector <RenderModelExternal*> > drawGroups;
-	for (std::map <StringId, std::vector <RenderModelExternal*> >::iterator i = drawGroups.begin(); i != drawGroups.end(); i++)
+	// for each pass, we have which camera and which draw groups to use
+	// we want to do culling for each unique camera and draw group combination
+	// use "camera/group" as a unique key string
+	// this is cached to avoid extra memory allocations each frame, so we need to clear old data
+	for (std::map <std::string, std::vector <RenderModelExternal*> >::iterator i = cameraDrawGroupDrawLists.begin(); i != cameraDrawGroupDrawLists.end(); i++)
 	{
 		i->second.clear();
 	}
 	
-	DrawGroupAssembler assembler(stringMap, gl, drawGroups);
+	// because the cameraDrawGroupDrawLists are cached, this is how we keep track of which combinations
+	// we have already generated
+	std::set <std::string> cameraDrawGroupCombinationsGenerated;
 	
-	// setup the dynamic draw list for rendering
-	dynamic_drawlist.ForEachWithName(assembler);
-	
-	// setup the static draw list for rendering
-	RenderUniform proj, view;
-	bool doCull = true;
-	StringId passName = stringMap.addStringId("track opaque");
-	std::string drawGroupName = "normal_noblend";
-	doCull = !(!doCull || !renderer.getPassUniform(passName, stringMap.addStringId("viewMatrix"), view));
-	doCull = !(!doCull || !renderer.getPassUniform(passName, stringMap.addStringId("projectionMatrix"), proj));
-	FRUSTUM frustum;
-	if (doCull)
+	// this maps passes to maps of draw groups and draw list vector pointers
+	// so drawMap[passName][drawGroup] is a pointer to a vector of RenderModelExternal pointers
+	// this is complicated but it lets us do culling per camera position and draw group combination
+	std::map <StringId, std::map <StringId, std::vector <RenderModelExternal*> *> > drawMap;
+
+	// for each pass, do culling of the dynamic and static drawlists and put the results into the cameraDrawGroupDrawLists
+	std::vector <StringId> passes = renderer.getPassNames();
+	for (std::vector <StringId>::const_iterator i = passes.begin(); i != passes.end(); i++)
 	{
-		frustum.Extract(&proj.data[0], &view.data[0]);
-		assembler.frustum = &frustum;
-		assembler.camPos = lastCameraPosition;
+		const std::set <StringId> & passDrawGroups = renderer.getDrawGroups(*i);
+		for (std::set <StringId>::const_iterator g = passDrawGroups.begin(); g != passDrawGroups.end(); g++)
+		{
+			StringId passName = *i;
+			StringId drawGroupName = *g;
+			std::string drawGroupString = stringMap.getString(drawGroupName);
+			std::string cameraDrawGroupKey = getCameraDrawGroupKey(passName, drawGroupName);
+			
+			std::vector <RenderModelExternal*> & outDrawList = cameraDrawGroupDrawLists[cameraDrawGroupKey];
+			
+			// see if we have already generated this combination
+			if (cameraDrawGroupCombinationsGenerated.find(cameraDrawGroupKey) == cameraDrawGroupCombinationsGenerated.end())
+			{
+				// we need to generate this combination
+				
+				// extract frustum information
+				RenderUniform proj, view;
+				bool doCull = true;
+				/*if (getCameraForPass(passName).empty())
+				{
+					doCull = false;
+				}
+				else*/
+				{
+					doCull = !(!doCull || !renderer.getPassUniform(passName, stringMap.addStringId("viewMatrix"), view));
+					doCull = !(!doCull || !renderer.getPassUniform(passName, stringMap.addStringId("projectionMatrix"), proj));
+				}
+				FRUSTUM frustum;
+				FRUSTUM * frustumPtr = NULL;
+				if (doCull)
+				{
+					frustum.Extract(&proj.data[0], &view.data[0]);
+					frustumPtr = &frustum;
+				}
+				
+				// assemble dynamic entries
+				const std::vector <DRAWABLE*> & dynamicDrawables = *dynamic_drawlist.GetByName(drawGroupString);
+				//assembleDrawList(dynamicDrawables, outDrawList, frustumPtr, lastCameraPosition);
+				assembleDrawList(dynamicDrawables, outDrawList, NULL, lastCameraPosition); // TODO: the above line is commented out because frustum culling dynamic drawables doesen't work at the moment; is the object center in the drawable for the car in the correct space??
+				
+				// assemble static entries
+				const AABB_SPACE_PARTITIONING_NODE_ADAPTER <DRAWABLE> & staticDrawables = *static_drawlist.GetDrawlist().GetByName(drawGroupString);
+				assembleDrawList(staticDrawables, outDrawList, frustumPtr, lastCameraPosition);
+			}
+			
+			// use the generated combination in our drawMap
+			drawMap[passName][drawGroupName] = &outDrawList;
+			
+			cameraDrawGroupCombinationsGenerated.insert(cameraDrawGroupKey);
+		}
 	}
 	
-	assembler(drawGroupName, *static_drawlist.GetDrawlist().GetByName(drawGroupName));
-	
-	/*for (std::map <StringId, std::vector <RenderModelExternal*> >::iterator i = drawGroups.begin(); i != drawGroups.end(); i++)
+	/*for (std::map <std::string, std::vector <RenderModelExternal*> >::iterator i = cameraDrawGroupDrawLists.begin(); i != cameraDrawGroupDrawLists.end(); i++)
 	{
-		std::cout << stringMap.getString(i->first) << ": " << i->second.size() << std::endl;
+		std::cout << i->first << ": " << i->second.size() << std::endl;
 	}
-	std::cout << "----------" << std::endl;
-	if (enableContributionCull) std::cout << "Contribution cull count: " << assembler.contributionCullCount << std::endl;*/
+	std::cout << "----------" << std::endl;*/
+	//if (enableContributionCull) std::cout << "Contribution cull count: " << assembler.contributionCullCount << std::endl;
 	//std::cout << "normal_noblend: " << drawGroups[stringMap.addStringId("normal_noblend")].size() << "/" << static_drawlist.GetDrawlist().GetByName("normal_noblend")->size() << std::endl;
 	
 	// render!
 	gl.logging(logNextGlFrame);
-	renderer.render(w, h, stringMap, drawGroups, error_output);
+	renderer.render(w, h, stringMap, drawMap, error_output);
 	gl.logging(false);
 	
 	logNextGlFrame = false;

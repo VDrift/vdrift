@@ -10,7 +10,7 @@
 const GLEnums GLEnumHelper;
 
 bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringIdMap & stringMap, 
-						const std::map <StringId, std::vector <RenderModelExternal*> > & externalModels,
+						const std::vector <const std::vector <RenderModelExternal*>*> & externalModels,
 						std::ostream & errorOutput)
 {
 	if (!enabled)
@@ -150,144 +150,140 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 	}
 	
 	// for each external model
-	for (std::map <StringId, std::vector <RenderModelExternal*> >::const_iterator i = externalModels.begin(); i != externalModels.end(); i++)
+	for (std::vector <const std::vector <RenderModelExternal*>*>::const_iterator i = externalModels.begin(); i != externalModels.end(); i++)
 	{
-		// see if we are drawing this draw group
-		if (drawGroups.find(i->first) != drawGroups.end())
+		//std::cout << "renderpass: " << stringMap.getString(i->first) << ": " << i->second.size() << std::endl;
+		
+		// loop through all models in the draw group
+		for (std::vector <RenderModelExternal*>::const_iterator n = (*i)->begin(); n != (*i)->end(); n++)
 		{
-			//std::cout << "renderpass: " << stringMap.getString(i->first) << ": " << i->second.size() << std::endl;
+			RenderModelExternal * m = *n;
+			assert(m);
 			
-			// loop through all models in the draw group
-			for (std::vector <RenderModelExternal*>::const_iterator n = i->second.begin(); n != i->second.end(); n++)
+			if (m->drawEnabled())
 			{
-				RenderModelExternal * m = *n;
-				assert(m);
-				
-				if (m->drawEnabled())
+				// restore textures that were overridden the by the previous model
+				for (override_tracking_type::const_iterator tu = lastOverriddenTextures.begin(); tu != lastOverriddenTextures.end(); tu++)
 				{
-					// restore textures that were overridden the by the previous model
-					for (override_tracking_type::const_iterator tu = lastOverriddenTextures.begin(); tu != lastOverriddenTextures.end(); tu++)
-					{
-						if (*tu < defaultTextures.size()) // sometimes we override sampler TUs that don't have defaults defined (think of diffuse textures)
-							textureState[*tu] = defaultTextures[*tu];
-						else
-							textureState[*tu] = NULL;
-					}
-					
-					// apply texture overrides, keeping track of which TUs we've overridden
-					overriddenTextures.clear();
-					
-					// check if we have cached information and if so use that
+					if (*tu < defaultTextures.size()) // sometimes we override sampler TUs that don't have defaults defined (think of diffuse textures)
+						textureState[*tu] = defaultTextures[*tu];
+					else
+						textureState[*tu] = NULL;
+				}
+				
+				// apply texture overrides, keeping track of which TUs we've overridden
+				overriddenTextures.clear();
+				
+				// check if we have cached information and if so use that
 #ifdef USE_EXTERNAL_MODEL_CACHE
-					if (m->perPassTextureCache.size() > passIndex)
+				if (m->perPassTextureCache.size() > passIndex)
+				{
+					const std::vector <RenderTexture> & cache = m->perPassTextureCache[passIndex];
+					for (std::vector <RenderTexture>::const_iterator t = cache.begin(); t != cache.end(); t++)
 					{
-						const std::vector <RenderTexture> & cache = m->perPassTextureCache[passIndex];
-						for (std::vector <RenderTexture>::const_iterator t = cache.begin(); t != cache.end(); t++)
+						// get the TU associated with this texture name id
+						GLuint tu = t->tu;
+						overriddenTextures.push_back(tu);
+						textureState[tu] = &*t;
+					}
+				}
+				else
+#endif
+				{
+					for (std::vector <RenderTextureEntry>::const_iterator t = m->textures.begin(); t != m->textures.end(); t++)
+					{
+						// get the TU associated with this texture name id
+						std::tr1::unordered_map <StringId, GLuint>::iterator tui = textureNameToTextureUnit.find(t->name);
+						if (tui != textureNameToTextureUnit.end()) // if the texture isn't used in this pass, it might not be in textureNameToTextureUnit
 						{
-							// get the TU associated with this texture name id
-							GLuint tu = t->tu;
+							GLuint tu = tui->second;
 							overriddenTextures.push_back(tu);
 							textureState[tu] = &*t;
-						}
-					}
-					else
-#endif
-					{
-						for (std::vector <RenderTextureEntry>::const_iterator t = m->textures.begin(); t != m->textures.end(); t++)
-						{
-							// get the TU associated with this texture name id
-							std::tr1::unordered_map <StringId, GLuint>::iterator tui = textureNameToTextureUnit.find(t->name);
-							if (tui != textureNameToTextureUnit.end()) // if the texture isn't used in this pass, it might not be in textureNameToTextureUnit
-							{
-								GLuint tu = tui->second;
-								overriddenTextures.push_back(tu);
-								textureState[tu] = &*t;
 #ifdef USE_EXTERNAL_MODEL_CACHE
-								m->perPassTextureCache[passIndex].push_back(RenderTexture(tu, *t)); // make cache entry
+							m->perPassTextureCache[passIndex].push_back(RenderTexture(tu, *t)); // make cache entry
 #endif
-							}
 						}
 					}
-					
-					// go through and actually apply the textures to the GL
-					for (override_tracking_type::const_iterator tu = lastOverriddenTextures.begin(); tu != lastOverriddenTextures.end(); tu++)
-					{
-						const RenderTextureBase * texture = textureState[*tu];
-						if (texture)
-							applyTexture(gl, *tu, texture->target, texture->handle);
-					}
-					for (override_tracking_type::const_iterator tu = overriddenTextures.begin(); tu != overriddenTextures.end(); tu++)
-					{
-						const RenderTextureBase * texture = textureState[*tu];
-						
-						// we shouldn't need to null-check texture
+				}
+				
+				// go through and actually apply the textures to the GL
+				for (override_tracking_type::const_iterator tu = lastOverriddenTextures.begin(); tu != lastOverriddenTextures.end(); tu++)
+				{
+					const RenderTextureBase * texture = textureState[*tu];
+					if (texture)
 						applyTexture(gl, *tu, texture->target, texture->handle);
-					}
+				}
+				for (override_tracking_type::const_iterator tu = overriddenTextures.begin(); tu != overriddenTextures.end(); tu++)
+				{
+					const RenderTextureBase * texture = textureState[*tu];
 					
-					lastOverriddenTextures.swap(overriddenTextures);
-					
-					// restore uniforms that were overridden the by the previous model
-					for (override_tracking_type::const_iterator location = lastOverriddenUniforms.begin(); location != lastOverriddenUniforms.end(); location++)
+					// we shouldn't need to null-check texture
+					applyTexture(gl, *tu, texture->target, texture->handle);
+				}
+				
+				lastOverriddenTextures.swap(overriddenTextures);
+				
+				// restore uniforms that were overridden the by the previous model
+				for (override_tracking_type::const_iterator location = lastOverriddenUniforms.begin(); location != lastOverriddenUniforms.end(); location++)
+				{
+					if (*location < defaultUniforms.size())
 					{
-						if (*location < defaultUniforms.size())
-						{
-							const RenderUniform * u = defaultUniforms[*location];
-							uniformState[u->location] = u;
-						}
+						const RenderUniform * u = defaultUniforms[*location];
+						uniformState[u->location] = u;
 					}
-					
-					// apply uniform overrides, keeping track of which locations we've overridden
-					overriddenUniforms.clear();
-					
-					// check if we have cached information and if so use that
+				}
+				
+				// apply uniform overrides, keeping track of which locations we've overridden
+				overriddenUniforms.clear();
+				
+				// check if we have cached information and if so use that
 #ifdef USE_EXTERNAL_MODEL_CACHE
-					if (m->perPassUniformCache.size() > passIndex)
+				if (m->perPassUniformCache.size() > passIndex)
+				{
+					const std::vector <RenderUniform> & cache = m->perPassUniformCache[passIndex];
+					for (std::vector <RenderUniform>::const_iterator u = cache.begin(); u != cache.end(); u++)
 					{
-						const std::vector <RenderUniform> & cache = m->perPassUniformCache[passIndex];
-						for (std::vector <RenderUniform>::const_iterator u = cache.begin(); u != cache.end(); u++)
+						GLuint location = u->location;
+						overriddenUniforms.push_back(location);
+						uniformState[location] = &*u;
+					}
+				}
+				else
+#endif
+				{
+					for (std::vector <RenderUniformEntry>::const_iterator u = m->uniforms.begin(); u != m->uniforms.end(); u++)
+					{
+						std::tr1::unordered_map <StringId, GLuint>::iterator loci = variableNameToUniformLocation.find(u->name);
+						if (loci != variableNameToUniformLocation.end()) // if the texture isn't used in this pass, it might not be in variableNameToUniformLocation
 						{
-							GLuint location = u->location;
+							GLuint location = loci->second;
 							overriddenUniforms.push_back(location);
 							uniformState[location] = &*u;
-						}
-					}
-					else
-#endif
-					{
-						for (std::vector <RenderUniformEntry>::const_iterator u = m->uniforms.begin(); u != m->uniforms.end(); u++)
-						{
-							std::tr1::unordered_map <StringId, GLuint>::iterator loci = variableNameToUniformLocation.find(u->name);
-							if (loci != variableNameToUniformLocation.end()) // if the texture isn't used in this pass, it might not be in variableNameToUniformLocation
-							{
-								GLuint location = loci->second;
-								overriddenUniforms.push_back(location);
-								uniformState[location] = &*u;
 #ifdef USE_EXTERNAL_MODEL_CACHE
-								m->perPassUniformCache[passIndex].push_back(RenderUniform(location, *u)); // make cache entry
+							m->perPassUniformCache[passIndex].push_back(RenderUniform(location, *u)); // make cache entry
 #endif
-							}
 						}
 					}
-					
-					// go through and actually apply the uniforms to the GL
-					for (override_tracking_type::const_iterator location = lastOverriddenUniforms.begin(); location != lastOverriddenUniforms.end(); location++)
-					{
-						const RenderUniformBase * uniform = uniformState[*location];
-						if (uniform)
-							gl.applyUniform(*location, uniform->data);
-					}
-					for (override_tracking_type::const_iterator location = overriddenUniforms.begin(); location != overriddenUniforms.end(); location++)
-					{
-						const RenderUniformBase * uniform = uniformState[*location];
-						//if (uniform)
-							gl.applyUniform(*location, uniform->data);
-					}
-					
-					lastOverriddenUniforms.swap(overriddenUniforms);
-					
-					// draw geometry
-					m->draw(gl);
 				}
+				
+				// go through and actually apply the uniforms to the GL
+				for (override_tracking_type::const_iterator location = lastOverriddenUniforms.begin(); location != lastOverriddenUniforms.end(); location++)
+				{
+					const RenderUniformBase * uniform = uniformState[*location];
+					if (uniform)
+						gl.applyUniform(*location, uniform->data);
+				}
+				for (override_tracking_type::const_iterator location = overriddenUniforms.begin(); location != overriddenUniforms.end(); location++)
+				{
+					const RenderUniformBase * uniform = uniformState[*location];
+					//if (uniform)
+						gl.applyUniform(*location, uniform->data);
+				}
+				
+				lastOverriddenUniforms.swap(overriddenUniforms);
+				
+				// draw geometry
+				m->draw(gl);
 			}
 		}
 	}
@@ -323,6 +319,8 @@ bool RenderPass::initialize(int passCount,
 	originalConfiguration = config;
 	
 	passIndex = passCount;
+	
+	passName = stringMap.addStringId(config.name);
 	
 	// which bitfields to clear when we start the pass
 	clearMask = 0;

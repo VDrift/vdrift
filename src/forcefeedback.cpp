@@ -1,3 +1,5 @@
+#include "definitions.h" // this is needed for #ifdef ENABLE_FORCE_FEEDBACK
+
 #ifdef ENABLE_FORCE_FEEDBACK
 
 #include "forcefeedback.h"
