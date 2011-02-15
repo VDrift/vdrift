@@ -227,12 +227,11 @@ bool COLLISION_WORLD::CastRay(
 			patch_id = contact.GetPatchId();
 			
 			if(track->CastRay(bezierspace_raystart, bezierspace_dir, length,
-				patch_id, colpoint, colpatch, colnormal))
+				patch_id, colpoint, b, colnormal))
 			{
 				p = btVector3(colpoint[2], colpoint[0], colpoint[1]);
 				n = btVector3(colnormal[2], colnormal[0], colnormal[1]);
 				d = (colpoint - bezierspace_raystart).Magnitude();
-				b = colpatch;
 			}
 		}
 
