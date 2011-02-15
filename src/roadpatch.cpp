@@ -8,15 +8,8 @@ bool ROADPATCH::Collide(
 	MATHVECTOR <float, 3> & normal) const
 {
 	bool col = patch.CollideSubDivQuadSimpleNorm(origin, direction, outtri, normal);
-	
-	if (col && (outtri - origin).Magnitude() <= seglen)
-	{
-		return true;
-	}
-	else
-	{
-		return false;
-	}
+	float len = (outtri - origin).Magnitude();
+	return col && len <= seglen;
 }
 
 void ROADPATCH::AddRacinglineScenenode(

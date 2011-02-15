@@ -183,16 +183,16 @@ bool COLLISION_WORLD::CastRay(
 	const btCollisionObject * caster,
 	COLLISION_CONTACT & contact) const
 {
-	btVector3 p(0, 0, 0);
-	btVector3 n(0, 0, 0);
-	btScalar d(0);
+	btVector3 p = origin + direction * length;
+	btVector3 n = -direction;
+	btScalar d = length;
 	int patch_id = -1;
-	const BEZIER * b(0);
+	const BEZIER * b = 0;
 	const TRACKSURFACE * s = TRACKSURFACE::None();
-	btCollisionObject * c(0);
+	btCollisionObject * c = 0;
 	
-	MyRayResultCallback ray(origin, origin + direction * length, caster);
-	world.rayTest(origin, origin + direction * length, ray);
+	MyRayResultCallback ray(origin, p, caster);
+	world.rayTest(origin, p, ray);
 	
 	// track geometry collision
 	bool geometryHit = ray.hasHit();
@@ -224,7 +224,6 @@ bool COLLISION_WORLD::CastRay(
 			MATHVECTOR <float, 3> bezierspace_dir(direction[1], direction[2], direction[0]);
 			MATHVECTOR <float, 3> colpoint;
 			MATHVECTOR <float, 3> colnormal;
-			const BEZIER * colpatch = 0;
 			patch_id = contact.GetPatchId();
 			
 			if(track->CastRay(bezierspace_raystart, bezierspace_dir, length,
@@ -234,7 +233,6 @@ bool COLLISION_WORLD::CastRay(
 				n = btVector3(colnormal[2], colnormal[0], colnormal[1]);
 				d = (colpoint - bezierspace_raystart).Magnitude();
 				b = colpatch;
-				c = 0;
 			}
 		}
 
@@ -243,7 +241,7 @@ bool COLLISION_WORLD::CastRay(
 	}
 
 	// should only happen on vehicle rollover
-	contact = COLLISION_CONTACT(origin + direction * length, -direction, length, patch_id, b, s, c);
+	contact = COLLISION_CONTACT(p, n, d, patch_id, b, s, c);
 	return false;
 }
 

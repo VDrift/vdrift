@@ -70,18 +70,14 @@ bool ROADSTRIP::Collide(
 	const BEZIER * & colpatch,
 	MATHVECTOR <float, 3> & normal) const
 {
-	// do a primitive previus patch check first, need to add support to aabb-tree
 	if (patch_id >= 0 && patch_id < (int)patches.size())
 	{
 		MATHVECTOR <float, 3> coltri, colnorm;
 		if (patches[patch_id].Collide(origin, direction, seglen, coltri, colnorm))
 		{
-			if ((coltri-origin).MagnitudeSquared() < (outtri-origin).MagnitudeSquared())
-			{
-				outtri = coltri;
-				normal = colnorm;
-				colpatch = &patches[patch_id].GetPatch();
-			}
+			outtri = coltri;
+			normal = colnorm;
+			colpatch = &patches[patch_id].GetPatch();
 			return true;
 		}
 	}
