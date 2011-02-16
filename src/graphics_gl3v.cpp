@@ -11,9 +11,6 @@
 GRAPHICS_GL3V::GRAPHICS_GL3V(StringIdMap & map) : 
 	stringMap(map), renderer(gl), logNextGlFrame(false), initialized(false)
 {
-	// assign cameras to each pass
-	passNameToCameraName["track opaque"] = "default";
-	passNameToCameraName["car opaque"] = "default";
 }
 
 bool GRAPHICS_GL3V::Init(const std::string & shaderpath,
@@ -374,6 +371,16 @@ bool GRAPHICS_GL3V::ReloadShaders(const std::string & shaderpath, std::ostream &
 		bool initSuccess = renderer.initialize(passInfos, stringMap, shaderpath+"/gl3", w, h, error_output);
 		if (initSuccess)
 		{
+			// assign cameras to each pass
+			std::vector <StringId> passes = renderer.getPassNames();
+			for (std::vector <StringId>::const_iterator i = passes.begin(); i != passes.end(); i++)
+			{
+				std::map <std::string, std::string> fields = renderer.getUserDefinedFields(*i);
+				std::map <std::string, std::string>::const_iterator field = fields.find("camera");
+				if (field != fields.end())
+					passNameToCameraName[stringMap.getString(*i)] = field->second;
+			}
+			
 			if (initialized)
 				renderer.printRendererStatus(VERBOSITY_MAXIMUM, stringMap, std::cout);
 		}

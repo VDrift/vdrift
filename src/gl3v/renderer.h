@@ -127,6 +127,9 @@ class Renderer
 		void setPassEnabled(StringId passName, bool enable);
 		bool getPassEnabled(StringId passName) const;
 		
+		/// Get user-defined fields for a pass
+		const std::map <std::string, std::string> & getUserDefinedFields(StringId passName) const;
+		
 		/// Get the draw groups that are used by the specified pass
 		const std::set <StringId> & getDrawGroups(StringId passName) const;
 		

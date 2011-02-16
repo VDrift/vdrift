@@ -457,6 +457,20 @@ std::vector <StringId> Renderer::getPassNames() const
 	return names;
 }
 
+static const std::map <std::string, std::string> emptyStringMap;
+
+const std::map <std::string, std::string> & Renderer::getUserDefinedFields(StringId passName) const
+{
+	std::tr1::unordered_map <StringId, int>::const_iterator i = passIndexMap.find(passName);
+	if (i != passIndexMap.end())
+	{
+		assert((unsigned int)i->second < passes.size());
+		return passes[i->second].getUserDefinedFields();
+	}
+	
+	return emptyStringMap;
+}
+
 void Renderer::printRendererStatus(RendererStatusVerbosity verbosity, const StringIdMap & stringMap, std::ostream & out) const
 {
 	out << "Renderer status" << std::endl;

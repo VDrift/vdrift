@@ -82,6 +82,8 @@ class RenderPass
 		
 		const std::set <StringId> & getDrawGroups() const {return drawGroups;}
 		
+		const std::map <std::string, std::string> & getUserDefinedFields() const {return originalConfiguration.userDefinedFields;}
+		
 		RenderPass() : configured(false),enabled(true),shaderProgram(0),framebufferObject(0),renderbuffer(0),passIndex(0) {}
 		
 	private:

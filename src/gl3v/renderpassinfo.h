@@ -16,6 +16,8 @@ struct RealtimeExportPassInfo
 	bool clearStencil;
 	std::vector <std::string> drawGroups;
 	
+	std::map <std::string, std::string> userDefinedFields;
+	
 	std::string vertexShader;
 	std::vector <std::string> vertexShaderDefines;
 	std::string fragmentShader;
@@ -104,6 +106,7 @@ struct RealtimeExportPassInfo
 		_SERIALIZE_(s,clearDepth);
 		_SERIALIZE_(s,clearStencil);
 		_SERIALIZE_(s,drawGroups);
+		_SERIALIZE_(s,userDefinedFields);
 		_SERIALIZE_(s,vertexShader);
 		_SERIALIZE_(s,vertexShaderDefines);
 		_SERIALIZE_(s,fragmentShader);
