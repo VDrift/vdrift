@@ -1220,7 +1220,7 @@ btVector3 CARDYNAMICS::ComputeTireFrictionForce ( int i, btScalar dt, btScalar n
 	assert ( Aproj.length() > 0.001 ); //ensure the wheel isn't in an odd orientation
 	Aproj = Aproj.normalize();
 	btVector3 up ( 0, 0, 1 ); //upward facing normal vector
-	btScalar camber_rads = acos ( Aproj.dot ( up ) ); //find the angular difference in the camber axis between up and the projected ground normal
+	btScalar camber_rads = btAcos ( Aproj.dot ( up ) ); //find the angular difference in the camber axis between up and the projected ground normal
 	assert ( !isnan ( camber_rads ) );
 	//btVector3 crosscheck = Aproj.cross(up); //find axis of rotation between Aproj and up
 	//camber_rads = (crosscheck[0] < 0) ? -camber_rads : camber_rads; //correct sign of angular distance
