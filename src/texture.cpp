@@ -558,8 +558,10 @@ bool TEXTURE::Load(const std::string & path, const TEXTUREINFO & info, std::ostr
 	    origw = texture_surface->w;
         origh = texture_surface->h;
 
-	    //scale to power of two if necessary
-	    if (!info.npot && (!IsPowerOfTwo(orig_surface->w) || !IsPowerOfTwo(orig_surface->h)))
+		//scale to power of two if necessary
+		bool norescale = (IsPowerOfTwo(orig_surface->w) && IsPowerOfTwo(orig_surface->h)) ||
+					(info.npot && (GLEW_VERSION_2_0 || GLEW_ARB_texture_non_power_of_two));
+		if (!norescale)
 	    {
 	        int newx = orig_surface->w;
 	        int maxsize = 2048;
@@ -590,8 +592,6 @@ bool TEXTURE::Load(const std::string & path, const TEXTUREINFO & info, std::ostr
 	        orig_surface = pot_surface;
 	        texture_surface = orig_surface;
 	    }
-
-	    //std::cout << "NPOT: " << texture_info.GetAllowNonPowerOfTwo() << ": " << !IsPowerOfTwo(orig_surface->w) << ", " << !IsPowerOfTwo(orig_surface->h) << std::endl;
 
 		//scale texture down if necessary
 		scale = Scale(info.size, orig_surface->w, orig_surface->h);
