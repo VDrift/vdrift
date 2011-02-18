@@ -48,6 +48,7 @@ src = Split("""aabb.cpp
 		forcefeedback.cpp
 		game.cpp
 		graphics_config.cpp
+		graphics_config_condition.cpp
 		graphics_fallback.cpp
 		graphics_gl3v.cpp
 		graphics_renderers.cpp

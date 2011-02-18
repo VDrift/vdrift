@@ -8,6 +8,8 @@
 #include <iostream>
 #include <set>
 
+#include "graphics_config_condition.h"
+
 struct GRAPHICS_CONFIG_SHADER
 {
 	std::string name; ///< the name of the shader package
@@ -15,16 +17,6 @@ struct GRAPHICS_CONFIG_SHADER
 	std::string defines; ///< space delimited list of #defines to be set
 	
 	bool Load(std::istream & f, std::ostream & error_output, int & linecount);
-};
-
-/// a space-delimited list of string conditions. putting ! before the condition negates it.
-struct GRAPHICS_CONFIG_CONDITION
-{
-	std::set <std::string> positive_conditions;
-	std::set <std::string> negated_conditions;
-	
-	void Parse(const std::string & str);
-	bool Satisfied(const std::set <std::string> & conditions) const;
 };
 
 struct GRAPHICS_CONFIG_OUTPUT
