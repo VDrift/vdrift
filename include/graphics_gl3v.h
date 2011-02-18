@@ -8,6 +8,7 @@
 #include "texture.h"
 #include "graphics_interface.h"
 #include "frustum.h"
+#include "graphics_config_condition.h"
 
 #include "gl3v/glwrapper.h"
 #include "gl3v/renderer.h"
@@ -105,6 +106,12 @@ private:
 	
 	// a map that stores which camera each pass uses
 	std::map <std::string, std::string> passNameToCameraName;
+	
+	// a set storing all configuration option conditions (bloom enabled, etc)
+	std::set <std::string> conditions;
+	
+	// a map that stores conditions for each pass
+	std::map <StringId, GRAPHICS_CONFIG_CONDITION> passNameToEnableCondition;
 };
 
 #endif

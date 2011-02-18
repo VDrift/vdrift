@@ -16,13 +16,13 @@ GRAPHICS_GL3V::GRAPHICS_GL3V(StringIdMap & map) :
 bool GRAPHICS_GL3V::Init(const std::string & shaderpath,
 				unsigned int resx, unsigned int resy, unsigned int bpp,
 				unsigned int depthbpp, bool fullscreen, bool shaders,
-				unsigned int antialiasing, bool enableshadows,
+				unsigned int antialiasing, bool shadows,
 				int shadow_distance, int shadow_quality,
 				int reflection_type,
 				const std::string & static_reflectionmap_file,
 				const std::string & static_ambientmap_file,
 				int anisotropy, const std::string & texturesize,
-				int lighting_quality, bool newbloom, bool newnormalmaps,
+				int lighting_quality, bool bloom, bool normalmaps,
 				const std::string & renderconfig,
 				std::ostream & info_output, std::ostream & error_output)
 {
@@ -34,6 +34,16 @@ bool GRAPHICS_GL3V::Init(const std::string & shaderpath,
 		error_output << "Initialization of GL3 failed; that's OK, falling back to GL 1 or 2" << std::endl;
 		return false;
 	}
+	
+	// set up our graphical configuration option conditions
+	bool fsaa = (antialiasing > 1);
+	
+	// add the conditions to the set
+	#define ADDCONDITION(x) if (x) conditions.insert(#x)
+	ADDCONDITION(bloom);
+	ADDCONDITION(normalmaps);
+	ADDCONDITION(fsaa);
+	#undef ADDCONDITION
 	
 	// this information is needed to initialize the renderer in ReloadShaders
 	w = resx;
@@ -245,6 +255,12 @@ static bool SortDraworder(DRAWABLE * d1, DRAWABLE * d2)
 
 void GRAPHICS_GL3V::DrawScene(std::ostream & error_output)
 {
+	// enable or disable passes
+	for (std::map <StringId, GRAPHICS_CONFIG_CONDITION>::const_iterator i = passNameToEnableCondition.begin(); i != passNameToEnableCondition.end(); i++)
+	{
+		renderer.setPassEnabled(i->first, i->second.Satisfied(conditions));
+	}
+	
 	//sort the two dimentional drawlist so we get correct ordering
 	std::sort(dynamic_drawlist.twodim.begin(),dynamic_drawlist.twodim.end(),&SortDraworder);
 	
@@ -270,55 +286,58 @@ void GRAPHICS_GL3V::DrawScene(std::ostream & error_output)
 	std::vector <StringId> passes = renderer.getPassNames();
 	for (std::vector <StringId>::const_iterator i = passes.begin(); i != passes.end(); i++)
 	{
-		const std::set <StringId> & passDrawGroups = renderer.getDrawGroups(*i);
-		for (std::set <StringId>::const_iterator g = passDrawGroups.begin(); g != passDrawGroups.end(); g++)
+		if (renderer.getPassEnabled(*i))
 		{
-			StringId passName = *i;
-			StringId drawGroupName = *g;
-			std::string drawGroupString = stringMap.getString(drawGroupName);
-			std::string cameraDrawGroupKey = getCameraDrawGroupKey(passName, drawGroupName);
-			
-			std::vector <RenderModelExternal*> & outDrawList = cameraDrawGroupDrawLists[cameraDrawGroupKey];
-			
-			// see if we have already generated this combination
-			if (cameraDrawGroupCombinationsGenerated.find(cameraDrawGroupKey) == cameraDrawGroupCombinationsGenerated.end())
+			const std::set <StringId> & passDrawGroups = renderer.getDrawGroups(*i);
+			for (std::set <StringId>::const_iterator g = passDrawGroups.begin(); g != passDrawGroups.end(); g++)
 			{
-				// we need to generate this combination
+				StringId passName = *i;
+				StringId drawGroupName = *g;
+				std::string drawGroupString = stringMap.getString(drawGroupName);
+				std::string cameraDrawGroupKey = getCameraDrawGroupKey(passName, drawGroupName);
 				
-				// extract frustum information
-				RenderUniform proj, view;
-				bool doCull = true;
-				/*if (getCameraForPass(passName).empty())
+				std::vector <RenderModelExternal*> & outDrawList = cameraDrawGroupDrawLists[cameraDrawGroupKey];
+				
+				// see if we have already generated this combination
+				if (cameraDrawGroupCombinationsGenerated.find(cameraDrawGroupKey) == cameraDrawGroupCombinationsGenerated.end())
 				{
-					doCull = false;
-				}
-				else*/
-				{
-					doCull = !(!doCull || !renderer.getPassUniform(passName, stringMap.addStringId("viewMatrix"), view));
-					doCull = !(!doCull || !renderer.getPassUniform(passName, stringMap.addStringId("projectionMatrix"), proj));
-				}
-				FRUSTUM frustum;
-				FRUSTUM * frustumPtr = NULL;
-				if (doCull)
-				{
-					frustum.Extract(&proj.data[0], &view.data[0]);
-					frustumPtr = &frustum;
+					// we need to generate this combination
+					
+					// extract frustum information
+					RenderUniform proj, view;
+					bool doCull = true;
+					/*if (getCameraForPass(passName).empty())
+					{
+						doCull = false;
+					}
+					else*/
+					{
+						doCull = !(!doCull || !renderer.getPassUniform(passName, stringMap.addStringId("viewMatrix"), view));
+						doCull = !(!doCull || !renderer.getPassUniform(passName, stringMap.addStringId("projectionMatrix"), proj));
+					}
+					FRUSTUM frustum;
+					FRUSTUM * frustumPtr = NULL;
+					if (doCull)
+					{
+						frustum.Extract(&proj.data[0], &view.data[0]);
+						frustumPtr = &frustum;
+					}
+					
+					// assemble dynamic entries
+					const std::vector <DRAWABLE*> & dynamicDrawables = *dynamic_drawlist.GetByName(drawGroupString);
+					//assembleDrawList(dynamicDrawables, outDrawList, frustumPtr, lastCameraPosition);
+					assembleDrawList(dynamicDrawables, outDrawList, NULL, lastCameraPosition); // TODO: the above line is commented out because frustum culling dynamic drawables doesen't work at the moment; is the object center in the drawable for the car in the correct space??
+					
+					// assemble static entries
+					const AABB_SPACE_PARTITIONING_NODE_ADAPTER <DRAWABLE> & staticDrawables = *static_drawlist.GetDrawlist().GetByName(drawGroupString);
+					assembleDrawList(staticDrawables, outDrawList, frustumPtr, lastCameraPosition);
 				}
 				
-				// assemble dynamic entries
-				const std::vector <DRAWABLE*> & dynamicDrawables = *dynamic_drawlist.GetByName(drawGroupString);
-				//assembleDrawList(dynamicDrawables, outDrawList, frustumPtr, lastCameraPosition);
-				assembleDrawList(dynamicDrawables, outDrawList, NULL, lastCameraPosition); // TODO: the above line is commented out because frustum culling dynamic drawables doesen't work at the moment; is the object center in the drawable for the car in the correct space??
+				// use the generated combination in our drawMap
+				drawMap[passName][drawGroupName] = &outDrawList;
 				
-				// assemble static entries
-				const AABB_SPACE_PARTITIONING_NODE_ADAPTER <DRAWABLE> & staticDrawables = *static_drawlist.GetDrawlist().GetByName(drawGroupString);
-				assembleDrawList(staticDrawables, outDrawList, frustumPtr, lastCameraPosition);
+				cameraDrawGroupCombinationsGenerated.insert(cameraDrawGroupKey);
 			}
-			
-			// use the generated combination in our drawMap
-			drawMap[passName][drawGroupName] = &outDrawList;
-			
-			cameraDrawGroupCombinationsGenerated.insert(cameraDrawGroupKey);
 		}
 	}
 	
@@ -379,6 +398,15 @@ bool GRAPHICS_GL3V::ReloadShaders(const std::string & shaderpath, std::ostream &
 				std::map <std::string, std::string>::const_iterator field = fields.find("camera");
 				if (field != fields.end())
 					passNameToCameraName[stringMap.getString(*i)] = field->second;
+			}
+			
+			// assign conditions to each pass
+			for (std::vector <StringId>::const_iterator i = passes.begin(); i != passes.end(); i++)
+			{
+				std::map <std::string, std::string> fields = renderer.getUserDefinedFields(*i);
+				std::map <std::string, std::string>::const_iterator field = fields.find("conditions");
+				if (field != fields.end())
+					passNameToEnableCondition[*i].Parse(field->second);
 			}
 			
 			if (initialized)
