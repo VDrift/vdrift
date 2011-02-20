@@ -6,10 +6,11 @@
 
 #ifdef __APPLE__
 #include <GLExtensionWrangler/glew.h>
+#include <OpenGL/gl.h>
 #else
 #include <GL/glew.h>
-#endif
 #include <GL/gl.h>
+#endif
 
 namespace OPENGL_UTILITY
 {
