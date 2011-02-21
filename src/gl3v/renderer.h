@@ -158,7 +158,7 @@ class Renderer
 		// internally shared resources: map of shader name to shader handle
 		std::map <std::string, RenderShader> shaders;
 		
-		// externally created models
+		// externally created but internally tracked models
 		keyed_container <RenderModelEntry> models;
 };
 

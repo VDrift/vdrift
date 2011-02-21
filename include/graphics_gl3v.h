@@ -109,9 +109,6 @@ private:
 	
 	// a set storing all configuration option conditions (bloom enabled, etc)
 	std::set <std::string> conditions;
-	
-	// a map that stores conditions for each pass
-	std::map <StringId, GRAPHICS_CONFIG_CONDITION> passNameToEnableCondition;
 };
 
 #endif

@@ -255,12 +255,6 @@ static bool SortDraworder(DRAWABLE * d1, DRAWABLE * d2)
 
 void GRAPHICS_GL3V::DrawScene(std::ostream & error_output)
 {
-	// enable or disable passes
-	for (std::map <StringId, GRAPHICS_CONFIG_CONDITION>::const_iterator i = passNameToEnableCondition.begin(); i != passNameToEnableCondition.end(); i++)
-	{
-		renderer.setPassEnabled(i->first, i->second.Satisfied(conditions));
-	}
-	
 	//sort the two dimentional drawlist so we get correct ordering
 	std::sort(dynamic_drawlist.twodim.begin(),dynamic_drawlist.twodim.end(),&SortDraworder);
 	
@@ -387,6 +381,23 @@ bool GRAPHICS_GL3V::ReloadShaders(const std::string & shaderpath, std::ostream &
 	bool passInfosLoaded = joeserialize::LoadObjectFromFile("passList", shaderpath+"/gl3/vdrift1.rhr", passInfos, false, true, info_output, error_output);
 	if (passInfosLoaded)
 	{
+		// strip pass infos from the list that we pass to the renderer if they are disabled
+		int origPassInfoSize = passInfos.size();
+		for (int i = origPassInfoSize - 1; i >= 0; i--)
+		{
+			std::map <std::string, std::string> & fields = passInfos[i].userDefinedFields;
+			std::map <std::string, std::string>::const_iterator field = fields.find("conditions");
+			if (field != fields.end())
+			{
+				GRAPHICS_CONFIG_CONDITION condition;
+				condition.Parse(field->second);
+				if (!condition.Satisfied(conditions))
+				{
+					passInfos.erase(passInfos.begin()+i);
+				}
+			}
+		}
+		
 		bool initSuccess = renderer.initialize(passInfos, stringMap, shaderpath+"/gl3", w, h, error_output);
 		if (initSuccess)
 		{
@@ -398,15 +409,6 @@ bool GRAPHICS_GL3V::ReloadShaders(const std::string & shaderpath, std::ostream &
 				std::map <std::string, std::string>::const_iterator field = fields.find("camera");
 				if (field != fields.end())
 					passNameToCameraName[stringMap.getString(*i)] = field->second;
-			}
-			
-			// assign conditions to each pass
-			for (std::vector <StringId>::const_iterator i = passes.begin(); i != passes.end(); i++)
-			{
-				std::map <std::string, std::string> fields = renderer.getUserDefinedFields(*i);
-				std::map <std::string, std::string>::const_iterator field = fields.find("conditions");
-				if (field != fields.end())
-					passNameToEnableCondition[*i].Parse(field->second);
 			}
 			
 			if (initialized)
