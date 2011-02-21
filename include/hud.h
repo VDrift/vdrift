@@ -49,7 +49,7 @@ class HUDBAR
 class HUD
 {
 public:
-	HUD() : debug_hud_info(false), racecomplete(false) {}
+	HUD() : debug_hud_info(false), racecomplete(false), lastvisible(true) {}
 
 	bool Init(
 		const std::string & texturepath,
@@ -143,11 +143,17 @@ private:
 	bool debug_hud_info;
 
 	bool racecomplete;
+	
+	bool lastvisible;
 
 	void SetVisible(bool newvis)
 	{
-		hudroot.SetChildVisibility(newvis);
-		SetDebugVisibility(newvis && debug_hud_info);
+		if (newvis != lastvisible)
+		{
+			hudroot.SetChildVisibility(newvis);
+			SetDebugVisibility(newvis && debug_hud_info);
+			lastvisible = newvis;
+		}
 	}
 
 	keyed_container <DRAWABLE>::handle SetupText(SCENENODE & parent, FONT & font, TEXT_DRAW & textdraw, const std::string & str, const float x, const float y, const float scalex, const float scaley, const float r, const float g, const float b, float zorder = 0)
