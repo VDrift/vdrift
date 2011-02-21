@@ -129,7 +129,7 @@ bool HUD::Init(
 		bestlaptime.Init(timernoderef, lcdfont, "", startx+xinc*2.0, timerboxdimy*1.2-timerboxdimy*0.3, fontscalex, fontscaley);
 		bestlaptime.SetDrawOrder(timernoderef, 0.2);
 	}
-
+	
 	{
 		float fontscaley = 0.02;
 		float fontscalex = screenhwratio * fontscaley;
@@ -141,7 +141,7 @@ bool HUD::Init(
 		debugtextdraw3 = SetupText(debugnoderef, sansfont, debugtext3, "", 0.5, fontscaley, fontscalex, fontscaley, 1,1,1, 10);
 		debugtextdraw4 = SetupText(debugnoderef, sansfont, debugtext4, "", 0.75, fontscaley, fontscalex, fontscaley, 1,1,1, 10);
 	}
-
+	
 	{
 		float fontscaley = barheight * 0.5;
 		float fontscalex = screenhwratio * fontscaley;
@@ -152,7 +152,7 @@ bool HUD::Init(
 		geartextdraw = SetupText(hudroot, lcdfont, geartext, "N", gx, y, fontscalex, fontscaley, 1,1,1, 4);	
 		mphtextdraw = SetupText(hudroot, lcdfont, mphtext, "0", mx, y, fontscalex, fontscaley, 1,1,1, 4);
 	}
-
+	
 	//load ABS and TCS indicators
 	{
 		float fontscaley = barheight * 0.25;
@@ -169,15 +169,6 @@ bool HUD::Init(
 		tcs.SetDrawOrder(hudroot, 4);
 		tcs.SetColor(hudroot, 1, 0.77, 0.23);
 	}
-
-	{
-		float fontscaley = barheight * 0.5;
-		float fontscalex = screenhwratio * fontscaley;
-		float x = fontscalex * 0.25;
-		float y = timerbox_lowery + fontscaley;
-		lapindicator.Init(hudroot, sansfont, "", x, y, fontscalex, fontscaley);
-		lapindicator.SetDrawOrder(hudroot, 0.2);
-	}
 	
 	{
 		float fontscaley = barheight * 0.5;
@@ -187,16 +178,25 @@ bool HUD::Init(
 		driftscoreindicator.Init(hudroot, sansfont, "", x, y, fontscalex, fontscaley);
 		driftscoreindicator.SetDrawOrder(hudroot, 0.2);
 	}
-
+	
 	{
 		float fontscaley = barheight * 0.5;
 		float fontscalex = screenhwratio * fontscaley;
 		float x = fontscalex * 0.25;
 		float y = timerbox_lowery + fontscaley * 2;
+		lapindicator.Init(hudroot, sansfont, "", x, y, fontscalex, fontscaley);
+		lapindicator.SetDrawOrder(hudroot, 0.2);
+	}
+	
+	{
+		float fontscaley = barheight * 0.5;
+		float fontscalex = screenhwratio * fontscaley;
+		float x = fontscalex * 0.25;
+		float y = timerbox_lowery + fontscaley * 3;
 		placeindicator.Init(hudroot, sansfont, "", x, y, fontscalex, fontscaley);
 		placeindicator.SetDrawOrder(hudroot, 0.2);
 	}
-
+	
 	{
 		float fontscaley = barheight * 0.5;
 		float fontscalex = screenhwratio * fontscaley;
@@ -206,7 +206,7 @@ bool HUD::Init(
 		raceprompt.SetDrawOrder(hudroot, 1.0);
 		raceprompt.SetColor(hudroot, 1, 0, 0);
 	}
-
+	
 	Hide();
 	
 	debug_hud_info = debugon;
@@ -312,50 +312,44 @@ void HUD::Update(FONT & lcdfont, FONT & sansfont, float curlap, float lastlap, f
 		else
 			tcs.SetAlpha(hudroot, 0.2);
 	}
-
-	//update lap
-	if (numlaps > 0)
-	{
-		std::stringstream lapstream;
-		//std::cout << curlapnum << std::endl;
-		lapstream << "Lap " << std::max(1,std::min(curlapnum, numlaps)) << "/" << numlaps;
-		lapindicator.Revise(lapstream.str());
-	}
-	else
-		placeindicator.SetDrawEnable(hudroot, false);
 	
 	//update drift score
 	if (numlaps == 0) //this is how we determine practice mode, for now
 	{
 		std::stringstream scorestream;
-		scorestream << "Score: " << (int)driftscore;
+		scorestream << "Score " << (int)driftscore;
 		if (drifting)
 		{
 			scorestream << " + " << (int)thisdriftscore;
 			driftscoreindicator.SetColor(hudroot, 1,0,0);
 		}
 		else
+		{
 			driftscoreindicator.SetColor(hudroot, 1,1,1);
+		}
 		driftscoreindicator.Revise(scorestream.str());
 	}
 	else
+	{
 		driftscoreindicator.SetDrawEnable(hudroot, false);
+	}
 
-	//update place
+	
 	if (numlaps > 0)
 	{
+		//update lap
+		std::stringstream lapstream;
+		//std::cout << curlapnum << std::endl;
+		lapstream << "Lap " << std::max(1, std::min(curlapnum, numlaps)) << "/" << numlaps;
+		lapindicator.Revise(lapstream.str());
+		
+		//update place
 		std::stringstream stream;
 		stream << "Place " << curplace << "/" << numcars;
 		placeindicator.Revise(stream.str());
-	}
-	else
-		placeindicator.SetDrawEnable(hudroot, false);
-
-	//update race prompt
-	if (numlaps > 0)
-	{
+		
+		//update race prompt
 		std::stringstream t;
-
 		if (stagingtimeleft > 0.5)
 		{
 			t << ((int)stagingtimeleft)+1;
@@ -389,7 +383,7 @@ void HUD::Update(FONT & lcdfont, FONT & sansfont, float curlap, float lastlap, f
 			raceprompt.SetPosition(0.5-width*0.5,0.5);
 			racecomplete = true;
 		}
-
+		
 		if (!racecomplete)
 		{
 			raceprompt.Revise(t.str());
@@ -398,5 +392,9 @@ void HUD::Update(FONT & lcdfont, FONT & sansfont, float curlap, float lastlap, f
 		}
 	}
 	else
+	{
+		lapindicator.SetDrawEnable(hudroot, false);
+		placeindicator.SetDrawEnable(hudroot, false);
 		raceprompt.SetDrawEnable(hudroot, false);
+	}
 }

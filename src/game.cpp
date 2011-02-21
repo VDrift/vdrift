@@ -1408,7 +1408,8 @@ void GAME::ProcessGUIAction(const std::string & action)
 	{
 		bool play_replay = false;
 		bool add_opponents = !opponents.empty();
-		if (!NewGame(play_replay, add_opponents, race_laps))
+		int num_laps = settings.GetNumberOfLaps();
+		if (!NewGame(play_replay, add_opponents, num_laps))
 		{
 			LeaveGame();
 		}
@@ -1634,6 +1635,8 @@ void GAME::UpdateCarInputs(CAR & car)
 bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 {
 	LeaveGame(); //this should clear out all data
+	
+	race_laps = num_laps; // cache number of laps for gui
 
 	if (playreplay)
 	{
@@ -1703,8 +1706,6 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 		return false;
 	}
 	//cout << "After load car: " << carcontrols_local.first << endl;
-
-	race_laps = num_laps;
 
 	//load AI cars
 	if (addopponents)
@@ -1855,6 +1856,7 @@ void GAME::LeaveGame()
 	timer.Unload();
 	active_camera = 0;
 	pause = false;
+	race_laps = 0;
 	tire_smoke.Clear();
 }
 
