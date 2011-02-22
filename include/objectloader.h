@@ -3,8 +3,7 @@
 
 #include "scenenode.h"
 #include "joepack.h"
-
-#include <map> // for std::pair
+#include "config.h"
 
 class TEXTUREMANAGER;
 class MODELMANAGER;
@@ -55,16 +54,17 @@ public:
 		params_per_object(17),
 		expected_params(17),
 		min_params(14),
-		error(false)
+		error(false),
+		list(false)
 	{
 		// ctor
 	}
-
+	
 	bool GetError() const
 	{
 		return error;
 	}
-
+	
 	int GetNumObjects() const
 	{
 		return numobjects;
@@ -107,8 +107,39 @@ private:
 	const int expected_params;
 	const int min_params;
 	bool error;
+	bool list;
 	
-	void CalculateNumObjects();
+	CONFIG track_config;
+	CONFIG::const_iterator track_it;
+	
+	/// pod for references
+	struct BODY
+	{
+		BODY() : nolighting(false), collidable(true), surface(0) {}
+		
+		std::tr1::shared_ptr<MODEL> model;
+		DRAWABLE drawable;
+		bool nolighting;
+		bool collidable;
+		int surface;
+	};
+	std::map<std::string, BODY> bodies;
+	
+	typedef std::map<std::string, BODY>::const_iterator body_iterator;
+	
+	body_iterator LoadBody(const std::string & name);
+	
+	void AddBody(SCENENODE & scene, const BODY & body);
+	
+	bool LoadNode(const CONFIG & cfg, const CONFIG::const_iterator & sec);
+	
+	bool Begin();
+	void CalculateNum();
+	std::pair<bool, bool> Continue();
+	
+	bool BeginOld();
+	void CalculateNumOld();
+	std::pair<bool, bool> ContinueOld();
 };
 
 #endif // _OBJECTLOADER_H

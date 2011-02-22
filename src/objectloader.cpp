@@ -1,7 +1,6 @@
 #include "objectloader.h"
 #include "texturemanager.h"
 #include "textureinfo.h"
-#include "model_joe03.h"
 #include "modelmanager.h"
 #include "tracksurface.h"
 #include "trackobject.h"
@@ -9,7 +8,291 @@
 #include <string>
 #include <fstream>
 
-///read from the file stream and put it in "output".
+/// TODO: weld together nearby geometry
+void Optimize(const SCENENODE & input, SCENENODE & output)
+{
+	output = input;
+}
+
+bool OBJECTLOADER::BeginObjectLoad()
+{
+	list = true;
+	packload = pack.LoadPack(objectpath + "/objects.jpk");
+	
+	std::string objectlist = objectpath + "/objects.txt";
+	objectfile.open(objectlist.c_str());
+	if (objectfile.good())
+	{
+		list = false;
+		return Begin();
+	}
+	
+	objectlist = objectpath + "/list.txt";
+	objectfile.open(objectlist.c_str());
+	if (!objectfile.good())
+	{
+		return false;
+	}
+	return BeginOld();
+}
+
+std::pair<bool, bool> OBJECTLOADER::ContinueObjectLoad()
+{
+	if (error)
+	{
+		return std::make_pair(true, false);
+	}
+	
+	if (list)
+	{
+		return ContinueOld();
+	}
+	
+	return Continue();
+}
+
+/*
+[body.foo]
+texture = diffuse.png
+model = body.joe
+#clampuv = 0
+#mipmap = true
+#skybox = false
+#nolighting = false
+#transparent = false
+#isashadow = false
+#collideable = false
+#surface = 0
+#mass = 0 # to be implemented
+#size = 1, 1, 1 # axis aligned bounding box
+
+[node.bla]
+body = foo
+#position = 0, 0, 0
+#rotation = 0, 0, 0
+*/
+
+OBJECTLOADER::body_iterator OBJECTLOADER::LoadBody(const std::string & name)
+{
+	body_iterator ib = bodies.find(name);
+	if(ib != bodies.end())
+	{
+		return ib;
+	}
+	
+	CONFIG body_config;
+	CONFIG * cfg = &track_config;
+	CONFIG::const_iterator sec;
+	if (!track_config.GetSection("body."+name, sec))
+	{
+		if (!body_config.Load(objectpath + "/" + name))
+		{
+			return bodies.end();
+		}
+		cfg = &body_config;
+		sec = body_config.begin();
+	}
+	
+	BODY body;
+	std::vector<std::string> texture_name(3);
+	std::string model_name;
+	int clampuv = 0;
+	bool mipmap = true;
+	bool skybox = false;
+	int transparent = 0;
+	bool isashadow = false;
+	
+	cfg->GetParam(sec, "texture", texture_name, error_output);
+	cfg->GetParam(sec, "model", model_name, error_output);
+	cfg->GetParam(sec, "clampuv", clampuv);
+	cfg->GetParam(sec, "mipmap", mipmap);
+	cfg->GetParam(sec, "skybox", skybox);
+	cfg->GetParam(sec, "transparent", transparent);
+	cfg->GetParam(sec, "isashadow", isashadow);
+	cfg->GetParam(sec, "nolighting", body.nolighting);
+	cfg->GetParam(sec, "collidable", body.collidable);
+	cfg->GetParam(sec, "surface", body.surface);
+	
+	// load model
+	if (packload)
+	{
+		if (!model_manager.Load(model_name, pack, body.model) &&
+			!model_manager.Load(objectdir, model_name, body.model))
+		{
+			return ib;
+		}
+	}
+	else
+	{
+		if (!model_manager.Load(objectdir, model_name, body.model))
+		{
+			return ib;
+		}
+	}
+	models.push_back(body.model);
+	
+	// load textures
+	TEXTUREINFO texinfo;
+	texinfo.mipmap = mipmap || anisotropy; //always mipmap if anisotropy is on
+	texinfo.anisotropy = anisotropy;
+	texinfo.repeatu = clampuv != 1 && clampuv != 2;
+	texinfo.repeatv = clampuv != 1 && clampuv != 3;
+	texinfo.size = texsize;
+	
+	std::tr1::shared_ptr<TEXTURE> diffuse;
+	if (!texture_manager.Load(objectdir, texture_name[0], texinfo, diffuse))
+	{
+		return ib;
+	}
+	
+	std::tr1::shared_ptr<TEXTURE> miscmap1;
+	if (texture_name[1].length() > 0)
+	{
+		texture_manager.Load(objectdir, texture_name[1], texinfo, miscmap1);
+	}
+	
+	std::tr1::shared_ptr<TEXTURE> miscmap2;
+	if (texture_name[2].length() > 0)
+	{
+		texture_manager.Load(objectdir, texture_name[2], texinfo, miscmap2);
+	}
+	
+	// setup drawable
+	DRAWABLE & drawable = body.drawable;
+	drawable.SetModel(*body.model);
+	drawable.SetDiffuseMap(diffuse);
+	drawable.SetMiscMap1(miscmap1);
+	drawable.SetMiscMap2(miscmap2);
+	drawable.SetDecal(transparent);
+	drawable.SetCull(cull && (transparent!=2), false);
+	drawable.SetRadius(body.model->GetRadius());
+	drawable.SetObjectCenter(body.model->GetCenter());
+	drawable.SetSkybox(skybox);
+	drawable.SetVerticalTrack(skybox && vertical_tracking_skyboxes);
+	
+	return bodies.insert(std::make_pair(name, body)).first;
+}
+
+void OBJECTLOADER::AddBody(SCENENODE & scene, const BODY & body)
+{
+	//use a different drawlist layer where necessary
+	bool nolighting = body.nolighting;
+	bool transparent = body.drawable.GetDecal();
+	bool skybox = body.drawable.GetSkybox();
+	keyed_container<DRAWABLE> * dlist = &scene.GetDrawlist().normal_noblend;
+	if (transparent)
+	{
+		dlist = &scene.GetDrawlist().normal_blend;
+	}
+	else if (nolighting)
+	{
+		dlist = &scene.GetDrawlist().normal_noblend_nolighting;
+	}
+	if (skybox)
+	{
+		if (transparent)
+		{
+			dlist = &scene.GetDrawlist().skybox_blend;
+		}
+		else
+		{
+			dlist = &scene.GetDrawlist().skybox_noblend;
+		}
+	}
+	dlist->insert(body.drawable);
+	
+	if (body.collidable)
+	{
+		assert(body.surface >= 0 && body.surface < (int)surfaces.size());
+		objects.push_back(TRACKOBJECT(body.model.get(), &surfaces[body.surface]));
+	}
+}
+
+bool OBJECTLOADER::LoadNode(const CONFIG & cfg, const CONFIG::const_iterator & sec)
+{
+	std::string bodyname;
+	if (!cfg.GetParam(sec, "body", bodyname, error_output))
+	{
+		return false;
+	}
+	
+	body_iterator ib = LoadBody(bodyname);
+	if (ib != bodies.end())
+	{
+		std::vector<float> position(3, 0.0), rotation(3, 0.0);
+		if (cfg.GetParam(sec, "position", position) | cfg.GetParam(sec, "rotation", rotation))
+		{
+			keyed_container <SCENENODE>::handle sh = unoptimized_scene.AddNode();
+			SCENENODE & node = unoptimized_scene.GetNode(sh);
+			
+			MATHVECTOR<float, 3> pos(position[0], position[1], position[2]);
+			QUATERNION<float> rot(rotation[0]/180*M_PI, rotation[1]/180*M_PI, rotation[2]/180*M_PI);
+			node.GetTransform().SetRotation(rot);
+			node.GetTransform().SetTranslation(pos);
+			
+			AddBody(node, ib->second);
+		}
+		else
+		{
+			AddBody(unoptimized_scene, ib->second);
+		}
+	}
+	
+	return true;
+}
+
+// count number of nodes
+void OBJECTLOADER::CalculateNum()
+{
+	numobjects = 0;
+	std::string objectlist = objectpath + "/objects.txt";
+	std::ifstream f(objectlist.c_str());
+	std::string line;
+	while (std::getline(f, line).good())
+	{
+		if (line.find("node.") < line.length())
+		{
+			numobjects++;
+		}
+	}
+}
+
+bool OBJECTLOADER::Begin()
+{
+	CalculateNum();
+	
+	models.reserve(numobjects);
+	objects.reserve(numobjects);
+	
+	if (track_config.Load(objectpath + "/objects.txt"))
+	{
+		track_it = track_config.begin();
+		return true;
+	}
+	return false;
+}
+
+std::pair<bool, bool> OBJECTLOADER::Continue()
+{
+	if (track_it == track_config.end())
+	{
+		// we're done, put the optimized scene in sceneroot
+		Optimize(unoptimized_scene, sceneroot);
+		unoptimized_scene.Clear();
+		return std::make_pair(false, false);
+	}
+	
+	if (track_it->first.find("node.") == 0 && !LoadNode(track_config, track_it))
+	{
+		return std::make_pair(true, false);
+	}
+	
+	track_it++;
+	
+	return std::make_pair(false, true);
+}
+
+/// read from the file stream and put it in "output".
 /// return true if the get was successful, else false
 template <typename T>
 static bool GetParam(std::ifstream & f, T & output)
@@ -33,35 +316,7 @@ static bool GetParam(std::ifstream & f, T & output)
 	return true;
 }
 
-bool OBJECTLOADER::BeginObjectLoad()
-{
-	CalculateNumObjects();
-	
-	models.reserve(numobjects);
-	objects.reserve(numobjects);
-
-	std::string objectlist = objectpath + "/list.txt";
-	objectfile.open(objectlist.c_str());
-
-	if (!GetParam(objectfile, params_per_object)) return false;
-
-	if (params_per_object != expected_params)
-	{
-		info_output << "Track object list has " << params_per_object << " params per object, expected " << expected_params << ", this is fine, continuing" << std::endl;
-	}
-
-	if (params_per_object < min_params)
-	{
-		error_output << "Track object list has " << params_per_object << " params per object, expected " << expected_params << std::endl;
-		return false;
-	}
-
-	packload = pack.LoadPack(objectpath + "/objects.jpk");
-
-	return true;
-}
-
-void OBJECTLOADER::CalculateNumObjects()
+void OBJECTLOADER::CalculateNumOld()
 {
 	numobjects = 0;
 	std::string objectlist = objectpath + "/list.txt";
@@ -76,25 +331,36 @@ void OBJECTLOADER::CalculateNumObjects()
 			{
 				GetParam(f, junk);
 			}
-
 			numobjects++;
 		}
 	}
 }
 
-void Optimize(const SCENENODE & input, SCENENODE & output)
+bool OBJECTLOADER::BeginOld()
 {
-	// TODO: weld together nearby geometry
-	output = input;
+	CalculateNumOld();
+	
+	models.reserve(numobjects);
+	objects.reserve(numobjects);
+	
+	if (!GetParam(objectfile, params_per_object)) return false;
+	
+	if (params_per_object != expected_params)
+	{
+		info_output << "Track object list has " << params_per_object << " params per object, expected " << expected_params << ", this is fine, continuing" << std::endl;
+	}
+	
+	if (params_per_object < min_params)
+	{
+		error_output << "Track object list has " << params_per_object << " params per object, expected " << expected_params << std::endl;
+		return false;
+	}
+	
+	return true;
 }
 
-std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad()
+std::pair<bool, bool> OBJECTLOADER::ContinueOld()
 {
-	if (error)
-	{
-		return std::make_pair(true, false);
-	}
-
 	std::string model_name;
 	if (!(GetParam(objectfile, model_name)))
 	{
