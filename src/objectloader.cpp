@@ -59,9 +59,9 @@ model = body.joe
 #mipmap = true
 #skybox = false
 #nolighting = false
-#transparent = false
+#transparent = 0
 #isashadow = false
-#collideable = false
+#collideable = true
 #surface = 0
 #mass = 0 # to be implemented
 #size = 1, 1, 1 # axis aligned bounding box
@@ -112,6 +112,11 @@ OBJECTLOADER::body_iterator OBJECTLOADER::LoadBody(const std::string & name)
 	cfg->GetParam(sec, "nolighting", body.nolighting);
 	cfg->GetParam(sec, "collidable", body.collidable);
 	cfg->GetParam(sec, "surface", body.surface);
+	
+	if (dynamicshadowsenabled && isashadow)
+	{
+		return ib;
+	}
 	
 	// load model
 	if (packload)
