@@ -1,5 +1,7 @@
 #include "objectloader.h"
 #include "texturemanager.h"
+#include "textureinfo.h"
+#include "model_joe03.h"
 #include "modelmanager.h"
 #include "tracksurface.h"
 #include "trackobject.h"
@@ -153,10 +155,10 @@ std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad()
 		return std::make_pair(false, true);
 	}
 
-	std::tr1::shared_ptr<MODEL_JOE03> model;
+	std::tr1::shared_ptr<MODEL> model;
 	if (packload)
 	{
-		if (!model_manager.Load(model_name, model, &pack))
+		if (!model_manager.Load(model_name, pack, model))
 		{
 			return std::make_pair(true, false);
 		}

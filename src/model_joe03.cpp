@@ -161,8 +161,6 @@ static bool NeedsNormalSwap(JOEObject & Object)
 
 bool MODEL_JOE03::Load ( const std::string & filename, std::ostream & err_output, bool genlist, JOEPACK * pack)
 {
-	modelpath = filename;
-
 	Clear();
 
 	FILE * m_FilePointer = NULL;
@@ -207,6 +205,10 @@ bool MODEL_JOE03::Load ( const std::string & filename, std::ostream & err_output
 			GenerateVertexArrayObject(err_output);
 		}
 	}
+	else
+	{
+		err_output << "in " << filename << std::endl;
+	}
 
 	return val;
 }
@@ -227,13 +229,13 @@ bool MODEL_JOE03::LoadFromHandle ( FILE * m_FilePointer, JOEPACK * pack, std::os
 	if ( Object.info.version != JOE_VERSION )
 	{
 		// Display an error message for bad file format, then stop loading
-		err_output << "Invalid file format (Version is " << Object.info.version << " not " << JOE_VERSION << ": " << modelpath;
+		err_output << "Invalid file format (Version is " << Object.info.version << " not " << JOE_VERSION << "). ";
 		return false;
 	}
 
 	if ( Object.info.num_faces > JOE_MAX_FACES )
 	{
-		err_output << modelpath << " has " << Object.info.num_faces << " faces (max " << JOE_MAX_FACES << ").";
+		err_output << Object.info.num_faces << " faces (max " << JOE_MAX_FACES << "). ";
 		return false;
 	}
 

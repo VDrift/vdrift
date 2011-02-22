@@ -1,5 +1,6 @@
 #include "loadingscreen.h"
 #include "texturemanager.h"
+#include "textureinfo.h"
 	
 void LOADINGSCREEN::Update(float percentage, const std::string & optional_text, float posx, float posy)
 {

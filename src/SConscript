@@ -72,6 +72,7 @@ src = Split("""aabb.cpp
 		model.cpp
 		model_joe03.cpp
 		model_obj.cpp
+		modelmanager.cpp
 		objectloader.cpp
 		opengl_utility.cpp
 		optional.cpp
@@ -94,11 +95,13 @@ src = Split("""aabb.cpp
 		sound.cpp
 		soundbuffer.cpp
 		soundfilter.cpp
+		soundmanager.cpp
 		soundsource.cpp
 		sprite2d.cpp
 		suspensionbumpdetection.cpp
 		svn_sourceforge.cpp
 		texture.cpp
+		texturemanager.cpp
 		text_draw.cpp
 		timer.cpp
 		toggle.cpp

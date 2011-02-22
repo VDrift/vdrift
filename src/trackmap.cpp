@@ -1,5 +1,6 @@
 #include "trackmap.h"
 #include "texturemanager.h"
+#include "texture.h"
 
 #ifdef __APPLE__
 #include <SDL_gfx/SDL_gfxPrimitives.h>

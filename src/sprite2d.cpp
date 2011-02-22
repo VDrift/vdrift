@@ -1,5 +1,6 @@
 #include "sprite2d.h"
 #include "texturemanager.h"
+#include "textureinfo.h"
 
 void SPRITE2D::Unload(SCENENODE & parent)
 {

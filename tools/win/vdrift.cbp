@@ -13,7 +13,6 @@
 				<Option type="1" />
 				<Option compiler="gcc" />
 				<Option use_console_runner="0" />
-				<Option parameters="-debug" />
 				<Compiler>
 					<Add option="-g" />
 				</Compiler>
@@ -469,6 +468,7 @@
 		<Unit filename="..\..\include\text_draw.h" />
 		<Unit filename="..\..\include\texture.h" />
 		<Unit filename="..\..\include\texture_interface.h" />
+		<Unit filename="..\..\include\textureinfo.h" />
 		<Unit filename="..\..\include\texturemanager.h" />
 		<Unit filename="..\..\include\timer.h" />
 		<Unit filename="..\..\include\tobullet.h" />
@@ -528,6 +528,7 @@
 		<Unit filename="..\..\src\gl3v\glenums.h" />
 		<Unit filename="..\..\src\gl3v\glwrapper.cpp" />
 		<Unit filename="..\..\src\gl3v\glwrapper.h" />
+		<Unit filename="..\..\src\gl3v\rendercachevector.h" />
 		<Unit filename="..\..\src\gl3v\renderdimensions.cpp" />
 		<Unit filename="..\..\src\gl3v\renderdimensions.h" />
 		<Unit filename="..\..\src\gl3v\renderer.cpp" />
@@ -551,6 +552,7 @@
 		<Unit filename="..\..\src\gl3v\renderuniformvector.h" />
 		<Unit filename="..\..\src\gl3v\stringidmap.h" />
 		<Unit filename="..\..\src\graphics_config.cpp" />
+		<Unit filename="..\..\src\graphics_config_condition.cpp" />
 		<Unit filename="..\..\src\graphics_fallback.cpp" />
 		<Unit filename="..\..\src\graphics_gl3v.cpp" />
 		<Unit filename="..\..\src\graphics_renderers.cpp" />
@@ -574,6 +576,7 @@
 		<Unit filename="..\..\src\model.cpp" />
 		<Unit filename="..\..\src\model_joe03.cpp" />
 		<Unit filename="..\..\src\model_obj.cpp" />
+		<Unit filename="..\..\src\modelmanager.cpp" />
 		<Unit filename="..\..\src\objectloader.cpp" />
 		<Unit filename="..\..\src\opengl_utility.cpp" />
 		<Unit filename="..\..\src\optional.cpp" />
@@ -596,12 +599,14 @@
 		<Unit filename="..\..\src\sound.cpp" />
 		<Unit filename="..\..\src\soundbuffer.cpp" />
 		<Unit filename="..\..\src\soundfilter.cpp" />
+		<Unit filename="..\..\src\soundmanager.cpp" />
 		<Unit filename="..\..\src\soundsource.cpp" />
 		<Unit filename="..\..\src\sprite2d.cpp" />
 		<Unit filename="..\..\src\suspensionbumpdetection.cpp" />
 		<Unit filename="..\..\src\svn_sourceforge.cpp" />
 		<Unit filename="..\..\src\text_draw.cpp" />
 		<Unit filename="..\..\src\texture.cpp" />
+		<Unit filename="..\..\src\texturemanager.cpp" />
 		<Unit filename="..\..\src\timer.cpp" />
 		<Unit filename="..\..\src\toggle.cpp" />
 		<Unit filename="..\..\src\track.cpp" />

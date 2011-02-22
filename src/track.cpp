@@ -4,6 +4,7 @@
 #include "tracksurface.h"
 #include "objectloader.h"
 #include "texturemanager.h"
+#include "textureinfo.h"
 #include "k1999.h"
 
 #include <functional>

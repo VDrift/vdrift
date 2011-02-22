@@ -7,6 +7,8 @@
 #include "carinput.h"
 #include "mesh_gen.h"
 #include "texturemanager.h"
+#include "textureinfo.h"
+#include "model_joe03.h"
 #include "modelmanager.h"
 #include "soundmanager.h"
 #include "camera_fixed.h"
@@ -62,7 +64,7 @@ struct LoadDrawable
 	const int anisotropy;
 	TEXTUREMANAGER & textures;
 	MODELMANAGER & models;
-	std::list<std::tr1::shared_ptr<MODEL_JOE03> > & modellist;
+	std::list<std::tr1::shared_ptr<MODEL> > & modellist;
 	std::ostream & error;
 	
 	LoadDrawable(
@@ -72,7 +74,7 @@ struct LoadDrawable
 		const int anisotropy,
 		TEXTUREMANAGER & textures,
 		MODELMANAGER & models,
-		std::list<std::tr1::shared_ptr<MODEL_JOE03> > & modellist,
+		std::list<std::tr1::shared_ptr<MODEL> > & modellist,
 		std::ostream & error) :
 		cfg(cfg),
 		path(path),
@@ -140,7 +142,7 @@ struct LoadDrawable
 
 		// set mesh
 		std::string scale;
-		std::tr1::shared_ptr<MODEL_JOE03> mesh;
+		std::tr1::shared_ptr<MODEL> mesh;
 		if (!cfg.GetParam(section, "scale", scale))
 		{
 			if (!models.Load(path, meshname, mesh)) return false;
@@ -154,7 +156,7 @@ struct LoadDrawable
 			std::stringstream s(scale);
 			s >> sc;
 			
-			std::tr1::shared_ptr<MODEL_JOE03> temp(new MODEL_JOE03());
+			std::tr1::shared_ptr<MODEL> temp(new MODEL());
 			temp->SetVertexArray(it->second->GetVertexArray());
 			temp->Scale(sc[0], sc[1], sc[2]); // coordinate system conversion
 			temp->GenerateMeshMetrics();
@@ -273,7 +275,7 @@ static bool LoadWheel(
 		float diameter = d[2] * 0.0254;
 		
 		VERTEXARRAY varray;
-		std::tr1::shared_ptr<MODEL_JOE03> temp(new MODEL_JOE03());
+		std::tr1::shared_ptr<MODEL> temp(new MODEL_JOE03());
 		temp->SetVertexArray(it->second->GetVertexArray());
 		temp->Translate(-0.75 * 0.5, 0, 0);
 		temp->Scale(width, diameter, diameter);
@@ -296,7 +298,7 @@ static bool LoadWheel(
 		s >> d;
 		
 		VERTEXARRAY varray;
-		std::tr1::shared_ptr<MODEL_JOE03> temp(new MODEL_JOE03());
+		std::tr1::shared_ptr<MODEL> temp(new MODEL_JOE03());
 		MESHGEN::mg_tire(varray, d[0], d[1], d[2]);
 		temp->SetVertexArray(varray);
 		temp->GenerateMeshMetrics();
@@ -334,7 +336,7 @@ static bool LoadWheel(
 		float thickness_mm = 0.025 * 1000;
 		
 		VERTEXARRAY varray;
-		std::tr1::shared_ptr<MODEL_JOE03> temp(new MODEL_JOE03());
+		std::tr1::shared_ptr<MODEL> temp(new MODEL_JOE03());
 		MESHGEN::mg_brake_rotor(varray, diameter_mm, thickness_mm);
 		temp->SetVertexArray(varray);
 		temp->GenerateMeshMetrics();
@@ -596,7 +598,7 @@ bool CAR::LoadPhysics(
 	std::ostream & error_output)
 {
 	std::string carmodel;
-	std::tr1::shared_ptr<MODEL_JOE03> modelptr;
+	std::tr1::shared_ptr<MODEL> modelptr;
 	if (!cfg.GetParam("body", "mesh", carmodel, error_output)) return false;
 	if (!models.Load(carpath, carmodel, modelptr)) return false;
 	

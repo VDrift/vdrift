@@ -1,5 +1,6 @@
 #include "particle.h"
 #include "texturemanager.h"
+#include "textureinfo.h"
 #include "unittest.h"
 
 bool PARTICLE_SYSTEM::Load(
@@ -142,10 +143,10 @@ void PARTICLE_SYSTEM::SetParameters(float transmin, float transmax, float longmi
 
 QT_TEST(particle_test)
 {
-	PARTICLE_SYSTEM s;
-	TEXTUREMANAGER t;
-	s.SetParameters(1.0,1.0,0.5,1.0,1.0,1.0,1.0,1.0,MATHVECTOR<float,3>(0,1,0));
 	std::stringstream out;
+	PARTICLE_SYSTEM s;
+	TEXTUREMANAGER t(out);
+	s.SetParameters(1.0,1.0,0.5,1.0,1.0,1.0,1.0,1.0,MATHVECTOR<float,3>(0,1,0));
 	s.Load(std::list<std::string> (), std::string(), "large", 0, t, out);
 	
 	//test basic particle management:  adding particles and letting them expire and get removed over time

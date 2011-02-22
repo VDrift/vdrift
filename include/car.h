@@ -308,7 +308,7 @@ protected:
 		MODEL model;
 	};
 	std::list<LIGHT> lights;
-	std::list<std::tr1::shared_ptr<MODEL_JOE03> > modellist;
+	std::list<std::tr1::shared_ptr<MODEL> > modellist;
 	
 	SUSPENSIONBUMPDETECTION suspensionbumpdetection[4];
 	CRASHDETECTION crashdetection;

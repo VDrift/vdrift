@@ -1,6 +1,7 @@
 #include "guipage.h"
 #include "config.h"
 #include "texturemanager.h"
+#include "textureinfo.h"
 #include "widget.h"
 #include "widget_image.h"
 #include "widget_multiimage.h"

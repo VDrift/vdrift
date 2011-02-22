@@ -52,6 +52,9 @@ GAME::GAME(std::ostream & info_out, std::ostream & error_out) :
 	clocktime(0),
 	target_time(0),
 	timestep(1/90.0),
+	textures(error_out),
+	models(error_out),
+	sounds(error_out),
 	graphics_interface(NULL),
 	enableGL3(false),
 	fps_track(10, 0),
@@ -228,9 +231,16 @@ void GAME::InitCoreSubsystems()
 {
 	pathmanager.Init(info_output, error_output);
 	http.SetTemporaryFolder(pathmanager.GetTemporaryFolder());
-	textures.Init(pathmanager.GetDataPath(), pathmanager.GetSharedDataPath(), error_output);
-	models.Init(pathmanager.GetDataPath(), pathmanager.GetSharedDataPath(), error_output);
-	sounds.Init(pathmanager.GetDataPath(), pathmanager.GetSharedDataPath(), error_output);
+	
+	textures.SetBasePath(pathmanager.GetDataPath());
+	textures.SetSharedPath(pathmanager.GetSharedDataPath());
+	
+	models.SetBasePath(pathmanager.GetDataPath());
+	models.SetSharedPath(pathmanager.GetSharedDataPath());
+	
+	sounds.SetBasePath(pathmanager.GetDataPath());
+	sounds.SetSharedPath(pathmanager.GetSharedDataPath());
+	
 	settings.Load(pathmanager.GetSettingsFile(), error_output);
 	
 	if (!LastStartWasSuccessful())

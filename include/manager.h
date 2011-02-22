@@ -4,7 +4,6 @@
 #include <map>
 #include <string>
 #include <iostream>
-#include <cassert>
 
 #ifdef _MSC_VER
 #include <memory>
@@ -20,7 +19,7 @@ public:
 	typedef typename container::iterator iterator;
 	typedef typename container::const_iterator const_iterator;
 	
-	MANAGER() : error(0)
+	MANAGER(std::ostream & error) : error(error)
 	{
 		// ctor
 	}
@@ -30,16 +29,28 @@ public:
 		Clear();
 	}
 	
-	void Init(const std::string & basepath, const std::string & sharedpath, std::ostream & error)
+	void SetBasePath(const std::string & path)
 	{
-		this->basepath = basepath;
-		this->sharedpath = sharedpath;
-		this->error = &error;
+		basepath = path;
+	}
+	
+	void SetSharedPath(const std::string & path)
+	{
+		sharedpath = path;
+	}
+	
+	const std::string & GetBasePath() const
+	{
+		return basepath;
+	}
+	
+	const std::string & GetSharedPath() const
+	{
+		return sharedpath;
 	}
 	
 	bool Get(const std::string & path, const std::string & name, const_iterator & it)
 	{
-		assert(error);
 		const_iterator i = objects.find(path + "/" + name);
 		if (i == objects.end())
 		{
@@ -71,16 +82,6 @@ public:
 		return objects.size();
 	}
 	
-	const std::string & GetBasePath() const
-	{
-		return basepath;
-	}
-	
-	const std::string & GetSharedPath() const
-	{
-		return sharedpath;
-	}
-	
 	// collect garbage
 	void Sweep()
 	{
@@ -103,12 +104,11 @@ public:
 		Sweep();
 		if (!objects.empty())
 		{
-			assert(error);
-			*error << "Leak: ";
-			DebugPrint(*error);
+			error << "Leak: ";
+			DebugPrint(error);
 			for (iterator it = objects.begin(); it != objects.end(); it++)
 			{
-				*error << "Leaked: " << it->first << std::endl;
+				error << "Leaked: " << it->first << std::endl;
 			}
 		}
 	}
@@ -131,7 +131,7 @@ protected:
 	container objects;
 	std::string basepath;
 	std::string sharedpath;
-	std::ostream * error;
+	std::ostream & error;
 };
 
 #endif // _MANAGER_H

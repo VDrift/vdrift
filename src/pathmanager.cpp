@@ -66,7 +66,7 @@ void PATHMANAGER::Init(std::ostream & info_output, std::ostream & error_output)
 			data_directory = DATA_DIR;
 		}
 		#else
-		data_directory = "data";
+		data_directory = "D:/vdrift/data";//"data";
 		#endif
 	} else {
 		data_directory = std::string(datadir);
