@@ -99,7 +99,8 @@ OBJECTLOADER::body_iterator OBJECTLOADER::LoadBody(const std::string & name)
 	int clampuv = 0;
 	bool mipmap = true;
 	bool skybox = false;
-	int transparent = 0;
+	bool alphablend = false;
+	bool doublesided = false;
 	bool isashadow = false;
 	
 	cfg->GetParam(sec, "texture", texture_name, error_output);
@@ -107,7 +108,8 @@ OBJECTLOADER::body_iterator OBJECTLOADER::LoadBody(const std::string & name)
 	cfg->GetParam(sec, "clampuv", clampuv);
 	cfg->GetParam(sec, "mipmap", mipmap);
 	cfg->GetParam(sec, "skybox", skybox);
-	cfg->GetParam(sec, "transparent", transparent);
+	cfg->GetParam(sec, "alphablend", alphablend);
+	cfg->GetParam(sec, "doublesided", doublesided);
 	cfg->GetParam(sec, "isashadow", isashadow);
 	cfg->GetParam(sec, "nolighting", body.nolighting);
 	cfg->GetParam(sec, "collidable", body.collidable);
@@ -168,8 +170,8 @@ OBJECTLOADER::body_iterator OBJECTLOADER::LoadBody(const std::string & name)
 	drawable.SetDiffuseMap(diffuse);
 	drawable.SetMiscMap1(miscmap1);
 	drawable.SetMiscMap2(miscmap2);
-	drawable.SetDecal(transparent);
-	drawable.SetCull(cull && (transparent!=2), false);
+	drawable.SetDecal(alphablend);
+	drawable.SetCull(cull && !doublesided, false);
 	drawable.SetRadius(body.model->GetRadius());
 	drawable.SetObjectCenter(body.model->GetCenter());
 	drawable.SetSkybox(skybox);
@@ -182,10 +184,10 @@ void OBJECTLOADER::AddBody(SCENENODE & scene, const BODY & body)
 {
 	//use a different drawlist layer where necessary
 	bool nolighting = body.nolighting;
-	bool transparent = body.drawable.GetDecal();
+	bool alphablend = body.drawable.GetDecal();
 	bool skybox = body.drawable.GetSkybox();
 	keyed_container<DRAWABLE> * dlist = &scene.GetDrawlist().normal_noblend;
-	if (transparent)
+	if (alphablend)
 	{
 		dlist = &scene.GetDrawlist().normal_blend;
 	}
@@ -195,7 +197,7 @@ void OBJECTLOADER::AddBody(SCENENODE & scene, const BODY & body)
 	}
 	if (skybox)
 	{
-		if (transparent)
+		if (alphablend)
 		{
 			dlist = &scene.GetDrawlist().skybox_blend;
 		}
@@ -205,12 +207,6 @@ void OBJECTLOADER::AddBody(SCENENODE & scene, const BODY & body)
 		}
 	}
 	dlist->insert(body.drawable);
-	
-	if (body.collidable)
-	{
-		assert(body.surface >= 0 && body.surface < (int)surfaces.size());
-		objects.push_back(TRACKOBJECT(body.model.get(), &surfaces[body.surface]));
-	}
 }
 
 bool OBJECTLOADER::LoadNode(const CONFIG & cfg, const CONFIG::const_iterator & sec)
@@ -224,22 +220,37 @@ bool OBJECTLOADER::LoadNode(const CONFIG & cfg, const CONFIG::const_iterator & s
 	body_iterator ib = LoadBody(bodyname);
 	if (ib != bodies.end())
 	{
+		MATHVECTOR<float, 3> pos;
+		QUATERNION<float> rot;
+		const BODY & body = ib->second;
 		std::vector<float> position(3, 0.0), rotation(3, 0.0);
 		if (cfg.GetParam(sec, "position", position) | cfg.GetParam(sec, "rotation", rotation))
 		{
 			keyed_container <SCENENODE>::handle sh = unoptimized_scene.AddNode();
 			SCENENODE & node = unoptimized_scene.GetNode(sh);
 			
-			MATHVECTOR<float, 3> pos(position[0], position[1], position[2]);
-			QUATERNION<float> rot(rotation[0]/180*M_PI, rotation[1]/180*M_PI, rotation[2]/180*M_PI);
+			pos.Set(position[0], position[1], position[2]);
+			rot.SetEulerZYX(rotation[0]/180*M_PI, rotation[1]/180*M_PI, rotation[2]/180*M_PI);
 			node.GetTransform().SetRotation(rot);
 			node.GetTransform().SetTranslation(pos);
 			
-			AddBody(node, ib->second);
+			AddBody(node, body);
 		}
 		else
 		{
-			AddBody(unoptimized_scene, ib->second);
+			AddBody(unoptimized_scene, body);
+		}
+		
+		if (body.collidable)
+		{
+			assert(body.surface >= 0 && body.surface < (int)surfaces.size());
+			
+			TRACKOBJECT t;
+			t.model = body.model.get();
+			t.surface = &surfaces[body.surface];
+			t.position = pos;
+			t.rotation = rot;
+			objects.push_back(t);
 		}
 	}
 	
@@ -284,6 +295,8 @@ std::pair<bool, bool> OBJECTLOADER::Continue()
 		// we're done, put the optimized scene in sceneroot
 		Optimize(unoptimized_scene, sceneroot);
 		unoptimized_scene.Clear();
+		track_config.Clear();
+		bodies.clear();
 		return std::make_pair(false, false);
 	}
 	
@@ -516,14 +529,16 @@ std::pair<bool, bool> OBJECTLOADER::ContinueOld()
 	drawable.SetRadius(model->GetRadius());
 	drawable.SetObjectCenter(model->GetCenter());
 	drawable.SetSkybox(skybox);
-	if (skybox && vertical_tracking_skyboxes) drawable.SetVerticalTrack(true);
+	drawable.SetVerticalTrack(skybox && vertical_tracking_skyboxes);
 
-	const TRACKSURFACE * surfacePtr = 0;
 	if (collideable || driveable)
 	{
 		assert(surface_id >= 0 && surface_id < (int)surfaces.size());
-		surfacePtr = &surfaces[surface_id];
-		objects.push_back(TRACKOBJECT(model.get(), surfacePtr));
+		
+		TRACKOBJECT t;
+		t.model = model.get();
+		t.surface = &surfaces[surface_id];
+		objects.push_back(t);
 	}
 
 	return std::make_pair(false, true);
