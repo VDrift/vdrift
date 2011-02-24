@@ -1,7 +1,6 @@
 #ifndef _CARDYNAMICS_H
 #define _CARDYNAMICS_H
 
-#include "rigidbody.h"
 #include "carengine.h"
 #include "carclutch.h"
 #include "cartransmission.h"

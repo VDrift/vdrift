@@ -18,8 +18,6 @@ public:
 
 	~COLLISION_WORLD();
 
-	btCollisionObject * AddCollisionObject(const MODEL & model);
-
 	void AddRigidBody(btRigidBody * body);
 
 	void AddAction(btActionInterface * action);
@@ -28,8 +26,8 @@ public:
 
 	void RemoveAction(btActionInterface * action);
 
-	// add track to collision world (unloads previous track)
-	void SetTrack(const TRACK * t);
+	// reset collision world (unloads previous track)
+	void Reset(const TRACK & t);
 
 	// cast ray into collision world, returns first hit, caster is excluded fom hits
 	bool CastRay(
@@ -51,20 +49,17 @@ public:
 protected:
 	btDefaultCollisionConfiguration collisionconfig;
 	btCollisionDispatcher collisiondispatcher;
-	bt32BitAxisSweep3 collisionbroadphase;
+	//bt32BitAxisSweep3 collisionbroadphase;
+	btDbvtBroadphase collisionbroadphase;
 	btSequentialImpulseConstraintSolver constraintsolver;
 	btDiscreteDynamicsWorld world;
 	btScalar timeStep;
 	int maxSubSteps;
 
-	//todo: cleanup here
 	const TRACK * track;
-	btCollisionObject * trackObject;
-	btTriangleIndexVertexArray * trackMesh;
 	btAlignedObjectArray<btCollisionShape *> shapes;
 	btAlignedObjectArray<btTriangleIndexVertexArray *> meshes;
-
-	btCollisionShape * AddMeshShape(const MODEL & model);
+	btAlignedObjectArray<btCollisionObject *> objects;
 };
 
 #endif // _COLLISION_WORLD_H

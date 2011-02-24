@@ -2002,7 +2002,7 @@ bool GAME::LoadTrack(const std::string & trackname)
 	}
 
 	//setup track collision
-	collision.SetTrack(&track);
+	collision.Reset(track);
 	collision.DebugPrint(info_output);
 	
 	//build static drawlist

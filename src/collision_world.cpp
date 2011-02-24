@@ -1,5 +1,6 @@
 #include "collision_world.h"
 #include "collision_contact.h"
+#include "tobullet.h"
 #include "model.h"
 #include "track.h"
 
@@ -83,31 +84,19 @@ static btIndexedMesh GetIndexedMesh(const MODEL & model)
 
 COLLISION_WORLD::COLLISION_WORLD(btScalar timeStep, int maxSubSteps) :
 	collisiondispatcher(&collisionconfig),
-	collisionbroadphase(btVector3(-5000, -5000, -5000), btVector3(5000, 5000, 5000)),
+	//collisionbroadphase(btVector3(-5000, -5000, -5000), btVector3(5000, 5000, 5000)),
 	world(&collisiondispatcher, &collisionbroadphase, &constraintsolver, &collisionconfig),
 	timeStep(timeStep),
 	maxSubSteps(maxSubSteps),
-	track(0),
-	trackObject(0),
-	trackMesh(0)
+	track(0)
 {
 	world.setGravity(btVector3(0.0, 0.0, -9.81));
-	world.setForceUpdateAllAabbs(false); //optimization
-	//world.getSolverInfo().m_numIterations = 20;
+	world.setForceUpdateAllAabbs(false);
 }
 
 COLLISION_WORLD::~COLLISION_WORLD()
 {
 	Clear();
-}
-
-btCollisionObject * COLLISION_WORLD::AddCollisionObject(const MODEL & model)
-{
-	btCollisionObject * col = new btCollisionObject();
-	btCollisionShape * shape = AddMeshShape(model);
-	col->setCollisionShape(shape);
-	world.addCollisionObject(col);
-	return col;
 }
 
 void COLLISION_WORLD::AddRigidBody(btRigidBody * body)
@@ -130,50 +119,97 @@ void COLLISION_WORLD::RemoveAction(btActionInterface * action)
 	world.removeAction(action);
 }
 
-void COLLISION_WORLD::SetTrack(const TRACK * t)
+void COLLISION_WORLD::Reset(const TRACK & t)
 {
-	assert(t);
-
-	// remove old track
-	if(track)
-	{
-		world.removeCollisionObject(trackObject);
-		delete trackObject->getCollisionShape();
-		delete trackObject;
-		delete trackMesh;
-		trackObject = 0;
-		trackMesh = 0;
-	}
-
-	// setup new track
-	track = t;
-	trackMesh = new btTriangleIndexVertexArray();
-	const std::vector<TRACKOBJECT> & objects = track->GetTrackObjects();
-	for(std::vector<TRACKOBJECT>::const_iterator ob = objects.begin(); ob != objects.end(); ++ob)
-	{
-		btIndexedMesh mesh = GetIndexedMesh(*ob->model);
-		trackMesh->addIndexedMesh(mesh);
-	}
-	// can not use QuantizedAabbCompression because of the track size
-	btCollisionShape * trackShape = new btBvhTriangleMeshShape(trackMesh, false);
+	Clear();
 	
-	trackObject = new btCollisionObject();
-	trackObject->setCollisionShape(trackShape);
-	trackObject->setUserPointer(0);
-
-	world.addCollisionObject(trackObject);
-}
-
-btCollisionShape * COLLISION_WORLD::AddMeshShape(const MODEL & model)
-{
-	btTriangleIndexVertexArray * mesh = new btTriangleIndexVertexArray();
-	mesh->addIndexedMesh(GetIndexedMesh(model));
-	btCollisionShape * shape = new btBvhTriangleMeshShape(mesh, true);
-
-	meshes.push_back(mesh);
-	shapes.push_back(shape);
-
-	return shape;
+	track = &t;
+	
+	const std::vector<TRACKOBJECT> & trackob = track->GetTrackObjects();
+	//std::cerr << "objects: " << trackob.size() << std::endl;
+	
+	// single batched shape, requires transformed meshes
+	if (false)
+	{
+		btTriangleIndexVertexArray * trackMesh = new btTriangleIndexVertexArray();
+		for(std::vector<TRACKOBJECT>::const_iterator i = trackob.begin(); i != trackob.end(); ++i)
+		{
+			btIndexedMesh mesh = GetIndexedMesh(*i->model);
+			trackMesh->addIndexedMesh(mesh);
+		}
+		
+		// can not use QuantizedAabbCompression because of the track size
+		btBvhTriangleMeshShape * trackShape = new btBvhTriangleMeshShape(trackMesh, false);
+		
+		btCollisionObject * trackObject = new btCollisionObject();
+		trackObject->setCollisionShape(trackShape);
+		trackObject->setUserPointer(0);
+		world.addCollisionObject(trackObject);
+		
+		meshes.push_back(trackMesh);
+		shapes.push_back(trackShape);
+		objects.push_back(trackObject);
+		
+		return;
+	}
+	
+	// single compound shape, with mesh instances
+	meshes.reserve(trackob.size());
+	if (false)
+	{
+		btCompoundShape * trackShape = new btCompoundShape(true);
+		for(std::vector<TRACKOBJECT>::const_iterator i = trackob.begin(); i != trackob.end(); ++i)
+		{
+			btTransform transform;
+			transform.setOrigin(ToBulletVector(i->position));
+			transform.setRotation(ToBulletQuaternion(i->rotation));
+			
+			btTriangleIndexVertexArray * mesh = new btTriangleIndexVertexArray();
+			mesh->addIndexedMesh(GetIndexedMesh(*i->model));
+			meshes.push_back(mesh);
+			
+			btBvhTriangleMeshShape * shape = new btBvhTriangleMeshShape(mesh, true);
+			trackShape->addChildShape(transform, shape);
+		}
+		trackShape->createAabbTreeFromChildren();
+		
+		btCollisionObject * trackObject = new btCollisionObject();
+		trackObject->setCollisionShape(trackShape);
+		trackObject->setUserPointer(0);
+		world.addCollisionObject(trackObject);
+		
+		return;
+	}
+	
+	// separate track objects
+	shapes.reserve(trackob.size());
+	objects.reserve(trackob.size());
+	if (true)
+	{
+		for(std::vector<TRACKOBJECT>::const_iterator i = trackob.begin(); i != trackob.end(); ++i)
+		{
+			btTriangleIndexVertexArray * mesh = new btTriangleIndexVertexArray();
+			mesh->addIndexedMesh(GetIndexedMesh(*i->model));
+			meshes.push_back(mesh);
+			
+			btBvhTriangleMeshShape * shape = new btBvhTriangleMeshShape(mesh, true);
+			shapes.push_back(shape);
+			
+			btCollisionObject * object = new btCollisionObject();
+			object->setCollisionShape(shape);
+			object->setUserPointer((void*)i->surface);
+			objects.push_back(object);
+			
+			btTransform transform;
+			transform.setOrigin(ToBulletVector(i->position));
+			transform.setRotation(ToBulletQuaternion(i->rotation));
+			object->setWorldTransform(transform);
+			
+			world.addCollisionObject(object);
+		}
+		
+		return;
+	}
 }
 
 bool COLLISION_WORLD::CastRay(
@@ -207,9 +243,7 @@ bool COLLISION_WORLD::CastRay(
 			void * ptr = c->getUserPointer();
 			if(ptr != 0)
 			{
-				const TRACKOBJECT * const ob = reinterpret_cast <const TRACKOBJECT * const> (ptr);
-				assert(ob);
-				s = ob->surface;
+				s = static_cast<const TRACKSURFACE * const>(ptr);
 			}
 			else if (ray.m_shapeId >= 0 && ray.m_shapeId < (int)track->GetTrackObjects().size()) //track geometry
 			{
@@ -247,6 +281,7 @@ bool COLLISION_WORLD::CastRay(
 void COLLISION_WORLD::Update(btScalar dt)
 {
 	world.stepSimulation(dt, maxSubSteps, timeStep);
+	//CProfileManager::dumpAll();
 }
 
 void COLLISION_WORLD::DebugPrint(std::ostream & out) const
@@ -256,18 +291,15 @@ void COLLISION_WORLD::DebugPrint(std::ostream & out) const
 
 void COLLISION_WORLD::Clear()
 {
-	if (trackObject)
-	{
-		world.removeCollisionObject(trackObject);
-		delete trackObject->getCollisionShape();
-		delete trackObject;
-	}
-	delete trackMesh;
-	
 	track = 0;
-	trackObject = 0;
-	trackMesh = 0;
-
+	
+	for(int i = 0; i < objects.size(); ++i)
+	{
+		world.removeCollisionObject(objects[i]);
+		delete objects[i];
+	}
+	objects.resize(0);
+	
 	for(int i = 0; i < shapes.size(); ++i)
 	{
 		btCollisionShape * shape = shapes[i];
@@ -282,10 +314,12 @@ void COLLISION_WORLD::Clear()
 		delete shape;
 	}
 	shapes.resize(0);
-
+	
 	for(int i = 0; i < meshes.size(); ++i)
 	{
 		delete meshes[i];
 	}
 	meshes.resize(0);
+	
+	collisionbroadphase.resetPool(&collisiondispatcher);
 }
