@@ -1418,7 +1418,7 @@ void GAME::ProcessGUIAction(const std::string & action)
 	{
 		bool play_replay = false;
 		bool add_opponents = !opponents.empty();
-		int num_laps = settings.GetNumberOfLaps();
+		int num_laps = race_laps;
 		if (!NewGame(play_replay, add_opponents, num_laps))
 		{
 			LeaveGame();
