@@ -166,7 +166,7 @@ void COLLISION_WORLD::Reset(const TRACK & t)
 		
 		btCollisionObject * object = new btCollisionObject();
 		object->setCollisionShape(shape);
-		object->setUserPointer((void*)i);
+		object->setUserPointer((void*)(i+1));
 		objects.push_back(object);
 		
 		btTransform transform;
