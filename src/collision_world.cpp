@@ -12,8 +12,9 @@ struct MyRayResultCallback : public btCollisionWorld::RayResultCallback
 		const btCollisionObject * exclude) :
 		m_rayFromWorld(rayFromWorld),
 		m_rayToWorld(rayToWorld),
-		m_shapeId(-1),
+		m_shapePart(-1),
 		m_triangleId(-1),
+		m_shape(0),
 		m_exclude(exclude)
 	{
 		// ctor
@@ -25,8 +26,10 @@ struct MyRayResultCallback : public btCollisionWorld::RayResultCallback
 	btVector3	m_hitNormalWorld;
 	btVector3	m_hitPointWorld;
 
-	int m_shapeId;
+	
+	int m_shapePart;
 	int m_triangleId;
+	const btCollisionShape * m_shape;
 	const btCollisionObject * m_exclude;
 
 	virtual	btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace)
@@ -41,7 +44,8 @@ struct MyRayResultCallback : public btCollisionWorld::RayResultCallback
 		
 		if(rayResult.m_localShapeInfo)
 		{
-			m_shapeId = rayResult.m_localShapeInfo->m_shapePart;
+			m_shape = rayResult.m_localShapeInfo->m_shape;
+			m_shapePart = rayResult.m_localShapeInfo->m_shapePart;
 			m_triangleId = rayResult.m_localShapeInfo->m_triangleIndex;
 		}
 		
@@ -124,92 +128,55 @@ void COLLISION_WORLD::Reset(const TRACK & t)
 	Clear();
 	
 	track = &t;
-	
-	const std::vector<TRACKOBJECT> & trackob = track->GetTrackObjects();
-	//std::cerr << "objects: " << trackob.size() << std::endl;
-	
-	// single batched shape, requires transformed meshes
-	if (false)
+	const std::vector<TRACKOBJECT> & ob = track->GetTrackObjects();
+#ifndef EXTBULLET
+	meshes.reserve(ob.size());
+	btCompoundShape * trackShape = new btCompoundShape(true);
+	for (int i = 0, n = ob.size(); i < n; ++i)
 	{
-		btTriangleIndexVertexArray * trackMesh = new btTriangleIndexVertexArray();
-		for(std::vector<TRACKOBJECT>::const_iterator i = trackob.begin(); i != trackob.end(); ++i)
-		{
-			btIndexedMesh mesh = GetIndexedMesh(*i->model);
-			trackMesh->addIndexedMesh(mesh);
-		}
+		btTransform transform;
+		transform.setOrigin(ToBulletVector(ob[i].position));
+		transform.setRotation(ToBulletQuaternion(ob[i].rotation));
 		
-		// can not use QuantizedAabbCompression because of the track size
-		btBvhTriangleMeshShape * trackShape = new btBvhTriangleMeshShape(trackMesh, false);
+		btTriangleIndexVertexArray * mesh = new btTriangleIndexVertexArray();
+		mesh->addIndexedMesh(GetIndexedMesh(*ob[i].model));
+		meshes.push_back(mesh);
 		
-		btCollisionObject * trackObject = new btCollisionObject();
-		trackObject->setCollisionShape(trackShape);
-		trackObject->setUserPointer(0);
-		world.addCollisionObject(trackObject);
-		
-		meshes.push_back(trackMesh);
-		shapes.push_back(trackShape);
-		objects.push_back(trackObject);
-		
-		return;
+		btBvhTriangleMeshShape * shape = new btBvhTriangleMeshShape(mesh, true);
+		shape->setUserPointer((void*)(i+1));
+		trackShape->addChildShape(transform, shape);
 	}
+	trackShape->createAabbTreeFromChildren();
 	
-	// single compound shape, with mesh instances
-	meshes.reserve(trackob.size());
-	if (false)
+	btCollisionObject * trackObject = new btCollisionObject();
+	trackObject->setCollisionShape(trackShape);
+	world.addCollisionObject(trackObject);
+	objects.push_back(trackObject);
+#else
+	shapes.reserve(ob.size());
+	objects.reserve(ob.size());
+	for (int i = 0, n = trackob.size(); i < n; ++i)
 	{
-		btCompoundShape * trackShape = new btCompoundShape(true);
-		for(std::vector<TRACKOBJECT>::const_iterator i = trackob.begin(); i != trackob.end(); ++i)
-		{
-			btTransform transform;
-			transform.setOrigin(ToBulletVector(i->position));
-			transform.setRotation(ToBulletQuaternion(i->rotation));
-			
-			btTriangleIndexVertexArray * mesh = new btTriangleIndexVertexArray();
-			mesh->addIndexedMesh(GetIndexedMesh(*i->model));
-			meshes.push_back(mesh);
-			
-			btBvhTriangleMeshShape * shape = new btBvhTriangleMeshShape(mesh, true);
-			trackShape->addChildShape(transform, shape);
-		}
-		trackShape->createAabbTreeFromChildren();
+		btTriangleIndexVertexArray * mesh = new btTriangleIndexVertexArray();
+		mesh->addIndexedMesh(GetIndexedMesh(*ob[i].model));
+		meshes.push_back(mesh);
 		
-		btCollisionObject * trackObject = new btCollisionObject();
-		trackObject->setCollisionShape(trackShape);
-		trackObject->setUserPointer(0);
-		world.addCollisionObject(trackObject);
+		btBvhTriangleMeshShape * shape = new btBvhTriangleMeshShape(mesh, true);
+		shapes.push_back(shape);
 		
-		return;
+		btCollisionObject * object = new btCollisionObject();
+		object->setCollisionShape(shape);
+		object->setUserPointer((void*)i);
+		objects.push_back(object);
+		
+		btTransform transform;
+		transform.setOrigin(ToBulletVector(ob[i].position));
+		transform.setRotation(ToBulletQuaternion(ob[i].rotation));
+		object->setWorldTransform(transform);
+		
+		world.addCollisionObject(object);
 	}
-	
-	// separate track objects
-	shapes.reserve(trackob.size());
-	objects.reserve(trackob.size());
-	if (true)
-	{
-		for(std::vector<TRACKOBJECT>::const_iterator i = trackob.begin(); i != trackob.end(); ++i)
-		{
-			btTriangleIndexVertexArray * mesh = new btTriangleIndexVertexArray();
-			mesh->addIndexedMesh(GetIndexedMesh(*i->model));
-			meshes.push_back(mesh);
-			
-			btBvhTriangleMeshShape * shape = new btBvhTriangleMeshShape(mesh, true);
-			shapes.push_back(shape);
-			
-			btCollisionObject * object = new btCollisionObject();
-			object->setCollisionShape(shape);
-			object->setUserPointer((void*)i->surface);
-			objects.push_back(object);
-			
-			btTransform transform;
-			transform.setOrigin(ToBulletVector(i->position));
-			transform.setRotation(ToBulletQuaternion(i->rotation));
-			object->setWorldTransform(transform);
-			
-			world.addCollisionObject(object);
-		}
-		
-		return;
-	}
+#endif
 }
 
 bool COLLISION_WORLD::CastRay(
@@ -240,15 +207,18 @@ bool COLLISION_WORLD::CastRay(
 		c = ray.m_collisionObject;
 		if (c->isStaticObject())
 		{
-			void * ptr = c->getUserPointer();
-			if(ptr != 0)
+			int ic = (int)c->getUserPointer();
+			int is = (int)ray.m_shape->getUserPointer();
+			int n = (int)track->GetTrackObjects().size();
+			if (ic > 0 && ic <= n)
 			{
-				s = static_cast<const TRACKSURFACE * const>(ptr);
+				s = track->GetTrackObjects()[ic-1].surface;
 			}
-			else if (ray.m_shapeId >= 0 && ray.m_shapeId < (int)track->GetTrackObjects().size()) //track geometry
+			else if (is > 0 && is <= n)
 			{
-				s = track->GetTrackObjects()[ray.m_shapeId].surface;
+				s = track->GetTrackObjects()[is-1].surface;
 			}
+			//std::cerr << "static object without surface" << std::endl;
 		}
 		
 		// track bezierpatch collision
@@ -268,11 +238,11 @@ bool COLLISION_WORLD::CastRay(
 				d = (colpoint - bezierspace_raystart).Magnitude();
 			}
 		}
-
+		
 		contact = COLLISION_CONTACT(p, n, d, patch_id, b, s, c);
 		return true;
 	}
-
+	
 	// should only happen on vehicle rollover
 	contact = COLLISION_CONTACT(p, n, d, patch_id, b, s, c);
 	return false;
@@ -299,7 +269,16 @@ void COLLISION_WORLD::Clear()
 		delete objects[i];
 	}
 	objects.resize(0);
-	
+/*	
+	int wnum = world.getCollisionObjectArray().size();
+	std::cerr << "world collision objects leaking: " << wnum << std::endl;
+	for (int i = 0; i < wnum; ++i)
+	{
+		btCollisionObject * ob = world.getCollisionObjectArray()[i];
+		std::cerr << "collision object leaking: " << ob << std::endl;
+		world.removeCollisionObject(ob);
+	}
+*/
 	for(int i = 0; i < shapes.size(); ++i)
 	{
 		btCollisionShape * shape = shapes[i];
