@@ -51,6 +51,7 @@ class RenderPass
 		/// externalModels is a map of draw group name ID to a vector array of pointers to external models to be drawn along with models that have been added to the pass with addModel
 		bool render(GLWrapper & gl, unsigned int w, unsigned int h, StringIdMap & stringMap, 
 					const std::vector <const std::vector <RenderModelExternal*>*> & externalModels, 
+					const std::tr1::unordered_map <StringId, RenderTextureEntry, StringId::hash> & sharedTextures,
 					std::ostream & errorOutput);
 		
 		// these functions handle modifications to the models container
@@ -88,7 +89,7 @@ class RenderPass
 		
 	private:
 		/// returns true on success
-		bool createFramebufferObject(GLWrapper & gl, unsigned int w, unsigned int h, StringIdMap & stringMap, std::ostream & errorOutput);
+		bool createFramebufferObject(GLWrapper & gl, unsigned int w, unsigned int h, StringIdMap & stringMap, const std::tr1::unordered_map <StringId, RenderTextureEntry, StringId::hash> & sharedTextures, std::ostream & errorOutput);
 		void deleteFramebufferObject(GLWrapper & gl);
 		
 		/// returns true on success
@@ -143,6 +144,7 @@ class RenderPass
 		RenderDimensions framebufferDimensions;
 		std::vector <RenderTexture> autoMipMapRenderTargets; // this is a subset of the textures below
 		std::map <StringId, RenderTexture> renderTargets; // the key is the render target name loaded from the RealtimeExportPassInfo
+		std::map <StringId, RenderTexture> externalRenderTargets; // the key is the render target name loaded from the RealtimeExportPassInfo
 		
 		// samplers
 		std::vector <RenderSampler> samplers;

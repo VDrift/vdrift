@@ -11,6 +11,7 @@ const GLEnums GLEnumHelper;
 
 bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringIdMap & stringMap, 
 						const std::vector <const std::vector <RenderModelExternal*>*> & externalModels,
+						const std::tr1::unordered_map <StringId, RenderTextureEntry, StringId::hash> & sharedTextures,
 						std::ostream & errorOutput)
 {
 	if (!enabled)
@@ -26,7 +27,7 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 	// if the framebuffer size has changed, we need to recreate it
 	if (changed)
 	{
-		if (!createFramebufferObject(gl, w, h, stringMap, errorOutput))
+		if (!createFramebufferObject(gl, w, h, stringMap, sharedTextures, errorOutput))
 		{
 			errorOutput << "Unable to create framebuffer object" << std::endl;
 			return changed;
@@ -291,6 +292,7 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 	// unbind framebuffer
 	gl.unbindFramebuffer();
 	
+	// TODO: we only want to do this if the next pass is going to use these and not write to these
 	// if autoMipmap then build mipmaps
 	for (std::vector <RenderTexture>::const_iterator t = autoMipMapRenderTargets.begin(); t != autoMipMapRenderTargets.end(); t++)
 	{
@@ -458,7 +460,7 @@ bool RenderPass::initialize(int passCount,
 	}
 	
 	// attempt to create the FBO
-	if (!createFramebufferObject(gl, w, h, stringMap, errorOutput))
+	if (!createFramebufferObject(gl, w, h, stringMap, sharedTextures, errorOutput))
 	{
 		errorOutput << "Unable to create framebuffer object" << std::endl;
 		return false;
@@ -527,9 +529,11 @@ void RenderPass::deleteFramebufferObject(GLWrapper & gl)
 		gl.DeleteTexture(i->second.handle);
 	}
 	renderTargets.clear();
+	
+	externalRenderTargets.clear();
 }
 
-bool RenderPass::createFramebufferObject(GLWrapper & gl, unsigned int w, unsigned int h, StringIdMap & stringMap, std::ostream & errorOutput)
+bool RenderPass::createFramebufferObject(GLWrapper & gl, unsigned int w, unsigned int h, StringIdMap & stringMap, const std::tr1::unordered_map <StringId, RenderTextureEntry, StringId::hash> & sharedTextures, std::ostream & errorOutput)
 {
 	deleteFramebufferObject(gl);
 	
@@ -607,6 +611,7 @@ bool RenderPass::createFramebufferObject(GLWrapper & gl, unsigned int w, unsigne
 		drawBuffers[i] = GL_COLOR_ATTACHMENT0+i;
 	gl.DrawBuffers(drawBuffers.size(), &drawBuffers[0]);
 	
+	// TODO: re-use these from a common pool?
 	// create a depth renderbuffer if we have no depth attachment
 	if (depthAttachments == 0)
 	{
@@ -670,35 +675,57 @@ bool RenderPass::createFramebufferObject(GLWrapper & gl, unsigned int w, unsigne
 		
 		// only 2d render targets are supported
 		GLenum target = GL_TEXTURE_2D;
+
+		StringId renderTargetNameId = stringMap.addStringId(i->second.name);
 		
-		// create the render target texture
-		RenderTexture texture(target, gl.GenTexture());
-		
-		// tell GL to allocate texture storage
-		gl.BindTexture(texture.target, texture.handle);
-		gl.TexImage2D(texture.target, 0, internalFormat, rtWidth, rtHeight, 0, format, type, NULL);
-		
-		// set some default texture parameters for now.
-		// when we actually sample the texture we should set parameters that
-		// match what we want in our texture, however...
-		// this is only here to work around a problem with my geforce 7
-		// drivers, where they will say the framebuffer setup is unsupported
-		// unless they know some texture parameters from when we originally
-		// create the texture.
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-		
-		gl.unbindTexture(texture.target);
-		
-		// store the texture we created
-		renderTargets.insert(std::make_pair(stringMap.addStringId(i->second.name),texture));
-		if (i->second.autoMipmap)
-			autoMipMapRenderTargets.push_back(texture);
-		
-		// attach the render target to the framebuffer
-		gl.FramebufferTexture2D(GL_DRAW_FRAMEBUFFER, attachmentPoint, texture.target, texture.handle, 0);
+		// either use an existing render target texture or create a new one
+		std::tr1::unordered_map <StringId, RenderTextureEntry, StringId::hash>::const_iterator sharedRenderTarget = 
+			sharedTextures.find(renderTargetNameId);
+		if (sharedRenderTarget != sharedTextures.end())
+		{
+			// this render target texture has already been created by a previous pass, we just want to use it
+			RenderTexture texture(target, sharedRenderTarget->second.handle);
+			
+			// store the dependency
+			externalRenderTargets.insert(std::make_pair(renderTargetNameId,texture));
+			
+			if (i->second.autoMipmap)
+				autoMipMapRenderTargets.push_back(texture);
+			
+			// attach the render target to the framebuffer
+			gl.FramebufferTexture2D(GL_DRAW_FRAMEBUFFER, attachmentPoint, texture.target, texture.handle, 0);
+		}
+		else
+		{
+			// create the render target texture
+			RenderTexture texture(target, gl.GenTexture());
+			
+			// tell GL to allocate texture storage
+			gl.BindTexture(texture.target, texture.handle);
+			gl.TexImage2D(texture.target, 0, internalFormat, rtWidth, rtHeight, 0, format, type, NULL);
+			
+			// set some default texture parameters for now.
+			// when we actually sample the texture we should set parameters that
+			// match what we want in our texture, however...
+			// this is only here to work around a problem with my geforce 7
+			// drivers, where they will say the framebuffer setup is unsupported
+			// unless they know some texture parameters from when we originally
+			// create the texture.
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+			
+			gl.unbindTexture(texture.target);
+			
+			// store the texture we created
+			renderTargets.insert(std::make_pair(renderTargetNameId,texture));
+			if (i->second.autoMipmap)
+				autoMipMapRenderTargets.push_back(texture);
+			
+			// attach the render target to the framebuffer
+			gl.FramebufferTexture2D(GL_DRAW_FRAMEBUFFER, attachmentPoint, texture.target, texture.handle, 0);
+		}
 	}
 	
 	// calling BindFramebuffer will do validation for us
@@ -1162,9 +1189,12 @@ void RenderPass::printRendererStatus(RendererStatusVerbosity verbosity, const St
 	out << prefix << "Render dimensions: " << framebufferDimensions << std::endl;
 	out << prefix << "Framebuffer object: " << (framebufferObject == 0 ? "default" : UTILS::tostr(framebufferObject)) << std::endl;
 	out << prefix << "Using depth renderbuffer: " << (renderbuffer == 0 ? "no" : "yes") << std::endl;
-	out << prefix << "Render targets: " << renderTargets.size() << std::endl;
+	out << prefix << "Created render targets: " << renderTargets.size() << std::endl;
 	printContextPrefix = prefix+prefix;
 	forEachInContainer(renderTargets, printPairRenderTargetHelper);
+	out << prefix << "External render targets: " << externalRenderTargets.size() << std::endl;
+	printContextPrefix = prefix+prefix;
+	forEachInContainer(externalRenderTargets, printPairRenderTargetHelper);
 	out << prefix << "Auto-mipmapped render targets: " << (autoMipMapRenderTargets.empty() ? "none" : "") << autoMipMapRenderTargets << std::endl;
 	
 	if (verbosity >= VERBOSITY_PASSDETAIL)

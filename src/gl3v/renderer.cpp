@@ -52,7 +52,7 @@ void Renderer::render(unsigned int w, unsigned int h, StringIdMap & stringMap,
 				drawList.push_back(&drawGroupIter->second);
 		}
 		
-		if (i->render(gl, w, h, stringMap, drawList, errorOutput))
+		if (i->render(gl, w, h, stringMap, drawList, sharedTextures, errorOutput))
 		{
 			// render targets have been recreated due to display dimension change
 			// call setGlobalTexture to update sharedTextures and let downstream passes know
@@ -87,7 +87,7 @@ void Renderer::render(unsigned int w, unsigned int h, StringIdMap & stringMap,
 			}
 		}
 		
-		if (i->render(gl, w, h, stringMap, drawList, errorOutput))
+		if (i->render(gl, w, h, stringMap, drawList, sharedTextures, errorOutput))
 		{
 			// render targets have been recreated due to display dimension change
 			// call setGlobalTexture to update sharedTextures and let downstream passes know
