@@ -113,6 +113,11 @@ public:
 		return objects;
 	}
 	
+	const std::vector<TRACKSURFACE> & GetSurfaces() const
+	{
+		return tracksurfaces;
+	}
+	
 	SCENENODE & GetRacinglineNode()
 	{
 		if (racingline_visible)

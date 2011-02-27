@@ -143,7 +143,7 @@ void COLLISION_WORLD::Reset(const TRACK & t)
 		meshes.push_back(mesh);
 		
 		btBvhTriangleMeshShape * shape = new btBvhTriangleMeshShape(mesh, true);
-		shape->setUserPointer((void*)(i+1));
+		shape->setUserPointer((void*)ob[i].surface);
 		trackShape->addChildShape(transform, shape);
 	}
 	trackShape->createAabbTreeFromChildren();
@@ -166,7 +166,7 @@ void COLLISION_WORLD::Reset(const TRACK & t)
 		
 		btCollisionObject * object = new btCollisionObject();
 		object->setCollisionShape(shape);
-		object->setUserPointer((void*)(i+1));
+		object->setUserPointer((void*)ob[i].surface);
 		objects.push_back(object);
 		
 		btTransform transform;
@@ -207,16 +207,16 @@ bool COLLISION_WORLD::CastRay(
 		c = ray.m_collisionObject;
 		if (c->isStaticObject())
 		{
-			int ic = (int)c->getUserPointer();
-			int is = (int)ray.m_shape->getUserPointer();
-			int n = (int)track->GetTrackObjects().size();
-			if (ic > 0 && ic <= n)
+			TRACKSURFACE* tsc = (TRACKSURFACE*)c->getUserPointer();
+			TRACKSURFACE* tss = (TRACKSURFACE*)ray.m_shape->getUserPointer();
+			const std::vector<TRACKSURFACE> & surfaces = track->GetSurfaces();
+			if (tsc >= &surfaces[0] && tsc <= &surfaces[surfaces.size()-1])
 			{
-				s = track->GetTrackObjects()[ic-1].surface;
+				s = tsc;
 			}
-			else if (is > 0 && is <= n)
+			else if (tss >= &surfaces[0] && tss <= &surfaces[surfaces.size()-1])
 			{
-				s = track->GetTrackObjects()[is-1].surface;
+				s = tss;
 			}
 			//std::cerr << "static object without surface" << std::endl;
 		}
@@ -224,10 +224,10 @@ bool COLLISION_WORLD::CastRay(
 		// track bezierpatch collision
 		if (track)
 		{
-			MATHVECTOR <float, 3> bezierspace_raystart(origin[1], origin[2], origin[0]);
-			MATHVECTOR <float, 3> bezierspace_dir(direction[1], direction[2], direction[0]);
-			MATHVECTOR <float, 3> colpoint;
-			MATHVECTOR <float, 3> colnormal;
+			MATHVECTOR<float, 3> bezierspace_raystart(origin[1], origin[2], origin[0]);
+			MATHVECTOR<float, 3> bezierspace_dir(direction[1], direction[2], direction[0]);
+			MATHVECTOR<float, 3> colpoint;
+			MATHVECTOR<float, 3> colnormal;
 			patch_id = contact.GetPatchId();
 			
 			if(track->CastRay(bezierspace_raystart, bezierspace_dir, length,
@@ -263,7 +263,7 @@ void COLLISION_WORLD::Clear()
 {
 	track = 0;
 	
-	for(int i = 0; i < objects.size(); ++i)
+	for(int i = 0, n = objects.size(); i < n; ++i)
 	{
 		world.removeCollisionObject(objects[i]);
 		delete objects[i];
@@ -279,13 +279,13 @@ void COLLISION_WORLD::Clear()
 		world.removeCollisionObject(ob);
 	}
 */
-	for(int i = 0; i < shapes.size(); ++i)
+	for(int i = 0, n = shapes.size(); i < n; ++i)
 	{
 		btCollisionShape * shape = shapes[i];
 		if (shape->isCompound())
 		{
 			btCompoundShape * cs = (btCompoundShape *)shape;
-			for (int i = 0; i < cs->getNumChildShapes(); ++i)
+			for (int i = 0, n = cs->getNumChildShapes(); i < n; ++i)
 			{
 				delete cs->getChildShape(i);
 			}
@@ -294,7 +294,7 @@ void COLLISION_WORLD::Clear()
 	}
 	shapes.resize(0);
 	
-	for(int i = 0; i < meshes.size(); ++i)
+	for(int i = 0, n = meshes.size(); i < n; ++i)
 	{
 		delete meshes[i];
 	}
