@@ -155,7 +155,7 @@ void COLLISION_WORLD::Reset(const TRACK & t)
 #else
 	shapes.reserve(ob.size());
 	objects.reserve(ob.size());
-	for (int i = 0, n = trackob.size(); i < n; ++i)
+	for (int i = 0, n = ob.size(); i < n; ++i)
 	{
 		btTriangleIndexVertexArray * mesh = new btTriangleIndexVertexArray();
 		mesh->addIndexedMesh(GetIndexedMesh(*ob[i].model));
