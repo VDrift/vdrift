@@ -97,6 +97,10 @@ private:
 	DRAWABLE_CONTAINER <PTRVECTOR> dynamic_drawlist; //used for objects that move or change
 	STATICDRAWABLES static_drawlist; //used for objects that will never change
 	
+	// a special drawable that's used for fullscreen quad passes
+	DRAWABLE fullscreenquad;
+	VERTEXARRAY fullscreenquadVertices;
+	
 	// drawlist cache
 	std::map <std::string, std::vector <RenderModelExternal*> > cameraDrawGroupDrawLists;
 	

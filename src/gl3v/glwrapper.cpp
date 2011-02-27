@@ -221,6 +221,35 @@ bool GLWrapper::linkShaderProgram(const std::vector <std::string> & shaderAttrib
 	}
 }
 
+bool GLWrapper::relinkShaderProgram(GLuint handle, std::ostream & shaderErrorOutput)
+{
+	if (!handle)
+		return false;
+	
+	// attempt to link the program
+	GLLOG(glLinkProgram(handle));ERROR_CHECK;
+	
+	// handle the result
+	GLint linkStatus;
+	GLLOG(glGetProgramiv(handle, GL_LINK_STATUS, &linkStatus));
+	if (!linkStatus)
+	{
+		GLint bufferSize(0);
+		GLLOG(glGetProgramiv(handle, GL_INFO_LOG_LENGTH, &bufferSize));
+		GLchar infoLog[bufferSize+1];
+		GLsizei infoLogLength;
+		GLLOG(glGetProgramInfoLog(handle, bufferSize, &infoLogLength, infoLog));
+		infoLog[bufferSize] = '\0';
+		shaderErrorOutput << "Linking of shader program failed:\n" << infoLog << std::endl;
+		GLLOG(glDeleteProgram(handle));ERROR_CHECK;
+		return false;
+	}
+	else
+	{
+		return true;
+	}
+}
+
 void GLWrapper::BindTexture(GLenum target, GLuint handle)
 {
 	// only cache 2D textures at the moment, so if it's not 2D, then just send it and return

@@ -579,6 +579,24 @@ bool RenderPass::createFramebufferObject(GLWrapper & gl, unsigned int w, unsigne
 		return false;
 	}
 	
+	// bind render target variable names to frag data locations, then relink the shader program
+	for (std::map <std::string, RealtimeExportPassInfo::RenderTargetInfo>::const_iterator i = config.renderTargets.begin(); i != config.renderTargets.end(); i++)
+	{
+		// we only bind names for color attachments
+		if (i->first.substr(0,19) == "GL_COLOR_ATTACHMENT")
+		{
+			// find the render target attachment point
+			GLenum attachmentPoint = GLEnumHelper.getEnum(i->first);
+		
+			// find the color attachment location
+			int colorNumber = attachmentPoint - GL_COLOR_ATTACHMENT0;
+		
+			gl.BindFragDataLocation(shaderProgram, colorNumber, i->second.variable.c_str());
+		}
+	}
+	if (!gl.relinkShaderProgram(shaderProgram, errorOutput))
+		return false;
+	
 	// generate a framebuffer object
 	framebufferObject = gl.GenFramebuffer();
 	gl.BindFramebufferWithoutValidation(framebufferObject);

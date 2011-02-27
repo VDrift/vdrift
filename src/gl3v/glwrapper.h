@@ -91,6 +91,10 @@ class GLWrapper
 		/// puts the generated shader program handle into the provided handle variable.
 		bool linkShaderProgram(const std::vector <std::string> & shaderAttributeBindings, const std::vector <GLuint> & shaderHandles, GLuint & handle, std::ostream & shaderErrorOutput);
 		
+		/// relinks a shader program that has previously been linked. does nothing and returns false if handle is zero.
+		/// returns true on success.
+		bool relinkShaderProgram(GLuint handle, std::ostream & shaderErrorOutput);
+		
 		// a bunch of OpenGL analogues; some return bools where true means success
 		bool BindFramebuffer(GLuint fbo);
 		void BindFramebufferWithoutValidation(GLuint fbo) {GLLOG(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo));ERROR_CHECK;}
@@ -149,6 +153,7 @@ class GLWrapper
 		void EnableVertexAttribArray(GLuint i){GLLOG(glEnableVertexAttribArray(i));ERROR_CHECK;}
 		void DisableVertexAttribArray(GLuint i){GLLOG(glDisableVertexAttribArray(i));ERROR_CHECK;}
 		void DrawElements(GLenum mode, GLsizei count, GLenum type, const void * indices) {GLLOG(glDrawElements(mode, count, type, indices));ERROR_CHECK;}
+		void BindFragDataLocation(GLuint program, GLuint colorNumber, const GLchar * name) {GLLOG(glBindFragDataLocation(program, colorNumber, name));ERROR_CHECK;}
 		
 		
 		/// writes errors to the log

@@ -64,6 +64,7 @@ struct RealtimeExportPassInfo
 	struct RenderTargetInfo
 	{
 		std::string name;
+		std::string variable;
 		std::string format;
 		std::string target;
 		bool autoMipmap;
@@ -73,6 +74,7 @@ struct RealtimeExportPassInfo
 		bool Serialize(joeserialize::Serializer & s)
 		{
 			_SERIALIZE_(s,name);
+			_SERIALIZE_(s,variable);
 			_SERIALIZE_(s,format);
 			_SERIALIZE_(s,target);
 			_SERIALIZE_(s,autoMipmap);

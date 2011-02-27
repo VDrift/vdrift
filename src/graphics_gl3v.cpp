@@ -11,6 +11,9 @@
 GRAPHICS_GL3V::GRAPHICS_GL3V(StringIdMap & map) : 
 	stringMap(map), renderer(gl), logNextGlFrame(false), initialized(false)
 {
+	// initialize the full screen quad
+	fullscreenquadVertices.SetTo2DQuad(0,0,1,1, 0,1,1,0, 0);
+	fullscreenquad.SetVertArray(&fullscreenquadVertices);
 }
 
 bool GRAPHICS_GL3V::Init(const std::string & shaderpath,
@@ -318,13 +321,29 @@ void GRAPHICS_GL3V::DrawScene(std::ostream & error_output)
 					}
 					
 					// assemble dynamic entries
-					const std::vector <DRAWABLE*> & dynamicDrawables = *dynamic_drawlist.GetByName(drawGroupString);
-					//assembleDrawList(dynamicDrawables, outDrawList, frustumPtr, lastCameraPosition);
-					assembleDrawList(dynamicDrawables, outDrawList, NULL, lastCameraPosition); // TODO: the above line is commented out because frustum culling dynamic drawables doesen't work at the moment; is the object center in the drawable for the car in the correct space??
+					reseatable_reference <PTRVECTOR <DRAWABLE> > dynamicDrawablesPtr = dynamic_drawlist.GetByName(drawGroupString);
+					if (dynamicDrawablesPtr)
+					{
+						const std::vector <DRAWABLE*> & dynamicDrawables = *dynamicDrawablesPtr;
+						//assembleDrawList(dynamicDrawables, outDrawList, frustumPtr, lastCameraPosition);
+						assembleDrawList(dynamicDrawables, outDrawList, NULL, lastCameraPosition); // TODO: the above line is commented out because frustum culling dynamic drawables doesen't work at the moment; is the object center in the drawable for the car in the correct space??
+					}
 					
 					// assemble static entries
-					const AABB_SPACE_PARTITIONING_NODE_ADAPTER <DRAWABLE> & staticDrawables = *static_drawlist.GetDrawlist().GetByName(drawGroupString);
-					assembleDrawList(staticDrawables, outDrawList, frustumPtr, lastCameraPosition);
+					reseatable_reference <AABB_SPACE_PARTITIONING_NODE_ADAPTER <DRAWABLE> > staticDrawablesPtr = static_drawlist.GetDrawlist().GetByName(drawGroupString);
+					if (staticDrawablesPtr)
+					{
+						const AABB_SPACE_PARTITIONING_NODE_ADAPTER <DRAWABLE> & staticDrawables = *staticDrawablesPtr;
+						assembleDrawList(staticDrawables, outDrawList, frustumPtr, lastCameraPosition);
+					}
+					
+					// if it's requesting the full screen rect draw group, feed it our special drawable
+					if (drawGroupString == "full screen rect")
+					{
+						std::vector <DRAWABLE*> rect;
+						rect.push_back(&fullscreenquad);
+						assembleDrawList(rect, outDrawList, NULL, lastCameraPosition);
+					}
 				}
 				
 				// use the generated combination in our drawMap
