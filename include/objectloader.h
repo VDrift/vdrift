@@ -3,7 +3,7 @@
 
 #include "scenenode.h"
 #include "joepack.h"
-#include "config.h"
+#include "cfg/ptree.h"
 
 class TEXTUREMANAGER;
 class MODELMANAGER;
@@ -109,8 +109,9 @@ private:
 	bool error;
 	bool list;
 	
-	CONFIG track_config;
-	CONFIG::const_iterator track_it;
+	PTree track_config;
+	const PTree * nodes;
+	PTree::const_iterator node_it;
 	
 	/// pod for references
 	struct BODY
@@ -131,10 +132,9 @@ private:
 	
 	void AddBody(SCENENODE & scene, const BODY & body);
 	
-	bool LoadNode(const CONFIG & cfg, const CONFIG::const_iterator & sec);
+	bool LoadNode(const PTree & sec);
 	
 	bool Begin();
-	void CalculateNum();
 	std::pair<bool, bool> Continue();
 	
 	bool BeginOld();

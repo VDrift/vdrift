@@ -121,6 +121,10 @@ src = Split("""aabb.cpp
 		widget_stringwheel.cpp
 		widget_toggle.cpp
 		window.cpp
+		cfg/inf.cpp
+		cfg/ini.cpp
+		cfg/xml.cpp
+		cfg/ptree.cpp
 		gl3v/glwrapper.cpp
 		gl3v/renderdimensions.cpp
 		gl3v/renderer.cpp

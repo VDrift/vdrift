@@ -8,6 +8,18 @@
 #include <string>
 #include <fstream>
 
+static void operator >> (std::istream & lhs, std::vector<std::string> & rhs)
+{
+	for (size_t i = 0; i < rhs.size() && !lhs.eof(); ++i)
+	{
+		std::string str;
+		std::getline(lhs, str, ',');
+		std::stringstream s(str);
+		s >> str;
+		rhs[i] = str;
+	}
+}
+
 /// TODO: weld together nearby geometry
 void Optimize(const SCENENODE & input, SCENENODE & output)
 {
@@ -59,7 +71,8 @@ model = body.joe
 #mipmap = true
 #skybox = false
 #nolighting = false
-#transparent = 0
+#alphablend = false
+#doublesided = false
 #isashadow = false
 #collideable = true
 #surface = 0
@@ -80,21 +93,23 @@ OBJECTLOADER::body_iterator OBJECTLOADER::LoadBody(const std::string & name)
 		return ib;
 	}
 	
-	CONFIG body_config;
-	CONFIG * cfg = &track_config;
-	CONFIG::const_iterator sec;
-	if (!track_config.GetSection("body."+name, sec))
+	const PTree * sec = 0;
+	if (!track_config.get("body." + name, sec))
 	{
-		if (!body_config.Load(objectpath + "/" + name))
+		std::string path = objectpath + "/" + name;
+		std::ifstream file(path.c_str());
+		if (!file)
 		{
 			return bodies.end();
 		}
-		cfg = &body_config;
-		sec = body_config.begin();
+		
+		PTree & bodysec = track_config.set("body." + name);
+		read_ini(file, bodysec);
+		sec = &bodysec;
 	}
 	
 	BODY body;
-	std::vector<std::string> texture_name(3);
+	std::string texture_name;
 	std::string model_name;
 	int clampuv = 0;
 	bool mipmap = true;
@@ -103,17 +118,17 @@ OBJECTLOADER::body_iterator OBJECTLOADER::LoadBody(const std::string & name)
 	bool doublesided = false;
 	bool isashadow = false;
 	
-	cfg->GetParam(sec, "texture", texture_name, error_output);
-	cfg->GetParam(sec, "model", model_name, error_output);
-	cfg->GetParam(sec, "clampuv", clampuv);
-	cfg->GetParam(sec, "mipmap", mipmap);
-	cfg->GetParam(sec, "skybox", skybox);
-	cfg->GetParam(sec, "alphablend", alphablend);
-	cfg->GetParam(sec, "doublesided", doublesided);
-	cfg->GetParam(sec, "isashadow", isashadow);
-	cfg->GetParam(sec, "nolighting", body.nolighting);
-	cfg->GetParam(sec, "collidable", body.collidable);
-	cfg->GetParam(sec, "surface", body.surface);
+	sec->get("texture", texture_name, error_output);
+	sec->get("model", model_name, error_output);
+	sec->get("clampuv", clampuv);
+	sec->get("mipmap", mipmap);
+	sec->get("skybox", skybox);
+	sec->get("alphablend", alphablend);
+	sec->get("doublesided", doublesided);
+	sec->get("isashadow", isashadow);
+	sec->get("nolighting", body.nolighting);
+	sec->get("collidable", body.collidable);
+	sec->get("surface", body.surface);
 	
 	if (dynamicshadowsenabled && isashadow)
 	{
@@ -139,6 +154,10 @@ OBJECTLOADER::body_iterator OBJECTLOADER::LoadBody(const std::string & name)
 	models.push_back(body.model);
 	
 	// load textures
+	std::vector<std::string> texture_names(3);
+	std::stringstream s(texture_name);
+	s >> texture_names;
+	
 	TEXTUREINFO texinfo;
 	texinfo.mipmap = mipmap || anisotropy; //always mipmap if anisotropy is on
 	texinfo.anisotropy = anisotropy;
@@ -147,21 +166,21 @@ OBJECTLOADER::body_iterator OBJECTLOADER::LoadBody(const std::string & name)
 	texinfo.size = texsize;
 	
 	std::tr1::shared_ptr<TEXTURE> diffuse;
-	if (!texture_manager.Load(objectdir, texture_name[0], texinfo, diffuse))
+	if (!texture_manager.Load(objectdir, texture_names[0], texinfo, diffuse))
 	{
 		return ib;
 	}
 	
 	std::tr1::shared_ptr<TEXTURE> miscmap1;
-	if (texture_name[1].length() > 0)
+	if (texture_names[1].length() > 0)
 	{
-		texture_manager.Load(objectdir, texture_name[1], texinfo, miscmap1);
+		texture_manager.Load(objectdir, texture_names[1], texinfo, miscmap1);
 	}
 	
 	std::tr1::shared_ptr<TEXTURE> miscmap2;
-	if (texture_name[2].length() > 0)
+	if (texture_names[2].length() > 0)
 	{
-		texture_manager.Load(objectdir, texture_name[2], texinfo, miscmap2);
+		texture_manager.Load(objectdir, texture_names[2], texinfo, miscmap2);
 	}
 	
 	// setup drawable
@@ -209,10 +228,10 @@ void OBJECTLOADER::AddBody(SCENENODE & scene, const BODY & body)
 	dlist->insert(body.drawable);
 }
 
-bool OBJECTLOADER::LoadNode(const CONFIG & cfg, const CONFIG::const_iterator & sec)
+bool OBJECTLOADER::LoadNode(const PTree & sec)
 {
 	std::string bodyname;
-	if (!cfg.GetParam(sec, "body", bodyname, error_output))
+	if (!sec.get("body", bodyname, error_output))
 	{
 		return false;
 	}
@@ -221,16 +240,15 @@ bool OBJECTLOADER::LoadNode(const CONFIG & cfg, const CONFIG::const_iterator & s
 	if (ib != bodies.end())
 	{
 		MATHVECTOR<float, 3> pos;
+		MATHVECTOR<float, 3> ang;
 		QUATERNION<float> rot;
 		const BODY & body = ib->second;
-		std::vector<float> position(3, 0.0), rotation(3, 0.0);
-		if (cfg.GetParam(sec, "position", position) | cfg.GetParam(sec, "rotation", rotation))
+		if (sec.get("position",  pos) | sec.get("rotation", ang))
 		{
 			keyed_container <SCENENODE>::handle sh = unoptimized_scene.AddNode();
 			SCENENODE & node = unoptimized_scene.GetNode(sh);
 			
-			pos.Set(position[0], position[1], position[2]);
-			rot.SetEulerZYX(rotation[0]/180*M_PI, rotation[1]/180*M_PI, rotation[2]/180*M_PI);
+			rot.SetEulerZYX(ang[0]/180*M_PI, ang[1]/180*M_PI, ang[2]/180*M_PI);
 			node.GetTransform().SetRotation(rot);
 			node.GetTransform().SetTranslation(pos);
 			
@@ -257,55 +275,45 @@ bool OBJECTLOADER::LoadNode(const CONFIG & cfg, const CONFIG::const_iterator & s
 	return true;
 }
 
-// count number of nodes
-void OBJECTLOADER::CalculateNum()
-{
-	numobjects = 0;
-	std::string objectlist = objectpath + "/objects.txt";
-	std::ifstream f(objectlist.c_str());
-	std::string line;
-	while (std::getline(f, line).good())
-	{
-		if (line.find("node.") < line.length())
-		{
-			numobjects++;
-		}
-	}
-}
-
 bool OBJECTLOADER::Begin()
 {
-	CalculateNum();
-	
-	models.reserve(numobjects);
-	objects.reserve(numobjects);
-	
-	if (track_config.Load(objectpath + "/objects.txt"))
+	std::string path = objectpath + "/objects.txt";
+	std::ifstream file(path.c_str());
+	if (file)
 	{
-		track_it = track_config.begin();
-		return true;
+		read_ini(file, track_config);
+		//write_ini(track_config, std::cerr);
+		nodes = 0;
+		if (track_config.get("node", nodes))
+		{
+			node_it = nodes->begin();
+			numobjects = nodes->size();
+			models.reserve(numobjects);
+			objects.reserve(numobjects);
+			return true;
+		}
 	}
 	return false;
 }
 
 std::pair<bool, bool> OBJECTLOADER::Continue()
 {
-	if (track_it == track_config.end())
+	if (node_it == nodes->end())
 	{
 		// we're done, put the optimized scene in sceneroot
 		Optimize(unoptimized_scene, sceneroot);
 		unoptimized_scene.Clear();
-		track_config.Clear();
+		track_config.clear();
 		bodies.clear();
 		return std::make_pair(false, false);
 	}
 	
-	if (track_it->first.find("node.") == 0 && !LoadNode(track_config, track_it))
+	if (!LoadNode(node_it->second))
 	{
 		return std::make_pair(true, false);
 	}
 	
-	track_it++;
+	node_it++;
 	
 	return std::make_pair(false, true);
 }

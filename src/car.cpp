@@ -152,9 +152,8 @@ struct LoadDrawable
 			MODELMANAGER::const_iterator it;
 			if (!models.Load(path, meshname, it)) return false;
 			
-			std::vector<float> sc;
-			std::stringstream s(scale);
-			s >> sc;
+			std::vector<float> sc(3, 0.0);
+			cfg.GetParam(section, "scale", sc);
 			
 			std::tr1::shared_ptr<MODEL> temp(new MODEL());
 			temp->SetVertexArray(it->second->GetVertexArray());
@@ -268,9 +267,9 @@ static bool LoadWheel(
 	{
 		if (!models.Load(load_drawable.path, meshname, it)) return false;
 		
-		std::vector<float> d;
-		std::stringstream s(tiredim);
-		s >> d;
+		std::vector<float> d(3, 0.0);
+		cfg.GetParam(tiresect, "size", d);
+		
 		float width = d[0] * 0.001;
 		float diameter = d[2] * 0.0254;
 		
@@ -293,9 +292,8 @@ static bool LoadWheel(
 	if (!cfg.GetParam(tiresect, "texture", texname, error_output)) return false;
 	if (!models.Get("", "tire"+tiredim, it))
 	{
-		std::vector<float> d;
-		std::stringstream s(tiredim);
-		s >> d;
+		std::vector<float> d(3, 0.0);
+		cfg.GetParam(tiresect, "size", d);
 		
 		VERTEXARRAY varray;
 		std::tr1::shared_ptr<MODEL> temp(new MODEL_JOE03());

@@ -1139,11 +1139,12 @@ void CARDYNAMICS::DoABS ( int i, btScalar suspension_force )
 void CARDYNAMICS::ComputeSuspensionDisplacement ( int i, btScalar dt )
 {
 	//compute bump effect
-	btScalar posx = wheel_contact[i].GetPosition() [0];
-	btScalar posz = wheel_contact[i].GetPosition() [2];
-	btScalar phase = 2 * M_PI * ( posx + posz ) / wheel_contact[i].GetSurface().bumpWaveLength;
+	const TRACKSURFACE & surface = wheel_contact[i].GetSurface();
+	btScalar posx = wheel_contact[i].GetPosition()[0];
+	btScalar posz = wheel_contact[i].GetPosition()[2];
+	btScalar phase = 2 * M_PI * ( posx + posz ) / surface.bumpWaveLength;
 	btScalar shift = 2 * sin ( phase * M_PI_2 );
-	btScalar amplitude = 0.25 * wheel_contact[i].GetSurface().bumpAmplitude;
+	btScalar amplitude = 0.25 * surface.bumpAmplitude;
 	btScalar bumpoffset = amplitude * ( sin ( phase + shift ) + sin ( M_PI_2*phase ) - 2.0 );
 
 	btScalar relative_displacement = wheel_contact[i].GetDepth() - 2 * tire[i].GetRadius() - bumpoffset;
@@ -1240,8 +1241,9 @@ btVector3 CARDYNAMICS::ComputeTireFrictionForce ( int i, btScalar dt, btScalar n
 void CARDYNAMICS::ApplyWheelForces ( btScalar dt, btScalar wheel_drive_torque, int i, const btVector3 & suspension_force, btVector3 & force, btVector3 & torque )
 {
 	btVector3 groundvel = quatRotate ( wheel_orientation[i].inverse(), wheel_velocity[i] );
-	btVector3 wheel_normal = quatRotate ( wheel_orientation[i], btVector3 ( 0, 0, 1 ) );
+	
 #ifdef SUSPENSION_FORCE_DIRECTION
+	btVector3 wheel_normal = quatRotate ( wheel_orientation[i], btVector3 ( 0, 0, 1 ) );
 	//btScalar normal_force = suspension_force.dot(wheel_normal);
 	btScalar normal_force = suspension_force.length();
 #else

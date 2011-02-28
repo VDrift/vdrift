@@ -512,6 +512,11 @@
 		<Unit filename="..\..\src\carengine.cpp" />
 		<Unit filename="..\..\src\carsuspension.cpp" />
 		<Unit filename="..\..\src\cartire.cpp" />
+		<Unit filename="..\..\src\cfg\inf.cpp" />
+		<Unit filename="..\..\src\cfg\ini.cpp" />
+		<Unit filename="..\..\src\cfg\ptree.cpp" />
+		<Unit filename="..\..\src\cfg\ptree.h" />
+		<Unit filename="..\..\src\cfg\xml.cpp" />
 		<Unit filename="..\..\src\collision_world.cpp" />
 		<Unit filename="..\..\src\config.cpp" />
 		<Unit filename="..\..\src\containeralgorithm.cpp" />

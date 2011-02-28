@@ -9,46 +9,6 @@
 #include <iostream>
 #include <cassert>
 
-template <class T>
-void operator << (std::ostream & lhs, const std::vector<T> & rhs)
-{
-	typename std::vector<T>::const_iterator it = rhs.begin();
-	while (it < rhs.end() - 1)
-	{
-		lhs << *it++ << ",";
-	}
-	lhs << *it;
-}
-
-template <class T>
-void operator >> (std::istream & lhs, std::vector<T> & rhs)
-{
-	if (rhs.size() > 0)
-	{
-		// set vector
-		for (size_t i = 0; i < rhs.size() && !lhs.eof(); ++i)
-		{
-			std::string str;
-			std::getline(lhs, str, ',');
-			std::stringstream s(str);
-			s >> rhs[i];
-		}
-	}
-	else
-	{
-		// fill vector
-		while (!lhs.eof())
-		{
-			std::string str;
-			std::getline(lhs, str, ',');
-			std::stringstream s(str);
-			T value;
-			s >> value;
-			rhs.push_back(value);
-		}
-	}
-}
-
 //see the user's guide at the bottom of the file
 class CONFIG
 {
@@ -99,6 +59,12 @@ public:
 		}
 		return false;
 	}
+	
+	/// will create section if not available
+	void GetSection(const std::string & section, iterator & it)
+	{
+		it = sections.insert(std::pair<const std::string, SECTION>(section, SECTION())).first;
+	}
 
 	bool GetSection(const std::string & section, const_iterator & it, std::ostream & error_output) const
 	{
@@ -108,18 +74,6 @@ public:
 			return false;
 		}
 		return true;
-	}
-
-	bool GetParam(const const_iterator & section, const std::string & param, std::string & output) const
-	{
-		assert(section != sections.end());
-		SECTION::const_iterator i = section->second.find(param);
-		if (i != section->second.end())
-		{
-			output = i->second;
-			return true;
-		}
-		return false;
 	}
 
 	template <typename T>
@@ -135,20 +89,39 @@ public:
 		}
 		return false;
 	}
-
-	bool GetParam(const const_iterator & section, const std::string & param, bool & output) const
+	
+	template <typename T>
+	bool GetParam(const const_iterator & section, const std::string & param, std::vector<T> & out) const
 	{
 		assert(section != sections.end());
 		SECTION::const_iterator i = section->second.find(param);
 		if (i != section->second.end())
 		{
-			output = false;
-			if (i->second == "1")
-				output = true;
-			else if (i->second == "true")
-				output = true;
-			else if (i->second == "on")
-				output = true;
+			std::stringstream st(i->second);
+			if (out.size() > 0)
+			{
+				// set vector
+				for (size_t i = 0; i < out.size() && !st.eof(); ++i)
+				{
+					std::string str;
+					std::getline(st, str, ',');
+					std::stringstream s(str);
+					s >> out[i];
+				}
+			}
+			else
+			{
+				// fill vector
+				while (!st.eof())
+				{
+					std::string str;
+					std::getline(st, str, ',');
+					std::stringstream s(str);
+					T value;
+					s >> value;
+					out.push_back(value);
+				}
+			}
 			return true;
 		}
 		return false;
@@ -180,21 +153,6 @@ public:
 		return GetSection(section, it, error_output) && GetParam(it, param, output, error_output);
 	}
 
-	/// will create section if not available
-	void GetSection(const std::string & section, iterator & it)
-	{
-		it = sections.insert(std::pair<const std::string, SECTION>(section, SECTION())).first;
-	}
-
-	/// will create param if not available
-	void SetParam(iterator section, const std::string & param, const std::string & invar)
-	{
-		if (section != sections.end())
-		{
-			section->second[param] = invar;
-		}
-	}
-
 	/// will create param if not available
 	template <typename T>
 	void SetParam(iterator section, const std::string & param, const T & invar)
@@ -203,6 +161,22 @@ public:
 		{
 			std::stringstream st;
 			st << std::boolalpha << invar;
+			section->second[param] = st.str();
+		}
+	}
+	
+	template <typename T>
+	void SetParam(iterator section, const std::string & param, const std::vector<T> & invar)
+	{
+		if (section != sections.end())
+		{
+			std::stringstream st;
+			typename std::vector<T>::const_iterator it = invar.begin();
+			while (it < invar.end() - 1)
+			{
+				st << *it++ << ",";
+			}
+			st << *it;
 			section->second[param] = st.str();
 		}
 	}
@@ -223,6 +197,48 @@ private:
 
 	bool ProcessLine(CONFIG::iterator & section, std::string & linestr);
 };
+
+// specializations
+template <> 
+inline bool CONFIG::GetParam(const const_iterator & section, const std::string & param, std::string & output) const
+{
+	assert(section != sections.end());
+	SECTION::const_iterator i = section->second.find(param);
+	if (i != section->second.end())
+	{
+		output = i->second;
+		return true;
+	}
+	return false;
+}
+
+template <> 
+inline bool CONFIG::GetParam(const const_iterator & section, const std::string & param, bool & output) const
+{
+	assert(section != sections.end());
+	SECTION::const_iterator i = section->second.find(param);
+	if (i != section->second.end())
+	{
+		output = false;
+		if (i->second == "1")
+			output = true;
+		else if (i->second == "true")
+			output = true;
+		else if (i->second == "on")
+			output = true;
+		return true;
+	}
+	return false;
+}
+
+template <> 
+inline void CONFIG::SetParam(iterator section, const std::string & param, const std::string & invar)
+{
+	if (section != sections.end())
+	{
+		section->second[param] = invar;
+	}
+}
 
 #endif /* _CONFIG_H */
 
