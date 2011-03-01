@@ -971,6 +971,16 @@ void GAME::ProcessGUIInputs()
 			}
 		}
 	}
+	
+	// handle F12 with dedicated logic because we want to be able to do this outside of the game
+	if (eventsystem.GetKeyState(SDLK_F12).just_down)
+	{
+		info_output << "Reloading shaders" << endl;
+		if (!graphics_interface->ReloadShaders(pathmanager.GetShaderPath(), info_output, error_output))
+		{
+			error_output << "Error reloading shaders" << endl;
+		}
+	}
 
 	list <string> gui_actions;
 
