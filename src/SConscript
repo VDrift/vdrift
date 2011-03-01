@@ -73,7 +73,6 @@ src = Split("""aabb.cpp
 		model_joe03.cpp
 		model_obj.cpp
 		modelmanager.cpp
-		objectloader.cpp
 		opengl_utility.cpp
 		optional.cpp
 		parallel_task.cpp
@@ -106,6 +105,7 @@ src = Split("""aabb.cpp
 		timer.cpp
 		toggle.cpp
 		track.cpp
+		trackloader.cpp
 		trackmap.cpp
 		utils.cpp
 		vertexarray.cpp

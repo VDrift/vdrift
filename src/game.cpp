@@ -72,7 +72,7 @@ GAME::GAME(std::ostream & info_out, std::ostream & error_out) :
 	profilingmode(false),
 	renderconfigfile("render.conf.deferred"),
 	collision(timestep),
-	track(info_out, error_out),
+	track(),
 	replay(timestep),
 	http("/tmp")
 {
@@ -626,6 +626,7 @@ void GAME::BeginDraw()
 	#ifndef USE_STATIC_OPTIMIZATION_FOR_TRACK
 	TraverseScene<false>(track.GetTrackNode(), graphics_interface->GetDynamicDrawlist());
 	#endif
+	TraverseScene<false>(track.GetBodyNode(), graphics_interface->GetDynamicDrawlist());
 	TraverseScene<false>(hud.GetNode(), graphics_interface->GetDynamicDrawlist());
 	TraverseScene<false>(trackmap.GetNode(), graphics_interface->GetDynamicDrawlist());
 	TraverseScene<false>(inputgraph.GetNode(), graphics_interface->GetDynamicDrawlist());
@@ -769,6 +770,9 @@ void GAME::AdvanceGameLogic()
 					UpdateCar(*i, TickPeriod());
 				}
 				PROFILER.endBlock("car-update");
+				
+				// update dynamic track objects
+				track.Update();
 				
 				//PROFILER.beginBlock("timer");
 				UpdateTimer();
@@ -1868,7 +1872,7 @@ void GAME::LeaveGame()
 	}
 	
 	collision.Clear();
-	track.Unload();
+	track.Clear();
 	cars.clear();
 	hud.Hide();
 	inputgraph.Hide();
@@ -1957,10 +1961,10 @@ bool GAME::LoadCar(
 bool GAME::LoadTrack(const std::string & trackname)
 {
 	LoadingScreen(0.0, 1.0, false, "", 0.5, 0.5);
-
-	//load the track
+	
 	if (!track.DeferredLoad(
-			textures, models,
+			textures, models, collision,
+			info_output, error_output,
 			pathmanager.GetTrackPath()+"/"+trackname,
 			pathmanager.GetTrackDir()+"/"+trackname,
 			pathmanager.GetEffectsTextureDir(),

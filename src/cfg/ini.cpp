@@ -17,7 +17,7 @@ void read_ini(std::istream & in, PTree & node, PTree & root)
 	while(!std::getline(in, line, '\n').eof())
 	{
 		size_t begin = line.find_first_not_of(" \t[");
-		size_t end = line.find_first_of(";#]", begin);
+		size_t end = line.find_first_of(";#]\r", begin);
 		if (begin >= end)
 		{
 			continue;
@@ -26,19 +26,19 @@ void read_ini(std::istream & in, PTree & node, PTree & root)
 		size_t next = line.find("=", begin);
 		if (next >= end)
 		{
-			next = line.find_last_not_of(" \t]", end);
+			next = line.find_last_not_of(" \t\r]", end);
 			name = line.substr(begin, next);
 			//std::cerr << "[" << name << "]\n";
 			read_ini(in, root.set(name), root);
 			continue;
 		}
 		
-		size_t next2 = line.find_first_not_of(" \t", next+1);
+		size_t next2 = line.find_first_not_of(" \t\r", next+1);
 		next = line.find_last_not_of(" \t", next-1);
 		if (next2 < end)
 		{
 			name = line.substr(begin, next+1);
-			std::string value = line.substr(next2, end);
+			std::string value = line.substr(next2, end-next2);
 			//std::cerr << "<" << name << "> = <" << value << ">\n";
 			node.set(name, value);
 		}

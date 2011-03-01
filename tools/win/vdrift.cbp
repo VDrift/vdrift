@@ -474,8 +474,8 @@
 		<Unit filename="..\..\include\tobullet.h" />
 		<Unit filename="..\..\include\toggle.h" />
 		<Unit filename="..\..\include\track.h" />
+		<Unit filename="..\..\include\trackloader.h" />
 		<Unit filename="..\..\include\trackmap.h" />
-		<Unit filename="..\..\include\trackobject.h" />
 		<Unit filename="..\..\include\tracksurface.h" />
 		<Unit filename="..\..\include\transform.h" />
 		<Unit filename="..\..\include\unittest.h" />
@@ -582,7 +582,6 @@
 		<Unit filename="..\..\src\model_joe03.cpp" />
 		<Unit filename="..\..\src\model_obj.cpp" />
 		<Unit filename="..\..\src\modelmanager.cpp" />
-		<Unit filename="..\..\src\objectloader.cpp" />
 		<Unit filename="..\..\src\opengl_utility.cpp" />
 		<Unit filename="..\..\src\optional.cpp" />
 		<Unit filename="..\..\src\parallel_task.cpp" />
@@ -615,6 +614,7 @@
 		<Unit filename="..\..\src\timer.cpp" />
 		<Unit filename="..\..\src\toggle.cpp" />
 		<Unit filename="..\..\src\track.cpp" />
+		<Unit filename="..\..\src\trackloader.cpp" />
 		<Unit filename="..\..\src\trackmap.cpp" />
 		<Unit filename="..\..\src\utils.cpp" />
 		<Unit filename="..\..\src\vertexarray.cpp" />

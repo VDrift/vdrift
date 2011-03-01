@@ -64,28 +64,6 @@ struct MyRayResultCallback : public btCollisionWorld::RayResultCallback
 	}
 };
 
-static btIndexedMesh GetIndexedMesh(const MODEL & model)
-{
-	const float * vertices;
-	int vcount;
-	const int * faces;
-	int fcount;
-	model.GetVertexArray().GetVertices(vertices, vcount);
-	model.GetVertexArray().GetFaces(faces, fcount);
-
-	assert(fcount % 3 == 0); //Face count is not a multiple of 3
-
-	btIndexedMesh mesh;
-	mesh.m_numTriangles = fcount / 3;
-	mesh.m_triangleIndexBase = (const unsigned char *)faces;
-	mesh.m_triangleIndexStride = sizeof(int) * 3;
-	mesh.m_numVertices = vcount;
-	mesh.m_vertexBase = (const unsigned char *)vertices;
-	mesh.m_vertexStride = sizeof(float) * 3;
-	mesh.m_vertexType = PHY_FLOAT;
-	return mesh;
-}
-
 COLLISION_WORLD::COLLISION_WORLD(btScalar timeStep, int maxSubSteps) :
 	collisiondispatcher(&collisionconfig),
 	//collisionbroadphase(btVector3(-5000, -5000, -5000), btVector3(5000, 5000, 5000)),
@@ -113,6 +91,11 @@ void COLLISION_WORLD::AddAction(btActionInterface * action)
 	world.addAction(action);
 }
 
+void COLLISION_WORLD::AddCollisionObject(btCollisionObject * object)
+{
+	world.addCollisionObject(object);
+}
+
 void COLLISION_WORLD::RemoveRigidBody(btRigidBody * body)
 {
 	world.removeRigidBody(body);
@@ -123,60 +106,15 @@ void COLLISION_WORLD::RemoveAction(btActionInterface * action)
 	world.removeAction(action);
 }
 
+void COLLISION_WORLD::RemoveCollisionObject(btCollisionObject * object)
+{
+	world.removeCollisionObject(object);
+}
+
 void COLLISION_WORLD::Reset(const TRACK & t)
 {
 	Clear();
-	
 	track = &t;
-	const std::vector<TRACKOBJECT> & ob = track->GetTrackObjects();
-#ifndef EXTBULLET
-	meshes.reserve(ob.size());
-	btCompoundShape * trackShape = new btCompoundShape(true);
-	for (int i = 0, n = ob.size(); i < n; ++i)
-	{
-		btTransform transform;
-		transform.setOrigin(ToBulletVector(ob[i].position));
-		transform.setRotation(ToBulletQuaternion(ob[i].rotation));
-		
-		btTriangleIndexVertexArray * mesh = new btTriangleIndexVertexArray();
-		mesh->addIndexedMesh(GetIndexedMesh(*ob[i].model));
-		meshes.push_back(mesh);
-		
-		btBvhTriangleMeshShape * shape = new btBvhTriangleMeshShape(mesh, true);
-		shape->setUserPointer((void*)ob[i].surface);
-		trackShape->addChildShape(transform, shape);
-	}
-	trackShape->createAabbTreeFromChildren();
-	
-	btCollisionObject * trackObject = new btCollisionObject();
-	trackObject->setCollisionShape(trackShape);
-	world.addCollisionObject(trackObject);
-	objects.push_back(trackObject);
-#else
-	shapes.reserve(ob.size());
-	objects.reserve(ob.size());
-	for (int i = 0, n = ob.size(); i < n; ++i)
-	{
-		btTriangleIndexVertexArray * mesh = new btTriangleIndexVertexArray();
-		mesh->addIndexedMesh(GetIndexedMesh(*ob[i].model));
-		meshes.push_back(mesh);
-		
-		btBvhTriangleMeshShape * shape = new btBvhTriangleMeshShape(mesh, true);
-		shapes.push_back(shape);
-		
-		btCollisionObject * object = new btCollisionObject();
-		object->setCollisionShape(shape);
-		object->setUserPointer((void*)ob[i].surface);
-		objects.push_back(object);
-		
-		btTransform transform;
-		transform.setOrigin(ToBulletVector(ob[i].position));
-		transform.setRotation(ToBulletQuaternion(ob[i].rotation));
-		object->setWorldTransform(transform);
-		
-		world.addCollisionObject(object);
-	}
-#endif
 }
 
 bool COLLISION_WORLD::CastRay(
@@ -261,44 +199,6 @@ void COLLISION_WORLD::DebugPrint(std::ostream & out) const
 
 void COLLISION_WORLD::Clear()
 {
-	track = 0;
-	
-	for(int i = 0, n = objects.size(); i < n; ++i)
-	{
-		world.removeCollisionObject(objects[i]);
-		delete objects[i];
-	}
-	objects.resize(0);
-/*	
-	int wnum = world.getCollisionObjectArray().size();
-	std::cerr << "world collision objects leaking: " << wnum << std::endl;
-	for (int i = 0; i < wnum; ++i)
-	{
-		btCollisionObject * ob = world.getCollisionObjectArray()[i];
-		std::cerr << "collision object leaking: " << ob << std::endl;
-		world.removeCollisionObject(ob);
-	}
-*/
-	for(int i = 0, n = shapes.size(); i < n; ++i)
-	{
-		btCollisionShape * shape = shapes[i];
-		if (shape->isCompound())
-		{
-			btCompoundShape * cs = (btCompoundShape *)shape;
-			for (int i = 0, n = cs->getNumChildShapes(); i < n; ++i)
-			{
-				delete cs->getChildShape(i);
-			}
-		}
-		delete shape;
-	}
-	shapes.resize(0);
-	
-	for(int i = 0, n = meshes.size(); i < n; ++i)
-	{
-		delete meshes[i];
-	}
-	meshes.resize(0);
-	
 	collisionbroadphase.resetPool(&collisiondispatcher);
+	track = 0;
 }

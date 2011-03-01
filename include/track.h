@@ -2,11 +2,12 @@
 #define _TRACK_H
 
 #include "scenenode.h"
-#include "trackobject.h"
 #include "tracksurface.h"
 #include "roadstrip.h"
 #include "mathvector.h"
 #include "quaternion.h"
+#include "LinearMath/btDefaultMotionState.h"
+#include "LinearMath/btAlignedObjectArray.h"
 
 #include <string>
 #include <iostream>
@@ -14,35 +15,29 @@
 #include <memory>
 #include <vector>
 
+class COLLISION_WORLD;
 class TEXTUREMANAGER;
 class MODELMANAGER;
 class OBJECTLOADER;
 class ROADSTRIP;
+class btStridingMeshInterface;
+class btCollisionShape;
+class btCollisionObject;
 
 class TRACK
 {
 public:
-	TRACK(std::ostream & info, std::ostream & error);
+	TRACK();
 	
 	~TRACK();
 	
-	void Clear();
-	
-	///returns true if successful.  loads the entire track with this one function call.
-	bool Load(
-		TEXTUREMANAGER & textures,
-		MODELMANAGER & models,
-		const std::string & trackpath,
-		const std::string & trackdir,
-		const std::string & effects_texturepath,
-		const std::string & texsize,
-		const int anisotropy,
-		const bool reverse);
-	
-	///returns true if successful.  only begins loading the track; the track won't be loaded until more calls to ContinueDeferredLoad().  use Loaded() to see if loading is complete yet.
+	/// true if successful.  only begins loading the track; the track won't be loaded until more calls to ContinueDeferredLoad().  use Loaded() to see if loading is complete yet.
 	bool DeferredLoad(
 		TEXTUREMANAGER & textures,
 		MODELMANAGER & models,
+		COLLISION_WORLD & world,
+		std::ostream & info_output,
+		std::ostream & error_output,
 		const std::string & trackpath,
 		const std::string & trackdir,
 		const std::string & effects_texturepath,
@@ -55,18 +50,13 @@ public:
 	bool ContinueDeferredLoad();
 	
 	int DeferredLoadTotalObjects() const;
-
-	std::pair <MATHVECTOR <float, 3>, QUATERNION <float> > GetStart(unsigned int index) const;
-	
-	int GetNumStartPositions() const
-	{
-		return start_positions.size();
-	}
 	
 	bool Loaded() const
 	{
-		return loaded;
+		return data.loaded;
 	}
+	
+	void Clear();
 	
 	bool CastRay(
 		const MATHVECTOR <float, 3> & origin,
@@ -76,21 +66,31 @@ public:
 		MATHVECTOR <float, 3> & outtri,
 		const BEZIER * & colpatch,
 		MATHVECTOR <float, 3> & normal) const;
+		
+	/// syncronize graphics and physics once per frame
+	void Update();
+	
+	std::pair <MATHVECTOR <float, 3>, QUATERNION <float> > GetStart(unsigned int index) const;
+	
+	int GetNumStartPositions() const
+	{
+		return data.start_positions.size();
+	}
 	
 	const std::list <ROADSTRIP> & GetRoadList() const
 	{
-		return roads;
+		return data.roads;
 	}
 	
 	unsigned int GetSectors() const
 	{
-		return lapsequence.size();
+		return data.lap.size();
 	}
 	
 	const BEZIER * GetLapSequence(unsigned int sector) const
 	{
-		assert (sector < lapsequence.size());
-		return lapsequence[sector];
+		assert (sector < data.lap.size());
+		return data.lap[sector];
 	}
 	
 	void SetRacingLineVisibility(bool newvis)
@@ -98,113 +98,81 @@ public:
 		racingline_visible = newvis;
 	}
 	
-	void Unload()
-	{
-		Clear();
-	}
-	
 	bool IsReversed() const
 	{
-		return direction == DIRECTION_REVERSE;
-	}
-	
-	const std::vector<TRACKOBJECT> & GetTrackObjects() const
-	{
-		return objects;
+		return data.direction == DATA::DIRECTION_REVERSE;
 	}
 	
 	const std::vector<TRACKSURFACE> & GetSurfaces() const
 	{
-		return tracksurfaces;
+		return data.surfaces;
 	}
 	
 	SCENENODE & GetRacinglineNode()
 	{
 		if (racingline_visible)
-			return racingline_node;
+			return data.racingline_node;
 		else 
 			return empty_node;
 	}
-
+	
 	SCENENODE & GetTrackNode()
 	{
-		return tracknode;
+		return data.static_node;
+	}
+	
+	SCENENODE & GetBodyNode()
+	{
+		return data.dynamic_node;
 	}
 
 private:
-	std::ostream & info_output;
-	std::ostream & error_output;
-	std::vector <std::pair <MATHVECTOR <float, 3>, QUATERNION <float> > > start_positions;
-	std::vector <TRACKSURFACE> tracksurfaces;
-	std::vector <TRACKOBJECT> objects;
-	std::vector <std::tr1::shared_ptr<MODEL> > models;
-	bool vertical_tracking_skyboxes;
-	
-	enum
+	struct DATA
 	{
-		DIRECTION_FORWARD,
-		DIRECTION_REVERSE
-	} direction;
+		COLLISION_WORLD * world;
+		
+		// static track objects
+		SCENENODE static_node;
+		std::vector <TRACKSURFACE> surfaces;
+		std::vector <std::tr1::shared_ptr<MODEL> > models;
+		btAlignedObjectArray <btStridingMeshInterface *> meshes;
+		btAlignedObjectArray <btCollisionShape *> shapes;
+		btAlignedObjectArray <btCollisionObject *> objects;
+		
+		// dynamic track objects
+		SCENENODE dynamic_node;
+		std::vector<keyed_container<SCENENODE>::handle> body_nodes;
+		std::list<btDefaultMotionState> body_transforms;
+		
+		// road information
+		std::vector <const BEZIER *> lap;
+		std::list <ROADSTRIP> roads;
+		std::vector <std::pair<MATHVECTOR <float, 3>, QUATERNION <float> > > start_positions;
+		
+		// racing line data
+		SCENENODE racingline_node;
+		std::tr1::shared_ptr<TEXTURE> racingline_texture;
+		
+		// track state
+		enum
+		{
+			DIRECTION_FORWARD,
+			DIRECTION_REVERSE
+		} direction;
+		bool vertical_tracking_skyboxes;
+		bool loaded;
+		bool cull;
+		
+		DATA();
+		
+	} data;
 	
-	//road information
-	std::list <ROADSTRIP> roads;
-	
-	//the sequence of beziers that a car needs to hit to do a lap
-	std::vector <const BEZIER *> lapsequence;
-	
-	//racing line data
-	SCENENODE racingline_node;
-	SCENENODE empty_node;
-	std::tr1::shared_ptr<TEXTURE> racingline_texture;
 	bool racingline_visible;
+	SCENENODE empty_node;
 	
-	SCENENODE tracknode;
-	
-	bool loaded;
-	bool cull;
-	
-	std::auto_ptr <OBJECTLOADER> objload;
-	
-	bool CreateRacingLines(
-		const std::string & texturepath,
-		const std::string & texsize,
-		TEXTUREMANAGER & textures);
-	
-	bool LoadParameters(const std::string & trackpath);
-	
-	bool LoadSurfaces(const std::string & trackpath);
-	
-	bool LoadObjects(
-		SCENENODE & sceneroot,
-		TEXTUREMANAGER & textures,
-		MODELMANAGER & models,
-		const std::string & trackpath,
-		const std::string & trackdir,
-		const std::string & texsize,
-		const int anisotropy);
-	
-	///returns false on error
-	bool BeginObjectLoad(
-		SCENENODE & sceneroot,
-		TEXTUREMANAGER & textures,
-		MODELMANAGER & models,
-		const std::string & trackpath,
-		const std::string & trackdir,
-		const std::string & texsize,
-		const int anisotropy,
-		const bool dynamicshadowsenabled,
-		const bool doagressivecombining);
-	
-	///returns a pair of bools: the first bool is true if there was an error, the second bool is true if an object was loaded
-	std::pair <bool, bool> ContinueObjectLoad();
-	
-	bool LoadRoads(const std::string & trackpath, bool reverse);
-	
-	bool LoadLapSequence(const std::string & trackpath, bool reverse);
-	
-	void ClearRoads() {roads.clear();}
-	
-	void Reverse();
+	// temporary loading data
+	class LOADER;
+	std::auto_ptr <LOADER> loader;
 };
 
 #endif

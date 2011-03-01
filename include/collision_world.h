@@ -22,9 +22,13 @@ public:
 
 	void AddAction(btActionInterface * action);
 
+	void AddCollisionObject(btCollisionObject * object);
+
 	void RemoveRigidBody(btRigidBody * body);
 
 	void RemoveAction(btActionInterface * action);
+
+	void RemoveCollisionObject(btCollisionObject * object);
 
 	// reset collision world (unloads previous track)
 	void Reset(const TRACK & t);
@@ -36,7 +40,7 @@ public:
 		const btScalar length,
 		const btCollisionObject * caster,
 		COLLISION_CONTACT & contact) const;
-
+	
 	// update world physics
 	void Update(btScalar dt);
 
@@ -57,9 +61,6 @@ protected:
 	int maxSubSteps;
 
 	const TRACK * track;
-	btAlignedObjectArray<btCollisionShape *> shapes;
-	btAlignedObjectArray<btTriangleIndexVertexArray *> meshes;
-	btAlignedObjectArray<btCollisionObject *> objects;
 };
 
 #endif // _COLLISION_WORLD_H
