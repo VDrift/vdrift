@@ -153,7 +153,17 @@ bool TRACK::LOADER::ContinueLoad()
 	
 	if (!loadstatus.second)
 	{
+#ifndef EXTBULLET
+		btCollisionObject * track_object = new btCollisionObject();
+		track_shape->createAabbTreeFromChildren();
+		track_object->setCollisionShape(track_shape);
+		world.AddCollisionObject(track_object);
+		data.objects.push_back(track_object);
+		data.shapes.push_back(track_shape);
+		track_shape = 0;
+#endif
 		data.loaded = true;
+		Clear();
 	}
 	
 	return true;
@@ -161,6 +171,11 @@ bool TRACK::LOADER::ContinueLoad()
 
 bool TRACK::LOADER::BeginObjectLoad()
 {
+#ifndef EXTBULLET			
+	assert(track_shape == 0);
+	track_shape = new btCompoundShape(true);
+#endif
+	
 	list = true;
 	packload = pack.LoadPack(objectpath + "/objects.jpk");
 	
@@ -211,10 +226,6 @@ bool TRACK::LOADER::Begin()
 			numobjects = nodes->size();
 			data.models.reserve(numobjects);
 			data.meshes.reserve(numobjects);
-#ifndef EXTBULLET			
-			assert(track_shape == 0);
-			track_shape = new btCompoundShape(true);
-#endif
 			return true;
 		}
 	}
@@ -225,16 +236,6 @@ std::pair<bool, bool> TRACK::LOADER::Continue()
 {
 	if (node_it == nodes->end())
 	{
-#ifndef EXTBULLET
-		btCollisionObject * track_object = new btCollisionObject();
-		track_shape->createAabbTreeFromChildren();
-		track_object->setCollisionShape(track_shape);
-		world.AddCollisionObject(track_object);
-		data.objects.push_back(track_object);
-		data.shapes.push_back(track_shape);
-		track_shape = 0;
-#endif
-		Clear();
 		return std::make_pair(false, false);
 	}
 	
@@ -569,9 +570,8 @@ bool TRACK::LOADER::BeginOld()
 std::pair<bool, bool> TRACK::LOADER::ContinueOld()
 {
 	std::string model_name;
-	if (!(GetParam(objectfile, model_name)))
+	if (!GetParam(objectfile, model_name))
 	{
-		Clear();
 		return std::make_pair(false, false);
 	}
 	
@@ -729,11 +729,17 @@ std::pair<bool, bool> TRACK::LOADER::ContinueOld()
 		shape->setUserPointer((void*)&data.surfaces[surface]);
 		data.shapes.push_back(shape);
 		
+#ifndef EXTBULLET
+		btTransform transform = btTransform::getIdentity();
+		track_shape->addChildShape(transform, shape);
+#else
 		btCollisionObject * object = new btCollisionObject();
+		object->setWorldTransform(transform);
 		object->setCollisionShape(shape);
+		object->setUserPointer(shape->getUserPointer());
 		data.objects.push_back(object);
-		
 		world.AddCollisionObject(object);
+#endif
 	}
 
 	return std::make_pair(false, true);
