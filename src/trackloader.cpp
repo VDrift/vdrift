@@ -263,6 +263,8 @@ TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const std::string & name)
 		std::ifstream file(path.c_str());
 		if (!file)
 		{
+			std::cerr << "body." << name << " not found." << std::endl; 
+			std::cerr << "External config: " << path << " not found." << std::endl; 
 			return ib;
 		}
 		
@@ -434,7 +436,7 @@ bool TRACK::LOADER::LoadNode(const PTree & sec)
 	body_iterator ib = LoadBody(bodyname);
 	if (ib == bodies.end())
 	{
-		return false;
+		return true;
 	}
 	
 	MATHVECTOR<float, 3> position, angle;
