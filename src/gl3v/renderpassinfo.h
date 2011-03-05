@@ -3,6 +3,7 @@
 
 #include <string>
 #include <vector>
+#include <set>
 
 #include "joeserialize.h"
 #include "macros.h"
@@ -19,9 +20,9 @@ struct RealtimeExportPassInfo
 	std::map <std::string, std::string> userDefinedFields;
 	
 	std::string vertexShader;
-	std::vector <std::string> vertexShaderDefines;
+	std::set <std::string> vertexShaderDefines;
 	std::string fragmentShader;
-	std::vector <std::string> fragmentShaderDefines;
+	std::set <std::string> fragmentShaderDefines;
 	
 	std::vector <std::string> shaderAttributeBindings;
 	

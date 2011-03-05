@@ -52,7 +52,22 @@ void eraseVectorUseSwapAndPop(unsigned int index, T & vector)
 	vector.pop_back();
 }
 
-std::string implode(const std::vector <std::string> & toImplode, const std::string & sep);
+// works if T is an STL (or STL-like) container
+template <typename T>
+std::string implode(const T & toImplode, const std::string & sep)
+{
+	std::string out;
+	
+	for (typename T::const_iterator i = toImplode.begin(); i != toImplode.end(); i++)
+	{
+		if (i != toImplode.begin())
+			out.append(sep);
+		out.append(*i);
+	}
+	
+	return out;
+}
+
 std::vector <std::string> explode(const std::string & toExplode, const std::string & sep);
 
 };

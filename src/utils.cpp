@@ -108,20 +108,6 @@ QT_TEST(utils)
 	}
 }
 
-std::string implode(const std::vector <std::string> & toImplode, const std::string & sep)
-{
-	std::string out;
-	
-	for (std::vector <std::string>::const_iterator i = toImplode.begin(); i != toImplode.end(); i++)
-	{
-		if (i != toImplode.begin())
-			out.append(sep);
-		out.append(*i);
-	}
-	
-	return out;
-}
-
 std::vector <std::string> explode(const std::string & toExplode, const std::string & sep)
 {
 	std::vector <std::string> out;

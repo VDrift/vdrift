@@ -144,7 +144,7 @@ class Renderer
 		Renderer(GLWrapper & glwrapper) : gl(glwrapper) {}
 		
 	private:
-		bool loadShader(const std::string & path, const std::string & name, const std::vector <std::string> & defines, GLenum shaderType, std::ostream & errorOutput);
+		bool loadShader(const std::string & path, const std::string & name, const std::set <std::string> & defines, GLenum shaderType, std::ostream & errorOutput);
 		
 		GLWrapper & gl;
 		

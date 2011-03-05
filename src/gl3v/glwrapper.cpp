@@ -6,13 +6,9 @@
 #define ERROR_CHECK checkForOpenGLErrors(__PRETTY_FUNCTION__,__FILE__,__LINE__)
 #define GLLOG(x) (logGlCall(#x),x)
 
-#define breakOnError false
+#define breakOnError true
 #define logEveryGlCall false
-#ifdef DEBUG
-	#define enableErrorChecking true
-#else
-	#define enableErrorChecking false
-#endif
+#define enableErrorChecking true
 
 const char * REQUIRED_GL_VERSION = "GL_VERSION_3_3";
 const GLEnums GLEnumHelper;

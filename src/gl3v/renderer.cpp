@@ -111,8 +111,12 @@ bool Renderer::initialize(const std::vector <RealtimeExportPassInfo> & config, S
 	for (std::vector <RealtimeExportPassInfo>::const_iterator i = config.begin(); i != config.end(); i++,passCount++)
 	{
 		// create unique names based on the path and define list
-		std::string vertexShaderName = i->vertexShader+" "+UTILS::implode(i->vertexShaderDefines," ");
-		std::string fragmentShaderName = i->fragmentShader+" "+UTILS::implode(i->fragmentShaderDefines," ");
+		std::string vertexShaderName = i->vertexShader;
+		if (!i->vertexShaderDefines.empty())
+			vertexShaderName += " "+UTILS::implode(i->vertexShaderDefines," ");
+		std::string fragmentShaderName = i->fragmentShader;
+		if (!i->fragmentShaderDefines.empty())
+			fragmentShaderName += " "+UTILS::implode(i->fragmentShaderDefines," ");
 		
 		// load shaders from the pass if necessary
 		if (shaders.find(vertexShaderName) == shaders.end())
@@ -166,7 +170,7 @@ bool Renderer::initialize(const std::vector <RealtimeExportPassInfo> & config, S
 	return true;
 }
 
-bool Renderer::loadShader(const std::string & path, const std::string & name, const std::vector <std::string> & defines, GLenum shaderType, std::ostream & errorOutput)
+bool Renderer::loadShader(const std::string & path, const std::string & name, const std::set <std::string> & defines, GLenum shaderType, std::ostream & errorOutput)
 {
 	std::string shaderSource = UTILS::LoadFileIntoString(path, errorOutput);
 	if (shaderSource.empty())
@@ -177,11 +181,11 @@ bool Renderer::loadShader(const std::string & path, const std::string & name, co
 	
 	// create a block of #defines
 	std::stringstream blockstream;
-	for (unsigned int i = 0; i < defines.size(); i++)
+	for (std::set <std::string>::const_iterator i = defines.begin(); i != defines.end(); i++)
 	{
-		if (!defines[i].empty())
+		if (!i->empty())
 		{
-			blockstream << "#define " << defines[i] << std::endl;
+			blockstream << "#define " << *i << std::endl;
 		}
 	}
 	

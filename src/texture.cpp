@@ -495,7 +495,8 @@ void GenTexture(const SDL_Surface * surface, const TEXTUREINFO & info, GLuint & 
 			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
 		}
-		glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
+		if (!glGenerateMipmap) // this kind of automatic mipmap generation is deprecated in GL3, so don't use it
+			glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
 	}
 	else
 	{
@@ -513,6 +514,11 @@ void GenTexture(const SDL_Surface * surface, const TEXTUREINFO & info, GLuint & 
 	glTexImage2D( GL_TEXTURE_2D, 0, internalformat, surface->w, surface->h, 0, format, GL_UNSIGNED_BYTE, surface->pixels );
 	OPENGL_UTILITY::CheckForOpenGLErrors("Texture creation", error);
 
+	// If we support generatemipmap, go ahead and do it regardless of the info.mipmap setting.
+	// In the GL3 renderer we don't allow individual textures to decide whether or not they want mip mapping.
+	if (glGenerateMipmap)
+		glGenerateMipmap(GL_TEXTURE_2D);
+	
 	//check for anisotropy
 	if (info.anisotropy > 1)
 	{
