@@ -1419,11 +1419,14 @@ void GAME::ProcessGUIAction(const std::string & action)
 		std::string opponentstr;
 		for (std::vector<std::string>::iterator i = opponents.begin(); i != opponents.end(); ++i)
 		{
+			size_t beg = i->rfind("/")+1;
+			size_t end = i->rfind(".car");
+			std::string carname = i->substr(beg, end-beg);
 			if (i != opponents.begin())
 			{
 				opponentstr += ", ";
 			}
-			opponentstr += *i;
+			opponentstr += carname;
 		}
 		SCENENODE & pagenode = gui.GetPageNode("SingleRace");
 		gui.GetPage("SingleRace").GetLabel("OpponentsList").get().SetText(pagenode, opponentstr);
@@ -1711,7 +1714,7 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	//load the local player's car
 	//cout << "About to load car..." << endl;
 	MATHVECTOR<float, 3> carcolor(0);
-	string carname, carpaint("00"), carfile;
+	string carname, carpaint("default"), carfile;
 	if (playreplay)
 	{
 		carname = replay.GetCarType();
@@ -1740,7 +1743,9 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 			//int startplace = std::min(carcount, track.GetNumStartPositions()-1);
 			int startplace = carcount;
 			if (!LoadCar(opponents[i], opponents_paint[i], opponents_color[i], track.GetStart(startplace).first, track.GetStart(startplace).second, false, true))
+			{
 				return false;
+			}
 			ai.add_car(&cars.back(), settings.GetAIDifficulty());
 			carcount++;
 		}
@@ -1795,7 +1800,7 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	{
 		assert(carcontrols_local.first);
 		std::string cartype = carcontrols_local.first->GetCarType();
-		std::string carpath = pathmanager.GetCarPath()+"/"+cartype+"/"+cartype+".car";
+		std::string carpath = pathmanager.GetCarPath()+"/"+cartype;
 		
 		float r(0), g(0), b(0);
 		settings.GetPlayerColor(r, g, b);
@@ -1886,15 +1891,17 @@ void GAME::LeaveGame()
 
 ///add a car, optionally controlled by the local player
 bool GAME::LoadCar(
-	const std::string & carname, const std::string & carpaint,
+	const std::string & carname,
+	const std::string & carpaint,
 	const MATHVECTOR <float, 3> & carcolor,
 	const MATHVECTOR <float, 3> & start_position,
 	const QUATERNION <float> & start_orientation,
 	bool islocal, bool isai, const string & carfile)
 {
 	std::string partspath = pathmanager.GetCarSharedDir();
-	std::string carpath = pathmanager.GetCarDir()+"/"+carname;
-	std::string cfgpath = pathmanager.GetDataPath()+"/"+carpath+"/"+carname+".car";
+	std::string carspath = pathmanager.GetDataPath()+"/"+pathmanager.GetCarDir();
+	std::string carpath = "/cars/"+carname.substr(0, carname.find("/"));
+	std::string cfgpath = carspath+"/"+carname;
 	
 	CONFIG carconf;
 	if (carfile.empty()) //if no file is passed in, then load it from disk
@@ -2170,26 +2177,17 @@ void GAME::PopulateReplayList(std::list <std::pair <std::string, std::string> > 
 void GAME::PopulateCarPaintList(const std::string & carname, std::list <std::pair <std::string, std::string> > & carpaintlist)
 {
 	carpaintlist.clear();
-	bool exists = true;
-	int paintnum = 0;
-	while (exists)
+	carpaintlist.push_back(std::make_pair("default", "default"));
+	
+	std::list <std::string> paintfolder;
+	std::string cardir = carname.substr(0, carname.rfind("/"));
+	std::string paintdir = pathmanager.GetCarPath()+"/"+cardir+"/skins";
+	if (pathmanager.GetFileList(paintdir, paintfolder, ".png"))
 	{
-		exists = false;
-
-		stringstream paintstr;
-		paintstr.width(2);
-		paintstr.fill('0');
-		paintstr << paintnum;
-
-		std::string cartexfile =pathmanager.GetCarPath()+"/"+carname+"/body"+paintstr.str()+".png";
-		//std::cout << cartexfile << std::endl;
-		ifstream check(cartexfile.c_str());
-		if (check)
+		for (std::list <std::string>::iterator i = paintfolder.begin(); i != paintfolder.end(); ++i)
 		{
-			exists = true;
-			carpaintlist.push_back(pair<string,string>(paintstr.str(),paintstr.str()));
-			//std::cout << carname << ": " << paintstr.str() << std::endl;
-			paintnum++;
+			std::string paintname = i->substr(0, i->length()-4);
+			carpaintlist.push_back(std::make_pair("skins/"+*i, paintname));
 		}
 	}
 }
@@ -2197,7 +2195,7 @@ void GAME::PopulateCarPaintList(const std::string & carname, std::list <std::pai
 void GAME::PopulateValueLists(std::map<std::string, std::list <std::pair <std::string, std::string> > > & valuelists)
 {
 	//populate track list
-	list <pair<string,string> > tracklist;
+	list <pair<string, string> > tracklist;
 	list <string> trackfolderlist;
 	pathmanager.GetFileList(pathmanager.GetTrackPath(), trackfolderlist);
 	for (list <string>::iterator i = trackfolderlist.begin(); i != trackfolderlist.end(); ++i)
@@ -2214,15 +2212,18 @@ void GAME::PopulateValueLists(std::map<std::string, std::list <std::pair <std::s
 	valuelists["tracks"] = tracklist;
 
 	//populate car list
-	list <pair<string,string> > carlist;
+	list <pair<string, string> > carlist;
 	list <string> carfolderlist;
 	pathmanager.GetFileList(pathmanager.GetCarPath(), carfolderlist);
 	for (list <string>::iterator i = carfolderlist.begin(); i != carfolderlist.end(); ++i)
 	{
-		ifstream check((pathmanager.GetCarPath()+"/"+*i+"/about.txt").c_str());
-		if (check)
+		list <string> carfilelist;
+		pathmanager.GetFileList(pathmanager.GetCarPath()+"/"+*i, carfilelist, ".car");
+		for (list <string>::iterator j = carfilelist.begin(); j != carfilelist.end(); ++j)
 		{
-			carlist.push_back(pair<string,string>(*i,*i));
+			string carname = j->substr(0, j->length()-4);
+			string carconf = *i + "/" + *j;
+			carlist.push_back(std::make_pair(carconf, carname));
 		}
 	}
 	valuelists["cars"] = carlist;
@@ -2296,8 +2297,7 @@ void GAME::PopulateValueLists(std::map<std::string, std::list <std::pair <std::s
 	{
 		if (pathmanager.FileExists(skinfolder + *i))
 		{
-			size_t n = i->rfind(".lng");
-			string value = i->substr(0, n);
+			string value = i->substr(0, i->length()-4);
 			valuelists["languages"].push_back(pair<string,string>(value, value));
 		}
 	}

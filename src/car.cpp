@@ -488,8 +488,10 @@ bool CAR::LoadGraphics(
 	std::ostream & info_output,
 	std::ostream & error_output)
 {
+	//cfg.DebugPrint(std::cerr);
+	
 	cartype = carname;
-	struct LoadDrawable load_drawable(cfg, carpath, texsize, anisotropy, textures, models, modellist, error_output);
+	LoadDrawable load_drawable(cfg, carpath, texsize, anisotropy, textures, models, modellist, error_output);
 	
 	// load body
 	CONFIG::const_iterator is;
@@ -498,8 +500,7 @@ bool CAR::LoadGraphics(
 	if (!cfg.GetSection("body", is, error_output)) return false;
 	if (!cfg.GetParam(is, "mesh", meshname, error_output)) return false;
 	if (!cfg.GetParam(is, "texture", texname, error_output)) return false;
-	assert(texname.size() && "No body texture defined.");
-	texname[0] = "body" + carpaint + ".png";
+	if (carpaint != "default") texname[0] = carpaint;
 	if (!load_drawable(meshname, texname, is, topnode, &bodynode)) return false;
 	
 	// load wheels

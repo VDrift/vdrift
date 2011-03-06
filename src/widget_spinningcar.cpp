@@ -205,8 +205,9 @@ void WIDGET_SPINNINGCAR::Load(SCENENODE & parent)
 	
 	CONFIG carconf;
 	std::string partspath = "carparts";
-	std::string carpath = "cars/"+carname;
-	std::string carconfpath = data+"/"+carpath+"/"+carname+".car";
+	std::string cardir = carname.substr(0, carname.rfind("/"));
+	std::string carpath = "cars/"+cardir;
+	std::string carconfpath = data+"/cars/"+carname;
 	if (!carconf.Load(carconfpath))
 	{
 		*errptr << "Error loading car's configfile: " << carconfpath << std::endl;
