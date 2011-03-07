@@ -5,8 +5,7 @@
 #include "rendertexture.h"
 #include "keyed_container.h"
 #include "rendermodelentry.h"
-
-#include <tr1/unordered_map>
+#include "unordered_map.h"
 
 /// The bare minimum required to draw geometry
 struct RenderModel

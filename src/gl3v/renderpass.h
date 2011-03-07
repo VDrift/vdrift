@@ -17,9 +17,9 @@
 #include "renderuniformentry.h"
 #include "renderstatusverbosity.h"
 #include "rendermodelext.h"
+#include "unordered_map.h"
 
 #include <vector>
-#include <tr1/unordered_map>
 #include <iostream>
 #include <map>
 #include <set>

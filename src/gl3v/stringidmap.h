@@ -1,8 +1,8 @@
 #ifndef _STRINGIDMAP
 #define _STRINGIDMAP
 
+#include "unordered_map.h"
 #include <map>
-#include <tr1/unordered_map>
 
 class StringIdMap;
 

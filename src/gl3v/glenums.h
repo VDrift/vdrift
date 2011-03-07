@@ -1,13 +1,13 @@
 #ifndef _GLENUMS_H
 #define _GLENUMS_H
 
+#include "unordered_map.h"
+
 #include <GL/glew.h>
 #include <GL/gl.h>
 
 #include <string>
 #include <cassert>
-
-#include <tr1/unordered_map>
 
 class GLEnums
 {

@@ -2,10 +2,10 @@
 #define _RENDERER
 
 #include <vector>
-#include <map>
 #include <iostream>
-#include <tr1/unordered_map>
+#include <map>
 
+#include "unordered_map.h"
 #include "renderpassinfo.h"
 #include "glwrapper.h"
 #include "stringidmap.h"
