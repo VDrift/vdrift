@@ -106,6 +106,7 @@ private:
 		btStridingMeshInterface * mesh;
 		btCollisionShape * shape;
 		btVector3 inertia;
+		btVector3 center;
 		float mass;
 		int surface;
 		bool collidable;
@@ -148,6 +149,8 @@ private:
 	void CalculateNumOld();
 	
 	bool LoadNode(const PTree & sec);
+	
+	bool LoadModel(const std::string & name);
 	
 	body_iterator LoadBody(const std::string & name);
 	

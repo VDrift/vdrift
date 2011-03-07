@@ -249,6 +249,18 @@ std::pair<bool, bool> TRACK::LOADER::Continue()
 	return std::make_pair(false, true);
 }
 
+bool TRACK::LOADER::LoadModel(const std::string & name)
+{
+	std::tr1::shared_ptr<MODEL> model;
+	if ((packload && model_manager.Load(name, pack, model)) || 
+		model_manager.Load(objectdir, name, model))
+	{
+		data.models.push_back(model);
+		return true;
+	}
+	return false;
+}
+
 TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const std::string & name)
 {
 	body_iterator ib = bodies.find(name);
@@ -262,7 +274,7 @@ TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const std::string & name)
 	{
 		std::string path = objectpath + "/" + name;
 		std::ifstream file(path.c_str());
-		if (!file)
+		if (!file.good())
 		{
 			std::cerr << "body." << name << " not found." << std::endl; 
 			std::cerr << "External config: " << path << " not found." << std::endl; 
@@ -299,24 +311,12 @@ TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const std::string & name)
 		return ib;
 	}
 	
-	// load model
-	std::tr1::shared_ptr<MODEL> model;
-	if (packload)
+	if (!LoadModel(model_name))
 	{
-		if (!model_manager.Load(model_name, pack, model) &&
-			!model_manager.Load(objectdir, model_name, model))
-		{
-			return ib;
-		}
+		return ib;
 	}
-	else
-	{
-		if (!model_manager.Load(objectdir, model_name, model))
-		{
-			return ib;
-		}
-	}
-	data.models.push_back(model);
+	
+	MODEL & model = *data.models.back();
 	
 	// load shape
 	int surface = -1;
@@ -327,7 +327,7 @@ TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const std::string & name)
 		if (body.mass < 1E-3)
 		{
 			btTriangleIndexVertexArray * mesh = new btTriangleIndexVertexArray();
-			mesh->addIndexedMesh(GetIndexedMesh(*model));
+			mesh->addIndexedMesh(GetIndexedMesh(model));
 			data.meshes.push_back(mesh);
 			body.mesh = mesh;
 			
@@ -344,8 +344,24 @@ TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const std::string & name)
 		}
 		else
 		{
-			btVector3 size = ToBulletVector(model->GetAABB().GetSize());
-			btBoxShape * shape = new btBoxShape(size * 0.5);
+			std::string shape_name;
+			btCollisionShape * shape = 0;
+			if (sec->get("shape", shape_name) && LoadModel(shape_name))
+			{
+				const float * points = 0;
+				int num_points = 0;
+				int stride = sizeof(float) * 3;
+				MODEL & shape_model = *data.models.back();
+				shape_model.GetVertexArray().GetVertices(points, num_points);
+				shape = new btConvexHullShape(points, num_points/3, stride);
+				body.center.setZero();
+			}
+			else
+			{
+				btVector3 size = ToBulletVector(model.GetAABB().GetSize());
+				shape = new btBoxShape(size * 0.5);
+				body.center = ToBulletVector(model.GetAABB().GetCenter());
+			}
 			shape->calculateLocalInertia(body.mass, body.inertia);
 			data.shapes.push_back(shape);
 			body.shape = shape;
@@ -384,14 +400,14 @@ TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const std::string & name)
 	
 	// setup drawable
 	DRAWABLE & drawable = body.drawable;
-	drawable.SetModel(*model);
+	drawable.SetModel(model);
 	drawable.SetDiffuseMap(diffuse);
 	drawable.SetMiscMap1(miscmap1);
 	drawable.SetMiscMap2(miscmap2);
 	drawable.SetDecal(alphablend);
 	drawable.SetCull(data.cull && !doublesided, false);
-	drawable.SetRadius(model->GetRadius());
-	drawable.SetObjectCenter(model->GetCenter());
+	drawable.SetRadius(model.GetRadius());
+	drawable.SetObjectCenter(model.GetCenter());
 	drawable.SetSkybox(skybox);
 	drawable.SetVerticalTrack(skybox && data.vertical_tracking_skyboxes);
 	
@@ -481,6 +497,7 @@ bool TRACK::LOADER::LoadNode(const PTree & sec)
 	else
 	{
 		data.body_transforms.push_back(btDefaultMotionState(transform));
+		data.body_transforms.back().m_centerOfMassOffset.getOrigin() = -body.center;
 		
 		btRigidBody::btRigidBodyConstructionInfo info(body.mass, &data.body_transforms.back(), body.shape, body.inertia);
 		info.m_friction = 0.9;
