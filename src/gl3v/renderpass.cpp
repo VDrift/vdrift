@@ -3,8 +3,10 @@
 #include "glenums.h"
 
 #include <cassert>
-#include <tr1/unordered_set>
 
+#ifdef USE_TR1
+#include <tr1/unordered_set>
+#endif
 //#define USE_EXTERNAL_MODEL_CACHE
 
 const GLEnums GLEnumHelper;
