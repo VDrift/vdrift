@@ -7,6 +7,8 @@
 #include "config.h"
 #include "k1999.h"
 
+//#define EXTBULLET
+
 static void operator >> (std::istream & lhs, std::vector<std::string> & rhs)
 {
 	for (size_t i = 0; i < rhs.size() && !lhs.eof(); ++i)
@@ -486,6 +488,7 @@ bool TRACK::LOADER::LoadNode(const PTree & sec)
 			track_shape->addChildShape(transform, body.shape);
 #else
 			btCollisionObject * object = new btCollisionObject();
+			object->setActivationState(DISABLE_SIMULATION);
 			object->setWorldTransform(transform);
 			object->setCollisionShape(body.shape);
 			object->setUserPointer(body.shape->getUserPointer());
@@ -751,7 +754,7 @@ std::pair<bool, bool> TRACK::LOADER::ContinueOld()
 		track_shape->addChildShape(transform, shape);
 #else
 		btCollisionObject * object = new btCollisionObject();
-		object->setWorldTransform(transform);
+		object->setActivationState(DISABLE_SIMULATION);
 		object->setCollisionShape(shape);
 		object->setUserPointer(shape->getUserPointer());
 		data.objects.push_back(object);
