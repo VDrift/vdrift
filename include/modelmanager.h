@@ -11,9 +11,9 @@ class MODELMANAGER: public MANAGER<MODEL>
 public:
 	bool Load(const std::string & path, const std::string & name, std::tr1::shared_ptr<MODEL> & sptr);
 	
-	bool Load(const std::string & path, const std::string & name, const_iterator & it);
+	bool Load(const std::string & path, const std::string & name, std::tr1::shared_ptr<MODEL> & sptr, JOEPACK & pack);
 	
-	bool Load(const std::string & name, JOEPACK & pack, std::tr1::shared_ptr<MODEL> & sptr);
+	bool Load(const std::string & path, const std::string & name, const_iterator & it);
 	
 	void setGenerateDrawList(bool genlist) {loadToDrawlists = genlist;}
 	

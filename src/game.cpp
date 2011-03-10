@@ -233,13 +233,13 @@ void GAME::InitCoreSubsystems()
 	http.SetTemporaryFolder(pathmanager.GetTemporaryFolder());
 	
 	textures.SetBasePath(pathmanager.GetDataPath());
-	textures.SetSharedPath(pathmanager.GetSharedDataPath());
-	
 	models.SetBasePath(pathmanager.GetDataPath());
-	models.SetSharedPath(pathmanager.GetSharedDataPath());
-	
 	sounds.SetBasePath(pathmanager.GetDataPath());
-	sounds.SetSharedPath(pathmanager.GetSharedDataPath());
+	
+	//set car shared path for car selection, TODO: implement virtual file system
+	textures.SetSharedPath(pathmanager.GetSharedCarPath());
+	models.SetSharedPath(pathmanager.GetSharedCarPath());
+	sounds.SetSharedPath(pathmanager.GetSharedCarPath());
 	
 	settings.Load(pathmanager.GetSettingsFile(), error_output);
 	
@@ -1690,6 +1690,11 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 		if (!replay.StartPlaying(replayfilename, error_output))
 			return false;
 	}
+	
+	//set track shared path, TODO: implement virtual file system
+	textures.SetSharedPath(pathmanager.GetSharedTrackPath());
+	models.SetSharedPath(pathmanager.GetSharedTrackPath());
+	sounds.SetSharedPath(pathmanager.GetSharedTrackPath());
 
 	//set the track name
 	std::string trackname;
@@ -1710,9 +1715,13 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	
 	//start out with no camera
 	active_camera = NULL;
-
-	//load the local player's car
-	//cout << "About to load car..." << endl;
+	
+	//set car shared path, TODO: implement virtual file system
+	textures.SetSharedPath(pathmanager.GetSharedCarPath());
+	models.SetSharedPath(pathmanager.GetSharedCarPath());
+	sounds.SetSharedPath(pathmanager.GetSharedCarPath());
+	
+	//load car
 	MATHVECTOR<float, 3> carcolor(0);
 	string carname, carpaint("default"), carfile;
 	if (playreplay)
@@ -1732,7 +1741,6 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	{
 		return false;
 	}
-	//cout << "After load car: " << carcontrols_local.first << endl;
 
 	//load AI cars
 	if (addopponents)

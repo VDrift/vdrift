@@ -24,6 +24,32 @@ bool MODELMANAGER::Load(
 bool MODELMANAGER::Load(
 	const std::string & path,
 	const std::string & name,
+	std::tr1::shared_ptr<MODEL> & sptr,
+	JOEPACK & pack)
+{
+	if (Get("", name, sptr)) return true;
+	
+	MODEL_JOE03 * model = new MODEL_JOE03();
+	if (model->Load(name, error, useDrawlists(), &pack))
+	{
+		std::tr1::shared_ptr<MODEL> temp(model);
+		objects[name] = temp;
+		sptr = temp;
+		return true;
+	}
+	delete model;
+	
+	if (Load(path, name, sptr))
+	{
+		return true;
+	}
+	
+	return false;
+}
+
+bool MODELMANAGER::Load(
+	const std::string & path,
+	const std::string & name,
 	const_iterator & it)
 {
 	if (Get(path, name, it)) return true;
@@ -46,25 +72,6 @@ bool MODELMANAGER::Load(
 			it = Set(name, temp);
 			return true;
 		}
-	}
-	delete model;
-	return false;
-}
-
-bool MODELMANAGER::Load(
-	const std::string & name,
-	JOEPACK & pack,
-	std::tr1::shared_ptr<MODEL> & sptr)
-{
-	if (Get("", name, sptr)) return true;
-	
-	MODEL_JOE03 * model = new MODEL_JOE03();
-	if (model->Load(name, error, useDrawlists(), &pack))
-	{
-		std::tr1::shared_ptr<MODEL> temp(model);
-		objects[name] = temp;
-		sptr = temp;
-		return true;
 	}
 	delete model;
 	return false;

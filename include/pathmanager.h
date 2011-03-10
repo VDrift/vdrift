@@ -8,7 +8,8 @@ class PATHMANAGER
 {		
 public:
 	std::string GetDataPath() const {return data_directory;}
-	std::string GetSharedDataPath() const {return data_directory+"/carparts";}
+	std::string GetSharedCarPath() const {return data_directory+"/carparts";}
+	std::string GetSharedTrackPath() const {return data_directory+"/trackparts";}
 	std::string GetStartupFile() const {return settings_path+"/startingup.txt";}
 	std::string GetTrackRecordsPath() const {return settings_path+"/records"+profile_suffix;}
 	std::string GetSettingsFile() const {return settings_path+"/VDrift.config"+profile_suffix;}

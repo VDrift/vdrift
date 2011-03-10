@@ -97,7 +97,7 @@ private:
 	struct BODY
 	{
 		BODY() : nolighting(false), mesh(0), shape(0), 
-			mass(0), surface(0), collidable(true)
+			mass(0), surface(0), collidable(false)
 		{
 			// ctor
 		}

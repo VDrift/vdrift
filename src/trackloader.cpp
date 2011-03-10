@@ -254,7 +254,7 @@ std::pair<bool, bool> TRACK::LOADER::Continue()
 bool TRACK::LOADER::LoadModel(const std::string & name)
 {
 	std::tr1::shared_ptr<MODEL> model;
-	if ((packload && model_manager.Load(name, pack, model)) || 
+	if ((packload && model_manager.Load(objectdir, name, model, pack)) || 
 		model_manager.Load(objectdir, name, model))
 	{
 		data.models.push_back(model);
@@ -274,13 +274,20 @@ TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const std::string & name)
 	const PTree * sec = 0;
 	if (!track_config.get("body." + name, sec))
 	{
+		// external config in track path
 		std::string path = objectpath + "/" + name;
 		std::ifstream file(path.c_str());
 		if (!file.good())
 		{
-			std::cerr << "body." << name << " not found." << std::endl; 
-			std::cerr << "External config: " << path << " not found." << std::endl; 
-			return ib;
+			// external config in shared path
+			path = model_manager.GetSharedPath() + "/" + name;
+			file.open(path.c_str());
+			if (!file.good())
+			{
+				std::cerr << "body." << name << " not found." << std::endl; 
+				std::cerr << "External config: " << path << " not found." << std::endl;
+				return ib;
+			}
 		}
 		
 		PTree & bodysec = track_config.set("body." + name);
@@ -291,6 +298,7 @@ TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const std::string & name)
 	BODY body;
 	std::string texture_name;
 	std::string model_name;
+	std::string shape_name;
 	int clampuv = 0;
 	bool mipmap = true;
 	bool skybox = false;
@@ -300,6 +308,7 @@ TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const std::string & name)
 	
 	sec->get("texture", texture_name, error_output);
 	sec->get("model", model_name, error_output);
+	sec->get("shape", shape_name);
 	sec->get("clampuv", clampuv);
 	sec->get("mipmap", mipmap);
 	sec->get("skybox", skybox);
@@ -307,6 +316,22 @@ TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const std::string & name)
 	sec->get("doublesided", doublesided);
 	sec->get("isashadow", isashadow);
 	sec->get("nolighting", body.nolighting);
+	
+	std::vector<std::string> texture_names(3);
+	std::stringstream s(texture_name);
+	s >> texture_names;
+	
+	// set relative path for models and textures, ugly
+	size_t npos = name.rfind("/");
+	if (npos < name.length())
+	{
+		std::string relative_path = name.substr(0, npos+1);
+		model_name = relative_path + model_name;
+		shape_name = relative_path + shape_name;
+		texture_names[0] = relative_path + texture_names[0];
+		if (!texture_names[1].empty()) texture_names[1] = relative_path + texture_names[1];
+		if (!texture_names[2].empty()) texture_names[2] = relative_path + texture_names[2];
+	}
 	
 	if (dynamic_shadows && isashadow)
 	{
@@ -321,8 +346,6 @@ TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const std::string & name)
 	MODEL & model = *data.models.back();
 	
 	// load shape
-	int surface = -1;
-	sec->get("surface", surface);
 	body.collidable = sec->get("mass", body.mass);
 	if (body.collidable)
 	{
@@ -333,12 +356,13 @@ TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const std::string & name)
 			data.meshes.push_back(mesh);
 			body.mesh = mesh;
 			
-			//assert(surface >= 0 && surface < (int)data.surfaces.size());
-			if (surface < 0 || surface >= (int)data.surfaces.size())
+			int surface = 0;
+			sec->get("surface", surface);
+			if (surface >= (int)data.surfaces.size())
 			{
-				std::cerr << surface << std::endl;
 				surface = 0;
 			}
+			
 			btBvhTriangleMeshShape * shape = new btBvhTriangleMeshShape(mesh, true);
 			shape->setUserPointer((void*)&data.surfaces[surface]);
 			data.shapes.push_back(shape);
@@ -346,9 +370,8 @@ TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const std::string & name)
 		}
 		else
 		{
-			std::string shape_name;
 			btCollisionShape * shape = 0;
-			if (sec->get("shape", shape_name) && LoadModel(shape_name))
+			if (!shape_name.empty() && LoadModel(shape_name))
 			{
 				const float * points = 0;
 				int num_points = 0;
@@ -371,10 +394,6 @@ TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const std::string & name)
 	}
 	
 	// load textures
-	std::vector<std::string> texture_names(3);
-	std::stringstream s(texture_name);
-	s >> texture_names;
-	
 	TEXTUREINFO texinfo;
 	texinfo.mipmap = mipmap || anisotropy; //always mipmap if anisotropy is on
 	texinfo.anisotropy = anisotropy;
@@ -649,7 +668,7 @@ std::pair<bool, bool> TRACK::LOADER::ContinueOld()
 	std::tr1::shared_ptr<MODEL> model;
 	if (packload)
 	{
-		if (!model_manager.Load(model_name, pack, model))
+		if (!model_manager.Load(objectdir, model_name, model, pack))
 		{
 			return std::make_pair(true, false);
 		}
