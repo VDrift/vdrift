@@ -455,7 +455,7 @@ QT_TEST(tire_test)
 	PATHMANAGER path;
 	path.Init(info, error);
 	
-	std::string tire_path = path.GetSharedDataPath() + "/touring";
+	std::string tire_path = path.GetSharedCarPath() + "/touring";
 	std::fstream tire_param(tire_path.c_str());
 	
 	std::stringstream tire_str;
