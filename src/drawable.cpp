@@ -2,6 +2,8 @@
 
 #include "texture.h"
 
+#include <cmath>
+
 void DRAWABLE::SetDiffuseMap(std::tr1::shared_ptr<TEXTURE> value)
 {
 	diffuse_map = value;
@@ -68,6 +70,7 @@ RenderModelExternal & DRAWABLE::generateRenderModelData(GLWrapper & gl, StringId
 	static StringId diffuseId = stringMap.addStringId("diffuseTexture");
 	static StringId transformId = stringMap.addStringId("modelMatrix");
 	static StringId colorId = stringMap.addStringId("colorTint");
+	static StringId depthOffsetId = stringMap.addStringId("depthOffset");
 	
 	// textures
 	if (texturesChanged)
@@ -90,7 +93,20 @@ RenderModelExternal & DRAWABLE::generateRenderModelData(GLWrapper & gl, StringId
 		if (transform != MATRIX4<float>()) // only add it if it's not the identity matrix
 			renderModel.uniforms.push_back(RenderUniformEntry(transformId, transform.GetArray(), 16));
 		if (r != 1 || g != 1 || b != 1 || a != 1) // only add it if it's not the default
-			renderModel.uniforms.push_back(RenderUniformEntry(colorId, &r, 4));
+		{
+			float srgb_alpha[4];
+			for (int i = 0; i < 3; i++)
+			{
+				srgb_alpha[i] = srgb_alpha[i] < 1 ? pow((&r)[i],2.2) : (&r)[i];
+			}
+			srgb_alpha[3] = a;
+			renderModel.uniforms.push_back(RenderUniformEntry(colorId, srgb_alpha, 4));
+		}
+		/*if (decal) // only add it if it's not the default of zero
+		{
+			float depthOffset = -0.005;
+			renderModel.uniforms.push_back(RenderUniformEntry(depthOffsetId, &depthOffset, 1));
+		}*/
 		
 		uniformsChanged = false;
 	}

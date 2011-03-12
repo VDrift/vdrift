@@ -5,6 +5,7 @@
 #include <vector>
 #include <cstring>
 #include <climits>
+#include <map>
 
 #ifdef __APPLE__
 #include <GLExtensionWrangler/glew.h>
@@ -94,7 +95,7 @@ class GLWrapper
 		/// link a shader program given the specified shaders.
 		/// returns true on success.
 		/// puts the generated shader program handle into the provided handle variable.
-		bool linkShaderProgram(const std::vector <std::string> & shaderAttributeBindings, const std::vector <GLuint> & shaderHandles, GLuint & handle, std::ostream & shaderErrorOutput);
+		bool linkShaderProgram(const std::vector <std::string> & shaderAttributeBindings, const std::vector <GLuint> & shaderHandles, GLuint & handle, const std::map <GLuint, std::string> & fragDataLocations, std::ostream & shaderErrorOutput);
 		
 		/// relinks a shader program that has previously been linked. does nothing and returns false if handle is zero.
 		/// returns true on success.
@@ -158,7 +159,6 @@ class GLWrapper
 		void EnableVertexAttribArray(GLuint i){GLLOG(glEnableVertexAttribArray(i));ERROR_CHECK;}
 		void DisableVertexAttribArray(GLuint i){GLLOG(glDisableVertexAttribArray(i));ERROR_CHECK;}
 		void DrawElements(GLenum mode, GLsizei count, GLenum type, const void * indices) {GLLOG(glDrawElements(mode, count, type, indices));ERROR_CHECK;}
-		void BindFragDataLocation(GLuint program, GLuint colorNumber, const GLchar * name) {GLLOG(glBindFragDataLocation(program, colorNumber, name));ERROR_CHECK;}
 		
 		
 		/// writes errors to the log

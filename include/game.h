@@ -119,6 +119,7 @@ private:
 	WINDOW_SDL window;
 	GRAPHICS_INTERFACE * graphics_interface;
 	bool enableGL3;
+	bool usingGL3;
 	StringIdMap stringMap;
 	EVENTSYSTEM_SDL eventsystem;
 	SOUND sound;

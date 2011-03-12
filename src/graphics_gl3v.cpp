@@ -136,6 +136,25 @@ void GRAPHICS_GL3V::SetupScene(float fov, float new_view_distance, const MATHVEC
 		renderer.setPassUniform(stringMap.addStringId(i->first), RenderUniformEntry(stringMap.addStringId("viewMatrix"), cameras[i->second].viewMatrix.GetArray(),16));
 		renderer.setPassUniform(stringMap.addStringId(i->first), RenderUniformEntry(stringMap.addStringId("projectionMatrix"), cameras[i->second].projectionMatrix.GetArray(),16));
 	}
+	
+	// send sun light direction for the default camera
+	
+	// this computes the worldspace light direction
+	// it is a little funky but at least matches what's done in GRAPHICS_FALLBACK::DrawScene
+	// TODO: use a 3D vector for sun direction instead of a quaternion and read it from the track.txt
+	MATHVECTOR <float, 3> lightDirection(0,0,1);
+	(-sunDirection).RotateVector(lightDirection);
+	
+	// transform to eyespace (view space)
+	MATHVECTOR <float, 4> lightDirection4;
+	for (int i = 0; i < 3; i++)
+		lightDirection4[i] = lightDirection[i];
+	lightDirection4[3] = 0;
+	cameras.find("default")->second.viewMatrix.MultiplyVector4(&lightDirection4[0]);
+	
+	// upload to the shaders
+	RenderUniformEntry lightDirectionUniform(stringMap.addStringId("eyespaceLightDirection"), &lightDirection4[0], 3);
+	renderer.setGlobalUniform(lightDirectionUniform);
 }
 
 // returns true for cull, false for don't-cull
@@ -430,6 +449,11 @@ bool GRAPHICS_GL3V::ReloadShaders(const std::string & shaderpath, std::ostream &
 					passNameToCameraName[stringMap.getString(*i)] = field->second;
 			}
 			
+			// set viewport size
+			float viewportSize[2] = {w,h};
+			RenderUniformEntry viewportSizeUniform(stringMap.addStringId("viewportSize"), viewportSize, 2);
+			renderer.setGlobalUniform(viewportSizeUniform);
+			
 			if (initialized)
 				renderer.printRendererStatus(VERBOSITY_MAXIMUM, stringMap, std::cout);
 		}
@@ -470,7 +494,7 @@ bool GRAPHICS_GL3V::GetShadows() const
 
 void GRAPHICS_GL3V::SetSunDirection ( const QUATERNION< float >& value )
 {
-	
+	sunDirection = value;
 }
 
 void GRAPHICS_GL3V::SetContrast ( float value )

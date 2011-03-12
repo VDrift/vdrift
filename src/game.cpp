@@ -57,6 +57,7 @@ GAME::GAME(std::ostream & info_out, std::ostream & error_out) :
 	sounds(error_out),
 	graphics_interface(NULL),
 	enableGL3(false),
+	usingGL3(false),
 	fps_track(10, 0),
 	fps_position(0),
 	fps_min(0),
@@ -256,7 +257,8 @@ void GAME::InitCoreSubsystems()
 		settings.GetBpp(),
 		settings.GetShadows() ? std::max(settings.GetDepthbpp(),(unsigned int)24) : settings.GetDepthbpp(),
 		settings.GetFullscreen(),
-		settings.GetAntialiasing(),
+		usingGL3 ? 0 : settings.GetAntialiasing(), // explicitly disable antialiasing for the GL3 path because we're using image-based AA
+		enableGL3,
 		info_output, error_output);
 	
 	const int rendererCount = 2;
@@ -267,11 +269,14 @@ void GAME::InitCoreSubsystems()
 		{
 			graphics_interface = new GRAPHICS_GL3V(stringMap);
 			models.setGenerateDrawList(false);
+			textures.SetSRGB(true);
+			usingGL3 = true;
 		}
 		else
 		{
 			graphics_interface = new GRAPHICS_FALLBACK();
 			models.setGenerateDrawList(true);
+			textures.SetSRGB(false);
 		}
 		
 		bool success = graphics_interface->Init(pathmanager.GetShaderPath(),

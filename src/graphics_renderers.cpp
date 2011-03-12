@@ -651,31 +651,38 @@ void RENDER_INPUT_SCENE::DrawList(GLSTATEMANAGER & glstate, std::vector <DRAWABL
 				const float * verts;
 				int vertcount;
 				i->GetVertArray()->GetVertices(verts, vertcount);
-				glVertexPointer(3, GL_FLOAT, 0, verts);
-
-				const float * norms;
-				int normcount;
-				i->GetVertArray()->GetNormals(norms, normcount);
-				glNormalPointer(GL_FLOAT, 0, norms);
-				if (normcount > 0)
-					glEnableClientState(GL_NORMAL_ARRAY);
-
-				//const float * tc[i->GetDraw()->varray.GetTexCoordSets()];
-				//int tccount[i->GetDraw()->varray.GetTexCoordSets()];
-				const float * tc[1];
-				int tccount[1];
-				if (i->GetVertArray()->GetTexCoordSets() > 0)
-				{
-					i->GetVertArray()->GetTexCoords(0, tc[0], tccount[0]);
-					glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-					glTexCoordPointer(2, GL_FLOAT, 0, tc[0]);
-				}
-
 				const int * faces;
 				int facecount;
 				i->GetVertArray()->GetFaces(faces, facecount);
+				if (vertcount > 0 && facecount > 0 && verts && faces)
+				{
+					glVertexPointer(3, GL_FLOAT, 0, verts);
 
-				glDrawElements(GL_TRIANGLES, facecount, GL_UNSIGNED_INT, faces);
+					const float * norms;
+					int normcount;
+					i->GetVertArray()->GetNormals(norms, normcount);
+					if (normcount > 0 && norms)
+					{
+						glNormalPointer(GL_FLOAT, 0, norms);
+						glEnableClientState(GL_NORMAL_ARRAY);
+					}
+
+					//const float * tc[i->GetDraw()->varray.GetTexCoordSets()];
+					//int tccount[i->GetDraw()->varray.GetTexCoordSets()];
+					const float * tc[1];
+					int tccount[1];
+					if (i->GetVertArray()->GetTexCoordSets() > 0)
+					{
+						i->GetVertArray()->GetTexCoords(0, tc[0], tccount[0]);
+						if (tc[0])
+						{
+							glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+							glTexCoordPointer(2, GL_FLOAT, 0, tc[0]);
+						}
+					}
+
+					glDrawElements(GL_TRIANGLES, facecount, GL_UNSIGNED_INT, faces);
+				}
 
 				glDisableClientState(GL_VERTEX_ARRAY);
 				glDisableClientState(GL_NORMAL_ARRAY);

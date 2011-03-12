@@ -69,6 +69,7 @@ private:
 	bool logNextGlFrame; // used to take a gl log capture after reloading shaders if gl logging is enabled
 	bool initialized;
 	MATHVECTOR <float, 3> lastCameraPosition;
+	QUATERNION< float > sunDirection;
 	
 	struct CameraMatrices
 	{

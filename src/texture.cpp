@@ -441,8 +441,9 @@ void GenTexture(const SDL_Surface * surface, const TEXTUREINFO & info, GLuint & 
 {
 	//detect channels
 	bool compression = (surface->w > 512 || surface->h > 512) && !info.normalmap;
+	bool srgb = info.srgb;
 	int format = GL_RGB;
-	int internalformat = compression ? GL_COMPRESSED_RGB : GL_RGB;
+	int internalformat = compression ? (srgb ? GL_COMPRESSED_SRGB : GL_COMPRESSED_RGB) : (srgb ? GL_SRGB8 : GL_RGB);
 	switch (surface->format->BytesPerPixel)
 	{
 		case 1:
@@ -457,12 +458,12 @@ void GenTexture(const SDL_Surface * surface, const TEXTUREINFO & info, GLuint & 
 			break;
 		case 3:
 			format = GL_RGB;
-			internalformat = compression ? GL_COMPRESSED_RGB : GL_RGB;
+			internalformat = compression ? (srgb ? GL_COMPRESSED_SRGB : GL_COMPRESSED_RGB) : (srgb ? GL_SRGB8 : GL_RGB);
 			alphachannel = false;
 			break;
 		case 4:
 			format = GL_RGBA;
-			internalformat = compression ? GL_COMPRESSED_RGBA : GL_RGBA;
+			internalformat = compression ? (srgb ? GL_COMPRESSED_SRGB_ALPHA : GL_COMPRESSED_RGBA) : (srgb ? GL_SRGB8_ALPHA8 : GL_RGBA);
 			alphachannel = true;
 			break;
 		default:
@@ -515,7 +516,7 @@ void GenTexture(const SDL_Surface * surface, const TEXTUREINFO & info, GLuint & 
 	OPENGL_UTILITY::CheckForOpenGLErrors("Texture creation", error);
 
 	// If we support generatemipmap, go ahead and do it regardless of the info.mipmap setting.
-	// In the GL3 renderer we don't allow individual textures to decide whether or not they want mip mapping.
+	// In the GL3 renderer the sampler decides whether or not to do mip filtering, so we conservatively make mipmaps available for all textures.
 	if (glGenerateMipmap)
 		glGenerateMipmap(GL_TEXTURE_2D);
 	

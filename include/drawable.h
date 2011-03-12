@@ -72,7 +72,7 @@ public:
 	void SetDrawOrderGUIForeground() {SetDrawOrder(4);}
 	
 	bool GetDecal() const {return decal;}
-	void SetDecal(bool newdecal) {decal = newdecal;}
+	void SetDecal(bool newdecal) {decal = newdecal;uniformsChanged = true;}
 	
 	bool GetDrawEnable() const {return drawenabled;}
 	void SetDrawEnable(bool value) {drawenabled = value;}

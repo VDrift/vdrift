@@ -16,7 +16,7 @@ private:
 	unsigned int fsaa;
 	
 	void ChangeDisplay(const int width, const int height, const int bpp, const int dbpp, const bool fullscreen, 
-			   unsigned int antialiasing, std::ostream & info_output, std::ostream & error_output);
+			   unsigned int antialiasing, bool enableGL3, std::ostream & info_output, std::ostream & error_output);
 	
 public:
 	WINDOW_SDL() : surface(NULL),initialized(false),fsaa(1) {}
@@ -26,6 +26,7 @@ public:
 				unsigned int resx, unsigned int resy, unsigned int bpp,
 				unsigned int depthbpp, bool fullscreen,
 				unsigned int antialiasing,
+				bool enableGL3,
 				std::ostream & info_output, std::ostream & error_output);
 	void Deinit();
 	void SwapBuffers(std::ostream & error_output);

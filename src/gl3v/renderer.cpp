@@ -364,13 +364,18 @@ void Renderer::removePassTexture(StringId passName, StringId textureName)
 	}
 }
 
-void Renderer::setGlobalUniform(const RenderUniformEntry & uniform)
+int Renderer::setGlobalUniform(const RenderUniformEntry & uniform)
 {
+	int passesAffected = 0;
+	
 	// inform the passes
 	for (std::vector <RenderPass>::iterator i = passes.begin(); i != passes.end(); i++)
 	{
-		i->setDefaultUniform(uniform);
+		if (i->setDefaultUniform(uniform))
+			passesAffected++;
 	}
+	
+	return passesAffected;
 }
 
 void Renderer::removeGlobalUniform(StringId name)

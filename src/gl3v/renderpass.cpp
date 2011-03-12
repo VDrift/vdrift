@@ -339,7 +339,7 @@ bool RenderPass::initialize(int passCount,
 	}
 	
 	// the shader program
-	if (!createShaderProgram(gl, config.shaderAttributeBindings, vertexShader, fragmentShader, errorOutput))
+	if (!createShaderProgram(gl, config.shaderAttributeBindings, vertexShader, fragmentShader, config.renderTargets, errorOutput))
 	{
 		errorOutput << "Unable to create shader program" << std::endl;
 		return false;
@@ -585,24 +585,6 @@ bool RenderPass::createFramebufferObject(GLWrapper & gl, unsigned int w, unsigne
 		return false;
 	}
 	
-	// bind render target variable names to frag data locations, then relink the shader program
-	for (std::map <std::string, RealtimeExportPassInfo::RenderTargetInfo>::const_iterator i = config.renderTargets.begin(); i != config.renderTargets.end(); i++)
-	{
-		// we only bind names for color attachments
-		if (i->first.substr(0,19) == "GL_COLOR_ATTACHMENT")
-		{
-			// find the render target attachment point
-			GLenum attachmentPoint = GLEnumHelper.getEnum(i->first);
-		
-			// find the color attachment location
-			int colorNumber = attachmentPoint - GL_COLOR_ATTACHMENT0;
-		
-			gl.BindFragDataLocation(shaderProgram, colorNumber, i->second.variable.c_str());
-		}
-	}
-	if (!gl.relinkShaderProgram(shaderProgram, errorOutput))
-		return false;
-	
 	// generate a framebuffer object
 	framebufferObject = gl.GenFramebuffer();
 	gl.BindFramebufferWithoutValidation(framebufferObject);
@@ -653,9 +635,11 @@ bool RenderPass::createFramebufferObject(GLWrapper & gl, unsigned int w, unsigne
 		GLenum format = GL_NONE;
 		if (formatstr.find("GL_RGBA") == 0)
 			format = GL_RGBA;
+		if (formatstr.find("GL_SRGB8_ALPHA8") == 0)
+			format = GL_RGBA;
 		else if (formatstr.find("GL_RG") == 0)
 			format = GL_RG;
-		else if (formatstr.find("GL_R") == 0)
+		else if (formatstr.find("GL_RED") == 0)
 			format = GL_RED;
 		else if (formatstr.find("GL_DEPTH_COMPONENT") == 0)
 			format = GL_DEPTH_COMPONENT;
@@ -674,6 +658,18 @@ bool RenderPass::createFramebufferObject(GLWrapper & gl, unsigned int w, unsigne
 			type = GL_HALF_FLOAT;
 		else if (formatstr.find("DEPTH_COMPONENT") != std::string::npos)
 			type = GL_UNSIGNED_INT;
+		else if (formatstr.find("8UI") != std::string::npos)
+			type = GL_UNSIGNED_BYTE;
+		else if (formatstr.find("16UI") != std::string::npos)
+			type = GL_UNSIGNED_SHORT;
+		else if (formatstr.find("32UI") != std::string::npos)
+			type = GL_UNSIGNED_INT;
+		else if (formatstr.find("8I") != std::string::npos)
+			type = GL_BYTE;
+		else if (formatstr.find("16I") != std::string::npos)
+			type = GL_SHORT;
+		else if (formatstr.find("32I") != std::string::npos)
+			type = GL_INT;
 		
 		// only 2d render targets are supported
 		GLenum target = GL_TEXTURE_2D;
@@ -750,7 +746,7 @@ void RenderPass::applyTexture(GLWrapper & gl, GLuint tu, GLenum target, GLuint h
 	gl.BindTexture(target, handle);
 }
 
-bool RenderPass::createShaderProgram(GLWrapper & gl, const std::vector <std::string> & shaderAttributeBindings, const RenderShader & vertexShader, const RenderShader & fragmentShader, std::ostream & errorOutput)
+bool RenderPass::createShaderProgram(GLWrapper & gl, const std::vector <std::string> & shaderAttributeBindings, const RenderShader & vertexShader, const RenderShader & fragmentShader, const std::map <std::string, RealtimeExportPassInfo::RenderTargetInfo> & renderTargets, std::ostream & errorOutput)
 {
 	deleteShaderProgram(gl);
 	
@@ -758,7 +754,24 @@ bool RenderPass::createShaderProgram(GLWrapper & gl, const std::vector <std::str
 	shaderHandles.push_back(vertexShader.handle);
 	shaderHandles.push_back(fragmentShader.handle);
 	
-	return gl.linkShaderProgram(shaderAttributeBindings, shaderHandles, shaderProgram, errorOutput);
+	// bind render target variable names to frag data locations
+	std::map <GLuint, std::string> fragDataLocations;
+	for (std::map <std::string, RealtimeExportPassInfo::RenderTargetInfo>::const_iterator i = renderTargets.begin(); i != renderTargets.end(); i++)
+	{
+		// we only bind names for color attachments
+		if (i->first.substr(0,19) == "GL_COLOR_ATTACHMENT")
+		{
+			// find the render target attachment point
+			GLenum attachmentPoint = GLEnumHelper.getEnum(i->first);
+		
+			// find the color attachment location
+			int colorNumber = attachmentPoint - GL_COLOR_ATTACHMENT0;
+		
+			fragDataLocations[colorNumber] = i->second.variable;
+		}
+	}
+	
+	return gl.linkShaderProgram(shaderAttributeBindings, shaderHandles, shaderProgram, fragDataLocations, errorOutput);
 }
 
 void RenderPass::deleteShaderProgram(GLWrapper & gl)
@@ -957,7 +970,7 @@ void RenderPass::removeDefaultTexture(StringId name)
 	}
 }
 
-void RenderPass::setDefaultUniform(const RenderUniformEntry & uniform)
+bool RenderPass::setDefaultUniform(const RenderUniformEntry & uniform)
 {
 	// see if we have a mapping for this name id
 	// if we don't that's fine, just ignore the change
@@ -973,13 +986,16 @@ void RenderPass::setDefaultUniform(const RenderUniformEntry & uniform)
 			{
 				// overwrite the existing entry, then return
 				*i = RenderUniform(location, uniform);
-				return;
+				return true;
 			}
 		}
 		
 		// if we've gotten here, we don't have an existing entry. make one!
 		defaultUniformBindings.push_back(RenderUniform(location, uniform));
+		return true;
 	}
+	
+	return false;
 }
 
 void RenderPass::removeDefaultUniform(StringId name)

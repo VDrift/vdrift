@@ -30,6 +30,7 @@ void WINDOW_SDL::Init(const std::string & windowcaption,
 				unsigned int resx, unsigned int resy, unsigned int bpp,
 				unsigned int depthbpp, bool fullscreen,
 				unsigned int antialiasing,
+				bool enableGL3,
 				std::ostream & info_output, std::ostream & error_output)
 {
 	if ( SDL_Init( SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK
@@ -45,7 +46,7 @@ void WINDOW_SDL::Init(const std::string & windowcaption,
 	else
 		info_output << "SDL initialization successful" << endl;
 
-	ChangeDisplay(resx, resy, bpp, depthbpp, fullscreen, antialiasing, info_output, error_output);
+	ChangeDisplay(resx, resy, bpp, depthbpp, fullscreen, antialiasing, enableGL3, info_output, error_output);
 
 	SDL_WM_SetCaption(windowcaption.c_str(), NULL);
 
@@ -53,7 +54,7 @@ void WINDOW_SDL::Init(const std::string & windowcaption,
 }
 
 void WINDOW_SDL::ChangeDisplay(const int width, const int height, const int bpp, const int dbpp,
-				   const bool fullscreen, unsigned int antialiasing,
+				   const bool fullscreen, unsigned int antialiasing, bool enableGL3,
        				   std::ostream & info_output, std::ostream & error_output)
 {
 	const SDL_VideoInfo *videoInfo = SDL_GetVideoInfo();
@@ -73,6 +74,12 @@ void WINDOW_SDL::ChangeDisplay(const int width, const int height, const int bpp,
 	videoFlags |= SDL_HWPALETTE;
 	//videoFlags |= SDL_RESIZABLE;
 
+	/*if (enableGL3)
+	{
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+	    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+	}*/
+	
 	SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
 	SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, dbpp );
 

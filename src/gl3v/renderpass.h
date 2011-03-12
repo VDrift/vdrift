@@ -68,7 +68,8 @@ class RenderPass
 		bool getDefaultUniform(StringId uniformName, RenderUniform & out);
 		
 		// these handle modifications to our defaultUniformBindings
-		void setDefaultUniform(const RenderUniformEntry & uniform);
+		// returns true if the pass uses this uniform
+		bool setDefaultUniform(const RenderUniformEntry & uniform);
 		void removeDefaultUniform(StringId name);
 		
 		const std::string & getName() const {return originalConfiguration.name;}
@@ -93,7 +94,7 @@ class RenderPass
 		void deleteFramebufferObject(GLWrapper & gl);
 		
 		/// returns true on success
-		bool createShaderProgram(GLWrapper & gl, const std::vector <std::string> & shaderAttributeBindings, const RenderShader & vertexShader, const RenderShader & fragmentShader, std::ostream & errorOutput);
+		bool createShaderProgram(GLWrapper & gl, const std::vector <std::string> & shaderAttributeBindings, const RenderShader & vertexShader, const RenderShader & fragmentShader, const std::map <std::string, RealtimeExportPassInfo::RenderTargetInfo> & renderTargets, std::ostream & errorOutput);
 		void deleteShaderProgram(GLWrapper & gl);
 		
 		/// switches to the texture's TU and binds the texture

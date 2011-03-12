@@ -151,6 +151,7 @@ void MODEL::GenerateVertexArrayObject(std::ostream & error_output)
 	const int * faces;
 	int facecount;
 	mesh.GetFaces(faces, facecount);
+	assert(faces && facecount > 0);
 	glGenBuffers(1, &elementVbo);ERROR_CHECK;
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementVbo);ERROR_CHECK;
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, facecount*sizeof(GLuint), faces, GL_STATIC_DRAW);ERROR_CHECK;
@@ -160,6 +161,7 @@ void MODEL::GenerateVertexArrayObject(std::ostream & error_output)
 	const float * verts;
 	int vertcount;
 	mesh.GetVertices(verts, vertcount);
+	assert(verts && vertcount > 0);
 	unsigned int vertexCount = vertcount/3;
 	
 	// generate buffer object for vertex positions
@@ -169,8 +171,15 @@ void MODEL::GenerateVertexArrayObject(std::ostream & error_output)
 	const float * norms;
 	int normcount;
 	mesh.GetNormals(norms, normcount);
-	assert((unsigned int)normcount == vertexCount*3);
-	vbos.push_back(GenerateBufferObject(norms, VERTEX_NORMAL, vertexCount, 3, error_output));
+	if (!norms || normcount <= 0)
+	{
+		glDisableVertexAttribArray(VERTEX_NORMAL);
+	}
+	else
+	{
+		assert((unsigned int)normcount == vertexCount*3);
+		vbos.push_back(GenerateBufferObject(norms, VERTEX_NORMAL, vertexCount, 3, error_output));
+	}
 	
 	// TODO: generate tangent and bitangent
 	glDisableVertexAttribArray(VERTEX_TANGENT);

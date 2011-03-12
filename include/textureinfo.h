@@ -19,6 +19,7 @@ struct TEXTUREINFO
 	bool npot;
 	bool nearest;
 	bool premultiply_alpha; ///< pre-multiply the color by the alpha value; allows using glstate.SetBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA); when drawing the texture to get correct blending
+	bool srgb; ///< whether or not to do srgb colorspace correction for this texture
 	
 	TEXTUREINFO() :
 		size("large"),
@@ -32,7 +33,8 @@ struct TEXTUREINFO
 		repeatv(true),
 		npot(true),
 		nearest(false),
-		premultiply_alpha(false)
+		premultiply_alpha(false),
+		srgb(false)
 	{
 		// ctor
 	}
