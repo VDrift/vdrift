@@ -27,6 +27,7 @@ opts.Add(BoolVariable('force_feedback', 'Enable force-feedback support', 0))
 opts.Add(BoolVariable('profiling', 'Turn on profiling output', 0))
 opts.Add(BoolVariable('efficiency', 'Turn on compile-time efficiency warnings', 0))
 opts.Add(BoolVariable('verbose', 'Show verbose compiling output', 1)) 
+opts.Add(BoolVariable('extbullet', 'Link against system bullet library', 0))
 
 #--------------------------#
 # Create Build Environment #
@@ -412,6 +413,12 @@ if env['minimal']:
     version += "-minimal"
 else:
     version += "-full"
+
+#---------------#
+# system bullet #
+#---------------#
+if env['extbullet']:
+	env.Append(CCFLAGS = ['-D EXTBULLET'])
 
 #-----------#
 # profiling #

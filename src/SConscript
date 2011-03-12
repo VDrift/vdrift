@@ -8,9 +8,6 @@ Import('*')
 #----------------#
 # Subdirectories #
 #----------------#
-#vamosobjs = SConscript('vamos/SConscript', exports=['env', 'src_dir'])
-#guiobjs = SConscript('gui/SConscript', exports=['env', 'src_dir'])
-
 def addbulletpath( val ):
     return "#bullet/"+val
 
@@ -263,7 +260,10 @@ SConsignFile()
 #--------------------------#
 appdir = ""
 vdrift_install = None
-common_libs = ['SDL_image', 'SDL_gfx', 'vorbisfile', 'vdriftbullet', 'curl']
+common_libs = ['SDL_image', 'SDL_gfx', 'vorbisfile', 'curl']
+
+if not local_env['extbullet']:
+	common_libs.append('vdriftbullet')
 
 if (sys.platform == 'freebsd6') or (sys.platform == 'freebsd7') or (sys.platform == 'freebsd8') or (sys.platform == 'freebsd9'):
     common_libs.append('libLinearMath')
@@ -319,8 +319,7 @@ elif ( 'win32' == sys.platform or 'cygwin' == sys.platform ):
 else:
     local_env.ParseConfig('sdl-config --cflags --libs')
     local_env.Append(LIBPATH = ['/usr/X11R6/lib'])
-#    libs_link = ['GL', 'GLU', 'GLEW', 'pthread', common_libs]
-    libs_link = ['GLU', 'GLEW', 'pthread', common_libs]
+    libs_link = ['GL', 'GLU', 'GLEW', 'pthread', common_libs]
 
 local_env.Append(LIBS = libs_link)
 
@@ -337,10 +336,12 @@ env.Distribute (src_dir, dist_files)
 #--------------------#
 # Compile Executable #
 #--------------------#
-#vdrift = local_env.Program(target='%s${EXECUTABLE_NAME}' % appdir, source=[src, vamosobjs, guiobjs])
-vdriftbullet = local_env.Library('vdriftbullet', bullet_src);
 vdrift = local_env.Program(target='%s${EXECUTABLE_NAME}' % appdir, source=src)
-Depends(vdrift, vdriftbullet)
+if not local_env['extbullet']:
+	vdriftbullet = local_env.Library('vdriftbullet', bullet_src);
+	Depends(vdrift, vdriftbullet)
+else:
+	local_env.ParseConfig('pkg-config bullet --libs --cflags')
 Default(Alias('vdrift', vdrift))
 
 #---------#
