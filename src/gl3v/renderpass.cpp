@@ -84,6 +84,10 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 	for (GLuint tu = 0; tu < samplers.size(); tu++)
 	{
 		samplers[tu].apply(gl);
+		
+		// TODO: replace GL_TEXTURE_2D with the sampler's target (need to add target to the sampler's data)
+		gl.ActiveTexture(tu);
+		gl.unbindTexture(GL_TEXTURE_2D);
 	}
 	
 	// apply default textures, keeping track of which textures are in which TUs
@@ -215,6 +219,11 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 					const RenderTextureBase * texture = textureState[*tu];
 					if (texture)
 						applyTexture(gl, *tu, texture->target, texture->handle);
+					else
+					{
+						gl.ActiveTexture(*tu);
+						gl.unbindTexture(GL_TEXTURE_2D); //TODO: determine target from sampler
+					}
 				}
 				for (override_tracking_type::const_iterator tu = overriddenTextures.begin(); tu != overriddenTextures.end(); tu++)
 				{

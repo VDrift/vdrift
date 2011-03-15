@@ -74,6 +74,7 @@ private:
 	struct CameraMatrices
 	{
 		MATRIX4 <float> projectionMatrix;
+		MATRIX4 <float> inverseProjectionMatrix;
 		MATRIX4 <float> viewMatrix;
 	};
 	std::map <std::string, CameraMatrices> cameras;

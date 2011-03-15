@@ -92,6 +92,9 @@ void GRAPHICS_GL3V::setCameraPerspective(const std::string & name,
 	
 	// generate projection matrix
 	matrices.projectionMatrix.Perspective(fov, w/(float)h, nearDistance, farDistance);
+	
+	// generate inverse projection matrix
+	matrices.inverseProjectionMatrix.InvPerspective(fov, w/(float)h, nearDistance, farDistance);
 }
 
 void GRAPHICS_GL3V::setCameraOrthographic(const std::string & name,
@@ -128,6 +131,16 @@ void GRAPHICS_GL3V::SetupScene(float fov, float new_view_distance, const MATHVEC
 		w,
 		h);
 	
+	MATHVECTOR <float,3> skyboxCamPosition(0,0,0);
+	setCameraPerspective("skybox",
+		skyboxCamPosition,
+		cam_rotation,
+		fov,
+		0.0001f,
+		10000.f,
+		w,
+		h);
+	
 	//TODO: more camera setup
 	
 	// send cameras to passes
@@ -136,6 +149,10 @@ void GRAPHICS_GL3V::SetupScene(float fov, float new_view_distance, const MATHVEC
 		renderer.setPassUniform(stringMap.addStringId(i->first), RenderUniformEntry(stringMap.addStringId("viewMatrix"), cameras[i->second].viewMatrix.GetArray(),16));
 		renderer.setPassUniform(stringMap.addStringId(i->first), RenderUniformEntry(stringMap.addStringId("projectionMatrix"), cameras[i->second].projectionMatrix.GetArray(),16));
 	}
+	
+	// send inverse projection matrix for the default camera
+	const CameraMatrices & defaultCamera = cameras.find("default")->second;
+	renderer.setGlobalUniform(RenderUniformEntry(stringMap.addStringId("invProjectionMatrix"), defaultCamera.inverseProjectionMatrix.GetArray(),16));
 	
 	// send sun light direction for the default camera
 	
@@ -150,7 +167,7 @@ void GRAPHICS_GL3V::SetupScene(float fov, float new_view_distance, const MATHVEC
 	for (int i = 0; i < 3; i++)
 		lightDirection4[i] = lightDirection[i];
 	lightDirection4[3] = 0;
-	cameras.find("default")->second.viewMatrix.MultiplyVector4(&lightDirection4[0]);
+	defaultCamera.viewMatrix.MultiplyVector4(&lightDirection4[0]);
 	
 	// upload to the shaders
 	RenderUniformEntry lightDirectionUniform(stringMap.addStringId("eyespaceLightDirection"), &lightDirection4[0], 3);

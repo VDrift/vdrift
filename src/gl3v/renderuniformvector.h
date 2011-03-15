@@ -18,7 +18,7 @@ class RenderUniformVector
 		
 		RenderUniformVector() : curSize(0) {}
 		RenderUniformVector(const RenderUniformVector & other) {Set(other);}
-		RenderUniformVector(T * newData, size_type newSize) {Set(newData, newSize);}
+		RenderUniformVector(const T * newData, size_type newSize) {Set(newData, newSize);}
 		RenderUniformVector(const std::vector <T> & other)
 		{
 			Set(&other[0],other.size());
