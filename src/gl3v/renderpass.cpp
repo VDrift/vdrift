@@ -9,6 +9,8 @@
 #endif
 //#define USE_EXTERNAL_MODEL_CACHE
 
+#define WAIT_ON_TIMER_QUERY true
+
 const GLEnums GLEnumHelper;
 
 bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringIdMap & stringMap, 
@@ -35,6 +37,23 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 			return changed;
 		}
 	}
+	
+	// get the last frame's timer result (but only if there was a last frame)
+	if (lastTime >= 0)
+	{
+		GLuint lastFrameTimerReady = gl.GetQueryObjectuiv(timerQuery, GL_QUERY_RESULT_AVAILABLE);
+		if (lastFrameTimerReady || WAIT_ON_TIMER_QUERY)
+		{
+			lastTime = gl.GetQueryObjectuiv(timerQuery, GL_QUERY_RESULT)*1e-9;
+		}
+		else
+			lastTime = 0;
+	}
+	else
+		lastTime = 0;
+	
+	// begin the timer query
+	gl.BeginQuery(GL_TIME_ELAPSED, timerQuery);
 	
 	// bind framebuffer
 	gl.BindFramebuffer(framebufferObject);
@@ -316,6 +335,8 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 		gl.unbindSampler(tu);
 	}
 	
+	gl.EndQuery(GL_TIME_ELAPSED);
+	
 	return changed;
 }
 
@@ -477,6 +498,10 @@ bool RenderPass::initialize(int passCount,
 		return false;
 	}
 	
+	// generate the timer query
+	timerQuery = gl.GenQuery();
+	lastTime = -1; // reset the last frame time to -1 so we know that the timer was just created
+	
 	configured = true;
 	
 	return true;
@@ -517,6 +542,12 @@ void RenderPass::clear(GLWrapper & gl)
 	stateEnum.clear();
 	
 	drawGroups.clear();
+	
+	if (timerQuery)
+	{
+		gl.DeleteQuery(timerQuery);
+		timerQuery = 0;
+	}
 	
 	// reset our configuration status
 	configured = false;

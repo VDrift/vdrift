@@ -46,6 +46,7 @@ public:
 	virtual bool GetShadows() const = 0;
 	virtual void SetSunDirection ( const QUATERNION< float >& value ) = 0;
 	virtual void SetContrast ( float value ) = 0;
+	virtual void printProfilingInfo(std::ostream & out) const {}
 	
 	virtual ~GRAPHICS_INTERFACE() {}
 };

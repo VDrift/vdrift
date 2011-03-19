@@ -140,6 +140,9 @@ class Renderer
 		/// Print some human readable text showing renderer status information.
 		void printRendererStatus(RendererStatusVerbosity verbosity, const StringIdMap & stringMap, std::ostream & out) const;
 		
+		/// Print some human readable profiling information
+		void printProfilingInfo(const StringIdMap & stringMap, std::ostream & out) const;
+		
 		/// The provided GLWrapper will be used for OpenGL context.
 		/// A reference will be kept to the glwrapper, so it must stay valid for the lifetime of this object.
 		Renderer(GLWrapper & glwrapper) : gl(glwrapper) {}

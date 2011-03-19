@@ -56,6 +56,7 @@ public:
 	virtual bool GetShadows() const;
 	virtual void SetSunDirection ( const QUATERNION< float >& value );
 	virtual void SetContrast ( float value );
+	virtual void printProfilingInfo(std::ostream & out) const {renderer.printProfilingInfo(stringMap, out);}
 	
 	GRAPHICS_GL3V(StringIdMap & map);
 	~GRAPHICS_GL3V() {};

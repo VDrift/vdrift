@@ -2120,7 +2120,11 @@ void GAME::CalculateFPS()
 	
 	if (profilingmode && frame % 10 == 0)
 	{
-		profiling_text.Revise(PROFILER.getAvgSummary(quickprof::MICROSECONDS));
+		std::string cpuProfile = PROFILER.getAvgSummary(quickprof::MICROSECONDS);
+		std::stringstream summary;
+		summary << "CPU:\n" << cpuProfile << "\n\nGPU:\n";
+		graphics_interface->printProfilingInfo(summary);
+		profiling_text.Revise(summary.str());
 	}
 }
 

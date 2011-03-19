@@ -86,7 +86,9 @@ class RenderPass
 		
 		const std::map <std::string, std::string> & getUserDefinedFields() const {return originalConfiguration.userDefinedFields;}
 		
-		RenderPass() : configured(false),enabled(true),shaderProgram(0),framebufferObject(0),renderbuffer(0),passIndex(0) {}
+		RenderPass() : configured(false),enabled(true),shaderProgram(0),framebufferObject(0),renderbuffer(0),passIndex(0),timerQuery(0),lastTime(-1) {}
+
+		float getLastTime() const {return lastTime;}
 		
 	private:
 		/// returns true on success
@@ -158,6 +160,10 @@ class RenderPass
 		
 		// our stringId-ified name
 		StringId passName;
+		
+		// the timing query object
+		GLuint timerQuery;
+		float lastTime;
 };
 
 #endif
