@@ -523,8 +523,7 @@ void GenTexture(const SDL_Surface * surface, const TEXTUREINFO & info, GLuint & 
 	//check for anisotropy
 	if (info.anisotropy > 1)
 	{
-		//glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, (float)info.anisotropy);
-		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, 16.0);
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, (float)info.anisotropy);
 	}
 }
 
