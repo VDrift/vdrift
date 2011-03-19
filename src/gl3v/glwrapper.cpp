@@ -154,15 +154,17 @@ bool GLWrapper::createAndCompileShader(const std::string & shaderSource, GLenum 
 	GLLOG(glCompileShader(handle));ERROR_CHECK;
 	GLint compileStatus(0);
 	GLLOG(glGetShaderiv(handle, GL_COMPILE_STATUS, &compileStatus));ERROR_CHECK;
+	
+	GLint bufferSize(0);
+	GLLOG(glGetShaderiv(handle, GL_INFO_LOG_LENGTH, &bufferSize));ERROR_CHECK;
+	GLchar infoLog[bufferSize+1];
+	GLsizei infoLogLength;
+	GLLOG(glGetShaderInfoLog(handle, bufferSize, &infoLogLength, infoLog));ERROR_CHECK;
+	infoLog[bufferSize] = '\0';
+	shaderErrorOutput << infoLog;
+	
 	if (!compileStatus)
 	{
-		GLint bufferSize(0);
-		GLLOG(glGetShaderiv(handle, GL_INFO_LOG_LENGTH, &bufferSize));ERROR_CHECK;
-		GLchar infoLog[bufferSize+1];
-		GLsizei infoLogLength;
-		GLLOG(glGetShaderInfoLog(handle, bufferSize, &infoLogLength, infoLog));ERROR_CHECK;
-		infoLog[bufferSize] = '\0';
-		shaderErrorOutput << infoLog;
 		GLLOG(glDeleteShader(handle));ERROR_CHECK;
 		handle = 0;
 		return false;

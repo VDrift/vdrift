@@ -76,6 +76,7 @@ private:
 		MATRIX4 <float> projectionMatrix;
 		MATRIX4 <float> inverseProjectionMatrix;
 		MATRIX4 <float> viewMatrix;
+		MATRIX4 <float> inverseViewMatrix;
 	};
 	std::map <std::string, CameraMatrices> cameras;
 	void setCameraPerspective(const std::string & name, 
@@ -115,6 +116,8 @@ private:
 	
 	// a set storing all configuration option conditions (bloom enabled, etc)
 	std::set <std::string> conditions;
+	
+	TEXTURE static_reflection;
 };
 
 #endif

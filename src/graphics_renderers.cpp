@@ -674,7 +674,7 @@ void RENDER_INPUT_SCENE::DrawList(GLSTATEMANAGER & glstate, std::vector <DRAWABL
 					if (i->GetVertArray()->GetTexCoordSets() > 0)
 					{
 						i->GetVertArray()->GetTexCoords(0, tc[0], tccount[0]);
-						if (tc[0])
+						if (tc[0] && tccount[0])
 						{
 							glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 							glTexCoordPointer(2, GL_FLOAT, 0, tc[0]);

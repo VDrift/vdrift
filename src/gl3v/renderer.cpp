@@ -209,6 +209,8 @@ bool Renderer::loadShader(const std::string & path, const std::string & name, co
 		RenderShader shader;
 		shader.handle = handle;
 		shaders.insert(std::make_pair(name, shader));
+		
+		//errorOutput << "Shader " << name << " info log:\n" << shaderOutput.str() << std::endl;
 	}
 	else
 	{

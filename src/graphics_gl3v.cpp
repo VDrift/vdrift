@@ -48,6 +48,18 @@ bool GRAPHICS_GL3V::Init(const std::string & shaderpath,
 	ADDCONDITION(fsaa);
 	#undef ADDCONDITION
 	
+	// load the reflection cubemap
+	if (!static_reflectionmap_file.empty())
+	{
+		TEXTUREINFO t;
+		t.cube = true;
+		t.verticalcross = true;
+		t.mipmap = true;
+		t.anisotropy = anisotropy;
+		t.size = texturesize;
+		static_reflection.Load(static_reflectionmap_file, t, error_output);
+	}
+	
 	// this information is needed to initialize the renderer in ReloadShaders
 	w = resx;
 	h = resy;
@@ -95,6 +107,9 @@ void GRAPHICS_GL3V::setCameraPerspective(const std::string & name,
 	
 	// generate inverse projection matrix
 	matrices.inverseProjectionMatrix.InvPerspective(fov, w/(float)h, nearDistance, farDistance);
+	
+	// generate inverse view matrix
+	matrices.inverseViewMatrix = matrices.viewMatrix.Inverse();
 }
 
 void GRAPHICS_GL3V::setCameraOrthographic(const std::string & name,
@@ -150,9 +165,10 @@ void GRAPHICS_GL3V::SetupScene(float fov, float new_view_distance, const MATHVEC
 		renderer.setPassUniform(stringMap.addStringId(i->first), RenderUniformEntry(stringMap.addStringId("projectionMatrix"), cameras[i->second].projectionMatrix.GetArray(),16));
 	}
 	
-	// send inverse projection matrix for the default camera
+	// send inverse matrices for the default camera
 	const CameraMatrices & defaultCamera = cameras.find("default")->second;
 	renderer.setGlobalUniform(RenderUniformEntry(stringMap.addStringId("invProjectionMatrix"), defaultCamera.inverseProjectionMatrix.GetArray(),16));
+	renderer.setGlobalUniform(RenderUniformEntry(stringMap.addStringId("invViewMatrix"), defaultCamera.inverseViewMatrix.GetArray(),16));
 	
 	// send sun light direction for the default camera
 	
@@ -172,6 +188,30 @@ void GRAPHICS_GL3V::SetupScene(float fov, float new_view_distance, const MATHVEC
 	// upload to the shaders
 	RenderUniformEntry lightDirectionUniform(stringMap.addStringId("eyespaceLightDirection"), &lightDirection4[0], 3);
 	renderer.setGlobalUniform(lightDirectionUniform);
+	
+	// set the reflection strength
+	// TODO: read this from the track definition
+	float reflectedLightColor[4];
+	for (int i = 0; i < 3; i++)
+		reflectedLightColor[i] = 1.0;
+	reflectedLightColor[4] = 1.;
+	renderer.setGlobalUniform(RenderUniformEntry(stringMap.addStringId("reflectedLightColor"), reflectedLightColor, 4));
+	
+	// set the ambient strength
+	// TODO: read this from the track definition
+	float ambientLightColor[4];
+	for (int i = 0; i < 3; i++)
+		ambientLightColor[i] = 1.5;
+	ambientLightColor[4] = 1.;
+	renderer.setGlobalUniform(RenderUniformEntry(stringMap.addStringId("ambientLightColor"), ambientLightColor, 4));
+	
+	// set the sun strength
+	// TODO: read this from the track definition
+	float directionalLightColor[4];
+	for (int i = 0; i < 3; i++)
+		directionalLightColor[i] = 1.4;
+	directionalLightColor[4] = 1.;
+	renderer.setGlobalUniform(RenderUniformEntry(stringMap.addStringId("directionalLightColor"), directionalLightColor, 4));
 }
 
 // returns true for cull, false for don't-cull
@@ -470,6 +510,13 @@ bool GRAPHICS_GL3V::ReloadShaders(const std::string & shaderpath, std::ostream &
 			float viewportSize[2] = {w,h};
 			RenderUniformEntry viewportSizeUniform(stringMap.addStringId("viewportSize"), viewportSize, 2);
 			renderer.setGlobalUniform(viewportSizeUniform);
+			
+			// set static reflection texture
+			if (static_reflection.Loaded())
+			{
+				assert(static_reflection.IsCube());
+				renderer.setGlobalTexture(stringMap.addStringId("reflectionCube"), RenderTextureEntry(stringMap.addStringId("reflectionCube"), static_reflection.GetID(), GL_TEXTURE_CUBE_MAP));
+			}
 			
 			if (initialized)
 				renderer.printRendererStatus(VERBOSITY_MAXIMUM, stringMap, std::cout);

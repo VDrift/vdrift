@@ -183,7 +183,7 @@ class MATRIX4
 			data[12] = 0; data[13] = 0; data[14] = -1; data[15] = (zfar + znear) / (2 * zfar * znear);
 		}
 		
-		MATRIX4<T> Inverse()
+		MATRIX4<T> Inverse() const
 		{
 			MATRIX4<T> Inv;
 			

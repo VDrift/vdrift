@@ -89,6 +89,10 @@ void RenderState::apply(GLWrapper & gl) const
 
 void RenderState::applySampler(GLWrapper & gl, GLuint samplerHandle) const
 {
+	// abort if we don't support anisotropic texture filtering and that's what we're about to set
+	if (pname == GL_TEXTURE_MAX_ANISOTROPY_EXT && !GLEW_EXT_texture_filter_anisotropic)
+		return;
+	
 	switch (type)
 	{
 		case SS_ENUM:
