@@ -122,21 +122,25 @@ public:
 		return hinge_anchor + hinge;
 	}
 
-	void Init(const CARSUSPENSIONINFO & info, const std::vector<btScalar> & h)
+	void Init(
+		const CARSUSPENSIONINFO & info,
+		const std::vector<btScalar> & ch,
+		const std::vector<btScalar> & wh)
 	{
 		CARSUSPENSION::Init(info);
-		hinge_anchor.setValue(h[0], h[1], h[2]);
-		hinge_arm = info.extended_position - hinge_anchor;
+		hinge_anchor.setValue(ch[0], ch[1], ch[2]);
+		btVector3 wheel_hub(wh[0], wh[1], wh[2]);
+		hinge_arm = wheel_hub - hinge_anchor;
 		hinge_radius = hinge_arm.length();
-		//btVector3 up(0, 0, 1);
-		//hinge_axis = up.cross(relwheelext).normalized();
+		
+		// take hinge arm offset into account
+		hinge_anchor += (info.extended_position - wheel_hub);
 	}
 
 private:
-	btVector3 hinge_anchor; ///< the point that the wheels are rotated around as the suspension compresses
+	btVector3 hinge_anchor;	///< the point that the wheels are rotated around as the suspension compresses
 	btVector3 hinge_arm;	///< vector from anchor towards extended position
-	btScalar hinge_radius; ///< length of the hinge arm
-	//btVector3 hinge_axis;	///< hinge rotation axis 
+	btScalar hinge_radius;	///< length of the hinge arm
 };
 
 inline btScalar angle_from_sides(btScalar a, btScalar h, btScalar o)
@@ -377,29 +381,23 @@ bool CARSUSPENSION::LoadSuspension(
 	if (!c.GetParam(iwheel, "toe", info.toe, error_output)) return false;
 	c.GetParam(iwheel, "steering", info.max_steering_angle);
 	c.GetParam(iwheel, "ackermann", info.ackermann);
-
+	
 	COORDINATESYSTEMS::ConvertV2toV1(p[0], p[1], p[2]);
 	info.extended_position.setValue(p[0], p[1], p[2]);
-
+	
 	if (c.GetParam(iwheel, "macpherson-strut", s_type))
 	{
 		std::vector<btScalar> strut_top(3), strut_end(3), hinge(3);
 		CONFIG::const_iterator iwb;
-
+		
 		if (!c.GetSection(s_type, iwb, error_output)) return false;
 		if (!c.GetParam(iwb, "hinge", hinge, error_output)) return false;
 		if (!c.GetParam(iwb, "strut-top", strut_top, error_output)) return false;
-		if (!c.GetParam(iwb, "strut-end", strut_end))
-		{
-			strut_end = p;
-		}
-		else
-		{
-			COORDINATESYSTEMS::ConvertV2toV1(strut_end[0], strut_end[1], strut_end[2]);
-		}
-
+		if (!c.GetParam(iwb, "strut-end", strut_end, error_output)) return false;
+		
 		COORDINATESYSTEMS::ConvertV2toV1(hinge[0], hinge[1], hinge[2]);
 		COORDINATESYSTEMS::ConvertV2toV1(strut_top[0], strut_top[1], strut_top[2]);
+		COORDINATESYSTEMS::ConvertV2toV1(strut_end[0], strut_end[1], strut_end[2]);
 		
 		MACPHERSONSUSPENSION * mps = new MACPHERSONSUSPENSION();
 		mps->Init(info, strut_top, strut_end, hinge);
@@ -431,18 +429,18 @@ bool CARSUSPENSION::LoadSuspension(
 	}*/
 	else
 	{
-		CONFIG::const_iterator iarm;
-		std::vector<btScalar> h(3, 0);
-		if (!((c.GetParam(iwheel, "arm", s_type, error_output) && 
-				c.GetSection(s_type, iarm, error_output) &&
-				c.GetParam(iarm, "hinge", h, error_output)) ||
-				c.GetParam(iwheel, "hinge", h, error_output))) // Fallback!
-				return false;	
-
-		COORDINATESYSTEMS::ConvertV2toV1(h[0], h[1], h[2]);	
+		CONFIG::const_iterator ih;
+		std::vector<btScalar> ch(3, 0), wh(3, 0);
+		if (!c.GetParam(iwheel, "hinge", s_type, error_output)) return false;
+		if (!c.GetSection(s_type, ih, error_output)) return false;
+		if (!c.GetParam(ih, "chassis", ch, error_output)) return false;
+		if (!c.GetParam(ih, "wheel", wh, error_output)) return false;
+		
+		COORDINATESYSTEMS::ConvertV2toV1(ch[0], ch[1], ch[2]);
+		COORDINATESYSTEMS::ConvertV2toV1(wh[0], wh[1], wh[2]);
 		
 		BASICSUSPENSION * bs = new BASICSUSPENSION();
-		bs->Init(info, h);
+		bs->Init(info, ch, wh);
 		suspension = bs;
 	}
 

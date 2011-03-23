@@ -228,7 +228,7 @@ static bool LoadAeroDevices(
 		
 		aerodynamics[i].Set(position, drag_area, drag_coeff, lift_area, lift_coeff, lift_eff);
 	}
-
+	
 	return true;
 }
 
@@ -256,31 +256,24 @@ static bool LoadMassParticles(
 	btAlignedObjectArray<std::pair<btScalar, btVector3> > & mass_particles,
 	std::ostream & error_output)
 {
-	int num = 0;
-	while(true)
+	CONFIG::const_iterator it;
+	if (!c.GetSection("particle", it)) return true;
+	
+	btScalar mass;
+	std::vector<btScalar> pos(3);
+	for (CONFIG::SECTION::const_iterator i = it->second.begin(), e = it->second.end(); i != e; ++i)
 	{
-		btScalar mass;
-		std::vector<btScalar> pos(3);
+		CONFIG::const_iterator ip;
+		if (!c.GetSection(i->second, ip, error_output)) return false;
 		
-		std::stringstream str;
-		str.width(2);
-		str.fill('0');
-		str << num;
-		std::string name = "particle-"+str.str();
-		
-		CONFIG::const_iterator it;
-		if (!c.GetSection(name, it)) break;
-		if (!c.GetParam(it, "position", pos, error_output)) return false;
-		if (!c.GetParam(it, "mass", mass)) return false;
-		
-		COORDINATESYSTEMS::ConvertV2toV1(pos[0], pos[1], pos[2]);
-		btVector3 position(pos[0], pos[1], pos[2]);
-		
-		mass_particles.push_back(std::pair<btScalar, btVector3>(mass, position));
-		
-		num++;
+		if (c.GetParam(ip, "position", pos) && c.GetParam(ip, "mass", mass))
+		{
+			COORDINATESYSTEMS::ConvertV2toV1(pos[0], pos[1], pos[2]);
+			btVector3 position(pos[0], pos[1], pos[2]);
+			mass_particles.push_back(std::pair<btScalar, btVector3>(mass, position));
+		}
 	}
-
+	
 	return true;
 }
 
