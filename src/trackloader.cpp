@@ -7,8 +7,6 @@
 #include "config.h"
 #include "k1999.h"
 
-//#define EXTBULLET
-
 static void operator >> (std::istream & lhs, std::vector<std::string> & rhs)
 {
 	for (size_t i = 0; i < rhs.size() && !lhs.eof(); ++i)
@@ -18,6 +16,20 @@ static void operator >> (std::istream & lhs, std::vector<std::string> & rhs)
 		std::stringstream s(str);
 		s >> str;
 		rhs[i] = str;
+	}
+}
+
+static void operator >> (std::istream & lhs, btVector3 & rhs)
+{
+	for (size_t i = 0; i < 3; ++i)
+	{
+		std::string str;
+		std::getline(lhs, str, ',');
+		
+		std::stringstream s(str);
+		btScalar val(0);
+		s >> val;
+		rhs[i] = val;
 	}
 }
 
@@ -378,8 +390,24 @@ TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const std::string & name)
 				int stride = sizeof(float) * 3;
 				MODEL & shape_model = *data.models.back();
 				shape_model.GetVertexArray().GetVertices(points, num_points);
-				shape = new btConvexHullShape(points, num_points/3, stride);
-				body.center.setZero();
+				
+				btVector3 center;
+				if (sec->get("mass-center", center))
+				{
+					btConvexHullShape * hull = new btConvexHullShape();
+					for (int i = 0; i < num_points; i+=3)
+					{
+						btVector3 p(points[i], points[i+1], points[i+2]);
+						hull->addPoint(p-center);
+					}
+					shape = hull;
+					body.center = center;
+				}
+				else
+				{
+					shape = new btConvexHullShape(points, num_points/3, stride);
+					body.center.setZero();	
+				}
 			}
 			else
 			{
@@ -481,10 +509,6 @@ bool TRACK::LOADER::LoadNode(const PTree & sec)
 	bool has_transform = sec.get("position",  position) | sec.get("rotation", angle);
 	QUATERNION<float> rotation(angle[0]/180*M_PI, angle[1]/180*M_PI, angle[2]/180*M_PI);
 	
-	btTransform transform;
-	transform.setOrigin(ToBulletVector(position));
-	transform.setRotation(ToBulletQuaternion(rotation));
-	
 	const BODY & body = ib->second;
 	if (body.mass < 1E-3)
 	{
@@ -503,6 +527,10 @@ bool TRACK::LOADER::LoadNode(const PTree & sec)
 		
 		if (body.collidable)
 		{
+			btTransform transform;
+			transform.setOrigin(ToBulletVector(position));
+			transform.setRotation(ToBulletQuaternion(rotation));
+			
 #ifndef EXTBULLET
 			track_shape->addChildShape(transform, body.shape);
 #else
@@ -518,6 +546,16 @@ bool TRACK::LOADER::LoadNode(const PTree & sec)
 	}
 	else
 	{
+		// fix postion due to rotation around mass center
+		MATHVECTOR<float, 3> c0 = ToMathVector<float>(body.center);
+		MATHVECTOR<float, 3> c1 = c0;
+		rotation.RotateVector(c1);
+		position = position - c0 + c1;
+		
+		btTransform transform;
+		transform.setOrigin(ToBulletVector(position));
+		transform.setRotation(ToBulletQuaternion(rotation));
+		
 		data.body_transforms.push_back(btDefaultMotionState(transform));
 		data.body_transforms.back().m_centerOfMassOffset.getOrigin() = -body.center;
 		
