@@ -14,8 +14,14 @@
 static void read_xml(std::istream & in, PTree & p, std::string key)
 {
 	std::string line, escape("/"+p.value());
-	while(!std::getline(in, line, '>').eof())
+	while(in.good())
 	{
+		std::getline(in, line, '\n');
+		if (line.empty())
+		{
+			continue;
+		}
+		
 		size_t begin = line.find_first_not_of(" \t\n<");
 		size_t end = line.length();
 		if (begin >= end || line[begin] == '!')

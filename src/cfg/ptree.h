@@ -7,6 +7,50 @@
 #include <iostream>
 #include <algorithm>
 
+class PTree;
+
+/*
+# ini format
+key1 = value1
+
+[key2.key3]
+key4 = value4
+
+[key2]
+key5 = value5
+*/
+void read_ini(std::istream & in, PTree & p);
+void write_ini(const PTree & p, std::ostream & out);
+
+/*
+; inf format
+key1 value1
+key2
+{
+    key3
+    {
+        key4 value4
+    }
+    key5 value5
+}
+*/
+void read_inf(std::istream & in, PTree & p);
+void write_inf(const PTree & p, std::ostream & out);
+
+/*
+<!-- xml format -->
+<key1>value1</key1>
+<key2>
+    <key3>
+		<key4>value4</key4>
+	</key3>
+    <key5>value5</key5>
+</key2>
+*/
+void read_xml(std::istream & in, PTree & p);
+void write_xml(const PTree & p, std::ostream & out);
+
+
 class PTree
 {
 public:
@@ -60,14 +104,16 @@ public:
 			return true;
 		}
 		
+		// error output
 		std::string full_key = key;
 		const PTree * parent = this;
 		while (parent)
 		{
-			full_key = parent->_value + '.' + full_key; // value contains node key
+			full_key = parent->_value + '.' + full_key;
 			parent = parent->_parent;
 		}
 		error << full_key << " not found." << std::endl;
+		
 		return false;
 	}
 	
@@ -79,7 +125,7 @@ public:
 		p._parent = this; // store parent pointer for error reporting
 		if (next >= key.length()-1)
 		{
-			std::stringstream s;
+			std::ostringstream s;
 			s << value;
 			p._value = s.str();
 			return p;
@@ -110,6 +156,10 @@ public:
 		_children.clear();
 	}
 	
+	void read(const std::string & filename, void (&read)(std::istream &, PTree &) = read_ini);
+	
+	void write(const std::string & filename, void (&write)(const PTree &, std::ostream &) = write_ini) const;
+	
 private:
 	std::string _value;
 	map _children;
@@ -117,7 +167,7 @@ private:
 	
 	template <typename T> void _get(const PTree & p, T & value) const
 	{
-		std::stringstream s(p._value);
+		std::istringstream s(p._value);
 		s >> value;
 	}
 };
@@ -137,46 +187,5 @@ template <> inline void PTree::_get<const PTree *>(const PTree & p, const PTree 
 {
 	value = &p;
 }
-
-/*
-# ini format
-key1 = value1
-
-[key2.key3]
-key4 = value4
-
-[key2]
-key5 = value5
-*/
-void read_ini(std::istream & in, PTree & p);
-void write_ini(const PTree & p, std::ostream & out);
-
-/*
-; inf format
-key1 value1
-key2
-{
-    key3
-    {
-        key4 value4
-    }
-    key5 value5
-}
-*/
-void read_inf(std::istream & in, PTree & p);
-void write_inf(const PTree & p, std::ostream & out);
-
-/*
-<!-- xml format -->
-<key1>value1</key1>
-<key2>
-    <key3>
-		<key4>value4</key4>
-	</key3>
-    <key5>value5</key5>
-</key2>
-*/
-void read_xml(std::istream & in, PTree & p);
-void write_xml(const PTree & p, std::ostream & out);
 
 #endif //_PTREE_H

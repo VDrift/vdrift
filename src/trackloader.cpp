@@ -275,6 +275,151 @@ bool TRACK::LOADER::LoadModel(const std::string & name)
 	return false;
 }
 
+static void LoadBoxShape(
+	const PTree & cfg,
+	const btVector3 & center,
+	btCollisionShape *& shape)
+{
+	btVector3 box_size(1, 1, 1);
+	cfg.get("size", box_size);
+	btBoxShape * box = new btBoxShape(box_size * 0.5);
+	
+	btVector3 box_center(0, 0, 0);
+	cfg.get("center", box_center);
+	btTransform transform = btTransform::getIdentity();
+	transform.getOrigin() = box_center - center;
+	
+	if (!shape)
+	{
+		if (center.isZero() && box_center.isZero())
+		{
+			shape = box;
+		}
+		else
+		{
+			btCompoundShape * compound = new btCompoundShape(false);
+			compound->addChildShape(transform, box);
+			shape = compound;
+		}
+	}
+	else
+	{
+		if (!shape->isCompound())
+		{
+			// create compound, remap shape pointer
+			btCollisionShape * temp = shape;
+			shape = new btCompoundShape(false);
+			static_cast<btCompoundShape*>(shape)->addChildShape(btTransform::getIdentity(), temp);
+		}
+		static_cast<btCompoundShape*>(shape)->addChildShape(transform, box);
+	}
+}
+
+static void LoadHullShape(
+	const PTree & cfg,
+	const btVector3 & center,
+	btCollisionShape *& shape)
+{
+	btConvexHullShape * hull = new btConvexHullShape();
+	for (PTree::const_iterator i = cfg.begin(); i != cfg.end(); ++i)
+	{
+		btVector3 point;
+		std::istringstream str(i->second.value());
+		str >> point;
+		hull->addPoint(point - center);
+	}
+	
+	if (!shape)
+	{
+		shape = hull;
+	}
+	else
+	{
+		if (!shape->isCompound())
+		{
+			// create compound, remap shape pointer
+			btCollisionShape * temp = shape;
+			shape = new btCompoundShape(false);
+			static_cast<btCompoundShape*>(shape)->addChildShape(btTransform::getIdentity(), temp);
+		}
+		static_cast<btCompoundShape*>(shape)->addChildShape(btTransform::getIdentity(), hull);
+	}
+}
+
+bool TRACK::LOADER::LoadShape(const PTree & cfg, const MODEL & model, BODY & body)
+{
+	if (body.mass < 1E-3)
+	{
+		btTriangleIndexVertexArray * mesh = new btTriangleIndexVertexArray();
+		mesh->addIndexedMesh(GetIndexedMesh(model));
+		data.meshes.push_back(mesh);
+		body.mesh = mesh;
+		
+		int surface = 0;
+		cfg.get("surface", surface);
+		if (surface >= (int)data.surfaces.size())
+		{
+			surface = 0;
+		}
+		
+		btBvhTriangleMeshShape * shape = new btBvhTriangleMeshShape(mesh, true);
+		shape->setUserPointer((void*)&data.surfaces[surface]);
+		data.shapes.push_back(shape);
+		body.shape = shape;
+	}
+	else
+	{
+		btCollisionShape * shape = 0;
+		
+		btVector3 center(0, 0, 0);
+		cfg.get("mass-center", center);
+		
+		const PTree * cfg_shape = 0;
+		if (cfg.get("shape.hull", cfg_shape))
+		{
+			// load hulls
+			for (PTree::const_iterator i = cfg_shape->begin(); i != cfg_shape->end(); ++i)
+			{
+				LoadHullShape(i->second, center, shape);
+			}
+		}
+		if (cfg.get("shape.box", cfg_shape))
+		{
+			// load boxes
+			for (PTree::const_iterator i = cfg_shape->begin(); i != cfg_shape->end(); ++i)
+			{
+				LoadBoxShape(i->second, center, shape);
+			}
+		}
+		
+		if (!shape)
+		{
+			// falback to model bounding box
+			btVector3 size = ToBulletVector(model.GetAABB().GetSize());
+			shape = new btBoxShape(size * 0.5);
+			center = center + ToBulletVector(model.GetAABB().GetCenter());
+		}
+		else if (shape->isCompound())
+		{
+			// keep track of child shapes
+			btCompoundShape * compound = static_cast<btCompoundShape*>(shape);
+			btCompoundShapeChild * children =  compound->getChildList();
+			int children_count = compound->getNumChildShapes();
+			for (int i = 0; i < children_count; ++i)
+			{
+				data.shapes.push_back(children[i].m_childShape);
+			}
+		}
+		data.shapes.push_back(shape);
+		
+		shape->calculateLocalInertia(body.mass, body.inertia);
+		body.shape = shape;
+		body.center = center;
+	}
+	
+	return true;
+}
+
 TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const std::string & name)
 {
 	body_iterator ib = bodies.find(name);
@@ -304,13 +449,13 @@ TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const std::string & name)
 		
 		PTree & bodysec = track_config.set("body." + name);
 		read_ini(file, bodysec);
+		//write_ini(bodysec, std::cerr);
 		sec = &bodysec;
 	}
 	
 	BODY body;
 	std::string texture_name;
 	std::string model_name;
-	std::string shape_name;
 	int clampuv = 0;
 	bool mipmap = true;
 	bool skybox = false;
@@ -320,7 +465,6 @@ TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const std::string & name)
 	
 	sec->get("texture", texture_name, error_output);
 	sec->get("model", model_name, error_output);
-	sec->get("shape", shape_name);
 	sec->get("clampuv", clampuv);
 	sec->get("mipmap", mipmap);
 	sec->get("skybox", skybox);
@@ -339,7 +483,6 @@ TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const std::string & name)
 	{
 		std::string relative_path = name.substr(0, npos+1);
 		model_name = relative_path + model_name;
-		shape_name = relative_path + shape_name;
 		texture_names[0] = relative_path + texture_names[0];
 		if (!texture_names[1].empty()) texture_names[1] = relative_path + texture_names[1];
 		if (!texture_names[2].empty()) texture_names[2] = relative_path + texture_names[2];
@@ -357,68 +500,10 @@ TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const std::string & name)
 	
 	MODEL & model = *data.models.back();
 	
-	// load shape
 	body.collidable = sec->get("mass", body.mass);
 	if (body.collidable)
 	{
-		if (body.mass < 1E-3)
-		{
-			btTriangleIndexVertexArray * mesh = new btTriangleIndexVertexArray();
-			mesh->addIndexedMesh(GetIndexedMesh(model));
-			data.meshes.push_back(mesh);
-			body.mesh = mesh;
-			
-			int surface = 0;
-			sec->get("surface", surface);
-			if (surface >= (int)data.surfaces.size())
-			{
-				surface = 0;
-			}
-			
-			btBvhTriangleMeshShape * shape = new btBvhTriangleMeshShape(mesh, true);
-			shape->setUserPointer((void*)&data.surfaces[surface]);
-			data.shapes.push_back(shape);
-			body.shape = shape;
-		}
-		else
-		{
-			btCollisionShape * shape = 0;
-			if (!shape_name.empty() && LoadModel(shape_name))
-			{
-				const float * points = 0;
-				int num_points = 0;
-				int stride = sizeof(float) * 3;
-				MODEL & shape_model = *data.models.back();
-				shape_model.GetVertexArray().GetVertices(points, num_points);
-				
-				btVector3 center;
-				if (sec->get("mass-center", center))
-				{
-					btConvexHullShape * hull = new btConvexHullShape();
-					for (int i = 0; i < num_points; i+=3)
-					{
-						btVector3 p(points[i], points[i+1], points[i+2]);
-						hull->addPoint(p-center);
-					}
-					shape = hull;
-					body.center = center;
-				}
-				else
-				{
-					shape = new btConvexHullShape(points, num_points/3, stride);
-					body.center.setZero();	
-				}
-			}
-			else
-			{
-				btVector3 size = ToBulletVector(model.GetAABB().GetSize());
-				shape = new btBoxShape(size * 0.5);
-				body.center = ToBulletVector(model.GetAABB().GetCenter());
-			}
-			shape->calculateLocalInertia(body.mass, body.inertia);
-			data.shapes.push_back(shape);
-			body.shape = shape;
-		}
+		LoadShape(*sec, model, body);
 	}
 	
 	// load textures

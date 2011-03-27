@@ -16,8 +16,14 @@ key2
 static void read_inf(std::istream & in, PTree & node, bool child)
 {
 	std::string line, name;
-	while(!std::getline(in, line, '\n').eof())
+	while(in.good())
 	{
+		std::getline(in, line, '\n');
+		if (line.empty())
+		{
+			continue;
+		}
+		
 		size_t begin = line.find_first_not_of(" \t");
 		size_t end = line.find_first_of(";#");
 		if (begin >= end)

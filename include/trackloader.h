@@ -152,6 +152,8 @@ private:
 	
 	bool LoadModel(const std::string & name);
 	
+	bool LoadShape(const PTree & body_cfg, const MODEL & body_model, BODY & body);
+	
 	body_iterator LoadBody(const std::string & name);
 	
 	void AddBody(SCENENODE & scene, const BODY & body);

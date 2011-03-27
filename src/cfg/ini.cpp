@@ -11,11 +11,17 @@ key5 = value5
 key4 = value4
 */
 
-void read_ini(std::istream & in, PTree & node, PTree & root)
+static void read_ini(std::istream & in, PTree & node, PTree & root)
 {
 	std::string line, name;
-	while(!std::getline(in, line, '\n').eof())
+	while(in.good())
 	{
+		std::getline(in, line, '\n');
+		if (line.empty())
+		{
+			continue;
+		}
+		
 		size_t begin = line.find_first_not_of(" \t[");
 		size_t end = line.find_first_of(";#]\r", begin);
 		if (begin >= end)
