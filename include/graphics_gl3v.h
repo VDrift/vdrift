@@ -80,7 +80,7 @@ private:
 		MATRIX4 <float> inverseViewMatrix;
 	};
 	std::map <std::string, CameraMatrices> cameras;
-	void setCameraPerspective(const std::string & name, 
+	CameraMatrices & setCameraPerspective(const std::string & name, 
 							  const MATHVECTOR <float, 3> & position,
 							  const QUATERNION <float> & rotation,
 							  float fov,
@@ -88,7 +88,7 @@ private:
 							  float farDistance,
 							  float w,
 							  float h);
-	void setCameraOrthographic(const std::string & name,
+	CameraMatrices & setCameraOrthographic(const std::string & name,
 							   const MATHVECTOR <float, 3> & position,
 							   const QUATERNION <float> & rotation,
 							   const MATHVECTOR <float, 3> & orthoMin,
@@ -119,6 +119,8 @@ private:
 	std::set <std::string> conditions;
 	
 	TEXTURE static_reflection;
+	
+	float closeshadow;
 };
 
 #endif

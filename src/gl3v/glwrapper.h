@@ -164,6 +164,9 @@ class GLWrapper
 		void BeginQuery(GLenum target, GLuint handle) {GLLOG(glBeginQuery(target, handle));ERROR_CHECK;}
 		void EndQuery(GLenum target) {GLLOG(glEndQuery(target));ERROR_CHECK;}
 		GLuint GetQueryObjectuiv(GLuint id, GLenum pname) {GLuint result;GLLOG(glGetQueryObjectuiv(id, pname, &result));ERROR_CHECK;return result;}
+		void ClearColor(GLfloat r, GLfloat g, GLfloat b, GLfloat a) {GLLOG(glClearColor(r,g,b,a));ERROR_CHECK;}
+		void ClearDepth(GLfloat d) {GLLOG(glClearDepth(d));ERROR_CHECK;}
+		void ClearStencil(GLint s) {GLLOG(glClearStencil(s));ERROR_CHECK;}
 		
 		
 		/// writes errors to the log

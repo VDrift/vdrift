@@ -9,7 +9,8 @@
 #define enableContributionCull true
 
 GRAPHICS_GL3V::GRAPHICS_GL3V(StringIdMap & map) : 
-	stringMap(map), renderer(gl), logNextGlFrame(false), initialized(false)
+	stringMap(map), renderer(gl), logNextGlFrame(false), initialized(false),
+	closeshadow(5.f)
 {
 	// initialize the full screen quad
 	fullscreenquadVertices.SetTo2DQuad(0,0,1,1, 0,1,1,0, 0);
@@ -46,6 +47,7 @@ bool GRAPHICS_GL3V::Init(const std::string & shaderpath,
 	ADDCONDITION(bloom);
 	ADDCONDITION(normalmaps);
 	ADDCONDITION(fsaa);
+	ADDCONDITION(shadows);
 	#undef ADDCONDITION
 	
 	// load the reflection cubemap
@@ -85,7 +87,7 @@ DRAWABLE_CONTAINER <PTRVECTOR> & GRAPHICS_GL3V::GetDynamicDrawlist()
 	return dynamic_drawlist;
 }
 
-void GRAPHICS_GL3V::setCameraPerspective(const std::string & name, 
+GRAPHICS_GL3V::CameraMatrices & GRAPHICS_GL3V::setCameraPerspective(const std::string & name, 
 	const MATHVECTOR <float, 3> & position,
 	const QUATERNION <float> & rotation,
 	float fov,
@@ -110,9 +112,11 @@ void GRAPHICS_GL3V::setCameraPerspective(const std::string & name,
 	
 	// generate inverse view matrix
 	matrices.inverseViewMatrix = matrices.viewMatrix.Inverse();
+	
+	return matrices;
 }
 
-void GRAPHICS_GL3V::setCameraOrthographic(const std::string & name,
+GRAPHICS_GL3V::CameraMatrices & GRAPHICS_GL3V::setCameraOrthographic(const std::string & name,
 	const MATHVECTOR <float, 3> & position,
 	const QUATERNION <float> & rotation,
 	const MATHVECTOR <float, 3> & orthoMin,
@@ -126,8 +130,16 @@ void GRAPHICS_GL3V::setCameraOrthographic(const std::string & name,
 	rotation.RotateVector(rotated_cam_position);
 	matrices.viewMatrix.Translate(-rotated_cam_position[0],-rotated_cam_position[1],-rotated_cam_position[2]);
 	
+	// generate inverse view matrix
+	matrices.inverseViewMatrix = matrices.viewMatrix.Inverse();
+	
 	// generate projection matrix
 	matrices.projectionMatrix.SetOrthographic(orthoMin[0], orthoMax[0], orthoMin[1], orthoMax[1], orthoMin[2], orthoMax[2]);
+	
+	// generate inverse projection matrix
+	matrices.inverseProjectionMatrix = matrices.projectionMatrix.Inverse();
+	
+	return matrices;
 }
 
 void GRAPHICS_GL3V::SetupScene(float fov, float new_view_distance, const MATHVECTOR <float, 3> cam_position, const QUATERNION <float> & cam_rotation,
@@ -156,7 +168,46 @@ void GRAPHICS_GL3V::SetupScene(float fov, float new_view_distance, const MATHVEC
 		w,
 		h);
 	
-	//TODO: more camera setup
+	// shadow cameras
+	for (int i = 0; i < 1; i++)
+	{
+		float shadow_radius = (1<<i)*closeshadow+(i)*20.0; //5,30,60
+		
+		MATHVECTOR <float, 3> shadowbox(1,1,1);
+		shadowbox = shadowbox * (shadow_radius*sqrt(2.0));
+		MATHVECTOR <float, 3> shadowoffset(0,0,-1);
+		shadowoffset = shadowoffset * shadow_radius;
+		(-cam_rotation).RotateVector(shadowoffset);
+		//shadowbox[2] += 60.0;
+		
+		std::string suffix = UTILS::tostr(i+1);
+	
+		CameraMatrices & shadowcam = setCameraOrthographic("shadow"+suffix,
+			cam_position+shadowoffset,
+			sunDirection,
+			-shadowbox,
+			shadowbox);
+		
+		std::string matrixName = "shadowMatrix"+suffix;
+		
+		// create and send shadow reconstruction matrices
+		// the reconstruction matrix should transform from view to world, then from world to shadow view, then from shadow view to shadow clip space
+		const CameraMatrices & defaultcam = cameras.find("default")->second;
+		MATRIX4 <float> shadowReconstruction = defaultcam.inverseViewMatrix.Multiply(shadowcam.viewMatrix).Multiply(shadowcam.projectionMatrix);
+		/*//MATRIX4 <float> shadowReconstruction = shadowcam.projectionMatrix.Multiply(shadowcam.viewMatrix.Multiply(defaultcam.inverseViewMatrix));
+		std::cout << "shadowcam.projectionMatrix: " << std::endl;
+		shadowcam.projectionMatrix.DebugPrint(std::cout);
+		std::cout << "defaultcam.inverseViewMatrix: " << std::endl;
+		defaultcam.inverseViewMatrix.DebugPrint(std::cout);
+		std::cout << "shadowcam.viewMatrix: " << std::endl;
+		shadowcam.viewMatrix.DebugPrint(std::cout);
+		std::cout << "defaultcam.inverseViewMatrix.Multiply(shadowcam.viewMatrix): " << std::endl;
+		defaultcam.inverseViewMatrix.Multiply(shadowcam.viewMatrix).DebugPrint(std::cout);
+		std::cout << matrixName << ":" << std::endl;
+		shadowReconstruction.DebugPrint(std::cout);*/
+		
+		renderer.setGlobalUniform(RenderUniformEntry(stringMap.addStringId(matrixName), shadowReconstruction.GetArray(),16));
+	}
 	
 	// send cameras to passes
 	for (std::map <std::string, std::string>::const_iterator i = passNameToCameraName.begin(); i != passNameToCameraName.end(); i++)
@@ -548,7 +599,7 @@ void GRAPHICS_GL3V::AddStaticNode(SCENENODE & node, bool clearcurrent)
 
 void GRAPHICS_GL3V::SetCloseShadow ( float value )
 {
-	
+	closeshadow = value;
 }
 
 bool GRAPHICS_GL3V::GetShadows() const

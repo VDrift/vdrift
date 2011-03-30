@@ -45,6 +45,7 @@ class MATRIX4
 			out << std::endl;
 		}
 		
+		// this is actually other * this, not this * other
 		MATRIX4 <T> Multiply(const MATRIX4 <T> & other) const
 		{
 			MATRIX4 out;

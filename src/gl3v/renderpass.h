@@ -126,6 +126,11 @@ class RenderPass
 		// which bitfields to clear when we start the pass
 		GLbitfield clearMask;
 		
+		// values to clear to
+		float clearColor[4];
+		float clearDepth;
+		int clearStencil;
+		
 		// the shader program
 		GLuint shaderProgram;
 		

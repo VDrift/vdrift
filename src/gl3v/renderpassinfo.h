@@ -15,6 +15,9 @@ struct RealtimeExportPassInfo
 	bool clearColor;
 	bool clearDepth;
 	bool clearStencil;
+	std::vector <float> clearColorValue;
+	float clearDepthValue;
+	int clearStencilValue;
 	std::vector <std::string> drawGroups;
 	
 	std::map <std::string, std::string> userDefinedFields;
@@ -108,6 +111,9 @@ struct RealtimeExportPassInfo
 		_SERIALIZE_(s,clearColor);
 		_SERIALIZE_(s,clearDepth);
 		_SERIALIZE_(s,clearStencil);
+		_SERIALIZE_(s,clearColorValue);
+		_SERIALIZE_(s,clearDepthValue);
+		_SERIALIZE_(s,clearStencilValue);
 		_SERIALIZE_(s,drawGroups);
 		_SERIALIZE_(s,userDefinedFields);
 		_SERIALIZE_(s,vertexShader);

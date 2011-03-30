@@ -88,6 +88,9 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 	
 	// clear
 	// we do this here so our write masks will have already been applied
+	gl.ClearColor(clearColor[0],clearColor[1],clearColor[2],clearColor[3]);
+	gl.ClearDepth(clearDepth);
+	gl.ClearStencil(clearStencil);
 	gl.Clear(clearMask);
 
 	// apply default uniforms
@@ -361,6 +364,20 @@ bool RenderPass::initialize(int passCount,
 	clearMask |= config.clearColor ? GL_COLOR_BUFFER_BIT : 0;
 	clearMask |= config.clearDepth ? GL_DEPTH_BUFFER_BIT : 0;
 	clearMask |= config.clearStencil ? GL_STENCIL_BUFFER_BIT : 0;
+	
+	// what values to clear to when we clear
+	if (config.clearColorValue.size() == 4)
+	{
+		for (int i = 0; i < 4; i++)
+			clearColor[i] = config.clearColorValue[i];
+	}
+	else
+	{
+		for (int i = 0; i < 4; i++)
+			clearColor[i] = 0;
+	}
+	clearDepth = config.clearDepthValue;
+	clearStencil = config.clearStencilValue;
 	
 	// remember which draw groups we're interested in
 	for (std::vector <std::string>::const_iterator i = config.drawGroups.begin(); i != config.drawGroups.end(); i++)
@@ -679,7 +696,7 @@ bool RenderPass::createFramebufferObject(GLWrapper & gl, unsigned int w, unsigne
 			format = GL_RGBA;
 		else if (formatstr.find("GL_RG") == 0)
 			format = GL_RG;
-		else if (formatstr.find("GL_RED") == 0)
+		else if (formatstr.find("GL_R") == 0)
 			format = GL_RED;
 		else if (formatstr.find("GL_DEPTH_COMPONENT") == 0)
 			format = GL_DEPTH_COMPONENT;
