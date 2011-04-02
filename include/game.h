@@ -83,6 +83,7 @@ private:
 	void UpdateTrackMap();
 	void LoadingScreen(float progress, float max, bool drawGui, const std::string & optionalText, float x, float y);
 	void ProcessNewSettings();
+	bool AssignControls();
 	void RedisplayControlPage();
 	void LoadControlsIntoGUIPage(const std::string & pagename);
 	void UpdateForceFeedback(float dt);

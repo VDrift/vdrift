@@ -47,9 +47,9 @@ public:
 		enum TYPE
 		{
 			KEY,
-				JOY,
+			JOY,
 			MOUSE,
-				UNKNOWN
+			UNKNOWN
 		} type;
 		
 		bool onetime;
@@ -59,41 +59,46 @@ public:
 		enum JOYAXISTYPE
 		{
 			POSITIVE,
-				NEGATIVE,
+			NEGATIVE,
 			BOTH
 		} joyaxistype;
 		int joybutton;
-		//bool joybuttonlaststate;
+		
 		enum JOYTYPE
 		{
 			JOYAXIS,
-				JOYBUTTON,
+			JOYBUTTON,
 			JOYHAT
 		} joytype;
 		bool joypushdown;
-
+		
 		int keycode;
 		bool keypushdown;
-
+		
 		enum MOUSETYPE
 		{
 			MOUSEBUTTON,
-				MOUSEMOTION
+			MOUSEMOTION
 		} mousetype;
 		int mbutton;
 		enum MOUSEDIRECTION
 		{
 			UP,
-				DOWN,
+			DOWN,
 			LEFT,
-				RIGHT
+			RIGHT
 		} mdir;
 		bool last_mouse_state;
 		bool mouse_push_down;
-
+		
 		float deadzone;
 		float exponent;
 		float gain;
+		
+		const bool IsAnalog() const
+		{
+			return (type == JOY && joytype == JOYAXIS) || (type == MOUSE && mousetype == MOUSEMOTION);
+		}
 		
 		void DebugPrint(std::ostream & out) const
 		{
