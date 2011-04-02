@@ -169,26 +169,45 @@ void GRAPHICS_GL3V::SetupScene(float fov, float new_view_distance, const MATHVEC
 		h);
 	
 	// shadow cameras
-	for (int i = 0; i < 1; i++)
+	for (int i = 0; i < 3; i++)
 	{
-		float shadow_radius = (1<<i)*closeshadow+(i)*20.0; //5,30,60
+		//float shadow_radius = (1<<i)*closeshadow+(i)*20.0; //5,30,60
+		float shadow_radius = (1<<(2-i))*closeshadow+(2-i)*20.0;
 		
 		MATHVECTOR <float, 3> shadowbox(1,1,1);
-		shadowbox = shadowbox * (shadow_radius*sqrt(2.0));
+		//shadowbox = shadowbox * (shadow_radius*sqrt(2.0));
+		shadowbox = shadowbox * (shadow_radius*1.5);
 		MATHVECTOR <float, 3> shadowoffset(0,0,-1);
 		shadowoffset = shadowoffset * shadow_radius;
 		(-cam_rotation).RotateVector(shadowoffset);
-		//shadowbox[2] += 60.0;
+		if (i == 2)
+			shadowbox[2] += 25.0;
+		
+		// snap the shadow camera's location to shadow map texels
+		const float shadowMapResolution = 512;
+		float snapToGridSize = 2.f*shadowbox[0]/shadowMapResolution;
+		MATHVECTOR <float, 3> shadowPosition = cam_position+shadowoffset;
+		MATHVECTOR <float, 3> cameraSpaceShadowPosition = shadowPosition;
+		sunDirection.RotateVector(cameraSpaceShadowPosition);
+		for (int n = 0; n < 3; n++)
+		{
+			float pos = cameraSpaceShadowPosition[n];
+			float gridpos = pos / snapToGridSize;
+			gridpos = floor(gridpos);
+			cameraSpaceShadowPosition[n] = gridpos*snapToGridSize;
+		}
+		(-sunDirection).RotateVector(cameraSpaceShadowPosition);
+		shadowPosition = cameraSpaceShadowPosition;
 		
 		std::string suffix = UTILS::tostr(i+1);
 	
 		CameraMatrices & shadowcam = setCameraOrthographic("shadow"+suffix,
-			cam_position+shadowoffset,
+			shadowPosition,
 			sunDirection,
 			-shadowbox,
 			shadowbox);
 		
-		std::string matrixName = "shadowMatrix"+suffix;
+		std::string matrixName = "shadowMatrix";
 		
 		// create and send shadow reconstruction matrices
 		// the reconstruction matrix should transform from view to world, then from world to shadow view, then from shadow view to shadow clip space
@@ -206,7 +225,19 @@ void GRAPHICS_GL3V::SetupScene(float fov, float new_view_distance, const MATHVEC
 		std::cout << matrixName << ":" << std::endl;
 		shadowReconstruction.DebugPrint(std::cout);*/
 		
-		renderer.setGlobalUniform(RenderUniformEntry(stringMap.addStringId(matrixName), shadowReconstruction.GetArray(),16));
+		//renderer.setGlobalUniform(RenderUniformEntry(stringMap.addStringId(matrixName), shadowReconstruction.GetArray(),16));
+
+		// examine the user-defined fields to find out which shadow matrix to send to a pass
+		std::vector <StringId> passes = renderer.getPassNames();
+		for (std::vector <StringId>::const_iterator i = passes.begin(); i != passes.end(); i++)
+		{
+			std::map <std::string, std::string> fields = renderer.getUserDefinedFields(*i);
+			std::map <std::string, std::string>::const_iterator field = fields.find(matrixName);
+			if (field != fields.end() && field->second == suffix)
+			{
+				renderer.setPassUniform(*i, RenderUniformEntry(stringMap.addStringId(matrixName), shadowReconstruction.GetArray(),16));
+			}
+		}
 	}
 	
 	// send cameras to passes
@@ -245,7 +276,7 @@ void GRAPHICS_GL3V::SetupScene(float fov, float new_view_distance, const MATHVEC
 	float reflectedLightColor[4];
 	for (int i = 0; i < 3; i++)
 		reflectedLightColor[i] = 1.0;
-	reflectedLightColor[3] = 1.0;
+	reflectedLightColor[4] = 1.;
 	renderer.setGlobalUniform(RenderUniformEntry(stringMap.addStringId("reflectedLightColor"), reflectedLightColor, 4));
 	
 	// set the ambient strength
@@ -253,7 +284,7 @@ void GRAPHICS_GL3V::SetupScene(float fov, float new_view_distance, const MATHVEC
 	float ambientLightColor[4];
 	for (int i = 0; i < 3; i++)
 		ambientLightColor[i] = 1.5;
-	ambientLightColor[3] = 1.0;
+	ambientLightColor[4] = 1.;
 	renderer.setGlobalUniform(RenderUniformEntry(stringMap.addStringId("ambientLightColor"), ambientLightColor, 4));
 	
 	// set the sun strength
@@ -261,7 +292,7 @@ void GRAPHICS_GL3V::SetupScene(float fov, float new_view_distance, const MATHVEC
 	float directionalLightColor[4];
 	for (int i = 0; i < 3; i++)
 		directionalLightColor[i] = 1.4;
-	directionalLightColor[3] = 1.0;
+	directionalLightColor[4] = 1.;
 	renderer.setGlobalUniform(RenderUniformEntry(stringMap.addStringId("directionalLightColor"), directionalLightColor, 4));
 }
 
