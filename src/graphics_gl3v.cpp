@@ -168,6 +168,16 @@ void GRAPHICS_GL3V::SetupScene(float fov, float new_view_distance, const MATHVEC
 		w,
 		h);
 	
+	// create a camera for 3d ui elements that has a fixed FOV
+	setCameraPerspective("ui3d",
+		cam_position,
+		cam_rotation,
+		45,
+		nearDistance,
+		new_view_distance,
+		w,
+		h);
+	
 	// shadow cameras
 	for (int i = 0; i < 3; i++)
 	{
