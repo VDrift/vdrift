@@ -8,7 +8,7 @@
 #include "macros.h"
 #include <iostream>
 
-class CONFIG;
+class PTree;
 
 struct CARSUSPENSIONINFO
 {
@@ -86,9 +86,8 @@ public:
 		return true;
 	}
 
-	static bool LoadSuspension(
-		const CONFIG & cfg,
-		const std::string & wheel,
+	static bool Load(
+		const PTree & cfg_wheel,
 		CARSUSPENSION *& suspension,
 		std::ostream & error);
 

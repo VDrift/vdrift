@@ -26,8 +26,8 @@
 #endif
 
 class MODEL;
-class CONFIG;
 class COLLISION_WORLD;
+class PTree;
 class btMultiSphereShape;
 
 class CARDYNAMICS : public btActionInterface
@@ -40,7 +40,7 @@ public:
 	~CARDYNAMICS();
 	
 	bool Load(
-		const CONFIG & cfg,
+		const PTree & cfg,
 		const btVector3 & size,
 		const btVector3 & center,
 		const btVector3 & position,

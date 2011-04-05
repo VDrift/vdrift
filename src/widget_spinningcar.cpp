@@ -1,6 +1,6 @@
 #include "widget_spinningcar.h"
 #include "car.h"
-#include "config.h"
+#include "cfg/ptree.h"
 
 WIDGET_SPINNINGCAR::WIDGET_SPINNINGCAR():
 	errptr(0),
@@ -203,12 +203,14 @@ void WIDGET_SPINNINGCAR::Load(SCENENODE & parent)
 	SCENENODE & carnoderef = GetCarNode(parent);
 	car.push_back(CAR());
 	
-	CONFIG carconf;
 	std::string partspath = "carparts";
 	std::string cardir = carname.substr(0, carname.rfind("/"));
 	std::string carpath = "cars/"+cardir;
 	std::string carconfpath = data+"/cars/"+carname;
-	if (!carconf.Load(carconfpath))
+	
+	PTree carconf;
+	file_open_basic fopen(data+"/"+carpath, data+"/"+partspath);
+	if (!read_ini(carname.substr(carname.rfind("/")+1), fopen, carconf))
 	{
 		*errptr << "Error loading car's configfile: " << carconfpath << std::endl;
 		return;

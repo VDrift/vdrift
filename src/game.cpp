@@ -3,7 +3,6 @@
 #include "definitions.h"
 #include "joepack.h"
 #include "matrix4.h"
-#include "config.h"
 #include "carwheelposition.h"
 #include "numprocessors.h"
 #include "parallel_task.h"
@@ -14,6 +13,7 @@
 #include "utils.h"
 #include "graphics_fallback.h"
 #include "graphics_gl3v.h"
+#include "cfg/ptree.h"
 
 #include <fstream>
 #include <string>
@@ -450,7 +450,8 @@ bool GAME::ParseArguments(std::list <std::string> & args)
 	{
 		pathmanager.Init(info_output, error_output);
 		PERFORMANCE_TESTING perftest;
-		perftest.Test(pathmanager.GetCarPath(), argmap["-cartest"], info_output, error_output);
+		perftest.Test(pathmanager.GetCarPath(), pathmanager.GetSharedCarPath(), 
+			argmap["-cartest"], info_output, error_output);
 		continue_game = false;
 	}
 	arghelp["-cartest CAR"] = "Run car performance testing on given CAR.";
@@ -1850,27 +1851,33 @@ bool GAME::LoadCar(
 	bool islocal, bool isai, const std::string & carfile)
 {
 	std::string partspath = pathmanager.GetCarSharedDir();
-	std::string carspath = pathmanager.GetDataPath()+"/"+pathmanager.GetCarDir();
-	std::string carpath = "/cars/"+carname.substr(0, carname.find("/"));
-	std::string cfgpath = carspath+"/"+carname;
+	std::string cardir = pathmanager.GetCarDir()+"/"+carname.substr(0, carname.find("/"));
+	std::string carpath = pathmanager.GetDataPath()+"/"+cardir;
 	
-	CONFIG carconf;
-	if (carfile.empty()) //if no file is passed in, then load it from disk
+	PTree carconf;
+	if (carfile.empty())
 	{
-		if (!carconf.Load(cfgpath)) return false;
+		//if no file is passed in, then load it from disk
+		file_open_basic fopen(carpath, partspath);
+		if (!read_ini(carname.substr(carname.find("/")+1), fopen, carconf))
+		{
+			error_output << "Failed to load " << carname << std::endl;
+			return false;
+		}
 	}
 	else
 	{
 		std::stringstream carstream(carfile);
-		if (!carconf.Load(carstream)) return false;
+		read_ini(carstream, carconf);
 	}
 	
+	//write_inf(carconf, std::cerr);
 	cars.push_back(CAR());
 	CAR & car = cars.back();
 	bool loaddriver = true;
 	
 	if (!car.LoadGraphics(
-		carconf, carpath, carname, partspath,
+		carconf, cardir, carname, partspath,
 		carcolor, carpaint, settings.GetTextureSize(), settings.GetAnisotropy(),
 		settings.GetCameraBounce(), loaddriver, debugmode,
 		textures, models, info_output, error_output))
@@ -1880,13 +1887,13 @@ bool GAME::LoadCar(
 		return false;
 	}
 	
-	if(sound.Enabled() && !car.LoadSounds(carpath, carname, sound.GetDeviceInfo(), sounds, info_output, error_output))
+	if(sound.Enabled() && !car.LoadSounds(cardir, carname, sound.GetDeviceInfo(), sounds, info_output, error_output))
 	{
 		return false;
 	}
 	
 	if (!car.LoadPhysics(
-		carconf, carpath,
+		carconf, cardir,
 		start_position, start_orientation,
 		settings.GetABS() || isai, settings.GetTCS() || isai,
 		models,  collision,

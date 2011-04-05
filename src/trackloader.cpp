@@ -4,7 +4,6 @@
 #include "textureinfo.h"
 #include "modelmanager.h"
 #include "tobullet.h"
-#include "config.h"
 #include "k1999.h"
 
 static void operator >> (std::istream & lhs, std::vector<std::string> & rhs)
@@ -193,15 +192,13 @@ bool TRACK::LOADER::BeginObjectLoad()
 	list = true;
 	packload = pack.LoadPack(objectpath + "/objects.jpk");
 	
-	std::string objectlist = objectpath + "/objects.txt";
-	objectfile.open(objectlist.c_str());
-	if (objectfile.good())
+	if (Begin())
 	{
 		list = false;
-		return Begin();
+		return true;
 	}
 	
-	objectlist = objectpath + "/list.txt";
+	std::string objectlist = objectpath + "/list.txt";
 	objectfile.open(objectlist.c_str());
 	if (!objectfile.good())
 	{
@@ -227,14 +224,12 @@ std::pair<bool, bool> TRACK::LOADER::ContinueObjectLoad()
 
 bool TRACK::LOADER::Begin()
 {
-	std::string path = objectpath + "/objects.txt";
-	std::ifstream file(path.c_str());
-	if (file)
+	file_open_basic fopen(objectpath, model_manager.GetSharedPath());
+	if (read_ini("objects.txt", fopen, track_config))
 	{
-		read_ini(file, track_config);
-		//write_ini(track_config, std::cerr);
+		//write_inf(track_config, std::cerr);
 		nodes = 0;
-		if (track_config.get("node", nodes))
+		if (track_config.get("object", nodes))
 		{
 			node_it = nodes->begin();
 			numobjects = nodes->size();
@@ -420,39 +415,8 @@ bool TRACK::LOADER::LoadShape(const PTree & cfg, const MODEL & model, BODY & bod
 	return true;
 }
 
-TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const std::string & name)
+TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const PTree & cfg)
 {
-	body_iterator ib = bodies.find(name);
-	if(ib != bodies.end())
-	{
-		return ib;
-	}
-	
-	const PTree * sec = 0;
-	if (!track_config.get("body." + name, sec))
-	{
-		// external config in track path
-		std::string path = objectpath + "/" + name;
-		std::ifstream file(path.c_str());
-		if (!file.good())
-		{
-			// external config in shared path
-			path = model_manager.GetSharedPath() + "/" + name;
-			file.open(path.c_str());
-			if (!file.good())
-			{
-				std::cerr << "body." << name << " not found." << std::endl; 
-				std::cerr << "External config: " << path << " not found." << std::endl;
-				return ib;
-			}
-		}
-		
-		PTree & bodysec = track_config.set("body." + name);
-		read_ini(file, bodysec);
-		//write_ini(bodysec, std::cerr);
-		sec = &bodysec;
-	}
-	
 	BODY body;
 	std::string texture_name;
 	std::string model_name;
@@ -463,47 +427,60 @@ TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const std::string & name)
 	bool doublesided = false;
 	bool isashadow = false;
 	
-	sec->get("texture", texture_name, error_output);
-	sec->get("model", model_name, error_output);
-	sec->get("clampuv", clampuv);
-	sec->get("mipmap", mipmap);
-	sec->get("skybox", skybox);
-	sec->get("alphablend", alphablend);
-	sec->get("doublesided", doublesided);
-	sec->get("isashadow", isashadow);
-	sec->get("nolighting", body.nolighting);
+	cfg.get("texture", texture_name, error_output);
+	cfg.get("model", model_name, error_output);
+	cfg.get("clampuv", clampuv);
+	cfg.get("mipmap", mipmap);
+	cfg.get("skybox", skybox);
+	cfg.get("alphablend", alphablend);
+	cfg.get("doublesided", doublesided);
+	cfg.get("isashadow", isashadow);
+	cfg.get("nolighting", body.nolighting);
 	
 	std::vector<std::string> texture_names(3);
 	std::stringstream s(texture_name);
 	s >> texture_names;
 	
-	// set relative path for models and textures, ugly
-	size_t npos = name.rfind("/");
-	if (npos < name.length())
+	// set relative path for models and textures, ugly hack
+	// need to identificate body references
+	// begin ugly hack
+	std::string name;
+	if (cfg.value() == "body" && cfg.parent())
 	{
-		std::string relative_path = name.substr(0, npos+1);
-		model_name = relative_path + model_name;
-		texture_names[0] = relative_path + texture_names[0];
-		if (!texture_names[1].empty()) texture_names[1] = relative_path + texture_names[1];
-		if (!texture_names[2].empty()) texture_names[2] = relative_path + texture_names[2];
+		name = cfg.parent()->value();
 	}
+	else
+	{
+		name = cfg.value();
+		size_t npos = name.rfind("/");
+		if (npos < name.length())
+		{
+			std::string rel_path = name.substr(0, npos+1);
+			model_name = rel_path + model_name;
+			texture_names[0] = rel_path + texture_names[0];
+			if (!texture_names[1].empty()) texture_names[1] = rel_path + texture_names[1];
+			if (!texture_names[2].empty()) texture_names[2] = rel_path + texture_names[2];
+		}
+	}
+	// end ugly hack
 	
 	if (dynamic_shadows && isashadow)
 	{
-		return ib;
+		return bodies.end();
 	}
 	
 	if (!LoadModel(model_name))
 	{
-		return ib;
+		info_output << "Failed to load body " << cfg.value() << " model " << model_name << std::endl;
+		return bodies.end();
 	}
 	
 	MODEL & model = *data.models.back();
 	
-	body.collidable = sec->get("mass", body.mass);
+	body.collidable = cfg.get("mass", body.mass);
 	if (body.collidable)
 	{
-		LoadShape(*sec, model, body);
+		LoadShape(cfg, model, body);
 	}
 	
 	// load textures
@@ -517,7 +494,8 @@ TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const std::string & name)
 	std::tr1::shared_ptr<TEXTURE> diffuse;
 	if (!texture_manager.Load(objectdir, texture_names[0], texinfo, diffuse))
 	{
-		return ib;
+		info_output << "Failed to load body " << cfg.value() << " texture " << texture_names[0] << std::endl;
+		return bodies.end();
 	}
 	
 	std::tr1::shared_ptr<TEXTURE> miscmap1;
@@ -578,15 +556,16 @@ void TRACK::LOADER::AddBody(SCENENODE & scene, const BODY & body)
 
 bool TRACK::LOADER::LoadNode(const PTree & sec)
 {
-	std::string bodyname;
-	if (!sec.get("body", bodyname, error_output))
+	const PTree * sec_body;
+	if (!sec.get("body", sec_body, error_output))
 	{
 		return false;
 	}
 	
-	body_iterator ib = LoadBody(bodyname);
+	body_iterator ib = LoadBody(*sec_body);
 	if (ib == bodies.end())
 	{
+		//info_output << "Object " << sec.value() << " failed to load body" << std::endl;
 		return true;
 	}
 	
@@ -910,29 +889,29 @@ std::pair<bool, bool> TRACK::LOADER::ContinueOld()
 bool TRACK::LOADER::LoadParameters()
 {
 	std::string parampath = trackpath + "/track.txt";
-	CONFIG param;
-	if (!param.Load(parampath))
+	std::ifstream file(parampath.c_str());
+	if (!file.good())
 	{
 		error_output << "Can't find track configfile: " << parampath << std::endl;
 		return false;
 	}
 	
-	CONFIG::const_iterator section;
-	param.GetSection("", section);
+	PTree param;
+	read_ini(file, param);
 	
-	param.GetParam(section, "vertical tracking skyboxes", data.vertical_tracking_skyboxes);
+	param.get("vertical tracking skyboxes", data.vertical_tracking_skyboxes);
 	
 	int sp_num = 0;
 	std::stringstream sp_name;
 	sp_name << "start position " << sp_num;
 	std::vector<float> f3(3);
-	while(param.GetParam(section, sp_name.str(), f3))
+	while(param.get(sp_name.str(), f3))
 	{
 		std::stringstream so_name;
 		so_name << "start orientation " << sp_num;
 		QUATERNION <float> q;
 		std::vector <float> angle(3, 0.0);
-		if(param.GetParam(section, so_name.str(), angle, error_output))
+		if(param.get(so_name.str(), angle, error_output))
 		{
 			q.SetEulerZYX(angle[0] * M_PI/180, angle[1] * M_PI/180, angle[2] * M_PI/180);
 		}
@@ -960,27 +939,32 @@ bool TRACK::LOADER::LoadParameters()
 bool TRACK::LOADER::LoadSurfaces()
 {
 	std::string path = trackpath + "/surfaces.txt";
-	
-	CONFIG param;
-	if (!param.Load(path))
+	std::ifstream file(path.c_str());
+	if (!file.good())
 	{
 		info_output << "Can't find surfaces configfile: " << path << std::endl;
 		return false;
 	}
 	
-	for (CONFIG::const_iterator section = param.begin(); section != param.end(); ++section)
+	PTree param;
+	read_ini(file, param);
+	for (PTree::const_iterator is = param.begin(); is != param.end(); ++is)
 	{
-		if (section->first.find("surface") != 0) continue;
+		if (is->first.find("surface") != 0)
+		{
+			continue;
+		}
 		
+		const PTree & surf_cfg = is->second;
 		data.surfaces.push_back(TRACKSURFACE());
 		TRACKSURFACE & surface = data.surfaces.back();
 
 		std::string type;
-		param.GetParam(section, "Type", type);
+		surf_cfg.get("Type", type);
 		surface.setType(type);
 		
 		float temp = 0.0;
-		param.GetParam(section, "BumpWaveLength", temp, error_output);
+		surf_cfg.get("BumpWaveLength", temp, error_output);
 		if (temp <= 0.0)
 		{
 			error_output << "Surface Type = " << type << " has BumpWaveLength = 0.0 in " << path << std::endl;
@@ -988,19 +972,19 @@ bool TRACK::LOADER::LoadSurfaces()
 		}
 		surface.bumpWaveLength = temp;
 		
-		param.GetParam(section, "BumpAmplitude", temp, error_output);
+		surf_cfg.get("BumpAmplitude", temp, error_output);
 		surface.bumpAmplitude = temp;
 		
-		param.GetParam(section, "FrictionNonTread", temp, error_output);
+		surf_cfg.get("FrictionNonTread", temp, error_output);
 		surface.frictionNonTread = temp;
 		
-		param.GetParam(section, "FrictionTread", temp, error_output);
+		surf_cfg.get("FrictionTread", temp, error_output);
 		surface.frictionTread = temp;
 		
-		param.GetParam(section, "RollResistanceCoefficient", temp, error_output);
+		surf_cfg.get("RollResistanceCoefficient", temp, error_output);
 		surface.rollResistanceCoefficient = temp;
 		
-		param.GetParam(section, "RollingDrag", temp, error_output);
+		surf_cfg.get("RollingDrag", temp, error_output);
 		surface.rollingDrag = temp;
 	}
 	info_output << "Loaded surfaces file, " << data.surfaces.size() << " surfaces." << std::endl;
@@ -1013,9 +997,8 @@ bool TRACK::LOADER::LoadRoads()
 	data.roads.clear();
 	
 	std::string roadpath = trackpath + "/roads.trk";
-	std::ifstream trackfile;
-	trackfile.open(roadpath.c_str());
-	if (!trackfile)
+	std::ifstream trackfile(roadpath.c_str());
+	if (!trackfile.good())
 	{
 		error_output << "Error opening roads file: " << trackpath + "/roads.trk" << std::endl;
 		return false;
@@ -1091,31 +1074,30 @@ void TRACK::LOADER::ReverseRoads()
 bool TRACK::LOADER::LoadLapSequence()
 {
 	std::string parampath = trackpath + "/track.txt";
-	CONFIG trackconfig;
-	if (!trackconfig.Load(parampath))
+	std::ifstream file(parampath.c_str());
+	if (!file.good())
 	{
 		error_output << "Can't find track configfile: " << parampath << std::endl;
 		return false;
 	}
 	
-	CONFIG::const_iterator section;
-	trackconfig.GetSection("", section);
-	trackconfig.GetParam(section, "cull faces", data.cull);
+	PTree param;
+	read_ini(file, param);
+	param.get("cull faces", data.cull);
 
 	int lapmarkers = 0;
-	if (trackconfig.GetParam(section, "lap sequences", lapmarkers))
+	if (param.get("lap sequences", lapmarkers))
 	{
 		for (int l = 0; l < lapmarkers; l++)
 		{
 			std::vector<float> lapraw(3);
 			std::stringstream lapname;
 			lapname << "lap sequence " << l;
-			trackconfig.GetParam(section, lapname.str(), lapraw);
+			param.get(lapname.str(), lapraw);
 			int roadid = lapraw[0];
 			int patchid = lapraw[1];
 
 			//info_output << "Looking for lap sequence: " << roadid << ", " << patchid << endl;
-
 			int curroad = 0;
 			for (std::list <ROADSTRIP>::iterator i = data.roads.begin(); i != data.roads.end(); ++i)
 			{

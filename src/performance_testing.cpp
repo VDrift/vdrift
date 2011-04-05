@@ -1,7 +1,7 @@
 #include "performance_testing.h"
 #include "tracksurface.h"
 #include "carinput.h"
-#include "config.h"
+#include "cfg/ptree.h"
 
 #include <vector>
 #include <iostream>
@@ -31,15 +31,17 @@ PERFORMANCE_TESTING::PERFORMANCE_TESTING()
 void PERFORMANCE_TESTING::Test(
 	const std::string & carpath,
 	const std::string & carname,
+	const std::string & partspath, 
 	std::ostream & info_output,
 	std::ostream & error_output)
 {
 	info_output << "Beginning car performance test on " << carname << std::endl;
+	const std::string carfile = carpath+"/"+carname+"/"+carname+".car";
 
 	//load the car dynamics
-	std::string carfile = carpath+"/"+carname+"/"+carname+".car";
-	CONFIG cfg;
-	if (!cfg.Load(carfile))
+	PTree cfg;
+	file_open_basic fopen(carpath+"/"+carname, partspath);
+	if (!read_ini(carname+".car", fopen, cfg))
 	{
 		error_output << "Error loading car configuration file: " << carfile << std::endl;
 		return;

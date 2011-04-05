@@ -1,7 +1,7 @@
 #include "carsuspension.h"
 #include "coordinatesystems.h"
 #include "tobullet.h"
-#include "config.h"
+#include "cfg/ptree.h"
 
 CARSUSPENSIONINFO::CARSUSPENSIONINFO() :
 	spring_constant(50000.0),
@@ -322,17 +322,13 @@ private:
 };
 
 // 1-9 points
-static void LoadPoints(
-	const CONFIG & c,
-	const CONFIG::const_iterator & it,
-	const std::string & name,
-	LINEARINTERP<btScalar> & points)
+static void LoadPoints(const PTree & cfg, const std::string & name, LINEARINTERP<btScalar> & points)
 {
 	int i = 1;
 	std::stringstream s;
 	s << std::setw(1) << i;
 	std::vector<btScalar> point(2);
-	while(c.GetParam(it, name+s.str(), point) && i < 10)
+	while(cfg.get(name+s.str(), point) && i < 10)
 	{
 		s.clear();
 		s << std::setw(1) << ++i;
@@ -341,59 +337,49 @@ static void LoadPoints(
 }
 
 static bool LoadCoilover(
-	const CONFIG & c,
-	const CONFIG::const_iterator & iwheel,
+	const PTree & cfg,
 	CARSUSPENSIONINFO & info,
 	std::ostream & error_output)
 {
-	std::string coilovername;
-	if (!c.GetParam(iwheel, "coilover", coilovername, error_output)) return false;
-	
-	CONFIG::const_iterator it;
-	if (!c.GetSection(coilovername, it, error_output)) return false;
-	if (!c.GetParam(it, "spring-constant", info.spring_constant, error_output)) return false;
-	if (!c.GetParam(it, "bounce", info.bounce, error_output)) return false;
-	if (!c.GetParam(it, "rebound", info.rebound, error_output)) return false;
-	if (!c.GetParam(it, "travel", info.travel, error_output)) return false;
-	if (!c.GetParam(it, "anti-roll", info.anti_roll, error_output)) return false;
-	LoadPoints(c, it, "damper-factor-", info.damper_factors);
-	LoadPoints(c, it, "spring-factor-", info.spring_factors);
-	
+	if (!cfg.get("spring-constant", info.spring_constant, error_output)) return false;
+	if (!cfg.get("bounce", info.bounce, error_output)) return false;
+	if (!cfg.get("rebound", info.rebound, error_output)) return false;
+	if (!cfg.get("travel", info.travel, error_output)) return false;
+	if (!cfg.get("anti-roll", info.anti_roll, error_output)) return false;
+	LoadPoints(cfg, "damper-factor-", info.damper_factors);
+	LoadPoints(cfg, "spring-factor-", info.spring_factors);
 	return true;
 }
 
-bool CARSUSPENSION::LoadSuspension(
-	const CONFIG & c,
-	const std::string & wheel,
+bool CARSUSPENSION::Load(
+	const PTree & cfg_wheel,
 	CARSUSPENSION *& suspension,
 	std::ostream & error_output)
 {
 	CARSUSPENSIONINFO info;
 	std::vector<btScalar> p(3);
-	std::string s_type = "basic";
-	
-	CONFIG::const_iterator iwheel;
-	if (!c.GetSection(wheel, iwheel ,error_output)) return false;
-	if (!LoadCoilover(c, iwheel, info, error_output)) return false;
-	if (!c.GetParam(iwheel, "position", p, error_output)) return false;
-	if (!c.GetParam(iwheel, "camber", info.camber, error_output)) return false;
-	if (!c.GetParam(iwheel, "caster", info.caster, error_output)) return false;
-	if (!c.GetParam(iwheel, "toe", info.toe, error_output)) return false;
-	c.GetParam(iwheel, "steering", info.max_steering_angle);
-	c.GetParam(iwheel, "ackermann", info.ackermann);
+	if (!cfg_wheel.get("position", p, error_output)) return false;
+	if (!cfg_wheel.get("camber", info.camber, error_output)) return false;
+	if (!cfg_wheel.get("caster", info.caster, error_output)) return false;
+	if (!cfg_wheel.get("toe", info.toe, error_output)) return false;
+	cfg_wheel.get("steering", info.max_steering_angle);
+	cfg_wheel.get("ackermann", info.ackermann);
 	
 	COORDINATESYSTEMS::ConvertV2toV1(p[0], p[1], p[2]);
 	info.extended_position.setValue(p[0], p[1], p[2]);
 	
-	if (c.GetParam(iwheel, "macpherson-strut", s_type))
+	const PTree * cfg_coil;
+	if (!cfg_wheel.get("coilover", cfg_coil, error_output)) return false;
+	if (!LoadCoilover(*cfg_coil, info, error_output)) return false;
+	
+	const PTree * cfg_susp;
+	if (cfg_wheel.get("macpherson-strut", cfg_susp))
 	{
 		std::vector<btScalar> strut_top(3), strut_end(3), hinge(3);
-		CONFIG::const_iterator iwb;
 		
-		if (!c.GetSection(s_type, iwb, error_output)) return false;
-		if (!c.GetParam(iwb, "hinge", hinge, error_output)) return false;
-		if (!c.GetParam(iwb, "strut-top", strut_top, error_output)) return false;
-		if (!c.GetParam(iwb, "strut-end", strut_end, error_output)) return false;
+		if (!cfg_susp->get("hinge", hinge, error_output)) return false;
+		if (!cfg_susp->get("strut-top", strut_top, error_output)) return false;
+		if (!cfg_susp->get("strut-end", strut_end, error_output)) return false;
 		
 		COORDINATESYSTEMS::ConvertV2toV1(hinge[0], hinge[1], hinge[2]);
 		COORDINATESYSTEMS::ConvertV2toV1(strut_top[0], strut_top[1], strut_top[2]);
@@ -403,19 +389,17 @@ bool CARSUSPENSION::LoadSuspension(
 		mps->Init(info, strut_top, strut_end, hinge);
 		suspension = mps;
 	}
-/*	else if (c.GetParam(iwheel, "double-wishbone",  s_type))
+/*	else if (cfg_wheel.get("double-wishbone", cfg_susp))
 	{
 		std::vector<btScalar> up_ch0(3), up_ch1(3), lo_ch0(3), lo_ch1(3), up_hub(3), lo_hub(3);
-		CONFIG::const_iterator iwb;
-
-		if (!c.GetSection(s_type, iwb, error_output)) return false;
-		if (!c.GetParam(iwb, "upper-chassis-front", up_ch0, error_output)) return false;
-		if (!c.GetParam(iwb, "upper-chassis-rear", up_ch1, error_output)) return false;
-		if (!c.GetParam(iwb, "lower-chassis-front", lo_ch0, error_output)) return false;
-		if (!c.GetParam(iwb, "lower-chassis-rear", lo_ch1, error_output)) return false;
-		if (!c.GetParam(iwb, "upper-hub", up_hub, error_output)) return false;
-		if (!c.GetParam(iwb, "lower-hub", lo_hub, error_output)) return false;
-
+		
+		if (!cfg_susp->get("upper-chassis-front", up_ch0, error_output)) return false;
+		if (!cfg_susp->get("upper-chassis-rear", up_ch1, error_output)) return false;
+		if (!cfg_susp->get("lower-chassis-front", lo_ch0, error_output)) return false;
+		if (!cfg_susp->get("lower-chassis-rear", lo_ch1, error_output)) return false;
+		if (!cfg_susp->get("upper-hub", up_hub, error_output)) return false;
+		if (!cfg_susp->get("lower-hub", lo_hub, error_output)) return false;
+		
 		COORDINATESYSTEMS::ConvertV2toV1(up_ch0[0], up_ch0[1], up_ch0[2]);
 		COORDINATESYSTEMS::ConvertV2toV1(up_ch1[0], up_ch1[1], up_ch1[2]);
 		COORDINATESYSTEMS::ConvertV2toV1(lo_ch0[0], lo_ch0[1], lo_ch0[2]);
@@ -429,12 +413,11 @@ bool CARSUSPENSION::LoadSuspension(
 	}*/
 	else
 	{
-		CONFIG::const_iterator ih;
 		std::vector<btScalar> ch(3, 0), wh(3, 0);
-		if (!c.GetParam(iwheel, "hinge", s_type, error_output)) return false;
-		if (!c.GetSection(s_type, ih, error_output)) return false;
-		if (!c.GetParam(ih, "chassis", ch, error_output)) return false;
-		if (!c.GetParam(ih, "wheel", wh, error_output)) return false;
+		
+		if (!cfg_wheel.get("hinge", cfg_susp, error_output)) return false;
+		if (!cfg_susp->get("chassis", ch, error_output)) return false;
+		if (!cfg_susp->get("wheel", wh, error_output)) return false;
 		
 		COORDINATESYSTEMS::ConvertV2toV1(ch[0], ch[1], ch[2]);
 		COORDINATESYSTEMS::ConvertV2toV1(wh[0], wh[1], wh[2]);

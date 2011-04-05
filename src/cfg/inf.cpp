@@ -34,7 +34,7 @@ static void read_inf(std::istream & in, PTree & node, bool child)
 		line = line.substr(begin, end);
 		if (line[0] == '{' && name.length())
 		{
-			read_inf(in, node.set(name), true);
+			read_inf(in, node.set(name, PTree()), true);
 			continue;
 		}
 		

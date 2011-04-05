@@ -1,5 +1,5 @@
 #include "carengine.h"
-#include "config.h"
+#include "cfg/ptree.h"
 #include "linearinterp.h"
 #include "coordinatesystems.h"
 
@@ -17,21 +17,19 @@ CARENGINEINFO::CARENGINEINFO():
 	// ctor
 }
 
-bool CARENGINEINFO::Load(const CONFIG & cfg, std::ostream & error_output)
+bool CARENGINEINFO::Load(const PTree & cfg, std::ostream & error_output)
 {
 	std::vector<std::pair<btScalar, btScalar> > torque;
 	std::vector<btScalar> pos(3);
 	
-	CONFIG::const_iterator it;
-	if (!cfg.GetSection("engine", it, error_output)) return false;
-	if (!cfg.GetParam(it, "peak-engine-rpm", redline, error_output)) return false; //used only for the redline graphics
-	if (!cfg.GetParam(it, "rpm-limit", rpm_limit, error_output)) return false;
-	if (!cfg.GetParam(it, "inertia", inertia, error_output)) return false;
-	if (!cfg.GetParam(it, "start-rpm", start_rpm, error_output)) return false;
-	if (!cfg.GetParam(it, "stall-rpm", stall_rpm, error_output)) return false;
-	if (!cfg.GetParam(it, "fuel-consumption", fuel_consumption, error_output)) return false;
-	if (!cfg.GetParam(it, "mass", mass, error_output)) return false;
-	if (!cfg.GetParam(it, "position", pos, error_output)) return false;
+	if (!cfg.get("peak-engine-rpm", redline, error_output)) return false; //used only for the redline graphics
+	if (!cfg.get("rpm-limit", rpm_limit, error_output)) return false;
+	if (!cfg.get("inertia", inertia, error_output)) return false;
+	if (!cfg.get("start-rpm", start_rpm, error_output)) return false;
+	if (!cfg.get("stall-rpm", stall_rpm, error_output)) return false;
+	if (!cfg.get("fuel-consumption", fuel_consumption, error_output)) return false;
+	if (!cfg.get("mass", mass, error_output)) return false;
+	if (!cfg.get("position", pos, error_output)) return false;
 
 	COORDINATESYSTEMS::ConvertV2toV1(pos[0], pos[1], pos[2]);
 	position.setValue(pos[0], pos[1], pos[2]);
@@ -39,7 +37,7 @@ bool CARENGINEINFO::Load(const CONFIG & cfg, std::ostream & error_output)
 	int curve_num = 0;
 	std::vector<btScalar> torque_point(2);
 	std::string torque_str("torque-curve-00");
-	while (cfg.GetParam(it, torque_str, torque_point))
+	while (cfg.get(torque_str, torque_point))
 	{
 		torque.push_back(std::pair<btScalar, btScalar>(torque_point[0], torque_point[1]));
 

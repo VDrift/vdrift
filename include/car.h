@@ -19,6 +19,7 @@ class TEXTUREMANAGER;
 class MODELMANAGER;
 class SOUNDMANAGER;
 class MODEL_JOE03;
+class PTree;
 
 class CAR 
 {
@@ -28,7 +29,7 @@ public:
 	CAR();
 	
 	bool LoadGraphics(
-		const CONFIG & cfg,
+		const PTree & cfg,
 		const std::string & carpath,
 		const std::string & carname,
 		const std::string & partspath,
@@ -53,7 +54,7 @@ public:
 		std::ostream & error_output);
 	
 	bool LoadPhysics(
-		const CONFIG & cfg,
+		const PTree & cfg,
 		const std::string & carpath,
 		const MATHVECTOR <float, 3> & initial_position,
 		const QUATERNION <float> & initial_orientation,
@@ -353,8 +354,7 @@ protected:
 	void UpdateGraphics();
 	
 	bool LoadLight(
-		const CONFIG & cfg,
-		const std::string & name,
+		const PTree & cfg,
 		MODELMANAGER & models,
 		std::ostream & error_output);
 };

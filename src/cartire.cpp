@@ -1,5 +1,5 @@
 #include "cartire.h"
-#include "config.h"
+#include "cfg/ptree.h"
 
 CARTIRE::CARTIRE() :
 	radius(0.3),
@@ -20,11 +20,8 @@ CARTIRE::CARTIRE() :
 	// ctor
 }
 
-bool CARTIRE::LoadTireParameters(const CONFIG & cfg, const std::string & name, std::ostream & error)
+bool CARTIRE::LoadParameters(const PTree & cfg, std::ostream & error)
 {
-	CONFIG::const_iterator it;
-	if (!cfg.GetSection(name, it, error)) return false;
-	
 	//read lateral
 	int numinfile;
 	for (int i = 0; i < 15; i++)
@@ -38,7 +35,7 @@ bool CARTIRE::LoadTireParameters(const CONFIG & cfg, const std::string & name, s
 			numinfile -= 1;
 		std::stringstream st;
 		st << "a" << numinfile;
-		if (!cfg.GetParam(it, st.str(), lateral[i], error)) return false;
+		if (!cfg.get(st.str(), lateral[i], error)) return false;
 	}
 	
 	//read longitudinal, error_output)) return false;
@@ -46,7 +43,7 @@ bool CARTIRE::LoadTireParameters(const CONFIG & cfg, const std::string & name, s
 	{
 		std::stringstream st;
 		st << "b" << i;
-		if (!cfg.GetParam(it, st.str(), longitudinal[i], error)) return false;
+		if (!cfg.get(st.str(), longitudinal[i], error)) return false;
 	}
 	
 	//read aligning, error_output)) return false;
@@ -54,34 +51,30 @@ bool CARTIRE::LoadTireParameters(const CONFIG & cfg, const std::string & name, s
 	{
 		std::stringstream st;
 		st << "c" << i;
-		if (!cfg.GetParam(it, st.str(), aligning[i], error)) return false;
+		if (!cfg.get(st.str(), aligning[i], error)) return false;
 	}
 	
 	std::vector<float> rolling_resistance(3);
-	if (!cfg.GetParam(it, "rolling-resistance", rolling_resistance, error)) return false;
+	if (!cfg.get("rolling-resistance", rolling_resistance, error)) return false;
 	rolling_resistance_linear = rolling_resistance[0];
 	rolling_resistance_quadratic = rolling_resistance[1];
 	
-	if (!cfg.GetParam(it, "tread", tread, error)) return false;
+	if (!cfg.get("tread", tread, error)) return false;
 	
 	return true;
 }
 
 bool CARTIRE::Load(
-	const CONFIG & cfg,
-	const std::string & name,
+	const PTree & cfg,
 	std::ostream & error)
 {
-	std::string type;
+	const PTree * type;
 	std::vector<btScalar> size(3, 0);
-	CONFIG::const_iterator it;
-	if (!cfg.GetSection(name, it, error)) return false;
-	if (!cfg.GetParam(it, "size",size, error)) return false;
-	if (!cfg.GetParam(it, "type", type, error)) return false;
-	if (!LoadTireParameters(cfg, type, error)) return false;
+	if (!cfg.get("size",size, error)) return false;
+	if (!cfg.get("type", type, error)) return false;
+	if (!LoadParameters(*type, error)) return false;
 	SetDimensions(size[0], size[1], size[2]);
 	CalculateSigmaHatAlphaHat();
-	
 	return true;
 }
 
@@ -460,15 +453,15 @@ QT_TEST(tire_test)
 	
 	std::stringstream tire_str;
 	tire_str << tire_param.rdbuf();
-	tire_str << "\n[tire]\nsize = 185,60,14\ntype = tire-touring\n";
+	tire_str << "\nsize = 185,60,14\ntype = tire-touring\n";
 	
-	CONFIG cfg;
-	cfg.Load(tire_str);
+	PTree cfg;
+	read_ini(tire_str, cfg);
 	//cfg.DebugPrint(std::clog);
 	
 	// some sanity tests
 	CARTIRE tire;
-	QT_CHECK(tire.Load(cfg, "tire", error));
+	QT_CHECK(tire.Load(cfg, error));
 	
 	btScalar normal_force = 1000;
 	btScalar friction_coeff = 1;

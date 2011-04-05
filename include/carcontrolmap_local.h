@@ -95,7 +95,7 @@ public:
 		float exponent;
 		float gain;
 		
-		const bool IsAnalog() const
+		bool IsAnalog() const
 		{
 			return (type == JOY && joytype == JOYAXIS) || (type == MOUSE && mousetype == MOUSEMOTION);
 		}

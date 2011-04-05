@@ -1,9 +1,9 @@
 #include "cardynamics.h"
-#include "config.h"
 #include "tracksurface.h"
 #include "coordinatesystems.h"
 #include "collision_world.h"
 #include "model.h"
+#include "cfg/ptree.h"
 
 #if defined(_WIN32) || defined(__APPLE__)
 bool isnan(float number);
@@ -56,18 +56,18 @@ CARDYNAMICS::~CARDYNAMICS()
 }
 
 static bool LoadClutch(
-	const CONFIG & c,
+	const PTree & cfg,
 	CARCLUTCH & clutch,
 	std::ostream & error_output)
 {
 	btScalar sliding, radius, area, max_pressure;
 
-	CONFIG::const_iterator it;
-	if (!c.GetSection("clutch", it, error_output)) return false;
-	if (!c.GetParam(it, "sliding", sliding, error_output)) return false;
-	if (!c.GetParam(it, "radius", radius, error_output)) return false;
-	if (!c.GetParam(it, "area", area, error_output)) return false;
-	if (!c.GetParam(it, "max-pressure", max_pressure, error_output)) return false;
+	const PTree * cfg_clutch;
+	if (!cfg.get("clutch", cfg_clutch, error_output)) return false;
+	if (!cfg_clutch->get("sliding", sliding, error_output)) return false;
+	if (!cfg_clutch->get("radius", radius, error_output)) return false;
+	if (!cfg_clutch->get("area", area, error_output)) return false;
+	if (!cfg_clutch->get("max-pressure", max_pressure, error_output)) return false;
 
 	clutch.SetSlidingFriction(sliding);
 	clutch.SetRadius(radius);
@@ -78,7 +78,7 @@ static bool LoadClutch(
 }
 
 static bool LoadTransmission(
-	const CONFIG & c,
+	const PTree & cfg,
 	CARTRANSMISSION & transmission,
 	std::ostream & error_output)
 {
@@ -86,18 +86,18 @@ static bool LoadTransmission(
 	btScalar ratio;
 	int gears;
 
-	CONFIG::const_iterator it;
-	if (!c.GetSection("transmission", it, error_output)) return false;
-	if (!c.GetParam(it, "gears", gears, error_output)) return false;
+	const PTree * cfg_trans;
+	if (!cfg.get("transmission", cfg_trans, error_output)) return false;
+	if (!cfg_trans->get("gears", gears, error_output)) return false;
 	for (int i = 0; i < gears; ++i)
 	{
 		std::stringstream s;
 		s << "gear-ratio-" << i+1;
-		if (!c.GetParam(it, s.str(), ratio, error_output)) return false;
+		if (!cfg_trans->get(s.str(), ratio, error_output)) return false;
 		transmission.SetGearRatio(i+1, ratio);
 	}
-	if (!c.GetParam(it, "gear-ratio-r", ratio, error_output)) return false;
-	c.GetParam(it, "shift-time", shift_time);
+	if (!cfg_trans->get("gear-ratio-r", ratio, error_output)) return false;
+	cfg_trans->get("shift-time", shift_time);
 	
 	transmission.SetGearRatio(-1, ratio);
 	transmission.SetShiftTime(shift_time);
@@ -106,7 +106,7 @@ static bool LoadTransmission(
 }
 
 static bool LoadFuelTank(
-	const CONFIG & c,
+	const PTree & cfg,
 	CARFUELTANK & fuel_tank,
 	std::ostream & error_output)
 {
@@ -114,13 +114,13 @@ static bool LoadFuelTank(
 	btScalar volume;
 	btScalar fuel_density;
 	std::vector<btScalar> pos(3);
-
-	CONFIG::const_iterator it;
-	if (!c.GetSection("fuel-tank", it, error_output)) return false;
-	if (!c.GetParam(it, "capacity", capacity, error_output)) return false;
-	if (!c.GetParam(it, "volume", volume, error_output)) return false;
-	if (!c.GetParam(it, "fuel-density", fuel_density, error_output)) return false;
-	if (!c.GetParam(it, "position", pos, error_output)) return false;
+	
+	const PTree * cfg_fuel;
+	if (!cfg.get("fuel-tank", cfg_fuel, error_output)) return false;
+	if (!cfg_fuel->get("capacity", capacity, error_output)) return false;
+	if (!cfg_fuel->get("volume", volume, error_output)) return false;
+	if (!cfg_fuel->get("fuel-density", fuel_density, error_output)) return false;
+	if (!cfg_fuel->get("position", pos, error_output)) return false;
 
 	COORDINATESYSTEMS::ConvertV2toV1(pos[0], pos[1], pos[2]);
 	btVector3 position(pos[0], pos[1], pos[2]);
@@ -134,43 +134,37 @@ static bool LoadFuelTank(
 }
 
 static bool LoadBrake(
-	const CONFIG & c,
-	const CONFIG::const_iterator & iwheel,
+	const PTree & cfg,
 	CARBRAKE & brake,
 	std::ostream & error_output)
 {
-	std::string brakename;
-	if (!c.GetParam(iwheel, "brake", brakename, error_output)) return false;
-	
 	float friction, max_pressure, area, bias, radius, handbrake(0);
-	CONFIG::const_iterator it;
-	if (!c.GetSection(brakename, it, error_output)) return false;
-	if (!c.GetParam(it, "friction", friction, error_output)) return false;
-	if (!c.GetParam(it, "area", area, error_output)) return false;
-	if (!c.GetParam(it, "radius", radius, error_output)) return false;
-	if (!c.GetParam(it, "bias", bias, error_output)) return false;
-	if (!c.GetParam(it, "max-pressure", max_pressure, error_output)) return false;
-	c.GetParam(it, "handbrake", handbrake);
-
+	
+	if (!cfg.get("friction", friction, error_output)) return false;
+	if (!cfg.get("area", area, error_output)) return false;
+	if (!cfg.get("radius", radius, error_output)) return false;
+	if (!cfg.get("bias", bias, error_output)) return false;
+	if (!cfg.get("max-pressure", max_pressure, error_output)) return false;
+	cfg.get("handbrake", handbrake);
+	
 	brake.SetFriction(friction);
 	brake.SetArea(area);
 	brake.SetRadius(radius);
 	brake.SetBias(bias);
 	brake.SetMaxPressure(max_pressure*bias);
 	brake.SetHandbrake(handbrake);
-
+	
 	return true;
 }
 
 static bool LoadWheel(
-	const CONFIG & c,
-	const CONFIG::const_iterator & iwheel,
+	const PTree & cfg,
 	const CARTIRE & tire,
 	CARWHEEL & wheel,
 	std::ostream & error_output)
 {
 	btScalar mass, inertia;
-	if (!c.GetParam(iwheel, "mass", mass) && !c.GetParam(iwheel, "inertia", inertia))
+	if (!cfg.get("mass", mass) && !cfg.get("inertia", inertia))
 	{
 		btScalar tire_radius = tire.GetRadius();
 		btScalar tire_width = tire.GetSidewallWidth();
@@ -199,29 +193,28 @@ static bool LoadWheel(
 }
 
 static bool LoadAeroDevices(
-	const CONFIG & c,
+	const PTree & cfg,
 	btAlignedObjectArray<CARAERO> & aerodynamics,
 	std::ostream & error_output)
 {
-	CONFIG::const_iterator is;
-	if (!c.GetSection("wing", is, error_output)) return true;
+	const PTree * cfg_wings;
+	if (!cfg.get("wing", cfg_wings, error_output)) return true;
 	
 	int i = 0;
-	aerodynamics.resize(is->second.size());
-	for (CONFIG::SECTION::const_iterator iw = is->second.begin(); iw != is->second.end(); ++iw, ++i)
+	aerodynamics.resize(cfg_wings->size());
+	for (PTree::const_iterator iw = cfg_wings->begin(); iw != cfg_wings->end(); ++iw, ++i)
 	{
 		std::vector<btScalar> pos(3);
 		btScalar drag_area, drag_coeff;
 		btScalar lift_area(0), lift_coeff(0), lift_eff(0);
 		
-		CONFIG::const_iterator it;
-		if (!c.GetSection(iw->second, it, error_output)) return false;
-		if (!c.GetParam(it, "frontal-area", drag_area, error_output)) return false;
-		if (!c.GetParam(it, "drag-coefficient", drag_coeff, error_output)) return false;
-		if (!c.GetParam(it, "position", pos, error_output)) return false;
-		c.GetParam(it, "surface-area", lift_area);
-		c.GetParam(it, "lift-coefficient", lift_coeff);
-		c.GetParam(it, "efficiency", lift_eff);
+		const PTree & cfg_wing = iw->second;
+		if (!cfg_wing.get("frontal-area", drag_area, error_output)) return false;
+		if (!cfg_wing.get("drag-coefficient", drag_coeff, error_output)) return false;
+		if (!cfg_wing.get("position", pos, error_output)) return false;
+		cfg_wing.get("surface-area", lift_area);
+		cfg_wing.get("lift-coefficient", lift_coeff);
+		cfg_wing.get("efficiency", lift_eff);
 		
 		COORDINATESYSTEMS::ConvertV2toV1(pos[0],pos[1],pos[2]);
 		btVector3 position(pos[0], pos[1], pos[2]);
@@ -233,17 +226,16 @@ static bool LoadAeroDevices(
 }
 
 static bool LoadDifferential(
-	const CONFIG & c,
-	const CONFIG::const_iterator & it,
+	const PTree & cfg,
 	CARDIFFERENTIAL & diff,
 	std::ostream & error_output)
 {
 	btScalar final_drive(1), anti_slip(0), anti_slip_torque(0), anti_slip_torque_deceleration_factor(0);
 	
-	if (!c.GetParam(it, "final-drive", final_drive, error_output)) return false;
-	if (!c.GetParam(it, "anti-slip", anti_slip, error_output)) return false;
-	c.GetParam(it, "anti-slip-torque", anti_slip_torque);
-	c.GetParam(it, "anti-slip-torque-deceleration-factor", anti_slip_torque_deceleration_factor);
+	if (!cfg.get("final-drive", final_drive, error_output)) return false;
+	if (!cfg.get("anti-slip", anti_slip, error_output)) return false;
+	cfg.get("anti-slip-torque", anti_slip_torque);
+	cfg.get("anti-slip-torque-deceleration-factor", anti_slip_torque_deceleration_factor);
 
 	diff.SetFinalDrive(final_drive);
 	diff.SetAntiSlip(anti_slip, anti_slip_torque, anti_slip_torque_deceleration_factor);
@@ -252,21 +244,19 @@ static bool LoadDifferential(
 }
 
 static bool LoadMassParticles(
-	const CONFIG & c,
+	const PTree & cfg,
 	btAlignedObjectArray<std::pair<btScalar, btVector3> > & mass_particles,
 	std::ostream & error_output)
 {
-	CONFIG::const_iterator it;
-	if (!c.GetSection("particle", it)) return true;
+	const PTree * cfg_prts;
+	if (!cfg.get("particle", cfg_prts)) return true;
 	
 	btScalar mass;
 	std::vector<btScalar> pos(3);
-	for (CONFIG::SECTION::const_iterator i = it->second.begin(), e = it->second.end(); i != e; ++i)
+	for (PTree::const_iterator i = cfg_prts->begin(), e = cfg_prts->end(); i != e; ++i)
 	{
-		CONFIG::const_iterator ip;
-		if (!c.GetSection(i->second, ip, error_output)) return false;
-		
-		if (c.GetParam(ip, "position", pos) && c.GetParam(ip, "mass", mass))
+		const PTree & cfg_prt = i->second;
+		if (cfg_prt.get("position", pos) && cfg_prt.get("mass", mass))
 		{
 			COORDINATESYSTEMS::ConvertV2toV1(pos[0], pos[1], pos[2]);
 			btVector3 position(pos[0], pos[1], pos[2]);
@@ -301,7 +291,7 @@ static btMultiSphereShape * CreateCollisionShape(const btVector3 & center, const
 }
 
 bool CARDYNAMICS::Load(
-	const CONFIG & cfg,
+	const PTree & cfg,
 	const btVector3 & size,
 	const btVector3 & center,
 	const btVector3 & position,
@@ -314,59 +304,60 @@ bool CARDYNAMICS::Load(
 	if (!LoadTransmission(cfg, transmission, error_output)) return false;
 	if (!LoadFuelTank(cfg, fuel_tank, error_output)) return false;
 	
+	const PTree * cfg_eng;
 	CARENGINEINFO engine_info;
-	if (!engine_info.Load(cfg, error_output)) return false;
+	if (!cfg.get("engine", cfg_eng, error_output)) return false;
+	if (!engine_info.Load(*cfg_eng, error_output)) return false;
 	engine.Init(engine_info);
 	AddMassParticle(engine.GetMass(), engine.GetPosition());
 	
-	CONFIG::const_iterator is;
-	if (!cfg.GetSection("wheel", is, error_output)) return false;
+	const PTree * cfg_wheels;
+	if (!cfg.get("wheel", cfg_wheels, error_output)) return false;
 	
-	assert(is->second.size() == WHEEL_POSITION_SIZE); // temporary restriction
-	tire.resize(is->second.size());
-	brake.resize(is->second.size());
-	wheel.resize(is->second.size());
-	suspension.resize(is->second.size());
+	int wheel_count = cfg_wheels->size();
+	assert(wheel_count == WHEEL_POSITION_SIZE); // temporary restriction
+	tire.resize(wheel_count);
+	brake.resize(wheel_count);
+	wheel.resize(wheel_count);
+	suspension.resize(wheel_count);
 	
 	int i = 0;
-	for (CONFIG::SECTION::const_iterator iw = is->second.begin(); iw != is->second.end(); ++iw, ++i)
+	for (PTree::const_iterator iw = cfg_wheels->begin(); iw != cfg_wheels->end(); ++iw, ++i)
 	{
-		std::string section;
-		CONFIG::const_iterator iwheel;
-		if (!cfg.GetSection(iw->second, iwheel, error_output)) return false;
+		const PTree & cfg_wheel = iw->second;
 		
-		if (!cfg.GetParam(iwheel, "tire", section, error_output)) return false;
+		const PTree * cfg_tire, * cfg_brake;
+		if (!cfg_wheel.get("tire", cfg_tire, error_output)) return false;
+		if (!cfg_wheel.get("brake", cfg_brake, error_output)) return false;
 		
-		if (!tire[i].Load(cfg, section, error_output)) return false;
+		if (!tire[i].Load(*cfg_tire, error_output)) return false;
+		if (!LoadBrake(*cfg_brake, brake[i], error_output)) return false;
+		if (!LoadWheel(cfg_wheel, tire[i], wheel[i], error_output)) return false;
 		
-		if (!LoadBrake(cfg, iwheel, brake[i], error_output)) return false;
+		CARSUSPENSION * sptr;
+		if (!CARSUSPENSION::Load(cfg_wheel, sptr, error_output)) return false;
 		
-		if (!LoadWheel(cfg, iwheel, tire[i], wheel[i], error_output)) return false;
-		
-		CARSUSPENSION * sptr(0);
-		if (!CARSUSPENSION::LoadSuspension(cfg, iw->second, sptr, error_output)) return false;
 		suspension[i].reset(sptr);
-		
 		if (suspension[i]->GetMaxSteeringAngle() > maxangle) maxangle = suspension[i]->GetMaxSteeringAngle();
 		
 		AddMassParticle(wheel[i].GetMass(), suspension[i]->GetWheelPosition());
 	}
 
 	drive = NONE;
-	CONFIG::const_iterator it;
-	if (cfg.GetSection("differential-front", it))
+	const PTree * cfg_diff;
+	if (cfg.get("differential-front", cfg_diff))
 	{
-		if (!LoadDifferential(cfg, it, differential_front, error_output)) return false;
+		if (!LoadDifferential(*cfg_diff, differential_front, error_output)) return false;
 		drive = FWD;
 	}
-	if (cfg.GetSection("differential-rear", it))
+	if (cfg.get("differential-rear", cfg_diff))
 	{
-		if (!LoadDifferential(cfg, it, differential_rear, error_output)) return false;
+		if (!LoadDifferential(*cfg_diff, differential_rear, error_output)) return false;
 		drive = (drive == FWD) ? AWD : RWD;
 	}
-	if (cfg.GetSection("differential-center", it) && drive == AWD)
+	if (cfg.get("differential-center", cfg_diff) && drive == AWD)
 	{
-		if (!LoadDifferential(cfg, it, differential_center, error_output)) return false;
+		if (!LoadDifferential(*cfg_diff, differential_center, error_output)) return false;
 	}
 	if (drive == NONE)
 	{
@@ -375,12 +366,13 @@ bool CARDYNAMICS::Load(
 	}
 
 	// load driver mass, todo unify for all car components
-	if (cfg.GetSection("driver", it))
+	const PTree * cfg_driver;
+	if (cfg.get("driver", cfg_driver))
 	{
 		btScalar mass;
 		std::vector<btScalar> pos(3);
-		if (!cfg.GetParam(it, "position", pos, error_output)) return false;
-		if (!cfg.GetParam(it, "mass", mass, error_output)) return false;
+		if (!cfg_driver->get("position", pos, error_output)) return false;
+		if (!cfg_driver->get("mass", mass, error_output)) return false;
 		COORDINATESYSTEMS::ConvertV2toV1(pos[0], pos[1], pos[2]);
 		btVector3 position(pos[0], pos[1], pos[2]);
 		AddMassParticle(mass, position);

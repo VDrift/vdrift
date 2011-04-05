@@ -10,7 +10,7 @@
 #include <iostream>
 #include <vector>
 
-class CONFIG;
+class PTree;
 
 struct CARENGINEINFO
 {
@@ -31,7 +31,7 @@ struct CARENGINEINFO
 	CARENGINEINFO();
 	
 	/// load engine from config file
-	bool Load(const CONFIG & cfg, std::ostream & error_output);
+	bool Load(const PTree & cfg, std::ostream & error_output);
 	
 	/// Set the torque curve using a vector of (RPM, torque) pairs.
 	/// also recalculate engine friction

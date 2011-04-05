@@ -2,12 +2,29 @@
 #define _PTREE_H
 
 #include <map>
+#include <vector>
 #include <string>
 #include <sstream>
 #include <iostream>
 #include <algorithm>
 
 class PTree;
+
+// file open functor, caller owns returned stream, returns a stream
+struct file_open
+{
+	virtual std::istream * operator()(const std::string & name) const = 0;
+};
+
+// file open functor, supporting a base path and additional alternative path
+struct file_open_basic : file_open
+{
+	std::string path, path_alt;
+	
+	file_open_basic(const std::string & path, const std::string & path_alt);
+	
+	std::istream * operator()(const std::string & name) const;
+};
 
 /*
 # ini format
@@ -20,6 +37,7 @@ key4 = value4
 key5 = value5
 */
 void read_ini(std::istream & in, PTree & p);
+bool read_ini(const std::string & file_name, const file_open & fopen, PTree & p);
 void write_ini(const PTree & p, std::ostream & out);
 
 /*
@@ -81,6 +99,16 @@ public:
 		return _value;
 	}
 	
+	std::string & value()
+	{
+		return _value;
+	}
+	
+	const PTree * parent() const
+	{
+		return _parent;
+	}
+	
 	template <typename T> bool get(const std::string & key, T & value) const
 	{
 		size_t next = key.find(".");
@@ -130,25 +158,8 @@ public:
 			p._value = s.str();
 			return p;
 		}
-		p._value = i->first; // store/copy node key for error reporting
+		p._value = i->first; // store node key for error reporting
 		return p.set(key.substr(next), value);
-	}
-	
-	PTree & set(const std::string & key)
-	{
-		std::string::const_iterator next = std::find(key.begin(), key.end(), '.');
-		std::pair<iterator, bool> pi = _children.insert(std::make_pair(std::string(key.begin(), next), PTree()));
-		PTree & p = pi.first->second;
-		if (pi.second)
-		{
-			p._value = pi.first->first;
-			p._parent = this;
-		}
-		if (next == key.end())
-		{
-			return p;
-		}
-		return p.set(std::string(next+1, key.end()));
 	}
 	
 	void clear()
@@ -156,9 +167,8 @@ public:
 		_children.clear();
 	}
 	
-	void read(const std::string & filename, void (&read)(std::istream &, PTree &) = read_ini);
-	
-	void write(const std::string & filename, void (&write)(const PTree &, std::ostream &) = write_ini) const;
+	//void read(const std::string & filename, void (&read)(std::istream &, PTree &) = read_ini);
+	//void write(const std::string & filename, void (&write)(const PTree &, std::ostream &) = write_ini) const;
 	
 private:
 	std::string _value;
@@ -186,6 +196,53 @@ template <> inline void PTree::_get<bool>(const PTree & p, bool & value) const
 template <> inline void PTree::_get<const PTree *>(const PTree & p, const PTree * & value) const
 {
 	value = &p;
+}
+
+template <> inline PTree & PTree::set(const std::string & key, const PTree & value)
+{
+	std::string::const_iterator next = std::find(key.begin(), key.end(), '.');
+	std::pair<iterator, bool> pi = _children.insert(std::make_pair(std::string(key.begin(), next), value));
+	PTree & p = pi.first->second;
+	if (pi.second && p._value.empty())
+	{
+		p._value = pi.first->first;
+		p._parent = this;
+	}
+	if (next == key.end())
+	{
+		return p;
+	}
+	return p.set(std::string(next+1, key.end()), PTree());
+}
+
+template <typename T>
+std::istream & operator>>(std::istream & stream, std::vector<T> & out)
+{
+	if (out.size() > 0)
+	{
+		// set vector
+		for (size_t i = 0; i < out.size() && !stream.eof(); ++i)
+		{
+			std::string str;
+			std::getline(stream, str, ',');
+			std::stringstream s(str);
+			s >> out[i];
+		}
+	}
+	else
+	{
+		// fill vector
+		while (stream.good())
+		{
+			std::string str;
+			std::getline(stream, str, ',');
+			std::stringstream s(str);
+			T value;
+			s >> value;
+			out.push_back(value);
+		}
+	}
+  return stream;
 }
 
 #endif //_PTREE_H

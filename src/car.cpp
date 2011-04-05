@@ -16,6 +16,7 @@
 #include "camera_chase.h"
 #include "camera_orbit.h"
 #include "camera_mount.h"
+#include "cfg/ptree.h"
 
 #include <map>
 #include <list>
@@ -58,7 +59,6 @@ static keyed_container <DRAWABLE> & GetDrawlist(SCENENODE & node, WHICHDRAWLIST 
 
 struct LoadDrawable
 {
-	const CONFIG & cfg;
 	const std::string & path;
 	const std::string & texsize;
 	const int anisotropy;
@@ -68,7 +68,6 @@ struct LoadDrawable
 	std::ostream & error;
 	
 	LoadDrawable(
-		const CONFIG & cfg,
 		const std::string & path,
 		const std::string & texsize,
 		const int anisotropy,
@@ -76,7 +75,6 @@ struct LoadDrawable
 		MODELMANAGER & models,
 		std::list<std::tr1::shared_ptr<MODEL> > & modellist,
 		std::ostream & error) :
-		cfg(cfg),
 		path(path),
 		texsize(texsize),
 		anisotropy(anisotropy),
@@ -89,24 +87,24 @@ struct LoadDrawable
 	}
 	
 	bool operator()(
-		const CONFIG::const_iterator section,
+		const PTree & cfg,
 		SCENENODE & topnode,
 		keyed_container<SCENENODE>::handle * nodehandle = 0,
 		keyed_container<DRAWABLE>::handle * drawhandle = 0)
 	{
 		std::vector<std::string> texname;
-		if (!cfg.GetParam(section, "texture", texname)) return true;
+		if (!cfg.get("texture", texname)) return true;
 		
 		std::string meshname;
-		if (!cfg.GetParam(section, "mesh", meshname, error)) return false;
+		if (!cfg.get("mesh", meshname, error)) return false;
 		
-		return operator()(meshname, texname, section, topnode, nodehandle, drawhandle);
+		return operator()(meshname, texname, cfg, topnode, nodehandle, drawhandle);
 	}
 
 	bool operator()(
 		const std::string & meshname,
 		const std::vector<std::string> & texname,
-		const CONFIG::const_iterator section,
+		const PTree & cfg,
 		SCENENODE & topnode,
 		keyed_container<SCENENODE>::handle * nodeptr = 0,
 		keyed_container<DRAWABLE>::handle * drawptr = 0)
@@ -143,7 +141,7 @@ struct LoadDrawable
 		// set mesh
 		std::string scale;
 		std::tr1::shared_ptr<MODEL> mesh;
-		if (!cfg.GetParam(section, "scale", scale))
+		if (!cfg.get("scale", scale))
 		{
 			if (!models.Load(path, meshname, mesh)) return false;
 		}
@@ -152,8 +150,8 @@ struct LoadDrawable
 			MODELMANAGER::const_iterator it;
 			if (!models.Load(path, meshname, it)) return false;
 			
-			std::vector<float> sc(3, 0.0);
-			cfg.GetParam(section, "scale", sc);
+			MATHVECTOR<float, 3> sc(1, 1, 1);
+			cfg.get("scale", sc);
 			
 			std::tr1::shared_ptr<MODEL> temp(new MODEL());
 			temp->SetVertexArray(it->second->GetVertexArray());
@@ -174,8 +172,8 @@ struct LoadDrawable
 		modellist.push_back(mesh);
 		
 		// set color
-		std::vector<float> col(4, 1);
-		if (cfg.GetParam(section, "color", col))
+		MATHVECTOR<float, 4> col(1);
+		if (cfg.get("color", col))
 		{
 			drawable.SetColor(col[0], col[1], col[2], col[3]);
 		}
@@ -192,8 +190,8 @@ struct LoadDrawable
 			node = &topnode.GetNode(*nodeptr);
 		}
 		
-		std::vector<float> pos(3, 0), rot(3, 0);
-		if (cfg.GetParam(section, "position", pos) | cfg.GetParam(section, "rotation", rot))
+		MATHVECTOR<float, 3> pos, rot;
+		if (cfg.get("position", pos) | cfg.get("rotation", rot))
 		{
 			if (node == &topnode)
 			{
@@ -201,7 +199,7 @@ struct LoadDrawable
 				keyed_container <SCENENODE>::handle nodehandle = topnode.AddNode();
 				node = &topnode.GetNode(nodehandle);
 			}
-			node->GetTransform().SetTranslation(MATHVECTOR<float, 3>(pos[0], pos[1], pos[2]));
+			node->GetTransform().SetTranslation(pos);
 			node->GetTransform().SetRotation(QUATERNION<float>(rot[0]/180*M_PI, rot[1]/180*M_PI, rot[2]/180*M_PI));
 		}
 		
@@ -211,7 +209,7 @@ struct LoadDrawable
 		if (drawptr != 0) draw = drawptr;
 		
 		std::string drawtype;
-		if (cfg.GetParam(section, "draw", drawtype))
+		if (cfg.get("draw", drawtype))
 		{
 			if (drawtype == "emissive")
 			{
@@ -233,8 +231,7 @@ struct LoadDrawable
 };
 
 static bool LoadWheel(
-	const CONFIG & cfg,
-	const std::string & wheelname,
+	const PTree & cfg_wheel,
 	struct LoadDrawable & load_drawable,
 	SCENENODE & topnode,
 	keyed_container<SCENENODE>::handle & wheelnode,
@@ -243,33 +240,27 @@ static bool LoadWheel(
 {
 	MODELMANAGER & models = load_drawable.models;
 	
-	CONFIG::const_iterator wheelsect;
-	if (!cfg.GetSection(wheelname, wheelsect, error_output)) return false;
-	
-	std::string tirename, tiredim;
-	CONFIG::const_iterator tiresect;
-	if (!cfg.GetParam(wheelsect, "tire", tirename, error_output)) return false;
-	if (!cfg.GetSection(tirename, tiresect, error_output)) return false;
-	if (!cfg.GetParam(tiresect, "size", tiredim, error_output)) return false;
+	std::string tiredim;
+	const PTree * cfg_tire;
+	if (!cfg_wheel.get("tire", cfg_tire, error_output)) return false;
+	if (!cfg_tire->get("size", tiredim, error_output)) return false;
 	
 	std::string brakename;
-	CONFIG::const_iterator brakesect;
-	if (!cfg.GetParam(wheelsect, "brake", brakename, error_output)) return false;
-	if (!cfg.GetSection(brakename, brakesect, error_output)) return false;
+	const PTree * cfg_brake;
+	if (!cfg_wheel.get("brake", cfg_brake, error_output)) return false;
 	
 	// load wheel
 	std::string meshname;
 	std::vector<std::string> texname;
 	MODELMANAGER::const_iterator it;
-	if (!cfg.GetParam(wheelsect, "mesh", meshname, error_output)) return false;
-	if (!cfg.GetParam(wheelsect, "texture", texname, error_output)) return false;
+	if (!cfg_wheel.get("mesh", meshname, error_output)) return false;
+	if (!cfg_wheel.get("texture", texname, error_output)) return false;
 	if (!models.Get(load_drawable.path, meshname+tiredim, it))
 	{
 		if (!models.Load(load_drawable.path, meshname, it)) return false;
 		
-		std::vector<float> d(3, 0.0);
-		cfg.GetParam(tiresect, "size", d);
-		
+		MATHVECTOR<float, 3> d(0);
+		cfg_tire->get("size", d);
 		float width = d[0] * 0.001;
 		float diameter = d[2] * 0.0254;
 		
@@ -285,15 +276,15 @@ static bool LoadWheel(
 		
 		models.Set(it->first+tiredim, temp);
 	}
-	if (!load_drawable(meshname+tiredim, texname, wheelsect, topnode, &wheelnode)) return false;
+	if (!load_drawable(meshname+tiredim, texname, cfg_wheel, topnode, &wheelnode)) return false;
 	
 	// load tire
 	texname.clear();
-	if (!cfg.GetParam(tiresect, "texture", texname, error_output)) return false;
+	if (!cfg_tire->get("texture", texname, error_output)) return false;
 	if (!models.Get("", "tire"+tiredim, it))
 	{
-		std::vector<float> d(3, 0.0);
-		cfg.GetParam(tiresect, "size", d);
+		MATHVECTOR<float, 3> d(0);
+		cfg_tire->get("size", d);
 		
 		VERTEXARRAY varray;
 		std::tr1::shared_ptr<MODEL> temp(new MODEL_JOE03());
@@ -304,17 +295,14 @@ static bool LoadWheel(
 		
 		models.Set("tire"+tiredim, temp);
 	}
-	if (!load_drawable("tire"+tiredim, texname, tiresect, topnode.GetNode(wheelnode))) return false;
+	if (!load_drawable("tire"+tiredim, texname, *cfg_tire, topnode.GetNode(wheelnode))) return false;
 	
 	// load fender (optional)
-	std::string fendername;
-	if (cfg.GetParam(wheelsect, "fender", fendername))
+	const PTree * cfg_fender;
+	if (cfg_wheel.get("fender", cfg_fender))
 	{
-		CONFIG::const_iterator fendersect;
-		if (!cfg.GetSection(fendername, fendersect, error_output)) return false;
-		
 		floatingnode = topnode.AddNode();
-		if (!load_drawable(fendersect, topnode.GetNode(floatingnode))) return false;
+		if (!load_drawable(*cfg_fender, topnode.GetNode(floatingnode))) return false;
 		
 		MATHVECTOR<float, 3> pos = topnode.GetNode(wheelnode).GetTransform().GetTranslation();
 		topnode.GetNode(floatingnode).GetTransform().SetTranslation(pos);
@@ -323,8 +311,8 @@ static bool LoadWheel(
 	// load brake (optional)
 	texname.clear();
 	std::string radius;
-	cfg.GetParam(brakesect, "radius", radius);
-	if (!cfg.GetParam(brakesect, "texture", texname)) return true;
+	cfg_brake->get("radius", radius);
+	if (!cfg_brake->get("texture", texname)) return true;
 	if (!models.Get("", "brake"+radius, it))
 	{
 		float r;
@@ -342,13 +330,13 @@ static bool LoadWheel(
 		
 		models.Set("brake"+radius, temp);
 	}
-	if (!load_drawable("brake"+radius, texname, brakesect, topnode.GetNode(wheelnode))) return false;
+	if (!load_drawable("brake"+radius, texname, *cfg_brake, topnode.GetNode(wheelnode))) return false;
 
 	return true;
 }
 
 static bool LoadCameras(
-	const CONFIG & cfg,
+	const PTree & cfg,
 	const float camerabounce,
 	CAMERA_SYSTEM & cameras,
 	std::ostream & error_output)
@@ -358,13 +346,13 @@ static bool LoadCameras(
 	driver_cam->SetEffectStrength(camerabounce);
 	hood_cam->SetEffectStrength(camerabounce);
 
-	std::vector<float> pos(3, 0.0), hoodpos(3, 0.0);
-	if (!cfg.GetParam("camera", "view-position", pos, error_output)) return false;
+	MATHVECTOR<float, 3> pos(0), hoodpos(0);
+	if (!cfg.get("camera.view-position", pos, error_output)) return false;
 	COORDINATESYSTEMS::ConvertV2toV1(pos[0], pos[1], pos[2]);
 	MATHVECTOR <float, 3> cam_offset(pos[0], pos[1], pos[2]);
 	driver_cam->SetOffset(cam_offset);
 
-	if (!cfg.GetParam("camera", "hood-mounted-view-position", hoodpos, error_output))
+	if (!cfg.get("camera.hood-mounted-view-position", hoodpos, error_output))
 	{
 		cam_offset.Set(pos[0] + 1, 0, pos[2]);
 	}
@@ -376,7 +364,7 @@ static bool LoadCameras(
 	hood_cam->SetOffset(cam_offset);
 
 	float view_stiffness = 0.0;
-	cfg.GetParam("camera", "view-stiffness", view_stiffness);
+	cfg.get("camera.view-stiffness", view_stiffness);
 	driver_cam->SetStiffness(view_stiffness);
 	hood_cam->SetStiffness(view_stiffness);
 	cameras.Add(hood_cam);
@@ -434,16 +422,15 @@ CAR::CAR() :
 }
 
 bool CAR::LoadLight(
-	const CONFIG & cfg,
-	const std::string & name,
+	const PTree & cfg,
 	MODELMANAGER & models,
 	std::ostream & error_output)
 {
 	float radius;
-	std::vector<float> pos(3, 0.0), col(3, 0.0);
-	if (!cfg.GetParam(name, "position", pos, error_output)) return false;
-	if (!cfg.GetParam(name, "color", col, error_output)) return false;
-	if (!cfg.GetParam(name, "radius", radius, error_output)) return false;
+	MATHVECTOR<float, 3> pos(0), col(0);
+	if (!cfg.get("position", pos, error_output)) return false;
+	if (!cfg.get("color", col, error_output)) return false;
+	if (!cfg.get("radius", radius, error_output)) return false;
 	
 	lights.push_back(LIGHT());
 	SCENENODE & bodynoderef = topnode.GetNode(bodynode);
@@ -472,7 +459,7 @@ bool CAR::LoadLight(
 }
 
 bool CAR::LoadGraphics(
-	const CONFIG & cfg,
+	const PTree & cfg,
 	const std::string & carpath,
 	const std::string & carname,
 	const std::string & partspath,
@@ -488,34 +475,37 @@ bool CAR::LoadGraphics(
 	std::ostream & info_output,
 	std::ostream & error_output)
 {
-	//cfg.DebugPrint(std::cerr);
+	//write_inf(cfg, std::cerr);
 	
 	cartype = carname;
-	LoadDrawable load_drawable(cfg, carpath, texsize, anisotropy, textures, models, modellist, error_output);
+	LoadDrawable load_drawable(carpath, texsize, anisotropy, textures, models, modellist, error_output);
 	
 	// load body
-	CONFIG::const_iterator is;
+	const PTree * cfg_body;
 	std::string meshname;
 	std::vector<std::string> texname;
-	if (!cfg.GetSection("body", is, error_output)) return false;
-	if (!cfg.GetParam(is, "mesh", meshname, error_output)) return false;
-	if (!cfg.GetParam(is, "texture", texname, error_output)) return false;
+	if (!cfg.get("body", cfg_body, error_output)) return false;
+	if (!cfg_body->get("mesh", meshname, error_output)) return false;
+	if (!cfg_body->get("texture", texname, error_output)) return false;
 	if (carpaint != "default") texname[0] = carpaint;
-	if (!load_drawable(meshname, texname, is, topnode, &bodynode)) return false;
+	if (!load_drawable(meshname, texname, *cfg_body, topnode, &bodynode)) return false;
 	
 	// load wheels
-	if (!cfg.GetSection("wheel", is, error_output)) return false;
-	for (CONFIG::SECTION::const_iterator i = is->second.begin(); i != is->second.end(); ++i)
+	const PTree * cfg_wheel;
+	if (!cfg.get("wheel", cfg_wheel, error_output)) return false;
+	for (PTree::const_iterator i = cfg_wheel->begin(); i != cfg_wheel->end(); ++i)
 	{
 		wheelnode.push_back(keyed_container<SCENENODE>::handle());
 		floatingnode.push_back(keyed_container<SCENENODE>::handle());
-		if (!LoadWheel(cfg, i->second, load_drawable, topnode,
-			wheelnode.back(), floatingnode.back(), error_output)) return false;
+		if (!LoadWheel(i->second, load_drawable, topnode, wheelnode.back(), floatingnode.back(), error_output))
+		{
+			return false;
+		}
 	}
 	
 	// load drawables
 	SCENENODE & bodynoderef = topnode.GetNode(bodynode);
-	for(CONFIG::const_iterator section = cfg.begin(); section != cfg.end(); ++section)
+	for(PTree::const_iterator section = cfg.begin(); section != cfg.end(); ++section)
 	{
 		if (section->first == "body" ||
 			section->first == "steering" ||
@@ -523,16 +513,16 @@ bool CAR::LoadGraphics(
 			section->first == "light-reverse" ||
 			section->first.find("wheel") == 0) continue;
 		
-		if (!load_drawable(section, bodynoderef)) return false;
+		if (!load_drawable(section->second, bodynoderef)) return false;
 	}
 	
 	{
 		// load steering wheel
-		CONFIG::const_iterator i;
-		if (cfg.GetSection("steering", i))
+		const PTree * cfg_steer;
+		if (cfg.get("steering", cfg_steer))
 		{
-			if (!load_drawable(i, bodynoderef, &steernode, 0)) return false;
-			cfg.GetParam(i, "max-angle", steer_angle_max);
+			if (!load_drawable(*cfg_steer, bodynoderef, &steernode, 0)) return false;
+			cfg_steer->get("max-angle", steer_angle_max);
 			steer_angle_max = steer_angle_max / 180.0 * M_PI;
 			SCENENODE & steernoderef = bodynoderef.GetNode(steernode);
 			steer_orientation = steernoderef.GetTransform().GetRotation();
@@ -541,12 +531,12 @@ bool CAR::LoadGraphics(
 	
 	{
 		// load brake/reverse light point light sources (optional)
-		float r;
 		int i = 0;
 		std::string istr = "0";
-		while (cfg.GetParam("light-brake-"+istr, "radius", r))
+		const PTree * cfg_light;
+		while (cfg.get("light-brake-"+istr, cfg_light))
 		{
-			if (!LoadLight(cfg, "light-brake-"+istr, models, error_output)) return false;
+			if (!LoadLight(*cfg_light, models, error_output)) return false;
 			
 			std::stringstream sstr;
 			sstr << ++i;
@@ -554,9 +544,9 @@ bool CAR::LoadGraphics(
 		}
 		i = 0;
 		istr = "0";
-		while (cfg.GetParam("light-reverse-"+istr, "radius", r))
+		while (cfg.get("light-reverse-"+istr, cfg_light))
 		{
-			if (!LoadLight(cfg, "light-reverse-"+istr, models, error_output)) return false;
+			if (!LoadLight(*cfg_light, models, error_output)) return false;
 
 			std::stringstream sstr;
 			sstr << ++i;
@@ -564,14 +554,13 @@ bool CAR::LoadGraphics(
 		}
 		
 		// load car brake/reverse graphics (optional)
-		CONFIG::const_iterator section;
-		if (cfg.GetSection("light-brake", section))
+		if (cfg.get("light-brake", cfg_light))
 		{
-			if (!load_drawable(section, bodynoderef, 0, &brakelights)) return false;
+			if (!load_drawable(*cfg_light, bodynoderef, 0, &brakelights)) return false;
 		}
-		if (cfg.GetSection("light-reverse", section))
+		if (cfg.get("light-reverse", cfg_light))
 		{
-			if (!load_drawable(section, bodynoderef, 0, &reverselights)) return false;
+			if (!load_drawable(*cfg_light, bodynoderef, 0, &reverselights)) return false;
 		}
 	}
 	
@@ -585,7 +574,7 @@ bool CAR::LoadGraphics(
 }
 
 bool CAR::LoadPhysics(
-	const CONFIG & cfg,
+	const PTree & cfg,
 	const std::string & carpath,
 	const MATHVECTOR <float, 3> & initial_position,
 	const QUATERNION <float> & initial_orientation,
@@ -598,7 +587,7 @@ bool CAR::LoadPhysics(
 {
 	std::string carmodel;
 	std::tr1::shared_ptr<MODEL> modelptr;
-	if (!cfg.GetParam("body", "mesh", carmodel, error_output)) return false;
+	if (!cfg.get("body.mesh", carmodel, error_output)) return false;
 	if (!models.Load(carpath, carmodel, modelptr)) return false;
 	
 	btVector3 size = ToBulletVector(modelptr->GetAABB().GetSize());
@@ -628,29 +617,34 @@ bool CAR::LoadSounds(
 	std::ostream & error_output)
 {
 	//check for sound specification file
-	CONFIG aud;
-	if (aud.Load(carpath+"/"+carname+".aud"))
+	std::string path_aud = carpath+"/"+carname+".aud";
+	std::ifstream file_aud(path_aud.c_str());
+	if (file_aud.good())
 	{
-		for (CONFIG::const_iterator i = aud.begin(); i != aud.end(); ++i)
+		PTree aud;
+		read_ini(file_aud, aud);
+		for (PTree::const_iterator i = aud.begin(); i != aud.end(); ++i)
 		{
+			const PTree & audi = i->second;
+
 			std::string filename;
 			std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
-			if (!aud.GetParam(i, "filename", filename, error_output)) return false;
+			if (!audi.get("filename", filename, error_output)) return false;
 			if (!sounds.Load(carpath, filename, soundinfo, soundptr)) return false;
 
 			enginesounds.push_back(std::pair <ENGINESOUNDINFO, SOUNDSOURCE> ());
 			ENGINESOUNDINFO & info = enginesounds.back().first;
 			SOUNDSOURCE & sound = enginesounds.back().second;
 
-			if (!aud.GetParam(i, "MinimumRPM", info.minrpm, error_output)) return false;
-			if (!aud.GetParam(i, "MaximumRPM", info.maxrpm, error_output)) return false;
-			if (!aud.GetParam(i, "NaturalRPM", info.naturalrpm, error_output)) return false;
+			if (!audi.get("MinimumRPM", info.minrpm, error_output)) return false;
+			if (!audi.get("MaximumRPM", info.maxrpm, error_output)) return false;
+			if (!audi.get("NaturalRPM", info.naturalrpm, error_output)) return false;
 
-			std::string powersetting;
-			if (!aud.GetParam(i, "power", powersetting, error_output)) return false;
-			if (powersetting == "on")
+			bool powersetting;
+			if (!audi.get("power", powersetting, error_output)) return false;
+			if (powersetting)
 				info.power = ENGINESOUNDINFO::POWERON;
-			else if (powersetting == "off")
+			else if (!powersetting)
 				info.power = ENGINESOUNDINFO::POWEROFF;
 			else //assume it's used in both ways
 				info.power = ENGINESOUNDINFO::BOTH;

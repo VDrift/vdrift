@@ -53,7 +53,7 @@ static void read_xml(std::istream & in, PTree & p, std::string key)
 		{
 			end = line.find(" ");
 			std::string child_key = line.substr(0, end);
-			read_xml(in, p.set(key), child_key);
+			read_xml(in, p.set(key, PTree()), child_key);
 		}
 		key.clear();
 	}

@@ -9,7 +9,7 @@
 #include <string>
 #include <iostream>
 
-class CONFIG;
+class PTree;
 
 class CARTIRE
 {
@@ -29,7 +29,7 @@ public:
 	btScalar GetIdealSlip() const	{return ideal_slip;}
 	
 	/// load tire from config file
-	bool Load(const CONFIG & cfg, const std::string & name, std::ostream & error);
+	bool Load(const PTree & cfg, std::ostream & error);
 	
 	/// look up ideal slide ratio, slip angle
 	void GetSigmaHatAlphaHat(btScalar load, btScalar & sh, btScalar & ah) const;
@@ -108,7 +108,7 @@ private:
 	/// pacejka magic formula function, aligning
 	btScalar PacejkaMz(btScalar sigma, btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff, btScalar & max_Mz) const;
 	
-	bool LoadTireParameters(const CONFIG & cfg, const std::string & name, std::ostream & error);
+	bool LoadParameters(const PTree & cfg, std::ostream & error);
 	
 	void SetDimensions(btScalar width_mm, btScalar ratio_percent, btScalar diameter_in);
 	
