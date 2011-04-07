@@ -1859,7 +1859,7 @@ bool GAME::LoadCar(
 	if (carfile.empty())
 	{
 		//if no file is passed in, then load it from disk
-		file_open_basic fopen(carpath, partspath);
+		file_open_basic fopen(carpath, pathmanager.GetSharedCarPath());
 		if (!read_ini(carname.substr(carname.find("/")+1), fopen, carconf))
 		{
 			error_output << "Failed to load " << carname << std::endl;
