@@ -192,11 +192,12 @@ void GRAPHICS_GL3V::SetupScene(float fov, float new_view_distance, const MATHVEC
 		(-cam_rotation).RotateVector(shadowoffset);
 		if (i == 2)
 			shadowbox[2] += 25.0;
+		MATHVECTOR <float, 3> shadowPosition = cam_position+shadowoffset;
 		
 		// snap the shadow camera's location to shadow map texels
+		// this can be commented out to minimize car aliasing at the expense of scenery aliasing
 		const float shadowMapResolution = 512;
 		float snapToGridSize = 2.f*shadowbox[0]/shadowMapResolution;
-		MATHVECTOR <float, 3> shadowPosition = cam_position+shadowoffset;
 		MATHVECTOR <float, 3> cameraSpaceShadowPosition = shadowPosition;
 		sunDirection.RotateVector(cameraSpaceShadowPosition);
 		for (int n = 0; n < 3; n++)

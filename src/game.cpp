@@ -184,7 +184,8 @@ void GAME::Start(std::list <std::string> & args)
 	if (profilingmode)
 	{
 		float screenhwratio = (float)window.GetH()/window.GetW();
-		profiling_text.Init(debugnode, fonts["futuresans"], "", 0.01, 0.25, screenhwratio*0.03, 0.03);
+		float profilingtextsize = 0.02;
+		profiling_text.Init(debugnode, fonts["futuresans"], "", 0.01, 0.25, screenhwratio*profilingtextsize, profilingtextsize);
 		profiling_text.SetDrawOrder(debugnode, 150);
 	}
 
