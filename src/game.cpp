@@ -55,7 +55,7 @@ GAME::GAME(std::ostream & info_out, std::ostream & error_out) :
 	models(error_out),
 	sounds(error_out),
 	graphics_interface(NULL),
-	enableGL3(false),
+	enableGL3(true),
 	usingGL3(false),
 	fps_track(10, 0),
 	fps_position(0),
@@ -341,7 +341,7 @@ bool GAME::InitGUI()
 		std::list <std::list <std::string>::iterator> todel;
 		for (std::list <std::string>::iterator i = menufiles.begin(); i != menufiles.end(); ++i)
 		{
-			if (i->find("~") != std::string::npos)
+			if (i->find("~") != std::string::npos || *i == "SConscript")
 			{
 				todel.push_back(i);
 			}
@@ -786,6 +786,22 @@ void GAME::AdvanceGameLogic()
 			}
 		}
 	}
+	else
+	{
+		// if there's no car yet, we still want to process game inputs
+		carcontrols_local.second.ProcessInput(
+					settings.GetJoyType(),
+					eventsystem,
+					0,
+					TickPeriod(),
+					settings.GetJoy200(),
+					0,
+					settings.GetSpeedSensitivity(),
+					window.GetW(),
+					window.GetH(),
+					settings.GetButtonRamp(),
+					settings.GetHGateShifter());
+	}
 
 	//PROFILER.beginBlock("trackmap-update");
 	UpdateTrackMap();
@@ -807,47 +823,68 @@ void GAME::AdvanceGameLogic()
 ///process inputs used only for higher level game functions
 void GAME::ProcessGameInputs()
 {
+	// most game inputs are allowed whether or not there's a car in the game
+	
+	if (carcontrols_local.second.GetInput(CARINPUT::SCREENSHOT) == 1.0)
+	{
+		//determine filename
+		std::string shotfile;
+		for (int i = 1; i < 999; i++)
+		{
+			std::stringstream s;
+			s << pathmanager.GetScreenshotPath() << "/shot";
+			s.width(3);
+			s.fill('0');
+			s << i << ".bmp";
+			if (!pathmanager.FileExists(s.str()))
+			{
+				shotfile = s.str();
+				break;
+			}
+		}
+		if (!shotfile.empty())
+		{
+			info_output << "Capturing screenshot to " << shotfile << std::endl;
+			window.Screenshot(shotfile);
+		}
+		else
+			error_output << "Couldn't find a file to which to save the captured screenshot" << std::endl;
+	}
+
+	if (carcontrols_local.second.GetInput(CARINPUT::RELOAD_SHADERS) == 1.0)
+	{
+		info_output << "Reloading shaders" << std::endl;
+		if (!graphics_interface->ReloadShaders(pathmanager.GetShaderPath(), info_output, error_output))
+		{
+			error_output << "Error reloading shaders" << std::endl;
+		}
+	}
+
+	if (carcontrols_local.second.GetInput(CARINPUT::RELOAD_GUI) == 1.0)
+	{
+		info_output << "Reloading GUI" << std::endl;
+		
+		// first, save the active page name so we can get back to in
+		std::string currentPage = gui.GetActivePageName();
+		
+		if (!InitGUI())
+		{
+			error_output << "Error reloading GUI" << std::endl;
+		}
+		else
+		{
+			// attempt to return to the last active page
+			// this may fail if the page is gone now
+			gui.ActivatePage(currentPage, 0.001, error_output);
+		}
+	}
+
+	// some game inputs are only allowed when there's a car in the game
 	if (carcontrols_local.first)
 	{
-		if (carcontrols_local.second.GetInput(CARINPUT::SCREENSHOT) == 1.0)
-		{
-			//determine filename
-			std::string shotfile;
-			for (int i = 1; i < 999; i++)
-			{
-				std::stringstream s;
-				s << pathmanager.GetScreenshotPath() << "/shot";
-				s.width(3);
-				s.fill('0');
-				s << i << ".bmp";
-				if (!pathmanager.FileExists(s.str()))
-				{
-					shotfile = s.str();
-					break;
-				}
-			}
-			if (!shotfile.empty())
-			{
-				info_output << "Capturing screenshot to " << shotfile << std::endl;
-				window.Screenshot(shotfile);
-			}
-			else
-				error_output << "Couldn't find a file to which to save the captured screenshot" << std::endl;
-		}
-		
 		if (carcontrols_local.second.GetInput(CARINPUT::PAUSE) == 1.0)
 		{
-			//cout << "Pause input; changing " << pause << " to " << !pause << std::endl;
 			pause = !pause;
-		}
-		
-		if (carcontrols_local.second.GetInput(CARINPUT::RELOAD_SHADERS) == 1.0)
-		{
-			info_output << "Reloading shaders" << std::endl;
-			if (!graphics_interface->ReloadShaders(pathmanager.GetShaderPath(), info_output, error_output))
-			{
-				error_output << "Error reloading shaders" << std::endl;
-			}
 		}
 	}
 }

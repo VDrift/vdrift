@@ -112,6 +112,7 @@ CARCONTROLMAP_LOCAL::CARCONTROLMAP_LOCAL()
 	carinput_stringmap["screen_shot"] = CARINPUT::SCREENSHOT;
 	carinput_stringmap["pause"] = CARINPUT::PAUSE;
 	carinput_stringmap["reload_shaders"] = CARINPUT::RELOAD_SHADERS;
+    carinput_stringmap["reload_gui"] = CARINPUT::RELOAD_GUI;
 	
 	PopulateLegacyKeycodes();
 }
