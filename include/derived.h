@@ -12,9 +12,9 @@ class DERIVED
 		T_BASECLASS * ptr;
 	
 	public:
-		DERIVED() : ptr(NULL) {}
+		DERIVED() : ptr(0) {}
 		DERIVED(T_BASECLASS * newobj) {ptr = newobj;}
-		DERIVED(const DERIVED & other) : ptr(NULL) {operator=(other);}
+		DERIVED(const DERIVED & other) : ptr(0) {operator=(other);}
 		DERIVED & operator= (T_BASECLASS * newobj) {if (ptr) delete ptr;ptr=newobj;return *this;}
 		~DERIVED() {if (ptr) delete ptr;}
 		T_BASECLASS * Get() {return ptr;}
