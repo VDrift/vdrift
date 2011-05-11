@@ -77,6 +77,7 @@ public:
 	typedef map::iterator iterator;
 	
 	PTree() : _parent(0) {}
+	
 	PTree(const std::string & value) : _value(value), _parent(0) {}
 	
 	const_iterator begin() const
@@ -167,8 +168,15 @@ public:
 		_children.clear();
 	}
 	
-	//void read(const std::string & filename, void (&read)(std::istream &, PTree &) = read_ini);
-	//void write(const std::string & filename, void (&write)(const PTree &, std::ostream &) = write_ini) const;
+	void read(std::istream & in, void (&read)(std::istream &, PTree &) = read_ini)
+	{
+		read(in, *this);
+	}
+	
+	void write(std::ostream & out, void (&write)(const PTree &, std::ostream &) = write_ini) const
+	{
+		write(*this, out);
+	}
 	
 private:
 	std::string _value;

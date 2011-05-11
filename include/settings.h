@@ -204,6 +204,11 @@ public:
 	{
 		return trackreverse;
 	}
+	
+	bool GetTrackDynamic() const
+	{
+		return trackdynamic;
+	}
 
 	bool GetShadows() const
 	{
@@ -385,6 +390,7 @@ private:
 	float ff_gain;
 	bool ff_invert;
 	bool trackreverse;
+	bool trackdynamic;
 	bool shadows;
 	int shadow_distance;
 	int shadow_quality;

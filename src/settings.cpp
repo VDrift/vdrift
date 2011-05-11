@@ -57,6 +57,7 @@ SETTINGS::SETTINGS() :
 	ff_gain(2.0),
 	ff_invert(false),
 	trackreverse(false),
+	trackdynamic(true),
 	shadows(false),
 	shadow_distance(1),
 	shadow_quality(1),
@@ -65,8 +66,8 @@ SETTINGS::SETTINGS() :
 	lighting(0),
 	bloom(false),
 	normalmaps(false),
-	player("XS"),
-	opponent("XS"),
+	player("XS/XS.car"),
+	opponent("XS/XS.car"),
 	player_paint("default"),
 	opponent_paint("default"), 
 	player_color(3, 1.0),
@@ -99,6 +100,7 @@ void SETTINGS::Serialize(bool write, CONFIG & config)
 	Param(config, write, section, "opponent_paint", opponent_paint);
 	Param(config, write, section, "opponent_color", opponent_color);
 	Param(config, write, section, "reverse", trackreverse);
+	Param(config, write, section, "track_dynamic", trackdynamic);
 	Param(config, write, section, "number_of_laps", number_of_laps);
 	Param(config, write, section, "camera_mode", camera_mode);
 

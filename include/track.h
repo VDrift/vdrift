@@ -44,6 +44,7 @@ public:
 		const std::string & texsize,
 		const int anisotropy,
 		const bool reverse,
+		const bool dynamicobjects,
 		const bool dynamicshadowsenabled,
 		const bool doagressivecombining);
 	

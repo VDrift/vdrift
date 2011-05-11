@@ -1974,6 +1974,7 @@ bool GAME::LoadTrack(const std::string & trackname)
 			settings.GetTextureSize(),
 			settings.GetAnisotropy(),
 			settings.GetTrackReverse(),
+			settings.GetTrackDynamic(),
 			graphics_interface->GetShadows(),
 			false))
 	{

@@ -44,8 +44,9 @@ bool TRACK::DeferredLoad(
 	const std::string & texsize,
 	const int anisotropy,
 	const bool reverse,
-	const bool dynamic_shadows_enabled,
-	const bool do_agressive_combining)
+	const bool dynamicobjects,
+	const bool dynamicshadows,
+	const bool agressivecombine)
 {
 	Clear();
 	
@@ -58,8 +59,9 @@ bool TRACK::DeferredLoad(
 			trackpath, trackdir,
 			texturedir, texsize,
 			anisotropy, reverse,
-			dynamic_shadows_enabled,
-			do_agressive_combining));
+			dynamicobjects,
+			dynamicshadows,
+			agressivecombine));
 	
 	return loader->BeginLoad();
 }

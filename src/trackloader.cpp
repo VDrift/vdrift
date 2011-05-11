@@ -67,6 +67,7 @@ TRACK::LOADER::LOADER(
 	const std::string & texsize,
 	const int anisotropy,
 	const bool reverse,
+	const bool dynamic_objects,
 	const bool dynamic_shadows,
 	const bool agressive_combining) :
 	texture_manager(textures),
@@ -81,6 +82,7 @@ TRACK::LOADER::LOADER(
 	texsize(texsize),
 	anisotropy(anisotropy),
 	reverse(reverse),
+	dynamic_objects(dynamic_objects),
 	dynamic_shadows(dynamic_shadows),
 	agressive_combining(agressive_combining),
 	packload(false),
@@ -576,8 +578,10 @@ bool TRACK::LOADER::LoadNode(const PTree & sec)
 	const BODY & body = ib->second;
 	if (body.mass < 1E-3)
 	{
+		// static geometry
 		if (has_transform)
 		{
+			// static geometry instanced
 			keyed_container <SCENENODE>::handle sh = data.static_node.AddNode();
 			SCENENODE & node = data.static_node.GetNode(sh);
 			node.GetTransform().SetTranslation(position);
@@ -586,11 +590,13 @@ bool TRACK::LOADER::LoadNode(const PTree & sec)
 		}
 		else
 		{
+			// static geometry pretransformed(non instanced)
 			AddBody(data.static_node, body);
 		}
 		
 		if (body.collidable)
 		{
+			// static geometry collidable
 			btTransform transform;
 			transform.setOrigin(ToBulletVector(position));
 			transform.setRotation(ToBulletQuaternion(rotation));
@@ -610,6 +616,7 @@ bool TRACK::LOADER::LoadNode(const PTree & sec)
 	}
 	else
 	{
+		// dynamic geometry
 		// fix postion due to rotation around mass center
 		MATHVECTOR<float, 3> c0 = ToMathVector<float>(body.center);
 		MATHVECTOR<float, 3> c1 = c0;
@@ -620,25 +627,45 @@ bool TRACK::LOADER::LoadNode(const PTree & sec)
 		transform.setOrigin(ToBulletVector(position));
 		transform.setRotation(ToBulletQuaternion(rotation));
 		
-		data.body_transforms.push_back(btDefaultMotionState(transform));
-		data.body_transforms.back().m_centerOfMassOffset.getOrigin() = -body.center;
-		
-		btRigidBody::btRigidBodyConstructionInfo info(body.mass, &data.body_transforms.back(), body.shape, body.inertia);
-		info.m_friction = 0.9;
-		
-		btRigidBody * object = new btRigidBody(info);
-		object->setContactProcessingThreshold(0.0);
-		data.objects.push_back(object);
-		world.AddRigidBody(object);
-		
-		keyed_container <SCENENODE>::handle nh = data.dynamic_node.AddNode();
-		SCENENODE & node = data.dynamic_node.GetNode(nh);
-		node.GetTransform().SetTranslation(position);
-		node.GetTransform().SetRotation(rotation);
-		data.body_nodes.push_back(nh);
-		AddBody(node, body);
+		if (dynamic_objects)
+		{
+			data.body_transforms.push_back(btDefaultMotionState(transform));
+			data.body_transforms.back().m_centerOfMassOffset.getOrigin() = -body.center;
+			
+			btRigidBody::btRigidBodyConstructionInfo info(body.mass, &data.body_transforms.back(), body.shape, body.inertia);
+			info.m_friction = 0.9;
+			
+			btRigidBody * object = new btRigidBody(info);
+			object->setContactProcessingThreshold(0.0);
+			data.objects.push_back(object);
+			world.AddRigidBody(object);
+			
+			keyed_container <SCENENODE>::handle nh = data.dynamic_node.AddNode();
+			SCENENODE & node = data.dynamic_node.GetNode(nh);
+			node.GetTransform().SetTranslation(position);
+			node.GetTransform().SetRotation(rotation);
+			data.body_nodes.push_back(nh);
+			AddBody(node, body);
+		}
+		else
+		{
+			// dynamic geometry as static geometry collidable
+			btCollisionObject * object = new btCollisionObject();
+			object->setActivationState(DISABLE_SIMULATION);
+			object->setWorldTransform(transform);
+			object->setCollisionShape(body.shape);
+			object->setUserPointer(body.shape->getUserPointer());
+			data.objects.push_back(object);
+			world.AddCollisionObject(object);
+			
+			keyed_container <SCENENODE>::handle sh = data.static_node.AddNode();
+			SCENENODE & node = data.static_node.GetNode(sh);
+			node.GetTransform().SetTranslation(position);
+			node.GetTransform().SetRotation(rotation);
+			AddBody(node, body);
+		}
 	}
-	
+
 	return true;
 }
 

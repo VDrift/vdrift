@@ -9,7 +9,11 @@
 #include <string>
 
 /*
-[body.foo]
+[object.foo]
+#position = 0, 0, 0
+#rotation = 0, 0, 0
+
+[object.foo.body]
 texture = diffuse.png
 model = body.joe
 #clampuv = 0
@@ -21,13 +25,8 @@ model = body.joe
 #isashadow = false
 #collideable = true
 #surface = 0
-#mass = 0 # to be implemented
+#mass = 0
 #size = 1, 1, 1 # axis aligned bounding box
-
-[node.bla]
-body = foo
-#position = 0, 0, 0
-#rotation = 0, 0, 0
 */
 
 class COLLISION_WORLD;
@@ -54,6 +53,7 @@ public:
 		const int anisotropy,
 		const bool reverse,
 		const bool dynamic_shadows,
+		const bool dynamic_objects,
 		const bool agressive_combining);
 		
 	~LOADER();
@@ -78,6 +78,7 @@ private:
 	const std::string & texsize;
 	const int anisotropy;
 	const bool reverse;
+	const bool dynamic_objects;
 	const bool dynamic_shadows;
 	const bool agressive_combining;
 	

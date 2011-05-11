@@ -44,7 +44,9 @@ struct MyRayResultCallback : public btCollisionWorld::RayResultCallback
 		
 		if(rayResult.m_localShapeInfo)
 		{
+#ifndef EXTBULLET
 			m_shape = rayResult.m_localShapeInfo->m_shape;
+#endif
 			m_shapePart = rayResult.m_localShapeInfo->m_shapePart;
 			m_triangleId = rayResult.m_localShapeInfo->m_triangleIndex;
 		}
@@ -66,7 +68,6 @@ struct MyRayResultCallback : public btCollisionWorld::RayResultCallback
 
 COLLISION_WORLD::COLLISION_WORLD(btScalar timeStep, int maxSubSteps) :
 	collisiondispatcher(&collisionconfig),
-	//collisionbroadphase(btVector3(-5000, -5000, -5000), btVector3(5000, 5000, 5000)),
 	world(&collisiondispatcher, &collisionbroadphase, &constraintsolver, &collisionconfig),
 	timeStep(timeStep),
 	maxSubSteps(maxSubSteps),
@@ -146,16 +147,21 @@ bool COLLISION_WORLD::CastRay(
 		if (c->isStaticObject())
 		{
 			TRACKSURFACE* tsc = (TRACKSURFACE*)c->getUserPointer();
-			TRACKSURFACE* tss = (TRACKSURFACE*)ray.m_shape->getUserPointer();
 			const std::vector<TRACKSURFACE> & surfaces = track->GetSurfaces();
 			if (tsc >= &surfaces[0] && tsc <= &surfaces[surfaces.size()-1])
 			{
 				s = tsc;
 			}
-			else if (tss >= &surfaces[0] && tss <= &surfaces[surfaces.size()-1])
+#ifndef EXTBULLET
+			else if (c->getCollisionShape()->isCompound())
 			{
-				s = tss;
+				TRACKSURFACE* tss = (TRACKSURFACE*)ray.m_shape->getUserPointer();
+				if (tss >= &surfaces[0] && tss <= &surfaces[surfaces.size()-1])
+				{
+					s = tss;
+				}
 			}
+#endif
 			//std::cerr << "static object without surface" << std::endl;
 		}
 		
