@@ -410,7 +410,7 @@ const PTree * cfg_shape;
 damage = damage && cfg.get("body.shape", cfg_shape);
 if (damage)
 {
-	btCollisionShape * shape = new btCompoundShape();
+	btCollisionShape * shape = new btCompoundShape(false);
 	LoadCollisionShape(*(cfg_shape->parent()), center_of_mass, shape);
 	
 	btRigidBody::btRigidBodyConstructionInfo info(mass, &motionState, shape, inertia);
