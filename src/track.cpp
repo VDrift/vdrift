@@ -1,6 +1,6 @@
 #include "track.h"
 #include "trackloader.h"
-#include "collision_world.h"
+#include "dynamicsworld.h"
 #include "tobullet.h"
 #include "reseatable_reference.h"
 
@@ -35,7 +35,7 @@ TRACK::DATA::DATA():
 bool TRACK::DeferredLoad(
 	TEXTUREMANAGER & textures,
 	MODELMANAGER & models,
-	COLLISION_WORLD & world,
+	DynamicsWorld & world,
 	std::ostream & info_output,
 	std::ostream & error_output,
 	const std::string & trackpath,
@@ -82,7 +82,7 @@ void TRACK::Clear()
 {
 	for(int i = 0, n = data.objects.size(); i < n; ++i)
 	{
-		data.world->RemoveCollisionObject(data.objects[i]);
+		data.world->removeCollisionObject(data.objects[i]);
 		delete data.objects[i];
 	}
 	data.objects.clear();

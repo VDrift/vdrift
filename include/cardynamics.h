@@ -17,7 +17,8 @@
 #include "collision_contact.h"
 #include "cartelemetry.h"
 #include "BulletDynamics/Dynamics/btActionInterface.h"
-#include "LinearMath/btDefaultMotionState.h"
+#include "LinearMath/btAlignedObjectArray.h"
+#include "LinearMath/btMotionState.h"
 
 #ifdef _MSC_VER
 #include <memory>
@@ -25,10 +26,30 @@
 #include <tr1/memory>
 #endif
 
-class MODEL;
-class COLLISION_WORLD;
+class DynamicsWorld;
 class PTree;
-class btMultiSphereShape;
+
+struct MotionState : public btMotionState {
+	btTransform m_graphicsWorldTrans;
+	btTransform	m_centerOfMassOffset;
+
+	MotionState(const btTransform& startTrans = btTransform::getIdentity(), const btTransform& centerOfMassOffset = btTransform::getIdentity())
+	: m_graphicsWorldTrans(startTrans), m_centerOfMassOffset(centerOfMassOffset)
+	{
+	}
+
+	/// from user to physics
+	virtual void getWorldTransform(btTransform& centerOfMassWorldTrans) const 
+	{
+		centerOfMassWorldTrans = m_graphicsWorldTrans * m_centerOfMassOffset.inverse();
+	}
+
+	/// from physics to user (for active objects)
+	virtual void setWorldTransform(const btTransform& centerOfMassWorldTrans)
+	{
+		m_graphicsWorldTrans = centerOfMassWorldTrans * m_centerOfMassOffset ;
+	}
+};
 
 class CARDYNAMICS : public btActionInterface
 {
@@ -36,30 +57,30 @@ friend class PERFORMANCE_TESTING;
 friend class joeserialize::Serializer;
 public:
 	CARDYNAMICS();
-	
+
 	~CARDYNAMICS();
-	
+
 	bool Load(
 		const PTree & cfg,
 		const btVector3 & size,
 		const btVector3 & center,
 		const btVector3 & position,
 		const btQuaternion & rotation,
-		COLLISION_WORLD & world,
+		const bool damage,
+		DynamicsWorld & world,
 		std::ostream & error_output);
-	
+
 	// bullet interface
 	void updateAction(btCollisionWorld * collisionWorld, btScalar dt);
 	void debugDraw(btIDebugDraw * debugDrawer);
 
 	// graphics interpolated
 	void Update();
+	btVector3 GetEnginePosition() const;
 	const btVector3 & GetPosition() const;
 	const btQuaternion & GetOrientation() const;
-	btVector3 GetEnginePosition() const;
-	btVector3 GetWheelPosition(WHEEL_POSITION wp) const;
-	btVector3 GetWheelPosition(WHEEL_POSITION wp, btScalar displacement_percent) const; // for debugging
-	btQuaternion GetWheelOrientation(WHEEL_POSITION wp) const;
+	const btVector3 & GetWheelPosition(WHEEL_POSITION wp) const;
+	const btQuaternion & GetWheelOrientation(WHEEL_POSITION wp) const;
 	btQuaternion GetUprightOrientation(WHEEL_POSITION wp) const;
 
 	// collision world interface
@@ -138,20 +159,32 @@ public:
 	bool Serialize(joeserialize::Serializer & s);
 
 protected:
+	DynamicsWorld * world;
+	
 	// body state
-	COLLISION_WORLD * world;
-	btMultiSphereShape * shape;
-	btRigidBody * body;
-	btDefaultMotionState motionState;	// common implementation to synchronize world transforms with offsets
-	btVector3 center_of_mass;
-	btTransform transform;				// last body transform
+	btRigidBody* body;
+	MotionState motionState;
+	btVector3 center_of_mass; 			// collision/graphics shape offset
+	
+	// body state cache
+	btTransform transform;
 	btVector3 linear_velocity;
 	btVector3 angular_velocity;
 	
-	// interpolated state
+	// body transform cache interpolated 
 	btVector3 bodyPosition;
 	btQuaternion bodyRotation;
-
+	
+	// breakable children bodies
+	struct Body {
+		btVector3 position;
+		btQuaternion rotation;
+		MotionState motionState;
+		btRigidBody* body;
+		Body() : body(0) {}
+	};
+	btAlignedObjectArray<Body> bodies;
+	
 	// driveline state
 	CARENGINE engine;
 	CARFUELTANK fuel_tank;
@@ -178,8 +211,8 @@ protected:
 	// traction control state
 	bool abs;
 	bool tcs;
-	std::vector <int> abs_active;
-	std::vector <int> tcs_active;
+	std::vector<int> abs_active;
+	std::vector<int> tcs_active;
 	
 	// suspension
 	btAlignedObjectArray<btVector3> suspension_force;
@@ -195,6 +228,7 @@ protected:
 	
 	btScalar maxangle;
 	btScalar feedback;
+	bool damage;
 
 	btVector3 GetDownVector() const;
 	
@@ -268,13 +302,6 @@ protected:
 		const btVector3 & bodyCenter,
 		btVector3 & center,
 		btVector3 & size);
-
-	void Init(
-		COLLISION_WORLD & world,
-		const btVector3 & bodySize,
-		const btVector3 & bodyCenter,
-		const btVector3 & position,
-		const btQuaternion & rotation);
 
 	void AddMassParticle(const btScalar mass, const btVector3 & pos);
 };

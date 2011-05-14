@@ -1,24 +1,27 @@
 #ifndef _PERFORMANCE_TESTING_H
 #define _PERFORMANCE_TESTING_H
 
-#include "collision_world.h"
 #include "car.h"
 
 #include <string>
 #include <ostream>
 
+class DynamicsWorld;
+
 class PERFORMANCE_TESTING
 {
 public:
-	PERFORMANCE_TESTING();
+	PERFORMANCE_TESTING(DynamicsWorld & world);
+	
 	void Test(
 		const std::string & carpath,
 		const std::string & carname,
 		const std::string & partspath,
 		std::ostream & info_output,
 		std::ostream & error_output);
+
 private:
-	COLLISION_WORLD world;
+	DynamicsWorld & world;
 	TRACKSURFACE surface;
 	CAR car;
 	std::string carstate;

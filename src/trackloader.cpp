@@ -1,24 +1,13 @@
 #include "trackloader.h"
-#include "collision_world.h"
+#include "dynamicsworld.h"
+#include "loadcollisionshape.h"
 #include "texturemanager.h"
 #include "textureinfo.h"
 #include "modelmanager.h"
 #include "tobullet.h"
 #include "k1999.h"
 
-static void operator >> (std::istream & lhs, std::vector<std::string> & rhs)
-{
-	for (size_t i = 0; i < rhs.size() && !lhs.eof(); ++i)
-	{
-		std::string str;
-		std::getline(lhs, str, ',');
-		std::stringstream s(str);
-		s >> str;
-		rhs[i] = str;
-	}
-}
-
-static void operator >> (std::istream & lhs, btVector3 & rhs)
+inline void operator >> (std::istream & lhs, btVector3 & rhs)
 {
 	for (size_t i = 0; i < 3; ++i)
 	{
@@ -29,6 +18,18 @@ static void operator >> (std::istream & lhs, btVector3 & rhs)
 		btScalar val(0);
 		s >> val;
 		rhs[i] = val;
+	}
+}
+
+inline void operator >> (std::istream & lhs, std::vector<std::string> & rhs)
+{
+	for (size_t i = 0; i < rhs.size() && !lhs.eof(); ++i)
+	{
+		std::string str;
+		std::getline(lhs, str, ',');
+		std::stringstream s(str);
+		s >> str;
+		rhs[i] = str;
 	}
 }
 
@@ -57,7 +58,7 @@ static btIndexedMesh GetIndexedMesh(const MODEL & model)
 TRACK::LOADER::LOADER(
 	TEXTUREMANAGER & textures,
 	MODELMANAGER & models,
-	COLLISION_WORLD & world,
+	DynamicsWorld & world,
 	DATA & data,
 	std::ostream & info_output,
 	std::ostream & error_output,
@@ -172,7 +173,7 @@ bool TRACK::LOADER::ContinueLoad()
 		btCollisionObject * track_object = new btCollisionObject();
 		track_shape->createAabbTreeFromChildren();
 		track_object->setCollisionShape(track_shape);
-		world.AddCollisionObject(track_object);
+		world.addCollisionObject(track_object);
 		data.objects.push_back(track_object);
 		data.shapes.push_back(track_shape);
 		track_shape = 0;
@@ -272,77 +273,6 @@ bool TRACK::LOADER::LoadModel(const std::string & name)
 	return false;
 }
 
-static void LoadBoxShape(
-	const PTree & cfg,
-	const btVector3 & center,
-	btCollisionShape *& shape)
-{
-	btVector3 box_size(1, 1, 1);
-	cfg.get("size", box_size);
-	btBoxShape * box = new btBoxShape(box_size * 0.5);
-	
-	btVector3 box_center(0, 0, 0);
-	cfg.get("center", box_center);
-	btTransform transform = btTransform::getIdentity();
-	transform.getOrigin() = box_center - center;
-	
-	if (!shape)
-	{
-		if (center.isZero() && box_center.isZero())
-		{
-			shape = box;
-		}
-		else
-		{
-			btCompoundShape * compound = new btCompoundShape(false);
-			compound->addChildShape(transform, box);
-			shape = compound;
-		}
-	}
-	else
-	{
-		if (!shape->isCompound())
-		{
-			// create compound, remap shape pointer
-			btCollisionShape * temp = shape;
-			shape = new btCompoundShape(false);
-			static_cast<btCompoundShape*>(shape)->addChildShape(btTransform::getIdentity(), temp);
-		}
-		static_cast<btCompoundShape*>(shape)->addChildShape(transform, box);
-	}
-}
-
-static void LoadHullShape(
-	const PTree & cfg,
-	const btVector3 & center,
-	btCollisionShape *& shape)
-{
-	btConvexHullShape * hull = new btConvexHullShape();
-	for (PTree::const_iterator i = cfg.begin(); i != cfg.end(); ++i)
-	{
-		btVector3 point;
-		std::istringstream str(i->second.value());
-		str >> point;
-		hull->addPoint(point - center);
-	}
-	
-	if (!shape)
-	{
-		shape = hull;
-	}
-	else
-	{
-		if (!shape->isCompound())
-		{
-			// create compound, remap shape pointer
-			btCollisionShape * temp = shape;
-			shape = new btCompoundShape(false);
-			static_cast<btCompoundShape*>(shape)->addChildShape(btTransform::getIdentity(), temp);
-		}
-		static_cast<btCompoundShape*>(shape)->addChildShape(btTransform::getIdentity(), hull);
-	}
-}
-
 bool TRACK::LOADER::LoadShape(const PTree & cfg, const MODEL & model, BODY & body)
 {
 	if (body.mass < 1E-3)
@@ -366,28 +296,11 @@ bool TRACK::LOADER::LoadShape(const PTree & cfg, const MODEL & model, BODY & bod
 	}
 	else
 	{
-		btCollisionShape * shape = 0;
-		
 		btVector3 center(0, 0, 0);
 		cfg.get("mass-center", center);
 		
-		const PTree * cfg_shape = 0;
-		if (cfg.get("shape.hull", cfg_shape))
-		{
-			// load hulls
-			for (PTree::const_iterator i = cfg_shape->begin(); i != cfg_shape->end(); ++i)
-			{
-				LoadHullShape(i->second, center, shape);
-			}
-		}
-		if (cfg.get("shape.box", cfg_shape))
-		{
-			// load boxes
-			for (PTree::const_iterator i = cfg_shape->begin(); i != cfg_shape->end(); ++i)
-			{
-				LoadBoxShape(i->second, center, shape);
-			}
-		}
+		btCollisionShape * shape = 0;
+		LoadCollisionShape(cfg, center, shape);
 		
 		if (!shape)
 		{
@@ -638,7 +551,7 @@ bool TRACK::LOADER::LoadNode(const PTree & sec)
 			btRigidBody * object = new btRigidBody(info);
 			object->setContactProcessingThreshold(0.0);
 			data.objects.push_back(object);
-			world.AddRigidBody(object);
+			world.addRigidBody(object);
 			
 			keyed_container <SCENENODE>::handle nh = data.dynamic_node.AddNode();
 			SCENENODE & node = data.dynamic_node.GetNode(nh);
@@ -656,7 +569,7 @@ bool TRACK::LOADER::LoadNode(const PTree & sec)
 			object->setCollisionShape(body.shape);
 			object->setUserPointer(body.shape->getUserPointer());
 			data.objects.push_back(object);
-			world.AddCollisionObject(object);
+			world.addCollisionObject(object);
 			
 			keyed_container <SCENENODE>::handle sh = data.static_node.AddNode();
 			SCENENODE & node = data.static_node.GetNode(sh);

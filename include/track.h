@@ -15,7 +15,7 @@
 #include <memory>
 #include <vector>
 
-class COLLISION_WORLD;
+class DynamicsWorld;
 class TEXTUREMANAGER;
 class MODELMANAGER;
 class OBJECTLOADER;
@@ -35,7 +35,7 @@ public:
 	bool DeferredLoad(
 		TEXTUREMANAGER & textures,
 		MODELMANAGER & models,
-		COLLISION_WORLD & world,
+		DynamicsWorld & world,
 		std::ostream & info_output,
 		std::ostream & error_output,
 		const std::string & trackpath,
@@ -130,7 +130,7 @@ public:
 private:
 	struct DATA
 	{
-		COLLISION_WORLD * world;
+		DynamicsWorld * world;
 		
 		// static track objects
 		SCENENODE static_node;

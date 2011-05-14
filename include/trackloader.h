@@ -29,7 +29,7 @@ model = body.joe
 #size = 1, 1, 1 # axis aligned bounding box
 */
 
-class COLLISION_WORLD;
+class DynamicsWorld;
 class TEXTUREMANAGER;
 class MODELMANAGER;
 class btStridingMeshInterface;
@@ -42,7 +42,7 @@ public:
 	LOADER(
 		TEXTUREMANAGER & textures,
 		MODELMANAGER & models,
-		COLLISION_WORLD & world,
+		DynamicsWorld & world,
 		DATA & data,
 		std::ostream & info_output,
 		std::ostream & error_output,
@@ -67,7 +67,7 @@ public:
 private:
 	TEXTUREMANAGER & texture_manager;
 	MODELMANAGER & model_manager;
-	COLLISION_WORLD & world;
+	DynamicsWorld & world;
 	DATA & data;
 	std::ostream & info_output;
 	std::ostream & error_output;

@@ -77,7 +77,8 @@ SETTINGS::SETTINGS() :
 	contrast(1.0),
 	camera_mode("chase"),
 	hgateshifter(false),
-	ai_difficulty(1.0)
+	ai_difficulty(1.0),
+	vehicle_damage(false)
 {
 	// ctor
 }
@@ -87,6 +88,7 @@ void SETTINGS::Serialize(bool write, CONFIG & config)
 	CONFIG::iterator section;
 	
 	config.GetSection("game", section);
+	Param(config, write, section, "vehicle_damage", vehicle_damage);
 	Param(config, write, section, "ai_difficulty", ai_difficulty);
 	Param(config, write, section, "track", track);
 	Param(config, write, section, "antilock", abs);

@@ -1,4 +1,5 @@
 #include "performance_testing.h"
+#include "dynamicsworld.h"
 #include "tracksurface.h"
 #include "carinput.h"
 #include "cfg/ptree.h"
@@ -17,7 +18,8 @@ static inline float ConvertToFeet(float meters)
 	return meters * 3.2808399;
 }
 
-PERFORMANCE_TESTING::PERFORMANCE_TESTING()
+PERFORMANCE_TESTING::PERFORMANCE_TESTING(DynamicsWorld & world) : 
+	world(world)
 {
 	surface.type = TRACKSURFACE::ASPHALT;
 	surface.bumpWaveLength = 1;
@@ -49,7 +51,8 @@ void PERFORMANCE_TESTING::Test(
 	
 	btVector3 size(0, 0, 0), center(0, 0, 0), pos(0, 0, 0); // collision shape from wheel data
 	btQuaternion rot = btQuaternion::getIdentity();
-	if (!car.dynamics.Load(cfg, size, center, pos, rot, world, error_output))
+	bool damage = false;
+	if (!car.dynamics.Load(cfg, size, center, pos, rot, damage, world, error_output))
 	{
 		error_output << "Error during car dynamics load: " << carfile << std::endl;
 		return;
@@ -141,7 +144,7 @@ void PERFORMANCE_TESTING::TestMaxSpeed(std::ostream & info_output, std::ostream 
 	{
 		car.HandleInputs(inputs, dt);
 
-		world.Update(dt);
+		world.update(dt);
 
 		if (car.dynamics.GetSpeed() > maxspeed.second)
 		{
@@ -231,7 +234,7 @@ void PERFORMANCE_TESTING::TestStoppingDistance(bool abs, std::ostream & info_out
 
 		car.HandleInputs(inputs, dt);
 
-		world.Update(dt);
+		world.update(dt);
 
 		if (car.dynamics.GetSpeed() >= brakestartspeed && accelerating) //stop accelerating and hit the brakes
 		{

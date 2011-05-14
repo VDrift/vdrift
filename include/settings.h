@@ -313,6 +313,11 @@ public:
 	{
 		return ai_difficulty;
 	}
+	
+	bool GetVehicleDamage() const
+	{
+		return vehicle_damage;
+	}
 
 	void SetResolutionX ( unsigned int theValue )
 	{
@@ -411,6 +416,7 @@ private:
 	std::string camera_mode;
 	bool hgateshifter;
 	float ai_difficulty;
+	bool vehicle_damage;
 };
 
 #endif

@@ -1,7 +1,7 @@
 #include "car.h"
 #include "carwheelposition.h"
 #include "coordinatesystems.h"
-#include "collision_world.h"
+#include "dynamicsworld.h"
 #include "tracksurface.h"
 #include "config.h"
 #include "carinput.h"
@@ -580,8 +580,9 @@ bool CAR::LoadPhysics(
 	const QUATERNION <float> & initial_orientation,
 	const bool defaultabs,
 	const bool defaulttcs,
+	const bool damage,
 	MODELMANAGER & models,
-	COLLISION_WORLD & world,
+	DynamicsWorld & world,
 	std::ostream & info_output,
 	std::ostream & error_output)
 {
@@ -599,7 +600,7 @@ bool CAR::LoadPhysics(
 	modelrotation.RotateVector(size);
 	modelrotation.RotateVector(center);
 	
-	if (!dynamics.Load(cfg, size, center, position, rotation, world, error_output)) return false;
+	if (!dynamics.Load(cfg, size, center, position, rotation, damage, world, error_output)) return false;
 	dynamics.SetABS(defaultabs);
 	dynamics.SetTCS(defaulttcs);
 	

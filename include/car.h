@@ -60,8 +60,9 @@ public:
 		const QUATERNION <float> & initial_orientation,
 		const bool defaultabs,
 		const bool defaulttcs,
+		const bool damage,
 		MODELMANAGER & models,
-		COLLISION_WORLD & world,
+		DynamicsWorld & world,
 		std::ostream & info_output,
 		std::ostream & error_output);
 	

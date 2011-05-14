@@ -71,7 +71,8 @@ GAME::GAME(std::ostream & info_out, std::ostream & error_out) :
 	debugmode(false),
 	profilingmode(false),
 	renderconfigfile("render.conf.deferred"),
-	collision(timestep),
+	collisiondispatch(&collisionconfig),
+	collision(&collisiondispatch, &collisionbroadphase, &collisionsolver, &collisionconfig, timestep),
 	track(),
 	replay(timestep),
 	http("/tmp")
@@ -450,7 +451,7 @@ bool GAME::ParseArguments(std::list <std::string> & args)
 	if (!argmap["-cartest"].empty())
 	{
 		pathmanager.Init(info_output, error_output);
-		PERFORMANCE_TESTING perftest;
+		PERFORMANCE_TESTING perftest(collision);
 		perftest.Test(pathmanager.GetCarPath(), pathmanager.GetSharedCarPath(), 
 			argmap["-cartest"], info_output, error_output);
 		continue_game = false;
@@ -763,7 +764,7 @@ void GAME::AdvanceGameLogic()
 				PROFILER.endBlock("ai");
 				
 				PROFILER.beginBlock("physics");
-				collision.Update(TickPeriod());
+				collision.update(TickPeriod());
 				PROFILER.endBlock("physics");
 				
 				PROFILER.beginBlock("car-update");
@@ -1866,7 +1867,6 @@ void GAME::LeaveGame()
 		}
 	}
 	
-	collision.Clear();
 	track.Clear();
 	cars.clear();
 	hud.Hide();
@@ -1886,7 +1886,8 @@ bool GAME::LoadCar(
 	const MATHVECTOR <float, 3> & carcolor,
 	const MATHVECTOR <float, 3> & start_position,
 	const QUATERNION <float> & start_orientation,
-	bool islocal, bool isai, const std::string & carfile)
+	bool islocal, bool isai,
+	const std::string & carfile)
 {
 	std::string partspath = pathmanager.GetCarSharedDir();
 	std::string cardir = pathmanager.GetCarDir()+"/"+carname.substr(0, carname.find("/"));
@@ -1934,7 +1935,8 @@ bool GAME::LoadCar(
 		carconf, cardir,
 		start_position, start_orientation,
 		settings.GetABS() || isai, settings.GetTCS() || isai,
-		models,  collision,
+		settings.GetVehicleDamage(),
+		models, collision,
 		info_output, error_output))
 	{
 		return false;
@@ -2020,8 +2022,8 @@ bool GAME::LoadTrack(const std::string & trackname)
 	}
 
 	//setup track collision
-	collision.Reset(track);
-	collision.DebugPrint(info_output);
+	collision.reset(track);
+	collision.debugPrint(info_output);
 	
 	//build static drawlist
 	#ifdef USE_STATIC_OPTIMIZATION_FOR_TRACK
