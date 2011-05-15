@@ -528,20 +528,19 @@ bool TRACK::LOADER::LoadNode(const PTree & sec)
 	}
 	else
 	{
+		// fix postion due to rotation around mass center
 		MATHVECTOR<float, 3> center_local = ToMathVector<float>(body.center);
 		MATHVECTOR<float, 3> center_world = center_local;
 		rotation.RotateVector(center_world);
+		position = position - center_local + center_world;
 		
-		// dynamic geometry
+		btTransform transform;
+		transform.setOrigin(ToBulletVector(position));
+		transform.setRotation(ToBulletQuaternion(rotation));
+		
 		if (dynamic_objects)
 		{
-			// fix postion due to rotation around mass center
-			position = position - center_local + center_world;
-			
-			btTransform transform;
-			transform.setOrigin(ToBulletVector(position));
-			transform.setRotation(ToBulletQuaternion(rotation));
-			
+			// dynamic geometry
 			data.body_transforms.push_back(MotionState(transform));
 			data.body_transforms.back().m_centerOfMassOffset.getOrigin() = -body.center;
 			
@@ -563,10 +562,6 @@ bool TRACK::LOADER::LoadNode(const PTree & sec)
 		else
 		{
 			// dynamic geometry as static geometry collidable
-			btTransform transform;
-			transform.setOrigin(ToBulletVector(position + center_world));
-			transform.setRotation(ToBulletQuaternion(rotation));
-			
 			btCollisionObject * object = new btCollisionObject();
 			object->setActivationState(DISABLE_SIMULATION);
 			object->setWorldTransform(transform);
