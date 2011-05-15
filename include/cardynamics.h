@@ -18,7 +18,7 @@
 #include "cartelemetry.h"
 #include "BulletDynamics/Dynamics/btActionInterface.h"
 #include "LinearMath/btAlignedObjectArray.h"
-#include "LinearMath/btMotionState.h"
+#include "motionstate.h"
 
 #ifdef _MSC_VER
 #include <memory>
@@ -28,28 +28,6 @@
 
 class DynamicsWorld;
 class PTree;
-
-struct MotionState : public btMotionState {
-	btTransform m_graphicsWorldTrans;
-	btTransform	m_centerOfMassOffset;
-
-	MotionState(const btTransform& startTrans = btTransform::getIdentity(), const btTransform& centerOfMassOffset = btTransform::getIdentity())
-	: m_graphicsWorldTrans(startTrans), m_centerOfMassOffset(centerOfMassOffset)
-	{
-	}
-
-	/// from user to physics
-	virtual void getWorldTransform(btTransform& centerOfMassWorldTrans) const 
-	{
-		centerOfMassWorldTrans = m_graphicsWorldTrans * m_centerOfMassOffset.inverse();
-	}
-
-	/// from physics to user (for active objects)
-	virtual void setWorldTransform(const btTransform& centerOfMassWorldTrans)
-	{
-		m_graphicsWorldTrans = centerOfMassWorldTrans * m_centerOfMassOffset ;
-	}
-};
 
 class CARDYNAMICS : public btActionInterface
 {

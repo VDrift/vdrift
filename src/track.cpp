@@ -50,6 +50,7 @@ bool TRACK::DeferredLoad(
 {
 	Clear();
 	
+	world.reset(*this);
 	data.world = &world;
 	
 	loader.reset(
@@ -235,8 +236,8 @@ void TRACK::Update()
 {
 	if (!data.loaded) return;
 	
-	std::list<btDefaultMotionState>::const_iterator t = data.body_transforms.begin();
-	for (int i = 0, n = data.body_nodes.size(); i < n; ++i, ++t)
+	std::list<MotionState>::const_iterator t = data.body_transforms.begin();
+	for (int i = 0, e = data.body_nodes.size(); i < e; ++i, ++t)
 	{
 		const btTransform & bt = t->m_graphicsWorldTrans;
 		TRANSFORM & vt = data.dynamic_node.GetNode(data.body_nodes[i]).GetTransform();

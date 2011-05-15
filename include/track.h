@@ -6,7 +6,7 @@
 #include "roadstrip.h"
 #include "mathvector.h"
 #include "quaternion.h"
-#include "LinearMath/btDefaultMotionState.h"
+#include "motionstate.h"
 #include "LinearMath/btAlignedObjectArray.h"
 
 #include <string>
@@ -68,7 +68,7 @@ public:
 		const BEZIER * & colpatch,
 		MATHVECTOR <float, 3> & normal) const;
 		
-	/// syncronize graphics and physics once per frame
+	/// synchronize graphics and physics
 	void Update();
 	
 	std::pair <MATHVECTOR <float, 3>, QUATERNION <float> > GetStart(unsigned int index) const;
@@ -130,50 +130,46 @@ public:
 private:
 	struct DATA
 	{
-		DynamicsWorld * world;
+		DynamicsWorld* world;
 		
 		// static track objects
 		SCENENODE static_node;
-		std::vector <TRACKSURFACE> surfaces;
-		std::vector <std::tr1::shared_ptr<MODEL> > models;
-		btAlignedObjectArray <btStridingMeshInterface *> meshes;
-		btAlignedObjectArray <btCollisionShape *> shapes;
-		btAlignedObjectArray <btCollisionObject *> objects;
+		std::vector<TRACKSURFACE> surfaces;
+		std::vector<std::tr1::shared_ptr<MODEL> > models;
+		btAlignedObjectArray<btStridingMeshInterface*> meshes;
+		btAlignedObjectArray<btCollisionShape*> shapes;
+		btAlignedObjectArray<btCollisionObject*> objects;
 		
 		// dynamic track objects
 		SCENENODE dynamic_node;
 		std::vector<keyed_container<SCENENODE>::handle> body_nodes;
-		std::list<btDefaultMotionState> body_transforms;
+		std::list<MotionState> body_transforms;
 		
 		// road information
-		std::vector <const BEZIER *> lap;
-		std::list <ROADSTRIP> roads;
-		std::vector <std::pair<MATHVECTOR <float, 3>, QUATERNION <float> > > start_positions;
+		std::vector<const BEZIER*> lap;
+		std::list<ROADSTRIP> roads;
+		std::vector<std::pair<MATHVECTOR<float, 3>, QUATERNION<float> > > start_positions;
 		
 		// racing line data
 		SCENENODE racingline_node;
 		std::tr1::shared_ptr<TEXTURE> racingline_texture;
 		
 		// track state
-		enum
-		{
-			DIRECTION_FORWARD,
-			DIRECTION_REVERSE
-		} direction;
+		enum { DIRECTION_FORWARD, DIRECTION_REVERSE } direction;
 		bool vertical_tracking_skyboxes;
 		bool loaded;
 		bool cull;
 		
 		DATA();
-		
-	} data;
+	};
 	
+	DATA data;
 	bool racingline_visible;
 	SCENENODE empty_node;
 	
 	// temporary loading data
 	class LOADER;
-	std::auto_ptr <LOADER> loader;
+	std::auto_ptr<LOADER> loader;
 };
 
 #endif

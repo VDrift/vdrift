@@ -2020,10 +2020,6 @@ bool GAME::LoadTrack(const std::string & trackname)
 		error_output << "Error loading track map: " << trackname << std::endl;
 		return false;
 	}
-
-	//setup track collision
-	collision.reset(track);
-	collision.debugPrint(info_output);
 	
 	//build static drawlist
 	#ifdef USE_STATIC_OPTIMIZATION_FOR_TRACK

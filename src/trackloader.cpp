@@ -171,7 +171,7 @@ bool TRACK::LOADER::ContinueLoad()
 	{
 #ifndef EXTBULLET
 		btCollisionObject * track_object = new btCollisionObject();
-		track_shape->createAabbTreeFromChildren();
+		//track_shape->createAabbTreeFromChildren();
 		track_object->setCollisionShape(track_shape);
 		world.addCollisionObject(track_object);
 		data.objects.push_back(track_object);
@@ -304,7 +304,7 @@ bool TRACK::LOADER::LoadShape(const PTree & cfg, const MODEL & model, BODY & bod
 		
 		if (!shape)
 		{
-			// falback to model bounding box
+			// fall back to model bounding box
 			btVector3 size = ToBulletVector(model.GetAABB().GetSize());
 			shape = new btBoxShape(size * 0.5);
 			center = center + ToBulletVector(model.GetAABB().GetCenter());
@@ -313,7 +313,7 @@ bool TRACK::LOADER::LoadShape(const PTree & cfg, const MODEL & model, BODY & bod
 		{
 			// keep track of child shapes
 			btCompoundShape * compound = static_cast<btCompoundShape*>(shape);
-			btCompoundShapeChild * children =  compound->getChildList();
+			btCompoundShapeChild * children = compound->getChildList();
 			int children_count = compound->getNumChildShapes();
 			for (int i = 0; i < children_count; ++i)
 			{
@@ -513,7 +513,6 @@ bool TRACK::LOADER::LoadNode(const PTree & sec)
 			btTransform transform;
 			transform.setOrigin(ToBulletVector(position));
 			transform.setRotation(ToBulletQuaternion(rotation));
-			
 #ifndef EXTBULLET
 			track_shape->addChildShape(transform, body.shape);
 #else
@@ -529,20 +528,21 @@ bool TRACK::LOADER::LoadNode(const PTree & sec)
 	}
 	else
 	{
+		MATHVECTOR<float, 3> center_local = ToMathVector<float>(body.center);
+		MATHVECTOR<float, 3> center_world = center_local;
+		rotation.RotateVector(center_world);
+		
 		// dynamic geometry
-		// fix postion due to rotation around mass center
-		MATHVECTOR<float, 3> c0 = ToMathVector<float>(body.center);
-		MATHVECTOR<float, 3> c1 = c0;
-		rotation.RotateVector(c1);
-		position = position - c0 + c1;
-		
-		btTransform transform;
-		transform.setOrigin(ToBulletVector(position));
-		transform.setRotation(ToBulletQuaternion(rotation));
-		
 		if (dynamic_objects)
 		{
-			data.body_transforms.push_back(btDefaultMotionState(transform));
+			// fix postion due to rotation around mass center
+			position = position - center_local + center_world;
+			
+			btTransform transform;
+			transform.setOrigin(ToBulletVector(position));
+			transform.setRotation(ToBulletQuaternion(rotation));
+			
+			data.body_transforms.push_back(MotionState(transform));
 			data.body_transforms.back().m_centerOfMassOffset.getOrigin() = -body.center;
 			
 			btRigidBody::btRigidBodyConstructionInfo info(body.mass, &data.body_transforms.back(), body.shape, body.inertia);
@@ -553,16 +553,20 @@ bool TRACK::LOADER::LoadNode(const PTree & sec)
 			data.objects.push_back(object);
 			world.addRigidBody(object);
 			
-			keyed_container <SCENENODE>::handle nh = data.dynamic_node.AddNode();
-			SCENENODE & node = data.dynamic_node.GetNode(nh);
+			keyed_container<SCENENODE>::handle node_handle = data.dynamic_node.AddNode();
+			SCENENODE & node = data.dynamic_node.GetNode(node_handle);
 			node.GetTransform().SetTranslation(position);
 			node.GetTransform().SetRotation(rotation);
-			data.body_nodes.push_back(nh);
+			data.body_nodes.push_back(node_handle);
 			AddBody(node, body);
 		}
 		else
 		{
 			// dynamic geometry as static geometry collidable
+			btTransform transform;
+			transform.setOrigin(ToBulletVector(position + center_world));
+			transform.setRotation(ToBulletQuaternion(rotation));
+			
 			btCollisionObject * object = new btCollisionObject();
 			object->setActivationState(DISABLE_SIMULATION);
 			object->setWorldTransform(transform);
@@ -578,7 +582,7 @@ bool TRACK::LOADER::LoadNode(const PTree & sec)
 			AddBody(node, body);
 		}
 	}
-
+	
 	return true;
 }
 
