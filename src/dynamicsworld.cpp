@@ -21,13 +21,11 @@ struct MyRayResultCallback : public btCollisionWorld::RayResultCallback
 		// ctor
 	}
 
-	btVector3	m_rayFromWorld;//used to calculate hitPointWorld from hitFraction
-	btVector3	m_rayToWorld;
+	btVector3 m_rayFromWorld;//used to calculate hitPointWorld from hitFraction
+	btVector3 m_rayToWorld;
+	btVector3 m_hitNormalWorld;
+	btVector3 m_hitPointWorld;
 
-	btVector3	m_hitNormalWorld;
-	btVector3	m_hitPointWorld;
-
-	
 	int m_shapePart;
 	int m_triangleId;
 	const btCollisionShape * m_shape;
@@ -250,8 +248,9 @@ void DynamicsWorld::fractureCallback( )
 				if (index >= 0)
 				{
 					btScalar & accImpulse = body->m_connections[index].m_accImpulse;
-					if (accImpulse > 1E-3)
+					if (accImpulse < 1E-3)
 					{
+						// activate connection
 						ConnectId id;
 						id.body = f0;
 						id.connection = index;
@@ -272,8 +271,9 @@ void DynamicsWorld::fractureCallback( )
 				if (index >= 0)
 				{
 					btScalar & accImpulse = body->m_connections[index].m_accImpulse;
-					if (accImpulse > 1E-3)
+					if (accImpulse < 1E-3)
 					{
+						// activate connection
 						ConnectId id;
 						id.body = f1;
 						id.connection = index;
