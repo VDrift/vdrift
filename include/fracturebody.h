@@ -9,7 +9,7 @@ class btManifoldPoint;
 #include "LinearMath/btAlignedObjectArray.h"
 #include "BulletDynamics/Dynamics/btRigidBody.h"
 
-#define CUSTOM_FRACTURE_TYPE (btRigidBody::CO_USER_TYPE+1)
+#define CUSTOM_FRACTURE_TYPE (btRigidBody::CO_USER_TYPE*2)
 
 struct btConnection
 {
