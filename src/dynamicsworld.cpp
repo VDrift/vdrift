@@ -217,11 +217,17 @@ void DynamicsWorld::reset()
 	track = 0;
 }
 
-struct ConnectId { int body; int connection; };
-
-void DynamicsWorld::fractureCallback( )
+struct ActiveCon
 {
-	btAlignedObjectArray<ConnectId> activeConnections;
+	ActiveCon(FractureBody* body, int connection) : 
+		body(body), connection(connection) {}
+	FractureBody* body;
+	int connection;
+};
+
+void DynamicsWorld::fractureCallback()
+{
+	btAlignedObjectArray<ActiveCon> activeConnections;
 	
 	int numManifolds = getDispatcher()->getNumManifolds();
 	for (int i = 0; i < numManifolds; ++i)
@@ -229,55 +235,40 @@ void DynamicsWorld::fractureCallback( )
 		btPersistentManifold* manifold = getDispatcher()->getManifoldByIndexInternal(i);
 		if (!manifold->getNumContacts()) continue;
 		
-		//if (!(((btCollisionObject*)manifold->getBody0())->getInternalType() & CUSTOM_FRACTURE_TYPE) && 
-		//	!(((btCollisionObject*)manifold->getBody1())->getInternalType() & CUSTOM_FRACTURE_TYPE))
-		//	continue;
-		
-		int f0 = m_fractureBodies.findLinearSearch((FractureBody*)manifold->getBody0());
-		int f1 = m_fractureBodies.findLinearSearch((FractureBody*)manifold->getBody1());
-		
-		if (f0 == f1) continue;
-		
-		if (f0 < m_fractureBodies.size())
+		if (((btCollisionObject*)manifold->getBody0())->getInternalType() & CUSTOM_FRACTURE_TYPE)
 		{
-			FractureBody * body = m_fractureBodies[f0];
+			FractureBody* body = (FractureBody*)manifold->getBody0();
 			for (int k = 0; k < manifold->getNumContacts(); ++k)
 			{
 				btManifoldPoint& pt = manifold->getContactPoint(k);
 				int index = pt.m_index0 - body->m_shapeOffset;
 				if (index >= 0)
 				{
-					btScalar & accImpulse = body->m_connections[index].m_accImpulse;
+					btScalar& accImpulse = body->m_connections[index].m_accImpulse;
 					if (accImpulse < 1E-3)
 					{
 						// activate connection
-						ConnectId id;
-						id.body = f0;
-						id.connection = index;
-						activeConnections.push_back(id);
+						activeConnections.push_back(ActiveCon(body, index));
 					}
 					accImpulse += pt.m_appliedImpulse;
 				}
 			}
 		}
 		
-		if (f1 < m_fractureBodies.size())
+		if (((btCollisionObject*)manifold->getBody1())->getInternalType() & CUSTOM_FRACTURE_TYPE)
 		{
-			FractureBody * body = m_fractureBodies[f0];
+			FractureBody* body = (FractureBody*)manifold->getBody1();
 			for (int k = 0; k < manifold->getNumContacts(); ++k)
 			{
 				btManifoldPoint& pt = manifold->getContactPoint(k);
 				int index = pt.m_index1 - body->m_shapeOffset;
 				if (index >= 0)
 				{
-					btScalar & accImpulse = body->m_connections[index].m_accImpulse;
+					btScalar& accImpulse = body->m_connections[index].m_accImpulse;
 					if (accImpulse < 1E-3)
 					{
 						// activate connection
-						ConnectId id;
-						id.body = f1;
-						id.connection = index;
-						activeConnections.push_back(id);
+						activeConnections.push_back(ActiveCon(body, index));
 					}
 					accImpulse += pt.m_appliedImpulse;
 				}
@@ -287,7 +278,7 @@ void DynamicsWorld::fractureCallback( )
 	
 	for (int i = 0; i < activeConnections.size(); ++i)
 	{
-		FractureBody * body = m_fractureBodies[activeConnections[i].body];
+		FractureBody* body = activeConnections[i].body;
 		btConnection& connection = body->m_connections[activeConnections[i].connection];
 		
 		// check connection
