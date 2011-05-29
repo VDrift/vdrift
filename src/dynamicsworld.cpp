@@ -233,7 +233,7 @@ void DynamicsWorld::fractureCallback()
 			for (int k = 0; k < manifold->getNumContacts(); ++k)
 			{
 				btManifoldPoint& pt = manifold->getContactPoint(k);
-				int id = (int)shape->getChildShape(pt.m_index0)->getUserPointer();
+				int id = cast<int>(shape->getChildShape(pt.m_index0)->getUserPointer());
 				if (id >= 0)
 				{
 					btScalar& accImpulse = body->m_connections[id].m_accImpulse;
@@ -254,7 +254,7 @@ void DynamicsWorld::fractureCallback()
 			for (int k = 0; k < manifold->getNumContacts(); ++k)
 			{
 				btManifoldPoint& pt = manifold->getContactPoint(k);
-				int id = (int)shape->getChildShape(pt.m_index1)->getUserPointer();
+				int id = cast<int>(shape->getChildShape(pt.m_index1)->getUserPointer());
 				if (id >= 0)
 				{
 					btScalar& accImpulse = body->m_connections[id].m_accImpulse;

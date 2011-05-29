@@ -11,6 +11,13 @@ class btManifoldPoint;
 
 #define CUSTOM_FRACTURE_TYPE (btRigidBody::CO_USER_TYPE*2)
 
+template <typename T0, typename T1> T0 cast(T1 t)
+{
+	union {T0 t0; T1 t1;} cast;
+	cast.t1 = t;
+	return cast.t0;
+}
+
 struct btConnection
 {
 	btRigidBody* m_body;

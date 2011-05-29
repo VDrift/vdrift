@@ -13,7 +13,7 @@ FractureBody::FractureBody(const btRigidBodyConstructionInfo& info) :
 
 void FractureBody::addShape(const btTransform& localTransform, btCollisionShape* shape)
 {
-	shape->setUserPointer((void*)-1);
+	shape->setUserPointer(cast<void*>(-1));
 	((btCompoundShape*)m_collisionShape)->addChildShape(localTransform, shape);
 }
 
@@ -23,7 +23,7 @@ void FractureBody::addConnection(btRigidBody* body, const btTransform& localTran
 	int shapeId = compound->getNumChildShapes();
 	
 	// store connection index as user pointer
-	body->getCollisionShape()->setUserPointer((void*)m_connections.size());
+	body->getCollisionShape()->setUserPointer(cast<void*>(m_connections.size()));
 	
 	btConnection c;
 	c.m_body = body;
@@ -45,7 +45,7 @@ btRigidBody* FractureBody::breakConnection(int id)
 	child->setWorldTransform(trans);
 	child->setLinearVelocity(getLinearVelocity());
 	child->setAngularVelocity(getAngularVelocity());
-	child->setUserPointer((void*)-1);
+	child->setUserPointer(cast<void*>(-1));
 	
 	//std::cerr << "\nbefore shape removal" << std::endl;
 	//debugPrint();
@@ -55,7 +55,7 @@ btRigidBody* FractureBody::breakConnection(int id)
 	compound->removeChildShapeByIndex(shapeId);
 	
 	// remove will swap last shape with shapeId need to update connection
-	id = (int)compound->getChildShape(shapeId)->getUserPointer();
+	id = cast<int>(compound->getChildShape(shapeId)->getUserPointer());
 	if (id >= 0 && shapeId <= compound->getNumChildShapes())
 	{
 		m_connections[id].m_shapeId = shapeId;
@@ -81,7 +81,7 @@ void FractureBody::updateMotionState()
 	const btCompoundShape* shape = (btCompoundShape*)getCollisionShape();
 	for (int i = 0; i < shape->getNumChildShapes(); ++i)
 	{
-		int id = (int)shape->getChildShape(i)->getUserPointer();
+		int id = cast<int>(shape->getChildShape(i)->getUserPointer());
 		if (id >= 0)
 		{
 			btTransform transform;
@@ -105,7 +105,7 @@ void FractureBody::debugPrint()
 	const btCompoundShape* shape = (btCompoundShape*)getCollisionShape();
 	for (int i = 0; i < shape->getNumChildShapes(); ++i)
 	{
-		std::cerr << "shape "  << (int)shape->getChildShape(i)->getUserPointer() << " " << shape->getChildShape(i) << std::endl;
+		std::cerr << "shape "  << cast<int>(shape->getChildShape(i)->getUserPointer()) << " " << shape->getChildShape(i) << std::endl;
 	}
 }
 
