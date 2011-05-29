@@ -40,8 +40,8 @@ public:
 
 	bool Load(
 		const PTree & cfg,
-		const btVector3 & size,
-		const btVector3 & center,
+		const btVector3 & meshsize,
+		const btVector3 & meshcenter,
 		const btVector3 & position,
 		const btQuaternion & rotation,
 		const bool damage,
@@ -61,13 +61,18 @@ public:
 	const btQuaternion & GetWheelOrientation(WHEEL_POSITION wp) const;
 	btQuaternion GetUprightOrientation(WHEEL_POSITION wp) const;
 
+	// intepolated bodies transform: body, wheels, ...
+	unsigned int GetNumBodies() const;
+	const btVector3 & GetPosition(int i) const;
+	const btQuaternion & GetOrientation(int i) const;
+
 	// collision world interface
 	const COLLISION_CONTACT & GetWheelContact(WHEEL_POSITION wp) const;
 	COLLISION_CONTACT & GetWheelContact(WHEEL_POSITION wp);
 
 	// body
 	const btVector3 & GetWheelVelocity(WHEEL_POSITION wp) const;
-	const btVector3 & GetCenterOfMassPosition() const;
+	const btVector3 & GetCenterOfMass() const;
 	const btVector3 & GetVelocity() const;
 	btScalar GetInvMass() const;
 	btScalar GetSpeed() const;
@@ -137,27 +142,17 @@ public:
 	bool Serialize(joeserialize::Serializer & s);
 
 protected:
-	DynamicsWorld * world;
-	
-	// body state
-	btRigidBody* body;
-	MotionState motionState;
-	btVector3 center_of_mass; 			// collision/graphics shape offset
+	DynamicsWorld* world;
+	btRigidBody* body;		// is equivalent to bodies[0].body
 	
 	// body state cache
 	btTransform transform;
 	btVector3 linear_velocity;
 	btVector3 angular_velocity;
 	
-	// body transform cache interpolated 
-	btVector3 bodyPosition;
-	btQuaternion bodyRotation;
-	
-	// breakable children bodies
+	// car bodies
 	struct Body {
-		btVector3 position;
-		btQuaternion rotation;
-		MotionState motionState;
+		MotionState state;
 		btRigidBody* body;
 		Body() : body(0) {}
 	};
@@ -201,7 +196,6 @@ protected:
 	std::vector<std::tr1::shared_ptr<CARSUSPENSION> > suspension;
 
 	btAlignedObjectArray<CARAERO> aerodynamics;
-	btAlignedObjectArray<std::pair<btScalar, btVector3> > mass_particles;
 	std::list<CARTELEMETRY> telemetry;
 	
 	btScalar maxangle;
@@ -209,6 +203,8 @@ protected:
 	bool damage;
 
 	btVector3 GetDownVector() const;
+	
+	const btVector3 & GetCenterOfMassOffset() const;
 	
 	btVector3 LocalToWorld(const btVector3 & local) const;
 	
@@ -243,11 +239,6 @@ protected:
 
 	void InterpolateWheelContacts();
 
-	void CalculateMass(
-		btVector3 & center,
-		btVector3 & inertia,
-		btScalar & mass);
-
 	// update engine, return wheel drive torque
 	void UpdateDriveline(btScalar drive_torque[], btScalar dt);
 
@@ -280,8 +271,6 @@ protected:
 		const btVector3 & bodyCenter,
 		btVector3 & center,
 		btVector3 & size);
-
-	void AddMassParticle(const btScalar mass, const btVector3 & pos);
 };
 
 #endif

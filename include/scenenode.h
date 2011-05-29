@@ -15,6 +15,8 @@ public:
 	SCENENODE & GetNode(keyed_container <SCENENODE>::handle handle) {return childlist.get(handle);}
 	const SCENENODE & GetNode(keyed_container <SCENENODE>::handle handle) const {return childlist.get(handle);}
 	
+	keyed_container <SCENENODE> & GetNodelist() {return childlist;}
+	const keyed_container <SCENENODE> & GetNodelist() const {return childlist;}
 	DRAWABLE_CONTAINER <keyed_container> & GetDrawlist() {return drawlist;}
 	const DRAWABLE_CONTAINER <keyed_container> & GetDrawlist() const {return drawlist;}
 	

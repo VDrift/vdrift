@@ -4,7 +4,6 @@
 #include "cardynamics.h"
 #include "tobullet.h"
 #include "scenenode.h"
-#include "model.h"
 #include "soundsource.h"
 #include "camera_system.h"
 #include "joeserialize.h"
@@ -18,7 +17,7 @@ class PERFORMANCE_TESTING;
 class TEXTUREMANAGER;
 class MODELMANAGER;
 class SOUNDMANAGER;
-class MODEL_JOE03;
+class MODEL;
 class PTree;
 
 class CAR 
@@ -38,7 +37,7 @@ public:
 		const std::string & texsize,
 		const int anisotropy,
 		const float camerabounce,
-		const bool loaddriver,
+		const bool damage,
 		const bool debugmode,
 		TEXTUREMANAGER & textures,
 		MODELMANAGER & models,
@@ -56,8 +55,8 @@ public:
 	bool LoadPhysics(
 		const PTree & cfg,
 		const std::string & carpath,
-		const MATHVECTOR <float, 3> & initial_position,
-		const QUATERNION <float> & initial_orientation,
+		const MATHVECTOR <float, 3> & position,
+		const QUATERNION <float> & orientation,
 		const bool defaultabs,
 		const bool defaulttcs,
 		const bool damage,
@@ -226,7 +225,7 @@ public:
 	// interpoated position
 	MATHVECTOR <float, 3> GetCenterOfMassPosition() const
 	{
-		return ToMathVector<float>(dynamics.GetCenterOfMassPosition());
+		return ToMathVector<float>(dynamics.GetCenterOfMass());
 	}
 	
 	// interpolated position
@@ -297,9 +296,6 @@ protected:
 	
 	keyed_container<SCENENODE>::handle bodynode;
 	keyed_container<SCENENODE>::handle steernode;
-	std::vector<keyed_container<SCENENODE>::handle> wheelnode;
-	std::vector<keyed_container<SCENENODE>::handle> floatingnode;
-	
 	keyed_container<DRAWABLE>::handle brakelights;
 	keyed_container<DRAWABLE>::handle reverselights;
 	

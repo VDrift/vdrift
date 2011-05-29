@@ -95,6 +95,16 @@ public:
 		return _children.size();
 	}
 	
+	// depth first traversal
+	template <class T> void forEachRecursive(T & functor) const
+	{
+		functor(*this);
+		for(const_iterator i = begin(); i != end(); ++i)
+		{
+			i->second.forEachRecursive(functor);
+		}
+	}
+	
 	const std::string & value() const
 	{
 		return _value;
@@ -185,7 +195,7 @@ private:
 	
 	template <typename T> void _get(const PTree & p, T & value) const
 	{
-		std::istringstream s(p._value);
+		std::stringstream s(p._value);
 		s >> value;
 	}
 };

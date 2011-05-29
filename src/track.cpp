@@ -239,9 +239,8 @@ void TRACK::Update()
 	std::list<MotionState>::const_iterator t = data.body_transforms.begin();
 	for (int i = 0, e = data.body_nodes.size(); i < e; ++i, ++t)
 	{
-		const btTransform & bt = t->m_graphicsWorldTrans;
 		TRANSFORM & vt = data.dynamic_node.GetNode(data.body_nodes[i]).GetTransform();
-		vt.SetRotation(ToMathQuaternion<float>(bt.getRotation()));
-		vt.SetTranslation(ToMathVector<float>(bt.getOrigin()));
+		vt.SetRotation(ToMathQuaternion<float>(t->rotation));
+		vt.SetTranslation(ToMathVector<float>(t->position));
 	}
 }

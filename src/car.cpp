@@ -3,19 +3,19 @@
 #include "coordinatesystems.h"
 #include "dynamicsworld.h"
 #include "tracksurface.h"
-#include "config.h"
 #include "carinput.h"
-#include "mesh_gen.h"
-#include "texturemanager.h"
-#include "textureinfo.h"
-#include "model_joe03.h"
-#include "modelmanager.h"
-#include "soundmanager.h"
+#include "camera.h"
+#include "camera_chase.h"
 #include "camera_fixed.h"
 #include "camera_free.h"
-#include "camera_chase.h"
-#include "camera_orbit.h"
 #include "camera_mount.h"
+#include "camera_orbit.h"
+#include "texturemanager.h"
+#include "textureinfo.h"
+#include "modelmanager.h"
+#include "model_joe03.h"
+#include "mesh_gen.h"
+#include "soundmanager.h"
 #include "cfg/ptree.h"
 
 #include <map>
@@ -100,7 +100,7 @@ struct LoadDrawable
 		
 		return operator()(meshname, texname, cfg, topnode, nodehandle, drawhandle);
 	}
-
+	
 	bool operator()(
 		const std::string & meshname,
 		const std::vector<std::string> & texname,
@@ -155,7 +155,7 @@ struct LoadDrawable
 			
 			std::tr1::shared_ptr<MODEL> temp(new MODEL());
 			temp->SetVertexArray(it->second->GetVertexArray());
-			temp->Scale(sc[0], sc[1], sc[2]); // coordinate system conversion
+			temp->Scale(sc[0], sc[1], sc[2]);
 			temp->GenerateMeshMetrics();
 			temp->GenerateListID(error);
 			
@@ -164,11 +164,14 @@ struct LoadDrawable
 		}
 		
 		if (models.useDrawlists())
+		{
 			mesh->GenerateListID(error);
+		}
 		else
+		{
 			mesh->GenerateVertexArrayObject(error);
+		}
 		drawable.SetModel(*mesh);
-		//drawable.SetObjectCenter(mesh->GetCenter());
 		modellist.push_back(mesh);
 		
 		// set color
@@ -230,15 +233,51 @@ struct LoadDrawable
 	}
 };
 
-static bool LoadWheel(
+struct LoadBody
+{
+	SCENENODE & topnode;
+	keyed_container<SCENENODE>::handle & bodynode;
+	LoadDrawable & loadDrawable;
+	bool damage;
+	
+	LoadBody(
+		SCENENODE & topnode,
+		keyed_container<SCENENODE>::handle & bodynode,
+		LoadDrawable & loadDrawable,
+		bool damage) :
+		topnode(topnode),
+		bodynode(bodynode),
+		loadDrawable(loadDrawable),
+		damage(damage)
+	{
+		// ctor
+	}
+
+	bool operator()(const PTree & cfg)
+	{
+		const PTree * link;
+		if (damage && cfg.get("link", link))
+		{
+			// load breakable body drawables
+			if (!loadDrawable(cfg, topnode)) return false;
+		}
+		else
+		{
+			// load fixed body drawables
+			if (!loadDrawable(cfg, topnode.GetNode(bodynode))) return false;
+		}
+		return true;
+	}
+};
+
+bool LoadWheel(
 	const PTree & cfg_wheel,
-	struct LoadDrawable & load_drawable,
+	struct LoadDrawable & loadDrawable,
 	SCENENODE & topnode,
-	keyed_container<SCENENODE>::handle & wheelnode,
-	keyed_container<SCENENODE>::handle & floatingnode,
 	std::ostream & error_output)
 {
-	MODELMANAGER & models = load_drawable.models;
+	keyed_container<SCENENODE>::handle wheelnode = topnode.AddNode();
+	MODELMANAGER & models = loadDrawable.models;
 	
 	std::string tiredim;
 	const PTree * cfg_tire;
@@ -255,9 +294,9 @@ static bool LoadWheel(
 	MODELMANAGER::const_iterator it;
 	if (!cfg_wheel.get("mesh", meshname, error_output)) return false;
 	if (!cfg_wheel.get("texture", texname, error_output)) return false;
-	if (!models.Get(load_drawable.path, meshname+tiredim, it))
+	if (!models.Get(loadDrawable.path, meshname+tiredim, it))
 	{
-		if (!models.Load(load_drawable.path, meshname, it)) return false;
+		if (!models.Load(loadDrawable.path, meshname, it)) return false;
 		
 		MATHVECTOR<float, 3> d(0);
 		cfg_tire->get("size", d);
@@ -276,7 +315,7 @@ static bool LoadWheel(
 		
 		models.Set(it->first+tiredim, temp);
 	}
-	if (!load_drawable(meshname+tiredim, texname, cfg_wheel, topnode, &wheelnode)) return false;
+	if (!loadDrawable(meshname+tiredim, texname, cfg_wheel, topnode, &wheelnode)) return false;
 	
 	// load tire
 	texname.clear();
@@ -295,18 +334,7 @@ static bool LoadWheel(
 		
 		models.Set("tire"+tiredim, temp);
 	}
-	if (!load_drawable("tire"+tiredim, texname, *cfg_tire, topnode.GetNode(wheelnode))) return false;
-	
-	// load fender (optional)
-	const PTree * cfg_fender;
-	if (cfg_wheel.get("fender", cfg_fender))
-	{
-		floatingnode = topnode.AddNode();
-		if (!load_drawable(*cfg_fender, topnode.GetNode(floatingnode))) return false;
-		
-		MATHVECTOR<float, 3> pos = topnode.GetNode(wheelnode).GetTransform().GetTranslation();
-		topnode.GetNode(floatingnode).GetTransform().SetTranslation(pos);
-	}
+	if (!loadDrawable("tire"+tiredim, texname, *cfg_tire, topnode.GetNode(wheelnode))) return false;
 	
 	// load brake (optional)
 	texname.clear();
@@ -330,12 +358,25 @@ static bool LoadWheel(
 		
 		models.Set("brake"+radius, temp);
 	}
-	if (!load_drawable("brake"+radius, texname, *cfg_brake, topnode.GetNode(wheelnode))) return false;
+	if (!loadDrawable("brake"+radius, texname, *cfg_brake, topnode.GetNode(wheelnode))) return false;
+	
+	/* load fender (optional)
+	keyed_container<SCENENODE>::handle floatingnode = topnode.AddNode();
+	const PTree * cfg_fender;
+	if (cfg_wheel.get("fender", cfg_fender))
+	{
+		floatingnode = topnode.AddNode();
+		if (!loadDrawable(*cfg_fender, topnode.GetNode(floatingnode))) return false;
+		
+		MATHVECTOR<float, 3> pos = topnode.GetNode(wheelnode).GetTransform().GetTranslation();
+		topnode.GetNode(floatingnode).GetTransform().SetTranslation(pos);
+	}
+	*/
 
 	return true;
 }
 
-static bool LoadCameras(
+bool LoadCameras(
 	const PTree & cfg,
 	const float camerabounce,
 	CAMERA_SYSTEM & cameras,
@@ -468,7 +509,7 @@ bool CAR::LoadGraphics(
 	const std::string & texsize,
 	const int anisotropy,
 	const float camerabounce,
-	const bool loaddriver,
+	const bool damage,
 	const bool debugmode,
 	TEXTUREMANAGER & textures,
 	MODELMANAGER & models,
@@ -476,11 +517,10 @@ bool CAR::LoadGraphics(
 	std::ostream & error_output)
 {
 	//write_inf(cfg, std::cerr);
-	
 	cartype = carname;
-	LoadDrawable load_drawable(carpath, texsize, anisotropy, textures, models, modellist, error_output);
+	LoadDrawable loadDrawable(carpath, texsize, anisotropy, textures, models, modellist, error_output);
 	
-	// load body
+	// load body first
 	const PTree * cfg_body;
 	std::string meshname;
 	std::vector<std::string> texname;
@@ -488,80 +528,76 @@ bool CAR::LoadGraphics(
 	if (!cfg_body->get("mesh", meshname, error_output)) return false;
 	if (!cfg_body->get("texture", texname, error_output)) return false;
 	if (carpaint != "default") texname[0] = carpaint;
-	if (!load_drawable(meshname, texname, *cfg_body, topnode, &bodynode)) return false;
+	if (!loadDrawable(meshname, texname, *cfg_body, topnode, &bodynode)) return false;
 	
 	// load wheels
 	const PTree * cfg_wheel;
 	if (!cfg.get("wheel", cfg_wheel, error_output)) return false;
 	for (PTree::const_iterator i = cfg_wheel->begin(); i != cfg_wheel->end(); ++i)
 	{
-		wheelnode.push_back(keyed_container<SCENENODE>::handle());
-		floatingnode.push_back(keyed_container<SCENENODE>::handle());
-		if (!LoadWheel(i->second, load_drawable, topnode, wheelnode.back(), floatingnode.back(), error_output))
+		if (!LoadWheel(i->second, loadDrawable, topnode, error_output))
 		{
 			return false;
 		}
 	}
 	
 	// load drawables
+	LoadBody loadBody(topnode, bodynode, loadDrawable, damage);
 	SCENENODE & bodynoderef = topnode.GetNode(bodynode);
-	for(PTree::const_iterator section = cfg.begin(); section != cfg.end(); ++section)
+	for(PTree::const_iterator i = cfg.begin(); i != cfg.end(); ++i)
 	{
-		if (section->first == "body" ||
-			section->first == "steering" ||
-			section->first == "light-brake" ||
-			section->first == "light-reverse" ||
-			section->first.find("wheel") == 0) continue;
+		if (i->first != "body" &&
+			i->first != "wheel" &&
+			i->first != "steering" &&
+			i->first != "light-brake" &&
+			i->first != "light-reverse")
+		{
+			i->second.forEachRecursive(loadBody);
+		}
+	}
+	
+	// load steering wheel
+	const PTree * cfg_steer;
+	if (cfg.get("steering", cfg_steer))
+	{
+		if (!loadDrawable(*cfg_steer, bodynoderef, &steernode, 0)) return false;
+		cfg_steer->get("max-angle", steer_angle_max);
+		steer_angle_max = steer_angle_max / 180.0 * M_PI;
+		SCENENODE & steernoderef = bodynoderef.GetNode(steernode);
+		steer_orientation = steernoderef.GetTransform().GetRotation();
+	}
+	
+	// load brake/reverse light point light sources (optional)
+	int i = 0;
+	std::string istr = "0";
+	const PTree * cfg_light;
+	while (cfg.get("light-brake-"+istr, cfg_light))
+	{
+		if (!LoadLight(*cfg_light, models, error_output)) return false;
 		
-		if (!load_drawable(section->second, bodynoderef)) return false;
+		std::stringstream sstr;
+		sstr << ++i;
+		istr = sstr.str();
 	}
-	
+	i = 0;
+	istr = "0";
+	while (cfg.get("light-reverse-"+istr, cfg_light))
 	{
-		// load steering wheel
-		const PTree * cfg_steer;
-		if (cfg.get("steering", cfg_steer))
-		{
-			if (!load_drawable(*cfg_steer, bodynoderef, &steernode, 0)) return false;
-			cfg_steer->get("max-angle", steer_angle_max);
-			steer_angle_max = steer_angle_max / 180.0 * M_PI;
-			SCENENODE & steernoderef = bodynoderef.GetNode(steernode);
-			steer_orientation = steernoderef.GetTransform().GetRotation();
-		}
-	}
-	
-	{
-		// load brake/reverse light point light sources (optional)
-		int i = 0;
-		std::string istr = "0";
-		const PTree * cfg_light;
-		while (cfg.get("light-brake-"+istr, cfg_light))
-		{
-			if (!LoadLight(*cfg_light, models, error_output)) return false;
-			
-			std::stringstream sstr;
-			sstr << ++i;
-			istr = sstr.str();
-		}
-		i = 0;
-		istr = "0";
-		while (cfg.get("light-reverse-"+istr, cfg_light))
-		{
-			if (!LoadLight(*cfg_light, models, error_output)) return false;
+		if (!LoadLight(*cfg_light, models, error_output)) return false;
 
-			std::stringstream sstr;
-			sstr << ++i;
-			istr = sstr.str();
-		}
-		
-		// load car brake/reverse graphics (optional)
-		if (cfg.get("light-brake", cfg_light))
-		{
-			if (!load_drawable(*cfg_light, bodynoderef, 0, &brakelights)) return false;
-		}
-		if (cfg.get("light-reverse", cfg_light))
-		{
-			if (!load_drawable(*cfg_light, bodynoderef, 0, &reverselights)) return false;
-		}
+		std::stringstream sstr;
+		sstr << ++i;
+		istr = sstr.str();
+	}
+	
+	// load car brake/reverse graphics (optional)
+	if (cfg.get("light-brake", cfg_light))
+	{
+		if (!loadDrawable(*cfg_light, bodynoderef, 0, &brakelights)) return false;
+	}
+	if (cfg.get("light-reverse", cfg_light))
+	{
+		if (!loadDrawable(*cfg_light, bodynoderef, 0, &reverselights)) return false;
 	}
 	
 	if (!LoadCameras(cfg, camerabounce, cameras, error_output)) return false;
@@ -865,64 +901,39 @@ void CAR::UpdateGraphics()
 {
 	if (!bodynode.valid()) return;
 	
-	MATHVECTOR <float, 3> vec = GetPosition();
+	assert(dynamics.GetNumBodies() == topnode.Nodes());
+	unsigned int i = 0;
+	keyed_container<SCENENODE> & childlist = topnode.GetNodelist();
+	for (keyed_container<SCENENODE>::iterator ni = childlist.begin(); ni != childlist.end(); ++ni, ++i)
+	{
+		MATHVECTOR<float, 3> pos = ToMathVector<float>(dynamics.GetPosition(i));
+		QUATERNION<float> rot = ToMathQuaternion<float>(dynamics.GetOrientation(i));
+		ni->GetTransform().SetTranslation(pos);
+		ni->GetTransform().SetRotation(rot * modelrotation);
+	}
+	
+	// brake/reverse lights
 	SCENENODE & bodynoderef = topnode.GetNode(bodynode);
-	bodynoderef.GetTransform().SetTranslation(vec);
-	
-	roadnoise.SetPosition(vec[0],vec[1],vec[2]);
-	crashsound.SetPosition(vec[0],vec[1],vec[2]);
-	gearsound.SetPosition(vec[0],vec[1],vec[2]);
-	brakesound.SetPosition(vec[0],vec[1],vec[2]);
-	handbrakesound.SetPosition(vec[0],vec[1],vec[2]);
-	
-	QUATERNION <float> quat = GetOrientation();
-	quat = quat * modelrotation;
-	bodynoderef.GetTransform().SetRotation(quat);
-	
-	if (steernode.valid())
-	{
-		SCENENODE & steernoderef = bodynoderef.GetNode(steernode);
-		steernoderef.GetTransform().SetRotation(steer_rotation);
-	}
-	
-	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
-	{
-		vec = ToMathVector<float>(dynamics.GetWheelPosition(WHEEL_POSITION(i)));
-		SCENENODE & wheelnoderef = topnode.GetNode(wheelnode[i]);
-		wheelnoderef.GetTransform().SetTranslation(vec);
-		tirebump[i].SetPosition(vec[0],vec[1],vec[2]);
-		
-		QUATERNION <float> wheelquat;
-		wheelquat = ToMathQuaternion<float>(dynamics.GetWheelOrientation(WHEEL_POSITION(i)));
-		wheelquat = wheelquat * modelrotation;
-		wheelnoderef.GetTransform().SetRotation(wheelquat);
-		
-		if (floatingnode[i].valid())
-		{
-			SCENENODE & floatingnoderef = topnode.GetNode(floatingnode[i]);
-			floatingnoderef.GetTransform().SetTranslation(vec);
-			
-			QUATERNION <float> floatquat;
-			floatquat = ToMathQuaternion<float>(dynamics.GetUprightOrientation(WHEEL_POSITION(i)));
-			floatquat = floatquat * modelrotation;
-			floatingnoderef.GetTransform().SetRotation(floatquat);
-		}
-	}
-	
-	// update brake/reverse lights
-	if (brakelights.valid())
-	{
-		GetDrawlist(bodynoderef, EMISSIVE).get(brakelights).SetDrawEnable(applied_brakes > 0);
-	}
-	for (std::list <LIGHT>::iterator i = lights.begin(); i != lights.end(); i++)
+	for (std::list<LIGHT>::iterator i = lights.begin(); i != lights.end(); i++)
 	{
 		SCENENODE & node = bodynoderef.GetNode(i->node);
 		DRAWABLE & draw = GetDrawlist(node, OMNI).get(i->draw);
 		draw.SetDrawEnable(applied_brakes > 0);
 	}
+	if (brakelights.valid())
+	{
+		GetDrawlist(bodynoderef, EMISSIVE).get(brakelights).SetDrawEnable(applied_brakes > 0);
+	}
 	if (reverselights.valid())
 	{
 		GetDrawlist(bodynoderef, EMISSIVE).get(reverselights).SetDrawEnable(GetGear() < 0);
+	}
+	
+	// steering
+	if (steernode.valid())
+	{
+		SCENENODE & steernoderef = bodynoderef.GetNode(steernode);
+		steernoderef.GetTransform().SetRotation(steer_rotation);
 	}
 }
 
@@ -940,171 +951,16 @@ void CAR::UpdateCameras(float dt)
 	cameras.Active()->Update(pos, rot, dt);
 }
 
-void CAR::Update(double dt)
-{
-	dynamics.Update();
-	UpdateGraphics();
-	UpdateCameras(dt);
-	UpdateSounds(dt);
-}
-
-void CAR::GetSoundList(std::list <SOUNDSOURCE *> & outputlist)
-{
-	for (std::list <std::pair <ENGINESOUNDINFO, SOUNDSOURCE> >::iterator i =
-		enginesounds.begin(); i != enginesounds.end(); ++i)
-	{
-		outputlist.push_back(&i->second);
-	}
-
-	for (int i = 0; i < 4; i++)
-		outputlist.push_back(&tiresqueal[i]);
-
-	for (int i = 0; i < 4; i++)
-		outputlist.push_back(&grasssound[i]);
-
-	for (int i = 0; i < 4; i++)
-		outputlist.push_back(&gravelsound[i]);
-
-	for (int i = 0; i < 4; i++)
-		outputlist.push_back(&tirebump[i]);
-
-	outputlist.push_back(&crashsound);
-	
-	outputlist.push_back(&gearsound);
-	
-	outputlist.push_back(&brakesound);
-	
-	outputlist.push_back(&handbrakesound);
-
-	outputlist.push_back(&roadnoise);
-}
-
-void CAR::GetEngineSoundList(std::list <SOUNDSOURCE *> & outputlist)
-{
-	for (std::list <std::pair <ENGINESOUNDINFO, SOUNDSOURCE> >::iterator i =
-		enginesounds.begin(); i != enginesounds.end(); ++i)
-	{
-		outputlist.push_back(&i->second);
-	}
-}
-
-void CAR::HandleInputs(const std::vector <float> & inputs, float dt)
-{
-	assert(inputs.size() == CARINPUT::INVALID); //this looks weird, but it ensures that our inputs vector contains exactly one item per input
-
-	//std::cout << "Throttle: " << inputs[CARINPUT::THROTTLE] << std::endl;
-	//std::cout << "Shift up: " << inputs[CARINPUT::SHIFT_UP] << std::endl;
-
-	// recover from a rollover
-	if(inputs[CARINPUT::ROLLOVER_RECOVER])
-		dynamics.RolloverRecover();
-
-	//set brakes
-	dynamics.SetBrake(inputs[CARINPUT::BRAKE]);
-	dynamics.SetHandBrake(inputs[CARINPUT::HANDBRAKE]);
-
-	//do steering
-	float steer_value = inputs[CARINPUT::STEER_RIGHT];
-	if (std::abs(inputs[CARINPUT::STEER_LEFT]) > std::abs(inputs[CARINPUT::STEER_RIGHT])) //use whichever control is larger
-		steer_value = -inputs[CARINPUT::STEER_LEFT];
-	dynamics.SetSteering(steer_value);
-	last_steer = steer_value;
-	QUATERNION<float> steer;
-	steer.Rotate(-steer_value * steer_angle_max, 0, 0, 1);
-	steer_rotation = steer_orientation * steer;
-
-    //start the engine if requested
-	if (inputs[CARINPUT::START_ENGINE])
-		dynamics.StartEngine();
-
-	//do shifting
-	int gear_change = 0;
-	if (inputs[CARINPUT::SHIFT_UP] == 1.0)
-		gear_change = 1;
-	if (inputs[CARINPUT::SHIFT_DOWN] == 1.0)
-		gear_change = -1;
-	int cur_gear = dynamics.GetTransmission().GetGear();
-	int new_gear = cur_gear + gear_change;
-
-	if (inputs[CARINPUT::REVERSE])
-		new_gear = -1;
-	if (inputs[CARINPUT::NEUTRAL])
-		new_gear = 0;
-	if (inputs[CARINPUT::FIRST_GEAR])
-		new_gear = 1;
-	if (inputs[CARINPUT::SECOND_GEAR])
-		new_gear = 2;
-	if (inputs[CARINPUT::THIRD_GEAR])
-		new_gear = 3;
-	if (inputs[CARINPUT::FOURTH_GEAR])
-		new_gear = 4;
-	if (inputs[CARINPUT::FIFTH_GEAR])
-		new_gear = 5;
-	if (inputs[CARINPUT::SIXTH_GEAR])
-		new_gear = 6;
-
-	applied_brakes = inputs[CARINPUT::BRAKE];
-
-	float throttle = inputs[CARINPUT::THROTTLE];
-	float clutch = 1 - inputs[CARINPUT::CLUTCH];
-
-	dynamics.ShiftGear(new_gear);
-	dynamics.SetThrottle(throttle);
-	dynamics.SetClutch(clutch);
-
-	//do driver aid toggles
-	if (inputs[CARINPUT::ABS_TOGGLE])
-		dynamics.SetABS(!dynamics.GetABSEnabled());
-	if (inputs[CARINPUT::TCS_TOGGLE])
-		dynamics.SetTCS(!dynamics.GetTCSEnabled());
-
-	// check for rear view button
-	if (inputs[CARINPUT::REAR_VIEW])
-	{
-		lookbehind = true;
-	}
-	else
-	{
-		lookbehind = false;
-	}
-
-	//update brake sound
-	{
-		if (inputs[CARINPUT::BRAKE] > 0 && !brakesound_check)
-		{
-			if (!brakesound.Audible())
-			{
-				float gain = 0.1;
-				brakesound.SetGain(gain);
-				brakesound.Stop();
-				brakesound.Play();
-			}
-			brakesound_check = true;
-		}
-		if(inputs[CARINPUT::BRAKE] <= 0)
-			brakesound_check = false;
-	}
-
-	//update handbrake sound
-	{
-		if (inputs[CARINPUT::HANDBRAKE] > 0 && !handbrakesound_check)
-		{
-			if (!handbrakesound.Audible())
-			{
-				float gain = 0.1;
-				handbrakesound.SetGain(gain);
-				handbrakesound.Stop();
-				handbrakesound.Play();
-			}
-			handbrakesound_check = true;
-		}
-		if(inputs[CARINPUT::HANDBRAKE] <= 0)
-			handbrakesound_check = false;
-	}
-}
 
 void CAR::UpdateSounds(float dt)
 {
+	MATHVECTOR <float, 3> vec = GetPosition();
+	roadnoise.SetPosition(vec[0],vec[1],vec[2]);
+	crashsound.SetPosition(vec[0],vec[1],vec[2]);
+	gearsound.SetPosition(vec[0],vec[1],vec[2]);
+	brakesound.SetPosition(vec[0],vec[1],vec[2]);
+	handbrakesound.SetPosition(vec[0],vec[1],vec[2]);
+	
 	//update engine sounds
 	float rpm = GetEngineRPM();
 	float throttle = dynamics.GetEngine().GetThrottle();
@@ -1339,6 +1195,169 @@ void CAR::UpdateSounds(float dt)
 			}
 			gearsound_check = GetGear();
 		}
+	}
+}
+
+void CAR::Update(double dt)
+{
+	dynamics.Update();
+	UpdateGraphics();
+	UpdateCameras(dt);
+	UpdateSounds(dt);
+}
+
+void CAR::GetSoundList(std::list <SOUNDSOURCE *> & outputlist)
+{
+	for (std::list <std::pair <ENGINESOUNDINFO, SOUNDSOURCE> >::iterator i =
+		enginesounds.begin(); i != enginesounds.end(); ++i)
+	{
+		outputlist.push_back(&i->second);
+	}
+
+	for (int i = 0; i < 4; i++)
+		outputlist.push_back(&tiresqueal[i]);
+
+	for (int i = 0; i < 4; i++)
+		outputlist.push_back(&grasssound[i]);
+
+	for (int i = 0; i < 4; i++)
+		outputlist.push_back(&gravelsound[i]);
+
+	for (int i = 0; i < 4; i++)
+		outputlist.push_back(&tirebump[i]);
+
+	outputlist.push_back(&crashsound);
+	
+	outputlist.push_back(&gearsound);
+	
+	outputlist.push_back(&brakesound);
+	
+	outputlist.push_back(&handbrakesound);
+
+	outputlist.push_back(&roadnoise);
+}
+
+void CAR::GetEngineSoundList(std::list <SOUNDSOURCE *> & outputlist)
+{
+	for (std::list <std::pair <ENGINESOUNDINFO, SOUNDSOURCE> >::iterator i =
+		enginesounds.begin(); i != enginesounds.end(); ++i)
+	{
+		outputlist.push_back(&i->second);
+	}
+}
+
+void CAR::HandleInputs(const std::vector <float> & inputs, float dt)
+{
+	assert(inputs.size() == CARINPUT::INVALID); //this looks weird, but it ensures that our inputs vector contains exactly one item per input
+
+	//std::cout << "Throttle: " << inputs[CARINPUT::THROTTLE] << std::endl;
+	//std::cout << "Shift up: " << inputs[CARINPUT::SHIFT_UP] << std::endl;
+
+	// recover from a rollover
+	if(inputs[CARINPUT::ROLLOVER_RECOVER])
+		dynamics.RolloverRecover();
+
+	//set brakes
+	dynamics.SetBrake(inputs[CARINPUT::BRAKE]);
+	dynamics.SetHandBrake(inputs[CARINPUT::HANDBRAKE]);
+
+	//do steering
+	float steer_value = inputs[CARINPUT::STEER_RIGHT];
+	if (std::abs(inputs[CARINPUT::STEER_LEFT]) > std::abs(inputs[CARINPUT::STEER_RIGHT])) //use whichever control is larger
+		steer_value = -inputs[CARINPUT::STEER_LEFT];
+	dynamics.SetSteering(steer_value);
+	last_steer = steer_value;
+	QUATERNION<float> steer;
+	steer.Rotate(-steer_value * steer_angle_max, 0, 0, 1);
+	steer_rotation = steer_orientation * steer;
+
+    //start the engine if requested
+	if (inputs[CARINPUT::START_ENGINE])
+		dynamics.StartEngine();
+
+	//do shifting
+	int gear_change = 0;
+	if (inputs[CARINPUT::SHIFT_UP] == 1.0)
+		gear_change = 1;
+	if (inputs[CARINPUT::SHIFT_DOWN] == 1.0)
+		gear_change = -1;
+	int cur_gear = dynamics.GetTransmission().GetGear();
+	int new_gear = cur_gear + gear_change;
+
+	if (inputs[CARINPUT::REVERSE])
+		new_gear = -1;
+	if (inputs[CARINPUT::NEUTRAL])
+		new_gear = 0;
+	if (inputs[CARINPUT::FIRST_GEAR])
+		new_gear = 1;
+	if (inputs[CARINPUT::SECOND_GEAR])
+		new_gear = 2;
+	if (inputs[CARINPUT::THIRD_GEAR])
+		new_gear = 3;
+	if (inputs[CARINPUT::FOURTH_GEAR])
+		new_gear = 4;
+	if (inputs[CARINPUT::FIFTH_GEAR])
+		new_gear = 5;
+	if (inputs[CARINPUT::SIXTH_GEAR])
+		new_gear = 6;
+
+	applied_brakes = inputs[CARINPUT::BRAKE];
+
+	float throttle = inputs[CARINPUT::THROTTLE];
+	float clutch = 1 - inputs[CARINPUT::CLUTCH];
+
+	dynamics.ShiftGear(new_gear);
+	dynamics.SetThrottle(throttle);
+	dynamics.SetClutch(clutch);
+
+	//do driver aid toggles
+	if (inputs[CARINPUT::ABS_TOGGLE])
+		dynamics.SetABS(!dynamics.GetABSEnabled());
+	if (inputs[CARINPUT::TCS_TOGGLE])
+		dynamics.SetTCS(!dynamics.GetTCSEnabled());
+
+	// check for rear view button
+	if (inputs[CARINPUT::REAR_VIEW])
+	{
+		lookbehind = true;
+	}
+	else
+	{
+		lookbehind = false;
+	}
+
+	//update brake sound
+	{
+		if (inputs[CARINPUT::BRAKE] > 0 && !brakesound_check)
+		{
+			if (!brakesound.Audible())
+			{
+				float gain = 0.1;
+				brakesound.SetGain(gain);
+				brakesound.Stop();
+				brakesound.Play();
+			}
+			brakesound_check = true;
+		}
+		if(inputs[CARINPUT::BRAKE] <= 0)
+			brakesound_check = false;
+	}
+
+	//update handbrake sound
+	{
+		if (inputs[CARINPUT::HANDBRAKE] > 0 && !handbrakesound_check)
+		{
+			if (!handbrakesound.Audible())
+			{
+				float gain = 0.1;
+				handbrakesound.SetGain(gain);
+				handbrakesound.Stop();
+				handbrakesound.Play();
+			}
+			handbrakesound_check = true;
+		}
+		if(inputs[CARINPUT::HANDBRAKE] <= 0)
+			handbrakesound_check = false;
 	}
 }
 

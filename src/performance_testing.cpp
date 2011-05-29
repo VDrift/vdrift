@@ -60,8 +60,8 @@ void PERFORMANCE_TESTING::Test(
 	info_output << "Car dynamics loaded" << std::endl;
 
 	info_output << carname << " Summary:\n" <<
-			"Mass (kg) including driver and fuel: " << 1 / car.dynamics.GetInvMass() << "\n" <<
-			"Center of mass (m): " << car.dynamics.center_of_mass << std::endl;
+			"Mass (kg) including driver and fuel: " << 1/car.GetInvMass() << "\n" <<
+			"Center of mass (m): " << car.GetCenterOfMassPosition() << std::endl;
 
 	std::stringstream statestream;
 	joeserialize::BinaryOutputSerializer serialize_output(statestream);
@@ -161,7 +161,7 @@ void PERFORMANCE_TESTING::TestMaxSpeed(std::ostream & info_output, std::ostream 
 		if (car.dynamics.GetSpeed() < 26.8224)
 			timeto60 = t;
 
-		if (car.dynamics.GetCenterOfMassPosition().length() > 402.3 && timetoquarter == maxtime)
+		if (car.dynamics.GetCenterOfMass().length() > 402.3 && timetoquarter == maxtime)
 		{
 			//quarter mile!
 			timetoquarter = t - timeto60start;

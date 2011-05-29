@@ -192,7 +192,7 @@ void WIDGET_SPINNINGCAR::Load(SCENENODE & parent)
 	std::string texsize = "large";
 	int anisotropy = 0;
 	float camerabounce = 0;
-	bool loaddriver = false;
+	bool damage = false;
 	bool debugmode = false;
 
 	if (!carnode.valid())
@@ -220,7 +220,7 @@ void WIDGET_SPINNINGCAR::Load(SCENENODE & parent)
 			carconf, carpath, carname, partspath,
 			MATHVECTOR<float, 3>(r, g, b),
 			carpaint, texsize, anisotropy,
-			camerabounce, loaddriver, debugmode,
+			camerabounce, damage, debugmode,
 			*textures, *models,
 			loadlog, loadlog))
 	{

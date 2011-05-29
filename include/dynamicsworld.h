@@ -44,11 +44,18 @@ public:
 	void debugPrint(std::ostream & out) const;
 
 protected:
+	struct ActiveCon
+	{
+		ActiveCon() : body(0), id(-1) {}
+		ActiveCon(FractureBody* body, int id) : body(body), id(id) {}
+		FractureBody* body;
+		int id;
+	};
+	btAlignedObjectArray<ActiveCon> m_activeConnections;
+	btAlignedObjectArray<FractureBody*> m_fractureBodies;
+	const TRACK * track;
 	btScalar timeStep;
 	int maxSubSteps;
-	
-	const TRACK * track;	
-	btAlignedObjectArray<FractureBody*> m_fractureBodies;
 	
 	void reset();
 	

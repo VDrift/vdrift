@@ -1913,12 +1913,11 @@ bool GAME::LoadCar(
 	//write_inf(carconf, std::cerr);
 	cars.push_back(CAR());
 	CAR & car = cars.back();
-	bool loaddriver = true;
 	
 	if (!car.LoadGraphics(
 		carconf, cardir, carname, partspath,
 		carcolor, carpaint, settings.GetTextureSize(), settings.GetAnisotropy(),
-		settings.GetCameraBounce(), loaddriver, debugmode,
+		settings.GetCameraBounce(), settings.GetVehicleDamage(), debugmode,
 		textures, models, info_output, error_output))
 	{
 		error_output << "Error loading car: " << carname << std::endl;
@@ -1932,11 +1931,9 @@ bool GAME::LoadCar(
 	}
 	
 	if (!car.LoadPhysics(
-		carconf, cardir,
-		start_position, start_orientation,
+		carconf, cardir, start_position, start_orientation,
 		settings.GetABS() || isai, settings.GetTCS() || isai,
-		settings.GetVehicleDamage(),
-		models, collision,
+		settings.GetVehicleDamage(), models, collision,
 		info_output, error_output))
 	{
 		return false;

@@ -1,72 +1,10 @@
 #include "cardynamics.h"
 #include "tracksurface.h"
-#include "coordinatesystems.h"
 #include "dynamicsworld.h"
-#include "model.h"
-#include "cfg/ptree.h"
-#include "loadcollisionshape.h"
 #include "fracturebody.h"
-
-#if defined(_WIN32) || defined(__APPLE__)
-bool isnan(float number);
-bool isnan(double number);
-#endif
-
-CARDYNAMICS::CARDYNAMICS() :
-	world(0),
-	body(0),
-	center_of_mass(0, 0, 0),
-	transform(btTransform::getIdentity()),
-	bodyPosition(0, 0, 0),
-	bodyRotation(btQuaternion::getIdentity()),
-	drive(NONE),
-	tacho_rpm(0),
-	autoclutch(true),
-	autoshift(false),
-	shifted(true),
-	shift_gear(0),
-	last_auto_clutch(1),
-	remaining_shift_time(0),
-	abs(false),
-	tcs(false),
-	maxangle(0),
-	damage(false)
-{
-	suspension.reserve(WHEEL_POSITION_SIZE);
-	wheel.reserve(WHEEL_POSITION_SIZE);
-	tire.reserve(WHEEL_POSITION_SIZE);
-	brake.reserve(WHEEL_POSITION_SIZE);
-	
-	bodies.resize(WHEEL_POSITION_SIZE);
-	suspension_force.resize(WHEEL_POSITION_SIZE);
-	wheel_velocity.resize(WHEEL_POSITION_SIZE);
-	wheel_position.resize(WHEEL_POSITION_SIZE);
-	wheel_orientation.resize(WHEEL_POSITION_SIZE);
-	wheel_contact.resize(WHEEL_POSITION_SIZE);
-	abs_active.resize(WHEEL_POSITION_SIZE, false);
-	tcs_active.resize(WHEEL_POSITION_SIZE, false);
-}
-
-CARDYNAMICS::~CARDYNAMICS()
-{
-	if (body)
-	{
-		world->removeAction(this);
-		world->removeRigidBody(body);
-		delete body->getCollisionShape();
-		delete body;
-	}
-	
-	for (int i = 0; i < bodies.size(); ++i)
-	{
-		if (bodies[i].body)
-		{
-			world->removeRigidBody(bodies[i].body);
-			delete bodies[i].body->getCollisionShape();
-			delete bodies[i].body;
-		}
-	}
-}
+#include "loadcollisionshape.h"
+#include "coordinatesystems.h"
+#include "cfg/ptree.h"
 
 static bool LoadClutch(
 	const PTree & cfg,
@@ -256,34 +194,10 @@ static bool LoadDifferential(
 	return true;
 }
 
-static bool LoadMassParticles(
-	const PTree & cfg,
-	btAlignedObjectArray<std::pair<btScalar, btVector3> > & mass_particles,
-	std::ostream & error_output)
-{
-	const PTree * cfg_prts;
-	if (!cfg.get("particle", cfg_prts)) return true;
-	
-	btScalar mass;
-	std::vector<btScalar> pos(3);
-	for (PTree::const_iterator i = cfg_prts->begin(), e = cfg_prts->end(); i != e; ++i)
-	{
-		const PTree & cfg_prt = i->second;
-		if (cfg_prt.get("position", pos) && cfg_prt.get("mass", mass))
-		{
-			COORDINATESYSTEMS::ConvertV2toV1(pos[0], pos[1], pos[2]);
-			btVector3 position(pos[0], pos[1], pos[2]);
-			mass_particles.push_back(std::pair<btScalar, btVector3>(mass, position));
-		}
-	}
-	
-	return true;
-}
-
-// create collision shape from bounding box
+// use btMultiSphereShape(4 spheres) to approximate bounding box
 static btMultiSphereShape * CreateCollisionShape(const btVector3 & center, const btVector3 & size)
 {
-	// use btMultiSphereShape(4 spheres) to approximate bounding box
+	
 	btVector3 hsize = 0.5 * size;
 	int min = hsize.minAxis();
 	int max = hsize.maxAxis();
@@ -303,17 +217,227 @@ static btMultiSphereShape * CreateCollisionShape(const btVector3 & center, const
 	return new btMultiSphereShape(positions, radii, numSpheres);
 }
 
+// helper class to load car body data
+struct BodyLoader
+{
+	struct Particle
+	{
+		btVector3 position;
+		btScalar mass;
+		Particle(const btVector3 & position, btScalar mass) :
+			position(position), mass(mass) {}
+	};
+	
+	struct Shape
+	{
+		btTransform transform;
+		btCollisionShape* shape;
+		Shape(const btTransform & transform, btCollisionShape* shape) :
+			transform(transform), shape(shape) {}
+	};
+	
+	struct Body
+	{
+		btTransform transform;
+		btCollisionShape* shape;
+		btScalar mass;
+		btScalar link_strength;
+		btScalar link_limit;
+		Body(const btTransform & transform, btCollisionShape* shape, btScalar mass, btScalar strength, btScalar limit) :
+			transform(transform), shape(shape), mass(mass), link_strength(strength), link_limit(limit) {}
+	};
+	
+	BodyLoader() : numbodies(0) {}
+	
+	std::vector<Particle> particles;
+	std::vector<Shape> shapes;
+	std::vector<Body> bodies;
+	std::vector<Body> wheels;
+	btCollisionShape* parent;
+	int numbodies;
+	
+	// descend cfg tree load bodies
+	bool load(const PTree & cfg, std::ostream & error_output)
+	{
+		loadBody(cfg, error_output);
+		for (PTree::const_iterator i = cfg.begin(); i != cfg.end(); ++i)
+		{
+			if (i->second.size()) load(i->second, error_output);
+		}
+		return true;
+	}
+	
+	// load a body instance
+	void loadBody(const PTree & cfg, std::ostream & error_output)
+	{
+		btScalar mass = 0;
+		std::vector<btScalar> pos(3, 0), rot(3, 0);
+		btTransform transform = btTransform::getIdentity();
+		
+		cfg.get("mass", mass);
+		cfg.get("position", pos);
+		cfg.get("rotation", rot);
+		COORDINATESYSTEMS::ConvertV2toV1(pos[0], pos[1], pos[2]);
+		COORDINATESYSTEMS::ConvertV2toV1(rot[0], rot[1], rot[2]);
+		transform.setOrigin(btVector3(pos[0], pos[1], pos[2]));
+		transform.setRotation(btQuaternion(rot[1]*M_PI/180, rot[0]*M_PI/180, rot[2]*M_PI/180));
+		
+		btCollisionShape * shape(0);
+		btVector3 center(0, 0, 0);
+		LoadCollisionShape(cfg, center, shape);
+		
+		const PTree * cfg_link;
+		if (cfg.get("link", cfg_link))
+		{
+			btScalar strength(0), limit(0);
+			cfg_link->get("strength", strength, error_output);
+			cfg_link->get("elastic-limit", limit, error_output);
+			if (cfg.parent() && cfg.parent()->value() == "wheel")
+			{
+				wheels.push_back(Body(transform, shape, mass, strength, limit));
+				numbodies++;
+			}
+			else if(shape && mass > 0)
+			{
+				bodies.push_back(Body(transform, shape, mass, strength, limit));
+				numbodies++;
+			}
+			else
+			{
+				error_output << "body with no mass/shape: " << cfg.value() << "\n";
+				//write_inf(cfg, error_output);
+			}
+		}
+		else
+		{
+			if (shape)
+			{
+				shapes.push_back(Shape(transform, shape));
+			}
+			if (mass > 0)
+			{
+				particles.push_back(Particle(transform.getOrigin(), mass));
+			}
+		}
+	}
+
+	void calculateParticleMass(btVector3 & center, btVector3 & inertia, btScalar & mass) const
+	{
+		center.setValue(0, 0, 0);
+		mass = 0;
+		
+		// calculate the total mass, and center of mass
+		for (size_t i = 0; i != particles.size(); ++i)
+		{
+			center = center + particles[i].position *  particles[i].mass;
+			mass +=  particles[i].mass;
+		}
+		center = center * (1.0 / mass);
+		
+		// calculate the inertia tensor
+		btScalar xx(0), yy(0), zz(0), xy(0), xz(0), yz(0);
+		for (size_t i = 0; i != particles.size(); ++i)
+		{
+			btVector3 p = particles[i].position - center;
+			btScalar m = particles[i].mass;
+			
+			// add the current mass to the inertia tensor
+			xx += m * (p.y() * p.y() + p.z() * p.z()); // mi*(yi^2+zi^2)
+			yy += m * (p.x() * p.x() + p.z() * p.z()); // mi*(xi^2+zi^2)
+			zz += m * (p.x() * p.x() + p.y() * p.y()); // mi*(xi^2+yi^2)
+			
+			xy -= m * (p.x() * p.y()); // mi*xi*yi
+			xz -= m * (p.x() * p.z()); // mi*xi*zi
+			yz -= m * (p.y() * p.z()); // mi*yi*zi
+		}
+		inertia.setValue(xx, yy, zz);
+	}
+	
+	void calculateMass(btVector3 & center, btVector3 & inertia, btScalar & mass)
+	{
+		particles.reserve(particles.size() + numbodies);
+		for (size_t i = 0; i < bodies.size(); ++i)
+		{
+			particles.push_back(Particle(bodies[i].transform.getOrigin(), bodies[i].mass));
+		}
+		for (size_t i = 0; i < wheels.size(); ++i)
+		{
+			particles.push_back(Particle(wheels[i].transform.getOrigin(), wheels[i].mass));
+		}
+		calculateParticleMass(center, inertia, mass);
+	}
+};
+
+CARDYNAMICS::CARDYNAMICS() :
+	world(0),
+	body(0),
+	drive(NONE),
+	tacho_rpm(0),
+	autoclutch(true),
+	autoshift(false),
+	shifted(true),
+	shift_gear(0),
+	last_auto_clutch(1),
+	remaining_shift_time(0),
+	abs(false),
+	tcs(false),
+	maxangle(0),
+	damage(false)
+{
+	suspension.reserve(WHEEL_POSITION_SIZE);
+	wheel.reserve(WHEEL_POSITION_SIZE);
+	tire.reserve(WHEEL_POSITION_SIZE);
+	brake.reserve(WHEEL_POSITION_SIZE);
+
+	suspension_force.resize(WHEEL_POSITION_SIZE);
+	wheel_velocity.resize(WHEEL_POSITION_SIZE);
+	wheel_position.resize(WHEEL_POSITION_SIZE);
+	wheel_orientation.resize(WHEEL_POSITION_SIZE);
+	wheel_contact.resize(WHEEL_POSITION_SIZE);
+	abs_active.resize(WHEEL_POSITION_SIZE, false);
+	tcs_active.resize(WHEEL_POSITION_SIZE, false);
+}
+
+CARDYNAMICS::~CARDYNAMICS()
+{
+	if (!world) return;
+	
+	//std::cerr << "\ndestroy" << std::endl;
+	//((FractureBody*)body)->debugPrint();
+	
+	world->removeAction(this);
+	for (int i = 0; i < bodies.size(); ++i)
+	{
+		if (!bodies[i].body) continue;
+		
+		if (bodies[i].body->isInWorld())
+		{
+			world->removeRigidBody(bodies[i].body);
+			if (bodies[i].body->getCollisionShape()->isCompound())
+			{
+				const btCompoundShape* shape = (btCompoundShape*)body->getCollisionShape();
+				for (int i = 0; i < shape->getNumChildShapes(); ++i)
+				{
+					delete shape->getChildShape(i);
+				}
+			}
+			delete bodies[i].body->getCollisionShape();
+		}
+		delete bodies[i].body;
+	}
+}
+
 bool CARDYNAMICS::Load(
 	const PTree & cfg,
-	const btVector3 & size,
-	const btVector3 & center,
+	const btVector3 & meshsize,
+	const btVector3 & meshcenter,
 	const btVector3 & position,
 	const btQuaternion & rotation,
-	const bool damage_enable,
+	const bool damage,
 	DynamicsWorld & world,
 	std::ostream & error_output)
 {
-	damage = damage_enable;
+	this->damage = damage;
 	
 	if (!LoadAeroDevices(cfg, aerodynamics, error_output)) return false;
 	if (!LoadClutch(cfg, clutch, error_output)) return false;
@@ -325,17 +449,15 @@ bool CARDYNAMICS::Load(
 	if (!cfg.get("engine", cfg_eng, error_output)) return false;
 	if (!engine_info.Load(*cfg_eng, error_output)) return false;
 	engine.Init(engine_info);
-	AddMassParticle(engine.GetMass(), engine.GetPosition());
 	
 	const PTree * cfg_wheels;
 	if (!cfg.get("wheel", cfg_wheels, error_output)) return false;
 	
-	int wheel_count = cfg_wheels->size();
-	assert(wheel_count == WHEEL_POSITION_SIZE); // temporary restriction
-	tire.resize(wheel_count);
-	brake.resize(wheel_count);
-	wheel.resize(wheel_count);
-	suspension.resize(wheel_count);
+	assert(cfg_wheels->size() == WHEEL_POSITION_SIZE); // temporary restriction
+	tire.resize(cfg_wheels->size());
+	brake.resize(cfg_wheels->size());
+	wheel.resize(cfg_wheels->size());
+	suspension.resize(cfg_wheels->size());
 	
 	int i = 0;
 	for (PTree::const_iterator iw = cfg_wheels->begin(); iw != cfg_wheels->end(); ++iw, ++i)
@@ -355,8 +477,6 @@ bool CARDYNAMICS::Load(
 		
 		suspension[i].reset(sptr);
 		if (suspension[i]->GetMaxSteeringAngle() > maxangle) maxangle = suspension[i]->GetMaxSteeringAngle();
-		
-		AddMassParticle(wheel[i].GetMass(), suspension[i]->GetWheelPosition());
 	}
 
 	drive = NONE;
@@ -380,75 +500,121 @@ bool CARDYNAMICS::Load(
 		error_output << "No differential declared" << std::endl;
 		return false;
 	}
-
-	// load driver mass, todo unify for all car components
-	const PTree * cfg_driver;
-	if (cfg.get("driver", cfg_driver))
+	
+	BodyLoader bodyLoader;
+	bodyLoader.load(cfg, error_output);
+	if (damage)
 	{
+		bodies.resize(1 + bodyLoader.numbodies);
+		
 		btScalar mass;
-		std::vector<btScalar> pos(3);
-		if (!cfg_driver->get("position", pos, error_output)) return false;
-		if (!cfg_driver->get("mass", mass, error_output)) return false;
-		COORDINATESYSTEMS::ConvertV2toV1(pos[0], pos[1], pos[2]);
-		btVector3 position(pos[0], pos[1], pos[2]);
-		AddMassParticle(mass, position);
+		btVector3 massCenter;
+		btVector3 inertia;
+		bodyLoader.calculateParticleMass(massCenter, inertia, mass);
+		
+		transform.setRotation(rotation);
+		transform.setOrigin(position - massCenter);
+		bodies[0].state.rotation = rotation;
+		bodies[0].state.position = position;
+		bodies[0].state.massCenterOffset = -massCenter;
+		
+		btCompoundShape * shape = new btCompoundShape(false);
+		btRigidBody::btRigidBodyConstructionInfo info(mass, &bodies[0].state, shape, inertia);
+		FractureBody * fbody = new FractureBody(info);
+		bodies[0].body = fbody;
+		body = fbody;
+		
+		size_t i = 1;
+		fbody->m_connections.reserve(bodyLoader.numbodies);
+		for (size_t j = 0; j < WHEEL_POSITION_SIZE; ++j, ++i)
+		{
+			float mass = wheel[j].GetMass();
+			btVector3 size(tire[j].GetRadius()*0.8, tire[j].GetSidewallWidth()*0.5, tire[j].GetRadius()*0.8);
+			
+			btVector3 inertia;
+			btCollisionShape * subshape = new btCylinderShape(size);
+			subshape->calculateLocalInertia(mass, inertia);
+			
+			btRigidBody::btRigidBodyConstructionInfo info(mass, &bodies[i].state, subshape, inertia);
+			bodies[i].body = new btRigidBody(info);
+			
+			btTransform offset;
+			offset.setOrigin(suspension[j]->GetWheelPosition(0.5) - massCenter);
+			offset.setRotation(suspension[j]->GetWheelOrientation());
+			
+			BodyLoader::Body & cb = bodyLoader.wheels[j];
+			fbody->addConnection(bodies[i].body, offset, cb.link_strength, cb.link_limit);
+		}
+		
+		for (size_t j = 0; j < bodyLoader.bodies.size(); ++j, ++i)
+		{
+			btVector3 inertia;
+			BodyLoader::Body & cb = bodyLoader.bodies[j];
+			cb.shape->calculateLocalInertia(cb.mass, inertia);
+			
+			btRigidBody::btRigidBodyConstructionInfo info(cb.mass, &bodies[i].state, cb.shape, inertia);
+			bodies[i].body = new btRigidBody(info);
+			
+			cb.transform.setOrigin(cb.transform.getOrigin() - massCenter);
+			fbody->addConnection(bodies[i].body, cb.transform, cb.link_strength, cb.link_limit);
+		}
+		
+		for (size_t i = 0; i < bodyLoader.shapes.size(); ++i)
+		{
+			BodyLoader::Shape & sh = bodyLoader.shapes[i];
+			sh.transform.setOrigin(sh.transform.getOrigin() - massCenter);
+			fbody->addShape(sh.transform, sh.shape);
+		}
+		
+		//std::cerr << "\ncreate" << std::endl;
+		//fbody->debugPrint();
 	}
-
-	if (!LoadMassParticles(cfg, mass_particles, error_output)) return false;
-
-	/////////////////////////////////////////////////////////
-	btScalar mass;
-	btVector3 inertia;
-	CalculateMass(center_of_mass, inertia, mass);
-	
-	transform.setOrigin(position - center_of_mass);
-	transform.setRotation(rotation);
-	motionState.setWorldTransform(transform);
-	motionState.m_centerOfMassOffset.setOrigin(-center_of_mass);
-
-const PTree * cfg_shape;
-damage = damage && cfg.get("body.shape", cfg_shape);
-if (damage)
-{
-	btCollisionShape * shape = new btCompoundShape(false);
-	LoadCollisionShape(*(cfg_shape->parent()), center_of_mass, shape);
-	
-	btRigidBody::btRigidBodyConstructionInfo info(mass, &motionState, shape, inertia);
-	
-	FractureBody * fbody = new FractureBody(info);
-	fbody->m_connections.reserve(WHEEL_POSITION_SIZE);
-	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
+	else
 	{
-		btVector3 inertia(4, 4, 4);
-		float mass = wheel[i].GetMass();
-		btVector3 size(tire[i].GetRadius()*0.8, tire[i].GetSidewallWidth()*0.5, tire[i].GetRadius()*0.8);
+		// add wheel mass
+		for (size_t j = 0; j < WHEEL_POSITION_SIZE; ++j)
+		{
+			bodyLoader.particles.push_back(BodyLoader::Particle(suspension[j]->GetWheelPosition(0.0), wheel[j].GetMass()));
+		}
 		
-		btTransform offset;
-		offset.setOrigin(suspension[i]->GetWheelPosition(1.0) - center_of_mass);
-		offset.setRotation(suspension[i]->GetWheelOrientation());
-		btCollisionShape * subshape = new btCylinderShape(size);
+		bodies.resize(1 + WHEEL_POSITION_SIZE);
 		
-		// watch out for reallocations, we are using pointers here
-		//bodies.push_back(Body());
-		Body & sb = bodies[i];
-		btRigidBody::btRigidBodyConstructionInfo info(mass, &sb.motionState, subshape, inertia);
-		sb.body = new btRigidBody(info);
+		btScalar mass;
+		btVector3 massCenter;
+		btVector3 inertia;
+		bodyLoader.calculateMass(massCenter, inertia, mass);
 		
-		fbody->addConnection(sb.body, offset, 2000, 3000);
+		transform.setRotation(rotation);
+		transform.setOrigin(position - massCenter);
+		bodies[0].state.rotation = rotation;
+		bodies[0].state.position = position;
+		bodies[0].state.massCenterOffset = -massCenter;
+		
+		btCompoundShape compound;
+		for (size_t i = 0; i < bodyLoader.shapes.size(); ++i)
+		{
+			BodyLoader::Shape & sh = bodyLoader.shapes[i];
+			sh.transform.setOrigin(sh.transform.getOrigin() - massCenter);
+			compound.addChildShape(sh.transform, sh.shape);
+		}
+		
+		btVector3 min, max, center, size;
+		if (bodyLoader.shapes.size())
+		{
+			compound.getAabb(btTransform::getIdentity(), min, max);
+		}
+		else
+		{
+			min = meshcenter - meshsize * 0.5;
+			max = meshcenter + meshsize * 0.5;
+		}
+		GetCollisionBox(min, max, center, size);
+		btCollisionShape* shape = CreateCollisionShape(center, size);
+		
+		btRigidBody::btRigidBodyConstructionInfo info(mass, &bodies[0].state, shape, inertia);
+		body = new btRigidBody(info);
+		bodies[0].body = body;
 	}
-	body = fbody;
-}
-else
-{
-	btVector3 bodySize;
-	btVector3 bodyMin = center - size * 0.5;
-	btVector3 bodyMax = center + size * 0.5;
-	btVector3 origin;
-	GetCollisionBox(bodyMin, bodyMax, origin, bodySize);
-	btCollisionShape* shape = CreateCollisionShape(origin, bodySize);
-	btRigidBody::btRigidBodyConstructionInfo info(mass, &motionState, shape, inertia);
-	body = new btRigidBody(info);
-}
 	
 	body->setActivationState(DISABLE_DEACTIVATION);
 	body->setContactProcessingThreshold(0.0); // internal edge workaround
@@ -461,24 +627,20 @@ else
 		wheel_velocity[i].setValue(0, 0, 0);
 		wheel_position[i] = LocalToWorld(suspension[i]->GetWheelPosition(0.0));
 		wheel_orientation[i] = LocalToWorld(suspension[i]->GetWheelOrientation());
-		
-		bodies[i].position = LocalToWorld(suspension[i]->GetWheelPosition(0.0));
-		bodies[i].rotation = LocalToWorld(suspension[i]->GetWheelOrientation());
 	}
 	
 	// add car to world
 	this->world = &world;
 	world.addRigidBody(body);
 	world.addAction(this);
-	AlignWithGround();
-	/////////////////////////////////////////////////////////
-
+	//AlignWithGround();
+	
 	// initialize telemetry
 	telemetry.clear();
 	//telemetry.push_back(CARTELEMETRY("brakes"));
 	//telemetry.push_back(CARTELEMETRY("suspension"));
 	//etc
-
+	
 	return true;
 }
 
@@ -489,10 +651,10 @@ void CARDYNAMICS::GetCollisionBox(
 	btVector3 & center,
 	btVector3 & size)
 {
-	btVector3 min = bodyMin - center_of_mass;
-	btVector3 max = bodyMax - center_of_mass;
+	btVector3 min = bodyMin + GetCenterOfMassOffset();
+	btVector3 max = bodyMax + GetCenterOfMassOffset();
 	btScalar minHeight = min.z() + 0.05; // add collision shape bottom margin
-	for (int i = 0; i < 4; ++i)
+	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
 	{
 		btVector3 wheelHSize(tire[i].GetRadius(), tire[i].GetSidewallWidth()*0.5, tire[i].GetRadius());
 		btVector3 wheelPos = suspension[i]->GetWheelPosition(0.0);
@@ -514,52 +676,60 @@ void CARDYNAMICS::debugDraw(btIDebugDraw* debugDrawer)
 
 void CARDYNAMICS::Update()
 {
-	bodyRotation = motionState.m_graphicsWorldTrans.getRotation();
-	bodyPosition = motionState.m_graphicsWorldTrans.getOrigin();
-	
-	for (int i = 0; i < bodies.size(); ++i)
+	if (damage) static_cast<FractureBody*>(body)->updateMotionState();
+	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
 	{
-		if (!damage || !bodies[i].body->isInWorld())
-		{
-			bodies[i].rotation = bodyRotation * suspension[i]->GetWheelOrientation() * wheel[i].GetRotation();
-			bodies[i].position = bodyPosition + quatRotate(bodyRotation, suspension[i]->GetWheelPosition());
-		}
-		else
-		{
-			bodies[i].rotation = bodies[i].motionState.m_graphicsWorldTrans.getRotation();
-			bodies[i].position = bodies[i].motionState.m_graphicsWorldTrans.getOrigin();
-		}
+		if (damage && bodies[i+1].body->isInWorld()) continue;
+		bodies[i+1].state.rotation = GetOrientation() * suspension[i]->GetWheelOrientation() * wheel[i].GetRotation();
+		bodies[i+1].state.position = GetPosition() + quatRotate(GetOrientation(), suspension[i]->GetWheelPosition());
 	}
 }
 
 btVector3 CARDYNAMICS::GetEnginePosition() const
 {
-	return bodyPosition + quatRotate(bodyRotation, engine.GetPosition());
+	return GetPosition(0) + quatRotate(GetOrientation(0), engine.GetPosition());
 }
 
 const btVector3 & CARDYNAMICS::GetPosition() const
 {
-	return bodyPosition;
+	return GetPosition(0);
 }
 
 const btQuaternion & CARDYNAMICS::GetOrientation() const
 {
-	return bodyRotation;
+	return GetOrientation(0);
 }
 
 const btVector3 & CARDYNAMICS::GetWheelPosition(WHEEL_POSITION wp) const
 {
-	return bodies[wp].position;
+	return bodies[wp+1].state.position;
 }
 
 const btQuaternion & CARDYNAMICS::GetWheelOrientation(WHEEL_POSITION wp) const
 {
-	return bodies[wp].rotation;
+	return bodies[wp+1].state.rotation;
 }
 
 btQuaternion CARDYNAMICS::GetUprightOrientation(WHEEL_POSITION wp) const
 {
-	return bodyRotation * suspension[wp]->GetWheelOrientation();
+	return GetOrientation(0) * suspension[wp]->GetWheelOrientation();
+}
+
+unsigned int CARDYNAMICS::GetNumBodies() const
+{
+	return bodies.size();
+}
+
+const btVector3 & CARDYNAMICS::GetPosition(int i) const
+{
+	btAssert(i < bodies.size());
+	return bodies[i].state.position;
+}
+
+const btQuaternion & CARDYNAMICS::GetOrientation(int i) const
+{
+	btAssert(i < bodies.size());
+	return bodies[i].state.rotation;
 }
 
 /// worldspace wheel center position
@@ -578,7 +748,7 @@ COLLISION_CONTACT & CARDYNAMICS::GetWheelContact(WHEEL_POSITION wp)
 	return wheel_contact[wp];
 }
 
-const btVector3 & CARDYNAMICS::GetCenterOfMassPosition() const
+const btVector3 & CARDYNAMICS::GetCenterOfMass() const
 {
 	return body->getCenterOfMassPosition();
 }
@@ -822,9 +992,9 @@ void CARDYNAMICS::DebugPrint ( std::ostream & out, bool p1, bool p2, bool p3, bo
 	{
 		out << std::fixed << std::setprecision(3);
 		out << "---Body---\n";
-		out << "Velocity: " << body->getLinearVelocity() << "\n";
-		out << "Position: " << bodyPosition << "\n";
-		out << "Center of mass: " << center_of_mass << "\n";
+		out << "Velocity: " << GetVelocity() << "\n";
+		out << "Position: " << GetPosition() << "\n";
+		out << "Center of mass: " << -GetCenterOfMassOffset() << "\n";
 		out << "Total mass: " << 1 / body->getInvMass() << "\n";
 		out << "\n";
 		fuel_tank.DebugPrint ( out );
@@ -993,7 +1163,7 @@ bool CARDYNAMICS::Serialize ( joeserialize::Serializer & s )
 	_SERIALIZE_(s, shift_gear);
 	_SERIALIZE_(s, shifted);
 	_SERIALIZE_(s, autoshift);
-	
+	if (!serialize(s, *body)) return false;
 	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
 	{
 		_SERIALIZE_(s, wheel[i]);
@@ -1004,12 +1174,6 @@ bool CARDYNAMICS::Serialize ( joeserialize::Serializer & s )
 		if (!serialize(s, wheel_position[i])) return false;
 		if (!serialize(s, wheel_orientation[i])) return false;
 	}
-	
-	if (!serialize(s, *body)) return false;
-	if (!serialize(s, transform)) return false;
-	if (!serialize(s, bodyPosition)) return false;
-	if (!serialize(s, bodyRotation)) return false;
-
 	return true;
 }
 
@@ -1018,9 +1182,14 @@ btVector3 CARDYNAMICS::GetDownVector() const
 	return -body->getCenterOfMassTransform().getBasis().getColumn(2);
 }
 
+const btVector3 & CARDYNAMICS::GetCenterOfMassOffset() const
+{
+	return bodies[0].state.massCenterOffset;
+}
+
 btVector3 CARDYNAMICS::LocalToWorld(const btVector3 & local) const
 {
-	return body->getCenterOfMassTransform() * (local - center_of_mass);
+	return body->getCenterOfMassTransform() * (GetCenterOfMassOffset() + local);
 }
 
 btQuaternion CARDYNAMICS::LocalToWorld(const btQuaternion & local) const
@@ -1063,7 +1232,7 @@ void CARDYNAMICS::ApplyAerodynamicsToBody ( btVector3 & force, btVector3 & torqu
 	{
 		btVector3 force = aerodynamics[i].GetForce(air_velocity);
 		wind_force = wind_force + force;
-		wind_torque = wind_torque + (aerodynamics[i].GetPosition() - center_of_mass).cross(force);
+		wind_torque = wind_torque + (aerodynamics[i].GetPosition() + GetCenterOfMassOffset()).cross(force);
 	}
 	wind_force = body->getCenterOfMassTransform().getBasis() * wind_force;
 	wind_torque = body->getCenterOfMassTransform().getBasis() * wind_torque;
@@ -1464,9 +1633,9 @@ void CARDYNAMICS::UpdateWheelContacts()
 		btVector3 raystart = wheel_position[i] - raydir * tire[i].GetRadius();
 		world->castRay(raystart, raydir, raylen, body, wheel_contact[i]);
 		
-		// reset contact hack
-		if (damage && bodies[i].body->isInWorld())
+		if (damage && bodies[i+1].body->isInWorld())
 		{
+			// reset contact
 			wheel_contact[i] = COLLISION_CONTACT(raystart, raydir, raylen, -1, 0, TRACKSURFACE::None(), 0); 
 		}
 	}
@@ -1481,46 +1650,6 @@ void CARDYNAMICS::InterpolateWheelContacts()
 		btVector3 raystart = wheel_position[i] - raydir * tire[i].GetRadius();
 		GetWheelContact(WHEEL_POSITION(i)).CastRay(raystart, raydir, raylen);
 	}
-}
-
-// todo: Calculate principle axes calculation
-void CARDYNAMICS::CalculateMass(
-	btVector3 & center,
-	btVector3 & inertia,
-	btScalar & mass)
-{
-	center.setValue(0, 0, 0);
-	mass = 0;
-	
-	// calculate the total mass, and center of mass
-	for (int i = 0; i != mass_particles.size(); ++i)
-	{
-		center = center +  mass_particles[i].second *  mass_particles[i].first;
-		mass +=  mass_particles[i].first;
-	}
-	
-	// account for fuel
-	mass += fuel_tank.GetMass();
-	center = center + fuel_tank.GetPosition() * fuel_tank.GetMass();
-	center = center * (1.0 / mass);
-	
-	// calculate the inertia tensor
-	btScalar xx(0), yy(0), zz(0), xy(0), xz(0), yz(0);
-	for (int i = 0; i != mass_particles.size(); ++i)
-	{
-		btVector3 p = mass_particles[i].second - center;
-		btScalar m = mass_particles[i].first;
-		
-		// add the current mass to the inertia tensor
-		xx += m * (p.y() * p.y() + p.z() * p.z()); //+mi*(yi^2+zi^2)
-		yy += m * (p.x() * p.x() + p.z() * p.z()); //+mi*(xi^2+zi^2)
-		zz += m * (p.x() * p.x() + p.y() * p.y()); //+mi*(xi^2+yi^2)
-		
-		xy -= m * (p.x() * p.y()); //-mi*xi*yi
-		xz -= m * (p.x() * p.z()); //-mi*xi*zi
-		yz -= m * (p.y() * p.z()); //-mi*yi*zi
-	}
-	inertia.setValue(xx, yy, zz);
 }
 
 void CARDYNAMICS::UpdateDriveline(btScalar drive_torque[], btScalar dt)
@@ -1736,9 +1865,4 @@ btScalar CARDYNAMICS::DownshiftRPM(int gear) const
 		shift_down_point = 0.7 * peak_engine_speed / lower_gear_ratio * current_gear_ratio;
 	}
 	return shift_down_point;
-}
-
-void CARDYNAMICS::AddMassParticle(const btScalar mass, const btVector3 & pos)
-{
-	mass_particles.push_back(std::pair<btScalar, btVector3>(mass, pos));
 }
