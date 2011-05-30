@@ -7,8 +7,8 @@
 FractureBody::FractureBody(const btRigidBodyConstructionInfo& info) :
 	btRigidBody(info)
 {
-	btAssert(!info.m_collisionShape->isCompound());
-	m_internalType = CUSTOM_FRACTURE_TYPE + CO_RIGID_BODY;
+	btAssert(info.m_collisionShape->isCompound());
+	m_internalType = CUSTOM_FRACTURE_TYPE | CO_RIGID_BODY;
 }
 
 void FractureBody::addShape(const btTransform& localTransform, btCollisionShape* shape)
