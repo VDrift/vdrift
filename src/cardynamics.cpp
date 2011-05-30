@@ -433,12 +433,10 @@ bool CARDYNAMICS::Load(
 	const btVector3 & meshcenter,
 	const btVector3 & position,
 	const btQuaternion & rotation,
-	const bool damage,
+	const bool cardamage,
 	DynamicsWorld & world,
 	std::ostream & error_output)
 {
-	this->damage = damage;
-	
 	if (!LoadAeroDevices(cfg, aerodynamics, error_output)) return false;
 	if (!LoadClutch(cfg, clutch, error_output)) return false;
 	if (!LoadTransmission(cfg, transmission, error_output)) return false;
@@ -503,6 +501,7 @@ bool CARDYNAMICS::Load(
 	
 	BodyLoader bodyLoader;
 	bodyLoader.load(cfg, error_output);
+	damage = cardamage && bodyLoader.numbodies > 0;
 	if (damage)
 	{
 		bodies.resize(1 + bodyLoader.numbodies);
