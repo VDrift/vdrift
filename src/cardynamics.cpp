@@ -632,7 +632,9 @@ bool CARDYNAMICS::Load(
 	this->world = &world;
 	world.addRigidBody(body);
 	world.addAction(this);
-	//AlignWithGround();
+	
+	// place car on track
+	AlignWithGround();
 	
 	// initialize telemetry
 	telemetry.clear();
