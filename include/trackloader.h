@@ -35,6 +35,7 @@ class MODELMANAGER;
 class btStridingMeshInterface;
 class btCompoundShape;
 class btCollisionShape;
+class SDL_Thread;
 
 class TRACK::LOADER
 {
@@ -62,7 +63,9 @@ public:
 	
 	bool ContinueLoad();
 	
-	int GetNumObjects() const {return numobjects;}
+	int GetNumObjects() const { return numobjects; }
+	
+	int GetNumLoaded() const { return numloaded; }
 
 private:
 	TEXTUREMANAGER & texture_manager;
@@ -88,6 +91,7 @@ private:
 	JOEPACK pack;
 	bool packload;
 	int numobjects;
+	int numloaded;
 	int params_per_object;
 	const int expected_params;
 	const int min_params;
@@ -122,6 +126,9 @@ private:
 	PTree track_config;
 	const PTree * nodes;
 	PTree::const_iterator node_it;
+	
+	// loader thread
+	SDL_Thread * thread;
 	
 	bool LoadParameters();
 	

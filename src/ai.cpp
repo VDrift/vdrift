@@ -5,6 +5,7 @@
 #include "carinput.h"
 #include "mathvector.h"
 #include "carwheelposition.h"
+#include "coordinatesystem.h"
 #include "optional.h"
 #include "unittest.h"
 
@@ -12,12 +13,6 @@
 #include <cmath>
 #include <algorithm>
 #include <iostream>
-
-
-#if defined(_WIN32) || defined(__APPLE__)
-bool isnan(float number);
-bool isnan(double number);
-#endif
 
 #define GRAVITY 9.8
 
@@ -350,7 +345,7 @@ void AI::updateGasBrake(AI_Car *c, float dt, TRACK* track_p, const std::list <CA
 		}
 		gas_value = 0.0;
 	}
-	else if (isnan(speed_diff) || speed_diff > MAX_SPEED_DIFF)
+	else if (std::isnan(speed_diff) || speed_diff > MAX_SPEED_DIFF)
 	{
 		gas_value = 1.0;
 		brake_value = 0.0;
@@ -458,8 +453,8 @@ void AI::calcMu(AI_Car *c, TRACK* track_p)
 
 	float long_mu = FRICTION_FACTOR_LONG * long_friction * c->car->GetInvMass() / GRAVITY;
 	float lat_mu = FRICTION_FACTOR_LAT * lat_friction * c->car->GetInvMass() / GRAVITY;
-	if (!isnan(long_mu)) c->longitude_mu = long_mu;
-	if (!isnan(lat_mu)) c->lateral_mu = lat_mu;
+	if (!std::isnan(long_mu)) c->longitude_mu = long_mu;
+	if (!std::isnan(lat_mu)) c->lateral_mu = lat_mu;
 }
 
 float AI::calcSpeedLimit(AI_Car *c, const BEZIER* patch, const BEZIER * nextpatch, float friction, float extraradius=0)
@@ -567,10 +562,8 @@ void AI::updateSteer(AI_Car *c, float dt, const std::list <CAR> & othercars)
 
 	MATHVECTOR <float, 3> next_position = TransformToWorldspace(dest_point);
 	MATHVECTOR <float, 3> car_position = c->car->GetCenterOfMassPosition();
-	MATHVECTOR <float, 3> car_orientation(0,1,0);
-	QUATERNION <float> fixer;
-	fixer.Rotate(-3.141593*0.5, 0, 0, 1);
-	(c->car->GetOrientation()*fixer).RotateVector(car_orientation);
+	MATHVECTOR <float, 3> car_orientation = direction::Forward;
+	(c->car->GetOrientation()).RotateVector(car_orientation);
 
 	MATHVECTOR <float, 3> desire_orientation = next_position - car_position;
 
@@ -609,7 +602,7 @@ void AI::updateSteer(AI_Car *c, float dt, const std::list <CAR> & othercars)
 	if (steer_value > 1.0) steer_value = 1.0;
 	else if (steer_value < -1.0) steer_value = -1.0;
 
-	assert(!isnan(steer_value));
+	assert(!std::isnan(steer_value));
 	c->inputs[CARINPUT::STEER_RIGHT] = steer_value;
 }
 
@@ -689,8 +682,8 @@ void AI::analyzeOthers(AI_Car *c, float dt, const std::list <CAR> & othercars)
 	
 	//std::cout << speed << ": " << authority << std::endl;
 	
-	const MATHVECTOR <float, 3> steer_right_axis(0,-1,0);
-	const MATHVECTOR <float, 3> throttle_axis(1,0,0); //positive is in front of the car
+	//const MATHVECTOR <float, 3> steer_right_axis = direction::Right;
+	const MATHVECTOR <float, 3> throttle_axis = direction::Forward;
 	
 #ifdef VISUALIZE_AI_DEBUG
 	//c->avoidancedraw->ClearLine();

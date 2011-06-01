@@ -116,7 +116,8 @@ btVector3 CARTIRE::GetForce(
 	btScalar friction_coeff,
 	btScalar inclination,
 	btScalar ang_velocity,
-	const btVector3 & velocity)
+	btScalar lon_velocity,
+	btScalar lat_velocity)
 {
 	if (normal_force < 1E-3 || friction_coeff < 1E-3)
 	{
@@ -132,9 +133,9 @@ btVector3 CARTIRE::GetForce(
 	GetSigmaHatAlphaHat(normal_force, sigma_hat, alpha_hat);
 	
 	btScalar gamma = inclination;									// positive when tire top tilts to the right, viewed from rear
-	btScalar denom = btMax(btFabs(velocity[0]), btScalar(1E-3));
-	btScalar sigma = (ang_velocity * radius - velocity[0]) / denom;	// longitudinal slip: negative in braking, positive in traction
-	btScalar alpha = -atan2(velocity[1], denom) * 180.0 / M_PI; 	// sideslip angle: positive in a right turn(opposite to SAE tire coords)	
+	btScalar denom = btMax(btFabs(lon_velocity), btScalar(1E-3));
+	btScalar sigma = (ang_velocity * radius - lon_velocity) / denom;	// longitudinal slip: negative in braking, positive in traction
+	btScalar alpha = -atan2(lat_velocity, denom) * 180.0 / M_PI; 	// sideslip angle: positive in a right turn(opposite to SAE tire coords)	
 	btScalar max_Fx(0), max_Fy(0), max_Mz(0);
 
 	//combining method 1: beckman method for pre-combining longitudinal and lateral forces
@@ -465,13 +466,14 @@ QT_TEST(tire_test)
 	
 	btScalar normal_force = 1000;
 	btScalar friction_coeff = 1;
-	btVector3 velocity(10, -5, 0);
-	btScalar ang_velocity = 0.5 * velocity[0] / tire.GetRadius();
+	btScalar lon_velocity = 10;
+	btScalar lat_velocity = -5;
+	btScalar ang_velocity = 0.5 * lon_velocity / tire.GetRadius();
 	btScalar inclination = 15;
 	
 	btVector3 f0, f1;
-	f0 = tire.GetForce(normal_force, friction_coeff, inclination, ang_velocity, velocity);
-	f1 = tire.GetForce(normal_force, friction_coeff, -inclination, ang_velocity, velocity);
+	f0 = tire.GetForce(normal_force, friction_coeff, inclination, ang_velocity, lon_velocity, lat_velocity);
+	f1 = tire.GetForce(normal_force, friction_coeff, -inclination, ang_velocity, lon_velocity, lat_velocity);
 	
 	QT_CHECK_CLOSE(f1[0], f0[0], 0.001);
 	QT_CHECK_LESS(f0[0], 0);

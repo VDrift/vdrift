@@ -1,4 +1,5 @@
 #include "camera_mount.h"
+#include "coordinatesystem.h"
 
 CAMERA_MOUNT::CAMERA_MOUNT(const std::string & name) :
 	CAMERA(name),
@@ -58,7 +59,7 @@ void CAMERA_MOUNT::Update(const MATHVECTOR <float, 3> & newpos, const QUATERNION
 	float k = 800.0+stiffness*800.0*4.0;
 	float c = 2.0*std::sqrt(k*body.GetMass())*0.35;
 	MATHVECTOR <float, 3> x = body.GetPosition();
-	MATHVECTOR <float, 3> bumpforce = MATHVECTOR <float, 3>(0,0,bumpimpulse);
+	MATHVECTOR <float, 3> bumpforce = direction::Up*bumpimpulse;
 	MATHVECTOR <float, 3> accelforce = accellocal*body.GetMass();
 	MATHVECTOR <float, 3> springforce = -x*k;
 	MATHVECTOR <float, 3> damperforce = -body.GetVelocity()*c;

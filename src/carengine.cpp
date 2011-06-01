@@ -1,7 +1,6 @@
 #include "carengine.h"
 #include "cfg/ptree.h"
 #include "linearinterp.h"
-#include "coordinatesystems.h"
 
 CARENGINEINFO::CARENGINEINFO():
 	redline(7800),
@@ -31,7 +30,6 @@ bool CARENGINEINFO::Load(const PTree & cfg, std::ostream & error_output)
 	if (!cfg.get("mass", mass, error_output)) return false;
 	if (!cfg.get("position", pos, error_output)) return false;
 
-	COORDINATESYSTEMS::ConvertV2toV1(pos[0], pos[1], pos[2]);
 	position.setValue(pos[0], pos[1], pos[2]);
 
 	int curve_num = 0;

@@ -1,6 +1,5 @@
 #include "car.h"
 #include "carwheelposition.h"
-#include "coordinatesystems.h"
 #include "dynamicsworld.h"
 #include "tracksurface.h"
 #include "carinput.h"
@@ -23,11 +22,6 @@
 #include <vector>
 #include <sstream>
 #include <string>
-
-#if defined(_WIN32) || defined(__APPLE__)
-bool isnan(float number) {return (number != number);}
-bool isnan(double number) {return (number != number);}
-#endif
 
 enum WHICHDRAWLIST
 {
@@ -270,7 +264,7 @@ struct LoadBody
 	}
 };
 
-bool LoadWheel(
+static bool LoadWheel(
 	const PTree & cfg_wheel,
 	struct LoadDrawable & loadDrawable,
 	SCENENODE & topnode,
@@ -376,7 +370,7 @@ bool LoadWheel(
 	return true;
 }
 
-bool LoadCameras(
+static bool LoadCameras(
 	const PTree & cfg,
 	const float camerabounce,
 	CAMERA_SYSTEM & cameras,
@@ -389,7 +383,6 @@ bool LoadCameras(
 
 	MATHVECTOR<float, 3> pos(0), hoodpos(0);
 	if (!cfg.get("camera.view-position", pos, error_output)) return false;
-	COORDINATESYSTEMS::ConvertV2toV1(pos[0], pos[1], pos[2]);
 	MATHVECTOR <float, 3> cam_offset(pos[0], pos[1], pos[2]);
 	driver_cam->SetOffset(cam_offset);
 
@@ -399,7 +392,6 @@ bool LoadCameras(
 	}
 	else
 	{
-		COORDINATESYSTEMS::ConvertV2toV1(hoodpos[0],hoodpos[1],hoodpos[2]);
 		cam_offset.Set(hoodpos[0], hoodpos[1], hoodpos[2]);
 	}
 	hood_cam->SetOffset(cam_offset);
@@ -412,7 +404,7 @@ bool LoadCameras(
 	cameras.Add(driver_cam);
 
 	CAMERA_FIXED * cam_chaserigid = new CAMERA_FIXED("chaserigid");
-	cam_chaserigid->SetOffset(-6, 0, 1.5);
+	cam_chaserigid->SetOffset(0, -6, 1.5);
 	cameras.Add(cam_chaserigid);
 
 	CAMERA_CHASE * cam_chase = new CAMERA_CHASE("chase");
@@ -431,7 +423,6 @@ bool LoadCameras(
 		float pos[3], angle[3];
 		if (!cfg.GetParam("view.position-" + istr, pos)) continue;
 		if (!cfg.GetParam("view.angle-" + istr, angle)) continue;
-		COORDINATESYSTEMS::ConvertV2toV1(pos[0], pos[1], pos[2]);
 
 		CAMERA_MOUNT* next_view = new CAMERA_MOUNT(view_name);
 
@@ -450,6 +441,59 @@ bool LoadCameras(
 	return true;
 }
 
+
+// draw collision shape bounding boxes
+static void DrawShape(
+	SCENENODE & bodynoderef,
+	const btCollisionShape * shape,
+	const btTransform & transform,
+	MODELMANAGER & models,
+	std::list<std::tr1::shared_ptr<MODEL> > & modellist,
+	std::ostream & error_output)
+{
+	if (shape->isCompound())
+	{
+		const btCompoundShape * compound = (const btCompoundShape *)shape;
+		for (int i = 0; i < compound->getNumChildShapes(); ++i)
+		{
+			const btCollisionShape * childshape = compound->getChildShape(i);
+			btTransform childtransform = transform * compound->getChildTransform(i);
+			DrawShape(bodynoderef, childshape, childtransform, models, modellist, error_output);
+		}
+	}
+	else
+	{
+		btVector3 min, max;
+		shape->getAabb(btTransform::getIdentity(), min, max);
+		
+		MATHVECTOR<float,3> pos(ToMathVector<float>(transform.getOrigin()));
+		MATHVECTOR<float,3> size(ToMathVector<float>(max - min));
+		
+		keyed_container<SCENENODE>::handle node = bodynoderef.AddNode();
+		SCENENODE & noderef = bodynoderef.GetNode(node);
+		noderef.GetTransform().SetTranslation(pos);
+		
+		VERTEXARRAY varray;
+		varray.SetToUnitCube();
+		varray.Scale(size[0], size[1], size[2]);
+		
+		MODEL * model = new MODEL();
+		model->BuildFromVertexArray(varray, error_output);
+		if (models.useDrawlists())
+			model->GenerateListID(error_output);
+		else
+			model->GenerateVertexArrayObject(error_output);
+		
+		keyed_container<DRAWABLE> & dlist = GetDrawlist(noderef, NOBLEND);
+		keyed_container<DRAWABLE>::handle draw = dlist.insert(DRAWABLE());
+		DRAWABLE & drawref = dlist.get(draw);
+		drawref.SetColor(1, 0, 0);
+		drawref.SetModel(*model);
+		
+		modellist.push_back(std::tr1::shared_ptr<MODEL>(model));
+	}
+}
+
 CAR::CAR() :
 	gearsound_check(0),
 	brakesound_check(false),
@@ -459,7 +503,7 @@ CAR::CAR() :
 	sector(-1),
 	applied_brakes(0)
 {
-	modelrotation.Rotate(-M_PI_2, 0, 0, 1);
+	// ctor
 }
 
 bool CAR::LoadLight(
@@ -632,15 +676,16 @@ bool CAR::LoadPhysics(
 	btVector3 position = ToBulletVector(initial_position);
 	btQuaternion rotation = ToBulletQuaternion(initial_orientation);
 	
-	// fix model rotation
-	modelrotation.RotateVector(size);
-	modelrotation.RotateVector(center);
-	
 	if (!dynamics.Load(cfg, size, center, position, rotation, damage, world, error_output)) return false;
 	dynamics.SetABS(defaultabs);
 	dynamics.SetTCS(defaulttcs);
 	
 	mz_nominalmax = (GetTireMaxMz(FRONT_LEFT) + GetTireMaxMz(FRONT_RIGHT)) * 0.5;
+	
+	// draw collision shape ounding boxes
+	//btTransform offset(btTransform::getIdentity());
+	//offset.setOrigin(btVector3(0, -0.206458, -0.283854));
+	//DrawShape(topnode.GetNode(bodynode), dynamics.GetShape(), offset, models, modellist, error_output);
 	
 	return true;
 }
@@ -909,7 +954,7 @@ void CAR::UpdateGraphics()
 		MATHVECTOR<float, 3> pos = ToMathVector<float>(dynamics.GetPosition(i));
 		QUATERNION<float> rot = ToMathQuaternion<float>(dynamics.GetOrientation(i));
 		ni->GetTransform().SetTranslation(pos);
-		ni->GetTransform().SetRotation(rot * modelrotation);
+		ni->GetTransform().SetRotation(rot);
 	}
 	
 	// brake/reverse lights

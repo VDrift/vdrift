@@ -12,13 +12,12 @@
 #include "carbrake.h"
 #include "carwheelposition.h"
 #include "caraerodynamicdevice.h"
-#include "joeserialize.h"
-#include "macros.h"
 #include "collision_contact.h"
 #include "cartelemetry.h"
+#include "motionstate.h"
+#include "joeserialize.h"
 #include "BulletDynamics/Dynamics/btActionInterface.h"
 #include "LinearMath/btAlignedObjectArray.h"
-#include "motionstate.h"
 
 #ifdef _MSC_VER
 #include <memory>
@@ -65,6 +64,7 @@ public:
 	unsigned int GetNumBodies() const;
 	const btVector3 & GetPosition(int i) const;
 	const btQuaternion & GetOrientation(int i) const;
+	const btCollisionShape * GetShape() const;
 
 	// collision world interface
 	const COLLISION_CONTACT & GetWheelContact(WHEEL_POSITION wp) const;

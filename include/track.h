@@ -50,8 +50,16 @@ public:
 	
 	bool ContinueDeferredLoad();
 	
-	int DeferredLoadTotalObjects() const;
+	/// start loading thread
+	void Load();
 	
+	/// number of objects to load in total
+	int ObjectsNum() const;
+	
+	/// number of objects loaded
+	int ObjectsNumLoaded() const;
+	
+	/// track loading status
 	bool Loaded() const
 	{
 		return data.loaded;

@@ -610,8 +610,7 @@ void GAME::BeginDraw()
 		
 		QUATERNION <float> camlook;
 		camlook.Rotate(3.141593*0.5,1,0,0);
-		camlook.Rotate(-3.141593*0.5,0,0,1);
-		QUATERNION <float> camorient = -(active_camera->GetOrientation()*camlook);
+		QUATERNION <float> camorient = -(active_camera->GetOrientation() * camlook);
 		graphics_interface->SetupScene(settings.GetFOV(), settings.GetViewDistance(), active_camera->GetPosition(), camorient, reflection_sample_location);
 	}
 	else
@@ -1615,9 +1614,9 @@ void GAME::UpdateCarInputs(CAR & car)
 		//handle camera inputs
 		float left = TickPeriod() * (carcontrol.GetInput(CARINPUT::PAN_LEFT) - carcontrol.GetInput(CARINPUT::PAN_RIGHT));
 		float up = TickPeriod() * (carcontrol.GetInput(CARINPUT::PAN_UP) - carcontrol.GetInput(CARINPUT::PAN_DOWN));
-		float dx = TickPeriod() * (carcontrol.GetInput(CARINPUT::ZOOM_IN) - carcontrol.GetInput(CARINPUT::ZOOM_OUT));
-		active_camera->Rotate(-up, left); //up is inverted
-		active_camera->Move(4 * dx, 0, 0);
+		float dy = TickPeriod() * (carcontrol.GetInput(CARINPUT::ZOOM_IN) - carcontrol.GetInput(CARINPUT::ZOOM_OUT));
+		active_camera->Rotate(up, left);
+		active_camera->Move(0, 4 * dy, 0);
 
 		//set cockpit sounds
 		bool incar = (active_camera->GetName() == "hood" || active_camera->GetName() == "incar");
@@ -1985,10 +1984,10 @@ bool GAME::LoadTrack(const std::string & trackname)
 	int count = 0;
 	while (!track.Loaded() && success)
 	{
-		int displayevery = track.DeferredLoadTotalObjects() / 50;
+		int displayevery = track.ObjectsNum() / 50;
 		if (displayevery == 0 || count % displayevery == 0)
 		{
-			LoadingScreen(count, track.DeferredLoadTotalObjects(), false, "", 0.5, 0.5);
+			LoadingScreen(count, track.ObjectsNum(), false, "", 0.5, 0.5);
 		}
 		success = track.ContinueDeferredLoad();
 		count++;
@@ -2525,8 +2524,7 @@ void GAME::UpdateParticleSystems(float dt)
 	if (track.Loaded() && active_camera)
 	{
 		QUATERNION <float> camlook;
-		camlook.Rotate(3.141593*0.5,1,0,0);
-		camlook.Rotate(-3.141593*0.5,0,0,1);
+		camlook.Rotate(3.141593*0.5, 1, 0, 0);
 		QUATERNION <float> camorient = -(active_camera->GetOrientation() * camlook);
 
 		tire_smoke.Update(dt, camorient, active_camera->GetPosition());
@@ -2559,15 +2557,16 @@ void GAME::UpdateDriftScore(CAR & car, double dt)
 		float car_speed = car_velocity.Magnitude();
 
 		//car's direction on the horizontal plane
-		MATHVECTOR <float, 3> car_orientation = car.GetOrientation().AxisX();
-		car_orientation[2] = 0;
-		float orient_mag = car_orientation.Magnitude();
+		MATHVECTOR <float, 3> car_direction = direction::Forward;
+		car.GetOrientation().RotateVector(car_direction);
+		car_direction[2] = 0;
+		float dir_mag = car_direction.Magnitude();
 
 		//speed must be above 10 m/s and orientation must be valid
-		if ( car_speed > 10 && orient_mag > 0.01)
+		if ( car_speed > 10 && dir_mag > 0.01)
 		{
 			//angle between car's direction and velocity
-			float cos_angle = car_orientation.dot(car_velocity) / (car_speed * orient_mag);
+			float cos_angle = car_direction.dot(car_velocity) / (car_speed * dir_mag);
 			if (cos_angle > 1) cos_angle = 1;
 			else if (cos_angle < -1) cos_angle = -1;
 			float car_angle = acos(cos_angle);

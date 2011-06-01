@@ -1,5 +1,4 @@
 #include "carsuspension.h"
-#include "coordinatesystems.h"
 #include "tobullet.h"
 #include "cfg/ptree.h"
 
@@ -365,7 +364,6 @@ bool CARSUSPENSION::Load(
 	cfg_wheel.get("steering", info.max_steering_angle);
 	cfg_wheel.get("ackermann", info.ackermann);
 	
-	COORDINATESYSTEMS::ConvertV2toV1(p[0], p[1], p[2]);
 	info.extended_position.setValue(p[0], p[1], p[2]);
 	
 	const PTree * cfg_coil;
@@ -380,10 +378,6 @@ bool CARSUSPENSION::Load(
 		if (!cfg_susp->get("hinge", hinge, error_output)) return false;
 		if (!cfg_susp->get("strut-top", strut_top, error_output)) return false;
 		if (!cfg_susp->get("strut-end", strut_end, error_output)) return false;
-		
-		COORDINATESYSTEMS::ConvertV2toV1(hinge[0], hinge[1], hinge[2]);
-		COORDINATESYSTEMS::ConvertV2toV1(strut_top[0], strut_top[1], strut_top[2]);
-		COORDINATESYSTEMS::ConvertV2toV1(strut_end[0], strut_end[1], strut_end[2]);
 		
 		MACPHERSONSUSPENSION * mps = new MACPHERSONSUSPENSION();
 		mps->Init(info, strut_top, strut_end, hinge);
@@ -400,13 +394,6 @@ bool CARSUSPENSION::Load(
 		if (!cfg_susp->get("upper-hub", up_hub, error_output)) return false;
 		if (!cfg_susp->get("lower-hub", lo_hub, error_output)) return false;
 		
-		COORDINATESYSTEMS::ConvertV2toV1(up_ch0[0], up_ch0[1], up_ch0[2]);
-		COORDINATESYSTEMS::ConvertV2toV1(up_ch1[0], up_ch1[1], up_ch1[2]);
-		COORDINATESYSTEMS::ConvertV2toV1(lo_ch0[0], lo_ch0[1], lo_ch0[2]);
-		COORDINATESYSTEMS::ConvertV2toV1(lo_ch1[0], lo_ch1[1], lo_ch1[2]);
-		COORDINATESYSTEMS::ConvertV2toV1(up_hub[0], up_hub[1], up_hub[2]);
-		COORDINATESYSTEMS::ConvertV2toV1(lo_hub[0], lo_hub[1], lo_hub[2]);
-		
 		WISHBONESUSPENSION * wbs = new WISHBONESUSPENSION();
 		wbs->Init(info, up_ch0, up_ch1, lo_ch0, lo_ch1, up_hub, lo_hub);
 		suspension = wbs;
@@ -418,9 +405,6 @@ bool CARSUSPENSION::Load(
 		if (!cfg_wheel.get("hinge", cfg_susp, error_output)) return false;
 		if (!cfg_susp->get("chassis", ch, error_output)) return false;
 		if (!cfg_susp->get("wheel", wh, error_output)) return false;
-		
-		COORDINATESYSTEMS::ConvertV2toV1(ch[0], ch[1], ch[2]);
-		COORDINATESYSTEMS::ConvertV2toV1(wh[0], wh[1], wh[2]);
 		
 		BASICSUSPENSION * bs = new BASICSUSPENSION();
 		bs->Init(info, ch, wh);

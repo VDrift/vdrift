@@ -73,10 +73,16 @@ bool TRACK::ContinueDeferredLoad()
 	return loader->ContinueLoad();
 }
 
-int TRACK::DeferredLoadTotalObjects() const
+int TRACK::ObjectsNum() const
 {
 	assert(loader.get());
 	return loader->GetNumObjects();
+}
+
+int TRACK::ObjectsNumLoaded() const
+{
+	assert(loader.get());
+	return loader->GetNumLoaded();
 }
 
 void TRACK::Clear()

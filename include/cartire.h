@@ -43,7 +43,8 @@ public:
 		btScalar friction_coeff,
 		btScalar inclination,
 		btScalar ang_velocity,
-		const btVector3 & velocity);
+		btScalar lon_velocty,
+		btScalar lat_velocity);
 	
 	/// get rolling resistance
 	btScalar GetRollingResistance(const btScalar velocity, const btScalar rolling_resistance_factor) const;

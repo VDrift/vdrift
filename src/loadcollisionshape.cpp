@@ -29,7 +29,7 @@ void LoadBoxShape(
 	btVector3 box_center(0, 0, 0);
 	cfg.get("center", box_center);
 	btTransform transform = btTransform::getIdentity();
-	transform.getOrigin() = box_center - center;
+	transform.setOrigin(box_center - center);
 	
 	if (!shape)
 	{

@@ -12,6 +12,11 @@ class CARWHEEL
 friend class joeserialize::Serializer;
 public:
 	CARWHEEL() : mass(20) {}
+	
+	btScalar GetRotation() const
+	{
+		return shaft.angle;
+	}
 
 	btScalar GetRPM() const
 	{
@@ -61,11 +66,6 @@ public:
 	void SetTorque(btScalar torque, btScalar dt)
 	{
 		shaft.applyMomentum(torque * dt);
-	}
-
-	btQuaternion GetRotation() const
-	{
-		return btQuaternion(btVector3(0, 1, 0), shaft.angle);
 	}
 
 	void DebugPrint(std::ostream & out) const

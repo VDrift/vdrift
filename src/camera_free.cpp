@@ -1,4 +1,5 @@
 #include "camera_free.h"
+#include "coordinatesystem.h"
 
 CAMERA_FREE::CAMERA_FREE(const std::string & name) :
 	CAMERA(name),
@@ -16,7 +17,7 @@ void CAMERA_FREE::Reset(const MATHVECTOR <float, 3> & newpos, const QUATERNION <
 	updown_rotation = 0;
 	
 	Rotate(0, 0);
-	Move(-8, 0, 0);
+	Move(0, -8, 0);
 }
 
 void CAMERA_FREE::Rotate(float up, float left)
@@ -27,13 +28,14 @@ void CAMERA_FREE::Rotate(float up, float left)
 	leftright_rotation += left;
 	
 	rotation.LoadIdentity();
-	rotation.Rotate(updown_rotation, 0, 1, 0);
-	rotation.Rotate(leftright_rotation, 0, 0, 1);
+	rotation.Rotate(updown_rotation, direction::Right);
+	rotation.Rotate(leftright_rotation, direction::Up);
 }
 
-void CAMERA_FREE::Move(float dx, float, float)
+void CAMERA_FREE::Move(float dx, float dy, float dz)
 {
-	MATHVECTOR <float, 3> forward(dx, 0, 0);
+	MATHVECTOR <float, 3> move(dx, dy, dz);
+	MATHVECTOR <float, 3> forward = direction::Forward * direction::Forward.dot(move);
 	rotation.RotateVector(forward);
 	position = position + forward;
 }

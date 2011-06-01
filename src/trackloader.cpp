@@ -7,6 +7,8 @@
 #include "tobullet.h"
 #include "k1999.h"
 
+#include <SDL/SDL_thread.h>
+
 inline void operator >> (std::istream & lhs, btVector3 & rhs)
 {
 	for (size_t i = 0; i < 3; ++i)
@@ -88,12 +90,14 @@ TRACK::LOADER::LOADER(
 	agressive_combining(agressive_combining),
 	packload(false),
 	numobjects(0),
+	numloaded(0),
 	params_per_object(17),
 	expected_params(17),
 	min_params(14),
 	error(false),
 	list(false),
-	track_shape(0)
+	track_shape(0),
+	thread(0)
 {
 	objectpath = trackpath + "/objects";
 	objectdir = trackdir + "/objects";
@@ -861,7 +865,7 @@ bool TRACK::LOADER::LoadParameters()
 
 		//due to historical reasons the initial orientation places the car faces the wrong way
 		QUATERNION <float> fixer; 
-		fixer.Rotate(3.141593, 0, 0, 1);
+		fixer.Rotate(M_PI_2, 0, 0, 1);
 		orient = fixer * orient;
 
 		MATHVECTOR <float, 3> pos(f3[2], f3[0], f3[1]);

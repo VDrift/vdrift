@@ -287,6 +287,14 @@ public:
 		Normalize();
 	}
 	
+	void Rotate(const T & a, const MATHVECTOR<T, 3> & axis)
+	{
+		QUATERNION output;
+		output.SetAxisAngle(a, axis[0], axis[1], axis[2]);
+		(*this) = output * (*this);
+		Normalize();
+	}
+	
 	///set the quaternion to rotation a around the given axis
 	/// a is in radians.  the axis is assumed to be a unit vector
 	void SetAxisAngle(const T & a, const T & ax, const T & ay, const T & az)

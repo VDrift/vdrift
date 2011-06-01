@@ -2,9 +2,10 @@
 #define _CARAERO_H
 
 #include "LinearMath/btVector3.h"
+#include "coordinatesystem.h"
 #include "joeserialize.h"
 #include "macros.h"
-#include <iostream>
+#include <ostream>
 
 class CARAERO
 {
@@ -70,13 +71,17 @@ class CARAERO
 			drag_vector = bodyspace_wind_vector * bodyspace_wind_vector.length() * 
 				0.5 * air_density * drag_coefficient * drag_frontal_area;
 			
+			//positive wind speed when the wind is heading at us
+			btScalar wind_speed = -direction::forward.dot(bodyspace_wind_vector);
+			
+			//assume the surface doesn't generate much lift when in reverse
+			if (wind_speed < 0) wind_speed = -wind_speed * 0.2;
+			
 			//calculate lift force and associated drag
-			btScalar wind_speed = -bodyspace_wind_vector[0]; //positive wind speed when the wind is heading at us
-			if (wind_speed < 0) wind_speed = -wind_speed * 0.2; //assume the surface doesn't generate much lift when in reverse
 			const btScalar k = 0.5 * air_density * wind_speed * wind_speed;
 			const btScalar lift = k * lift_coefficient * lift_surface_area;
 			const btScalar drag = -lift_coefficient * lift * (1.0 -  lift_efficiency);
-			lift_vector = btVector3 (drag, 0, lift);
+			lift_vector = direction::forward * drag + direction::up * lift;
 			
 			btVector3 force = drag_vector + lift_vector;
 			

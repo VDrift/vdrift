@@ -3,8 +3,9 @@
 #include "dynamicsworld.h"
 #include "fracturebody.h"
 #include "loadcollisionshape.h"
-#include "coordinatesystems.h"
+#include "coordinatesystem.h"
 #include "cfg/ptree.h"
+#include "macros.h"
 
 static bool LoadClutch(
 	const PTree & cfg,
@@ -73,7 +74,6 @@ static bool LoadFuelTank(
 	if (!cfg_fuel->get("fuel-density", fuel_density, error_output)) return false;
 	if (!cfg_fuel->get("position", pos, error_output)) return false;
 
-	COORDINATESYSTEMS::ConvertV2toV1(pos[0], pos[1], pos[2]);
 	btVector3 position(pos[0], pos[1], pos[2]);
 
 	fuel_tank.SetCapacity(capacity);
@@ -167,9 +167,7 @@ static bool LoadAeroDevices(
 		cfg_wing.get("lift-coefficient", lift_coeff);
 		cfg_wing.get("efficiency", lift_eff);
 		
-		COORDINATESYSTEMS::ConvertV2toV1(pos[0],pos[1],pos[2]);
 		btVector3 position(pos[0], pos[1], pos[2]);
-		
 		aerodynamics[i].Set(position, drag_area, drag_coeff, lift_area, lift_coeff, lift_eff);
 	}
 	
@@ -277,8 +275,6 @@ struct BodyLoader
 		cfg.get("mass", mass);
 		cfg.get("position", pos);
 		cfg.get("rotation", rot);
-		COORDINATESYSTEMS::ConvertV2toV1(pos[0], pos[1], pos[2]);
-		COORDINATESYSTEMS::ConvertV2toV1(rot[0], rot[1], rot[2]);
 		transform.setOrigin(btVector3(pos[0], pos[1], pos[2]));
 		transform.setRotation(btQuaternion(rot[1]*M_PI/180, rot[0]*M_PI/180, rot[2]*M_PI/180));
 		
@@ -501,7 +497,7 @@ bool CARDYNAMICS::Load(
 	
 	BodyLoader bodyLoader;
 	bodyLoader.load(cfg, error_output);
-	damage = cardamage && bodyLoader.numbodies > 0;
+	damage = cardamage && bodyLoader.numbodies;
 	if (damage)
 	{
 		bodies.resize(1 + bodyLoader.numbodies);
@@ -528,10 +524,10 @@ bool CARDYNAMICS::Load(
 		for (size_t j = 0; j < WHEEL_POSITION_SIZE; ++j, ++i)
 		{
 			float mass = wheel[j].GetMass();
-			btVector3 size(tire[j].GetRadius()*0.8, tire[j].GetSidewallWidth()*0.5, tire[j].GetRadius()*0.8);
+			btVector3 size(tire[j].GetSidewallWidth()*0.5, tire[j].GetRadius()*0.8, tire[j].GetRadius()*0.8);
 			
 			btVector3 inertia;
-			btCollisionShape * subshape = new btCylinderShape(size);
+			btCollisionShape * subshape = new btCylinderShapeX(size);
 			subshape->calculateLocalInertia(mass, inertia);
 			
 			btRigidBody::btRigidBodyConstructionInfo info(mass, &bodies[i].state, subshape, inertia);
@@ -564,6 +560,7 @@ bool CARDYNAMICS::Load(
 			sh.transform.setOrigin(sh.transform.getOrigin() - massCenter);
 			fbody->addShape(sh.transform, sh.shape);
 		}
+		
 		
 		//std::cerr << "\ncreate" << std::endl;
 		//fbody->debugPrint();
@@ -681,8 +678,16 @@ void CARDYNAMICS::Update()
 	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
 	{
 		if (damage && bodies[i+1].body->isInWorld()) continue;
-		bodies[i+1].state.rotation = GetOrientation() * suspension[i]->GetWheelOrientation() * wheel[i].GetRotation();
-		bodies[i+1].state.position = GetPosition() + quatRotate(GetOrientation(), suspension[i]->GetWheelPosition());
+		
+		btQuaternion rotation = btQuaternion(direction::right, -wheel[i].GetRotation());
+		rotation = suspension[i]->GetWheelOrientation() * rotation;
+		rotation = GetOrientation() * rotation;
+		
+		btVector3 position = quatRotate(GetOrientation(), suspension[i]->GetWheelPosition());
+		position = GetPosition() + position;
+		
+		bodies[i+1].state.rotation = rotation;
+		bodies[i+1].state.position = position;
 	}
 }
 
@@ -731,6 +736,11 @@ const btQuaternion & CARDYNAMICS::GetOrientation(int i) const
 {
 	btAssert(i < bodies.size());
 	return bodies[i].state.rotation;
+}
+
+const btCollisionShape * CARDYNAMICS::GetShape() const
+{
+	return body->getCollisionShape();
 }
 
 /// worldspace wheel center position
@@ -900,22 +910,19 @@ void CARDYNAMICS::AlignWithGround()
 // ugh, ugly code
 void CARDYNAMICS::RolloverRecover()
 {
-	btQuaternion rot(0, 0, 0, 1);
-	//btTransform transform = body->getCenterOfMassTransform();
-
-	btVector3 z(0, 0, 1);
-	btVector3 y_car = transform.getBasis().getColumn(0);
+	btVector3 z(direction::up);
+	btVector3 y_car = transform.getBasis() * direction::forward;
 	y_car = y_car - z * z.dot(y_car);
 	y_car.normalize();
 
-	btVector3 z_car = transform.getBasis().getColumn(2);
+	btVector3 z_car = transform.getBasis() * direction::up;
 	z_car = z_car - y_car * y_car.dot(z_car);
 	z_car.normalize();
 
 	btScalar angle = z_car.angle(z);
 	if (fabs(angle) < M_PI / 4.0) return;
 
-	rot.setRotation(y_car, angle);
+	btQuaternion rot(y_car, angle);
 	rot = rot * transform.getRotation();
 
 	transform.setRotation(rot);
@@ -1219,7 +1226,7 @@ void CARDYNAMICS::UpdateWheelTransform()
 void CARDYNAMICS::ApplyEngineTorqueToBody ( btVector3 & force, btVector3 & torque )
 {
 	btVector3 engine_torque ( -engine.GetTorque(), 0, 0 );
-	assert ( !isnan ( engine_torque[0] ) );
+	assert ( !std::isnan ( engine_torque[0] ) );
 	torque = body->getCenterOfMassTransform().getBasis() * engine_torque;
 }
 
@@ -1357,9 +1364,9 @@ void CARDYNAMICS::ComputeSuspensionDisplacement ( int i, btScalar dt )
 	btScalar bumpoffset = amplitude * ( sin ( phase + shift ) + sin ( M_PI_2*phase ) - 2.0 );
 
 	btScalar relative_displacement = wheel_contact[i].GetDepth() - 2 * tire[i].GetRadius() - bumpoffset;
-	assert ( !isnan ( relative_displacement ) );
+	assert ( !std::isnan ( relative_displacement ) );
 	suspension[i]->SetDisplacement ( suspension[i]->GetDisplacement()-relative_displacement, dt );
-	assert ( !isnan ( suspension[i]->GetDisplacement() ) );
+	assert ( !std::isnan ( suspension[i]->GetDisplacement() ) );
 }
 
 ///returns the suspension force (so it can be applied to the tires)
@@ -1367,7 +1374,7 @@ btVector3 CARDYNAMICS::ApplySuspensionForceToBody ( int i, btScalar dt, btVector
 {
 	//compute suspension force
 	btScalar springdampforce = suspension[i]->GetForce ( dt );
-	assert ( !isnan ( springdampforce ) );
+	assert ( !std::isnan ( springdampforce ) );
 
 	//do anti-roll
 	int otheri = i;
@@ -1375,7 +1382,7 @@ btVector3 CARDYNAMICS::ApplySuspensionForceToBody ( int i, btScalar dt, btVector
 	else otheri--;
 	btScalar antirollforce = suspension[i]->GetAntiRoll() * 
 		( suspension[i]->GetDisplacement() - suspension[WHEEL_POSITION ( otheri ) ]->GetDisplacement() );
-	assert ( !isnan ( antirollforce ) );
+	assert ( !std::isnan ( antirollforce ) );
 
 	//find the vector direction to apply the suspension force
 #ifdef SUSPENSION_FORCE_DIRECTION
@@ -1387,7 +1394,7 @@ btVector3 CARDYNAMICS::ApplySuspensionForceToBody ( int i, btScalar dt, btVector
 	btVector3 forcedirection = relwheelext.Normalize().cross ( rotaxis );
 	//std::cout << i << ". " << forcedirection << std::endl;
 #else
-	btVector3 forcedirection( 0,0,1 );
+	btVector3 forcedirection(direction::up);
 #endif
 	forcedirection = body->getCenterOfMassTransform().getBasis() * forcedirection;
 
@@ -1411,38 +1418,42 @@ btVector3 CARDYNAMICS::ApplySuspensionForceToBody ( int i, btScalar dt, btVector
 	force = force + suspension_force;
 	torque = torque + suspension_force_application_point.cross(suspension_force);
 
-	for ( int n = 0; n < 3; ++n ) assert ( !isnan ( force[n] ) );
-	for ( int n = 0; n < 3; ++n ) assert ( !isnan ( torque[n] ) );
+	for ( int n = 0; n < 3; ++n ) assert ( !std::isnan ( force[n] ) );
+	for ( int n = 0; n < 3; ++n ) assert ( !std::isnan ( torque[n] ) );
 
 	return suspension_force;
 }
 
-btVector3 CARDYNAMICS::ComputeTireFrictionForce ( int i, btScalar dt, btScalar normal_force,
-        btScalar angvel, btVector3 & groundvel, const btQuaternion & wheel_orientation )
+btVector3 CARDYNAMICS::ComputeTireFrictionForce (int i, btScalar dt, btScalar normal_force,
+        btScalar angvel, btVector3 & groundvel, const btQuaternion & wheel_orientation)
 {
-	//determine camber relative to the r.length()oad
+	//determine camber relative to the road
 	//the component of vector A projected onto plane B = A || B = B × (A×B / |B|) / |B|
 	//plane B is the plane defined by using the tire's forward-facing vector as the plane's normal, in wheelspace
 	//vector A is the normal of the driving surface, in wheelspace
-	btVector3 B ( 1, 0, 0 ); //forward facing normal vector
-	btVector3 A = quatRotate ( wheel_orientation.inverse(), wheel_contact[ WHEEL_POSITION ( i ) ].GetNormal() ) ; //driving surface normal in wheelspace
-	btVector3 Aproj = B.cross ( A.cross ( B ) / B.length() ); //project the ground normal onto our forward facing plane
-	assert ( Aproj.length() > 0.001 ); //ensure the wheel isn't in an odd orientation
+	btVector3 B = direction::forward; //forward facing normal vector
+	btVector3 A = quatRotate(wheel_orientation.inverse(), wheel_contact[ WHEEL_POSITION ( i ) ].GetNormal() ) ; //driving surface normal in wheelspace
+	btVector3 Aproj = B.cross(A.cross(B)); //project the ground normal onto our forward facing plane
+	assert(Aproj.length() > 0.001); //ensure the wheel isn't in an odd orientation
 	Aproj = Aproj.normalize();
-	btVector3 up ( 0, 0, 1 ); //upward facing normal vector
-	btScalar camber_rads = btAcos ( Aproj.dot ( up ) ); //find the angular difference in the camber axis between up and the projected ground normal
-	assert ( !isnan ( camber_rads ) );
+	btScalar camber_rads = btAcos(Aproj.dot(direction::up)); //find the angular difference in the camber axis between up and the projected ground normal
+	assert(!std::isnan(camber_rads));
 	//btVector3 crosscheck = Aproj.cross(up); //find axis of rotation between Aproj and up
 	//camber_rads = (crosscheck[0] < 0) ? -camber_rads : camber_rads; //correct sign of angular distance
 	camber_rads = -camber_rads;
 	//std::cout << i << ". " << Aproj << " | " << camber_rads*180/3.141593 << std::endl;
 	//wheel[WHEEL_POSITION(i)].SetCamberDeg(camber_rads*180.0/3.141593);
 
-	btScalar friction_coeff = tire[i].GetTread() * wheel_contact[i].GetSurface().frictionTread + ( 1.0 - tire[i].GetTread() ) * wheel_contact[i].GetSurface().frictionNonTread;
+	btScalar lonvel = direction::forward.dot(groundvel);
+	btScalar latvel = -direction::right.dot(groundvel);
+	btScalar friction_coeff = 
+		tire[i].GetTread() * wheel_contact[i].GetSurface().frictionTread + 
+		(1.0 - tire[i].GetTread()) * wheel_contact[i].GetSurface().frictionNonTread;
 
-	btVector3 friction_force = tire[i].GetForce ( normal_force, friction_coeff, camber_rads, angvel, groundvel );
+	btVector3 friction_force = tire[i].GetForce(
+		normal_force, friction_coeff, camber_rads, angvel, lonvel, latvel);
 
-	for ( int n = 0; n < 3; ++n ) assert ( !isnan ( friction_force[n] ) );
+	for (int n = 0; n < 3; ++n) assert(!std::isnan(friction_force[n]));
 
 	return friction_force;
 }
@@ -1452,20 +1463,20 @@ void CARDYNAMICS::ApplyWheelForces ( btScalar dt, btScalar wheel_drive_torque, i
 	btVector3 groundvel = quatRotate ( wheel_orientation[i].inverse(), wheel_velocity[i] );
 	
 #ifdef SUSPENSION_FORCE_DIRECTION
-	btVector3 wheel_normal = quatRotate ( wheel_orientation[i], btVector3 ( 0, 0, 1 ) );
+	btVector3 wheel_normal = quatRotate ( wheel_orientation[i], up );
 	//btScalar normal_force = suspension_force.dot(wheel_normal);
 	btScalar normal_force = suspension_force.length();
 #else
 	btScalar normal_force = suspension_force.length();
 #endif
-	assert ( !isnan ( normal_force ) );
+	assert(!std::isnan(normal_force));
 
 	btVector3 friction_force = ComputeTireFrictionForce ( i, dt, normal_force, wheel[i].GetAngularVelocity(), groundvel, wheel_orientation[i] );
 
 	//calculate friction torque
-	btVector3 tire_force ( friction_force[0], friction_force[1], 0 );
-	btScalar tire_friction_torque = tire_force [0] * tire[i].GetRadius();
-	assert ( !isnan ( tire_friction_torque ) );
+	btVector3 tire_force = direction::forward * friction_force[0] - direction::right * friction_force[1];
+	btScalar tire_friction_torque = friction_force[0] * tire[i].GetRadius();
+	assert ( !std::isnan ( tire_friction_torque ) );
 
 	//calculate brake torque
 	btScalar wheel_brake_torque = (0 - wheel[i].GetAngularVelocity()) / dt * wheel[i].GetInertia() - wheel_drive_torque + tire_friction_torque;
@@ -1477,7 +1488,7 @@ void CARDYNAMICS::ApplyWheelForces ( btScalar dt, btScalar wheel_drive_torque, i
 	{
 		wheel_brake_torque = -brake[i].GetTorque();
 	}
-	assert ( !isnan ( wheel_brake_torque ) );
+	assert ( !std::isnan ( wheel_brake_torque ) );
 
 	//limit the reaction torque to the applied drive and braking torque
 	btScalar reaction_torque = tire_friction_torque;
@@ -1485,16 +1496,14 @@ void CARDYNAMICS::ApplyWheelForces ( btScalar dt, btScalar wheel_drive_torque, i
 	if ( ( applied_torque > 0 && reaction_torque > applied_torque ) ||
 			( applied_torque < 0 && reaction_torque < applied_torque ) )
 		reaction_torque = applied_torque;
-	btVector3 tire_torque ( 0, -reaction_torque, -friction_force[2] );
+	btVector3 tire_torque = direction::right * reaction_torque - direction::up * friction_force[2];
 
 	//set wheel torque due to tire rolling resistance
-	btScalar tire_rolling_resistance_torque =
-		-tire[i].GetRollingResistance ( wheel[i].GetAngularVelocity(), wheel_contact[i].GetSurface().rollResistanceCoefficient )
-										 * tire[i].GetRadius() - tire_friction_torque;
-		assert ( !isnan ( tire_rolling_resistance_torque ) );
+	btScalar rolling_resistance = -tire[i].GetRollingResistance(wheel[i].GetAngularVelocity(), wheel_contact[i].GetSurface().rollResistanceCoefficient);
+	btScalar tire_rolling_resistance_torque = rolling_resistance * tire[i].GetRadius() - tire_friction_torque;
+	assert(!std::isnan(tire_rolling_resistance_torque));
 
-	for ( int axis = 0; axis < 2; axis++ )
-		tire_force[axis] -= groundvel[axis]*wheel_contact[i].GetSurface().rollingDrag;
+	tire_force -= groundvel * wheel_contact[i].GetSurface().rollingDrag;
 
 	//have the wheels internally apply forces, or just forcibly set the wheel speed if the brakes are locked
 	wheel[i].SetTorque ( wheel_drive_torque+wheel_brake_torque+tire_rolling_resistance_torque, dt );
@@ -1566,8 +1575,8 @@ void CARDYNAMICS::ApplyForces ( btScalar dt, const btVector3 & ext_force, const 
 		ApplyWheelForces ( dt, wheel_drive_torque[i], i, suspension_force[i], force, torque );
 	}
 
-	for ( int n = 0; n < 3; ++n ) assert ( !isnan ( force[n] ) );
-	for ( int n = 0; n < 3; ++n ) assert ( !isnan ( torque[n] ) );
+	for ( int n = 0; n < 3; ++n ) assert ( !std::isnan ( force[n] ) );
+	for ( int n = 0; n < 3; ++n ) assert ( !std::isnan ( torque[n] ) );
 	body->applyCentralForce( force );
 	body->applyTorque( torque );
 }
@@ -1670,7 +1679,7 @@ void CARDYNAMICS::UpdateDriveline(btScalar drive_torque[], btScalar dt)
 void CARDYNAMICS::CalculateDriveTorque(btScalar wheel_drive_torque[], btScalar clutch_torque)
 {
 	btScalar driveshaft_torque = transmission.GetTorque(clutch_torque);
-	assert(!isnan(driveshaft_torque));
+	assert(!std::isnan(driveshaft_torque));
 
 	for ( int i = 0; i < WHEEL_POSITION_SIZE; ++i )
 		wheel_drive_torque[i] = 0;
@@ -1699,7 +1708,7 @@ void CARDYNAMICS::CalculateDriveTorque(btScalar wheel_drive_torque[], btScalar c
 	}
 
 	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
-		assert(!isnan(wheel_drive_torque[WHEEL_POSITION(i)]));
+		assert(!std::isnan(wheel_drive_torque[WHEEL_POSITION(i)]));
 }
 
 btScalar CARDYNAMICS::CalculateDriveshaftSpeed()
@@ -1711,7 +1720,7 @@ btScalar CARDYNAMICS::CalculateDriveshaftSpeed()
 	btScalar right_rear_wheel_speed = wheel[REAR_RIGHT].GetAngularVelocity();
 	
 	for ( int i = 0; i < 4; ++i )
-		assert ( !isnan ( wheel[i].GetAngularVelocity() ) );
+		assert ( !std::isnan ( wheel[i].GetAngularVelocity() ) );
 	
 	if (drive == RWD)
 	{

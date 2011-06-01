@@ -292,7 +292,6 @@ public:
 protected:
 	SCENENODE topnode;
 	CARDYNAMICS dynamics;
-	QUATERNION<float> modelrotation; // const model rotation fix
 	
 	keyed_container<SCENENODE>::handle bodynode;
 	keyed_container<SCENENODE>::handle steernode;

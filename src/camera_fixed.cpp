@@ -1,4 +1,5 @@
 #include "camera_fixed.h"
+#include "coordinatesystem.h"
 
 CAMERA_FIXED::CAMERA_FIXED(const std::string & name) : CAMERA(name)
 {
