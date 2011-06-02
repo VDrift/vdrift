@@ -433,7 +433,7 @@ bool CARDYNAMICS::Load(
 	DynamicsWorld & world,
 	std::ostream & error_output)
 {
-	cfg.write(error_output, write_inf);
+	//cfg.write(error_output, write_inf);
 	
 	if (!LoadAeroDevices(cfg, aerodynamics, error_output)) return false;
 	if (!LoadClutch(cfg, clutch, error_output)) return false;
