@@ -1790,13 +1790,12 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	{
 		assert(carcontrols_local.first);
 
-		std::string cartype = carcontrols_local.first->GetCarType();
-		std::string sharedpath = pathmanager.GetSharedCarPath();
+		std::string cartype = carcontrols_local.first->GetCarType();;
 		std::string cardir = pathmanager.GetCarDir()+"/"+carname.substr(0, carname.find("/"));
 		std::string carpath = pathmanager.GetDataPath()+"/"+cardir;
 
 		PTree carconfig;
-		file_open_basic fopen(carpath, pathmanager.GetCarSharedDir());
+		file_open_basic fopen(carpath, pathmanager.GetSharedCarPath());
 		if (!read_ini(carname.substr(carname.find("/")+1), fopen, carconfig))
 		{
 			error_output << "Failed to load " << carname << std::endl;
