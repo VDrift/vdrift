@@ -220,7 +220,7 @@ public:
 		const std::string & newcartype,
 		const std::string & newcarpaint,
 		float r, float g, float b,
-		const std::string & carfilename,
+		const PTree & carconfig,
 		const std::string & trackname,
 		std::ostream & error_log);
 	

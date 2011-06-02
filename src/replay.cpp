@@ -1,6 +1,6 @@
 #include "replay.h"
 #include "unittest.h"
-#include "config.h"
+#include "cfg/ptree.h"
 #include "carinput.h"
 
 #include <iostream>
@@ -107,7 +107,7 @@ void REPLAY::StartRecording(
 	const std::string & newcartype,
 	const std::string & newcarpaint,
 	float r, float g, float b,
-	const std::string & carfilename,
+	const PTree & carconfig,
 	const std::string & trackname,
 	ostream & error_log)
 {
@@ -120,11 +120,9 @@ void REPLAY::StartRecording(
 	
 	GetReadyToRecord();
 	
-	CONFIG carconfig;
-	stringstream carfilestream;
-	carconfig.Load(carfilename);
-	carconfig.DebugPrint(carfilestream);
-	carfile = carfilestream.str();
+	stringstream carstream;
+	carconfig.write(carstream);
+	carfile = carstream.str();
 }
 
 void REPLAY::GetReadyToPlay()

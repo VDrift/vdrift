@@ -1789,9 +1789,20 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	if (settings.GetRecordReplay() && !playreplay)
 	{
 		assert(carcontrols_local.first);
+
 		std::string cartype = carcontrols_local.first->GetCarType();
-		std::string carpath = pathmanager.GetCarPath()+"/"+cartype;
-		
+		std::string sharedpath = pathmanager.GetSharedCarPath();
+		std::string cardir = pathmanager.GetCarDir()+"/"+carname.substr(0, carname.find("/"));
+		std::string carpath = pathmanager.GetDataPath()+"/"+cardir;
+
+		PTree carconfig;
+		file_open_basic fopen(carpath, pathmanager.GetCarSharedDir());
+		if (!read_ini(carname.substr(carname.find("/")+1), fopen, carconfig))
+		{
+			error_output << "Failed to load " << carname << std::endl;
+			return false;
+		}
+
 		float r(0), g(0), b(0);
 		settings.GetPlayerColor(r, g, b);
 		
@@ -1799,7 +1810,7 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 			cartype,
 			settings.GetPlayerCarPaint(),
 			r, g, b,
-			carpath,
+			carconfig,
 			settings.GetTrack(),
 			error_output);
 	}
