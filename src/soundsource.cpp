@@ -30,8 +30,8 @@ SOUNDFILTER & SOUNDSOURCE::GetFilter(int num)
 		curnum++;
 	}
 	assert(0);
-	SOUNDFILTER * nullfilt = NULL;
-	return *nullfilt;
+	static SOUNDFILTER null;
+	return null;
 }
 
 bool SOUNDSOURCE::Audible() const

@@ -161,6 +161,7 @@ bool SOUNDBUFFER::LoadWAV(const std::string & filename, const SOUNDINFO & sound_
 			error_output << "Sound file doesn't have RIFF header: "+filename << std::endl;
 			return false;
 		}
+		fclose(fp);
 	}
 	else
 	{

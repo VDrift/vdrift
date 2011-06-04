@@ -50,14 +50,14 @@ std::string skip(std::istream & in, const std::string & skipchars, int * linecou
 		{
 			getTrimmedLine(in); //discard comment
 			if (linecount)
-				*linecount++;
+				(*linecount)++;
 			next = in.peek();
 		}
 		else
 		{
 			cruft.push_back(in.get());
 			if (*cruft.rend() == '\n' && linecount)
-				*linecount++;
+				(*linecount)++;
 			next = in.peek();
 		}
 	}
@@ -80,14 +80,14 @@ std::string skipUntil(std::istream & in, const std::string & skipchars, int * li
 		{
 			getTrimmedLine(in); // discard comment
 			if (linecount)
-				*linecount++;
+				(*linecount)++;
 			next = in.peek();
 		}
 		else
 		{
 			cruft.push_back(in.get());
 			if (*cruft.rbegin() == '\n' && linecount) // last character a newline
-				*linecount++;
+				(*linecount)++;
 			next = in.peek();
 		}
 	}
@@ -98,14 +98,14 @@ std::string skipUntil(std::istream & in, const std::string & skipchars, int * li
 std::map <std::string, std::string> readValuePairs(std::istream & f, std::ostream & error_output, int & line)
 {
 	const char terminator = '[';
-	
+
 	std::map <std::string, std::string> varmap;
-	
+
 	while (f && (peekTrimmedLine(f).empty() || peekTrimmedLine(f)[0] != terminator))
 	{
 		std::stringstream lineparse(getTrimmedLine(f));
 		line++;
-		
+
 		std::string name = strTrim(skipUntil(lineparse, "="));
 		if (lineparse)
 		{
@@ -115,7 +115,7 @@ std::map <std::string, std::string> readValuePairs(std::istream & f, std::ostrea
 			varmap[name] = value;
 		}
 	}
-	
+
 	return varmap;
 }
 
@@ -131,7 +131,7 @@ bool readSection(std::istream & f, std::ostream & error_output, int & line, cons
 			return false;
 		}
 	}
-	
+
 	return true;
 }
 
@@ -150,7 +150,7 @@ bool isOf(const std::string & val, const std::string & list, std::ostream * erro
 		if (val == item)
 			return true;
 	}
-	
+
 	if (error_output)
 	{
 		*error_output << "Expected one of these values: \"" << list << "\" but got value \"" << val << "\" in section starting on line " << line << std::endl;
@@ -167,26 +167,26 @@ bool GRAPHICS_CONFIG_SHADER::Load(std::istream & f, std::ostream & error_output,
 {
 	std::vector <std::string> reqd;
 	reqd.push_back("name");
-	
+
 	int sectionstart = line;
-	
+
 	std::map <std::string, std::string> vars;
 	if (!readSection(f, error_output, line, reqd, vars))
 		return false;
-	
+
 	for (std::map <std::string, std::string>::const_iterator i = vars.begin(); i != vars.end(); i++)
 	{
 		if (!isOf(i->first, "name folder defines", &error_output, sectionstart)) return false;
 	}
-	
+
 	// fill in defaults
 	if (vars["folder"].empty())
 		vars["folder"] = vars["name"];
-	
+
 	ASSIGNVAR(name);
 	ASSIGNVAR(folder);
 	ASSIGNVAR(defines);
-	
+
 	return true;
 }
 
@@ -210,7 +210,7 @@ void GRAPHICS_CONFIG_OUTPUT::SIZE::Parse(const std::string & str)
 		}
 		rhs = getTrimmedLine(parser);
 	}
-	
+
 	value = 0;
 	fb_div = 0;
 	fb_mult = 0;
@@ -241,7 +241,7 @@ void fillDefault(std::map <std::string, std::string> & vars, const std::string &
 bool GRAPHICS_CONFIG_OUTPUT::Load(std::istream & f, std::ostream & error_output, int & line)
 {
 	int sectionstart = line;
-	
+
 	std::vector <std::string> reqd;
 	reqd.push_back("name");
 	//reqd.push_back("width");
@@ -251,16 +251,16 @@ bool GRAPHICS_CONFIG_OUTPUT::Load(std::istream & f, std::ostream & error_output,
 	//reqd.push_back("filter");
 	//reqd.push_back("mipmap");
 	//reqd.push_back("multisample");
-	
+
 	std::map <std::string, std::string> vars;
 	if (!readSection(f, error_output, line, reqd, vars))
 		return false;
-	
+
 	for (std::map <std::string, std::string>::const_iterator i = vars.begin(); i != vars.end(); i++)
 	{
 		if (!isOf(i->first, "name width height type filter format mipmap multisample conditions", &error_output, sectionstart)) return false;
 	}
-	
+
 	// fill in defaults
 	fillDefault(vars, "filter", "linear");
 	fillDefault(vars, "mipmap", "false");
@@ -270,7 +270,7 @@ bool GRAPHICS_CONFIG_OUTPUT::Load(std::istream & f, std::ostream & error_output,
 	fillDefault(vars, "format", "RGB8");
 	if (vars["multisample"] == "framebuffer")
 		vars["multisample"] = "-1";
-	
+
 	ASSIGNVAR(name);
 	ASSIGNPARSE(width);
 	ASSIGNPARSE(height);
@@ -283,7 +283,7 @@ bool GRAPHICS_CONFIG_OUTPUT::Load(std::istream & f, std::ostream & error_output,
 	ASSIGNBOOL(mipmap);
 	ASSIGNOTHER(multisample);
 	ASSIGNPARSE(conditions);
-	
+
 	return true;
 }
 
@@ -324,25 +324,25 @@ void GRAPHICS_CONFIG_INPUTS::Parse(const std::string & str)
 bool GRAPHICS_CONFIG_PASS::Load(std::istream & f, std::ostream & error_output, int & line)
 {
 	int sectionstart = line;
-	
+
 	std::vector <std::string> reqd;
 	//reqd.push_back("camera");
 	reqd.push_back("draw");
 	//reqd.push_back("light");
 	reqd.push_back("output");
 	//reqd.push_back("shader"); //not required because non-shader path is specified using these files
-	
+
 	std::map <std::string, std::string> vars;
 	if (!readSection(f, error_output, line, reqd, vars))
 		return false;
-	
+
 	for (std::map <std::string, std::string>::const_iterator i = vars.begin(); i != vars.end(); i++)
 	{
 		if (!isOf(i->first, "draw camera light output shader inputs clear_color clear_depth write_color write_alpha write_depth cull conditions blendmode depthtest", &error_output, sectionstart)) return false;
 	}
-	
+
 	bool postprocess = (vars["draw"] == "postprocess");
-	
+
 	// fill in defaults
 	fillDefault(vars, "shader", "NO SHADER SPECIFIED");
 	fillDefault(vars, "light", "sun");
@@ -355,13 +355,13 @@ bool GRAPHICS_CONFIG_PASS::Load(std::istream & f, std::ostream & error_output, i
 	fillDefault(vars, "camera", "default");
 	fillDefault(vars, "blendmode", postprocess ? "disabled" : "disabled");
 	fillDefault(vars, "depthtest", postprocess ? "disabled" : "lequal");
-	
+
 	std::string blendmodes = "disabled alphablend add alphablend_premultiplied";
-	
+
 	if (!isOf(vars, "blendmode", postprocess ? blendmodes : blendmodes + " alphatest", &error_output, sectionstart)) return false;
 	if (!isOf(vars, "depthtest", "lequal equal gequal disabled", &error_output, sectionstart)) return false;
-	
-	
+
+
 	// process draw as a comma delimited list
 	{
 		if (postprocess)
@@ -383,7 +383,7 @@ bool GRAPHICS_CONFIG_PASS::Load(std::istream & f, std::ostream & error_output, i
 			}
 		}
 	}
-	
+
 	ASSIGNVAR(camera);
 	ASSIGNVAR(light);
 	ASSIGNVAR(output);
@@ -398,17 +398,17 @@ bool GRAPHICS_CONFIG_PASS::Load(std::istream & f, std::ostream & error_output, i
 	ASSIGNPARSE(conditions);
 	ASSIGNVAR(blendmode);
 	ASSIGNVAR(depthtest);
-	
+
 	return true;
 }
 
 bool GRAPHICS_CONFIG::Load(std::istream & f, std::ostream & error_output)
 {
 	int line = 1;
-	
+
 	// find the first section
 	skipUntil(f, "[", &line);
-	
+
 	while (f)
 	{
 		// read the section title
@@ -420,11 +420,11 @@ bool GRAPHICS_CONFIG::Load(std::istream & f, std::ostream & error_output)
 			error_output << "Unexpected end of file while reading section header on line " << line << std::endl;
 			return false;
 		}
-		
+
 		// consume the rest of the line
 		getTrimmedLine(f);
 		line++;
-		
+
 		// handle the section
 		if (type == "shader")
 		{
@@ -452,11 +452,11 @@ bool GRAPHICS_CONFIG::Load(std::istream & f, std::ostream & error_output)
 			error_output << "Unexpected section header type \"" << type << "\" on line " << line << std::endl;
 			return false;
 		}
-		
+
 		// find the next section
 		skipUntil(f, "[", &line);
 	}
-	
+
 	return true;
 }
 

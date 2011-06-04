@@ -74,22 +74,15 @@ void PATHMANAGER::Init(std::ostream & info_output, std::ostream & error_output)
 
 	//find settings file
 	settings_path = home_directory;
-	#ifndef _WIN32
-	settings_path += "/";
-	settings_path += SETTINGS_DIR;
-	MakeDir(settings_path);
-	#else
 	#ifdef _WIN32
 	MakeDir(settings_path+"\\My Documents");
 	MakeDir(settings_path+"\\My Documents\\My Games");
 	settings_path += "\\My Documents\\My Games\\VDrift";
 	MakeDir(settings_path);
 	#else
-	{
-		settings_path += "/";
-		settings_path += SETTINGS_DIR;
-	}
-	#endif
+	settings_path += "/";
+	settings_path += SETTINGS_DIR;
+	MakeDir(settings_path);
 	#endif
 
 	temporary_folder = settings_path+"/tmp";
@@ -155,7 +148,7 @@ bool PATHMANAGER::GetFileList(std::string folderpath, std::list <std::string> & 
 		// Traverse through the directory structure
 		while (FindNextFile(hList, &FileData))
 		{
-			if (!(FileData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) && 
+			if (!(FileData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) &&
 				(FileData.cFileName[0] != '.'))
 			{
 				outputfolderlist.push_back (FileData.cFileName);
