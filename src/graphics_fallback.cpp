@@ -322,15 +322,15 @@ bool GRAPHICS_FALLBACK::LoadShader(const std::string & shaderpath, const std::st
 			defines.push_back("_CSM2_");
 		if (shadow_distance > 1)
 			defines.push_back("_CSM3_");
-//		if (shadow_quality == 0)
-//			defines.push_back("_SHADOWSLOW_");
-//		if (shadow_quality == 1)
-//			defines.push_back("_SHADOWSMEDIUM_");
-//		if (shadow_quality == 2)
-//			defines.push_back("_SHADOWSHIGH_");
-//		if (shadow_quality == 3)
-//			defines.push_back("_SHADOWSVHIGH_");
-//		if (shadow_quality == 4)
+		if (shadow_quality == 0)
+			defines.push_back("_SHADOWSLOW_");
+		if (shadow_quality == 1)
+			defines.push_back("_SHADOWSMEDIUM_");
+		if (shadow_quality == 2)
+			defines.push_back("_SHADOWSHIGH_");
+		if (shadow_quality == 3)
+			defines.push_back("_SHADOWSVHIGH_");
+		if (shadow_quality == 4)
 			defines.push_back("_SHADOWSULTRA_");
 	}
 	
@@ -472,7 +472,7 @@ void GRAPHICS_FALLBACK::EnableShaders(const std::string & shaderpath, std::ostre
 		
 		// for now, map vhigh and ultra to high
 		shadow_quality_high = shadow_quality_high || shadow_quality_vhigh || shadow_quality_ultra;
-//		shadow_quality_vhigh = false;
+		shadow_quality_vhigh = false;
 		shadow_quality_ultra = true;
 		
 		conditions.clear();
