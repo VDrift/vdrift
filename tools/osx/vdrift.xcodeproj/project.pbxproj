@@ -62,6 +62,14 @@
 		B933CCB212D526B9000BC5FC /* libcurl.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = B933CCB112D526B9000BC5FC /* libcurl.framework */; };
 		B933CCC412D526C1000BC5FC /* libcurl.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = B933CCB112D526B9000BC5FC /* libcurl.framework */; };
 		B937D144091BC36000EF8096 /* config_mac.mm in Sources */ = {isa = PBXBuildFile; fileRef = B937D143091BC36000EF8096 /* config_mac.mm */; };
+		B94206E7139A35B6006ED680 /* loadcollisionshape.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B94206E6139A35B6006ED680 /* loadcollisionshape.cpp */; };
+		B94206E9139A35C0006ED680 /* fracturebody.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B94206E8139A35C0006ED680 /* fracturebody.cpp */; };
+		B94206ED139A35D9006ED680 /* dynamicsworld.h in Headers */ = {isa = PBXBuildFile; fileRef = B94206EC139A35D9006ED680 /* dynamicsworld.h */; };
+		B94206EF139A35E0006ED680 /* fracturebody.h in Headers */ = {isa = PBXBuildFile; fileRef = B94206EE139A35E0006ED680 /* fracturebody.h */; };
+		B94206F1139A35EE006ED680 /* motionstate.h in Headers */ = {isa = PBXBuildFile; fileRef = B94206F0139A35EE006ED680 /* motionstate.h */; };
+		B94206F3139A35F9006ED680 /* coordinatesystem.h in Headers */ = {isa = PBXBuildFile; fileRef = B94206F2139A35F9006ED680 /* coordinatesystem.h */; };
+		B94206F5139A3603006ED680 /* loadcollisionshape.h in Headers */ = {isa = PBXBuildFile; fileRef = B94206F4139A3603006ED680 /* loadcollisionshape.h */; };
+		B9420714139A3697006ED680 /* dynamicsworld.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B9420713139A3697006ED680 /* dynamicsworld.cpp */; };
 		B97DC2051326371E00B262BC /* aabb_space_partitioning.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B97DC17A1326371E00B262BC /* aabb_space_partitioning.cpp */; };
 		B97DC2061326371E00B262BC /* aabb.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B97DC17B1326371E00B262BC /* aabb.cpp */; };
 		B97DC2071326371E00B262BC /* ai.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B97DC17C1326371E00B262BC /* ai.cpp */; };
@@ -84,7 +92,6 @@
 		B97DC2181326371E00B262BC /* ptree.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B97DC18E1326371E00B262BC /* ptree.cpp */; };
 		B97DC2191326371E00B262BC /* ptree.h in Headers */ = {isa = PBXBuildFile; fileRef = B97DC18F1326371E00B262BC /* ptree.h */; };
 		B97DC21A1326371E00B262BC /* xml.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B97DC1901326371E00B262BC /* xml.cpp */; };
-		B97DC21B1326371E00B262BC /* collision_world.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B97DC1911326371E00B262BC /* collision_world.cpp */; };
 		B97DC21C1326371E00B262BC /* config.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B97DC1921326371E00B262BC /* config.cpp */; };
 		B97DC21D1326371E00B262BC /* containeralgorithm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B97DC1931326371E00B262BC /* containeralgorithm.cpp */; };
 		B97DC21E1326371E00B262BC /* crashdetection.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B97DC1941326371E00B262BC /* crashdetection.cpp */; };
@@ -228,10 +235,8 @@
 		B97DC33F1326374100B262BC /* carwheel.h in Headers */ = {isa = PBXBuildFile; fileRef = B97DC2A91326374000B262BC /* carwheel.h */; };
 		B97DC3401326374100B262BC /* carwheelposition.h in Headers */ = {isa = PBXBuildFile; fileRef = B97DC2AA1326374000B262BC /* carwheelposition.h */; };
 		B97DC3411326374100B262BC /* collision_contact.h in Headers */ = {isa = PBXBuildFile; fileRef = B97DC2AB1326374000B262BC /* collision_contact.h */; };
-		B97DC3421326374100B262BC /* collision_world.h in Headers */ = {isa = PBXBuildFile; fileRef = B97DC2AC1326374000B262BC /* collision_world.h */; };
 		B97DC3431326374100B262BC /* config.h in Headers */ = {isa = PBXBuildFile; fileRef = B97DC2AD1326374000B262BC /* config.h */; };
 		B97DC3441326374100B262BC /* containeralgorithm.h in Headers */ = {isa = PBXBuildFile; fileRef = B97DC2AE1326374000B262BC /* containeralgorithm.h */; };
-		B97DC3451326374100B262BC /* coordinatesystems.h in Headers */ = {isa = PBXBuildFile; fileRef = B97DC2AF1326374000B262BC /* coordinatesystems.h */; };
 		B97DC3461326374100B262BC /* crashdetection.h in Headers */ = {isa = PBXBuildFile; fileRef = B97DC2B01326374100B262BC /* crashdetection.h */; };
 		B97DC3471326374100B262BC /* definitions.h in Headers */ = {isa = PBXBuildFile; fileRef = B97DC2B11326374100B262BC /* definitions.h */; };
 		B97DC3481326374100B262BC /* derived.h in Headers */ = {isa = PBXBuildFile; fileRef = B97DC2B21326374100B262BC /* derived.h */; };
@@ -663,6 +668,14 @@
 		B90DC8B311A324220070B6D7 /* btWheelInfo.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = btWheelInfo.h; sourceTree = "<group>"; };
 		B933CCB112D526B9000BC5FC /* libcurl.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = libcurl.framework; sourceTree = "<group>"; };
 		B937D143091BC36000EF8096 /* config_mac.mm */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.objcpp; path = config_mac.mm; sourceTree = "<group>"; };
+		B94206E6139A35B6006ED680 /* loadcollisionshape.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = loadcollisionshape.cpp; sourceTree = "<group>"; };
+		B94206E8139A35C0006ED680 /* fracturebody.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = fracturebody.cpp; sourceTree = "<group>"; };
+		B94206EC139A35D9006ED680 /* dynamicsworld.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = dynamicsworld.h; sourceTree = "<group>"; };
+		B94206EE139A35E0006ED680 /* fracturebody.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = fracturebody.h; sourceTree = "<group>"; };
+		B94206F0139A35EE006ED680 /* motionstate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = motionstate.h; sourceTree = "<group>"; };
+		B94206F2139A35F9006ED680 /* coordinatesystem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = coordinatesystem.h; sourceTree = "<group>"; };
+		B94206F4139A3603006ED680 /* loadcollisionshape.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = loadcollisionshape.h; sourceTree = "<group>"; };
+		B9420713139A3697006ED680 /* dynamicsworld.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = dynamicsworld.cpp; sourceTree = "<group>"; };
 		B9653A8C091E84FE00006133 /* ReadMe.rtf */ = {isa = PBXFileReference; lastKnownFileType = text.rtf; path = ReadMe.rtf; sourceTree = "<group>"; };
 		B97DC17A1326371E00B262BC /* aabb_space_partitioning.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = aabb_space_partitioning.cpp; sourceTree = "<group>"; };
 		B97DC17B1326371E00B262BC /* aabb.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = aabb.cpp; sourceTree = "<group>"; };
@@ -686,7 +699,6 @@
 		B97DC18E1326371E00B262BC /* ptree.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ptree.cpp; sourceTree = "<group>"; };
 		B97DC18F1326371E00B262BC /* ptree.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = ptree.h; sourceTree = "<group>"; };
 		B97DC1901326371E00B262BC /* xml.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = xml.cpp; sourceTree = "<group>"; };
-		B97DC1911326371E00B262BC /* collision_world.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = collision_world.cpp; sourceTree = "<group>"; };
 		B97DC1921326371E00B262BC /* config.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = config.cpp; sourceTree = "<group>"; };
 		B97DC1931326371E00B262BC /* containeralgorithm.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = containeralgorithm.cpp; sourceTree = "<group>"; };
 		B97DC1941326371E00B262BC /* crashdetection.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = crashdetection.cpp; sourceTree = "<group>"; };
@@ -830,10 +842,8 @@
 		B97DC2A91326374000B262BC /* carwheel.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = carwheel.h; sourceTree = "<group>"; };
 		B97DC2AA1326374000B262BC /* carwheelposition.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = carwheelposition.h; sourceTree = "<group>"; };
 		B97DC2AB1326374000B262BC /* collision_contact.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = collision_contact.h; sourceTree = "<group>"; };
-		B97DC2AC1326374000B262BC /* collision_world.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = collision_world.h; sourceTree = "<group>"; };
 		B97DC2AD1326374000B262BC /* config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = config.h; sourceTree = "<group>"; };
 		B97DC2AE1326374000B262BC /* containeralgorithm.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = containeralgorithm.h; sourceTree = "<group>"; };
-		B97DC2AF1326374000B262BC /* coordinatesystems.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = coordinatesystems.h; sourceTree = "<group>"; };
 		B97DC2B01326374100B262BC /* crashdetection.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = crashdetection.h; sourceTree = "<group>"; };
 		B97DC2B11326374100B262BC /* definitions.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = definitions.h; sourceTree = "<group>"; };
 		B97DC2B21326374100B262BC /* derived.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = derived.h; sourceTree = "<group>"; };
@@ -1394,7 +1404,12 @@
 				B97DC29E1326374000B262BC /* carclutch.h */,
 				B97DC29F1326374000B262BC /* carcontrolmap_local.h */,
 				B97DC2A01326374000B262BC /* cardifferential.h */,
+				B94206EC139A35D9006ED680 /* dynamicsworld.h */,
+				B94206F4139A3603006ED680 /* loadcollisionshape.h */,
+				B94206F2139A35F9006ED680 /* coordinatesystem.h */,
+				B94206F0139A35EE006ED680 /* motionstate.h */,
 				B97DC2A11326374000B262BC /* cardynamics.h */,
+				B94206EE139A35E0006ED680 /* fracturebody.h */,
 				B97DC2A21326374000B262BC /* carengine.h */,
 				B97DC2A31326374000B262BC /* carfueltank.h */,
 				B97DC2A41326374000B262BC /* carinput.h */,
@@ -1405,10 +1420,8 @@
 				B97DC2A91326374000B262BC /* carwheel.h */,
 				B97DC2AA1326374000B262BC /* carwheelposition.h */,
 				B97DC2AB1326374000B262BC /* collision_contact.h */,
-				B97DC2AC1326374000B262BC /* collision_world.h */,
 				B97DC2AD1326374000B262BC /* config.h */,
 				B97DC2AE1326374000B262BC /* containeralgorithm.h */,
-				B97DC2AF1326374000B262BC /* coordinatesystems.h */,
 				B97DC2B01326374100B262BC /* crashdetection.h */,
 				B97DC2B11326374100B262BC /* definitions.h */,
 				B97DC2B21326374100B262BC /* derived.h */,
@@ -1550,7 +1563,6 @@
 				B97DC1891326371E00B262BC /* carsuspension.cpp */,
 				B97DC18A1326371E00B262BC /* cartire.cpp */,
 				B97DC18B1326371E00B262BC /* cfg */,
-				B97DC1911326371E00B262BC /* collision_world.cpp */,
 				B97DC1921326371E00B262BC /* config.cpp */,
 				B97DC1931326371E00B262BC /* containeralgorithm.cpp */,
 				B97DC1941326371E00B262BC /* crashdetection.cpp */,
@@ -1629,6 +1641,9 @@
 				B97DC1F91326371E00B262BC /* widget_button.cpp */,
 				B97DC1FA1326371E00B262BC /* widget_colorpicker.cpp */,
 				B97DC1FB1326371E00B262BC /* widget_controlgrab.cpp */,
+				B94206E8139A35C0006ED680 /* fracturebody.cpp */,
+				B94206E6139A35B6006ED680 /* loadcollisionshape.cpp */,
+				B9420713139A3697006ED680 /* dynamicsworld.cpp */,
 				B97DC1FC1326371E00B262BC /* widget_doublestringwheel.cpp */,
 				B97DC1FD1326371E00B262BC /* widget_image.cpp */,
 				B97DC1FE1326371E00B262BC /* widget_label.cpp */,
@@ -2202,10 +2217,8 @@
 				B97DC33F1326374100B262BC /* carwheel.h in Headers */,
 				B97DC3401326374100B262BC /* carwheelposition.h in Headers */,
 				B97DC3411326374100B262BC /* collision_contact.h in Headers */,
-				B97DC3421326374100B262BC /* collision_world.h in Headers */,
 				B97DC3431326374100B262BC /* config.h in Headers */,
 				B97DC3441326374100B262BC /* containeralgorithm.h in Headers */,
-				B97DC3451326374100B262BC /* coordinatesystems.h in Headers */,
 				B97DC3461326374100B262BC /* crashdetection.h in Headers */,
 				B97DC3471326374100B262BC /* definitions.h in Headers */,
 				B97DC3481326374100B262BC /* derived.h in Headers */,
@@ -2320,6 +2333,11 @@
 				B97DC3B71326374100B262BC /* widget_toggle.h in Headers */,
 				B97DC3B81326374100B262BC /* widget.h in Headers */,
 				B97DC3B91326374100B262BC /* window.h in Headers */,
+				B94206ED139A35D9006ED680 /* dynamicsworld.h in Headers */,
+				B94206EF139A35E0006ED680 /* fracturebody.h in Headers */,
+				B94206F1139A35EE006ED680 /* motionstate.h in Headers */,
+				B94206F3139A35F9006ED680 /* coordinatesystem.h in Headers */,
+				B94206F5139A3603006ED680 /* loadcollisionshape.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2552,7 +2570,6 @@
 				B97DC2171326371E00B262BC /* ini.cpp in Sources */,
 				B97DC2181326371E00B262BC /* ptree.cpp in Sources */,
 				B97DC21A1326371E00B262BC /* xml.cpp in Sources */,
-				B97DC21B1326371E00B262BC /* collision_world.cpp in Sources */,
 				B97DC21C1326371E00B262BC /* config.cpp in Sources */,
 				B97DC21D1326371E00B262BC /* containeralgorithm.cpp in Sources */,
 				B97DC21E1326371E00B262BC /* crashdetection.cpp in Sources */,
@@ -2645,6 +2662,9 @@
 				B97DC28B1326371E00B262BC /* widget_stringwheel.cpp in Sources */,
 				B97DC28C1326371E00B262BC /* widget_toggle.cpp in Sources */,
 				B97DC28D1326371E00B262BC /* window.cpp in Sources */,
+				B94206E7139A35B6006ED680 /* loadcollisionshape.cpp in Sources */,
+				B94206E9139A35C0006ED680 /* fracturebody.cpp in Sources */,
+				B9420714139A3697006ED680 /* dynamicsworld.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
