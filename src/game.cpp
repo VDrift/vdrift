@@ -1822,20 +1822,18 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 
 std::string GAME::GetReplayRecordingFilename()
 {
-	//determine replay filename
-	int replay_number = 1;
-	for (int i = 1; i < 99; i++)
-	{
-		std::stringstream s;
-		s << pathmanager.GetReplayPath() << "/" << i << ".vdr";
-		if (!pathmanager.FileExists(s.str()))
-		{
-			replay_number = i;
-			break;
-		}
-	}
+	// get time
+	time_t curtime = time(0);
+	tm now = *localtime(&curtime);
+	
+	// time string
+	char timestr[]= "YYYY-MM-DD-hh-mm-ss";
+	const char format[] = "%Y-%m-%d-%H-%M-%S";
+	strftime(timestr, sizeof(timestr), format, &now);
+	
+	// replay file name
 	std::stringstream s;
-	s << pathmanager.GetReplayPath() << "/" << replay_number << ".vdr";
+	s << pathmanager.GetReplayPath() << "/" << timestr << "-" << settings.GetTrack() << ".vdr";
 	return s.str();
 }
 
@@ -1848,8 +1846,9 @@ void GAME::LeaveGame()
 
 	if (replay.GetRecording())
 	{
-		info_output << "Saving replay to " << GetReplayRecordingFilename() << std::endl;
-		replay.StopRecording(GetReplayRecordingFilename());
+		std::string replayname = GetReplayRecordingFilename();
+		info_output << "Saving replay to " << replayname << std::endl;
+		replay.StopRecording(replayname);
 		
 		std::list <std::pair <std::string, std::string> > replaylist;
 		PopulateReplayList(replaylist);
@@ -2121,42 +2120,14 @@ bool SortStringPairBySecond (const std::pair<std::string, std::string> & first, 
 	return first.second < second.second;
 }
 
-bool UnsignedNumericSort (const std::string & a, const std::string & b)
-{
-	unsigned i = 0;
-	while ((i < a.length()) && (i < b.length()))
-	{
-		if(a[i] >= '0' && a[i] <= '9' && b[i] >= '0' && b[i] <= '9')
-		{
-			int an = atoi(a.c_str() + i),	bn = atoi(b.c_str() + i);
-			
-			if (an < bn)
-				return true;
-			else if (an > bn)
-				return false;
-			
-			for(; bn; i++, bn/=10);
-
-			continue;
-		}
-		if(a[i] < b[i])
-			return true;
-		else if(a[i] > b[i])
-			return false;
-		i++;
-	}
-	return true;
-}
-
 void GAME::PopulateReplayList(std::list <std::pair <std::string, std::string> > & replaylist)
 {
 	replaylist.clear();
 	int numreplays = 0;
 	std::list <std::string> replayfoldercontents;
-	if (pathmanager.GetFileList(pathmanager.GetReplayPath(),replayfoldercontents))
+	if (pathmanager.GetFileList(pathmanager.GetReplayPath(), replayfoldercontents))
 	{
-		replayfoldercontents.sort(UnsignedNumericSort);
-		for (std::list <std::string>::iterator i = replayfoldercontents.begin(); i != replayfoldercontents.end(); ++i)
+		for (std::list<std::string>::iterator i = replayfoldercontents.begin(); i != replayfoldercontents.end(); ++i)
 		{
 			if (*i != "benchmark.vdr" && i->find(".vdr") == i->length()-4)
 			{
