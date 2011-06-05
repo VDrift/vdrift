@@ -69,7 +69,7 @@ if (sys.platform == 'freebsd6') or (sys.platform == 'freebsd7') or (sys.platform
 # OS X build #
 #------------#
 elif sys.platform == 'darwin':
-    opts.Add( ListOption('universal', 
+    opts.Add( ListVariable('universal', 
             'the target architectures to include in a universal binary.', 
             'none', ['ppc', 'i386']))
     opts.Add('SDK', 'the path to an SDK directory', '')
