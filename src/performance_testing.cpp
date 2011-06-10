@@ -7,6 +7,16 @@
 #include <iostream>
 #include <sstream>
 
+static inline float ConvertToMPH(float ms)
+{
+	return ms * 2.23693629;
+}
+
+static inline float ConvertToFeet(float meters)
+{
+	return meters * 3.2808399;
+}
+
 PERFORMANCE_TESTING::PERFORMANCE_TESTING()
 {
 	surface.type = TRACKSURFACE::ASPHALT;
@@ -27,14 +37,17 @@ void PERFORMANCE_TESTING::Test(
 	info_output << "Beginning car performance test on " << carname << std::endl;
 
 	//load the car dynamics
-	CONFIG carconf;
 	std::string carfile = carpath+"/"+carname+"/"+carname+".car";
-	if ( !carconf.Load ( carfile ) )
+	CONFIG cfg;
+	if (!cfg.Load(carfile))
 	{
 		error_output << "Error loading car configuration file: " << carfile << std::endl;
 		return;
 	}
-	if (!car.dynamics.Load(carconf, error_output))
+	
+	btVector3 size(0, 0, 0), center(0, 0, 0), pos(0, 0, 0); // collision shape from wheel data
+	btQuaternion rot = btQuaternion::getIdentity();
+	if (!car.dynamics.Load(cfg, size, center, pos, rot, world, error_output))
 	{
 		error_output << "Error during car dynamics load: " << carfile << std::endl;
 		return;
@@ -42,16 +55,22 @@ void PERFORMANCE_TESTING::Test(
 	info_output << "Car dynamics loaded" << std::endl;
 
 	info_output << carname << " Summary:\n" <<
-			"Mass (kg) including driver and fuel: " << car.dynamics.GetMass() << "\n" <<
+			"Mass (kg) including driver and fuel: " << 1 / car.dynamics.GetInvMass() << "\n" <<
 			"Center of mass (m): " << car.dynamics.center_of_mass << std::endl;
 
 	std::stringstream statestream;
 	joeserialize::BinaryOutputSerializer serialize_output(statestream);
 	if (!car.Serialize(serialize_output))
+	{
 		error_output << "Serialization error" << std::endl;
+	}
 	//else info_output << "Car state: " << statestream.str();
 	carstate = statestream.str();
-
+	
+	// fixme
+	info_output << "Car performance test broken - exiting." << std::endl;
+	return;
+	
 	TestMaxSpeed(info_output, error_output);
 	TestStoppingDistance(false, info_output, error_output);
 	TestStoppingDistance(true, info_output, error_output);
@@ -65,27 +84,25 @@ void PERFORMANCE_TESTING::ResetCar()
 	joeserialize::BinaryInputSerializer serialize_input(statestream);
 	car.Serialize(serialize_input);
 
-	MATHVECTOR <double, 3> initial_position(0, 0, 0);
-	car.dynamics.SetPosition(initial_position);
-
+	car.dynamics.SetPosition(btVector3(0, 0, 0));
 	car.dynamics.SetTCS(true);
 	car.dynamics.SetABS(true);
 	car.SetAutoShift(true);
 	car.SetAutoClutch(true);
 }
 
-///designed to be called inside a test's main loop
+///designed to be called inside a test's main loop  // broken, fixme
 void PERFORMANCE_TESTING::SimulateFlatRoad()
 {
-	//simulate an infinite, flat road
+/*	//simulate an infinite, flat road
 	for (int i = 0; i < 4; i++)
 	{
-		MATHVECTOR <float, 3> wp = car.dynamics.GetWheelPosition(WHEEL_POSITION(i));
-		float depth = wp[2] - car.GetTireRadius(WHEEL_POSITION(i)); //should really project along the car's down vector, but... oh well
-		MATHVECTOR <float, 3> pos(wp[0], wp[1], 0);
-		MATHVECTOR <float, 3> norm(0, 0, 1);
-		car.GetWheelContact(WHEEL_POSITION(i)).Set(pos, norm, depth, &surface, NULL, NULL);
-	}
+		btVector3 wp = car.dynamics.GetWheelPosition(WHEEL_POSITION(i));
+		btScalar depth = wp.z() - car.GetTireRadius(WHEEL_POSITION(i)); //should really project along the car's down vector, but... oh well
+		btVector3 pos(wp[0], wp[1], 0);
+		btVector3 norm(0, 0, 1);
+		car.GetWheelContact(WHEEL_POSITION(i)).Set(pos, norm, depth, &surface, 0, 0);
+	}*/
 }
 
 void PERFORMANCE_TESTING::TestMaxSpeed(std::ostream & info_output, std::ostream & error_output)
@@ -118,22 +135,11 @@ void PERFORMANCE_TESTING::TestMaxSpeed(std::ostream & info_output, std::ostream 
 	float quarterspeed = 0;
 
 	std::string downforcestr = "N/A";
-
-	MATHVECTOR <double, 3> ext_torque(0);
-	MATHVECTOR <double, 3> ext_force(0, 0, -9.81 * car.GetMass());
-
 	while (t < maxtime)
 	{
-		SimulateFlatRoad();
-
-		/*if (t == 0)
-			inputs[CARINPUT::SHIFT_UP] = 1.0;
-		else
-			inputs[CARINPUT::SHIFT_UP] = 0;*/
-
 		car.HandleInputs(inputs, dt);
 
-		car.dynamics.Tick(ext_force, ext_torque, dt);
+		world.Update(dt);
 
 		if (car.dynamics.GetSpeed() > maxspeed.second)
 		{
@@ -150,17 +156,13 @@ void PERFORMANCE_TESTING::TestMaxSpeed(std::ostream & info_output, std::ostream 
 		if (car.dynamics.GetSpeed() < 26.8224)
 			timeto60 = t;
 
-		if (car.dynamics.GetCenterOfMassPosition().Magnitude() > 402.3 && timetoquarter == maxtime)
+		if (car.dynamics.GetCenterOfMassPosition().length() > 402.3 && timetoquarter == maxtime)
 		{
 			//quarter mile!
 			timetoquarter = t - timeto60start;
 			quarterspeed = car.dynamics.GetSpeed();
 		}
-/* fixme
-		car.remaining_shift_time-=dt;
-		if (car.remaining_shift_time < 0)
-			car.remaining_shift_time = 0;
-*/
+
 		if (i % (int)(1.0/dt) == 0) //every second
 		{
 			if (1)
@@ -207,23 +209,12 @@ void PERFORMANCE_TESTING::TestStoppingDistance(bool abs, std::ostream & info_out
 	inputs[CARINPUT::THROTTLE] = 1.0;
 
 	float stopthreshold = 0.1; //if the speed (in m/s) is less than this value, discontinue the testing
-	MATHVECTOR <double, 3> stopstart; //where the stopping starts
+	btVector3 stopstart; //where the stopping starts
 	float brakestartspeed = 26.82; //speed at which to start braking, in m/s (26.82 m/s is 60 mph)
 
 	bool accelerating = true; //switches to false once 60 mph is reached
-	
-	MATHVECTOR <double, 3> ext_torque(0);
-	MATHVECTOR <double, 3> ext_force(0, 0, -9.81 * car.GetMass());
-
 	while (t < maxtime)
 	{
-		SimulateFlatRoad();
-
-		/*if (t == 0)
-			inputs[CARINPUT::SHIFT_UP] = 1.0;
-		else
-			inputs[CARINPUT::SHIFT_UP] = 0;*/
-
 		if (accelerating)
 		{
 			inputs[CARINPUT::THROTTLE] = 1.0;
@@ -238,7 +229,7 @@ void PERFORMANCE_TESTING::TestStoppingDistance(bool abs, std::ostream & info_out
 
 		car.HandleInputs(inputs, dt);
 
-		car.dynamics.Tick(ext_force, ext_torque, dt);
+		world.Update(dt);
 
 		if (car.dynamics.GetSpeed() >= brakestartspeed && accelerating) //stop accelerating and hit the brakes
 		{
@@ -257,11 +248,7 @@ void PERFORMANCE_TESTING::TestStoppingDistance(bool abs, std::ostream & info_out
 			error_output << "Car stalled during launch, t=" << t << std::endl;
 			break;
 		}
-/* fixme
-		car.remaining_shift_time-=dt;
-		if (car.remaining_shift_time < 0)
-			car.remaining_shift_time = 0;
-*/
+
 		if (i % (int)(1.0/dt) == 0) //every second
 		{
 			//std::cout << t << ", " << car.dynamics.GetSpeed() << ", " << car.GetGear() << ", " << car.GetEngineRPM() << std::endl;
@@ -271,12 +258,12 @@ void PERFORMANCE_TESTING::TestStoppingDistance(bool abs, std::ostream & info_out
 		i++;
 	}
 
-	MATHVECTOR <double, 3> stopend = car.dynamics.GetWheelPosition(WHEEL_POSITION(0));
+	btVector3 stopend = car.dynamics.GetWheelPosition(WHEEL_POSITION(0));
 
 	info_output << "60-0 stopping distance ";
 	if (abs)
 		info_output << "(ABS)";
 	else
 		info_output << "(no ABS)";
-	info_output << ": " << ConvertToFeet((stopend-stopstart).Magnitude()) << " ft" << std::endl;
+	info_output << ": " << ConvertToFeet((stopend-stopstart).length()) << " ft" << std::endl;
 }

@@ -2,7 +2,7 @@
 
 CAMERA_FIXED::CAMERA_FIXED(const std::string & name) : CAMERA(name)
 {
-
+	rotation.LoadIdentity();
 }
 
 void CAMERA_FIXED::Reset(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newquat)
@@ -10,10 +10,10 @@ void CAMERA_FIXED::Reset(const MATHVECTOR <float, 3> & newpos, const QUATERNION 
 	MATHVECTOR <float, 3> newoffset = offset;
 	newquat.RotateVector(newoffset);
 	position = newpos + newoffset;
-	orientation = newquat;
+	rotation = newquat;
 }
 
-void CAMERA_FIXED::Update(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newquat, const MATHVECTOR <float, 3> &, float)
+void CAMERA_FIXED::Update(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newquat, float)
 {
 	Reset(newpos, newquat);
 }

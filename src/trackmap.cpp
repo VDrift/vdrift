@@ -13,6 +13,7 @@ using std::endl;
 using std::string;
 using std::ostream;
 using std::list;
+using std::vector;
 using std::pair;
 
 TRACKMAP::TRACKMAP() : scale(1.0), MAP_WIDTH(256),MAP_HEIGHT(256),surface(NULL)
@@ -80,8 +81,8 @@ bool TRACKMAP::BuildMap(
 
 	for (list <ROADSTRIP>::const_iterator road = roads.begin(); road != roads.end(); road++)
 	{
-		for (list <ROADPATCH>::const_iterator curp = road->GetPatchList().begin();
-		     curp != road->GetPatchList().end(); curp++)
+		for (vector<ROADPATCH>::const_iterator curp = road->GetPatches().begin();
+		     curp != road->GetPatches().end(); curp++)
 		{
 			for (int i = 0; i < 4; i++)
 			{
@@ -122,8 +123,8 @@ bool TRACKMAP::BuildMap(
 
 	for (list <ROADSTRIP>::const_iterator road = roads.begin(); road != roads.end(); road++)
 	{
-		for (list <ROADPATCH>::const_iterator curp = road->GetPatchList().begin();
-		     curp != road->GetPatchList().end(); curp++)
+		for (vector<ROADPATCH>::const_iterator curp = road->GetPatches().begin();
+		     curp != road->GetPatches().end(); curp++)
 		{
 			Sint16 x[4], y[4];
 

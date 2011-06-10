@@ -21,7 +21,6 @@ src = Split("""aabb.cpp
 		aabb_space_partitioning.cpp
 		ai.cpp
 		bezier.cpp
-		camera.cpp
 		camera_chase.cpp
 		camera_fixed.cpp
 		camera_free.cpp
@@ -44,6 +43,7 @@ src = Split("""aabb.cpp
                 datametric_cornering.cpp
                 datametric_full_stop.cpp
                 driverfeedback.cpp
+		downloadable.cpp
 		endian_utility.cpp
 		eventsystem.cpp
 		fbobject.cpp
@@ -58,6 +58,7 @@ src = Split("""aabb.cpp
 		gui.cpp
 		guioption.cpp
 		guipage.cpp
+		http.cpp
 		hud.cpp
 		joepack.cpp
 		joeserialize.cpp
@@ -98,12 +99,14 @@ src = Split("""aabb.cpp
 		soundsource.cpp
 		sprite2d.cpp
 		suspensionbumpdetection.cpp
+		svn_sourceforge.cpp
 		texture.cpp
 		text_draw.cpp
 		timer.cpp
 		toggle.cpp
 		track.cpp
 		trackmap.cpp
+		utils.cpp
 		vertexarray.cpp
 		widget_button.cpp
 		widget_colorpicker.cpp
@@ -248,7 +251,7 @@ SConsignFile()
 #--------------------------#
 appdir = ""
 vdrift_install = None
-common_libs = ['SDL_image', 'SDL_gfx', 'vorbisfile', 'vdriftbullet']
+common_libs = ['SDL_image', 'SDL_gfx', 'vorbisfile', 'vdriftbullet', 'curl']
 
 if (sys.platform == 'freebsd6') or (sys.platform == 'freebsd7') or (sys.platform == 'freebsd8') or (sys.platform == 'freebsd9'):
     common_libs.append('libLinearMath')
@@ -334,6 +337,16 @@ Default(Alias('vdrift', vdrift))
 if not vdrift_install: vdrift_install = vdrift
 install = env.Install(Dir(env.subst("$destdir$prefix/$bindir")), vdrift_install)
 env.Alias("install", install)
+
+#---------#
+# Testing #
+#---------#
+if 'test' in COMMAND_LINE_TARGETS:
+    src.remove("main.cpp")
+    src += ['unittest.cpp']
+
+unit_tests = local_env.Program(target="%svdrift-test" % appdir, source=src)
+env.Alias("test", unit_tests)
 
 #---------------#
 # Python Export #

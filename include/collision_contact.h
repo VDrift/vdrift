@@ -1,7 +1,7 @@
 #ifndef _COLLISION_CONTACT_H
 #define _COLLISION_CONTACT_H
 
-#include "mathvector.h"
+#include "LinearMath/btVector3.h"
 #include "tracksurface.h"
 
 class BEZIER;
@@ -10,22 +10,46 @@ class btCollisionObject;
 class COLLISION_CONTACT
 {
 public:
-	COLLISION_CONTACT() : depth(0), surface(TRACKSURFACE::None()), patch(NULL), col(NULL)
+	COLLISION_CONTACT() :
+		depth(0),
+		patchid(-1),
+		patch(0),
+		surface(TRACKSURFACE::None()),
+		col(0)
 	{
-	
+		// ctor
 	}
 	
-	const MATHVECTOR <float, 3> & GetPosition() const
+	COLLISION_CONTACT(
+		const btVector3 & p,
+		const btVector3 & n,
+		const btScalar d,
+		const int i,
+		const BEZIER * b,
+		const TRACKSURFACE * s,
+		const btCollisionObject * c) :
+		position(p),
+		normal(n),
+		depth(d),
+		patchid(i),
+		patch(b),
+		surface(s),
+		col(c)
+	{
+		assert(s != NULL);
+	}
+	
+	const btVector3 & GetPosition() const
 	{
 		return position;
 	}
 	
-	const MATHVECTOR <float, 3> & GetNormal() const
+	const btVector3 & GetNormal() const
 	{
 		return normal;
 	}
 	
-	float GetDepth() const
+	btScalar GetDepth() const
 	{
 		return depth;
 	}
@@ -33,6 +57,11 @@ public:
 	const TRACKSURFACE & GetSurface() const
 	{
 		return *surface;
+	}
+	
+	int GetPatchId() const
+	{
+		return patchid;
 	}
 	
 	const BEZIER * GetPatch() const
@@ -45,32 +74,14 @@ public:
 		return col;
 	}
 	
-	void Set(
-		const MATHVECTOR <float, 3> & p,
-		const MATHVECTOR <float, 3> & n,
-		float d,
-		const TRACKSURFACE * s,
-		const BEZIER * b,
-		const btCollisionObject * c)
-	{
-		assert(s != NULL);
-		
-		position = p;
-		normal = n;
-		depth = d;
-		patch = b;
-		surface = s;
-		col = c;
-	}
-	
 	// update/interpolate contact
 	bool CastRay(
-		const MATHVECTOR <float, 3> & origin,
-		const MATHVECTOR <float, 3> & direction,
-		float length)
+		const btVector3 & origin,
+		const btVector3 & direction,
+		const btScalar length)
 	{
 		// plane-based approximation
-		float nd = normal.dot(direction);
+		btScalar nd = normal.dot(direction);
 		if (nd < 0)
 		{
 			depth = normal.dot(position - origin) / nd;
@@ -83,11 +94,12 @@ public:
 	}
 	
 private:
-	MATHVECTOR <float, 3> position;
-	MATHVECTOR <float, 3> normal;
-	float depth;
-	const TRACKSURFACE * surface;
+	btVector3 position;
+	btVector3 normal;
+	btScalar depth;
+	int patchid;
 	const BEZIER * patch;
+	const TRACKSURFACE * surface;
 	const btCollisionObject * col;
 };
 

@@ -6,10 +6,11 @@
 #include <vector>
 #include <iostream>
 #include <sstream>
-
 #include <cstring> // memcpy
 #include <cassert>
+#ifndef _USE_MATH_DEFINES
 #define _USE_MATH_DEFINES
+#endif
 #include <cmath>
 
 template <typename T, unsigned int dimension>

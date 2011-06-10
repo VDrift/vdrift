@@ -1,6 +1,7 @@
 #ifndef _PERFORMANCE_TESTING_H
 #define _PERFORMANCE_TESTING_H
 
+#include "collision_world.h"
 #include "car.h"
 
 #include <string>
@@ -8,17 +9,6 @@
 
 class PERFORMANCE_TESTING
 {
-private:
-	CAR car;
-	TRACKSURFACE surface;
-	std::string carstate;
-	void SimulateFlatRoad();
-	void ResetCar();
-	void TestMaxSpeed(std::ostream & info_output, std::ostream & error_output);
-	void TestStoppingDistance(bool abs, std::ostream & info_output, std::ostream & error_output);
-	float ConvertToMPH(float ms) {return ms*2.23693629;}
-	float ConvertToFeet(float meters) {return meters*3.2808399;}
-	
 public:
 	PERFORMANCE_TESTING();
 	void Test(
@@ -26,6 +16,19 @@ public:
 		const std::string & carname,
 		std::ostream & info_output,
 		std::ostream & error_output);
+private:
+	COLLISION_WORLD world;
+	TRACKSURFACE surface;
+	CAR car;
+	std::string carstate;
+	
+	void SimulateFlatRoad();
+	
+	void ResetCar();
+	
+	void TestMaxSpeed(std::ostream & info_output, std::ostream & error_output);
+	
+	void TestStoppingDistance(bool abs, std::ostream & info_output, std::ostream & error_output);
 };
 
 #endif

@@ -84,7 +84,7 @@ void CORNERINGMETRIC::StateChangeReaction()
 			{
 				ostringstream os;
 				os << "Turn completed, took " << total_turn_time << " seconds" << endl;
-				os << "Maximum lateral accel: " << (turn_max_lateral_accel / 9.81) << " Gs" << endl;
+				os << "Maximum lateral accel: " << (turn_max_lateral_accel) << " Gs" << endl;
 				DATAMETRIC::SetFeedbackMessageEvent("Cornering Report", os.str(), 10.0, 1.0, 2.0);
 			}
 			turn_max_lateral_accel = 0.0;
@@ -122,11 +122,19 @@ void CORNERINGMETRIC::Update(float dt)
 	// Calculate lateral acceleration, add to output.
 	double lateral_velocity = DATAMETRIC::GetLastInColumn("LateralVelocity");
 	double last_lateral_velocity = DATAMETRIC::GetNextLastInColumn("LateralVelocity");
-	double lateral_acceleration = (lateral_velocity - last_lateral_velocity) / dt;
+	double t = DATAMETRIC::GetLastInColumn("Time");
+	double last_t = DATAMETRIC::GetNextLastInColumn("Time");
+	double delta_t = t - last_t;
+	double lateral_acceleration = 0.0;
+	if (delta_t != 0.0)
+	{
+		lateral_acceleration = ((lateral_velocity - last_lateral_velocity) / delta_t) / 9.81;
+		assert (lateral_acceleration == lateral_acceleration);
+	}
 	output_data["LateralAcceleration"] = lateral_acceleration;
 
 	// if turning, update maximum lateral acceleration
-	if (state == turning_over_threshold && lateral_acceleration > turn_max_lateral_accel)
+	if (state == turning_over_threshold && abs(lateral_acceleration) > abs(turn_max_lateral_accel))
 	{
 		turn_max_lateral_accel = lateral_acceleration;
 	}

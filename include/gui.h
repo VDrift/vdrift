@@ -113,6 +113,9 @@ public:
 		const std::string & optionname,
 		const std::list <std::pair <std::string, std::string> > & newvalues,
 		std::ostream & error_output);
+	
+	/// returns false if the specified page/label does not exist
+	bool SetLabelText(const std::string & page, const std::string & label, const std::string & text);
 
 private:
 	std::map<std::string, GUIPAGE> pages;
@@ -132,7 +135,7 @@ private:
 	bool LoadOptions(
 		const std::string & optionfile,
 		const std::map<std::string, std::list <std::pair <std::string, std::string> > > & valuelists,
-		const std::map<std::string, std::string> languagemap,
+		const std::map<std::string, std::string> & languagemap,
 		std::ostream & error_output);
 	
 	///send options from the optionmap to the widgets

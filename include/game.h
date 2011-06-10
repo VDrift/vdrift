@@ -34,6 +34,7 @@
 #include "soundmanager.h"
 #include "datalog.h"
 #include "datamanager.h"
+#include "http.h"
 
 #include <ostream>
 #include <string>
@@ -49,7 +50,7 @@ public:
 	void Start(std::list <std::string> & args);
 
 private:
-	float TickPeriod() const {return framerate;}
+	float TickPeriod() const {return timestep;}
 	void MainLoop();
 	bool ParseArguments(std::list <std::string> & args);
 	void InitCoreSubsystems();
@@ -82,7 +83,7 @@ private:
 	void PopulateReplayList(std::list <std::pair <std::string, std::string> > & replaylist);
 	void PopulateCarPaintList(const std::string & carname, std::list <std::pair <std::string, std::string> > & carpaintlist);
 	void UpdateTrackMap();
-	void LoadingScreen(float progress, float max);
+	void LoadingScreen(float progress, float max, bool drawGui, const std::string & optionalText, float x, float y);
 	void ProcessNewSettings();
 	void RedisplayControlPage();
 	void LoadControlsIntoGUIPage(const std::string & pagename);
@@ -96,9 +97,13 @@ private:
 	void BeginStartingUp();
 	void DoneStartingUp();
 	bool LastStartWasSuccessful() const;
+
 	bool QueryLogData(DATALOG::log_entry_T * new_entry);
 	void UpdateDataManager(float dt);
 
+	bool Download(const std::string & file);
+	bool Download(const std::vector <std::string> & files);
+	
 	// move to settings
 	void GetOptions(std::map<std::string, std::string> & options);
 	void SetOptions(const std::map<std::string, std::string> & options);
@@ -109,7 +114,7 @@ private:
 	unsigned int displayframe; ///< display frame counter
 	double clocktime; ///< elapsed wall clock time
 	double target_time;
-	const float framerate;
+	const float timestep; ///< simulation time step
 
 	PATHMANAGER pathmanager;
 	TEXTUREMANAGER textures;
@@ -171,6 +176,7 @@ private:
 	DATAMANAGER data_manager;
 
 	//SKY sky;
+	HTTP http;
 
 #ifdef ENABLE_FORCE_FEEDBACK
 	std::auto_ptr <FORCEFEEDBACK> forcefeedback;

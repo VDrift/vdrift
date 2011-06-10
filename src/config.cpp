@@ -224,7 +224,8 @@ QT_TEST(configfile_test)
 		"this is a duplicate = 0\n"
 		"this is a duplicate = 1\n"
 		"random = intermediary\n"
-		"this is a duplicate = 2\n";
+		"this is a duplicate = 2\n"
+		"unterminated line = good?";
 	
 	CONFIG testconfig;
 	testconfig.Load(instream);
@@ -246,6 +247,9 @@ QT_TEST(configfile_test)
 	QT_CHECK_EQUAL(vec[0], 2.1f);
 	QT_CHECK_EQUAL(vec[1], 0.9f);
 	QT_CHECK_EQUAL(vec[2], 0.f);
+	tstr = "notfound";
+	QT_CHECK(testconfig.GetParam("what about", "unterminated line", tstr));
+	QT_CHECK_EQUAL(tstr, "good?");
 	//testconfig.DebugPrint(std::cout);
 	
 	{
@@ -267,6 +271,44 @@ QT_TEST(configfile_test)
 		testconfig.GetSection("test section numero UNO", i);
 		QT_CHECK_EQUAL(testconfig.GetParam(i, "i'm so great", value), true);
 		QT_CHECK_EQUAL(testconfig.GetParam(i, "look at me", value), true);
+	}
+}
+
+#include "pathmanager.h"
+QT_TEST(config_include)
+{
+	std::stringbuf log;
+	std::ostream info(&log), error(&log);
+	PATHMANAGER path;
+	path.Init(info, error);
+	
+	std::string test_file = path.GetDataPath() + "/test/test.cfg";
+	std::string verify_file = path.GetDataPath() + "/test/verify.cfg";
+	bool files_loaded = false;
+	
+	CONFIG cfg_test;
+	files_loaded = cfg_test.Load(test_file);
+	//cfg_test.DebugPrint(std::cerr);
+	
+	CONFIG cfg_verify;
+	files_loaded = files_loaded && cfg_verify.Load(verify_file);
+	//cfg_verify.DebugPrint(std::cerr);
+	
+	QT_CHECK(files_loaded);
+	if (!files_loaded) return;
+	
+	for (CONFIG::const_iterator s = cfg_verify.begin(); s != cfg_verify.end(); ++s)
+	{
+		CONFIG::const_iterator ts;
+		QT_CHECK(cfg_test.GetSection(s->first, ts, error));
+		if (ts == cfg_test.end()) continue;
+		
+		for (CONFIG::SECTION::const_iterator p = s->second.begin(); p != s->second.end(); ++p)
+		{
+			std::string value;
+			QT_CHECK(cfg_test.GetParam(ts, p->first, value, error));
+			QT_CHECK(p->second == value);
+		}
 	}
 }
 

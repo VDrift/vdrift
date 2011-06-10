@@ -1,109 +1,73 @@
 #ifndef _CARWHEEL_H
 #define _CARWHEEL_H
 
-#include "mathvector.h"
-#include "rotationalframe.h"
-#include "matrix3.h"
+#include "driveshaft.h"
 #include "joeserialize.h"
 #include "macros.h"
 
 #include <iostream>
 
-template <typename T>
 class CARWHEEL
 {
 friend class joeserialize::Serializer;
 public:
-	//default constructor makes an S2000-like car
-	CARWHEEL() : mass(18.14)
+	CARWHEEL() : mass(20) {}
+
+	btScalar GetRPM() const
 	{
-		SetInertia(10.0);
+		return shaft.ang_velocity * 30.0 / 3.141593;
 	}
 
-	T GetRPM() const
+	btScalar GetAngularVelocity() const
 	{
-		return rotation.GetAngularVelocity()[1] * 30.0 / 3.141593;
+		return shaft.ang_velocity;
 	}
 
-	//used for telemetry only
-	const T & GetAngVelInfo()
+	void SetAngularVelocity(btScalar value)
 	{
-		return angvel;
+		shaft.ang_velocity = value;
 	}
 
-	T GetAngularVelocity() const
-	{
-		return rotation.GetAngularVelocity()[1];
-	}
-
-	void SetAngularVelocity(T angvel)
-	{
-		MATHVECTOR <T, 3> v(0, angvel, 0);
-		return rotation.SetAngularVelocity(v);
-	}
-
-	void SetMass ( const T& value )
+	void SetMass(btScalar value)
 	{
 		mass = value;
 	}
 
-	T GetMass() const
+	btScalar GetMass() const
 	{
 		return mass;
 	}
 
-	void SetInertia(T new_inertia)
+	void SetInertia(btScalar value)
 	{
-		MATRIX3 <T> inertia;
-		inertia.Scale(new_inertia);
-		rotation.SetInertia(inertia);
+		shaft.inv_inertia = 1 / value;
 	}
 
-	T GetInertia() const
+	btScalar GetInertia() const
 	{
-		return rotation.GetInertia()[0];
+		return 1 / shaft.inv_inertia;
 	}
 
-	void Integrate1(const T dt)
+	void Integrate(btScalar dt)
 	{
-		rotation.Integrate1(dt);
+		shaft.integrate(dt);
 	}
 
-	void Integrate2(const T dt)
+	btScalar GetTorque(btScalar new_angvel, btScalar dt) const
 	{
-		rotation.Integrate2(dt);
+		return shaft.getMomentum(new_angvel) / dt;
 	}
 
-	void SetTorque(const T torque)
+	void SetTorque(btScalar torque, btScalar dt)
 	{
-		MATHVECTOR <T, 3> v(0, torque, 0);
-		rotation.SetTorque(v);
-		angvel = GetAngularVelocity();
+		shaft.applyMomentum(torque * dt);
 	}
 
-	T GetTorque() const
+	btQuaternion GetRotation() const
 	{
-		return rotation.GetTorque()[1];
+		return btQuaternion(btVector3(0, 1, 0), shaft.angle);
 	}
 
-	T GetTorque(const T w_new, const T dt) const
-	{
-		MATHVECTOR <T, 3> w(0, w_new, 0);
-	    return rotation.GetTorque(w, dt)[1];
-	}
-
-	void ZeroForces()
-	{
-		MATHVECTOR <T, 3> v;
-		rotation.SetTorque(v);
-	}
-
-	const QUATERNION <T> & GetRotation() const
-	{
-		return rotation.GetOrientation();
-	}
-
-	
 	void DebugPrint(std::ostream & out) const
 	{
 		out << "---Wheel---" << "\n";
@@ -112,18 +76,14 @@ public:
 
 	bool Serialize(joeserialize::Serializer & s)
 	{
-		T inertia = rotation.GetInertia()[0];
-		_SERIALIZE_(s,inertia);
+		_SERIALIZE_(s, shaft.ang_velocity);
+		_SERIALIZE_(s, shaft.angle);
 		return true;
 	}
 
 private:
-	//constants (not actually declared as const because they can be changed after object creation)
-	T mass; ///< the mass of the wheel
-	ROTATIONALFRAME <T> rotation; ///< a simulation of wheel rotation.  this contains the wheel orientation, angular velocity, angular acceleration, and inertia tensor
-
-	//for info only
-	T angvel;
+	DriveShaft shaft;
+	btScalar mass;
 };
 
 #endif

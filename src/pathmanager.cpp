@@ -92,9 +92,12 @@ void PATHMANAGER::Init(std::ostream & info_output, std::ostream & error_output)
 	#endif
 	#endif
 
+	temporary_folder = settings_path+"/tmp";
+
 	MakeDir(GetTrackRecordsPath());
 	MakeDir(GetReplayPath());
 	MakeDir(GetScreenshotPath());
+	MakeDir(GetTemporaryFolder());
 
 	//print diagnostic info
 	info_output << "Home directory: " << home_directory << std::endl;
@@ -110,6 +113,7 @@ void PATHMANAGER::Init(std::ostream & info_output, std::ostream & error_output)
 	info_output << "\nDATA_DIR: " << DATA_DIR;
 #endif
 	info_output << std::endl;
+	info_output << "Temporary directory: " << GetTemporaryFolder() << std::endl;
 	info_output << "Log file: " << GetLogFile() << std::endl;
 }
 

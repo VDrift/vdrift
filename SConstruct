@@ -142,7 +142,7 @@ else:
         LINKFLAGS = ['-pthread'],
         CC = 'gcc', CXX = 'g++',
         options = opts)
-    check_headers = ['asio.hpp', 'boost/bind.hpp', 'GL/gl.h', 'GL/glu.h', 'SDL/SDL.h', 'SDL/SDL_image.h', 'SDL/SDL_rotozoom.h', 'vorbis/vorbisfile.h', 'GL/glew.h']
+    check_headers = ['asio.hpp', 'boost/bind.hpp', 'GL/gl.h', 'GL/glu.h', 'SDL/SDL.h', 'SDL/SDL_image.h', 'SDL/SDL_rotozoom.h', 'vorbis/vorbisfile.h', 'GL/glew.h', 'curl/curl.h']
 
 if ARGUMENTS.get('verbose') != "1":
        env['ARCOMSTR'] = "\tARCH $TARGET"
@@ -561,9 +561,6 @@ if 'data-package' in COMMAND_LINE_TARGETS:
 
 if 'autopackage' in COMMAND_LINE_TARGETS:
     os.system("CXX1=g++-3.4 CXX2=g++-4.1 APBUILD_CXX1=g++-3.4 APBUILD_NO_STATIC_X=1 VDRIFT_VERSION=%s VDRIFT_MINIMAL=%d VDRIFT_RELEASE=%d makepackage tools/autopackage/vdrift.apspec" % (version, env['minimal'], env['release']))
-
-if env['NLS']:
-    SConscript('po/SConscript')
 
 SConscript('docs/SConscript')
 SConscript('include/SConscript')

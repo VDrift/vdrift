@@ -10,15 +10,17 @@ class TEXTUREMANAGER;
 class MODELMANAGER;
 class TRACKSURFACE;
 class TRACKOBJECT;
+class MODEL;
 
 class OBJECTLOADER
 {
 public:
 	OBJECTLOADER(
 		SCENENODE & sceneroot,
-		TEXTUREMANAGER & textures,
-		MODELMANAGER & models,
-		std::list<TRACKOBJECT> & objects,
+		TEXTUREMANAGER & texture_manager,
+		MODELMANAGER & model_manager,
+		std::vector<std::tr1::shared_ptr<MODEL> > & models,
+		std::vector<TRACKOBJECT> & objects,
 		std::ostream & info_output,
 		std::ostream & error_output,
 		const std::vector<TRACKSURFACE> & surfaces,
@@ -49,9 +51,10 @@ public:
 	
 private:
 	SCENENODE & sceneroot;
-	TEXTUREMANAGER & textures;
-	MODELMANAGER & models;
-	std::list<TRACKOBJECT> & objects;
+	TEXTUREMANAGER & texture_manager;
+	MODELMANAGER & model_manager;
+	std::vector<std::tr1::shared_ptr<MODEL> > & models;
+	std::vector<TRACKOBJECT> & objects;
 	std::ostream & info_output;
 	std::ostream & error_output;
 	
@@ -79,33 +82,6 @@ private:
 	bool error;
 	
 	void CalculateNumObjects();
-	
-	///read from the file stream and put it in "output".
-	/// return true if the get was successful, else false
-	template <typename T>
-	bool GetParam(std::ifstream & f, T & output)
-	{
-		if (!f.good())
-			return false;
-
-		std::string instr;
-		f >> instr;
-		if (instr.empty())
-			return false;
-
-		while (!instr.empty() && instr[0] == '#' && f.good())
-		{
-			f.ignore(1024, '\n');
-			f >> instr;
-		}
-
-		if (!f.good() && !instr.empty() && instr[0] == '#')
-			return false;
-
-		std::stringstream sstr(instr);
-		sstr >> output;
-		return true;
-	}
 };
 
 #endif // _OBJECTLOADER_H

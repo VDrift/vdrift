@@ -311,6 +311,12 @@ void GUI::ActivatePage(
 	std::ostream & error_output,
 	bool save_options)
 {
+	if (active_page == pages.find(pagename))
+	{
+		animation_counter = animation_count_start = activation_time; // fade it back in at least
+		return;
+	}
+	
 	if (last_active_page != pages.end())
 	{
 		last_active_page->second.SetVisible(node, false);
@@ -350,7 +356,7 @@ void GUI::ActivatePage(
 bool GUI::LoadOptions(
 	const std::string & optionfile,
 	const std::map<std::string, std::list <std::pair <std::string, std::string> > > & valuelists,
-	const std::map<std::string, std::string> languagemap,
+	const std::map<std::string, std::string> & languagemap,
 	std::ostream & error_output)
 {
 	CONFIG opt;
@@ -470,4 +476,19 @@ void GUI::UpdateOptions(std::ostream & error_output)
 	{
 		i->second.UpdateOptions(node, save_to, optionmap, error_output);
 	}
+}
+
+bool GUI::SetLabelText(const std::string & pagename, const std::string & labelname, const std::string & text)
+{
+	if (pages.find(pagename) == pages.end())
+		return false;
+	
+	SCENENODE & pagenode = GetPageNode(pagename);
+	reseatable_reference <WIDGET_LABEL> label = GetPage(pagename).GetLabel(labelname);
+	if (!label)
+		return false;
+	
+	label.get().SetText(pagenode, text);
+	
+	return true;
 }

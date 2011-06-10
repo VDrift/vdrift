@@ -40,6 +40,8 @@ public:
 	std::string GetTireSmokeTextureDir() const {return "textures/smoke";}
 	std::string GetDataLogPath() const {return settings_path+"/datalog";}
 
+	std::string GetTemporaryFolder() const {return temporary_folder;}
+	
 	bool FileExists(const std::string & filename) const;
 
 	///<optionally filter for the given extension
@@ -55,6 +57,7 @@ private:
 	std::string settings_path;
 	std::string data_directory;
 	std::string profile_suffix;
+	std::string temporary_folder;
 };
 
 #endif

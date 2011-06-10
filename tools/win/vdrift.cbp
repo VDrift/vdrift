@@ -25,13 +25,16 @@
 				<Option compiler="gcc" />
 				<Compiler>
 					<Add option="-O3" />
+					<Add option="-pg" />
 					<Add option="-march=native" />
 				</Compiler>
+				<Linker>
+					<Add option="-pg -lgmon" />
+				</Linker>
 			</Target>
 		</Build>
 		<Compiler>
 			<Add option="-Wall" />
-			<Add option="-pg" />
 			<Add option="-fexceptions" />
 			<Add option="-mwindows" />
 			<Add directory="include" />
@@ -39,7 +42,6 @@
 			<Add directory="..\..\bullet" />
 		</Compiler>
 		<Linker>
-			<Add option="-pg -lgmon" />
 			<Add library="opengl32" />
 			<Add library="glu32" />
 			<Add library="glew32" />
@@ -51,6 +53,7 @@
 			<Add library="wsock32" />
 			<Add library="ws2_32" />
 			<Add library="vorbisfile" />
+			<Add library="libcurl" />
 			<Add directory="dll" />
 		</Linker>
 		<ExtraCommands>
@@ -382,8 +385,10 @@
 		<Unit filename="..\..\include\crashdetection.h" />
 		<Unit filename="..\..\include\definitions.h" />
 		<Unit filename="..\..\include\derived.h" />
+		<Unit filename="..\..\include\downloadable.h" />
 		<Unit filename="..\..\include\drawable.h" />
 		<Unit filename="..\..\include\drawable_container.h" />
+		<Unit filename="..\..\include\driveshaft.h" />
 		<Unit filename="..\..\include\endian_utility.h" />
 		<Unit filename="..\..\include\enginesoundinfo.h" />
 		<Unit filename="..\..\include\eventsystem.h" />
@@ -401,6 +406,7 @@
 		<Unit filename="..\..\include\gui.h" />
 		<Unit filename="..\..\include\guioption.h" />
 		<Unit filename="..\..\include\guipage.h" />
+		<Unit filename="..\..\include\http.h" />
 		<Unit filename="..\..\include\hud.h" />
 		<Unit filename="..\..\include\inputgraph.h" />
 		<Unit filename="..\..\include\joepack.h" />
@@ -457,6 +463,7 @@
 		<Unit filename="..\..\include\sprite2d.h" />
 		<Unit filename="..\..\include\staticdrawables.h" />
 		<Unit filename="..\..\include\suspensionbumpdetection.h" />
+		<Unit filename="..\..\include\svn_sourceforge.h" />
 		<Unit filename="..\..\include\text_draw.h" />
 		<Unit filename="..\..\include\texture.h" />
 		<Unit filename="..\..\include\texture_interface.h" />
@@ -470,6 +477,7 @@
 		<Unit filename="..\..\include\tracksurface.h" />
 		<Unit filename="..\..\include\transform.h" />
 		<Unit filename="..\..\include\unittest.h" />
+		<Unit filename="..\..\include\utils.h" />
 		<Unit filename="..\..\include\vertexarray.h" />
 		<Unit filename="..\..\include\widget.h" />
 		<Unit filename="..\..\include\widget_button.h" />
@@ -505,6 +513,7 @@
 		<Unit filename="..\..\src\config.cpp" />
 		<Unit filename="..\..\src\containeralgorithm.cpp" />
 		<Unit filename="..\..\src\crashdetection.cpp" />
+		<Unit filename="..\..\src\downloadable.cpp" />
 		<Unit filename="..\..\src\endian_utility.cpp" />
 		<Unit filename="..\..\src\eventsystem.cpp" />
 		<Unit filename="..\..\src\fbobject.cpp" />
@@ -519,6 +528,7 @@
 		<Unit filename="..\..\src\gui.cpp" />
 		<Unit filename="..\..\src\guioption.cpp" />
 		<Unit filename="..\..\src\guipage.cpp" />
+		<Unit filename="..\..\src\http.cpp" />
 		<Unit filename="..\..\src\hud.cpp" />
 		<Unit filename="..\..\src\joepack.cpp" />
 		<Unit filename="..\..\src\joeserialize.cpp" />
@@ -553,18 +563,22 @@
 		<Unit filename="..\..\src\scenenode.cpp" />
 		<Unit filename="..\..\src\settings.cpp" />
 		<Unit filename="..\..\src\shader.cpp" />
+		<Unit filename="..\..\src\sky.cpp" />
 		<Unit filename="..\..\src\sound.cpp" />
 		<Unit filename="..\..\src\soundbuffer.cpp" />
 		<Unit filename="..\..\src\soundfilter.cpp" />
 		<Unit filename="..\..\src\soundsource.cpp" />
 		<Unit filename="..\..\src\sprite2d.cpp" />
 		<Unit filename="..\..\src\suspensionbumpdetection.cpp" />
+		<Unit filename="..\..\src\svn_sourceforge.cpp" />
 		<Unit filename="..\..\src\text_draw.cpp" />
 		<Unit filename="..\..\src\texture.cpp" />
 		<Unit filename="..\..\src\timer.cpp" />
 		<Unit filename="..\..\src\toggle.cpp" />
 		<Unit filename="..\..\src\track.cpp" />
 		<Unit filename="..\..\src\trackmap.cpp" />
+		<Unit filename="..\..\src\unittest.cpp" />
+		<Unit filename="..\..\src\utils.cpp" />
 		<Unit filename="..\..\src\vertexarray.cpp" />
 		<Unit filename="..\..\src\widget_button.cpp" />
 		<Unit filename="..\..\src\widget_colorpicker.cpp" />

@@ -8,11 +8,41 @@
 #endif
 
 #include <fstream>
+#include <sstream>
+
+MODEL::MODEL() : 
+	generatedlistid(false),
+	generatedmetrics(false),
+	radius(0),
+	radiusxz(0)
+{
+	// ctor
+}
+
+MODEL::MODEL(const std::string & filepath, std::ostream & error_output) :
+	generatedlistid(false),
+	generatedmetrics(false),
+	radius(0),
+	radiusxz(0) 
+{
+	if (filepath.size() > 4 && filepath.substr(filepath.size()-4) == ".ova")
+	{
+		ReadFromFile(filepath, error_output, false);
+	}
+	else
+	{
+		Load(filepath, error_output, false);
+	}
+}
+
+MODEL::~MODEL()
+{
+	Clear();
+}
 
 void MODEL::GenerateListID(std::ostream & error_output)
 {
-	if (HaveListID())
-		return;
+	if (HaveListID()) return;
 	
 	ClearListID();
 	
@@ -131,8 +161,7 @@ void MODEL::GenerateMeshMetrics()
 
 void MODEL::ClearListID()
 {
-	if (generatedlistid)
-		glDeleteLists(listid, 1);
+	if (generatedlistid) glDeleteLists(listid, 1);
 	generatedlistid = false;
 }
 
@@ -140,8 +169,7 @@ bool MODEL::WriteToFile(const std::string & filepath)
 {
 	const std::string magic = "OGLVARRAYV01";
 	std::ofstream fileout(filepath.c_str());
-	if (!fileout)
-		return false;
+	if (!fileout) return false;
 	
 	fileout.write(magic.c_str(), magic.size());
 	joeserialize::BinaryOutputSerializer s(fileout);
@@ -207,8 +235,8 @@ bool MODEL::ReadFromFile(const std::string & filepath, std::ostream & error_outp
 	ClearMetrics();
 	GenerateMeshMetrics();
 	if (verbose) std::cout << filepath << ": generating list id" << std::endl;
-	if (generatelistid)
-		GenerateListID(error_output);
+	
+	if (generatelistid) GenerateListID(error_output);
 	
 	if (verbose) std::cout << filepath << ": done" << std::endl;
 	
@@ -218,7 +246,6 @@ bool MODEL::ReadFromFile(const std::string & filepath, std::ostream & error_outp
 void MODEL::SetVertexArray(const VERTEXARRAY & newmesh)
 {
 	Clear();
-	
 	mesh = newmesh;
 }
 

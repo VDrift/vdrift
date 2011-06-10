@@ -102,8 +102,8 @@ struct LoadDrawable
 	}
 
 	bool operator()(
-		const std::string meshname,
-		const std::vector<std::string> texname,
+		const std::string & meshname,
+		const std::vector<std::string> & texname,
 		const CONFIG::const_iterator section,
 		SCENENODE & topnode,
 		keyed_container<SCENENODE>::handle * nodeptr = 0,
@@ -571,29 +571,21 @@ bool CAR::LoadPhysics(
 	std::ostream & info_output,
 	std::ostream & error_output)
 {
-	if (!dynamics.Load(cfg, error_output)) return false;
-
 	std::string carmodel;
 	std::tr1::shared_ptr<MODEL_JOE03> modelptr;
 	if (!cfg.GetParam("body", "mesh", carmodel, error_output)) return false;
 	if (!models.Load(carpath, carmodel, modelptr)) return false;
 
-	typedef CARDYNAMICS::T T;
-	MATHVECTOR <T, 3> size;
-	MATHVECTOR <T, 3> center;
-	MATHVECTOR <T, 3> position;
-	QUATERNION <T> orientation;
+	btVector3 size = ToBulletVector(modelptr->GetAABB().GetSize());
+	btVector3 center = ToBulletVector(modelptr->GetAABB().GetCenter());
+	btVector3 position = ToBulletVector(initial_position);
+	btQuaternion rotation = ToBulletQuaternion(initial_orientation);
 
-	position = initial_position;
-	orientation = initial_orientation;
-	size = modelptr->GetAABB().GetSize();
-	center = modelptr->GetAABB().GetCenter();
-	
 	// fix model rotation
 	modelrotation.RotateVector(size);
 	modelrotation.RotateVector(center);
 	
-	dynamics.Init(world, size, center, position, orientation);
+	if (!dynamics.Load(cfg, size, center, position, rotation, world, error_output)) return false;
 	dynamics.SetABS(defaultabs);
 	dynamics.SetTCS(defaulttcs);
 
@@ -841,49 +833,41 @@ void CAR::SetColor(float r, float g, float b)
 
 void CAR::SetPosition(const MATHVECTOR <float, 3> & new_position)
 {
-	MATHVECTOR <double,3> newpos;
-	newpos = new_position;
+	btVector3 newpos = ToBulletVector(new_position);
 	dynamics.SetPosition(newpos);
-
 	dynamics.AlignWithGround();
 
-	QUATERNION <float> rot;
-	rot = dynamics.GetOrientation();
-
-	cameras.Active()->Reset(newpos, rot);
+	QUATERNION <float> rot = GetOrientation();
+	cameras.Active()->Reset(new_position, rot);
 }
 
 void CAR::UpdateGraphics()
 {
-	if (!bodynode.valid())
-		return;
+	if (!bodynode.valid()) return;
 	
-	MATHVECTOR <float, 3> vec;
-	vec = dynamics.GetPosition();
+	MATHVECTOR <float, 3> vec = GetPosition();
 	SCENENODE & bodynoderef = topnode.GetNode(bodynode);
 	bodynoderef.GetTransform().SetTranslation(vec);
 	
-	vec = dynamics.GetCenterOfMassPosition();
 	roadnoise.SetPosition(vec[0],vec[1],vec[2]);
 	crashsound.SetPosition(vec[0],vec[1],vec[2]);
 	gearsound.SetPosition(vec[0],vec[1],vec[2]);
 	brakesound.SetPosition(vec[0],vec[1],vec[2]);
 	handbrakesound.SetPosition(vec[0],vec[1],vec[2]);
 	
-	QUATERNION <float> quat;
-	quat = dynamics.GetOrientation();
+	QUATERNION <float> quat = GetOrientation();
 	quat = quat * modelrotation;
 	bodynoderef.GetTransform().SetRotation(quat);
 	
 	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
 	{
-		vec = dynamics.GetWheelPosition(WHEEL_POSITION(i));
+		vec = ToMathVector<float>(dynamics.GetWheelPosition(WHEEL_POSITION(i)));
 		SCENENODE & wheelnoderef = topnode.GetNode(wheelnode[i]);
 		wheelnoderef.GetTransform().SetTranslation(vec);
 		tirebump[i].SetPosition(vec[0],vec[1],vec[2]);
 
 		QUATERNION <float> wheelquat;
-		wheelquat = dynamics.GetWheelOrientation(WHEEL_POSITION(i));
+		wheelquat = ToMathQuaternion<float>(dynamics.GetWheelOrientation(WHEEL_POSITION(i)));
 		wheelquat = wheelquat * modelrotation;
 		wheelnoderef.GetTransform().SetRotation(wheelquat);
 		
@@ -893,7 +877,7 @@ void CAR::UpdateGraphics()
 			floatingnoderef.GetTransform().SetTranslation(vec);
 
 			QUATERNION <float> floatquat;
-			floatquat = dynamics.GetUprightOrientation(WHEEL_POSITION(i));
+			floatquat = ToMathQuaternion<float>(dynamics.GetUprightOrientation(WHEEL_POSITION(i)));
 			floatquat = floatquat * modelrotation;
 			floatingnoderef.GetTransform().SetRotation(floatquat);
 		}
@@ -918,11 +902,8 @@ void CAR::UpdateGraphics()
 
 void CAR::UpdateCameras(float dt)
 {
-	MATHVECTOR <float, 3> pos = dynamics.GetPosition();
-	MATHVECTOR <float, 3> acc = dynamics.GetLastBodyForce() / dynamics.GetMass();
-	
-	QUATERNION <float> rot;
-	rot = dynamics.GetOrientation();
+	MATHVECTOR <float, 3> pos = ToMathVector<float>(dynamics.GetPosition());
+	QUATERNION <float> rot = ToMathQuaternion<float>(dynamics.GetOrientation());
 	
 	// reverse the camera direction
 	if (lookbehind)
@@ -930,7 +911,7 @@ void CAR::UpdateCameras(float dt)
 		rot.Rotate(M_PI, 0, 0, 1);
 	}
 	
-	cameras.Active()->Update(pos, rot, acc, dt);
+	cameras.Active()->Update(pos, rot, dt);
 }
 
 void CAR::Update(double dt)
@@ -1099,7 +1080,7 @@ void CAR::UpdateSounds(float dt)
 	float rpm = GetEngineRPM();
 	float throttle = dynamics.GetEngine().GetThrottle();
 
-	const MATHVECTOR <double, 3> & engine_pos = dynamics.GetEnginePosition();
+	btVector3 engine_pos = dynamics.GetEnginePosition();
 
 	float total_gain = 0.0;
 	std::list <std::pair <SOUNDSOURCE *, float> > gainlist;
@@ -1202,14 +1183,12 @@ void CAR::UpdateSounds(float dt)
 		}
 
 		// set the sound position
-		MATHVECTOR <float, 3> vec;
-		vec = dynamics.GetWheelPosition(WHEEL_POSITION(i));
+		btVector3 vec = dynamics.GetWheelPosition(WHEEL_POSITION(i));
 		thesound[i].SetPosition(vec[0], vec[1], vec[2]);
 
-		MATHVECTOR <float, 3> groundvel;
-		groundvel = dynamics.GetWheelVelocity(WHEEL_POSITION(i));
-		thesound[i].SetGain(squeal*maxgain);
-		float pitch = (groundvel.Magnitude()-5.0)*0.1;
+		const btVector3 & groundvel = dynamics.GetWheelVelocity(WHEEL_POSITION(i));
+		thesound[i].SetGain(squeal * maxgain);
+		float pitch = (groundvel.length() - 5.0) * 0.1;
 		if (pitch < 0)
 			pitch = 0;
 		if (pitch > 1)
@@ -1226,11 +1205,8 @@ void CAR::UpdateSounds(float dt)
 
 	//update road noise sound
 	{
-		MATHVECTOR <float, 3> vel;
-		vel = dynamics.GetVelocity();
-		float gain = vel.Magnitude();
-		if (gain < 0)
-			gain = -gain;
+		btScalar gain = dynamics.GetVelocity().length();
+		if (gain < 0) gain = -gain;
 		gain *= 0.02;
 		gain *= gain;
 		if (gain > 1.0)	gain = 1.0;
@@ -1324,19 +1300,15 @@ float CAR::GetFeedback()
 float CAR::GetTireSquealAmount(WHEEL_POSITION i) const
 {
 	const TRACKSURFACE & surface = dynamics.GetWheelContact(WHEEL_POSITION(i)).GetSurface();
-	if (surface.type == TRACKSURFACE::NONE)
-		return 0;
+	if (surface.type == TRACKSURFACE::NONE) return 0;
 
-	MATHVECTOR <float, 3> groundvel;
-	groundvel = dynamics.GetWheelVelocity(WHEEL_POSITION(i));
-	QUATERNION <float> wheelspace;
-	wheelspace = dynamics.GetUprightOrientation(WHEEL_POSITION(i));
-	(-wheelspace).RotateVector(groundvel);
-	float wheelspeed = dynamics.GetWheel(WHEEL_POSITION(i)).GetAngularVelocity()*dynamics.GetTire(WHEEL_POSITION(i)).GetRadius();
+	btQuaternion wheelspace = dynamics.GetUprightOrientation(WHEEL_POSITION(i));
+	btVector3 groundvel = quatRotate(wheelspace.inverse(), dynamics.GetWheelVelocity(WHEEL_POSITION(i)));
+	float wheelspeed = dynamics.GetWheel(WHEEL_POSITION(i)).GetAngularVelocity() * dynamics.GetTire(WHEEL_POSITION(i)).GetRadius();
 	groundvel[0] -= wheelspeed;
 	groundvel[1] *= 2.0;
 	groundvel[2] = 0;
-	float squeal = (groundvel.Magnitude() - 3.0) * 0.2;
+	float squeal = (groundvel.length() - 3.0) * 0.2;
 
 	double slide = dynamics.GetTire(i).GetSlide() / dynamics.GetTire(i).GetIdealSlide();
 	double slip = dynamics.GetTire(i).GetSlip() / dynamics.GetTire(i).GetIdealSlip();

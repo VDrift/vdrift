@@ -7,11 +7,36 @@
 #include <string>
 #include <fstream>
 
+///read from the file stream and put it in "output".
+/// return true if the get was successful, else false
+template <typename T>
+static bool GetParam(std::ifstream & f, T & output)
+{
+	if (!f.good()) return false;
+
+	std::string instr;
+	f >> instr;
+	if (instr.empty()) return false;
+
+	while (!instr.empty() && instr[0] == '#' && f.good())
+	{
+		f.ignore(1024, '\n');
+		f >> instr;
+	}
+
+	if (!f.good() && !instr.empty() && instr[0] == '#') return false;
+
+	std::stringstream sstr(instr);
+	sstr >> output;
+	return true;
+}
+
 OBJECTLOADER::OBJECTLOADER(
 	SCENENODE & sceneroot,
-	TEXTUREMANAGER & textures,
-	MODELMANAGER & models,
-	std::list<TRACKOBJECT> & objects,
+	TEXTUREMANAGER & texture_manager,
+	MODELMANAGER & model_manager,
+	std::vector<std::tr1::shared_ptr<MODEL> > & models,
+	std::vector<TRACKOBJECT> & objects,
 	std::ostream & info_output,
 	std::ostream & error_output,
 	const std::vector<TRACKSURFACE> & surfaces,
@@ -24,7 +49,8 @@ OBJECTLOADER::OBJECTLOADER(
 	const bool agressivecombine,
 	const bool cull) :
 	sceneroot(sceneroot),
-	textures(textures),
+	texture_manager(texture_manager),
+	model_manager(model_manager),
 	models(models),
 	objects(objects),
 	info_output(info_output),
@@ -54,15 +80,19 @@ bool OBJECTLOADER::BeginObjectLoad()
 {
 	CalculateNumObjects();
 	
+	models.reserve(numobjects);
+	objects.reserve(numobjects);
+
 	std::string objectlist = objectpath + "/list.txt";
 	objectfile.open(objectlist.c_str());
 
-	if (!GetParam(objectfile, params_per_object))
-		return false;
+	if (!GetParam(objectfile, params_per_object)) return false;
 
 	if (params_per_object != expected_params)
+	{
 		info_output << "Track object list has " << params_per_object << " params per object, expected " << expected_params << ", this is fine, continuing" << std::endl;
-	
+	}
+
 	if (params_per_object < min_params)
 	{
 		error_output << "Track object list has " << params_per_object << " params per object, expected " << expected_params << std::endl;
@@ -85,8 +115,10 @@ void OBJECTLOADER::CalculateNumObjects()
 		std::string junk;
 		while (GetParam(f, junk))
 		{
-			for (int i = 0; i < params_per_object-1; i++)
+			for (int i = 0; i < params_per_object-1; ++i)
+			{
 				GetParam(f, junk);
+			}
 
 			numobjects++;
 		}
@@ -162,18 +194,19 @@ std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad()
 	std::tr1::shared_ptr<MODEL_JOE03> model;
 	if (packload)
 	{
-		if (!models.Load(model_name, model, &pack))
+		if (!model_manager.Load(model_name, model, &pack))
 		{
 			return std::make_pair(true, false);
 		}
 	}
 	else
 	{
-		if (!models.Load(objectdir, model_name, model))
+		if (!model_manager.Load(objectdir, model_name, model))
 		{
 			return std::make_pair(true, false);
 		}
 	}
+	models.push_back(model);
 
 	TEXTUREINFO texinfo;
 	texinfo.mipmap = mipmap || anisotropy; //always mipmap if anisotropy is on
@@ -183,7 +216,7 @@ std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad()
 	texinfo.size = texsize;
 
 	std::tr1::shared_ptr<TEXTURE> diffuse_texture;
-	if (!textures.Load(objectdir, diffuse_texture_name, texinfo, diffuse_texture))
+	if (!texture_manager.Load(objectdir, diffuse_texture_name, texinfo, diffuse_texture))
 	{
 		error_output << "Skipping object " << model_name << " and continuing" << std::endl;
 		return std::make_pair(false, true);
@@ -195,7 +228,7 @@ std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad()
 		std::string filepath = objectpath + "/" + texture_name;
 		if (std::ifstream(filepath.c_str()))
 		{
-			if (!textures.Load(objectdir, texture_name, texinfo, miscmap1_texture))
+			if (!texture_manager.Load(objectdir, texture_name, texinfo, miscmap1_texture))
 			{
 				error_output << "Error loading texture: " << filepath << " for object " << model_name << ", continuing" << std::endl;
 			}
@@ -208,7 +241,7 @@ std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad()
 		std::string filepath = objectpath + "/" + texture_name;
 		if (std::ifstream(filepath.c_str()))
 		{
-			if (!textures.Load(objectdir, texture_name, texinfo, miscmap2_texture))
+			if (!texture_manager.Load(objectdir, texture_name, texinfo, miscmap2_texture))
 			{
 				error_output << "Error loading texture: " << filepath << " for object " << model_name << ", continuing" << std::endl;
 			}
@@ -255,9 +288,8 @@ std::pair <bool,bool> OBJECTLOADER::ContinueObjectLoad()
 	{
 		assert(surface_id >= 0 && surface_id < (int)surfaces.size());
 		surfacePtr = &surfaces[surface_id];
+		objects.push_back(TRACKOBJECT(model.get(), surfacePtr));
 	}
-	TRACKOBJECT object(model, surfacePtr);
-	objects.push_back(object);
 
 	return std::make_pair(false, true);
 }

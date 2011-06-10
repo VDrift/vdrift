@@ -1,28 +1,28 @@
 #include "roadstrip.h"
+#include <algorithm>
 
 bool ROADSTRIP::ReadFrom(std::istream & openfile, std::ostream & error_output)
 {
-	patches.clear();
-
 	assert(openfile);
 
 	//number of patches in this road strip
-	int num;
+	int num = 0;
 	openfile >> num;
+	
+	patches.clear();
+	patches.reserve(num);
 
 	//add all road patches to this strip
 	int badcount = 0;
-	for (int i = 0; i < num; i++)
+	for (int i = 0; i < num; ++i)
 	{
-		BEZIER * prevbezier = NULL;
-		if (!patches.empty())
-			prevbezier = &patches.back().GetPatch();
+		BEZIER * prevbezier = 0;
+		if (!patches.empty()) prevbezier = &patches.back().GetPatch();
 
 		patches.push_back(ROADPATCH());
 		patches.back().GetPatch().ReadFrom(openfile);
 
-		if (prevbezier)
-			prevbezier->Attach(patches.back().GetPatch());
+		if (prevbezier) prevbezier->Attach(patches.back().GetPatch());
 
 		if (patches.back().GetPatch().CheckForProblems())
 		{
@@ -54,33 +54,53 @@ bool ROADSTRIP::ReadFrom(std::istream & openfile, std::ostream & error_output)
 void ROADSTRIP::GenerateSpacePartitioning()
 {
 	aabb_part.Clear();
-
-	for (std::list <ROADPATCH>::iterator i = patches.begin(); i != patches.end(); ++i)
+	for (int i = 0; i < (int)patches.size(); ++i)
 	{
-		ROADPATCH * rp = &(*i);
-		aabb_part.Add(rp, i->GetPatch().GetAABB());
+		aabb_part.Add(i, patches[i].GetPatch().GetAABB());
 	}
-
 	aabb_part.Optimize();
 }
 
-bool ROADSTRIP::Collide(const MATHVECTOR <float, 3> & origin, const MATHVECTOR <float, 3> & direction, float seglen, MATHVECTOR <float, 3> & outtri, const BEZIER * & colpatch, MATHVECTOR <float, 3> & normal) const
+bool ROADSTRIP::Collide(
+	const MATHVECTOR <float, 3> & origin,
+	const MATHVECTOR <float, 3> & direction,
+	const float seglen,
+	int & patch_id,
+	MATHVECTOR <float, 3> & outtri,
+	const BEZIER * & colpatch,
+	MATHVECTOR <float, 3> & normal) const
 {
-	std::list <ROADPATCH *> candidates;
-	aabb_part.Query(AABB<float>::RAY(origin, direction, seglen), candidates);
-	bool col = false;
-	for (std::list <ROADPATCH *>::iterator i = candidates.begin(); i != candidates.end(); ++i)
+	// do a primitive previus patch check first, need to add support to aabb-tree
+	if (patch_id >= 0 && patch_id < (int)patches.size())
 	{
 		MATHVECTOR <float, 3> coltri, colnorm;
-		if ((*i)->Collide(origin, direction, seglen, coltri, colnorm))
+		if (patches[patch_id].Collide(origin, direction, seglen, coltri, colnorm))
 		{
-			if (!col || (coltri-origin).Magnitude() < (outtri-origin).Magnitude())
+			if ((coltri-origin).MagnitudeSquared() < (outtri-origin).MagnitudeSquared())
 			{
 				outtri = coltri;
 				normal = colnorm;
-				colpatch = &(*i)->GetPatch();
+				colpatch = &patches[patch_id].GetPatch();
 			}
-
+			return true;
+		}
+	}
+	
+	bool col = false;
+	std::vector<int> candidates;
+	aabb_part.Query(AABB<float>::RAY(origin, direction, seglen), candidates);
+	for (std::vector<int>::iterator i = candidates.begin(); i != candidates.end(); ++i)
+	{
+		MATHVECTOR <float, 3> coltri, colnorm;
+		if (patches[*i].Collide(origin, direction, seglen, coltri, colnorm))
+		{
+			if (!col || (coltri-origin).MagnitudeSquared() < (outtri-origin).MagnitudeSquared())
+			{
+				outtri = coltri;
+				normal = colnorm;
+				colpatch = &patches[*i].GetPatch();
+				patch_id = *i;
+			}
 			col = true;
 		}
 	}
@@ -90,20 +110,20 @@ bool ROADSTRIP::Collide(const MATHVECTOR <float, 3> & origin, const MATHVECTOR <
 
 void ROADSTRIP::Reverse()
 {
-	patches.reverse();
+	std::reverse(patches.begin(), patches.end());
 
-	for (std::list <ROADPATCH>::iterator i = patches.begin(); i != patches.end(); ++i)
+	for (std::vector<ROADPATCH>::iterator i = patches.begin(); i != patches.end(); ++i)
 	{
 		i->GetPatch().Reverse();
 		i->GetPatch().ResetDistFromStart();
 	}
 
 	//fix pointers to next patches for race placement
-	for (std::list <ROADPATCH>::iterator i = patches.begin(); i != patches.end(); ++i)
+	for (std::vector<ROADPATCH>::iterator i = patches.begin(); i != patches.end(); ++i)
 	{
-		std::list <ROADPATCH>::iterator n = i;
+		std::vector<ROADPATCH>::iterator n = i;
 		n++;
-		BEZIER * nextpatchptr = NULL;
+		BEZIER * nextpatchptr = 0;
 		if (n != patches.end())
 		{
 			nextpatchptr = &(n->GetPatch());
@@ -122,11 +142,11 @@ void ROADSTRIP::CreateRacingLine(
 	std::tr1::shared_ptr<TEXTURE> racingline_texture,
 	std::ostream & error_output)
 {
-	for (std::list <ROADPATCH>::iterator i = patches.begin(); i != patches.end(); ++i)
+	for (std::vector<ROADPATCH>::iterator i = patches.begin(); i != patches.end(); ++i)
 	{
-		std::list <ROADPATCH>::iterator n = i;
+		std::vector<ROADPATCH>::iterator n = i;
 		n++;
-		ROADPATCH * nextpatch(NULL);
+		ROADPATCH * nextpatch(0);
 		if (n != patches.end())
 		{
 			nextpatch = &(*n);

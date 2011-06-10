@@ -253,6 +253,8 @@ void DATAMANAGER::Update(float dt)
 	bool must_return = false;
 	if (!NeedsUpdate())
 		must_return = true;
+	if (dt == 0.0)
+		must_return = true;
 
 	time_since_update += dt;
 

@@ -1,14 +1,37 @@
 #include "loadingscreen.h"
 #include "texturemanager.h"
 	
-void LOADINGSCREEN::Update(float percentage)
+void LOADINGSCREEN::Update(float percentage, const std::string & optional_text, float posx, float posy)
 {
 	if (percentage < 0)
 		percentage = 0;
 	if (percentage > 1.0)
 		percentage = 1.0;
 	
-	barverts.SetToBillboard(0.5-w*0.5,0.5-h*0.5*hscale,0.5-w*0.5+w*percentage, 0.5+h*0.5*hscale);
+	if (optional_text.empty())
+	{
+		boxverts.SetTo2DButton(0,0,w,h,w*0.5/3.,false);
+		
+		float barheight = h*0.5*hscale;
+		float y1 = -barheight;
+		float y2 = barheight;
+		barverts.SetToBillboard(-w*0.5,y1,-w*0.5+w*percentage, y2);
+		barbackverts.SetToBillboard(-w*0.5,y1,w*0.5, y2);
+	}
+	else
+	{
+		boxverts.SetTo2DButton(0,0,w,h*1.5,w*0.5/3.,false);
+		
+		float barheight = h*0.5*hscale;
+		float y1 = 0;
+		float y2 = barheight*2;
+		barverts.SetToBillboard(-w*0.5,y1,-w*0.5+w*percentage, y2);
+		barbackverts.SetToBillboard(-w*0.5,y1,w*0.5, y2);
+	}
+	
+	text.Revise(optional_text);
+	
+	root.GetTransform().SetTranslation(MATHVECTOR<float,3>(posx,posy,0));
 }
 
 ///initialize the loading screen given the root node for the loading screen
@@ -17,7 +40,8 @@ bool LOADINGSCREEN::Init(
 	int displayw,
 	int displayh,
 	const std::string & texsize,
-	TEXTUREMANAGER & textures)
+	TEXTUREMANAGER & textures,
+	FONT & font)
 {
 	TEXTUREINFO texinfo;
 	texinfo.mipmap = false;
@@ -36,28 +60,34 @@ bool LOADINGSCREEN::Init(
 	
 	boxdrawref.SetDiffuseMap(boxtex);
 	boxdrawref.SetVertArray(&boxverts);
-	boxdrawref.SetDrawOrder(0);
+	boxdrawref.SetDrawOrder(10000);
 	boxdrawref.SetCull(false, false);
 	boxdrawref.SetColor(1,1,1,1);
 	
-	w = 128.0/displayw;
+	w = 128.0/displayw*3.;
 	h = 128.0/displayw;
-	boxverts.SetTo2DButton(0.5,0.5,w,h,w*0.5,false);
 	
 	barbackdrawref.SetDiffuseMap(bartex);
 	barbackdrawref.SetVertArray(&barbackverts);
-	barbackdrawref.SetDrawOrder(1);
+	barbackdrawref.SetDrawOrder(10001);
 	barbackdrawref.SetCull(false, false);
 	barbackdrawref.SetColor(0.3, 0.3, 0.3, 0.4);
 	
 	hscale = 0.3;
-	barbackverts.SetToBillboard(0.5-w*0.5,0.5-h*0.5*hscale,0.5+w*0.5, 0.5+h*0.5*hscale);
 	
 	bardrawref.SetDiffuseMap(bartex);
 	bardrawref.SetVertArray(&barverts);
-	bardrawref.SetDrawOrder(2);
+	bardrawref.SetDrawOrder(10002);
 	bardrawref.SetCull(false, false);
 	bardrawref.SetColor(1,1,1, 0.7);
+	
+	float screenhwratio = displayh/(float)displayw;
+	float fontscaley = 0.02;
+	float fontscalex = fontscaley*screenhwratio;
+	text.Init(root, font, "", -w*0.5, -0.5*h*hscale, fontscalex, fontscaley);
+	text.SetDrawOrder(root, 10003);
+	
+	Update(0.0,"",0.5,0.5);
 	
 	return true;
 }

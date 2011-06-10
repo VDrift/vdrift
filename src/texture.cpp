@@ -495,9 +495,7 @@ void GenTexture(const SDL_Surface * surface, const TEXTUREINFO & info, GLuint & 
 			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
 		}
-		//std:: cout << (int) texture_surface->format->BytesPerPixel << "," << format << "," << texture_surface->w << "," << texture_surface->h << "," << texture_surface->pixels << endl;
-		gluBuild2DMipmaps( GL_TEXTURE_2D, internalformat, surface->w, surface->h, format, GL_UNSIGNED_BYTE, surface->pixels ); //causes a crash on some png files, dunno why
-
+		glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
 	}
 	else
 	{
@@ -511,8 +509,8 @@ void GenTexture(const SDL_Surface * surface, const TEXTUREINFO & info, GLuint & 
 			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
 		}
-		glTexImage2D( GL_TEXTURE_2D, 0, internalformat, surface->w, surface->h, 0, format, GL_UNSIGNED_BYTE, surface->pixels );
 	}
+	glTexImage2D( GL_TEXTURE_2D, 0, internalformat, surface->w, surface->h, 0, format, GL_UNSIGNED_BYTE, surface->pixels );
 	OPENGL_UTILITY::CheckForOpenGLErrors("Texture creation", error);
 
 	//check for anisotropy

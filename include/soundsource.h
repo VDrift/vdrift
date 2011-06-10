@@ -6,8 +6,13 @@
 #include "mathvector.h"
 #include "quaternion.h"
 
-#include <tr1/memory>
 #include <cassert>
+
+#ifdef _MSC_VER
+#include <memory>
+#else
+#include <tr1/memory>
+#endif
 
 class SOUNDSOURCE
 {

@@ -1,120 +1,122 @@
 #ifndef _CARTIRE_H
 #define _CARTIRE_H
 
-#include "mathvector.h"
+#include "LinearMath/btVector3.h"
 #include "joeserialize.h"
 #include "macros.h"
 
+#include <vector>
 #include <string>
 #include <iostream>
-#include <vector>
 
-template <typename T>
-struct CARTIREINFO
-{
-	T radius; ///< the total tread radius of the tire in meters
-	T aspect_ratio; ///< 0..1 percentage value
-	T sidewall_width; /// in meters
-	T tread; ///< 1.0 means a pure off-road tire, 0.0 is a pure road tire
-	T rolling_resistance_linear; ///< linear rolling resistance on a hard surface
-	T rolling_resistance_quadratic; ///< quadratic rolling resistance on a hard surface
-	std::vector <T> longitudinal; ///< the parameters of the longitudinal pacejka equation.  this is series b
-	std::vector <T> lateral; ///< the parameters of the lateral pacejka equation.  this is series a
-	std::vector <T> aligning; ///< the parameters of the aligning moment pacejka equation.  this is series c
-	
-	CARTIREINFO() : radius(0.3), aspect_ratio(0.5), sidewall_width(0.185), tread(0), longitudinal(11), lateral(15), aligning(18) {}
-	
-	void SetDimensions(T width_mm, T ratio_percent, T diameter_in);
-};
+class CONFIG;
 
-template <typename T>
 class CARTIRE
 {
 friend class joeserialize::Serializer;
 public:
 	CARTIRE();
-
-	void Init(const CARTIREINFO <T> & info);
-
-	T GetRadius() const	{return info.radius;}
-	T GetTread() const	{return info.tread;}
-	T GetAspectRatio() const	{return info.aspect_ratio;}
-	T GetSidewallWidth() const	{return info.sidewall_width;}
-
-	T GetFeedback() const	{return feedback;}
-	T GetSlide() const	{return slide;}
-	T GetSlip() const	{return slip;}
-	T GetIdealSlide() const	{return ideal_slide;}
-	T GetIdealSlip() const	{return ideal_slip;}
-
-	/// Return the friction vector calculated from the magic formula.
-	/// velocity: velocity vector of the wheel's reference frame in m/s
-	/// ang_velocity: wheel angular veloity in rad/s
+	
+	btScalar GetRadius() const	{return radius;}
+	btScalar GetTread() const	{return tread;}
+	btScalar GetAspectRatio() const	{return aspect_ratio;}
+	btScalar GetSidewallWidth() const	{return sidewall_width;}
+	
+	btScalar GetFeedback() const	{return feedback;}
+	btScalar GetSlide() const	{return slide;}
+	btScalar GetSlip() const	{return slip;}
+	btScalar GetIdealSlide() const	{return ideal_slide;}
+	btScalar GetIdealSlip() const	{return ideal_slip;}
+	
+	/// load tire from config file
+	bool Load(const CONFIG & cfg, const std::string & name, std::ostream & error);
+	
+	/// velocity vector of the wheel's reference frame in m/s
+	/// velocity_ang: wheel angular veloity in rad/s
 	/// inclination: wheel inclination in degrees
 	/// normal_force: tire load in newton
-	MATHVECTOR <T, 3> GetForce(
-		const T normal_force,
-		const T friction_coeff,
-		const MATHVECTOR <T, 3> & velocity,
-		const T ang_velocity,
-		const T inclination);
-
+	btVector3 GetForce(
+		const btScalar normal_force,
+		const btScalar friction_coeff,
+		const btVector3 & velocity,
+		const btScalar ang_velocity,
+		const btScalar inclination);
+	
 	/// return max rolling resistance
-	T GetRollingResistance(
-		const T velocity,
-		const T normal_force,
-		const T rolling_resistance_factor) const;
-
+	btScalar GetRollingResistance(
+		const btScalar velocity,
+		const btScalar normal_force,
+		const btScalar rolling_resistance_factor) const;
+	
 	/// load is the normal force in newtons.
-	T GetMaximumFx(T load) const;
-
+	btScalar GetMaxFx(btScalar load) const;
+	
 	/// load is the normal force in newtons, camber is in degrees
-	T GetMaximumFy(T load, T camber) const;
-
+	btScalar GetMaxFy(btScalar load, btScalar camber) const;
+	
 	/// load is the normal force in newtons, camber is in degrees
-	T GetMaximumMz(T load, T camber) const;
-
+	btScalar GetMaxMz(btScalar load, btScalar camber) const;
+	
 	bool Serialize(joeserialize::Serializer & s)
 	{
 		_SERIALIZE_(s, feedback);
 		return true;
 	}
-
+	
 	void DebugPrint(std::ostream & out) const
 	{
 		out << "---Tire---" << "\n";
-		out << "Inclination: " << camber << "\n";
-		out << "Slide ratio: " << slide  << "\n";
-		out << "Slip angle: " << slip  << "\n";
+		//out << "Inclination: " << camber << "\n";
+		//out << "Slide ratio: " << slide  << "\n";
+		//out << "Slip angle: " << slip  << "\n";
+		out << "Fx: " << fx << "\n";
+		out << "Fy: " << fy  << "\n";
+		out << "Fz: " << fz  << "\n";
 	}
 
 private:
-	CARTIREINFO <T> info;
-	std::vector <T> sigma_hat; ///< maximum grip in the longitudinal direction
-	std::vector <T> alpha_hat; ///< maximum grip in the lateral direction
-
-	//for info only
-	T feedback; ///< the force feedback effect value
-	T camber; ///< tire camber relative to track surface
-	T slide; ///< ratio of tire contact patch speed to road speed, minus one
-	T slip; ///< the angle (in degrees) between the wheel heading and the wheel's actual velocity
-	T ideal_slide; ///< ideal slide ratio
-	T ideal_slip; ///< ideal slip angle
-
+	// constants
+	btScalar radius; ///< the total tread radius of the tire in meters
+	btScalar aspect_ratio; ///< 0..1 percentage value
+	btScalar sidewall_width; /// in meters
+	btScalar tread; ///< 1.0 means a pure off-road tire, 0.0 is a pure road tire
+	btScalar rolling_resistance_linear; ///< linear rolling resistance on a hard surface
+	btScalar rolling_resistance_quadratic; ///< quadratic rolling resistance on a hard surface
+	std::vector<btScalar> longitudinal; ///< the parameters of the longitudinal pacejka equation.  this is series b
+	std::vector<btScalar> lateral; ///< the parameters of the lateral pacejka equation.  this is series a
+	std::vector<btScalar> aligning; ///< the parameters of the aligning moment pacejka equation.  this is series c
+	std::vector<btScalar> sigma_hat; ///< maximum grip in the longitudinal direction
+	std::vector<btScalar> alpha_hat; ///< maximum grip in the lateral direction
+	
+	// variables
+	btScalar feedback; ///< the force feedback effect value
+	btScalar camber; ///< tire camber relative to track surface
+	btScalar slide; ///< ratio of tire contact patch speed to road speed, minus one
+	btScalar slip; ///< the angle (in degrees) between the wheel heading and the wheel's actual velocity
+	btScalar ideal_slide; ///< ideal slide ratio
+	btScalar ideal_slip; ///< ideal slip angle
+	
+	// debugging
+	btScalar fx, fy, fz;
+	
 	/// look up ideal slide ratio, slip angle
-	void LookupSigmaHatAlphaHat(T load, T & sh, T & ah) const;
-
+	void GetSigmaHatAlphaHat(btScalar load, btScalar & sh, btScalar & ah) const;
+	
 	/// pacejka magic formula function, longitudinal
-	T PacejkaFx(T sigma, T Fz, T friction_coeff, T & max_Fx);
-
+	btScalar PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coeff, btScalar & max_Fx) const;
+	
 	/// pacejka magic formula function, lateral
-	T PacejkaFy(T alpha, T Fz, T gamma, T friction_coeff, T & max_Fy);
-
+	btScalar PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff, btScalar & max_Fy) const;
+	
 	/// pacejka magic formula function, aligning
-	T PacejkaMz(T sigma, T alpha, T Fz, T gamma, T friction_coeff, T & max_Mz);
-
-	void FindSigmaHatAlphaHat(T load, T & output_sigmahat, T & output_alphahat, int iterations=400);
-
+	btScalar PacejkaMz(btScalar sigma, btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff, btScalar & max_Mz) const;
+	
+	bool LoadTireParameters(const CONFIG & cfg, const std::string & name, std::ostream & error);
+	
+	void SetDimensions(btScalar width_mm, btScalar ratio_percent, btScalar diameter_in);
+	
+	void FindSigmaHatAlphaHat(btScalar load, btScalar & output_sigmahat, btScalar & output_alphahat, int iterations=400);
+	
 	void CalculateSigmaHatAlphaHat(int tablesize=20);
 };
 
