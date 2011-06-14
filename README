@@ -38,3 +38,5 @@ COMPILING AND INSTALLING:
 To compile vdrif just type "scons" command in the root directory of the sources. You can use some flags to enable options, for example "scons arch=a64 release=1" will compile for a 64 bits machine and turn off debug.
 
 For installing just run "sudo scons install". You can also use diverse flags in this step like "scons install prefix=/usr/local" for setting the prefix to install vdrift.
+
+Run "scons -h" for seing all the modificable flags.
