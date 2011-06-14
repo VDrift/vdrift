@@ -5,10 +5,8 @@
 static void distribute(float frustum[][4])
 {
 	for (int i = 1; i < 6; i++)
-	{
 		for (int n = 0; n < 4; n++)
 			frustum[i][n] = frustum[0][n];
-	}
 }
 
 QT_TEST(aabb_test)

@@ -57,10 +57,8 @@ float RateLimit(float old_value, float new_value, float rate_limit_pos, float ra
 const std::vector <float> & AI::GetInputs(CAR * car) const
 {
 	for( std::vector<AI_Car>::const_iterator it = AI_Cars.begin (); it != AI_Cars.end (); it++ )
-	{
 		if (car == it->car)
 			return it->inputs;
-	}
 	return empty_vector;
 }
 
@@ -110,9 +108,7 @@ const BEZIER * GetCurrentPatch(const CAR *c)
 	{
 		curr_patch = c->GetCurPatch(1); //let's try the other wheel
 		if (!curr_patch)
-		{
 			return NULL;
-		}
 	}
 
 	return curr_patch;
