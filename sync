@@ -1,0 +1,34 @@
+#!/bin/bash
+
+# Check whether bullet exists or not...
+if [ ! -d bullet ]
+then
+	echo "Downloading bullet..."
+	svn checkout http://bullet.googlecode.com/svn/trunk/src bullet
+fi
+
+# Check if data is present...
+if [ ! -d data ]
+then
+        echo "Downloading data..."
+        svn checkout https://vdrift.svn.sourceforge.net/svnroot/vdrift/vdrift-data data
+fi
+
+# Update this sources...
+echo "Updating main sources..."
+git pull
+
+# Update bullet...
+echo "Updating bullet..."
+cd bullet
+svn update
+cd ..
+
+# Update data...
+echo "Updating data..."
+cd data
+svn update
+cd ..
+
+# All done...
+echo "Everything is synced..."

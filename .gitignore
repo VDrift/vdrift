@@ -1,0 +1,7 @@
+.sconf_temp/
+.sconsign.dblite
+config.log
+include/definitions.h
+vdrift.conf
+bullet/
+data/
