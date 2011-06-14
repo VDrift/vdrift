@@ -100,10 +100,9 @@ RenderModelExternal & DRAWABLE::generateRenderModelData(GLWrapper & gl, StringId
 		if (r != 1 || g != 1 || b != 1 || a != 1) // only add it if it's not the default
 		{
 			float srgb_alpha[4];
-			for (int i = 0; i < 3; i++)
-			{
-				srgb_alpha[i] = srgb_alpha[i] < 1 ? pow((&r)[i],2.2) : (&r)[i];
-			}
+			srgb_alpha[0] = r < 1 ? pow(r, 2.2f) : r;
+			srgb_alpha[1] = g < 1 ? pow(g, 2.2f) : g;
+			srgb_alpha[2] = b < 1 ? pow(b, 2.2f) : b;
 			srgb_alpha[3] = a;
 			renderModel.uniforms.push_back(RenderUniformEntry(colorId, srgb_alpha, 4));
 		}
