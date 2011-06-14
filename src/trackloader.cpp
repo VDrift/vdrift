@@ -526,7 +526,7 @@ bool TRACK::LOADER::LoadNode(const PTree & sec)
 			object->setCollisionShape(body.shape);
 			object->setUserPointer(body.shape->getUserPointer());
 			data.objects.push_back(object);
-			world.AddCollisionObject(object);
+			world.addCollisionObject(object);
 #endif
 		}
 	}
@@ -824,7 +824,7 @@ std::pair<bool, bool> TRACK::LOADER::ContinueOld()
 		object->setCollisionShape(shape);
 		object->setUserPointer(shape->getUserPointer());
 		data.objects.push_back(object);
-		world.AddCollisionObject(object);
+		world.addCollisionObject(object);
 #endif
 	}
 
