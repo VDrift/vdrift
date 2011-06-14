@@ -268,7 +268,7 @@ std::pair<bool, bool> TRACK::LOADER::Continue()
 bool TRACK::LOADER::LoadModel(const std::string & name)
 {
 	std::tr1::shared_ptr<MODEL> model;
-	if ((packload && model_manager.Load(objectdir, name, model, pack)) || 
+	if ((packload && model_manager.Load(objectdir, name, model, pack)) ||
 		model_manager.Load(objectdir, name, model))
 	{
 		data.models.push_back(model);
@@ -864,7 +864,7 @@ bool TRACK::LOADER::LoadParameters()
 		QUATERNION <float> orient(q[2], q[0], q[1], q[3]);
 
 		//due to historical reasons the initial orientation places the car faces the wrong way
-		QUATERNION <float> fixer; 
+		QUATERNION <float> fixer;
 		fixer.Rotate(M_PI_2, 0, 0, 1);
 		orient = fixer * orient;
 
@@ -1093,7 +1093,7 @@ bool TRACK::LOADER::LoadLapSequence()
 
 bool TRACK::LOADER::CreateRacingLines()
 {
-	TEXTUREINFO texinfo; 
+	TEXTUREINFO texinfo;
 	texinfo.size = texsize;
 	if (!texture_manager.Load(texturedir, "racingline.png", texinfo, data.racingline_texture))
 	{

@@ -790,7 +790,7 @@ void CARDYNAMICS::ShiftGear(int value)
 {
 	if (shifted &&
 		value != transmission.GetGear() &&
-		value <= transmission.GetForwardGears() && 
+		value <= transmission.GetForwardGears() &&
 		value >= -transmission.GetReverseGears())
 	{
 		remaining_shift_time = transmission.GetShiftTime();
@@ -1382,7 +1382,7 @@ btVector3 CARDYNAMICS::ApplySuspensionForceToBody ( int i, btScalar dt, btVector
 	int otheri = i;
 	if ( i == 0 || i == 2 ) otheri++;
 	else otheri--;
-	btScalar antirollforce = suspension[i]->GetAntiRoll() * 
+	btScalar antirollforce = suspension[i]->GetAntiRoll() *
 		( suspension[i]->GetDisplacement() - suspension[WHEEL_POSITION ( otheri ) ]->GetDisplacement() );
 	assert ( !std::isnan ( antirollforce ) );
 
@@ -1448,8 +1448,8 @@ btVector3 CARDYNAMICS::ComputeTireFrictionForce (int i, btScalar dt, btScalar no
 
 	btScalar lonvel = direction::forward.dot(groundvel);
 	btScalar latvel = -direction::right.dot(groundvel);
-	btScalar friction_coeff = 
-		tire[i].GetTread() * wheel_contact[i].GetSurface().frictionTread + 
+	btScalar friction_coeff =
+		tire[i].GetTread() * wheel_contact[i].GetSurface().frictionTread +
 		(1.0 - tire[i].GetTread()) * wheel_contact[i].GetSurface().frictionNonTread;
 
 	btVector3 friction_force = tire[i].GetForce(
@@ -1648,7 +1648,7 @@ void CARDYNAMICS::UpdateWheelContacts()
 		if (damage && bodies[i+1].body->isInWorld())
 		{
 			// reset contact
-			wheel_contact[i] = COLLISION_CONTACT(raystart, raydir, raylen, -1, 0, TRACKSURFACE::None(), 0); 
+			wheel_contact[i] = COLLISION_CONTACT(raystart, raydir, raylen, -1, 0, TRACKSURFACE::None(), 0);
 		}
 	}
 }

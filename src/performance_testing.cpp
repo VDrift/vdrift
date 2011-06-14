@@ -18,7 +18,7 @@ static inline float ConvertToFeet(float meters)
 	return meters * 3.2808399;
 }
 
-PERFORMANCE_TESTING::PERFORMANCE_TESTING(DynamicsWorld & world) : 
+PERFORMANCE_TESTING::PERFORMANCE_TESTING(DynamicsWorld & world) :
 	world(world)
 {
 	surface.type = TRACKSURFACE::ASPHALT;
@@ -33,7 +33,7 @@ PERFORMANCE_TESTING::PERFORMANCE_TESTING(DynamicsWorld & world) :
 void PERFORMANCE_TESTING::Test(
 	const std::string & carpath,
 	const std::string & carname,
-	const std::string & partspath, 
+	const std::string & partspath,
 	std::ostream & info_output,
 	std::ostream & error_output)
 {

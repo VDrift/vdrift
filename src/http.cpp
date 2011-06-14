@@ -72,7 +72,7 @@ bool HTTP::Request(const std::string & url, std::ostream & error_output)
 		// setup the appropriate options for the easy handle
 		curl_easy_setopt(easyhandle, CURLOPT_URL, url.c_str());
 
-		// This function call will make this multi_handle control the specified easy_handle. 
+		// This function call will make this multi_handle control the specified easy_handle.
 		// Furthermore, libcurl now initiates the connection associated with the specified easy_handle.
 		CURLMcode result = curl_multi_add_handle(multihandle, easyhandle);
 
@@ -172,8 +172,8 @@ void HTTP::UpdateProgress(CURL * handle, float total, float current)
 
 bool HTTP::Tick()
 {
-	// curl_multi_perform() returns as soon as the reads/writes are done. 
-	// This function does not require that there actually is any data available for reading or that data 
+	// curl_multi_perform() returns as soon as the reads/writes are done.
+	// This function does not require that there actually is any data available for reading or that data
 	// can be written, it can be called just in case.
 	int running_transfers = 0;
 	int loopcheck = 0;

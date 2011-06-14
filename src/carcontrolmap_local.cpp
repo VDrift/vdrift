@@ -813,11 +813,11 @@ const std::vector <float> & CARCONTROLMAP_LOCAL::ProcessInput(const std::string 
 	if (hgateshifter)
 	{
 		bool havegear = inputs[CARINPUT::FIRST_GEAR] ||
-				inputs[CARINPUT::SECOND_GEAR] || 
-				inputs[CARINPUT::THIRD_GEAR] || 
-				inputs[CARINPUT::FOURTH_GEAR] || 
-				inputs[CARINPUT::FIFTH_GEAR] || 
-				inputs[CARINPUT::SIXTH_GEAR] || 
+				inputs[CARINPUT::SECOND_GEAR] ||
+				inputs[CARINPUT::THIRD_GEAR] ||
+				inputs[CARINPUT::FOURTH_GEAR] ||
+				inputs[CARINPUT::FIFTH_GEAR] ||
+				inputs[CARINPUT::SIXTH_GEAR] ||
 				inputs[CARINPUT::REVERSE];
 		if (!havegear)
 			inputs[CARINPUT::NEUTRAL] = 1.0;

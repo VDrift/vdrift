@@ -207,7 +207,7 @@ public:
 								(hingev[1] - hingev[0]).length(),
 								(hingev[2] - hingev[1]).length());
 
-		hinge[UPPER_CHASSIS] = hingev[0] + (axis[UPPER_CHASSIS]	* 
+		hinge[UPPER_CHASSIS] = hingev[0] + (axis[UPPER_CHASSIS]	*
 				((hingev[2] - hingev[0]).length() * cos(innerangle[0])));
 
 		if (up_hub[1] < hinge[UPPER_CHASSIS][1])
@@ -224,7 +224,7 @@ public:
 								(hingev[1] - hingev[0]).length(),
 								(hingev[2] - hingev[1]).length());
 
-		hinge[LOWER_CHASSIS] = hingev[0] + (axis[LOWER_CHASSIS]	* 
+		hinge[LOWER_CHASSIS] = hingev[0] + (axis[LOWER_CHASSIS]	*
 				((hingev[2] - hingev[0]).length() * cos(innerangle[1])));
 
 		if (lo_hub[1] < hinge[LOWER_CHASSIS][1])

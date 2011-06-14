@@ -3,7 +3,7 @@
 #include <cassert>
 
 CRASHDETECTION::CRASHDETECTION()
-: lastvel(0), 
+: lastvel(0),
   curmaxdecel(0),
   maxdecel(0),
   deceltrigger(200)

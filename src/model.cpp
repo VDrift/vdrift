@@ -8,7 +8,7 @@ using namespace VERTEX_ATTRIBS;
 
 #define ERROR_CHECK OPENGL_UTILITY::CheckForOpenGLErrors(std::string(__PRETTY_FUNCTION__)+":"+__FILE__+":"+UTILS::tostr(__LINE__), error_output)
 
-MODEL::MODEL() : 
+MODEL::MODEL() :
 	generatedlistid(false),
 	generatedmetrics(false),
 	generatedvao(false),
@@ -29,7 +29,7 @@ MODEL::MODEL(const std::string & filepath, std::ostream & error_output) :
 	elementVbo(0),
 	elementCount(0),
 	radius(0),
-	radiusxz(0) 
+	radiusxz(0)
 {
 	if (filepath.size() > 4 && filepath.substr(filepath.size()-4) == ".ova")
 	{

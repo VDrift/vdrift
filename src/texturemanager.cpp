@@ -2,7 +2,7 @@
 #include "texture.h"
 #include <fstream>
 
-TEXTUREMANAGER::TEXTUREMANAGER(std::ostream & error) : 
+TEXTUREMANAGER::TEXTUREMANAGER(std::ostream & error) :
 	MANAGER<TEXTURE>(error), srgb(false)
 {
 	// ctor

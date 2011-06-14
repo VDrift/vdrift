@@ -4,7 +4,7 @@
 
 const std::string GUIOPTION::null;
 
-GUIOPTION::GUIOPTION() : 
+GUIOPTION::GUIOPTION() :
 	current_valid(false),
 	min(0),
 	max(1),

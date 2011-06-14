@@ -18,7 +18,7 @@
 #include <fstream>
 #include <sstream>
 
-GUIPAGE::GUIPAGE() : 
+GUIPAGE::GUIPAGE() :
 	tooltip_widget(0),
 	dialog(false)
 {
@@ -450,7 +450,7 @@ bool GUIPAGE::Load(
 			if (!textures.Load(texpath, "widgets/sld_wedge.png", texinfo, wedge)) return false;
 
 			WIDGET_SLIDER * new_widget = NewWidget<WIDGET_SLIDER>();
-			new_widget->SetupDrawable(sref, wedge, cursor, xy[0], xy[1], w, h, min, max, 
+			new_widget->SetupDrawable(sref, wedge, cursor, xy[0], xy[1], w, h, min, max,
 					percentage, setting, font, fontscalex, fontscaley, error_output, z);
 			new_widget->SetName(name);
 			new_widget->SetDescription(desc);
@@ -467,7 +467,7 @@ bool GUIPAGE::Load(
 			if (!pagefile.GetParam(section, "values", values, error_output)) return false;
 
 			WIDGET_SPINNINGCAR * new_widget = NewWidget<WIDGET_SPINNINGCAR>();
-			new_widget->SetupDrawable(sref, textures, models, texsize, datapath, centerxy[0], centerxy[1], 
+			new_widget->SetupDrawable(sref, textures, models, texsize, datapath, centerxy[0], centerxy[1],
 				MATHVECTOR<float, 3>(carpos[0], carpos[1], carpos[2]), error_output, z+10);
 		}
 		else if (type == "controlgrab")
@@ -500,7 +500,7 @@ bool GUIPAGE::Load(
 			float fontscalex = fontsize * screenhwratio;
 
 			WIDGET_CONTROLGRAB * new_widget = NewWidget<WIDGET_CONTROLGRAB>();
-			new_widget->SetupDrawable(sref, controlsconfig, setting, control, font, 
+			new_widget->SetupDrawable(sref, controlsconfig, setting, control, font,
 					text, xy[0], xy[1], fontscalex, fontscaley, analog, only_one, z);
 			controlgrabs.push_back(new_widget);
 		}

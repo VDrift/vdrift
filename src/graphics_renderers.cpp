@@ -976,12 +976,12 @@ FRUSTUM RENDER_INPUT_SCENE::SetCameraInfo(const MATHVECTOR <float, 3> & newpos,
 }
 
 RENDER_INPUT_SCENE::RENDER_INPUT_SCENE()
-:	last_transform_valid(false), 
-	shaders(false), 
-	clearcolor(false), 
-	cleardepth(false), 
-	orthomode(false), 
-	contrast(1.0), 
+:	last_transform_valid(false),
+	shaders(false),
+	clearcolor(false),
+	cleardepth(false),
+	orthomode(false),
+	contrast(1.0),
 	depth_mode(GL_LEQUAL),
 	writecolor(true),
 	writedepth(true),

@@ -492,7 +492,7 @@ float AI::calcSpeedLimit(AI_Car *c, const BEZIER* patch, const BEZIER * nextpatc
 float AI::calcBrakeDist(AI_Car *ai_car, float current_speed, float allowed_speed, float friction)
 {
 	float c = friction * GRAVITY;
-	float d = (-(ai_car->car->GetAerodynamicDownforceCoefficient()) * friction + 
+	float d = (-(ai_car->car->GetAerodynamicDownforceCoefficient()) * friction +
 				ai_car->car->GetAeordynamicDragCoefficient()) * ai_car->car->GetInvMass();
 	float v1sqr = current_speed * current_speed;
 	float v2sqr = allowed_speed * allowed_speed;
@@ -528,7 +528,7 @@ void AI::updateSteer(AI_Car *c, float dt, const std::list <CAR> & othercars)
 
 	//find the point to steer towards
 	float track_width = GetPatchWidthVector(curr_patch).Magnitude();
-	float lookahead = track_width * LOOKAHEAD_FACTOR1 + 
+	float lookahead = track_width * LOOKAHEAD_FACTOR1 +
 			c->car->GetVelocity().Magnitude() * LOOKAHEAD_FACTOR2;
 	lookahead = 1.0;
 	float length = 0.0;

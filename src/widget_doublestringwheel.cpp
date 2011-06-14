@@ -101,7 +101,7 @@ void WIDGET_DOUBLESTRINGWHEEL::SetupDrawable(
 	SCENENODE & scene,
 	const std::string & newtitle,
 	std::tr1::shared_ptr<TEXTURE> left_up,
-	std::tr1::shared_ptr<TEXTURE> left_down, 
+	std::tr1::shared_ptr<TEXTURE> left_down,
 	std::tr1::shared_ptr<TEXTURE> right_up,
 	std::tr1::shared_ptr<TEXTURE> right_down,
 	const FONT & font,

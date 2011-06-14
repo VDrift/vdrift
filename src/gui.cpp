@@ -21,24 +21,24 @@ void GUI::Unload()
     active_page = last_active_page = pages.end();
     pages.clear();
     optionmap.clear();
-    
+
     // clear out the scenegraph
     node.Clear();
-    
+
     // reset variables
     animation_counter = 0;
     animation_count_start = 0;
     syncme = false;
     syncme_from_external = false;
     control_load = false;
-    
+
     // some things we don't want to reset incase we're in the middle of a reload;
     // for example we don't want to reset ingame
 }
 
 bool GUI::Load(
 	const std::list <std::string> & pagelist,
-	const std::map<std::string, std::list <std::pair <std::string, std::string> > > & valuelists, 
+	const std::map<std::string, std::list <std::pair <std::string, std::string> > > & valuelists,
 	const std::string & optionsfile,
 	const std::string & carcontrolsfile,
 	const std::string & menupath,
@@ -55,7 +55,7 @@ bool GUI::Load(
 	std::ostream & error_output)
 {
     Unload();
-    
+
 	// load language font
 	CONFIG languageconfig;
 	languageconfig.Load(datapath + "/" + languagedir + "/" + language + ".lng");
@@ -262,9 +262,9 @@ void GUI::SyncOptions(
 				{
 					option->second.SetToFirstValue();
 					error_output << "Error setting GUI option \""
-								<< option->first << "\" to GAME value \"" 
-								<< i->second << "\" use first option \"" 
-								<< option->second.GetCurrentStorageValue() 
+								<< option->first << "\" to GAME value \""
+								<< i->second << "\" use first option \""
+								<< option->second.GetCurrentStorageValue()
 								<< "\"" << std::endl;
 				}
 			}

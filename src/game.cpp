@@ -452,7 +452,7 @@ bool GAME::ParseArguments(std::list <std::string> & args)
 	{
 		pathmanager.Init(info_output, error_output);
 		PERFORMANCE_TESTING perftest(collision);
-		perftest.Test(pathmanager.GetCarPath(), pathmanager.GetSharedCarPath(), 
+		perftest.Test(pathmanager.GetCarPath(), pathmanager.GetSharedCarPath(),
 			argmap["-cartest"], info_output, error_output);
 		continue_game = false;
 	}
@@ -918,7 +918,7 @@ void GAME::UpdateTimer()
 		{
 			// only count it if the car's current sector isn't -1
 			// which is the default value when the car is loaded
-			timer.Lap(carid, i->GetSector(), nextsector, (i->GetSector() >= 0)); 
+			timer.Lap(carid, i->GetSector(), nextsector, (i->GetSector() >= 0));
 			i->SetSector(nextsector);
 		}
 

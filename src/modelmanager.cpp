@@ -1,7 +1,7 @@
 #include "modelmanager.h"
 #include "model_joe03.h"
 
-MODELMANAGER::MODELMANAGER(std::ostream & error) : 
+MODELMANAGER::MODELMANAGER(std::ostream & error) :
 	MANAGER<MODEL>(error), loadToDrawlists(true)
 {
 	// ctor

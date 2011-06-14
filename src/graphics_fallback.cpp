@@ -1178,8 +1178,8 @@ void GRAPHICS_FALLBACK::DrawScene(std::ostream & error_output)
 }
 
 void GRAPHICS_FALLBACK::RenderDrawlist(std::vector <DRAWABLE*> & drawlist,
-						RENDER_INPUT_SCENE & render_scene, 
-						RENDER_OUTPUT & render_output, 
+						RENDER_INPUT_SCENE & render_scene,
+						RENDER_OUTPUT & render_output,
 						std::ostream & error_output)
 {
 	if (drawlist.empty() && !render_scene.GetClear().first && !render_scene.GetClear().second)
@@ -1192,8 +1192,8 @@ void GRAPHICS_FALLBACK::RenderDrawlist(std::vector <DRAWABLE*> & drawlist,
 void GRAPHICS_FALLBACK::RenderDrawlists(std::vector <DRAWABLE*> & dynamic_drawlist,
 						std::vector <DRAWABLE*> & static_drawlist,
 						const std::vector <TEXTURE_INTERFACE*> & extra_textures,
-						RENDER_INPUT_SCENE & render_scene, 
-						RENDER_OUTPUT & render_output, 
+						RENDER_INPUT_SCENE & render_scene,
+						RENDER_OUTPUT & render_output,
 						std::ostream & error_output)
 {
 	if (dynamic_drawlist.empty() && static_drawlist.empty() && !render_scene.GetClear().first && !render_scene.GetClear().second)

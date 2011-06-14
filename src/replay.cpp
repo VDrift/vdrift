@@ -17,7 +17,7 @@ using std::stringstream;
 using std::ifstream;
 using std::ofstream;
 
-REPLAY::REPLAY(float framerate) : 
+REPLAY::REPLAY(float framerate) :
 	version_info("VDRIFTREPLAYV13", CARINPUT::GAME_ONLY_INPUTS_START_HERE, framerate),
 	frame(0),
 	replaymode(IDLE),

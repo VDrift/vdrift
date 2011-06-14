@@ -6,10 +6,10 @@ using std::vector;
 
 #include <map>
 using std::map;
-	 
+
 #include <list>
 using std::list;
-	 
+
 #include <iostream>
 using std::endl;
 
@@ -27,7 +27,7 @@ void EVENTSYSTEM_SDL::Init(std::ostream & info_output)
 		info_output << ":" << endl;
 	else
 		info_output << "." << endl;
-	for (int i=0; i < SDL_NumJoysticks(); i++ ) 
+	for (int i=0; i < SDL_NumJoysticks(); i++ )
 	{
 		info_output << "    " << i << ". " << SDL_JoystickName(i) << endl;
 	}

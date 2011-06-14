@@ -8,7 +8,7 @@
 
 #define enableContributionCull true
 
-GRAPHICS_GL3V::GRAPHICS_GL3V(StringIdMap & map) : 
+GRAPHICS_GL3V::GRAPHICS_GL3V(StringIdMap & map) :
 	stringMap(map), renderer(gl), logNextGlFrame(false), initialized(false),
 	closeshadow(5.f)
 {
@@ -87,7 +87,7 @@ DRAWABLE_CONTAINER <PTRVECTOR> & GRAPHICS_GL3V::GetDynamicDrawlist()
 	return dynamic_drawlist;
 }
 
-GRAPHICS_GL3V::CameraMatrices & GRAPHICS_GL3V::setCameraPerspective(const std::string & name, 
+GRAPHICS_GL3V::CameraMatrices & GRAPHICS_GL3V::setCameraPerspective(const std::string & name,
 	const MATHVECTOR <float, 3> & position,
 	const QUATERNION <float> & rotation,
 	float fov,
@@ -557,12 +557,12 @@ bool GRAPHICS_GL3V::AntialiasingSupported() const
 	return true;
 }
 
-bool GRAPHICS_GL3V::GetUsingShaders() const 
+bool GRAPHICS_GL3V::GetUsingShaders() const
 {
 	return true;
 }
 
-bool GRAPHICS_GL3V::ReloadShaders(const std::string & shaderpath, std::ostream & info_output, std::ostream & error_output) 
+bool GRAPHICS_GL3V::ReloadShaders(const std::string & shaderpath, std::ostream & info_output, std::ostream & error_output)
 {
 	// reinitialize the entire renderer
 	std::vector <RealtimeExportPassInfo> passInfos;

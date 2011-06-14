@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-WIDGET_LABEL::WIDGET_LABEL() : 
+WIDGET_LABEL::WIDGET_LABEL() :
 	savedfont(0), r(1), g(1), b(1)
 {
 	// ctor

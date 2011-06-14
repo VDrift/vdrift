@@ -14,7 +14,7 @@ DRAWABLE & GetDrawable(SCENENODE & node, keyed_container <DRAWABLE>::handle & dr
 bool HUD::Init(
 	const std::string & texturepath,
 	const std::string & texsize,
-	TEXTUREMANAGER & textures, 
+	TEXTUREMANAGER & textures,
 	FONT & lcdfont,
 	FONT & sansfont,
 	float displaywidth,

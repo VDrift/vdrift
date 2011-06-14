@@ -112,13 +112,13 @@ bool WIDGET_CONTROLGRAB::ProcessInput(
 			desc << Str[EDIT_STR] << " " << Str[KEY_STR];
 			if (i->key.empty())
 			{
-				desc << " #" << i->keycode; 
+				desc << " #" << i->keycode;
 			}
 			else
 			{
 				desc << " " << i->key;
 			}
-			desc << " " << (i->down ? Str[PRESS_STR] : Str[RELEASE_STR]) << 
+			desc << " " << (i->down ? Str[PRESS_STR] : Str[RELEASE_STR]) <<
 					" (" << (i->once ? Str[ONCE_STR] : Str[HELD_STR]) << ")";
 			tempdescription = desc.str();
 		}
@@ -128,13 +128,13 @@ bool WIDGET_CONTROLGRAB::ProcessInput(
 			desc << Str[EDIT_STR] << " " << Str[JOY_STR] << " " << i->joy_index << " ";
 			if (i->joy_type == "button")
 			{
-				desc << Str[BUTTON_STR] << " " << i->joy_button << 
+				desc << Str[BUTTON_STR] << " " << i->joy_button <<
 					" " << (i->down ? Str[PRESS_STR] : Str[RELEASE_STR]) <<
 					" (" << (i->once ? Str[ONCE_STR] : Str[HELD_STR]) << ")";
 			}
 			else if (i->joy_type == "axis")
 			{
-				desc << Str[AXIS_STR] << " " << i->joy_axis << " " << 
+				desc << Str[AXIS_STR] << " " << i->joy_axis << " " <<
 					"(" << (i->joy_axis_type == "negative" ? "-" : "+") << ")";
 			}
 			tempdescription = desc.str();

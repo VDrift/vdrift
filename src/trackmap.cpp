@@ -225,8 +225,8 @@ bool TRACKMAP::BuildMap(
 	position[1] = 0.12;
 	size[0] = MAP_WIDTH / screen[0];
 	size[1] = MAP_HEIGHT / screen[1];
-	dot_size[0] = cardot0->GetW() / 2.0 / screen[0]; 
-	dot_size[1] = cardot0->GetH() / 2.0 / screen[1]; 
+	dot_size[0] = cardot0->GetW() / 2.0 / screen[0];
+	dot_size[1] = cardot0->GetH() / 2.0 / screen[1];
 
 	mapdraw = mapnode.GetDrawlist().twodim.insert(DRAWABLE());
 	DRAWABLE & mapdrawref = mapnode.GetDrawlist().twodim.get(mapdraw);

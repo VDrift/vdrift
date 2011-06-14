@@ -12,7 +12,7 @@ const float MODEL_JOE03::MODEL_SCALE = 1.0;
 
 // This holds the header information that is read in at the beginning of the file
 struct JOEHeader
-{ 
+{
 	int magic;                   // This is used to identify the file
 	int version;                 // The version number of the file
 	int num_faces;	            // The number of faces (polygons)
@@ -52,8 +52,8 @@ struct JOEFrame
 	std::vector<JOETexCoord> texcoords;
 };
 
-// This holds all the information for our model/scene. 
-struct JOEObject 
+// This holds all the information for our model/scene.
+struct JOEObject
 {
 	JOEHeader info;
 	std::vector<JOEFrame> frames;
@@ -416,8 +416,8 @@ void MODEL_JOE03::ReadData ( FILE * m_FilePointer, JOEPACK * pack, JOEObject & O
 	}*/
 
 	float newvertnum = vert_master.size();
-	/*std::cout << modelpath << " (" << Object.info.num_faces << ") used to have " << Object.frames[frame].num_verts << " vertices, " << 
-			Object.frames[frame].num_normals << " normals, " << Object.frames[frame].num_texcoords 
+	/*std::cout << modelpath << " (" << Object.info.num_faces << ") used to have " << Object.frames[frame].num_verts << " vertices, " <<
+			Object.frames[frame].num_normals << " normals, " << Object.frames[frame].num_texcoords
 			<< " tex coords, now it has " << newvertnum << " combo verts (combo indices)" << std::endl;*/
 
 	//now, fill up the vertices, normals, and texcoords

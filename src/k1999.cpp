@@ -27,7 +27,7 @@ void K1999::UpdateTxTy(int i)
 {
  tx[i] = tLane[i] * txRight[i] + (1 - tLane[i]) * txLeft[i];
  ty[i] = tLane[i] * tyRight[i] + (1 - tLane[i]) * tyLeft[i];
-}                                                                               
+}
 
 /////////////////////////////////////////////////////////////////////////////
 // Draw a path (use gnuplot)
@@ -58,13 +58,13 @@ double K1999::GetRInverse(int prev, double x, double y, int next)
  double y2 = ty[prev] - y;
  double x3 = tx[next] - tx[prev];
  double y3 = ty[next] - ty[prev];
- 
+
  double det = x1 * y2 - x2 * y1;
  double n1 = x1 * x1 + y1 * y1;
  double n2 = x2 * x2 + y2 * y2;
  double n3 = x3 * x3 + y3 * y3;
  double nnn = sqrt(n1 * n2 * n3);
- 
+
  double c = 2 * det / nnn;
  return c;
 }
@@ -85,7 +85,7 @@ void K1999::AdjustRadius(int prev, int i, int next, double TargetRInverse, doubl
               (tx[next] - tx[prev]) * (tyLeft[i] - ty[prev])) /
             ( (ty[next] - ty[prev]) * (txRight[i] - txLeft[i]) -
               (tx[next] - tx[prev]) * (tyRight[i] - tyLeft[i]));
- // the original algorithm allows going outside the track 
+ // the original algorithm allows going outside the track
  /*
  if (tLane[i] < -0.2)
   tLane[i] = -0.2;
@@ -98,28 +98,28 @@ void K1999::AdjustRadius(int prev, int i, int next, double TargetRInverse, doubl
   tLane[i] = 1.0;
 
  UpdateTxTy(i);
- 
+
  //
  // Newton-like resolution method
  //
  const double dLane = 0.0001;
- 
+
  double dx = dLane * (txRight[i] - txLeft[i]);
  double dy = dLane * (tyRight[i] - tyLeft[i]);
- 
+
  double dRInverse = GetRInverse(prev, tx[i] + dx, ty[i] + dy, next);
- 
+
  if (dRInverse > 0.000000001)
  {
   tLane[i] += (dLane / dRInverse) * TargetRInverse;
- 
+
   double ExtLane = (SideDistExt + Security) / Width;
   double IntLane = (SideDistInt + Security) / Width;
   if (ExtLane > 0.5)
    ExtLane = 0.5;
   if (IntLane > 0.5)
    IntLane = 0.5;
- 
+
   if (TargetRInverse >= 0.0)
   {
    if (tLane[i] < IntLane)
@@ -145,7 +145,7 @@ void K1999::AdjustRadius(int prev, int i, int next, double TargetRInverse, doubl
     tLane[i] = 1 - IntLane;
   }
  }
- 
+
  UpdateTxTy(i);
 }
 
@@ -158,14 +158,14 @@ void K1999::Smooth(int Step)
  int prevprev = prev - Step;
  int next = Step;
  int nextnext = next + Step;
- 
+
  assert(prev >= 0);
  //std::cout << Divs << ", " << Step << ", " << prev << ", " << tx.size() << std::endl;
  assert(prev < (int)tx.size());
  assert(prev < (int)ty.size());
  assert(next < (int)tx.size());
  assert(next < (int)ty.size());
- 
+
  for (int i = 0; i <= Divs - Step; i += Step)
  {
   double ri0 = GetRInverse(prevprev, tx[prev], ty[prev], i);
@@ -177,7 +177,7 @@ void K1999::Smooth(int Step)
 
   double Security = lPrev * lNext / (8 * SecurityR);
   AdjustRadius(prev, i, next, TargetRInverse, Security);
- 
+
   prevprev = prev;
   prev = i;
   next = nextnext;
@@ -195,11 +195,11 @@ void K1999::StepInterpolate(int iMin, int iMax, int Step)
  int next = (iMax + Step) % Divs;
  if (next > Divs - Step)
   next = 0;
- 
+
  int prev = (((Divs + iMin - Step) % Divs) / Step) * Step;
  if (prev > Divs - Step)
   prev -= Step;
- 
+
  double ir0 = GetRInverse(prev, tx[iMin], ty[iMin], iMax % Divs);
  double ir1 = GetRInverse(iMin, tx[iMax % Divs], ty[iMax % Divs], next);
  for (int k = iMax; --k > iMin;)
@@ -209,7 +209,7 @@ void K1999::StepInterpolate(int iMin, int iMax, int Step)
   AdjustRadius(iMin, k, iMax % Divs, TargetRInverse);
  }
 }
- 
+
 /////////////////////////////////////////////////////////////////////////////
 // Calls to StepInterpolate for the full path
 /////////////////////////////////////////////////////////////////////////////
@@ -241,7 +241,7 @@ void K1999::CalcRaceLine()
    Smooth(Step);
   Interpolate(Step);
  }
- 
+
  //
  // Compute curvature along the path
  //
@@ -258,7 +258,7 @@ void K1999::CalcRaceLine()
  std::ofstream ofs("k1999.path");
  DrawPath(ofs);
 #endif
-} 
+}
 
 
 //
