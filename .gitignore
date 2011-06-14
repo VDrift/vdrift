@@ -3,5 +3,4 @@
 config.log
 include/definitions.h
 vdrift.conf
-bullet/
 data/
