@@ -123,7 +123,7 @@ static void PreMultiplyAlpha(SDL_Surface * surface)
 static float Scale(const std::string & size, float width, float height)
 {
 	float maxsize, minscale;
-	
+
 	if (size == "medium")
 	{
 		maxsize = 256;
@@ -138,12 +138,12 @@ static float Scale(const std::string & size, float width, float height)
 	{
 		return 1.0;
 	}
-	
+
 	float scalew = (width > maxsize) ? maxsize / width : 1.0;
 	float scaleh = (height > maxsize) ? maxsize / height : 1.0;
 	float scale = (scalew < scaleh) ? scalew : scaleh;
 	if (scale < minscale) scale = minscale;
-	
+
 	return scale;
 }
 
@@ -308,7 +308,7 @@ bool TEXTURE::LoadCubeVerticalCross(const std::string & path, const TEXTUREINFO 
 	{
 		glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-		
+
 		if (GLEW_ARB_framebuffer_object)
 		{
 			glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
@@ -519,7 +519,7 @@ void GenTexture(const SDL_Surface * surface, const TEXTUREINFO & info, GLuint & 
 	// In the GL3 renderer the sampler decides whether or not to do mip filtering, so we conservatively make mipmaps available for all textures.
 	if (glGenerateMipmap)
 		glGenerateMipmap(GL_TEXTURE_2D);
-	
+
 	//check for anisotropy
 	if (info.anisotropy > 1)
 	{
@@ -540,7 +540,7 @@ bool TEXTURE::Load(const std::string & path, const TEXTUREINFO & info, std::ostr
 		error << "Tried to load a texture with an empty name" << std::endl;
 		return false;
 	}
-	
+
 	id = 0;
 	if (info.cube)
 	{

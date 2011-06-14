@@ -35,15 +35,15 @@ int main (int argc, char * argv[])
 	act.sa_handler = release_mouse;
 	sigaction(SIGABRT,&act, NULL);
 #endif
-	
+
 	list <string> args(argv, argv + argc);
-	
+
 	//find the path of the log file
 	PATHMANAGER paths;
 	std::stringstream dummy;
 	paths.Init(dummy, dummy);
 	string logfilename = paths.GetLogFile();
-	
+
 	//open the log file
 	std::ofstream logfile(logfilename.c_str());
 	if (!logfile)
@@ -51,7 +51,7 @@ int main (int argc, char * argv[])
 		std::cerr << "Couldn't open log file: " << logfilename << std::endl;
 		return EXIT_FAILURE;
 	}
-	
+
 	//set up the logging arrangement
 	logging::splitterstreambuf infosplitter(std::cout, logfile);
 	std::ostream infosplitterstream(&infosplitter);
@@ -60,18 +60,18 @@ int main (int argc, char * argv[])
 	logging::logstreambuf infolog("INFO: ", infosplitterstream);
 	//logstreambuf infolog("INFO: ", logfile);
 	logging::logstreambuf errorlog("ERROR: ", errorsplitterstream);
-	
+
 	//primary logging ostreams
 	std::ostream info_output(&infolog);
 	std::ostream error_output(&errorlog);
-	
+
 	//create the game object
 	GAME game(info_output, error_output);
-	
+
 	//kick it all off
 	game.Start(args);
-	
+
 	info_output << "Exiting" << std::endl;
-	
+
 	return EXIT_SUCCESS;
 }

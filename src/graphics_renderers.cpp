@@ -72,7 +72,7 @@ void ExtractFrustum(FRUSTUM & frustum)
 	clip[13] = modl[12] * proj[ 1] + modl[13] * proj[ 5] + modl[14] * proj[ 9] + modl[15] * proj[13];
 	clip[14] = modl[12] * proj[ 2] + modl[13] * proj[ 6] + modl[14] * proj[10] + modl[15] * proj[14];
 	clip[15] = modl[12] * proj[ 3] + modl[13] * proj[ 7] + modl[14] * proj[11] + modl[15] * proj[15];
-	
+
 	/* Extract the numbers for the RIGHT plane */
 	frustum.frustum[0][0] = clip[ 3] - clip[ 0];
 	frustum.frustum[0][1] = clip[ 7] - clip[ 4];
@@ -160,16 +160,16 @@ void PushShadowMatrices()
 	MATRIX4<float> m;
 	glGetFloatv (GL_TEXTURE_MATRIX, m.GetArray());
 	m = m.Inverse();
-	
+
 	//std::cout << m << std::endl;
-	
+
 	for (int i = 0; i < 3; i++)
 	{
 		glActiveTexture(GL_TEXTURE4+i);
 		glPushMatrix();
 		glMultMatrixf(m.GetArray());
 	}
-	
+
 	glActiveTexture(GL_TEXTURE0);
 	glMatrixMode(GL_MODELVIEW);
 }
@@ -177,13 +177,13 @@ void PushShadowMatrices()
 void PopShadowMatrices()
 {
 	glMatrixMode(GL_TEXTURE);
-	
+
 	for (int i = 0; i < 3; i++)
 	{
 		glActiveTexture(GL_TEXTURE4+i);
 		glPopMatrix();
 	}
-	
+
 	glActiveTexture(GL_TEXTURE0);
 	glMatrixMode(GL_MODELVIEW);
 }
@@ -191,23 +191,23 @@ void PopShadowMatrices()
 void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & error_output)
 {
 	assert(shader);
-	
+
 	OPENGL_UTILITY::CheckForOpenGLErrors("postprocess begin", error_output);
-	
+
 	glstate.SetColorMask(writecolor, writealpha);
 	glstate.SetDepthMask(writedepth);
-	
+
 	if (clearcolor && cleardepth)
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	else if (clearcolor)
 		glClear(GL_COLOR_BUFFER_BIT);
 	else if (cleardepth)
 		glClear(GL_DEPTH_BUFFER_BIT);
-	
+
 	shader->Enable();
-	
+
 	OPENGL_UTILITY::CheckForOpenGLErrors("postprocess shader enable", error_output);
-	
+
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
 	glLoadIdentity();
@@ -218,7 +218,7 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 
 	glColor4f(1,1,1,1);
 	glstate.SetColor(1,1,1,1);
-	
+
 	assert(blendmode != BLENDMODE::ALPHATEST);
 	switch (blendmode)
 	{
@@ -229,7 +229,7 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
 		}
 		break;
-		
+
 		case BLENDMODE::ADD:
 		{
 			glstate.Disable(GL_ALPHA_TEST);
@@ -238,7 +238,7 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 			glstate.SetBlendFunc(GL_ONE, GL_ONE);
 		}
 		break;
-		
+
 		case BLENDMODE::ALPHABLEND:
 		{
 			glstate.Disable(GL_ALPHA_TEST);
@@ -247,7 +247,7 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 			glstate.SetBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		}
 		break;
-		
+
 		case BLENDMODE::PREMULTIPLIED_ALPHA:
 		{
 			glstate.Disable(GL_ALPHA_TEST);
@@ -256,25 +256,25 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 			glstate.SetBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 		}
 		break;
-		
+
 		default:
 		assert(0);
 		break;
 	}
-	
+
 	if (writedepth || depth_mode != GL_ALWAYS)
 		glstate.Enable(GL_DEPTH_TEST);
 	else
 		glstate.Disable(GL_DEPTH_TEST);
 	glDepthFunc( depth_mode );
 	glstate.Enable(GL_TEXTURE_2D);
-	
+
 	glActiveTexture(GL_TEXTURE0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE);
 	glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_LUMINANCE);
-	
+
 	OPENGL_UTILITY::CheckForOpenGLErrors("postprocess flag set", error_output);
-	
+
 	// put the camera transform into texture3
 	glActiveTexture(GL_TEXTURE3);
 	glMatrixMode(GL_TEXTURE);
@@ -285,15 +285,15 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 	glTranslatef(-cam_position[0],-cam_position[1],-cam_position[2]);
 	glActiveTexture(GL_TEXTURE0);
 	glMatrixMode(GL_MODELVIEW);
-	
+
 	//std::cout << "postprocess: " << std::endl;
 	PushShadowMatrices();
-	
+
 	OPENGL_UTILITY::CheckForOpenGLErrors("shader parameter upload", error_output);
-	
+
 	float maxu = 1.f;
 	float maxv = 1.f;
-	
+
 	int num_nonnull = 0;
 	for (unsigned int i = 0; i < source_textures.size(); i++)
 	{
@@ -316,7 +316,7 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 		return;
 	}
 	glActiveTexture(GL_TEXTURE0);
-	
+
 	OPENGL_UTILITY::CheckForOpenGLErrors("postprocess texture set", error_output);
 
 	// build the frustum corners
@@ -333,7 +333,7 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 		invproj.TransformVectorOut(frustum_corners[i][0], frustum_corners[i][1], frustum_corners[i][2]);
 		frustum_corners[i][2] = -lod_far;
 	}
-	
+
 	// send shader parameters
 	{
 		MATHVECTOR <float, 3> lightvec = lightposition;
@@ -346,42 +346,42 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 		shader->UploadActiveShaderParameter3f("frustum_corner_br_delta", frustum_corners[1]-frustum_corners[0]);
 		shader->UploadActiveShaderParameter3f("frustum_corner_tl_delta", frustum_corners[3]-frustum_corners[0]);
 	}
-	
-	
+
+
 	glBegin(GL_QUADS);
-	
+
 	// send the UV corners in UV set 0, send the frustum corners in UV set 1
-	
+
 	glMultiTexCoord2f(GL_TEXTURE0, 0.0f, 0.0f);
 	glMultiTexCoord3f(GL_TEXTURE1, frustum_corners[0][0], frustum_corners[0][1], frustum_corners[0][2]);
 	glVertex3f( 0.0f,  0.0f,  0.0f);
-	
+
 	glMultiTexCoord2f(GL_TEXTURE0, maxu, 0.0f);
 	glMultiTexCoord3f(GL_TEXTURE1, frustum_corners[1][0], frustum_corners[1][1], frustum_corners[1][2]);
 	glVertex3f( 1.0f,  0.0f,  0.0f);
-	
+
 	glMultiTexCoord2f(GL_TEXTURE0, maxu, maxv);
 	glMultiTexCoord3f(GL_TEXTURE1, frustum_corners[2][0], frustum_corners[2][1], frustum_corners[2][2]);
 	glVertex3f( 1.0f,  1.0f,  0.0f);
-	
+
 	glMultiTexCoord2f(GL_TEXTURE0, 0.0f, maxv);
 	glMultiTexCoord3f(GL_TEXTURE1, frustum_corners[3][0], frustum_corners[3][1], frustum_corners[3][2]);
 	glVertex3f( 0.0f,  1.0f,  0.0f);
-	
+
 	glEnd();
-	
+
 	OPENGL_UTILITY::CheckForOpenGLErrors("postprocess draw", error_output);
-	
+
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
 	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
-	
+
 	PopShadowMatrices();
 
 	glstate.Enable(GL_DEPTH_TEST);
 	glstate.Disable(GL_TEXTURE_2D);
-	
+
 	for (unsigned int i = 0; i < source_textures.size(); i++)
 	{
 		//std::cout << i << ": " << source_textures[i] << std::endl;
@@ -390,7 +390,7 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 			source_textures[i]->Deactivate();
 	}
 	glActiveTexture(GL_TEXTURE0);
-	
+
 	OPENGL_UTILITY::CheckForOpenGLErrors("postprocess end", error_output);
 }
 
@@ -407,7 +407,7 @@ void RENDER_INPUT_POSTPROCESS::SetCameraInfo(const MATHVECTOR <float, 3> & newpo
 	lod_far = newlodfar;
 	w = neww;
 	h = newh;
-	
+
 	const bool restore_matrices = true;
 	glMatrixMode( GL_PROJECTION );
 	if (restore_matrices)
@@ -441,7 +441,7 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 {
 	if (shaders)
 		assert(shader);
-	
+
 	glMatrixMode( GL_PROJECTION );
 	glLoadIdentity();
 	if (orthomode)
@@ -509,7 +509,7 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 			reflection->Activate();
 			glActiveTexture(GL_TEXTURE0);
 		}*/
-		
+
 		/*glActiveTexture(GL_TEXTURE3);
 		if (ambient && ambient->Loaded())
 		{
@@ -521,29 +521,29 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 			//assert(0);
 		}*/
 		glActiveTexture(GL_TEXTURE0);
-		
+
 		PushShadowMatrices();
 	}
-	
+
 	//std::cout << "scene: " << std::endl;
 
 	glstate.SetColorMask(writecolor, writealpha);
 	glstate.SetDepthMask(writedepth);
-	
+
 	if (clearcolor && cleardepth)
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	else if (clearcolor)
 		glClear(GL_COLOR_BUFFER_BIT);
 	else if (cleardepth)
 		glClear(GL_DEPTH_BUFFER_BIT);
-	
+
 	if (writedepth || depth_mode != GL_ALWAYS)
 		glstate.Enable(GL_DEPTH_TEST);
 	else
 		glstate.Disable(GL_DEPTH_TEST);
-	
+
 	glDepthFunc( depth_mode );
-	
+
 	switch (blendmode)
 	{
 		case BLENDMODE::DISABLED:
@@ -553,7 +553,7 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
 		}
 		break;
-		
+
 		case BLENDMODE::ADD:
 		{
 			glstate.Disable(GL_ALPHA_TEST);
@@ -562,7 +562,7 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 			glstate.SetBlendFunc(GL_SRC_ALPHA, GL_ONE);
 		}
 		break;
-		
+
 		case BLENDMODE::ALPHABLEND:
 		{
 			glstate.Disable(GL_ALPHA_TEST);
@@ -571,7 +571,7 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 			glstate.SetBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		}
 		break;
-		
+
 		case BLENDMODE::PREMULTIPLIED_ALPHA:
 		{
 			glstate.Disable(GL_ALPHA_TEST);
@@ -580,7 +580,7 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 			glstate.SetBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 		}
 		break;
-		
+
 		case BLENDMODE::ALPHATEST:
 		{
 			glstate.Enable(GL_ALPHA_TEST);
@@ -592,23 +592,23 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 			glstate.SetAlphaFunc(GL_GREATER, 0.5f);
 		}
 		break;
-		
+
 		default:
 		assert(0);
 		break;
 	}
 
 	last_transform_valid = false;
-	
+
 	glColor4f(1,1,1,1);
 	glstate.SetColor(1,1,1,1);
-	
+
 	DrawList(glstate, *dynamic_drawlist_ptr, false);
 	DrawList(glstate, *static_drawlist_ptr, true);
-	
+
 	if (last_transform_valid)
 		glPopMatrix();
-	
+
 	if (shaders)
 		PopShadowMatrices();
 }
@@ -617,14 +617,14 @@ void RENDER_INPUT_SCENE::DrawList(GLSTATEMANAGER & glstate, std::vector <DRAWABL
 {
 	unsigned int drawcount = 0;
 	unsigned int loopcount = 0;
-	
+
 	for (vector <DRAWABLE*>::iterator ptr = drawlist.begin(); ptr != drawlist.end(); ptr++, loopcount++)
 	{
 		DRAWABLE * i = *ptr;
 		if (preculled || !FrustumCull(*i))
 		{
 			drawcount++;
-			
+
 			SelectFlags(*i, glstate);
 
 			if (shaders) SelectAppropriateShader(*i);
@@ -703,7 +703,7 @@ void RENDER_INPUT_SCENE::DrawList(GLSTATEMANAGER & glstate, std::vector <DRAWABL
 			SelectTransformEnd(*i, need_pop);
 		}
 	}
-	
+
 	//std::cout << "drew " << drawcount << " of " << drawlist_static->size() + drawlist_dynamic->size() << " ("  << combined_drawlist_cache.size() << "/" << already_culled << ")" << std::endl;
 }
 
@@ -903,7 +903,7 @@ bool RENDER_INPUT_SCENE::SelectTransformStart(DRAWABLE & forme, GLSTATEMANAGER &
 		}
 		else need_a_pop = false;
 	}
-	
+
 	// throw information about the object into the texture 1 matrix
 	/*glActiveTexture(GL_TEXTURE1);
 	glMatrixMode(GL_TEXTURE);
@@ -919,7 +919,7 @@ bool RENDER_INPUT_SCENE::SelectTransformStart(DRAWABLE & forme, GLSTATEMANAGER &
 	glLoadMatrixf(temp_matrix);
 	glActiveTexture(GL_TEXTURE0);
 	glMatrixMode(GL_MODELVIEW);*/
-	
+
 	return need_a_pop;
 }
 
@@ -945,7 +945,7 @@ FRUSTUM RENDER_INPUT_SCENE::SetCameraInfo(const MATHVECTOR <float, 3> & newpos,
 	lod_far = newlodfar;
 	w = neww;
 	h = newh;
-	
+
 	glMatrixMode( GL_PROJECTION );
 	if (restore_matrices)
 		glPushMatrix();
@@ -1006,9 +1006,9 @@ RENDER_INPUT_SCENE::RENDER_INPUT_SCENE()
 {
 	combined_drawlist_cache.resize(0);
 	combined_drawlist_cache.reserve(drawlist_static->size()+drawlist_dynamic->size());
-	
+
 	unsigned int already_culled = 0;
-	
+
 	if (use_static_partitioning)
 	{
 		AABB<float>::FRUSTUM aabbfrustum(frustum);
@@ -1019,6 +1019,6 @@ RENDER_INPUT_SCENE::RENDER_INPUT_SCENE()
 	else
 		calgo::transform(*drawlist_static, std::back_inserter(combined_drawlist_cache), &PointerTo);
 	calgo::transform(*drawlist_dynamic, std::back_inserter(combined_drawlist_cache), &PointerTo);
-	
+
 	return already_culled;
 }*/

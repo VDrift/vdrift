@@ -25,7 +25,7 @@ static bool VerifyParse(
 	}
 	else
 	{
-		return true;	
+		return true;
 	}
 }
 
@@ -59,14 +59,14 @@ bool FONT::Load(
 	texinfo.repeatv = false;
 	texinfo.size = texsize;
 	if (!textures.Load(texpath, texname, texinfo, font_texture)) return false;
-	
+
 	std::ifstream fontinfo(fontinfopath.c_str());
 	if (!fontinfo)
 	{
 		error_output << "Can't find font information file: " << fontinfopath << std::endl;
 		return false;
 	}
-	
+
 	const std::string sizestr("size=");
 	const float sw = font_texture->GetScale() / font_texture->GetW();
 	const float sh = font_texture->GetScale() / font_texture->GetH();
@@ -78,7 +78,7 @@ bool FONT::Load(
 		{
 			unsigned int cur_id(0);
 			if (!Parse("id=", cur_id, fontinfo, fontinfopath, error_output)) return false;
-			
+
 			CHARINFO & info = charinfo[cur_id];
 			if (!Parse("x=", info.x, fontinfo, fontinfopath, error_output)) return false;
 			if (!Parse("y=", info.y, fontinfo, fontinfopath, error_output)) return false;
@@ -88,7 +88,7 @@ bool FONT::Load(
 			if (!Parse("yoffset=", info.yoffset, fontinfo, fontinfopath, error_output)) return false;
 			if (!Parse("xadvance=", info.xadvance, fontinfo, fontinfopath, error_output)) return false;
 			fontinfo >> curstr >> curstr; //don't care
-			
+
 			info.x *= sw;
 			info.y *= sh;
 			info.width *= sw;
@@ -106,7 +106,7 @@ bool FONT::Load(
 			inv_size = 1 / (size * sh);
 		}
 	}
-	
+
 	return true;
 }
 

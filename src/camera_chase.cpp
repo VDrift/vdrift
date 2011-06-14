@@ -58,14 +58,14 @@ void CAMERA_CHASE::LookAt(MATHVECTOR <float, 3> eye, MATHVECTOR <float, 3> cente
 	//now rotate the camera so it's pointing up
 	MATHVECTOR <float, 3> curup = direction::Up;
 	rotation.RotateVector(curup);
-	
+
 	float rollangle = AngleBetween(realup, curup);
 	if (curup.dot(side) > 0.0)
 	{
 		const float pi = 3.141593;
 		rollangle = (pi - rollangle) + pi;
 	}
-	
+
 	axis = forward;
 	rotation.Rotate(rollangle, axis[0], axis[1], axis[2]);
 

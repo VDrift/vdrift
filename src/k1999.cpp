@@ -227,11 +227,11 @@ void K1999::Interpolate(int Step)
 void K1999::CalcRaceLine()
 {
 	const unsigned int stepsize = 128;
-	
+
 	//abort if the track isn't long enough
 	if (tx.size() < stepsize)
 		return;
-	
+
  //
  // Smoothing loop
  //
@@ -278,7 +278,7 @@ bool K1999::LoadData(ROADSTRIP* road)
 
 	const std::vector<ROADPATCH> & patchlist = road->GetPatches();
 	Divs = patchlist.size();
-	
+
 	int count = 0;
 
 	for (std::vector<ROADPATCH>::const_iterator i = patchlist.begin(); i != patchlist.end(); ++i)
@@ -292,7 +292,7 @@ bool K1999::LoadData(ROADSTRIP* road)
 		ty.push_back(0.0);
 		tRInverse.push_back(0.0);
 		UpdateTxTy(count);
-		
+
 		count++;
 	}
 
@@ -306,13 +306,13 @@ void K1999::UpdateRoadStrip(ROADSTRIP* road)
 {
 	std::vector<ROADPATCH> & patchlist = road->GetPatches();
 	int count = 0;
-	
+
 	for (std::vector<ROADPATCH>::iterator i = patchlist.begin(); i != patchlist.end(); ++i)
 	{
 		i->SetTrackCurvature(tRInverse[count]);
 		i->SetRacingLine(i->GetPatch().GetPoint(3,0)*(1.0-tLane[count]) + i->GetPatch().GetPoint(3,3)*(tLane[count]));
 		//std::cout << i->GetPatch().GetPoint(3,0)*(1.0-tLane[count]) + i->GetPatch().GetPoint(3,3)*(tLane[count]) << std::endl;
-		
+
 		count++;
 	}
 

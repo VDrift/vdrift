@@ -50,7 +50,7 @@ static bool LoadTransmission(
 	}
 	if (!cfg_trans->get("gear-ratio-r", ratio, error_output)) return false;
 	cfg_trans->get("shift-time", shift_time);
-	
+
 	transmission.SetGearRatio(-1, ratio);
 	transmission.SetShiftTime(shift_time);
 
@@ -66,7 +66,7 @@ static bool LoadFuelTank(
 	btScalar volume;
 	btScalar fuel_density;
 	std::vector<btScalar> pos(3);
-	
+
 	const PTree * cfg_fuel;
 	if (!cfg.get("fuel-tank", cfg_fuel, error_output)) return false;
 	if (!cfg_fuel->get("capacity", capacity, error_output)) return false;
@@ -90,21 +90,21 @@ static bool LoadBrake(
 	std::ostream & error_output)
 {
 	float friction, max_pressure, area, bias, radius, handbrake(0);
-	
+
 	if (!cfg.get("friction", friction, error_output)) return false;
 	if (!cfg.get("area", area, error_output)) return false;
 	if (!cfg.get("radius", radius, error_output)) return false;
 	if (!cfg.get("bias", bias, error_output)) return false;
 	if (!cfg.get("max-pressure", max_pressure, error_output)) return false;
 	cfg.get("handbrake", handbrake);
-	
+
 	brake.SetFriction(friction);
 	brake.SetArea(area);
 	brake.SetRadius(radius);
 	brake.SetBias(bias);
 	brake.SetMaxPressure(max_pressure*bias);
 	brake.SetHandbrake(handbrake);
-	
+
 	return true;
 }
 
@@ -150,7 +150,7 @@ static bool LoadAeroDevices(
 {
 	const PTree * cfg_wings;
 	if (!cfg.get("wing", cfg_wings, error_output)) return true;
-	
+
 	int i = 0;
 	aerodynamics.resize(cfg_wings->size());
 	for (PTree::const_iterator iw = cfg_wings->begin(); iw != cfg_wings->end(); ++iw, ++i)
@@ -158,7 +158,7 @@ static bool LoadAeroDevices(
 		std::vector<btScalar> pos(3);
 		btScalar drag_area, drag_coeff;
 		btScalar lift_area(0), lift_coeff(0), lift_eff(0);
-		
+
 		const PTree & cfg_wing = iw->second;
 		if (!cfg_wing.get("frontal-area", drag_area, error_output)) return false;
 		if (!cfg_wing.get("drag-coefficient", drag_coeff, error_output)) return false;
@@ -166,11 +166,11 @@ static bool LoadAeroDevices(
 		cfg_wing.get("surface-area", lift_area);
 		cfg_wing.get("lift-coefficient", lift_coeff);
 		cfg_wing.get("efficiency", lift_eff);
-		
+
 		btVector3 position(pos[0], pos[1], pos[2]);
 		aerodynamics[i].Set(position, drag_area, drag_coeff, lift_area, lift_coeff, lift_eff);
 	}
-	
+
 	return true;
 }
 
@@ -180,7 +180,7 @@ static bool LoadDifferential(
 	std::ostream & error_output)
 {
 	btScalar final_drive(1), anti_slip(0), anti_slip_torque(0), anti_slip_torque_deceleration_factor(0);
-	
+
 	if (!cfg.get("final-drive", final_drive, error_output)) return false;
 	if (!cfg.get("anti-slip", anti_slip, error_output)) return false;
 	cfg.get("anti-slip-torque", anti_slip_torque);
@@ -195,7 +195,7 @@ static bool LoadDifferential(
 // use btMultiSphereShape(4 spheres) to approximate bounding box
 static btMultiSphereShape * CreateCollisionShape(const btVector3 & center, const btVector3 & size)
 {
-	
+
 	btVector3 hsize = 0.5 * size;
 	int min = hsize.minAxis();
 	int max = hsize.maxAxis();
@@ -211,7 +211,7 @@ static btMultiSphereShape * CreateCollisionShape(const btVector3 & center, const
 	positions[1] = center + offset1;
 	positions[2] = center - offset0;
 	positions[3] = center - offset1;
-	
+
 	return new btMultiSphereShape(positions, radii, numSpheres);
 }
 
@@ -225,7 +225,7 @@ struct BodyLoader
 		Particle(const btVector3 & position, btScalar mass) :
 			position(position), mass(mass) {}
 	};
-	
+
 	struct Shape
 	{
 		btTransform transform;
@@ -233,7 +233,7 @@ struct BodyLoader
 		Shape(const btTransform & transform, btCollisionShape* shape) :
 			transform(transform), shape(shape) {}
 	};
-	
+
 	struct Body
 	{
 		btTransform transform;
@@ -244,16 +244,16 @@ struct BodyLoader
 		Body(const btTransform & transform, btCollisionShape* shape, btScalar mass, btScalar strength, btScalar limit) :
 			transform(transform), shape(shape), mass(mass), link_strength(strength), link_limit(limit) {}
 	};
-	
+
 	BodyLoader() : numbodies(0) {}
-	
+
 	std::vector<Particle> particles;
 	std::vector<Shape> shapes;
 	std::vector<Body> bodies;
 	std::vector<Body> wheels;
 	btCollisionShape* parent;
 	int numbodies;
-	
+
 	// descend cfg tree load bodies
 	bool load(const PTree & cfg, std::ostream & error_output)
 	{
@@ -264,24 +264,24 @@ struct BodyLoader
 		}
 		return true;
 	}
-	
+
 	// load a body instance
 	void loadBody(const PTree & cfg, std::ostream & error_output)
 	{
 		btScalar mass = 0;
 		std::vector<btScalar> pos(3, 0), rot(3, 0);
 		btTransform transform = btTransform::getIdentity();
-		
+
 		cfg.get("mass", mass);
 		cfg.get("position", pos);
 		cfg.get("rotation", rot);
 		transform.setOrigin(btVector3(pos[0], pos[1], pos[2]));
 		transform.setRotation(btQuaternion(rot[1]*M_PI/180, rot[0]*M_PI/180, rot[2]*M_PI/180));
-		
+
 		btCollisionShape * shape(0);
 		btVector3 center(0, 0, 0);
 		LoadCollisionShape(cfg, center, shape);
-		
+
 		const PTree * cfg_link;
 		if (cfg.get("link", cfg_link))
 		{
@@ -321,7 +321,7 @@ struct BodyLoader
 	{
 		center.setValue(0, 0, 0);
 		mass = 0;
-		
+
 		// calculate the total mass, and center of mass
 		for (size_t i = 0; i != particles.size(); ++i)
 		{
@@ -329,26 +329,26 @@ struct BodyLoader
 			mass +=  particles[i].mass;
 		}
 		center = center * (1.0 / mass);
-		
+
 		// calculate the inertia tensor
 		btScalar xx(0), yy(0), zz(0), xy(0), xz(0), yz(0);
 		for (size_t i = 0; i != particles.size(); ++i)
 		{
 			btVector3 p = particles[i].position - center;
 			btScalar m = particles[i].mass;
-			
+
 			// add the current mass to the inertia tensor
 			xx += m * (p.y() * p.y() + p.z() * p.z()); // mi*(yi^2+zi^2)
 			yy += m * (p.x() * p.x() + p.z() * p.z()); // mi*(xi^2+zi^2)
 			zz += m * (p.x() * p.x() + p.y() * p.y()); // mi*(xi^2+yi^2)
-			
+
 			xy -= m * (p.x() * p.y()); // mi*xi*yi
 			xz -= m * (p.x() * p.z()); // mi*xi*zi
 			yz -= m * (p.y() * p.z()); // mi*yi*zi
 		}
 		inertia.setValue(xx, yy, zz);
 	}
-	
+
 	void calculateMass(btVector3 & center, btVector3 & inertia, btScalar & mass)
 	{
 		particles.reserve(particles.size() + numbodies);
@@ -397,15 +397,15 @@ CARDYNAMICS::CARDYNAMICS() :
 CARDYNAMICS::~CARDYNAMICS()
 {
 	if (!world) return;
-	
+
 	//std::cerr << "\ndestroy" << std::endl;
 	//((FractureBody*)body)->debugPrint();
-	
+
 	world->removeAction(this);
 	for (int i = 0; i < bodies.size(); ++i)
 	{
 		if (!bodies[i].body) continue;
-		
+
 		if (bodies[i].body->isInWorld())
 		{
 			world->removeRigidBody(bodies[i].body);
@@ -434,43 +434,43 @@ bool CARDYNAMICS::Load(
 	std::ostream & error_output)
 {
 	//cfg.write(error_output, write_inf);
-	
+
 	if (!LoadAeroDevices(cfg, aerodynamics, error_output)) return false;
 	if (!LoadClutch(cfg, clutch, error_output)) return false;
 	if (!LoadTransmission(cfg, transmission, error_output)) return false;
 	if (!LoadFuelTank(cfg, fuel_tank, error_output)) return false;
-	
+
 	const PTree * cfg_eng;
 	CARENGINEINFO engine_info;
 	if (!cfg.get("engine", cfg_eng, error_output)) return false;
 	if (!engine_info.Load(*cfg_eng, error_output)) return false;
 	engine.Init(engine_info);
-	
+
 	const PTree * cfg_wheels;
 	if (!cfg.get("wheel", cfg_wheels, error_output)) return false;
-	
+
 	assert(cfg_wheels->size() == WHEEL_POSITION_SIZE); // temporary restriction
 	tire.resize(cfg_wheels->size());
 	brake.resize(cfg_wheels->size());
 	wheel.resize(cfg_wheels->size());
 	suspension.resize(cfg_wheels->size());
-	
+
 	int i = 0;
 	for (PTree::const_iterator iw = cfg_wheels->begin(); iw != cfg_wheels->end(); ++iw, ++i)
 	{
 		const PTree & cfg_wheel = iw->second;
-		
+
 		const PTree * cfg_tire, * cfg_brake;
 		if (!cfg_wheel.get("tire", cfg_tire, error_output)) return false;
 		if (!cfg_wheel.get("brake", cfg_brake, error_output)) return false;
-		
+
 		if (!tire[i].Load(*cfg_tire, error_output)) return false;
 		if (!LoadBrake(*cfg_brake, brake[i], error_output)) return false;
 		if (!LoadWheel(cfg_wheel, tire[i], wheel[i], error_output)) return false;
-		
+
 		CARSUSPENSION * sptr;
 		if (!CARSUSPENSION::Load(cfg_wheel, sptr, error_output)) return false;
-		
+
 		suspension[i].reset(sptr);
 		if (suspension[i]->GetMaxSteeringAngle() > maxangle) maxangle = suspension[i]->GetMaxSteeringAngle();
 	}
@@ -496,74 +496,74 @@ bool CARDYNAMICS::Load(
 		error_output << "No differential declared" << std::endl;
 		return false;
 	}
-	
+
 	BodyLoader bodyLoader;
 	bodyLoader.load(cfg, error_output);
 	damage = cardamage && bodyLoader.numbodies;
 	if (damage)
 	{
 		bodies.resize(1 + bodyLoader.numbodies);
-		
+
 		btScalar mass;
 		btVector3 massCenter;
 		btVector3 inertia;
 		bodyLoader.calculateParticleMass(massCenter, inertia, mass);
-		
+
 		transform.setRotation(rotation);
 		transform.setOrigin(position - massCenter);
 		bodies[0].state.rotation = rotation;
 		bodies[0].state.position = position;
 		bodies[0].state.massCenterOffset = -massCenter;
-		
+
 		btCompoundShape * shape = new btCompoundShape(false);
 		btRigidBody::btRigidBodyConstructionInfo info(mass, &bodies[0].state, shape, inertia);
 		FractureBody * fbody = new FractureBody(info);
 		bodies[0].body = fbody;
 		body = fbody;
-		
+
 		size_t i = 1;
 		fbody->m_connections.reserve(bodyLoader.numbodies);
 		for (size_t j = 0; j < WHEEL_POSITION_SIZE; ++j, ++i)
 		{
 			float mass = wheel[j].GetMass();
 			btVector3 size(tire[j].GetSidewallWidth()*0.5, tire[j].GetRadius()*0.8, tire[j].GetRadius()*0.8);
-			
+
 			btVector3 inertia;
 			btCollisionShape * subshape = new btCylinderShapeX(size);
 			subshape->calculateLocalInertia(mass, inertia);
-			
+
 			btRigidBody::btRigidBodyConstructionInfo info(mass, &bodies[i].state, subshape, inertia);
 			bodies[i].body = new btRigidBody(info);
-			
+
 			btTransform offset;
 			offset.setOrigin(suspension[j]->GetWheelPosition(0.5) - massCenter);
 			offset.setRotation(suspension[j]->GetWheelOrientation());
-			
+
 			BodyLoader::Body & cb = bodyLoader.wheels[j];
 			fbody->addConnection(bodies[i].body, offset, cb.link_strength, cb.link_limit);
 		}
-		
+
 		for (size_t j = 0; j < bodyLoader.bodies.size(); ++j, ++i)
 		{
 			btVector3 inertia;
 			BodyLoader::Body & cb = bodyLoader.bodies[j];
 			cb.shape->calculateLocalInertia(cb.mass, inertia);
-			
+
 			btRigidBody::btRigidBodyConstructionInfo info(cb.mass, &bodies[i].state, cb.shape, inertia);
 			bodies[i].body = new btRigidBody(info);
-			
+
 			cb.transform.setOrigin(cb.transform.getOrigin() - massCenter);
 			fbody->addConnection(bodies[i].body, cb.transform, cb.link_strength, cb.link_limit);
 		}
-		
+
 		for (size_t i = 0; i < bodyLoader.shapes.size(); ++i)
 		{
 			BodyLoader::Shape & sh = bodyLoader.shapes[i];
 			sh.transform.setOrigin(sh.transform.getOrigin() - massCenter);
 			fbody->addShape(sh.transform, sh.shape);
 		}
-		
-		
+
+
 		//std::cerr << "\ncreate" << std::endl;
 		//fbody->debugPrint();
 	}
@@ -574,20 +574,20 @@ bool CARDYNAMICS::Load(
 		{
 			bodyLoader.particles.push_back(BodyLoader::Particle(suspension[j]->GetWheelPosition(0.0), wheel[j].GetMass()));
 		}
-		
+
 		bodies.resize(1 + WHEEL_POSITION_SIZE);
-		
+
 		btScalar mass;
 		btVector3 massCenter;
 		btVector3 inertia;
 		bodyLoader.calculateMass(massCenter, inertia, mass);
-		
+
 		transform.setRotation(rotation);
 		transform.setOrigin(position - massCenter);
 		bodies[0].state.rotation = rotation;
 		bodies[0].state.position = position;
 		bodies[0].state.massCenterOffset = -massCenter;
-		
+
 		btCompoundShape compound;
 		for (size_t i = 0; i < bodyLoader.shapes.size(); ++i)
 		{
@@ -595,7 +595,7 @@ bool CARDYNAMICS::Load(
 			sh.transform.setOrigin(sh.transform.getOrigin() - massCenter);
 			compound.addChildShape(sh.transform, sh.shape);
 		}
-		
+
 		btVector3 min, max, center, size;
 		if (bodyLoader.shapes.size())
 		{
@@ -608,17 +608,17 @@ bool CARDYNAMICS::Load(
 		}
 		GetCollisionBox(min, max, center, size);
 		btCollisionShape* shape = CreateCollisionShape(center, size);
-		
+
 		btRigidBody::btRigidBodyConstructionInfo info(mass, &bodies[0].state, shape, inertia);
 		body = new btRigidBody(info);
 		bodies[0].body = body;
 	}
-	
+
 	body->setActivationState(DISABLE_DEACTIVATION);
 	body->setContactProcessingThreshold(0.0); // internal edge workaround
 	linear_velocity.setValue(0, 0, 0);
 	angular_velocity.setValue(0, 0, 0);
-	
+
 	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
 	{
 		suspension_force[i].setValue(0, 0, 0);
@@ -626,21 +626,21 @@ bool CARDYNAMICS::Load(
 		wheel_position[i] = LocalToWorld(suspension[i]->GetWheelPosition(0.0));
 		wheel_orientation[i] = LocalToWorld(suspension[i]->GetWheelOrientation());
 	}
-	
+
 	// add car to world
 	this->world = &world;
 	world.addRigidBody(body);
 	world.addAction(this);
-	
+
 	// place car on track
 	AlignWithGround();
-	
+
 	// initialize telemetry
 	telemetry.clear();
 	//telemetry.push_back(CARTELEMETRY("brakes"));
 	//telemetry.push_back(CARTELEMETRY("suspension"));
 	//etc
-	
+
 	return true;
 }
 
@@ -680,14 +680,14 @@ void CARDYNAMICS::Update()
 	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
 	{
 		if (damage && bodies[i+1].body->isInWorld()) continue;
-		
+
 		btQuaternion rotation = btQuaternion(direction::right, -wheel[i].GetRotation());
 		rotation = suspension[i]->GetWheelOrientation() * rotation;
 		rotation = GetOrientation() * rotation;
-		
+
 		btVector3 position = quatRotate(GetOrientation(), suspension[i]->GetWheelPosition());
 		position = GetPosition() + position;
-		
+
 		bodies[i+1].state.rotation = rotation;
 		bodies[i+1].state.position = position;
 	}
@@ -900,11 +900,11 @@ void CARDYNAMICS::AlignWithGround()
 
 	btVector3 delta = GetDownVector() * min_height;
 	btVector3 trimmed_position = transform.getOrigin() + delta;
-	
+
 	SetPosition(trimmed_position);
 	body->setAngularVelocity(btVector3(0, 0, 0));
 	body->setLinearVelocity(btVector3(0, 0, 0));
-	
+
 	UpdateWheelTransform();
 	UpdateWheelContacts();
 }
@@ -1463,7 +1463,7 @@ btVector3 CARDYNAMICS::ComputeTireFrictionForce (int i, btScalar dt, btScalar no
 void CARDYNAMICS::ApplyWheelForces ( btScalar dt, btScalar wheel_drive_torque, int i, const btVector3 & suspension_force, btVector3 & force, btVector3 & torque )
 {
 	btVector3 groundvel = quatRotate ( wheel_orientation[i].inverse(), wheel_velocity[i] );
-	
+
 #ifdef SUSPENSION_FORCE_DIRECTION
 	btVector3 wheel_normal = quatRotate ( wheel_orientation[i], up );
 	//btScalar normal_force = suspension_force.dot(wheel_normal);
@@ -1527,7 +1527,7 @@ void CARDYNAMICS::ApplyForces ( btScalar dt, const btVector3 & ext_force, const 
 	//start accumulating forces and torques on the car body
 	btVector3 force (ext_force);
 	btVector3 torque (ext_torque);
-	
+
 	// call before UpdateDriveline, overrides clutch, throttle
 	UpdateTransmission(dt);
 
@@ -1586,13 +1586,13 @@ void CARDYNAMICS::ApplyForces ( btScalar dt, const btVector3 & ext_force, const 
 void CARDYNAMICS::Tick(btScalar dt, const btVector3 & force, const btVector3 & torque)
 {
 	body->clearForces();
-	
+
 	ApplyForces(dt, force, torque );
-	
+
 	body->integrateVelocities(dt);
 	body->predictIntegratedTransform (dt, transform);
 	body->proceedToTransform (transform);
-	
+
 	UpdateWheelVelocity();
 	UpdateWheelTransform();
 	InterpolateWheelContacts();
@@ -1611,13 +1611,13 @@ void CARDYNAMICS::updateAction(btCollisionWorld * collisionWorld, btScalar dt)
 	body->setLinearVelocity(linear_velocity);
 	body->setAngularVelocity(angular_velocity);
 	UpdateWheelContacts();
-	
+
 	int repeats = 10;
 	btScalar dt_internal = dt / repeats;
 	for (int i = 0; i < repeats; ++i)
 	{
 		Tick(dt_internal, force, torque);
-		
+
 		feedback += 0.5 * (tire[FRONT_LEFT].GetFeedback() + tire[FRONT_RIGHT].GetFeedback());
 	}
 	feedback /= (repeats + 1);
@@ -1644,7 +1644,7 @@ void CARDYNAMICS::UpdateWheelContacts()
 	{
 		btVector3 raystart = wheel_position[i] - raydir * tire[i].GetRadius();
 		world->castRay(raystart, raydir, raylen, body, wheel_contact[i]);
-		
+
 		if (damage && bodies[i+1].body->isInWorld())
 		{
 			// reset contact
@@ -1720,10 +1720,10 @@ btScalar CARDYNAMICS::CalculateDriveshaftSpeed()
 	btScalar right_front_wheel_speed = wheel[FRONT_RIGHT].GetAngularVelocity();
 	btScalar left_rear_wheel_speed = wheel[REAR_LEFT].GetAngularVelocity();
 	btScalar right_rear_wheel_speed = wheel[REAR_RIGHT].GetAngularVelocity();
-	
+
 	for ( int i = 0; i < 4; ++i )
 		assert ( !std::isnan ( wheel[i].GetAngularVelocity() ) );
-	
+
 	if (drive == RWD)
 	{
 		driveshaft_speed = differential_rear.CalculateDriveshaftSpeed ( left_rear_wheel_speed, right_rear_wheel_speed );
@@ -1745,7 +1745,7 @@ btScalar CARDYNAMICS::CalculateDriveshaftSpeed()
 void CARDYNAMICS::UpdateTransmission(btScalar dt)
 {
 	btScalar driveshaft_speed = CalculateDriveshaftSpeed();
-	
+
 	driveshaft_rpm = transmission.GetClutchSpeed(driveshaft_speed) * 30.0 / 3.141593;
 
 	if (autoshift)

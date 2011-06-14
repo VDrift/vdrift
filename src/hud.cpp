@@ -29,7 +29,7 @@ bool HUD::Init(
 	texinfo.repeatu = false;
 	texinfo.repeatv = false;
 	texinfo.size = texsize;
-	
+
 	std::tr1::shared_ptr<TEXTURE> bartex, progbartex;
 	if (!textures.Load(texturepath, "hudbox.png", texinfo, bartex)) return false;
 	if (!textures.Load(texturepath, "progressbar.png", texinfo, progbartex)) return false;
@@ -37,21 +37,21 @@ bool HUD::Init(
 	rpmbar = AddDrawable(hudroot);
 	rpmredbar = AddDrawable(hudroot);
 	rpmbox = AddDrawable(hudroot);
-	
+
 	DRAWABLE & rpmboxref = GetDrawable(hudroot, rpmbox);
 	rpmboxref.SetDiffuseMap(progbartex);
 	rpmboxref.SetVertArray(&rpmboxverts);
 	rpmboxref.SetDrawOrder(2);
 	rpmboxref.SetCull(false, false);
 	rpmboxref.SetColor(0.3, 0.3, 0.3, 0.4);
-	
+
 	DRAWABLE & rpmbarref = GetDrawable(hudroot, rpmbar);
 	rpmbarref.SetDiffuseMap(progbartex);
 	rpmbarref.SetVertArray(&rpmbarverts);
 	rpmbarref.SetDrawOrder(3);
 	rpmbarref.SetCull(false, false);
 	rpmbarref.SetColor(1.0, 1.0, 1.0, 0.7);
-	
+
 	DRAWABLE & rpmredbarref = GetDrawable(hudroot, rpmredbar);
 	rpmredbarref.SetDiffuseMap(progbartex);
 	rpmredbarref.SetVertArray(&rpmredbarverts);
@@ -129,7 +129,7 @@ bool HUD::Init(
 		bestlaptime.Init(timernoderef, lcdfont, "", startx+xinc*2.0, timerboxdimy*1.2-timerboxdimy*0.3, fontscalex, fontscaley);
 		bestlaptime.SetDrawOrder(timernoderef, 0.2);
 	}
-	
+
 	{
 		float fontscaley = 0.02;
 		float fontscalex = screenhwratio * fontscaley;
@@ -141,18 +141,18 @@ bool HUD::Init(
 		debugtextdraw3 = SetupText(debugnoderef, sansfont, debugtext3, "", 0.5, fontscaley, fontscalex, fontscaley, 1,1,1, 10);
 		debugtextdraw4 = SetupText(debugnoderef, sansfont, debugtext4, "", 0.75, fontscaley, fontscalex, fontscaley, 1,1,1, 10);
 	}
-	
+
 	{
 		float fontscaley = barheight * 0.5;
 		float fontscalex = screenhwratio * fontscaley;
 		float y = 1.0 - fontscaley * 0.5;
 		float gx = screenhwratio * 0.02;
 		float mx = 1.0 - screenhwratio * 0.02;
-		
-		geartextdraw = SetupText(hudroot, lcdfont, geartext, "N", gx, y, fontscalex, fontscaley, 1,1,1, 4);	
+
+		geartextdraw = SetupText(hudroot, lcdfont, geartext, "N", gx, y, fontscalex, fontscaley, 1,1,1, 4);
 		mphtextdraw = SetupText(hudroot, lcdfont, mphtext, "0", mx, y, fontscalex, fontscaley, 1,1,1, 4);
 	}
-	
+
 	//load ABS and TCS indicators
 	{
 		float fontscaley = barheight * 0.25;
@@ -169,7 +169,7 @@ bool HUD::Init(
 		tcs.SetDrawOrder(hudroot, 4);
 		tcs.SetColor(hudroot, 1, 0.77, 0.23);
 	}
-	
+
 	{
 		float fontscaley = barheight * 0.5;
 		float fontscalex = screenhwratio * fontscaley;
@@ -178,7 +178,7 @@ bool HUD::Init(
 		driftscoreindicator.Init(hudroot, sansfont, "", x, y, fontscalex, fontscaley);
 		driftscoreindicator.SetDrawOrder(hudroot, 0.2);
 	}
-	
+
 	{
 		float fontscaley = barheight * 0.5;
 		float fontscalex = screenhwratio * fontscaley;
@@ -187,7 +187,7 @@ bool HUD::Init(
 		lapindicator.Init(hudroot, sansfont, "", x, y, fontscalex, fontscaley);
 		lapindicator.SetDrawOrder(hudroot, 0.2);
 	}
-	
+
 	{
 		float fontscaley = barheight * 0.5;
 		float fontscalex = screenhwratio * fontscaley;
@@ -196,7 +196,7 @@ bool HUD::Init(
 		placeindicator.Init(hudroot, sansfont, "", x, y, fontscalex, fontscaley);
 		placeindicator.SetDrawOrder(hudroot, 0.2);
 	}
-	
+
 	{
 		float fontscaley = barheight * 0.5;
 		float fontscalex = screenhwratio * fontscaley;
@@ -206,9 +206,9 @@ bool HUD::Init(
 		raceprompt.SetDrawOrder(hudroot, 1.0);
 		raceprompt.SetColor(hudroot, 1, 0, 0);
 	}
-	
+
 	Hide();
-	
+
 	debug_hud_info = debugon;
 
 	return true;
@@ -312,7 +312,7 @@ void HUD::Update(FONT & lcdfont, FONT & sansfont, float curlap, float lastlap, f
 		else
 			tcs.SetAlpha(hudroot, 0.2);
 	}
-	
+
 	//update drift score
 	if (numlaps == 0) //this is how we determine practice mode, for now
 	{
@@ -334,7 +334,7 @@ void HUD::Update(FONT & lcdfont, FONT & sansfont, float curlap, float lastlap, f
 		driftscoreindicator.SetDrawEnable(hudroot, false);
 	}
 
-	
+
 	if (numlaps > 0)
 	{
 		//update lap
@@ -342,12 +342,12 @@ void HUD::Update(FONT & lcdfont, FONT & sansfont, float curlap, float lastlap, f
 		//std::cout << curlapnum << std::endl;
 		lapstream << "Lap " << std::max(1, std::min(curlapnum, numlaps)) << "/" << numlaps;
 		lapindicator.Revise(lapstream.str());
-		
+
 		//update place
 		std::stringstream stream;
 		stream << "Place " << curplace << "/" << numcars;
 		placeindicator.Revise(stream.str());
-		
+
 		//update race prompt
 		std::stringstream t;
 		if (stagingtimeleft > 0.5)
@@ -383,7 +383,7 @@ void HUD::Update(FONT & lcdfont, FONT & sansfont, float curlap, float lastlap, f
 			raceprompt.SetPosition(0.5-width*0.5,0.5);
 			racecomplete = true;
 		}
-		
+
 		if (!racecomplete)
 		{
 			raceprompt.Revise(t.str());

@@ -37,7 +37,7 @@ bool CARTIRE::LoadParameters(const PTree & cfg, std::ostream & error)
 		st << "a" << numinfile;
 		if (!cfg.get(st.str(), lateral[i], error)) return false;
 	}
-	
+
 	//read longitudinal, error_output)) return false;
 	for (int i = 0; i < 11; i++)
 	{
@@ -45,7 +45,7 @@ bool CARTIRE::LoadParameters(const PTree & cfg, std::ostream & error)
 		st << "b" << i;
 		if (!cfg.get(st.str(), longitudinal[i], error)) return false;
 	}
-	
+
 	//read aligning, error_output)) return false;
 	for (int i = 0; i < 18; i++)
 	{
@@ -53,14 +53,14 @@ bool CARTIRE::LoadParameters(const PTree & cfg, std::ostream & error)
 		st << "c" << i;
 		if (!cfg.get(st.str(), aligning[i], error)) return false;
 	}
-	
+
 	std::vector<float> rolling_resistance(3);
 	if (!cfg.get("rolling-resistance", rolling_resistance, error)) return false;
 	rolling_resistance_linear = rolling_resistance[0];
 	rolling_resistance_quadratic = rolling_resistance[1];
-	
+
 	if (!cfg.get("tread", tread, error)) return false;
-	
+
 	return true;
 }
 
@@ -131,11 +131,11 @@ btVector3 CARTIRE::GetForce(
 	btScalar sigma_hat(0);
 	btScalar alpha_hat(0);
 	GetSigmaHatAlphaHat(normal_force, sigma_hat, alpha_hat);
-	
+
 	btScalar gamma = inclination;									// positive when tire top tilts to the right, viewed from rear
 	btScalar denom = btMax(btFabs(lon_velocity), btScalar(1E-3));
 	btScalar sigma = (ang_velocity * radius - lon_velocity) / denom;	// longitudinal slip: negative in braking, positive in traction
-	btScalar alpha = -atan2(lat_velocity, denom) * 180.0 / M_PI; 	// sideslip angle: positive in a right turn(opposite to SAE tire coords)	
+	btScalar alpha = -atan2(lat_velocity, denom) * 180.0 / M_PI; 	// sideslip angle: positive in a right turn(opposite to SAE tire coords)
 	btScalar max_Fx(0), max_Fy(0), max_Mz(0);
 
 	//combining method 1: beckman method for pre-combining longitudinal and lateral forces
@@ -177,16 +177,16 @@ btVector3 CARTIRE::GetForce(
 	// combining method 3: traction circle
 	btScalar Fx = PacejkaFx(sigma, Fz, friction_coeff, max_Fx);
 	btScalar Fy = PacejkaFy(alpha, Fz, gamma, friction_coeff, max_Fy);
-	
+
 	// determine to what extent the tires are long (x) gripping vs lat (y) gripping
 	// 1.0 when Fy is zero, 0.0 when Fx is zero
 	btScalar longfactor = 1.0;
 	btScalar combforce = btFabs(Fx) + btFabs(Fy);
 	if (combforce > 1) longfactor = btFabs(Fx) / combforce;
-	
+
 	// determine the maximum force for this amount of long vs lat grip by linear interpolation
 	btScalar maxforce = btFabs(max_Fx) * longfactor + (1.0 - longfactor) * btFabs(max_Fy);
-	
+
 	// scale down forces to fit into the maximum
 	if (combforce > maxforce)
 	{
@@ -194,7 +194,7 @@ btVector3 CARTIRE::GetForce(
 		Fy *= maxforce / combforce;
 	}
 */
-/*	
+/*
 	//combining method 4: traction ellipse (prioritize Fx)
 	//std::cout << "Fy0=" << Fy << ", ";
 	if (Fx >= max_Fx)
@@ -241,7 +241,7 @@ btVector3 CARTIRE::GetForce(
 	slip = alpha;
 	ideal_slide = sigma_hat;
 	ideal_slip = alpha_hat;
-	
+
 	// debugging
 	fx = Fx; fy = Fy; fz = Fz;
 
@@ -253,15 +253,15 @@ btScalar CARTIRE::GetRollingResistance(const btScalar velocity, const btScalar r
 {
 	// surface influence on rolling resistance
 	btScalar rolling_resistance = rolling_resistance_linear * rolling_resistance_factor;
-	
+
 	// heat due to tire deformation increases rolling resistance
 	// approximate by quadratic function
 	rolling_resistance += velocity * velocity * rolling_resistance_quadratic;
-	
+
 	// rolling resistance direction
 	btScalar resistance = -rolling_resistance;
 	if (velocity < 0) resistance = -resistance;
-	
+
 	return resistance;
 }
 
@@ -309,13 +309,13 @@ btScalar CARTIRE::PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coeff
 
 	// curvature factor
 	btScalar E = (b[6] * Fz * Fz + b[7] * Fz + b[8]);
-	
+
 	// horizontal shift
 	btScalar Sh = 0;//beckmann//b[9] * Fz + b[10];
-	
+
 	// composite
 	btScalar S = 100 * sigma + Sh;
-	
+
 	// longitudinal force
 	btScalar Fx = D * sin(b[0] * atan(B * S - E * (B * S - atan(B * S))));
 
@@ -328,34 +328,34 @@ btScalar CARTIRE::PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coeff
 btScalar CARTIRE::PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff, btScalar & max_Fy) const
 {
 	const std::vector<btScalar> & a = lateral;
-	
+
 	// shape factor
 	btScalar C = a[0];
-	
+
 	// peak factor
 	btScalar D = (a[1] * Fz + a[2]) * Fz;
-	
+
 	btScalar BCD = a[3] * sin(2.0 * atan(Fz / a[4])) * (1.0 - a[5] * btFabs(gamma));
-	
+
 	// stiffness factor
 	btScalar B = BCD / (C * D);
-	
+
 	// curvature factor
 	btScalar E = a[6] * Fz + a[7];
-	
+
 	// horizontal shift
 	btScalar Sh = 0;//beckmann//a[8] * gamma + a[9] * Fz + a[10];
-	
+
 	// vertical shift
 	//btScalar Sv = a[11] * Fz * gamma + a[12] * Fz + a[13]; // pacejka89
 	btScalar Sv = ((a[11] * Fz + a[12]) * gamma + a[13]) * Fz + a[14]; // pacejka96?
-	
+
 	// composite
 	btScalar S = alpha + Sh;
-	
+
 	// scale peak facor by friction coefficient
 	D *= friction_coeff;
-	
+
 	// lateral force
 	btScalar Fy = D * sin(C * atan(B * S - E * (B * S - atan(B * S)))) + Sv;
 
@@ -371,19 +371,19 @@ btScalar CARTIRE::PacejkaMz(btScalar sigma, btScalar alpha, btScalar Fz, btScala
 
 	// peak factor
 	btScalar D = (c[1] * Fz + c[2]) * Fz * friction_coeff;
-	
+
 	// stiffness factor
 	btScalar B = (c[3] * Fz * Fz + c[4] * Fz) * (1.0 - c[6] * btFabs(gamma)) * exp (-c[5] * Fz) / (c[0] * D);
-	
+
 	// curvature factor
 	btScalar E = (c[7] * Fz * Fz + c[8] * Fz + c[9] ) * (1.0 - c[10] * btFabs(gamma));
-	
+
 	// slip angle + horizontal shift
 	btScalar S = alpha + c[11] * gamma + c[12] * Fz + c[13];
-	
+
 	// vertical shift
 	btScalar Sv = (c[14] * Fz * Fz + c[15] * Fz) * gamma + c[16] * Fz + c[17];
-	
+
 	// self-aligning torque
 	btScalar Mz = D * sin(c[0] * atan(B * S - E * (B * S - atan(B * S)))) + Sv;
 
@@ -397,7 +397,7 @@ void CARTIRE::SetDimensions(btScalar width_mm, btScalar ratio_percent, btScalar 
 {
 	radius = width_mm * 0.001 * ratio_percent * 0.01 + diameter_in * 0.0254 * 0.5;
 	aspect_ratio = ratio_percent * 0.01;
-	sidewall_width = width_mm * 0.001;	
+	sidewall_width = width_mm * 0.001;
 }
 
 void CARTIRE::FindSigmaHatAlphaHat(btScalar load, btScalar & output_sigmahat, btScalar & output_alphahat, int iterations)
@@ -448,33 +448,33 @@ QT_TEST(tire_test)
 	std::ostream info(&log), error(&log);
 	PATHMANAGER path;
 	path.Init(info, error);
-	
+
 	std::string tire_path = path.GetSharedCarPath() + "/touring";
 	std::fstream tire_param(tire_path.c_str());
-	
+
 	std::stringstream tire_str;
 	tire_str << tire_param.rdbuf();
 	tire_str << "\nsize = 185,60,14\ntype = tire-touring\n";
-	
+
 	PTree cfg;
 	read_ini(tire_str, cfg);
 	//cfg.DebugPrint(std::clog);
-	
+
 	// some sanity tests
 	CARTIRE tire;
 	QT_CHECK(tire.Load(cfg, error));
-	
+
 	btScalar normal_force = 1000;
 	btScalar friction_coeff = 1;
 	btScalar lon_velocity = 10;
 	btScalar lat_velocity = -5;
 	btScalar ang_velocity = 0.5 * lon_velocity / tire.GetRadius();
 	btScalar inclination = 15;
-	
+
 	btVector3 f0, f1;
 	f0 = tire.GetForce(normal_force, friction_coeff, inclination, ang_velocity, lon_velocity, lat_velocity);
 	f1 = tire.GetForce(normal_force, friction_coeff, -inclination, ang_velocity, lon_velocity, lat_velocity);
-	
+
 	QT_CHECK_CLOSE(f1[0], f0[0], 0.001);
 	QT_CHECK_LESS(f0[0], 0);
 	QT_CHECK_LESS(f1[0], 0);

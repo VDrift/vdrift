@@ -12,13 +12,13 @@ SUSPENSIONBUMPDETECTION::SUSPENSIONBUMPDETECTION() :
   	dpstart(0),
   	dpend(0)
 {
-	
+
 }
 
 void SUSPENSIONBUMPDETECTION::Update(float vel, float displacementpercent, float dt)
 {
 	laststate = state;
-	
+
 	//switch states based on velocity
 	if (state == SETTLED)
 	{
@@ -51,7 +51,7 @@ void SUSPENSIONBUMPDETECTION::Update(float vel, float displacementpercent, float
 			state = DISPLACED;
 		}
 	}
-	
+
 	//switch states based on time
 	if (state == DISPLACING)
 	{

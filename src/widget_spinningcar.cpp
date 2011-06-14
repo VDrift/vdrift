@@ -27,14 +27,14 @@ void WIDGET_SPINNINGCAR::SetAlpha(SCENENODE & scene, float newalpha)
 void WIDGET_SPINNINGCAR::SetVisible(SCENENODE & scene, bool newvis)
 {
 	wasvisible = newvis;
-	
+
 	//std::cout << "newvis: " << newvis << std::endl;
-	
+
 	if (!car.empty())
 	{
 		GetCarNode(scene).SetChildVisibility(newvis);
 	}
-	
+
 	if (newvis && car.empty())
 	{
 		if (!carpaint.empty() && !carname.empty())
@@ -47,13 +47,13 @@ void WIDGET_SPINNINGCAR::SetVisible(SCENENODE & scene, bool newvis)
 			//std::cout << "Not loading car on visibility change since no carname or carpaint are present:" << std::endl;
 		}
 	}
-	
+
 	if (!newvis && !car.empty())
 	{
 		//std::cout << "Unloading spinning car due to visibility" << std::endl;
 		Unload(scene);
 	}
-	
+
 	//std::cout << carname << std::endl;
 	//std::cout << carpaint << std::endl;
 }
@@ -61,7 +61,7 @@ void WIDGET_SPINNINGCAR::SetVisible(SCENENODE & scene, bool newvis)
 void WIDGET_SPINNINGCAR::HookMessage(SCENENODE & scene, const std::string & message, const std::string & from)
 {
 	assert(errptr);
-	
+
 	bool reload(false);
 	std::stringstream s;
 	if (from.find("Car") != std::string::npos)
@@ -82,14 +82,14 @@ void WIDGET_SPINNINGCAR::HookMessage(SCENENODE & scene, const std::string & mess
 		MATHVECTOR<float, 3> rgb;
 		s << message;
 		s >> rgb;
-		
+
 		if (fabs(rgb[0] - r) < 1.0/128.0 &&
 			fabs(rgb[1] - g) < 1.0/128.0 &&
 			fabs(rgb[2] - b) < 1.0/128.0)
 		{
 			return;
 		}
-		
+
 		r = rgb[0];
 		g = rgb[1];
 		b = rgb[2];
@@ -104,7 +104,7 @@ void WIDGET_SPINNINGCAR::HookMessage(SCENENODE & scene, const std::string & mess
 	{
 		Load(scene);
 	}
-	
+
 	if (!car.empty())
 	{
 		SetColor(scene, r, g, b);
@@ -114,7 +114,7 @@ void WIDGET_SPINNINGCAR::HookMessage(SCENENODE & scene, const std::string & mess
 void WIDGET_SPINNINGCAR::Update(SCENENODE & scene, float dt)
 {
 	if (car.empty()) return;
-	
+
 	rotation += dt;
 	QUATERNION <float> q;
 	q.Rotate(3.141593*1.5, 1, 0, 0);
@@ -185,9 +185,9 @@ void WIDGET_SPINNINGCAR::Load(SCENENODE & parent)
 	assert(errptr);
 	assert(textures);
 	assert(models);
-	
+
 	Unload(parent);
-	
+
 	std::stringstream loadlog;
 	std::string texsize = "large";
 	int anisotropy = 0;
@@ -199,15 +199,15 @@ void WIDGET_SPINNINGCAR::Load(SCENENODE & parent)
 	{
 		carnode = parent.AddNode();
 	}
-	
+
 	SCENENODE & carnoderef = GetCarNode(parent);
 	car.push_back(CAR());
-	
+
 	std::string partspath = "carparts";
 	std::string cardir = carname.substr(0, carname.rfind("/"));
 	std::string carpath = "cars/"+cardir;
 	std::string carconfpath = data+"/cars/"+carname;
-	
+
 	PTree carconf;
 	file_open_basic fopen(data+"/"+carpath, data+"/"+partspath);
 	if (!read_ini(carname.substr(carname.rfind("/")+1), fopen, carconf))
@@ -215,7 +215,7 @@ void WIDGET_SPINNINGCAR::Load(SCENENODE & parent)
 		*errptr << "Error loading car's configfile: " << carconfpath << std::endl;
 		return;
 	}
-	
+
 	if (!car.back().LoadGraphics(
 			carconf, carpath, carname, partspath,
 			MATHVECTOR<float, 3>(r, g, b),
@@ -232,22 +232,22 @@ void WIDGET_SPINNINGCAR::Load(SCENENODE & parent)
 		Unload(parent);
 		return;
 	}
-	
+
 	//copy the car's scene to our scene
 	carnoderef = car.back().GetNode();
-	
+
 	//move all of the drawables to the nocamtrans layer and disable camera transform
 	carnoderef.ApplyDrawableContainerFunctor(CAMTRANS_FUNCTOR());
 	carnoderef.ApplyDrawableFunctor(CAMTRANS_DRAWABLE_FUNCTOR());
-	
+
 	MATHVECTOR <float, 3> cartrans = carpos;
 	cartrans[0] += center[0];
 	cartrans[1] += center[1];
 	carnoderef.GetTransform().SetTranslation(cartrans);
-	
+
 	//set initial rotation
 	Update(parent, 0);
-	
+
 	carnoderef.SetChildVisibility(wasvisible);
 
 	//if (!loadlog.str().empty()) *errptr << "Loading log: " << loadlog.str() << std::endl;
@@ -258,15 +258,15 @@ void WIDGET_SPINNINGCAR::SetColor(SCENENODE & scene, float r, float g, float b)
 	// save the current state of the transform
 	SCENENODE & carnoderef = GetCarNode(scene);
 	TRANSFORM oldtrans = carnoderef.GetTransform();
-	
+
 	// set the new car color
 	car.back().SetColor(r,g,b);
-	
+
 	// re-copy nodes from the car to our GUI node
 	carnoderef = car.back().GetNode();
 	carnoderef.ApplyDrawableContainerFunctor(CAMTRANS_FUNCTOR());
 	carnoderef.ApplyDrawableFunctor(CAMTRANS_DRAWABLE_FUNCTOR());
-	
+
 	// restore the original state
 	carnoderef.SetTransform(oldtrans);
 	Update(scene, 0);

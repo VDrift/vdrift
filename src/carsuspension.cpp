@@ -25,7 +25,7 @@ CARSUSPENSION::CARSUSPENSION()
 	spring_force = 0;
 	damp_force = 0;
 	force = 0;
-	
+
 	overtravel = 0;
 	displacement = 0;
 	last_displacement = 0;
@@ -48,7 +48,7 @@ void CARSUSPENSION::SetSteering(const btScalar & value)
 	{
 		steering_angle = atan(1.0 / (1.0 / tan(alpha) - tan(info.ackermann * M_PI / 180.0)));
 	}
-	
+
 	btQuaternion s(btVector3(sin(-info.caster * M_PI / 180.0), 0, cos(-info.caster * M_PI / 180.0)), steering_angle);
 	btQuaternion t(btVector3(0, 0, 1), info.toe * M_PI / 180.0);
 	btQuaternion c(btVector3(1, 0, 0), -info.camber * M_PI / 180.0);
@@ -64,17 +64,17 @@ void CARSUSPENSION::SetDisplacement ( const btScalar & value, btScalar dt )
 		displacement = info.travel;
 	if (displacement < 0)
 		displacement = 0;
-	
+
 	overtravel = value - info.travel;
 	if (overtravel < 0)
 		overtravel = 0;
-	
+
 	//enforce maximum compression velocity
 	/*if (displacement - last_displacement < -max_compression_velocity*dt)
 		displacement = last_displacement - max_compression_velocity*dt;
 	if (displacement - last_displacement > max_compression_velocity*dt)
 		displacement = last_displacement + max_compression_velocity*dt;*/
-		
+
 	// update wheel position
 	position = GetWheelPosition(displacement / info.travel);
 }
@@ -88,14 +88,14 @@ btScalar CARSUSPENSION::GetForce ( btScalar dt )
 	{
 		damping = info.rebound;
 	}
-	
+
 	//compute damper factor based on curve
 	btScalar velabs = std::abs(velocity);
 	btScalar dampfactor = info.damper_factors.Interpolate(velabs);
-	
+
 	//compute spring factor based on curve
 	btScalar springfactor = info.spring_factors.Interpolate(displacement);
-	
+
 	spring_force = displacement * info.spring_constant * springfactor; //when compressed, the spring force will push the car in the positive z direction
 	damp_force = velocity * damping * dampfactor; //when compression is increasing, the damp force will push the car in the positive z direction
 	return spring_force + damp_force;
@@ -114,7 +114,7 @@ class BASICSUSPENSION : public CARSUSPENSION
 {
 public:
 	btVector3 GetWheelPosition(btScalar displacement_fraction)
-	{	
+	{
 		btVector3 up(0, 0, 1);
 		btVector3 hinge = hinge_arm + up * displacement_fraction * info.travel;
 		hinge = hinge.normalized() * hinge_radius;
@@ -131,7 +131,7 @@ public:
 		btVector3 wheel_hub(wh[0], wh[1], wh[2]);
 		hinge_arm = wheel_hub - hinge_anchor;
 		hinge_radius = hinge_arm.length();
-		
+
 		// take hinge arm offset into account
 		hinge_anchor += (info.extended_position - wheel_hub);
 	}
@@ -156,7 +156,7 @@ class WISHBONESUSPENSION : public CARSUSPENSION
 {
 public:
 	WISHBONESUSPENSION() : mountrot(btQuaternion::getIdentity()) {}
-	
+
 	btVector3 GetWheelPosition(btScalar displacement_fraction)
 	{
 		btVector3 rel_uc_uh = (hinge[UPPER_HUB] - hinge[UPPER_CHASSIS]),
@@ -166,7 +166,7 @@ public:
 			rel_uc_lc = (hinge[LOWER_CHASSIS] - hinge[UPPER_CHASSIS]),
 			rel_lh_uh = (hinge[UPPER_HUB] - hinge[LOWER_HUB]),
 			localwheelpos = (info.extended_position - hinge[LOWER_HUB]);
-		
+
 		btScalar radlc = angle_from_sides(rel_lc_lh.length(), rel_uc_lc.length(), rel_uc_lh.length());
 		btScalar lrotrad = -displacement_fraction * info.travel / rel_lc_lh.length();
 		btScalar radlcd = radlc + lrotrad;
@@ -174,7 +174,7 @@ public:
 		btScalar radlh = angle_from_sides(rel_lc_lh.length(), rel_lh_uh.length(), rel_lc_uh.length());
 		btScalar dradlh = (angle_from_sides(rel_lc_lh.length(), d_uc_lh, rel_uc_lc.length()) +
 								angle_from_sides(d_uc_lh, rel_lh_uh.length(), rel_uc_uh.length()));
-		
+
 		btVector3 axiswd = -rel_lc_lh.cross(rel_lh_uh);
 
 		btQuaternion hingerot(axis[LOWER_CHASSIS], lrotrad);
@@ -182,7 +182,7 @@ public:
 		rel_lc_lh = quatRotate(hingerot, rel_lc_lh);
 		localwheelpos = quatRotate(mountrot, localwheelpos);
 
-		return hinge[LOWER_CHASSIS] + rel_lc_lh + localwheelpos;	
+		return hinge[LOWER_CHASSIS] + rel_lc_lh + localwheelpos;
 	}
 
 	void Init(
@@ -227,7 +227,7 @@ public:
 		hinge[LOWER_CHASSIS] = hingev[0] + (axis[LOWER_CHASSIS]	* 
 				((hingev[2] - hingev[0]).length() * cos(innerangle[1])));
 
-		if (lo_hub[1] < hinge[LOWER_CHASSIS][1])			
+		if (lo_hub[1] < hinge[LOWER_CHASSIS][1])
 			axis[LOWER_CHASSIS] = -axis[LOWER_CHASSIS];
 
 		hinge[UPPER_HUB].setValue(up_hub[0], up_hub[1], up_hub[2]);
@@ -363,22 +363,22 @@ bool CARSUSPENSION::Load(
 	if (!cfg_wheel.get("toe", info.toe, error_output)) return false;
 	cfg_wheel.get("steering", info.max_steering_angle);
 	cfg_wheel.get("ackermann", info.ackermann);
-	
+
 	info.extended_position.setValue(p[0], p[1], p[2]);
-	
+
 	const PTree * cfg_coil;
 	if (!cfg_wheel.get("coilover", cfg_coil, error_output)) return false;
 	if (!LoadCoilover(*cfg_coil, info, error_output)) return false;
-	
+
 	const PTree * cfg_susp;
 	if (cfg_wheel.get("macpherson-strut", cfg_susp))
 	{
 		std::vector<btScalar> strut_top(3), strut_end(3), hinge(3);
-		
+
 		if (!cfg_susp->get("hinge", hinge, error_output)) return false;
 		if (!cfg_susp->get("strut-top", strut_top, error_output)) return false;
 		if (!cfg_susp->get("strut-end", strut_end, error_output)) return false;
-		
+
 		MACPHERSONSUSPENSION * mps = new MACPHERSONSUSPENSION();
 		mps->Init(info, strut_top, strut_end, hinge);
 		suspension = mps;
@@ -386,14 +386,14 @@ bool CARSUSPENSION::Load(
 /*	else if (cfg_wheel.get("double-wishbone", cfg_susp))
 	{
 		std::vector<btScalar> up_ch0(3), up_ch1(3), lo_ch0(3), lo_ch1(3), up_hub(3), lo_hub(3);
-		
+
 		if (!cfg_susp->get("upper-chassis-front", up_ch0, error_output)) return false;
 		if (!cfg_susp->get("upper-chassis-rear", up_ch1, error_output)) return false;
 		if (!cfg_susp->get("lower-chassis-front", lo_ch0, error_output)) return false;
 		if (!cfg_susp->get("lower-chassis-rear", lo_ch1, error_output)) return false;
 		if (!cfg_susp->get("upper-hub", up_hub, error_output)) return false;
 		if (!cfg_susp->get("lower-hub", lo_hub, error_output)) return false;
-		
+
 		WISHBONESUSPENSION * wbs = new WISHBONESUSPENSION();
 		wbs->Init(info, up_ch0, up_ch1, lo_ch0, lo_ch1, up_hub, lo_hub);
 		suspension = wbs;
@@ -401,11 +401,11 @@ bool CARSUSPENSION::Load(
 	else
 	{
 		std::vector<btScalar> ch(3, 0), wh(3, 0);
-		
+
 		if (!cfg_wheel.get("hinge", cfg_susp, error_output)) return false;
 		if (!cfg_susp->get("chassis", ch, error_output)) return false;
 		if (!cfg_susp->get("wheel", wh, error_output)) return false;
-		
+
 		BASICSUSPENSION * bs = new BASICSUSPENSION();
 		bs->Init(info, ch, wh);
 		suspension = bs;

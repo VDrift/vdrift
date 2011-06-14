@@ -9,7 +9,7 @@ inline void operator >> (std::istream & lhs, btVector3 & rhs)
 	{
 		std::string str;
 		std::getline(lhs, str, ',');
-		
+
 		std::stringstream s(str);
 		btScalar val(0);
 		s >> val;
@@ -25,12 +25,12 @@ void LoadBoxShape(
 	btVector3 box_size(1, 1, 1);
 	cfg.get("size", box_size);
 	btBoxShape * box = new btBoxShape(box_size * 0.5);
-	
+
 	btVector3 box_center(0, 0, 0);
 	cfg.get("center", box_center);
 	btTransform transform = btTransform::getIdentity();
 	transform.setOrigin(box_center - center);
-	
+
 	if (!shape)
 	{
 		if (center.isZero() && box_center.isZero())
@@ -70,7 +70,7 @@ void LoadHullShape(
 		str >> point;
 		hull->addPoint(point - center);
 	}
-	
+
 	if (!shape)
 	{
 		shape = hull;

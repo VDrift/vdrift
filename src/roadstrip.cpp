@@ -8,7 +8,7 @@ bool ROADSTRIP::ReadFrom(std::istream & openfile, std::ostream & error_output)
 	//number of patches in this road strip
 	int num = 0;
 	openfile >> num;
-	
+
 	patches.clear();
 	patches.reserve(num);
 
@@ -81,7 +81,7 @@ bool ROADSTRIP::Collide(
 			return true;
 		}
 	}
-	
+
 	bool col = false;
 	std::vector<int> candidates;
 	aabb_part.Query(AABB<float>::RAY(origin, direction, seglen), candidates);

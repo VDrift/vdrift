@@ -188,7 +188,7 @@ void SOUNDSOURCE::SampleAndAdvanceWithPitch16bit(int * chan1, int * chan2, int l
 			sample_pos = (unsigned int) newpos; //save the integer portion of the current playback position back to the soundsource
 			sample_pos_remainder = newpos - sample_pos; //save the fractional portion of the current playback position back to the soundsource
 		}
-		
+
 		if (playing)
 			assert((int)sample_pos <= samples_per_channel);
 		//assert(0);

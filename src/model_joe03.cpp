@@ -45,7 +45,7 @@ struct JOEFrame
 	int num_verts;
 	int num_texcoords;
 	int num_normals;
-	
+
 	std::vector<JOEFace> faces;
 	std::vector<JOEVertex> verts;
 	std::vector<JOEVertex> normals;
@@ -77,7 +77,7 @@ static void CorrectEndian(std::vector<JOEFace> & p)
 			p[i].normalIndex[d] = ENDIAN_SWAP_16 ( p[i].normalIndex[d] );
 			p[i].textureIndex[d] = ENDIAN_SWAP_16 ( p[i].textureIndex[d] );
 		}
-	}	
+	}
 }
 
 static void CorrectEndian(std::vector<JOEVertex> & p)
@@ -97,13 +97,13 @@ static void CorrectEndian(std::vector<JOETexCoord> & p)
 	{
 		p[i].u = ENDIAN_SWAP_FLOAT ( p[i].u );
 		p[i].v = ENDIAN_SWAP_FLOAT ( p[i].v );
-	}	
+	}
 }
 
 static int BinaryRead ( void * buffer, unsigned int size, unsigned int count, FILE * f, JOEPACK * pack )
 {
 	unsigned int bytesread = 0;
-	
+
 	if ( pack == NULL )
 	{
 		bytesread = fread ( buffer, size, count, f );
@@ -112,9 +112,9 @@ static int BinaryRead ( void * buffer, unsigned int size, unsigned int count, FI
 	{
 		bytesread = pack->Pack_fread ( buffer, size, count );
 	}
-	
+
 	assert(bytesread == count);
-	
+
 	return bytesread;
 }
 
@@ -152,7 +152,7 @@ static bool NeedsNormalSwap(JOEObject & Object)
 				}
 			}
 		}
-		
+
 		if (normal_flip_count > Object.info.num_faces/4)
 			need_normal_flip = true;
 	}
@@ -191,7 +191,7 @@ bool MODEL_JOE03::Load ( const std::string & filename, std::ostream & err_output
 		fclose ( m_FilePointer );
 	else
 		pack->Pack_fclose();
-		
+
 	if (val)
 	{
 		if (genlist)
@@ -283,7 +283,7 @@ void MODEL_JOE03::ReadData ( FILE * m_FilePointer, JOEPACK * pack, JOEObject & O
 	}
 
 	//cout << "!!! loading " << modelpath << endl;
-	
+
 	//go do scaling
 	for (int i = 0; i < num_frames; i++)
 	{
@@ -298,7 +298,7 @@ void MODEL_JOE03::ReadData ( FILE * m_FilePointer, JOEPACK * pack, JOEObject & O
 				Object.frames[i].verts[v].vertex[n] = temp[n];
 		}
 	}
-	
+
 	if (NeedsNormalSwap(Object))
 	{
 		for (int i = 0; i < num_frames; i++)
@@ -312,7 +312,7 @@ void MODEL_JOE03::ReadData ( FILE * m_FilePointer, JOEPACK * pack, JOEObject & O
 		}
 		//std::cout << "!!! swapped normals !!!" << std::endl;
 	}
-	
+
 	//assert(!NeedsNormalFlip(pObject));
 
 	/*//make sure vertex ordering is consistent with normals
@@ -337,28 +337,28 @@ void MODEL_JOE03::ReadData ( FILE * m_FilePointer, JOEPACK * pack, JOEObject & O
 			short tvi = Object.frames[0].faces[i].vertexIndex[1];
 			Object.frames[0].faces[i].vertexIndex[1] = Object.frames[0].faces[i].vertexIndex[2];
 			Object.frames[0].faces[i].vertexIndex[2] = tvi;
-		
+
 			tvi = Object.frames[0].faces[i].normalIndex[1];
 			Object.frames[0].faces[i].normalIndex[1] = Object.frames[0].faces[i].normalIndex[2];
 			Object.frames[0].faces[i].normalIndex[2] = tvi;
-		
+
 			tvi = Object.frames[0].faces[i].textureIndex[1];
 			Object.frames[0].faces[i].textureIndex[1] = Object.frames[0].faces[i].textureIndex[2];
 			Object.frames[0].faces[i].textureIndex[2] = tvi;
 		}
 	}*/
-	
+
 	//build unique vertices
 	//cout << "building unique vertices...." << endl;
 	int frame(0);
-	
+
 	typedef size_t size_type;
-	
+
 	vector <VERT_ENTRY> vert_master ((size_type)(Object.frames[frame].num_verts));
 	vert_master.reserve(Object.frames[frame].num_verts*2);
-	
+
 	vector <int> v_faces((size_type)(Object.info.num_faces*3));
-	
+
 	for (int i = 0; i < Object.info.num_faces; i++)
 	{
 		for (int v = 0; v < 3; v++)
@@ -371,10 +371,10 @@ void MODEL_JOE03::ReadData ( FILE * m_FilePointer, JOEPACK * pack, JOEObject & O
 				ve.tex_index = Object.frames[frame].faces[i].textureIndex[v];
 				//if (ve.tex_index < 0)
 				assert(ve.tex_index >= 0);
-				
+
 				v_faces[i*3+v] = Object.frames[frame].faces[i].vertexIndex[v];
 				//cout << "(first) face " << i << " vert " << v << " index: " << v_faces[i*3+v] << endl;
-				
+
 				//cout << "first entry: " << ve.original_index << "," << ve.norm_index << "," << ve.tex_index << endl;
 			}
 			else
@@ -386,7 +386,7 @@ void MODEL_JOE03::ReadData ( FILE * m_FilePointer, JOEPACK * pack, JOEObject & O
 					v_faces[i*3+v] = Object.frames[frame].faces[i].vertexIndex[v];
 					assert(ve.tex_index >= 0);
 					//cout << "(matched) face " << i << " vert " << v << " index: " << v_faces[i*3+v] << endl;
-					
+
 					//cout << "matched entry: " << ve.original_index << "," << ve.norm_index << "," << ve.tex_index << endl;
 				}
 				else
@@ -396,30 +396,30 @@ void MODEL_JOE03::ReadData ( FILE * m_FilePointer, JOEPACK * pack, JOEObject & O
 					vert_master.back().original_index = Object.frames[frame].faces[i].vertexIndex[v];
 					vert_master.back().norm_index = Object.frames[frame].faces[i].normalIndex[v];
 					vert_master.back().tex_index = Object.frames[frame].faces[i].textureIndex[v];
-					
+
 					assert(vert_master.back().tex_index >= 0);
-					
+
 					v_faces[i*3+v] = vert_master.size()-1;
 					//cout << "(new) face " << i << " vert " << v << " index: " << v_faces[i*3+v] << endl;
-					
+
 					//cout << "new entry: " << vert_master.back().original_index << "," << vert_master.back().norm_index << "," << vert_master.back().tex_index << " (" << ve.original_index << "," << ve.norm_index << "," << ve.tex_index << ")" << endl;
 				}
 			}
 		}
 	}
-	
+
 	/*for (int i = 0; i < vert_master.size(); i++)
 	{
 		if (vert_master[i].original_index < 0)
 			std::cout << i << ", " << Object.frames[frame].num_verts << ", " << vert_master.size() << std::endl;
 		assert(vert_master[i].original_index >= 0);
 	}*/
-	
+
 	float newvertnum = vert_master.size();
 	/*std::cout << modelpath << " (" << Object.info.num_faces << ") used to have " << Object.frames[frame].num_verts << " vertices, " << 
 			Object.frames[frame].num_normals << " normals, " << Object.frames[frame].num_texcoords 
 			<< " tex coords, now it has " << newvertnum << " combo verts (combo indices)" << std::endl;*/
-	
+
 	//now, fill up the vertices, normals, and texcoords
 	vector <float> v_vertices((size_type)(newvertnum*3));
 	vector <float> v_texcoords((size_type)(newvertnum*2));
@@ -430,10 +430,10 @@ void MODEL_JOE03::ReadData ( FILE * m_FilePointer, JOEPACK * pack, JOEObject & O
 		{
 			for (int d = 0; d < 3; d++)
 				v_vertices[i*3+d] = Object.frames[frame].verts[vert_master[i].original_index].vertex[d];
-			
+
 			for (int d = 0; d < 3; d++)
 				v_normals[i*3+d] = Object.frames[frame].normals[vert_master[i].norm_index].vertex[d];
-			
+
 			//std::cout << i << ", " << vert_master[i].tex_index << ", " << vert_master.size() << ", " << Object.frames[frame].num_texcoords << std::endl;
 			//assert(vert_master[i].tex_index >= 0);
 			//assert(vert_master[i].tex_index < Object.frames[frame].num_texcoords);
@@ -449,10 +449,10 @@ void MODEL_JOE03::ReadData ( FILE * m_FilePointer, JOEPACK * pack, JOEObject & O
 			}
 		}
 	}
-	
+
 	/*for (int i = 0; i < newvertnum; i++)
 		cout << v_vertices[i*3] << "," << v_vertices[i*3+1] << "," << v_vertices[i*3+2] << endl;*/
-	
+
 	//assign to our mesh
 	mesh.SetFaces(&v_faces[0], v_faces.size());
 	mesh.SetVertices(&v_vertices[0], v_vertices.size());

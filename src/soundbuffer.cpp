@@ -199,7 +199,7 @@ bool SOUNDBUFFER::LoadOGG(const std::string & filename, const SOUNDINFO & sound_
 		//I assume ogg is always 16-bit (2 bytes per sample) -Venzon
 		samples = ov_pcm_total(&oggFile,-1);
 		info = SOUNDINFO(samples*pInfo->channels, pInfo->rate, pInfo->channels, 2);
-		
+
 		SOUNDINFO desired_info(info.samples, sound_device_info.frequency, info.channels, sound_device_info.bytespersample);
 
 		if (!(desired_info == info))

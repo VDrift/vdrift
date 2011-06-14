@@ -48,7 +48,7 @@ void PERFORMANCE_TESTING::Test(
 		error_output << "Error loading car configuration file: " << carfile << std::endl;
 		return;
 	}
-	
+
 	btVector3 size(0, 0, 0), center(0, 0, 0), pos(0, 0, 0); // collision shape from wheel data
 	btQuaternion rot = btQuaternion::getIdentity();
 	bool damage = false;
@@ -71,11 +71,11 @@ void PERFORMANCE_TESTING::Test(
 	}
 	//else info_output << "Car state: " << statestream.str();
 	carstate = statestream.str();
-	
+
 	// fixme
 	info_output << "Car performance test broken - exiting." << std::endl;
 	return;
-	
+
 	TestMaxSpeed(info_output, error_output);
 	TestStoppingDistance(false, info_output, error_output);
 	TestStoppingDistance(true, info_output, error_output);

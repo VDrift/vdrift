@@ -37,32 +37,32 @@ QT_TEST(calgo_test)
 	vec.push_back("4321");
 	vec.push_back("133");
 	QT_CHECK_EQUAL(&(*calgo::find(vec, "133")), &vec[2]);
-	
+
 	vector <string> vec2;
 	//vec2.resize(vec.size());
 	calgo::copy(vec, std::back_inserter(vec2));
 	QT_CHECK(vec == vec2);
-	
+
 	TESTONLY::myclass myobject = calgo::for_each(vec, TESTONLY::myclass());
 	QT_CHECK_EQUAL(myobject.sum, 11);
-	
+
 	vector <string> vec3;
 	calgo::copy_if(vec, std::back_inserter(vec3), TESTONLY::starts_with_1);
 	QT_CHECK_EQUAL(vec3.size(), 2);
 	QT_CHECK_EQUAL(vec3[0], "1234");
 	QT_CHECK_EQUAL(vec3[1], "133");
-	
+
 	vector <int> vec4(vec.size());
 	calgo::transform(vec, vec4.begin(), std::mem_fun_ref(&string::length));
 	QT_CHECK_EQUAL(vec4.size(), 3);
 	QT_CHECK_EQUAL(vec4[0], 4);
 	QT_CHECK_EQUAL(vec4[1], 4);
 	QT_CHECK_EQUAL(vec4[2], 3);
-	
+
 	vector <string> vec5;
 	vector <string> target;
 	vector <unsigned int> todel;
-	
+
 	vec5.clear();
 	target.clear();
 	todel.clear();
@@ -70,7 +70,7 @@ QT_TEST(calgo_test)
 	calgo::copy(vec, std::back_inserter(target));
 	calgo::SwapAndPop(vec5, todel);
 	QT_CHECK_EQUAL(vec5, target);
-	
+
 	vec5.clear();
 	target.clear();
 	todel.clear();
@@ -81,7 +81,7 @@ QT_TEST(calgo_test)
 	calgo::SwapAndPop(vec5, todel);
 	target.pop_back();
 	QT_CHECK_EQUAL(vec5, target);
-	
+
 	vec5.clear();
 	target.clear();
 	todel.clear();
@@ -92,7 +92,7 @@ QT_TEST(calgo_test)
 	calgo::SwapAndPop(vec5, todel);
 	target.pop_back();
 	QT_CHECK_EQUAL(vec5, target);
-	
+
 	vec5.clear();
 	target.clear();
 	todel.clear();
@@ -102,7 +102,7 @@ QT_TEST(calgo_test)
 	calgo::SwapAndPop(vec5, todel);
 	target.pop_back();
 	QT_CHECK_EQUAL(vec5, target);
-	
+
 	vec5.clear();
 	target.clear();
 	todel.clear();
@@ -115,7 +115,7 @@ QT_TEST(calgo_test)
 	target.pop_back();
 	target.pop_back();
 	QT_CHECK_EQUAL(vec5, target);
-	
+
 	vec5.clear();
 	target.clear();
 	todel.clear();
@@ -127,7 +127,7 @@ QT_TEST(calgo_test)
 	target.pop_back();
 	target.pop_back();
 	QT_CHECK_EQUAL(vec5, target);
-	
+
 	vec5.clear();
 	target.clear();
 	todel.clear();
@@ -140,7 +140,7 @@ QT_TEST(calgo_test)
 	target.pop_back();
 	target.pop_back();
 	QT_CHECK_EQUAL(vec5, target);
-	
+
 	vec5.clear();
 	target.clear();
 	todel.clear();

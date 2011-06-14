@@ -31,9 +31,9 @@ void EVENTSYSTEM_SDL::Init(std::ostream & info_output)
 	{
 		info_output << "    " << i << ". " << SDL_JoystickName(i) << endl;
 	}
-	
+
 	SDL_JoystickEventState(SDL_ENABLE);
-	
+
 	int j;
 	for (j = 0; j < SDL_NumJoysticks(); j++)
 	{
@@ -53,7 +53,7 @@ void EVENTSYSTEM_SDL::BeginFrame()
 		double thistick = SDL_GetTicks();
 
 		dt = (thistick-lasttick)/1000.0;
-		
+
 		/*if (throttle && dt < game.TickPeriod())
 		{
 			//cout << "throttling: " << lasttick.data << "," << thistick << endl;
@@ -61,24 +61,24 @@ void EVENTSYSTEM_SDL::BeginFrame()
 			thistick = SDL_GetTicks();
 			dt = (thistick-lasttick)/1000.0;
 		}*/
-		
+
 		lasttick = thistick;
 	}
-	
+
 	RecordFPS(1.0f/dt);
 }
 
 void EVENTSYSTEM_SDL::ProcessEvents()
 {
 	SDL_Event event;
-	
+
 	AgeToggles <SDLKey> (keymap);
 	AgeToggles <int> (mbutmap);
 	for (std::vector <JOYSTICK>::iterator i = joystick.begin(); i != joystick.end(); i++)
 	{
 		i->AgeToggles();
 	}
-	
+
 	while ( SDL_PollEvent( &event ) )
 	{
 		switch( event.type )
@@ -206,14 +206,14 @@ void EVENTSYSTEM_SDL::TestStim(TEST_STIM stim)
 QT_TEST(eventsystem_test)
 {
 	EVENTSYSTEM_SDL e;
-	
+
 	//key stuff
 	{
 		//check key insertion
 		e.TestStim(EVENTSYSTEM_SDL::STIM_INSERT_KEY_DOWN);
 		EVENTSYSTEM_SDL::BUTTON_STATE tstate = e.GetKeyState(SDLK_t);
 		QT_CHECK(tstate.down && tstate.just_down && !tstate.just_up);
-		
+
 		//check key aging
 		e.TestStim(EVENTSYSTEM_SDL::STIM_AGE_KEYS);
 		tstate = e.GetKeyState(SDLK_t);
@@ -221,12 +221,12 @@ QT_TEST(eventsystem_test)
 		e.TestStim(EVENTSYSTEM_SDL::STIM_AGE_KEYS); //age again
 		tstate = e.GetKeyState(SDLK_t);
 		QT_CHECK(tstate.down && !tstate.just_down && !tstate.just_up);
-		
+
 		//check key removal
 		e.TestStim(EVENTSYSTEM_SDL::STIM_INSERT_KEY_UP);
 		tstate = e.GetKeyState(SDLK_t);
 		QT_CHECK(!tstate.down && !tstate.just_down && tstate.just_up);
-		
+
 		//check key aging
 		e.TestStim(EVENTSYSTEM_SDL::STIM_AGE_KEYS);
 		tstate = e.GetKeyState(SDLK_t);
@@ -235,14 +235,14 @@ QT_TEST(eventsystem_test)
 		tstate = e.GetKeyState(SDLK_t);
 		QT_CHECK(!tstate.down && !tstate.just_down && !tstate.just_up);
 	}
-	
+
 	//mouse button stuff
 	{
 		//check button insertion
 		e.TestStim(EVENTSYSTEM_SDL::STIM_INSERT_MBUT_DOWN);
 		EVENTSYSTEM_SDL::BUTTON_STATE tstate = e.GetMouseButtonState(SDL_BUTTON_LEFT);
 		QT_CHECK(tstate.down && tstate.just_down && !tstate.just_up);
-	
+
 		//check button aging
 		e.TestStim(EVENTSYSTEM_SDL::STIM_AGE_MBUT);
 		tstate = e.GetMouseButtonState(SDL_BUTTON_LEFT);
@@ -250,12 +250,12 @@ QT_TEST(eventsystem_test)
 		e.TestStim(EVENTSYSTEM_SDL::STIM_AGE_MBUT); //age again
 		tstate = e.GetMouseButtonState(SDL_BUTTON_LEFT);
 		QT_CHECK(tstate.down && !tstate.just_down && !tstate.just_up);
-	
+
 		//check button removal
 		e.TestStim(EVENTSYSTEM_SDL::STIM_INSERT_MBUT_UP);
 		tstate = e.GetMouseButtonState(SDL_BUTTON_LEFT);
 		QT_CHECK(!tstate.down && !tstate.just_down && tstate.just_up);
-	
+
 		//check button aging
 		e.TestStim(EVENTSYSTEM_SDL::STIM_AGE_MBUT);
 		tstate = e.GetMouseButtonState(SDL_BUTTON_LEFT);
@@ -264,7 +264,7 @@ QT_TEST(eventsystem_test)
 		tstate = e.GetMouseButtonState(SDL_BUTTON_LEFT);
 		QT_CHECK(!tstate.down && !tstate.just_down && !tstate.just_up);
 	}
-	
+
 	//mouse motion stuff
 	{
 		e.TestStim(EVENTSYSTEM_SDL::STIM_INSERT_MOTION);
@@ -284,7 +284,7 @@ void EVENTSYSTEM_SDL::RecordFPS(const float fps)
 	fps_memory.push_back(fps);
 	if (fps_memory.size() > fps_memory_window)
 		fps_memory.pop_front();
-	
+
 	//ensure no fps memory corruption
 	assert(fps_memory.size() <= fps_memory_window);
 }
@@ -292,9 +292,9 @@ void EVENTSYSTEM_SDL::RecordFPS(const float fps)
 float EVENTSYSTEM_SDL::GetFPS() const
 {
 	float avg = std::accumulate(fps_memory.begin(), fps_memory.end(), 0);
-	
+
 	if (!fps_memory.empty())
 		avg = avg / fps_memory.size();
-	
+
 	return avg;
 }

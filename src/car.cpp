@@ -37,13 +37,13 @@ static keyed_container <DRAWABLE> & GetDrawlist(SCENENODE & node, WHICHDRAWLIST 
 	{
 		case BLEND:
 		return node.GetDrawlist().normal_blend;
-		
+
 		case NOBLEND:
 		return node.GetDrawlist().car_noblend;
-		
+
 		case EMISSIVE:
 		return node.GetDrawlist().lights_emissive;
-		
+
 		case OMNI:
 		return node.GetDrawlist().lights_omni;
 	};
@@ -60,7 +60,7 @@ struct LoadDrawable
 	MODELMANAGER & models;
 	std::list<std::tr1::shared_ptr<MODEL> > & modellist;
 	std::ostream & error;
-	
+
 	LoadDrawable(
 		const std::string & path,
 		const std::string & texsize,
@@ -79,7 +79,7 @@ struct LoadDrawable
 	{
 		// ctor
 	}
-	
+
 	bool operator()(
 		const PTree & cfg,
 		SCENENODE & topnode,
@@ -88,13 +88,13 @@ struct LoadDrawable
 	{
 		std::vector<std::string> texname;
 		if (!cfg.get("texture", texname)) return true;
-		
+
 		std::string meshname;
 		if (!cfg.get("mesh", meshname, error)) return false;
-		
+
 		return operator()(meshname, texname, cfg, topnode, nodehandle, drawhandle);
 	}
-	
+
 	bool operator()(
 		const std::string & meshname,
 		const std::vector<std::string> & texname,
@@ -143,20 +143,20 @@ struct LoadDrawable
 		{
 			MODELMANAGER::const_iterator it;
 			if (!models.Load(path, meshname, it)) return false;
-			
+
 			MATHVECTOR<float, 3> sc(1, 1, 1);
 			cfg.get("scale", sc);
-			
+
 			std::tr1::shared_ptr<MODEL> temp(new MODEL());
 			temp->SetVertexArray(it->second->GetVertexArray());
 			temp->Scale(sc[0], sc[1], sc[2]);
 			temp->GenerateMeshMetrics();
 			temp->GenerateListID(error);
-			
+
 			models.Set(it->first+scale, temp);
 			mesh = temp;
 		}
-		
+
 		if (models.useDrawlists())
 		{
 			mesh->GenerateListID(error);
@@ -167,14 +167,14 @@ struct LoadDrawable
 		}
 		drawable.SetModel(*mesh);
 		modellist.push_back(mesh);
-		
+
 		// set color
 		MATHVECTOR<float, 4> col(1);
 		if (cfg.get("color", col))
 		{
 			drawable.SetColor(col[0], col[1], col[2], col[3]);
 		}
-		
+
 		// set node
 		SCENENODE * node = &topnode;
 		if (nodeptr != 0)
@@ -186,7 +186,7 @@ struct LoadDrawable
 			}
 			node = &topnode.GetNode(*nodeptr);
 		}
-		
+
 		MATHVECTOR<float, 3> pos, rot;
 		if (cfg.get("position", pos) | cfg.get("rotation", rot))
 		{
@@ -199,12 +199,12 @@ struct LoadDrawable
 			node->GetTransform().SetTranslation(pos);
 			node->GetTransform().SetRotation(QUATERNION<float>(rot[0]/180*M_PI, rot[1]/180*M_PI, rot[2]/180*M_PI));
 		}
-		
+
 		// set drawable
 		keyed_container<DRAWABLE>::handle drawtemp;
 		keyed_container<DRAWABLE>::handle * draw = &drawtemp;
 		if (drawptr != 0) draw = drawptr;
-		
+
 		std::string drawtype;
 		if (cfg.get("draw", drawtype))
 		{
@@ -222,7 +222,7 @@ struct LoadDrawable
 		{
 			*draw = node->GetDrawlist().car_noblend.insert(drawable);
 		}
-		
+
 		return true;
 	}
 };
@@ -233,7 +233,7 @@ struct LoadBody
 	keyed_container<SCENENODE>::handle & bodynode;
 	LoadDrawable & loadDrawable;
 	bool damage;
-	
+
 	LoadBody(
 		SCENENODE & topnode,
 		keyed_container<SCENENODE>::handle & bodynode,
@@ -272,16 +272,16 @@ static bool LoadWheel(
 {
 	keyed_container<SCENENODE>::handle wheelnode = topnode.AddNode();
 	MODELMANAGER & models = loadDrawable.models;
-	
+
 	std::string tiredim;
 	const PTree * cfg_tire;
 	if (!cfg_wheel.get("tire", cfg_tire, error_output)) return false;
 	if (!cfg_tire->get("size", tiredim, error_output)) return false;
-	
+
 	std::string brakename;
 	const PTree * cfg_brake;
 	if (!cfg_wheel.get("brake", cfg_brake, error_output)) return false;
-	
+
 	// load wheel
 	std::string meshname;
 	std::vector<std::string> texname;
@@ -291,12 +291,12 @@ static bool LoadWheel(
 	if (!models.Get(loadDrawable.path, meshname+tiredim, it))
 	{
 		if (!models.Load(loadDrawable.path, meshname, it)) return false;
-		
+
 		MATHVECTOR<float, 3> d(0);
 		cfg_tire->get("size", d);
 		float width = d[0] * 0.001;
 		float diameter = d[2] * 0.0254;
-		
+
 		VERTEXARRAY varray;
 		std::tr1::shared_ptr<MODEL> temp(new MODEL_JOE03());
 		temp->SetVertexArray(it->second->GetVertexArray());
@@ -306,11 +306,11 @@ static bool LoadWheel(
 		temp->SetVertexArray(varray + temp->GetVertexArray());
 		temp->GenerateMeshMetrics();
 		temp->GenerateListID(error_output);
-		
+
 		models.Set(it->first+tiredim, temp);
 	}
 	if (!loadDrawable(meshname+tiredim, texname, cfg_wheel, topnode, &wheelnode)) return false;
-	
+
 	// load tire
 	texname.clear();
 	if (!cfg_tire->get("texture", texname, error_output)) return false;
@@ -318,18 +318,18 @@ static bool LoadWheel(
 	{
 		MATHVECTOR<float, 3> d(0);
 		cfg_tire->get("size", d);
-		
+
 		VERTEXARRAY varray;
 		std::tr1::shared_ptr<MODEL> temp(new MODEL_JOE03());
 		MESHGEN::mg_tire(varray, d[0], d[1], d[2]);
 		temp->SetVertexArray(varray);
 		temp->GenerateMeshMetrics();
 		temp->GenerateListID(error_output);
-		
+
 		models.Set("tire"+tiredim, temp);
 	}
 	if (!loadDrawable("tire"+tiredim, texname, *cfg_tire, topnode.GetNode(wheelnode))) return false;
-	
+
 	// load brake (optional)
 	texname.clear();
 	std::string radius;
@@ -342,18 +342,18 @@ static bool LoadWheel(
 		s >> r;
 		float diameter_mm = r * 2 * 1000;
 		float thickness_mm = 0.025 * 1000;
-		
+
 		VERTEXARRAY varray;
 		std::tr1::shared_ptr<MODEL> temp(new MODEL_JOE03());
 		MESHGEN::mg_brake_rotor(varray, diameter_mm, thickness_mm);
 		temp->SetVertexArray(varray);
 		temp->GenerateMeshMetrics();
 		temp->GenerateListID(error_output);
-		
+
 		models.Set("brake"+radius, temp);
 	}
 	if (!loadDrawable("brake"+radius, texname, *cfg_brake, topnode.GetNode(wheelnode))) return false;
-	
+
 	/* load fender (optional)
 	keyed_container<SCENENODE>::handle floatingnode = topnode.AddNode();
 	const PTree * cfg_fender;
@@ -361,7 +361,7 @@ static bool LoadWheel(
 	{
 		floatingnode = topnode.AddNode();
 		if (!loadDrawable(*cfg_fender, topnode.GetNode(floatingnode))) return false;
-		
+
 		MATHVECTOR<float, 3> pos = topnode.GetNode(wheelnode).GetTransform().GetTranslation();
 		topnode.GetNode(floatingnode).GetTransform().SetTranslation(pos);
 	}
@@ -428,7 +428,7 @@ static bool LoadCameras(
 
 		MATHVECTOR <float, 3> view_offset;
 		view_offset.Set(pos);
-		
+
 		next_view->SetOffset(view_offset);
 		next_view->SetRotation(angle[0] * 3.141593/180.0, angle[1] * 3.141593/180.0);
 		cameras.Add(next_view);
@@ -465,31 +465,31 @@ static void DrawShape(
 	{
 		btVector3 min, max;
 		shape->getAabb(btTransform::getIdentity(), min, max);
-		
+
 		MATHVECTOR<float,3> pos(ToMathVector<float>(transform.getOrigin()));
 		MATHVECTOR<float,3> size(ToMathVector<float>(max - min));
-		
+
 		keyed_container<SCENENODE>::handle node = bodynoderef.AddNode();
 		SCENENODE & noderef = bodynoderef.GetNode(node);
 		noderef.GetTransform().SetTranslation(pos);
-		
+
 		VERTEXARRAY varray;
 		varray.SetToUnitCube();
 		varray.Scale(size[0], size[1], size[2]);
-		
+
 		MODEL * model = new MODEL();
 		model->BuildFromVertexArray(varray, error_output);
 		if (models.useDrawlists())
 			model->GenerateListID(error_output);
 		else
 			model->GenerateVertexArrayObject(error_output);
-		
+
 		keyed_container<DRAWABLE> & dlist = GetDrawlist(noderef, NOBLEND);
 		keyed_container<DRAWABLE>::handle draw = dlist.insert(DRAWABLE());
 		DRAWABLE & drawref = dlist.get(draw);
 		drawref.SetColor(1, 0, 0);
 		drawref.SetModel(*model);
-		
+
 		modellist.push_back(std::tr1::shared_ptr<MODEL>(model));
 	}
 }
@@ -516,7 +516,7 @@ bool CAR::LoadLight(
 	if (!cfg.get("position", pos, error_output)) return false;
 	if (!cfg.get("color", col, error_output)) return false;
 	if (!cfg.get("radius", radius, error_output)) return false;
-	
+
 	lights.push_back(LIGHT());
 	SCENENODE & bodynoderef = topnode.GetNode(bodynode);
 	lights.back().node = bodynoderef.AddNode();
@@ -531,7 +531,7 @@ bool CAR::LoadLight(
 		model.GenerateListID(error_output);
 	else
 		model.GenerateVertexArrayObject(error_output);
-	
+
 	keyed_container <DRAWABLE> & dlist = GetDrawlist(node, OMNI);
 	lights.back().draw = dlist.insert(DRAWABLE());
 	DRAWABLE & draw = dlist.get(lights.back().draw);
@@ -539,7 +539,7 @@ bool CAR::LoadLight(
 	draw.SetModel(model);
 	draw.SetCull(true, true);
 	draw.SetDrawEnable(false);
-	
+
 	return true;
 }
 
@@ -563,7 +563,7 @@ bool CAR::LoadGraphics(
 	//write_inf(cfg, std::cerr);
 	cartype = carname;
 	LoadDrawable loadDrawable(carpath, texsize, anisotropy, textures, models, modellist, error_output);
-	
+
 	// load body first
 	const PTree * cfg_body;
 	std::string meshname;
@@ -573,7 +573,7 @@ bool CAR::LoadGraphics(
 	if (!cfg_body->get("texture", texname, error_output)) return false;
 	if (carpaint != "default") texname[0] = carpaint;
 	if (!loadDrawable(meshname, texname, *cfg_body, topnode, &bodynode)) return false;
-	
+
 	// load wheels
 	const PTree * cfg_wheel;
 	if (!cfg.get("wheel", cfg_wheel, error_output)) return false;
@@ -584,7 +584,7 @@ bool CAR::LoadGraphics(
 			return false;
 		}
 	}
-	
+
 	// load drawables
 	LoadBody loadBody(topnode, bodynode, loadDrawable, damage);
 	SCENENODE & bodynoderef = topnode.GetNode(bodynode);
@@ -599,7 +599,7 @@ bool CAR::LoadGraphics(
 			i->second.forEachRecursive(loadBody);
 		}
 	}
-	
+
 	// load steering wheel
 	const PTree * cfg_steer;
 	if (cfg.get("steering", cfg_steer))
@@ -610,7 +610,7 @@ bool CAR::LoadGraphics(
 		SCENENODE & steernoderef = bodynoderef.GetNode(steernode);
 		steer_orientation = steernoderef.GetTransform().GetRotation();
 	}
-	
+
 	// load brake/reverse light point light sources (optional)
 	int i = 0;
 	std::string istr = "0";
@@ -618,7 +618,7 @@ bool CAR::LoadGraphics(
 	while (cfg.get("light-brake-"+istr, cfg_light))
 	{
 		if (!LoadLight(*cfg_light, models, error_output)) return false;
-		
+
 		std::stringstream sstr;
 		sstr << ++i;
 		istr = sstr.str();
@@ -633,7 +633,7 @@ bool CAR::LoadGraphics(
 		sstr << ++i;
 		istr = sstr.str();
 	}
-	
+
 	// load car brake/reverse graphics (optional)
 	if (cfg.get("light-brake", cfg_light))
 	{
@@ -643,13 +643,13 @@ bool CAR::LoadGraphics(
 	{
 		if (!loadDrawable(*cfg_light, bodynoderef, 0, &reverselights)) return false;
 	}
-	
+
 	if (!LoadCameras(cfg, camerabounce, cameras, error_output)) return false;
-	
+
 	SetColor(carcolor[0], carcolor[1], carcolor[2]);
-	
+
 	lookbehind = false;
-	
+
 	return true;
 }
 
@@ -670,23 +670,23 @@ bool CAR::LoadPhysics(
 	std::tr1::shared_ptr<MODEL> modelptr;
 	if (!cfg.get("body.mesh", carmodel, error_output)) return false;
 	if (!models.Load(carpath, carmodel, modelptr)) return false;
-	
+
 	btVector3 size = ToBulletVector(modelptr->GetAABB().GetSize());
 	btVector3 center = ToBulletVector(modelptr->GetAABB().GetCenter());
 	btVector3 position = ToBulletVector(initial_position);
 	btQuaternion rotation = ToBulletQuaternion(initial_orientation);
-	
+
 	if (!dynamics.Load(cfg, size, center, position, rotation, damage, world, error_output)) return false;
 	dynamics.SetABS(defaultabs);
 	dynamics.SetTCS(defaulttcs);
-	
+
 	mz_nominalmax = (GetTireMaxMz(FRONT_LEFT) + GetTireMaxMz(FRONT_RIGHT)) * 0.5;
-	
+
 	// draw collision shape ounding boxes
 	//btTransform offset(btTransform::getIdentity());
 	//offset.setOrigin(btVector3(0, -0.206458, -0.283854));
 	//DrawShape(topnode.GetNode(bodynode), dynamics.GetShape(), offset, models, modellist, error_output);
-	
+
 	return true;
 }
 
@@ -937,7 +937,7 @@ void CAR::SetPosition(const MATHVECTOR <float, 3> & new_position)
 	btVector3 newpos = ToBulletVector(new_position);
 	dynamics.SetPosition(newpos);
 	dynamics.AlignWithGround();
-	
+
 	QUATERNION <float> rot = GetOrientation();
 	cameras.Active()->Reset(new_position, rot);
 }
@@ -945,7 +945,7 @@ void CAR::SetPosition(const MATHVECTOR <float, 3> & new_position)
 void CAR::UpdateGraphics()
 {
 	if (!bodynode.valid()) return;
-	
+
 	assert(dynamics.GetNumBodies() == topnode.Nodes());
 	unsigned int i = 0;
 	keyed_container<SCENENODE> & childlist = topnode.GetNodelist();
@@ -956,7 +956,7 @@ void CAR::UpdateGraphics()
 		ni->GetTransform().SetTranslation(pos);
 		ni->GetTransform().SetRotation(rot);
 	}
-	
+
 	// brake/reverse lights
 	SCENENODE & bodynoderef = topnode.GetNode(bodynode);
 	for (std::list<LIGHT>::iterator i = lights.begin(); i != lights.end(); i++)
@@ -973,7 +973,7 @@ void CAR::UpdateGraphics()
 	{
 		GetDrawlist(bodynoderef, EMISSIVE).get(reverselights).SetDrawEnable(GetGear() < 0);
 	}
-	
+
 	// steering
 	if (steernode.valid())
 	{
@@ -986,13 +986,13 @@ void CAR::UpdateCameras(float dt)
 {
 	MATHVECTOR <float, 3> pos = ToMathVector<float>(dynamics.GetPosition());
 	QUATERNION <float> rot = ToMathQuaternion<float>(dynamics.GetOrientation());
-	
+
 	// reverse the camera direction
 	if (lookbehind)
 	{
 		rot.Rotate(M_PI, 0, 0, 1);
 	}
-	
+
 	cameras.Active()->Update(pos, rot, dt);
 }
 
@@ -1005,7 +1005,7 @@ void CAR::UpdateSounds(float dt)
 	gearsound.SetPosition(vec[0],vec[1],vec[2]);
 	brakesound.SetPosition(vec[0],vec[1],vec[2]);
 	handbrakesound.SetPosition(vec[0],vec[1],vec[2]);
-	
+
 	//update engine sounds
 	float rpm = GetEngineRPM();
 	float throttle = dynamics.GetEngine().GetThrottle();
@@ -1032,7 +1032,7 @@ void CAR::UpdateSounds(float dt)
 		{
 			gain *= (rpm - info.minrpm) / (info.fullgainrpmstart - info.minrpm);
 		}
-		
+
 		if (rpm > info.maxrpm)
 		{
 			gain = 0;
@@ -1041,7 +1041,7 @@ void CAR::UpdateSounds(float dt)
 		{
 			gain *= 1.0 - (rpm - info.fullgainrpmend) / (info.maxrpm - info.fullgainrpmend);
 		}
-		
+
 		if (info.power == ENGINESOUNDINFO::BOTH)
 		{
 			gain *= throttle * 0.5 + 0.5;
@@ -1272,11 +1272,11 @@ void CAR::GetSoundList(std::list <SOUNDSOURCE *> & outputlist)
 		outputlist.push_back(&tirebump[i]);
 
 	outputlist.push_back(&crashsound);
-	
+
 	outputlist.push_back(&gearsound);
-	
+
 	outputlist.push_back(&brakesound);
-	
+
 	outputlist.push_back(&handbrakesound);
 
 	outputlist.push_back(&roadnoise);

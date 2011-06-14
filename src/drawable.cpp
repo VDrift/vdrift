@@ -65,14 +65,14 @@ RenderModelExternal & DRAWABLE::generateRenderModelData(GLWrapper & gl, StringId
 	// copy data over to the GL3V renderModel object
 	// eventually this should only be done when we update the values, but for now
 	// we call this every time we draw the drawable
-	
+
 	// cache off the stringId values
 	static StringId diffuseId = stringMap.addStringId("diffuseTexture");
 	static StringId misc1Id = stringMap.addStringId("misc1Texture");
 	static StringId transformId = stringMap.addStringId("modelMatrix");
 	static StringId colorId = stringMap.addStringId("colorTint");
 	static StringId depthOffsetId = stringMap.addStringId("depthOffset");
-	
+
 	// textures
 	if (texturesChanged)
 	{
@@ -86,10 +86,10 @@ RenderModelExternal & DRAWABLE::generateRenderModelData(GLWrapper & gl, StringId
 		{
 			renderModel.textures.push_back(RenderTextureEntry(misc1Id, misc_map1->GetID(), GL_TEXTURE_2D));
 		}
-		
+
 		texturesChanged = false;
 	}
-	
+
 	// uniforms
 	if (uniformsChanged)
 	{
@@ -111,10 +111,10 @@ RenderModelExternal & DRAWABLE::generateRenderModelData(GLWrapper & gl, StringId
 			float depthOffset = -0.005;
 			renderModel.uniforms.push_back(RenderUniformEntry(depthOffsetId, &depthOffset, 1));
 		}*/
-		
+
 		uniformsChanged = false;
 	}
-	
+
 	return renderModel;
 }
 
@@ -124,7 +124,7 @@ void DRAWABLE::SetModel(const MODEL & model)
 	{
 		AddDrawList(model.GetListID());
 	}
-	
+
 	if (model.HaveVertexArrayObject())
 	{
 		GLuint vao;

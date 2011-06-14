@@ -64,7 +64,7 @@ bool WIDGET_DOUBLESTRINGWHEEL::ProcessInput(SCENENODE & scene, float cursorx, fl
 {
 	bool left = button_left.ProcessInput(scene, cursorx, cursory, cursordown, cursorjustup);
 	bool right = button_right.ProcessInput(scene, cursorx, cursory, cursordown, cursorjustup);
-	
+
 	if (current1 != values1.end())
 	{
 		if (left && cursorjustup)
@@ -80,7 +80,7 @@ bool WIDGET_DOUBLESTRINGWHEEL::ProcessInput(SCENENODE & scene, float cursorx, fl
 				SetCurrent(scene, i1->first, i2->first);
 			}
 		}
-		
+
 		if (right && cursorjustup)
 		{
 			std::list <std::pair<std::string,std::string> >::iterator i1 = current1;
@@ -93,7 +93,7 @@ bool WIDGET_DOUBLESTRINGWHEEL::ProcessInput(SCENENODE & scene, float cursorx, fl
 				SetCurrent(scene, i1->first, i2->first);
 		}
 	}
-	
+
 	return left || right;
 }
 
@@ -115,7 +115,7 @@ void WIDGET_DOUBLESTRINGWHEEL::SetupDrawable(
 	assert(left_down);
 	assert(right_up);
 	assert(right_down);
-	
+
 	float titlewidth = title.GetWidth(font, newtitle, scalex);
 	float blx = centerx + titlewidth + scalex / 2;
 	float brx = blx + scalex * 3 / 4;
@@ -149,7 +149,7 @@ void WIDGET_DOUBLESTRINGWHEEL::SetCurrent(SCENENODE & scene, const std::string &
 		//count++;
 		i1++;i2++;
 	}
-	
+
 	/*count = 0;
 	for (std::list <std::pair<std::string,std::string> >::iterator i = values2.begin(); i != values2.end(); i++)
 	{
@@ -157,7 +157,7 @@ void WIDGET_DOUBLESTRINGWHEEL::SetCurrent(SCENENODE & scene, const std::string &
 			current2 = i;
 		count++;
 	}*/
-	
+
 	assert (current1 != values1.end());
 	assert (current2 != values2.end());
 
@@ -185,7 +185,7 @@ void WIDGET_DOUBLESTRINGWHEEL::SetCurrent(SCENENODE & scene, const std::string &
 		//count++;
 		i1++;i2++;
 	}
-	
+
 	if (current1 == values1.end() || current2 == values2.end())
 	{
 		error_output << "Option " << setting1 << " doesn't have value " << newsetting1 << " or option " << setting2 << " doesn't pair with " << newsetting2 << std::endl;

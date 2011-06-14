@@ -28,7 +28,7 @@ bool MODELMANAGER::Load(
 	JOEPACK & pack)
 {
 	if (Get("", name, sptr)) return true;
-	
+
 	MODEL_JOE03 * model = new MODEL_JOE03();
 	if (model->Load(name, error, useDrawlists(), &pack))
 	{
@@ -38,12 +38,12 @@ bool MODELMANAGER::Load(
 		return true;
 	}
 	delete model;
-	
+
 	if (Load(path, name, sptr))
 	{
 		return true;
 	}
-	
+
 	return false;
 }
 
@@ -53,7 +53,7 @@ bool MODELMANAGER::Load(
 	const_iterator & it)
 {
 	if (Get(path, name, it)) return true;
-	
+
 	std::string filepath = basepath + "/" + path + "/" + name;
 	MODEL_JOE03 * model = new MODEL_JOE03();
 	if (std::ifstream(filepath.c_str()) &&

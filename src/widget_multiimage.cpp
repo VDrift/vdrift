@@ -50,9 +50,9 @@ void WIDGET_MULTIIMAGE::HookMessage(SCENENODE & scene, const std::string & messa
 {
 	assert(errptr);
 	assert(textures);
-	
+
 	s1.Load(scene, prefix, message + postfix, tsize, *textures, draworder, *errptr);
 	s1.SetToBillboard(center[0] - dim[0] * 0.5, center[1] - dim[1] * 0.5, dim[0], dim[1]);
-	
+
 	if (s1.Loaded()) s1.SetVisible(scene, wasvisible);
 }

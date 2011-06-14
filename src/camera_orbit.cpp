@@ -16,7 +16,7 @@ void CAMERA_ORBIT::Reset(const MATHVECTOR <float, 3> & newfocus, const QUATERNIO
 	leftright_rotation = 0;
 	updown_rotation = 0;
 	orbit_distance = 4.0;
-	
+
 	rotation.LoadIdentity();
 	position = -direction::Forward * orbit_distance;
 }
@@ -32,9 +32,9 @@ void CAMERA_ORBIT::Rotate(float up, float left)
 	updown_rotation += up;
 	if (updown_rotation > maxupdown) updown_rotation = maxupdown;
 	if (updown_rotation <-maxupdown) updown_rotation =-maxupdown;
-	
+
 	leftright_rotation -= left;
-	
+
 	rotation.LoadIdentity();
 	rotation.Rotate(updown_rotation, direction::Right);
 	rotation.Rotate(leftright_rotation, direction::Up);
@@ -43,11 +43,11 @@ void CAMERA_ORBIT::Rotate(float up, float left)
 void CAMERA_ORBIT::Move(float dx, float dy, float dz)
 {
 	MATHVECTOR <float, 3> move(dx, dy, dz);
-	
+
 	orbit_distance -= direction::Forward.dot(move);
 	if (orbit_distance < 3.0) orbit_distance = 3.0;
 	if (orbit_distance > 10.0) orbit_distance = 10.0;
-		
+
 	position = -direction::Forward * orbit_distance;
 	rotation.RotateVector(position);
 	position = position + focus;

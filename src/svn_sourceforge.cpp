@@ -9,12 +9,12 @@
 std::map <std::string, int> SVN_SOURCEFORGE::ParseFolderView(const std::string & folderfile)
 {
 	std::map <std::string, int> folders;
-	
+
 	std::stringstream s(folderfile);
-	
+
 	// fast forward to the start of the list
 	UTILS::SeekTo(s,"&nbsp;Parent&nbsp;Directory");
-	
+
 	// loop through each entry
 	while (s)
 	{
@@ -22,9 +22,9 @@ std::map <std::string, int> SVN_SOURCEFORGE::ParseFolderView(const std::string &
 		std::string name = UTILS::SeekTo(s,"\"");
 		UTILS::SeekTo(s,"title=\"View directory revision log\"><strong>");
 		std::string revstr = UTILS::SeekTo(s,"</strong>");
-		
+
 		//std::cout << "name: " << name << ", revstr: " << revstr << std::endl;
-		
+
 		if (name != "SConscript" && !name.empty() && !revstr.empty())
 		{
 			std::stringstream converter(revstr);
@@ -36,7 +36,7 @@ std::map <std::string, int> SVN_SOURCEFORGE::ParseFolderView(const std::string &
 			}
 		}
 	}
-	
+
 	return folders;
 }
 
@@ -45,7 +45,7 @@ QT_TEST(svn_sourceforge)
 	HTTP http("data/test");
 	SVN_SOURCEFORGE svn;
 	std::string testurl = svn.GetCarFolderUrl();
-	
+
 	QT_CHECK(http.Request(testurl, std::cerr));
 	HTTPINFO curinfo;
 	while (http.Tick())
@@ -53,12 +53,12 @@ QT_TEST(svn_sourceforge)
 	}
 	QT_CHECK(http.GetRequestInfo(testurl, curinfo));
 	QT_CHECK(curinfo.state == HTTPINFO::COMPLETE);
-	
+
 	std::string page = UTILS::LoadFileIntoString(http.GetDownloadPath(testurl), std::cerr);
 	std::map <std::string, int> res = svn.ParseFolderView(page);
-	
+
 	QT_CHECK(res.size() > 10);
-	
+
 	/*std::cout << "svn_sourceforge test result: " << res.size() << std::endl;
 	for (std::map <std::string, int>::const_iterator i = res.begin(); i != res.end(); i++)
 	{

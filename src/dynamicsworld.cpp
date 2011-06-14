@@ -34,13 +34,13 @@ struct MyRayResultCallback : public btCollisionWorld::RayResultCallback
 	virtual	btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace)
 	{
 		if (rayResult.m_collisionObject == m_exclude) return 1.0;
-		
+
 		//caller already does the filter on the m_closestHitFraction
 		btAssert(rayResult.m_hitFraction <= m_closestHitFraction);
 
 		m_closestHitFraction = rayResult.m_hitFraction;
 		m_collisionObject = rayResult.m_collisionObject;
-		
+
 		if(rayResult.m_localShapeInfo)
 		{
 #ifndef EXTBULLET
@@ -49,7 +49,7 @@ struct MyRayResultCallback : public btCollisionWorld::RayResultCallback
 			m_shapePart = rayResult.m_localShapeInfo->m_shapePart;
 			m_triangleId = rayResult.m_localShapeInfo->m_triangleIndex;
 		}
-		
+
 		if (normalInWorldSpace)
 		{
 			m_hitNormalWorld = rayResult.m_hitNormalLocal;
@@ -59,7 +59,7 @@ struct MyRayResultCallback : public btCollisionWorld::RayResultCallback
 			///need to transform normal into worldspace
 			m_hitNormalWorld = m_collisionObject->getWorldTransform().getBasis() * rayResult.m_hitNormalLocal;
 		}
-		
+
 		m_hitPointWorld.setInterpolate3(m_rayFromWorld,m_rayToWorld,rayResult.m_hitFraction);
 		return rayResult.m_hitFraction;
 	}
@@ -100,10 +100,10 @@ bool DynamicsWorld::castRay(
 	const BEZIER * b = 0;
 	const TRACKSURFACE * s = TRACKSURFACE::None();
 	btCollisionObject * c = 0;
-	
+
 	MyRayResultCallback ray(origin, p, caster);
 	rayTest(origin, p, ray);
-	
+
 	// track geometry collision
 	bool geometryHit = ray.hasHit();
 	if (geometryHit)
@@ -132,7 +132,7 @@ bool DynamicsWorld::castRay(
 #endif
 			//std::cerr << "static object without surface" << std::endl;
 		}
-		
+
 		// track bezierpatch collision
 		if (track)
 		{
@@ -141,7 +141,7 @@ bool DynamicsWorld::castRay(
 			MATHVECTOR<float, 3> colpoint;
 			MATHVECTOR<float, 3> colnormal;
 			patch_id = contact.GetPatchId();
-			
+
 			if(track->CastRay(bezierspace_raystart, bezierspace_dir, length,
 				patch_id, colpoint, b, colnormal))
 			{
@@ -150,11 +150,11 @@ bool DynamicsWorld::castRay(
 				d = (colpoint - bezierspace_raystart).Magnitude();
 			}
 		}
-		
+
 		contact = COLLISION_CONTACT(p, n, d, patch_id, b, s, c);
 		return true;
 	}
-	
+
 	// should only happen on vehicle rollover
 	contact = COLLISION_CONTACT(p, n, d, patch_id, b, s, c);
 	return false;
@@ -225,7 +225,7 @@ void DynamicsWorld::fractureCallback()
 	{
 		btPersistentManifold* manifold = getDispatcher()->getManifoldByIndexInternal(i);
 		if (!manifold->getNumContacts()) continue;
-		
+
 		if (((btCollisionObject*)manifold->getBody0())->getInternalType() & CUSTOM_FRACTURE_TYPE)
 		{
 			FractureBody* body = (FractureBody*)manifold->getBody0();
@@ -246,7 +246,7 @@ void DynamicsWorld::fractureCallback()
 				}
 			}
 		}
-		
+
 		if (((btCollisionObject*)manifold->getBody1())->getInternalType() & CUSTOM_FRACTURE_TYPE)
 		{
 			FractureBody* body = (FractureBody*)manifold->getBody1();
@@ -268,12 +268,12 @@ void DynamicsWorld::fractureCallback()
 			}
 		}
 	}
-	
+
 	for (int i = 0; i < m_activeConnections.size(); ++i)
 	{
 		FractureBody* body = m_activeConnections[i].body;
 		btConnection& connection = body->m_connections[m_activeConnections[i].id];
-		
+
 		// check connection
 		btScalar damage = connection.m_accImpulse - connection.m_elasticLimit;
 		connection.m_accImpulse = 0;
@@ -283,7 +283,7 @@ void DynamicsWorld::fractureCallback()
 			connection.m_accImpulse = 0;
 			connection.m_elasticLimit -= damage * 0.5;
 			connection.m_strength -= damage;
-			
+
 			if (connection.m_strength < 0)
 			{
 				btRigidBody * child = body->breakConnection(m_activeConnections[i].id);

@@ -29,9 +29,9 @@ TRACKMAP::~TRACKMAP()
 void TRACKMAP::Unload()
 {
 	dotlist.clear();
-	
+
 	mapnode.Clear();
-	
+
 	mapdraw.invalidate();
 
 	if (surface)
@@ -51,10 +51,10 @@ bool TRACKMAP::BuildMap(
 	std::ostream & error_output)
 {
 	Unload();
-	
+
 	int outsizex = MAP_WIDTH;
 	int outsizey = MAP_HEIGHT;
-	
+
 	Uint32 rmask, gmask, bmask, amask;
 
 	// SDL interprets each pixel as a 32-bit number, so our masks must depend
@@ -70,9 +70,9 @@ bool TRACKMAP::BuildMap(
 	bmask = 0x00ff0000;
 	amask = 0xff000000;
 #endif
-	
+
 	surface = SDL_CreateRGBSurface(SDL_SWSURFACE, outsizex, outsizey, 32, rmask, gmask, bmask, amask);
-	
+
 	//find the map width and height
 	mapsize.Set(0,0);
 	map_w_min = FLT_MAX;
@@ -209,7 +209,7 @@ bool TRACKMAP::BuildMap(
 	texinfo.size = texsize;
 	std::tr1::shared_ptr<TEXTURE> track_map;
 	if (!textures.Load(std::string(), trackname, texinfo, track_map)) return false;
-	
+
 	//std::cout << "Loading track map dots" << std::endl;
 	TEXTUREINFO dotinfo;
 	dotinfo.size = texsize;
@@ -217,7 +217,7 @@ bool TRACKMAP::BuildMap(
 	if (!textures.Load(texturepath, "cardot1.png", dotinfo, cardot1)) return false;
 	if (!textures.Load(texturepath, "cardot0_focused.png", dotinfo, cardot0_focused)) return false;
 	if (!textures.Load(texturepath, "cardot1_focused.png", dotinfo, cardot1_focused)) return false;
-	
+
 	// calculate map position, size
 	screen[0] = (float)w;
 	screen[1] = (float)h;
@@ -227,7 +227,7 @@ bool TRACKMAP::BuildMap(
 	size[1] = MAP_HEIGHT / screen[1];
 	dot_size[0] = cardot0->GetW() / 2.0 / screen[0]; 
 	dot_size[1] = cardot0->GetH() / 2.0 / screen[1]; 
-	
+
 	mapdraw = mapnode.GetDrawlist().twodim.insert(DRAWABLE());
 	DRAWABLE & mapdrawref = mapnode.GetDrawlist().twodim.get(mapdraw);
 	mapdrawref.SetDiffuseMap(track_map);
@@ -236,7 +236,7 @@ bool TRACKMAP::BuildMap(
 	mapdrawref.SetColor(1,1,1,0.7);
 	mapdrawref.SetDrawOrder(0);
 	mapverts.SetToBillboard(position[0], position[1], position[0]+size[0], position[1]+size[1]);
-	
+
 	return true;
 }
 
@@ -254,21 +254,21 @@ void TRACKMAP::Update(bool mapvisible, const std::list <std::pair<MATHVECTOR <fl
 			std::tr1::shared_ptr<TEXTURE> tex = cardot0_focused;
 			if (!car->second)
 				tex = cardot1;
-			
+
 			//find the coordinates of the dot
 			MATHVECTOR <float, 2> dotpos = position;
 			dotpos[0] += ((car->first[1] - map_w_min)*scale + 1) / screen[0];
 			dotpos[1] += ((car->first[0] - map_h_min)*scale + 1) / screen[1];
 			MATHVECTOR <float, 2> corner1 = dotpos - dot_size;
 			MATHVECTOR <float, 2> corner2 = dotpos + dot_size;
-			
+
 			if (dot == dotlist.end())
 			{
 				//need to insert a new dot
 				dotlist.push_back(CARDOT());
 				dotlist.back().Init(mapnode, tex, corner1, corner2);
 				dot = dotlist.end();
-				
+
 				//std::cout << count << ". inserting new dot: " << corner1 << " || " << corner2 << endl;
 			}
 			else
@@ -276,12 +276,12 @@ void TRACKMAP::Update(bool mapvisible, const std::list <std::pair<MATHVECTOR <fl
 				//update existing dot
 				dot->Retexture(mapnode, tex);
 				dot->Reposition(corner1, corner2);
-				
+
 				//std::cout << count << ". reusing existing dot: " << corner1 << " || " << corner2 << endl;
-				
+
 				dot++;
 			}
-			
+
 			car++;
 			count++;
 		}
@@ -289,7 +289,7 @@ void TRACKMAP::Update(bool mapvisible, const std::list <std::pair<MATHVECTOR <fl
 			mapnode.GetDrawlist().twodim.erase(i->GetDrawableHandle());
 		dotlist.erase(dot,dotlist.end());
 	}
-	
+
 	if (mapdraw.valid())
 	{
 		DRAWABLE & mapdrawref = mapnode.GetDrawlist().twodim.get(mapdraw);
@@ -297,7 +297,7 @@ void TRACKMAP::Update(bool mapvisible, const std::list <std::pair<MATHVECTOR <fl
 	}
 	for (list <CARDOT>::iterator i = dotlist.begin(); i != dotlist.end(); ++i)
 		i->SetVisible(mapnode, mapvisible);
-	
+
 	/*for (list <CARDOT>::iterator i = dotlist.begin(); i != dotlist.end(); i++)
 		i->DebugPrint(std::cout);*/
 }

@@ -54,7 +54,7 @@ bool WIDGET_BUTTON::GetCancel() const
 bool WIDGET_BUTTON::ProcessInput(SCENENODE & scene, float cursorx, float cursory, bool cursordown, bool cursorjustup)
 {
 	active_action.clear();
-	
+
 	if (cursorx < image_up.GetCorner2()[0] &&
 		cursorx > image_up.GetCorner1()[0] &&
 		cursory < image_up.GetCorner2()[1] &&
@@ -66,7 +66,7 @@ bool WIDGET_BUTTON::ProcessInput(SCENENODE & scene, float cursorx, float cursory
 			image_down.SetVisible(scene, true);
 			image_up.SetVisible(scene, false);
 			image_selected.SetVisible(scene, false);
-			
+
 			//std::cout << "depress" << std::endl;
 		}
 		else if (!cursordown && state != SELECTED)
@@ -76,15 +76,15 @@ bool WIDGET_BUTTON::ProcessInput(SCENENODE & scene, float cursorx, float cursory
 			image_up.SetVisible(scene, false);
 			image_selected.SetVisible(scene, true);
 		}
-		
+
 		//std::cout << "hover" << std::endl << std::endl;
-		
+
 		if (cursorjustup)
 		{
 			//take some action
 			active_action = action;
 		}
-		
+
 		return true;
 	}
 	else
@@ -96,7 +96,7 @@ bool WIDGET_BUTTON::ProcessInput(SCENENODE & scene, float cursorx, float cursory
 			image_up.SetVisible(scene, true);
 			image_selected.SetVisible(scene, false);
 		}
-		
+
 		//std::cout << image_up.GetCorner1() << " x " << image_up.GetCorner2() << cursorx << "," << cursory << std::endl << std::endl;
 		return false;
 	}
@@ -128,12 +128,12 @@ void WIDGET_BUTTON::SetupDrawable(
 	assert(teximage_up);
 	assert(teximage_down);
 	assert(teximage_selected);
-	
+
 	// enlarge button to fit the text contained
 	if (h < scaley) h = scaley;
 	if (w < font.GetWidth(text) * scalex) w = font.GetWidth(text) * scalex;
 	float hwratio = scaley / scalex;
-	
+
 	label.SetupDrawable(scene, font, text, centerx, centery, scalex, scaley, r, g, b, order + 1);
 	image_up.SetupDrawable(scene, teximage_up, centerx, centery, w, h, order, true, hwratio);
 	image_down.SetupDrawable(scene, teximage_down, centerx, centery, w, h, order, true, hwratio);

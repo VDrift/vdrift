@@ -86,7 +86,7 @@ SETTINGS::SETTINGS() :
 void SETTINGS::Serialize(bool write, CONFIG & config)
 {
 	CONFIG::iterator section;
-	
+
 	config.GetSection("game", section);
 	Param(config, write, section, "vehicle_damage", vehicle_damage);
 	Param(config, write, section, "ai_difficulty", ai_difficulty);
@@ -138,7 +138,7 @@ void SETTINGS::Serialize(bool write, CONFIG & config)
 	Param(config, write, section, "normalmaps", normalmaps);
 	Param(config, write, section, "camerabounce", camerabounce);
 	Param(config, write, section, "contrast", contrast);
-	
+
 	config.GetSection("sound", section);
 	Param(config, write, section, "volume", mastervolume);
 

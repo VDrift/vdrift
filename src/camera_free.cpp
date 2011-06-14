@@ -15,7 +15,7 @@ void CAMERA_FREE::Reset(const MATHVECTOR <float, 3> & newpos, const QUATERNION <
 	leftright_rotation = 0;
 	updown_rotation = 0;
 	Rotate(0, 0);
-	
+
 	MATHVECTOR <float, 3> move(-direction::Forward * 8);
 	position = newpos + offset;
 	Move(move[0], move[1], move[2]);
@@ -27,7 +27,7 @@ void CAMERA_FREE::Rotate(float up, float left)
 	if (updown_rotation > 1.0) updown_rotation = 1.0;
 	if (updown_rotation <-1.0) updown_rotation =-1.0;
 	leftright_rotation += left;
-	
+
 	rotation.LoadIdentity();
 	rotation.Rotate(updown_rotation, direction::Right);
 	rotation.Rotate(leftright_rotation, direction::Up);

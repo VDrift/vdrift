@@ -27,7 +27,7 @@ void WIDGET_IMAGE::SetupDrawable(
 	MATHVECTOR <float, 2> center(x, y);
 	corner1 = center - dim * 0.5;
 	corner2 = center + dim * 0.5;
-	
+
 	draw = scene.GetDrawlist().twodim.insert(DRAWABLE());
 	DRAWABLE & drawref = GetDrawable(scene);
 	drawref.SetDiffuseMap(teximage);
@@ -35,7 +35,7 @@ void WIDGET_IMAGE::SetupDrawable(
 	drawref.SetCull(false, false);
 	drawref.SetColor(r, g, b, a);
 	drawref.SetDrawOrder(z);
-	
+
 	if (button_mode)
 	{
 		float sidewidth = h / (screenhwratio * 3.0);

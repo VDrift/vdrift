@@ -38,7 +38,7 @@ void WIDGET_CONTROLGRAB::SetAlpha(SCENENODE & scene, float newalpha)
 	SCENENODE & topnoderef = scene.GetNode(topnode);
 	label.SetAlpha(topnoderef, newalpha);
 	addbutton.SetAlpha(topnoderef, newalpha);
-	
+
 	SCENENODE & ctrlnoderef = topnoderef.GetNode(ctrlnode);
 	for (std::list <CONTROLWIDGET>::iterator i = controlbuttons.begin(); i != controlbuttons.end(); ++i)
 	{
@@ -51,7 +51,7 @@ void WIDGET_CONTROLGRAB::SetVisible(SCENENODE & scene, bool newvis)
 	SCENENODE & topnoderef = scene.GetNode(topnode);
 	label.SetVisible(topnoderef, newvis);
 	addbutton.SetVisible(topnoderef, newvis);
-	
+
 	SCENENODE & ctrlnoderef = topnoderef.GetNode(ctrlnode);
 	for (std::list <CONTROLWIDGET>::iterator i = controlbuttons.begin(); i != controlbuttons.end(); ++i)
 	{
@@ -85,7 +85,7 @@ bool WIDGET_CONTROLGRAB::ProcessInput(
 {
 	active_action.clear();
 	tempdescription.clear();
-	
+
 	//generate the add input tooltip, check to see if we pressed the add input button, generate an action
 	SCENENODE & topnoderef = scene.GetNode(topnode);
 	if (addbutton.ProcessInput(topnoderef, cursorx, cursory, cursordown, cursorjustup))
@@ -96,7 +96,7 @@ bool WIDGET_CONTROLGRAB::ProcessInput(
 			active_action = "controlgrabadd:"+std::string(analog?"y":"n")+":"+std::string(only_one?"y":"n")+":"+setting;
 		}
 	}
-	
+
 	//generate the input tooltip, check to see if we clicked, generate an action
 	SCENENODE & ctrlnoderef = topnoderef.GetNode(ctrlnode);
 	for (std::list <CONTROLWIDGET>::iterator i = controlbuttons.begin(); i != controlbuttons.end(); ++i)
@@ -105,7 +105,7 @@ bool WIDGET_CONTROLGRAB::ProcessInput(
 		{
 			continue;
 		}
-		
+
 		if (i->type == "key")
 		{
 			std::stringstream desc;
@@ -155,7 +155,7 @@ bool WIDGET_CONTROLGRAB::ProcessInput(
 			}
 			tempdescription = desc.str();
 		}
-		
+
 		//generate an action.  code up an action string based on the DebugPrint string representation of a CONTROL
 		if (cursorjustup)
 		{
@@ -165,7 +165,7 @@ bool WIDGET_CONTROLGRAB::ProcessInput(
 			newctrl.gain = i->gain;
 			newctrl.onetime = i->once;
 			newctrl.type = CARCONTROLMAP_LOCAL::CONTROL::UNKNOWN;
-			
+
 			if (i->type == "key")
 			{
 				newctrl.type = CARCONTROLMAP_LOCAL::CONTROL::KEY;
@@ -180,13 +180,13 @@ bool WIDGET_CONTROLGRAB::ProcessInput(
 				newctrl.joytype = CARCONTROLMAP_LOCAL::CONTROL::JOYBUTTON;
 				newctrl.joybutton = i->joy_button;
 				newctrl.joypushdown = i->down;
-				
+
 				if (i->joy_type == "axis")
 				{
 					newctrl.joytype = CARCONTROLMAP_LOCAL::CONTROL::JOYAXIS;
 					newctrl.joyaxistype = CARCONTROLMAP_LOCAL::CONTROL::POSITIVE;
 					newctrl.joyaxis = i->joy_axis;
-					
+
 					if (i->joy_axis_type == "negative")
 					{
 						newctrl.joyaxistype = CARCONTROLMAP_LOCAL::CONTROL::NEGATIVE;
@@ -207,12 +207,12 @@ bool WIDGET_CONTROLGRAB::ProcessInput(
 				newctrl.mousetype = CARCONTROLMAP_LOCAL::CONTROL::MOUSEBUTTON;
 				newctrl.mbutton = i->mouse_button;
 				newctrl.mouse_push_down = i->down;
-				
+
 				if (i->mouse_type == "motion")
 				{
 					newctrl.mousetype = CARCONTROLMAP_LOCAL::CONTROL::MOUSEMOTION;
 					newctrl.mdir = CARCONTROLMAP_LOCAL::CONTROL::RIGHT;
-					
+
 					if (i->mouse_motion == "up")
 					{
 						newctrl.mdir = CARCONTROLMAP_LOCAL::CONTROL::UP;
@@ -227,13 +227,13 @@ bool WIDGET_CONTROLGRAB::ProcessInput(
 					}
 				}
 			}
-			
+
 			std::stringstream controlstring;
 			newctrl.DebugPrint(controlstring);
 			active_action = "controlgrabedit:" + controlstring.str() + setting;
 		}
 	}
-	
+
 	return (cursorx > x - w * 0.5 &&
 			cursorx < x + w * 0.5 &&
 			cursory > y - h * 0.5 &&
@@ -258,37 +258,37 @@ void WIDGET_CONTROLGRAB::SetupDrawable(
 	assert(!newsetting.empty());
 	assert(texturevector.size() == END);
 	for (int i = 0; i < END; ++i) assert(texturevector[i]);
-	
+
 	setting = newsetting;
 	textures = texturevector;
-	
+
 	topnode = scene.AddNode();
 	SCENENODE & topnoderef = scene.GetNode(topnode);
 	ctrlnode = topnoderef.AddNode();
-	
+
 	x = centerx;
 	y = centery;
 	z = newz;
 	h = scaley;
 	w = 0.5;
-	
+
 	scale_x = scalex;
 	scale_y = scaley;
-	
+
 	analog = newanalog;
 	only_one = newonly_one;
-	
+
 	float r(1), g(1), b(1);
 	float lw = label.GetWidth(font, text, scalex);
 	float lx = x - w * 0.5 + lw * 0.5;
 	float ly = y;
 	float bw = scalex * 0.8 * (4.0 / 3.0);
 	float bh = scaley * 0.8;
-	
+
 	label.SetupDrawable(topnoderef, font, text, lx, ly, scalex, scaley, r, g, b, z+1);
 	addbutton.SetupDrawable(topnoderef, textures[ADD], textures[ADDSEL], textures[ADDSEL],
 		font, "", x, y, bw, bh, r ,g, b, 0, 0, z);
-	
+
 	LoadControls(scene, c, font);
 }
 
@@ -296,16 +296,16 @@ void WIDGET_CONTROLGRAB::LoadControls(SCENENODE & scene, const CONFIG & c, const
 {
 	assert(textures.size() == END);
 	assert(!setting.empty()); //ensure that we've already done a SetupDrawable
-	
+
 	SCENENODE & parentnode = scene.GetNode(topnode).GetNode(ctrlnode);
 	parentnode.Clear();
 	controlbuttons.clear();
-	
+
 	for (CONFIG::const_iterator section = c.begin(); section != c.end(); ++section)
 	{
 		std::string controlname;
 		c.GetParam(section, "name",  controlname);
-		
+
 		if (controlname == setting)
 		{
 			controlbuttons.push_back(CONTROLWIDGET());
@@ -326,7 +326,7 @@ void WIDGET_CONTROLGRAB::LoadControls(SCENENODE & scene, const CONFIG & c, const
 			c.GetParam(section, "deadzone", button.deadzone);
 			c.GetParam(section, "exponent", button.exponent);
 			c.GetParam(section, "gain", button.gain);
-			
+
 			std::tr1::shared_ptr<TEXTURE> tex_unsel;
 			std::tr1::shared_ptr<TEXTURE> tex_sel;
 			if (button.type == "key")
@@ -352,13 +352,13 @@ void WIDGET_CONTROLGRAB::LoadControls(SCENENODE & scene, const CONFIG & c, const
 				tex_unsel = textures[MOUSE];
 				tex_sel = textures[MOUSESEL];
 			}
-			
+
 			float r(1), g(1), b(1);
 			float bw = scale_x * 0.8 * (4.0 / 3.0);
 			float bh = scale_y * 0.8;
 			float bx = x + bw * controlbuttons.size();
 			float by = y;
-			
+
 			button.widget.SetupDrawable(parentnode, tex_unsel, tex_sel, tex_sel,
 				font, "", bx, by, bw, bh, r, g, b, 0, 0, z);
 		}

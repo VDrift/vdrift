@@ -9,7 +9,7 @@ void GRAPHICS_CONFIG_CONDITION::Parse(const std::string & str)
 	{
 		std::string condition;
 		parser >> condition;
-		
+
 		if (!condition.empty())
 		{
 			if (condition[0] == '!')
@@ -44,7 +44,7 @@ bool GRAPHICS_CONFIG_CONDITION::Satisfied(const std::set <std::string> & conditi
 			return false;
 		}
 	}
-	
+
 	// if we find any of our negative conditions in the conditions set, return false
 	for (std::set <std::string>::const_iterator i = negated_conditions.begin(); i != negated_conditions.end(); i++)
 	{
@@ -53,6 +53,6 @@ bool GRAPHICS_CONFIG_CONDITION::Satisfied(const std::set <std::string> & conditi
 			return false;
 		}
 	}
-	
+
 	return true;
 }
