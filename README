@@ -37,6 +37,7 @@ The required libraries include:
 	Boost C++ Libraries (header-file-only)
 	ASIO C++ Libraries (header-file-only)
 	bullet C++ Libraries (BulletCollision, BulletDynamics, LinearMath)
+	libcurl - For managing data download from the net.
 
 Your Linux distribution may have different package names and/or bundled differently. The list above should give enough information to search for applicable packages within your distribution's package manager.
 For Ubuntu, all the required packages may be installed using this command:
