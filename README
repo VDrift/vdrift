@@ -1,6 +1,16 @@
+Project's Homepage: http://vdrift.net/
+
+Documentation: http://wiki.vdrift.net/Main_Page
+
+Source repositories: https://github.com/VDrift
+
+Data repository: http://sourceforge.net/projects/vdrift/
+
+
 VDrift svn trunk import starting at revision number 2504 (6-15-09 release), bullet sources excluded.
 
 For more information: http://vdrift.net/Forum/viewtopic.php?t=1492
+
 
 HARDWARE:
 
@@ -26,7 +36,7 @@ The required libraries include:
 	libvorbis - The Vorbis General Audio Compression Codec
 	Boost C++ Libraries (header-file-only)
 	ASIO C++ Libraries (header-file-only)
-	bullet - Needs to be compiled by hand (2.73 version is recommended).
+	bullet C++ Libraries (BulletCollision, BulletDynamics, LinearMath)
 
 Your Linux distribution may have different package names and/or bundled differently. The list above should give enough information to search for applicable packages within your distribution's package manager.
 For Ubuntu, all the required packages may be installed using this command:
