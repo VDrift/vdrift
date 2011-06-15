@@ -65,6 +65,7 @@ if (sys.platform == 'freebsd6') or (sys.platform == 'freebsd7') or (sys.platform
         env.Replace(CC = "g++")
     if 'CXXFLAGS' in os.environ:
         env.Append(CXXFLAGS = os.environ['CXXFLAGS'])
+
 #------------#
 # OS X build #
 #------------#
@@ -76,7 +77,7 @@ elif sys.platform == 'darwin':
 
     env = Environment(ENV = os.environ,
         CPPPATH = ['#include', '#src', '#tools/osx', '#tools/osx/SDL.framework/Headers'],
-        CCFLAGS = ['-Wall', '-Wextra', '-Wno-unused-parameters'],
+        CCFLAGS = ['-Wall', '-Wextra'],
         CXXFLAGS = Split("$CCFLAGS -Wno-non-virtual-dtor"),
         LIBPATH = ['.'],
         FRAMEWORKPATH = ['tools/osx'],
