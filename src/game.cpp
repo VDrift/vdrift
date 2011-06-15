@@ -1615,8 +1615,9 @@ void GAME::UpdateCarInputs(CAR & car)
 		float left = TickPeriod() * (carcontrol.GetInput(CARINPUT::PAN_LEFT) - carcontrol.GetInput(CARINPUT::PAN_RIGHT));
 		float up = TickPeriod() * (carcontrol.GetInput(CARINPUT::PAN_UP) - carcontrol.GetInput(CARINPUT::PAN_DOWN));
 		float dy = TickPeriod() * (carcontrol.GetInput(CARINPUT::ZOOM_IN) - carcontrol.GetInput(CARINPUT::ZOOM_OUT));
+		MATHVECTOR<float, 3> zoom(direction::Forward * 4 * dy);
 		active_camera->Rotate(up, left);
-		active_camera->Move(0, 4 * dy, 0);
+		active_camera->Move(zoom[0], zoom[1], zoom[2]);
 
 		//set cockpit sounds
 		bool incar = (active_camera->GetName() == "hood" || active_camera->GetName() == "incar");
