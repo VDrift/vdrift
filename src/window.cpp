@@ -41,7 +41,8 @@ void WINDOW_SDL::Init(const std::string & windowcaption,
 	{
 		string err = SDL_GetError();
 		error_output << "SDL initialization failed: " << err << endl;
-		assert(0); //die
+		// Die...
+		assert(0);
 	}
 	else
 		info_output << "SDL initialization successful" << endl;
