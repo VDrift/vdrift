@@ -265,7 +265,6 @@ env.Append (BUILDERS = {'Tarball' : tarball_bld})
 #--------------------------------------------------#
 def exportvisit( srcfiles, dirname, entries):
     from os.path import join, isdir, islink
-    entries.remove( '.svn' )
     
     srcfiles.extend( [ File( join( dirname, e ) ) for e in entries 
             if not isdir( join( dirname, e ) ) ] )
