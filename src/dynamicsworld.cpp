@@ -5,6 +5,8 @@
 #include "model.h"
 #include "track.h"
 
+#define EXTBULLET
+
 struct MyRayResultCallback : public btCollisionWorld::RayResultCallback
 {
 	MyRayResultCallback(
