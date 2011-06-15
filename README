@@ -26,6 +26,7 @@ The required libraries include:
 	libvorbis - The Vorbis General Audio Compression Codec
 	Boost C++ Libraries (header-file-only)
 	ASIO C++ Libraries (header-file-only)
+	libcurl - For managing data download from the net.
 	bullet - Needs to be compiled by hand (2.73 version is recommended).
 
 Your Linux distribution may have different package names and/or bundled differently. The list above should give enough information to search for applicable packages within your distribution's package manager.
