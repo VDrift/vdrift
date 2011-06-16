@@ -32,19 +32,19 @@ bool inverseorder(int i1, int i2)
 void PARTICLE_SYSTEM::Update(float dt, const QUATERNION <float> & camdir, const MATHVECTOR <float, 3> & campos)
 {
 	QUATERNION <float> camdir_conj = -camdir;
-	
+
 	std::vector <int> expired_list;
-	
+
 	for (unsigned int i = 0; i < particles.size(); i++)
 	{
 		particles[i].Update(node, dt, camdir_conj, campos);
 		if (particles[i].Expired())
 			expired_list.push_back(i);
 	}
-	
+
 	//must sort our expired list so highest numbers come first or swap & pop won't work
 	std::sort(expired_list.begin(), expired_list.end(), inverseorder);
-	
+
 	if (expired_list.size() == particles.size() && !particles.empty())
 	{
 		//std::cout << "Clearing all nodes" << std::endl;
@@ -53,9 +53,9 @@ void PARTICLE_SYSTEM::Update(float dt, const QUATERNION <float> & camdir, const 
 	else if (!expired_list.empty())
 	{
 		assert(expired_list.size() < particles.size());
-		
+
 		//std::cout << "Getting ready to delete " << expired_list.size() << "/" << particles.size() << std::endl;
-		
+
 		//do the old swap & pop trick to remove expired particles quickly.
 		//all swaps must be done before the popping starts, because popping invalidates iterators
 		int newback = particles.size()-1;
@@ -66,13 +66,13 @@ void PARTICLE_SYSTEM::Update(float dt, const QUATERNION <float> & camdir, const 
 			{
 				std::swap(particles[*i], particles[newback]);
 			}
-			
+
 			//std::cout << "Deleted node: " << &particles[newback].GetNode() << endl;
 			node.Delete(particles[newback].GetNode());
-			
+
 			newback--;
 		}
-		
+
 		//do all of the pops
 		//std::cout << expired_list.size() << ", " << particles.size() << ", " << newback << std::endl;
 		assert((int)particles.size() - (int)expired_list.size() == newback + 1);
@@ -92,26 +92,26 @@ void PARTICLE_SYSTEM::AddParticle(
 {
 	if (cur_texture == textures.end())
 		cur_texture = textures.begin();
-	
+
 	std::tr1::shared_ptr<TEXTURE> tex;
 	if (!testonly)
 	{
 		assert(cur_texture != textures.end()); //this should only happen if the textures array is empty, which should never happen unless we're doing a unit test
 		tex = *cur_texture;
 	}
-	
+
 	const unsigned int max_particles = 128;
-	
+
 	while (particles.size() >= max_particles)
 		particles.pop_back();
-	
+
 	particles.push_back(PARTICLE(node, position, direction,
 			    speed_range.first+newspeed*(speed_range.second-speed_range.first),
 			    transparency_range.first+newspeed*(transparency_range.second-transparency_range.first),
 			    longevity_range.first+newspeed*(longevity_range.second-longevity_range.first),
 			    size_range.first+newspeed*(size_range.second-size_range.first),
 				tex));
-	
+
 	if (cur_texture != textures.end())
 		cur_texture++;
 }
@@ -122,7 +122,7 @@ void PARTICLE_SYSTEM::Clear()
 	{
 		node.Delete(i->GetNode());
 	}
-	
+
 	particles.clear();
 }
 
@@ -148,7 +148,7 @@ QT_TEST(particle_test)
 	TEXTUREMANAGER t(out);
 	s.SetParameters(1.0,1.0,0.5,1.0,1.0,1.0,1.0,1.0,MATHVECTOR<float,3>(0,1,0));
 	s.Load(std::list<std::string> (), std::string(), "large", 0, t, out);
-	
+
 	//test basic particle management:  adding particles and letting them expire and get removed over time
 	QT_CHECK_EQUAL(s.NumParticles(),0);
 	s.AddParticle(MATHVECTOR<float,3>(0,0,0),0,0,0,0,true);

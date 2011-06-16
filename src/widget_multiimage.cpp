@@ -20,7 +20,7 @@ void WIDGET_MULTIIMAGE::SetupDrawable(
 	TEXTUREMANAGER & textures,
 	const std::string & texturesize,
 	const std::string & newprefix,
-	const std::string & newpostfix, 
+	const std::string & newpostfix,
 	float x, float y, float w, float h,
 	std::ostream & error_output,
 	float z)
@@ -50,9 +50,9 @@ void WIDGET_MULTIIMAGE::HookMessage(SCENENODE & scene, const std::string & messa
 {
 	assert(errptr);
 	assert(textures);
-	
+
 	s1.Load(scene, prefix, message + postfix, tsize, *textures, draworder, *errptr);
 	s1.SetToBillboard(center[0] - dim[0] * 0.5, center[1] - dim[1] * 0.5, dim[0], dim[1]);
-	
+
 	if (s1.Loaded()) s1.SetVisible(scene, wasvisible);
 }

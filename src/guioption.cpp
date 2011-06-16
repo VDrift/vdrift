@@ -4,7 +4,7 @@
 
 const std::string GUIOPTION::null;
 
-GUIOPTION::GUIOPTION() : 
+GUIOPTION::GUIOPTION() :
 	current_valid(false),
 	min(0),
 	max(1),
@@ -17,7 +17,7 @@ void GUIOPTION::ReplaceValues(const std::list <std::pair<std::string, std::strin
 {
 	//if (text == "Color") std::cout << "car paint: values replaced" << std::endl;
 	values = newvalues;
-	
+
 	SetToFirstValue();
 }
 
@@ -32,7 +32,7 @@ void GUIOPTION::SetInfo(const std::string & newtext, const std::string & newdesc
 void GUIOPTION::Insert(const std::string & stored_value, const std::string & display_value)
 {
 	//if (text == "Color") std::cout << "car paint: values added: " << stored_value << std::endl;
-	
+
 	/*bool duplicate = false;
 	for (std::list <std::pair<std::string, std::string> >::iterator i = values.begin(); i != values.end(); i++)
 	{
@@ -41,7 +41,7 @@ void GUIOPTION::Insert(const std::string & stored_value, const std::string & dis
 			duplicate = true;
 		}
 	}
-	
+
 	if (!duplicate)*/
 		values.push_back(std::pair<std::string, std::string>(stored_value,display_value));
 }
@@ -57,7 +57,7 @@ void GUIOPTION::SetMinMaxPercentage(float newmin, float newmax, bool newpercenta
 bool GUIOPTION::SetCurrentValue(const std::string & storedvaluename)
 {
 	//if (text == "Color") std::cout << "car paint: setcurrentvalue " << storedvaluename << " !! " << values.empty() << std::endl;
-	
+
 	if (values.empty())
 	{
 		non_value_data = storedvaluename;
@@ -113,7 +113,7 @@ void GUIOPTION::Increment()
 		current_value = values.end();
 		return;
 	}
-	
+
 	if (current_value == values.end())
 		current_value = values.begin();
 	else
@@ -122,7 +122,7 @@ void GUIOPTION::Increment()
 		if (current_value == values.end())
 			current_value = values.begin();
 	}
-	
+
 	current_valid = !values.empty();
 }
 
@@ -134,12 +134,12 @@ void GUIOPTION::Decrement()
 		current_value = values.end();
 		return;
 	}
-	
+
 	if (current_value == values.begin())
 		current_value = values.end();
 
 	current_value--;
-	
+
 	current_valid = !values.empty();
 }
 

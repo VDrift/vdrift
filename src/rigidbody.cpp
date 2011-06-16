@@ -23,7 +23,7 @@ QT_TEST(rigidbody_test)
 	QT_CHECK_CLOSE(pos[0], expected[0], 0.0001);
 	QT_CHECK_CLOSE(pos[1], expected[1], 0.0001);
 	QT_CHECK_CLOSE(pos[2], expected[2], 0.0001);
-	
+
 	QT_CHECK_CLOSE(body.TransformWorldToLocal(pos)[0], localcoords[0], 0.0001);
 	QT_CHECK_CLOSE(body.TransformWorldToLocal(pos)[1], localcoords[1], 0.0001);
 	QT_CHECK_CLOSE(body.TransformWorldToLocal(pos)[2], localcoords[2], 0.0001);

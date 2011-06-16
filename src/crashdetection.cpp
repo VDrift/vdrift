@@ -3,22 +3,22 @@
 #include <cassert>
 
 CRASHDETECTION::CRASHDETECTION()
-: lastvel(0), 
+: lastvel(0),
   curmaxdecel(0),
   maxdecel(0),
   deceltrigger(200)
 {
-	
+
 }
 
 void CRASHDETECTION::Update(float vel, float dt)
 {
 	maxdecel = 0;
-	
+
 	float decel = (lastvel - vel)/dt;
-	
+
 	//std::cout << "Decel: " << decel << std::endl;
-	
+
 	if (decel > deceltrigger && curmaxdecel == 0)
 	{
 		//idle, start capturing decel
@@ -38,6 +38,6 @@ void CRASHDETECTION::Update(float vel, float dt)
 			curmaxdecel = 0;
 		}
 	}
-	
+
 	lastvel = vel;
 }

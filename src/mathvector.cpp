@@ -14,7 +14,7 @@ QT_TEST(mathvector_test)
 		test3 = test1 + test2;
 		QT_CHECK_EQUAL(test3[0], 13);
 	}
-	
+
 	{
 		MATHVECTOR <float, 2> test1(0);
 		test1.Set(3,4);
@@ -23,7 +23,7 @@ QT_TEST(mathvector_test)
 		QT_CHECK_EQUAL(test3[0], 2);
 		QT_CHECK_EQUAL(test3[1], 3);
 	}
-	
+
 	{
 		MATHVECTOR <float, 3> test1;
 		test1.Set(1,2,3);
@@ -32,17 +32,17 @@ QT_TEST(mathvector_test)
 		QT_CHECK_EQUAL(test3[0], 2);
 		QT_CHECK_EQUAL(test3[1], 3);
 		QT_CHECK_EQUAL(test3[2], 4);
-		
+
 		test3 = test1;
 		QT_CHECK(test1 == test3);
 		QT_CHECK(test1 != test2);
-		
+
 		test3 = -test1;
 		MATHVECTOR <float, 3> answer;
 		answer.Set(-1,-2,-3);
 		QT_CHECK_EQUAL(test3,answer);
 	}
-	
+
 	{
 		MATHVECTOR <float, 3> test1;
 		test1.Set(1,2,3);
@@ -84,21 +84,21 @@ QT_TEST(mathvector_test)
 		QT_CHECK_EQUAL(testcopy,test1);
 		QT_CHECK_CLOSE(test1.MagnitudeSquared(),14.0,0.001);
 		QT_CHECK_CLOSE(test1.Magnitude(),3.741657,0.001);
-		
+
 		QT_CHECK_CLOSE(test1.Normalize()[0],0.267261,0.001);
 		QT_CHECK_CLOSE(test1.Normalize()[1],0.534522,0.001);
-		
+
 		MATHVECTOR <float, 3> test2;
 		for (int i = 0; i < 3; i++)
 			QT_CHECK_EQUAL(test2[i],0);
 		test2.Set(2,3,4);
 		QT_CHECK_CLOSE(test1.dot(test2),20.0,0.001);
-		
+
 		test1.Set(1,-1,-2);
 		test1.absify();
 		QT_CHECK_EQUAL(test1,(MATHVECTOR<float,3>(1,1,2)));
 	}
-	
+
 	{
 		MATHVECTOR <float, 3> test1;
 		test1.Set(1,2,3);

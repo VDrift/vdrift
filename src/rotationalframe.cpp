@@ -17,7 +17,7 @@ QT_TEST(rotationalframe_test)
 		frame.SetAngularVelocity(initv);
 		MATHVECTOR <double, 3> torque;
 		torque.Set(0,1,0);
-		
+
 		//integrate for 10 seconds
 		for (int i = 0; i < 1000; i++)
 		{
@@ -27,14 +27,14 @@ QT_TEST(rotationalframe_test)
 			frame.ApplyTorque(torque);
 			frame.Integrate2(0.01);
 		}
-		
+
 		/*cout << "t = " << t << endl;
 		cout << "Calculated Orientation: " << frame.GetOrientation() << endl;
 		cout << "Calculated Velocity: " << frame.GetAngularVelocity() << endl;*/
-		
+
 		QT_CHECK_CLOSE(frame.GetAngularVelocity()[1], 0.1, 0.0001);
 	}
-	
+
 	{
 		ROTATIONALFRAME <double> frame;
 		//frame.SetInertia(1.0);
@@ -48,7 +48,7 @@ QT_TEST(rotationalframe_test)
 		MATRIX3 <double> inertia;
 		inertia.Scale(0.1);
 		frame.SetInertia(inertia);
-		
+
 		//integrate for 10 seconds
 		for (int i = 0; i < 1000; i++)
 		{
@@ -56,11 +56,11 @@ QT_TEST(rotationalframe_test)
 			frame.ApplyTorque(torque);
 			frame.Integrate2(0.01);
 		}
-		
+
 		//cout << "t = " << t << endl;
 		//cout << "Calculated Orientation: " << frame.GetOrientation() << endl;
 		//cout << "Calculated Velocity: " << frame.GetAngularVelocity() << endl;
-			
+
 		//QT_CHECK_CLOSE(frame.GetAngularVelocity()[1], 0.1, 0.0001);
 		QT_CHECK_CLOSE(frame.GetAngularVelocity()[1], 100., 0.0001);
 	}

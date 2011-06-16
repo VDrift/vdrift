@@ -49,10 +49,10 @@ bool TRACK::DeferredLoad(
 	const bool agressivecombine)
 {
 	Clear();
-	
+
 	world.reset(*this);
 	data.world = &world;
-	
+
 	loader.reset(
 		new LOADER(
 			textures, models, world, data,
@@ -63,7 +63,7 @@ bool TRACK::DeferredLoad(
 			dynamicobjects,
 			dynamicshadows,
 			agressivecombine));
-	
+
 	return loader->BeginLoad();
 }
 
@@ -93,7 +93,7 @@ void TRACK::Clear()
 		delete data.objects[i];
 	}
 	data.objects.clear();
-	
+
 	/*
 	int wnum = data.world->getCollisionObjectArray().size();
 	std::cerr << "world collision objects leaking: " << wnum << std::endl;
@@ -104,7 +104,7 @@ void TRACK::Clear()
 		data.world->removeCollisionObject(ob);
 	}
 	*/
-	
+
 	for(int i = 0, n = data.shapes.size(); i < n; ++i)
 	{
 		btCollisionShape * shape = data.shapes[i];/*
@@ -120,13 +120,13 @@ void TRACK::Clear()
 		delete shape;
 	}
 	data.shapes.clear();
-	
+
 	for(int i = 0, n = data.meshes.size(); i < n; ++i)
 	{
 		delete data.meshes[i];
 	}
 	data.meshes.clear();
-	
+
 	data.static_node.Clear();
 	data.surfaces.clear();
 	data.models.clear();
@@ -241,7 +241,7 @@ std::pair <MATHVECTOR <float, 3>, QUATERNION <float> > TRACK::GetStart(unsigned 
 void TRACK::Update()
 {
 	if (!data.loaded) return;
-	
+
 	std::list<MotionState>::const_iterator t = data.body_transforms.begin();
 	for (int i = 0, e = data.body_nodes.size(); i < e; ++i, ++t)
 	{

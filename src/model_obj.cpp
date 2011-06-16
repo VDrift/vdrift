@@ -56,10 +56,10 @@ bool ExtractRepeating(std::vector <T> & output_vector, unsigned int repeats, std
 		reformat >> reformatted;
 		output_vector.push_back(reformatted);
 	}
-	
+
 	if (output_vector.size() != repeats)
 		return false;
-	
+
 	return true;
 }
 
@@ -91,10 +91,10 @@ bool BuildVertex(VERTEXARRAY::VERTEXDATA & outputvert, vector <VERTEXARRAY::TRIF
 {
 	if (std::count(facestr.begin(), facestr.end(), '/') != 2)
 		return false;
-	
+
 	if (facestr.find("//") != string::npos)
 		return false;
-	
+
 	string facestr2 = facestr;
 	std::replace(facestr2.begin(), facestr2.end(), '/', ' ');
 	stringstream s(facestr2);
@@ -102,11 +102,11 @@ bool BuildVertex(VERTEXARRAY::VERTEXDATA & outputvert, vector <VERTEXARRAY::TRIF
 	s >> v >> t >> n;
 	if (v <= 0 || t <= 0 || n <= 0)
 		return false;
-	
+
 	outputvert.vertex = verts[v-1];
 	outputvert.normal = normals[n-1];
 	outputvert.texcoord = texcoords[t-1];
-	
+
 	return true;
 }
 
@@ -118,16 +118,16 @@ bool MODEL_OBJ::Load(const std::string & filepath, std::ostream & error_log, boo
 		error_log << "Couldn't open object file: " << filepath << endl;
 		return false;
 	}
-	
+
 	vector <VERTEXARRAY::TRIFLOAT> verts;
 	vector <VERTEXARRAY::TRIFLOAT> normals;
 	vector <VERTEXARRAY::TWOFLOAT> texcoords;
 	vector <VERTEXARRAY::FACE> faces;
-	
+
 	while (f)
 	{
 		string id = ReadFromStream(f);
-		
+
 		if (id == "v")
 		{
 			if (!ExtractTriFloat(verts, "vertices", f, error_log, filepath)) return false;
@@ -162,12 +162,12 @@ bool MODEL_OBJ::Load(const std::string & filepath, std::ostream & error_log, boo
 			faces.push_back(newface);
 		}
 	}
-	
+
 	mesh.BuildFromFaces(faces);
 	GenerateMeshMetrics();
 	if (genlist)
 		GenerateListID(error_log);
-	
+
 	return true;
 }
 
@@ -207,16 +207,16 @@ bool MODEL_OBJ::Save(const std::string & strFileName, std::ostream & error_outpu
 		error_output << "Error opening file for writing: " << error_output << endl;
 		return false;
 	}
-	
+
 	f << "# Model conversion utility by Joe Venzon" << endl << endl;
-	
+
 	WriteVectorGroupings(f, mesh.vertices, "v", 3);
 	f << endl;
 	WriteVectorGroupings(f, mesh.texcoords[0], "vt", 2);
 	f << endl;
 	WriteVectorGroupings(f, mesh.normals, "vn", 3);
 	f << endl;
-	
+
 	for (int i = 0; i < (int)mesh.faces.size()/3; i++)
 	{
 		f << "f ";
@@ -227,7 +227,7 @@ bool MODEL_OBJ::Save(const std::string & strFileName, std::ostream & error_outpu
 		}
 		f << endl;
 	}
-	
+
 	return true;
 }
 

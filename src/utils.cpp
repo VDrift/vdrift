@@ -11,26 +11,26 @@ namespace UTILS
 std::string LoadFileIntoString(const std::string & filepath, std::ostream & error_output)
 {
 	std::string filestring;
-	
+
 	std::ifstream f;
 	f.open(filepath.c_str());
 	if (f)
 	{
 		char c[1024];
-		
+
 		while (f.good())
 		{
 			f.get(c, 1024, 0);
 			filestring = filestring + c;
 		}
-		
+
 		f.close();
 	}
 	else
 	{
 		error_output << "File not found: " + filepath << std::endl;
 	}
-	
+
 	return filestring;
 }
 
@@ -38,7 +38,7 @@ std::string SeekTo(std::istream & in, const std::string & token)
 {
 	std::string sofar; // what we've read in so far
 	std::string potential; // potential token
-	
+
 	while (in && potential != token)
 	{
 		char c = in.get();
@@ -60,9 +60,9 @@ std::string SeekTo(std::istream & in, const std::string & token)
 			}
 		}
 	}
-	
+
 	//std::cout << "sofar: " << sofar << ", potential: " << potential << std::endl;
-	
+
 	if (potential != token)
 		return sofar+potential;
 	else
@@ -113,7 +113,7 @@ std::vector <std::string> explode(const std::string & toExplode, const std::stri
 	std::vector <std::string> out;
 	size_t lastPos = 0;
 	size_t curPos = 0;
-	
+
 	curPos = toExplode.find(sep, lastPos);
 	while (curPos != std::string::npos)
 	{
@@ -121,12 +121,12 @@ std::vector <std::string> explode(const std::string & toExplode, const std::stri
 		lastPos = curPos+sep.size();
 		curPos = toExplode.find(sep, lastPos);
 	}
-	
+
 	if (lastPos != curPos && lastPos < toExplode.size())
 		out.push_back(toExplode.substr(lastPos));
 	else
 		out.push_back("");
-	
+
 	return out;
 }
 
@@ -143,7 +143,7 @@ QT_TEST(utils_test)
 		if (exploded.size() > 3) QT_CHECK_EQUAL(exploded[3], "code");
 		if (exploded.size() > 4) QT_CHECK_EQUAL(exploded[4], "test.hog");
 	}
-	
+
 	{
 		std::vector <std::string> exploded = UTILS::explode("/home/joe/code/", "/");
 		QT_CHECK_EQUAL(exploded.size(), 5);
@@ -153,7 +153,7 @@ QT_TEST(utils_test)
 		if (exploded.size() > 3) QT_CHECK_EQUAL(exploded[3], "code");
 		if (exploded.size() > 4) QT_CHECK_EQUAL(exploded[4], "");
 	}
-	
+
 	{
 		std::vector <std::string> exploded = UTILS::explode("c:/home/joe/code/test.hog", "/");
 		QT_CHECK_EQUAL(exploded.size(), 5);

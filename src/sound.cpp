@@ -26,7 +26,7 @@ SOUND::~SOUND()
 	{
 		SDL_CloseAudio();
 	}
-	
+
 	if (sourcelistlock)
 		SDL_DestroyMutex(sourcelistlock);
 }
@@ -40,7 +40,7 @@ bool SOUND::Init(int buffersize, std::ostream & info_output, std::ostream & erro
 {
 	if (disable || initdone)
 		return false;
-	
+
 	sourcelistlock = SDL_CreateMutex();
 
 	SDL_AudioSpec desired, obtained;
@@ -133,9 +133,9 @@ void SOUND::Callback16bitstereo(void *myself, Uint8 *stream, int len)
 
 	std::list <SOUNDSOURCE *> active_sourcelist;
 	std::list <SOUNDSOURCE *> inactive_sourcelist;
-	
+
 	LockSourceList();
-	
+
 	DetermineActiveSources(active_sourcelist, inactive_sourcelist);
 	Compute3DEffects(active_sourcelist, lpos, lrot);//, cam.GetPosition().ScaleR(-1), cam.GetRotation());
 
@@ -177,7 +177,7 @@ void SOUND::Callback16bitstereo(void *myself, Uint8 *stream, int len)
 	}
 	delete [] buffer1;
 	delete [] buffer2,
-	
+
 	UnlockSourceList();
 
 	//cout << active_sourcelist.size() << "," << inactive_sourcelist.size() << std::endl;

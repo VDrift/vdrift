@@ -16,13 +16,13 @@ using std::ios_base;
 bool JOEPACK::LoadPack(const string & fn)
 {
 	ClosePack();
-	
+
 	f.open(fn.c_str(), ios_base::in | ios_base::binary);
-	
+
 	if (f)
 	{
 		packpath = fn;
-		
+
 		//load header
 		char * versioncstr = new char[versionstr.length() + 1];
 		f.read(versioncstr, versionstr.length());
@@ -34,22 +34,22 @@ bool JOEPACK::LoadPack(const string & fn)
 			//write out an error?
 			return false;
 		}
-		
+
 		unsigned int numobjs = 0;
 		assert(sizeof(unsigned int) == 4);
 		f.read((char*)(&numobjs), sizeof(unsigned int));
 		numobjs = ENDIAN_SWAP_32(numobjs);
-		
+
 		//DPRINT(numobjs << " objects");
-		
+
 		unsigned int maxstrlen = 0;
 		f.read((char*)(&maxstrlen), sizeof(unsigned int));
 		maxstrlen = ENDIAN_SWAP_32(maxstrlen);
-		
+
 		//DPRINT(maxstrlen << " max string length");
-		
+
 		char * fnch = new char[maxstrlen+1];
-		
+
 		//load FAT
 		for (unsigned int i = 0; i < numobjs; i++)
 		{
@@ -62,10 +62,10 @@ bool JOEPACK::LoadPack(const string & fn)
 			fnch[maxstrlen] = '\0';
 			string filename = fnch;
 			fat[filename] = fa;
-			
+
 			//DPRINT(filename << ": offest " << fa.offset << " length " << fa.length);
 		}
-		
+
 		delete [] fnch;
 		return true;
 	}
@@ -101,12 +101,12 @@ bool JOEPACK::Pack_fopen(string fn)
 		//DPRINT(fn << " -> " << newfn);
 		fn = newfn;
 	}
-	
+
 	//DPRINT("Opening " << fn << " by seeking to " << fat[fn].offset);
-	
+
 	//curfa = &(fat[fn]);
 	curfa = fat.find(fn);
-	
+
 	if (curfa == fat.end())
 	{
 		//write an error?
@@ -130,15 +130,15 @@ int JOEPACK::Pack_fread(void * buffer, const unsigned int size, const unsigned i
 		assert(curfa->second.length >= relpos);
 		unsigned int fileleft = curfa->second.length - relpos;
 		unsigned int requestedread = size*count;
-		
+
 		assert(size != 0);
-		
+
 		if (requestedread > fileleft)
 		{
 			//overflow
 			requestedread = fileleft/size;
 		}
-		
+
 		//DPRINT("JOEPACK fread: " << abspos << "," << relpos << "," << fileleft << "," << requestedread);
 		f.read((char *)buffer, requestedread);
 		return f.gcount()/size;

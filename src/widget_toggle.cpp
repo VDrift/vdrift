@@ -16,7 +16,7 @@ WIDGET * WIDGET_TOGGLE::clone() const
 void WIDGET_TOGGLE::SetAlpha(SCENENODE & scene, float newalpha)
 {
 	//if (newalpha > 0 && !wasvisible) std::cout << "Changing alpha on invisible toggle: " << newalpha << std::endl;
-	
+
 	image_up.SetAlpha(scene, newalpha);
 	image_down.SetAlpha(scene, newalpha);
 	image_upsel.SetAlpha(scene, newalpha);
@@ -27,15 +27,15 @@ void WIDGET_TOGGLE::SetAlpha(SCENENODE & scene, float newalpha)
 void WIDGET_TOGGLE::SetVisible(SCENENODE & scene, bool newvis)
 {
 	//if (newvis != wasvisible) std::cout << this << " New vis: " << newvis << ", " << wasvisible << " " << &wasvisible << std::endl;
-	
+
 	wasvisible = newvis;
-	
+
 	image_down.SetVisible(scene, false);
 	image_up.SetVisible(scene, false);
 	image_upsel.SetVisible(scene, false);
 	image_downsel.SetVisible(scene, false);
 	image_transition.SetVisible(scene, false);
-	
+
 	if (state == UP)
 		image_up.SetVisible(scene, newvis);
 	else if (state == DOWN)
@@ -88,7 +88,7 @@ bool WIDGET_TOGGLE::ProcessInput(
 				SetState(scene, DOWNTRANS);
 			}
 		}
-		
+
 		return true;
 	}
 	else
@@ -101,7 +101,7 @@ bool WIDGET_TOGGLE::ProcessInput(
 		{
 			SetState(scene, DOWN);
 		}
-		
+
 		//std::cout << image_up.GetCorner1() << " x " << image_up.GetCorner2() << cursorx << "," << cursory << std::endl << std::endl;
 		return false;
 	}
@@ -115,7 +115,7 @@ void WIDGET_TOGGLE::UpdateOptions(
 {
 	if (setting.empty())
 		return;
-	
+
 	if (save_to_options)
 	{
 		bool current_value = false;
@@ -151,13 +151,13 @@ void WIDGET_TOGGLE::UpdateOptions(
 void WIDGET_TOGGLE::SetState(SCENENODE & scene, const TOGGLESTATE & newstate)
 {
 	state = newstate;
-	
+
 	//std::cout << "State set to: " << (int) state << ", " << wasvisible << std::endl;
-	
+
 	//std::cout << "Was visible: " << wasvisible << std::endl;
-	
+
 	//if (wasvisible) std::cout << "Refreshing state visibility" << std::endl;
-	
+
 	SetVisible(scene, wasvisible);
 }
 
@@ -181,12 +181,12 @@ void WIDGET_TOGGLE::SetupDrawable(
 	assert(teximage_upselected);
 	assert(teximage_downselected);
 	assert(teximage_transition);
-	
+
 	image_up.SetupDrawable(scene, teximage_up, centerx, centery, w, h, z);
 	image_down.SetupDrawable(scene, teximage_down, centerx, centery, w, h, z);
 	image_upsel.SetupDrawable(scene, teximage_upselected, centerx, centery, w, h, z);
 	image_downsel.SetupDrawable(scene, teximage_downselected, centerx, centery, w, h, z);
 	image_transition.SetupDrawable(scene, teximage_transition, centerx, centery, w, h, z);
-	
+
 	SetState(scene, UP);
 }

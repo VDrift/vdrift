@@ -569,6 +569,5 @@ if 'data-package' in COMMAND_LINE_TARGETS:
 if 'autopackage' in COMMAND_LINE_TARGETS:
     os.system("CXX1=g++-3.4 CXX2=g++-4.1 APBUILD_CXX1=g++-3.4 APBUILD_NO_STATIC_X=1 VDRIFT_VERSION=%s VDRIFT_MINIMAL=%d VDRIFT_RELEASE=%d makepackage tools/autopackage/vdrift.apspec" % (version, env['minimal'], env['release']))
 
-SConscript('docs/SConscript')
 SConscript('include/SConscript')
 SConscript('src/SConscript', variant_dir='build', duplicate = 0)

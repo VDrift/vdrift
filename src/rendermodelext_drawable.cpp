@@ -13,7 +13,7 @@ void RenderModelExternalDrawable::draw(GLWrapper & gl) const
 	else if (vert_array)
 	{
 		gl.unbindVertexArray();
-		
+
 		const float * verts;
 		int vertcount;
 		vert_array->GetVertices(verts, vertcount);
@@ -32,7 +32,7 @@ void RenderModelExternalDrawable::draw(GLWrapper & gl) const
 			}
 			else
 				gl.DisableVertexAttribArray(VERTEX_NORMAL);
-			
+
 			gl.DisableVertexAttribArray(VERTEX_TANGENT);
 			gl.DisableVertexAttribArray(VERTEX_BITANGENT);
 			gl.DisableVertexAttribArray(VERTEX_COLOR);
@@ -49,7 +49,7 @@ void RenderModelExternalDrawable::draw(GLWrapper & gl) const
 			}
 			else
 				gl.DisableVertexAttribArray(VERTEX_UV0);
-			
+
 			gl.DisableVertexAttribArray(VERTEX_UV1);
 			gl.DisableVertexAttribArray(VERTEX_UV2);
 

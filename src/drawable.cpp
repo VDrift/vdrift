@@ -65,14 +65,14 @@ RenderModelExternal & DRAWABLE::generateRenderModelData(GLWrapper & gl, StringId
 	// copy data over to the GL3V renderModel object
 	// eventually this should only be done when we update the values, but for now
 	// we call this every time we draw the drawable
-	
+
 	// cache off the stringId values
 	static StringId diffuseId = stringMap.addStringId("diffuseTexture");
 	static StringId misc1Id = stringMap.addStringId("misc1Texture");
 	static StringId transformId = stringMap.addStringId("modelMatrix");
 	static StringId colorId = stringMap.addStringId("colorTint");
 	static StringId depthOffsetId = stringMap.addStringId("depthOffset");
-	
+
 	// textures
 	if (texturesChanged)
 	{
@@ -86,10 +86,10 @@ RenderModelExternal & DRAWABLE::generateRenderModelData(GLWrapper & gl, StringId
 		{
 			renderModel.textures.push_back(RenderTextureEntry(misc1Id, misc_map1->GetID(), GL_TEXTURE_2D));
 		}
-		
+
 		texturesChanged = false;
 	}
-	
+
 	// uniforms
 	if (uniformsChanged)
 	{
@@ -100,10 +100,9 @@ RenderModelExternal & DRAWABLE::generateRenderModelData(GLWrapper & gl, StringId
 		if (r != 1 || g != 1 || b != 1 || a != 1) // only add it if it's not the default
 		{
 			float srgb_alpha[4];
-			for (int i = 0; i < 3; i++)
-			{
-				srgb_alpha[i] = srgb_alpha[i] < 1 ? pow((&r)[i],2.2) : (&r)[i];
-			}
+			srgb_alpha[0] = r < 1 ? pow(r, 2.2f) : r;
+			srgb_alpha[1] = g < 1 ? pow(g, 2.2f) : g;
+			srgb_alpha[2] = b < 1 ? pow(b, 2.2f) : b;
 			srgb_alpha[3] = a;
 			renderModel.uniforms.push_back(RenderUniformEntry(colorId, srgb_alpha, 4));
 		}
@@ -112,10 +111,10 @@ RenderModelExternal & DRAWABLE::generateRenderModelData(GLWrapper & gl, StringId
 			float depthOffset = -0.005;
 			renderModel.uniforms.push_back(RenderUniformEntry(depthOffsetId, &depthOffset, 1));
 		}*/
-		
+
 		uniformsChanged = false;
 	}
-	
+
 	return renderModel;
 }
 
@@ -125,7 +124,7 @@ void DRAWABLE::SetModel(const MODEL & model)
 	{
 		AddDrawList(model.GetListID());
 	}
-	
+
 	if (model.HaveVertexArrayObject())
 	{
 		GLuint vao;

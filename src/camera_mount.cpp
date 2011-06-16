@@ -19,13 +19,13 @@ void CAMERA_MOUNT::Reset(const MATHVECTOR <float, 3> & newpos, const QUATERNION 
 	rotinertia.Scale(mass*length*length/3.0);
 	body.SetInertia(rotinertia);
 	body.SetPosition(MATHVECTOR <float, 3>(0));
-	
+
 	MATHVECTOR <float, 3> pos = offset;
 	newquat.RotateVector(pos);
 	anchor = pos + newpos;
-	
+
 	body.SetOrientation(newquat);
-	
+
 	UpdatePosition();
 }
 
@@ -34,23 +34,23 @@ void CAMERA_MOUNT::Update(const MATHVECTOR <float, 3> & newpos, const QUATERNION
 	MATHVECTOR <float, 3> pos = offset;
 	newdir.RotateVector(pos);
 	pos = pos + newpos;
-	
+
 	QUATERNION<float> dir = newdir * rotation;
 	MATHVECTOR <float, 3> vel = pos - anchor;
 	anchor = pos;
-	
+
 	effect = (vel.Magnitude()-.02)/0.04;
 	if (effect < 0) effect = 0;
 	else if (effect > 1) effect = 1;
 	//std::cout << vel.Magnitude() << std::endl;
-	
+
 	float bumpdiff = randgen.Get();
 	float power = pow(bumpdiff, 32);
 	if (power < 0) power = 0;
 	else if (power > 0.2) power = 0.2;
 	float veleffect = std::min(pow(vel.Magnitude()*(2.0-stiffness),3.0),1.0);
 	float bumpimpulse = power*130.0*veleffect;
-	
+
 	body.Integrate1(dt);
 
 	MATHVECTOR <float, 3> accellocal;// = -accel;
@@ -64,15 +64,15 @@ void CAMERA_MOUNT::Update(const MATHVECTOR <float, 3> & newpos, const QUATERNION
 	MATHVECTOR <float, 3> springforce = -x*k;
 	MATHVECTOR <float, 3> damperforce = -body.GetVelocity()*c;
 	body.SetForce(springforce+damperforce+accelforce+bumpforce);
-	
+
 	//std::cout << bumpdiff << ", " << power << ", " << vel.Magnitude() << ", " << veleffect << ", " << bumpimpulse << std::endl;
 	//std::cout << accellocal << std::endl;
-	
+
 	body.SetTorque(MATHVECTOR <float, 3> (0));
 	body.Integrate2(dt);
-	
+
 	body.SetOrientation(dir);
-	
+
 	UpdatePosition();
 }
 
@@ -88,6 +88,6 @@ void CAMERA_MOUNT::UpdatePosition()
 		if (modbody[i] < -maxallowed[i]) modbody[i] = -maxallowed[i];
 	}
 	modbody[1] *= 0.5;
-	
-	position = anchor + (modbody * effect) * offset_effect_strength;	
+
+	position = anchor + (modbody * effect) * offset_effect_strength;
 }

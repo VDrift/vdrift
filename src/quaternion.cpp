@@ -35,7 +35,7 @@ QT_TEST(quaternion_test)
 	QT_CHECK_EQUAL(mat[13],0.0);
 	QT_CHECK_EQUAL(mat[14],0.0);
 	QT_CHECK_EQUAL(mat[15],1.0);
-	
+
 	float vec[3];
 	vec[0] = 0;
 	vec[1] = 0;
@@ -47,16 +47,16 @@ QT_TEST(quaternion_test)
 	QT_CHECK_CLOSE(vec[1], 0.0, 0.001);
 	QT_CHECK_CLOSE(vec[2], 0.0, 0.001);
 	//std::cout << vec[0] << "," << vec[1] << "," << vec[2] << std::endl;
-	
+
 	test2.LoadIdentity();
 	test1.Rotate(3.141593*0.5, 0.0, 0.0, 1.0);
 	QT_CHECK_CLOSE(test1.GetAngleBetween(test2),3.141593*0.5,0.001);
-	
+
 	test1.LoadIdentity();
 	test1.Rotate(3.141593*0.75, 0.0, 1.0, 0.0);
 	test2.LoadIdentity();
 	test2.Rotate(3.141593*0.25, 0.0, 1.0, 0.0);
-	
+
 	vec[0] = 0;
 	vec[1] = 0;
 	vec[2] = 1;

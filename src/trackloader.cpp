@@ -15,7 +15,7 @@ inline void operator >> (std::istream & lhs, btVector3 & rhs)
 	{
 		std::string str;
 		std::getline(lhs, str, ',');
-		
+
 		std::stringstream s(str);
 		btScalar val(0);
 		s >> val;
@@ -130,7 +130,7 @@ bool TRACK::LOADER::BeginLoad()
 	{
 		info_output << "No Surfaces File. Continuing with standard surfaces" << std::endl;
 	}
-	
+
 	//load roads
 	if (!LoadRoads())
 	{
@@ -170,7 +170,7 @@ bool TRACK::LOADER::ContinueLoad()
 	{
 		return false;
 	}
-	
+
 	if (!loadstatus.second)
 	{
 #ifndef EXTBULLET
@@ -185,26 +185,26 @@ bool TRACK::LOADER::ContinueLoad()
 		data.loaded = true;
 		Clear();
 	}
-	
+
 	return true;
 }
 
 bool TRACK::LOADER::BeginObjectLoad()
 {
-#ifndef EXTBULLET			
+#ifndef EXTBULLET
 	assert(track_shape == 0);
 	track_shape = new btCompoundShape(true);
 #endif
-	
+
 	list = true;
 	packload = pack.LoadPack(objectpath + "/objects.jpk");
-	
+
 	if (Begin())
 	{
 		list = false;
 		return true;
 	}
-	
+
 	std::string objectlist = objectpath + "/list.txt";
 	objectfile.open(objectlist.c_str());
 	if (!objectfile.good())
@@ -220,12 +220,12 @@ std::pair<bool, bool> TRACK::LOADER::ContinueObjectLoad()
 	{
 		return std::make_pair(true, false);
 	}
-	
+
 	if (list)
 	{
 		return ContinueOld();
 	}
-	
+
 	return Continue();
 }
 
@@ -254,21 +254,21 @@ std::pair<bool, bool> TRACK::LOADER::Continue()
 	{
 		return std::make_pair(false, false);
 	}
-	
+
 	if (!LoadNode(node_it->second))
 	{
 		return std::make_pair(true, false);
 	}
-	
+
 	node_it++;
-	
+
 	return std::make_pair(false, true);
 }
 
 bool TRACK::LOADER::LoadModel(const std::string & name)
 {
 	std::tr1::shared_ptr<MODEL> model;
-	if ((packload && model_manager.Load(objectdir, name, model, pack)) || 
+	if ((packload && model_manager.Load(objectdir, name, model, pack)) ||
 		model_manager.Load(objectdir, name, model))
 	{
 		data.models.push_back(model);
@@ -285,14 +285,14 @@ bool TRACK::LOADER::LoadShape(const PTree & cfg, const MODEL & model, BODY & bod
 		mesh->addIndexedMesh(GetIndexedMesh(model));
 		data.meshes.push_back(mesh);
 		body.mesh = mesh;
-		
+
 		int surface = 0;
 		cfg.get("surface", surface);
 		if (surface >= (int)data.surfaces.size())
 		{
 			surface = 0;
 		}
-		
+
 		btBvhTriangleMeshShape * shape = new btBvhTriangleMeshShape(mesh, true);
 		shape->setUserPointer((void*)&data.surfaces[surface]);
 		data.shapes.push_back(shape);
@@ -302,10 +302,10 @@ bool TRACK::LOADER::LoadShape(const PTree & cfg, const MODEL & model, BODY & bod
 	{
 		btVector3 center(0, 0, 0);
 		cfg.get("mass-center", center);
-		
+
 		btCollisionShape * shape = 0;
 		LoadCollisionShape(cfg, center, shape);
-		
+
 		if (!shape)
 		{
 			// fall back to model bounding box
@@ -325,12 +325,12 @@ bool TRACK::LOADER::LoadShape(const PTree & cfg, const MODEL & model, BODY & bod
 			}
 		}
 		data.shapes.push_back(shape);
-		
+
 		shape->calculateLocalInertia(body.mass, body.inertia);
 		body.shape = shape;
 		body.center = center;
 	}
-	
+
 	return true;
 }
 
@@ -345,7 +345,7 @@ TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const PTree & cfg)
 	bool alphablend = false;
 	bool doublesided = false;
 	bool isashadow = false;
-	
+
 	cfg.get("texture", texture_name, error_output);
 	cfg.get("model", model_name, error_output);
 	cfg.get("clampuv", clampuv);
@@ -355,11 +355,11 @@ TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const PTree & cfg)
 	cfg.get("doublesided", doublesided);
 	cfg.get("isashadow", isashadow);
 	cfg.get("nolighting", body.nolighting);
-	
+
 	std::vector<std::string> texture_names(3);
 	std::stringstream s(texture_name);
 	s >> texture_names;
-	
+
 	// set relative path for models and textures, ugly hack
 	// need to identificate body references
 	// begin ugly hack
@@ -382,26 +382,26 @@ TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const PTree & cfg)
 		}
 	}
 	// end ugly hack
-	
+
 	if (dynamic_shadows && isashadow)
 	{
 		return bodies.end();
 	}
-	
+
 	if (!LoadModel(model_name))
 	{
 		info_output << "Failed to load body " << cfg.value() << " model " << model_name << std::endl;
 		return bodies.end();
 	}
-	
+
 	MODEL & model = *data.models.back();
-	
+
 	body.collidable = cfg.get("mass", body.mass);
 	if (body.collidable)
 	{
 		LoadShape(cfg, model, body);
 	}
-	
+
 	// load textures
 	TEXTUREINFO texinfo;
 	texinfo.mipmap = mipmap || anisotropy; //always mipmap if anisotropy is on
@@ -409,26 +409,26 @@ TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const PTree & cfg)
 	texinfo.repeatu = clampuv != 1 && clampuv != 2;
 	texinfo.repeatv = clampuv != 1 && clampuv != 3;
 	texinfo.size = texsize;
-	
+
 	std::tr1::shared_ptr<TEXTURE> diffuse;
 	if (!texture_manager.Load(objectdir, texture_names[0], texinfo, diffuse))
 	{
 		info_output << "Failed to load body " << cfg.value() << " texture " << texture_names[0] << std::endl;
 		return bodies.end();
 	}
-	
+
 	std::tr1::shared_ptr<TEXTURE> miscmap1;
 	if (texture_names[1].length() > 0)
 	{
 		texture_manager.Load(objectdir, texture_names[1], texinfo, miscmap1);
 	}
-	
+
 	std::tr1::shared_ptr<TEXTURE> miscmap2;
 	if (texture_names[2].length() > 0)
 	{
 		texture_manager.Load(objectdir, texture_names[2], texinfo, miscmap2);
 	}
-	
+
 	// setup drawable
 	DRAWABLE & drawable = body.drawable;
 	drawable.SetModel(model);
@@ -441,7 +441,7 @@ TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const PTree & cfg)
 	drawable.SetObjectCenter(model.GetCenter());
 	drawable.SetSkybox(skybox);
 	drawable.SetVerticalTrack(skybox && data.vertical_tracking_skyboxes);
-	
+
 	return bodies.insert(std::make_pair(name, body)).first;
 }
 
@@ -480,18 +480,18 @@ bool TRACK::LOADER::LoadNode(const PTree & sec)
 	{
 		return false;
 	}
-	
+
 	body_iterator ib = LoadBody(*sec_body);
 	if (ib == bodies.end())
 	{
 		//info_output << "Object " << sec.value() << " failed to load body" << std::endl;
 		return true;
 	}
-	
+
 	MATHVECTOR<float, 3> position, angle;
 	bool has_transform = sec.get("position",  position) | sec.get("rotation", angle);
 	QUATERNION<float> rotation(angle[0]/180*M_PI, angle[1]/180*M_PI, angle[2]/180*M_PI);
-	
+
 	const BODY & body = ib->second;
 	if (body.mass < 1E-3)
 	{
@@ -510,7 +510,7 @@ bool TRACK::LOADER::LoadNode(const PTree & sec)
 			// static geometry pretransformed(non instanced)
 			AddBody(data.static_node, body);
 		}
-		
+
 		if (body.collidable)
 		{
 			// static geometry collidable
@@ -537,7 +537,7 @@ bool TRACK::LOADER::LoadNode(const PTree & sec)
 		MATHVECTOR<float, 3> center_world = center_local;
 		rotation.RotateVector(center_world);
 		position = position - center_local + center_world;
-		
+
 		if (dynamic_objects)
 		{
 			// dynamic geometry
@@ -545,15 +545,15 @@ bool TRACK::LOADER::LoadNode(const PTree & sec)
 			data.body_transforms.back().rotation = ToBulletQuaternion(rotation);
 			data.body_transforms.back().position = ToBulletVector(position);
 			data.body_transforms.back().massCenterOffset = -body.center;
-			
+
 			btRigidBody::btRigidBodyConstructionInfo info(body.mass, &data.body_transforms.back(), body.shape, body.inertia);
 			info.m_friction = 0.9;
-			
+
 			btRigidBody * object = new btRigidBody(info);
 			object->setContactProcessingThreshold(0.0);
 			data.objects.push_back(object);
 			world.addRigidBody(object);
-			
+
 			keyed_container<SCENENODE>::handle node_handle = data.dynamic_node.AddNode();
 			SCENENODE & node = data.dynamic_node.GetNode(node_handle);
 			node.GetTransform().SetTranslation(position);
@@ -567,7 +567,7 @@ bool TRACK::LOADER::LoadNode(const PTree & sec)
 			btTransform transform;
 			transform.setOrigin(ToBulletVector(position));
 			transform.setRotation(ToBulletQuaternion(rotation));
-			
+
 			btCollisionObject * object = new btCollisionObject();
 			object->setActivationState(DISABLE_SIMULATION);
 			object->setWorldTransform(transform);
@@ -575,7 +575,7 @@ bool TRACK::LOADER::LoadNode(const PTree & sec)
 			object->setUserPointer(body.shape->getUserPointer());
 			data.objects.push_back(object);
 			world.addCollisionObject(object);
-			
+
 			keyed_container <SCENENODE>::handle sh = data.static_node.AddNode();
 			SCENENODE & node = data.static_node.GetNode(sh);
 			node.GetTransform().SetTranslation(position);
@@ -583,7 +583,7 @@ bool TRACK::LOADER::LoadNode(const PTree & sec)
 			AddBody(node, body);
 		}
 	}
-	
+
 	return true;
 }
 
@@ -634,22 +634,22 @@ void TRACK::LOADER::CalculateNumOld()
 bool TRACK::LOADER::BeginOld()
 {
 	CalculateNumOld();
-	
+
 	data.models.reserve(numobjects);
-	
+
 	if (!GetParam(objectfile, params_per_object)) return false;
-	
+
 	if (params_per_object != expected_params)
 	{
 		info_output << "Track object list has " << params_per_object << " params per object, expected " << expected_params << ", this is fine, continuing" << std::endl;
 	}
-	
+
 	if (params_per_object < min_params)
 	{
 		error_output << "Track object list has " << params_per_object << " params per object, expected " << expected_params << std::endl;
 		return false;
 	}
-	
+
 	return true;
 }
 
@@ -660,7 +660,7 @@ std::pair<bool, bool> TRACK::LOADER::ContinueOld()
 	{
 		return std::make_pair(false, false);
 	}
-	
+
 	assert(objectfile.good());
 
 	std::string diffuse_texture_name;
@@ -743,7 +743,7 @@ std::pair<bool, bool> TRACK::LOADER::ContinueOld()
 		return std::make_pair(false, true);
 	}
 
-	std::tr1::shared_ptr<TEXTURE> miscmap1_texture;		
+	std::tr1::shared_ptr<TEXTURE> miscmap1_texture;
 	{
 		std::string texture_name = diffuse_texture_name.substr(0, std::max(0, (int)diffuse_texture_name.length()-4)) + "-misc1.png";
 		std::string filepath = objectpath + "/" + texture_name;
@@ -809,12 +809,12 @@ std::pair<bool, bool> TRACK::LOADER::ContinueOld()
 		btTriangleIndexVertexArray * mesh = new btTriangleIndexVertexArray();
 		mesh->addIndexedMesh(GetIndexedMesh(*model));
 		data.meshes.push_back(mesh);
-		
+
 		assert(surface >= 0 && surface < (int)data.surfaces.size());
 		btBvhTriangleMeshShape * shape = new btBvhTriangleMeshShape(mesh, true);
 		shape->setUserPointer((void*)&data.surfaces[surface]);
 		data.shapes.push_back(shape);
-		
+
 #ifndef EXTBULLET
 		btTransform transform = btTransform::getIdentity();
 		track_shape->addChildShape(transform, shape);
@@ -840,12 +840,12 @@ bool TRACK::LOADER::LoadParameters()
 		error_output << "Can't find track configfile: " << parampath << std::endl;
 		return false;
 	}
-	
+
 	PTree param;
 	read_ini(file, param);
-	
+
 	param.get("vertical tracking skyboxes", data.vertical_tracking_skyboxes);
-	
+
 	int sp_num = 0;
 	std::stringstream sp_name;
 	sp_name << "start position " << sp_num;
@@ -864,7 +864,7 @@ bool TRACK::LOADER::LoadParameters()
 		QUATERNION <float> orient(q[2], q[0], q[1], q[3]);
 
 		//due to historical reasons the initial orientation places the car faces the wrong way
-		QUATERNION <float> fixer; 
+		QUATERNION <float> fixer;
 		fixer.Rotate(M_PI_2, 0, 0, 1);
 		orient = fixer * orient;
 
@@ -890,7 +890,7 @@ bool TRACK::LOADER::LoadSurfaces()
 		info_output << "Can't find surfaces configfile: " << path << std::endl;
 		return false;
 	}
-	
+
 	PTree param;
 	read_ini(file, param);
 	for (PTree::const_iterator is = param.begin(); is != param.end(); ++is)
@@ -899,7 +899,7 @@ bool TRACK::LOADER::LoadSurfaces()
 		{
 			continue;
 		}
-		
+
 		const PTree & surf_cfg = is->second;
 		data.surfaces.push_back(TRACKSURFACE());
 		TRACKSURFACE & surface = data.surfaces.back();
@@ -907,7 +907,7 @@ bool TRACK::LOADER::LoadSurfaces()
 		std::string type;
 		surf_cfg.get("Type", type);
 		surface.setType(type);
-		
+
 		float temp = 0.0;
 		surf_cfg.get("BumpWaveLength", temp, error_output);
 		if (temp <= 0.0)
@@ -916,31 +916,31 @@ bool TRACK::LOADER::LoadSurfaces()
 			temp = 1.0;
 		}
 		surface.bumpWaveLength = temp;
-		
+
 		surf_cfg.get("BumpAmplitude", temp, error_output);
 		surface.bumpAmplitude = temp;
-		
+
 		surf_cfg.get("FrictionNonTread", temp, error_output);
 		surface.frictionNonTread = temp;
-		
+
 		surf_cfg.get("FrictionTread", temp, error_output);
 		surface.frictionTread = temp;
-		
+
 		surf_cfg.get("RollResistanceCoefficient", temp, error_output);
 		surface.rollResistanceCoefficient = temp;
-		
+
 		surf_cfg.get("RollingDrag", temp, error_output);
 		surface.rollingDrag = temp;
 	}
 	info_output << "Loaded surfaces file, " << data.surfaces.size() << " surfaces." << std::endl;
-	
+
 	return true;
 }
 
 bool TRACK::LOADER::LoadRoads()
 {
 	data.roads.clear();
-	
+
 	std::string roadpath = trackpath + "/roads.trk";
 	std::ifstream trackfile(roadpath.c_str());
 	if (!trackfile.good())
@@ -1025,7 +1025,7 @@ bool TRACK::LOADER::LoadLapSequence()
 		error_output << "Can't find track configfile: " << parampath << std::endl;
 		return false;
 	}
-	
+
 	PTree param;
 	read_ini(file, param);
 	param.get("cull faces", data.cull);
@@ -1093,13 +1093,13 @@ bool TRACK::LOADER::LoadLapSequence()
 
 bool TRACK::LOADER::CreateRacingLines()
 {
-	TEXTUREINFO texinfo; 
+	TEXTUREINFO texinfo;
 	texinfo.size = texsize;
 	if (!texture_manager.Load(texturedir, "racingline.png", texinfo, data.racingline_texture))
 	{
 		return false;
 	}
-	
+
 	K1999 k1999data;
 	int n = 0;
 	for (std::list <ROADSTRIP>::iterator i = data.roads.begin(); i != data.roads.end(); ++i,++n)
@@ -1110,9 +1110,9 @@ bool TRACK::LOADER::CreateRacingLines()
 			k1999data.UpdateRoadStrip(&(*i));
 		}
 		//else error_output << "Couldn't create racing line for roadstrip " << n << std::endl;
-		
+
 		i->CreateRacingLine(data.racingline_node, data.racingline_texture, error_output);
 	}
-	
+
 	return true;
 }

@@ -45,10 +45,10 @@ using std::vector;
 std::vector <std::string> Tokenize(const std::string & input, const std::string & tokens)
 {
 	std::vector <std::string> out;
-	
+
 	unsigned int pos = 0;
 	unsigned int lastpos = 0;
-	
+
 	while (pos != (unsigned int) std::string::npos)
 	{
 		pos = input.find_first_of(tokens, pos);
@@ -58,14 +58,14 @@ std::vector <std::string> Tokenize(const std::string & input, const std::string 
 		pos = input.find_first_not_of(tokens, pos);
 		lastpos = pos;
 	}
-	
+
 	return out;
 }
 
 void ReportOnce(const void * id, const std::string & message, std::ostream & output)
 {
 	static std::map <const void*, std::string> prev_messages;
-	
+
 	std::map <const void*, std::string>::iterator i = prev_messages.find(id);
 	if (i == prev_messages.end() || i->second != message)
 	{
@@ -98,9 +98,9 @@ bool GRAPHICS_FALLBACK::Init(const std::string & shaderpath,
 		reflection_status = REFLECTION_STATIC;
 	else if (reflection_type == 2)
 		reflection_status = REFLECTION_DYNAMIC;
-	
+
 	ChangeDisplay(resx, resy, bpp, depthbpp, fullscreen, antialiasing, info_output, error_output);
-	
+
 	fsaa = 1;
 	if (antialiasing > 1)
 		fsaa = antialiasing;
@@ -123,7 +123,7 @@ bool GRAPHICS_FALLBACK::Init(const std::string & shaderpath,
 	{
 		error_output << "You don't have an NVIDIA or ATI/AMD card.  This game may not run correctly or at all." << endl;
 	}
-	
+
 	std::stringstream vendorstr;
 	vendorstr << glGetString(GL_VENDOR);
 	if (vendorstr.str().find("ATI") != string::npos ||
@@ -131,7 +131,7 @@ bool GRAPHICS_FALLBACK::Init(const std::string & shaderpath,
 	{
 		aticard = true;
 	}
-	
+
 	//initialize GLEW
 	//glewExperimental = GL_TRUE; // expose all avaiable extensions
 	GLenum glew_err = glewInit();
@@ -190,13 +190,13 @@ bool GRAPHICS_FALLBACK::Init(const std::string & shaderpath,
 		GLint maxattach;
 		glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxattach);
 		info_output << "Maximum color attachments: " << maxattach << endl;
-		
+
 		const GLint reqmrt = 1;
-		
+
 		GLint mrt;
 		glGetIntegerv(GL_MAX_DRAW_BUFFERS, &mrt);
 		info_output << "Maximum draw buffers (" << reqmrt << " required): " << mrt << endl;
-		
+
 		if (GLEW_ARB_shading_language_100 && GLEW_VERSION_2_0 && shaders && GLEW_ARB_fragment_shader && mrt >= reqmrt && maxattach >= reqmrt)
 		{
 			EnableShaders(shaderpath, info_output, error_output);
@@ -207,7 +207,7 @@ bool GRAPHICS_FALLBACK::Init(const std::string & shaderpath,
 			DisableShaders(shaderpath, error_output);
 		}
 	}
-	
+
 	//load static reflection map for dynamic reflections too, since we may need it
 	if ((reflection_status == REFLECTION_STATIC || reflection_status == REFLECTION_DYNAMIC) && !static_reflectionmap_file.empty())
 	{
@@ -219,7 +219,7 @@ bool GRAPHICS_FALLBACK::Init(const std::string & shaderpath,
 		t.size = texturesize;
 		static_reflection.Load(static_reflectionmap_file, t, error_output);
 	}
-	
+
 	if (!static_ambientmap_file.empty())
 	{
 		TEXTUREINFO t;
@@ -239,7 +239,7 @@ bool GRAPHICS_FALLBACK::Init(const std::string & shaderpath,
 	OPENGL_UTILITY::CheckForOpenGLErrors("Shader loading", error_output);
 
 	initialized = true;
-	
+
 	return true;
 }
 
@@ -254,7 +254,7 @@ void GRAPHICS_FALLBACK::ChangeDisplay(const int width, const int height, const i
 	gluPerspective( 45.0f, ratio, 0.1f, 100.0f );
 	glMatrixMode( GL_MODELVIEW );
 	glLoadIdentity( );
-	
+
 	OPENGL_UTILITY::CheckForOpenGLErrors("ChangeDisplay", error_output);
 
 	w = width;
@@ -333,13 +333,13 @@ bool GRAPHICS_FALLBACK::LoadShader(const std::string & shaderpath, const std::st
 		if (shadow_quality == 4)
 			defines.push_back("_SHADOWSULTRA_");
 	}
-	
+
 	if (normalmaps)
 		defines.push_back("_NORMALMAPS_");
 
 	if (lighting == 1)
 		defines.push_back("_SSAO_LOW_");
-	
+
 	if (lighting == 2)
 		defines.push_back("_SSAO_HIGH_");
 
@@ -361,7 +361,7 @@ bool GRAPHICS_FALLBACK::LoadShader(const std::string & shaderpath, const std::st
 	}
 	pair <map < string, SHADER_GLSL >::iterator, bool> result = shadermap.insert(pair < string, SHADER_GLSL > (shadername, SHADER_GLSL()));
 	map < string, SHADER_GLSL >::iterator i = result.first;
-	
+
 	bool success = true;
 	//if (result.second) //if the insertion resulted in a new object being created, set it up
 	{
@@ -395,14 +395,14 @@ FBTEXTURE::FORMAT TextureFormatFromString(const std::string & format)
 		return FBTEXTURE::RGB16;
 	else
 		assert(0);
-	
+
 	return FBTEXTURE::RGB8;
 }
 
 void GRAPHICS_FALLBACK::EnableShaders(const std::string & shaderpath, std::ostream & info_output, std::ostream & error_output)
 {
 	bool shader_load_success = true;
-	
+
 	{
 		GLint tu;
 		glGetIntegerv( GL_MAX_TEXTURE_IMAGE_UNITS,&tu );
@@ -410,9 +410,9 @@ void GRAPHICS_FALLBACK::EnableShaders(const std::string & shaderpath, std::ostre
 		glGetIntegerv( GL_MAX_TEXTURE_UNITS,&tufull );
 		info_output << "Texture units: " << tufull << " full, " << tu << " partial" << std::endl;
 	}
-	
+
 	OPENGL_UTILITY::CheckForOpenGLErrors("EnableShaders: start", error_output);
-	
+
 	// unload current shaders
 	glUseProgramObjectARB(0);
 	for (shader_map_type::iterator i = shadermap.begin(); i != shadermap.end(); i++)
@@ -421,9 +421,9 @@ void GRAPHICS_FALLBACK::EnableShaders(const std::string & shaderpath, std::ostre
 	}
 	shadermap.clear();
 	activeshader = shadermap.end();
-	
+
 	OPENGL_UTILITY::CheckForOpenGLErrors("EnableShaders: shader unload", error_output);
-	
+
 	// reload configuration
 	config = GRAPHICS_CONFIG();
 	std::string rcpath = shaderpath+"/" + renderconfigfile;
@@ -441,21 +441,21 @@ void GRAPHICS_FALLBACK::EnableShaders(const std::string & shaderpath, std::ostre
 		shadernames.insert(s->name);
 		shader_load_success = shader_load_success && LoadShader(shaderpath, s->folder, info_output, error_output, s->name, s->defines);
 	}
-	
+
 	OPENGL_UTILITY::CheckForOpenGLErrors("EnableShaders: shader loading", error_output);
-	
+
 	if (shader_load_success)
 	{
 		using_shaders = true;
 		info_output << "Successfully enabled shaders" << endl;
-		
+
 		// unload current outputs
 		render_outputs.clear();
 		texture_outputs.clear();
 		texture_inputs.clear();
-		
+
 		OPENGL_UTILITY::CheckForOpenGLErrors("EnableShaders: FBO deinit", error_output);
-		
+
 		bool ssao = (lighting > 0);
 		bool ssao_low = (lighting == 1);
 		bool ssao_high = (lighting == 2);
@@ -469,12 +469,12 @@ void GRAPHICS_FALLBACK::EnableShaders(const std::string & shaderpath, std::ostre
 		bool shadow_quality_high = shadows && (shadow_quality == 2);
 		bool shadow_quality_vhigh = shadows && (shadow_quality == 3);
 		bool shadow_quality_ultra = shadows && (shadow_quality == 4);
-		
+
 		// for now, map vhigh and ultra to high
 		shadow_quality_high = shadow_quality_high || shadow_quality_vhigh || shadow_quality_ultra;
 		shadow_quality_vhigh = false;
 		shadow_quality_ultra = true;
-		
+
 		conditions.clear();
 		if (fsaa > 1) conditions.insert("fsaa");
 		#define ADDCONDITION(x) if (x) conditions.insert(#x)
@@ -494,12 +494,12 @@ void GRAPHICS_FALLBACK::EnableShaders(const std::string & shaderpath, std::ostre
 		ADDCONDITION(shadow_quality_vhigh);
 // 		ADDCONDITION(shadow_quality_ultra);
 		#undef ADDCONDITION
-		
+
 		// add some common textures
 		if (reflection_status == REFLECTION_STATIC)
 			texture_inputs["reflection_cube"] = static_reflection;
 		texture_inputs["ambient_cube"] = static_ambient;
-		
+
 		for (std::vector <GRAPHICS_CONFIG_OUTPUT>::const_iterator i = config.outputs.begin(); i != config.outputs.end(); i++)
 		{
 			if (i->conditions.Satisfied(conditions))
@@ -509,7 +509,7 @@ void GRAPHICS_FALLBACK::EnableShaders(const std::string & shaderpath, std::ostre
 					error_output << "Detected duplicate output name in render config: " << i->name << ", only the first output will be constructed." << std::endl;
 					continue;
 				}
-				
+
 				if (i->type == "framebuffer")
 				{
 					render_outputs[i->name].RenderToFramebuffer();
@@ -525,7 +525,7 @@ void GRAPHICS_FALLBACK::EnableShaders(const std::string & shaderpath, std::ostre
 					int fbms = 0;
 					if (i->multisample < 0)
 						fbms = fsaa;
-					
+
 					// initialize fbtexture
 					fbtex.Init(glstate,
 							   i->width.GetSize(w),
@@ -537,17 +537,17 @@ void GRAPHICS_FALLBACK::EnableShaders(const std::string & shaderpath, std::ostre
 							   error_output,
 							   fbms,
 							   (i->format == "depthshadow"));
-					
+
 					// map to input texture
 					texture_inputs[i->name] = fbtex;
 				}
-				
+
 				info_output << "Initialized render output: " << i->name << (i->type != "framebuffer" ? " (FBO)" : " (framebuffer alias)") << std::endl;
 			}
 		}
-		
+
 		render_outputs["framebuffer"].RenderToFramebuffer();
-		
+
 		// go through all pass outputs and construct the actual FBOs, which can consist of one or more fbtextures
 		for (std::vector <GRAPHICS_CONFIG_PASS>::const_iterator i = config.passes.begin(); i != config.passes.end(); i++)
 		{
@@ -560,7 +560,7 @@ void GRAPHICS_FALLBACK::EnableShaders(const std::string & shaderpath, std::ostre
 				{
 					// tokenize the output list
 					std::vector <std::string> outputs = Tokenize(outname, " ");
-					
+
 					// collect a list of textures for the outputs
 					std::vector <FBTEXTURE*> fbotex;
 					for (std::vector <std::string>::const_iterator o = outputs.begin(); o != outputs.end(); o++)
@@ -571,13 +571,13 @@ void GRAPHICS_FALLBACK::EnableShaders(const std::string & shaderpath, std::ostre
 							fbotex.push_back(&to->second);
 						}
 					}
-					
+
 					if (fbotex.empty())
 					{
 						error_output << "None of these outputs are active: " << error_output << ", this pass will not have an output." << std::endl;
 						continue;
 					}
-					
+
 					// initialize fbo
 					FBOBJECT & fbo = render_outputs[outname].RenderToFBO();
 					fbo.Init(glstate, fbotex, error_output);
@@ -595,7 +595,7 @@ void GRAPHICS_FALLBACK::EnableShaders(const std::string & shaderpath, std::ostre
 bool GRAPHICS_FALLBACK::ReloadShaders(const std::string & shaderpath, std::ostream & info_output, std::ostream & error_output)
 {
 	EnableShaders(shaderpath, info_output, error_output);
-	
+
 	return GetUsingShaders();
 }
 
@@ -609,18 +609,18 @@ void GRAPHICS_FALLBACK::DisableShaders(const std::string & shaderpath, std::ostr
 	{
 		glUseProgramObjectARB(0);
 	}
-	
+
 	// load non-shader configuration
 	config = GRAPHICS_CONFIG();
 	std::string rcpath = shaderpath+"/render.conf.noshaders";
 	if (!config.Load(rcpath, error_output))
 	{
 		error_output << "Error loading non-shader render configuration file: " << rcpath << std::endl;
-		
+
 		// uh oh, now we're really boned
 		assert(0);
 	}
-	
+
 	render_outputs["framebuffer"].RenderToFramebuffer();
 }
 
@@ -642,14 +642,14 @@ void GRAPHICS_FALLBACK::SetupScene(float fov, float new_view_distance, const MAT
 		cam.w = w;
 		cam.h = h;
 	}
-	
+
 	// create a camera for the skybox with a long view distance
 	{
 		GRAPHICS_CAMERA & cam = cameras["skybox"];
 		cam = cameras["default"];
 		cam.view_distance = 10000.0;
 	}
-	
+
 	// create a camera for 3d ui elements that has a fixed FOV
 	{
 		GRAPHICS_CAMERA & cam = cameras["ui3d"];
@@ -660,7 +660,7 @@ void GRAPHICS_FALLBACK::SetupScene(float fov, float new_view_distance, const MAT
 		cam.w = w;
 		cam.h = h;
 	}
-	
+
 	// create a camera for the dynamic reflections
 	{
 		GRAPHICS_CAMERA & cam = cameras["dynamic_reflection"];
@@ -671,26 +671,26 @@ void GRAPHICS_FALLBACK::SetupScene(float fov, float new_view_distance, const MAT
 		cam.w = 1.f; // this gets automatically overridden with the cubemap dimensions
 		cam.h = 1.f; // this gets automatically overridden with the cubemap dimensions
 	}
-	
+
 	// create a camera for the dynamic reflection skybox
 	{
 		GRAPHICS_CAMERA & cam = cameras["dynamic_reflection_skybox"];
 		cam = cameras["dynamic_reflection"];
 		cam.view_distance = 10000.f;
 	}
-	
+
 	// create an ortho camera for 2d drawing
 	{
 		GRAPHICS_CAMERA & cam = cameras["2d"];
-		
+
 		// this is the glOrtho call we want:
 		//glOrtho( 0, 1, 1, 0, -1, 1 );
-		
+
 		cam.orthomode = true;
 		cam.orthomin = MATHVECTOR <float, 3> (0,1,-1);
 		cam.orthomax = MATHVECTOR <float, 3> (1,0,1);
 	}
-	
+
 	// create cameras for shadow passes
 	if (shadows)
 	{
@@ -701,14 +701,14 @@ void GRAPHICS_FALLBACK::SetupScene(float fov, float new_view_distance, const MAT
 		for (int i = 0; i < 3; i++)
 		{
 			float shadow_radius = (1<<i)*closeshadow+(i)*20.0; //5,30,60
-			
+
 			MATHVECTOR <float, 3> shadowbox(1,1,1);
 			shadowbox = shadowbox * (shadow_radius*sqrt(2.0));
 			MATHVECTOR <float, 3> shadowoffset(0,0,-1);
 			shadowoffset = shadowoffset * shadow_radius;
 			(-cam_rotation).RotateVector(shadowoffset);
 			shadowbox[2] += 60.0;
-			
+
 			GRAPHICS_CAMERA & cam = cameras["shadows_"+shadow_names[i]];
 			cam = cameras["default"];
 			cam.orthomode = true;
@@ -716,7 +716,7 @@ void GRAPHICS_FALLBACK::SetupScene(float fov, float new_view_distance, const MAT
 			cam.orthomax = shadowbox;
 			cam.pos = cam.pos + shadowoffset;
 			cam.orient = lightdirection;
-			
+
 			// go through and extract the clip matrix, storing it in a texture matrix
 			renderscene.SetOrtho(cam.orthomin, cam.orthomax);
 			renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h, false);
@@ -756,39 +756,39 @@ std::string BuildKey(const std::string & camera, const std::string & draw)
 QUATERNION <float> GetCubeSideOrientation(int i, const QUATERNION <float> & origorient, std::ostream & error_output)
 {
 	QUATERNION <float> orient = origorient;
-	
+
 	switch (i)
 	{
 		case 0:
 		orient.Rotate(M_PI*0.5, 0,1,0);
 		break;
-		
+
 		case 1:
 		orient.Rotate(-M_PI*0.5, 0,1,0);
 		break;
-		
+
 		case 2:
 		orient.Rotate(M_PI*0.5, 1,0,0);
 		break;
-		
+
 		case 3:
 		orient.Rotate(-M_PI*0.5, 1,0,0);
 		break;
-		
+
 		case 4:
 		// orient is already set up for us!
 		break;
-		
+
 		case 5:
 		orient.Rotate(M_PI, 0,1,0);
 		break;
-		
+
 		default:
 		error_output << "Reached odd spot while building cubemap orientation. How many sides are in a cube, anyway? " << i << "?" << std::endl;
 		assert(0);
 		break;
 	};
-	
+
 	return orient;
 }
 
@@ -799,33 +799,33 @@ void AttachCubeSide(int i, FBOBJECT & reflection_fbo, std::ostream & error_outpu
 		case 0:
 		reflection_fbo.SetCubeSide(FBTEXTURE::POSX);
 		break;
-		
+
 		case 1:
 		reflection_fbo.SetCubeSide(FBTEXTURE::NEGX);
 		break;
-		
+
 		case 2:
 		reflection_fbo.SetCubeSide(FBTEXTURE::POSY);
 		break;
-		
+
 		case 3:
 		reflection_fbo.SetCubeSide(FBTEXTURE::NEGY);
 		break;
-		
+
 		case 4:
 		reflection_fbo.SetCubeSide(FBTEXTURE::POSZ);
 		break;
-		
+
 		case 5:
 		reflection_fbo.SetCubeSide(FBTEXTURE::NEGZ);
 		break;
-		
+
 		default:
 		error_output << "Reached odd spot while attaching cubemap side. How many sides are in a cube, anyway? " << i << "?" << std::endl;
 		assert(0);
 		break;
 	};
-	
+
 	OPENGL_UTILITY::CheckForOpenGLErrors("cubemap generation: FBO cube side attachment", error_output);
 }
 
@@ -841,7 +841,7 @@ GLint DepthModeFromString(const std::string & mode)
 		return GL_ALWAYS;
 	else
 		assert(0);
-	
+
 	return GL_LEQUAL;
 }
 
@@ -859,7 +859,7 @@ BLENDMODE::BLENDMODE BlendModeFromString(const std::string & mode)
 		return BLENDMODE::ALPHATEST;
 	else
 		assert(0);
-	
+
 	return BLENDMODE::DISABLED;
 }
 
@@ -876,7 +876,7 @@ void GRAPHICS_FALLBACK::DrawScene(std::ostream & error_output)
 
 	//sort the two dimentional drawlist so we get correct ordering
 	std::sort(dynamic_drawlist.twodim.begin(),dynamic_drawlist.twodim.end(),&SortDraworder);
-	
+
 	//do fast culling queries for static geometry, but only where necessary
 	//for each pass, we have which camera and which draw layer to use
 	//we want to do culling for each unique camera and draw layer combination
@@ -891,44 +891,44 @@ void GRAPHICS_FALLBACK::DrawScene(std::ostream & error_output)
 			{
 				// determine if we're dealing with a cubemap
 				render_output_map_type::iterator oi = render_outputs.find(i->output);
-				
+
 				if (oi == render_outputs.end())
 				{
 					ReportOnce(&*i, "Render output "+i->output+" couldn't be found", error_output);
 					continue;
 				}
-				
+
 				bool cubemap = (oi->second.IsFBO() && oi->second.RenderToFBO().IsCubemap());
-				
+
 				std::string cameraname = i->camera;
 				const int cubesides = cubemap ? 6 : 1;
-				
+
 				for (int cubeside = 0; cubeside < cubesides; cubeside++)
 				{
 					if (cubemap)
 					{
 						// build sub-camera
-						
+
 						// build a name for the sub camera
 						{
 							std::stringstream converter;
 							converter << i->camera << "_cubeside" << cubeside;
 							cameraname = converter.str();
 						}
-						
+
 						// get the base camera
 						camera_map_type::iterator bci = cameras.find(i->camera);
-						
+
 						if (bci == cameras.end())
 						{
 							ReportOnce(&*i, "Camera "+i->camera+" couldn't be found", error_output);
 							continue;
 						}
-						
+
 						// create our sub-camera
 						GRAPHICS_CAMERA & cam = cameras[cameraname];
 						cam = bci->second;
-						
+
 						// set the sub-camera's properties
 						cam.orient = GetCubeSideOrientation(cubeside, cam.orient, error_output);
 						cam.fov = 90;
@@ -937,18 +937,18 @@ void GRAPHICS_FALLBACK::DrawScene(std::ostream & error_output)
 						cam.w = fbo.GetWidth();
 						cam.h = fbo.GetHeight();
 					}
-					
+
 					std::string key = BuildKey(cameraname, *d);
 					if (i->cull)
 					{
 						camera_map_type::iterator ci = cameras.find(cameraname);
-						
+
 						if (ci == cameras.end())
 						{
 							ReportOnce(&*i, "Camera "+cameraname+" couldn't be found", error_output);
 							continue;
 						}
-						
+
 						GRAPHICS_CAMERA & cam = ci->second;
 						if (culled_static_drawlist.find(key) == culled_static_drawlist.end())
 						{
@@ -959,13 +959,13 @@ void GRAPHICS_FALLBACK::DrawScene(std::ostream & error_output)
 							FRUSTUM frustum = renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h);
 							reseatable_reference <AABB_SPACE_PARTITIONING_NODE_ADAPTER <DRAWABLE> > container =
 								static_drawlist.GetDrawlist().GetByName(*d);
-							
+
 							if (!container)
 							{
 								ReportOnce(&*i, "Drawable container "+*d+" couldn't be found", error_output);
 								continue;
 							}
-							
+
 							container->Query(frustum, culled_static_drawlist[key]);
 							renderscene.DisableOrtho();
 						}
@@ -974,26 +974,26 @@ void GRAPHICS_FALLBACK::DrawScene(std::ostream & error_output)
 					{
 						reseatable_reference <AABB_SPACE_PARTITIONING_NODE_ADAPTER <DRAWABLE> > container =
 							static_drawlist.GetDrawlist().GetByName(*d);
-							
+
 						if (!container)
 						{
 							ReportOnce(&*i, "Drawable container "+*d+" couldn't be found", error_output);
 							continue;
 						}
-						
+
 						container->Query(AABB<float>::INTERSECT_ALWAYS(), culled_static_drawlist[key]);
 					}
 				}
 			}
 		}
 	}
-	
+
 	//construct light position
 	MATHVECTOR <float, 3> lightposition(0,0,1);
 	(-lightdirection).RotateVector(lightposition);
 	renderscene.SetSunDirection(lightposition);
 	postprocess.SetSunDirection(lightposition);
-	
+
 	// draw the passes
 	for (std::vector <GRAPHICS_CONFIG_PASS>::const_iterator i = config.passes.begin(); i != config.passes.end(); i++)
 	{
@@ -1004,13 +1004,13 @@ void GRAPHICS_FALLBACK::DrawScene(std::ostream & error_output)
 			for (std::map <unsigned int, std::string>::const_iterator t = i->inputs.tu.begin(); t != i->inputs.tu.end(); t++)
 			{
 				unsigned int tuid = t->first;
-				
+
 				unsigned int cursize = input_textures.size();
 				for (unsigned int extra = cursize; extra < tuid; extra++)
 					input_textures.push_back(NULL);
-				
+
 				std::string texname = t->second;
-				
+
 				// quietly ignore invalid names
 				// this allows us to specify outputs that are only present for certain conditions
 				// and then always specify those outputs as inputs to later stages, and have
@@ -1026,7 +1026,7 @@ void GRAPHICS_FALLBACK::DrawScene(std::ostream & error_output)
 					input_textures.push_back(NULL);
 				}
 			}
-			
+
 			assert(!i->draw.empty());
 			if (i->draw.back() == "postprocess")
 			{
@@ -1045,42 +1045,42 @@ void GRAPHICS_FALLBACK::DrawScene(std::ostream & error_output)
 					renderscene.DisableOrtho();
 				renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h);
 				postprocess.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h); //so we have this later if we want
-				
+
 				postprocess.SetDepthMode(DepthModeFromString(i->depthtest));
 				postprocess.SetWriteDepth(i->write_depth);
 				postprocess.SetClear(i->clear_color, i->clear_depth);
 				postprocess.SetBlendMode(BlendModeFromString(i->blendmode));
-				
+
 				shader_map_type::iterator si = shadermap.find(i->shader);
 				if (si == shadermap.end())
 				{
 					ReportOnce(&*i, "Shader "+i->shader+" couldn't be found", error_output);
 					continue;
 				}
-				
+
 				RenderPostProcess(i->shader, input_textures, render_outputs[i->output], i->write_color, i->write_alpha, error_output);
 			}
 			else
 			{
 				renderscene.SetBlendMode(BlendModeFromString(i->blendmode));
 				renderscene.SetDepthMode(DepthModeFromString(i->depthtest));
-				
+
 				for (std::vector <std::string>::const_iterator d = i->draw.begin(); d != i->draw.end(); d++)
 				{
 					// setup render output
 					render_output_map_type::iterator oi = render_outputs.find(i->output);
-					
+
 					if (oi == render_outputs.end())
 					{
 						ReportOnce(&*i, "Render output "+i->output+" couldn't be found", error_output);
 						continue;
 					}
-					
+
 					// handle the cubemap case
 					bool cubemap = (oi->second.IsFBO() && oi->second.RenderToFBO().IsCubemap());
 					std::string cameraname = i->camera;
 					const int cubesides = cubemap ? 6 : 1;
-					
+
 					for (int cubeside = 0; cubeside < cubesides; cubeside++)
 					{
 						if (cubemap)
@@ -1089,27 +1089,27 @@ void GRAPHICS_FALLBACK::DrawScene(std::ostream & error_output)
 							std::stringstream converter;
 							converter << i->camera << "_cubeside" << cubeside;
 							cameraname = converter.str();
-							
+
 							// attach the correct cube side on the render output
 							AttachCubeSide(cubeside, oi->second.RenderToFBO(), error_output);
 						}
-						
+
 						// setup camera
 						camera_map_type::iterator ci = cameras.find(cameraname);
-						
+
 						if (ci == cameras.end())
 						{
 							ReportOnce(&*i, "Camera "+i->camera+" couldn't be found", error_output);
 							continue;
 						}
-						
+
 						GRAPHICS_CAMERA & cam = ci->second;
 						if (cam.orthomode)
 							renderscene.SetOrtho(cam.orthomin, cam.orthomax);
 						else
 							renderscene.DisableOrtho();
 						renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h);
-						
+
 						// setup shader
 						if (using_shaders)
 						{
@@ -1121,7 +1121,7 @@ void GRAPHICS_FALLBACK::DrawScene(std::ostream & error_output)
 							}
 							renderscene.SetDefaultShader(si->second);
 						}
-						
+
 						// setup other flags
 						if (d == i->draw.begin())
 							renderscene.SetClear(i->clear_color, i->clear_depth);
@@ -1130,28 +1130,28 @@ void GRAPHICS_FALLBACK::DrawScene(std::ostream & error_output)
 						renderscene.SetWriteColor(i->write_color);
 						renderscene.SetWriteAlpha(i->write_alpha);
 						renderscene.SetWriteDepth(i->write_depth);
-						
+
 						// setup dynamic drawlist
 						reseatable_reference <PTRVECTOR <DRAWABLE> > container = dynamic_drawlist.GetByName(*d);
-						
+
 						if (!container)
 						{
 							ReportOnce(&*i, "Drawable container "+*d+" couldn't be found", error_output);
 							continue;
 						}
-						
+
 						// setup static drawlist
 						std::map <std::string, PTRVECTOR <DRAWABLE> >::iterator container_static =
 									culled_static_drawlist.find(BuildKey(cameraname,*d));
-						
+
 						if (container_static == culled_static_drawlist.end())
 						{
 							ReportOnce(&*i, "Couldn't find culled static drawlist for camera/draw combination: "+BuildKey(cameraname,*d), error_output);
 							continue;
 						}
-						
+
 						OPENGL_UTILITY::CheckForOpenGLErrors("render setup", error_output);
-						
+
 						// car paint hack for non-shader path
 						if (!using_shaders && (*d == "nocamtrans_noblend" || *d == "car_noblend"))
 						{
@@ -1159,7 +1159,7 @@ void GRAPHICS_FALLBACK::DrawScene(std::ostream & error_output)
 						}
 						else
 							renderscene.SetCarPaintHack(false);
-						
+
 						// render
 						RenderDrawlists(*container,
 											container_static->second,
@@ -1167,7 +1167,7 @@ void GRAPHICS_FALLBACK::DrawScene(std::ostream & error_output)
 											renderscene,
 											oi->second,
 											error_output);
-						
+
 						// cleanup
 						renderscene.DisableOrtho();
 					}
@@ -1178,8 +1178,8 @@ void GRAPHICS_FALLBACK::DrawScene(std::ostream & error_output)
 }
 
 void GRAPHICS_FALLBACK::RenderDrawlist(std::vector <DRAWABLE*> & drawlist,
-						RENDER_INPUT_SCENE & render_scene, 
-						RENDER_OUTPUT & render_output, 
+						RENDER_INPUT_SCENE & render_scene,
+						RENDER_OUTPUT & render_output,
 						std::ostream & error_output)
 {
 	if (drawlist.empty() && !render_scene.GetClear().first && !render_scene.GetClear().second)
@@ -1192,51 +1192,51 @@ void GRAPHICS_FALLBACK::RenderDrawlist(std::vector <DRAWABLE*> & drawlist,
 void GRAPHICS_FALLBACK::RenderDrawlists(std::vector <DRAWABLE*> & dynamic_drawlist,
 						std::vector <DRAWABLE*> & static_drawlist,
 						const std::vector <TEXTURE_INTERFACE*> & extra_textures,
-						RENDER_INPUT_SCENE & render_scene, 
-						RENDER_OUTPUT & render_output, 
+						RENDER_INPUT_SCENE & render_scene,
+						RENDER_OUTPUT & render_output,
 						std::ostream & error_output)
 {
 	if (dynamic_drawlist.empty() && static_drawlist.empty() && !render_scene.GetClear().first && !render_scene.GetClear().second)
 		return;
-	
+
 	OPENGL_UTILITY::CheckForOpenGLErrors("RenderDrawlists start", error_output);
-	
+
 	for (unsigned int i = 0; i < extra_textures.size(); i++)
 	{
 		if (extra_textures[i])
 		{
 			glActiveTexture(GL_TEXTURE0+i);
 			extra_textures[i]->Activate();
-			
+
 			if (OPENGL_UTILITY::CheckForOpenGLErrors("RenderDrawlists extra texture bind", error_output))
 			{
 				error_output << "this error occurred while binding texture " << i << ": id=" << extra_textures[i]->GetID() << " loaded=" << extra_textures[i]->Loaded() << std::endl;
 			}
 		}
 	}
-	
+
 	glActiveTexture(GL_TEXTURE0);
-	
+
 	render_scene.SetDrawLists(dynamic_drawlist, static_drawlist);
-	
+
 	OPENGL_UTILITY::CheckForOpenGLErrors("RenderDrawlists SetDrawLists", error_output);
-	
+
 	Render(&render_scene, render_output, error_output);
-	
+
 	for (unsigned int i = 0; i < extra_textures.size(); i++)
 	{
 		if (extra_textures[i])
 		{
 			glActiveTexture(GL_TEXTURE0+i);
 			extra_textures[i]->Deactivate();
-			
+
 			if (OPENGL_UTILITY::CheckForOpenGLErrors("RenderDrawlists extra texture unbind", error_output))
 			{
 				error_output << "this error occurred while binding texture " << i << ": id=" << extra_textures[i]->GetID() << " loaded=" << extra_textures[i]->Loaded() << std::endl;
 			}
 		}
 	}
-	
+
 	glActiveTexture(GL_TEXTURE0);
 }
 

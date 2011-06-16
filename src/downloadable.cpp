@@ -45,7 +45,7 @@ void DOWNLOADABLEMANAGER::SetDownloadable(const std::string & name, int new_vers
 std::vector <std::string> DOWNLOADABLEMANAGER::GetUpdatables(const std::map <std::string, int> & remote_downloadables) const
 {
 	std::vector <std::string> update;
-	
+
 	// do a naive n*log(n) algorithm for now
 	for (std::map <std::string, int>::const_iterator i = downloadables.begin(); i != downloadables.end(); i++)
 	{
@@ -53,6 +53,6 @@ std::vector <std::string> DOWNLOADABLEMANAGER::GetUpdatables(const std::map <std
 		if (r != remote_downloadables.end() && r->second > i->second)
 			update.push_back(i->first);
 	}
-	
+
 	return update;
 }

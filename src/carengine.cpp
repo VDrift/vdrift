@@ -20,7 +20,7 @@ bool CARENGINEINFO::Load(const PTree & cfg, std::ostream & error_output)
 {
 	std::vector<std::pair<btScalar, btScalar> > torque;
 	std::vector<btScalar> pos(3);
-	
+
 	if (!cfg.get("peak-engine-rpm", redline, error_output)) return false; //used only for the redline graphics
 	if (!cfg.get("rpm-limit", rpm_limit, error_output)) return false;
 	if (!cfg.get("inertia", inertia, error_output)) return false;
@@ -53,7 +53,7 @@ bool CARENGINEINFO::Load(const PTree & cfg, std::ostream & error_output)
 		return false;
 	}
 	SetTorqueCurve(redline, torque);
-	
+
 	return true;
 }
 
@@ -62,34 +62,34 @@ void CARENGINEINFO::SetTorqueCurve(
 	const std::vector<std::pair<btScalar, btScalar> > & torque)
 {
 	torque_curve.Clear();
-	
+
 	//this value accounts for the fact that the torque curves are usually measured
 	// on a dyno, but we're interested in the actual crankshaft power
 	const btScalar dyno_correction_factor = 1.0;//1.14;
-	
+
 	assert(torque.size() > 1);
-	
+
 	//ensure we have a smooth curve down to 0 RPM
 	if (torque[0].first != 0) torque_curve.AddPoint(0,0);
-	
+
 	for (std::vector<std::pair<btScalar, btScalar> >::const_iterator i = torque.begin(); i != torque.end(); ++i)
 	{
 		torque_curve.AddPoint(i->first, i->second * dyno_correction_factor);
 	}
-	
+
 	//ensure we have a smooth curve for over-revs
 	torque_curve.AddPoint(torque[torque.size()-1].first + 10000, 0);
-	
+
 	//write out a debug torque curve file
 	/*std::ofstream f("out.dat");
 	for (btScalar i = 0; i < curve[curve.size()-1].first+1000; i+= 20) f << i << " " << torque_curve.Interpolate(i) << std::endl;*/
 	//for (unsigned int i = 0; i < curve.size(); i++) f << curve[i].first << " " << curve[i].second << std::endl;
-	
+
 	//calculate engine friction
 	btScalar max_power_angvel = redline*3.14153/30.0;
 	btScalar max_power = torque_curve.Interpolate(redline) * max_power_angvel;
 	friction = max_power / (max_power_angvel*max_power_angvel*max_power_angvel);
-	
+
 	//calculate idle throttle position
 	for (idle = 0; idle < 1.0; idle += 0.01)
 	{
@@ -114,7 +114,7 @@ btScalar CARENGINEINFO::GetFrictionTorque(
 {
 	btScalar velsign = 1.0;
 	if (angvel < 0) velsign = -1.0;
-	
+
 	btScalar A = 0;
 	btScalar B = -1300 * friction;
 	btScalar C = 0;
@@ -133,7 +133,7 @@ void CARENGINE::Init(const CARENGINEINFO & info)
 	combustion_torque = 0;
 	friction_torque = 0;
 	clutch_torque = 0;
-	
+
 	throttle_position = 0;
 	out_of_gas = false;
 	rev_limit_exceeded = false;
@@ -143,37 +143,37 @@ void CARENGINE::Init(const CARENGINEINFO & info)
 btScalar CARENGINE::Integrate(btScalar clutch_drag, btScalar clutch_angvel, btScalar dt)
 {
 	clutch_torque = clutch_drag;
-	
+
 	btScalar torque_limit = shaft.getMomentum(clutch_angvel) / dt;
 	if ((clutch_torque > 0 && clutch_torque > torque_limit) ||
 		(clutch_torque < 0 && clutch_torque < torque_limit))
 	{
 		clutch_torque = torque_limit;
 	}
-	
+
 	stalled = (GetRPM() < info.stall_rpm);
-	
+
 	//make sure the throttle is at least idling
 	if (throttle_position < info.idle) throttle_position = info.idle;
-	
+
 	//engine drive torque
 	btScalar friction_factor = 1.0; //used to make sure we allow friction to work if we're out of gas or above the rev limit
 	btScalar rev_limit = info.rpm_limit;
 	if (rev_limit_exceeded) rev_limit -= 100.0; //tweakable
-	
+
 	if (GetRPM() < rev_limit)
 		rev_limit_exceeded = false;
 	else
 		rev_limit_exceeded = true;
-	
+
 	combustion_torque = info.GetTorque(throttle_position, GetRPM());
-	
+
 	if (out_of_gas || rev_limit_exceeded || stalled)
 	{
 		friction_factor = 0.0;
 		combustion_torque = 0.0;
 	}
-	
+
 	friction_torque = info.GetFrictionTorque(shaft.ang_velocity, friction_factor, throttle_position);
 	if (stalled)
 	{
@@ -183,7 +183,7 @@ btScalar CARENGINE::Integrate(btScalar clutch_drag, btScalar clutch_angvel, btSc
 
 	btScalar total_torque = combustion_torque + friction_torque + clutch_torque;
 	shaft.applyMomentum(total_torque * dt);
-	
+
 	return clutch_torque;
 }
 

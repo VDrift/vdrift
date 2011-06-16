@@ -21,17 +21,17 @@ void FractureBody::addConnection(btRigidBody* body, const btTransform& localTran
 {
 	btCompoundShape* compound = (btCompoundShape*)m_collisionShape;
 	int shapeId = compound->getNumChildShapes();
-	
+
 	// store connection index as user pointer
 	body->getCollisionShape()->setUserPointer(cast<void*>(m_connections.size()));
-	
+
 	btConnection c;
 	c.m_body = body;
 	c.m_strength = strength;
 	c.m_elasticLimit = elasticLimit;
 	c.m_shapeId = shapeId;
 	m_connections.push_back(c);
-	
+
 	compound->addChildShape(localTransform, body->getCollisionShape());
 }
 
@@ -41,29 +41,29 @@ btRigidBody* FractureBody::breakConnection(int id)
 	btRigidBody* child = m_connections[id].m_body;
 	btCompoundShape* compound = (btCompoundShape*)getCollisionShape();
 	btTransform trans = getWorldTransform() * compound->getChildTransform(shapeId);
-	
+
 	child->setWorldTransform(trans);
 	child->setLinearVelocity(getLinearVelocity());
 	child->setAngularVelocity(getAngularVelocity());
 	child->setUserPointer(cast<void*>(-1));
-	
+
 	//std::cerr << "\nbefore shape removal" << std::endl;
 	//debugPrint();
 	//std::cerr << "removing shape " << shapeId << std::endl;
-	
+
 	// will swap last shape with removed one
 	compound->removeChildShapeByIndex(shapeId);
-	
+
 	// remove will swap last shape with shapeId need to update connection
 	id = cast<int>(compound->getChildShape(shapeId)->getUserPointer());
 	if (id >= 0 && shapeId <= compound->getNumChildShapes())
 	{
 		m_connections[id].m_shapeId = shapeId;
 	}
-	
+
 	//std::cerr << "\nafter shape removal" << std::endl;
 	//debugPrint();
-	
+
 	return child;
 }
 
@@ -71,7 +71,7 @@ void FractureBody::updateMassCenter()
 {
 	for (int i = 0; i < m_connections.size(); ++i)
 	{
-		
+
 	}
 }
 
@@ -87,7 +87,7 @@ void FractureBody::updateMotionState()
 			btTransform transform;
 			getMotionState()->getWorldTransform(transform);
 			transform = transform * shape->getChildTransform(i);
-			m_connections[id].m_body->getMotionState()->setWorldTransform(transform);		
+			m_connections[id].m_body->getMotionState()->setWorldTransform(transform);
 		}
 	}
 }
@@ -113,7 +113,7 @@ btCompoundShape* FractureBody::shiftTransform(btCompoundShape* compound, btScala
 {
 	btTransform principal;
 	compound->calculatePrincipalAxisTransform(masses, principal, principalInertia);
-	
+
 	///create a new compound with world transform/center of mass properly aligned with the principal axis
 	///creation is faster using a new compound to store the shifted children
 	btCompoundShape* newCompound = new btCompoundShape();
@@ -124,7 +124,7 @@ btCompoundShape* FractureBody::shiftTransform(btCompoundShape* compound, btScala
 		///updateChildTransform is really slow, because it re-calculates the AABB each time. todo: add option to disable this update
 		newCompound->addChildShape(newChildTransform, compound->getChildShape(i));
 	}
-	
+
 	shift = principal;
 	return newCompound;
 }

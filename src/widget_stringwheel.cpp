@@ -32,10 +32,10 @@ void WIDGET_STRINGWHEEL::SetVisible(SCENENODE & scene, bool newvis)
 bool WIDGET_STRINGWHEEL::ProcessInput(SCENENODE & scene, float cursorx, float cursory, bool cursordown, bool cursorjustup)
 {
 	active_action.clear();
-	
+
 	bool left = button_left.ProcessInput(scene, cursorx, cursory, cursordown, cursorjustup);
 	bool right = button_right.ProcessInput(scene, cursorx, cursory, cursordown, cursorjustup);
-	
+
 	if (option)
 	{
 		if (left && cursorjustup)
@@ -44,7 +44,7 @@ bool WIDGET_STRINGWHEEL::ProcessInput(SCENENODE & scene, float cursorx, float cu
 			SyncOption(scene);
 			active_action = action;
 		}
-		
+
 		if (right && cursorjustup)
 		{
 			option->Increment();
@@ -52,7 +52,7 @@ bool WIDGET_STRINGWHEEL::ProcessInput(SCENENODE & scene, float cursorx, float cu
 			active_action = action;
 		}
 	}
-	
+
 	return left || right;
 }
 
@@ -116,7 +116,7 @@ void WIDGET_STRINGWHEEL::SetupDrawable(
 	assert(left_down);
 	assert(right_up);
 	assert(right_down);
-	
+
 	float titlewidth = title.GetWidth(font, newtitle, scalex);
 	float blx = centerx + titlewidth + scalex / 2;
 	float brx = blx + scalex * 3 / 4;

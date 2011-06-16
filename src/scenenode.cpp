@@ -21,7 +21,7 @@ VEC3 SCENENODE::TransformIntoLocalSpace(const VEC3 & worldspace) const
 void SCENENODE::SetChildVisibility(bool newvis)
 {
 	drawlist.SetVisibility(newvis);
-	
+
 	for (keyed_container <SCENENODE>::iterator i = childlist.begin(); i != childlist.end(); ++i)
 	{
 		i->SetChildVisibility(newvis);
@@ -31,7 +31,7 @@ void SCENENODE::SetChildVisibility(bool newvis)
 void SCENENODE::SetChildAlpha(float a)
 {
 	drawlist.SetAlpha(a);
-	
+
 	for (keyed_container <SCENENODE>::iterator i = childlist.begin(); i != childlist.end(); ++i)
 	{
 		i->SetChildAlpha(a);
@@ -43,7 +43,7 @@ void SCENENODE::DebugPrint(std::ostream & out, int curdepth) const
 	for (int i = 0; i < curdepth; i++)
 		out << "-";
 	out << "Children: " << Nodes() << ", Drawables: " << Drawables() << std::endl;
-	
+
 	for (keyed_container <SCENENODE>::const_iterator i = childlist.begin(); i != childlist.end(); ++i)
 	{
 		i->DebugPrint(out, curdepth+1);

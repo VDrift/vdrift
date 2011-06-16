@@ -12,7 +12,7 @@ void SPRITE2D::Unload(SCENENODE & parent)
 	}
 	node.invalidate();
 	draw.invalidate();
-	
+
 	varray.Clear();
 }
 
@@ -76,6 +76,6 @@ bool SPRITE2D::Load(
 	drawref.SetDrawOrder(draworder);
 	drawref.SetCull(false, false);
 	drawref.SetColor(r,g,b,a);
-	
+
 	return true;
 }

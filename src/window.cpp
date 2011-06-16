@@ -41,7 +41,8 @@ void WINDOW_SDL::Init(const std::string & windowcaption,
 	{
 		string err = SDL_GetError();
 		error_output << "SDL initialization failed: " << err << endl;
-		assert(0); //die
+		// Die...
+		assert(0);
 	}
 	else
 		info_output << "SDL initialization successful" << endl;
@@ -79,7 +80,7 @@ void WINDOW_SDL::ChangeDisplay(const int width, const int height, const int bpp,
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
 	    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
 	}*/
-	
+
 	SDL_GL_SetAttribute( SDL_GL_DOUBLEBUFFER, 1 );
 	SDL_GL_SetAttribute( SDL_GL_DEPTH_SIZE, dbpp );
 
