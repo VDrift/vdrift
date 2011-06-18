@@ -283,7 +283,6 @@
 		<Unit filename="bullet\BulletDynamics\ConstraintSolver\btTypedConstraint.h" />
 		<Unit filename="bullet\BulletDynamics\ConstraintSolver\btUniversalConstraint.cpp" />
 		<Unit filename="bullet\BulletDynamics\ConstraintSolver\btUniversalConstraint.h" />
-		<Unit filename="bullet\BulletDynamics\Dynamics\Bullet-C-API.cpp" />
 		<Unit filename="bullet\BulletDynamics\Dynamics\btActionInterface.h" />
 		<Unit filename="bullet\BulletDynamics\Dynamics\btContinuousDynamicsWorld.cpp" />
 		<Unit filename="bullet\BulletDynamics\Dynamics\btContinuousDynamicsWorld.h" />

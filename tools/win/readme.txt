@@ -1,12 +1,5 @@
 Download http://bullet.googlecode.com/files/bullet-2.78.zip
 
-Extract the following files/folders into tools/win/bullet:
-	BulletCollision
-	BulletDynamics
-	LinearMath
-	btBulletCollisionCommon.h
-	btBulletDynamicsCommon.h
+Extract bullet-2.78/src/ content into tools/win/bullet/
 
-Open vdrift.workspace with codeblocks
-
-Build vdrift project
+Open vdrift.workspace, build vdrift project
