@@ -47,8 +47,8 @@ btRigidBody* FractureBody::breakConnection(int con_id)
 	btRigidBody* child = m_connections[con_id].m_body;
 	btTransform trans = getWorldTransform() * compound->getChildTransform(shape_id);
 	child->setWorldTransform(trans);
-	child->setLinearVelocity(getLinearVelocity());
-	child->setAngularVelocity(getAngularVelocity());
+	child->setLinearVelocity(getVelocityInLocalPoint(trans.getOrigin()-getCenterOfMassPosition()));
+	child->setAngularVelocity(btVector3(0, 0, 0));
 	child->getCollisionShape()->setUserPointer(cast<void*>(-1));
 	
 	// invalidate connection
