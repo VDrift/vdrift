@@ -235,16 +235,18 @@ void DynamicsWorld::fractureCallback()
 			for (int k = 0; k < manifold->getNumContacts(); ++k)
 			{
 				btManifoldPoint& pt = manifold->getContactPoint(k);
-				int id = cast<int>(shape->getChildShape(pt.m_index0)->getUserPointer());
-				if (id >= 0)
+				int shape_id = pt.m_index0;
+				int con_id = cast<int>(shape->getChildShape(shape_id)->getUserPointer());
+				if (con_id >= 0 && pt.m_appliedImpulse > 1E-3)
 				{
-					btScalar& accImpulse = body->m_connections[id].m_accImpulse;
-					if (accImpulse < 1E-3)
+					FractureBody::Connection & connection = body->m_connections[con_id];
+					btAssert(connection.m_shapeId == shape_id);
+					if (connection.m_accImpulse < 1E-3)
 					{
 						// activate connection
-						m_activeConnections.push_back(ActiveCon(body, id));
+						m_activeConnections.push_back(ActiveCon(body, con_id));
 					}
-					accImpulse += pt.m_appliedImpulse;
+					connection.m_accImpulse += pt.m_appliedImpulse;
 				}
 			}
 		}
@@ -256,16 +258,18 @@ void DynamicsWorld::fractureCallback()
 			for (int k = 0; k < manifold->getNumContacts(); ++k)
 			{
 				btManifoldPoint& pt = manifold->getContactPoint(k);
-				int id = cast<int>(shape->getChildShape(pt.m_index1)->getUserPointer());
-				if (id >= 0)
+				int shape_id = pt.m_index1;
+				int con_id = cast<int>(shape->getChildShape(shape_id)->getUserPointer());
+				if (con_id >= 0 && pt.m_appliedImpulse > 1E-3)
 				{
-					btScalar& accImpulse = body->m_connections[id].m_accImpulse;
-					if (accImpulse < 1E-3)
+					FractureBody::Connection & connection = body->m_connections[con_id];
+					btAssert(connection.m_shapeId == shape_id);
+					if (connection.m_accImpulse < 1E-3)
 					{
 						// activate connection
-						m_activeConnections.push_back(ActiveCon(body, id));
+						m_activeConnections.push_back(ActiveCon(body, con_id));
 					}
-					accImpulse += pt.m_appliedImpulse;
+					connection.m_accImpulse += pt.m_appliedImpulse;
 				}
 			}
 		}
@@ -273,22 +277,23 @@ void DynamicsWorld::fractureCallback()
 	
 	for (int i = 0; i < m_activeConnections.size(); ++i)
 	{
-		FractureBody* body = m_activeConnections[i].body;
-		btConnection& connection = body->m_connections[m_activeConnections[i].id];
-		
 		// check connection
+		FractureBody* body = m_activeConnections[i].body;
+		int con_id = m_activeConnections[i].id;
+		FractureBody::Connection& connection = body->m_connections[con_id];
 		btScalar damage = connection.m_accImpulse - connection.m_elasticLimit;
 		connection.m_accImpulse = 0;
+		
 		if (damage > 0)
 		{
 			// weaken connection
-			connection.m_accImpulse = 0;
 			connection.m_elasticLimit -= damage * 0.5;
 			connection.m_strength -= damage;
 			
 			if (connection.m_strength < 0)
 			{
-				btRigidBody * child = body->breakConnection(m_activeConnections[i].id);
+				// break connection
+				btRigidBody * child = body->breakConnection(con_id);
 				addRigidBody(child);
 			}
 		}
