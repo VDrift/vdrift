@@ -59,8 +59,10 @@ btRigidBody* FractureBody::breakConnection(int con_id)
 	if (shape_id < compound->getNumChildShapes() - 1)
 	{
 		int id = cast<int>(compound->getChildShape(shape_id)->getUserPointer());
-		btAssert(id >= 0);
-		m_connections[id].m_shapeId = shape_id;
+		if(id >= 0)
+		{
+			m_connections[id].m_shapeId = shape_id;
+		}
 	}
 	
 	return child;
