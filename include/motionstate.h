@@ -16,7 +16,7 @@ struct MotionState : public btMotionState {
 	}
 	
 	/// from user to physics
-	virtual void getWorldTransform(btTransform& centerOfMassWorldTrans) const 
+	virtual void getWorldTransform(btTransform& centerOfMassWorldTrans) const
 	{
 		//centerOfMassWorldTrans = m_graphicsWorldTrans * m_centerOfMassOffset.inverse();
 		btQuaternion rot = rotation * massCenterRotation.inverse();

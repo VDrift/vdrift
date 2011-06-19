@@ -47,7 +47,7 @@ class FBTEXTURE : public TEXTURE_INTERFACE
 			DEPTH24 = GL_DEPTH_COMPONENT24
 		};
 		
-		FBTEXTURE() : 
+		FBTEXTURE() :
 			fbtexture(0),
 			renderbuffer_multisample(0),
 			inited(false),

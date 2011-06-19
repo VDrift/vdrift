@@ -20,7 +20,7 @@ class SOUNDMANAGER;
 class MODEL;
 class PTree;
 
-class CAR 
+class CAR
 {
 friend class PERFORMANCE_TESTING;
 friend class joeserialize::Serializer;

@@ -213,7 +213,7 @@ public:
 		
 		A = (v[3] + v[0])*(quat2.v[3] + quat2.v[0]);
 		B = (v[2] - v[1])*(quat2.v[1] - quat2.v[2]);
-		C = (v[3] - v[0])*(quat2.v[1] + quat2.v[2]); 
+		C = (v[3] - v[0])*(quat2.v[1] + quat2.v[2]);
 		D = (v[1] + v[2])*(quat2.v[3] - quat2.v[0]);
 		E = (v[0] + v[2])*(quat2.v[0] + quat2.v[1]);
 		F = (v[0] - v[2])*(quat2.v[0] - quat2.v[1]);
@@ -327,7 +327,7 @@ public:
 		x = atan2(2 * (v[1] * v[2] + v[0] * v[3]), -v[0] * v[0] - v[1] * v[1] + v[2] * v[2] + v[3] * v[3]);
 		y = asin(-2 * (v[0] * v[2] - v[1] * v[3]));
 		z = atan2(2 * (v[0] * v[1] + v[2] * v[3]),  v[0] * v[0] - v[1] * v[1] - v[2] * v[2] + v[3] * v[3]);
-	} 
+	}
 	
 	///rotate a vector (accessible with []) by this quaternion
 	/// note that the output is saved back to the input vec variable
@@ -437,14 +437,14 @@ public:
 	}
 	
 	/*///assuming the eye is at the given coordinates, set the orientation to look at center
-	void LookAt(T eyex, 
-			T eyey, 
-			T eyez, 
-			T centerx, 
-			T centery, 
-			T centerz, 
-			T upx, 
-			T upy, 
+	void LookAt(T eyex,
+			T eyey,
+			T eyez,
+			T centerx,
+			T centery,
+			T centerz,
+			T upx,
+			T upy,
 			T upz)
 	{
 		MATHVECTOR <T,3> forward(centerx-eyex, centery-eyey, centerz-eyez);
@@ -496,13 +496,13 @@ public:
 		}
 		else
 		{
-		if ( mat[0] > mat[5] && mat[0] > mat[10] )  {       // Column 0: 
+		if ( mat[0] > mat[5] && mat[0] > mat[10] )  {       // Column 0:
 			S  = sqrt( 1.0 + mat[0] - mat[5] - mat[10] ) * 2;
 			v[0] = 0.25 * S;
 			v[1] = (mat[4] + mat[1] ) / S;
 			v[2] = (mat[2] + mat[8] ) / S;
 			v[3] = (mat[9] - mat[6] ) / S;
-		} else if ( mat[5] > mat[10] ) {                    // Column 1: 
+		} else if ( mat[5] > mat[10] ) {                    // Column 1:
 			S  = sqrt( 1.0 + mat[5] - mat[0] - mat[10] ) * 2;
 			v[0] = (mat[4] + mat[1] ) / S;
 			v[1] = 0.25 * S;

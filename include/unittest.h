@@ -18,16 +18,16 @@
 * but WITHOUT ANY WARRANTY; without even the implied warranty of        *
 * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the files    *
 * license-LGPL.txt and license-BSD.txt for more details.                *
-************************************************************************/ 
+************************************************************************/
 
-// Please visit the project website (http://quicktest.sourceforge.net) 
+// Please visit the project website (http://quicktest.sourceforge.net)
 // for usage instructions.
 
-// Credits: 
-// Thanks to Noel Llopis for his helpful comparison of various C++ unit 
-// testing frameworks and ideas for an ideal simple testing framework: 
-// http://www.gamesfromwithin.com/articles/0412/000061.html  Thanks to 
-// Michael Feathers for developing CppUnitLite.  Many of the macros in 
+// Credits:
+// Thanks to Noel Llopis for his helpful comparison of various C++ unit
+// testing frameworks and ideas for an ideal simple testing framework:
+// http://www.gamesfromwithin.com/articles/0412/000061.html  Thanks to
+// Michael Feathers for developing CppUnitLite.  Many of the macros in
 // Quicktest were modeled after those in CppUnitLite.
 
 #ifndef QUICK_TEST_H
@@ -41,13 +41,13 @@
 // -----------------------------------------------------------------------
 // Design Notes
 // -----------------------------------------------------------------------
-// * Each test automatically registers itself by accessing the TestManager 
+// * Each test automatically registers itself by accessing the TestManager
 // singleton.
-// 
-// * There are no formal fixtures.  Fixtures are simply user-defined 
-// objects.  setup and teardown occur in the user-defined object's 
-// constructor and destructor.  Tests that need fixtures should staticly 
-// allocate one of these objects at the beginning of the test.  This method 
+//
+// * There are no formal fixtures.  Fixtures are simply user-defined
+// objects.  setup and teardown occur in the user-defined object's
+// constructor and destructor.  Tests that need fixtures should staticly
+// allocate one of these objects at the beginning of the test.  This method
 // is flexible and conceptually simple.
 
 namespace quicktest
@@ -65,7 +65,7 @@ namespace quicktest
 		virtual void run(TestResult& result) = 0;
 
 	protected:
-		void recordFailure(TestResult& result, const std::string& file, 
+		void recordFailure(TestResult& result, const std::string& file,
 			unsigned long int line, const std::string& message)
 		{
 			// If the full filename is too long, only use the last part.
@@ -74,15 +74,15 @@ namespace quicktest
 			size_t fileLength = file.size();
 			if (fileLength > maxLength)
 			{
-				// Get the last maxLength characters - 3 (leave room for 
+				// Get the last maxLength characters - 3 (leave room for
 				// three ellipses at the beginning).
 				fileStr = "...";
-				fileStr += file.substr(fileLength - maxLength + 3, 
+				fileStr += file.substr(fileLength - maxLength + 3,
 					fileLength - 1);
 			}
 
 			std::ostringstream oss;
-			oss << fileStr << "(" << line << "): '" << mTestName 
+			oss << fileStr << "(" << line << "): '" << mTestName
 				<< "' FAILED: " << message;
 			result.push_back(oss.str());
 		}
@@ -119,8 +119,8 @@ namespace quicktest
 		{
 			unsigned int numFailures = 0;
 
-			*getOutputStream() 
-				<< "[-------------- RUNNING UNIT TESTS --------------]" 
+			*getOutputStream()
+				<< "[-------------- RUNNING UNIT TESTS --------------]"
 				<< std::endl;
 
 			std::vector<Test*>::iterator iter;
@@ -144,12 +144,12 @@ namespace quicktest
 				}
 			}
 
-			*getOutputStream() << "Results: " << (unsigned int)mTests.size() 
-				- numFailures << " succeeded, " << numFailures << " failed" 
+			*getOutputStream() << "Results: " << (unsigned int)mTests.size()
+				- numFailures << " succeeded, " << numFailures << " failed"
 				<< std::endl;
 
-			*getOutputStream() 
-				<< "[-------------- UNIT TESTS FINISHED -------------]" 
+			*getOutputStream()
+				<< "[-------------- UNIT TESTS FINISHED -------------]"
 				<< std::endl;
 				
 			return numFailures;
@@ -165,7 +165,7 @@ namespace quicktest
 		{
 		}
 
-		/// List of pointers to Tests.  All tests are staticly allocated, 
+		/// List of pointers to Tests.  All tests are staticly allocated,
 		/// so we don't need to destroy them manually.
 		std::vector<Test*> mTests;
 
@@ -189,7 +189,7 @@ namespace quicktest
 	}testName##Instance;\
 	void testName##Test::run(quicktest::TestResult& result)
 
-/// Macro that runs all tests.  
+/// Macro that runs all tests.
 #define QT_RUN_TESTS quicktest::TestManager::instance().runTests()
 
 /// Macro that sets the output stream to use.
@@ -229,8 +229,8 @@ namespace quicktest
 		}\
 	}
 
-/// Checks whether the first parameter is within the given tolerance from 
-/// the second parameter.  This is useful for comparing floating point 
+/// Checks whether the first parameter is within the given tolerance from
+/// the second parameter.  This is useful for comparing floating point
 /// values.
 #define QT_CHECK_CLOSE(value1, value2, tolerance)\
 	{\
@@ -281,7 +281,7 @@ namespace quicktest
 		}\
 	}
 
-/// Checks whether the first parameter is greater than or equal to the 
+/// Checks whether the first parameter is greater than or equal to the
 /// second.
 #define QT_CHECK_GREATER_OR_EQUAL(value1, value2)\
 	{\

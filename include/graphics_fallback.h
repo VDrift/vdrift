@@ -103,7 +103,7 @@ private:
 	
 	QUATERNION <float> lightdirection;
 	
-	void ChangeDisplay(const int width, const int height, const int bpp, const int dbpp, const bool fullscreen, 
+	void ChangeDisplay(const int width, const int height, const int bpp, const int dbpp, const bool fullscreen,
 			   unsigned int antialiasing, std::ostream & info_output, std::ostream & error_output);
 	void SetActiveShader(const std::string name);
 	bool LoadShader(const std::string & shaderpath, const std::string & name, std::ostream & info_output, std::ostream & error_output, std::string variant="", std::string variant_defines="");
@@ -111,18 +111,18 @@ private:
 	void DisableShaders(const std::string & shaderpath, std::ostream & error_output);
 	void DrawBox(const MATHVECTOR <float, 3> & corner1, const MATHVECTOR <float, 3> & corner2) const;
 	void RenderDrawlist(std::vector <DRAWABLE*> & drawlist,
-						RENDER_INPUT_SCENE & render_scene, 
-						RENDER_OUTPUT & render_output, 
+						RENDER_INPUT_SCENE & render_scene,
+						RENDER_OUTPUT & render_output,
 						std::ostream & error_output);
 	void RenderDrawlists(std::vector <DRAWABLE*> & dynamic_drawlist,
 						std::vector <DRAWABLE*> & static_drawlist,
 						const std::vector <TEXTURE_INTERFACE*> & extra_textures,
 						RENDER_INPUT_SCENE & render_scene,
-						RENDER_OUTPUT & render_output, 
+						RENDER_OUTPUT & render_output,
 						std::ostream & error_output);
 	void RenderPostProcess(const std::string & shadername,
 						const std::vector <TEXTURE_INTERFACE*> & textures,
-						RENDER_OUTPUT & render_output, 
+						RENDER_OUTPUT & render_output,
 						bool write_color,
 						bool write_alpha,
 						std::ostream & error_output);
@@ -130,7 +130,7 @@ private:
 	void Render(RENDER_INPUT * input, RENDER_OUTPUT & output, std::ostream & error_output);
 public:
 	GRAPHICS_FALLBACK() : initialized(false),using_shaders(false),max_anisotropy(0),shadows(false),
-		       	closeshadow(5.0), fsaa(1),lighting(0),bloom(false),normalmaps(false),contrast(1.0), aticard(false), 
+		       	closeshadow(5.0), fsaa(1),lighting(0),bloom(false),normalmaps(false),contrast(1.0), aticard(false),
 		       	reflection_status(REFLECTION_DISABLED), renderconfigfile("render.conf")
 			{activeshader = shadermap.end();}
 	~GRAPHICS_FALLBACK() {}

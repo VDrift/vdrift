@@ -46,7 +46,7 @@ public:
 		SCENENODE & scene,
 		const std::string & newtitle,
 		std::tr1::shared_ptr<TEXTURE> teximage_left_up,
-		std::tr1::shared_ptr<TEXTURE> teximage_left_down, 
+		std::tr1::shared_ptr<TEXTURE> teximage_left_down,
 		std::tr1::shared_ptr<TEXTURE> teximage_right_up,
 		std::tr1::shared_ptr<TEXTURE> teximage_right_down,
 		const FONT & font,

@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-WIDGET_TOGGLE::WIDGET_TOGGLE() : 
+WIDGET_TOGGLE::WIDGET_TOGGLE() :
 	wasvisible(false)
 {
 	// ctor
@@ -169,9 +169,9 @@ void WIDGET_TOGGLE::SetSetting(const std::string & newsetting)
 void WIDGET_TOGGLE::SetupDrawable(
 	SCENENODE & scene,
 	std::tr1::shared_ptr<TEXTURE> teximage_up,
-	std::tr1::shared_ptr<TEXTURE> teximage_down, 
+	std::tr1::shared_ptr<TEXTURE> teximage_down,
 	std::tr1::shared_ptr<TEXTURE> teximage_upselected,
-	std::tr1::shared_ptr<TEXTURE> teximage_downselected, 
+	std::tr1::shared_ptr<TEXTURE> teximage_downselected,
 	std::tr1::shared_ptr<TEXTURE> teximage_transition,
 	float centerx, float centery,
 	float w, float h, float z)

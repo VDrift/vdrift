@@ -80,7 +80,7 @@ private:
 		MATRIX4 <float> inverseViewMatrix;
 	};
 	std::map <std::string, CameraMatrices> cameras;
-	CameraMatrices & setCameraPerspective(const std::string & name, 
+	CameraMatrices & setCameraPerspective(const std::string & name,
 							  const MATHVECTOR <float, 3> & position,
 							  const QUATERNION <float> & rotation,
 							  float fov,

@@ -17,7 +17,7 @@ template <typename T>
 class ROTATIONALFRAME
 {
 public:
-	ROTATIONALFRAME() : 
+	ROTATIONALFRAME() :
 		torque(0),
 		halfstep(false)
 	{
@@ -31,7 +31,7 @@ public:
 	/// get torque needed to reach a new angular velocity
 	const MATHVECTOR <T, 3> GetTorque(const MATHVECTOR<T, 3> & angvel_new, const T dt) const
 	{
-		MATHVECTOR<T, 3> angvel_delta = angvel_new - angular_velocity; 
+		MATHVECTOR<T, 3> angvel_delta = angvel_new - angular_velocity;
 		MATHVECTOR<T, 3> angmom_delta = world_inertia_tensor.Multiply(angvel_delta);
 		return angmom_delta / dt;
 	}
@@ -141,11 +141,11 @@ public:
 #endif
 		
 #ifdef SECOND_ORDER
-		MATHVECTOR<T, 3> ang_acc = 
+		MATHVECTOR<T, 3> ang_acc =
 			world_inverse_inertia_tensor.Multiply(torque - angular_velocity.cross(angular_momentum));
-		MATHVECTOR<T, 3> avg_rot = 
+		MATHVECTOR<T, 3> avg_rot =
 			angular_velocity + ang_acc * dt / 2.0 + ang_acc.cross(angular_velocity) * dt * dt / 12.0;
-		QUATERNION<T> dq = 
+		QUATERNION<T> dq =
 			QUATERNION<T>(avg_rot[0], avg_rot[1], avg_rot[2], 0) * orientation * 0.5 * dt;
 		orientation = orientation + dq;
 		orientation.Normalize();

@@ -56,9 +56,9 @@ public:
 	void SetupDrawable(
 		SCENENODE & scene,
 		std::tr1::shared_ptr<TEXTURE> teximage_up,
-		std::tr1::shared_ptr<TEXTURE> teximage_down, 
+		std::tr1::shared_ptr<TEXTURE> teximage_down,
 		std::tr1::shared_ptr<TEXTURE> teximage_upselected,
-		std::tr1::shared_ptr<TEXTURE> teximage_downselected, 
+		std::tr1::shared_ptr<TEXTURE> teximage_downselected,
 		std::tr1::shared_ptr<TEXTURE> teximage_transition,
 		float centerx, float centery,
 		float w,  float h, float z = 0);

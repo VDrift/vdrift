@@ -14,7 +14,7 @@ public:
 	
 	const QUATERNION <float> & GetOrientation() const {return rotation;}
 	
-	void Reset(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newquat); 
+	void Reset(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newquat);
 	
 	void Update(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newdir, float dt);
 	

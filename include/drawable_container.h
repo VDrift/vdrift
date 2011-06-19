@@ -102,7 +102,7 @@ struct DRAWABLE_CONTAINER
 	// you can add new drawable containers by modifying drawables.def
 	// see http://en.wikipedia.org/wiki/C_preprocessor#X-Macros
 	
-	template <typename T> 
+	template <typename T>
 	void ForEach(T func)
 	{
 		#define X(Y) func(Y);
@@ -110,7 +110,7 @@ struct DRAWABLE_CONTAINER
 		#undef X
 	}
 	
-	template <typename T> 
+	template <typename T>
 	void ForEachWithName(T func)
 	{
 		#define X(Y) func(#Y,Y);

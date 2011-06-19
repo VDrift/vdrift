@@ -39,7 +39,7 @@ public:
 	SCENENODE & GetNode() {return mapnode;}
 
 private:
-	//track map size in real world 
+	//track map size in real world
 	MATHVECTOR <float, 2> mapsize;
 	float map_w_min, map_w_max;
 	float map_h_min, map_h_max;
@@ -75,9 +75,9 @@ private:
 	{
 		public:
 			void Init(
-				SCENENODE & topnode, 
-				std::tr1::shared_ptr<TEXTURE> tex, 
-				const MATHVECTOR <float, 2> & corner1, 
+				SCENENODE & topnode,
+				std::tr1::shared_ptr<TEXTURE> tex,
+				const MATHVECTOR <float, 2> & corner1,
 				const MATHVECTOR <float, 2> & corner2)
 			{
 				dotdraw = topnode.GetDrawlist().twodim.insert(DRAWABLE());

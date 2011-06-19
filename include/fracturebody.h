@@ -29,7 +29,7 @@ public:
 		btScalar m_accImpulse;
 		int m_shapeId;
 		
-		Connection() : 
+		Connection() :
 			m_body(0), m_strength(0), m_elasticLimit(0), m_accImpulse(0), m_shapeId(-1)
 		{
 			// ctor

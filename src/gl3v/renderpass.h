@@ -33,7 +33,7 @@ class RenderPass
 		/// The provided StringIdMap will be used to convert strings into unique numeric IDs.
 		/// w and h are the width and height of the application's window and will be used to initialize FBOs.
 		bool initialize(int passCount,
-			const RealtimeExportPassInfo & config, 
+			const RealtimeExportPassInfo & config,
 			StringIdMap & stringMap,
 			GLWrapper & gl,
 			RenderShader & vertexShader,
@@ -49,8 +49,8 @@ class RenderPass
 		/// w and h are the width and height of the application's window
 		/// returns true if the framebuffer dimensions have changed, which is a signal that the render targets have been recreated
 		/// externalModels is a map of draw group name ID to a vector array of pointers to external models to be drawn along with models that have been added to the pass with addModel
-		bool render(GLWrapper & gl, unsigned int w, unsigned int h, StringIdMap & stringMap, 
-					const std::vector <const std::vector <RenderModelExternal*>*> & externalModels, 
+		bool render(GLWrapper & gl, unsigned int w, unsigned int h, StringIdMap & stringMap,
+					const std::vector <const std::vector <RenderModelExternal*>*> & externalModels,
 					const std::tr1::unordered_map <StringId, RenderTextureEntry, StringId::hash> & sharedTextures,
 					std::ostream & errorOutput);
 		
@@ -111,7 +111,7 @@ class RenderPass
 		
 		// all of the models we'll be rendering in this pass
 		// we keep two data structures, one for fast iteration during rendering
-		// which holds the actual RenderModel data, and another that is used to 
+		// which holds the actual RenderModel data, and another that is used to
 		// speed up updates and which simply holds handles to the keyed_container
 		keyed_container <RenderModel> models;
 		typedef std::tr1::unordered_map <RenderModelHandle, keyed_container <RenderModel>::handle, keyed_container_hash> modelHandleMap;

@@ -45,7 +45,7 @@ public:
 	
 	bool Load(
 		const std::list <std::string> & pagelist,
-		const std::map<std::string, std::list <std::pair <std::string, std::string> > > & valuelists, 
+		const std::map<std::string, std::list <std::pair <std::string, std::string> > > & valuelists,
 		const std::string & optionsfile,
 		const std::string & carcontrolsfile,
 		const std::string & menupath,
@@ -60,7 +60,7 @@ public:
 		MODELMANAGER & models,
 		std::ostream & info_output,
 		std::ostream & error_output);
-    
+
     /// Clears out all variables and reset the class to what it looked like when it was originally initialized.
     /// Can be called whether the GUI is currently loaded or not.
     void Unload();

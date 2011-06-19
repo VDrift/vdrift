@@ -173,7 +173,7 @@ public:
 			
 			return (std::memcmp(&me,&them,sizeof(CONTROL)) == 0);*/
 			
-			//bool equality = (type == other.type) && (type == other.type) && 
+			//bool equality = (type == other.type) && (type == other.type) &&
 		}
 		
 		bool operator<(const CONTROL & other) const

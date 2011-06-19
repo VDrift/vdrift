@@ -104,7 +104,7 @@ class MATRIX3
 		{
 			MATHVECTOR <T, 3> output;
 			output.Set(v[0]*data[0] + v[1]*data[3] + v[2]*data[6],
-				   v[0]*data[1] + v[1]*data[4] + v[2]*data[7], 
+				   v[0]*data[1] + v[1]*data[4] + v[2]*data[7],
        				   v[0]*data[2] + v[1]*data[5] + v[2]*data[8]);
 			return output;
 		}
@@ -216,7 +216,7 @@ class MATRIX3
 		  double s, c, t;                 // sin(phi), cos(phi), tan(phi) and temporary storage
 		  double g, h, z, theta;          // More temporary storage
 		  double thresh;
-		  
+
 		  // Initialize Q to the identitity matrix
 		  for (int i=0; i < n; i++)
 		  {
@@ -229,16 +229,16 @@ class MATRIX3
 		  for (int i=0; i < n; i++)
 			w[i] = A[i][i];
 
-		  // Calculate tr(A)^2 
+		  // Calculate tr(A)^2
 		  sd = 0.0;
 		  for (int i=0; i < n; i++)
 			sd += fabs(w[i]);
 		  sd = sd * sd;
-		 
+		
 		  // Main iteration loop
 		  for (int nIter=0; nIter < 50; nIter++)
 		  {
-			// Test for convergence 
+			// Test for convergence
 			so = 0.0;
 			for (int p=0; p < n; p++)
 			  for (int q=p+1; q < n; q++)

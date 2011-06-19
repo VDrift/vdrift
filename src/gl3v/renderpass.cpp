@@ -13,7 +13,7 @@
 
 const GLEnums GLEnumHelper;
 
-bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringIdMap & stringMap, 
+bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringIdMap & stringMap,
 						const std::vector <const std::vector <RenderModelExternal*>*> & externalModels,
 						const std::tr1::unordered_map <StringId, RenderTextureEntry, StringId::hash> & sharedTextures,
 						std::ostream & errorOutput)
@@ -734,7 +734,7 @@ bool RenderPass::createFramebufferObject(GLWrapper & gl, unsigned int w, unsigne
 		StringId renderTargetNameId = stringMap.addStringId(i->second.name);
 		
 		// either use an existing render target texture or create a new one
-		std::tr1::unordered_map <StringId, RenderTextureEntry, StringId::hash>::const_iterator sharedRenderTarget = 
+		std::tr1::unordered_map <StringId, RenderTextureEntry, StringId::hash>::const_iterator sharedRenderTarget =
 			sharedTextures.find(renderTargetNameId);
 		if (sharedRenderTarget != sharedTextures.end())
 		{
@@ -866,7 +866,7 @@ void RenderPass::setModelTexture(RenderModelHandle handle, const RenderTextureEn
 		RenderModel & model = models.get(iter->second);
 		
 		// first, see if there's an existing texture override with this name
-		std::tr1::unordered_map <StringId, keyed_container <RenderTexture>::handle>::iterator existing = 
+		std::tr1::unordered_map <StringId, keyed_container <RenderTexture>::handle>::iterator existing =
 			model.textureNameToTextureOverride.find(texture.name);
 		if (existing != model.textureNameToTextureOverride.end())
 		{
@@ -898,7 +898,7 @@ void RenderPass::removeModelTexture(RenderModelHandle handle, StringId name)
 		RenderModel & model = models.get(iter->second);
 		
 		// find the existing texture override with this name
-		std::tr1::unordered_map <StringId, keyed_container <RenderTexture>::handle>::iterator existing = 
+		std::tr1::unordered_map <StringId, keyed_container <RenderTexture>::handle>::iterator existing =
 			model.textureNameToTextureOverride.find(name);
 		if (existing != model.textureNameToTextureOverride.end())
 		{
@@ -924,7 +924,7 @@ void RenderPass::setModelUniform(RenderModelHandle handle, const RenderUniformEn
 		RenderModel & model = models.get(iter->second);
 		
 		// first, see if there's an existing override with this name
-		std::tr1::unordered_map <StringId, keyed_container <RenderUniform>::handle>::iterator existing = 
+		std::tr1::unordered_map <StringId, keyed_container <RenderUniform>::handle>::iterator existing =
 			model.variableNameToUniformOverride.find(uniform.name);
 		if (existing != model.variableNameToUniformOverride.end())
 		{
@@ -956,7 +956,7 @@ void RenderPass::removeModelUniform(RenderModelHandle handle, StringId name)
 		RenderModel & model = models.get(iter->second);
 		
 		// find the existing uniform override with this name
-		std::tr1::unordered_map <StringId, keyed_container <RenderUniform>::handle>::iterator existing = 
+		std::tr1::unordered_map <StringId, keyed_container <RenderUniform>::handle>::iterator existing =
 			model.variableNameToUniformOverride.find(name);
 		if (existing != model.variableNameToUniformOverride.end())
 		{

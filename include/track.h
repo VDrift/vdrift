@@ -121,7 +121,7 @@ public:
 	{
 		if (racingline_visible)
 			return data.racingline_node;
-		else 
+		else
 			return empty_node;
 	}
 	

@@ -68,7 +68,7 @@ class CARAERO
 		btVector3 GetForce(const btVector3 & bodyspace_wind_vector) const
 		{
 			//calculate drag force
-			drag_vector = bodyspace_wind_vector * bodyspace_wind_vector.length() * 
+			drag_vector = bodyspace_wind_vector * bodyspace_wind_vector.length() *
 				0.5 * air_density * drag_coefficient * drag_frontal_area;
 			
 			//positive wind speed when the wind is heading at us

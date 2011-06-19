@@ -18,7 +18,7 @@ struct ini
 	const file_open * fopen;
 	PTree cache;
 	
-	ini(std::istream & in, PTree & root, const file_open * fopen = 0) : 
+	ini(std::istream & in, PTree & root, const file_open * fopen = 0) :
 		in(in), root(root), fopen(fopen)
 	{
 		// ctor

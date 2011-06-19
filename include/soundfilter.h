@@ -16,10 +16,10 @@ public:
 	void Filter(int * chan1, int * chan2, const int len);
 	
 	//yc0 is ignored
-	void SetFilterOrder1(float xc0, float xc1, float yc1); 
+	void SetFilterOrder1(float xc0, float xc1, float yc1);
 	
 	//yc0 is ignored
-	void SetFilterOrder0(float xc0); 
+	void SetFilterOrder0(float xc0);
 
 private:
 	int order;

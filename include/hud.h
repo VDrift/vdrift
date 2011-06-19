@@ -54,7 +54,7 @@ public:
 	bool Init(
 		const std::string & texturepath,
 		const std::string & texsize,
-		TEXTUREMANAGER & textures, 
+		TEXTUREMANAGER & textures,
 		FONT & lcdfont,
 		FONT & sansfont,
 		float displaywidth,

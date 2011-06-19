@@ -28,7 +28,7 @@ public:
 	std::vector<ROADPATCH> & GetPatches() {return patches;}
 	
 	void CreateRacingLine(
-		SCENENODE & parentnode, 
+		SCENENODE & parentnode,
 		std::tr1::shared_ptr<TEXTURE> racingline_texture,
 		std::ostream & error_output);
 

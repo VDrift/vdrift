@@ -7,15 +7,15 @@
 class GLSTATEMANAGER
 {
 public:
-	GLSTATEMANAGER() : 
-		used(65536, false), 
-		state(65536), 
-		r(1),g(1),b(1),a(1), 
-		depthmask(true), 
-		alphamode(GL_NEVER), 
-		alphavalue(0), 
-		blendsource(GL_ZERO), 
-		blenddest(GL_ZERO), 
+	GLSTATEMANAGER() :
+		used(65536, false),
+		state(65536),
+		r(1),g(1),b(1),a(1),
+		depthmask(true),
+		alphamode(GL_NEVER),
+		alphavalue(0),
+		blendsource(GL_ZERO),
+		blenddest(GL_ZERO),
 		cullmode(GL_BACK),
 		colormask(true),
 		alphamask(true),

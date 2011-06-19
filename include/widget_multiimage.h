@@ -29,7 +29,7 @@ public:
 		TEXTUREMANAGER & textures,
 		const std::string & texturesize,
 		const std::string & newprefix,
-		const std::string & newpostfix, 
+		const std::string & newpostfix,
       	float x, float y, float w, float h,
       	std::ostream & error_output,
 	    float z = 0);

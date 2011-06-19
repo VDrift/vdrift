@@ -40,7 +40,7 @@ private:
 	}
 
 public:
-	SPRITE2D() : 
+	SPRITE2D() :
 		r(1), g(1), b(1), a(1)
 	{
 		// ctor

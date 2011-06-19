@@ -44,13 +44,13 @@ public:
 class RENDER_INPUT_POSTPROCESS : public RENDER_INPUT
 {
 public:
-	RENDER_INPUT_POSTPROCESS() : 
-		shader(NULL), 
-		writealpha(true), 
-		writecolor(true), 
-		writedepth(false), 
-		depth_mode(GL_LEQUAL), 
-		clearcolor(false), 
+	RENDER_INPUT_POSTPROCESS() :
+		shader(NULL),
+		writealpha(true),
+		writecolor(true),
+		writedepth(false),
+		depth_mode(GL_LEQUAL),
+		clearcolor(false),
 		cleardepth(false),
 		blendmode(BLENDMODE::DISABLED),
 		contrast(1.0)

@@ -20,9 +20,9 @@ namespace logging
 
 		public:
 			logstreambuf() {}
-			logstreambuf(const std::string & newprefix) : 
+			logstreambuf(const std::string & newprefix) :
 				prefix(newprefix) {}
-			logstreambuf(const std::string & newprefix, std::ostream & forwardee) : 
+			logstreambuf(const std::string & newprefix, std::ostream & forwardee) :
 				prefix(newprefix) {forwardstream.push_back(&forwardee);}
 			
 			std::string str() const
@@ -73,7 +73,7 @@ namespace logging
 					std::string::size_type opt_len = std::max(std::string::size_type(2 * capacity),
 							std::string::size_type(512));
 					if (this->epptr() - this->pbase() < (int) capacity)
-						opt_len = capacity; 
+						opt_len = capacity;
 					const std::string::size_type len = std::min(opt_len, max_size);
 					std::string tmp;
 					tmp.reserve(len);
@@ -122,7 +122,7 @@ namespace logging
 			std::ostream & forwardstream2;
 
 		public:
-			splitterstreambuf (std::ostream & forwardee1, std::ostream & forwardee2) : 
+			splitterstreambuf (std::ostream & forwardee1, std::ostream & forwardee2) :
 				forwardstream1(forwardee1),forwardstream2(forwardee2) {}
 			
 			std::string str() const
@@ -167,7 +167,7 @@ namespace logging
 					std::string::size_type opt_len = std::max(std::string::size_type(2 * capacity),
 							std::string::size_type(512));
 					if (this->epptr() - this->pbase() < (int)capacity)
-						opt_len = capacity; 
+						opt_len = capacity;
 					const std::string::size_type len = std::min(opt_len, max_size);
 					std::string tmp;
 					tmp.reserve(len);

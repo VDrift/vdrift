@@ -89,7 +89,7 @@ public:
 			return true;
 		}
 		position = origin + direction * length;
-		depth = length; 
+		depth = length;
 		return false;
 	}
 	

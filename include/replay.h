@@ -23,7 +23,7 @@ private:
 			REPLAYVERSIONING() : format_version("VDRIFTREPLAYV??"), inputs_supported(0), framerate(0) {}
 			REPLAYVERSIONING(const std::string & ver, unsigned int ins, float newfr) : format_version(ver),
 				     inputs_supported(ins), framerate(newfr) {}
-				     
+				
 			bool Serialize(joeserialize::Serializer & s)
 			{
 				_SERIALIZE_(s,inputs_supported);
@@ -58,8 +58,8 @@ private:
 			
 			bool operator==(const REPLAYVERSIONING & other) const
 			{
-				return (format_version == other.format_version && 
-					inputs_supported == other.inputs_supported && 
+				return (format_version == other.format_version &&
+					inputs_supported == other.inputs_supported &&
 				        framerate == other.framerate);
 			}
 	};
@@ -212,7 +212,7 @@ public:
 	void StopPlaying();
 	
 	///< returns true if the replay system is currently playing
-	bool GetPlaying() const {return (replaymode == PLAYING);} 
+	bool GetPlaying() const {return (replaymode == PLAYING);}
 	
 	const std::vector <float> & PlayFrame(CAR & car);
 	
