@@ -98,7 +98,7 @@ private:
 	bool LastStartWasSuccessful() const;
 	bool Download(const std::string & file);
 	bool Download(const std::vector <std::string> & files);
-	
+
 	// move to settings
 	void GetOptions(std::map<std::string, std::string> & options);
 	void SetOptions(const std::map<std::string, std::string> & options);
@@ -159,13 +159,13 @@ private:
 	std::list <CAR> cars;
 	std::map <CAR *, int> cartimerids;
 	std::pair <CAR *, CARCONTROLMAP_LOCAL> carcontrols_local;
-	
+
 	btDefaultCollisionConfiguration collisionconfig;
 	btCollisionDispatcher collisiondispatch;
 	btDbvtBroadphase collisionbroadphase;
 	btSequentialImpulseConstraintSolver collisionsolver;
 	DynamicsWorld collision;
-	
+
 	TRACKMAP trackmap;
 	TRACK track;
 	GUI gui;

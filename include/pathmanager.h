@@ -5,7 +5,7 @@
 #include <string>
 
 class PATHMANAGER
-{		
+{
 public:
 	std::string GetDataPath() const {return data_directory;}
 	std::string GetSharedCarPath() const {return data_directory+"/carparts";}
@@ -27,7 +27,7 @@ public:
 	std::string GetStaticReflectionMap() const {return data_directory+"/textures/weather/cubereflection-nosun.png";}
 	std::string GetStaticAmbientMap() const {return data_directory+"/textures/weather/cubelighting.png";}
 	std::string GetShaderPath() const {return data_directory + "/shaders";}
-	
+
 	std::string GetTrackDir() const {return "tracks";}
 	std::string GetCarDir() const {return "cars";}
 	std::string GetCarSharedDir() const {return "carparts";}
@@ -38,19 +38,19 @@ public:
 	std::string GetHUDTextureDir() const {return "textures/hud";}
 	std::string GetEffectsTextureDir() const {return "textures/effects";}
 	std::string GetTireSmokeTextureDir() const {return "textures/smoke";}
-	
+
 	std::string GetTemporaryFolder() const {return temporary_folder;}
-	
+
 	bool FileExists(const std::string & filename) const;
-	
+
 	///<optionally filter for the given extension
 	bool GetFileList(std::string folderpath, std::list <std::string> & outputfolderlist, std::string extension="") const;
-	
+
 	///<only call this before Init()
 	void SetProfile(const std::string & value);
-	
+
 	void Init(std::ostream & info_output, std::ostream & error_output);
-	
+
 private:
 	std::string home_directory;
 	std::string settings_path;

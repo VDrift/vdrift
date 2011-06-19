@@ -9,23 +9,23 @@ class CAMERA_SIMPLEMOUNT : public CAMERA
 {
 public:
 	CAMERA_SIMPLEMOUNT(const std::string & name);
-	
+
 	const MATHVECTOR <float, 3> & GetPosition() const {return position;}
-	
+
 	const QUATERNION <float> & GetOrientation() const {return rotation;}
-	
+
 	void Reset(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newquat);
-	
+
 	void Update(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newdir, float dt);
-	
+
 	MATHVECTOR <float, 3> GetOffset() const {return offset_final;}
-	
+
 	void SetStiffness(float value) {stiffness = value;}
-	
+
 private:
 	MATHVECTOR <float, 3> position;
 	QUATERNION <float> rotation;
-	
+
 
 	MATHVECTOR <float, 3> offset_randomwalk;
 	MATHVECTOR <float, 3> offset_filtered;
@@ -36,7 +36,7 @@ private:
 	std::vector<signalprocessing::PID> offsetpid;
 
 	DETERMINISTICRANDOM randgen;
-	
+
 	float stiffness; ///< where 0.0 is nominal stiffness for a sports car and 1.0 is a formula 1 car
 
 	float Random();

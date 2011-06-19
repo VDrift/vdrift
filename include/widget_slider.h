@@ -12,35 +12,35 @@ class WIDGET_SLIDER : public WIDGET
 {
 public:
 	WIDGET_SLIDER() {};
-	
+
 	~WIDGET_SLIDER() {};
-	
+
 	virtual WIDGET * clone() const;
-	
+
 	virtual void SetAlpha(SCENENODE & scene, float newalpha);
-	
+
 	virtual void SetVisible(SCENENODE & scene, bool newvis);
-	
+
 	virtual bool ProcessInput(SCENENODE & scene, float cursorx, float cursory, bool cursordown, bool cursorjustup);
-	
+
 	virtual void SetName(const std::string & newname);
-	
+
 	virtual std::string GetDescription() const;
-	
+
 	virtual void SetDescription(const std::string & newdesc);
-	
+
 	virtual void UpdateOptions(
 		SCENENODE & scene,
 		bool save_to_options,
 		std::map<std::string, GUIOPTION> & optionmap,
 		std::ostream & error_output);
-		
+
 	virtual void AddHook(WIDGET * other);
-	
+
 	void SetColor(SCENENODE & scene, float r, float g, float b);
-	
+
 	void SetSetting(const std::string & newsetting);
-	
+
 	void SetupDrawable(
 		SCENENODE & scene,
 		std::tr1::shared_ptr<TEXTURE> wedgetex,
@@ -72,9 +72,9 @@ private:
 	bool percentage;
 	float w, h, texty;
 	std::list <WIDGET *> hooks;
-	
+
 	void UpdateText(SCENENODE & scene);
-	
+
 	void SendMessage(SCENENODE & scene, const std::string & message) const;
 };
 

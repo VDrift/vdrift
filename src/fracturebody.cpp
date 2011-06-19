@@ -21,10 +21,10 @@ void FractureBody::addConnection(btRigidBody* body, const btTransform& localTran
 {
 	// Store connection index as user pointer.
 	body->getCollisionShape()->setUserPointer(cast<void*>(m_connections.size()));
-	
+
 	btCompoundShape* compound = (btCompoundShape*)m_collisionShape;
 	compound->addChildShape(localTransform, body->getCollisionShape());
-	
+
 	Connection connection;
 	connection.m_body = body;
 	connection.m_strength = strength;
@@ -38,11 +38,11 @@ btRigidBody* FractureBody::breakConnection(int con_id)
 	btCompoundShape* compound = (btCompoundShape*)getCollisionShape();
 	btAssert(con_id >= 0);
 	btAssert(con_id < m_connections.size());
-	
+
 	int shape_id = m_connections[con_id].m_shapeId;
 	btAssert(shape_id >= 0);
 	btAssert(shape_id < compound->getNumChildShapes());
-	
+
 	// Init child body.
 	btRigidBody* child = m_connections[con_id].m_body;
 	btTransform trans = getWorldTransform() * compound->getChildTransform(shape_id);
@@ -50,10 +50,10 @@ btRigidBody* FractureBody::breakConnection(int con_id)
 	child->setLinearVelocity(getVelocityInLocalPoint(trans.getOrigin()-getCenterOfMassPosition()));
 	child->setAngularVelocity(btVector3(0, 0, 0));
 	child->getCollisionShape()->setUserPointer(cast<void*>(-1));
-	
+
 	// Invalidate connection.
 	m_connections[con_id].m_shapeId = -1;
-	
+
 	// Remove child shape.
 	compound->removeChildShapeByIndex(shape_id);
 	if (shape_id < compound->getNumChildShapes() - 1)

@@ -17,18 +17,18 @@ struct ini
 	PTree & root;
 	const file_open * fopen;
 	PTree cache;
-	
+
 	ini(std::istream & in, PTree & root, const file_open * fopen = 0) :
 		in(in), root(root), fopen(fopen)
 	{
 		// ctor
 	}
-	
+
 	void read()
 	{
 		read(root);
 	}
-	
+
 	void read(PTree & node)
 	{
 		std::string line, name;
@@ -39,14 +39,14 @@ struct ini
 			{
 				continue;
 			}
-			
+
 			size_t begin = line.find_first_not_of(" \t[");
 			size_t end = line.find_first_of(";#]\r", begin);
 			if (begin >= end)
 			{
 				continue;
 			}
-			
+
 			size_t next = line.find("=", begin);
 			if (next >= end)
 			{
@@ -56,14 +56,14 @@ struct ini
 				read(root.set(name, PTree()));
 				continue;
 			}
-			
+
 			size_t next2 = line.find_first_not_of(" \t\r", next+1);
 			next = line.find_last_not_of(" \t", next-1);
 			if (next2 >= end)
 			{
 				continue;
 			}
-			
+
 			name = line.substr(begin, next+1);
 			if (!fopen || line.at(next2) != '&')
 			{
@@ -72,7 +72,7 @@ struct ini
 				node.set(name, value);
 				continue;
 			}
-			
+
 			// value is a reference
 			std::string value = line.substr(next2+1, end-next2-1);
 			const PTree * ref_ptr;
@@ -81,7 +81,7 @@ struct ini
 				node.set(name, *ref_ptr);
 				continue;
 			}
-			
+
 			// load external reference
 			PTree ref;
 			read_ini(value, *fopen, ref);
@@ -102,7 +102,7 @@ static void write_ini(const PTree & p, std::ostream & out, std::string key_name)
 		}
 	}
 	out << "\n";
-	
+
 	for (PTree::const_iterator i = p.begin(), e = p.end(); i != e; ++i)
 	{
 		if (i->second.size() > 0)

@@ -17,7 +17,7 @@ public:
 		if (verbose)
 		{
 			for (int i = 0; i < level; ++i) output << "-";
-	
+
 			output << "objects: " << objects.size() << ", child nodes: " << children.size() << ", aabb: ";
 			bbox.DebugPrint(output);
 		}
@@ -38,21 +38,21 @@ public:
 			output << "TOTAL OBJECTS: " << objectcount << std::endl;
 		}
 	}
-	
+
 	unsigned int size(unsigned int objectcount = 0) const
 	{
 		unsigned int childcount = 0;
-		
+
 		for (typename childrenlist_type::const_iterator i = children.begin(); i != children.end(); ++i)
 		{
 			childcount += i->size(objectcount);
 		}
-		
+
 		objectcount += objects.size() + childcount;
 
 		return objectcount;
 	}
-	
+
 	void Optimize()
 	{
 		CollapseTo(*this);
@@ -61,7 +61,7 @@ public:
 
 		DistributeObjectsToChildren(0);
 	}
-	
+
 	void Add(DATATYPE & object, const AABB <float> & newaabb)
 	{
 		objects.push_back(std::pair <DATATYPE, AABB <float> > (object, newaabb));
@@ -70,7 +70,7 @@ public:
 		else
 			bbox.CombineWith(newaabb);
 	}
-	
+
 	///a slow delete that only requires the object
 	void Delete(DATATYPE & object)
 	{
@@ -97,7 +97,7 @@ public:
 			i->Delete(object);
 		}
 	}
-	
+
 	///a faster delete that uses the supplied AABB to find the object
 	void Delete(DATATYPE & object, const AABB <float> & objaabb)
 	{
@@ -127,7 +127,7 @@ public:
 			}
 		}
 	}
-	
+
 	///run a query for objects that collide with the given shape
 	template <typename T, typename U>
 	void Query(const T & shape, U &outputlist, bool testChildren=true) const
@@ -155,7 +155,7 @@ public:
 		for (typename childrenlist_type::const_iterator i = children.begin(); i != children.end(); ++i)
 		{
 			AABB<float>::INTERSECTION intersection = i->GetBBOX().Intersect(shape);
-			
+
 			if (intersection != AABB<float>::OUT)
 			{
 				//our child intersects with the segment, dispatch a query
@@ -164,11 +164,11 @@ public:
 			}
 		}
 	}
-	
+
 	bool Empty() const {return (objects.empty() && children.empty());}
-	
+
 	void Clear() {objects.clear(); children.clear();}
-	
+
 	///traverse the entire tree putting pointers to all DATATYPE objects into the given outputlist
 	void GetContainedObjects(std::list <DATATYPE *> & outputlist)
 	{
@@ -191,9 +191,9 @@ private:
 	objectlist_type objects;
 	childrenlist_type children;
 	AABB <float> bbox;
-	
+
 	const AABB <float> & GetBBOX() const {return bbox;}
-	
+
 	///recursively send all objects and all childrens' objects to the target node, clearing out everything else
 	void CollapseTo(AABB_SPACE_PARTITIONING_NODE & collapse_target)
 	{
@@ -205,14 +205,14 @@ private:
 			}
 			objects.clear();
 		}
-		
+
 		for (typename childrenlist_type::iterator i = children.begin(); i != children.end(); ++i)
 		{
 			i->CollapseTo(collapse_target);
 		}
 		children.clear();
 	}
-	
+
 	///requires the DATATYPE class implements operator< and operator==
 	void RemoveDuplicateObjects()
 	{
@@ -220,7 +220,7 @@ private:
 		//objects.sort();
 		//objects.unique();
 	}
-	
+
 	///intelligently add new child nodes and parse objects to them, recursively
 	void DistributeObjectsToChildren(const int level)
 	{
@@ -273,7 +273,7 @@ private:
 		for (typename objectlist_type::iterator i = objects.begin(); i != objects.end(); ++i)
 		{
 			float objcentercoord = i->second.GetCenter().dot(axismask);
-	
+
 			if (objcentercoord > avgcentercoord)
 			{
 				children.front().Add(i->first, i->second);
@@ -317,7 +317,7 @@ private:
 					Add(n->first, n->second);
 				}
 			}
-	
+
 			children.clear();
 		}
 

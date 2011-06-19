@@ -40,31 +40,31 @@ public:
 	{
 		final_drive = value;
 	}
-	
+
 	void SetAntiSlip(btScalar as, btScalar ast, btScalar astdf)
 	{
 		anti_slip = as;
 		anti_slip_torque = ast;
 		anti_slip_torque_deceleration_factor = astdf;
 	}
-	
+
 	btScalar CalculateDriveshaftSpeed(btScalar new_side1_speed, btScalar new_side2_speed)
 	{
 		side1_speed = new_side1_speed;
 		side2_speed = new_side2_speed;
 		return final_drive * (side1_speed + side2_speed) * 0.5;
 	}
-	
+
 	btScalar GetDriveshaftSpeed(btScalar new_side1_speed, btScalar new_side2_speed) const
 	{
 		return final_drive * (side1_speed + side2_speed) * 0.5;
 	}
-	
+
 	btScalar clamp(btScalar val, btScalar min, btScalar max) const
 	{
 		return std::max(std::min(val,max), min);
 	}
-	
+
 	void ComputeWheelTorques(btScalar driveshaft_torque)
 	{
 		//determine torque from the anti-slip mechanism
@@ -77,7 +77,7 @@ public:
 		}
 		current_anti_slip = std::max(btScalar(0) ,current_anti_slip);
 		btScalar drag = clamp(current_anti_slip * (side1_speed - side2_speed),-anti_slip,anti_slip);
-		
+
 		btScalar torque = driveshaft_torque * final_drive;
 		side1_torque = torque * (1 - torque_split) - drag;
 		side2_torque = torque * torque_split + drag;
@@ -92,7 +92,7 @@ public:
 	{
 		return side2_torque;
 	}
-	
+
 	const btScalar & GetSide1Speed() const
 	{
 		return side1_speed;
@@ -107,7 +107,7 @@ public:
 	{
 		return final_drive;
 	}
-	
+
 	bool Serialize(joeserialize::Serializer & s)
 	{
 		_SERIALIZE_(s, side1_speed);
@@ -124,7 +124,7 @@ private:
 	btScalar anti_slip_torque; ///< this allows modelling of torque sensitive limited-slip differentials.  this is the anti_slip dependence on torque.
 	btScalar anti_slip_torque_deceleration_factor; ///< this allows modelling of torque sensitive limited-slip differentials that are 1.5 or 2-way.  set it to 0.0 for 1-way LSD, 1.0 for 2-way LSD, and somewhere in between for 1.5-way LSD.
 	btScalar torque_split; ///< this allows modelling of epicyclic differentials.  this value ranges from 0.0 to 1.0 where 0.0 applies all torque to side1
-	
+
 	//variables
 	///by convention, side1 is left or front, side2 is right or rear.
 	btScalar side1_speed;

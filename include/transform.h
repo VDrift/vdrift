@@ -9,7 +9,7 @@ class TRANSFORM
 public:
 	typedef QUATERNION<float> QUAT;
 	typedef MATHVECTOR<float,3> VEC3;
-	
+
 	const QUAT & GetRotation() const {return rotation;}
 	const VEC3 & GetTranslation() const {return translation;}
 	void SetRotation(const QUAT & rot) {rotation = rot;}

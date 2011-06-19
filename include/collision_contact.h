@@ -19,7 +19,7 @@ public:
 	{
 		// ctor
 	}
-	
+
 	COLLISION_CONTACT(
 		const btVector3 & p,
 		const btVector3 & n,
@@ -38,42 +38,42 @@ public:
 	{
 		assert(s != NULL);
 	}
-	
+
 	const btVector3 & GetPosition() const
 	{
 		return position;
 	}
-	
+
 	const btVector3 & GetNormal() const
 	{
 		return normal;
 	}
-	
+
 	btScalar GetDepth() const
 	{
 		return depth;
 	}
-	
+
 	const TRACKSURFACE & GetSurface() const
 	{
 		return *surface;
 	}
-	
+
 	int GetPatchId() const
 	{
 		return patchid;
 	}
-	
+
 	const BEZIER * GetPatch() const
 	{
 		return patch;
 	}
-	
+
 	const btCollisionObject * GetObject() const
 	{
 		return col;
 	}
-	
+
 	// update/interpolate contact
 	bool CastRay(
 		const btVector3 & origin,
@@ -92,7 +92,7 @@ public:
 		depth = length;
 		return false;
 	}
-	
+
 private:
 	btVector3 position;
 	btVector3 normal;

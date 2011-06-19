@@ -11,7 +11,7 @@ class SOUNDBUFFER
 public:
 	SOUNDBUFFER() : info(0,0,0,0),loaded(false),sound_buffer(NULL) {}
 	~SOUNDBUFFER() {Unload();}
-	
+
 	bool Load(const std::string & filename, const SOUNDINFO & sound_device_info, std::ostream & error_output)
 	{
 		if (filename.find(".wav") != std::string::npos)
@@ -36,7 +36,7 @@ public:
 	{
 		return loaded;
 	}
-	
+
 friend class SOUNDSOURCE;
 private:
 	SOUNDINFO info;

@@ -18,7 +18,7 @@ class RenderDimensions
 				outw = (unsigned int)floor(origw*w);
 				outh = (unsigned int)floor(origh*h);
 			}
-			
+
 			if (outw != width || outh != height)
 			{
 				width = outw;
@@ -28,16 +28,16 @@ class RenderDimensions
 			else
 				return false;
 		}
-		
+
 		RenderDimensions() : width(0), height(0), origw(0), origh(0), origMultiples(false) {}
 		RenderDimensions(float w, float h) : width(0), height(0), origw(w), origh(h), origMultiples(false) {}
 		RenderDimensions(float w, float h, bool mult) : width(0), height(0), origw(w), origh(h), origMultiples(mult) {}
-		
+
 	private:
 		unsigned int width, height;
 		float origw, origh;
 		bool origMultiples;
-		
+
 		friend std::ostream & operator<<(std::ostream & out, const RenderDimensions & dim);
 };
 

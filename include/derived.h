@@ -10,7 +10,7 @@ class DERIVED
 {
 	private:
 		T_BASECLASS * ptr;
-	
+
 	public:
 		DERIVED() : ptr(0) {}
 		DERIVED(T_BASECLASS * newobj) {ptr = newobj;}

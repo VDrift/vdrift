@@ -151,7 +151,7 @@ namespace quicktest
 			*getOutputStream()
 				<< "[-------------- UNIT TESTS FINISHED -------------]"
 				<< std::endl;
-				
+
 			return numFailures;
 		}
 

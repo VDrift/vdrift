@@ -21,28 +21,28 @@ static void read_xml(std::istream & in, PTree & p, std::string key)
 		{
 			continue;
 		}
-		
+
 		size_t begin = line.find_first_not_of(" \t\n<");
 		size_t end = line.length();
 		if (begin >= end || line[begin] == '!')
 		{
 			continue;
 		}
-		
+
 		line = line.substr(begin, end);
-		
+
 		if (line.find(escape) == 0)
 		{
 			break;
 		}
-		
+
 		if (key.length() == 0)
 		{
 			end = line.find(" ");
 			key = line.substr(0, end);
 			continue;
 		}
-		
+
 		size_t next = line.find("</"+key);
 		if (next < end)
 		{

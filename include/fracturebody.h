@@ -28,7 +28,7 @@ public:
 		btScalar m_elasticLimit;
 		btScalar m_accImpulse;
 		int m_shapeId;
-		
+
 		Connection() :
 			m_body(0), m_strength(0), m_elasticLimit(0), m_accImpulse(0), m_shapeId(-1)
 		{
@@ -36,23 +36,23 @@ public:
 		}
 	};
 	btAlignedObjectArray<Connection> m_connections;
-	
+
 	// the collisionshape has to be a compound shape containing parent body children shapes
 	FractureBody(const btRigidBodyConstructionInfo& info);
-	
+
 	void addShape(const btTransform& localTransform, btCollisionShape* shape);
-	
+
 	// body collision shape user pointer will used to store the connection index
 	void addConnection(btRigidBody* body, const btTransform& localTransform, btScalar strength, btScalar elasticLimit);
-	
+
 	btRigidBody* breakConnection(int i);
-	
+
 	// to be called after adding/breaking connections
 	void updateMassCenter();
-	
+
 	// sync child body motionstates
 	void updateMotionState();
-	
+
 	static btCompoundShape* shiftTransform(btCompoundShape* compound, btScalar* masses, btTransform& shift, btVector3& principalInertia);
 };
 

@@ -18,7 +18,7 @@ private:
 	keyed_container <DRAWABLE>::handle draw;
 	keyed_container <SCENENODE>::handle node;
 	float r, g, b, a;
-	
+
 	DRAWABLE & GetDrawableFromParent(SCENENODE & parent)
 	{
 		SCENENODE & noderef = GetNode(parent);
@@ -29,7 +29,7 @@ private:
 		const SCENENODE & noderef = GetNode(parent);
 		return GetDrawableFromNode(noderef);
 	}
-	
+
 	DRAWABLE & GetDrawableFromNode(SCENENODE & noderef)
 	{
 		return noderef.GetDrawlist().twodim.get(draw);
@@ -92,7 +92,7 @@ public:
 	{
 		GetDrawableFromParent(parent).SetDrawEnable(newvis);
 	}
-	
+
 	bool GetVisible(const SCENENODE & parent) const
 	{
 		return GetDrawableFromParent(parent).GetDrawEnable();
@@ -122,7 +122,7 @@ public:
 	{
 		varray.SetTo2DBox(x,y,w,h,marginwidth,marginheight);
 	}
-	
+
 	void SetTo2DQuad(float x1, float y1, float x2, float y2, float u1, float v1, float u2, float v2, float z)
 	{
 		varray.SetTo2DQuad(x1,y1,x2,y2,u1,v1,u2,v2,z);

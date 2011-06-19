@@ -28,7 +28,7 @@ private:
 	int containerid;
 	#endif
 	keyed_container_handle(INDEX newidx, DATAVERSION newver) : index(newidx),version(newver) {}
-	
+
 public:
 	keyed_container_handle() : index(-1),version(-1)
 	#ifdef TRACK_CONTAINERS
@@ -51,14 +51,14 @@ public:
 		long long mykey = index;
 		mykey = mykey << 32;
 		mykey = mykey | version;
-		
+
 		long long otherkey = other.index;
 		otherkey = otherkey << 32;
 		otherkey = otherkey | other.version;
-		
+
 		return (mykey < otherkey);
 	}
-	
+
 	friend std::ostream & operator<< (std::ostream & os, const keyed_container_handle & other)
 	{
 		#ifdef TRACK_CONTAINERS
@@ -67,7 +67,7 @@ public:
 		os << other.index << " " << other.version;
 		return os;
 	}
-	
+
 	friend std::istream & operator>> (std::istream & is, keyed_container_handle & other)
 	{
 		#ifdef TRACK_CONTAINERS
@@ -76,12 +76,12 @@ public:
 		is >> other.index >> other.version;
 		return is;
 	}
-	
+
 	bool valid() const
 	{
 		return (index >= 0) && (version >= 0);
 	}
-	
+
 	void invalidate()
 	{
 		index = -1;
@@ -98,7 +98,7 @@ struct keyed_container_hash
 		long long key = h.index;
 		key = key << 32;
 		key = key | h.version;
-		
+
 		key = (~key) + (key << 18);
 		key = key ^ (key >> 31);
 		key = key * 21;
@@ -135,10 +135,10 @@ private:
 public:
 	typedef keyed_container_handle handle;
 	typedef keyed_container_hash hash;
-	
+
 	typedef std::vector <INDEX> rmap_type;
 	typedef std::vector <DATATYPE> container_type;
-	
+
 	typedef typename container_type::iterator iterator;
 	typedef typename container_type::const_iterator const_iterator;
 
@@ -150,7 +150,7 @@ private:
 	#ifdef TRACK_CONTAINERS
 	int containerid;
 	#endif
-	
+
 	///asserts that the item is found
 	const DATATYPE & get_const(const handle & key) const
 	{
@@ -172,7 +172,7 @@ public:
 	#ifdef TRACK_CONTAINERS
 	keyed_container() : containerid((size_t)this) {}
 	#endif
-	
+
 	bool Serialize(joeserialize::Serializer & s)
 	{
 		_SERIALIZE_(s,pool);
@@ -184,14 +184,14 @@ public:
 		#endif
 		return true;
 	}
-	
+
 	///returns the handle of the inserted item
 	handle insert(const DATATYPE & newitem)
 	{
 		//insert the item into our data pool
 		pool.push_back(newitem);
 		INDEX newidx = (int)pool.size()-1;
-		
+
 		//generate a handle
 		INDEX hidx(-1);
 		if (freehandles.empty())
@@ -210,11 +210,11 @@ public:
 			handlemap[hidx].version++;
 			handlemap[hidx].index = newidx;
 		}
-		
+
 		//store reverse handlemap
 		reverse_handlemap.push_back(hidx);
 		assert(pool.size() == reverse_handlemap.size());
-		
+
 		#ifdef TRACK_CONTAINERS
 		handle htemp = handle(hidx,handlemap[hidx].version);
 		htemp.containerid = containerid;
@@ -223,12 +223,12 @@ public:
 		return handle(hidx,handlemap[hidx].version);
 		#endif
 	}
-	
+
 	const DATATYPE & get(const handle & key) const
 	{
 		return get_const(key);
 	}
-	
+
 	DATATYPE & get(const handle & key)
 	{
 		return const_cast <DATATYPE&> (get_const(key));
@@ -247,7 +247,7 @@ public:
 		#ifdef TRACK_CONTAINERS
 		assert(key.containerid == containerid);
 		#endif
-		
+
 		//swap the data pool element to be erased to the end
 		INDEX last = (int)pool.size()-1;
 		INDEX moved = handlemap[key.index].index;
@@ -255,32 +255,32 @@ public:
 		{
 			//do the swap
 			std::swap(pool[last],pool[moved]);
-			
+
 			//update the handlemap
 			INDEX hlast = reverse_handlemap[last];
 			INDEX hmoved = reverse_handlemap[moved];
 			assert(key.index == hmoved);
 			std::swap(handlemap[hlast].index, handlemap[hmoved].index);
-			
+
 			//update the reverse handlemap
 			std::swap(reverse_handlemap[last],reverse_handlemap[moved]);
 		}
-		
+
 		//erase the last element from the pool
 		pool.pop_back();
 		reverse_handlemap.pop_back();
-		
+
 		//free up the handlemap entry
 		handlemap[key.index].version++; //invalidate existing handles
 		freehandles.push_back(key.index); //mark it free
 	}
-	
+
 	iterator begin() {return pool.begin();}
 	const_iterator begin() const {return pool.begin();}
-	
+
 	iterator end() {return pool.end();}
 	const_iterator end() const {return pool.end();}
-	
+
 	unsigned int size() const
 	{
 		assert(handlemap.size()>=freehandles.size());
@@ -288,19 +288,19 @@ public:
 		assert(pool.size() == reverse_handlemap.size());
 		return pool.size();
 	}
-	
+
 	bool empty() const
 	{
 		assert(pool.empty() == (size() == 0));
 		return pool.empty();
 	}
-	
+
 	/// perhaps unexpectedly, this is O(n)
 	void clear()
 	{
 		if (empty())
 			return;
-		
+
 		for (unsigned int i = 0; i < pool.size(); i++)
 		{
 			INDEX hidx = reverse_handlemap[i];
@@ -310,7 +310,7 @@ public:
 		pool.clear();
 		reverse_handlemap.clear();
 	}
-	
+
 	bool contains(const handle & key) const
 	{
 		#ifdef TRACK_CONTAINERS
@@ -325,7 +325,7 @@ public:
 		else
 			return false;
 	}
-	
+
 	iterator find(const handle & key)
 	{
 		#ifdef TRACK_CONTAINERS

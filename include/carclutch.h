@@ -16,17 +16,17 @@ private:
 	btScalar radius; ///< torque on the clutch is found by dividing the clutch pressure by the value in the area tag and multiplying by the radius and sliding (friction) parameters
 	btScalar area; ///< torque on the clutch is found by dividing the clutch pressure by the value in the area tag and multiplying by the radius and sliding (friction) parameters
 	btScalar max_pressure; ///< maximum allowed pressure on the plates
-	
+
 	//variables
 	btScalar clutch_position;
 	bool locked;
-	
+
 	//for info only
 	btScalar last_torque;
 	btScalar engine_speed;
 	btScalar drive_speed;
-		
-		
+
+
 public:
 	//default constructor makes an S2000-like car
 	CARCLUTCH() :
@@ -70,13 +70,13 @@ public:
 	{
 		max_pressure = value;
 	}
-	
+
 	///set the clutch engagement, where 1.0 is fully engaged
 	void SetClutch ( const btScalar& value )
 	{
 		clutch_position = value;
 	}
-	
+
 	btScalar GetClutch() const
 	{
 		return clutch_position;
@@ -88,7 +88,7 @@ public:
 		drive_speed = n_drive_speed;
 		btScalar new_speed_diff = drive_speed - engine_speed;
 		locked = true;
-		
+
 		btScalar torque_capacity = sliding_friction * max_pressure * area * radius; // constant
 		btScalar max_torque = clutch_position * torque_capacity;
 		btScalar friction_torque = max_torque * new_speed_diff;	// highly viscous coupling (locked clutch)
@@ -102,7 +102,7 @@ public:
 			friction_torque = -max_torque;
 			locked = false;
 		}
-		
+
 		btScalar torque = friction_torque;
 		last_torque = torque;
 		return torque;

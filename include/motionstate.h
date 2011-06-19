@@ -8,13 +8,13 @@ struct MotionState : public btMotionState {
 	btVector3 position;
 	btQuaternion massCenterRotation;
 	btVector3 massCenterOffset;
-	
+
 	MotionState() : rotation(0,0,0,1), position(0,0,0),
 		massCenterRotation(0,0,0,1), massCenterOffset(0,0,0)
 	{
 		// ctor
 	}
-	
+
 	/// from user to physics
 	virtual void getWorldTransform(btTransform& centerOfMassWorldTrans) const
 	{
@@ -24,7 +24,7 @@ struct MotionState : public btMotionState {
 		centerOfMassWorldTrans.setRotation(rot);
 		centerOfMassWorldTrans.setOrigin(pos);
 	}
-	
+
 	/// from physics to user (for active objects)
 	virtual void setWorldTransform(const btTransform& centerOfMassWorldTrans)
 	{

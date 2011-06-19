@@ -20,13 +20,13 @@ public:
 		for (int i = 0; i < 6; i++)
 			planes[i].Set(cfrustum[i]);
 	}
-	
+
 	void DebugPrint(std::ostream & output)
 	{
 		for (int i = 0; i < 6; i++)
 			output << i << ". " << planes[i] << "\n";
 	}
-	
+
 	inline const MATHPLANE <T> & operator[](const int n) const
 	{
 		assert(n >= 0);
@@ -40,7 +40,7 @@ public:
 		assert(n < 6);
 		return planes[n];
 	}
-	
+
 private:
 	std::vector <MATHPLANE <T> > planes;
 };*/
@@ -61,7 +61,7 @@ public:
 			for (int n = 0; n < 4; n++)
 				frustum[i][n] = cfrustum[i][n];
 	}
-	
+
 	void Extract(float * proj, float * view)
 	{
 		float   clip[16];
@@ -87,7 +87,7 @@ public:
 		clip[13] = view[12] * proj[ 1] + view[13] * proj[ 5] + view[14] * proj[ 9] + view[15] * proj[13];
 		clip[14] = view[12] * proj[ 2] + view[13] * proj[ 6] + view[14] * proj[10] + view[15] * proj[14];
 		clip[15] = view[12] * proj[ 3] + view[13] * proj[ 7] + view[14] * proj[11] + view[15] * proj[15];
-		
+
 		/* Extract the numbers for the RIGHT plane */
 		frustum[0][0] = clip[ 3] - clip[ 0];
 		frustum[0][1] = clip[ 7] - clip[ 4];
@@ -166,7 +166,7 @@ public:
 		frustum[5][2] /= t;
 		frustum[5][3] /= t;
 	}
-	
+
 	float frustum[6][4];
 };
 

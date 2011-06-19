@@ -22,43 +22,43 @@ public:
 	{
 		gear_ratios[0] = 0.0;
 	}
-	
+
 	int GetGear() const
 	{
 		return gear;
 	}
-	
+
 	int GetForwardGears() const
 	{
 		return forward_gears;
 	}
-	
+
 	int GetReverseGears() const
 	{
 		return reverse_gears;
 	}
-	
+
 	void SetShiftTime(btScalar value)
 	{
 		shift_time = value;
 	}
-	
+
 	btScalar GetShiftTime() const
 	{
 		return shift_time;
 	}
-	
+
 	void Shift(int newgear)
 	{
 		if (newgear <= forward_gears && newgear >= -reverse_gears)
 			gear = newgear;
 	}
-	
+
 	///ratio is: driveshaft speed / crankshaft speed
 	void SetGearRatio(int gear, btScalar ratio)
 	{
 		gear_ratios[gear] = ratio;
-		
+
 		//find out how many consecutive forward gears we have
 		forward_gears = 0;
 		int key = 1;
@@ -67,7 +67,7 @@ public:
 			forward_gears++;
 			key++;
 		}
-		
+
 		//find out how many consecutive forward gears we have
 		reverse_gears = 0;
 		key = -1;
@@ -77,7 +77,7 @@ public:
 			key--;
 		}
 	}
-	
+
 	btScalar GetGearRatio(int gear) const
 	{
 		btScalar ratio = 1.0;
@@ -85,18 +85,18 @@ public:
 		if (i != gear_ratios.end()) ratio = i->second;
 		return ratio;
 	}
-	
+
 	btScalar GetCurrentGearRatio() const
 	{
 		return GetGearRatio(gear);
 	}
-	
+
 	///get the torque on the driveshaft due to the given torque at the clutch
 	btScalar GetTorque(btScalar clutch_torque)
 	{
 		return clutch_torque*gear_ratios[gear];
 	}
-	
+
 	///get the rotational speed of the clutch given the rotational speed of the driveshaft
 	btScalar CalculateClutchSpeed(btScalar driveshaft_speed)
 	{
@@ -104,7 +104,7 @@ public:
 		crankshaft_rpm = driveshaft_speed * gear_ratios[gear] * 30.0 / 3.141593;
 		return driveshaft_speed * gear_ratios[gear];
 	}
-	
+
 	///get the rotational speed of the clutch given the rotational speed of the driveshaft (const)
 	btScalar GetClutchSpeed(btScalar driveshaft_speed) const
 	{
@@ -112,7 +112,7 @@ public:
 		assert(i != gear_ratios.end());
 		return driveshaft_speed * i->second;
 	}
-	
+
 	void DebugPrint(std::ostream & out) const
 	{
 		out << "---Transmission---" << "\n";
@@ -120,7 +120,7 @@ public:
 		out << "Crankshaft RPM: " << crankshaft_rpm << "\n";
 		out << "Driveshaft RPM: " << driveshaft_rpm << "\n";
 	}
-	
+
 	bool Serialize(joeserialize::Serializer & s)
 	{
 		_SERIALIZE_(s, gear);
@@ -133,10 +133,10 @@ private:
 	int forward_gears; ///< the number of consecutive forward gears
 	int reverse_gears; ///< the number of consecutive reverse gears
 	btScalar shift_time; ///< transmission shift time
-	
+
 	//variables
 	int gear; ///< the current gear
-	
+
 	//for info only
 	btScalar driveshaft_rpm;
 	btScalar crankshaft_rpm;

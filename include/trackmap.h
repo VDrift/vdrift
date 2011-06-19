@@ -17,9 +17,9 @@ class TRACKMAP
 {
 public:
 	TRACKMAP();
-	
+
 	~TRACKMAP();
-	
+
 	///w and h are the display device dimensions in pixels.  returns true if successful.
 	bool BuildMap(
 		const std::list <ROADSTRIP> & roads,
@@ -30,12 +30,12 @@ public:
 		const std::string & texsize,
 		TEXTUREMANAGER & textures,
 		std::ostream & error_output);
-	
+
 	void Unload();
-	
+
 	///update the map with provided information for map visibility, as well as a list of car positions and whether or not they're the player car
 	void Update(bool mapvisible, const std::list <std::pair<MATHVECTOR <float, 3>, bool> > & carpositions);
-	
+
 	SCENENODE & GetNode() {return mapnode;}
 
 private:
@@ -60,17 +60,17 @@ private:
 	MATHVECTOR <float, 2> dot_size;
 
 	SDL_Surface* surface;
-	
+
 	SCENENODE mapnode;
 	keyed_container <DRAWABLE>::handle mapdraw;
 	VERTEXARRAY mapverts;
-	
+
 	// car dot textures
 	std::tr1::shared_ptr<TEXTURE> cardot0;
 	std::tr1::shared_ptr<TEXTURE> cardot1;
 	std::tr1::shared_ptr<TEXTURE> cardot0_focused;
 	std::tr1::shared_ptr<TEXTURE> cardot1_focused;
-	
+
 	class CARDOT
 	{
 		public:
@@ -111,22 +111,22 @@ private:
 			{
 				return dotdraw;
 			}
-		
+
 		private:
 			keyed_container <DRAWABLE>::handle dotdraw;
 			VERTEXARRAY dotverts;
-			
+
 			DRAWABLE & GetDrawable(SCENENODE & topnode)
 			{
 				return topnode.GetDrawlist().twodim.get(dotdraw);
 			}
-			
+
 			const DRAWABLE & GetDrawable(SCENENODE & topnode) const
 			{
 				return topnode.GetDrawlist().twodim.get(dotdraw);
 			}
 	};
-	
+
 	std::list <CARDOT> dotlist;
 };
 

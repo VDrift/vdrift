@@ -9,9 +9,9 @@ class ROADSTRIP
 {
 public:
 	ROADSTRIP() : closed(false) {}
-	
+
 	bool ReadFrom(std::istream & openfile, std::ostream & error_output);
-	
+
 	bool Collide(
 		const MATHVECTOR <float, 3> & origin,
 		const MATHVECTOR <float, 3> & direction,
@@ -20,13 +20,13 @@ public:
 		MATHVECTOR <float, 3> & outtri,
 		const BEZIER * & colpatch,
 		MATHVECTOR <float, 3> & normal) const;
-	
+
 	void Reverse();
-	
+
 	const std::vector<ROADPATCH> & GetPatches() const {return patches;}
-	
+
 	std::vector<ROADPATCH> & GetPatches() {return patches;}
-	
+
 	void CreateRacingLine(
 		SCENENODE & parentnode,
 		std::tr1::shared_ptr<TEXTURE> racingline_texture,
@@ -44,7 +44,7 @@ private:
 	std::vector<ROADPATCH> patches;
 	AABB_SPACE_PARTITIONING_NODE <int> aabb_part;
 	bool closed;
-	
+
 	void GenerateSpacePartitioning();
 };
 

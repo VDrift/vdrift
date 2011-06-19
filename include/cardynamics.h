@@ -89,7 +89,7 @@ public:
 
 	// first wheel velocity
 	btScalar GetSpeedMPS() const;
-	
+
 	// engine rpm
 	btScalar GetTachoRPM() const;
 
@@ -114,7 +114,7 @@ public:
 
 	// move the car along z-axis until it is touching the ground
 	void AlignWithGround();
-	
+
 	// rotate car back onto it's wheels after rollover
 	void RolloverRecover();
 
@@ -123,15 +123,15 @@ public:
 
 	// get the maximum steering angle in degrees
 	btScalar GetMaxSteeringAngle() const;
-	
+
 	const CARSUSPENSION & GetSuspension(WHEEL_POSITION pos) const {return *suspension[pos];}
-	
+
 	btScalar GetAerodynamicDownforceCoefficient() const;
-	
+
 	btScalar GetAeordynamicDragCoefficient() const;
-	
+
 	btVector3 GetTotalAero() const;
-	
+
 	btScalar GetFeedback() const;
 
 	void UpdateTelemetry(btScalar dt);
@@ -144,12 +144,12 @@ public:
 protected:
 	DynamicsWorld* world;
 	btRigidBody* body;		// is equivalent to bodies[0].body
-	
+
 	// body state cache
 	btTransform transform;
 	btVector3 linear_velocity;
 	btVector3 angular_velocity;
-	
+
 	// car bodies
 	struct Body {
 		MotionState state;
@@ -157,7 +157,7 @@ protected:
 		Body() : body(0) {}
 	};
 	btAlignedObjectArray<Body> bodies;
-	
+
 	// driveline state
 	CARENGINE engine;
 	CARFUELTANK fuel_tank;
@@ -169,7 +169,7 @@ protected:
 	btAlignedObjectArray<CARBRAKE> brake;
 	btAlignedObjectArray<CARWHEEL> wheel;
 	btAlignedObjectArray<CARTIRE> tire;
-	
+
 	enum { NONE = 0, FWD = 1, RWD = 2, AWD = 3 } drive;
 	btScalar driveshaft_rpm;
 	btScalar tacho_rpm;
@@ -186,7 +186,7 @@ protected:
 	bool tcs;
 	std::vector<int> abs_active;
 	std::vector<int> tcs_active;
-	
+
 	// suspension
 	btAlignedObjectArray<btVector3> suspension_force;
 	btAlignedObjectArray<btVector3> wheel_velocity;
@@ -197,17 +197,17 @@ protected:
 
 	btAlignedObjectArray<CARAERO> aerodynamics;
 	std::list<CARTELEMETRY> telemetry;
-	
+
 	btScalar maxangle;
 	btScalar feedback;
 	bool damage;
 
 	btVector3 GetDownVector() const;
-	
+
 	const btVector3 & GetCenterOfMassOffset() const;
-	
+
 	btVector3 LocalToWorld(const btVector3 & local) const;
-	
+
 	btQuaternion LocalToWorld(const btQuaternion & local) const;
 
 	void UpdateWheelVelocity();
@@ -252,16 +252,16 @@ protected:
 	void UpdateTransmission(btScalar dt);
 
 	bool WheelDriven(int i) const;
-	
+
 	btScalar AutoClutch(btScalar last_clutch, btScalar dt) const;
-	
+
 	btScalar ShiftAutoClutch() const;
-	
+
 	btScalar ShiftAutoClutchThrottle(btScalar throttle, btScalar dt);
-	
+
 	// calculate next gear based on engine rpm
 	int NextGear() const;
-	
+
 	// calculate downshift point based on gear, engine rpm
 	btScalar DownshiftRPM(int gear) const;
 

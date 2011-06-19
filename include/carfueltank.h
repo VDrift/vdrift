@@ -44,7 +44,7 @@ public:
 	{
 		position = value;
 	}
-	
+
 
 	const btVector3 & GetPosition() const
 	{
@@ -61,47 +61,47 @@ public:
 		volume = value;
 		UpdateMass();
 	}
-		
+
 	void Fill()
 	{
 		volume = capacity;
 	}
-	
+
 	bool Empty() const
 	{
 		return (volume <= 0.0);
 	}
-	
+
 	btScalar FuelPercent() const
 	{
 		return volume / capacity;
 	}
-	
+
 	void Consume(btScalar amount)
 	{
 		volume -= amount;
 		if (volume < 0.0) volume = 0.0;
-		
+
 		UpdateMass();
 	}
-	
+
 	bool Serialize(joeserialize::Serializer & s)
 	{
 		_SERIALIZE_(s, mass);
 		_SERIALIZE_(s, volume);
 		return true;
 	}
-	
+
 private:
 	//constants (not actually declared as const because they can be changed after object creation)
 	btScalar capacity;
 	btScalar density;
 	btVector3 position;
-	
+
 	//variables
 	btScalar mass;
 	btScalar volume;
-	
+
 	void UpdateMass()
 	{
 		mass = density * volume;

@@ -13,17 +13,17 @@ class WIDGET_MULTIIMAGE : public WIDGET
 {
 public:
 	WIDGET_MULTIIMAGE();
-	
+
 	~WIDGET_MULTIIMAGE() {};
-	
+
 	virtual WIDGET * clone() const;
-	
+
 	virtual void SetAlpha(SCENENODE & scene, float newalpha);
-	
+
 	virtual void SetVisible(SCENENODE & scene, bool newvis);
-	
+
 	virtual void HookMessage(SCENENODE & scene, const std::string & message, const std::string & from);
-	
+
 	void SetupDrawable(
 		SCENENODE & scene,
 		TEXTUREMANAGER & textures,
@@ -33,7 +33,7 @@ public:
       	float x, float y, float w, float h,
       	std::ostream & error_output,
 	    float z = 0);
-	
+
 private:
 	std::string prefix;
 	std::string postfix;

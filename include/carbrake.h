@@ -19,15 +19,15 @@ class CARBRAKE
 		btScalar bias; ///< the fraction of the pressure to be applied to the brake
 		btScalar threshold; ///< brake locks when the linear brake velocity divided by the normal force is less than this value
 		btScalar handbrake; ///< the friction factor that is applied when the handbrake is pulled.  this is usually 1.0 for rear brakes and 0.0 for front brakes, but could be any number
-		
+
 		//variables
 		btScalar brake_factor;
 		btScalar handbrake_factor; ///< this is separate so that ABS does not get applied to the handbrake
-		
+
 		//for info only
 		btScalar lasttorque;
-		
-		
+
+
 	public:
 		//default constructor makes an S2000-like car
 		CARBRAKE() :
@@ -49,13 +49,13 @@ class CARBRAKE
 			out << "Brake control: " << brake_factor << ", " << handbrake_factor << "\n";
 			out << "Braking torque: " << lasttorque << "\n";
 		}
-		
+
 		///brake_factor ranges from 0.0 (no brakes applied) to 1.0 (brakes applied)
 		void SetBrakeFactor(btScalar newfactor)
 		{
 			brake_factor = newfactor;
 		}
-		
+
 		///brake torque magnitude
 		btScalar GetTorque()
 		{
@@ -72,17 +72,17 @@ class CARBRAKE
 		{
 			friction = value;
 		}
-	
+
 		btScalar GetFriction() const
 		{
 			return friction;
 		}
-	
+
 		void SetMaxPressure(const btScalar & value)
 		{
 			max_pressure = value;
 		}
-	
+
 		void SetRadius(const btScalar & value)
 		{
 			radius = value;
@@ -92,12 +92,12 @@ class CARBRAKE
 		{
 			return radius;
 		}
-	
+
 		void SetArea(const btScalar & value)
 		{
 			area = value;
 		}
-	
+
 		void SetBias(const btScalar & value)
 		{
 			bias = value;
@@ -107,7 +107,7 @@ class CARBRAKE
 		{
 			return brake_factor;
 		}
-		
+
 		bool Serialize(joeserialize::Serializer & s)
 		{
 			_SERIALIZE_(s, brake_factor);
@@ -119,7 +119,7 @@ class CARBRAKE
 		{
 			handbrake = value;
 		}
-		
+
 		///ranges from 0.0 (no brakes applied) to 1.0 (brakes applied)
 		void SetHandbrakeFactor(const btScalar & value)
 		{

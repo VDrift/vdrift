@@ -23,21 +23,21 @@ public:
 		UPTRANS,
 		DOWNTRANS
 	};
-	
+
 	WIDGET_TOGGLE();
-	
+
 	~WIDGET_TOGGLE() {};
-	
+
 	virtual WIDGET * clone() const;
-	
+
 	virtual void SetAlpha(SCENENODE & scene, float newalpha);
-	
+
 	virtual void SetVisible(SCENENODE & scene, bool newvis);
-	
+
 	virtual std::string GetDescription() const;
-	
+
 	virtual void SetDescription(const std::string & newdesc);
-	
+
 	virtual bool ProcessInput(
 		SCENENODE & scene,
 		float cursorx, float cursory,
@@ -48,11 +48,11 @@ public:
 		bool save_to_options,
 		std::map<std::string, GUIOPTION> & optionmap,
 		std::ostream & error_output);
-	
+
 	void SetState(SCENENODE & scene, const TOGGLESTATE & newstate);
-	
+
 	void SetSetting(const std::string & newsetting);
-	
+
 	void SetupDrawable(
 		SCENENODE & scene,
 		std::tr1::shared_ptr<TEXTURE> teximage_up,
@@ -62,7 +62,7 @@ public:
 		std::tr1::shared_ptr<TEXTURE> teximage_transition,
 		float centerx, float centery,
 		float w,  float h, float z = 0);
-	
+
 private:
 	WIDGET_IMAGE image_up;
 	WIDGET_IMAGE image_down;

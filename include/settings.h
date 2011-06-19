@@ -204,7 +204,7 @@ public:
 	{
 		return trackreverse;
 	}
-	
+
 	bool GetTrackDynamic() const
 	{
 		return trackdynamic;
@@ -244,22 +244,22 @@ public:
 	{
 		return bloom;
 	}
-	
+
 	bool GetNormalMaps() const
 	{
 		return normalmaps;
 	}
-	
+
 	std::string GetSelectedCar() const
 	{
 		return player;
 	}
-	
+
 	std::string GetPlayerCarPaint() const
 	{
 		return player_paint;
 	}
-	
+
 	void GetPlayerColor(float & r, float & g, float & b) const
 	{
 		r = player_color[0];
@@ -276,7 +276,7 @@ public:
 	{
 		return opponent_paint;
 	}
-	
+
 	void GetOpponentColor(float & r, float & g, float & b) const
 	{
 		r = opponent_color[0];
@@ -298,12 +298,12 @@ public:
 	{
 		return contrast;
 	}
-	
+
 	std::string GetCameraMode() const
 	{
 		return camera_mode;
 	}
-	
+
 	bool GetHGateShifter() const
 	{
 		return hgateshifter;
@@ -313,7 +313,7 @@ public:
 	{
 		return ai_difficulty;
 	}
-	
+
 	bool GetVehicleDamage() const
 	{
 		return vehicle_damage;
@@ -356,7 +356,7 @@ public:
 		shaders = false;
 		texturesize = "medium";
 	}
-	
+
 private:
 	bool res_override;
 	int resolution_x;

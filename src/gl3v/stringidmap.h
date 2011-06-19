@@ -18,7 +18,7 @@ class StringId
 		{
 			std::size_t operator()(const StringId toHash) const {return std::tr1::hash<unsigned int>()(toHash.id);}
 		};
-		
+
 	private:
 		unsigned int id;
 };
@@ -28,7 +28,7 @@ class StringIdMap
 {
 	public:
 		static bool valid(StringId id) {return id.valid();}
-		
+
 		/// returns the string id if it already exists, otherwise creates an id and returns it
 		StringId addStringId(const std::string & str)
 		{
@@ -43,7 +43,7 @@ class StringIdMap
 				return newId;
 			}
 		}
-		
+
 		/// returns an invalid string ID if there's no ID for this string
 		StringId getStringId(const std::string & str) const
 		{
@@ -53,7 +53,7 @@ class StringIdMap
 			else
 				return StringId();
 		}
-		
+
 		/// returns an empty string if the id was not found
 		std::string getString(StringId id) const
 		{
@@ -65,11 +65,11 @@ class StringIdMap
 			else
 				return "";
 		}
-		
+
 	private:
 		std::tr1::unordered_map <std::string, StringId> idmap;
 		std::tr1::unordered_map <StringId, std::string, StringId::hash> stringmap;
-		
+
 		StringId makeStringId(unsigned int id) const
 		{
 			StringId newId;

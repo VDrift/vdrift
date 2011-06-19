@@ -17,7 +17,7 @@ public:
 		COBBLES = 6,
 		NumTypes
 	};
-	
+
 	void setType(const std::string & value)
 	{
 		if (value == "asphalt")			type = ASPHALT;
@@ -28,13 +28,13 @@ public:
 		else if (value == "cobbles")	type = COBBLES;
 		else							type = NONE;
 	}
-	
+
 	static const TRACKSURFACE * None()
 	{
 		static const TRACKSURFACE s;
 		return &s;
 	}
-	
+
 	TRACKSURFACE() :
 		type(NONE),
 		bumpWaveLength(1),
@@ -46,7 +46,7 @@ public:
 	{
 
 	}
-	
+
 	TYPE type;
 	float bumpWaveLength;
 	float bumpAmplitude;

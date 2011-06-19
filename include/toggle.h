@@ -8,7 +8,7 @@ class TOGGLE
 private:
 	bool state;
 	bool laststate;
-	
+
 public:
 	TOGGLE() {Clear();}
 
@@ -18,9 +18,9 @@ public:
 	bool GetImpulseRising() const;
 	bool GetImpulseFalling() const;
 	bool GetImpulse() const;
-	
+
 	void Clear() {state = false; laststate = false;}
-	
+
 	void DebugPrint(std::ostream & out) const;
 
 	void Tick();

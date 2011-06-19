@@ -56,15 +56,15 @@ public:
 		const bool dynamic_shadows,
 		const bool dynamic_objects,
 		const bool agressive_combining);
-		
+
 	~LOADER();
-	
+
 	bool BeginLoad();
-	
+
 	bool ContinueLoad();
-	
+
 	int GetNumObjects() const { return numobjects; }
-	
+
 	int GetNumLoaded() const { return numloaded; }
 
 private:
@@ -74,7 +74,7 @@ private:
 	DATA & data;
 	std::ostream & info_output;
 	std::ostream & error_output;
-	
+
 	const std::string & trackpath;
 	const std::string & trackdir;
 	const std::string & texturedir;
@@ -84,7 +84,7 @@ private:
 	const bool dynamic_objects;
 	const bool dynamic_shadows;
 	const bool agressive_combining;
-	
+
 	std::string objectpath;
 	std::string objectdir;
 	std::ifstream objectfile;
@@ -97,7 +97,7 @@ private:
 	const int min_params;
 	bool error;
 	bool list;
-	
+
 	// pod for references
 	struct BODY
 	{
@@ -118,54 +118,54 @@ private:
 	};
 	typedef std::map<std::string, BODY>::const_iterator body_iterator;
 	std::map<std::string, BODY> bodies;
-	
+
 	// compound track shape
 	btCompoundShape * track_shape;
-	
+
 	// track config
 	PTree track_config;
 	const PTree * nodes;
 	PTree::const_iterator node_it;
-	
+
 	// loader thread
 	SDL_Thread * thread;
-	
+
 	bool LoadParameters();
-	
+
 	bool LoadSurfaces();
-	
+
 	bool LoadRoads();
-	
+
 	void ReverseRoads();
-	
+
 	bool LoadLapSequence();
-	
+
 	bool CreateRacingLines();
-	
+
 	bool BeginObjectLoad();
-	
+
 	std::pair<bool, bool> ContinueObjectLoad();
-	
+
 	bool Begin();
-	
+
 	bool BeginOld();
-	
+
 	std::pair<bool, bool> Continue();
-	
+
 	std::pair<bool, bool> ContinueOld();
-	
+
 	void CalculateNumOld();
-	
+
 	bool LoadNode(const PTree & sec);
-	
+
 	bool LoadModel(const std::string & name);
-	
+
 	bool LoadShape(const PTree & body_cfg, const MODEL & body_model, BODY & body);
-	
+
 	body_iterator LoadBody(const PTree & cfg);
-	
+
 	void AddBody(SCENENODE & scene, const BODY & body);
-	
+
 	void Clear();
 };
 

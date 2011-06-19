@@ -18,7 +18,7 @@ class FONT
 {
 public:
 	FONT() : charinfo(charnum), inv_size(256.0/40.0) {};
-	
+
 	struct CHARINFO
 	{
 		CHARINFO() : loaded(false) {}
@@ -26,7 +26,7 @@ public:
 		float x, y, width, height;
 		float xoffset, yoffset, xadvance;
 	};
-	
+
 	bool Load(
 		const std::string & fontinfopath,
 		const std::string & texpath,
@@ -35,12 +35,12 @@ public:
 		TEXTUREMANAGER & textures,
 		std::ostream & error_output,
 		bool mipmap = false);
-	
+
 	const std::tr1::shared_ptr<TEXTURE> GetFontTexture() const
 	{
 		return font_texture;
 	}
-	
+
 	bool GetCharInfo(char c, const CHARINFO * & info) const
 	{
 		unsigned int i = *((unsigned char*)&c);
@@ -51,12 +51,12 @@ public:
 		}
 		return false;
 	}
-	
+
 	// get normalized(font height = 1) string width
 	float GetWidth(const std::string & newtext) const;
-	
+
 	float GetInvSize() const {return inv_size;}
-	
+
 private:
 	std::tr1::shared_ptr<TEXTURE> font_texture;	// font texture
 	std::vector <CHARINFO> charinfo;			// font metrics in texture space

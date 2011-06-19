@@ -22,17 +22,17 @@ public:
 		framebuffer(0)
 	{
 	}
-	
+
 	inline void Enable(int stateid)
 	{
 		Set(stateid, true);
 	}
-	
+
 	inline void Disable(int stateid)
 	{
 		Set(stateid, false);
 	}
-	
+
 	void SetColor(float nr, float ng, float nb, float na)
 	{
 		if (r != nr || g != ng || b != nb || a != na)
@@ -41,7 +41,7 @@ public:
 			glColor4f(r,g,b,a);
 		}
 	}
-	
+
 	void SetDepthMask(bool newdepthmask)
 	{
 		if (newdepthmask != depthmask)
@@ -50,7 +50,7 @@ public:
 			glDepthMask(depthmask ? 1 : 0);
 		}
 	}
-	
+
 	void SetColorMask(bool newcolormask, bool newalphamask)
 	{
 		if (newcolormask != colormask || newalphamask != alphamask)
@@ -61,7 +61,7 @@ public:
 			glColorMask(val, val, val, alphamask ? GL_TRUE : GL_FALSE);
 		}
 	}
-	
+
 	void SetAlphaFunc(GLenum mode, float value)
 	{
 		if (mode != alphamode || value != alphavalue)
@@ -71,7 +71,7 @@ public:
 			glAlphaFunc(mode, value);
 		}
 	}
-	
+
 	void SetBlendFunc(GLenum s, GLenum d)
 	{
 		if (blendsource != s || blenddest != d)
@@ -81,7 +81,7 @@ public:
 			glBlendFunc(s, d);
 		}
 	}
-	
+
 	void SetCullFace(GLenum mode)
 	{
 		if (mode != cullmode)
@@ -90,7 +90,7 @@ public:
 			glCullFace(cullmode);
 		}
 	}
-	
+
 	void BindFramebuffer(GLuint fbid)
 	{
 		if (fbid != framebuffer)
@@ -99,12 +99,12 @@ public:
 			framebuffer = fbid;
 		}
 	}
-	
+
 	void BindTexture2D(unsigned int tu, const TEXTURE_INTERFACE * texture)
 	{
 		if (tu >= tex2d.size())
 			tex2d.resize(tu+1,0);
-		
+
 		GLuint & curid = tex2d[tu];
 		GLuint id = 0;
 		if (texture)
@@ -117,12 +117,12 @@ public:
 			Enable(GL_TEXTURE_2D);
 		}
 	}
-	
+
 private:
 	std::vector <bool> used; //on modern compilers this should result in a lower memory usage bit_vector-type arrangement
 	std::vector <bool> state;
 	std::vector <GLuint> tex2d;
-	
+
 	float r, g, b, a;
 	bool depthmask;
 	GLenum alphamode;
@@ -133,11 +133,11 @@ private:
 	bool colormask;
 	bool alphamask;
 	GLuint framebuffer;
-	
+
 	void Set(int stateid, bool newval)
 	{
 		assert(stateid <= 65535);
-		
+
 		if (used[stateid])
 		{
 			if (state[stateid] != newval)

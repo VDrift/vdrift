@@ -29,7 +29,7 @@ class Serializer
 
 		///optional hints to higher level classes about where we are in the serialization process
 		virtual void ComplexTypeEnd(const std::string & name) { (void) name; }
-		
+
 	public:
 		///generic serialization function that will be called for complex types; this is a branch. returns true on success
 		template <typename T>
@@ -712,7 +712,7 @@ class TextOutputSerializer : public SerializerOutput
 				n = "*value";
 			return n;
 		}
-		
+
 		template <typename T>
 		bool WriteData(const std::string & name, const T & i, bool precise)
 		{
@@ -934,7 +934,7 @@ class TextInputSerializer : public SerializerInput
 			std::deque <std::string> tree_location;
 
 			int linenum = 0;
-			
+
 			//the parse loop
 			while (in)
 			{
@@ -945,7 +945,7 @@ class TextInputSerializer : public SerializerInput
 				std::string name = SeekTo(linestream, '=');
 				name = strTrim(name);
 				std::string origname = name;
-				
+
 				// special case handling for multiple items
 				// this allows us to have a nice format for vectors
 				if (name == "*item")
@@ -1000,13 +1000,13 @@ class TextInputSerializer : public SerializerInput
 					if (name == "{")
 					{
 						//ignore redundant information
-						
+
 						//*error_output_ << (tree_location.empty() ? "NULL" : tree_location.back()) << " { " << tree_location.size() << " " << linenum << std::endl;
 					}
 					else if (name == "}")
 					{
 						//*error_output_ << (tree_location.empty() ? "NULL" : tree_location.back()) << " } " << tree_location.size() << " " << linenum << std::endl;
-						
+
 						if (tree_location.empty()) //error: too many } in stream
 						{
 							if (error_output_)
@@ -1021,7 +1021,7 @@ class TextInputSerializer : public SerializerInput
 					else
 					{
 						tree_location.push_back(name);
-						
+
 						//*error_output_ << (tree_location.empty() ? "NULL" : tree_location.back()) << " " << tree_location.size() << " " << linenum << std::endl;
 					}
 				}

@@ -7,13 +7,13 @@ class CARTELEMETRY
 {
 	private:
 		typedef double T;
-	
+
 		std::vector <std::pair <std::string, T> > variable_names;
 		T time;
 		bool wroteheader;
 		const std::string telemetryname;
 		std::ofstream file;
-		
+
 		void WriteHeader(const std::string & filename)
 		{
 			std::ofstream f((filename+".plt").c_str());
@@ -34,11 +34,11 @@ class CARTELEMETRY
 			}
 			wroteheader = true;
 		}
-		
+
 	public:
 		CARTELEMETRY(const std::string & name) : time(0), wroteheader(false), telemetryname(name), file((name+".dat").c_str()) {}
 		CARTELEMETRY(const CARTELEMETRY & other) : variable_names(other.variable_names), time(other.time), wroteheader(other.wroteheader), telemetryname(other.telemetryname), file((telemetryname+".dat").c_str()) {}
-		
+
 		void AddRecord(const std::string & name, T value)
 		{
 			bool found = false;
@@ -55,13 +55,13 @@ class CARTELEMETRY
 			if (!found)
 				variable_names.push_back(std::make_pair(name, value));
 		}
-		
+
 		void Update(T dt)
 		{
 			if (time != 0 && !wroteheader)
 				WriteHeader(telemetryname);
 			time += dt;
-			
+
 			if (file)
 			{
 				file << time << " ";

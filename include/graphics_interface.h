@@ -15,7 +15,7 @@ class GRAPHICS_INTERFACE
 {
 public:
 	typedef DRAWABLE_CONTAINER <PTRVECTOR> dynamicdrawlist_type;
-	
+
 	///reflection_type is 0 (low=OFF), 1 (medium=static), 2 (high=dynamic)
 	/// returns true on success
 	virtual bool Init(const std::string & shaderpath,
@@ -47,7 +47,7 @@ public:
 	virtual void SetSunDirection ( const QUATERNION< float >& value ) = 0;
 	virtual void SetContrast ( float value ) = 0;
 	virtual void printProfilingInfo(std::ostream & out) const {}
-	
+
 	virtual ~GRAPHICS_INTERFACE() {}
 };
 

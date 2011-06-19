@@ -14,7 +14,7 @@ class LOADINGSCREEN
 {
 public:
 	SCENENODE & GetNode() {return root;}
-	
+
 	void Update(float percentage, const std::string & optional_text, float posx, float posy);
 
 	///initialize the loading screen given the root node for the loading screen

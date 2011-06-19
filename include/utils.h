@@ -39,7 +39,7 @@ void eraseVectorUseSwapAndPop(unsigned int index, T & vector)
 {
 	// note that an empty vector will cause this assert to fail
 	assert(index < vector.size());
-	
+
 	// see if we actually need to swap
 	unsigned int last = vector.size()-1;
 	if (index != last)
@@ -47,7 +47,7 @@ void eraseVectorUseSwapAndPop(unsigned int index, T & vector)
 		// yes, let's swap
 		std::swap(vector[index],vector[last]);
 	}
-	
+
 	// pop
 	vector.pop_back();
 }
@@ -57,14 +57,14 @@ template <typename T>
 std::string implode(const T & toImplode, const std::string & sep)
 {
 	std::string out;
-	
+
 	for (typename T::const_iterator i = toImplode.begin(); i != toImplode.end(); i++)
 	{
 		if (i != toImplode.begin())
 			out.append(sep);
 		out.append(*i);
 	}
-	
+
 	return out;
 }
 
