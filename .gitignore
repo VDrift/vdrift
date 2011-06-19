@@ -3,7 +3,6 @@ config.log
 include/definitions.h
 vdrift.conf
 .sconf_temp/
-bullet/
 data/
 build/
 tools/

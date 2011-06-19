@@ -51,11 +51,11 @@
 #endif
 
 #ifdef _WIN32
-	#define OS_NAME Windows
+	#define OS_NAME "Windows"
 #elif defined(__APPLE__)
-	#define OS_NAME Mac OS
+	#define OS_NAME "Mac OS"
 #else
-	#define OS_NAME Unix
+	#define OS_NAME "Unix"
 #endif
 
 #define _PRINTSIZE_(x) {std::cout << #x << ": " << sizeof(x) << std::endl;}
