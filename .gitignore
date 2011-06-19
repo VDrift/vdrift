@@ -3,5 +3,8 @@ config.log
 include/definitions.h
 vdrift.conf
 .sconf_temp/
-data/
 build/
+data/
+tools/osx/vdrift.xcodeproj/project.xcworkspace/
+tools/osx/vdrift.xcodeproj/xcuserdata/
+
