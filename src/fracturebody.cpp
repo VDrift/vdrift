@@ -19,50 +19,51 @@ void FractureBody::addShape(const btTransform& localTransform, btCollisionShape*
 
 void FractureBody::addConnection(btRigidBody* body, const btTransform& localTransform, btScalar strength, btScalar elasticLimit)
 {
-	btCompoundShape* compound = (btCompoundShape*)m_collisionShape;
-	int shapeId = compound->getNumChildShapes();
-
-	// store connection index as user pointer
+	// Store connection index as user pointer.
 	body->getCollisionShape()->setUserPointer(cast<void*>(m_connections.size()));
-
-	btConnection c;
-	c.m_body = body;
-	c.m_strength = strength;
-	c.m_elasticLimit = elasticLimit;
-	c.m_shapeId = shapeId;
-	m_connections.push_back(c);
-
+	
+	btCompoundShape* compound = (btCompoundShape*)m_collisionShape;
 	compound->addChildShape(localTransform, body->getCollisionShape());
+	
+	Connection connection;
+	connection.m_body = body;
+	connection.m_strength = strength;
+	connection.m_elasticLimit = elasticLimit;
+	connection.m_shapeId = compound->getNumChildShapes() - 1;
+	m_connections.push_back(connection);
 }
 
-btRigidBody* FractureBody::breakConnection(int id)
+btRigidBody* FractureBody::breakConnection(int con_id)
 {
-	int shapeId = m_connections[id].m_shapeId;
-	btRigidBody* child = m_connections[id].m_body;
 	btCompoundShape* compound = (btCompoundShape*)getCollisionShape();
-	btTransform trans = getWorldTransform() * compound->getChildTransform(shapeId);
-
+	btAssert(con_id >= 0);
+	btAssert(con_id < m_connections.size());
+	
+	int shape_id = m_connections[con_id].m_shapeId;
+	btAssert(shape_id >= 0);
+	btAssert(shape_id < compound->getNumChildShapes());
+	
+	// Init child body.
+	btRigidBody* child = m_connections[con_id].m_body;
+	btTransform trans = getWorldTransform() * compound->getChildTransform(shape_id);
 	child->setWorldTransform(trans);
-	child->setLinearVelocity(getLinearVelocity());
-	child->setAngularVelocity(getAngularVelocity());
-	child->setUserPointer(cast<void*>(-1));
-
-	//std::cerr << "\nbefore shape removal" << std::endl;
-	//debugPrint();
-	//std::cerr << "removing shape " << shapeId << std::endl;
-
-	// will swap last shape with removed one
-	compound->removeChildShapeByIndex(shapeId);
-
-	// remove will swap last shape with shapeId need to update connection
-	id = cast<int>(compound->getChildShape(shapeId)->getUserPointer());
-	if (id >= 0 && shapeId <= compound->getNumChildShapes())
+	child->setLinearVelocity(getVelocityInLocalPoint(trans.getOrigin()-getCenterOfMassPosition()));
+	child->setAngularVelocity(btVector3(0, 0, 0));
+	child->getCollisionShape()->setUserPointer(cast<void*>(-1));
+	
+	// Invalidate connection.
+	m_connections[con_id].m_shapeId = -1;
+	
+	// Remove child shape.
+	compound->removeChildShapeByIndex(shape_id);
+	if (shape_id < compound->getNumChildShapes() - 1)
 	{
-		m_connections[id].m_shapeId = shapeId;
+		int id = cast<int>(compound->getChildShape(shape_id)->getUserPointer());
+		if(id >= 0)
+		{
+			m_connections[id].m_shapeId = shape_id;
+		}
 	}
-
-	//std::cerr << "\nafter shape removal" << std::endl;
-	//debugPrint();
 
 	return child;
 }
@@ -89,23 +90,6 @@ void FractureBody::updateMotionState()
 			transform = transform * shape->getChildTransform(i);
 			m_connections[id].m_body->getMotionState()->setWorldTransform(transform);
 		}
-	}
-}
-
-void FractureBody::debugPrint()
-{
-	std::cerr << "fracture body " << this << std::endl;
-	std::cerr << "connections" << std::endl;
-	for (int i = 0; i < m_connections.size(); ++i)
-	{
-		std::cerr << "body " << m_connections[i].m_body << std::endl;
-		std::cerr << "shape " << m_connections[i].m_shapeId << " " << m_connections[i].m_body->getCollisionShape() << std::endl;
-	}
-	std::cerr << "shapes" << std::endl;
-	const btCompoundShape* shape = (btCompoundShape*)getCollisionShape();
-	for (int i = 0; i < shape->getNumChildShapes(); ++i)
-	{
-		std::cerr << "shape "  << cast<int>(shape->getChildShape(i)->getUserPointer()) << " " << shape->getChildShape(i) << std::endl;
 	}
 }
 

@@ -414,12 +414,6 @@ if env['minimal']:
 else:
     version += "-full"
 
-#---------------#
-# system bullet #
-#---------------#
-if env['extbullet']:
-	env.Append(CCFLAGS = ['-D EXTBULLET'])
-
 #-----------#
 # profiling #
 #-----------#
@@ -559,7 +553,6 @@ if 'install' in COMMAND_LINE_TARGETS:
     SConscript('data/SConscript')
 
 if 'src-package' in COMMAND_LINE_TARGETS:
-    SConscript('po/SConscript')
     SConscript('tools/SConscript')
     SConscript('data/SConscript')
 

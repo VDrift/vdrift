@@ -9,6 +9,8 @@
 
 #include <SDL/SDL_thread.h>
 
+#define EXTBULLET
+
 inline void operator >> (std::istream & lhs, btVector3 & rhs)
 {
 	for (size_t i = 0; i < 3; ++i)
