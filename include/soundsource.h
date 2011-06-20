@@ -44,7 +44,7 @@ public:
 	float ComputedGain(const int channel) const {if (channel == 1) return computed_gain1; else return computed_gain2;}
 	void SetRelativeGain(const float relgain) {relative_gain = relgain;}
 	float GetRelativeGain() {return relative_gain;}
-	
+
 	void Loop(const bool newloop) {if (newloop) loop = 1; else loop = 0;}
 	void Reset() {sample_pos = 0; sample_pos_remainder=0;}
 	void Stop() {playing = 0;Reset();}
@@ -52,7 +52,7 @@ public:
 	void Play() {playing = 1;}
 	bool Audible() const;
 	const std::string GetName() const {if (buffer == NULL) return "NULL"; else return buffer->GetName();}
-	
+
 	const SOUNDBUFFER & GetSoundBuffer() const {return *buffer;}
 	SOUNDFILTER & AddFilter() {{SOUNDFILTER newfilt;filters.push_back(newfilt);}return filters.back();}
 	SOUNDFILTER & GetFilter(int num);
@@ -73,7 +73,7 @@ private:
 
 	float computed_gain1;
 	float computed_gain2;
-	
+
 	float last_computed_gain1;
 	float last_computed_gain2;
 

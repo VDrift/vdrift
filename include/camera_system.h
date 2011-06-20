@@ -12,15 +12,15 @@ class CAMERA_SYSTEM
 {
 public:
 	~CAMERA_SYSTEM();
-	
+
 	CAMERA* Active() const;
-	
+
 	CAMERA* Select(const std::string & name);
-	
+
 	CAMERA* Next();
-	
+
 	CAMERA* Prev();
-	
+
 	void Add(CAMERA* newcam);
 
 protected:

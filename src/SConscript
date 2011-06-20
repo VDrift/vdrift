@@ -274,6 +274,7 @@ if (sys.platform == 'freebsd6') or (sys.platform == 'freebsd7') or (sys.platform
     local_env.Append(LIBPATH = ['/usr/X11R6/lib'])
     libs_link = ['GLU', 'GLEW', 'pthread', common_libs]
 elif ( 'darwin' == sys.platform ):
+    common_libs = ['SDL_image', 'SDL_gfx', 'Vorbis', 'curl']
     vdrift_install = "${PRODUCT_NAME}.app"
     pkgbase = "%s/Contents" % vdrift_install
     appdir = "%s/MacOS/" % pkgbase

@@ -41,7 +41,7 @@ bool GLWrapper::initialize()
 	logOutput(std::string("GL Renderer: ")+UTILS::tostr(glGetString(GL_RENDERER)));
 	logOutput(std::string("GL Vendor: ")+UTILS::tostr(glGetString(GL_VENDOR)));
 	logOutput(std::string("GL Version: ")+UTILS::tostr(glGetString(GL_VERSION)));
-	
+
 	GLenum glew_err = glewInit();
 	if (glew_err != GLEW_OK)
 	{
@@ -52,16 +52,16 @@ bool GLWrapper::initialize()
 	{
 		logOutput(std::string("Initialized GLEW ")+UTILS::tostr(glewGetString(GLEW_VERSION)));
 	}
-	
+
 	// check through all OpenGL versions to determine the highest supported OpenGL version
 	bool supportsRequiredVersion = glewIsSupported(REQUIRED_GL_VERSION);
-	
+
 	if (!supportsRequiredVersion)
 	{
 		logError(std::string("Graphics card or driver does not support required ")+REQUIRED_GL_VERSION);
 		return false;
 	}
-	
+
 	return ERROR_CHECK;
 }
 
@@ -97,23 +97,23 @@ void GLWrapper::applyUniform(GLint location, const RenderUniformVector <float> &
 		case 1:
 		GLLOG(glUniform1f(location, data[0]));ERROR_CHECK;
 		break;
-		
+
 		case 2:
 		GLLOG(glUniform2f(location, data[0], data[1]));ERROR_CHECK;
 		break;
-		
+
 		case 3:
 		GLLOG(glUniform3f(location, data[0], data[1], data[2]));ERROR_CHECK;
 		break;
-		
+
 		case 4:
 		GLLOG(glUniform4f(location, data[0], data[1], data[2], data[3]));ERROR_CHECK;
 		break;
-		
+
 		case 16:
 		GLLOG(glUniformMatrix4fv(location, 1, false, &data[0]));ERROR_CHECK;
 		break;
-		
+
 		default:
 		logError("Encountered unexpected uniform size: " + UTILS::tostr(data.size()) + " location " +UTILS::tostr(location));
 		assert(!"unexpected uniform size");
@@ -127,19 +127,19 @@ void GLWrapper::applyUniform(GLint location, const RenderUniformVector <int> & d
 		case 1:
 		GLLOG(glUniform1i(location, data[0]));ERROR_CHECK;
 		break;
-		
+
 		case 2:
 		GLLOG(glUniform2i(location, data[0], data[1]));ERROR_CHECK;
 		break;
-		
+
 		case 3:
 		GLLOG(glUniform3i(location, data[0], data[1], data[2]));ERROR_CHECK;
 		break;
-		
+
 		case 4:
 		GLLOG(glUniform4i(location, data[0], data[1], data[2], data[3]));ERROR_CHECK;
 		break;
-		
+
 		default:
 		logError("Encountered unexpected uniform size: " + UTILS::tostr(data.size()) + " location " +UTILS::tostr(location));
 		assert(0 && "unexpected uniform size");
@@ -154,7 +154,7 @@ bool GLWrapper::createAndCompileShader(const std::string & shaderSource, GLenum 
 	GLLOG(glCompileShader(handle));ERROR_CHECK;
 	GLint compileStatus(0);
 	GLLOG(glGetShaderiv(handle, GL_COMPILE_STATUS, &compileStatus));ERROR_CHECK;
-	
+
 	GLint bufferSize(0);
 	GLLOG(glGetShaderiv(handle, GL_INFO_LOG_LENGTH, &bufferSize));ERROR_CHECK;
 	GLchar infoLog[bufferSize+1];
@@ -162,7 +162,7 @@ bool GLWrapper::createAndCompileShader(const std::string & shaderSource, GLenum 
 	GLLOG(glGetShaderInfoLog(handle, bufferSize, &infoLogLength, infoLog));ERROR_CHECK;
 	infoLog[bufferSize] = '\0';
 	shaderErrorOutput << infoLog;
-	
+
 	if (!compileStatus)
 	{
 		GLLOG(glDeleteShader(handle));ERROR_CHECK;
@@ -178,13 +178,13 @@ bool GLWrapper::createAndCompileShader(const std::string & shaderSource, GLenum 
 bool GLWrapper::linkShaderProgram(const std::vector <std::string> & shaderAttributeBindings, const std::vector <GLuint> & shaderHandles, GLuint & handle, const std::map <GLuint, std::string> & fragDataLocations, std::ostream & shaderErrorOutput)
 {
 	handle = GLLOG(glCreateProgram());ERROR_CHECK;
-	
+
 	// attach all shaders that we got (hopefully a vertex and fragment shader are in here)
 	for (unsigned int i = 0; i < shaderHandles.size(); i++)
 	{
 		GLLOG(glAttachShader(handle, shaderHandles[i]));ERROR_CHECK;
 	}
-	
+
 	// make sure we get our vertex attributes bound to the proper names
 	for (unsigned int i = 0; i < shaderAttributeBindings.size(); i++)
 	{
@@ -193,16 +193,16 @@ bool GLWrapper::linkShaderProgram(const std::vector <std::string> & shaderAttrib
 			GLLOG(glBindAttribLocation(handle, i, shaderAttributeBindings[i].c_str()));ERROR_CHECK;
 		}
 	}
-	
+
 	// make sure color outputs are bound to the proper names
 	for (std::map <GLuint, std::string>::const_iterator i = fragDataLocations.begin(); i != fragDataLocations.end(); i++)
 	{
 		GLLOG(glBindFragDataLocation(handle, i->first, i->second.c_str()));ERROR_CHECK;
 	}
-	
+
 	// attempt to link the program
 	GLLOG(glLinkProgram(handle));ERROR_CHECK;
-	
+
 	// handle the result
 	GLint linkStatus;
 	GLLOG(glGetProgramiv(handle, GL_LINK_STATUS, &linkStatus));
@@ -229,10 +229,10 @@ bool GLWrapper::relinkShaderProgram(GLuint handle, std::ostream & shaderErrorOut
 {
 	if (!handle)
 		return false;
-	
+
 	// attempt to link the program
 	GLLOG(glLinkProgram(handle));ERROR_CHECK;
-	
+
 	// handle the result
 	GLint linkStatus;
 	GLLOG(glGetProgramiv(handle, GL_LINK_STATUS, &linkStatus));
@@ -263,7 +263,7 @@ void GLWrapper::BindTexture(GLenum target, GLuint handle)
 		GLLOG(glBindTexture(target,handle));ERROR_CHECK;
 		return;
 	}
-	
+
 	// check the cache
 	bool send = false;
 	if (curActiveTexture < boundTextures.size())
@@ -276,7 +276,7 @@ void GLWrapper::BindTexture(GLenum target, GLuint handle)
 		boundTextures.resize(curActiveTexture+1,0);
 		send = true;
 	}
-	
+
 	if (send)
 	{
 		GLLOG(glBindTexture(target,handle));ERROR_CHECK;

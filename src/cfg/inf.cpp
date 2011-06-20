@@ -23,26 +23,26 @@ static void read_inf(std::istream & in, PTree & node, bool child)
 		{
 			continue;
 		}
-		
+
 		size_t begin = line.find_first_not_of(" \t");
 		size_t end = line.find_first_of(";#");
 		if (begin >= end)
 		{
 			continue;
 		}
-		
+
 		line = line.substr(begin, end);
 		if (line[0] == '{' && name.length())
 		{
 			read_inf(in, node.set(name, PTree()), true);
 			continue;
 		}
-		
+
 		if (line[0] == '}' && child)
 		{
 			break;
 		}
-		
+
 		size_t next = line.find(" ");
 		end = line.length();
 		name = line.substr(0, next);

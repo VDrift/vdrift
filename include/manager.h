@@ -18,37 +18,37 @@ public:
 	typedef std::map<const std::string, std::tr1::shared_ptr<T> > container;
 	typedef typename container::iterator iterator;
 	typedef typename container::const_iterator const_iterator;
-	
+
 	MANAGER(std::ostream & error) : error(error)
 	{
 		// ctor
 	}
-	
+
 	~MANAGER()
 	{
 		Clear();
 	}
-	
+
 	void SetBasePath(const std::string & path)
 	{
 		basepath = path;
 	}
-	
+
 	void SetSharedPath(const std::string & path)
 	{
 		sharedpath = path;
 	}
-	
+
 	const std::string & GetBasePath() const
 	{
 		return basepath;
 	}
-	
+
 	const std::string & GetSharedPath() const
 	{
 		return sharedpath;
 	}
-	
+
 	bool Get(const std::string & path, const std::string & name, const_iterator & it)
 	{
 		const_iterator i = objects.find(path + "/" + name);
@@ -60,7 +60,7 @@ public:
 		it = i;
 		return true;
 	}
-	
+
 	bool Get(const std::string & path, const std::string & name, std::tr1::shared_ptr<T> & sp)
 	{
 		const_iterator it;
@@ -71,17 +71,17 @@ public:
 		}
 		return false;
 	}
-	
+
 	const_iterator Set(const std::string & path, const std::tr1::shared_ptr<T> & sp)
 	{
 		return objects.insert(std::pair<std::string, std::tr1::shared_ptr<T> >(path, sp)).first;
 	}
-	
+
 	unsigned int Size() const
 	{
 		return objects.size();
 	}
-	
+
 	// collect garbage
 	void Sweep()
 	{
@@ -98,7 +98,7 @@ public:
 			}
 		}
 	}
-	
+
 	void Clear()
 	{
 		Sweep();
@@ -112,7 +112,7 @@ public:
 			}
 		}
 	}
-	
+
 	void DebugPrint(std::ostream & out)
 	{
 		int refcount = 0;
@@ -126,7 +126,7 @@ public:
 		}
 		out << "References count: " << refcount << std::endl;
 	}
-	
+
 protected:
 	container objects;
 	std::string basepath;

@@ -14,6 +14,6 @@ enum VERTEX_ATTRIBS
 	VERTEX_UV1,
 	VERTEX_UV2
 };
-};
+}
 
 #endif

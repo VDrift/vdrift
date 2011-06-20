@@ -16,25 +16,25 @@ namespace calgo
 	{
 		return std::find(c.begin(), c.end(), value);
 	}
-	
+
 	template<class Container_in, class OutputIterator>
 	OutputIterator copy ( const Container_in & c, OutputIterator result )
 	{
 		return std::copy(c.begin(), c.end(), result);
 	}
-	
+
 	template<class Container_in>
 	void sort ( Container_in & c )
 	{
 		std::sort(c.begin(), c.end());
 	}
-	
+
 	template<class Container, class Function>
 	Function for_each(Container & c, Function f)
 	{
 		return std::for_each(c.begin(), c.end(), f);
 	}
-	
+
 	template <class Container1, class OutputIterator, class UnaryPredicate>
 	OutputIterator copy_if(const Container1& container_in, OutputIterator result, UnaryPredicate pred)
 	{
@@ -45,20 +45,20 @@ namespace calgo
 				*result++ = *i;
 		return result;
 	}
-	
+
 	template < class Container, class OutputIterator, class UnaryOperator >
 	OutputIterator transform ( const Container & c,
 		OutputIterator result, UnaryOperator op )
 	{
 		return std::transform(c.begin(), c.end(), result, op);
 	}
-	
+
 	template<class Container, class InputIterator, class T>
 	InputIterator find ( const Container & c, const T& value )
 	{
 		return std::find(c.begin(), c.end(), value);
 	}
-	
+
 	template<class T>
 	void SwapAndPop(std::vector <T> & container, const std::vector <unsigned int> & todel)
 	{
@@ -69,7 +69,7 @@ namespace calgo
 		else
 		{
 			std::map <unsigned int, unsigned int> remap;
-			
+
 			unsigned int orig_container_size = container.size();
 			for (unsigned int i = 0; i < todel.size(); i++)
 			{
@@ -87,11 +87,11 @@ namespace calgo
 				}
 				container.pop_back();
 			}
-			
+
 			/*std::vector <unsigned int> remap(container.size());
 			for (unsigned int i = 0; i < remap.size(); i++)
 				remap[i] = i;
-			
+
 			unsigned int orig_container_size = container.size();
 			for (unsigned int i = 0; i < todel.size(); i++)
 			{

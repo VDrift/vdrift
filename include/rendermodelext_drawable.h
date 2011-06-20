@@ -12,10 +12,10 @@ class RenderModelExternalDrawable : public RenderModelExternal
 	public:
 		void SetVertArray(const VERTEXARRAY* value) {vert_array = value;if (vert_array) enabled = true;}
 		virtual void draw(GLWrapper & gl) const;
-		
+
 		RenderModelExternalDrawable() : vert_array(NULL) {}
 		~RenderModelExternalDrawable() {}
-		
+
 	private:
 		const VERTEXARRAY * vert_array;
 };

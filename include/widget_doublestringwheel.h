@@ -16,37 +16,37 @@ class WIDGET_DOUBLESTRINGWHEEL : public WIDGET
 {
 public:
 	WIDGET_DOUBLESTRINGWHEEL();
-	
+
 	~WIDGET_DOUBLESTRINGWHEEL() {};
-	
+
 	virtual WIDGET * clone() const;
-	
+
 	virtual void SetAlpha(SCENENODE & scene, float newalpha);
-	
+
 	virtual void SetVisible(SCENENODE & scene, bool newvis);
-	
+
 	virtual std::string GetDescription() const;
-	
+
 	virtual void SetDescription(const std::string & newdesc);
-	
+
 	virtual bool ProcessInput(
 		SCENENODE & scene,
 		float cursorx,
 		float cursory,
 		bool cursordown,
 		bool cursorjustup);
-	
+
 	virtual void UpdateOptions(
 		SCENENODE & scene,
 		bool save_to_options,
 		std::map<std::string, GUIOPTION> & optionmap,
 		std::ostream & error_output);
-	
+
 	void SetupDrawable(
 		SCENENODE & scene,
 		const std::string & newtitle,
 		std::tr1::shared_ptr<TEXTURE> teximage_left_up,
-		std::tr1::shared_ptr<TEXTURE> teximage_left_down, 
+		std::tr1::shared_ptr<TEXTURE> teximage_left_down,
 		std::tr1::shared_ptr<TEXTURE> teximage_right_up,
 		std::tr1::shared_ptr<TEXTURE> teximage_right_down,
 		const FONT & font,
@@ -55,13 +55,13 @@ public:
 		float centerx,
 		float centery,
 		float z);
-	
+
 	void SetCurrent(SCENENODE & scene, const std::string & newsetting1, const std::string & newsetting2);
-	
+
 	void SetCurrent(SCENENODE & scene, const std::string & newsetting1, const std::string & newsetting2, std::ostream & error_output);
-	
+
 	void SetValueList(const std::list <std::pair<std::string,std::string> > & newvaluelist1, const std::list <std::pair<std::string,std::string> > & newvaluelist2);
-	
+
 	void SetSetting(const std::string & newsetting1, const std::string & newsetting2);
 
 private:

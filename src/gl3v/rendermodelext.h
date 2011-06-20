@@ -27,7 +27,7 @@ class RenderModelExternal
 			if (elementCount > 0)
 				enabled = true;
 		}
-		
+
 		virtual ~RenderModelExternal() {}
 		virtual void draw(GLWrapper & gl) const {gl.drawGeometry(vao, elementCount);}
 		bool drawEnabled() const {return enabled;}
@@ -38,19 +38,19 @@ class RenderModelExternal
 			if (elementCount > 0)
 				enabled = true;
 		}
-		
+
 	protected:
 		GLuint vao;
 		int elementCount;
 		bool enabled;
-		
+
 		std::vector <RenderTextureEntry> textures;
 		std::vector <RenderUniformEntry> uniforms;
-		
+
 		// these need to be called whenever the vectors above are changed
 		void clearTextureCache() {perPassTextureCache.clear();}
 		void clearUniformCache() {perPassUniformCache.clear();}
-		
+
 	private:
 		RenderCacheVector <std::vector <RenderTexture> > perPassTextureCache; // indexed by pass ID
 		RenderCacheVector <std::vector <RenderUniform> > perPassUniformCache; // indexed by pass ID

@@ -37,7 +37,7 @@ public:
 	///shortest cubic spline through 3 on-curve points(p1 == p2)
 	///will modify point[1] and point[2]
 	void FitMidPoint(MATHVECTOR <float, 3> p[]);
-	
+
 	///attach this bezier and the other bezier by moving them and adjusting control points as necessary.
 	/// note that the other patch will be modified
 	void Attach(BEZIER & other, bool reverse);
@@ -85,7 +85,7 @@ public:
 		assert(y < 4);
 		return points[x][y];
 	}
-	
+
 	///return the 3D point on the bezier surface at the given normalized coordinates px and py
 	MATHVECTOR <float, 3> SurfCoord(float px, float py) const;
 

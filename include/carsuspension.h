@@ -36,7 +36,7 @@ class CARSUSPENSION
 {
 public:
 	CARSUSPENSION();
-	
+
 	virtual ~CARSUSPENSION() {}
 
 	const btScalar & GetAntiRoll() const {return info.anti_roll;}
@@ -74,7 +74,7 @@ public:
 	virtual void SetSteering(const btScalar & value);
 
 	void SetDisplacement ( const btScalar & value, btScalar dt );
-	
+
 	btScalar GetForce ( btScalar dt );
 
 	void DebugPrint(std::ostream & out) const;
@@ -95,7 +95,7 @@ public:
 
 protected:
 	CARSUSPENSIONINFO info;
-	
+
 	// suspension
 	btQuaternion orientation;
 	btVector3 position;
@@ -110,7 +110,7 @@ protected:
 	btScalar last_displacement;
 	btScalar wheel_velocity;
 	btScalar wheel_force;
-	
+
 	void Init(const CARSUSPENSIONINFO & info);
 };
 

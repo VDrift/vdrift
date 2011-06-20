@@ -95,29 +95,29 @@ template <template <typename U> class CONTAINER>
 struct DRAWABLE_CONTAINER
 {
 	// all of the layers of the scene
-	
+
 	#define X(Y) CONTAINER <DRAWABLE> Y;
 	#include "drawables.def"
 	#undef X
 	// you can add new drawable containers by modifying drawables.def
 	// see http://en.wikipedia.org/wiki/C_preprocessor#X-Macros
-	
-	template <typename T> 
+
+	template <typename T>
 	void ForEach(T func)
 	{
 		#define X(Y) func(Y);
 		#include "drawables.def"
 		#undef X
 	}
-	
-	template <typename T> 
+
+	template <typename T>
 	void ForEachWithName(T func)
 	{
 		#define X(Y) func(#Y,Y);
 		#include "drawables.def"
 		#undef X
 	}
-	
+
 	/// adds elements from the first drawable container to the second
 	template <template <typename UU> class CONTAINERU, bool use_transform>
 	void AppendTo(DRAWABLE_CONTAINER <CONTAINERU> & dest, const MATRIX4 <float> & transform)
@@ -126,7 +126,7 @@ struct DRAWABLE_CONTAINER
 		#include "drawables.def"
 		#undef X
 	}
-	
+
 	/// this is slow, don't do it often
 	reseatable_reference <CONTAINER <DRAWABLE> > GetByName(const std::string & name)
 	{
@@ -136,19 +136,19 @@ struct DRAWABLE_CONTAINER
 		#undef X
 		return ref;
 	}
-	
+
 	/// apply this functor to all drawables
 	template <typename T>
 	void ForEachDrawable(T func)
 	{
 		ForEach(DRAWABLE_CONTAINER_HELPER::ApplyFunctor<T>(func));
 	}
-	
+
 	bool empty() const
 	{
 		return (size() == 0);
 	}
-	
+
 	unsigned int size() const
 	{
 		DRAWABLE_CONTAINER <CONTAINER> * me = const_cast<DRAWABLE_CONTAINER <CONTAINER> *>(this); // messy, but avoids more typing. const correctness is enforced in AccumulateSize::operator()
@@ -156,17 +156,17 @@ struct DRAWABLE_CONTAINER
 		me->ForEach(DRAWABLE_CONTAINER_HELPER::AccumulateSize(count));
 		return count;
 	}
-	
+
 	void clear()
 	{
 		ForEach(DRAWABLE_CONTAINER_HELPER::ClearContainer());
 	}
-	
+
 	void SetVisibility(bool newvis)
 	{
 		ForEach(DRAWABLE_CONTAINER_HELPER::SetVisibility(newvis));
 	}
-	
+
 	void SetAlpha(float a)
 	{
 		ForEach(DRAWABLE_CONTAINER_HELPER::SetAlpha(a));

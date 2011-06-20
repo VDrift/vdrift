@@ -56,11 +56,11 @@ protected:
 	const TRACK * track;
 	btScalar timeStep;
 	int maxSubSteps;
-	
+
 	void reset();
-	
+
 	void solveConstraints(btContactSolverInfo& solverInfo);
-	
+
 	void fractureCallback();
 };
 

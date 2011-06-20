@@ -59,7 +59,7 @@ public:
 		}
 		return false;
 	}
-	
+
 	/// will create section if not available
 	void GetSection(const std::string & section, iterator & it)
 	{
@@ -89,7 +89,7 @@ public:
 		}
 		return false;
 	}
-	
+
 	template <typename T>
 	bool GetParam(const const_iterator & section, const std::string & param, std::vector<T> & out) const
 	{
@@ -164,7 +164,7 @@ public:
 			section->second[param] = st.str();
 		}
 	}
-	
+
 	template <typename T>
 	void SetParam(iterator section, const std::string & param, const std::vector<T> & invar)
 	{
@@ -199,7 +199,7 @@ private:
 };
 
 // specializations
-template <> 
+template <>
 inline bool CONFIG::GetParam(const const_iterator & section, const std::string & param, std::string & output) const
 {
 	assert(section != sections.end());
@@ -212,7 +212,7 @@ inline bool CONFIG::GetParam(const const_iterator & section, const std::string &
 	return false;
 }
 
-template <> 
+template <>
 inline bool CONFIG::GetParam(const const_iterator & section, const std::string & param, bool & output) const
 {
 	assert(section != sections.end());
@@ -231,7 +231,7 @@ inline bool CONFIG::GetParam(const const_iterator & section, const std::string &
 	return false;
 }
 
-template <> 
+template <>
 inline void CONFIG::SetParam(iterator section, const std::string & param, const std::string & invar)
 {
 	if (section != sections.end())

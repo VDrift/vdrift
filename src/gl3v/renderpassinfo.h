@@ -11,7 +11,7 @@
 struct RealtimeExportPassInfo
 {
 	std::string name;
-	
+
 	bool clearColor;
 	bool clearDepth;
 	bool clearStencil;
@@ -19,20 +19,20 @@ struct RealtimeExportPassInfo
 	float clearDepthValue;
 	int clearStencilValue;
 	std::vector <std::string> drawGroups;
-	
+
 	std::map <std::string, std::string> userDefinedFields;
-	
+
 	std::string vertexShader;
 	std::set <std::string> vertexShaderDefines;
 	std::string fragmentShader;
 	std::set <std::string> fragmentShaderDefines;
-	
+
 	std::vector <std::string> shaderAttributeBindings;
-	
+
 	struct UniformData
 	{
 		std::vector <float> data;
-		
+
 		bool Serialize(joeserialize::Serializer & s)
 		{
 			_SERIALIZE_(s,data);
@@ -40,7 +40,7 @@ struct RealtimeExportPassInfo
 		}
 	};
 	std::map <std::string, UniformData> uniforms;
-	
+
 	// render states
 	struct RenderState
 	{
@@ -48,7 +48,7 @@ struct RealtimeExportPassInfo
 		std::string enumdata;
 		std::vector <int> intdata;
 		std::vector <float> floatdata;
-		
+
 		bool Serialize(joeserialize::Serializer & s)
 		{
 			_SERIALIZE_(s,type);
@@ -63,7 +63,7 @@ struct RealtimeExportPassInfo
 	std::vector <std::pair <std::string, int> > stateEnablei;
 	std::vector <std::pair <std::string, int> > stateDisablei;
 	std::map <std::string, RenderState> stateEnum;
-	
+
 	// render target information
 	struct RenderTargetInfo
 	{
@@ -74,7 +74,7 @@ struct RealtimeExportPassInfo
 		bool autoMipmap;
 		float width, height;
 		bool widthHeightAreMultiples;
-		
+
 		bool Serialize(joeserialize::Serializer & s)
 		{
 			_SERIALIZE_(s,name);
@@ -89,13 +89,13 @@ struct RealtimeExportPassInfo
 		}
 	};
 	std::map <std::string, RenderTargetInfo> renderTargets;
-	
+
 	// samplers
 	struct Sampler
 	{
 		std::string textureName;
 		std::map <std::string, RenderState> state;
-		
+
 		bool Serialize(joeserialize::Serializer & s)
 		{
 			_SERIALIZE_(s,textureName);
@@ -104,7 +104,7 @@ struct RealtimeExportPassInfo
 		}
 	};
 	std::map <std::string, Sampler> samplers;
-	
+
 	bool Serialize(joeserialize::Serializer & s)
 	{
 		_SERIALIZE_(s,name);

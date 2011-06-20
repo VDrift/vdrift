@@ -19,11 +19,11 @@ private:
 			std::string format_version;
 			int inputs_supported;
 			float framerate;
-			
+
 			REPLAYVERSIONING() : format_version("VDRIFTREPLAYV??"), inputs_supported(0), framerate(0) {}
 			REPLAYVERSIONING(const std::string & ver, unsigned int ins, float newfr) : format_version(ver),
 				     inputs_supported(ins), framerate(newfr) {}
-				     
+
 			bool Serialize(joeserialize::Serializer & s)
 			{
 				_SERIALIZE_(s,inputs_supported);
@@ -35,12 +35,12 @@ private:
 			{
 				//write the file format version data manually.  if the serialization functions were used, a variable length string would be written instead, which isn't exactly what we want
 				outstream.write(format_version.data(), format_version.length());
-				
+
 				//write the rest of the versioning info
 				joeserialize::BinaryOutputSerializer serialize_output(outstream);
 				Serialize(serialize_output);
 			}
-			
+
 			void Load(std::istream & instream)
 			{
 				//read the file format version data manually
@@ -50,20 +50,20 @@ private:
 				version_buf[bufsize] = '\0';
 				format_version = version_buf;
 				delete [] version_buf;
-				
+
 				//read the rest of the versioning info
 				joeserialize::BinaryInputSerializer serialize_input(instream);
 				Serialize(serialize_input);
 			}
-			
+
 			bool operator==(const REPLAYVERSIONING & other) const
 			{
-				return (format_version == other.format_version && 
-					inputs_supported == other.inputs_supported && 
+				return (format_version == other.format_version &&
+					inputs_supported == other.inputs_supported &&
 				        framerate == other.framerate);
 			}
 	};
-	
+
 	class INPUTFRAME
 	{
 	private:
@@ -73,10 +73,10 @@ private:
 		public:
 			INPUTPAIR() : index(0), value(0) {}
 			INPUTPAIR(int newindex, float newvalue) : index(newindex), value(newvalue) {}
-			
+
 			int index;
 			float value;
-			
+
 			bool Serialize(joeserialize::Serializer & s)
 			{
 				_SERIALIZE_(s,index);
@@ -84,50 +84,50 @@ private:
 				return true;
 			}
 		};
-		
+
 		int frame;
 		std::vector <INPUTPAIR> inputs;
-		
+
 	public:
 		INPUTFRAME() : frame(0) {}
 		INPUTFRAME(int newframe) : frame(newframe) {}
-		
+
 		bool Serialize(joeserialize::Serializer & s)
 		{
 			_SERIALIZE_(s,frame);
 			_SERIALIZE_(s,inputs);
 			return true;
 		}
-		
+
 		void AddInput(int index, float value)
 		{
 			inputs.push_back(INPUTPAIR(index,value));
 		}
-		
+
 		unsigned int GetNumInputs() const {return inputs.size();}
 
 		int GetFrame() const
 		{
 			return frame;
 		}
-		
+
 		///returns a pair for the <control id, value> of the indexed input
 		std::pair <int, float> GetInput(unsigned int index) const {assert(index < inputs.size());return std::pair <int, float> (inputs[index].index, inputs[index].value);}
 	};
-	
+
 	class STATEFRAME
 	{
 	private:
 		friend class joeserialize::Serializer;
-		
+
 		int frame;
 		std::string binary_state_data;
 		std::vector <float> input_snapshot;
-		
+
 	public:
 		STATEFRAME() : frame(0) {}
 		STATEFRAME(int newframe) : frame(newframe) {}
-		
+
 		bool Serialize(joeserialize::Serializer & s)
 		{
 			_SERIALIZE_(s,frame);
@@ -164,10 +164,10 @@ private:
 			input_snapshot = value;
 		}
 	};
-	
+
 	//version information
 	REPLAYVERSIONING version_info;
-	
+
 	//serialized
 	std::string track;
 	std::string cartype; //car type, used for loading graphics and sound
@@ -178,7 +178,7 @@ private:
 	float carcolor_b;
 	std::vector <INPUTFRAME> inputframes;
 	std::vector <STATEFRAME> stateframes;
-	
+
 	//not stored in the replay file
 	int frame;
 	enum
@@ -190,7 +190,7 @@ private:
 	std::vector <float> inputbuffer;
 	unsigned int cur_inputframe;
 	unsigned int cur_stateframe;
-	
+
 	//functions
 	void ProcessPlayInputFrame(const INPUTFRAME & frame);
 	void ProcessPlayStateFrame(const STATEFRAME & frame, CAR & car);
@@ -200,22 +200,22 @@ private:
 	void SaveHeader(std::ostream & outstream); ///< write only the header information to the stream
 	void GetReadyToPlay();
 	void GetReadyToRecord();
-	
+
 public:
 	REPLAY(float framerate);
-	
+
 	///< returns true on success
 	bool StartPlaying(
 		const std::string & replayfilename,
 		std::ostream & error_output);
-	
+
 	void StopPlaying();
-	
+
 	///< returns true if the replay system is currently playing
-	bool GetPlaying() const {return (replaymode == PLAYING);} 
-	
+	bool GetPlaying() const {return (replaymode == PLAYING);}
+
 	const std::vector <float> & PlayFrame(CAR & car);
-	
+
 	void StartRecording(
 		const std::string & newcartype,
 		const std::string & newcarpaint,
@@ -223,15 +223,15 @@ public:
 		const PTree & carconfig,
 		const std::string & trackname,
 		std::ostream & error_log);
-	
+
 	///< if replayfilename is empty, do not save the data
 	void StopRecording(const std::string & replayfilename);
-	
+
 	///< returns true if the replay system is currently recording
 	bool GetRecording() const {return (replaymode == RECORDING);}
-	
+
 	void RecordFrame(const std::vector <float> & inputs, CAR & car);
-	
+
 	bool Serialize(joeserialize::Serializer & s);
 
 	std::string GetCarType() const
@@ -253,7 +253,7 @@ public:
 	{
 		return carpaint;
 	}
-	
+
 	void GetCarColor(float & r, float & g, float & b) const
 	{
 		r = carcolor_r;

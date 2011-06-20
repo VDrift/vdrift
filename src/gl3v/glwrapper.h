@@ -34,22 +34,22 @@ class GLWrapper
 		/// this must be called before you can use any other functions from this class
 		/// an already created window reference must be passed in
 		bool initialize();
-		
+
 		/// this allows specification of a stream to send error messages to
 		/// a pointer to the passed value will be kept, and must be valid
 		/// for the lifetime of the object
 		void setErrorOutput(std::ostream & newOutput) {errorOutput = &newOutput;}
-		
+
 		/// this allows specification of a stream to send miscellaneous logging 
 		/// messages to
 		/// a pointer to the passed value will be kept, and must be valid
 		/// for the lifetime of the object
 		void setInfoOutput(std::ostream & newOutput) {infoOutput = &newOutput;}
-		
+
 		/// calls the appropriate glUniform* function immediately
 		void applyUniform(GLint location, const RenderUniformVector <float> & data);
 		void applyUniform(GLint location, const RenderUniformVector <int> & data);
-		
+
 		/// this checks the cache before applying the uniform
 		template <typename T>
 		void applyUniformCached(GLint location, const RenderUniformVector <T> & data)
@@ -57,7 +57,7 @@ class GLWrapper
 			if (!uniformCache(location, data))
 				applyUniform(location, data);
 		}
-		
+
 		/// this accumulates the uniform changes but delays their application until a draw call
 		/// this approach allows for cache-ing and minimization of GL calls
 		template <typename T>
@@ -66,7 +66,7 @@ class GLWrapper
 			if (!uniformCache(location, data))
 				applyUniform(location, data);
 		}
-		
+
 		/// draws a vertex array object
 		void drawGeometry(GLuint vao, GLuint elementCount)
 		{
@@ -74,11 +74,11 @@ class GLWrapper
 			GLLOG(glDrawElements(GL_TRIANGLES, elementCount, GL_UNSIGNED_INT, 0));ERROR_CHECK2(vao,elementCount);
 			/*logOutput("drawGeometry "+UTILS::tostr(vao)+","+UTILS::tostr(elementCount));*/
 		}
-		
+
 		void unbindFramebuffer() {GLLOG(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0));ERROR_CHECK;}
-		
+
 		void unbindTexture(GLenum target) {BindTexture(target,0);}
-		
+
 		/// generate a mipmap
 		void generateMipmaps(GLenum target, GLuint handle)
 		{
@@ -86,21 +86,21 @@ class GLWrapper
 			GLLOG(glGenerateMipmap(target));ERROR_CHECK;
 			unbindTexture(target);ERROR_CHECK;
 		}
-		
+
 		/// create and compile a shader of the given shader type.
 		/// returns true on success.
 		/// puts the generated shader handle into the provided handle variable.
 		bool createAndCompileShader(const std::string & shaderSource, GLenum shaderType, GLuint & handle, std::ostream & shaderErrorOutput);
-		
+
 		/// link a shader program given the specified shaders.
 		/// returns true on success.
 		/// puts the generated shader program handle into the provided handle variable.
 		bool linkShaderProgram(const std::vector <std::string> & shaderAttributeBindings, const std::vector <GLuint> & shaderHandles, GLuint & handle, const std::map <GLuint, std::string> & fragDataLocations, std::ostream & shaderErrorOutput);
-		
+
 		/// relinks a shader program that has previously been linked. does nothing and returns false if handle is zero.
 		/// returns true on success.
 		bool relinkShaderProgram(GLuint handle, std::ostream & shaderErrorOutput);
-		
+
 		// a bunch of OpenGL analogues; some return bools where true means success
 		bool BindFramebuffer(GLuint fbo);
 		void BindFramebufferWithoutValidation(GLuint fbo) {GLLOG(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo));ERROR_CHECK;}
@@ -167,22 +167,22 @@ class GLWrapper
 		void ClearColor(GLfloat r, GLfloat g, GLfloat b, GLfloat a) {GLLOG(glClearColor(r,g,b,a));ERROR_CHECK;}
 		void ClearDepth(GLfloat d) {GLLOG(glClearDepth(d));ERROR_CHECK;}
 		void ClearStencil(GLint s) {GLLOG(glClearStencil(s));ERROR_CHECK;}
-		
-		
+
+
 		/// writes errors to the log
 		/// returns false if there was an error
 		bool checkForOpenGLErrors(const char * function, const char * file, int line) const;
-		
+
 		void logging(bool log) {logEnable = log;}
-		
+
 		GLWrapper() : initialized(false), infoOutput(NULL), errorOutput(NULL), logEnable(false) {clearCaches();}
-		
+
 	private:
 		bool initialized;
 		std::ostream * infoOutput;
 		std::ostream * errorOutput;
 		bool logEnable; // only does anything if logEveryGlCall in glwrapper.cpp is true
-		
+
 		// cached state
 		unsigned int curActiveTexture;
 		std::vector <GLuint> boundTextures;
@@ -190,7 +190,7 @@ class GLWrapper
 		std::vector <RenderUniformVector<int> > cachedUniformInts; // indexed by location
 		std::vector <unsigned int> cachedUniformFloatsToApplyNextDrawCall; // indexed by location
 		std::vector <unsigned int> cachedUniformIntsToApplyNextDrawCall; // indexed by location
-		
+
 		void clearCaches()
 		{
 			curActiveTexture = UINT_MAX;
@@ -198,27 +198,27 @@ class GLWrapper
 			cachedUniformFloats.clear();
 			cachedUniformInts.clear();
 		}
-		
+
 		// notifies the uniform cache of new data; returns true if the new data matches the old data
 		template <typename T>
 		bool uniformCache(GLint location, const RenderUniformVector <T> & data, std::vector <RenderUniformVector<T> > & cache)
 		{
 			bool match = true;
-			
+
 			// if we don't have an entry for this location yet, it's definitely not a match
 			if (location >= (int)cache.size())
 			{
 				match = false;
 				cache.resize(location+1);
 			}
-			
+
 			// look up the cached value
 			RenderUniformVector<T> & cached = cache[location];
-			
+
 			// check if the sizes of the vectors match
 			if (cached.size() != data.size())
 				match = false;
-			
+
 			// if we've passed tests so far, check the values themselves
 			if (match)
 			{
@@ -227,17 +227,17 @@ class GLWrapper
 					match = false;
 				}
 			}
-			
+
 			// update the cached value if it has changed
 			if (!match)
 				cached = data;
-			
+
 			return match;
 		}
 		bool uniformCache(GLint location, const RenderUniformVector <float> & data) {return uniformCache(location, data, cachedUniformFloats);}
 		bool uniformCache(GLint location, const RenderUniformVector <int> & data) {return uniformCache(location, data, cachedUniformInts);}
-		
-		
+
+
 		// logging
 		void logError(const std::string & msg) const;
 		void logOutput(const std::string & msg) const;

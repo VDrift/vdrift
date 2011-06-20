@@ -8,7 +8,7 @@
 struct RenderUniformBase
 {
 	RenderUniformVector <float> data;
-	
+
 	RenderUniformBase() {}
 	RenderUniformBase(const float * newData, int dataSize) : data(newData, dataSize) {}
 	RenderUniformBase(const std::vector <float> & newdata) : data(newdata) {}
@@ -18,7 +18,7 @@ struct RenderUniformBase
 struct RenderUniformEntry : public RenderUniformBase
 {
 	StringId name;
-	
+
 	RenderUniformEntry() {}
 	RenderUniformEntry(StringId newName, const float * newData, int dataSize) : RenderUniformBase(newData, dataSize), name(newName) {}
 };

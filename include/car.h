@@ -20,13 +20,13 @@ class SOUNDMANAGER;
 class MODEL;
 class PTree;
 
-class CAR 
+class CAR
 {
 friend class PERFORMANCE_TESTING;
 friend class joeserialize::Serializer;
 public:
 	CAR();
-	
+
 	bool LoadGraphics(
 		const PTree & cfg,
 		const std::string & carpath,
@@ -43,7 +43,7 @@ public:
 		MODELMANAGER & models,
 		std::ostream & info_output,
 		std::ostream & error_output);
-	
+
 	bool LoadSounds(
 		const std::string & carpath,
 		const std::string & carname,
@@ -51,7 +51,7 @@ public:
 		SOUNDMANAGER & sounds,
 		std::ostream & info_output,
 		std::ostream & error_output);
-	
+
 	bool LoadPhysics(
 		const PTree & cfg,
 		const std::string & carpath,
@@ -64,17 +64,17 @@ public:
 		DynamicsWorld & world,
 		std::ostream & info_output,
 		std::ostream & error_output);
-	
+
 	// change car color
 	void SetColor(float r, float g, float b);
-	
+
 	// will align car relative to track surface
 	void SetPosition(const MATHVECTOR <float, 3> & position);
-	
+
 	void Update(double dt);
 
 	void GetSoundList(std::list <SOUNDSOURCE *> & outputlist);
-	
+
 	void GetEngineSoundList(std::list <SOUNDSOURCE *> & outputlist);
 
 	// interpolated
@@ -94,7 +94,7 @@ public:
 	}
 
 	void HandleInputs(const std::vector <float> & inputs, float dt);
-	
+
 	CAMERA_SYSTEM & Cameras()
 	{
 		return cameras;
@@ -114,12 +114,12 @@ public:
 	{
 		return dynamics.GetTransmission().GetGear();
 	}
-	
+
     void SetGear(int gear)
 	{
 	    dynamics.ShiftGear(gear);
 	}
-	
+
 	float GetClutch()
 	{
 		return dynamics.GetClutch().GetClutch();
@@ -154,7 +154,7 @@ public:
 	{
 		return dynamics.GetTCSActive();
 	}
-	
+
 	/// return the speedometer reading (based on the driveshaft speed) in m/s
 	float GetSpeedometer()
 	{
@@ -191,7 +191,7 @@ public:
 	{
 		return dynamics.GetSpeed();
 	}
-	
+
 	MATHVECTOR <float, 3> GetTotalAero() const
 	{
 		return ToMathVector<float>(dynamics.GetTotalAero());
@@ -201,14 +201,14 @@ public:
 
 	// returns a float from 0.0 to 1.0 with the amount of tire squealing going on
 	float GetTireSquealAmount(WHEEL_POSITION i) const;
-	
+
 	void EnableGlass(bool enable);
 
 	void DebugPrint(std::ostream & out, bool p1, bool p2, bool p3, bool p4) const
 	{
 		dynamics.DebugPrint(out, p1, p2, p3, p4);
 	}
-	
+
 	bool Serialize(joeserialize::Serializer & s);
 
 /// AI interface
@@ -221,19 +221,19 @@ public:
 	{
 		return dynamics.GetEngine().GetStallRPM();
 	}
-	
+
 	// interpoated position
 	MATHVECTOR <float, 3> GetCenterOfMassPosition() const
 	{
 		return ToMathVector<float>(dynamics.GetCenterOfMass());
 	}
-	
+
 	// interpolated position
 	MATHVECTOR <float, 3> GetPosition() const
 	{
 		return ToMathVector<float>(dynamics.GetPosition());
 	}
-	
+
 	// interpolated orientation
 	QUATERNION <float> GetOrientation() const
 	{
@@ -288,16 +288,16 @@ public:
 	}
 
 	SCENENODE & GetNode() {return topnode;}
-	
+
 protected:
 	SCENENODE topnode;
 	CARDYNAMICS dynamics;
-	
+
 	keyed_container<SCENENODE>::handle bodynode;
 	keyed_container<SCENENODE>::handle steernode;
 	keyed_container<DRAWABLE>::handle brakelights;
 	keyed_container<DRAWABLE>::handle reverselights;
-	
+
 	struct LIGHT
 	{
 		keyed_container<SCENENODE>::handle node;
@@ -306,11 +306,11 @@ protected:
 	};
 	std::list<LIGHT> lights;
 	std::list<std::tr1::shared_ptr<MODEL> > modellist;
-	
+
 	SUSPENSIONBUMPDETECTION suspensionbumpdetection[4];
 	CRASHDETECTION crashdetection;
 	CAMERA_SYSTEM cameras;
-	
+
 	std::list<std::pair <ENGINESOUNDINFO, SOUNDSOURCE> > enginesounds;
 	SOUNDSOURCE tiresqueal[WHEEL_POSITION_SIZE];
 	SOUNDSOURCE tirebump[WHEEL_POSITION_SIZE];
@@ -321,16 +321,16 @@ protected:
 	SOUNDSOURCE brakesound;
 	SOUNDSOURCE handbrakesound;
 	SOUNDSOURCE roadnoise;
-	
+
 	int gearsound_check;
 	bool brakesound_check;
 	bool handbrakesound_check;
-	
+
 	// steering wheel
 	QUATERNION<float> steer_orientation;
 	QUATERNION<float> steer_rotation;
 	float steer_angle_max;
-	
+
 	//internal variables that might change during driving (so, they need to be serialized)
 	float last_steer;
 	bool lookbehind;
@@ -338,17 +338,17 @@ protected:
 	std::string cartype;
 	int sector; //the last lap timing sector that the car hit
 	const BEZIER * curpatch[WHEEL_POSITION_SIZE]; //the last bezier patch that each wheel hit
-	
+
 	float applied_brakes; ///< cached so we can update the brake light
-	
+
 	float mz_nominalmax; //the nominal maximum Mz force, used to scale force feedback
-	
+
 	void UpdateSounds(float dt);
-	
+
 	void UpdateCameras(float dt);
-		
+
 	void UpdateGraphics();
-	
+
 	bool LoadLight(
 		const PTree & cfg,
 		MODELMANAGER & models,

@@ -22,7 +22,7 @@ class TEXTURE_INTERFACE
 		virtual bool IsRect() const {return false;}
 		virtual unsigned int GetW() const = 0;
 		virtual unsigned int GetH() const = 0;
-	
+
 	protected:
 		virtual GLuint GetID() const = 0;
 };

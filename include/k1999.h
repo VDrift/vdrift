@@ -42,7 +42,7 @@ private:
 
 public:
 	bool LoadData(ROADSTRIP* road);
-	void CalcRaceLine(); 
+	void CalcRaceLine();
 	void UpdateRoadStrip(ROADSTRIP* road);
 };
 

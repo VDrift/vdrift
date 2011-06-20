@@ -12,7 +12,7 @@ class CARWHEEL
 friend class joeserialize::Serializer;
 public:
 	CARWHEEL() : mass(20) {}
-	
+
 	btScalar GetRotation() const
 	{
 		return shaft.angle;

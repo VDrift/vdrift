@@ -44,23 +44,23 @@ public:
 class RENDER_INPUT_POSTPROCESS : public RENDER_INPUT
 {
 public:
-	RENDER_INPUT_POSTPROCESS() : 
-		shader(NULL), 
-		writealpha(true), 
-		writecolor(true), 
-		writedepth(false), 
-		depth_mode(GL_LEQUAL), 
-		clearcolor(false), 
+	RENDER_INPUT_POSTPROCESS() :
+		shader(NULL),
+		writealpha(true),
+		writecolor(true),
+		writedepth(false),
+		depth_mode(GL_LEQUAL),
+		clearcolor(false),
 		cleardepth(false),
 		blendmode(BLENDMODE::DISABLED),
 		contrast(1.0)
 		{}
-	
+
 	void SetSourceTextures(const std::vector <TEXTURE_INTERFACE*> & textures)
 	{
 		source_textures = textures;
 	}
-	
+
 	void SetShader(SHADER_GLSL * newshader) {shader = newshader;}
 	virtual void Render(GLSTATEMANAGER & glstate, std::ostream & error_output);
 	void SetWriteColor(bool write) {writecolor = write;}
@@ -70,11 +70,11 @@ public:
 	void SetClear(bool newclearcolor, bool newcleardepth) {clearcolor = newclearcolor;cleardepth = newcleardepth;}
 	void SetBlendMode(BLENDMODE::BLENDMODE mode) {blendmode = mode;}
 	void SetContrast ( float value ) {contrast = value;}
-	
+
 	// these are used only to upload uniforms to the shaders
 	void SetCameraInfo(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newrot, float newfov, float newlodfar, float neww, float newh);
 	void SetSunDirection(const MATHVECTOR <float, 3> & newsun) {lightposition = newsun;}
-	
+
 private:
 	std::vector <TEXTURE_INTERFACE*> source_textures;
 	SHADER_GLSL * shader;
@@ -98,7 +98,7 @@ class RENDER_INPUT_SCENE : public RENDER_INPUT
 {
 public:
 	RENDER_INPUT_SCENE();
-	
+
 	void SetDrawLists(std::vector <DRAWABLE*> & dl_dynamic, std::vector <DRAWABLE*> & dl_static)
 	{
 		dynamic_drawlist_ptr = &dl_dynamic;
@@ -152,7 +152,7 @@ private:
 	bool writedepth;
 	bool carpainthack;
 	BLENDMODE::BLENDMODE blendmode;
-	
+
 	void DrawList(GLSTATEMANAGER & glstate, std::vector <DRAWABLE*> & drawlist, bool preculled);
 	bool FrustumCull(DRAWABLE & tocull);
 	void SelectAppropriateShader(DRAWABLE & forme);
@@ -166,21 +166,21 @@ class RENDER_OUTPUT
 {
 public:
 	RENDER_OUTPUT() : target(RENDER_TO_FRAMEBUFFER) {}
-	
+
 	///returns the FBO that the user should set up as necessary
 	FBOBJECT & RenderToFBO()
 	{
 		target = RENDER_TO_FBO;
 		return fbo;
 	}
-	
+
 	void RenderToFramebuffer()
 	{
 		target = RENDER_TO_FRAMEBUFFER;
 	}
-	
+
 	bool IsFBO() const {return target == RENDER_TO_FBO;}
-	
+
 	void Begin(GLSTATEMANAGER & glstate, std::ostream & error_output)
 	{
 		if (target == RENDER_TO_FBO)
@@ -188,13 +188,13 @@ public:
 		else if (target == RENDER_TO_FRAMEBUFFER)
 			glstate.BindFramebuffer(0);
 	}
-	
+
 	void End(GLSTATEMANAGER & glstate, std::ostream & error_output)
 	{
 		if (target == RENDER_TO_FBO)
 			fbo.End(glstate, error_output);
 	}
-	
+
 private:
 	FBOBJECT fbo;
 	enum
