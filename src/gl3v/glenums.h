@@ -23,7 +23,7 @@ class GLEnums
 			#include "glenums.def"
 			#undef X
 		}
-		
+
 		GLenum getEnum(const std::string & value) const
 		{
 			std::tr1::unordered_map <std::string, GLenum>::const_iterator i = strToEnum.find(value);
@@ -45,7 +45,7 @@ class GLEnums
 			}
 			return i->second;
 		}
-	
+
 	private:
 		std::tr1::unordered_map <std::string, GLenum> strToEnum;
 		std::tr1::unordered_map <GLenum, std::string> enumToStr;

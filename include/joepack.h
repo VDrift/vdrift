@@ -17,21 +17,21 @@ class JOEPACK
 {
 public:
 	JOEPACK() : versionstr("JPK01.00") {curfa = fat.end();}
-	
+
 	~JOEPACK() {ClosePack();}
-	
+
 	const std::string & GetPath() const {return packpath;}
-	
+
 	bool LoadPack(const std::string & fn);
-	
+
 	void ClosePack();
-	
+
 	bool Pack_fopen(std::string fn);
-	
+
 	void Pack_fclose();
-	
+
 	int Pack_fread(void * buffer, const unsigned int size, const unsigned int count);
-	
+
 	const std::map <std::string, JOEPACK_FADATA> & GetFAT() const {return fat;}
 
 private:

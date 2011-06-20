@@ -130,7 +130,7 @@ std::vector <std::string> explode(const std::string & toExplode, const std::stri
 	return out;
 }
 
-};
+}
 
 QT_TEST(utils_test)
 {

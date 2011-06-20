@@ -15,32 +15,32 @@ class WIDGET_BUTTON : public WIDGET
 {
 public:
 	WIDGET_BUTTON();
-	
+
 	~WIDGET_BUTTON() {};
-	
+
 	virtual WIDGET * clone() const;
-	
+
 	virtual void SetAlpha(SCENENODE & scene, float newalpha);
-	
+
 	virtual void SetVisible(SCENENODE & scene, bool newvis);
-	
+
 	virtual std::string GetAction() const;
-	
+
 	virtual std::string GetDescription() const;
-	
+
 	virtual void SetDescription(const std::string & newdesc);
-	
+
 	virtual bool GetCancel() const;
-	
+
 	virtual bool ProcessInput(
 		SCENENODE & scene,
 		float cursorx, float cursory,
 		bool cursordown, bool cursorjustup);
-	
+
 	void SetCancel(bool newcancel);
-	
+
 	void SetAction(const std::string & newaction);
-	
+
 	void SetupDrawable(
 		SCENENODE & scene,
 		std::tr1::shared_ptr<TEXTURE> teximage_up,

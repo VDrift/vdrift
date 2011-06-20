@@ -15,7 +15,7 @@ struct GRAPHICS_CONFIG_SHADER
 	std::string name; ///< the name of the shader package
 	std::string folder; ///< the name of the folder where the shader package is
 	std::string defines; ///< space delimited list of #defines to be set
-	
+
 	bool Load(std::istream & f, std::ostream & error_output, int & linecount);
 };
 
@@ -27,10 +27,10 @@ struct GRAPHICS_CONFIG_OUTPUT
 		unsigned int value;
 		unsigned int fb_div;
 		unsigned int fb_mult;
-		
+
 	public:
 		SIZE() : value(0), fb_div(0), fb_mult(0) {}
-		
+
 		unsigned int GetSize(unsigned int framebuffer_size) const
 		{
 			if (value != 0)
@@ -47,7 +47,7 @@ struct GRAPHICS_CONFIG_OUTPUT
 		}
 		void Parse(const std::string & str);
 	};
-	
+
 	std::string name; ///< the name of the output
 	SIZE width; ///< sizes can be absolute numbers, "framebuffer", "framebuffer/X" (where X is an int), or "framebuffer*X"
 	SIZE height;
@@ -57,7 +57,7 @@ struct GRAPHICS_CONFIG_OUTPUT
 	bool mipmap;
 	int multisample; ///< zero indicates no multisampling, any negative number means use the same as the framebuffer (can also specify "framebuffer")
 	GRAPHICS_CONFIG_CONDITION conditions;
-	
+
 	bool Load(std::istream & f, std::ostream & error_output, int & linecount);
 };
 
@@ -65,7 +65,7 @@ struct GRAPHICS_CONFIG_INPUTS
 {
 	/// this maps texture units to output names (to be used as inputs)
 	std::map <unsigned int, std::string> tu;
-	
+
 	/// str should be a space-delimited lists of the form tunumber:outputname where tunumber: is optional
 	void Parse(const std::string & str);
 };
@@ -87,7 +87,7 @@ struct GRAPHICS_CONFIG_PASS
 	std::string blendmode; ///< which blending mode to use: "disabled" "add" "alphablend" "alphablend_premultiplied"
 	std::string depthtest; ///< values: lequal, equal, gequal, disabled
 	GRAPHICS_CONFIG_CONDITION conditions;
-	
+
 	bool Load(std::istream & f, std::ostream & error_output, int & linecount);
 };
 
@@ -96,7 +96,7 @@ struct GRAPHICS_CONFIG
 	std::vector <GRAPHICS_CONFIG_SHADER> shaders;
 	std::vector <GRAPHICS_CONFIG_OUTPUT> outputs;
 	std::vector <GRAPHICS_CONFIG_PASS> passes;
-	
+
 	bool Load(const std::string & filename, std::ostream & error_output)
 	{
 		std::ifstream f(filename.c_str(), std::ifstream::binary); // binary mode to avoid newline/seekg issues
@@ -107,7 +107,7 @@ struct GRAPHICS_CONFIG
 		}
 		return Load(f, error_output);
 	}
-	
+
 	bool Load(std::istream & f, std::ostream & error_output);
 };
 

@@ -13,26 +13,26 @@ class DELAY
 	private:
 		std::vector <float> oldstate;
 		int index;
-		
+
 	public:
 		DELAY(int newdelayticks)
 		{
 			oldstate.resize(newdelayticks+1);
 			Clear(0.0);
 		}
-		
+
 		void Clear(float clearvalue)
 		{
 			for (int i = 0; i < (int)oldstate.size(); i++)
 				oldstate[i] = clearvalue;
-			
+
 			index = 0;
 		}
-		
+
 		float Process(float input)
 		{
 			assert (index < (int)oldstate.size());
-			
+
 			oldstate[index] = input;
 			index++;
 			if (index >= (int)oldstate.size())
@@ -46,10 +46,10 @@ class LOWPASS
 	private:
 		float lastout;
 		float coeff;
-		
+
 	public:
 		LOWPASS(float newcoeff) : coeff(newcoeff) {}
-		
+
 		float Process(float input)
 		{
 			lastout = input*coeff + lastout*(1.0f-coeff);
@@ -67,11 +67,11 @@ class PID
 			iGain, // proportional gain
 			dGain; // derivative gain
 		bool limiting;
-	
+
 	public:
 		PID(float p, float i, float d, bool newlimiting) : dState(0), iState(0), iMax(1), iMin(-1),
 			pGain(p),iGain(i),dGain(d),limiting(newlimiting) {}
-		
+
 		float Process(float error, float position)
 		{
 			float pTerm, dTerm, iTerm;
@@ -89,7 +89,7 @@ class PID
 			dState = position;
 			return pTerm + iTerm - dTerm;
 		}
-		
+
 		void SetState(float init)
 		{
 			iState = init;

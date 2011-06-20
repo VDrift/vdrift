@@ -20,11 +20,11 @@ namespace logging
 
 		public:
 			logstreambuf() {}
-			logstreambuf(const std::string & newprefix) : 
+			logstreambuf(const std::string & newprefix) :
 				prefix(newprefix) {}
-			logstreambuf(const std::string & newprefix, std::ostream & forwardee) : 
+			logstreambuf(const std::string & newprefix, std::ostream & forwardee) :
 				prefix(newprefix) {forwardstream.push_back(&forwardee);}
-			
+
 			std::string str() const
 			{
 				std::string ret;
@@ -36,7 +36,7 @@ namespace logging
 					ret = buffer;
 				return ret;
 			}
-			
+
 			void forward(std::ostream & forwardee)
 			{
 				forwardstream.clear();
@@ -46,16 +46,16 @@ namespace logging
 		protected:
 			virtual int_type overflow(int_type c = traits_type::eof())
 			{
-			
+
 				const std::string::size_type capacity = buffer.capacity();
 				const std::string::size_type max_size = buffer.max_size();
-			
+
 				/*std::cout << "Overflow: \"" << (char)c << "\" (" << (int)c << ")" << std::endl;
 				std::cout << "Capacity: " << capacity << std::endl;
 				std::cout << "pptr: " << this->pptr() - this->pbase() << std::endl;
 				std::cout << "epptr: " << this->epptr() - this->pbase() << std::endl;
 				std::cout << "alignment check: " << this->pbase() - buffer.data() << std::endl;*/
-			
+
 				// Try to append __c into output sequence in one of two ways.
 				// Order these tests done in is unspecified by the standard.
 				const char conv = traits_type::to_char_type(c);
@@ -73,7 +73,7 @@ namespace logging
 					std::string::size_type opt_len = std::max(std::string::size_type(2 * capacity),
 							std::string::size_type(512));
 					if (this->epptr() - this->pbase() < (int) capacity)
-						opt_len = capacity; 
+						opt_len = capacity;
 					const std::string::size_type len = std::min(opt_len, max_size);
 					std::string tmp;
 					tmp.reserve(len);
@@ -91,7 +91,7 @@ namespace logging
 				this->pbump(1);
 				return c;
 			}
-		
+
 			virtual int_type sync()
 			{
 				std::string myoutput = prefix + str();
@@ -100,7 +100,7 @@ namespace logging
 					if (myoutput[i] == '\n')
 						myoutput.insert(i+1,prefix.length(),' ');
 				}
-			
+
 				if (!forwardstream.empty())
 					(**forwardstream.begin()) << myoutput << std::flush;
 				char * newbasep = const_cast<char_type*>(buffer.data());
@@ -122,9 +122,9 @@ namespace logging
 			std::ostream & forwardstream2;
 
 		public:
-			splitterstreambuf (std::ostream & forwardee1, std::ostream & forwardee2) : 
+			splitterstreambuf (std::ostream & forwardee1, std::ostream & forwardee2) :
 				forwardstream1(forwardee1),forwardstream2(forwardee2) {}
-			
+
 			std::string str() const
 			{
 				std::string ret;
@@ -140,16 +140,16 @@ namespace logging
 		protected:
 			virtual int_type overflow(int_type c = traits_type::eof())
 			{
-			
+
 				const std::string::size_type capacity = buffer.capacity();
 				const std::string::size_type max_size = buffer.max_size();
-			
+
 				/*std::cout << "Overflow: \"" << (char)c << "\" (" << (int)c << ")" << std::endl;
 				std::cout << "Capacity: " << capacity << std::endl;
 				std::cout << "pptr: " << this->pptr() - this->pbase() << std::endl;
 				std::cout << "epptr: " << this->epptr() - this->pbase() << std::endl;
 				std::cout << "alignment check: " << this->pbase() - buffer.data() << std::endl;*/
-			
+
 				// Try to append __c into output sequence in one of two ways.
 				// Order these tests done in is unspecified by the standard.
 				const char conv = traits_type::to_char_type(c);
@@ -167,7 +167,7 @@ namespace logging
 					std::string::size_type opt_len = std::max(std::string::size_type(2 * capacity),
 							std::string::size_type(512));
 					if (this->epptr() - this->pbase() < (int)capacity)
-						opt_len = capacity; 
+						opt_len = capacity;
 					const std::string::size_type len = std::min(opt_len, max_size);
 					std::string tmp;
 					tmp.reserve(len);
@@ -185,7 +185,7 @@ namespace logging
 				this->pbump(1);
 				return c;
 			}
-		
+
 			virtual int_type sync()
 			{
 				forwardstream1 << str() << std::flush;
@@ -196,7 +196,7 @@ namespace logging
 				return 0;
 			}
 	};
-	
+
 	class redirect_ostream : public std::ostream
 	{
 		public:
@@ -205,7 +205,7 @@ namespace logging
 			{
 				redirector.forward(newostream);
 			}
-		
+
 		private:
 			logstreambuf redirector;
 	};

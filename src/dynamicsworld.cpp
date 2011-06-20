@@ -283,7 +283,7 @@ void DynamicsWorld::fractureCallback()
 		FractureBody::Connection& connection = body->m_connections[con_id];
 		btScalar damage = connection.m_accImpulse - connection.m_elasticLimit;
 		connection.m_accImpulse = 0;
-		
+
 		if (damage > 0)
 		{
 			// weaken connection

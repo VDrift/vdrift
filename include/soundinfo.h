@@ -6,9 +6,9 @@
 struct SOUNDINFO
 {
 	int samples, frequency, bytespersample, channels;
-	
+
 	SOUNDINFO(int numsamples, int freq, int chan, int bytespersamp) : samples(numsamples), frequency(freq), bytespersample(bytespersamp), channels(chan) { }
-	
+
 	void DebugPrint(std::ostream & out) const
 	{
 		out << "Samples: " << samples << std::endl;
@@ -16,7 +16,7 @@ struct SOUNDINFO
 		out << "Channels: " << channels << std::endl;
 		out << "Bits per sample: " << bytespersample*8 << std::endl;
 	}
-	
+
 	bool operator==(const SOUNDINFO & other) const
 	{
 		return (samples == other.samples &&

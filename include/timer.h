@@ -15,32 +15,32 @@ class TIMER
 {
 public:
 	TIMER() : pretime(0.0), playercarindex(0), loaded(false) {}
-	
+
 	~TIMER() {Unload();}
 
 	bool Load(const std::string & trackrecordspath, float stagingtime, std::ostream & error_output);
-	
+
 	///add a car of the given type and return the integer identifier that the track system will use
 	int AddCar(const std::string & cartype);
-	
+
 	void SetPlayerCarID(int newid) {playercarindex = newid;}
-	
+
 	void Unload();
-	
+
 	bool Staging() const {return (pretime > 0);}
-	
+
 	void Tick(float dt);
-	
+
 	void Lap(const unsigned int carid, const int prevsector, const int nextsector, const bool countit);
-	
+
 	void UpdateDistance(const unsigned int carid, const double newdistance);
-	
+
 	void DebugPrint(std::ostream & out) const;
-	
+
 	float GetPlayerTime() {assert(playercarindex<car.size());return car[playercarindex].GetTime();}
-	
+
 	float GetLastLap() {assert(playercarindex<car.size());return car[playercarindex].GetLastLap();}
-	
+
 	float GetBestLap()
 	{
 		assert(playercarindex<car.size());
@@ -60,48 +60,48 @@ public:
 		else
 			return curbestlap;
 	}
-	
+
 	int GetPlayerCurrentLap() {return GetCurrentLap(playercarindex);}
-	
+
 	int GetCurrentLap(unsigned int index) {assert(index<car.size());return car[index].GetCurrentLap();}
-	
+
 	float GetStagingTimeLeft() const {return pretime;}
 
 	///return the place (first element) out of total (second element)
 	std::pair <int, int> GetCarPlace(int index);
 
 	std::pair <int, int> GetPlayerPlace() {return GetCarPlace(playercarindex);}
-	
+
 	float GetDriftScore(unsigned int index) const
 	{
 		assert(index<car.size());
 		return car[index].GetDriftScore().GetScore();
 	}
-	
+
 	float GetThisDriftScore(unsigned int index) const
 	{
 		assert(index<car.size());
 		return car[index].GetDriftScore().GetThisDriftScore() + car[index].GetDriftScore().GetBonusScore();
 	}
-	
+
 	bool GetIsDrifting(unsigned int index) const
 	{
 		assert(index<car.size());
 		return car[index].GetDriftScore().GetDrifting();
 	}
-	
+
 	void SetIsDrifting(unsigned int index, bool newdrift, bool countthedrift)
 	{
 		assert(index<car.size());
 		car[index].GetDriftScore().SetDrifting(newdrift, countthedrift);
 	}
-	
+
 	void IncrementThisDriftScore(unsigned int index, float incrementamount)
 	{
 		assert(index<car.size());
 		car[index].GetDriftScore().SetThisDriftScore(car[index].GetDriftScore().GetThisDriftScore()+incrementamount);
 	}
-	
+
 	void UpdateMaxDriftAngleSpeed(unsigned int index, float angle, float speed)
 	{
 		assert(index<car.size());
@@ -110,17 +110,17 @@ public:
 		if (speed > car[index].GetDriftScore().GetMaxSpeed())
 			car[index].GetDriftScore().SetMaxSpeed(speed);
 	}
-	
+
 private:
 	class LAPINFO;
 	std::vector <LAPINFO> car;
-	
+
 	CONFIG trackrecords; //the track records configfile
 	std::string trackrecordsfile; //the filename for the track records
 	float pretime; //amount of time left in staging
 	unsigned int playercarindex; //the index for the player's car; defaults to zero
 	bool loaded;
-	
+
 	class LAPTIME
 	{
 	private:
@@ -155,7 +155,7 @@ private:
 			havetime = true;
 		}
 	};
-	
+
 	class DRIFTSCORE
 	{
 	private:
@@ -164,10 +164,10 @@ private:
 		bool drifting;
 		float max_angle;
 		float max_speed;
-	
+
 	public:
 		DRIFTSCORE() : score(0), thisdriftscore(0), drifting(false), max_angle(0), max_speed(0) {}
-		
+
 		void Reset()
 		{
 			score = 0;
@@ -178,7 +178,7 @@ private:
 		{
 			score = value;
 		}
-		
+
 		float GetScore() const
 		{
 			return score;
@@ -192,17 +192,17 @@ private:
 				//std::cout << "Incrementing score: " << score << std::endl;
 			}
 			//else if (!value && drifting) std::cout << "Not scoring: " << countit << ", " << thisdriftscore << std::endl;
-			
+
 			if (!value)
 			{
 				thisdriftscore = 0;
 				max_angle = 0;
 				max_speed = 0;
 			}
-			
+
 			drifting = value;
 		}
-	
+
 		bool GetDrifting() const
 		{
 			return drifting;
@@ -212,7 +212,7 @@ private:
 		{
 			thisdriftscore = value;
 		}
-		
+
 		float GetThisDriftScore() const
 		{
 			return thisdriftscore;
@@ -222,7 +222,7 @@ private:
 		{
 			max_angle = value;
 		}
-	
+
 		void SetMaxSpeed ( float value )
 		{
 			max_speed = value;
@@ -232,18 +232,18 @@ private:
 		{
 			return max_angle;
 		}
-	
+
 		float GetMaxSpeed() const
 		{
 			return max_speed;
 		}
-		
+
 		float GetBonusScore() const
 		{
 			return max_speed / 2.0 + max_angle * 40.0 / 3.141593 + thisdriftscore; //including thisdriftscore here is redundant on purpose to give more points to long drifts
 		}
 	};
-	
+
 	class LAPINFO
 	{
 	private:
@@ -325,7 +325,7 @@ private:
 		{
 			return driftscore;
 		}
-		
+
 		DRIFTSCORE & GetDriftScore()
 		{
 			return driftscore;

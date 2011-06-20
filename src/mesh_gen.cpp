@@ -1524,4 +1524,4 @@ void mg_brake_rotor(VERTEXARRAY & rotor, float diameter_mm, float thickness_mm)
 
 
 
-}; //namespace
+} //namespace

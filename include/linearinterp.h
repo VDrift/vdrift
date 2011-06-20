@@ -18,7 +18,7 @@ public:
 		CONSTANTSLOPE,
   		CONSTANTVALUE
 	};
-	
+
 private:
 	std::vector <std::pair <T, T> > points;
 	mutable T first_slope;
@@ -26,28 +26,28 @@ private:
 	mutable bool slopes_calculated;
 	BOUNDSMODE mode;
 	T empty_value;
-	
+
 	void Calculate() const
 	{
 		size_t n = points.size ();
 		assert (n > 1);
-		
+
 		first_slope = (points[1].second-points[0].second)/(points[1].first-points[0].first);
 		last_slope = (points[n-1].second-points[n-2].second)/(points[n-1].first-points[n-2].first);
-		
+
 		slopes_calculated = true;
 	}
-	
+
 public:
 	LINEARINTERP() : first_slope(0.0), last_slope(0.0), slopes_calculated(false), mode(CONSTANTVALUE), empty_value(0) {}
 	LINEARINTERP(T empty_value_) : first_slope(0.0), last_slope(0.0), slopes_calculated(false), mode(CONSTANTVALUE), empty_value(empty_value_) {} ///< Interpolate will return the given empty_value if no points exist
-	
+
 	void Clear()
 	{
 		points.clear();
 		slopes_calculated = false;
 	}
-	
+
 	void AddPoint(const T x, const T y)
 	{
 		points.push_back(std::pair <T,T> (x,y));
@@ -55,26 +55,26 @@ public:
 		PAIRSORTER_FIRST <T> sorter;
 		std::sort(points.begin(), points.end(), sorter);
 	}
-	
+
 	T Interpolate(T x) const
 	{
 		if (points.empty())
 			return empty_value;
-		
+
 		if (points.size() == 1)
 		{
 			return points[0].second;
 		}
-		
+
 		// calculate() only needs to be called once for a given set of
 		// points.
 		if ( !slopes_calculated )
 			Calculate ();
-		
+
 		size_t low = 0;
 		size_t high = points.size () - 1;
 		size_t index;
-		
+
 		// handle the case where the value is out of bounds
 		if (x > points[high].first)
 		{
@@ -90,7 +90,7 @@ public:
 			else
 				return points[low].second;
 		}
-		
+
 		// Bisect to find the interval that distance is on.
 		while ( ( high - low ) > 1 )
 		{
@@ -100,12 +100,12 @@ public:
 			else
 				low = index;
 		}
-		
+
 		// Make sure that x_high > x_low.
 		const T diff = points [high].first - points [low].first;
 		assert ( diff >= 0.0 );
 		const T diffy = points [high].second - points [low].second;
-		
+
 		return diffy*(x-points[low].first)/diff+points[low].second;
 	}
 
@@ -116,7 +116,7 @@ public:
 	{
 		mode = value;
 	}
-	
+
 };
 
 #endif

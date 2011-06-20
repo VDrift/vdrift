@@ -18,11 +18,11 @@ class ROADPATCH
 {
 public:
 	ROADPATCH() : track_curvature(0) {}
-	
+
 	const BEZIER & GetPatch() const {return patch;}
-	
+
 	BEZIER & GetPatch() {return patch;}
-	
+
 	///return true if the ray starting at the given origin going in the given direction intersects this patch.
 	/// output the contact point and normal to the given outtri and normal variables.
 	bool Collide(
@@ -53,13 +53,13 @@ public:
 		patch.racing_line = value;
 		patch.have_racingline = true;
 	}
-	
+
 	void AddRacinglineScenenode(
 		SCENENODE & node,
-		ROADPATCH * nextpatch, 
+		ROADPATCH * nextpatch,
 		std::tr1::shared_ptr<TEXTURE> racingline_texture,
 		std::ostream & error_output);
-	
+
 private:
 	BEZIER patch;
 	float track_curvature;

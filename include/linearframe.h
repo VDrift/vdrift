@@ -89,26 +89,26 @@ public:
 		force.Set(0.0);
 		halfstep = true;
 	}
-	
+
 	/// both steps must be executed each frame and forces must be set between steps 1 and 2
 	void Integrate2(const T & dt)
 	{
 		assert(halfstep);
-		
+
 #ifdef VELOCITYVERLET
 		momentum = momentum + force * dt * 0.5;
 #endif
-		
+
 #ifdef NSV
 		momentum = momentum + force * dt;
 		position = position + momentum * inverse_mass * dt;
 #endif
-		
+
 #ifdef EULER
 		position = position + momentum * inverse_mass * dt;
 		momentum = momentum + force * dt;
 #endif
-		
+
 #ifdef SUVAT
 		position = position + momentum * inverse_mass * dt + force * inverse_mass * dt * dt * 0.5;
 		momentum = momentum + force * dt;
@@ -116,7 +116,7 @@ public:
 
 		halfstep = false;
 	}
-	
+
 	bool Serialize(joeserialize::Serializer & s)
 	{
 		_SERIALIZE_(s, position);
@@ -130,13 +130,13 @@ private:
 	MATHVECTOR <T, 3> position;
 	MATHVECTOR <T, 3> momentum;
 	MATHVECTOR <T, 3> force;
-	
+
 	//constants
 	T inverse_mass;
-	
+
 	//housekeeping
 	bool halfstep;
-	
+
 	MATHVECTOR <T, 3> GetVelocityFromMomentum(const MATHVECTOR <T, 3> & moment) const
 	{
 		return moment * inverse_mass;

@@ -29,7 +29,7 @@ class HUDBAR
 		{
 			draw = parent.GetDrawlist().twodim.insert(DRAWABLE());
 			DRAWABLE & drawref = parent.GetDrawlist().twodim.get(draw);
-			
+
 			drawref.SetDiffuseMap(bartex);
 			drawref.SetVertArray(&verts);
 			drawref.SetCull(false, false);
@@ -54,7 +54,7 @@ public:
 	bool Init(
 		const std::string & texturepath,
 		const std::string & texsize,
-		TEXTUREMANAGER & textures, 
+		TEXTUREMANAGER & textures,
 		FONT & lcdfont,
 		FONT & sansfont,
 		float displaywidth,
@@ -85,9 +85,9 @@ public:
 		SCENENODE & debugnoderef = hudroot.GetNode(debugnode);
 		debugnoderef.SetChildVisibility(show);
 	}
-	
+
 	SCENENODE & GetNode() {return hudroot;}
-	
+
 private:
 	TEXTURE bartex;
 	SCENENODE hudroot;
@@ -143,7 +143,7 @@ private:
 	bool debug_hud_info;
 
 	bool racecomplete;
-	
+
 	bool lastvisible;
 
 	void SetVisible(bool newvis)

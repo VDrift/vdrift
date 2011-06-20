@@ -23,72 +23,72 @@ private:
 public:
 	VERTEXARRAY() {}
 	~VERTEXARRAY() {Clear();}
-	
+
 	VERTEXARRAY operator+ (const VERTEXARRAY & v) const;
 
 	void Clear() {texcoords.clear();normals.clear();vertices.clear();faces.clear();}
-	
+
 	void SetNormals(float * newarray, size_t newarraycount);
 	void SetVertices(float * newarray, size_t newarraycount);
 	void SetFaces(int * newarray, size_t newarraycount);
 	void SetTexCoordSets(int newtcsets);
 	void SetTexCoords(size_t set, float * newarray, size_t newarraycount); ///<set is zero indexed
-	
+
 	void Add(float * newnorm, int newnormcount, float * newvert, int newvertcount, int * newfaces, int newfacecount,
 		float * newtc, int newtccount); ///< assumes there is 1 tex coord set
-	
+
 	//C style interface functions
 	void GetNormals(const float * & output_array_pointer, int & output_array_num) const;
 	void GetVertices(const float * & output_array_pointer, int & output_array_num) const;
 	void GetFaces(const int * & output_array_pointer, int & output_array_num) const;
 	inline int GetTexCoordSets() const {return texcoords.size();}
 	void GetTexCoords(size_t set, const float * & output_array_pointer, int & output_array_num) const;
-	
+
 	//C++ style interface functions
 	inline int GetNumFaces() const {return faces.size();}
 	///array bounds are not checked
 	inline std::vector <float> GetVertex(int face_number, int vertex_number) const
 	{
 		std::vector <float> v3(3);
-		
+
 		for (int i = 0; i < 3; i++)
 			v3[i] = vertices[faces[face_number*3+vertex_number]*3+i];
-		
+
 		return v3;
 	}
 	///array bounds are not checked
 	inline std::vector <float> GetNormal(int face_number, int vertex_number) const
 	{
 		std::vector <float> n3(3);
-		
+
 		for (int i = 0; i < 3; i++)
 			n3[i] = normals[faces[face_number*3+vertex_number]*3+i];
-		
+
 		return n3;
 	}
 	///array bounds are not checked
 	inline std::vector <float> GetTextureCoordinate(int face_number, int vertex_number, int tc_set) const
 	{
 		std::vector <float> t2(2);
-		
+
 		for (int i = 0; i < 2; i++)
 			t2[i] = texcoords[tc_set][faces[face_number*3+vertex_number]*2+i];
-		
+
 		return t2;
 	}
-	
+
 	void SetToBillboard(float x1, float y1, float x2, float y2);
-	
+
 	void SetTo2DButton(float x, float y, float w, float h, float sidewidth, bool flip=false);
-	
+
 	void SetTo2DBox(float x, float y, float w, float h, float marginwidth, float marginheight, float clipx=1.f);
-	
+
 	void SetTo2DQuad(float x1, float y1, float x2, float y2, float u1, float v1, float u2, float v2, float z);
-	
+
 	void SetVertexData2DQuad(float x1, float y1, float x2, float y2, float u1, float v1, float u2, float v2, float * vcorners, float * uvs, int * bfaces, int faceoffset=0) const;
-	
+
 	void SetToUnitCube();
-	
+
 	bool Serialize(joeserialize::Serializer & s)
 	{
 		_SERIALIZE_(s,vertices);
@@ -97,7 +97,7 @@ public:
 		_SERIALIZE_(s,faces);
 		return true;
 	}
-	
+
 	///build the vertex array given the faces defined by the verts, normals, and texcoords passed in
 	class TRIFLOAT
 	{
@@ -118,11 +118,11 @@ public:
 		public:
 			VERTEXDATA() {}
 			VERTEXDATA(TRIFLOAT nv, TRIFLOAT nn, TWOFLOAT nt) : vertex(nv), normal(nn), texcoord(nt) {}
-			
+
 			TRIFLOAT vertex;
 			TRIFLOAT normal;
 			TWOFLOAT texcoord;
-			
+
 			bool operator<(const VERTEXDATA & other) const
 			{
 				if (vertex.x != other.vertex.x)

@@ -26,7 +26,7 @@ class FBTEXTURE : public TEXTURE_INTERFACE
 			RECTANGLE = GL_TEXTURE_RECTANGLE,
 			CUBEMAP = GL_TEXTURE_CUBE_MAP
 		};
-		
+
 		enum CUBE_SIDE
 		{
 			POSX = GL_TEXTURE_CUBE_MAP_POSITIVE_X,
@@ -36,7 +36,7 @@ class FBTEXTURE : public TEXTURE_INTERFACE
 			POSZ = GL_TEXTURE_CUBE_MAP_POSITIVE_Z,
 			NEGZ = GL_TEXTURE_CUBE_MAP_NEGATIVE_Z
 		};
-		
+
 		enum FORMAT
 		{
 			LUM8 = GL_LUMINANCE8,
@@ -46,8 +46,8 @@ class FBTEXTURE : public TEXTURE_INTERFACE
 			RGBA16 = GL_RGBA16,
 			DEPTH24 = GL_DEPTH_COMPONENT24
 		};
-		
-		FBTEXTURE() : 
+
+		FBTEXTURE() :
 			fbtexture(0),
 			renderbuffer_multisample(0),
 			inited(false),
@@ -73,17 +73,17 @@ class FBTEXTURE : public TEXTURE_INTERFACE
 		virtual unsigned int GetW() const {return sizew;}
 		virtual unsigned int GetH() const {return sizeh;}
 		bool IsCubemap() const {return (texture_target == CUBEMAP);}
-		
+
 	protected:
 		virtual GLuint GetID() const {return fbtexture;}
-		
+
 	private:
 		GLuint fbtexture;
 		GLuint renderbuffer_multisample;
 		bool inited;
 		bool attached;
 		int sizew, sizeh;
-		
+
 		TARGET texture_target;
 		bool mipmap;
 		int multisample;

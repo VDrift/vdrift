@@ -18,26 +18,26 @@ class WIDGET_CONTROLGRAB : public WIDGET
 {
 public:
 	WIDGET_CONTROLGRAB() {};
-	
+
 	~WIDGET_CONTROLGRAB();
-	
+
 	virtual WIDGET * clone() const;
-	
+
 	virtual void SetAlpha(SCENENODE & scene, float newalpha);
-	
+
 	virtual void SetVisible(SCENENODE & scene, bool newvis);
-	
+
 	virtual std::string GetAction() const;
-	
+
 	virtual std::string GetDescription() const;
-	
+
 	virtual void SetDescription(const std::string & newdesc);
-	
+
 	virtual bool ProcessInput(
 		SCENENODE & scene,
 		float cursorx, float cursory,
 		bool cursordown, bool cursorjustup);
-	
+
 	void SetupDrawable(
 		SCENENODE & scene,
 		const CONFIG & c,
@@ -52,14 +52,14 @@ public:
 		bool newanalog,
 		bool newonly_one,
 		float newz = 0);
-	
+
 	void LoadControls(SCENENODE & parent, const CONFIG & c, const FONT & font);
-	
+
 	keyed_container <SCENENODE>::handle GetNode()
 	{
 		return topnode;
 	}
-	
+
 	enum CONTROLTEXTURE
 	{
 		ADD,
@@ -74,7 +74,7 @@ public:
 		MOUSESEL,
 		END
 	};
-	
+
 	// awfull widget description hack
 	enum STRING
 	{
@@ -93,12 +93,12 @@ public:
 		END_STR
 	};
 	static std::string Str[END_STR];
-	
+
 private:
 	struct CONTROLWIDGET
 	{
 		CONTROLWIDGET();
-		
+
 		WIDGET_BUTTON widget;
 		std::string type;
 		std::string name;
@@ -118,7 +118,7 @@ private:
 		float exponent;
 		float gain;
 	};
-	
+
 	WIDGET_LABEL label;
 	WIDGET_BUTTON addbutton;
 	std::list <CONTROLWIDGET> controlbuttons;

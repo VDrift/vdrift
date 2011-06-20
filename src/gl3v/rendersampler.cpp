@@ -6,6 +6,6 @@ void RenderSampler::apply(GLWrapper & gl) const
 	{
 		s->applySampler(gl, handle);
 	}
-	
+
 	gl.BindSampler(tu, handle);
 }

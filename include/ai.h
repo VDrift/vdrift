@@ -28,22 +28,22 @@ struct AI_Car
 	const BEZIER * last_patch; ///<last patch the car was on, used in case car is off track
 	bool use_racingline; ///<true allows the AI to take a proper racing line
 	float difficulty;
-	
+
 	///the vector is indexed by CARINPUT values
 	std::vector <float> inputs;
-	
+
 	struct OTHERCARINFO
 	{
 		OTHERCARINFO() : active(false) {}
-		
+
 		float horizontal_distance;
 		float fore_distance;
 		float eta;
 		bool active;
 	};
-	
+
 	std::map <const CAR *, OTHERCARINFO> othercars;
-	
+
 	//for debug visualization
 	keyed_container <DRAWABLE>::handle brakedraw;
 	keyed_container <DRAWABLE>::handle steerdraw;
@@ -59,18 +59,18 @@ private:
 	struct PATH_REVISION
 	{
 		PATH_REVISION() : trimleft_front(0), trimright_front(0), trimleft_back(0), trimright_back(0), car_pos_along_track(0) {}
-		
+
 		float trimleft_front;
 		float trimright_front;
 		float trimleft_back;
 		float trimright_back;
 		float car_pos_along_track;
 	};
-	
+
 	std::map <const CAR *, PATH_REVISION> path_revisions;
-	
+
 	SCENENODE topnode;
-	
+
 	std::vector <float> empty_vector;
 	std::vector <AI_Car> AI_Cars;
 	void updateGasBrake(AI_Car *c, float dt, TRACK* track_p, const std::list <CAR> & othercars);

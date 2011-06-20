@@ -20,9 +20,9 @@ struct file_open
 struct file_open_basic : file_open
 {
 	std::string path, path_alt;
-	
+
 	file_open_basic(const std::string & path, const std::string & path_alt);
-	
+
 	std::istream * operator()(const std::string & name) const;
 };
 
@@ -75,26 +75,26 @@ public:
 	typedef std::map<std::string, PTree> map;
 	typedef map::const_iterator const_iterator;
 	typedef map::iterator iterator;
-	
+
 	PTree() : _parent(0) {}
-	
+
 	PTree(const std::string & value) : _value(value), _parent(0) {}
-	
+
 	const_iterator begin() const
 	{
 		return _children.begin();
 	}
-	
+
 	const_iterator end() const
 	{
 		return _children.end();
 	}
-	
+
 	int size() const
 	{
 		return _children.size();
 	}
-	
+
 	// depth first traversal
 	template <class T> void forEachRecursive(T & functor) const
 	{
@@ -104,22 +104,22 @@ public:
 			i->second.forEachRecursive(functor);
 		}
 	}
-	
+
 	const std::string & value() const
 	{
 		return _value;
 	}
-	
+
 	std::string & value()
 	{
 		return _value;
 	}
-	
+
 	const PTree * parent() const
 	{
 		return _parent;
 	}
-	
+
 	template <typename T> bool get(const std::string & key, T & value) const
 	{
 		size_t next = key.find(".");
@@ -135,14 +135,14 @@ public:
 		}
 		return false;
 	}
-	
+
 	template <typename T> bool get(const std::string & key, T & value, std::ostream & error) const
 	{
 		if (get(key, value))
 		{
 			return true;
 		}
-		
+
 		// error output
 		std::string full_key = key;
 		const PTree * parent = this;
@@ -152,10 +152,10 @@ public:
 			parent = parent->_parent;
 		}
 		error << full_key << " not found." << std::endl;
-		
+
 		return false;
 	}
-	
+
 	template <typename T> PTree & set(const std::string & key, const T & value)
 	{
 		size_t next = key.find(".");
@@ -172,27 +172,27 @@ public:
 		p._value = i->first; // store node key for error reporting
 		return p.set(key.substr(next), value);
 	}
-	
+
 	void clear()
 	{
 		_children.clear();
 	}
-	
+
 	void read(std::istream & in, void (&read)(std::istream &, PTree &) = read_ini)
 	{
 		read(in, *this);
 	}
-	
+
 	void write(std::ostream & out, void (&write)(const PTree &, std::ostream &) = write_ini) const
 	{
 		write(*this, out);
 	}
-	
+
 private:
 	std::string _value;
 	map _children;
 	const PTree * _parent;
-	
+
 	template <typename T> void _get(const PTree & p, T & value) const
 	{
 		std::stringstream s(p._value);

@@ -7,19 +7,19 @@ class SUSPENSIONBUMPDETECTION
 {
 public:
 	SUSPENSIONBUMPDETECTION();
-	
-	void Update(float vel, float displacementpercent, float dt);	
-	
+
+	void Update(float vel, float displacementpercent, float dt);
+
 	bool JustDisplaced() const
 	{
 		return (state == DISPLACED && laststate != DISPLACED);
 	}
-	
+
 	bool JustSettled() const
 	{
 		return (state == SETTLED && laststate != SETTLED);
 	}
-	
+
 	float GetTotalBumpSize() const
 	{
 		return dpend - dpstart;
@@ -34,12 +34,12 @@ private:
 		SETTLING,
 		SETTLED
 	} state, laststate;
-	
+
 	const float displacetime; ///< how long the suspension has to be displacing a high velocity, uninterrupted
 	const float displacevelocitythreshold; ///< the threshold for high velocity
 	const float settletime; ///< how long the suspension has to be settled, uninterrupted
 	const float settlevelocitythreshold;
-	
+
 	float displacetimer;
 	float settletimer;
 	float dpstart, dpend;
