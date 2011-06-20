@@ -18,7 +18,7 @@ class myclass
 		void operator() (const std::string & s) {sum += s.length();}//std::cout << sum << ", " << s.length() << std::endl;}
 };
 bool starts_with_1(const std::string & s) {return (s[0] == '1');}
-};
+}
 
 std::ostream & operator << (std::ostream &os, const vector <string> & v)
 {

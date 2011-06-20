@@ -70,6 +70,6 @@ std::string implode(const T & toImplode, const std::string & sep)
 
 std::vector <std::string> explode(const std::string & toExplode, const std::string & sep);
 
-};
+}
 
 #endif
