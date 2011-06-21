@@ -4,7 +4,7 @@
 #include <string>
 #include <ostream>
 
-class SDL_Surface;
+struct SDL_Surface;
 
 class WINDOW_SDL
 {

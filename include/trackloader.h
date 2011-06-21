@@ -35,7 +35,6 @@ class MODELMANAGER;
 class btStridingMeshInterface;
 class btCompoundShape;
 class btCollisionShape;
-class SDL_Thread;
 
 class TRACK::LOADER
 {
@@ -126,9 +125,6 @@ private:
 	PTree track_config;
 	const PTree * nodes;
 	PTree::const_iterator node_it;
-
-	// loader thread
-	SDL_Thread * thread;
 
 	bool LoadParameters();
 
