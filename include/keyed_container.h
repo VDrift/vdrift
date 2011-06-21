@@ -18,7 +18,7 @@ class keyed_container_handle
 {
 template <typename> friend class keyed_container;
 friend class joeserialize::Serializer;
-friend class keyed_container_hash;
+friend struct keyed_container_hash;
 private:
 	typedef int INDEX;
 	typedef int DATAVERSION;

@@ -4,7 +4,7 @@
 #include "manager.h"
 
 class SOUNDBUFFER;
-class SOUNDINFO;
+struct SOUNDINFO;
 
 class SOUNDMANAGER : public MANAGER<SOUNDBUFFER>
 {

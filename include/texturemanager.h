@@ -4,7 +4,7 @@
 #include "manager.h"
 
 class TEXTURE;
-class TEXTUREINFO;
+struct TEXTUREINFO;
 
 class TEXTUREMANAGER : public MANAGER<TEXTURE>
 {

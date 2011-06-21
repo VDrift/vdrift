@@ -11,7 +11,7 @@
 
 class TEXTUREMANAGER;
 class TEXTURE;
-class SDL_Surface;
+struct SDL_Surface;
 
 class TRACKMAP
 {
