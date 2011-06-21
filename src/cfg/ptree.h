@@ -26,6 +26,37 @@ struct file_open_basic : file_open
 	std::istream * operator()(const std::string & name) const;
 };
 
+// stream operator for a vector of values
+template <typename T>
+std::istream & operator>>(std::istream & stream, std::vector<T> & out)
+{
+	if (out.size() > 0)
+	{
+		// set vector
+		for (size_t i = 0; i < out.size() && !stream.eof(); ++i)
+		{
+			std::string str;
+			std::getline(stream, str, ',');
+			std::stringstream s(str);
+			s >> out[i];
+		}
+	}
+	else
+	{
+		// fill vector
+		while (stream.good())
+		{
+			std::string str;
+			std::getline(stream, str, ',');
+			std::stringstream s(str);
+			T value;
+			s >> value;
+			out.push_back(value);
+		}
+	}
+  return stream;
+}
+
 /*
 # ini format
 key1 = value1
@@ -231,36 +262,6 @@ template <> inline PTree & PTree::set(const std::string & key, const PTree & val
 		return p;
 	}
 	return p.set(std::string(next+1, key.end()), PTree());
-}
-
-template <typename T>
-std::istream & operator>>(std::istream & stream, std::vector<T> & out)
-{
-	if (out.size() > 0)
-	{
-		// set vector
-		for (size_t i = 0; i < out.size() && !stream.eof(); ++i)
-		{
-			std::string str;
-			std::getline(stream, str, ',');
-			std::stringstream s(str);
-			s >> out[i];
-		}
-	}
-	else
-	{
-		// fill vector
-		while (stream.good())
-		{
-			std::string str;
-			std::getline(stream, str, ',');
-			std::stringstream s(str);
-			T value;
-			s >> value;
-			out.push_back(value);
-		}
-	}
-  return stream;
 }
 
 #endif //_PTREE_H
