@@ -1,5 +1,6 @@
 .sconsign.dblite
 config.log
+compile.log
 include/definitions.h
 vdrift.conf
 .sconf_temp/
