@@ -385,8 +385,8 @@ if ( 'win32' == sys.platform or 'cygwin' == sys.platform ):
     env['data_directory'] = "./data"
     env['settings'] = "VDrift"
     cppdefines.append(("DATA_DIR", '"%s"' % env['data_directory']))
-elif ('darwin' == env['PLATFORM']):
-    cppdefines.append(("DATA_DIR", "get_mac_data_dir()"))
+#elif ('darwin' == env['PLATFORM']):
+    #cppdefines.append(("DATA_DIR", "get_mac_data_dir()"))
 else:
     temp = env['prefix'] + '/' + env['datadir']
     cppdefines.append(("DATA_DIR", '"%s"' % temp))
