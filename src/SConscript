@@ -281,7 +281,7 @@ elif ( 'darwin' == sys.platform ):
     pkgsrc = "../tools/osx"
 
     common_libs.append( 'SDL' )
-    common_libs.append( 'GLExtensionWrangler' )
+    common_libs.append( 'GLEW' )
     def batch_copy( target, source, env): 
         # Do a mini svn export... this funtion could possibly
         # be useful in general ( as a builder ), but I don't 

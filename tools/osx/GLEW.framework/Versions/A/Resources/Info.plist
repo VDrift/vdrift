@@ -7,13 +7,13 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
-	<string>SDL_gfx</string>
+	<string>GLEW</string>
 	<key>CFBundleIdentifier</key>
-	<string>com.SDL.SDL-gfx</string>
+	<string>com.SDL.GLEW</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>SDL_gfx</string>
+	<string>GLEW</string>
 	<key>CFBundlePackageType</key>
 	<string>FMWK</string>
 	<key>CFBundleShortVersionString</key>

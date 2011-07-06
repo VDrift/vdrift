@@ -9,7 +9,7 @@
 #include "graphics_config.h"
 
 #ifdef __APPLE__
-#include <GLExtensionWrangler/glew.h>
+#include <GLEW/glew.h>
 #include <OpenGL/gl.h>
 #include <OpenGL/glu.h>
 #else
