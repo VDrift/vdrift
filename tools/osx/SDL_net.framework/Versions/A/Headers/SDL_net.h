@@ -20,7 +20,7 @@
     slouken@libsdl.org
 */
 
-/* $Id: SDL_net.h 1428 2004-09-17 13:36:16Z slouken $ */
+/* $Id: SDL_net.h 3281 2007-07-15 05:58:56Z slouken $ */
 
 #ifndef _SDL_NET_H
 #define _SDL_NET_H
@@ -41,7 +41,7 @@ extern "C" {
 */
 #define SDL_NET_MAJOR_VERSION	1
 #define SDL_NET_MINOR_VERSION	2
-#define SDL_NET_PATCHLEVEL	6
+#define SDL_NET_PATCHLEVEL	7
 
 /* This macro can be used to fill a version structure with the compile-time
  * version of the SDL_net library.

@@ -4,6 +4,7 @@
 config.log
 vdrift.conf
 build/
+bullet/
 data/
 include/.DS_Store
 include/definitions.h
