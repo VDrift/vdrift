@@ -7,4 +7,4 @@ build/
 data/
 tools/osx/vdrift.xcodeproj/project.xcworkspace/
 tools/osx/vdrift.xcodeproj/xcuserdata/
-
+*~
