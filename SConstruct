@@ -334,6 +334,7 @@ Note: The options you enter will be saved in the file vdrift.conf and they will 
 #--------------------------#
 # Check for Libs & Headers #
 #--------------------------#
+env.ParseConfig('pkg-config bullet --libs --cflags')
 conf = Configure(env)
 for header in check_headers:
     if not conf.CheckCXXHeader(header):

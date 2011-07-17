@@ -203,7 +203,6 @@ else:
     local_env.Append(LIBPATH = ['/usr/X11R6/lib'])
     libs_link = ['GL', 'GLU', 'GLEW', 'pthread', common_libs]
 
-local_env.ParseConfig('pkg-config bullet --libs --cflags')
 local_env.Append(LIBS = libs_link)
 
 #-----------------------#
