@@ -308,7 +308,7 @@ elif ( 'darwin' == sys.platform ):
             '%s/vdrift.icns' % pkgsrc,
             Copy( '$TARGET', '$SOURCE') ),
         [ local_env.WorkingExport( '%s/Frameworks' % pkgbase, s ) for s in
-            build_list( '%s/%%s.framework' % pkgsrc, common_libs ) ] ] ) 
+            build_list( '%s/Frameworks/%%s.framework' % pkgsrc, common_libs ) ] ] ) 
         #local_env.Command(
         #    build_list( '%s/Frameworks/%%s.framework' % pkgbase, common_libs  ),
         #    build_list( '%s/%%s.framework' % pkgsrc, common_libs ),

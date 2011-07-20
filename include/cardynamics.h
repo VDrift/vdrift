@@ -17,6 +17,11 @@
 #include "motionstate.h"
 #include "joeserialize.h"
 #include "BulletDynamics/Dynamics/btActionInterface.h"
+#ifdef __APPLE__
+#include "BulletCollision/btBulletCollisionCommon.h"
+#else
+#include "btBulletCollisionCommon.h"
+#endif
 #include "LinearMath/btAlignedObjectArray.h"
 
 #ifdef _MSC_VER
