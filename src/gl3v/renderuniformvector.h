@@ -53,7 +53,7 @@ class RenderUniformVector
 			assert(newSize < MAXUNIFORMSIZE);
 			#endif
 			curSize = newSize;
-			std::memcpy(data,newdata,sizeof(T)*16);
+			std::memcpy(data,newdata,sizeof(T)*curSize);
 		}
 
 		inline void Set(const RenderUniformVector & other)
