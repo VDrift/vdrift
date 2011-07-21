@@ -48,8 +48,10 @@ btRigidBody* FractureBody::updateConnection(int shape_id)
 	btAssert(shape_id >= 0);
 	if (shape_id >= compound->getNumChildShapes())
 	{
-		std::cerr << "Trying to remove shape " << shape_id << std::endl;
-		std::cerr << "Number of shapes " << compound->getNumChildShapes() << std::endl;
+#ifdef DEBUG
+		std::cerr << "Trying to fracture child shape " << shape_id << std::endl;
+		std::cerr << "Number of child shapes " << compound->getNumChildShapes() << std::endl;
+#endif
 		return 0;
 	}
 
