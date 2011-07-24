@@ -330,7 +330,7 @@ std::string HTTPINFO::FormatSpeed(double bytes)
 	return s.str();
 }
 
-std::string HTTP::GetDownloadPath(const std::string & url)
+std::string HTTP::GetDownloadPath(const std::string & url) const
 {
 	return folder+"/"+ExtractFilenameFromUrl(url);
 }

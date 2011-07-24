@@ -36,6 +36,7 @@
 #include "graphics_gl3v.h"
 #include "cfg/ptree.h"
 #include "svn_sourceforge.h"
+#include "game_downloader.h"
 
 #include <fstream>
 #include <string>
@@ -89,7 +90,7 @@ GAME::GAME(std::ostream & info_out, std::ostream & error_out) :
 	textures(error_out),
 	models(error_out),
 	sounds(error_out),
-	car_manager_cur_car(0),
+	updater(info_out, error_out),
 	graphics_interface(NULL),
 	enableGL3(true),
 	usingGL3(false),
@@ -162,14 +163,15 @@ void GAME::Start(std::list <std::string> & args)
 	}
 	
 	// Load update information
-	if (!update_manager.Load(pathmanager.GetUpdateManagerFile()))
+	if (!updater.Init(pathmanager.GetUpdateManagerFileBase(), pathmanager.GetUpdateManagerFile(), pathmanager.GetUpdateManagerFileBackup()))
 	{
-		info_output << "Update status file " << pathmanager.GetUpdateManagerFile() << " will be created" << std::endl;
-		
-		if (!update_manager.Load(pathmanager.GetUpdateManagerFileBase()))
-		{
-			error_output << "Unable to load update manager base file: " << pathmanager.GetUpdateManagerFileBase() << "; updates will start from scratch" << std::endl;
-		}
+		// non-fatal error, just log it
+		error_output << "Update manager failed to initialize; this error is not fatal" << std::endl;
+	}
+	else
+	{
+		// send GUI value lists to the updater so it knows about the cars/tracks on disk
+		PopulateValueLists(updater.GetValueLists());
 	}
 
 	// If sound initialization fails, that's okay, it'll disable itself...
@@ -1396,22 +1398,22 @@ void GAME::ProcessGUIAction(const std::string & action)
 	}
 	else if (action == "StartCheckForUpdates")
 	{
-		StartCheckForUpdates();
+		updater.StartCheckForUpdates(GAME_DOWNLOADER(*this, http), gui);
 	}
 	else if (action == "StartCarManager")
 	{
-		car_manager_cur_car = 0;
-		ShowCarManager();
+		updater.ResetCarManager();
+		updater.ShowCarManager(gui);
 	}
 	else if (action == "CarManagerNext")
 	{
-		car_manager_cur_car++;
-		ShowCarManager();
+		updater.IncrementCarManager();
+		updater.ShowCarManager(gui);
 	}
 	else if (action == "CarManagerPrev")
 	{
-		car_manager_cur_car--;
-		ShowCarManager();
+		updater.DecrementCarManager();
+		updater.ShowCarManager(gui);
 	}
 	else if (action == "StartDataManager")
 	{
@@ -2452,6 +2454,16 @@ void GAME::LoadingScreen(float progress, float max, bool drawGui, const std::str
 	window.SwapBuffers(error_output);
 }
 
+bool GAME_DOWNLOADER::operator()(const std::string & file)
+{
+	return game.Download(file);
+}
+
+bool GAME_DOWNLOADER::operator()(const std::vector <std::string> & urls)
+{
+	return game.Download(urls);
+}
+
 bool GAME::Download(const std::string & file)
 {
 	std::vector <std::string> files;
@@ -2679,129 +2691,3 @@ bool GAME::LastStartWasSuccessful() const
 	return !pathmanager.FileExists(pathmanager.GetStartupFile());
 }
 
-void GAME::StartCheckForUpdates()
-{
-	const bool verbose = true;
-	
-	gui.ActivatePage("Downloading", 0.25, error_output);
-
-	// download the SVN folder views to a temporary folder
-	std::string group = "cars";
-	// TODO: track support
-	SVN_SOURCEFORGE svn;
-	std::string url = svn.GetCarFolderUrl();
-	bool success = Download(url);
-
-	if (success)
-	{
-		// get the downloaded page
-		info_output << "Checking for updates..." << std::endl;
-		std::string page = UTILS::LoadFileIntoString(http.GetDownloadPath(url), error_output);
-		std::map <std::string, int> res = svn.ParseFolderView(page);
-		
-		// check the current SVN picture against what's in our update manager to find things we can update
-		update_manager.SetAvailableUpdates(group, res);
-		std::pair <std::vector <std::string>,std::vector <std::string> > updates = update_manager.CheckUpdate(group);
-		info_output << "Updates: " << updates.first.size() << " update(s), " << updates.second.size() << " deletion(s) found" << std::endl;
-		if (verbose)
-		{
-			info_output << "Updates: [";
-			UTILS::print_vector(updates.first, info_output);
-			info_output << "]" << std::endl;
-			info_output << "Deletions: [";
-			UTILS::print_vector(updates.second, info_output);
-			info_output << "]" << std::endl;
-		}
-		
-		if (updates.first.empty())
-		{
-			gui.ActivatePage("UpdatesNotFound", 0.25, error_output);
-		}
-		else
-		{
-			gui.ActivatePage("UpdatesFound", 0.25, error_output);
-			std::stringstream updatesummary;
-			updatesummary << updates.first.size() << " update";
-			if (updates.first.size() > 1)
-				updatesummary << "s";
-			updatesummary << " found";
-			gui.SetLabelText("UpdatesFound", "LabelText", updatesummary.str());
-		}
-		
-		// store the new set of available updates
-		update_manager.Write(pathmanager.GetUpdateManagerFile());
-	}
-	else
-	{
-		gui.ActivatePage("DataConnectionError", 0.25, error_output);
-	}
-}
-
-void GAME::ShowCarManager()
-{
-	const bool verbose = false;
-	const std::string group = "cars";
-	
-	// build a list of current cars, including those that we don't have yet but know about
-	std::set <std::string> allcars;
-	
-	// start off with the list of cars we have on disk
-	std::map<std::string, std::list <std::pair <std::string, std::string> > > valuelists;
-	PopulateValueLists(valuelists);
-	const std::list <std::pair <std::string, std::string> > & cardisklist = valuelists["cars"];
-	for (std::list <std::pair <std::string, std::string> >::const_iterator i = cardisklist.begin(); i != cardisklist.end(); i++)
-	{
-		allcars.insert(i->second);
-	}
-	
-	// now add in the cars in the remote repo
-	std::map <std::string, int> remote = update_manager.GetAvailableUpdates(group);
-	for (std::map <std::string, int>::const_iterator i = remote.begin(); i != remote.end(); i++)
-	{
-		allcars.insert(i->first);
-	}
-	
-	if (allcars.empty())
-	{
-		error_output << "ShowCarManager: No cars!" << std::endl;
-		return;
-	}
-	
-	// find the car at index car_manager_cur_car
-	std::string thecar;
-	int count = 0;
-	while (car_manager_cur_car < 0)
-		car_manager_cur_car = allcars.size() + car_manager_cur_car;
-	car_manager_cur_car = car_manager_cur_car % allcars.size();
-	for (std::set <std::string>::const_iterator i = allcars.begin(); i != allcars.end(); i++, count++)
-	{
-		if (count == car_manager_cur_car)
-		{
-			thecar = *i;
-		}
-	}
-	
-	if (verbose)
-	{
-		info_output << "All cars: ";
-		for (std::set <std::string>::const_iterator i = allcars.begin(); i != allcars.end(); i++)
-		{
-			if (i != allcars.begin())
-				info_output << ", ";
-			info_output << *i;
-		}
-		info_output << std::endl;
-	}
-	
-	if (!thecar.empty())
-	{
-		std::pair <int, int> revs = update_manager.GetVersions(group, thecar);
-		gui.ActivatePage("CarManager", 0.0001, error_output);
-		gui.SetLabelText("CarManager", "carlabel", thecar);
-		gui.SetLabelText("CarManager", "localrev", UTILS::tostr(revs.first));
-		gui.SetLabelText("CarManager", "remoterev", UTILS::tostr(revs.second));
-	}
-	
-	/*if (!update_manager.empty())
-		update_manager.Write(pathmanager.GetUpdateManagerFileBackup()); // save a backup before changing it*/
-}

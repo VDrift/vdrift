@@ -33,7 +33,8 @@
 #include "soundmanager.h"
 #include "http.h"
 #include "gl3v/stringidmap.h"
-#include "autoupdate.h"
+#include "updatemanagement.h"
+#include "game_downloader.h"
 
 #include <ostream>
 #include <string>
@@ -44,6 +45,7 @@
 
 class GAME
 {
+friend class GAME_DOWNLOADER;
 public:
 	GAME(std::ostream & info_out, std::ostream & error_out);
 	void Start(std::list <std::string> & args);
@@ -97,13 +99,9 @@ private:
 	void BeginStartingUp();
 	void DoneStartingUp();
 	bool LastStartWasSuccessful() const;
-	
-	// update stuff
 	bool Download(const std::string & file);
 	bool Download(const std::vector <std::string> & files);
-	void StartCheckForUpdates();
-	void ShowCarManager();
-
+	
 	// move to settings
 	void GetOptions(std::map<std::string, std::string> & options);
 	void SetOptions(const std::map<std::string, std::string> & options);
@@ -122,8 +120,7 @@ private:
 	SOUNDMANAGER sounds;
 	SETTINGS settings;
 	
-	AUTOUPDATE update_manager;
-	int car_manager_cur_car;
+	UPDATE_MANAGER updater;
 
 	WINDOW_SDL window;
 	GRAPHICS_INTERFACE * graphics_interface;
