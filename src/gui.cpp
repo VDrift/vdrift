@@ -518,3 +518,18 @@ bool GUI::SetLabelText(const std::string & pagename, const std::string & labelna
 
 	return true;
 }
+
+bool GUI::SetButtonEnabled(const std::string & pagename, const std::string & buttonname, bool enable)
+{
+	if (pages.find(pagename) == pages.end())
+		return false;
+
+	SCENENODE & pagenode = GetPageNode(pagename);
+	reseatable_reference <WIDGET_BUTTON> button = GetPage(pagename).GetButton(buttonname);
+	if (!button)
+		return false;
+
+	button.get().SetEnabled(pagenode, enable);
+
+	return true;
+}

@@ -53,6 +53,8 @@ public:
 		float r, float g, float b,
 		float h = 0, float w = 0,
 		float order = 0);
+	
+	void SetEnabled(SCENENODE & scene, bool newenabled);
 
 private:
 	WIDGET_LABEL label;
@@ -64,6 +66,8 @@ private:
 	std::string description;
 	enum { UP, DOWN, SELECTED } state;
 	bool cancel;
+	bool enabled;
+	float alpha;
 };
 
 #endif

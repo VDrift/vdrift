@@ -142,6 +142,7 @@ bool GUIPAGE::Load(
 			std::vector<float> color(3, 1.0);
 			std::string action;
 			bool cancel;
+			bool enabled = true;
 
 			if (!pagefile.GetParam(section, "center", xy, error_output)) return false;
 			if (!pagefile.GetParam(section, "fontsize", fontsize, error_output)) return false;
@@ -150,6 +151,7 @@ bool GUIPAGE::Load(
 			if (!pagefile.GetParam(section, "cancel", cancel, error_output)) return false;
 			pagefile.GetParam(section, "height", h);
 			pagefile.GetParam(section, "width", w);
+			pagefile.GetParam(section, "enabled", enabled);
 
 			std::tr1::shared_ptr<TEXTURE> texture_up, texture_down, texture_sel;
 			if (!textures.Load(texpath, "widgets/btn_up_unsel.png", texinfo, texture_sel)) return false;
@@ -166,6 +168,13 @@ bool GUIPAGE::Load(
 			new_widget->SetAction(action);
 			new_widget->SetDescription(desc);
 			new_widget->SetCancel(cancel);
+			new_widget->SetEnabled(sref, enabled);
+			
+			std::string name;
+			if (pagefile.GetParam(section, "name", name))
+			{
+				button_widgets[name] = *new_widget;
+			}
 		}
 		else if (type == "label")
 		{

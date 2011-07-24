@@ -27,6 +27,9 @@ public:
 	std::string GetStaticReflectionMap() const {return data_directory+"/textures/weather/cubereflection-nosun.png";}
 	std::string GetStaticAmbientMap() const {return data_directory+"/textures/weather/cubelighting.png";}
 	std::string GetShaderPath() const {return data_directory + "/shaders";}
+	std::string GetUpdateManagerFile() const {return settings_path+"/updates.config"+profile_suffix;}
+	std::string GetUpdateManagerFileBackup() const {return settings_path+"/updates.config.backup"+profile_suffix;}
+	std::string GetUpdateManagerFileBase() const {return data_directory + "/settings/updates.config";}
 
 	std::string GetTrackDir() const {return "tracks";}
 	std::string GetCarDir() const {return "cars";}

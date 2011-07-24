@@ -17,6 +17,7 @@ def addbulletpath( val ):
 src = Split("""aabb.cpp
 		aabb_space_partitioning.cpp
 		ai.cpp
+		autoupdate.cpp
 		bezier.cpp
 		camera_chase.cpp
 		camera_fixed.cpp

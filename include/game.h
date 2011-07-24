@@ -33,6 +33,7 @@
 #include "soundmanager.h"
 #include "http.h"
 #include "gl3v/stringidmap.h"
+#include "autoupdate.h"
 
 #include <ostream>
 #include <string>
@@ -96,8 +97,12 @@ private:
 	void BeginStartingUp();
 	void DoneStartingUp();
 	bool LastStartWasSuccessful() const;
+	
+	// update stuff
 	bool Download(const std::string & file);
 	bool Download(const std::vector <std::string> & files);
+	void StartCheckForUpdates();
+	void ShowCarManager();
 
 	// move to settings
 	void GetOptions(std::map<std::string, std::string> & options);
@@ -116,6 +121,9 @@ private:
 	MODELMANAGER models;
 	SOUNDMANAGER sounds;
 	SETTINGS settings;
+	
+	AUTOUPDATE update_manager;
+	int car_manager_cur_car;
 
 	WINDOW_SDL window;
 	GRAPHICS_INTERFACE * graphics_interface;
