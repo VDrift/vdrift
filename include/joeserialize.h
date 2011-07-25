@@ -1110,11 +1110,11 @@ class BinaryOutputSerializer : public SerializerOutput
 			if (!bigendian_)
 			{
 				T temp(i);
-				ByteSwap(reinterpret_cast<unsigned char *>(&temp),sizeof(T));
-				out_.write(reinterpret_cast<const char *>(&temp),sizeof(T));
+				ByteSwap(reinterpret_cast<unsigned char *>(&temp), sizeof(T));
+				out_.write(reinterpret_cast<const char *>(&temp), sizeof(T));
 			}
 			else
-				out_.write(reinterpret_cast<const char *>(&i),sizeof(T));
+				out_.write(reinterpret_cast<const char *>(&i), sizeof(T));
 
 			return !out_.bad();
 		}
@@ -1122,9 +1122,9 @@ class BinaryOutputSerializer : public SerializerOutput
 		bool WriteStringData(const std::string & name, const std::string & i)
 		{
 			(void) name;
-			unsigned int strlen = i.length();
+			int strlen = i.length();
 			if (!WriteData("length", strlen)) return false;
-			out_.write(i.c_str(),strlen*sizeof(char));
+			out_.write(i.data(), strlen * sizeof(char));
 			return !out_.bad();
 		}
 
@@ -1189,7 +1189,7 @@ class BinaryInputSerializer : public SerializerInput
 		{
 			(void) name;
 			if (in_.eof()) return false;
-			in_.read(reinterpret_cast<char *>(&i),sizeof(T));
+			in_.read(reinterpret_cast<char *>(&i), sizeof(T));
 			if (in_.fail() || in_.gcount() != sizeof(T)) return false;
 
 			if (!bigendian_)
@@ -1207,8 +1207,8 @@ class BinaryInputSerializer : public SerializerInput
 			if (!ReadData("length", strlen)) return false;
 			char * inbuffer = new char[strlen+1];
 			inbuffer[strlen] = '\0';
-			in_.read(inbuffer,strlen*sizeof(char));
-			if (in_.fail() || in_.gcount() != (int)(strlen*sizeof(char))) return false;
+			in_.read(inbuffer, strlen * sizeof(char));
+			if (in_.fail() || in_.gcount() != (int)(strlen * sizeof(char))) return false;
 			i.clear();
 			for (int n = 0; n < strlen; n++)
 			{

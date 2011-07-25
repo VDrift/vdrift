@@ -1,21 +1,15 @@
 import os, sys, errno, SCons
 from time import gmtime, strftime
 
-
 #---------------#
 # Build Options #
 #---------------#
-
 opts = Variables('vdrift.conf', ARGUMENTS)
 opts.Add('destdir', 'Staging area to install VDrift to.  Useful for packagers. ', '')
-opts.Add('localedir', 'Path suffix were vdrift locales (.mo files) will be installed', "share/locale")
 opts.Add('arch', 'Target architecture to compile vdrift for (x86, 686, p4, axp, a64, prescott, nocona, core2)', 'x86')
 opts.Add(BoolVariable('minimal', 'Only install minimal data (3 cars and 2 tracks)', 0))
 opts.Add(BoolVariable('cache', 'Cache options in vdrift.conf', 1))
 opts.Add(BoolVariable('release', 'Turn off debug option during build', 0))
-opts.Add(BoolVariable('use_gcc_32', 'Set this to 1 if the game runs fine but the cars bounce around (gcc4 bug).', 0))
-opts.Add(BoolVariable('use_gcc_33', 'Set this to 1 if the game runs fine but the cars bounce around (gcc4 bug).', 0))
-opts.Add(BoolVariable('use_gcc_34', 'Set this to 1 if the game runs fine but the cars bounce around (gcc4 bug).', 0))
 opts.Add(BoolVariable('use_apbuild', 'Set this to 1 if you want to compile with apgcc to create an autopackage', 0))
 opts.Add(BoolVariable('use_binreloc', 'Set this to 1 if you want to compile with Binary Relocation support', 1))
 opts.Add(BoolVariable('os_cc', 'Set this to 1 if you want to use the operating system\'s C compiler environment variable.', 0))
@@ -27,7 +21,6 @@ opts.Add(BoolVariable('force_feedback', 'Enable force-feedback support', 0))
 opts.Add(BoolVariable('profiling', 'Turn on profiling output', 0))
 opts.Add(BoolVariable('efficiency', 'Turn on compile-time efficiency warnings', 0))
 opts.Add(BoolVariable('verbose', 'Show verbose compiling output', 1)) 
-opts.Add(BoolVariable('extbullet', 'Link against system bullet library', 1))
 
 #--------------------------#
 # Create Build Environment #
@@ -38,8 +31,6 @@ default_settingsdir = ".vdrift"
 default_prefix = "/usr/local"
 default_datadir = "share/games/vdrift/data"
 default_bindir = "bin"
-
-# convenience var for identifying a windows platform
 
 #---------------#
 # FreeBSD build #
@@ -54,7 +45,7 @@ if (sys.platform == 'freebsd6') or (sys.platform == 'freebsd7') or (sys.platform
         LIBPATH = ['.', '#lib', LOCALBASE + '/lib'],
         LINKFLAGS = ['-pthread','-lintl'],
         options = opts)
-    check_headers = ['asio.hpp', 'boost/bind.hpp', 'GL/gl.h', 'GL/glu.h', 'SDL/SDL.h', 'SDL/SDL_image.h', 'SDL/SDL_rotozoom.h', 'vorbis/vorbisfile.h', 'GL/glew.h']
+    check_headers = ['asio.hpp', 'boost/bind.hpp', 'GL/gl.h', 'GL/glu.h', 'SDL/SDL.h', 'SDL/SDL_image.h', 'SDL/SDL_rotozoom.h', 'vorbis/vorbisfile.h', 'GL/glew.h', 'bullet/btBulletCollisionCommon.h']
     if 'CC' in os.environ:
         env.Replace(CC = os.environ['CC'])
     else:
@@ -127,24 +118,24 @@ elif ( 'win32' == sys.platform or 'cygwin' == sys.platform ):
         CCFLAGS = ['-Wall', '-Wextra', '-Wno-unused-parameters', '-O2', '-pipe', '-mwindows', '-mno-cygwin'],
         CPPPATH = ['#include', '#tools/win/include', '#bullet'],
         LIBPATH = ['#tools/win/dll'],
-		LINKFLAGS = ['-static-libgcc'],
+		LINKFLAGS = ['-static-libgcc', '-static-libstdc++'],
         CPPDEFINES = ['_REENTRANT'],
         CC = 'gcc', CXX = 'g++',
         options = opts)
     check_headers = []
-#env['IS_WIN'] = True
+
 #-------------#
 # POSIX build #
 #-------------#
 else:
     env = Environment(ENV = os.environ,
-        CPPPATH = ['#include', '#bullet', '#src'],
+        CPPPATH = ['#include', '#src'],
         CCFLAGS = ['-Wall', '-Wextra', '-Wno-unused-parameter', '-pthread'],
         LIBPATH = ['.', '#lib'],
         LINKFLAGS = ['-pthread'],
         CC = 'gcc', CXX = 'g++',
         options = opts)
-    check_headers = ['asio.hpp', 'boost/bind.hpp', 'GL/gl.h', 'GL/glu.h', 'SDL/SDL.h', 'SDL/SDL_image.h', 'SDL/SDL_rotozoom.h', 'vorbis/vorbisfile.h', 'GL/glew.h', 'curl/curl.h']
+    check_headers = ['asio.hpp', 'boost/bind.hpp', 'GL/gl.h', 'GL/glu.h', 'SDL/SDL.h', 'SDL/SDL_image.h', 'SDL/SDL_rotozoom.h', 'vorbis/vorbisfile.h', 'GL/glew.h', 'curl/curl.h', 'bullet/btBulletCollisionCommon.h']
 
 if ARGUMENTS.get('verbose') != "1":
        env['ARCOMSTR'] = "\tARCH $TARGET"
@@ -156,10 +147,10 @@ if ARGUMENTS.get('verbose') != "1":
 #-------------------------------#
 # General configurarion options #
 #-------------------------------#
-
 opts.Add('settings', 'Directory under user\'s home dir where settings will be stored', default_settingsdir )
 opts.Add('prefix', 'Path prefix.', default_prefix)
-opts.Add('datadir', 'Path suffix where where VDrift data will be installed', default_datadir) # in most case this dir doesn't exsist => do not use PathOption (Fails on build)
+# in most case datadir doesn't exsist => do not use PathOption (Fails on build)
+opts.Add('datadir', 'Path suffix where where VDrift data will be installed', default_datadir) 
 opts.Add('bindir', 'Path suffix where vdrift binary executable will be installed', default_bindir)
 
 # For the OSX package, but could be useful otherwise
@@ -170,7 +161,6 @@ env['PRODUCT_NAME'] = 'vdrift'
 # Save Options #
 #--------------#
 opts.Update(env)
-
 if env['cache']:
     opts.Save('vdrift.conf', env)
 
@@ -328,9 +318,6 @@ Type: 'scons' to compile with the default options.
       'scons settings=.VDrift' to change settings directory.
       'scons install' (as root) to install VDrift.
       'scons wrapper' to build the Python wrapper used by track editor
-      'scons use_gcc_3.2=1' to use g++-3.2 instead of the default.
-      'scons use_gcc_3.3=1' to use g++-3.3 instead of the default.
-      'scons use_gcc_3.4=1' to use g++-3.4 instead of the default.
       'scons use_apbuild=1' to create an autopackage (building with apbuild)
       'scons use_binreloc=0' to turn off binary relocation support
       'scons os_cc=1' to use the operating system's C compiler environment variable
@@ -347,8 +334,8 @@ Note: The options you enter will be saved in the file vdrift.conf and they will 
 #--------------------------#
 # Check for Libs & Headers #
 #--------------------------#
+env.ParseConfig('pkg-config bullet --libs --cflags')
 conf = Configure(env)
-
 for header in check_headers:
     if not conf.CheckCXXHeader(header):
         print 'You do not have the %s headers installed. Exiting.' % header
@@ -357,7 +344,6 @@ for header in check_headers:
 #--------------#
 # i18n support # 
 #--------------#
-
 if env['NLS'] and (sys.platform != 'win32'):
     #print 'Checking for internationalization support ...'
     have_gettext = conf.TryAction(Action('xgettext --version'))
@@ -377,9 +363,7 @@ env = conf.Finish()
 #-------------#
 env['data_directory'] = env['destdir'] + env['prefix'] + '/' + env['datadir']
 cppdefines.append(("SETTINGS_DIR", '"%s"' % env['settings']))
-#if env['IS_WIN']:
 if ( 'win32' == sys.platform or 'cygwin' == sys.platform ):
-    # -DWIN32 is already defined
     env['use_binreloc'] = False
     env['use_apbuild'] = False
     env['data_directory'] = "./data"
@@ -399,14 +383,10 @@ if env['release']:
     # release build, debugging off, optimizations on
     if (sys.platform != 'freebsd6') and (sys.platform != 'freebsd7') and (sys.platform != 'freebsd8') and (sys.platform != 'freebsd9') and (sys.platform != 'win32') and (sys.platform != 'cygwin'):
         env.Append(CCFLAGS = ['-O1', '-pipe'])
-    # version is current build date
-    #version = strftime("%Y-%m-%d")
 else:
     # debug build, lots of debugging, no optimizations
     env.Append(CCFLAGS = ['-g3'])
     cppdefines.append(('DEBUG','1'))
-    # development version
-    #version += "-dev"
     version = "development"
 
 if env['minimal']:
@@ -432,18 +412,6 @@ if env['efficiency']:
 #-------------#
 # g++ version #
 #-------------#
-if env['use_gcc_32']:
-    # change the compiler version to 3.2 to work around gcc4 bugs
-    env.Append(CXX = '-3.2')
-
-if env['use_gcc_33']:
-    # change the compiler version to 3.2 to work around gcc4 bugs
-    env.Append(CXX = '-3.3')
-
-if env['use_gcc_34']:
-    # change the compiler version to 3.4 to work around gcc4 bugs
-    env.Append(CXX = '-3.4')
-
 if env['use_apbuild']:
     env['CXX'] = 'apg++'
     env['CC'] = 'apgcc'
@@ -455,18 +423,11 @@ if env['use_distcc']:
     env['CXX'] = 'distcc '+env['CXX']
     env['CC'] = 'distcc '+env['CC']
 
-#env.Append(CFLAGS = '-D_FORTIFY_SOURCE=0 -fno-stack-protector')
-
 #------------------------#
 # Force Feedback support #
 #------------------------#
 if env['force_feedback']:
     cppdefines.append('ENABLE_FORCE_FEEDBACK')
-
-#---------------------#
-# Pre-compiled header #
-#---------------------#
-#env.Append(CCFLAGS = ['-include #/include/pch.h'])
 
 #----------------------#
 # OS compiler settings #
@@ -484,7 +445,6 @@ if env['os_cxxflags']:
 # Target architecture to compile for #
 #------------------------------------#
 arch_flags = {
-#    'x86': "-march= -mtune=generic"
     'axp': "-march=athlon-xp",
     '686': "-march=i686",
     'p4': "-march=pentium4",
@@ -496,14 +456,10 @@ arch_flags = {
 if env['arch'] in arch_flags:
     env.Append(CCFLAGS=arch_flags[env['arch']])
 
-#env.MergeFlags('-include pch.h')
-
 #---------#
 # Version #
 #---------#
 cppdefines.append(('VERSION', '"%s"' % version))
-
-#if sys.platform != 'win32':
 revision = os.popen('svnversion').read().split('\n')
 cppdefines.append(('REVISION', '"%s"' % revision[0]))
 
@@ -521,7 +477,9 @@ if env['NLS'] == 1 and (sys.platform != 'win32'):
 if 'wrapper' in COMMAND_LINE_TARGETS:
   cppdefines.append("WRAPPER")
 
-# take care of CPP defines
+#--------------------------#
+# take care of CPP defines #
+#--------------------------#
 write_definitions(cppdefines)
 
 #-----------------#

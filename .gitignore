@@ -6,6 +6,7 @@ vdrift.conf
 build/
 bullet/
 data/
+<<<<<<< HEAD
 include/.DS_Store
 include/definitions.h
 src/.DS_Store
