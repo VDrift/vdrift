@@ -3,6 +3,7 @@
 
 #ifdef __APPLE__
 #include "BulletCollision/btBulletCollisionCommon.h"
+#include "BulletDynamics/btBulletDynamicsCommon.h"
 #else
 #include "btBulletCollisionCommon.h"
 #endif
