@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 45;
+	objectVersion = 46;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -936,6 +936,7 @@
 		B9DE32B309A4FC81003B34CD /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = /System/Library/Frameworks/AppKit.framework; sourceTree = "<absolute>"; };
 		E7B9D9680C8076070098C75A /* Ogg.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Ogg.framework; sourceTree = "<group>"; };
 		E7B9D96C0C80761B0098C75A /* Vorbis.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Vorbis.framework; sourceTree = "<group>"; };
+		F593C31313DB291D00BA4BE0 /* VDrift.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = VDrift.entitlements; sourceTree = "<group>"; };
 		F5A47A9D01A0482F01D3D55B /* SDLMain.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = SDLMain.h; sourceTree = SOURCE_ROOT; };
 		F5A47A9E01A0483001D3D55B /* SDLMain.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; path = SDLMain.m; sourceTree = SOURCE_ROOT; };
 		F5A4DDA413C4A817001D9010 /* btBulletCollisionCommon.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = btBulletCollisionCommon.h; sourceTree = "<group>"; };
@@ -1309,6 +1310,7 @@
 		29B97317FDCFA39411CA2CEA /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				F593C31313DB291D00BA4BE0 /* VDrift.entitlements */,
 				B9653A8C091E84FE00006133 /* ReadMe.rtf */,
 				B99293AC091BB71F00648CFC /* vdrift.icns */,
 				B9ADD1AE0907CF9C00D55A16 /* Info.plist */,
@@ -2425,10 +2427,11 @@
 		29B97313FDCFA39411CA2CEA /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				LastUpgradeCheck = 0410;
 				ORGANIZATIONNAME = "org.vdrift-team.vdrift";
 			};
 			buildConfigurationList = B9ADCF750907C8EB00D55A16 /* Build configuration list for PBXProject "vdrift" */;
-			compatibilityVersion = "Xcode 3.1";
+			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 1;
 			knownRegions = (
@@ -2472,7 +2475,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "DATE=`date +%Y-%m-%d`\nREVISION=\"revision????\"\nif [ -f \"/opt/local/bin/svnversion\" ] ; then\n\tREVISION=`/opt/local/bin/svnversion`\nfi\nif [ -f \"/usr/local/bin/svnversion\" ] ; then\n\tREVISION=`/usr/local/bin/svnversion`\nfi\necho \"#ifndef _DEFINITIONS_H\" > $SRCROOT/../../include/definitions.h\necho \"#define _DEFINITIONS_H\" >> $SRCROOT/../../include/definitions.h\necho \"char* get_mac_data_dir();\" >> $SRCROOT/../../include/definitions.h\necho \"#define SETTINGS_DIR \\\"Library/Preferences/VDrift\\\"\" >> $SRCROOT/../../include/definitions.h\necho \"#define DATA_DIR get_mac_data_dir()\" >> $SRCROOT/../../include/definitions.h\necho \"#define PACKAGE \\\"VDrift\\\"\" >> $SRCROOT/../../include/definitions.h\necho \"#define LOCALEDIR \\\"/usr/share/locale\\\"\" >> $SRCROOT/../../include/definitions.h\necho \"#ifndef VERSION\" >> $SRCROOT/../../include/definitions.h\necho \"#define VERSION \\\"$DATE\\\"\" >> $SRCROOT/../../include/definitions.h\necho \"#endif //VERSION\" >> $SRCROOT/../../include/definitions.h\necho \"#define REVISION \\\"$REVISION\\\"\" >> $SRCROOT/../../include/definitions.h\necho \"#endif // _DEFINITIONS_H\" >> $SRCROOT/../../include/definitions.h";
+			shellScript = "DATE=`date +%Y-%m-%d`\n#no longer using svn, and we use date for version anyway\n#REVISION=\"revision????\"\n#if [ -f \"/opt/local/bin/svnversion\" ] ; then\n#\tREVISION=`/opt/local/bin/svnversion`\n#fi\n#if [ -f \"/usr/local/bin/svnversion\" ] ; then\n#\tREVISION=`/usr/local/bin/svnversion`\n#fi\nREVISION=`date +%Y-%m-%d`\necho \"#ifndef _DEFINITIONS_H\" > $SRCROOT/../../include/definitions.h\necho \"#define _DEFINITIONS_H\" >> $SRCROOT/../../include/definitions.h\necho \"char* get_mac_data_dir();\" >> $SRCROOT/../../include/definitions.h\necho \"#define SETTINGS_DIR \\\"Library/Preferences/VDrift\\\"\" >> $SRCROOT/../../include/definitions.h\necho \"#define DATA_DIR get_mac_data_dir()\" >> $SRCROOT/../../include/definitions.h\necho \"#define PACKAGE \\\"VDrift\\\"\" >> $SRCROOT/../../include/definitions.h\necho \"#define LOCALEDIR \\\"/usr/share/locale\\\"\" >> $SRCROOT/../../include/definitions.h\necho \"#ifndef VERSION\" >> $SRCROOT/../../include/definitions.h\necho \"#define VERSION \\\"$DATE\\\"\" >> $SRCROOT/../../include/definitions.h\necho \"#endif //VERSION\" >> $SRCROOT/../../include/definitions.h\necho \"#define REVISION \\\"$REVISION\\\"\" >> $SRCROOT/../../include/definitions.h\necho \"#endif // _DEFINITIONS_H\" >> $SRCROOT/../../include/definitions.h";
 		};
 		B92C1E1D091E6A2700CF42D0 /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -2736,15 +2739,7 @@
 		B9ADCF760907C8EB00D55A16 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(NATIVE_ARCH)";
 				FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)";
-				GCC_C_LANGUAGE_STANDARD = gnu99;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"DEBUG=1",
-					"$(GCC_PREPROCESSOR_DEFINITIONS_QUOTED_1)",
-				);
-				GCC_VERSION = 4.2;
 				HEADER_SEARCH_PATHS = (
 					.,
 					../../src/,
@@ -2756,8 +2751,6 @@
 				INFOPLIST_FILE = Info.plist;
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.4;
-				OTHER_LDFLAGS = "";
-				PREBINDING = NO;
 				PRODUCT_NAME = VDrift;
 				SDKROOT = macosx;
 				STRIP_INSTALLED_PRODUCT = NO;
@@ -2772,10 +2765,7 @@
 					ppc,
 				);
 				FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)";
-				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = YES;
-				GCC_OPTIMIZATION_LEVEL = 3;
-				GCC_VERSION = 4.2;
 				HEADER_SEARCH_PATHS = (
 					.,
 					../../src/,
@@ -2787,8 +2777,6 @@
 				INFOPLIST_FILE = Info.plist;
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.4;
-				OTHER_LDFLAGS = "";
-				PREBINDING = NO;
 				PRODUCT_NAME = VDrift;
 				SDKROOT = macosx;
 				STRIP_INSTALLED_PRODUCT = NO;
@@ -2798,6 +2786,7 @@
 		B9ADD1AB0907CF9C00D55A16 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = VDrift.entitlements;
 				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)\"";
 				MACOSX_DEPLOYMENT_TARGET = 10.4;
 			};
@@ -2806,6 +2795,7 @@
 		B9ADD1AC0907CF9C00D55A16 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = VDrift.entitlements;
 				FRAMEWORK_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"$(SRCROOT)\"";
 				MACOSX_DEPLOYMENT_TARGET = 10.4;
 			};
