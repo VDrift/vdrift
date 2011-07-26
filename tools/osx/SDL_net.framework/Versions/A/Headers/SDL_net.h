@@ -25,10 +25,10 @@
 #ifndef _SDL_NET_H
 #define _SDL_NET_H
 
-#include "SDL.h"
-#include "SDL_endian.h"
-#include "SDL_version.h"
-#include "begin_code.h"
+#include "SDL/SDL.h"
+#include "SDL/SDL_endian.h"
+#include "SDL/SDL_version.h"
+#include "SDL/begin_code.h"
 
 
 
@@ -439,6 +439,6 @@ do					\
 #ifdef __cplusplus
 }
 #endif
-#include "close_code.h"
+#include "SDL/close_code.h"
 
 #endif /* _SDL_NET_H */

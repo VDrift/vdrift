@@ -1507,6 +1507,7 @@
 		B9ADCF760907C8EB00D55A16 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 				CODE_SIGN_ENTITLEMENTS = VDrift.entitlements;
 				FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)";
 				GCC_OPTIMIZATION_LEVEL = 0;
@@ -1550,7 +1551,6 @@
 		B9ADD1AC0907CF9C00D55A16 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
 			};
 			name = Release;
 		};

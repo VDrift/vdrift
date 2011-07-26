@@ -3,40 +3,40 @@
 <plist version="1.0">
 <dict>
 	<key>BuildMachineOSBuild</key>
-	<string>11A511</string>
+	<string>10K540</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
-	<string>SDL_net</string>
-	<key>CFBundleGetInfoString</key>
-	<string>http://www.libsdl.org</string>
+	<string>SDL_gfx</string>
 	<key>CFBundleIdentifier</key>
-	<string>SDL_net</string>
+	<string>com.SDL-gfx</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>Simple DirectMedia Layer</string>
+	<string>SDL_gfx</string>
 	<key>CFBundlePackageType</key>
 	<string>FMWK</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.2.7</string>
+	<string>1.0</string>
 	<key>CFBundleSignature</key>
-	<string>SDL_netX</string>
+	<string>????</string>
 	<key>CFBundleVersion</key>
-	<string>1.2.7</string>
+	<string>1</string>
 	<key>DTCompiler</key>
-	<string></string>
+	<string>com.apple.compilers.llvm.clang.1_0</string>
 	<key>DTPlatformBuild</key>
-	<string>4B110</string>
+	<string>4A2002a</string>
 	<key>DTPlatformVersion</key>
 	<string>GM</string>
 	<key>DTSDKBuild</key>
-	<string>11A511a</string>
+	<string>10K540</string>
 	<key>DTSDKName</key>
-	<string>macosx10.7</string>
+	<string></string>
 	<key>DTXcode</key>
-	<string>0410</string>
+	<string>0402</string>
 	<key>DTXcodeBuild</key>
-	<string>4B110</string>
+	<string>4A2002a</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>Copyright © 2011 __MyCompanyName__. All rights reserved.</string>
 </dict>
 </plist>
