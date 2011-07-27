@@ -14,7 +14,7 @@ FractureBody::FractureBody(const btRigidBodyConstructionInfo& info) :
 void FractureBody::addShape(const btTransform& localTransform, btCollisionShape* shape)
 {
 	shape->setUserPointer(cast<void*>(-1));
-	((btCompoundShape*)m_collisionShape)->addChildShape(localTransform, shape);
+	static_cast<btCompoundShape*>(m_collisionShape)->addChildShape(localTransform, shape);
 }
 
 void FractureBody::addConnection(btRigidBody* body, const btTransform& localTransform, btScalar strength, btScalar elasticLimit)
@@ -29,43 +29,63 @@ void FractureBody::addConnection(btRigidBody* body, const btTransform& localTran
 	connection.m_body = body;
 	connection.m_strength = strength;
 	connection.m_elasticLimit = elasticLimit;
-	connection.m_shapeId = compound->getNumChildShapes() - 1;
+	connection.m_accImpulse = 0;
 	m_connections.push_back(connection);
 }
 
-btRigidBody* FractureBody::breakConnection(int con_id)
+btRigidBody* FractureBody::addBody(const btRigidBodyConstructionInfo& info, btScalar strength, btScalar elasticLimit)
+{
+	btRigidBody* rb = new btRigidBody(info);
+	btTransform transform;
+	rb->getMotionState()->getWorldTransform(transform);
+	addConnection(rb, transform, strength, elasticLimit);
+	return rb;
+}
+
+btRigidBody* FractureBody::updateConnection(int shape_id)
 {
 	btCompoundShape* compound = (btCompoundShape*)getCollisionShape();
-	btAssert(con_id >= 0);
-	btAssert(con_id < m_connections.size());
-
-	int shape_id = m_connections[con_id].m_shapeId;
 	btAssert(shape_id >= 0);
-	btAssert(shape_id < compound->getNumChildShapes());
-
-	// Init child body.
-	btRigidBody* child = m_connections[con_id].m_body;
-	btTransform trans = getWorldTransform() * compound->getChildTransform(shape_id);
-	child->setWorldTransform(trans);
-	child->setLinearVelocity(getVelocityInLocalPoint(trans.getOrigin()-getCenterOfMassPosition()));
-	child->setAngularVelocity(btVector3(0, 0, 0));
-	child->getCollisionShape()->setUserPointer(cast<void*>(-1));
-
-	// Invalidate connection.
-	m_connections[con_id].m_shapeId = -1;
-
-	// Remove child shape.
-	compound->removeChildShapeByIndex(shape_id);
-	if (shape_id < compound->getNumChildShapes() - 1)
+	if (shape_id >= compound->getNumChildShapes())
 	{
-		int id = cast<int>(compound->getChildShape(shape_id)->getUserPointer());
-		if(id >= 0)
+#ifdef DEBUG
+		std::cerr << "Trying to fracture child shape " << shape_id << std::endl;
+		std::cerr << "Number of child shapes " << compound->getNumChildShapes() << std::endl;
+#endif
+		return 0;
+	}
+
+	btCollisionShape* child_shape = compound->getChildShape(shape_id);
+	int con_id = cast<int>(child_shape->getUserPointer());
+	btAssert(con_id >= 0 && con_id < m_connections.size());
+
+	Connection& connection = m_connections[con_id];
+	btScalar damage = connection.m_accImpulse - connection.m_elasticLimit;
+	connection.m_accImpulse = 0;
+
+	if (damage > 0)
+	{
+		connection.m_elasticLimit -= damage * 0.5;
+		connection.m_strength -= damage;
+
+		if (connection.m_strength < 0)
 		{
-			m_connections[id].m_shapeId = shape_id;
+			// Init child body.
+			btRigidBody* child = m_connections[con_id].m_body;
+			btTransform trans = getWorldTransform() * compound->getChildTransform(shape_id);
+			child->setWorldTransform(trans);
+			child->setLinearVelocity(getVelocityInLocalPoint(trans.getOrigin()-getCenterOfMassPosition()));
+			child->setAngularVelocity(btVector3(0, 0, 0));
+			child->getCollisionShape()->setUserPointer(cast<void*>(-1));
+
+			// Remove child shape.
+			compound->removeChildShapeByIndex(shape_id);
+
+			return child;
 		}
 	}
 
-	return child;
+	return 0;
 }
 
 void FractureBody::updateMassCenter()
@@ -76,19 +96,21 @@ void FractureBody::updateMassCenter()
 	}
 }
 
-void FractureBody::updateMotionState()
+void FractureBody::updateState()
 {
 	btAssert(m_internalType & CUSTOM_FRACTURE_TYPE);
 	const btCompoundShape* shape = (btCompoundShape*)getCollisionShape();
 	for (int i = 0; i < shape->getNumChildShapes(); ++i)
 	{
-		int id = cast<int>(shape->getChildShape(i)->getUserPointer());
-		if (id >= 0)
+		int con_id = cast<int>(shape->getChildShape(i)->getUserPointer());
+		if (con_id >= 0)
 		{
 			btTransform transform;
 			getMotionState()->getWorldTransform(transform);
 			transform = transform * shape->getChildTransform(i);
-			m_connections[id].m_body->getMotionState()->setWorldTransform(transform);
+
+			btAssert(con_id < numConnections());
+			m_connections[con_id].m_body->getMotionState()->setWorldTransform(transform);
 		}
 	}
 }

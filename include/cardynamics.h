@@ -61,7 +61,7 @@ public:
 	btQuaternion GetUprightOrientation(WHEEL_POSITION wp) const;
 
 	// intepolated bodies transform: body, wheels, ...
-	unsigned int GetNumBodies() const;
+	unsigned GetNumBodies() const;
 	const btVector3 & GetPosition(int i) const;
 	const btQuaternion & GetOrientation(int i) const;
 	const btCollisionShape * GetShape() const;
@@ -143,20 +143,13 @@ public:
 
 protected:
 	DynamicsWorld* world;
-	btRigidBody* body;		// is equivalent to bodies[0].body
+	btRigidBody* body;
 
-	// body state cache
+	// body state
 	btTransform transform;
 	btVector3 linear_velocity;
 	btVector3 angular_velocity;
-
-	// car bodies
-	struct Body {
-		MotionState state;
-		btRigidBody* body;
-		Body() : body(0) {}
-	};
-	btAlignedObjectArray<Body> bodies;
+	btAlignedObjectArray<MotionState> motion_state;
 
 	// driveline state
 	CARENGINE engine;
