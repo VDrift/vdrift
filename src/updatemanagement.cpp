@@ -3,6 +3,11 @@
 #include "svn_sourceforge.h"
 #include "gui.h"
 #include "http.h"
+#include "pathmanager.h"
+#include "utils.h"
+#include "containeralgorithm.h"
+
+typedef SVN_SOURCEFORGE repo_type;
 
 bool UPDATE_MANAGER::Init(const std::string & updatefilebase, const std::string & newupdatefile, const std::string & newupdatefilebackup)
 {
@@ -35,7 +40,7 @@ void UPDATE_MANAGER::StartCheckForUpdates(GAME_DOWNLOADER downloader, GUI & gui)
 	// download the SVN folder views to a temporary folder
 	std::string group = "cars";
 	// TODO: track support
-	SVN_SOURCEFORGE svn;
+	repo_type svn;
 	std::string url = svn.GetCarFolderUrl();
 	bool success = downloader(url);
 
@@ -77,6 +82,9 @@ void UPDATE_MANAGER::StartCheckForUpdates(GAME_DOWNLOADER downloader, GUI & gui)
 		
 		// store the new set of available updates
 		autoupdate.Write(updatefile);
+		
+		// attempt to download updates.config
+		DownloadRemoteConfig(downloader, gui);
 	}
 	else
 	{
@@ -142,12 +150,144 @@ void UPDATE_MANAGER::ShowCarManager(GUI & gui)
 	{
 		std::pair <int, int> revs = autoupdate.GetVersions(group, thecar);
 		gui.ActivatePage("CarManager", 0.0001, error_output);
-		gui.SetLabelText("CarManager", "carlabel", thecar);
-		gui.SetLabelText("CarManager", "localrev", UTILS::tostr(revs.first));
-		gui.SetLabelText("CarManager", "remoterev", UTILS::tostr(revs.second));
+		gui.SetLabelText("CarManager", "carlabel",  thecar);
+		gui.SetLabelText("CarManager", "version", "Version: " + UTILS::tostr(revs.first));
+		
+		if (!revs.second)
+		{
+			// either they haven't checked for updates or the car is local only
+			if (autoupdate.empty())
+			{
+				gui.SetLabelText("CarManager", "updateinfo", "You need to check for updates");
+			}
+			else
+			{
+				// the car doesn't exist remotely; either it was deleted from the remote repo or
+				// the user created this car locally
+				gui.SetLabelText("CarManager", "updateinfo", "This car cannot be updated");
+			}
+			gui.SetButtonEnabled("CarManager", "Updatebutton", false);
+		}
+		else
+		{
+			if (revs.first == revs.second)
+			{
+				gui.SetLabelText("CarManager", "updateinfo", "This car is up to date");
+				gui.SetButtonEnabled("CarManager", "Updatebutton", false);
+			}
+			else
+			{
+				gui.SetLabelText("CarManager", "updateinfo", "An update is available");
+				gui.SetButtonEnabled("CarManager", "Updatebutton", true);
+				info_output << thecar << ": local version: " << revs.first << " remote version: " << revs.second << std::endl;
+			}
+		}
 	}
-	
-	/*if (!update_manager.empty())
-		update_manager.Write(pathmanager.GetUpdateManagerFileBackup()); // save a backup before changing it*/
 }
 
+bool UPDATE_MANAGER::ApplyCarUpdate(GAME_DOWNLOADER downloader, GUI & gui, const PATHMANAGER & pathmanager)
+{
+	const std::string group = "cars";
+	std::string carname;
+	if (!gui.GetLabelText("CarManager", "carlabel", carname))
+	{
+		error_output << "Couldn't find the name of the car to update" << std::endl;
+		return false;
+	}
+	
+	std::pair <int, int> revs = autoupdate.GetVersions(group, carname);
+	
+	if (revs.first == revs.second)
+	{
+		error_output << "ApplyCarUpdate: " << carname << " is already up to date" << std::endl;
+		return false;
+	}
+	
+	// check that we have a recent enough release
+	if (!DownloadRemoteConfig(downloader, gui))
+	{
+		error_output << "ApplyCarUpdate: unable to retrieve version information" << std::endl;
+		gui.ActivatePage("DataConnectionError", 0.25, error_output);
+		return false;
+	}
+	assert(remoteconfig.get()); // DownloadRemoteConfig should only return true if remoteconfig is set
+	int version = 0;
+	if (!remoteconfig->GetParam("formats", group, version, error_output))
+	{
+		error_output << "ApplyCarUpdate: missing version information" << std::endl;
+		return false;
+	}
+	int localversion = autoupdate.GetFormatVersion(group);
+	if (localversion != version)
+	{
+		error_output << "ApplyCarUpdate: remote format for " << group << " is " << version << " but this version of VDrift only understands " << localversion << std::endl;
+		gui.ActivatePage("UpdateFailedVersion", 0.25, error_output);
+		return false;
+	}
+	
+	// download archive
+	std::string url = repo_type::GetCarDownloadLink(carname);
+	info_output << "ApplyCarUpdate: attempting to download " + url << std::endl;
+	bool success = downloader(url);
+	if (!success)
+	{
+		error_output << "ApplyCarUpdate: download failed" << std::endl;
+		gui.ActivatePage("DataConnectionError", 0.25, error_output);
+		return false;
+	}
+	
+	// get the downloaded page
+	std::string archivepath = downloader.GetHttp().GetDownloadPath(url);
+	info_output << "ApplyCarUpdate: download successful: " << archivepath << std::endl;
+	
+	//TODO:
+	// decompress
+	// write output
+	// record update
+	
+	/*if (!autoupdate.empty())
+		autoupdate.Write(updatefilebackup); // save a backup before changing it*/
+	
+	gui.ActivatePage("UpdateSuccessful", 0.25, error_output);
+	
+	return true;
+}
+
+bool UPDATE_MANAGER::DownloadRemoteConfig(GAME_DOWNLOADER downloader, GUI & gui)
+{
+	if (remoteconfig.get())
+	{
+		info_output << "DownloadRemoteConfig: already have the remote updates.config" << std::endl;
+		return true;
+	}
+	
+	std::string url = repo_type::GetRemoteUpdateConfigUrl();
+	info_output << "DownloadRemoteConfig: attempting to download " + url << std::endl;
+	bool success = downloader(url);
+	if (!success)
+	{
+		error_output << "DownloadRemoteConfig: download failed" << std::endl;
+		return false;
+	}
+	
+	std::string filepath = downloader.GetHttp().GetDownloadPath(url);
+	info_output << "DownloadRemoteConfig: download successful: " << filepath << std::endl;
+	
+	std::string updatesconfig = UTILS::LoadFileIntoString(filepath, error_output);
+	if (updatesconfig.empty())
+	{
+		error_output << "DownloadRemoteConfig: empty updates.config" << std::endl;
+		return false;
+	}
+	
+	std::stringstream f(updatesconfig);
+	CONFIG * conf = new CONFIG();
+	remoteconfig.reset(conf);
+	if (!conf->Load(f))
+	{
+		error_output << "DownloadRemoteConfig: failed to load updates.config" << std::endl;
+		return false;
+	}
+	
+	return true;
+}

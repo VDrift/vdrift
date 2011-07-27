@@ -519,6 +519,20 @@ bool GUI::SetLabelText(const std::string & pagename, const std::string & labelna
 	return true;
 }
 
+bool GUI::GetLabelText(const std::string & pagename, const std::string & labelname, std::string & text_output)
+{
+	if (pages.find(pagename) == pages.end())
+		return false;
+
+	reseatable_reference <WIDGET_LABEL> label = GetPage(pagename).GetLabel(labelname);
+	if (!label)
+		return false;
+
+	text_output = label.get().GetText();
+
+	return true;
+}
+
 bool GUI::SetButtonEnabled(const std::string & pagename, const std::string & buttonname, bool enable)
 {
 	if (pages.find(pagename) == pages.end())

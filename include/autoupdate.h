@@ -32,6 +32,10 @@ public:
 	/// return available updates of the specified group
 	std::map <std::string, int> GetAvailableUpdates(const std::string & group) const;
 	
+	/// get the format version for the specified group
+	/// returns zero on error
+	int GetFormatVersion(const std::string & group) const;
+	
 	/// returns true if we have no update data
 	bool empty() const {return groups.empty();}
 	bool empty(const std::string & group) const;
@@ -42,6 +46,7 @@ private:
 	typedef std::map <std::string, pair_type> group_type;
 	group_type groups;
 	group_type available_updates;
+	pair_type formats;
 };
 
 #endif

@@ -1415,19 +1415,9 @@ void GAME::ProcessGUIAction(const std::string & action)
 		updater.DecrementCarManager();
 		updater.ShowCarManager(gui);
 	}
-	else if (action == "StartDataManager")
+	else if (action == "ApplyCarUpdate")
 	{
-		gui.ActivatePage("Downloading", 0.25, error_output);
-		std::string url = "http://vdrift.svn.sourceforge.net/viewvc/vdrift/vdrift-data/cars/350Z/?view=tar";
-		bool success = Download(url);
-		if (success)
-		{
-			gui.ActivatePage("DataManager", 0.25, error_output);
-		}
-		else
-		{
-			gui.ActivatePage("DataConnectionError", 0.25, error_output);
-		}
+		updater.ApplyCarUpdate(GAME_DOWNLOADER(*this, http), gui, pathmanager);
 	}
 	else if (action.substr(0,14) == "controlgrabadd")
 	{

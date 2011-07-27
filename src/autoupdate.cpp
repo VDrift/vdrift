@@ -52,10 +52,21 @@ bool AUTOUPDATE::Load(const std::string & path)
 	for (CONFIG::const_iterator s = conf.begin(); s != conf.end(); s++)
 	{
 		// get the group corresponding to this section (creating it if necessary)
-		pair_type * group = &groups[s->first];
-		if (s->first.find(AVAILABLE_PREFIX) == 0)
+		pair_type * group = NULL;
+		if (s->first == "formats")
 		{
-			group = &available_updates[s->first.substr(AVAILABLE_PREFIX.size())];
+			group = &formats;
+		}
+		else
+		{
+			if (s->first.find(AVAILABLE_PREFIX) == 0)
+			{
+				group = &available_updates[s->first.substr(AVAILABLE_PREFIX.size())];
+			}
+			else
+			{
+				group = &groups[s->first];
+			}
 		}
 		
 		// iterate over all paths in this group
@@ -188,4 +199,15 @@ std::map <std::string, int> AUTOUPDATE::GetAvailableUpdates(const std::string & 
 	}
 	else
 		return std::map <std::string, int>();
+}
+
+int AUTOUPDATE::GetFormatVersion(const std::string & group) const
+{
+	int version = 0;
+	
+	pair_type::const_iterator i = formats.find(group);
+	if (i != formats.end())
+		version = i->second;
+	
+	return version;
 }
