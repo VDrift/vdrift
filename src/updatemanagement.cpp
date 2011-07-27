@@ -6,6 +6,7 @@
 #include "pathmanager.h"
 #include "utils.h"
 #include "containeralgorithm.h"
+#include "archiveutils.h"
 
 typedef SVN_SOURCEFORGE repo_type;
 
@@ -170,12 +171,12 @@ void UPDATE_MANAGER::ShowCarManager(GUI & gui)
 		}
 		else
 		{
-			if (revs.first == revs.second)
+			if (revs.first >= revs.second) // this checks that the local rev is at least the remote rev
 			{
 				gui.SetLabelText("CarManager", "updateinfo", "This car is up to date");
 				gui.SetButtonEnabled("CarManager", "Updatebutton", false);
 			}
-			else
+			else // local rev is less than the remote rev
 			{
 				gui.SetLabelText("CarManager", "updateinfo", "An update is available");
 				gui.SetButtonEnabled("CarManager", "Updatebutton", true);
@@ -187,6 +188,7 @@ void UPDATE_MANAGER::ShowCarManager(GUI & gui)
 
 bool UPDATE_MANAGER::ApplyCarUpdate(GAME_DOWNLOADER downloader, GUI & gui, const PATHMANAGER & pathmanager)
 {
+	const bool debug = true;
 	const std::string group = "cars";
 	std::string carname;
 	if (!gui.GetLabelText("CarManager", "carlabel", carname))
@@ -227,29 +229,35 @@ bool UPDATE_MANAGER::ApplyCarUpdate(GAME_DOWNLOADER downloader, GUI & gui, const
 	
 	// download archive
 	std::string url = repo_type::GetCarDownloadLink(carname);
-	info_output << "ApplyCarUpdate: attempting to download " + url << std::endl;
-	bool success = downloader(url);
-	if (!success)
+	std::string archivepath = downloader.GetHttp().GetDownloadPath(url);
+	if (debug && !pathmanager.FileExists(archivepath)) // if in debug mode, don't redownload files
 	{
-		error_output << "ApplyCarUpdate: download failed" << std::endl;
+		info_output << "ApplyCarUpdate: attempting to download " + url << std::endl;
+		bool success = downloader(url);
+		if (!success)
+		{
+			error_output << "ApplyCarUpdate: download failed" << std::endl;
+			gui.ActivatePage("DataConnectionError", 0.25, error_output);
+			return false;
+		}
+	}
+	info_output << "ApplyCarUpdate: download successful: " << archivepath << std::endl;
+	
+	// decompress
+	if (!Decompress(archivepath, pathmanager.GetWriteableCarPath(), info_output, error_output))
+	{
+		error_output << "ApplyCarUpdate: unable to decompress update" << std::endl;
 		gui.ActivatePage("DataConnectionError", 0.25, error_output);
 		return false;
 	}
 	
-	// get the downloaded page
-	std::string archivepath = downloader.GetHttp().GetDownloadPath(url);
-	info_output << "ApplyCarUpdate: download successful: " << archivepath << std::endl;
-	
-	//TODO:
-	// decompress
 	// write output
-	// record update
 	
+	// record update
 	/*if (!autoupdate.empty())
 		autoupdate.Write(updatefilebackup); // save a backup before changing it*/
 	
 	gui.ActivatePage("UpdateSuccessful", 0.25, error_output);
-	
 	return true;
 }
 

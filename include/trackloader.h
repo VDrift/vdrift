@@ -50,6 +50,7 @@ public:
 		const std::string & trackdir,
 		const std::string & texturedir,
 		const std::string & texsize,
+		const std::string & sharedobjectpath,
 		const int anisotropy,
 		const bool reverse,
 		const bool dynamic_shadows,
@@ -78,6 +79,7 @@ private:
 	const std::string & trackdir;
 	const std::string & texturedir;
 	const std::string & texsize;
+	const std::string & sharedobjectpath;
 	const int anisotropy;
 	const bool reverse;
 	const bool dynamic_objects;

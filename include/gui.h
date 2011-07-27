@@ -52,7 +52,7 @@ public:
 		const std::string & languagedir,
 		const std::string & language,
 		const std::string & texpath,
-		const std::string & datapath,
+		const PATHMANAGER & pathmanager,
 		const std::string & texsize,
 		const float screenhwratio,
 		const std::map <std::string, FONT> & fonts,

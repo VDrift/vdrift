@@ -54,22 +54,17 @@ bool MODELMANAGER::Load(
 {
 	if (Get(path, name, it)) return true;
 
-	std::string filepath = basepath + "/" + path + "/" + name;
 	MODEL_JOE03 * model = new MODEL_JOE03();
-	if (std::ifstream(filepath.c_str()) &&
-		model->Load(filepath, error, useDrawlists()))
+	for (std::vector <PATH>::const_iterator p = basepaths.begin(); p != basepaths.end(); p++)
 	{
-		std::tr1::shared_ptr<MODEL> temp(model);
-		it = Set(path + "/" + name, temp);
-		return true;
-	}
-	else
-	{
-		filepath = sharedpath + "/" + name;
-		if (model->Load(filepath, error, useDrawlists()))
+		std::string filepath = p->path + "/" + path + "/" + name;
+		if (p->shared)
+			filepath = p->path + "/" + name;
+		if (std::ifstream(filepath.c_str()) &&
+			model->Load(filepath, error, useDrawlists()))
 		{
 			std::tr1::shared_ptr<MODEL> temp(model);
-			it = Set(name, temp);
+			it = Set(p->GetAssetPath(path, name), temp);
 			return true;
 		}
 	}

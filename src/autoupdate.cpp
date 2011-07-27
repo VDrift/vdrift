@@ -34,6 +34,13 @@ bool AUTOUPDATE::Write(const std::string & path) const
 		}
 	}
 	
+	// now write formats
+	for (pair_type::const_iterator p = formats.begin(); p != formats.end(); p++)
+	{
+		conf.SetParam("formats", p->first, p->second);
+	}
+	
+	
 	// write to disk
 	return conf.Write(true, path);
 }

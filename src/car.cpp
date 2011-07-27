@@ -118,17 +118,29 @@ struct LoadDrawable
 		}
 		if(texname.size() > 0)
 		{
-			if (!textures.Load(path, texname[0], info, tex)) return false;
+			if (!textures.Load(path, texname[0], info, tex))
+			{
+				error << "LoadDrawable: couldn't load texture " << path << "//" << texname[0] << std::endl;
+				return false;
+			}
 			drawable.SetDiffuseMap(tex);
 		}
 		if(texname.size() > 1)
 		{
-			if (!textures.Load(path, texname[1], info, tex)) return false;
+			if (!textures.Load(path, texname[1], info, tex))
+			{
+				error << "LoadDrawable: couldn't load texture " << texname[1] << std::endl;
+				return false;
+			}
 			drawable.SetMiscMap1(tex);
 		}
 		if(texname.size() > 2)
 		{
-			if (!textures.Load(path, texname[2], info, tex)) return false;
+			if (!textures.Load(path, texname[2], info, tex))
+			{
+				error << "LoadDrawable: couldn't load texture " << texname[2] << std::endl;
+				return false;
+			}
 			drawable.SetMiscMap2(tex);
 		}
 
@@ -137,12 +149,20 @@ struct LoadDrawable
 		std::tr1::shared_ptr<MODEL> mesh;
 		if (!cfg.get("scale", scale))
 		{
-			if (!models.Load(path, meshname, mesh)) return false;
+			if (!models.Load(path, meshname, mesh))
+			{
+				error << "LoadDrawable: couldn't load mesh path " << path << ", name " << meshname << std::endl;
+				return false;
+			}
 		}
 		else if (!models.Get(path, meshname+scale, mesh))
 		{
 			MODELMANAGER::const_iterator it;
-			if (!models.Load(path, meshname, it)) return false;
+			if (!models.Load(path, meshname, it))
+			{
+				error << "LoadDrawable: couldn't load mesh (scaled) " << path << ", " << meshname << std::endl;
+				return false;
+			}
 
 			MATHVECTOR<float, 3> sc(1, 1, 1);
 			cfg.get("scale", sc);
@@ -290,7 +310,11 @@ static bool LoadWheel(
 	if (!cfg_wheel.get("texture", texname, error_output)) return false;
 	if (!models.Get(loadDrawable.path, meshname+tiredim, it))
 	{
-		if (!models.Load(loadDrawable.path, meshname, it)) return false;
+		if (!models.Load(loadDrawable.path, meshname, it))
+		{
+			error_output << "unable to load wheel model: " << loadDrawable.path << ", " << meshname+tiredim << std::endl;
+			return false;
+		}
 
 		MATHVECTOR<float, 3> d(0);
 		cfg_tire->get("size", d);
@@ -309,7 +333,11 @@ static bool LoadWheel(
 
 		models.Set(it->first+tiredim, temp);
 	}
-	if (!loadDrawable(meshname+tiredim, texname, cfg_wheel, topnode, &wheelnode)) return false;
+	if (!loadDrawable(meshname+tiredim, texname, cfg_wheel, topnode, &wheelnode))
+	{
+		error_output << "unable to load wheel drawable" << std::endl;
+		return false;
+	}
 
 	// load tire
 	texname.clear();
@@ -328,7 +356,11 @@ static bool LoadWheel(
 
 		models.Set("tire"+tiredim, temp);
 	}
-	if (!loadDrawable("tire"+tiredim, texname, *cfg_tire, topnode.GetNode(wheelnode))) return false;
+	if (!loadDrawable("tire"+tiredim, texname, *cfg_tire, topnode.GetNode(wheelnode)))
+	{
+		error_output << "unable to load tire drawable" << std::endl;
+		return false;
+	}
 
 	// load brake (optional)
 	texname.clear();
@@ -352,7 +384,11 @@ static bool LoadWheel(
 
 		models.Set("brake"+radius, temp);
 	}
-	if (!loadDrawable("brake"+radius, texname, *cfg_brake, topnode.GetNode(wheelnode))) return false;
+	if (!loadDrawable("brake"+radius, texname, *cfg_brake, topnode.GetNode(wheelnode)))
+	{
+		error_output << "unable to load brake drawable" << std::endl;
+		return false;
+	}
 
 	/* load fender (optional)
 	keyed_container<SCENENODE>::handle floatingnode = topnode.AddNode();
@@ -568,7 +604,11 @@ bool CAR::LoadGraphics(
 	const PTree * cfg_body;
 	std::string meshname;
 	std::vector<std::string> texname;
-	if (!cfg.get("body", cfg_body, error_output)) return false;
+	if (!cfg.get("body", cfg_body, error_output))
+	{
+		error_output << "there is a problem with the .car file" << std::endl;
+		return false;
+	}
 	if (!cfg_body->get("mesh", meshname, error_output)) return false;
 	if (!cfg_body->get("texture", texname, error_output)) return false;
 	if (carpaint != "default") texname[0] = carpaint;
@@ -581,6 +621,7 @@ bool CAR::LoadGraphics(
 	{
 		if (!LoadWheel(i->second, loadDrawable, topnode, error_output))
 		{
+			error_output << "unable to load wheels" << std::endl;
 			return false;
 		}
 	}
@@ -604,7 +645,11 @@ bool CAR::LoadGraphics(
 	const PTree * cfg_steer;
 	if (cfg.get("steering", cfg_steer))
 	{
-		if (!loadDrawable(*cfg_steer, bodynoderef, &steernode, 0)) return false;
+		if (!loadDrawable(*cfg_steer, bodynoderef, &steernode, 0))
+		{
+			error_output << "unable to load steering wheel" << std::endl;
+			return false;
+		}
 		cfg_steer->get("max-angle", steer_angle_max);
 		steer_angle_max = steer_angle_max / 180.0 * M_PI;
 		SCENENODE & steernoderef = bodynoderef.GetNode(steernode);
@@ -617,7 +662,11 @@ bool CAR::LoadGraphics(
 	const PTree * cfg_light;
 	while (cfg.get("light-brake-"+istr, cfg_light))
 	{
-		if (!LoadLight(*cfg_light, models, error_output)) return false;
+		if (!LoadLight(*cfg_light, models, error_output))
+		{
+			error_output << "unable to load lights" << std::endl;
+			return false;
+		}
 
 		std::stringstream sstr;
 		sstr << ++i;
@@ -627,7 +676,11 @@ bool CAR::LoadGraphics(
 	istr = "0";
 	while (cfg.get("light-reverse-"+istr, cfg_light))
 	{
-		if (!LoadLight(*cfg_light, models, error_output)) return false;
+		if (!LoadLight(*cfg_light, models, error_output))
+		{
+			error_output << "unable to load lights" << std::endl;
+			return false;
+		}
 
 		std::stringstream sstr;
 		sstr << ++i;
@@ -637,14 +690,26 @@ bool CAR::LoadGraphics(
 	// load car brake/reverse graphics (optional)
 	if (cfg.get("light-brake", cfg_light))
 	{
-		if (!loadDrawable(*cfg_light, bodynoderef, 0, &brakelights)) return false;
+		if (!loadDrawable(*cfg_light, bodynoderef, 0, &brakelights))
+		{
+			error_output << "unable to load lights" << std::endl;
+			return false;
+		}
 	}
 	if (cfg.get("light-reverse", cfg_light))
 	{
-		if (!loadDrawable(*cfg_light, bodynoderef, 0, &reverselights)) return false;
+		if (!loadDrawable(*cfg_light, bodynoderef, 0, &reverselights))
+		{
+			error_output << "unable to load lights" << std::endl;
+			return false;
+		}
 	}
 
-	if (!LoadCameras(cfg, camerabounce, cameras, error_output)) return false;
+	if (!LoadCameras(cfg, camerabounce, cameras, error_output))
+	{
+		error_output << "unable to load cameras" << std::endl;
+		return false;
+	}
 
 	SetColor(carcolor[0], carcolor[1], carcolor[2]);
 

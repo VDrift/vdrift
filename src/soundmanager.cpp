@@ -16,31 +16,23 @@ bool SOUNDMANAGER::Load(
 {
 	if (Get(path, name, sptr)) return true;
 
-	// prefer ogg
-	std::string filepath = basepath + "/" + path + "/" +  name + ".ogg";
-	if (!std::ifstream(filepath.c_str()))
-	{
-		filepath = basepath + "/" + path + "/" + name + ".wav";
-	}
-
-	std::tr1::shared_ptr<SOUNDBUFFER> temp(new SOUNDBUFFER());
-	if (std::ifstream(filepath.c_str()) && temp->Load(filepath, info, error))
-	{
-		sptr = Set(path + "/" + name, temp)->second;
-		return true;
-	}
-	else
+	for (std::vector <PATH>::const_iterator p = basepaths.begin(); p != basepaths.end(); p++)
 	{
 		// prefer ogg
-		std::string filepath = sharedpath + "/" + name + ".ogg";
+		std::string filepath = p->path + "/" + path + "/" +  name + ".ogg";
+		if (p->shared)
+			filepath = p->path + "/" + name + ".ogg";
 		if (!std::ifstream(filepath.c_str()))
 		{
-			filepath = sharedpath + "/" + name + ".wav";
+			filepath = p->path + "/" + path + "/" + name + ".wav";
+			if (p->shared)
+				filepath = p->path + "/" + name + ".wav";
 		}
 
-		if (temp->Load(filepath, info, error))
+		std::tr1::shared_ptr<SOUNDBUFFER> temp(new SOUNDBUFFER());
+		if (std::ifstream(filepath.c_str()) && temp->Load(filepath, info, error))
 		{
-			sptr = Set(name, temp)->second;
+			sptr = Set(p->GetAssetPath(path, name), temp)->second;
 			return true;
 		}
 	}

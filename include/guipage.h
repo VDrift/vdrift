@@ -18,6 +18,7 @@ class TEXTUREMANAGER;
 class MODELMANAGER;
 class CONFIG;
 class FONT;
+class PATHMANAGER;
 
 class GUIPAGE
 {
@@ -29,7 +30,7 @@ public:
 	bool Load(
 		const std::string & path,
 		const std::string & texpath,
-		const std::string & datapath,
+		const PATHMANAGER & pathmanager,
 		const std::string & texsize,
 		const float screenhwratio,
 		const CONFIG & controlsconfig,

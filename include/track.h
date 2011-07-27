@@ -42,6 +42,7 @@ public:
 		const std::string & trackdir,
 		const std::string & effects_texturepath,
 		const std::string & texsize,
+		const std::string & sharedobjectpath,
 		const int anisotropy,
 		const bool reverse,
 		const bool dynamicobjects,

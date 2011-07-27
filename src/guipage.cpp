@@ -33,7 +33,7 @@ GUIPAGE::~GUIPAGE()
 bool GUIPAGE::Load(
 	const std::string & path,
 	const std::string & texpath,
-	const std::string & datapath,
+	const PATHMANAGER & pathmanager,
 	const std::string & texsize,
 	const float screenhwratio,
 	const CONFIG & controlsconfig,
@@ -476,7 +476,7 @@ bool GUIPAGE::Load(
 			if (!pagefile.GetParam(section, "values", values, error_output)) return false;
 
 			WIDGET_SPINNINGCAR * new_widget = NewWidget<WIDGET_SPINNINGCAR>();
-			new_widget->SetupDrawable(sref, textures, models, texsize, datapath, centerxy[0], centerxy[1],
+			new_widget->SetupDrawable(sref, textures, models, texsize, pathmanager, centerxy[0], centerxy[1],
 				MATHVECTOR<float, 3>(carpos[0], carpos[1], carpos[2]), error_output, z+10);
 		}
 		else if (type == "controlgrab")

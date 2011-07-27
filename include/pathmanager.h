@@ -8,28 +8,30 @@ class PATHMANAGER
 {
 public:
 	std::string GetDataPath() const {return data_directory;}
-	std::string GetSharedCarPath() const {return data_directory+"/carparts";}
-	std::string GetSharedTrackPath() const {return data_directory+"/trackparts";}
+	std::string GetWriteableDataPath() const {return settings_path;}
+	std::string GetSharedCarPath() const {return GetDataPath()+"/carparts";}
+	std::string GetSharedTrackPath() const {return GetDataPath()+"/trackparts";}
 	std::string GetStartupFile() const {return settings_path+"/startingup.txt";}
 	std::string GetTrackRecordsPath() const {return settings_path+"/records"+profile_suffix;}
 	std::string GetSettingsFile() const {return settings_path+"/VDrift.config"+profile_suffix;}
 	std::string GetLogFile() const {return settings_path+"/log.txt";}
-	std::string GetTrackPath() const {return data_directory+"/"+GetTrackDir();}
-	std::string GetCarPath() const {return data_directory+"/"+GetCarDir();}
-	std::string GetGUIMenuPath(const std::string & skinname) const {return data_directory+"/skins/"+skinname+"/menus";}
-	std::string GetSkinPath() const {return data_directory+"/skins/";}
-	std::string GetOptionsFile() const {return data_directory + "/settings/options.config";}
-	std::string GetVideoModeFile() const {return data_directory + "/lists/videomodes";}
+	std::string GetTrackPath() const {return GetDataPath()+"/"+GetTrackDir();}
+	std::string GetCarPath(const std::string & carname) const;
+	std::string GetCarPaintPath(const std::string & carname) const {return GetCarPath(carname)+"/skins";}
+	std::string GetGUIMenuPath(const std::string & skinname) const {return GetDataPath()+"/skins/"+skinname+"/menus";}
+	std::string GetSkinPath() const {return GetDataPath()+"/skins/";}
+	std::string GetOptionsFile() const {return GetDataPath() + "/settings/options.config";}
+	std::string GetVideoModeFile() const {return GetDataPath() + "/lists/videomodes";}
 	std::string GetCarControlsFile() const {return settings_path+"/controls.config"+profile_suffix;}
-	std::string GetDefaultCarControlsFile() const {return data_directory+"/settings/controls.config";}
+	std::string GetDefaultCarControlsFile() const {return GetDataPath()+"/settings/controls.config";}
 	std::string GetReplayPath() const {return settings_path+"/replays";}
 	std::string GetScreenshotPath() const {return settings_path+"/screenshots";}
-	std::string GetStaticReflectionMap() const {return data_directory+"/textures/weather/cubereflection-nosun.png";}
-	std::string GetStaticAmbientMap() const {return data_directory+"/textures/weather/cubelighting.png";}
-	std::string GetShaderPath() const {return data_directory + "/shaders";}
+	std::string GetStaticReflectionMap() const {return GetDataPath()+"/textures/weather/cubereflection-nosun.png";}
+	std::string GetStaticAmbientMap() const {return GetDataPath()+"/textures/weather/cubelighting.png";}
+	std::string GetShaderPath() const {return GetDataPath() + "/shaders";}
 	std::string GetUpdateManagerFile() const {return settings_path+"/updates.config"+profile_suffix;}
 	std::string GetUpdateManagerFileBackup() const {return settings_path+"/updates.config.backup"+profile_suffix;}
-	std::string GetUpdateManagerFileBase() const {return data_directory + "/settings/updates.config";}
+	std::string GetUpdateManagerFileBase() const {return GetDataPath() + "/settings/updates.config";}
 
 	std::string GetTrackDir() const {return "tracks";}
 	std::string GetCarDir() const {return "cars";}
@@ -41,6 +43,9 @@ public:
 	std::string GetHUDTextureDir() const {return "textures/hud";}
 	std::string GetEffectsTextureDir() const {return "textures/effects";}
 	std::string GetTireSmokeTextureDir() const {return "textures/smoke";}
+	
+	std::string GetReadOnlyCarPath() const {return GetDataPath()+"/"+GetCarDir();}
+	std::string GetWriteableCarPath() const {return GetWriteableDataPath()+"/"+GetCarDir();}
 
 	std::string GetTemporaryFolder() const {return temporary_folder;}
 
@@ -53,6 +58,8 @@ public:
 	void SetProfile(const std::string & value);
 
 	void Init(std::ostream & info_output, std::ostream & error_output);
+	
+	static void MakeDir(const std::string & dir);
 
 private:
 	std::string home_directory;

@@ -37,6 +37,7 @@
 #include "cfg/ptree.h"
 #include "svn_sourceforge.h"
 #include "game_downloader.h"
+#include "containeralgorithm.h"
 
 #include <fstream>
 #include <string>
@@ -278,15 +279,22 @@ void GAME::InitCoreSubsystems()
 	pathmanager.Init(info_output, error_output);
 	http.SetTemporaryFolder(pathmanager.GetTemporaryFolder());
 
-	textures.SetBasePath(pathmanager.GetDataPath());
-	models.SetBasePath(pathmanager.GetDataPath());
-	sounds.SetBasePath(pathmanager.GetDataPath());
+	// always add the writeable data paths first so they are checked first
+	textures.AddPath(pathmanager.GetWriteableDataPath());
+	textures.AddPath(pathmanager.GetDataPath());
+	models.AddPath(pathmanager.GetWriteableDataPath());
+	models.AddPath(pathmanager.GetDataPath());
+	sounds.AddPath(pathmanager.GetWriteableDataPath());
+	sounds.AddPath(pathmanager.GetDataPath());
 
 	// Set car shared path for car selection.
 	// TODO: implement virtual file system...
-	textures.SetSharedPath(pathmanager.GetSharedCarPath());
-	models.SetSharedPath(pathmanager.GetSharedCarPath());
-	sounds.SetSharedPath(pathmanager.GetSharedCarPath());
+	textures.AddPath(pathmanager.GetSharedCarPath(), true);
+	models.AddPath(pathmanager.GetSharedCarPath(), true);
+	sounds.AddPath(pathmanager.GetSharedCarPath(), true);
+	textures.AddPath(pathmanager.GetSharedTrackPath(), true);
+	models.AddPath(pathmanager.GetSharedTrackPath(), true);
+	sounds.AddPath(pathmanager.GetSharedTrackPath(), true);
 
 	settings.Load(pathmanager.GetSettingsFile(), error_output);
 
@@ -411,7 +419,7 @@ bool GAME::InitGUI()
 			pathmanager.GetGUILanguageDir(settings.GetSkin()),
 			settings.GetLanguage(),
 			pathmanager.GetGUITextureDir(settings.GetSkin()),
-			pathmanager.GetDataPath(),
+			pathmanager,
 			settings.GetTextureSize(),
 			(float)window.GetH()/window.GetW(),
 			fonts,
@@ -499,8 +507,9 @@ bool GAME::ParseArguments(std::list <std::string> & args)
 	{
 		pathmanager.Init(info_output, error_output);
 		PERFORMANCE_TESTING perftest(collision);
-		perftest.Test(pathmanager.GetCarPath(), pathmanager.GetSharedCarPath(),
-			argmap["-cartest"], info_output, error_output);
+		const std::string carname = argmap["-cartest"];
+		perftest.Test(pathmanager.GetCarPath(carname), pathmanager.GetSharedCarPath(),
+			carname, info_output, error_output);
 		continue_game = false;
 	}
 	arghelp["-cartest CAR"] = "Run car performance testing on given CAR.";
@@ -1744,15 +1753,10 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 		info_output << "Loading replay file " << replayfilename << std::endl;
 		if (!replay.StartPlaying(replayfilename, error_output))
 		{
+			error_output << "Unable to load replay file " << replayfilename << std::endl;
 			return false;
 		}
 	}
-
-	// Set track shared path.
-	// TODO: implement virtual file system.
-	textures.SetSharedPath(pathmanager.GetSharedTrackPath());
-	models.SetSharedPath(pathmanager.GetSharedTrackPath());
-	sounds.SetSharedPath(pathmanager.GetSharedTrackPath());
 
 	// Set the track name.
 	std::string trackname;
@@ -1774,12 +1778,6 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	// Start out with no camera.
 	active_camera = NULL;
 
-	// Set car shared path.
-	// TODO: implement virtual file system.
-	textures.SetSharedPath(pathmanager.GetSharedCarPath());
-	models.SetSharedPath(pathmanager.GetSharedCarPath());
-	sounds.SetSharedPath(pathmanager.GetSharedCarPath());
-
 	// Load car.
 	MATHVECTOR<float, 3> carcolor(0);
 	std::string carname, carpaint("default"), carfile;
@@ -1798,6 +1796,7 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	}
 	if (!LoadCar(carname, carpaint, carcolor, track.GetStart(0).first, track.GetStart(0).second, true, false, carfile))
 	{
+		error_output << "Unable to load car " << carname << std::endl;
 		return false;
 	}
 
@@ -1810,6 +1809,7 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 			int startplace = carcount;
 			if (!LoadCar(opponents[i], opponents_paint[i], opponents_color[i], track.GetStart(startplace).first, track.GetStart(startplace).second, false, true))
 			{
+				error_output << "Unable to get track start location " << i << std::endl;
 				return false;
 			}
 			ai.add_car(&cars.back(), settings.GetAIDifficulty());
@@ -1843,7 +1843,10 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	if (num_laps > 0)
 		pretime = 3.0f;
 	if (!timer.Load(pathmanager.GetTrackRecordsPath()+"/"+trackname+".txt", pretime, error_output))
+	{
+		error_output << "Unable to load timer" << std::endl;
 		return false;
+	}
 
 	// Add cars to the timer system.
 	int count = 0;
@@ -1866,9 +1869,10 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	{
 		assert(carcontrols_local.first);
 
-		std::string cartype = carcontrols_local.first->GetCarType();;
-		std::string cardir = pathmanager.GetCarDir()+"/"+carname.substr(0, carname.find("/"));
-		std::string carpath = pathmanager.GetDataPath()+"/"+cardir;
+		std::string cartype = carcontrols_local.first->GetCarType();
+		std::string carnamebase = carname.substr(0, carname.find("/"));
+		std::string cardir = pathmanager.GetCarDir()+"/"+carnamebase;
+		std::string carpath = pathmanager.GetCarPath(carnamebase);
 
 		PTree carconfig;
 		file_open_basic fopen(carpath, pathmanager.GetSharedCarPath());
@@ -1974,8 +1978,9 @@ bool GAME::LoadCar(
 	const std::string & carfile)
 {
 	std::string partspath = pathmanager.GetCarSharedDir();
-	std::string cardir = pathmanager.GetCarDir()+"/"+carname.substr(0, carname.find("/"));
-	std::string carpath = pathmanager.GetDataPath()+"/"+cardir;
+	std::string carnamebase = carname.substr(0, carname.find("/"));
+	std::string cardir = pathmanager.GetCarDir()+"/"+carnamebase;
+	std::string carpath = pathmanager.GetCarPath(carnamebase);
 
 	PTree carconf;
 	if (carfile.empty())
@@ -2011,6 +2016,7 @@ bool GAME::LoadCar(
 
 	if(sound.Enabled() && !car.LoadSounds(cardir, carname, sound.GetDeviceInfo(), sounds, info_output, error_output))
 	{
+		error_output << "Failed to load sounds for car " << carname << std::endl;
 		return false;
 	}
 
@@ -2020,6 +2026,7 @@ bool GAME::LoadCar(
 		settings.GetVehicleDamage(), models, collision,
 		info_output, error_output))
 	{
+		error_output << "Failed to load physics for car " << carname << std::endl;
 		return false;
 	}
 
@@ -2055,6 +2062,7 @@ bool GAME::LoadTrack(const std::string & trackname)
 			pathmanager.GetTrackDir()+"/"+trackname,
 			pathmanager.GetEffectsTextureDir(),
 			settings.GetTextureSize(),
+			pathmanager.GetSharedTrackPath(),
 			settings.GetAnisotropy(),
 			settings.GetTrackReverse(),
 			settings.GetTrackDynamic(),
@@ -2233,13 +2241,30 @@ void GAME::PopulateCarPaintList(const std::string & carname, std::list <std::pai
 
 	std::list <std::string> paintfolder;
 	std::string cardir = carname.substr(0, carname.rfind("/"));
-	std::string paintdir = pathmanager.GetCarPath()+"/"+cardir+"/skins";
+	std::string paintdir = pathmanager.GetCarPaintPath(carname);
 	if (pathmanager.GetFileList(paintdir, paintfolder, ".png"))
 	{
 		for (std::list <std::string>::iterator i = paintfolder.begin(); i != paintfolder.end(); ++i)
 		{
 			std::string paintname = i->substr(0, i->length()-4);
 			carpaintlist.push_back(std::make_pair("skins/"+*i, paintname));
+		}
+	}
+}
+
+void PopulateCarSet(std::set <std::pair<std::string, std::string> > & carset, const std::string & carpath, const PATHMANAGER & pathmanager)
+{
+	std::list <std::string> carfolderlist;
+	pathmanager.GetFileList(carpath, carfolderlist);
+	for (std::list <std::string>::iterator i = carfolderlist.begin(); i != carfolderlist.end(); ++i)
+	{
+		std::list <std::string> carfilelist;
+		pathmanager.GetFileList(carpath+"/"+*i, carfilelist, ".car");
+		for (std::list <std::string>::iterator j = carfilelist.begin(); j != carfilelist.end(); ++j)
+		{
+			std::string carname = j->substr(0, j->length()-4);
+			std::string carconf = *i + "/" + *j;
+			carset.insert(std::make_pair(carconf, carname));
 		}
 	}
 }
@@ -2264,22 +2289,16 @@ void GAME::PopulateValueLists(std::map<std::string, std::list <std::pair <std::s
 	valuelists["tracks"] = tracklist;
 
 	// Populate car list.
+	std::set <std::pair<std::string, std::string> > carset; // to avoid duplicate entries
+	PopulateCarSet(carset, pathmanager.GetReadOnlyCarPath(), pathmanager);
+	PopulateCarSet(carset, pathmanager.GetWriteableCarPath(), pathmanager);
 	std::list <std::pair<std::string, std::string> > carlist;
-	std::list <std::string> carfolderlist;
-	pathmanager.GetFileList(pathmanager.GetCarPath(), carfolderlist);
-	for (std::list <std::string>::iterator i = carfolderlist.begin(); i != carfolderlist.end(); ++i)
+	for (std::set <std::pair<std::string, std::string> >::const_iterator i = carset.begin(); i != carset.end(); i++)
 	{
-		std::list <std::string> carfilelist;
-		pathmanager.GetFileList(pathmanager.GetCarPath()+"/"+*i, carfilelist, ".car");
-		for (std::list <std::string>::iterator j = carfilelist.begin(); j != carfilelist.end(); ++j)
-		{
-			std::string carname = j->substr(0, j->length()-4);
-			std::string carconf = *i + "/" + *j;
-			carlist.push_back(std::make_pair(carconf, carname));
-		}
+		carlist.push_back(*i);
 	}
 	valuelists["cars"] = carlist;
-
+	
 	// Populate car paints.
 	PopulateCarPaintList(settings.GetSelectedCar(), valuelists["player_paints"]);
 	PopulateCarPaintList(settings.GetOpponentCar(), valuelists["opponent_paints"]);

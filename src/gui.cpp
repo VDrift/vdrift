@@ -1,6 +1,7 @@
 #include "gui.h"
 #include "config.h"
 #include "widget_controlgrab.h"
+#include "pathmanager.h"
 
 #include <sstream>
 
@@ -45,7 +46,7 @@ bool GUI::Load(
 	const std::string & languagedir,
 	const std::string & language,
 	const std::string & texpath,
-	const std::string & datapath,
+	const PATHMANAGER & pathmanager,
 	const std::string & texsize,
 	const float screenhwratio,
 	const std::map <std::string, FONT> & fonts,
@@ -55,6 +56,8 @@ bool GUI::Load(
 	std::ostream & error_output)
 {
     Unload();
+	
+	std::string datapath = pathmanager.GetDataPath();
 
 	// load language font
 	CONFIG languageconfig;
@@ -97,7 +100,7 @@ bool GUI::Load(
 		const std::string & pagename = *i;
 
 		if (!pages[pagename].Load(
-			menupath + "/" + pagename, texpath, datapath, texsize,
+			menupath + "/" + pagename, texpath, pathmanager, texsize,
 			screenhwratio, carcontrolsfile, font, languagemap, optionmap,
 			node, textures, models, error_output))
 		{
