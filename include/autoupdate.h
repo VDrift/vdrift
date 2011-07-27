@@ -36,6 +36,9 @@ public:
 	/// returns zero on error
 	int GetFormatVersion(const std::string & group) const;
 	
+	/// update the local version record for the specified group and item to the specified version
+	void SetVersion(const std::string & group, const std::string & item, int newversion);
+	
 	/// returns true if we have no update data
 	bool empty() const {return groups.empty();}
 	bool empty(const std::string & group) const;

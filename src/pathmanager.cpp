@@ -28,6 +28,11 @@ void PATHMANAGER::MakeDir(const std::string & dir)
 #endif
 }
 
+void PATHMANAGER::DeleteFile(const std::string & path)
+{
+	remove(path.c_str());
+}
+
 void PATHMANAGER::Init(std::ostream & info_output, std::ostream & error_output)
 {
 	//figure out the user's home directory

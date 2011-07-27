@@ -188,7 +188,7 @@ void UPDATE_MANAGER::ShowCarManager(GUI & gui)
 
 bool UPDATE_MANAGER::ApplyCarUpdate(GAME_DOWNLOADER downloader, GUI & gui, const PATHMANAGER & pathmanager)
 {
-	const bool debug = true;
+	const bool debug = false;
 	const std::string group = "cars";
 	std::string carname;
 	if (!gui.GetLabelText("CarManager", "carlabel", carname))
@@ -243,7 +243,7 @@ bool UPDATE_MANAGER::ApplyCarUpdate(GAME_DOWNLOADER downloader, GUI & gui, const
 	}
 	info_output << "ApplyCarUpdate: download successful: " << archivepath << std::endl;
 	
-	// decompress
+	// decompress and write output
 	if (!Decompress(archivepath, pathmanager.GetWriteableCarPath(), info_output, error_output))
 	{
 		error_output << "ApplyCarUpdate: unable to decompress update" << std::endl;
@@ -251,11 +251,16 @@ bool UPDATE_MANAGER::ApplyCarUpdate(GAME_DOWNLOADER downloader, GUI & gui, const
 		return false;
 	}
 	
-	// write output
-	
 	// record update
-	/*if (!autoupdate.empty())
-		autoupdate.Write(updatefilebackup); // save a backup before changing it*/
+	if (!autoupdate.empty())
+		autoupdate.Write(updatefilebackup); // save a backup before changing it
+	autoupdate.SetVersion(group, carname, revs.second);
+	
+	// remove temporary file
+	if (!debug)
+	{
+		PATHMANAGER::DeleteFile(archivepath);
+	}
 	
 	gui.ActivatePage("UpdateSuccessful", 0.25, error_output);
 	return true;
@@ -296,6 +301,8 @@ bool UPDATE_MANAGER::DownloadRemoteConfig(GAME_DOWNLOADER downloader, GUI & gui)
 		error_output << "DownloadRemoteConfig: failed to load updates.config" << std::endl;
 		return false;
 	}
+	
+	PATHMANAGER::DeleteFile(filepath);
 	
 	return true;
 }

@@ -218,3 +218,8 @@ int AUTOUPDATE::GetFormatVersion(const std::string & group) const
 	
 	return version;
 }
+
+void AUTOUPDATE::SetVersion(const std::string & group, const std::string & item, int newversion)
+{
+	groups[group][item] = newversion;
+}
