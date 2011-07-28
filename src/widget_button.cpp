@@ -2,7 +2,7 @@
 
 #include <cassert>
 
-WIDGET_BUTTON::WIDGET_BUTTON() : cancel(true)
+WIDGET_BUTTON::WIDGET_BUTTON() : cancel(true), enabled(true), alpha(1.0f)
 {
 	// ctor
 }
@@ -14,10 +14,12 @@ WIDGET * WIDGET_BUTTON::clone() const
 
 void WIDGET_BUTTON::SetAlpha(SCENENODE & scene, float newalpha)
 {
-	label.SetAlpha(scene, newalpha);
-	image_up.SetAlpha(scene, newalpha);
-	image_down.SetAlpha(scene, newalpha);
-	image_selected.SetAlpha(scene, newalpha);
+	float basealpha = enabled ? 1.0 : 0.5;
+	label.SetAlpha(scene, newalpha*basealpha);
+	image_up.SetAlpha(scene, newalpha*basealpha);
+	image_down.SetAlpha(scene, newalpha*basealpha);
+	image_selected.SetAlpha(scene, newalpha*basealpha);
+	alpha = newalpha;
 }
 
 void WIDGET_BUTTON::SetVisible(SCENENODE & scene, bool newvis)
@@ -55,7 +57,8 @@ bool WIDGET_BUTTON::ProcessInput(SCENENODE & scene, float cursorx, float cursory
 {
 	active_action.clear();
 
-	if (cursorx < image_up.GetCorner2()[0] &&
+	if (enabled &&
+		cursorx < image_up.GetCorner2()[0] &&
 		cursorx > image_up.GetCorner1()[0] &&
 		cursory < image_up.GetCorner2()[1] &&
 		cursory > image_up.GetCorner1()[1])
@@ -141,4 +144,10 @@ void WIDGET_BUTTON::SetupDrawable(
 	image_down.SetVisible(scene, false);
 	image_selected.SetVisible(scene, false);
 	state = UP;
+}
+
+void WIDGET_BUTTON::SetEnabled(SCENENODE & scene, bool newenabled)
+{
+	enabled = newenabled;
+	SetAlpha(scene, alpha);
 }

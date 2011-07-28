@@ -38,11 +38,11 @@ void PERFORMANCE_TESTING::Test(
 	std::ostream & error_output)
 {
 	info_output << "Beginning car performance test on " << carname << std::endl;
-	const std::string carfile = carpath+"/"+carname+"/"+carname+".car";
+	const std::string carfile = carpath+"/"+carname+".car";
 
 	//load the car dynamics
 	PTree cfg;
-	file_open_basic fopen(carpath+"/"+carname, partspath);
+	file_open_basic fopen(carpath, partspath);
 	if (!read_ini(carname+".car", fopen, cfg))
 	{
 		error_output << "Error loading car configuration file: " << carfile << std::endl;

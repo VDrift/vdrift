@@ -758,3 +758,66 @@
    fun:snd_pcm_mmap_writei
    fun:snd_pcm_writei
 }
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Addr8
+   obj:/usr/lib/fglrx/dri/fglrx_dri.so
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Addr2
+   obj:/usr/lib/fglrx/dri/fglrx_dri.so
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Param
+   rt_sigaction(act->sa_mask)
+   fun:__libc_sigaction
+   fun:sigaction
+   fun:main
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Param
+   ioctl(generic)
+   fun:ioctl
+   obj:/usr/lib/fglrx/dri/fglrx_dri.so
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Addr8
+   obj:/usr/lib/fglrx/dri/fglrx_dri.so
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Param
+   ioctl(generic)
+   fun:ioctl
+   obj:*
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Param
+   ioctl(generic)
+   fun:ioctl
+   obj:/usr/lib/fglrx/dri/fglrx_dri.so
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Param
+   sched_setaffinity(mask)
+   fun:syscall
+   obj:/usr/lib/fglrx/dri/fglrx_dri.so
+   obj:/usr/lib/fglrx/dri/fglrx_dri.so
+   obj:/usr/lib/fglrx/dri/fglrx_dri.so
+   obj:/usr/lib/fglrx/dri/fglrx_dri.so
+   obj:/usr/lib/fglrx/dri/fglrx_dri.so
+   obj:/usr/lib/fglrx/dri/fglrx_dri.so
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Addr1
+   obj:/usr/lib/fglrx/dri/fglrx_dri.so
+}
+

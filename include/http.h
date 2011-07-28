@@ -82,7 +82,7 @@ public:
 
 	static std::string ExtractFilenameFromUrl(const std::string & url);
 
-	std::string GetDownloadPath(const std::string & url);
+	std::string GetDownloadPath(const std::string & url) const;
 
 	void UpdateProgress(CURL * handle, float total, float current);
 

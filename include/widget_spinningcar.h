@@ -8,6 +8,7 @@
 
 class TEXTUREMANAGER;
 class MODELMANAGER;
+class PATHMANAGER;
 
 class WIDGET_SPINNINGCAR : public WIDGET
 {
@@ -31,7 +32,7 @@ public:
 		TEXTUREMANAGER & textures,
 		MODELMANAGER & models,
 		const std::string & texturesize,
-		const std::string & datapath,
+		const PATHMANAGER & pathmanager,
 		const float x,
 		const float y,
 		const MATHVECTOR <float, 3> & newcarpos,
@@ -39,7 +40,9 @@ public:
 		int order = 0);
 
 private:
-	std::string data;
+	std::string datarw;
+	std::string dataro;
+	std::string dataparts;
 	std::string tsize;
 	MATHVECTOR <float, 2> center;
 	MATHVECTOR <float, 3> carpos;
@@ -64,6 +67,8 @@ private:
 	void Unload(SCENENODE & parent);
 
 	void Load(SCENENODE & parent);
+	
+	bool Valid() const {return carnode.valid();}
 };
 
 #endif // _WIDGET_SPINNINGCAR_H

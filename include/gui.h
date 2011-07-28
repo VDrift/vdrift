@@ -52,7 +52,7 @@ public:
 		const std::string & languagedir,
 		const std::string & language,
 		const std::string & texpath,
-		const std::string & datapath,
+		const PATHMANAGER & pathmanager,
 		const std::string & texsize,
 		const float screenhwratio,
 		const std::map <std::string, FONT> & fonts,
@@ -120,6 +120,10 @@ public:
 
 	/// returns false if the specified page/label does not exist
 	bool SetLabelText(const std::string & page, const std::string & label, const std::string & text);
+	bool GetLabelText(const std::string & page, const std::string & label, std::string & text_output);
+	
+	/// returns false if the specified page/label does not exist
+	bool SetButtonEnabled(const std::string & page, const std::string & button, bool enable);
 
 private:
 	std::map<std::string, GUIPAGE> pages;

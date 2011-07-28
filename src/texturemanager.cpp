@@ -10,26 +10,38 @@ TEXTUREMANAGER::TEXTUREMANAGER(std::ostream & error) :
 
 bool TEXTUREMANAGER::Load(const std::string & path, const std::string & name, const TEXTUREINFO & originalinfo, std::tr1::shared_ptr<TEXTURE> & sptr)
 {
+	const bool debug = true;
+	
 	if (Get(path, name, sptr)) return true;
 
 	// override some parameters in the info based on the manager's configuration
 	TEXTUREINFO info = originalinfo;
 	info.srgb = srgb;
 
-	std::string filepath = basepath + "/" + path + "/" + name;
 	std::tr1::shared_ptr<TEXTURE> temp(new TEXTURE());
-	if (std::ifstream(filepath.c_str()) && temp->Load(filepath, info, error))
+	
+	for (std::vector <PATH>::const_iterator p = basepaths.begin(); p != basepaths.end(); p++)
 	{
-		sptr = Set(path + "/" + name, temp)->second;
-		return true;
-	}
-	else
-	{
-		if (temp->Load(sharedpath + "/" + name, info, error))
+		std::string filepath = p->path + "/" + path + "/" + name;
+		if (p->shared)
+			filepath = p->path + "/" + name;
+		if ((info.surface || std::ifstream(filepath.c_str())) && temp->Load(filepath, info, error))
 		{
-			sptr = Set(name, temp)->second;
+			sptr = Set(p->GetAssetPath(path, name), temp)->second;
 			return true;
 		}
+	}
+	
+	if (debug)
+	{
+		std::cerr << "tried paths: ";
+		for (std::vector <PATH>::const_iterator p = basepaths.begin(); p != basepaths.end(); p++)
+		{
+			if (p != basepaths.begin())
+				std::cerr << ", ";
+			std::cerr << p->path + "/" + path + "/" + name;
+		}
+		std::cerr << std::endl;
 	}
 
 	return false;

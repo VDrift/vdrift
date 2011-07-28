@@ -1,0 +1,1 @@
+valgrind --suppressions=tools/valgrind/vdrift.supp --leak-check=full --show-reachable=yes --gen-suppressions=all build/vdrift 2>valgrind_dump

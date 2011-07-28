@@ -70,6 +70,7 @@ TRACK::LOADER::LOADER(
 	const std::string & trackdir,
 	const std::string & texturedir,
 	const std::string & texsize,
+	const std::string & sharedobjectpath,
 	const int anisotropy,
 	const bool reverse,
 	const bool dynamic_objects,
@@ -85,6 +86,7 @@ TRACK::LOADER::LOADER(
 	trackdir(trackdir),
 	texturedir(texturedir),
 	texsize(texsize),
+	sharedobjectpath(sharedobjectpath),
 	anisotropy(anisotropy),
 	reverse(reverse),
 	dynamic_objects(dynamic_objects),
@@ -232,7 +234,7 @@ std::pair<bool, bool> TRACK::LOADER::ContinueObjectLoad()
 
 bool TRACK::LOADER::Begin()
 {
-	file_open_basic fopen(objectpath, model_manager.GetSharedPath());
+	file_open_basic fopen(objectpath, sharedobjectpath);
 	if (read_ini("objects.txt", fopen, track_config))
 	{
 		//write_inf(track_config, std::cerr);

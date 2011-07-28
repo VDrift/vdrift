@@ -4,6 +4,7 @@
 #include <map>
 #include <string>
 #include <iostream>
+#include <vector>
 
 #ifdef _MSC_VER
 #include <memory>
@@ -29,26 +30,11 @@ public:
 		Clear();
 	}
 
-	void SetBasePath(const std::string & path)
+	void AddPath(const std::string & path, bool shared = false)
 	{
-		basepath = path;
+		basepaths.push_back(PATH(path, shared));
 	}
-
-	void SetSharedPath(const std::string & path)
-	{
-		sharedpath = path;
-	}
-
-	const std::string & GetBasePath() const
-	{
-		return basepath;
-	}
-
-	const std::string & GetSharedPath() const
-	{
-		return sharedpath;
-	}
-
+	
 	bool Get(const std::string & path, const std::string & name, const_iterator & it)
 	{
 		const_iterator i = objects.find(path + "/" + name);
@@ -129,8 +115,20 @@ public:
 
 protected:
 	container objects;
-	std::string basepath;
-	std::string sharedpath;
+	struct PATH
+	{
+		std::string path;
+		bool shared;
+		std::string GetAssetPath(const std::string & localpath, const std::string & name) const
+		{
+			if (shared)
+				return name;
+			else
+				return localpath + "/" + name;
+		}
+		PATH(const std::string & path_, bool shared_) : path(path_), shared(shared_) {}
+	};
+	std::vector <PATH> basepaths;
 	std::ostream & error;
 };
 

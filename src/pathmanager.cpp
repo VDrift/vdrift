@@ -19,13 +19,18 @@
 #include <errno.h>
 #endif
 
-static void MakeDir(const std::string & dir)
+void PATHMANAGER::MakeDir(const std::string & dir)
 {
 #ifndef _WIN32
 	mkdir(dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
 #else
 	mkdir(dir.c_str());
 #endif
+}
+
+void PATHMANAGER::DeleteFile(const std::string & path)
+{
+	remove(path.c_str());
 }
 
 void PATHMANAGER::Init(std::ostream & info_output, std::ostream & error_output)
@@ -196,4 +201,13 @@ void PATHMANAGER::SetProfile(const std::string & value)
 {
 	assert(data_directory.empty()); //assert that Init() hasn't been called yet
 	profile_suffix = "."+value;
+}
+
+std::string PATHMANAGER::GetCarPath(const std::string & carname) const
+{
+	// check writeable car path first (check for presence of .car files)
+	if (FileExists(GetWriteableDataPath() + "/" + GetCarDir() + "/" + carname + "/" + carname + ".car"))
+		return GetWriteableDataPath() + "/" + GetCarDir() + "/" + carname;
+	else
+		return GetDataPath()+"/"+GetCarDir()+"/"+carname;
 }
