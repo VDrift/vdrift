@@ -350,6 +350,7 @@
 		F52DA99413E4646B002D95FC /* archive_write_private.h in Headers */ = {isa = PBXBuildFile; fileRef = F52DA89B13E4646B002D95FC /* archive_write_private.h */; };
 		F52DA9A613E4646B002D95FC /* config_freebsd.h in Headers */ = {isa = PBXBuildFile; fileRef = F52DA8AD13E4646B002D95FC /* config_freebsd.h */; };
 		F52DA9A913E4646B002D95FC /* filter_fork.h in Headers */ = {isa = PBXBuildFile; fileRef = F52DA8B013E4646B002D95FC /* filter_fork.h */; };
+		F574510C13E466EF00D30F11 /* game_downloader.h in Headers */ = {isa = PBXBuildFile; fileRef = F574510B13E466EF00D30F11 /* game_downloader.h */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -710,6 +711,7 @@
 		F52DA89B13E4646B002D95FC /* archive_write_private.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = archive_write_private.h; sourceTree = "<group>"; };
 		F52DA8AD13E4646B002D95FC /* config_freebsd.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = config_freebsd.h; sourceTree = "<group>"; };
 		F52DA8B013E4646B002D95FC /* filter_fork.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = filter_fork.h; sourceTree = "<group>"; };
+		F574510B13E466EF00D30F11 /* game_downloader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = game_downloader.h; sourceTree = "<group>"; };
 		F5A47A9D01A0482F01D3D55B /* SDLMain.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = SDLMain.h; sourceTree = SOURCE_ROOT; };
 		F5A47A9E01A0483001D3D55B /* SDLMain.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; path = SDLMain.m; sourceTree = SOURCE_ROOT; };
 		F5DBC76713DF3C7D00C92CC6 /* VDrift.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = VDrift.entitlements; sourceTree = "<group>"; };
@@ -879,6 +881,7 @@
 				B97DC2BE1326374100B262BC /* forcefeedback.h */,
 				B94206EE139A35E0006ED680 /* fracturebody.h */,
 				B97DC2BF1326374100B262BC /* frustum.h */,
+				F574510B13E466EF00D30F11 /* game_downloader.h */,
 				B97DC2C01326374100B262BC /* game.h */,
 				B97DC2C11326374100B262BC /* glstatemanager.h */,
 				B97DC2C21326374100B262BC /* graphics_config_condition.h */,
@@ -1373,6 +1376,7 @@
 				F52DA99413E4646B002D95FC /* archive_write_private.h in Headers */,
 				F52DA9A613E4646B002D95FC /* config_freebsd.h in Headers */,
 				F52DA9A913E4646B002D95FC /* filter_fork.h in Headers */,
+				F574510C13E466EF00D30F11 /* game_downloader.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
