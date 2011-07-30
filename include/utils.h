@@ -70,6 +70,18 @@ std::string implode(const T & toImplode, const std::string & sep)
 
 std::vector <std::string> explode(const std::string & toExplode, const std::string & sep);
 
+/// print all elements in the vector to the provided ostream
+template <typename T>
+void print_vector(const std::vector <T> & v, std::ostream & o, const std::string delim = ", ")
+{
+	for (typename std::vector <T>::const_iterator i = v.begin(); i != v.end(); i++)
+	{
+		if (i != v.begin())
+			o << delim;
+		o << *i;
+	}
+}
+
 }
 
 #endif

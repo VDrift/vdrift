@@ -12,11 +12,13 @@
 #include <ostream>
 
 class WIDGET_LABEL;
+class WIDGET_BUTTON;
 class WIDGET_CONTROLGRAB;
 class TEXTUREMANAGER;
 class MODELMANAGER;
 class CONFIG;
 class FONT;
+class PATHMANAGER;
 
 class GUIPAGE
 {
@@ -28,7 +30,7 @@ public:
 	bool Load(
 		const std::string & path,
 		const std::string & texpath,
-		const std::string & datapath,
+		const PATHMANAGER & pathmanager,
 		const std::string & texsize,
 		const float screenhwratio,
 		const CONFIG & controlsconfig,
@@ -65,6 +67,11 @@ public:
 	{
 		return label_widgets[label_widget_name];
 	}
+	
+	reseatable_reference <WIDGET_BUTTON> GetButton(const std::string & widget_name)
+	{
+		return button_widgets[widget_name];
+	}
 
 	SCENENODE & GetNode(SCENENODE & parentnode)
 	{
@@ -74,6 +81,7 @@ public:
 private:
 	std::list <DERIVED <WIDGET> > widgets;
 	std::map <std::string, reseatable_reference <WIDGET_LABEL> > label_widgets;
+	std::map <std::string, reseatable_reference <WIDGET_BUTTON> > button_widgets;
 	std::list <WIDGET_CONTROLGRAB *> controlgrabs;
 	WIDGET_LABEL * tooltip_widget;
 	keyed_container <SCENENODE>::handle s;

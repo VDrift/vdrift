@@ -17,6 +17,8 @@ def addbulletpath( val ):
 src = Split("""aabb.cpp
 		aabb_space_partitioning.cpp
 		ai.cpp
+		archiveutils.cpp
+		autoupdate.cpp
 		bezier.cpp
 		camera_chase.cpp
 		camera_fixed.cpp
@@ -106,6 +108,7 @@ src = Split("""aabb.cpp
 		track.cpp
 		trackloader.cpp
 		trackmap.cpp
+		updatemanagement.cpp
 		utils.cpp
 		vertexarray.cpp
 		widget_button.cpp
@@ -144,7 +147,7 @@ SConsignFile()
 #--------------------------#
 appdir = ""
 vdrift_install = None
-common_libs = ['SDL_image', 'SDL_gfx', 'vorbisfile', 'curl']
+common_libs = ['SDL_image', 'SDL_gfx', 'vorbisfile', 'curl', 'archive']
 
 if (sys.platform == 'freebsd6') or (sys.platform == 'freebsd7') or (sys.platform == 'freebsd8') or (sys.platform == 'freebsd9'):
     common_libs.append('libLinearMath')

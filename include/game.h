@@ -33,6 +33,8 @@
 #include "soundmanager.h"
 #include "http.h"
 #include "gl3v/stringidmap.h"
+#include "updatemanagement.h"
+#include "game_downloader.h"
 
 #include <ostream>
 #include <string>
@@ -43,6 +45,7 @@
 
 class GAME
 {
+friend class GAME_DOWNLOADER;
 public:
 	GAME(std::ostream & info_out, std::ostream & error_out);
 	void Start(std::list <std::string> & args);
@@ -98,7 +101,7 @@ private:
 	bool LastStartWasSuccessful() const;
 	bool Download(const std::string & file);
 	bool Download(const std::vector <std::string> & files);
-
+	
 	// move to settings
 	void GetOptions(std::map<std::string, std::string> & options);
 	void SetOptions(const std::map<std::string, std::string> & options);
@@ -116,6 +119,8 @@ private:
 	MODELMANAGER models;
 	SOUNDMANAGER sounds;
 	SETTINGS settings;
+	
+	UPDATE_MANAGER updater;
 
 	WINDOW_SDL window;
 	GRAPHICS_INTERFACE * graphics_interface;

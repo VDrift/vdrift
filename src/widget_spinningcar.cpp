@@ -1,6 +1,7 @@
 #include "widget_spinningcar.h"
 #include "car.h"
 #include "cfg/ptree.h"
+#include "pathmanager.h"
 
 WIDGET_SPINNINGCAR::WIDGET_SPINNINGCAR():
 	errptr(0),
@@ -128,7 +129,7 @@ void WIDGET_SPINNINGCAR::SetupDrawable(
 	TEXTUREMANAGER & textures,
 	MODELMANAGER & models,
 	const std::string & texturesize,
-	const std::string & datapath,
+	const PATHMANAGER & pathmanager,
 	const float x,
 	const float y,
 	const MATHVECTOR <float, 3> & newcarpos,
@@ -136,7 +137,9 @@ void WIDGET_SPINNINGCAR::SetupDrawable(
 	int order)
 {
 	tsize = texturesize;
-	data = datapath;
+	dataro = pathmanager.GetReadOnlyCarPath();
+	datarw = pathmanager.GetWriteableCarPath();
+	dataparts = pathmanager.GetSharedCarPath();
 	center.Set(x,y);
 	carpos = newcarpos;
 	this->textures = &textures;
@@ -195,6 +198,21 @@ void WIDGET_SPINNINGCAR::Load(SCENENODE & parent)
 	bool damage = false;
 	bool debugmode = false;
 
+	std::string partspath = "carparts";
+	std::string cardir = carname.substr(0, carname.rfind("/"));
+	std::string carpath = "cars/"+cardir;
+	std::string carconfpath = datarw+"/"+cardir;
+	if (!std::ifstream(carconfpath.c_str()))
+		carconfpath = dataro+"/"+cardir;
+
+	PTree carconf;
+	file_open_basic fopen(carconfpath, dataparts);
+	if (!read_ini(carname.substr(carname.rfind("/")+1), fopen, carconf))
+	{
+		*errptr << "Error loading car's configfile: " << carconfpath << std::endl;
+		return;
+	}
+	
 	if (!carnode.valid())
 	{
 		carnode = parent.AddNode();
@@ -202,19 +220,6 @@ void WIDGET_SPINNINGCAR::Load(SCENENODE & parent)
 
 	SCENENODE & carnoderef = GetCarNode(parent);
 	car.push_back(CAR());
-
-	std::string partspath = "carparts";
-	std::string cardir = carname.substr(0, carname.rfind("/"));
-	std::string carpath = "cars/"+cardir;
-	std::string carconfpath = data+"/cars/"+carname;
-
-	PTree carconf;
-	file_open_basic fopen(data+"/"+carpath, data+"/"+partspath);
-	if (!read_ini(carname.substr(carname.rfind("/")+1), fopen, carconf))
-	{
-		*errptr << "Error loading car's configfile: " << carconfpath << std::endl;
-		return;
-	}
 
 	if (!car.back().LoadGraphics(
 			carconf, carpath, carname, partspath,
@@ -255,6 +260,9 @@ void WIDGET_SPINNINGCAR::Load(SCENENODE & parent)
 
 void WIDGET_SPINNINGCAR::SetColor(SCENENODE & scene, float r, float g, float b)
 {
+	if (!Valid())
+		return;
+	
 	// save the current state of the transform
 	SCENENODE & carnoderef = GetCarNode(scene);
 	TRANSFORM oldtrans = carnoderef.GetTransform();
