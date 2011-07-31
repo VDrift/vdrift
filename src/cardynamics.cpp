@@ -115,28 +115,32 @@ static bool LoadWheel(
 	std::ostream & error_output)
 {
 	btScalar mass, inertia;
-	if (!cfg.get("mass", mass) && !cfg.get("inertia", inertia))
-	{
-		btScalar tire_radius = tire.GetRadius();
-		btScalar tire_width = tire.GetSidewallWidth();
-		btScalar tire_thickness = 0.05;
-		btScalar tire_density = 8E3;
 
-		btScalar rim_radius = tire_radius - tire_width * tire.GetAspectRatio();
-		btScalar rim_width = tire_width;
-		btScalar rim_thickness = 0.01;
-		btScalar rim_density = 3E5;
+	// calculate mass, inertia from dimensions
+	btScalar tire_radius = tire.GetRadius();
+	btScalar tire_width = tire.GetSidewallWidth();
+	btScalar tire_thickness = 0.05;
+	btScalar tire_density = 8E3;
 
-		btScalar tire_volume = tire_width * M_PI * tire_thickness * tire_thickness * (2 * tire_radius  - tire_thickness);
-		btScalar rim_volume = rim_width * M_PI * rim_thickness * rim_thickness * (2 * rim_radius - rim_thickness);
-		btScalar tire_mass = tire_density * tire_volume;
-		btScalar rim_mass = rim_density * rim_volume;
-		btScalar tire_inertia = tire_mass * tire_radius * tire_radius;
-		btScalar rim_inertia = rim_mass * rim_radius * rim_radius;
+	btScalar rim_radius = tire_radius - tire_width * tire.GetAspectRatio();
+	btScalar rim_width = tire_width;
+	btScalar rim_thickness = 0.01;
+	btScalar rim_density = 3E5;
 
-		mass = tire_mass + rim_mass;
-		inertia = (tire_inertia + rim_inertia) * 4;	// scale inertia fixme
-	}
+	btScalar tire_volume = tire_width * M_PI * tire_thickness * tire_thickness * (2 * tire_radius  - tire_thickness);
+	btScalar rim_volume = rim_width * M_PI * rim_thickness * rim_thickness * (2 * rim_radius - rim_thickness);
+	btScalar tire_mass = tire_density * tire_volume;
+	btScalar rim_mass = rim_density * rim_volume;
+	btScalar tire_inertia = tire_mass * tire_radius * tire_radius;
+	btScalar rim_inertia = rim_mass * rim_radius * rim_radius;
+
+	mass = tire_mass + rim_mass;
+	inertia = (tire_inertia + rim_inertia) * 4;	// scale inertia fixme
+
+	// override mass, inertia
+	cfg.get("mass", mass);
+	cfg.get("inertia", inertia);
+
 	wheel.SetMass(mass);
 	wheel.SetInertia(inertia);
 
