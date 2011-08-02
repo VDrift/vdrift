@@ -28,7 +28,7 @@ void PATHMANAGER::MakeDir(const std::string & dir)
 #endif
 }
 
-void PATHMANAGER::DeleteFile(const std::string & path)
+void PATHMANAGER::DeleteFile1(const std::string & path)
 {
 	remove(path.c_str());
 }

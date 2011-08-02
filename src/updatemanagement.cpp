@@ -259,7 +259,7 @@ bool UPDATE_MANAGER::ApplyCarUpdate(GAME_DOWNLOADER downloader, GUI & gui, const
 	// remove temporary file
 	if (!debug)
 	{
-		PATHMANAGER::DeleteFile(archivepath);
+		PATHMANAGER::DeleteFile1(archivepath);
 	}
 	
 	gui.ActivatePage("UpdateSuccessful", 0.25, error_output);
@@ -302,7 +302,7 @@ bool UPDATE_MANAGER::DownloadRemoteConfig(GAME_DOWNLOADER downloader, GUI & gui)
 		return false;
 	}
 	
-	PATHMANAGER::DeleteFile(filepath);
+	PATHMANAGER::DeleteFile1(filepath);
 	
 	return true;
 }

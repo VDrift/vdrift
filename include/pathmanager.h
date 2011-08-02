@@ -60,7 +60,7 @@ public:
 	void Init(std::ostream & info_output, std::ostream & error_output);
 	
 	static void MakeDir(const std::string & dir);
-	static void DeleteFile(const std::string & path);
+	static void DeleteFile1(const std::string & path);
 
 private:
 	std::string home_directory;
