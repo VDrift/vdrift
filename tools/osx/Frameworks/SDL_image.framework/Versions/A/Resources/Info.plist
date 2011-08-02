@@ -5,11 +5,11 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
-	<string>SDL_net</string>
+	<string>SDL_image</string>
 	<key>CFBundleGetInfoString</key>
 	<string>http://www.libsdl.org</string>
 	<key>CFBundleIdentifier</key>
-	<string>SDL_net</string>
+	<string>SDL_image</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
@@ -17,10 +17,10 @@
 	<key>CFBundlePackageType</key>
 	<string>FMWK</string>
 	<key>CFBundleShortVersionString</key>
-	<string>1.2.5</string>
+	<string>1.2.3</string>
 	<key>CFBundleSignature</key>
-	<string>SDL_netX</string>
+	<string>SDL_imageX</string>
 	<key>CFBundleVersion</key>
-	<string>1.2.5</string>
+	<string>1.2.3</string>
 </dict>
 </plist>
