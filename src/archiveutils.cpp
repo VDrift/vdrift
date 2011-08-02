@@ -2,8 +2,13 @@
 
 #include "pathmanager.h"
 
+#ifdef __APPLE__
+#include <Archive/archive.h>
+#include <Archive/archive_entry.h>
+#else
 #include <archive.h>
 #include <archive_entry.h>
+#endif
 
 #include <fstream>
 
