@@ -11,6 +11,13 @@
 		AC2CF02013D73C54005D2E97 /* BulletCollision.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = AC67047413CCD8D800B6B360 /* BulletCollision.framework */; };
 		AC2CF02113D73C54005D2E97 /* BulletDynamics.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = AC67047513CCD8D800B6B360 /* BulletDynamics.framework */; };
 		AC2CF02213D73C54005D2E97 /* BulletSoftBody.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = AC67047613CCD8D800B6B360 /* BulletSoftBody.framework */; };
+		AC5F1F4513E1BCA0008A9BCF /* game_downloader.h in Headers */ = {isa = PBXBuildFile; fileRef = AC5F1F4413E1BCA0008A9BCF /* game_downloader.h */; };
+		AC5F1F4713E1BD3D008A9BCF /* updatemanagement.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AC5F1F4613E1BD3D008A9BCF /* updatemanagement.cpp */; };
+		AC5F1F4913E1BD9B008A9BCF /* updatemanagement.h in Headers */ = {isa = PBXBuildFile; fileRef = AC5F1F4813E1BD9B008A9BCF /* updatemanagement.h */; };
+		AC5F1F4B13E1BDB9008A9BCF /* archiveutils.h in Headers */ = {isa = PBXBuildFile; fileRef = AC5F1F4A13E1BDB9008A9BCF /* archiveutils.h */; };
+		AC5F1F4D13E1BDE9008A9BCF /* autoupdate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AC5F1F4C13E1BDE9008A9BCF /* autoupdate.cpp */; };
+		AC5F1F4F13E1BDF0008A9BCF /* archiveutils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = AC5F1F4E13E1BDF0008A9BCF /* archiveutils.cpp */; };
+		AC5F1F5113E1BE0F008A9BCF /* autoupdate.h in Headers */ = {isa = PBXBuildFile; fileRef = AC5F1F5013E1BE0F008A9BCF /* autoupdate.h */; };
 		AC67047713CCD8D800B6B360 /* BulletCollision.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AC67047413CCD8D800B6B360 /* BulletCollision.framework */; };
 		AC67047813CCD8D800B6B360 /* BulletDynamics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AC67047513CCD8D800B6B360 /* BulletDynamics.framework */; };
 		AC67047913CCD8D800B6B360 /* BulletSoftBody.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = AC67047613CCD8D800B6B360 /* BulletSoftBody.framework */; };
@@ -31,6 +38,8 @@
 		ACC4B13213D627F200CB9E0C /* libcurl.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = AC873D2113C59B5E00DF9182 /* libcurl.framework */; };
 		ACC4B13313D6280A00CB9E0C /* Ogg.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = AC873D2313C59B5E00DF9182 /* Ogg.framework */; };
 		ACC4B13413D6281C00CB9E0C /* SDL_gfx.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = AC873D2413C59B5E00DF9182 /* SDL_gfx.framework */; };
+		ACE0A6EF13E4D8ED00524C7D /* Archive.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = ACE0A6EE13E4D8ED00524C7D /* Archive.framework */; };
+		ACE0A6F113E4D99700524C7D /* Archive.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = ACE0A6EE13E4D8ED00524C7D /* Archive.framework */; };
 		B937D144091BC36000EF8096 /* config_mac.mm in Sources */ = {isa = PBXBuildFile; fileRef = B937D143091BC36000EF8096 /* config_mac.mm */; };
 		B94206E7139A35B6006ED680 /* loadcollisionshape.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B94206E6139A35B6006ED680 /* loadcollisionshape.cpp */; };
 		B94206E9139A35C0006ED680 /* fracturebody.cpp in Sources */ = {isa = PBXBuildFile; fileRef = B94206E8139A35C0006ED680 /* fracturebody.cpp */; };
@@ -346,6 +355,7 @@
 				ACC4B13213D627F200CB9E0C /* libcurl.framework in CopyFiles */,
 				ACC4B13313D6280A00CB9E0C /* Ogg.framework in CopyFiles */,
 				ACC4B13413D6281C00CB9E0C /* SDL_gfx.framework in CopyFiles */,
+				ACE0A6F113E4D99700524C7D /* Archive.framework in CopyFiles */,
 				ACB17A7C13D7149D00355B9E /* SDL_image.framework in CopyFiles */,
 				ACB17A7D13D714C600355B9E /* SDL_net.framework in CopyFiles */,
 			);
@@ -355,6 +365,13 @@
 
 /* Begin PBXFileReference section */
 		29B97325FDCFA39411CA2CEA /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
+		AC5F1F4413E1BCA0008A9BCF /* game_downloader.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = game_downloader.h; sourceTree = "<group>"; };
+		AC5F1F4613E1BD3D008A9BCF /* updatemanagement.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = updatemanagement.cpp; sourceTree = "<group>"; };
+		AC5F1F4813E1BD9B008A9BCF /* updatemanagement.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = updatemanagement.h; sourceTree = "<group>"; };
+		AC5F1F4A13E1BDB9008A9BCF /* archiveutils.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = archiveutils.h; sourceTree = "<group>"; };
+		AC5F1F4C13E1BDE9008A9BCF /* autoupdate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = autoupdate.cpp; sourceTree = "<group>"; };
+		AC5F1F4E13E1BDF0008A9BCF /* archiveutils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = archiveutils.cpp; sourceTree = "<group>"; };
+		AC5F1F5013E1BE0F008A9BCF /* autoupdate.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = autoupdate.h; sourceTree = "<group>"; };
 		AC67047413CCD8D800B6B360 /* BulletCollision.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = BulletCollision.framework; path = Frameworks/BulletCollision.framework; sourceTree = "<group>"; };
 		AC67047513CCD8D800B6B360 /* BulletDynamics.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = BulletDynamics.framework; path = Frameworks/BulletDynamics.framework; sourceTree = "<group>"; };
 		AC67047613CCD8D800B6B360 /* BulletSoftBody.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = BulletSoftBody.framework; path = Frameworks/BulletSoftBody.framework; sourceTree = "<group>"; };
@@ -367,6 +384,7 @@
 		AC873D2613C59B5E00DF9182 /* SDL_net.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL_net.framework; path = Frameworks/SDL_net.framework; sourceTree = "<group>"; };
 		AC873D2713C59B5E00DF9182 /* SDL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL.framework; path = Frameworks/SDL.framework; sourceTree = "<group>"; };
 		AC873D2813C59B5E00DF9182 /* Vorbis.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Vorbis.framework; path = Frameworks/Vorbis.framework; sourceTree = "<group>"; };
+		ACE0A6EE13E4D8ED00524C7D /* Archive.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Archive.framework; path = Frameworks/Archive.framework; sourceTree = "<group>"; };
 		B2F67ED704C74A3F00A80002 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = /System/Library/Frameworks/OpenGL.framework; sourceTree = "<absolute>"; };
 		B937D143091BC36000EF8096 /* config_mac.mm */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.objcpp; path = config_mac.mm; sourceTree = "<group>"; };
 		B94206E6139A35B6006ED680 /* loadcollisionshape.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = loadcollisionshape.cpp; sourceTree = "<group>"; };
@@ -687,6 +705,7 @@
 				AC67047813CCD8D800B6B360 /* BulletDynamics.framework in Frameworks */,
 				AC67047913CCD8D800B6B360 /* BulletSoftBody.framework in Frameworks */,
 				AC67047B13CCD8E200B6B360 /* LinearMath.framework in Frameworks */,
+				ACE0A6EF13E4D8ED00524C7D /* Archive.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -747,6 +766,7 @@
 		29B97323FDCFA39411CA2CEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				ACE0A6EE13E4D8ED00524C7D /* Archive.framework */,
 				AC67047A13CCD8E200B6B360 /* LinearMath.framework */,
 				AC67047413CCD8D800B6B360 /* BulletCollision.framework */,
 				AC67047513CCD8D800B6B360 /* BulletDynamics.framework */,
@@ -770,6 +790,8 @@
 				B97DC28E1326374000B262BC /* aabb_space_partitioning.h */,
 				B97DC28F1326374000B262BC /* aabb.h */,
 				B97DC2901326374000B262BC /* ai.h */,
+				AC5F1F4A13E1BDB9008A9BCF /* archiveutils.h */,
+				AC5F1F5013E1BE0F008A9BCF /* autoupdate.h */,
 				B97DC2911326374000B262BC /* bezier.h */,
 				B97DC2921326374000B262BC /* bucketed_hashmap.h */,
 				B97DC2931326374000B262BC /* camera_chase.h */,
@@ -821,6 +843,7 @@
 				B97DC2BE1326374100B262BC /* forcefeedback.h */,
 				B97DC2BF1326374100B262BC /* frustum.h */,
 				B97DC2C01326374100B262BC /* game.h */,
+				AC5F1F4413E1BCA0008A9BCF /* game_downloader.h */,
 				B97DC2C11326374100B262BC /* glstatemanager.h */,
 				B97DC2C21326374100B262BC /* graphics_config_condition.h */,
 				B97DC2C31326374100B262BC /* graphics_config.h */,
@@ -903,6 +926,7 @@
 				B97DC3111326374100B262BC /* transform.h */,
 				B97DC3121326374100B262BC /* unittest.h */,
 				B97DC3131326374100B262BC /* unordered_map.h */,
+				AC5F1F4813E1BD9B008A9BCF /* updatemanagement.h */,
 				B97DC3141326374100B262BC /* utils.h */,
 				B97DC3151326374100B262BC /* vertexarray.h */,
 				B97DC3161326374100B262BC /* vertexattribs.h */,
@@ -930,6 +954,8 @@
 				B97DC17A1326371E00B262BC /* aabb_space_partitioning.cpp */,
 				B97DC17B1326371E00B262BC /* aabb.cpp */,
 				B97DC17C1326371E00B262BC /* ai.cpp */,
+				AC5F1F4E13E1BDF0008A9BCF /* archiveutils.cpp */,
+				AC5F1F4C13E1BDE9008A9BCF /* autoupdate.cpp */,
 				B97DC17D1326371E00B262BC /* bezier.cpp */,
 				B97DC17E1326371E00B262BC /* camera_chase.cpp */,
 				B97DC17F1326371E00B262BC /* camera_fixed.cpp */,
@@ -1018,6 +1044,7 @@
 				B97DC1F41326371E00B262BC /* track.cpp */,
 				B97DC1F51326371E00B262BC /* trackloader.cpp */,
 				B97DC1F61326371E00B262BC /* trackmap.cpp */,
+				AC5F1F4613E1BD3D008A9BCF /* updatemanagement.cpp */,
 				B97DC1F71326371E00B262BC /* utils.cpp */,
 				B97DC1F81326371E00B262BC /* vertexarray.cpp */,
 				B97DC1F91326371E00B262BC /* widget_button.cpp */,
@@ -1266,6 +1293,10 @@
 				B94206F1139A35EE006ED680 /* motionstate.h in Headers */,
 				B94206F3139A35F9006ED680 /* coordinatesystem.h in Headers */,
 				B94206F5139A3603006ED680 /* loadcollisionshape.h in Headers */,
+				AC5F1F4513E1BCA0008A9BCF /* game_downloader.h in Headers */,
+				AC5F1F4913E1BD9B008A9BCF /* updatemanagement.h in Headers */,
+				AC5F1F4B13E1BDB9008A9BCF /* archiveutils.h in Headers */,
+				AC5F1F5113E1BE0F008A9BCF /* autoupdate.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1299,6 +1330,9 @@
 /* Begin PBXProject section */
 		29B97313FDCFA39411CA2CEA /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0410;
+			};
 			buildConfigurationList = B9ADCF750907C8EB00D55A16 /* Build configuration list for PBXProject "vdrift" */;
 			compatibilityVersion = "Xcode 2.4";
 			developmentRegion = English;
@@ -1484,6 +1518,9 @@
 				B94206E7139A35B6006ED680 /* loadcollisionshape.cpp in Sources */,
 				B94206E9139A35C0006ED680 /* fracturebody.cpp in Sources */,
 				B9420714139A3697006ED680 /* dynamicsworld.cpp in Sources */,
+				AC5F1F4713E1BD3D008A9BCF /* updatemanagement.cpp in Sources */,
+				AC5F1F4D13E1BDE9008A9BCF /* autoupdate.cpp in Sources */,
+				AC5F1F4F13E1BDF0008A9BCF /* archiveutils.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1494,6 +1531,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)/Frameworks";
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = (
 					../../src,
 					.,
@@ -1519,7 +1557,6 @@
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.4;
 				OTHER_LDFLAGS = "";
-				PREBINDING = NO;
 				PRODUCT_NAME = vdrift;
 				SDKROOT = macosx;
 				STRIP_INSTALLED_PRODUCT = NO;
@@ -1544,7 +1581,6 @@
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.4;
 				OTHER_LDFLAGS = "";
-				PREBINDING = NO;
 				PRODUCT_NAME = vdrift;
 				SDKROOT = macosx;
 				STRIP_INSTALLED_PRODUCT = NO;
@@ -1566,7 +1602,6 @@
 				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				MACOSX_DEPLOYMENT_TARGET = 10.4;
 				OTHER_LDFLAGS = "";
-				PREBINDING = NO;
 				PRODUCT_NAME = vdrift;
 				SDKROOT = macosx;
 				STRIP_INSTALLED_PRODUCT = NO;
@@ -1577,6 +1612,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)/Frameworks";
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = (
 					../../src,
 					.,
@@ -1590,6 +1626,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				FRAMEWORK_SEARCH_PATHS = "$(SRCROOT)/Frameworks";
+				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
 				HEADER_SEARCH_PATHS = (
 					../../src,
 					.,
