@@ -88,7 +88,7 @@ bool HTTP::Request(const std::string & url, std::ostream & error_output)
 			}
 
 			std::string filename = folder+"/"+filepart;
-			FILE * file = fopen(filename.c_str(),"w");
+			FILE * file = fopen(filename.c_str(),"wb");
 			if (!file)
 			{
 				error_output << "HTTP::Request: unable to open \"" << filename << "\" for writing" << std::endl;
