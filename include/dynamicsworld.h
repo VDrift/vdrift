@@ -6,6 +6,7 @@
 #include "BulletDynamics/btBulletDynamicsCommon.h"
 #else
 #include "btBulletCollisionCommon.h"
+#include "btBulletDynamicsCommon.h"
 #endif
 
 #include <ostream>
