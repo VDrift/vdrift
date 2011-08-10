@@ -17,6 +17,7 @@
 #include "motionstate.h"
 #include "joeserialize.h"
 #include "BulletDynamics/Dynamics/btActionInterface.h"
+#include "btBulletCollisionCommon.h"
 #include "LinearMath/btAlignedObjectArray.h"
 
 #ifdef _MSC_VER
