@@ -156,14 +156,14 @@ if (sys.platform == 'freebsd6') or (sys.platform == 'freebsd7') or (sys.platform
     local_env.Append(LIBPATH = ['/usr/X11R6/lib'])
     libs_link = ['GLU', 'GLEW', 'pthread', common_libs]
 elif ( 'darwin' == sys.platform ):
-    common_libs = ['SDL_image', 'SDL_gfx', 'Vorbis', 'curl']
+    common_libs = ['SDL_image', 'SDL_gfx', 'Vorbis', 'libcurl']
     vdrift_install = "${PRODUCT_NAME}.app"
     pkgbase = "%s/Contents" % vdrift_install
     appdir = "%s/MacOS/" % pkgbase
     pkgsrc = "../tools/osx"
 
     common_libs.append( 'SDL' )
-    common_libs.append( 'GLExtensionWrangler' )
+    common_libs.append( 'GLEW' )
     def batch_copy( target, source, env): 
         # Do a mini svn export... this funtion could possibly
         # be useful in general ( as a builder ), but I don't 
@@ -190,7 +190,7 @@ elif ( 'darwin' == sys.platform ):
             '%s/vdrift.icns' % pkgsrc,
             Copy( '$TARGET', '$SOURCE') ),
         [ local_env.WorkingExport( '%s/Frameworks' % pkgbase, s ) for s in
-            build_list( '%s/%%s.framework' % pkgsrc, common_libs ) ] ] ) 
+            build_list( '%s/Frameworks/%%s.framework' % pkgsrc, common_libs ) ] ] ) 
         #local_env.Command(
         #    build_list( '%s/Frameworks/%%s.framework' % pkgbase, common_libs  ),
         #    build_list( '%s/%%s.framework' % pkgsrc, common_libs ),
