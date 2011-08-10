@@ -825,7 +825,7 @@ void GAME::AdvanceGameLogic()
 
 				PROFILER.beginBlock("ai");
 				ai.Visualize();
-				ai.update(TickPeriod(), &track, cars);
+				ai.update(TickPeriod(), cars);
 				PROFILER.endBlock("ai");
 
 				PROFILER.beginBlock("physics");

@@ -130,7 +130,7 @@ elif ( 'win32' == sys.platform or 'cygwin' == sys.platform ):
 else:
     env = Environment(ENV = os.environ,
         CPPPATH = ['#include', '#src'],
-        CCFLAGS = ['-Wall', '-Wextra', '-Wno-unused-parameter', '-pthread'],
+        CCFLAGS = ['-Wall', '-Wextra', '-pthread'],
         LIBPATH = ['.', '#lib'],
         LINKFLAGS = ['-pthread'],
         CC = 'gcc', CXX = 'g++',
