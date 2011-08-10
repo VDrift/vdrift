@@ -230,7 +230,7 @@ bool UPDATE_MANAGER::ApplyCarUpdate(GAME_DOWNLOADER downloader, GUI & gui, const
 	// download archive
 	std::string url = repo_type::GetCarDownloadLink(carname);
 	std::string archivepath = downloader.GetHttp().GetDownloadPath(url);
-	if (debug && !pathmanager.FileExists(archivepath)) // if in debug mode, don't redownload files
+	if (!(debug && pathmanager.FileExists(archivepath))) // if in debug mode, don't redownload files
 	{
 		info_output << "ApplyCarUpdate: attempting to download " + url << std::endl;
 		bool success = downloader(url);
@@ -255,6 +255,7 @@ bool UPDATE_MANAGER::ApplyCarUpdate(GAME_DOWNLOADER downloader, GUI & gui, const
 	if (!autoupdate.empty())
 		autoupdate.Write(updatefilebackup); // save a backup before changing it
 	autoupdate.SetVersion(group, carname, revs.second);
+	autoupdate.Write(updatefile);
 	
 	// remove temporary file
 	if (!debug)
