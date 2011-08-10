@@ -1,12 +1,8 @@
 #ifndef _DYNAMICSWORLD_H
 #define _DYNAMICSWORLD_H
 
-#ifdef __APPLE__
-#include "BulletCollision/btBulletCollisionCommon.h"
-#include "BulletDynamics/btBulletDynamicsCommon.h"
-#else
 #include "btBulletCollisionCommon.h"
-#endif
+#include "btBulletDynamicsCommon.h"
 
 #include <ostream>
 

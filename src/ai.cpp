@@ -72,15 +72,15 @@ void AI::add_car(CAR * car, float difficulty)
 	car->SetAutoClutch(true);
 }
 
-void AI::update(float dt, TRACK* track_p, const std::list <CAR> & othercars)
+void AI::update(float dt, const std::list <CAR> & othercars)
 {
-	updatePlan(othercars, dt);
+	updatePlan(); //TODO: THIS CALLS EMPTY FUNCTION. ANYONE CHECK IF THIS FUNCTION IS NEEDED.
 
-	for( std::vector<AI_Car>::iterator it = AI_Cars.begin (); it != AI_Cars.end (); it++ )
+	for(std::vector<AI_Car>::iterator it = AI_Cars.begin (); it != AI_Cars.end (); it++ )
 	{
 		analyzeOthers(&(*it), dt, othercars);
-		updateGasBrake(&(*it), dt, track_p, othercars);
-		updateSteer(&(*it), dt, othercars);
+		updateGasBrake(&(*it));
+		updateSteer(&(*it));
 	}
 }
 
@@ -205,7 +205,7 @@ void TrimPatch(BEZIER & patch, float trimleft_front, float trimright_front, floa
 	patch.SetFromCorners(newfl, newfr, newbl, newbr);
 }
 
-BEZIER AI::RevisePatch(const BEZIER * origpatch, bool use_racingline, AI_Car *c, const std::list <CAR> & allcars)
+BEZIER AI::RevisePatch(const BEZIER * origpatch, bool use_racingline)
 {
 	BEZIER patch = *origpatch;
 
@@ -276,7 +276,7 @@ BEZIER AI::RevisePatch(const BEZIER * origpatch, bool use_racingline, AI_Car *c,
 	return patch;
 }
 
-void AI::updateGasBrake(AI_Car *c, float dt, TRACK* track_p, const std::list <CAR> & othercars)
+void AI::updateGasBrake(AI_Car *c)
 {
 	c->brakelook.clear();
 
@@ -289,7 +289,7 @@ void AI::updateGasBrake(AI_Car *c, float dt, TRACK* track_p, const std::list <CA
 	else
 		c->inputs[CARINPUT::START_ENGINE] = 0.0;
 
-	calcMu(c, track_p);
+	calcMu(c);
 
 	const BEZIER *curr_patch_ptr = GetCurrentPatch(c->car);
 	//if car is not on track, just let it roll
@@ -300,7 +300,7 @@ void AI::updateGasBrake(AI_Car *c, float dt, TRACK* track_p, const std::list <CA
 		return;
 	}
 
-	BEZIER curr_patch = RevisePatch(curr_patch_ptr, c->use_racingline, c, othercars);
+	BEZIER curr_patch = RevisePatch(curr_patch_ptr, c->use_racingline);
 	//BEZIER curr_patch = *curr_patch_ptr;
 
 	MATHVECTOR <float, 3> patch_direction = TransformToWorldspace(GetPatchDirection(curr_patch));
@@ -320,7 +320,7 @@ void AI::updateGasBrake(AI_Car *c, float dt, TRACK* track_p, const std::list <CA
 	}
 	else
 	{
-		BEZIER next_patch = RevisePatch(curr_patch.next_patch, c->use_racingline, c, othercars);
+		BEZIER next_patch = RevisePatch(curr_patch.next_patch, c->use_racingline);
 		speed_limit = calcSpeedLimit(c, &curr_patch, &next_patch, c->lateral_mu, GetPatchWidthVector(*curr_patch_ptr).Magnitude())*speed_percent;
 	}
 
@@ -375,7 +375,7 @@ void AI::updateGasBrake(AI_Car *c, float dt, TRACK* track_p, const std::list <CA
 			break;
 		}
 		else
-			patch_to_check = RevisePatch(patch_to_check.next_patch, c->use_racingline, c, othercars);
+			patch_to_check = RevisePatch(patch_to_check.next_patch, c->use_racingline);
 
 #ifdef VISUALIZE_AI_DEBUG
 		c->brakelook.push_back(patch_to_check);
@@ -388,7 +388,7 @@ void AI::updateGasBrake(AI_Car *c, float dt, TRACK* track_p, const std::list <CA
 		}
 		else
 		{
-			BEZIER next_patch = RevisePatch(patch_to_check.next_patch, c->use_racingline, c, othercars);
+			BEZIER next_patch = RevisePatch(patch_to_check.next_patch, c->use_racingline);
 			speed_limit = calcSpeedLimit(c, &patch_to_check, &next_patch, c->lateral_mu, GetPatchWidthVector(*unmodified_patch_to_check).Magnitude())*speed_percent;
 		}
 
@@ -435,7 +435,7 @@ void AI::updateGasBrake(AI_Car *c, float dt, TRACK* track_p, const std::list <CA
 	//c->inputs[CARINPUT::BRAKE] = 1.0;
 }
 
-void AI::calcMu(AI_Car *c, TRACK* track_p)
+void AI::calcMu(AI_Car *c)
 {
 	int i;
 	float long_friction = 0.0;
@@ -495,7 +495,7 @@ float AI::calcBrakeDist(AI_Car *ai_car, float current_speed, float allowed_speed
 	return -log((c + v2sqr*d)/(c + v1sqr*d))/(2.0*d);
 }
 
-void AI::updateSteer(AI_Car *c, float dt, const std::list <CAR> & othercars)
+void AI::updateSteer(AI_Car *c)
 {
 	c->steerlook.clear();
 
@@ -511,7 +511,7 @@ void AI::updateSteer(AI_Car *c, float dt, const std::list <CAR> & othercars)
 
 	c->last_patch = curr_patch_ptr; //store the last patch car was on
 
-	BEZIER curr_patch = RevisePatch(curr_patch_ptr, c->use_racingline, c, othercars);
+	BEZIER curr_patch = RevisePatch(curr_patch_ptr, c->use_racingline);
 
 #ifdef VISUALIZE_AI_DEBUG
 	c->steerlook.push_back(curr_patch);
@@ -520,7 +520,7 @@ void AI::updateSteer(AI_Car *c, float dt, const std::list <CAR> & othercars)
 	//if there is no next patch (probably a non-closed track), let it roll
 	if (!curr_patch.next_patch) return;
 
-	BEZIER next_patch = RevisePatch(curr_patch.next_patch, c->use_racingline, c, othercars);
+	BEZIER next_patch = RevisePatch(curr_patch.next_patch, c->use_racingline);
 
 	//find the point to steer towards
 	float track_width = GetPatchWidthVector(curr_patch).Magnitude();
@@ -546,7 +546,7 @@ void AI::updateSteer(AI_Car *c, float dt, const std::list <CAR> & othercars)
 			break;
 		}
 
-		next_patch = RevisePatch(next_patch.next_patch, c->use_racingline, c, othercars);
+		next_patch = RevisePatch(next_patch.next_patch, c->use_racingline);
 
 		//if next patch is a very sharp corner, stop lookahead
 		if (GetPatchRadius(next_patch) < LOOKAHEAD_MIN_RADIUS)
@@ -618,7 +618,7 @@ float RampBetween(float val, float startat, float endat)
 	return (clamp(val,startat,endat)-startat)/(endat-startat);
 }
 
-float AI::brakeFromOthers(AI_Car *c, float dt, const std::list <CAR> & othercars, float speed_diff)
+float AI::brakeFromOthers(AI_Car *c, float speed_diff)
 {
 	const float nobiasdiff = 30;
 	const float fullbiasdiff = 0;
@@ -835,7 +835,7 @@ void AI::analyzeOthers(AI_Car *c, float dt, const std::list <CAR> & othercars)
 	return 0.0;
 }*/
 
-float AI::steerAwayFromOthers(AI_Car *c, float dt, const std::list <CAR> & othercars, float cursteer)
+float AI::steerAwayFromOthers(AI_Car *c)
 {
 	const float spacingdistance = 3.5; //how far left and right we target for our spacing in meters (center of mass to center of mass)
 	const float horizontal_meters_per_second = 5.0; //how fast we want to steer away in horizontal meters per second
@@ -956,7 +956,7 @@ optional <float> GetDistanceFromPatchToPatch(const BEZIER * frontpatch, const BE
 }
 
 ///update our navigation markers
-void AI::updatePlan(const std::list <CAR> & allcars, float dt)
+void AI::updatePlan()
 {
 	/*//update our account of the cars
 	const float minwidth = 0.3;

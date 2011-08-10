@@ -11,8 +11,8 @@
 #include <GLEW/glew.h>
 #include <OpenGL/gl.h>
 #else
-#include <GL/gl.h>
 #include <GL/glew.h>
+#include <GL/gl.h>
 #endif
 
 #include "utils.h"

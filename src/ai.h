@@ -73,23 +73,23 @@ private:
 
 	std::vector <float> empty_vector;
 	std::vector <AI_Car> AI_Cars;
-	void updateGasBrake(AI_Car *c, float dt, TRACK* track_p, const std::list <CAR> & othercars);
-	void calcMu(AI_Car *c, TRACK* track_p);
+	void updateGasBrake(AI_Car *c);
+	void calcMu(AI_Car *c);
 	float calcSpeedLimit(AI_Car *c, const BEZIER* patch, const BEZIER* nextpatch, float friction, float extraradius);
 	float calcBrakeDist(AI_Car *c, float current_speed, float allowed_speed, float friction);
-	void updateSteer(AI_Car *c, float dt, const std::list <CAR> & othercars);
+	void updateSteer(AI_Car *c);
 	void analyzeOthers(AI_Car *c, float dt, const std::list <CAR> & othercars);
-	float steerAwayFromOthers(AI_Car *c, float dt, const std::list <CAR> & othercars, float cursteer); ///< returns a float that should be added into the steering wheel command
-	float brakeFromOthers(AI_Car *c, float dt, const std::list <CAR> & othercars, float speed_diff); ///< returns a float that should be added into the brake command. speed_diff is the difference between the desired speed and speed limit of this area of the track
+	float steerAwayFromOthers(AI_Car *c); ///< returns a float that should be added into the steering wheel command
+	float brakeFromOthers(AI_Car *c, float speed_diff); ///< returns a float that should be added into the brake command. speed_diff is the difference between the desired speed and speed limit of this area of the track
 	double Angle(double x1, double y1); ///< returns the angle in degrees of the normalized 2-vector
 	void Visualize(AI_Car *c);
-	BEZIER RevisePatch(const BEZIER * origpatch, bool use_racingline, AI_Car *c, const std::list <CAR> & allcars);
-	void updatePlan(const std::list <CAR> & allcars, float dt);
+	BEZIER RevisePatch(const BEZIER * origpatch, bool use_racingline);
+	void updatePlan();
 
 public:
 	void add_car(CAR * car, float difficulty);
 	void clear_cars() { AI_Cars.clear(); path_revisions.clear(); }
-	void update(float dt, TRACK* track_p, const std::list <CAR> & othercars);
+	void update(float dt, const std::list <CAR> & othercars);
 	const std::vector <float> & GetInputs(CAR * car) const; ///< returns an empty vector if the car isn't AI-controlled
 	void Visualize();
 };
