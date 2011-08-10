@@ -38,88 +38,6 @@ struct COMPONENTINFO
 	Uint32 loss;
 };
 
-static void PreMultiplyAlpha(SDL_Surface * surface)
-{
-	if (surface->format->BytesPerPixel == 1)
-	{
-		//std::cout << "Not true color: " << surface->format->BytesPerPixel << std::endl;
-		return; //not a true-color image
-	}
-	if (surface->format->Amask == 0)
-	{
-		//std::cout << "No alpha channel: " << surface->format->Amask << std::endl;
-		return; //no alpha channel
-	}
-
-	int error = SDL_LockSurface(surface);
-	assert(!error);
-
-	std::vector <struct COMPONENTINFO> channelinfo(4);
-	std::vector <Uint8> channels(4);
-
-	for (int y = 0; y < surface->h; ++y)
-	{
-		for (int x = 0; x < surface->w; ++x)
-		{
-			/*char* pixeladdy = & ( ((char*)surface->pixels)[surface->format->BytesPerPixel*x+y*surface->pitch] );
-
-			Uint32 pixel = 0;
-			for (int i = 0; i < surface->format->BytesPerPixel; ++i)
-				pixel = pixel | ((Uint32)(*(pixeladdy+i)) << 8*i); //little endian
-				//pixel = (pixel << 8*i) | (Uint32)(*(pixeladdy+i)); //big endian*/
-
-			Uint32* pixeladdy = & ( ((Uint32*)surface->pixels)[x+y*surface->w] );
-			Uint32 pixel = *((Uint32 *)pixeladdy);
-
-			//fill our channel info structs
-			channelinfo[0].mask = surface->format->Rmask;
-			channelinfo[0].shift = surface->format->Rshift;
-			channelinfo[0].loss = surface->format->Rloss;
-
-			channelinfo[1].mask = surface->format->Gmask;
-			channelinfo[1].shift = surface->format->Gshift;
-			channelinfo[1].loss = surface->format->Gloss;
-
-			channelinfo[2].mask = surface->format->Bmask;
-			channelinfo[2].shift = surface->format->Bshift;
-			channelinfo[2].loss = surface->format->Bloss;
-
-			channelinfo[3].mask = surface->format->Amask;
-			channelinfo[3].shift = surface->format->Ashift;
-			channelinfo[3].loss = surface->format->Aloss;
-
-			//extract channels
-			for (unsigned int i = 0; i < channelinfo.size(); ++i)
-			{
-				channels[i] = ExtractComponent(pixel, channelinfo[i].mask, channelinfo[i].shift, channelinfo[i].loss);
-			}
-
-			//pre-multiply alpha channel to color channels
-			float r = (float)channels[0]/255.0;
-			float g = (float)channels[1]/255.0;
-			float b = (float)channels[2]/255.0;
-			float a = (float)channels[3]/255.0;
-			channels[0] = a*r*255.0;
-			channels[1] = a*g*255.0;
-			channels[2] = a*b*255.0;
-
-			/*channels[0] *= channels[3];
-			channels[1] *= channels[3];
-			channels[2] *= channels[3];*/
-
-			//save back to the pixel
-			for (unsigned int i = 0; i < channelinfo.size(); ++i)
-			{
-				pixel = InsertComponent(pixel, channels[i], channelinfo[i].mask, channelinfo[i].shift, channelinfo[i].loss);
-			}
-
-			*((Uint32 *)pixeladdy) = pixel;
-		}
-	}
-
-	SDL_UnlockSurface(surface);
-}
-
 static float Scale(const std::string & size, float width, float height)
 {
 	float maxsize, minscale;
@@ -606,8 +524,6 @@ bool TEXTURE::Load(const std::string & path, const TEXTUREINFO & info, std::ostr
 		{
 			texture_surface = zoomSurface (orig_surface, scale, scale, SMOOTHING_ON);
 		}
-
-		//PreMultiplyAlpha(texture_surface);
 
 		//store dimensions
 		w = texture_surface->w;

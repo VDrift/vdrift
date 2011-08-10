@@ -67,11 +67,11 @@ elif sys.platform == 'darwin':
     opts.Add('SDK', 'the path to an SDK directory', '')
 
     env = Environment(ENV = os.environ,
-        CPPPATH = ['#include', '#src', '#tools/osx', '#tools/osx/SDL.framework/Headers'],
+        CPPPATH = ['#include', '#src', '#tools/osx/Frameworks', '#tools/osx/Frameworks/SDL.framework/Headers'],
         CCFLAGS = ['-Wall', '-Wextra'],
-        CXXFLAGS = Split("$CCFLAGS -Wno-non-virtual-dtor"),
+        CXXFLAGS = Split("$CCFLAGS -Wno-non-virtual-dtor -Wunused-parameter"),
         LIBPATH = ['.'],
-        FRAMEWORKPATH = ['tools/osx'],
+        FRAMEWORKPATH = ['tools/osx/Frameworks/'],
         FRAMEWORKS = [ 'OpenGL' ],
         options = opts)
 
@@ -130,7 +130,7 @@ elif ( 'win32' == sys.platform or 'cygwin' == sys.platform ):
 else:
     env = Environment(ENV = os.environ,
         CPPPATH = ['#include', '#src'],
-        CCFLAGS = ['-Wall', '-Wextra', '-Wno-unused-parameter', '-pthread'],
+        CCFLAGS = ['-Wall', '-Wextra', '-pthread'],
         LIBPATH = ['.', '#lib'],
         LINKFLAGS = ['-pthread'],
         CC = 'gcc', CXX = 'g++',
@@ -369,8 +369,8 @@ if ( 'win32' == sys.platform or 'cygwin' == sys.platform ):
     env['data_directory'] = "./data"
     env['settings'] = "VDrift"
     cppdefines.append(("DATA_DIR", '"%s"' % env['data_directory']))
-elif ('darwin' == env['PLATFORM']):
-    cppdefines.append(("DATA_DIR", "get_mac_data_dir()"))
+#elif ('darwin' == env['PLATFORM']):
+    #cppdefines.append(("DATA_DIR", "get_mac_data_dir()"))
 else:
     temp = env['prefix'] + '/' + env['datadir']
     cppdefines.append(("DATA_DIR", '"%s"' % temp))
