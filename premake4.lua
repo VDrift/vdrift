@@ -17,17 +17,16 @@ solution "VDrift"
 		defines {"DEBUG"}
 		flags {"ExtraWarnings", "Symbols"}
 
-	configuration {"windows"}
-		flags {"StaticRuntime"}
-		includedirs {"win32/include", "win32/bullet"}
-		libdirs {"win32/lib"}
-		links {"opengl32", "glu32", "glew32", "SDLmain", "SDL", "wsock32", "ws2_32"}
-		files {"win32/bullet/**.h", "win32/bullet/**.cpp"}
-		links {"SDL_image", "SDL_gfx", "vorbisfile", "curl", "archive"}
-		postbuildcommands {"xcopy /d /y /f win32\lib\*.dll"}
-
 	configuration {"windows", "codeblocks"}
 		links {"mingw32"}
+
+	configuration {"windows"}
+		flags {"StaticRuntime"}
+		includedirs {"vdrift-win/include", "vdrift-win/bullet"}
+		libdirs {"vdrift-win/lib"}
+		links {"opengl32", "glu32", "glew32", "SDLmain", "SDL", "SDL_image", "SDL_gfx", "vorbisfile", "curl", "archive-2", "wsock32", "ws2_32"}
+		files {"vdrift-win/bullet/**"}
+		postbuildcommands {"xcopy /d /y /f ..\\vdrift-win\\lib\\*.dll ..\\"}
 
 	configuration {"linux"}
 		includedirs {"/usr/local/include/bullet/", "/usr/include/bullet"}

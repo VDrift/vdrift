@@ -19,7 +19,7 @@ DEPENDENCIES:
 Make sure you have all the required libraries and build tools. Make sure you also have the development files for each of the libraries.
 
 The required build tools include:
-	premake4 - This tool will generate project files wich will suit your needs.
+	premake4 - This tool will generate project files which will suit your needs.
 
 The required libraries include:
 	libsdl - Simple Direct Media Layer
