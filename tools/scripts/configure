@@ -1,9 +1,0 @@
-#!/bin/bash
-
-echo
-echo "*** Notice ***"
-echo
-echo "VDrift is no longer using autotools. Please take a look at the file docs/INSTALL"
-echo "for installation instructions."
-echo
-
