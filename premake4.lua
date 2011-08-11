@@ -32,7 +32,7 @@ solution "VDrift"
 	configuration {"linux"}
 		includedirs {"/usr/local/include/bullet/", "/usr/include/bullet"}
 		libdirs {"/usr/X11R6/lib"}
-		links {"archive", "curl", "LinearMath", "BulletDynamics", "BulletCollision", "GL", "GLU", "GLEW", "SDL", "vorbisfile", "SDL_image", "SDL_gfx"}
+		links {"archive", "curl", "BulletDynamics", "BulletCollision", "LinearMath", "GL", "GLU", "GLEW", "SDL", "vorbisfile", "SDL_image", "SDL_gfx"}
 
 	configuration {"macosx"}
 		files {"vdrift-mac/config_mac.mm", "vdrift-mac/SDLMain.h", "vdrift-mac/SDLMain.m"}
