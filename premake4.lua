@@ -3,7 +3,7 @@ solution "VDrift"
 		kind "WindowedApp"
 		language "C++"
 		location "."
-		targetdir "."
+		targetdir "build"
 		includedirs {"src"}
 		files {"src/**"}
 		location "build"
