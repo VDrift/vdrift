@@ -198,7 +198,6 @@ bool TEXTURE::LoadCubeVerticalCross(const std::string & path, const TEXTUREINFO 
 					}
 				}
 			}
-
 			glTexImage2D( targetparam, 0, format, w, h, 0, format, GL_UNSIGNED_BYTE, cubeface );
 			delete [] cubeface;
 		}
@@ -360,7 +359,7 @@ void GenTexture(const SDL_Surface * surface, const TEXTUREINFO & info, GLuint & 
 	//detect channels
 	bool compression = (surface->w > 512 || surface->h > 512) && !info.normalmap;
 	bool srgb = info.srgb;
-	int format = GL_RGB;
+	int format;
 	int internalformat = compression ? (srgb ? GL_COMPRESSED_SRGB : GL_COMPRESSED_RGB) : (srgb ? GL_SRGB8 : GL_RGB);
 	switch (surface->format->BytesPerPixel)
 	{
@@ -375,16 +374,29 @@ void GenTexture(const SDL_Surface * surface, const TEXTUREINFO & info, GLuint & 
 			alphachannel = true;
 			break;
 		case 3:
+#ifdef __APPLE__
+            format = GL_BGR;
+#else
 			format = GL_RGB;
-			internalformat = compression ? (srgb ? GL_COMPRESSED_SRGB : GL_COMPRESSED_RGB) : (srgb ? GL_SRGB8 : GL_RGB);
+#endif
+            internalformat = compression ? (srgb ? GL_COMPRESSED_SRGB : GL_COMPRESSED_RGB) : (srgb ? GL_SRGB8 : GL_RGB);
 			alphachannel = false;
 			break;
 		case 4:
+#ifdef __APPLE__
+            format = GL_BGRA;
+#else
 			format = GL_RGBA;
+#endif
 			internalformat = compression ? (srgb ? GL_COMPRESSED_SRGB_ALPHA : GL_COMPRESSED_RGBA) : (srgb ? GL_SRGB8_ALPHA8 : GL_RGBA);
 			alphachannel = true;
 			break;
 		default:
+#ifdef __APPLE__
+            format = GL_BGR;
+#else
+            format = GL_RGB;
+#endif
 			break;
 	}
 
