@@ -1,8 +1,9 @@
 .DS_Store
 a.out
-vdrift
 Makefile
+vdrift
 include/definitions.h
+vdrift.app/	
 build/
 data/
 tools/osx/.DS_Store
