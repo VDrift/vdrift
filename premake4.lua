@@ -39,4 +39,4 @@ solution "VDrift"
 		includedirs { "tools/osx/", "tools/osx/Frameworks/Archive.framework/Headers", "tools/osx/Frameworks/BulletCollision.framework/Headers", "tools/osx/Frameworks/BulletDynamics.framework/Headers" }
 		libdirs { "tools/osx/Frameworks" }
 		links { "Cocoa.framework", "Vorbis.framework", "libcurl.framework", "SDL.framework", "SDL_image.framework", "SDL_gfx.framework", "Archive.framework", "BulletCollision.framework", "BulletDynamics.framework", "BulletSoftBody.framework", "GLEW.framework", "LinearMath.framework", "OpenGL.framework" }
-		postbuildcommands {"cp -r ../tools/osx/Frameworks/ vdrift.app/Contents/Frameworks/"}
+		postbuildcommands {"cp -r ../tools/osx/Frameworks/ ../vdrift.app/Contents/Frameworks/"}
