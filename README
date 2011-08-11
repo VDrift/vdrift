@@ -1,15 +1,11 @@
+README:
+
+VDrift is a car racing simulator for multiple platforms. It is an open source project licensed under GPL v3 that can be modified under the terms of this license.
 Project's Homepage: http://vdrift.net/
-
 Documentation: http://wiki.vdrift.net/Main_Page
-
 Source repositories: https://github.com/VDrift
-
 Data repository: http://sourceforge.net/projects/vdrift/
 
-
-VDrift svn trunk import starting at revision number 2504 (6-15-09 release), bullet sources excluded.
-
-For more information: http://vdrift.net/Forum/viewtopic.php?t=1492
 
 HARDWARE:
 
@@ -23,8 +19,7 @@ DEPENDENCIES:
 Make sure you have all the required libraries and build tools. Make sure you also have the development files for each of the libraries.
 
 The required build tools include:
-	g++ - The GNU C++ compiler
-	scons - A replacement for Make
+	premake4 - This tool will generate project files wich will suit your needs.
 
 The required libraries include:
 	libsdl - Simple Direct Media Layer
@@ -46,8 +41,12 @@ sudo apt-get install g++ scons libsdl-gfx1.2-dev libsdl-image1.2-dev libsdl-net1
 
 COMPILING AND INSTALLING:
 
-To compile vdrif just type "scons" command in the root directory of the sources. You can use some flags to enable options, for example "scons arch=a64 release=1" will compile for a 64 bits machine and turn off debug.
-
-For installing just run "sudo scons install". You can also use diverse flags in this step like "scons install prefix=/usr/local" for setting the prefix to install vdrift.
-
-Run "scons -h" for seing all the modificable flags.
+For compiling you'll need to download the source code package and your platform dependencies.
+For downloading the source code from the repository execute "git clone https://github.com/VDrift/vdrift.git".
+After this change your directory to the root of the sources "cd vdrift"
+Donwload your platform dependencies:
+- Windows: svn co 
+- Mac OS: svn co
+Once everything is downloaded use the command "premake4 --help" to see what project files do you want to generate (codeblocks, gmake, xcode3...).
+Type "premake4 <action>" and your project files will appear in a folder under the name of "build".
+Use your favourite compiler or ide to modify or compile the game.
