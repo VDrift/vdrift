@@ -22,6 +22,7 @@ solution "VDrift"
 
 	configuration {"windows"}
 		flags {"StaticRuntime"}
+		debugdir "."
 		includedirs {"vdrift-win/include", "vdrift-win/bullet"}
 		libdirs {"vdrift-win/lib"}
 		links {"opengl32", "glu32", "glew32", "SDLmain", "SDL", "SDL_image", "SDL_gfx", "vorbisfile", "curl", "archive-2", "wsock32", "ws2_32"}
