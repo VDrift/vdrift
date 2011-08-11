@@ -45,8 +45,8 @@ For compiling you'll need to download the source code package and your platform 
 For downloading the source code from the repository execute "git clone https://github.com/VDrift/vdrift.git".
 After this change your directory to the root of the sources "cd vdrift"
 Donwload your platform dependencies:
-- Windows: svn co 
-- Mac OS: svn co
+- Windows: git clone https://github.com/VDrift/vdrift-win.git
+- Mac OS: git clone https://github.com/VDrift/vdrift-mac.git
 Once everything is downloaded use the command "premake4 --help" to see what project files do you want to generate (codeblocks, gmake, xcode3...).
 Type "premake4 <action>" and your project files will appear in a folder under the name of "build".
 Use your favourite compiler or ide to modify or compile the game.
