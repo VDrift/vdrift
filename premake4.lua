@@ -4,6 +4,12 @@ newoption {
 	description = "Path suffix where where VDrift data will be installed",
 }
 
+newoption {
+	trigger = "bindir",
+	value = "PATH",
+	description = "Path suffix where vdrift binary executable will be installed",
+}
+
 solution "VDrift"
 	project "vdrift"
 		kind "WindowedApp"
@@ -13,9 +19,9 @@ solution "VDrift"
 		includedirs {"src"}
 		files {"src/**"}
 		if _OPTIONS["datadir"] then
-			defines {"DATA_DIR=" .. _OPTIONS["datadir"]}
+			defines {"DATA_DIR=\"\\\"" .. _OPTIONS["datadir"] .. "\\\"\""}
 		else
-			defines {"DATA_DIR=/usr/local/share/games/vdrift/data"}
+			defines {"DATA_DIR=\"\\\"/usr/local/share/games/vdrift/data\\\"\""}
 		end
 
 	configurations {"Debug", "Release"}
