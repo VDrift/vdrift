@@ -2,11 +2,10 @@ solution "VDrift"
 	project "vdrift"
 		kind "WindowedApp"
 		language "C++"
-		location "."
-		targetdir "build"
+		location "build"
+		targetdir "."
 		includedirs {"src"}
 		files {"src/**"}
-		location "build"
 
 	configurations {"Debug", "Release"}
 
