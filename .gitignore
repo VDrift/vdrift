@@ -1,10 +1,9 @@
 .DS_Store
-.sconsign.dblite
-config.log
-compile.log
+a.out
+Makefile
+vdrift
 include/definitions.h
-vdrift.conf
-.sconf_temp/
+vdrift.app/	
 build/
 data/
 tools/osx/.DS_Store
