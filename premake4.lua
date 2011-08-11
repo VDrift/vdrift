@@ -1,3 +1,9 @@
+newoption {
+	trigger = "datadir",
+	value = "PATH",
+	description = "Path suffix where where VDrift data will be installed",
+}
+
 solution "VDrift"
 	project "vdrift"
 		kind "WindowedApp"
@@ -6,6 +12,11 @@ solution "VDrift"
 		targetdir "."
 		includedirs {"src"}
 		files {"src/**"}
+		if _OPTIONS["datadir"] then
+			defines {"DATA_DIR=" .. _OPTIONS["datadir"]}
+		else
+			defines {"DATA_DIR=/usr/local/share/games/vdrift/data"}
+		end
 
 	configurations {"Debug", "Release"}
 
@@ -22,7 +33,7 @@ solution "VDrift"
 
 	configuration {"windows"}
 		flags {"StaticRuntime"}
-		debugdir "."
+		--debugdir "."
 		includedirs {"vdrift-win/include", "vdrift-win/bullet"}
 		libdirs {"vdrift-win/lib"}
 		links {"opengl32", "glu32", "glew32", "SDLmain", "SDL", "SDL_image", "SDL_gfx", "vorbisfile", "curl", "archive-2", "wsock32", "ws2_32"}
