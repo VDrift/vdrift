@@ -1,12 +1,75 @@
+settingsdir = ".vdrift"
+bindir = "/usr/local/bin"
+datadir = "/usr/local/share/games/vdrift/data"
+
+newoption {
+	trigger = "settings",
+	value = "PATH",
+	description = "Directory in user\'s home dir where settings will be stored. Default: " .. settingsdir,
+}
+
+newoption {
+	trigger = "datadir",
+	value = "PATH",
+	description = "Path where where VDrift data will be installed. Default: " .. datadir,
+}
+
+newoption {
+	trigger = "bindir",
+	value = "PATH",
+	description = "Path where VDrift executable will be installed. Default: " .. bindir,
+}
+
+newoption {
+	trigger = "force_feedback",
+	description = "Enable force feedback"
+}
+
+newoption {
+	trigger = "binreloc",
+	description = "Compile with Binary Relocation support"
+}
+
+newaction {
+	trigger = "install",
+	description = "Install vdrift binary to bindir",
+	execute = function ()
+		local _bindir = _OPTIONS["bindir"]
+		local _binname = "vdrift" 
+		
+		if not _bindir then
+			_bindir = bindir
+			print("Using default installation directory: " .. _bindir)
+			print("To set installation directory use: premake4 -bindir=PATH install.")
+		end
+		
+		if os.is("windows") then 
+			_binname = "vdrift.exe"
+		end
+
+		if not os.isfile(_binname) then
+			print "VDrift binary not found. Build vdrift before install."
+		else
+			print("Install binary into " .. _bindir)
+			if not os.isdir(_bindir) then
+				print("Create " .. _bindir)
+				if not os.mkdir(_bindir) then
+					print("Failed to create " .. _bindir)
+				end
+			end
+			os.copyfile(_binname, "E:/vdri")
+		end
+	end
+}
+
 write_definitions_h = function()
+	local _datadir = iif(_OPTIONS["datadir"], _OPTIONS["datadir"], datadir)
+	local _settings = iif(_OPTIONS["settings"], _OPTIONS["settings"], settingsdir)
 	local def = io.open("src/definitions.h", "w")
 	def:write("#ifndef _DEFINITIONS_H\n")
 	def:write("#define _DEFINITIONS_H\n")
-	if _OPTIONS["datadir"] then
-		def:write("#define DATA_DIR \"" .. _OPTIONS["datadir"] .. "\"\n")
-	else
-		def:write("#define DATA_DIR \"/usr/local/share/games/vdrift/data\"\n")
-	end
+	def:write("#define SETTINGS_DIR \"" .. _settings .. "\"\n")
+	def:write("#define DATA_DIR \"" .. _datadir .. "\"\n")
 	if _OPTIONS["force_feedback"] then
 		def:write("#define ENABLE_FORCE_FEEDBACK\n")
 	end
@@ -64,43 +127,3 @@ solution "VDrift"
 		libdirs { "vdrift-mac/Frameworks" }
 		links { "Cocoa.framework", "Vorbis.framework", "libcurl.framework", "SDL.framework", "SDL_image.framework", "SDL_gfx.framework", "Archive.framework", "BulletCollision.framework", "BulletDynamics.framework", "BulletSoftBody.framework", "GLEW.framework", "LinearMath.framework", "OpenGL.framework" }
 		postbuildcommands {"cp -r ../vdrift-mac/Frameworks/ ../vdrift.app/Contents/Frameworks/"}
-		
-	newoption {
-		trigger = "datadir",
-		value = "PATH",
-		description = "Path suffix where where VDrift data will be installed",
-	}
-
-	newoption {
-		trigger = "bindir",
-		value = "PATH",
-		description = "Path suffix where vdrift binary executable will be installed",
-	}
-	
-	newoption {
-		trigger = "force_feedback",
-		description = "Enable force feedback"
-	}
-	
-	newoption {
-		trigger = "binreloc",
-		description = "Compile with Binary Relocation support"
-	}
-
-	newaction {
-		trigger = "install",
-		description = "Install vdrift binary to bindir",
-		execute = function ()
-			if not _OPTIONS["bindir"] then
-				print "No bindir specified."
-			elseif  os.is("linux") then
-				os.copyfile("vdrift", _OPTIONS["bindir"])
-			elseif  os.is("windows") then
-				print("Install binary into " .. _OPTIONS["bindir"])
-				os.copyfile("vdrift.exe", _OPTIONS["bindir"])
-				os.copyfile("*.dll", _OPTIONS["bindir"])
-			else
-				print "Configuration not supported"
-			end
-		end
-	}
