@@ -1,8 +1,8 @@
 update_options = function()
 	local options = {}
-	if not options["settings"] then options["settings"]=".vdrift" end
-	if not options["bindir"] then options["bindir"]="/usr/local/bin" end
-	if not options["datadir"] then options["datadir"]="/usr/local/share/games/vdrift/data" end
+	options["settings"]=".vdrift"
+	options["bindir"]="/usr/local/bin"
+	options["datadir"]="/usr/local/share/games/vdrift/data"
 	local f = io.open("vdrift.cfg", "r")
 	if f then
 		for line in f:lines() do
