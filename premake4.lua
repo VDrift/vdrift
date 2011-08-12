@@ -1,14 +1,17 @@
-newoption {
-	trigger = "datadir",
-	value = "PATH",
-	description = "Path suffix where where VDrift data will be installed",
-}
-
-newoption {
-	trigger = "bindir",
-	value = "PATH",
-	description = "Path suffix where vdrift binary executable will be installed",
-}
+write_definitions_h = function()
+	local def = io.open("src/definitions.h", "w")
+	def:write("#ifndef _DEFINITIONS_H\n")
+	def:write("#define _DEFINITIONS_H\n")
+	if _OPTIONS["datadir"] then
+		def:write("#define DATA_DIR \"" .. _OPTIONS["datadir"] .. "\"\n")
+	else
+		def:write("#define DATA_DIR \"/usr/local/share/games/vdrift/data\"\n")
+	end
+	def:write("#define ENABLE_BINRELOC\n")
+	def:write("#define VERSION \"development-full\"\n")
+	def:write("#define REVISION \"latest\"\n")
+	def:write("#endif // _DEFINITIONS_H\n")
+end
 
 solution "VDrift"
 	project "vdrift"
@@ -17,12 +20,8 @@ solution "VDrift"
 		location "build"
 		targetdir "."
 		includedirs {"src"}
-		files {"src/**"}
-		if _OPTIONS["datadir"] then
-			defines {"DATA_DIR=\"\\\"" .. _OPTIONS["datadir"] .. "\\\"\""}
-		else
-			defines {"DATA_DIR=\"\\\"/usr/local/share/games/vdrift/data\\\"\""}
-		end
+		files {"src/**.h", "src/**.cpp"}
+		write_definitions_h()
 
 	configurations {"Debug", "Release"}
 
@@ -36,6 +35,9 @@ solution "VDrift"
 
 	configuration {"windows", "codeblocks"}
 		links {"mingw32"}
+		
+	configuration {"vs2008"}
+		defines {"__PRETTY_FUNCTION__=__FUNCSIG__"}
 
 	configuration {"windows"}
 		flags {"StaticRuntime"}
@@ -43,7 +45,7 @@ solution "VDrift"
 		includedirs {"vdrift-win/include", "vdrift-win/bullet"}
 		libdirs {"vdrift-win/lib"}
 		links {"opengl32", "glu32", "glew32", "SDLmain", "SDL", "SDL_image", "SDL_gfx", "vorbisfile", "curl", "archive-2", "wsock32", "ws2_32"}
-		files {"vdrift-win/bullet/**"}
+		files {"vdrift-win/bullet/**.h", "vdrift-win/bullet/**.cpp"}
 		postbuildcommands {"xcopy /d /y /f ..\\vdrift-win\\lib\\*.dll ..\\"}
 
 	configuration {"linux"}
@@ -57,3 +59,33 @@ solution "VDrift"
 		libdirs { "vdrift-mac/Frameworks" }
 		links { "Cocoa.framework", "Vorbis.framework", "libcurl.framework", "SDL.framework", "SDL_image.framework", "SDL_gfx.framework", "Archive.framework", "BulletCollision.framework", "BulletDynamics.framework", "BulletSoftBody.framework", "GLEW.framework", "LinearMath.framework", "OpenGL.framework" }
 		postbuildcommands {"cp -r ../vdrift-mac/Frameworks/ ../vdrift.app/Contents/Frameworks/"}
+		
+	newoption {
+		trigger = "datadir",
+		value = "PATH",
+		description = "Path suffix where where VDrift data will be installed",
+	}
+
+	newoption {
+		trigger = "bindir",
+		value = "PATH",
+		description = "Path suffix where vdrift binary executable will be installed",
+	}
+
+	newaction {
+		trigger = "install",
+		description = "Install vdrift binary to bindir",
+		execute = function ()
+			if not _OPTIONS["bindir"] then
+				print "No bindir specified."
+			elseif  os.is("linux") then
+				os.copyfile("vdrift", _OPTIONS["bindir"])
+			elseif  os.is("windows") then
+				print("Install binary into " .. _OPTIONS["bindir"])
+				os.copyfile("vdrift.exe", _OPTIONS["bindir"])
+				os.copyfile("*.dll", _OPTIONS["bindir"])
+			else
+				print "Configuration not supported"
+			end
+		end
+	}
