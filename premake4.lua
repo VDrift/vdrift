@@ -7,7 +7,12 @@ write_definitions_h = function()
 	else
 		def:write("#define DATA_DIR \"/usr/local/share/games/vdrift/data\"\n")
 	end
-	def:write("#define ENABLE_BINRELOC\n")
+	if _OPTIONS["force_feedback"] then
+		def:write("#define ENABLE_FORCE_FEEDBACK\n")
+	end
+	if _OPTIONS["binreloc"] then
+		def:write("#define ENABLE_BINRELOC\n")
+	end
 	def:write("#define VERSION \"development-full\"\n")
 	def:write("#define REVISION \"latest\"\n")
 	def:write("#endif // _DEFINITIONS_H\n")
@@ -70,6 +75,16 @@ solution "VDrift"
 		trigger = "bindir",
 		value = "PATH",
 		description = "Path suffix where vdrift binary executable will be installed",
+	}
+	
+	newoption {
+		trigger = "force_feedback",
+		description = "Enable force feedback"
+	}
+	
+	newoption {
+		trigger = "binreloc",
+		description = "Compile with Binary Relocation support"
 	}
 
 	newaction {
