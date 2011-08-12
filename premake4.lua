@@ -95,7 +95,39 @@ newaction {
 				return
 			end
 		end
-		os.copyfile(binname, bindir.."/"..binname)
+		os.copyfile(os.getcwd().."/"..binname, bindir.."/"..binname)
+	end
+}
+
+newaction {
+	trigger = "install-data",
+	description = "Install vdrift data to datadir.",
+	execute = function ()
+		local cwd = os.getcwd()
+		local sourcedir = "data"
+		local targetdir = _OPTIONS["datadir"]
+		if not os.isdir(sourcedir) then
+			print "VDrift data not found in current working directory."
+			return
+		end
+		print("Install binary into "..targetdir)
+		if not os.isdir(targetdir) then
+			print("Create "..targetdir)
+			if not os.mkdir(targetdir) then
+				print("Failed to create "..targetdir)
+				return
+			end
+		end
+		local dirlist = os.matchdirs(sourcedir.."/**")
+		for i, val in ipairs(dirlist) do
+			os.mkdir(targetdir..val:sub(5))
+		end
+		local filelist = os.matchfiles(sourcedir.."/**")
+		for i, val in ipairs(filelist) do
+			if not val:find("SConscript", 1, true) then
+				os.copyfile(cwd.."/"..val, targetdir..val:sub(5))
+			end
+		end
 	end
 }
 
