@@ -57,7 +57,7 @@ newaction {
 					print("Failed to create " .. _bindir)
 				end
 			end
-			os.copyfile(_binname, "E:/vdri")
+			os.copyfile(_binname, _bindir)
 		end
 	end
 }
