@@ -1,85 +1,105 @@
-settingsdir = ".vdrift"
-bindir = "/usr/local/bin"
-datadir = "/usr/local/share/games/vdrift/data"
+update_options = function()
+	local options = {}
+	if not options["settings"] then options["settings"]=".vdrift" end
+	if not options["bindir"] then options["bindir"]="/usr/local/bin" end
+	if not options["datadir"] then options["datadir"]="/usr/local/share/games/vdrift/data" end
+	local f = io.open("vdrift.cfg", "r")
+	if f then
+		for line in f:lines() do
+			key_value = string.explode(line, "=")
+			options[key_value[1]] = key_value[2]
+		end
+		f:close()
+	end
+	for key, value in pairs(options) do
+		if (not _OPTIONS[key]) or (_OPTIONS[key] == "") then
+			_OPTIONS[key] = value
+		end
+	end
+	f = io.open("vdrift.cfg", "w")
+	for key, value in pairs(_OPTIONS) do
+		if value then
+			f:write(key .. "=" .. value .. "\n")
+		end
+	end
+	f:close()
+end
+
+write_definitions_h = function()
+	local f = io.open("src/definitions.h", "w")
+	f:write("#ifndef _DEFINITIONS_H\n")
+	f:write("#define _DEFINITIONS_H\n")
+	f:write("#define SETTINGS_DIR \"" .. _OPTIONS["settings"] .. "\"\n")
+	f:write("#define DATA_DIR \"" .. _OPTIONS["datadir"] .. "\"\n")
+	if _OPTIONS["force_feedback"] then
+		f:write("#define ENABLE_FORCE_FEEDBACK\n")
+	end
+	if _OPTIONS["binreloc"] then
+		f:write("#define ENABLE_BINRELOC\n")
+	end
+	f:write("#define VERSION \"development-full\"\n")
+	f:write("#define REVISION \"latest\"\n")
+	f:write("#endif // _DEFINITIONS_H\n")
+	f:close()
+end
 
 newoption {
 	trigger = "settings",
 	value = "PATH",
-	description = "Directory in user\'s home dir where settings will be stored. Default: " .. settingsdir,
+	description = "Directory in user\'s home dir where settings will be stored."
 }
 
 newoption {
 	trigger = "datadir",
 	value = "PATH",
-	description = "Path where where VDrift data will be installed. Default: " .. datadir,
+	description = "Path where where VDrift data will be installed."
 }
 
 newoption {
 	trigger = "bindir",
 	value = "PATH",
-	description = "Path where VDrift executable will be installed. Default: " .. bindir,
+	description = "Path where VDrift executable will be installed."
 }
 
 newoption {
 	trigger = "force_feedback",
-	description = "Enable force feedback"
+	description = "Enable force feedback."
 }
 
 newoption {
 	trigger = "binreloc",
-	description = "Compile with Binary Relocation support"
+	description = "Compile with Binary Relocation support."
 }
 
 newaction {
 	trigger = "install",
 	description = "Install vdrift binary to bindir",
 	execute = function ()
+		local _binname = iif(os.is("windows"), "vdrift.exe", "vdrift")
+		if not os.isfile(_binname) then
+			print "VDrift binary not found. Build vdrift before install."
+			return
+		end
+
+		local _datadir = _OPTIONS["datadir"]
 		local _bindir = _OPTIONS["bindir"]
-		local _binname = "vdrift" 
-		
 		if not _bindir then
 			_bindir = bindir
 			print("Using default installation directory: " .. _bindir)
 			print("To set installation directory use: premake4 -bindir=PATH install.")
 		end
-		
-		if os.is("windows") then 
-			_binname = "vdrift.exe"
+
+		print("Install binary into " .. _bindir)
+		if not os.isdir(_bindir) then
+			print("Create " .. _bindir)
+			if not os.mkdir(_bindir) then
+				print("Failed to create " .. _bindir)
+			end
 		end
 
-		if not os.isfile(_binname) then
-			print "VDrift binary not found. Build vdrift before install."
-		else
-			print("Install binary into " .. _bindir)
-			if not os.isdir(_bindir) then
-				print("Create " .. _bindir)
-				if not os.mkdir(_bindir) then
-					print("Failed to create " .. _bindir)
-				end
-			end
-			os.copyfile(_binname, _bindir .. "/")
-		end
+		os.copyfile(_binname, _bindir .. "/")
 	end
 }
-
-write_definitions_h = function()
-	local _datadir = iif(_OPTIONS["datadir"], _OPTIONS["datadir"], datadir)
-	local _settings = iif(_OPTIONS["settings"], _OPTIONS["settings"], settingsdir)
-	local def = io.open("src/definitions.h", "w")
-	def:write("#ifndef _DEFINITIONS_H\n")
-	def:write("#define _DEFINITIONS_H\n")
-	def:write("#define SETTINGS_DIR \"" .. _settings .. "\"\n")
-	def:write("#define DATA_DIR \"" .. _datadir .. "\"\n")
-	if _OPTIONS["force_feedback"] then
-		def:write("#define ENABLE_FORCE_FEEDBACK\n")
-	end
-	if _OPTIONS["binreloc"] then
-		def:write("#define ENABLE_BINRELOC\n")
-	end
-	def:write("#define VERSION \"development-full\"\n")
-	def:write("#define REVISION \"latest\"\n")
-	def:write("#endif // _DEFINITIONS_H\n")
-end
 
 solution "VDrift"
 	project "vdrift"
@@ -89,6 +109,7 @@ solution "VDrift"
 		targetdir "."
 		includedirs {"src"}
 		files {"src/**.h", "src/**.cpp"}
+		update_options()
 		write_definitions_h()
 
 	configurations {"Debug", "Release"}
