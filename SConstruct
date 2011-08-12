@@ -226,7 +226,7 @@ def tarballer (target, source, env):
 # definitions file writer function #
 #----------------------------------#
 def write_definitions(cppdefs=[]):
-    defs_file = open("include/definitions.h", "w")
+    defs_file = open("src/definitions.h", "w")
     defs_file.write("#ifndef _DEFINITIONS_H\n")
     defs_file.write("#define _DEFINITIONS_H\n")
     for item in cppdefs:
