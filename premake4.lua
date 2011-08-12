@@ -3,6 +3,8 @@ update_options = function()
 	options["settings"]=".vdrift"
 	options["bindir"]="/usr/local/bin"
 	options["datadir"]="/usr/local/share/games/vdrift/data"
+	options["force_feedback"]="no"
+	options["binreloc"]="no"
 	local f = io.open("vdrift.cfg", "r")
 	if f then
 		for line in f:lines() do
@@ -18,8 +20,8 @@ update_options = function()
 	end
 	f = io.open("vdrift.cfg", "w")
 	for key, value in pairs(_OPTIONS) do
-		if value then
-			f:write(key .. "=" .. value .. "\n")
+		if options[key] then
+			f:write(key.."="..value.."\n")
 		end
 	end
 	f:close()
@@ -29,12 +31,12 @@ write_definitions_h = function()
 	local f = io.open("src/definitions.h", "w")
 	f:write("#ifndef _DEFINITIONS_H\n")
 	f:write("#define _DEFINITIONS_H\n")
-	f:write("#define SETTINGS_DIR \"" .. _OPTIONS["settings"] .. "\"\n")
-	f:write("#define DATA_DIR \"" .. _OPTIONS["datadir"] .. "\"\n")
-	if _OPTIONS["force_feedback"] then
+	f:write("#define SETTINGS_DIR \"".._OPTIONS["settings"].."\"\n")
+	f:write("#define DATA_DIR \"".._OPTIONS["datadir"].."\"\n")
+	if _OPTIONS["force_feedback"] == "yes" then
 		f:write("#define ENABLE_FORCE_FEEDBACK\n")
 	end
-	if _OPTIONS["binreloc"] then
+	if _OPTIONS["binreloc"] == "yes" then
 		f:write("#define ENABLE_BINRELOC\n")
 	end
 	f:write("#define VERSION \"development-full\"\n")
@@ -63,41 +65,37 @@ newoption {
 
 newoption {
 	trigger = "force_feedback",
-	description = "Enable force feedback."
+	value = "VALUE",
+	description = "Enable force feedback.",
+	allowed = {{"yes", "Enable option"}, {"no", "Disable option"}}
 }
 
 newoption {
 	trigger = "binreloc",
-	description = "Compile with Binary Relocation support."
+	value = "VALUE",
+	description = "Compile with Binary Relocation support.",
+	allowed = {{"yes", "Enable option"}, {"no", "Disable option"}}
 }
 
 newaction {
 	trigger = "install",
-	description = "Install vdrift binary to bindir",
+	description = "Install vdrift binary to bindir.",
 	execute = function ()
-		local _binname = iif(os.is("windows"), "vdrift.exe", "vdrift")
-		if not os.isfile(_binname) then
+		local binname = iif(os.is("windows"), "vdrift.exe", "vdrift")
+		if not os.isfile(binname) then
 			print "VDrift binary not found. Build vdrift before install."
 			return
 		end
-
-		local _datadir = _OPTIONS["datadir"]
-		local _bindir = _OPTIONS["bindir"]
-		if not _bindir then
-			_bindir = bindir
-			print("Using default installation directory: " .. _bindir)
-			print("To set installation directory use: premake4 -bindir=PATH install.")
-		end
-
-		print("Install binary into " .. _bindir)
-		if not os.isdir(_bindir) then
-			print("Create " .. _bindir)
-			if not os.mkdir(_bindir) then
-				print("Failed to create " .. _bindir)
+		local bindir = _OPTIONS["bindir"]
+		print("Install binary into "..bindir)
+		if not os.isdir(bindir) then
+			print("Create "..bindir)
+			if not os.mkdir(bindir) then
+				print("Failed to create "..bindir)
+				return
 			end
 		end
-
-		os.copyfile(_binname, _bindir .. "/")
+		os.copyfile(binname, bindir.."/"..binname)
 	end
 }
 
