@@ -110,14 +110,6 @@ newaction {
 			print "VDrift data not found in current working directory."
 			return
 		end
-		print("Install binary into "..targetdir)
-		if not os.isdir(targetdir) then
-			print("Create "..targetdir)
-			if not os.mkdir(targetdir) then
-				print("Failed to create "..targetdir)
-				return
-			end
-		end
 		local dirlist = os.matchdirs(sourcedir.."/**")
 		for i, val in ipairs(dirlist) do
 			os.mkdir(targetdir..val:sub(5))
