@@ -2,7 +2,8 @@
 a.out
 Makefile
 vdrift
-include/definitions.h
+vdrift.cfg
+src/definitions.h
 vdrift.app/
 vdrift-mac/
 build/
