@@ -1,0 +1,253 @@
+import os, sys
+
+#-------------#
+# Import Vars #
+#-------------#
+Import('*')
+
+#----------------#
+# Subdirectories #
+#----------------#
+def addbulletpath( val ):
+    return "#bullet/"+val
+
+#---------#
+# Sources #
+#---------#
+src = Split("""aabb.cpp
+		aabb_space_partitioning.cpp
+		ai.cpp
+		archiveutils.cpp
+		autoupdate.cpp
+		bezier.cpp
+		camera_chase.cpp
+		camera_fixed.cpp
+		camera_free.cpp
+		camera_mount.cpp
+		camera_orbit.cpp
+		camera_simplemount.cpp
+		camera_system.cpp
+		car.cpp
+		carcontrolmap_local.cpp
+		cardynamics.cpp
+		carengine.cpp
+		carsuspension.cpp
+		cartire.cpp
+		config.cpp
+		containeralgorithm.cpp
+		crashdetection.cpp
+		downloadable.cpp
+		drawable.cpp
+		dynamicsworld.cpp
+		endian_utility.cpp
+		eventsystem.cpp
+		fbobject.cpp
+		fbtexture.cpp
+		font.cpp
+		forcefeedback.cpp
+		fracturebody.cpp
+		game.cpp
+		graphics_config.cpp
+		graphics_config_condition.cpp
+		graphics_fallback.cpp
+		graphics_gl3v.cpp
+		graphics_renderers.cpp
+		gui.cpp
+		guioption.cpp
+		guipage.cpp
+		http.cpp
+		hud.cpp
+		joepack.cpp
+		joeserialize.cpp
+		k1999.cpp
+		keyed_container.cpp
+		linearframe.cpp
+		linearinterp.cpp
+		loadcollisionshape.cpp
+		loadingscreen.cpp
+		main.cpp
+		mathplane.cpp
+		mathvector.cpp
+		matrix4.cpp
+		mesh_gen.cpp
+		model.cpp
+		model_joe03.cpp
+		model_obj.cpp
+		modelmanager.cpp
+		opengl_utility.cpp
+		optional.cpp
+		parallel_task.cpp
+		particle.cpp
+		pathmanager.cpp
+		performance_testing.cpp
+		quaternion.cpp
+		random.cpp
+		rendermodelext_drawable.cpp
+		replay.cpp
+		reseatable_reference.cpp
+		rigidbody.cpp
+		roadpatch.cpp
+		roadstrip.cpp
+		rotationalframe.cpp
+		scenenode.cpp
+		settings.cpp
+		shader.cpp
+		sound.cpp
+		soundbuffer.cpp
+		soundfilter.cpp
+		soundmanager.cpp
+		soundsource.cpp
+		sprite2d.cpp
+		suspensionbumpdetection.cpp
+		svn_sourceforge.cpp
+		texture.cpp
+		texturemanager.cpp
+		text_draw.cpp
+		timer.cpp
+		toggle.cpp
+		track.cpp
+		trackloader.cpp
+		trackmap.cpp
+		updatemanagement.cpp
+		utils.cpp
+		vertexarray.cpp
+		widget_button.cpp
+		widget_colorpicker.cpp
+		widget_controlgrab.cpp
+		widget_doublestringwheel.cpp
+		widget_image.cpp
+		widget_label.cpp
+		widget_multiimage.cpp		
+		widget_slider.cpp
+		widget_spinningcar.cpp
+		widget_stringwheel.cpp
+		widget_toggle.cpp
+		window.cpp
+		cfg/inf.cpp
+		cfg/ini.cpp
+		cfg/xml.cpp
+		cfg/ptree.cpp
+		gl3v/glwrapper.cpp
+		gl3v/renderdimensions.cpp
+		gl3v/renderer.cpp
+		gl3v/renderpass.cpp
+		gl3v/rendersampler.cpp
+		gl3v/renderstate.cpp""")
+
+src.sort(lambda x, y: cmp(x.lower(),y.lower()))
+
+#------------------------#
+# Copy Build Environment #
+#------------------------#
+local_env = env.Clone()
+SConsignFile()
+
+#--------------------------#
+# Modify Build Environment #
+#--------------------------#
+appdir = ""
+vdrift_install = None
+common_libs = ['SDL_image', 'SDL_gfx', 'vorbisfile', 'curl', 'archive']
+
+if (sys.platform == 'freebsd6') or (sys.platform == 'freebsd7') or (sys.platform == 'freebsd8') or (sys.platform == 'freebsd9'):
+    common_libs.append('libLinearMath')
+    common_libs.append('libBulletCollision')
+    local_env.ParseConfig('sdl-config --cflags --libs')
+    local_env.Append(LIBPATH = ['/usr/X11R6/lib'])
+    libs_link = ['GLU', 'GLEW', 'pthread', common_libs]
+elif ( 'darwin' == sys.platform ):
+    common_libs = ['SDL_image', 'SDL_gfx', 'Vorbis', 'libcurl']
+    vdrift_install = "${PRODUCT_NAME}.app"
+    pkgbase = "%s/Contents" % vdrift_install
+    appdir = "%s/MacOS/" % pkgbase
+    pkgsrc = "../tools/osx"
+
+    common_libs.append( 'SDL' )
+    common_libs.append( 'GLEW' )
+    def batch_copy( target, source, env): 
+        # Do a mini svn export... this funtion could possibly
+        # be useful in general ( as a builder ), but I don't 
+        # want to think about getting it cross-platform... 
+        # win32 could use xcopy... but there are so many different
+        # versions of the tools below in circulation that 
+        # testing would be difficult
+        for tgt, src in zip( target, source ):
+            src = str(src)
+            tgt = str(tgt)
+            env.Execute( ( "mkdir -p '%s';" +
+                "tar -cf - -C '%s' . --exclude \\*/.svn\\* |" +
+                "tar -xf - -C '%s'" )  % ( tgt, src, tgt ) )
+
+    def build_list( template, items ):
+        return [ template % x for x in items ]
+
+    Alias( 'vdrift', [
+        local_env.ProcessTemplate( 
+            '%s/Info.plist' % pkgbase, 
+            '%s/Info.plist' % pkgsrc ),
+        local_env.Command( 
+            '%s/Resources/${PRODUCT_NAME}.icns' % pkgbase, 
+            '%s/vdrift.icns' % pkgsrc,
+            Copy( '$TARGET', '$SOURCE') ),
+        [ local_env.WorkingExport( '%s/Frameworks' % pkgbase, s ) for s in
+            build_list( '%s/Frameworks/%%s.framework' % pkgsrc, common_libs ) ] ] ) 
+        #local_env.Command(
+        #    build_list( '%s/Frameworks/%%s.framework' % pkgbase, common_libs  ),
+        #    build_list( '%s/%%s.framework' % pkgsrc, common_libs ),
+        #    batch_copy )  ] )
+    libs_link = ['objc']
+    local_env.Append( FRAMEWORKS = [ common_libs, 'Foundation', 'AppKit'] )
+    src.append(['../tools/osx/SDLMain.m', '../tools/osx/config_mac.mm'])
+elif ( 'win32' == sys.platform or 'cygwin' == sys.platform ):
+	local_env.Append(LIBPATH = ['/usr/lib/mingw', '#tools/win/lib', '#build'])
+	libs_link = ['opengl32', 'glu32', 'glew32', 'mingw32', 'SDLmain', 'SDL', 'ws2_32', common_libs ]
+else:
+    local_env.ParseConfig('sdl-config --cflags --libs')
+    local_env.Append(LIBPATH = ['/usr/X11R6/lib'])
+    libs_link = ['GL', 'GLU', 'GLEW', 'pthread', common_libs]
+
+local_env.Append(LIBS = libs_link)
+
+#-----------------------#
+# Distribute to src_dir #
+#-----------------------#
+dist_files = ['SConscript'] + src
+env.Distribute (src_dir, dist_files)
+
+#--------------------#
+# Compile Executable #
+#--------------------#
+vdrift = local_env.Program(target='%s${EXECUTABLE_NAME}' % appdir, source=src)
+Default(Alias('vdrift', vdrift))
+
+#---------#
+# Install #
+#---------#
+if not vdrift_install: vdrift_install = vdrift
+install = env.Install(Dir(env.subst("$destdir$prefix/$bindir")), vdrift_install)
+env.Alias("install", install)
+
+#---------------#
+# Python Export #
+#---------------#
+
+if not ( 'win32' == sys.platform or 'cygwin' == sys.platform ):
+    #for now this seems to break windows build so disabling for win
+    wrapper_build_env = local_env.Clone()
+
+    pybase = 'python%s' % sys.version[0:3]
+    wrapper_build_env.Append(CPPPATH=[os.path.join(sys.prefix, 'include', pybase)],
+                             LIBPATH=[os.path.join(sys.prefix, 'lib', pybase, 'config')],
+                             LIBS=['lib%s' % pybase])
+
+#    wrapper_build_env.Append(CPPDEFINES=['BOOST_PYTHON_STATIC_LIB', 'BOOST_PYTHON_STATIC_MODULE'],
+#                             CPPPATH=['#include','$boostIncludes'],  # boostIncludes is a PathOption
+#                             LIBS=['boost_python'])
+
+    wrapper_build_env.Replace(SHLIBPREFIX = '_')  # do not add 'lib' in front of the output file
+    wrapper_build_env.Append(SWIGFLAGS=['-c++', '-python'])
+#wrapper = wrapper_build_env.SharedLibrary('vdrift', [src, vamosobjs, guiobjs, "vdrift.i"])
+    wrapper = wrapper_build_env.SharedLibrary('vdrift', [src, "vdrift.i"])
+
+    env.Alias("wrapper", wrapper)
+
