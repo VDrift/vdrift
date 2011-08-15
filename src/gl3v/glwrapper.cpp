@@ -157,11 +157,12 @@ bool GLWrapper::createAndCompileShader(const std::string & shaderSource, GLenum 
 
 	GLint bufferSize(0);
 	GLLOG(glGetShaderiv(handle, GL_INFO_LOG_LENGTH, &bufferSize));ERROR_CHECK;
-	GLchar infoLog[bufferSize+1];
+	GLchar* infoLog = new GLchar[bufferSize+1];
 	GLsizei infoLogLength;
 	GLLOG(glGetShaderInfoLog(handle, bufferSize, &infoLogLength, infoLog));ERROR_CHECK;
 	infoLog[bufferSize] = '\0';
 	shaderErrorOutput << infoLog;
+	delete[] infoLog;
 
 	if (!compileStatus)
 	{
@@ -210,12 +211,13 @@ bool GLWrapper::linkShaderProgram(const std::vector <std::string> & shaderAttrib
 	{
 		GLint bufferSize(0);
 		GLLOG(glGetProgramiv(handle, GL_INFO_LOG_LENGTH, &bufferSize));
-		GLchar infoLog[bufferSize+1];
+		GLchar* infoLog = new GLchar[bufferSize+1];
 		GLsizei infoLogLength;
 		GLLOG(glGetProgramInfoLog(handle, bufferSize, &infoLogLength, infoLog));
 		infoLog[bufferSize] = '\0';
 		shaderErrorOutput << "Linking of shader program failed:\n" << infoLog << std::endl;
 		GLLOG(glDeleteProgram(handle));ERROR_CHECK;
+		delete[] infoLog;
 		handle = 0;
 		return false;
 	}
@@ -240,12 +242,13 @@ bool GLWrapper::relinkShaderProgram(GLuint handle, std::ostream & shaderErrorOut
 	{
 		GLint bufferSize(0);
 		GLLOG(glGetProgramiv(handle, GL_INFO_LOG_LENGTH, &bufferSize));
-		GLchar infoLog[bufferSize+1];
+		GLchar* infoLog = new GLchar[bufferSize+1];
 		GLsizei infoLogLength;
 		GLLOG(glGetProgramInfoLog(handle, bufferSize, &infoLogLength, infoLog));
 		infoLog[bufferSize] = '\0';
 		shaderErrorOutput << "Linking of shader program failed:\n" << infoLog << std::endl;
 		GLLOG(glDeleteProgram(handle));ERROR_CHECK;
+		delete[] infoLog;
 		return false;
 	}
 	else
