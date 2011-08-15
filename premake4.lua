@@ -146,9 +146,9 @@ solution "VDrift"
 
 	configuration {"windows", "codeblocks"}
 		links {"mingw32"}
-		
-	configuration {"vs2008"}
-		defines {"__PRETTY_FUNCTION__=__FUNCSIG__"}
+
+	configuration {"vs*"}
+		defines {"__PRETTY_FUNCTION__=__FUNCSIG__", "_USE_MATH_DEFINES", "NOMINMAX"}
 
 	configuration {"windows"}
 		flags {"StaticRuntime"}
