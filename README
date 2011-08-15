@@ -19,7 +19,8 @@ DEPENDENCIES:
 Make sure you have all the required libraries and build tools. Make sure you also have the development files for each of the libraries.
 
 The required build tools include:
-	premake4 - This tool will generate project files which will suit your needs.
+	g++ - The GNU C++ compiler
+	scons - A replacement for Make
 
 The required libraries include:
 	libsdl - Simple Direct Media Layer
@@ -28,15 +29,13 @@ The required libraries include:
 	sdl-image - Image file loading library for SDL
 	vorbisfile - File loading library for the ogg vorbis format
 	libvorbis - The Vorbis General Audio Compression Codec
-	Boost C++ Libraries (header-file-only)
-	ASIO C++ Libraries (header-file-only)
 	bullet C++ Libraries (BulletCollision, BulletDynamics, LinearMath)
 	libcurl - For managing data download from the net.
 	libarchive - API for managing compressed files.
 
 Your Linux distribution may have different package names and/or bundled differently. The list above should give enough information to search for applicable packages within your distribution's package manager.
 For Ubuntu, all the required packages may be installed using this command:
-sudo apt-get install g++ scons libsdl-gfx1.2-dev libsdl-image1.2-dev libsdl-net1.2-dev libvorbis-dev libglew-dev libasio-dev libboost-dev
+sudo apt-get install g++ scons libsdl-gfx1.2-dev libsdl-image1.2-dev libsdl-net1.2-dev libvorbis-dev libglew-dev libcurl-dev libarchive-dev
 
 
 COMPILING AND INSTALLING:
@@ -49,7 +48,20 @@ Donwload your platform dependencies:
 - Windows: git clone https://github.com/VDrift/vdrift-win.git
 - Mac OS: git clone https://github.com/VDrift/vdrift-mac.git
 
+To compile vdrift type "scons" command in the root directory of the sources. You can use some flags to enable options, for example "scons arch=a64 release=1" will compile for a 64 bits machine and turn off debug.
+
+For installing run "sudo scons install". You can also use diverse flags in this step like "scons install prefix=/usr/local" for setting the prefix to install vdrift.
+
+Run "scons -h" for seing all the modificable flags.
+
+
+EXPERIMENTAL:
+
+The required build tools include:
+	premake4 - This tool will generate project files which will suit your needs.
+	
 Once everything is downloaded use the command "premake4 --help" to see what project files do you want to generate (codeblocks, gmake, xcode3...).
 Type "premake4 <action>" and your project files will appear in a folder under the name of "build".
+
 Windows dependencies repo contains a premake4 executable. Use "vdrift-win\premake4 --help", "vdrift-win\premake4 <action>".
 Use your favourite compiler or ide to modify or compile the game.
