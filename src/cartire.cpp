@@ -125,7 +125,10 @@ btVector3 CARTIRE::GetForce(
 	}
 
 	btScalar Fz = normal_force * 0.001;
-	if (Fz > 30) Fz = 30;
+
+	// limit input
+	btSetMin(Fz, btScalar(30));
+	btClamp(inclination, btScalar(-30), btScalar(30));
 
 	// get ideal slip ratio
 	btScalar sigma_hat(0);
@@ -135,13 +138,13 @@ btVector3 CARTIRE::GetForce(
 	btScalar gamma = inclination;									// positive when tire top tilts to the right, viewed from rear
 	btScalar denom = btMax(btFabs(lon_velocity), btScalar(1E-3));
 	btScalar sigma = (ang_velocity * radius - lon_velocity) / denom;	// longitudinal slip: negative in braking, positive in traction
-	btScalar alpha = -atan(lat_velocity / denom) * 180.0 / M_PI; 	// sideslip angle: positive in a right turn(opposite to SAE tire coords)
+	btScalar alpha = -btAtan(lat_velocity / denom) * 180.0 / M_PI; 	// sideslip angle: positive in a right turn(opposite to SAE tire coords)
 	btScalar max_Fx(0), max_Fy(0), max_Mz(0);
 
 	//combining method 1: beckman method for pre-combining longitudinal and lateral forces
 	btScalar s = sigma / sigma_hat;
 	btScalar a = alpha / alpha_hat;
-	btScalar rho = std::max(btScalar(sqrt(s * s + a * a)), btScalar(1E-4)); // avoid divide-by-zero
+	btScalar rho = btMax(btScalar(sqrt(s * s + a * a)), btScalar(1E-4)); // avoid divide-by-zero
 	btScalar Fx = (s / rho) * PacejkaFx(rho * sigma_hat, Fz, friction_coeff, max_Fx);
 	btScalar Fy = (a / rho) * PacejkaFy(rho * alpha_hat, Fz, gamma, friction_coeff, max_Fy);
 

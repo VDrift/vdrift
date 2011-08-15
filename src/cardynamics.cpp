@@ -1474,9 +1474,8 @@ btVector3 CARDYNAMICS::ComputeTireFrictionForce (int i, btScalar dt, btScalar no
 	//btVector3 crosscheck = Aproj.cross(up); //find axis of rotation between Aproj and up
 	//camber_rads = (crosscheck[0] < 0) ? -camber_rads : camber_rads; //correct sign of angular distance
 	camber_rads = -camber_rads;
-	//std::cout << i << ". " << Aproj << " | " << camber_rads*180/3.141593 << std::endl;
-	//wheel[WHEEL_POSITION(i)].SetCamberDeg(camber_rads*180.0/3.141593);
-
+	
+	btScalar camber = camber_rads * SIMD_DEGS_PER_RAD;
 	btScalar lonvel = direction::forward.dot(groundvel);
 	btScalar latvel = -direction::right.dot(groundvel);
 	btScalar friction_coeff =
@@ -1484,7 +1483,7 @@ btVector3 CARDYNAMICS::ComputeTireFrictionForce (int i, btScalar dt, btScalar no
 		(1.0 - tire[i].GetTread()) * wheel_contact[i].GetSurface().frictionNonTread;
 
 	btVector3 friction_force = tire[i].GetForce(
-		normal_force, friction_coeff, camber_rads, angvel, lonvel, latvel);
+		normal_force, friction_coeff, camber, angvel, lonvel, latvel);
 
 	for (int n = 0; n < 3; ++n) assert(!std::isnan(friction_force[n]));
 
