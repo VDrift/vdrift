@@ -14,6 +14,11 @@
 #include <algorithm>
 #include <iostream>
 
+template<class T> bool isnan(const T & x)
+{
+	return x != x;
+}
+
 #define GRAVITY 9.8
 
 //used to calculate brake value
@@ -341,7 +346,7 @@ void AI::updateGasBrake(AI_Car *c)
 		}
 		gas_value = 0.0;
 	}
-	else if (std::isnan(speed_diff) || speed_diff > MAX_SPEED_DIFF)
+	else if (isnan(speed_diff) || speed_diff > MAX_SPEED_DIFF)
 	{
 		gas_value = 1.0;
 		brake_value = 0.0;
@@ -449,8 +454,8 @@ void AI::calcMu(AI_Car *c)
 
 	float long_mu = FRICTION_FACTOR_LONG * long_friction * c->car->GetInvMass() / GRAVITY;
 	float lat_mu = FRICTION_FACTOR_LAT * lat_friction * c->car->GetInvMass() / GRAVITY;
-	if (!std::isnan(long_mu)) c->longitude_mu = long_mu;
-	if (!std::isnan(lat_mu)) c->lateral_mu = lat_mu;
+	if (!isnan(long_mu)) c->longitude_mu = long_mu;
+	if (!isnan(lat_mu)) c->lateral_mu = lat_mu;
 }
 
 float AI::calcSpeedLimit(AI_Car *c, const BEZIER* patch, const BEZIER * nextpatch, float friction, float extraradius=0)
@@ -598,7 +603,7 @@ void AI::updateSteer(AI_Car *c)
 	if (steer_value > 1.0) steer_value = 1.0;
 	else if (steer_value < -1.0) steer_value = -1.0;
 
-	assert(!std::isnan(steer_value));
+	assert(!isnan(steer_value));
 	c->inputs[CARINPUT::STEER_RIGHT] = steer_value;
 }
 
