@@ -308,14 +308,14 @@ btScalar CARTIRE::PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coeff
 
 	// peak factor
 	btScalar D = (b[1] * Fz + b[2]) * Fz;
-	
+
 	btScalar BCD = (b[3] * Fz + b[4]) * Fz * exp(-b[5] * Fz);
 
 	// stiffness factor
 	btScalar B =  BCD / (C * D);
 
 	// curvature factor
-	btScalar E = (b[6] * Fz * Fz + b[7] * Fz + b[8]);
+	btScalar E = b[6] * Fz * Fz + b[7] * Fz + b[8];
 
 	// horizontal shift
 	btScalar Sh = 0;//beckmann//b[9] * Fz + b[10];
@@ -363,7 +363,7 @@ btScalar CARTIRE::PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScala
 
 	// lateral force
 	btScalar Fy = D * sin(C * atan(B * S - E * (B * S - atan(B * S)))) + Sv;
-	
+
 	// scale by surface friction
 	Fy = Fy * friction_coeff;
 	max_Fy = (D + Sv) * friction_coeff;
@@ -376,23 +376,24 @@ btScalar CARTIRE::PacejkaMz(btScalar sigma, btScalar alpha, btScalar Fz, btScala
 {
 	const std::vector<btScalar> & c = aligning;
 
+	btScalar C = c[0];
+
 	// peak factor
 	btScalar D = (c[1] * Fz + c[2]) * Fz;
 
+	btScalar BCD = (c[3] * Fz + c[4]) * Fz * (1.0 - c[6] * btFabs(gamma)) * exp (-c[5] * Fz);
+
 	// stiffness factor
-	btScalar B = (c[3] * Fz * Fz + c[4] * Fz) * (1.0 - c[6] * btFabs(gamma)) * exp (-c[5] * Fz) / (c[0] * D);
+	btScalar B =  BCD / (C * D);
 
 	// curvature factor
-	btScalar E = (c[7] * Fz * Fz + c[8] * Fz + c[9] ) * (1.0 - c[10] * btFabs(gamma));
+	btScalar E = (c[7] * Fz * Fz + c[8] * Fz + c[9]) * (1.0 - c[10] * btFabs(gamma));
 
 	// slip angle + horizontal shift
 	btScalar S = alpha + c[11] * gamma + c[12] * Fz + c[13];
 
 	// vertical shift
 	btScalar Sv = (c[14] * Fz * Fz + c[15] * Fz) * gamma + c[16] * Fz + c[17];
-
-	// scale peak factor by friction coefficient
-	D *= friction_coeff;
 
 	// self-aligning torque
 	btScalar Mz = D * sin(c[0] * atan(B * S - E * (B * S - atan(B * S)))) + Sv;
