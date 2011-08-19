@@ -497,11 +497,16 @@ bool GAME::ParseArguments(std::list <std::string> & args)
 	}
 	arghelp["-debug"] = "Display car debugging information.";
 
-	if (argmap.find("-gl3") != argmap.end())
+	if (argmap.find("-gl2") != argmap.end())
+	{
+		enableGL3 = false;
+	}
+	else if (argmap.find("-gl3") != argmap.end())
 	{
 		enableGL3 = true;
 	}
-	arghelp["-gl3"] = "Attempt to enable OpenGL3 rendering.";
+	arghelp["-gl2"] = "Prefer OpenGL2 rendering if supported.";
+	arghelp["-gl3"] = "Prefer OpenGL3 rendering if supported.";
 
 	if (!argmap["-cartest"].empty())
 	{
