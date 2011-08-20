@@ -28,12 +28,13 @@
 /*                                                                      */
 /************************************************************************/
 
-#define BUFFSIZE 10240
 #include <archive.h>
 #include <archive_entry.h>
 #include <fstream>
 #include "archiveutils.h"
 #include "pathmanager.h"
+
+#define BUFFSIZE 10240
 
 bool Decompress(const std::string & file, const std::string & output_path, std::ostream & info_output, std::ostream & error_output)
 {
