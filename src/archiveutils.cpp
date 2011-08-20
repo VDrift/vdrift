@@ -21,13 +21,14 @@
 
 /************************************************************************/
 /*                                                                      */
-/* archieveutils.cpp                                                    */
+/* archiveutils.cpp                                                     */
 /*                                                                      */
 /*   This file is responsible of decompressing repository downloaded    */
 /* files like car updates or similar.                                   */
 /*                                                                      */
 /************************************************************************/
 
+#define BUFFSIZE 10240
 #include <archive.h>
 #include <archive_entry.h>
 #include <fstream>
@@ -36,24 +37,19 @@
 
 bool Decompress(const std::string & file, const std::string & output_path, std::ostream & info_output, std::ostream & error_output)
 {
-	//TODO: Maybe use preprocessor definition for debug?
-	const bool verbose = true;
-
 	// Ensure the output path exists.
 	PATHMANAGER::MakeDir(output_path);
 
 	struct archive * a = archive_read_new();
 	archive_read_support_compression_all(a);
 	archive_read_support_format_all(a);
-	int r = archive_read_open_filename(a, file.c_str(), 10240);
-	if (r != ARCHIVE_OK)
+	if (archive_read_open_filename(a, file.c_str(), BUFFSIZE) != ARCHIVE_OK)
 	{
 		error_output << "Unable to open " << file << std::endl;
 		return false;
 	}
 
-	const int buffsize = 10240;
-	char buff[buffsize];
+	char buff[BUFFSIZE];
 	struct archive_entry *entry;
 	while (archive_read_next_header(a, &entry) == ARCHIVE_OK)
 	{
@@ -61,14 +57,6 @@ bool Decompress(const std::string & file, const std::string & output_path, std::
 		std::string fullpath = output_path + "/" + filename;
 
 		bool isdir = (archive_entry_filetype(entry) == AE_IFDIR);
-
-		if (verbose)
-		{
-			if (isdir)
-				info_output << "Creating " << filename << std::endl;
-			else
-				info_output << "Decompressing " << filename << std::endl;
-		}
 
 		if (isdir)
 			PATHMANAGER::MakeDir(fullpath);
@@ -84,7 +72,7 @@ bool Decompress(const std::string & file, const std::string & output_path, std::
 			int size = -1;
 			while (size != 0)
 			{
-				size = archive_read_data(a, buff, buffsize);
+				size = archive_read_data(a, buff, BUFFSIZE);
 				if (size < 0)
 				{
 					error_output << "Encountered corrupt file: " << filename << std::endl;
@@ -97,8 +85,7 @@ bool Decompress(const std::string & file, const std::string & output_path, std::
 
 		archive_read_data_skip(a);
 	}
-	r = archive_read_finish(a);
-	if (r != ARCHIVE_OK)
+	if (archive_read_finish(a) != ARCHIVE_OK)
 	{
 		error_output << "Unable to finish read of " << file << std::endl;
 		return false;
