@@ -34,7 +34,8 @@
 #include <string>
 #include <iostream>
 
-// Returns true on success.
+/// Decompress a compressed file or folder to the specified path.
+/// Returns true on success and false on fail.
 bool Decompress(const std::string & file, const std::string & output_path, std::ostream & info_output, std::ostream & error_output);
 
 #endif
