@@ -40,7 +40,7 @@ public:
 	GLEnums();
 
 	/// Get OpenGL enumeration based on the string.
-	GLenum getEnum(const std::string & value) const
+	GLenum getEnum(const std::string & value) const;
 
 	/// Get the string based on an OpenGL enumeration.
 	const std::string & getEnum(GLenum value) const;
