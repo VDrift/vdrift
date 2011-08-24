@@ -15,8 +15,6 @@
 /* You should have received a copy of the GNU General Public License    */
 /* along with VDrift.  If not, see <http://www.gnu.org/licenses/>.      */
 /*                                                                      */
-/* This is the main entry point for VDrift.                             */
-/*                                                                      */
 /************************************************************************/
 
 #include <sstream>
