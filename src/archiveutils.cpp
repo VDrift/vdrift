@@ -46,36 +46,34 @@ bool Decompress(const std::string & file, const std::string & output_path, std::
 		std::string filename = archive_entry_pathname(entry);
 		std::string fullpath = output_path + "/" + filename;
 
-		bool isdir = (archive_entry_filetype(entry) == AE_IFDIR);
-
-		if (isdir)
+		if(archive_entry_filetype(entry) == AE_IFDIR)
 			PATHMANAGER::MakeDir(fullpath);
 		else
 		{
 			std::fstream f(fullpath.c_str(), std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
-			if (!f)
+			if(!f)
 			{
 				error_output << "Unable to open file for write (permissions issue?): " << fullpath << std::endl;
 				return false;
 			}
 
 			int size = -1;
-			while (size != 0)
+			while(size != 0)
 			{
 				size = archive_read_data(a, buff, BUFFSIZE);
-				if (size < 0)
+				if(size < 0)
 				{
 					error_output << "Encountered corrupt file: " << filename << std::endl;
 					return false;
 				}
-				else if (size != 0)
+				else if(size != 0)
 					f.write(buff, size);
 			}
 		}
 
 		archive_read_data_skip(a);
 	}
-	if (archive_read_finish(a) != ARCHIVE_OK)
+	if(archive_read_finish(a) != ARCHIVE_OK)
 	{
 		error_output << "Unable to finish read of " << file << std::endl;
 		return false;
