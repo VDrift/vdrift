@@ -146,18 +146,21 @@ solution "VDrift"
 
 	configuration {"windows", "codeblocks"}
 		links {"mingw32"}
-		
-	configuration {"vs2008"}
-		defines {"__PRETTY_FUNCTION__=__FUNCSIG__"}
+
+	configuration {"vs*"}
+		defines {"__PRETTY_FUNCTION__=__FUNCSIG__", "_USE_MATH_DEFINES", "NOMINMAX"}
+		buildoptions {"/wd4100", "/wd4127", "/wd4244", "/wd4245", "/wd4305", "/wd4512", "/wd4800"}
+	
+	configuration {"vs*", "Debug"}
+		linkoptions {"/NODEFAULTLIB:\"msvcrt.lib\""}
 
 	configuration {"windows"}
-		flags {"StaticRuntime"}
-		--debugdir "."
+		location "."
 		includedirs {"vdrift-win/include", "vdrift-win/bullet"}
 		libdirs {"vdrift-win/lib"}
-		links {"opengl32", "glu32", "glew32", "SDLmain", "SDL", "SDL_image", "SDL_gfx", "vorbisfile", "curl", "archive-2", "wsock32", "ws2_32"}
+		links {"opengl32", "glu32", "glew32", "SDLmain", "SDL", "SDL_image", "SDL_gfx", "vorbisfile", "libcurl", "libarchive-2", "wsock32", "ws2_32"}
 		files {"vdrift-win/bullet/**.h", "vdrift-win/bullet/**.cpp"}
-		postbuildcommands {"xcopy /d /y /f ..\\vdrift-win\\lib\\*.dll ..\\"}
+		postbuildcommands {"xcopy /d /y /f .\\vdrift-win\\lib\\*.dll .\\"}
 
 	configuration {"linux"}
 		includedirs {"/usr/local/include/bullet/", "/usr/include/bullet"}
