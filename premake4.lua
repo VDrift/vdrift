@@ -168,8 +168,8 @@ solution "VDrift"
 		links {"archive", "curl", "BulletDynamics", "BulletCollision", "LinearMath", "GL", "GLU", "GLEW", "SDL", "vorbisfile", "SDL_image", "SDL_gfx"}
 
 	configuration {"macosx"}
-		files {"vdrift-mac/config_mac.mm", "vdrift-mac/SDLMain.h", "vdrift-mac/SDLMain.m"}
+		files {"vdrift-mac/config_mac.mm", "vdrift-mac/SDLMain.h", "vdrift-mac/SDLMain.m", "vdrift-mac/Info.plist", "vdrift-mac/Readme.rtf", "vdrift-mac/vdrift.icns"}
 		includedirs { "vdrift-mac", "vdrift-mac/Frameworks/Archive.framework/Headers", "vdrift-mac/Frameworks/BulletCollision.framework/Headers", "vdrift-mac/Frameworks/BulletDynamics.framework/Headers" }
-		libdirs { "vdrift-mac/Frameworks" }
-		links { "Cocoa.framework", "Vorbis.framework", "libcurl.framework", "SDL.framework", "SDL_image.framework", "SDL_gfx.framework", "Archive.framework", "BulletCollision.framework", "BulletDynamics.framework", "BulletSoftBody.framework", "GLEW.framework", "LinearMath.framework", "OpenGL.framework" }
+		libdirs {"vdrift-mac/Frameworks"}
+		links {"Archive.framework", "BulletCollision.framework", "BulletDynamics.framework", "BulletSoftBody.framework", "GLEW.framework", "libcurl.framework", "LinearMath.framework", "Ogg.framework", "SDL_gfx.framework", "SDL_image.framework", "SDL_net.framework", "SDL.framework", "Vorbis.framework", "AppKit.framework", "OpenGL.framework"}
 		postbuildcommands {"cp -r ../vdrift-mac/Frameworks/ ../vdrift.app/Contents/Frameworks/"}
