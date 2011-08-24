@@ -17,15 +17,6 @@
 /*                                                                      */
 /************************************************************************/
 
-/************************************************************************/
-/*                                                                      */
-/* archieveutils.cpp                                                    */
-/*                                                                      */
-/*   This file is responsible of decompressing repository downloaded    */
-/* files like car updates or similar.                                   */
-/*                                                                      */
-/************************************************************************/
-
 #ifndef _ARCHIVE_H
 #define _ARCHIVE_H
 

@@ -17,15 +17,6 @@
 /*                                                                      */
 /************************************************************************/
 
-/************************************************************************/
-/*                                                                      */
-/* archiveutils.cpp                                                     */
-/*                                                                      */
-/*   This file is responsible of decompressing repository downloaded    */
-/* files like car updates or similar.                                   */
-/*                                                                      */
-/************************************************************************/
-
 #include <archive.h>
 #include <archive_entry.h>
 #include <fstream>
