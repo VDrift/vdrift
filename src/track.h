@@ -1,6 +1,11 @@
 #ifndef _TRACK_H
 #define _TRACK_H
 
+#include <string>
+#include <iostream>
+#include <list>
+#include <memory>
+#include <vector>
 #include "scenenode.h"
 #include "tracksurface.h"
 #include "roadstrip.h"
@@ -8,12 +13,6 @@
 #include "quaternion.h"
 #include "motionstate.h"
 #include "LinearMath/btAlignedObjectArray.h"
-
-#include <string>
-#include <iostream>
-#include <list>
-#include <memory>
-#include <vector>
 
 class DynamicsWorld;
 class TEXTUREMANAGER;
@@ -28,56 +27,33 @@ class TRACK
 {
 public:
 	TRACK();
-
 	~TRACK();
 
-	/// true if successful.  only begins loading the track; the track won't be loaded until more calls to ContinueDeferredLoad().  use Loaded() to see if loading is complete yet.
-	bool DeferredLoad(
-		TEXTUREMANAGER & textures,
-		MODELMANAGER & models,
-		DynamicsWorld & world,
-		std::ostream & info_output,
-		std::ostream & error_output,
-		const std::string & trackpath,
-		const std::string & trackdir,
-		const std::string & effects_texturepath,
-		const std::string & texsize,
-		const std::string & sharedobjectpath,
-		const int anisotropy,
-		const bool reverse,
-		const bool dynamicobjects,
-		const bool dynamicshadowsenabled,
-		const bool doagressivecombining);
+	/// Only begins loading the track.
+    /// The track won't be loaded until more calls to ContinueDeferredLoad().
+    /// Use Loaded() to see if loading is complete yet.
+    /// Returns true if successful.
+	bool DeferredLoad(TEXTUREMANAGER & textures, MODELMANAGER & models, DynamicsWorld & world, std::ostream & info_output, std::ostream & error_output, const std::string & trackpath, const std::string & trackdir, const std::string & effects_texturepath, const std::string & texsize, const std::string & sharedobjectpath, const int anisotropy, const bool reverse, const bool dynamicobjects, const bool dynamicshadowsenabled, const bool doagressivecombining);
 
 	bool ContinueDeferredLoad();
 
-	/// start loading thread
+	/// Start loading thread.
 	void Load();
 
-	/// number of objects to load in total
+	/// Number of objects to load in total.
 	int ObjectsNum() const;
 
-	/// number of objects loaded
+	/// Number of objects loaded.
 	int ObjectsNumLoaded() const;
 
-	/// track loading status
-	bool Loaded() const
-	{
-		return data.loaded;
-	}
+	/// Track loading status.
+	bool Loaded() const;
 
 	void Clear();
 
-	bool CastRay(
-		const MATHVECTOR <float, 3> & origin,
-		const MATHVECTOR <float, 3> & direction,
-		const float seglen,
-		int & patch_id,
-		MATHVECTOR <float, 3> & outtri,
-		const BEZIER * & colpatch,
-		MATHVECTOR <float, 3> & normal) const;
+	bool CastRay(const MATHVECTOR <float, 3> & origin, const MATHVECTOR <float, 3> & direction, const float seglen, int & patch_id, MATHVECTOR <float, 3> & outtri, const BEZIER * & colpatch, MATHVECTOR <float, 3> & normal) const;
 
-	/// synchronize graphics and physics
+	/// Synchronize graphics and physics.
 	void Update();
 
 	std::pair <MATHVECTOR <float, 3>, QUATERNION <float> > GetStart(unsigned int index) const;
