@@ -100,8 +100,18 @@ void Renderer::render(unsigned int w, unsigned int h, StringIdMap & stringMap,
 	}
 }
 
+template <typename T>
+static std::set <T> mergeSets(const std::set <T> & set1, const std::set <T> & set2)
+{
+	std::set <T> result = set1;
+	for (typename std::set <T>::const_iterator i = set2.begin(); i != set2.end(); i++)
+		result.insert(*i);
+	return result;
+}
+
 bool Renderer::initialize(const std::vector <RealtimeExportPassInfo> & config, StringIdMap & stringMap,
-	const std::string & shaderPath, unsigned int w, unsigned int h, std::ostream & errorOutput)
+	const std::string & shaderPath, unsigned int w, unsigned int h, const std::set <std::string> & globalDefines, 
+	std::ostream & errorOutput)
 {
 	// clear existing passes
 	clear();
@@ -123,7 +133,7 @@ bool Renderer::initialize(const std::vector <RealtimeExportPassInfo> & config, S
 		{
 			if (!loadShader(shaderPath.empty() ? i->vertexShader : shaderPath+"/"+i->vertexShader, 
 				vertexShaderName, 
-				i->vertexShaderDefines, 
+				mergeSets(i->vertexShaderDefines, globalDefines), 
 				GL_VERTEX_SHADER, 
 				errorOutput))
 			{
@@ -134,7 +144,7 @@ bool Renderer::initialize(const std::vector <RealtimeExportPassInfo> & config, S
 		{
 			if (!loadShader(shaderPath.empty() ? i->fragmentShader : shaderPath+"/"+i->fragmentShader, 
 				fragmentShaderName, 
-				i->fragmentShaderDefines, 
+				mergeSets(i->fragmentShaderDefines, globalDefines),
 				GL_FRAGMENT_SHADER, 
 				errorOutput))
 			{

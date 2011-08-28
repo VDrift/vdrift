@@ -69,6 +69,7 @@ RenderModelExternal & DRAWABLE::generateRenderModelData(GLWrapper & gl, StringId
 	// cache off the stringId values
 	static StringId diffuseId = stringMap.addStringId("diffuseTexture");
 	static StringId misc1Id = stringMap.addStringId("misc1Texture");
+	static StringId misc2Id = stringMap.addStringId("normalMapTexture");
 	static StringId transformId = stringMap.addStringId("modelMatrix");
 	static StringId colorId = stringMap.addStringId("colorTint");
 	static StringId depthOffsetId = stringMap.addStringId("depthOffset");
@@ -85,6 +86,10 @@ RenderModelExternal & DRAWABLE::generateRenderModelData(GLWrapper & gl, StringId
 		if (misc_map1 && !misc_map1->IsCube())
 		{
 			renderModel.textures.push_back(RenderTextureEntry(misc1Id, misc_map1->GetID(), GL_TEXTURE_2D));
+		}
+		if (misc_map2 && !misc_map2->IsCube())
+		{
+			renderModel.textures.push_back(RenderTextureEntry(misc2Id, misc_map2->GetID(), GL_TEXTURE_2D));
 		}
 
 		texturesChanged = false;
