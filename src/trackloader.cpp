@@ -3,15 +3,12 @@
 #include "loadcollisionshape.h"
 #include "contentmanager.h"
 #include "textureinfo.h"
-#include "modelmanager.h"
 #include "tobullet.h"
 #include "k1999.h"
 
-#include <SDL/SDL_thread.h>
-
 #define EXTBULLET
 
-inline void operator >> (std::istream & lhs, btVector3 & rhs)
+inline std::istream & operator >> (std::istream & lhs, btVector3 & rhs)
 {
 	for (size_t i = 0; i < 3; ++i)
 	{
@@ -23,9 +20,10 @@ inline void operator >> (std::istream & lhs, btVector3 & rhs)
 		s >> val;
 		rhs[i] = val;
 	}
+	return lhs;
 }
 
-inline void operator >> (std::istream & lhs, std::vector<std::string> & rhs)
+inline std::istream & operator >> (std::istream & lhs, std::vector<std::string> & rhs)
 {
 	for (size_t i = 0; i < rhs.size() && !lhs.eof(); ++i)
 	{
@@ -35,6 +33,7 @@ inline void operator >> (std::istream & lhs, std::vector<std::string> & rhs)
 		s >> str;
 		rhs[i] = str;
 	}
+	return lhs;
 }
 
 static btIndexedMesh GetIndexedMesh(const MODEL & model)
