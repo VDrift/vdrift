@@ -2,27 +2,48 @@
 #include "endian_utility.h"
 #include "unittest.h"
 
-#include <string>
-using std::string;
-
 #include <map>
-using std::map;
-
 #include <fstream>
-using std::ios_base;
-
 #include <cassert>
 
-bool JOEPACK::LoadPack(const string & fn)
+using std::string;
+using std::map;
+using std::ios_base;
+
+struct JOEPACK::IMPL
 {
-	ClosePack();
+	struct FADATA
+	{
+		FADATA() : offset(0), length(0) { }
+		unsigned offset;
+		unsigned length;
+	};
+	const std::string versionstr;
+	std::map <std::string, FADATA> fat;
+	std::map <std::string, FADATA>::iterator curfa;
+	std::ifstream f;
+
+	IMPL();
+	bool Load(const string & fn);
+	void Close();
+	void fclose();
+	bool fopen(const string & fn);
+	int fread(void * buffer, const unsigned size, const unsigned count);
+};
+
+JOEPACK::IMPL::IMPL() : versionstr("JPK01.00")
+{
+	curfa = fat.end();
+}
+
+bool JOEPACK::IMPL::Load(const string & fn)
+{
+	Close();
 
 	f.open(fn.c_str(), ios_base::in | ios_base::binary);
 
 	if (f)
 	{
-		packpath = fn;
-
 		//load header
 		char * versioncstr = new char[versionstr.length() + 1];
 		f.read(versioncstr, versionstr.length());
@@ -53,7 +74,7 @@ bool JOEPACK::LoadPack(const string & fn)
 		//load FAT
 		for (unsigned int i = 0; i < numobjs; i++)
 		{
-			JOEPACK_FADATA fa;
+			FADATA fa;
 			f.read((char*)(&(fa.offset)), sizeof(unsigned int));
 			fa.offset = ENDIAN_SWAP_32(fa.offset);
 			f.read((char*)(&(fa.length)), sizeof(unsigned int));
@@ -76,40 +97,24 @@ bool JOEPACK::LoadPack(const string & fn)
 	}
 }
 
-void JOEPACK::ClosePack()
+void JOEPACK::IMPL::Close()
 {
-	Pack_fclose();
+	fclose();
+	f.close();
 	fat.clear();
-	if (f.is_open())
-	{
-		f.close();
-	}
-	packpath.clear();
 	curfa = fat.end();
 }
 
-void JOEPACK::Pack_fclose()
+void JOEPACK::IMPL::fclose()
 {
 	curfa = fat.end();
 }
 
-bool JOEPACK::Pack_fopen(string fn)
+bool JOEPACK::IMPL::fopen(const string & fn)
 {
-	if (fn.find(packpath, 0) < fn.length())
-	{
-		string newfn = fn.substr(packpath.length()+1);
-		//DPRINT(fn << " -> " << newfn);
-		fn = newfn;
-	}
-
-	//DPRINT("Opening " << fn << " by seeking to " << fat[fn].offset);
-
-	//curfa = &(fat[fn]);
 	curfa = fat.find(fn);
-
 	if (curfa == fat.end())
 	{
-		//write an error?
 		return false;
 	}
 	else
@@ -119,14 +124,13 @@ bool JOEPACK::Pack_fopen(string fn)
 	}
 }
 
-int JOEPACK::Pack_fread(void * buffer, const unsigned int size, const unsigned int count)
+int JOEPACK::IMPL::fread(void * buffer, const unsigned size, const unsigned count)
 {
 	if (curfa != fat.end())
 	{
 		unsigned int abspos = f.tellg();
 		assert(abspos >= curfa->second.offset);
 		unsigned int relpos = abspos - curfa->second.offset;
-		//DPRINT("relpos: " << relpos);
 		assert(curfa->second.length >= relpos);
 		unsigned int fileleft = curfa->second.length - relpos;
 		unsigned int requestedread = size*count;
@@ -150,13 +154,60 @@ int JOEPACK::Pack_fread(void * buffer, const unsigned int size, const unsigned i
 	}
 }
 
+JOEPACK::JOEPACK()
+{
+	impl = new IMPL();
+}
+
+JOEPACK::~JOEPACK()
+{
+	Close();
+	delete impl;
+}
+
+bool JOEPACK::Load(const std::string & fn)
+{
+	packpath = fn;
+	return impl->Load(fn);
+}
+
+void JOEPACK::Close()
+{
+	packpath.clear();
+	impl->Close();
+}
+
+void JOEPACK::fclose() const
+{
+	impl->fclose();
+}
+
+bool JOEPACK::fopen(const string & fn) const
+{
+	string newfn;
+	if (fn.find(packpath, 0) < fn.length())
+	{
+		newfn = fn.substr(packpath.length()+1);
+	}
+	else
+	{
+		newfn = fn;
+	}
+	return impl->fopen(newfn);
+}
+
+int JOEPACK::fread(void * buffer, const unsigned size, const unsigned count) const
+{
+	return impl->fread(buffer, size, count);
+}
+
 QT_TEST(joepack_test)
 {
 	JOEPACK p;
-	QT_CHECK(p.LoadPack("data/test/test1.jpk"));
-	QT_CHECK(p.Pack_fopen("testlist.txt"));
+	QT_CHECK(p.Load("data/test/test1.jpk"));
+	QT_CHECK(p.fopen("testlist.txt"));
 	char buf[1000];
-	unsigned int chars = p.Pack_fread(buf, 1, 999);
+	unsigned int chars = p.fread(buf, 1, 999);
 	QT_CHECK_EQUAL(chars, 16);
 	buf[chars] = '\0';
 	string comparisonstr = "This is\na test.\n";

@@ -50,13 +50,12 @@ bool GUI::Load(
 	const std::string & texsize,
 	const float screenhwratio,
 	const std::map <std::string, FONT> & fonts,
-	TEXTUREMANAGER & textures,
-	MODELMANAGER & models,
+	ContentManager & content,
 	std::ostream & info_output,
 	std::ostream & error_output)
 {
-    Unload();
-	
+	Unload();
+
 	std::string datapath = pathmanager.GetDataPath();
 
 	// load language font
@@ -68,7 +67,7 @@ bool GUI::Load(
 	if (!languageconfig.GetParam("font", "texture", fonttex, error_output)) return false;
 
 	std::string fontinfopath = datapath + "/" + languagedir + "/" + fontinfo;
-	if (!font.Load(fontinfopath, languagedir, fonttex, texsize, textures, error_output)) return false;
+	if (!font.Load(fontinfopath, languagedir, fonttex, content, error_output)) return false;
 
 	// load language map
 	CONFIG::const_iterator section;
@@ -100,9 +99,9 @@ bool GUI::Load(
 		const std::string & pagename = *i;
 
 		if (!pages[pagename].Load(
-			menupath + "/" + pagename, texpath, pathmanager, texsize,
+			menupath + "/" + pagename, texpath, pathmanager,
 			screenhwratio, carcontrolsfile, font, languagemap, optionmap,
-			node, textures, models, error_output))
+			node, content, error_output))
 		{
 			error_output << "Error loading GUI page: " << menupath << "/" << *i << std::endl;
 			return false;

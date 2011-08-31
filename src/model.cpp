@@ -46,6 +46,16 @@ MODEL::~MODEL()
 	Clear();
 }
 
+bool MODEL::Load(const VERTEXARRAY & varray, std::ostream & error_output, bool genlist)
+{
+	BuildFromVertexArray(varray, error_output);
+	if (genlist)
+		GenerateListID(error_output);
+	else
+		GenerateVertexArrayObject(error_output);
+	return true;
+}
+
 void MODEL::GenerateListID(std::ostream & error_output)
 {
 	if (HaveListID()) return;

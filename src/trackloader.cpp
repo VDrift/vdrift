@@ -1,7 +1,7 @@
 #include "trackloader.h"
 #include "dynamicsworld.h"
 #include "loadcollisionshape.h"
-#include "texturemanager.h"
+#include "contentmanager.h"
 #include "textureinfo.h"
 #include "modelmanager.h"
 #include "tobullet.h"
@@ -60,8 +60,7 @@ static btIndexedMesh GetIndexedMesh(const MODEL & model)
 }
 
 TRACK::LOADER::LOADER(
-	TEXTUREMANAGER & textures,
-	MODELMANAGER & models,
+	ContentManager & content,
 	DynamicsWorld & world,
 	DATA & data,
 	std::ostream & info_output,
@@ -69,15 +68,13 @@ TRACK::LOADER::LOADER(
 	const std::string & trackpath,
 	const std::string & trackdir,
 	const std::string & texturedir,
-	const std::string & texsize,
 	const std::string & sharedobjectpath,
 	const int anisotropy,
 	const bool reverse,
 	const bool dynamic_objects,
 	const bool dynamic_shadows,
 	const bool agressive_combining) :
-	texture_manager(textures),
-	model_manager(models),
+	content(content),
 	world(world),
 	data(data),
 	info_output(info_output),
@@ -85,7 +82,6 @@ TRACK::LOADER::LOADER(
 	trackpath(trackpath),
 	trackdir(trackdir),
 	texturedir(texturedir),
-	texsize(texsize),
 	sharedobjectpath(sharedobjectpath),
 	anisotropy(anisotropy),
 	reverse(reverse),
@@ -200,7 +196,7 @@ bool TRACK::LOADER::BeginObjectLoad()
 #endif
 
 	list = true;
-	packload = pack.LoadPack(objectpath + "/objects.jpk");
+	packload = pack.Load(objectpath + "/objects.jpk");
 
 	if (Begin())
 	{
@@ -271,8 +267,8 @@ std::pair<bool, bool> TRACK::LOADER::Continue()
 bool TRACK::LOADER::LoadModel(const std::string & name)
 {
 	std::tr1::shared_ptr<MODEL> model;
-	if ((packload && model_manager.Load(objectdir, name, model, pack)) ||
-		model_manager.Load(objectdir, name, model))
+	if ((packload && content.load(objectdir, name, pack, model)) ||
+		content.load(objectdir, name, model))
 	{
 		data.models.push_back(model);
 		return true;
@@ -411,10 +407,9 @@ TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const PTree & cfg)
 	texinfo.anisotropy = anisotropy;
 	texinfo.repeatu = clampuv != 1 && clampuv != 2;
 	texinfo.repeatv = clampuv != 1 && clampuv != 3;
-	texinfo.size = texsize;
 
 	std::tr1::shared_ptr<TEXTURE> diffuse;
-	if (!texture_manager.Load(objectdir, texture_names[0], texinfo, diffuse))
+	if (!content.load(objectdir, texture_names[0], texinfo, diffuse))
 	{
 		info_output << "Failed to load body " << cfg.value() << " texture " << texture_names[0] << std::endl;
 		return bodies.end();
@@ -423,13 +418,13 @@ TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const PTree & cfg)
 	std::tr1::shared_ptr<TEXTURE> miscmap1;
 	if (texture_names[1].length() > 0)
 	{
-		texture_manager.Load(objectdir, texture_names[1], texinfo, miscmap1);
+		content.load(objectdir, texture_names[1], texinfo, miscmap1);
 	}
 
 	std::tr1::shared_ptr<TEXTURE> miscmap2;
 	if (texture_names[2].length() > 0)
 	{
-		texture_manager.Load(objectdir, texture_names[2], texinfo, miscmap2);
+		content.load(objectdir, texture_names[2], texinfo, miscmap2);
 	}
 
 	// setup drawable
@@ -718,14 +713,14 @@ std::pair<bool, bool> TRACK::LOADER::ContinueOld()
 	std::tr1::shared_ptr<MODEL> model;
 	if (packload)
 	{
-		if (!model_manager.Load(objectdir, model_name, model, pack))
+		if (!content.load(objectdir, model_name, pack, model))
 		{
 			return std::make_pair(true, false);
 		}
 	}
 	else
 	{
-		if (!model_manager.Load(objectdir, model_name, model))
+		if (!content.load(objectdir, model_name, model))
 		{
 			return std::make_pair(true, false);
 		}
@@ -737,10 +732,9 @@ std::pair<bool, bool> TRACK::LOADER::ContinueOld()
 	texinfo.anisotropy = anisotropy;
 	texinfo.repeatu = clamptexture != 1 && clamptexture != 2;
 	texinfo.repeatv = clamptexture != 1 && clamptexture != 3;
-	texinfo.size = texsize;
 
 	std::tr1::shared_ptr<TEXTURE> diffuse_texture;
-	if (!texture_manager.Load(objectdir, diffuse_texture_name, texinfo, diffuse_texture))
+	if (!content.load(objectdir, diffuse_texture_name, texinfo, diffuse_texture))
 	{
 		error_output << "Skipping object " << model_name << " and continuing" << std::endl;
 		return std::make_pair(false, true);
@@ -752,7 +746,7 @@ std::pair<bool, bool> TRACK::LOADER::ContinueOld()
 		std::string filepath = objectpath + "/" + texture_name;
 		if (std::ifstream(filepath.c_str()))
 		{
-			if (!texture_manager.Load(objectdir, texture_name, texinfo, miscmap1_texture))
+			if (!content.load(objectdir, texture_name, texinfo, miscmap1_texture))
 			{
 				error_output << "Error loading texture: " << filepath << " for object " << model_name << ", continuing" << std::endl;
 			}
@@ -765,7 +759,7 @@ std::pair<bool, bool> TRACK::LOADER::ContinueOld()
 		std::string filepath = objectpath + "/" + texture_name;
 		if (std::ifstream(filepath.c_str()))
 		{
-			if (!texture_manager.Load(objectdir, texture_name, texinfo, miscmap2_texture))
+			if (!content.load(objectdir, texture_name, texinfo, miscmap2_texture))
 			{
 				error_output << "Error loading texture: " << filepath << " for object " << model_name << ", continuing" << std::endl;
 			}
@@ -1097,8 +1091,7 @@ bool TRACK::LOADER::LoadLapSequence()
 bool TRACK::LOADER::CreateRacingLines()
 {
 	TEXTUREINFO texinfo;
-	texinfo.size = texsize;
-	if (!texture_manager.Load(texturedir, "racingline.png", texinfo, data.racingline_texture))
+	if (!content.load(texturedir, "racingline.png", texinfo, data.racingline_texture))
 	{
 		return false;
 	}

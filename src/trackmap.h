@@ -9,7 +9,7 @@
 #include <string>
 #include <iostream>
 
-class TEXTUREMANAGER;
+class ContentManager;
 class TEXTURE;
 struct SDL_Surface;
 
@@ -27,8 +27,7 @@ public:
 		int h,
 		const std::string & trackname,
 		const std::string & texturepath,
-		const std::string & texsize,
-		TEXTUREMANAGER & textures,
+		ContentManager & content,
 		std::ostream & error_output);
 
 	void Unload();

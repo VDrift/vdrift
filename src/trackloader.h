@@ -30,8 +30,7 @@ model = body.joe
 */
 
 class DynamicsWorld;
-class TEXTUREMANAGER;
-class MODELMANAGER;
+class ContentManager;
 class btStridingMeshInterface;
 class btCompoundShape;
 class btCollisionShape;
@@ -40,8 +39,7 @@ class TRACK::LOADER
 {
 public:
 	LOADER(
-		TEXTUREMANAGER & textures,
-		MODELMANAGER & models,
+		ContentManager & content,
 		DynamicsWorld & world,
 		DATA & data,
 		std::ostream & info_output,
@@ -49,7 +47,6 @@ public:
 		const std::string & trackpath,
 		const std::string & trackdir,
 		const std::string & texturedir,
-		const std::string & texsize,
 		const std::string & sharedobjectpath,
 		const int anisotropy,
 		const bool reverse,
@@ -68,8 +65,7 @@ public:
 	int GetNumLoaded() const { return numloaded; }
 
 private:
-	TEXTUREMANAGER & texture_manager;
-	MODELMANAGER & model_manager;
+	ContentManager & content;
 	DynamicsWorld & world;
 	DATA & data;
 	std::ostream & info_output;
@@ -78,7 +74,6 @@ private:
 	const std::string & trackpath;
 	const std::string & trackdir;
 	const std::string & texturedir;
-	const std::string & texsize;
 	const std::string & sharedobjectpath;
 	const int anisotropy;
 	const bool reverse;

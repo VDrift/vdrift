@@ -28,9 +28,7 @@
 #include "particle.h"
 #include "ai.h"
 #include "quickmp.h"
-#include "texturemanager.h"
-#include "modelmanager.h"
-#include "soundmanager.h"
+#include "contentmanager.h"
 #include "http.h"
 #include "gl3v/stringidmap.h"
 #include "updatemanagement.h"
@@ -101,7 +99,7 @@ private:
 	bool LastStartWasSuccessful() const;
 	bool Download(const std::string & file);
 	bool Download(const std::vector <std::string> & files);
-	
+
 	// move to settings
 	void GetOptions(std::map<std::string, std::string> & options);
 	void SetOptions(const std::map<std::string, std::string> & options);
@@ -115,11 +113,9 @@ private:
 	const float timestep; ///< simulation time step
 
 	PATHMANAGER pathmanager;
-	TEXTUREMANAGER textures;
-	MODELMANAGER models;
-	SOUNDMANAGER sounds;
+	ContentManager content;
 	SETTINGS settings;
-	
+
 	UPDATE_MANAGER updater;
 
 	WINDOW_SDL window;

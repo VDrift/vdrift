@@ -29,9 +29,7 @@ public:
 
 	void SetupDrawable(
 		SCENENODE & scene,
-		TEXTUREMANAGER & textures,
-		MODELMANAGER & models,
-		const std::string & texturesize,
+		ContentManager & content,
 		const PATHMANAGER & pathmanager,
 		const float x,
 		const float y,
@@ -47,6 +45,7 @@ private:
 	MATHVECTOR <float, 2> center;
 	MATHVECTOR <float, 3> carpos;
 	int draworder;
+	ContentManager * contentptr;
 	std::ostream * errptr;
 	float rotation;
 	std::string carname;
@@ -55,8 +54,6 @@ private:
 	float r, g, b;
 
 	keyed_container <SCENENODE>::handle carnode;
-	TEXTUREMANAGER * textures;
-	MODELMANAGER * models;
 
 	std::list <CAR> car; ///< only ever one element, please
 
@@ -67,7 +64,7 @@ private:
 	void Unload(SCENENODE & parent);
 
 	void Load(SCENENODE & parent);
-	
+
 	bool Valid() const {return carnode.valid();}
 };
 
