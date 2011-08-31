@@ -150,15 +150,11 @@ void GAME::Start(std::list <std::string> & args)
 
 	// Load controls.
 	info_output << "Loading car controls from: " << pathmanager.GetCarControlsFile() << std::endl;
-	if (!pathmanager.FileExists(pathmanager.GetCarControlsFile()))
+	if (!carcontrols_local.second.Load(pathmanager.GetCarControlsFile(), info_output, error_output))
 	{
 		info_output << "Car control file " << pathmanager.GetCarControlsFile() << " doesn't exist; using defaults" << std::endl;
 		carcontrols_local.second.Load(pathmanager.GetDefaultCarControlsFile(), info_output, error_output);
 		carcontrols_local.second.Save(pathmanager.GetCarControlsFile(), info_output, error_output);
-	}
-	else
-	{
-		carcontrols_local.second.Load(pathmanager.GetCarControlsFile(), info_output, error_output);
 	}
 
 	// Load update information

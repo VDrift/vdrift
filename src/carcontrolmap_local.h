@@ -19,7 +19,7 @@ class CARCONTROLMAP_LOCAL
 public:
 	CARCONTROLMAP_LOCAL();
 
-	void Load(const std::string & controlfile, std::ostream & info_output, std::ostream & error_output);
+	bool Load(const std::string & controlfile, std::ostream & info_output, std::ostream & error_output);
 
 	void Save(const std::string & controlfile, std::ostream & info_output, std::ostream & error_output);
 
