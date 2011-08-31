@@ -55,8 +55,6 @@ public:
 
 	void sweep();
 
-	void print(std::ostream& out);
-
 private:
 	template <class T>
 	class Cache : public std::map<std::string, std::tr1::shared_ptr<T> >
