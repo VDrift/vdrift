@@ -244,7 +244,7 @@ bool UPDATE_MANAGER::ApplyCarUpdate(GAME_DOWNLOADER downloader, GUI & gui, const
 	info_output << "ApplyCarUpdate: download successful: " << archivepath << std::endl;
 	
 	// decompress and write output
-	if (!Decompress(archivepath, pathmanager.GetWriteableCarPath(), info_output, error_output))
+	if (!Decompress(archivepath, pathmanager.GetWriteableCarsPath(), info_output, error_output))
 	{
 		error_output << "ApplyCarUpdate: unable to decompress update" << std::endl;
 		gui.ActivatePage("DataConnectionError", 0.25, error_output);

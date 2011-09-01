@@ -1,5 +1,5 @@
 #include "font.h"
-#include "texturemanager.h"
+#include "contentmanager.h"
 #include "texture.h"
 
 #include <sstream>
@@ -48,8 +48,7 @@ bool FONT::Load(
 	const std::string & fontinfopath,
 	const std::string & texpath,
 	const std::string & texname,
-	const std::string & texsize,
-	TEXTUREMANAGER & textures,
+	ContentManager & content,
 	std::ostream & error_output,
 	bool mipmap)
 {
@@ -57,8 +56,7 @@ bool FONT::Load(
 	texinfo.mipmap = mipmap;
 	texinfo.repeatu = false;
 	texinfo.repeatv = false;
-	texinfo.size = texsize;
-	if (!textures.Load(texpath, texname, texinfo, font_texture)) return false;
+	if (!content.load(texpath, texname, texinfo, font_texture)) return false;
 
 	std::ifstream fontinfo(fontinfopath.c_str());
 	if (!fontinfo)

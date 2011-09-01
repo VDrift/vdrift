@@ -100,7 +100,7 @@ static void CorrectEndian(std::vector<JOETexCoord> & p)
 	}
 }
 
-static int BinaryRead ( void * buffer, unsigned int size, unsigned int count, FILE * f, JOEPACK * pack )
+static int BinaryRead ( void * buffer, unsigned int size, unsigned int count, FILE * f, const JOEPACK * pack )
 {
 	unsigned int bytesread = 0;
 
@@ -110,7 +110,7 @@ static int BinaryRead ( void * buffer, unsigned int size, unsigned int count, FI
 	}
 	else
 	{
-		bytesread = pack->Pack_fread ( buffer, size, count );
+		bytesread = pack->fread ( buffer, size, count );
 	}
 
 	assert(bytesread == count);
@@ -159,7 +159,7 @@ static bool NeedsNormalSwap(JOEObject & Object)
 	return need_normal_flip;
 }
 
-bool MODEL_JOE03::Load ( const std::string & filename, std::ostream & err_output, bool genlist, JOEPACK * pack)
+bool MODEL_JOE03::Load ( const std::string & filename, std::ostream & err_output, bool genlist, const JOEPACK * pack)
 {
 	Clear();
 
@@ -177,7 +177,7 @@ bool MODEL_JOE03::Load ( const std::string & filename, std::ostream & err_output
 	}
 	else
 	{
-		if (!pack->Pack_fopen(filename))
+		if (!pack->fopen(filename))
 		{
 			err_output << "MODEL_JOE03: Failed to open file " << filename << " in " << pack->GetPath() << std::endl;
 			return false;
@@ -190,7 +190,7 @@ bool MODEL_JOE03::Load ( const std::string & filename, std::ostream & err_output
 	if ( pack == NULL )
 		fclose ( m_FilePointer );
 	else
-		pack->Pack_fclose();
+		pack->fclose();
 
 	if (val)
 	{
@@ -213,7 +213,7 @@ bool MODEL_JOE03::Load ( const std::string & filename, std::ostream & err_output
 	return val;
 }
 
-bool MODEL_JOE03::LoadFromHandle ( FILE * m_FilePointer, JOEPACK * pack, std::ostream & err_output )
+bool MODEL_JOE03::LoadFromHandle ( FILE * m_FilePointer, const JOEPACK * pack, std::ostream & err_output )
 {
 	JOEObject Object;
 
@@ -249,7 +249,7 @@ bool MODEL_JOE03::LoadFromHandle ( FILE * m_FilePointer, JOEPACK * pack, std::os
 	return true;
 }
 
-void MODEL_JOE03::ReadData ( FILE * m_FilePointer, JOEPACK * pack, JOEObject & Object )
+void MODEL_JOE03::ReadData ( FILE * m_FilePointer, const JOEPACK * pack, JOEObject & Object )
 {
 	int num_frames = Object.info.num_frames;
 	int num_faces = Object.info.num_faces;

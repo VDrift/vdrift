@@ -8,7 +8,7 @@
 #include <cassert>
 #include <iostream>
 
-class TEXTUREMANAGER;
+class ContentManager;
 
 ///a higher level class that takes care of using the TEXTURE, DRAWABLE, and VERTEXARRAY objects to create a 2D sprite
 class SPRITE2D
@@ -58,8 +58,7 @@ public:
 		SCENENODE & parent,
 		const std::string & texturepath,
 		const std::string & texturename,
-		const std::string & texturesize,
-		TEXTUREMANAGER & textures,
+		ContentManager & content,
 		float draworder,
 		std::ostream & error_output);
 

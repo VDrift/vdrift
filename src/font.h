@@ -11,7 +11,7 @@
 #include <tr1/memory>
 #endif
 
-class TEXTUREMANAGER;
+class ContentManager;
 class TEXTURE;
 
 class FONT
@@ -31,8 +31,7 @@ public:
 		const std::string & fontinfopath,
 		const std::string & texpath,
 		const std::string & texname,
-		const std::string & texsize,
-		TEXTUREMANAGER & textures,
+		ContentManager & content,
 		std::ostream & error_output,
 		bool mipmap = false);
 

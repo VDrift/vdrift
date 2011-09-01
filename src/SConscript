@@ -35,6 +35,7 @@ src = Split("""aabb.cpp
 		cartire.cpp
 		config.cpp
 		containeralgorithm.cpp
+		contentmanager.cpp
 		crashdetection.cpp
 		downloadable.cpp
 		drawable.cpp
@@ -73,7 +74,6 @@ src = Split("""aabb.cpp
 		model.cpp
 		model_joe03.cpp
 		model_obj.cpp
-		modelmanager.cpp
 		opengl_utility.cpp
 		optional.cpp
 		parallel_task.cpp
@@ -95,13 +95,11 @@ src = Split("""aabb.cpp
 		sound.cpp
 		soundbuffer.cpp
 		soundfilter.cpp
-		soundmanager.cpp
 		soundsource.cpp
 		sprite2d.cpp
 		suspensionbumpdetection.cpp
 		svn_sourceforge.cpp
 		texture.cpp
-		texturemanager.cpp
 		text_draw.cpp
 		timer.cpp
 		toggle.cpp

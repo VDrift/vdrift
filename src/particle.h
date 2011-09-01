@@ -10,7 +10,7 @@
 #include <vector>
 #include <list>
 
-class TEXTUREMANAGER;
+class ContentManager;
 
 class PARTICLE_SYSTEM
 {
@@ -182,9 +182,8 @@ public:
 	bool Load(
 		const std::list <std::string> & texlist,
 		const std::string & texpath,
-		const std::string & texsize,
 		int anisotropy,
-		TEXTUREMANAGER & texturemanager,
+		ContentManager & content,
 		std::ostream & error_output);
 
 	void Update(

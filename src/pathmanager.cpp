@@ -205,12 +205,12 @@ std::string PATHMANAGER::GetWriteableDataPath() const
 	return settings_path;
 }
 
-std::string PATHMANAGER::GetSharedCarPath() const
+std::string PATHMANAGER::GetCarPartsPath() const
 {
-	return GetDataPath()+"/carparts";
+	return GetDataPath()+"/"+GetCarPartsDir();
 }
 
-std::string PATHMANAGER::GetSharedTrackPath() const
+std::string PATHMANAGER::GetTrackPartsPath() const
 {
 	return GetDataPath()+"/trackparts";
 }
@@ -235,18 +235,18 @@ std::string PATHMANAGER::GetLogFile() const
 	return settings_path+"/log.txt";
 }
 
-std::string PATHMANAGER::GetTrackPath() const
+std::string PATHMANAGER::GetTracksPath() const
 {
-	return GetDataPath()+"/"+GetTrackDir();
+	return GetDataPath()+"/"+GetTracksDir();
 }
 
 std::string PATHMANAGER::GetCarPath(const std::string & carname) const
 {
 	// Check writeable car path first (check for presence of .car files).
-	if(FileExists(GetWriteableDataPath() + "/" + GetCarDir() + "/" + carname + "/" + carname + ".car"))
-		return GetWriteableDataPath() + "/" + GetCarDir() + "/" + carname;
+	if(FileExists(GetWriteableDataPath() + "/" + GetCarsDir() + "/" + carname + "/" + carname + ".car"))
+		return GetWriteableDataPath() + "/" + GetCarsDir() + "/" + carname;
 	else
-		return GetDataPath()+"/"+GetCarDir()+"/"+carname;
+		return GetDataPath()+"/"+GetCarsDir()+"/"+carname;
 }
 
 std::string PATHMANAGER::GetCarPaintPath(const std::string & carname) const
@@ -324,19 +324,19 @@ std::string PATHMANAGER::GetUpdateManagerFileBase() const
 	return GetDataPath() + "/settings/updates.config";
 }
 
-std::string PATHMANAGER::GetTrackDir() const
+std::string PATHMANAGER::GetTracksDir() const
 {
 	return "tracks";
 }
 
-std::string PATHMANAGER::GetCarDir() const
+std::string PATHMANAGER::GetCarsDir() const
 {
 	return "cars";
 }
 
-std::string PATHMANAGER::GetCarSharedDir() const
+std::string PATHMANAGER::GetCarPartsDir() const
 {
-	return "carparts";
+    return "carparts";
 }
 
 std::string PATHMANAGER::GetGUITextureDir(const std::string & skinname) const
@@ -374,14 +374,14 @@ std::string PATHMANAGER::GetTireSmokeTextureDir() const
 	return "textures/smoke";
 }
 
-std::string PATHMANAGER::GetReadOnlyCarPath() const
+std::string PATHMANAGER::GetReadOnlyCarsPath() const
 {
-	return GetDataPath()+"/"+GetCarDir();
+	return GetDataPath()+"/"+GetCarsDir();
 }
 
-std::string PATHMANAGER::GetWriteableCarPath() const
+std::string PATHMANAGER::GetWriteableCarsPath() const
 {
-	return GetWriteableDataPath()+"/"+GetCarDir();
+	return GetWriteableDataPath()+"/"+GetCarsDir();
 }
 
 std::string PATHMANAGER::GetTemporaryFolder() const

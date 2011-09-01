@@ -40,13 +40,13 @@ public:
 
 	std::string GetDataPath() const;
 	std::string GetWriteableDataPath() const;
-	std::string GetSharedCarPath() const;
-	std::string GetSharedTrackPath() const;
+	std::string GetCarPartsPath() const;
+	std::string GetTrackPartsPath() const;
 	std::string GetStartupFile() const;
 	std::string GetTrackRecordsPath() const;
 	std::string GetSettingsFile() const;
 	std::string GetLogFile() const;
-	std::string GetTrackPath() const;
+	std::string GetTracksPath() const;
 	std::string GetCarPath(const std::string & carname) const;
 	std::string GetCarPaintPath(const std::string & carname) const;
 	std::string GetGUIMenuPath(const std::string & skinname) const;
@@ -64,9 +64,9 @@ public:
 	std::string GetUpdateManagerFileBackup() const;
 	std::string GetUpdateManagerFileBase() const;
 
-	std::string GetTrackDir() const;
-	std::string GetCarDir() const;
-	std::string GetCarSharedDir() const;
+	std::string GetTracksDir() const;
+	std::string GetCarsDir() const;
+	std::string GetCarPartsDir() const;
 	std::string GetGUITextureDir(const std::string & skinname) const;
 	std::string GetGUILanguageDir(const std::string & skinname) const;
 	std::string GetFontDir(const std::string & skinname) const;
@@ -75,8 +75,8 @@ public:
 	std::string GetEffectsTextureDir() const;
 	std::string GetTireSmokeTextureDir() const;
 
-	std::string GetReadOnlyCarPath() const;
-	std::string GetWriteableCarPath() const;
+	std::string GetReadOnlyCarsPath() const;
+	std::string GetWriteableCarsPath() const;
 
 	std::string GetTemporaryFolder() const;
 

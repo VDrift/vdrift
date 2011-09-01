@@ -14,11 +14,10 @@
 class WIDGET_LABEL;
 class WIDGET_BUTTON;
 class WIDGET_CONTROLGRAB;
-class TEXTUREMANAGER;
-class MODELMANAGER;
 class CONFIG;
 class FONT;
 class PATHMANAGER;
+class ContentManager;
 
 class GUIPAGE
 {
@@ -31,17 +30,15 @@ public:
 		const std::string & path,
 		const std::string & texpath,
 		const PATHMANAGER & pathmanager,
-		const std::string & texsize,
 		const float screenhwratio,
 		const CONFIG & controlsconfig,
 		const FONT & fonts,
 		const std::map <std::string, std::string> & languagemap,
 		std::map <std::string, GUIOPTION> & optionmap,
 		SCENENODE & parentnode,
-		TEXTUREMANAGER & textures,
-		MODELMANAGER & models,
+		ContentManager & content,
 		std::ostream & error_output);
-  
+
 	void SetVisible(SCENENODE & parent, const bool newvis);
 
 	void SetAlpha(SCENENODE & parent, const float newalpha);
@@ -67,7 +64,7 @@ public:
 	{
 		return label_widgets[label_widget_name];
 	}
-	
+
 	reseatable_reference <WIDGET_BUTTON> GetButton(const std::string & widget_name)
 	{
 		return button_widgets[widget_name];

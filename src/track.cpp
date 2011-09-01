@@ -22,14 +22,36 @@ TRACK::~TRACK()
 	Clear();
 }
 
-bool TRACK::DeferredLoad(TEXTUREMANAGER & textures, MODELMANAGER & models, DynamicsWorld & world, std::ostream & info_output, std::ostream & error_output, const std::string & trackpath, const std::string & trackdir, const std::string & texturedir, const std::string & texsize, const std::string & sharedobjectpath, const int anisotropy, const bool reverse, const bool dynamicobjects, const bool dynamicshadows, const bool agressivecombine)
+bool TRACK::DeferredLoad(
+	ContentManager & content,
+	DynamicsWorld & world,
+	std::ostream & info_output,
+	std::ostream & error_output,
+	const std::string & trackpath,
+	const std::string & trackdir,
+	const std::string & texturedir,
+	const std::string & sharedobjectpath,
+	const int anisotropy,
+	const bool reverse,
+	const bool dynamicobjects,
+	const bool dynamicshadows,
+	const bool agressivecombine)
 {
 	Clear();
 
 	world.reset(*this);
 	data.world = &world;
 
-	loader.reset(new LOADER(textures, models, world, data, info_output, error_output, trackpath, trackdir, texturedir, texsize, sharedobjectpath, anisotropy, reverse, dynamicobjects, dynamicshadows, agressivecombine));
+	loader.reset(
+		new LOADER(
+			content, world, data,
+			info_output, error_output,
+			trackpath, trackdir,
+			texturedir,	sharedobjectpath,
+			anisotropy, reverse,
+			dynamicobjects,
+			dynamicshadows,
+			agressivecombine));
 
 	return loader->BeginLoad();
 }

@@ -24,11 +24,13 @@ public:
 
 	virtual ~MODEL();
 
-	virtual bool Load(const std::string & strFileName, std::ostream & error_output, bool genlist) {return false;}
-
 	virtual bool CanSave() const {return false;}  ///< returns true if the model format is capable of saving to a file
 
 	virtual bool Save(const std::string & strFileName, std::ostream & error_output) const {return false;} ///< optional capability
+
+	virtual bool Load(const std::string & strFileName, std::ostream & error_output, bool genlist) {return false;}
+
+	bool Load(const VERTEXARRAY & varray, std::ostream & error_output, bool genlist);
 
 	bool Serialize(joeserialize::Serializer & s)
 	{

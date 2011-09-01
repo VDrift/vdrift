@@ -14,11 +14,12 @@
 #include "motionstate.h"
 #include "LinearMath/btAlignedObjectArray.h"
 
-class DynamicsWorld;
 class TEXTUREMANAGER;
 class MODELMANAGER;
 class OBJECTLOADER;
 class ROADSTRIP;
+class DynamicsWorld;
+class ContentManager;
 class btStridingMeshInterface;
 class btCollisionShape;
 class btCollisionObject;
@@ -33,7 +34,20 @@ public:
     /// The track won't be loaded until more calls to ContinueDeferredLoad().
     /// Use Loaded() to see if loading is complete yet.
     /// Returns true if successful.
-	bool DeferredLoad(TEXTUREMANAGER & textures, MODELMANAGER & models, DynamicsWorld & world, std::ostream & info_output, std::ostream & error_output, const std::string & trackpath, const std::string & trackdir, const std::string & effects_texturepath, const std::string & texsize, const std::string & sharedobjectpath, const int anisotropy, const bool reverse, const bool dynamicobjects, const bool dynamicshadowsenabled, const bool doagressivecombining);
+	bool DeferredLoad(
+                      ContentManager & content,
+                      DynamicsWorld & world,
+                      std::ostream & info_output,
+                      std::ostream & error_output,
+                      const std::string & trackpath,
+                      const std::string & trackdir,
+                      const std::string & effects_texturepath,
+                      const std::string & sharedobjectpath,
+                      const int anisotropy,
+                      const bool reverse,
+                      const bool dynamicobjects,
+                      const bool dynamicshadowsenabled,
+                      const bool doagressivecombining);
 
 	bool ContinueDeferredLoad();
 

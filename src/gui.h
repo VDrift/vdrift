@@ -56,8 +56,7 @@ public:
 		const std::string & texsize,
 		const float screenhwratio,
 		const std::map <std::string, FONT> & fonts,
-		TEXTUREMANAGER & textures,
-		MODELMANAGER & models,
+		ContentManager & content,
 		std::ostream & info_output,
 		std::ostream & error_output);
 
@@ -121,7 +120,7 @@ public:
 	/// returns false if the specified page/label does not exist
 	bool SetLabelText(const std::string & page, const std::string & label, const std::string & text);
 	bool GetLabelText(const std::string & page, const std::string & label, std::string & text_output);
-	
+
 	/// returns false if the specified page/label does not exist
 	bool SetButtonEnabled(const std::string & page, const std::string & button, bool enable);
 
