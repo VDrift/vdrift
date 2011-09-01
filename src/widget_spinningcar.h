@@ -45,6 +45,7 @@ private:
 	MATHVECTOR <float, 2> center;
 	MATHVECTOR <float, 3> carpos;
 	int draworder;
+	const PATHMANAGER * pathptr;
 	ContentManager * contentptr;
 	std::ostream * errptr;
 	float rotation;

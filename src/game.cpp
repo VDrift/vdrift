@@ -274,8 +274,8 @@ void GAME::InitCoreSubsystems()
 	// always add the writeable data paths first so they are checked first
 	content.addPath(pathmanager.GetWriteableDataPath());
 	content.addPath(pathmanager.GetDataPath());
-	content.addSharedPath(pathmanager.GetSharedCarPath());
-	content.addSharedPath(pathmanager.GetSharedTrackPath());
+	content.addSharedPath(pathmanager.GetCarPartsPath());
+	content.addSharedPath(pathmanager.GetTrackPartsPath());
 	content.setTexSize(settings.GetTextureSize());
 
 	if (!LastStartWasSuccessful())
@@ -493,7 +493,7 @@ bool GAME::ParseArguments(std::list <std::string> & args)
 		pathmanager.Init(info_output, error_output);
 		PERFORMANCE_TESTING perftest(collision);
 		const std::string carname = argmap["-cartest"];
-		perftest.Test(pathmanager.GetCarPath(carname), pathmanager.GetSharedCarPath(),
+		perftest.Test(pathmanager.GetCarPath(carname), pathmanager.GetCarPartsPath(),
 			carname, info_output, error_output);
 		continue_game = false;
 	}
@@ -1856,11 +1856,11 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 
 		std::string cartype = carcontrols_local.first->GetCarType();
 		std::string carnamebase = carname.substr(0, carname.find("/"));
-		std::string cardir = pathmanager.GetCarDir()+"/"+carnamebase;
+		std::string cardir = pathmanager.GetCarsDir()+"/"+carnamebase;
 		std::string carpath = pathmanager.GetCarPath(carnamebase);
 
 		PTree carconfig;
-		file_open_basic fopen(carpath, pathmanager.GetSharedCarPath());
+		file_open_basic fopen(carpath, pathmanager.GetCarPartsPath());
 		if (!read_ini(carname.substr(carname.find("/")+1), fopen, carconfig))
 		{
 			error_output << "Failed to load " << carname << std::endl;
@@ -1960,16 +1960,16 @@ bool GAME::LoadCar(
 	bool islocal, bool isai,
 	const std::string & carfile)
 {
-	std::string partspath = pathmanager.GetCarSharedDir();
+	std::string partspath = pathmanager.GetCarPartsDir();
 	std::string carnamebase = carname.substr(0, carname.find("/"));
-	std::string cardir = pathmanager.GetCarDir()+"/"+carnamebase;
+	std::string cardir = pathmanager.GetCarsDir()+"/"+carnamebase;
 	std::string carpath = pathmanager.GetCarPath(carnamebase);
 
 	PTree carconf;
 	if (carfile.empty())
 	{
 		// If no file is passed in, then load it from disk.
-		file_open_basic fopen(carpath, pathmanager.GetSharedCarPath());
+		file_open_basic fopen(carpath, pathmanager.GetCarPartsPath());
 		if (!read_ini(carname.substr(carname.find("/")+1), fopen, carconf))
 		{
 			error_output << "Failed to load " << carname << std::endl;
@@ -2041,10 +2041,10 @@ bool GAME::LoadTrack(const std::string & trackname)
 	if (!track.DeferredLoad(
 			content, collision,
 			info_output, error_output,
-			pathmanager.GetTrackPath()+"/"+trackname,
-			pathmanager.GetTrackDir()+"/"+trackname,
+			pathmanager.GetTracksPath()+"/"+trackname,
+			pathmanager.GetTracksDir()+"/"+trackname,
 			pathmanager.GetEffectsTextureDir(),
-			pathmanager.GetSharedTrackPath(),
+			pathmanager.GetTrackPartsPath(),
 			settings.GetAnisotropy(),
 			settings.GetTrackReverse(),
 			settings.GetTrackDynamic(),
@@ -2255,10 +2255,10 @@ void GAME::PopulateValueLists(std::map<std::string, std::list <std::pair <std::s
 	// Populate track list.
 	std::list <std::pair<std::string, std::string> > tracklist;
 	std::list <std::string> trackfolderlist;
-	pathmanager.GetFileList(pathmanager.GetTrackPath(), trackfolderlist);
+	pathmanager.GetFileList(pathmanager.GetTracksPath(), trackfolderlist);
 	for (std::list <std::string>::iterator i = trackfolderlist.begin(); i != trackfolderlist.end(); ++i)
 	{
-		std::ifstream check((pathmanager.GetTrackPath()+"/"+*i+"/about.txt").c_str());
+		std::ifstream check((pathmanager.GetTracksPath()+"/"+*i+"/about.txt").c_str());
 		if (check)
 		{
 			std::string displayname;
@@ -2271,8 +2271,8 @@ void GAME::PopulateValueLists(std::map<std::string, std::list <std::pair <std::s
 
 	// Populate car list.
 	std::set <std::pair<std::string, std::string> > carset; // to avoid duplicate entries
-	PopulateCarSet(carset, pathmanager.GetReadOnlyCarPath(), pathmanager);
-	PopulateCarSet(carset, pathmanager.GetWriteableCarPath(), pathmanager);
+	PopulateCarSet(carset, pathmanager.GetReadOnlyCarsPath(), pathmanager);
+	PopulateCarSet(carset, pathmanager.GetWriteableCarsPath(), pathmanager);
 	std::list <std::pair<std::string, std::string> > carlist;
 	for (std::set <std::pair<std::string, std::string> >::const_iterator i = carset.begin(); i != carset.end(); i++)
 	{

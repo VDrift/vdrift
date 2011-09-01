@@ -4,6 +4,7 @@
 #include "pathmanager.h"
 
 WIDGET_SPINNINGCAR::WIDGET_SPINNINGCAR():
+	pathptr(0),
 	contentptr(0),
 	errptr(0),
 	rotation(0),
@@ -133,11 +134,9 @@ void WIDGET_SPINNINGCAR::SetupDrawable(
 	std::ostream & error_output,
 	int order)
 {
-	dataro = pathmanager.GetReadOnlyCarPath();
-	datarw = pathmanager.GetWriteableCarPath();
-	dataparts = pathmanager.GetSharedCarPath();
 	center.Set(x,y);
 	carpos = newcarpos;
+	pathptr = &pathmanager;
 	contentptr = &content;
 	errptr = &error_output;
 	draworder = order;
@@ -180,6 +179,7 @@ struct CAMTRANS_DRAWABLE_FUNCTOR
 
 void WIDGET_SPINNINGCAR::Load(SCENENODE & parent)
 {
+	assert(pathptr);
 	assert(errptr);
 	assert(contentptr);
 
@@ -191,18 +191,16 @@ void WIDGET_SPINNINGCAR::Load(SCENENODE & parent)
 	bool damage = false;
 	bool debugmode = false;
 
-	std::string partspath = "carparts";
-	std::string cardir = carname.substr(0, carname.rfind("/"));
-	std::string carpath = "cars/"+cardir;
-	std::string carconfpath = datarw+"/"+cardir;
-	if (!std::ifstream(carconfpath.c_str()))
-		carconfpath = dataro+"/"+cardir;
+	std::string partspath = pathptr->GetCarPartsDir();
+	std::string carnamebase = carname.substr(0, carname.find("/"));
+	std::string cardir = pathptr->GetCarsDir()+"/"+carnamebase;
+	std::string carpath = pathptr->GetCarPath(carnamebase);
 
 	PTree carconf;
-	file_open_basic fopen(carconfpath, dataparts);
-	if (!read_ini(carname.substr(carname.rfind("/")+1), fopen, carconf))
+	file_open_basic fopen(carpath, pathptr->GetCarPartsPath());
+	if (!read_ini(carname.substr(carname.find("/")+1), fopen, carconf))
 	{
-		*errptr << "Error loading car's configfile: " << carconfpath << std::endl;
+		*errptr << "Error loading car's configfile: " << carpath << std::endl;
 		return;
 	}
 
@@ -215,7 +213,7 @@ void WIDGET_SPINNINGCAR::Load(SCENENODE & parent)
 	car.push_back(CAR());
 
 	if (!car.back().LoadGraphics(
-			carconf, carpath, carname, partspath,
+			carconf, cardir, carname, partspath,
 			MATHVECTOR<float, 3>(r, g, b),
 			carpaint, anisotropy,
 			camerabounce, damage, debugmode,

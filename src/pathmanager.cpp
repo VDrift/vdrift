@@ -206,8 +206,8 @@ void PATHMANAGER::SetProfile(const std::string & value)
 std::string PATHMANAGER::GetCarPath(const std::string & carname) const
 {
 	// check writeable car path first (check for presence of .car files)
-	if (FileExists(GetWriteableDataPath() + "/" + GetCarDir() + "/" + carname + "/" + carname + ".car"))
-		return GetWriteableDataPath() + "/" + GetCarDir() + "/" + carname;
+	if (FileExists(GetWriteableDataPath() + "/" + GetCarsDir() + "/" + carname + "/" + carname + ".car"))
+		return GetWriteableDataPath() + "/" + GetCarsDir() + "/" + carname;
 	else
-		return GetDataPath()+"/"+GetCarDir()+"/"+carname;
+		return GetDataPath()+"/"+GetCarsDir()+"/"+carname;
 }

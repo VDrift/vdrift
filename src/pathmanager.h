@@ -9,13 +9,13 @@ class PATHMANAGER
 public:
 	std::string GetDataPath() const {return data_directory;}
 	std::string GetWriteableDataPath() const {return settings_path;}
-	std::string GetSharedCarPath() const {return GetDataPath()+"/carparts";}
-	std::string GetSharedTrackPath() const {return GetDataPath()+"/trackparts";}
+	std::string GetCarPartsPath() const {return GetDataPath()+"/carparts";}
+	std::string GetTrackPartsPath() const {return GetDataPath()+"/trackparts";}
 	std::string GetStartupFile() const {return settings_path+"/startingup.txt";}
 	std::string GetTrackRecordsPath() const {return settings_path+"/records"+profile_suffix;}
 	std::string GetSettingsFile() const {return settings_path+"/VDrift.config"+profile_suffix;}
 	std::string GetLogFile() const {return settings_path+"/log.txt";}
-	std::string GetTrackPath() const {return GetDataPath()+"/"+GetTrackDir();}
+	std::string GetTracksPath() const {return GetDataPath()+"/"+GetTracksDir();}
 	std::string GetCarPath(const std::string & carname) const;
 	std::string GetCarPaintPath(const std::string & carname) const {return GetCarPath(carname)+"/skins";}
 	std::string GetGUIMenuPath(const std::string & skinname) const {return GetDataPath()+"/skins/"+skinname+"/menus";}
@@ -33,9 +33,9 @@ public:
 	std::string GetUpdateManagerFileBackup() const {return settings_path+"/updates.config.backup"+profile_suffix;}
 	std::string GetUpdateManagerFileBase() const {return GetDataPath() + "/settings/updates.config";}
 
-	std::string GetTrackDir() const {return "tracks";}
-	std::string GetCarDir() const {return "cars";}
-	std::string GetCarSharedDir() const {return "carparts";}
+	std::string GetTracksDir() const {return "tracks";}
+	std::string GetCarsDir() const {return "cars";}
+	std::string GetCarPartsDir() const {return "carparts";}
 	std::string GetGUITextureDir(const std::string & skinname) const {return "skins/"+skinname+"/textures";}
 	std::string GetGUILanguageDir(const std::string & skinname) const {return "skins/"+skinname+"/languages";}
 	std::string GetFontDir(const std::string & skinname) const {return "/skins/"+skinname+"/fonts";}
@@ -44,8 +44,8 @@ public:
 	std::string GetEffectsTextureDir() const {return "textures/effects";}
 	std::string GetTireSmokeTextureDir() const {return "textures/smoke";}
 	
-	std::string GetReadOnlyCarPath() const {return GetDataPath()+"/"+GetCarDir();}
-	std::string GetWriteableCarPath() const {return GetWriteableDataPath()+"/"+GetCarDir();}
+	std::string GetReadOnlyCarsPath() const {return GetDataPath()+"/"+GetCarsDir();}
+	std::string GetWriteableCarsPath() const {return GetWriteableDataPath()+"/"+GetCarsDir();}
 
 	std::string GetTemporaryFolder() const {return temporary_folder;}
 
