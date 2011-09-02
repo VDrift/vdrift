@@ -20,19 +20,11 @@
 #ifndef _GLWRAPPER
 #define _GLWRAPPER
 
-#ifdef __APPLE__
-#include <GLEW/glew.h>
-#include <OpenGL/gl.h>
-#else
-#include <GL/glew.h>
-#include <GL/gl.h>
-#endif
 #include <iostream>
 #include <vector>
-#include <cstring>
-#include <climits>
 #include <map>
-#include "utils.h"
+#include "glew.h"
+#include "gl.h"
 #include "renderuniformvector.h"
 
 /// A wrapper around all OpenGL functions.

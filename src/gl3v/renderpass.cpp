@@ -21,6 +21,7 @@
 #include <tr1/unordered_set>
 #endif
 #include <cassert>
+#include "utils.h"
 #include "renderpass.h"
 #include "glenums.h"
 
