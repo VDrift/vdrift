@@ -690,7 +690,7 @@ void GAME::FinishDraw()
 {
 	PROFILER.beginBlock("render");
 	graphics_interface->EndScene(error_output);
-	window.SwapBuffers(error_output);
+	window.SwapBuffers();
 	PROFILER.endBlock("render");
 }
 
@@ -2439,7 +2439,7 @@ void GAME::LoadingScreen(float progress, float max, bool drawGui, const std::str
 	graphics_interface->BeginScene(error_output);
 	graphics_interface->DrawScene(error_output);
 	graphics_interface->EndScene(error_output);
-	window.SwapBuffers(error_output);
+	window.SwapBuffers();
 }
 
 bool GAME_DOWNLOADER::operator()(const std::string & file)
