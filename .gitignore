@@ -3,7 +3,8 @@ a.out
 Makefile
 vdrift
 vdrift.cfg
-vdrift.xcodeproj
+vdrift.xcodeproj/
+VDrift.xcworkspace/
 vdrift.app/
 build/
 data/
