@@ -20,15 +20,7 @@
 #ifndef _GLENUMS_H
 #define _GLENUMS_H
 
-#ifdef __APPLE__
-#include <GLEW/glew.h>
-#include <OpenGL/gl.h>
-#else
-#include <GL/glew.h>
-#include <GL/gl.h>
-#endif
 #include <string>
-#include <cassert>
 #include "unordered_map.h"
 
 /// Base interface for OpenGL enumerations.
