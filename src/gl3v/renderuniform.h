@@ -3,6 +3,8 @@
 
 #include "renderuniformentry.h"
 #include "renderuniformvector.h"
+#include "glew.h"
+#include "gl.h"
 
 /// The bare minimum required to update uniforms
 struct RenderUniform : public RenderUniformBase
