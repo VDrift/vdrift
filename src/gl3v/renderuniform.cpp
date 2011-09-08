@@ -17,22 +17,19 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _RENDERUNIFORM
-#define _RENDERUNIFORM
+#include "renderuniform.h"
 
-#include "renderuniformentry.h"
-#include "renderuniformvector.h"
-#include "glew.h"
-#include "gl.h"
-
-/// The bare minimum required to update uniforms.
-struct RenderUniform : public RenderUniformBase
+RenderUniform::RenderUniform()
 {
-	RenderUniform();
-	RenderUniform(GLint loc, const RenderUniformEntry & entry);
-	RenderUniform(GLint loc, const std::vector <float> & newdata);
+	// Constructor.
+}
 
-	GLuint location;
-};
+RenderUniform::RenderUniform(GLint loc, const RenderUniformEntry & entry) : RenderUniformBase(entry.data), location(loc)
+{
+	// Constructor.
+}
 
-#endif
+RenderUniform::RenderUniform(GLint loc, const std::vector <float> & newdata) : RenderUniformBase(newdata), location(loc)
+{
+	// Constructor.
+}
