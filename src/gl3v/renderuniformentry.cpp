@@ -17,28 +17,35 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _RENDERUNIFORMENTRY
-#define _RENDERUNIFORMENTRY
-
-#include "renderuniformvector.h"
+#include "renderuniformentry.h"
 #include "stringidmap.h"
 
-struct RenderUniformBase
+RenderUniformBase::RenderUniformBase()
 {
-	RenderUniformBase();
-	RenderUniformBase(const float * newData, int dataSize);
-	RenderUniformBase(const std::vector <float> & newdata);
-	RenderUniformBase(const RenderUniformVector <float> & newdata);
+	// Constructor.
+}
 
-	RenderUniformVector <float> data;
-};
-
-struct RenderUniformEntry : public RenderUniformBase
+RenderUniformBase::RenderUniformBase(const float * newData, int dataSize) : data(newData, dataSize)
 {
-	RenderUniformEntry();
-	RenderUniformEntry(StringId newName, const float * newData, int dataSize);
+	// Constructor.
+}
 
-	StringId name;
-};
+RenderUniformBase::RenderUniformBase(const std::vector <float> & newdata) : data(newdata)
+{
+	// Constructor.
+}
 
-#endif
+RenderUniformBase::RenderUniformBase(const RenderUniformVector <float> & newdata) : data(newdata)
+{
+	// Constructor.
+}
+
+RenderUniformEntry::RenderUniformEntry()
+{
+	// Constructor.
+}
+
+RenderUniformEntry::RenderUniformEntry(StringId newName, const float * newData, int dataSize) : RenderUniformBase(newData, dataSize), name(newName)
+{
+	// Constructor.
+}
