@@ -20,8 +20,6 @@
 #ifndef _RENDERMODELEXT
 #define _RENDERMODELEXT
 
-//#include "keyed_container.h"
-//#include "stringidmap.h"
 #include "rendertextureentry.h"
 #include "renderuniformentry.h"
 #include "glwrapper.h"
