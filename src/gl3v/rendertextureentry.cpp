@@ -17,27 +17,24 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _RENDERTEXTUREENTRY
-#define _RENDERTEXTUREENTRY
+#include "rendertextureentry.h"
 
-#include "stringidmap.h"
-#include "glwrapper.h"
-
-struct RenderTextureBase
+RenderTextureBase::RenderTextureBase()
 {
-	RenderTextureBase();
-	RenderTextureBase(GLuint newhandle, GLenum newtarget);
+	// Constructor.
+}
 
-	GLuint handle;
-	GLenum target;
-};
-
-struct RenderTextureEntry : public RenderTextureBase
+RenderTextureBase::RenderTextureBase(GLuint newhandle, GLenum newtarget) : handle(newhandle), target(newtarget)
 {
-	RenderTextureEntry();
-	RenderTextureEntry(StringId newname, GLuint newhandle, GLenum newtarget);
+	// Constructor.
+}
 
-	StringId name;
-};
+RenderTextureEntry::RenderTextureEntry()
+{
+	// Constructor.
+}
 
-#endif
+RenderTextureEntry::RenderTextureEntry(StringId newname, GLuint newhandle, GLenum newtarget) : RenderTextureBase(newhandle,newtarget), name(newname)
+{
+	// Constructor.
+}
