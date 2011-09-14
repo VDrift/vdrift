@@ -133,6 +133,8 @@ solution "VDrift"
 		files {"src/**.h", "src/**.cpp"}
 		update_options()
 		write_definitions_h()
+	
+	platforms {"native", "universal"}
 
 	configurations {"Debug", "Release"}
 
@@ -173,6 +175,5 @@ solution "VDrift"
 		includedirs {"vdrift-mac", "vdrift-mac/Frameworks/Archive.framework/Headers", "vdrift-mac/Frameworks/BulletCollision.framework/Headers", "vdrift-mac/Frameworks/BulletDynamics.framework/Headers"} --Add paths to Header Search Paths (removing need for "ifdef __APPLE__"'s in source).
 		libdirs {"vdrift-mac/Frameworks"} --Add Frameworks folder to Library Search Paths. We need to add it to Framework Search Paths instead. 
 		links {"Archive.framework", "BulletCollision.framework", "BulletDynamics.framework", "BulletSoftBody.framework", "GLEW.framework", "libcurl.framework", "LinearMath.framework", "Ogg.framework", "SDL_gfx.framework", "SDL_image.framework", "SDL_net.framework", "SDL.framework", "Vorbis.framework", "AppKit.framework", "OpenGL.framework"} --Tell xcode to link to frameworks.
-		platforms {"universal"} --Build a universal, 32 and 64 bit application.
 		postbuildcommands {"cp -r vdrift-mac/Frameworks/ build/Debug/vdrift.app/Contents/Frameworks/\n"} --Copy frameworks to app for portibility.
 		postbuildcommands {"cd $TARGET_BUILD_DIR\n\n#Make the directory which our disk image will be made of.\nmkdir VDrift\n\n#Copy vdrift there.\n/Developer/Tools/CpMac -r $TARGET_BUILD_DIR/VDrift.app VDrift/\n\n#Copy readme.\n/Developer/Tools/CpMac $SRCROOT/vdrift-mac/ReadMe.rtf VDrift/ReadMe.rtf\n\n#Copy data and remove unnecessary stuff.\nmkdir VDrift/data\n/Developer/Tools/CpMac -r $SRCROOT/data/carparts VDrift/data/\n/Developer/Tools/CpMac -r $SRCROOT/data/lists VDrift/data/\n/Developer/Tools/CpMac -r $SRCROOT/data/music VDrift/data/\n/Developer/Tools/CpMac -r $SRCROOT/data/settings VDrift/data/\n/Developer/Tools/CpMac -r $SRCROOT/data/shaders VDrift/data/\n/Developer/Tools/CpMac -r $SRCROOT/data/skins VDrift/data/\n/Developer/Tools/CpMac -r $SRCROOT/data/textures VDrift/data/\n/Developer/Tools/CpMac -r $SRCROOT/data/trackparts VDrift/data/\nmkdir VDrift/data/cars\n/Developer/Tools/CpMac -r $SRCROOT/data/cars/F1-02 VDrift/data/cars/\n/Developer/Tools/CpMac -r $SRCROOT/data/cars/XS VDrift/data/cars/\nmkdir VDrift/data/tracks\n/Developer/Tools/CpMac -r $SRCROOT/data/tracks/paulricard88 VDrift/data/tracks/\n/Developer/Tools/CpMac -r $SRCROOT/data/tracks/weekend VDrift/data/tracks/\nfind VDrift/ -type f -name SConscript -exec rm {} ';'\nfind VDrift/ -type f -name \.DS_Store -exec rm -f {} ';'\nfind -d VDrift/ -type d -name \.svn -exec rm -rf {} ';'\n\n#Finally make a disk image out of the stuff.\nhdiutil create -srcfolder VDrift vdrift-mac-yyyy-mm-dd.dmg\nhdiutil internet-enable -yes vdrift-mac-yyyy-mm-dd.dmg\n\n#Cleanup.\nrm -r VDrift"} --Make a disk image with application, minimal data and readme.
