@@ -46,6 +46,7 @@ if (sys.platform == 'freebsd6') or (sys.platform == 'freebsd7') or (sys.platform
         LINKFLAGS = ['-pthread','-lintl'],
         options = opts)
     check_headers = ['asio.hpp', 'boost/bind.hpp', 'GL/gl.h', 'GL/glu.h', 'SDL/SDL.h', 'SDL/SDL_image.h', 'SDL/SDL_rotozoom.h', 'vorbis/vorbisfile.h', 'GL/glew.h', 'bullet/btBulletCollisionCommon.h']
+    check_libs = []
     if 'CC' in os.environ:
         env.Replace(CC = os.environ['CC'])
     else:
@@ -108,6 +109,7 @@ elif sys.platform == 'darwin':
     default_bindir = ""
 
     check_headers = ['OpenGL/gl.h', 'OpenGL/glu.h', 'SDL/sdl.h']
+    check_libs = []
     cppdefines.append(("_DEFINE_OSX_HELPERS"))
 
 #---------------#
@@ -123,6 +125,7 @@ elif ( 'win32' == sys.platform or 'cygwin' == sys.platform ):
         CC = 'gcc', CXX = 'g++',
         options = opts)
     check_headers = []
+    check_libs = []
 
 #-------------#
 # POSIX build #
@@ -136,6 +139,7 @@ else:
         CC = 'gcc', CXX = 'g++',
         options = opts)
     check_headers = ['asio.hpp', 'boost/bind.hpp', 'GL/gl.h', 'GL/glu.h', 'SDL/SDL.h', 'SDL/SDL_image.h', 'SDL/SDL_rotozoom.h', 'vorbis/vorbisfile.h', 'GL/glew.h', 'curl/curl.h', 'bullet/btBulletCollisionCommon.h', 'archive.h']
+    check_libs = [ ['GLEW', 'GL/glew.h', 'glDeleteSamplers(0, NULL);', 'Your GLEW library is out of date.'] ]
 
 if ARGUMENTS.get('verbose') != "1":
        env['ARCOMSTR'] = "\tARCH $TARGET"
@@ -339,6 +343,10 @@ conf = Configure(env)
 for header in check_headers:
     if not conf.CheckCXXHeader(header):
         print 'You do not have the %s headers installed. Exiting.' % header
+        Exit(1)
+for lib in check_libs:
+    if not conf.CheckLibWithHeader(lib[0], lib[1], 'C', lib[2]):
+        print lib[3]
         Exit(1)
 
 #--------------#
