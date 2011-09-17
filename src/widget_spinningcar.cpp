@@ -4,12 +4,12 @@
 #include "pathmanager.h"
 
 WIDGET_SPINNINGCAR::WIDGET_SPINNINGCAR():
+	pathptr(0),
+	contentptr(0),
 	errptr(0),
 	rotation(0),
 	wasvisible(false),
-	r(1), g(1), b(1),
-	textures(0),
-	models(0)
+	r(1), g(1), b(1)
 {
 	// ctor
 }
@@ -126,9 +126,7 @@ void WIDGET_SPINNINGCAR::Update(SCENENODE & scene, float dt)
 
 void WIDGET_SPINNINGCAR::SetupDrawable(
 	SCENENODE & scene,
-	TEXTUREMANAGER & textures,
-	MODELMANAGER & models,
-	const std::string & texturesize,
+	ContentManager & content,
 	const PATHMANAGER & pathmanager,
 	const float x,
 	const float y,
@@ -136,14 +134,10 @@ void WIDGET_SPINNINGCAR::SetupDrawable(
 	std::ostream & error_output,
 	int order)
 {
-	tsize = texturesize;
-	dataro = pathmanager.GetReadOnlyCarPath();
-	datarw = pathmanager.GetWriteableCarPath();
-	dataparts = pathmanager.GetSharedCarPath();
 	center.Set(x,y);
 	carpos = newcarpos;
-	this->textures = &textures;
-	this->models = &models;
+	pathptr = &pathmanager;
+	contentptr = &content;
 	errptr = &error_output;
 	draworder = order;
 }
@@ -185,34 +179,31 @@ struct CAMTRANS_DRAWABLE_FUNCTOR
 
 void WIDGET_SPINNINGCAR::Load(SCENENODE & parent)
 {
+	assert(pathptr);
 	assert(errptr);
-	assert(textures);
-	assert(models);
+	assert(contentptr);
 
 	Unload(parent);
 
 	std::stringstream loadlog;
-	std::string texsize = "large";
 	int anisotropy = 0;
 	float camerabounce = 0;
 	bool damage = false;
 	bool debugmode = false;
 
-	std::string partspath = "carparts";
-	std::string cardir = carname.substr(0, carname.rfind("/"));
-	std::string carpath = "cars/"+cardir;
-	std::string carconfpath = datarw+"/"+cardir;
-	if (!std::ifstream(carconfpath.c_str()))
-		carconfpath = dataro+"/"+cardir;
+	std::string partspath = pathptr->GetCarPartsDir();
+	std::string carnamebase = carname.substr(0, carname.find("/"));
+	std::string cardir = pathptr->GetCarsDir()+"/"+carnamebase;
+	std::string carpath = pathptr->GetCarPath(carnamebase);
 
 	PTree carconf;
-	file_open_basic fopen(carconfpath, dataparts);
-	if (!read_ini(carname.substr(carname.rfind("/")+1), fopen, carconf))
+	file_open_basic fopen(carpath, pathptr->GetCarPartsPath());
+	if (!read_ini(carname.substr(carname.find("/")+1), fopen, carconf))
 	{
-		*errptr << "Error loading car's configfile: " << carconfpath << std::endl;
+		*errptr << "Error loading car's configfile: " << carpath << std::endl;
 		return;
 	}
-	
+
 	if (!carnode.valid())
 	{
 		carnode = parent.AddNode();
@@ -222,12 +213,11 @@ void WIDGET_SPINNINGCAR::Load(SCENENODE & parent)
 	car.push_back(CAR());
 
 	if (!car.back().LoadGraphics(
-			carconf, carpath, carname, partspath,
+			carconf, cardir, carname, partspath,
 			MATHVECTOR<float, 3>(r, g, b),
-			carpaint, texsize, anisotropy,
+			carpaint, anisotropy,
 			camerabounce, damage, debugmode,
-			*textures, *models,
-			loadlog, loadlog))
+			*contentptr, loadlog, loadlog))
 	{
 		*errptr << "Couldn't load spinning car: " << carname << std::endl;
 		if (!loadlog.str().empty())
@@ -262,7 +252,7 @@ void WIDGET_SPINNINGCAR::SetColor(SCENENODE & scene, float r, float g, float b)
 {
 	if (!Valid())
 		return;
-	
+
 	// save the current state of the transform
 	SCENENODE & carnoderef = GetCarNode(scene);
 	TRANSFORM oldtrans = carnoderef.GetTransform();

@@ -1,5 +1,5 @@
 #include "trackmap.h"
-#include "texturemanager.h"
+#include "contentmanager.h"
 #include "texture.h"
 
 #ifdef __APPLE__
@@ -46,8 +46,7 @@ bool TRACKMAP::BuildMap(
 	int w, int h,
 	const std::string & trackname,
 	const std::string & texturepath,
-	const std::string & texsize,
-	TEXTUREMANAGER & textures,
+	ContentManager & content,
 	std::ostream & error_output)
 {
 	Unload();
@@ -206,9 +205,8 @@ bool TRACKMAP::BuildMap(
 	texinfo.surface = surface;
 	texinfo.repeatu = false;
 	texinfo.repeatv = false;
-	texinfo.size = texsize;
 	std::tr1::shared_ptr<TEXTURE> track_map;
-	if (!textures.Load(std::string(), trackname, texinfo, track_map))
+	if (!content.load(std::string(), trackname, texinfo, track_map))
 	{
 		error_output << "Can't load generated track map texture" << std::endl;
 		return false;
@@ -216,23 +214,22 @@ bool TRACKMAP::BuildMap(
 
 	//std::cout << "Loading track map dots" << std::endl;
 	TEXTUREINFO dotinfo;
-	dotinfo.size = texsize;
-	if (!textures.Load(texturepath, "cardot0.png", dotinfo, cardot0))
+	if (!content.load(texturepath, "cardot0.png", dotinfo, cardot0))
 	{
 		error_output << "Can't load cardot0" << std::endl;
 		return false;
 	}
-	if (!textures.Load(texturepath, "cardot1.png", dotinfo, cardot1))
+	if (!content.load(texturepath, "cardot1.png", dotinfo, cardot1))
 	{
 		error_output << "Can't load cardot1" << std::endl;
 		return false;
 	}
-	if (!textures.Load(texturepath, "cardot0_focused.png", dotinfo, cardot0_focused))
+	if (!content.load(texturepath, "cardot0_focused.png", dotinfo, cardot0_focused))
 	{
 		error_output << "Can't load cardot0_focused" << std::endl;
 		return false;
 	}
-	if (!textures.Load(texturepath, "cardot1_focused.png", dotinfo, cardot1_focused))
+	if (!content.load(texturepath, "cardot1_focused.png", dotinfo, cardot1_focused))
 	{
 		error_output << "Can't load cardot1_focused" << std::endl;
 		return false;

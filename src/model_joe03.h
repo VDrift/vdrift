@@ -28,9 +28,9 @@ public:
 		return false;
 	}
 
-	bool Load(const std::string & strFileName, std::ostream & error_output, bool genlist, JOEPACK * pack);
+	bool Load(const std::string & strFileName, std::ostream & error_output, bool genlist, const JOEPACK * pack);
 
-	bool LoadFromHandle(FILE * f, JOEPACK * pack, std::ostream & error_output);
+
 
 private:
 	static const int JOE_MAX_FACES;
@@ -38,7 +38,9 @@ private:
 	static const float MODEL_SCALE;
 
 	// This reads in the data from the MD2 file and stores it in the member variable
-	void ReadData(FILE * m_FilePointer, JOEPACK * pack, JOEObject & Object);
+	void ReadData(FILE * m_FilePointer, const JOEPACK * pack, JOEObject & Object);
+
+	bool LoadFromHandle(FILE * f, const JOEPACK * pack, std::ostream & error_output);
 };
 
 #endif

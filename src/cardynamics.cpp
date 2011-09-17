@@ -89,12 +89,28 @@ static bool LoadFuelTank(
 	return true;
 }
 
+static bool LoadEngine(
+	const PTree & cfg,
+	CARENGINE & engine,
+	std::ostream & error_output)
+{
+	const PTree * cfg_eng;
+	CARENGINEINFO engine_info;
+
+	if (!cfg.get("engine", cfg_eng, error_output)) return false;
+	if (!engine_info.Load(*cfg_eng, error_output)) return false;
+	engine.Init(engine_info);
+
+	return true;
+}
+
+
 static bool LoadBrake(
 	const PTree & cfg,
 	CARBRAKE & brake,
 	std::ostream & error_output)
 {
-	float friction, max_pressure, area, bias, radius, handbrake(0);
+	btScalar friction, max_pressure, area, bias, radius, handbrake(0);
 
 	if (!cfg.get("friction", friction, error_output)) return false;
 	if (!cfg.get("area", area, error_output)) return false;
@@ -227,14 +243,6 @@ static btMultiSphereShape * CreateCollisionShape(const btVector3 & center, const
 // helper class to load car body data
 struct BodyLoader
 {
-	struct Particle
-	{
-		btVector3 position;
-		btScalar mass;
-		Particle(const btVector3 & position, btScalar mass) :
-			position(position), mass(mass) {}
-	};
-
 	struct Shape
 	{
 		btTransform transform;
@@ -266,14 +274,24 @@ struct BodyLoader
 			link_limit(limit) {}
 	};
 
-	BodyLoader() : numbodies(0) {}
+	BodyLoader(bool damage = false) :
+		m_mass_center(0, 0, 0),
+		m_inertia(0, 0, 0),
+		m_mass(0),
+		m_numbodies(0),
+		m_damage(damage)
+	{
+		// ctor
+	}
 
-	btAlignedObjectArray<Particle> particles;
 	btAlignedObjectArray<Shape> shapes;
 	btAlignedObjectArray<Body> bodies;
 	btAlignedObjectArray<Body> wheels;
-	btCollisionShape* parent;
-	int numbodies;
+	btVector3 m_mass_center;
+	btVector3 m_inertia;
+	btScalar m_mass;
+	int m_numbodies;
+	bool m_damage;
 
 	// descend cfg tree load bodies
 	bool load(const PTree & cfg, std::ostream & error_output)
@@ -304,7 +322,7 @@ struct BodyLoader
 		LoadCollisionShape(cfg, center, shape);
 
 		const PTree * cfg_link;
-		if (cfg.get("link", cfg_link))
+		if (m_damage && cfg.get("link", cfg_link))
 		{
 			btVector3 inertia(1, 1, 1);
 			btScalar strength(0), limit(0);
@@ -313,83 +331,57 @@ struct BodyLoader
 			if (cfg.parent() && cfg.parent()->value() == "wheel")
 			{
 				wheels.push_back(Body(transform, shape, inertia, mass, strength, limit));
-				numbodies++;
+				m_numbodies++;
 			}
 			else if(shape && mass > 0)
 			{
 				shape->calculateLocalInertia(mass, inertia);
 				bodies.push_back(Body(transform, shape, inertia, mass, strength, limit));
-				numbodies++;
+				m_numbodies++;
 			}
 			else
 			{
 				error_output << "body with no mass/shape: " << cfg.value() << "\n";
-				//write_inf(cfg, error_output);
 			}
 		}
 		else
 		{
-			if (shape)
-			{
-				shapes.push_back(Shape(transform, shape));
-			}
-			if (mass > 0)
-			{
-				particles.push_back(Particle(transform.getOrigin(), mass));
-			}
+			if (mass > 0) addMass(transform.getOrigin(), mass);
+			if (shape) shapes.push_back(Shape(transform, shape));
 		}
 	}
 
-	void calculateParticleMass(btVector3 & center, btVector3 & inertia, btScalar & mass) const
+	btVector3 calculateInertia(const btVector3 & p, btScalar m) const
 	{
-		center.setValue(0, 0, 0);
-		mass = 0;
-
-		// calculate the total mass, and center of mass
-		for (int i = 0; i != particles.size(); ++i)
-		{
-			center = center + particles[i].position *  particles[i].mass;
-			mass +=  particles[i].mass;
-		}
-		center = center * (1.0 / mass);
-
-		// calculate the inertia tensor
-		btScalar xx(0), yy(0), zz(0), xy(0), xz(0), yz(0);
-		for (int i = 0; i != particles.size(); ++i)
-		{
-			btVector3 p = particles[i].position - center;
-			btScalar m = particles[i].mass;
-
-			// add the current mass to the inertia tensor
-			xx += m * (p.y() * p.y() + p.z() * p.z()); // mi*(yi^2+zi^2)
-			yy += m * (p.x() * p.x() + p.z() * p.z()); // mi*(xi^2+zi^2)
-			zz += m * (p.x() * p.x() + p.y() * p.y()); // mi*(xi^2+yi^2)
-
-			xy -= m * (p.x() * p.y()); // mi*xi*yi
-			xz -= m * (p.x() * p.z()); // mi*xi*zi
-			yz -= m * (p.y() * p.z()); // mi*yi*zi
-		}
-		inertia.setValue(xx, yy, zz);
+		// principal inertia only
+		return m * btVector3(
+			p.y() * p.y() + p.z() * p.z(),
+			p.x() * p.x() + p.z() * p.z(),
+			p.x() * p.x() + p.y() * p.y());
 	}
 
-	void calculateMass(btVector3 & center, btVector3 & inertia, btScalar & mass)
+	void addMass(const btVector3 & p, btScalar m)
 	{
-		particles.reserve(particles.size() + numbodies);
-		for (int i = 0; i < bodies.size(); ++i)
-		{
-			particles.push_back(Particle(bodies[i].transform.getOrigin(), bodies[i].mass));
-		}
-		for (int i = 0; i < wheels.size(); ++i)
-		{
-			particles.push_back(Particle(wheels[i].transform.getOrigin(), wheels[i].mass));
-		}
-		calculateParticleMass(center, inertia, mass);
+		m_inertia += calculateInertia(p, m);
+		m_mass_center += m * p;
+		m_mass += m;
+	}
+
+	void calculateMass(btVector3 & center, btVector3 & inertia, btScalar & mass) const
+	{
+		btAssert(m_mass > 0);
+		center = m_mass_center / m_mass;
+		mass = m_mass;
+		inertia = m_inertia - calculateInertia(center, mass);
 	}
 };
 
 CARDYNAMICS::CARDYNAMICS() :
 	world(0),
 	body(0),
+	transform(btTransform::getIdentity()),
+	linear_velocity(0,0,0),
+	angular_velocity(0,0,0),
 	drive(NONE),
 	tacho_rpm(0),
 	autoclutch(true),
@@ -403,11 +395,10 @@ CARDYNAMICS::CARDYNAMICS() :
 	maxangle(0),
 	damage(false)
 {
-	suspension.reserve(WHEEL_POSITION_SIZE);
-	wheel.reserve(WHEEL_POSITION_SIZE);
-	tire.reserve(WHEEL_POSITION_SIZE);
-	brake.reserve(WHEEL_POSITION_SIZE);
-
+	suspension.resize(WHEEL_POSITION_SIZE);
+	wheel.resize(WHEEL_POSITION_SIZE);
+	tire.resize(WHEEL_POSITION_SIZE);
+	brake.resize(WHEEL_POSITION_SIZE);
 	suspension_force.resize(WHEEL_POSITION_SIZE);
 	wheel_velocity.resize(WHEEL_POSITION_SIZE);
 	wheel_position.resize(WHEEL_POSITION_SIZE);
@@ -470,47 +461,11 @@ bool CARDYNAMICS::Load(
 	DynamicsWorld & world,
 	std::ostream & error_output)
 {
-	//cfg.write(error_output, write_inf);
-
 	if (!LoadAeroDevices(cfg, aerodynamics, error_output)) return false;
 	if (!LoadClutch(cfg, clutch, error_output)) return false;
 	if (!LoadTransmission(cfg, transmission, error_output)) return false;
 	if (!LoadFuelTank(cfg, fuel_tank, error_output)) return false;
-
-	const PTree * cfg_eng;
-	CARENGINEINFO engine_info;
-	if (!cfg.get("engine", cfg_eng, error_output)) return false;
-	if (!engine_info.Load(*cfg_eng, error_output)) return false;
-	engine.Init(engine_info);
-
-	const PTree * cfg_wheels;
-	if (!cfg.get("wheel", cfg_wheels, error_output)) return false;
-
-	assert(cfg_wheels->size() == WHEEL_POSITION_SIZE); // temporary restriction
-	tire.resize(cfg_wheels->size());
-	brake.resize(cfg_wheels->size());
-	wheel.resize(cfg_wheels->size());
-	suspension.resize(cfg_wheels->size());
-
-	int i = 0;
-	for (PTree::const_iterator iw = cfg_wheels->begin(); iw != cfg_wheels->end(); ++iw, ++i)
-	{
-		const PTree & cfg_wheel = iw->second;
-
-		const PTree * cfg_tire, * cfg_brake;
-		if (!cfg_wheel.get("tire", cfg_tire, error_output)) return false;
-		if (!cfg_wheel.get("brake", cfg_brake, error_output)) return false;
-
-		if (!tire[i].Load(*cfg_tire, error_output)) return false;
-		if (!LoadBrake(*cfg_brake, brake[i], error_output)) return false;
-		if (!LoadWheel(cfg_wheel, tire[i], wheel[i], error_output)) return false;
-
-		CARSUSPENSION * sptr;
-		if (!CARSUSPENSION::Load(cfg_wheel, sptr, error_output)) return false;
-
-		suspension[i].reset(sptr);
-		if (suspension[i]->GetMaxSteeringAngle() > maxangle) maxangle = suspension[i]->GetMaxSteeringAngle();
-	}
+	if (!LoadEngine(cfg, engine, error_output)) return false;
 
 	drive = NONE;
 	const PTree * cfg_diff;
@@ -534,17 +489,50 @@ bool CARDYNAMICS::Load(
 		return false;
 	}
 
-	BodyLoader bodyLoader;
+	// load car bodies
+	BodyLoader bodyLoader(cardamage);
 	bodyLoader.load(cfg, error_output);
-	damage = cardamage && bodyLoader.numbodies;
+	damage = cardamage && bodyLoader.m_numbodies;
+
+	// load wheels
+	const PTree * cfg_wheels;
+	if (!cfg.get("wheel", cfg_wheels, error_output)) return false;
+	assert(cfg_wheels->size() == WHEEL_POSITION_SIZE);
+
+	int i = 0;
+	for (PTree::const_iterator iw = cfg_wheels->begin(); iw != cfg_wheels->end(); ++iw, ++i)
+	{
+		const PTree & cfg_wheel = iw->second;
+
+		const PTree * cfg_tire, * cfg_brake;
+		if (!cfg_wheel.get("tire", cfg_tire, error_output)) return false;
+		if (!cfg_wheel.get("brake", cfg_brake, error_output)) return false;
+
+		if (!tire[i].Load(*cfg_tire, error_output)) return false;
+		if (!LoadBrake(*cfg_brake, brake[i], error_output)) return false;
+		if (!LoadWheel(cfg_wheel, tire[i], wheel[i], error_output)) return false;
+
+		CARSUSPENSION * sptr;
+		if (!CARSUSPENSION::Load(cfg_wheel, sptr, error_output)) return false;
+
+		suspension[i].reset(sptr);
+		if (suspension[i]->GetMaxSteeringAngle() > maxangle) maxangle = suspension[i]->GetMaxSteeringAngle();
+
+		btScalar mass;
+		if (!damage && !cfg_wheel.get("mass", mass))
+		{
+			bodyLoader.addMass(suspension[i]->GetWheelPosition(0.0), wheel[i].GetMass());
+		}
+	}
+
 	if (damage)
 	{
-		motion_state.resize(bodyLoader.numbodies + 1);
+		motion_state.resize(1 + bodyLoader.m_numbodies);
 
 		btScalar mass;
 		btVector3 massCenter;
 		btVector3 inertia;
-		bodyLoader.calculateParticleMass(massCenter, inertia, mass);
+		bodyLoader.calculateMass(massCenter, inertia, mass);
 
 		transform.setRotation(rotation);
 		transform.setOrigin(position - massCenter);
@@ -558,7 +546,7 @@ bool CARDYNAMICS::Load(
 		body = fbody;
 
 		size_t i = 1; // first motion_state is main body motion state
-		fbody->m_connections.reserve(bodyLoader.numbodies);
+		fbody->m_connections.reserve(bodyLoader.m_numbodies);
 		for (size_t j = 0; j < WHEEL_POSITION_SIZE; ++j, ++i)
 		{
 			BodyLoader::Body & cb = bodyLoader.wheels[j];
@@ -595,18 +583,9 @@ bool CARDYNAMICS::Load(
 			sh.transform.setOrigin(sh.transform.getOrigin() - massCenter);
 			fbody->addShape(sh.transform, sh.shape);
 		}
-
-		//std::cerr << "\ncreate" << std::endl;
-		//fbody->debugPrint();
 	}
 	else
 	{
-		// add wheel mass
-		for (size_t j = 0; j < WHEEL_POSITION_SIZE; ++j)
-		{
-			bodyLoader.particles.push_back(BodyLoader::Particle(suspension[j]->GetWheelPosition(0.0), wheel[j].GetMass()));
-		}
-
 		motion_state.resize(1 + WHEEL_POSITION_SIZE);
 
 		btScalar mass;
@@ -647,9 +626,10 @@ bool CARDYNAMICS::Load(
 
 	body->setActivationState(DISABLE_DEACTIVATION);
 	body->setContactProcessingThreshold(0.0); // internal edge workaround
-	linear_velocity.setValue(0, 0, 0);
-	angular_velocity.setValue(0, 0, 0);
 
+	transform = body->getCenterOfMassTransform();
+	linear_velocity = body->getLinearVelocity();
+	angular_velocity = body->getAngularVelocity();
 	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
 	{
 		suspension_force[i].setValue(0, 0, 0);
@@ -1479,7 +1459,7 @@ btVector3 CARDYNAMICS::ComputeTireFrictionForce (int i, btScalar dt, btScalar no
 	//btVector3 crosscheck = Aproj.cross(up); //find axis of rotation between Aproj and up
 	//camber_rads = (crosscheck[0] < 0) ? -camber_rads : camber_rads; //correct sign of angular distance
 	camber_rads = -camber_rads;
-	
+
 	btScalar camber = camber_rads * SIMD_DEGS_PER_RAD;
 	btScalar lonvel = direction::forward.dot(groundvel);
 	btScalar latvel = -direction::right.dot(groundvel);

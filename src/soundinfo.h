@@ -1,13 +1,25 @@
 #ifndef SOUNDINFO_H
 #define SOUNDINFO_H
 
+#include <string>
 #include <ostream>
 
 struct SOUNDINFO
 {
-	int samples, frequency, bytespersample, channels;
+	std::string name;
+	int samples;
+	int frequency;
+	int bytespersample;
+	int channels;
 
-	SOUNDINFO(int numsamples, int freq, int chan, int bytespersamp) : samples(numsamples), frequency(freq), bytespersample(bytespersamp), channels(chan) { }
+	SOUNDINFO(int numsamples, int freq, int chan, int bytespersamp) :
+		samples(numsamples),
+		frequency(freq),
+		bytespersample(bytespersamp),
+		channels(chan)
+	{
+		//ctor
+	}
 
 	void DebugPrint(std::ostream & out) const
 	{

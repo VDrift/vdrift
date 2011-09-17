@@ -14,10 +14,8 @@
 
 class BEZIER;
 class PERFORMANCE_TESTING;
-class TEXTUREMANAGER;
-class MODELMANAGER;
-class SOUNDMANAGER;
 class MODEL;
+class ContentManager;
 class PTree;
 
 class CAR
@@ -34,21 +32,18 @@ public:
 		const std::string & partspath,
 		const MATHVECTOR <float, 3> & carcolor,
 		const std::string & carpaint,
-		const std::string & texsize,
 		const int anisotropy,
 		const float camerabounce,
 		const bool damage,
 		const bool debugmode,
-		TEXTUREMANAGER & textures,
-		MODELMANAGER & models,
+		ContentManager & content,
 		std::ostream & info_output,
 		std::ostream & error_output);
 
 	bool LoadSounds(
 		const std::string & carpath,
 		const std::string & carname,
-		const SOUNDINFO & soundinfo,
-		SOUNDMANAGER & sounds,
+		ContentManager & content,
 		std::ostream & info_output,
 		std::ostream & error_output);
 
@@ -60,7 +55,7 @@ public:
 		const bool defaultabs,
 		const bool defaulttcs,
 		const bool damage,
-		MODELMANAGER & models,
+		ContentManager & content,
 		DynamicsWorld & world,
 		std::ostream & info_output,
 		std::ostream & error_output);
@@ -302,10 +297,9 @@ protected:
 	{
 		keyed_container<SCENENODE>::handle node;
 		keyed_container<DRAWABLE>::handle draw;
-		MODEL model;
 	};
 	std::list<LIGHT> lights;
-	std::list<std::tr1::shared_ptr<MODEL> > modellist;
+	std::list<std::tr1::shared_ptr<MODEL> > models;
 
 	SUSPENSIONBUMPDETECTION suspensionbumpdetection[4];
 	CRASHDETECTION crashdetection;
@@ -351,7 +345,8 @@ protected:
 
 	bool LoadLight(
 		const PTree & cfg,
-		MODELMANAGER & models,
+		ContentManager & content,
+		std::list<std::tr1::shared_ptr<MODEL> >& models,
 		std::ostream & error_output);
 };
 

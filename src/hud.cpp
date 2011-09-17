@@ -1,5 +1,5 @@
 #include "hud.h"
-#include "texturemanager.h"
+#include "contentmanager.h"
 
 keyed_container <DRAWABLE>::handle AddDrawable(SCENENODE & node)
 {
@@ -13,8 +13,7 @@ DRAWABLE & GetDrawable(SCENENODE & node, keyed_container <DRAWABLE>::handle & dr
 
 bool HUD::Init(
 	const std::string & texturepath,
-	const std::string & texsize,
-	TEXTUREMANAGER & textures,
+	ContentManager & content,
 	FONT & lcdfont,
 	FONT & sansfont,
 	float displaywidth,
@@ -28,11 +27,10 @@ bool HUD::Init(
 	texinfo.mipmap = false;
 	texinfo.repeatu = false;
 	texinfo.repeatv = false;
-	texinfo.size = texsize;
 
 	std::tr1::shared_ptr<TEXTURE> bartex, progbartex;
-	if (!textures.Load(texturepath, "hudbox.png", texinfo, bartex)) return false;
-	if (!textures.Load(texturepath, "progressbar.png", texinfo, progbartex)) return false;
+	if (!content.load(texturepath, "hudbox.png", texinfo, bartex)) return false;
+	if (!content.load(texturepath, "progressbar.png", texinfo, progbartex)) return false;
 
 	rpmbar = AddDrawable(hudroot);
 	rpmredbar = AddDrawable(hudroot);
@@ -87,9 +85,8 @@ bool HUD::Init(
 		timerboxtexinfo.mipmap = false;
 		timerboxtexinfo.repeatu = true;
 		timerboxtexinfo.repeatv = false;
-		timerboxtexinfo.size = texsize;
 		std::tr1::shared_ptr<TEXTURE> timerboxtex;
-		if (!textures.Load(texturepath, "timerbox.png", timerboxtexinfo, timerboxtex)) return false;
+		if (!content.load(texturepath, "timerbox.png", timerboxtexinfo, timerboxtex)) return false;
 
 		float totalsizex = timerboxdimx*6.05;
 		float totalsizey = timerboxdimy*2.0;

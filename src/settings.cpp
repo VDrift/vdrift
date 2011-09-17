@@ -57,7 +57,7 @@ SETTINGS::SETTINGS() :
 	ff_gain(2.0),
 	ff_invert(false),
 	trackreverse(false),
-	trackdynamic(true),
+	trackdynamic(false),
 	shadows(false),
 	shadow_distance(1),
 	shadow_quality(1),

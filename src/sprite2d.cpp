@@ -1,5 +1,5 @@
 #include "sprite2d.h"
-#include "texturemanager.h"
+#include "contentmanager.h"
 #include "textureinfo.h"
 
 void SPRITE2D::Unload(SCENENODE & parent)
@@ -20,8 +20,7 @@ bool SPRITE2D::Load(
 	SCENENODE & parent,
 	const std::string & texturepath,
 	const std::string & texturename,
-	const std::string & texturesize,
-	TEXTUREMANAGER & textures,
+	ContentManager & content,
 	float draworder,
 	std::ostream & error_output)
 {
@@ -35,9 +34,8 @@ bool SPRITE2D::Load(
 	texinfo.repeatu = false;
 	texinfo.repeatv = false;
 	texinfo.npot = false;
-	texinfo.size = texturesize;
 	std::tr1::shared_ptr<TEXTURE> texture;
-	if (!textures.Load(texturepath, texturename, texinfo, texture)) return false;
+	if (!content.load(texturepath, texturename, texinfo, texture)) return false;
 
 	node = parent.AddNode();
 	SCENENODE & noderef = parent.GetNode(node);

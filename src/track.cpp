@@ -33,15 +33,13 @@ TRACK::DATA::DATA():
 }
 
 bool TRACK::DeferredLoad(
-	TEXTUREMANAGER & textures,
-	MODELMANAGER & models,
+	ContentManager & content,
 	DynamicsWorld & world,
 	std::ostream & info_output,
 	std::ostream & error_output,
 	const std::string & trackpath,
 	const std::string & trackdir,
 	const std::string & texturedir,
-	const std::string & texsize,
 	const std::string & sharedobjectpath,
 	const int anisotropy,
 	const bool reverse,
@@ -56,11 +54,10 @@ bool TRACK::DeferredLoad(
 
 	loader.reset(
 		new LOADER(
-			textures, models, world, data,
+			content, world, data,
 			info_output, error_output,
 			trackpath, trackdir,
-			texturedir, texsize,
-			sharedobjectpath,
+			texturedir,	sharedobjectpath,
 			anisotropy, reverse,
 			dynamicobjects,
 			dynamicshadows,

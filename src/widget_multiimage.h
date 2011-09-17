@@ -26,8 +26,7 @@ public:
 
 	void SetupDrawable(
 		SCENENODE & scene,
-		TEXTUREMANAGER & textures,
-		const std::string & texturesize,
+		ContentManager & content,
 		const std::string & newprefix,
 		const std::string & newpostfix,
       	float x, float y, float w, float h,
@@ -43,7 +42,7 @@ private:
 	SPRITE2D s1;
 	float draworder;
 	bool wasvisible;
-	TEXTUREMANAGER * textures;
+	ContentManager * content;
 	std::ostream * errptr;
 };
 
