@@ -22,8 +22,8 @@ The goals of the VDrift project are:
 See also
 --------
 
-- [wiki.vdrift.net/About_the_project](http://wiki.vdrift.net/About_the_project)
-- [wiki.vdrift.net/License](http://wiki.vdrift.net/License)
+- [wiki.VDrift.net/About_the_project](http://wiki.VDrift.net/About_the_project)
+- [wiki.VDrift.net/License](http://wiki.VDrift.net/License)
 
 Hardware Requirements
 =====================
@@ -55,7 +55,7 @@ VDrift. Intel graphics cards are not supported.
 See also
 --------
 
-- [wiki.vdrift.net/Hardware_requirements](http://wiki.vdrift.net/Hardware_requirements)
+- [wiki.VDrift.net/Hardware_requirements](http://wiki.VDrift.net/Hardware_requirements)
 
 
 DEPENDENCIES
@@ -91,70 +91,89 @@ Your Linux distribution may have different package names and/or bundled
 differently. The list above should give enough information to search for
 applicable packages within your distribution's package manager.
 
-For Ubuntu, all the required packages may be installed using this command:
+Installing Dependencies on Ubuntu Linux
+---------------------------------------
 
-    sudo apt-get install g++ scons libsdl-gfx1.2-dev libsdl-image1.2-dev libsdl-net1.2-dev libvorbis-dev libglew-dev libcurl4-nss-dev libarchive-dev
+Ubuntu does not include a libbullet package, but getdeb does. To add the getdeb-repository to your sources-list.d:
+
+    wget -q -O - http://archive.getdeb.net/getdeb-archive.key | sudo apt-key add - 
+    sudo sh -c 'echo "deb http://archive.getdeb.net/ubuntu natty-getdeb games" >> /etc/apt/sources.list.d/getdeb.list'
+    sudo apt-get update
+
+Ubuntu 11.04 (Natty Narwhal) does contain libglew1.5, only. To install libglew1.6 and its development headers:
+
+    wget http://archive.ubuntu.com/ubuntu/pool/universe/g/glew/libglew1.6_1.6.0-3_amd64.deb
+    sudo dpkg -i libglew1.6_1.6.0-3_amd64.deb
+    rm libglew1.6_1.6.0-3_amd64.deb
     
+    wget http://archive.ubuntu.com/ubuntu/pool/universe/g/glew/libglew1.6-dev_1.6.0-3_amd64.deb
+    sudo dpkg -i libglew1.6-dev_1.6.0-3_amd64.deb
+    rm libglew1.6-dev_1.6.0-3_amd64.deb
+
+All other required packages can be installed using this command:
+
+    sudo apt-get install g++ libarchive-dev libarchive-dev libasio-dev libboost-dev libcurl4-gnutls-dev libsdl-gfx1.2-dev libsdl-image1.2-dev libsdl-net1.2-dev libvorbis-dev freeglut3 libbullet0 libbullet-dev scons
+
+Downloading Dependencies on Windows
+-----------------------------------
+
+Download the dependencies for Windows:
+
+- Windows: `git clone https://github.com/VDrift/VDrift-win.git`
+
+Downloading Dependencies on Mac OS
+----------------------------------
+
+Download the dependencies for Mac OS:
+
+- Mac OS: `git clone https://github.com/VDrift/VDrift-mac.git`
+
 See also
 --------
 
-- [wiki.vdrift.net/Software_requirements](http://wiki.vdrift.net/Software_requirements)
+- [wiki.VDrift.net/Software_requirements](http://wiki.VDrift.net/Software_requirements)
 
-Downloading
-===========
-
-For compiling you'll need to download the source code and your platform
-dependencies.
-
-Download VDrift
----------------
+Downloading VDrift
+==================
 
 For downloading the source code from the repository execute
 
-    git clone https://github.com/VDrift/vdrift.git
+    git clone https://github.com/VDrift/VDrift.git
 
 After this change your directory to the root of the sources
 
-    cd vdrift
-
-Download platform dependencies
-------------------------------
-
-Download the dependencies for your plattform:
-
-- Windows: `git clone https://github.com/VDrift/vdrift-win.git`
-- Mac OS: `git clone https://github.com/VDrift/vdrift-mac.git`
+    cd VDrift
 
 See also
 --------
 
-- [wiki.vdrift.net/Getting_the_latest_release](http://wiki.vdrift.net/Getting_the_latest_release)
+- [wiki.VDrift.net/Getting_the_latest_release](http://wiki.VDrift.net/Getting_the_latest_release)
 
-Compiling
-=========
+Compiling VDrift
+================
 
-To compile vdrift type `scons` command in the root directory of the sources. You
+To compile VDrift type `scons` command in the root directory of the sources. You
 can use some flags to enable options, for example `scons arch=a64 release=1`
 will compile for a 64 bits machine and turn off debug.
 
 See also
 --------
 
-- [wiki.vdrift.net/Compiling](http://wiki.vdrift.net/Compiling)
+- [wiki.VDrift.net/Compiling](http://wiki.VDrift.net/Compiling)
 
-Installing
-==========
+Installing VDrift
+=================
 
 For installing run `sudo scons install`. You can also use diverse flags in this
 step like `scons install prefix=/usr/local` for setting the prefix to install
-vdrift.
+VDrift.
 
 Run `scons -h` for seeing all the modificable flags.
 
 See also
 --------
 
-- [wiki.vdrift.net/Installing](http://wiki.vdrift.net/Installing)
+- [wiki.VDrift.net/Installing](http://wiki.VDrift.net/Installing)
 
 Everything further
 ==================
@@ -162,4 +181,4 @@ Everything further
 For configuring, running and extending the game, for playing, contributing and developing please search the
 wiki for an article on your topic:
 
-- [wiki.vdrift.net/Main_Page](http://wiki.vdrift.net/Main_Page)
+- [wiki.VDrift.net/Main_Page](http://wiki.VDrift.net/Main_Page)
