@@ -94,13 +94,15 @@ applicable packages within your distribution's package manager.
 Installing Dependencies on Ubuntu Linux
 ---------------------------------------
 
-Ubuntu does not include a libbullet package, but getdeb does. To add the getdeb-repository to your sources-list.d:
+Ubuntu does not include a libbullet package, but getdeb does. To add the
+getdeb-repository to your sources-list.d:
 
     wget -q -O - http://archive.getdeb.net/getdeb-archive.key | sudo apt-key add - 
-    sudo sh -c 'echo "deb http://archive.getdeb.net/ubuntu natty-getdeb games" >> /etc/apt/sources.list.d/getdeb.list'
+    sudo sh -c 'echo "deb http://archive.getdeb.net/ubuntu natty-getdeb games" > /etc/apt/sources.list.d/getdeb.list'
     sudo apt-get update
 
-Ubuntu 11.04 (Natty Narwhal) does contain libglew1.5, only. To install libglew1.6 and its development headers:
+Ubuntu 11.04 (Natty Narwhal) does contain libglew1.5, only. To install
+libglew1.6 and its development headers:
 
     wget http://archive.ubuntu.com/ubuntu/pool/universe/g/glew/libglew1.6_1.6.0-3_amd64.deb
     sudo dpkg -i libglew1.6_1.6.0-3_amd64.deb
@@ -112,7 +114,12 @@ Ubuntu 11.04 (Natty Narwhal) does contain libglew1.5, only. To install libglew1.
 
 All other required packages can be installed using this command:
 
-    sudo apt-get install g++ libarchive-dev libarchive-dev libasio-dev libboost-dev libcurl4-gnutls-dev libsdl-gfx1.2-dev libsdl-image1.2-dev libsdl-net1.2-dev libvorbis-dev freeglut3 libbullet0 libbullet-dev scons
+    sudo apt-get install g++ libarchive-dev libarchive-dev libasio-dev \
+                         libboost-dev libcurl4-gnutls-dev libdrm-dev \
+                         libgl1-mesa-dev libglu1-mesa-dev libkms1 \
+                         mesa-common-dev libsdl-gfx1.2-dev libsdl-image1.2-dev \
+                         libsdl-net1.2-dev libvorbis-dev freeglut3 libbullet0 \
+                         libbullet-dev scons
 
 Downloading Dependencies on Windows
 -----------------------------------
@@ -153,8 +160,8 @@ Compiling VDrift
 ================
 
 To compile VDrift type `scons` command in the root directory of the sources. You
-can use some flags to enable options, for example `scons arch=a64 release=1`
-will compile for a 64 bits machine and turn off debug.
+can use some flags to enable options, for example `scons arch=a64 release=1 extbullet=1 prefix=/usr/local/`
+will compile for a 64 bits machine, turn off debug, use the bullet you just installed and install to /opt.
 
 See also
 --------
@@ -178,7 +185,7 @@ See also
 Everything further
 ==================
 
-For configuring, running and extending the game, for playing, contributing and developing please search the
-wiki for an article on your topic:
+For configuring, running and extending the game, for playing, contributing and
+developing please search the wiki for an article on your topic:
 
 - [wiki.VDrift.net/Main_Page](http://wiki.VDrift.net/Main_Page)
