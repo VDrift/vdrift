@@ -35,34 +35,45 @@ VDrift requires a relatively fast CPU. A 2 GHz or better clock speed is
 recommended, although it should be possible to run VDrift with a 1 GHz or better
 CPU.
 
+GPU
+---
+
+VDrift requires a recent nVidia or ATI graphics card. Intel graphics cards are
+not supported.
+
+A nVidia GeForce 7-series or ATI Radeon X1000-Series card is recommended in
+order to enable all the visual effects. By reducing or disabling some of the
+display options, it should be possible to play VDrift with a nVidia GeForce 2 or
+better.
+
+HDD
+---
+
+VDrift takes up quite some harddisk space. The VDrift Data alone is about 1.6 GB
+in size and you will need to check it out, first and install it afterwards. So
+be prepared for handling some 3 - 5 GB.
+
 RAM
 ---
 
 VDrift consumes 300 MiB of memory space on a typical run. 512 MiB of
 memory may be sufficient on some operating systems. 1 GiB or more is
-recommended, and required for larger tracks.
+recommended and required for larger tracks.
 
-GPU
----
-
-VDrift requires a recent nVidia or ATI graphics card. A nVidia GeForce 7-series
-or better (or the equivalent ATI card) is recommended in order to enable all the
-visual effects. By reducing or disabling some of the display options, it should
-be possible to play VDrift with a nVidia GeForce 2 or better. Users should
-install the newest version of the device drivers for their graphics card to run
-VDrift. Intel graphics cards are not supported.
 
 See also
 --------
 
 - [wiki.VDrift.net/Hardware_requirements](http://wiki.VDrift.net/Hardware_requirements)
 
-
-DEPENDENCIES
+Dependencies
 ============
 
 Make sure you have all the required libraries and build tools. Make sure you
-also have the development files for each of the libraries.
+also have the development files for each of the libraries. Your Linux
+distribution may have different package names and/or bundled differently. The
+lists below should give enough information to search for applicable packages
+within your distribution's package manager.
 
 Build Tools
 -----------
@@ -87,9 +98,12 @@ The required libraries include:
 - libcurl - For managing data download from the net.
 - libarchive - API for managing compressed files.
 
-Your Linux distribution may have different package names and/or bundled
-differently. The list above should give enough information to search for
-applicable packages within your distribution's package manager.
+Packages
+--------
+
+VDrift needs the following packages to run:
+
+- vdrift-data - Content from the old Sourceforge repository
 
 Installing Dependencies on Ubuntu Linux
 ---------------------------------------
@@ -147,21 +161,34 @@ For downloading the source code from the repository execute
 
     git clone https://github.com/VDrift/VDrift.git
 
-After this change your directory to the root of the sources
+Downloading VDrift Data
+-----------------------
+
+VDrift Data is expected to reside in a folder called data in the root of VDrift,
+so change your directory to the root of the sources:
 
     cd VDrift
+
+Currently the VDrift Data is still hosted at Sourceforge, so to getting it
+requires checking out the repository with subversion:
+
+    svn co https://vdrift.svn.sourceforge.net/svnroot/vdrift/vdrift-data data
 
 See also
 --------
 
 - [wiki.VDrift.net/Getting_the_latest_release](http://wiki.VDrift.net/Getting_the_latest_release)
+- [wiki.VDrift.net/Getting_the_development_version](http://wiki.VDrift.net/Getting_the_development_version)
 
 Compiling VDrift
 ================
 
-To compile VDrift type `scons` command in the root directory of the sources. You
-can use some flags to enable options, for example `scons arch=a64 release=1 extbullet=1 prefix=/usr/local/`
-will compile for a 64 bits machine, turn off debug, use the bullet you just installed and install to /opt.
+To compile VDrift you only need to run `scons` in the root directory of the
+sources. You can use some flags to enable options. To compile for a 64 bits
+machine, turn off debugging, use the bullet physics engine you just installed
+and install VDrift to the default directory run:
+
+    scons arch=a64 release=1 extbullet=1 prefix=/usr/local
 
 See also
 --------
@@ -171,11 +198,11 @@ See also
 Installing VDrift
 =================
 
-For installing run `sudo scons install`. You can also use diverse flags in this
-step like `scons install prefix=/usr/local` for setting the prefix to install
-VDrift.
+To install VDrift, you need to run `sudo scons install` in the root directory of
+the sources. You can use some flags in this step, too. To set the prefix to the
+default location explicitely for example run:
 
-Run `scons -h` for seeing all the modificable flags.
+    sudo scons install prefix=/usr/local
 
 See also
 --------
