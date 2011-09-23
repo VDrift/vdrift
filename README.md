@@ -19,6 +19,13 @@ The goals of the VDrift project are:
 - to provide a platform for creative experimentation to a community of
   developers and artists.
 
+Saying more than 1000 words
+---------------------------
+
+<span style="margin:auto o">
+![](https://github.com/bigben87/vdrift/blob/master/miura_vdrift_899.jpg?raw=true)
+</span>
+
 See also
 --------
 
