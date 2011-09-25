@@ -166,7 +166,7 @@ Downloading VDrift
 
 For downloading the source code from the repository execute
 
-    git clone https://github.com/VDrift/VDrift.git
+    git clone https://github.com/VDrift/VDrift.git VDrift
 
 Downloading VDrift Data
 -----------------------
