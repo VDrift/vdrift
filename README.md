@@ -179,7 +179,7 @@ so change your directory to the root of the sources:
 Currently the VDrift Data is still hosted at Sourceforge, so to getting it
 requires checking out the repository with subversion:
 
-    svn co https://vdrift.svn.sourceforge.net/svnroot/vdrift/vdrift-data data
+    svn checkout https://vdrift.svn.sourceforge.net/svnroot/vdrift/vdrift-data data
 
 See also
 --------
