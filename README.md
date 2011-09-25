@@ -22,9 +22,7 @@ The goals of the VDrift project are:
 Saying more than 1000 words
 ---------------------------
 
-<span style="margin:auto o">
-![](https://github.com/bigben87/vdrift/blob/master/miura_vdrift_899.jpg?raw=true)
-</span>
+![](vdrift/raw/2f19c79de4fac0c326fa099dba7d9f19362552d0/miura_vdrift_899.jpg)
 
 See also
 --------
