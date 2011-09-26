@@ -26,7 +26,8 @@ class Renderer
 		/// The provided StringIdMap will be used to convert strings into unique numeric IDs.
 		/// w and h are the width and height of the application's window and will be used to initialize FBOs.
 		bool initialize(const std::vector <RealtimeExportPassInfo> & config, StringIdMap & stringMap,
-			const std::string & shaderPath, unsigned int w, unsigned int h, std::ostream & errorOutput);
+			const std::string & shaderPath, unsigned int w, unsigned int h, const std::set <std::string> & globalDefines, 
+			std::ostream & errorOutput);
 
 		/// render all passes
 		/// w and h are the width and height of the application's window
