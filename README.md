@@ -214,6 +214,19 @@ See also
 
 - [wiki.VDrift.net/Installing](http://wiki.VDrift.net/Installing)
 
+Cleaning up VDrift
+==================
+
+Building the project creates several artifacts that do not need to be stored,
+because they can be regenerated on demand. Cleaning them up can be done with
+scons, too:
+
+    scons --clean
+
+To remove all additional temporary files:
+
+    rm -rf .sconf_temp/ .sconsign.dblite config.log vdrift.conf
+
 Everything further
 ==================
 
