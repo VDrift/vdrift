@@ -27,8 +27,13 @@ Saying more than 1000 words
 See also
 --------
 
+<<<<<<< HEAD
 - [wiki.vdrift.net/About_the_project](http://wiki.vdrift.net/About_the_project)
 - [wiki.vdrift.net/License](http://wiki.vdrift.net/License)
+=======
+- [VDrift's wiki on VDrift](http://wiki.VDrift.net/About_the_project)
+- [VDrift's wiki on licensing](http://wiki.VDrift.net/License)
+>>>>>>> adapted link style to the VDrift Data readme
 
 Hardware Requirements
 =====================
@@ -43,7 +48,12 @@ CPU.
 GPU
 ---
 
+<<<<<<< HEAD
 VDrift requires a recent nVidia or ATI graphics card. Some Intel graphics cards may work with recent drivers.
+=======
+VDrift requires a recent nVidia or ATI graphics card. Intel graphics cards are
+not supported.
+>>>>>>> adapted link style to the VDrift Data readme
 
 A nVidia GeForce 7-series or ATI Radeon X1000-Series card is recommended in
 order to enable all the visual effects. By reducing or disabling some of the
@@ -68,7 +78,11 @@ recommended and required for larger tracks.
 See also
 --------
 
+<<<<<<< HEAD
 - [wiki.vdrift.net/Hardware_requirements](http://wiki.vdrift.net/Hardware_requirements)
+=======
+- [VDrift's wiki on hardware requirements](http://wiki.VDrift.net/Hardware_requirements)
+>>>>>>> adapted link style to the VDrift Data readme
 
 Dependencies
 ============
@@ -102,6 +116,7 @@ The required libraries include:
 - libcurl - For managing data download from the net.
 - libarchive - API for managing compressed files.
 
+<<<<<<< HEAD
 Packages
 --------
 
@@ -109,6 +124,8 @@ VDrift needs the following packages to run:
 
 - vdrift-data - Content from the old Sourceforge repository
 
+=======
+>>>>>>> adapted link style to the VDrift Data readme
 Installing Dependencies on Ubuntu Linux
 ---------------------------------------
 
@@ -139,17 +156,42 @@ All other required packages can be installed using this command:
                          libsdl-net1.2-dev libvorbis-dev freeglut3 libbullet0 \
                          libbullet-dev scons
 
+<<<<<<< HEAD
 See also
 --------
 
 - [wiki.vdrift.net/Software_requirements](http://wiki.vdrift.net/Software_requirements)
+=======
+Downloading Dependencies on Windows
+-----------------------------------
+
+Download the dependencies for Windows:
+
+- Windows: `git clone https://github.com/VDrift/VDrift-win.git`
+
+Downloading Dependencies on Mac OS
+----------------------------------
+
+Download the dependencies for Mac OS:
+
+- Mac OS: `git clone https://github.com/VDrift/VDrift-mac.git`
+
+See also
+--------
+
+- [VDrift's wiki on software requirements](http://wiki.VDrift.net/Software_requirements)
+>>>>>>> adapted link style to the VDrift Data readme
 
 Downloading VDrift
 ==================
 
 For downloading the source code from the repository execute
 
+<<<<<<< HEAD
     git clone https://github.com/vdrift/vdrift.git
+=======
+    git clone https://github.com/VDrift/VDrift.git VDrift
+>>>>>>> adapted link style to the VDrift Data readme
 
 Downloading VDrift Data
 -----------------------
@@ -157,13 +199,18 @@ Downloading VDrift Data
 VDrift Data is expected to reside in a folder called data in the root of VDrift,
 so change your directory to the root of the sources:
 
+<<<<<<< HEAD
     cd vdrift
+=======
+    cd VDrift
+>>>>>>> adapted link style to the VDrift Data readme
 
 Currently the VDrift Data is still hosted at Sourceforge, so to getting it
 requires checking out the repository with subversion:
 
     svn checkout https://vdrift.svn.sourceforge.net/svnroot/vdrift/vdrift-data data
 
+<<<<<<< HEAD
 Downloading Dependencies on Windows
 -----------------------------------
 
@@ -185,6 +232,12 @@ See also
 
 - [wiki.vdrift.net/Getting_the_latest_release](http://wiki.vdrift.net/Getting_the_latest_release)
 - [wiki.vdrift.net/Getting_the_development_version](http://wiki.vdrift.net/Getting_the_development_version)
+=======
+See also
+--------
+
+- [VDrift's wiki on downloading](http://wiki.VDrift.net/Getting_the_development_version)
+>>>>>>> adapted link style to the VDrift Data readme
 
 Compiling VDrift
 ================
@@ -199,7 +252,11 @@ and install VDrift to the default directory run:
 See also
 --------
 
+<<<<<<< HEAD
 - [wiki.vdrift.net/Compiling](http://wiki.vdrift.net/Compiling)
+=======
+- [VDrift's wiki on compiling](http://wiki.VDrift.net/Compiling)
+>>>>>>> adapted link style to the VDrift Data readme
 
 Installing VDrift
 =================
@@ -213,7 +270,11 @@ default location explicitely for example run:
 See also
 --------
 
+<<<<<<< HEAD
 - [wiki.vdrift.net/Installing](http://wiki.vdrift.net/Installing)
+=======
+- [VDrift's wiki on installing](http://wiki.VDrift.net/Installing)
+>>>>>>> adapted link style to the VDrift Data readme
 
 Cleaning up VDrift
 ==================
@@ -234,4 +295,8 @@ Everything further
 For configuring, running and extending the game, for playing, contributing and
 developing please search the wiki for an article on your topic:
 
+<<<<<<< HEAD
 - [wiki.vdrift.net/Main_Page](http://wiki.vdrift.net/Main_Page)
+=======
+- [VDrift's wiki front page](http://wiki.VDrift.net/Main_Page)
+>>>>>>> adapted link style to the VDrift Data readme
