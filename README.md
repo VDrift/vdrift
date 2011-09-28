@@ -85,8 +85,13 @@ Build Tools
 
 The required build tools include:
 
-- g++ - The GNU C++ compiler
-- scons - A replacement for Make
+- g++ - The GNU C++ compiler.
+- scons - A replacement for Make.
+
+    Needed on Linux, only.
+- premake - Automatically builds configuration from source code.
+
+    Needed Windows and MacOS, only.
 
 Libraries
 ---------
@@ -136,24 +141,32 @@ All other required packages can be installed using this command:
 Installing Dependencies on Windows
 ----------------------------------
 
-- Install Git for Windows (will take a little while to compile itself)
-- Install msysgit (git bash only is suffcient)
+- Install the [official Git for Windows](http://code.google.com/p/msysgit/downloads/list)
 
-Afterwards you open the Git Bash via the start menu and enter all following commands in it.
+    It will take a little while to compile Git.
+    
+- Install [msysGit](http://code.google.com/p/msysgit/downloads/list)
 
-Downloading Dependencies on Windows
------------------------------------
+    Installing *git bash only* will be sufficient.
+    
+- Install [Subversion](http://www.sliksvn.com/en/download)
 
-Download the dependencies for Windows:
+    Other packages are available, too but this one is tested.
 
-- Windows: `git clone https://github.com/VDrift/VDrift-win.git`
+    Install with the *typical* profile.
+    
+- Install [Code::Blocks](http://www.codeblocks.org/downloads/26)
 
-Downloading Dependencies on Mac OS
-----------------------------------
+    Download the one containing *mingw* in the filename.
+    
+    Install with the *MinGW Compiler Suite*.
 
-Download the dependencies for Mac OS:
+After this, all following git commands are to be entered in a Git Bash, which can be opened via the start menu.
 
-- Mac OS: `git clone https://github.com/VDrift/VDrift-mac.git`
+Installing Dependencies on Mac OS
+---------------------------------
+
+#TODO
 
 See also
 --------
@@ -165,7 +178,7 @@ Downloading VDrift
 
 For downloading the source code from the repository execute
 
-    git clone https://github.com/VDrift/VDrift.git VDrift
+    git clone https://github.com/VDrift/vdrift.git VDrift
 
 Downloading VDrift Data
 -----------------------
@@ -207,8 +220,39 @@ See also
 
 - [VDrift's wiki on downloading](http://wiki.VDrift.net/Getting_the_development_version)
 
+Injecting Libraries
+===================
+
+Windows and Mac OS do not have any packages for some libraries required at compile time.
+In order to compile VDrift these libraries need to be present in the git root of VDrift.
+
+Injecting Libraries under Linux
+-------------------------------
+
+Under Linux all needed libraries can be installed via package management, so it is not
+recommended to compile them oneself.
+
+Injecting Libraries for Windows
+-------------------------------
+
+Download libraries required to compile under Windows:
+
+    git clone https://github.com/VDrift/vdrift-win.git
+
+Injecting Libraries for Mac OS
+------------------------------
+
+Download libraries required to compile under Mac OS:
+
+    git clone https://github.com/VDrift/VDrift-mac.git
+
 Compiling VDrift
 ================
+
+#TODO
+
+Compiling VDrift under Linux
+----------------------------
 
 To compile VDrift you only need to run `scons` in the root directory of the
 sources. You can use some flags to enable options. To compile for a 64 bits
@@ -216,6 +260,16 @@ machine, turn off debugging, use the bullet physics engine you just installed
 and install VDrift to the default directory run:
 
     scons arch=a64 release=1 extbullet=1 prefix=/usr/local
+
+Compiling VDrift under Windows
+------------------------------
+
+#TODO
+
+Compiling VDrift under Mac OS
+-----------------------------
+
+#TODO
 
 See also
 --------
@@ -225,11 +279,25 @@ See also
 Installing VDrift
 =================
 
+Installing VDrift under Linux
+-----------------------------
+
 To install VDrift, you need to run `sudo scons install` in the root directory of
 the sources. You can use some flags in this step, too. To set the prefix to the
 default location explicitely for example run:
 
     sudo scons install prefix=/usr/local
+
+Installing VDrift under Windows
+-------------------------------
+
+#TODO
+
+
+Installing VDrift under Mac OS
+------------------------------
+
+#TODO
 
 See also
 --------
@@ -240,14 +308,33 @@ Cleaning up VDrift
 ==================
 
 Building the project creates several artifacts that do not need to be stored,
-because they can be regenerated on demand. Cleaning them up can be done with
-scons, too:
+because they can be regenerated on demand.
+
+Cleaning up VDrift under Linux
+------------------------------
+
+Cleaning them up can be done with scons, too:
 
     scons --clean
 
 To remove all additional temporary files:
 
     rm -rf .sconf_temp/ .sconsign.dblite config.log vdrift.conf
+
+Cleaning up VDrift under Windows
+--------------------------------
+
+#TODO
+
+Cleaning up VDrift under Mac OS
+-------------------------------
+
+#TODO
+
+See also
+--------
+
+- [VDrift's wiki on cleaning up](http://wiki.VDrift.net/Cleaning_up)
 
 Everything further
 ==================
