@@ -188,7 +188,7 @@ For downloading the source code from the repository execute
 Downloading VDrift Data
 -----------------------
 
-VDrift Data is expected to reside in a folder called data in the root of VDrift,
+VDrift Data is expected to reside in a folder called *data* in the root of VDrift,
 so change your directory to the root of the sources:
 
     cd VDrift
@@ -229,7 +229,7 @@ Injecting Libraries
 ===================
 
 Windows and Mac OS do not have any packages for some libraries required at compile time.
-In order to compile VDrift these libraries need to be present in the git root of VDrift.
+They need to be placed below the git root of VDrift.
 
 Injecting Libraries under FreeBSD
 ---------------------------------
