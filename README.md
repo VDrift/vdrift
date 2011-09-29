@@ -1,4 +1,4 @@
-VDrift - a car racing simulator for multiple platforms
+VDrift - A Car Racing Simulator for Multiple Platforms
 ======================================================
 
 VDrift is a cross-platform, open source driving simulation made with drift
@@ -19,8 +19,8 @@ The goals of the VDrift project are:
 - to provide a platform for creative experimentation to a community of
   developers and artists.
 
-Saying more than 1000 words
----------------------------
+Saying More Than a Thousand Words
+---------------------------------
 
 ![](vdrift/raw/2f19c79de4fac0c326fa099dba7d9f19362552d0/miura_vdrift_899.jpg)
 
@@ -251,8 +251,8 @@ Compiling VDrift
 
 #TODO
 
-Compiling VDrift under Linux
-----------------------------
+Compiling VDrift on Linux
+-------------------------
 
 To compile VDrift you only need to run `scons` in the root directory of the
 sources. You can use some flags to enable options. To compile for a 64 bits
@@ -261,13 +261,13 @@ and install VDrift to the default directory run:
 
     scons arch=a64 release=1 extbullet=1 prefix=/usr/local
 
-Compiling VDrift under Windows
-------------------------------
+Compiling VDrift on Windows
+---------------------------
 
 #TODO
 
-Compiling VDrift under Mac OS
------------------------------
+Compiling VDrift on Mac OS
+--------------------------
 
 #TODO
 
@@ -279,8 +279,8 @@ See also
 Installing VDrift
 =================
 
-Installing VDrift under Linux
------------------------------
+Installing VDrift on Linux
+--------------------------
 
 To install VDrift, you need to run `sudo scons install` in the root directory of
 the sources. You can use some flags in this step, too. To set the prefix to the
@@ -288,14 +288,14 @@ default location explicitely for example run:
 
     sudo scons install prefix=/usr/local
 
-Installing VDrift under Windows
--------------------------------
+Installing VDrift on Windows
+----------------------------
 
 #TODO
 
 
-Installing VDrift under Mac OS
-------------------------------
+Installing VDrift on Mac OS
+---------------------------
 
 #TODO
 
@@ -310,8 +310,8 @@ Cleaning up VDrift
 Building the project creates several artifacts that do not need to be stored,
 because they can be regenerated on demand.
 
-Cleaning up VDrift under Linux
-------------------------------
+Cleaning up VDrift on Linux
+---------------------------
 
 Cleaning them up can be done with scons, too:
 
@@ -321,13 +321,13 @@ To remove all additional temporary files:
 
     rm -rf .sconf_temp/ .sconsign.dblite config.log vdrift.conf
 
-Cleaning up VDrift under Windows
---------------------------------
+Cleaning up VDrift on Windows
+-----------------------------
 
 #TODO
 
-Cleaning up VDrift under Mac OS
--------------------------------
+Cleaning up VDrift on Mac OS
+----------------------------
 
 #TODO
 
