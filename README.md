@@ -4,8 +4,8 @@ VDrift - A Car Racing Simulator for Multiple Platforms
 VDrift is a cross-platform, open source driving simulation made with drift
 racing in mind. The driving physics engine was recently re-written from scratch
 but was inspired and owes much to the Vamos physics engine. It is released under
-the GNU General Public License (GPL) v3. It is currently available for Linux,
-FreeBSD, Mac OS X and Windows.
+the GNU General Public License (GPL) v3. It is currently available for FreeBSD,
+Linux, Mac OS X and Windows.
 
 Mission Statement
 -----------------
@@ -108,6 +108,11 @@ The required libraries include:
 - libcurl - For managing data download from the net.
 - libarchive - API for managing compressed files.
 
+Installing Dependencies on FreeBSD
+----------------------------------
+
+TODO
+
 Installing Dependencies on Ubuntu Linux
 ---------------------------------------
 
@@ -138,6 +143,11 @@ All other required packages can be installed using this command:
                          libsdl-net1.2-dev libvorbis-dev freeglut3 libbullet0 \
                          libbullet-dev scons
 
+Installing Dependencies on Mac OS
+---------------------------------
+
+TODO
+
 Installing Dependencies on Windows
 ----------------------------------
 
@@ -162,11 +172,6 @@ Installing Dependencies on Windows
     Install with the *MinGW Compiler Suite*.
 
 After this, all following git commands are to be entered in a Git Bash, which can be opened via the start menu.
-
-Installing Dependencies on Mac OS
----------------------------------
-
-#TODO
 
 See also
 --------
@@ -226,18 +231,16 @@ Injecting Libraries
 Windows and Mac OS do not have any packages for some libraries required at compile time.
 In order to compile VDrift these libraries need to be present in the git root of VDrift.
 
+Injecting Libraries under FreeBSD
+---------------------------------
+
+TODO
+
 Injecting Libraries under Linux
 -------------------------------
 
 Under Linux all needed libraries can be installed via package management, so it is not
 recommended to compile them oneself.
-
-Injecting Libraries for Windows
--------------------------------
-
-Download libraries required to compile under Windows:
-
-    git clone https://github.com/VDrift/vdrift-win.git
 
 Injecting Libraries for Mac OS
 ------------------------------
@@ -246,10 +249,22 @@ Download libraries required to compile under Mac OS:
 
     git clone https://github.com/VDrift/VDrift-mac.git
 
+Injecting Libraries for Windows
+-------------------------------
+
+Download libraries required to compile under Windows:
+
+    git clone https://github.com/VDrift/vdrift-win.git
+
 Compiling VDrift
 ================
 
-#TODO
+TODO
+
+Compiling VDrift on FreeBSD
+---------------------------
+
+TODO
 
 Compiling VDrift on Linux
 -------------------------
@@ -261,15 +276,15 @@ and install VDrift to the default directory run:
 
     scons arch=a64 release=1 extbullet=1 prefix=/usr/local
 
-Compiling VDrift on Windows
----------------------------
-
-#TODO
-
 Compiling VDrift on Mac OS
 --------------------------
 
-#TODO
+TODO
+
+Compiling VDrift on Windows
+---------------------------
+
+TODO
 
 See also
 --------
@@ -278,6 +293,11 @@ See also
 
 Installing VDrift
 =================
+
+Installing VDrift on FreeBSD
+----------------------------
+
+TODO
 
 Installing VDrift on Linux
 --------------------------
@@ -288,16 +308,15 @@ default location explicitely for example run:
 
     sudo scons install prefix=/usr/local
 
-Installing VDrift on Windows
-----------------------------
-
-#TODO
-
-
 Installing VDrift on Mac OS
 ---------------------------
 
-#TODO
+TODO
+
+Installing VDrift on Windows
+----------------------------
+
+TODO
 
 See also
 --------
@@ -310,6 +329,11 @@ Cleaning up VDrift
 Building the project creates several artifacts that do not need to be stored,
 because they can be regenerated on demand.
 
+Cleaning up VDrift on FreeBSD
+-----------------------------
+
+TODO
+
 Cleaning up VDrift on Linux
 ---------------------------
 
@@ -321,15 +345,15 @@ To remove all additional temporary files:
 
     rm -rf .sconf_temp/ .sconsign.dblite config.log vdrift.conf
 
-Cleaning up VDrift on Windows
------------------------------
-
-#TODO
-
 Cleaning up VDrift on Mac OS
 ----------------------------
 
-#TODO
+TODO
+
+Cleaning up VDrift on Windows
+-----------------------------
+
+TODO
 
 See also
 --------
