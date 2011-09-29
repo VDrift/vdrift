@@ -48,8 +48,8 @@ not supported.
 
 A nVidia GeForce 7-series or ATI Radeon X1000-Series card is recommended in
 order to enable all the visual effects. By reducing or disabling some of the
-display options, it should be possible to play VDrift with a nVidia GeForce 2 or
-better.
+display options, it should be possible to play VDrift with a nVidia GeForce 2
+or an ATI Radeon 7000.
 
 HDD
 ---
