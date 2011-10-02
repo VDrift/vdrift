@@ -4,8 +4,6 @@
 #include "unordered_map.h"
 #include <map>
 
-class StringIdMap;
-
 class StringId
 {
 	friend class StringIdMap;
