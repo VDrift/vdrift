@@ -22,8 +22,6 @@
 
 #include "unordered_map.h"
 
-class StringIdMap;
-
 class StringId
 {
 	friend class StringIdMap;

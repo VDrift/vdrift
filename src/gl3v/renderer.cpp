@@ -26,27 +26,36 @@ Renderer::Renderer(GLWrapper & glwrapper) : gl(glwrapper)
 	// Constructor.
 }
 
-bool Renderer::initialize(const std::vector <RealtimeExportPassInfo> & config, StringIdMap & stringMap, const std::string & shaderPath, unsigned int w, unsigned int h, std::ostream & errorOutput)
+template <typename T>
+static std::set <T> mergeSets(const std::set <T> & set1, const std::set <T> & set2)
+{
+	std::set <T> result = set1;
+	for (typename std::set <T>::const_iterator i = set2.begin(); i != set2.end(); i++)
+		result.insert(*i);
+	return result;
+}
+
+bool Renderer::initialize(const std::vector <RealtimeExportPassInfo> & config, StringIdMap & stringMap, const std::string & shaderPath, unsigned int w,unsigned int h, const std::set <std::string> & globalDefines, std::ostream & errorOutput)
 {
 	// Clear existing passes.
 	clear();
 
 	// Add new passes.
 	int passCount = 0;
-	for(std::vector <RealtimeExportPassInfo>::const_iterator i = config.begin(); i != config.end(); i++,passCount++)
+	for (std::vector <RealtimeExportPassInfo>::const_iterator i = config.begin(); i != config.end(); i++, passCount++)
 	{
 		// Create unique names based on the path and define list.
 		std::string vertexShaderName = i->vertexShader;
 		if(!i->vertexShaderDefines.empty())
-			vertexShaderName += " "+UTILS::implode(i->vertexShaderDefines, " ");
+			vertexShaderName += " "+UTILS::implode(i->vertexShaderDefines," ");
 		std::string fragmentShaderName = i->fragmentShader;
 		if(!i->fragmentShaderDefines.empty())
-			fragmentShaderName += " "+UTILS::implode(i->fragmentShaderDefines, " ");
+			fragmentShaderName += " "+UTILS::implode(i->fragmentShaderDefines," ");
 
 		// Load shaders from the pass if necessary.
-		if((shaders.find(vertexShaderName) == shaders.end()) && (!loadShader(shaderPath.empty() ? i->vertexShader : shaderPath+"/"+i->vertexShader, vertexShaderName, i->vertexShaderDefines, GL_VERTEX_SHADER, errorOutput)))
+		if((shaders.find(vertexShaderName) == shaders.end()) && (!loadShader(shaderPath.empty() ? i->vertexShader : shaderPath+"/"+i->vertexShader, vertexShaderName, mergeSets(i->vertexShaderDefines, globalDefines), GL_VERTEX_SHADER, errorOutput)))
 			return false;
-		if((shaders.find(fragmentShaderName) == shaders.end()) && (!loadShader(shaderPath.empty() ? i->fragmentShader : shaderPath+"/"+i->fragmentShader, fragmentShaderName, i->fragmentShaderDefines, GL_FRAGMENT_SHADER, errorOutput)))
+		if((shaders.find(fragmentShaderName) == shaders.end()) && (!loadShader(shaderPath.empty() ? i->fragmentShader : shaderPath+"/"+i->fragmentShader, fragmentShaderName, mergeSets(i->fragmentShaderDefines, globalDefines), GL_FRAGMENT_SHADER, errorOutput)))
 			return false;
 
 		// Note which draw groups the pass uses.
@@ -61,7 +70,7 @@ bool Renderer::initialize(const std::vector <RealtimeExportPassInfo> & config, S
 
 		// Put the pass's output render targets into a map so we can feed them to subsequent passes.
 		const std::map <StringId, RenderTexture> & passRTs = passes.back().getRenderTargets();
-		for(std::map <StringId, RenderTexture>::const_iterator rt = passRTs.begin(); rt != passRTs.end(); rt++)
+		for (std::map <StringId, RenderTexture>::const_iterator rt = passRTs.begin(); rt != passRTs.end(); rt++)
 		{
 			StringId nameId = rt->first;
 			sharedTextures.insert(std::make_pair(nameId, RenderTextureEntry(nameId, rt->second.handle, rt->second.target)));
@@ -72,6 +81,28 @@ bool Renderer::initialize(const std::vector <RealtimeExportPassInfo> & config, S
 	}
 
 	return true;
+}
+
+void Renderer::clear()
+{
+	// Destroy shaders.
+	for(std::map <std::string, RenderShader>::iterator i = shaders.begin(); i != shaders.end(); i++)
+		gl.DeleteShader(i->second.handle);
+	shaders.clear();
+
+	// Tell each pass to clean itself up.
+	for(std::vector <RenderPass>::iterator i = passes.begin(); i != passes.end(); i++)
+		i->clear(gl);
+
+	// Remove all passes.
+	passes.clear();
+	sharedTextures.clear();
+	passIndexMap.clear();
+
+	// Management of GL memory associated with the models is external.
+	models.clear();
+
+	drawGroupToPasses.clear();
 }
 
 void Renderer::render(unsigned int w, unsigned int h, StringIdMap & stringMap, std::ostream & errorOutput)
@@ -134,28 +165,6 @@ void Renderer::render(unsigned int w, unsigned int h, StringIdMap & stringMap, c
 				setGlobalTexture(rt->first, RenderTextureEntry(rt->first, rt->second.handle, rt->second.target));
 		}
 	}
-}
-
-void Renderer::clear()
-{
-	// Destroy shaders.
-	for(std::map <std::string, RenderShader>::iterator i = shaders.begin(); i != shaders.end(); i++)
-		gl.DeleteShader(i->second.handle);
-	shaders.clear();
-
-	// Tell each pass to clean itself up.
-	for(std::vector <RenderPass>::iterator i = passes.begin(); i != passes.end(); i++)
-		i->clear(gl);
-
-	// Remove all passes.
-	passes.clear();
-	sharedTextures.clear();
-	passIndexMap.clear();
-
-	// Management of GL memory associated with the models is external.
-	models.clear();
-
-	drawGroupToPasses.clear();
 }
 
 RenderModelHandle Renderer::addModel(const RenderModelEntry & entry)
@@ -456,7 +465,7 @@ bool Renderer::loadShader(const std::string & path, const std::string & name, co
 
 	// Insert the define block at the top of the shader, but after the "#version" line, if it exists.
 	if((shaderSource.substr(0,8) == "#version") && (shaderSource.find('\n') != std::string::npos && shaderSource.find('\n') + 1 < shaderSource.size()))
-        shaderSource.insert(shaderSource.find('\n')+1, blockstream.str());
+		shaderSource.insert(shaderSource.find('\n')+1, blockstream.str());
 	else
 		shaderSource = blockstream.str() + shaderSource;
 

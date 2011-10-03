@@ -5,6 +5,8 @@
 #include <sstream>
 #include <vector>
 #include <map>
+#include <algorithm>
+#include <cctype>
 
 #define enableContributionCull true
 
@@ -562,6 +564,11 @@ bool GRAPHICS_GL3V::GetUsingShaders() const
 	return true;
 }
 
+int upper(int c)
+{
+  return std::toupper((unsigned char)c);
+}
+
 bool GRAPHICS_GL3V::ReloadShaders(const std::string & shaderpath, std::ostream & info_output, std::ostream & error_output)
 {
 	// reinitialize the entire renderer
@@ -585,8 +592,16 @@ bool GRAPHICS_GL3V::ReloadShaders(const std::string & shaderpath, std::ostream &
 				}
 			}
 		}
+		
+		std::set <std::string> allcapsConditions;
+		for (std::set <std::string>::const_iterator i = conditions.begin(); i != conditions.end(); i++)
+		{
+			std::string s = *i;
+			std::transform(s.begin(), s.end(), s.begin(), upper);
+			allcapsConditions.insert(s);
+		}
 
-		bool initSuccess = renderer.initialize(passInfos, stringMap, shaderpath+"/gl3", w, h, error_output);
+		bool initSuccess = renderer.initialize(passInfos, stringMap, shaderpath+"/gl3", w, h, allcapsConditions, error_output);
 		if (initSuccess)
 		{
 			// assign cameras to each pass
