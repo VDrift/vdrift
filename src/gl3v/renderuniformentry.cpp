@@ -17,34 +17,35 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _DOWNLOADABLE_H
-#define _DOWNLOADABLE_H
+#include "renderuniformentry.h"
+#include "stringidmap.h"
 
-#include <string>
-#include <map>
-#include <vector>
-
-/// A dictionary of downloadable assets.
-class DOWNLOADABLEMANAGER
+RenderUniformBase::RenderUniformBase()
 {
-public:
-	/// Initialize using the provided filename as the record-keeping method.
-	/// The file doesn't need to exist, but if it does, it will be parsed to get local_version info.
-	void Initialize(const std::string & newfilename);
+	// Constructor.
+}
 
-	/// Given a map of available downloadables and their remote version, return a list of downloadable names that we want to download.
-	std::vector <std::string> GetUpdatables(const std::map <std::string, int> & remote_downloadables) const;
+RenderUniformBase::RenderUniformBase(const float * newData, int dataSize) : data(newData, dataSize)
+{
+	// Constructor.
+}
 
-	/// Inform us that we have just installed a new downloadable.
-	void SetDownloadable(const std::string & name, int new_version);
+RenderUniformBase::RenderUniformBase(const std::vector <float> & newdata) : data(newdata)
+{
+	// Constructor.
+}
 
-private:
-	std::string filename;
-    /// Mapping between downloadable name and local version.
-	std::map <std::string, int> downloadables;
+RenderUniformBase::RenderUniformBase(const RenderUniformVector <float> & newdata) : data(newdata)
+{
+	// Constructor.
+}
 
-	void Load();
-	void Save() const;
-};
+RenderUniformEntry::RenderUniformEntry()
+{
+	// Constructor.
+}
 
-#endif
+RenderUniformEntry::RenderUniformEntry(StringId newName, const float * newData, int dataSize) : RenderUniformBase(newData, dataSize), name(newName)
+{
+	// Constructor.
+}

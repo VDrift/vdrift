@@ -1,3 +1,22 @@
+/************************************************************************/
+/*                                                                      */
+/* This file is part of VDrift.                                         */
+/*                                                                      */
+/* VDrift is free software: you can redistribute it and/or modify       */
+/* it under the terms of the GNU General Public License as published by */
+/* the Free Software Foundation, either version 3 of the License, or    */
+/* (at your option) any later version.                                  */
+/*                                                                      */
+/* VDrift is distributed in the hope that it will be useful,            */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of       */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the        */
+/* GNU General Public License for more details.                         */
+/*                                                                      */
+/* You should have received a copy of the GNU General Public License    */
+/* along with VDrift.  If not, see <http://www.gnu.org/licenses/>.      */
+/*                                                                      */
+/************************************************************************/
+
 #ifndef _MODEL_H
 #define _MODEL_H
 
@@ -5,15 +24,8 @@
 #include "vertexarray.h"
 #include "mathvector.h"
 #include "aabb.h"
-#include "joeserialize.h"
-#include "macros.h"
 
-#include <string>
-#include <iostream>
-#include <cassert>
-#include <vector>
-
-///loading data into the mesh vertexarray is implemented by derived classes
+/// Loading data into the mesh vertexarray is implemented by derived classes.
 class MODEL
 {
 friend class joeserialize::Serializer;
@@ -24,19 +36,17 @@ public:
 
 	virtual ~MODEL();
 
-	virtual bool CanSave() const {return false;}  ///< returns true if the model format is capable of saving to a file
+	/// Returns true if the model format is capable of saving to a file.
+	virtual bool CanSave() const;
 
-	virtual bool Save(const std::string & strFileName, std::ostream & error_output) const {return false;} ///< optional capability
+	/// Optional capability.
+	virtual bool Save(const std::string & strFileName, std::ostream & error_output) const;
 
-	virtual bool Load(const std::string & strFileName, std::ostream & error_output, bool genlist) {return false;}
+	virtual bool Load(const std::string & strFileName, std::ostream & error_output, bool genlist);
 
 	bool Load(const VERTEXARRAY & varray, std::ostream & error_output, bool genlist);
 
-	bool Serialize(joeserialize::Serializer & s)
-	{
-		_SERIALIZE_(s,mesh);
-		return true;
-	}
+	bool Serialize(joeserialize::Serializer & s);
 
 	bool WriteToFile(const std::string & filepath);
 
@@ -45,41 +55,40 @@ public:
 	void GenerateListID(std::ostream & error_output);
 
 	void GenerateVertexArrayObject(std::ostream & error_output);
-	bool HaveVertexArrayObject() const {return generatedvao;}
+	bool HaveVertexArrayObject() const;
 	void ClearVertexArrayObject();
 
-	/// returns true if we have a vertex array object and stores the VAO handle and element count in the provided
-	/// arguments; returns false if we have no vertex array object
+	/// Returns true if we have a vertex array object and stores the VAO handle and element count in the provided arguments.
+	/// Returns false if we have no vertex array object.
 	bool GetVertexArrayObject(GLuint & vao_out, unsigned int & elementCount_out) const;
 
 	void GenerateMeshMetrics();
 
-	void ClearMeshData() {mesh.Clear();}
+	void ClearMeshData();
 
-	int GetListID() const {RequireListID(); return listid;}
+	int GetListID() const;
 
-	//"metrics"
-	float GetRadius() const {RequireMetrics();return radius + 0.5f;}
+	float GetRadius() const;
 
-	float GetRadiusXZ() const {RequireMetrics();return radiusxz;}
+	float GetRadiusXZ() const;
 
-	MATHVECTOR <float, 3> GetCenter() {return (bboxmax + bboxmin) * 0.5;}
+	MATHVECTOR <float, 3> GetCenter();
 
-	bool HaveMeshData() const {return (mesh.GetNumFaces() > 0);}
+	bool HaveMeshData() const;
 
-	bool HaveMeshMetrics() const {return generatedmetrics;}
+	bool HaveMeshMetrics() const;
 
-	bool HaveListID() const {return generatedlistid;}
+	bool HaveListID() const;
 
-	void Clear() {ClearMeshData();ClearListID();ClearVertexArrayObject();ClearMetrics();}
+	void Clear();
 
-	const VERTEXARRAY & GetVertexArray() const {return mesh;}
+	const VERTEXARRAY & GetVertexArray() const;
 
 	void SetVertexArray(const VERTEXARRAY & newmesh);
 
-	void BuildFromVertexArray(const VERTEXARRAY & newmesh, std::ostream & error_output);
+	void BuildFromVertexArray(const VERTEXARRAY & newmesh);
 
-	bool Loaded() {return (mesh.GetNumFaces() > 0);}
+	bool Loaded();
 
 	void Translate(float x, float y, float z);
 
@@ -87,15 +96,10 @@ public:
 
 	void Scale(float x, float y, float z);
 
-	AABB <float> GetAABB() const
-	{
-		AABB <float> output;
-		output.SetFromCorners(bboxmin, bboxmax);
-		return output;
-	}
+	AABB <float> GetAABB() const;
 
 protected:
-	///to be filled by the derived classes
+	/// To be filled by the derived classes.
 	VERTEXARRAY mesh;
 
 private:
@@ -103,35 +107,26 @@ private:
 	bool generatedmetrics;
 	int listid;
 
-	bool generatedvao; // vao means vertex array object
+	bool generatedvao;
+	/// VAO means vertex array object.
 	GLuint vao;
 	std::vector <GLuint> vbos;
 	GLuint elementVbo;
 	unsigned int elementCount;
 
-	//metrics
+	// Metrics.
 	float radius;
 	float radiusxz;
 	MATHVECTOR <float, 3> bboxmin;
 	MATHVECTOR <float, 3> bboxmax;
 
-	void RequireMetrics() const
-	{
-		//Mesh metrics need to be generated before they can be queried
-		assert(generatedmetrics);
-	}
+	void RequireMetrics() const;
 
-	void RequireListID() const
-	{
-		//Mesh id needs to be generated
-		assert(generatedlistid);
-	}
+	void RequireListID() const;
 
 	void ClearListID();
 
-	void ClearMetrics() {generatedmetrics = false;}
+	void ClearMetrics();
 };
 
 #endif
-
-

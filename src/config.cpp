@@ -153,7 +153,7 @@ bool CONFIG::ProcessLine(CONFIG::iterator & section, std::string & linestr)
 				return false;
 			}
 		}
-		else if(linestr.find("include ") == 0)
+		else if (linestr.find("include ") == 0)
 		{
 			//configfile include
 			std::string dir;

@@ -61,7 +61,7 @@ float RateLimit(float old_value, float new_value, float rate_limit_pos, float ra
 
 const std::vector <float> & AI::GetInputs(CAR * car) const
 {
-	for( std::vector<AI_Car>::const_iterator it = AI_Cars.begin (); it != AI_Cars.end (); it++ )
+	for ( std::vector<AI_Car>::const_iterator it = AI_Cars.begin (); it != AI_Cars.end (); it++ )
 		if (car == it->car)
 			return it->inputs;
 	return empty_vector;
@@ -81,7 +81,7 @@ void AI::update(float dt, const std::list <CAR> & othercars)
 {
 	updatePlan(); //TODO: THIS CALLS EMPTY FUNCTION. ANYONE CHECK IF THIS FUNCTION IS NEEDED.
 
-	for(std::vector<AI_Car>::iterator it = AI_Cars.begin (); it != AI_Cars.end (); it++ )
+	for (std::vector<AI_Car>::iterator it = AI_Cars.begin (); it != AI_Cars.end (); it++ )
 	{
 		analyzeOthers(&(*it), dt, othercars);
 		updateGasBrake(&(*it));
@@ -936,7 +936,7 @@ void AI::Visualize()
 #ifdef VISUALIZE_AI_DEBUG
 	/*if (!AI_Cars.empty())
 		Visualize(&AI_Cars.back(), topnode);*/
-	for( std::vector<AI_Car>::iterator it = AI_Cars.begin (); it != AI_Cars.end (); it++ )
+	for ( std::vector<AI_Car>::iterator it = AI_Cars.begin (); it != AI_Cars.end (); it++ )
 	{
 		Visualize(&(*it));
 	}

@@ -44,7 +44,7 @@ void CARSUSPENSION::SetSteering(const btScalar & value)
 {
 	btScalar alpha = -value * info.max_steering_angle * M_PI / 180.0;
 	steering_angle = 0.0;
-	if(alpha != 0.0)
+	if (alpha != 0.0)
 	{
 		steering_angle = atan(1.0 / (1.0 / tan(alpha) - tan(info.ackermann * M_PI / 180.0)));
 	}
@@ -327,7 +327,7 @@ static void LoadPoints(const PTree & cfg, const std::string & name, LINEARINTERP
 	std::stringstream s;
 	s << std::setw(1) << i;
 	std::vector<btScalar> point(2);
-	while(cfg.get(name+s.str(), point) && i < 10)
+	while (cfg.get(name+s.str(), point) && i < 10)
 	{
 		s.clear();
 		s << std::setw(1) << ++i;

@@ -17,34 +17,24 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _DOWNLOADABLE_H
-#define _DOWNLOADABLE_H
+#include "rendertextureentry.h"
 
-#include <string>
-#include <map>
-#include <vector>
-
-/// A dictionary of downloadable assets.
-class DOWNLOADABLEMANAGER
+RenderTextureBase::RenderTextureBase()
 {
-public:
-	/// Initialize using the provided filename as the record-keeping method.
-	/// The file doesn't need to exist, but if it does, it will be parsed to get local_version info.
-	void Initialize(const std::string & newfilename);
+	// Constructor.
+}
 
-	/// Given a map of available downloadables and their remote version, return a list of downloadable names that we want to download.
-	std::vector <std::string> GetUpdatables(const std::map <std::string, int> & remote_downloadables) const;
+RenderTextureBase::RenderTextureBase(GLuint newhandle, GLenum newtarget) : handle(newhandle), target(newtarget)
+{
+	// Constructor.
+}
 
-	/// Inform us that we have just installed a new downloadable.
-	void SetDownloadable(const std::string & name, int new_version);
+RenderTextureEntry::RenderTextureEntry()
+{
+	// Constructor.
+}
 
-private:
-	std::string filename;
-    /// Mapping between downloadable name and local version.
-	std::map <std::string, int> downloadables;
-
-	void Load();
-	void Save() const;
-};
-
-#endif
+RenderTextureEntry::RenderTextureEntry(StringId newname, GLuint newhandle, GLenum newtarget) : RenderTextureBase(newhandle,newtarget), name(newname)
+{
+	// Constructor.
+}

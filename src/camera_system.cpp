@@ -3,7 +3,7 @@
 
 CAMERA_SYSTEM::~CAMERA_SYSTEM()
 {
-	for(unsigned int i = 0; i < camera.size(); i++)
+	for (unsigned int i = 0; i < camera.size(); i++)
 	{
 		if (camera[i]) delete camera[i];
 	}

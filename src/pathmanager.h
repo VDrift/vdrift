@@ -1,3 +1,22 @@
+/************************************************************************/
+/*                                                                      */
+/* This file is part of VDrift.                                         */
+/*                                                                      */
+/* VDrift is free software: you can redistribute it and/or modify       */
+/* it under the terms of the GNU General Public License as published by */
+/* the Free Software Foundation, either version 3 of the License, or    */
+/* (at your option) any later version.                                  */
+/*                                                                      */
+/* VDrift is distributed in the hope that it will be useful,            */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of       */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the        */
+/* GNU General Public License for more details.                         */
+/*                                                                      */
+/* You should have received a copy of the GNU General Public License    */
+/* along with VDrift.  If not, see <http://www.gnu.org/licenses/>.      */
+/*                                                                      */
+/************************************************************************/
+
 #ifndef _PATHMANAGER_H
 #define _PATHMANAGER_H
 
@@ -7,60 +26,59 @@
 class PATHMANAGER
 {
 public:
-	std::string GetDataPath() const {return data_directory;}
-	std::string GetWriteableDataPath() const {return settings_path;}
-	std::string GetCarPartsPath() const {return GetDataPath()+"/carparts";}
-	std::string GetTrackPartsPath() const {return GetDataPath()+"/trackparts";}
-	std::string GetStartupFile() const {return settings_path+"/startingup.txt";}
-	std::string GetTrackRecordsPath() const {return settings_path+"/records"+profile_suffix;}
-	std::string GetSettingsFile() const {return settings_path+"/VDrift.config"+profile_suffix;}
-	std::string GetLogFile() const {return settings_path+"/log.txt";}
-	std::string GetTracksPath() const {return GetDataPath()+"/"+GetTracksDir();}
-	std::string GetCarPath(const std::string & carname) const;
-	std::string GetCarPaintPath(const std::string & carname) const {return GetCarPath(carname)+"/skins";}
-	std::string GetGUIMenuPath(const std::string & skinname) const {return GetDataPath()+"/skins/"+skinname+"/menus";}
-	std::string GetSkinPath() const {return GetDataPath()+"/skins/";}
-	std::string GetOptionsFile() const {return GetDataPath() + "/settings/options.config";}
-	std::string GetVideoModeFile() const {return GetDataPath() + "/lists/videomodes";}
-	std::string GetCarControlsFile() const {return settings_path+"/controls.config"+profile_suffix;}
-	std::string GetDefaultCarControlsFile() const {return GetDataPath()+"/settings/controls.config";}
-	std::string GetReplayPath() const {return settings_path+"/replays";}
-	std::string GetScreenshotPath() const {return settings_path+"/screenshots";}
-	std::string GetStaticReflectionMap() const {return GetDataPath()+"/textures/weather/cubereflection-nosun.png";}
-	std::string GetStaticAmbientMap() const {return GetDataPath()+"/textures/weather/cubelighting.png";}
-	std::string GetShaderPath() const {return GetDataPath() + "/shaders";}
-	std::string GetUpdateManagerFile() const {return settings_path+"/updates.config"+profile_suffix;}
-	std::string GetUpdateManagerFileBackup() const {return settings_path+"/updates.config.backup"+profile_suffix;}
-	std::string GetUpdateManagerFileBase() const {return GetDataPath() + "/settings/updates.config";}
+	void Init(std::ostream & info_output, std::ostream & error_output);
 
-	std::string GetTracksDir() const {return "tracks";}
-	std::string GetCarsDir() const {return "cars";}
-	std::string GetCarPartsDir() const {return "carparts";}
-	std::string GetGUITextureDir(const std::string & skinname) const {return "skins/"+skinname+"/textures";}
-	std::string GetGUILanguageDir(const std::string & skinname) const {return "skins/"+skinname+"/languages";}
-	std::string GetFontDir(const std::string & skinname) const {return "/skins/"+skinname+"/fonts";}
-	std::string GetGenericSoundDir() const {return "sounds";}
-	std::string GetHUDTextureDir() const {return "textures/hud";}
-	std::string GetEffectsTextureDir() const {return "textures/effects";}
-	std::string GetTireSmokeTextureDir() const {return "textures/smoke";}
-	
-	std::string GetReadOnlyCarsPath() const {return GetDataPath()+"/"+GetCarsDir();}
-	std::string GetWriteableCarsPath() const {return GetWriteableDataPath()+"/"+GetCarsDir();}
-
-	std::string GetTemporaryFolder() const {return temporary_folder;}
-
-	bool FileExists(const std::string & filename) const;
-
-	///<optionally filter for the given extension
-	bool GetFileList(std::string folderpath, std::list <std::string> & outputfolderlist, std::string extension="") const;
-
-	///<only call this before Init()
+	/// Only call this before Init().
 	void SetProfile(const std::string & value);
 
-	void Init(std::ostream & info_output, std::ostream & error_output);
-	
+	/// Optionally filter for the given extension.
+	bool GetFileList(std::string folderpath, std::list <std::string> & outputfolderlist, std::string extension="") const;
+
+	bool FileExists(const std::string & filename) const;
 	static void MakeDir(const std::string & dir);
 	static void DeleteFile1(const std::string & path);
+
+	std::string GetDataPath() const;
+	std::string GetWriteableDataPath() const;
+	std::string GetCarPartsPath() const;
+	std::string GetTrackPartsPath() const;
+	std::string GetStartupFile() const;
+	std::string GetTrackRecordsPath() const;
+	std::string GetSettingsFile() const;
+	std::string GetLogFile() const;
+	std::string GetTracksPath() const;
+	std::string GetCarPath(const std::string & carname) const;
+	std::string GetCarPaintPath(const std::string & carname) const;
+	std::string GetGUIMenuPath(const std::string & skinname) const;
+	std::string GetSkinPath() const;
+	std::string GetOptionsFile() const;
+	std::string GetVideoModeFile() const;
+	std::string GetCarControlsFile() const;
+	std::string GetDefaultCarControlsFile() const;
+	std::string GetReplayPath() const;
+	std::string GetScreenshotPath() const;
+	std::string GetStaticReflectionMap() const;
+	std::string GetStaticAmbientMap() const;
+	std::string GetShaderPath() const;
+	std::string GetUpdateManagerFile() const;
+	std::string GetUpdateManagerFileBackup() const;
+	std::string GetUpdateManagerFileBase() const;
+
+	std::string GetTracksDir() const;
+	std::string GetCarsDir() const;
+	std::string GetCarPartsDir() const;
+	std::string GetGUITextureDir(const std::string & skinname) const;
+	std::string GetGUILanguageDir(const std::string & skinname) const;
+	std::string GetFontDir(const std::string & skinname) const;
+	std::string GetGenericSoundDir() const;
+	std::string GetHUDTextureDir() const;
+	std::string GetEffectsTextureDir() const;
+	std::string GetTireSmokeTextureDir() const;
+
+	std::string GetReadOnlyCarsPath() const;
+	std::string GetWriteableCarsPath() const;
+
+	std::string GetTemporaryFolder() const;
 
 private:
 	std::string home_directory;

@@ -33,10 +33,10 @@ public:
 		hy_pos = 0.8;
 		hball_scale = 4.0;
 
-		if(!hslider.Load(graphroot, texturepath, "slider2.png", content, 1, error_output))
+		if (!hslider.Load(graphroot, texturepath, "slider2.png", content, 1, error_output))
 			return false;
 		hslider.SetToBillboard(hx_pos, hy_pos, hwidth, hheight);
-		if(!hball.Load(graphroot, texturepath, "ball2.png", content, 2, error_output))
+		if (!hball.Load(graphroot, texturepath, "ball2.png", content, 2, error_output))
 			return false;
 		hball.SetToBillboard(hx_pos+hwidth/2-hwidth/(2.0*hball_scale), hy_pos+hheight/2-hheight/(2*hball_scale), hwidth/hball_scale, hheight/hball_scale);
 
@@ -44,10 +44,10 @@ public:
 		vheight = hheight/2;
 		vx_pos = 0.35-vwidth/2;
 		vy_pos = 0.87;
-		if(!vslider.Load(graphroot, texturepath, "accdec-slider.png", content, 1, error_output))
+		if (!vslider.Load(graphroot, texturepath, "accdec-slider.png", content, 1, error_output))
 			return false;
 		vslider.SetToBillboard(vx_pos, vy_pos, vwidth, vheight);
-		if(!vball.Load(graphroot, texturepath, "accdec-marker.png", content, 2, error_output))
+		if (!vball.Load(graphroot, texturepath, "accdec-marker.png", content, 2, error_output))
 			return false;
 		vball.SetToBillboard(vx_pos, vy_pos, vwidth, vheight);
 		return true;

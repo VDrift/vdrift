@@ -130,7 +130,7 @@ public:
 	template <class T> void forEachRecursive(T & functor) const
 	{
 		functor(*this);
-		for(const_iterator i = begin(); i != end(); ++i)
+		for (const_iterator i = begin(); i != end(); ++i)
 		{
 			i->second.forEachRecursive(functor);
 		}

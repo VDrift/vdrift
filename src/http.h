@@ -1,15 +1,34 @@
+/************************************************************************/
+/*                                                                      */
+/* This file is part of VDrift.                                         */
+/*                                                                      */
+/* VDrift is free software: you can redistribute it and/or modify       */
+/* it under the terms of the GNU General Public License as published by */
+/* the Free Software Foundation, either version 3 of the License, or    */
+/* (at your option) any later version.                                  */
+/*                                                                      */
+/* VDrift is distributed in the hope that it will be useful,            */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of       */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the        */
+/* GNU General Public License for more details.                         */
+/*                                                                      */
+/* You should have received a copy of the GNU General Public License    */
+/* along with VDrift.  If not, see <http://www.gnu.org/licenses/>.      */
+/*                                                                      */
+/************************************************************************/
+
 #ifndef _HTTP_H
 #define _HTTP_H
 
-#include <string>
-#include <set>
-#include <map>
-
 #include <curl/curl.h>
 #include <curl/easy.h>
+#include <string>
+#include <map>
 
 struct HTTPINFO
 {
+    HTTPINFO();
+
 	enum STATE
 	{
 		CONNECTING,
@@ -17,34 +36,33 @@ struct HTTPINFO
 		COMPLETE,
 		FAILED
 	} state;
-	std::string error; ///< if empty, no error
-	double totalsize; ///< bytes
-	double downloaded; ///< bytes
-	double speed; ///< bytes/second
 
-	/// convert a state enum to a string
+	std::string error; ///< If empty, no error.
+	double totalsize; ///< Total file size in bytes.
+	double downloaded; ///< Downloaded part in bytes.
+	double speed; ///< Downalod speed in bytes per second.
+
+	/// Convert a state enum to a string.
 	static const char * GetString(STATE state);
 
-	/// pretty-printing functions
+	/// Pretty-printing functions.
 	static std::string FormatSize(double bytes);
 	static std::string FormatSpeed(double bytesPerSecond);
 
-	bool operator!= (const HTTPINFO & other) const;
-	bool operator== (const HTTPINFO & other) const;
+	bool operator != (const HTTPINFO & other) const;
+	bool operator == (const HTTPINFO & other) const;
 
 	void print(std::ostream & s);
-
-	HTTPINFO() : state(CONNECTING), totalsize(1),downloaded(0),speed(0) {}
 };
 
-/// for internal use only....
+/// For internal use only.
 class HTTP;
 struct PROGRESSINFO
 {
+    PROGRESSINFO();
+	PROGRESSINFO(HTTP * newhttp, CURL * newhandle);
 	HTTP * http;
 	CURL * easyhandle;
-	PROGRESSINFO() : http(NULL), easyhandle(NULL) {}
-	PROGRESSINFO(HTTP * newhttp, CURL * newhandle) : http(newhttp), easyhandle(newhandle) {}
 };
 
 /// This class manages one or many HTTP requests.
@@ -54,27 +72,22 @@ public:
 	HTTP(const std::string & temporary_folder);
 	~HTTP();
 
-	void SetTemporaryFolder(const std::string & temporary_folder)
-	{
-		folder = temporary_folder;
-	}
+    /// Change temporary folder.
+	void SetTemporaryFolder(const std::string & temporary_folder);
 
-	/// returns true if the request succeeded, although note that this
-	/// doesn't actually do any I/O operations until you call Tick()
+	/// Returns true if the request succeeded, although note that this doesn't actually do any I/O operations until you call Tick().
 	bool Request(const std::string & url, std::ostream & error_output);
 
-	/// perform any I/O operations associated with any requests
-	/// returns true if transfers are ongoing
+	/// Perform any I/O operations associated with any requests.
+	/// Returns true if transfers are ongoing.
 	bool Tick();
 
-	/// returns true if any requests are currently downloading
-	bool Downloading() const {return downloading;}
+	/// Returns true if any requests are currently downloading.
+	bool Downloading() const;
 
-	/// gets info about a request for a url.
-	/// returns true if the url is for a known request.
-	/// if the request is complete, then this function will
-	/// remove the request from the info map, and further calls
-	/// to this function with the same url will return false
+	/// Gets info about a request for a url.
+	/// Returns true if the url is for a known request.
+	/// If the request is complete, then this function will remove the request from the info map and further calls to this function with the same url will return false
 	bool GetRequestInfo(const std::string & url, HTTPINFO & out);
 
 	void CancelAllRequests();
@@ -96,8 +109,8 @@ private:
 		PROGRESSINFO progress_callback_data;
 		REQUEST(const std::string & newurl, FILE * newfile) : url(newurl), file(newfile) {}
 	};
-	std::map <CURL*, REQUEST> easyhandles; ///< maps active curl easy handles to request info
-	std::map <std::string, HTTPINFO> requests; ///< info about requests
+	std::map <CURL*, REQUEST> easyhandles; ///< Maps active curl easy handles to request info.
+	std::map <std::string, HTTPINFO> requests; ///< Info about requests.
 };
 
 #endif

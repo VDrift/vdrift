@@ -81,11 +81,10 @@ bool TEXTURE::LoadCubeVerticalCross(const std::string & path, const TEXTUREINFO 
 
 	glBindTexture(GL_TEXTURE_CUBE_MAP, new_handle);
 
-	SDL_Surface * texture_surface = NULL;
-
-	if ((texture_surface = IMG_Load(cubefile.c_str())))
+	SDL_Surface * texture_surface = IMG_Load(cubefile.c_str());
+	if (texture_surface)
 	{
-		for (int i = 0; i < 6; i++)
+		for (int i = 0; i < 6; ++i)
 		{
 			w = texture_surface->w/3;
 			h = texture_surface->h/4;
@@ -261,11 +260,10 @@ bool TEXTURE::LoadCube(const std::string & path, const TEXTUREINFO & info, std::
 
 	glBindTexture(GL_TEXTURE_CUBE_MAP, new_handle);
 
-	for (unsigned int i = 0; i < 6; i++)
+	for (unsigned int i = 0; i < 6; ++i)
 	{
-		SDL_Surface * texture_surface = NULL;
-
-		if ((texture_surface = IMG_Load(cubefiles[i].c_str())))
+		SDL_Surface * texture_surface = IMG_Load(cubefiles[i].c_str());
+		if (texture_surface)
 		{
 			//store dimensions
 			if (i != 0 && (w != (unsigned int) texture_surface->w || h != (unsigned int) texture_surface->h))

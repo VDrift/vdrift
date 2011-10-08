@@ -120,9 +120,9 @@ template <class T>
 inline void ContentManager::Cache<T>::sweep()
 {
 	typename Cache::iterator it = this->begin();
-	while(it != this->end())
+	while (it != this->end())
 	{
-		if(it->second.unique())
+		if (it->second.unique())
 		{
 			this->erase(it++);
 		}

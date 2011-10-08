@@ -1,6 +1,6 @@
 #include "renderstate.h"
-
 #include "glenums.h"
+#include <cassert>
 
 void RenderState::apply(GLWrapper & gl) const
 {

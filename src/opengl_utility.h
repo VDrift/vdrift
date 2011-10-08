@@ -1,9 +1,6 @@
 #ifndef _OPENGL_UTILITY_H
 #define _OPENGL_UTILITY_H
 
-#include <string>
-#include <iostream>
-
 #ifdef __APPLE__
 #include <GLEW/glew.h>
 #include <OpenGL/gl.h>
@@ -11,6 +8,9 @@
 #include <GL/glew.h>
 #include <GL/gl.h>
 #endif
+
+#include <string>
+#include <iostream>
 
 namespace OPENGL_UTILITY
 {

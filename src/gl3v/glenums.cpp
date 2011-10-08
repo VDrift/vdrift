@@ -17,34 +17,37 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _DOWNLOADABLE_H
-#define _DOWNLOADABLE_H
+#include "glew.h"
+#include "glenums.h"
+#include <iostream>
+#include <cassert>
 
-#include <string>
-#include <map>
-#include <vector>
-
-/// A dictionary of downloadable assets.
-class DOWNLOADABLEMANAGER
+GLEnums::GLEnums()
 {
-public:
-	/// Initialize using the provided filename as the record-keeping method.
-	/// The file doesn't need to exist, but if it does, it will be parsed to get local_version info.
-	void Initialize(const std::string & newfilename);
+	#define X(x) {enumToStr[x]=#x;strToEnum[#x]=x;}
+	#include "glenums.def"
+	#undef X
+}
 
-	/// Given a map of available downloadables and their remote version, return a list of downloadable names that we want to download.
-	std::vector <std::string> GetUpdatables(const std::map <std::string, int> & remote_downloadables) const;
+GLenum GLEnums::getEnum(const std::string & value) const
+{
+	std::tr1::unordered_map <std::string, GLenum>::const_iterator i = strToEnum.find(value);
+	if (i == strToEnum.end())
+	{
+		std::cerr << "Unknown GLenum string: " << value << std::endl;
+		assert(0);
+	}
+	return i->second;
+}
 
-	/// Inform us that we have just installed a new downloadable.
-	void SetDownloadable(const std::string & name, int new_version);
+const std::string & GLEnums::getEnum(GLenum value) const
+{
+	std::tr1::unordered_map <GLenum, std::string>::const_iterator i = enumToStr.find(value);
+	if (i == enumToStr.end())
+	{
+		std::cerr << "Unknown GLenum value: " << (int)value << std::endl;
+		assert(0);
+	}
+	return i->second;
+}
 
-private:
-	std::string filename;
-    /// Mapping between downloadable name and local version.
-	std::map <std::string, int> downloadables;
-
-	void Load();
-	void Save() const;
-};
-
-#endif

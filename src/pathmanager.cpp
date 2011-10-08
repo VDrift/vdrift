@@ -1,13 +1,22 @@
-#include "pathmanager.h"
-#include "definitions.h"
+/************************************************************************/
+/*                                                                      */
+/* This file is part of VDrift.                                         */
+/*                                                                      */
+/* VDrift is free software: you can redistribute it and/or modify       */
+/* it under the terms of the GNU General Public License as published by */
+/* the Free Software Foundation, either version 3 of the License, or    */
+/* (at your option) any later version.                                  */
+/*                                                                      */
+/* VDrift is distributed in the hope that it will be useful,            */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of       */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the        */
+/* GNU General Public License for more details.                         */
+/*                                                                      */
+/* You should have received a copy of the GNU General Public License    */
+/* along with VDrift.  If not, see <http://www.gnu.org/licenses/>.      */
+/*                                                                      */
+/************************************************************************/
 
-#include <string>
-#include <iostream>
-#include <fstream>
-#include <cassert>
-#include <cstdlib> //getenv
-
-//includes for listing folder contents
 #ifdef _WIN32
 #include <windows.h>
 #include <tchar.h>
@@ -18,77 +27,58 @@
 #include <sys/stat.h>
 #include <errno.h>
 #endif
-
-void PATHMANAGER::MakeDir(const std::string & dir)
-{
-#ifndef _WIN32
-	mkdir(dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
-#else
-	mkdir(dir.c_str());
-#endif
-}
-
-void PATHMANAGER::DeleteFile1(const std::string & path)
-{
-	remove(path.c_str());
-}
+#include <string>
+#include <iostream>
+#include <fstream>
+#include <cassert>
+#include <cstdlib>
+#include "pathmanager.h"
+#include "definitions.h"
 
 void PATHMANAGER::Init(std::ostream & info_output, std::ostream & error_output)
 {
-	//figure out the user's home directory
+	// Figure out the user's home directory.
 	const char* homedir;
-	#ifndef _WIN32
-	homedir = getenv ( "HOME" );
-	if ( homedir == NULL )
+#ifndef _WIN32
+	if ((homedir = getenv("HOME")) == NULL)
 	{
-		homedir = getenv ( "USER" );
-		if ( homedir == NULL )
-		{
-			homedir = getenv ( "USERNAME" );
-			if ( homedir == NULL )
-			{
+		if ((homedir = getenv("USER")) == NULL)
+			if ((homedir = getenv("USERNAME")) == NULL)
 				error_output << "Could not find user's home directory!" << std::endl;
-			}
-		}
 		home_directory = "/home/";
 	}
-	#else
-	homedir = getenv ( "USERPROFILE" );
-	if (homedir == NULL)
-	{
-		homedir = "data"; // WIN 9x/Me
-	}
-	#endif
+#else
+	if ((homedir = getenv("USERPROFILE")) == NULL)
+		homedir = "data";	// WIN 9x/Me
+#endif
 	home_directory += homedir;
 
-	//find data dir
-	const char * datadir = getenv ( "VDRIFT_DATA_DIRECTORY" );
-	if (datadir == NULL) {
-		#ifndef _WIN32
-		if (FileExists("data/settings/options.config")) {
+	// Find data dir.
+	const char * datadir = getenv("VDRIFT_DATA_DIRECTORY");
+	if (datadir == NULL)
+#ifndef _WIN32
+		if (FileExists("data/settings/options.config"))
 			data_directory = "data";
-		} else {
+        else
 			data_directory = DATA_DIR;
-		}
-		#else
+#else
 		data_directory = "data";
-		#endif
-	} else {
+#endif
+        else
 		data_directory = std::string(datadir);
-	}
 
-	//find settings file
+	// Find settings file.
 	settings_path = home_directory;
-	#ifdef _WIN32
+#ifdef _WIN32
 	MakeDir(settings_path+"\\My Documents");
 	MakeDir(settings_path+"\\My Documents\\My Games");
 	settings_path += "\\My Documents\\My Games\\VDrift";
 	MakeDir(settings_path);
-	#else
+#else
 	settings_path += "/";
 	settings_path += SETTINGS_DIR;
 	MakeDir(settings_path);
-	#endif
+#endif
 
 	temporary_folder = settings_path+"/tmp";
 
@@ -97,7 +87,7 @@ void PATHMANAGER::Init(std::ostream & info_output, std::ostream & error_output)
 	MakeDir(GetScreenshotPath());
 	MakeDir(GetTemporaryFolder());
 
-	//print diagnostic info
+	// Print diagnostic info.
 	info_output << "Home directory: " << home_directory << std::endl;
 	bool settings_file_present = FileExists(GetSettingsFile());
 	info_output << "Settings file: " << GetSettingsFile();
@@ -115,68 +105,63 @@ void PATHMANAGER::Init(std::ostream & info_output, std::ostream & error_output)
 	info_output << "Log file: " << GetLogFile() << std::endl;
 }
 
+void PATHMANAGER::SetProfile(const std::string & value)
+{
+	// Assert that Init() hasn't been called yet.
+	assert(data_directory.empty());
+	profile_suffix = "."+value;
+}
+
 bool PATHMANAGER::GetFileList(std::string folderpath, std::list <std::string> & outputfolderlist, std::string extension) const
 {
-//------Folder listing code for POSIX
+	// Folder listing code for POSIX.
 #ifndef _WIN32
 	DIR *dp;
 	struct dirent *ep;
-	dp = opendir (folderpath.c_str());
+	dp = opendir(folderpath.c_str());
 	if (dp != NULL)
 	{
-		while ( ( ep = readdir( dp ) ) )
+		while ((ep = readdir(dp)))
 		{
 			std::string newname = ep->d_name;
 			if (newname[0] != '.')
-			{
 				outputfolderlist.push_back(newname);
-			}
 		}
-		(void) closedir (dp);
+		closedir(dp);
 	}
 	else
-	{
 		return false;
-	}
-#else 	//------End POSIX-specific folder listing code ---- Start WIN32 Specific code
+	// End POSIX-specific folder listing code. Start WIN32 Specific code.
+#else
 	HANDLE          hList;
 	TCHAR           szDir[MAX_PATH+1];
 	WIN32_FIND_DATA FileData;
 
-	// Get the proper directory path
-	sprintf(szDir, "%s\\*", folderpath.c_str ());
+	// Get the proper directory path.
+	sprintf(szDir, "%s\\*", folderpath.c_str());
 
-	// Get the first file
+	// Get the first file.
 	hList = FindFirstFile(szDir, &FileData);
 	if (hList != INVALID_HANDLE_VALUE)
-	{
-		// Traverse through the directory structure
+		// Traverse through the directory structure.
 		while (FindNextFile(hList, &FileData))
-		{
-			if (!(FileData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) &&
-				(FileData.cFileName[0] != '.'))
-			{
-				outputfolderlist.push_back (FileData.cFileName);
-			}
-		}
-	}
+			if (!(FileData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) && (FileData.cFileName[0] != '.'))
+				outputfolderlist.push_back(FileData.cFileName);
 
 	FindClose(hList);
-#endif //------End WIN32 specific folder listing code
+	// End WIN32 specific folder listing code.
+#endif
 
-	//remove non-matcthing extensions
+	// Remove non-matcthing extensions.
 	if (!extension.empty())
 	{
 		std::list <std::list <std::string>::iterator> todel;
 		for (std::list <std::string>::iterator i = outputfolderlist.begin(); i != outputfolderlist.end(); ++i)
-		{
-			if (i->find(extension) != i->length()-extension.length()) todel.push_back(i);
-		}
+			if (i->find(extension) != i->length()-extension.length())
+                todel.push_back(i);
 
 		for (std::list <std::list <std::string>::iterator>::iterator i = todel.begin(); i != todel.end(); ++i)
-		{
 			outputfolderlist.erase(*i);
-		}
 	}
 
 	outputfolderlist.sort();
@@ -196,18 +181,210 @@ bool PATHMANAGER::FileExists(const std::string & filename) const
 		return false;
 }
 
-///only call this before Init()
-void PATHMANAGER::SetProfile(const std::string & value)
+void PATHMANAGER::MakeDir(const std::string & dir)
 {
-	assert(data_directory.empty()); //assert that Init() hasn't been called yet
-	profile_suffix = "."+value;
+#ifndef _WIN32
+	mkdir(dir.c_str(), S_IRWXU | S_IRWXG | S_IROTH | S_IXOTH);
+#else
+	mkdir(dir.c_str());
+#endif
+}
+
+void PATHMANAGER::DeleteFile1(const std::string & path)
+{
+	remove(path.c_str());
+}
+
+std::string PATHMANAGER::GetDataPath() const
+{
+	return data_directory;
+}
+
+std::string PATHMANAGER::GetWriteableDataPath() const
+{
+	return settings_path;
+}
+
+std::string PATHMANAGER::GetCarPartsPath() const
+{
+	return GetDataPath()+"/"+GetCarPartsDir();
+}
+
+std::string PATHMANAGER::GetTrackPartsPath() const
+{
+	return GetDataPath()+"/trackparts";
+}
+
+std::string PATHMANAGER::GetStartupFile() const
+{
+	return settings_path+"/startingup.txt";
+}
+
+std::string PATHMANAGER::GetTrackRecordsPath() const
+{
+	return settings_path+"/records"+profile_suffix;
+}
+
+std::string PATHMANAGER::GetSettingsFile() const
+{
+	return settings_path+"/VDrift.config"+profile_suffix;
+}
+
+std::string PATHMANAGER::GetLogFile() const
+{
+	return settings_path+"/log.txt";
+}
+
+std::string PATHMANAGER::GetTracksPath() const
+{
+	return GetDataPath()+"/"+GetTracksDir();
 }
 
 std::string PATHMANAGER::GetCarPath(const std::string & carname) const
 {
-	// check writeable car path first (check for presence of .car files)
+	// Check writeable car path first (check for presence of .car files).
 	if (FileExists(GetWriteableDataPath() + "/" + GetCarsDir() + "/" + carname + "/" + carname + ".car"))
 		return GetWriteableDataPath() + "/" + GetCarsDir() + "/" + carname;
 	else
 		return GetDataPath()+"/"+GetCarsDir()+"/"+carname;
+}
+
+std::string PATHMANAGER::GetCarPaintPath(const std::string & carname) const
+{
+	return GetCarPath(carname)+"/skins";
+}
+
+std::string PATHMANAGER::GetGUIMenuPath(const std::string & skinname) const
+{
+	return GetDataPath()+"/skins/"+skinname+"/menus";
+}
+
+std::string PATHMANAGER::GetSkinPath() const
+{
+	return GetDataPath()+"/skins/";
+}
+
+std::string PATHMANAGER::GetOptionsFile() const
+{
+	return GetDataPath() + "/settings/options.config";
+}
+
+std::string PATHMANAGER::GetVideoModeFile() const
+{
+	return GetDataPath() + "/lists/videomodes";
+}
+
+std::string PATHMANAGER::GetCarControlsFile() const
+{
+	return settings_path+"/controls.config"+profile_suffix;
+}
+
+std::string PATHMANAGER::GetDefaultCarControlsFile() const
+{
+	return GetDataPath()+"/settings/controls.config";
+}
+
+std::string PATHMANAGER::GetReplayPath() const
+{
+	return settings_path+"/replays";
+}
+
+std::string PATHMANAGER::GetScreenshotPath() const
+{
+	return settings_path+"/screenshots";
+}
+
+std::string PATHMANAGER::GetStaticReflectionMap() const
+{
+	return GetDataPath()+"/textures/weather/cubereflection-nosun.png";
+}
+
+std::string PATHMANAGER::GetStaticAmbientMap() const
+{
+	return GetDataPath()+"/textures/weather/cubelighting.png";
+}
+
+std::string PATHMANAGER::GetShaderPath() const
+{
+	return GetDataPath() + "/shaders";
+}
+
+std::string PATHMANAGER::GetUpdateManagerFile() const
+{
+	return settings_path+"/updates.config"+profile_suffix;
+}
+
+std::string PATHMANAGER::GetUpdateManagerFileBackup() const
+{
+	return settings_path+"/updates.config.backup"+profile_suffix;
+}
+
+std::string PATHMANAGER::GetUpdateManagerFileBase() const
+{
+	return GetDataPath() + "/settings/updates.config";
+}
+
+std::string PATHMANAGER::GetTracksDir() const
+{
+	return "tracks";
+}
+
+std::string PATHMANAGER::GetCarsDir() const
+{
+	return "cars";
+}
+
+std::string PATHMANAGER::GetCarPartsDir() const
+{
+    return "carparts";
+}
+
+std::string PATHMANAGER::GetGUITextureDir(const std::string & skinname) const
+{
+	return "skins/"+skinname+"/textures";
+}
+
+std::string PATHMANAGER::GetGUILanguageDir(const std::string & skinname) const
+{
+	return "skins/"+skinname+"/languages";
+}
+
+std::string PATHMANAGER::GetFontDir(const std::string & skinname) const
+{
+	return "/skins/"+skinname+"/fonts";
+}
+
+std::string PATHMANAGER::GetGenericSoundDir() const
+{
+	return "sounds";
+}
+
+std::string PATHMANAGER::GetHUDTextureDir() const
+{
+	return "textures/hud";
+}
+
+std::string PATHMANAGER::GetEffectsTextureDir() const
+{
+	return "textures/effects";
+}
+
+std::string PATHMANAGER::GetTireSmokeTextureDir() const
+{
+	return "textures/smoke";
+}
+
+std::string PATHMANAGER::GetReadOnlyCarsPath() const
+{
+	return GetDataPath()+"/"+GetCarsDir();
+}
+
+std::string PATHMANAGER::GetWriteableCarsPath() const
+{
+	return GetWriteableDataPath()+"/"+GetCarsDir();
+}
+
+std::string PATHMANAGER::GetTemporaryFolder() const
+{
+	return temporary_folder;
 }

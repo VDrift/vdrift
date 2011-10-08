@@ -1,54 +1,43 @@
+/************************************************************************/
+/*                                                                      */
+/* This file is part of VDrift.                                         */
+/*                                                                      */
+/* VDrift is free software: you can redistribute it and/or modify       */
+/* it under the terms of the GNU General Public License as published by */
+/* the Free Software Foundation, either version 3 of the License, or    */
+/* (at your option) any later version.                                  */
+/*                                                                      */
+/* VDrift is distributed in the hope that it will be useful,            */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of       */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the        */
+/* GNU General Public License for more details.                         */
+/*                                                                      */
+/* You should have received a copy of the GNU General Public License    */
+/* along with VDrift.  If not, see <http://www.gnu.org/licenses/>.      */
+/*                                                                      */
+/************************************************************************/
+
 #ifndef _GLENUMS_H
 #define _GLENUMS_H
 
 #include "unordered_map.h"
-
-#ifdef __APPLE__
-#include <GLEW/glew.h>
-#include <OpenGL/gl.h>
-#else
-#include <GL/glew.h>
-#include <GL/gl.h>
-#endif
-
 #include <string>
-#include <cassert>
 
+/// Base interface for OpenGL enumerations.
 class GLEnums
 {
-	public:
-		GLEnums()
-		{
-			#define X(x) {enumToStr[x]=#x;strToEnum[#x]=x;}
-			#include "glenums.def"
-			#undef X
-		}
+public:
+	GLEnums();
 
-		GLenum getEnum(const std::string & value) const
-		{
-			std::tr1::unordered_map <std::string, GLenum>::const_iterator i = strToEnum.find(value);
-			if (i == strToEnum.end())
-			{
-				std::cerr << "Unknown GLenum string: " << value << std::endl;
-				assert(0);
-			}
-			return i->second;
-		}
+	/// Get OpenGL enumeration based on the string.
+	GLenum getEnum(const std::string & value) const;
 
-		const std::string & getEnum(GLenum value) const
-		{
-			std::tr1::unordered_map <GLenum, std::string>::const_iterator i = enumToStr.find(value);
-			if (i == enumToStr.end())
-			{
-				std::cerr << "Unknown GLenum value: " << (int)value << std::endl;
-				assert(0);
-			}
-			return i->second;
-		}
+	/// Get the string based on an OpenGL enumeration.
+	const std::string & getEnum(GLenum value) const;
 
-	private:
-		std::tr1::unordered_map <std::string, GLenum> strToEnum;
-		std::tr1::unordered_map <GLenum, std::string> enumToStr;
+private:
+	std::tr1::unordered_map <std::string, GLenum> strToEnum;
+	std::tr1::unordered_map <GLenum, std::string> enumToStr;
 };
 
 #undef ADD_GL_ENUM

@@ -12,24 +12,14 @@
 #include <fstream>
 #include <sstream>
 
-TRACK::TRACK() :
-	racingline_visible(false)
+TRACK::TRACK() : racingline_visible(false)
 {
-	// ctor
+	// Constructor.
 }
 
 TRACK::~TRACK()
 {
 	Clear();
-}
-
-TRACK::DATA::DATA():
-	world(0),
-	vertical_tracking_skyboxes(false),
-	loaded(false),
-	cull(true)
-{
-	// ctor
 }
 
 bool TRACK::DeferredLoad(
@@ -84,46 +74,29 @@ int TRACK::ObjectsNumLoaded() const
 	return loader->GetNumLoaded();
 }
 
+bool TRACK::Loaded() const
+{
+    return data.loaded;
+}
+
 void TRACK::Clear()
 {
-	for(int i = 0, n = data.objects.size(); i < n; ++i)
+	for (int i = 0, n = data.objects.size(); i < n; ++i)
 	{
 		data.world->removeCollisionObject(data.objects[i]);
 		delete data.objects[i];
 	}
 	data.objects.clear();
-
-	/*
-	int wnum = data.world->getCollisionObjectArray().size();
-	std::cerr << "world collision objects leaking: " << wnum << std::endl;
-	for (int i = 0; i < wnum; ++i)
+    
+	for (int i = 0, n = data.shapes.size(); i < n; ++i)
 	{
-		btCollisionObject * ob = data.world->getCollisionObjectArray()[i];
-		std::cerr << "collision object leaking: " << ob << std::endl;
-		data.world->removeCollisionObject(ob);
-	}
-	*/
-
-	for(int i = 0, n = data.shapes.size(); i < n; ++i)
-	{
-		btCollisionShape * shape = data.shapes[i];/*
-		if (shape->isCompound())
-		{
-			btCompoundShape * cs = (btCompoundShape *)shape;
-			for (int i = 0, n = cs->getNumChildShapes(); i < n; ++i)
-			{
-				btCollisionShape * childShape = cs->getChildShape(i);
-				delete childShape;
-			}
-		}*/
+		btCollisionShape * shape = data.shapes[i];
 		delete shape;
 	}
 	data.shapes.clear();
-
-	for(int i = 0, n = data.meshes.size(); i < n; ++i)
-	{
+    
+	for (int i = 0, n = data.meshes.size(); i < n; ++i)
 		delete data.meshes[i];
-	}
 	data.meshes.clear();
 
 	data.static_node.Clear();
@@ -139,14 +112,7 @@ void TRACK::Clear()
 	data.loaded = false;
 }
 
-bool TRACK::CastRay(
-	const MATHVECTOR <float, 3> & origin,
-	const MATHVECTOR <float, 3> & direction,
-	const float seglen,
-	int & patch_id,
-	MATHVECTOR <float, 3> & outtri,
-	const BEZIER * & colpatch,
-	MATHVECTOR <float, 3> & normal) const
+bool TRACK::CastRay(const MATHVECTOR <float, 3> & origin, const MATHVECTOR <float, 3> & direction, const float seglen, int & patch_id, MATHVECTOR <float, 3> & outtri, const BEZIER * & colpatch, MATHVECTOR <float, 3> & normal) const
 {
 	bool col = false;
 	for (std::list <ROADSTRIP>::const_iterator i = data.roads.begin(); i != data.roads.end(); ++i)
@@ -168,6 +134,56 @@ bool TRACK::CastRay(
 
 	return col;
 }
+
+void TRACK::Update()
+{
+	if (!data.loaded) return;
+    
+	std::list<MotionState>::const_iterator t = data.body_transforms.begin();
+	for (int i = 0, e = data.body_nodes.size(); i < e; ++i, ++t)
+	{
+		TRANSFORM & vt = data.dynamic_node.GetNode(data.body_nodes[i]).GetTransform();
+		vt.SetRotation(ToMathQuaternion<float>(t->rotation));
+		vt.SetTranslation(ToMathVector<float>(t->position));
+	}
+}
+
+std::pair <MATHVECTOR <float, 3>, QUATERNION <float> > TRACK::GetStart(unsigned int index) const
+{
+	assert(!data.start_positions.empty());
+	unsigned int laststart = data.start_positions.size()-1;
+	if (index > laststart)
+	{
+		std::pair <MATHVECTOR <float, 3>, QUATERNION <float> > sp = data.start_positions[laststart];
+		MATHVECTOR <float, 3> backward(6,0,0);
+		backward = backward * (index-laststart);
+		sp.second.RotateVector(backward);
+		sp.first = sp.first + backward;
+		return sp;
+	}
+	return data.start_positions[index];
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+TRACK::DATA::DATA(): world(0), vertical_tracking_skyboxes(false), loaded(false), cull(true)
+{
+	// Constructor.
+}
+
+
+
+
 
 optional <const BEZIER *> ROADSTRIP::FindBezierAtOffset(const BEZIER * bezier, int offset) const
 {
@@ -221,31 +237,4 @@ optional <const BEZIER *> ROADSTRIP::FindBezierAtOffset(const BEZIER * bezier, i
 	}
 }
 
-std::pair <MATHVECTOR <float, 3>, QUATERNION <float> > TRACK::GetStart(unsigned int index) const
-{
-	assert(!data.start_positions.empty());
-	unsigned int laststart = data.start_positions.size()-1;
-	if (index > laststart)
-	{
-		std::pair <MATHVECTOR <float, 3>, QUATERNION <float> > sp = data.start_positions[laststart];
-		MATHVECTOR <float, 3> backward(6,0,0);
-		backward = backward * (index-laststart);
-		sp.second.RotateVector(backward);
-		sp.first = sp.first + backward;
-		return sp;
-	}
-	return data.start_positions[index];
-}
 
-void TRACK::Update()
-{
-	if (!data.loaded) return;
-
-	std::list<MotionState>::const_iterator t = data.body_transforms.begin();
-	for (int i = 0, e = data.body_nodes.size(); i < e; ++i, ++t)
-	{
-		TRANSFORM & vt = data.dynamic_node.GetNode(data.body_nodes[i]).GetTransform();
-		vt.SetRotation(ToMathQuaternion<float>(t->rotation));
-		vt.SetTranslation(ToMathVector<float>(t->position));
-	}
-}

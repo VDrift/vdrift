@@ -17,34 +17,68 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _DOWNLOADABLE_H
-#define _DOWNLOADABLE_H
+#include "stringidmap.h"
 
-#include <string>
-#include <map>
-#include <vector>
-
-/// A dictionary of downloadable assets.
-class DOWNLOADABLEMANAGER
+StringId::StringId() : id(0)
 {
-public:
-	/// Initialize using the provided filename as the record-keeping method.
-	/// The file doesn't need to exist, but if it does, it will be parsed to get local_version info.
-	void Initialize(const std::string & newfilename);
+	// Constructor.
+}
 
-	/// Given a map of available downloadables and their remote version, return a list of downloadable names that we want to download.
-	std::vector <std::string> GetUpdatables(const std::map <std::string, int> & remote_downloadables) const;
+bool StringId::valid() const
+{
+	return id > 0;
+}
 
-	/// Inform us that we have just installed a new downloadable.
-	void SetDownloadable(const std::string & name, int new_version);
+bool StringId::operator== (const StringId other) const
+{
+	return id == other.id;
+}
 
-private:
-	std::string filename;
-    /// Mapping between downloadable name and local version.
-	std::map <std::string, int> downloadables;
+bool StringId::operator< (const StringId other) const
+{
+	return id < other.id;
+}
 
-	void Load();
-	void Save() const;
-};
+bool StringIdMap::valid(StringId id)
+{
+	return id.valid();
+}
 
-#endif
+StringId StringIdMap::addStringId(const std::string & str)
+{
+	std::tr1::unordered_map <std::string, StringId>::iterator i = idmap.find(str);
+	if (i != idmap.end())
+		return i->second;
+	else
+	{
+		StringId newId = makeStringId(idmap.size()+1);
+		idmap.insert(std::make_pair(str,newId));
+		stringmap.insert(std::make_pair(newId,str));
+		return newId;
+	}
+}
+
+StringId StringIdMap::getStringId(const std::string & str) const
+{
+	std::tr1::unordered_map <std::string, StringId>::const_iterator i = idmap.find(str);
+	if (i != idmap.end())
+		return i->second;
+	else
+		return StringId();
+}
+
+std::string StringIdMap::getString(StringId id) const
+{
+	std::tr1::unordered_map <StringId, std::string, StringId::hash>::const_iterator i = stringmap.find(id);
+	if (i != stringmap.end())
+		return i->second;
+	else
+		return "";
+}
+
+StringId StringIdMap::makeStringId(unsigned int id) const
+{
+	StringId newId;
+	newId.id = id;
+	return newId;
+}

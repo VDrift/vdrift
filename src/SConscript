@@ -29,6 +29,7 @@ src = Split("""aabb.cpp
 		camera_system.cpp
 		car.cpp
 		carcontrolmap_local.cpp
+		cardifferential.cpp
 		cardynamics.cpp
 		carengine.cpp
 		carsuspension.cpp
@@ -115,7 +116,7 @@ src = Split("""aabb.cpp
 		widget_doublestringwheel.cpp
 		widget_image.cpp
 		widget_label.cpp
-		widget_multiimage.cpp		
+		widget_multiimage.cpp
 		widget_slider.cpp
 		widget_spinningcar.cpp
 		widget_stringwheel.cpp
@@ -123,14 +124,21 @@ src = Split("""aabb.cpp
 		window.cpp
 		cfg/inf.cpp
 		cfg/ini.cpp
-		cfg/xml.cpp
 		cfg/ptree.cpp
+		cfg/xml.cpp
+		gl3v/glenums.cpp
 		gl3v/glwrapper.cpp
 		gl3v/renderdimensions.cpp
 		gl3v/renderer.cpp
+		gl3v/rendermodel.cpp
+		gl3v/rendermodelext.cpp
 		gl3v/renderpass.cpp
 		gl3v/rendersampler.cpp
-		gl3v/renderstate.cpp""")
+		gl3v/renderstate.cpp
+		gl3v/rendertextureentry.cpp
+		gl3v/renderuniform.cpp
+		gl3v/renderuniformentry.cpp
+		gl3v/stringidmap.cpp""")
 
 src.sort(lambda x, y: cmp(x.lower(),y.lower()))
 

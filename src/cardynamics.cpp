@@ -333,7 +333,7 @@ struct BodyLoader
 				wheels.push_back(Body(transform, shape, inertia, mass, strength, limit));
 				m_numbodies++;
 			}
-			else if(shape && mass > 0)
+			else if (shape && mass > 0)
 			{
 				shape->calculateLocalInertia(mass, inertia);
 				bodies.push_back(Body(transform, shape, inertia, mass, strength, limit));
@@ -827,7 +827,7 @@ void CARDYNAMICS::SetClutch(btScalar value)
 
 void CARDYNAMICS::SetBrake(btScalar value)
 {
-	for(int i = 0; i < brake.size(); ++i)
+	for (int i = 0; i < brake.size(); ++i)
 	{
 		brake[i].SetBrakeFactor(value);
 	}
@@ -835,7 +835,7 @@ void CARDYNAMICS::SetBrake(btScalar value)
 
 void CARDYNAMICS::SetHandBrake(btScalar value)
 {
-	for(int i = 0; i < brake.size(); ++i)
+	for (int i = 0; i < brake.size(); ++i)
 	{
 		brake[i].SetHandbrakeFactor(value);
 	}
@@ -951,7 +951,7 @@ void CARDYNAMICS::RolloverRecover()
 
 void CARDYNAMICS::SetSteering(const btScalar value)
 {
-	for(int i = 0; i < WHEEL_POSITION_SIZE; ++i)
+	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
 	{
 		suspension[i]->SetSteering(value);
 	}
@@ -1225,7 +1225,7 @@ btQuaternion CARDYNAMICS::LocalToWorld(const btQuaternion & local) const
 
 void CARDYNAMICS::UpdateWheelVelocity()
 {
-	for(int i = 0; i < WHEEL_POSITION_SIZE; ++i)
+	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
 	{
 		btVector3 offset = wheel_position[i] - body->getCenterOfMassPosition();
 		wheel_velocity[i] = body->getVelocityInLocalPoint(offset);
@@ -1234,7 +1234,7 @@ void CARDYNAMICS::UpdateWheelVelocity()
 
 void CARDYNAMICS::UpdateWheelTransform()
 {
-	for(int i = 0; i < WHEEL_POSITION_SIZE; ++i)
+	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
 	{
 		wheel_position[i] = LocalToWorld(suspension[i]->GetWheelPosition());
 		wheel_orientation[i] = LocalToWorld(suspension[i]->GetWheelOrientation());
@@ -1254,7 +1254,7 @@ void CARDYNAMICS::ApplyAerodynamicsToBody ( btVector3 & force, btVector3 & torqu
 	btVector3 wind_force(0, 0, 0);
 	btVector3 wind_torque(0, 0, 0);
 	btVector3 air_velocity = inv * -GetVelocity();
-	for(int i = 0; i < aerodynamics.size(); ++i)
+	for (int i = 0; i < aerodynamics.size(); ++i)
 	{
 		btVector3 force = aerodynamics[i].GetForce(air_velocity);
 		wind_force = wind_force + force;
@@ -1687,7 +1687,7 @@ void CARDYNAMICS::UpdateDriveline(btScalar drive_torque[], btScalar dt)
 	btScalar clutch_speed = transmission.CalculateClutchSpeed(driveshaft_speed);
 	btScalar crankshaft_speed = engine.GetAngularVelocity();
 	btScalar clutch_drag = clutch.GetTorque(crankshaft_speed, clutch_speed);
-	if(transmission.GetGear() == 0) clutch_drag = 0;
+	if (transmission.GetGear() == 0) clutch_drag = 0;
 
 	clutch_drag = engine.Integrate(clutch_drag, clutch_speed, dt);
 
@@ -1844,9 +1844,9 @@ btScalar CARDYNAMICS::ShiftAutoClutch() const
 
 btScalar CARDYNAMICS::ShiftAutoClutchThrottle(btScalar throttle, btScalar dt)
 {
-	if(remaining_shift_time > 0.0)
+	if (remaining_shift_time > 0.0)
 	{
-		if(engine.GetRPM() < driveshaft_rpm && engine.GetRPM() < engine.GetRedline())
+		if (engine.GetRPM() < driveshaft_rpm && engine.GetRPM() < engine.GetRedline())
 		{
 			remaining_shift_time += dt;
 			return 1.0;
@@ -1875,7 +1875,7 @@ int CARDYNAMICS::NextGear() const
 		}
 		// shift down when driveshaft speed below shift_down_point
 		// we do not auto shift down from 1st gear to neutral
-		if(driveshaft_rpm < DownshiftRPM(gear) && gear > 1)
+		if (driveshaft_rpm < DownshiftRPM(gear) && gear > 1)
 		{
 			return gear - 1;
 		}
