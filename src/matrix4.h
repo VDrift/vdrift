@@ -1,12 +1,12 @@
 #ifndef _MATRIX4_H
 #define _MATRIX4_H
 
+#include "mathvector.h"
+
 #include <iostream>
 #include <cstring>
 #include <cmath>
 #include <cassert>
-
-#include "mathvector.h"
 
 template <typename T>
 class MATRIX4

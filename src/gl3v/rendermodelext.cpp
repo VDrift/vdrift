@@ -17,34 +17,48 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _DOWNLOADABLE_H
-#define _DOWNLOADABLE_H
+#include "rendermodelext.h"
 
-#include <string>
-#include <map>
-#include <vector>
-
-/// A dictionary of downloadable assets.
-class DOWNLOADABLEMANAGER
+RenderModelExternal::RenderModelExternal() : vao(0), elementCount(0), enabled(false)
 {
-public:
-	/// Initialize using the provided filename as the record-keeping method.
-	/// The file doesn't need to exist, but if it does, it will be parsed to get local_version info.
-	void Initialize(const std::string & newfilename);
+	// Constructor.
+}
 
-	/// Given a map of available downloadables and their remote version, return a list of downloadable names that we want to download.
-	std::vector <std::string> GetUpdatables(const std::map <std::string, int> & remote_downloadables) const;
+RenderModelExternal::RenderModelExternal(const RenderModelEntry & m) : vao(m.vao), elementCount(m.elementCount)
+{
+	if (elementCount > 0)
+		enabled = true;
+}
 
-	/// Inform us that we have just installed a new downloadable.
-	void SetDownloadable(const std::string & name, int new_version);
+RenderModelExternal::~RenderModelExternal()
+{
+	// Destructor.
+}
 
-private:
-	std::string filename;
-    /// Mapping between downloadable name and local version.
-	std::map <std::string, int> downloadables;
+void RenderModelExternal::draw(GLWrapper & gl) const
+{
+	gl.drawGeometry(vao, elementCount);
+}
 
-	void Load();
-	void Save() const;
-};
+bool RenderModelExternal::drawEnabled() const
+{
+	return enabled;
+}
 
-#endif
+void RenderModelExternal::setVertexArrayObject(GLuint newVao, unsigned int newElementCount)
+{
+	vao = newVao;
+	elementCount = newElementCount;
+	if (elementCount > 0)
+		enabled = true;
+}
+
+void RenderModelExternal::clearTextureCache()
+{
+	perPassTextureCache.clear();
+}
+
+void RenderModelExternal::clearUniformCache()
+{
+	perPassUniformCache.clear();
+}

@@ -1,20 +1,42 @@
-#include "ptree.h"
+/************************************************************************/
+/*                                                                      */
+/* This file is part of VDrift.                                         */
+/*                                                                      */
+/* VDrift is free software: you can redistribute it and/or modify       */
+/* it under the terms of the GNU General Public License as published by */
+/* the Free Software Foundation, either version 3 of the License, or    */
+/* (at your option) any later version.                                  */
+/*                                                                      */
+/* VDrift is distributed in the hope that it will be useful,            */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of       */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the        */
+/* GNU General Public License for more details.                         */
+/*                                                                      */
+/* You should have received a copy of the GNU General Public License    */
+/* along with VDrift.  If not, see <http://www.gnu.org/licenses/>.      */
+/*                                                                      */
+/************************************************************************/
 
 /*
-<!--xml-->
-<key1>value1</key1>
-<key2>
-    <key3>
-        <key4>value4</key4>
-	</key3>
-    <key5>value5</key5>
-</key2>
-*/
+ * XML file format:
+ *
+ * <!-- comment -->
+ * <key1>value1</key1>
+ * <key2>
+ *    <key3>
+ *        <key4>value4</key4>
+ *    </key3>
+ *    <key5>value5</key5>
+ * </key2>
+ *
+ */
+
+#include "ptree.h"
 
 static void read_xml(std::istream & in, PTree & p, std::string key)
 {
 	std::string line, escape("/"+p.value());
-	while(in.good())
+	while (in.good())
 	{
 		std::getline(in, line, '\n');
 		if (line.empty())

@@ -29,7 +29,7 @@ class hasher <std::string>
 		{
 			unsigned int hash = 5381;
 			unsigned int strlen = str.length();
-			for(std::size_t i = 0; i < strlen; i++)
+			for (std::size_t i = 0; i < strlen; i++)
 			{
 				hash = ((hash << 5) + hash) + str[i];
 			}

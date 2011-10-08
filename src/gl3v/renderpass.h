@@ -1,3 +1,22 @@
+/************************************************************************/
+/*                                                                      */
+/* This file is part of VDrift.                                         */
+/*                                                                      */
+/* VDrift is free software: you can redistribute it and/or modify       */
+/* it under the terms of the GNU General Public License as published by */
+/* the Free Software Foundation, either version 3 of the License, or    */
+/* (at your option) any later version.                                  */
+/*                                                                      */
+/* VDrift is distributed in the hope that it will be useful,            */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of       */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the        */
+/* GNU General Public License for more details.                         */
+/*                                                                      */
+/* You should have received a copy of the GNU General Public License    */
+/* along with VDrift.  If not, see <http://www.gnu.org/licenses/>.      */
+/*                                                                      */
+/************************************************************************/
+
 #ifndef _RENDERPASS
 #define _RENDERPASS
 
@@ -26,149 +45,139 @@
 
 class RenderPass
 {
-	public:
-		/// Initialize the renderer with the configuration in the provided renderpassinfos.
-		/// The passes will be rendered in the order they appear in the vector.
-		/// The provided GLWrapper will be used for OpenGL context.
-		/// The provided StringIdMap will be used to convert strings into unique numeric IDs.
-		/// w and h are the width and height of the application's window and will be used to initialize FBOs.
-		bool initialize(int passCount,
-			const RealtimeExportPassInfo & config,
-			StringIdMap & stringMap,
-			GLWrapper & gl,
-			RenderShader & vertexShader,
-			RenderShader & fragmentShader,
-			const std::tr1::unordered_map <StringId, RenderTextureEntry, StringId::hash> & sharedTextures,
-			unsigned int w, unsigned int h,
-			std::ostream & errorOutput);
+public:
+	// Constructor.
+	RenderPass();
 
-		/// prepare for destruction by cleaning up any resources that we are using
-		void clear(GLWrapper & gl);
+	/// Initialize the renderer with the configuration in the provided renderpassinfos.
+	/// The passes will be rendered in the order they appear in the vector.
+	/// The provided GLWrapper will be used for OpenGL context.
+	/// The provided StringIdMap will be used to convert strings into unique numeric IDs.
+	/// w and h are the width and height of the application's window and will be used to initialize FBOs.
+	bool initialize(int passCount, const RealtimeExportPassInfo & config, StringIdMap & stringMap, GLWrapper & gl, RenderShader & vertexShader, RenderShader & fragmentShader, const std::tr1::unordered_map <StringId, RenderTextureEntry, StringId::hash> & sharedTextures, unsigned int w, unsigned int h, std::ostream & errorOutput);
 
-		/// render the pass
-		/// w and h are the width and height of the application's window
-		/// returns true if the framebuffer dimensions have changed, which is a signal that the render targets have been recreated
-		/// externalModels is a map of draw group name ID to a vector array of pointers to external models to be drawn along with models that have been added to the pass with addModel
-		bool render(GLWrapper & gl, unsigned int w, unsigned int h, StringIdMap & stringMap,
-					const std::vector <const std::vector <RenderModelExternal*>*> & externalModels,
-					const std::tr1::unordered_map <StringId, RenderTextureEntry, StringId::hash> & sharedTextures,
-					std::ostream & errorOutput);
+	/// Prepare for destruction by cleaning up any resources that we are using.
+	void clear(GLWrapper & gl);
 
-		// these functions handle modifications to the models container
-		void addModel(const RenderModelEntry & entry, RenderModelHandle handle);
-		void removeModel(RenderModelHandle handle);
-		void setModelTexture(RenderModelHandle model, const RenderTextureEntry & texture);
-		void removeModelTexture(RenderModelHandle model, StringId name);
-		void setModelUniform(RenderModelHandle model, const RenderUniformEntry & uniform);
-		void removeModelUniform(RenderModelHandle model, StringId name);
+	/// Render the pass.
+	/// w and h are the width and height of the application's window.
+	/// Returns true if the framebuffer dimensions have changed, which is a signal that the render targets have been recreated.
+	/// externalModels is a map of draw group name ID to a vector array of pointers to external models to be drawn along with models that have been added to the pass with addModel.
+	bool render(GLWrapper & gl, unsigned int w, unsigned int h, StringIdMap & stringMap, const std::vector <const std::vector <RenderModelExternal*>*> & externalModels, const std::tr1::unordered_map <StringId, RenderTextureEntry, StringId::hash> & sharedTextures, std::ostream & errorOutput);
 
-		// these handle modifications to our defaultTextureBindings
-		void setDefaultTexture(StringId name, const RenderTextureEntry & texture);
-		void removeDefaultTexture(StringId name);
-		bool getDefaultUniform(StringId uniformName, RenderUniform & out);
+	// These functions handle modifications to the models container.
+	void addModel(const RenderModelEntry & entry, RenderModelHandle handle);
+	void removeModel(RenderModelHandle handle);
+	void setModelTexture(RenderModelHandle model, const RenderTextureEntry & texture);
+	void removeModelTexture(RenderModelHandle model, StringId name);
+	void setModelUniform(RenderModelHandle model, const RenderUniformEntry & uniform);
+	void removeModelUniform(RenderModelHandle model, StringId name);
 
-		// these handle modifications to our defaultUniformBindings
-		// returns true if the pass uses this uniform
-		bool setDefaultUniform(const RenderUniformEntry & uniform);
-		void removeDefaultUniform(StringId name);
+	// These handle modifications to our defaultTextureBindings.
+	void setDefaultTexture(StringId name, const RenderTextureEntry & texture);
+	void removeDefaultTexture(StringId name);
+	bool getDefaultUniform(StringId uniformName, RenderUniform & out);
 
-		const std::string & getName() const {return originalConfiguration.name;}
-		StringId getNameId() const {return passName;}
+	// These handle modifications to our defaultUniformBindings.
+	// Returns true if the pass uses this uniform.
+	bool setDefaultUniform(const RenderUniformEntry & uniform);
+	void removeDefaultUniform(StringId name);
 
-		const std::map <StringId, RenderTexture> & getRenderTargets() const {return renderTargets;}
+	const std::string & getName() const;
+	StringId getNameId() const;
 
-		void setEnabled(bool val) {enabled = val;}
-		bool getEnabled() const {return enabled;}
+	const std::map <StringId, RenderTexture> & getRenderTargets() const;
 
-		void printRendererStatus(RendererStatusVerbosity verbosity, const StringIdMap & stringMap, std::ostream & out) const;
+	void setEnabled(bool val);
+	bool getEnabled() const;
 
-		const std::set <StringId> & getDrawGroups() const {return drawGroups;}
+	void printRendererStatus(RendererStatusVerbosity verbosity, const StringIdMap & stringMap, std::ostream & out) const;
 
-		const std::map <std::string, std::string> & getUserDefinedFields() const {return originalConfiguration.userDefinedFields;}
+	const std::set <StringId> & getDrawGroups() const;
 
-		RenderPass() : configured(false),enabled(true),shaderProgram(0),framebufferObject(0),renderbuffer(0),passIndex(0),timerQuery(0),lastTime(-1) {}
+	const std::map <std::string, std::string> & getUserDefinedFields() const;
 
-		float getLastTime() const {return lastTime;}
+	float getLastTime() const;
 
-	private:
-		/// returns true on success
-		bool createFramebufferObject(GLWrapper & gl, unsigned int w, unsigned int h, StringIdMap & stringMap, const std::tr1::unordered_map <StringId, RenderTextureEntry, StringId::hash> & sharedTextures, std::ostream & errorOutput);
-		void deleteFramebufferObject(GLWrapper & gl);
+private:
+	/// Returns true on success.
+	bool createFramebufferObject(GLWrapper & gl, unsigned int w, unsigned int h, StringIdMap & stringMap, const std::tr1::unordered_map <StringId, RenderTextureEntry, StringId::hash> & sharedTextures, std::ostream & errorOutput);
+	void deleteFramebufferObject(GLWrapper & gl);
 
-		/// returns true on success
-		bool createShaderProgram(GLWrapper & gl, const std::vector <std::string> & shaderAttributeBindings, const RenderShader & vertexShader, const RenderShader & fragmentShader, const std::map <std::string, RealtimeExportPassInfo::RenderTargetInfo> & renderTargets, std::ostream & errorOutput);
-		void deleteShaderProgram(GLWrapper & gl);
+	/// Returns true on success.
+	bool createShaderProgram(GLWrapper & gl, const std::vector <std::string> & shaderAttributeBindings, const RenderShader & vertexShader, const RenderShader & fragmentShader, const std::map <std::string, RealtimeExportPassInfo::RenderTargetInfo> & renderTargets, std::ostream & errorOutput);
+	void deleteShaderProgram(GLWrapper & gl);
 
-		/// switches to the texture's TU and binds the texture
-		void applyTexture(GLWrapper & gl, const RenderTexture & texture) {applyTexture(gl, texture.tu, texture.target, texture.handle);}
-		void applyTexture(GLWrapper & gl, GLuint tu, GLenum target, GLuint handle);
+	/// Switches to the texture's TU and binds the texture.
+	void applyTexture(GLWrapper & gl, const RenderTexture & texture);
+	/// Switches to the texture's TU and binds the texture.
+	void applyTexture(GLWrapper & gl, GLuint tu, GLenum target, GLuint handle);
 
-		bool configured;
-		bool enabled;
+	bool configured;
+	bool enabled;
 
-		// the original, verbose configuration data
-		RealtimeExportPassInfo originalConfiguration;
+	/// The original, verbose configuration data.
+	RealtimeExportPassInfo originalConfiguration;
 
-		// all of the models we'll be rendering in this pass
-		// we keep two data structures, one for fast iteration during rendering
-		// which holds the actual RenderModel data, and another that is used to
-		// speed up updates and which simply holds handles to the keyed_container
-		keyed_container <RenderModel> models;
-		typedef std::tr1::unordered_map <RenderModelHandle, keyed_container <RenderModel>::handle, keyed_container_hash> modelHandleMap;
-		modelHandleMap modelHandles;
+	// All of the models we'll be rendering in this pass.
+	// We keep two data structures, one for fast iteration during rendering which holds the actual RenderModel data, and another that is used to speed up updates and which simply holds handles to the keyed_container.
+	keyed_container <RenderModel> models;
+	typedef std::tr1::unordered_map <RenderModelHandle, keyed_container <RenderModel>::handle, keyed_container_hash> modelHandleMap;
+	modelHandleMap modelHandles;
 
-		// these fields are used to remember mappings so we can look them up when we get an update
-		// this is used to remember how variable names correspond to uniform locations
-		std::tr1::unordered_map <StringId, GLuint, StringId::hash> variableNameToUniformLocation;
-		// this is used to remember how texture names correspond to texture unit numbers
-		std::tr1::unordered_map <StringId, GLuint, StringId::hash> textureNameToTextureUnit;
+	// Theese fields are used to remember mappings so we can look them up when we get an update.
+	/// This is used to remember how variable names correspond to uniform locations.
+	std::tr1::unordered_map <StringId, GLuint, StringId::hash> variableNameToUniformLocation;
+	/// This is used to remember how texture names correspond to texture unit numbers.
+	std::tr1::unordered_map <StringId, GLuint, StringId::hash> textureNameToTextureUnit;
 
-		// which bitfields to clear when we start the pass
-		GLbitfield clearMask;
+	/// Which bitfields to clear when we start the pass.
+	GLbitfield clearMask;
 
-		// values to clear to
-		float clearColor[4];
-		float clearDepth;
-		int clearStencil;
+	// Values to clear to.
+	float clearColor[4];
+	float clearDepth;
+	int clearStencil;
 
-		// the shader program
-		GLuint shaderProgram;
+	/// The shader program.
+	GLuint shaderProgram;
 
-		// variables that can be overridden (or not) by specific models
-		std::vector <RenderUniform> defaultUniformBindings;
-		// texture bindings that can be overridden (or not) by specific models
-		// there's no particular indexing; the tu is in the RenderTexture
-		std::vector <RenderTexture> defaultTextureBindings;
+	// Variables that can be overridden (or not) by specific models.
+	std::vector <RenderUniform> defaultUniformBindings;
+	// Texture bindings that can be overridden (or not) by specific models.
+	// There's no particular indexing; the tu is in the RenderTexture.
+	std::vector <RenderTexture> defaultTextureBindings;
 
-		// render states
-		std::vector <GLenum> stateEnable;
-		std::vector <GLenum> stateDisable;
-		std::vector <std::pair<GLenum,unsigned int> > stateEnablei;
-		std::vector <std::pair<GLenum,unsigned int> > stateDisablei;
-		std::vector <RenderState> stateEnum;
+	// Render states.
+	std::vector <GLenum> stateEnable;
+	std::vector <GLenum> stateDisable;
+	std::vector <std::pair<GLenum,unsigned int> > stateEnablei;
+	std::vector <std::pair<GLenum,unsigned int> > stateDisablei;
+	std::vector <RenderState> stateEnum;
 
-		// render target information
-		GLuint framebufferObject, renderbuffer;
-		RenderDimensions framebufferDimensions;
-		std::vector <RenderTexture> autoMipMapRenderTargets; // this is a subset of the textures below
-		std::map <StringId, RenderTexture> renderTargets; // the key is the render target name loaded from the RealtimeExportPassInfo
-		std::map <StringId, RenderTexture> externalRenderTargets; // the key is the render target name loaded from the RealtimeExportPassInfo
+	// Render target information.
+	GLuint framebufferObject, renderbuffer;
+	RenderDimensions framebufferDimensions;
+	std::vector <RenderTexture> autoMipMapRenderTargets; // This is a subset of the textures below.
+	std::map <StringId, RenderTexture> renderTargets; // The key is the render target name loaded from the RealtimeExportPassInfo.
+	std::map <StringId, RenderTexture> externalRenderTargets; // The key is the render target name loaded from the RealtimeExportPassInfo.
 
-		// samplers
-		std::vector <RenderSampler> samplers;
+	/// Samplers.
+	std::vector <RenderSampler> samplers;
 
-		// draw groups
-		std::set <StringId> drawGroups;
+	/// Draw groups.
+	std::set <StringId> drawGroups;
 
-		// our index in the renderer's list of passes
-		unsigned int passIndex;
+	/// Our index in the renderer's list of passes.
+	unsigned int passIndex;
 
-		// our stringId-ified name
-		StringId passName;
+	/// Our stringId-ified name.
+	StringId passName;
 
-		// the timing query object
-		GLuint timerQuery;
-		float lastTime;
+	/// Timing query object.
+	GLuint timerQuery;
+	/// Timing query object.
+	float lastTime;
 };
 
 #endif

@@ -43,7 +43,7 @@ struct MyRayResultCallback : public btCollisionWorld::RayResultCallback
 		m_closestHitFraction = rayResult.m_hitFraction;
 		m_collisionObject = rayResult.m_collisionObject;
 
-		if(rayResult.m_localShapeInfo)
+		if (rayResult.m_localShapeInfo)
 		{
 #ifndef EXTBULLET
 			m_shape = rayResult.m_localShapeInfo->m_shape;
@@ -144,7 +144,7 @@ bool DynamicsWorld::castRay(
 			MATHVECTOR<float, 3> colnormal;
 			patch_id = contact.GetPatchId();
 
-			if(track->CastRay(bezierspace_raystart, bezierspace_dir, length,
+			if (track->CastRay(bezierspace_raystart, bezierspace_dir, length,
 				patch_id, colpoint, b, colnormal))
 			{
 				p = btVector3(colpoint[2], colpoint[0], colpoint[1]);

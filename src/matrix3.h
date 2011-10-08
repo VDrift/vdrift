@@ -169,19 +169,19 @@ class MATRIX3
 		static bool Diagonalize(MATRIX3<T>& m, MATRIX3<T>& v, MATHVECTOR<T, 3>& w)
 		{
 			double sm[3][3], ev[3][3], ew[3];
-			for(int i = 0; i < 3; i++)
+			for (int i = 0; i < 3; i++)
 			{
-				for(int j = 0; j < 3; j++)
+				for (int j = 0; j < 3; j++)
 				{
 					sm[i][j] = m[i*3 + j];
 				}
 			}
 
-			if(MATRIX3<T>::dsyevj3(sm, ev, ew)) return false;
+			if (MATRIX3<T>::dsyevj3(sm, ev, ew)) return false;
 
-			for(int i = 0; i < 3; i++)
+			for (int i = 0; i < 3; i++)
 			{
-				for(int j = 0; j < 3; j++)
+				for (int j = 0; j < 3; j++)
 				{
 					v[i*3 + j] = ev[i][j];
 				}

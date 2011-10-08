@@ -3,7 +3,7 @@
 
 #include <ostream>
 #include <vector>
-#include <assert.h>
+#include <cassert>
 
 namespace signalprocessing
 {

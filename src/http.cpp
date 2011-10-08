@@ -1,284 +1,29 @@
+/************************************************************************/
+/*                                                                      */
+/* This file is part of VDrift.                                         */
+/*                                                                      */
+/* VDrift is free software: you can redistribute it and/or modify       */
+/* it under the terms of the GNU General Public License as published by */
+/* the Free Software Foundation, either version 3 of the License, or    */
+/* (at your option) any later version.                                  */
+/*                                                                      */
+/* VDrift is distributed in the hope that it will be useful,            */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of       */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the        */
+/* GNU General Public License for more details.                         */
+/*                                                                      */
+/* You should have received a copy of the GNU General Public License    */
+/* along with VDrift.  If not, see <http://www.gnu.org/licenses/>.      */
+/*                                                                      */
+/************************************************************************/
+
 #include "http.h"
 #include "unittest.h"
-
-#include <sstream>
-#include <cstdio>
 #include <cassert>
 
-static bool s_curl_init = false;
-
-HTTP::HTTP(const std::string & temporary_folder) : folder(temporary_folder), downloading(false)
+HTTPINFO::HTTPINFO() : state(CONNECTING), totalsize(1), downloaded(0), speed(0)
 {
-	if (!s_curl_init)
-	{
-		curl_global_init(CURL_GLOBAL_ALL);
-		s_curl_init = true;
-	}
-
-	// To use the multi interface, you must first create a 'multi handle'
-	multihandle = curl_multi_init();
-}
-
-int ProgressCallback(void * ptr, double TotalToDownload, double NowDownloaded, double TotalToUpload, double NowUploaded)
-{
-	PROGRESSINFO * info = (PROGRESSINFO*)ptr;
-	assert(info->http && info->easyhandle);
-	info->http->UpdateProgress(info->easyhandle, TotalToDownload, NowDownloaded);
-	return 0;
-}
-
-std::string HTTP::ExtractFilenameFromUrl(const std::string & in)
-{
-	std::string url = in;
-	size_t start = url.find_last_of('/');
-	size_t end = url.find_first_of('?');
-	if (start == std::string::npos)
-		start = 0;
-	else
-		start++;
-	if (end == std::string::npos)
-		end = url.size();
-	if (end > 1 && url[end-1] == '/')
-	{
-		url[end-1] = '?';
-		start = url.find_last_of('/');
-		end = url.find_first_of('?');
-		if (start == std::string::npos)
-			start = 0;
-		else
-			start++;
-	}
-	return url.substr(start,end-start);
-}
-
-static size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream)
-{
-	return fwrite(ptr, size, nmemb, (FILE *)stream);
-}
-
-bool HTTP::Request(const std::string & url, std::ostream & error_output)
-{
-	if (!multihandle)
-	{
-		error_output << "HTTP::Request: multihandle initialization failed" << std::endl;
-		return false;
-	}
-
-	// Each single transfer is built up with an easy handle
-	CURL * easyhandle = curl_easy_init();
-
-	if (easyhandle)
-	{
-		// setup the appropriate options for the easy handle
-		curl_easy_setopt(easyhandle, CURLOPT_URL, url.c_str());
-
-		// This function call will make this multi_handle control the specified easy_handle.
-		// Furthermore, libcurl now initiates the connection associated with the specified easy_handle.
-		CURLMcode result = curl_multi_add_handle(multihandle, easyhandle);
-
-		if (result == CURLM_OK)
-		{
-			// open the destination file for write
-			std::string filepart = ExtractFilenameFromUrl(url);
-			if (filepart.empty())
-			{
-				error_output << "HTTP::Request: url \"" << url << "\" is invalid" << std::endl;
-				curl_multi_remove_handle(multihandle, easyhandle);
-				return false;
-			}
-
-			std::string filename = folder+"/"+filepart;
-			FILE * file = fopen(filename.c_str(),"wb");
-			if (!file)
-			{
-				error_output << "HTTP::Request: unable to open \"" << filename << "\" for writing" << std::endl;
-				curl_multi_remove_handle(multihandle, easyhandle);
-				return false;
-			}
-
-			// setup file writing
-			curl_easy_setopt(easyhandle, CURLOPT_WRITEFUNCTION, write_data);
-			curl_easy_setopt(easyhandle, CURLOPT_WRITEDATA, file);
-
-			// begin tracking the easyhandle
-			REQUEST requestinfo(url,file);
-			requestinfo.progress_callback_data.http = this;
-			requestinfo.progress_callback_data.easyhandle = easyhandle;
-			easyhandles.insert(std::make_pair(easyhandle,requestinfo));
-			requests.insert(std::make_pair(url,HTTPINFO()));
-
-			// setup the progress callback
-			curl_easy_setopt(easyhandle, CURLOPT_NOPROGRESS, 0);
-			curl_easy_setopt(easyhandle, CURLOPT_PROGRESSFUNCTION, ProgressCallback);
-			curl_easy_setopt(easyhandle, CURLOPT_PROGRESSDATA, &(easyhandles.find(easyhandle)->second.progress_callback_data));
-
-			return true;
-		}
-		else
-		{
-			// tell the multihandle to forget the handle
-			curl_multi_remove_handle(multihandle, easyhandle);
-
-			error_output << "HTTP::Request: CURL is unable to request URL \"" << url << "\"" << std::endl;
-			return false;
-		}
-	}
-	else
-	{
-		error_output << "HTTP::Request: easyhandle initialization failed" << std::endl;
-		return false;
-	}
-}
-
-HTTP::~HTTP()
-{
-	for (std::map <CURL*, REQUEST>::iterator i = easyhandles.begin(); i != easyhandles.end(); i++)
-	{
-		FILE * file = i->second.file;
-		fclose(file);
-		curl_easy_cleanup(i->first);
-	}
-	easyhandles.clear();
-	requests.clear();
-
-	if (multihandle)
-		curl_multi_cleanup(multihandle);
-	multihandle = NULL;
-}
-
-void HTTP::CancelAllRequests()
-{
-	for (std::map <CURL*, REQUEST>::iterator i = easyhandles.begin(); i != easyhandles.end(); i++)
-	{
-		FILE * file = i->second.file;
-		fclose(file);
-		curl_easy_cleanup(i->first);
-	}
-	easyhandles.clear();
-	requests.clear();
-	downloading = false;
-}
-
-void HTTP::UpdateProgress(CURL * handle, float total, float current)
-{
-	std::map <CURL*, REQUEST>::iterator i = easyhandles.find(handle);
-	if (i == easyhandles.end())
-		return;
-
-	std::string url = i->second.url;
-	requests[url].totalsize = total;
-	requests[url].downloaded = current;
-}
-
-bool HTTP::Tick()
-{
-	// curl_multi_perform() returns as soon as the reads/writes are done.
-	// This function does not require that there actually is any data available for reading or that data
-	// can be written, it can be called just in case.
-	int running_transfers = 0;
-	int loopcheck = 0;
-	CURLMcode result = CURLM_CALL_MULTI_PERFORM;
-	while (result == CURLM_CALL_MULTI_PERFORM)
-	{
-		result = curl_multi_perform(multihandle, &running_transfers);
-		loopcheck++;
-		assert(loopcheck < 1000 && "infinite loop in HTTP::Tick()");
-	}
-
-	CURLMsg * msg = NULL;
-	do
-	{
-		int msgs_in_queue = 0;
-		msg = curl_multi_info_read(multihandle, &msgs_in_queue);
-		if (msg && msg->msg == CURLMSG_DONE)
-		{
-			// handle completion
-			CURL * easyhandle = msg->easy_handle;
-
-			// get the url
-			std::map <CURL*, REQUEST>::iterator u = easyhandles.find(easyhandle);
-			assert(u != easyhandles.end() && "corruption in easyhandles map");
-			std::string url = u->second.url;
-
-			if (msg->data.result == CURLE_OK)
-			{
-				// completion
-				requests[url].state = HTTPINFO::COMPLETE;
-				curl_easy_getinfo(easyhandle, CURLINFO_SPEED_DOWNLOAD, &requests[url].speed);
-			}
-			else
-			{
-				// failure
-				requests[url].state = HTTPINFO::FAILED;
-				requests[url].error = "unknown";
-			}
-
-			// cleanup
-			curl_easy_cleanup(easyhandle);
-			fclose(u->second.file);
-			easyhandles.erase(easyhandle);
-		}
-
-		// update status
-		for (std::map <CURL*, REQUEST>::iterator i = easyhandles.begin(); i != easyhandles.end(); i++)
-		{
-			CURL * easyhandle = i->first;
-			std::map <CURL*, REQUEST>::iterator u = easyhandles.find(easyhandle);
-			assert(u != easyhandles.end() && "corruption in requestUrls map");
-			std::string url = u->second.url;
-
-			curl_easy_getinfo(easyhandle, CURLINFO_SPEED_DOWNLOAD, &requests[url].speed);
-			requests[url].state = requests[url].downloaded > 0 ? HTTPINFO::DOWNLOADING : HTTPINFO::CONNECTING;
-		}
-	}
-	while (msg);
-
-	downloading = (running_transfers > 0);
-
-	return downloading;
-}
-
-void HTTPINFO::print(std::ostream & s)
-{
-	s << "State: " << GetString(state) << std::endl;
-	s << "Total size: " << FormatSize(totalsize) << std::endl;
-	s << "Downloaded: " << FormatSize(downloaded) << std::endl;
-	s << "Speed: " << FormatSpeed(speed) << std::endl;
-	s << "Error: " << (error.empty() ? "none" : error) << std::endl;
-}
-
-bool HTTPINFO::operator!=(const HTTPINFO & other) const
-{
-	return !(*this == other);
-}
-
-bool HTTPINFO::operator==(const HTTPINFO & other) const
-{
-#define X(x) if (x != other.x) return false
-	X(state);
-	X(totalsize);
-	X(downloaded);
-	// speed is purposely ignored
-	X(error);
-#undef X
-
-	return true;
-}
-
-bool HTTP::GetRequestInfo(const std::string & url, HTTPINFO & out)
-{
-	std::map <std::string, HTTPINFO>::iterator i = requests.find(url);
-	if (i == requests.end())
-	{
-		return false;
-	}
-
-	out = i->second;
-
-	if (i->second.state == HTTPINFO::FAILED || i->second.state == HTTPINFO::COMPLETE)
-		requests.erase(i);
-
-	return true;
+    // Constructor.
 }
 
 const char * HTTPINFO::GetString(STATE state)
@@ -286,19 +31,15 @@ const char * HTTPINFO::GetString(STATE state)
 	switch (state)
 	{
 		case CONNECTING:
-		return "connecting";
-
+            return "connecting";
 		case DOWNLOADING:
-		return "downloading";
-
+            return "downloading";
 		case COMPLETE:
-		return "complete";
-
+            return "complete";
 		case FAILED:
-		return "failed";
-
+            return "failed";
 		default:
-		return "error";
+            return "error";
 	};
 }
 
@@ -330,9 +71,296 @@ std::string HTTPINFO::FormatSpeed(double bytes)
 	return s.str();
 }
 
+bool HTTPINFO::operator != (const HTTPINFO & other) const
+{
+	return !(*this == other);
+}
+
+bool HTTPINFO::operator == (const HTTPINFO & other) const
+{
+    if (state != other.state) return false;
+    if (totalsize != other.totalsize) return false;
+    if (downloaded != other.downloaded) return false;
+    if (error != other.error) return false;
+
+	return true;
+}
+
+void HTTPINFO::print(std::ostream & s)
+{
+	s << "State: " << GetString(state) << std::endl << "Total size: " << FormatSize(totalsize) << std::endl << "Downloaded: " << FormatSize(downloaded) << std::endl << "Speed: " << FormatSpeed(speed) << std::endl << "Error: " << (error.empty() ? "none" : error) << std::endl;
+}
+
+PROGRESSINFO::PROGRESSINFO() : http(NULL), easyhandle(NULL)
+{
+    // Cosntructor.
+}
+
+PROGRESSINFO::PROGRESSINFO(HTTP * newhttp, CURL * newhandle) : http(newhttp), easyhandle(newhandle) 
+{
+    // Constructor.
+}
+
+// Just for storing curl initialization state.
+static bool s_curl_init = false;
+
+HTTP::HTTP(const std::string & temporary_folder) : folder(temporary_folder), downloading(false)
+{
+	if (!s_curl_init)
+	{
+		curl_global_init(CURL_GLOBAL_ALL);
+		s_curl_init = true;
+	}
+
+	// To use the multi interface, you must first create a 'multi handle'.
+	multihandle = curl_multi_init();
+}
+
+HTTP::~HTTP()
+{
+	for (std::map <CURL*, REQUEST>::iterator i = easyhandles.begin(); i != easyhandles.end(); i++)
+	{
+		FILE * file = i->second.file;
+		fclose(file);
+		curl_easy_cleanup(i->first);
+	}
+	easyhandles.clear();
+	requests.clear();
+    
+	if (multihandle)
+		curl_multi_cleanup(multihandle);
+	multihandle = NULL;
+}
+
+void HTTP::SetTemporaryFolder(const std::string & temporary_folder)
+{
+    folder = temporary_folder;
+}
+
+int ProgressCallback(void * ptr, double TotalToDownload, double NowDownloaded, double TotalToUpload, double NowUploaded)
+{
+	PROGRESSINFO * info = (PROGRESSINFO*)ptr;
+	assert(info->http && info->easyhandle);
+	info->http->UpdateProgress(info->easyhandle, TotalToDownload, NowDownloaded);
+	return 0;
+}
+
+static size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream)
+{
+	return fwrite(ptr, size, nmemb, (FILE *)stream);
+}
+
+bool HTTP::Request(const std::string & url, std::ostream & error_output)
+{
+	if (!multihandle)
+	{
+		error_output << "HTTP::Request: multihandle initialization failed" << std::endl;
+		return false;
+	}
+    
+	// Each single transfer is built up with an easy handle.
+	CURL * easyhandle = curl_easy_init();
+    
+	if (easyhandle)
+	{
+		// Setup the appropriate options for the easy handle.
+		curl_easy_setopt(easyhandle, CURLOPT_URL, url.c_str());
+        
+		// This function call will make this multi_handle control the specified easy_handle.
+		// Furthermore, libcurl now initiates the connection associated with the specified easy_handle.
+		CURLMcode result = curl_multi_add_handle(multihandle, easyhandle);
+        
+		if (result == CURLM_OK)
+		{
+			// Open the destination file for write.
+			std::string filepart = ExtractFilenameFromUrl(url);
+			if (filepart.empty())
+			{
+				error_output << "HTTP::Request: url \"" << url << "\" is invalid" << std::endl;
+				curl_multi_remove_handle(multihandle, easyhandle);
+				return false;
+			}
+            
+			std::string filename = folder+"/"+filepart;
+			FILE * file = fopen(filename.c_str(),"wb");
+			if (!file)
+			{
+				error_output << "HTTP::Request: unable to open \"" << filename << "\" for writing" << std::endl;
+				curl_multi_remove_handle(multihandle, easyhandle);
+				return false;
+			}
+            
+			// Setup file writing.
+			curl_easy_setopt(easyhandle, CURLOPT_WRITEFUNCTION, write_data);
+			curl_easy_setopt(easyhandle, CURLOPT_WRITEDATA, file);
+            
+			// Begin tracking the easyhandle.
+			REQUEST requestinfo(url,file);
+			requestinfo.progress_callback_data.http = this;
+			requestinfo.progress_callback_data.easyhandle = easyhandle;
+			easyhandles.insert(std::make_pair(easyhandle,requestinfo));
+			requests.insert(std::make_pair(url,HTTPINFO()));
+            
+			// Setup the progress callback.
+			curl_easy_setopt(easyhandle, CURLOPT_NOPROGRESS, 0);
+			curl_easy_setopt(easyhandle, CURLOPT_PROGRESSFUNCTION, ProgressCallback);
+			curl_easy_setopt(easyhandle, CURLOPT_PROGRESSDATA, &(easyhandles.find(easyhandle)->second.progress_callback_data));
+            
+			return true;
+		}
+		else
+		{
+			// Tell the multihandle to forget the handle.
+			curl_multi_remove_handle(multihandle, easyhandle);
+
+			error_output << "HTTP::Request: CURL is unable to request URL \"" << url << "\"" << std::endl;
+			return false;
+		}
+	}
+	else
+	{
+		error_output << "HTTP::Request: easyhandle initialization failed" << std::endl;
+		return false;
+	}
+}
+
+bool HTTP::Tick()
+{
+	// curl_multi_perform() returns as soon as the reads/writes are done.
+	// This function does not require that there actually is any data available for reading or that data can be written, it can be called just in case.
+	int running_transfers = 0;
+	int loopcheck = 0;
+	CURLMcode result = CURLM_CALL_MULTI_PERFORM;
+	while (result == CURLM_CALL_MULTI_PERFORM)
+	{
+		result = curl_multi_perform(multihandle, &running_transfers);
+		loopcheck++;
+		assert(loopcheck < 1000 && "infinite loop in HTTP::Tick()");
+	}
+    
+	CURLMsg * msg = NULL;
+	do
+	{
+		int msgs_in_queue = 0;
+		msg = curl_multi_info_read(multihandle, &msgs_in_queue);
+		if (msg && msg->msg == CURLMSG_DONE)
+		{
+			// Handle completion.
+			CURL * easyhandle = msg->easy_handle;
+            
+			// Get the url.
+			std::map <CURL*, REQUEST>::iterator u = easyhandles.find(easyhandle);
+			assert(u != easyhandles.end() && "corruption in easyhandles map");
+			std::string url = u->second.url;
+            
+			if (msg->data.result == CURLE_OK)
+			{
+				// Completion.
+				requests[url].state = HTTPINFO::COMPLETE;
+				curl_easy_getinfo(easyhandle, CURLINFO_SPEED_DOWNLOAD, &requests[url].speed);
+			}
+			else
+			{
+				// Failure.
+				requests[url].state = HTTPINFO::FAILED;
+				requests[url].error = "unknown";
+			}
+            
+			// Cleanup.
+			curl_easy_cleanup(easyhandle);
+			fclose(u->second.file);
+			easyhandles.erase(easyhandle);
+		}
+
+		// Update status.
+		for (std::map <CURL*, REQUEST>::iterator i = easyhandles.begin(); i != easyhandles.end(); i++)
+		{
+			CURL * easyhandle = i->first;
+			std::map <CURL*, REQUEST>::iterator u = easyhandles.find(easyhandle);
+			assert(u != easyhandles.end() && "corruption in requestUrls map");
+			std::string url = u->second.url;
+            
+			curl_easy_getinfo(easyhandle, CURLINFO_SPEED_DOWNLOAD, &requests[url].speed);
+			requests[url].state = requests[url].downloaded > 0 ? HTTPINFO::DOWNLOADING : HTTPINFO::CONNECTING;
+		}
+	}
+	while (msg);
+
+	downloading = (running_transfers > 0);
+
+	return downloading;
+}
+
+bool HTTP::Downloading() const
+{
+    return downloading;
+}
+
+bool HTTP::GetRequestInfo(const std::string & url, HTTPINFO & out)
+{
+	std::map <std::string, HTTPINFO>::iterator i = requests.find(url);
+	if (i == requests.end())
+		return false;
+    
+	out = i->second;
+    
+	if (i->second.state == HTTPINFO::FAILED || i->second.state == HTTPINFO::COMPLETE)
+		requests.erase(i);
+    
+	return true;
+}
+
+void HTTP::CancelAllRequests()
+{
+	for (std::map <CURL*, REQUEST>::iterator i = easyhandles.begin(); i != easyhandles.end(); i++)
+	{
+		FILE * file = i->second.file;
+		fclose(file);
+		curl_easy_cleanup(i->first);
+	}
+	easyhandles.clear();
+	requests.clear();
+	downloading = false;
+}
+
+std::string HTTP::ExtractFilenameFromUrl(const std::string & in)
+{
+	std::string url = in;
+	size_t start = url.find_last_of('/');
+	size_t end = url.find_first_of('?');
+	if (start == std::string::npos)
+		start = 0;
+	else
+		start++;
+	if (end == std::string::npos)
+		end = url.size();
+	if (end > 1 && url[end-1] == '/')
+	{
+		url[end-1] = '?';
+		start = url.find_last_of('/');
+		end = url.find_first_of('?');
+		if (start == std::string::npos)
+			start = 0;
+		else
+			start++;
+	}
+	return url.substr(start,end-start);
+}
+
 std::string HTTP::GetDownloadPath(const std::string & url) const
 {
 	return folder+"/"+ExtractFilenameFromUrl(url);
+}
+
+void HTTP::UpdateProgress(CURL * handle, float total, float current)
+{
+	std::map <CURL*, REQUEST>::iterator i = easyhandles.find(handle);
+	if (i == easyhandles.end())
+		return;
+
+	std::string url = i->second.url;
+	requests[url].totalsize = total;
+	requests[url].downloaded = current;
 }
 
 QT_TEST(http)

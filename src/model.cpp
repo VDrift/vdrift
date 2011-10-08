@@ -1,44 +1,42 @@
+/************************************************************************/
+/*                                                                      */
+/* This file is part of VDrift.                                         */
+/*                                                                      */
+/* VDrift is free software: you can redistribute it and/or modify       */
+/* it under the terms of the GNU General Public License as published by */
+/* the Free Software Foundation, either version 3 of the License, or    */
+/* (at your option) any later version.                                  */
+/*                                                                      */
+/* VDrift is distributed in the hope that it will be useful,            */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of       */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the        */
+/* GNU General Public License for more details.                         */
+/*                                                                      */
+/* You should have received a copy of the GNU General Public License    */
+/* along with VDrift.  If not, see <http://www.gnu.org/licenses/>.      */
+/*                                                                      */
+/************************************************************************/
+
 #include "model.h"
 #include "utils.h"
 #include "vertexattribs.h"
 using namespace VERTEX_ATTRIBS;
 
-#include <fstream>
-#include <sstream>
-
 #define ERROR_CHECK OPENGL_UTILITY::CheckForOpenGLErrors(std::string(__PRETTY_FUNCTION__)+":"+__FILE__+":"+UTILS::tostr(__LINE__), error_output)
 
-MODEL::MODEL() :
-	generatedlistid(false),
-	generatedmetrics(false),
-	generatedvao(false),
-	vao(0),
-	elementVbo(0),
-	elementCount(0),
-	radius(0),
-	radiusxz(0)
+static const char file_magic[] = "OGLVARRAYV01";
+
+MODEL::MODEL() : generatedlistid(false), generatedmetrics(false), generatedvao(false), vao(0), elementVbo(0), elementCount(0), radius(0), radiusxz(0)
 {
-	// ctor
+	// Constructor.
 }
 
-MODEL::MODEL(const std::string & filepath, std::ostream & error_output) :
-	generatedlistid(false),
-	generatedmetrics(false),
-	generatedvao(false),
-	vao(0),
-	elementVbo(0),
-	elementCount(0),
-	radius(0),
-	radiusxz(0)
+MODEL::MODEL(const std::string & filepath, std::ostream & error_output) : generatedlistid(false), generatedmetrics(false), generatedvao(false), vao(0), elementVbo(0), elementCount(0), radius(0), radiusxz(0)
 {
 	if (filepath.size() > 4 && filepath.substr(filepath.size()-4) == ".ova")
-	{
 		ReadFromFile(filepath, error_output, false);
-	}
 	else
-	{
 		Load(filepath, error_output, false);
-	}
 }
 
 MODEL::~MODEL()
@@ -46,9 +44,24 @@ MODEL::~MODEL()
 	Clear();
 }
 
+bool MODEL::CanSave() const
+{
+	return false;
+}
+
+bool MODEL::Save(const std::string & strFileName, std::ostream & error_output) const
+{
+	return false;
+}
+
+bool MODEL::Load(const std::string & strFileName, std::ostream & error_output, bool genlist)
+{
+	return false;
+}
+
 bool MODEL::Load(const VERTEXARRAY & varray, std::ostream & error_output, bool genlist)
 {
-	BuildFromVertexArray(varray, error_output);
+	BuildFromVertexArray(varray);
 	if (genlist)
 		GenerateListID(error_output);
 	else
@@ -56,9 +69,69 @@ bool MODEL::Load(const VERTEXARRAY & varray, std::ostream & error_output, bool g
 	return true;
 }
 
+bool MODEL::Serialize(joeserialize::Serializer & s)
+{
+	_SERIALIZE_(s,mesh);
+	return true;
+}
+
+bool MODEL::WriteToFile(const std::string & filepath)
+{
+	std::ofstream fileout(filepath.c_str());
+	if (!fileout)
+		return false;
+
+	fileout.write(file_magic, sizeof(file_magic));
+	joeserialize::BinaryOutputSerializer s(fileout);
+	return Serialize(s);
+}
+
+bool MODEL::ReadFromFile(const std::string & filepath, std::ostream & error_output, bool generatelistid)
+{
+	std::ifstream filein(filepath.c_str(), std::ios_base::binary);
+	if (!filein)
+	{
+		error_output << "Can't find file: " << filepath << std::endl;
+		return false;
+	}
+
+	char fmagic[sizeof(file_magic)+1];
+	filein.read(fmagic, sizeof(file_magic));
+	if (!filein)
+	{
+		error_output << "File magic read error: " << filepath << std::endl;
+		return false;
+	}
+
+	fmagic[sizeof(file_magic)] = '\0';
+	if (file_magic != fmagic)
+	{
+		error_output << "File magic is incorrect: \"" << file_magic << "\" != \"" << fmagic << "\" in " << filepath << std::endl;
+		return false;
+	}
+
+	joeserialize::BinaryInputSerializer s(filein);
+	if (!Serialize(s))
+	{
+		error_output << "Serialization error: " << filepath << std::endl;
+		Clear();
+		return false;
+	}
+
+	ClearListID();
+	ClearMetrics();
+	GenerateMeshMetrics();
+
+	if (generatelistid)
+		GenerateListID(error_output);
+
+	return true;
+}
+
 void MODEL::GenerateListID(std::ostream & error_output)
 {
-	if (HaveListID()) return;
+	if (HaveListID())
+		return;
 
 	ClearListID();
 
@@ -69,28 +142,25 @@ void MODEL::GenerateListID(std::ostream & error_output)
 
 	int true_faces = mesh.GetNumFaces() / 3;
 
-	//cout << "generating list from " << true_faces << " faces" << endl;
-
-	// iterate through all of the faces (polygons)
-	for(int j = 0; j < true_faces; j++)
-	{
-		// iterate though each vertex in the face
-		for(int whichVertex = 0; whichVertex < 3; whichVertex++)
+	// Iterate through all of the faces (polygons).
+	for (int j = 0; j < true_faces; j++)
+		// Iterate though each vertex in the face.
+		for (int whichVertex = 0; whichVertex < 3; whichVertex++)
 		{
-			// get the 3D location for this vertex
-			///vert array bounds are not checked but it is assumed to be of size 3
+			// Get the 3D location for this vertex.
+			/// Vert array bounds are not checked but it is assumed to be of size 3.
 			std::vector <float> vert = mesh.GetVertex(j, whichVertex);
 
-			// get the 3D normal for this vertex
-			///norm array bounds are not checked but it is assumed to be of size 3
+			// Get the 3D normal for this vertex.
+			/// Norm array bounds are not checked but it is assumed to be of size 3.
 			std::vector <float> norm = mesh.GetNormal(j, whichVertex);
 
-			assert (mesh.GetTexCoordSets() > 0);
+			assert(mesh.GetTexCoordSets() > 0);
 
 			if (mesh.GetTexCoordSets() > 0)
 			{
-				// get the 2D texture coordinates for this vertex
-				///tex array bounds are not checked but it is assumed to be of size 2
+				// Get the 2D texture coordinates for this vertex.
+				///Tex array bounds are not checked but it is assumed to be of size 2.
 				std::vector <float> tex = mesh.GetTextureCoordinate(j, whichVertex, 0);
 
 				glMultiTexCoord2f(GL_TEXTURE0, tex[0], tex[1]);
@@ -99,7 +169,6 @@ void MODEL::GenerateListID(std::ostream & error_output)
 			glNormal3fv(&norm[0]);
 			glVertex3fv(&vert[0]);
 		}
-	}
 
 	glEnd();
 
@@ -108,31 +177,6 @@ void MODEL::GenerateListID(std::ostream & error_output)
 	generatedlistid = true;
 
 	OPENGL_UTILITY::CheckForOpenGLErrors("model list ID generation", error_output);
-}
-
-void MODEL::ClearVertexArrayObject()
-{
-	if (generatedvao)
-	{
-		glBindBuffer(GL_ARRAY_BUFFER,0);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
-		if (!vbos.empty())
-		{
-			glDeleteBuffers(vbos.size(), &vbos[0]);
-		}
-		if (elementVbo != 0)
-		{
-			glDeleteBuffers(1, &elementVbo);
-			elementVbo = 0;
-		}
-		if (vao != 0)
-		{
-			glBindVertexArray(0);
-			glDeleteVertexArrays(1,&vao);
-			vao = 0;
-		}
-	}
-	generatedlistid = false;
 }
 
 template <typename T>
@@ -153,11 +197,11 @@ void MODEL::GenerateVertexArrayObject(std::ostream & error_output)
 	if (generatedvao)
 		return;
 
-	// generate vertex array object
+	// Generate vertex array object.
 	glGenVertexArrays(1, &vao);ERROR_CHECK;
 	glBindVertexArray(vao);ERROR_CHECK;
 
-	// buffer object for faces
+	// Buffer object for faces.
 	const int * faces;
 	int facecount;
 	mesh.GetFaces(faces, facecount);
@@ -167,42 +211,40 @@ void MODEL::GenerateVertexArrayObject(std::ostream & error_output)
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, facecount*sizeof(GLuint), faces, GL_STATIC_DRAW);ERROR_CHECK;
 	elementCount = facecount;
 
-	// calculate the number of vertices (vertcount is the size of the verts array)
+	// Calculate the number of vertices (vertcount is the size of the verts array).
 	const float * verts;
 	int vertcount;
 	mesh.GetVertices(verts, vertcount);
 	assert(verts && vertcount > 0);
 	unsigned int vertexCount = vertcount/3;
 
-	// generate buffer object for vertex positions
+	// Generate buffer object for vertex positions.
 	vbos.push_back(GenerateBufferObject(verts, VERTEX_POSITION, vertexCount, 3, error_output));
 
-	// generate buffer object for normals
+	// Generate buffer object for normals.
 	const float * norms;
 	int normcount;
 	mesh.GetNormals(norms, normcount);
 	if (!norms || normcount <= 0)
-	{
 		glDisableVertexAttribArray(VERTEX_NORMAL);
-	}
 	else
 	{
 		assert((unsigned int)normcount == vertexCount*3);
 		vbos.push_back(GenerateBufferObject(norms, VERTEX_NORMAL, vertexCount, 3, error_output));
 	}
 
-	// TODO: generate tangent and bitangent
+	// TODO: Generate tangent and bitangent.
 	glDisableVertexAttribArray(VERTEX_TANGENT);
 	glDisableVertexAttribArray(VERTEX_BITANGENT);
 
 	glDisableVertexAttribArray(VERTEX_COLOR);
 
-	// generate buffer object for texture coordinates
+	// Generate buffer object for texture coordinates.
 	const float * tc[1];
 	int tccount[1];
 	if (mesh.GetTexCoordSets() > 0)
 	{
-		// TODO: make this work for UV1 and UV2
+		// TODO: Make this work for UV1 and UV2.
 		mesh.GetTexCoords(0, tc[0], tccount[0]);
 		assert((unsigned int)tccount[0] == vertexCount*2);
 		vbos.push_back(GenerateBufferObject(tc[0], VERTEX_UV0, vertexCount, 2, error_output));
@@ -213,12 +255,41 @@ void MODEL::GenerateVertexArrayObject(std::ostream & error_output)
 	glDisableVertexAttribArray(VERTEX_UV1);
 	glDisableVertexAttribArray(VERTEX_UV2);
 
-	// don't leave anything bound
+	// Don't leave anything bound.
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER,0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
 
 	generatedvao = true;
+}
+
+bool MODEL::HaveVertexArrayObject() const
+{
+	return generatedvao;
+}
+
+void MODEL::ClearVertexArrayObject()
+{
+	if (generatedvao)
+	{
+		glBindBuffer(GL_ARRAY_BUFFER,0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+		if (!vbos.empty())
+			glDeleteBuffers(vbos.size(), &vbos[0]);
+
+		if (elementVbo != 0)
+		{
+			glDeleteBuffers(1, &elementVbo);
+			elementVbo = 0;
+		}
+		if (vao != 0)
+		{
+			glBindVertexArray(0);
+			glDeleteVertexArrays(1,&vao);
+			vao = 0;
+		}
+	}
+	generatedlistid = false;
 }
 
 bool MODEL::GetVertexArrayObject(GLuint & vao_out, unsigned int & elementCount_out) const
@@ -237,23 +308,21 @@ void MODEL::GenerateMeshMetrics()
 	float maxv[3] = {0, 0, 0};
 	float minv[3] = {0, 0, 0};
 	bool havevals[6];
-	for ( int n = 0; n < 6; n++ )
+	for (int n = 0; n < 6; n++)
 		havevals[n] = false;
 
 	const float * verts;
 	int vnum;
 	mesh.GetVertices(verts, vnum);
-	vnum = vnum / 3;
-	for ( int v = 0; v < vnum; v++ )
+	vnum /= 3;
+	for (int v = 0; v < vnum; v++)
 	{
 		MATHVECTOR <float, 3> temp;
 
-		temp.Set ( verts + v*3 );
+		temp.Set(verts + v*3);
 
-		//cout << verts[v*3] << "," << verts[v*3+1] << "," << verts[v*3+2] << endl;
-
-		//cache for bbox stuff
-		for ( int n = 0; n < 3; n++ )
+		// Cache for bbox stuff.
+		for (int n = 0; n < 3; n++)
 		{
 			if (!havevals[n])
 			{
@@ -276,9 +345,9 @@ void MODEL::GenerateMeshMetrics()
 		MATHVECTOR <float, 2> tempxz;
 		tempxz.Set(temp[0], temp[2]);
 		float rxz = tempxz.Magnitude();
-		if ( r > radius )
+		if (r > radius)
 			radius = r;
-		if ( rxz > radiusxz )
+		if (rxz > radiusxz)
 			radiusxz = rxz;
 	}
 
@@ -297,88 +366,60 @@ void MODEL::GenerateMeshMetrics()
 	generatedmetrics = true;
 }
 
-void MODEL::ClearListID()
+void MODEL::ClearMeshData()
 {
-	if (generatedlistid) glDeleteLists(listid, 1);
-	generatedlistid = false;
+	mesh.Clear();
 }
 
-bool MODEL::WriteToFile(const std::string & filepath)
+int MODEL::GetListID() const
 {
-	const std::string magic = "OGLVARRAYV01";
-	std::ofstream fileout(filepath.c_str());
-	if (!fileout) return false;
-
-	fileout.write(magic.c_str(), magic.size());
-	joeserialize::BinaryOutputSerializer s(fileout);
-	return Serialize(s);
+	RequireListID();
+	return listid;
 }
 
-bool MODEL::ReadFromFile(const std::string & filepath, std::ostream & error_output, bool generatelistid)
+float MODEL::GetRadius() const
 {
-	const bool verbose = false;
+	RequireMetrics();
+	return radius + 0.5f;
+}
 
-	if (verbose) std::cout << filepath << ": starting mesh read" << std::endl;
+float MODEL::GetRadiusXZ() const
+{
+	RequireMetrics();
+	return radiusxz;
+}
 
-	std::ifstream filein(filepath.c_str(), std::ios_base::binary);
-	if (!filein)
-	{
-		error_output << "Can't find file: " << filepath << std::endl;
-		return false;
-	}
-	//else std::cout << "File " << filepath << " exists!" << std::endl;
+MATHVECTOR <float, 3> MODEL::GetCenter()
+{
+	return (bboxmax + bboxmin) * 0.5;
+}
 
-	const std::string magic = "OGLVARRAYV01";
-	const int magicsize = 12;//magic.size();
-	char fmagic[magicsize+1];
-	filein.read(fmagic, magic.size());
-	if (!filein)
-	{
-		error_output << "File magic read error: " << filepath << std::endl;
-		return false;
-	}
+bool MODEL::HaveMeshData() const
+{
+	return (mesh.GetNumFaces() > 0);
+}
 
-	fmagic[magic.size()] = '\0';
-	std::string fmagicstr = fmagic;
-	if (magic != fmagic)
-	{
-		error_output << "File magic is incorrect: \"" << magic << "\" != \"" << fmagic << "\" in " << filepath << std::endl;
-		return false;
-	}
+bool MODEL::HaveMeshMetrics() const
+{
+	return generatedmetrics;
+}
 
-	if (verbose) std::cout << filepath << ": serializing" << std::endl;
+bool MODEL::HaveListID() const
+{
+	return generatedlistid;
+}
 
-	/*// read the entire file into the memfile stream
-	std::streampos start = filein.tellg();
-	filein.seekg(0,std::ios::end);
-	std::streampos length = filein.tellg() - start;
-	filein.seekg(start);
-	std::vector <char> buffer(length);
-	filein.read(&buffer[0],length);
-	std::stringstream memfile;
-	memfile.rdbuf()->pubsetbuf(&buffer[0],length);*/
-
-	joeserialize::BinaryInputSerializer s(filein);
-	//joeserialize::BinaryInputSerializer s(memfile);
-	if (!Serialize(s))
-	{
-		error_output << "Serialization error: " << filepath << std::endl;
-		Clear();
-		return false;
-	}
-
-	if (verbose) std::cout << filepath << ": generating metrics" << std::endl;
-
+void MODEL::Clear()
+{
+	ClearMeshData();
 	ClearListID();
+	ClearVertexArrayObject();
 	ClearMetrics();
-	GenerateMeshMetrics();
-	if (verbose) std::cout << filepath << ": generating list id" << std::endl;
+}
 
-	if (generatelistid) GenerateListID(error_output);
-
-	if (verbose) std::cout << filepath << ": done" << std::endl;
-
-	return true;
+const VERTEXARRAY & MODEL::GetVertexArray() const
+{
+	return mesh;
 }
 
 void MODEL::SetVertexArray(const VERTEXARRAY & newmesh)
@@ -387,12 +428,17 @@ void MODEL::SetVertexArray(const VERTEXARRAY & newmesh)
 	mesh = newmesh;
 }
 
-void MODEL::BuildFromVertexArray(const VERTEXARRAY & newmesh, std::ostream & error_output)
+void MODEL::BuildFromVertexArray(const VERTEXARRAY & newmesh)
 {
 	SetVertexArray(newmesh);
 
-	//generate metrics such as bounding box, etc
+	// Generate metrics such as bounding box, etc.
 	GenerateMeshMetrics();
+}
+
+bool MODEL::Loaded()
+{
+	return (mesh.GetNumFaces() > 0);
 }
 
 void MODEL::Translate(float x, float y, float z)
@@ -408,4 +454,35 @@ void MODEL::Rotate(float a, float x, float y, float z)
 void MODEL::Scale(float x, float y, float z)
 {
 	mesh.Scale(x,y,z);
+}
+
+AABB <float> MODEL::GetAABB() const
+{
+	AABB <float> output;
+	output.SetFromCorners(bboxmin, bboxmax);
+	return output;
+}
+
+void MODEL::RequireMetrics() const
+{
+	// Mesh metrics need to be generated before they can be queried.
+	assert(generatedmetrics);
+}
+
+void MODEL::RequireListID() const
+{
+	// Mesh id needs to be generated.
+	assert(generatedlistid);
+}
+
+void MODEL::ClearListID()
+{
+	if (generatedlistid)
+		glDeleteLists(listid, 1);
+	generatedlistid = false;
+}
+
+void MODEL::ClearMetrics()
+{
+	generatedmetrics = false;
 }

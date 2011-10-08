@@ -159,7 +159,7 @@ bool CARCONTROLMAP_LOCAL::Load(const std::string & controlfile, std::ostream & i
 				if (!controls_config.GetParam(i, "down", newctrl.joypushdown, error_output)) continue;
 				if (!controls_config.GetParam(i, "once", newctrl.onetime, error_output)) continue;
 			}
-			else if(joy_type == "axis")
+			else if (joy_type == "axis")
 			{
 				newctrl.joytype = CONTROL::JOYAXIS;
 				int joy_axis = 0;
@@ -174,7 +174,7 @@ bool CARCONTROLMAP_LOCAL::Load(const std::string & controlfile, std::ostream & i
 				if (!controls_config.GetParam(i, "gain", gain, error_output)) continue;
 
 				newctrl.joyaxis = joy_axis;
-				if(axis_type == "positive")
+				if (axis_type == "positive")
 				{
 					newctrl.joyaxistype = CONTROL::POSITIVE;
 				}
@@ -376,7 +376,7 @@ void CARCONTROLMAP_LOCAL::Save(CONFIG & controls_config, std::ostream & info_out
 				controls_config.SetParam(section, "once", curctrl.onetime);
 				controls_config.SetParam(section, "down", curctrl.keypushdown);
 			}
-			else if(curctrl.type == CONTROL::MOUSE)
+			else if (curctrl.type == CONTROL::MOUSE)
 			{
 				controls_config.SetParam(section, "type", "mouse");
 				if (curctrl.mousetype == CONTROL::MOUSEBUTTON)
@@ -390,19 +390,19 @@ void CARCONTROLMAP_LOCAL::Save(CONFIG & controls_config, std::ostream & info_out
 				{
 					std::string direction = "invalid";
 					CONTROL::MOUSEDIRECTION mdir = curctrl.mdir;
-					if( mdir == CONTROL::UP )
+					if ( mdir == CONTROL::UP )
 					{
 						direction = "up";
 					}
-					else if( mdir == CONTROL::DOWN )
+					else if ( mdir == CONTROL::DOWN )
 					{
 						direction = "down";
 					}
-					else if( mdir == CONTROL::LEFT )
+					else if ( mdir == CONTROL::LEFT )
 					{
 						direction = "left";
 					}
-					else if( mdir == CONTROL::RIGHT )
+					else if ( mdir == CONTROL::RIGHT )
 					{
 						direction = "right";
 					}
@@ -499,15 +499,15 @@ void CARCONTROLMAP_LOCAL::AddInputJoyAxis(const std::string & inputname, bool an
 	float exponent = 1.0;
 	float gain = 1.0;
 	newctrl.joyaxis = ( joy_axis );
-	if( axis_type == "positive" )
+	if ( axis_type == "positive" )
 	{
 		newctrl.joyaxistype = CONTROL::POSITIVE;
 	}
-	else if( axis_type == "negative" )
+	else if ( axis_type == "negative" )
 	{
 		newctrl.joyaxistype = CONTROL::NEGATIVE;
 	}
-	else if( axis_type == "both" )
+	else if ( axis_type == "both" )
 	{
 		newctrl.joyaxistype = CONTROL::BOTH;
 	}
@@ -901,7 +901,7 @@ void CARCONTROLMAP_LOCAL::ProcessSteering(const std::string & joytype, float ste
 	}
 
 	//do speed sensitivity
-	if( speedsens != 0.0 )
+	if ( speedsens != 0.0 )
 	{
 		float coeff = 1.0;
 		if (carmph > 1)

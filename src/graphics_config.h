@@ -1,14 +1,14 @@
 #ifndef _GRAPHICS_CONFIG_H
 #define _GRAPHICS_CONFIG_H
 
+#include "graphics_config_condition.h"
+
 #include <string>
 #include <vector>
 #include <map>
 #include <fstream>
 #include <iostream>
 #include <set>
-
-#include "graphics_config_condition.h"
 
 struct GRAPHICS_CONFIG_SHADER
 {

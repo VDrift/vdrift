@@ -157,7 +157,7 @@ btVector3 CARTIRE::GetForce(
 	x = fabs(Fx) / (fabs(Fx) + fabs(Fy));
 	btScalar y = 1.0 - x;
 	btScalar one = 1.0;
-	if(sigma < 0.0) one = -1.0;
+	if (sigma < 0.0) one = -1.0;
 	btScalar pure_sigma = sigma / (one + sigma);
 	btScalar pure_alpha = tan(alpha_rad) / (one + sigma);
 	btScalar pure_combined = sqrt(pure_sigma * pure_sigma + pure_alpha * pure_alpha);
@@ -169,7 +169,7 @@ btVector3 CARTIRE::GetForce(
 	btScalar Flimit = (fabs(x * Flimit_lng) + fabs(y * Flimit_lat));
 	btScalar Fmag = sqrt(Fx * Fx + Fy * Fy);
 
-	if(Fmag > Flimit)
+	if (Fmag > Flimit)
 	{
 		btScalar scale = Flimit / Fmag;
 		Fx *= scale;

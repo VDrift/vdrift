@@ -1086,7 +1086,7 @@ class BinaryOutputSerializer : public SerializerOutput
 		bool IsBigEndian() const
 		{
 			short word = 0x4321;
-			if((*(char *)& word) != 0x21 )
+			if ((*(char *)& word) != 0x21 )
 				return true;
 			else
 				return false;
@@ -1167,7 +1167,7 @@ class BinaryInputSerializer : public SerializerInput
 		bool IsBigEndian() const
 		{
 			short word = 0x4321;
-			if((*(char *)& word) != 0x21 )
+			if ((*(char *)& word) != 0x21 )
 				return true;
 			else
 				return false;

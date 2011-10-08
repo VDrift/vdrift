@@ -9,7 +9,6 @@
 #include "graphics_interface.h"
 #include "frustum.h"
 #include "graphics_config_condition.h"
-
 #include "gl3v/glwrapper.h"
 #include "gl3v/renderer.h"
 #include "gl3v/stringidmap.h"

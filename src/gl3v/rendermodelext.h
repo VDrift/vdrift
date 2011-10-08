@@ -1,8 +1,25 @@
+/************************************************************************/
+/*                                                                      */
+/* This file is part of VDrift.                                         */
+/*                                                                      */
+/* VDrift is free software: you can redistribute it and/or modify       */
+/* it under the terms of the GNU General Public License as published by */
+/* the Free Software Foundation, either version 3 of the License, or    */
+/* (at your option) any later version.                                  */
+/*                                                                      */
+/* VDrift is distributed in the hope that it will be useful,            */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of       */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the        */
+/* GNU General Public License for more details.                         */
+/*                                                                      */
+/* You should have received a copy of the GNU General Public License    */
+/* along with VDrift.  If not, see <http://www.gnu.org/licenses/>.      */
+/*                                                                      */
+/************************************************************************/
+
 #ifndef _RENDERMODELEXT
 #define _RENDERMODELEXT
 
-#include "keyed_container.h"
-#include "stringidmap.h"
 #include "rendertextureentry.h"
 #include "renderuniformentry.h"
 #include "glwrapper.h"
@@ -14,46 +31,35 @@
 class RenderPass;
 
 /// This class is similar to RenderModelEntry, but contains textures and uniforms.
-/// The idea is that these objects are stored externally from the renderer, and then
-/// arrays of pointers to them get passed into the renderer function at render time.
+/// The idea is that these objects are stored externally from the renderer, and then arrays of pointers to them get passed into the renderer function at render time.
 /// If a different geometry draw method is desired, the class can be derived from.
 class RenderModelExternal
 {
 	friend class RenderPass;
-	public:
-		RenderModelExternal() : vao(0), elementCount(0), enabled(false) {}
-		RenderModelExternal(const RenderModelEntry & m) : vao(m.vao), elementCount(m.elementCount)
-		{
-			if (elementCount > 0)
-				enabled = true;
-		}
+public:
+	RenderModelExternal();
+	RenderModelExternal(const RenderModelEntry & m);
 
-		virtual ~RenderModelExternal() {}
-		virtual void draw(GLWrapper & gl) const {gl.drawGeometry(vao, elementCount);}
-		bool drawEnabled() const {return enabled;}
-		void setVertexArrayObject(GLuint newVao, unsigned int newElementCount)
-		{
-			vao = newVao;
-			elementCount = newElementCount;
-			if (elementCount > 0)
-				enabled = true;
-		}
+	virtual ~RenderModelExternal();
+	virtual void draw(GLWrapper & gl) const;
+	bool drawEnabled() const;
+	void setVertexArrayObject(GLuint newVao, unsigned int newElementCount);
 
-	protected:
-		GLuint vao;
-		int elementCount;
-		bool enabled;
+protected:
+	GLuint vao;
+	int elementCount;
+	bool enabled;
 
-		std::vector <RenderTextureEntry> textures;
-		std::vector <RenderUniformEntry> uniforms;
+	std::vector <RenderTextureEntry> textures;
+	std::vector <RenderUniformEntry> uniforms;
 
-		// these need to be called whenever the vectors above are changed
-		void clearTextureCache() {perPassTextureCache.clear();}
-		void clearUniformCache() {perPassUniformCache.clear();}
+	// These need to be called whenever the vectors above are changed.
+	void clearTextureCache();
+	void clearUniformCache();
 
-	private:
-		RenderCacheVector <std::vector <RenderTexture> > perPassTextureCache; // indexed by pass ID
-		RenderCacheVector <std::vector <RenderUniform> > perPassUniformCache; // indexed by pass ID
+private:
+	RenderCacheVector <std::vector <RenderTexture> > perPassTextureCache;	// Indexed by pass ID.
+	RenderCacheVector <std::vector <RenderUniform> > perPassUniformCache;	// Indexed by pass ID.
 };
 
 #endif
