@@ -20,6 +20,7 @@
 #include "glwrapper.h"
 #include "glenums.h"
 #include "utils.h"
+#include <limits.h>
 
 #define ERROR_CHECK checkForOpenGLErrors(__PRETTY_FUNCTION__,__FILE__,__LINE__)
 #define ERROR_CHECK1(x) checkForOpenGLErrors(__PRETTY_FUNCTION__,__FILE__,__LINE__)

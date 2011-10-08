@@ -19,6 +19,8 @@
 
 #include "glew.h"
 #include "glenums.h"
+#include <iostream>
+#include <cassert>
 
 GLEnums::GLEnums()
 {
