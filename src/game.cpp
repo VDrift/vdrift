@@ -243,6 +243,13 @@ void GAME::Start(std::list <std::string> & args)
 	}
 	tire_smoke.SetParameters(0.125,0.25, 5,14, 0.3,1, 0.5,1, MATHVECTOR<float,3>(0,0,1));
 
+	// Initialize skid mark system.
+	if (!skidmarks.Init(content, pathmanager.GetEffectsTextureDir(), "skidmark.png"))
+	{
+		error_output << "Error loading skidmark system" << std::endl;
+		return;
+	}
+
 	// Initialize force feedback.
 #ifdef ENABLE_FORCE_FEEDBACK
 	forcefeedback.reset(new FORCEFEEDBACK(settings.GetFFDevice(), error_output, info_output));
@@ -666,6 +673,7 @@ void GAME::BeginDraw()
 	TraverseScene<true>(debugnode, graphics_interface->GetDynamicDrawlist());
 	TraverseScene<false>(gui.GetNode(), graphics_interface->GetDynamicDrawlist());
 	TraverseScene<false>(track.GetRacinglineNode(), graphics_interface->GetDynamicDrawlist());
+	TraverseScene<false>(skidmarks.GetNode(), graphics_interface->GetDynamicDrawlist());
 #ifndef USE_STATIC_OPTIMIZATION_FOR_TRACK
 	TraverseScene<false>(track.GetTrackNode(), graphics_interface->GetDynamicDrawlist());
 #endif
@@ -819,6 +827,7 @@ void GAME::AdvanceGameLogic()
 				for (std::list <CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
 				{
 					UpdateCar(*i, TickPeriod());
+					UpdateSkidmarks(*i);
 				}
 				PROFILER.endBlock("car-update");
 
@@ -2566,6 +2575,27 @@ void GAME::UpdateForceFeedback(float dt)
 		forcefeedback->update(0, &pos, 0.02, error_output);
 	}
 #endif
+}
+
+void GAME::UpdateSkidmarks(CAR & car)
+{
+	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
+	{
+		const COLLISION_CONTACT & ct = car.GetWheelContact(WHEEL_POSITION(i));
+		const MATHVECTOR<float, 3> & pos = ToMathVector<float>(ct.GetPosition());
+		const MATHVECTOR<float, 3> & norm = ToMathVector<float>(ct.GetNormal());
+		MATHVECTOR<float, 3> v = car.GetWheelVelocity(WHEEL_POSITION(i));
+		MATHVECTOR<float, 3> left = norm.cross(v);
+		
+		// ignore low tangential velocity
+		if (left.MagnitudeSquared() < 0.001) continue; 
+		
+		left = left.Normalize();
+		unsigned int & id = car.GetSkidmarkId(WHEEL_POSITION(i));
+		const float hwidth = 0.15;
+		const float squeal = car.GetTireSquealAmount(WHEEL_POSITION(i));
+		skidmarks.Update(id, pos, left, norm, hwidth, squeal);
+	}
 }
 
 void GAME::AddTireSmokeParticles(float dt, CAR & car)

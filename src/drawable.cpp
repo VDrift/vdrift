@@ -47,6 +47,7 @@ void DRAWABLE::SetColor(float nr, float ng, float nb, float na)
 	a = na;
 	uniformsChanged = true;
 }
+
 void DRAWABLE::SetColor(float nr, float ng, float nb)
 {
 	r = nr;
@@ -54,6 +55,12 @@ void DRAWABLE::SetColor(float nr, float ng, float nb)
 	b = nb;
 	uniformsChanged = true;
 }
+
+float DRAWABLE::GetAlpha() const
+{
+	return a;
+}
+
 void DRAWABLE::SetAlpha(float na)
 {
 	a = na;

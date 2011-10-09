@@ -111,7 +111,7 @@ void CARTIRE::GetSigmaHatAlphaHat(btScalar load, btScalar & sh, btScalar & ah) c
 	}
 }
 
-btVector3 CARTIRE::GetForce(
+void CARTIRE::Update(
 	btScalar normal_force,
 	btScalar friction_coeff,
 	btScalar inclination,
@@ -121,7 +121,9 @@ btVector3 CARTIRE::GetForce(
 {
 	if (normal_force < 1E-3 || friction_coeff < 1E-3)
 	{
-		return btVector3(0, 0, 0);
+		feedback = 0;
+		force.setZero();
+		return;
 	}
 
 	btScalar Fz = normal_force * 0.001;
@@ -245,11 +247,18 @@ btVector3 CARTIRE::GetForce(
 	ideal_slide = sigma_hat;
 	ideal_slip = alpha_hat;
 
-	// debugging
-	fx = Fx; fy = Fy; fz = Fz;
-
 	// Fx positive during traction, Fy positive in a right turn, Mz positive in a left turn
-	return btVector3(Fx, Fy, Mz);
+	force.setValue(Fx, Fy, Fz * 1000);
+}
+
+btScalar CARTIRE::GetTorque() const
+{
+	return feedback;
+}
+
+const btVector3 & CARTIRE::GetForce() const
+{
+	return force;
 }
 
 btScalar CARTIRE::GetRollingResistance(const btScalar velocity, const btScalar rolling_resistance_factor) const
@@ -485,8 +494,10 @@ QT_TEST(tire_test)
 	btScalar inclination = 15;
 
 	btVector3 f0, f1;
-	f0 = tire.GetForce(normal_force, friction_coeff, inclination, ang_velocity, lon_velocity, lat_velocity);
-	f1 = tire.GetForce(normal_force, friction_coeff, -inclination, ang_velocity, lon_velocity, lat_velocity);
+	tire.Update(normal_force, friction_coeff, inclination, ang_velocity, lon_velocity, lat_velocity);
+	f0 = tire.GetForce();
+	tire.Update(normal_force, friction_coeff, inclination, ang_velocity, lon_velocity, lat_velocity);
+	f1 = tire.GetForce();
 
 	QT_CHECK_CLOSE(f1[0], f0[0], 0.001);
 	QT_CHECK_LESS(f0[0], 0);

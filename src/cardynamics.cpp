@@ -1442,7 +1442,7 @@ btVector3 CARDYNAMICS::ApplySuspensionForceToBody ( int i, btScalar dt, btVector
 	return suspension_force;
 }
 
-btVector3 CARDYNAMICS::ComputeTireFrictionForce (int i, btScalar dt, btScalar normal_force,
+void CARDYNAMICS::ComputeTireFrictionForce (int i, btScalar dt, btScalar normal_force,
         btScalar angvel, btVector3 & groundvel, const btQuaternion & wheel_orientation)
 {
 	//determine camber relative to the road
@@ -1467,12 +1467,7 @@ btVector3 CARDYNAMICS::ComputeTireFrictionForce (int i, btScalar dt, btScalar no
 		tire[i].GetTread() * wheel_contact[i].GetSurface().frictionTread +
 		(1.0 - tire[i].GetTread()) * wheel_contact[i].GetSurface().frictionNonTread;
 
-	btVector3 friction_force = tire[i].GetForce(
-		normal_force, friction_coeff, camber, angvel, lonvel, latvel);
-
-	for (int n = 0; n < 3; ++n) assert(!isnan(friction_force[n]));
-
-	return friction_force;
+	tire[i].Update(normal_force, friction_coeff, camber, angvel, lonvel, latvel);
 }
 
 void CARDYNAMICS::ApplyWheelForces ( btScalar dt, btScalar wheel_drive_torque, int i, const btVector3 & suspension_force, btVector3 & force, btVector3 & torque )
@@ -1488,8 +1483,9 @@ void CARDYNAMICS::ApplyWheelForces ( btScalar dt, btScalar wheel_drive_torque, i
 #endif
 	assert(!isnan(normal_force));
 
-	btVector3 friction_force = ComputeTireFrictionForce ( i, dt, normal_force, wheel[i].GetAngularVelocity(), groundvel, wheel_orientation[i] );
-
+	ComputeTireFrictionForce ( i, dt, normal_force, wheel[i].GetAngularVelocity(), groundvel, wheel_orientation[i] );
+	btVector3 friction_force = tire[i].GetForce();
+	
 	//calculate friction torque
 	btVector3 tire_force = direction::forward * friction_force[0] - direction::right * friction_force[1];
 	btScalar tire_friction_torque = friction_force[0] * tire[i].GetRadius();
@@ -1513,7 +1509,7 @@ void CARDYNAMICS::ApplyWheelForces ( btScalar dt, btScalar wheel_drive_torque, i
 	if ( ( applied_torque > 0 && reaction_torque > applied_torque ) ||
 			( applied_torque < 0 && reaction_torque < applied_torque ) )
 		reaction_torque = applied_torque;
-	btVector3 tire_torque = direction::right * reaction_torque - direction::up * friction_force[2];
+	btVector3 tire_torque = direction::right * reaction_torque - direction::up * tire[i].GetTorque();
 
 	//set wheel torque due to tire rolling resistance
 	btScalar rolling_resistance = -tire[i].GetRollingResistance(wheel[i].GetAngularVelocity(), wheel_contact[i].GetSurface().rollResistanceCoefficient);

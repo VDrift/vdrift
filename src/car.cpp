@@ -20,6 +20,7 @@
 #include <vector>
 #include <sstream>
 #include <string>
+#include <cassert>
 
 enum WHICHDRAWLIST
 {
@@ -413,7 +414,10 @@ CAR::CAR() :
 	sector(-1),
 	applied_brakes(0)
 {
-	// ctor
+	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
+	{
+		skidmark[i] = -1;
+	}
 }
 
 bool CAR::LoadLight(
@@ -439,7 +443,7 @@ bool CAR::LoadLight(
 	node.GetTransform().SetTranslation(MATHVECTOR<float,3>(pos[0], pos[1], pos[2]));
 
 	std::tr1::shared_ptr<MODEL> mesh;
-	if (!content.get("", "cube"+radiusstr, mesh));
+	if (!content.get("", "cube"+radiusstr, mesh))
 	{
 		VERTEXARRAY varray;
 		varray.SetToUnitCube();
@@ -1356,24 +1360,32 @@ float CAR::GetFeedback()
 
 float CAR::GetTireSquealAmount(WHEEL_POSITION i) const
 {
+	// No squeal if no surface contact
 	const TRACKSURFACE & surface = dynamics.GetWheelContact(WHEEL_POSITION(i)).GetSurface();
 	if (surface.type == TRACKSURFACE::NONE) return 0;
 
-	btQuaternion wheelspace = dynamics.GetUprightOrientation(WHEEL_POSITION(i));
-	btVector3 groundvel = quatRotate(wheelspace.inverse(), dynamics.GetWheelVelocity(WHEEL_POSITION(i)));
-	float wheelspeed = dynamics.GetWheel(WHEEL_POSITION(i)).GetAngularVelocity() * dynamics.GetTire(WHEEL_POSITION(i)).GetRadius();
-	groundvel[0] -= wheelspeed;
-	groundvel[1] *= 2.0;
-	groundvel[2] = 0;
-	float squeal = (groundvel.length() - 3.0) * 0.2;
+	// No squeal if wheel velocity lower than 0.3m/s due to slip oscillations at low speeds
+	btVector3 velocity = dynamics.GetWheelVelocity(WHEEL_POSITION(i));
+	btVector3 normal = dynamics.GetWheelContact(WHEEL_POSITION(i)).GetNormal();
+	btScalar v = (velocity - normal * velocity.dot(normal)).length2();
+	if (v < 0.3 * 0.3) return 0;
 
-	double slide = dynamics.GetTire(i).GetSlide() / dynamics.GetTire(i).GetIdealSlide();
-	double slip = dynamics.GetTire(i).GetSlip() / dynamics.GetTire(i).GetIdealSlip();
-	double maxratio = std::max(std::abs(slide), std::abs(slip));
-	float squealfactor = std::max(0.0, maxratio - 1.0);
-	squeal *= squealfactor;
-	if (squeal < 0) squeal = 0;
-	if (squeal > 1) squeal = 1;
+	// Sqeal proprtional to tire load, scale by magic number(half max tire load 10kN)
+	btVector3 force = dynamics.GetTire(i).GetForce();
+	float squeal = force.z() / 10E3;
+
+	// Scale sqeal by slide, slip ratios maximum.
+	float slide_ratio = dynamics.GetTire(i).GetSlide() / dynamics.GetTire(i).GetIdealSlide();
+	float slip_ratio = dynamics.GetTire(i).GetSlip() / dynamics.GetTire(i).GetIdealSlip();
+	float max_ratio = std::max(std::abs(slide_ratio), std::abs(slip_ratio));
+
+	// Sqeal only if we exceed ideal slip, slide.
+	float squeal_factor = std::max(0.0, max_ratio - 1.0);
+	squeal *= squeal_factor;
+
+	// Limit sqeal to 0.1-1.0
+	if (squeal < 0.1) squeal = 0.0;
+	else if (squeal > 1.00) squeal = 1.0;
 
 	return squeal;
 }

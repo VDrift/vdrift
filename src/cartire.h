@@ -38,13 +38,17 @@ public:
 	/// velocity_ang: wheel angular veloity in rad/s
 	/// inclination: wheel inclination in degrees
 	/// normal_force: tire load in newton
-	btVector3 GetForce(
+	void Update(
 		btScalar normal_force,
 		btScalar friction_coeff,
 		btScalar inclination,
 		btScalar ang_velocity,
 		btScalar lon_velocty,
 		btScalar lat_velocity);
+
+	btScalar GetTorque() const;
+
+	const btVector3 & GetForce() const;
 
 	/// get rolling resistance
 	btScalar GetRollingResistance(const btScalar velocity, const btScalar rolling_resistance_factor) const;
@@ -70,9 +74,9 @@ public:
 		//out << "Inclination: " << camber << "\n";
 		//out << "Slide ratio: " << slide  << "\n";
 		//out << "Slip angle: " << slip  << "\n";
-		out << "Fx: " << fx << "\n";
-		out << "Fy: " << fy  << "\n";
-		out << "Fz: " << fz  << "\n";
+		out << "Fx: " << force.x() << "\n";
+		out << "Fy: " << force.y() << "\n";
+		out << "Fz: " << force.z() << "\n";
 	}
 
 private:
@@ -96,9 +100,7 @@ private:
 	btScalar slip; ///< the angle (in degrees) between the wheel heading and the wheel's actual velocity
 	btScalar ideal_slide; ///< ideal slide ratio
 	btScalar ideal_slip; ///< ideal slip angle
-
-	// debugging
-	btScalar fx, fy, fz;
+	btVector3 force; ///< tire contact force
 
 	/// pacejka magic formula function, longitudinal
 	btScalar PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coeff, btScalar & max_Fx) const;

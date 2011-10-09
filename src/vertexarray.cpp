@@ -266,9 +266,11 @@ VERTEXARRAY VERTEXARRAY::operator+ (const VERTEXARRAY & v) const
 	return out;
 }
 
-void VERTEXARRAY::Add(float * newnorm, int newnormcount, float * newvert, int newvertcount,
-			int * newfaces, int newfacecount,
-			float * newtc, int newtccount)
+void VERTEXARRAY::Add(
+	const float * newnorm, int newnormcount,
+	const float * newvert, int newvertcount,
+	const int * newfaces, int newfacecount,
+	const float * newtc, int newtccount)
 {
 	int idxoffset = vertices.size()/3;
 
@@ -335,10 +337,11 @@ void VERTEXARRAY::Add(float * newnorm, int newnormcount, float * newvert, int ne
 		}
 	}
 
-	//add tex coords
+	//add tex coords to first texcoordset
 	{
-		//This version of VERTEXARRAY::Add assumes texcoordsets == 1
-		assert(GetTexCoordSets() == 1);
+		//Make sure we've got at least 1 texcoordset
+		if (GetTexCoordSets() == 0)
+			texcoords.resize(1);
 
 		int newcount = newtccount;
 		int origsize = texcoords[0].size();

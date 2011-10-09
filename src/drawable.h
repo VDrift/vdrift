@@ -62,6 +62,8 @@ public:
 	void GetColor(float &nr, float &ng, float &nb, float &na) const {nr = r; ng = g; nb = b; na = a;}
 	void SetColor(float nr, float ng, float nb, float na);
 	void SetColor(float nr, float ng, float nb);
+
+	float GetAlpha() const;
 	void SetAlpha(float na);
 
 	float GetDrawOrder() const {return draw_order;}

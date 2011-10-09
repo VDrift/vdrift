@@ -78,6 +78,11 @@ public:
 		return ToMathVector<float>(dynamics.GetWheelPosition(wpos));
 	}
 
+	const MATHVECTOR <float, 3> GetWheelVelocity(const WHEEL_POSITION i) const
+	{
+		return ToMathVector<float>(dynamics.GetWheelVelocity(i));
+	}
+
 	float GetTireRadius(const WHEEL_POSITION wpos) const
 	{
 		return dynamics.GetTire(wpos).GetRadius();
@@ -196,6 +201,11 @@ public:
 
 	// returns a float from 0.0 to 1.0 with the amount of tire squealing going on
 	float GetTireSquealAmount(WHEEL_POSITION i) const;
+
+	unsigned int & GetSkidmarkId(WHEEL_POSITION i)
+	{
+		return skidmark[i];
+	}
 
 	void EnableGlass(bool enable);
 
@@ -332,6 +342,7 @@ protected:
 	std::string cartype;
 	int sector; //the last lap timing sector that the car hit
 	const BEZIER * curpatch[WHEEL_POSITION_SIZE]; //the last bezier patch that each wheel hit
+	unsigned int skidmark[WHEEL_POSITION_SIZE]; // one skidmark per wheel
 
 	float applied_brakes; ///< cached so we can update the brake light
 

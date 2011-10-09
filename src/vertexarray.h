@@ -34,8 +34,12 @@ public:
 	void SetTexCoordSets(int newtcsets);
 	void SetTexCoords(size_t set, float * newarray, size_t newarraycount); ///<set is zero indexed
 
-	void Add(float * newnorm, int newnormcount, float * newvert, int newvertcount, int * newfaces, int newfacecount,
-		float * newtc, int newtccount); ///< assumes there is 1 tex coord set
+	///< assumes there is 1 tex coord set
+	void Add(
+		const float * newnorm, int newnormcount,
+		const float * newvert, int newvertcount,
+		const int * newfaces, int newfacecount,
+		const float * newtc, int newtccount);
 
 	//C style interface functions
 	void GetNormals(const float * & output_array_pointer, int & output_array_num) const;

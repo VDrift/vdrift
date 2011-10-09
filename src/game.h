@@ -26,6 +26,7 @@
 #include "replay.h"
 #include "forcefeedback.h"
 #include "particle.h"
+#include "skidmark.h"
 #include "ai.h"
 #include "quickmp.h"
 #include "contentmanager.h"
@@ -90,6 +91,7 @@ private:
 	void UpdateForceFeedback(float dt);
 	void UpdateParticleSystems(float dt);
 	void AddTireSmokeParticles(float dt, CAR & car);
+	void UpdateSkidmarks(CAR & car);
 	std::string GetReplayRecordingFilename();
 	void ParallelUpdate(int carindex);
 	void BeginDraw();
@@ -176,6 +178,7 @@ private:
 	TIMER timer;
 	REPLAY replay;
 	PARTICLE_SYSTEM tire_smoke;
+	SKIDMARK skidmarks;
 	AI ai;
 	HTTP http;
 
