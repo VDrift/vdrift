@@ -53,7 +53,7 @@ struct ini
 	void read(PTree & node)
 	{
 		std::string line, name;
-		while(in.good())
+		while (in.good())
 		{
 			std::getline(in, line, '\n');
 			if (line.empty())

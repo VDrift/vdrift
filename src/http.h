@@ -20,10 +20,10 @@
 #ifndef _HTTP_H
 #define _HTTP_H
 
-#include <string>
-#include <map>
 #include <curl/curl.h>
 #include <curl/easy.h>
+#include <string>
+#include <map>
 
 struct HTTPINFO
 {

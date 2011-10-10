@@ -36,7 +36,7 @@
 static void read_xml(std::istream & in, PTree & p, std::string key)
 {
 	std::string line, escape("/"+p.value());
-	while(in.good())
+	while (in.good())
 	{
 		std::getline(in, line, '\n');
 		if (line.empty())

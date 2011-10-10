@@ -20,11 +20,11 @@
 #ifndef _RENDERER
 #define _RENDERER
 
+#include "stringidmap.h"
+#include "renderpass.h"
 #include <vector>
 #include <iostream>
 #include <map>
-#include "stringidmap.h"
-#include "renderpass.h"
 
 /// StringIds are used to speed up use of the friendly names for texture samplers, uniform locations, and draw groups.
 class Renderer

@@ -67,7 +67,7 @@ void CARDIFFERENTIAL::ComputeWheelTorques(btScalar driveshaft_torque)
 	// Determine torque from the anti-slip mechanism.
 	btScalar current_anti_slip = anti_slip;
     // If torque sensitive.
-	if(anti_slip_torque > 0)
+	if (anti_slip_torque > 0)
         //TODO: add some minimum anti-slip.
 		current_anti_slip = anti_slip_torque*driveshaft_torque;
 

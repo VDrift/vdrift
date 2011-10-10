@@ -24,6 +24,7 @@
 #include "coordinatesystem.h"
 #include "joeserialize.h"
 #include "macros.h"
+
 #include <ostream>
 
 class CARAERO

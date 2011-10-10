@@ -4,7 +4,6 @@
 #include "toggle.h"
 
 #include <SDL/SDL.h>
-
 #include <vector>
 #include <map>
 #include <list>
@@ -129,14 +128,14 @@ private:
 	void AgeToggles(std::map <T, TOGGLE> & togglemap)
 	{
 		std::list <typename std::map<T, TOGGLE>::iterator> todel;
-		for(typename std::map <T, TOGGLE>::iterator i = togglemap.begin(); i != togglemap.end(); ++i)
+		for (typename std::map <T, TOGGLE>::iterator i = togglemap.begin(); i != togglemap.end(); ++i)
 		{
 			i->second.Tick();
 			if (!i->second.GetState() && !i->second.GetImpulseFalling())
 				todel.push_back(i);
 		}
 
-		for(typename std::list <typename std::map<T, TOGGLE>::iterator>::iterator i = todel.begin(); i != todel.end(); ++i)
+		for (typename std::list <typename std::map<T, TOGGLE>::iterator>::iterator i = todel.begin(); i != todel.end(); ++i)
 			togglemap.erase(*i);
 	}
 

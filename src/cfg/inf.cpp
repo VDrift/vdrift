@@ -38,7 +38,7 @@
 static void read_inf(std::istream & in, PTree & node, bool child)
 {
 	std::string line, name;
-	while(in.good())
+	while (in.good())
 	{
 		std::getline(in, line, '\n');
 		if (line.empty())

@@ -107,8 +107,6 @@ private:
 	bool generatedmetrics;
 	int listid;
 
-	const std::string file_magic;
-
 	bool generatedvao;
 	/// VAO means vertex array object.
 	GLuint vao;

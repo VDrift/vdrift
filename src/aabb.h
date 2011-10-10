@@ -211,7 +211,7 @@ public:
 				return OUT;
 			}
 
-			/*if(fabs(rd) < bound)
+			/*if (fabs(rd) < bound)
 			{
 				// partially in
 				// we don't return here because we could still be fully out of another frustum plane

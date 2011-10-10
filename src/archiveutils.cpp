@@ -46,7 +46,7 @@ bool Decompress(const std::string & file, const std::string & output_path, std::
 		std::string filename = archive_entry_pathname(entry);
 		std::string fullpath = output_path + "/" + filename;
 
-		if(archive_entry_filetype(entry) == AE_IFDIR)
+		if (archive_entry_filetype(entry) == AE_IFDIR)
 			PATHMANAGER::MakeDir(fullpath);
 		else
 		{
@@ -58,22 +58,22 @@ bool Decompress(const std::string & file, const std::string & output_path, std::
 			}
 
 			int size = -1;
-			while(size != 0)
+			while (size != 0)
 			{
 				size = archive_read_data(a, buff, BUFFSIZE);
-				if(size < 0)
+				if (size < 0)
 				{
 					error_output << "Encountered corrupt file: " << filename << std::endl;
 					return false;
 				}
-				else if(size != 0)
+				else if (size != 0)
 					f.write(buff, size);
 			}
 		}
 
 		archive_read_data_skip(a);
 	}
-	if(archive_read_finish(a) != ARCHIVE_OK)
+	if (archive_read_finish(a) != ARCHIVE_OK)
 	{
 		error_output << "Unable to finish read of " << file << std::endl;
 		return false;

@@ -78,10 +78,10 @@ bool HTTPINFO::operator != (const HTTPINFO & other) const
 
 bool HTTPINFO::operator == (const HTTPINFO & other) const
 {
-    if(state != other.state) return false;
-    if(totalsize != other.totalsize) return false;
-    if(downloaded != other.downloaded) return false;
-    if(error != other.error) return false;
+    if (state != other.state) return false;
+    if (totalsize != other.totalsize) return false;
+    if (downloaded != other.downloaded) return false;
+    if (error != other.error) return false;
 
 	return true;
 }

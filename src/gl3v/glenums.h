@@ -20,8 +20,8 @@
 #ifndef _GLENUMS_H
 #define _GLENUMS_H
 
-#include <string>
 #include "unordered_map.h"
+#include <string>
 
 /// Base interface for OpenGL enumerations.
 class GLEnums

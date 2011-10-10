@@ -1,11 +1,6 @@
 #ifndef _TRACK_H
 #define _TRACK_H
 
-#include <string>
-#include <iostream>
-#include <list>
-#include <memory>
-#include <vector>
 #include "scenenode.h"
 #include "tracksurface.h"
 #include "roadstrip.h"
@@ -13,6 +8,11 @@
 #include "quaternion.h"
 #include "motionstate.h"
 #include "LinearMath/btAlignedObjectArray.h"
+#include <string>
+#include <iostream>
+#include <list>
+#include <memory>
+#include <vector>
 
 class TEXTUREMANAGER;
 class MODELMANAGER;

@@ -40,13 +40,14 @@ bool RenderDimensions::get(unsigned int w, unsigned int h, unsigned int & outw, 
 {
 	outw = (unsigned int)floor(origw);
 	outh = (unsigned int)floor(origh);
-	if(origMultiples)
+
+	if (origMultiples)
 	{
 		outw = (unsigned int)floor(origw*w);
 		outh = (unsigned int)floor(origh*h);
 	}
 
-	if(outw != width || outh != height)
+	if (outw != width || outh != height)
 	{
 		width = outw;
 		height = outh;

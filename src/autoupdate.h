@@ -20,9 +20,10 @@
 #ifndef _AUTOUPDATE_H
 #define _AUTOUPDATE_H
 
+#include "config.h"
+
 #include <string>
 #include <map>
-#include "config.h"
 
 /// A class that maintains version information about cars and tracks.
 class AUTOUPDATE

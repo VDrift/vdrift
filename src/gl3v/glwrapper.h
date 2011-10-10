@@ -20,12 +20,12 @@
 #ifndef _GLWRAPPER
 #define _GLWRAPPER
 
-#include <iostream>
-#include <vector>
-#include <map>
 #include "glew.h"
 #include "gl.h"
 #include "renderuniformvector.h"
+#include <iostream>
+#include <vector>
+#include <map>
 
 /// A wrapper around all OpenGL functions.
 /// All GL functions should go through this class only; this allows it to cache state changes and perform other optimizations.

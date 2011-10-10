@@ -1,14 +1,14 @@
 #ifndef _UPDATEMANAGEMENT_H
 #define _UPDATEMANAGEMENT_H
 
+#include "autoupdate.h"
+#include "game_downloader.h"
+
 #include <string>
 #include <vector>
 #include <list>
 #include <map>
 #include <memory>
-
-#include "autoupdate.h"
-#include "game_downloader.h"
 
 class GUI;
 class PATHMANAGER;

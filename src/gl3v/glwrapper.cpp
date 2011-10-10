@@ -136,14 +136,14 @@ void GLWrapper::applyUniform(GLint location, const RenderUniformVector <int> & d
 template <typename T>
 void GLWrapper::applyUniformCached(GLint location, const RenderUniformVector <T> & data)
 {
-	if(!uniformCache(location, data))
+	if (!uniformCache(location, data))
 		applyUniform(location, data);
 }
 
 template <typename T>
 void GLWrapper::applyUniformDelayed(GLint location, const RenderUniformVector <T> & data)
 {
-	if(!uniformCache(location, data))
+	if (!uniformCache(location, data))
 		applyUniform(location, data);
 }
 
@@ -203,16 +203,16 @@ bool GLWrapper::linkShaderProgram(const std::vector <std::string> & shaderAttrib
 	handle = GLLOG(glCreateProgram());ERROR_CHECK;
 
 	// Attach all shaders that we got (hopefully a vertex and fragment shader are in here).
-	for(unsigned int i = 0; i < shaderHandles.size(); i++)
+	for (unsigned int i = 0; i < shaderHandles.size(); i++)
 		GLLOG(glAttachShader(handle, shaderHandles[i]));ERROR_CHECK;
 
 	// Make sure we get our vertex attributes bound to the proper names.
-	for(unsigned int i = 0; i < shaderAttributeBindings.size(); i++)
-		if(!shaderAttributeBindings[i].empty())
+	for (unsigned int i = 0; i < shaderAttributeBindings.size(); i++)
+		if (!shaderAttributeBindings[i].empty())
 			GLLOG(glBindAttribLocation(handle, i, shaderAttributeBindings[i].c_str()));ERROR_CHECK;
 
 	// Make sure color outputs are bound to the proper names.
-	for(std::map <GLuint, std::string>::const_iterator i = fragDataLocations.begin(); i != fragDataLocations.end(); i++)
+	for (std::map <GLuint, std::string>::const_iterator i = fragDataLocations.begin(); i != fragDataLocations.end(); i++)
 		GLLOG(glBindFragDataLocation(handle, i->first, i->second.c_str()));ERROR_CHECK;
 
 	// Attempt to link the program.
@@ -271,7 +271,7 @@ bool GLWrapper::BindFramebuffer(GLuint fbo)
 {
 	GLLOG(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, fbo));ERROR_CHECK;
 	GLenum status = GLLOG(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER));ERROR_CHECK;
-	if(status != GL_FRAMEBUFFER_COMPLETE)
+	if (status != GL_FRAMEBUFFER_COMPLETE)
 	{
 		logError("Incomplete framebuffer: "+GLEnumHelper.getEnum(status));
 		return false;
@@ -380,7 +380,7 @@ void GLWrapper::BindTexture(GLenum target, GLuint handle)
 {
 	// Only cache 2D textures at the moment, so if it's not 2D, then just send it and return.
 	// If we don't know what TU is active, then we can't do cache either.
-	if(target != GL_TEXTURE_2D || curActiveTexture == UINT_MAX)
+	if (target != GL_TEXTURE_2D || curActiveTexture == UINT_MAX)
 	{
 		GLLOG(glBindTexture(target,handle));ERROR_CHECK;
 		return;
@@ -398,8 +398,8 @@ void GLWrapper::BindTexture(GLenum target, GLuint handle)
 		boundTextures.resize(curActiveTexture+1,0);
 		send = true;
 	}
-    
-	if(send)
+
+	if (send)
 	{
 		GLLOG(glBindTexture(target,handle));ERROR_CHECK;
 		boundTextures[curActiveTexture] = handle;
@@ -643,10 +643,10 @@ void GLWrapper::ClearStencil(GLint s)
 
 bool GLWrapper::checkForOpenGLErrors(const char * function, const char * file, int line) const
 {
-	if(enableErrorChecking)
+	if (enableErrorChecking)
 	{
 		GLenum gl_error = glGetError();
-		if(gl_error != GL_NO_ERROR)
+		if (gl_error != GL_NO_ERROR)
 		{
 			const GLubyte *err_string = gluErrorString(gl_error);
 			std::string activity_description = std::string(function)+":"+file+":"+UTILS::tostr(line);
@@ -677,7 +677,7 @@ bool GLWrapper::uniformCache(GLint location, const RenderUniformVector <T> & dat
 	bool match = true;
 
 	// If we don't have an entry for this location yet, it's definitely not a match.
-	if(location >= (int)cache.size())
+	if (location >= (int)cache.size())
 	{
 		match = false;
 		cache.resize(location+1);
@@ -687,15 +687,15 @@ bool GLWrapper::uniformCache(GLint location, const RenderUniformVector <T> & dat
 	RenderUniformVector<T> & cached = cache[location];
 
 	// Check if the sizes of the vectors match.
-	if(cached.size() != data.size())
+	if (cached.size() != data.size())
 		match = false;
 
 	// If we've passed tests so far, check the values themselves.
-	if(match && (std::memcmp(&cached[0],&data[0],data.size()*sizeof(T)) != 0))
+	if (match && (std::memcmp(&cached[0],&data[0],data.size()*sizeof(T)) != 0))
 		match = false;
 
 	// Update the cached value if it has changed.
-	if(!match)
+	if (!match)
 		cached = data;
 
 	return match;
@@ -713,19 +713,19 @@ bool GLWrapper::uniformCache(GLint location, const RenderUniformVector <int> & d
 
 void GLWrapper::logError(const std::string & msg) const
 {
-	if(errorOutput)
+	if (errorOutput)
 		(*errorOutput) << msg << std::endl;
 }
 
 void GLWrapper::logOutput(const std::string & msg) const
 {
-	if(infoOutput)
+	if (infoOutput)
 		(*infoOutput) << msg << std::endl;
 }
 
 void GLWrapper::logGlCall(const char * msg) const
 {
-	if(logEveryGlCall && logEnable)
+	if (logEveryGlCall && logEnable)
 		logOutput(msg);
 }
 

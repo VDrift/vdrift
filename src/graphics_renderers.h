@@ -11,7 +11,6 @@
 #include "frustum.h"
 
 #include <SDL/SDL.h>
-
 #include <string>
 #include <ostream>
 #include <map>

@@ -20,8 +20,8 @@
 #ifndef _STRINGIDMAP
 #define _STRINGIDMAP
 
-#include <string>
 #include "unordered_map.h"
+#include <string>
 
 class StringId
 {

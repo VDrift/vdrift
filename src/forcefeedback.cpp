@@ -164,7 +164,7 @@ FORCEFEEDBACK::FORCEFEEDBACK( string device, std::ostream & error_output, std::o
 
 void FORCEFEEDBACK::update(double force, double * position, double dt, std::ostream & error_output)
 {
-	if( !enabled )
+	if ( !enabled )
 		return;
 
 	struct input_event event;

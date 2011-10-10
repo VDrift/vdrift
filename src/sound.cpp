@@ -307,14 +307,14 @@ void SOUND::Compute3DEffects(std::list <SOUNDSOURCE *> & sources, const MATHVECT
 
 void SOUND::LockSourceList()
 {
-	if(SDL_mutexP(sourcelistlock)==-1){
+	if (SDL_mutexP(sourcelistlock)==-1){
 		assert(0 && "Couldn't lock mutex");
 	}
 }
 
 void SOUND::UnlockSourceList()
 {
-	if(SDL_mutexV(sourcelistlock)==-1){
+	if (SDL_mutexV(sourcelistlock)==-1){
 		assert(0 && "Couldn't unlock mutex");
 	}
 }

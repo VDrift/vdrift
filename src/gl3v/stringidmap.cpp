@@ -47,7 +47,7 @@ bool StringIdMap::valid(StringId id)
 StringId StringIdMap::addStringId(const std::string & str)
 {
 	std::tr1::unordered_map <std::string, StringId>::iterator i = idmap.find(str);
-	if(i != idmap.end())
+	if (i != idmap.end())
 		return i->second;
 	else
 	{

@@ -40,24 +40,24 @@ void PATHMANAGER::Init(std::ostream & info_output, std::ostream & error_output)
 	// Figure out the user's home directory.
 	const char* homedir;
 #ifndef _WIN32
-	if((homedir = getenv("HOME")) == NULL)
+	if ((homedir = getenv("HOME")) == NULL)
 	{
-		if((homedir = getenv("USER")) == NULL)
-			if((homedir = getenv("USERNAME")) == NULL)
+		if ((homedir = getenv("USER")) == NULL)
+			if ((homedir = getenv("USERNAME")) == NULL)
 				error_output << "Could not find user's home directory!" << std::endl;
 		home_directory = "/home/";
 	}
 #else
-	if((homedir = getenv("USERPROFILE")) == NULL)
+	if ((homedir = getenv("USERPROFILE")) == NULL)
 		homedir = "data";	// WIN 9x/Me
 #endif
 	home_directory += homedir;
 
 	// Find data dir.
 	const char * datadir = getenv("VDRIFT_DATA_DIRECTORY");
-	if(datadir == NULL)
+	if (datadir == NULL)
 #ifndef _WIN32
-		if(FileExists("data/settings/options.config"))
+		if (FileExists("data/settings/options.config"))
 			data_directory = "data";
         else
 			data_directory = DATA_DIR;
@@ -119,12 +119,12 @@ bool PATHMANAGER::GetFileList(std::string folderpath, std::list <std::string> & 
 	DIR *dp;
 	struct dirent *ep;
 	dp = opendir(folderpath.c_str());
-	if(dp != NULL)
+	if (dp != NULL)
 	{
-		while((ep = readdir(dp)))
+		while ((ep = readdir(dp)))
 		{
 			std::string newname = ep->d_name;
-			if(newname[0] != '.')
+			if (newname[0] != '.')
 				outputfolderlist.push_back(newname);
 		}
 		closedir(dp);
@@ -142,10 +142,10 @@ bool PATHMANAGER::GetFileList(std::string folderpath, std::list <std::string> & 
 
 	// Get the first file.
 	hList = FindFirstFile(szDir, &FileData);
-	if(hList != INVALID_HANDLE_VALUE)
+	if (hList != INVALID_HANDLE_VALUE)
 		// Traverse through the directory structure.
-		while(FindNextFile(hList, &FileData))
-			if(!(FileData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) && (FileData.cFileName[0] != '.'))
+		while (FindNextFile(hList, &FileData))
+			if (!(FileData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) && (FileData.cFileName[0] != '.'))
 				outputfolderlist.push_back(FileData.cFileName);
 
 	FindClose(hList);
@@ -153,14 +153,14 @@ bool PATHMANAGER::GetFileList(std::string folderpath, std::list <std::string> & 
 #endif
 
 	// Remove non-matcthing extensions.
-	if(!extension.empty())
+	if (!extension.empty())
 	{
 		std::list <std::list <std::string>::iterator> todel;
-		for(std::list <std::string>::iterator i = outputfolderlist.begin(); i != outputfolderlist.end(); ++i)
-			if(i->find(extension) != i->length()-extension.length())
+		for (std::list <std::string>::iterator i = outputfolderlist.begin(); i != outputfolderlist.end(); ++i)
+			if (i->find(extension) != i->length()-extension.length())
                 todel.push_back(i);
 
-		for(std::list <std::list <std::string>::iterator>::iterator i = todel.begin(); i != todel.end(); ++i)
+		for (std::list <std::list <std::string>::iterator>::iterator i = todel.begin(); i != todel.end(); ++i)
 			outputfolderlist.erase(*i);
 	}
 
@@ -243,7 +243,7 @@ std::string PATHMANAGER::GetTracksPath() const
 std::string PATHMANAGER::GetCarPath(const std::string & carname) const
 {
 	// Check writeable car path first (check for presence of .car files).
-	if(FileExists(GetWriteableDataPath() + "/" + GetCarsDir() + "/" + carname + "/" + carname + ".car"))
+	if (FileExists(GetWriteableDataPath() + "/" + GetCarsDir() + "/" + carname + "/" + carname + ".car"))
 		return GetWriteableDataPath() + "/" + GetCarsDir() + "/" + carname;
 	else
 		return GetDataPath()+"/"+GetCarsDir()+"/"+carname;

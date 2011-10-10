@@ -37,7 +37,7 @@ WINDOW_SDL::~WINDOW_SDL()
 
 void WINDOW_SDL::Init(const std::string & windowcaption, unsigned int resx, unsigned int resy, unsigned int bpp, unsigned int depthbpp, bool fullscreen, unsigned int antialiasing, bool enableGL3, std::ostream & info_output, std::ostream & error_output)
 {
-	if(SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK) < 0)
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK) < 0)
 	{
         // Die...
 		error_output << "SDL initialization failed: " << SDL_GetError() << std::endl;
@@ -70,7 +70,7 @@ void WINDOW_SDL::Screenshot(std::string filename)
     
 	screen = surface;
     
-	if(!(screen->flags & SDL_OPENGL))
+	if (!(screen->flags & SDL_OPENGL))
 	{
 		SDL_SaveBMP(temp, filename.c_str());
 		return;
@@ -118,7 +118,7 @@ void WINDOW_SDL::ChangeDisplay(const int width, const int height, const int bpp,
 {
 	const SDL_VideoInfo *videoInfo = SDL_GetVideoInfo();
 
-	if(!videoInfo)
+	if (!videoInfo)
 	{
 		error_output << "SDL video query failed: " << SDL_GetError() << std::endl;
 		assert (0);
@@ -130,7 +130,7 @@ void WINDOW_SDL::ChangeDisplay(const int width, const int height, const int bpp,
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, dbpp);
 
 	fsaa = 1;
-	if(antialiasing > 1)
+	if (antialiasing > 1)
 	{
 		fsaa = antialiasing;
 		info_output << "Enabling antialiasing: " << fsaa << "X" << std::endl;
@@ -139,12 +139,12 @@ void WINDOW_SDL::ChangeDisplay(const int width, const int height, const int bpp,
 	else
 		info_output << "Disabling antialiasing" << std::endl;
 
-	if(fullscreen)
+	if (fullscreen)
 		videoFlags |= (SDL_HWSURFACE | SDL_ANYFORMAT | SDL_FULLSCREEN);
 	else
 		videoFlags |= (SDL_SWSURFACE | SDL_ANYFORMAT);
 
-	if(surface != NULL)
+	if (surface != NULL)
 	{
 		SDL_FreeSurface(surface);
 		surface = NULL;
@@ -152,7 +152,7 @@ void WINDOW_SDL::ChangeDisplay(const int width, const int height, const int bpp,
 
 	surface = SDL_SetVideoMode(width, height, bpp, videoFlags);
 
-	if(!surface)
+	if (!surface)
 	{
 		error_output << "Display change failed: " << width << "x" << height << "x" << bpp << " " << dbpp << "z fullscreen=" << fullscreen << std::endl << "Error: " << SDL_GetError() << std::endl;
 		assert (0);

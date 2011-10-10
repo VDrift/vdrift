@@ -846,13 +846,13 @@ bool TRACK::LOADER::LoadParameters()
 	std::stringstream sp_name;
 	sp_name << "start position " << sp_num;
 	std::vector<float> f3(3);
-	while(param.get(sp_name.str(), f3))
+	while (param.get(sp_name.str(), f3))
 	{
 		std::stringstream so_name;
 		so_name << "start orientation " << sp_num;
 		QUATERNION <float> q;
 		std::vector <float> angle(3, 0.0);
-		if(param.get(so_name.str(), angle, error_output))
+		if (param.get(so_name.str(), angle, error_output))
 		{
 			q.SetEulerZYX(angle[0] * M_PI/180, angle[1] * M_PI/180, angle[2] * M_PI/180);
 		}

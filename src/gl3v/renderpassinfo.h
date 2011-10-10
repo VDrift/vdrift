@@ -1,12 +1,12 @@
 #ifndef _RENDERPASSINFO_H
 #define _RENDERPASSINFO_H
 
+#include "joeserialize.h"
+#include "macros.h"
+
 #include <string>
 #include <vector>
 #include <set>
-
-#include "joeserialize.h"
-#include "macros.h"
 
 struct RealtimeExportPassInfo
 {

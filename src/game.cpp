@@ -1669,7 +1669,7 @@ void GAME::UpdateCarInputs(CAR & car)
 		}
 		settings.SetCameraMode(active_camera->GetName());
 
-		if(old_camera != active_camera)
+		if (old_camera != active_camera)
 		{
 			active_camera->Reset(car.GetPosition(), car.GetOrientation());
 		}
@@ -1714,7 +1714,7 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	{
 		std::stringstream replayfilenamestream;
 
-		if(benchmode)
+		if (benchmode)
 		{
 			replayfilenamestream << pathmanager.GetReplayPath() << "/benchmark.vdr";
 		}
@@ -1995,7 +1995,7 @@ bool GAME::LoadCar(
 		return false;
 	}
 
-	if(sound.Enabled() && !car.LoadSounds(cardir, carname, content, info_output, error_output))
+	if (sound.Enabled() && !car.LoadSounds(cardir, carname, content, info_output, error_output))
 	{
 		error_output << "Failed to load sounds for car " << carname << std::endl;
 		return false;
@@ -2139,16 +2139,16 @@ void GAME::CalculateFPS()
 	fpsstr << "FPS: " << (int)fps_avg;
 
 	// Don't start looking an min/max until we've put out a few frames.
-	if(fps_min == 0 && frame > 20)
+	if (fps_min == 0 && frame > 20)
 	{
 		fps_max = fps_avg;
 		fps_min = fps_avg;
 	}
-	else if(fps_avg > fps_max)
+	else if (fps_avg > fps_max)
 	{
 		fps_max = fps_avg;
 	}
-	else if(fps_avg < fps_min)
+	else if (fps_avg < fps_min)
 	{
 		fps_min = fps_avg;
 	}

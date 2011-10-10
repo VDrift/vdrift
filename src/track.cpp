@@ -81,21 +81,21 @@ bool TRACK::Loaded() const
 
 void TRACK::Clear()
 {
-	for(int i = 0, n = data.objects.size(); i < n; ++i)
+	for (int i = 0, n = data.objects.size(); i < n; ++i)
 	{
 		data.world->removeCollisionObject(data.objects[i]);
 		delete data.objects[i];
 	}
 	data.objects.clear();
     
-	for(int i = 0, n = data.shapes.size(); i < n; ++i)
+	for (int i = 0, n = data.shapes.size(); i < n; ++i)
 	{
 		btCollisionShape * shape = data.shapes[i];
 		delete shape;
 	}
 	data.shapes.clear();
     
-	for(int i = 0, n = data.meshes.size(); i < n; ++i)
+	for (int i = 0, n = data.meshes.size(); i < n; ++i)
 		delete data.meshes[i];
 	data.meshes.clear();
 
