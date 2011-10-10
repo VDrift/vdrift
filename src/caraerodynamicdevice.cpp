@@ -26,9 +26,7 @@ CARAERO::CARAERO() : air_density(1.2), drag_frontal_area(0), drag_coefficient(0)
 
 void CARAERO::DebugPrint(std::ostream & out) const
 {
-	out << "---Aerodynamic Device---" << "\n";
-	out << "Drag: " << drag_vector[0] << ", " << drag_vector[1] << ", " << drag_vector[2] << "\n";
-	out << "Lift: " << lift_vector[0] << ", " << lift_vector[1] << ", " << lift_vector[2] << "\n";
+	out << "---Aerodynamic Device---" << "\n" << "Drag: " << drag_vector[0] << ", " << drag_vector[1] << ", " << drag_vector[2] << "\n" << "Lift: " << lift_vector[0] << ", " << lift_vector[1] << ", " << lift_vector[2] << "\n";
 }
 
 void CARAERO::Set(const btVector3 & newpos, btScalar new_drag_frontal_area, btScalar new_drag_coefficient, btScalar new_lift_surface_area, btScalar new_lift_coefficient, btScalar new_lift_efficiency)
