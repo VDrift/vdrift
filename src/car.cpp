@@ -439,7 +439,7 @@ bool CAR::LoadLight(
 	node.GetTransform().SetTranslation(MATHVECTOR<float,3>(pos[0], pos[1], pos[2]));
 
 	std::tr1::shared_ptr<MODEL> mesh;
-	if (!content.get("", "cube"+radiusstr, mesh));
+	if (!content.get("", "cube"+radiusstr, mesh))
 	{
 		VERTEXARRAY varray;
 		varray.SetToUnitCube();
