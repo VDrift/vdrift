@@ -23,6 +23,13 @@ class DRAWABLE
 public:
 	bool operator < (const DRAWABLE & other) const {return draw_order < other.draw_order;}
 
+	/// WARNING: Not implemented.
+	bool operator == (const DRAWABLE & other) const
+	{
+		// TODO: Implement this.
+		return false;
+	}
+
 	bool IsDrawList() const {return !list_ids.empty();}
 
 	const std::vector <int> & GetDrawLists() const {return list_ids;}

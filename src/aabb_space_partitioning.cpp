@@ -20,6 +20,7 @@
 #include "aabb_space_partitioning.h"
 #include "drawable.h"
 #include "unittest.h"
+#include <algorithm>
 
 template <typename DATATYPE, unsigned int ideal_objects_per_node>
 void AABB_SPACE_PARTITIONING_NODE<DATATYPE, ideal_objects_per_node>::DebugPrint(int level, int & objectcount, bool verbose, std::ostream & output) const
@@ -193,9 +194,8 @@ void AABB_SPACE_PARTITIONING_NODE<DATATYPE, ideal_objects_per_node>::CollapseTo(
 template <typename DATATYPE, unsigned int ideal_objects_per_node>
 void AABB_SPACE_PARTITIONING_NODE<DATATYPE, ideal_objects_per_node>::RemoveDuplicateObjects()
 {
-	//TODO: Re-enable this code and make it compile. Requires the DATATYPE class implements operator< and operator==.
-	//objects.sort();
-	//objects.unique();
+	std::sort(objects.begin(), objects.end());
+	std::unique(objects.begin(), objects.end());
 }
 
 template <typename DATATYPE, unsigned int ideal_objects_per_node>

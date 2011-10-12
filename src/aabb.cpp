@@ -45,6 +45,25 @@ const AABB <T> & AABB<T>::operator = (const AABB <T> & other)
 }
 
 template <typename T>
+bool AABB<T>::operator == (const AABB<T> & other) const
+{
+	if (center != other.center)
+		return false;
+
+	if (size != other.size)
+		return false;
+
+	return true;
+}
+
+template <typename T>
+bool AABB<T>::operator < (const AABB<T> & other) const
+{
+	// TODO: Implement.
+	return false;
+}
+
+template <typename T>
 const MATHVECTOR <T, 3> & AABB<T>::GetPos() const
 {
 	return pos;

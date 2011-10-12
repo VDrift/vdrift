@@ -34,6 +34,11 @@ public:
 
 	const AABB <T> & operator = (const AABB <T> & other);
 
+	bool operator == (const AABB<T> & other) const;
+
+	/// WARNING: Not implemented.
+	bool operator < (const AABB<T> & other) const;
+
 	const MATHVECTOR <T, 3> & GetPos() const;
 	const MATHVECTOR <T, 3> & GetSize() const;
 	const MATHVECTOR <T, 3> & GetCenter() const;
