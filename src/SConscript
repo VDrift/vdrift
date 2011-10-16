@@ -93,6 +93,7 @@ src = Split("""aabb.cpp
 		scenenode.cpp
 		settings.cpp
 		shader.cpp
+		skidmark.cpp
 		sound.cpp
 		soundbuffer.cpp
 		soundfilter.cpp
