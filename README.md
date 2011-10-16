@@ -43,8 +43,7 @@ CPU.
 GPU
 ---
 
-VDrift requires a recent nVidia or ATI graphics card. Intel graphics cards are
-not supported.
+VDrift requires a recent nVidia or ATI graphics card. Some Intel graphics cards may work with recent drivers.
 
 A nVidia GeForce 7-series or ATI Radeon X1000-Series card is recommended in
 order to enable all the visual effects. By reducing or disabling some of the
