@@ -507,7 +507,6 @@ bool CAR::LoadGraphics(
 
 	// load drawables
 	LoadBody loadBody(topnode, bodynode, loadDrawable, damage);
-	SCENENODE & bodynoderef = topnode.GetNode(bodynode);
 	for (PTree::const_iterator i = cfg.begin(); i != cfg.end(); ++i)
 	{
 		if (i->first != "body" &&
@@ -524,6 +523,7 @@ bool CAR::LoadGraphics(
 	const PTree * cfg_steer;
 	if (cfg.get("steering", cfg_steer))
 	{
+		SCENENODE & bodynoderef = topnode.GetNode(bodynode);
 		if (!loadDrawable(*cfg_steer, bodynoderef, &steernode, 0))
 		{
 			error_output << "unable to load steering wheel" << std::endl;
@@ -569,6 +569,7 @@ bool CAR::LoadGraphics(
 	// load car brake/reverse graphics (optional)
 	if (cfg.get("light-brake", cfg_light))
 	{
+		SCENENODE & bodynoderef = topnode.GetNode(bodynode);
 		if (!loadDrawable(*cfg_light, bodynoderef, 0, &brakelights))
 		{
 			error_output << "unable to load lights" << std::endl;
@@ -577,6 +578,7 @@ bool CAR::LoadGraphics(
 	}
 	if (cfg.get("light-reverse", cfg_light))
 	{
+		SCENENODE & bodynoderef = topnode.GetNode(bodynode);
 		if (!loadDrawable(*cfg_light, bodynoderef, 0, &reverselights))
 		{
 			error_output << "unable to load lights" << std::endl;

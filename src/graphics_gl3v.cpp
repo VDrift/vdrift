@@ -264,6 +264,7 @@ void GRAPHICS_GL3V::SetupScene(float fov, float new_view_distance, const MATHVEC
 	const CameraMatrices & defaultCamera = cameras.find("default")->second;
 	renderer.setGlobalUniform(RenderUniformEntry(stringMap.addStringId("invProjectionMatrix"), defaultCamera.inverseProjectionMatrix.GetArray(),16));
 	renderer.setGlobalUniform(RenderUniformEntry(stringMap.addStringId("invViewMatrix"), defaultCamera.inverseViewMatrix.GetArray(),16));
+	renderer.setGlobalUniform(RenderUniformEntry(stringMap.addStringId("defaultViewMatrix"), defaultCamera.viewMatrix.GetArray(),16));
 
 	// send sun light direction for the default camera
 
