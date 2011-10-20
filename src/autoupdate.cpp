@@ -23,7 +23,7 @@
 
 const std::string AVAILABLE_PREFIX = "available_";
 
-AUTOUPDATE::AUTOUPDATE() : 
+AUTOUPDATE::AUTOUPDATE() :
 	url("http://vdrift.svn.sourceforge.net/viewvc/vdrift/vdrift-data/")
 {
 	// Constructor
@@ -57,6 +57,9 @@ bool AUTOUPDATE::Write(const std::string & path) const
 	// Now write formats.
 	for (pair_type::const_iterator p = formats.begin(); p != formats.end(); p++)
 		conf.SetParam("formats", p->first, p->second);
+
+	// Write data url.
+	conf.SetParam("", "url", url);
 
 	// Write to disk.
 	return conf.Write(true, path);
