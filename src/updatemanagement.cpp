@@ -42,7 +42,7 @@ void UPDATE_MANAGER::StartCheckForUpdates(GAME_DOWNLOADER downloader, GUI & gui)
 	std::string group = "cars";
 	// TODO: track support
 	repo_type svn;
-	std::string url = svn.GetCarFolderUrl();
+	std::string url = autoupdate.GetUrl()+"/cars";
 	bool success = downloader(url);
 
 	if (success)
@@ -228,7 +228,7 @@ bool UPDATE_MANAGER::ApplyCarUpdate(GAME_DOWNLOADER downloader, GUI & gui, const
 	}
 	
 	// download archive
-	std::string url = repo_type::GetCarDownloadLink(carname);
+	std::string url = repo_type::GetCarDownloadLink(autoupdate.GetUrl(), carname);
 	std::string archivepath = downloader.GetHttp().GetDownloadPath(url);
 	if (!(debug && pathmanager.FileExists(archivepath))) // if in debug mode, don't redownload files
 	{
@@ -275,7 +275,7 @@ bool UPDATE_MANAGER::DownloadRemoteConfig(GAME_DOWNLOADER downloader, GUI & gui)
 		return true;
 	}
 	
-	std::string url = repo_type::GetRemoteUpdateConfigUrl();
+	std::string url = autoupdate.GetUrl() + "settings/updates.config";
 	info_output << "DownloadRemoteConfig: attempting to download " + url << std::endl;
 	bool success = downloader(url);
 	if (!success)

@@ -29,6 +29,8 @@
 class AUTOUPDATE
 {
 public:
+	AUTOUPDATE();
+
 	/// Write the version information to a VDrift config format file.
 	/// Returns true on success and false on error.
 	bool Write(const std::string & path) const;
@@ -56,6 +58,9 @@ public:
 	/// Update the local version record for the specified group and item to the specified version.
 	void SetVersion(const std::string & group, const std::string & item, int newversion);
 
+	/// Get vdrift data url.
+	const std::string & GetUrl() const;
+
 	/// Returns true if we have no update data.
 	bool empty() const;
 	bool empty(const std::string & group) const;
@@ -67,6 +72,7 @@ private:
 	group_type groups;
 	group_type available_updates;
 	pair_type formats;
+	std::string url;
 };
 
 #endif

@@ -23,6 +23,12 @@
 
 const std::string AVAILABLE_PREFIX = "available_";
 
+AUTOUPDATE::AUTOUPDATE() : 
+	url("http://vdrift.svn.sourceforge.net/viewvc/vdrift/vdrift-data/")
+{
+	// Constructor
+}
+
 bool AUTOUPDATE::Write(const std::string & path) const
 {
 	CONFIG conf;
@@ -65,6 +71,9 @@ bool AUTOUPDATE::Load(const std::string & path)
 
 	// Clear the existing data.
 	groups.clear();
+
+	// Get data url
+	conf.GetParam("", "url", url);
 
 	// Iterate over all sections.
 	for (CONFIG::const_iterator s = conf.begin(); s != conf.end(); s++)
@@ -209,4 +218,9 @@ int AUTOUPDATE::GetFormatVersion(const std::string & group) const
 void AUTOUPDATE::SetVersion(const std::string & group, const std::string & item, int newversion)
 {
 	groups[group][item] = newversion;
+}
+
+const std::string & AUTOUPDATE::GetUrl() const
+{
+	return url;
 }
