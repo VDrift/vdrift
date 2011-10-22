@@ -52,6 +52,11 @@ bool GRAPHICS_GL3V::Init(const std::string & shaderpath,
 	ADDCONDITION(shadows);
 	#undef ADDCONDITION
 
+    if (reflection_type >= 1)
+        conditions.insert("reflections_low");
+    if (reflection_type >= 2)
+        conditions.insert("reflections_high");
+
 	// load the reflection cubemap
 	if (!static_reflectionmap_file.empty())
 	{
@@ -260,11 +265,12 @@ void GRAPHICS_GL3V::SetupScene(float fov, float new_view_distance, const MATHVEC
 		renderer.setPassUniform(stringMap.addStringId(i->first), RenderUniformEntry(stringMap.addStringId("projectionMatrix"), cameras[i->second].projectionMatrix.GetArray(),16));
 	}
 
-	// send inverse matrices for the default camera
+	// send matrices for the default camera
 	const CameraMatrices & defaultCamera = cameras.find("default")->second;
 	renderer.setGlobalUniform(RenderUniformEntry(stringMap.addStringId("invProjectionMatrix"), defaultCamera.inverseProjectionMatrix.GetArray(),16));
 	renderer.setGlobalUniform(RenderUniformEntry(stringMap.addStringId("invViewMatrix"), defaultCamera.inverseViewMatrix.GetArray(),16));
 	renderer.setGlobalUniform(RenderUniformEntry(stringMap.addStringId("defaultViewMatrix"), defaultCamera.viewMatrix.GetArray(),16));
+	renderer.setGlobalUniform(RenderUniformEntry(stringMap.addStringId("defaultProjectionMatrix"), defaultCamera.projectionMatrix.GetArray(),16));
 
 	// send sun light direction for the default camera
 

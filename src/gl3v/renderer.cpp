@@ -407,6 +407,17 @@ void Renderer::printRendererStatus(RendererStatusVerbosity verbosity, const Stri
 		if (i != shaders.begin())
 			out << ", ";
 		out << i->first;
+        if (!i->second.defines.empty())
+        {
+            out << "(";
+            for (std::set <std::string>::const_iterator d = i->second.defines.begin(); d != i->second.defines.end(); d++)
+            {
+                if (d != i->second.defines.begin())
+                    out << "/";
+                out << *d;
+            }
+            out << ")";
+        }
 	}
 	out << std::endl;
 
@@ -477,6 +488,7 @@ bool Renderer::loadShader(const std::string & path, const std::string & name, co
 	{
 		RenderShader shader;
 		shader.handle = handle;
+        shader.defines = defines; // for debug only
 		shaders.insert(std::make_pair(name, shader));
 	}
 	else
