@@ -7,7 +7,7 @@
 #include <fstream>
 
 REPLAY::REPLAY(float framerate) :
-	version_info("VDRIFTREPLAYV13", CARINPUT::GAME_ONLY_INPUTS_START_HERE, framerate),
+	version_info("VDRIFTREPLAYV14", CARINPUT::GAME_ONLY_INPUTS_START_HERE, framerate),
 	frame(0),
 	replaymode(IDLE),
 	inputbuffer(CARINPUT::GAME_ONLY_INPUTS_START_HERE, 0)
