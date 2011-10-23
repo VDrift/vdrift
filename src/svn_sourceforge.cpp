@@ -25,19 +25,9 @@
 #include "http.h"
 #include "unittest.h"
 
-std::string SVN_SOURCEFORGE::GetCarFolderUrl() const
+std::string SVN_SOURCEFORGE::GetCarDownloadLink(const std::string & dataurl, const std::string & carname)
 {
-	return "http://vdrift.svn.sourceforge.net/viewvc/vdrift/vdrift-data/cars/";
-}
-
-std::string SVN_SOURCEFORGE::GetCarDownloadLink(const std::string & car)
-{
-	return "http://vdrift.svn.sourceforge.net/viewvc/vdrift/vdrift-data/cars/"+car+"/?view=tar";
-}
-
-std::string SVN_SOURCEFORGE::GetRemoteUpdateConfigUrl()
-{
-	return "http://vdrift.svn.sourceforge.net/viewvc/vdrift/vdrift-data/settings/updates.config";
+	return dataurl + "cars/" + carname + "/?view=tar";
 }
 
 std::map <std::string, int> SVN_SOURCEFORGE::ParseFolderView(const std::string & folderfile)
@@ -74,7 +64,7 @@ QT_TEST(svn_sourceforge)
 {
 	HTTP http("data/test");
 	SVN_SOURCEFORGE svn;
-	std::string testurl = svn.GetCarFolderUrl();
+	std::string testurl = "http://vdrift.svn.sourceforge.net/viewvc/vdrift/vdrift-data/cars/";
 
 	QT_CHECK(http.Request(testurl, std::cerr));
 	HTTPINFO curinfo;

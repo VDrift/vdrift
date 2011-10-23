@@ -29,12 +29,9 @@
 class SVN_SOURCEFORGE
 {
 public:
-	/// Returns SVN repo car folder URL.
-	std::string GetCarFolderUrl() const;
 	/// Returns the download URL for any particular car given a name.
-	static std::string GetCarDownloadLink(const std::string & car);
-	/// Return the URL that points to the update.config file.
-	static std::string GetRemoteUpdateConfigUrl();
+	static std::string GetCarDownloadLink(const std::string & dataurl, const std::string & carname);
+
 	/// Given a sourceforge web svn folder view, return a map of folder names and revisions.
 	std::map <std::string, int> ParseFolderView(const std::string & folderfile);
 };

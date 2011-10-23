@@ -1190,6 +1190,9 @@ bool CARDYNAMICS::Serialize ( joeserialize::Serializer & s )
 	_SERIALIZE_(s, shifted);
 	_SERIALIZE_(s, autoshift);
 	if (!serialize(s, *body)) return false;
+	if (!serialize(s, transform)) return false;
+	if (!serialize(s, linear_velocity)) return false;
+	if (!serialize(s, angular_velocity)) return false;
 	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
 	{
 		_SERIALIZE_(s, wheel[i]);
