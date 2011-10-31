@@ -71,12 +71,16 @@ public:
 		SetVisible(true);
 	}
 
-	void Update(FONT & lcdfont, FONT & sansfont, float curlap, float lastlap, float bestlap, float stagingtimeleft, int curlapnum,
-		int numlaps, int curplace, int numcars, float clutch, int newgear, int newrpm, int redrpm, int maxrpm,
-		float meterspersecond,
-		bool mph, const std::string & debug_string1, const std::string & debug_string2,
-		const std::string & debug_string3, const std::string & debug_string4, float displaywidth,
-		float displayheight, bool absenabled, bool absactive, bool tcsenabled, bool tcsactive,
+	void Update(
+		FONT & lcdfont, FONT & sansfont, float displaywidth, float displayheight,
+		float curlap, float lastlap, float bestlap, float stagingtimeleft,
+		int curlapnum, int numlaps, int curplace, int numcars,
+		int newrpm, int redrpm, int maxrpm,
+		float meterspersecond, bool mph, float clutch, int newgear,
+		const std::string & debug_string1, const std::string & debug_string2,
+		const std::string & debug_string3, const std::string & debug_string4,
+		bool absenabled, bool absactive, bool tcsenabled, bool tcsactive,
+		bool outofgas, bool nosactive, float nosamount,
 		bool drifting, float driftscore, float thisdriftscore);
 
 	void SetDebugVisibility(bool show)
@@ -116,11 +120,11 @@ private:
 	TEXT_DRAWABLE placeindicator;
 	TEXT_DRAWABLE raceprompt;
 
-	// variables for abs/tcs/gas/n2o indicators
+	// abs/tcs/gas/nos indicators
 	TEXT_DRAWABLE abs;
 	TEXT_DRAWABLE tcs;
 	TEXT_DRAWABLE gas;
-	TEXT_DRAWABLE n2o;
+	TEXT_DRAWABLE nos;
 
 	//debug info
 	keyed_container <SCENENODE>::handle debugnode;

@@ -74,6 +74,7 @@ static float ApplyExponent(float exponent, float val)
 CARCONTROLMAP_LOCAL::CARCONTROLMAP_LOCAL()
 {
 	carinput_stringmap["gas"] = CARINPUT::THROTTLE;
+	carinput_stringmap["nos"] = CARINPUT::NOS;
 	carinput_stringmap["brake"] = CARINPUT::BRAKE;
 	carinput_stringmap["handbrake"] = CARINPUT::HANDBRAKE;
 	carinput_stringmap["clutch"] = CARINPUT::CLUTCH;
@@ -977,21 +978,6 @@ void CARCONTROLMAP_LOCAL::ProcessSteering(const std::string & joytype, float ste
 
 void CARCONTROLMAP_LOCAL::PopulateLegacyKeycodes()
 {
-	legacy_keycodes["F1"] = 282;
-	legacy_keycodes["F2"] = 283;
-	legacy_keycodes["F3"] = 284;
-	legacy_keycodes["F4"] = 285;
-	legacy_keycodes["F5"] = 286;
-	legacy_keycodes["F6"] = 287;
-	legacy_keycodes["F7"] = 288;
-	legacy_keycodes["F8"] = 289;
-	legacy_keycodes["F9"] = 290;
-	legacy_keycodes["F10"] = 291;
-	legacy_keycodes["F11"] = 292;
-	legacy_keycodes["F12"] = 293;
-	legacy_keycodes["F13"] = 294;
-	legacy_keycodes["F14"] = 295;
-	legacy_keycodes["F15"] = 296;
 	legacy_keycodes["BACKSPACE"] = 8;
 	legacy_keycodes["TAB"] = 9;
 	legacy_keycodes["CLEAR"] = 12;
@@ -1089,4 +1075,33 @@ void CARCONTROLMAP_LOCAL::PopulateLegacyKeycodes()
 	legacy_keycodes["END"] = 279;
 	legacy_keycodes["PAGEUP"] = 280;
 	legacy_keycodes["PAGEDOWN"] = 281;
+	legacy_keycodes["F1"] = 282;
+	legacy_keycodes["F2"] = 283;
+	legacy_keycodes["F3"] = 284;
+	legacy_keycodes["F4"] = 285;
+	legacy_keycodes["F5"] = 286;
+	legacy_keycodes["F6"] = 287;
+	legacy_keycodes["F7"] = 288;
+	legacy_keycodes["F8"] = 289;
+	legacy_keycodes["F9"] = 290;
+	legacy_keycodes["F10"] = 291;
+	legacy_keycodes["F11"] = 292;
+	legacy_keycodes["F12"] = 293;
+	legacy_keycodes["F13"] = 294;
+	legacy_keycodes["F14"] = 295;
+	legacy_keycodes["F15"] = 296;
+	legacy_keycodes["NUMLOCK"] = 300;
+	legacy_keycodes["CAPSLOCK"] = 301;
+	legacy_keycodes["SCROLLOCK"] = 302;
+	legacy_keycodes["RSHIFT"] = 303;
+	legacy_keycodes["LSHIFT"] = 304;
+	legacy_keycodes["RCTRL"] = 305;
+	legacy_keycodes["LCTRL"] = 306;
+	legacy_keycodes["RALT"] = 307;
+	legacy_keycodes["LALT"] = 308;
+	legacy_keycodes["RMETA"] = 309;
+	legacy_keycodes["LMETA"] = 310;
+	legacy_keycodes["LSUPER"] = 311;
+	legacy_keycodes["RSUPER"] = 312;
+	legacy_keycodes["ALTGR"] = 313;
 }

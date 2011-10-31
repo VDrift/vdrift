@@ -1620,17 +1620,19 @@ void GAME::UpdateCarInputs(CAR & car)
 			car.DebugPrint(debug_info3, false, false, true, false);
 			car.DebugPrint(debug_info4, false, false, false, true);
 		}
+
 		std::pair <int, int> curplace = timer.GetPlayerPlace();
-		hud.Update(fonts["lcd"], fonts["futuresans"], timer.GetPlayerTime(), timer.GetLastLap(),
-			timer.GetBestLap(), timer.GetStagingTimeLeft(),
+		int tid = cartimerids[&car];
+		hud.Update(
+			fonts["lcd"], fonts["futuresans"], window.GetW(), window.GetH(),
+			timer.GetPlayerTime(), timer.GetLastLap(), timer.GetBestLap(), timer.GetStagingTimeLeft(),
 			timer.GetPlayerCurrentLap(), race_laps, curplace.first, curplace.second,
-			car.GetClutch(), car.GetGear(), car.GetEngineRPM(),
-			car.GetEngineRedline(), car.GetEngineRPMLimit(), car.GetSpeedometer(),
-			settings.GetMPH(), debug_info1.str(), debug_info2.str(), debug_info3.str(),
-			debug_info4.str(), window.GetW(), window.GetH(), car.GetABSEnabled(),
-			car.GetABSActive(), car.GetTCSEnabled(), car.GetTCSActive(),
-			timer.GetIsDrifting(cartimerids[&car]), timer.GetDriftScore(cartimerids[&car]),
-			timer.GetThisDriftScore(cartimerids[&car]));
+			car.GetEngineRPM(), car.GetEngineRedline(), car.GetEngineRPMLimit(),
+			car.GetSpeedometer(), settings.GetMPH(), car.GetClutch(), car.GetGear(),
+			debug_info1.str(), debug_info2.str(), debug_info3.str(), debug_info4.str(),
+			car.GetABSEnabled(), car.GetABSActive(), car.GetTCSEnabled(), car.GetTCSActive(),
+			car.GetOutOfGas(), car.GetNosActive(), car.GetNosAmount(),
+			timer.GetIsDrifting(tid), timer.GetDriftScore(tid), timer.GetThisDriftScore(tid));
 
 		// Handle camera mode change inputs.
 		CAMERA * old_camera = active_camera;

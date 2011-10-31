@@ -14,17 +14,20 @@ class PTree;
 
 struct CARENGINEINFO
 {
-	btScalar redline; ///< the redline in RPMs
+	btScalar redline; ///< the redline in RPMs (used only for the redline graphics)
 	btScalar rpm_limit; ///< peak engine RPMs after which limiting occurs
 	btScalar idle; ///< idle throttle percentage; this is calculated algorithmically
 	btScalar start_rpm; ///< initial condition RPM
 	btScalar stall_rpm; ///< RPM at which the engine dies
-	btScalar fuel_consumption; ///< fuel consumed each second (in liters) is the fuel-consumption parameter times RPM times throttle
+	btScalar fuel_rate; ///< fuel rate kg/Ws based on fuel heating value(4E7) and engine efficiency(0.35)
 	btScalar friction; ///< friction coefficient from the engine; this is calculated algorithmically
 	SPLINE<btScalar> torque_curve;
 	btVector3 position;
 	btScalar inertia;
 	btScalar mass;
+	btScalar nos_mass; ///< amount of nitrous oxide in kg
+	btScalar nos_boost; ///< max nitrous oxide power boost in Watt
+	btScalar nos_fuel_ratio; ///< nos to fuel ratio(5)
 
 	/// default constructor makes an S2000-like car
 	/// SetTorqueCurve() has to be called explicitly to initialise carengineinfo
@@ -82,11 +85,6 @@ public:
 		return info.stall_rpm;
 	}
 
-	btScalar GetFuelConsumption() const
-	{
-		return info.fuel_consumption;
-	}
-
 	const btVector3 & GetPosition() const
 	{
 		return info.position;
@@ -123,15 +121,22 @@ public:
 		return combustion_torque + friction_torque;
 	}
 
+	///fuel consumtion rate kg/s per simulation step
 	btScalar FuelRate() const
 	{
-		return info.fuel_consumption * shaft.ang_velocity * throttle_position;
+		return info.fuel_rate * combustion_torque * shaft.ang_velocity;
 	}
 
 	///returns true if the engine is combusting fuel
 	bool GetCombustion() const
 	{
 		return !stalled;
+	}
+
+	///return remaining nos fraction
+	btScalar GetNosAmount() const
+	{
+		return nos_mass / info.nos_mass;
 	}
 
 	void StartEngine()
@@ -143,6 +148,12 @@ public:
 	void SetThrottle(btScalar value)
 	{
 		throttle_position = value;
+	}
+
+	/// nitrous injection boost factor 0.0 - 1.0
+	void SetNosBoost(btScalar value)
+	{
+		nos_boost_factor = value;
 	}
 
 	void SetOutOfGas(bool value)
@@ -166,6 +177,8 @@ private:
 	btScalar clutch_torque;
 
 	btScalar throttle_position;
+	btScalar nos_boost_factor;
+	btScalar nos_mass;
 	bool rev_limit_exceeded;
 	bool out_of_gas;
 	bool stalled;

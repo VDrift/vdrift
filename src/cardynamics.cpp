@@ -820,6 +820,11 @@ void CARDYNAMICS::SetThrottle(btScalar value)
 	engine.SetThrottle(value);
 }
 
+void CARDYNAMICS::SetNOS(btScalar value)
+{
+	engine.SetNosBoost(value);
+}
+
 void CARDYNAMICS::SetClutch(btScalar value)
 {
 	clutch.SetClutch(value);

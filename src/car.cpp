@@ -1295,10 +1295,14 @@ void CAR::HandleInputs(const std::vector <float> & inputs, float dt)
 
 	float throttle = inputs[CARINPUT::THROTTLE];
 	float clutch = 1 - inputs[CARINPUT::CLUTCH];
+	float nos = inputs[CARINPUT::NOS];
+
+	nosactive = nos > 0;
 
 	dynamics.ShiftGear(new_gear);
 	dynamics.SetThrottle(throttle);
 	dynamics.SetClutch(clutch);
+	dynamics.SetNOS(nos);
 
 	//do driver aid toggles
 	if (inputs[CARINPUT::ABS_TOGGLE])

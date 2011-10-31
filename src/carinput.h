@@ -7,6 +7,7 @@ enum CARINPUT
 {
 	//actual car inputs that the car uses
 	THROTTLE,
+	NOS,
  	BRAKE,
   	HANDBRAKE,
    	CLUTCH,

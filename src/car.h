@@ -105,6 +105,21 @@ public:
 		return dynamics.GetEngine().GetRPMLimit();
 	}
 
+	bool GetOutOfGas() const
+	{
+		return dynamics.GetOutOfGas();
+	}
+
+	float GetNosAmount() const
+	{
+		return dynamics.GetNosAmount();
+	}
+
+	bool GetNosActive() const
+	{
+		return nosactive;
+	}
+
 	int GetGear() const
 	{
 		return dynamics.GetTransmission().GetGear();
@@ -328,6 +343,7 @@ protected:
 	//internal variables that might change during driving (so, they need to be serialized)
 	float last_steer;
 	bool lookbehind;
+	bool nosactive;
 
 	std::string cartype;
 	int sector; //the last lap timing sector that the car hit

@@ -8,33 +8,45 @@ CARENGINEINFO::CARENGINEINFO():
 	idle(0.02),
 	start_rpm(1000),
 	stall_rpm(350),
-	fuel_consumption(1e-9),
+	fuel_rate(4E7),
 	friction(0.000328),
 	inertia(0.25),
-	mass(200)
+	mass(200),
+	nos_mass(0),
+	nos_boost(0),
+	nos_fuel_ratio(5)
 {
 	// ctor
 }
 
 bool CARENGINEINFO::Load(const PTree & cfg, std::ostream & error_output)
 {
-	std::vector<std::pair<btScalar, btScalar> > torque;
 	std::vector<btScalar> pos(3);
-
-	if (!cfg.get("peak-engine-rpm", redline, error_output)) return false; //used only for the redline graphics
+	if (!cfg.get("peak-engine-rpm", redline, error_output)) return false;
 	if (!cfg.get("rpm-limit", rpm_limit, error_output)) return false;
 	if (!cfg.get("inertia", inertia, error_output)) return false;
 	if (!cfg.get("start-rpm", start_rpm, error_output)) return false;
 	if (!cfg.get("stall-rpm", stall_rpm, error_output)) return false;
-	if (!cfg.get("fuel-consumption", fuel_consumption, error_output)) return false;
-	if (!cfg.get("mass", mass, error_output)) return false;
 	if (!cfg.get("position", pos, error_output)) return false;
+	if (!cfg.get("mass", mass, error_output)) return false;
 
-	position.setValue(pos[0], pos[1], pos[2]);
+	// fuel consumption
+	btScalar fuel_heating_value = 4.5E7; // Ws/kg
+	btScalar engine_efficiency = 0.35;
+	cfg.get("fuel-heating-value", fuel_heating_value);
+	cfg.get("efficiency", engine_efficiency);
+	fuel_rate = 1 /	(engine_efficiency * fuel_heating_value);
 
+	// nos parameters
+	cfg.get("nos-mass", nos_mass);
+	cfg.get("nos-boost", nos_boost);
+	cfg.get("nos-ratio", nos_fuel_ratio);
+
+	// torque
 	int curve_num = 0;
 	std::vector<btScalar> torque_point(2);
 	std::string torque_str("torque-curve-00");
+	std::vector<std::pair<btScalar, btScalar> > torque;
 	while (cfg.get(torque_str, torque_point))
 	{
 		torque.push_back(std::pair<btScalar, btScalar>(torque_point[0], torque_point[1]));
@@ -53,6 +65,7 @@ bool CARENGINEINFO::Load(const PTree & cfg, std::ostream & error_output)
 		return false;
 	}
 	SetTorqueCurve(redline, torque);
+	position.setValue(pos[0], pos[1], pos[2]);
 
 	return true;
 }
@@ -123,7 +136,7 @@ btScalar CARENGINEINFO::GetFrictionTorque(
 
 CARENGINE::CARENGINE()
 {
-	Init(this->info);
+	Init(info);
 }
 
 void CARENGINE::Init(const CARENGINEINFO & info)
@@ -135,6 +148,8 @@ void CARENGINE::Init(const CARENGINEINFO & info)
 	clutch_torque = 0;
 
 	throttle_position = 0;
+	nos_boost_factor = 0;
+	nos_mass = info.nos_mass;
 	out_of_gas = false;
 	rev_limit_exceeded = false;
 	stalled = false;
@@ -160,13 +175,20 @@ btScalar CARENGINE::Integrate(btScalar clutch_drag, btScalar clutch_angvel, btSc
 	btScalar friction_factor = 1.0; //used to make sure we allow friction to work if we're out of gas or above the rev limit
 	btScalar rev_limit = info.rpm_limit;
 	if (rev_limit_exceeded) rev_limit -= 100.0; //tweakable
-
-	if (GetRPM() < rev_limit)
-		rev_limit_exceeded = false;
-	else
-		rev_limit_exceeded = true;
+	rev_limit_exceeded = GetRPM() > rev_limit;
 
 	combustion_torque = info.GetTorque(throttle_position, GetRPM());
+
+	//nitrous injection
+	if (nos_mass > 0 && nos_boost_factor > 0)
+	{
+		btScalar boost = nos_boost_factor * info.nos_boost;
+		combustion_torque += boost / shaft.ang_velocity;
+
+		btScalar fuel_consumed = boost * info.fuel_rate * dt;
+		btScalar nos_consumed = info.nos_fuel_ratio * fuel_consumed;
+		nos_mass = btMax(btScalar(0), nos_mass - nos_consumed);
+	}
 
 	if (out_of_gas || rev_limit_exceeded || stalled)
 	{

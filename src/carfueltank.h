@@ -37,7 +37,7 @@ public:
 	void SetDensity(const btScalar & value)
 	{
 		density = value;
-		UpdateMass();
+		mass = density * volume;
 	}
 
 	void SetPosition(const btVector3 & value)
@@ -59,7 +59,7 @@ public:
 	void SetVolume(const btScalar & value)
 	{
 		volume = value;
-		UpdateMass();
+		mass = density * volume;
 	}
 
 	void Fill()
@@ -77,12 +77,12 @@ public:
 		return volume / capacity;
 	}
 
-	void Consume(btScalar amount)
+	// consumption in kg
+	void Consume(btScalar value)
 	{
-		volume -= amount;
-		if (volume < 0.0) volume = 0.0;
-
-		UpdateMass();
+		mass = mass - value;
+		if (mass < 0) mass = 0;
+		volume = mass / density;
 	}
 
 	bool Serialize(joeserialize::Serializer & s)
@@ -104,8 +104,10 @@ private:
 
 	void UpdateMass()
 	{
-		mass = density * volume;
+
 	}
+
+
 };
 
 #endif

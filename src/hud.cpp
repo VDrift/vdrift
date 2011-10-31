@@ -66,7 +66,7 @@ bool HUD::Init(
 
 	//lower right bar
 	bars.push_back(HUDBAR());
-	bars.back().Set(hudroot, bartex, 1.0-barwidth*0.14, 1.0-barheight*0.5, barwidth, barheight, opacity, false);
+	bars.back().Set(hudroot, bartex, 1.0-barwidth*0.175, 1.0-barheight*0.5, barwidth, barheight, opacity, false);
 
 	float screenhwratio = displayheight/displaywidth;
 
@@ -150,21 +150,29 @@ bool HUD::Init(
 		mphtextdraw = SetupText(hudroot, lcdfont, mphtext, "0", mx, y, fontscalex, fontscaley, 1,1,1, 4);
 	}
 
-	//load ABS and TCS indicators
 	{
 		float fontscaley = barheight * 0.25;
 		float fontscalex = screenhwratio * fontscaley;
-		float x = 1 - barwidth * 0.63;
-		float ay = 1 - fontscaley * 1.25;
-		float ty = 1 - fontscaley * 0.5;
+		float x0 = 1 - barwidth * 0.6;
+		float x1 = 1 - barwidth * 0.7;
+		float y0 = 1 - fontscaley * 1.25;
+		float y1 = 1 - fontscaley * 0.5;
 
-		abs.Init(hudroot, sansfont, "ABS", x, ay, fontscalex, fontscaley);
+		abs.Init(hudroot, sansfont, "ABS", x0, y0, fontscalex, fontscaley);
 		abs.SetDrawOrder(hudroot, 4);
 		abs.SetColor(hudroot, 0, 1, 0);
 
-		tcs.Init(hudroot, sansfont, "TCS", x, ty, fontscalex, fontscaley);
+		tcs.Init(hudroot, sansfont, "TCS", x0, y1, fontscalex, fontscaley);
 		tcs.SetDrawOrder(hudroot, 4);
 		tcs.SetColor(hudroot, 1, 0.77, 0.23);
+
+		gas.Init(hudroot, sansfont, "GAS", x1, y0, fontscalex, fontscaley);
+		gas.SetDrawOrder(hudroot, 4);
+		gas.SetColor(hudroot, 1, 0, 0);
+
+		nos.Init(hudroot, sansfont, "NOS", x1, y1, fontscalex, fontscaley);
+		nos.SetDrawOrder(hudroot, 4);
+		nos.SetColor(hudroot, 0, 1, 0);
 	}
 
 	{
@@ -211,13 +219,17 @@ bool HUD::Init(
 	return true;
 }
 
-void HUD::Update(FONT & lcdfont, FONT & sansfont, float curlap, float lastlap, float bestlap, float stagingtimeleft, int curlapnum,
-		int numlaps, int curplace, int numcars, float clutch, int newgear, int newrpm, int redrpm, int maxrpm,
-		float meterspersecond,
-		bool mph, const std::string & debug_string1, const std::string & debug_string2,
-		const std::string & debug_string3, const std::string & debug_string4, float displaywidth,
-		float displayheight, bool absenabled, bool absactive, bool tcsenabled, bool tcsactive,
-		bool drifting, float driftscore, float thisdriftscore)
+void HUD::Update(
+	FONT & lcdfont, FONT & sansfont, float displaywidth, float displayheight,
+	float curlap, float lastlap, float bestlap, float stagingtimeleft,
+	int curlapnum, int numlaps, int curplace, int numcars,
+	int newrpm, int redrpm, int maxrpm,
+	float meterspersecond, bool mph, float clutch, int newgear,
+	const std::string & debug_string1, const std::string & debug_string2,
+	const std::string & debug_string3, const std::string & debug_string4,
+	bool absenabled, bool absactive, bool tcsenabled, bool tcsactive,
+	bool outofgas, bool nosactive, float nosamount,
+	bool drifting, float driftscore, float thisdriftscore)
 {
 	float screenhwratio = displayheight/displaywidth;
 
@@ -229,7 +241,6 @@ void HUD::Update(FONT & lcdfont, FONT & sansfont, float curlap, float lastlap, f
 		debugtext4.Revise(sansfont, debug_string4);
 	}
 
-	//geartextdraw->SetDrawEnable(true);
 	std::stringstream gearstr;
 	if (newgear == -1)
 		gearstr << "R";
@@ -264,7 +275,6 @@ void HUD::Update(FONT & lcdfont, FONT & sansfont, float curlap, float lastlap, f
 	rpmredbarverts.SetToBillboard(rpmredx, rpmy, rpmredxend, rpmy+rpmheight);
 	rpmboxverts.SetToBillboard(rpmxstart, rpmy, rpmxstart+rpmwidth, rpmy+rpmheight);
 
-	//mphtextdraw->SetDrawEnable(true);
 	std::stringstream speedo;
 	if (mph)
 		speedo << std::abs((int)(2.23693629 * meterspersecond)) << " MPH";
@@ -301,13 +311,38 @@ void HUD::Update(FONT & lcdfont, FONT & sansfont, float curlap, float lastlap, f
 
 	//update TCS alpha value
 	if (!tcsenabled)
+	{
 		tcs.SetAlpha(hudroot, 0.0);
+	}
 	else
 	{
 		if (tcsactive)
 			tcs.SetAlpha(hudroot, 1.0);
 		else
 			tcs.SetAlpha(hudroot, 0.2);
+	}
+
+	//update GAS indicator
+	if (outofgas)
+	{
+		gas.SetAlpha(hudroot, 1.0);
+	}
+	else
+	{
+		gas.SetAlpha(hudroot, 0.0);
+	}
+
+	//update NOS indicator
+	if (nosamount > 0)
+	{
+		if (nosactive)
+			nos.SetAlpha(hudroot, 1.0);
+		else
+			nos.SetAlpha(hudroot, 0.2);
+	}
+	else
+	{
+		nos.SetAlpha(hudroot, 0.0);
 	}
 
 	//update drift score
