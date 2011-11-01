@@ -165,10 +165,14 @@ public:
 		return dynamics.GetTCSActive();
 	}
 
-	/// return the speedometer reading (based on the driveshaft speed) in m/s
-	float GetSpeedometer()
+	float GetSpeedMPS()
 	{
 		return dynamics.GetSpeedMPS();
+	}
+
+	float GetMaxSpeedMPS()
+	{
+		return dynamics.GetMaxSpeedMPS();
 	}
 
 	std::string GetCarType() const
@@ -176,7 +180,7 @@ public:
 		return cartype;
 	}
 
-	void SetSector ( int value )
+	void SetSector(int value)
 	{
 		sector = value;
 	}
@@ -186,10 +190,9 @@ public:
 		return sector;
 	}
 
-	const BEZIER * GetCurPatch(unsigned int wheel) const
+	const BEZIER * GetCurPatch(WHEEL_POSITION wheel) const
 	{
-		assert (wheel < 4);
-		return dynamics.GetWheelContact(WHEEL_POSITION(wheel)).GetPatch();
+		return dynamics.GetWheelContact(wheel).GetPatch();
 	}
 
 	float GetLastSteer() const

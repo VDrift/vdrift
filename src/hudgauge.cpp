@@ -24,13 +24,13 @@ void HUDGAUGE::Set(
 	float radius,
 	float startangle,
 	float endangle,
-	int startvalue,
-	int endvalue,
+	float startvalue,
+	float endvalue,
 	int numvalues,
 	std::ostream & error_output)
 {
 	offset = startangle;
-	scale = (endangle - startangle) / numvalues;
+	scale = (endangle - startangle) / (endvalue - startvalue);
 
 	// dial
 	{
@@ -74,26 +74,25 @@ void HUDGAUGE::Set(
 
 	// pointer
 	{
-		VERTEXARRAY ptr;
-		float pp[] = {-0.01, 0.92, 0, 0.01, 0.92, 0, 0.025, -0.1, 0, -0.025, -0.1, 0};
+		float p[] = {-0.015, 0.92, 0, 0.015, 0.92, 0, 0.025, -0.1, 0, -0.025, -0.1, 0};
 		float t[] = {0, 0, 1, 0, 1, 1, 0, 1};
 		int f[] = {0, 2, 1, 0, 3, 2};
-		ptr.SetVertices(pp, 12);
-		ptr.SetTexCoordSets(1);
-		ptr.SetTexCoords(0, t, 8);
-		ptr.SetFaces(f, 6);
-		ptr.Scale(radius, radius, 1);
+		pointer.SetVertices(p, 12);
+		pointer.SetTexCoordSets(1);
+		pointer.SetTexCoords(0, t, 8);
+		pointer.SetFaces(f, 6);
+		pointer.Scale(radius, radius, 1);
 
 		pointer_node = parent.AddNode();
 		SCENENODE & noderef = parent.GetNode(pointer_node);
-		QUATERNION<float> rot(startangle, 0, 0, 1);
+		QUATERNION<float> rot(startangle, 1, 0, 0);
 		MATHVECTOR<float,3> pos(centerx, centery, 0);
 		noderef.GetTransform().SetRotation(rot);
 		noderef.GetTransform().SetTranslation(pos);
 
 		pointer_draw = AddDrawable(noderef);
 		DRAWABLE & drawref = GetDrawable(noderef, pointer_draw);
-		drawref.SetVertArray(&ptr);
+		drawref.SetVertArray(&pointer);
 		drawref.SetCull(false, false);
 		drawref.SetColor(1, 1, 1, 0.5);
 		drawref.SetDrawOrder(1);
@@ -102,7 +101,8 @@ void HUDGAUGE::Set(
 
 void HUDGAUGE::Update(SCENENODE & parent, float value)
 {
+	float angle = value * scale + offset;
+	QUATERNION<float> rot(angle, 1, 0, 0);
 	SCENENODE & noderef = parent.GetNode(pointer_node);
-	QUATERNION<float> rot(value * scale + offset, 0, 0, 1);
 	noderef.GetTransform().SetRotation(rot);
 }

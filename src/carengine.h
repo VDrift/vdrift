@@ -102,7 +102,7 @@ public:
 
 	btScalar GetRPM() const
 	{
-		return shaft.ang_velocity * 30.0 / 3.141593;
+		return shaft.ang_velocity * 30.0 / M_PI;
 	}
 
 	btScalar GetThrottle() const

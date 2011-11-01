@@ -19,19 +19,12 @@ public:
 		float radius,
 		float startangle,
 		float endangle,
-		int startvalue,
-		int endvalue,
+		float startvalue,
+		float endvalue,
 		int numvalues,
 		std::ostream & error_output);
 
 	void Update(SCENENODE & parent, float value);
-
-	void SetVisible(SCENENODE & parent, bool newvis)
-	{
-		DRAWABLE & drawref = parent.GetDrawlist().twodim.get(dial_draw);
-		drawref.SetDrawEnable(newvis);
-	}
-
 
 private:
 	keyed_container<SCENENODE>::handle pointer_node;
@@ -39,6 +32,7 @@ private:
 	keyed_container<DRAWABLE>::handle pointer_draw;
 	keyed_container<DRAWABLE>::handle dial_draw;
 	std::vector<TEXT_DRAW> dialnums;
+	VERTEXARRAY pointer;
 	VERTEXARRAY dial;
 	float offset;
 	float scale;

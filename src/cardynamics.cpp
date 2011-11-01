@@ -393,6 +393,7 @@ CARDYNAMICS::CARDYNAMICS() :
 	abs(false),
 	tcs(false),
 	maxangle(0),
+	maxspeed(0),
 	damage(false)
 {
 	suspension.resize(WHEEL_POSITION_SIZE);
@@ -523,6 +524,14 @@ bool CARDYNAMICS::Load(
 		{
 			bodyLoader.addMass(suspension[i]->GetWheelPosition(0.0), wheel[i].GetMass());
 		}
+	}
+
+	// calculate max spped
+	{
+		float tr = transmission.GetGearRatio(transmission.GetForwardGears() - 1);
+		float cr = differential_center.GetFinalDrive();
+		float rr = differential_rear.GetFinalDrive();
+		maxspeed = tire[3].GetRadius() * engine.GetRPMLimit() * M_PI / 30 * tr * cr * rr;
 	}
 
 	if (damage)
@@ -859,6 +868,11 @@ void CARDYNAMICS::SetAutoShift(bool value)
 btScalar CARDYNAMICS::GetSpeedMPS() const
 {
 	return tire[0].GetRadius() * wheel[0].GetAngularVelocity();
+}
+
+btScalar CARDYNAMICS::GetMaxSpeedMPS() const
+{
+	return maxspeed;
 }
 
 btScalar CARDYNAMICS::GetTachoRPM() const

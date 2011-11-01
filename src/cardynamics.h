@@ -89,8 +89,11 @@ public:
 	void SetAutoClutch(bool value);
 	void SetAutoShift(bool value);
 
-	// first wheel velocity
+	// speedometer reading front left wheel in m/s
 	btScalar GetSpeedMPS() const;
+
+	// based on transmission, engine rpm limit and wheel radius in m/s
+	btScalar GetMaxSpeedMPS() const;
 
 	// engine rpm
 	btScalar GetTachoRPM() const;
@@ -196,6 +199,7 @@ protected:
 	std::list<CARTELEMETRY> telemetry;
 
 	btScalar maxangle;
+	btScalar maxspeed;
 	btScalar feedback;
 	bool damage;
 

@@ -33,8 +33,8 @@ public:
 		FONT & lcdfont, FONT & sansfont, float displaywidth, float displayheight,
 		float curlap, float lastlap, float bestlap, float stagingtimeleft,
 		int curlapnum, int numlaps, int curplace, int numcars,
-		int newrpm, int redrpm, int maxrpm,
-		float meterspersecond, bool mph, float clutch, int newgear,
+		int rpm, int redrpm, int maxrpm,
+		float speed, float maxspeed, bool mph, float clutch, int newgear,
 		const std::string & debug_string1, const std::string & debug_string2,
 		const std::string & debug_string3, const std::string & debug_string4,
 		bool absenabled, bool absactive, bool tcsenabled, bool tcsactive,
@@ -126,7 +126,7 @@ private:
 		if (newvis != lastvisible)
 		{
 			hudroot.SetChildVisibility(newvis);
-			SetDebugVisibility(newvis && debug_hud_info);
+			//SetDebugVisibility(newvis && debug_hud_info);
 			lastvisible = newvis;
 		}
 	}

@@ -951,7 +951,7 @@ void GAME::UpdateTimer()
 			//cout << "next " << nextsector << ", cur " << i->GetSector() << ", track " << track.GetSectors() << std::endl;
 			for (int p = 0; p < 4; p++)
 			{
-				if (i->GetCurPatch(p) == track.GetLapSequence(nextsector))
+				if (i->GetCurPatch(WHEEL_POSITION(p)) == track.GetLapSequence(nextsector))
 				{
 					advance = true;
 					//cout << "Drove over new sector " << nextsector << " patch " << i->GetCurPatch(p) << std::endl;
@@ -970,10 +970,10 @@ void GAME::UpdateTimer()
 
 		// Update how far the car is on the track...
 		// Find the patch under the front left wheel...
-		const BEZIER * curpatch = i->GetCurPatch(0);
+		const BEZIER * curpatch = i->GetCurPatch(FRONT_LEFT);
 		if (!curpatch)
 			// Try the other wheel...
-			curpatch = i->GetCurPatch(1);
+			curpatch = i->GetCurPatch(FRONT_RIGHT);
 
 		// Only update if car is on track.
 		if (curpatch)
@@ -1628,7 +1628,7 @@ void GAME::UpdateCarInputs(CAR & car)
 			timer.GetPlayerTime(), timer.GetLastLap(), timer.GetBestLap(), timer.GetStagingTimeLeft(),
 			timer.GetPlayerCurrentLap(), race_laps, curplace.first, curplace.second,
 			car.GetEngineRPM(), car.GetEngineRedline(), car.GetEngineRPMLimit(),
-			car.GetSpeedometer(), settings.GetMPH(), car.GetClutch(), car.GetGear(),
+			car.GetSpeedMPS(), car.GetMaxSpeedMPS(), settings.GetMPH(), car.GetClutch(), car.GetGear(),
 			debug_info1.str(), debug_info2.str(), debug_info3.str(), debug_info4.str(),
 			car.GetABSEnabled(), car.GetABSActive(), car.GetTCSEnabled(), car.GetTCSActive(),
 			car.GetOutOfGas(), car.GetNosActive(), car.GetNosAmount(),
