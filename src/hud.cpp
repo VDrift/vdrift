@@ -1,14 +1,53 @@
 #include "hud.h"
 #include "contentmanager.h"
 
-keyed_container <DRAWABLE>::handle AddDrawable(SCENENODE & node)
+//#define GAUGES
+
+inline keyed_container<DRAWABLE>::handle AddDrawable(SCENENODE & node)
 {
 	return node.GetDrawlist().twodim.insert(DRAWABLE());
 }
 
-DRAWABLE & GetDrawable(SCENENODE & node, keyed_container <DRAWABLE>::handle & drawhandle)
+inline DRAWABLE & GetDrawable(SCENENODE & node, keyed_container <DRAWABLE>::handle & drawhandle)
 {
 	return node.GetDrawlist().twodim.get(drawhandle);
+}
+
+inline keyed_container <DRAWABLE>::handle SetupText(
+	SCENENODE & parent, FONT & font,
+	TEXT_DRAW & textdraw, const std::string & str,
+	float x, float y, float scalex, float scaley,
+	float r, float g, float b, float zorder = 0)
+{
+	keyed_container <DRAWABLE>::handle draw = parent.GetDrawlist().text.insert(DRAWABLE());
+	DRAWABLE & drawref = parent.GetDrawlist().text.get(draw);
+	textdraw.Set(drawref, font, str, x, y, scalex,scaley, r, g, b);
+	drawref.SetDrawOrder(zorder);
+	return draw;
+}
+
+static void GetTimeString(float time, std::string & outtime)
+{
+	int min = (int) time / 60;
+	float secs = time - min * 60;
+
+	if (time != 0.0)
+	{
+		std::stringstream s;
+		s << std::setfill('0');
+		s << std::setw(2) << min << ":";
+		s << std::fixed << std::setprecision(3) << std::setw(6) << secs;
+		outtime = s.str();
+	}
+	else
+	{
+		outtime = "--:--.---";
+	}
+}
+
+HUD::HUD() : debug_hud_info(false), racecomplete(false), lastvisible(true)
+{
+	// ctor
 }
 
 bool HUD::Init(
@@ -22,6 +61,9 @@ bool HUD::Init(
 	std::ostream & error_output)
 {
 	float opacity = 0.8;
+	float screenhwratio = displayheight/displaywidth;
+	float barheight = 64.0/displayheight;
+	float barwidth = 256.0/displaywidth;
 
 	TEXTUREINFO texinfo;
 	texinfo.mipmap = false;
@@ -32,6 +74,7 @@ bool HUD::Init(
 	if (!content.load(texturepath, "hudbox.png", texinfo, bartex)) return false;
 	if (!content.load(texturepath, "progressbar.png", texinfo, progbartex)) return false;
 
+#ifndef GAUGES
 	rpmbar = AddDrawable(hudroot);
 	rpmredbar = AddDrawable(hudroot);
 	rpmbox = AddDrawable(hudroot);
@@ -57,9 +100,6 @@ bool HUD::Init(
 	rpmredbarref.SetDrawOrder(3);
 	rpmredbarref.SetCull(false, false);
 
-	float barheight = 64.0/displayheight;
-	float barwidth = 256.0/displaywidth;
-
 	//lower left bar
 	bars.push_back(HUDBAR());
 	bars.back().Set(hudroot, bartex, 0.0+barwidth*0.5, 1.0-barheight*0.5, barwidth, barheight, opacity, false);
@@ -67,8 +107,7 @@ bool HUD::Init(
 	//lower right bar
 	bars.push_back(HUDBAR());
 	bars.back().Set(hudroot, bartex, 1.0-barwidth*0.175, 1.0-barheight*0.5, barwidth, barheight, opacity, false);
-
-	float screenhwratio = displayheight/displaywidth;
+#endif
 
 	float timerbox_lowery = 0;
 	//load the timer
@@ -212,6 +251,14 @@ bool HUD::Init(
 		raceprompt.SetColor(hudroot, 1, 0, 0);
 	}
 
+#ifdef GAUGES
+	rpmgauge.Set(hudroot, sansfont, screenhwratio, 0.85, 0.85, 0.12,
+		45.0 / 180.0 * M_PI, 315.0 / 180.0 * M_PI, 0, 9, 10, error_output);
+
+	speedgauge.Set(hudroot, sansfont, screenhwratio, 0.15, 0.85, 0.12,
+		45.0 / 180.0 * M_PI, 315.0 / 180.0 * M_PI, 0, 9, 10, error_output);
+#endif
+
 	Hide();
 
 	debug_hud_info = debugon;
@@ -241,6 +288,7 @@ void HUD::Update(
 		debugtext4.Revise(sansfont, debug_string4);
 	}
 
+#ifndef GAUGES
 	std::stringstream gearstr;
 	if (newgear == -1)
 		gearstr << "R";
@@ -287,17 +335,6 @@ void HUD::Update(
 	float y = 1 - fontscaley * 0.5;
 	mphtext.Revise(lcdfont, speedo.str(), x, y, fontscalex, fontscaley);
 
-	//update timer info
-	{
-		std::string tempstr;
-		GetTimeString(curlap, tempstr);
-		laptime.Revise(tempstr);
-		GetTimeString(lastlap, tempstr);
-		lastlaptime.Revise(tempstr);
-		GetTimeString(bestlap, tempstr);
-		bestlaptime.Revise(tempstr);
-	}
-
 	//update ABS alpha value
 	if (!absenabled)
 		abs.SetAlpha(hudroot, 0.0);
@@ -343,6 +380,18 @@ void HUD::Update(
 	else
 	{
 		nos.SetAlpha(hudroot, 0.0);
+	}
+#endif
+
+	//update timer info
+	{
+		std::string tempstr;
+		GetTimeString(curlap, tempstr);
+		laptime.Revise(tempstr);
+		GetTimeString(lastlap, tempstr);
+		lastlaptime.Revise(tempstr);
+		GetTimeString(bestlap, tempstr);
+		bestlaptime.Revise(tempstr);
 	}
 
 	//update drift score

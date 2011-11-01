@@ -2,54 +2,22 @@
 #define _HUD_H
 
 #include "scenenode.h"
-#include "font.h"
 #include "texture.h"
 #include "text_draw.h"
+#include "hudgauge.h"
+#include "hudbar.h"
 
 #include <ostream>
-#include <cassert>
 #include <string>
 #include <list>
-#include <sstream>
-#include <algorithm>
 
-class HUDBAR
-{
-	private:
-		keyed_container <DRAWABLE>::handle draw;
-		VERTEXARRAY verts;
-
-	public:
-		void Set(
-			SCENENODE & parent,
-			std::tr1::shared_ptr<TEXTURE> bartex,
-			float x, float y, float w, float h,
-			float opacity,
-			bool flip)
-		{
-			draw = parent.GetDrawlist().twodim.insert(DRAWABLE());
-			DRAWABLE & drawref = parent.GetDrawlist().twodim.get(draw);
-
-			drawref.SetDiffuseMap(bartex);
-			drawref.SetVertArray(&verts);
-			drawref.SetCull(false, false);
-			drawref.SetColor(1,1,1,opacity);
-			drawref.SetDrawOrder(1);
-
-			verts.SetTo2DButton(x, y, w, h, h*0.75, flip);
-		}
-
-		void SetVisible(SCENENODE & parent, bool newvis)
-		{
-			DRAWABLE & drawref = parent.GetDrawlist().twodim.get(draw);
-			drawref.SetDrawEnable(newvis);
-		}
-};
+class FONT;
+class ContentManager;
 
 class HUD
 {
 public:
-	HUD() : debug_hud_info(false), racecomplete(false), lastvisible(true) {}
+	HUD();
 
 	bool Init(
 		const std::string & texturepath,
@@ -60,16 +28,6 @@ public:
 		float displayheight,
 		bool debugon,
 		std::ostream & error_output);
-
-	void Hide()
-	{
-		SetVisible(false);
-	}
-
-	void Show()
-	{
-		SetVisible(true);
-	}
 
 	void Update(
 		FONT & lcdfont, FONT & sansfont, float displaywidth, float displayheight,
@@ -83,18 +41,25 @@ public:
 		bool outofgas, bool nosactive, float nosamount,
 		bool drifting, float driftscore, float thisdriftscore);
 
-	void SetDebugVisibility(bool show)
+	SCENENODE & GetNode()
 	{
-		SCENENODE & debugnoderef = hudroot.GetNode(debugnode);
-		debugnoderef.SetChildVisibility(show);
+		return hudroot;
 	}
 
-	SCENENODE & GetNode() {return hudroot;}
+	void Hide()
+	{
+		SetVisible(false);
+	}
+
+	void Show()
+	{
+		SetVisible(true);
+	}
 
 private:
 	TEXTURE bartex;
 	SCENENODE hudroot;
-	std::list <HUDBAR> bars;
+	std::list<HUDBAR> bars;
 
 	TEXTURE progbartex;
 	keyed_container <DRAWABLE>::handle rpmbar;
@@ -143,11 +108,18 @@ private:
 	TEXT_DRAW mphtext;
 	keyed_container <DRAWABLE>::handle mphtextdraw;
 
+	HUDGAUGE rpmgauge;
+	HUDGAUGE speedgauge;
+
 	bool debug_hud_info;
-
 	bool racecomplete;
-
 	bool lastvisible;
+
+	void SetDebugVisibility(bool show)
+	{
+		SCENENODE & debugnoderef = hudroot.GetNode(debugnode);
+		debugnoderef.SetChildVisibility(show);
+	}
 
 	void SetVisible(bool newvis)
 	{
@@ -156,34 +128,6 @@ private:
 			hudroot.SetChildVisibility(newvis);
 			SetDebugVisibility(newvis && debug_hud_info);
 			lastvisible = newvis;
-		}
-	}
-
-	keyed_container <DRAWABLE>::handle SetupText(SCENENODE & parent, FONT & font, TEXT_DRAW & textdraw, const std::string & str, const float x, const float y, const float scalex, const float scaley, const float r, const float g, const float b, float zorder = 0)
-	{
-		keyed_container <DRAWABLE>::handle draw = parent.GetDrawlist().text.insert(DRAWABLE());
-		DRAWABLE & drawref = parent.GetDrawlist().text.get(draw);
-		textdraw.Set(drawref, font, str, x, y, scalex,scaley, r, g, b);
-		drawref.SetDrawOrder(zorder);
-		return draw;
-	}
-
-	void GetTimeString(float time, std::string & outtime) const
-	{
-		int min = (int) time / 60;
-		float secs = time - min * 60;
-
-		if (time != 0.0)
-		{
-			std::stringstream s;
-			s << std::setfill('0');
-			s << std::setw(2) << min << ":";
-			s << std::fixed << std::setprecision(3) << std::setw(6) << secs;
-			outtime = s.str();
-		}
-		else
-		{
-			outtime = "--:--.---";
 		}
 	}
 };
