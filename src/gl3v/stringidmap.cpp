@@ -39,6 +39,11 @@ bool StringId::operator< (const StringId other) const
 	return id < other.id;
 }
 
+std::size_t StringId::hash::operator()(const StringId toHash) const
+{
+    return std::tr1::hash<unsigned int>()(toHash.id);
+}
+
 bool StringIdMap::valid(StringId id)
 {
 	return id.valid();

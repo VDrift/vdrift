@@ -36,7 +36,7 @@ public:
 
 	struct hash
 	{
-		std::size_t operator()(const StringId toHash) const {return std::tr1::hash<unsigned int>()(toHash.id);}
+		std::size_t operator()(const StringId toHash) const;
 	};
 
 private:
