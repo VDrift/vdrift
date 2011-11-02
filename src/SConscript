@@ -59,6 +59,8 @@ src = Split("""aabb.cpp
 		guipage.cpp
 		http.cpp
 		hud.cpp
+		hudbar.cpp
+		hudgauge.cpp
 		joepack.cpp
 		joeserialize.cpp
 		k1999.cpp

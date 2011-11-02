@@ -82,14 +82,18 @@ public:
 	void StartEngine();
 	void ShiftGear(int value);
 	void SetThrottle(btScalar value);
+	void SetNOS(btScalar value);
 	void SetClutch(btScalar value);
 	void SetBrake(btScalar value);
 	void SetHandBrake(btScalar value);
 	void SetAutoClutch(bool value);
 	void SetAutoShift(bool value);
 
-	// first wheel velocity
+	// speedometer reading front left wheel in m/s
 	btScalar GetSpeedMPS() const;
+
+	// based on transmission, engine rpm limit and wheel radius in m/s
+	btScalar GetMaxSpeedMPS() const;
 
 	// engine rpm
 	btScalar GetTachoRPM() const;
@@ -101,6 +105,8 @@ public:
 	const CARBRAKE & GetBrake(WHEEL_POSITION pos) const {return brake[pos];}
 	const CARWHEEL & GetWheel(WHEEL_POSITION pos) const {return wheel[pos];}
 	const CARTIRE & GetTire(WHEEL_POSITION pos) const {return tire[pos];}
+	btScalar GetNosAmount() const {return engine.GetNosAmount();}
+	bool GetOutOfGas() const {return fuel_tank.Empty();}
 
 	// traction control
 	void SetABS(const bool newabs);
@@ -193,6 +199,7 @@ protected:
 	std::list<CARTELEMETRY> telemetry;
 
 	btScalar maxangle;
+	btScalar maxspeed;
 	btScalar feedback;
 	bool damage;
 

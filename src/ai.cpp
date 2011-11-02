@@ -108,12 +108,11 @@ QT_TEST(ai_test)
 
 const BEZIER * GetCurrentPatch(const CAR *c)
 {
-	const BEZIER *curr_patch = c->GetCurPatch(0);
+	const BEZIER *curr_patch = c->GetCurPatch(WHEEL_POSITION(0));
 	if (!curr_patch)
 	{
-		curr_patch = c->GetCurPatch(1); //let's try the other wheel
-		if (!curr_patch)
-			return NULL;
+		curr_patch = c->GetCurPatch(WHEEL_POSITION(1)); //let's try the other wheel
+		if (!curr_patch) return NULL;
 	}
 
 	return curr_patch;
