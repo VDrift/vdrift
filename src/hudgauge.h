@@ -31,10 +31,14 @@ public:
 
 private:
 	keyed_container<SCENENODE>::handle pointer_node;
-	keyed_container<DRAWABLE>::handle pointer_draw;
+	VERTEXARRAY pointer_rotated;
 	VERTEXARRAY pointer;
 	VERTEXARRAY dialnum;
 	VERTEXARRAY dial;
+	float centerx;
+	float centery;
+	float scalex;
+	float scaley;
 	float offset;
 	float scale;
 };
