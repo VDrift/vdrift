@@ -1,7 +1,10 @@
 #ifndef _HUDGAUGE_H
 #define _HUDGAUGE_H
 
-#include "text_draw.h"
+#include "scenenode.h"
+#include <ostream>
+
+class FONT;
 
 class HUDGAUGE
 {
@@ -28,12 +31,14 @@ public:
 
 private:
 	keyed_container<SCENENODE>::handle pointer_node;
-	//keyed_container<SCENENODE>::handle dial_node;
-	keyed_container<DRAWABLE>::handle pointer_draw;
-	keyed_container<DRAWABLE>::handle dial_draw;
-	std::vector<TEXT_DRAW> dialnums;
+	VERTEXARRAY pointer_rotated;
 	VERTEXARRAY pointer;
+	VERTEXARRAY dialnum;
 	VERTEXARRAY dial;
+	float centerx;
+	float centery;
+	float scalex;
+	float scaley;
 	float offset;
 	float scale;
 };
