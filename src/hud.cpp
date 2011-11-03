@@ -253,10 +253,10 @@ bool HUD::Init(
 
 #ifdef GAUGES
 	rpmgauge.Set(hudroot, sansfont, screenhwratio, 0.15, 0.85, 0.12,
-		45.0 / 180.0 * M_PI, 315.0 / 180.0 * M_PI, 0, 9000, 10, error_output);
+		315.0 / 180.0 * M_PI, 45.0 / 180.0 * M_PI, 0, 9, 9, error_output);
 
 	speedgauge.Set(hudroot, sansfont, screenhwratio, 0.85, 0.85, 0.12,
-		45.0 / 180.0 * M_PI, 315.0 / 180.0 * M_PI, 0, 100, 10, error_output);
+		315.0 / 180.0 * M_PI, 45.0 / 180.0 * M_PI, 0, 240, 6, error_output);
 #endif
 
 	Hide();
@@ -289,8 +289,8 @@ void HUD::Update(
 	}
 
 #ifdef GAUGES
-	rpmgauge.Update(hudroot,rpm);
-	speedgauge.Update(hudroot, speed);
+	rpmgauge.Update(hudroot, rpm / 1000.0);
+	speedgauge.Update(hudroot, speed * 3.6);
 #else
 	std::stringstream gearstr;
 	if (newgear == -1)
@@ -327,8 +327,8 @@ void HUD::Update(
 		speedo << std::abs((int)(2.23693629 * speed)) << " MPH";
 	else
 		speedo << std::abs((int)(3.6 * speed)) << " KPH";
-	float fontscalex = mphtext.GetCurrentScale().first;
-	float fontscaley = mphtext.GetCurrentScale().second;
+	float fontscalex = mphtext.GetScale().first;
+	float fontscaley = mphtext.GetScale().second;
 	float speedotextwidth = lcdfont.GetWidth(speedo.str()) * fontscalex;
 	float x = 1.0 - screenhwratio * 0.02 - speedotextwidth;
 	float y = 1 - fontscaley * 0.5;

@@ -1,4 +1,7 @@
 #include "hudgauge.h"
+#include "text_draw.h"
+
+#include <sstream>
 
 inline keyed_container<DRAWABLE>::handle AddDrawable(SCENENODE & node)
 {
@@ -57,16 +60,48 @@ void HUDGAUGE::Set(
 		for (int i = 0; i <= 3 * numvalues; ++i)
 		{
 			VERTEXARRAY temp = (i % 3) ? sm : bm;
-			temp.Rotate(angle, 0, 0, 1);
+			temp.Rotate(angle, 0, 0, -1);
 			dial = dial + temp;
 			angle = angle + delta;
 		}
 		dial.Scale(radius * hwratio, radius, 1);
 		dial.Translate(centerx, centery, 0.0);
 
-		dial_draw = AddDrawable(parent);
+		keyed_container<DRAWABLE>::handle dial_draw = AddDrawable(parent);
 		DRAWABLE & drawref = GetDrawable(parent, dial_draw);
 		drawref.SetVertArray(&dial);
+		drawref.SetCull(false, false);
+		drawref.SetColor(1, 1, 1, 0.5);
+		drawref.SetDrawOrder(1);
+	}
+
+	// dial numbers
+	{
+		float scalex = 0.25 * radius * hwratio;
+		float scaley = 0.25 * radius;
+		float angle = startangle;
+		float angle_delta = (endangle - startangle) / numvalues;
+		float value = startvalue;
+		float value_delta = (endvalue - startvalue) / numvalues;
+		for (int i = 0; i <= numvalues; ++i)
+		{
+			VERTEXARRAY temp;
+			std::stringstream sstr;
+			std::string text;
+			sstr << value;
+			sstr >> text;
+			float x = centerx + 0.75 * sin(angle) * radius * hwratio;
+			float y = centery + 0.75 * cos(angle) * radius;
+			float xn = TEXT_DRAW::RenderText(font, text, x, y, scalex, scaley, temp);
+			temp.Translate((x - xn) * 0.5, 0, 0);
+			dialnum = dialnum + temp;
+			angle += angle_delta;
+			value += value_delta;
+		}
+		keyed_container<DRAWABLE>::handle dialnum_draw = AddDrawable(parent);
+		DRAWABLE & drawref = GetDrawable(parent, dialnum_draw);
+		drawref.SetDiffuseMap(font.GetFontTexture());
+		drawref.SetVertArray(&dialnum);
 		drawref.SetCull(false, false);
 		drawref.SetColor(1, 1, 1, 0.5);
 		drawref.SetDrawOrder(1);
@@ -85,7 +120,7 @@ void HUDGAUGE::Set(
 
 		pointer_node = parent.AddNode();
 		SCENENODE & noderef = parent.GetNode(pointer_node);
-		QUATERNION<float> rot(startangle, 1, 0, 0);
+		QUATERNION<float> rot;//(startangle, 0, 0, 1);
 		MATHVECTOR<float,3> pos(centerx, centery, 0);
 		noderef.GetTransform().SetRotation(rot);
 		noderef.GetTransform().SetTranslation(pos);
@@ -101,8 +136,8 @@ void HUDGAUGE::Set(
 
 void HUDGAUGE::Update(SCENENODE & parent, float value)
 {
-	float angle = value * scale + offset;
+/*	float angle = value * scale + offset;
 	QUATERNION<float> rot(angle, 1, 0, 0);
 	SCENENODE & noderef = parent.GetNode(pointer_node);
-	noderef.GetTransform().SetRotation(rot);
+	noderef.GetTransform().SetRotation(rot);*/
 }

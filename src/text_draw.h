@@ -11,36 +11,46 @@
 class TEXT_DRAW
 {
 public:
-	TEXT_DRAW() : oldx(0), oldy(0), oldscalex(1.0), oldscaley(1.0) {}
+	TEXT_DRAW();
 
-	void Set(DRAWABLE & draw, const FONT & font, const std::string & newtext, const float x, const float y, const float newscalex, const float newscaley, const float r=1, const float g=1, const float b=1)
-	{
-		Set(draw, font, newtext, x, y, newscalex, newscaley, r, g, b, varray);
-	}
+	void Set(
+		DRAWABLE & draw,
+		const FONT & font, const std::string & newtext,
+		float x,  float y, float newscalex, float newscaley,
+		float r, float g, float b);
 
-	void Set(DRAWABLE & draw, const FONT & font, const std::string & newtext, const float x, const float y, const float newscalex, const float newscaley, const float r, const float g, const float b, VERTEXARRAY & output_array);
+	void Revise(
+		const FONT & font, const std::string & newtext,
+		float x, float y, float scalex, float scaley);
 
-	void Revise(const FONT & font, const std::string & newtext)
-	{
-		Revise(font, newtext, oldx, oldy, oldscalex, oldscaley);
-	}
-
-	void Revise(const FONT & font, const std::string & newtext, float x, float y, float scalex, float scaley)
-	{
-		Revise(font, newtext, x, y, scalex, scaley, varray);
-	}
-
-	void Revise(const FONT & font, const std::string & newtext, float x, float y, float scalex, float scaley, VERTEXARRAY & output_array);
+	void Revise(const FONT & font, const std::string & newtext);
 
 	const std::string & GetText() const
 	{
 		return text;
 	}
 
-	const std::pair<float,float> GetCurrentScale() const
+	const std::pair<float,float> GetScale() const
 	{
-		return std::pair<float,float>(oldscalex,oldscaley);
+		return std::pair<float,float>(oldscalex, oldscaley);
 	}
+
+	static float RenderCharacter(
+		const FONT & font, char c,
+		float x, float y, float scalex, float scaley,
+		VERTEXARRAY & output_array);
+
+	static float RenderText(
+		const FONT & font, const std::string & newtext,
+		float x, float y, float scalex, float scaley,
+		VERTEXARRAY & output_array);
+
+	static void SetText(
+		DRAWABLE & draw,
+		const FONT & font, const std::string & text,
+		float x, float y, float scalex, float scaley,
+		float r, float g, float b,
+		VERTEXARRAY & output_array);
 
 private:
 	VERTEXARRAY varray;
@@ -71,7 +81,7 @@ public:
 	void Revise(const std::string & newtext)
 	{
 		assert(font);
-		text.Revise(*font, newtext, curx, cury, text.GetCurrentScale().first, text.GetCurrentScale().second);
+		text.Revise(*font, newtext, curx, cury, text.GetScale().first, text.GetScale().second);
 	}
 
 	void Revise(const std::string & newtext, const float x, const float y, const float newscalex, const float newscaley)
@@ -86,7 +96,7 @@ public:
 		assert(font);
 		curx = newx;
 		cury = newy;
-		text.Revise(*font, text.GetText(), curx, cury, text.GetCurrentScale().first, text.GetCurrentScale().second);
+		text.Revise(*font, text.GetText(), curx, cury, text.GetScale().first, text.GetScale().second);
 	}
 
 	void SetColor(SCENENODE & parentnode, const float r, const float g, const float b)
@@ -108,13 +118,13 @@ public:
 	float GetWidth() const
 	{
 		assert (font);
-		return font->GetWidth(text.GetText()) * text.GetCurrentScale().first;
+		return font->GetWidth(text.GetText()) * text.GetScale().first;
 	}
 
 	float GetWidth(const std::string & newstr) const
 	{
 		assert (font);
-		return font->GetWidth(newstr) * text.GetCurrentScale().first;
+		return font->GetWidth(newstr) * text.GetScale().first;
 	}
 
 	void SetDrawOrder(SCENENODE & parentnode, float newdo)
