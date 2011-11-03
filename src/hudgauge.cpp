@@ -13,6 +13,11 @@ inline DRAWABLE & GetDrawable(SCENENODE & node, keyed_container <DRAWABLE>::hand
 	return node.GetDrawlist().twodim.get(drawhandle);
 }
 
+inline void Erase(SCENENODE & node, keyed_container <DRAWABLE>::handle & drawhandle)
+{
+	if (drawhandle.valid()) node.GetDrawlist().twodim.erase(drawhandle);
+}
+
 HUDGAUGE::HUDGAUGE() :
 	centerx(0), centery(0), scalex(1), scaley(1), offset(0), scale(1)
 {
@@ -30,15 +35,30 @@ void HUDGAUGE::Set(
 	float endangle,
 	float startvalue,
 	float endvalue,
-	int numvalues,
-	std::ostream & error_output)
+	float valuedelta)
 {
+	// calculate number of segments (max 9)
+	float segments = (endvalue - startvalue) / valuedelta;
+	float factor = ceil(segments / 9.0f);
+	segments = ceil(segments / factor);
+	valuedelta = valuedelta * factor;
+	endvalue = startvalue + segments * valuedelta;
+
 	this->centerx = centerx;
 	this->centery = centery;
 	this->scalex = radius * hwratio;
 	this->scaley = radius;
 	this->offset = startangle;
 	this->scale = (endangle - startangle) / (endvalue - startvalue);
+
+	// reset
+	Erase(parent, pointer_draw);
+	Erase(parent, dialnum_draw);
+	Erase(parent, dial_draw);
+	pointer_rotated.Clear();
+	pointer.Clear();
+	dialnum.Clear();
+	dial.Clear();
 
 	// dial
 	{
@@ -60,9 +80,9 @@ void HUDGAUGE::Set(
 		sm.SetTexCoords(0, t, 8);
 		sm.SetFaces(f, 6);
 
-		float delta = (endangle - startangle) / (3 * numvalues);
+		float delta = (endangle - startangle) / (3 * segments);
 		float angle = startangle;
-		for (int i = 0; i <= 3 * numvalues; ++i)
+		for (int i = 0; i <= 3 * segments; ++i)
 		{
 			VERTEXARRAY temp = (i % 3) ? sm : bm;
 			temp.Rotate(angle, 0, 0, -1);
@@ -72,7 +92,7 @@ void HUDGAUGE::Set(
 		dial.Scale(radius * hwratio, radius, 1);
 		dial.Translate(centerx, centery, 0.0);
 
-		keyed_container<DRAWABLE>::handle dial_draw = AddDrawable(parent);
+		dial_draw = AddDrawable(parent);
 		DRAWABLE & drawref = GetDrawable(parent, dial_draw);
 		drawref.SetVertArray(&dial);
 		drawref.SetCull(false, false);
@@ -85,10 +105,10 @@ void HUDGAUGE::Set(
 		float w = 0.25 * radius * hwratio;
 		float h = 0.25 * radius;
 		float angle = startangle;
-		float angle_delta = (endangle - startangle) / numvalues;
+		float angle_delta = (endangle - startangle) / segments;
 		float value = startvalue;
-		float value_delta = (endvalue - startvalue) / numvalues;
-		for (int i = 0; i <= numvalues; ++i)
+		float value_delta = (endvalue - startvalue) / segments;
+		for (int i = 0; i <= segments; ++i)
 		{
 			VERTEXARRAY temp;
 			std::stringstream sstr;
@@ -103,7 +123,7 @@ void HUDGAUGE::Set(
 			angle += angle_delta;
 			value += value_delta;
 		}
-		keyed_container<DRAWABLE>::handle dialnum_draw = AddDrawable(parent);
+		dialnum_draw = AddDrawable(parent);
 		DRAWABLE & drawref = GetDrawable(parent, dialnum_draw);
 		drawref.SetDiffuseMap(font.GetFontTexture());
 		drawref.SetVertArray(&dialnum);
@@ -130,7 +150,7 @@ void HUDGAUGE::Set(
 		noderef.GetTransform().SetRotation(rot);
 		noderef.GetTransform().SetTranslation(pos);
 */
-		keyed_container<DRAWABLE>::handle pointer_draw = AddDrawable(parent);//noderef);
+		pointer_draw = AddDrawable(parent);//noderef);
 		DRAWABLE & drawref = GetDrawable(parent, pointer_draw);//noderef, pointer_draw);
 		drawref.SetVertArray(&pointer_rotated);//pointer);
 		drawref.SetCull(false, false);

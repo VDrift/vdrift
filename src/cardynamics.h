@@ -266,6 +266,9 @@ protected:
 	// calculate downshift point based on gear, engine rpm
 	btScalar DownshiftRPM(int gear) const;
 
+	// max speed in m/s calculated from maxrpm, maxgear, finalgear ratios
+	btScalar CalculateMaxSpeed() const;
+
 	// cardynamics initialization
 	void GetCollisionBox(
 		const btVector3 & bodySize,

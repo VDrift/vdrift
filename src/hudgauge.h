@@ -12,7 +12,7 @@ public:
 	HUDGAUGE();
 
 	// startangle and endangle in rad
-	// startvalue + endvalue = numvalues * delta
+	// startvalue + endvalue = n * valuedelta
 	void Set(
 		SCENENODE & parent,
 		FONT & font,
@@ -24,13 +24,15 @@ public:
 		float endangle,
 		float startvalue,
 		float endvalue,
-		int numvalues,
-		std::ostream & error_output);
+		float valuedelta);
 
 	void Update(SCENENODE & parent, float value);
 
 private:
 	keyed_container<SCENENODE>::handle pointer_node;
+	keyed_container<DRAWABLE>::handle pointer_draw;
+	keyed_container<DRAWABLE>::handle dialnum_draw;
+	keyed_container<DRAWABLE>::handle dial_draw;
 	VERTEXARRAY pointer_rotated;
 	VERTEXARRAY pointer;
 	VERTEXARRAY dialnum;

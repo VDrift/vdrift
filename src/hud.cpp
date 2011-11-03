@@ -45,7 +45,12 @@ static void GetTimeString(float time, std::string & outtime)
 	}
 }
 
-HUD::HUD() : debug_hud_info(false), racecomplete(false), lastvisible(true)
+HUD::HUD() :
+	maxrpm(9000),
+	maxspeed(240),
+	debug_hud_info(false),
+	racecomplete(false),
+	lastvisible(true)
 {
 	// ctor
 }
@@ -253,10 +258,10 @@ bool HUD::Init(
 
 #ifdef GAUGES
 	rpmgauge.Set(hudroot, sansfont, screenhwratio, 0.15, 0.85, 0.12,
-		315.0 / 180.0 * M_PI, 45.0 / 180.0 * M_PI, 0, 9, 9, error_output);
+		315.0 / 180.0 * M_PI, 45.0 / 180.0 * M_PI, 0, maxrpm / 1000, 1);
 
 	speedgauge.Set(hudroot, sansfont, screenhwratio, 0.85, 0.85, 0.12,
-		315.0 / 180.0 * M_PI, 45.0 / 180.0 * M_PI, 0, 240, 6, error_output);
+		315.0 / 180.0 * M_PI, 45.0 / 180.0 * M_PI, 0, maxspeed * 3.6, 10);
 #endif
 
 	Hide();
@@ -287,11 +292,22 @@ void HUD::Update(
 		debugtext3.Revise(sansfont, debug_string3);
 		debugtext4.Revise(sansfont, debug_string4);
 	}
-
 #ifdef GAUGES
+	if (fabs(this->maxrpm - maxrpm) > 1)
+	{
+		this->maxrpm = maxrpm;
+		rpmgauge.Set(hudroot, sansfont, screenhwratio, 0.15, 0.85, 0.12,
+			315.0 / 180.0 * M_PI, 45.0 / 180.0 * M_PI, 0, maxrpm / 1000, 1);
+	}
+	if (fabs(this->maxspeed - maxspeed) > 1)
+	{
+		this->maxspeed = maxspeed;
+		speedgauge.Set(hudroot, sansfont, screenhwratio, 0.85, 0.85, 0.12,
+			315.0 / 180.0 * M_PI, 45.0 / 180.0 * M_PI, 0, maxspeed * 3.6, 20);
+	}
 	rpmgauge.Update(hudroot, rpm / 1000.0);
 	speedgauge.Update(hudroot, speed * 3.6);
-#else
+#endif
 	std::stringstream gearstr;
 	if (newgear == -1)
 		gearstr << "R";
@@ -303,7 +319,7 @@ void HUD::Update(
 	geartext.Revise(lcdfont, gearstr.str());
 	float geartext_alpha = (newgear == 0) ? 1 : clutch * 0.5 + 0.5;
 	geartextdrawref.SetColor(1, 1, 1, geartext_alpha);
-
+#ifndef GAUGES
 	float rpmpercent = std::min(1.0f, rpm / (float) maxrpm);
 	float rpmredpoint = redrpm / (float) maxrpm;
 	float rpmxstart = 60.0 / displaywidth;
@@ -321,7 +337,7 @@ void HUD::Update(
 	rpmbarverts.SetToBillboard(rpmxstart, rpmy, rpmxend, rpmy + rpmheight);
 	rpmredbarverts.SetToBillboard(rpmredx, rpmy, rpmredxend, rpmy + rpmheight);
 	rpmboxverts.SetToBillboard(rpmxstart, rpmy, rpmxstart + rpmwidth, rpmy + rpmheight);
-
+#endif
 	std::stringstream speedo;
 	if (mph)
 		speedo << std::abs((int)(2.23693629 * speed)) << " MPH";
@@ -380,7 +396,6 @@ void HUD::Update(
 	{
 		nos.SetAlpha(hudroot, 0.0);
 	}
-#endif
 
 	//update timer info
 	{

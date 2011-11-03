@@ -110,6 +110,8 @@ private:
 
 	HUDGAUGE rpmgauge;
 	HUDGAUGE speedgauge;
+	float maxrpm;
+	float maxspeed;
 
 	bool debug_hud_info;
 	bool racecomplete;
