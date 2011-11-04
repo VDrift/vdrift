@@ -3,6 +3,7 @@
 
 #include "scenenode.h"
 #include <ostream>
+#include <string>
 
 class FONT;
 
@@ -15,7 +16,8 @@ public:
 	// startvalue + endvalue = n * valuedelta
 	void Set(
 		SCENENODE & parent,
-		FONT & font,
+		const FONT & font,
+		const std::string & name,
 		float hwratio,
 		float centerx,
 		float centery,
@@ -35,8 +37,8 @@ private:
 	keyed_container<DRAWABLE>::handle dial_draw;
 	VERTEXARRAY pointer_rotated;
 	VERTEXARRAY pointer;
-	VERTEXARRAY dialnum;
-	VERTEXARRAY dial;
+	VERTEXARRAY dial_label;
+	VERTEXARRAY dial_marks;
 	float centerx;
 	float centery;
 	float scalex;

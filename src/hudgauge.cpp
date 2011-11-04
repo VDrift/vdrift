@@ -26,7 +26,8 @@ HUDGAUGE::HUDGAUGE() :
 
 void HUDGAUGE::Set(
 	SCENENODE & parent,
-	FONT & font,
+	const FONT & font,
+	const std::string & name,
 	float hwratio,
 	float centerx,
 	float centery,
@@ -57,10 +58,10 @@ void HUDGAUGE::Set(
 	Erase(parent, dial_draw);
 	pointer_rotated.Clear();
 	pointer.Clear();
-	dialnum.Clear();
-	dial.Clear();
+	dial_label.Clear();
+	dial_marks.Clear();
 
-	// dial
+	// dial marks
 	{
 		// big marker
 		float pb[] = {-0.02, 1, 0, 0.02, 1, 0, 0.02, 0.92, 0, -0.02, 0.92, 0};
@@ -86,47 +87,54 @@ void HUDGAUGE::Set(
 		{
 			VERTEXARRAY temp = (i % 3) ? sm : bm;
 			temp.Rotate(angle, 0, 0, -1);
-			dial = dial + temp;
+			dial_marks = dial_marks + temp;
 			angle = angle + delta;
 		}
-		dial.Scale(radius * hwratio, radius, 1);
-		dial.Translate(centerx, centery, 0.0);
+		dial_marks.Scale(radius * hwratio, radius, 1);
+		dial_marks.Translate(centerx, centery, 0.0);
 
 		dial_draw = AddDrawable(parent);
 		DRAWABLE & drawref = GetDrawable(parent, dial_draw);
-		drawref.SetVertArray(&dial);
+		drawref.SetVertArray(&dial_marks);
 		drawref.SetCull(false, false);
 		drawref.SetColor(1, 1, 1, 0.5);
 		drawref.SetDrawOrder(1);
 	}
 
-	// dial numbers
+	// dial label
 	{
+		VERTEXARRAY temp;
 		float w = 0.25 * radius * hwratio;
 		float h = 0.25 * radius;
+		float x = centerx;
+		float y = centery - 0.5 * radius;
+		float xn = TEXT_DRAW::RenderText(font, name, x, y, w, h, temp);
+		temp.Translate((x - xn) * 0.5, 0, 0);
+		dial_label = dial_label + temp;
+
 		float angle = startangle;
 		float angle_delta = (endangle - startangle) / segments;
 		float value = startvalue;
 		float value_delta = (endvalue - startvalue) / segments;
 		for (int i = 0; i <= segments; ++i)
 		{
-			VERTEXARRAY temp;
 			std::stringstream sstr;
 			std::string text;
 			sstr << value;
 			sstr >> text;
-			float x = centerx + 0.75 * sin(angle) * radius * hwratio;
-			float y = centery + 0.75 * cos(angle) * radius;
-			float xn = TEXT_DRAW::RenderText(font, text, x, y, w, h, temp);
+			x = centerx + 0.75 * sin(angle) * radius * hwratio;
+			y = centery + 0.75 * cos(angle) * radius;
+			xn = TEXT_DRAW::RenderText(font, text, x, y, w, h, temp);
 			temp.Translate((x - xn) * 0.5, 0, 0);
-			dialnum = dialnum + temp;
+			dial_label = dial_label + temp;
 			angle += angle_delta;
 			value += value_delta;
 		}
+
 		dialnum_draw = AddDrawable(parent);
 		DRAWABLE & drawref = GetDrawable(parent, dialnum_draw);
 		drawref.SetDiffuseMap(font.GetFontTexture());
-		drawref.SetVertArray(&dialnum);
+		drawref.SetVertArray(&dial_label);
 		drawref.SetCull(false, false);
 		drawref.SetColor(1, 1, 1, 0.5);
 		drawref.SetDrawOrder(1);
@@ -155,7 +163,7 @@ void HUDGAUGE::Set(
 		drawref.SetVertArray(&pointer_rotated);//pointer);
 		drawref.SetCull(false, false);
 		drawref.SetColor(1, 1, 1, 0.5);
-		drawref.SetDrawOrder(1);
+		drawref.SetDrawOrder(2);
 	}
 }
 

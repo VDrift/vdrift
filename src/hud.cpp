@@ -257,10 +257,10 @@ bool HUD::Init(
 	}
 
 #ifdef GAUGES
-	rpmgauge.Set(hudroot, sansfont, screenhwratio, 0.15, 0.85, 0.12,
+	rpmgauge.Set(hudroot, sansfont, "rpm", screenhwratio, 0.15, 0.85, 0.12,
 		315.0 / 180.0 * M_PI, 45.0 / 180.0 * M_PI, 0, maxrpm / 1000, 1);
 
-	speedgauge.Set(hudroot, sansfont, screenhwratio, 0.85, 0.85, 0.12,
+	speedgauge.Set(hudroot, sansfont, "kph", screenhwratio, 0.85, 0.85, 0.12,
 		315.0 / 180.0 * M_PI, 45.0 / 180.0 * M_PI, 0, maxspeed * 3.6, 10);
 #endif
 
@@ -275,7 +275,7 @@ void HUD::Update(
 	FONT & lcdfont, FONT & sansfont, float displaywidth, float displayheight,
 	float curlap, float lastlap, float bestlap, float stagingtimeleft,
 	int curlapnum, int numlaps, int curplace, int numcars,
-	int rpm, int redrpm, int maxrpm,
+	float rpm, float redrpm, float maxrpm,
 	float speed, float maxspeed, bool mph, float clutch, int newgear,
 	const std::string & debug_string1, const std::string & debug_string2,
 	const std::string & debug_string3, const std::string & debug_string4,
@@ -296,13 +296,13 @@ void HUD::Update(
 	if (fabs(this->maxrpm - maxrpm) > 1)
 	{
 		this->maxrpm = maxrpm;
-		rpmgauge.Set(hudroot, sansfont, screenhwratio, 0.15, 0.85, 0.12,
+		rpmgauge.Set(hudroot, sansfont, "rpm", screenhwratio, 0.15, 0.85, 0.12,
 			315.0 / 180.0 * M_PI, 45.0 / 180.0 * M_PI, 0, maxrpm / 1000, 1);
 	}
 	if (fabs(this->maxspeed - maxspeed) > 1)
 	{
 		this->maxspeed = maxspeed;
-		speedgauge.Set(hudroot, sansfont, screenhwratio, 0.85, 0.85, 0.12,
+		speedgauge.Set(hudroot, sansfont, "kph", screenhwratio, 0.85, 0.85, 0.12,
 			315.0 / 180.0 * M_PI, 45.0 / 180.0 * M_PI, 0, maxspeed * 3.6, 20);
 	}
 	rpmgauge.Update(hudroot, rpm / 1000.0);
@@ -320,8 +320,8 @@ void HUD::Update(
 	float geartext_alpha = (newgear == 0) ? 1 : clutch * 0.5 + 0.5;
 	geartextdrawref.SetColor(1, 1, 1, geartext_alpha);
 #ifndef GAUGES
-	float rpmpercent = std::min(1.0f, rpm / (float) maxrpm);
-	float rpmredpoint = redrpm / (float) maxrpm;
+	float rpmpercent = std::min(1.0f, rpm / maxrpm);
+	float rpmredpoint = redrpm / maxrpm;
 	float rpmxstart = 60.0 / displaywidth;
 	float rpmwidth = 200.0 / displaywidth;
 	float rpmredx = rpmwidth * rpmredpoint + rpmxstart;
