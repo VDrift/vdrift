@@ -3,23 +3,14 @@
 
 #include <sstream>
 
-inline keyed_container<DRAWABLE>::handle AddDrawable(SCENENODE & node)
-{
-	return node.GetDrawlist().twodim.insert(DRAWABLE());
-}
-
-inline DRAWABLE & GetDrawable(SCENENODE & node, keyed_container <DRAWABLE>::handle & drawhandle)
-{
-	return node.GetDrawlist().twodim.get(drawhandle);
-}
-
-inline void Erase(SCENENODE & node, keyed_container <DRAWABLE>::handle & drawhandle)
-{
-	if (drawhandle.valid()) node.GetDrawlist().twodim.erase(drawhandle);
-}
-
 HUDGAUGE::HUDGAUGE() :
-	centerx(0), centery(0), scalex(1), scaley(1), offset(0), scale(1)
+	centerx(0),
+	centery(0),
+	scalex(1),
+	scaley(1),
+	startangle(0),
+	endangle(0),
+	scale(1)
 {
 	// ctor
 }
@@ -27,7 +18,6 @@ HUDGAUGE::HUDGAUGE() :
 void HUDGAUGE::Set(
 	SCENENODE & parent,
 	const FONT & font,
-	const std::string & name,
 	float hwratio,
 	float centerx,
 	float centery,
@@ -49,13 +39,14 @@ void HUDGAUGE::Set(
 	this->centery = centery;
 	this->scalex = radius * hwratio;
 	this->scaley = radius;
-	this->offset = startangle;
+	this->startangle = startangle;
+	this->endangle = endangle;
 	this->scale = (endangle - startangle) / (endvalue - startvalue);
 
 	// reset
-	Erase(parent, pointer_draw);
-	Erase(parent, dialnum_draw);
-	Erase(parent, dial_draw);
+	if (dialnum_draw.valid()) parent.GetDrawlist().text.erase(dialnum_draw);
+	if (pointer_draw.valid()) parent.GetDrawlist().twodim.erase(pointer_draw);
+	if (dial_draw.valid()) 	parent.GetDrawlist().twodim.erase(dial_draw);
 	pointer_rotated.Clear();
 	pointer.Clear();
 	dial_label.Clear();
@@ -81,7 +72,7 @@ void HUDGAUGE::Set(
 		sm.SetTexCoords(0, t, 8);
 		sm.SetFaces(f, 6);
 
-		float delta = (endangle - startangle) / (3 * segments);
+		float delta = (endangle - startangle) / (3.0 * segments);
 		float angle = startangle;
 		for (int i = 0; i <= 3 * segments; ++i)
 		{
@@ -93,12 +84,12 @@ void HUDGAUGE::Set(
 		dial_marks.Scale(radius * hwratio, radius, 1);
 		dial_marks.Translate(centerx, centery, 0.0);
 
-		dial_draw = AddDrawable(parent);
-		DRAWABLE & drawref = GetDrawable(parent, dial_draw);
+		dial_draw = parent.GetDrawlist().twodim.insert(DRAWABLE());
+		DRAWABLE & drawref = parent.GetDrawlist().twodim.get(dial_draw);
 		drawref.SetVertArray(&dial_marks);
 		drawref.SetCull(false, false);
-		drawref.SetColor(1, 1, 1, 0.5);
-		drawref.SetDrawOrder(1);
+		//drawref.SetColor(1, 1, 1, 0.5);
+		//drawref.SetDrawOrder(4);
 	}
 
 	// dial label
@@ -106,12 +97,6 @@ void HUDGAUGE::Set(
 		VERTEXARRAY temp;
 		float w = 0.25 * radius * hwratio;
 		float h = 0.25 * radius;
-		float x = centerx;
-		float y = centery - 0.5 * radius;
-		float xn = TEXT_DRAW::RenderText(font, name, x, y, w, h, temp);
-		temp.Translate((x - xn) * 0.5, 0, 0);
-		dial_label = dial_label + temp;
-
 		float angle = startangle;
 		float angle_delta = (endangle - startangle) / segments;
 		float value = startvalue;
@@ -122,22 +107,22 @@ void HUDGAUGE::Set(
 			std::string text;
 			sstr << value;
 			sstr >> text;
-			x = centerx + 0.75 * sin(angle) * radius * hwratio;
-			y = centery + 0.75 * cos(angle) * radius;
-			xn = TEXT_DRAW::RenderText(font, text, x, y, w, h, temp);
+			float x = centerx + 0.75 * sin(angle) * radius * hwratio;
+			float y = centery + 0.75 * cos(angle) * radius;
+			float xn = TEXT_DRAW::RenderText(font, text, x, y, w, h, temp);
 			temp.Translate((x - xn) * 0.5, 0, 0);
 			dial_label = dial_label + temp;
 			angle += angle_delta;
 			value += value_delta;
 		}
 
-		dialnum_draw = AddDrawable(parent);
-		DRAWABLE & drawref = GetDrawable(parent, dialnum_draw);
+		dialnum_draw = parent.GetDrawlist().text.insert(DRAWABLE());
+		DRAWABLE & drawref = parent.GetDrawlist().text.get(dialnum_draw);
 		drawref.SetDiffuseMap(font.GetFontTexture());
 		drawref.SetVertArray(&dial_label);
 		drawref.SetCull(false, false);
-		drawref.SetColor(1, 1, 1, 0.5);
-		drawref.SetDrawOrder(1);
+		//drawref.SetColor(1, 1, 1, 0.5);
+		//drawref.SetDrawOrder(4);
 	}
 
 	// pointer
@@ -149,33 +134,32 @@ void HUDGAUGE::Set(
 		pointer.SetTexCoordSets(1);
 		pointer.SetTexCoords(0, t, 8);
 		pointer.SetFaces(f, 6);
-/*		pointer.Scale(radius, radius, 1);
 
-		pointer_node = parent.AddNode();
-		SCENENODE & noderef = parent.GetNode(pointer_node);
-		QUATERNION<float> rot(startangle, 0, 0, 1);
-		MATHVECTOR<float,3> pos(centerx, centery, 0);
-		noderef.GetTransform().SetRotation(rot);
-		noderef.GetTransform().SetTranslation(pos);
-*/
-		pointer_draw = AddDrawable(parent);//noderef);
-		DRAWABLE & drawref = GetDrawable(parent, pointer_draw);//noderef, pointer_draw);
-		drawref.SetVertArray(&pointer_rotated);//pointer);
+		pointer_draw = parent.GetDrawlist().twodim.insert(DRAWABLE());
+		DRAWABLE & drawref = parent.GetDrawlist().twodim.get(pointer_draw);
+		drawref.SetVertArray(&pointer_rotated);
 		drawref.SetCull(false, false);
-		drawref.SetColor(1, 1, 1, 0.5);
-		drawref.SetDrawOrder(2);
+		//drawref.SetColor(1, 1, 1, 0.5);
+		//drawref.SetDrawOrder(4);
 	}
+}
+
+void HUDGAUGE::Revise(
+	SCENENODE & parent,
+	const FONT & font,
+	float startvalue,
+	float endvalue,
+	float valuedelta)
+{
+	Set(parent, font, scalex / scaley, centerx, centery, scaley,
+		startangle, endangle, startvalue, endvalue, valuedelta);
 }
 
 void HUDGAUGE::Update(SCENENODE & parent, float value)
 {
-	float angle = value * scale + offset;
+	float angle = value * scale + startangle;
 	pointer_rotated = pointer;
 	pointer_rotated.Rotate(angle, 0, 0, -1);
 	pointer_rotated.Scale(scalex, scaley, 1);
 	pointer_rotated.Translate(centerx, centery, 0);
-/*	QUATERNION<float> rot(angle, 1, 0, 0);
-	SCENENODE & noderef = parent.GetNode(pointer_node);
-	noderef.GetTransform().SetRotation(rot);*/
-
 }

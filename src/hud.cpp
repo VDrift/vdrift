@@ -1,5 +1,6 @@
 #include "hud.h"
 #include "contentmanager.h"
+#include "texture.h"
 
 //#define GAUGES
 
@@ -17,11 +18,11 @@ inline keyed_container <DRAWABLE>::handle SetupText(
 	SCENENODE & parent, FONT & font,
 	TEXT_DRAW & textdraw, const std::string & str,
 	float x, float y, float scalex, float scaley,
-	float r, float g, float b, float zorder = 0)
+	float r, float g , float b, float zorder = 0)
 {
-	keyed_container <DRAWABLE>::handle draw = parent.GetDrawlist().text.insert(DRAWABLE());
+	keyed_container<DRAWABLE>::handle draw = parent.GetDrawlist().text.insert(DRAWABLE());
 	DRAWABLE & drawref = parent.GetDrawlist().text.get(draw);
-	textdraw.Set(drawref, font, str, x, y, scalex,scaley, r, g, b);
+	textdraw.Set(drawref, font, str, x, y, scalex, scaley, r, g, b);
 	drawref.SetDrawOrder(zorder);
 	return draw;
 }
@@ -65,57 +66,17 @@ bool HUD::Init(
 	bool debugon,
 	std::ostream & error_output)
 {
-	float opacity = 0.8;
-	float screenhwratio = displayheight / displaywidth;
-	float barheight = 64.0 / displayheight;
-	float barwidth = 256.0 / displaywidth;
+	const float opacity = 0.8;
+	const float screenhwratio = displayheight / displaywidth;
+	const float barheight = 64.0 / displayheight;
+	const float barwidth = 256.0 / displaywidth;
 
 	TEXTUREINFO texinfo;
 	texinfo.mipmap = false;
 	texinfo.repeatu = false;
 	texinfo.repeatv = false;
 
-	std::tr1::shared_ptr<TEXTURE> bartex, progbartex;
-	if (!content.load(texturepath, "hudbox.png", texinfo, bartex)) return false;
-	if (!content.load(texturepath, "progressbar.png", texinfo, progbartex)) return false;
-
-#ifndef GAUGES
-	rpmbar = AddDrawable(hudroot);
-	rpmredbar = AddDrawable(hudroot);
-	rpmbox = AddDrawable(hudroot);
-
-	DRAWABLE & rpmboxref = GetDrawable(hudroot, rpmbox);
-	rpmboxref.SetDiffuseMap(progbartex);
-	rpmboxref.SetVertArray(&rpmboxverts);
-	rpmboxref.SetDrawOrder(2);
-	rpmboxref.SetCull(false, false);
-	rpmboxref.SetColor(0.3, 0.3, 0.3, 0.4);
-
-	DRAWABLE & rpmbarref = GetDrawable(hudroot, rpmbar);
-	rpmbarref.SetDiffuseMap(progbartex);
-	rpmbarref.SetVertArray(&rpmbarverts);
-	rpmbarref.SetDrawOrder(3);
-	rpmbarref.SetCull(false, false);
-	rpmbarref.SetColor(1.0, 1.0, 1.0, 0.7);
-
-	DRAWABLE & rpmredbarref = GetDrawable(hudroot, rpmredbar);
-	rpmredbarref.SetDiffuseMap(progbartex);
-	rpmredbarref.SetVertArray(&rpmredbarverts);
-	rpmredbarref.SetColor(1.0, 0.2, 0.2, 0.7);
-	rpmredbarref.SetDrawOrder(3);
-	rpmredbarref.SetCull(false, false);
-
-	//lower left bar
-	bars.push_back(HUDBAR());
-	bars.back().Set(hudroot, bartex, 0.0 + barwidth * 0.5, 1.0-barheight*0.5, barwidth, barheight, opacity, false);
-
-	//lower right bar
-	bars.push_back(HUDBAR());
-	bars.back().Set(hudroot, bartex, 1.0 - barwidth * 0.175, 1.0-barheight*0.5, barwidth, barheight, opacity, false);
-#endif
-
 	float timerbox_lowery = 0;
-	//load the timer
 	{
 		timernode = hudroot.AddNode();
 		SCENENODE & timernoderef = hudroot.GetNode(timernode);
@@ -172,54 +133,6 @@ bool HUD::Init(
 	}
 
 	{
-		float fontscaley = 0.02;
-		float fontscalex = screenhwratio * fontscaley;
-
-		debugnode = hudroot.AddNode();
-		SCENENODE & debugnoderef = hudroot.GetNode(debugnode);
-		debugtextdraw1 = SetupText(debugnoderef, sansfont, debugtext1, "", 0.01, fontscaley, fontscalex, fontscaley, 1, 1, 1, 10);
-		debugtextdraw2 = SetupText(debugnoderef, sansfont, debugtext2, "", 0.25, fontscaley, fontscalex, fontscaley, 1, 1, 1, 10);
-		debugtextdraw3 = SetupText(debugnoderef, sansfont, debugtext3, "", 0.5, fontscaley, fontscalex, fontscaley, 1, 1, 1, 10);
-		debugtextdraw4 = SetupText(debugnoderef, sansfont, debugtext4, "", 0.75, fontscaley, fontscalex, fontscaley, 1, 1, 1, 10);
-	}
-
-	{
-		float fontscaley = barheight * 0.5;
-		float fontscalex = screenhwratio * fontscaley;
-		float y = 1.0 - fontscaley * 0.5;
-		float x0 = screenhwratio * 0.02;
-		float x1 = 1.0 - screenhwratio * 0.02;
-
-		geartextdraw = SetupText(hudroot, lcdfont, geartext, "N", x0, y, fontscalex, fontscaley, 1, 1, 1, 4);
-		mphtextdraw = SetupText(hudroot, lcdfont, mphtext, "0", x1, y, fontscalex, fontscaley, 1, 1, 1, 4);
-	}
-
-	{
-		float fontscaley = barheight * 0.25;
-		float fontscalex = screenhwratio * fontscaley;
-		float x0 = 1 - barwidth * 0.6;
-		float x1 = 1 - barwidth * 0.7;
-		float y0 = 1 - fontscaley * 1.25;
-		float y1 = 1 - fontscaley * 0.5;
-
-		abs.Init(hudroot, sansfont, "ABS", x0, y0, fontscalex, fontscaley);
-		abs.SetDrawOrder(hudroot, 4);
-		abs.SetColor(hudroot, 0, 1, 0);
-
-		tcs.Init(hudroot, sansfont, "TCS", x0, y1, fontscalex, fontscaley);
-		tcs.SetDrawOrder(hudroot, 4);
-		tcs.SetColor(hudroot, 1, 0.77, 0.23);
-
-		gas.Init(hudroot, sansfont, "GAS", x1, y0, fontscalex, fontscaley);
-		gas.SetDrawOrder(hudroot, 4);
-		gas.SetColor(hudroot, 1, 0, 0);
-
-		nos.Init(hudroot, sansfont, "NOS", x1, y1, fontscalex, fontscaley);
-		nos.SetDrawOrder(hudroot, 4);
-		nos.SetColor(hudroot, 0, 1, 0);
-	}
-
-	{
 		float fontscaley = barheight * 0.5;
 		float fontscalex = screenhwratio * fontscaley;
 		float x = fontscalex * 0.25;
@@ -256,12 +169,163 @@ bool HUD::Init(
 		raceprompt.SetColor(hudroot, 1, 0, 0);
 	}
 
-#ifdef GAUGES
-	rpmgauge.Set(hudroot, sansfont, "rpm", screenhwratio, 0.15, 0.85, 0.12,
-		315.0 / 180.0 * M_PI, 45.0 / 180.0 * M_PI, 0, maxrpm / 1000, 1);
+	{
+		float fontscaley = 0.02;
+		float fontscalex = screenhwratio * fontscaley;
 
-	speedgauge.Set(hudroot, sansfont, "kph", screenhwratio, 0.85, 0.85, 0.12,
-		315.0 / 180.0 * M_PI, 45.0 / 180.0 * M_PI, 0, maxspeed * 3.6, 10);
+		debugnode = hudroot.AddNode();
+		SCENENODE & debugnoderef = hudroot.GetNode(debugnode);
+		debugtextdraw1 = SetupText(debugnoderef, sansfont, debugtext1, "", 0.01, fontscaley, fontscalex, fontscaley, 1, 1, 1, 10);
+		debugtextdraw2 = SetupText(debugnoderef, sansfont, debugtext2, "", 0.25, fontscaley, fontscalex, fontscaley, 1, 1, 1, 10);
+		debugtextdraw3 = SetupText(debugnoderef, sansfont, debugtext3, "", 0.5, fontscaley, fontscalex, fontscaley, 1, 1, 1, 10);
+		debugtextdraw4 = SetupText(debugnoderef, sansfont, debugtext4, "", 0.75, fontscaley, fontscalex, fontscaley, 1, 1, 1, 10);
+	}
+
+#ifndef GAUGES
+	std::tr1::shared_ptr<TEXTURE> bartex, progbartex;
+	if (!content.load(texturepath, "hudbox.png", texinfo, bartex)) return false;
+	if (!content.load(texturepath, "progressbar.png", texinfo, progbartex)) return false;
+
+	rpmbar = AddDrawable(hudroot);
+	rpmredbar = AddDrawable(hudroot);
+	rpmbox = AddDrawable(hudroot);
+
+	DRAWABLE & rpmboxref = GetDrawable(hudroot, rpmbox);
+	rpmboxref.SetDiffuseMap(progbartex);
+	rpmboxref.SetVertArray(&rpmboxverts);
+	rpmboxref.SetDrawOrder(2);
+	rpmboxref.SetCull(false, false);
+	rpmboxref.SetColor(0.3, 0.3, 0.3, 0.4);
+
+	DRAWABLE & rpmbarref = GetDrawable(hudroot, rpmbar);
+	rpmbarref.SetDiffuseMap(progbartex);
+	rpmbarref.SetVertArray(&rpmbarverts);
+	rpmbarref.SetDrawOrder(3);
+	rpmbarref.SetCull(false, false);
+	rpmbarref.SetColor(1.0, 1.0, 1.0, 0.7);
+
+	DRAWABLE & rpmredbarref = GetDrawable(hudroot, rpmredbar);
+	rpmredbarref.SetDiffuseMap(progbartex);
+	rpmredbarref.SetVertArray(&rpmredbarverts);
+	rpmredbarref.SetColor(1.0, 0.2, 0.2, 0.7);
+	rpmredbarref.SetDrawOrder(3);
+	rpmredbarref.SetCull(false, false);
+
+	//lower left bar
+	bars.push_back(HUDBAR());
+	bars.back().Set(hudroot, bartex, 0.0 + barwidth * 0.5, 1.0-barheight*0.5, barwidth, barheight, opacity, false);
+
+	//lower right bar
+	bars.push_back(HUDBAR());
+	bars.back().Set(hudroot, bartex, 1.0 - barwidth * 0.175, 1.0-barheight*0.5, barwidth, barheight, opacity, false);
+
+	{
+		float fontscaley = barheight * 0.5;
+		float fontscalex = screenhwratio * fontscaley;
+		float y = 1.0 - fontscaley * 0.5;
+		float x0 = screenhwratio * 0.02;
+		float x1 = 1.0 - screenhwratio * 0.02;
+
+		geartextdraw = SetupText(hudroot, lcdfont, geartext, "N", x0, y, fontscalex, fontscaley, 1, 1, 1, 4);
+		mphtextdraw = SetupText(hudroot, lcdfont, mphtext, "0", x1, y, fontscalex, fontscaley, 1, 1, 1, 4);
+	}
+
+	{
+		float fontscaley = barheight * 0.25;
+		float fontscalex = screenhwratio * fontscaley;
+		float x0 = 1 - barwidth * 0.6;
+		float x1 = 1 - barwidth * 0.7;
+		float y0 = 1 - fontscaley * 1.25;
+		float y1 = 1 - fontscaley * 0.5;
+
+		abs.Init(hudroot, sansfont, "ABS", x0, y0, fontscalex, fontscaley);
+		abs.SetDrawOrder(hudroot, 4);
+		abs.SetColor(hudroot, 0, 1, 0);
+
+		tcs.Init(hudroot, sansfont, "TCS", x0, y1, fontscalex, fontscaley);
+		tcs.SetDrawOrder(hudroot, 4);
+		tcs.SetColor(hudroot, 1, 0.77, 0.23);
+
+		gas.Init(hudroot, sansfont, "GAS", x1, y0, fontscalex, fontscaley);
+		gas.SetDrawOrder(hudroot, 4);
+		gas.SetColor(hudroot, 1, 0, 0);
+
+		nos.Init(hudroot, sansfont, "NOS", x1, y1, fontscalex, fontscaley);
+		nos.SetDrawOrder(hudroot, 4);
+		nos.SetColor(hudroot, 0, 1, 0);
+	}
+#else
+	{
+		float r = 0.12;
+		float x0 = 0.15;
+		float x1 = 0.85;
+		float y0 = 0.85;
+		float h0 = r * 0.25;
+		float w0 = screenhwratio * h0;
+		float angle_min = 315.0 / 180.0 * M_PI;
+		float angle_max = 45.0 / 180.0 * M_PI;
+
+		rpmgauge.Set(hudroot, sansfont, screenhwratio, x0, y0, r,
+			angle_min, angle_max, 0, maxrpm * 0.001, 1);
+
+		speedgauge.Set(hudroot, sansfont, screenhwratio, x1, y0, r,
+			angle_min, angle_max, 0, maxspeed * 3.6, 10);
+
+		float w = w0;
+		float h = h0;
+		float x = x0 - sansfont.GetWidth("rpm") * w * 0.5;
+		float y = y0 - r * 0.5;
+		SetupText(hudroot, sansfont, rpmlabel, "rpm", x, y, w, h, 1, 1, 1);
+
+		w = w0 * 0.65;
+		h = h0 * 0.65;
+		x = x0 - sansfont.GetWidth("x1000") * w * 0.5;
+		y = y0 - r * 0.5 + h;
+		SetupText(hudroot, sansfont, rpmxlabel, "x1000", x, y, w, h, 1, 1, 1);
+
+		w = w0;
+		h = h0;
+		x = x1 - sansfont.GetWidth("kph") * w * 0.5;
+		y = y0 - r * 0.5;
+		SetupText(hudroot, sansfont, speedlabel, "kph", x, y, w, h, 1, 1, 1);
+
+		w = w0 * 2;
+		h = h0 * 2;
+		x = x0 - w * 0.25;
+		y = y0 + r * 0.64;
+		geartextdraw = SetupText(hudroot, sansfont, geartext, "N", x, y, w, h, 1, 1, 1);
+
+		w = w0 * 1.5;
+		h = h0 * 1.5;
+		x = x1 - w * 0.3;
+		y = y0 + r * 0.68;
+		mphtextdraw = SetupText(hudroot, sansfont, mphtext, "0", x, y, w, h, 1, 1, 1);
+	}
+
+	{
+		float fontscaley = barheight * 0.25;
+		float fontscalex = screenhwratio * fontscaley;
+		float x0 = 1 - barwidth * 0.6;
+		float x1 = 1 - barwidth * 0.7;
+		float y0 = 1 - fontscaley * 1.25;
+		float y1 = 1 - fontscaley * 0.5;
+
+		abs.Init(hudroot, sansfont, "ABS", x0, y0, fontscalex, fontscaley);
+		abs.SetDrawOrder(hudroot, 4);
+		abs.SetColor(hudroot, 0, 1, 0);
+
+		tcs.Init(hudroot, sansfont, "TCS", x0, y1, fontscalex, fontscaley);
+		tcs.SetDrawOrder(hudroot, 4);
+		tcs.SetColor(hudroot, 1, 0.77, 0.23);
+
+		gas.Init(hudroot, sansfont, "GAS", x1, y0, fontscalex, fontscaley);
+		gas.SetDrawOrder(hudroot, 4);
+		gas.SetColor(hudroot, 1, 0, 0);
+
+		nos.Init(hudroot, sansfont, "NOS", x1, y1, fontscalex, fontscaley);
+		nos.SetDrawOrder(hudroot, 4);
+		nos.SetColor(hudroot, 0, 1, 0);
+	}
 #endif
 
 	Hide();
@@ -296,18 +360,17 @@ void HUD::Update(
 	if (fabs(this->maxrpm - maxrpm) > 1)
 	{
 		this->maxrpm = maxrpm;
-		rpmgauge.Set(hudroot, sansfont, "rpm", screenhwratio, 0.15, 0.85, 0.12,
-			315.0 / 180.0 * M_PI, 45.0 / 180.0 * M_PI, 0, maxrpm / 1000, 1);
+		rpmgauge.Revise(hudroot, sansfont, 0, maxrpm * 0.001, 1);
 	}
 	if (fabs(this->maxspeed - maxspeed) > 1)
 	{
 		this->maxspeed = maxspeed;
-		speedgauge.Set(hudroot, sansfont, "kph", screenhwratio, 0.85, 0.85, 0.12,
-			315.0 / 180.0 * M_PI, 45.0 / 180.0 * M_PI, 0, maxspeed * 3.6, 20);
+		speedgauge.Revise(hudroot, sansfont, 0, maxspeed * 3.6, 10);
 	}
-	rpmgauge.Update(hudroot, rpm / 1000.0);
+	rpmgauge.Update(hudroot, rpm * 0.001);
 	speedgauge.Update(hudroot, speed * 3.6);
-#endif
+
+	// gear
 	std::stringstream gearstr;
 	if (newgear == -1)
 		gearstr << "R";
@@ -315,11 +378,36 @@ void HUD::Update(
 		gearstr << "N";
 	else
 		gearstr << newgear;
+	geartext.Revise(sansfont, gearstr.str());
+
+	float geartext_alpha = clutch * 0.5 + 0.5;
+	if (newgear == 0) geartext_alpha = 1;
 	DRAWABLE & geartextdrawref = hudroot.GetDrawlist().text.get(geartextdraw);
-	geartext.Revise(lcdfont, gearstr.str());
-	float geartext_alpha = (newgear == 0) ? 1 : clutch * 0.5 + 0.5;
 	geartextdrawref.SetColor(1, 1, 1, geartext_alpha);
-#ifndef GAUGES
+
+	// speed
+	std::stringstream sstr;
+	sstr << std::abs(int(speed * 3.6));
+	//float sx = mphtext.GetScale().first;
+	//float sy = mphtext.GetScale().second;
+	//float w = sansfont.GetWidth(sstr.str()) * sx;
+	//float x = 1 - w;
+	//float y = 1 - sy * 0.5;
+	mphtext.Revise(sansfont, sstr.str());//, x, y, fontscalex, fontscaley);
+#else
+	std::stringstream gearstr;
+	if (newgear == -1)
+		gearstr << "R";
+	else if (newgear == 0)
+		gearstr << "N";
+	else
+		gearstr << newgear;
+	geartext.Revise(lcdfont, gearstr.str());
+
+	float geartext_alpha = (newgear == 0) ? 1 : clutch * 0.5 + 0.5;
+	DRAWABLE & geartextdrawref = hudroot.GetDrawlist().text.get(geartextdraw);
+	geartextdrawref.SetColor(1, 1, 1, geartext_alpha);
+
 	float rpmpercent = std::min(1.0f, rpm / maxrpm);
 	float rpmredpoint = redrpm / maxrpm;
 	float rpmxstart = 60.0 / displaywidth;
@@ -337,7 +425,7 @@ void HUD::Update(
 	rpmbarverts.SetToBillboard(rpmxstart, rpmy, rpmxend, rpmy + rpmheight);
 	rpmredbarverts.SetToBillboard(rpmredx, rpmy, rpmredxend, rpmy + rpmheight);
 	rpmboxverts.SetToBillboard(rpmxstart, rpmy, rpmxstart + rpmwidth, rpmy + rpmheight);
-#endif
+
 	std::stringstream speedo;
 	if (mph)
 		speedo << std::abs((int)(2.23693629 * speed)) << " MPH";
@@ -349,10 +437,12 @@ void HUD::Update(
 	float x = 1.0 - screenhwratio * 0.02 - speedotextwidth;
 	float y = 1 - fontscaley * 0.5;
 	mphtext.Revise(lcdfont, speedo.str(), x, y, fontscalex, fontscaley);
-
+#endif
 	//update ABS alpha value
 	if (!absenabled)
+	{
 		abs.SetAlpha(hudroot, 0.0);
+	}
 	else
 	{
 		if (absactive)

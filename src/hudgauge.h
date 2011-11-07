@@ -17,7 +17,6 @@ public:
 	void Set(
 		SCENENODE & parent,
 		const FONT & font,
-		const std::string & name,
 		float hwratio,
 		float centerx,
 		float centery,
@@ -28,10 +27,16 @@ public:
 		float endvalue,
 		float valuedelta);
 
+	void Revise(
+		SCENENODE & parent,
+		const FONT & font,
+		float startvalue,
+		float endvalue,
+		float valuedelta);
+
 	void Update(SCENENODE & parent, float value);
 
 private:
-	keyed_container<SCENENODE>::handle pointer_node;
 	keyed_container<DRAWABLE>::handle pointer_draw;
 	keyed_container<DRAWABLE>::handle dialnum_draw;
 	keyed_container<DRAWABLE>::handle dial_draw;
@@ -43,7 +48,8 @@ private:
 	float centery;
 	float scalex;
 	float scaley;
-	float offset;
+	float startangle;
+	float endangle;
 	float scale;
 };
 
