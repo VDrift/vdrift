@@ -3,28 +3,33 @@
 
 #include <string>
 
-struct SDL_Surface;
-
 struct TEXTUREINFO
 {
-	std::string size;
-	SDL_Surface * surface;
-	unsigned char anisotropy;
-	bool mipmap;
-	bool cube;
-	bool verticalcross;
-	bool normalmap;
-	bool repeatu;
-	bool repeatv;
-	bool npot;
-	bool nearest;
+	enum Size { LARGE, MEDIUM, SMALL };
+	char* data;				///< raw data pointer
+	short width;			///< texture width, only set if data not null
+	short height;			///< texture height, only set if data not null
+	char bytespp;			///< bytes per pixel, only set if data not null
+	char anisotropy;		///< anisotropic filter level
+	Size maxsize;			///< max texture size 128, 256, 2048
+	bool mipmap;			///< build mip maps
+	bool cube;				///< is a cube map
+	bool verticalcross; 	///< is a vertical cross cube map
+	bool normalmap;			///< is a normal map
+	bool repeatu;			///< repeat texture along u coordinate
+	bool repeatv;			///< repeat texture along v coordinate
+	bool npot;				///< is not power of two
+	bool nearest;			///< use nearest-neighbor interpolation filter
 	bool premultiply_alpha; ///< pre-multiply the color by the alpha value; allows using glstate.SetBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA); when drawing the texture to get correct blending
-	bool srgb; ///< whether or not to do srgb colorspace correction for this texture
+	bool srgb; 				///< apply srgb colorspace correction
 
 	TEXTUREINFO() :
-		size("large"),
-		surface(0),
+		data(0),
+		width(0),
+		height(0),
+		bytespp(4),
 		anisotropy(0),
+		maxsize(LARGE),
 		mipmap(true),
 		cube(false),
 		verticalcross(false),
@@ -37,6 +42,13 @@ struct TEXTUREINFO
 		srgb(false)
 	{
 		// ctor
+	}
+
+	static Size GetMaxSize(const std::string & value)
+	{
+		if (value == "small") return SMALL;
+		if (value == "medium") return MEDIUM;
+		return LARGE;
 	}
 };
 

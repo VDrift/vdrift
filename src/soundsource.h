@@ -5,14 +5,8 @@
 #include "soundfilter.h"
 #include "mathvector.h"
 #include "quaternion.h"
-
+#include "memory.h"
 #include <cassert>
-
-#ifdef _MSC_VER
-#include <memory>
-#else
-#include <tr1/memory>
-#endif
 
 class SOUNDSOURCE
 {

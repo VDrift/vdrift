@@ -4,17 +4,17 @@
 
 //#define GAUGES
 
-inline keyed_container<DRAWABLE>::handle AddDrawable(SCENENODE & node)
+static keyed_container<DRAWABLE>::handle AddDrawable(SCENENODE & node)
 {
 	return node.GetDrawlist().twodim.insert(DRAWABLE());
 }
 
-inline DRAWABLE & GetDrawable(SCENENODE & node, keyed_container <DRAWABLE>::handle & drawhandle)
+static DRAWABLE & GetDrawable(SCENENODE & node, const keyed_container <DRAWABLE>::handle & drawhandle)
 {
 	return node.GetDrawlist().twodim.get(drawhandle);
 }
 
-inline keyed_container <DRAWABLE>::handle SetupText(
+static keyed_container <DRAWABLE>::handle SetupText(
 	SCENENODE & parent, FONT & font,
 	TEXT_DRAW & textdraw, const std::string & str,
 	float x, float y, float scalex, float scaley,
@@ -49,6 +49,8 @@ static void GetTimeString(float time, std::string & outtime)
 HUD::HUD() :
 	maxrpm(9000),
 	maxspeed(240),
+	speedscale(3.6),
+	mph(false),
 	debug_hud_info(false),
 	racecomplete(false),
 	lastvisible(true)
@@ -256,6 +258,17 @@ bool HUD::Init(
 	}
 #else
 	{
+		// gauge texture
+		char white[] = {255, 255, 255, 255};
+		TEXTUREINFO tinfo;
+		tinfo.data = white;
+		tinfo.width = 1;
+		tinfo.height = 1;
+		tinfo.bytespp = 4;
+		tinfo.mipmap = false;
+		std::tr1::shared_ptr<TEXTURE> texture;
+		content.load("", "white1x1", tinfo, texture);
+
 		float r = 0.12;
 		float x0 = 0.15;
 		float x1 = 0.85;
@@ -265,29 +278,32 @@ bool HUD::Init(
 		float angle_min = 315.0 / 180.0 * M_PI;
 		float angle_max = 45.0 / 180.0 * M_PI;
 
-		rpmgauge.Set(hudroot, sansfont, screenhwratio, x0, y0, r,
+		rpmgauge.Set(hudroot, texture, sansfont, screenhwratio, x0, y0, r,
 			angle_min, angle_max, 0, maxrpm * 0.001, 1);
 
-		speedgauge.Set(hudroot, sansfont, screenhwratio, x1, y0, r,
-			angle_min, angle_max, 0, maxspeed * 3.6, 10);
+		speedgauge.Set(hudroot, texture, sansfont, screenhwratio, x1, y0, r,
+			angle_min, angle_max, 0, maxspeed * speedscale, 10);
 
 		float w = w0;
 		float h = h0;
 		float x = x0 - sansfont.GetWidth("rpm") * w * 0.5;
 		float y = y0 - r * 0.5;
-		SetupText(hudroot, sansfont, rpmlabel, "rpm", x, y, w, h, 1, 1, 1);
+		DRAWABLE & rpmd = GetDrawable(hudroot, AddDrawable(hudroot));
+		rpmlabel.Set(rpmd, sansfont, "rpm", x, y, w, h, 1, 1, 1);
 
 		w = w0 * 0.65;
 		h = h0 * 0.65;
 		x = x0 - sansfont.GetWidth("x1000") * w * 0.5;
 		y = y0 - r * 0.5 + h;
-		SetupText(hudroot, sansfont, rpmxlabel, "x1000", x, y, w, h, 1, 1, 1);
+		DRAWABLE & x1000d = GetDrawable(hudroot, AddDrawable(hudroot));
+		rpmxlabel.Set(x1000d, sansfont, "x1000", x, y, w, h, 1, 1, 1);
 
 		w = w0;
 		h = h0;
 		x = x1 - sansfont.GetWidth("kph") * w * 0.5;
 		y = y0 - r * 0.5;
-		SetupText(hudroot, sansfont, speedlabel, "kph", x, y, w, h, 1, 1, 1);
+		DRAWABLE & spdd = GetDrawable(hudroot, AddDrawable(hudroot));
+		speedlabel.Set(spdd, sansfont, "kph", x, y, w, h, 1, 1, 1);
 
 		w = w0 * 2;
 		h = h0 * 2;
@@ -362,13 +378,24 @@ void HUD::Update(
 		this->maxrpm = maxrpm;
 		rpmgauge.Revise(hudroot, sansfont, 0, maxrpm * 0.001, 1);
 	}
-	if (fabs(this->maxspeed - maxspeed) > 1)
+	if (fabs(this->maxspeed - maxspeed) > 1 || this->mph != mph)
 	{
 		this->maxspeed = maxspeed;
-		speedgauge.Revise(hudroot, sansfont, 0, maxspeed * 3.6, 10);
+		this->mph = mph;
+		if (mph)
+		{
+			speedlabel.Revise(sansfont, "mph");
+			speedscale = 2.23693629;
+		}
+		else
+		{
+			speedlabel.Revise(sansfont, "kph");
+			speedscale = 3.6;
+		}
+		speedgauge.Revise(hudroot, sansfont, 0, maxspeed * speedscale, 10);
 	}
 	rpmgauge.Update(hudroot, rpm * 0.001);
-	speedgauge.Update(hudroot, speed * 3.6);
+	speedgauge.Update(hudroot, fabs(speed) * speedscale);
 
 	// gear
 	std::stringstream gearstr;
@@ -387,7 +414,7 @@ void HUD::Update(
 
 	// speed
 	std::stringstream sstr;
-	sstr << std::abs(int(speed * 3.6));
+	sstr << std::abs(int(speed * speedscale));
 	//float sx = mphtext.GetScale().first;
 	//float sy = mphtext.GetScale().second;
 	//float w = sansfont.GetWidth(sstr.str()) * sx;

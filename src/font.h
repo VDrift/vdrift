@@ -1,15 +1,10 @@
 #ifndef _FONT_H
 #define _FONT_H
 
+#include "memory.h"
 #include <vector>
 #include <string>
 #include <iostream>
-
-#ifdef _MSC_VER
-#include <memory>
-#else
-#include <tr1/memory>
-#endif
 
 class ContentManager;
 class TEXTURE;

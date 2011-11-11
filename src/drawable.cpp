@@ -1,22 +1,20 @@
 #include "drawable.h"
-
 #include "texture.h"
-
 #include <cmath>
 
-void DRAWABLE::SetDiffuseMap(std::tr1::shared_ptr<TEXTURE> value)
+void DRAWABLE::SetDiffuseMap(const std::tr1::shared_ptr<TEXTURE> & value)
 {
 	diffuse_map = value;
 	texturesChanged = true;
 }
 
-void DRAWABLE::SetMiscMap1(std::tr1::shared_ptr<TEXTURE> value)
+void DRAWABLE::SetMiscMap1(const std::tr1::shared_ptr<TEXTURE> & value)
 {
 	misc_map1 = value;
 	texturesChanged = true;
 }
 
-void DRAWABLE::SetMiscMap2(std::tr1::shared_ptr<TEXTURE> value)
+void DRAWABLE::SetMiscMap2(const std::tr1::shared_ptr<TEXTURE> & value)
 {
 	misc_map2 = value;
 	texturesChanged = true;

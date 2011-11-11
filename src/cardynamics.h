@@ -19,12 +19,7 @@
 #include "BulletDynamics/Dynamics/btActionInterface.h"
 #include "btBulletCollisionCommon.h"
 #include "LinearMath/btAlignedObjectArray.h"
-
-#ifdef _MSC_VER
-#include <memory>
-#else
-#include <tr1/memory>
-#endif
+#include "memory.h"
 
 class DynamicsWorld;
 class PTree;

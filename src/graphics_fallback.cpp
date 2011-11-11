@@ -216,7 +216,7 @@ bool GRAPHICS_FALLBACK::Init(const std::string & shaderpath,
 		t.verticalcross = true;
 		t.mipmap = true;
 		t.anisotropy = anisotropy;
-		t.size = texturesize;
+		t.maxsize = TEXTUREINFO::GetMaxSize(texturesize);
 		static_reflection.Load(static_reflectionmap_file, t, error_output);
 	}
 
@@ -227,7 +227,7 @@ bool GRAPHICS_FALLBACK::Init(const std::string & shaderpath,
 		t.verticalcross = true;
 		t.mipmap = false;
 		t.anisotropy = anisotropy;
-		t.size = texturesize;
+		t.maxsize = TEXTUREINFO::GetMaxSize(texturesize);
 		static_ambient.Load(static_ambientmap_file, t, error_output);
 	}
 

@@ -1,7 +1,25 @@
 #include "hudgauge.h"
 #include "text_draw.h"
-
 #include <sstream>
+
+static keyed_container<DRAWABLE>::handle AddDrawable(SCENENODE & node)
+{
+	return node.GetDrawlist().twodim.insert(DRAWABLE());
+}
+
+static DRAWABLE & GetDrawable(SCENENODE & node, const keyed_container<DRAWABLE>::handle & drawhandle)
+{
+	return node.GetDrawlist().twodim.get(drawhandle);
+}
+
+static void EraseDrawable(SCENENODE & node, keyed_container<DRAWABLE>::handle & drawhandle)
+{
+	if (drawhandle.valid())
+	{
+		node.GetDrawlist().twodim.erase(drawhandle);
+		drawhandle.invalidate();
+	}
+}
 
 HUDGAUGE::HUDGAUGE() :
 	centerx(0),
@@ -17,6 +35,7 @@ HUDGAUGE::HUDGAUGE() :
 
 void HUDGAUGE::Set(
 	SCENENODE & parent,
+	const std::tr1::shared_ptr<TEXTURE> & texture,
 	const FONT & font,
 	float hwratio,
 	float centerx,
@@ -35,6 +54,7 @@ void HUDGAUGE::Set(
 	valuedelta = valuedelta * factor;
 	endvalue = startvalue + segments * valuedelta;
 
+	this->texture = texture;
 	this->centerx = centerx;
 	this->centery = centery;
 	this->scalex = radius * hwratio;
@@ -44,9 +64,9 @@ void HUDGAUGE::Set(
 	this->scale = (endangle - startangle) / (endvalue - startvalue);
 
 	// reset
-	if (dialnum_draw.valid()) parent.GetDrawlist().text.erase(dialnum_draw);
-	if (pointer_draw.valid()) parent.GetDrawlist().twodim.erase(pointer_draw);
-	if (dial_draw.valid()) 	parent.GetDrawlist().twodim.erase(dial_draw);
+	EraseDrawable(parent, dialnum_draw);
+	EraseDrawable(parent, pointer_draw);
+	EraseDrawable(parent, dial_draw);
 	pointer_rotated.Clear();
 	pointer.Clear();
 	dial_label.Clear();
@@ -84,12 +104,13 @@ void HUDGAUGE::Set(
 		dial_marks.Scale(radius * hwratio, radius, 1);
 		dial_marks.Translate(centerx, centery, 0.0);
 
-		dial_draw = parent.GetDrawlist().twodim.insert(DRAWABLE());
-		DRAWABLE & drawref = parent.GetDrawlist().twodim.get(dial_draw);
+		dial_draw = AddDrawable(parent);
+		DRAWABLE & drawref = GetDrawable(parent, dial_draw);
+		drawref.SetDiffuseMap(texture);
 		drawref.SetVertArray(&dial_marks);
 		drawref.SetCull(false, false);
 		//drawref.SetColor(1, 1, 1, 0.5);
-		//drawref.SetDrawOrder(4);
+		drawref.SetDrawOrder(1);
 	}
 
 	// dial label
@@ -116,13 +137,13 @@ void HUDGAUGE::Set(
 			value += value_delta;
 		}
 
-		dialnum_draw = parent.GetDrawlist().text.insert(DRAWABLE());
-		DRAWABLE & drawref = parent.GetDrawlist().text.get(dialnum_draw);
+		dialnum_draw = AddDrawable(parent);
+		DRAWABLE & drawref = GetDrawable(parent, dialnum_draw);
 		drawref.SetDiffuseMap(font.GetFontTexture());
 		drawref.SetVertArray(&dial_label);
 		drawref.SetCull(false, false);
 		//drawref.SetColor(1, 1, 1, 0.5);
-		//drawref.SetDrawOrder(4);
+		drawref.SetDrawOrder(1);
 	}
 
 	// pointer
@@ -135,12 +156,13 @@ void HUDGAUGE::Set(
 		pointer.SetTexCoords(0, t, 8);
 		pointer.SetFaces(f, 6);
 
-		pointer_draw = parent.GetDrawlist().twodim.insert(DRAWABLE());
-		DRAWABLE & drawref = parent.GetDrawlist().twodim.get(pointer_draw);
+		pointer_draw = AddDrawable(parent);
+		DRAWABLE & drawref = GetDrawable(parent, pointer_draw);
+		drawref.SetDiffuseMap(texture);
 		drawref.SetVertArray(&pointer_rotated);
 		drawref.SetCull(false, false);
 		//drawref.SetColor(1, 1, 1, 0.5);
-		//drawref.SetDrawOrder(4);
+		drawref.SetDrawOrder(2);
 	}
 }
 
@@ -151,7 +173,7 @@ void HUDGAUGE::Revise(
 	float endvalue,
 	float valuedelta)
 {
-	Set(parent, font, scalex / scaley, centerx, centery, scaley,
+	Set(parent, texture, font, scalex / scaley, centerx, centery, scaley,
 		startangle, endangle, startvalue, endvalue, valuedelta);
 }
 

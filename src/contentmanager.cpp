@@ -47,9 +47,9 @@ void ContentManager::setSound(const SOUNDINFO& info)
 	sound_info = info;
 }
 
-void ContentManager::setTexSize(const std::string& value)
+void ContentManager::setTexSize(const std::string & value)
 {
-	texture_size = value;
+	texture_size = TEXTUREINFO::GetMaxSize(value);
 }
 
 void ContentManager::setSRGB(bool value)
@@ -75,11 +75,11 @@ bool ContentManager::load(
 	const std::string& abspath,
 	const TEXTUREINFO& info)
 {
-	if (info.surface || std::ifstream(abspath.c_str()))
+	if (info.data || std::ifstream(abspath.c_str()))
 	{
 		TEXTUREINFO info_temp = info;
 		info_temp.srgb = texture_srgb;
-		info_temp.size = texture_size;
+		info_temp.maxsize = texture_size;
 		std::tr1::shared_ptr<TEXTURE> temp(new TEXTURE());
 		if (temp->Load(abspath, info_temp, error))
 		{
