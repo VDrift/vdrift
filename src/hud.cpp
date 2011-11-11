@@ -2,7 +2,7 @@
 #include "contentmanager.h"
 #include "texture.h"
 
-//#define GAUGES
+#define GAUGES
 
 static keyed_container<DRAWABLE>::handle AddDrawable(SCENENODE & node)
 {
