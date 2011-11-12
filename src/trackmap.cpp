@@ -54,10 +54,11 @@ bool TRACKMAP::BuildMap(
 	int outsizex = MAP_WIDTH;
 	int outsizey = MAP_HEIGHT;
 
-	Uint32 rmask, gmask, bmask, amask;
+	int bpp = 32;
 
 	// SDL interprets each pixel as a 32-bit number, so our masks must depend
 	// on the endianness (byte order) of the machine
+	Uint32 rmask, gmask, bmask, amask;
 #if SDL_BYTEORDER == SDL_BIG_ENDIAN
 	rmask = 0xff000000;
 	gmask = 0x00ff0000;
@@ -70,7 +71,7 @@ bool TRACKMAP::BuildMap(
 	amask = 0xff000000;
 #endif
 
-	surface = SDL_CreateRGBSurface(SDL_SWSURFACE, outsizex, outsizey, 32, rmask, gmask, bmask, amask);
+	surface = SDL_CreateRGBSurface(SDL_SWSURFACE, outsizex, outsizey, bpp, rmask, gmask, bmask, amask);
 
 	//find the map width and height
 	mapsize.Set(0,0);
@@ -147,25 +148,9 @@ bool TRACKMAP::BuildMap(
 		}
 	}
 
-	//draw the starting line
-	/*BEZIER* startpatch = track->GetLapSequence(0);
-	if (startpatch)
-	{
-		VERTEX startline_l = startpatch->points[3][0];
-		VERTEX startline_r = startpatch->points[3][3];
-		int x1 = int((startline_l.x - map_w_min) * scale) + 1;
-		int y1 = int((startline_l.z - map_h_min) * scale) + 1;
-		int x2 = int((startline_r.x - map_w_min) * scale) + 1;
-		int y2 = int((startline_r.z - map_h_min) * scale) + 1;
-		aalineRGBA(surface, x1, y1, x2, y2, 255, 0, 0, 255);
-		filledCircleRGBA(surface, x1, y1, 2, 255, 0, 0, 255);
-		filledCircleRGBA(surface, x2, y2, 2, 255, 0, 0, 255);
-	}*/
-
 	//draw a black border around the track
 	Uint32* rawpixels = (Uint32*)surface->pixels;
 	Uint32 rgbmask = rmask | gmask | bmask;
-
 	for (int x = 0; x < outsizex; x++)
 	{
 		for (int y = 0; y < outsizey; y++)
@@ -202,7 +187,10 @@ bool TRACKMAP::BuildMap(
 	}
 
 	TEXTUREINFO texinfo;
-	texinfo.surface = surface;
+	texinfo.data = (char*)surface->pixels;
+	texinfo.width = surface->w;
+	texinfo.height = surface->h;
+	texinfo.bytespp = surface->format->BitsPerPixel / 8;
 	texinfo.repeatu = false;
 	texinfo.repeatv = false;
 	std::tr1::shared_ptr<TEXTURE> track_map;

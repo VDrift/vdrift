@@ -2,17 +2,12 @@
 #define _CONTENTMANAGER_H
 
 #include "soundinfo.h"
-
+#include "textureinfo.h"
+#include "memory.h"
 #include <map>
 #include <string>
 #include <vector>
 #include <iostream>
-
-#ifdef _MSC_VER
-#include <memory>
-#else
-#include <tr1/memory>
-#endif
 
 class SOUNDBUFFER;
 class TEXTURE;
@@ -44,7 +39,7 @@ public:
 	void setSound(const SOUNDINFO& info);
 
 	/// textures size setting
-	void setTexSize(const std::string& value);
+	void setTexSize(const std::string & value);
 
 	/// in general all textures on disk will be in the SRGB colorspace, so if the renderer wants to do
 	/// gamma correct lighting, it will want all textures to be gamma corrected using the SRGB flag
@@ -70,7 +65,7 @@ private:
 
 	// content settings
 	SOUNDINFO sound_info;
-	std::string texture_size;
+	TEXTUREINFO::Size texture_size;
 	bool texture_srgb;
 	bool model_vbo;
 

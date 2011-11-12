@@ -4,14 +4,8 @@
 #include "matrix4.h"
 #include "mathvector.h"
 #include "model.h"
-
 #include "rendermodelext_drawable.h"
-
-#ifdef _MSC_VER
-#include <memory>
-#else
-#include <tr1/memory>
-#endif
+#include "memory.h"
 
 class TEXTURE;
 class VERTEXARRAY;
@@ -37,13 +31,13 @@ public:
 	void SetModel(const MODEL & model);
 
 	const TEXTURE * GetDiffuseMap() const {return diffuse_map.get();}
-	void SetDiffuseMap(std::tr1::shared_ptr<TEXTURE> value);
+	void SetDiffuseMap(const std::tr1::shared_ptr<TEXTURE> & value);
 
 	const TEXTURE * GetMiscMap1() const {return misc_map1.get();}
-	void SetMiscMap1(std::tr1::shared_ptr<TEXTURE> value);
+	void SetMiscMap1(const std::tr1::shared_ptr<TEXTURE> & value);
 
 	const TEXTURE * GetMiscMap2() const {return misc_map2.get();}
-	void SetMiscMap2(std::tr1::shared_ptr<TEXTURE> value);
+	void SetMiscMap2(const std::tr1::shared_ptr<TEXTURE> & value);
 
 	const VERTEXARRAY * GetVertArray() const {return vert_array;}
 	void SetVertArray(const VERTEXARRAY* value);

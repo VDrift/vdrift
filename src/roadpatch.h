@@ -4,12 +4,7 @@
 #include "bezier.h"
 #include "mathvector.h"
 #include "vertexarray.h"
-
-#ifdef _MSC_VER
-#include <memory>
-#else
-#include <tr1/memory>
-#endif
+#include "memory.h"
 
 class TEXTURE;
 class SCENENODE;

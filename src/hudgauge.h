@@ -2,7 +2,6 @@
 #define _HUDGAUGE_H
 
 #include "scenenode.h"
-#include <ostream>
 
 class FONT;
 
@@ -12,10 +11,11 @@ public:
 	HUDGAUGE();
 
 	// startangle and endangle in rad
-	// startvalue + endvalue = numvalues * delta
+	// startvalue + endvalue = n * valuedelta
 	void Set(
 		SCENENODE & parent,
-		FONT & font,
+		const std::tr1::shared_ptr<TEXTURE> & texture,
+		const FONT & font,
 		float hwratio,
 		float centerx,
 		float centery,
@@ -24,22 +24,32 @@ public:
 		float endangle,
 		float startvalue,
 		float endvalue,
-		int numvalues,
-		std::ostream & error_output);
+		float valuedelta);
+
+	void Revise(
+		SCENENODE & parent,
+		const FONT & font,
+		float startvalue,
+		float endvalue,
+		float valuedelta);
 
 	void Update(SCENENODE & parent, float value);
 
 private:
-	keyed_container<SCENENODE>::handle pointer_node;
+	keyed_container<DRAWABLE>::handle pointer_draw;
+	keyed_container<DRAWABLE>::handle dialnum_draw;
+	keyed_container<DRAWABLE>::handle dial_draw;
+	std::tr1::shared_ptr<TEXTURE> texture;
 	VERTEXARRAY pointer_rotated;
 	VERTEXARRAY pointer;
-	VERTEXARRAY dialnum;
-	VERTEXARRAY dial;
+	VERTEXARRAY dial_label;
+	VERTEXARRAY dial_marks;
 	float centerx;
 	float centery;
 	float scalex;
 	float scaley;
-	float offset;
+	float startangle;
+	float endangle;
 	float scale;
 };
 

@@ -526,14 +526,6 @@ bool CARDYNAMICS::Load(
 		}
 	}
 
-	// calculate max spped
-	{
-		float tr = transmission.GetGearRatio(transmission.GetForwardGears() - 1);
-		float cr = differential_center.GetFinalDrive();
-		float rr = differential_rear.GetFinalDrive();
-		maxspeed = tire[3].GetRadius() * engine.GetRPMLimit() * M_PI / 30 * tr * cr * rr;
-	}
-
 	if (damage)
 	{
 		motion_state.resize(1 + bodyLoader.m_numbodies);
@@ -660,6 +652,8 @@ bool CARDYNAMICS::Load(
 	//telemetry.push_back(CARTELEMETRY("brakes"));
 	//telemetry.push_back(CARTELEMETRY("suspension"));
 	//etc
+
+	maxspeed = CalculateMaxSpeed();
 
 	return true;
 }
@@ -1916,4 +1910,27 @@ btScalar CARDYNAMICS::DownshiftRPM(int gear) const
 		shift_down_point = 0.7 * peak_engine_speed / lower_gear_ratio * current_gear_ratio;
 	}
 	return shift_down_point;
+}
+
+btScalar CARDYNAMICS::CalculateMaxSpeed() const
+{
+	btScalar maxspeed = 0;
+	btScalar tr = transmission.GetGearRatio(transmission.GetForwardGears());
+	if (drive == RWD)
+	{
+		tr *= differential_rear.GetFinalDrive();
+		maxspeed = tire[REAR_LEFT].GetRadius() * engine.GetRPMLimit() * M_PI / 30 / tr;
+	}
+	else if (drive == FWD)
+	{
+		tr *= differential_front.GetFinalDrive();
+		maxspeed = tire[FRONT_LEFT].GetRadius() * engine.GetRPMLimit() * M_PI / 30 / tr;
+	}
+	else if (drive == AWD)
+	{
+		tr *= differential_front.GetFinalDrive();
+		tr *= differential_center.GetFinalDrive();
+		maxspeed = tire[FRONT_LEFT].GetRadius() * engine.GetRPMLimit() * M_PI / 30 / tr;
+	}
+	return maxspeed;
 }

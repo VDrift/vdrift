@@ -2,7 +2,6 @@
 #define _HUD_H
 
 #include "scenenode.h"
-#include "texture.h"
 #include "text_draw.h"
 #include "hudgauge.h"
 #include "hudbar.h"
@@ -33,7 +32,7 @@ public:
 		FONT & lcdfont, FONT & sansfont, float displaywidth, float displayheight,
 		float curlap, float lastlap, float bestlap, float stagingtimeleft,
 		int curlapnum, int numlaps, int curplace, int numcars,
-		int rpm, int redrpm, int maxrpm,
+		float rpm, float redrpm, float maxrpm,
 		float speed, float maxspeed, bool mph, float clutch, int newgear,
 		const std::string & debug_string1, const std::string & debug_string2,
 		const std::string & debug_string3, const std::string & debug_string4,
@@ -57,22 +56,11 @@ public:
 	}
 
 private:
-	TEXTURE bartex;
 	SCENENODE hudroot;
-	std::list<HUDBAR> bars;
 
-	TEXTURE progbartex;
-	keyed_container <DRAWABLE>::handle rpmbar;
-	keyed_container <DRAWABLE>::handle rpmredbar;
-	VERTEXARRAY rpmbarverts;
-	VERTEXARRAY rpmredbarverts;
-	keyed_container <DRAWABLE>::handle rpmbox;
-	VERTEXARRAY rpmboxverts;
-
-	//variables for drawing the timer
-	keyed_container <SCENENODE>::handle timernode;
-	TEXTURE timerboxtex;
-	keyed_container <DRAWABLE>::handle timerboxdraw;
+	// timer
+	keyed_container<SCENENODE>::handle timernode;
+	keyed_container<DRAWABLE>::handle timerboxdraw;
 	VERTEXARRAY timerboxverts;
 	TEXT_DRAWABLE laptime_label;
 	TEXT_DRAWABLE laptime;
@@ -85,31 +73,50 @@ private:
 	TEXT_DRAWABLE placeindicator;
 	TEXT_DRAWABLE raceprompt;
 
+	// debug info
+	keyed_container<SCENENODE>::handle debugnode;
+	keyed_container<DRAWABLE>::handle debugtextdraw1;
+	keyed_container<DRAWABLE>::handle debugtextdraw2;
+	keyed_container<DRAWABLE>::handle debugtextdraw3;
+	keyed_container<DRAWABLE>::handle debugtextdraw4;
+	TEXT_DRAW debugtext1;
+	TEXT_DRAW debugtext2;
+	TEXT_DRAW debugtext3;
+	TEXT_DRAW debugtext4;
+
+	// rpm/speed bar
+	std::list<HUDBAR> bars;
+	keyed_container<DRAWABLE>::handle rpmbar;
+	keyed_container<DRAWABLE>::handle rpmredbar;
+	keyed_container<DRAWABLE>::handle rpmbox;
+	VERTEXARRAY rpmbarverts;
+	VERTEXARRAY rpmredbarverts;
+	VERTEXARRAY rpmboxverts;
+
+	// gear/speed values
+	keyed_container<DRAWABLE>::handle geartextdraw;
+	keyed_container<DRAWABLE>::handle mphtextdraw;
+	TEXT_DRAW geartext;
+	TEXT_DRAW mphtext;
+
 	// abs/tcs/gas/nos indicators
 	TEXT_DRAWABLE abs;
 	TEXT_DRAWABLE tcs;
 	TEXT_DRAWABLE gas;
 	TEXT_DRAWABLE nos;
 
-	//debug info
-	keyed_container <SCENENODE>::handle debugnode;
-	TEXT_DRAW debugtext1;
-	keyed_container <DRAWABLE>::handle debugtextdraw1;
-	TEXT_DRAW debugtext2;
-	keyed_container <DRAWABLE>::handle debugtextdraw2;
-	TEXT_DRAW debugtext3;
-	keyed_container <DRAWABLE>::handle debugtextdraw3;
-	TEXT_DRAW debugtext4;
-	keyed_container <DRAWABLE>::handle debugtextdraw4;
+	// gauge labels
+	TEXT_DRAW speedlabel;
+	TEXT_DRAW rpmlabel;
+	TEXT_DRAW rpmxlabel;
 
-	TEXT_DRAW geartext;
-	keyed_container <DRAWABLE>::handle geartextdraw;
-
-	TEXT_DRAW mphtext;
-	keyed_container <DRAWABLE>::handle mphtextdraw;
-
+	// gauges
 	HUDGAUGE rpmgauge;
 	HUDGAUGE speedgauge;
+	float maxrpm;
+	float maxspeed;
+	float speedscale;
+	bool mph;
 
 	bool debug_hud_info;
 	bool racecomplete;
@@ -126,7 +133,7 @@ private:
 		if (newvis != lastvisible)
 		{
 			hudroot.SetChildVisibility(newvis);
-			//SetDebugVisibility(newvis && debug_hud_info);
+			SetDebugVisibility(newvis && debug_hud_info);
 			lastvisible = newvis;
 		}
 	}

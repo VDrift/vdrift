@@ -19,12 +19,7 @@
 #include "BulletDynamics/Dynamics/btActionInterface.h"
 #include "btBulletCollisionCommon.h"
 #include "LinearMath/btAlignedObjectArray.h"
-
-#ifdef _MSC_VER
-#include <memory>
-#else
-#include <tr1/memory>
-#endif
+#include "memory.h"
 
 class DynamicsWorld;
 class PTree;
@@ -265,6 +260,9 @@ protected:
 
 	// calculate downshift point based on gear, engine rpm
 	btScalar DownshiftRPM(int gear) const;
+
+	// max speed in m/s calculated from maxrpm, maxgear, finalgear ratios
+	btScalar CalculateMaxSpeed() const;
 
 	// cardynamics initialization
 	void GetCollisionBox(

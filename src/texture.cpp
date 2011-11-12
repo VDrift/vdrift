@@ -14,43 +14,18 @@
 #include <vector>
 #include <cassert>
 
-Uint8 ExtractComponent(Uint32 value, Uint32 mask, Uint32 shift, Uint32 loss)
-{
-	Uint32 temp = value & mask;
-	temp = temp >> shift;
-	temp = temp << loss;
-	return (Uint8) temp;
-}
-
-//save the component to the value using the given mask, shift, loss, and return the resulting value
-Uint32 InsertComponent(Uint32 value, Uint8 component, Uint32 mask, Uint32 shift, Uint32 loss)
-{
-	Uint32 temp = component;
-	temp = temp >> loss;
-	temp = temp << shift;
-	return (value & ~mask) | temp;
-}
-
-struct COMPONENTINFO
-{
-	Uint32 mask;
-	Uint32 shift;
-	Uint32 loss;
-};
-
-static float Scale(const std::string & size, float width, float height)
+static float Scale(TEXTUREINFO::Size size, float width, float height)
 {
 	float maxsize, minscale;
-
-	if (size == "medium")
-	{
-		maxsize = 256;
-		minscale = 0.5;
-	}
-	else if (size == "small")
+	if (size == TEXTUREINFO::SMALL)
 	{
 		maxsize = 128;
 		minscale = 0.25;
+	}
+	else if (size == TEXTUREINFO::MEDIUM)
+	{
+		maxsize = 256;
+		minscale = 0.5;
 	}
 	else
 	{
@@ -463,7 +438,7 @@ bool TEXTURE::Load(const std::string & path, const TEXTUREINFO & info, std::ostr
 		return false;
 	}
 
-	if (path.empty() && !info.surface)
+	if (path.empty() && !info.data)
 	{
 		error << "Tried to load a texture with an empty name" << std::endl;
 		return false;
@@ -476,7 +451,26 @@ bool TEXTURE::Load(const std::string & path, const TEXTUREINFO & info, std::ostr
 		return LoadCube(path, info, error);
 	}
 
-	SDL_Surface * orig_surface = info.surface;
+	SDL_Surface * orig_surface = 0;
+	if (info.data)
+	{
+		Uint32 rmask, gmask, bmask, amask;
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
+		rmask = 0xff000000;
+		gmask = 0x00ff0000;
+		bmask = 0x0000ff00;
+		amask = 0x000000ff;
+#else
+		rmask = 0x000000ff;
+		gmask = 0x0000ff00;
+		bmask = 0x00ff0000;
+		amask = 0xff000000;
+#endif
+		orig_surface = SDL_CreateRGBSurfaceFrom(
+							info.data, info.width, info.height,
+							info.bytespp * 8, info.width * info.bytespp,
+							rmask, gmask, bmask, amask);
+	}
 	if (!orig_surface)
 	{
 		orig_surface = IMG_Load(path.c_str());
@@ -487,7 +481,7 @@ bool TEXTURE::Load(const std::string & path, const TEXTUREINFO & info, std::ostr
 		}
 	}
 
-	SDL_Surface * texture_surface(orig_surface);
+	SDL_Surface * texture_surface = orig_surface;
 	if (orig_surface)
 	{
 	    origw = texture_surface->w;
@@ -518,7 +512,7 @@ bool TEXTURE::Load(const std::string & path, const TEXTUREINFO & info, std::ostr
 	        float scalew = ((float)newx+0.5) / orig_surface->w;
 	        float scaleh = ((float)newy+0.5) / orig_surface->h;
 
-	        SDL_Surface * pot_surface = zoomSurface (orig_surface, scalew, scaleh, SMOOTHING_ON);
+	        SDL_Surface * pot_surface = zoomSurface(orig_surface, scalew, scaleh, SMOOTHING_ON);
 
 	        assert(IsPowerOfTwo(pot_surface->w));
 	        assert(IsPowerOfTwo(pot_surface->h));
@@ -529,10 +523,10 @@ bool TEXTURE::Load(const std::string & path, const TEXTUREINFO & info, std::ostr
 	    }
 
 		//scale texture down if necessary
-		scale = Scale(info.size, orig_surface->w, orig_surface->h);
+		scale = Scale(info.maxsize, orig_surface->w, orig_surface->h);
 		if (scale < 1.0)
 		{
-			texture_surface = zoomSurface (orig_surface, scale, scale, SMOOTHING_ON);
+			texture_surface = zoomSurface(orig_surface, scale, scale, SMOOTHING_ON);
 		}
 
 		//store dimensions
@@ -549,7 +543,7 @@ bool TEXTURE::Load(const std::string & path, const TEXTUREINFO & info, std::ostr
 	}
 
 	//free the original surface if it's not a custom surface (used for the track map)
-	if (!info.surface && orig_surface)
+	if (!info.data && orig_surface)
 	{
 		SDL_FreeSurface(orig_surface);
 	}
