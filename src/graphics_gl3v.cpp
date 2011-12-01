@@ -27,7 +27,7 @@ bool GRAPHICS_GL3V::Init(const std::string & shaderpath,
 				int reflection_type,
 				const std::string & static_reflectionmap_file,
 				const std::string & static_ambientmap_file,
-				int anisotropy, const std::string & texturesize,
+				int anisotropy, int texturesize,
 				int lighting_quality, bool bloom, bool normalmaps,
 				const std::string & renderconfig,
 				std::ostream & info_output, std::ostream & error_output)
@@ -65,7 +65,7 @@ bool GRAPHICS_GL3V::Init(const std::string & shaderpath,
 		t.verticalcross = true;
 		t.mipmap = true;
 		t.anisotropy = anisotropy;
-		t.maxsize = TEXTUREINFO::GetMaxSize(texturesize);
+		t.maxsize = TEXTUREINFO::Size(texturesize);
 		static_reflection.Load(static_reflectionmap_file, t, error_output);
 	}
 

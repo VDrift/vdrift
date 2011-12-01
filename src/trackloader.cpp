@@ -359,8 +359,7 @@ TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const PTree & cfg)
 	s >> texture_names;
 
 	// set relative path for models and textures, ugly hack
-	// need to identificate body references
-	// begin ugly hack
+	// need to identify body references
 	std::string name;
 	if (cfg.value() == "body" && cfg.parent())
 	{
@@ -379,7 +378,6 @@ TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const PTree & cfg)
 			if (!texture_names[2].empty()) texture_names[2] = rel_path + texture_names[2];
 		}
 	}
-	// end ugly hack
 
 	if (dynamic_shadows && isashadow)
 	{

@@ -1,11 +1,9 @@
 #ifndef _TEXTUREINFO_H
 #define _TEXTUREINFO_H
 
-#include <string>
-
 struct TEXTUREINFO
 {
-	enum Size { LARGE, MEDIUM, SMALL };
+	enum Size { SMALL, LARGE, MEDIUM };
 	char* data;				///< raw data pointer
 	short width;			///< texture width, only set if data not null
 	short height;			///< texture height, only set if data not null
@@ -42,13 +40,6 @@ struct TEXTUREINFO
 		srgb(false)
 	{
 		// ctor
-	}
-
-	static Size GetMaxSize(const std::string & value)
-	{
-		if (value == "small") return SMALL;
-		if (value == "medium") return MEDIUM;
-		return LARGE;
 	}
 };
 

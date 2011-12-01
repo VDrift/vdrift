@@ -26,7 +26,7 @@ public:
 				int reflection_type,
 				const std::string & static_reflectionmap_file,
 				const std::string & static_ambientmap_file,
-				int anisotropy, const std::string & texturesize,
+				int anisotropy, int texturesize,
 				int lighting_quality, bool newbloom, bool newnormalmaps,
 				const std::string & renderconfig,
 				std::ostream & info_output, std::ostream & error_output) = 0;

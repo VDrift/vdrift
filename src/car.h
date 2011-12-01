@@ -365,7 +365,6 @@ protected:
 	bool LoadLight(
 		const PTree & cfg,
 		ContentManager & content,
-		std::list<std::tr1::shared_ptr<MODEL> >& models,
 		std::ostream & error_output);
 };
 
