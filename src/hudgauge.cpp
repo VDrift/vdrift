@@ -7,9 +7,19 @@ static keyed_container<DRAWABLE>::handle AddDrawable(SCENENODE & node)
 	return node.GetDrawlist().twodim.insert(DRAWABLE());
 }
 
+static keyed_container<DRAWABLE>::handle AddTextDrawable(SCENENODE & node)
+{
+	return node.GetDrawlist().text.insert(DRAWABLE());
+}
+
 static DRAWABLE & GetDrawable(SCENENODE & node, const keyed_container<DRAWABLE>::handle & drawhandle)
 {
 	return node.GetDrawlist().twodim.get(drawhandle);
+}
+
+static DRAWABLE & GetTextDrawable(SCENENODE & node, const keyed_container<DRAWABLE>::handle & drawhandle)
+{
+	return node.GetDrawlist().text.get(drawhandle);
 }
 
 static void EraseDrawable(SCENENODE & node, keyed_container<DRAWABLE>::handle & drawhandle)
@@ -17,6 +27,15 @@ static void EraseDrawable(SCENENODE & node, keyed_container<DRAWABLE>::handle & 
 	if (drawhandle.valid())
 	{
 		node.GetDrawlist().twodim.erase(drawhandle);
+		drawhandle.invalidate();
+	}
+}
+
+static void EraseTextDrawable(SCENENODE & node, keyed_container<DRAWABLE>::handle & drawhandle)
+{
+	if (drawhandle.valid())
+	{
+		node.GetDrawlist().text.erase(drawhandle);
 		drawhandle.invalidate();
 	}
 }
@@ -64,7 +83,7 @@ void HUDGAUGE::Set(
 	this->scale = (endangle - startangle) / (endvalue - startvalue);
 
 	// reset
-	EraseDrawable(parent, dialnum_draw);
+	EraseTextDrawable(parent, dialnum_draw);
 	EraseDrawable(parent, pointer_draw);
 	EraseDrawable(parent, dial_draw);
 	pointer_rotated.Clear();
@@ -137,8 +156,8 @@ void HUDGAUGE::Set(
 			value += value_delta;
 		}
 
-		dialnum_draw = AddDrawable(parent);
-		DRAWABLE & drawref = GetDrawable(parent, dialnum_draw);
+		dialnum_draw = AddTextDrawable(parent);
+		DRAWABLE & drawref = GetTextDrawable(parent, dialnum_draw);
 		drawref.SetDiffuseMap(font.GetFontTexture());
 		drawref.SetVertArray(&dial_label);
 		drawref.SetCull(false, false);

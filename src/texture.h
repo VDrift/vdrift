@@ -3,6 +3,7 @@
 
 #include "texture_interface.h"
 #include "textureinfo.h"
+#include <string>
 
 class TEXTURE : public TEXTURE_INTERFACE
 {

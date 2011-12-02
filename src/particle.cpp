@@ -144,7 +144,6 @@ QT_TEST(particle_test)
 	std::stringstream out;
 	PARTICLE_SYSTEM s;
 	ContentManager c(out);
-	c.setTexSize("large");
 	s.SetParameters(1.0,1.0,0.5,1.0,1.0,1.0,1.0,1.0,MATHVECTOR<float,3>(0,1,0));
 	s.Load(std::list<std::string> (), std::string(), 0, c, out);
 

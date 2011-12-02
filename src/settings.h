@@ -210,6 +210,11 @@ public:
 		return trackdynamic;
 	}
 
+	bool GetBatchGeometry() const
+	{
+		return batch_geometry;
+	}
+
 	bool GetShadows() const
 	{
 		return shadows;
@@ -396,6 +401,7 @@ private:
 	bool ff_invert;
 	bool trackreverse;
 	bool trackdynamic;
+	bool batch_geometry;
 	bool shadows;
 	int shadow_distance;
 	int shadow_quality;

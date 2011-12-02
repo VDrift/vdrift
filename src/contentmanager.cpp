@@ -17,6 +17,7 @@ static void printLeak(const std::map<key, value>& cache, std::ostream& out)
 
 ContentManager::ContentManager(std::ostream & error) :
 	sound_info(0, 0, 0, 0),
+	texture_size(TEXTUREINFO::LARGE),
 	texture_srgb(false),
 	model_vbo(false),
 	error(error)
@@ -47,9 +48,9 @@ void ContentManager::setSound(const SOUNDINFO& info)
 	sound_info = info;
 }
 
-void ContentManager::setTexSize(const std::string & value)
+void ContentManager::setTexSize(int value)
 {
-	texture_size = TEXTUREINFO::GetMaxSize(value);
+	texture_size = TEXTUREINFO::Size(value);
 }
 
 void ContentManager::setSRGB(bool value)
@@ -60,6 +61,14 @@ void ContentManager::setSRGB(bool value)
 void ContentManager::setVBO(bool value)
 {
 	model_vbo = value;
+}
+
+void ContentManager::sweep(std::ostream & info)
+{
+	sweep();
+	info << "Textures: " << textures.size() << "\n";
+	info << "Models: " << models.size() << "\n";
+	info << "Sounds: " << sounds.size() << std::endl;
 }
 
 void ContentManager::sweep()

@@ -39,7 +39,7 @@ public:
 	void setSound(const SOUNDINFO& info);
 
 	/// textures size setting
-	void setTexSize(const std::string & value);
+	void setTexSize(int value);
 
 	/// in general all textures on disk will be in the SRGB colorspace, so if the renderer wants to do
 	/// gamma correct lighting, it will want all textures to be gamma corrected using the SRGB flag
@@ -48,6 +48,8 @@ public:
 	/// use VBOs instead of draw lists for models
 	void setVBO(bool value);
 
+	/// purge unused content
+	void sweep(std::ostream & info);
 	void sweep();
 
 private:

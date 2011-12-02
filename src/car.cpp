@@ -419,7 +419,6 @@ CAR::CAR() :
 bool CAR::LoadLight(
 	const PTree & cfg,
 	ContentManager & content,
-	std::list<std::tr1::shared_ptr<MODEL> >& models,
 	std::ostream & error_output)
 {
 	float radius;
@@ -541,7 +540,7 @@ bool CAR::LoadGraphics(
 	const PTree * cfg_light;
 	while (cfg.get("light-brake-"+istr, cfg_light))
 	{
-		if (!LoadLight(*cfg_light, content, models, error_output))
+		if (!LoadLight(*cfg_light, content, error_output))
 		{
 			error_output << "unable to load lights" << std::endl;
 			return false;
@@ -555,7 +554,7 @@ bool CAR::LoadGraphics(
 	istr = "0";
 	while (cfg.get("light-reverse-"+istr, cfg_light))
 	{
-		if (!LoadLight(*cfg_light, content, models, error_output))
+		if (!LoadLight(*cfg_light, content, error_output))
 		{
 			error_output << "unable to load lights" << std::endl;
 			return false;

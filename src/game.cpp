@@ -269,12 +269,23 @@ void GAME::InitCoreSubsystems()
 
 	settings.Load(pathmanager.GetSettingsFile(), error_output);
 
+	// global texture size override
+	int texturesize = TEXTUREINFO::LARGE;
+	if (settings.GetTextureSize() == "small")
+	{
+		texturesize = TEXTUREINFO::SMALL;
+	}
+	else if (settings.GetTextureSize() == "medium")
+	{
+		texturesize = TEXTUREINFO::MEDIUM;
+	}
+
 	// always add the writeable data paths first so they are checked first
 	content.addPath(pathmanager.GetWriteableDataPath());
 	content.addPath(pathmanager.GetDataPath());
 	content.addSharedPath(pathmanager.GetCarPartsPath());
 	content.addSharedPath(pathmanager.GetTrackPartsPath());
-	content.setTexSize(settings.GetTextureSize());
+	content.setTexSize(texturesize);
 
 	if (!LastStartWasSuccessful())
 	{
@@ -319,7 +330,7 @@ void GAME::InitCoreSubsystems()
 			settings.GetShadowDistance(), settings.GetShadowQuality(),
 			settings.GetReflections(), pathmanager.GetStaticReflectionMap(),
 			pathmanager.GetStaticAmbientMap(),
-			settings.GetAnisotropic(), settings.GetTextureSize(),
+			settings.GetAnisotropic(), texturesize,
 			settings.GetLighting(), settings.GetBloom(), settings.GetNormalMaps(),
 			renderconfigfile,
 			info_output, error_output);
@@ -1879,7 +1890,7 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 			error_output);
 	}
 
-	content.sweep();
+	content.sweep(info_output);
 	return true;
 }
 
@@ -2049,7 +2060,7 @@ bool GAME::LoadTrack(const std::string & trackname)
 			settings.GetTrackReverse(),
 			settings.GetTrackDynamic(),
 			graphics_interface->GetShadows(),
-			false))
+			settings.GetBatchGeometry()))
 	{
 		error_output << "Error loading track: " << trackname << std::endl;
 		return false;
