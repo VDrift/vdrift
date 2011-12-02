@@ -2060,7 +2060,7 @@ bool GAME::LoadTrack(const std::string & trackname)
 			settings.GetTrackReverse(),
 			settings.GetTrackDynamic(),
 			graphics_interface->GetShadows(),
-			false))
+			settings.GetBatchGeometry()))
 	{
 		error_output << "Error loading track: " << trackname << std::endl;
 		return false;

@@ -115,6 +115,22 @@ private:
 	typedef std::map<std::string, BODY>::const_iterator body_iterator;
 	std::map<std::string, BODY> bodies;
 
+	// batch static geometry with same diffuse texture
+	struct OBJECT
+	{
+		std::tr1::shared_ptr<MODEL> model;
+		std::string texture;
+		int transparent_blend;
+		int clamptexture;
+		int surface;
+		bool mipmap;
+		bool nolighting;
+		bool skybox;
+		bool collideable;
+		bool cached;
+	};
+	std::map<std::string, OBJECT> combined;
+
 	// compound track shape
 	btCompoundShape * track_shape;
 
@@ -158,6 +174,8 @@ private:
 	body_iterator LoadBody(const PTree & cfg);
 
 	void AddBody(SCENENODE & scene, const BODY & body);
+
+	bool AddObject(const OBJECT & object);
 
 	void Clear();
 };

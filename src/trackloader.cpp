@@ -171,6 +171,20 @@ bool TRACK::LOADER::ContinueLoad()
 
 	if (!loadstatus.second)
 	{
+		if (agressive_combining)
+		{
+			std::map<std::string, OBJECT>::iterator i;
+			for (i = combined.begin(); i != combined.end(); ++i)
+			{
+				std::tr1::shared_ptr<MODEL> & model = i->second.model;
+				if (!model->HaveMeshMetrics())
+				{
+					// cache combined model
+					content.load(objectdir, i->first, model->GetVertexArray(), model);
+				}
+				AddObject(i->second);
+			}
+		}
 #ifndef EXTBULLET
 		btCollisionObject * track_object = new btCollisionObject();
 		//track_shape->createAabbTreeFromChildren();
@@ -632,14 +646,12 @@ bool TRACK::LOADER::BeginOld()
 
 	data.models.reserve(numobjects);
 
-	if (!GetParam(objectfile, params_per_object)) return false;
-
-	if (params_per_object != expected_params)
+	if (!GetParam(objectfile, params_per_object))
 	{
-		info_output << "Track object list has " << params_per_object << " params per object, expected " << expected_params << ", this is fine, continuing" << std::endl;
+			return false;
 	}
 
-	if (params_per_object < min_params)
+	if (params_per_object != expected_params)
 	{
 		error_output << "Track object list has " << params_per_object << " params per object, expected " << expected_params << std::endl;
 		return false;
@@ -648,133 +660,54 @@ bool TRACK::LOADER::BeginOld()
 	return true;
 }
 
-std::pair<bool, bool> TRACK::LOADER::ContinueOld()
+bool TRACK::LOADER::AddObject(const OBJECT & object)
 {
-	std::string model_name;
-	if (!GetParam(objectfile, model_name))
-	{
-		return std::make_pair(false, false);
-	}
-
-	assert(objectfile.good());
-
-	std::string diffuse_texture_name;
-	bool mipmap;
-	bool nolighting;
-	bool skybox;
-	int transparent_blend;
-	float bump_wavelength;
-	float bump_amplitude;
-	bool driveable;
-	bool collideable;
-	float friction_notread;
-	float friction_tread;
-	float rolling_resistance;
-	float rolling_drag;
-	bool isashadow(false);
-	int clamptexture(0);
-	int surface(0);
-	std::string otherjunk;
-
-	GetParam(objectfile, diffuse_texture_name);
-	GetParam(objectfile, mipmap);
-	GetParam(objectfile, nolighting);
-	GetParam(objectfile, skybox);
-	GetParam(objectfile, transparent_blend);
-	GetParam(objectfile, bump_wavelength);
-	GetParam(objectfile, bump_amplitude);
-	GetParam(objectfile, driveable);
-	GetParam(objectfile, collideable);
-	GetParam(objectfile, friction_notread);
-	GetParam(objectfile, friction_tread);
-	GetParam(objectfile, rolling_resistance);
-	GetParam(objectfile, rolling_drag);
-
-	if (params_per_object >= 15)
-		GetParam(objectfile, isashadow);
-
-	if (params_per_object >= 16)
-		GetParam(objectfile, clamptexture);
-
-	if (params_per_object >= 17)
-		GetParam(objectfile, surface);
-
-	for (int i = 0; i < params_per_object - expected_params; i++)
-		GetParam(objectfile, otherjunk);
-
-	if (dynamic_shadows && isashadow)
-	{
-		return std::make_pair(false, true);
-	}
-
-	std::tr1::shared_ptr<MODEL> model;
-	if (packload)
-	{
-		if (!content.load(objectdir, model_name, pack, model))
-		{
-			return std::make_pair(true, false);
-		}
-	}
-	else
-	{
-		if (!content.load(objectdir, model_name, model))
-		{
-			return std::make_pair(true, false);
-		}
-	}
-	data.models.push_back(model);
+	data.models.push_back(object.model);
 
 	TEXTUREINFO texinfo;
-	texinfo.mipmap = mipmap || anisotropy; //always mipmap if anisotropy is on
+	texinfo.mipmap = object.mipmap || anisotropy; //always mipmap if anisotropy is on
 	texinfo.anisotropy = anisotropy;
-	texinfo.repeatu = clamptexture != 1 && clamptexture != 2;
-	texinfo.repeatv = clamptexture != 1 && clamptexture != 3;
+	texinfo.repeatu = object.clamptexture != 1 && object.clamptexture != 2;
+	texinfo.repeatv = object.clamptexture != 1 && object.clamptexture != 3;
 
 	std::tr1::shared_ptr<TEXTURE> diffuse_texture;
-	if (!content.load(objectdir, diffuse_texture_name, texinfo, diffuse_texture))
+	if (!content.load(objectdir, object.texture, texinfo, diffuse_texture))
 	{
-		error_output << "Skipping object " << model_name << " and continuing" << std::endl;
-		return std::make_pair(false, true);
+		return false;
 	}
 
 	std::tr1::shared_ptr<TEXTURE> miscmap1_texture;
 	{
-		std::string texture_name = diffuse_texture_name.substr(0, std::max(0, (int)diffuse_texture_name.length()-4)) + "-misc1.png";
+		std::string texture_name = object.texture.substr(0, std::max(0, (int)object.texture.length()-4)) + "-misc1.png";
 		std::string filepath = objectpath + "/" + texture_name;
 		if (std::ifstream(filepath.c_str()))
 		{
-			if (!content.load(objectdir, texture_name, texinfo, miscmap1_texture))
-			{
-				error_output << "Error loading texture: " << filepath << " for object " << model_name << ", continuing" << std::endl;
-			}
+			content.load(objectdir, texture_name, texinfo, miscmap1_texture);
 		}
 	}
 
 	std::tr1::shared_ptr<TEXTURE> miscmap2_texture;
 	{
-		std::string texture_name = diffuse_texture_name.substr(0, std::max(0, (int)diffuse_texture_name.length()-4)) + "-misc2.png";
+		std::string texture_name = object.texture.substr(0, std::max(0, (int)object.texture.length()-4)) + "-misc2.png";
 		std::string filepath = objectpath + "/" + texture_name;
 		if (std::ifstream(filepath.c_str()))
 		{
-			if (!content.load(objectdir, texture_name, texinfo, miscmap2_texture))
-			{
-				error_output << "Error loading texture: " << filepath << " for object " << model_name << ", continuing" << std::endl;
-			}
+			content.load(objectdir, texture_name, texinfo, miscmap2_texture);
 		}
 	}
 
 	//use a different drawlist layer where necessary
-	bool transparent = (transparent_blend==1);
+	bool transparent = (object.transparent_blend==1);
 	keyed_container <DRAWABLE> * dlist = &data.static_node.GetDrawlist().normal_noblend;
 	if (transparent)
 	{
 		dlist = &data.static_node.GetDrawlist().normal_blend;
 	}
-	else if (nolighting)
+	else if (object.nolighting)
 	{
 		dlist = &data.static_node.GetDrawlist().normal_noblend_nolighting;
 	}
-	if (skybox)
+	if (object.skybox)
 	{
 		if (transparent)
 		{
@@ -787,39 +720,115 @@ std::pair<bool, bool> TRACK::LOADER::ContinueOld()
 	}
 	keyed_container <DRAWABLE>::handle dref = dlist->insert(DRAWABLE());
 	DRAWABLE & drawable = dlist->get(dref);
-	drawable.SetModel(*model);
+	drawable.SetModel(*object.model);
 	drawable.SetDiffuseMap(diffuse_texture);
 	drawable.SetMiscMap1(miscmap1_texture);
 	drawable.SetMiscMap2(miscmap2_texture);
 	drawable.SetDecal(transparent);
-	drawable.SetCull(data.cull && (transparent_blend!=2), false);
-	drawable.SetRadius(model->GetRadius());
-	drawable.SetObjectCenter(model->GetCenter());
-	drawable.SetSkybox(skybox);
-	drawable.SetVerticalTrack(skybox && data.vertical_tracking_skyboxes);
+	drawable.SetCull(data.cull && (object.transparent_blend!=2), false);
+	drawable.SetRadius(object.model->GetRadius());
+	drawable.SetObjectCenter(object.model->GetCenter());
+	drawable.SetSkybox(object.skybox);
+	drawable.SetVerticalTrack(object.skybox && data.vertical_tracking_skyboxes);
 
-	if (collideable || driveable)
+	if (object.collideable)
 	{
 		btTriangleIndexVertexArray * mesh = new btTriangleIndexVertexArray();
-		mesh->addIndexedMesh(GetIndexedMesh(*model));
+		mesh->addIndexedMesh(GetIndexedMesh(*object.model));
 		data.meshes.push_back(mesh);
 
-		assert(surface >= 0 && surface < (int)data.surfaces.size());
+		assert(object.surface >= 0 && object.surface < (int)data.surfaces.size());
 		btBvhTriangleMeshShape * shape = new btBvhTriangleMeshShape(mesh, true);
-		shape->setUserPointer((void*)&data.surfaces[surface]);
+		shape->setUserPointer((void*)&data.surfaces[object.surface]);
 		data.shapes.push_back(shape);
 
 #ifndef EXTBULLET
 		btTransform transform = btTransform::getIdentity();
 		track_shape->addChildShape(transform, shape);
 #else
-		btCollisionObject * object = new btCollisionObject();
-		object->setActivationState(DISABLE_SIMULATION);
-		object->setCollisionShape(shape);
-		object->setUserPointer(shape->getUserPointer());
-		data.objects.push_back(object);
-		world.addCollisionObject(object);
+		btCollisionObject * co = new btCollisionObject();
+		co->setActivationState(DISABLE_SIMULATION);
+		co->setCollisionShape(shape);
+		co->setUserPointer(shape->getUserPointer());
+		data.objects.push_back(co);
+		world.addCollisionObject(co);
 #endif
+	}
+	return true;
+}
+
+std::pair<bool, bool> TRACK::LOADER::ContinueOld()
+{
+	std::string model_name;
+	if (!GetParam(objectfile, model_name))
+	{
+		return std::make_pair(false, false);
+	}
+
+	OBJECT object;
+	bool isashadow;
+	std::string junk;
+
+	GetParam(objectfile, object.texture);
+	GetParam(objectfile, object.mipmap);
+	GetParam(objectfile, object.nolighting);
+	GetParam(objectfile, object.skybox);
+	GetParam(objectfile, object.transparent_blend);
+	GetParam(objectfile, junk);//bump_wavelength);
+	GetParam(objectfile, junk);//bump_amplitude);
+	GetParam(objectfile, junk);//driveable);
+	GetParam(objectfile, object.collideable);
+	GetParam(objectfile, junk);//friction_notread);
+	GetParam(objectfile, junk);//friction_tread);
+	GetParam(objectfile, junk);//rolling_resistance);
+	GetParam(objectfile, junk);//rolling_drag);
+	GetParam(objectfile, isashadow);
+	GetParam(objectfile, object.clamptexture);
+	GetParam(objectfile, object.surface);
+	for (int i = 0; i < params_per_object - expected_params; i++)
+	{
+		GetParam(objectfile, junk);
+	}
+
+	if (dynamic_shadows && isashadow)
+	{
+		return std::make_pair(false, true);
+	}
+
+	if (packload)
+	{
+		if (!content.load(objectdir, model_name, pack, object.model))
+		{
+			return std::make_pair(true, false);
+		}
+	}
+	else
+	{
+		if (!content.load(objectdir, model_name, object.model))
+		{
+			return std::make_pair(true, false);
+		}
+	}
+
+	if (agressive_combining)
+	{
+		std::map<std::string, OBJECT>::iterator i = combined.find(object.texture);
+		if (i != combined.end() && !i->second.cached)
+		{
+			i->second.model->SetVertexArray(i->second.model->GetVertexArray() + object.model->GetVertexArray());
+		}
+		else
+		{
+			object.cached = content.get(objectdir, object.texture, object.model);
+			combined[object.texture] = object;
+		}
+	}
+	else
+	{
+		if (!AddObject(object))
+		{
+			return std::make_pair(true, false);
+		}
 	}
 
 	return std::make_pair(false, true);

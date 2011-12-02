@@ -58,6 +58,7 @@ SETTINGS::SETTINGS() :
 	ff_invert(false),
 	trackreverse(false),
 	trackdynamic(false),
+	batch_geometry(false),
 	shadows(false),
 	shadow_distance(1),
 	shadow_quality(1),
@@ -103,6 +104,7 @@ void SETTINGS::Serialize(bool write, CONFIG & config)
 	Param(config, write, section, "opponent_color", opponent_color);
 	Param(config, write, section, "reverse", trackreverse);
 	Param(config, write, section, "track_dynamic", trackdynamic);
+	Param(config, write, section, "batch_geometry", batch_geometry);
 	Param(config, write, section, "number_of_laps", number_of_laps);
 	Param(config, write, section, "camera_mode", camera_mode);
 
