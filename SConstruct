@@ -15,7 +15,6 @@ opts.Add(BoolVariable('use_binreloc', 'Set this to 1 if you want to compile with
 opts.Add(BoolVariable('os_cc', 'Set this to 1 if you want to use the operating system\'s C compiler environment variable.', 0))
 opts.Add(BoolVariable('os_cxx', 'Set this to 1 if you want to use the operating system\'s C++ compiler environment variable.', 0))
 opts.Add(BoolVariable('os_cxxflags', 'Set this to 1 if you want to use the operating system\'s C++ compiler flags environment variable.', 0))
-opts.Add(BoolVariable('NLS', 'Set this to 1 to turn on i18n support', 0))
 opts.Add(BoolVariable('use_distcc', 'Set this to 1 to enable distributed compilation', 0))
 opts.Add(BoolVariable('force_feedback', 'Enable force-feedback support', 0))
 opts.Add(BoolVariable('profiling', 'Turn on profiling output', 0))
@@ -317,7 +316,6 @@ Type: 'scons' to compile with the default options.
       'scons destdir=$PWD/tmp' to install to $PWD/tmp staging area.
       'scons datadir= to install data files into an alternate directory'
       'scons bindir=games/bin' to executable into an alternate directory.
-      'scons localedir=share/locale' to install translation into an alternate directory.
       'scons release=1' to turn off compiler optimizations and debugging info.
       'scons settings=.VDrift' to change settings directory.
       'scons install' (as root) to install VDrift.
@@ -328,7 +326,6 @@ Type: 'scons' to compile with the default options.
       'scons os_cxx=1' to use the operating system's C++ compiler environment variable
       'scons os_cxxflags=1' to use the operating system's C++ compiler flags environment variable
       'scons use_distcc=1' to use distributed compilation
-      'scons NLS=0' To disable internationalization support (An english-only version will be built)
       'scons efficiency=1' to show efficiency assessment at compile time
       'scons profiling=1' to enable profiling support
 %s 
@@ -348,20 +345,6 @@ for lib in check_libs:
     if not conf.CheckLibWithHeader(lib[0], lib[1], 'C', lib[2]):
         print lib[3]
         Exit(1)
-
-#--------------#
-# i18n support # 
-#--------------#
-if env['NLS'] and (sys.platform != 'win32'):
-    #print 'Checking for internationalization support ...'
-    have_gettext = conf.TryAction(Action('xgettext --version'))
-    if not have_gettext[0]:
-        print 'This system is not configured for internationalized applications (no xgettext command). An english-only version will be built\n'
-        env['NLS'] = 0
-
-    if not conf.CheckCHeader('libintl.h'):
-        print 'This system is not configured for internationalized applications (no libintl.h). An english-only version will be built\n'
-        env['NLS'] = 0
 
 env = conf.Finish()
 
@@ -470,14 +453,6 @@ if env['arch'] in arch_flags:
 cppdefines.append(('VERSION', '"%s"' % version))
 revision = os.popen('svnversion').read().split('\n')
 cppdefines.append(('REVISION', '"%s"' % revision[0]))
-
-#------#
-# i18n #
-#------#
-if env['NLS'] == 1 and (sys.platform != 'win32'):
-    cppdefines.append("ENABLE_NLS")
-    cppdefines.append(("PACKAGE", '"VDrift"'))
-    cppdefines.append(("LOCALEDIR", '"' + env['prefix'] + "/" + env['localedir'] + '"'))
 
 #---------------#
 # Python Export #
