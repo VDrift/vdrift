@@ -87,7 +87,8 @@ GAME::GAME(std::ostream & info_out, std::ostream & error_out) :
 	target_time(0),
 	timestep(1/90.0),
 	content(error_out),
-	updater(info_out, error_out),
+	carupdater(autoupdate, info_out, error_out),
+	trackupdater(autoupdate, info_out, error_out),
 	graphics_interface(NULL),
 	enableGL3(true),
 	usingGL3(false),
@@ -155,16 +156,38 @@ void GAME::Start(std::list <std::string> & args)
 		carcontrols_local.second.Save(pathmanager.GetCarControlsFile(), info_output, error_output);
 	}
 
-	// Load update information
-	if (!updater.Init(pathmanager.GetUpdateManagerFileBase(), pathmanager.GetUpdateManagerFile(), pathmanager.GetUpdateManagerFileBackup()))
+	// Init car update manager
+	if (!carupdater.Init(
+			pathmanager.GetUpdateManagerFileBase(),
+			pathmanager.GetUpdateManagerFile(),
+			pathmanager.GetUpdateManagerFileBackup(),
+			"CarManager",
+			pathmanager.GetCarsDir()))
 	{
 		// non-fatal error, just log it
-		error_output << "Update manager failed to initialize; this error is not fatal" << std::endl;
+		error_output << "Car update manager failed to initialize; this error is not fatal" << std::endl;
 	}
 	else
 	{
-		// send GUI value lists to the updater so it knows about the cars/tracks on disk
-		PopulateValueLists(updater.GetValueLists());
+		// send GUI value lists to the carupdater so it knows about the cars on disk
+		PopulateValueLists(carupdater.GetValueLists());
+	}
+
+	// Init track update manager
+	if (!trackupdater.Init(
+			pathmanager.GetUpdateManagerFileBase(),
+			pathmanager.GetUpdateManagerFile(),
+			pathmanager.GetUpdateManagerFileBackup(),
+			"TrackManager",
+			pathmanager.GetTracksDir()))
+	{
+		// non-fatal error, just log it
+		error_output << "Track update manager failed to initialize; this error is not fatal" << std::endl;
+	}
+	else
+	{
+		// send GUI value lists to the carupdater so it knows about the tracks on disk
+		PopulateValueLists(trackupdater.GetValueLists());
 	}
 
 	// If sound initialization fails, that's okay, it'll disable itself...
@@ -826,12 +849,12 @@ void GAME::AdvanceGameLogic()
 				collision.update(TickPeriod());
 				PROFILER.endBlock("physics");
 
-				PROFILER.beginBlock("car-update");
+				PROFILER.beginBlock("car");
 				for (std::list <CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
 				{
 					UpdateCar(*i, TickPeriod());
 				}
-				PROFILER.endBlock("car-update");
+				PROFILER.endBlock("car");
 
 				// Update dynamic track objects.
 				track.Update();
@@ -1375,14 +1398,11 @@ void GAME::ProcessGUIAction(const std::string & action)
 		std::string opponentstr;
 		for (std::vector<std::string>::iterator i = opponents.begin(); i != opponents.end(); ++i)
 		{
-			size_t beg = i->rfind("/")+1;
-			size_t end = i->rfind(".car");
-			std::string carname = i->substr(beg, end-beg);
 			if (i != opponents.begin())
 			{
 				opponentstr += ", ";
 			}
-			opponentstr += carname;
+			opponentstr += *i;
 		}
 		SCENENODE & pagenode = gui.GetPageNode("SingleRace");
 		gui.GetPage("SingleRace").GetLabel("OpponentsList").get().SetText(pagenode, opponentstr);
@@ -1401,26 +1421,47 @@ void GAME::ProcessGUIAction(const std::string & action)
 	}
 	else if (action == "StartCheckForUpdates")
 	{
-		updater.StartCheckForUpdates(GAME_DOWNLOADER(*this, http), gui);
+		carupdater.StartCheckForUpdates(GAME_DOWNLOADER(*this, http), gui);
+		trackupdater.StartCheckForUpdates(GAME_DOWNLOADER(*this, http), gui);
+		gui.ActivatePage("UpdatesFound", 0.25, error_output);
 	}
 	else if (action == "StartCarManager")
 	{
-		updater.ResetCarManager();
-		updater.ShowCarManager(gui);
+		carupdater.Reset();
+		carupdater.Show(gui);
 	}
 	else if (action == "CarManagerNext")
 	{
-		updater.IncrementCarManager();
-		updater.ShowCarManager(gui);
+		carupdater.Increment();
+		carupdater.Show(gui);
 	}
 	else if (action == "CarManagerPrev")
 	{
-		updater.DecrementCarManager();
-		updater.ShowCarManager(gui);
+		carupdater.Decrement();
+		carupdater.Show(gui);
 	}
 	else if (action == "ApplyCarUpdate")
 	{
-		updater.ApplyCarUpdate(GAME_DOWNLOADER(*this, http), gui, pathmanager);
+		carupdater.ApplyUpdate(GAME_DOWNLOADER(*this, http), gui, pathmanager);
+	}
+	else if (action == "StartTrackManager")
+	{
+		trackupdater.Reset();
+		trackupdater.Show(gui);
+	}
+	else if (action == "TrackManagerNext")
+	{
+		trackupdater.Increment();
+		trackupdater.Show(gui);
+	}
+	else if (action == "TrackManagerPrev")
+	{
+		trackupdater.Decrement();
+		trackupdater.Show(gui);
+	}
+	else if (action == "ApplyTrackUpdate")
+	{
+		trackupdater.ApplyUpdate(GAME_DOWNLOADER(*this, http), gui, pathmanager);
 	}
 	else if (action.substr(0,14) == "controlgrabadd")
 	{
@@ -1866,13 +1907,11 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 		assert(carcontrols_local.first);
 
 		std::string cartype = carcontrols_local.first->GetCarType();
-		std::string carnamebase = carname.substr(0, carname.find("/"));
-		std::string cardir = pathmanager.GetCarsDir()+"/"+carnamebase;
-		std::string carpath = pathmanager.GetCarPath(carnamebase);
+		std::string cardir = pathmanager.GetCarsDir() + "/" + carname;
 
 		PTree carconfig;
-		file_open_basic fopen(carpath, pathmanager.GetCarPartsPath());
-		if (!read_ini(carname.substr(carname.find("/")+1), fopen, carconfig))
+		file_open_basic fopen(pathmanager.GetCarPath(carname), pathmanager.GetCarPartsPath());
+		if (!read_ini(carname + ".car", fopen, carconfig))
 		{
 			error_output << "Failed to load " << carname << std::endl;
 			return false;
@@ -1971,17 +2010,12 @@ bool GAME::LoadCar(
 	bool islocal, bool isai,
 	const std::string & carfile)
 {
-	std::string partspath = pathmanager.GetCarPartsDir();
-	std::string carnamebase = carname.substr(0, carname.find("/"));
-	std::string cardir = pathmanager.GetCarsDir()+"/"+carnamebase;
-	std::string carpath = pathmanager.GetCarPath(carnamebase);
-
 	PTree carconf;
 	if (carfile.empty())
 	{
 		// If no file is passed in, then load it from disk.
-		file_open_basic fopen(carpath, pathmanager.GetCarPartsPath());
-		if (!read_ini(carname.substr(carname.find("/")+1), fopen, carconf))
+		file_open_basic fopen(pathmanager.GetCarPath(carname), pathmanager.GetCarPartsPath());
+		if (!read_ini(carname + ".car", fopen, carconf))
 		{
 			error_output << "Failed to load " << carname << std::endl;
 			return false;
@@ -1993,12 +2027,12 @@ bool GAME::LoadCar(
 		read_ini(carstream, carconf);
 	}
 
-	//write_inf(carconf, std::cerr);
 	cars.push_back(CAR());
 	CAR & car = cars.back();
 
+	std::string cardir = pathmanager.GetCarsDir() + "/" + carname;
 	if (!car.LoadGraphics(
-		carconf, cardir, carname, partspath,
+		carconf, cardir, carname, pathmanager.GetCarPartsPath(),
 		carcolor, carpaint, settings.GetAnisotropy(),
 		settings.GetCameraBounce(), settings.GetVehicleDamage(), debugmode,
 		content, info_output, error_output))
@@ -2244,44 +2278,48 @@ void GAME::PopulateCarPaintList(const std::string & carname, std::list <std::pai
 	}
 }
 
-void PopulateCarSet(std::set <std::pair<std::string, std::string> > & carset, const std::string & carpath, const PATHMANAGER & pathmanager)
+static void PopulateCarSet(std::set <std::pair<std::string, std::string> > & set, const std::string & path, const PATHMANAGER & pathmanager)
 {
-	std::list <std::string> carfolderlist;
-	pathmanager.GetFileList(carpath, carfolderlist);
-	for (std::list <std::string>::iterator i = carfolderlist.begin(); i != carfolderlist.end(); ++i)
+	std::list <std::string> folderlist;
+	pathmanager.GetFileList(path, folderlist);
+	for (std::list <std::string>::iterator i = folderlist.begin(); i != folderlist.end(); ++i)
 	{
-		std::list <std::string> carfilelist;
-		pathmanager.GetFileList(carpath+"/"+*i, carfilelist, ".car");
-		for (std::list <std::string>::iterator j = carfilelist.begin(); j != carfilelist.end(); ++j)
+		set.insert(std::make_pair(*i, *i));
+	}
+}
+
+static void PopulateTrackSet(std::set <std::pair<std::string, std::string> > & set, const std::string & path, const PATHMANAGER & pathmanager)
+{
+	std::list <std::string> folderlist;
+	pathmanager.GetFileList(path, folderlist);
+	for (std::list <std::string>::iterator i = folderlist.begin(); i != folderlist.end(); ++i)
+	{
+		std::ifstream check((path+"/"+*i+"/about.txt").c_str());
+		if (check)
 		{
-			std::string carname = j->substr(0, j->length()-4);
-			std::string carconf = *i + "/" + *j;
-			carset.insert(std::make_pair(carconf, carname));
+			std::string name;
+			getline(check, name);
+			set.insert(std::make_pair(*i, name));
 		}
 	}
 }
 
 void GAME::PopulateValueLists(std::map<std::string, std::list <std::pair <std::string, std::string> > > & valuelists)
 {
-	// Populate track list.
+	// Populate track list. Use set to avoid duplicate entries.
+	std::set <std::pair<std::string, std::string> > trackset;
+	PopulateTrackSet(trackset, pathmanager.GetReadOnlyTracksPath(), pathmanager);
+	PopulateTrackSet(trackset, pathmanager.GetWriteableTracksPath(), pathmanager);
 	std::list <std::pair<std::string, std::string> > tracklist;
-	std::list <std::string> trackfolderlist;
-	pathmanager.GetFileList(pathmanager.GetTracksPath(), trackfolderlist);
-	for (std::list <std::string>::iterator i = trackfolderlist.begin(); i != trackfolderlist.end(); ++i)
+	for (std::set <std::pair<std::string, std::string> >::const_iterator i = trackset.begin(); i != trackset.end(); i++)
 	{
-		std::ifstream check((pathmanager.GetTracksPath()+"/"+*i+"/about.txt").c_str());
-		if (check)
-		{
-			std::string displayname;
-			getline(check, displayname);
-			tracklist.push_back(std::make_pair(*i,displayname));
-		}
+		tracklist.push_back(*i);
 	}
 	tracklist.sort(SortStringPairBySecond);
 	valuelists["tracks"] = tracklist;
 
-	// Populate car list.
-	std::set <std::pair<std::string, std::string> > carset; // to avoid duplicate entries
+	// Populate car list. Use set to avoid duplicate entries.
+	std::set <std::pair<std::string, std::string> > carset;
 	PopulateCarSet(carset, pathmanager.GetReadOnlyCarsPath(), pathmanager);
 	PopulateCarSet(carset, pathmanager.GetWriteableCarsPath(), pathmanager);
 	std::list <std::pair<std::string, std::string> > carlist;
@@ -2513,7 +2551,11 @@ bool GAME::Download(const std::vector <std::string> & urls)
 			std::stringstream text;
 			text << HTTPINFO::GetString(info.state);
 			if (info.state == HTTPINFO::DOWNLOADING)
-				text << " " << HTTP::ExtractFilenameFromUrl(url) << " " << HTTPINFO::FormatSpeed(info.speed);
+			{
+				text << " " << HTTP::ExtractFilenameFromUrl(url);
+				text << " " << HTTPINFO::FormatSize(info.downloaded);
+				//text << " " << HTTPINFO::FormatSpeed(info.speed);
+			}
 			double total = 1000000;
 			if (info.totalsize > 0)
 				total = info.totalsize;

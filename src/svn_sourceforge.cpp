@@ -25,9 +25,9 @@
 #include "http.h"
 #include "unittest.h"
 
-std::string SVN_SOURCEFORGE::GetCarDownloadLink(const std::string & dataurl, const std::string & carname)
+std::string SVN_SOURCEFORGE::GetDownloadLink(const std::string & dataurl, const std::string & group, const std::string & name)
 {
-	return dataurl + "cars/" + carname + "/?view=tar";
+	return dataurl + group + "/" + name + "/?view=tar";
 }
 
 std::map <std::string, int> SVN_SOURCEFORGE::ParseFolderView(const std::string & folderfile)

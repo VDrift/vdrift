@@ -81,7 +81,7 @@ bool REPLAY::LoadHeader(std::istream & instream, std::ostream & error_output)
 	joeserialize::BinaryInputSerializer serialize_input(instream);
 	if (!Serialize(serialize_input))
 	{
-		error_output << "Errro loading replay header " << std::endl;
+		error_output << "Error loading replay header " << std::endl;
 		return false;
 	}
 

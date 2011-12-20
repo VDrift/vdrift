@@ -77,6 +77,8 @@ public:
 
 	std::string GetReadOnlyCarsPath() const;
 	std::string GetWriteableCarsPath() const;
+	std::string GetReadOnlyTracksPath() const;
+	std::string GetWriteableTracksPath() const;
 
 	std::string GetTemporaryFolder() const;
 
