@@ -116,7 +116,9 @@ private:
 	ContentManager content;
 	SETTINGS settings;
 
-	UPDATE_MANAGER updater;
+	AUTOUPDATE autoupdate;
+	UPDATE_MANAGER carupdater;
+	UPDATE_MANAGER trackupdater;
 
 	WINDOW_SDL window;
 	GRAPHICS_INTERFACE * graphics_interface;

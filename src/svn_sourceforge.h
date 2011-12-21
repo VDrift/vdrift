@@ -29,8 +29,8 @@
 class SVN_SOURCEFORGE
 {
 public:
-	/// Returns the download URL for any particular car given a name.
-	static std::string GetCarDownloadLink(const std::string & dataurl, const std::string & carname);
+	/// Returns the download URL for any particular group (car, track) given a name.
+	static std::string GetDownloadLink(const std::string & dataurl, const std::string & group, const std::string & name);
 
 	/// Given a sourceforge web svn folder view, return a map of folder names and revisions.
 	std::map <std::string, int> ParseFolderView(const std::string & folderfile);

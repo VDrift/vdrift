@@ -191,16 +191,11 @@ void WIDGET_SPINNINGCAR::Load(SCENENODE & parent)
 	bool damage = false;
 	bool debugmode = false;
 
-	std::string partspath = pathptr->GetCarPartsDir();
-	std::string carnamebase = carname.substr(0, carname.find("/"));
-	std::string cardir = pathptr->GetCarsDir()+"/"+carnamebase;
-	std::string carpath = pathptr->GetCarPath(carnamebase);
-
 	PTree carconf;
-	file_open_basic fopen(carpath, pathptr->GetCarPartsPath());
-	if (!read_ini(carname.substr(carname.find("/")+1), fopen, carconf))
+	file_open_basic fopen(pathptr->GetCarPath(carname), pathptr->GetCarPartsPath());
+	if (!read_ini(carname + ".car", fopen, carconf))
 	{
-		*errptr << "Error loading car's configfile: " << carpath << std::endl;
+		*errptr << "Failed to load " << carname << std::endl;
 		return;
 	}
 
@@ -212,6 +207,8 @@ void WIDGET_SPINNINGCAR::Load(SCENENODE & parent)
 	SCENENODE & carnoderef = GetCarNode(parent);
 	car.push_back(CAR());
 
+	std::string partspath = pathptr->GetCarPartsDir();
+	std::string cardir = pathptr->GetCarsDir()+"/"+carname;
 	if (!car.back().LoadGraphics(
 			carconf, cardir, carname, partspath,
 			MATHVECTOR<float, 3>(r, g, b),

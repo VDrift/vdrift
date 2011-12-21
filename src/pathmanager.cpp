@@ -384,6 +384,16 @@ std::string PATHMANAGER::GetWriteableCarsPath() const
 	return GetWriteableDataPath()+"/"+GetCarsDir();
 }
 
+std::string PATHMANAGER::GetReadOnlyTracksPath() const
+{
+	return GetDataPath()+"/"+GetTracksDir();
+}
+
+std::string PATHMANAGER::GetWriteableTracksPath() const
+{
+	return GetWriteableDataPath()+"/"+GetTracksDir();
+}
+
 std::string PATHMANAGER::GetTemporaryFolder() const
 {
 	return temporary_folder;

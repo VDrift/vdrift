@@ -46,6 +46,8 @@ const char * HTTPINFO::GetString(STATE state)
 std::string HTTPINFO::FormatSize(double bytes)
 {
 	std::stringstream s;
+	s.precision(2);
+	s << std::fixed;
 	if (bytes < 0)
 		s << "unknown";
 	else if (bytes > 1000000)
@@ -60,6 +62,8 @@ std::string HTTPINFO::FormatSize(double bytes)
 std::string HTTPINFO::FormatSpeed(double bytes)
 {
 	std::stringstream s;
+	s.precision(2);
+	s << std::fixed;
 	if (bytes < 0)
 		s << "unknown";
 	else if (bytes > 1000000)
