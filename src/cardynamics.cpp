@@ -627,6 +627,11 @@ bool CARDYNAMICS::Load(
 
 	body->setActivationState(DISABLE_DEACTIVATION);
 	body->setContactProcessingThreshold(0.0); // internal edge workaround
+	
+	// add car to world
+	this->world = &world;
+	world.addRigidBody(body);
+	world.addAction(this);
 
 	transform = body->getCenterOfMassTransform();
 	linear_velocity = body->getLinearVelocity();
@@ -635,16 +640,17 @@ bool CARDYNAMICS::Load(
 	{
 		suspension_force[i].setValue(0, 0, 0);
 		wheel_velocity[i].setValue(0, 0, 0);
-		wheel_position[i] = LocalToWorld(suspension[i]->GetWheelPosition(0.0));
+		wheel_position[i] = LocalToWorld(suspension[i]->GetWheelPosition());
 		wheel_orientation[i] = LocalToWorld(suspension[i]->GetWheelOrientation());
 	}
 
-	// add car to world
-	this->world = &world;
-	world.addRigidBody(body);
-	world.addAction(this);
+	// position can be a point on the surface not at car center of mass
+	// move wheel[0] center to position level to make sure the ray test doesn't fail
+	btVector3 down = GetDownVector();
+	btVector3 offset = down * down.dot(position - wheel_position[0]);
+	SetPosition(body->getCenterOfMassPosition() + offset);
 
-	// place car on track
+	// realign with ground
 	AlignWithGround();
 
 	// initialize telemetry
