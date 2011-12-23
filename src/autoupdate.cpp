@@ -114,7 +114,7 @@ std::pair <std::vector <std::string>, std::vector <std::string> > AUTOUPDATE::Ch
 
 	// Get the relevant available update group.
 	group_type::const_iterator availfound = available_updates.find(group);
-	if (availfound != available_updates.end())
+	if(availfound != available_updates.end())
 	{
 		const pair_type & check = availfound->second;
 
@@ -137,7 +137,7 @@ std::pair <std::vector <std::string>, std::vector <std::string> > AUTOUPDATE::Ch
 			{
 				// See if we have it; if not, it's new and should be updated.
 				pair_type::const_iterator c = cur.find(i->first);
-				if (c == cur.end())
+				if(c == cur.end())
 					changed.push_back(i->first);
 				else
 					// If we have it, we only need to update if the input rev is newer.
@@ -212,7 +212,7 @@ int AUTOUPDATE::GetFormatVersion(const std::string & group) const
 	int version = 0;
 
 	pair_type::const_iterator i = formats.find(group);
-	if (i != formats.end())
+	if(i != formats.end())
 		version = i->second;
 
 	return version;

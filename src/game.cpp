@@ -1025,7 +1025,7 @@ void GAME::UpdateTimer()
 		if (advance)
 		{
 			// Only count it if the car's current sector isn't -1 which is the default value when the car is loaded...
-			timer.Lap(carid, i->GetSector(), nextsector, (i->GetSector() >= 0));
+			timer.Lap(carid, nextsector, (i->GetSector() >= 0));
 			i->SetSector(nextsector);
 		}
 
@@ -1906,7 +1906,7 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	float pretime = 0.0f;
 	if (num_laps > 0)
 		pretime = 3.0f;
-	if (!timer.Load(pathmanager.GetTrackRecordsPath()+"/"+trackname+".txt", pretime, error_output))
+	if (!timer.Load(pathmanager.GetTrackRecordsPath()+"/"+trackname+".txt", pretime))
 	{
 		error_output << "Unable to load timer" << std::endl;
 		return false;

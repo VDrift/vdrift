@@ -57,16 +57,12 @@ struct ini
 		{
 			std::getline(in, line, '\n');
 			if (line.empty())
-			{
 				continue;
-			}
 
 			size_t begin = line.find_first_not_of(" \t[");
 			size_t end = line.find_first_of(";#]\r", begin);
 			if (begin >= end)
-			{
 				continue;
-			}
 
 			size_t next = line.find("=", begin);
 			if (next >= end)
@@ -113,22 +109,16 @@ struct ini
 static void write_ini(const PTree & p, std::ostream & out, std::string key_name)
 {
 	for (PTree::const_iterator i = p.begin(), e = p.end(); i != e; ++i)
-	{
 		if (i->second.size() == 0)
-		{
 			out << i->first << " = " << i->second.value() << "\n";
-		}
-	}
 	out << "\n";
 
 	for (PTree::const_iterator i = p.begin(), e = p.end(); i != e; ++i)
-	{
 		if (i->second.size() > 0)
 		{
 			out << "[" << key_name + i->first << "]\n";
 			write_ini(i->second, out, key_name + i->first + ".");
 		}
-	}
 }
 
 void read_ini(std::istream & in, PTree & p)

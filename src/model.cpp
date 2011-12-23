@@ -157,7 +157,7 @@ void MODEL::GenerateListID(std::ostream & error_output)
 
 			assert(mesh.GetTexCoordSets() > 0);
 
-			if (mesh.GetTexCoordSets() > 0)
+			if(mesh.GetTexCoordSets() > 0)
 			{
 				// Get the 2D texture coordinates for this vertex.
 				///Tex array bounds are not checked but it is assumed to be of size 2.
@@ -194,7 +194,7 @@ GLuint GenerateBufferObject(T * data, unsigned int i, unsigned int vertexCount, 
 
 void MODEL::GenerateVertexArrayObject(std::ostream & error_output)
 {
-	if (generatedvao)
+	if(generatedvao)
 		return;
 
 	// Generate vertex array object.
@@ -242,7 +242,7 @@ void MODEL::GenerateVertexArrayObject(std::ostream & error_output)
 	// Generate buffer object for texture coordinates.
 	const float * tc[1];
 	int tccount[1];
-	if (mesh.GetTexCoordSets() > 0)
+	if(mesh.GetTexCoordSets() > 0)
 	{
 		// TODO: Make this work for UV1 and UV2.
 		mesh.GetTexCoords(0, tc[0], tccount[0]);
@@ -294,7 +294,7 @@ void MODEL::ClearVertexArrayObject()
 
 bool MODEL::GetVertexArrayObject(GLuint & vao_out, unsigned int & elementCount_out) const
 {
-	if (!generatedvao)
+	if(!generatedvao)
 		return false;
 
 	vao_out = vao;
@@ -332,12 +332,12 @@ void MODEL::GenerateMeshMetrics()
 			else if (temp[n] > maxv[n])
 				maxv[n] = temp[n];
 
-			if (!havevals[n+3])
+			if(!havevals[n+3])
 			{
 				minv[n] = temp[n];
 				havevals[n+3] = true;
 			}
-			else if (temp[n] < minv[n])
+			else if(temp[n] < minv[n])
 				minv[n] = temp[n];
 		}
 

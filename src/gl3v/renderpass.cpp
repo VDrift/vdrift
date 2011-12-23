@@ -225,7 +225,7 @@ void RenderPass::clear(GLWrapper & gl)
 
 bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringIdMap & stringMap, const std::vector <const std::vector <RenderModelExternal*>*> & externalModels, const std::tr1::unordered_map <StringId, RenderTextureEntry, StringId::hash> & sharedTextures, std::ostream & errorOutput)
 {
-	if (!enabled)
+	if(!enabled)
 		return false;
 
 	// Ensure we've been successfully configured.
@@ -328,7 +328,7 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 	{
 		// Apply texture overrides, keeping track of which TUs we've overridden.
 		overriddenTextures.clear();
-		for (std::vector <RenderTexture>::const_iterator t = m->textureBindingOverrides.begin(); t != m->textureBindingOverrides.end(); t++)
+		for(std::vector <RenderTexture>::const_iterator t = m->textureBindingOverrides.begin(); t != m->textureBindingOverrides.end(); t++)
 		{
 			overriddenTextures.push_back(t->tu);
 
@@ -337,7 +337,7 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 
 		// Apply uniform overrides, keeping track of which locations we've overridden.
 		overriddenUniforms.clear();
-		for (std::vector <RenderUniform>::const_iterator u = m->uniformOverrides.begin(); u != m->uniformOverrides.end(); u++)
+		for(std::vector <RenderUniform>::const_iterator u = m->uniformOverrides.begin(); u != m->uniformOverrides.end(); u++)
 		{
 			overriddenUniforms.push_back(u->location);
 
@@ -353,7 +353,7 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 			if (*location < defaultUniforms.size())
 			{
 				const RenderUniform * u = defaultUniforms[*location];
-				if (u)
+				if(u)
 					gl.applyUniform(u->location, u->data);
 			}
 		}
@@ -393,10 +393,10 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 
 				// Check if we have cached information and if so use that.
 #ifdef USE_EXTERNAL_MODEL_CACHE
-				if (m->perPassTextureCache.size() > passIndex)
+				if(m->perPassTextureCache.size() > passIndex)
 				{
 					const std::vector <RenderTexture> & cache = m->perPassTextureCache[passIndex];
-					for (std::vector <RenderTexture>::const_iterator t = cache.begin(); t != cache.end(); t++)
+					for(std::vector <RenderTexture>::const_iterator t = cache.begin(); t != cache.end(); t++)
 					{
 						// Get the TU associated with this texture name id.
 						GLuint tu = t->tu;
@@ -407,7 +407,7 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 				else
 #endif
 				{
-					for (std::vector <RenderTextureEntry>::const_iterator t = m->textures.begin(); t != m->textures.end(); t++)
+					for(std::vector <RenderTextureEntry>::const_iterator t = m->textures.begin(); t != m->textures.end(); t++)
 					{
 						// Get the TU associated with this texture name id.
 						std::tr1::unordered_map <StringId, GLuint>::iterator tui = textureNameToTextureUnit.find(t->name);
@@ -435,7 +435,7 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 						gl.unbindTexture(GL_TEXTURE_2D); //TODO: Determine target from sampler.
 					}
 				}
-				for (override_tracking_type::const_iterator tu = overriddenTextures.begin(); tu != overriddenTextures.end(); tu++)
+				for(override_tracking_type::const_iterator tu = overriddenTextures.begin(); tu != overriddenTextures.end(); tu++)
 				{
 					const RenderTextureBase * texture = textureState[*tu];
 
@@ -458,10 +458,10 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 
 				// Check if we have cached information and if so use that.
 #ifdef USE_EXTERNAL_MODEL_CACHE
-				if (m->perPassUniformCache.size() > passIndex)
+				if(m->perPassUniformCache.size() > passIndex)
 				{
 					const std::vector <RenderUniform> & cache = m->perPassUniformCache[passIndex];
-					for (std::vector <RenderUniform>::const_iterator u = cache.begin(); u != cache.end(); u++)
+					for(std::vector <RenderUniform>::const_iterator u = cache.begin(); u != cache.end(); u++)
 					{
 						GLuint location = u->location;
 						overriddenUniforms.push_back(location);
@@ -490,7 +490,7 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 				for (override_tracking_type::const_iterator location = lastOverriddenUniforms.begin(); location != lastOverriddenUniforms.end(); location++)
 				{
 					const RenderUniformBase * uniform = uniformState[*location];
-					if (uniform)
+					if(uniform)
 						gl.applyUniform(*location, uniform->data);
 				}
 				for (override_tracking_type::const_iterator location = overriddenUniforms.begin(); location != overriddenUniforms.end(); location++)
@@ -546,7 +546,7 @@ void RenderPass::setModelTexture(RenderModelHandle handle, const RenderTextureEn
 {
 	// Find the model from the handle.
 	modelHandleMap::iterator iter = modelHandles.find(handle);
-	if (iter != modelHandles.end())
+	if(iter != modelHandles.end())
 	{
 		RenderModel & model = models.get(iter->second);
 
@@ -577,7 +577,7 @@ void RenderPass::removeModelTexture(RenderModelHandle handle, StringId name)
 {
 	// Find the model from the handle.
 	modelHandleMap::iterator iter = modelHandles.find(handle);
-	if (iter != modelHandles.end())
+	if(iter != modelHandles.end())
 	{
 		RenderModel & model = models.get(iter->second);
 
@@ -600,7 +600,7 @@ void RenderPass::setModelUniform(RenderModelHandle handle, const RenderUniformEn
 {
 	// Find the model from the handle.
 	modelHandleMap::iterator iter = modelHandles.find(handle);
-	if (iter != modelHandles.end())
+	if(iter != modelHandles.end())
 	{
 		RenderModel & model = models.get(iter->second);
 
@@ -631,7 +631,7 @@ void RenderPass::removeModelUniform(RenderModelHandle handle, StringId name)
 {
 	// Find the model from the handle.
 	modelHandleMap::iterator iter = modelHandles.find(handle);
-	if (iter != modelHandles.end())
+	if(iter != modelHandles.end())
 	{
 		RenderModel & model = models.get(iter->second);
 
@@ -655,7 +655,7 @@ void RenderPass::setDefaultTexture(StringId name, const RenderTextureEntry & tex
 	// See if we have a mapping for this name id.
 	// If we don't that's fine, just ignore the change.
 	std::tr1::unordered_map <StringId, GLuint>::const_iterator tuIter = textureNameToTextureUnit.find(name);
-	if (tuIter != textureNameToTextureUnit.end())
+	if(tuIter != textureNameToTextureUnit.end())
 	{
 		GLuint tu = tuIter->second;
 
@@ -678,7 +678,7 @@ void RenderPass::removeDefaultTexture(StringId name)
 	// See if we have a mapping for this name id.
 	// If we don't that's fine, just ignore the change.
 	std::tr1::unordered_map <StringId, GLuint>::const_iterator tuIter = textureNameToTextureUnit.find(name);
-	if (tuIter != textureNameToTextureUnit.end())
+	if(tuIter != textureNameToTextureUnit.end())
 	{
 		GLuint tu = tuIter->second;
 
@@ -724,7 +724,7 @@ bool RenderPass::setDefaultUniform(const RenderUniformEntry & uniform)
 	// See if we have a mapping for this name id.
 	// If we don't that's fine, just ignore the change.
 	std::tr1::unordered_map <StringId, GLuint>::const_iterator locIter = variableNameToUniformLocation.find(uniform.name);
-	if (locIter != variableNameToUniformLocation.end())
+	if(locIter != variableNameToUniformLocation.end())
 	{
 		GLuint location = locIter->second;
 
@@ -750,7 +750,7 @@ void RenderPass::removeDefaultUniform(StringId name)
 	// See if we have a mapping for this name id.
 	// If we don't that's fine, just ignore the change.
 	std::tr1::unordered_map <StringId, GLuint>::const_iterator locIter = variableNameToUniformLocation.find(name);
-	if (locIter != variableNameToUniformLocation.end())
+	if(locIter != variableNameToUniformLocation.end())
 	{
 		GLuint location = locIter->second;
 
@@ -805,9 +805,9 @@ const StringIdMap * printContextStringMap = NULL;
 template <typename T>
 std::ostream & operator<<(std::ostream & out, const std::vector <T> & vector)
 {
-	for (typename std::vector <T>::const_iterator i = vector.begin(); i != vector.end(); i++)
+	for(typename std::vector <T>::const_iterator i = vector.begin(); i != vector.end(); i++)
 	{
-		if (i != vector.begin())
+		if(i != vector.begin())
 			out << ", ";
 		out << *i;
 	}
@@ -817,9 +817,9 @@ std::ostream & operator<<(std::ostream & out, const std::vector <T> & vector)
 template <typename T>
 std::ostream & operator<<(std::ostream & out, const RenderUniformVector <T> & vector)
 {
-	for (typename RenderUniformVector <T>::const_iterator i = vector.begin(); i != vector.end(); i++)
+	for(typename RenderUniformVector <T>::const_iterator i = vector.begin(); i != vector.end(); i++)
 	{
-		if (i != vector.begin())
+		if(i != vector.begin())
 			out << ", ";
 		out << *i;
 	}
@@ -901,7 +901,7 @@ void RenderPass::printRendererStatus(RendererStatusVerbosity verbosity, const St
 
 	{
 		out << prefix << "Clear mask:";
-		if (clearMask == 0)
+		if(clearMask == 0)
 			out << " (empty)";
 		else
 		{
@@ -922,9 +922,9 @@ void RenderPass::printRendererStatus(RendererStatusVerbosity verbosity, const St
 	}
 
 	out << prefix << "Samplers: " << samplers.size() << " TU(s)" << std::endl;
-	if (verbosity >= VERBOSITY_PASSDETAIL)
+	if(verbosity >= VERBOSITY_PASSDETAIL)
 	{
-		for (unsigned int i = 0; i < samplers.size(); i++)
+		for(unsigned int i = 0; i < samplers.size(); i++)
 		{
 			out << prefix+prefix << "Sampler handle TU " << i << ": " << samplers[i].getHandle() << std::endl;
 			out << prefix+prefix << "Sampler state TU " << i << ": " << std::endl;
@@ -942,7 +942,7 @@ void RenderPass::printRendererStatus(RendererStatusVerbosity verbosity, const St
 	}
 
 	out << prefix << "Uniforms: " << variableNameToUniformLocation.size() << std::endl;
-	if (verbosity >= VERBOSITY_PASSDETAIL)
+	if(verbosity >= VERBOSITY_PASSDETAIL)
 	{
 		printContextPrefix = prefix+prefix;
 		forEachInContainer(variableNameToUniformLocation, printPairHelper);

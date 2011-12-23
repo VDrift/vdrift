@@ -51,7 +51,7 @@ bool Decompress(const std::string & file, const std::string & output_path, std::
 		else
 		{
 			std::fstream f(fullpath.c_str(), std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);
-			if (!f)
+			if(!f)
 			{
 				error_output << "Unable to open file for write (permissions issue?): " << fullpath << std::endl;
 				return false;

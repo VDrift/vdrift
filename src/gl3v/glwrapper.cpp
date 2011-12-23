@@ -47,7 +47,7 @@ bool GLWrapper::initialize()
 	logOutput(std::string("GL Version: ")+UTILS::tostr(glGetString(GL_VERSION)));
 
 	GLenum glew_err = glewInit();
-	if (glew_err != GLEW_OK)
+	if(glew_err != GLEW_OK)
 	{
 		logError(std::string("GLEW failed to initialize: ")+UTILS::tostr(glewGetErrorString(glew_err)));
 		return false;
@@ -58,7 +58,7 @@ bool GLWrapper::initialize()
 	// Check through all OpenGL versions to determine the highest supported OpenGL version.
 	bool supportsRequiredVersion = glewIsSupported(REQUIRED_GL_VERSION);
 
-	if (!supportsRequiredVersion)
+	if(!supportsRequiredVersion)
 	{
 		logError(std::string("Graphics card or driver does not support required ")+REQUIRED_GL_VERSION);
 		return false;
@@ -221,7 +221,7 @@ bool GLWrapper::linkShaderProgram(const std::vector <std::string> & shaderAttrib
 	// Handle the result.
 	GLint linkStatus;
 	GLLOG(glGetProgramiv(handle, GL_LINK_STATUS, &linkStatus));
-	if (!linkStatus)
+	if(!linkStatus)
 	{
 		GLint bufferSize(0);
 		GLLOG(glGetProgramiv(handle, GL_INFO_LOG_LENGTH, &bufferSize));
@@ -241,7 +241,7 @@ bool GLWrapper::linkShaderProgram(const std::vector <std::string> & shaderAttrib
 
 bool GLWrapper::relinkShaderProgram(GLuint handle, std::ostream & shaderErrorOutput)
 {
-	if (!handle)
+	if(!handle)
 		return false;
     
 	// Attempt to link the program.
@@ -250,7 +250,7 @@ bool GLWrapper::relinkShaderProgram(GLuint handle, std::ostream & shaderErrorOut
 	// Handle the result.
 	GLint linkStatus;
 	GLLOG(glGetProgramiv(handle, GL_LINK_STATUS, &linkStatus));
-	if (!linkStatus)
+	if(!linkStatus)
 	{
 		GLint bufferSize(0);
 		GLLOG(glGetProgramiv(handle, GL_INFO_LOG_LENGTH, &bufferSize));
@@ -388,7 +388,7 @@ void GLWrapper::BindTexture(GLenum target, GLuint handle)
     
 	// Check the cache.
 	bool send = false;
-	if (curActiveTexture < boundTextures.size())
+	if(curActiveTexture < boundTextures.size())
 	{
 		if (boundTextures[curActiveTexture] != handle)
 			send = true;
@@ -398,7 +398,7 @@ void GLWrapper::BindTexture(GLenum target, GLuint handle)
 		boundTextures.resize(curActiveTexture+1,0);
 		send = true;
 	}
-    
+
 	if (send)
 	{
 		GLLOG(glBindTexture(target,handle));ERROR_CHECK;

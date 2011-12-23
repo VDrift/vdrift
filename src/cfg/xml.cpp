@@ -40,23 +40,17 @@ static void read_xml(std::istream & in, PTree & p, std::string key)
 	{
 		std::getline(in, line, '\n');
 		if (line.empty())
-		{
 			continue;
-		}
 
 		size_t begin = line.find_first_not_of(" \t\n<");
 		size_t end = line.length();
 		if (begin >= end || line[begin] == '!')
-		{
 			continue;
-		}
 
 		line = line.substr(begin, end);
 
 		if (line.find(escape) == 0)
-		{
 			break;
-		}
 
 		if (key.length() == 0)
 		{
@@ -84,7 +78,6 @@ static void read_xml(std::istream & in, PTree & p, std::string key)
 static void write_xml(const PTree & p, std::ostream & out, std::string indent)
 {
 	for (PTree::const_iterator i = p.begin(), e = p.end(); i != e; ++i)
-	{
 		if (i->second.size() == 0)
 		{
 			out << indent << "<" << i->first << ">" << i->second.value() << "</" << i->first << ">\n";
@@ -96,7 +89,6 @@ static void write_xml(const PTree & p, std::ostream & out, std::string indent)
 			write_xml(i->second, out, indent+"\t");
 			out << indent << "</" << i->first << ">\n";
 		}
-	}
 }
 
 void read_xml(std::istream & in, PTree & p)

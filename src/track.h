@@ -8,7 +8,6 @@
 #include "quaternion.h"
 #include "motionstate.h"
 #include "LinearMath/btAlignedObjectArray.h"
-
 #include <string>
 #include <iostream>
 #include <list>

@@ -20,6 +20,10 @@
 #ifndef _RENDERPASS
 #define _RENDERPASS
 
+#include <vector>
+#include <iostream>
+#include <map>
+#include <set>
 #include "renderpassinfo.h"
 #include "glwrapper.h"
 #include "stringidmap.h"
@@ -37,11 +41,6 @@
 #include "renderstatusverbosity.h"
 #include "rendermodelext.h"
 #include "unordered_map.h"
-
-#include <vector>
-#include <iostream>
-#include <map>
-#include <set>
 
 class RenderPass
 {
