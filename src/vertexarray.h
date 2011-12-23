@@ -28,8 +28,8 @@ public:
 
 	void Clear() {texcoords.clear();normals.clear();vertices.clear();faces.clear();}
 
-	void SetNormals(float * newarray, size_t newarraycount);
-	void SetVertices(float * newarray, size_t newarraycount);
+	void SetNormals(float * array, size_t count, size_t offset = 0);
+	void SetVertices(float * array, size_t count, size_t offset = 0);
 	void SetFaces(int * newarray, size_t newarraycount);
 	void SetTexCoordSets(int newtcsets);
 	void SetTexCoords(size_t set, float * newarray, size_t newarraycount); ///<set is zero indexed

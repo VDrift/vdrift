@@ -23,6 +23,8 @@ public:
 
 	~DynamicsWorld();
 
+	void addCollisionObject(btCollisionObject* object);
+
 	void addRigidBody(btRigidBody * body);
 
 	void removeRigidBody(btRigidBody * body);

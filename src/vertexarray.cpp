@@ -84,51 +84,42 @@ QT_TEST(vertexarray_test)
 	QT_CHECK_EQUAL(ptri[4], 2);
 }
 
-void VERTEXARRAY::SetNormals(float * newarray, size_t newarraycount)
+void VERTEXARRAY::SetNormals(float * array, size_t count, size_t offset)
 {
-	//Tried to assign values that aren't in sets of 3
-	assert(newarraycount % 3 == 0);
+	size_t size = offset + count;
 
-	if (newarraycount != normals.size())
+	// Tried to assign values that aren't in sets of 3
+	assert(size % 3 == 0);
+
+	if (size != normals.size())
 	{
-		normals.resize(newarraycount);
+		normals.resize(size);
 	}
 
-	float * myarray = &(normals[0]);
-	for (size_t i = 0; i < newarraycount; ++i)
+	float * myarray = &(normals[offset]);
+	for (size_t i = 0; i < count; ++i)
 	{
-		myarray[i] = newarray[i];
+		myarray[i] = array[i];
 	}
-
-	/*for (int i = 0; i < newarraycount; i++)
-	{
-		normals[i] = newarray[i];
-	}*/
 }
 
-void VERTEXARRAY::SetVertices(float * newarray, size_t newarraycount)
+void VERTEXARRAY::SetVertices(float * array, size_t count, size_t offset)
 {
-	//Tried to assign values that aren't in sets of 3
-	assert(newarraycount % 3 == 0);
+	size_t size = offset + count;
 
-	if (newarraycount != vertices.size())
+	// Tried to assign values that aren't in sets of 3
+	assert(size % 3 == 0);
+
+	if (size != vertices.size())
 	{
-		//cout << "New size: " << newarraycount << " (was " << vertices.size() << ")" << endl;
-		vertices.resize(newarraycount);
+		vertices.resize(size);
 	}
 
-	float * myarray = &(vertices[0]);
-	for (size_t i = 0; i < newarraycount; ++i)
+	float * myarray = &(vertices[offset]);
+	for (size_t i = 0; i < count; ++i)
 	{
-		myarray[i] = newarray[i];
+		myarray[i] = array[i];
 	}
-
-	/*int i = 0;
-	ITERVEC(float, vertices, it)
-	{
-		*it = newarray[i];
-		++i;
-	}*/
 }
 
 void VERTEXARRAY::SetFaces(int * newarray, size_t newarraycount)

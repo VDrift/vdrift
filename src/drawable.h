@@ -35,12 +35,9 @@ public:
 	const VERTEXARRAY * GetVertArray() const {return vert_array;}
 	void SetVertArray(const VERTEXARRAY* value);
 
-	const std::vector < MATHVECTOR <float, 3> > & GetLine() const {return lineverts;}
-	void AddLinePoint(const MATHVECTOR <float, 3> & value) {lineverts.push_back(value);}
-	void ClearLine() {lineverts.clear();}
-
-	float GetLinesize() const {return linesize;}
-	void SetLinesize(float value) {linesize = value;}
+	/// draw vertex array as line segments if size > 0
+	void SetLineSize(float size) { linesize = size; }
+	float GetLineSize() const { return linesize; }
 
 	const MATRIX4 <float> & GetTransform() {return transform;}
 	void SetTransform(const MATRIX4 <float> & value);
@@ -94,7 +91,7 @@ public:
 
 	DRAWABLE() :
 		vert_array(0),
-		linesize(1),
+		linesize(0),
 		radius(0),
 		r(1), g(1), b(1), a(1),
 		draw_order(0),
@@ -117,7 +114,6 @@ private:
 	std::tr1::shared_ptr<TEXTURE> misc_map2;
 	std::vector <int> list_ids;
 	const VERTEXARRAY * vert_array;
-	std::vector <MATHVECTOR <float, 3> > lineverts;
 	float linesize;
 	MATRIX4 <float> transform;
 	MATHVECTOR <float, 3> objcenter;

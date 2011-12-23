@@ -14,7 +14,7 @@
 #include "gui.h"
 #include "car.h"
 #include "dynamicsworld.h"
-#include "collision_contact.h"
+#include "dynamicsdraw.h"
 #include "carcontrolmap_local.h"
 #include "hud.h"
 #include "inputgraph.h"
@@ -167,7 +167,9 @@ private:
 	btCollisionDispatcher collisiondispatch;
 	btDbvtBroadphase collisionbroadphase;
 	btSequentialImpulseConstraintSolver collisionsolver;
-	DynamicsWorld collision;
+	DynamicsDraw dynamicsdraw;
+	DynamicsWorld dynamics;
+	int dynamics_drawmode;
 
 	TRACKMAP trackmap;
 	TRACK track;

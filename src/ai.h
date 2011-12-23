@@ -48,6 +48,9 @@ struct AI_Car
 	keyed_container <DRAWABLE>::handle brakedraw;
 	keyed_container <DRAWABLE>::handle steerdraw;
 	keyed_container <DRAWABLE>::handle avoidancedraw;
+	VERTEXARRAY brakeshape;
+	VERTEXARRAY steershape;
+	VERTEXARRAY avoidanceshape;
 	std::vector <BEZIER> brakelook;
 	std::vector <BEZIER> steerlook;
 };

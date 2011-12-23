@@ -41,6 +41,7 @@ src = Split("""aabb.cpp
 		downloadable.cpp
 		drawable.cpp
 		dynamicsworld.cpp
+		dynamicsdraw.cpp
 		endian_utility.cpp
 		eventsystem.cpp
 		fbobject.cpp

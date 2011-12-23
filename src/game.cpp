@@ -107,7 +107,8 @@ GAME::GAME(std::ostream & info_out, std::ostream & error_out) :
 	profilingmode(false),
 	renderconfigfile("render.conf.deferred"),
 	collisiondispatch(&collisionconfig),
-	collision(&collisiondispatch, &collisionbroadphase, &collisionsolver, &collisionconfig, timestep),
+	dynamics(&collisiondispatch, &collisionbroadphase, &collisionsolver, &collisionconfig, timestep),
+	dynamics_drawmode(0),
 	track(),
 	replay(timestep),
 	http("/tmp")
@@ -523,7 +524,7 @@ bool GAME::ParseArguments(std::list <std::string> & args)
 	if (!argmap["-cartest"].empty())
 	{
 		pathmanager.Init(info_output, error_output);
-		PERFORMANCE_TESTING perftest(collision);
+		PERFORMANCE_TESTING perftest(dynamics);
 		const std::string carname = argmap["-cartest"];
 		perftest.Test(pathmanager.GetCarPath(carname), pathmanager.GetCarPartsPath(),
 			carname, info_output, error_output);
@@ -613,6 +614,24 @@ bool GAME::ParseArguments(std::list <std::string> & args)
 		renderconfigfile = argmap["-render"];
 	}
 
+	dynamics_drawmode = 0;
+	if (argmap.find("-drawaabbs") != argmap.end())
+	{
+		dynamics_drawmode |= btIDebugDraw::DBG_DrawAabb;
+	}
+	arghelp["-drawaabbs"] = "Draw collision object axis aligned bounding boxes.";
+
+	if (argmap.find("-drawcontacts") != argmap.end())
+	{
+		dynamics_drawmode |= btIDebugDraw::DBG_DrawContactPoints;
+	}
+	arghelp["-drawcontacts"] = "Draw collision object contact normals.";
+
+	if (argmap.find("-drawshapes") != argmap.end())
+	{
+		dynamics_drawmode |= btIDebugDraw::DBG_DrawWireframe;
+	}
+	arghelp["-drawshapes"] = "Draw collision object shape wireframes.";
 
 	arghelp["-help"] = "Display command-line help.";
 	if (argmap.find("-help") != argmap.end() || argmap.find("-h") != argmap.end() || argmap.find("--help") != argmap.end() || argmap.find("-?") != argmap.end())
@@ -700,6 +719,7 @@ void GAME::BeginDraw()
 	TraverseScene<true>(debugnode, graphics_interface->GetDynamicDrawlist());
 	TraverseScene<false>(gui.GetNode(), graphics_interface->GetDynamicDrawlist());
 	TraverseScene<false>(track.GetRacinglineNode(), graphics_interface->GetDynamicDrawlist());
+	TraverseScene<false>(dynamicsdraw.getNode(), graphics_interface->GetDynamicDrawlist());
 #ifndef USE_STATIC_OPTIMIZATION_FOR_TRACK
 	TraverseScene<false>(track.GetTrackNode(), graphics_interface->GetDynamicDrawlist());
 #endif
@@ -785,6 +805,13 @@ void GAME::Tick(float deltat)
 		curticks++;
 	}
 
+	// Debug draw dynamics
+	if (dynamics_drawmode && track.Loaded())
+	{
+		dynamicsdraw.clear();
+		dynamics.debugDrawWorld();
+	}
+
 	if (dumpfps && curticks > 0 && frame % 100 == 0)
 	{
 		info_output << "Current FPS: " << eventsystem.GetFPS() << std::endl;
@@ -846,7 +873,7 @@ void GAME::AdvanceGameLogic()
 				PROFILER.endBlock("ai");
 
 				PROFILER.beginBlock("physics");
-				collision.update(TickPeriod());
+				dynamics.update(TickPeriod());
 				PROFILER.endBlock("physics");
 
 				PROFILER.beginBlock("car");
@@ -2051,7 +2078,7 @@ bool GAME::LoadCar(
 	if (!car.LoadPhysics(
 		carconf, cardir, start_position, start_orientation,
 		settings.GetABS() || isai, settings.GetTCS() || isai,
-		settings.GetVehicleDamage(), content, collision,
+		settings.GetVehicleDamage(), content, dynamics,
 		info_output, error_output))
 	{
 		error_output << "Failed to load physics for car " << carname << std::endl;
@@ -2084,7 +2111,7 @@ bool GAME::LoadTrack(const std::string & trackname)
 	LoadingScreen(0.0, 1.0, false, "", 0.5, 0.5);
 
 	if (!track.DeferredLoad(
-			content, collision,
+			content, dynamics,
 			info_output, error_output,
 			pathmanager.GetTracksPath()+"/"+trackname,
 			pathmanager.GetTracksDir()+"/"+trackname,
@@ -2134,6 +2161,17 @@ bool GAME::LoadTrack(const std::string & trackname)
 	{
 		error_output << "Error loading track map: " << trackname << std::endl;
 		return false;
+	}
+
+	// Set dynamics debug draw mode
+	if (dynamics_drawmode)
+	{
+		dynamicsdraw.setDebugMode(dynamics_drawmode);
+		dynamics.setDebugDrawer(&dynamicsdraw);
+	}
+	else
+	{
+		dynamics.setDebugDrawer(0);
 	}
 
 	// Build static drawlist.

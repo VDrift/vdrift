@@ -185,6 +185,19 @@ void DynamicsWorld::solveConstraints(btContactSolverInfo& solverInfo)
 	fractureCallback();
 }
 
+void DynamicsWorld::addCollisionObject(btCollisionObject* object)
+{
+	// disable shape drawing for meshes
+	if (object->getCollisionShape()->getShapeType() == TRIANGLE_MESH_SHAPE_PROXYTYPE)
+	{
+		int flags = object->getCollisionFlags();
+		//flags |= btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK;
+		flags |= btCollisionObject::CF_DISABLE_VISUALIZE_OBJECT;
+		object->setCollisionFlags(flags);
+	}
+	btDiscreteDynamicsWorld::addCollisionObject(object);
+}
+
 void DynamicsWorld::addRigidBody(btRigidBody* body)
 {
 	if (body->getInternalType() & CUSTOM_FRACTURE_TYPE)

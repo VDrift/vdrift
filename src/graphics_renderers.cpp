@@ -637,74 +637,64 @@ void RENDER_INPUT_SCENE::DrawList(GLSTATEMANAGER & glstate, std::vector <DRAWABL
 
 			if (i->IsDrawList())
 			{
-				//cout << "beep" << endl;
-				//assert(i->GetDraw()->GetModel()->HaveListID());
-				//glCallList(i->GetDraw()->GetModel()->GetListID());
 				const unsigned int numlists = i->GetDrawLists().size();
 				for (unsigned int n = 0; n < numlists; ++n)
 					glCallList(i->GetDrawLists()[n]);
 			}
 			else if (i->GetVertArray())
 			{
-				glEnableClientState(GL_VERTEX_ARRAY);
-
 				const float * verts;
 				int vertcount;
 				i->GetVertArray()->GetVertices(verts, vertcount);
-				const int * faces;
-				int facecount;
-				i->GetVertArray()->GetFaces(faces, facecount);
-				if (vertcount > 0 && facecount > 0 && verts && faces)
+				if (vertcount > 0 && verts)
 				{
 					glVertexPointer(3, GL_FLOAT, 0, verts);
+					glEnableClientState(GL_VERTEX_ARRAY);
 
-					const float * norms;
-					int normcount;
-					i->GetVertArray()->GetNormals(norms, normcount);
-					if (normcount > 0 && norms)
+					const int * faces;
+					int facecount;
+					i->GetVertArray()->GetFaces(faces, facecount);
+					if (facecount > 0 && faces)
 					{
-						glNormalPointer(GL_FLOAT, 0, norms);
-						glEnableClientState(GL_NORMAL_ARRAY);
-					}
-
-					//const float * tc[i->GetDraw()->varray.GetTexCoordSets()];
-					//int tccount[i->GetDraw()->varray.GetTexCoordSets()];
-					const float * tc[1];
-					int tccount[1];
-					if (i->GetVertArray()->GetTexCoordSets() > 0)
-					{
-						i->GetVertArray()->GetTexCoords(0, tc[0], tccount[0]);
-						if (tc[0] && tccount[0])
+						const float * norms;
+						int normcount;
+						i->GetVertArray()->GetNormals(norms, normcount);
+						if (normcount > 0 && norms)
 						{
-							glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-							glTexCoordPointer(2, GL_FLOAT, 0, tc[0]);
+							glNormalPointer(GL_FLOAT, 0, norms);
+							glEnableClientState(GL_NORMAL_ARRAY);
 						}
+
+						const float * tc[1];
+						int tccount[1];
+						if (i->GetVertArray()->GetTexCoordSets() > 0)
+						{
+							i->GetVertArray()->GetTexCoords(0, tc[0], tccount[0]);
+							if (tc[0] && tccount[0])
+							{
+								glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+								glTexCoordPointer(2, GL_FLOAT, 0, tc[0]);
+							}
+						}
+
+						glDrawElements(GL_TRIANGLES, facecount, GL_UNSIGNED_INT, faces);
+			
+						glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+						glDisableClientState(GL_NORMAL_ARRAY);
 					}
-
-					glDrawElements(GL_TRIANGLES, facecount, GL_UNSIGNED_INT, faces);
+					else if (i->GetLineSize() > 0)
+					{
+						glstate.Enable(GL_LINE_SMOOTH);
+						glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+						glLineWidth(i->GetLineSize());
+						glDrawArrays(GL_LINES,  0, vertcount/3);
+					}
+					glDisableClientState(GL_VERTEX_ARRAY);
 				}
-
-				glDisableClientState(GL_VERTEX_ARRAY);
-				glDisableClientState(GL_NORMAL_ARRAY);
-				glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 			}
-			else if (!i->GetLine().empty())
-			{
-				glstate.Enable(GL_LINE_SMOOTH);
-				glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-				glLineWidth(i->GetLinesize());
-				glBegin(GL_LINE_STRIP);
-				const std::vector< MATHVECTOR < float , 3 > > & line = i->GetLine();
-				for (std::vector< MATHVECTOR < float , 3 > >::const_iterator i = line.begin(); i != line.end(); ++i)
-					glVertex3f((*i)[0],(*i)[1],(*i)[2]);
-				glEnd();
-			}
-
 			SelectTransformEnd(*i, need_pop);
 		}
 	}
-
-	//std::cout << "drew " << drawcount << " of " << drawlist_static->size() + drawlist_dynamic->size() << " ("  << combined_drawlist_cache.size() << "/" << already_culled << ")" << std::endl;
 }
 
 ///returns true if the object was culled and should not be drawn
