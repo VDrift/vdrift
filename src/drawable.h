@@ -36,7 +36,7 @@ public:
 	void SetVertArray(const VERTEXARRAY* value);
 
 	/// draw vertex array as line segments if size > 0
-	void SetLineSize(float size) { linesize = size; }
+	void SetLineSize(float size) { linesize = size; renderModel.SetLineSize(size);}
 	float GetLineSize() const { return linesize; }
 
 	const MATRIX4 <float> & GetTransform() {return transform;}

@@ -9,11 +9,11 @@ DynamicsDraw::DynamicsDraw() :
 
 	drawable.SetColor(1, 0, 0);
 	drawable.SetVertArray(&m_contacts);
-	m_node.GetDrawlist().normal_noblend_nolighting.insert(drawable);
+	m_node.GetDrawlist().debug_lines.insert(drawable);
 
 	drawable.SetColor(0, 0, 1);
 	drawable.SetVertArray(&m_shapes);
-	m_node.GetDrawlist().normal_noblend_nolighting.insert(drawable);
+	m_node.GetDrawlist().debug_lines.insert(drawable);
 }
 
 DynamicsDraw::~DynamicsDraw()

@@ -142,6 +142,7 @@ public:
 	void EnableVertexAttribArray(GLuint i);
 	void DisableVertexAttribArray(GLuint i);
 	void DrawElements(GLenum mode, GLsizei count, GLenum type, const void * indices);
+	void DrawArrays(GLenum mode, GLint first, GLsizei count);
 	void DeleteQuery(GLuint handle);
 	GLuint GenQuery();
 	void BeginQuery(GLenum target, GLuint handle);
@@ -150,6 +151,7 @@ public:
 	void ClearColor(GLfloat r, GLfloat g, GLfloat b, GLfloat a);
 	void ClearDepth(GLfloat d);
 	void ClearStencil(GLint s);
+	void LineWidth(GLfloat width);
 
 	/// Writes errors to the log.
 	/// Returns false if there was an error.

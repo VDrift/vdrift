@@ -56,8 +56,16 @@ void RenderModelExternalDrawable::draw(GLWrapper & gl) const
 			const int * faces;
 			int facecount;
 			vert_array->GetFaces(faces, facecount);
-			assert(faces);
-			gl.DrawElements(GL_TRIANGLES, facecount, GL_UNSIGNED_INT, faces);
+
+            if (faces)
+            {
+                gl.DrawElements(GL_TRIANGLES, facecount, GL_UNSIGNED_INT, faces);
+            }
+            else
+            {
+                gl.LineWidth(linesize);
+                gl.DrawArrays(GL_LINES, 0, vertcount/3);
+            }
 		}
 	}
 }

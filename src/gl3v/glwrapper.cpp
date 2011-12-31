@@ -597,6 +597,11 @@ void GLWrapper::DrawElements(GLenum mode, GLsizei count, GLenum type, const void
 	GLLOG(glDrawElements(mode, count, type, indices));ERROR_CHECK;
 }
 
+void GLWrapper::DrawArrays(GLenum mode, GLint first, GLsizei count)
+{
+	GLLOG(glDrawArrays(mode, first, count));ERROR_CHECK;
+}
+
 void GLWrapper::DeleteQuery(GLuint handle)
 {
 	GLLOG(glDeleteQueries(1, &handle));ERROR_CHECK;
@@ -639,6 +644,11 @@ void GLWrapper::ClearDepth(GLfloat d)
 void GLWrapper::ClearStencil(GLint s)
 {
 	GLLOG(glClearStencil(s));ERROR_CHECK;
+}
+
+void GLWrapper::LineWidth(GLfloat width)
+{
+	GLLOG(glLineWidth(width));ERROR_CHECK;
 }
 
 bool GLWrapper::checkForOpenGLErrors(const char * function, const char * file, int line) const

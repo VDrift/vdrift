@@ -18,6 +18,9 @@ class RenderModelExternalDrawable : public RenderModelExternal
 
 	private:
 		const VERTEXARRAY * vert_array;
+        void SetLineSize(float size) { linesize = size; }
+
+        float linesize;
 };
 
 #endif
