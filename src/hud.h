@@ -23,13 +23,14 @@ public:
 		ContentManager & content,
 		FONT & lcdfont,
 		FONT & sansfont,
+		FONT & sansfont_noshader,
 		float displaywidth,
 		float displayheight,
 		bool debugon,
 		std::ostream & error_output);
 
 	void Update(
-		FONT & lcdfont, FONT & sansfont, float displaywidth, float displayheight,
+		FONT & lcdfont, FONT & sansfont, FONT & sansfont_noshader, float displaywidth, float displayheight,
 		float curlap, float lastlap, float bestlap, float stagingtimeleft,
 		int curlapnum, int numlaps, int curplace, int numcars,
 		float rpm, float redrpm, float maxrpm,

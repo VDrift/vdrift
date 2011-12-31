@@ -7,19 +7,9 @@ static keyed_container<DRAWABLE>::handle AddDrawable(SCENENODE & node)
 	return node.GetDrawlist().twodim.insert(DRAWABLE());
 }
 
-static keyed_container<DRAWABLE>::handle AddTextDrawable(SCENENODE & node)
-{
-	return node.GetDrawlist().text.insert(DRAWABLE());
-}
-
 static DRAWABLE & GetDrawable(SCENENODE & node, const keyed_container<DRAWABLE>::handle & drawhandle)
 {
 	return node.GetDrawlist().twodim.get(drawhandle);
-}
-
-static DRAWABLE & GetTextDrawable(SCENENODE & node, const keyed_container<DRAWABLE>::handle & drawhandle)
-{
-	return node.GetDrawlist().text.get(drawhandle);
 }
 
 static void EraseDrawable(SCENENODE & node, keyed_container<DRAWABLE>::handle & drawhandle)
@@ -31,11 +21,21 @@ static void EraseDrawable(SCENENODE & node, keyed_container<DRAWABLE>::handle & 
 	}
 }
 
+static keyed_container<DRAWABLE>::handle AddTextDrawable(SCENENODE & node)
+{
+	return node.GetDrawlist().twodim.insert(DRAWABLE());
+}
+
+static DRAWABLE & GetTextDrawable(SCENENODE & node, const keyed_container<DRAWABLE>::handle & drawhandle)
+{
+	return node.GetDrawlist().twodim.get(drawhandle);
+}
+
 static void EraseTextDrawable(SCENENODE & node, keyed_container<DRAWABLE>::handle & drawhandle)
 {
 	if (drawhandle.valid())
 	{
-		node.GetDrawlist().text.erase(drawhandle);
+		node.GetDrawlist().twodim.erase(drawhandle);
 		drawhandle.invalidate();
 	}
 }

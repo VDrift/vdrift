@@ -212,7 +212,7 @@ void GAME::Start(std::list <std::string> & args)
 	}
 
 	// Initialize HUD.
-	if (!hud.Init(pathmanager.GetGUITextureDir(settings.GetSkin()), content, fonts["lcd"], fonts["futuresans"], window.GetW(), window.GetH(), debugmode, error_output))
+	if (!hud.Init(pathmanager.GetGUITextureDir(settings.GetSkin()), content, fonts["lcd"], fonts["futuresans"], fonts["futuresans-noshader"], window.GetW(), window.GetH(), debugmode, error_output))
 	{
 		error_output << "Error initializing HUD" << std::endl;
 		return;
@@ -1703,7 +1703,7 @@ void GAME::UpdateCarInputs(CAR & car)
 		std::pair <int, int> curplace = timer.GetPlayerPlace();
 		int tid = cartimerids[&car];
 		hud.Update(
-			fonts["lcd"], fonts["futuresans"], window.GetW(), window.GetH(),
+			fonts["lcd"], fonts["futuresans"], fonts["futuresans-noshader"], window.GetW(), window.GetH(),
 			timer.GetPlayerTime(), timer.GetLastLap(), timer.GetBestLap(), timer.GetStagingTimeLeft(),
 			timer.GetPlayerCurrentLap(), race_laps, curplace.first, curplace.second,
 			car.GetEngineRPM(), car.GetEngineRedline(), car.GetEngineRPMLimit(),
@@ -2192,6 +2192,7 @@ bool GAME::LoadFonts()
 		if (!fonts["freesans"].Load(fontpath+"/freesans.txt",fontdir, "freesans.png", content, error_output)) return false;
 		if (!fonts["lcd"].Load(fontpath+"/lcd.txt",fontdir, "lcd.png", content, error_output)) return false;
 		if (!fonts["futuresans"].Load(fontpath+"/futuresans.txt",fontdir, "futuresans.png", content, error_output)) return false;
+		if (!fonts["futuresans-noshader"].Load(fontpath+"/futuresans.txt",fontdir, "futuresans_noshaders.png", content, error_output)) return false;
 	}
 	else
 	{

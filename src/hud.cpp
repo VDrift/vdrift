@@ -63,6 +63,7 @@ bool HUD::Init(
 	ContentManager & content,
 	FONT & lcdfont,
 	FONT & sansfont,
+    FONT & sansfont_noshader,
 	float displaywidth,
 	float displayheight,
 	bool debugon,
@@ -258,6 +259,8 @@ bool HUD::Init(
 	}
 #else
 	{
+        FONT & gaugefont = sansfont_noshader;
+
 		// gauge texture
 		char white[] = {255, 255, 255, 255};
 		TEXTUREINFO tinfo;
@@ -278,44 +281,44 @@ bool HUD::Init(
 		float angle_min = 315.0 / 180.0 * M_PI;
 		float angle_max = 45.0 / 180.0 * M_PI;
 
-		rpmgauge.Set(hudroot, texture, sansfont, screenhwratio, x0, y0, r,
+		rpmgauge.Set(hudroot, texture, gaugefont, screenhwratio, x0, y0, r,
 			angle_min, angle_max, 0, maxrpm * 0.001, 1);
 
-		speedgauge.Set(hudroot, texture, sansfont, screenhwratio, x1, y0, r,
+		speedgauge.Set(hudroot, texture, gaugefont, screenhwratio, x1, y0, r,
 			angle_min, angle_max, 0, maxspeed * speedscale, 10);
 
 		float w = w0;
 		float h = h0;
-		float x = x0 - sansfont.GetWidth("rpm") * w * 0.5;
+		float x = x0 - gaugefont.GetWidth("rpm") * w * 0.5;
 		float y = y0 - r * 0.5;
 		DRAWABLE & rpmd = GetDrawable(hudroot, AddDrawable(hudroot));
-		rpmlabel.Set(rpmd, sansfont, "rpm", x, y, w, h, 1, 1, 1);
+		rpmlabel.Set(rpmd, gaugefont, "rpm", x, y, w, h, 1, 1, 1);
 
 		w = w0 * 0.65;
 		h = h0 * 0.65;
-		x = x0 - sansfont.GetWidth("x1000") * w * 0.5;
+		x = x0 - gaugefont.GetWidth("x1000") * w * 0.5;
 		y = y0 - r * 0.5 + h;
 		DRAWABLE & x1000d = GetDrawable(hudroot, AddDrawable(hudroot));
-		rpmxlabel.Set(x1000d, sansfont, "x1000", x, y, w, h, 1, 1, 1);
+		rpmxlabel.Set(x1000d, gaugefont, "x1000", x, y, w, h, 1, 1, 1);
 
 		w = w0;
 		h = h0;
-		x = x1 - sansfont.GetWidth("kph") * w * 0.5;
+		x = x1 - gaugefont.GetWidth("kph") * w * 0.5;
 		y = y0 - r * 0.5;
 		DRAWABLE & spdd = GetDrawable(hudroot, AddDrawable(hudroot));
-		speedlabel.Set(spdd, sansfont, "kph", x, y, w, h, 1, 1, 1);
+		speedlabel.Set(spdd, gaugefont, "kph", x, y, w, h, 1, 1, 1);
 
 		w = w0 * 2;
 		h = h0 * 2;
 		x = x0 - w * 0.25;
 		y = y0 + r * 0.64;
-		geartextdraw = SetupText(hudroot, sansfont, geartext, "N", x, y, w, h, 1, 1, 1);
+		geartextdraw = SetupText(hudroot, gaugefont, geartext, "N", x, y, w, h, 1, 1, 1);
 
 		w = w0 * 1.5;
 		h = h0 * 1.5;
 		x = x1 - w * 0.3;
 		y = y0 + r * 0.68;
-		mphtextdraw = SetupText(hudroot, sansfont, mphtext, "0", x, y, w, h, 1, 1, 1);
+		mphtextdraw = SetupText(hudroot, gaugefont, mphtext, "0", x, y, w, h, 1, 1, 1);
 	}
 
 	{
@@ -352,7 +355,7 @@ bool HUD::Init(
 }
 
 void HUD::Update(
-	FONT & lcdfont, FONT & sansfont, float displaywidth, float displayheight,
+	FONT & lcdfont, FONT & sansfont, FONT & sansfont_noshader, float displaywidth, float displayheight,
 	float curlap, float lastlap, float bestlap, float stagingtimeleft,
 	int curlapnum, int numlaps, int curplace, int numcars,
 	float rpm, float redrpm, float maxrpm,
@@ -373,10 +376,12 @@ void HUD::Update(
 		debugtext4.Revise(sansfont, debug_string4);
 	}
 #ifdef GAUGES
+    FONT & gaugefont = sansfont_noshader;
+
 	if (fabs(this->maxrpm - maxrpm) > 1)
 	{
 		this->maxrpm = maxrpm;
-		rpmgauge.Revise(hudroot, sansfont, 0, maxrpm * 0.001, 1);
+		rpmgauge.Revise(hudroot, gaugefont, 0, maxrpm * 0.001, 1);
 	}
 	if (fabs(this->maxspeed - maxspeed) > 1 || this->mph != mph)
 	{
@@ -384,15 +389,15 @@ void HUD::Update(
 		this->mph = mph;
 		if (mph)
 		{
-			speedlabel.Revise(sansfont, "mph");
+			speedlabel.Revise(gaugefont, "mph");
 			speedscale = 2.23693629;
 		}
 		else
 		{
-			speedlabel.Revise(sansfont, "kph");
+			speedlabel.Revise(gaugefont, "kph");
 			speedscale = 3.6;
 		}
-		speedgauge.Revise(hudroot, sansfont, 0, maxspeed * speedscale, 10);
+		speedgauge.Revise(hudroot, gaugefont, 0, maxspeed * speedscale, 10);
 	}
 	rpmgauge.Update(hudroot, rpm * 0.001);
 	speedgauge.Update(hudroot, fabs(speed) * speedscale);
@@ -405,7 +410,7 @@ void HUD::Update(
 		gearstr << "N";
 	else
 		gearstr << newgear;
-	geartext.Revise(sansfont, gearstr.str());
+	geartext.Revise(gaugefont, gearstr.str());
 
 	float geartext_alpha = clutch * 0.5 + 0.5;
 	if (newgear == 0) geartext_alpha = 1;
@@ -417,10 +422,10 @@ void HUD::Update(
 	sstr << std::abs(int(speed * speedscale));
 	//float sx = mphtext.GetScale().first;
 	//float sy = mphtext.GetScale().second;
-	//float w = sansfont.GetWidth(sstr.str()) * sx;
+	//float w = gaugefont.GetWidth(sstr.str()) * sx;
 	//float x = 1 - w;
 	//float y = 1 - sy * 0.5;
-	mphtext.Revise(sansfont, sstr.str());//, x, y, fontscalex, fontscaley);
+	mphtext.Revise(gaugefont, sstr.str());//, x, y, fontscalex, fontscaley);
 #else
 	std::stringstream gearstr;
 	if (newgear == -1)
