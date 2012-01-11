@@ -1,3 +1,22 @@
+/************************************************************************/
+/*                                                                      */
+/* This file is part of VDrift.                                         */
+/*                                                                      */
+/* VDrift is free software: you can redistribute it and/or modify       */
+/* it under the terms of the GNU General Public License as published by */
+/* the Free Software Foundation, either version 3 of the License, or    */
+/* (at your option) any later version.                                  */
+/*                                                                      */
+/* VDrift is distributed in the hope that it will be useful,            */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of       */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the        */
+/* GNU General Public License for more details.                         */
+/*                                                                      */
+/* You should have received a copy of the GNU General Public License    */
+/* along with VDrift.  If not, see <http://www.gnu.org/licenses/>.      */
+/*                                                                      */
+/************************************************************************/
+
 #ifndef _RANDOM_H
 #define _RANDOM_H
 
@@ -7,29 +26,28 @@
 
 class DETERMINISTICRANDOM
 {
-private:
-    unsigned int seed;
-
 public:
-	DETERMINISTICRANDOM() : seed(0) {}
-	void ReSeed() {seed = time(NULL) % 2048;}
-	void ReSeed(unsigned int newseed) {seed = newseed % 2048;}
+	DETERMINISTICRANDOM();
+	void ReSeed();
+	void ReSeed(unsigned int newseed);
 
 	double Get();
 	double Peek() const;
+
+private:
+	unsigned int seed;
 };
 
 class RANDOM
 {
-private:
-    unsigned int seed;
-
 public:
-	RANDOM() : seed(0) {}
-	void ReSeed() {seed = time(NULL);srand(seed);}
-	void ReSeed(unsigned int newseed) {seed = newseed;srand(newseed);}
+	RANDOM();
+	void ReSeed();
+	void ReSeed(unsigned int newseed);
 
-	double Get() {return (double) rand()/RAND_MAX;}
+	double Get();
+private:
+	unsigned int seed;
 };
 
 #endif
