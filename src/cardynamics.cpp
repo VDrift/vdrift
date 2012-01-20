@@ -1839,9 +1839,6 @@ btScalar CARDYNAMICS::AutoClutch(btScalar last_clutch, btScalar dt) const
 	// shift time
 	clutch *= ShiftAutoClutch();
 
-	// brakes fully engaged (declutch)
-	if (brake[0].GetBrakeFactor() == 1.0) clutch = 0.0;
-
 	// rate limit the autoclutch
 	btScalar min_engage_time = 0.05;
 	btScalar engage_limit = dt / min_engage_time;
