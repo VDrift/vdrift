@@ -143,6 +143,15 @@ public:
 
 	bool Serialize(joeserialize::Serializer & s);
 
+	static bool WheelContactCallback(
+		btManifoldPoint& cp,
+		const btCollisionObject* colObj0,
+		int partId0,
+		int index0,
+		const btCollisionObject* colObj1,
+		int partId1,
+		int index1);
+
 protected:
 	DynamicsWorld* world;
 	btRigidBody* body;

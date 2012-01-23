@@ -8,7 +8,7 @@ FractureBody::FractureBody(const btRigidBodyConstructionInfo& info) :
 	btRigidBody(info)
 {
 	btAssert(info.m_collisionShape->isCompound());
-	m_internalType = CUSTOM_FRACTURE_TYPE | CO_RIGID_BODY;
+	m_internalType = CO_FRACTURE_BODY;
 }
 
 void FractureBody::addShape(const btTransform& localTransform, btCollisionShape* shape)
@@ -22,7 +22,7 @@ void FractureBody::addConnection(btRigidBody* body, const btTransform& localTran
 	// Store connection index as user pointer.
 	body->getCollisionShape()->setUserPointer(cast<void*>(m_connections.size()));
 
-	btCompoundShape* compound = (btCompoundShape*)m_collisionShape;
+	btCompoundShape* compound = static_cast<btCompoundShape*>(m_collisionShape);
 	compound->addChildShape(localTransform, body->getCollisionShape());
 
 	Connection connection;
@@ -44,7 +44,7 @@ btRigidBody* FractureBody::addBody(const btRigidBodyConstructionInfo& info, btSc
 
 btRigidBody* FractureBody::updateConnection(int shape_id)
 {
-	btCompoundShape* compound = (btCompoundShape*)getCollisionShape();
+	btCompoundShape* compound = static_cast<btCompoundShape*>(m_collisionShape);
 	btAssert(shape_id >= 0);
 	if (shape_id >= compound->getNumChildShapes())
 	{
@@ -98,8 +98,7 @@ void FractureBody::updateMassCenter()
 
 void FractureBody::updateState()
 {
-	btAssert(m_internalType & CUSTOM_FRACTURE_TYPE);
-	const btCompoundShape* shape = (btCompoundShape*)getCollisionShape();
+	const btCompoundShape* shape = static_cast<btCompoundShape*>(m_collisionShape);
 	for (int i = 0; i < shape->getNumChildShapes(); ++i)
 	{
 		int con_id = cast<int>(shape->getChildShape(i)->getUserPointer());

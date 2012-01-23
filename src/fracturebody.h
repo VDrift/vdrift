@@ -9,7 +9,7 @@ class btManifoldPoint;
 #include "LinearMath/btAlignedObjectArray.h"
 #include "BulletDynamics/Dynamics/btRigidBody.h"
 
-#define CUSTOM_FRACTURE_TYPE (btRigidBody::CO_USER_TYPE*2)
+#define CO_FRACTURE_BODY (btRigidBody::CO_USER_TYPE | btRigidBody::CO_RIGID_BODY)
 
 template <typename T0, typename T1> T0 cast(T1 t)
 {

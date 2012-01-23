@@ -414,7 +414,7 @@ CARDYNAMICS::~CARDYNAMICS()
 	if (!world) return;
 
 	// delete fractured bodies
-	if (body->getInternalType() & CUSTOM_FRACTURE_TYPE)
+	if (body->getInternalType() & CO_FRACTURE_BODY)
 	{
 		FractureBody* fb = static_cast<FractureBody*>(body);
 		for (int i = 0; i < fb->m_connections.size(); ++i)
@@ -546,13 +546,16 @@ bool CARDYNAMICS::Load(
 		FractureBody * fbody = new FractureBody(info);
 		body = fbody;
 
+		// set CUSTOM_MATERIAL_CALLBACK flag to enable contact callback
+		fbody->setCollisionFlags(fbody->getCollisionFlags() | btCollisionObject::CF_CUSTOM_MATERIAL_CALLBACK);
+
 		size_t i = 1; // first motion_state is main body motion state
 		fbody->m_connections.reserve(bodyLoader.m_numbodies);
 		for (size_t j = 0; j < WHEEL_POSITION_SIZE; ++j, ++i)
 		{
 			BodyLoader::Body & cb = bodyLoader.wheels[j];
 			float mass = wheel[j].GetMass();
-			btVector3 size(tire[j].GetSidewallWidth()*0.5, tire[j].GetRadius()*0.8, tire[j].GetRadius()*0.8);
+			btVector3 size(tire[j].GetSidewallWidth()*0.5, tire[j].GetRadius(), tire[j].GetRadius());
 
 			btVector3 inertia;
 			btCollisionShape * subshape = new btCylinderShapeX(size);
@@ -627,7 +630,7 @@ bool CARDYNAMICS::Load(
 
 	body->setActivationState(DISABLE_DEACTIVATION);
 	body->setContactProcessingThreshold(0.0); // internal edge workaround
-	
+
 	// add car to world
 	this->world = &world;
 	world.addRigidBody(body);
@@ -1918,22 +1921,56 @@ btScalar CARDYNAMICS::DownshiftRPM(int gear) const
 btScalar CARDYNAMICS::CalculateMaxSpeed() const
 {
 	btScalar maxspeed = 0;
-	btScalar tr = transmission.GetGearRatio(transmission.GetForwardGears());
+	btScalar ratio = transmission.GetGearRatio(transmission.GetForwardGears());
 	if (drive == RWD)
 	{
-		tr *= differential_rear.GetFinalDrive();
-		maxspeed = tire[REAR_LEFT].GetRadius() * engine.GetRPMLimit() * M_PI / 30 / tr;
+		ratio *= differential_rear.GetFinalDrive();
+		maxspeed = tire[REAR_LEFT].GetRadius() * engine.GetRPMLimit() * M_PI / 30 / ratio;
 	}
 	else if (drive == FWD)
 	{
-		tr *= differential_front.GetFinalDrive();
-		maxspeed = tire[FRONT_LEFT].GetRadius() * engine.GetRPMLimit() * M_PI / 30 / tr;
+		ratio *= differential_front.GetFinalDrive();
+		maxspeed = tire[FRONT_LEFT].GetRadius() * engine.GetRPMLimit() * M_PI / 30 / ratio;
 	}
 	else if (drive == AWD)
 	{
-		tr *= differential_front.GetFinalDrive();
-		tr *= differential_center.GetFinalDrive();
-		maxspeed = tire[FRONT_LEFT].GetRadius() * engine.GetRPMLimit() * M_PI / 30 / tr;
+		ratio *= differential_front.GetFinalDrive();
+		ratio *= differential_center.GetFinalDrive();
+		maxspeed = tire[FRONT_LEFT].GetRadius() * engine.GetRPMLimit() * M_PI / 30 / ratio;
+
 	}
 	return maxspeed;
+}
+
+bool CARDYNAMICS::WheelContactCallback(
+	btManifoldPoint& cp,
+	const btCollisionObject* colObj0,
+	int partId0,
+	int index0,
+	const btCollisionObject* colObj1,
+	int partId1,
+	int index1)
+{
+	// cars are fracture bodies, wheel is a cylinder shape
+	if (colObj0->getInternalType() == CO_FRACTURE_BODY)
+	{
+		const btCollisionShape* shape = colObj0->getCollisionShape();
+		if (shape->getShapeType() == CYLINDER_SHAPE_PROXYTYPE)
+		{
+			// is contact within contact patch?
+			const btCompoundShape* car = static_cast<const btCompoundShape*>(colObj0->getRootCollisionShape());
+			const btCylinderShapeX* wheel = static_cast<const btCylinderShapeX*>(shape);
+			btVector3 contactPoint = car->getChildTransform(cp.m_index0).invXform(cp.m_localPointA);
+			if (-direction::up.dot(contactPoint) > 0.5 * wheel->getRadius())
+			{
+				// break contact (hack)
+				cp.m_normalWorldOnB = btVector3(0, 0, 0);
+				cp.m_distance1 = 0;
+				cp.m_combinedFriction = 0;
+				cp.m_combinedRestitution = 0;
+				return true;
+			}
+		}
+	}
+	return false;
 }

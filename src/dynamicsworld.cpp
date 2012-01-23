@@ -198,26 +198,6 @@ void DynamicsWorld::addCollisionObject(btCollisionObject* object)
 	btDiscreteDynamicsWorld::addCollisionObject(object);
 }
 
-void DynamicsWorld::addRigidBody(btRigidBody* body)
-{
-	if (body->getInternalType() & CUSTOM_FRACTURE_TYPE)
-	{
-		FractureBody* fbody = (FractureBody*)body;
-		m_fractureBodies.push_back(fbody);
-	}
-	btDiscreteDynamicsWorld::addRigidBody(body);
-}
-
-void DynamicsWorld::removeRigidBody(btRigidBody* body)
-{
-	if (body->getInternalType() & CUSTOM_FRACTURE_TYPE)
-	{
-		FractureBody* fbody = (FractureBody*)body;
-		m_fractureBodies.remove(fbody);
-	}
-	btDiscreteDynamicsWorld::removeRigidBody(body);
-}
-
 void DynamicsWorld::reset(const TRACK & t)
 {
 	reset();
@@ -232,6 +212,11 @@ void DynamicsWorld::reset()
 	track = 0;
 }
 
+void DynamicsWorld::setContactAddedCallback(ContactAddedCallback cb)
+{
+	gContactAddedCallback = cb;
+}
+
 void DynamicsWorld::fractureCallback()
 {
 	m_activeConnections.resize(0);
@@ -242,7 +227,7 @@ void DynamicsWorld::fractureCallback()
 		btPersistentManifold* manifold = getDispatcher()->getManifoldByIndexInternal(i);
 		if (!manifold->getNumContacts()) continue;
 
-		if (((btCollisionObject*)manifold->getBody0())->getInternalType() & CUSTOM_FRACTURE_TYPE)
+		if (((btCollisionObject*)manifold->getBody0())->getInternalType() == CO_FRACTURE_BODY)
 		{
 			FractureBody* body = (FractureBody*)manifold->getBody0();
 			btCompoundShape* shape = (btCompoundShape*)body->getCollisionShape();
@@ -267,7 +252,7 @@ void DynamicsWorld::fractureCallback()
 			}
 		}
 
-		if (((btCollisionObject*)manifold->getBody1())->getInternalType() & CUSTOM_FRACTURE_TYPE)
+		if (((btCollisionObject*)manifold->getBody1())->getInternalType() == CO_FRACTURE_BODY)
 		{
 			FractureBody* body = (FractureBody*)manifold->getBody1();
 			btCompoundShape* shape = (btCompoundShape*)body->getCollisionShape();
