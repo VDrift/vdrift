@@ -34,4 +34,4 @@ struct MotionState : public btMotionState {
 	}
 };
 
-#endif // _MOTIONSTATE_H
+#endif

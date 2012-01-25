@@ -20,7 +20,7 @@ public:
 	btScalar GetRadius() const	{return radius;}
 	btScalar GetTread() const	{return tread;}
 	btScalar GetAspectRatio() const	{return aspect_ratio;}
-	btScalar GetSidewallWidth() const	{return sidewall_width;}
+	btScalar GetWidth() const	{return sidewall_width;}
 
 	btScalar GetFeedback() const	{return feedback;}
 	btScalar GetSlide() const	{return slide;}
