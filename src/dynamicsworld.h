@@ -25,12 +25,11 @@ public:
 
 	void addCollisionObject(btCollisionObject* object);
 
-	void addRigidBody(btRigidBody * body);
-
-	void removeRigidBody(btRigidBody * body);
-
 	// reset collision world (unloads previous track)
 	void reset(const TRACK & t);
+
+	// set custon contact callback
+	void setContactAddedCallback(ContactAddedCallback cb);
 
 	// cast ray into collision world, returns first hit, caster is excluded fom hits
 	bool castRay(
@@ -55,7 +54,6 @@ protected:
 		int id;
 	};
 	btAlignedObjectArray<ActiveCon> m_activeConnections;
-	btAlignedObjectArray<FractureBody*> m_fractureBodies;
 	const TRACK * track;
 	btScalar timeStep;
 	int maxSubSteps;

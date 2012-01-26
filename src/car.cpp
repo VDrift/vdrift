@@ -206,17 +206,14 @@ struct LoadBody
 	SCENENODE & topnode;
 	keyed_container<SCENENODE>::handle & bodynode;
 	LoadDrawable & loadDrawable;
-	bool damage;
 
 	LoadBody(
 		SCENENODE & topnode,
 		keyed_container<SCENENODE>::handle & bodynode,
-		LoadDrawable & loadDrawable,
-		bool damage) :
+		LoadDrawable & loadDrawable) :
 		topnode(topnode),
 		bodynode(bodynode),
-		loadDrawable(loadDrawable),
-		damage(damage)
+		loadDrawable(loadDrawable)
 	{
 		// ctor
 	}
@@ -224,7 +221,7 @@ struct LoadBody
 	bool operator()(const PTree & cfg)
 	{
 		const PTree * link;
-		if (damage && cfg.get("link", link))
+		if (cfg.get("link", link))
 		{
 			// load breakable body drawables
 			if (!loadDrawable(cfg, topnode)) return false;
@@ -499,22 +496,21 @@ bool CAR::LoadGraphics(
 	{
 		if (!LoadWheel(i->second, loadDrawable, topnode, error_output))
 		{
-			error_output << "unable to load wheels" << std::endl;
+			error_output << "Failed to load wheels." << std::endl;
 			return false;
 		}
 	}
 
 	// load drawables
-	LoadBody loadBody(topnode, bodynode, loadDrawable, damage);
+	LoadBody loadBody(topnode, bodynode, loadDrawable);
 	for (PTree::const_iterator i = cfg.begin(); i != cfg.end(); ++i)
 	{
 		if (i->first != "body" &&
-			i->first != "wheel" &&
 			i->first != "steering" &&
 			i->first != "light-brake" &&
 			i->first != "light-reverse")
 		{
-			i->second.forEachRecursive(loadBody);
+			loadBody(i->second);
 		}
 	}
 
@@ -626,11 +622,6 @@ bool CAR::LoadPhysics(
 	dynamics.SetTCS(defaulttcs);
 
 	mz_nominalmax = (GetTireMaxMz(FRONT_LEFT) + GetTireMaxMz(FRONT_RIGHT)) * 0.5;
-
-	// draw collision shape ounding boxes
-	//btTransform offset(btTransform::getIdentity());
-	//offset.setOrigin(btVector3(0, -0.206458, -0.283854));
-	//DrawShape(topnode.GetNode(bodynode), dynamics.GetShape(), offset, models, modellist, error_output);
 
 	return true;
 }
@@ -889,8 +880,8 @@ void CAR::SetPosition(const MATHVECTOR <float, 3> & new_position)
 void CAR::UpdateGraphics()
 {
 	if (!bodynode.valid()) return;
-
 	assert(dynamics.GetNumBodies() == topnode.Nodes());
+	
 	unsigned int i = 0;
 	keyed_container<SCENENODE> & childlist = topnode.GetNodelist();
 	for (keyed_container<SCENENODE>::iterator ni = childlist.begin(); ni != childlist.end(); ++ni, ++i)
@@ -1189,7 +1180,6 @@ void CAR::UpdateSounds(float dt)
 
 void CAR::Update(double dt)
 {
-	dynamics.Update();
 	UpdateGraphics();
 	UpdateCameras(dt);
 	UpdateSounds(dt);

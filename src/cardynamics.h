@@ -11,17 +11,17 @@
 #include "cartire.h"
 #include "carbrake.h"
 #include "carwheelposition.h"
-#include "caraerodynamicdevice.h"
+#include "aerodevice.h"
 #include "collision_contact.h"
 #include "cartelemetry.h"
 #include "motionstate.h"
 #include "joeserialize.h"
 #include "BulletDynamics/Dynamics/btActionInterface.h"
-#include "btBulletCollisionCommon.h"
 #include "LinearMath/btAlignedObjectArray.h"
-#include "memory.h"
 
+class btManifoldPoint;
 class DynamicsWorld;
+class FractureBody;
 class PTree;
 
 class CARDYNAMICS : public btActionInterface
@@ -48,7 +48,6 @@ public:
 	void debugDraw(btIDebugDraw * debugDrawer);
 
 	// graphics interpolated
-	void Update();
 	btVector3 GetEnginePosition() const;
 	const btVector3 & GetPosition() const;
 	const btQuaternion & GetOrientation() const;
@@ -60,7 +59,6 @@ public:
 	unsigned GetNumBodies() const;
 	const btVector3 & GetPosition(int i) const;
 	const btQuaternion & GetOrientation(int i) const;
-	const btCollisionShape * GetShape() const;
 
 	// collision world interface
 	const COLLISION_CONTACT & GetWheelContact(WHEEL_POSITION wp) const;
@@ -143,9 +141,18 @@ public:
 
 	bool Serialize(joeserialize::Serializer & s);
 
+	static bool WheelContactCallback(
+		btManifoldPoint& cp,
+		const btCollisionObject* colObj0,
+		int partId0,
+		int index0,
+		const btCollisionObject* colObj1,
+		int partId1,
+		int index1);
+
 protected:
 	DynamicsWorld* world;
-	btRigidBody* body;
+	FractureBody* body;
 
 	// body state
 	btTransform transform;
@@ -188,15 +195,14 @@ protected:
 	btAlignedObjectArray<btVector3> wheel_position;
 	btAlignedObjectArray<btQuaternion> wheel_orientation;
 	btAlignedObjectArray<COLLISION_CONTACT> wheel_contact;
-	std::vector<std::tr1::shared_ptr<CARSUSPENSION> > suspension;
+	btAlignedObjectArray<CARSUSPENSION*> suspension;
 
-	btAlignedObjectArray<CARAERO> aerodynamics;
+	btAlignedObjectArray<AeroDevice> aerodynamics;
 	std::list<CARTELEMETRY> telemetry;
 
 	btScalar maxangle;
 	btScalar maxspeed;
 	btScalar feedback;
-	bool damage;
 
 	btVector3 GetDownVector() const;
 
@@ -263,13 +269,6 @@ protected:
 
 	// max speed in m/s calculated from maxrpm, maxgear, finalgear ratios
 	btScalar CalculateMaxSpeed() const;
-
-	// cardynamics initialization
-	void GetCollisionBox(
-		const btVector3 & bodySize,
-		const btVector3 & bodyCenter,
-		btVector3 & center,
-		btVector3 & size);
 };
 
 #endif

@@ -314,9 +314,12 @@ bool TRACK::LOADER::LoadShape(const PTree & cfg, const MODEL & model, BODY & bod
 	{
 		btVector3 center(0, 0, 0);
 		cfg.get("mass-center", center);
+		btTransform transform = btTransform::getIdentity();
+		transform.getOrigin() -= center;
 
+		btCompoundShape * compound = 0;
 		btCollisionShape * shape = 0;
-		LoadCollisionShape(cfg, center, shape);
+		LoadCollisionShape(cfg, transform, shape, compound);
 
 		if (!shape)
 		{
@@ -325,16 +328,9 @@ bool TRACK::LOADER::LoadShape(const PTree & cfg, const MODEL & model, BODY & bod
 			shape = new btBoxShape(size * 0.5);
 			center = center + ToBulletVector(model.GetAABB().GetCenter());
 		}
-		else if (shape->isCompound())
+		if (compound)
 		{
-			// keep track of child shapes
-			btCompoundShape * compound = static_cast<btCompoundShape*>(shape);
-			btCompoundShapeChild * children = compound->getChildList();
-			int children_count = compound->getNumChildShapes();
-			for (int i = 0; i < children_count; ++i)
-			{
-				data.shapes.push_back(children[i].m_childShape);
-			}
+			shape = compound;
 		}
 		data.shapes.push_back(shape);
 
