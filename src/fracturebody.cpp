@@ -53,7 +53,7 @@ FractureBody::FractureBody(const FractureBodyInfo & info) :
 	if (info.m_states.size() == m_connections.size() + 1)
 	{
 		info.m_states[0].massCenterOffset = m_centerOfMassOffset;
-		new (&m_motionState) FrMotionState(*this, &info.m_states[0]);
+		new (&m_motionState) MotionState(*this, &info.m_states[0]);
 		setMotionState(&m_motionState);
 
 		for (int i = 0; i < m_connections.size(); ++i)
@@ -147,6 +147,12 @@ btRigidBody* FractureBody::breakConnection(int con_id)
 	btAssert(child->getCollisionShape() == compound->getChildShape(shape_id));
 	compound->removeChildShapeByIndex(shape_id);
 
+	// Execute fracture callback.
+	if (m_connections[con_id].m_fracture)
+	{
+		(*m_connections[con_id].m_fracture)(m_connections[con_id]);
+	}
+
 	// Invalidate connection.
 	m_connections[con_id].m_shapeId = -1;
 
@@ -162,42 +168,6 @@ btRigidBody* FractureBody::breakConnection(int con_id)
 	}
 
 	return child;
-}
-
-FractureBody::FrMotionState::FrMotionState(FractureBody & body, btMotionState * state) :
-	m_body(body),
-	m_state(state)
-{
-	// ctor
-}
-
-FractureBody::FrMotionState::~FrMotionState()
-{
-	// dtor
-}
-
-void FractureBody::FrMotionState::getWorldTransform(btTransform & worldTrans) const
-{
-	btAssert(m_state);
-	m_state->getWorldTransform(worldTrans);
-}
-
-void FractureBody::FrMotionState::setWorldTransform(const btTransform & worldTrans)
-{
-	btAssert(m_state);
-	m_state->setWorldTransform(worldTrans);
-
-	// children motion states
-	const btCompoundShape* compound = static_cast<btCompoundShape*>(m_body.m_collisionShape);
-	for (int i = 0; i < compound->getNumChildShapes(); ++i)
-	{
-		int con_id = getConId(*compound->getChildShape(i));
-		if (con_id == -1) continue;
-
-		btAssert(con_id < m_body.m_connections.size());
-		btTransform transform = worldTrans * compound->getChildTransform(i);
-		m_body.m_connections[con_id].m_body->getMotionState()->setWorldTransform(transform);
-	}
 }
 
 FractureBodyInfo::FractureBodyInfo(btAlignedObjectArray<MotionState>& states) :
@@ -259,4 +229,46 @@ void FractureBodyInfo::addBody(
 {
 	m_shape->addChildShape(localTransform, shape);
 	addBody(m_shape->getNumChildShapes(), inertia, mass, elasticLimit, plasticLimit);
+}
+
+FractureBody::Connection::Connection() :
+	m_body(0),
+	m_fracture(0),
+	m_elasticLimit(0),
+	m_plasticLimit(0),
+	m_accImpulse(0),
+	m_shapeId(-1)
+{
+	// ctor
+}
+
+FractureBody::MotionState::MotionState(FractureBody & body, btMotionState * state) :
+	m_body(body),
+	m_state(state)
+{
+	// ctor
+}
+
+void FractureBody::MotionState::getWorldTransform(btTransform & worldTrans) const
+{
+	btAssert(m_state);
+	m_state->getWorldTransform(worldTrans);
+}
+
+void FractureBody::MotionState::setWorldTransform(const btTransform & worldTrans)
+{
+	btAssert(m_state);
+	m_state->setWorldTransform(worldTrans);
+
+	// children motion states
+	const btCompoundShape* compound = static_cast<btCompoundShape*>(m_body.m_collisionShape);
+	for (int i = 0; i < compound->getNumChildShapes(); ++i)
+	{
+		int con_id = getConId(*compound->getChildShape(i));
+		if (con_id == -1) continue;
+
+		btAssert(con_id < m_body.m_connections.size());
+		btTransform transform = worldTrans * compound->getChildTransform(i);
+		m_body.m_connections[con_id].m_body->getMotionState()->setWorldTransform(transform);
+	}
 }

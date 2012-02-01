@@ -17,9 +17,10 @@
 #include "motionstate.h"
 #include "joeserialize.h"
 #include "BulletDynamics/Dynamics/btActionInterface.h"
-#include "LinearMath/btAlignedObjectArray.h"
 
+class btCollisionWorld;
 class btManifoldPoint;
+class btIDebugDraw;
 class DynamicsWorld;
 class FractureBody;
 class PTree;
@@ -171,6 +172,15 @@ protected:
 	btAlignedObjectArray<CARBRAKE> brake;
 	btAlignedObjectArray<CARWHEEL> wheel;
 	btAlignedObjectArray<CARTIRE> tire;
+	btAlignedObjectArray<CARSUSPENSION*> suspension;
+	btAlignedObjectArray<AeroDevice> aerodevice;
+
+	// wheel contact state
+	btAlignedObjectArray<COLLISION_CONTACT> wheel_contact;
+	btAlignedObjectArray<btVector3> suspension_force;
+	btAlignedObjectArray<btVector3> wheel_velocity;
+	btAlignedObjectArray<btVector3> wheel_position;
+	btAlignedObjectArray<btQuaternion> wheel_orientation;
 
 	enum { NONE = 0, FWD = 1, RWD = 2, AWD = 3 } drive;
 	btScalar driveshaft_rpm;
@@ -188,16 +198,6 @@ protected:
 	bool tcs;
 	std::vector<int> abs_active;
 	std::vector<int> tcs_active;
-
-	// suspension
-	btAlignedObjectArray<btVector3> suspension_force;
-	btAlignedObjectArray<btVector3> wheel_velocity;
-	btAlignedObjectArray<btVector3> wheel_position;
-	btAlignedObjectArray<btQuaternion> wheel_orientation;
-	btAlignedObjectArray<COLLISION_CONTACT> wheel_contact;
-	btAlignedObjectArray<CARSUSPENSION*> suspension;
-
-	btAlignedObjectArray<AeroDevice> aerodynamics;
 	std::list<CARTELEMETRY> telemetry;
 
 	btScalar maxangle;

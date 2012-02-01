@@ -13,6 +13,7 @@ struct AeroDeviceInfo
 	btScalar lift_coefficient; 	/// a unitless lift coefficient
 	btScalar lift_efficiency; 	/// the efficiency of the wing, a unitless value from 0.0 to 1.0
 	btVector3 position; 		/// the position that the drag and lift forces are applied on the body
+	void* user_ptr;				/// user supplied pointer
 
 	AeroDeviceInfo() :
 		air_density(1.2),
@@ -21,7 +22,8 @@ struct AeroDeviceInfo
 		lift_surface_area(0),
 		lift_coefficient(0),
 		lift_efficiency(0),
-		position(0, 0, 0)
+		position(0, 0, 0),
+		user_ptr(0)
 	{
 		// ctor
 	}
@@ -75,11 +77,18 @@ public:
 		return force;
 	}
 
+	void* GetUserPointer() const
+	{
+		return user_ptr;
+	}
+
+
 	AeroDevice() :
 		lift_coefficient(0),
 		drag_coefficient(0),
 		induced_drag_coefficient(0),
-		position(0, 0, 0)
+		position(0, 0, 0),
+		user_ptr(0)
 	{
 		// ctor
 	}
@@ -91,6 +100,7 @@ public:
 		induced_drag_coefficient = lift_coefficient * info.lift_coefficient * (1.0 - info.lift_efficiency);
 		drag_coefficient = 0.5 * info.air_density * info.drag_coefficient * info.drag_frontal_area;
 		position = info.position;
+		user_ptr = info.user_ptr;
 	}
 
 private:
@@ -100,6 +110,7 @@ private:
 	btVector3 position;
 	btVector3 lift_vector;
 	btVector3 drag_vector;
+	void* user_ptr;
 };
 
 #endif

@@ -50,11 +50,10 @@ private:
 	btVector3 m_centerOfMassOffset;
 
 	// motion state wrapper, updates children motion states
-	class FrMotionState : public btMotionState
+	class MotionState : public btMotionState
 	{
 	public:
-		FrMotionState(FractureBody & body, btMotionState * state = 0);
-		~FrMotionState();
+		MotionState(FractureBody & body, btMotionState * state = 0);
 		void getWorldTransform(btTransform & worldTrans) const;
 		void setWorldTransform(const btTransform & worldTrans);
 
@@ -62,7 +61,7 @@ private:
 		FractureBody & m_body;
 		btMotionState * m_state;
 	};
-	FrMotionState m_motionState;
+	MotionState m_motionState;
 
 	// separate shape, return child body
 	btRigidBody* breakConnection(int con_id);
@@ -89,33 +88,31 @@ struct FractureBodyInfo
 		btScalar elasticLimit,
 		btScalar plasticLimit);
 
-    FractureBodyInfo(btAlignedObjectArray<MotionState>& m_states);
+	FractureBodyInfo(btAlignedObjectArray<MotionState>& m_states);
 
 	btCompoundShape* m_shape;
-    btAlignedObjectArray<MotionState>& m_states;
+	btAlignedObjectArray<MotionState>& m_states;
 	btAlignedObjectArray<FractureBody::Connection> m_connections;
 	btVector3 m_inertia;
 	btVector3 m_massCenter;
 	btScalar m_mass;
 };
 
+struct FractureCallback
+{
+	virtual void operator()(FractureBody::Connection & connection) = 0;
+	virtual ~FractureCallback() {};
+};
+
 struct FractureBody::Connection
 {
 	btRigidBody* m_body;
+	FractureCallback* m_fracture;
 	btScalar m_elasticLimit;
 	btScalar m_plasticLimit;
 	btScalar m_accImpulse;
 	int m_shapeId;
-
-	Connection() :
-		m_body(0),
-		m_elasticLimit(0),
-		m_plasticLimit(0),
-		m_accImpulse(0),
-		m_shapeId(-1)
-	{
-		// ctor
-	}
+	Connection();
 };
 
 #endif

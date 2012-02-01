@@ -215,17 +215,48 @@ static btMultiSphereShape * CreateCollisionShape(const btVector3 & center, const
 	return new btMultiSphereShape(positions, radii, numSpheres);
 }
 
+struct AeroDeviceFracture : public FractureCallback
+{
+	btAlignedObjectArray<AeroDevice> & aerodevice;
+	int id;
+
+	AeroDeviceFracture(btAlignedObjectArray<AeroDevice> & aerodevice, int id) :
+		aerodevice(aerodevice),
+		id(id)
+	{
+		// ctor
+	}
+
+	~AeroDeviceFracture()
+	{
+		// dtor
+	}
+
+	void operator()(FractureBody::Connection & connection)
+	{
+		int last = aerodevice.size() - 1;
+		if (id < last)
+		{
+			aerodevice.swap(id, last);
+			AeroDeviceFracture* ad = static_cast<AeroDeviceFracture*>(aerodevice[id].GetUserPointer());
+			btAssert(ad);
+			ad->id = id;
+		}
+		aerodevice.resize(last);
+	}
+};
+
 struct BodyLoader
 {
-	btAlignedObjectArray<AeroDevice> & aero;
+	btAlignedObjectArray<AeroDevice> & aerodevice;
 	FractureBodyInfo & info;
 	const bool & damage;
 
 	BodyLoader(
-		btAlignedObjectArray<AeroDevice> & aero,
+		btAlignedObjectArray<AeroDevice> & aerodevice,
 		FractureBodyInfo & info,
 		const bool & damage) :
-		aero(aero),
+		aerodevice(aerodevice),
 		info(info),
 		damage(damage)
 	{
@@ -253,14 +284,13 @@ struct BodyLoader
 
 		info.addMass(pos, mass);
 
-		loadAero(cfg, pos);
-
 		LoadCollisionShape(cfg, transform, shape, info.m_shape);
 
 		const PTree * cfg_link = 0;
-		link |= cfg.get("link", cfg_link);
+		cfg.get("link", cfg_link);
+		link = (link || cfg_link) && shape;
 
-		if (shape && link)
+		if (link)
 		{
 			btScalar elimit(1E5);
 			btScalar plimit(1E5);
@@ -281,19 +311,32 @@ struct BodyLoader
 			info.m_states.push_back(MotionState());
 		}
 
+		loadAeroDevice(cfg, pos, link);
+
 		return true;
 	}
 
-	bool loadAero(const PTree & cfg, const btVector3 & position)
+	bool loadAeroDevice(const PTree & cfg, const btVector3 & position, bool link)
 	{
-		AeroDeviceInfo info;
-		if (!cfg.get("drag-coefficient", info.drag_coefficient)) return true;
-		cfg.get("frontal-area", info.drag_frontal_area);
-		cfg.get("surface-area", info.lift_surface_area);
-		cfg.get("lift-coefficient", info.lift_coefficient);
-		cfg.get("lift-efficiency", info.lift_efficiency);
-		info.position = position;
-		aero.push_back(AeroDevice(info));
+		btScalar drag_coefficient;
+		if (!cfg.get("drag-coefficient", drag_coefficient)) return true;
+
+		AeroDeviceInfo ad;
+		ad.position = position;
+		ad.drag_coefficient = drag_coefficient;
+		cfg.get("frontal-area", ad.drag_frontal_area);
+		cfg.get("surface-area", ad.lift_surface_area);
+		cfg.get("lift-coefficient", ad.lift_coefficient);
+		cfg.get("lift-efficiency", ad.lift_efficiency);
+		if (link)
+		{
+			int id = aerodevice.size();
+			AeroDeviceFracture * adf = new AeroDeviceFracture(aerodevice, id);
+			info.m_connections[info.m_connections.size() - 1].m_fracture = adf;
+			ad.user_ptr = adf;
+		}
+
+		aerodevice.push_back(AeroDevice(ad));
 		return true;
 	}
 };
@@ -363,10 +406,14 @@ CARDYNAMICS::~CARDYNAMICS()
 	delete body->getCollisionShape();
 	delete body;
 
-	// delete suspension
-	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
+	for (int i = 0; i < suspension.size(); ++i)
 	{
 		delete suspension[i];
+	}
+
+	for (int i = 0; i < aerodevice.size(); ++i)
+	{
+		delete static_cast<AeroDeviceFracture*>(aerodevice[i].GetUserPointer());
 	}
 }
 
@@ -409,7 +456,7 @@ bool CARDYNAMICS::Load(
 
 	motion_state.push_back(MotionState());
 	FractureBodyInfo bodyinfo(motion_state);
-	BodyLoader loadBody(aerodynamics, bodyinfo, damage);
+	BodyLoader loadBody(aerodevice, bodyinfo, damage);
 
 	// load wheels
 	const PTree * cfg_wheels;
@@ -769,9 +816,9 @@ btScalar CARDYNAMICS::GetMaxSteeringAngle() const
 btVector3 CARDYNAMICS::GetTotalAero() const
 {
 	btVector3 downforce(0, 0, 0);
-	for (int i = 0; i != aerodynamics.size(); ++i)
+	for (int i = 0; i != aerodevice.size(); ++i)
 	{
-		downforce = downforce + aerodynamics[i].getLift() +  aerodynamics[i].getDrag();
+		downforce = downforce + aerodevice[i].getLift() +  aerodevice[i].getDrag();
 	}
 	return downforce;
 }
@@ -779,9 +826,9 @@ btVector3 CARDYNAMICS::GetTotalAero() const
 btScalar CARDYNAMICS::GetAerodynamicDownforceCoefficient() const
 {
 	btScalar coeff = 0.0;
-	for (int i = 0; i != aerodynamics.size(); ++i)
+	for (int i = 0; i != aerodevice.size(); ++i)
 	{
-		coeff += aerodynamics[i].getLiftCoefficient();
+		coeff += aerodevice[i].getLiftCoefficient();
 	}
 	return coeff;
 }
@@ -789,9 +836,9 @@ btScalar CARDYNAMICS::GetAerodynamicDownforceCoefficient() const
 btScalar CARDYNAMICS::GetAeordynamicDragCoefficient() const
 {
 	btScalar coeff = 0.0;
-	for (int i = 0; i != aerodynamics.size(); ++i)
+	for (int i = 0; i != aerodevice.size(); ++i)
 	{
-		coeff += aerodynamics[i].getDragCoefficient();
+		coeff += aerodevice[i].getDragCoefficient();
 	}
 	return coeff;
 }
@@ -921,11 +968,11 @@ void CARDYNAMICS::DebugPrint ( std::ostream & out, bool p1, bool p2, bool p3, bo
 	if ( p4 )
 	{
 		out << std::fixed << std::setprecision(3);
-		for (int i = 0; i != aerodynamics.size(); ++i)
+		for (int i = 0; i != aerodevice.size(); ++i)
 		{
 			out << "---Aerodynamic Device---" << "\n";
-			out << "Drag: " << aerodynamics[i].getDrag() << "\n";
-			out << "Lift: " << aerodynamics[i].getLift() << "\n\n";
+			out << "Drag: " << aerodevice[i].getDrag() << "\n";
+			out << "Lift: " << aerodevice[i].getLift() << "\n\n";
 		}
 	}
 }
@@ -1069,11 +1116,11 @@ void CARDYNAMICS::ApplyAerodynamicsToBody ( btVector3 & force, btVector3 & torqu
 	btVector3 wind_force(0, 0, 0);
 	btVector3 wind_torque(0, 0, 0);
 	btVector3 air_velocity = inv * -GetVelocity();
-	for (int i = 0; i < aerodynamics.size(); ++i)
+	for (int i = 0; i < aerodevice.size(); ++i)
 	{
-		btVector3 force = aerodynamics[i].getForce(air_velocity);
+		btVector3 force = aerodevice[i].getForce(air_velocity);
 		wind_force = wind_force + force;
-		wind_torque = wind_torque + (aerodynamics[i].getPosition() + GetCenterOfMassOffset()).cross(force);
+		wind_torque = wind_torque + (aerodevice[i].getPosition() + GetCenterOfMassOffset()).cross(force);
 	}
 	wind_force = body->getCenterOfMassTransform().getBasis() * wind_force;
 	wind_torque = body->getCenterOfMassTransform().getBasis() * wind_torque;
