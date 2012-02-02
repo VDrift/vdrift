@@ -24,7 +24,7 @@ using namespace VERTEX_ATTRIBS;
 
 #define ERROR_CHECK OPENGL_UTILITY::CheckForOpenGLErrors(std::string(__PRETTY_FUNCTION__)+":"+__FILE__+":"+UTILS::tostr(__LINE__), error_output)
 
-static const char file_magic[] = "OGLVARRAYV01";
+static const std::string file_magic = "OGLVARRAYV01";
 
 MODEL::MODEL() : generatedlistid(false), generatedmetrics(false), generatedvao(false), vao(0), elementVbo(0), elementCount(0), radius(0), radiusxz(0)
 {
@@ -81,7 +81,7 @@ bool MODEL::WriteToFile(const std::string & filepath)
 	if (!fileout)
 		return false;
 
-	fileout.write(file_magic, sizeof(file_magic));
+	fileout.write(file_magic.c_str(), file_magic.size());
 	joeserialize::BinaryOutputSerializer s(fileout);
 	return Serialize(s);
 }
@@ -95,16 +95,16 @@ bool MODEL::ReadFromFile(const std::string & filepath, std::ostream & error_outp
 		return false;
 	}
 
-	char fmagic[sizeof(file_magic)+1];
-	filein.read(fmagic, sizeof(file_magic));
+	char fmagic[file_magic.size() + 1];
+	filein.read(fmagic, file_magic.size());
 	if (!filein)
 	{
 		error_output << "File magic read error: " << filepath << std::endl;
 		return false;
 	}
 
-	fmagic[sizeof(file_magic)] = '\0';
-	if (file_magic != fmagic)
+	fmagic[file_magic.size()] = '\0';
+	if (!file_magic.compare(fmagic))
 	{
 		error_output << "File magic is incorrect: \"" << file_magic << "\" != \"" << fmagic << "\" in " << filepath << std::endl;
 		return false;
