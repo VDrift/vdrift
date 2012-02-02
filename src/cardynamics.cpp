@@ -15,8 +15,14 @@ static inline bool isnan(const T & x)
 
 static inline std::istream & operator >> (std::istream & lhs, btVector3 & rhs)
 {
-	char sep;
-	return lhs >> rhs[0] >> sep >> rhs[1] >> sep >> rhs[2];
+	std::string str;
+	for (int i = 0; i < 3 && !lhs.eof(); ++i)
+	{
+		std::getline(lhs, str, ',');
+		std::stringstream s(str);
+		s >> rhs[i];
+	}
+	return lhs;
 }
 
 static bool LoadClutch(

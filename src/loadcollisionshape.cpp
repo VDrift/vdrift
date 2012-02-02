@@ -4,18 +4,16 @@
 #include "BulletCollision/CollisionShapes/btBoxShape.h"
 #include "cfg/ptree.h"
 
-inline void operator >> (std::istream & lhs, btVector3 & rhs)
+static inline std::istream & operator >> (std::istream & lhs, btVector3 & rhs)
 {
-	for (size_t i = 0; i < 3; ++i)
+	std::string str;
+	for (int i = 0; i < 3 && !lhs.eof(); ++i)
 	{
-		std::string str;
 		std::getline(lhs, str, ',');
-
 		std::stringstream s(str);
-		btScalar val(0);
-		s >> val;
-		rhs[i] = val;
+		s >> rhs[i];
 	}
+	return lhs;
 }
 
 void LoadCapsuleShape(
