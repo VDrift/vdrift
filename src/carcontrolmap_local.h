@@ -3,7 +3,6 @@
 
 #include "eventsystem.h"
 #include "carinput.h"
-#include "car.h"
 
 #include <map>
 #include <string>
@@ -95,121 +94,17 @@ public:
 		float exponent;
 		float gain;
 
-		bool IsAnalog() const
-		{
-			return (type == JOY && joytype == JOYAXIS) || (type == MOUSE && mousetype == MOUSEMOTION);
-		}
+		bool IsAnalog() const;
 
-		void DebugPrint(std::ostream & out) const
-		{
-			out << type << " " << onetime << " " << joynum << " " << joyaxis << " " <<
-					joyaxistype << " " << joybutton << " " << joytype << " " <<
-					joypushdown << " " << keycode << " " << keypushdown << " " <<
-					mousetype << " " << mbutton << " " << mdir << " " <<
-					last_mouse_state << " " << mouse_push_down << " " <<
-					deadzone << " " << exponent << " " << gain << std::endl;
-		}
+		void DebugPrint(std::ostream & out) const;
 
-		void ReadFrom(std::istream & in)
-		{
-			int newtype, newjoyaxistype, newjoytype, newmousetype, newmdir;
-			in >> newtype >> onetime >> joynum >> joyaxis >>
-					newjoyaxistype >> joybutton >> newjoytype >>
-					joypushdown >> keycode >> keypushdown >>
-					newmousetype >> mbutton >> newmdir >>
-					last_mouse_state >> mouse_push_down >>
-					deadzone >> exponent >> gain;
-			type=TYPE(newtype);
-			joyaxistype=JOYAXISTYPE(newjoyaxistype);
-			joytype=JOYTYPE(newjoytype);
-			mousetype=MOUSETYPE(newmousetype);
-			mdir=MOUSEDIRECTION(newmdir);
-		}
+		bool operator==(const CONTROL & other) const;
 
-		/*void MemDump(std::ostream & out)
-		{
-			for (unsigned int i = 0; i < sizeof(CONTROL); i++)
-			{
-				char c = ((char *) this)[i];
-				std::cout << (int) c << " ";
-			}
-			std::cout << std::endl;
-		}*/
+		bool operator<(const CONTROL & other) const;
 
-		bool operator==(const CONTROL & other) const
-		{
-			CONTROL me = *this;
-			CONTROL them = other;
+		void ReadFrom(std::istream & in);
 
-			//don't care about certain flags
-			me.onetime = 1;
-			me.joypushdown = 1;
-			me.keypushdown = 1;
-			me.mouse_push_down = 1;
-			me.deadzone = 0;
-			me.exponent = 1;
-			me.gain = 1;
-			them.onetime = 1;
-			them.joypushdown = 1;
-			them.keypushdown = 1;
-			them.mouse_push_down = 1;
-			them.deadzone = 0;
-			them.exponent = 1;
-			them.gain = 1;
-
-			std::stringstream mestr;
-			std::stringstream themstr;
-			me.DebugPrint(mestr);
-			them.DebugPrint(themstr);
-
-			return (mestr.str() == themstr.str());
-
-			/*std::cout << "Checking:" << std::endl;
-			me.DebugPrint(std::cout);
-			me.MemDump(std::cout);
-			them.DebugPrint(std::cout);
-			them.MemDump(std::cout);
-			std::cout << "Equality check: " << (std::memcmp(&me,&them,sizeof(CONTROL)) == 0) << std::endl;
-
-			return (std::memcmp(&me,&them,sizeof(CONTROL)) == 0);*/
-
-			//bool equality = (type == other.type) && (type == other.type) &&
-		}
-
-		bool operator<(const CONTROL & other) const
-		{
-			CONTROL me = *this;
-			CONTROL them = other;
-
-			me.onetime = 1;
-			me.joypushdown = 1;
-			me.keypushdown = 1;
-			me.mouse_push_down = 1;
-			me.deadzone = 0;
-			me.exponent = 1;
-			me.gain = 1;
-			them.onetime = 1;
-			them.joypushdown = 1;
-			them.keypushdown = 1;
-			them.mouse_push_down = 1;
-			them.deadzone = 0;
-			them.exponent = 1;
-			them.gain = 1;
-
-			std::stringstream mestr;
-			std::stringstream themstr;
-			me.DebugPrint(mestr);
-			them.DebugPrint(themstr);
-
-			return (mestr.str() < themstr.str());
-		}
-
-		CONTROL() : type(UNKNOWN),onetime(true),joynum(0),joyaxis(0),joyaxistype(POSITIVE),
-			joybutton(0),joytype(JOYAXIS),joypushdown(true),keycode(0),keypushdown(true),
-			mousetype(MOUSEBUTTON),mbutton(0),mdir(UP),last_mouse_state(false),
-			mouse_push_down(true),
-			deadzone(0.0), exponent(1.0), gain(1.0)
-		{}
+		CONTROL();
 	};
 
 	void DeleteControl(const CONTROL & ctrltodel, const std::string & inputname, std::ostream & error_output);
