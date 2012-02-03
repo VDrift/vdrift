@@ -95,18 +95,17 @@ bool MODEL::ReadFromFile(const std::string & filepath, std::ostream & error_outp
 		return false;
 	}
 
-	char fmagic[file_magic.size() + 1];
-	filein.read(fmagic, file_magic.size());
+	std::vector<char> fmagic(file_magic.size() + 1, 0);
+	filein.read(&fmagic[0], file_magic.size());
 	if (!filein)
 	{
 		error_output << "File magic read error: " << filepath << std::endl;
 		return false;
 	}
 
-	fmagic[file_magic.size()] = '\0';
-	if (!file_magic.compare(fmagic))
+	if (!file_magic.compare(&fmagic[0]))
 	{
-		error_output << "File magic is incorrect: \"" << file_magic << "\" != \"" << fmagic << "\" in " << filepath << std::endl;
+		error_output << "File magic is incorrect: \"" << file_magic << "\" != \"" << &fmagic[0] << "\" in " << filepath << std::endl;
 		return false;
 	}
 
