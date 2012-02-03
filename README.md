@@ -27,8 +27,8 @@ Saying more than 1000 words
 See also
 --------
 
-- [wiki.VDrift.net/About_the_project](http://wiki.VDrift.net/About_the_project)
-- [wiki.VDrift.net/License](http://wiki.VDrift.net/License)
+- [wiki.vdrift.net/About_the_project](http://wiki.vdrift.net/About_the_project)
+- [wiki.vdrift.net/License](http://wiki.vdrift.net/License)
 
 Hardware Requirements
 =====================
@@ -68,7 +68,7 @@ recommended and required for larger tracks.
 See also
 --------
 
-- [wiki.VDrift.net/Hardware_requirements](http://wiki.VDrift.net/Hardware_requirements)
+- [wiki.vdrift.net/Hardware_requirements](http://wiki.vdrift.net/Hardware_requirements)
 
 Dependencies
 ============
@@ -139,31 +139,17 @@ All other required packages can be installed using this command:
                          libsdl-net1.2-dev libvorbis-dev freeglut3 libbullet0 \
                          libbullet-dev scons
 
-Downloading Dependencies on Windows
------------------------------------
-
-Download the dependencies for Windows:
-
-- Windows: `git clone https://github.com/VDrift/VDrift-win.git`
-
-Downloading Dependencies on Mac OS
-----------------------------------
-
-Download the dependencies for Mac OS:
-
-- Mac OS: `git clone https://github.com/VDrift/VDrift-mac.git`
-
 See also
 --------
 
-- [wiki.VDrift.net/Software_requirements](http://wiki.VDrift.net/Software_requirements)
+- [wiki.vdrift.net/Software_requirements](http://wiki.vdrift.net/Software_requirements)
 
 Downloading VDrift
 ==================
 
 For downloading the source code from the repository execute
 
-    git clone https://github.com/VDrift/VDrift.git VDrift
+    git clone https://github.com/vdrift/vdrift.git
 
 Downloading VDrift Data
 -----------------------
@@ -171,18 +157,34 @@ Downloading VDrift Data
 VDrift Data is expected to reside in a folder called data in the root of VDrift,
 so change your directory to the root of the sources:
 
-    cd VDrift
+    cd vdrift
 
 Currently the VDrift Data is still hosted at Sourceforge, so to getting it
 requires checking out the repository with subversion:
 
     svn checkout https://vdrift.svn.sourceforge.net/svnroot/vdrift/vdrift-data data
 
+Downloading Dependencies on Windows
+-----------------------------------
+
+Download the dependencies for Windows:
+
+    cd vdrift
+    git clone https://github.com/vdrift/vdrift-win.git
+
+Downloading Dependencies on Mac OS
+----------------------------------
+
+Download the dependencies for Mac OS:
+
+    cd vdrift
+    git clone https://github.com/vdrift/vdrift-mac.git
+
 See also
 --------
 
-- [wiki.VDrift.net/Getting_the_latest_release](http://wiki.VDrift.net/Getting_the_latest_release)
-- [wiki.VDrift.net/Getting_the_development_version](http://wiki.VDrift.net/Getting_the_development_version)
+- [wiki.vdrift.net/Getting_the_latest_release](http://wiki.vdrift.net/Getting_the_latest_release)
+- [wiki.vdrift.net/Getting_the_development_version](http://wiki.vdrift.net/Getting_the_development_version)
 
 Compiling VDrift
 ================
@@ -197,7 +199,7 @@ and install VDrift to the default directory run:
 See also
 --------
 
-- [wiki.VDrift.net/Compiling](http://wiki.VDrift.net/Compiling)
+- [wiki.vdrift.net/Compiling](http://wiki.vdrift.net/Compiling)
 
 Installing VDrift
 =================
@@ -211,7 +213,7 @@ default location explicitely for example run:
 See also
 --------
 
-- [wiki.VDrift.net/Installing](http://wiki.VDrift.net/Installing)
+- [wiki.vdrift.net/Installing](http://wiki.vdrift.net/Installing)
 
 Cleaning up VDrift
 ==================
@@ -232,4 +234,4 @@ Everything further
 For configuring, running and extending the game, for playing, contributing and
 developing please search the wiki for an article on your topic:
 
-- [wiki.VDrift.net/Main_Page](http://wiki.VDrift.net/Main_Page)
+- [wiki.vdrift.net/Main_Page](http://wiki.vdrift.net/Main_Page)
