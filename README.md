@@ -111,7 +111,7 @@ The required libraries include:
 Installing Dependencies on FreeBSD
 ----------------------------------
 
-TODO
+Please seek advice from the wiki.
 
 Installing Dependencies on Ubuntu Linux
 ---------------------------------------
@@ -119,7 +119,7 @@ Installing Dependencies on Ubuntu Linux
 Ubuntu does not include a libbullet package, but getdeb does. To add the
 getdeb-repository to your sources-list.d:
 
-    wget -q -O - http://archive.getdeb.net/getdeb-archive.key | sudo apt-key add - 
+    wget -q -O - http://archive.getdeb.net/getdeb-archive.key | sudo apt-key add -
     sudo sh -c 'echo "deb http://archive.getdeb.net/ubuntu natty-getdeb games" > /etc/apt/sources.list.d/getdeb.list'
     sudo apt-get update
 
@@ -129,7 +129,7 @@ libglew1.6 and its development headers:
     wget http://archive.ubuntu.com/ubuntu/pool/universe/g/glew/libglew1.6_1.6.0-3_amd64.deb
     sudo dpkg -i libglew1.6_1.6.0-3_amd64.deb
     rm libglew1.6_1.6.0-3_amd64.deb
-    
+
     wget http://archive.ubuntu.com/ubuntu/pool/universe/g/glew/libglew1.6-dev_1.6.0-3_amd64.deb
     sudo dpkg -i libglew1.6-dev_1.6.0-3_amd64.deb
     rm libglew1.6-dev_1.6.0-3_amd64.deb
@@ -146,7 +146,7 @@ All other required packages can be installed using this command:
 Installing Dependencies on Mac OS
 ---------------------------------
 
-TODO
+Please seek advice from the wiki.
 
 Installing Dependencies on Windows
 ----------------------------------
@@ -154,24 +154,25 @@ Installing Dependencies on Windows
 - Install the [official Git for Windows](http://code.google.com/p/msysgit/downloads/list)
 
     It will take a little while to compile Git.
-    
+
 - Install [msysGit](http://code.google.com/p/msysgit/downloads/list)
 
     Installing *git bash only* will be sufficient.
-    
+
 - Install [Subversion](http://www.sliksvn.com/en/download)
 
     Other packages are available, too but this one is tested.
 
     Install with the *typical* profile.
-    
+
 - Install [Code::Blocks](http://www.codeblocks.org/downloads/26)
 
     Download the one containing *mingw* in the filename.
-    
+
     Install with the *MinGW Compiler Suite*.
 
-After this, all following git commands are to be entered in a Git Bash, which can be opened via the start menu.
+After this, all following git commands are to be entered in a Git Bash, which
+can be opened via the start menu.
 
 See also
 --------
@@ -188,8 +189,8 @@ For downloading the source code from the repository execute
 Downloading VDrift Data
 -----------------------
 
-VDrift Data is expected to reside in a folder called *data* in the root of VDrift,
-so change your directory to the root of the sources:
+VDrift Data is expected to reside in a folder called *data* in the root of
+VDrift, so change your directory to the root of the sources:
 
     cd VDrift
 
@@ -228,43 +229,43 @@ See also
 Injecting Libraries
 ===================
 
-Windows and Mac OS do not have any packages for some libraries required at compile time.
-They need to be placed below the git root of VDrift.
+Windows and Mac OS do not have any packages for some libraries required at
+compile time. These need to be placed below the git root of VDrift.
 
-Injecting Libraries under FreeBSD
----------------------------------
-
-TODO
-
-Injecting Libraries under Linux
--------------------------------
-
-Under Linux all needed libraries can be installed via package management, so it is not
-recommended to compile them oneself.
-
-Injecting Libraries for Mac OS
+Injecting Libraries on FreeBSD
 ------------------------------
 
-Download libraries required to compile under Mac OS:
+Please seek advice from the wiki.
+
+Injecting Libraries on Linux
+----------------------------
+
+Usually all needed libraries can be installed using the package management on
+Linux, so it is not recommended to compile them oneself.
+
+Injecting Libraries on Mac OS
+-----------------------------
+
+Download libraries required to compile on Mac OS:
 
     git clone https://github.com/VDrift/VDrift-mac.git
 
-Injecting Libraries for Windows
--------------------------------
+Injecting Libraries on Windows
+------------------------------
 
-Download libraries required to compile under Windows:
+Download libraries required to compile on Windows:
 
     git clone https://github.com/VDrift/vdrift-win.git
 
 Compiling VDrift
 ================
 
-TODO
+Please seek advice from the wiki.
 
 Compiling VDrift on FreeBSD
 ---------------------------
 
-TODO
+Please seek advice from the wiki.
 
 Compiling VDrift on Linux
 -------------------------
@@ -279,12 +280,12 @@ and install VDrift to the default directory run:
 Compiling VDrift on Mac OS
 --------------------------
 
-TODO
+Please seek advice from the wiki.
 
 Compiling VDrift on Windows
 ---------------------------
 
-TODO
+Please seek advice from the wiki.
 
 See also
 --------
@@ -297,7 +298,7 @@ Installing VDrift
 Installing VDrift on FreeBSD
 ----------------------------
 
-TODO
+Please seek advice from the wiki.
 
 Installing VDrift on Linux
 --------------------------
@@ -311,12 +312,12 @@ default location explicitely for example run:
 Installing VDrift on Mac OS
 ---------------------------
 
-TODO
+Please seek advice from the wiki.
 
 Installing VDrift on Windows
 ----------------------------
 
-TODO
+Please seek advice from the wiki.
 
 See also
 --------
@@ -332,7 +333,7 @@ because they can be regenerated on demand.
 Cleaning up VDrift on FreeBSD
 -----------------------------
 
-TODO
+Please seek advice from the wiki.
 
 Cleaning up VDrift on Linux
 ---------------------------
@@ -348,12 +349,12 @@ To remove all additional temporary files:
 Cleaning up VDrift on Mac OS
 ----------------------------
 
-TODO
+Please seek advice from the wiki.
 
 Cleaning up VDrift on Windows
 -----------------------------
 
-TODO
+Please seek advice from the wiki.
 
 See also
 --------
