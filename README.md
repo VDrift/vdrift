@@ -75,8 +75,8 @@ Dependencies
 ============
 
 VDrift requires several tools and libraries at build time. Make sure you have
-installed all required libraries, each correspondent development files and build
-tools, which are listed below.
+installed all required libraries, each correspondent development files and all build
+tools, as listed below.
 
 Build Tools
 -----------
