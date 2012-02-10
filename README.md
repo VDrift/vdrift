@@ -102,8 +102,8 @@ See also
 - [VDrift's wiki on getting the lastest release](http://wiki.vdrift.net/Getting_the_latest_release)
 - [VDrift's wiki on getting the development version](http://wiki.vdrift.net/Getting_the_development_version)
 
-Dependencies
-============
+Installing Dependencies
+=======================
 
 VDrift requires several tools and libraries at build time. Make sure you have
 installed all required libraries, each correspondent development files and all build
