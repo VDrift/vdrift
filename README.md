@@ -104,7 +104,7 @@ The required libraries include:
 - sdl-image - Image file loading library for SDL
 - vorbisfile - File loading library for the ogg vorbis format
 - libvorbis - The Vorbis General Audio Compression Codec
-- bullet C++ Libraries (BulletCollision, BulletDynamics, LinearMath)
+- bullet - C++ Libraries (BulletCollision, BulletDynamics, LinearMath)
 - libcurl - For managing data download from the net.
 - libarchive - API for managing compressed files.
 
