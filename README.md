@@ -260,8 +260,6 @@ Download libraries required to compile on Windows:
 Compiling VDrift
 ================
 
-Please seek advice from the wiki.
-
 Compiling VDrift on FreeBSD
 ---------------------------
 
