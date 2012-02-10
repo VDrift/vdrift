@@ -1398,7 +1398,7 @@ void GAME::ProcessGUIAction(const std::string & action)
 	{
         // This means the player clicked the GUI to change their car.
 		std::list <std::pair <std::string, std::string> > carpaintlist;
-		PopulateCarPaintList(settings.GetSelectedCar(), carpaintlist);
+		PopulateCarPaintList(settings.GetPlayerCar(), carpaintlist);
 		gui.ReplaceOptionValues("game.player_paint", carpaintlist, error_output);
 	}
 	else if (action == "OpponentCarChange")
@@ -1855,7 +1855,7 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	}
 	else
 	{
-		carname = settings.GetSelectedCar();
+		carname = settings.GetPlayerCar();
 		carpaint = settings.GetPlayerCarPaint();
 		settings.GetPlayerColor(carcolor[0], carcolor[1], carcolor[2]);
 	}
@@ -2370,7 +2370,7 @@ void GAME::PopulateValueLists(std::map<std::string, std::list <std::pair <std::s
 	valuelists["cars"] = carlist;
 
 	// Populate car paints.
-	PopulateCarPaintList(settings.GetSelectedCar(), valuelists["player_paints"]);
+	PopulateCarPaintList(settings.GetPlayerCar(), valuelists["player_paints"]);
 	PopulateCarPaintList(settings.GetOpponentCar(), valuelists["opponent_paints"]);
 
 	// Populate video mode list.
