@@ -48,12 +48,12 @@ public:
 		return shaders;
 	}
 
-	std::string GetSkin() const
+	const std::string & GetSkin() const
 	{
 		return skin;
 	}
 
-	std::string GetLanguage() const
+	const std::string & GetLanguage() const
 	{
 		return language;
 	}
@@ -73,7 +73,7 @@ public:
 		return mph;
 	}
 
-	std::string GetTrack() const
+	const std::string & GetTrack() const
 	{
 		return track;
 	}
@@ -120,7 +120,7 @@ public:
 		return tcs;
 	}
 
-	std::string GetJoyType() const
+	const std::string & GetJoyType() const
 	{
 		return joytype;
 	}
@@ -175,7 +175,7 @@ public:
 		return selected_replay;
 	}
 
-	std::string GetTextureSize() const
+	const std::string & GetTextureSize() const
 	{
 		return texturesize;
 	}
@@ -185,7 +185,7 @@ public:
 		return button_ramp;
 	}
 
-	std::string GetFFDevice() const
+	const std::string & GetFFDevice() const
 	{
 		return ff_device;
 	}
@@ -255,12 +255,12 @@ public:
 		return normalmaps;
 	}
 
-	std::string GetSelectedCar() const
+	const std::string & GetPlayerCar() const
 	{
 		return player;
 	}
 
-	std::string GetPlayerCarPaint() const
+	const std::string & GetPlayerCarPaint() const
 	{
 		return player_paint;
 	}
@@ -272,12 +272,12 @@ public:
 		b = player_color[2];
 	}
 
-	std::string GetOpponentCar() const
+	const std::string & GetOpponentCar() const
 	{
 		return opponent;
 	}
 
-	std::string GetOpponentCarPaint() const
+	const std::string & GetOpponentCarPaint() const
 	{
 		return opponent_paint;
 	}
@@ -304,7 +304,7 @@ public:
 		return contrast;
 	}
 
-	std::string GetCameraMode() const
+	const std::string & GetCameraMode() const
 	{
 		return camera_mode;
 	}
