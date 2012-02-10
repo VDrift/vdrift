@@ -99,9 +99,9 @@ bool GUIPAGE::Load(
 		// optional
 		float w(0), h(0), z(0);
 		std::string text, desc;
-		pagefile.GetParam(section, "width", w, error_output);
-		pagefile.GetParam(section, "height", h, error_output);
-		pagefile.GetParam(section, "layer", z, error_output);
+		pagefile.GetParam(section, "width", w);
+		pagefile.GetParam(section, "height", h);
+		pagefile.GetParam(section, "layer", z);
 		pagefile.GetParam(section, "text", text);
 		pagefile.GetParam(section, "tip", desc);
 		z += z0;
