@@ -67,22 +67,11 @@ bool GUIPAGE::Load(
 	if (!pagefile.GetParam("", "name", name)) return false;
 	if (!pagefile.GetParam("", "dialog", dialog)) return false;
 
-	// draw order
-	float z = 100;
+	// widget map for hooks
+	std::map <std::string, WIDGET *> namemap;
 
-	//generate background
-	{
-		float y(0.5);
-		float x(0.5);
-		float yscale(1.0);
-		float xscale(1.0);
-		std::string background;
-		std::tr1::shared_ptr<TEXTURE> texture;
-		if (!pagefile.GetParam("", "background", background)) return false;
-		if (!content.load(texpath, background, texinfo, texture)) return false;
-		WIDGET_IMAGE * bg_widget = NewWidget<WIDGET_IMAGE>();
-		bg_widget->SetupDrawable(sref, texture, x, y, xscale, yscale, z-1);
-	}
+	// draw order offset
+	float z0 = 100;
 
 	// tooltip widget
 	{
@@ -93,23 +82,29 @@ bool GUIPAGE::Load(
 		float xscale(yscale * screenhwratio);
 		float r(1), g(1), b(1);
 		tooltip_widget = NewWidget<WIDGET_LABEL>();
-		tooltip_widget->SetupDrawable(sref, font, text, x, y, xscale, yscale, r, g, b, z);
+		tooltip_widget->SetupDrawable(sref, font, text, x, y, xscale, yscale, r, g, b, z0);
 	}
-
-	// widget map for hooks
-	std::map <std::string, WIDGET *> namemap;
 
 	// load widgets
 	for (CONFIG::const_iterator section = pagefile.begin(); section != pagefile.end(); ++section)
 	{
 		if (section->first.empty()) continue;
 
+		// required
 		std::string type;
+		std::vector<float> xy(2);
 		if (!pagefile.GetParam(section, "type", type, error_output)) return false;
+		if (!pagefile.GetParam(section, "center", xy, error_output)) return false;
 
+		// optional
+		float w(0), h(0), z(0);
 		std::string text, desc;
+		pagefile.GetParam(section, "width", w, error_output);
+		pagefile.GetParam(section, "height", h, error_output);
+		pagefile.GetParam(section, "layer", z, error_output);
 		pagefile.GetParam(section, "text", text);
 		pagefile.GetParam(section, "tip", desc);
+		z += z0;
 
 		std::map<std::string, std::string>::const_iterator li;
 		if ((li = languagemap.find(text)) != languagemap.end()) text = li->second;
@@ -117,13 +112,6 @@ bool GUIPAGE::Load(
 
 		if (type == "image")
 		{
-			float w, h;
-			std::vector<float> xy(2);
-
-			if (!pagefile.GetParam(section, "center", xy, error_output)) return false;
-			if (!pagefile.GetParam(section, "width", w, error_output)) return false;
-			if (!pagefile.GetParam(section, "height", h, error_output)) return false;
-
 			std::string texname;
 			std::tr1::shared_ptr<TEXTURE> texture;
 			if (!pagefile.GetParam(section, "filename", texname, error_output)) return false;
@@ -134,20 +122,16 @@ bool GUIPAGE::Load(
 		}
 		else if (type == "button")
 		{
-			float fontsize(0), h(0), w(0);
-			std::vector<float> xy(2);
+			float fontsize(0);
 			std::vector<float> color(3, 1.0);
 			std::string action;
-			bool cancel;
+			bool cancel = false;
 			bool enabled = true;
 
-			if (!pagefile.GetParam(section, "center", xy, error_output)) return false;
 			if (!pagefile.GetParam(section, "fontsize", fontsize, error_output)) return false;
 			if (!pagefile.GetParam(section, "color", color, error_output)) return false;
 			if (!pagefile.GetParam(section, "action", action, error_output)) return false;
 			if (!pagefile.GetParam(section, "cancel", cancel, error_output)) return false;
-			pagefile.GetParam(section, "height", h);
-			pagefile.GetParam(section, "width", w);
 			pagefile.GetParam(section, "enabled", enabled);
 
 			std::tr1::shared_ptr<TEXTURE> texture_up, texture_down, texture_sel;
@@ -176,10 +160,8 @@ bool GUIPAGE::Load(
 		else if (type == "label")
 		{
 			float fontsize;
-			std::vector<float> xy(2);
 			std::vector<float> color(3, 1.0);
 
-			if (!pagefile.GetParam(section, "center", xy, error_output)) return false;
 			if (!pagefile.GetParam(section, "fontsize", fontsize, error_output)) return false;
 			pagefile.GetParam(section, "color", color);
 
@@ -197,13 +179,11 @@ bool GUIPAGE::Load(
 		}
 		else if (type == "toggle")
 		{
-			std::vector<float> xy(2);
 			std::string setting;
 			std::string valuetype;
 			float spacing(0.3);
 			float fontsize;
 
-			if (!pagefile.GetParam(section, "center", xy, error_output)) return false;
 			if (!pagefile.GetParam(section, "setting", setting, error_output)) return false;
 			if (!pagefile.GetParam(section, "fontsize", fontsize, error_output)) return false;
 			if (!pagefile.GetParam(section, "values", valuetype, error_output)) return false;
@@ -262,13 +242,11 @@ bool GUIPAGE::Load(
 			std::string setting;
 			std::string values;
 			std::string action;
-			std::vector<float> xy(2);
 			float spacing(0.3);
 			float fontsize;
 
 			if (!pagefile.GetParam(section, "setting", setting, error_output)) return false;
 			if (!pagefile.GetParam(section, "values", values, error_output)) return false;
-			if (!pagefile.GetParam(section, "center", xy, error_output)) return false;
 			if (!pagefile.GetParam(section, "fontsize", fontsize, error_output)) return false;
 			pagefile.GetParam(section, "spacing", spacing);
 			pagefile.GetParam(section, "action", action);
@@ -313,7 +291,6 @@ bool GUIPAGE::Load(
 			if (!pagefile.GetParam(section, "setting1", setting1, error_output)) return false;
 			if (!pagefile.GetParam(section, "setting2", setting2, error_output)) return false;
 			if (!pagefile.GetParam(section, "values", values, error_output)) return false;
-			if (!pagefile.GetParam(section, "center", xy, error_output)) return false;
 			if (!pagefile.GetParam(section, "fontsize", fontsize, error_output)) return false;
 			pagefile.GetParam(section, "spacing", spacing);
 			pagefile.GetParam(section, "hook", hook);
@@ -351,54 +328,38 @@ bool GUIPAGE::Load(
 		}
 		else if (type == "multi-image")
 		{
-			std::vector<float> xy(2, 0.0);
-			float width, height;
 			std::string setting, values, prefix, postfix;
-
-			if (!pagefile.GetParam(section, "center", xy, error_output)) return false;
-			if (!pagefile.GetParam(section, "width", width, error_output)) return false;
-			if (!pagefile.GetParam(section, "height", height, error_output)) return false;
 			if (!pagefile.GetParam(section, "setting", setting, error_output)) return false;
 			if (!pagefile.GetParam(section, "values", values, error_output)) return false;
 			if (!pagefile.GetParam(section, "prefix", prefix, error_output)) return false;
 			if (!pagefile.GetParam(section, "postfix", postfix, error_output)) return false;
 
 			WIDGET_MULTIIMAGE * new_widget = NewWidget<WIDGET_MULTIIMAGE>();
-			new_widget->SetupDrawable(sref, content, prefix, postfix, xy[0], xy[1], width, height, error_output, z);
+			new_widget->SetupDrawable(sref, content, prefix, postfix, xy[0], xy[1], w, h, error_output, z);
 		}
 		else if (type == "colorpicker")
 		{
-			std::vector<float> xy(2);
-			float width, height;
 			std::string setting, name;
 			std::tr1::shared_ptr<TEXTURE> cursor, hue, sat, bg;
-
-			if (!pagefile.GetParam(section, "center", xy, error_output)) return false;
-			if (!pagefile.GetParam(section, "width", width, error_output)) return false;
-			if (!pagefile.GetParam(section, "height", height, error_output)) return false;
 			if (!pagefile.GetParam(section, "setting", setting, error_output)) return false;
-
 			if (!content.load(texpath, "widgets/color_cursor.png", texinfo, cursor)) return false;
 			if (!content.load(texpath, "widgets/color_hue.png", texinfo, hue)) return false;
 			if (!content.load(texpath, "widgets/color_saturation.png", texinfo, sat)) return false;
 			if (!content.load(texpath, "widgets/color_value.png", texinfo, bg)) return false;
 
-			float x = xy[0] - width / 2;
-			float y = xy[1] - height / 2;
-
+			float x = xy[0] - w / 2;
+			float y = xy[1] - h / 2;
 			WIDGET_COLORPICKER * new_widget = NewWidget<WIDGET_COLORPICKER>();
-			new_widget->SetupDrawable(sref, cursor, hue, sat, bg, x, y, width, height, setting, error_output, z);
+			new_widget->SetupDrawable(sref, cursor, hue, sat, bg, x, y, w, h, setting, error_output, z);
 		}
 		else if (type == "slider")
 		{
-			std::vector<float> xy(2);
 			float min(0), max(1);
 			float fontsize;
 			bool percentage(false);
 			std::string name, setting, values;
 
 			if (!pagefile.GetParam(section, "name", name, error_output)) return false;
-			if (!pagefile.GetParam(section, "center", xy, error_output)) return false;
 			if (!pagefile.GetParam(section, "setting", setting, error_output)) return false;
 			if (!pagefile.GetParam(section, "values", values, error_output)) return false;
 			if (!pagefile.GetParam(section, "fontsize", fontsize, error_output)) return false;
@@ -441,9 +402,6 @@ bool GUIPAGE::Load(
 				new_widget->SetupDrawable(sref, font, text, x, y, fontscalex, fontscaley, r, g, b, z);
 			}
 
-			float h(0.0), w(0.0);
-			pagefile.GetParam(section, "width", w);
-			pagefile.GetParam(section, "height", h);
 			if (h == 0.0) h = fontsize;
 			if (w < h * screenhwratio) w = h * screenhwratio;
 			xy[0] = xy[0] - w * 4.0 / 2 - fontscalex; // slider offset
@@ -464,27 +422,23 @@ bool GUIPAGE::Load(
 		}
 		else if (type == "spinningcar")
 		{
-			std::vector<float> centerxy(3), carpos(3);
+			std::vector<float> carpos(3);
 			std::string setting, values, name, prefix, postfix;
-
-			if (!pagefile.GetParam(section, "center", centerxy, error_output)) return false;
 			if (!pagefile.GetParam(section, "carpos", carpos, error_output)) return false;
 			if (!pagefile.GetParam(section, "setting", setting, error_output)) return false;
 			if (!pagefile.GetParam(section, "values", values, error_output)) return false;
 
 			WIDGET_SPINNINGCAR * new_widget = NewWidget<WIDGET_SPINNINGCAR>();
-			new_widget->SetupDrawable(sref, content, pathmanager, centerxy[0], centerxy[1],
+			new_widget->SetupDrawable(sref, content, pathmanager, xy[0], xy[1],
 				MATHVECTOR<float, 3>(carpos[0], carpos[1], carpos[2]), error_output, z+10);
 		}
 		else if (type == "controlgrab")
 		{
-			std::vector<float> xy(2);
 			float fontsize;
 			std::string setting;
 			bool analog(false);
 			bool only_one(false);
 
-			if (!pagefile.GetParam(section, "center", xy, error_output)) return false;
 			if (!pagefile.GetParam(section, "fontsize", fontsize, error_output)) return false;
 			if (!pagefile.GetParam(section, "setting", setting, error_output)) return false;
 			pagefile.GetParam(section, "analog", analog);
