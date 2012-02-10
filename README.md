@@ -96,14 +96,14 @@ Libraries
 
 The required libraries include:
 
-- libsdl - Simple Direct Media Layer
-- libglew - OpenGL extension utilities
-- sdl-gfx - Graphics drawing primitives library for SDL
-- sdl-image - Image file loading library for SDL
-- vorbisfile - File loading library for the ogg vorbis format
-- libvorbis - The Vorbis General Audio Compression Codec
-- bullet - C++ Libraries (BulletCollision, BulletDynamics, LinearMath)
-- libcurl - For managing data download from the net.
+- libsdl - Simple Direct Media Layer.
+- libglew - OpenGL extension utilities.
+- sdl-gfx - Graphics drawing primitives library for SDL.
+- sdl-image - Image file loading library for SDL.
+- vorbisfile - File loading library for the ogg vorbis format.
+- libvorbis - The Vorbis General Audio Compression Codec.
+- bullet - The C++ Libraries BulletCollision, BulletDynamics, LinearMath are required.
+- libcurl - For managing data download from the internet.
 - libarchive - API for managing compressed files.
 
 Installing Dependencies on FreeBSD
@@ -190,7 +190,7 @@ See also
 Downloading VDrift
 ==================
 
-For downloading the source code from the repository execute
+Download the source code from the repository
 
     git clone https://github.com/VDrift/vdrift.git VDrift
 
@@ -207,66 +207,55 @@ requires checking out the repository with subversion:
 
     svn checkout https://vdrift.svn.sourceforge.net/svnroot/vdrift/vdrift-data data
 
-Downloading Dependencies on Windows
------------------------------------
-
-Download the dependencies for Windows:
-
-    cd vdrift
-    git clone https://github.com/vdrift/vdrift-win.git
-
-Downloading Dependencies on Mac OS
-----------------------------------
-
-Download the dependencies for Mac OS:
-
-    cd vdrift
-    git clone https://github.com/vdrift/vdrift-mac.git
-
 See also
 --------
 
-- [wiki.vdrift.net/Getting_the_latest_release](http://wiki.vdrift.net/Getting_the_latest_release)
-- [wiki.vdrift.net/Getting_the_development_version](http://wiki.vdrift.net/Getting_the_development_version)
+- [VDrift's wiki on getting the lastest release](http://wiki.vdrift.net/Getting_the_latest_release)
+- [VDrift's wiki on getting the development version](http://wiki.vdrift.net/Getting_the_development_version)
 
-See also
---------
-
-- [VDrift's wiki on downloading](http://wiki.VDrift.net/Getting_the_development_version)
-
-Injecting Libraries
-===================
+Injecting Build Dependencies
+============================
 
 Windows and Mac OS do not have any packages for some libraries required at
 compile time. These need to be placed below the git root of VDrift.
 
-Injecting Libraries on FreeBSD
-------------------------------
+Injecting Build Dependencies on FreeBSD
+---------------------------------------
 
 Please seek advice from the wiki.
 
-Injecting Libraries on Linux
-----------------------------
+Injecting Build Dependencies on Linux
+-------------------------------------
 
 Usually all needed libraries can be installed using the package management on
-Linux, so it is not recommended to compile them oneself.
+Linux, so it is not necessary to inject them.
 
-Injecting Libraries on Mac OS
------------------------------
+Injecting Build Dependencies on Mac OS
+--------------------------------------
 
-Download libraries required to compile on Mac OS:
+Download platform specific build dependencies on Mac OS:
 
+    cd VDrift
     git clone https://github.com/VDrift/VDrift-mac.git
 
-Injecting Libraries on Windows
-------------------------------
+Injecting Build Dependencies on Windows
+---------------------------------------
 
-Download libraries required to compile on Windows:
+Download platform specific build dependencies on Windows:
 
+    cd VDrift
     git clone https://github.com/VDrift/vdrift-win.git
+
+See also
+--------
+
+- [VDrift's wiki on injecting build dependencies](http://wiki.vdrift.net/Injecting_Build_Dependencies)
 
 Compiling VDrift
 ================
+
+The downloaded source code needs to be compiled to be executable. The process to
+do this depends on the platform on that the compiling is done.
 
 Compiling VDrift on FreeBSD
 ---------------------------
@@ -300,6 +289,9 @@ See also
 
 Installing VDrift
 =================
+
+In order to integrate with the platform the compiled executables need to be
+installed in the system.
 
 Installing VDrift on FreeBSD
 ----------------------------
