@@ -190,6 +190,11 @@ See also
 Downloading VDrift
 ==================
 
+VDrift consists of two essential parts; the core source code and content data.
+
+Downloading VDrift Source
+-------------------------
+
 Download the source code from the repository
 
     git clone https://github.com/VDrift/vdrift.git VDrift
@@ -216,8 +221,7 @@ See also
 Injecting Build Dependencies
 ============================
 
-Windows and Mac OS do not have any packages for some libraries required at
-compile time. These need to be placed below the git root of VDrift.
+Libraries that can not be installed need to present at the git root of VDrift.
 
 Injecting Build Dependencies on FreeBSD
 ---------------------------------------
@@ -227,8 +231,8 @@ Please seek advice from the wiki.
 Injecting Build Dependencies on Linux
 -------------------------------------
 
-Usually all needed libraries can be installed using the package management on
-Linux, so it is not necessary to inject them.
+On Linux all needed libraries can be installed using the package management,
+usually. Therefore it is not necessary to inject them.
 
 Injecting Build Dependencies on Mac OS
 --------------------------------------
