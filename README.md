@@ -71,6 +71,37 @@ See also
 
 - [VDrift's wiki on hardware requirements](http://wiki.VDrift.net/Hardware_requirements)
 
+Downloading VDrift
+==================
+
+VDrift consists of two essential parts; the core source code and content data.
+
+Downloading VDrift Source
+-------------------------
+
+Download the source code from the repository
+
+    git clone https://github.com/VDrift/vdrift.git VDrift
+
+Downloading VDrift Data
+-----------------------
+
+VDrift Data is expected to reside in a folder called *data* in the root of
+VDrift, so change your directory to the root of the sources:
+
+    cd VDrift
+
+Currently the VDrift Data is still hosted at Sourceforge, so to getting it
+requires checking out the repository with subversion:
+
+    svn checkout https://vdrift.svn.sourceforge.net/svnroot/vdrift/vdrift-data data
+
+See also
+--------
+
+- [VDrift's wiki on getting the lastest release](http://wiki.vdrift.net/Getting_the_latest_release)
+- [VDrift's wiki on getting the development version](http://wiki.vdrift.net/Getting_the_development_version)
+
 Dependencies
 ============
 
@@ -186,37 +217,6 @@ See also
 --------
 
 - [VDrift's wiki on software requirements](http://wiki.VDrift.net/Software_requirements)
-
-Downloading VDrift
-==================
-
-VDrift consists of two essential parts; the core source code and content data.
-
-Downloading VDrift Source
--------------------------
-
-Download the source code from the repository
-
-    git clone https://github.com/VDrift/vdrift.git VDrift
-
-Downloading VDrift Data
------------------------
-
-VDrift Data is expected to reside in a folder called *data* in the root of
-VDrift, so change your directory to the root of the sources:
-
-    cd VDrift
-
-Currently the VDrift Data is still hosted at Sourceforge, so to getting it
-requires checking out the repository with subversion:
-
-    svn checkout https://vdrift.svn.sourceforge.net/svnroot/vdrift/vdrift-data data
-
-See also
---------
-
-- [VDrift's wiki on getting the lastest release](http://wiki.vdrift.net/Getting_the_latest_release)
-- [VDrift's wiki on getting the development version](http://wiki.vdrift.net/Getting_the_development_version)
 
 Injecting Build Dependencies
 ============================
