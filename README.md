@@ -74,11 +74,9 @@ See also
 Dependencies
 ============
 
-Make sure you have all the required libraries and build tools. Make sure you
-also have the development files for each of the libraries. Your Linux
-distribution may have different package names and/or bundled differently. The
-lists below should give enough information to search for applicable packages
-within your distribution's package manager.
+VDrift requires several tools and libraries at build time. Make sure you have
+installed all required libraries, each correspondent development files and build
+tools, which are listed below.
 
 Build Tools
 -----------
@@ -112,6 +110,16 @@ Installing Dependencies on FreeBSD
 ----------------------------------
 
 Please seek advice from the wiki.
+
+Installing Dependencies on Linux
+--------------------------------
+
+Your Linux distribution may have different package names and/or bundled
+differently. The lists above should give enough information to search for
+applicable packages within your distribution's package manager.
+
+Below following are instructions for Ubuntu Linux. Please seek advice for other
+distributions from the wiki.
 
 Installing Dependencies on Ubuntu Linux
 ---------------------------------------
