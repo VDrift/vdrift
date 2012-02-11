@@ -44,41 +44,75 @@ GPU
 ---
 
 VDrift requires a recent nVidia or ATI graphics card. Intel graphics cards are
-not supported.
+not recommended.
 
 A nVidia GeForce 7-series or ATI Radeon X1000-Series card is recommended in
 order to enable all the visual effects. By reducing or disabling some of the
 display options, it should be possible to play VDrift with a nVidia GeForce 2
 or an ATI Radeon 7000.
 
-HDD
----
+Hard Disk Drive
+---------------
 
-VDrift takes up quite some harddisk space. The VDrift Data alone is about 1.6 GB
-in size and you will need to check it out, first and install it afterwards. So
-be prepared for handling some 3 - 5 GB.
+When following this readme, one will typically need about 5.5 GiB hard disk
+space. VDrift source code and data sum up to about 3.5 GiB at the build location
+and installation requires about 2 GiB of space including dependencies.
+
+Network Transfer
+----------------
+
+About 2 - 3 GiB network transfer volume are required for downloading VDrift, its
+data and dependencies.
 
 RAM
 ---
 
-VDrift consumes 300 MiB of memory space on a typical run. 512 MiB of
-memory may be sufficient on some operating systems. 1 GiB or more is
-recommended and required for larger tracks.
-
+VDrift consumes 300 MiB of memory space on a typical run, so 512 MiB of
+memory is the minimum requirement. Though, 1 GiB or more memory is recommended,
+especially for larger tracks.
 
 See also
 --------
 
 - [VDrift's wiki on hardware requirements](http://wiki.VDrift.net/Hardware_requirements)
 
-Dependencies
-============
+Downloading VDrift
+==================
 
-Make sure you have all the required libraries and build tools. Make sure you
-also have the development files for each of the libraries. Your Linux
-distribution may have different package names and/or bundled differently. The
-lists below should give enough information to search for applicable packages
-within your distribution's package manager.
+VDrift consists of two essential parts; the core source code and content data.
+
+Downloading VDrift Source
+-------------------------
+
+Download the source code from the repository
+
+    git clone https://github.com/VDrift/vdrift.git VDrift
+
+Downloading VDrift Data
+-----------------------
+
+VDrift Data is expected to reside in a folder called *data* in the root of
+VDrift, so change your directory to the root of the sources:
+
+    cd VDrift
+
+Currently the VDrift Data is still hosted at Sourceforge, so to getting it
+requires checking out the repository with subversion:
+
+    svn checkout https://vdrift.svn.sourceforge.net/svnroot/vdrift/vdrift-data data
+
+See also
+--------
+
+- [VDrift's wiki on getting the lastest release](http://wiki.vdrift.net/Getting_the_latest_release)
+- [VDrift's wiki on getting the development version](http://wiki.vdrift.net/Getting_the_development_version)
+
+Installing Dependencies
+=======================
+
+VDrift requires several tools and libraries at build time. Make sure you have
+installed all required libraries, each correspondent development files and all build
+tools, as listed below.
 
 Build Tools
 -----------
@@ -98,20 +132,39 @@ Libraries
 
 The required libraries include:
 
-- libsdl - Simple Direct Media Layer
-- libglew - OpenGL extension utilities
-- sdl-gfx - Graphics drawing primitives library for SDL
-- sdl-image - Image file loading library for SDL
-- vorbisfile - File loading library for the ogg vorbis format
-- libvorbis - The Vorbis General Audio Compression Codec
-- bullet C++ Libraries (BulletCollision, BulletDynamics, LinearMath)
-- libcurl - For managing data download from the net.
+- libsdl - Simple Direct Media Layer.
+- libglew - OpenGL extension utilities.
+- sdl-gfx - Graphics drawing primitives library for SDL.
+- sdl-image - Image file loading library for SDL.
+- vorbisfile - File loading library for the ogg vorbis format.
+- libvorbis - The Vorbis General Audio Compression Codec.
+- bullet - The C++ Libraries BulletCollision, BulletDynamics, LinearMath are required.
+- libcurl - For managing data download from the internet.
 - libarchive - API for managing compressed files.
 
 Installing Dependencies on FreeBSD
 ----------------------------------
 
 Please seek advice from the wiki.
+
+Installing Dependencies on Linux
+--------------------------------
+
+Your Linux distribution may have different package names and/or bundled
+differently. The lists above should give enough information to search for
+applicable packages within your distribution's package manager.
+
+Below following are instructions for Ubuntu Linux. Please seek advice for other
+distributions from the wiki.
+
+Installing Dependencies on Fedora Linux
+---------------------------------------
+
+All required packages can be installed using this command:
+
+    sudo yum install asio-devel bullet-devel gcc-c++ glew-devel \
+                     libarchive-devel scons SDL_*-devel curl-devel
+
 
 Installing Dependencies on Ubuntu Linux
 ---------------------------------------
@@ -136,10 +189,10 @@ libglew1.6 and its development headers:
 
 All other required packages can be installed using this command:
 
-    sudo apt-get install g++ libarchive-dev libarchive-dev libasio-dev \
-                         libboost-dev libcurl4-gnutls-dev libdrm-dev \
-                         libgl1-mesa-dev libglu1-mesa-dev libkms1 \
-                         mesa-common-dev libsdl-gfx1.2-dev libsdl-image1.2-dev \
+    sudo apt-get install g++ libarchive-dev libasio-dev libboost-dev \
+                         libcurl4-gnutls-dev libdrm-dev libgl1-mesa-dev \
+                         libglu1-mesa-dev libkms1 mesa-common-dev \
+                         libsdl-gfx1.2-dev libsdl-image1.2-dev \
                          libsdl-net1.2-dev libvorbis-dev freeglut3 libbullet0 \
                          libbullet-dev scons
 
@@ -179,88 +232,48 @@ See also
 
 - [VDrift's wiki on software requirements](http://wiki.VDrift.net/Software_requirements)
 
-Downloading VDrift
-==================
+Injecting Build Dependencies
+============================
 
-For downloading the source code from the repository execute
+Libraries that can not be installed need to present at the git root of VDrift.
 
-    git clone https://github.com/VDrift/vdrift.git VDrift
-
-Downloading VDrift Data
------------------------
-
-VDrift Data is expected to reside in a folder called *data* in the root of
-VDrift, so change your directory to the root of the sources:
-
-    cd VDrift
-
-Currently the VDrift Data is still hosted at Sourceforge, so to getting it
-requires checking out the repository with subversion:
-
-    svn checkout https://vdrift.svn.sourceforge.net/svnroot/vdrift/vdrift-data data
-
-Downloading Dependencies on Windows
------------------------------------
-
-Download the dependencies for Windows:
-
-    cd vdrift
-    git clone https://github.com/vdrift/vdrift-win.git
-
-Downloading Dependencies on Mac OS
-----------------------------------
-
-Download the dependencies for Mac OS:
-
-    cd vdrift
-    git clone https://github.com/vdrift/vdrift-mac.git
-
-See also
---------
-
-- [wiki.vdrift.net/Getting_the_latest_release](http://wiki.vdrift.net/Getting_the_latest_release)
-- [wiki.vdrift.net/Getting_the_development_version](http://wiki.vdrift.net/Getting_the_development_version)
-
-See also
---------
-
-- [VDrift's wiki on downloading](http://wiki.VDrift.net/Getting_the_development_version)
-
-Injecting Libraries
-===================
-
-Windows and Mac OS do not have any packages for some libraries required at
-compile time. These need to be placed below the git root of VDrift.
-
-Injecting Libraries on FreeBSD
-------------------------------
+Injecting Build Dependencies on FreeBSD
+---------------------------------------
 
 Please seek advice from the wiki.
 
-Injecting Libraries on Linux
-----------------------------
+Injecting Build Dependencies on Linux
+-------------------------------------
 
-Usually all needed libraries can be installed using the package management on
-Linux, so it is not recommended to compile them oneself.
+On Linux all needed libraries can be installed using the package management,
+usually. Therefore it is not necessary to inject them.
 
-Injecting Libraries on Mac OS
------------------------------
+Injecting Build Dependencies on Mac OS
+--------------------------------------
 
-Download libraries required to compile on Mac OS:
+Download platform specific build dependencies on Mac OS:
 
+    cd VDrift
     git clone https://github.com/VDrift/VDrift-mac.git
 
-Injecting Libraries on Windows
-------------------------------
+Injecting Build Dependencies on Windows
+---------------------------------------
 
-Download libraries required to compile on Windows:
+Download platform specific build dependencies on Windows:
 
+    cd VDrift
     git clone https://github.com/VDrift/vdrift-win.git
+
+See also
+--------
+
+- [VDrift's wiki on injecting build dependencies](http://wiki.vdrift.net/Injecting_Build_Dependencies)
 
 Compiling VDrift
 ================
 
-Please seek advice from the wiki.
+The downloaded source code needs to be compiled to be executable. The process to
+do this depends on the platform on that the compiling is done.
 
 Compiling VDrift on FreeBSD
 ---------------------------
@@ -294,6 +307,9 @@ See also
 
 Installing VDrift
 =================
+
+In order to integrate with the platform the compiled executables need to be
+installed in the system.
 
 Installing VDrift on FreeBSD
 ----------------------------
