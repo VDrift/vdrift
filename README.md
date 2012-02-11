@@ -44,27 +44,32 @@ GPU
 ---
 
 VDrift requires a recent nVidia or ATI graphics card. Intel graphics cards are
-not supported.
+not recommended.
 
 A nVidia GeForce 7-series or ATI Radeon X1000-Series card is recommended in
 order to enable all the visual effects. By reducing or disabling some of the
 display options, it should be possible to play VDrift with a nVidia GeForce 2
 or an ATI Radeon 7000.
 
-HDD
----
+Hard Disk Drive
+---------------
 
-VDrift takes up quite some harddisk space. The VDrift Data alone is about 1.6 GB
-in size and you will need to check it out, first and install it afterwards. So
-be prepared for handling some 3 - 5 GB.
+When following this readme, one will typically need about 5.5 GiB hard disk
+space. VDrift source code and data sum up to about 3.5 GiB at the build location
+and installation requires about 2 GiB of space including dependencies.
+
+Network Transfer
+----------------
+
+About 2 - 3 GiB network transfer volume are required for downloading VDrift, its
+data and dependencies.
 
 RAM
 ---
 
-VDrift consumes 300 MiB of memory space on a typical run. 512 MiB of
-memory may be sufficient on some operating systems. 1 GiB or more is
-recommended and required for larger tracks.
-
+VDrift consumes 300 MiB of memory space on a typical run, so 512 MiB of
+memory is the minimum requirement. Though, 1 GiB or more memory is recommended,
+especially for larger tracks.
 
 See also
 --------
