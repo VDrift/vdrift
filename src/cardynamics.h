@@ -228,9 +228,6 @@ protected:
 
 	btVector3 ApplySuspensionForceToBody ( int i, btScalar dt, btVector3 & force, btVector3 & torque );
 
-	btVector3 ComputeTireFrictionForce ( int i, btScalar dt, btScalar normal_force,
-        btScalar angvel, btVector3 & groundvel, const btQuaternion & wheel_orientation );
-
 	void ApplyWheelForces ( btScalar dt, btScalar wheel_drive_torque, int i, const btVector3 & suspension_force, btVector3 & force, btVector3 & torque );
 
 	void ApplyForces ( btScalar dt, const btVector3 & force, const btVector3 & torque);
