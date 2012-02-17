@@ -5,7 +5,6 @@
 #include "carinput.h"
 #include "camera.h"
 #include "camera_chase.h"
-#include "camera_fixed.h"
 #include "camera_free.h"
 #include "camera_mount.h"
 #include "camera_orbit.h"
@@ -333,71 +332,72 @@ static bool LoadWheel(
 static bool LoadCameras(
 	const PTree & cfg,
 	const float camerabounce,
-	CAMERA_SYSTEM & cameras,
+	std::vector<CAMERA*> & cameras,
 	std::ostream & error_output)
 {
-	CAMERA_MOUNT * hood_cam = new CAMERA_MOUNT("hood");
-	CAMERA_MOUNT * driver_cam = new CAMERA_MOUNT("incar");
-	driver_cam->SetEffectStrength(camerabounce);
-	hood_cam->SetEffectStrength(camerabounce);
-
-	MATHVECTOR<float, 3> pos(0), hoodpos(0);
-	if (!cfg.get("camera.view-position", pos, error_output)) return false;
-	MATHVECTOR <float, 3> cam_offset(pos[0], pos[1], pos[2]);
-	driver_cam->SetOffset(cam_offset);
-
-	if (!cfg.get("camera.hood-mounted-view-position", hoodpos, error_output))
+	const PTree * cfg_cams;
+	if (!cfg.get("camera", cfg_cams)) return false;
+	
+	int cam_num = cfg_cams->size();
+	if (cam_num < 1)
 	{
-		cam_offset.Set(pos[0] + 1, 0, pos[2]);
+		error_output << "No cameras defined." << std::endl;
+		return false;
 	}
-	else
+	cameras.reserve(cam_num);
+	
+	std::string type, name;
+	for (PTree::const_iterator i = cfg_cams->begin(); i != cfg_cams->end(); ++i)
 	{
-		cam_offset.Set(hoodpos[0], hoodpos[1], hoodpos[2]);
+		const PTree & cfg_cam = i->second;
+		if (!cfg_cam.get("type", type, error_output)) return false;
+		if (!cfg_cam.get("name", name, error_output)) return false;
+		
+		MATHVECTOR<float, 3> position;
+		MATHVECTOR<float, 3> lookat;
+		float stiffness = 0.0;
+		cfg_cam.get("stiffness", stiffness);
+		cfg_cam.get("position", position);
+		if (!cfg_cam.get("lookat", lookat))
+		{
+			lookat = position + direction::Forward;
+		}
+
+		CAMERA * cam;
+		if (type == "mount")
+		{
+			CAMERA_MOUNT * c = new CAMERA_MOUNT(name);
+			c->SetEffectStrength(camerabounce);
+			c->SetStiffness(stiffness);
+			c->SetOffset(position, lookat);
+			cam = c;
+		}
+		else if (type == "chase")
+		{
+			CAMERA_CHASE * c = new CAMERA_CHASE(name);
+			c->SetOffset(position);
+			cam = c;
+		}
+		else if (type == "orbit")
+		{
+			CAMERA_ORBIT * c = new CAMERA_ORBIT(name);
+			c->SetOffset(position);
+			cam = c;
+		}
+		else if (type == "free")
+		{
+			CAMERA_FREE * c = new CAMERA_FREE(name);
+			c->SetOffset(position);
+			cam = c;
+		}
+		else
+		{
+			error_output << "Unknown camera type " << type << std::endl;
+			return false;
+		}
+		cameras.push_back(cam);
 	}
-	hood_cam->SetOffset(cam_offset);
 
-	float view_stiffness = 0.0;
-	cfg.get("camera.view-stiffness", view_stiffness);
-	driver_cam->SetStiffness(view_stiffness);
-	hood_cam->SetStiffness(view_stiffness);
-	cameras.Add(hood_cam);
-	cameras.Add(driver_cam);
-
-	CAMERA_FIXED * cam_chaserigid = new CAMERA_FIXED("chaserigid");
-	cam_chaserigid->SetOffset(0, -6, 1.5);
-	cameras.Add(cam_chaserigid);
-
-	CAMERA_CHASE * cam_chase = new CAMERA_CHASE("chase");
-	cam_chase->SetChaseHeight(2.0);
-	cameras.Add(cam_chase);
-
-	cameras.Add(new CAMERA_ORBIT("orbit"));
-	cameras.Add(new CAMERA_FREE("free"));
-/*
-	// load additional views
-	int i = 1;
-	std::string istr = "1";
-	std::string view_name;
-	while (cfg.GetParam("view.name-" + istr, view_name))
-	{
-		float pos[3], angle[3];
-		if (!cfg.GetParam("view.position-" + istr, pos)) continue;
-		if (!cfg.GetParam("view.angle-" + istr, angle)) continue;
-
-		CAMERA_MOUNT* next_view = new CAMERA_MOUNT(view_name);
-
-		MATHVECTOR <float, 3> view_offset;
-		view_offset.Set(pos);
-
-		next_view->SetOffset(view_offset);
-		next_view->SetRotation(angle[0] * 3.141593/180.0, angle[1] * 3.141593/180.0);
-		cameras.Add(next_view);
-
-		std::stringstream sstr;
-		sstr << ++i;
-		istr = sstr.str();
-	}
-*/
 	return true;
 }
 
@@ -411,6 +411,14 @@ CAR::CAR() :
 	applied_brakes(0)
 {
 	// ctor
+}
+
+CAR::~CAR()
+{
+	for (int i = 0; i < cameras.size(); ++i)
+	{
+		delete cameras[i];
+	}
 }
 
 bool CAR::LoadLight(
@@ -521,7 +529,7 @@ bool CAR::LoadGraphics(
 		SCENENODE & bodynoderef = topnode.GetNode(bodynode);
 		if (!loadDrawable(*cfg_steer, bodynoderef, &steernode, 0))
 		{
-			error_output << "unable to load steering wheel" << std::endl;
+			error_output << "Failed to load steering wheel." << std::endl;
 			return false;
 		}
 		cfg_steer->get("max-angle", steer_angle_max);
@@ -538,7 +546,7 @@ bool CAR::LoadGraphics(
 	{
 		if (!LoadLight(*cfg_light, content, error_output))
 		{
-			error_output << "unable to load lights" << std::endl;
+			error_output << "Failed to load lights." << std::endl;
 			return false;
 		}
 
@@ -552,7 +560,7 @@ bool CAR::LoadGraphics(
 	{
 		if (!LoadLight(*cfg_light, content, error_output))
 		{
-			error_output << "unable to load lights" << std::endl;
+			error_output << "Failed to load lights." << std::endl;
 			return false;
 		}
 
@@ -567,7 +575,7 @@ bool CAR::LoadGraphics(
 		SCENENODE & bodynoderef = topnode.GetNode(bodynode);
 		if (!loadDrawable(*cfg_light, bodynoderef, 0, &brakelights))
 		{
-			error_output << "unable to load lights" << std::endl;
+			error_output << "Failed to load lights." << std::endl;
 			return false;
 		}
 	}
@@ -576,20 +584,18 @@ bool CAR::LoadGraphics(
 		SCENENODE & bodynoderef = topnode.GetNode(bodynode);
 		if (!loadDrawable(*cfg_light, bodynoderef, 0, &reverselights))
 		{
-			error_output << "unable to load lights" << std::endl;
+			error_output << "Failed to load lights." << std::endl;
 			return false;
 		}
 	}
 
 	if (!LoadCameras(cfg, camerabounce, cameras, error_output))
 	{
-		error_output << "unable to load cameras" << std::endl;
+		error_output << "Failed to load cameras." << std::endl;
 		return false;
 	}
 
 	SetColor(carcolor[0], carcolor[1], carcolor[2]);
-
-	lookbehind = false;
 
 	return true;
 }
@@ -872,9 +878,11 @@ void CAR::SetPosition(const MATHVECTOR <float, 3> & new_position)
 	btVector3 newpos = ToBulletVector(new_position);
 	dynamics.SetPosition(newpos);
 	dynamics.AlignWithGround();
-
-	QUATERNION <float> rot = GetOrientation();
-	cameras.Active()->Reset(new_position, rot);
+	
+	for (int i = 0; i < cameras.size(); ++i)
+	{
+		cameras[i]->Reset(GetPosition(), GetOrientation());
+	}
 }
 
 void CAR::UpdateGraphics()
@@ -916,21 +924,6 @@ void CAR::UpdateGraphics()
 		steernoderef.GetTransform().SetRotation(steer_rotation);
 	}
 }
-
-void CAR::UpdateCameras(float dt)
-{
-	MATHVECTOR <float, 3> pos = ToMathVector<float>(dynamics.GetPosition());
-	QUATERNION <float> rot = ToMathQuaternion<float>(dynamics.GetOrientation());
-
-	// reverse the camera direction
-	if (lookbehind)
-	{
-		rot.Rotate(M_PI, 0, 0, 1);
-	}
-
-	cameras.Active()->Update(pos, rot, dt);
-}
-
 
 void CAR::UpdateSounds(float dt)
 {
@@ -1099,15 +1092,15 @@ void CAR::UpdateSounds(float dt)
 		roadnoise.SetGain(gain);
 		//std::cout << gain << std::endl;
 	}
-
+/*
 	//update bump noise sound
 	{
 		for (int i = 0; i < 4; i++)
 		{
-//			suspensionbumpdetection[i].Update(
-//				dynamics.GetSuspension(WHEEL_POSITION(i)).GetVelocity(),
-//				dynamics.GetSuspension(WHEEL_POSITION(i)).GetDisplacementFraction(),
-//				dt);
+			suspensionbumpdetection[i].Update(
+				dynamics.GetSuspension(WHEEL_POSITION(i)).GetVelocity(),
+				dynamics.GetSuspension(WHEEL_POSITION(i)).GetDisplacementFraction(),
+				dt);
 			if (suspensionbumpdetection[i].JustSettled())
 			{
 				float bumpsize = suspensionbumpdetection[i].GetTotalBumpSize();
@@ -1128,7 +1121,7 @@ void CAR::UpdateSounds(float dt)
 			}
 		}
 	}
-
+*/
 	//update crash sound
 	{
 		crashdetection.Update(GetSpeed(), dt);
@@ -1181,7 +1174,6 @@ void CAR::UpdateSounds(float dt)
 void CAR::Update(double dt)
 {
 	UpdateGraphics();
-	UpdateCameras(dt);
 	UpdateSounds(dt);
 }
 
@@ -1298,16 +1290,6 @@ void CAR::HandleInputs(const std::vector <float> & inputs, float dt)
 		dynamics.SetABS(!dynamics.GetABSEnabled());
 	if (inputs[CARINPUT::TCS_TOGGLE])
 		dynamics.SetTCS(!dynamics.GetTCSEnabled());
-
-	// check for rear view button
-	if (inputs[CARINPUT::REAR_VIEW])
-	{
-		lookbehind = true;
-	}
-	else
-	{
-		lookbehind = false;
-	}
 
 	//update brake sound
 	{

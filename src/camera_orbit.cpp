@@ -3,22 +3,31 @@
 
 CAMERA_ORBIT::CAMERA_ORBIT(const std::string & name) :
 	CAMERA(name),
+	offset(-direction::Forward * 3),
+	distance(-1.5 * direction::Forward.dot(offset)),
 	leftright_rotation(0),
-	updown_rotation(0),
-	orbit_distance(4.0)
+	updown_rotation(0)
 {
 	rotation.LoadIdentity();
+}
+
+void CAMERA_ORBIT::SetOffset(const MATHVECTOR <float, 3> & value)
+{
+	offset = value;
+	if (offset.dot(direction::Forward) > -0.001)
+	{
+		offset = offset - direction::Forward;
+	}
 }
 
 void CAMERA_ORBIT::Reset(const MATHVECTOR <float, 3> & newfocus, const QUATERNION <float> &)
 {
 	focus = newfocus;
+	distance = -1.5 * direction::Forward.dot(offset);
 	leftright_rotation = 0;
 	updown_rotation = 0;
-	orbit_distance = 4.0;
-
 	rotation.LoadIdentity();
-	position = -direction::Forward * orbit_distance;
+	position = offset;
 }
 
 void CAMERA_ORBIT::Update(const MATHVECTOR <float, 3> & newfocus, const QUATERNION <float> &, float)
@@ -43,12 +52,13 @@ void CAMERA_ORBIT::Rotate(float up, float left)
 void CAMERA_ORBIT::Move(float dx, float dy, float dz)
 {
 	MATHVECTOR <float, 3> move(dx, dy, dz);
+	distance += direction::Forward.dot(move);
+	float min_distance = -direction::Forward.dot(offset);
+	float max_distance = 4 * min_distance;
+	if (distance < min_distance) distance = min_distance;
+	else if (distance > max_distance) distance = max_distance;
 
-	orbit_distance -= direction::Forward.dot(move);
-	if (orbit_distance < 3.0) orbit_distance = 3.0;
-	if (orbit_distance > 10.0) orbit_distance = 10.0;
-
-	position = -direction::Forward * orbit_distance;
+	position = -direction::Forward * distance;
 	rotation.RotateVector(position);
 	position = position + focus;
 }

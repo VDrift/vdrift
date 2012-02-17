@@ -5,12 +5,11 @@
 #include "tobullet.h"
 #include "scenenode.h"
 #include "soundsource.h"
-#include "camera_system.h"
-#include "joeserialize.h"
-#include "macros.h"
-#include "suspensionbumpdetection.h"
+#include "camera.h"
 #include "crashdetection.h"
 #include "enginesoundinfo.h"
+#include "joeserialize.h"
+#include "macros.h"
 
 class BEZIER;
 class PERFORMANCE_TESTING;
@@ -24,6 +23,8 @@ friend class PERFORMANCE_TESTING;
 friend class joeserialize::Serializer;
 public:
 	CAR();
+	
+	virtual ~CAR();
 
 	bool LoadGraphics(
 		const PTree & cfg,
@@ -90,7 +91,7 @@ public:
 
 	void HandleInputs(const std::vector <float> & inputs, float dt);
 
-	CAMERA_SYSTEM & Cameras()
+	const std::vector<CAMERA*> & GetCameras() const
 	{
 		return cameras;
 	}
@@ -319,9 +320,8 @@ protected:
 	std::list<LIGHT> lights;
 	std::list<std::tr1::shared_ptr<MODEL> > models;
 
-	SUSPENSIONBUMPDETECTION suspensionbumpdetection[4];
 	CRASHDETECTION crashdetection;
-	CAMERA_SYSTEM cameras;
+	std::vector<CAMERA*> cameras;
 
 	std::list<std::pair <ENGINESOUNDINFO, SOUNDSOURCE> > enginesounds;
 	SOUNDSOURCE tiresqueal[WHEEL_POSITION_SIZE];
@@ -345,7 +345,6 @@ protected:
 
 	//internal variables that might change during driving (so, they need to be serialized)
 	float last_steer;
-	bool lookbehind;
 	bool nosactive;
 
 	std::string cartype;
@@ -357,8 +356,6 @@ protected:
 	float mz_nominalmax; //the nominal maximum Mz force, used to scale force feedback
 
 	void UpdateSounds(float dt);
-
-	void UpdateCameras(float dt);
 
 	void UpdateGraphics();
 

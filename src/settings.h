@@ -291,7 +291,7 @@ public:
 
 	float GetCameraBounce() const
 	{
-		return camerabounce;
+		return camera_bounce;
 	}
 
 	int GetNumberOfLaps() const
@@ -304,9 +304,9 @@ public:
 		return contrast;
 	}
 
-	const std::string & GetCameraMode() const
+	int GetCamera() const
 	{
-		return camera_mode;
+		return camera_id;
 	}
 
 	bool GetHGateShifter() const
@@ -344,9 +344,9 @@ public:
 		selected_replay = value;
 	}
 
-	void SetCameraMode ( const std::string& value )
+	void SetCamera ( int value )
 	{
-		camera_mode = value;
+		camera_id = value;
 	}
 
 	void SetResolutionOverride ( bool value )
@@ -416,10 +416,10 @@ private:
 	std::string opponent_paint;
 	std::vector<float> player_color;
 	std::vector<float> opponent_color;
-	float camerabounce;
+	int camera_id;
+	float camera_bounce;
 	int number_of_laps;
 	float contrast;
-	std::string camera_mode;
 	bool hgateshifter;
 	float ai_difficulty;
 	bool vehicle_damage;
