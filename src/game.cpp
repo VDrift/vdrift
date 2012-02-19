@@ -372,8 +372,8 @@ void GAME::InitCoreSubsystems()
 	}
 
 	QUATERNION <float> ldir;
-	ldir.Rotate(3.141593*0.05,0,1,0);
-	ldir.Rotate(-3.141593*0.1,1,0,0);
+	ldir.Rotate(3.141593*0.1,0,1,0);
+	ldir.Rotate(-3.141593*0.2,1,0,0);
 	graphics_interface->SetSunDirection(ldir);
 
 	eventsystem.Init(info_output);
