@@ -26,11 +26,11 @@ enum CARINPUT
    	FIFTH_GEAR,
     SIXTH_GEAR,
     REVERSE,
-	REAR_VIEW,
 	ROLLOVER_RECOVER,
 
     //inputs that are used elsewhere in the game only
     GAME_ONLY_INPUTS_START_HERE,
+	VIEW_REAR,
  	VIEW_PREV,
  	VIEW_NEXT,
     VIEW_HOOD,

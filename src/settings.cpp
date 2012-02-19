@@ -73,10 +73,10 @@ SETTINGS::SETTINGS() :
 	opponent_paint("default"),
 	player_color(3, 1.0),
 	opponent_color(3, 1.0),
-	camerabounce(1.0),
+	camera_id(0),
+	camera_bounce(1.0),
 	number_of_laps(1),
 	contrast(1.0),
-	camera_mode("chase"),
 	hgateshifter(false),
 	ai_difficulty(1.0),
 	vehicle_damage(false)
@@ -106,7 +106,7 @@ void SETTINGS::Serialize(bool write, CONFIG & config)
 	Param(config, write, section, "track_dynamic", trackdynamic);
 	Param(config, write, section, "batch_geometry", batch_geometry);
 	Param(config, write, section, "number_of_laps", number_of_laps);
-	Param(config, write, section, "camera_mode", camera_mode);
+	Param(config, write, section, "camera_id", camera_id);
 
 	config.GetSection("display", section);
 	if (!res_override)
@@ -138,7 +138,7 @@ void SETTINGS::Serialize(bool write, CONFIG & config)
 	Param(config, write, section, "lighting", lighting);
 	Param(config, write, section, "bloom", bloom);
 	Param(config, write, section, "normalmaps", normalmaps);
-	Param(config, write, section, "camerabounce", camerabounce);
+	Param(config, write, section, "camerabounce", camera_bounce);
 	Param(config, write, section, "contrast", contrast);
 
 	config.GetSection("sound", section);

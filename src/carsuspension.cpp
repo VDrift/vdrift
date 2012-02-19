@@ -1,4 +1,5 @@
 #include "carsuspension.h"
+#include "coordinatesystem.h"
 #include "tobullet.h"
 #include "cfg/ptree.h"
 
@@ -37,7 +38,7 @@ void CARSUSPENSION::Init(const CARSUSPENSIONINFO & info)
 {
 	this->info = info;
 	position = info.extended_position;
-	orientation = btQuaternion::getIdentity();
+	SetSteering(0.0);
 }
 
 void CARSUSPENSION::SetSteering(const btScalar & value)
@@ -48,11 +49,12 @@ void CARSUSPENSION::SetSteering(const btScalar & value)
 	{
 		steering_angle = atan(1.0 / (1.0 / tan(alpha) - tan(info.ackermann * M_PI / 180.0)));
 	}
-
-	btQuaternion s(btVector3(sin(-info.caster * M_PI / 180.0), 0, cos(-info.caster * M_PI / 180.0)), steering_angle);
-	btQuaternion t(btVector3(0, 0, 1), info.toe * M_PI / 180.0);
-	btQuaternion c(btVector3(1, 0, 0), -info.camber * M_PI / 180.0);
-	orientation = c * t * s;
+	btVector3 steeraxis = direction::up * cos(-info.caster * M_PI / 180.0) +
+		direction::right * sin(-info.caster * M_PI / 180.0);
+	btQuaternion ste(steeraxis, steering_angle);
+	btQuaternion toe(direction::up, info.toe * M_PI / 180.0);
+	btQuaternion cam(direction::forward, -info.camber * M_PI / 180.0);
+	orientation = ste * toe * cam;
 }
 
 void CARSUSPENSION::SetDisplacement ( const btScalar & value, btScalar dt )

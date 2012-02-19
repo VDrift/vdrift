@@ -1668,119 +1668,137 @@ void GAME::UpdateCarInputs(CAR & car)
 
 	car.HandleInputs(carinputs, TickPeriod());
 
-	if (carcontrols_local.first == &car)
+	if (carcontrols_local.first != &car)
+		return;
+
+	if (replay.GetRecording())
+		replay.RecordFrame(carinputs, car);
+
+	inputgraph.Update(carinputs);
+
+	if (replay.GetPlaying())
 	{
-		if (replay.GetRecording())
-			replay.RecordFrame(carinputs, car);
-
-		inputgraph.Update(carinputs);
-
-		if (replay.GetPlaying())
-		{
-			// This next line allows game inputs to be processed.
-			carcontrols_local.second.ProcessInput(
-				settings.GetJoyType(),
-				eventsystem,
-				car.GetLastSteer(),
-				TickPeriod(),
-				settings.GetJoy200(),
-				car.GetSpeed(),
-				settings.GetSpeedSensitivity(),
-				window.GetW(),
-				window.GetH(),
-				settings.GetButtonRamp(),
-				settings.GetHGateShifter());
-		}
-
-		std::stringstream debug_info1, debug_info2, debug_info3, debug_info4;
-		if (debugmode)
-		{
-			car.DebugPrint(debug_info1, true, false, false, false);
-			car.DebugPrint(debug_info2, false, true, false, false);
-			car.DebugPrint(debug_info3, false, false, true, false);
-			car.DebugPrint(debug_info4, false, false, false, true);
-		}
-
-		std::pair <int, int> curplace = timer.GetPlayerPlace();
-		int tid = cartimerids[&car];
-		hud.Update(
-			fonts["lcd"], fonts["futuresans"], fonts["futuresans-noshader"], window.GetW(), window.GetH(),
-			timer.GetPlayerTime(), timer.GetLastLap(), timer.GetBestLap(), timer.GetStagingTimeLeft(),
-			timer.GetPlayerCurrentLap(), race_laps, curplace.first, curplace.second,
-			car.GetEngineRPM(), car.GetEngineRedline(), car.GetEngineRPMLimit(),
-			car.GetSpeedMPS(), car.GetMaxSpeedMPS(), settings.GetMPH(), car.GetClutch(), car.GetGear(),
-			debug_info1.str(), debug_info2.str(), debug_info3.str(), debug_info4.str(),
-			car.GetABSEnabled(), car.GetABSActive(), car.GetTCSEnabled(), car.GetTCSActive(),
-			car.GetOutOfGas(), car.GetNosActive(), car.GetNosAmount(),
-			timer.GetIsDrifting(tid), timer.GetDriftScore(tid), timer.GetThisDriftScore(tid));
-
-		// Handle camera mode change inputs.
-		CAMERA * old_camera = active_camera;
-		CARCONTROLMAP_LOCAL & carcontrol = carcontrols_local.second;
-		if (carcontrol.GetInput(CARINPUT::VIEW_HOOD))
-		{
-			active_camera = car.Cameras().Select("hood");
-		}
-		else if (carcontrol.GetInput(CARINPUT::VIEW_INCAR))
-		{
-			active_camera = car.Cameras().Select("incar");
-		}
-		else if (carcontrol.GetInput(CARINPUT::VIEW_FREE))
-		{
-			active_camera = car.Cameras().Select("free");
-		}
-		else if (carcontrol.GetInput(CARINPUT::VIEW_ORBIT))
-		{
-			active_camera = car.Cameras().Select("orbit");
-		}
-		else if (carcontrol.GetInput(CARINPUT::VIEW_CHASERIGID))
-		{
-			active_camera = car.Cameras().Select("chaserigid");
-		}
-		else if (carcontrol.GetInput(CARINPUT::VIEW_CHASE))
-		{
-			active_camera = car.Cameras().Select("chase");
-		}
-		else if (carcontrol.GetInput(CARINPUT::VIEW_NEXT))
-		{
-			active_camera = car.Cameras().Next();
-		}
-		else if (carcontrol.GetInput(CARINPUT::VIEW_PREV))
-		{
-			active_camera = car.Cameras().Prev();
-		}
-		settings.SetCameraMode(active_camera->GetName());
-
-		if (old_camera != active_camera)
-		{
-			active_camera->Reset(car.GetPosition(), car.GetOrientation());
-		}
-
-		// Handle camera inputs.
-		float left = TickPeriod() * (carcontrol.GetInput(CARINPUT::PAN_LEFT) - carcontrol.GetInput(CARINPUT::PAN_RIGHT));
-		float up = TickPeriod() * (carcontrol.GetInput(CARINPUT::PAN_UP) - carcontrol.GetInput(CARINPUT::PAN_DOWN));
-		float dy = TickPeriod() * (carcontrol.GetInput(CARINPUT::ZOOM_IN) - carcontrol.GetInput(CARINPUT::ZOOM_OUT));
-		MATHVECTOR<float, 3> zoom(direction::Forward * 4 * dy);
-		active_camera->Rotate(up, left);
-		active_camera->Move(zoom[0], zoom[1], zoom[2]);
-
-		// Set cockpit sounds.
-		bool incar = (active_camera->GetName() == "hood" || active_camera->GetName() == "incar");
-		{
-			std::list <SOUNDSOURCE *> soundlist;
-			car.GetEngineSoundList(soundlist);
-			for (std::list <SOUNDSOURCE *>::iterator s = soundlist.begin(); s != soundlist.end(); s++)
-			{
-				(*s)->Enable3D(!incar);
-			}
-		}
-
-		// Hide glass if we're inside the car.
-		car.EnableGlass(!incar);
-
-		// Move up the close shadow distance if we're in the cockpit.
-		graphics_interface->SetCloseShadow(incar ? 1.0 : 5.0);
+		// This next line allows game inputs to be processed.
+		carcontrols_local.second.ProcessInput(
+			settings.GetJoyType(),
+			eventsystem,
+			car.GetLastSteer(),
+			TickPeriod(),
+			settings.GetJoy200(),
+			car.GetSpeed(),
+			settings.GetSpeedSensitivity(),
+			window.GetW(),
+			window.GetH(),
+			settings.GetButtonRamp(),
+			settings.GetHGateShifter());
 	}
+
+	std::stringstream debug_info1, debug_info2, debug_info3, debug_info4;
+	if (debugmode)
+	{
+		car.DebugPrint(debug_info1, true, false, false, false);
+		car.DebugPrint(debug_info2, false, true, false, false);
+		car.DebugPrint(debug_info3, false, false, true, false);
+		car.DebugPrint(debug_info4, false, false, false, true);
+	}
+
+	std::pair <int, int> curplace = timer.GetPlayerPlace();
+	int tid = cartimerids[&car];
+	hud.Update(
+		fonts["lcd"], fonts["futuresans"], fonts["futuresans-noshader"], window.GetW(), window.GetH(),
+		timer.GetPlayerTime(), timer.GetLastLap(), timer.GetBestLap(), timer.GetStagingTimeLeft(),
+		timer.GetPlayerCurrentLap(), race_laps, curplace.first, curplace.second,
+		car.GetEngineRPM(), car.GetEngineRedline(), car.GetEngineRPMLimit(),
+		car.GetSpeedMPS(), car.GetMaxSpeedMPS(), settings.GetMPH(), car.GetClutch(), car.GetGear(),
+		debug_info1.str(), debug_info2.str(), debug_info3.str(), debug_info4.str(),
+		car.GetABSEnabled(), car.GetABSActive(), car.GetTCSEnabled(), car.GetTCSActive(),
+		car.GetOutOfGas(), car.GetNosActive(), car.GetNosAmount(),
+		timer.GetIsDrifting(tid), timer.GetDriftScore(tid), timer.GetThisDriftScore(tid));
+
+	// Handle camera mode change inputs.
+	CAMERA * old_camera = active_camera;
+	CARCONTROLMAP_LOCAL & carcontrol = carcontrols_local.second;
+	int camera_id = settings.GetCamera();
+	if (carcontrol.GetInput(CARINPUT::VIEW_HOOD))
+	{
+		camera_id = 0;
+	}
+	else if (carcontrol.GetInput(CARINPUT::VIEW_INCAR))
+	{
+		camera_id = 1;
+	}
+	else if (carcontrol.GetInput(CARINPUT::VIEW_CHASERIGID))
+	{
+		camera_id = 2;
+	}
+	else if (carcontrol.GetInput(CARINPUT::VIEW_CHASE))
+	{
+		camera_id = 3;
+	}
+	else if (carcontrol.GetInput(CARINPUT::VIEW_ORBIT))
+	{
+		camera_id = 4;
+	}
+	else if (carcontrol.GetInput(CARINPUT::VIEW_FREE))
+	{
+		camera_id = 5;
+	}
+	else if (carcontrol.GetInput(CARINPUT::VIEW_NEXT))
+	{
+		++camera_id;
+	}
+	else if (carcontrol.GetInput(CARINPUT::VIEW_PREV))
+	{
+		--camera_id;
+	}
+	if (camera_id < 0)
+	{
+		camera_id = car.GetCameras().size() - 1;
+	}
+	else if (camera_id >= car.GetCameras().size())
+	{
+		camera_id = 0;
+	}
+	active_camera = car.GetCameras()[camera_id];
+	settings.SetCamera(camera_id);
+	bool incar = camera_id == 0 || camera_id == 1;
+
+	MATHVECTOR<float, 3> pos = car.GetPosition();
+	QUATERNION<float> rot = car.GetOrientation();
+	if (carcontrol.GetInput(CARINPUT::VIEW_REAR))
+	{
+		rot.Rotate(M_PI, 0, 0, 1);
+	}
+	if (old_camera != active_camera)
+	{
+		active_camera->Reset(pos, rot);
+	}
+	else
+	{
+		active_camera->Update(pos, rot, TickPeriod());
+	}
+
+	// Handle camera inputs.
+	float left = TickPeriod() * (carcontrol.GetInput(CARINPUT::PAN_LEFT) - carcontrol.GetInput(CARINPUT::PAN_RIGHT));
+	float up = TickPeriod() * (carcontrol.GetInput(CARINPUT::PAN_UP) - carcontrol.GetInput(CARINPUT::PAN_DOWN));
+	float dy = TickPeriod() * (carcontrol.GetInput(CARINPUT::ZOOM_IN) - carcontrol.GetInput(CARINPUT::ZOOM_OUT));
+	MATHVECTOR<float, 3> zoom(direction::Forward * 4 * dy);
+	active_camera->Rotate(up, left);
+	active_camera->Move(zoom[0], zoom[1], zoom[2]);
+
+	// Set cockpit sounds.
+	std::list <SOUNDSOURCE *> soundlist;
+	car.GetEngineSoundList(soundlist);
+	for (std::list <SOUNDSOURCE *>::iterator s = soundlist.begin(); s != soundlist.end(); s++)
+	{
+		(*s)->Enable3D(!incar);
+	}
+
+	// Hide glass if we're inside the car.
+	car.EnableGlass(!incar);
+
+	// Move up the close shadow distance if we're in the cockpit.
+	graphics_interface->SetCloseShadow(incar ? 1.0 : 5.0);
 }
 
 /* Start a new game. LeaveGame() is called first thing, which should take care of clearing out all current data... */
@@ -2091,10 +2109,6 @@ bool GAME::LoadCar(
 	{
 		// Load local controls.
 		carcontrols_local.first = &cars.back();
-
-		// Set the active camera.
-		active_camera = car.Cameras().Select(settings.GetCameraMode());
-		active_camera->Reset(car.GetPosition(), car.GetOrientation());
 
 		// Setup auto clutch and auto shift.
 		ProcessNewSettings();

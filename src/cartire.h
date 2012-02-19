@@ -67,12 +67,12 @@ public:
 	void DebugPrint(std::ostream & out) const
 	{
 		out << "---Tire---" << "\n";
-		//out << "Inclination: " << camber << "\n";
-		//out << "Slide ratio: " << slide  << "\n";
-		//out << "Slip angle: " << slip  << "\n";
-		out << "Fx: " << fx << "\n";
-		out << "Fy: " << fy  << "\n";
-		out << "Fz: " << fz  << "\n";
+		out << "Camber: " << camber << "\n";
+		out << "Slide ratio: " << slide  << "\n";
+		out << "Slip angle: " << slip  << "\n";
+		//out << "Fx: " << fx << "\n";
+		//out << "Fy: " << fy  << "\n";
+		//out << "Fz: " << fz  << "\n";
 	}
 
 private:

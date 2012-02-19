@@ -21,12 +21,9 @@ src = Split("""aabb.cpp
 		autoupdate.cpp
 		bezier.cpp
 		camera_chase.cpp
-		camera_fixed.cpp
 		camera_free.cpp
 		camera_mount.cpp
 		camera_orbit.cpp
-		camera_simplemount.cpp
-		camera_system.cpp
 		car.cpp
 		carcontrolmap_local.cpp
 		cardifferential.cpp

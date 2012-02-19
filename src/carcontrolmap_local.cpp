@@ -94,9 +94,9 @@ CARCONTROLMAP_LOCAL::CARCONTROLMAP_LOCAL()
 	carinput_stringmap["fifth_gear"] = CARINPUT::FIFTH_GEAR;
 	carinput_stringmap["sixth_gear"] = CARINPUT::SIXTH_GEAR;
 	carinput_stringmap["reverse"] = CARINPUT::REVERSE;
-	carinput_stringmap["rear_view"] = CARINPUT::REAR_VIEW;
 	carinput_stringmap["rollover_recover"] = CARINPUT::ROLLOVER_RECOVER;
-
+	
+	carinput_stringmap["rear_view"] = CARINPUT::VIEW_REAR;
 	carinput_stringmap["view_prev"] = CARINPUT::VIEW_PREV;
 	carinput_stringmap["view_next"] = CARINPUT::VIEW_NEXT;
 	carinput_stringmap["view_hood"] = CARINPUT::VIEW_HOOD;

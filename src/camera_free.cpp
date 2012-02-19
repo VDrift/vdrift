@@ -3,11 +3,20 @@
 
 CAMERA_FREE::CAMERA_FREE(const std::string & name) :
 	CAMERA(name),
-	offset(direction::Up * 2),
+	offset(direction::Up * 2 - direction::Forward * 8),
 	leftright_rotation(0),
 	updown_rotation(0)
 {
 	rotation.LoadIdentity();
+}
+
+void CAMERA_FREE::SetOffset(const MATHVECTOR <float, 3> & value)
+{
+	offset = value;
+	if (offset.dot(direction::Forward) < 0.001)
+	{
+		offset = offset - direction::Forward;
+	}
 }
 
 void CAMERA_FREE::Reset(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> &)
@@ -15,10 +24,7 @@ void CAMERA_FREE::Reset(const MATHVECTOR <float, 3> & newpos, const QUATERNION <
 	leftright_rotation = 0;
 	updown_rotation = 0;
 	Rotate(0, 0);
-
-	MATHVECTOR <float, 3> move(-direction::Forward * 8);
 	position = newpos + offset;
-	Move(move[0], move[1], move[2]);
 }
 
 void CAMERA_FREE::Rotate(float up, float left)
