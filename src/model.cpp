@@ -133,45 +133,42 @@ void MODEL::GenerateListID(std::ostream & error_output)
 		return;
 
 	ClearListID();
-
 	listid = glGenLists(1);
-	glNewList (listid, GL_COMPILE);
 
-	glBegin(GL_TRIANGLES);
+	const int * faces;
+	const float * verts;
+	const float * norms;
+	const float * tc[1];
+	int facecount;
+	int vertcount;
+	int normcount;
+	int tccount[1];
 
-	int true_faces = mesh.GetNumFaces() / 3;
+	mesh.GetFaces(faces, facecount);
+	mesh.GetVertices(verts, vertcount);
+	mesh.GetNormals(norms, normcount);
+	mesh.GetTexCoords(0, tc[0], tccount[0]);
 
-	// Iterate through all of the faces (polygons).
-	for (int j = 0; j < true_faces; j++)
-		// Iterate though each vertex in the face.
-		for (int whichVertex = 0; whichVertex < 3; whichVertex++)
-		{
-			// Get the 3D location for this vertex.
-			/// Vert array bounds are not checked but it is assumed to be of size 3.
-			std::vector <float> vert = mesh.GetVertex(j, whichVertex);
+	assert(facecount > 0);
+	assert(vertcount > 0);
+	assert(normcount > 0);
+	assert (tccount[0] > 0);
 
-			// Get the 3D normal for this vertex.
-			/// Norm array bounds are not checked but it is assumed to be of size 3.
-			std::vector <float> norm = mesh.GetNormal(j, whichVertex);
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glEnableClientState(GL_NORMAL_ARRAY);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-			assert(mesh.GetTexCoordSets() > 0);
+	glVertexPointer(3, GL_FLOAT, 0, verts);
+	glNormalPointer(GL_FLOAT, 0, norms);
+	glTexCoordPointer(2, GL_FLOAT, 0, tc[0]);
+	
+	glNewList(listid, GL_COMPILE);
+	glDrawElements(GL_TRIANGLES, facecount, GL_UNSIGNED_INT, faces);
+	glEndList();
 
-			if (mesh.GetTexCoordSets() > 0)
-			{
-				// Get the 2D texture coordinates for this vertex.
-				///Tex array bounds are not checked but it is assumed to be of size 2.
-				std::vector <float> tex = mesh.GetTextureCoordinate(j, whichVertex, 0);
-
-				glMultiTexCoord2f(GL_TEXTURE0, tex[0], tex[1]);
-			}
-
-			glNormal3fv(&norm[0]);
-			glVertex3fv(&vert[0]);
-		}
-
-	glEnd();
-
-	glEndList ();
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+	glDisableClientState(GL_NORMAL_ARRAY);
+	glDisableClientState(GL_VERTEX_ARRAY);
 
 	generatedlistid = true;
 
