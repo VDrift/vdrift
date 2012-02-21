@@ -46,9 +46,11 @@ class GAME
 friend class GAME_DOWNLOADER;
 public:
 	GAME(std::ostream & info_out, std::ostream & error_out);
+	~GAME();
 	void Start(std::list <std::string> & args);
 
 private:
+	void End();
 	float TickPeriod() const {return timestep;}
 	void MainLoop();
 	bool ParseArguments(std::list <std::string> & args);
@@ -56,7 +58,6 @@ private:
 	void InitThreading();
 	bool InitSound();
 	bool InitGUI();
-	void End();
 	void Test();
 	void Tick(float dt);
 	void Draw();
@@ -113,13 +114,7 @@ private:
 	const float timestep; ///< simulation time step
 
 	PATHMANAGER pathmanager;
-	ContentManager content;
 	SETTINGS settings;
-
-	AUTOUPDATE autoupdate;
-	UPDATE_MANAGER carupdater;
-	UPDATE_MANAGER trackupdater;
-
 	WINDOW_SDL window;
 	GRAPHICS_INTERFACE * graphics_interface;
 	bool enableGL3;
@@ -127,6 +122,10 @@ private:
 	StringIdMap stringMap;
 	EVENTSYSTEM_SDL eventsystem;
 	SOUND sound;
+	ContentManager content;
+	AUTOUPDATE autoupdate;
+	UPDATE_MANAGER carupdater;
+	UPDATE_MANAGER trackupdater;
 
 	SCENENODE debugnode;
 	TEXT_DRAWABLE fps_draw;

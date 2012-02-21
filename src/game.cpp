@@ -86,12 +86,12 @@ GAME::GAME(std::ostream & info_out, std::ostream & error_out) :
 	clocktime(0),
 	target_time(0),
 	timestep(1/90.0),
-	content(error_out),
-	carupdater(autoupdate, info_out, error_out),
-	trackupdater(autoupdate, info_out, error_out),
 	graphics_interface(NULL),
 	enableGL3(true),
 	usingGL3(false),
+	content(error_out),
+	carupdater(autoupdate, info_out, error_out),
+	trackupdater(autoupdate, info_out, error_out),
 	fps_track(10, 0),
 	fps_position(0),
 	fps_min(0),
@@ -115,6 +115,11 @@ GAME::GAME(std::ostream & info_out, std::ostream & error_out) :
 {
 	carcontrols_local.first = 0;
 	dynamics.setContactAddedCallback(&CARDYNAMICS::WheelContactCallback);
+}
+
+GAME::~GAME()
+{
+	// dtor
 }
 
 /* Start the game with the given arguments... */
@@ -281,9 +286,38 @@ void GAME::Start(std::list <std::string> & args)
 
 	DoneStartingUp();
 
-	// Begin...
 	MainLoop();
+
 	End();
+}
+
+/* Do any necessary cleanup... */
+void GAME::End()
+{
+	if (benchmode)
+	{
+		float mean_fps = displayframe / clocktime;
+		info_output << "Elapsed time: " << clocktime << " seconds\n";
+		info_output << "Average frame-rate: " << mean_fps << " frames per second\n";
+		info_output << "Min / Max frame-rate: " << fps_min << " / " << fps_max << " frames per second" << std::endl;
+	}
+
+	if (profilingmode)
+		info_output << "Profiling summary:\n" << PROFILER.getSummary(quickprof::PERCENT) << std::endl;
+
+	info_output << "Shutting down..." << std::endl;
+
+	LeaveGame();
+
+	// Stop the sound thread.
+	if (sound.Enabled())
+		sound.Pause(true);
+
+	// Save settings first incase later deinits cause crashes.
+	settings.Save(pathmanager.GetSettingsFile(), error_output);
+
+	graphics_interface->Deinit();
+	delete graphics_interface;
 }
 
 /* Initialize the most important, basic subsystems... */
@@ -654,36 +688,6 @@ bool GAME::ParseArguments(std::list <std::string> & args)
 	}
 
 	return continue_game;
-}
-
-/* Do any necessary cleanup... */
-void GAME::End()
-{
-	if (benchmode)
-	{
-		float mean_fps = displayframe / clocktime;
-		info_output << "Elapsed time: " << clocktime << " seconds\n";
-		info_output << "Average frame-rate: " << mean_fps << " frames per second\n";
-		info_output << "Min / Max frame-rate: " << fps_min << " / " << fps_max << " frames per second" << std::endl;
-	}
-
-	if (profilingmode)
-		info_output << "Profiling summary:\n" << PROFILER.getSummary(quickprof::PERCENT) << std::endl;
-
-	info_output << "Shutting down..." << std::endl;
-
-	LeaveGame();
-
-	// Stop the sound thread.
-	if (sound.Enabled())
-		sound.Pause(true);
-
-	// Save settings first incase later deinits cause crashes.
-	settings.Save(pathmanager.GetSettingsFile(), error_output);
-
-	graphics_interface->Deinit();
-	delete graphics_interface;
-	window.Deinit();
 }
 
 void GAME::Test()
