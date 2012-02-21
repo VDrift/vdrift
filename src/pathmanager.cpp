@@ -70,9 +70,7 @@ void PATHMANAGER::Init(std::ostream & info_output, std::ostream & error_output)
 	// Find settings file.
 	settings_path = home_directory;
 #ifdef _WIN32
-	MakeDir(settings_path+"\\My Documents");
-	MakeDir(settings_path+"\\My Documents\\My Games");
-	settings_path += "\\My Documents\\My Games\\VDrift";
+	settings_path += "\\Documents\\VDrift";
 	MakeDir(settings_path);
 #else
 	settings_path += "/";
