@@ -33,6 +33,8 @@ WINDOW_SDL::WINDOW_SDL() : surface(NULL), initialized(false), fsaa(1)
 
 WINDOW_SDL::~WINDOW_SDL()
 {
+	if (initialized)
+		SDL_Quit();
 }
 
 void WINDOW_SDL::Init(const std::string & windowcaption, unsigned int resx, unsigned int resy, unsigned int bpp, unsigned int depthbpp, bool fullscreen, unsigned int antialiasing, bool enableGL3, std::ostream & info_output, std::ostream & error_output)
@@ -51,11 +53,6 @@ void WINDOW_SDL::Init(const std::string & windowcaption, unsigned int resx, unsi
 	initialized = true;
 }
 
-void WINDOW_SDL::Deinit()
-{
-	SDL_Quit();
-}
-
 void WINDOW_SDL::SwapBuffers()
 {
 	SDL_GL_SwapBuffers();
@@ -67,15 +64,15 @@ void WINDOW_SDL::Screenshot(std::string filename)
 	SDL_Surface *temp = NULL;
 	unsigned char *pixels;
 	int i;
-    
+
 	screen = surface;
-    
+
 	if (!(screen->flags & SDL_OPENGL))
 	{
 		SDL_SaveBMP(temp, filename.c_str());
 		return;
 	}
-    
+
 	temp = SDL_CreateRGBSurface(SDL_SWSURFACE, screen->w, screen->h, 24,
 #if SDL_BYTEORDER == SDL_LIL_ENDIAN
                                 0x000000FF, 0x0000FF00, 0x00FF0000, 0

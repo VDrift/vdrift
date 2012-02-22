@@ -32,7 +32,6 @@ public:
 	~WINDOW_SDL();
 
 	void Init(const std::string & windowcaption, unsigned int resx, unsigned int resy, unsigned int bpp, unsigned int depthbpp, bool fullscreen, unsigned int antialiasing, bool enableGL3, std::ostream & info_output, std::ostream & error_output);
-	void Deinit();
 	void SwapBuffers();
 	void Screenshot(std::string filename);
 	unsigned int GetW() const;
@@ -45,7 +44,7 @@ private:
 	SDL_Surface * surface;
 	bool initialized;
 	unsigned int fsaa;
-    
+
 	void ChangeDisplay(const int width, const int height, const int bpp, const int dbpp, const bool fullscreen, unsigned int antialiasing, bool enableGL3, std::ostream & info_output, std::ostream & error_output);
 };
 
