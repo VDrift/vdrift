@@ -3,15 +3,13 @@
 #include "dynamicsworld.h"
 #include "tracksurface.h"
 #include "carinput.h"
-#include "camera.h"
-#include "camera_chase.h"
-#include "camera_free.h"
-#include "camera_mount.h"
-#include "camera_orbit.h"
 #include "contentmanager.h"
 #include "textureinfo.h"
 #include "model_joe03.h"
 #include "mesh_gen.h"
+#include "loaddrawable.h"
+#include "loadcamera.h"
+#include "camera.h"
 #include "cfg/ptree.h"
 
 #include <map>
@@ -47,158 +45,6 @@ static keyed_container <DRAWABLE> & GetDrawlist(SCENENODE & node, WHICHDRAWLIST 
 	assert(0);
 	return node.GetDrawlist().car_noblend;
 }
-
-struct LoadDrawable
-{
-	const std::string & path;
-	const int anisotropy;
-	ContentManager & content;
-	std::list<std::tr1::shared_ptr<MODEL> > & modellist;
-	std::ostream & error;
-
-	LoadDrawable(
-		const std::string & path,
-		const int anisotropy,
-		ContentManager & content,
-		std::list<std::tr1::shared_ptr<MODEL> > & modellist,
-		std::ostream & error) :
-		path(path),
-		anisotropy(anisotropy),
-		content(content),
-		modellist(modellist),
-		error(error)
-	{
-		// ctor
-	}
-
-	bool operator()(
-		const PTree & cfg,
-		SCENENODE & topnode,
-		keyed_container<SCENENODE>::handle * nodehandle = 0,
-		keyed_container<DRAWABLE>::handle * drawhandle = 0)
-	{
-		std::vector<std::string> texname;
-		if (!cfg.get("texture", texname)) return true;
-
-		std::string meshname;
-		if (!cfg.get("mesh", meshname, error)) return false;
-
-		return operator()(meshname, texname, cfg, topnode, nodehandle, drawhandle);
-	}
-
-	bool operator()(
-		const std::string & meshname,
-		const std::vector<std::string> & texname,
-		const PTree & cfg,
-		SCENENODE & topnode,
-		keyed_container<SCENENODE>::handle * nodeptr = 0,
-		keyed_container<DRAWABLE>::handle * drawptr = 0)
-	{
-		DRAWABLE drawable;
-
-		// set textures
-		TEXTUREINFO texinfo;
-		texinfo.mipmap = true;
-		texinfo.anisotropy = anisotropy;
-		std::tr1::shared_ptr<TEXTURE> tex;
-		if (texname.size() == 0)
-		{
-			error << "No texture defined" << std::endl;
-			return false;
-		}
-		if (texname.size() > 0)
-		{
-			if (!content.load(path, texname[0], texinfo, tex)) return false;
-			drawable.SetDiffuseMap(tex);
-		}
-		if (texname.size() > 1)
-		{
-			if (!content.load(path, texname[1], texinfo, tex)) return false;
-			drawable.SetMiscMap1(tex);
-		}
-		if (texname.size() > 2)
-		{
-			if (!content.load(path, texname[2], texinfo, tex)) return false;
-			drawable.SetMiscMap2(tex);
-		}
-
-		// set mesh
-		std::tr1::shared_ptr<MODEL> mesh;
-		if (!content.load(path, meshname, mesh)) return false;
-
-		std::string scalestr;
-		if (cfg.get("scale", scalestr) &&
-			!content.get(path, meshname + scalestr, mesh))
-		{
-			MATHVECTOR<float, 3> scale;
-			std::stringstream s(scalestr);
-			s >> scale;
-
-			VERTEXARRAY meshva = mesh->GetVertexArray();
-			meshva.Scale(scale[0], scale[1], scale[2]);
-			content.load(path, meshname + scalestr, meshva, mesh);
-		}
-		drawable.SetModel(*mesh);
-		modellist.push_back(mesh);
-
-		// set color
-		MATHVECTOR<float, 4> col(1);
-		if (cfg.get("color", col))
-		{
-			drawable.SetColor(col[0], col[1], col[2], col[3]);
-		}
-
-		// set node
-		SCENENODE * node = &topnode;
-		if (nodeptr != 0)
-		{
-			if (!nodeptr->valid())
-			{
-				*nodeptr = topnode.AddNode();
-				assert(nodeptr->valid());
-			}
-			node = &topnode.GetNode(*nodeptr);
-		}
-
-		MATHVECTOR<float, 3> pos, rot;
-		if (cfg.get("position", pos) | cfg.get("rotation", rot))
-		{
-			if (node == &topnode)
-			{
-				// position relative to parent, create child node
-				keyed_container <SCENENODE>::handle nodehandle = topnode.AddNode();
-				node = &topnode.GetNode(nodehandle);
-			}
-			node->GetTransform().SetTranslation(pos);
-			node->GetTransform().SetRotation(QUATERNION<float>(rot[0]/180*M_PI, rot[1]/180*M_PI, rot[2]/180*M_PI));
-		}
-
-		// set drawable
-		keyed_container<DRAWABLE>::handle drawtemp;
-		keyed_container<DRAWABLE>::handle * draw = &drawtemp;
-		if (drawptr != 0) draw = drawptr;
-
-		std::string drawtype;
-		if (cfg.get("draw", drawtype))
-		{
-			if (drawtype == "emissive")
-			{
-				drawable.SetDecal(true);
-				*draw = node->GetDrawlist().lights_emissive.insert(drawable);
-			}
-			else if (drawtype == "transparent")
-			{
-				*draw = node->GetDrawlist().normal_blend.insert(drawable);
-			}
-		}
-		else
-		{
-			*draw = node->GetDrawlist().car_noblend.insert(drawable);
-		}
-
-		return true;
-	}
-};
 
 struct LoadBody
 {
@@ -329,78 +175,6 @@ static bool LoadWheel(
 	return true;
 }
 
-static bool LoadCameras(
-	const PTree & cfg,
-	const float camerabounce,
-	std::vector<CAMERA*> & cameras,
-	std::ostream & error_output)
-{
-	const PTree * cfg_cams;
-	if (!cfg.get("camera", cfg_cams)) return false;
-	
-	int cam_num = cfg_cams->size();
-	if (cam_num < 1)
-	{
-		error_output << "No cameras defined." << std::endl;
-		return false;
-	}
-	cameras.reserve(cam_num);
-	
-	std::string type, name;
-	for (PTree::const_iterator i = cfg_cams->begin(); i != cfg_cams->end(); ++i)
-	{
-		const PTree & cfg_cam = i->second;
-		if (!cfg_cam.get("type", type, error_output)) return false;
-		if (!cfg_cam.get("name", name, error_output)) return false;
-		
-		MATHVECTOR<float, 3> position;
-		MATHVECTOR<float, 3> lookat;
-		float stiffness = 0.0;
-		cfg_cam.get("stiffness", stiffness);
-		cfg_cam.get("position", position);
-		if (!cfg_cam.get("lookat", lookat))
-		{
-			lookat = position + direction::Forward;
-		}
-
-		CAMERA * cam;
-		if (type == "mount")
-		{
-			CAMERA_MOUNT * c = new CAMERA_MOUNT(name);
-			c->SetEffectStrength(camerabounce);
-			c->SetStiffness(stiffness);
-			c->SetOffset(position, lookat);
-			cam = c;
-		}
-		else if (type == "chase")
-		{
-			CAMERA_CHASE * c = new CAMERA_CHASE(name);
-			c->SetOffset(position);
-			cam = c;
-		}
-		else if (type == "orbit")
-		{
-			CAMERA_ORBIT * c = new CAMERA_ORBIT(name);
-			c->SetOffset(position);
-			cam = c;
-		}
-		else if (type == "free")
-		{
-			CAMERA_FREE * c = new CAMERA_FREE(name);
-			c->SetOffset(position);
-			cam = c;
-		}
-		else
-		{
-			error_output << "Unknown camera type " << type << std::endl;
-			return false;
-		}
-		cameras.push_back(cam);
-	}
-
-	return true;
-}
-
 CAR::CAR() :
 	gearsound_check(0),
 	brakesound_check(false),
@@ -415,7 +189,7 @@ CAR::CAR() :
 
 CAR::~CAR()
 {
-	for (int i = 0; i < cameras.size(); ++i)
+	for (unsigned i = 0; i < cameras.size(); ++i)
 	{
 		delete cameras[i];
 	}
@@ -589,10 +363,22 @@ bool CAR::LoadGraphics(
 		}
 	}
 
-	if (!LoadCameras(cfg, camerabounce, cameras, error_output))
+	const PTree * cfg_cams;
+	if (!cfg.get("camera", cfg_cams))
 	{
-		error_output << "Failed to load cameras." << std::endl;
 		return false;
+	}
+	if (!cfg_cams->size())
+	{
+		error_output << "No cameras defined." << std::endl;
+		return false;
+	}
+	cameras.reserve(cfg_cams->size());
+	for (PTree::const_iterator i = cfg_cams->begin(); i != cfg_cams->end(); ++i)
+	{
+		CAMERA * cam = LoadCamera(i->second, camerabounce, error_output);
+		if (!cam) return false;
+		cameras.push_back(cam);
 	}
 
 	SetColor(carcolor[0], carcolor[1], carcolor[2]);
@@ -878,18 +664,13 @@ void CAR::SetPosition(const MATHVECTOR <float, 3> & new_position)
 	btVector3 newpos = ToBulletVector(new_position);
 	dynamics.SetPosition(newpos);
 	dynamics.AlignWithGround();
-	
-	for (int i = 0; i < cameras.size(); ++i)
-	{
-		cameras[i]->Reset(GetPosition(), GetOrientation());
-	}
 }
 
 void CAR::UpdateGraphics()
 {
 	if (!bodynode.valid()) return;
 	assert(dynamics.GetNumBodies() == topnode.Nodes());
-	
+
 	unsigned int i = 0;
 	keyed_container<SCENENODE> & childlist = topnode.GetNodelist();
 	for (keyed_container<SCENENODE>::iterator ni = childlist.begin(); ni != childlist.end(); ++ni, ++i)

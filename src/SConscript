@@ -65,7 +65,9 @@ src = Split("""aabb.cpp
 		keyed_container.cpp
 		linearframe.cpp
 		linearinterp.cpp
+		loadcamera.cpp
 		loadcollisionshape.cpp
+		loaddrawable.cpp
 		loadingscreen.cpp
 		main.cpp
 		mathplane.cpp

@@ -5,13 +5,13 @@
 #include "tobullet.h"
 #include "scenenode.h"
 #include "soundsource.h"
-#include "camera.h"
 #include "crashdetection.h"
 #include "enginesoundinfo.h"
 #include "joeserialize.h"
 #include "macros.h"
 
 class BEZIER;
+class CAMERA;
 class PERFORMANCE_TESTING;
 class MODEL;
 class ContentManager;
@@ -23,7 +23,7 @@ friend class PERFORMANCE_TESTING;
 friend class joeserialize::Serializer;
 public:
 	CAR();
-	
+
 	virtual ~CAR();
 
 	bool LoadGraphics(

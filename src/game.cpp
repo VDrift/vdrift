@@ -703,14 +703,16 @@ void GAME::BeginDraw()
 	// Send scene information to the graphics subsystem.
 	if (active_camera)
 	{
+		float fov = active_camera->GetFOV() > 0 ? active_camera->GetFOV() : settings.GetFOV();
+
 		MATHVECTOR <float, 3> reflection_sample_location = active_camera->GetPosition();
 		if (carcontrols_local.first)
 			reflection_sample_location = carcontrols_local.first->GetCenterOfMassPosition();
 
 		QUATERNION <float> camlook;
-		camlook.Rotate(3.141593*0.5,1,0,0);
+		camlook.Rotate(M_PI_2, 1, 0, 0);
 		QUATERNION <float> camorient = -(active_camera->GetOrientation() * camlook);
-		graphics_interface->SetupScene(settings.GetFOV(), settings.GetViewDistance(), active_camera->GetPosition(), camorient, reflection_sample_location);
+		graphics_interface->SetupScene(fov, settings.GetViewDistance(), active_camera->GetPosition(), camorient, reflection_sample_location);
 	}
 	else
 		graphics_interface->SetupScene(settings.GetFOV(), settings.GetViewDistance(), MATHVECTOR <float, 3> (), QUATERNION <float> (), MATHVECTOR <float, 3> ());

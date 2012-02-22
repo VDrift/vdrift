@@ -10,11 +10,15 @@
 class CAMERA
 {
 public:
-	CAMERA(const std::string & camera_name) : name(camera_name) {}
+	CAMERA(const std::string & camera_name) : name(camera_name), fov(0) {}
 
 	virtual ~CAMERA() {}
 
 	const std::string & GetName() const { return name; }
+
+	void SetFOV(float value) { fov = std::max(40.0f, std::min(160.0f, value)); }
+
+	float GetFOV() const { return fov; }
 
 	virtual const MATHVECTOR <float, 3> & GetPosition() const { return position; }
 
@@ -36,6 +40,7 @@ protected:
 	const std::string name;
 	MATHVECTOR <float, 3> position;
 	QUATERNION <float> rotation;
+	float fov;
 };
 
 inline float AngleBetween(MATHVECTOR <float, 3> vec1, MATHVECTOR <float, 3> vec2)
@@ -83,7 +88,7 @@ inline QUATERNION <float> LookAt(
 
 	MATHVECTOR <float, 3> axis = forward;
 	rotation.Rotate(rollangle, axis[0], axis[1], axis[2]);
-	
+
 	return rotation;
 }
 
