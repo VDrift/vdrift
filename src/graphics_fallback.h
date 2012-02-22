@@ -129,11 +129,8 @@ private:
 
 	void Render(RENDER_INPUT * input, RENDER_OUTPUT & output, std::ostream & error_output);
 public:
-	GRAPHICS_FALLBACK() : initialized(false),using_shaders(false),max_anisotropy(0),shadows(false),
-		       	closeshadow(5.0), fsaa(1),lighting(0),bloom(false),normalmaps(false),contrast(1.0), aticard(false),
-		       	reflection_status(REFLECTION_DISABLED), renderconfigfile("render.conf")
-			{activeshader = shadermap.end();}
-	~GRAPHICS_FALLBACK() {}
+	GRAPHICS_FALLBACK();
+	~GRAPHICS_FALLBACK();
 
 	///reflection_type is 0 (low=OFF), 1 (medium=static), 2 (high=dynamic)
 	/// returns true on success

@@ -74,6 +74,31 @@ void ReportOnce(const void * id, const std::string & message, std::ostream & out
 	}
 }
 
+GRAPHICS_FALLBACK::GRAPHICS_FALLBACK() :
+	initialized(false),
+	using_shaders(false),
+	max_anisotropy(0),
+	shadows(false),
+	closeshadow(5.0),
+	fsaa(1),
+	lighting(0),
+	bloom(false),
+	normalmaps(false),
+	contrast(1.0),
+	aticard(false),
+	reflection_status(REFLECTION_DISABLED),
+	renderconfigfile("render.conf")
+{
+	activeshader = shadermap.end();
+}
+
+GRAPHICS_FALLBACK::~GRAPHICS_FALLBACK()
+{
+	render_outputs.clear();
+	texture_outputs.clear();
+	texture_inputs.clear();
+}
+
 bool GRAPHICS_FALLBACK::Init(const std::string & shaderpath,
 	unsigned int resx, unsigned int resy, unsigned int bpp,
 	unsigned int depthbpp, bool fullscreen, bool shaders,
