@@ -1321,39 +1321,36 @@ void CARDYNAMICS::ApplyWheelForces(
 	btAssert(!isnan(normal_force));
 
 	btMatrix3x3 wheel_space(wheel_orientation[i]);
-	btVector3 wx = wheel_space.getColumn(0);
-	btVector3 wy = wheel_space.getColumn(1);
-	btVector3 wz = wheel_space.getColumn(2);
+	btVector3 wx = wheel_space.getColumn(0);		// right
+	btVector3 wy = wheel_space.getColumn(1);		// forward
+	btVector3 wz = wheel_space.getColumn(2);		// up
 	btVector3 z = wheel_contact[i].GetNormal();
 
-	// ignore surface normals with over 30 deg deviation from wheel z axis
-	btScalar zdot = wz.dot(z);
-	if (zdot < 0.866f)
+	// ignore surface normals with over 30 deg deviation from wheel up axis
+	if (wz.dot(z) < 0.866f)
 	{
 		z = wz;
 	}
 
-	// setup contact space
-	btVector3 x = wy.cross(z).normalized();
-	btVector3 y = z.cross(x);
-
-	// camber positive when the top of the tire tilts to the right (when viewing the from the rear)
-	btScalar zproj = z.dot(wz - y * wz.dot(y));
-	btScalar camber = btAcos(zproj) * SIMD_DEGS_PER_RAD;
-	if (x.dot(wz) < 0)
+	// Pacejka Tire Coordinate System
+	// x wheel heading direction (forward)
+	// y wheel axis projected onto surface (right)
+	// camber angle positive when the top of the tire tilts to the right (when viewing the from the rear)
+	btVector3 y = wy.cross(z).normalized(); 
+	btVector3 x = z.cross(y);
+	btVector3 wzproj = wz - x * wz.dot(x);
+	btScalar camber = -btAcos(z.dot(wzproj)) * SIMD_DEGS_PER_RAD;
+	if (y.dot(wz) > 0)
 	{
 		camber = -camber;
 	}
-
-	// contact velocities
-	btScalar lonvel = y.dot(wheel_velocity[i]);
-	btScalar latvel = -x.dot(wheel_velocity[i]);
-	btScalar angvel = wheel[i].GetAngularVelocity();
-
-	// friction
+	
+	btScalar vx = x.dot(wheel_velocity[i]);
+	btScalar vy = y.dot(wheel_velocity[i]);
+	btScalar vr = wheel[i].GetAngularVelocity() * tire[i].GetRadius();
 	btScalar friction_coeff = tire[i].GetTread() * wheel_contact[i].GetSurface().frictionTread +
 		(1.0 - tire[i].GetTread()) * wheel_contact[i].GetSurface().frictionNonTread;
-	btVector3 friction_force = tire[i].GetForce(normal_force, friction_coeff, camber, angvel, lonvel, latvel);
+	btVector3 friction_force = tire[i].GetForce(normal_force, friction_coeff, camber, vx, vy, vr);
 	btAssert(!isnan(friction_force));
 
 	btScalar friction_torque = friction_force[0] * tire[i].GetRadius();
@@ -1390,13 +1387,12 @@ void CARDYNAMICS::ApplyWheelForces(
 	// apply forces to body
 	btVector3 relpos = wheel_position[i] - body->getCenterOfMassPosition();
 	btVector3 world_tire_drag = -wheel_velocity[i] * wheel_contact[i].GetSurface().rollingDrag;
-	btVector3 world_tire_force = y * friction_force[0] - x * friction_force[1] + world_tire_drag;
-	btVector3 world_tire_torque = wheel_space * tire_torque + relpos.cross(world_tire_force);
+	btVector3 world_tire_force = x * friction_force[0] + y * friction_force[1] + world_tire_drag;
+	btVector3 world_tire_torque = relpos.cross(world_tire_force) + wheel_space * tire_torque;
 	force = force + world_tire_force;
 	torque = torque + world_tire_torque;
 }
 
-///the core function of the car dynamics simulation:  find and apply all forces on the car and components.
 void CARDYNAMICS::ApplyForces ( btScalar dt, const btVector3 & ext_force, const btVector3 & ext_torque)
 {
 	assert ( dt > 0 );
@@ -1454,8 +1450,8 @@ void CARDYNAMICS::ApplyForces ( btScalar dt, const btVector3 & ext_force, const 
 		ApplyWheelForces ( dt, wheel_drive_torque[i], i, suspension_force[i], force, torque );
 	}
 
-	for ( int n = 0; n < 3; ++n ) assert ( !isnan ( force[n] ) );
-	for ( int n = 0; n < 3; ++n ) assert ( !isnan ( torque[n] ) );
+	btAssert ( !isnan ( force ) );
+	btAssert ( !isnan ( torque ) );
 	body->applyCentralForce( force );
 	body->applyTorque( torque );
 }
@@ -1464,7 +1460,7 @@ void CARDYNAMICS::Tick(btScalar dt, const btVector3 & force, const btVector3 & t
 {
 	body->clearForces();
 
-	ApplyForces(dt, force, torque );
+	ApplyForces(dt, force, torque);
 
 	body->integrateVelocities(dt);
 	body->predictIntegratedTransform (dt, transform);
