@@ -23,8 +23,8 @@ struct CARSUSPENSIONINFO
 	LINEARINTERP<btScalar> spring_factors;
 
 	// suspension geometry(const)
-	btVector3 extended_position; ///< the position of the wheel when the suspension is fully extended (zero g)
-	btScalar max_steering_angle; ///< maximum steering angle in degrees
+	btVector3 position; ///< the position of the wheel when the suspension is fully extended (zero g)
+	btScalar steering_angle; ///< maximum steering angle in degrees
 	btScalar ackermann; ///< /// for ideal ackemann steering_toe = atan(0.5 * steering_axis_length / axes_distance)
 	btScalar camber; ///< camber angle in degrees. sign convention depends on the side
 	btScalar caster; ///< caster angle in degrees. sign convention depends on the side
@@ -42,7 +42,7 @@ public:
 
 	const btScalar & GetAntiRoll() const {return info.anti_roll;}
 
-	const btScalar & GetMaxSteeringAngle() const {return info.max_steering_angle;}
+	const btScalar & GetMaxSteeringAngle() const {return info.steering_angle;}
 
 	/// wheel orientation relative to car
 	const btQuaternion & GetWheelOrientation() const {return orientation;}
@@ -98,6 +98,8 @@ protected:
 	CARSUSPENSIONINFO info;
 
 	// suspension
+	btQuaternion orientation_ext;
+	btVector3 steering_axis;
 	btQuaternion orientation;
 	btVector3 position;
 	btScalar steering_angle;

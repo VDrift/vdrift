@@ -11,7 +11,7 @@ CARSUSPENSIONINFO::CARSUSPENSIONINFO() :
 	travel(0.2),
 	damper_factors(1),
 	spring_factors(1),
-	max_steering_angle(0),
+	steering_angle(0),
 	ackermann(0),
 	camber(0),
 	caster(0),
@@ -20,41 +20,50 @@ CARSUSPENSIONINFO::CARSUSPENSIONINFO() :
 	// ctor
 }
 
-CARSUSPENSION::CARSUSPENSION()
+CARSUSPENSION::CARSUSPENSION() :
+	orientation_ext(direction::up, 0),
+	steering_axis(direction::up),
+	orientation(orientation_ext),
+	position(0, 0, 0),
+	steering_angle(0),
+	spring_force(0),
+	damp_force(0),
+	force(0),
+	overtravel(0),
+	displacement(0),
+	last_displacement(0),
+	wheel_velocity(0),
+	wheel_force(0)
 {
-	steering_angle = 0;
-	spring_force = 0;
-	damp_force = 0;
-	force = 0;
-
-	overtravel = 0;
-	displacement = 0;
-	last_displacement = 0;
-	wheel_velocity = 0;
-	wheel_force = 0;
+	// ctor
 }
 
 void CARSUSPENSION::Init(const CARSUSPENSIONINFO & info)
 {
 	this->info = info;
-	position = info.extended_position;
+
+	btQuaternion toe(direction::up, info.toe * M_PI / 180.0);
+	btQuaternion cam(direction::forward, -info.camber * M_PI / 180.0);
+	orientation_ext = toe * cam;
+
+	steering_axis = direction::up * cos(-info.caster * M_PI / 180.0) +
+		direction::right * sin(-info.caster * M_PI / 180.0);
+
+	position = info.position;
+
 	SetSteering(0.0);
 }
 
 void CARSUSPENSION::SetSteering(const btScalar & value)
 {
-	btScalar alpha = -value * info.max_steering_angle * M_PI / 180.0;
+	btScalar alpha = -value * info.steering_angle * M_PI / 180.0;
 	steering_angle = 0.0;
 	if (alpha != 0.0)
 	{
 		steering_angle = atan(1.0 / (1.0 / tan(alpha) - tan(info.ackermann * M_PI / 180.0)));
 	}
-	btVector3 steeraxis = direction::up * cos(-info.caster * M_PI / 180.0) +
-		direction::right * sin(-info.caster * M_PI / 180.0);
-	btQuaternion ste(steeraxis, steering_angle);
-	btQuaternion toe(direction::up, info.toe * M_PI / 180.0);
-	btQuaternion cam(direction::forward, -info.camber * M_PI / 180.0);
-	orientation = ste * toe * cam;
+	btQuaternion steer(steering_axis, steering_angle);
+	orientation = steer * orientation_ext;
 }
 
 void CARSUSPENSION::SetDisplacement ( const btScalar & value, btScalar dt )
@@ -135,7 +144,7 @@ public:
 		hinge_radius = hinge_arm.length();
 
 		// take hinge arm offset into account
-		hinge_anchor += (info.extended_position - wheel_hub);
+		hinge_anchor += (info.position - wheel_hub);
 	}
 
 private:
@@ -167,7 +176,7 @@ public:
 			rel_lc_uh = (hinge[UPPER_HUB] - hinge[LOWER_CHASSIS]),
 			rel_uc_lc = (hinge[LOWER_CHASSIS] - hinge[UPPER_CHASSIS]),
 			rel_lh_uh = (hinge[UPPER_HUB] - hinge[LOWER_HUB]),
-			localwheelpos = (info.extended_position - hinge[LOWER_HUB]);
+			localwheelpos = (info.position - hinge[LOWER_HUB]);
 
 		btScalar radlc = angle_from_sides(rel_lc_lh.length(), rel_uc_lc.length(), rel_uc_lh.length());
 		btScalar lrotrad = -displacement_fraction * info.travel / rel_lc_lh.length();
@@ -266,7 +275,7 @@ public:
 		btVector3 hinge_top = strut.top - strut.hinge;
 
 		btVector3 rotaxis = up.cross(hinge_end).normalized();
-		btVector3 localwheelpos = info.extended_position - strut.end;
+		btVector3 localwheelpos = info.position - strut.end;
 
 		btScalar hingeradius = hinge_end.length();
 		btScalar disp_rad = asin(displacement_fraction * info.travel / hingeradius);
@@ -363,10 +372,10 @@ bool CARSUSPENSION::Load(
 	if (!cfg_wheel.get("camber", info.camber, error_output)) return false;
 	if (!cfg_wheel.get("caster", info.caster, error_output)) return false;
 	if (!cfg_wheel.get("toe", info.toe, error_output)) return false;
-	cfg_wheel.get("steering", info.max_steering_angle);
+	cfg_wheel.get("steering", info.steering_angle);
 	cfg_wheel.get("ackermann", info.ackermann);
 
-	info.extended_position.setValue(p[0], p[1], p[2]);
+	info.position.setValue(p[0], p[1], p[2]);
 
 	const PTree * cfg_coil;
 	if (!cfg_wheel.get("coilover", cfg_coil, error_output)) return false;
