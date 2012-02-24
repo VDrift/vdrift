@@ -3,13 +3,9 @@ a.out
 Makefile
 vdrift
 vdrift.cfg
-vdrift.xcodeproj/
-VDrift.xcworkspace/
-vdrift.app/
 build/
 data/
 obj/
-src/.DS_Store
 src/definitions.h
 vdrift-mac/
 vdrift-win/
