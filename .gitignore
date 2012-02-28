@@ -3,10 +3,10 @@ a.out
 Makefile
 vdrift
 vdrift.cfg
-build/
-data/
-obj/
+build
+data
+obj
 src/definitions.h
-vdrift-mac/
-vdrift-win/
+vdrift-mac
+vdrift-win
 *~
