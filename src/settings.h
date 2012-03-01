@@ -1,6 +1,7 @@
 #ifndef _SETTINGS_H
 #define _SETTINGS_H
 
+#include <map>
 #include <string>
 #include <vector>
 #include <ostream>
@@ -17,6 +18,10 @@ public:
 	void Load(const std::string & settingsfile, std::ostream & error);
 
 	void Save(const std::string & settingsfile, std::ostream & error);
+
+	void Get(std::map<std::string, std::string> & options);
+
+	void Set(const std::map<std::string, std::string> & options);
 
 	unsigned int GetResolutionX() const
 	{

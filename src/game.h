@@ -101,10 +101,6 @@ private:
 	bool Download(const std::string & file);
 	bool Download(const std::vector <std::string> & files);
 
-	// move to settings
-	void GetOptions(std::map<std::string, std::string> & options);
-	void SetOptions(const std::map<std::string, std::string> & options);
-
 	std::ostream & info_output;
 	std::ostream & error_output;
 	unsigned int frame; ///< physics frame counter

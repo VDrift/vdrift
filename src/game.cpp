@@ -480,9 +480,8 @@ bool GAME::InitGUI()
 	}
 
 	std::map<std::string, std::string> optionmap;
-	GetOptions(optionmap);
+	settings.Get(optionmap);
 	gui.SyncOptions(true, optionmap, error_output);
-	// Nice, slow fade-in...
 	gui.ActivatePage("Main", 0.5, error_output);
 	if (settings.GetMouseGrab()) eventsystem.SetMouseCursorVisibility(true);
 
@@ -1179,9 +1178,12 @@ void GAME::ProcessGUIInputs()
 		if (neededsync)
 		{
 			std::map<std::string, std::string> optionmap;
-			GetOptions(optionmap);
+			settings.Get(optionmap);
 			gui.SyncOptions(false, optionmap, error_output);
-			SetOptions(optionmap);
+			settings.Set(optionmap);
+
+			// Account for new settings.
+			ProcessNewSettings();
 		}
 
 		if (gui.ControlsNeedLoading())
@@ -2461,50 +2463,6 @@ void GAME::PopulateValueLists(std::map<std::string, std::list <std::pair <std::s
 			valuelists["languages"].push_back(std::make_pair(value, value));
 		}
 	}
-}
-
-/* Read options from settings... */
-void GAME::GetOptions(std::map<std::string, std::string> & options)
-{
-	bool write_to = true;
-	CONFIG tempconfig;
-	settings.Serialize(write_to, tempconfig);
-
-	for (CONFIG::const_iterator ic = tempconfig.begin(); ic != tempconfig.end(); ++ic)
-	{
-		std::string section = ic->first;
-		for (CONFIG::SECTION::const_iterator is = ic->second.begin(); is != ic->second.end(); ++is)
-		{
-			if (section.length() > 0)
-				options[section + "." + is->first] = is->second;
-			else
-				options[is->first] = is->second;
-		}
-	}
-}
-
-/* Write options to settings... */
-void GAME::SetOptions(const std::map<std::string, std::string> & options)
-{
-	CONFIG tempconfig;
-	for (std::map<std::string, std::string>::const_iterator i = options.begin(); i != options.end(); ++i)
-	{
-		std::string section;
-		std::string param = i->first;
-		size_t n = param.find(".");
-		if (n < param.length())
-		{
-			section = param.substr(0, n);
-			param.erase(0, n + 1);
-		}
-		tempconfig.SetParam(section, param, i->second);
-	}
-
-	bool write_to = false;
-	settings.Serialize(write_to, tempconfig);
-
-	// Account for new settings.
-	ProcessNewSettings();
 }
 
 /* Update the game with any new setting changes that have just been made... */
