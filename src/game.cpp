@@ -1726,7 +1726,7 @@ void GAME::UpdateCarInputs(CAR & car)
 	// Handle camera mode change inputs.
 	CAMERA * old_camera = active_camera;
 	CARCONTROLMAP_LOCAL & carcontrol = carcontrols_local.second;
-	int camera_id = settings.GetCamera();
+	unsigned camera_id = settings.GetCamera();
 	if (carcontrol.GetInput(CARINPUT::VIEW_HOOD))
 	{
 		camera_id = 0;
@@ -1759,11 +1759,11 @@ void GAME::UpdateCarInputs(CAR & car)
 	{
 		--camera_id;
 	}
-	if (camera_id < 0)
+	if (camera_id > car.GetCameras().size())
 	{
 		camera_id = car.GetCameras().size() - 1;
 	}
-	else if (camera_id >= car.GetCameras().size())
+	else if (camera_id == car.GetCameras().size())
 	{
 		camera_id = 0;
 	}
