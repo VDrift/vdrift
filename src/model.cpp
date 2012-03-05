@@ -26,6 +26,8 @@ using namespace VERTEX_ATTRIBS;
 
 static const std::string file_magic = "OGLVARRAYV01";
 
+static const bool vaoDebug = false;
+
 MODEL::MODEL() : generatedlistid(false), generatedmetrics(false), generatedvao(false), vao(0), elementVbo(0), elementCount(0), radius(0), radiusxz(0)
 {
 	// Constructor.
@@ -195,6 +197,8 @@ void MODEL::GenerateVertexArrayObject(std::ostream & error_output)
 
 	// Generate vertex array object.
 	glGenVertexArrays(1, &vao);ERROR_CHECK;
+    if (vaoDebug)
+        std::cout << "created vao " << vao << std::endl;
 	glBindVertexArray(vao);ERROR_CHECK;
 
 	// Buffer object for faces.
@@ -281,6 +285,8 @@ void MODEL::ClearVertexArrayObject()
 		if (vao != 0)
 		{
 			glBindVertexArray(0);
+            if (vaoDebug)
+                std::cout << "deleting vao " << vao << std::endl;
 			glDeleteVertexArrays(1,&vao);
 			vao = 0;
 		}

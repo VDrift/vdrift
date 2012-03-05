@@ -223,8 +223,8 @@ bool CAR::LoadLight(
 		varray.SetToUnitCube();
 		varray.Scale(radius, radius, radius);
 		content.load("", "cube"+radiusstr, varray, mesh);
-		models.push_back(mesh);
 	}
+    models.push_back(mesh);
 
 	keyed_container <DRAWABLE> & dlist = GetDrawlist(node, OMNI);
 	lights.back().draw = dlist.insert(DRAWABLE());
