@@ -26,7 +26,7 @@
 #include "replay.h"
 #include "forcefeedback.h"
 #include "particle.h"
-#include "ai.h"
+#include "ai/ai.h"
 #include "quickmp.h"
 #include "contentmanager.h"
 #include "http.h"
@@ -140,6 +140,7 @@ private:
 	std::vector <std::string> opponents;
 	std::vector <std::string> opponents_paint;
 	std::vector < MATHVECTOR <float, 3> > opponents_color;
+	std::vector <std::string> opponents_type;
 	int race_laps;
 	bool debugmode;
 	bool profilingmode;

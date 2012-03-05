@@ -287,6 +287,11 @@ public:
 		return opponent_paint;
 	}
 
+	const std::string & GetOpponentType() const
+	{
+		return opponent_type;
+	}
+
 	void GetOpponentColor(float & r, float & g, float & b) const
 	{
 		r = opponent_color[0];
@@ -419,6 +424,7 @@ private:
 	std::string opponent;
 	std::string player_paint;
 	std::string opponent_paint;
+	std::string opponent_type;
 	std::vector<float> player_color;
 	std::vector<float> opponent_color;
 	int camera_id;

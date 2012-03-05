@@ -71,6 +71,7 @@ SETTINGS::SETTINGS() :
 	opponent("XS"),
 	player_paint("default"),
 	opponent_paint("default"),
+	opponent_type("Standard AI"),
 	player_color(3, 1.0),
 	opponent_color(3, 1.0),
 	camera_id(0),
@@ -102,6 +103,7 @@ void SETTINGS::Serialize(bool write, CONFIG & config)
 	Param(config, write, section, "opponent", opponent);
 	Param(config, write, section, "opponent_paint", opponent_paint);
 	Param(config, write, section, "opponent_color", opponent_color);
+	Param(config, write, section, "opponent_type", opponent_type);
 	Param(config, write, section, "reverse", trackreverse);
 	Param(config, write, section, "track_dynamic", trackdynamic);
 	Param(config, write, section, "batch_geometry", batch_geometry);
