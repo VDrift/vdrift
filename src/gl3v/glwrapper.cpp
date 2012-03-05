@@ -28,7 +28,7 @@
 #define GLLOG(x) (logGlCall(#x),x)
 #define CACHED(cachedValue,newValue,statement) {if (cachedValue != newValue) {cachedValue = newValue;statement}}
 
-#define breakOnError true
+#define breakOnError false
 #define logEveryGlCall false
 #define enableErrorChecking true
 
