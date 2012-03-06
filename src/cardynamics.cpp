@@ -1303,97 +1303,103 @@ btVector3 CARDYNAMICS::ApplySuspensionForceToBody ( int i, btScalar dt, btVector
 
 	force = force + suspension_force;
 	torque = torque + suspension_force_application_point.cross(suspension_force);
-	btAssert(!isnan(force));
-	btAssert(!isnan(torque));
+
+	for ( int n = 0; n < 3; ++n ) assert ( !isnan ( force[n] ) );
+	for ( int n = 0; n < 3; ++n ) assert ( !isnan ( torque[n] ) );
 
 	return suspension_force;
 }
 
-void CARDYNAMICS::ApplyWheelForces(
-	btScalar dt,
-	btScalar drive_torque,
-	int i,
-	const btVector3 & suspension_force,
-	btVector3 & force,
-	btVector3 & torque)
+btVector3 CARDYNAMICS::ComputeTireFrictionForce (int i, btScalar dt, btScalar normal_force,
+        btScalar angvel, btVector3 & groundvel, const btQuaternion & wheel_orientation)
 {
-	btScalar normal_force = suspension_force.length();
-	btAssert(!isnan(normal_force));
+	//determine camber relative to the road
+	//the component of vector A projected onto plane B = A || B = B × (A×B / |B|) / |B|
+	//plane B is the plane defined by using the tire's forward-facing vector as the plane's normal, in wheelspace
+	//vector A is the normal of the driving surface, in wheelspace
+	btVector3 B = direction::forward; //forward facing normal vector
+	btVector3 A = quatRotate(wheel_orientation.inverse(), wheel_contact[ WHEEL_POSITION ( i ) ].GetNormal() ) ; //driving surface normal in wheelspace
+	btVector3 Aproj = B.cross(A.cross(B)); //project the ground normal onto our forward facing plane
+	assert(Aproj.length() > 0.001); //ensure the wheel isn't in an odd orientation
+	Aproj = Aproj.normalize();
+	btScalar camber_rads = btAcos(Aproj.dot(direction::up)); //find the angular difference in the camber axis between up and the projected ground normal
+	assert(!isnan(camber_rads));
+	//btVector3 crosscheck = Aproj.cross(up); //find axis of rotation between Aproj and up
+	//camber_rads = (crosscheck[0] < 0) ? -camber_rads : camber_rads; //correct sign of angular distance
+	camber_rads = -camber_rads;
 
-	btMatrix3x3 wheel_space(wheel_orientation[i]);
-	btVector3 wx = wheel_space.getColumn(0);
-	btVector3 wy = wheel_space.getColumn(1);
-	btVector3 wz = wheel_space.getColumn(2);
-	btVector3 z = wheel_contact[i].GetNormal();
-
-	// ignore surface normals with over 30 deg deviation from wheel z axis
-	btScalar zdot = wz.dot(z);
-	if (zdot < 0.866f)
-	{
-		z = wz;
-	}
-
-	// setup contact space
-	btVector3 x = wy.cross(z).normalized();
-	btVector3 y = z.cross(x);
-
-	// camber positive when the top of the tire tilts to the right (when viewing the from the rear)
-	btScalar zproj = z.dot(wz - y * wz.dot(y));
-	btScalar camber = btAcos(zproj) * SIMD_DEGS_PER_RAD;
-	if (x.dot(wz) < 0)
-	{
-		camber = -camber;
-	}
-
-	// contact velocities
-	btScalar lonvel = y.dot(wheel_velocity[i]);
-	btScalar latvel = -x.dot(wheel_velocity[i]);
-	btScalar angvel = wheel[i].GetAngularVelocity();
-
-	// friction
-	btScalar friction_coeff = tire[i].GetTread() * wheel_contact[i].GetSurface().frictionTread +
+	btScalar camber = camber_rads * SIMD_DEGS_PER_RAD;
+	btScalar lonvel = direction::forward.dot(groundvel);
+	btScalar latvel = -direction::right.dot(groundvel);
+	btScalar friction_coeff =
+		tire[i].GetTread() * wheel_contact[i].GetSurface().frictionTread +
 		(1.0 - tire[i].GetTread()) * wheel_contact[i].GetSurface().frictionNonTread;
-	btVector3 friction_force = tire[i].GetForce(normal_force, friction_coeff, camber, angvel, lonvel, latvel);
-	btAssert(!isnan(friction_force));
 
-	btScalar friction_torque = friction_force[0] * tire[i].GetRadius();
-	btScalar brake_torque = -wheel[i].GetAngularVelocity() / dt * wheel[i].GetInertia() - drive_torque + friction_torque;
-	if (brake_torque > 0 && brake_torque > brake[i].GetTorque())
-	{
-		brake_torque = brake[i].GetTorque();
-	}
-	else if (brake_torque < 0 && brake_torque < -brake[i].GetTorque())
-	{
-		brake_torque = -brake[i].GetTorque();
-	}
-	btAssert(!isnan(brake_torque));
+	btVector3 friction_force = tire[i].GetForce(
+		normal_force, friction_coeff, camber, angvel, lonvel, latvel);
 
-	// limit the reaction torque to the applied drive and braking torque
-	btScalar reaction_torque = friction_torque;
-	btScalar applied_torque = drive_torque + brake_torque;
-	if ((applied_torque > 0 && reaction_torque > applied_torque) ||
-		(applied_torque < 0 && reaction_torque < applied_torque))
+	for (int n = 0; n < 3; ++n) assert(!isnan(friction_force[n]));
+
+	return friction_force;
+}
+
+void CARDYNAMICS::ApplyWheelForces ( btScalar dt, btScalar wheel_drive_torque, int i, const btVector3 & suspension_force, btVector3 & force, btVector3 & torque )
+{
+	btVector3 groundvel = quatRotate ( wheel_orientation[i].inverse(), wheel_velocity[i] );
+
+#ifdef SUSPENSION_FORCE_DIRECTION
+	btVector3 wheel_normal = quatRotate ( wheel_orientation[i], up );
+	//btScalar normal_force = suspension_force.dot(wheel_normal);
+	btScalar normal_force = suspension_force.length();
+#else
+	btScalar normal_force = suspension_force.length();
+#endif
+	assert(!isnan(normal_force));
+
+	btVector3 friction_force = ComputeTireFrictionForce ( i, dt, normal_force, wheel[i].GetAngularVelocity(), groundvel, wheel_orientation[i] );
+
+	//calculate friction torque
+	btVector3 tire_force = direction::forward * friction_force[0] - direction::right * friction_force[1];
+	btScalar tire_friction_torque = friction_force[0] * tire[i].GetRadius();
+	assert ( !isnan ( tire_friction_torque ) );
+
+	//calculate brake torque
+	btScalar wheel_brake_torque = (0 - wheel[i].GetAngularVelocity()) / dt * wheel[i].GetInertia() - wheel_drive_torque + tire_friction_torque;
+	if (wheel_brake_torque > 0 && wheel_brake_torque > brake[i].GetTorque())
 	{
+		wheel_brake_torque = brake[i].GetTorque();
+	}
+	else if (wheel_brake_torque < 0 && wheel_brake_torque < -brake[i].GetTorque())
+	{
+		wheel_brake_torque = -brake[i].GetTorque();
+	}
+	assert ( !isnan ( wheel_brake_torque ) );
+
+	//limit the reaction torque to the applied drive and braking torque
+	btScalar reaction_torque = tire_friction_torque;
+	btScalar applied_torque = wheel_drive_torque + wheel_brake_torque;
+	if ( ( applied_torque > 0 && reaction_torque > applied_torque ) ||
+			( applied_torque < 0 && reaction_torque < applied_torque ) )
 		reaction_torque = applied_torque;
-	}
 	btVector3 tire_torque = direction::right * reaction_torque - direction::up * friction_force[2];
 
-	// set wheel torque due to tire rolling resistance
+	//set wheel torque due to tire rolling resistance
 	btScalar rolling_resistance = -tire[i].GetRollingResistance(wheel[i].GetAngularVelocity(), wheel_contact[i].GetSurface().rollResistanceCoefficient);
-	btScalar rolling_resistance_torque = rolling_resistance * tire[i].GetRadius() - friction_torque;
-	btAssert(!isnan(rolling_resistance_torque));
+	btScalar tire_rolling_resistance_torque = rolling_resistance * tire[i].GetRadius() - tire_friction_torque;
+	assert(!isnan(tire_rolling_resistance_torque));
 
-	// have the wheels internally apply forces, or just forcibly set the wheel speed if the brakes are locked
-	wheel[i].SetTorque(drive_torque + brake_torque + rolling_resistance_torque, dt);
-	wheel[i].Integrate(dt);
+	tire_force -= groundvel * wheel_contact[i].GetSurface().rollingDrag;
 
-	// apply forces to body
-	btVector3 relpos = wheel_position[i] - body->getCenterOfMassPosition();
-	btVector3 world_tire_drag = -wheel_velocity[i] * wheel_contact[i].GetSurface().rollingDrag;
-	btVector3 world_tire_force = y * friction_force[0] - x * friction_force[1] + world_tire_drag;
-	btVector3 world_tire_torque = wheel_space * tire_torque + relpos.cross(world_tire_force);
+	//have the wheels internally apply forces, or just forcibly set the wheel speed if the brakes are locked
+	wheel[i].SetTorque ( wheel_drive_torque+wheel_brake_torque+tire_rolling_resistance_torque, dt );
+	wheel[i].Integrate ( dt );
+
+	//apply forces to body
+	btVector3 world_tire_force = quatRotate ( wheel_orientation[i], tire_force );
+	btVector3 world_tire_torque = quatRotate ( wheel_orientation[i],  tire_torque);
+	btVector3 tirepos = wheel_position[i] - body->getCenterOfMassPosition();
 	force = force + world_tire_force;
-	torque = torque + world_tire_torque;
+	torque = torque + world_tire_torque + tirepos.cross(world_tire_force);
 }
 
 ///the core function of the car dynamics simulation:  find and apply all forces on the car and components.
