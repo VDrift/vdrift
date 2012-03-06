@@ -1423,6 +1423,7 @@ void GAME::ProcessGUIAction(const std::string & action)
 			opponents.clear();
 			opponents_paint.clear();
 			opponents_color.clear();
+			opponents_difficulty.clear();
 			opponents_type.clear();
 		}
 
@@ -1431,6 +1432,7 @@ void GAME::ProcessGUIAction(const std::string & action)
 		MATHVECTOR <float, 3> color(0);
 		settings.GetOpponentColor(color[0], color[1], color[2]);
 		opponents_color.push_back(color);
+		opponents_difficulty.push_back(settings.GetAIDifficulty());
 		opponents_type.push_back(settings.GetOpponentType());
 
 		std::string opponentstr;
@@ -1905,7 +1907,7 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 				error_output << "Unable to get track start location " << i << std::endl;
 				return false;
 			}
-			ai.add_car(&cars.back(), settings.GetAIDifficulty(), opponents_type[i]);
+			ai.add_car(&cars.back(), opponents_difficulty[i], opponents_type[i]);
 			carcount++;
 		}
 	}

@@ -140,6 +140,7 @@ private:
 	std::vector <std::string> opponents;
 	std::vector <std::string> opponents_paint;
 	std::vector < MATHVECTOR <float, 3> > opponents_color;
+	std::vector <float> opponents_difficulty;
 	std::vector <std::string> opponents_type;
 	int race_laps;
 	bool debugmode;
