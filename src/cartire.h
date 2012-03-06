@@ -34,20 +34,17 @@ public:
 	/// look up ideal slide ratio, slip angle
 	void GetSigmaHatAlphaHat(btScalar load, btScalar & sh, btScalar & ah) const;
 
-	/// load: Tire normal force in N
-	/// friction_coeff: surface friction coefficient [0, 1]
-	/// inclination: wheel inclination when viewed from behind in degrees
-	/// vx: forward velocity in m/s
-	/// vy: lateral velocity in m/s
-	/// vr: tire patch velocity (radius * angular velocity) in m/s
-	/// return Fx, Fy, Mz in N
+	/// velocity vector of the wheel's reference frame in m/s
+	/// velocity_ang: wheel angular veloity in rad/s
+	/// inclination: wheel inclination in degrees
+	/// normal_force: tire load in newton
 	btVector3 GetForce(
-		btScalar load,
+		btScalar normal_force,
 		btScalar friction_coeff,
 		btScalar inclination,
-		btScalar vx,
-		btScalar vy,
-		btScalar vr);
+		btScalar ang_velocity,
+		btScalar lon_velocty,
+		btScalar lat_velocity);
 
 	/// get rolling resistance
 	btScalar GetRollingResistance(const btScalar velocity, const btScalar rolling_resistance_factor) const;
