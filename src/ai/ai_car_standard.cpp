@@ -43,7 +43,7 @@ AI_Car_Standard::~AI_Car_Standard ()
 #endif
 }
 
-template<class T> bool isnan(const T & x)
+template<class T> bool AI_Car_Standard::isnan(const T & x)
 {
 	return x != x;
 }
@@ -69,14 +69,14 @@ template<class T> bool isnan(const T & x)
 #define BRAKE_RATE_LIMIT 0.1
 #define THROTTLE_RATE_LIMIT 0.1
 
-float clamp(float val, float min, float max)
+float AI_Car_Standard::clamp(float val, float min, float max)
 {
 	assert(min <= max);
 	return std::min(max,std::max(min,val));
 }
 
 //note that rate_limit_neg should be positive, it gets inverted inside the function
-float RateLimit(float old_value, float new_value, float rate_limit_pos, float rate_limit_neg)
+float AI_Car_Standard::RateLimit(float old_value, float new_value, float rate_limit_pos, float rate_limit_neg)
 {
 	if (new_value - old_value > rate_limit_pos)
 		return old_value + rate_limit_pos;
@@ -93,24 +93,17 @@ void AI_Car_Standard::Update(float dt, const std::list <CAR> & checkcars)
 	updateSteer();
 }
 
-MATHVECTOR <float, 3> TransformToWorldspace(const MATHVECTOR <float, 3> & bezierspace)
+MATHVECTOR <float, 3> AI_Car_Standard::TransformToWorldspace(const MATHVECTOR <float, 3> & bezierspace)
 {
 	return MATHVECTOR <float, 3> (bezierspace[2], bezierspace[0], bezierspace[1]);
 }
 
-MATHVECTOR <float, 3> TransformToPatchspace(const MATHVECTOR <float, 3> & bezierspace)
+MATHVECTOR <float, 3> AI_Car_Standard::TransformToPatchspace(const MATHVECTOR <float, 3> & bezierspace)
 {
 	return MATHVECTOR <float, 3> (bezierspace[1], bezierspace[2], bezierspace[0]);
 }
 
-QT_TEST(ai_test)
-{
-	MATHVECTOR <float, 3> testvec(1,2,3);
-	QT_CHECK_EQUAL(testvec, TransformToWorldspace(TransformToPatchspace(testvec)));
-	QT_CHECK_EQUAL(testvec, TransformToPatchspace(TransformToWorldspace(testvec)));
-}
-
-const BEZIER * GetCurrentPatch(const CAR *c)
+const BEZIER * AI_Car_Standard::GetCurrentPatch(const CAR *c)
 {
 	const BEZIER *curr_patch = c->GetCurPatch(WHEEL_POSITION(0));
 	if (!curr_patch)
@@ -122,28 +115,28 @@ const BEZIER * GetCurrentPatch(const CAR *c)
 	return curr_patch;
 }
 
-MATHVECTOR <float, 3> GetPatchFrontCenter(const BEZIER & patch)
+MATHVECTOR <float, 3> AI_Car_Standard::GetPatchFrontCenter(const BEZIER & patch)
 {
 	return (patch.GetPoint(0,0) + patch.GetPoint(0,3)) * 0.5;
 }
 
-MATHVECTOR <float, 3> GetPatchBackCenter(const BEZIER & patch)
+MATHVECTOR <float, 3> AI_Car_Standard::GetPatchBackCenter(const BEZIER & patch)
 {
 	return (patch.GetPoint(3,0) + patch.GetPoint(3,3)) * 0.5;
 }
 
-MATHVECTOR <float, 3> GetPatchDirection(const BEZIER & patch)
+MATHVECTOR <float, 3> AI_Car_Standard::GetPatchDirection(const BEZIER & patch)
 {
 	return (GetPatchFrontCenter(patch) - GetPatchBackCenter(patch)) * 0.5;
 }
 
-MATHVECTOR <float, 3> GetPatchWidthVector(const BEZIER & patch)
+MATHVECTOR <float, 3> AI_Car_Standard::GetPatchWidthVector(const BEZIER & patch)
 {
 	return ((patch.GetPoint(0,0) + patch.GetPoint(3,0)) -
 			(patch.GetPoint(0,3) + patch.GetPoint(3,3))) * 0.5;
 }
 
-double GetPatchRadius(const BEZIER & patch)
+double AI_Car_Standard::GetPatchRadius(const BEZIER & patch)
 {
 	if (patch.GetNextPatch() && patch.GetNextPatch()->GetNextPatch())
 	{
@@ -172,7 +165,7 @@ double GetPatchRadius(const BEZIER & patch)
 }
 
 ///trim the patch's width in-place
-void TrimPatch(BEZIER & patch, float trimleft_front, float trimright_front, float trimleft_back, float trimright_back)
+void AI_Car_Standard::TrimPatch(BEZIER & patch, float trimleft_front, float trimright_front, float trimleft_back, float trimright_back)
 {
 	MATHVECTOR <float, 3> frontvector = (patch.GetPoint(0,3) - patch.GetPoint(0,0));
 	MATHVECTOR <float, 3> backvector = (patch.GetPoint(3,3) - patch.GetPoint(3,0));
@@ -512,6 +505,7 @@ void AI_Car_Standard::updateSteer()
 #endif
 
 	const BEZIER *curr_patch_ptr = GetCurrentPatch(car);
+	
 	//if car has no contact with track, just let it roll
 	if (!curr_patch_ptr)
 	{
@@ -616,7 +610,7 @@ void AI_Car_Standard::updateSteer()
 
 ///note that carposition must be in patch space
 ///returns distance from left side of the track
-float GetHorizontalDistanceAlongPatch(const BEZIER & patch, MATHVECTOR <float, 3> carposition)
+float AI_Car_Standard::GetHorizontalDistanceAlongPatch(const BEZIER & patch, MATHVECTOR <float, 3> carposition)
 {
 	MATHVECTOR <float, 3> leftside = (patch.GetPoint(0,0) + patch.GetPoint(3,0))*0.5;
 	MATHVECTOR <float, 3> rightside = (patch.GetPoint(0,3) + patch.GetPoint(3,3))*0.5;
@@ -624,7 +618,7 @@ float GetHorizontalDistanceAlongPatch(const BEZIER & patch, MATHVECTOR <float, 3
 	return patchwidthvector.Normalize().dot(carposition-leftside);
 }
 
-float RampBetween(float val, float startat, float endat)
+float AI_Car_Standard::RampBetween(float val, float startat, float endat)
 {
 	assert(endat > startat);
 	return (clamp(val,startat,endat)-startat)/(endat-startat);
@@ -893,7 +887,7 @@ double AI_Car_Standard::Angle(double x1, double y1)
 	return atan2(y1, x1) * 180.0 / M_PI;
 }
 #ifdef VISUALIZE_AI_DEBUG
-static void ConfigureDrawable(keyed_container <DRAWABLE>::handle & ref, SCENENODE & topnode, float r, float g, float b)
+void AI_Car_Standard::ConfigureDrawable(keyed_container <DRAWABLE>::handle & ref, SCENENODE & topnode, float r, float g, float b)
 {
 	if (!ref.valid())
 	{
@@ -904,7 +898,7 @@ static void ConfigureDrawable(keyed_container <DRAWABLE>::handle & ref, SCENENOD
 	}
 }
 
-static void AddLinePoint(VERTEXARRAY & va, const MATHVECTOR<float, 3> & p)
+void AI_Car_Standard::AddLinePoint(VERTEXARRAY & va, const MATHVECTOR<float, 3> & p)
 {
 	int vsize;
 	const float* vbase;
