@@ -25,7 +25,7 @@ public:
 	AI();
 	~AI();
 
-	void add_car(CAR * car, float difficulty, std::string type = "" );
+	void add_car(CAR * car, float difficulty, std::string type = default_ai_type );
 	void remove_car(CAR * car);
 	void clear_cars();
 	void update(float dt, const std::list <CAR> & othercars);
@@ -35,6 +35,8 @@ public:
 	std::vector<std::string> ListFactoryTypes();
 
 	void Visualize();
+
+	static const std::string default_ai_type;
 };
 
 #endif //_AI_H

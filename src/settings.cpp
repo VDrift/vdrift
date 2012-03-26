@@ -1,5 +1,6 @@
 #include "settings.h"
 #include "config.h"
+#include "ai/ai.h"
 
 template <typename T>
 static void Param(
@@ -71,7 +72,7 @@ SETTINGS::SETTINGS() :
 	opponent("XS"),
 	player_paint("default"),
 	opponent_paint("default"),
-	opponent_type("Standard AI"),
+	opponent_type(AI::default_ai_type),
 	player_color(3, 1.0),
 	opponent_color(3, 1.0),
 	camera_id(0),

@@ -7,10 +7,12 @@
 
 #include <cassert>
 
+const std::string AI::default_ai_type = "Standard AI";
+
 AI::AI() :
 	empty_input(CARINPUT::INVALID, 0.0)
 {
-	AddAIFactory("Standard AI", new AI_Car_Standard_Factory());
+	AddAIFactory(default_ai_type, new AI_Car_Standard_Factory());
 }
 
 AI::~AI(){
