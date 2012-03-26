@@ -28,6 +28,20 @@ AI_Car_Standard::AI_Car_Standard (CAR * new_car, float newdifficulty) :
 	car->SetAutoShift(true);
 	car->SetAutoClutch(true);
 }
+AI_Car_Standard::~AI_Car_Standard ()
+{
+#ifdef VISUALIZE_AI_DEBUG
+	SCENENODE& topnode  = car->GetNode();
+	if (brakedraw.valid())
+	{
+		topnode.GetDrawlist().normal_noblend.erase(brakedraw);
+	}
+	if (steerdraw.valid())
+	{
+		topnode.GetDrawlist().normal_noblend.erase(steerdraw);
+	}
+#endif
+}
 
 template<class T> bool isnan(const T & x)
 {
@@ -904,15 +918,15 @@ static void AddLinePoint(VERTEXARRAY & va, const MATHVECTOR<float, 3> & p)
 	}
 	else
 	{
-		const float * p0 = vbase + vsize - 3;
 		int vcount = 6;
-		float verts[6] = {p0[0], p0[1], p0[0], p[0], p[1], p[2]};
+		float verts[6] = {p[0], p[1], p[2], p[0], p[1], p[2]};
 		va.SetVertices(verts, vcount, vsize);
 	}
 }
 
 void AI_Car_Standard::Visualize()
 {
+	SCENENODE& topnode  = car->GetNode();
 	ConfigureDrawable(brakedraw, topnode, 0,1,0);
 	ConfigureDrawable(steerdraw, topnode, 0,0,1);
 	//ConfigureDrawable(avoidancedraw, topnode, 1,0,0);
@@ -920,7 +934,7 @@ void AI_Car_Standard::Visualize()
 	DRAWABLE & brakedrawable = topnode.GetDrawlist().normal_noblend.get(brakedraw);
 	DRAWABLE & steerdrawable = topnode.GetDrawlist().normal_noblend.get(steerdraw);
 
-	brakedrawable.SetLineSize(1);
+	brakedrawable.SetLineSize(4);
 	brakedrawable.SetVertArray(&brakeshape);
 	brakeshape.Clear();
 	for (std::vector <BEZIER>::iterator i = brakelook.begin(); i != brakelook.end(); ++i)
@@ -931,10 +945,9 @@ void AI_Car_Standard::Visualize()
 		AddLinePoint(brakeshape, TransformToWorldspace(patch.GetFR()));
 		AddLinePoint(brakeshape, TransformToWorldspace(patch.GetBR()));
 		AddLinePoint(brakeshape, TransformToWorldspace(patch.GetBL()));
-		AddLinePoint(brakeshape, TransformToWorldspace(patch.GetFL()));
 	}
 
-	steerdrawable.SetLineSize(1);
+	steerdrawable.SetLineSize(4);
 	steerdrawable.SetVertArray(&steershape);
 	steershape.Clear();
 	for (std::vector <BEZIER>::iterator i = steerlook.begin(); i != steerlook.end(); ++i)
@@ -945,7 +958,6 @@ void AI_Car_Standard::Visualize()
 		AddLinePoint(steershape, TransformToWorldspace(patch.GetBR()));
 		AddLinePoint(steershape, TransformToWorldspace(patch.GetFR()));
 		AddLinePoint(steershape, TransformToWorldspace(patch.GetBL()));
-		AddLinePoint(steershape, TransformToWorldspace(patch.GetFL()));
 	}
 }
 #endif

@@ -72,7 +72,6 @@ private:
 	bool use_racingline; ///<true allows the AI to take a proper racing line
 
 #ifdef VISUALIZE_AI_DEBUG
-	SCENENODE topnode;
 	VERTEXARRAY brakeshape;
 	VERTEXARRAY steershape;
 	VERTEXARRAY avoidanceshape;
@@ -85,7 +84,7 @@ private:
 
 public:
 	AI_Car_Standard (CAR * new_car, float newdifficulty);
-
+	~AI_Car_Standard();
 	void Update(float dt, const std::list <CAR> & checkcars);
 
 #ifdef VISUALIZE_AI_DEBUG
