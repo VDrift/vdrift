@@ -135,6 +135,9 @@ public:
 
 	btScalar GetFeedback() const;
 
+	// This is needed for ray casts in the AI implementation.
+	DynamicsWorld* getDynamicsWorld() const {return world;}
+
 	void UpdateTelemetry(btScalar dt);
 
 	// print debug info to the given ostream.  set p1, p2, etc if debug info part 1, and/or part 2, etc is desired

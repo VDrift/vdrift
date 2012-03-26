@@ -301,6 +301,12 @@ public:
 		return dynamics.GetMaxSteeringAngle();
 	}
 
+	// allows to create raycasts
+	DynamicsWorld* GetDynamicsWorld()
+	{
+		return dynamics.getDynamicsWorld();
+	}
+
 	SCENENODE & GetNode() {return topnode;}
 
 protected:
