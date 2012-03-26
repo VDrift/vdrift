@@ -23,6 +23,7 @@ public:
 	AI_Car(CAR* _car, float _difficulty) :
 		car(_car), difficulty(_difficulty), inputs(CARINPUT::INVALID, 0.0)
 	{ }
+	virtual ~AI_Car(){}
 
 	CAR*						GetCar() { return car; }
 	float						GetDifficulty() { return difficulty; }
