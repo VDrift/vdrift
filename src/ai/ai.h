@@ -26,6 +26,7 @@ public:
 	~AI();
 
 	void add_car(CAR * car, float difficulty, std::string type = "" );
+	void remove_car(CAR * car);
 	void clear_cars();
 	void update(float dt, const std::list <CAR> & othercars);
 	const std::vector <float>& GetInputs(CAR * car) const; ///< returns an empty vector if the car isn't AI-controlled

@@ -32,6 +32,10 @@ const std::vector <float> & AI::GetInputs(CAR * car) const
 			return AI_Cars[i]->GetInputs();
 		}
 	}
+
+	//Trying to get the input of a not AI controlled car.
+	assert(1);
+
 	return empty_input;
 }
 
@@ -59,6 +63,23 @@ void AI::add_car(CAR * car, float difficulty, std::string type)
 	AI_Cars.push_back(aicar);
 }
 
+void AI::remove_car(CAR * car)
+{
+	assert(car);
+
+	for (int i = 0; i < AI_Cars.size(); i++)
+	{
+		if(AI_Cars[i]->GetCar() == car)
+		{
+			delete AI_Cars[i];
+			AI_Cars.erase(AI_Cars.begin() + i);
+			return;
+		}
+	}
+
+	//Car not found.
+	assert(1);
+}
 
 void AI::update(float dt, const std::list <CAR> & othercars)
 {
