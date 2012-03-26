@@ -4,6 +4,7 @@
 
 // AI implementations:
 #include "ai_car_standard.h"
+#include "ai_car_experimental.h"
 
 #include <cassert>
 
@@ -13,6 +14,7 @@ AI::AI() :
 	empty_input(CARINPUT::INVALID, 0.0)
 {
 	AddAIFactory(default_ai_type, new AI_Car_Standard_Factory());
+	AddAIFactory("Experimental AI", new AI_Car_Experimental_Factory());
 }
 
 AI::~AI(){
