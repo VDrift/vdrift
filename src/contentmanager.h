@@ -181,11 +181,11 @@ inline bool ContentManager::load(
 	error << "Failed to load " << name << " from:";
 	for (size_t i = 0; i < basepaths.size(); ++i)
 	{
-		error << " " << basepaths[i] + '/' + path;
+		error << ", " << basepaths[i] + '/' + path;
 	}
 	for (size_t i = 0; i < sharedpaths.size(); ++i)
 	{
-		error << " " << sharedpaths[i];
+		error << ", " << sharedpaths[i];
 	}
 	error << std::endl;
 	return false;
