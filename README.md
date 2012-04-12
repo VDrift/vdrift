@@ -162,8 +162,7 @@ Installing Dependencies on Fedora Linux
 
 All required packages can be installed using this command:
 
-    sudo yum install asio-devel bullet-devel gcc-c++ glew-devel \
-                     libarchive-devel scons SDL_*-devel curl-devel
+    sudo yum install bullet-devel gcc-c++ glew-devel libarchive-devel scons SDL_*-devel curl-devel
 
 
 Installing Dependencies on Ubuntu Linux
@@ -189,8 +188,8 @@ libglew1.6 and its development headers:
 
 All other required packages can be installed using this command:
 
-    sudo apt-get install g++ libarchive-dev libasio-dev libboost-dev \
-                         libcurl4-gnutls-dev libdrm-dev libgl1-mesa-dev \
+    sudo apt-get install g++ libarchive-dev libcurl4-gnutls-dev \
+                         libdrm-dev libgl1-mesa-dev \
                          libglu1-mesa-dev libkms1 mesa-common-dev \
                          libsdl-gfx1.2-dev libsdl-image1.2-dev \
                          libsdl-net1.2-dev libvorbis-dev freeglut3 libbullet0 \
