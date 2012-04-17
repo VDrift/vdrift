@@ -33,8 +33,6 @@ public:
 		return last_active_page->first;
 	}
 
-	std::map<std::string, GUIOPTION> & GetOptionMap() {return optionmap;}
-
 	SCENENODE & GetNode() {return node;}
 
 	SCENENODE & GetPageNode(const std::string & pagename)
@@ -123,6 +121,9 @@ public:
 
 	/// returns false if the specified page/label does not exist
 	bool SetButtonEnabled(const std::string & page, const std::string & button, bool enable);
+
+	std::string GetOptionValue(const std::string & name) const;
+	void SetOptionValue(const std::string & name, const std::string & value);
 
 private:
 	std::map<std::string, GUIPAGE> pages;

@@ -2,28 +2,24 @@
 #define _WIDGET_SPINNINGCAR_H
 
 #include "widget.h"
+#include "signal.h"
 #include "scenenode.h"
 #include "mathvector.h"
-#include "car.h"
 
-class TEXTUREMANAGER;
-class MODELMANAGER;
+class ContentManager;
 class PATHMANAGER;
+class CAR;
 
 class WIDGET_SPINNINGCAR : public WIDGET
 {
 public:
 	WIDGET_SPINNINGCAR();
 
-	~WIDGET_SPINNINGCAR() {};
-
-	virtual WIDGET * clone() const;
+	~WIDGET_SPINNINGCAR();
 
 	virtual void SetAlpha(SCENENODE & scene, float newalpha);
 
 	virtual void SetVisible(SCENENODE & scene, bool newvis);
-
-	virtual void HookMessage(SCENENODE & scene, const std::string & message, const std::string & from);
 
 	virtual void Update(SCENENODE & scene, float dt);
 
@@ -31,9 +27,10 @@ public:
 		SCENENODE & scene,
 		ContentManager & content,
 		const PATHMANAGER & pathmanager,
-		const float x,
-		const float y,
+		std::map<std::string, GUIOPTION> & optionmap,
+		const float x, const float y,
 		const MATHVECTOR <float, 3> & newcarpos,
+		const std::string & option,
 		std::ostream & error_output,
 		int order = 0);
 
@@ -42,21 +39,32 @@ private:
 	std::string dataro;
 	std::string dataparts;
 	std::string tsize;
+	std::string carname;
+	std::string carpaint;
+	unsigned carcolor;
 	MATHVECTOR <float, 2> center;
 	MATHVECTOR <float, 3> carpos;
-	int draworder;
 	const PATHMANAGER * pathptr;
 	ContentManager * contentptr;
 	std::ostream * errptr;
 	float rotation;
-	std::string carname;
-	std::string carpaint;
+	int draworder;
 	bool wasvisible;
-	float r, g, b;
+	bool updatecolor;
+	bool updatecar;
 
 	keyed_container <SCENENODE>::handle carnode;
+	CAR * car;
 
-	std::list <CAR> car; ///< only ever one element, please
+	// widget slots
+	Slot1<const std::string &> set_car;
+	Slot1<const std::string &> set_paint;
+	Slot1<const std::string &> set_color;
+	void SetCar(const std::string & name);
+	void SetPaint(const std::string & paint);
+	void SetColor(const std::string & color);
+
+	WIDGET_SPINNINGCAR(const WIDGET_SPINNINGCAR & other);
 
 	SCENENODE & GetCarNode(SCENENODE & parent);
 
@@ -65,6 +73,8 @@ private:
 	void Unload(SCENENODE & parent);
 
 	void Load(SCENENODE & parent);
+
+	void Rotate(SCENENODE & scene, float delta);
 
 	bool Valid() const {return carnode.valid();}
 };

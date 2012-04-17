@@ -28,11 +28,6 @@ WIDGET_CONTROLGRAB::~WIDGET_CONTROLGRAB()
 	//std::clog << "ControlGrab Destructor: " << setting << ", " << description << std::endl;
 }
 
-WIDGET * WIDGET_CONTROLGRAB::clone() const
-{
-	return new WIDGET_CONTROLGRAB(*this);
-}
-
 void WIDGET_CONTROLGRAB::SetAlpha(SCENENODE & scene, float newalpha)
 {
 	SCENENODE & topnoderef = scene.GetNode(topnode);
@@ -80,6 +75,7 @@ void WIDGET_CONTROLGRAB::SetDescription(const std::string & newdesc)
 
 bool WIDGET_CONTROLGRAB::ProcessInput(
 	SCENENODE & scene,
+	std::map<std::string, GUIOPTION> & optionmap,
 	float cursorx, float cursory,
 	bool cursordown, bool cursorjustup)
 {
@@ -88,7 +84,10 @@ bool WIDGET_CONTROLGRAB::ProcessInput(
 
 	//generate the add input tooltip, check to see if we pressed the add input button, generate an action
 	SCENENODE & topnoderef = scene.GetNode(topnode);
-	if (addbutton.ProcessInput(topnoderef, cursorx, cursory, cursordown, cursorjustup))
+	if (addbutton.ProcessInput(
+		topnoderef, optionmap,
+		cursorx, cursory,
+		cursordown, cursorjustup))
 	{
 		tempdescription = Str[ADDNEW_STR];
 		if (cursorjustup)
@@ -101,7 +100,10 @@ bool WIDGET_CONTROLGRAB::ProcessInput(
 	SCENENODE & ctrlnoderef = topnoderef.GetNode(ctrlnode);
 	for (std::list <CONTROLWIDGET>::iterator i = controlbuttons.begin(); i != controlbuttons.end(); ++i)
 	{
-		if (!i->widget.ProcessInput(ctrlnoderef, cursorx, cursory, cursordown, cursorjustup))
+		if (!i->widget.ProcessInput(
+			ctrlnoderef, optionmap,
+			cursorx, cursory,
+			cursordown, cursorjustup))
 		{
 			continue;
 		}

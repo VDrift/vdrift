@@ -15,15 +15,12 @@ GUIOPTION::GUIOPTION() :
 
 void GUIOPTION::ReplaceValues(const std::list <std::pair<std::string, std::string> > & newvalues)
 {
-	//if (text == "Color") std::cout << "car paint: values replaced" << std::endl;
 	values = newvalues;
-
 	SetToFirstValue();
 }
 
 void GUIOPTION::SetInfo(const std::string & newtext, const std::string & newdesc, const std::string & newtype)
 {
-	//std::cout << newtext << std::endl;
 	text = newtext;
 	description = newdesc;
 	type = newtype;
@@ -31,19 +28,7 @@ void GUIOPTION::SetInfo(const std::string & newtext, const std::string & newdesc
 
 void GUIOPTION::Insert(const std::string & stored_value, const std::string & display_value)
 {
-	//if (text == "Color") std::cout << "car paint: values added: " << stored_value << std::endl;
-
-	/*bool duplicate = false;
-	for (std::list <std::pair<std::string, std::string> >::iterator i = values.begin(); i != values.end(); i++)
-	{
-		if (i->first == stored_value && i->second == display_value)
-		{
-			duplicate = true;
-		}
-	}
-
-	if (!duplicate)*/
-		values.push_back(std::pair<std::string, std::string>(stored_value,display_value));
+	values.push_back(std::pair<std::string, std::string>(stored_value, display_value));
 }
 
 void GUIOPTION::SetMinMaxPercentage(float newmin, float newmax, bool newpercentage)
@@ -53,56 +38,63 @@ void GUIOPTION::SetMinMaxPercentage(float newmin, float newmax, bool newpercenta
 	percentage = newpercentage;
 }
 
-///returns true if the storedvaluename was found
 bool GUIOPTION::SetCurrentValue(const std::string & storedvaluename)
 {
-	//if (text == "Color") std::cout << "car paint: setcurrentvalue " << storedvaluename << " !! " << values.empty() << std::endl;
-
 	if (values.empty())
 	{
 		non_value_data = storedvaluename;
 		current_valid = false;
+		signal_val(storedvaluename);
+		signal_str(storedvaluename);
 		return true;
+	}
+
+	current_valid = false;
+	if (type == "float")
+	{
+		float storedvaluefloat(0);
+		{
+			std::stringstream floatstr;
+			floatstr.str(storedvaluename);
+			floatstr >> storedvaluefloat;
+		}
+		for (std::list <std::pair<std::string, std::string> >::iterator i = values.begin(); i != values.end(); ++i)
+		{
+			float ifloat(0);
+			std::stringstream floatstr;
+			floatstr.str(i->first);
+			floatstr >> ifloat;
+			if (ifloat == storedvaluefloat)
+			{
+				current_valid = true;
+				current_value = i;
+				break;
+			}
+		}
 	}
 	else
 	{
-		current_valid = false;
-		if (type == "float")
+		for (std::list <std::pair<std::string, std::string> >::iterator i = values.begin(); i != values.end(); ++i)
 		{
-			float storedvaluefloat(0);
+			if (i->first == storedvaluename)
 			{
-				std::stringstream floatstr;
-				floatstr.str(storedvaluename);
-				floatstr >> storedvaluefloat;
-			}
-			for (std::list <std::pair<std::string, std::string> >::iterator i = values.begin(); i != values.end(); ++i)
-			{
-				float ifloat(0);
-				std::stringstream floatstr;
-				floatstr.str(i->first);
-				floatstr >> ifloat;
-				if (ifloat == storedvaluefloat)
-				{
-					current_valid = true;
-					current_value = i;
-				}
+				current_valid = true;
+				current_value = i;
+				break;
 			}
 		}
-		else
-		{
-			for (std::list <std::pair<std::string, std::string> >::iterator i = values.begin(); i != values.end(); ++i)
-			{
-				if (i->first == storedvaluename)
-				{
-					current_valid = true;
-					current_value = i;
-				}
-			}
-		}
-		if (!current_valid)
-			current_value = values.end();
-		return current_valid;
 	}
+
+	if (!current_valid)
+	{
+		current_value = values.end();
+	}
+	else
+	{
+		SignalValue();
+	}
+
+	return current_valid;
 }
 
 ///increment the current_value to the next value in the values list
@@ -123,7 +115,7 @@ void GUIOPTION::Increment()
 			current_value = values.begin();
 	}
 
-	current_valid = !values.empty();
+	SignalValue();
 }
 
 ///decrement the current_value to the previous value in the values list
@@ -136,17 +128,19 @@ void GUIOPTION::Decrement()
 	}
 
 	if (current_value == values.begin())
+	{
 		current_value = values.end();
+	}
 
 	current_value--;
 
-	current_valid = !values.empty();
+	SignalValue();
 }
 
 void GUIOPTION::SetToFirstValue()
 {
 	current_value = values.begin();
-	current_valid = !values.empty();
+	SignalValue();
 }
 
 const std::string & GUIOPTION::GetCurrentDisplayValue() const
@@ -190,4 +184,14 @@ const std::list <std::pair<std::string,std::string> > & GUIOPTION::GetValueList(
 	}
 	return valuelist;*/
 	return values;
+}
+
+void GUIOPTION::SignalValue()
+{
+	current_valid = !values.empty();
+	if (current_valid)
+	{
+		signal_val(current_value->first);
+		signal_str(current_value->second);
+	}
 }

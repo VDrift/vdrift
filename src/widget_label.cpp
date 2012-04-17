@@ -8,11 +8,6 @@ WIDGET_LABEL::WIDGET_LABEL() :
 	// ctor
 }
 
-WIDGET * WIDGET_LABEL::clone() const
-{
-	return new WIDGET_LABEL(*this);
-}
-
 void WIDGET_LABEL::SetAlpha(SCENENODE & scene, float newalpha)
 {
 	GetDrawable(scene).SetColor(r, g, b, newalpha);

@@ -2,14 +2,10 @@
 
 #include <cassert>
 
-WIDGET_BUTTON::WIDGET_BUTTON() : cancel(true), enabled(true), alpha(1.0f)
+WIDGET_BUTTON::WIDGET_BUTTON() :
+	cancel(true), enabled(true), alpha(1.0f)
 {
 	// ctor
-}
-
-WIDGET * WIDGET_BUTTON::clone() const
-{
-	return new WIDGET_BUTTON(*this);
 }
 
 void WIDGET_BUTTON::SetAlpha(SCENENODE & scene, float newalpha)
@@ -53,7 +49,11 @@ bool WIDGET_BUTTON::GetCancel() const
 	return cancel;
 }
 
-bool WIDGET_BUTTON::ProcessInput(SCENENODE & scene, float cursorx, float cursory, bool cursordown, bool cursorjustup)
+bool WIDGET_BUTTON::ProcessInput(
+	SCENENODE & scene,
+	std::map<std::string, GUIOPTION> & optionmap,
+	float cursorx, float cursory,
+	bool cursordown, bool cursorjustup)
 {
 	active_action.clear();
 

@@ -17,8 +17,6 @@ public:
 
 	~WIDGET_LABEL() {};
 
-	virtual WIDGET * clone() const;
-
 	virtual void SetAlpha(SCENENODE & scene, float newalpha);
 
 	virtual void SetVisible(SCENENODE & scene, bool newvis);

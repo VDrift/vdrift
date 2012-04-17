@@ -52,6 +52,7 @@ public:
 	///returns a list of actions that were generated
 	std::list <std::pair <std::string, bool> > ProcessInput(
 		SCENENODE & parent,
+		std::map<std::string, GUIOPTION> & optionmap,
 		bool movedown, bool moveup,
 		float cursorx, float cursory,
 		bool cursordown, bool cursorjustup,
@@ -76,22 +77,14 @@ public:
 	}
 
 private:
-	std::list <DERIVED <WIDGET> > widgets;
 	std::map <std::string, reseatable_reference <WIDGET_LABEL> > label_widgets;
 	std::map <std::string, reseatable_reference <WIDGET_BUTTON> > button_widgets;
-	std::list <WIDGET_CONTROLGRAB *> controlgrabs;
+	std::vector <WIDGET_CONTROLGRAB *> controlgrabs;
+	std::vector <WIDGET *> widgets;
 	WIDGET_LABEL * tooltip_widget;
 	keyed_container <SCENENODE>::handle s;
 	std::string name;
 	bool dialog;
-
-	///hides some of the ugliness behind this method
-	template <typename T>
-	T * NewWidget()
-	{
-		widgets.push_back(DERIVED <WIDGET> (new T()));
-		return (T*) widgets.back().Get();
-	}
 
 	void Clear(SCENENODE & parentnode);
 };

@@ -21,8 +21,6 @@ public:
 
 	~WIDGET_CONTROLGRAB();
 
-	virtual WIDGET * clone() const;
-
 	virtual void SetAlpha(SCENENODE & scene, float newalpha);
 
 	virtual void SetVisible(SCENENODE & scene, bool newvis);
@@ -35,6 +33,7 @@ public:
 
 	virtual bool ProcessInput(
 		SCENENODE & scene,
+		std::map<std::string, GUIOPTION> & optionmap,
 		float cursorx, float cursory,
 		bool cursordown, bool cursorjustup);
 

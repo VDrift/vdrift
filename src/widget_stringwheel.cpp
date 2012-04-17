@@ -2,14 +2,14 @@
 #include "guioption.h"
 
 WIDGET_STRINGWHEEL::WIDGET_STRINGWHEEL() :
-	option(0)
+	update(false)
 {
-	// ctor
+	set_value.call.bind<WIDGET_STRINGWHEEL, &WIDGET_STRINGWHEEL::SetValue>(this);
 }
 
-WIDGET * WIDGET_STRINGWHEEL::clone() const
+WIDGET_STRINGWHEEL::~WIDGET_STRINGWHEEL()
 {
-	return new WIDGET_STRINGWHEEL(*this);
+	// dtor
 }
 
 void WIDGET_STRINGWHEEL::SetAlpha(SCENENODE & scene, float newalpha)
@@ -22,43 +22,37 @@ void WIDGET_STRINGWHEEL::SetAlpha(SCENENODE & scene, float newalpha)
 
 void WIDGET_STRINGWHEEL::SetVisible(SCENENODE & scene, bool newvis)
 {
-	if (newvis) SyncOption(scene);
 	title.SetVisible(scene, newvis);
 	label.SetVisible(scene, newvis);
 	button_left.SetVisible(scene, newvis);
 	button_right.SetVisible(scene, newvis);
 }
 
-bool WIDGET_STRINGWHEEL::ProcessInput(SCENENODE & scene, float cursorx, float cursory, bool cursordown, bool cursorjustup)
+bool WIDGET_STRINGWHEEL::ProcessInput(
+	SCENENODE & scene,
+	std::map<std::string, GUIOPTION> & optionmap,
+	float cursorx, float cursory,
+	bool cursordown, bool cursorjustup)
 {
+	bool left = button_left.ProcessInput(scene, optionmap, cursorx, cursory, cursordown, cursorjustup);
+	bool right = button_right.ProcessInput(scene, optionmap, cursorx, cursory, cursordown, cursorjustup);
+
 	active_action.clear();
-
-	bool left = button_left.ProcessInput(scene, cursorx, cursory, cursordown, cursorjustup);
-	bool right = button_right.ProcessInput(scene, cursorx, cursory, cursordown, cursorjustup);
-
-	if (option)
+	if (cursorjustup)
 	{
-		if (left && cursorjustup)
+		if (left)
 		{
-			option->Decrement();
-			SyncOption(scene);
+			optionmap[setting].Decrement();
 			active_action = action;
 		}
-
-		if (right && cursorjustup)
+		else if (right)
 		{
-			option->Increment();
-			SyncOption(scene);
+			optionmap[setting].Increment();
 			active_action = action;
 		}
 	}
 
 	return left || right;
-}
-
-void WIDGET_STRINGWHEEL::SetName(const std::string & newname)
-{
-	name = newname;
 }
 
 std::string WIDGET_STRINGWHEEL::GetDescription() const
@@ -71,36 +65,20 @@ void WIDGET_STRINGWHEEL::SetDescription(const std::string & newdesc)
 	description = newdesc;
 }
 
-///set the local option pointer to the associated optionmap
-void WIDGET_STRINGWHEEL::UpdateOptions(
-	SCENENODE & scene,
-	bool save_to,
-	std::map<std::string, GUIOPTION> & optionmap,
-	std::ostream & error_output)
+void WIDGET_STRINGWHEEL::Update(SCENENODE & scene, float dt)
 {
-	option = &(optionmap[setting]);
-	if (!save_to) SyncOption(scene);
-}
-
-void WIDGET_STRINGWHEEL::AddHook(WIDGET * other)
-{
-	hooks.push_back(other);
-}
-
-void WIDGET_STRINGWHEEL::HookMessage(SCENENODE & scene, const std::string & message, const std::string & from)
-{
-	if (option) option->SetToFirstValue();
-	SyncOption(scene);
-}
-
-void WIDGET_STRINGWHEEL::SetSetting(const std::string & newsetting)
-{
-	setting = newsetting;
+	if (update)
+	{
+		label.ReviseDrawable(scene, value);
+		update = false;
+	}
 }
 
 void WIDGET_STRINGWHEEL::SetupDrawable(
 	SCENENODE & scene,
-	const std::string & newtitle,
+	std::map<std::string, GUIOPTION> & optionmap,
+	const std::string & settingnew,
+	const std::string & titlenew,
 	std::tr1::shared_ptr<TEXTURE> left_up,
 	std::tr1::shared_ptr<TEXTURE> left_down,
 	std::tr1::shared_ptr<TEXTURE> right_up,
@@ -117,26 +95,33 @@ void WIDGET_STRINGWHEEL::SetupDrawable(
 	assert(right_up);
 	assert(right_down);
 
-	float titlewidth = title.GetWidth(font, newtitle, scalex);
+	float titlewidth = title.GetWidth(font, titlenew, scalex);
 	float blx = centerx + titlewidth + scalex / 2;
 	float brx = blx + scalex * 3 / 4;
 	float labelx = brx + scalex / 2;
 	float r(1), g(1), b(1);
 	float h(0), w(0);
-	title.SetupDrawable(scene, font, newtitle, centerx, centery, scalex, scaley, r, g, b, z, false);
+	title.SetupDrawable(scene, font, titlenew, centerx, centery, scalex, scaley, r, g, b, z, false);
 	label.SetupDrawable(scene, font, "", labelx, centery, scalex, scaley, r, g, b, z, false);
 	button_left.SetupDrawable(scene, left_up, left_down, left_up, font, "", blx, centery, scalex, scaley, r, g, b, h, w, z);
 	button_right.SetupDrawable(scene, right_up, right_down, right_up, font, "", brx, centery, scalex, scaley, r, g, b, h, w, z);
+
+	// connect slot
+	setting = settingnew;
+	std::map<std::string, GUIOPTION>::iterator i = optionmap.find(setting);
+	if (i != optionmap.end())
+	{
+		set_value.connect(i->second.signal_str);
+		SetValue(i->second.GetCurrentDisplayValue());
+	}
+	Update(scene, 0);
 }
 
-void WIDGET_STRINGWHEEL::SyncOption(SCENENODE & scene)
+void WIDGET_STRINGWHEEL::SetValue(const std::string & valuenew)
 {
-	if (option)
+	if (value != valuenew)
 	{
-		label.ReviseDrawable(scene, option->GetCurrentDisplayValue());
-		for (std::list <WIDGET *>::iterator n = hooks.begin(); n != hooks.end(); n++)
-		{
-			(*n)->HookMessage(scene, option->GetCurrentStorageValue(), name);
-		}
+		value = valuenew;
+		update = true;
 	}
 }

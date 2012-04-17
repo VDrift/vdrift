@@ -1,10 +1,5 @@
 #include "widget_image.h"
 
-WIDGET * WIDGET_IMAGE::clone() const
-{
-	return new WIDGET_IMAGE(*this);
-}
-
 void WIDGET_IMAGE::SetAlpha(SCENENODE & node, float newalpha)
 {
 	GetDrawable(node).SetColor(1, 1, 1, newalpha);

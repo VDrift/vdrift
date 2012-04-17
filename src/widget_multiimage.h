@@ -2,10 +2,9 @@
 #define _WIDGET_MULTIIMAGE_H
 
 #include "widget.h"
+#include "signal.h"
 #include "sprite2d.h"
 #include "mathvector.h"
-
-#include <string>
 
 class SCENENODE;
 
@@ -14,19 +13,19 @@ class WIDGET_MULTIIMAGE : public WIDGET
 public:
 	WIDGET_MULTIIMAGE();
 
-	~WIDGET_MULTIIMAGE() {};
-
-	virtual WIDGET * clone() const;
+	~WIDGET_MULTIIMAGE();
 
 	virtual void SetAlpha(SCENENODE & scene, float newalpha);
 
 	virtual void SetVisible(SCENENODE & scene, bool newvis);
 
-	virtual void HookMessage(SCENENODE & scene, const std::string & message, const std::string & from);
+	virtual void Update(SCENENODE & scene, float dt);
 
 	void SetupDrawable(
 		SCENENODE & scene,
 		ContentManager & content,
+		std::map<std::string, GUIOPTION> & optionmap,
+		const std::string & option,
 		const std::string & newprefix,
 		const std::string & newpostfix,
       	float x, float y, float w, float h,
@@ -34,6 +33,7 @@ public:
 	    float z = 0);
 
 private:
+	std::string image;
 	std::string prefix;
 	std::string postfix;
 	std::string tsize;
@@ -42,8 +42,14 @@ private:
 	SPRITE2D s1;
 	float draworder;
 	bool wasvisible;
+	bool update;
 	ContentManager * content;
 	std::ostream * errptr;
+
+	Slot1<const std::string &> set_image;
+	void SetImage(const std::string & value);
+
+	WIDGET_MULTIIMAGE(const WIDGET_MULTIIMAGE & other);
 };
 
 #endif

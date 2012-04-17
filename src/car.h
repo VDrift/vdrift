@@ -28,11 +28,11 @@ public:
 
 	bool LoadGraphics(
 		const PTree & cfg,
+		const std::string & partspath,
 		const std::string & carpath,
 		const std::string & carname,
-		const std::string & partspath,
-		const MATHVECTOR <float, 3> & carcolor,
 		const std::string & carpaint,
+		const unsigned carcolor,
 		const int anisotropy,
 		const float camerabounce,
 		const bool damage,

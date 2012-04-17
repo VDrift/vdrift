@@ -1,9 +1,18 @@
 #include "widget_slider.h"
 #include "guioption.h"
 
-WIDGET * WIDGET_SLIDER::clone() const
+WIDGET_SLIDER::WIDGET_SLIDER() :
+	min(0),
+	max(1),
+	current(0),
+	update(false)
 {
-	return new WIDGET_SLIDER(*this);
+	set_value.call.bind<WIDGET_SLIDER, &WIDGET_SLIDER::SetValue>(this);
+}
+
+WIDGET_SLIDER::~WIDGET_SLIDER()
+{
+	// dtor
 }
 
 void WIDGET_SLIDER::SetAlpha(SCENENODE & scene, float newalpha)
@@ -20,7 +29,11 @@ void WIDGET_SLIDER::SetVisible(SCENENODE & scene, bool newvis)
 	text.SetDrawEnable(scene, newvis);
 }
 
-bool WIDGET_SLIDER::ProcessInput(SCENENODE & scene, float cursorx, float cursory, bool cursordown, bool cursorjustup)
+bool WIDGET_SLIDER::ProcessInput(
+	SCENENODE & scene,
+	std::map<std::string, GUIOPTION> & optionmap,
+	float cursorx, float cursory,
+	bool cursordown, bool cursorjustup)
 {
 	if (cursorx < corner2[0] + w * 0.5 &&
 		cursorx > corner1[0] - w * 0.5 &&
@@ -32,17 +45,11 @@ bool WIDGET_SLIDER::ProcessInput(SCENENODE & scene, float cursorx, float cursory
 			float coeff = (cursorx - corner1[0]) / (corner2[0] - corner1[0]);
 			if (coeff < 0) coeff = 0;
 			else if (coeff > 1.0) coeff = 1.0;
-			//std::cout << coeff << std::endl;
 			current = coeff * (max - min) + min;
-			float x = corner1[0] + coeff * (corner2[0] - corner1[0]);
-			float y = corner1[1];
-			cursor.SetToBillboard(x, y, w, h);
-
-			UpdateText(scene);
 
 			std::stringstream s;
 			s << current;
-			SendMessage(scene, s.str());
+			optionmap[setting].SetCurrentValue(s.str());
 		}
 
 		return true;
@@ -66,40 +73,40 @@ void WIDGET_SLIDER::SetDescription(const std::string & newdesc)
 	description = newdesc;
 }
 
-void WIDGET_SLIDER::UpdateOptions(
-	SCENENODE & scene,
-	bool save_to_options,
-	std::map<std::string, GUIOPTION> & optionmap,
-	std::ostream & error_output)
+void WIDGET_SLIDER::Update(SCENENODE & scene, float dt)
 {
-	if (setting.empty()) return;
-
-	if (save_to_options)
+	if (update)
 	{
+		float dx = (corner2[0] - corner1[0]) * (current - min) / (max - min);
+		cursor.SetToBillboard(corner1[0] + dx, corner1[1], w, h);
+
+		float value = current;
+
 		std::stringstream s;
-		s << current;
-		optionmap[setting].SetCurrentValue(s.str());
-		//std::cout << "Saving option value to: " << current << " | " << s.str() << std::endl;
-	}
-	else
-	{
-		std::string currentsetting = optionmap[setting].GetCurrentStorageValue();
-		if (!currentsetting.empty())
+		if (percentage)
 		{
-			std::stringstream s(currentsetting);
-			s >> current;
-			float coeff = (current-min)/(max-min);
-			cursor.SetToBillboard(corner1[0]+coeff*(corner2[0]-corner1[0]), corner1[1], w, h);
-			UpdateText(scene);
-			SendMessage(scene, currentsetting);
-			//std::cout << "Loading option value for " << setting << ": " << current << " | " << currentsetting << std::endl;
+			s.precision(0);
+			value *= 100.0f;
 		}
-	}
-}
+		else
+		{
+			s.precision(2);
+		}
 
-void WIDGET_SLIDER::AddHook(WIDGET * other)
-{
-	hooks.push_back(other);
+		s << std::fixed << value;
+		if (percentage)
+		{
+			s << "%";
+		}
+
+		text.Revise(s.str());
+
+		float width = text.GetWidth();
+		float newx = corner1[0] - width - w * 0.25;
+		text.SetPosition(newx, texty);
+
+		update = false;
+	}
 }
 
 void WIDGET_SLIDER::SetColor(SCENENODE & scene, float r, float g, float b)
@@ -123,6 +130,7 @@ void WIDGET_SLIDER::SetupDrawable(
 	const float newmin,
 	const float newmax,
 	const bool ispercentage,
+	std::map<std::string, GUIOPTION> & optionmap,
 	const std::string & newsetting,
 	const FONT & font,
 	const float scalex,
@@ -149,46 +157,28 @@ void WIDGET_SLIDER::SetupDrawable(
 	texty = y + (h - scaley) * 0.5;
 
 	text.Init(scene, font, "", corner1[0], texty, scalex, scaley);
-	UpdateText(scene);
 	text.SetDrawOrder(scene, draworder);
-
-	//wedge.SetToBillboard(corner1[0], corner1[1], w * 4.0, h * 4.0);
-	cursor.SetToBillboard(corner1[0], corner1[1], w, h);
 	wedge.SetTo2DQuad(corner1[0], corner1[1], corner2[0], corner2[1], 0, 0, 13.0/16.0, 1.0/4.0, 0);
+
+	// connect slot
+	std::map<std::string, GUIOPTION>::iterator i = optionmap.find(setting);
+	if (i != optionmap.end())
+	{
+		set_value.connect(i->second.signal_val);
+		SetValue(i->second.GetCurrentStorageValue());
+	}
+	Update(scene, 0);
 }
 
-void WIDGET_SLIDER::UpdateText(SCENENODE & scene)
+void WIDGET_SLIDER::SetValue(const std::string & valuestr)
 {
-	float value = current;
-
+	float value;
 	std::stringstream s;
-	if (percentage)
+	s << valuestr;
+	s >> value;
+	if (value != current)
 	{
-		s.precision(0);
-		value *= 100.0f;
-	}
-	else
-	{
-		s.precision(2);
-	}
-
-	s << std::fixed << value;
-	if (percentage)
-	{
-		s << "%";
-	}
-
-	text.Revise(s.str());
-
-	float width = text.GetWidth();
-	float newx = corner1[0] - width - w * 0.25;
-	text.SetPosition(newx, texty);
-}
-
-void WIDGET_SLIDER::SendMessage(SCENENODE & scene, const std::string & message) const
-{
-	for (std::list <WIDGET *>::const_iterator n = hooks.begin(); n != hooks.end(); n++)
-	{
-		(*n)->HookMessage(scene, message, name);
+		current = value;
+		update = true;
 	}
 }

@@ -15,8 +15,6 @@ public:
 
 	~WIDGET_IMAGE() {};
 
-	virtual WIDGET * clone() const;
-
 	virtual void SetAlpha(SCENENODE & node, float newalpha);
 
 	virtual void SetVisible(SCENENODE & node, bool newvis);

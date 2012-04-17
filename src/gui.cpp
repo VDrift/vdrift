@@ -154,9 +154,11 @@ std::list <std::string> GUI::ProcessInput(
 	if (active_page != pages.end())
 	{
 		actions = active_page->second.ProcessInput(
-			node,
-			movedown, moveup, cursorx, cursory,
-			cursordown, cursorjustup, screenhwratio);
+			node, optionmap,
+			movedown, moveup,
+			cursorx, cursory,
+			cursordown, cursorjustup,
+			screenhwratio);
 	}
 
 	std::list <std::string> gameactions;
@@ -462,6 +464,10 @@ bool GUI::LoadOptions(
 		{
 
 		}
+		else if (values == "int")
+		{
+
+		}
 		else if (values == "float")
 		{
 
@@ -548,4 +554,23 @@ bool GUI::SetButtonEnabled(const std::string & pagename, const std::string & but
 	button.get().SetEnabled(pagenode, enable);
 
 	return true;
+}
+
+std::string GUI::GetOptionValue(const std::string & name) const
+{
+	std::map<std::string, GUIOPTION>::const_iterator it = optionmap.find(name);
+	if (it != optionmap.end())
+	{
+		return it->second.GetCurrentStorageValue();
+	}
+	return std::string();
+}
+
+void GUI::SetOptionValue(const std::string & name, const std::string & value)
+{
+	std::map<std::string, GUIOPTION>::iterator it = optionmap.find(name);
+	if (it != optionmap.end())
+	{
+		it->second.SetCurrentValue(value);
+	}
 }

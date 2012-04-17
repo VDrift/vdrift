@@ -240,11 +240,11 @@ bool CAR::LoadLight(
 
 bool CAR::LoadGraphics(
 	const PTree & cfg,
+	const std::string & partspath,
 	const std::string & carpath,
 	const std::string & carname,
-	const std::string & partspath,
-	const MATHVECTOR <float, 3> & carcolor,
 	const std::string & carpaint,
+	const unsigned carcolor,
 	const int anisotropy,
 	const float camerabounce,
 	const bool damage,
@@ -381,7 +381,10 @@ bool CAR::LoadGraphics(
 		cameras.push_back(cam);
 	}
 
-	SetColor(carcolor[0], carcolor[1], carcolor[2]);
+	float r = float((carcolor >> 16) & 255) / 255;
+	float g = float((carcolor >> 8) & 255) / 255;
+	float b = float((carcolor >> 0) & 255) / 255;
+	SetColor(r, g, b);
 
 	return true;
 }

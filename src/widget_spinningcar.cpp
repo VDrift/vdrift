@@ -1,7 +1,8 @@
 #include "widget_spinningcar.h"
-#include "car.h"
-#include "cfg/ptree.h"
+#include "guioption.h"
 #include "pathmanager.h"
+#include "cfg/ptree.h"
+#include "car.h"
 
 WIDGET_SPINNINGCAR::WIDGET_SPINNINGCAR():
 	pathptr(0),
@@ -9,14 +10,18 @@ WIDGET_SPINNINGCAR::WIDGET_SPINNINGCAR():
 	errptr(0),
 	rotation(0),
 	wasvisible(false),
-	r(1), g(1), b(1)
+	updatecolor(false),
+	updatecar(false),
+	car(0)
 {
-	// ctor
+	set_car.call.bind<WIDGET_SPINNINGCAR, &WIDGET_SPINNINGCAR::SetCar>(this);
+	set_paint.call.bind<WIDGET_SPINNINGCAR, &WIDGET_SPINNINGCAR::SetPaint>(this);
+	set_color.call.bind<WIDGET_SPINNINGCAR, &WIDGET_SPINNINGCAR::SetColor>(this);
 }
 
-WIDGET * WIDGET_SPINNINGCAR::clone() const
+WIDGET_SPINNINGCAR::~WIDGET_SPINNINGCAR()
 {
-	return new WIDGET_SPINNINGCAR(*this);
+	if (car) delete car;
 }
 
 void WIDGET_SPINNINGCAR::SetAlpha(SCENENODE & scene, float newalpha)
@@ -31,12 +36,12 @@ void WIDGET_SPINNINGCAR::SetVisible(SCENENODE & scene, bool newvis)
 
 	//std::cout << "newvis: " << newvis << std::endl;
 
-	if (!car.empty())
+	if (car)
 	{
 		GetCarNode(scene).SetChildVisibility(newvis);
 	}
 
-	if (newvis && car.empty())
+	if (newvis && !car)
 	{
 		if (!carpaint.empty() && !carname.empty())
 		{
@@ -49,88 +54,44 @@ void WIDGET_SPINNINGCAR::SetVisible(SCENENODE & scene, bool newvis)
 		}
 	}
 
-	if (!newvis && !car.empty())
+	if (!newvis && car)
 	{
 		//std::cout << "Unloading spinning car due to visibility" << std::endl;
 		Unload(scene);
-	}
-
-	//std::cout << carname << std::endl;
-	//std::cout << carpaint << std::endl;
-}
-
-void WIDGET_SPINNINGCAR::HookMessage(SCENENODE & scene, const std::string & message, const std::string & from)
-{
-	assert(errptr);
-
-	bool reload(false);
-	std::stringstream s;
-	if (from.find("Car") != std::string::npos)
-	{
-		if (carname == message) return;
-		carpaint.clear();	// car changed reset paint
-		carname = message;
-		reload = true;
-	}
-	else if (from.find("Paint") != std::string::npos)
-	{
-		if (carpaint == message) return;
-		carpaint = message;
-		reload = true;
-	}
-	else if (from.find("Color") != std::string::npos)
-	{
-		MATHVECTOR<float, 3> rgb;
-		s << message;
-		s >> rgb;
-
-		if (fabs(rgb[0] - r) < 1.0/128.0 &&
-			fabs(rgb[1] - g) < 1.0/128.0 &&
-			fabs(rgb[2] - b) < 1.0/128.0)
-		{
-			return;
-		}
-
-		r = rgb[0];
-		g = rgb[1];
-		b = rgb[2];
-	}
-
-	if (!wasvisible)
-	{
-		return;
-	}
-
-	if (!carpaint.empty() && !carname.empty() && reload)
-	{
-		Load(scene);
-	}
-
-	if (!car.empty())
-	{
-		SetColor(scene, r, g, b);
 	}
 }
 
 void WIDGET_SPINNINGCAR::Update(SCENENODE & scene, float dt)
 {
-	if (car.empty()) return;
+	if (!car) return;
 
-	rotation += dt;
-	QUATERNION <float> q;
-	q.Rotate(3.141593*1.5, 1, 0, 0);
-	q.Rotate(rotation, 0, 1, 0);
-	q.Rotate(3.141593*0.1, 1, 0, 0);
-	GetCarNode(scene).GetTransform().SetRotation(q);
+	if (updatecar)
+	{
+		Load(scene);
+		updatecar = false;
+		updatecolor = false;
+	}
+
+	if (updatecolor)
+	{
+		float r = float((carcolor >> 16) & 255) / 255;
+		float g = float((carcolor >> 8) & 255) / 255;
+		float b = float((carcolor >> 0) & 255) / 255;
+		SetColor(scene, r, g, b);
+		updatecolor = false;
+	}
+
+	Rotate(scene, dt);
 }
 
 void WIDGET_SPINNINGCAR::SetupDrawable(
 	SCENENODE & scene,
 	ContentManager & content,
 	const PATHMANAGER & pathmanager,
-	const float x,
-	const float y,
+	std::map<std::string, GUIOPTION> & optionmap,
+	const float x, const float y,
 	const MATHVECTOR <float, 3> & newcarpos,
+	const std::string & option,
 	std::ostream & error_output,
 	int order)
 {
@@ -140,6 +101,49 @@ void WIDGET_SPINNINGCAR::SetupDrawable(
 	contentptr = &content;
 	errptr = &error_output;
 	draworder = order;
+
+	// connect slots
+	std::map<std::string, GUIOPTION>::iterator i;
+	i = optionmap.find(option);
+	if (i != optionmap.end())
+		set_car.connect(i->second.signal_val);
+	i = optionmap.find(option + "_paint");
+	if (i != optionmap.end())
+		set_paint.connect(i->second.signal_val);
+	i = optionmap.find(option + "_color");
+	if (i != optionmap.end())
+		set_color.connect(i->second.signal_val);
+}
+
+void WIDGET_SPINNINGCAR::SetCar(const std::string & name)
+{
+	if (carname != name)
+	{
+		carname = name;
+		updatecar = true;
+	}
+}
+
+void WIDGET_SPINNINGCAR::SetPaint(const std::string & paint)
+{
+	if (carpaint != paint)
+	{
+		carpaint = paint;
+		updatecar = true;
+	}
+}
+
+void WIDGET_SPINNINGCAR::SetColor(const std::string & colorstr)
+{
+	std::stringstream s;
+	unsigned color;
+	s << colorstr;
+	s >> color;
+	if (carcolor != color)
+	{
+		carcolor = color;
+		updatecolor = true;
+	}
 }
 
 SCENENODE & WIDGET_SPINNINGCAR::GetCarNode(SCENENODE & parent)
@@ -153,7 +157,22 @@ void WIDGET_SPINNINGCAR::Unload(SCENENODE & parent)
 	{
 		GetCarNode(parent).Clear();
 	}
-	car.clear();
+
+	if (car)
+	{
+		delete car;
+		car = 0;
+	}
+}
+
+void WIDGET_SPINNINGCAR::Rotate(SCENENODE & scene, float delta)
+{
+	rotation += delta;
+	QUATERNION <float> q;
+	q.Rotate(M_PI * 1.5, 1, 0, 0);
+	q.Rotate(rotation, 0, 1, 0);
+	q.Rotate(M_PI * 0.1, 1, 0, 0);
+	GetCarNode(scene).GetTransform().SetRotation(q);
 }
 
 /// this functor copies all normal layers to nocamtrans layers so
@@ -205,15 +224,13 @@ void WIDGET_SPINNINGCAR::Load(SCENENODE & parent)
 	}
 
 	SCENENODE & carnoderef = GetCarNode(parent);
-	car.push_back(CAR());
+	car = new CAR();
 
 	std::string partspath = pathptr->GetCarPartsDir();
-	std::string cardir = pathptr->GetCarsDir()+"/"+carname;
-	if (!car.back().LoadGraphics(
-			carconf, cardir, carname, partspath,
-			MATHVECTOR<float, 3>(r, g, b),
-			carpaint, anisotropy,
-			camerabounce, damage, debugmode,
+	std::string cardir = pathptr->GetCarsDir() + "/" + carname;
+	if (!car->LoadGraphics(
+			carconf, partspath, cardir, carname, carpaint, carcolor,
+			anisotropy, camerabounce, damage, debugmode,
 			*contentptr, loadlog, loadlog))
 	{
 		*errptr << "Couldn't load spinning car: " << carname << std::endl;
@@ -225,24 +242,21 @@ void WIDGET_SPINNINGCAR::Load(SCENENODE & parent)
 		return;
 	}
 
-	//copy the car's scene to our scene
-	carnoderef = car.back().GetNode();
+	// copy the car's scene to our scene
+	carnoderef = car->GetNode();
 
-	//move all of the drawables to the nocamtrans layer and disable camera transform
+	// move all of the drawables to the nocamtrans layer and disable camera transform
 	carnoderef.ApplyDrawableContainerFunctor(CAMTRANS_FUNCTOR());
 	carnoderef.ApplyDrawableFunctor(CAMTRANS_DRAWABLE_FUNCTOR());
 
+	// set transform and visibility
 	MATHVECTOR <float, 3> cartrans = carpos;
 	cartrans[0] += center[0];
 	cartrans[1] += center[1];
 	carnoderef.GetTransform().SetTranslation(cartrans);
 
-	//set initial rotation
-	Update(parent, 0);
-
+	Rotate(parent, 0);
 	carnoderef.SetChildVisibility(wasvisible);
-
-	//if (!loadlog.str().empty()) *errptr << "Loading log: " << loadlog.str() << std::endl;
 }
 
 void WIDGET_SPINNINGCAR::SetColor(SCENENODE & scene, float r, float g, float b)
@@ -255,15 +269,15 @@ void WIDGET_SPINNINGCAR::SetColor(SCENENODE & scene, float r, float g, float b)
 	TRANSFORM oldtrans = carnoderef.GetTransform();
 
 	// set the new car color
-	car.back().SetColor(r,g,b);
+	car->SetColor(r, g, b);
 
 	// re-copy nodes from the car to our GUI node
-	carnoderef = car.back().GetNode();
+	carnoderef = car->GetNode();
 	carnoderef.ApplyDrawableContainerFunctor(CAMTRANS_FUNCTOR());
 	carnoderef.ApplyDrawableFunctor(CAMTRANS_DRAWABLE_FUNCTOR());
 
 	// restore the original state
 	carnoderef.SetTransform(oldtrans);
-	Update(scene, 0);
+	Rotate(scene, 0);
 	carnoderef.SetChildVisibility(wasvisible);
 }

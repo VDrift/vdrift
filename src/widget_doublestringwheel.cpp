@@ -9,11 +9,6 @@ WIDGET_DOUBLESTRINGWHEEL::WIDGET_DOUBLESTRINGWHEEL()
 	current2 = values2.end();
 }
 
-WIDGET * WIDGET_DOUBLESTRINGWHEEL::clone() const
-{
-	return new WIDGET_DOUBLESTRINGWHEEL(*this);
-}
-
 void WIDGET_DOUBLESTRINGWHEEL::SetAlpha(SCENENODE & scene, float newalpha)
 {
 	title.SetAlpha(scene, newalpha);
@@ -60,10 +55,14 @@ void WIDGET_DOUBLESTRINGWHEEL::UpdateOptions(SCENENODE & scene, bool save_to_opt
 	}
 }
 
-bool WIDGET_DOUBLESTRINGWHEEL::ProcessInput(SCENENODE & scene, float cursorx, float cursory, bool cursordown, bool cursorjustup)
+bool WIDGET_DOUBLESTRINGWHEEL::ProcessInput(
+	SCENENODE & scene,
+	std::map<std::string, GUIOPTION> & optionmap,
+	float cursorx, float cursory,
+	bool cursordown, bool cursorjustup)
 {
-	bool left = button_left.ProcessInput(scene, cursorx, cursory, cursordown, cursorjustup);
-	bool right = button_right.ProcessInput(scene, cursorx, cursory, cursordown, cursorjustup);
+	bool left = button_left.ProcessInput(scene, optionmap, cursorx, cursory, cursordown, cursorjustup);
+	bool right = button_right.ProcessInput(scene, optionmap, cursorx, cursory, cursordown, cursorjustup);
 
 	if (current1 != values1.end())
 	{

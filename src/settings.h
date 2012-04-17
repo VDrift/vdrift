@@ -270,28 +270,9 @@ public:
 		return player_paint;
 	}
 
-	void GetPlayerColor(float & r, float & g, float & b) const
+	unsigned GetPlayerCarColor() const
 	{
-		r = player_color[0];
-		g = player_color[1];
-		b = player_color[2];
-	}
-
-	const std::string & GetOpponentCar() const
-	{
-		return opponent;
-	}
-
-	const std::string & GetOpponentCarPaint() const
-	{
-		return opponent_paint;
-	}
-
-	void GetOpponentColor(float & r, float & g, float & b) const
-	{
-		r = opponent_color[0];
-		g = opponent_color[1];
-		b = opponent_color[2];
+		return player_color;
 	}
 
 	float GetCameraBounce() const
@@ -416,11 +397,8 @@ private:
 	bool bloom;
 	bool normalmaps;
 	std::string player;
-	std::string opponent;
 	std::string player_paint;
-	std::string opponent_paint;
-	std::vector<float> player_color;
-	std::vector<float> opponent_color;
+	unsigned player_color;
 	int camera_id;
 	float camera_bounce;
 	int number_of_laps;

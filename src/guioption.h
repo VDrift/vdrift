@@ -1,6 +1,8 @@
 #ifndef _GUIOPTION_H
 #define _GUIOPTION_H
 
+#include "signal.h"
+
 #include <map>
 #include <string>
 #include <list>
@@ -45,6 +47,10 @@ public:
 
 	bool GetPercentage() const {return percentage;}
 
+	/// signal changed value to connected slots
+	Signal1<const std::string &> signal_val;
+	Signal1<const std::string &> signal_str;
+
 private:
 	bool current_valid;
 	std::list <std::pair<std::string, std::string> >::const_iterator current_value;
@@ -56,8 +62,9 @@ private:
 	float min;
 	float max;
 	bool percentage;
-
 	static const std::string null; // returned if current value is not valid
+
+	void SignalValue();
 };
 
 #endif

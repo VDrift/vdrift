@@ -8,11 +8,6 @@ WIDGET_TOGGLE::WIDGET_TOGGLE() :
 	// ctor
 }
 
-WIDGET * WIDGET_TOGGLE::clone() const
-{
-	return new WIDGET_TOGGLE(*this);
-}
-
 void WIDGET_TOGGLE::SetAlpha(SCENENODE & scene, float newalpha)
 {
 	//if (newalpha > 0 && !wasvisible) std::cout << "Changing alpha on invisible toggle: " << newalpha << std::endl;
@@ -60,6 +55,7 @@ void WIDGET_TOGGLE::SetDescription(const std::string & newdesc)
 
 bool WIDGET_TOGGLE::ProcessInput(
 	SCENENODE & scene,
+	std::map<std::string, GUIOPTION> & optionmap,
 	float cursorx, float cursory,
 	bool cursordown, bool cursorjustup)
 {

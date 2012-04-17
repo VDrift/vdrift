@@ -18,8 +18,6 @@ public:
 
 	~WIDGET_BUTTON() {};
 
-	virtual WIDGET * clone() const;
-
 	virtual void SetAlpha(SCENENODE & scene, float newalpha);
 
 	virtual void SetVisible(SCENENODE & scene, bool newvis);
@@ -34,6 +32,7 @@ public:
 
 	virtual bool ProcessInput(
 		SCENENODE & scene,
+		std::map<std::string, GUIOPTION> & optionmap,
 		float cursorx, float cursory,
 		bool cursordown, bool cursorjustup);
 
@@ -53,7 +52,7 @@ public:
 		float r, float g, float b,
 		float h = 0, float w = 0,
 		float order = 0);
-	
+
 	void SetEnabled(SCENENODE & scene, bool newenabled);
 
 private:

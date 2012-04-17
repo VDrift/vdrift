@@ -19,8 +19,6 @@ public:
 
 	~WIDGET_DOUBLESTRINGWHEEL() {};
 
-	virtual WIDGET * clone() const;
-
 	virtual void SetAlpha(SCENENODE & scene, float newalpha);
 
 	virtual void SetVisible(SCENENODE & scene, bool newvis);
@@ -31,10 +29,9 @@ public:
 
 	virtual bool ProcessInput(
 		SCENENODE & scene,
-		float cursorx,
-		float cursory,
-		bool cursordown,
-		bool cursorjustup);
+		std::map<std::string, GUIOPTION> & optionmap,
+		float cursorx, float cursory,
+		bool cursordown, bool cursorjustup);
 
 	virtual void UpdateOptions(
 		SCENENODE & scene,

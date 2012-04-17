@@ -69,12 +69,24 @@ private:
 	void ProcessGUIInputs();
 	void ProcessGameInputs();
 	void ProcessGUIAction(const std::string & action);
+	void UpdateStartList(unsigned i, const std::string & value);
+	void PlayerCarChange();
+	void PlayerPaintChange();
+	void PlayerColorChange();
+	void OpponentCarChange();
+	void OpponentPaintChange();
+	void OpponentColorChange();
+	void OpponentsChange();
+	void AddControl(const std::string & controlstr);
+	void EditControl(const std::string & controlstr);
+	void SetButtonControl();
+	void SetAnalogControl();
 	bool NewGame(bool playreplay=false, bool opponents=false, int num_laps=0);
 	void LeaveGame();
 	bool LoadTrack(const std::string & trackname);
 	///< carfile is a string containing an entire .car file (e.g. XS.car) and is used instead of reading from disk.  this is optional
 	bool LoadCar(
-		const std::string & carname, const std::string & carpaint, const MATHVECTOR <float, 3> & carcolor,
+		const std::string & carname, const std::string & carpaint, unsigned carcolor,
 		const MATHVECTOR <float, 3> & start_position, const QUATERNION <float> & start_orientation,
 		bool islocal, bool isai, const std::string & carfile="");
 	bool LoadFonts();
@@ -137,9 +149,9 @@ private:
 	CAMERA * active_camera;
 	bool pause;
 	unsigned int particle_timer;
-	std::vector <std::string> opponents;
-	std::vector <std::string> opponents_paint;
-	std::vector < MATHVECTOR <float, 3> > opponents_color;
+	std::vector <std::string> cars_name;
+	std::vector <std::string> cars_paint;
+	std::vector <unsigned> cars_color;
 	int race_laps;
 	bool debugmode;
 	bool profilingmode;

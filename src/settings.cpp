@@ -68,11 +68,8 @@ SETTINGS::SETTINGS() :
 	bloom(false),
 	normalmaps(false),
 	player("XS"),
-	opponent("XS"),
 	player_paint("default"),
-	opponent_paint("default"),
-	player_color(3, 1.0),
-	opponent_color(3, 1.0),
+	player_color(0xFF0000),
 	camera_id(0),
 	camera_bounce(1.0),
 	number_of_laps(1),
@@ -99,9 +96,6 @@ void SETTINGS::Serialize(bool write, CONFIG & config)
 	Param(config, write, section, "player", player);
 	Param(config, write, section, "player_paint", player_paint);
 	Param(config, write, section, "player_color", player_color);
-	Param(config, write, section, "opponent", opponent);
-	Param(config, write, section, "opponent_paint", opponent_paint);
-	Param(config, write, section, "opponent_color", opponent_color);
 	Param(config, write, section, "reverse", trackreverse);
 	Param(config, write, section, "track_dynamic", trackdynamic);
 	Param(config, write, section, "batch_geometry", batch_geometry);

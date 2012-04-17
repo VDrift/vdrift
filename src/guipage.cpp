@@ -27,7 +27,10 @@ GUIPAGE::GUIPAGE() :
 
 GUIPAGE::~GUIPAGE()
 {
-	//std::clog << "Page Destructor: " << name << std::endl;
+	for (std::vector <WIDGET *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
+	{
+		delete *i;
+	}
 }
 
 bool GUIPAGE::Load(
@@ -67,9 +70,6 @@ bool GUIPAGE::Load(
 	if (!pagefile.GetParam("", "name", name)) return false;
 	if (!pagefile.GetParam("", "dialog", dialog)) return false;
 
-	// widget map for hooks
-	std::map <std::string, WIDGET *> namemap;
-
 	// draw order offset
 	float z0 = 100;
 
@@ -81,8 +81,9 @@ bool GUIPAGE::Load(
 		float yscale(0.03);
 		float xscale(yscale * screenhwratio);
 		float r(1), g(1), b(1);
-		tooltip_widget = NewWidget<WIDGET_LABEL>();
+		tooltip_widget = new WIDGET_LABEL();
 		tooltip_widget->SetupDrawable(sref, font, text, x, y, xscale, yscale, r, g, b, z0);
+		widgets.push_back(tooltip_widget);
 	}
 
 	// load widgets
@@ -117,8 +118,9 @@ bool GUIPAGE::Load(
 			if (!pagefile.GetParam(section, "filename", texname, error_output)) return false;
 			if (!content.load(texpath, texname, texinfo, texture)) return false;
 
-			WIDGET_IMAGE * new_widget = NewWidget<WIDGET_IMAGE>();
+			WIDGET_IMAGE * new_widget = new WIDGET_IMAGE();
 			new_widget->SetupDrawable(sref, texture, xy[0], xy[1], w, h, z);
+			widgets.push_back(new_widget);
 		}
 		else if (type == "button")
 		{
@@ -142,7 +144,7 @@ bool GUIPAGE::Load(
 			float fontscaley = fontsize;
 			float fontscalex = fontsize * screenhwratio;
 
-			WIDGET_BUTTON * new_widget = NewWidget<WIDGET_BUTTON>();
+			WIDGET_BUTTON * new_widget = new WIDGET_BUTTON();
 			new_widget->SetupDrawable(sref, texture_up, texture_down, texture_sel,
 					font, text, xy[0], xy[1], fontscalex, fontscaley,
 					color[0], color[1], color[2], h, w, z);
@@ -150,6 +152,7 @@ bool GUIPAGE::Load(
 			new_widget->SetDescription(desc);
 			new_widget->SetCancel(cancel);
 			new_widget->SetEnabled(sref, enabled);
+			widgets.push_back(new_widget);
 
 			std::string name;
 			if (pagefile.GetParam(section, "name", name))
@@ -168,8 +171,9 @@ bool GUIPAGE::Load(
 			float fontscaley = fontsize;
 			float fontscalex = fontsize * screenhwratio;
 
-			WIDGET_LABEL * new_widget = NewWidget<WIDGET_LABEL>();
+			WIDGET_LABEL * new_widget = new WIDGET_LABEL();
 			new_widget->SetupDrawable(sref, font, text, xy[0], xy[1], fontscalex, fontscaley, color[0], color[1], color[2], z);
+			widgets.push_back(new_widget);
 
 			std::string name;
 			if (pagefile.GetParam(section, "name", name))
@@ -212,8 +216,9 @@ bool GUIPAGE::Load(
 				float x = xy[0] + textwidth * 0.5;
 				float y = xy[1];
 				float r(1), g(1), b(1);
-				WIDGET_LABEL * new_widget = NewWidget<WIDGET_LABEL>();
+				WIDGET_LABEL * new_widget = new WIDGET_LABEL();
 				new_widget->SetupDrawable(sref, font, text, x, y, fontscalex, fontscaley, r, g, b, z);
+				widgets.push_back(new_widget);
 			}
 
 			//generate toggle
@@ -230,11 +235,12 @@ bool GUIPAGE::Load(
 				float x = xy[0] - w;
 				float y = xy[1];
 
-				WIDGET_TOGGLE * new_widget = NewWidget<WIDGET_TOGGLE>();
+				WIDGET_TOGGLE * new_widget = new WIDGET_TOGGLE();
 				new_widget->SetupDrawable(sref, up, down, upsel, downsel, trans, x, y, w, h, z);
 				new_widget->SetDescription(desc);
 				new_widget->SetSetting(setting);
 				new_widget->UpdateOptions(sref, false, optionmap, error_output);
+				widgets.push_back(new_widget);
 			}
 		}
 		else if (type == "stringwheel" || type == "intwheel" || type == "floatwheel")
@@ -271,13 +277,14 @@ bool GUIPAGE::Load(
 			float fontscalex = fontsize * screenhwratio;
 			xy[0] -= spacing * 0.5;
 
-			WIDGET_STRINGWHEEL * new_widget = NewWidget<WIDGET_STRINGWHEEL>();
-			new_widget->SetupDrawable(sref, text+":", up_left, down_left, up_right, down_right,
-					font, fontscalex, fontscaley, xy[0], xy[1], z);
+			WIDGET_STRINGWHEEL * new_widget = new WIDGET_STRINGWHEEL();
+			new_widget->SetupDrawable(
+				sref, optionmap, setting, text+":",
+				up_left, down_left, up_right, down_right,
+				font, fontscalex, fontscaley, xy[0], xy[1], z);
 			new_widget->SetDescription(desc);
-			new_widget->SetSetting(setting);
-			new_widget->UpdateOptions(sref, false, optionmap, error_output);
 			new_widget->SetAction(action);
+			widgets.push_back(new_widget);
 		}
 		else if (type == "intintwheel")
 		{
@@ -315,7 +322,7 @@ bool GUIPAGE::Load(
 			float fontscalex = fontsize * screenhwratio;
 			xy[0] -= spacing * 0.5;
 
-			WIDGET_DOUBLESTRINGWHEEL * new_widget = NewWidget<WIDGET_DOUBLESTRINGWHEEL>();
+			WIDGET_DOUBLESTRINGWHEEL * new_widget = new WIDGET_DOUBLESTRINGWHEEL();
 			new_widget->SetupDrawable(sref, text+":", up_left, down_left, up_right, down_right,
 					font, fontscalex, fontscaley, xy[0], xy[1], z);
 			new_widget->SetDescription(desc);
@@ -325,6 +332,7 @@ bool GUIPAGE::Load(
 			const std::list <std::pair<std::string,std::string> > & valuelist2 = optionmap[setting2].GetValueList();
 			new_widget->SetValueList(valuelist1, valuelist2);
 			new_widget->UpdateOptions(sref, false, optionmap, error_output);
+			widgets.push_back(new_widget);
 		}
 		else if (type == "multi-image")
 		{
@@ -334,23 +342,31 @@ bool GUIPAGE::Load(
 			if (!pagefile.GetParam(section, "prefix", prefix, error_output)) return false;
 			if (!pagefile.GetParam(section, "postfix", postfix, error_output)) return false;
 
-			WIDGET_MULTIIMAGE * new_widget = NewWidget<WIDGET_MULTIIMAGE>();
-			new_widget->SetupDrawable(sref, content, prefix, postfix, xy[0], xy[1], w, h, error_output, z);
+			WIDGET_MULTIIMAGE * new_widget = new WIDGET_MULTIIMAGE();
+			new_widget->SetupDrawable(
+				sref, content, optionmap, setting, prefix, postfix,
+				xy[0], xy[1], w, h, error_output, z);
+			widgets.push_back(new_widget);
 		}
 		else if (type == "colorpicker")
 		{
-			std::string setting, name;
+			std::string setting, action, name;
 			std::tr1::shared_ptr<TEXTURE> cursor, hue, sat, bg;
-			if (!pagefile.GetParam(section, "setting", setting, error_output)) return false;
 			if (!content.load(texpath, "widgets/color_cursor.png", texinfo, cursor)) return false;
 			if (!content.load(texpath, "widgets/color_hue.png", texinfo, hue)) return false;
 			if (!content.load(texpath, "widgets/color_saturation.png", texinfo, sat)) return false;
 			if (!content.load(texpath, "widgets/color_value.png", texinfo, bg)) return false;
+			if (!pagefile.GetParam(section, "setting", setting, error_output)) return false;
+			if (pagefile.GetParam(section, "action", action, error_output));
 
 			float x = xy[0] - w / 2;
 			float y = xy[1] - h / 2;
-			WIDGET_COLORPICKER * new_widget = NewWidget<WIDGET_COLORPICKER>();
-			new_widget->SetupDrawable(sref, cursor, hue, sat, bg, x, y, w, h, setting, error_output, z);
+			WIDGET_COLORPICKER * new_widget = new WIDGET_COLORPICKER();
+			new_widget->SetupDrawable(
+				sref, cursor, hue, sat, bg, x, y, w, h,
+				optionmap, setting, error_output, z);
+			new_widget->SetAction(action);
+			widgets.push_back(new_widget);
 		}
 		else if (type == "slider")
 		{
@@ -398,8 +414,9 @@ bool GUIPAGE::Load(
 				float x = xy[0] + textwidth * 0.5;
 				float y = xy[1];
 				float r(1), g(1), b(1);
-				WIDGET_LABEL * new_widget = NewWidget<WIDGET_LABEL>();
+				WIDGET_LABEL * new_widget = new WIDGET_LABEL();
 				new_widget->SetupDrawable(sref, font, text, x, y, fontscalex, fontscaley, r, g, b, z);
+				widgets.push_back(new_widget);
 			}
 
 			if (h == 0.0) h = fontsize;
@@ -413,12 +430,14 @@ bool GUIPAGE::Load(
 			if (!content.load(texpath, "widgets/sld_cursor.png", texinfo, cursor)) return false;
 			if (!content.load(texpath, "widgets/sld_wedge.png", texinfo, wedge)) return false;
 
-			WIDGET_SLIDER * new_widget = NewWidget<WIDGET_SLIDER>();
-			new_widget->SetupDrawable(sref, wedge, cursor, xy[0], xy[1], w, h, min, max,
-					percentage, setting, font, fontscalex, fontscaley, error_output, z);
+			WIDGET_SLIDER * new_widget = new WIDGET_SLIDER();
+			new_widget->SetupDrawable(
+				sref, wedge, cursor, xy[0], xy[1], w, h, min, max, percentage,
+				optionmap, setting, font, fontscalex, fontscaley, error_output, z);
 			new_widget->SetName(name);
 			new_widget->SetDescription(desc);
 			new_widget->SetColor(sref, color[0], color[1], color[2]);
+			widgets.push_back(new_widget);
 		}
 		else if (type == "spinningcar")
 		{
@@ -428,9 +447,11 @@ bool GUIPAGE::Load(
 			if (!pagefile.GetParam(section, "setting", setting, error_output)) return false;
 			if (!pagefile.GetParam(section, "values", values, error_output)) return false;
 
-			WIDGET_SPINNINGCAR * new_widget = NewWidget<WIDGET_SPINNINGCAR>();
-			new_widget->SetupDrawable(sref, content, pathmanager, xy[0], xy[1],
-				MATHVECTOR<float, 3>(carpos[0], carpos[1], carpos[2]), error_output, z+10);
+			WIDGET_SPINNINGCAR * new_widget = new WIDGET_SPINNINGCAR();
+			new_widget->SetupDrawable(sref, content, pathmanager, optionmap,
+				xy[0], xy[1], MATHVECTOR<float, 3>(carpos[0], carpos[1], carpos[2]),
+				setting, error_output, z + 10);
+			widgets.push_back(new_widget);
 		}
 		else if (type == "controlgrab")
 		{
@@ -459,44 +480,15 @@ bool GUIPAGE::Load(
 			float fontscaley = fontsize;
 			float fontscalex = fontsize * screenhwratio;
 
-			WIDGET_CONTROLGRAB * new_widget = NewWidget<WIDGET_CONTROLGRAB>();
+			WIDGET_CONTROLGRAB * new_widget = new WIDGET_CONTROLGRAB();
 			new_widget->SetupDrawable(sref, controlsconfig, setting, control, font,
 					text, xy[0], xy[1], fontscalex, fontscaley, analog, only_one, z);
 			controlgrabs.push_back(new_widget);
+			widgets.push_back(new_widget);
 		}
 		else if (type != "disabled")
 		{
 			error_output << path << ": unknown " << section->first << " type: " << type << ", ignoring" << std::endl;
-		}
-
-		// process hooks
-		std::string widget_name;
-		if (pagefile.GetParam(section, "name", widget_name))
-		{
-			widgets.back().Get()->SetName(widget_name);
-
-			std::map <std::string, WIDGET *>::iterator widget = namemap.find(widget_name);
-			if (widget != namemap.end())
-			{
-				error_output << widget_name << " defined twice." << std::endl;
-				return false;
-			}
-			namemap[widget_name] = widgets.back().Get();
-		}
-
-		std::vector<std::string> hooks;
-		pagefile.GetParam(section, "hook", hooks);
-		for (std::vector<std::string>::iterator n = hooks.begin(); n != hooks.end(); ++n)
-		{
-			std::map <std::string, WIDGET *>::iterator hookee = namemap.find(*n);
-			if (hookee != namemap.end())
-			{
-				widgets.back().Get()->AddHook(hookee->second); // last widget added
-			}
-			else
-			{
-				error_output << path << ": unknown hook reference to " << *n << std::endl;
-			}
 		}
 	}
 
@@ -507,7 +499,7 @@ void GUIPAGE::UpdateControls(SCENENODE & parentnode, const CONFIG & controls, co
 {
 	assert(s.valid());
 	SCENENODE & sref = GetNode(parentnode);
-	for (std::list <WIDGET_CONTROLGRAB *>::iterator i = controlgrabs.begin(); i != controlgrabs.end(); ++i)
+	for (std::vector <WIDGET_CONTROLGRAB *>::iterator i = controlgrabs.begin(); i != controlgrabs.end(); ++i)
 	{
 		(*i)->LoadControls(sref, controls, font);
 	}
@@ -516,7 +508,7 @@ void GUIPAGE::UpdateControls(SCENENODE & parentnode, const CONFIG & controls, co
 void GUIPAGE::SetVisible(SCENENODE & parent, const bool newvis)
 {
 	SCENENODE & sref = GetNode(parent);
-	for (std::list <DERIVED <WIDGET> >::iterator i = widgets.begin(); i != widgets.end(); ++i)
+	for (std::vector <WIDGET *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
 	{
 		(*i)->SetVisible(sref, newvis);
 	}
@@ -525,25 +517,32 @@ void GUIPAGE::SetVisible(SCENENODE & parent, const bool newvis)
 void GUIPAGE::SetAlpha(SCENENODE & parent, const float newalpha)
 {
 	SCENENODE & sref = parent.GetNode(s);
-	for (std::list <DERIVED <WIDGET> >::iterator i = widgets.begin(); i != widgets.end(); ++i)
+	for (std::vector <WIDGET *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
 	{
 		(*i)->SetAlpha(sref, newalpha);
 	}
 }
 
-///tell all child widgets to update to/from the option map
-void GUIPAGE::UpdateOptions(SCENENODE & parent, bool save_to, std::map<std::string, GUIOPTION> & optionmap, std::ostream & error_output)
+void GUIPAGE::UpdateOptions(
+	SCENENODE & parent,
+	bool save_to,
+	std::map<std::string, GUIOPTION> & optionmap,
+	std::ostream & error_output)
 {
 	SCENENODE & sref = parent.GetNode(s);
-	for (std::list <DERIVED <WIDGET> >::iterator i = widgets.begin(); i != widgets.end(); ++i)
+	for (std::vector <WIDGET *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
 	{
 		(*i)->UpdateOptions(sref, save_to, optionmap, error_output);
 	}
 }
 
 std::list <std::pair <std::string, bool> > GUIPAGE::ProcessInput(
-	SCENENODE & parent, bool movedown, bool moveup, float cursorx, float cursory,
-	bool cursordown, bool cursorjustup, float screenhwratio)
+	SCENENODE & parent,
+	std::map<std::string, GUIOPTION> & optionmap,
+	bool movedown, bool moveup,
+	float cursorx, float cursory,
+	bool cursordown, bool cursorjustup,
+	float screenhwratio)
 {
 	assert(tooltip_widget);
 
@@ -552,18 +551,22 @@ std::list <std::pair <std::string, bool> > GUIPAGE::ProcessInput(
 	std::list <std::pair <std::string, bool> > actions;
 	std::string tooltip;
 
-	for (std::list <DERIVED <WIDGET> >::iterator i = widgets.begin(); i != widgets.end(); ++i)
+	for (std::vector <WIDGET *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
 	{
-		WIDGET * w = i->Get();
+		WIDGET & w = **i;
 
-		bool mouseover = w->ProcessInput(sref, cursorx, cursory, cursordown, cursorjustup);
+		bool mouseover = w.ProcessInput(
+			sref, optionmap,
+			cursorx, cursory,
+			cursordown, cursorjustup);
+
 		if (mouseover)
 		{
-			tooltip = w->GetDescription();
+			tooltip = w.GetDescription();
 		}
 
-		std::string action = w->GetAction();
-		bool cancel = w->GetCancel();
+		std::string action = w.GetAction();
+		bool cancel = w.GetCancel();
 		if (!action.empty())
 		{
 			actions.push_back(std::pair <std::string, bool> (action, !cancel));
@@ -578,11 +581,10 @@ std::list <std::pair <std::string, bool> > GUIPAGE::ProcessInput(
 	return actions;
 }
 
-///tell all child widgets to do as update tick
 void GUIPAGE::Update(SCENENODE & parent, float dt)
 {
 	SCENENODE & sref = parent.GetNode(s);
-	for (std::list <DERIVED <WIDGET> >::iterator i = widgets.begin(); i != widgets.end(); ++i)
+	for (std::vector <WIDGET *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
 	{
 		(*i)->Update(sref, dt);
 	}
@@ -593,7 +595,13 @@ void GUIPAGE::Clear(SCENENODE & parentnode)
 	controlgrabs.clear();
 	tooltip_widget = 0;
 	dialog = false;
+
+	for (std::vector <WIDGET *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
+	{
+		delete *i;
+	}
 	widgets.clear();
+
 	if (s.valid())
 	{
 		SCENENODE & sref = parentnode.GetNode(s);
