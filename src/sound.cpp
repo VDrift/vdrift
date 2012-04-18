@@ -137,8 +137,7 @@ void SOUND::Callback16bitstereo(void *myself, Uint8 *stream, int len)
 	int len4 = len / 4;
 	buffer1.resize(len4);
 	buffer2.resize(len4);
-	
-	LockSourceList();
+
 	DetermineActiveSources(active_sourcelist, inactive_sourcelist);
 	Compute3DEffects(active_sourcelist, lpos, lrot);
 
@@ -179,7 +178,6 @@ void SOUND::Callback16bitstereo(void *myself, Uint8 *stream, int len)
 		}
 	}
 
-	UnlockSourceList();
 	// mute stream if no active sources
 	if (active_sourcelist.empty())
 	{
@@ -195,69 +193,54 @@ void SOUND::Callback16bitstereo(void *myself, Uint8 *stream, int len)
 
 void SOUND::CollectGarbage()
 {
-	if (disable)
-		return;
+	if (disable) return;
 
-	std::list <SOUNDSOURCE *> todel;
+	LockSourceList();
 	for (std::list <SOUNDSOURCE *>::iterator i = sourcelist.begin(); i != sourcelist.end(); ++i)
 	{
 		if (!(*i)->Audible() && (*i)->GetAutoDelete())
 		{
-			todel.push_back(*i);
+			i = sourcelist.erase(i);
 		}
 	}
-
-	for (std::list <SOUNDSOURCE *>::iterator i = todel.begin(); i != todel.end(); ++i)
-	{
-		RemoveSource(*i);
-	}
-
-	//cout << sourcelist.size() << std::endl;
+	UnlockSourceList();
 }
 
-void SOUND::DetermineActiveSources(std::list <SOUNDSOURCE *> & active_sourcelist, std::list <SOUNDSOURCE *> & inaudible_sourcelist) const
+void SOUND::DetermineActiveSources(std::list <SOUNDSOURCE *> & active_sourcelist, std::list <SOUNDSOURCE *> & inactive_sourcelist)
 {
 	active_sourcelist.clear();
-	inaudible_sourcelist.clear();
-	//int sourcenum = 0;
+	inactive_sourcelist.clear();
+
+	LockSourceList();
 	for (std::list <SOUNDSOURCE *>::const_iterator i = sourcelist.begin(); i != sourcelist.end(); ++i)
 	{
 		if ((*i)->Audible())
 		{
 			active_sourcelist.push_back(*i);
-			//cout << "Tick: " << &(*i) << std::endl;
-			//cout << "Source is audible: " << i->GetName() << ", " << i->GetGain() << ":" << i->ComputedGain(1) << "," << i->ComputedGain(2) << std::endl;
-			//cout << "Source " << sourcenum << " is audible: " << i->GetName() << std::endl;
 		}
 		else
 		{
-			inaudible_sourcelist.push_back(*i);
+			inactive_sourcelist.push_back(*i);
 		}
-		//sourcenum++;
 	}
-	//cout << "sounds active: " << active_sourcelist.size() << ", sounds inactive: " << inaudible_sourcelist.size() << std::endl;
+	UnlockSourceList();
 }
 
 void SOUND::RemoveSource(SOUNDSOURCE * todel)
 {
-	if (disable)
-		return;
+	if (disable) return;
 
 	assert(todel);
-
-	std::list <SOUNDSOURCE *>::iterator delit = sourcelist.end();
 	for (std::list <SOUNDSOURCE *>::iterator i = sourcelist.begin(); i != sourcelist.end(); ++i)
 	{
 		if (*i == todel)
-			delit = i;
+		{
+			LockSourceList();
+			sourcelist.erase(i);
+			UnlockSourceList();
+			return;
+		}
 	}
-
-	//assert(delit != sourcelist.end()); //can't find source to delete //update: don't assert, just do a check
-
-	LockSourceList();
-	if (delit != sourcelist.end())
-		sourcelist.erase(delit);
-	UnlockSourceList();
 }
 
 void SOUND::Compute3DEffects(std::list <SOUNDSOURCE *> & sources, const MATHVECTOR <float, 3> & listener_pos, const QUATERNION <float> & listener_rot) const
