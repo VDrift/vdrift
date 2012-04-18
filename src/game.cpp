@@ -2468,7 +2468,11 @@ static void PopulateCarSet(std::set <std::pair<std::string, std::string> > & set
 	pathmanager.GetFileList(path, folderlist);
 	for (std::list <std::string>::iterator i = folderlist.begin(); i != folderlist.end(); ++i)
 	{
-		set.insert(std::make_pair(*i, *i));
+		std::ifstream check((path + "/" + *i + "/" + *i + ".car").c_str());
+		if (check)
+		{
+			set.insert(std::make_pair(*i, *i));
+		}
 	}
 }
 
