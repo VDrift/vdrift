@@ -291,7 +291,6 @@ bool GUIPAGE::Load(
 			std::string setting1, setting2;
 			std::string values;
 			std::string hook;
-			std::vector<float> xy(2);
 			float spacing(0.3);
 			float fontsize;
 
