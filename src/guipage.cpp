@@ -279,7 +279,7 @@ bool GUIPAGE::Load(
 
 			WIDGET_STRINGWHEEL * new_widget = new WIDGET_STRINGWHEEL();
 			new_widget->SetupDrawable(
-				sref, optionmap, setting, text+":",
+				sref, optionmap, setting, text + ":",
 				up_left, down_left, up_right, down_right,
 				font, fontscalex, fontscaley, xy[0], xy[1], z);
 			new_widget->SetDescription(desc);
@@ -288,9 +288,7 @@ bool GUIPAGE::Load(
 		}
 		else if (type == "intintwheel")
 		{
-			std::string setting1, setting2;
-			std::string values;
-			std::string hook;
+			std::string setting1, setting2, values;
 			float spacing(0.3);
 			float fontsize;
 
@@ -299,7 +297,6 @@ bool GUIPAGE::Load(
 			if (!pagefile.GetParam(section, "values", values, error_output)) return false;
 			if (!pagefile.GetParam(section, "fontsize", fontsize, error_output)) return false;
 			pagefile.GetParam(section, "spacing", spacing);
-			pagefile.GetParam(section, "hook", hook);
 
 			if (values == "options")
 			{
@@ -322,15 +319,11 @@ bool GUIPAGE::Load(
 			xy[0] -= spacing * 0.5;
 
 			WIDGET_DOUBLESTRINGWHEEL * new_widget = new WIDGET_DOUBLESTRINGWHEEL();
-			new_widget->SetupDrawable(sref, text+":", up_left, down_left, up_right, down_right,
-					font, fontscalex, fontscaley, xy[0], xy[1], z);
+			new_widget->SetupDrawable(
+				sref, optionmap, setting1, setting2, text + ":",
+				up_left, down_left, up_right, down_right,
+				font, fontscalex, fontscaley, xy[0], xy[1], z);
 			new_widget->SetDescription(desc);
-			new_widget->SetSetting(setting1, setting2);
-
-			const std::list <std::pair<std::string,std::string> > & valuelist1 = optionmap[setting1].GetValueList();
-			const std::list <std::pair<std::string,std::string> > & valuelist2 = optionmap[setting2].GetValueList();
-			new_widget->SetValueList(valuelist1, valuelist2);
-			new_widget->UpdateOptions(sref, false, optionmap, error_output);
 			widgets.push_back(new_widget);
 		}
 		else if (type == "multi-image")

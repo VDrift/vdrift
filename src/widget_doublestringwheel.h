@@ -4,9 +4,7 @@
 #include "widget.h"
 #include "widget_label.h"
 #include "widget_button.h"
-
-#include <string>
-#include <list>
+#include "signal.h"
 
 class SCENENODE;
 class TEXTURE;
@@ -17,7 +15,7 @@ class WIDGET_DOUBLESTRINGWHEEL : public WIDGET
 public:
 	WIDGET_DOUBLESTRINGWHEEL();
 
-	~WIDGET_DOUBLESTRINGWHEEL() {};
+	~WIDGET_DOUBLESTRINGWHEEL();
 
 	virtual void SetAlpha(SCENENODE & scene, float newalpha);
 
@@ -33,14 +31,13 @@ public:
 		float cursorx, float cursory,
 		bool cursordown, bool cursorjustup);
 
-	virtual void UpdateOptions(
-		SCENENODE & scene,
-		bool save_to_options,
-		std::map<std::string, GUIOPTION> & optionmap,
-		std::ostream & error_output);
+	virtual void Update(SCENENODE & scene, float dt);
 
 	void SetupDrawable(
 		SCENENODE & scene,
+		std::map<std::string, GUIOPTION> & optionmap,
+		const std::string & newsetting1,
+		const std::string & newsetting2,
 		const std::string & newtitle,
 		std::tr1::shared_ptr<TEXTURE> teximage_left_up,
 		std::tr1::shared_ptr<TEXTURE> teximage_left_down,
@@ -53,23 +50,22 @@ public:
 		float centery,
 		float z);
 
-	void SetCurrent(SCENENODE & scene, const std::string & newsetting1, const std::string & newsetting2);
-
-	void SetCurrent(SCENENODE & scene, const std::string & newsetting1, const std::string & newsetting2, std::ostream & error_output);
-
-	void SetValueList(const std::list <std::pair<std::string,std::string> > & newvaluelist1, const std::list <std::pair<std::string,std::string> > & newvaluelist2);
-
-	void SetSetting(const std::string & newsetting1, const std::string & newsetting2);
-
 private:
 	WIDGET_LABEL title;
 	WIDGET_LABEL label;
 	WIDGET_BUTTON button_left;
 	WIDGET_BUTTON button_right;
-	std::list <std::pair<std::string,std::string> > values1, values2;
-	std::list <std::pair<std::string,std::string> >::iterator current1, current2;
-	std::string description;
 	std::string setting1, setting2;
+	std::string value1, value2;
+	std::string description;
+	bool update;
+
+	Slot1<const std::string &> set_value1;
+	Slot1<const std::string &> set_value2;
+	void SetValue1(const std::string & value);
+	void SetValue2(const std::string & value);
+
+	WIDGET_DOUBLESTRINGWHEEL(const WIDGET_DOUBLESTRINGWHEEL & other);
 };
 
 #endif
