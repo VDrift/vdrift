@@ -48,6 +48,7 @@ private:
 
 	SOUNDINFO deviceinfo;
 	std::list <SOUNDSOURCE *> sourcelist;
+	std::vector<int> buffer1, buffer2;
 
 	float gain_estimate;
 	SOUNDFILTER volume_filter;

@@ -134,66 +134,63 @@ void SOUND::Callback16bitstereo(void *myself, Uint8 *stream, int len)
 	std::list <SOUNDSOURCE *> active_sourcelist;
 	std::list <SOUNDSOURCE *> inactive_sourcelist;
 
+	int len4 = len / 4;
+	buffer1.resize(len4);
+	buffer2.resize(len4);
+	
 	LockSourceList();
-
 	DetermineActiveSources(active_sourcelist, inactive_sourcelist);
-	Compute3DEffects(active_sourcelist, lpos, lrot);//, cam.GetPosition().ScaleR(-1), cam.GetRotation());
+	Compute3DEffects(active_sourcelist, lpos, lrot);
 
-	//increment inactive sources
+	// increment inactive sources
 	for (std::list <SOUNDSOURCE *>::iterator s = inactive_sourcelist.begin(); s != inactive_sourcelist.end(); s++)
 	{
-		(*s)->IncrementWithPitch(len/4);
+		(*s)->IncrementWithPitch(len4);
 	}
 
-	int * buffer1 = new int[len/4];
-	int * buffer2 = new int[len/4];
+	// update active sources
 	for (std::list <SOUNDSOURCE *>::iterator s = active_sourcelist.begin(); s != active_sourcelist.end(); s++)
 	{
 		SOUNDSOURCE * src = *s;
-		src->SampleAndAdvanceWithPitch16bit(buffer1, buffer2, len/4);
+		src->SampleAndAdvanceWithPitch16bit(&buffer1[0], &buffer2[0], len4);
 		for (int f = 0; f < src->NumFilters(); f++)
 		{
-			src->GetFilter(f).Filter(buffer1, buffer2, len/4);
+			src->GetFilter(f).Filter(&buffer1[0], &buffer2[0], len4);
 		}
-		volume_filter.Filter(buffer1, buffer2, len/4);
+		volume_filter.Filter(&buffer1[0], &buffer2[0], len4);
+
 		if (s == active_sourcelist.begin())
 		{
-			for (int i = 0; i < len/4; i++)
+			for (int i = 0; i < len4; i++)
 			{
-				int pos = i*2;
+				int pos = i * 2;
 				((short *) stream)[pos] = (buffer1[i]);
 				((short *) stream)[pos+1] = (buffer2[i]);
 			}
 		}
 		else
 		{
-			for (int i = 0; i < len/4; i++)
+			for (int i = 0; i < len4; i++)
 			{
-				int pos = i*2;
+				int pos = i * 2;
 				((short *) stream)[pos] += (buffer1[i]);
 				((short *) stream)[pos+1] += (buffer2[i]);
 			}
 		}
 	}
-	delete [] buffer1;
-	delete [] buffer2,
 
 	UnlockSourceList();
-
-	//cout << active_sourcelist.size() << "," << inactive_sourcelist.size() << std::endl;
-
+	// mute stream if no active sources
 	if (active_sourcelist.empty())
 	{
-		for (int i = 0; i < len/4; i++)
+		for (int i = 0; i < len4; i++)
 		{
-			int pos = i*2;
-			((short *) stream)[pos] = ((short *) stream)[pos+1] = 0;
+			int pos = i * 2;
+			((short *) stream)[pos] = ((short *) stream)[pos + 1] = 0;
 		}
 	}
 
 	CollectGarbage();
-
-	//cout << "Callback: " << len << std::endl;
 }
 
 void SOUND::CollectGarbage()
