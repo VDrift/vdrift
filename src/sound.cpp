@@ -276,11 +276,11 @@ void SOUND::Compute3DEffects(std::list <SOUNDSOURCE *> & sources, const MATHVECT
 				pgain2 = 0;
 			//cout << cgain << std::endl;
 			//cout << xcoord << std::endl;
-			(*i)->SetComputationResults(cgain*(*i)->GetGain()*(1.0-pgain1), cgain*(*i)->GetGain()*(1.0-pgain2));
+			(*i)->SetComputedGain(cgain*(*i)->GetGain()*(1.0-pgain1), cgain*(*i)->GetGain()*(1.0-pgain2));
 		}
 		else
 		{
-			(*i)->SetComputationResults((*i)->GetGain(), (*i)->GetGain());
+			(*i)->SetComputedGain((*i)->GetGain(), (*i)->GetGain());
 		}
 	}
 }
