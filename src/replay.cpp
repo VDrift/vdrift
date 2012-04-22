@@ -104,7 +104,11 @@ void REPLAY::StartRecording(
 	float r, float g, float b,
 	const PTree & carconfig,
 	const std::string & trackname,
-	std::ostream & error_log)
+	std::ostream & error_log,
+	const std::vector <std::string> & opps,
+	const std::vector <std::string> & opps_paint,
+	const std::vector < MATHVECTOR <float, 3> > & opps_color,
+	int num_laps)
 {
 	track = trackname;
 	cartype = newcartype;
@@ -112,6 +116,10 @@ void REPLAY::StartRecording(
 	carcolor_r = r;
 	carcolor_g = g;
 	carcolor_b = b;
+	opponents = opps;
+	opponents_paint = opps_paint;
+	opponents_color = opps_color;	
+	number_laps = num_laps;
 
 	GetReadyToRecord();
 
@@ -287,6 +295,11 @@ bool REPLAY::Serialize(joeserialize::Serializer & s)
 	_SERIALIZE_(s, carcolor_r);
 	_SERIALIZE_(s, carcolor_g);
 	_SERIALIZE_(s, carcolor_b);
+
+	_SERIALIZE_(s, opponents);
+	_SERIALIZE_(s, opponents_paint);
+	_SERIALIZE_(s, opponents_color);
+	
 	return true;
 }
 
@@ -305,7 +318,7 @@ REPLAY::VERSION::VERSION(const std::string & ver,  unsigned ins, float newfr) :
 {
 	// ctor
 }
-
+	 
 bool REPLAY::VERSION::Serialize(joeserialize::Serializer & s)
 {
 	_SERIALIZE_(s, inputs_supported);

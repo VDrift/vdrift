@@ -17,7 +17,7 @@
 /*                                                                      */
 /************************************************************************/
 
-#include "game.h"
+#include "game.h" 
 #include "unittest.h"
 #include "definitions.h"
 #include "joepack.h"
@@ -1815,9 +1815,6 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	// This should clear out all data...
 	LeaveGame();
 
-	// Cache number of laps for gui.
-	race_laps = num_laps;
-
 	if (playreplay)
 	{
 		std::stringstream replayfilenamestream;
@@ -1847,7 +1844,19 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 			error_output << "Unable to load replay file " << replayfilename << std::endl;
 			return false;
 		}
+
+		if (replay.GetOpponents().size() > 0) {
+			opponents = replay.GetOpponents();
+			opponents_paint = replay.GetOpponentsPaint();
+			opponents_color = replay.GetOpponentsColor();
+
+			addopponents = true;
+			num_laps = replay.GetNumberLaps();
+		}
 	}
+
+	// Cache number of laps for gui.
+	race_laps = num_laps;
 
 	// Set the track name.
 	std::string trackname;
@@ -1980,7 +1989,11 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 			r, g, b,
 			carconfig,
 			settings.GetTrack(),
-			error_output);
+			error_output,
+			opponents,
+			opponents_paint,
+			opponents_color,
+			num_laps);
 	}
 
 	content.sweep(info_output);
