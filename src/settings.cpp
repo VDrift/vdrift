@@ -30,7 +30,7 @@ SETTINGS::SETTINGS() :
 	skin("simple"),
 	language("English"),
 	show_fps(false),
-	mastervolume(1.0),
+	sound_volume(1.0),
 	mph(true),
 	track("paulricard88"),
 	antialiasing(0),
@@ -136,7 +136,7 @@ void SETTINGS::Serialize(bool write, CONFIG & config)
 	Param(config, write, section, "contrast", contrast);
 
 	config.GetSection("sound", section);
-	Param(config, write, section, "volume", mastervolume);
+	Param(config, write, section, "volume", sound_volume);
 
 	config.GetSection("joystick", section);
 	Param(config, write, section, "type", joytype);

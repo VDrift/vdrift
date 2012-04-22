@@ -42,13 +42,12 @@ void SOUNDSOURCE::SampleAndAdvanceWithPitch16bit(int * chan1, int * chan2, int l
 		for (int i = 0; i < len; ++i)
 		{
 			// limit gain change rate
-			const int maxrate = (denom * 100) / 44100;
-			int gaindiff1 = computed_gain1 - last_computed_gain1;
-			int gaindiff2 = computed_gain2 - last_computed_gain2;
-			gaindiff1 = clamp(gaindiff1, -maxrate, maxrate);
-			gaindiff2 = clamp(gaindiff2, -maxrate, maxrate);
-			last_computed_gain1 += gaindiff1;
-			last_computed_gain2 += gaindiff2;
+			int gain_delta1 = computed_gain1 - last_computed_gain1;
+			int gain_delta2 = computed_gain2 - last_computed_gain2;
+			gain_delta1 = clamp(gain_delta1, -max_gain_delta, max_gain_delta);
+			gain_delta2 = clamp(gain_delta2, -max_gain_delta, max_gain_delta);
+			last_computed_gain1 += gain_delta1;
+			last_computed_gain2 += gain_delta2;
 
 			if (!loop)
 			{
@@ -109,9 +108,16 @@ void SOUNDSOURCE::SampleAndAdvanceWithPitch16bit(int * chan1, int * chan2, int l
 	}
 }
 
-void SOUNDSOURCE::IncrementWithPitch(int num)
+void SOUNDSOURCE::IncrementWithPitch(int len)
 {
-	sample_pos_remainder += num * pitch;
+	int gain_delta1 = computed_gain1 - last_computed_gain1;
+	int gain_delta2 = computed_gain2 - last_computed_gain2;
+	gain_delta1 = clamp(gain_delta1, -max_gain_delta * len, max_gain_delta * len);
+	gain_delta2 = clamp(gain_delta2, -max_gain_delta * len, max_gain_delta * len);
+	last_computed_gain1 += gain_delta1;
+	last_computed_gain2 += gain_delta2;
+
+	sample_pos_remainder += len * pitch;
 	int delta = sample_pos_remainder / denom;
 	sample_pos_remainder -= delta * denom;
 	sample_pos += delta;

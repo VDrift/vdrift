@@ -504,7 +504,7 @@ bool GAME::InitSound()
 {
 	if (sound.Init(2048, info_output, error_output))
 	{
-		sound.SetMasterVolume(settings.GetMasterVolume());
+		sound.SetMasterVolume(settings.GetSoundVolume());
 		sound.Pause(false);
 		content.setSound(sound.GetDeviceInfo());
 	}
@@ -2041,10 +2041,7 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	{
 		std::list <SOUNDSOURCE *> soundlist;
 		i->GetSoundList(soundlist);
-		for (std::list <SOUNDSOURCE *>::iterator s = soundlist.begin(); s != soundlist.end(); ++s)
-		{
-			sound.AddSource(**s);
-		}
+		sound.AddSources(soundlist);
 	}
 
 	// Enable HUD display.
@@ -2626,7 +2623,7 @@ void GAME::ProcessNewSettings()
 		carcontrols_local.first->SetAutoShift(settings.GetAutoShift());
 	}
 
-	sound.SetMasterVolume(settings.GetMasterVolume());
+	sound.SetMasterVolume(settings.GetSoundVolume());
 }
 
 void GAME::LoadingScreen(float progress, float max, bool drawGui, const std::string & optionalText, float x, float y)

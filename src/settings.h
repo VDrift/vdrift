@@ -68,9 +68,9 @@ public:
 		return show_fps;
 	}
 
-	float GetMasterVolume() const
+	float GetSoundVolume() const
 	{
-		return mastervolume;
+		return sound_volume;
 	}
 
 	bool GetMPH() const
@@ -320,11 +320,6 @@ public:
 		resolution_y = value;
 	}
 
-	void SetMasterVolume ( float value )
-	{
-		mastervolume = value;
-	}
-
 	void SetSelectedReplay ( int value )
 	{
 		selected_replay = value;
@@ -359,7 +354,7 @@ private:
 	std::string skin;
 	std::string language;
 	bool show_fps;
-	float mastervolume;
+	float sound_volume;
 	bool mph; //if false, KPH
 	std::string track;
 	int antialiasing; //0 or 1 mean off

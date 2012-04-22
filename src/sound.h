@@ -4,11 +4,9 @@
 #include "quaternion.h"
 #include "mathvector.h"
 
-#include <iostream>
 #include <string>
 #include <list>
-#include <map>
-#include <fstream>
+#include <ostream>
 #include "stdint.h"
 
 struct SDL_mutex;
@@ -24,35 +22,59 @@ public:
 
 	void Callback16bitstereo(void *unused, uint8_t *stream, int len);
 
-	void Pause(const bool pause_on);
+	void Pause(bool value);
 
-	void AddSource(SOUNDSOURCE & newsource) {if (disable) return; LockSourceList();sourcelist.push_back(&newsource);UnlockSourceList();}
+	// use to pass a source list at once, will empty passed list
+	void AddSources(std::list<SOUNDSOURCE *> & sources);
 
+	// add a single source
+	void AddSource(SOUNDSOURCE & source);
+
+	// remove a single source, O(N)
 	void RemoveSource(SOUNDSOURCE * todel);
 
-	void Clear() {sourcelist.clear();}
+	// remove all sources
+	void Clear();
 
-	void SetMasterVolume(float newvol) {volume_filter.SetFilterOrder0(newvol*0.25);}
+	void SetMasterVolume(float value)
+	{
+		volume_filter.SetFilterOrder0(value * 0.25);
+	}
 
-	void Disable() {disable=true;}
+	void Disable()
+	{
+		disable = true;
+	}
 
-	void SetListener(const MATHVECTOR <float, 3> & npos, const QUATERNION <float> & nrot, const MATHVECTOR <float, 3> & nvel) {lpos = npos; lrot = nrot; lvel = nvel;}
+	void SetListener(
+		const MATHVECTOR <float, 3> & npos,
+		const QUATERNION <float> & nrot,
+		const MATHVECTOR <float, 3> & nvel)
+	{
+		lpos = npos;
+		lrot = nrot;
+		lvel = nvel;
+	}
 
-	bool Enabled() const {return !disable;}
+	bool Enabled() const
+	{
+		return !disable;
+	}
 
-	const SOUNDINFO & GetDeviceInfo() {return deviceinfo;}
+	const SOUNDINFO & GetDeviceInfo() const
+	{
+		return deviceinfo;
+	}
 
 private:
 	bool initdone;
 	bool paused;
+	bool disable;
 
 	SOUNDINFO deviceinfo;
-	std::list <SOUNDSOURCE *> sourcelist;
-	std::vector<int> buffer1, buffer2;
-
-	float gain_estimate;
 	SOUNDFILTER volume_filter;
-	bool disable;
+	std::list <SOUNDSOURCE *> sourcelist;
+	std::vector <int> buffer1, buffer2;
 
 	MATHVECTOR <float, 3> lpos;
 	MATHVECTOR <float, 3> lvel;
@@ -60,7 +82,7 @@ private:
 
 	SDL_mutex * sourcelistlock;
 
-	void DetermineActiveSources(std::list <SOUNDSOURCE *> & active_sourcelist, std::list <SOUNDSOURCE *> & inactive_sourcelist);
+	void DetermineActiveSources(std::list <SOUNDSOURCE *> & active, std::list <SOUNDSOURCE *> & inactive);
 	void Compute3DEffects(std::list <SOUNDSOURCE *> & sources, const MATHVECTOR <float, 3> & listener_pos, const QUATERNION <float> & listener_rot) const;
 	void CollectGarbage();
 	void LockSourceList();

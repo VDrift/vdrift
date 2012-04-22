@@ -24,7 +24,7 @@ public:
 
 	void SampleAndAdvanceWithPitch16bit(int * chan1, int * chan2, int len);
 
-	void IncrementWithPitch(int num);
+	void IncrementWithPitch(int len);
 
 	void SeekToSample(int n)
 	{
@@ -165,8 +165,16 @@ public:
 		filters.clear();
 	}
 
+	bool operator<(const SOUNDSOURCE & other) const
+	{
+		return std::max(last_computed_gain1, last_computed_gain2) <
+			std::max(other.last_computed_gain1, last_computed_gain2);
+	}
+
 private:
 	static const int denom = 1 << 15;
+	static const int max_gain_delta = (denom * 100) / 44100;
+
 	int samples_per_channel;
 	int samples;
 	int sample_pos;
