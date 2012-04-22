@@ -105,7 +105,10 @@ TRACK::LOADER::~LOADER()
 void TRACK::LOADER::Clear()
 {
 	bodies.clear();
+	combined.clear();
 	track_config.clear();
+	objectfile.close();
+	pack.Close();
 }
 
 bool TRACK::LOADER::BeginLoad()
