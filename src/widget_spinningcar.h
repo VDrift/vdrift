@@ -2,7 +2,6 @@
 #define _WIDGET_SPINNINGCAR_H
 
 #include "widget.h"
-#include "signal.h"
 #include "scenenode.h"
 #include "mathvector.h"
 

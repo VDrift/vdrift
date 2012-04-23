@@ -3,7 +3,6 @@
 
 #include "widget_label.h"
 #include "widget_button.h"
-#include "signal.h"
 
 class FONT;
 class SCENENODE;

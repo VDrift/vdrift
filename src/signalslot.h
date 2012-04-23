@@ -1,5 +1,5 @@
-#ifndef _SIGNAL_H
-#define _SIGNAL_H
+#ifndef _SIGNALSLOT_H
+#define _SIGNALSLOT_H
 
 #include "delegate.h"
 #include <vector>
@@ -212,4 +212,4 @@ public:
 	}
 };
 
-#endif //_SIGNAL_H
+#endif //_SIGNALSLOT_H

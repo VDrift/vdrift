@@ -1,7 +1,7 @@
 #ifndef _GUIOPTION_H
 #define _GUIOPTION_H
 
-#include "signal.h"
+#include "signalslot.h"
 
 #include <map>
 #include <string>

@@ -2,7 +2,6 @@
 #define _WIDGET_COLORPICKER_H
 
 #include "widget.h"
-#include "signal.h"
 #include "sprite2d.h"
 
 class WIDGET_COLORPICKER : public WIDGET

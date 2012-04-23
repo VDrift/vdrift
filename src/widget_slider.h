@@ -2,7 +2,6 @@
 #define _WIDGET_SLIDER_H
 
 #include "widget.h"
-#include "signal.h"
 #include "sprite2d.h"
 #include "text_draw.h"
 #include "mathvector.h"

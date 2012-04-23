@@ -2,7 +2,6 @@
 #define _WIDGET_MULTIIMAGE_H
 
 #include "widget.h"
-#include "signal.h"
 #include "sprite2d.h"
 #include "mathvector.h"
 

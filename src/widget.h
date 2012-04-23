@@ -1,9 +1,11 @@
 #ifndef _WIDGET_H
 #define _WIDGET_H
 
+#include "signalslot.h"
+
 #include <map>
 #include <string>
-#include <iostream>
+#include <ostream>
 
 class SCENENODE;
 class GUIOPTION;
