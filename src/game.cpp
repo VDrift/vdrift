@@ -2148,19 +2148,7 @@ void GAME::LeaveGame()
 	SCENENODE empty;
 	graphics_interface->AddStaticNode(empty, true);
 
-	if (sound.Enabled())
-	{
-		for (std::list <CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
-		{
-			std::list <SOUNDSOURCE *> soundlist;
-			i->GetSoundList(soundlist);
-			for (std::list <SOUNDSOURCE *>::iterator s = soundlist.begin(); s != soundlist.end(); s++)
-			{
-				sound.RemoveSource(*s);
-			}
-		}
-	}
-
+	sound.Clear();
 	track.Clear();
 	cars.clear();
 	hud.Hide();
