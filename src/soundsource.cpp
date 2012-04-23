@@ -110,13 +110,6 @@ void SOUNDSOURCE::SampleAndAdvanceWithPitch16bit(int * chan1, int * chan2, int l
 
 void SOUNDSOURCE::IncrementWithPitch(int len)
 {
-	int gain_delta1 = computed_gain1 - last_computed_gain1;
-	int gain_delta2 = computed_gain2 - last_computed_gain2;
-	gain_delta1 = clamp(gain_delta1, -max_gain_delta * len, max_gain_delta * len);
-	gain_delta2 = clamp(gain_delta2, -max_gain_delta * len, max_gain_delta * len);
-	last_computed_gain1 += gain_delta1;
-	last_computed_gain2 += gain_delta2;
-
 	sample_pos_remainder += len * pitch;
 	int delta = sample_pos_remainder / denom;
 	sample_pos_remainder -= delta * denom;
