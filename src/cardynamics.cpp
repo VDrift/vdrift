@@ -514,7 +514,7 @@ bool CARDYNAMICS::Load(
 	}
 
 	transform.setRotation(rotation);
-	transform.setOrigin(position + direction::up);
+	transform.setOrigin(position);
 
 	body = new FractureBody(bodyinfo);
 	body->setCenterOfMassTransform(transform);
@@ -536,14 +536,18 @@ bool CARDYNAMICS::Load(
 		wheel_orientation[i] = LocalToWorld(suspension[i]->GetWheelOrientation());
 	}
 
-	// position can be a point on the surface not at car center of mass
-	// move wheel[0] center to position level to make sure the ray test doesn't fail
-	btVector3 down = GetDownVector();
-	btVector3 offset = down * down.dot(position - wheel_position[0]);
-	SetPosition(body->getCenterOfMassPosition() + offset);
+	// position is the center of a 2 x 4 x 1 meter box on track surface
+	// move car to fit bounding box front lower edge of the position box
+	btVector3 bmin, bmax;
+	body->getCollisionShape()->getAabb(btTransform::getIdentity(), bmin, bmax);
+	btVector3 fwd = body->getCenterOfMassTransform().getBasis().getColumn(1);
+	btVector3 up = body->getCenterOfMassTransform().getBasis().getColumn(2);
+	btVector3 fwd_offset = fwd * (2.0 - bmax.y());
+	btVector3 up_offset = -up * (0.5 + bmin.z());
+	SetPosition(body->getCenterOfMassPosition() + up_offset + fwd_offset);
 
 	// realign with ground
-	AlignWithGround();
+	//AlignWithGround();
 
 	// initialize telemetry
 	telemetry.clear();
@@ -1794,24 +1798,22 @@ bool CARDYNAMICS::WheelContactCallback(
 	int index1)
 {
 	// cars are fracture bodies, wheel is a cylinder shape
-	if (colObj0->getInternalType() & CO_FRACTURE_TYPE)
+	const btCollisionShape* shape = colObj0->getCollisionShape();
+	if ((colObj0->getInternalType() & CO_FRACTURE_TYPE) &&
+		(shape->getShapeType() == CYLINDER_SHAPE_PROXYTYPE))
 	{
-		const btCollisionShape* shape = colObj0->getCollisionShape();
-		if (shape->getShapeType() == CYLINDER_SHAPE_PROXYTYPE)
+		// is contact within contact patch?
+		const btCompoundShape* car = static_cast<const btCompoundShape*>(colObj0->getRootCollisionShape());
+		const btCylinderShapeX* wheel = static_cast<const btCylinderShapeX*>(shape);
+		btVector3 contactPoint = cp.m_localPointA - car->getChildTransform(cp.m_index0).getOrigin();
+		if (-direction::up.dot(contactPoint) > 0.5 * wheel->getRadius())
 		{
-			// is contact within contact patch?
-			const btCompoundShape* car = static_cast<const btCompoundShape*>(colObj0->getRootCollisionShape());
-			const btCylinderShapeX* wheel = static_cast<const btCylinderShapeX*>(shape);
-			btVector3 contactPoint = cp.m_localPointA - car->getChildTransform(cp.m_index0).getOrigin();
-			if (-direction::up.dot(contactPoint) > 0.5 * wheel->getRadius())
-			{
-				// break contact (hack)
-				cp.m_normalWorldOnB = btVector3(0, 0, 0);
-				cp.m_distance1 = 0;
-				cp.m_combinedFriction = 0;
-				cp.m_combinedRestitution = 0;
-				return true;
-			}
+			// break contact (hack)
+			cp.m_normalWorldOnB = btVector3(0, 0, 0);
+			cp.m_distance1 = 0;
+			cp.m_combinedFriction = 0;
+			cp.m_combinedRestitution = 0;
+			return true;
 		}
 	}
 	return false;
