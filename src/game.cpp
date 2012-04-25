@@ -942,11 +942,8 @@ void GAME::AdvanceGameLogic()
 			sound.SetListener(active_camera->GetPosition(), -active_camera->GetOrientation(), MATHVECTOR <float, 3>());
 		else
 			sound.SetListener(MATHVECTOR <float, 3> (), QUATERNION <float> (), MATHVECTOR <float, 3>());
-
-		sound.CollectGarbage();
-		sound.DetermineActiveSources();
-		sound.Compute3DEffects();
-		//sound.LimitActiveSources();
+		
+		sound.Update();
 		PROFILER.endBlock("sound");
 	}
 
@@ -2619,6 +2616,7 @@ void GAME::ProcessNewSettings()
 	}
 
 	sound.SetMasterVolume(settings.GetSoundVolume());
+	sound.SetMaxActiveSources(settings.GetMaxSoundSources());
 }
 
 void GAME::LoadingScreen(float progress, float max, bool drawGui, const std::string & optionalText, float x, float y)

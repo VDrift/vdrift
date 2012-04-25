@@ -20,8 +20,6 @@ public:
 
 	bool Init(int buffersize, std::ostream & info_output, std::ostream & error_output);
 
-	void Callback16bitstereo(void *unused, uint8_t *stream, int len);
-
 	void Pause(bool value);
 
 	// use to pass a source list at once, will empty passed list
@@ -36,14 +34,19 @@ public:
 	// remove all sources
 	void Clear();
 
+	// call to commit state changes
+	void Update();
+
+	// active sources limit can be adjusted at runtime
+	void SetMaxActiveSources(size_t value)
+	{
+		assert(value > 0);
+		max_active_sources = value;
+	}
+
 	void SetMasterVolume(float value)
 	{
 		volume_filter.SetFilterOrder0(value * 0.25);
-	}
-
-	void Disable()
-	{
-		disable = true;
 	}
 
 	void SetListener(
@@ -56,6 +59,11 @@ public:
 		listener_vel = vel;
 	}
 
+	void Disable()
+	{
+		disable = true;
+	}
+
 	bool Enabled() const
 	{
 		return !disable;
@@ -65,14 +73,6 @@ public:
 	{
 		return deviceinfo;
 	}
-
-	void DetermineActiveSources();
-
-	void Compute3DEffects() const;
-
-	void LimitActiveSources();
-
-	void CollectGarbage();
 
 private:
 	bool initdone;
@@ -87,15 +87,25 @@ private:
 	QUATERNION <float> listener_rot;
 	size_t max_active_sources;
 
-	// cache
-	std::vector <SOUNDSOURCE *> sources_active;
-	std::vector <SOUNDSOURCE *> sources_inactive;
+	// sampling buffers
 	std::vector <int> buffer1, buffer2;
-	size_t activemax, inactivemax;
 
+	// double buffered source lists
+	std::vector <SOUNDSOURCE *> sources_active_1, sources_active_2;
+	std::vector <SOUNDSOURCE *> sources_inactive_1, sources_inactive_2;
+	std::vector <SOUNDSOURCE *> * sources_active_p;
+	std::vector <SOUNDSOURCE *> * sources_inactive_p;
 	SDL_mutex * sourcelistlock;
+	
+	void DetermineActiveSources(std::vector <SOUNDSOURCE *> & sources_active, std::vector <SOUNDSOURCE *> & sources_inactive);
+	void Compute3DEffects(std::vector <SOUNDSOURCE *> & sources_active) const;
+	void LimitActiveSources(std::vector <SOUNDSOURCE *> & sources_active, std::vector <SOUNDSOURCE *> & sources_inactive);
+	void CollectGarbage();
 	void LockSourceList();
 	void UnlockSourceList();
+	
+	void Callback16bitStereo(void *sound, uint8_t *stream, int len);
+	static void CallbackWrapper(void *sound, uint8_t *stream, int len);
 };
 
 #define _SOUND_H

@@ -73,6 +73,11 @@ public:
 		return sound_volume;
 	}
 
+	int GetMaxSoundSources() const
+	{
+		return sound_sources;
+	}
+
 	bool GetMPH() const
 	{
 		return mph;
@@ -355,6 +360,7 @@ private:
 	std::string language;
 	bool show_fps;
 	float sound_volume;
+	int sound_sources;
 	bool mph; //if false, KPH
 	std::string track;
 	int antialiasing; //0 or 1 mean off

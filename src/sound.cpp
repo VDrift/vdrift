@@ -4,11 +4,6 @@
 #include <algorithm>
 #include <cassert>
 
-static void SOUND_CallbackWrapper(void *soundclass, Uint8 *stream, int len)
-{
-	((SOUND*)soundclass)->Callback16bitstereo(soundclass, stream, len);
-}
-
 static inline bool CompareSource(SOUNDSOURCE * i, SOUNDSOURCE * j)
 {
 	return !(*i < *j);
@@ -20,11 +15,11 @@ SOUND::SOUND() :
 	disable(false),
 	deviceinfo(0, 0, 0, 0),
 	max_active_sources(64),
-	activemax(0),
-	inactivemax(0),
 	sourcelistlock(0)
 {
 	volume_filter.SetFilterOrder0(1.0);
+	sources_active_p = &sources_active_1;
+	sources_inactive_p = &sources_inactive_1;
 }
 
 SOUND::~SOUND()
@@ -34,8 +29,6 @@ SOUND::~SOUND()
 
 	if (sourcelistlock)
 		SDL_DestroyMutex(sourcelistlock);
-
-	//std::cout << "Max active/inactive sound sources: " << activemax << "/" << inactivemax << std::endl;
 }
 
 bool SOUND::Init(int buffersize, std::ostream & info_output, std::ostream & error_output)
@@ -50,7 +43,7 @@ bool SOUND::Init(int buffersize, std::ostream & info_output, std::ostream & erro
 	desired.freq = 44100;
 	desired.format = AUDIO_S16SYS;
 	desired.samples = buffersize;
-	desired.callback = SOUND_CallbackWrapper;
+	desired.callback = SOUND::CallbackWrapper;
 	desired.userdata = this;
 	desired.channels = 2;
 
@@ -103,45 +96,6 @@ bool SOUND::Init(int buffersize, std::ostream & info_output, std::ostream & erro
 	return true;
 }
 
-void SOUND::Callback16bitstereo(void *myself, Uint8 *stream, int len)
-{
-	assert(this == myself);
-	assert(initdone);
-
-	// set buffers, clear stream
-	int len4 = len / 4;
-	buffer1.resize(len4);
-	buffer2.resize(len4);
-	memset(stream, 0, len);
-
-	// sample active sources
-	LockSourceList();
-	for (std::vector <SOUNDSOURCE *>::iterator s = sources_active.begin(); s != sources_active.end(); ++s)
-	{
-		SOUNDSOURCE * src = *s;
-		src->SampleAndAdvanceWithPitch16bit(&buffer1[0], &buffer2[0], len4);
-		for (int f = 0; f < src->NumFilters(); ++f)
-		{
-			src->GetFilter(f).Filter(&buffer1[0], &buffer2[0], len4);
-		}
-		volume_filter.Filter(&buffer1[0], &buffer2[0], len4);
-
-		for (int i = 0; i < len4; ++i)
-		{
-			int pos = i * 2;
-			((short *) stream)[pos] += buffer1[i];
-			((short *) stream)[pos + 1] += buffer2[i];
-		}
-	}
-
-	// increment inactive sources
-	for (std::vector <SOUNDSOURCE *>::iterator s = sources_inactive.begin(); s != sources_inactive.end(); ++s)
-	{
-		(*s)->AdvanceWithPitch(len4);
-	}
-	UnlockSourceList();
-}
-
 void SOUND::Pause(bool value)
 {
 	if (paused != value)
@@ -183,9 +137,29 @@ void SOUND::Clear()
 	sourcelist.clear();
 }
 
-void SOUND::DetermineActiveSources()
+void  SOUND::Update()
 {
+	// get source lists to work with
+	std::vector <SOUNDSOURCE *> & sources_active = (sources_active_p != &sources_active_1) ? sources_active_1 : sources_active_2;
+	std::vector <SOUNDSOURCE *> & sources_inactive = (sources_inactive_p != &sources_inactive_1) ? sources_inactive_1 : sources_inactive_2;
+
+	CollectGarbage();
+	
+	DetermineActiveSources(sources_active, sources_inactive);
+	
+	Compute3DEffects(sources_active);
+	
+	LimitActiveSources(sources_active, sources_inactive);
+
+	// commit processed source lists
 	LockSourceList();
+	sources_active_p = &sources_active;
+	sources_inactive_p = &sources_inactive;
+	UnlockSourceList();
+}
+
+void SOUND::DetermineActiveSources(std::vector <SOUNDSOURCE *> & sources_active, std::vector <SOUNDSOURCE *> & sources_inactive)
+{
 	sources_active.clear();
 	sources_inactive.clear();
 	for (std::list <SOUNDSOURCE *>::const_iterator i = sourcelist.begin(); i != sourcelist.end(); ++i)
@@ -199,10 +173,9 @@ void SOUND::DetermineActiveSources()
 			sources_inactive.push_back(*i);
 		}
 	}
-	UnlockSourceList();
 }
 
-void SOUND::Compute3DEffects() const
+void SOUND::Compute3DEffects(std::vector <SOUNDSOURCE *> & sources_active) const
 {
 	for (std::vector <SOUNDSOURCE *>::const_iterator i = sources_active.begin(); i != sources_active.end(); ++i)
 	{
@@ -238,36 +211,23 @@ void SOUND::Compute3DEffects() const
 	}
 }
 
-void SOUND::LimitActiveSources()
+void SOUND::LimitActiveSources(std::vector <SOUNDSOURCE *> & sources_active, std::vector <SOUNDSOURCE *> & sources_inactive)
 {
 	if (sources_active.size() <= max_active_sources)
 		return;
 
-	std::vector<SOUNDSOURCE*> active = sources_active;
 	std::partial_sort(
-		active.begin(),
-		active.begin() + max_active_sources,
-		active.end(),
+		sources_active.begin(),
+		sources_active.begin() + max_active_sources,
+		sources_active.end(),
 		CompareSource);
-
-	LockSourceList();
-
-	sources_active.assign(
-		active.begin(),
-		active.begin() + max_active_sources);
-
+	
 	sources_inactive.insert(
 		sources_inactive.end(),
-		active.begin() + max_active_sources,
-		active.end());
+		sources_active.begin() + max_active_sources,
+		sources_active.end());
 
-	UnlockSourceList();
-
-	activemax = activemax < sources_active.size() ? sources_active.size() : activemax;
-	inactivemax = inactivemax < sources_inactive.size() ? sources_inactive.size() : inactivemax;
-	//std::cout << sources_active.size() << '/' << sources_inactive.size() << '\n';
-	//std::cout << "gain " << sources_active[0]->GetComputedGain() << '/';
-	//std::cout << sources_active.back()->GetComputedGain() << '\n';
+	sources_active.resize(max_active_sources);
 }
 
 void SOUND::CollectGarbage()
@@ -295,4 +255,52 @@ void SOUND::UnlockSourceList()
 	if (SDL_mutexV(sourcelistlock) == -1){
 		assert(0 && "Couldn't unlock mutex");
 	}
+}
+
+void SOUND::Callback16bitStereo(void *myself, Uint8 *stream, int len)
+{
+	assert(this == myself);
+	assert(initdone);
+
+	// get sources
+	LockSourceList();
+	std::vector <SOUNDSOURCE *> & sources_active = *sources_active_p;
+	std::vector <SOUNDSOURCE *> & sources_inactive = *sources_inactive_p;
+	UnlockSourceList();
+
+	// set buffers, clear stream
+	int len4 = len / 4;
+	buffer1.resize(len4);
+	buffer2.resize(len4);
+	memset(stream, 0, len);
+
+	// sample active sources
+	for (std::vector <SOUNDSOURCE *>::iterator s = sources_active.begin(); s != sources_active.end(); ++s)
+	{
+		SOUNDSOURCE * src = *s;
+		src->SampleAndAdvanceWithPitch16bit(&buffer1[0], &buffer2[0], len4);
+		for (int f = 0; f < src->NumFilters(); ++f)
+		{
+			src->GetFilter(f).Filter(&buffer1[0], &buffer2[0], len4);
+		}
+		volume_filter.Filter(&buffer1[0], &buffer2[0], len4);
+
+		for (int i = 0; i < len4; ++i)
+		{
+			int pos = i * 2;
+			((short *) stream)[pos] += buffer1[i];
+			((short *) stream)[pos + 1] += buffer2[i];
+		}
+	}
+
+	// increment inactive sources
+	for (std::vector <SOUNDSOURCE *>::iterator s = sources_inactive.begin(); s != sources_inactive.end(); ++s)
+	{
+		(*s)->AdvanceWithPitch(len4);
+	}
+}
+
+void SOUND::CallbackWrapper(void *sound, uint8_t *stream, int len)
+{
+	((SOUND*)sound)->Callback16bitStereo(sound, stream, len);
 }

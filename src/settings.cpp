@@ -31,6 +31,7 @@ SETTINGS::SETTINGS() :
 	language("English"),
 	show_fps(false),
 	sound_volume(1.0),
+	sound_sources(64),
 	mph(true),
 	track("paulricard88"),
 	antialiasing(0),
@@ -136,6 +137,7 @@ void SETTINGS::Serialize(bool write, CONFIG & config)
 	Param(config, write, section, "contrast", contrast);
 
 	config.GetSection("sound", section);
+	Param(config, write, section, "sources", sound_sources);
 	Param(config, write, section, "volume", sound_volume);
 
 	config.GetSection("joystick", section);
