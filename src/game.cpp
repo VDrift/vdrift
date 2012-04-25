@@ -937,10 +937,17 @@ void GAME::AdvanceGameLogic()
 
 	if (sound.Enabled())
 	{
+		PROFILER.beginBlock("sound");
 		if (active_camera)
 			sound.SetListener(active_camera->GetPosition(), -active_camera->GetOrientation(), MATHVECTOR <float, 3>());
 		else
 			sound.SetListener(MATHVECTOR <float, 3> (), QUATERNION <float> (), MATHVECTOR <float, 3>());
+
+		sound.CollectGarbage();
+		sound.DetermineActiveSources();
+		sound.Compute3DEffects();
+		//sound.LimitActiveSources();
+		PROFILER.endBlock("sound");
 	}
 
 	//PROFILER.beginBlock("force-feedback");

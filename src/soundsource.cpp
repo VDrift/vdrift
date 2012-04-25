@@ -108,13 +108,15 @@ void SOUNDSOURCE::SampleAndAdvanceWithPitch16bit(int * chan1, int * chan2, int l
 	}
 }
 
-void SOUNDSOURCE::IncrementWithPitch(int len)
+void SOUNDSOURCE::AdvanceWithPitch(int len)
 {
+	// advance playback position
 	sample_pos_remainder += len * pitch;
 	int delta = sample_pos_remainder / denom;
 	sample_pos_remainder -= delta * denom;
 	sample_pos += delta;
 
+	// loop buffer
 	if (!loop)
 	{
 		playing = (sample_pos < samples_per_channel);

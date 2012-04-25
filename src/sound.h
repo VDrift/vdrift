@@ -47,13 +47,13 @@ public:
 	}
 
 	void SetListener(
-		const MATHVECTOR <float, 3> & npos,
-		const QUATERNION <float> & nrot,
-		const MATHVECTOR <float, 3> & nvel)
+		const MATHVECTOR <float, 3> & pos,
+		const QUATERNION <float> & rot,
+		const MATHVECTOR <float, 3> & vel)
 	{
-		lpos = npos;
-		lrot = nrot;
-		lvel = nvel;
+		listener_pos = pos;
+		listener_rot = rot;
+		listener_vel = vel;
 	}
 
 	bool Enabled() const
@@ -66,6 +66,14 @@ public:
 		return deviceinfo;
 	}
 
+	void DetermineActiveSources();
+
+	void Compute3DEffects() const;
+
+	void LimitActiveSources();
+
+	void CollectGarbage();
+
 private:
 	bool initdone;
 	bool paused;
@@ -74,17 +82,18 @@ private:
 	SOUNDINFO deviceinfo;
 	SOUNDFILTER volume_filter;
 	std::list <SOUNDSOURCE *> sourcelist;
-	std::vector <int> buffer1, buffer2;
+	MATHVECTOR <float, 3> listener_pos;
+	MATHVECTOR <float, 3> listener_vel;
+	QUATERNION <float> listener_rot;
+	size_t max_active_sources;
 
-	MATHVECTOR <float, 3> lpos;
-	MATHVECTOR <float, 3> lvel;
-	QUATERNION <float> lrot;
+	// cache
+	std::vector <SOUNDSOURCE *> sources_active;
+	std::vector <SOUNDSOURCE *> sources_inactive;
+	std::vector <int> buffer1, buffer2;
+	size_t activemax, inactivemax;
 
 	SDL_mutex * sourcelistlock;
-
-	void DetermineActiveSources(std::list <SOUNDSOURCE *> & active, std::list <SOUNDSOURCE *> & inactive);
-	void Compute3DEffects(std::list <SOUNDSOURCE *> & sources, const MATHVECTOR <float, 3> & listener_pos, const QUATERNION <float> & listener_rot) const;
-	void CollectGarbage();
 	void LockSourceList();
 	void UnlockSourceList();
 };

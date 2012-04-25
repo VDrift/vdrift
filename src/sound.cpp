@@ -1,6 +1,7 @@
 #include "sound.h"
 
 #include <SDL/SDL.h>
+#include <algorithm>
 #include <cassert>
 
 static void SOUND_CallbackWrapper(void *soundclass, Uint8 *stream, int len)
@@ -8,11 +9,19 @@ static void SOUND_CallbackWrapper(void *soundclass, Uint8 *stream, int len)
 	((SOUND*)soundclass)->Callback16bitstereo(soundclass, stream, len);
 }
 
+static inline bool CompareSource(SOUNDSOURCE * i, SOUNDSOURCE * j)
+{
+	return !(*i < *j);
+}
+
 SOUND::SOUND() :
 	initdone(false),
 	paused(true),
 	disable(false),
 	deviceinfo(0, 0, 0, 0),
+	max_active_sources(64),
+	activemax(0),
+	inactivemax(0),
 	sourcelistlock(0)
 {
 	volume_filter.SetFilterOrder0(1.0);
@@ -25,6 +34,8 @@ SOUND::~SOUND()
 
 	if (sourcelistlock)
 		SDL_DestroyMutex(sourcelistlock);
+
+	//std::cout << "Max active/inactive sound sources: " << activemax << "/" << inactivemax << std::endl;
 }
 
 bool SOUND::Init(int buffersize, std::ostream & info_output, std::ostream & error_output)
@@ -61,7 +72,6 @@ bool SOUND::Init(int buffersize, std::ostream & info_output, std::ostream & erro
 
 	if (obtained.format != desired.format)
 	{
-		//cout << "Warning: obtained audio format isn't the same as the desired format!" << std::endl;
 		error_output << "Obtained audio format isn't the same as the desired format, disabling sound." << std::endl;
 		Disable();
 		return false;
@@ -93,41 +103,20 @@ bool SOUND::Init(int buffersize, std::ostream & info_output, std::ostream & erro
 	return true;
 }
 
-void SOUND::Pause(bool value)
-{
-	if (paused != value)
-	{
-		paused = value;
-		SDL_PauseAudio(paused);
-	}
-}
-
 void SOUND::Callback16bitstereo(void *myself, Uint8 *stream, int len)
 {
 	assert(this == myself);
 	assert(initdone);
 
-	// set buffers
+	// set buffers, clear stream
 	int len4 = len / 4;
 	buffer1.resize(len4);
 	buffer2.resize(len4);
-
-	// clear stream
-	for (int i = 0; i < len4; ++i)
-	{
-		int pos = i * 2;
-		((short *) stream)[pos] = 0;
-		((short *) stream)[pos + 1] = 0;
-	}
-
-	// get sources
-	std::list <SOUNDSOURCE *> active_sourcelist;
-	std::list <SOUNDSOURCE *> inactive_sourcelist;
-	DetermineActiveSources(active_sourcelist, inactive_sourcelist);
-	Compute3DEffects(active_sourcelist, lpos, lrot);
+	memset(stream, 0, len);
 
 	// sample active sources
-	for (std::list <SOUNDSOURCE *>::iterator s = active_sourcelist.begin(); s != active_sourcelist.end(); ++s)
+	LockSourceList();
+	for (std::vector <SOUNDSOURCE *>::iterator s = sources_active.begin(); s != sources_active.end(); ++s)
 	{
 		SOUNDSOURCE * src = *s;
 		src->SampleAndAdvanceWithPitch16bit(&buffer1[0], &buffer2[0], len4);
@@ -146,65 +135,32 @@ void SOUND::Callback16bitstereo(void *myself, Uint8 *stream, int len)
 	}
 
 	// increment inactive sources
-	for (std::list <SOUNDSOURCE *>::iterator s = inactive_sourcelist.begin(); s != inactive_sourcelist.end(); s++)
+	for (std::vector <SOUNDSOURCE *>::iterator s = sources_inactive.begin(); s != sources_inactive.end(); ++s)
 	{
-		(*s)->IncrementWithPitch(len4);
-	}
-
-	CollectGarbage();
-}
-
-void SOUND::CollectGarbage()
-{
-	if (disable) return;
-
-	LockSourceList();
-	for (std::list <SOUNDSOURCE *>::iterator i = sourcelist.begin(); i != sourcelist.end(); ++i)
-	{
-		if (!(*i)->Audible() && (*i)->GetAutoDelete())
-		{
-			i = sourcelist.erase(i);
-		}
+		(*s)->AdvanceWithPitch(len4);
 	}
 	UnlockSourceList();
 }
 
-void SOUND::DetermineActiveSources(std::list <SOUNDSOURCE *> & active, std::list <SOUNDSOURCE *> & inactive)
+void SOUND::Pause(bool value)
 {
-	active.clear();
-	inactive.clear();
-
-	LockSourceList();
-	for (std::list <SOUNDSOURCE *>::const_iterator i = sourcelist.begin(); i != sourcelist.end(); ++i)
+	if (paused != value)
 	{
-		if ((*i)->Audible())
-		{
-			active.push_back(*i);
-		}
-		else
-		{
-			inactive.push_back(*i);
-		}
+		paused = value;
+		SDL_PauseAudio(paused);
 	}
-	UnlockSourceList();
 }
 
 void SOUND::AddSources(std::list<SOUNDSOURCE *> & sources)
 {
 	if (disable) return;
-
-	LockSourceList();
 	sourcelist.splice(sourcelist.end(), sources);
-	UnlockSourceList();
 }
 
 void SOUND::AddSource(SOUNDSOURCE & source)
 {
 	if (disable) return;
-
-	LockSourceList();
 	sourcelist.push_back(&source);
-	UnlockSourceList();
 }
 
 void SOUND::RemoveSource(SOUNDSOURCE * todel)
@@ -216,9 +172,7 @@ void SOUND::RemoveSource(SOUNDSOURCE * todel)
 	{
 		if (*i == todel)
 		{
-			LockSourceList();
 			sourcelist.erase(i);
-			UnlockSourceList();
 			return;
 		}
 	}
@@ -226,14 +180,31 @@ void SOUND::RemoveSource(SOUNDSOURCE * todel)
 
 void SOUND::Clear()
 {
-	LockSourceList();
 	sourcelist.clear();
+}
+
+void SOUND::DetermineActiveSources()
+{
+	LockSourceList();
+	sources_active.clear();
+	sources_inactive.clear();
+	for (std::list <SOUNDSOURCE *>::const_iterator i = sourcelist.begin(); i != sourcelist.end(); ++i)
+	{
+		if ((*i)->Audible())
+		{
+			sources_active.push_back(*i);
+		}
+		else
+		{
+			sources_inactive.push_back(*i);
+		}
+	}
 	UnlockSourceList();
 }
 
-void SOUND::Compute3DEffects(std::list <SOUNDSOURCE *> & sources, const MATHVECTOR <float, 3> & listener_pos, const QUATERNION <float> & listener_rot) const
+void SOUND::Compute3DEffects() const
 {
-	for (std::list <SOUNDSOURCE *>::iterator i = sources.begin(); i != sources.end(); ++i)
+	for (std::vector <SOUNDSOURCE *>::const_iterator i = sources_active.begin(); i != sources_active.end(); ++i)
 	{
 		if ((*i)->Get3DEffects())
 		{
@@ -263,6 +234,51 @@ void SOUND::Compute3DEffects(std::list <SOUNDSOURCE *> & sources, const MATHVECT
 		else
 		{
 			(*i)->SetComputedGain((*i)->GetGain(), (*i)->GetGain());
+		}
+	}
+}
+
+void SOUND::LimitActiveSources()
+{
+	if (sources_active.size() <= max_active_sources)
+		return;
+
+	std::vector<SOUNDSOURCE*> active = sources_active;
+	std::partial_sort(
+		active.begin(),
+		active.begin() + max_active_sources,
+		active.end(),
+		CompareSource);
+
+	LockSourceList();
+
+	sources_active.assign(
+		active.begin(),
+		active.begin() + max_active_sources);
+
+	sources_inactive.insert(
+		sources_inactive.end(),
+		active.begin() + max_active_sources,
+		active.end());
+
+	UnlockSourceList();
+
+	activemax = activemax < sources_active.size() ? sources_active.size() : activemax;
+	inactivemax = inactivemax < sources_inactive.size() ? sources_inactive.size() : inactivemax;
+	//std::cout << sources_active.size() << '/' << sources_inactive.size() << '\n';
+	//std::cout << "gain " << sources_active[0]->GetComputedGain() << '/';
+	//std::cout << sources_active.back()->GetComputedGain() << '\n';
+}
+
+void SOUND::CollectGarbage()
+{
+	if (disable) return;
+
+	for (std::list <SOUNDSOURCE *>::iterator i = sourcelist.begin(); i != sourcelist.end(); ++i)
+	{
+		if (!(*i)->Audible() && (*i)->GetAutoDelete())
+		{
+			i = sourcelist.erase(i);
 		}
 	}
 }

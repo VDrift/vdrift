@@ -24,7 +24,7 @@ public:
 
 	void SampleAndAdvanceWithPitch16bit(int * chan1, int * chan2, int len);
 
-	void IncrementWithPitch(int len);
+	void AdvanceWithPitch(int len);
 
 	void SeekToSample(int n)
 	{
@@ -106,7 +106,10 @@ public:
 
 	void Reset()
 	{
-		sample_pos = sample_pos_remainder = 0;
+		sample_pos = 0;
+		sample_pos_remainder = 0;
+		last_computed_gain1 = 0;
+		last_computed_gain2 = 0;
 	}
 
 	void Stop()
@@ -128,19 +131,6 @@ public:
 	bool Audible() const
 	{
 		return playing && (gain > 0);
-	}
-
-	const std::string GetName() const
-	{
-		if (buffer == NULL)
-			return "NULL";
-		else
-			return buffer->GetName();
-	}
-
-	const SOUNDBUFFER & GetSoundBuffer() const
-	{
-		return *buffer;
 	}
 
 	SOUNDFILTER & AddFilter()
@@ -167,8 +157,8 @@ public:
 
 	bool operator<(const SOUNDSOURCE & other) const
 	{
-		return std::max(last_computed_gain1, last_computed_gain2) <
-			std::max(other.last_computed_gain1, last_computed_gain2);
+		return std::max(computed_gain1, computed_gain2) <
+			std::max(other.computed_gain1, other.computed_gain2);
 	}
 
 private:
