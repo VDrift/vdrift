@@ -16,8 +16,8 @@ public:
 	void SetBuffer(std::tr1::shared_ptr<SOUNDBUFFER> newbuf)
 	{
 		buffer = newbuf;
-		samples_per_channel = buffer->info.samples / buffer->info.channels;
-		samples = samples_per_channel * buffer->info.channels;
+		samples_per_channel = buffer->GetInfo().samples / buffer->GetInfo().channels;
+		samples = samples_per_channel * buffer->GetInfo().channels;
 		Loop(false);
 		Stop();
 	}
@@ -29,7 +29,7 @@ public:
 	void SeekToSample(int n)
 	{
 		assert(buffer);
-		assert(n * buffer->info.channels < buffer->info.samples);
+		assert(n * buffer->GetInfo().channels < buffer->GetInfo().samples);
 		sample_pos = n;
 		sample_pos_remainder = 0;
 	}

@@ -33,11 +33,11 @@ void SOUNDSOURCE::SampleAndAdvanceWithPitch16bit(int * chan1, int * chan2, int l
 		assert(buffer);
 		assert(len > 0);
 
-		int chan = buffer->info.channels;
+		int chan = buffer->GetInfo().channels;
 		int chaninc = chan - 1;
 		int nr = sample_pos_remainder;
 		int ni = sample_pos;
-		int16_t * buf = (int16_t *)buffer->sound_buffer;
+		const int16_t * buf = (const int16_t *)buffer->GetRawBuffer();
 
 		for (int i = 0; i < len; ++i)
 		{
