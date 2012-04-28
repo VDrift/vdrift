@@ -11,6 +11,7 @@
 #include "loadcamera.h"
 #include "camera.h"
 #include "cfg/ptree.h"
+#include "sound.h"
 
 #include <map>
 #include <list>
@@ -176,11 +177,14 @@ static bool LoadWheel(
 }
 
 CAR::CAR() :
+	psound(0),
 	gearsound_check(0),
 	brakesound_check(false),
 	handbrakesound_check(false),
 	steer_angle_max(0),
 	last_steer(0),
+	nos_active(false),
+	driver_view(false),
 	sector(-1),
 	applied_brakes(0)
 {
@@ -189,10 +193,10 @@ CAR::CAR() :
 
 CAR::~CAR()
 {
-	for (unsigned i = 0; i < cameras.size(); ++i)
-	{
+	RemoveSounds();
+
+	for (size_t i = 0; i < cameras.size(); ++i)
 		delete cameras[i];
-	}
 }
 
 bool CAR::LoadLight(
@@ -424,17 +428,21 @@ bool CAR::LoadPhysics(
 bool CAR::LoadSounds(
 	const std::string & carpath,
 	const std::string & carname,
+	SOUND & sound,
 	ContentManager & content,
 	std::ostream & info_output,
 	std::ostream & error_output)
 {
-	//check for sound specification file
-	std::string path_aud = carpath+"/"+carname+".aud";
+	psound = &sound;
+
+	// check for sound specification file
+	std::string path_aud = carpath + "/" + carname + ".aud";
 	std::ifstream file_aud(path_aud.c_str());
 	if (file_aud.good())
 	{
 		PTree aud;
 		read_ini(file_aud, aud);
+		enginesounds.reserve(aud.size());
 		for (PTree::const_iterator i = aud.begin(); i != aud.end(); ++i)
 		{
 			const PTree & audi = i->second;
@@ -442,11 +450,9 @@ bool CAR::LoadSounds(
 			std::string filename;
 			std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
 			if (!audi.get("filename", filename, error_output)) return false;
-			if (!content.load(carpath, filename, soundptr)) return false;
 
-			enginesounds.push_back(std::pair <ENGINESOUNDINFO, SOUNDSOURCE> ());
-			ENGINESOUNDINFO & info = enginesounds.back().first;
-			SOUNDSOURCE & sound = enginesounds.back().second;
+			enginesounds.push_back(ENGINESOUNDINFO());
+			ENGINESOUNDINFO & info = enginesounds.back();
 
 			if (!audi.get("MinimumRPM", info.minrpm, error_output)) return false;
 			if (!audi.get("MaximumRPM", info.maxrpm, error_output)) return false;
@@ -458,39 +464,34 @@ bool CAR::LoadSounds(
 				info.power = ENGINESOUNDINFO::POWERON;
 			else if (!powersetting)
 				info.power = ENGINESOUNDINFO::POWEROFF;
-			else //assume it's used in both ways
+			else
 				info.power = ENGINESOUNDINFO::BOTH;
 
-			sound.SetBuffer(soundptr);
-			sound.Enable3D(true);
-			sound.Loop(true);
-			sound.SetGain(0);
-			sound.Play();
+			info.sound_source = sound.AddSource(soundptr, 0, true, true);
+			sound.SetSourceGain(info.sound_source, 0);
 		}
 
-		//set blend start and end locations -- requires multiple passes
+		// set blend start and end locations -- requires multiple passes
 		std::map <ENGINESOUNDINFO *, ENGINESOUNDINFO *> temporary_to_actual_map;
-		std::list <ENGINESOUNDINFO> poweron_sounds;
-		std::list <ENGINESOUNDINFO> poweroff_sounds;
-		for (std::list <std::pair <ENGINESOUNDINFO, SOUNDSOURCE> >::iterator i = enginesounds.begin(); i != enginesounds.end(); ++i)
+		std::list <ENGINESOUNDINFO> poweron_sounds, poweroff_sounds;
+		for (std::vector <ENGINESOUNDINFO>::iterator i = enginesounds.begin(); i != enginesounds.end(); ++i)
 		{
-			ENGINESOUNDINFO & info = i->first;
-			if (info.power == ENGINESOUNDINFO::POWERON)
+			if (i->power == ENGINESOUNDINFO::POWERON)
 			{
-				poweron_sounds.push_back(info);
-				temporary_to_actual_map[&poweron_sounds.back()] = &info;
+				poweron_sounds.push_back(*i);
+				temporary_to_actual_map[&poweron_sounds.back()] = &*i;
 			}
-			else if (info.power == ENGINESOUNDINFO::POWEROFF)
+			else if (i->power == ENGINESOUNDINFO::POWEROFF)
 			{
-				poweroff_sounds.push_back(info);
-				temporary_to_actual_map[&poweroff_sounds.back()] = &info;
+				poweroff_sounds.push_back(*i);
+				temporary_to_actual_map[&poweroff_sounds.back()] = &*i;
 			}
 		}
 
 		poweron_sounds.sort();
 		poweroff_sounds.sort();
 
-		//we only support 2 overlapping sounds at once each for poweron and poweroff; this
+		// we only support 2 overlapping sounds at once each for poweron and poweroff; this
 		// algorithm fails for other cases (undefined behavior)
 		std::list <ENGINESOUNDINFO> * cursounds = &poweron_sounds;
 		for (int n = 0; n < 2; n++)
@@ -500,12 +501,11 @@ bool CAR::LoadSounds(
 
 			for (std::list <ENGINESOUNDINFO>::iterator i = (*cursounds).begin(); i != (*cursounds).end(); ++i)
 			{
-				//set start blend
+				// set start blend
 				if (i == (*cursounds).begin())
 					i->fullgainrpmstart = i->minrpm;
-				//else, the blend start has been set already by the previous iteration
 
-				//set end blend
+				// set end blend
 				std::list <ENGINESOUNDINFO>::iterator inext = i;
 				inext++;
 				if (inext == (*cursounds).end())
@@ -517,7 +517,7 @@ bool CAR::LoadSounds(
 				}
 			}
 
-			//now assign back to the actual infos
+			// now assign back to the actual infos
 			for (std::list <ENGINESOUNDINFO>::iterator i = (*cursounds).begin(); i != (*cursounds).end(); ++i)
 			{
 				assert(temporary_to_actual_map.find(&(*i)) != temporary_to_actual_map.end());
@@ -529,13 +529,9 @@ bool CAR::LoadSounds(
 	{
 		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
 		if (!content.load(carpath, "engine", soundptr)) return false;
-		enginesounds.push_back(std::pair <ENGINESOUNDINFO, SOUNDSOURCE> ());
-		SOUNDSOURCE & enginesound = enginesounds.back().second;
-		enginesound.SetBuffer(soundptr);
-		enginesound.Enable3D(true);
-		enginesound.Loop(true);
-		enginesound.SetGain(0);
-		enginesound.Play();
+		enginesounds.push_back(ENGINESOUNDINFO());
+		enginesounds.back().sound_source = sound.AddSource(soundptr, 0, true, true);
+		sound.SetSourceGain(enginesounds.back().sound_source, 0);
 	}
 
 	//set up tire squeal sounds
@@ -543,13 +539,8 @@ bool CAR::LoadSounds(
 	{
 		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
 		if (!content.load(carpath, "tire_squeal", soundptr)) return false;
-		tiresqueal[i].SetBuffer(soundptr);
-		tiresqueal[i].Enable3D(true);
-		tiresqueal[i].Loop(true);
-		tiresqueal[i].SetGain(0);
-		int samples = soundptr->GetInfo().samples;
-		tiresqueal[i].SeekToSample((samples/4)*i);
-		tiresqueal[i].Play();
+		tiresqueal[i] = sound.AddSource(soundptr, i * 0.25, true, true);
+		sound.SetSourceGain(tiresqueal[i], 0);
 	}
 
 	//set up tire gravel sounds
@@ -557,13 +548,8 @@ bool CAR::LoadSounds(
 	{
 		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
 		if (!content.load(carpath, "gravel", soundptr)) return false;
-		gravelsound[i].SetBuffer(soundptr);
-		gravelsound[i].Enable3D(true);
-		gravelsound[i].Loop(true);
-		gravelsound[i].SetGain(0);
-		int samples = soundptr->GetInfo().samples;
-		gravelsound[i].SeekToSample((samples/4)*i);
-		gravelsound[i].Play();
+		gravelsound[i] = sound.AddSource(soundptr, i * 0.25, true, true);
+		sound.SetSourceGain(gravelsound[i], 0);
 	}
 
 	//set up tire grass sounds
@@ -571,13 +557,8 @@ bool CAR::LoadSounds(
 	{
 		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
 		if (!content.load(carpath, "grass", soundptr)) return false;
-		grasssound[i].SetBuffer(soundptr);
-		grasssound[i].Enable3D(true);
-		grasssound[i].Loop(true);
-		grasssound[i].SetGain(0);
-		int samples = soundptr->GetInfo().samples;
-		grasssound[i].SeekToSample((samples/4)*i);
-		grasssound[i].Play();
+		grasssound[i] = sound.AddSource(soundptr, i * 0.25, true, true);
+		sound.SetSourceGain(grasssound[i], 0);
 	}
 
 	//set up bump sounds
@@ -592,61 +573,42 @@ bool CAR::LoadSounds(
 		{
 			if (!content.load(carpath, "bump_front", soundptr)) return false;
 		}
-		tirebump[i].SetBuffer(soundptr);
-		tirebump[i].Enable3D(true);
-		tirebump[i].Loop(false);
-		tirebump[i].SetGain(1.0);
+		tirebump[i] = sound.AddSource(soundptr, 0, true, false);
 	}
 
 	//set up crash sound
 	{
 		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
 		if (!content.load(carpath, "crash", soundptr)) return false;
-		crashsound.SetBuffer(soundptr);
-		crashsound.Enable3D(true);
-		crashsound.Loop(false);
-		crashsound.SetGain(1.0);
+		crashsound = sound.AddSource(soundptr, 0, true, false);
 	}
 
 	//set up gear sound
 	{
 		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
 		if (!content.load(carpath, "gear", soundptr)) return false;
-		gearsound.SetBuffer(soundptr);
-		gearsound.Enable3D(true);
-		gearsound.Loop(false);
-		gearsound.SetGain(1.0);
+		gearsound = sound.AddSource(soundptr, 0, true, false);
 	}
 
 	//set up brake sound
 	{
 		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
 		if (!content.load(carpath, "brake", soundptr)) return false;
-		brakesound.SetBuffer(soundptr);
-		brakesound.Enable3D(true);
-		brakesound.Loop(false);
-		brakesound.SetGain(1.0);
+		brakesound = sound.AddSource(soundptr, 0, true, false);
 	}
 
 	//set up handbrake sound
 	{
 		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
 		if (!content.load(carpath, "handbrake", soundptr)) return false;
-		handbrakesound.SetBuffer(soundptr);
-		handbrakesound.Enable3D(true);
-		handbrakesound.Loop(false);
-		handbrakesound.SetGain(1.0);
+		handbrakesound = sound.AddSource(soundptr, 0, true, false);
 	}
 
 	{
 		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
 		if (!content.load(carpath, "wind", soundptr)) return false;
-		roadnoise.SetBuffer(soundptr);
-		roadnoise.Enable3D(true);
-		roadnoise.Loop(true);
-		roadnoise.SetGain(0);
-		roadnoise.SetPitch(1.0);
-		roadnoise.Play();
+		roadnoise = sound.AddSource(soundptr, 0, true, true);
+		sound.SetSourceGain(roadnoise, 0);
 	}
 
 	return true;
@@ -709,31 +671,56 @@ void CAR::UpdateGraphics()
 	}
 }
 
+void CAR::RemoveSounds()
+{
+	if (!psound) return;
+
+	// reverse order
+	psound->RemoveSource(roadnoise);
+	psound->RemoveSource(handbrakesound);
+	psound->RemoveSource(brakesound);
+	psound->RemoveSource(gearsound);
+	psound->RemoveSource(crashsound);
+
+	for (int i = WHEEL_POSITION_SIZE - 1; i >= 0; --i)
+		psound->RemoveSource(tirebump[i]);
+
+	for (int i = WHEEL_POSITION_SIZE - 1; i >= 0; --i)
+		psound->RemoveSource(grasssound[i]);
+
+	for (int i = WHEEL_POSITION_SIZE - 1; i >= 0; --i)
+		psound->RemoveSource(gravelsound[i]);
+
+	for (int i = WHEEL_POSITION_SIZE - 1; i >= 0; --i)
+		psound->RemoveSource(tiresqueal[i]);
+
+	for (int i = enginesounds.size() - 1; i >= 0; --i)
+		psound->RemoveSource(enginesounds[i].sound_source);
+}
+
 void CAR::UpdateSounds(float dt)
 {
-	MATHVECTOR <float, 3> vec = GetPosition();
-	roadnoise.SetPosition(vec[0],vec[1],vec[2]);
-	crashsound.SetPosition(vec[0],vec[1],vec[2]);
-	gearsound.SetPosition(vec[0],vec[1],vec[2]);
-	brakesound.SetPosition(vec[0],vec[1],vec[2]);
-	handbrakesound.SetPosition(vec[0],vec[1],vec[2]);
+	if (!psound) return;
 
-	//update engine sounds
+	MATHVECTOR <float, 3> pos_car = GetPosition();
+	MATHVECTOR <float, 3> pos_eng = ToMathVector<float>(dynamics.GetEnginePosition());
+
+	psound->SetSourcePosition(roadnoise, pos_car[0], pos_car[1], pos_car[2]);
+	psound->SetSourcePosition(crashsound, pos_car[0], pos_car[1], pos_car[2]);
+	psound->SetSourcePosition(gearsound, pos_car[0], pos_car[1], pos_car[2]);
+	psound->SetSourcePosition(brakesound, pos_car[0], pos_car[1], pos_car[2]);
+	psound->SetSourcePosition(handbrakesound, pos_car[0], pos_car[1], pos_car[2]);
+
+	// update engine sounds
 	float rpm = GetEngineRPM();
 	float throttle = dynamics.GetEngine().GetThrottle();
-
-	btVector3 engine_pos = dynamics.GetEnginePosition();
-
 	float total_gain = 0.0;
-	std::list <std::pair <SOUNDSOURCE *, float> > gainlist;
 
-	float loudest = 0.0; //for debugging
-
-	for (std::list <std::pair <ENGINESOUNDINFO, SOUNDSOURCE> >::iterator i = enginesounds.begin(); i != enginesounds.end(); ++i)
+	std::vector<std::pair<size_t, float> > gainlist;
+	gainlist.reserve(enginesounds.size());
+	for (std::vector<ENGINESOUNDINFO>::iterator i = enginesounds.begin(); i != enginesounds.end(); ++i)
 	{
-		ENGINESOUNDINFO & info = i->first;
-		SOUNDSOURCE & sound = i->second;
-
+		ENGINESOUNDINFO & info = *i;
 		float gain = 1.0;
 
 		if (rpm < info.minrpm)
@@ -768,113 +755,108 @@ void CAR::UpdateSounds(float dt)
 		}
 
 		total_gain += gain;
-		if (gain > loudest)
-		{
-			loudest = gain;
-		}
-		gainlist.push_back(std::pair <SOUNDSOURCE *, float> (&sound, gain));
+		gainlist.push_back(std::make_pair(info.sound_source, gain));
 
 		float pitch = rpm / info.naturalrpm;
-		sound.SetPitch(pitch);
 
-		sound.SetPosition(engine_pos[0], engine_pos[1], engine_pos[2]);
+		psound->SetSourcePosition(info.sound_source, pos_eng[0], pos_eng[1], pos_eng[2]);
+		psound->SetSourcePitch(info.sound_source, pitch);
 	}
 
-	//normalize gains
+	// normalize gains
 	assert(total_gain >= 0.0);
-	for (std::list <std::pair <SOUNDSOURCE *, float> >::iterator i = gainlist.begin(); i != gainlist.end(); ++i)
+	for (std::vector<std::pair<size_t, float> >::iterator i = gainlist.begin(); i != gainlist.end(); ++i)
 	{
+		float gain;
 		if (total_gain == 0.0)
 		{
-			i->first->SetGain(0.0);
+			gain = 0.0;
 		}
-		else if (enginesounds.size() == 1 && enginesounds.back().first.power == ENGINESOUNDINFO::BOTH)
+		else if (enginesounds.size() == 1 && enginesounds.back().power == ENGINESOUNDINFO::BOTH)
 		{
-			i->first->SetGain(i->second);
+			gain = i->second;
 		}
 		else
 		{
-			i->first->SetGain(i->second/total_gain);
+			gain = i->second / total_gain;
 		}
-		//if (i->second == loudest) std::cout << i->first->GetSoundTrack().GetName() << ": " << i->second << std::endl;
+		psound->SetSourceGain(i->first, gain);
 	}
 
-	//update tire squeal sounds
+	// update tire squeal sounds
 	for (int i = 0; i < 4; i++)
 	{
 		// make sure we don't get overlap
-		gravelsound[i].SetGain(0.0);
-		grasssound[i].SetGain(0.0);
-		tiresqueal[i].SetGain(0.0);
+		psound->SetSourceGain(gravelsound[i], 0.0);
+		psound->SetSourceGain(grasssound[i], 0.0);
+		psound->SetSourceGain(tiresqueal[i], 0.0);
 
 		float squeal = GetTireSquealAmount(WHEEL_POSITION(i));
 		float maxgain = 0.3;
 		float pitchvariation = 0.4;
 
-		SOUNDSOURCE * thesound;
+		size_t * sound_active;
 		const TRACKSURFACE & surface = dynamics.GetWheelContact(WHEEL_POSITION(i)).GetSurface();
 		if (surface.type == TRACKSURFACE::ASPHALT)
 		{
-			thesound = tiresqueal;
+			sound_active = tiresqueal;
 		}
 		else if (surface.type == TRACKSURFACE::GRASS)
 		{
-			thesound = grasssound;
+			sound_active = grasssound;
 			maxgain = 0.4; // up the grass sound volume a little
 		}
 		else if (surface.type == TRACKSURFACE::GRAVEL)
 		{
-			thesound = gravelsound;
+			sound_active = gravelsound;
 			maxgain = 0.4;
 		}
 		else if (surface.type == TRACKSURFACE::CONCRETE)
 		{
-			thesound = tiresqueal;
+			sound_active = tiresqueal;
 			maxgain = 0.3;
 			pitchvariation = 0.25;
 		}
 		else if (surface.type == TRACKSURFACE::SAND)
 		{
-			thesound = grasssound;
+			sound_active = grasssound;
 			maxgain = 0.25; // quieter for sand
 			pitchvariation = 0.25;
 		}
 		else
 		{
-			thesound = tiresqueal;
+			sound_active = tiresqueal;
 			maxgain = 0.0;
 		}
 
-		// set the sound position
-		btVector3 vec = dynamics.GetWheelPosition(WHEEL_POSITION(i));
-		thesound[i].SetPosition(vec[0], vec[1], vec[2]);
-
-		const btVector3 & groundvel = dynamics.GetWheelVelocity(WHEEL_POSITION(i));
-		thesound[i].SetGain(squeal * maxgain);
-		float pitch = (groundvel.length() - 5.0) * 0.1;
+		btVector3 pos_wheel = dynamics.GetWheelPosition(WHEEL_POSITION(i));
+		btVector3 vel_wheel = dynamics.GetWheelVelocity(WHEEL_POSITION(i));
+		float pitch = (vel_wheel.length() - 5.0) * 0.1;
 		if (pitch < 0)
 			pitch = 0;
 		if (pitch > 1)
 			pitch = 1;
 		pitch = 1.0 - pitch;
 		pitch *= pitchvariation;
-		pitch = pitch + (1.0-pitchvariation);
+		pitch = pitch + (1.0 - pitchvariation);
 		if (pitch < 0.1)
 			pitch = 0.1;
 		if (pitch > 4.0)
 			pitch = 4.0;
-		thesound[i].SetPitch(pitch);
+
+		psound->SetSourcePosition(sound_active[i], pos_wheel[0], pos_wheel[1], pos_wheel[2]);
+		psound->SetSourcePitch(sound_active[i], pitch);
+		psound->SetSourceGain(sound_active[i], squeal * maxgain);
 	}
 
 	//update road noise sound
 	{
-		btScalar gain = dynamics.GetVelocity().length();
+		float gain = dynamics.GetVelocity().length();
 		if (gain < 0) gain = -gain;
 		gain *= 0.02;
 		gain *= gain;
 		if (gain > 1.0)	gain = 1.0;
-		roadnoise.SetGain(gain);
-		//std::cout << gain << std::endl;
+		psound->SetSourceGain(roadnoise, gain);
 	}
 /*
 	//update bump noise sound
@@ -905,7 +887,7 @@ void CAR::UpdateSounds(float dt)
 			}
 		}
 	}
-*/
+
 	//update crash sound
 	{
 		crashdetection.Update(GetSpeed(), dt);
@@ -921,8 +903,6 @@ void CAR::UpdateSounds(float dt)
 			if (gain < mingain)
 				gain = mingain;
 
-			//std::cout << crashdecel << ", gain: " << gain << std::endl;
-
 			if (!crashsound.Audible())
 			{
 				crashsound.SetGain(gain);
@@ -931,27 +911,24 @@ void CAR::UpdateSounds(float dt)
 			}
 		}
 	}
-
-	//update gear sound
+*/
+	// update gear sound
+	if (driver_view && gearsound_check != GetGear())
 	{
-		if (gearsound_check != GetGear())
-		{
-			float gain = 0.0;
-			if (GetEngineRPM() != 0.0)
-				gain = GetEngineRPMLimit() / GetEngineRPM();
-			if (gain > 0.05)
-				gain = 0.05;
-			if (gain < 0.025)
-				gain = 0.025;
+		float gain = 0.0;
+		if (GetEngineRPM() != 0.0)
+			gain = GetEngineRPMLimit() / GetEngineRPM();
+		if (gain > 0.5)
+			gain = 0.5;
+		if (gain < 0.25)
+			gain = 0.25;
 
-			if (!gearsound.Audible())
-			{
-				gearsound.SetGain(gain);
-				gearsound.Stop();
-				gearsound.Play();
-			}
-			gearsound_check = GetGear();
+		if (!psound->GetSourcePlaying(gearsound))
+		{
+			psound->ResetSource(gearsound);
+			psound->SetSourceGain(gearsound, gain);
 		}
+		gearsound_check = GetGear();
 	}
 }
 
@@ -961,62 +938,20 @@ void CAR::Update(double dt)
 	UpdateSounds(dt);
 }
 
-void CAR::GetSoundList(std::list <SOUNDSOURCE *> & outputlist)
-{
-	for (std::list <std::pair <ENGINESOUNDINFO, SOUNDSOURCE> >::iterator i =
-		enginesounds.begin(); i != enginesounds.end(); ++i)
-	{
-		outputlist.push_back(&i->second);
-	}
-
-	for (int i = 0; i < 4; i++)
-		outputlist.push_back(&tiresqueal[i]);
-
-	for (int i = 0; i < 4; i++)
-		outputlist.push_back(&grasssound[i]);
-
-	for (int i = 0; i < 4; i++)
-		outputlist.push_back(&gravelsound[i]);
-
-	for (int i = 0; i < 4; i++)
-		outputlist.push_back(&tirebump[i]);
-
-	outputlist.push_back(&crashsound);
-
-	outputlist.push_back(&gearsound);
-
-	outputlist.push_back(&brakesound);
-
-	outputlist.push_back(&handbrakesound);
-
-	outputlist.push_back(&roadnoise);
-}
-
-void CAR::GetEngineSoundList(std::list <SOUNDSOURCE *> & outputlist)
-{
-	for (std::list <std::pair <ENGINESOUNDINFO, SOUNDSOURCE> >::iterator i =
-		enginesounds.begin(); i != enginesounds.end(); ++i)
-	{
-		outputlist.push_back(&i->second);
-	}
-}
-
 void CAR::HandleInputs(const std::vector <float> & inputs, float dt)
 {
-	assert(inputs.size() == CARINPUT::INVALID); //this looks weird, but it ensures that our inputs vector contains exactly one item per input
-
-	//std::cout << "Throttle: " << inputs[CARINPUT::THROTTLE] << std::endl;
-	//std::cout << "Shift up: " << inputs[CARINPUT::SHIFT_UP] << std::endl;
+	 // ensure that our inputs vector contains exactly one item per input
+	assert(inputs.size() == CARINPUT::INVALID);
 
 	// recover from a rollover
 	if (inputs[CARINPUT::ROLLOVER_RECOVER])
 		dynamics.RolloverRecover();
 
-	//set brakes
+	// set brakes
 	dynamics.SetBrake(inputs[CARINPUT::BRAKE]);
 	dynamics.SetHandBrake(inputs[CARINPUT::HANDBRAKE]);
 
-	//do steering
+	// do steering
 	float steer_value = inputs[CARINPUT::STEER_RIGHT];
 	if (std::abs(inputs[CARINPUT::STEER_LEFT]) > std::abs(inputs[CARINPUT::STEER_RIGHT])) //use whichever control is larger
 		steer_value = -inputs[CARINPUT::STEER_LEFT];
@@ -1026,11 +961,11 @@ void CAR::HandleInputs(const std::vector <float> & inputs, float dt)
 	steer.Rotate(-steer_value * steer_angle_max, 0, 0, 1);
 	steer_rotation = steer_orientation * steer;
 
-    //start the engine if requested
+    // start the engine if requested
 	if (inputs[CARINPUT::START_ENGINE])
 		dynamics.StartEngine();
 
-	//do shifting
+	// do shifting
 	int gear_change = 0;
 	if (inputs[CARINPUT::SHIFT_UP] == 1.0)
 		gear_change = 1;
@@ -1062,52 +997,48 @@ void CAR::HandleInputs(const std::vector <float> & inputs, float dt)
 	float clutch = 1 - inputs[CARINPUT::CLUTCH];
 	float nos = inputs[CARINPUT::NOS];
 
-	nosactive = nos > 0;
+	nos_active = nos > 0;
 
 	dynamics.ShiftGear(new_gear);
 	dynamics.SetThrottle(throttle);
 	dynamics.SetClutch(clutch);
 	dynamics.SetNOS(nos);
 
-	//do driver aid toggles
+	// do driver aid toggles
 	if (inputs[CARINPUT::ABS_TOGGLE])
 		dynamics.SetABS(!dynamics.GetABSEnabled());
+
 	if (inputs[CARINPUT::TCS_TOGGLE])
 		dynamics.SetTCS(!dynamics.GetTCSEnabled());
 
-	//update brake sound
-	{
-		if (inputs[CARINPUT::BRAKE] > 0 && !brakesound_check)
-		{
-			if (!brakesound.Audible())
-			{
-				float gain = 0.1;
-				brakesound.SetGain(gain);
-				brakesound.Stop();
-				brakesound.Play();
-			}
-			brakesound_check = true;
-		}
-		if (inputs[CARINPUT::BRAKE] <= 0)
-			brakesound_check = false;
-	}
+	// update interior sounds
+	if (!psound && driver_view) return;
 
-	//update handbrake sound
+	// brake sound
+	if (inputs[CARINPUT::BRAKE] > 0 && !brakesound_check)
 	{
-		if (inputs[CARINPUT::HANDBRAKE] > 0 && !handbrakesound_check)
+		if (!psound->GetSourcePlaying(brakesound))
 		{
-			if (!handbrakesound.Audible())
-			{
-				float gain = 0.1;
-				handbrakesound.SetGain(gain);
-				handbrakesound.Stop();
-				handbrakesound.Play();
-			}
-			handbrakesound_check = true;
+			psound->ResetSource(brakesound);
+			psound->SetSourceGain(brakesound, 0.5);
 		}
-		if (inputs[CARINPUT::HANDBRAKE] <= 0)
-			handbrakesound_check = false;
+		brakesound_check = true;
 	}
+	if (inputs[CARINPUT::BRAKE] <= 0)
+		brakesound_check = false;
+
+	// handbrake sound
+	if (inputs[CARINPUT::HANDBRAKE] > 0 && !handbrakesound_check)
+	{
+		if (!psound->GetSourcePlaying(handbrakesound))
+		{
+			psound->ResetSource(handbrakesound);
+			psound->SetSourceGain(handbrakesound, 0.5);
+		}
+		handbrakesound_check = true;
+	}
+	if (inputs[CARINPUT::HANDBRAKE] <= 0)
+		handbrakesound_check = false;
 }
 
 float CAR::GetFeedback()
@@ -1139,13 +1070,18 @@ float CAR::GetTireSquealAmount(WHEEL_POSITION i) const
 	return squeal;
 }
 
-void CAR::EnableGlass(bool enable)
+void CAR::SetInteriorView(bool value)
 {
+	if (driver_view == value) return;
+
+	driver_view = value;
+
+	// disable/enable glass
 	SCENENODE & bodynoderef = topnode.GetNode(bodynode);
 	keyed_container<DRAWABLE> & normal_blend = bodynoderef.GetDrawlist().normal_blend;
 	for (keyed_container<DRAWABLE>::iterator i = normal_blend.begin(); i != normal_blend.end(); ++i)
 	{
-		i->SetDrawEnable(enable);
+		i->SetDrawEnable(!driver_view);
 	}
 }
 

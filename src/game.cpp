@@ -309,11 +309,11 @@ void GAME::End()
 
 	info_output << "Shutting down..." << std::endl;
 
-	LeaveGame();
-
 	// Stop the sound thread.
 	if (sound.Enabled())
 		sound.Pause(true);
+
+	LeaveGame();
 
 	// Save settings first incase later deinits cause crashes.
 	settings.Save(pathmanager.GetSettingsFile(), error_output);
@@ -504,7 +504,7 @@ bool GAME::InitSound()
 {
 	if (sound.Init(2048, info_output, error_output))
 	{
-		sound.SetMasterVolume(settings.GetSoundVolume());
+		sound.SetVolume(settings.GetSoundVolume());
 		sound.Pause(false);
 		content.setSound(sound.GetDeviceInfo());
 	}
@@ -938,11 +938,15 @@ void GAME::AdvanceGameLogic()
 	if (sound.Enabled())
 	{
 		PROFILER.beginBlock("sound");
+		MATHVECTOR <float, 3> pos;
+		QUATERNION <float> rot;
 		if (active_camera)
-			sound.SetListener(active_camera->GetPosition(), -active_camera->GetOrientation(), MATHVECTOR <float, 3>());
-		else
-			sound.SetListener(MATHVECTOR <float, 3> (), QUATERNION <float> (), MATHVECTOR <float, 3>());
-		
+		{
+			pos = active_camera->GetPosition();
+			rot = -active_camera->GetOrientation();
+		}
+		sound.SetListenerPosition(pos[0], pos[1], pos[2]);
+		sound.SetListenerRotation(rot[0], rot[1], rot[2], rot[3]);
 		sound.Update();
 		PROFILER.endBlock("sound");
 	}
@@ -1917,7 +1921,7 @@ void GAME::UpdateCarInputs(CAR & car)
 	}
 	active_camera = car.GetCameras()[camera_id];
 	settings.SetCamera(camera_id);
-	bool incar = camera_id == 0 || camera_id == 1;
+	bool incar = (camera_id == 0 || camera_id == 1);
 
 	MATHVECTOR<float, 3> pos = car.GetPosition();
 	QUATERNION<float> rot = car.GetOrientation();
@@ -1942,16 +1946,8 @@ void GAME::UpdateCarInputs(CAR & car)
 	active_camera->Rotate(up, left);
 	active_camera->Move(zoom[0], zoom[1], zoom[2]);
 
-	// Set cockpit sounds.
-	std::list <SOUNDSOURCE *> soundlist;
-	car.GetEngineSoundList(soundlist);
-	for (std::list <SOUNDSOURCE *>::iterator s = soundlist.begin(); s != soundlist.end(); s++)
-	{
-		(*s)->Enable3D(!incar);
-	}
-
-	// Hide glass if we're inside the car.
-	car.EnableGlass(!incar);
+	// Hide glass if we're inside the car, adjust sounds.
+	car.SetInteriorView(incar);
 
 	// Move up the close shadow distance if we're in the cockpit.
 	graphics_interface->SetCloseShadow(incar ? 1.0 : 5.0);
@@ -2038,14 +2034,6 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 			ai.add_car(&cars.back(), settings.GetAIDifficulty());
 		else
 			carfile.clear();
-	}
-
-	// Send car sounds to the sound subsystem.
-	for (std::list <CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
-	{
-		std::list <SOUNDSOURCE *> soundlist;
-		i->GetSoundList(soundlist);
-		sound.AddSources(soundlist);
 	}
 
 	// Enable HUD display.
@@ -2152,7 +2140,6 @@ void GAME::LeaveGame()
 	SCENENODE empty;
 	graphics_interface->AddStaticNode(empty, true);
 
-	sound.Clear();
 	track.Clear();
 	cars.clear();
 	hud.Hide();
@@ -2163,6 +2150,7 @@ void GAME::LeaveGame()
 	pause = false;
 	race_laps = 0;
 	tire_smoke.Clear();
+	sound.Update();
 }
 
 /* Add a car, optionally controlled by the local player... */
@@ -2207,7 +2195,7 @@ bool GAME::LoadCar(
 		return false;
 	}
 
-	if (sound.Enabled() && !car.LoadSounds(cardir, carname, content, info_output, error_output))
+	if (sound.Enabled() && !car.LoadSounds(cardir, carname, sound, content, info_output, error_output))
 	{
 		error_output << "Failed to load sounds for car " << carname << std::endl;
 		return false;
@@ -2615,7 +2603,7 @@ void GAME::ProcessNewSettings()
 		carcontrols_local.first->SetAutoShift(settings.GetAutoShift());
 	}
 
-	sound.SetMasterVolume(settings.GetSoundVolume());
+	sound.SetVolume(settings.GetSoundVolume());
 	sound.SetMaxActiveSources(settings.GetMaxSoundSources());
 }
 

@@ -43,6 +43,14 @@ public:
 		*this = other;
 	}
 
+	void Set(const T & val1, const T & val2, const T & val3, const T & val4)
+	{
+		v[0] = val1;
+		v[1] = val2;
+		v[2] = val3;
+		v[3] = val4;
+	}
+
 	///load the [1,(0,0,0)] quaternion
 	void LoadIdentity()
 	{

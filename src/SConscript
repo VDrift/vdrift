@@ -98,7 +98,6 @@ src = Split("""aabb.cpp
 		sound.cpp
 		soundbuffer.cpp
 		soundfilter.cpp
-		soundsource.cpp
 		sprite2d.cpp
 		suspensionbumpdetection.cpp
 		svn_sourceforge.cpp

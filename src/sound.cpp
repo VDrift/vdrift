@@ -4,22 +4,139 @@
 #include <algorithm>
 #include <cassert>
 
-static inline bool CompareSource(SOUNDSOURCE * i, SOUNDSOURCE * j)
+template <class T>
+static inline T clamp(T val, T min, T max)
 {
-	return !(*i < *j);
+	return val > min ? (val < max ? val : max) : min;
+}
+
+static inline void Lock(SDL_mutex * mutex)
+{
+	if (SDL_mutexP(mutex) == -1)
+		assert(0 && "Couldn't lock mutex");
+}
+
+static inline void Unlock(SDL_mutex * mutex)
+{
+	if (SDL_mutexV(mutex) == -1)
+		assert(0 && "Couldn't unlock mutex");
+}
+
+static void SampleAndAdvanceWithPitch16bit(SOUNDSAMPLER & sampler, int * chan1, int * chan2, int len)
+{
+	assert(len > 0);
+	assert(sampler.buffer);
+
+	// if not playing, fill output buffers with silence, should not happen
+	if (!sampler.playing)
+	{
+		assert(0);
+		for (int i = 0; i < len; ++i)
+		{
+			chan1[i] = chan2[i] = 0;
+		}
+		return;
+	}
+
+	// start samlping
+	int chan = sampler.buffer->GetInfo().channels;
+	int samples = sampler.samples_per_channel * chan;
+	int chaninc = chan - 1;
+	int nr = sampler.sample_pos_remainder;
+	int ni = sampler.sample_pos;
+	const int16_t * buf = (const int16_t *)sampler.buffer->GetRawBuffer();
+
+	for (int i = 0; i < len; ++i)
+	{
+		// limit gain change rate
+		int gain_delta1 = sampler.gain1 - sampler.last_gain1;
+		int gain_delta2 = sampler.gain2 - sampler.last_gain2;
+		gain_delta1 = clamp(gain_delta1, -sampler.max_gain_delta, sampler.max_gain_delta);
+		gain_delta2 = clamp(gain_delta2, -sampler.max_gain_delta, sampler.max_gain_delta);
+		sampler.last_gain1 += gain_delta1;
+		sampler.last_gain2 += gain_delta2;
+
+		if (ni >= sampler.samples_per_channel && !sampler.loop)
+		{
+			// finish playing the buffer if looping is not enabled
+			chan1[i] = chan2[i] = 0;
+			sampler.playing = false;
+		}
+		else
+		{
+			// the sample to the left of the playback position, channel 0 and 1
+			int id1 = (ni * chan) % samples;
+			int samp10 = buf[id1];
+			int samp11 = buf[id1 + chaninc];
+
+			// the sample to the right of the playback position, channel 0 and 1
+			int id2 = (id1 + chan) % samples;
+			int samp20 = buf[id2];
+			int samp21 = buf[id2 + chaninc];
+
+			// interpolated sample at playback position
+			int val1 = (nr * samp20 + (sampler.denom - nr) * samp10) / sampler.denom;
+			int val2 = (nr * samp21 + (sampler.denom - nr) * samp11) / sampler.denom;
+			val1 = (val1 * sampler.last_gain1) / sampler.denom;
+			val2 = (val2 * sampler.last_gain2) / sampler.denom;
+
+			// fill output buffers
+			chan1[i] = val1;
+			chan2[i] = val2;
+
+			// advance playback position
+			nr += sampler.pitch;
+			int ninc = nr / sampler.denom;
+			nr -= ninc * sampler.denom;
+			ni += ninc;
+		}
+	}
+
+	sampler.sample_pos = ni;
+	sampler.sample_pos_remainder = nr;
+	if (!sampler.loop)
+	{
+		sampler.playing = (sampler.sample_pos < sampler.samples_per_channel);
+	}
+	else
+	{
+		sampler.sample_pos = sampler.sample_pos % sampler.samples_per_channel;
+	}
+}
+
+static void AdvanceWithPitch(SOUNDSAMPLER & sampler, int len)
+{
+	// advance playback position
+	sampler.sample_pos_remainder += len * sampler.pitch;
+	int delta = sampler.sample_pos_remainder / sampler.denom;
+	sampler.sample_pos_remainder -= delta * sampler.denom;
+	sampler.sample_pos += delta;
+
+	// loop buffer
+	if (!sampler.loop)
+	{
+		sampler.playing = (sampler.sample_pos < sampler.samples_per_channel);
+	}
+	else
+	{
+		sampler.sample_pos = sampler.sample_pos % sampler.samples_per_channel;
+	}
 }
 
 SOUND::SOUND() :
-	initdone(false),
-	paused(true),
-	disable(false),
 	deviceinfo(0, 0, 0, 0),
+	initdone(false),
+	disable(false),
+	paused(true),
+	sampler_lock(0),
+	source_lock(0),
 	max_active_sources(64),
-	sourcelistlock(0)
+	sources_num(0),
+	samplers_num(0)
 {
 	volume_filter.SetFilterOrder0(1.0);
-	sources_active_p = &sources_active_1;
-	sources_inactive_p = &sources_inactive_1;
+	sources.reserve(64);
+	samplers.reserve(64);
 }
 
 SOUND::~SOUND()
@@ -27,8 +144,11 @@ SOUND::~SOUND()
 	if (initdone)
 		SDL_CloseAudio();
 
-	if (sourcelistlock)
-		SDL_DestroyMutex(sourcelistlock);
+	if (sampler_lock)
+		SDL_DestroyMutex(sampler_lock);
+
+	if (source_lock)
+		SDL_DestroyMutex(source_lock);
 }
 
 bool SOUND::Init(int buffersize, std::ostream & info_output, std::ostream & error_output)
@@ -36,7 +156,8 @@ bool SOUND::Init(int buffersize, std::ostream & info_output, std::ostream & erro
 	if (disable || initdone)
 		return false;
 
-	sourcelistlock = SDL_CreateMutex();
+	sampler_lock = SDL_CreateMutex();
+	source_lock = SDL_CreateMutex();
 
 	SDL_AudioSpec desired, obtained;
 
@@ -91,170 +212,472 @@ bool SOUND::Init(int buffersize, std::ostream & info_output, std::ostream & erro
 
 	initdone = true;
 
-	SetMasterVolume(1.0);
+	SetVolume(1.0);
 
 	return true;
+}
+
+const SOUNDINFO & SOUND::GetDeviceInfo() const
+{
+	return deviceinfo;
+}
+
+bool SOUND::Enabled() const
+{
+	return !disable;
+}
+
+void SOUND::Disable()
+{
+	disable = true;
 }
 
 void SOUND::Pause(bool value)
 {
 	if (paused != value)
 	{
+		SDL_PauseAudio(value);
 		paused = value;
-		SDL_PauseAudio(paused);
 	}
 }
 
-void SOUND::AddSources(std::list<SOUNDSOURCE *> & sources)
-{
-	if (disable) return;
-	sourcelist.splice(sourcelist.end(), sources);
-}
-
-void SOUND::AddSource(SOUNDSOURCE & source)
-{
-	if (disable) return;
-	sourcelist.push_back(&source);
-}
-
-void SOUND::RemoveSource(SOUNDSOURCE * todel)
+void SOUND::Update()
 {
 	if (disable) return;
 
-	assert(todel);
-	for (std::list <SOUNDSOURCE *>::iterator i = sourcelist.begin(); i != sourcelist.end(); ++i)
+	GetSourceChanges();
+
+	ProcessSourceStop();
+
+	ProcessSourceRemove();
+
+	ProcessSources();
+
+	SetSamplerChanges();
+
+	// short circuit if paused(sound thread blocked)
+	if (paused)
 	{
-		if (*i == todel)
-		{
-			sourcelist.erase(i);
-			return;
-		}
+		GetSamplerChanges();
+
+		ProcessSamplerRemove();
+
+		ProcessSamplerAdd();
+
+		SetSourceChanges();
+
+		GetSourceChanges();
+
+		ProcessSourceStop();
+
+		ProcessSourceRemove();
 	}
 }
 
-void SOUND::Clear()
+void SOUND::SetMaxActiveSources(size_t value)
 {
-	sourcelist.clear();
+	max_active_sources = value;
 }
 
-void  SOUND::Update()
+// add item to a compactifying vector
+template <class T>
+inline size_t AddItem(T & item, std::vector<T> & items, size_t & item_num)
 {
-	// get source lists to work with
-	std::vector <SOUNDSOURCE *> & sources_active = (sources_active_p != &sources_active_1) ? sources_active_1 : sources_active_2;
-	std::vector <SOUNDSOURCE *> & sources_inactive = (sources_inactive_p != &sources_inactive_1) ? sources_inactive_1 : sources_inactive_2;
+	size_t id = item_num;
+	if (id < items.size())
+	{
+		size_t idn = items[id].id;
+		if (idn != id)
+		{
+			// swap back redirected item
+			assert(idn < id);
+			items[id] = items[idn];
+			id = idn;
+		}
+		items[id] = item;
+	}
+	else
+	{
+		items.push_back(item);
+	}
+	items[id].id = id;
+	++item_num;
 
-	CollectGarbage();
-	
-	DetermineActiveSources(sources_active, sources_inactive);
-	
-	Compute3DEffects(sources_active);
-	
-	LimitActiveSources(sources_active, sources_inactive);
-
-	// commit processed source lists
-	LockSourceList();
-	sources_active_p = &sources_active;
-	sources_inactive_p = &sources_inactive;
-	UnlockSourceList();
+	return id;
 }
 
-void SOUND::DetermineActiveSources(std::vector <SOUNDSOURCE *> & sources_active, std::vector <SOUNDSOURCE *> & sources_inactive)
+// remove item from a compactifying vector
+template <class T>
+inline void RemoveItem(size_t id, std::vector<T> & items, size_t & item_num)
 {
+	assert(id < items.size());
+	size_t idn = items[id].id;
+	assert(idn < item_num);
+	--item_num;
+	// swap last item with current
+	size_t idl = items[item_num].id;
+	if (idl != item_num)
+	{
+		// move redirected last item into free slot
+		items[idn] = items[item_num];
+
+		// redirect to new item position
+		items[idl].id = idn;
+
+		// invalidate old redirection
+		items[item_num].id = item_num;
+	}
+	else
+	{
+		// move last item into free slot
+		items[idn] = items[item_num];
+
+		// redirect to new item position
+		items[item_num].id = idn;
+	}
+	if (id != idn)
+	{
+		// invalidate redirecting item
+		items[id].id = id;
+	}
+}
+
+size_t SOUND::AddSource(std::tr1::shared_ptr<SOUNDBUFFER> buffer, float offset, bool is3d, bool loop)
+{
+	SOUNDSOURCE src;
+	src.buffer = buffer;
+	src.position.Set(0, 0, 0);
+	src.velocity.Set(0, 0, 0);
+	src.offset = offset;
+	src.pitch = 1.0;
+	src.gain = 0.0;
+	src.is3d = is3d;
+	src.playing = true;
+	src.loop = loop;
+	size_t id = AddItem(src, sources, sources_num);
+
+	// notify sound thread
+	NewSampler ns;
+	ns.buffer = buffer.get();
+	ns.offset = offset * SOUNDSAMPLER::denom;
+	ns.loop = loop;
+	ns.id = -1;
+	sampler_add.getFirst().push_back(ns);
+
+	//std::cout << "Add sound source: " << id << " " << buffer->GetName() << std::endl;
+	return id;
+}
+
+void SOUND::RemoveSource(size_t id)
+{
+	// notify sound thread, it will notify main thread to remove the source
+	//std::cout << "To be removed source: " << id << " " << sources[sources[id].id].buffer->GetName() << std::endl;
+	sampler_remove.getFirst().push_back(id);
+}
+
+void SOUND::ResetSource(size_t id)
+{
+	size_t idn = sources[id].id;
+	SOUNDSOURCE & src = sources[idn];
+	src.playing = true;
+
+	// notify sound thread
+	NewSampler ns;
+	ns.buffer = src.buffer.get();
+	ns.offset = src.offset * SOUNDSAMPLER::denom;
+	ns.loop = src.loop;
+	ns.id = idn;
+	sampler_add.getFirst().push_back(ns);
+}
+
+bool SOUND::GetSourcePlaying(size_t id) const
+{
+	return sources[sources[id].id].playing;
+}
+
+void SOUND::SetSourceVelocity(size_t id, float x, float y, float z)
+{
+	sources[sources[id].id].velocity.Set(x, y, z);
+}
+
+void SOUND::SetSourcePosition(size_t id, float x, float y, float z)
+{
+	sources[sources[id].id].position.Set(x, y, z);
+}
+
+void SOUND::SetSourceRotation(size_t id, float x, float y, float z, float w)
+{
+	//sources[sources[id].id].rotation.Set(x, y, z, w);
+}
+
+void SOUND::SetSourcePitch(size_t id, float value)
+{
+	sources[sources[id].id].pitch = value;
+}
+
+void SOUND::SetSourceGain(size_t id, float value)
+{
+	sources[sources[id].id].gain = value;
+}
+
+void SOUND::SetListenerVelocity(float x, float y, float z)
+{
+	listener_vel.Set(x, y, z);
+}
+
+void SOUND::SetListenerPosition(float x, float y, float z)
+{
+	listener_pos.Set(x, y, z);
+}
+
+void SOUND::SetListenerRotation(float x, float y, float z, float w)
+{
+	listener_rot.Set(x, y, z, w);
+}
+
+void SOUND::SetVolume(float value)
+{
+	volume_filter.SetFilterOrder0(value * 0.25);
+}
+
+void SOUND::GetSourceChanges()
+{
+	Lock(source_lock);
+	source_stop.swapFirst();
+	source_remove.swapFirst();
+	Unlock(source_lock);
+}
+
+void SOUND::ProcessSourceStop()
+{
+	std::vector<size_t> & sstop = source_stop.getFirst();
+	for (size_t i = 0; i < sstop.size(); ++i)
+	{
+		size_t id = sstop[i];
+		assert(id < sources_num);
+		sources[id].playing = false;
+	}
+	sstop.clear();
+}
+
+void SOUND::ProcessSourceRemove()
+{
+	std::vector<size_t> & sremove = source_remove.getFirst();
+	for (size_t i = 0; i < sremove.size(); ++i)
+	{
+		size_t id = sremove[i];
+		assert(id < sources.size());
+		size_t idn = sources[id].id;
+		assert(idn < sources_num);
+		//std::cout << "Remove sound source: " << id << " " << sources[idn].buffer->GetName() << std::endl;
+		RemoveItem(id, sources, sources_num);
+	}
+	sremove.clear();
+}
+
+void SOUND::ProcessSources()
+{
+	std::vector<GainPitch> & supdate = sampler_update.getFirst();
+	supdate.resize(sources_num);
+
 	sources_active.clear();
-	sources_inactive.clear();
-	for (std::list <SOUNDSOURCE *>::const_iterator i = sourcelist.begin(); i != sourcelist.end(); ++i)
+	for (size_t i = 0; i < sources_num; ++i)
 	{
-		if ((*i)->Audible())
-		{
-			sources_active.push_back(*i);
-		}
-		else
-		{
-			sources_inactive.push_back(*i);
-		}
-	}
-}
+		SOUNDSOURCE & src = sources[i];
+		if (!src.playing) continue;
 
-void SOUND::Compute3DEffects(std::vector <SOUNDSOURCE *> & sources_active) const
-{
-	for (std::vector <SOUNDSOURCE *>::const_iterator i = sources_active.begin(); i != sources_active.end(); ++i)
-	{
-		if ((*i)->Get3DEffects())
+		float gain1 = 0.0, gain2 = 0.0;
+		if (src.gain > 0.0)
 		{
-			MATHVECTOR <float, 3> relvec = (*i)->GetPosition() - listener_pos;
-			float len = relvec.Magnitude();
-			if (len < 0.1)
+			if (src.is3d)
 			{
-				relvec[2] = 0.1;
-				len = relvec.Magnitude();
+				MATHVECTOR <float, 3> relvec = src.position - listener_pos;
+				float len = relvec.Magnitude();
+				if (len < 0.1)
+				{
+					relvec[2] = 0.1;
+					len = relvec.Magnitude();
+				}
+				listener_rot.RotateVector(relvec);
+
+				float cgain = log(1000.0 / pow((double)len, 1.3)) / log(100.0);
+				if (cgain > 1.0) cgain = 1.0;
+				if (cgain < 0.0) cgain = 0.0;
+
+				float xcoord = -relvec.Normalize()[1];
+				float pgain1 = -xcoord;
+				float pgain2 = xcoord;
+				if (pgain1 < 0) pgain1 = 0;
+				if (pgain2 < 0) pgain2 = 0;
+
+				gain1 = cgain * src.gain * (1.0 - pgain1);
+				gain2 = cgain * src.gain * (1.0 - pgain2);
 			}
-			listener_rot.RotateVector(relvec);
+			else
+			{
+				gain1 = gain2 = src.gain;
+			}
 
-			float cgain = log(1000.0 / pow((double)len, 1.3)) / log(100.0);
-			if (cgain > 1.0) cgain = 1.0;
-			if (cgain < 0.0) cgain = 0.0;
-
-			float xcoord = -relvec.Normalize()[1];
-			float pgain1 = -xcoord;
-			float pgain2 = xcoord;
-			if (pgain1 < 0) pgain1 = 0;
-			if (pgain2 < 0) pgain2 = 0;
-
-			float gain1 = cgain * (*i)->GetGain() * (1.0 - pgain1);
-			float gain2 = cgain * (*i)->GetGain() * (1.0 - pgain2);
-			(*i)->SetComputedGain(gain1, gain2);
+			if (gain1 > 0 || gain2 > 0)
+			{
+				sources_active.push_back(i);
+			}
 		}
-		else
-		{
-			(*i)->SetComputedGain((*i)->GetGain(), (*i)->GetGain());
-		}
+
+		supdate[i].gain1 = gain1 * SOUNDSAMPLER::denom;
+		supdate[i].gain2 = gain2 * SOUNDSAMPLER::denom;
+		supdate[i].pitch = src.pitch * SOUNDSAMPLER::denom;
 	}
+
+	LimitActiveSources();
 }
 
-void SOUND::LimitActiveSources(std::vector <SOUNDSOURCE *> & sources_active, std::vector <SOUNDSOURCE *> & sources_inactive)
-{
+void SOUND::LimitActiveSources()
+{/*
+	// limit active sources to max active sources
 	if (sources_active.size() <= max_active_sources)
 		return;
 
+	// get loudest max_active_sources
 	std::partial_sort(
 		sources_active.begin(),
 		sources_active.begin() + max_active_sources,
 		sources_active.end(),
 		CompareSource);
-	
-	sources_inactive.insert(
-		sources_inactive.end(),
-		sources_active.begin() + max_active_sources,
-		sources_active.end());
 
-	sources_active.resize(max_active_sources);
+	// mute remaining sources
+	for (size_t i = max_active_sources; i < sources_active.size(); ++i)
+	{
+		supdate[i].gain1 = 0;
+		supdate[i].gain2 = 0;
+	}*/
 }
 
-void SOUND::CollectGarbage()
+void SOUND::SetSamplerChanges()
 {
-	if (disable) return;
+	Lock(sampler_lock);
+	if (sampler_update.getFirst().size()) sampler_update.swapFirst();
+	if (sampler_add.getFirst().size()) sampler_add.swapFirst();
+	if (sampler_remove.getFirst().size()) sampler_remove.swapFirst();
+	Unlock(sampler_lock);
+}
 
-	for (std::list <SOUNDSOURCE *>::iterator i = sourcelist.begin(); i != sourcelist.end(); ++i)
+void SOUND::GetSamplerChanges()
+{
+	Lock(sampler_lock);
+	sampler_update.swapLast();
+	sampler_remove.swapLast();
+	sampler_add.swapLast();
+	Unlock(sampler_lock);
+}
+
+void SOUND::ProcessSamplerUpdate()
+{
+	std::vector<GainPitch> & supdate = sampler_update.getLast();
+	if (samplers_num == supdate.size())
 	{
-		if (!(*i)->Audible() && (*i)->GetAutoDelete())
+		for (size_t i = 0; i < samplers_num; ++i)
 		{
-			i = sourcelist.erase(i);
+			samplers[i].gain1 = supdate[i].gain1;
+			samplers[i].gain2 = supdate[i].gain2;
+			samplers[i].pitch = supdate[i].pitch;
 		}
 	}
+	supdate.clear();
 }
 
-void SOUND::LockSourceList()
+void SOUND::ProcessSamplers(uint8_t *stream, int len)
 {
-	if (SDL_mutexP(sourcelistlock) == -1){
-		assert(0 && "Couldn't lock mutex");
+	// set buffers and clear stream
+	int len4 = len / 4;
+	buffer1.resize(len4);
+	buffer2.resize(len4);
+	memset(stream, 0, len);
+
+	// run samplers
+	for (size_t i = 0; i < samplers_num; ++i)
+	{
+		SOUNDSAMPLER & smp = samplers[i];
+
+		if (!smp.playing)
+			continue;
+
+		if (smp.gain1 | smp.gain2 | smp.last_gain1 | smp.last_gain2)
+		{
+			SampleAndAdvanceWithPitch16bit(smp, &buffer1[0], &buffer2[0], len4);
+
+			volume_filter.Filter(&buffer1[0], &buffer2[0], len4);
+
+			for (int n = 0; n < len4; ++n)
+			{
+				int pos = n * 2;
+				((short *) stream)[pos] += buffer1[n];
+				((short *) stream)[pos + 1] += buffer2[n];
+			}
+		}
+		else
+		{
+			AdvanceWithPitch(smp, len);
+		}
+
+		if (!smp.playing)
+			source_stop.getLast().push_back(i);
 	}
 }
 
-void SOUND::UnlockSourceList()
+void SOUND::ProcessSamplerRemove()
 {
-	if (SDL_mutexV(sourcelistlock) == -1){
-		assert(0 && "Couldn't unlock mutex");
+	std::vector<size_t> & sremove = sampler_remove.getLast();
+	if (!sremove.empty())
+	{
+		for (size_t i = 0; i < sremove.size(); ++i)
+		{
+			size_t id = sremove[i];
+			assert(id < samplers.size());
+			RemoveItem(id, samplers, samplers_num);
+		}
+		source_remove.getLast() = sremove;
+		sremove.clear();
 	}
+}
+
+void SOUND::ProcessSamplerAdd()
+{
+	std::vector<NewSampler> & sadd = sampler_add.getLast();
+	for (size_t i = 0; i < sadd.size(); ++i)
+	{
+		SOUNDSAMPLER smp;
+		smp.buffer = sadd[i].buffer;
+		smp.samples_per_channel = smp.buffer->GetInfo().samples / smp.buffer->GetInfo().channels;
+		smp.sample_pos = sadd[i].offset;
+		smp.sample_pos_remainder = 0;
+		smp.pitch = smp.denom;
+		smp.gain1 = 0;
+		smp.gain2 = 0;
+		smp.last_gain1 = 0;
+		smp.last_gain2 = 0;
+		smp.playing = true;
+		smp.loop = sadd[i].loop;
+
+		if (sadd[i].id == -1)
+		{
+			AddItem(smp, samplers, samplers_num);
+		}
+		else
+		{
+			smp.id = samplers[sadd[i].id].id;
+			samplers[sadd[i].id] = smp;
+		}
+	}
+	sadd.clear();
+}
+
+void SOUND::SetSourceChanges()
+{
+	Lock(source_lock);
+	if (source_stop.getLast().size()) source_stop.swapLast();
+	if (source_remove.getLast().size()) source_remove.swapLast();
+	Unlock(source_lock);
 }
 
 void SOUND::Callback16bitStereo(void *myself, Uint8 *stream, int len)
@@ -262,42 +685,17 @@ void SOUND::Callback16bitStereo(void *myself, Uint8 *stream, int len)
 	assert(this == myself);
 	assert(initdone);
 
-	// get sources
-	LockSourceList();
-	std::vector <SOUNDSOURCE *> & sources_active = *sources_active_p;
-	std::vector <SOUNDSOURCE *> & sources_inactive = *sources_inactive_p;
-	UnlockSourceList();
+	GetSamplerChanges();
 
-	// set buffers, clear stream
-	int len4 = len / 4;
-	buffer1.resize(len4);
-	buffer2.resize(len4);
-	memset(stream, 0, len);
+	ProcessSamplerUpdate();
 
-	// sample active sources
-	for (std::vector <SOUNDSOURCE *>::iterator s = sources_active.begin(); s != sources_active.end(); ++s)
-	{
-		SOUNDSOURCE * src = *s;
-		src->SampleAndAdvanceWithPitch16bit(&buffer1[0], &buffer2[0], len4);
-		for (int f = 0; f < src->NumFilters(); ++f)
-		{
-			src->GetFilter(f).Filter(&buffer1[0], &buffer2[0], len4);
-		}
-		volume_filter.Filter(&buffer1[0], &buffer2[0], len4);
+	ProcessSamplers(stream, len);
 
-		for (int i = 0; i < len4; ++i)
-		{
-			int pos = i * 2;
-			((short *) stream)[pos] += buffer1[i];
-			((short *) stream)[pos + 1] += buffer2[i];
-		}
-	}
+	ProcessSamplerRemove();
 
-	// increment inactive sources
-	for (std::vector <SOUNDSOURCE *>::iterator s = sources_inactive.begin(); s != sources_inactive.end(); ++s)
-	{
-		(*s)->AdvanceWithPitch(len4);
-	}
+	ProcessSamplerAdd();
+
+	SetSourceChanges();
 }
 
 void SOUND::CallbackWrapper(void *sound, uint8_t *stream, int len)

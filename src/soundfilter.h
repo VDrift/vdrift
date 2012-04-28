@@ -14,6 +14,7 @@ public:
 	// the coefficients are arrays like xcoeff[neworder+1], note ycoeff[0] is ignored
 	void SetFilter(const int neworder, const float * xcoeff, const float * ycoeff);
 
+	// apply filter
 	void Filter(int * chan1, int * chan2, const int len);
 
 	// yc0 is ignored

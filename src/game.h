@@ -129,8 +129,8 @@ private:
 	bool usingGL3;
 	StringIdMap stringMap;
 	EVENTSYSTEM_SDL eventsystem;
-	SOUND sound;
 	ContentManager content;
+	SOUND sound;
 	AUTOUPDATE autoupdate;
 	UPDATE_MANAGER carupdater;
 	UPDATE_MANAGER trackupdater;
