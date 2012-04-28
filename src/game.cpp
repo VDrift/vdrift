@@ -2023,7 +2023,8 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 		cars_color[0] = replay.GetCarColor();
 	}
 
-	for (size_t i = 0; i < cars_name.size(); ++i)
+	size_t cars_num = (addopponents) ? cars_name.size() : 1;
+	for (size_t i = 0; i < cars_num; ++i)
 	{
 		bool isai = i > 0;
 		if (!LoadCar(cars_name[i], cars_paint[i], cars_color[i],
