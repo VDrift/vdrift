@@ -39,9 +39,8 @@ JOEPACK::IMPL::IMPL() : versionstr("JPK01.00")
 bool JOEPACK::IMPL::Load(const string & fn)
 {
 	Close();
-
-	f.open(fn.c_str(), ios_base::in | ios_base::binary);
-
+	f.clear();
+	f.open(fn.c_str(), ios_base::binary);
 	if (f)
 	{
 		//load header
@@ -99,8 +98,7 @@ bool JOEPACK::IMPL::Load(const string & fn)
 
 void JOEPACK::IMPL::Close()
 {
-	fclose();
-	f.close();
+	if (f.is_open()) f.close();
 	fat.clear();
 	curfa = fat.end();
 }

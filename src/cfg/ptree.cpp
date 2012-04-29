@@ -21,6 +21,7 @@ std::istream * file_open_basic::operator()(const std::string & name) const
 		// external config in shared path
 		file_path = path_alt + "/" + name;
 		file->close();
+		file->clear();
 		file->open(file_path.c_str());
 	}
 	return file;
