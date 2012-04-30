@@ -98,7 +98,7 @@ void PARTICLE_SYSTEM::AddParticle(
 		tex = *cur_texture;
 	}
 
-	const unsigned int max_particles = 128;
+	const unsigned int max_particles = 8*128;
 
 	while (particles.size() >= max_particles)
 		particles.pop_back();
