@@ -11,41 +11,8 @@
 #include <vector>
 #include <string>
 #include <ostream>
-#include "stdint.h"
 
 struct SDL_mutex;
-
-struct SOUNDSOURCE
-{
-	std::tr1::shared_ptr<SOUNDBUFFER> buffer;
-	MATHVECTOR<float, 3> position;
-	MATHVECTOR<float, 3> velocity;
-	float offset;
-	float pitch;
-	float gain;
-	bool is3d;
-	bool playing;
-	bool loop;
-	size_t id;
-};
-
-struct SOUNDSAMPLER
-{
-	static const int denom = 1 << 15;
-	static const int max_gain_delta = (denom * 100) / 44100;
-	const SOUNDBUFFER * buffer;
-	int samples_per_channel;
-	int sample_pos;
-	int sample_pos_remainder;
-	int pitch;
-	int gain1;
-	int gain2;
-	int last_gain1;
-	int last_gain2;
-	bool playing;
-	bool loop;
-	size_t id;
-};
 
 class SOUND
 {
@@ -111,11 +78,56 @@ private:
 	bool disable;
 	bool paused;
 
+	// state structs
+	struct Source
+	{
+		std::tr1::shared_ptr<SOUNDBUFFER> buffer;
+		MATHVECTOR<float, 3> position;
+		MATHVECTOR<float, 3> velocity;
+		float offset;
+		float pitch;
+		float gain;
+		bool is3d;
+		bool playing;
+		bool loop;
+		size_t id;
+	};
+
+	struct Sampler
+	{
+		static const int denom = 1 << 15;
+		static const int max_gain_delta = (denom * 100) / 44100;
+		const SOUNDBUFFER * buffer;
+		int samples_per_channel;
+		int sample_pos;
+		int sample_pos_remainder;
+		int pitch;
+		int gain1;
+		int gain2;
+		int last_gain1;
+		int last_gain2;
+		bool playing;
+		bool loop;
+		size_t id;
+	};
+
+	// message structs
+	struct SamplerUpdate
+	{
+		int gain1, gain2, pitch;
+	};
+
+	struct SamplerAdd
+	{
+		const SOUNDBUFFER * buffer;
+		int offset;
+		bool loop;
+		int id;
+	};
+
 	// sound thread message system
-	struct GainPitch { int gain1, gain2, pitch; };
-	struct NewSampler { const SOUNDBUFFER * buffer; int offset; bool loop; int id; };
-	TrippleBuffer<GainPitch> sampler_update;
-	TrippleBuffer<NewSampler> sampler_add;
+	TrippleBuffer<SamplerUpdate> sampler_update;
+	TrippleBuffer<SamplerAdd> sampler_add;
 	TrippleBuffer<size_t> sampler_remove;
 	TrippleBuffer<size_t> source_remove;
 	TrippleBuffer<size_t> source_stop;
@@ -124,13 +136,13 @@ private:
 
 	// sound sources state
 	std::vector<size_t> sources_active;
-	std::vector<SOUNDSOURCE> sources;
+	std::vector<Source> sources;
 	size_t max_active_sources;
 	size_t sources_num;
 
 	// sound thread state
 	std::vector<int> buffer1, buffer2;
-	std::vector<SOUNDSAMPLER> samplers;
+	std::vector<Sampler> samplers;
 	size_t samplers_num;
 
 	// main thread methods
@@ -151,7 +163,7 @@ private:
 
 	void ProcessSamplerUpdate();
 
-	void ProcessSamplers(uint8_t *stream, int len);
+	void ProcessSamplers(unsigned char *stream, int len);
 
 	void ProcessSamplerRemove();
 
@@ -159,9 +171,14 @@ private:
 
 	void SetSourceChanges();
 
-	void Callback16bitStereo(void *sound, uint8_t *stream, int len);
+	void Callback16bitStereo(void *sound, unsigned char *stream, int len);
 
-	static void CallbackWrapper(void *sound, uint8_t *stream, int len);
+	static void CallbackWrapper(void *sound, unsigned char *stream, int len);
+
+	static void SampleAndAdvanceWithPitch16bit(
+		Sampler & sampler, int * chan1, int * chan2, int len);
+
+	static void AdvanceWithPitch(Sampler & sampler, int len);
 };
 
 #endif
