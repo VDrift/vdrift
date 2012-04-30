@@ -111,6 +111,12 @@ private:
 		size_t id;
 	};
 
+	struct SourceActive
+	{
+		bool operator<(const SourceActive & other);
+		int gain, id;
+	};
+
 	// message structs
 	struct SamplerUpdate
 	{
@@ -135,7 +141,7 @@ private:
 	SDL_mutex * source_lock;
 
 	// sound sources state
-	std::vector<size_t> sources_active;
+	std::vector<SourceActive> sources_active;
 	std::vector<Source> sources;
 	size_t max_active_sources;
 	size_t sources_num;

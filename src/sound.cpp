@@ -22,6 +22,12 @@ static inline void Unlock(SDL_mutex * mutex)
 		assert(0 && "Couldn't unlock mutex");
 }
 
+bool SOUND::SourceActive::operator<(const SOUND::SourceActive & other)
+{
+	// reverse op as partial sort sorts for the smallest elemets
+	return this->gain > other.gain;
+}
+
 SOUND::SOUND() :
 	deviceinfo(0, 0, 0, 0),
 	initdone(false),
@@ -417,9 +423,13 @@ void SOUND::ProcessSources()
 				gain1 = gain2 = src.gain;
 			}
 
-			if (gain1 > 0 || gain2 > 0)
+			int maxgain = std::max(gain1, gain2) * Sampler::denom;
+			if (maxgain > 0)
 			{
-				sources_active.push_back(i);
+				SourceActive sa;
+				sa.gain = maxgain;
+				sa.id = i;
+				sources_active.push_back(sa);
 			}
 		}
 
@@ -432,7 +442,7 @@ void SOUND::ProcessSources()
 }
 
 void SOUND::LimitActiveSources()
-{/*
+{
 	// limit active sources to max active sources
 	if (sources_active.size() <= max_active_sources)
 		return;
@@ -441,15 +451,15 @@ void SOUND::LimitActiveSources()
 	std::partial_sort(
 		sources_active.begin(),
 		sources_active.begin() + max_active_sources,
-		sources_active.end(),
-		CompareSource);
+		sources_active.end());
 
 	// mute remaining sources
+	std::vector<SamplerUpdate> & supdate = sampler_update.getFirst();
 	for (size_t i = max_active_sources; i < sources_active.size(); ++i)
 	{
-		supdate[i].gain1 = 0;
-		supdate[i].gain2 = 0;
-	}*/
+		supdate[sources_active[i].id].gain1 = 0;
+		supdate[sources_active[i].id].gain2 = 0;
+	}
 }
 
 void SOUND::SetSamplerChanges()
