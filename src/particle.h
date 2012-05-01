@@ -126,7 +126,7 @@ private:
 			if (trans < 0.0)
 				trans = 0.0;
 
-			sizescale = 5.0*(time/longevity)+1.0;
+			sizescale = 0.2*(time/longevity)+0.4;
 
 			varray.SetToBillboard(-sizescale,-sizescale,sizescale,sizescale);
 			drawref.SetRadius(sizescale);

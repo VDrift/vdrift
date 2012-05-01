@@ -271,7 +271,7 @@ void GAME::Start(std::list <std::string> & args)
 		error_output << "Error loading tire smoke particle system" << std::endl;
 		return;
 	}
-	tire_smoke.SetParameters(0.125,0.25, 5,14, 0.3,1, 0.5,1, MATHVECTOR<float,3>(0,0,1));
+	tire_smoke.SetParameters(0.4,0.9, 1,2, 0.3,0.6, 0.02,0.06, MATHVECTOR<float,3>(0.4,0.2,1));
 
 	// Initialize force feedback.
 #ifdef ENABLE_FORCE_FEEDBACK
@@ -2649,12 +2649,12 @@ void GAME::AddTireSmokeParticles(float dt, CAR & car)
 		if (squeal > 0)
 		{
 			// Only spawn particles every so often...
-			unsigned int interval = 0.2 / dt;
+			unsigned int interval = 0.05 / dt;
 			if (particle_timer % interval == 0)
 			{
 				tire_smoke.AddParticle(
 					car.GetWheelPosition(WHEEL_POSITION(i)) - MATHVECTOR<float,3>(0,0,car.GetTireRadius(WHEEL_POSITION(i))),
-					0.5, 0.5, 0.5, 0.5);
+					0.5, 0.7, 1.0, 0.03);
 			}
 		}
 	}
