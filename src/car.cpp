@@ -531,7 +531,6 @@ bool CAR::LoadSounds(
 		if (!content.load(carpath, "engine", soundptr)) return false;
 		enginesounds.push_back(ENGINESOUNDINFO());
 		enginesounds.back().sound_source = sound.AddSource(soundptr, 0, true, true);
-		sound.SetSourceGain(enginesounds.back().sound_source, 0);
 	}
 
 	//set up tire squeal sounds
@@ -540,7 +539,6 @@ bool CAR::LoadSounds(
 		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
 		if (!content.load(carpath, "tire_squeal", soundptr)) return false;
 		tiresqueal[i] = sound.AddSource(soundptr, i * 0.25, true, true);
-		sound.SetSourceGain(tiresqueal[i], 0);
 	}
 
 	//set up tire gravel sounds
@@ -549,7 +547,6 @@ bool CAR::LoadSounds(
 		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
 		if (!content.load(carpath, "gravel", soundptr)) return false;
 		gravelsound[i] = sound.AddSource(soundptr, i * 0.25, true, true);
-		sound.SetSourceGain(gravelsound[i], 0);
 	}
 
 	//set up tire grass sounds
@@ -558,7 +555,6 @@ bool CAR::LoadSounds(
 		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
 		if (!content.load(carpath, "grass", soundptr)) return false;
 		grasssound[i] = sound.AddSource(soundptr, i * 0.25, true, true);
-		sound.SetSourceGain(grasssound[i], 0);
 	}
 
 	//set up bump sounds
@@ -608,7 +604,6 @@ bool CAR::LoadSounds(
 		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
 		if (!content.load(carpath, "wind", soundptr)) return false;
 		roadnoise = sound.AddSource(soundptr, 0, true, true);
-		sound.SetSourceGain(roadnoise, 0);
 	}
 
 	return true;
@@ -1012,7 +1007,7 @@ void CAR::HandleInputs(const std::vector <float> & inputs, float dt)
 		dynamics.SetTCS(!dynamics.GetTCSEnabled());
 
 	// update interior sounds
-	if (!psound && driver_view) return;
+	if (!psound || !driver_view) return;
 
 	// brake sound
 	if (inputs[CARINPUT::BRAKE] > 0 && !brakesound_check)
