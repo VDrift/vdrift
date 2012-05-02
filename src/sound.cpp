@@ -342,7 +342,7 @@ void SOUND::SetListenerRotation(float x, float y, float z, float w)
 
 void SOUND::SetVolume(float value)
 {
-	volume_filter.SetFilterOrder0(value * 0.25);
+	volume_filter.SetFilterOrder0(value);
 }
 
 void SOUND::GetSourceChanges()
@@ -398,17 +398,13 @@ void SOUND::ProcessSources()
 			{
 				MATHVECTOR <float, 3> relvec = src.position - listener_pos;
 				float len = relvec.Magnitude();
-				if (len < 0.1)
-				{
-					relvec[2] = 0.1;
-					len = relvec.Magnitude();
-				}
-				listener_rot.RotateVector(relvec);
+				if (len < 0.1) len = 0.1;
 
-				float cgain = log(1000.0 / pow((double)len, 1.3)) / log(100.0);
+				float cgain = 0.25 / log(100) * (log(1000) - 1.6 * log(len));
 				if (cgain > 1.0) cgain = 1.0;
 				if (cgain < 0.0) cgain = 0.0;
 
+				listener_rot.RotateVector(relvec);
 				float xcoord = -relvec.Normalize()[1];
 				float pgain1 = -xcoord;
 				float pgain2 = xcoord;
