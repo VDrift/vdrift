@@ -1542,7 +1542,10 @@ void GAME::UpdateStartList(unsigned i, const std::string & value)
 	std::stringstream s;
 	s << "Racer" << i;
 	SCENENODE & pagenode = gui.GetPageNode("SingleRace");
-	gui.GetPage("SingleRace").GetLabel(s.str()).get().SetText(pagenode, value);
+	GUIPAGE & page = gui.GetPage("SingleRace");
+	reseatable_reference <WIDGET_LABEL> label = page.GetLabel(s.str());
+	if (label)
+		label->SetText(pagenode, value);
 }
 
 void GAME::PlayerCarChange()
