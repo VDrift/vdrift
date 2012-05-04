@@ -342,7 +342,7 @@ void SOUND::SetListenerRotation(float x, float y, float z, float w)
 
 void SOUND::SetVolume(float value)
 {
-	volume_filter.SetFilterOrder0(value);
+	volume_filter.SetFilterOrder0(clamp(value, 0.f, 1.f));
 }
 
 void SOUND::GetSourceChanges()
@@ -500,6 +500,7 @@ void SOUND::ProcessSamplers(unsigned char *stream, int len)
 	memset(stream, 0, len);
 
 	// run samplers
+	short * sstream = (short*)stream;
 	for (size_t i = 0; i < samplers_num; ++i)
 	{
 		Sampler & smp = samplers[i];
@@ -516,8 +517,8 @@ void SOUND::ProcessSamplers(unsigned char *stream, int len)
 			for (int n = 0; n < len4; ++n)
 			{
 				int pos = n * 2;
-				((short *) stream)[pos] += buffer1[n];
-				((short *) stream)[pos + 1] += buffer2[n];
+				sstream[pos] = clamp(sstream[pos] + buffer1[n], -32768, 32767);
+				sstream[pos + 1] = clamp(sstream[pos + 1] + buffer2[n], -32768, 32767);
 			}
 		}
 		else
