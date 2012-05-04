@@ -23,6 +23,20 @@ WIDGET_CONTROLGRAB::CONTROLWIDGET::CONTROLWIDGET() :
 	// ctor
 }
 
+WIDGET_CONTROLGRAB::WIDGET_CONTROLGRAB() :
+	scale_x(0.05),
+	scale_y(0.05),
+	x(0.5),
+	y(0.5),
+	z(0),
+	w(0.5),
+	h(0.5),
+	analog(false),
+	only_one(false)
+{
+	// ctor
+}
+
 WIDGET_CONTROLGRAB::~WIDGET_CONTROLGRAB()
 {
 	//std::clog << "ControlGrab Destructor: " << setting << ", " << description << std::endl;
@@ -82,7 +96,12 @@ bool WIDGET_CONTROLGRAB::ProcessInput(
 	active_action.clear();
 	tempdescription.clear();
 
-	//generate the add input tooltip, check to see if we pressed the add input button, generate an action
+	bool infocus = (cursorx > x - w * 0.5 &&
+		cursorx < x + w * 0.5 &&
+		cursory > y - h * 0.5 &&
+		cursory < y + h * 0.5);
+
+	// generate the add input tooltip, check to see if we pressed the add input button, generate an action
 	SCENENODE & topnoderef = scene.GetNode(topnode);
 	if (addbutton.ProcessInput(
 		topnoderef, optionmap,
@@ -92,11 +111,15 @@ bool WIDGET_CONTROLGRAB::ProcessInput(
 		tempdescription = Str[ADDNEW_STR];
 		if (cursorjustup)
 		{
-			active_action = "controlgrabadd:"+std::string(analog?"y":"n")+":"+std::string(only_one?"y":"n")+":"+setting;
+			active_action = "controlgrabadd:" +
+				std::string(analog ? "y" : "n") + ":" +
+				std::string(only_one ? "y" : "n") + ":" +
+				setting;
 		}
+		return infocus;
 	}
 
-	//generate the input tooltip, check to see if we clicked, generate an action
+	// generate the input tooltip, check to see if we clicked, generate an action
 	SCENENODE & ctrlnoderef = topnoderef.GetNode(ctrlnode);
 	for (std::list <CONTROLWIDGET>::iterator i = controlbuttons.begin(); i != controlbuttons.end(); ++i)
 	{
@@ -158,7 +181,7 @@ bool WIDGET_CONTROLGRAB::ProcessInput(
 			tempdescription = desc.str();
 		}
 
-		//generate an action.  code up an action string based on the DebugPrint string representation of a CONTROL
+		// action string is based on the DebugPrint string representation of a CONTROL
 		if (cursorjustup)
 		{
 			CARCONTROLMAP_LOCAL::CONTROL newctrl;
@@ -234,12 +257,11 @@ bool WIDGET_CONTROLGRAB::ProcessInput(
 			newctrl.DebugPrint(controlstring);
 			active_action = "controlgrabedit:" + controlstring.str() + setting;
 		}
+
+		break;
 	}
 
-	return (cursorx > x - w * 0.5 &&
-			cursorx < x + w * 0.5 &&
-			cursory > y - h * 0.5 &&
-			cursory < y + h * 0.5);
+	return infocus;
 }
 
 void WIDGET_CONTROLGRAB::SetupDrawable(

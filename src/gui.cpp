@@ -259,7 +259,7 @@ void GUI::SyncOptions(
 			{
 				//error_output << "External option \"" << i->first << "\" has no internal GUI counterpart" << std::endl;
 			}
-			else //if (i->first.find("controledit.") != 0)
+			else
 			{
 				//std::cout << i->first << std::endl;
 				if (!option->second.SetCurrentValue(i->second))
@@ -363,21 +363,10 @@ void GUI::ActivatePage(
 		active_page->second.UpdateOptions(node, true, optionmap, error_output);
 	}
 
-	//purge controledit parameters from the optionmap
-	optionmap.erase("controledit.analog.deadzone");
-	optionmap.erase("controledit.analog.gain");
-	optionmap.erase("controledit.analog.exponent");
-	optionmap.erase("controledit.button.held_once");
-	optionmap.erase("controledit.button.up_down");
-
-	//if (active_page != pages.end()) active_page->second.page.UpdateOptions(ok, optionmap, error_output);
-
 	last_active_page = active_page;
 	active_page = pages.find(pagename);
 	assert(active_page != pages.end());
 	active_page->second.SetVisible(node, true);
-	//std::cout << "Moving to page " << active_page->first << std::endl;
-	//active_page->second.page.UpdateOptions(false, optionmap, error_output);
 	animation_counter = animation_count_start = activation_time;
 
 	//std::cout << "Done activating page" << std::endl;

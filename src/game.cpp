@@ -1672,13 +1672,12 @@ void GAME::OpponentsChange()
 void GAME::AddControl(const std::string & controlstr)
 {
 	controlgrab_page = gui.GetActivePageName();
-	std::string setting = controlstr.substr(19);
-	controlgrab_input = setting;
-	controlgrab_analog = (controlstr.substr(15,1) == "y");
-	controlgrab_only_one = (controlstr.substr(17,1) == "y");
-
-	controlgrab_mouse_coords = std::pair <int,int> (eventsystem.GetMousePosition()[0],eventsystem.GetMousePosition()[1]);
+	controlgrab_input = controlstr.substr(19);
+	controlgrab_analog = (controlstr.substr(15, 1) == "y");
+	controlgrab_only_one = (controlstr.substr(17, 1) == "y");
+	controlgrab_mouse_coords = std::make_pair(eventsystem.GetMousePosition()[0], eventsystem.GetMousePosition()[1]);
 	controlgrab_joystick_state = eventsystem.GetJoysticks();
+
 	gui.ActivatePage("AssignControl", 0.25, error_output);
 	gui.SetControlsNeedLoading(false);
 }
@@ -1687,61 +1686,51 @@ void GAME::EditControl(const std::string & controlstr)
 {
 	// Determine edit parameters.
 	controlgrab_page = gui.GetActivePageName();
-	std::string controlval = controlstr.substr(16);
-	std::stringstream controlstream(controlstr);
+
+	std::stringstream controlstream(controlstr.substr(16));
 	controlgrab_editcontrol.ReadFrom(controlstream);
+
 	assert(controlstr.find('\n') != std::string::npos);
 	controlgrab_input = controlstr.substr(controlstr.find('\n') + 1);
 	assert(!controlgrab_input.empty());
 
-	std::map<std::string, GUIOPTION> tempoptionmap;
-
 	// Display the page and load up the gui state.
 	if (!controlgrab_editcontrol.IsAnalog())
 	{
-		gui.ActivatePage("EditButtonControl", 0.25, error_output);
-		tempoptionmap["controledit.button.held_once"].SetCurrentValue(controlgrab_editcontrol.onetime?"true":"false");
-
+		bool push_down = true;
 		if (controlgrab_editcontrol.type == CARCONTROLMAP_LOCAL::CONTROL::KEY)
-			tempoptionmap["controledit.button.up_down"].SetCurrentValue(controlgrab_editcontrol.keypushdown?"true":"false");
+			push_down = controlgrab_editcontrol.keypushdown;
 		else if (controlgrab_editcontrol.type == CARCONTROLMAP_LOCAL::CONTROL::JOY)
-			tempoptionmap["controledit.button.up_down"].SetCurrentValue(controlgrab_editcontrol.joypushdown?"true":"false");
+			push_down = controlgrab_editcontrol.joypushdown;
 		else if (controlgrab_editcontrol.type == CARCONTROLMAP_LOCAL::CONTROL::MOUSE)
-			tempoptionmap["controledit.button.up_down"].SetCurrentValue(controlgrab_editcontrol.mouse_push_down?"true":"false");
+			push_down = controlgrab_editcontrol.mouse_push_down;
 		else
 			assert(0);
+
+		gui.SetOptionValue("controledit.held_once", controlgrab_editcontrol.onetime ? "true" : "false");
+		gui.SetOptionValue("controledit.up_down", push_down ? "true" : "false");
+		gui.ActivatePage("EditButtonControl", 0.25, error_output);
 	}
 	else
 	{
-		gui.ActivatePage("EditAnalogControl", 0.25, error_output);
-
 		std::string deadzone = cast(controlgrab_editcontrol.deadzone);
 		std::string exponent = cast(controlgrab_editcontrol.exponent);
 		std::string gain = cast(controlgrab_editcontrol.gain);
 
-		tempoptionmap["controledit.analog.deadzone"].SetCurrentValue(deadzone);
-		tempoptionmap["controledit.analog.exponent"].SetCurrentValue(exponent);
-		tempoptionmap["controledit.analog.gain"].SetCurrentValue(gain);
+		gui.SetOptionValue("controledit.deadzone", deadzone);
+		gui.SetOptionValue("controledit.exponent", exponent);
+		gui.SetOptionValue("controledit.gain", gain);
+		gui.ActivatePage("EditAnalogControl", 0.25, error_output);
 	}
-	//std::cout << "Updating options..." << std::endl;
-	gui.GetPage(gui.GetActivePageName()).UpdateOptions(gui.GetNode(), false, tempoptionmap, error_output);
-	//std::cout << "Done updating options." << std::endl;
+
 	gui.SetControlsNeedLoading(false);
 }
 
 void GAME::SetButtonControl()
 {
-	std::map<std::string, GUIOPTION> tempoptionmap;
-
-	// Get current GUI state.
-	tempoptionmap["controledit.button.held_once"].SetCurrentValue(controlgrab_editcontrol.onetime ? "true" : "false");
-	tempoptionmap["controledit.button.up_down"].SetCurrentValue(controlgrab_editcontrol.keypushdown ? "true" : "false");
-	gui.GetPage(gui.GetActivePageName()).UpdateOptions(gui.GetNode(), true, tempoptionmap, error_output);
-
-	// Save GUI state to our control.
-	bool once = (tempoptionmap["controledit.button.held_once"].GetCurrentDisplayValue() == "true");
-	bool down = (tempoptionmap["controledit.button.up_down"].GetCurrentDisplayValue() == "true");
-
+	// Get GUI state of our control.
+	bool once = (gui.GetOptionValue("controledit.held_once") == "true");
+	bool down = (gui.GetOptionValue("controledit.up_down") == "true");
 	controlgrab_editcontrol.onetime = once;
 	controlgrab_editcontrol.joypushdown = down;
 	controlgrab_editcontrol.keypushdown = down;
@@ -1756,18 +1745,10 @@ void GAME::SetButtonControl()
 
 void GAME::SetAnalogControl()
 {
-	std::map<std::string, GUIOPTION> tempoptionmap;
-
-	// Get current GUI state.
-	tempoptionmap["controledit.analog.deadzone"].SetCurrentValue("0");
-	tempoptionmap["controledit.analog.exponent"].SetCurrentValue("1");
-	tempoptionmap["controledit.analog.gain"].SetCurrentValue("1");
-	gui.GetPage(gui.GetActivePageName()).UpdateOptions(gui.GetNode(), true, tempoptionmap, error_output);
-
-	// Save GUI state to our control.
-	controlgrab_editcontrol.deadzone = cast<float>(tempoptionmap["controledit.analog.deadzone"].GetCurrentDisplayValue());
-	controlgrab_editcontrol.exponent = cast<float>(tempoptionmap["controledit.analog.exponent"].GetCurrentDisplayValue());
-	controlgrab_editcontrol.gain = cast<float>(tempoptionmap["controledit.analog.gain"].GetCurrentDisplayValue());
+	// Get GUI state of our control.
+	controlgrab_editcontrol.deadzone = cast<float>(gui.GetOptionValue("controledit.deadzone"));
+	controlgrab_editcontrol.exponent = cast<float>(gui.GetOptionValue("controledit.exponent"));
+	controlgrab_editcontrol.gain = cast<float>(gui.GetOptionValue("controledit.gain"));
 
 	// Send our control update to the control maintainer.
 	carcontrols_local.second.UpdateControl(controlgrab_editcontrol, controlgrab_input, error_output);
@@ -1776,7 +1757,6 @@ void GAME::SetAnalogControl()
 	RedisplayControlPage();
 }
 
-/* Send inputs to the car, check for collisions, and so on... */
 void GAME::UpdateCar(CAR & car, double dt)
 {
 	car.Update(dt);

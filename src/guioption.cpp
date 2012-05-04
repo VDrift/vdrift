@@ -177,12 +177,6 @@ const std::string & GUIOPTION::GetCurrentStorageValue() const
 
 const std::list <std::pair<std::string,std::string> > & GUIOPTION::GetValueList() const
 {
-	/*std::list <std::pair<std::string,std::string> > valuelist;
-	for (std::map <std::string, std::string>::const_iterator i = values.begin(); i != values.end(); i++)
-	{
-		valuelist.push_back(std::pair<std::string,std::string> (i->first,i->second));
-	}
-	return valuelist;*/
 	return values;
 }
 

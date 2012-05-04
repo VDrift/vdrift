@@ -1,4 +1,5 @@
 #include "guipage.h"
+#include "guioption.h"
 #include "config.h"
 #include "contentmanager.h"
 #include "textureinfo.h"
@@ -7,7 +8,6 @@
 #include "widget_multiimage.h"
 #include "widget_label.h"
 #include "widget_button.h"
-#include "widget_toggle.h"
 #include "widget_stringwheel.h"
 #include "widget_doublestringwheel.h"
 #include "widget_slider.h"
@@ -181,68 +181,6 @@ bool GUIPAGE::Load(
 				label_widgets[name] = *new_widget;
 			}
 		}
-		else if (type == "toggle")
-		{
-			std::string setting;
-			std::string valuetype;
-			float spacing(0.3);
-			float fontsize;
-
-			if (!pagefile.GetParam(section, "setting", setting, error_output)) return false;
-			if (!pagefile.GetParam(section, "fontsize", fontsize, error_output)) return false;
-			if (!pagefile.GetParam(section, "values", valuetype, error_output)) return false;
-			pagefile.GetParam(section, "spacing", spacing);
-
-			if (valuetype == "options")
-			{
-				text = optionmap[setting].GetText();
-				desc = optionmap[setting].GetDescription();
-			}
-			else if (valuetype == "manual")
-			{
-				std::string truestr, falsestr;
-				if (!pagefile.GetParam(section, "true", truestr, error_output)) return false;
-				if (!pagefile.GetParam(section, "false", falsestr, error_output)) return false;
-				text = truestr;
-			}
-
-			float fontscaley = fontsize;
-			float fontscalex = fontsize * screenhwratio;
-			xy[0] -= spacing * 0.5;
-
-			//generate label
-			{
-				float textwidth = font.GetWidth(text) * fontscalex;
-				float x = xy[0] + textwidth * 0.5;
-				float y = xy[1];
-				float r(1), g(1), b(1);
-				WIDGET_LABEL * new_widget = new WIDGET_LABEL();
-				new_widget->SetupDrawable(sref, font, text, x, y, fontscalex, fontscaley, r, g, b, z);
-				widgets.push_back(new_widget);
-			}
-
-			//generate toggle
-			{
-				std::tr1::shared_ptr<TEXTURE> up, down, upsel, downsel, trans;
-				if (!content.load(texpath, "widgets/tog_off_up_unsel.png", texinfo, up)) return false;
-				if (!content.load(texpath, "widgets/tog_on_up_unsel.png", texinfo, down)) return false;
-				if (!content.load(texpath, "widgets/tog_off_up.png", texinfo, upsel)) return false;
-				if (!content.load(texpath, "widgets/tog_on_up.png", texinfo, downsel)) return false;
-				if (!content.load(texpath, "widgets/tog_off_down.png", texinfo, trans)) return false;
-
-				float h = fontsize * 0.75;
-				float w = h * screenhwratio;
-				float x = xy[0] - w;
-				float y = xy[1];
-
-				WIDGET_TOGGLE * new_widget = new WIDGET_TOGGLE();
-				new_widget->SetupDrawable(sref, up, down, upsel, downsel, trans, x, y, w, h, z);
-				new_widget->SetDescription(desc);
-				new_widget->SetSetting(setting);
-				new_widget->UpdateOptions(sref, false, optionmap, error_output);
-				widgets.push_back(new_widget);
-			}
-		}
 		else if (type == "stringwheel" || type == "intwheel" || type == "floatwheel")
 		{
 			std::string setting;
@@ -349,7 +287,7 @@ bool GUIPAGE::Load(
 			if (!content.load(texpath, "widgets/color_saturation.png", texinfo, sat)) return false;
 			if (!content.load(texpath, "widgets/color_value.png", texinfo, bg)) return false;
 			if (!pagefile.GetParam(section, "setting", setting, error_output)) return false;
-			if (pagefile.GetParam(section, "action", action, error_output));
+			pagefile.GetParam(section, "action", action);
 
 			float x = xy[0] - w / 2;
 			float y = xy[1] - h / 2;
