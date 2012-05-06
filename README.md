@@ -132,15 +132,15 @@ Libraries
 
 The required libraries include:
 
-- libsdl - Simple Direct Media Layer.
-- libglew - OpenGL extension utilities.
-- sdl-gfx - Graphics drawing primitives library for SDL.
-- sdl-image - Image file loading library for SDL.
+- bullet - Open Source Physics Library (minimum version 2.78).
+- glew - OpenGL Extension Wrangler Library (minimum version 1.5.7).
+- libarchive - Multi-format archive and compression library (minimum version 2.8.3).
+- libcurl - Multiprotocol file transfer library (minimum version 7.21.6).
+- libvorbis - The Vorbis General Audio Compression Codec Library.
 - vorbisfile - File loading library for the ogg vorbis format.
-- libvorbis - The Vorbis General Audio Compression Codec.
-- bullet - The C++ Libraries BulletCollision, BulletDynamics, LinearMath are required.
-- libcurl - For managing data download from the internet.
-- libarchive - API for managing compressed files.
+- sdl - Simple DirectMedia Layer Library (minimum version 1.2.4).
+- sdl-gfx - Graphics drawing primitives library (minimum version 2.0.16)
+- sdl-image - Image file loading library (minimum version 1.2.10).
 
 Installing Dependencies on FreeBSD
 ----------------------------------
