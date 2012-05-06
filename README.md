@@ -136,7 +136,7 @@ The required libraries include:
 - glew - OpenGL Extension Wrangler Library (minimum version 1.5.7).
 - libarchive - Multi-format archive and compression library (minimum version 2.8.3).
 - libcurl - Multiprotocol file transfer library (minimum version 7.21.6).
-- libvorbis - The Vorbis General Audio Compression Codec Library.
+- libvorbis - The Vorbis General Audio Compression Codec Library (minimum version 1.2.0).
 - vorbisfile - File loading library for the ogg vorbis format.
 - sdl - Simple DirectMedia Layer Library (minimum version 1.2.4).
 - sdl-gfx - Graphics drawing primitives library (minimum version 2.0.16)
@@ -192,7 +192,7 @@ All other required packages can be installed using this command:
                          libdrm-dev libgl1-mesa-dev \
                          libglu1-mesa-dev libkms1 mesa-common-dev \
                          libsdl-gfx1.2-dev libsdl-image1.2-dev \
-                         libsdl-net1.2-dev libvorbis-dev freeglut3 libbullet0 \
+                         libvorbis-dev freeglut3 libbullet0 \
                          libbullet-dev scons
 
 Installing Dependencies on Mac OS
