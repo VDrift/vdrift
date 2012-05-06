@@ -138,7 +138,7 @@ The required libraries include:
 - libcurl - Multiprotocol file transfer library (minimum version 7.21.6).
 - libvorbis - The Vorbis General Audio Compression Codec Library (minimum version 1.2.0).
 - vorbisfile - File loading library for the ogg vorbis format.
-- sdl - Simple DirectMedia Layer Library (minimum version 1.2.4).
+- sdl - Simple DirectMedia Layer Library (minimum version 1.2.14).
 - sdl-gfx - Graphics drawing primitives library (minimum version 2.0.16)
 - sdl-image - Image file loading library (minimum version 1.2.10).
 
