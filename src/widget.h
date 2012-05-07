@@ -6,8 +6,8 @@
 #include <string>
 #include <ostream>
 
-class GUIOPTION;
 class SCENENODE;
+class GUIOPTION;
 
 class WIDGET
 {
@@ -24,7 +24,6 @@ public:
 	/// true if the mouse is within the widget
 	virtual bool ProcessInput(
 		SCENENODE & scene,
-		std::map<std::string, GUIOPTION> & optionmap,
 		float cursorx, float cursory,
 		bool cursordown, bool cursorjustup);
 
@@ -78,7 +77,6 @@ inline void WIDGET::SetVisible(SCENENODE & scene, bool value)
 
 inline bool WIDGET::ProcessInput(
 	SCENENODE & scene,
-	std::map<std::string, GUIOPTION> & optionmap,
 	float cursorx, float cursory,
 	bool cursordown, bool cursorjustup)
 {

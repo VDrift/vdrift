@@ -420,8 +420,7 @@ std::list <std::pair <std::string, bool> > GUIPAGE::ProcessInput(
 		WIDGET & w = **i;
 
 		bool mouseover = w.ProcessInput(
-			sref, optionmap,
-			cursorx, cursory,
+			sref, cursorx, cursory,
 			cursordown, cursorjustup);
 
 		if (mouseover)
