@@ -12,6 +12,19 @@ class Delegate0
 public:
 	Delegate0(void) : m_inst(0), m_func(0)
 	{
+		// ctor
+	}
+
+	Delegate0(const Delegate0 & other)
+	{
+		*this = other;
+	}
+
+	Delegate0 & operator=(const Delegate0 & other)
+	{
+		 m_inst = other.m_inst;
+		 m_func = other.m_func;
+		 return *this;
 	}
 
 	// Bind a function
@@ -65,6 +78,19 @@ class Delegate1
 public:
 	Delegate1(void) : m_inst(0), m_func(0)
 	{
+		// ctor
+	}
+
+	Delegate1(const Delegate1 & other)
+	{
+		*this = other;
+	}
+
+	Delegate1 & operator=(const Delegate1 & other)
+	{
+		 m_inst = other.m_inst;
+		 m_func = other.m_func;
+		return *this;
 	}
 
 	template <R (*Function)(P)>
@@ -113,6 +139,19 @@ class Delegate2
 public:
 	Delegate2(void) : m_inst(0), m_func(0)
 	{
+		// ctor
+	}
+
+	Delegate2(const Delegate2 & other)
+	{
+		*this = other;
+	}
+
+	Delegate2 & operator=(const Delegate2 & other)
+	{
+		 m_inst = other.m_inst;
+		 m_func = other.m_func;
+		 return *this;
 	}
 
 	template <R (*Function)(P1, P2)>
