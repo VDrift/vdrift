@@ -12,6 +12,10 @@ class GUIOPTION
 public:
 	GUIOPTION();
 
+	GUIOPTION(const GUIOPTION & other);
+
+	GUIOPTION & operator=(const GUIOPTION & other);
+
 	void ReplaceValues(const std::list <std::pair<std::string, std::string> > & newvalues);
 
 	void SetInfo(const std::string & newtext, const std::string & newdesc, const std::string & newtype);
@@ -20,8 +24,8 @@ public:
 
 	void SetMinMaxPercentage(float newmin, float newmax, bool newpercentage);
 
-	/// returns true if the storedvaluename was found
-	bool SetCurrentValue(const std::string & storedvaluename);
+	/// reset to first value if passed value invalid
+	void SetCurrentValue(const std::string & storedvaluename);
 
 	/// increment the current_value to the next value in the values list
 	void Increment();
@@ -47,13 +51,18 @@ public:
 
 	bool GetPercentage() const {return percentage;}
 
-	/// signal changed value to connected slots
+	/// option signals
 	Signal1<const std::string &> signal_val;
 	Signal1<const std::string &> signal_str;
 
+	/// option slots
+	Slot1<const std::string &> set_val;
+	Slot0 prev_val;
+	Slot0 next_val;
+
 private:
 	bool current_valid;
-	std::list <std::pair<std::string, std::string> >::const_iterator current_value;
+	std::list <std::pair<std::string, std::string> >::iterator current_value;
 	std::list <std::pair<std::string, std::string> > values; //the first element of the pair is the (sometimes numeric) stored value, while the second element is the display value.  sometimes they are the same.
 	std::string non_value_data; //this is used when the values map is empty, such as for numeric settings
 	std::string description;

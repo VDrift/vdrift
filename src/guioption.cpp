@@ -10,7 +10,35 @@ GUIOPTION::GUIOPTION() :
 	max(1),
 	percentage(true)
 {
-	current_value = values.end();
+	current_value = values.begin();
+	set_val.call.bind<GUIOPTION, &GUIOPTION::SetCurrentValue>(this);
+	prev_val.call.bind<GUIOPTION, &GUIOPTION::Decrement>(this);
+	next_val.call.bind<GUIOPTION, &GUIOPTION::Increment>(this);
+}
+
+GUIOPTION::GUIOPTION(const GUIOPTION & other)
+{
+	*this = other;
+	set_val.call.bind<GUIOPTION, &GUIOPTION::SetCurrentValue>(this);
+	prev_val.call.bind<GUIOPTION, &GUIOPTION::Decrement>(this);
+	next_val.call.bind<GUIOPTION, &GUIOPTION::Increment>(this);
+}
+
+GUIOPTION & GUIOPTION::operator=(const GUIOPTION & other)
+{
+	current_valid = other.current_valid;
+	values = other.values;
+	current_value = values.begin(); // fixme
+	non_value_data = other.non_value_data;
+	description = other.description;
+	text = other.text;
+	type = other.type;
+	min = other.min;
+	max = other.max;
+	percentage = other.percentage;
+	signal_val = other.signal_val;
+	signal_str = other.signal_str;
+	return *this;
 }
 
 void GUIOPTION::ReplaceValues(const std::list <std::pair<std::string, std::string> > & newvalues)
@@ -38,7 +66,7 @@ void GUIOPTION::SetMinMaxPercentage(float newmin, float newmax, bool newpercenta
 	percentage = newpercentage;
 }
 
-bool GUIOPTION::SetCurrentValue(const std::string & storedvaluename)
+void GUIOPTION::SetCurrentValue(const std::string & storedvaluename)
 {
 	if (values.empty())
 	{
@@ -46,7 +74,7 @@ bool GUIOPTION::SetCurrentValue(const std::string & storedvaluename)
 		current_valid = false;
 		signal_val(storedvaluename);
 		signal_str(storedvaluename);
-		return true;
+		return;
 	}
 
 	current_valid = false;
@@ -85,19 +113,16 @@ bool GUIOPTION::SetCurrentValue(const std::string & storedvaluename)
 		}
 	}
 
+	// if value not found set first value
 	if (!current_valid)
 	{
-		current_value = values.end();
-	}
-	else
-	{
-		SignalValue();
+		current_value = values.begin();
+		current_valid = true;
 	}
 
-	return current_valid;
+	SignalValue();
 }
 
-///increment the current_value to the next value in the values list
 void GUIOPTION::Increment()
 {
 	if (values.empty())
@@ -118,7 +143,6 @@ void GUIOPTION::Increment()
 	SignalValue();
 }
 
-///decrement the current_value to the previous value in the values list
 void GUIOPTION::Decrement()
 {
 	if (values.empty())
