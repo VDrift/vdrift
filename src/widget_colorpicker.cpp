@@ -56,7 +56,6 @@ std::string WIDGET_COLORPICKER::GetAction() const
 
 bool WIDGET_COLORPICKER::ProcessInput(
 	SCENENODE & scene,
-	std::map<std::string, GUIOPTION> & optionmap,
 	float cursorx, float cursory,
 	bool cursordown, bool cursorjustup)
 {
@@ -109,7 +108,7 @@ bool WIDGET_COLORPICKER::ProcessInput(
 	{
 		std::stringstream s;
 		s << rgbnew;
-		optionmap[setting].SetCurrentValue(s.str());
+		signal_value(s.str());
 		active_action = action;
 		return true;
 	}
@@ -180,6 +179,7 @@ void WIDGET_COLORPICKER::SetupDrawable(
 	std::map<std::string, GUIOPTION>::iterator i = optionmap.find(setting);
 	if (i != optionmap.end())
 	{
+		i->second.set_val.connect(signal_value);
 		set_value.connect(i->second.signal_val);
 	}
 }

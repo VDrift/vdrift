@@ -25,7 +25,6 @@ public:
 
 	virtual bool ProcessInput(
 		SCENENODE & scene,
-		std::map<std::string, GUIOPTION> & optionmap,
 		float cursorx, float cursory,
 		bool cursordown, bool cursorjustup);
 
@@ -69,12 +68,13 @@ private:
 	float size2;
 	bool update;
 
+	Signal1<const std::string &> signal_value;
 	Slot1<const std::string &> set_value;
 	void SetValue(const std::string & value);
 
 	void UpdatePosition();
 	bool SetColor(SCENENODE & scene, float x, float y);
-	void SendMessage(SCENENODE & scene, const std::string & message) const;
+	WIDGET_COLORPICKER(const WIDGET_COLORPICKER & other);
 };
 
 #endif // _WIDGET_COLORPICKER_H

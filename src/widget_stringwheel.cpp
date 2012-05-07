@@ -2,7 +2,7 @@
 #include "guioption.h"
 
 WIDGET_STRINGWHEEL::WIDGET_STRINGWHEEL() :
-	update(false)
+	m_focus(false)
 {
 	set_value.call.bind<WIDGET_STRINGWHEEL, &WIDGET_STRINGWHEEL::SetValue>(this);
 }
@@ -12,116 +12,145 @@ WIDGET_STRINGWHEEL::~WIDGET_STRINGWHEEL()
 	// dtor
 }
 
-void WIDGET_STRINGWHEEL::SetAlpha(SCENENODE & scene, float newalpha)
+void WIDGET_STRINGWHEEL::SetAlpha(SCENENODE & scene, float value)
 {
-	title.SetAlpha(scene, newalpha);
-	label.SetAlpha(scene, newalpha);
-	button_left.SetAlpha(scene, newalpha);
-	button_right.SetAlpha(scene, newalpha);
+	m_label_value.SetAlpha(scene, value);
+	m_label_left.SetAlpha(scene, value);
+	m_label_right.SetAlpha(scene, value);
+	m_background.SetAlpha(scene, 0.25 * value);
 }
 
-void WIDGET_STRINGWHEEL::SetVisible(SCENENODE & scene, bool newvis)
+void WIDGET_STRINGWHEEL::SetVisible(SCENENODE & scene, bool value)
 {
-	title.SetVisible(scene, newvis);
-	label.SetVisible(scene, newvis);
-	button_left.SetVisible(scene, newvis);
-	button_right.SetVisible(scene, newvis);
+	m_label_value.SetVisible(scene, value);
+	m_label_left.SetVisible(scene, m_focus && value);
+	m_label_right.SetVisible(scene, m_focus && value);
+	m_background.SetVisible(scene, m_focus && value);
 }
 
 bool WIDGET_STRINGWHEEL::ProcessInput(
 	SCENENODE & scene,
-	std::map<std::string, GUIOPTION> & optionmap,
 	float cursorx, float cursory,
 	bool cursordown, bool cursorjustup)
 {
-	bool left = button_left.ProcessInput(scene, optionmap, cursorx, cursory, cursordown, cursorjustup);
-	bool right = button_right.ProcessInput(scene, optionmap, cursorx, cursory, cursordown, cursorjustup);
+	bool focus_left = m_label_left.InFocus(cursorx, cursory);
+	bool focus_right = !focus_left && m_label_right.InFocus(cursorx, cursory);
 
-	active_action.clear();
+	m_focus = focus_left || focus_right;
+	m_label_left.SetVisible(scene, m_focus);
+	m_label_right.SetVisible(scene, m_focus);
+	m_background.SetVisible(scene, m_focus);
+
 	if (cursorjustup)
 	{
-		if (left)
+		if (focus_left)
 		{
-			optionmap[setting].Decrement();
-			active_action = action;
+			prev_value();
+			m_action_active = m_action;
 		}
-		else if (right)
+		else if (focus_right)
 		{
-			optionmap[setting].Increment();
-			active_action = action;
+			next_value();
+			m_action_active = m_action;
 		}
 	}
+	else
+	{
+		m_action_active.clear();
+	}
 
-	return left || right;
+	return m_focus;
 }
 
 std::string WIDGET_STRINGWHEEL::GetDescription() const
 {
-	return description;
+	return m_description;
 }
 
-void WIDGET_STRINGWHEEL::SetDescription(const std::string & newdesc)
+void WIDGET_STRINGWHEEL::SetDescription(const std::string & value)
 {
-	description = newdesc;
+	m_description = value;
 }
 
 void WIDGET_STRINGWHEEL::Update(SCENENODE & scene, float dt)
 {
-	if (update)
+	if (m_update)
 	{
-		label.ReviseDrawable(scene, value);
-		update = false;
+		m_label_value.SetText(scene, m_value);
+		m_update = false;
 	}
+}
+
+std::string WIDGET_STRINGWHEEL::GetAction() const
+{
+	return m_action_active;
+}
+
+void WIDGET_STRINGWHEEL::SetAction(const std::string & value)
+{
+	m_action = value;
 }
 
 void WIDGET_STRINGWHEEL::SetupDrawable(
 	SCENENODE & scene,
+	std::tr1::shared_ptr<TEXTURE> bgtex,
 	std::map<std::string, GUIOPTION> & optionmap,
-	const std::string & settingnew,
-	const std::string & titlenew,
-	std::tr1::shared_ptr<TEXTURE> left_up,
-	std::tr1::shared_ptr<TEXTURE> left_down,
-	std::tr1::shared_ptr<TEXTURE> right_up,
-	std::tr1::shared_ptr<TEXTURE> right_down,
+	const std::string & setting,
 	const FONT & font,
-	float scalex,
-	float scaley,
-	float centerx,
-	float centery,
-	float z)
+	float scalex, float scaley,
+	float centerx, float centery,
+	float w, float h, float z,
+	std::ostream & error_output)
 {
-	assert(left_up);
-	assert(left_down);
-	assert(right_up);
-	assert(right_down);
+	assert(bgtex);
 
-	float titlewidth = title.GetWidth(font, titlenew, scalex);
-	float blx = centerx + titlewidth + scalex / 2;
-	float brx = blx + scalex * 3 / 4;
-	float labelx = brx + scalex / 2;
-	float r(1), g(1), b(1);
-	float h(0), w(0);
-	title.SetupDrawable(scene, font, titlenew, centerx, centery, scalex, scaley, r, g, b, z, false);
-	label.SetupDrawable(scene, font, "", labelx, centery, scalex, scaley, r, g, b, z, false);
-	button_left.SetupDrawable(scene, left_up, left_down, left_up, font, "", blx, centery, scalex, scaley, r, g, b, h, w, z);
-	button_right.SetupDrawable(scene, right_up, right_down, right_up, font, "", brx, centery, scalex, scaley, r, g, b, h, w, z);
+	m_xmin = centerx - w * 0.5;
+	m_xmax = centerx + w * 0.5;
+	m_ymin = centery - h * 0.5;
+	m_ymax = centery + h * 0.5;
 
-	// connect slot
-	setting = settingnew;
+	m_background.Load(scene, bgtex, z, error_output);
+	m_background.SetToBillboard(m_xmin, m_ymin, w, h);
+	m_background.SetVisible(scene, m_focus);
+	m_background.SetColor(scene, 0.7, 0.7, 0.7);
+	m_background.SetAlpha(scene, 0.25);
+
+	m_label_value.SetupDrawable(
+		scene, font, 0, scalex, scaley,
+		centerx, centery, w, h, z + 1,
+		m_r, m_g, m_b);
+
+	m_label_left.SetupDrawable(
+		scene, font, -1, scalex, scaley,
+		centerx - w * 0.25, centery, w * 0.5, h, z + 1,
+		m_r, m_g, m_b);
+
+	m_label_right.SetupDrawable(
+		scene, font, 1, scalex, scaley,
+		centerx + w * 0.25, centery, w * 0.5, h, z + 1,
+		m_r, m_g, m_b);
+
+	m_label_left.SetText(scene, " <");
+	m_label_right.SetText(scene, "> ");
+
+	// connect slots, signals
+	m_setting = setting;
 	std::map<std::string, GUIOPTION>::iterator i = optionmap.find(setting);
 	if (i != optionmap.end())
 	{
+		i->second.prev_val.connect(prev_value);
+		i->second.next_val.connect(next_value);
 		set_value.connect(i->second.signal_str);
 		SetValue(i->second.GetCurrentDisplayValue());
 	}
 	Update(scene, 0);
 }
 
-void WIDGET_STRINGWHEEL::SetValue(const std::string & valuenew)
+void WIDGET_STRINGWHEEL::SetValue(const std::string & value)
 {
-	if (value != valuenew)
+	if (m_value != value)
 	{
-		value = valuenew;
-		update = true;
+		m_value = value;
+		m_update = true;
 	}
 }

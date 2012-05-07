@@ -75,14 +75,14 @@ bool GUIPAGE::Load(
 
 	// tooltip widget
 	{
-		std::string text;
-		float y(0.95);
-		float x(0.5);
-		float yscale(0.03);
-		float xscale(yscale * screenhwratio);
+		float yscale(0.03), xscale(yscale * screenhwratio);
+		float y(0.95), x(0.5), w(1.0), h(yscale);
 		float r(1), g(1), b(1);
+		int align(0);
 		tooltip_widget = new WIDGET_LABEL();
-		tooltip_widget->SetupDrawable(sref, font, text, x, y, xscale, yscale, r, g, b, z0);
+		tooltip_widget->SetupDrawable(
+			sref, font, align, xscale, yscale,
+			x, y, w, h, z0, r, g, b);
 		widgets.push_back(tooltip_widget);
 	}
 
@@ -98,14 +98,28 @@ bool GUIPAGE::Load(
 		if (!pagefile.GetParam(section, "center", xy, error_output)) return false;
 
 		// optional
-		float w(0), h(0), z(0);
-		std::string text, desc;
+		float fontsize(0.03), w(0), h(0), z(0);
+		std::vector<float> rgb(3, 1.0);
+		std::string salign, text, desc;
+		int align(0);
+		pagefile.GetParam(section, "fontsize", fontsize);
 		pagefile.GetParam(section, "width", w);
 		pagefile.GetParam(section, "height", h);
 		pagefile.GetParam(section, "layer", z);
+		pagefile.GetParam(section, "color", rgb);
+		pagefile.GetParam(section, "align", salign);
 		pagefile.GetParam(section, "text", text);
 		pagefile.GetParam(section, "tip", desc);
-		z += z0;
+
+		float scaley = fontsize;
+		float scalex = fontsize * screenhwratio;
+		z = z + z0;
+
+		if (salign == "right") align = 1;
+		else if (salign == "left") align = -1;
+
+		if (w == 0) w = fontsize;
+		if (h == 0) h = fontsize;
 
 		std::map<std::string, std::string>::const_iterator li;
 		if ((li = languagemap.find(text)) != languagemap.end()) text = li->second;
@@ -124,14 +138,10 @@ bool GUIPAGE::Load(
 		}
 		else if (type == "button")
 		{
-			float fontsize(0);
-			std::vector<float> color(3, 1.0);
 			std::string action;
 			bool cancel = false;
 			bool enabled = true;
 
-			if (!pagefile.GetParam(section, "fontsize", fontsize, error_output)) return false;
-			if (!pagefile.GetParam(section, "color", color, error_output)) return false;
 			if (!pagefile.GetParam(section, "action", action, error_output)) return false;
 			if (!pagefile.GetParam(section, "cancel", cancel, error_output)) return false;
 			pagefile.GetParam(section, "enabled", enabled);
@@ -141,13 +151,12 @@ bool GUIPAGE::Load(
 			if (!content.load(texpath, "widgets/btn_down.png", texinfo, texture_down)) return false;
 			if (!content.load(texpath, "widgets/btn_up.png", texinfo, texture_up)) return false;
 
-			float fontscaley = fontsize;
-			float fontscalex = fontsize * screenhwratio;
-
 			WIDGET_BUTTON * new_widget = new WIDGET_BUTTON();
-			new_widget->SetupDrawable(sref, texture_up, texture_down, texture_sel,
-					font, text, xy[0], xy[1], fontscalex, fontscaley,
-					color[0], color[1], color[2], h, w, z);
+			new_widget->SetupDrawable(
+				sref, texture_up, texture_down, texture_sel,
+				font, text, scalex, scaley,
+				xy[0], xy[1], w, h, z,
+				rgb[0], rgb[1], rgb[2]);
 			new_widget->SetAction(action);
 			new_widget->SetDescription(desc);
 			new_widget->SetCancel(cancel);
@@ -162,17 +171,12 @@ bool GUIPAGE::Load(
 		}
 		else if (type == "label")
 		{
-			float fontsize;
-			std::vector<float> color(3, 1.0);
-
-			if (!pagefile.GetParam(section, "fontsize", fontsize, error_output)) return false;
-			pagefile.GetParam(section, "color", color);
-
-			float fontscaley = fontsize;
-			float fontscalex = fontsize * screenhwratio;
-
 			WIDGET_LABEL * new_widget = new WIDGET_LABEL();
-			new_widget->SetupDrawable(sref, font, text, xy[0], xy[1], fontscalex, fontscaley, color[0], color[1], color[2], z);
+			new_widget->SetupDrawable(
+				sref, font, align, scalex, scaley,
+				xy[0], xy[1], w, h, z,
+				rgb[0], rgb[1], rgb[2]);
+			new_widget->SetText(sref, text);
 			widgets.push_back(new_widget);
 
 			std::string name;
@@ -183,43 +187,27 @@ bool GUIPAGE::Load(
 		}
 		else if (type == "stringwheel" || type == "intwheel" || type == "floatwheel")
 		{
-			std::string setting;
-			std::string values;
-			std::string action;
-			float spacing(0.3);
-			float fontsize;
-
+			std::string setting, action;
 			if (!pagefile.GetParam(section, "setting", setting, error_output)) return false;
-			if (!pagefile.GetParam(section, "values", values, error_output)) return false;
-			if (!pagefile.GetParam(section, "fontsize", fontsize, error_output)) return false;
-			pagefile.GetParam(section, "spacing", spacing);
 			pagefile.GetParam(section, "action", action);
 
-			if (values == "options")
+			std::map <std::string, GUIOPTION>::const_iterator opt = optionmap.find(setting);
+			if (opt == optionmap.end())
 			{
-				text = optionmap[setting].GetText();
-				desc = optionmap[setting].GetDescription();
+				error_output << path << ": widget option " << setting << " not found." << std::endl;
+				return false;
 			}
-			else
-			{
-				error_output << "Widget " << section->first << ": unknown value type " << values << std::endl;
-			}
+			desc = opt->second.GetDescription();
 
-			std::tr1::shared_ptr<TEXTURE> up_left, down_left, up_right, down_right;
-			if (!content.load(texpath, "widgets/wheel_up_l.png", texinfo, up_left)) return false;
-			if (!content.load(texpath, "widgets/wheel_down_l.png", texinfo, down_left)) return false;
-			if (!content.load(texpath, "widgets/wheel_up_r.png", texinfo, up_right)) return false;
-			if (!content.load(texpath, "widgets/wheel_down_r.png", texinfo, down_right)) return false;
-
-			float fontscaley = fontsize;
-			float fontscalex = fontsize * screenhwratio;
-			xy[0] -= spacing * 0.5;
+			std::tr1::shared_ptr<TEXTURE> bgtex;
+			if (!content.load(texpath, "white.png", texinfo, bgtex)) return false;
 
 			WIDGET_STRINGWHEEL * new_widget = new WIDGET_STRINGWHEEL();
 			new_widget->SetupDrawable(
-				sref, optionmap, setting, text + ":",
-				up_left, down_left, up_right, down_right,
-				font, fontscalex, fontscaley, xy[0], xy[1], z);
+				sref, bgtex, optionmap, setting,
+				font, scalex, scaley,
+				xy[0], xy[1], w, h, z,
+				error_output);
 			new_widget->SetDescription(desc);
 			new_widget->SetAction(action);
 			widgets.push_back(new_widget);
@@ -227,48 +215,33 @@ bool GUIPAGE::Load(
 		else if (type == "intintwheel")
 		{
 			std::string setting1, setting2, values;
-			float spacing(0.3);
-			float fontsize;
-
 			if (!pagefile.GetParam(section, "setting1", setting1, error_output)) return false;
 			if (!pagefile.GetParam(section, "setting2", setting2, error_output)) return false;
-			if (!pagefile.GetParam(section, "values", values, error_output)) return false;
-			if (!pagefile.GetParam(section, "fontsize", fontsize, error_output)) return false;
-			pagefile.GetParam(section, "spacing", spacing);
 
-			if (values == "options")
+			std::map <std::string, GUIOPTION>::const_iterator opt = optionmap.find(setting1);
+			if (opt == optionmap.end())
 			{
-				text = optionmap[setting1].GetText();
-				desc = optionmap[setting1].GetDescription();
+				error_output << path << ": widget option " << setting1 << " not found." << std::endl;
+				return false;
 			}
-			else
-			{
-				error_output << "Widget " << section->first << ": unknown value type " << values << std::endl;
-			}
+			desc = opt->second.GetDescription();
 
-			std::tr1::shared_ptr<TEXTURE> up_left, down_left, up_right, down_right;
-			if (!content.load(texpath, "widgets/wheel_up_l.png", texinfo, up_left)) return false;
-			if (!content.load(texpath, "widgets/wheel_down_l.png", texinfo, down_left)) return false;
-			if (!content.load(texpath, "widgets/wheel_up_r.png", texinfo, up_right)) return false;
-			if (!content.load(texpath, "widgets/wheel_down_r.png", texinfo, down_right)) return false;
-
-			float fontscaley = fontsize;
-			float fontscalex = fontsize * screenhwratio;
-			xy[0] -= spacing * 0.5;
+			std::tr1::shared_ptr<TEXTURE> bgtex;
+			if (!content.load(texpath, "white.png", texinfo, bgtex)) return false;
 
 			WIDGET_DOUBLESTRINGWHEEL * new_widget = new WIDGET_DOUBLESTRINGWHEEL();
 			new_widget->SetupDrawable(
-				sref, optionmap, setting1, setting2, text + ":",
-				up_left, down_left, up_right, down_right,
-				font, fontscalex, fontscaley, xy[0], xy[1], z);
+				sref, bgtex, optionmap, setting1, setting2,
+				font, scalex, scaley,
+				xy[0], xy[1], w, h, z,
+				error_output);
 			new_widget->SetDescription(desc);
 			widgets.push_back(new_widget);
 		}
 		else if (type == "multi-image")
 		{
-			std::string setting, values, prefix, postfix;
+			std::string setting, prefix, postfix;
 			if (!pagefile.GetParam(section, "setting", setting, error_output)) return false;
-			if (!pagefile.GetParam(section, "values", values, error_output)) return false;
 			if (!pagefile.GetParam(section, "prefix", prefix, error_output)) return false;
 			if (!pagefile.GetParam(section, "postfix", postfix, error_output)) return false;
 
@@ -301,96 +274,58 @@ bool GUIPAGE::Load(
 		else if (type == "slider")
 		{
 			float min(0), max(1);
-			float fontsize;
 			bool percentage(false);
-			std::string name, setting, values;
-
+			std::string name, setting;
 			if (!pagefile.GetParam(section, "name", name, error_output)) return false;
 			if (!pagefile.GetParam(section, "setting", setting, error_output)) return false;
-			if (!pagefile.GetParam(section, "values", values, error_output)) return false;
-			if (!pagefile.GetParam(section, "fontsize", fontsize, error_output)) return false;
 
-			if (values == "manual")
+			std::map <std::string, GUIOPTION>::const_iterator opt = optionmap.find(setting);
+			if (opt == optionmap.end())
 			{
-				if (!pagefile.GetParam(section, "min", min, error_output)) return false;
-				if (!pagefile.GetParam(section, "max", max, error_output)) return false;
+				error_output << path << ": widget option " << setting << " not found." << std::endl;
+				return false;
 			}
-			else
-			{
-				text = optionmap[setting].GetText();
-				desc = optionmap[setting].GetDescription();
-				if (optionmap.find(setting) == optionmap.end())
-				{
-					error_output << path << ": slider widget option " << setting << " not found, assuming default min/max/percentage values" << std::endl;
-				}
-				else
-				{
-					min = optionmap[setting].GetMin();
-					max = optionmap[setting].GetMax();
-					percentage = optionmap[setting].GetPercentage();
-				}
-			}
+			min = opt->second.GetMin();
+			max = opt->second.GetMax();
+			percentage = opt->second.GetPercentage();
+			desc = opt->second.GetDescription();
 
-			float spacing(0.3);
-			pagefile.GetParam(section, "spacing", spacing);
-			xy[0] -= spacing * 0.5;
-
-			float fontscaley = fontsize;
-			float fontscalex = fontsize * screenhwratio;
-
-			//generate label
-			{
-				float textwidth = font.GetWidth(text) * fontscalex;
-				float x = xy[0] + textwidth * 0.5;
-				float y = xy[1];
-				float r(1), g(1), b(1);
-				WIDGET_LABEL * new_widget = new WIDGET_LABEL();
-				new_widget->SetupDrawable(sref, font, text, x, y, fontscalex, fontscaley, r, g, b, z);
-				widgets.push_back(new_widget);
-			}
-
-			if (h == 0.0) h = fontsize;
-			if (w < h * screenhwratio) w = h * screenhwratio;
-			xy[0] = xy[0] - w * 4.0 / 2 - fontscalex; // slider offset
-
-			std::vector<float> color(3, 1.0);
-			pagefile.GetParam(section, "color", color);
-
-			std::tr1::shared_ptr<TEXTURE> cursor, wedge;
-			if (!content.load(texpath, "widgets/sld_cursor.png", texinfo, cursor)) return false;
-			if (!content.load(texpath, "widgets/sld_wedge.png", texinfo, wedge)) return false;
+			std::tr1::shared_ptr<TEXTURE> bgtex, bartex;
+			if (!content.load(texpath, "white.png", texinfo, bgtex)) return false;
+			if (!content.load(texpath, "white.png", texinfo, bartex)) return false;
 
 			WIDGET_SLIDER * new_widget = new WIDGET_SLIDER();
 			new_widget->SetupDrawable(
-				sref, wedge, cursor, xy[0], xy[1], w, h, min, max, percentage,
-				optionmap, setting, font, fontscalex, fontscaley, error_output, z);
-			new_widget->SetName(name);
+				sref, bgtex, bartex,
+				optionmap, setting,
+				font, scalex, scaley,
+				xy[0], xy[1], w, h, z,
+				min, max, percentage,
+				error_output);
 			new_widget->SetDescription(desc);
-			new_widget->SetColor(sref, color[0], color[1], color[2]);
+			new_widget->SetColor(sref, rgb[0], rgb[1], rgb[2]);
 			widgets.push_back(new_widget);
 		}
 		else if (type == "spinningcar")
 		{
 			std::vector<float> carpos(3);
-			std::string setting, values, name, prefix, postfix;
+			std::string setting;
 			if (!pagefile.GetParam(section, "carpos", carpos, error_output)) return false;
 			if (!pagefile.GetParam(section, "setting", setting, error_output)) return false;
-			if (!pagefile.GetParam(section, "values", values, error_output)) return false;
 
 			WIDGET_SPINNINGCAR * new_widget = new WIDGET_SPINNINGCAR();
-			new_widget->SetupDrawable(sref, content, pathmanager, optionmap,
-				xy[0], xy[1], MATHVECTOR<float, 3>(carpos[0], carpos[1], carpos[2]),
+			new_widget->SetupDrawable(
+				sref, content, pathmanager, optionmap,
+				xy[0], xy[1],
+				MATHVECTOR<float, 3>(carpos[0], carpos[1], carpos[2]),
 				setting, error_output, z + 10);
 			widgets.push_back(new_widget);
 		}
 		else if (type == "controlgrab")
 		{
-			float fontsize;
 			std::string setting;
 			bool analog(false);
 			bool only_one(false);
-
-			if (!pagefile.GetParam(section, "fontsize", fontsize, error_output)) return false;
 			if (!pagefile.GetParam(section, "setting", setting, error_output)) return false;
 			pagefile.GetParam(section, "analog", analog);
 			pagefile.GetParam(section, "only_one", only_one);
@@ -407,12 +342,11 @@ bool GUIPAGE::Load(
 			if (!content.load(texpath, "widgets/controls/mouse.png", texinfo, control[WIDGET_CONTROLGRAB::MOUSE])) return false;
 			if (!content.load(texpath, "widgets/controls/mouse_sel.png", texinfo, control[WIDGET_CONTROLGRAB::MOUSESEL])) return false;
 
-			float fontscaley = fontsize;
-			float fontscalex = fontsize * screenhwratio;
-
 			WIDGET_CONTROLGRAB * new_widget = new WIDGET_CONTROLGRAB();
-			new_widget->SetupDrawable(sref, controlsconfig, setting, control, font,
-					text, xy[0], xy[1], fontscalex, fontscaley, analog, only_one, z);
+			new_widget->SetupDrawable(
+				sref, control, setting, controlsconfig, font,
+				scalex, scaley, xy[0], xy[1], z,
+				analog, only_one);
 			controlgrabs.push_back(new_widget);
 			widgets.push_back(new_widget);
 		}
@@ -435,21 +369,21 @@ void GUIPAGE::UpdateControls(SCENENODE & parentnode, const CONFIG & controls, co
 	}
 }
 
-void GUIPAGE::SetVisible(SCENENODE & parent, const bool newvis)
+void GUIPAGE::SetVisible(SCENENODE & parent, bool value)
 {
 	SCENENODE & sref = GetNode(parent);
 	for (std::vector <WIDGET *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
 	{
-		(*i)->SetVisible(sref, newvis);
+		(*i)->SetVisible(sref, value);
 	}
 }
 
-void GUIPAGE::SetAlpha(SCENENODE & parent, const float newalpha)
+void GUIPAGE::SetAlpha(SCENENODE & parent, float value)
 {
 	SCENENODE & sref = parent.GetNode(s);
 	for (std::vector <WIDGET *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
 	{
-		(*i)->SetAlpha(sref, newalpha);
+		(*i)->SetAlpha(sref, value);
 	}
 }
 

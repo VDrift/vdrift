@@ -2,10 +2,13 @@
 #include "guioption.h"
 
 WIDGET_SLIDER::WIDGET_SLIDER() :
-	min(0),
-	max(1),
-	current(0),
-	update(false)
+	m_min(0),
+	m_max(1),
+	m_current(0),
+	m_w(0),
+	m_h(0),
+	m_percentage(false),
+	m_focus(false)
 {
 	set_value.call.bind<WIDGET_SLIDER, &WIDGET_SLIDER::SetValue>(this);
 }
@@ -15,75 +18,77 @@ WIDGET_SLIDER::~WIDGET_SLIDER()
 	// dtor
 }
 
-void WIDGET_SLIDER::SetAlpha(SCENENODE & scene, float newalpha)
+void WIDGET_SLIDER::SetAlpha(SCENENODE & scene, float value)
 {
-	wedge.SetAlpha(scene, newalpha);
-	cursor.SetAlpha(scene, newalpha);
-	text.SetAlpha(scene, newalpha);
+	m_label_value.SetAlpha(scene, value);
+	m_label_left.SetAlpha(scene, value);
+	m_label_right.SetAlpha(scene, value);
+	m_background.SetAlpha(scene, value * 0.25);
+	m_bar.SetAlpha(scene, value * 0.5);
 }
 
-void WIDGET_SLIDER::SetVisible(SCENENODE & scene, bool newvis)
+void WIDGET_SLIDER::SetVisible(SCENENODE & scene, bool value)
 {
-	wedge.SetVisible(scene, newvis);
-	cursor.SetVisible(scene, newvis);
-	text.SetDrawEnable(scene, newvis);
+	m_label_value.SetVisible(scene, value);
+	m_label_left.SetVisible(scene, m_focus && value);
+	m_label_right.SetVisible(scene, m_focus && value);
+	m_background.SetVisible(scene, m_focus && value);
+	m_bar.SetVisible(scene, m_focus && value);
 }
 
 bool WIDGET_SLIDER::ProcessInput(
 	SCENENODE & scene,
-	std::map<std::string, GUIOPTION> & optionmap,
 	float cursorx, float cursory,
 	bool cursordown, bool cursorjustup)
 {
-	if (cursorx < corner2[0] + w * 0.5 &&
-		cursorx > corner1[0] - w * 0.5 &&
-		cursory < corner2[1] &&
-		cursory > corner1[1])
+	m_focus = InFocus(cursorx, cursory);
+	m_bar.SetVisible(scene, m_focus);
+	m_label_left.SetVisible(scene, m_focus);
+	m_label_right.SetVisible(scene, m_focus);
+	m_background.SetVisible(scene, m_focus);
+
+	if (!m_focus)
+		return false;
+
+	if (cursordown)
 	{
-		if (cursordown)
-		{
-			float coeff = (cursorx - corner1[0]) / (corner2[0] - corner1[0]);
-			if (coeff < 0) coeff = 0;
-			else if (coeff > 1.0) coeff = 1.0;
-			current = coeff * (max - min) + min;
+		float xmin = (m_xmin + m_xmax - m_w) * 0.5;
+		float coeff = (cursorx - xmin) / m_w;
+		coeff = (coeff > 0.0) ? (coeff < 1.0) ? coeff : 1.0 : 0.0;
+		m_current = coeff * (m_max - m_min) + m_min;
 
-			std::stringstream s;
-			s << current;
-			optionmap[setting].SetCurrentValue(s.str());
-		}
-
-		return true;
+		std::stringstream s;
+		s << m_current;
+		signal_value(s.str());
 	}
 
-	return false;
-}
-
-void WIDGET_SLIDER::SetName(const std::string & newname)
-{
-	name = newname;
+	return true;
 }
 
 std::string WIDGET_SLIDER::GetDescription() const
 {
-	return description;
+	return m_description;
 }
 
-void WIDGET_SLIDER::SetDescription(const std::string & newdesc)
+void WIDGET_SLIDER::SetDescription(const std::string & value)
 {
-	description = newdesc;
+	m_description = value;
 }
 
 void WIDGET_SLIDER::Update(SCENENODE & scene, float dt)
 {
-	if (update)
+	if (m_update)
 	{
-		float dx = (corner2[0] - corner1[0]) * (current - min) / (max - min);
-		cursor.SetToBillboard(corner1[0] + dx, corner1[1], w, h);
+		float dx = ((m_xmax - m_xmin) - m_w) * 0.5;
+		float xmin = m_xmin + dx;
+		float ymin = m_ymin + m_h * 0.15;
+		float h = m_h * 0.7;
+		float w = m_w * (m_current - m_min) / (m_max - m_min);
+		m_bar.SetToBillboard(xmin, ymin, w, h);
 
-		float value = current;
-
+		float value = m_current;
 		std::stringstream s;
-		if (percentage)
+		if (m_percentage)
 		{
 			s.precision(0);
 			value *= 100.0f;
@@ -94,76 +99,80 @@ void WIDGET_SLIDER::Update(SCENENODE & scene, float dt)
 		}
 
 		s << std::fixed << value;
-		if (percentage)
+		if (m_percentage)
 		{
 			s << "%";
 		}
+		m_label_value.SetText(scene, s.str());
 
-		text.Revise(s.str());
-
-		float width = text.GetWidth();
-		float newx = corner1[0] - width - w * 0.25;
-		text.SetPosition(newx, texty);
-
-		update = false;
+		m_update = false;
 	}
 }
 
 void WIDGET_SLIDER::SetColor(SCENENODE & scene, float r, float g, float b)
 {
-	wedge.SetColor(scene, r, g, b);
-}
-
-void WIDGET_SLIDER::SetSetting(const std::string & newsetting)
-{
-	setting = newsetting;
+	//m_wedge.SetColor(scene, r, g, b);
 }
 
 void WIDGET_SLIDER::SetupDrawable(
 	SCENENODE & scene,
-	std::tr1::shared_ptr<TEXTURE> wedgetex,
-	std::tr1::shared_ptr<TEXTURE> cursortex,
-	const float x,
-	const float y,
-	const float nw,
-	const float nh,
-	const float newmin,
-	const float newmax,
-	const bool ispercentage,
+	std::tr1::shared_ptr<TEXTURE> bgtex,
+	std::tr1::shared_ptr<TEXTURE> bartex,
 	std::map<std::string, GUIOPTION> & optionmap,
-	const std::string & newsetting,
+	const std::string & setting,
 	const FONT & font,
-	const float scalex,
-	const float scaley,
-	std::ostream & error_output,
-	int draworder)
+	float scalex, float scaley,
+	float centerx, float centery,
+	float w, float h, float z,
+	float min, float max, bool percentage,
+	std::ostream & error_output)
 {
-	assert(wedgetex);
-	assert(cursortex);
+	assert(bgtex);
+	assert(bartex);
 
-	current = 0.0;
-	percentage = ispercentage;
-	min = newmin;
-	max = newmax;
-	w = nw;
-	h = nh;
-	setting = newsetting;
+	m_setting = setting;
+	m_current = 0.0;
+	m_min = min;
+	m_max = max;
+	m_percentage = percentage;
+	m_xmin = centerx - w * 0.5;
+	m_xmax = centerx + w * 0.5;
+	m_ymin = centery - h * 0.5;
+	m_ymax = centery + h * 0.5;
+	m_w = w - 2 * font.GetWidth(" <") * scalex;
+	m_h = h;
 
-	wedge.Load(scene, wedgetex, draworder, error_output);
-	cursor.Load(scene, cursortex, draworder + 1, error_output);
+	m_background.Load(scene, bgtex, z, error_output);
+	m_background.SetToBillboard(m_xmin, m_ymin, w, h);
+	m_background.SetVisible(scene, m_focus);
+	m_background.SetColor(scene, 0.7, 0.7, 0.7);
+	m_background.SetAlpha(scene, 0.25);
 
-	corner1.Set(x - w * 4.0 * 0.5, y - h * 0.5);
-	corner2.Set(x + w * 4.0 * 0.5, y + h * 0.5);
-	texty = y + (h - scaley) * 0.5;
+	m_label_value.SetupDrawable(
+		scene, font, 0, scalex, scaley,
+		centerx, centery, w, h, z + 2,
+		m_r, m_g, m_b);
 
-	text.Init(scene, font, "", corner1[0], texty, scalex, scaley);
-	text.SetDrawOrder(scene, draworder);
-	wedge.SetTo2DQuad(corner1[0], corner1[1], corner2[0], corner2[1], 0, 0, 13.0/16.0, 1.0/4.0, 0);
+	m_label_left.SetupDrawable(
+		scene, font, -1, scalex, scaley,
+		centerx - w * 0.25, centery, w * 0.5, h, z + 2,
+		m_r, m_g, m_b);
 
-	// connect slot
+	m_label_right.SetupDrawable(
+		scene, font, 1, scalex, scaley,
+		centerx + w * 0.25, centery, w * 0.5, h, z + 2,
+		m_r, m_g, m_b);
+
+	m_label_left.SetText(scene, " <");
+	m_label_right.SetText(scene, "> ");
+
+	m_bar.Load(scene, bartex, z + 1, error_output);
+
+	// connect slots, signals
 	std::map<std::string, GUIOPTION>::iterator i = optionmap.find(setting);
 	if (i != optionmap.end())
 	{
+		i->second.set_val.connect(signal_value);
 		set_value.connect(i->second.signal_val);
 		SetValue(i->second.GetCurrentStorageValue());
 	}
@@ -176,9 +185,9 @@ void WIDGET_SLIDER::SetValue(const std::string & valuestr)
 	std::stringstream s;
 	s << valuestr;
 	s >> value;
-	if (value != current)
+	if (value != m_current)
 	{
-		current = value;
-		update = true;
+		m_current = value;
+		m_update = true;
 	}
 }

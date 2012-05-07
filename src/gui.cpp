@@ -255,37 +255,14 @@ void GUI::SyncOptions(
 		if (external_settings_are_newer || syncme_from_external)
 		{
 			std::map<std::string, GUIOPTION>::iterator option = optionmap.find(i->first);
-			if (option == optionmap.end())
-			{
-				//error_output << "External option \"" << i->first << "\" has no internal GUI counterpart" << std::endl;
-			}
-			else
-			{
-				//std::cout << i->first << std::endl;
-				if (!option->second.SetCurrentValue(i->second))
-				{
-					option->second.SetToFirstValue();
-					error_output << "Error setting GUI option \""
-								<< option->first << "\" to GAME value \""
-								<< i->second << "\" use first option \""
-								<< option->second.GetCurrentStorageValue()
-								<< "\"" << std::endl;
-				}
-			}
-			//else std::cout << "Ignoring controledit value: " << i->first << std::endl;
+			if (option != optionmap.end())
+				option->second.SetCurrentValue(i->second);
 		}
 		else
 		{
 			std::map<std::string, GUIOPTION>::iterator option = optionmap.find(i->first);
-			if (option == optionmap.end())
-			{
-				//error_output << "External option \"" << i->first << "\" has no internal GUI counterpart" << std::endl;
-			}
-			else
-			{
-				//if (option->first == "game.car_paint") error_output << "Setting GAME option \"" << i->first << "\" to GUI value \"" << option->second.GetCurrentStorageValue() << "\"" << std::endl;
+			if (option != optionmap.end())
 				i->second = option->second.GetCurrentStorageValue();
-			}
 		}
 	}
 
@@ -322,13 +299,14 @@ void GUI::ReplaceOptionValues(
 {
 	//std::cout << "Replacing option map values" << std::endl;
 
-	if (optionmap.find(optionname) == optionmap.end())
+	std::map<std::string, GUIOPTION>::iterator op = optionmap.find(optionname);
+	if (op == optionmap.end())
 	{
 		error_output << "Can't find option named " << optionname << " when replacing optionmap values" << std::endl;
 	}
 	else
 	{
-		optionmap[optionname].ReplaceValues(newvalues);
+		op->second.ReplaceValues(newvalues);
 		UpdateOptions(error_output);
 	}
 
@@ -395,7 +373,6 @@ bool GUI::LoadOptions(
 		if (!opt.GetParam(i, "name", name, error_output)) return false;
 		if (!opt.GetParam(i, "default", defaultval, error_output)) return false;
 		if (!opt.GetParam(i, "values", values, error_output)) return false;
-		if (!opt.GetParam(i, "title", text, error_output)) return false;
 		if (!opt.GetParam(i, "desc", desc, error_output)) return false;
 		if (!opt.GetParam(i, "type", type, error_output)) return false;
 
@@ -409,7 +386,7 @@ bool GUI::LoadOptions(
 		opt.GetParam(i, "max",max);
 		opt.GetParam(i, "percentage",percentage);
 
-		std::string optionname = cat+"."+name;
+		std::string optionname = cat + "." + name;
 		GUIOPTION & option = optionmap[optionname];
 
 		option.SetInfo(text, desc, type);

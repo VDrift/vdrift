@@ -45,7 +45,6 @@ WIDGET_CONTROLGRAB::~WIDGET_CONTROLGRAB()
 void WIDGET_CONTROLGRAB::SetAlpha(SCENENODE & scene, float newalpha)
 {
 	SCENENODE & topnoderef = scene.GetNode(topnode);
-	label.SetAlpha(topnoderef, newalpha);
 	addbutton.SetAlpha(topnoderef, newalpha);
 
 	SCENENODE & ctrlnoderef = topnoderef.GetNode(ctrlnode);
@@ -58,7 +57,6 @@ void WIDGET_CONTROLGRAB::SetAlpha(SCENENODE & scene, float newalpha)
 void WIDGET_CONTROLGRAB::SetVisible(SCENENODE & scene, bool newvis)
 {
 	SCENENODE & topnoderef = scene.GetNode(topnode);
-	label.SetVisible(topnoderef, newvis);
 	addbutton.SetVisible(topnoderef, newvis);
 
 	SCENENODE & ctrlnoderef = topnoderef.GetNode(ctrlnode);
@@ -89,7 +87,6 @@ void WIDGET_CONTROLGRAB::SetDescription(const std::string & newdesc)
 
 bool WIDGET_CONTROLGRAB::ProcessInput(
 	SCENENODE & scene,
-	std::map<std::string, GUIOPTION> & optionmap,
 	float cursorx, float cursory,
 	bool cursordown, bool cursorjustup)
 {
@@ -104,8 +101,7 @@ bool WIDGET_CONTROLGRAB::ProcessInput(
 	// generate the add input tooltip, check to see if we pressed the add input button, generate an action
 	SCENENODE & topnoderef = scene.GetNode(topnode);
 	if (addbutton.ProcessInput(
-		topnoderef, optionmap,
-		cursorx, cursory,
+		topnoderef, cursorx, cursory,
 		cursordown, cursorjustup))
 	{
 		tempdescription = Str[ADDNEW_STR];
@@ -124,8 +120,7 @@ bool WIDGET_CONTROLGRAB::ProcessInput(
 	for (std::list <CONTROLWIDGET>::iterator i = controlbuttons.begin(); i != controlbuttons.end(); ++i)
 	{
 		if (!i->widget.ProcessInput(
-			ctrlnoderef, optionmap,
-			cursorx, cursory,
+			ctrlnoderef, cursorx, cursory,
 			cursordown, cursorjustup))
 		{
 			continue;
@@ -266,18 +261,13 @@ bool WIDGET_CONTROLGRAB::ProcessInput(
 
 void WIDGET_CONTROLGRAB::SetupDrawable(
 	SCENENODE & scene,
-	const CONFIG & c,
-	const std::string & newsetting,
 	const std::vector <std::tr1::shared_ptr<TEXTURE> > & texturevector,
+	const std::string & newsetting,
+	const CONFIG & c,
 	const FONT & font,
-	const std::string & text,
-	float centerx,
-	float centery,
-	float scalex,
-	float scaley,
-	bool newanalog,
-	bool newonly_one,
-	float newz)
+	float scalex, float scaley,
+	float centerx, float centery, float newz,
+	bool newanalog, bool newonly_one)
 {
 	assert(!newsetting.empty());
 	assert(texturevector.size() == END);
@@ -302,16 +292,15 @@ void WIDGET_CONTROLGRAB::SetupDrawable(
 	analog = newanalog;
 	only_one = newonly_one;
 
-	float r(1), g(1), b(1);
-	float lw = label.GetWidth(font, text, scalex);
-	float lx = x - w * 0.5 + lw * 0.5;
-	float ly = y;
 	float bw = scalex * 0.8 * (4.0 / 3.0);
 	float bh = scaley * 0.8;
 
-	label.SetupDrawable(topnoderef, font, text, lx, ly, scalex, scaley, r, g, b, z+1);
-	addbutton.SetupDrawable(topnoderef, textures[ADD], textures[ADDSEL], textures[ADDSEL],
-		font, "", x, y, bw, bh, r ,g, b, 0, 0, z);
+	addbutton.SetupDrawable(
+		topnoderef,
+		textures[ADD], textures[ADDSEL], textures[ADDSEL],
+		font, "", bw, bh,
+		x, y, 0, 0, z,
+		m_r ,m_g, m_b);
 
 	LoadControls(scene, c, font);
 }
@@ -377,14 +366,17 @@ void WIDGET_CONTROLGRAB::LoadControls(SCENENODE & scene, const CONFIG & c, const
 				tex_sel = textures[MOUSESEL];
 			}
 
-			float r(1), g(1), b(1);
 			float bw = scale_x * 0.8 * (4.0 / 3.0);
 			float bh = scale_y * 0.8;
 			float bx = x + bw * controlbuttons.size();
 			float by = y;
 
-			button.widget.SetupDrawable(parentnode, tex_unsel, tex_sel, tex_sel,
-				font, "", bx, by, bw, bh, r, g, b, 0, 0, z);
+			button.widget.SetupDrawable(
+				parentnode,
+				tex_unsel, tex_sel, tex_sel,
+				font, "", bw, bh,
+				bx, by, 0, 0, z,
+				m_r, m_g, m_b);
 		}
 	}
 }

@@ -1,10 +1,8 @@
 #ifndef _WIDGET_SLIDER_H
 #define _WIDGET_SLIDER_H
 
-#include "widget.h"
+#include "widget_label.h"
 #include "sprite2d.h"
-#include "text_draw.h"
-#include "mathvector.h"
 
 class FONT;
 
@@ -15,17 +13,14 @@ public:
 
 	~WIDGET_SLIDER();
 
-	virtual void SetAlpha(SCENENODE & scene, float newalpha);
+	virtual void SetAlpha(SCENENODE & scene, float value);
 
-	virtual void SetVisible(SCENENODE & scene, bool newvis);
+	virtual void SetVisible(SCENENODE & scene, bool value);
 
 	virtual bool ProcessInput(
 		SCENENODE & scene,
-		std::map<std::string, GUIOPTION> & optionmap,
 		float cursorx, float cursory,
 		bool cursordown, bool cursorjustup);
-
-	virtual void SetName(const std::string & newname);
 
 	virtual std::string GetDescription() const;
 
@@ -35,41 +30,34 @@ public:
 
 	void SetColor(SCENENODE & scene, float r, float g, float b);
 
-	void SetSetting(const std::string & newsetting);
-
 	void SetupDrawable(
 		SCENENODE & scene,
-		std::tr1::shared_ptr<TEXTURE> wedgetex,
-		std::tr1::shared_ptr<TEXTURE> cursortex,
-		const float x,
-		const float y,
-		const float nw,
-		const float nh,
-		const float newmin,
-		const float newmax,
-		const bool ispercentage,
+		std::tr1::shared_ptr<TEXTURE> bgtex,
+		std::tr1::shared_ptr<TEXTURE> bartex,
 		std::map<std::string, GUIOPTION> & optionmap,
-		const std::string & newsetting,
+		const std::string & setting,
   		const FONT & font,
-  		const float fontscalex,
-  		const float fontscaley,
-  		std::ostream & error_output,
-  		int draworder = 1);
+  		float scalex, float scaley,
+		float centerx, float centery,
+		float w, float h, float z,
+		float min, float max, bool percentage,
+  		std::ostream & error_output);
 
 private:
-	TEXT_DRAWABLE text;
-	SPRITE2D wedge;
-	SPRITE2D cursor;
-	std::string name;
-	std::string description;
-	std::string setting;
-	MATHVECTOR <float, 2> corner1;
-	MATHVECTOR <float, 2> corner2;
-	float min, max, current;
-	bool percentage;
-	float w, h, texty;
-	bool update;
+	WIDGET_LABEL m_label_value;
+	WIDGET_LABEL m_label_left;
+	WIDGET_LABEL m_label_right;
+	SPRITE2D m_background;
+	SPRITE2D m_bar;
+	std::string m_name;
+	std::string m_description;
+	std::string m_setting;
+	float m_min, m_max, m_current;
+	float m_w, m_h;
+	bool m_percentage;
+	bool m_focus;
 
+	Signal1<const std::string &> signal_value;
 	Slot1<const std::string &> set_value;
 	void SetValue(const std::string & value);
 

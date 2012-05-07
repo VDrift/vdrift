@@ -33,24 +33,18 @@ public:
 
 	virtual bool ProcessInput(
 		SCENENODE & scene,
-		std::map<std::string, GUIOPTION> & optionmap,
 		float cursorx, float cursory,
 		bool cursordown, bool cursorjustup);
 
 	void SetupDrawable(
 		SCENENODE & scene,
-		const CONFIG & c,
+		const std::vector <std::tr1::shared_ptr<TEXTURE> > & texturevector,
 		const std::string & newsetting,
-		const std::vector <std::tr1::shared_ptr<TEXTURE> > & textures,
+		const CONFIG & c,
 		const FONT & font,
-		const std::string & text,
-		float centerx,
-		float centery,
-		float scalex,
-		float scaley,
-		bool newanalog,
-		bool newonly_one,
-		float newz = 0);
+		float scalex, float scaley,
+		float centerx, float centery, float newz,
+		bool newanalog, bool newonly_one);
 
 	void LoadControls(SCENENODE & parent, const CONFIG & c, const FONT & font);
 
@@ -118,7 +112,6 @@ private:
 		float gain;
 	};
 
-	WIDGET_LABEL label;
 	WIDGET_BUTTON addbutton;
 	std::list <CONTROLWIDGET> controlbuttons;
 	std::string setting;

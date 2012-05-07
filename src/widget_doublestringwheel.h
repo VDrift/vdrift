@@ -1,13 +1,8 @@
 #ifndef _WIDGET_DOUBLESTRINGWHEEL_H
 #define _WIDGET_DOUBLESTRINGWHEEL_H
 
-#include "widget.h"
 #include "widget_label.h"
-#include "widget_button.h"
-
-class SCENENODE;
-class TEXTURE;
-class FONT;
+#include "sprite2d.h"
 
 class WIDGET_DOUBLESTRINGWHEEL : public WIDGET
 {
@@ -16,17 +11,16 @@ public:
 
 	~WIDGET_DOUBLESTRINGWHEEL();
 
-	virtual void SetAlpha(SCENENODE & scene, float newalpha);
+	virtual void SetAlpha(SCENENODE & scene, float value);
 
-	virtual void SetVisible(SCENENODE & scene, bool newvis);
+	virtual void SetVisible(SCENENODE & scene, bool value);
 
 	virtual std::string GetDescription() const;
 
-	virtual void SetDescription(const std::string & newdesc);
+	virtual void SetDescription(const std::string & value);
 
 	virtual bool ProcessInput(
 		SCENENODE & scene,
-		std::map<std::string, GUIOPTION> & optionmap,
 		float cursorx, float cursory,
 		bool cursordown, bool cursorjustup);
 
@@ -34,31 +28,28 @@ public:
 
 	void SetupDrawable(
 		SCENENODE & scene,
+		std::tr1::shared_ptr<TEXTURE> bgtex,
 		std::map<std::string, GUIOPTION> & optionmap,
-		const std::string & newsetting1,
-		const std::string & newsetting2,
-		const std::string & newtitle,
-		std::tr1::shared_ptr<TEXTURE> teximage_left_up,
-		std::tr1::shared_ptr<TEXTURE> teximage_left_down,
-		std::tr1::shared_ptr<TEXTURE> teximage_right_up,
-		std::tr1::shared_ptr<TEXTURE> teximage_right_down,
+		const std::string & setting1,
+		const std::string & setting2,
 		const FONT & font,
-		float scalex,
-		float scaley,
-		float centerx,
-		float centery,
-		float z);
+		float scalex, float scaley,
+		float centerx, float centery,
+		float w, float h, float z,
+		std::ostream & error_output);
 
 private:
-	WIDGET_LABEL title;
-	WIDGET_LABEL label;
-	WIDGET_BUTTON button_left;
-	WIDGET_BUTTON button_right;
-	std::string setting1, setting2;
-	std::string value1, value2;
-	std::string description;
-	bool update;
+	WIDGET_LABEL m_label_value;
+	WIDGET_LABEL m_label_left;
+	WIDGET_LABEL m_label_right;
+	SPRITE2D m_background;
+	std::string m_setting1, m_setting2;
+	std::string m_value1, m_value2;
+	std::string m_description;
+	bool m_focus;
 
+	Signal0 next_value1, prev_value1;
+	Signal0 next_value2, prev_value2;
 	Slot1<const std::string &> set_value1;
 	Slot1<const std::string &> set_value2;
 	void SetValue1(const std::string & value);

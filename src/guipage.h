@@ -39,9 +39,9 @@ public:
 		ContentManager & content,
 		std::ostream & error_output);
 
-	void SetVisible(SCENENODE & parent, const bool newvis);
+	void SetVisible(SCENENODE & parent, bool newvis);
 
-	void SetAlpha(SCENENODE & parent, const float newalpha);
+	void SetAlpha(SCENENODE & parent, float newalpha);
 
 	///tell all child widgets to update to/from the option map
 	void UpdateOptions(SCENENODE & parent, bool save_to, std::map<std::string, GUIOPTION> & optionmap, std::ostream & error_output);

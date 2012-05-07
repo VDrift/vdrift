@@ -1,26 +1,19 @@
 #ifndef _WIDGET_BUTTON_H
 #define _WIDGET_BUTTON_H
 
-#include "widget.h"
 #include "widget_label.h"
 #include "widget_image.h"
-
-#include <string>
-
-class SCENENODE;
-class TEXTURE;
-class FONT;
 
 class WIDGET_BUTTON : public WIDGET
 {
 public:
 	WIDGET_BUTTON();
 
-	~WIDGET_BUTTON() {};
+	~WIDGET_BUTTON();
 
-	virtual void SetAlpha(SCENENODE & scene, float newalpha);
+	virtual void SetAlpha(SCENENODE & scene, float value);
 
-	virtual void SetVisible(SCENENODE & scene, bool newvis);
+	virtual void SetVisible(SCENENODE & scene, bool value);
 
 	virtual std::string GetAction() const;
 
@@ -32,7 +25,6 @@ public:
 
 	virtual bool ProcessInput(
 		SCENENODE & scene,
-		std::map<std::string, GUIOPTION> & optionmap,
 		float cursorx, float cursory,
 		bool cursordown, bool cursorjustup);
 
@@ -47,11 +39,10 @@ public:
 		std::tr1::shared_ptr<TEXTURE> teximage_selected,
 		const FONT & font,
 		const std::string & text,
-		float centerx, float centery,
 		float scalex, float scaley,
-		float r, float g, float b,
-		float h = 0, float w = 0,
-		float order = 0);
+		float centerx, float centery,
+		float w, float h, float z,
+		float r, float g, float b);
 
 	void SetEnabled(SCENENODE & scene, bool newenabled);
 

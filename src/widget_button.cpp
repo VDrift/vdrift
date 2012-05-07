@@ -3,30 +3,37 @@
 #include <cassert>
 
 WIDGET_BUTTON::WIDGET_BUTTON() :
-	cancel(true), enabled(true), alpha(1.0f)
+	cancel(true),
+	enabled(true),
+	alpha(1)
 {
 	// ctor
 }
 
-void WIDGET_BUTTON::SetAlpha(SCENENODE & scene, float newalpha)
+WIDGET_BUTTON::~WIDGET_BUTTON()
 {
-	float basealpha = enabled ? 1.0 : 0.5;
-	label.SetAlpha(scene, newalpha*basealpha);
-	image_up.SetAlpha(scene, newalpha*basealpha);
-	image_down.SetAlpha(scene, newalpha*basealpha);
-	image_selected.SetAlpha(scene, newalpha*basealpha);
-	alpha = newalpha;
+	// dtor
 }
 
-void WIDGET_BUTTON::SetVisible(SCENENODE & scene, bool newvis)
+void WIDGET_BUTTON::SetAlpha(SCENENODE & scene, float value)
 {
-	label.SetVisible(scene, newvis);
+	float basealpha = enabled ? 1.0 : 0.5;
+	label.SetAlpha(scene, value * basealpha);
+	image_up.SetAlpha(scene, value * basealpha);
+	image_down.SetAlpha(scene, value * basealpha);
+	image_selected.SetAlpha(scene, value * basealpha);
+	alpha = value;
+}
+
+void WIDGET_BUTTON::SetVisible(SCENENODE & scene, bool value)
+{
+	label.SetVisible(scene, value);
 	if (state == UP)
-		image_up.SetVisible(scene, newvis);
+		image_up.SetVisible(scene, value);
 	else if (state == DOWN)
-		image_down.SetVisible(scene, newvis);
+		image_down.SetVisible(scene, value);
 	else if (state == SELECTED)
-		image_selected.SetVisible(scene, newvis);
+		image_selected.SetVisible(scene, value);
 }
 
 std::string WIDGET_BUTTON::GetAction() const
@@ -51,7 +58,6 @@ bool WIDGET_BUTTON::GetCancel() const
 
 bool WIDGET_BUTTON::ProcessInput(
 	SCENENODE & scene,
-	std::map<std::string, GUIOPTION> & optionmap,
 	float cursorx, float cursory,
 	bool cursordown, bool cursorjustup)
 {
@@ -122,25 +128,48 @@ void WIDGET_BUTTON::SetupDrawable(
 	std::tr1::shared_ptr<TEXTURE> teximage_selected,
 	const FONT & font,
 	const std::string & text,
-	float centerx, float centery,
 	float scalex, float scaley,
-	float r, float g, float b,
-	float h, float w,
-	float order)
+	float centerx, float centery,
+	float w, float h, float z,
+	float r, float g, float b)
 {
 	assert(teximage_up);
 	assert(teximage_down);
 	assert(teximage_selected);
+
+	m_r = r;
+	m_g = g;
+	m_b = b;
 
 	// enlarge button to fit the text contained
 	if (h < scaley) h = scaley;
 	if (w < font.GetWidth(text) * scalex) w = font.GetWidth(text) * scalex;
 	float hwratio = scaley / scalex;
 
-	label.SetupDrawable(scene, font, text, centerx, centery, scalex, scaley, r, g, b, order + 1);
-	image_up.SetupDrawable(scene, teximage_up, centerx, centery, w, h, order, true, hwratio);
-	image_down.SetupDrawable(scene, teximage_down, centerx, centery, w, h, order, true, hwratio);
-	image_selected.SetupDrawable(scene, teximage_selected, centerx, centery, w, h, order, true, hwratio);
+	label.SetupDrawable(
+		scene, font, 0,
+		scalex, scaley,
+		centerx, centery,
+		w, h, z + 1,
+		r, g, b);
+
+	label.SetText(scene, text);
+
+	image_up.SetupDrawable(
+		scene, teximage_up,
+		centerx, centery,
+		w, h, z, true, hwratio);
+
+	image_down.SetupDrawable(
+		scene, teximage_down,
+		centerx, centery,
+		w, h, z, true, hwratio);
+
+	image_selected.SetupDrawable(
+		scene, teximage_selected,
+		centerx, centery,
+		w, h, z, true, hwratio);
+
 	image_down.SetVisible(scene, false);
 	image_selected.SetVisible(scene, false);
 	state = UP;
