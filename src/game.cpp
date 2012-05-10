@@ -54,7 +54,7 @@
 #ifdef _WIN32
 	#define OS_NAME "Windows"
 #elif defined(__APPLE__)
-	#define OS_NAME "Mac OS"
+	#define OS_NAME "OS X"
 #else
 	#define OS_NAME "Unix"
 #endif
@@ -150,7 +150,7 @@ void GAME::Start(std::list <std::string> & args)
 		return;
 	}
 
-	info_output << "Starting VDrift: " << VERSION << ", Version: " << REVISION << ", O/S: " << OS_NAME << std::endl;
+	info_output << "Starting VDrift: " << VERSION << ", Revision: " << REVISION << ", O/S: " << OS_NAME << std::endl;
 
 	InitCoreSubsystems();
 
