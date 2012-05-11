@@ -261,7 +261,6 @@ bool WIDGET_CONTROLGRAB::ProcessInput(
 
 void WIDGET_CONTROLGRAB::SetupDrawable(
 	SCENENODE & scene,
-	const std::vector <std::tr1::shared_ptr<TEXTURE> > & texturevector,
 	const std::string & newsetting,
 	const CONFIG & c,
 	const FONT & font,
@@ -269,13 +268,7 @@ void WIDGET_CONTROLGRAB::SetupDrawable(
 	float centerx, float centery, float newz,
 	bool newanalog, bool newonly_one)
 {
-	assert(!newsetting.empty());
-	assert(texturevector.size() == END);
-	for (int i = 0; i < END; ++i) assert(texturevector[i]);
-
 	setting = newsetting;
-	textures = texturevector;
-
 	topnode = scene.AddNode();
 	SCENENODE & topnoderef = scene.GetNode(topnode);
 	ctrlnode = topnoderef.AddNode();
@@ -292,22 +285,18 @@ void WIDGET_CONTROLGRAB::SetupDrawable(
 	analog = newanalog;
 	only_one = newonly_one;
 
-	float bw = scalex * 0.8 * (4.0 / 3.0);
-	float bh = scaley * 0.8;
-
 	addbutton.SetupDrawable(
 		topnoderef,
-		textures[ADD], textures[ADDSEL], textures[ADDSEL],
-		font, "", bw, bh,
-		x, y, 0, 0, z,
+		font, 0, scalex * 1.5, scaley * 1.5,
+		x, y, scalex * 2, scaley, z,
 		m_r ,m_g, m_b);
+	addbutton.SetText(topnoderef, "+");
 
 	LoadControls(scene, c, font);
 }
 
 void WIDGET_CONTROLGRAB::LoadControls(SCENENODE & scene, const CONFIG & c, const FONT & font)
 {
-	assert(textures.size() == END);
 	assert(!setting.empty()); //ensure that we've already done a SetupDrawable
 
 	SCENENODE & parentnode = scene.GetNode(topnode).GetNode(ctrlnode);
@@ -340,43 +329,48 @@ void WIDGET_CONTROLGRAB::LoadControls(SCENENODE & scene, const CONFIG & c, const
 			c.GetParam(section, "exponent", button.exponent);
 			c.GetParam(section, "gain", button.gain);
 
-			std::tr1::shared_ptr<TEXTURE> tex_unsel;
-			std::tr1::shared_ptr<TEXTURE> tex_sel;
+			std::string text = "none";
 			if (button.type == "key")
 			{
-				tex_unsel = textures[KEY];
-				tex_sel = textures[KEYSEL];
+				text = button.key;
 			}
 			else if (button.type == "joy")
 			{
 				if (button.joy_type == "button")
 				{
-					tex_unsel = textures[JOYBTN];
-					tex_sel = textures[JOYBTNSEL];
+					std::stringstream s;
+					s << button.joy_button;
+					text = "button " + s.str();
 				}
 				else if (button.joy_type == "axis")
 				{
-					tex_unsel = textures[JOYAXIS];
-					tex_sel = textures[JOYAXISSEL];
+					std::stringstream s;
+					s << button.joy_axis;
+					text = "axis " + s.str();
 				}
 			}
 			else if (button.type == "mouse")
 			{
-				tex_unsel = textures[MOUSE];
-				tex_sel = textures[MOUSESEL];
+				if (button.mouse_type == "motion")
+				{
+					text = "mouse " + button.mouse_motion;
+				}
+				else
+				{
+					std::stringstream s;
+					s << button.mouse_button;
+					text = "mouse " + s.str();
+				}
 			}
 
-			float bw = scale_x * 0.8 * (4.0 / 3.0);
-			float bh = scale_y * 0.8;
-			float bx = x + bw * controlbuttons.size();
+			float bx = x + scale_x * 4 * controlbuttons.size();
 			float by = y;
-
 			button.widget.SetupDrawable(
-				parentnode,
-				tex_unsel, tex_sel, tex_sel,
-				font, "", bw, bh,
-				bx, by, 0, 0, z,
+				parentnode, font,
+				0, scale_x, scale_y,
+				bx, by, scale_x * 4, scale_y, z,
 				m_r, m_g, m_b);
+			button.widget.SetText(parentnode, text);
 		}
 	}
 }

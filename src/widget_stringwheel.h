@@ -45,7 +45,6 @@ private:
 	WIDGET_LABEL m_label_value;
 	WIDGET_LABEL m_label_left;
 	WIDGET_LABEL m_label_right;
-	SPRITE2D m_background;
 	std::string m_description;
 	std::string m_setting;
 	std::string m_value;

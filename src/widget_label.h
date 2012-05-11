@@ -25,7 +25,7 @@ public:
 		const FONT & font,
 		int align,
 		float scalex, float scaley,
-		float x, float y,
+		float centerx, float centery,
 		float w, float h, float z,
 		float r, float g, float b);
 

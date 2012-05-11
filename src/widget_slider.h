@@ -40,21 +40,23 @@ public:
   		float scalex, float scaley,
 		float centerx, float centery,
 		float w, float h, float z,
-		float min, float max, bool percentage,
+		float min, float max,
+		bool percent, bool fill,
   		std::ostream & error_output);
 
 private:
 	WIDGET_LABEL m_label_value;
 	WIDGET_LABEL m_label_left;
 	WIDGET_LABEL m_label_right;
-	SPRITE2D m_background;
+	SPRITE2D m_slider;
 	SPRITE2D m_bar;
 	std::string m_name;
 	std::string m_description;
 	std::string m_setting;
 	float m_min, m_max, m_current;
 	float m_w, m_h;
-	bool m_percentage;
+	bool m_percent;
+	bool m_fill;
 	bool m_focus;
 
 	Signal1<const std::string &> signal_value;

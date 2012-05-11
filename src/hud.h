@@ -41,20 +41,9 @@ public:
 		bool outofgas, bool nosactive, float nosamount,
 		bool drifting, float driftscore, float thisdriftscore);
 
-	SCENENODE & GetNode()
-	{
-		return hudroot;
-	}
+	SCENENODE & GetNode();
 
-	void Hide()
-	{
-		SetVisible(false);
-	}
-
-	void Show()
-	{
-		SetVisible(true);
-	}
+	void SetVisible(bool value);
 
 private:
 	SCENENODE hudroot;
@@ -123,21 +112,7 @@ private:
 	bool racecomplete;
 	bool lastvisible;
 
-	void SetDebugVisibility(bool show)
-	{
-		SCENENODE & debugnoderef = hudroot.GetNode(debugnode);
-		debugnoderef.SetChildVisibility(show);
-	}
-
-	void SetVisible(bool newvis)
-	{
-		if (newvis != lastvisible)
-		{
-			hudroot.SetChildVisibility(newvis);
-			SetDebugVisibility(newvis && debug_hud_info);
-			lastvisible = newvis;
-		}
-	}
+	void SetDebugVisible(bool value);
 };
 
 #endif

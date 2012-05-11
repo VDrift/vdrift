@@ -15,31 +15,25 @@ class GUI
 public:
 	GUI();
 
-	GUIPAGE & GetPage(const std::string & pagename)
-	{
-		assert(pages.find(pagename) != pages.end());
-		return pages[pagename];
-	}
+	std::string GetActivePageName();
 
-	std::string GetActivePageName()
-	{
-		if (active_page == pages.end()) return "";
-		return active_page->first;
-	}
+	std::string GetLastPageName();
 
-	std::string GetLastPageName()
-	{
-		if (last_active_page == pages.end()) return "";
-		return last_active_page->first;
-	}
+	SCENENODE & GetNode();
 
-	SCENENODE & GetNode() {return node;}
+	SCENENODE & GetPageNode(const std::string & name);
 
-	SCENENODE & GetPageNode(const std::string & pagename)
-	{
-		assert(pages.find(pagename) != pages.end());
-		return pages[pagename].GetNode(node);
-	}
+	GUIPAGE & GetPage(const std::string & name);
+
+	bool Active() const;
+
+	bool OptionsNeedSync() const;
+
+	bool ControlsNeedLoading();
+
+	void SetControlsNeedLoading(bool value);
+
+	void SetInGame(bool value);
 
 	bool Load(
 		const std::list <std::string> & pagelist,
@@ -64,7 +58,7 @@ public:
 
 	void UpdateControls(const std::string & pagename, const CONFIG & controlfile);
 
-	void DeactivateAll();
+	void Deactivate();
 
 	/// ensure the last last active page is invisible, update options from the last page and start fading it out, and load options into the new page and fade it in
 	void ActivatePage(
@@ -73,21 +67,7 @@ public:
 		std::ostream & error_output,
 		bool save_options = false);
 
-	bool OptionsNeedSync() const {return syncme;}
-
-	bool ControlsNeedLoading()
-	{
-		if (control_load)
-		{
-			control_load = false;
-			return true;
-		}
-		return false;
-	}
-
-	void SetControlsNeedLoading(bool newcl) {control_load = newcl;}
-
-	///movedown and moveup are true when the user has navigated up or down with the keyboard
+	/// movedown and moveup are true when the user has navigated up or down with the keyboard
 	/// or joystick, while the cursor variables are set for mouse navigation.
 	/// returns a list of actions for processing by the game.
 	std::list <std::string> ProcessInput(
@@ -99,11 +79,7 @@ public:
 
 	void Update(float dt);
 
-	bool Active() const {return (active_page != pages.end());}
-
-	void SetInGame(bool value) {ingame = value;}
-
-	///if settings_are_newer is true, then this function will revise its internal options
+	/// if settings_are_newer is true, then this function will revise its internal options
 	/// to match the settings passed in.  otherwise, it'll operate the other way around
 	void SyncOptions(
 		const bool external_settings_are_newer,
@@ -122,6 +98,7 @@ public:
 	/// returns false if the specified page/label does not exist
 	bool SetButtonEnabled(const std::string & page, const std::string & button, bool enable);
 
+	/// access option values
 	std::string GetOptionValue(const std::string & name) const;
 	void SetOptionValue(const std::string & name, const std::string & value);
 
@@ -134,19 +111,19 @@ private:
 	FONT font;
 	float animation_counter;
 	float animation_count_start;
-	bool syncme; ///<true if a sync is needed
+	bool syncme; /// true if a sync is needed
 	bool syncme_from_external;
 	bool control_load;
 	bool ingame;
 
-	///returns a string showing where the error occurred, or an empty string if no error
+	/// returns a string showing where the error occurred, or an empty string if no error
 	bool LoadOptions(
 		const std::string & optionfile,
 		const std::map<std::string, std::list <std::pair <std::string, std::string> > > & valuelists,
 		const std::map<std::string, std::string> & languagemap,
 		std::ostream & error_output);
 
-	///send options from the optionmap to the widgets
+	/// send options from the optionmap to the widgets
 	void UpdateOptions(std::ostream & error_output);
 };
 

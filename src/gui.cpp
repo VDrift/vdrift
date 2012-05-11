@@ -16,6 +16,65 @@ GUI::GUI() :
 	active_page = last_active_page = pages.end();
 }
 
+std::string GUI::GetActivePageName()
+{
+	if (active_page == pages.end()) return "";
+	return active_page->first;
+}
+
+std::string GUI::GetLastPageName()
+{
+	if (last_active_page == pages.end()) return "";
+	return last_active_page->first;
+}
+
+SCENENODE & GUI::GetNode()
+{
+	return node;
+}
+
+SCENENODE & GUI::GetPageNode(const std::string & name)
+{
+	assert(pages.find(name) != pages.end());
+	return pages[name].GetNode(node);
+}
+
+GUIPAGE & GUI::GetPage(const std::string & name)
+{
+	assert(pages.find(name) != pages.end());
+	return pages[name];
+}
+
+bool GUI::Active() const
+{
+	return (active_page != pages.end());
+}
+
+bool GUI::OptionsNeedSync() const
+{
+	return syncme;
+}
+
+bool GUI::ControlsNeedLoading()
+{
+	if (control_load)
+	{
+		control_load = false;
+		return true;
+	}
+	return false;
+}
+
+void GUI::SetControlsNeedLoading(bool value)
+{
+	control_load = value;
+}
+
+void GUI::SetInGame(bool value)
+{
+	ingame = value;
+}
+
 void GUI::Unload()
 {
     // clear out maps
@@ -121,8 +180,8 @@ bool GUI::Load(
 
 	info_output << "Loaded GUI successfully" << std::endl;
 
-	//start out with everything invisible
-	DeactivateAll();
+	// start out with everything invisible
+	Deactivate();
 
 	return true;
 }
@@ -133,7 +192,7 @@ void GUI::UpdateControls(const std::string & pagename, const CONFIG & controlfil
 	pages[pagename].UpdateControls(node, controlfile, font);
 }
 
-void GUI::DeactivateAll()
+void GUI::Deactivate()
 {
 	for (std::map<std::string, GUIPAGE>::iterator i = pages.begin(); i != pages.end(); ++i)
 	{
@@ -171,15 +230,9 @@ std::list <std::string> GUI::ProcessInput(
 	{
 		std::string actionname = i->first;
 
-		//if the action is the same as a page name, just switch to that page
-		//decide which main page to use
-		if (actionname == "Main")
-		{
-			if (ingame)
-			{
-				actionname = "InGameMenu";
-			}
-		}
+		// if the action is the same as a page name, just switch to that page
+		if (ingame && actionname == "Main")
+				actionname = "InGameMain";
 
 		if (pages.find(actionname) != pages.end())
 		{
@@ -319,7 +372,15 @@ void GUI::ActivatePage(
 	std::ostream & error_output,
 	bool save_options)
 {
-	if (active_page == pages.find(pagename))
+	std::map<std::string, GUIPAGE>::iterator next_active_page;
+	next_active_page = pages.find(pagename);
+	if (next_active_page == pages.end())
+	{
+		error_output << "Gui page not found: " << pagename << std::endl;
+		return;
+	}
+
+	if (active_page == next_active_page)
 	{
 		animation_counter = animation_count_start = activation_time; // fade it back in at least
 		return;
@@ -342,8 +403,7 @@ void GUI::ActivatePage(
 	}
 
 	last_active_page = active_page;
-	active_page = pages.find(pagename);
-	assert(active_page != pages.end());
+	active_page = next_active_page;
 	active_page->second.SetVisible(node, true);
 	animation_counter = animation_count_start = activation_time;
 
@@ -484,11 +544,11 @@ bool GUI::SetLabelText(const std::string & pagename, const std::string & labelna
 		return false;
 
 	SCENENODE & pagenode = GetPageNode(pagename);
-	reseatable_reference <WIDGET_LABEL> label = GetPage(pagename).GetLabel(labelname);
+	WIDGET_LABEL * label = GetPage(pagename).GetLabel(labelname);
 	if (!label)
 		return false;
 
-	label.get().SetText(pagenode, text);
+	label->SetText(pagenode, text);
 
 	return true;
 }
@@ -498,11 +558,11 @@ bool GUI::GetLabelText(const std::string & pagename, const std::string & labelna
 	if (pages.find(pagename) == pages.end())
 		return false;
 
-	reseatable_reference <WIDGET_LABEL> label = GetPage(pagename).GetLabel(labelname);
+	WIDGET_LABEL * label = GetPage(pagename).GetLabel(labelname);
 	if (!label)
 		return false;
 
-	text_output = label.get().GetText();
+	text_output = label->GetText();
 
 	return true;
 }
@@ -513,11 +573,11 @@ bool GUI::SetButtonEnabled(const std::string & pagename, const std::string & but
 		return false;
 
 	SCENENODE & pagenode = GetPageNode(pagename);
-	reseatable_reference <WIDGET_BUTTON> button = GetPage(pagename).GetButton(buttonname);
+	WIDGET_BUTTON * button = GetPage(pagename).GetButton(buttonname);
 	if (!button)
 		return false;
 
-	button.get().SetEnabled(pagenode, enable);
+	button->SetEnabled(pagenode, enable);
 
 	return true;
 }

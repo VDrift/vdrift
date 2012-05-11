@@ -143,22 +143,17 @@ bool GUIPAGE::Load(
 			bool enabled = true;
 
 			if (!pagefile.GetParam(section, "action", action, error_output)) return false;
-			if (!pagefile.GetParam(section, "cancel", cancel, error_output)) return false;
+			pagefile.GetParam(section, "cancel", cancel);
 			pagefile.GetParam(section, "enabled", enabled);
-
-			std::tr1::shared_ptr<TEXTURE> texture_up, texture_down, texture_sel;
-			if (!content.load(texpath, "widgets/btn_up_unsel.png", texinfo, texture_sel)) return false;
-			if (!content.load(texpath, "widgets/btn_down.png", texinfo, texture_down)) return false;
-			if (!content.load(texpath, "widgets/btn_up.png", texinfo, texture_up)) return false;
 
 			WIDGET_BUTTON * new_widget = new WIDGET_BUTTON();
 			new_widget->SetupDrawable(
-				sref, texture_up, texture_down, texture_sel,
-				font, text, scalex, scaley,
+				sref, font, align, scalex, scaley,
 				xy[0], xy[1], w, h, z,
 				rgb[0], rgb[1], rgb[2]);
-			new_widget->SetAction(action);
+			new_widget->SetText(sref, text);
 			new_widget->SetDescription(desc);
+			new_widget->SetAction(action);
 			new_widget->SetCancel(cancel);
 			new_widget->SetEnabled(sref, enabled);
 			widgets.push_back(new_widget);
@@ -166,7 +161,7 @@ bool GUIPAGE::Load(
 			std::string name;
 			if (pagefile.GetParam(section, "name", name))
 			{
-				button_widgets[name] = *new_widget;
+				buttons[name] = new_widget;
 			}
 		}
 		else if (type == "label")
@@ -182,7 +177,7 @@ bool GUIPAGE::Load(
 			std::string name;
 			if (pagefile.GetParam(section, "name", name))
 			{
-				label_widgets[name] = *new_widget;
+				labels[name] = new_widget;
 			}
 		}
 		else if (type == "stringwheel" || type == "intwheel" || type == "floatwheel")
@@ -274,10 +269,11 @@ bool GUIPAGE::Load(
 		else if (type == "slider")
 		{
 			float min(0), max(1);
-			bool percentage(false);
+			bool percent(false), fill(false);
 			std::string name, setting;
 			if (!pagefile.GetParam(section, "name", name, error_output)) return false;
 			if (!pagefile.GetParam(section, "setting", setting, error_output)) return false;
+			pagefile.GetParam(section, "fill", fill);
 
 			std::map <std::string, GUIOPTION>::const_iterator opt = optionmap.find(setting);
 			if (opt == optionmap.end())
@@ -287,7 +283,7 @@ bool GUIPAGE::Load(
 			}
 			min = opt->second.GetMin();
 			max = opt->second.GetMax();
-			percentage = opt->second.GetPercentage();
+			percent = opt->second.GetPercentage();
 			desc = opt->second.GetDescription();
 
 			std::tr1::shared_ptr<TEXTURE> bgtex, bartex;
@@ -300,7 +296,7 @@ bool GUIPAGE::Load(
 				optionmap, setting,
 				font, scalex, scaley,
 				xy[0], xy[1], w, h, z,
-				min, max, percentage,
+				min, max, percent, fill,
 				error_output);
 			new_widget->SetDescription(desc);
 			new_widget->SetColor(sref, rgb[0], rgb[1], rgb[2]);
@@ -330,21 +326,9 @@ bool GUIPAGE::Load(
 			pagefile.GetParam(section, "analog", analog);
 			pagefile.GetParam(section, "only_one", only_one);
 
-			std::vector <std::tr1::shared_ptr<TEXTURE> > control(WIDGET_CONTROLGRAB::END);
-			if (!content.load(texpath, "widgets/controls/add.png", texinfo, control[WIDGET_CONTROLGRAB::ADD])) return false;
-			if (!content.load(texpath, "widgets/controls/add_sel.png", texinfo, control[WIDGET_CONTROLGRAB::ADDSEL])) return false;
-			if (!content.load(texpath, "widgets/controls/joy_axis.png", texinfo, control[WIDGET_CONTROLGRAB::JOYAXIS])) return false;
-			if (!content.load(texpath, "widgets/controls/joy_axis_sel.png", texinfo, control[WIDGET_CONTROLGRAB::JOYAXISSEL])) return false;
-			if (!content.load(texpath, "widgets/controls/joy_btn.png", texinfo, control[WIDGET_CONTROLGRAB::JOYBTN])) return false;
-			if (!content.load(texpath, "widgets/controls/joy_btn_sel.png", texinfo, control[WIDGET_CONTROLGRAB::JOYBTNSEL])) return false;
-			if (!content.load(texpath, "widgets/controls/key.png", texinfo, control[WIDGET_CONTROLGRAB::KEY])) return false;
-			if (!content.load(texpath, "widgets/controls/key_sel.png", texinfo, control[WIDGET_CONTROLGRAB::KEYSEL])) return false;
-			if (!content.load(texpath, "widgets/controls/mouse.png", texinfo, control[WIDGET_CONTROLGRAB::MOUSE])) return false;
-			if (!content.load(texpath, "widgets/controls/mouse_sel.png", texinfo, control[WIDGET_CONTROLGRAB::MOUSESEL])) return false;
-
 			WIDGET_CONTROLGRAB * new_widget = new WIDGET_CONTROLGRAB();
 			new_widget->SetupDrawable(
-				sref, control, setting, controlsconfig, font,
+				sref, setting, controlsconfig, font,
 				scalex, scaley, xy[0], xy[1], z,
 				analog, only_one);
 			controlgrabs.push_back(new_widget);

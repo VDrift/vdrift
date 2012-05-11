@@ -3,9 +3,9 @@
 #include <cassert>
 
 WIDGET_BUTTON::WIDGET_BUTTON() :
-	cancel(true),
-	enabled(true),
-	alpha(1)
+	m_cancel(true),
+	m_enabled(true),
+	m_alpha(1)
 {
 	// ctor
 }
@@ -17,43 +17,29 @@ WIDGET_BUTTON::~WIDGET_BUTTON()
 
 void WIDGET_BUTTON::SetAlpha(SCENENODE & scene, float value)
 {
-	float basealpha = enabled ? 1.0 : 0.5;
-	label.SetAlpha(scene, value * basealpha);
-	image_up.SetAlpha(scene, value * basealpha);
-	image_down.SetAlpha(scene, value * basealpha);
-	image_selected.SetAlpha(scene, value * basealpha);
-	alpha = value;
-}
-
-void WIDGET_BUTTON::SetVisible(SCENENODE & scene, bool value)
-{
-	label.SetVisible(scene, value);
-	if (state == UP)
-		image_up.SetVisible(scene, value);
-	else if (state == DOWN)
-		image_down.SetVisible(scene, value);
-	else if (state == SELECTED)
-		image_selected.SetVisible(scene, value);
+	float basealpha = m_enabled ? 1.0 : 0.5;
+	WIDGET_LABEL::SetAlpha(scene, value * basealpha);
+	m_alpha = value;
 }
 
 std::string WIDGET_BUTTON::GetAction() const
 {
-	return active_action;
+	return m_active_action;
 }
 
 std::string WIDGET_BUTTON::GetDescription() const
 {
-	return description;
+	return m_description;
 }
 
-void WIDGET_BUTTON::SetDescription(const std::string & newdesc)
+void WIDGET_BUTTON::SetDescription(const std::string & value)
 {
-	description = newdesc;
+	m_description = value;
 }
 
 bool WIDGET_BUTTON::GetCancel() const
 {
-	return cancel;
+	return m_cancel;
 }
 
 bool WIDGET_BUTTON::ProcessInput(
@@ -61,122 +47,32 @@ bool WIDGET_BUTTON::ProcessInput(
 	float cursorx, float cursory,
 	bool cursordown, bool cursorjustup)
 {
-	active_action.clear();
-
-	if (enabled &&
-		cursorx < image_up.GetCorner2()[0] &&
-		cursorx > image_up.GetCorner1()[0] &&
-		cursory < image_up.GetCorner2()[1] &&
-		cursory > image_up.GetCorner1()[1])
-	{
-		if (cursordown && state != DOWN)
-		{
-			state = DOWN;
-			image_down.SetVisible(scene, true);
-			image_up.SetVisible(scene, false);
-			image_selected.SetVisible(scene, false);
-
-			//std::cout << "depress" << std::endl;
-		}
-		else if (!cursordown && state != SELECTED)
-		{
-			state = SELECTED;
-			image_down.SetVisible(scene, false);
-			image_up.SetVisible(scene, false);
-			image_selected.SetVisible(scene, true);
-		}
-
-		//std::cout << "hover" << std::endl << std::endl;
-
-		if (cursorjustup)
-		{
-			//take some action
-			active_action = action;
-		}
-
-		return true;
-	}
-	else
-	{
-		if (state != UP)
-		{
-			state = UP;
-			image_down.SetVisible(scene, false);
-			image_up.SetVisible(scene, true);
-			image_selected.SetVisible(scene, false);
-		}
-
-		//std::cout << image_up.GetCorner1() << " x " << image_up.GetCorner2() << cursorx << "," << cursory << std::endl << std::endl;
+	if (!m_enabled)
 		return false;
-	}
+
+	m_active_action.clear();
+
+	if (!InFocus(cursorx, cursory))
+		return false;
+
+	if (cursorjustup)
+		m_active_action = m_action;
+
+	return true;
 }
 
-void WIDGET_BUTTON::SetCancel(bool newcancel)
+void WIDGET_BUTTON::SetCancel(bool value)
 {
-	cancel = newcancel;
+	m_cancel = value;
 }
 
-void WIDGET_BUTTON::SetAction(const std::string & newaction)
+void WIDGET_BUTTON::SetAction(const std::string & value)
 {
-	action = newaction;
+	m_action = value;
 }
 
-void WIDGET_BUTTON::SetupDrawable(
-	SCENENODE & scene,
-	std::tr1::shared_ptr<TEXTURE> teximage_up,
-	std::tr1::shared_ptr<TEXTURE> teximage_down,
-	std::tr1::shared_ptr<TEXTURE> teximage_selected,
-	const FONT & font,
-	const std::string & text,
-	float scalex, float scaley,
-	float centerx, float centery,
-	float w, float h, float z,
-	float r, float g, float b)
+void WIDGET_BUTTON::SetEnabled(SCENENODE & scene, bool value)
 {
-	assert(teximage_up);
-	assert(teximage_down);
-	assert(teximage_selected);
-
-	m_r = r;
-	m_g = g;
-	m_b = b;
-
-	// enlarge button to fit the text contained
-	if (h < scaley) h = scaley;
-	if (w < font.GetWidth(text) * scalex) w = font.GetWidth(text) * scalex;
-	float hwratio = scaley / scalex;
-
-	label.SetupDrawable(
-		scene, font, 0,
-		scalex, scaley,
-		centerx, centery,
-		w, h, z + 1,
-		r, g, b);
-
-	label.SetText(scene, text);
-
-	image_up.SetupDrawable(
-		scene, teximage_up,
-		centerx, centery,
-		w, h, z, true, hwratio);
-
-	image_down.SetupDrawable(
-		scene, teximage_down,
-		centerx, centery,
-		w, h, z, true, hwratio);
-
-	image_selected.SetupDrawable(
-		scene, teximage_selected,
-		centerx, centery,
-		w, h, z, true, hwratio);
-
-	image_down.SetVisible(scene, false);
-	image_selected.SetVisible(scene, false);
-	state = UP;
-}
-
-void WIDGET_BUTTON::SetEnabled(SCENENODE & scene, bool newenabled)
-{
-	enabled = newenabled;
-	SetAlpha(scene, alpha);
+	m_enabled = value;
+	SetAlpha(scene, m_alpha);
 }

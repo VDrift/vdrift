@@ -4,7 +4,7 @@
 #include "widget_label.h"
 #include "widget_image.h"
 
-class WIDGET_BUTTON : public WIDGET
+class WIDGET_BUTTON : public WIDGET_LABEL
 {
 public:
 	WIDGET_BUTTON();
@@ -13,13 +13,11 @@ public:
 
 	virtual void SetAlpha(SCENENODE & scene, float value);
 
-	virtual void SetVisible(SCENENODE & scene, bool value);
-
 	virtual std::string GetAction() const;
 
 	virtual std::string GetDescription() const;
 
-	virtual void SetDescription(const std::string & newdesc);
+	virtual void SetDescription(const std::string & value);
 
 	virtual bool GetCancel() const;
 
@@ -28,36 +26,19 @@ public:
 		float cursorx, float cursory,
 		bool cursordown, bool cursorjustup);
 
-	void SetCancel(bool newcancel);
+	void SetCancel(bool value);
 
-	void SetAction(const std::string & newaction);
+	void SetAction(const std::string & value);
 
-	void SetupDrawable(
-		SCENENODE & scene,
-		std::tr1::shared_ptr<TEXTURE> teximage_up,
-		std::tr1::shared_ptr<TEXTURE> teximage_down,
-		std::tr1::shared_ptr<TEXTURE> teximage_selected,
-		const FONT & font,
-		const std::string & text,
-		float scalex, float scaley,
-		float centerx, float centery,
-		float w, float h, float z,
-		float r, float g, float b);
-
-	void SetEnabled(SCENENODE & scene, bool newenabled);
+	void SetEnabled(SCENENODE & scene, bool value);
 
 private:
-	WIDGET_LABEL label;
-	WIDGET_IMAGE image_up;
-	WIDGET_IMAGE image_down;
-	WIDGET_IMAGE image_selected;
-	std::string action;
-	std::string active_action;
-	std::string description;
-	enum { UP, DOWN, SELECTED } state;
-	bool cancel;
-	bool enabled;
-	float alpha;
+	std::string m_action;
+	std::string m_active_action;
+	std::string m_description;
+	bool m_cancel;
+	bool m_enabled;
+	float m_alpha;
 };
 
 #endif

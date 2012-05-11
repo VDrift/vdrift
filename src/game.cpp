@@ -225,7 +225,7 @@ void GAME::Start(std::list <std::string> & args)
 		error_output << "Error initializing HUD" << std::endl;
 		return;
 	}
-	hud.Hide();
+	hud.SetVisible(false);
 
 	// Initialise input graph.
 	if (!inputgraph.Init(pathmanager.GetGUITextureDir(settings.GetSkin()), content, error_output))
@@ -943,7 +943,7 @@ void GAME::AdvanceGameLogic()
 		if (active_camera)
 		{
 			pos = active_camera->GetPosition();
-			rot = -active_camera->GetOrientation();
+			rot = active_camera->GetOrientation();
 		}
 		sound.SetListenerPosition(pos[0], pos[1], pos[2]);
 		sound.SetListenerRotation(rot[0], rot[1], rot[2], rot[3]);
@@ -1142,27 +1142,18 @@ void GAME::ProcessGUIInputs()
 			{
 				if (gui.Active())
 				{
-					gui.DeactivateAll();
+					ShowHUD(true);
 					if (settings.GetMouseGrab()) eventsystem.SetMouseCursorVisibility(false);
 				}
 				else
 				{
-					gui.ActivatePage("InGameMenu", 0.25, error_output);
+					ShowHUD(false);
+					gui.ActivatePage("InGameMain", 0.25, error_output);
 					if (settings.GetMouseGrab()) eventsystem.SetMouseCursorVisibility(true);
 				}
 			}
 		}
 	}
-
-	/*// handle F12 with dedicated logic because we want to be able to do this outside of the game
-	if (eventsystem.GetKeyState(SDLK_F12).just_down)
-	{
-		info_output << "Reloading shaders" << std::endl;
-		if (!graphics_interface->ReloadShaders(pathmanager.GetShaderPath(), info_output, error_output))
-		{
-			error_output << "Error reloading shaders" << std::endl;
-		}
-	}*/
 
 	// Handle inputs when we're waiting to assign a control...
 	if (gui.Active())
@@ -1375,7 +1366,7 @@ void GAME::ProcessGUIAction(const std::string & action)
 	{
 		if (gui.Active())
 		{
-			gui.DeactivateAll();
+			gui.Deactivate();
 			if (settings.GetMouseGrab())
 			{
 				eventsystem.SetMouseCursorVisibility(false);
@@ -1541,11 +1532,7 @@ void GAME::UpdateStartList(unsigned i, const std::string & value)
 {
 	std::stringstream s;
 	s << "Racer" << i;
-	SCENENODE & pagenode = gui.GetPageNode("SingleRace");
-	GUIPAGE & page = gui.GetPage("SingleRace");
-	reseatable_reference <WIDGET_LABEL> label = page.GetLabel(s.str());
-	if (label)
-		label->SetText(pagenode, value);
+	gui.SetLabelText("SingleRace", s.str(), value);
 }
 
 void GAME::PlayerCarChange()
@@ -2020,12 +2007,6 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 			carfile.clear();
 	}
 
-	// Enable HUD display.
-	if (settings.GetShowHUD())
-		hud.Show();
-	if (settings.GetInputGraph())
-		inputgraph.Show();
-
 	// Load the timer.
 	float pretime = 0.0f;
 	if (num_laps > 0)
@@ -2048,7 +2029,7 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 
 	// Set up the GUI.
 	gui.SetInGame(true);
-	gui.DeactivateAll();
+	gui.Deactivate();
 	if (settings.GetMouseGrab())
 		eventsystem.SetMouseCursorVisibility(false);
 
@@ -2126,7 +2107,7 @@ void GAME::LeaveGame()
 
 	track.Clear();
 	cars.clear();
-	hud.Hide();
+	hud.SetVisible(false);
 	inputgraph.Hide();
 	trackmap.Unload();
 	timer.Unload();
@@ -2568,10 +2549,7 @@ void GAME::ProcessNewSettings()
 {
 	if (track.Loaded())
 	{
-		if (settings.GetShowHUD())
-			hud.Show();
-		else
-			hud.Hide();
+		hud.SetVisible(settings.GetShowHUD());
 
 		if (settings.GetInputGraph())
 			inputgraph.Show();
@@ -2589,6 +2567,16 @@ void GAME::ProcessNewSettings()
 
 	sound.SetVolume(settings.GetSoundVolume());
 	sound.SetMaxActiveSources(settings.GetMaxSoundSources());
+}
+
+void GAME::ShowHUD(bool value)
+{
+	hud.SetVisible(value && settings.GetShowHUD());
+
+	if (value && settings.GetInputGraph())
+		inputgraph.Show();
+	else
+		inputgraph.Hide();
 }
 
 void GAME::LoadingScreen(float progress, float max, bool drawGui, const std::string & optionalText, float x, float y)

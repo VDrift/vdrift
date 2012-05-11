@@ -17,7 +17,6 @@ void WIDGET_STRINGWHEEL::SetAlpha(SCENENODE & scene, float value)
 	m_label_value.SetAlpha(scene, value);
 	m_label_left.SetAlpha(scene, value);
 	m_label_right.SetAlpha(scene, value);
-	m_background.SetAlpha(scene, 0.25 * value);
 }
 
 void WIDGET_STRINGWHEEL::SetVisible(SCENENODE & scene, bool value)
@@ -25,7 +24,6 @@ void WIDGET_STRINGWHEEL::SetVisible(SCENENODE & scene, bool value)
 	m_label_value.SetVisible(scene, value);
 	m_label_left.SetVisible(scene, m_focus && value);
 	m_label_right.SetVisible(scene, m_focus && value);
-	m_background.SetVisible(scene, m_focus && value);
 }
 
 bool WIDGET_STRINGWHEEL::ProcessInput(
@@ -39,7 +37,6 @@ bool WIDGET_STRINGWHEEL::ProcessInput(
 	m_focus = focus_left || focus_right;
 	m_label_left.SetVisible(scene, m_focus);
 	m_label_right.SetVisible(scene, m_focus);
-	m_background.SetVisible(scene, m_focus);
 
 	if (cursorjustup)
 	{
@@ -108,12 +105,6 @@ void WIDGET_STRINGWHEEL::SetupDrawable(
 	m_xmax = centerx + w * 0.5;
 	m_ymin = centery - h * 0.5;
 	m_ymax = centery + h * 0.5;
-
-	m_background.Load(scene, bgtex, z, error_output);
-	m_background.SetToBillboard(m_xmin, m_ymin, w, h);
-	m_background.SetVisible(scene, m_focus);
-	m_background.SetColor(scene, 0.7, 0.7, 0.7);
-	m_background.SetAlpha(scene, 0.25);
 
 	m_label_value.SetupDrawable(
 		scene, font, 0, scalex, scaley,

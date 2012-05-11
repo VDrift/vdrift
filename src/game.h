@@ -95,6 +95,7 @@ private:
 	void PopulateReplayList(std::list <std::pair <std::string, std::string> > & replaylist);
 	void PopulateCarPaintList(const std::string & carname, std::list <std::pair <std::string, std::string> > & carpaintlist);
 	void UpdateTrackMap();
+	void ShowHUD(bool value);
 	void LoadingScreen(float progress, float max, bool drawGui, const std::string & optionalText, float x, float y);
 	void ProcessNewSettings();
 	bool AssignControls();

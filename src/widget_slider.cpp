@@ -7,7 +7,8 @@ WIDGET_SLIDER::WIDGET_SLIDER() :
 	m_current(0),
 	m_w(0),
 	m_h(0),
-	m_percentage(false),
+	m_percent(false),
+	m_fill(false),
 	m_focus(false)
 {
 	set_value.call.bind<WIDGET_SLIDER, &WIDGET_SLIDER::SetValue>(this);
@@ -23,8 +24,8 @@ void WIDGET_SLIDER::SetAlpha(SCENENODE & scene, float value)
 	m_label_value.SetAlpha(scene, value);
 	m_label_left.SetAlpha(scene, value);
 	m_label_right.SetAlpha(scene, value);
-	m_background.SetAlpha(scene, value * 0.25);
-	m_bar.SetAlpha(scene, value * 0.5);
+	m_slider.SetAlpha(scene, value * 0.5);
+	m_bar.SetAlpha(scene, value * 0.25);
 }
 
 void WIDGET_SLIDER::SetVisible(SCENENODE & scene, bool value)
@@ -32,7 +33,7 @@ void WIDGET_SLIDER::SetVisible(SCENENODE & scene, bool value)
 	m_label_value.SetVisible(scene, value);
 	m_label_left.SetVisible(scene, m_focus && value);
 	m_label_right.SetVisible(scene, m_focus && value);
-	m_background.SetVisible(scene, m_focus && value);
+	m_slider.SetVisible(scene, m_focus && value);
 	m_bar.SetVisible(scene, m_focus && value);
 }
 
@@ -42,10 +43,10 @@ bool WIDGET_SLIDER::ProcessInput(
 	bool cursordown, bool cursorjustup)
 {
 	m_focus = InFocus(cursorx, cursory);
-	m_bar.SetVisible(scene, m_focus);
 	m_label_left.SetVisible(scene, m_focus);
 	m_label_right.SetVisible(scene, m_focus);
-	m_background.SetVisible(scene, m_focus);
+	m_slider.SetVisible(scene, m_focus);
+	m_bar.SetVisible(scene, m_focus);
 
 	if (!m_focus)
 		return false;
@@ -79,16 +80,22 @@ void WIDGET_SLIDER::Update(SCENENODE & scene, float dt)
 {
 	if (m_update)
 	{
-		float dx = ((m_xmax - m_xmin) - m_w) * 0.5;
-		float xmin = m_xmin + dx;
-		float ymin = m_ymin + m_h * 0.15;
-		float h = m_h * 0.7;
+		float dx = (m_xmax - m_xmin - m_w) * 0.5;
+		float dy = (m_ymax - m_ymin - m_h);
+		float x = m_xmin + dx;
+		float y = m_ymin + dy;
 		float w = m_w * (m_current - m_min) / (m_max - m_min);
-		m_bar.SetToBillboard(xmin, ymin, w, h);
+		float h = m_h - dy;
+		if (!m_fill)
+		{
+			x = x + w - m_h * 0.1;
+			w = m_h * 0.2;
+		}
+		m_slider.SetToBillboard(x, y, w, h);
 
 		float value = m_current;
 		std::stringstream s;
-		if (m_percentage)
+		if (m_percent)
 		{
 			s.precision(0);
 			value *= 100.0f;
@@ -99,7 +106,7 @@ void WIDGET_SLIDER::Update(SCENENODE & scene, float dt)
 		}
 
 		s << std::fixed << value;
-		if (m_percentage)
+		if (m_percent)
 		{
 			s << "%";
 		}
@@ -124,7 +131,8 @@ void WIDGET_SLIDER::SetupDrawable(
 	float scalex, float scaley,
 	float centerx, float centery,
 	float w, float h, float z,
-	float min, float max, bool percentage,
+	float min, float max,
+	bool percent, bool fill,
 	std::ostream & error_output)
 {
 	assert(bgtex);
@@ -134,19 +142,22 @@ void WIDGET_SLIDER::SetupDrawable(
 	m_current = 0.0;
 	m_min = min;
 	m_max = max;
-	m_percentage = percentage;
+	m_percent = percent;
+	m_fill = fill;
 	m_xmin = centerx - w * 0.5;
 	m_xmax = centerx + w * 0.5;
 	m_ymin = centery - h * 0.5;
 	m_ymax = centery + h * 0.5;
-	m_w = w - 2 * font.GetWidth(" <") * scalex;
-	m_h = h;
+	float dx = font.GetWidth(" <") * scalex;
+	m_w = w - 2 * dx;
+	m_h = scaley;
+	float dy = m_ymax - m_ymin - m_h;
 
-	m_background.Load(scene, bgtex, z, error_output);
-	m_background.SetToBillboard(m_xmin, m_ymin, w, h);
-	m_background.SetVisible(scene, m_focus);
-	m_background.SetColor(scene, 0.7, 0.7, 0.7);
-	m_background.SetAlpha(scene, 0.25);
+	m_bar.Load(scene, bgtex, z, error_output);
+	m_bar.SetToBillboard(m_xmin + dx, m_ymin + dy, m_w, m_h - dy);
+	m_bar.SetVisible(scene, m_focus);
+	m_bar.SetColor(scene, 0.7, 0.7, 0.7);
+	m_bar.SetAlpha(scene, 0.25);
 
 	m_label_value.SetupDrawable(
 		scene, font, 0, scalex, scaley,
@@ -166,7 +177,7 @@ void WIDGET_SLIDER::SetupDrawable(
 	m_label_left.SetText(scene, " <");
 	m_label_right.SetText(scene, "> ");
 
-	m_bar.Load(scene, bartex, z + 1, error_output);
+	m_slider.Load(scene, bartex, z + 1, error_output);
 
 	// connect slots, signals
 	std::map<std::string, GUIOPTION>::iterator i = optionmap.find(setting);

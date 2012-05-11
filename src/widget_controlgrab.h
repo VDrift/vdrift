@@ -38,7 +38,6 @@ public:
 
 	void SetupDrawable(
 		SCENENODE & scene,
-		const std::vector <std::tr1::shared_ptr<TEXTURE> > & texturevector,
 		const std::string & newsetting,
 		const CONFIG & c,
 		const FONT & font,
@@ -52,21 +51,6 @@ public:
 	{
 		return topnode;
 	}
-
-	enum CONTROLTEXTURE
-	{
-		ADD,
-		ADDSEL,
-		JOYAXIS,
-		JOYAXISSEL,
-		JOYBTN,
-		JOYBTNSEL,
-		KEY,
-		KEYSEL,
-		MOUSE,
-		MOUSESEL,
-		END
-	};
 
 	// awfull widget description hack
 	enum STRING
@@ -120,7 +104,6 @@ private:
 	std::string active_action;
 	keyed_container <SCENENODE>::handle topnode;
 	keyed_container <SCENENODE>::handle ctrlnode;
-	std::vector <std::tr1::shared_ptr<TEXTURE> > textures;
 	float scale_x, scale_y;
 	float x, y, z;
 	float w, h;

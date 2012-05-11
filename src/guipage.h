@@ -43,13 +43,13 @@ public:
 
 	void SetAlpha(SCENENODE & parent, float newalpha);
 
-	///tell all child widgets to update to/from the option map
+	/// tell all child widgets to update to/from the option map
 	void UpdateOptions(SCENENODE & parent, bool save_to, std::map<std::string, GUIOPTION> & optionmap, std::ostream & error_output);
 
-	///update controlgrab widgets
+	/// update controlgrab widgets
 	void UpdateControls(SCENENODE & parentnode, const CONFIG & controls, const FONT & font);
 
-	///returns a list of actions that were generated
+	/// return a list of actions
 	std::list <std::pair <std::string, bool> > ProcessInput(
 		SCENENODE & parent,
 		std::map<std::string, GUIOPTION> & optionmap,
@@ -58,27 +58,18 @@ public:
 		bool cursordown, bool cursorjustup,
 		float screenhwratio);
 
-	///tell all child widgets to do as update tick
+	/// tell all child widgets to do as update tick
 	void Update(SCENENODE & parent, float dt);
 
-	reseatable_reference <WIDGET_LABEL> GetLabel(const std::string & label_widget_name)
-	{
-		return label_widgets[label_widget_name];
-	}
+	WIDGET_LABEL * GetLabel(const std::string & name);
 
-	reseatable_reference <WIDGET_BUTTON> GetButton(const std::string & widget_name)
-	{
-		return button_widgets[widget_name];
-	}
+	WIDGET_BUTTON * GetButton(const std::string & name);
 
-	SCENENODE & GetNode(SCENENODE & parentnode)
-	{
-		return parentnode.GetNode(s);
-	}
+	SCENENODE & GetNode(SCENENODE & parentnode);
 
 private:
-	std::map <std::string, reseatable_reference <WIDGET_LABEL> > label_widgets;
-	std::map <std::string, reseatable_reference <WIDGET_BUTTON> > button_widgets;
+	std::map <std::string, WIDGET_LABEL *> labels;
+	std::map <std::string, WIDGET_BUTTON *> buttons;
 	std::vector <WIDGET_CONTROLGRAB *> controlgrabs;
 	std::vector <WIDGET *> widgets;
 	WIDGET_LABEL * tooltip_widget;
@@ -88,5 +79,26 @@ private:
 
 	void Clear(SCENENODE & parentnode);
 };
+
+inline WIDGET_LABEL * GUIPAGE::GetLabel(const std::string & name)
+{
+	std::map <std::string, WIDGET_LABEL*>::const_iterator i = labels.find(name);
+	if (i != labels.end())
+		return i->second;
+	return 0;
+}
+
+inline WIDGET_BUTTON * GUIPAGE::GetButton(const std::string & name)
+{
+	std::map <std::string, WIDGET_BUTTON*>::const_iterator i = buttons.find(name);
+	if (i != buttons.end())
+		return i->second;
+	return 0;
+}
+
+inline SCENENODE & GUIPAGE::GetNode(SCENENODE & parentnode)
+{
+	return parentnode.GetNode(s);
+}
 
 #endif
