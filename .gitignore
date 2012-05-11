@@ -4,7 +4,7 @@ Makefile
 vdrift
 vdrift.cfg
 build
-data
+*data*
 obj
 src/definitions.h
 vdrift-mac
