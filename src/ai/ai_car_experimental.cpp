@@ -142,7 +142,7 @@ MATHVECTOR <float, 3> AI_Car_Experimental::GetPatchBackCenter(const BEZIER & pat
 
 MATHVECTOR <float, 3> AI_Car_Experimental::GetPatchDirection(const BEZIER & patch)
 {
-	return (GetPatchFrontCenter(patch) - GetPatchBackCenter(patch)) * 0.5;
+	return GetPatchFrontCenter(patch) - GetPatchBackCenter(patch);
 }
 
 MATHVECTOR <float, 3> AI_Car_Experimental::GetPatchWidthVector(const BEZIER & patch)
@@ -575,7 +575,7 @@ void AI_Car_Experimental::updateSteer()
 		steerlook.push_back(next_patch);
 #endif
 
-		length += GetPatchDirection(next_patch).Magnitude()*2.0;
+		length += GetPatchDirection(next_patch).Magnitude();
 		dest_point = GetPatchFrontCenter(next_patch);
 
 		//if there is no next patch for whatever reason, stop lookahead
