@@ -86,15 +86,20 @@ private:
 	static float GetHorizontalDistanceAlongPatch(const BEZIER & patch, MATHVECTOR <float, 3> carposition);
 	static float RampBetween(float val, float startat, float endat);
 	
+	/// Creates a ray from the middle of the car. Returns the distance to the first colliding object or max_length.
+	float RayCastDistance( MATHVECTOR <float, 3> direction, float max_length);
+	
 #ifdef VISUALIZE_AI_DEBUG
 	VERTEXARRAY brakeshape;
 	VERTEXARRAY steershape;
 	VERTEXARRAY avoidanceshape;
+	VERTEXARRAY raycastshape;
 	std::vector <BEZIER> brakelook;
 	std::vector <BEZIER> steerlook;
 	keyed_container <DRAWABLE>::handle brakedraw;
 	keyed_container <DRAWABLE>::handle steerdraw;
 	keyed_container <DRAWABLE>::handle avoidancedraw;
+	keyed_container <DRAWABLE>::handle raycastdraw;
 
 	static void ConfigureDrawable(keyed_container <DRAWABLE>::handle & ref, SCENENODE & topnode, float r, float g, float b);
 	static void AddLinePoint(VERTEXARRAY & va, const MATHVECTOR<float, 3> & p);

@@ -307,6 +307,11 @@ public:
 		return dynamics.getDynamicsWorld();
 	}
 
+	CARDYNAMICS& GetCarDynamics()
+	{
+		return dynamics;
+	}
+
 	SCENENODE & GetNode() {return topnode;}
 
 protected:

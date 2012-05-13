@@ -9,6 +9,7 @@
 #include "coordinatesystem.h"
 #include "optional.h"
 #include "unittest.h"
+#include "dynamicsworld.h"
 
 #include <cassert>
 #include <cmath>
@@ -39,6 +40,10 @@ AI_Car_Experimental::~AI_Car_Experimental ()
 	if (steerdraw.valid())
 	{
 		topnode.GetDrawlist().normal_noblend.erase(steerdraw);
+	}
+	if (raycastdraw.valid())
+	{
+		topnode.GetDrawlist().normal_noblend.erase(raycastdraw);
 	}
 #endif
 }
@@ -291,6 +296,7 @@ void AI_Car_Experimental::updateGasBrake()
 {
 #ifdef VISUALIZE_AI_DEBUG
 	brakelook.clear();
+	raycastshape.Clear();
 #endif
 
 	float brake_value = 0.0;
@@ -501,6 +507,28 @@ float AI_Car_Experimental::calcBrakeDist(float current_speed, float allowed_spee
 	float v1sqr = current_speed * current_speed;
 	float v2sqr = allowed_speed * allowed_speed;
 	return -log((c + v2sqr*d)/(c + v1sqr*d))/(2.0*d);
+}
+float AI_Car_Experimental::RayCastDistance( MATHVECTOR <float, 3> direction, float max_length){
+	btVector3 pos = car->GetCarDynamics().GetPosition();
+	btVector3 dir = car->GetCarDynamics().LocalToWorld(ToBulletVector(direction));
+	dir -= pos;
+	COLLISION_CONTACT contact;
+	car->GetDynamicsWorld()->castRay(
+		pos,
+		dir,
+		max_length,
+		&car->GetCarDynamics().getCollisionObject(),
+		contact
+		);
+	float depth = contact.GetDepth();
+	float dist = std::min(max_length, depth);
+	MATHVECTOR<float, 3> pos_start(ToMathVector<float>(pos));
+	MATHVECTOR<float, 3> pos_end = pos_start + (ToMathVector<float>(dir) * dist);
+#ifdef VISUALIZE_AI_DEBUG
+	AddLinePoint(raycastshape, pos_start);
+	AddLinePoint(raycastshape, pos_end);
+#endif
+	return dist;
 }
 
 void AI_Car_Experimental::updateSteer()
@@ -928,10 +956,12 @@ void AI_Car_Experimental::Visualize()
 	SCENENODE& topnode  = car->GetNode();
 	ConfigureDrawable(brakedraw, topnode, 0,1,0);
 	ConfigureDrawable(steerdraw, topnode, 0,0,1);
+	ConfigureDrawable(raycastdraw, topnode, 1,0,0);
 	//ConfigureDrawable(avoidancedraw, topnode, 1,0,0);
 
 	DRAWABLE & brakedrawable = topnode.GetDrawlist().normal_noblend.get(brakedraw);
 	DRAWABLE & steerdrawable = topnode.GetDrawlist().normal_noblend.get(steerdraw);
+	DRAWABLE & raycastdrawable = topnode.GetDrawlist().normal_noblend.get(raycastdraw);
 
 	brakedrawable.SetLineSize(4);
 	brakedrawable.SetVertArray(&brakeshape);
@@ -958,6 +988,9 @@ void AI_Car_Experimental::Visualize()
 		AddLinePoint(steershape, TransformToWorldspace(patch.GetFR()));
 		AddLinePoint(steershape, TransformToWorldspace(patch.GetBL()));
 	}
+
+	raycastdrawable.SetLineSize(4);
+	raycastdrawable.SetVertArray(&raycastshape);
 }
 #endif
 /*
