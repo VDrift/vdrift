@@ -88,6 +88,10 @@ DynamicsWorld::~DynamicsWorld()
 	reset();
 }
 
+const BEZIER* DynamicsWorld::GetLapSequence(int i){
+	return track->GetLapSequence(i);
+}
+
 bool DynamicsWorld::castRay(
 	const btVector3 & origin,
 	const btVector3 & direction,

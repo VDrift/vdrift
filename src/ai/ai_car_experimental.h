@@ -85,6 +85,11 @@ private:
 	static void TrimPatch(BEZIER & patch, float trimleft_front, float trimright_front, float trimleft_back, float trimright_back);
 	static float GetHorizontalDistanceAlongPatch(const BEZIER & patch, MATHVECTOR <float, 3> carposition);
 	static float RampBetween(float val, float startat, float endat);
+
+	/// This will return the nearest patch to the car.
+	/// This is only useful if the car is outside of the road.
+	/// Optionally, you can pass a helper bezier to improve performance, which should be near to the car, but maybe not the nearest.
+	const BEZIER* getNearestPatch(const BEZIER* helper = 0);
 	
 	/// Creates a ray from the middle of the car. Returns the distance to the first colliding object or max_length.
 	float RayCastDistance( MATHVECTOR <float, 3> direction, float max_length);

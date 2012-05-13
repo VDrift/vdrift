@@ -543,6 +543,33 @@ float AI_Car_Experimental::RayCastDistance( MATHVECTOR <float, 3> direction, flo
 	return dist;
 }
 
+const BEZIER* AI_Car_Experimental::getNearestPatch(const BEZIER* helper)
+{
+	// At the moment this is very slow!
+	// TODO: Implement backward chaining for BEZIER, to just look around the helper if passed.
+	const BEZIER* b;
+	const BEZIER* b_end;
+	b_end = car->GetDynamicsWorld()->GetLapSequence(0);
+	b = b_end->GetNextPatch();
+	const BEZIER* b_nearest = 0;
+	float v_nearDist = 1000000.0f;
+	MATHVECTOR <float, 3> c = car->GetPosition();
+	while(b != 0 && b != b_end)
+	{
+		MATHVECTOR<float,3> v(b->GetPoint(2,2));
+		v[0] -= c[1];
+		v[2] -= c[0];
+		float dist = v[0]*v[0]+v[2]*v[2];
+		if(dist < v_nearDist){
+			v_nearDist = dist;
+			b_nearest = b;
+
+		}
+		b = b->GetNextPatch();
+	}
+	assert(b_nearest);
+	return b_nearest;
+}
 void AI_Car_Experimental::updateSteer()
 {
 #ifdef VISUALIZE_AI_DEBUG
@@ -554,10 +581,11 @@ void AI_Car_Experimental::updateSteer()
 	//if car has no contact with track, just let it roll
 	if (!curr_patch_ptr)
 	{
-		if (!last_patch) return;
+		last_patch = getNearestPatch(last_patch);
+
 		//if car is off track, steer the car towards the last patch it was on
 		//this should get the car back on track
-		else curr_patch_ptr = last_patch;
+		curr_patch_ptr = last_patch;
 	}
 
 	last_patch = curr_patch_ptr; //store the last patch car was on
