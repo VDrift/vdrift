@@ -70,6 +70,8 @@ private:
 	float lateral_mu; ///<friction coefficient of the tire - lateral direction
 	const BEZIER * last_patch; ///<last patch the car was on, used in case car is off track
 	bool use_racingline; ///<true allows the AI to take a proper racing line
+	bool isRecovering; ///< tries to get back to the road. 
+	time_t recoverStartTime;
 
 	template<class T> static bool isnan(const T & x);
 	static float clamp(float val, float min, float max);
@@ -91,6 +93,7 @@ private:
 	/// Optionally, you can pass a helper bezier to improve performance, which should be near to the car, but maybe not the nearest.
 	const BEZIER* getNearestPatch(const BEZIER* helper = 0);
 	
+	bool recover(const BEZIER* patch);
 	/// Creates a ray from the middle of the car. Returns the distance to the first colliding object or max_length.
 	float RayCastDistance( MATHVECTOR <float, 3> direction, float max_length);
 	
