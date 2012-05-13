@@ -501,12 +501,24 @@ float AI_Car_Experimental::calcSpeedLimit(const BEZIER* patch, const BEZIER * ne
 
 float AI_Car_Experimental::calcBrakeDist(float current_speed, float allowed_speed, float friction)
 {
-	float c = friction * GRAVITY;
-	float d = (-(car->GetAerodynamicDownforceCoefficient()) * friction +
-				car->GetAeordynamicDragCoefficient()) * car->GetInvMass();
-	float v1sqr = current_speed * current_speed;
-	float v2sqr = allowed_speed * allowed_speed;
-	return -log((c + v2sqr*d)/(c + v1sqr*d))/(2.0*d);
+	// Old way, which returns very big breaking distances:
+	// float c = friction * GRAVITY;
+	// float d = (-(car->GetAerodynamicDownforceCoefficient()) * friction +
+	// 			car->GetAeordynamicDragCoefficient()) * car->GetInvMass();
+	// float v1sqr = current_speed * current_speed;
+	// float v2sqr = allowed_speed * allowed_speed;
+	// return (c + v2sqr*d)/(c + v1sqr*d)/(2.0*d);*/
+
+	if (allowed_speed < current_speed){
+		// equations used:
+		// mu * mass * gravity * distance = 0.5 * mass * (Initial_velocity^2 - Final_velocity^2)
+		// where distance is:
+		//  distance = (Initial_velocity^2 - Final_velocity^2) / (2 * mu * gravity)
+		return (current_speed*current_speed - allowed_speed*allowed_speed) / ( 2.0 * friction * GRAVITY);
+	} else {
+		//if allowed speed  is bigger then the current speed then break distance is 0.
+		return 0;
+	}
 }
 float AI_Car_Experimental::RayCastDistance( MATHVECTOR <float, 3> direction, float max_length){
 	btVector3 pos = car->GetCarDynamics().GetPosition();
