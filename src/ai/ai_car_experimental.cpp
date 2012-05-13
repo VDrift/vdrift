@@ -66,8 +66,8 @@ template<class T> bool AI_Car_Experimental::isnan(const T & x)
 #define FRICTION_FACTOR_LAT 0.62
 
 //maximum change in brake value per second
-#define BRAKE_RATE_LIMIT 0.1
-#define THROTTLE_RATE_LIMIT 0.1
+#define BRAKE_RATE_LIMIT 2.0 // 500 milisec
+#define THROTTLE_RATE_LIMIT 2.0 
 
 float AI_Car_Experimental::clamp(float val, float min, float max)
 {
@@ -88,9 +88,19 @@ float AI_Car_Experimental::RateLimit(float old_value, float new_value, float rat
 
 void AI_Car_Experimental::Update(float dt, const std::list <CAR> & checkcars)
 {
+	float lastThrottle = inputs[CARINPUT::THROTTLE];
+	float lastBreak = inputs[CARINPUT::BRAKE];
+	fill(inputs.begin(), inputs.end(), 0);
+
 	analyzeOthers(dt, checkcars);
 	updateGasBrake();
 	updateSteer();
+	float rateLimit = THROTTLE_RATE_LIMIT * dt;
+	inputs[CARINPUT::THROTTLE] = RateLimit(lastThrottle, inputs[CARINPUT::THROTTLE],
+		rateLimit, rateLimit);
+	rateLimit = BRAKE_RATE_LIMIT * dt;
+	inputs[CARINPUT::BRAKE] = RateLimit(lastBreak, inputs[CARINPUT::BRAKE],
+		rateLimit, rateLimit);
 }
 
 MATHVECTOR <float, 3> AI_Car_Experimental::TransformToWorldspace(const MATHVECTOR <float, 3> & bezierspace)
@@ -396,7 +406,7 @@ void AI_Car_Experimental::updateGasBrake()
 		}
 
 		dist_checked += GetPatchDirection(patch_to_check).Magnitude();
-		brake_dist = calcBrakeDist(currentspeed, speed_limit, longitude_mu);
+		brake_dist = calcBrakeDist(currentspeed, speed_limit, longitude_mu) * 1.4;
 
 		//if (brake_dist + CORNER_BRAKE_OFFSET > dist_checked)
 		if (brake_dist > dist_checked)
@@ -429,13 +439,8 @@ void AI_Car_Experimental::updateGasBrake()
 		brake_value = std::max(trafficbrake, brake_value);
 	}*/
 
-	inputs[CARINPUT::THROTTLE] = RateLimit(inputs[CARINPUT::THROTTLE], gas_value,
-											  THROTTLE_RATE_LIMIT, THROTTLE_RATE_LIMIT);
-	inputs[CARINPUT::BRAKE] = RateLimit(inputs[CARINPUT::BRAKE], brake_value,
-										   BRAKE_RATE_LIMIT, BRAKE_RATE_LIMIT);
-
-	//inputs[CARINPUT::THROTTLE] = 0.0;
-	//inputs[CARINPUT::BRAKE] = 1.0;
+	inputs[CARINPUT::THROTTLE] = gas_value;
+	inputs[CARINPUT::BRAKE] = brake_value;
 }
 
 void AI_Car_Experimental::calcMu()
