@@ -56,16 +56,18 @@ void PATHMANAGER::Init(std::ostream & info_output, std::ostream & error_output)
 	// Find data dir.
 	const char * datadir = getenv("VDRIFT_DATA_DIRECTORY");
 	if (datadir == NULL)
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(__APPLE__)
 		if (FileExists("data/settings/options.config"))
 			data_directory = "data";
         else
 			data_directory = DATA_DIR;
+#elif __APPLE__
+        data_directory = get_mac_data_dir();
 #else
 		data_directory = "data";
 #endif
-        else
-		data_directory = std::string(datadir);
+    else
+        data_directory = std::string(datadir);
 
 	// Find settings file.
 	settings_path = home_directory;
@@ -95,7 +97,7 @@ void PATHMANAGER::Init(std::ostream & info_output, std::ostream & error_output)
 	info_output << "Data directory: " << data_directory;
 	if (datadir)
 		info_output << "\nVDRIFT_DATA_DIRECTORY: " << datadir;
-#ifndef _WIN32
+#if !defined(_WIN32) && !defined(__APPLE__)
 	info_output << "\nDATA_DIR: " << DATA_DIR;
 #endif
 	info_output << std::endl;
