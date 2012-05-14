@@ -366,6 +366,9 @@ void HUD::Update(
 	bool outofgas, bool nosactive, float nosamount,
 	bool drifting, float driftscore, float thisdriftscore)
 {
+	if (!lastvisible)
+		return;
+
 	float screenhwratio = displayheight/displaywidth;
 
 	if (debug_hud_info)

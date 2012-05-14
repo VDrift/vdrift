@@ -1136,22 +1136,12 @@ void GAME::ProcessGUIInputs()
 
 			gui.SetControlsNeedLoading(false);
 		}
-		else
+		else if (!gui.Active() && track.Loaded())
 		{
-			if (track.Loaded())
-			{
-				if (gui.Active())
-				{
-					ShowHUD(true);
-					if (settings.GetMouseGrab()) eventsystem.SetMouseCursorVisibility(false);
-				}
-				else
-				{
-					ShowHUD(false);
-					gui.ActivatePage("InGameMain", 0.25, error_output);
-					if (settings.GetMouseGrab()) eventsystem.SetMouseCursorVisibility(true);
-				}
-			}
+			ShowHUD(false);
+			gui.ActivatePage("InGameMain", 0.25, error_output);
+			if (settings.GetMouseGrab())
+				eventsystem.SetMouseCursorVisibility(true);
 		}
 	}
 
@@ -1366,11 +1356,10 @@ void GAME::ProcessGUIAction(const std::string & action)
 	{
 		if (gui.Active())
 		{
-			gui.Deactivate();
 			if (settings.GetMouseGrab())
-			{
 				eventsystem.SetMouseCursorVisibility(false);
-			}
+			gui.Deactivate();
+			ShowHUD(true);
 		}
 	}
 	else if (action == "LeaveGame")
@@ -2030,6 +2019,7 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	// Set up the GUI.
 	gui.SetInGame(true);
 	gui.Deactivate();
+	ShowHUD(true);
 	if (settings.GetMouseGrab())
 		eventsystem.SetMouseCursorVisibility(false);
 
@@ -2549,13 +2539,6 @@ void GAME::ProcessNewSettings()
 {
 	if (track.Loaded())
 	{
-		hud.SetVisible(settings.GetShowHUD());
-
-		if (settings.GetInputGraph())
-			inputgraph.Show();
-		else
-			inputgraph.Hide();
-
 		track.SetRacingLineVisibility(settings.GetRacingline());
 	}
 
