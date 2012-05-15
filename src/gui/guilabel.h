@@ -1,19 +1,19 @@
-#ifndef _WIDGET_LABEL_H
-#define _WIDGET_LABEL_H
+#ifndef _GUILABEL_H
+#define _GUILABEL_H
 
-#include "widget.h"
+#include "gui/guiwidget.h"
 #include "scenenode.h"
 #include "text_draw.h"
 
 class TEXTURE;
 class FONT;
 
-class WIDGET_LABEL : public WIDGET
+class GUILABEL : public GUIWIDGET
 {
 public:
-	WIDGET_LABEL();
+	GUILABEL();
 
-	virtual ~WIDGET_LABEL();
+	virtual ~GUILABEL();
 
 	virtual void SetAlpha(SCENENODE & scene, float value);
 

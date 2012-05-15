@@ -1,18 +1,18 @@
-#ifndef _WIDGET_MULTIIMAGE_H
-#define _WIDGET_MULTIIMAGE_H
+#ifndef _GUIMULTIIMAGE_H
+#define _GUIMULTIIMAGE_H
 
-#include "widget.h"
+#include "gui/guiwidget.h"
 #include "sprite2d.h"
 #include "mathvector.h"
 
 class SCENENODE;
 
-class WIDGET_MULTIIMAGE : public WIDGET
+class GUIMULTIIMAGE : public GUIWIDGET
 {
 public:
-	WIDGET_MULTIIMAGE();
+	GUIMULTIIMAGE();
 
-	~WIDGET_MULTIIMAGE();
+	~GUIMULTIIMAGE();
 
 	virtual void SetAlpha(SCENENODE & scene, float newalpha);
 
@@ -48,7 +48,7 @@ private:
 	Slot1<const std::string &> set_image;
 	void SetImage(const std::string & value);
 
-	WIDGET_MULTIIMAGE(const WIDGET_MULTIIMAGE & other);
+	GUIMULTIIMAGE(const GUIMULTIIMAGE & other);
 };
 
 #endif

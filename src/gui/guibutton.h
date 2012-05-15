@@ -1,15 +1,15 @@
-#ifndef _WIDGET_BUTTON_H
-#define _WIDGET_BUTTON_H
+#ifndef _GUIBUTTON_H
+#define _GUIBUTTON_H
 
-#include "widget_label.h"
-#include "widget_image.h"
+#include "gui/guilabel.h"
+#include "gui/guiimage.h"
 
-class WIDGET_BUTTON : public WIDGET_LABEL
+class GUIBUTTON : public GUILABEL
 {
 public:
-	WIDGET_BUTTON();
+	GUIBUTTON();
 
-	~WIDGET_BUTTON();
+	~GUIBUTTON();
 
 	virtual void SetAlpha(SCENENODE & scene, float value);
 

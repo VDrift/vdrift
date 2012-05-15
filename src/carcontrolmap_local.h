@@ -9,7 +9,6 @@
 #include <iostream>
 #include <vector>
 
-class WIDGET_CONTROLGRAB;
 class CONFIG;
 class GAME;
 

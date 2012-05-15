@@ -1,4 +1,4 @@
-#include "guioption.h"
+#include "gui/guioption.h"
 
 #include <sstream>
 

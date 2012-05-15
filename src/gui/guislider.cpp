@@ -1,7 +1,7 @@
-#include "widget_slider.h"
-#include "guioption.h"
+#include "gui/guislider.h"
+#include "gui/guioption.h"
 
-WIDGET_SLIDER::WIDGET_SLIDER() :
+GUISLIDER::GUISLIDER() :
 	m_min(0),
 	m_max(1),
 	m_current(0),
@@ -11,15 +11,15 @@ WIDGET_SLIDER::WIDGET_SLIDER() :
 	m_fill(false),
 	m_focus(false)
 {
-	set_value.call.bind<WIDGET_SLIDER, &WIDGET_SLIDER::SetValue>(this);
+	set_value.call.bind<GUISLIDER, &GUISLIDER::SetValue>(this);
 }
 
-WIDGET_SLIDER::~WIDGET_SLIDER()
+GUISLIDER::~GUISLIDER()
 {
 	// dtor
 }
 
-void WIDGET_SLIDER::SetAlpha(SCENENODE & scene, float value)
+void GUISLIDER::SetAlpha(SCENENODE & scene, float value)
 {
 	m_label_value.SetAlpha(scene, value);
 	m_label_left.SetAlpha(scene, value);
@@ -28,7 +28,7 @@ void WIDGET_SLIDER::SetAlpha(SCENENODE & scene, float value)
 	m_bar.SetAlpha(scene, value * 0.25);
 }
 
-void WIDGET_SLIDER::SetVisible(SCENENODE & scene, bool value)
+void GUISLIDER::SetVisible(SCENENODE & scene, bool value)
 {
 	m_label_value.SetVisible(scene, value);
 	m_label_left.SetVisible(scene, m_focus && value);
@@ -37,7 +37,7 @@ void WIDGET_SLIDER::SetVisible(SCENENODE & scene, bool value)
 	m_bar.SetVisible(scene, m_focus && value);
 }
 
-bool WIDGET_SLIDER::ProcessInput(
+bool GUISLIDER::ProcessInput(
 	SCENENODE & scene,
 	float cursorx, float cursory,
 	bool cursordown, bool cursorjustup)
@@ -66,17 +66,17 @@ bool WIDGET_SLIDER::ProcessInput(
 	return true;
 }
 
-std::string WIDGET_SLIDER::GetDescription() const
+std::string GUISLIDER::GetDescription() const
 {
 	return m_description;
 }
 
-void WIDGET_SLIDER::SetDescription(const std::string & value)
+void GUISLIDER::SetDescription(const std::string & value)
 {
 	m_description = value;
 }
 
-void WIDGET_SLIDER::Update(SCENENODE & scene, float dt)
+void GUISLIDER::Update(SCENENODE & scene, float dt)
 {
 	if (m_update)
 	{
@@ -116,12 +116,15 @@ void WIDGET_SLIDER::Update(SCENENODE & scene, float dt)
 	}
 }
 
-void WIDGET_SLIDER::SetColor(SCENENODE & scene, float r, float g, float b)
+void GUISLIDER::SetColor(SCENENODE & scene, float r, float g, float b)
 {
-	//m_wedge.SetColor(scene, r, g, b);
+	m_r = r;
+	m_g = g;
+	m_b = b;
+	m_bar.SetColor(scene, r, g, b);
 }
 
-void WIDGET_SLIDER::SetupDrawable(
+void GUISLIDER::SetupDrawable(
 	SCENENODE & scene,
 	std::tr1::shared_ptr<TEXTURE> bgtex,
 	std::tr1::shared_ptr<TEXTURE> bartex,
@@ -149,9 +152,9 @@ void WIDGET_SLIDER::SetupDrawable(
 	m_ymin = centery - h * 0.5;
 	m_ymax = centery + h * 0.5;
 	float dx = font.GetWidth(" <") * scalex;
+	float dy = m_ymax - m_ymin - m_h;
 	m_w = w - 2 * dx;
 	m_h = scaley;
-	float dy = m_ymax - m_ymin - m_h;
 
 	m_bar.Load(scene, bgtex, z, error_output);
 	m_bar.SetToBillboard(m_xmin + dx, m_ymin + dy, m_w, m_h - dy);
@@ -190,7 +193,7 @@ void WIDGET_SLIDER::SetupDrawable(
 	Update(scene, 0);
 }
 
-void WIDGET_SLIDER::SetValue(const std::string & valuestr)
+void GUISLIDER::SetValue(const std::string & valuestr)
 {
 	float value;
 	std::stringstream s;

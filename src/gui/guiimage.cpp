@@ -1,16 +1,16 @@
-#include "widget_image.h"
+#include "gui/guiimage.h"
 
-void WIDGET_IMAGE::SetAlpha(SCENENODE & node, float newalpha)
+void GUIIMAGE::SetAlpha(SCENENODE & node, float newalpha)
 {
 	GetDrawable(node).SetColor(1, 1, 1, newalpha);
 }
 
-void WIDGET_IMAGE::SetVisible(SCENENODE & node, bool newvis)
+void GUIIMAGE::SetVisible(SCENENODE & node, bool newvis)
 {
 	GetDrawable(node).SetDrawEnable(newvis);
 }
 
-void WIDGET_IMAGE::SetupDrawable(
+void GUIIMAGE::SetupDrawable(
 	SCENENODE & scene,
 	const std::tr1::shared_ptr<TEXTURE> teximage,
 	float x, float y, float w, float h, int z,

@@ -1,8 +1,8 @@
-#include "widget_label.h"
+#include "gui/guilabel.h"
 
 #include <cassert>
 
-WIDGET_LABEL::WIDGET_LABEL() :
+GUILABEL::GUILABEL() :
 	m_font(0),
 	m_x(0),
 	m_y(0),
@@ -13,22 +13,22 @@ WIDGET_LABEL::WIDGET_LABEL() :
 	// constructor
 }
 
-WIDGET_LABEL::~WIDGET_LABEL()
+GUILABEL::~GUILABEL()
 {
 	// destructor
 }
 
-void WIDGET_LABEL::SetAlpha(SCENENODE & scene, float value)
+void GUILABEL::SetAlpha(SCENENODE & scene, float value)
 {
 	GetDrawable(scene).SetColor(m_r, m_g, m_b, value);
 }
 
-void WIDGET_LABEL::SetVisible(SCENENODE & scene, bool value)
+void GUILABEL::SetVisible(SCENENODE & scene, bool value)
 {
 	GetDrawable(scene).SetDrawEnable(value);
 }
 
-void WIDGET_LABEL::SetupDrawable(
+void GUILABEL::SetupDrawable(
 	SCENENODE & scene,
 	const FONT & font,
 	int align,
@@ -62,14 +62,14 @@ void WIDGET_LABEL::SetupDrawable(
 	m_text_draw.Set(drawref, font, m_text, x, y, scalex, scaley, r, g, b);
 }
 
-void WIDGET_LABEL::ReviseDrawable(SCENENODE & scene, const std::string & text)
+void GUILABEL::ReviseDrawable(SCENENODE & scene, const std::string & text)
 {
 	assert(m_font);
 	m_text = text;
 	m_text_draw.Revise(*m_font, m_text);
 }
 
-void WIDGET_LABEL::SetText(SCENENODE & scene, const std::string & text)
+void GUILABEL::SetText(SCENENODE & scene, const std::string & text)
 {
 	assert(m_font);
 	m_text = text;
@@ -81,12 +81,12 @@ void WIDGET_LABEL::SetText(SCENENODE & scene, const std::string & text)
 	m_text_draw.Revise(*m_font, m_text, x, m_y, m_scalex, m_scaley);
 }
 
-const std::string & WIDGET_LABEL::GetText() const
+const std::string & GUILABEL::GetText() const
 {
 	return m_text;
 }
 
-DRAWABLE & WIDGET_LABEL::GetDrawable(SCENENODE & scene)
+DRAWABLE & GUILABEL::GetDrawable(SCENENODE & scene)
 {
 	return scene.GetDrawlist().text.get(m_draw);
 }

@@ -11,7 +11,7 @@
 #include "quaternion.h"
 #include "font.h"
 #include "text_draw.h"
-#include "gui.h"
+#include "gui/gui.h"
 #include "car.h"
 #include "dynamicsworld.h"
 #include "dynamicsdraw.h"

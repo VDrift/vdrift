@@ -26,7 +26,6 @@
 #include "numprocessors.h"
 #include "parallel_task.h"
 #include "performance_testing.h"
-#include "widget_label.h"
 #include "quickprof.h"
 #include "tracksurface.h"
 #include "utils.h"

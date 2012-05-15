@@ -1,19 +1,19 @@
-#ifndef _WIDGET_IMAGE_H
-#define _WIDGET_IMAGE_H
+#ifndef _GUIIMAGE_H
+#define _GUIIMAGE_H
 
-#include "widget.h"
+#include "gui/guiwidget.h"
 #include "mathvector.h"
 #include "scenenode.h"
 #include "vertexarray.h"
 
 class TEXTURE;
 
-class WIDGET_IMAGE : public WIDGET
+class GUIIMAGE : public GUIWIDGET
 {
 public:
-	WIDGET_IMAGE() {};
+	GUIIMAGE() {};
 
-	~WIDGET_IMAGE() {};
+	~GUIIMAGE() {};
 
 	virtual void SetAlpha(SCENENODE & node, float newalpha);
 

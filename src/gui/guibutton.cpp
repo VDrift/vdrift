@@ -1,8 +1,8 @@
-#include "widget_button.h"
+#include "gui/guibutton.h"
 
 #include <cassert>
 
-WIDGET_BUTTON::WIDGET_BUTTON() :
+GUIBUTTON::GUIBUTTON() :
 	m_cancel(true),
 	m_enabled(true),
 	m_alpha(1)
@@ -10,39 +10,39 @@ WIDGET_BUTTON::WIDGET_BUTTON() :
 	// ctor
 }
 
-WIDGET_BUTTON::~WIDGET_BUTTON()
+GUIBUTTON::~GUIBUTTON()
 {
 	// dtor
 }
 
-void WIDGET_BUTTON::SetAlpha(SCENENODE & scene, float value)
+void GUIBUTTON::SetAlpha(SCENENODE & scene, float value)
 {
 	float basealpha = m_enabled ? 1.0 : 0.5;
-	WIDGET_LABEL::SetAlpha(scene, value * basealpha);
+	GUILABEL::SetAlpha(scene, value * basealpha);
 	m_alpha = value;
 }
 
-std::string WIDGET_BUTTON::GetAction() const
+std::string GUIBUTTON::GetAction() const
 {
 	return m_active_action;
 }
 
-std::string WIDGET_BUTTON::GetDescription() const
+std::string GUIBUTTON::GetDescription() const
 {
 	return m_description;
 }
 
-void WIDGET_BUTTON::SetDescription(const std::string & value)
+void GUIBUTTON::SetDescription(const std::string & value)
 {
 	m_description = value;
 }
 
-bool WIDGET_BUTTON::GetCancel() const
+bool GUIBUTTON::GetCancel() const
 {
 	return m_cancel;
 }
 
-bool WIDGET_BUTTON::ProcessInput(
+bool GUIBUTTON::ProcessInput(
 	SCENENODE & scene,
 	float cursorx, float cursory,
 	bool cursordown, bool cursorjustup)
@@ -61,17 +61,17 @@ bool WIDGET_BUTTON::ProcessInput(
 	return true;
 }
 
-void WIDGET_BUTTON::SetCancel(bool value)
+void GUIBUTTON::SetCancel(bool value)
 {
 	m_cancel = value;
 }
 
-void WIDGET_BUTTON::SetAction(const std::string & value)
+void GUIBUTTON::SetAction(const std::string & value)
 {
 	m_action = value;
 }
 
-void WIDGET_BUTTON::SetEnabled(SCENENODE & scene, bool value)
+void GUIBUTTON::SetEnabled(SCENENODE & scene, bool value)
 {
 	m_enabled = value;
 	SetAlpha(scene, m_alpha);

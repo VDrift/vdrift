@@ -1,17 +1,17 @@
-#ifndef _WIDGET_SLIDER_H
-#define _WIDGET_SLIDER_H
+#ifndef _GUISLIDER_H
+#define _GUISLIDER_H
 
-#include "widget_label.h"
+#include "gui/guilabel.h"
 #include "sprite2d.h"
 
 class FONT;
 
-class WIDGET_SLIDER : public WIDGET
+class GUISLIDER : public GUIWIDGET
 {
 public:
-	WIDGET_SLIDER();
+	GUISLIDER();
 
-	~WIDGET_SLIDER();
+	~GUISLIDER();
 
 	virtual void SetAlpha(SCENENODE & scene, float value);
 
@@ -45,9 +45,9 @@ public:
   		std::ostream & error_output);
 
 private:
-	WIDGET_LABEL m_label_value;
-	WIDGET_LABEL m_label_left;
-	WIDGET_LABEL m_label_right;
+	GUILABEL m_label_value;
+	GUILABEL m_label_left;
+	GUILABEL m_label_right;
 	SPRITE2D m_slider;
 	SPRITE2D m_bar;
 	std::string m_name;
@@ -63,7 +63,7 @@ private:
 	Slot1<const std::string &> set_value;
 	void SetValue(const std::string & value);
 
-	WIDGET_SLIDER(const WIDGET_SLIDER & other);
+	GUISLIDER(const GUISLIDER & other);
 
 	void UpdateText(SCENENODE & scene);
 };

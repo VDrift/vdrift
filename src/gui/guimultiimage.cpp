@@ -1,22 +1,22 @@
-#include "widget_multiimage.h"
-#include "guioption.h"
+#include "gui/guimultiimage.h"
+#include "gui/guioption.h"
 #include <cassert>
 
-WIDGET_MULTIIMAGE::WIDGET_MULTIIMAGE() :
+GUIMULTIIMAGE::GUIMULTIIMAGE() :
 	wasvisible(false),
 	update(false),
 	content(0),
 	errptr(0)
 {
-	set_image.call.bind<WIDGET_MULTIIMAGE, &WIDGET_MULTIIMAGE::SetImage>(this);
+	set_image.call.bind<GUIMULTIIMAGE, &GUIMULTIIMAGE::SetImage>(this);
 }
 
-WIDGET_MULTIIMAGE::~WIDGET_MULTIIMAGE()
+GUIMULTIIMAGE::~GUIMULTIIMAGE()
 {
 	// dtor
 }
 
-void WIDGET_MULTIIMAGE::SetupDrawable(
+void GUIMULTIIMAGE::SetupDrawable(
 	SCENENODE & scene,
 	ContentManager & content,
 	std::map<std::string, GUIOPTION> & optionmap,
@@ -43,18 +43,18 @@ void WIDGET_MULTIIMAGE::SetupDrawable(
 	}
 }
 
-void WIDGET_MULTIIMAGE::SetAlpha(SCENENODE & scene, float newalpha)
+void GUIMULTIIMAGE::SetAlpha(SCENENODE & scene, float newalpha)
 {
 	if (s1.Loaded()) s1.SetAlpha(scene, newalpha);
 }
 
-void WIDGET_MULTIIMAGE::SetVisible(SCENENODE & scene, bool newvis)
+void GUIMULTIIMAGE::SetVisible(SCENENODE & scene, bool newvis)
 {
 	wasvisible = newvis;
 	if (s1.Loaded()) s1.SetVisible(scene, newvis);
 }
 
-void WIDGET_MULTIIMAGE::Update(SCENENODE & scene, float dt)
+void GUIMULTIIMAGE::Update(SCENENODE & scene, float dt)
 {
 	if (update)
 	{
@@ -67,7 +67,7 @@ void WIDGET_MULTIIMAGE::Update(SCENENODE & scene, float dt)
 	}
 }
 
-void WIDGET_MULTIIMAGE::SetImage(const std::string & value)
+void GUIMULTIIMAGE::SetImage(const std::string & value)
 {
 	if (image != value)
 	{

@@ -1,45 +1,45 @@
-#include "widget_doublestringwheel.h"
-#include "guioption.h"
+#include "gui/guistringwheel2.h"
+#include "gui/guioption.h"
 
 #include <cassert>
 
-WIDGET_DOUBLESTRINGWHEEL::WIDGET_DOUBLESTRINGWHEEL() :
+GUISTRINGWHEEL2::GUISTRINGWHEEL2() :
 	m_focus(false)
 {
-	set_value1.call.bind<WIDGET_DOUBLESTRINGWHEEL, &WIDGET_DOUBLESTRINGWHEEL::SetValue1>(this);
-	set_value2.call.bind<WIDGET_DOUBLESTRINGWHEEL, &WIDGET_DOUBLESTRINGWHEEL::SetValue2>(this);
+	set_value1.call.bind<GUISTRINGWHEEL2, &GUISTRINGWHEEL2::SetValue1>(this);
+	set_value2.call.bind<GUISTRINGWHEEL2, &GUISTRINGWHEEL2::SetValue2>(this);
 }
 
-WIDGET_DOUBLESTRINGWHEEL::~WIDGET_DOUBLESTRINGWHEEL()
+GUISTRINGWHEEL2::~GUISTRINGWHEEL2()
 {
 	// dtor
 }
 
-void WIDGET_DOUBLESTRINGWHEEL::SetAlpha(SCENENODE & scene, float value)
+void GUISTRINGWHEEL2::SetAlpha(SCENENODE & scene, float value)
 {
 	m_label_value.SetAlpha(scene, value);
 	m_label_left.SetAlpha(scene, value);
 	m_label_right.SetAlpha(scene, value);
 }
 
-void WIDGET_DOUBLESTRINGWHEEL::SetVisible(SCENENODE & scene, bool value)
+void GUISTRINGWHEEL2::SetVisible(SCENENODE & scene, bool value)
 {
 	m_label_value.SetVisible(scene, value);
 	m_label_left.SetVisible(scene, m_focus && value);
 	m_label_right.SetVisible(scene, m_focus && value);
 }
 
-std::string WIDGET_DOUBLESTRINGWHEEL::GetDescription() const
+std::string GUISTRINGWHEEL2::GetDescription() const
 {
 	return m_description;
 }
 
-void WIDGET_DOUBLESTRINGWHEEL::SetDescription(const std::string & value)
+void GUISTRINGWHEEL2::SetDescription(const std::string & value)
 {
 	m_description = value;
 }
 
-void WIDGET_DOUBLESTRINGWHEEL::Update(SCENENODE & scene, float dt)
+void GUISTRINGWHEEL2::Update(SCENENODE & scene, float dt)
 {
 	if (m_update)
 	{
@@ -49,7 +49,7 @@ void WIDGET_DOUBLESTRINGWHEEL::Update(SCENENODE & scene, float dt)
 	}
 }
 
-bool WIDGET_DOUBLESTRINGWHEEL::ProcessInput(
+bool GUISTRINGWHEEL2::ProcessInput(
 	SCENENODE & scene,
 	float cursorx, float cursory,
 	bool cursordown, bool cursorjustup)
@@ -78,7 +78,7 @@ bool WIDGET_DOUBLESTRINGWHEEL::ProcessInput(
 	return m_focus;
 }
 
-void WIDGET_DOUBLESTRINGWHEEL::SetupDrawable(
+void GUISTRINGWHEEL2::SetupDrawable(
 	SCENENODE & scene,
 	std::tr1::shared_ptr<TEXTURE> bgtex,
 	std::map<std::string, GUIOPTION> & optionmap,
@@ -137,7 +137,7 @@ void WIDGET_DOUBLESTRINGWHEEL::SetupDrawable(
 	Update(scene, 0);
 }
 
-void WIDGET_DOUBLESTRINGWHEEL::SetValue1(const std::string & value)
+void GUISTRINGWHEEL2::SetValue1(const std::string & value)
 {
 	if (m_value1 != value)
 	{
@@ -146,7 +146,7 @@ void WIDGET_DOUBLESTRINGWHEEL::SetValue1(const std::string & value)
 	}
 }
 
-void WIDGET_DOUBLESTRINGWHEEL::SetValue2(const std::string & value)
+void GUISTRINGWHEEL2::SetValue2(const std::string & value)
 {
 	if (m_value2 != value)
 	{

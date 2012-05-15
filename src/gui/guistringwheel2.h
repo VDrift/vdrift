@@ -1,15 +1,15 @@
-#ifndef _WIDGET_DOUBLESTRINGWHEEL_H
-#define _WIDGET_DOUBLESTRINGWHEEL_H
+#ifndef _GUISTRINGWHEEL2_H
+#define _GUISTRINGWHEEL2_H
 
-#include "widget_label.h"
+#include "gui/guilabel.h"
 #include "sprite2d.h"
 
-class WIDGET_DOUBLESTRINGWHEEL : public WIDGET
+class GUISTRINGWHEEL2 : public GUIWIDGET
 {
 public:
-	WIDGET_DOUBLESTRINGWHEEL();
+	GUISTRINGWHEEL2();
 
-	~WIDGET_DOUBLESTRINGWHEEL();
+	~GUISTRINGWHEEL2();
 
 	virtual void SetAlpha(SCENENODE & scene, float value);
 
@@ -39,9 +39,9 @@ public:
 		std::ostream & error_output);
 
 private:
-	WIDGET_LABEL m_label_value;
-	WIDGET_LABEL m_label_left;
-	WIDGET_LABEL m_label_right;
+	GUILABEL m_label_value;
+	GUILABEL m_label_left;
+	GUILABEL m_label_right;
 	std::string m_setting1, m_setting2;
 	std::string m_value1, m_value2;
 	std::string m_description;
@@ -54,7 +54,7 @@ private:
 	void SetValue1(const std::string & value);
 	void SetValue2(const std::string & value);
 
-	WIDGET_DOUBLESTRINGWHEEL(const WIDGET_DOUBLESTRINGWHEEL & other);
+	GUISTRINGWHEEL2(const GUISTRINGWHEEL2 & other);
 };
 
 #endif

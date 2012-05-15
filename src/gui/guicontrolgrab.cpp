@@ -1,15 +1,15 @@
-#include "widget_controlgrab.h"
+#include "gui/guicontrolgrab.h"
 #include "carcontrolmap_local.h"
 #include "config.h"
 
 #include <cassert>
 
-std::string WIDGET_CONTROLGRAB::Str[] =
+std::string GUICONTROLGRAB::Str[] =
 {
 	"Add a new input", "Edit", "press", "release", "once", "held", "key", "joy", "mouse", "button", "axis", "motion"
 };
 
-WIDGET_CONTROLGRAB::CONTROLWIDGET::CONTROLWIDGET() :
+GUICONTROLGRAB::CONTROLWIDGET::CONTROLWIDGET() :
 	once(true),
 	down(false),
 	joy_index(0),
@@ -23,7 +23,7 @@ WIDGET_CONTROLGRAB::CONTROLWIDGET::CONTROLWIDGET() :
 	// ctor
 }
 
-WIDGET_CONTROLGRAB::WIDGET_CONTROLGRAB() :
+GUICONTROLGRAB::GUICONTROLGRAB() :
 	scale_x(0.05),
 	scale_y(0.05),
 	x(0.5),
@@ -37,12 +37,12 @@ WIDGET_CONTROLGRAB::WIDGET_CONTROLGRAB() :
 	// ctor
 }
 
-WIDGET_CONTROLGRAB::~WIDGET_CONTROLGRAB()
+GUICONTROLGRAB::~GUICONTROLGRAB()
 {
 	//std::clog << "ControlGrab Destructor: " << setting << ", " << description << std::endl;
 }
 
-void WIDGET_CONTROLGRAB::SetAlpha(SCENENODE & scene, float newalpha)
+void GUICONTROLGRAB::SetAlpha(SCENENODE & scene, float newalpha)
 {
 	SCENENODE & topnoderef = scene.GetNode(topnode);
 	addbutton.SetAlpha(topnoderef, newalpha);
@@ -54,7 +54,7 @@ void WIDGET_CONTROLGRAB::SetAlpha(SCENENODE & scene, float newalpha)
 	}
 }
 
-void WIDGET_CONTROLGRAB::SetVisible(SCENENODE & scene, bool newvis)
+void GUICONTROLGRAB::SetVisible(SCENENODE & scene, bool newvis)
 {
 	SCENENODE & topnoderef = scene.GetNode(topnode);
 	addbutton.SetVisible(topnoderef, newvis);
@@ -66,12 +66,12 @@ void WIDGET_CONTROLGRAB::SetVisible(SCENENODE & scene, bool newvis)
 	}
 }
 
-std::string WIDGET_CONTROLGRAB::GetAction() const
+std::string GUICONTROLGRAB::GetAction() const
 {
 	return active_action;
 }
 
-std::string WIDGET_CONTROLGRAB::GetDescription() const
+std::string GUICONTROLGRAB::GetDescription() const
 {
 	if (!tempdescription.empty())
 	{
@@ -80,12 +80,12 @@ std::string WIDGET_CONTROLGRAB::GetDescription() const
 	return description;
 }
 
-void WIDGET_CONTROLGRAB::SetDescription(const std::string & newdesc)
+void GUICONTROLGRAB::SetDescription(const std::string & newdesc)
 {
 	description = newdesc;
 }
 
-bool WIDGET_CONTROLGRAB::ProcessInput(
+bool GUICONTROLGRAB::ProcessInput(
 	SCENENODE & scene,
 	float cursorx, float cursory,
 	bool cursordown, bool cursorjustup)
@@ -259,7 +259,7 @@ bool WIDGET_CONTROLGRAB::ProcessInput(
 	return infocus;
 }
 
-void WIDGET_CONTROLGRAB::SetupDrawable(
+void GUICONTROLGRAB::SetupDrawable(
 	SCENENODE & scene,
 	const std::string & newsetting,
 	const CONFIG & c,
@@ -295,7 +295,7 @@ void WIDGET_CONTROLGRAB::SetupDrawable(
 	LoadControls(scene, c, font);
 }
 
-void WIDGET_CONTROLGRAB::LoadControls(SCENENODE & scene, const CONFIG & c, const FONT & font)
+void GUICONTROLGRAB::LoadControls(SCENENODE & scene, const CONFIG & c, const FONT & font)
 {
 	assert(!setting.empty()); //ensure that we've already done a SetupDrawable
 

@@ -1,15 +1,15 @@
-#ifndef _WIDGET_COLORPICKER_H
-#define _WIDGET_COLORPICKER_H
+#ifndef _GUICOLORPICKER_H
+#define _GUICOLORPICKER_H
 
-#include "widget.h"
+#include "gui/guiwidget.h"
 #include "sprite2d.h"
 
-class WIDGET_COLORPICKER : public WIDGET
+class GUICOLORPICKER : public GUIWIDGET
 {
 public:
-	WIDGET_COLORPICKER();
+	GUICOLORPICKER();
 
-	~WIDGET_COLORPICKER();
+	~GUICOLORPICKER();
 
 	virtual void SetAlpha(SCENENODE & scene, float newalpha);
 
@@ -74,7 +74,7 @@ private:
 
 	void UpdatePosition();
 	bool SetColor(SCENENODE & scene, float x, float y);
-	WIDGET_COLORPICKER(const WIDGET_COLORPICKER & other);
+	GUICOLORPICKER(const GUICOLORPICKER & other);
 };
 
-#endif // _WIDGET_COLORPICKER_H
+#endif // _GUICOLORPICKER_H

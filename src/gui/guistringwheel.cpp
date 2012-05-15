@@ -1,32 +1,32 @@
-#include "widget_stringwheel.h"
-#include "guioption.h"
+#include "gui/guistringwheel.h"
+#include "gui/guioption.h"
 
-WIDGET_STRINGWHEEL::WIDGET_STRINGWHEEL() :
+GUISTRINGWHEEL::GUISTRINGWHEEL() :
 	m_focus(false)
 {
-	set_value.call.bind<WIDGET_STRINGWHEEL, &WIDGET_STRINGWHEEL::SetValue>(this);
+	set_value.call.bind<GUISTRINGWHEEL, &GUISTRINGWHEEL::SetValue>(this);
 }
 
-WIDGET_STRINGWHEEL::~WIDGET_STRINGWHEEL()
+GUISTRINGWHEEL::~GUISTRINGWHEEL()
 {
 	// dtor
 }
 
-void WIDGET_STRINGWHEEL::SetAlpha(SCENENODE & scene, float value)
+void GUISTRINGWHEEL::SetAlpha(SCENENODE & scene, float value)
 {
 	m_label_value.SetAlpha(scene, value);
 	m_label_left.SetAlpha(scene, value);
 	m_label_right.SetAlpha(scene, value);
 }
 
-void WIDGET_STRINGWHEEL::SetVisible(SCENENODE & scene, bool value)
+void GUISTRINGWHEEL::SetVisible(SCENENODE & scene, bool value)
 {
 	m_label_value.SetVisible(scene, value);
 	m_label_left.SetVisible(scene, m_focus && value);
 	m_label_right.SetVisible(scene, m_focus && value);
 }
 
-bool WIDGET_STRINGWHEEL::ProcessInput(
+bool GUISTRINGWHEEL::ProcessInput(
 	SCENENODE & scene,
 	float cursorx, float cursory,
 	bool cursordown, bool cursorjustup)
@@ -59,17 +59,17 @@ bool WIDGET_STRINGWHEEL::ProcessInput(
 	return m_focus;
 }
 
-std::string WIDGET_STRINGWHEEL::GetDescription() const
+std::string GUISTRINGWHEEL::GetDescription() const
 {
 	return m_description;
 }
 
-void WIDGET_STRINGWHEEL::SetDescription(const std::string & value)
+void GUISTRINGWHEEL::SetDescription(const std::string & value)
 {
 	m_description = value;
 }
 
-void WIDGET_STRINGWHEEL::Update(SCENENODE & scene, float dt)
+void GUISTRINGWHEEL::Update(SCENENODE & scene, float dt)
 {
 	if (m_update)
 	{
@@ -78,17 +78,17 @@ void WIDGET_STRINGWHEEL::Update(SCENENODE & scene, float dt)
 	}
 }
 
-std::string WIDGET_STRINGWHEEL::GetAction() const
+std::string GUISTRINGWHEEL::GetAction() const
 {
 	return m_action_active;
 }
 
-void WIDGET_STRINGWHEEL::SetAction(const std::string & value)
+void GUISTRINGWHEEL::SetAction(const std::string & value)
 {
 	m_action = value;
 }
 
-void WIDGET_STRINGWHEEL::SetupDrawable(
+void GUISTRINGWHEEL::SetupDrawable(
 	SCENENODE & scene,
 	std::tr1::shared_ptr<TEXTURE> bgtex,
 	std::map<std::string, GUIOPTION> & optionmap,
@@ -137,7 +137,7 @@ void WIDGET_STRINGWHEEL::SetupDrawable(
 	Update(scene, 0);
 }
 
-void WIDGET_STRINGWHEEL::SetValue(const std::string & value)
+void GUISTRINGWHEEL::SetValue(const std::string & value)
 {
 	if (m_value != value)
 	{

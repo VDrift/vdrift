@@ -1,22 +1,22 @@
-#include "widget_colorpicker.h"
-#include "guioption.h"
+#include "gui/guicolorpicker.h"
+#include "gui/guioption.h"
 #include "mathvector.h"
 #include "hsvtorgb.h"
 
-WIDGET_COLORPICKER::WIDGET_COLORPICKER() :
+GUICOLORPICKER::GUICOLORPICKER() :
 	h_select(false),
 	sv_select(false),
 	update(false)
 {
-	set_value.call.bind<WIDGET_COLORPICKER, &WIDGET_COLORPICKER::SetValue>(this);
+	set_value.call.bind<GUICOLORPICKER, &GUICOLORPICKER::SetValue>(this);
 }
 
-WIDGET_COLORPICKER::~WIDGET_COLORPICKER()
+GUICOLORPICKER::~GUICOLORPICKER()
 {
 	// dtor
 }
 
-void WIDGET_COLORPICKER::SetAlpha(SCENENODE & scene, float newalpha)
+void GUICOLORPICKER::SetAlpha(SCENENODE & scene, float newalpha)
 {
 	h_bar.SetAlpha(scene, newalpha);
 	h_cursor.SetAlpha(scene, newalpha);
@@ -25,7 +25,7 @@ void WIDGET_COLORPICKER::SetAlpha(SCENENODE & scene, float newalpha)
 	sv_cursor.SetAlpha(scene, newalpha);
 }
 
-void WIDGET_COLORPICKER::SetVisible(SCENENODE & scene, bool newvis)
+void GUICOLORPICKER::SetVisible(SCENENODE & scene, bool newvis)
 {
 	h_bar.SetVisible(scene, newvis);
 	h_cursor.SetVisible(scene, newvis);
@@ -34,27 +34,27 @@ void WIDGET_COLORPICKER::SetVisible(SCENENODE & scene, bool newvis)
 	sv_cursor.SetVisible(scene, newvis);
 }
 
-void WIDGET_COLORPICKER::SetName(const std::string & newname)
+void GUICOLORPICKER::SetName(const std::string & newname)
 {
 	name = newname;
 }
 
-void WIDGET_COLORPICKER::SetDescription(const std::string & newdesc)
+void GUICOLORPICKER::SetDescription(const std::string & newdesc)
 {
 	description = newdesc;
 }
 
-std::string WIDGET_COLORPICKER::GetDescription() const
+std::string GUICOLORPICKER::GetDescription() const
 {
 	return description;
 }
 
-std::string WIDGET_COLORPICKER::GetAction() const
+std::string GUICOLORPICKER::GetAction() const
 {
 	return active_action;
 }
 
-bool WIDGET_COLORPICKER::ProcessInput(
+bool GUICOLORPICKER::ProcessInput(
 	SCENENODE & scene,
 	float cursorx, float cursory,
 	bool cursordown, bool cursorjustup)
@@ -115,7 +115,7 @@ bool WIDGET_COLORPICKER::ProcessInput(
 	return false;
 }
 
-void WIDGET_COLORPICKER::Update(SCENENODE & scene, float dt)
+void GUICOLORPICKER::Update(SCENENODE & scene, float dt)
 {
 	if (update)
 	{
@@ -127,7 +127,7 @@ void WIDGET_COLORPICKER::Update(SCENENODE & scene, float dt)
 	}
 }
 
-void WIDGET_COLORPICKER::SetupDrawable(
+void GUICOLORPICKER::SetupDrawable(
 	SCENENODE & scene,
 	std::tr1::shared_ptr<TEXTURE> cursortex,
 	std::tr1::shared_ptr<TEXTURE> htex,
@@ -184,12 +184,12 @@ void WIDGET_COLORPICKER::SetupDrawable(
 	}
 }
 
-void WIDGET_COLORPICKER::SetAction(const std::string & newaction)
+void GUICOLORPICKER::SetAction(const std::string & newaction)
 {
 	action = newaction;
 }
 
-void WIDGET_COLORPICKER::SetValue(const std::string & value)
+void GUICOLORPICKER::SetValue(const std::string & value)
 {
 	unsigned rgbnew;
 	std::stringstream s(value);
@@ -204,7 +204,7 @@ void WIDGET_COLORPICKER::SetValue(const std::string & value)
 	}
 }
 
-void WIDGET_COLORPICKER::UpdatePosition()
+void GUICOLORPICKER::UpdatePosition()
 {
 	h_pos[0] = h_max[0] - size2;
 	h_pos[1] = h_min[1] + hsv[0] * (h_max[1] - h_min[1]);

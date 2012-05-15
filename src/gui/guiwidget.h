@@ -1,5 +1,5 @@
-#ifndef _WIDGET_H
-#define _WIDGET_H
+#ifndef _GUIWIDGET_H
+#define _GUIWIDGET_H
 
 #include "signalslot.h"
 #include <map>
@@ -9,7 +9,7 @@
 class SCENENODE;
 class GUIOPTION;
 
-class WIDGET
+class GUIWIDGET
 {
 public:
 	/// true if x, y within widget rectangle
@@ -49,7 +49,7 @@ public:
 	virtual void Update(SCENENODE & scene, float dt);
 
 	/// base destructor
-	virtual ~WIDGET();
+	virtual ~GUIWIDGET();
 
 protected:
 	float m_xmin, m_ymin, m_xmax, m_ymax;
@@ -57,25 +57,25 @@ protected:
 	bool m_visible;
 	bool m_update;
 
-	WIDGET();
+	GUIWIDGET();
 };
 
-inline bool WIDGET::InFocus(float x, float y) const
+inline bool GUIWIDGET::InFocus(float x, float y) const
 {
 	return x < m_xmax && x > m_xmin && y < m_ymax && y > m_ymin;
 }
 
-inline void WIDGET::SetAlpha(SCENENODE & scene, float value)
+inline void GUIWIDGET::SetAlpha(SCENENODE & scene, float value)
 {
 	//GetDrawable(scene).SetColor(m_r, m_g, m_b, m_a * value);
 }
 
-inline void WIDGET::SetVisible(SCENENODE & scene, bool value)
+inline void GUIWIDGET::SetVisible(SCENENODE & scene, bool value)
 {
 	//GetDrawable(scene).SetDrawEnable(m_visible & value);
 }
 
-inline bool WIDGET::ProcessInput(
+inline bool GUIWIDGET::ProcessInput(
 	SCENENODE & scene,
 	float cursorx, float cursory,
 	bool cursordown, bool cursorjustup)
@@ -83,27 +83,27 @@ inline bool WIDGET::ProcessInput(
 	return false;
 }
 
-inline std::string WIDGET::GetAction() const
+inline std::string GUIWIDGET::GetAction() const
 {
 	return "";
 }
 
-inline void WIDGET::SetName(const std::string & newname)
+inline void GUIWIDGET::SetName(const std::string & newname)
 {
 	// optional
 }
 
-inline std::string WIDGET::GetDescription() const
+inline std::string GUIWIDGET::GetDescription() const
 {
 	return "";
 }
 
-inline void WIDGET::SetDescription(const std::string & newdesc)
+inline void GUIWIDGET::SetDescription(const std::string & newdesc)
 {
 	// optional
 }
 
-inline void WIDGET::UpdateOptions(
+inline void GUIWIDGET::UpdateOptions(
 	SCENENODE & scene,
 	bool save_to_options,
 	std::map<std::string, GUIOPTION> & optionmap,
@@ -112,22 +112,22 @@ inline void WIDGET::UpdateOptions(
 	// optional
 }
 
-inline bool WIDGET::GetCancel() const
+inline bool GUIWIDGET::GetCancel() const
 {
 	return false;
 }
 
-inline void WIDGET::Update(SCENENODE & scene, float dt)
+inline void GUIWIDGET::Update(SCENENODE & scene, float dt)
 {
 	// optional
 }
 
-inline WIDGET::~WIDGET()
+inline GUIWIDGET::~GUIWIDGET()
 {
 	// destructor
 }
 
-inline WIDGET::WIDGET() :
+inline GUIWIDGET::GUIWIDGET() :
 	m_xmin(0), m_ymin(0), m_xmax(0), m_ymax(0),
 	m_r(1), m_g(1), m_b(1), m_a(0),
 	m_visible(true),
@@ -136,4 +136,4 @@ inline WIDGET::WIDGET() :
 	// constructor
 }
 
-#endif // _WIDGET_H
+#endif // _GUIH

@@ -1,6 +1,6 @@
-#include "gui.h"
+#include "gui/gui.h"
+#include "gui/guicontrolgrab.h"
 #include "config.h"
-#include "widget_controlgrab.h"
 #include "pathmanager.h"
 
 #include <sstream>
@@ -138,9 +138,9 @@ bool GUI::Load(
 	//languageconfig.DebugPrint(std::clog);
 
 	// controlgrab description strings translation (ugly hack)
-	for (int i = 0; i < WIDGET_CONTROLGRAB::END_STR; ++i)
+	for (int i = 0; i < GUICONTROLGRAB::END_STR; ++i)
 	{
-		std::string & str = WIDGET_CONTROLGRAB::Str[i];
+		std::string & str = GUICONTROLGRAB::Str[i];
 		std::map<std::string, std::string>::const_iterator li;
 		if ((li = languagemap.find(str)) != languagemap.end()) str = li->second;
 	}
@@ -544,7 +544,7 @@ bool GUI::SetLabelText(const std::string & pagename, const std::string & labelna
 		return false;
 
 	SCENENODE & pagenode = GetPageNode(pagename);
-	WIDGET_LABEL * label = GetPage(pagename).GetLabel(labelname);
+	GUILABEL * label = GetPage(pagename).GetLabel(labelname);
 	if (!label)
 		return false;
 
@@ -558,7 +558,7 @@ bool GUI::GetLabelText(const std::string & pagename, const std::string & labelna
 	if (pages.find(pagename) == pages.end())
 		return false;
 
-	WIDGET_LABEL * label = GetPage(pagename).GetLabel(labelname);
+	GUILABEL * label = GetPage(pagename).GetLabel(labelname);
 	if (!label)
 		return false;
 
@@ -573,7 +573,7 @@ bool GUI::SetButtonEnabled(const std::string & pagename, const std::string & but
 		return false;
 
 	SCENENODE & pagenode = GetPageNode(pagename);
-	WIDGET_BUTTON * button = GetPage(pagename).GetButton(buttonname);
+	GUIBUTTON * button = GetPage(pagename).GetButton(buttonname);
 	if (!button)
 		return false;
 

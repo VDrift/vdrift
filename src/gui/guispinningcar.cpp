@@ -1,10 +1,10 @@
-#include "widget_spinningcar.h"
-#include "guioption.h"
+#include "gui/guispinningcar.h"
+#include "gui/guioption.h"
 #include "pathmanager.h"
 #include "cfg/ptree.h"
 #include "car.h"
 
-WIDGET_SPINNINGCAR::WIDGET_SPINNINGCAR():
+GUISPINNINGCAR::GUISPINNINGCAR():
 	pathptr(0),
 	contentptr(0),
 	errptr(0),
@@ -14,23 +14,23 @@ WIDGET_SPINNINGCAR::WIDGET_SPINNINGCAR():
 	updatecar(false),
 	car(0)
 {
-	set_car.call.bind<WIDGET_SPINNINGCAR, &WIDGET_SPINNINGCAR::SetCar>(this);
-	set_paint.call.bind<WIDGET_SPINNINGCAR, &WIDGET_SPINNINGCAR::SetPaint>(this);
-	set_color.call.bind<WIDGET_SPINNINGCAR, &WIDGET_SPINNINGCAR::SetColor>(this);
+	set_car.call.bind<GUISPINNINGCAR, &GUISPINNINGCAR::SetCar>(this);
+	set_paint.call.bind<GUISPINNINGCAR, &GUISPINNINGCAR::SetPaint>(this);
+	set_color.call.bind<GUISPINNINGCAR, &GUISPINNINGCAR::SetColor>(this);
 }
 
-WIDGET_SPINNINGCAR::~WIDGET_SPINNINGCAR()
+GUISPINNINGCAR::~GUISPINNINGCAR()
 {
 	if (car) delete car;
 }
 
-void WIDGET_SPINNINGCAR::SetAlpha(SCENENODE & scene, float newalpha)
+void GUISPINNINGCAR::SetAlpha(SCENENODE & scene, float newalpha)
 {
 	// TODO:
 	//if (!car.empty()) car.back().SetAlpha(newalpha);
 }
 
-void WIDGET_SPINNINGCAR::SetVisible(SCENENODE & scene, bool newvis)
+void GUISPINNINGCAR::SetVisible(SCENENODE & scene, bool newvis)
 {
 	wasvisible = newvis;
 
@@ -61,7 +61,7 @@ void WIDGET_SPINNINGCAR::SetVisible(SCENENODE & scene, bool newvis)
 	}
 }
 
-void WIDGET_SPINNINGCAR::Update(SCENENODE & scene, float dt)
+void GUISPINNINGCAR::Update(SCENENODE & scene, float dt)
 {
 	if (!car) return;
 
@@ -84,7 +84,7 @@ void WIDGET_SPINNINGCAR::Update(SCENENODE & scene, float dt)
 	Rotate(scene, dt);
 }
 
-void WIDGET_SPINNINGCAR::SetupDrawable(
+void GUISPINNINGCAR::SetupDrawable(
 	SCENENODE & scene,
 	ContentManager & content,
 	const PATHMANAGER & pathmanager,
@@ -115,7 +115,7 @@ void WIDGET_SPINNINGCAR::SetupDrawable(
 		set_color.connect(i->second.signal_val);
 }
 
-void WIDGET_SPINNINGCAR::SetCar(const std::string & name)
+void GUISPINNINGCAR::SetCar(const std::string & name)
 {
 	if (carname != name)
 	{
@@ -124,7 +124,7 @@ void WIDGET_SPINNINGCAR::SetCar(const std::string & name)
 	}
 }
 
-void WIDGET_SPINNINGCAR::SetPaint(const std::string & paint)
+void GUISPINNINGCAR::SetPaint(const std::string & paint)
 {
 	if (carpaint != paint)
 	{
@@ -133,7 +133,7 @@ void WIDGET_SPINNINGCAR::SetPaint(const std::string & paint)
 	}
 }
 
-void WIDGET_SPINNINGCAR::SetColor(const std::string & colorstr)
+void GUISPINNINGCAR::SetColor(const std::string & colorstr)
 {
 	std::stringstream s;
 	unsigned color;
@@ -146,12 +146,12 @@ void WIDGET_SPINNINGCAR::SetColor(const std::string & colorstr)
 	}
 }
 
-SCENENODE & WIDGET_SPINNINGCAR::GetCarNode(SCENENODE & parent)
+SCENENODE & GUISPINNINGCAR::GetCarNode(SCENENODE & parent)
 {
 	return parent.GetNode(carnode);
 }
 
-void WIDGET_SPINNINGCAR::Unload(SCENENODE & parent)
+void GUISPINNINGCAR::Unload(SCENENODE & parent)
 {
 	if (carnode.valid())
 	{
@@ -165,7 +165,7 @@ void WIDGET_SPINNINGCAR::Unload(SCENENODE & parent)
 	}
 }
 
-void WIDGET_SPINNINGCAR::Rotate(SCENENODE & scene, float delta)
+void GUISPINNINGCAR::Rotate(SCENENODE & scene, float delta)
 {
 	rotation += delta;
 	QUATERNION <float> q;
@@ -196,7 +196,7 @@ struct CAMTRANS_DRAWABLE_FUNCTOR
 	}
 };
 
-void WIDGET_SPINNINGCAR::Load(SCENENODE & parent)
+void GUISPINNINGCAR::Load(SCENENODE & parent)
 {
 	assert(pathptr);
 	assert(errptr);
@@ -259,7 +259,7 @@ void WIDGET_SPINNINGCAR::Load(SCENENODE & parent)
 	carnoderef.SetChildVisibility(wasvisible);
 }
 
-void WIDGET_SPINNINGCAR::SetColor(SCENENODE & scene, float r, float g, float b)
+void GUISPINNINGCAR::SetColor(SCENENODE & scene, float r, float g, float b)
 {
 	if (!Valid())
 		return;

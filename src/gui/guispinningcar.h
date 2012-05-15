@@ -1,7 +1,7 @@
-#ifndef _WIDGET_SPINNINGCAR_H
-#define _WIDGET_SPINNINGCAR_H
+#ifndef _GUISPINNINGCAR_H
+#define _GUISPINNINGCAR_H
 
-#include "widget.h"
+#include "gui/guiwidget.h"
 #include "scenenode.h"
 #include "mathvector.h"
 
@@ -9,12 +9,12 @@ class ContentManager;
 class PATHMANAGER;
 class CAR;
 
-class WIDGET_SPINNINGCAR : public WIDGET
+class GUISPINNINGCAR : public GUIWIDGET
 {
 public:
-	WIDGET_SPINNINGCAR();
+	GUISPINNINGCAR();
 
-	~WIDGET_SPINNINGCAR();
+	~GUISPINNINGCAR();
 
 	virtual void SetAlpha(SCENENODE & scene, float newalpha);
 
@@ -63,7 +63,7 @@ private:
 	void SetPaint(const std::string & paint);
 	void SetColor(const std::string & color);
 
-	WIDGET_SPINNINGCAR(const WIDGET_SPINNINGCAR & other);
+	GUISPINNINGCAR(const GUISPINNINGCAR & other);
 
 	SCENENODE & GetCarNode(SCENENODE & parent);
 
@@ -78,4 +78,4 @@ private:
 	bool Valid() const {return carnode.valid();}
 };
 
-#endif // _WIDGET_SPINNINGCAR_H
+#endif // _GUISPINNINGCAR_H

@@ -1,9 +1,8 @@
-#ifndef _WIDGET_CONTROLGRAB_H
-#define _WIDGET_CONTROLGRAB_H
+#ifndef _GUICONTROLGRAB_H
+#define _GUICONTROLGRAB_H
 
-#include "widget.h"
-#include "widget_label.h"
-#include "widget_button.h"
+#include "gui/guilabel.h"
+#include "gui/guibutton.h"
 
 #include <string>
 #include <list>
@@ -14,12 +13,12 @@ class TEXTURE;
 class CONFIG;
 class FONT;
 
-class WIDGET_CONTROLGRAB : public WIDGET
+class GUICONTROLGRAB : public GUIWIDGET
 {
 public:
-	WIDGET_CONTROLGRAB();
+	GUICONTROLGRAB();
 
-	~WIDGET_CONTROLGRAB();
+	~GUICONTROLGRAB();
 
 	virtual void SetAlpha(SCENENODE & scene, float newalpha);
 
@@ -76,7 +75,7 @@ private:
 	{
 		CONTROLWIDGET();
 
-		WIDGET_BUTTON widget;
+		GUIBUTTON widget;
 		std::string type;
 		std::string name;
 		bool once;
@@ -96,7 +95,7 @@ private:
 		float gain;
 	};
 
-	WIDGET_BUTTON addbutton;
+	GUIBUTTON addbutton;
 	std::list <CONTROLWIDGET> controlbuttons;
 	std::string setting;
 	std::string description;

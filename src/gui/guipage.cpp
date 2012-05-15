@@ -1,19 +1,19 @@
-#include "guipage.h"
-#include "guioption.h"
+#include "gui/guipage.h"
+#include "gui/guioption.h"
 #include "config.h"
 #include "contentmanager.h"
 #include "textureinfo.h"
-#include "widget.h"
-#include "widget_image.h"
-#include "widget_multiimage.h"
-#include "widget_label.h"
-#include "widget_button.h"
-#include "widget_stringwheel.h"
-#include "widget_doublestringwheel.h"
-#include "widget_slider.h"
-#include "widget_spinningcar.h"
-#include "widget_controlgrab.h"
-#include "widget_colorpicker.h"
+#include "gui/guiwidget.h"
+#include "gui/guiimage.h"
+#include "gui/guimultiimage.h"
+#include "gui/guilabel.h"
+#include "gui/guibutton.h"
+#include "gui/guistringwheel.h"
+#include "gui/guistringwheel2.h"
+#include "gui/guislider.h"
+#include "gui/guispinningcar.h"
+#include "gui/guicontrolgrab.h"
+#include "gui/guicolorpicker.h"
 
 #include <fstream>
 #include <sstream>
@@ -27,7 +27,7 @@ GUIPAGE::GUIPAGE() :
 
 GUIPAGE::~GUIPAGE()
 {
-	for (std::vector <WIDGET *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
+	for (std::vector <GUIWIDGET *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
 	{
 		delete *i;
 	}
@@ -79,7 +79,7 @@ bool GUIPAGE::Load(
 		float y(0.95), x(0.5), w(1.0), h(yscale);
 		float r(1), g(1), b(1);
 		int align(0);
-		tooltip_widget = new WIDGET_LABEL();
+		tooltip_widget = new GUILABEL();
 		tooltip_widget->SetupDrawable(
 			sref, font, align, xscale, yscale,
 			x, y, w, h, z0, r, g, b);
@@ -132,7 +132,7 @@ bool GUIPAGE::Load(
 			if (!pagefile.GetParam(section, "filename", texname, error_output)) return false;
 			if (!content.load(texpath, texname, texinfo, texture)) return false;
 
-			WIDGET_IMAGE * new_widget = new WIDGET_IMAGE();
+			GUIIMAGE * new_widget = new GUIIMAGE();
 			new_widget->SetupDrawable(sref, texture, xy[0], xy[1], w, h, z);
 			widgets.push_back(new_widget);
 		}
@@ -146,7 +146,7 @@ bool GUIPAGE::Load(
 			pagefile.GetParam(section, "cancel", cancel);
 			pagefile.GetParam(section, "enabled", enabled);
 
-			WIDGET_BUTTON * new_widget = new WIDGET_BUTTON();
+			GUIBUTTON * new_widget = new GUIBUTTON();
 			new_widget->SetupDrawable(
 				sref, font, align, scalex, scaley,
 				xy[0], xy[1], w, h, z,
@@ -166,7 +166,7 @@ bool GUIPAGE::Load(
 		}
 		else if (type == "label")
 		{
-			WIDGET_LABEL * new_widget = new WIDGET_LABEL();
+			GUILABEL * new_widget = new GUILABEL();
 			new_widget->SetupDrawable(
 				sref, font, align, scalex, scaley,
 				xy[0], xy[1], w, h, z,
@@ -197,7 +197,7 @@ bool GUIPAGE::Load(
 			std::tr1::shared_ptr<TEXTURE> bgtex;
 			if (!content.load(texpath, "white.png", texinfo, bgtex)) return false;
 
-			WIDGET_STRINGWHEEL * new_widget = new WIDGET_STRINGWHEEL();
+			GUISTRINGWHEEL * new_widget = new GUISTRINGWHEEL();
 			new_widget->SetupDrawable(
 				sref, bgtex, optionmap, setting,
 				font, scalex, scaley,
@@ -224,7 +224,7 @@ bool GUIPAGE::Load(
 			std::tr1::shared_ptr<TEXTURE> bgtex;
 			if (!content.load(texpath, "white.png", texinfo, bgtex)) return false;
 
-			WIDGET_DOUBLESTRINGWHEEL * new_widget = new WIDGET_DOUBLESTRINGWHEEL();
+			GUISTRINGWHEEL2 * new_widget = new GUISTRINGWHEEL2();
 			new_widget->SetupDrawable(
 				sref, bgtex, optionmap, setting1, setting2,
 				font, scalex, scaley,
@@ -240,7 +240,7 @@ bool GUIPAGE::Load(
 			if (!pagefile.GetParam(section, "prefix", prefix, error_output)) return false;
 			if (!pagefile.GetParam(section, "postfix", postfix, error_output)) return false;
 
-			WIDGET_MULTIIMAGE * new_widget = new WIDGET_MULTIIMAGE();
+			GUIMULTIIMAGE * new_widget = new GUIMULTIIMAGE();
 			new_widget->SetupDrawable(
 				sref, content, optionmap, setting, prefix, postfix,
 				xy[0], xy[1], w, h, error_output, z);
@@ -259,7 +259,7 @@ bool GUIPAGE::Load(
 
 			float x = xy[0] - w / 2;
 			float y = xy[1] - h / 2;
-			WIDGET_COLORPICKER * new_widget = new WIDGET_COLORPICKER();
+			GUICOLORPICKER * new_widget = new GUICOLORPICKER();
 			new_widget->SetupDrawable(
 				sref, cursor, hue, sat, bg, x, y, w, h,
 				optionmap, setting, error_output, z);
@@ -290,7 +290,7 @@ bool GUIPAGE::Load(
 			if (!content.load(texpath, "white.png", texinfo, bgtex)) return false;
 			if (!content.load(texpath, "white.png", texinfo, bartex)) return false;
 
-			WIDGET_SLIDER * new_widget = new WIDGET_SLIDER();
+			GUISLIDER * new_widget = new GUISLIDER();
 			new_widget->SetupDrawable(
 				sref, bgtex, bartex,
 				optionmap, setting,
@@ -309,7 +309,7 @@ bool GUIPAGE::Load(
 			if (!pagefile.GetParam(section, "carpos", carpos, error_output)) return false;
 			if (!pagefile.GetParam(section, "setting", setting, error_output)) return false;
 
-			WIDGET_SPINNINGCAR * new_widget = new WIDGET_SPINNINGCAR();
+			GUISPINNINGCAR * new_widget = new GUISPINNINGCAR();
 			new_widget->SetupDrawable(
 				sref, content, pathmanager, optionmap,
 				xy[0], xy[1],
@@ -326,7 +326,7 @@ bool GUIPAGE::Load(
 			pagefile.GetParam(section, "analog", analog);
 			pagefile.GetParam(section, "only_one", only_one);
 
-			WIDGET_CONTROLGRAB * new_widget = new WIDGET_CONTROLGRAB();
+			GUICONTROLGRAB * new_widget = new GUICONTROLGRAB();
 			new_widget->SetupDrawable(
 				sref, setting, controlsconfig, font,
 				scalex, scaley, xy[0], xy[1], z,
@@ -347,7 +347,7 @@ void GUIPAGE::UpdateControls(SCENENODE & parentnode, const CONFIG & controls, co
 {
 	assert(s.valid());
 	SCENENODE & sref = GetNode(parentnode);
-	for (std::vector <WIDGET_CONTROLGRAB *>::iterator i = controlgrabs.begin(); i != controlgrabs.end(); ++i)
+	for (std::vector <GUICONTROLGRAB *>::iterator i = controlgrabs.begin(); i != controlgrabs.end(); ++i)
 	{
 		(*i)->LoadControls(sref, controls, font);
 	}
@@ -356,7 +356,7 @@ void GUIPAGE::UpdateControls(SCENENODE & parentnode, const CONFIG & controls, co
 void GUIPAGE::SetVisible(SCENENODE & parent, bool value)
 {
 	SCENENODE & sref = GetNode(parent);
-	for (std::vector <WIDGET *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
+	for (std::vector <GUIWIDGET *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
 	{
 		(*i)->SetVisible(sref, value);
 	}
@@ -365,7 +365,7 @@ void GUIPAGE::SetVisible(SCENENODE & parent, bool value)
 void GUIPAGE::SetAlpha(SCENENODE & parent, float value)
 {
 	SCENENODE & sref = parent.GetNode(s);
-	for (std::vector <WIDGET *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
+	for (std::vector <GUIWIDGET *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
 	{
 		(*i)->SetAlpha(sref, value);
 	}
@@ -378,7 +378,7 @@ void GUIPAGE::UpdateOptions(
 	std::ostream & error_output)
 {
 	SCENENODE & sref = parent.GetNode(s);
-	for (std::vector <WIDGET *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
+	for (std::vector <GUIWIDGET *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
 	{
 		(*i)->UpdateOptions(sref, save_to, optionmap, error_output);
 	}
@@ -399,9 +399,9 @@ std::list <std::pair <std::string, bool> > GUIPAGE::ProcessInput(
 	std::list <std::pair <std::string, bool> > actions;
 	std::string tooltip;
 
-	for (std::vector <WIDGET *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
+	for (std::vector <GUIWIDGET *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
 	{
-		WIDGET & w = **i;
+		GUIWIDGET & w = **i;
 
 		bool mouseover = w.ProcessInput(
 			sref, cursorx, cursory,
@@ -431,7 +431,7 @@ std::list <std::pair <std::string, bool> > GUIPAGE::ProcessInput(
 void GUIPAGE::Update(SCENENODE & parent, float dt)
 {
 	SCENENODE & sref = parent.GetNode(s);
-	for (std::vector <WIDGET *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
+	for (std::vector <GUIWIDGET *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
 	{
 		(*i)->Update(sref, dt);
 	}
@@ -443,7 +443,7 @@ void GUIPAGE::Clear(SCENENODE & parentnode)
 	tooltip_widget = 0;
 	dialog = false;
 
-	for (std::vector <WIDGET *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
+	for (std::vector <GUIWIDGET *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
 	{
 		delete *i;
 	}
