@@ -52,9 +52,19 @@ src = Split("""aabb.cpp
 		graphics_fallback.cpp
 		graphics_gl3v.cpp
 		graphics_renderers.cpp
-		gui.cpp
-		guioption.cpp
-		guipage.cpp
+		gui/gui.cpp
+		gui/guibutton.cpp
+		gui/guicolorpicker.cpp
+		gui/guicontrolgrab.cpp
+		gui/guiimage.cpp
+		gui/guilabel.cpp
+		gui/guimultiimage.cpp
+		gui/guioption.cpp
+		gui/guipage.cpp
+		gui/guislider.cpp
+		gui/guispinningcar.cpp
+		gui/guistringwheel.cpp
+		gui/guistringwheel2.cpp
 		http.cpp
 		hud.cpp
 		hudbar.cpp
@@ -111,17 +121,6 @@ src = Split("""aabb.cpp
 		updatemanagement.cpp
 		utils.cpp
 		vertexarray.cpp
-		widget_button.cpp
-		widget_colorpicker.cpp
-		widget_controlgrab.cpp
-		widget_doublestringwheel.cpp
-		widget_image.cpp
-		widget_label.cpp
-		widget_multiimage.cpp
-		widget_slider.cpp
-		widget_spinningcar.cpp
-		widget_stringwheel.cpp
-		widget_toggle.cpp
 		window.cpp
 		cfg/inf.cpp
 		cfg/ini.cpp
