@@ -152,7 +152,7 @@ void GUISLIDER::SetupDrawable(
 	m_ymin = centery - h * 0.5;
 	m_ymax = centery + h * 0.5;
 	float dx = font.GetWidth(" <") * scalex;
-	float dy = m_ymax - m_ymin - m_h;
+	float dy = m_ymax - m_ymin - scaley;
 	m_w = w - 2 * dx;
 	m_h = scaley;
 
