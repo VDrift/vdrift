@@ -4,6 +4,7 @@
 #include "gui/guilabel.h"
 #include "sprite2d.h"
 
+class GUIOPTION;
 class FONT;
 
 class GUISLIDER : public GUIWIDGET
@@ -43,6 +44,11 @@ public:
 		float min, float max,
 		bool percent, bool fill,
   		std::ostream & error_output);
+
+	Signal0 signal_moveup;
+	Signal0 signal_movedown;
+	Signal0 signal_next;
+	Signal0 signal_prev;
 
 private:
 	GUILABEL m_label_value;

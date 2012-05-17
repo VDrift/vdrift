@@ -4,6 +4,8 @@
 #include "gui/guiwidget.h"
 #include "sprite2d.h"
 
+class GUIOPTION;
+
 class GUICOLORPICKER : public GUIWIDGET
 {
 public:
@@ -15,13 +17,9 @@ public:
 
 	virtual void SetVisible(SCENENODE & scene, bool newvis);
 
-	virtual void SetName(const std::string & newname);
-
 	virtual void SetDescription(const std::string & newdesc);
 
 	virtual std::string GetDescription() const;
-
-	virtual std::string GetAction() const;
 
 	virtual bool ProcessInput(
 		SCENENODE & scene,
@@ -42,7 +40,10 @@ public:
 		std::ostream & error_output,
 		int draworder);
 
-	void SetAction(const std::string & newaction);
+	Signal0 signal_action;
+	Signal0 signal_moveup;
+	Signal0 signal_movedown;
+	Signal1<const std::string &> signal_value;
 
 private:
 	SPRITE2D sv_plane;
@@ -53,8 +54,6 @@ private:
 	std::string name;
 	std::string description;
 	std::string setting;
-	std::string action;
-	std::string active_action;
 	MATHVECTOR <float, 2> sv_min;
 	MATHVECTOR <float, 2> sv_max;
 	MATHVECTOR <float, 2> h_min;
@@ -68,7 +67,6 @@ private:
 	float size2;
 	bool update;
 
-	Signal1<const std::string &> signal_value;
 	Slot1<const std::string &> set_value;
 	void SetValue(const std::string & value);
 

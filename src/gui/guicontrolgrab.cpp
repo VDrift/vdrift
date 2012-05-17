@@ -32,7 +32,7 @@ GUICONTROLGRAB::GUICONTROLGRAB() :
 	w(0.5),
 	h(0.5),
 	analog(false),
-	only_one(false)
+	once(false)
 {
 	// ctor
 }
@@ -66,11 +66,6 @@ void GUICONTROLGRAB::SetVisible(SCENENODE & scene, bool newvis)
 	}
 }
 
-std::string GUICONTROLGRAB::GetAction() const
-{
-	return active_action;
-}
-
 std::string GUICONTROLGRAB::GetDescription() const
 {
 	if (!tempdescription.empty())
@@ -90,7 +85,6 @@ bool GUICONTROLGRAB::ProcessInput(
 	float cursorx, float cursory,
 	bool cursordown, bool cursorjustup)
 {
-	active_action.clear();
 	tempdescription.clear();
 
 	bool infocus = (cursorx > x - w * 0.5 &&
@@ -107,10 +101,12 @@ bool GUICONTROLGRAB::ProcessInput(
 		tempdescription = Str[ADDNEW_STR];
 		if (cursorjustup)
 		{
-			active_action = "controlgrabadd:" +
-				std::string(analog ? "y" : "n") + ":" +
-				std::string(only_one ? "y" : "n") + ":" +
-				setting;
+			signal_control(
+				"add " +
+				std::string(analog ? "y " : "n ") +
+				std::string(once ? "y " : "n ") +
+				setting);
+			signal_action();
 		}
 		return infocus;
 	}
@@ -250,7 +246,8 @@ bool GUICONTROLGRAB::ProcessInput(
 
 			std::stringstream controlstring;
 			newctrl.DebugPrint(controlstring);
-			active_action = "controlgrabedit:" + controlstring.str() + setting;
+			signal_control("edit " + controlstring.str() + setting);
+			signal_action();
 		}
 
 		break;
@@ -283,7 +280,7 @@ void GUICONTROLGRAB::SetupDrawable(
 	scale_y = scaley;
 
 	analog = newanalog;
-	only_one = newonly_one;
+	once = newonly_one;
 
 	addbutton.SetupDrawable(
 		topnoderef,
@@ -373,4 +370,9 @@ void GUICONTROLGRAB::LoadControls(SCENENODE & scene, const CONFIG & c, const FON
 			button.widget.SetText(parentnode, text);
 		}
 	}
+}
+
+keyed_container <SCENENODE>::handle GUICONTROLGRAB::GetNode()
+{
+	return topnode;
 }

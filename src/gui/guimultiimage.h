@@ -5,6 +5,7 @@
 #include "sprite2d.h"
 #include "mathvector.h"
 
+class GUIOPTION;
 class SCENENODE;
 
 class GUIMULTIIMAGE : public GUIWIDGET

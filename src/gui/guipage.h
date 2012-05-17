@@ -18,6 +18,7 @@ class CONFIG;
 class FONT;
 class PATHMANAGER;
 class ContentManager;
+class Slot0;
 
 class GUIPAGE
 {
@@ -35,6 +36,7 @@ public:
 		const FONT & fonts,
 		const std::map <std::string, std::string> & languagemap,
 		std::map <std::string, GUIOPTION> & optionmap,
+		std::map <std::string, Slot0*> & actionmap,
 		SCENENODE & parentnode,
 		ContentManager & content,
 		std::ostream & error_output);
@@ -43,16 +45,12 @@ public:
 
 	void SetAlpha(SCENENODE & parent, float newalpha);
 
-	/// tell all child widgets to update to/from the option map
-	void UpdateOptions(SCENENODE & parent, bool save_to, std::map<std::string, GUIOPTION> & optionmap, std::ostream & error_output);
-
 	/// update controlgrab widgets
 	void UpdateControls(SCENENODE & parentnode, const CONFIG & controls, const FONT & font);
 
-	/// return a list of actions
-	std::list <std::pair <std::string, bool> > ProcessInput(
+	/// execute game actions and update gui options
+	void ProcessInput(
 		SCENENODE & parent,
-		std::map<std::string, GUIOPTION> & optionmap,
 		bool movedown, bool moveup,
 		float cursorx, float cursory,
 		bool cursordown, bool cursorjustup,

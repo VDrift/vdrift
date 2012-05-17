@@ -17,6 +17,12 @@
 /*                                                                      */
 /************************************************************************/
 
+#include "definitions.h"
+#include "pathmanager.h"
+
+#include <fstream>
+#include <cassert>
+#include <cstdlib>
 #ifdef _WIN32
 #include <windows.h>
 #include <tchar.h>
@@ -27,13 +33,6 @@
 #include <sys/stat.h>
 #include <errno.h>
 #endif
-#include <string>
-#include <iostream>
-#include <fstream>
-#include <cassert>
-#include <cstdlib>
-#include "pathmanager.h"
-#include "definitions.h"
 
 void PATHMANAGER::Init(std::ostream & info_output, std::ostream & error_output)
 {
@@ -265,11 +264,6 @@ std::string PATHMANAGER::GetSkinPath() const
 std::string PATHMANAGER::GetOptionsFile() const
 {
 	return GetDataPath() + "/settings/options.config";
-}
-
-std::string PATHMANAGER::GetVideoModeFile() const
-{
-	return GetDataPath() + "/lists/videomodes";
 }
 
 std::string PATHMANAGER::GetCarControlsFile() const

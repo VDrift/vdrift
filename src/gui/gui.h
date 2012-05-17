@@ -27,12 +27,6 @@ public:
 
 	bool Active() const;
 
-	bool OptionsNeedSync() const;
-
-	bool ControlsNeedLoading();
-
-	void SetControlsNeedLoading(bool value);
-
 	void SetInGame(bool value);
 
 	bool Load(
@@ -48,6 +42,7 @@ public:
 		const std::string & texsize,
 		const float screenhwratio,
 		const std::map <std::string, FONT> & fonts,
+		std::map <std::string, Slot0*> & actionmap,
 		ContentManager & content,
 		std::ostream & info_output,
 		std::ostream & error_output);
@@ -60,31 +55,26 @@ public:
 
 	void Deactivate();
 
-	/// ensure the last last active page is invisible, update options from the last page and start fading it out, and load options into the new page and fade it in
 	void ActivatePage(
 		const std::string & pagename,
 		float activation_time,
-		std::ostream & error_output,
-		bool save_options = false);
+		std::ostream & error_output);
 
 	/// movedown and moveup are true when the user has navigated up or down with the keyboard
 	/// or joystick, while the cursor variables are set for mouse navigation.
 	/// returns a list of actions for processing by the game.
-	std::list <std::string> ProcessInput(
+	void ProcessInput(
 		bool movedown, bool moveup,
 		float cursorx, float cursory,
 		bool cursordown, bool cursorjustup,
-		float screenhwratio,
-		std::ostream & error_output);
+		float screenhwratio);
 
 	void Update(float dt);
 
 	/// if settings_are_newer is true, then this function will revise its internal options
 	/// to match the settings passed in.  otherwise, it'll operate the other way around
-	void SyncOptions(
-		const bool external_settings_are_newer,
-		std::map <std::string, std::string> & external_options,
-		std::ostream & error_output);
+	void GetOptions(std::map <std::string, std::string> & options) const;
+	void SetOptions(const std::map <std::string, std::string> & options);
 
 	void ReplaceOptionValues(
 		const std::string & optionname,
@@ -103,28 +93,41 @@ public:
 	void SetOptionValue(const std::string & name, const std::string & value);
 
 private:
-	std::map<std::string, GUIPAGE> pages;
-	std::map<std::string, GUIPAGE>::iterator active_page;
-	std::map<std::string, GUIPAGE>::iterator last_active_page;
+	typedef std::map<std::string, GUIPAGE> PAGEMAP;
+	PAGEMAP::iterator last_active_page;
+	PAGEMAP::iterator active_page;
+	PAGEMAP pages;
 	std::map<std::string, GUIOPTION> optionmap;
 	SCENENODE node;
 	FONT font;
 	float animation_counter;
 	float animation_count_start;
-	bool syncme; /// true if a sync is needed
-	bool syncme_from_external;
-	bool control_load;
 	bool ingame;
 
-	/// returns a string showing where the error occurred, or an empty string if no error
+	struct PAGECB
+	{
+		GUI * gui;
+		std::string page;
+		Slot0 action;
+
+		PAGECB();
+		PAGECB(const PAGECB & other);
+		PAGECB & operator=(const PAGECB & other);
+		void call();
+	};
+	std::vector<PAGECB> page_activate;
+
+	/// return false on failure
+	bool ActivatePage(
+		const std::string & pagename,
+		float activation_time);
+
+	/// return false on failure
 	bool LoadOptions(
 		const std::string & optionfile,
 		const std::map<std::string, std::list <std::pair <std::string, std::string> > > & valuelists,
 		const std::map<std::string, std::string> & languagemap,
 		std::ostream & error_output);
-
-	/// send options from the optionmap to the widgets
-	void UpdateOptions(std::ostream & error_output);
 };
 
 #endif

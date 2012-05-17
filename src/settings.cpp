@@ -20,10 +20,9 @@ static void Param(
 }
 
 SETTINGS::SETTINGS() :
+	resolution(2),
 	res_override(false),
-	resolution_x(800),
-	resolution_y(600),
-	bpp(16),
+	bpp(32),
 	depthbpp(24),
 	fullscreen(false),
 	shaders(true),
@@ -79,7 +78,8 @@ SETTINGS::SETTINGS() :
 	ai_difficulty(1.0),
 	vehicle_damage(false)
 {
-	// ctor
+	resolution[0] = 800;
+	resolution[1] = 600;
 }
 
 void SETTINGS::Serialize(bool write, CONFIG & config)
@@ -105,10 +105,7 @@ void SETTINGS::Serialize(bool write, CONFIG & config)
 
 	config.GetSection("display", section);
 	if (!res_override)
-	{
-		Param(config, write, section, "width", resolution_x);
-		Param(config, write, section, "height", resolution_y);
-	}
+		Param(config, write, section, "resolution", resolution);
 	Param(config, write, section, "depth", bpp);
 	Param(config, write, section, "zdepth", depthbpp);
 	Param(config, write, section, "fullscreen", fullscreen);

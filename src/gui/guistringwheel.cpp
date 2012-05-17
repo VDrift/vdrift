@@ -42,18 +42,14 @@ bool GUISTRINGWHEEL::ProcessInput(
 	{
 		if (focus_left)
 		{
-			prev_value();
-			m_action_active = m_action;
+			signal_prev();
+			signal_action();
 		}
 		else if (focus_right)
 		{
-			next_value();
-			m_action_active = m_action;
+			signal_next();
+			signal_action();
 		}
-	}
-	else
-	{
-		m_action_active.clear();
 	}
 
 	return m_focus;
@@ -76,16 +72,6 @@ void GUISTRINGWHEEL::Update(SCENENODE & scene, float dt)
 		m_label_value.SetText(scene, m_value);
 		m_update = false;
 	}
-}
-
-std::string GUISTRINGWHEEL::GetAction() const
-{
-	return m_action_active;
-}
-
-void GUISTRINGWHEEL::SetAction(const std::string & value)
-{
-	m_action = value;
 }
 
 void GUISTRINGWHEEL::SetupDrawable(
@@ -129,12 +115,11 @@ void GUISTRINGWHEEL::SetupDrawable(
 	std::map<std::string, GUIOPTION>::iterator i = optionmap.find(setting);
 	if (i != optionmap.end())
 	{
-		i->second.prev_val.connect(prev_value);
-		i->second.next_val.connect(next_value);
+		i->second.prev_val.connect(signal_prev);
+		i->second.next_val.connect(signal_next);
 		set_value.connect(i->second.signal_str);
 		SetValue(i->second.GetCurrentDisplayValue());
 	}
-	Update(scene, 0);
 }
 
 void GUISTRINGWHEEL::SetValue(const std::string & value)

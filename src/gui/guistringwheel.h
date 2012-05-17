@@ -4,6 +4,8 @@
 #include "gui/guilabel.h"
 #include "sprite2d.h"
 
+class GUIOPTION;
+
 class GUISTRINGWHEEL : public GUIWIDGET
 {
 public:
@@ -26,10 +28,6 @@ public:
 
 	virtual void Update(SCENENODE & scene, float dt);
 
-	virtual std::string GetAction() const;
-
-	void SetAction(const std::string & value);
-
 	void SetupDrawable(
 		SCENENODE & scene,
 		std::tr1::shared_ptr<TEXTURE> bgtex,
@@ -41,18 +39,21 @@ public:
 		float w, float h, float z,
 		std::ostream & error_output);
 
-private:
+	Signal0 signal_moveup;
+	Signal0 signal_movedown;
+	Signal0 signal_action;
+	Signal0 signal_next;
+	Signal0 signal_prev;
+
+protected:
 	GUILABEL m_label_value;
 	GUILABEL m_label_left;
 	GUILABEL m_label_right;
 	std::string m_description;
 	std::string m_setting;
 	std::string m_value;
-	std::string m_action;
-	std::string m_action_active;
 	bool m_focus;
 
-	Signal0 next_value, prev_value;
 	Slot1<const std::string &> set_value;
 	void SetValue(const std::string & value);
 

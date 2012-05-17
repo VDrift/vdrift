@@ -7,7 +7,6 @@
 #include <ostream>
 
 class SCENENODE;
-class GUIOPTION;
 
 class GUIWIDGET
 {
@@ -27,23 +26,9 @@ public:
 		float cursorx, float cursory,
 		bool cursordown, bool cursorjustup);
 
-	/// action associated with the widget
-	virtual std::string GetAction() const;
-
-	virtual void SetName(const std::string & newname);
-
 	virtual std::string GetDescription() const;
 
 	virtual void SetDescription(const std::string & newdesc);
-
-	/// write/read associated guioption
-	virtual void UpdateOptions(
-		SCENENODE & scene,
-		bool save_to_options,
-		std::map<std::string, GUIOPTION> & optionmap,
-		std::ostream & error_output);
-
-	virtual bool GetCancel() const;
 
 	/// update widget state
 	virtual void Update(SCENENODE & scene, float dt);
@@ -83,16 +68,6 @@ inline bool GUIWIDGET::ProcessInput(
 	return false;
 }
 
-inline std::string GUIWIDGET::GetAction() const
-{
-	return "";
-}
-
-inline void GUIWIDGET::SetName(const std::string & newname)
-{
-	// optional
-}
-
 inline std::string GUIWIDGET::GetDescription() const
 {
 	return "";
@@ -101,20 +76,6 @@ inline std::string GUIWIDGET::GetDescription() const
 inline void GUIWIDGET::SetDescription(const std::string & newdesc)
 {
 	// optional
-}
-
-inline void GUIWIDGET::UpdateOptions(
-	SCENENODE & scene,
-	bool save_to_options,
-	std::map<std::string, GUIOPTION> & optionmap,
-	std::ostream & error_output)
-{
-	// optional
-}
-
-inline bool GUIWIDGET::GetCancel() const
-{
-	return false;
 }
 
 inline void GUIWIDGET::Update(SCENENODE & scene, float dt)

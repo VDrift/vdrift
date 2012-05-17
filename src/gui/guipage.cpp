@@ -9,7 +9,6 @@
 #include "gui/guilabel.h"
 #include "gui/guibutton.h"
 #include "gui/guistringwheel.h"
-#include "gui/guistringwheel2.h"
 #include "gui/guislider.h"
 #include "gui/guispinningcar.h"
 #include "gui/guicontrolgrab.h"
@@ -33,6 +32,22 @@ GUIPAGE::~GUIPAGE()
 	}
 }
 
+static void RegisterActions(
+	const std::map<std::string, Slot0*> actionmap,
+	const std::string & actionstr,
+	Signal0 & signal)
+{
+	std::stringstream st(actionstr);
+	while (st.good())
+	{
+		std::string action;
+		st >> action;
+		std::map<std::string, Slot0*>::const_iterator it = actionmap.find(action);
+		if (it != actionmap.end())
+			it->second->connect(signal);
+	}
+}
+
 bool GUIPAGE::Load(
 	const std::string & path,
 	const std::string & texpath,
@@ -42,6 +57,7 @@ bool GUIPAGE::Load(
 	const FONT & font,
 	const std::map <std::string, std::string> & languagemap,
 	std::map <std::string, GUIOPTION> & optionmap,
+	std::map <std::string, Slot0*> & actionmap,
 	SCENENODE & parentnode,
 	ContentManager & content,
 	std::ostream & error_output)
@@ -136,33 +152,18 @@ bool GUIPAGE::Load(
 			new_widget->SetupDrawable(sref, texture, xy[0], xy[1], w, h, z);
 			widgets.push_back(new_widget);
 		}
-		else if (type == "button")
+		else if (type == "multi-image")
 		{
-			std::string action;
-			bool cancel = false;
-			bool enabled = true;
+			std::string setting, prefix, postfix;
+			if (!pagefile.GetParam(section, "setting", setting, error_output)) return false;
+			if (!pagefile.GetParam(section, "prefix", prefix, error_output)) return false;
+			if (!pagefile.GetParam(section, "postfix", postfix, error_output)) return false;
 
-			if (!pagefile.GetParam(section, "action", action, error_output)) return false;
-			pagefile.GetParam(section, "cancel", cancel);
-			pagefile.GetParam(section, "enabled", enabled);
-
-			GUIBUTTON * new_widget = new GUIBUTTON();
+			GUIMULTIIMAGE * new_widget = new GUIMULTIIMAGE();
 			new_widget->SetupDrawable(
-				sref, font, align, scalex, scaley,
-				xy[0], xy[1], w, h, z,
-				rgb[0], rgb[1], rgb[2]);
-			new_widget->SetText(sref, text);
-			new_widget->SetDescription(desc);
-			new_widget->SetAction(action);
-			new_widget->SetCancel(cancel);
-			new_widget->SetEnabled(sref, enabled);
+				sref, content, optionmap, setting, prefix, postfix,
+				xy[0], xy[1], w, h, error_output, z);
 			widgets.push_back(new_widget);
-
-			std::string name;
-			if (pagefile.GetParam(section, "name", name))
-			{
-				buttons[name] = new_widget;
-			}
 		}
 		else if (type == "label")
 		{
@@ -178,6 +179,31 @@ bool GUIPAGE::Load(
 			if (pagefile.GetParam(section, "name", name))
 			{
 				labels[name] = new_widget;
+			}
+		}
+		else if (type == "button")
+		{
+			std::string action;
+			bool enabled = true;
+			if (!pagefile.GetParam(section, "action", action, error_output)) return false;
+			pagefile.GetParam(section, "enabled", enabled);
+
+			GUIBUTTON * new_widget = new GUIBUTTON();
+			new_widget->SetupDrawable(
+				sref, font, align, scalex, scaley,
+				xy[0], xy[1], w, h, z,
+				rgb[0], rgb[1], rgb[2]);
+			new_widget->SetText(sref, text);
+			new_widget->SetDescription(desc);
+			new_widget->SetEnabled(sref, enabled);
+			widgets.push_back(new_widget);
+
+			RegisterActions(actionmap, action, new_widget->signal_action);
+
+			std::string name;
+			if (pagefile.GetParam(section, "name", name))
+			{
+				buttons[name] = new_widget;
 			}
 		}
 		else if (type == "stringwheel" || type == "intwheel" || type == "floatwheel")
@@ -204,51 +230,13 @@ bool GUIPAGE::Load(
 				xy[0], xy[1], w, h, z,
 				error_output);
 			new_widget->SetDescription(desc);
-			new_widget->SetAction(action);
 			widgets.push_back(new_widget);
-		}
-		else if (type == "intintwheel")
-		{
-			std::string setting1, setting2, values;
-			if (!pagefile.GetParam(section, "setting1", setting1, error_output)) return false;
-			if (!pagefile.GetParam(section, "setting2", setting2, error_output)) return false;
 
-			std::map <std::string, GUIOPTION>::const_iterator opt = optionmap.find(setting1);
-			if (opt == optionmap.end())
-			{
-				error_output << path << ": widget option " << setting1 << " not found." << std::endl;
-				return false;
-			}
-			desc = opt->second.GetDescription();
-
-			std::tr1::shared_ptr<TEXTURE> bgtex;
-			if (!content.load(texpath, "white.png", texinfo, bgtex)) return false;
-
-			GUISTRINGWHEEL2 * new_widget = new GUISTRINGWHEEL2();
-			new_widget->SetupDrawable(
-				sref, bgtex, optionmap, setting1, setting2,
-				font, scalex, scaley,
-				xy[0], xy[1], w, h, z,
-				error_output);
-			new_widget->SetDescription(desc);
-			widgets.push_back(new_widget);
-		}
-		else if (type == "multi-image")
-		{
-			std::string setting, prefix, postfix;
-			if (!pagefile.GetParam(section, "setting", setting, error_output)) return false;
-			if (!pagefile.GetParam(section, "prefix", prefix, error_output)) return false;
-			if (!pagefile.GetParam(section, "postfix", postfix, error_output)) return false;
-
-			GUIMULTIIMAGE * new_widget = new GUIMULTIIMAGE();
-			new_widget->SetupDrawable(
-				sref, content, optionmap, setting, prefix, postfix,
-				xy[0], xy[1], w, h, error_output, z);
-			widgets.push_back(new_widget);
+			RegisterActions(actionmap, action, new_widget->signal_action);
 		}
 		else if (type == "colorpicker")
 		{
-			std::string setting, action, name;
+			std::string setting, action;
 			std::tr1::shared_ptr<TEXTURE> cursor, hue, sat, bg;
 			if (!content.load(texpath, "widgets/color_cursor.png", texinfo, cursor)) return false;
 			if (!content.load(texpath, "widgets/color_hue.png", texinfo, hue)) return false;
@@ -263,15 +251,14 @@ bool GUIPAGE::Load(
 			new_widget->SetupDrawable(
 				sref, cursor, hue, sat, bg, x, y, w, h,
 				optionmap, setting, error_output, z);
-			new_widget->SetAction(action);
 			widgets.push_back(new_widget);
+
+			RegisterActions(actionmap, action, new_widget->signal_action);
 		}
 		else if (type == "slider")
 		{
-			float min(0), max(1);
-			bool percent(false), fill(false);
-			std::string name, setting;
-			if (!pagefile.GetParam(section, "name", name, error_output)) return false;
+			bool fill(false);
+			std::string setting;
 			if (!pagefile.GetParam(section, "setting", setting, error_output)) return false;
 			pagefile.GetParam(section, "fill", fill);
 
@@ -281,9 +268,9 @@ bool GUIPAGE::Load(
 				error_output << path << ": widget option " << setting << " not found." << std::endl;
 				return false;
 			}
-			min = opt->second.GetMin();
-			max = opt->second.GetMax();
-			percent = opt->second.GetPercentage();
+			float min = opt->second.GetMin();
+			float max = opt->second.GetMax();
+			bool percent = opt->second.GetPercentage();
 			desc = opt->second.GetDescription();
 
 			std::tr1::shared_ptr<TEXTURE> bgtex, bartex;
@@ -302,6 +289,29 @@ bool GUIPAGE::Load(
 			new_widget->SetColor(sref, rgb[0], rgb[1], rgb[2]);
 			widgets.push_back(new_widget);
 		}
+		else if (type == "controlgrab")
+		{
+			std::string setting;
+			bool analog(false);
+			bool once(false);
+			if (!pagefile.GetParam(section, "setting", setting, error_output)) return false;
+			pagefile.GetParam(section, "analog", analog);
+			pagefile.GetParam(section, "only_one", once);
+
+			GUICONTROLGRAB * new_widget = new GUICONTROLGRAB();
+			new_widget->SetupDrawable(
+				sref, setting, controlsconfig, font,
+				scalex, scaley, xy[0], xy[1], z,
+				analog, once);
+			controlgrabs.push_back(new_widget);
+			widgets.push_back(new_widget);
+
+			std::map<std::string, GUIOPTION>::iterator i = optionmap.find("controledit.string");
+			if (i != optionmap.end())
+				i->second.set_val.connect(new_widget->signal_control);
+
+			RegisterActions(actionmap, "UpdateControl", new_widget->signal_action);
+		}
 		else if (type == "spinningcar")
 		{
 			std::vector<float> carpos(3);
@@ -312,26 +322,8 @@ bool GUIPAGE::Load(
 			GUISPINNINGCAR * new_widget = new GUISPINNINGCAR();
 			new_widget->SetupDrawable(
 				sref, content, pathmanager, optionmap,
-				xy[0], xy[1],
-				MATHVECTOR<float, 3>(carpos[0], carpos[1], carpos[2]),
+				xy[0], xy[1], MATHVECTOR<float, 3>(carpos[0], carpos[1], carpos[2]),
 				setting, error_output, z + 10);
-			widgets.push_back(new_widget);
-		}
-		else if (type == "controlgrab")
-		{
-			std::string setting;
-			bool analog(false);
-			bool only_one(false);
-			if (!pagefile.GetParam(section, "setting", setting, error_output)) return false;
-			pagefile.GetParam(section, "analog", analog);
-			pagefile.GetParam(section, "only_one", only_one);
-
-			GUICONTROLGRAB * new_widget = new GUICONTROLGRAB();
-			new_widget->SetupDrawable(
-				sref, setting, controlsconfig, font,
-				scalex, scaley, xy[0], xy[1], z,
-				analog, only_one);
-			controlgrabs.push_back(new_widget);
 			widgets.push_back(new_widget);
 		}
 		else if (type != "disabled")
@@ -371,61 +363,33 @@ void GUIPAGE::SetAlpha(SCENENODE & parent, float value)
 	}
 }
 
-void GUIPAGE::UpdateOptions(
+void GUIPAGE::ProcessInput(
 	SCENENODE & parent,
-	bool save_to,
-	std::map<std::string, GUIOPTION> & optionmap,
-	std::ostream & error_output)
-{
-	SCENENODE & sref = parent.GetNode(s);
-	for (std::vector <GUIWIDGET *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
-	{
-		(*i)->UpdateOptions(sref, save_to, optionmap, error_output);
-	}
-}
-
-std::list <std::pair <std::string, bool> > GUIPAGE::ProcessInput(
-	SCENENODE & parent,
-	std::map<std::string, GUIOPTION> & optionmap,
 	bool movedown, bool moveup,
 	float cursorx, float cursory,
 	bool cursordown, bool cursorjustup,
 	float screenhwratio)
 {
-	assert(tooltip_widget);
-
 	SCENENODE & sref = parent.GetNode(s);
-
-	std::list <std::pair <std::string, bool> > actions;
 	std::string tooltip;
 
 	for (std::vector <GUIWIDGET *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
 	{
 		GUIWIDGET & w = **i;
 
-		bool mouseover = w.ProcessInput(
+		bool focus = w.ProcessInput(
 			sref, cursorx, cursory,
 			cursordown, cursorjustup);
 
-		if (mouseover)
-		{
+		if (focus)
 			tooltip = w.GetDescription();
-		}
-
-		std::string action = w.GetAction();
-		bool cancel = w.GetCancel();
-		if (!action.empty())
-		{
-			actions.push_back(std::pair <std::string, bool> (action, !cancel));
-		}
 	}
 
+	assert(tooltip_widget);
 	if (tooltip != tooltip_widget->GetText())
 	{
 		tooltip_widget->SetText(sref, tooltip);
 	}
-
-	return actions;
 }
 
 void GUIPAGE::Update(SCENENODE & parent, float dt)

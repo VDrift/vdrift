@@ -7,6 +7,7 @@
 
 class ContentManager;
 class PATHMANAGER;
+class GUIOPTION;
 class CAR;
 
 class GUISPINNINGCAR : public GUIWIDGET

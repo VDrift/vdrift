@@ -64,7 +64,6 @@ src = Split("""aabb.cpp
 		gui/guislider.cpp
 		gui/guispinningcar.cpp
 		gui/guistringwheel.cpp
-		gui/guistringwheel2.cpp
 		http.cpp
 		hud.cpp
 		hudbar.cpp

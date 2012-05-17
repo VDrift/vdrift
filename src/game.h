@@ -66,23 +66,11 @@ private:
 	void UpdateDriftScore(CAR & car, double dt);
 	void UpdateCarInputs(CAR & car);
 	void UpdateTimer();
+	///< Check eventsystem state and update GUI
 	void ProcessGUIInputs();
 	void ProcessGameInputs();
-	void ProcessGUIAction(const std::string & action);
 	void UpdateStartList(unsigned i, const std::string & value);
-	void PlayerCarChange();
-	void PlayerPaintChange();
-	void PlayerColorChange();
-	void OpponentCarChange();
-	void OpponentPaintChange();
-	void OpponentColorChange();
-	void OpponentsChange();
-	void AddControl(const std::string & controlstr);
-	void EditControl(const std::string & controlstr);
-	void SetButtonControl();
-	void SetAnalogControl();
 	bool NewGame(bool playreplay=false, bool opponents=false, int num_laps=0);
-	void LeaveGame();
 	bool LoadTrack(const std::string & trackname);
 	///< carfile is a string containing an entire .car file (e.g. XS.car) and is used instead of reading from disk.  this is optional
 	bool LoadCar(
@@ -105,7 +93,6 @@ private:
 	void UpdateParticleSystems(float dt);
 	void AddTireSmokeParticles(float dt, CAR & car);
 	std::string GetReplayRecordingFilename();
-	void ParallelUpdate(int carindex);
 	void BeginDraw();
 	void FinishDraw();
 	void BeginStartingUp();
@@ -113,6 +100,46 @@ private:
 	bool LastStartWasSuccessful() const;
 	bool Download(const std::string & file);
 	bool Download(const std::vector <std::string> & files);
+	void AddControl(std::stringstream & controlstream);
+	void EditControl(std::stringstream & controlstream);
+
+	// game actions
+	void QuitGame();
+	void LeaveGame();
+	void StartPractice();
+	void StartRace();
+	void ReturnToGame();
+	void RestartGame();
+	void StartReplay();
+	void PlayerCarChange();
+	void PlayerPaintChange();
+	void PlayerColorChange();
+	void OpponentCarChange();
+	void OpponentPaintChange();
+	void OpponentColorChange();
+	void OpponentsChange();
+	void HandleOnlineClicked();
+	void StartCheckForUpdates();
+	void StartCarManager();
+	void CarManagerNext();
+	void CarManagerPrev();
+	void ApplyCarUpdate();
+	void StartTrackManager();
+	void TrackManagerNext();
+	void TrackManagerPrev();
+	void ApplyTrackUpdate();
+	void UpdateControl();
+	void CancelControl();
+	void DeleteControl();
+	void SetButtonControl();
+	void SetAnalogControl();
+	void LoadControls();
+	void SaveControls();
+	void SyncOptions();
+	void SyncSettings();
+	void RegisterActions();
+	void InitActionMap(std::map<std::string, Slot0*> & actionmap);
+	std::vector<Slot0> actions;
 
 	std::ostream & info_output;
 	std::ostream & error_output;

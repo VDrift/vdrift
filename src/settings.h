@@ -25,12 +25,12 @@ public:
 
 	unsigned int GetResolutionX() const
 	{
-		return resolution_x;
+		return resolution[0];
 	}
 
 	unsigned int GetResolutionY() const
 	{
-		return resolution_y;
+		return resolution[1];
 	}
 
 	unsigned int GetBpp() const
@@ -315,14 +315,14 @@ public:
 		return vehicle_damage;
 	}
 
-	void SetResolutionX ( unsigned int theValue )
+	void SetResolutionX ( unsigned value )
 	{
-		resolution_x = theValue;
+		resolution[0] = value;
 	}
 
-	void SetResolutionY ( unsigned int value )
+	void SetResolutionY ( unsigned value )
 	{
-		resolution_y = value;
+		resolution[1] = value;
 	}
 
 	void SetSelectedReplay ( int value )
@@ -349,9 +349,8 @@ public:
 	}
 
 private:
+	std::vector<unsigned> resolution;
 	bool res_override;
-	int resolution_x;
-	int resolution_y;
 	int bpp;
 	int depthbpp;
 	bool fullscreen;

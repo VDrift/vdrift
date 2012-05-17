@@ -8,9 +8,6 @@
 GUI::GUI() :
 	animation_counter(0),
 	animation_count_start(0),
-	syncme(false),
-	syncme_from_external(false),
-	control_load(false),
 	ingame(false)
 {
 	active_page = last_active_page = pages.end();
@@ -50,26 +47,6 @@ bool GUI::Active() const
 	return (active_page != pages.end());
 }
 
-bool GUI::OptionsNeedSync() const
-{
-	return syncme;
-}
-
-bool GUI::ControlsNeedLoading()
-{
-	if (control_load)
-	{
-		control_load = false;
-		return true;
-	}
-	return false;
-}
-
-void GUI::SetControlsNeedLoading(bool value)
-{
-	control_load = value;
-}
-
 void GUI::SetInGame(bool value)
 {
 	ingame = value;
@@ -78,9 +55,9 @@ void GUI::SetInGame(bool value)
 void GUI::Unload()
 {
     // clear out maps
-    active_page = last_active_page = pages.end();
     pages.clear();
     optionmap.clear();
+    page_activate.clear();
 
     // clear out the scenegraph
     node.Clear();
@@ -88,9 +65,7 @@ void GUI::Unload()
     // reset variables
     animation_counter = 0;
     animation_count_start = 0;
-    syncme = false;
-    syncme_from_external = false;
-    control_load = false;
+    active_page = last_active_page = pages.end();
 
     // some things we don't want to reset incase we're in the middle of a reload;
     // for example we don't want to reset ingame
@@ -109,6 +84,7 @@ bool GUI::Load(
 	const std::string & texsize,
 	const float screenhwratio,
 	const std::map <std::string, FONT> & fonts,
+	std::map <std::string, Slot0*> & actionmap,
 	ContentManager & content,
 	std::ostream & info_output,
 	std::ostream & error_output)
@@ -148,31 +124,44 @@ bool GUI::Load(
 	// load options
 	if (!LoadOptions(optionsfile, valuelists, languagemap, error_output)) return false;
 
-	bool foundmain = false;
-
+	// pre-load controls file so that each individual widget doesn't have to reload it
 	CONFIG controlsconfig;
-	controlsconfig.Load(carcontrolsfile); //pre-load controls file so that each individual widget doesn't have to reload it
+	controlsconfig.Load(carcontrolsfile);
 
+	// init pages
+	size_t pagecount = 0;
 	for (std::list <std::string>::const_iterator i = pagelist.begin(); i != pagelist.end(); ++i)
 	{
-		const std::string & pagename = *i;
+		pages.insert(std::make_pair(*i, GUIPAGE()));
+		pagecount++;
+	}
 
-		if (!pages[pagename].Load(
-			menupath + "/" + pagename, texpath, pathmanager,
-			screenhwratio, carcontrolsfile, font, languagemap, optionmap,
+	// register pages
+	page_activate.reserve(pagecount);
+	for (PAGEMAP::iterator i = pages.begin(); i != pages.end(); ++i)
+	{
+		page_activate.push_back(PAGECB());
+		page_activate.back().gui = this;
+		page_activate.back().page = i->first;
+		actionmap[i->first] = &page_activate.back().action;
+	}
+
+	// load pages
+	for (PAGEMAP::iterator i = pages.begin(); i != pages.end(); ++i)
+	{
+		const std::string pagepath = menupath + "/" + i->first;
+		if (!i->second.Load(
+			pagepath, texpath, pathmanager,
+			screenhwratio, carcontrolsfile, font,
+			languagemap, optionmap, actionmap,
 			node, content, error_output))
 		{
-			error_output << "Error loading GUI page: " << menupath << "/" << *i << std::endl;
+			error_output << "Error loading GUI page: " << pagepath << std::endl;
 			return false;
-		}
-
-		if (pagename == "Main")
-		{
-			foundmain = true;
 		}
 	}
 
-	if (!foundmain)
+	if (pages.find("Main") == pages.end())
 	{
 		error_output << "Couldn't find GUI Main menu in: " << menupath << std::endl;
 		return false;
@@ -201,62 +190,20 @@ void GUI::Deactivate()
 	active_page = pages.end();
 }
 
-std::list <std::string> GUI::ProcessInput(
+void GUI::ProcessInput(
 	bool movedown, bool moveup,
 	float cursorx, float cursory,
 	bool cursordown, bool cursorjustup,
-	float screenhwratio,
-	std::ostream & error_output)
+	float screenhwratio)
 {
-	std::list <std::pair <std::string, bool> > actions;
-
 	if (active_page != pages.end())
 	{
-		actions = active_page->second.ProcessInput(
-			node, optionmap,
-			movedown, moveup,
+		active_page->second.ProcessInput(
+			node, movedown, moveup,
 			cursorx, cursory,
 			cursordown, cursorjustup,
 			screenhwratio);
 	}
-
-	std::list <std::string> gameactions;
-
-	std::string newpage;
-	bool save_options = false;
-
-	//process resulting actions
-	for (std::list <std::pair <std::string, bool> >::iterator i = actions.begin(); i != actions.end(); ++i)
-	{
-		std::string actionname = i->first;
-
-		// if the action is the same as a page name, just switch to that page
-		if (ingame && actionname == "Main")
-				actionname = "InGameMain";
-
-		if (pages.find(actionname) != pages.end())
-		{
-			newpage = actionname;
-			save_options = i->second;
-			if (!newpage.empty())
-			{
-				ActivatePage(newpage, 0.25, error_output, save_options);
-			}
-		}
-		else
-		{
-			gameactions.push_back(actionname);
-			if (i->second)
-			{
-				//std::cout << "Processing input" << std::endl;
-				active_page->second.UpdateOptions(node, true, optionmap, error_output);
-				//std::cout << "Done processing options" << std::endl;
-				syncme = true;
-			}
-		}
-	}
-
-	return gameactions;
 }
 
 void GUI::Update(float dt)
@@ -267,16 +214,20 @@ void GUI::Update(float dt)
 	if (active_page != pages.end())
 	{
 		//ease curve: 3*p^2-2*p^3
-		float p = 1.0-animation_counter/animation_count_start;
-		active_page->second.SetAlpha(node, 3*p*p-2*p*p*p);
+		float p = 1.0 - animation_counter / animation_count_start;
+		float alpha = 3 * p * p - 2 * p * p * p;
+		active_page->second.SetAlpha(node, alpha);
+		active_page->second.Update(node, dt);
 	}
 
 	if (last_active_page != pages.end())
 	{
 		if (animation_counter > 0)
 		{
-			float p = animation_counter/animation_count_start;
-			last_active_page->second.SetAlpha(node, 3*p*p-2*p*p*p);
+			float p = animation_counter / animation_count_start;
+			float alpha = 3 * p * p - 2 * p * p * p;
+			last_active_page->second.SetAlpha(node, alpha);
+			last_active_page->second.Update(node, dt);
 		}
 		else
 		{
@@ -284,65 +235,26 @@ void GUI::Update(float dt)
 			last_active_page = pages.end();
 		}
 	}
+}
 
-	if (active_page != pages.end())
+void GUI::GetOptions(std::map <std::string, std::string> & options) const
+{
+	for (std::map <std::string, std::string>::iterator i = options.begin(); i != options.end(); ++i)
 	{
-		active_page->second.Update(node, dt);
-	}
-
-	if (last_active_page != pages.end())
-	{
-		last_active_page->second.Update(node, dt);
+		std::map<std::string, GUIOPTION>::const_iterator option = optionmap.find(i->first);
+		if (option != optionmap.end())
+			i->second = option->second.GetCurrentStorageValue();
 	}
 }
 
-void GUI::SyncOptions(
-	const bool external_settings_are_newer,
-	std::map <std::string, std::string> & external_options,
-	std::ostream & error_output)
+void GUI::SetOptions(const std::map <std::string, std::string> & options)
 {
-	//std::cout << "Syncing options: " << external_settings_are_newer << ", " << syncme_from_external << std::endl;
-
-	for (std::map <std::string, std::string>::iterator i = external_options.begin(); i != external_options.end(); ++i)
+	for (std::map <std::string, std::string>::const_iterator i = options.begin(); i != options.end(); ++i)
 	{
-		if (external_settings_are_newer || syncme_from_external)
-		{
-			std::map<std::string, GUIOPTION>::iterator option = optionmap.find(i->first);
-			if (option != optionmap.end())
-				option->second.SetCurrentValue(i->second);
-		}
-		else
-		{
-			std::map<std::string, GUIOPTION>::iterator option = optionmap.find(i->first);
-			if (option != optionmap.end())
-				i->second = option->second.GetCurrentStorageValue();
-		}
+		std::map<std::string, GUIOPTION>::iterator option = optionmap.find(i->first);
+		if (option != optionmap.end())
+			option->second.SetCurrentValue(i->second);
 	}
-
-	if (external_settings_are_newer)
-	{
-		UpdateOptions(error_output);
-	}
-
-	if (syncme_from_external)
-	{
-		//UpdateOptions(error_output);
-		if (last_active_page != pages.end())
-		{
-			last_active_page->second.UpdateOptions(node, false, optionmap, error_output);
-		}
-
-		//std::cout << "About to update" << std::endl;
-		if (active_page != pages.end())
-		{
-			active_page->second.UpdateOptions(node, false, optionmap, error_output);
-		}
-		//std::cout << "Done updating" << std::endl;
-	}
-
-	syncme = false;
-
-	//std::cout << "Done syncing options" << std::endl;
 }
 
 void GUI::ReplaceOptionValues(
@@ -350,8 +262,6 @@ void GUI::ReplaceOptionValues(
 	const std::list <std::pair <std::string, std::string> > & newvalues,
 	std::ostream & error_output)
 {
-	//std::cout << "Replacing option map values" << std::endl;
-
 	std::map<std::string, GUIOPTION>::iterator op = optionmap.find(optionname);
 	if (op == optionmap.end())
 	{
@@ -360,54 +270,40 @@ void GUI::ReplaceOptionValues(
 	else
 	{
 		op->second.ReplaceValues(newvalues);
-		UpdateOptions(error_output);
 	}
-
-	//std::cout << "Done replacing option map values" << std::endl;
 }
 
 void GUI::ActivatePage(
 	const std::string & pagename,
 	float activation_time,
-	std::ostream & error_output,
-	bool save_options)
+	std::ostream & error_output)
 {
-	std::map<std::string, GUIPAGE>::iterator next_active_page;
-	next_active_page = pages.find(pagename);
-	if (next_active_page == pages.end())
-	{
+	if (!ActivatePage(pagename, activation_time))
 		error_output << "Gui page not found: " << pagename << std::endl;
-		return;
-	}
+}
 
-	if (active_page == next_active_page)
-	{
-		animation_counter = animation_count_start = activation_time; // fade it back in at least
-		return;
-	}
+bool GUI::ActivatePage(
+	const std::string & pagename,
+	float activation_time)
+{
+	animation_counter = animation_count_start = activation_time;
 
-	if (last_active_page != pages.end())
-	{
-		last_active_page->second.SetVisible(node, false);
-	}
+	if (active_page != pages.end() && active_page->first == pagename)
+		return true;
 
-	bool ok = save_options;
-	syncme = true;
-	syncme_from_external = !ok;
-	if (!ok) control_load = true;
+	PAGEMAP::iterator next_active_page;
+	if (ingame && pagename == "Main")
+		next_active_page = pages.find("InGameMain");
+	else
+		next_active_page = pages.find(pagename);
 
-	//save options from widgets to internal optionmap array, which will then later be saved to the game options via SyncOptions
-	if (active_page != pages.end() && ok)
-	{
-		active_page->second.UpdateOptions(node, true, optionmap, error_output);
-	}
+	if (next_active_page == pages.end())
+		return false;
 
 	last_active_page = active_page;
 	active_page = next_active_page;
 	active_page->second.SetVisible(node, true);
-	animation_counter = animation_count_start = activation_time;
-
-	//std::cout << "Done activating page" << std::endl;
+	return true;
 }
 
 bool GUI::LoadOptions(
@@ -420,7 +316,7 @@ bool GUI::LoadOptions(
 	if (!opt.Load(optionfile))
 	{
 		error_output << "Can't find options file: " << optionfile << std::endl;
-		return "File loading";
+		return false;
 	}
 
 	//opt.DebugPrint(error_output);
@@ -452,7 +348,7 @@ bool GUI::LoadOptions(
 		option.SetInfo(text, desc, type);
 		option.SetMinMaxPercentage(min, max, percentage);
 
-		//different ways to populate the options
+		// different ways to populate the options
 		if (values == "list")
 		{
 			int valuenum;
@@ -508,7 +404,7 @@ bool GUI::LoadOptions(
 			if (vlist == valuelists.end())
 			{
 				error_output << "Can't find value type \"" << values << "\" in list of GAME values" << std::endl;
-				return "GAME valuelist";
+				return false;
 			}
 			else
 			{
@@ -524,18 +420,7 @@ bool GUI::LoadOptions(
 		option.SetCurrentValue(defaultval);
 	}
 
-	UpdateOptions(error_output);
-
-	return "";
-}
-
-void GUI::UpdateOptions(std::ostream & error_output)
-{
-	bool save_to = false;
-	for (std::map<std::string, GUIPAGE>::iterator i = pages.begin(); i != pages.end(); ++i)
-	{
-		i->second.UpdateOptions(node, save_to, optionmap, error_output);
-	}
+	return true;
 }
 
 bool GUI::SetLabelText(const std::string & pagename, const std::string & labelname, const std::string & text)
@@ -599,4 +484,29 @@ void GUI::SetOptionValue(const std::string & name, const std::string & value)
 	{
 		it->second.SetCurrentValue(value);
 	}
+}
+
+GUI::PAGECB::PAGECB()
+{
+	action.call.bind<PAGECB, &PAGECB::call>(this);
+	gui = 0;
+}
+
+GUI::PAGECB::PAGECB(const PAGECB & other)
+{
+	*this = other;
+}
+
+GUI::PAGECB & GUI::PAGECB::operator=(const PAGECB & other)
+{
+	action.call.bind<PAGECB, &PAGECB::call>(this);
+	gui = other.gui;
+	page = other.page;
+	return *this;
+}
+
+void GUI::PAGECB::call()
+{
+	assert(gui && !page.empty());
+	gui->ActivatePage(page, 0.25);
 }

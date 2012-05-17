@@ -24,8 +24,6 @@ public:
 
 	virtual void SetVisible(SCENENODE & scene, bool newvis);
 
-	virtual std::string GetAction() const;
-
 	virtual std::string GetDescription() const;
 
 	virtual void SetDescription(const std::string & newdesc);
@@ -46,10 +44,14 @@ public:
 
 	void LoadControls(SCENENODE & parent, const CONFIG & c, const FONT & font);
 
-	keyed_container <SCENENODE>::handle GetNode()
-	{
-		return topnode;
-	}
+	keyed_container <SCENENODE>::handle GetNode();
+
+	Signal0 signal_moveup;
+	Signal0 signal_movedown;
+	Signal0 signal_action;
+	Signal0 signal_next;
+	Signal0 signal_prev;
+	Signal1<const std::string &> signal_control;
 
 	// awfull widget description hack
 	enum STRING
@@ -100,14 +102,13 @@ private:
 	std::string setting;
 	std::string description;
 	std::string tempdescription;
-	std::string active_action;
 	keyed_container <SCENENODE>::handle topnode;
 	keyed_container <SCENENODE>::handle ctrlnode;
 	float scale_x, scale_y;
 	float x, y, z;
 	float w, h;
 	bool analog;
-	bool only_one;
+	bool once;
 };
 
 #endif

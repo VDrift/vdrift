@@ -34,11 +34,6 @@ void GUICOLORPICKER::SetVisible(SCENENODE & scene, bool newvis)
 	sv_cursor.SetVisible(scene, newvis);
 }
 
-void GUICOLORPICKER::SetName(const std::string & newname)
-{
-	name = newname;
-}
-
 void GUICOLORPICKER::SetDescription(const std::string & newdesc)
 {
 	description = newdesc;
@@ -49,18 +44,11 @@ std::string GUICOLORPICKER::GetDescription() const
 	return description;
 }
 
-std::string GUICOLORPICKER::GetAction() const
-{
-	return active_action;
-}
-
 bool GUICOLORPICKER::ProcessInput(
 	SCENENODE & scene,
 	float cursorx, float cursory,
 	bool cursordown, bool cursorjustup)
 {
-	active_action.clear();
-
 	if (!cursordown)
 	{
 		h_select = false;
@@ -109,7 +97,7 @@ bool GUICOLORPICKER::ProcessInput(
 		std::stringstream s;
 		s << rgbnew;
 		signal_value(s.str());
-		active_action = action;
+		signal_action();
 		return true;
 	}
 	return false;
@@ -182,11 +170,6 @@ void GUICOLORPICKER::SetupDrawable(
 		i->second.set_val.connect(signal_value);
 		set_value.connect(i->second.signal_val);
 	}
-}
-
-void GUICOLORPICKER::SetAction(const std::string & newaction)
-{
-	action = newaction;
 }
 
 void GUICOLORPICKER::SetValue(const std::string & value)

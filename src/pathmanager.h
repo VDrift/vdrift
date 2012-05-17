@@ -22,6 +22,7 @@
 
 #include <list>
 #include <string>
+#include <iostream>
 
 class PATHMANAGER
 {
@@ -52,7 +53,6 @@ public:
 	std::string GetGUIMenuPath(const std::string & skinname) const;
 	std::string GetSkinPath() const;
 	std::string GetOptionsFile() const;
-	std::string GetVideoModeFile() const;
 	std::string GetCarControlsFile() const;
 	std::string GetDefaultCarControlsFile() const;
 	std::string GetReplayPath() const;

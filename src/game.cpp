@@ -116,6 +116,7 @@ GAME::GAME(std::ostream & info_out, std::ostream & error_out) :
 {
 	carcontrols_local.first = 0;
 	dynamics.setContactAddedCallback(&CARDYNAMICS::WheelContactCallback);
+	RegisterActions();
 }
 
 GAME::~GAME()
@@ -459,6 +460,9 @@ bool GAME::InitGUI()
 	std::map<std::string, std::list <std::pair <std::string, std::string> > > valuelists;
 	PopulateValueLists(valuelists);
 
+	std::map<std::string, Slot0*> actionmap;
+	InitActionMap(actionmap);
+
 	if (!gui.Load(
 			menufiles,
 			valuelists,
@@ -472,6 +476,7 @@ bool GAME::InitGUI()
 			settings.GetTextureSize(),
 			(float)window.GetH()/window.GetW(),
 			fonts,
+			actionmap,
 			content,
 			info_output,
 			error_output))
@@ -483,7 +488,7 @@ bool GAME::InitGUI()
 	// Set options from game settings.
 	std::map<std::string, std::string> optionmap;
 	settings.Get(optionmap);
-	gui.SyncOptions(true, optionmap, error_output);
+	gui.SetOptions(optionmap);
 
 	// Init opponent option explicitly.
 	gui.SetOptionValue("game.opponent", cars_name.back());
@@ -1116,104 +1121,38 @@ void GAME::UpdateTrackMap()
 	trackmap.Update(settings.GetTrackmap(), carpositions);
 }
 
-/* Check eventsystem state and make updates to the GUI... */
 void GAME::ProcessGUIInputs()
 {
-	// Handle the ESCAPE key with dedicated logic...
-	if (eventsystem.GetKeyState(SDLK_ESCAPE).just_down)
+	if (!gui.Active())
 	{
-		if (gui.Active() && gui.GetActivePageName() == "AssignControl")
+		// Handle the ESCAPE key with dedicated logic...
+		if (eventsystem.GetKeyState(SDLK_ESCAPE).just_down)
 		{
-			if (controlgrab_page.empty())
-				// Uh, dunno what to do so go to the main menu...
-				gui.ActivatePage("Main", 0.25, error_output);
-			else
-				gui.ActivatePage(controlgrab_page, 0.25, error_output);
-
-			if (settings.GetMouseGrab())
-				eventsystem.SetMouseCursorVisibility(true);
-
-			gui.SetControlsNeedLoading(false);
-		}
-		else if (!gui.Active() && track.Loaded())
-		{
+			// Show in-game GUI
 			ShowHUD(false);
 			gui.ActivatePage("InGameMain", 0.25, error_output);
 			if (settings.GetMouseGrab())
 				eventsystem.SetMouseCursorVisibility(true);
 		}
+		return;
 	}
 
-	// Handle inputs when we're waiting to assign a control...
-	if (gui.Active())
+	if (gui.GetActivePageName() == "AssignControl")
 	{
-		if (settings.GetMouseGrab())
-			eventsystem.SetMouseCursorVisibility(true);
-
-		std::list <std::string> gui_actions;
-
-		if (gui.GetActivePageName() == "AssignControl")
-		{
-			if (AssignControls())
-			{
-				RedisplayControlPage();
-			}
-		}
-		else
-		{
-			// Send input to the gui and get output into the gui_actions list.
-			gui_actions = gui.ProcessInput(
-				eventsystem.GetKeyState(SDLK_UP).just_down,
-				eventsystem.GetKeyState(SDLK_DOWN).just_down,
-				eventsystem.GetMousePosition()[0] / (float)window.GetW(),
-				eventsystem.GetMousePosition()[1] / (float)window.GetH(),
-				eventsystem.GetMouseButtonState(1).down,
-				eventsystem.GetMouseButtonState(1).just_up,
-				(float)window.GetH() / window.GetW(),
-				error_output);
-		}
-
-		// If the user did something that requires loading or saving options, do a sync.
-		bool neededsync = gui.OptionsNeedSync();
-		if (neededsync)
-		{
-			std::map<std::string, std::string> optionmap;
-			settings.Get(optionmap);
-			gui.SyncOptions(false, optionmap, error_output);
-			settings.Set(optionmap);
-
-			// Account for new settings.
-			ProcessNewSettings();
-		}
-
-		if (gui.ControlsNeedLoading())
-		{
-			carcontrols_local.second.Load(pathmanager.GetCarControlsFile(), info_output, error_output);
-			//std::cout << "Control files are being loaded: " << gui.GetActivePageName() << ", " << gui.GetLastPageName() << std::endl;
-			if (!gui.GetLastPageName().empty())
-			{
-				LoadControlsIntoGUIPage(gui.GetLastPageName());
-			}
-		}
-
-		// Process gui actions...
-		for (std::list <std::string>::iterator i = gui_actions.begin(); i != gui_actions.end(); ++i)
-		{
-			ProcessGUIAction(*i);
-		}
-
-		if (neededsync &&
-			gui.GetActivePageName() != "AssignControl" &&
-			gui.GetActivePageName() != "EditButtonControl" &&
-			gui.GetLastPageName() != "EditButtonControl" &&
-			gui.GetActivePageName() != "EditAnalogControl" &&
-			gui.GetLastPageName() != "EditAnalogControl")
-		{
-			// Write out controls.
-			carcontrols_local.second.Save(pathmanager.GetCarControlsFile(), info_output, error_output);
-			//std::cout << "Control files are being saved: " << gui.GetActivePageName() << ", " << gui.GetLastPageName() << std::endl;
-		}
+		// Handle control assignment
+		if (AssignControls())
+			RedisplayControlPage();
+		return;
 	}
+
+	gui.ProcessInput(
+		eventsystem.GetKeyState(SDLK_UP).just_down,
+		eventsystem.GetKeyState(SDLK_DOWN).just_down,
+		eventsystem.GetMousePosition()[0] / (float)window.GetW(),
+		eventsystem.GetMousePosition()[1] / (float)window.GetH(),
+		eventsystem.GetMouseButtonState(1).down,
+		eventsystem.GetMouseButtonState(1).just_up,
+		(float)window.GetH() / window.GetW());
 }
 
 /* Look for keyboard, mouse, joystick input, assign local car controls... */
@@ -1316,7 +1255,6 @@ void GAME::RedisplayControlPage()
 {
 	if (controlgrab_page.empty())
 	{
-        // Uh, dunno what to do so go to the main menu...
 		gui.ActivatePage("Main", 0.25, error_output);
 	}
 	else
@@ -1324,7 +1262,6 @@ void GAME::RedisplayControlPage()
 		gui.ActivatePage(controlgrab_page, 0.25, error_output);
 		LoadControlsIntoGUIPage(controlgrab_page);
 	}
-	gui.SetControlsNeedLoading(false);
 }
 
 void GAME::LoadControlsIntoGUIPage(const std::string & pagename)
@@ -1336,400 +1273,11 @@ void GAME::LoadControlsIntoGUIPage(const std::string & pagename)
 	gui.UpdateControls(pagename, controlfile);
 }
 
-/* Process the action string from the GUI... */
-void GAME::ProcessGUIAction(const std::string & action)
-{
-	if (action == "Quit")
-	{
-		info_output << "Got quit message from GUI. Shutting down..." << std::endl;
-		eventsystem.Quit();
-	}
-	else if (action == "StartPracticeGame")
-	{
-		if (!NewGame())
-		{
-			LeaveGame();
-		}
-	}
-	else if (action == "ReturnToGame")
-	{
-		if (gui.Active())
-		{
-			if (settings.GetMouseGrab())
-				eventsystem.SetMouseCursorVisibility(false);
-			gui.Deactivate();
-			ShowHUD(true);
-		}
-	}
-	else if (action == "LeaveGame")
-	{
-		LeaveGame();
-		gui.ActivatePage("Main", 0.25, error_output);
-	}
-	else if (action == "StartReplay")
-	{
-		if (settings.GetSelectedReplay() && !NewGame(true))
-		{
-			gui.ActivatePage("ReplayStartError", 0.25, error_output);
-		}
-	}
-	else if (action == "RestartGame")
-	{
-		bool play_replay = false;
-		bool add_opponents = cars_name.size() > 1;
-		int num_laps = race_laps;
-		if (!NewGame(play_replay, add_opponents, num_laps))
-		{
-			LeaveGame();
-		}
-	}
-	else if (action == "StartRace")
-	{
-		// Handle a single race.
-		if (cars_name.size() < 2)
-		{
-			gui.ActivatePage("NoOpponentsError", 0.25, error_output);
-		}
-		else
-		{
-			bool play_replay = false;
-			bool add_opponents = true;
-			int num_laps = settings.GetNumberOfLaps();
-			if (!NewGame(play_replay, add_opponents, num_laps))
-			{
-				LeaveGame();
-			}
-		}
-	}
-	else if (action == "PlayerCarChange")
-	{
-		PlayerCarChange();
-	}
-	else if (action == "PlayerPaintChange")
-	{
-		PlayerPaintChange();
-	}
-	else if (action == "PlayerColorChange")
-	{
-		PlayerColorChange();
-	}
-	else if (action == "OpponentCarChange")
-	{
-		OpponentCarChange();
-	}
-	else if (action == "OpponentPaintChange")
-	{
-		OpponentPaintChange();
-	}
-	else if (action == "OpponentColorChange")
-	{
-		OpponentColorChange();
-	}
-	else if (action == "OpponentsChange")
-	{
-		OpponentsChange();
-	}
-	else if (action == "HandleOnlineClicked")
-	{
-		std::string motdUrl = "vdrift.net/online/motd.txt";
-		bool success = Download(motdUrl);
-		if (success)
-		{
-			gui.ActivatePage("Online", 0.25, error_output);
-			std::string motdFile = http.GetDownloadPath(motdUrl);
-			std::string motd = UTILS::LoadFileIntoString(motdFile, error_output);
-			gui.SetLabelText("Online", "Motd", motd);
-		}
-	}
-	else if (action == "StartCheckForUpdates")
-	{
-		carupdater.StartCheckForUpdates(GAME_DOWNLOADER(*this, http), gui);
-		trackupdater.StartCheckForUpdates(GAME_DOWNLOADER(*this, http), gui);
-		gui.ActivatePage("UpdatesFound", 0.25, error_output);
-	}
-	else if (action == "StartCarManager")
-	{
-		carupdater.Reset();
-		carupdater.Show(gui);
-	}
-	else if (action == "CarManagerNext")
-	{
-		carupdater.Increment();
-		carupdater.Show(gui);
-	}
-	else if (action == "CarManagerPrev")
-	{
-		carupdater.Decrement();
-		carupdater.Show(gui);
-	}
-	else if (action == "ApplyCarUpdate")
-	{
-		carupdater.ApplyUpdate(GAME_DOWNLOADER(*this, http), gui, pathmanager);
-	}
-	else if (action == "StartTrackManager")
-	{
-		trackupdater.Reset();
-		trackupdater.Show(gui);
-	}
-	else if (action == "TrackManagerNext")
-	{
-		trackupdater.Increment();
-		trackupdater.Show(gui);
-	}
-	else if (action == "TrackManagerPrev")
-	{
-		trackupdater.Decrement();
-		trackupdater.Show(gui);
-	}
-	else if (action == "ApplyTrackUpdate")
-	{
-		trackupdater.ApplyUpdate(GAME_DOWNLOADER(*this, http), gui, pathmanager);
-	}
-	else if (action.substr(0,14) == "controlgrabadd")
-	{
-		AddControl(action);
-	}
-	else if (action.substr(0,15) == "controlgrabedit")
-	{
-		EditControl(action);
-	}
-	else if (action == "ButtonControlOK")
-	{
-		SetButtonControl();
-	}
-	else if (action == "AnalogControlOK")
-	{
-		SetAnalogControl();
-	}
-	else if (action == "ButtonControlCancel" || action == "AnalogControlCancel")
-	{
-		RedisplayControlPage();
-	}
-	else if (action == "ButtonControlDelete" || action == "AnalogControlDelete")
-	{
-		carcontrols_local.second.DeleteControl(controlgrab_editcontrol, controlgrab_input, error_output);
-		RedisplayControlPage();
-	}
-	else
-	{
-		error_output << "Unhandled GUI event: " << action << std::endl;
-	}
-}
-
 void GAME::UpdateStartList(unsigned i, const std::string & value)
 {
 	std::stringstream s;
 	s << "Racer" << i;
 	gui.SetLabelText("SingleRace", s.str(), value);
-}
-
-void GAME::PlayerCarChange()
-{
-	std::list <std::pair <std::string, std::string> > carpaintlist;
-	PopulateCarPaintList(gui.GetOptionValue("game.player"), carpaintlist);
-	gui.ReplaceOptionValues("game.player_paint", carpaintlist, error_output);
-
-	cars_name[0] = gui.GetOptionValue("game.player");
-	cars_paint[0] = gui.GetOptionValue("game.player_paint");
-	cars_color[0] = cast<unsigned>(gui.GetOptionValue("game.player_color"));
-
-	if (cars_name.size() < 2)
-	{
-		gui.ReplaceOptionValues("game.opponent_paint", carpaintlist, error_output);
-		gui.SetOptionValue("game.opponent", cars_name.back());
-		gui.SetOptionValue("game.opponent_paint", cars_paint.back());
-		gui.SetOptionValue("game.opponent_color", cast(cars_color.back()));
-	}
-
-	UpdateStartList(0, cars_name[0]);
-}
-
-void GAME::PlayerPaintChange()
-{
-	cars_paint[0] = gui.GetOptionValue("game.player_paint");
-	if (cars_paint.size() < 2)
-		gui.SetOptionValue("game.opponent_paint", cars_paint.back());
-}
-
-void GAME::PlayerColorChange()
-{
-	cars_color[0] = cast<unsigned>(gui.GetOptionValue("game.player_color"));
-	if (cars_color.size() < 2)
-		gui.SetOptionValue("game.opponent_color", cast(cars_color.back()));
-}
-
-void GAME::OpponentCarChange()
-{
-	std::list <std::pair <std::string, std::string> > carpaintlist;
-	PopulateCarPaintList(gui.GetOptionValue("game.opponent"), carpaintlist);
-	gui.ReplaceOptionValues("game.opponent_paint", carpaintlist, error_output);
-
-	cars_name.back() = gui.GetOptionValue("game.opponent");
-	cars_paint.back() = gui.GetOptionValue("game.opponent_paint");
-	cars_color.back() = cast<unsigned>(gui.GetOptionValue("game.opponent_color"));
-
-	if (cars_name.size() < 2)
-	{
-		gui.ReplaceOptionValues("game.player_paint", carpaintlist, error_output);
-		gui.SetOptionValue("game.player", cars_name.back());
-		gui.SetOptionValue("game.player_paint", cars_paint.back());
-		gui.SetOptionValue("game.player_color", cast(cars_color.back()));
-	}
-
-	UpdateStartList(cars_name.size() - 1, cars_name.back());
-}
-
-void GAME::OpponentPaintChange()
-{
-	cars_paint.back() = gui.GetOptionValue("game.opponent_paint");
-	if (cars_paint.size() < 2)
-		gui.SetOptionValue("game.player_paint", cars_paint.back());
-}
-
-void GAME::OpponentColorChange()
-{
-	cars_color.back() = cast<unsigned>(gui.GetOptionValue("game.opponent_color"));
-	if (cars_color.size() < 2)
-		gui.SetOptionValue("game.player_color", cast(cars_color.back()));
-}
-
-void GAME::OpponentsChange()
-{
-	unsigned opponents = cast<unsigned>(gui.GetOptionValue("game.opponents"));
-	int delta = opponents - cars_name.size();
-	if (delta < 0)
-	{
-		for (unsigned i = cars_name.size(); i > opponents; --i)
-		{
-			UpdateStartList(i - 1, "");
-			cars_name.pop_back();
-			cars_paint.pop_back();
-			cars_color.pop_back();
-		}
-
-		gui.SetOptionValue("game.opponent", cars_name.back());
-		gui.SetOptionValue("game.opponent_paint", cars_paint.back());
-		gui.SetOptionValue("game.opponent_color", cast(cars_color.back()));
-
-		if (opponents < 2)
-		{
-			gui.SetOptionValue("game.player", cars_name.back());
-			gui.SetOptionValue("game.player_paint", cars_paint.back());
-			gui.SetOptionValue("game.player_color", cast(cars_color.back()));
-		}
-	}
-	else if (delta > 0)
-	{
-		cars_name.reserve(opponents);
-		cars_paint.reserve(opponents);
-		cars_color.reserve(opponents);
-		for (unsigned i = cars_name.size(); i < opponents; ++i)
-		{
-			// variate color lame version, fixme
-			float r, g, b, h, s, v;
-			unpackRGB(cars_color.back(), r, g, b);
-			RGBtoHSV(r, g, b, h, s, v);
-			HSVtoRGB(h + 0.07, 0.9, 0.5, r, g, b);
-			unsigned color = packRGB(r, g, b);
-
-			cars_name.push_back(cars_name.back());
-			cars_paint.push_back(cars_paint.back());
-			cars_color.push_back(color);
-			UpdateStartList(i, cars_name.back());
-		}
-
-		gui.SetOptionValue("game.opponent", cars_name.back());
-		gui.SetOptionValue("game.opponent_paint", cars_paint.back());
-		gui.SetOptionValue("game.opponent_color", cast(cars_color.back()));
-	}
-}
-
-void GAME::AddControl(const std::string & controlstr)
-{
-	controlgrab_page = gui.GetActivePageName();
-	controlgrab_input = controlstr.substr(19);
-	controlgrab_analog = (controlstr.substr(15, 1) == "y");
-	controlgrab_only_one = (controlstr.substr(17, 1) == "y");
-	controlgrab_mouse_coords = std::make_pair(eventsystem.GetMousePosition()[0], eventsystem.GetMousePosition()[1]);
-	controlgrab_joystick_state = eventsystem.GetJoysticks();
-
-	gui.ActivatePage("AssignControl", 0.25, error_output);
-	gui.SetControlsNeedLoading(false);
-}
-
-void GAME::EditControl(const std::string & controlstr)
-{
-	// Determine edit parameters.
-	controlgrab_page = gui.GetActivePageName();
-
-	std::stringstream controlstream(controlstr.substr(16));
-	controlgrab_editcontrol.ReadFrom(controlstream);
-
-	assert(controlstr.find('\n') != std::string::npos);
-	controlgrab_input = controlstr.substr(controlstr.find('\n') + 1);
-	assert(!controlgrab_input.empty());
-
-	// Display the page and load up the gui state.
-	if (!controlgrab_editcontrol.IsAnalog())
-	{
-		bool push_down = true;
-		if (controlgrab_editcontrol.type == CARCONTROLMAP_LOCAL::CONTROL::KEY)
-			push_down = controlgrab_editcontrol.keypushdown;
-		else if (controlgrab_editcontrol.type == CARCONTROLMAP_LOCAL::CONTROL::JOY)
-			push_down = controlgrab_editcontrol.joypushdown;
-		else if (controlgrab_editcontrol.type == CARCONTROLMAP_LOCAL::CONTROL::MOUSE)
-			push_down = controlgrab_editcontrol.mouse_push_down;
-		else
-			assert(0);
-
-		gui.SetOptionValue("controledit.held_once", controlgrab_editcontrol.onetime ? "true" : "false");
-		gui.SetOptionValue("controledit.up_down", push_down ? "true" : "false");
-		gui.ActivatePage("EditButtonControl", 0.25, error_output);
-	}
-	else
-	{
-		std::string deadzone = cast(controlgrab_editcontrol.deadzone);
-		std::string exponent = cast(controlgrab_editcontrol.exponent);
-		std::string gain = cast(controlgrab_editcontrol.gain);
-
-		gui.SetOptionValue("controledit.deadzone", deadzone);
-		gui.SetOptionValue("controledit.exponent", exponent);
-		gui.SetOptionValue("controledit.gain", gain);
-		gui.ActivatePage("EditAnalogControl", 0.25, error_output);
-	}
-
-	gui.SetControlsNeedLoading(false);
-}
-
-void GAME::SetButtonControl()
-{
-	// Get GUI state of our control.
-	bool once = (gui.GetOptionValue("controledit.held_once") == "true");
-	bool down = (gui.GetOptionValue("controledit.up_down") == "true");
-	controlgrab_editcontrol.onetime = once;
-	controlgrab_editcontrol.joypushdown = down;
-	controlgrab_editcontrol.keypushdown = down;
-	controlgrab_editcontrol.mouse_push_down = down;
-
-	// Send our control update to the control maintainer.
-	carcontrols_local.second.UpdateControl(controlgrab_editcontrol, controlgrab_input, error_output);
-
-	// Go back to the previous page.
-	RedisplayControlPage();
-}
-
-void GAME::SetAnalogControl()
-{
-	// Get GUI state of our control.
-	controlgrab_editcontrol.deadzone = cast<float>(gui.GetOptionValue("controledit.deadzone"));
-	controlgrab_editcontrol.exponent = cast<float>(gui.GetOptionValue("controledit.exponent"));
-	controlgrab_editcontrol.gain = cast<float>(gui.GetOptionValue("controledit.gain"));
-
-	// Send our control update to the control maintainer.
-	carcontrols_local.second.UpdateControl(controlgrab_editcontrol, controlgrab_input, error_output);
-
-	// Go back to the previous page.
-	RedisplayControlPage();
 }
 
 void GAME::UpdateCar(CAR & car, double dt)
@@ -2015,7 +1563,7 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 		count++;
 	}
 
-	// Set up the GUI.
+	// Set up GUI.
 	gui.SetInGame(true);
 	gui.Deactivate();
 	ShowHUD(true);
@@ -2067,44 +1615,6 @@ std::string GAME::GetReplayRecordingFilename()
 	std::stringstream s;
 	s << pathmanager.GetReplayPath() << "/" << timestr << "-" << settings.GetTrack() << ".vdr";
 	return s.str();
-}
-
-/* Clean up all game data... */
-void GAME::LeaveGame()
-{
-	ai.clear_cars();
-
-	carcontrols_local.first = NULL;
-
-	if (replay.GetRecording())
-	{
-		std::string replayname = GetReplayRecordingFilename();
-		info_output << "Saving replay to " << replayname << std::endl;
-		replay.StopRecording(replayname);
-
-		std::list <std::pair <std::string, std::string> > replaylist;
-		PopulateReplayList(replaylist);
-		gui.ReplaceOptionValues("game.selected_replay", replaylist, error_output);
-	}
-	if (replay.GetPlaying()) replay.StopPlaying();
-
-	gui.SetInGame(false);
-
-	// Clear out the static drawables.
-	SCENENODE empty;
-	graphics_interface->AddStaticNode(empty, true);
-
-	track.Clear();
-	cars.clear();
-	hud.SetVisible(false);
-	inputgraph.Hide();
-	trackmap.Unload();
-	timer.Unload();
-	active_camera = 0;
-	pause = false;
-	race_laps = 0;
-	tire_smoke.Clear();
-	sound.Update();
 }
 
 /* Add a car, optionally controlled by the local player... */
@@ -2463,26 +1973,6 @@ void GAME::PopulateValueLists(std::map<std::string, std::list <std::pair <std::s
 	PopulateCarPaintList(cars_name[0], valuelists["player_paints"]);
 	PopulateCarPaintList(cars_name.back(), valuelists["opponent_paints"]);
 
-	// Populate video mode list.
-	std::list <std::pair<std::string, std::string> > modelistx;
-	std::list <std::pair<std::string, std::string> > modelisty;
-	std::ifstream modes(pathmanager.GetVideoModeFile().c_str());
-	while (modes.good())
-	{
-		std::string x, y;
-		modes >> x;
-		modes >> y;
-		if (!x.empty() && !y.empty())
-		{
-			modelistx.push_back(std::make_pair(x,x));
-			modelisty.push_back(std::make_pair(y,y));
-		}
-	}
-	modelistx.reverse();
-	modelisty.reverse();
-	valuelists["resolution_widths"] = modelistx;
-	valuelists["resolution_heights"] = modelisty;
-
 	// Populate anisotropy list.
 	int max_aniso = graphics_interface->GetMaxAnisotropy();
 	valuelists["anisotropy"].push_back(std::make_pair("0","Off"));
@@ -2821,3 +2311,515 @@ bool GAME::LastStartWasSuccessful() const
 	return !pathmanager.FileExists(pathmanager.GetStartupFile());
 }
 
+void GAME::QuitGame()
+{
+	info_output << "Got quit message from GUI. Shutting down..." << std::endl;
+	eventsystem.Quit();
+}
+
+void GAME::LeaveGame()
+{
+	ai.clear_cars();
+
+	carcontrols_local.first = NULL;
+
+	if (replay.GetRecording())
+	{
+		std::string replayname = GetReplayRecordingFilename();
+		info_output << "Saving replay to " << replayname << std::endl;
+		replay.StopRecording(replayname);
+
+		std::list <std::pair <std::string, std::string> > replaylist;
+		PopulateReplayList(replaylist);
+		gui.ReplaceOptionValues("game.selected_replay", replaylist, error_output);
+	}
+
+	if (replay.GetPlaying())
+		replay.StopPlaying();
+
+	gui.SetInGame(false);
+	gui.ActivatePage("Main", 0.25, error_output);
+
+	// Clear out the static drawables.
+	SCENENODE empty;
+	graphics_interface->AddStaticNode(empty, true);
+
+	track.Clear();
+	cars.clear();
+	hud.SetVisible(false);
+	inputgraph.Hide();
+	trackmap.Unload();
+	timer.Unload();
+	active_camera = 0;
+	pause = false;
+	race_laps = 0;
+	tire_smoke.Clear();
+	sound.Update();
+}
+
+void GAME::StartPractice()
+{
+	if (!NewGame())
+		LeaveGame();
+}
+
+void GAME::StartRace()
+{
+	// Handle a single race.
+	if (cars_name.size() < 2)
+	{
+		gui.ActivatePage("NoOpponentsError", 0.25, error_output);
+	}
+	else
+	{
+		bool play_replay = false;
+		bool add_opponents = true;
+		int num_laps = settings.GetNumberOfLaps();
+		if (!NewGame(play_replay, add_opponents, num_laps))
+		{
+			LeaveGame();
+		}
+	}
+}
+
+void GAME::ReturnToGame()
+{
+	if (gui.Active())
+	{
+		if (settings.GetMouseGrab())
+			eventsystem.SetMouseCursorVisibility(false);
+		gui.Deactivate();
+		ShowHUD(true);
+	}
+}
+
+void GAME::RestartGame()
+{
+	bool play_replay = false;
+	bool add_opponents = cars_name.size() > 1;
+	int num_laps = race_laps;
+	if (!NewGame(play_replay, add_opponents, num_laps))
+	{
+		LeaveGame();
+	}
+}
+
+void GAME::StartReplay()
+{
+	if (settings.GetSelectedReplay() && !NewGame(true))
+	{
+		gui.ActivatePage("ReplayStartError", 0.25, error_output);
+	}
+}
+
+void GAME::PlayerCarChange()
+{
+	std::list <std::pair <std::string, std::string> > carpaintlist;
+	PopulateCarPaintList(gui.GetOptionValue("game.player"), carpaintlist);
+	gui.ReplaceOptionValues("game.player_paint", carpaintlist, error_output);
+
+	cars_name[0] = gui.GetOptionValue("game.player");
+	cars_paint[0] = gui.GetOptionValue("game.player_paint");
+	cars_color[0] = cast<unsigned>(gui.GetOptionValue("game.player_color"));
+
+	if (cars_name.size() < 2)
+	{
+		gui.ReplaceOptionValues("game.opponent_paint", carpaintlist, error_output);
+		gui.SetOptionValue("game.opponent", cars_name.back());
+		gui.SetOptionValue("game.opponent_paint", cars_paint.back());
+		gui.SetOptionValue("game.opponent_color", cast(cars_color.back()));
+	}
+
+	UpdateStartList(0, cars_name[0]);
+}
+
+void GAME::PlayerPaintChange()
+{
+	cars_paint[0] = gui.GetOptionValue("game.player_paint");
+	if (cars_paint.size() < 2)
+		gui.SetOptionValue("game.opponent_paint", cars_paint.back());
+}
+
+void GAME::PlayerColorChange()
+{
+	cars_color[0] = cast<unsigned>(gui.GetOptionValue("game.player_color"));
+	if (cars_color.size() < 2)
+		gui.SetOptionValue("game.opponent_color", cast(cars_color.back()));
+}
+
+void GAME::OpponentCarChange()
+{
+	std::list <std::pair <std::string, std::string> > carpaintlist;
+	PopulateCarPaintList(gui.GetOptionValue("game.opponent"), carpaintlist);
+	gui.ReplaceOptionValues("game.opponent_paint", carpaintlist, error_output);
+
+	cars_name.back() = gui.GetOptionValue("game.opponent");
+	cars_paint.back() = gui.GetOptionValue("game.opponent_paint");
+	cars_color.back() = cast<unsigned>(gui.GetOptionValue("game.opponent_color"));
+
+	if (cars_name.size() < 2)
+	{
+		gui.ReplaceOptionValues("game.player_paint", carpaintlist, error_output);
+		gui.SetOptionValue("game.player", cars_name.back());
+		gui.SetOptionValue("game.player_paint", cars_paint.back());
+		gui.SetOptionValue("game.player_color", cast(cars_color.back()));
+	}
+
+	UpdateStartList(cars_name.size() - 1, cars_name.back());
+}
+
+void GAME::OpponentPaintChange()
+{
+	cars_paint.back() = gui.GetOptionValue("game.opponent_paint");
+	if (cars_paint.size() < 2)
+		gui.SetOptionValue("game.player_paint", cars_paint.back());
+}
+
+void GAME::OpponentColorChange()
+{
+	cars_color.back() = cast<unsigned>(gui.GetOptionValue("game.opponent_color"));
+	if (cars_color.size() < 2)
+		gui.SetOptionValue("game.player_color", cast(cars_color.back()));
+}
+
+void GAME::OpponentsChange()
+{
+	unsigned opponents = cast<unsigned>(gui.GetOptionValue("game.opponents"));
+	int delta = opponents - cars_name.size();
+	if (delta < 0)
+	{
+		for (unsigned i = cars_name.size(); i > opponents; --i)
+		{
+			UpdateStartList(i - 1, "");
+			cars_name.pop_back();
+			cars_paint.pop_back();
+			cars_color.pop_back();
+		}
+
+		gui.SetOptionValue("game.opponent", cars_name.back());
+		gui.SetOptionValue("game.opponent_paint", cars_paint.back());
+		gui.SetOptionValue("game.opponent_color", cast(cars_color.back()));
+
+		if (opponents < 2)
+		{
+			gui.SetOptionValue("game.player", cars_name.back());
+			gui.SetOptionValue("game.player_paint", cars_paint.back());
+			gui.SetOptionValue("game.player_color", cast(cars_color.back()));
+		}
+	}
+	else if (delta > 0)
+	{
+		cars_name.reserve(opponents);
+		cars_paint.reserve(opponents);
+		cars_color.reserve(opponents);
+		for (unsigned i = cars_name.size(); i < opponents; ++i)
+		{
+			// variate color lame version, fixme
+			float r, g, b, h, s, v;
+			unpackRGB(cars_color.back(), r, g, b);
+			RGBtoHSV(r, g, b, h, s, v);
+			HSVtoRGB(h + 0.07, 0.9, 0.5, r, g, b);
+			unsigned color = packRGB(r, g, b);
+
+			cars_name.push_back(cars_name.back());
+			cars_paint.push_back(cars_paint.back());
+			cars_color.push_back(color);
+			UpdateStartList(i, cars_name.back());
+		}
+
+		gui.SetOptionValue("game.opponent", cars_name.back());
+		gui.SetOptionValue("game.opponent_paint", cars_paint.back());
+		gui.SetOptionValue("game.opponent_color", cast(cars_color.back()));
+	}
+}
+
+void GAME::HandleOnlineClicked()
+{
+	std::string motdUrl = "vdrift.net/online/motd.txt";
+	bool success = Download(motdUrl);
+	if (success)
+	{
+		gui.ActivatePage("Online", 0.25, error_output);
+		std::string motdFile = http.GetDownloadPath(motdUrl);
+		std::string motd = UTILS::LoadFileIntoString(motdFile, error_output);
+		gui.SetLabelText("Online", "Motd", motd);
+	}
+}
+
+void GAME::StartCheckForUpdates()
+{
+	carupdater.StartCheckForUpdates(GAME_DOWNLOADER(*this, http), gui);
+	trackupdater.StartCheckForUpdates(GAME_DOWNLOADER(*this, http), gui);
+	gui.ActivatePage("UpdatesFound", 0.25, error_output);
+}
+
+void GAME::StartCarManager()
+{
+	carupdater.Reset();
+	carupdater.Show(gui);
+}
+
+void GAME::CarManagerNext()
+{
+	carupdater.Increment();
+	carupdater.Show(gui);
+}
+
+void GAME::CarManagerPrev()
+{
+	carupdater.Decrement();
+	carupdater.Show(gui);
+}
+
+void GAME::ApplyCarUpdate()
+{
+	carupdater.ApplyUpdate(GAME_DOWNLOADER(*this, http), gui, pathmanager);
+}
+
+void GAME::StartTrackManager()
+{
+	trackupdater.Reset();
+	trackupdater.Show(gui);
+}
+
+void GAME::TrackManagerNext()
+{
+	trackupdater.Increment();
+	trackupdater.Show(gui);
+}
+
+void GAME::TrackManagerPrev()
+{
+	trackupdater.Decrement();
+	trackupdater.Show(gui);
+}
+
+void GAME::ApplyTrackUpdate()
+{
+	trackupdater.ApplyUpdate(GAME_DOWNLOADER(*this, http), gui, pathmanager);
+}
+
+void GAME::AddControl(std::stringstream & controlstream)
+{
+	std::string str;
+
+	controlstream >> str;
+	controlgrab_analog = (str == "y");
+
+	controlstream >> str;
+	controlgrab_only_one = (str == "y");
+
+	controlstream >> controlgrab_input;
+
+	controlgrab_page = gui.GetActivePageName();
+	controlgrab_mouse_coords = std::make_pair(eventsystem.GetMousePosition()[0], eventsystem.GetMousePosition()[1]);
+	controlgrab_joystick_state = eventsystem.GetJoysticks();
+
+	gui.SetOptionValue("controledit.string", "");
+	gui.ActivatePage("AssignControl", 0.25, error_output);
+}
+
+void GAME::EditControl(std::stringstream & controlstream)
+{
+	controlgrab_editcontrol.ReadFrom(controlstream);
+
+	controlstream >> controlgrab_input;
+	assert(!controlgrab_input.empty());
+
+	controlgrab_page = gui.GetActivePageName();
+
+	// Display the page and load up the gui state.
+	if (!controlgrab_editcontrol.IsAnalog())
+	{
+		bool push_down = true;
+		if (controlgrab_editcontrol.type == CARCONTROLMAP_LOCAL::CONTROL::KEY)
+			push_down = controlgrab_editcontrol.keypushdown;
+		else if (controlgrab_editcontrol.type == CARCONTROLMAP_LOCAL::CONTROL::JOY)
+			push_down = controlgrab_editcontrol.joypushdown;
+		else if (controlgrab_editcontrol.type == CARCONTROLMAP_LOCAL::CONTROL::MOUSE)
+			push_down = controlgrab_editcontrol.mouse_push_down;
+		else
+			assert(0);
+
+		gui.SetOptionValue("controledit.held_once", controlgrab_editcontrol.onetime ? "true" : "false");
+		gui.SetOptionValue("controledit.up_down", push_down ? "true" : "false");
+		gui.ActivatePage("EditButtonControl", 0.25, error_output);
+	}
+	else
+	{
+		std::string deadzone = cast(controlgrab_editcontrol.deadzone);
+		std::string exponent = cast(controlgrab_editcontrol.exponent);
+		std::string gain = cast(controlgrab_editcontrol.gain);
+
+		gui.SetOptionValue("controledit.deadzone", deadzone);
+		gui.SetOptionValue("controledit.exponent", exponent);
+		gui.SetOptionValue("controledit.gain", gain);
+		gui.ActivatePage("EditAnalogControl", 0.25, error_output);
+	}
+
+	gui.SetOptionValue("controledit.string", "");
+}
+
+void GAME::UpdateControl()
+{
+	std::string controlstr = gui.GetOptionValue("controledit.string");
+	std::stringstream controlstream(controlstr);
+	std::string str;
+	controlstream >> str;
+	if (str == "add")
+		AddControl(controlstream);
+	else if (str == "edit")
+		EditControl(controlstream);
+}
+
+void GAME::CancelControl()
+{
+	RedisplayControlPage();
+}
+
+void GAME::DeleteControl()
+{
+	carcontrols_local.second.DeleteControl(controlgrab_editcontrol, controlgrab_input, error_output);
+	RedisplayControlPage();
+}
+
+void GAME::SetButtonControl()
+{
+	// Get GUI state of our control.
+	bool once = (gui.GetOptionValue("controledit.held_once") == "true");
+	bool down = (gui.GetOptionValue("controledit.up_down") == "true");
+	controlgrab_editcontrol.onetime = once;
+	controlgrab_editcontrol.joypushdown = down;
+	controlgrab_editcontrol.keypushdown = down;
+	controlgrab_editcontrol.mouse_push_down = down;
+
+	// Send our control update to the control maintainer.
+	carcontrols_local.second.UpdateControl(controlgrab_editcontrol, controlgrab_input, error_output);
+
+	// Go back to the previous page.
+	RedisplayControlPage();
+}
+
+void GAME::SetAnalogControl()
+{
+	// Get GUI state of our control.
+	controlgrab_editcontrol.deadzone = cast<float>(gui.GetOptionValue("controledit.deadzone"));
+	controlgrab_editcontrol.exponent = cast<float>(gui.GetOptionValue("controledit.exponent"));
+	controlgrab_editcontrol.gain = cast<float>(gui.GetOptionValue("controledit.gain"));
+
+	// Send our control update to the control maintainer.
+	carcontrols_local.second.UpdateControl(controlgrab_editcontrol, controlgrab_input, error_output);
+
+	// Go back to the previous page.
+	RedisplayControlPage();
+}
+
+void GAME::LoadControls()
+{
+	carcontrols_local.second.Load(
+		pathmanager.GetCarControlsFile(),
+		info_output,
+		error_output);
+
+	assert(!gui.GetActivePageName().empty());
+	LoadControlsIntoGUIPage(gui.GetActivePageName());
+}
+
+void GAME::SaveControls()
+{
+	carcontrols_local.second.Save(
+		pathmanager.GetCarControlsFile(),
+		info_output,
+		error_output);
+}
+
+void GAME::SyncOptions()
+{
+	std::map<std::string, std::string> optionmap;
+	settings.Get(optionmap);
+	gui.SetOptions(optionmap);
+}
+
+void GAME::SyncSettings()
+{
+	std::map<std::string, std::string> optionmap;
+	settings.Get(optionmap);
+	gui.GetOptions(optionmap);
+	settings.Set(optionmap);
+	ProcessNewSettings();
+}
+
+void GAME::RegisterActions()
+{
+	actions.resize(33);
+	actions[0].call.bind<GAME, &GAME::QuitGame>(this);
+	actions[1].call.bind<GAME, &GAME::LeaveGame>(this);
+	actions[2].call.bind<GAME, &GAME::StartPractice>(this);
+	actions[3].call.bind<GAME, &GAME::StartRace>(this);
+	actions[4].call.bind<GAME, &GAME::ReturnToGame>(this);
+	actions[5].call.bind<GAME, &GAME::RestartGame>(this);
+	actions[6].call.bind<GAME, &GAME::StartReplay>(this);
+	actions[7].call.bind<GAME, &GAME::PlayerCarChange>(this);
+	actions[8].call.bind<GAME, &GAME::PlayerPaintChange>(this);
+	actions[9].call.bind<GAME, &GAME::PlayerColorChange>(this);
+	actions[10].call.bind<GAME, &GAME::OpponentCarChange>(this);
+	actions[11].call.bind<GAME, &GAME::OpponentPaintChange>(this);
+	actions[12].call.bind<GAME, &GAME::OpponentColorChange>(this);
+	actions[13].call.bind<GAME, &GAME::OpponentsChange>(this);
+	actions[14].call.bind<GAME, &GAME::HandleOnlineClicked>(this);
+	actions[15].call.bind<GAME, &GAME::StartCheckForUpdates>(this);
+	actions[16].call.bind<GAME, &GAME::StartCarManager>(this);
+	actions[17].call.bind<GAME, &GAME::CarManagerNext>(this);
+	actions[18].call.bind<GAME, &GAME::CarManagerPrev>(this);
+	actions[19].call.bind<GAME, &GAME::ApplyCarUpdate>(this);
+	actions[20].call.bind<GAME, &GAME::StartTrackManager>(this);
+	actions[21].call.bind<GAME, &GAME::TrackManagerNext>(this);
+	actions[22].call.bind<GAME, &GAME::TrackManagerPrev>(this);
+	actions[23].call.bind<GAME, &GAME::ApplyTrackUpdate>(this);
+	actions[24].call.bind<GAME, &GAME::UpdateControl>(this);
+	actions[25].call.bind<GAME, &GAME::CancelControl>(this);
+	actions[26].call.bind<GAME, &GAME::DeleteControl>(this);
+	actions[27].call.bind<GAME, &GAME::SetButtonControl>(this);
+	actions[28].call.bind<GAME, &GAME::SetAnalogControl>(this);
+	actions[29].call.bind<GAME, &GAME::LoadControls>(this);
+	actions[30].call.bind<GAME, &GAME::SaveControls>(this);
+	actions[31].call.bind<GAME, &GAME::SyncOptions>(this);
+	actions[32].call.bind<GAME, &GAME::SyncSettings>(this);
+}
+
+void GAME::InitActionMap(std::map<std::string, Slot0*> & actionmap)
+{
+	actionmap["QuitGame"] = &actions[0];
+	actionmap["LeaveGame"] = &actions[1];
+	actionmap["StartPractice"] = &actions[2];
+	actionmap["StartRace"] = &actions[3];
+	actionmap["ReturnToGame"] = &actions[4];
+	actionmap["RestartGame"] = &actions[5];
+	actionmap["StartReplay"] = &actions[6];
+	actionmap["PlayerCarChange"] = &actions[7];
+	actionmap["PlayerPaintChange"] = &actions[8];
+	actionmap["PlayerColorChange"] = &actions[9];
+	actionmap["OpponentCarChange"] = &actions[10];
+	actionmap["OpponentPaintChange"] = &actions[11];
+	actionmap["OpponentColorChange"] = &actions[12];
+	actionmap["OpponentsChange"] = &actions[13];
+	actionmap["HandleOnlineClicked"] = &actions[14];
+	actionmap["StartCheckForUpdates"] = &actions[15];
+	actionmap["StartCarManager"] = &actions[16];
+	actionmap["CarManagerNext"] = &actions[17];
+	actionmap["CarManagerPrev"] = &actions[18];
+	actionmap["ApplyCarUpdate"] = &actions[19];
+	actionmap["StartTrackManager"] = &actions[20];
+	actionmap["TrackManagerNext"] = &actions[21];
+	actionmap["TrackManagerPrev"] = &actions[22];
+	actionmap["ApplyTrackUpdate"] = &actions[23];
+	actionmap["UpdateControl"] = &actions[24];
+	actionmap["CancelControl"] = &actions[25];
+	actionmap["DeleteControl"] = &actions[26];
+	actionmap["SetButtonControl"] = &actions[27];
+	actionmap["SetAnalogControl"] = &actions[28];
+	actionmap["controls.load"] = &actions[29];
+	actionmap["controls.save"] = &actions[30];
+	actionmap["gui.options.load"] = &actions[31];
+	actionmap["gui.options.save"] = &actions[32];
+}
