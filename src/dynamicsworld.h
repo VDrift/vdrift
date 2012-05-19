@@ -9,6 +9,7 @@
 class TRACK;
 class COLLISION_CONTACT;
 class FractureBody;
+class BEZIER;
 
 class DynamicsWorld  : public btDiscreteDynamicsWorld
 {
@@ -30,6 +31,8 @@ public:
 
 	// set custon contact callback
 	void setContactAddedCallback(ContactAddedCallback cb);
+
+	const BEZIER* GetLapSequence(int i);
 
 	// cast ray into collision world, returns first hit, caster is excluded fom hits
 	bool castRay(
