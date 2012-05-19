@@ -1816,3 +1816,6 @@ bool CARDYNAMICS::WheelContactCallback(
 	}
 	return false;
 }
+const btCollisionObject& CARDYNAMICS::getCollisionObject() const {
+	return *static_cast<btCollisionObject*>(body);
+}

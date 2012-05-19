@@ -1423,6 +1423,8 @@ void GAME::ProcessGUIAction(const std::string & action)
 			opponents.clear();
 			opponents_paint.clear();
 			opponents_color.clear();
+			opponents_difficulty.clear();
+			opponents_type.clear();
 		}
 
 		opponents.push_back(settings.GetOpponentCar());
@@ -1430,6 +1432,8 @@ void GAME::ProcessGUIAction(const std::string & action)
 		MATHVECTOR <float, 3> color(0);
 		settings.GetOpponentColor(color[0], color[1], color[2]);
 		opponents_color.push_back(color);
+		opponents_difficulty.push_back(settings.GetAIDifficulty());
+		opponents_type.push_back(settings.GetOpponentType());
 
 		std::string opponentstr;
 		for (std::vector<std::string>::iterator i = opponents.begin(); i != opponents.end(); ++i)
@@ -1647,8 +1651,42 @@ void GAME::UpdateCarInputs(CAR & car)
 		}
 		else
 		{
-			//carinputs = carcontrols_local.second.GetInputs();
-			carinputs = carcontrols_local.second.ProcessInput(
+#ifdef VISUALIZE_AI_DEBUG
+			// It allows to activate the AI on the player car with F9 button.
+			// This is useful for bringing the car in strange 
+			// situations and test how the AI solves it.
+			
+			static bool aiControlled = false;
+			static bool buttonPressed = false;
+			if (buttonPressed != eventsystem.GetKeyState(SDLK_F9).just_down)
+			{
+				buttonPressed = !buttonPressed;
+				if (buttonPressed)
+				{
+					aiControlled = !aiControlled;
+					if (aiControlled)
+					{
+						info_output << "Switching to AI controlled player." << std::endl;
+						ai.add_car(&car, 1.0);
+					}
+					else
+					{
+						info_output << "Switching to user controlled player." << std::endl;
+						ai.remove_car(&car);
+					}
+				}
+			}
+
+			if(aiControlled)
+			{
+				carinputs = ai.GetInputs(&car);
+				assert(carinputs.size() == CARINPUT::INVALID);
+			}
+			else
+			{
+#endif
+				//carinputs = carcontrols_local.second.GetInputs();
+				carinputs = carcontrols_local.second.ProcessInput(
 					settings.GetJoyType(),
 					eventsystem,
 					car.GetLastSteer(),
@@ -1660,6 +1698,9 @@ void GAME::UpdateCarInputs(CAR & car)
 					window.GetH(),
 					settings.GetButtonRamp(),
 					settings.GetHGateShifter());
+#ifdef VISUALIZE_AI_DEBUG
+			}
+#endif
 		}
 	}
 	else
@@ -1903,7 +1944,7 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 				error_output << "Unable to get track start location " << i << std::endl;
 				return false;
 			}
-			ai.add_car(&cars.back(), settings.GetAIDifficulty());
+			ai.add_car(&cars.back(), opponents_difficulty[i], opponents_type[i]);
 			carcount++;
 		}
 	}
@@ -2390,6 +2431,15 @@ void GAME::PopulateValueLists(std::map<std::string, std::list <std::pair <std::s
 		carlist.push_back(*i);
 	}
 	valuelists["cars"] = carlist;
+
+	std::vector <std::string> AI_Types(ai.ListFactoryTypes());
+
+	std::list <std::pair<std::string, std::string> > AI_Type_list;
+	for (int i=0;i< AI_Types.size(); i++)
+	{
+		AI_Type_list.push_back(std::make_pair(AI_Types[i], AI_Types[i]));
+	}
+	valuelists["opponent_types"] = AI_Type_list;
 
 	// Populate car paints.
 	PopulateCarPaintList(settings.GetPlayerCar(), valuelists["player_paints"]);
