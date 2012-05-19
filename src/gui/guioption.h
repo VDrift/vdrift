@@ -61,7 +61,6 @@ public:
 	Slot0 next_val;
 
 private:
-	bool current_valid;
 	std::list <std::pair<std::string, std::string> >::iterator current_value;
 	std::list <std::pair<std::string, std::string> > values; //the first element of the pair is the (sometimes numeric) stored value, while the second element is the display value.  sometimes they are the same.
 	std::string non_value_data; //this is used when the values map is empty, such as for numeric settings

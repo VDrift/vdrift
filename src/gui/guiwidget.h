@@ -2,9 +2,7 @@
 #define _GUIWIDGET_H
 
 #include "signalslot.h"
-#include <map>
 #include <string>
-#include <ostream>
 
 class SCENENODE;
 
@@ -19,16 +17,6 @@ public:
 
 	/// override visibility
 	virtual void SetVisible(SCENENODE & scene, bool value);
-
-	/// true if the mouse is within the widget
-	virtual bool ProcessInput(
-		SCENENODE & scene,
-		float cursorx, float cursory,
-		bool cursordown, bool cursorjustup);
-
-	virtual std::string GetDescription() const;
-
-	virtual void SetDescription(const std::string & newdesc);
 
 	/// update widget state
 	virtual void Update(SCENENODE & scene, float dt);
@@ -58,24 +46,6 @@ inline void GUIWIDGET::SetAlpha(SCENENODE & scene, float value)
 inline void GUIWIDGET::SetVisible(SCENENODE & scene, bool value)
 {
 	//GetDrawable(scene).SetDrawEnable(m_visible & value);
-}
-
-inline bool GUIWIDGET::ProcessInput(
-	SCENENODE & scene,
-	float cursorx, float cursory,
-	bool cursordown, bool cursorjustup)
-{
-	return false;
-}
-
-inline std::string GUIWIDGET::GetDescription() const
-{
-	return "";
-}
-
-inline void GUIWIDGET::SetDescription(const std::string & newdesc)
-{
-	// optional
 }
 
 inline void GUIWIDGET::Update(SCENENODE & scene, float dt)

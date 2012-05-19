@@ -1,8 +1,5 @@
 #include "gui/guipage.h"
 #include "gui/guioption.h"
-#include "config.h"
-#include "contentmanager.h"
-#include "textureinfo.h"
 #include "gui/guiwidget.h"
 #include "gui/guiimage.h"
 #include "gui/guimultiimage.h"
@@ -13,11 +10,17 @@
 #include "gui/guispinningcar.h"
 #include "gui/guicontrolgrab.h"
 #include "gui/guicolorpicker.h"
+#include "contentmanager.h"
+#include "textureinfo.h"
+#include "config.h"
 
 #include <fstream>
 #include <sstream>
 
 GUIPAGE::GUIPAGE() :
+	default_widget(0),
+	active_widget(0),
+	active_widget_next(0),
 	tooltip_widget(0),
 	dialog(false)
 {
@@ -26,25 +29,13 @@ GUIPAGE::GUIPAGE() :
 
 GUIPAGE::~GUIPAGE()
 {
-	for (std::vector <GUIWIDGET *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
+	for (std::vector <GUIWIDGET *>::iterator i = pwidgets.begin(); i != pwidgets.end(); ++i)
 	{
 		delete *i;
 	}
-}
-
-static void RegisterActions(
-	const std::map<std::string, Slot0*> actionmap,
-	const std::string & actionstr,
-	Signal0 & signal)
-{
-	std::stringstream st(actionstr);
-	while (st.good())
+	for (std::vector <GUICONTROL *>::iterator i = awidgets.begin(); i != awidgets.end(); ++i)
 	{
-		std::string action;
-		st >> action;
-		std::map<std::string, Slot0*>::const_iterator it = actionmap.find(action);
-		if (it != actionmap.end())
-			it->second->connect(signal);
+		delete *i;
 	}
 }
 
@@ -86,6 +77,13 @@ bool GUIPAGE::Load(
 	if (!pagefile.GetParam("", "name", name)) return false;
 	if (!pagefile.GetParam("", "dialog", dialog)) return false;
 
+	// set oncancel event handler
+	std::string actionstr;
+	if (pagefile.GetParam("", "oncancel", actionstr))
+	{
+		GUICONTROL::SetActions(actionmap, actionstr, oncancel);
+	}
+
 	// draw order offset
 	float z0 = 100;
 
@@ -99,10 +97,12 @@ bool GUIPAGE::Load(
 		tooltip_widget->SetupDrawable(
 			sref, font, align, xscale, yscale,
 			x, y, w, h, z0, r, g, b);
-		widgets.push_back(tooltip_widget);
+		pwidgets.push_back(tooltip_widget);
 	}
 
 	// load widgets
+	GUICONTROL * selected_widget = 0;
+	std::vector<std::string> awidgetsid;
 	for (CONFIG::const_iterator section = pagefile.begin(); section != pagefile.end(); ++section)
 	{
 		if (section->first.empty()) continue;
@@ -114,16 +114,18 @@ bool GUIPAGE::Load(
 		if (!pagefile.GetParam(section, "center", xy, error_output)) return false;
 
 		// optional
+		bool selected(false);
 		float fontsize(0.03), w(0), h(0), z(0);
 		std::vector<float> rgb(3, 1.0);
-		std::string salign, text, desc;
+		std::string alignstr, text, desc;
 		int align(0);
+		pagefile.GetParam(section, "selected", selected);
 		pagefile.GetParam(section, "fontsize", fontsize);
 		pagefile.GetParam(section, "width", w);
 		pagefile.GetParam(section, "height", h);
 		pagefile.GetParam(section, "layer", z);
 		pagefile.GetParam(section, "color", rgb);
-		pagefile.GetParam(section, "align", salign);
+		pagefile.GetParam(section, "align", alignstr);
 		pagefile.GetParam(section, "text", text);
 		pagefile.GetParam(section, "tip", desc);
 
@@ -131,8 +133,8 @@ bool GUIPAGE::Load(
 		float scalex = fontsize * screenhwratio;
 		z = z + z0;
 
-		if (salign == "right") align = 1;
-		else if (salign == "left") align = -1;
+		if (alignstr == "right") align = 1;
+		else if (alignstr == "left") align = -1;
 
 		if (w == 0) w = fontsize;
 		if (h == 0) h = fontsize;
@@ -150,7 +152,7 @@ bool GUIPAGE::Load(
 
 			GUIIMAGE * new_widget = new GUIIMAGE();
 			new_widget->SetupDrawable(sref, texture, xy[0], xy[1], w, h, z);
-			widgets.push_back(new_widget);
+			pwidgets.push_back(new_widget);
 		}
 		else if (type == "multi-image")
 		{
@@ -163,7 +165,7 @@ bool GUIPAGE::Load(
 			new_widget->SetupDrawable(
 				sref, content, optionmap, setting, prefix, postfix,
 				xy[0], xy[1], w, h, error_output, z);
-			widgets.push_back(new_widget);
+			pwidgets.push_back(new_widget);
 		}
 		else if (type == "label")
 		{
@@ -172,20 +174,16 @@ bool GUIPAGE::Load(
 				sref, font, align, scalex, scaley,
 				xy[0], xy[1], w, h, z,
 				rgb[0], rgb[1], rgb[2]);
-			new_widget->SetText(sref, text);
-			widgets.push_back(new_widget);
+			new_widget->SetText(text);
+			pwidgets.push_back(new_widget);
 
 			std::string name;
 			if (pagefile.GetParam(section, "name", name))
-			{
 				labels[name] = new_widget;
-			}
 		}
 		else if (type == "button")
 		{
-			std::string action;
 			bool enabled = true;
-			if (!pagefile.GetParam(section, "action", action, error_output)) return false;
 			pagefile.GetParam(section, "enabled", enabled);
 
 			GUIBUTTON * new_widget = new GUIBUTTON();
@@ -193,24 +191,23 @@ bool GUIPAGE::Load(
 				sref, font, align, scalex, scaley,
 				xy[0], xy[1], w, h, z,
 				rgb[0], rgb[1], rgb[2]);
-			new_widget->SetText(sref, text);
+			new_widget->SetText(text);
 			new_widget->SetDescription(desc);
 			new_widget->SetEnabled(sref, enabled);
-			widgets.push_back(new_widget);
+			awidgets.push_back(new_widget);
+			awidgetsid.push_back(section->first);
 
-			RegisterActions(actionmap, action, new_widget->signal_action);
+			if (selected)
+				selected_widget = new_widget;
 
 			std::string name;
 			if (pagefile.GetParam(section, "name", name))
-			{
 				buttons[name] = new_widget;
-			}
 		}
 		else if (type == "stringwheel" || type == "intwheel" || type == "floatwheel")
 		{
-			std::string setting, action;
-			if (!pagefile.GetParam(section, "setting", setting, error_output)) return false;
-			pagefile.GetParam(section, "action", action);
+			std::string setting;
+			pagefile.GetParam(section, "setting", setting);
 
 			std::map <std::string, GUIOPTION>::const_iterator opt = optionmap.find(setting);
 			if (opt == optionmap.end())
@@ -230,20 +227,22 @@ bool GUIPAGE::Load(
 				xy[0], xy[1], w, h, z,
 				error_output);
 			new_widget->SetDescription(desc);
-			widgets.push_back(new_widget);
+			awidgets.push_back(new_widget);
+			awidgetsid.push_back(section->first);
 
-			RegisterActions(actionmap, action, new_widget->signal_action);
+			if (selected)
+				selected_widget = new_widget;
 		}
 		else if (type == "colorpicker")
 		{
-			std::string setting, action;
+			std::string setting;
+			if (!pagefile.GetParam(section, "setting", setting, error_output)) return false;
+
 			std::tr1::shared_ptr<TEXTURE> cursor, hue, sat, bg;
 			if (!content.load(texpath, "widgets/color_cursor.png", texinfo, cursor)) return false;
 			if (!content.load(texpath, "widgets/color_hue.png", texinfo, hue)) return false;
 			if (!content.load(texpath, "widgets/color_saturation.png", texinfo, sat)) return false;
 			if (!content.load(texpath, "widgets/color_value.png", texinfo, bg)) return false;
-			if (!pagefile.GetParam(section, "setting", setting, error_output)) return false;
-			pagefile.GetParam(section, "action", action);
 
 			float x = xy[0] - w / 2;
 			float y = xy[1] - h / 2;
@@ -251,14 +250,16 @@ bool GUIPAGE::Load(
 			new_widget->SetupDrawable(
 				sref, cursor, hue, sat, bg, x, y, w, h,
 				optionmap, setting, error_output, z);
-			widgets.push_back(new_widget);
+			awidgets.push_back(new_widget);
+			awidgetsid.push_back(section->first);
 
-			RegisterActions(actionmap, action, new_widget->signal_action);
+			if (selected)
+				selected_widget = new_widget;
 		}
 		else if (type == "slider")
 		{
-			bool fill(false);
 			std::string setting;
+			bool fill = false;
 			if (!pagefile.GetParam(section, "setting", setting, error_output)) return false;
 			pagefile.GetParam(section, "fill", fill);
 
@@ -287,13 +288,17 @@ bool GUIPAGE::Load(
 				error_output);
 			new_widget->SetDescription(desc);
 			new_widget->SetColor(sref, rgb[0], rgb[1], rgb[2]);
-			widgets.push_back(new_widget);
+			awidgets.push_back(new_widget);
+			awidgetsid.push_back(section->first);
+
+			if (selected)
+				selected_widget = new_widget;
 		}
 		else if (type == "controlgrab")
 		{
 			std::string setting;
-			bool analog(false);
-			bool once(false);
+			bool analog = false;
+			bool once = false;
 			if (!pagefile.GetParam(section, "setting", setting, error_output)) return false;
 			pagefile.GetParam(section, "analog", analog);
 			pagefile.GetParam(section, "only_one", once);
@@ -304,13 +309,15 @@ bool GUIPAGE::Load(
 				scalex, scaley, xy[0], xy[1], z,
 				analog, once);
 			controlgrabs.push_back(new_widget);
-			widgets.push_back(new_widget);
+			awidgets.push_back(new_widget);
+			awidgetsid.push_back(section->first);
+
+			if (selected)
+				selected_widget = new_widget;
 
 			std::map<std::string, GUIOPTION>::iterator i = optionmap.find("controledit.string");
 			if (i != optionmap.end())
 				i->second.set_val.connect(new_widget->signal_control);
-
-			RegisterActions(actionmap, "UpdateControl", new_widget->signal_action);
 		}
 		else if (type == "spinningcar")
 		{
@@ -324,13 +331,38 @@ bool GUIPAGE::Load(
 				sref, content, pathmanager, optionmap,
 				xy[0], xy[1], MATHVECTOR<float, 3>(carpos[0], carpos[1], carpos[2]),
 				setting, error_output, z + 10);
-			widgets.push_back(new_widget);
+			pwidgets.push_back(new_widget);
 		}
 		else if (type != "disabled")
 		{
 			error_output << path << ": unknown " << section->first << " type: " << type << ", ignoring" << std::endl;
 		}
 	}
+
+	// register widget actions, extra pass to avoid reallocations
+	widget_activate.reserve(awidgets.size());
+	for (size_t i = 0; i < awidgets.size(); ++i)
+	{
+		widget_activate.push_back(WIDGETCB());
+		widget_activate.back().page = this;
+		widget_activate.back().widget = awidgets[i];
+		actionmap[awidgetsid[i]] = &widget_activate.back().action;
+	}
+
+	// set widget actions
+	for (size_t i = 0; i < awidgets.size(); ++i)
+	{
+		awidgets[i]->RegisterActions(actionmap, awidgetsid[i], pagefile);
+	}
+
+	// set active widget
+	if (!selected_widget && !awidgets.empty())
+		selected_widget = awidgets[0];
+
+	default_widget = active_widget = selected_widget;
+
+	if (active_widget)
+		tooltip_widget->SetText(active_widget->GetDescription());
 
 	return true;
 }
@@ -348,54 +380,87 @@ void GUIPAGE::UpdateControls(SCENENODE & parentnode, const CONFIG & controls, co
 void GUIPAGE::SetVisible(SCENENODE & parent, bool value)
 {
 	SCENENODE & sref = GetNode(parent);
-	for (std::vector <GUIWIDGET *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
+	for (std::vector <GUIWIDGET *>::iterator i = pwidgets.begin(); i != pwidgets.end(); ++i)
 	{
 		(*i)->SetVisible(sref, value);
 	}
+	for (std::vector <GUICONTROL *>::iterator i = awidgets.begin(); i != awidgets.end(); ++i)
+	{
+		(*i)->SetVisible(sref, value);
+	}
+
+	// reset active widget
+	if (!value && default_widget)
+		SetActiveWidget(*default_widget);
 }
 
 void GUIPAGE::SetAlpha(SCENENODE & parent, float value)
 {
 	SCENENODE & sref = parent.GetNode(s);
-	for (std::vector <GUIWIDGET *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
+	for (std::vector <GUIWIDGET *>::iterator i = pwidgets.begin(); i != pwidgets.end(); ++i)
 	{
 		(*i)->SetAlpha(sref, value);
 	}
+	for (std::vector <GUICONTROL *>::iterator i = awidgets.begin(); i != awidgets.end(); ++i)
+	{
+		(*i)->SetAlpha(sref, value * inactive_alpha);
+	}
+
+	// set active widget
+	if (active_widget)
+		active_widget->SetAlpha(sref, value);
 }
 
 void GUIPAGE::ProcessInput(
 	SCENENODE & parent,
-	bool movedown, bool moveup,
 	float cursorx, float cursory,
 	bool cursordown, bool cursorjustup,
+	bool moveleft, bool moveright,
+	bool moveup, bool movedown,
+	bool select, bool cancel,
 	float screenhwratio)
 {
-	SCENENODE & sref = parent.GetNode(s);
-	std::string tooltip;
-
-	for (std::vector <GUIWIDGET *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
+	if (cancel)
 	{
-		GUIWIDGET & w = **i;
-
-		bool focus = w.ProcessInput(
-			sref, cursorx, cursory,
-			cursordown, cursorjustup);
-
-		if (focus)
-			tooltip = w.GetDescription();
+		oncancel();
+		return;
 	}
 
-	assert(tooltip_widget);
-	if (tooltip != tooltip_widget->GetText())
+	// set active widget
+	SCENENODE & sref = parent.GetNode(s);
+	for (std::vector <GUICONTROL *>::iterator i = awidgets.begin(); i != awidgets.end(); ++i)
 	{
-		tooltip_widget->SetText(sref, tooltip);
+		if ((**i).ProcessInput(sref, cursorx, cursory, cursordown, cursorjustup))
+		{
+			SetActiveWidget(**i);
+			break;
+		}
+	}
+
+	// process events
+	if (active_widget)
+	{
+		if (select)
+			active_widget->OnSelect();
+		else if (moveleft)
+			active_widget->OnMoveLeft();
+		else if (moveright)
+			active_widget->OnMoveRight();
+		else if (moveup)
+			active_widget->OnMoveUp();
+		else if (movedown)
+			active_widget->OnMoveDown();
 	}
 }
 
 void GUIPAGE::Update(SCENENODE & parent, float dt)
 {
 	SCENENODE & sref = parent.GetNode(s);
-	for (std::vector <GUIWIDGET *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
+	for (std::vector <GUIWIDGET *>::iterator i = pwidgets.begin(); i != pwidgets.end(); ++i)
+	{
+		(*i)->Update(sref, dt);
+	}
+	for (std::vector <GUICONTROL *>::iterator i = awidgets.begin(); i != awidgets.end(); ++i)
 	{
 		(*i)->Update(sref, dt);
 	}
@@ -403,15 +468,22 @@ void GUIPAGE::Update(SCENENODE & parent, float dt)
 
 void GUIPAGE::Clear(SCENENODE & parentnode)
 {
-	controlgrabs.clear();
-	tooltip_widget = 0;
-	dialog = false;
-
-	for (std::vector <GUIWIDGET *>::iterator i = widgets.begin(); i != widgets.end(); ++i)
+	for (std::vector <GUIWIDGET *>::iterator i = pwidgets.begin(); i != pwidgets.end(); ++i)
 	{
 		delete *i;
 	}
-	widgets.clear();
+	for (std::vector <GUICONTROL *>::iterator i = awidgets.begin(); i != awidgets.end(); ++i)
+	{
+		delete *i;
+	}
+
+	pwidgets.clear();
+	awidgets.clear();
+	labels.clear();
+	buttons.clear();
+	controlgrabs.clear();
+	tooltip_widget = 0;
+	dialog = false;
 
 	if (s.valid())
 	{
@@ -419,4 +491,39 @@ void GUIPAGE::Clear(SCENENODE & parentnode)
 		sref.Clear();
 	}
 	s.invalidate();
+}
+
+void GUIPAGE::SetActiveWidget(GUICONTROL & widget)
+{
+	if (active_widget != &widget)
+	{
+		active_widget = &widget;
+		tooltip_widget->SetText(active_widget->GetDescription());
+	}
+}
+
+GUIPAGE::WIDGETCB::WIDGETCB()
+{
+	action.call.bind<WIDGETCB, &WIDGETCB::call>(this);
+	page = 0;
+	widget = 0;
+}
+
+GUIPAGE::WIDGETCB::WIDGETCB(const WIDGETCB & other)
+{
+	*this = other;
+}
+
+GUIPAGE::WIDGETCB & GUIPAGE::WIDGETCB::operator=(const WIDGETCB & other)
+{
+	action.call.bind<WIDGETCB, &WIDGETCB::call>(this);
+	page = other.page;
+	widget = other.widget;
+	return *this;
+}
+
+void GUIPAGE::WIDGETCB::call()
+{
+	assert(page && widget);
+	page->SetActiveWidget(*widget);
 }

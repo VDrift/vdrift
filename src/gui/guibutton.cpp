@@ -16,19 +16,14 @@ GUIBUTTON::~GUIBUTTON()
 
 void GUIBUTTON::SetAlpha(SCENENODE & scene, float value)
 {
-	float basealpha = m_enabled ? 1.0 : 0.5;
-	GUILABEL::SetAlpha(scene, value * basealpha);
 	m_alpha = value;
+	float enabled = m_enabled ? 1.0 : 0.5;
+	m_label.SetAlpha(scene, value * enabled);
 }
 
-std::string GUIBUTTON::GetDescription() const
+void GUIBUTTON::SetVisible(SCENENODE & scene, bool value)
 {
-	return m_description;
-}
-
-void GUIBUTTON::SetDescription(const std::string & value)
-{
-	m_description = value;
+	m_label.SetVisible(scene, value);
 }
 
 bool GUIBUTTON::ProcessInput(
@@ -36,17 +31,31 @@ bool GUIBUTTON::ProcessInput(
 	float cursorx, float cursory,
 	bool cursordown, bool cursorjustup)
 {
-	if (!m_enabled || !InFocus(cursorx, cursory))
-		return false;
-
-	if (cursorjustup)
-		signal_action();
-
-	return true;
+	return m_enabled && m_label.InFocus(cursorx, cursory);
 }
 
 void GUIBUTTON::SetEnabled(SCENENODE & scene, bool value)
 {
 	m_enabled = value;
-	SetAlpha(scene, m_alpha);
+	m_label.SetAlpha(scene, m_alpha);
+}
+
+void GUIBUTTON::SetText(const std::string & value)
+{
+	m_label.SetText(value);
+}
+
+void GUIBUTTON::SetupDrawable(
+	SCENENODE & scene,
+	const FONT & font,
+	int align,
+	float scalex, float scaley,
+	float x, float y,
+	float w, float h, float z,
+	float r, float g, float b)
+{
+	m_label.SetupDrawable(
+		scene, font, align, scalex, scaley,
+		x, y, w, h, z,
+		r, g, b);
 }

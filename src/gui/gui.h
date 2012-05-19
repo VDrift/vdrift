@@ -64,9 +64,11 @@ public:
 	/// or joystick, while the cursor variables are set for mouse navigation.
 	/// returns a list of actions for processing by the game.
 	void ProcessInput(
-		bool movedown, bool moveup,
 		float cursorx, float cursory,
 		bool cursordown, bool cursorjustup,
+		bool moveleft, bool moveright,
+		bool moveup, bool movedown,
+		bool select, bool cancel,
 		float screenhwratio);
 
 	void Update(float dt);
@@ -93,11 +95,12 @@ public:
 	void SetOptionValue(const std::string & name, const std::string & value);
 
 private:
+	typedef std::map<std::string, GUIOPTION> OPTIONMAP;
 	typedef std::map<std::string, GUIPAGE> PAGEMAP;
+	OPTIONMAP options;
+	PAGEMAP pages;
 	PAGEMAP::iterator last_active_page;
 	PAGEMAP::iterator active_page;
-	PAGEMAP pages;
-	std::map<std::string, GUIOPTION> optionmap;
 	SCENENODE node;
 	FONT font;
 	float animation_counter;
@@ -128,6 +131,9 @@ private:
 		const std::map<std::string, std::list <std::pair <std::string, std::string> > > & valuelists,
 		const std::map<std::string, std::string> & languagemap,
 		std::ostream & error_output);
+
+	/// add option slots to action map
+	void RegisterOptions(std::map <std::string, Slot0*> & actionmap);
 };
 
 #endif

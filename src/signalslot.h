@@ -15,7 +15,7 @@ public:
 	Signal(const Signal & other);
 	Signal & operator=(const Signal & other);
 	void disconnect(void);
-	bool isconnected(void) const;
+	bool connected(void) const;
 
 protected:
 	friend class Slot<Delegate>;
@@ -181,7 +181,7 @@ inline void Signal<Delegate>::disconnect(void)
 }
 
 template <class Delegate>
-inline bool Signal<Delegate>::isconnected(void) const
+inline bool Signal<Delegate>::connected(void) const
 {
 	return m_connections.size();
 }

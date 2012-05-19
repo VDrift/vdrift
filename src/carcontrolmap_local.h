@@ -49,8 +49,9 @@ public:
 			MOUSE,
 			UNKNOWN
 		} type;
-
 		bool onetime;
+		bool pushdown;
+		int keycode;
 
 		int joynum;
 		int joyaxis;
@@ -60,25 +61,18 @@ public:
 			NEGATIVE,
 			BOTH
 		} joyaxistype;
-		int joybutton;
-
 		enum JOYTYPE
 		{
 			JOYAXIS,
 			JOYBUTTON,
 			JOYHAT
 		} joytype;
-		bool joypushdown;
-
-		int keycode;
-		bool keypushdown;
 
 		enum MOUSETYPE
 		{
 			MOUSEBUTTON,
 			MOUSEMOTION
 		} mousetype;
-		int mbutton;
 		enum MOUSEDIRECTION
 		{
 			UP,
@@ -87,7 +81,6 @@ public:
 			RIGHT
 		} mdir;
 		bool last_mouse_state;
-		bool mouse_push_down;
 
 		float deadzone;
 		float exponent;

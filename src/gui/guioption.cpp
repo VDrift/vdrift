@@ -5,7 +5,6 @@
 const std::string GUIOPTION::null;
 
 GUIOPTION::GUIOPTION() :
-	current_valid(false),
 	min(0),
 	max(1),
 	percentage(true)
@@ -26,7 +25,6 @@ GUIOPTION::GUIOPTION(const GUIOPTION & other)
 
 GUIOPTION & GUIOPTION::operator=(const GUIOPTION & other)
 {
-	current_valid = other.current_valid;
 	values = other.values;
 	current_value = values.begin(); // fixme
 	non_value_data = other.non_value_data;
@@ -71,13 +69,12 @@ void GUIOPTION::SetCurrentValue(const std::string & storedvaluename)
 	if (values.empty())
 	{
 		non_value_data = storedvaluename;
-		current_valid = false;
 		signal_val(storedvaluename);
 		signal_str(storedvaluename);
 		return;
 	}
 
-	current_valid = false;
+	bool current_valid = false;
 	if (type == "float")
 	{
 		float storedvaluefloat(0);
@@ -115,10 +112,7 @@ void GUIOPTION::SetCurrentValue(const std::string & storedvaluename)
 
 	// if value not found set first value
 	if (!current_valid)
-	{
 		current_value = values.begin();
-		current_valid = true;
-	}
 
 	SignalValue();
 }
@@ -127,36 +121,67 @@ void GUIOPTION::Increment()
 {
 	if (values.empty())
 	{
-		current_value = values.end();
-		return;
+		if (type == "float")
+		{
+			float f;
+			std::stringstream sf(non_value_data);
+			sf >> f;
+			f += (max - min) / 16;	// hardcoded for now
+			if (f > max) f = max;
+			std::stringstream fs;
+			fs << f;
+			non_value_data = fs.str();
+		}
+		else
+		{
+			current_value = values.end();
+			return;
+		}
 	}
-
-	if (current_value == values.end())
-		current_value = values.begin();
 	else
 	{
-		current_value++;
 		if (current_value == values.end())
+		{
 			current_value = values.begin();
+		}
+		else
+		{
+			++current_value;
+			if (current_value == values.end())
+				current_value = values.begin();
+		}
 	}
 
 	SignalValue();
 }
-
+//#include <iostream>
 void GUIOPTION::Decrement()
 {
 	if (values.empty())
 	{
-		current_value = values.end();
-		return;
+		if (type == "float")
+		{
+			float f;
+			std::stringstream sf(non_value_data);
+			sf >> f;
+			f -= (max - min) / 16;	// hardcoded for now
+			if (f < min) f = min;
+			std::stringstream fs;
+			fs << f;
+			non_value_data = fs.str();
+		}
+		else
+		{
+			current_value = values.end();
+			return;
+		}
 	}
-
-	if (current_value == values.begin())
+	else
 	{
-		current_value = values.end();
+		if (current_value == values.begin())
+			current_value = values.end();
+		--current_value;
 	}
-
-	current_value--;
 
 	SignalValue();
 }
@@ -170,33 +195,23 @@ void GUIOPTION::SetToFirstValue()
 const std::string & GUIOPTION::GetCurrentDisplayValue() const
 {
 	if (values.empty())
-	{
 		return non_value_data;
-	}
-	else if (current_value == values.end() || !current_valid)
-	{
+
+	if (current_value == values.end())
 		return null;
-	}
-	else
-	{
-		return current_value->second;
-	}
+
+	return current_value->second;
 }
 
 const std::string & GUIOPTION::GetCurrentStorageValue() const
 {
 	if (values.empty())
-	{
 		return non_value_data;
-	}
-	else if (current_value == values.end() || !current_valid)
-	{
+
+	if (current_value == values.end())
 		return null;
-	}
-	else
-	{
-		return current_value->first;
-	}
+
+	return current_value->first;
 }
 
 const std::list <std::pair<std::string,std::string> > & GUIOPTION::GetValueList() const
@@ -206,8 +221,12 @@ const std::list <std::pair<std::string,std::string> > & GUIOPTION::GetValueList(
 
 void GUIOPTION::SignalValue()
 {
-	current_valid = !values.empty();
-	if (current_valid)
+	if (values.empty())
+	{
+		signal_val(non_value_data);
+		signal_str(non_value_data);
+	}
+	else
 	{
 		signal_val(current_value->first);
 		signal_str(current_value->second);

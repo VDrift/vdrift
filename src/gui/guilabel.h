@@ -29,9 +29,9 @@ public:
 		float w, float h, float z,
 		float r, float g, float b);
 
-	void ReviseDrawable(SCENENODE & scene, const std::string & text);
+	void ReviseDrawable(const std::string & text);
 
-	void SetText(SCENENODE & scene, const std::string & text);
+	void SetText(const std::string & text);
 
 	const std::string & GetText() const;
 

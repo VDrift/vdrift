@@ -56,7 +56,7 @@ void GUI::Unload()
 {
     // clear out maps
     pages.clear();
-    optionmap.clear();
+    options.clear();
     page_activate.clear();
 
     // clear out the scenegraph
@@ -124,6 +124,8 @@ bool GUI::Load(
 	// load options
 	if (!LoadOptions(optionsfile, valuelists, languagemap, error_output)) return false;
 
+	RegisterOptions(actionmap);
+
 	// pre-load controls file so that each individual widget doesn't have to reload it
 	CONFIG controlsconfig;
 	controlsconfig.Load(carcontrolsfile);
@@ -153,7 +155,7 @@ bool GUI::Load(
 		if (!i->second.Load(
 			pagepath, texpath, pathmanager,
 			screenhwratio, carcontrolsfile, font,
-			languagemap, optionmap, actionmap,
+			languagemap, options, actionmap,
 			node, content, error_output))
 		{
 			error_output << "Error loading GUI page: " << pagepath << std::endl;
@@ -191,17 +193,21 @@ void GUI::Deactivate()
 }
 
 void GUI::ProcessInput(
-	bool movedown, bool moveup,
 	float cursorx, float cursory,
 	bool cursordown, bool cursorjustup,
+	bool moveleft, bool moveright,
+	bool moveup, bool movedown,
+	bool select, bool cancel,
 	float screenhwratio)
 {
 	if (active_page != pages.end())
 	{
 		active_page->second.ProcessInput(
-			node, movedown, moveup,
-			cursorx, cursory,
+			node, cursorx, cursory,
 			cursordown, cursorjustup,
+			moveleft, moveright,
+			moveup, movedown,
+			select, cancel,
 			screenhwratio);
 	}
 }
@@ -241,8 +247,8 @@ void GUI::GetOptions(std::map <std::string, std::string> & options) const
 {
 	for (std::map <std::string, std::string>::iterator i = options.begin(); i != options.end(); ++i)
 	{
-		std::map<std::string, GUIOPTION>::const_iterator option = optionmap.find(i->first);
-		if (option != optionmap.end())
+		OPTIONMAP::const_iterator option = this->options.find(i->first);
+		if (option != this->options.end())
 			i->second = option->second.GetCurrentStorageValue();
 	}
 }
@@ -251,8 +257,8 @@ void GUI::SetOptions(const std::map <std::string, std::string> & options)
 {
 	for (std::map <std::string, std::string>::const_iterator i = options.begin(); i != options.end(); ++i)
 	{
-		std::map<std::string, GUIOPTION>::iterator option = optionmap.find(i->first);
-		if (option != optionmap.end())
+		OPTIONMAP::iterator option = this->options.find(i->first);
+		if (option != this->options.end())
 			option->second.SetCurrentValue(i->second);
 	}
 }
@@ -262,8 +268,8 @@ void GUI::ReplaceOptionValues(
 	const std::list <std::pair <std::string, std::string> > & newvalues,
 	std::ostream & error_output)
 {
-	std::map<std::string, GUIOPTION>::iterator op = optionmap.find(optionname);
-	if (op == optionmap.end())
+	OPTIONMAP::iterator op = options.find(optionname);
+	if (op == options.end())
 	{
 		error_output << "Can't find option named " << optionname << " when replacing optionmap values" << std::endl;
 	}
@@ -336,14 +342,14 @@ bool GUI::LoadOptions(
 		if ((li = languagemap.find(text)) != languagemap.end()) text = li->second;
 		if ((li = languagemap.find(desc)) != languagemap.end()) desc = li->second;
 
-		float min(0),max(1);
+		float min(0), max(1);
 		bool percentage(true);
-		opt.GetParam(i, "min",min);
-		opt.GetParam(i, "max",max);
-		opt.GetParam(i, "percentage",percentage);
+		opt.GetParam(i, "min", min);
+		opt.GetParam(i, "max", max);
+		opt.GetParam(i, "percentage", percentage);
 
 		std::string optionname = cat + "." + name;
-		GUIOPTION & option = optionmap[optionname];
+		GUIOPTION & option = options[optionname];
 
 		option.SetInfo(text, desc, type);
 		option.SetMinMaxPercentage(min, max, percentage);
@@ -423,17 +429,25 @@ bool GUI::LoadOptions(
 	return true;
 }
 
+void GUI::RegisterOptions(std::map <std::string, Slot0*> & actionmap)
+{
+	for (OPTIONMAP::iterator i = options.begin(); i != options.end(); ++i)
+	{
+		actionmap[i->first + ".next"] = &i->second.next_val;
+		actionmap[i->first + ".prev"] = &i->second.prev_val;
+	}
+}
+
 bool GUI::SetLabelText(const std::string & pagename, const std::string & labelname, const std::string & text)
 {
 	if (pages.find(pagename) == pages.end())
 		return false;
 
-	SCENENODE & pagenode = GetPageNode(pagename);
 	GUILABEL * label = GetPage(pagename).GetLabel(labelname);
 	if (!label)
 		return false;
 
-	label->SetText(pagenode, text);
+	label->SetText(text);
 
 	return true;
 }
@@ -469,8 +483,8 @@ bool GUI::SetButtonEnabled(const std::string & pagename, const std::string & but
 
 std::string GUI::GetOptionValue(const std::string & name) const
 {
-	std::map<std::string, GUIOPTION>::const_iterator it = optionmap.find(name);
-	if (it != optionmap.end())
+	OPTIONMAP::const_iterator it = options.find(name);
+	if (it != options.end())
 	{
 		return it->second.GetCurrentStorageValue();
 	}
@@ -479,8 +493,8 @@ std::string GUI::GetOptionValue(const std::string & name) const
 
 void GUI::SetOptionValue(const std::string & name, const std::string & value)
 {
-	std::map<std::string, GUIOPTION>::iterator it = optionmap.find(name);
-	if (it != optionmap.end())
+	OPTIONMAP::iterator it = options.find(name);
+	if (it != options.end())
 	{
 		it->second.SetCurrentValue(value);
 	}

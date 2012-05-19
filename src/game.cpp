@@ -1146,12 +1146,16 @@ void GAME::ProcessGUIInputs()
 	}
 
 	gui.ProcessInput(
-		eventsystem.GetKeyState(SDLK_UP).just_down,
-		eventsystem.GetKeyState(SDLK_DOWN).just_down,
 		eventsystem.GetMousePosition()[0] / (float)window.GetW(),
 		eventsystem.GetMousePosition()[1] / (float)window.GetH(),
 		eventsystem.GetMouseButtonState(1).down,
 		eventsystem.GetMouseButtonState(1).just_up,
+		carcontrols_local.second.GetInput(CARINPUT::GUI_LEFT),
+		carcontrols_local.second.GetInput(CARINPUT::GUI_RIGHT),
+		carcontrols_local.second.GetInput(CARINPUT::GUI_UP),
+		carcontrols_local.second.GetInput(CARINPUT::GUI_DOWN),
+		carcontrols_local.second.GetInput(CARINPUT::GUI_SELECT),
+		carcontrols_local.second.GetInput(CARINPUT::GUI_CANCEL),
 		(float)window.GetH() / window.GetW());
 }
 
@@ -2631,18 +2635,15 @@ void GAME::EditControl(std::stringstream & controlstream)
 	// Display the page and load up the gui state.
 	if (!controlgrab_editcontrol.IsAnalog())
 	{
-		bool push_down = true;
-		if (controlgrab_editcontrol.type == CARCONTROLMAP_LOCAL::CONTROL::KEY)
-			push_down = controlgrab_editcontrol.keypushdown;
-		else if (controlgrab_editcontrol.type == CARCONTROLMAP_LOCAL::CONTROL::JOY)
-			push_down = controlgrab_editcontrol.joypushdown;
-		else if (controlgrab_editcontrol.type == CARCONTROLMAP_LOCAL::CONTROL::MOUSE)
-			push_down = controlgrab_editcontrol.mouse_push_down;
-		else
-			assert(0);
+		assert(
+			controlgrab_editcontrol.type == CARCONTROLMAP_LOCAL::CONTROL::KEY ||
+			controlgrab_editcontrol.type == CARCONTROLMAP_LOCAL::CONTROL::JOY ||
+			controlgrab_editcontrol.type == CARCONTROLMAP_LOCAL::CONTROL::MOUSE);
 
-		gui.SetOptionValue("controledit.held_once", controlgrab_editcontrol.onetime ? "true" : "false");
-		gui.SetOptionValue("controledit.up_down", push_down ? "true" : "false");
+		bool pushdown = controlgrab_editcontrol.pushdown;
+		bool once = controlgrab_editcontrol.onetime;
+		gui.SetOptionValue("controledit.held_once", once ? "true" : "false");
+		gui.SetOptionValue("controledit.up_down", pushdown ? "true" : "false");
 		gui.ActivatePage("EditButtonControl", 0.25, error_output);
 	}
 	else
@@ -2689,9 +2690,7 @@ void GAME::SetButtonControl()
 	bool once = (gui.GetOptionValue("controledit.held_once") == "true");
 	bool down = (gui.GetOptionValue("controledit.up_down") == "true");
 	controlgrab_editcontrol.onetime = once;
-	controlgrab_editcontrol.joypushdown = down;
-	controlgrab_editcontrol.keypushdown = down;
-	controlgrab_editcontrol.mouse_push_down = down;
+	controlgrab_editcontrol.pushdown = down;
 
 	// Send our control update to the control maintainer.
 	carcontrols_local.second.UpdateControl(controlgrab_editcontrol, controlgrab_input, error_output);

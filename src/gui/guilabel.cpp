@@ -62,14 +62,14 @@ void GUILABEL::SetupDrawable(
 	m_text_draw.Set(drawref, font, m_text, x, y, scalex, scaley, r, g, b);
 }
 
-void GUILABEL::ReviseDrawable(SCENENODE & scene, const std::string & text)
+void GUILABEL::ReviseDrawable(const std::string & text)
 {
 	assert(m_font);
 	m_text = text;
 	m_text_draw.Revise(*m_font, m_text);
 }
 
-void GUILABEL::SetText(SCENENODE & scene, const std::string & text)
+void GUILABEL::SetText(const std::string & text)
 {
 	assert(m_font);
 	m_text = text;

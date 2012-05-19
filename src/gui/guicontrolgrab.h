@@ -1,19 +1,16 @@
 #ifndef _GUICONTROLGRAB_H
 #define _GUICONTROLGRAB_H
 
-#include "gui/guilabel.h"
 #include "gui/guibutton.h"
-
-#include <string>
-#include <list>
 #include <vector>
+#include <list>
 
 class SCENENODE;
 class TEXTURE;
 class CONFIG;
 class FONT;
 
-class GUICONTROLGRAB : public GUIWIDGET
+class GUICONTROLGRAB : public GUICONTROL
 {
 public:
 	GUICONTROLGRAB();
@@ -23,10 +20,6 @@ public:
 	virtual void SetAlpha(SCENENODE & scene, float newalpha);
 
 	virtual void SetVisible(SCENENODE & scene, bool newvis);
-
-	virtual std::string GetDescription() const;
-
-	virtual void SetDescription(const std::string & newdesc);
 
 	virtual bool ProcessInput(
 		SCENENODE & scene,
@@ -46,11 +39,6 @@ public:
 
 	keyed_container <SCENENODE>::handle GetNode();
 
-	Signal0 signal_moveup;
-	Signal0 signal_movedown;
-	Signal0 signal_action;
-	Signal0 signal_next;
-	Signal0 signal_prev;
 	Signal1<const std::string &> signal_control;
 
 	// awfull widget description hack
@@ -82,16 +70,14 @@ private:
 		std::string name;
 		bool once;
 		bool down;
+		int keycode;
 		std::string key;
-		std::string keycode;
 		std::string joy_type;
 		int joy_index;
-		int joy_button;
 		int joy_axis;
 		std::string joy_axis_type;
 		std::string mouse_type;
 		std::string mouse_motion;
-		int mouse_button;
 		float deadzone;
 		float exponent;
 		float gain;
@@ -99,9 +85,8 @@ private:
 
 	GUIBUTTON addbutton;
 	std::list <CONTROLWIDGET> controlbuttons;
+	GUICONTROL * active_widget;
 	std::string setting;
-	std::string description;
-	std::string tempdescription;
 	keyed_container <SCENENODE>::handle topnode;
 	keyed_container <SCENENODE>::handle ctrlnode;
 	float scale_x, scale_y;
@@ -109,6 +94,9 @@ private:
 	float w, h;
 	bool analog;
 	bool once;
+
+	static std::string GetDescription(CONTROLWIDGET & widget);
+	static std::string GetControlString(CONTROLWIDGET & widget);
 };
 
 #endif

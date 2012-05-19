@@ -2,6 +2,7 @@
 #define _GUIPAGE_H
 
 #include "scenenode.h"
+#include "signalslot.h"
 
 #include <map>
 #include <list>
@@ -14,11 +15,11 @@ class GUIBUTTON;
 class GUICONTROLGRAB;
 class GUIOPTION;
 class GUIWIDGET;
+class GUICONTROL;
 class CONFIG;
 class FONT;
 class PATHMANAGER;
 class ContentManager;
-class Slot0;
 
 class GUIPAGE
 {
@@ -41,19 +42,21 @@ public:
 		ContentManager & content,
 		std::ostream & error_output);
 
-	void SetVisible(SCENENODE & parent, bool newvis);
+	void SetVisible(SCENENODE & parent, bool value);
 
-	void SetAlpha(SCENENODE & parent, float newalpha);
+	void SetAlpha(SCENENODE & parent, float value);
 
 	/// update controlgrab widgets
-	void UpdateControls(SCENENODE & parentnode, const CONFIG & controls, const FONT & font);
+	void UpdateControls(SCENENODE & parent, const CONFIG & controls, const FONT & font);
 
 	/// execute game actions and update gui options
 	void ProcessInput(
 		SCENENODE & parent,
-		bool movedown, bool moveup,
 		float cursorx, float cursory,
 		bool cursordown, bool cursorjustup,
+		bool moveleft, bool moveright,
+		bool moveup, bool movedown,
+		bool select, bool cancel,
 		float screenhwratio);
 
 	/// tell all child widgets to do as update tick
@@ -66,16 +69,37 @@ public:
 	SCENENODE & GetNode(SCENENODE & parentnode);
 
 private:
+	static const float inactive_alpha = 0.6;
 	std::map <std::string, GUILABEL *> labels;
 	std::map <std::string, GUIBUTTON *> buttons;
-	std::vector <GUICONTROLGRAB *> controlgrabs;
-	std::vector <GUIWIDGET *> widgets;
-	GUILABEL * tooltip_widget;
+	std::vector <GUICONTROLGRAB *> controlgrabs;	// input edit widgets
+	std::vector <GUICONTROL *> awidgets;			// active widgets (process input)
+	std::vector <GUIWIDGET *> pwidgets;				// passive widgets
+	GUICONTROL * default_widget;					// default active widget
+	GUICONTROL * active_widget;						// current active widget
+	GUICONTROL * active_widget_next;				// next active widget
+	GUILABEL * tooltip_widget;						// tooltip, hardcoded
 	keyed_container <SCENENODE>::handle s;
 	std::string name;
 	bool dialog;
 
+	struct WIDGETCB
+	{
+		GUIPAGE * page;
+		GUICONTROL * widget;
+		Slot0 action;
+
+		WIDGETCB();
+		WIDGETCB(const WIDGETCB & other);
+		WIDGETCB & operator=(const WIDGETCB & other);
+		void call();
+	};
+	std::vector<WIDGETCB> widget_activate;			// active widget actions
+	Signal0 oncancel;								// page cancel action
+
 	void Clear(SCENENODE & parentnode);
+
+	void SetActiveWidget(GUICONTROL & widget);
 };
 
 inline GUILABEL * GUIPAGE::GetLabel(const std::string & name)

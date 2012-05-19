@@ -95,7 +95,7 @@ CARCONTROLMAP_LOCAL::CARCONTROLMAP_LOCAL()
 	carinput_stringmap["sixth_gear"] = CARINPUT::SIXTH_GEAR;
 	carinput_stringmap["reverse"] = CARINPUT::REVERSE;
 	carinput_stringmap["rollover_recover"] = CARINPUT::ROLLOVER_RECOVER;
-	
+
 	carinput_stringmap["rear_view"] = CARINPUT::VIEW_REAR;
 	carinput_stringmap["view_prev"] = CARINPUT::VIEW_PREV;
 	carinput_stringmap["view_next"] = CARINPUT::VIEW_NEXT;
@@ -115,6 +115,12 @@ CARCONTROLMAP_LOCAL::CARCONTROLMAP_LOCAL()
 	carinput_stringmap["pause"] = CARINPUT::PAUSE;
 	carinput_stringmap["reload_shaders"] = CARINPUT::RELOAD_SHADERS;
     carinput_stringmap["reload_gui"] = CARINPUT::RELOAD_GUI;
+	carinput_stringmap["gui_left"] = CARINPUT::GUI_LEFT;
+	carinput_stringmap["gui_right"] = CARINPUT::GUI_RIGHT;
+	carinput_stringmap["gui_up"] = CARINPUT::GUI_UP;
+	carinput_stringmap["gui_down"] = CARINPUT::GUI_DOWN;
+	carinput_stringmap["gui_select"] = CARINPUT::GUI_SELECT;
+	carinput_stringmap["gui_cancel"] = CARINPUT::GUI_CANCEL;
 
 	PopulateLegacyKeycodes();
 }
@@ -154,11 +160,11 @@ bool CARCONTROLMAP_LOCAL::Load(const std::string & controlfile, std::ostream & i
 			if (joy_type == "button")
 			{
 				newctrl.joytype = CONTROL::JOYBUTTON;
-				newctrl.joybutton = 0;
-				newctrl.joypushdown = false;
+				newctrl.keycode = 0;
+				newctrl.pushdown = false;
 				newctrl.onetime = false;
-				if (!controls_config.GetParam(i, "joy_button", newctrl.joybutton, error_output)) continue;
-				if (!controls_config.GetParam(i, "down", newctrl.joypushdown, error_output)) continue;
+				if (!controls_config.GetParam(i, "joy_button", newctrl.keycode, error_output)) continue;
+				if (!controls_config.GetParam(i, "down", newctrl.pushdown, error_output)) continue;
 				if (!controls_config.GetParam(i, "once", newctrl.onetime, error_output)) continue;
 			}
 			else if (joy_type == "axis")
@@ -231,7 +237,7 @@ bool CARCONTROLMAP_LOCAL::Load(const std::string & controlfile, std::ostream & i
 			{
 				newctrl.keycode = SDLKey(keycode);
 			}
-			newctrl.keypushdown = key_down;
+			newctrl.pushdown = key_down;
 			newctrl.onetime = key_once;
 		}
 		else if (type == "mouse")
@@ -250,8 +256,8 @@ bool CARCONTROLMAP_LOCAL::Load(const std::string & controlfile, std::ostream & i
 				controls_config.GetParam(i, "mouse_button", mouse_btn);
 				controls_config.GetParam(i, "down", mouse_btn_down);
 				controls_config.GetParam(i, "once", mouse_btn_once);
-				newctrl.mbutton = mouse_btn;
-				newctrl.mouse_push_down = mouse_btn_down;
+				newctrl.keycode = mouse_btn;
+				newctrl.pushdown = mouse_btn_down;
 				newctrl.onetime = mouse_btn_once;
 			}
 			else if (mouse_type == "motion")
@@ -361,9 +367,9 @@ void CARCONTROLMAP_LOCAL::Save(CONFIG & controls_config, std::ostream & info_out
 				else if (curctrl.joytype == CONTROL::JOYBUTTON)
 				{
 					controls_config.SetParam(section, "joy_type", "button");
-					controls_config.SetParam(section, "joy_button", curctrl.joybutton);
+					controls_config.SetParam(section, "joy_button", curctrl.keycode);
 					controls_config.SetParam(section, "once", curctrl.onetime);
-					controls_config.SetParam(section, "down", curctrl.joypushdown);
+					controls_config.SetParam(section, "down", curctrl.pushdown);
 				}
 			}
 			else if (curctrl.type == CONTROL::KEY)
@@ -376,7 +382,7 @@ void CARCONTROLMAP_LOCAL::Save(CONFIG & controls_config, std::ostream & info_out
 				controls_config.SetParam(section, "key", keyname);
 				controls_config.SetParam(section, "keycode", curctrl.keycode);
 				controls_config.SetParam(section, "once", curctrl.onetime);
-				controls_config.SetParam(section, "down", curctrl.keypushdown);
+				controls_config.SetParam(section, "down", curctrl.pushdown);
 			}
 			else if (curctrl.type == CONTROL::MOUSE)
 			{
@@ -384,9 +390,9 @@ void CARCONTROLMAP_LOCAL::Save(CONFIG & controls_config, std::ostream & info_out
 				if (curctrl.mousetype == CONTROL::MOUSEBUTTON)
 				{
 					controls_config.SetParam(section, "mouse_type", "button");
-					controls_config.SetParam(section, "mouse_button", curctrl.mbutton );
+					controls_config.SetParam(section, "mouse_button", curctrl.keycode );
 					controls_config.SetParam(section, "once", curctrl.onetime );
-					controls_config.SetParam(section, "down", curctrl.mouse_push_down );
+					controls_config.SetParam(section, "down", curctrl.pushdown );
 				}
 				else if (curctrl.mousetype == CONTROL::MOUSEMOTION)
 				{
@@ -429,7 +435,7 @@ void CARCONTROLMAP_LOCAL::AddInputKey(const std::string & inputname, bool analog
 
 	newctrl.type = CONTROL::KEY;
 	newctrl.keycode = key;
-	newctrl.keypushdown = true;
+	newctrl.pushdown = true;
 	newctrl.onetime = !analog;
 
 	//std::cout << "Assigning input " << inputname << " keycode " << key << " onlyone " << only_one << std::endl;
@@ -443,8 +449,8 @@ void CARCONTROLMAP_LOCAL::AddInputMouseButton(const std::string & inputname, boo
 
 	newctrl.type = CONTROL::MOUSE;
 	newctrl.mousetype = CONTROL::MOUSEBUTTON;
-	newctrl.mbutton = mouse_btn;
-	newctrl.mouse_push_down = true;
+	newctrl.keycode = mouse_btn;
+	newctrl.pushdown = true;
 	newctrl.onetime = !analog;
 
 	//std::cout << "Assigning input " << inputname << " keycode " << key << " onlyone " << only_one << std::endl;
@@ -481,8 +487,8 @@ void CARCONTROLMAP_LOCAL::AddInputJoyButton(const std::string & inputname, bool 
 	newctrl.type = CONTROL::JOY;
 	newctrl.joynum = joy_num;
 	newctrl.joytype = CONTROL::JOYBUTTON;
-	newctrl.joybutton = joy_btn;
-	newctrl.joypushdown = true;
+	newctrl.keycode = joy_btn;
+	newctrl.pushdown = true;
 	newctrl.onetime = !analog;
 
 	//std::cout << "Assigning input " << inputname << " keycode " << key << " onlyone " << only_one << std::endl;
@@ -633,13 +639,13 @@ const std::vector <float> & CARCONTROLMAP_LOCAL::ProcessInput(const std::string 
 				}
 				else if (i->joytype == CONTROL::JOYBUTTON)
 				{
-					TOGGLE button = eventsystem.GetJoyButton(i->joynum, i->joybutton);
+					TOGGLE button = eventsystem.GetJoyButton(i->joynum, i->keycode);
 
 					if (i->onetime)
 					{
-						if (i->joypushdown && button.GetImpulseRising())
+						if (i->pushdown && button.GetImpulseRising())
 							tempval = 1.0;
-						else if (!i->joypushdown && button.GetImpulseFalling())
+						else if (!i->pushdown && button.GetImpulseFalling())
 							tempval = 1.0;
 						else
 							tempval = 0.0;
@@ -649,7 +655,7 @@ const std::vector <float> & CARCONTROLMAP_LOCAL::ProcessInput(const std::string 
 					{
 						float downval = 1.0;
 						float upval = 0.0;
-						if (!i->joypushdown)
+						if (!i->pushdown)
 						{
 							downval = 0.0;
 							upval = 1.0;
@@ -668,9 +674,9 @@ const std::vector <float> & CARCONTROLMAP_LOCAL::ProcessInput(const std::string 
 
 				if (i->onetime)
 				{
-					if (i->keypushdown && keystate.just_down)
+					if (i->pushdown && keystate.just_down)
 						tempval = 1.0;
-					else if (!i->keypushdown && keystate.just_up)
+					else if (!i->pushdown && keystate.just_up)
 						tempval = 1.0;
 					else
 						tempval = 0.0;
@@ -680,7 +686,7 @@ const std::vector <float> & CARCONTROLMAP_LOCAL::ProcessInput(const std::string 
 				{
 					float downval = 1.0;
 					float upval = 0.0;
-					if (!i->keypushdown)
+					if (!i->pushdown)
 					{
 						downval = 0.0;
 						upval = 1.0;
@@ -700,13 +706,13 @@ const std::vector <float> & CARCONTROLMAP_LOCAL::ProcessInput(const std::string 
 				{
 					//cout << "mousebutton" << std::endl;
 
-					EVENTSYSTEM_SDL::BUTTON_STATE buttonstate = eventsystem.GetMouseButtonState(i->mbutton);
+					EVENTSYSTEM_SDL::BUTTON_STATE buttonstate = eventsystem.GetMouseButtonState(i->keycode);
 
 					if (i->onetime)
 					{
-						if (i->mouse_push_down && buttonstate.just_down)
+						if (i->pushdown && buttonstate.just_down)
 							tempval = 1.0;
-						else if (!i->mouse_push_down && buttonstate.just_up)
+						else if (!i->pushdown && buttonstate.just_up)
 							tempval = 1.0;
 						else
 							tempval = 0.0;
@@ -716,7 +722,7 @@ const std::vector <float> & CARCONTROLMAP_LOCAL::ProcessInput(const std::string 
 					{
 						float downval = 1.0;
 						float upval = 0.0;
-						if (!i->mouse_push_down)
+						if (!i->pushdown)
 						{
 							downval = 0.0;
 							upval = 1.0;
@@ -1114,12 +1120,10 @@ bool CARCONTROLMAP_LOCAL::CONTROL::IsAnalog() const
 
 void CARCONTROLMAP_LOCAL::CONTROL::DebugPrint(std::ostream & out) const
 {
-	out << type << " " << onetime << " " << joynum << " " << joyaxis << " " <<
-			joyaxistype << " " << joybutton << " " << joytype << " " <<
-			joypushdown << " " << keycode << " " << keypushdown << " " <<
-			mousetype << " " << mbutton << " " << mdir << " " <<
-			last_mouse_state << " " << mouse_push_down << " " <<
-			deadzone << " " << exponent << " " << gain << std::endl;
+	out << type << " " << onetime << " " << pushdown << " " << keycode << " " <<
+		joynum << " " << joyaxis << " " << joyaxistype << " " << joytype << " " <<
+		mousetype << " " << mdir << " " << last_mouse_state << " " <<
+		deadzone << " " << exponent << " " << gain << std::endl;
 }
 
 bool CARCONTROLMAP_LOCAL::CONTROL::operator==(const CONTROL & other) const
@@ -1129,16 +1133,12 @@ bool CARCONTROLMAP_LOCAL::CONTROL::operator==(const CONTROL & other) const
 
 	//don't care about certain flags
 	me.onetime = 1;
-	me.joypushdown = 1;
-	me.keypushdown = 1;
-	me.mouse_push_down = 1;
+	me.pushdown = 1;
 	me.deadzone = 0;
 	me.exponent = 1;
 	me.gain = 1;
 	them.onetime = 1;
-	them.joypushdown = 1;
-	them.keypushdown = 1;
-	them.mouse_push_down = 1;
+	them.pushdown = 1;
 	them.deadzone = 0;
 	them.exponent = 1;
 	them.gain = 1;
@@ -1168,16 +1168,12 @@ bool CARCONTROLMAP_LOCAL::CONTROL::operator<(const CONTROL & other) const
 	CONTROL them = other;
 
 	me.onetime = 1;
-	me.joypushdown = 1;
-	me.keypushdown = 1;
-	me.mouse_push_down = 1;
+	me.pushdown = 1;
 	me.deadzone = 0;
 	me.exponent = 1;
 	me.gain = 1;
 	them.onetime = 1;
-	them.joypushdown = 1;
-	them.keypushdown = 1;
-	them.mouse_push_down = 1;
+	them.pushdown = 1;
 	them.deadzone = 0;
 	them.exponent = 1;
 	them.gain = 1;
@@ -1193,23 +1189,20 @@ bool CARCONTROLMAP_LOCAL::CONTROL::operator<(const CONTROL & other) const
 void CARCONTROLMAP_LOCAL::CONTROL::ReadFrom(std::istream & in)
 {
 	int newtype, newjoyaxistype, newjoytype, newmousetype, newmdir;
-	in >> newtype >> onetime >> joynum >> joyaxis >>
-			newjoyaxistype >> joybutton >> newjoytype >>
-			joypushdown >> keycode >> keypushdown >>
-			newmousetype >> mbutton >> newmdir >>
-			last_mouse_state >> mouse_push_down >>
-			deadzone >> exponent >> gain;
-	type=TYPE(newtype);
-	joyaxistype=JOYAXISTYPE(newjoyaxistype);
-	joytype=JOYTYPE(newjoytype);
-	mousetype=MOUSETYPE(newmousetype);
-	mdir=MOUSEDIRECTION(newmdir);
+	in >> newtype >> onetime >> pushdown >> keycode >>
+		joynum >> joyaxis >> newjoyaxistype >> newjoytype >>
+		newmousetype >> newmdir >> 	last_mouse_state >>
+		deadzone >> exponent >> gain;
+	type = TYPE(newtype);
+	joyaxistype = JOYAXISTYPE(newjoyaxistype);
+	joytype = JOYTYPE(newjoytype);
+	mousetype = MOUSETYPE(newmousetype);
+	mdir = MOUSEDIRECTION(newmdir);
 }
 
 CARCONTROLMAP_LOCAL::CONTROL::CONTROL() :
-	type(UNKNOWN),onetime(true),joynum(0),joyaxis(0),joyaxistype(POSITIVE),
-	joybutton(0),joytype(JOYAXIS),joypushdown(true),keycode(0),keypushdown(true),
-	mousetype(MOUSEBUTTON),mbutton(0),mdir(UP),last_mouse_state(false),
-	mouse_push_down(true),
+	type(UNKNOWN), onetime(true), pushdown(true), keycode(0),
+	joynum(0), joyaxis(0), joyaxistype(POSITIVE), joytype(JOYAXIS),
+	mousetype(MOUSEBUTTON), mdir(UP), last_mouse_state(false),
 	deadzone(0.0), exponent(1.0), gain(1.0)
 {}

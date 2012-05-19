@@ -1,13 +1,14 @@
 #ifndef _GUISLIDER_H
 #define _GUISLIDER_H
 
+#include "gui/guicontrol.h"
 #include "gui/guilabel.h"
 #include "sprite2d.h"
 
 class GUIOPTION;
 class FONT;
 
-class GUISLIDER : public GUIWIDGET
+class GUISLIDER : public GUICONTROL
 {
 public:
 	GUISLIDER();
@@ -18,16 +19,12 @@ public:
 
 	virtual void SetVisible(SCENENODE & scene, bool value);
 
+	virtual void Update(SCENENODE & scene, float dt);
+
 	virtual bool ProcessInput(
 		SCENENODE & scene,
 		float cursorx, float cursory,
 		bool cursordown, bool cursorjustup);
-
-	virtual std::string GetDescription() const;
-
-	virtual void SetDescription(const std::string & newdesc);
-
-	virtual void Update(SCENENODE & scene, float dt);
 
 	void SetColor(SCENENODE & scene, float r, float g, float b);
 
@@ -45,25 +42,17 @@ public:
 		bool percent, bool fill,
   		std::ostream & error_output);
 
-	Signal0 signal_moveup;
-	Signal0 signal_movedown;
-	Signal0 signal_next;
-	Signal0 signal_prev;
-
 private:
 	GUILABEL m_label_value;
 	GUILABEL m_label_left;
 	GUILABEL m_label_right;
 	SPRITE2D m_slider;
 	SPRITE2D m_bar;
-	std::string m_name;
-	std::string m_description;
 	std::string m_setting;
 	float m_min, m_max, m_current;
 	float m_w, m_h;
 	bool m_percent;
 	bool m_fill;
-	bool m_focus;
 
 	Signal1<const std::string &> signal_value;
 	Slot1<const std::string &> set_value;

@@ -49,6 +49,12 @@ enum CARINPUT
  	PAUSE,
   	RELOAD_SHADERS,
     RELOAD_GUI,
+    GUI_LEFT,
+    GUI_RIGHT,
+    GUI_UP,
+    GUI_DOWN,
+    GUI_SELECT,
+    GUI_CANCEL,
 
 	INVALID
 };

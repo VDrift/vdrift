@@ -1,8 +1,7 @@
 #include "gui/guistringwheel.h"
 #include "gui/guioption.h"
 
-GUISTRINGWHEEL::GUISTRINGWHEEL() :
-	m_focus(false)
+GUISTRINGWHEEL::GUISTRINGWHEEL()
 {
 	set_value.call.bind<GUISTRINGWHEEL, &GUISTRINGWHEEL::SetValue>(this);
 }
@@ -22,8 +21,17 @@ void GUISTRINGWHEEL::SetAlpha(SCENENODE & scene, float value)
 void GUISTRINGWHEEL::SetVisible(SCENENODE & scene, bool value)
 {
 	m_label_value.SetVisible(scene, value);
-	m_label_left.SetVisible(scene, m_focus && value);
-	m_label_right.SetVisible(scene, m_focus && value);
+	m_label_left.SetVisible(scene, value);
+	m_label_right.SetVisible(scene, value);
+}
+
+void GUISTRINGWHEEL::Update(SCENENODE & scene, float dt)
+{
+	if (m_update)
+	{
+		m_label_value.SetText(m_value);
+		m_update = false;
+	}
 }
 
 bool GUISTRINGWHEEL::ProcessInput(
@@ -34,44 +42,19 @@ bool GUISTRINGWHEEL::ProcessInput(
 	bool focus_left = m_label_left.InFocus(cursorx, cursory);
 	bool focus_right = !focus_left && m_label_right.InFocus(cursorx, cursory);
 
-	m_focus = focus_left || focus_right;
-	m_label_left.SetVisible(scene, m_focus);
-	m_label_right.SetVisible(scene, m_focus);
-
 	if (cursorjustup)
 	{
 		if (focus_left)
 		{
-			signal_prev();
-			signal_action();
+			OnMoveLeft();
 		}
 		else if (focus_right)
 		{
-			signal_next();
-			signal_action();
+			OnMoveRight();
 		}
 	}
 
-	return m_focus;
-}
-
-std::string GUISTRINGWHEEL::GetDescription() const
-{
-	return m_description;
-}
-
-void GUISTRINGWHEEL::SetDescription(const std::string & value)
-{
-	m_description = value;
-}
-
-void GUISTRINGWHEEL::Update(SCENENODE & scene, float dt)
-{
-	if (m_update)
-	{
-		m_label_value.SetText(scene, m_value);
-		m_update = false;
-	}
+	return focus_left || focus_right;
 }
 
 void GUISTRINGWHEEL::SetupDrawable(
@@ -107,16 +90,14 @@ void GUISTRINGWHEEL::SetupDrawable(
 		centerx + w * 0.25, centery, w * 0.5, h, z + 1,
 		m_r, m_g, m_b);
 
-	m_label_left.SetText(scene, " <");
-	m_label_right.SetText(scene, "> ");
+	m_label_left.SetText(" <");
+	m_label_right.SetText("> ");
 
 	// connect slots, signals
 	m_setting = setting;
 	std::map<std::string, GUIOPTION>::iterator i = optionmap.find(setting);
 	if (i != optionmap.end())
 	{
-		i->second.prev_val.connect(signal_prev);
-		i->second.next_val.connect(signal_next);
 		set_value.connect(i->second.signal_str);
 		SetValue(i->second.GetCurrentDisplayValue());
 	}

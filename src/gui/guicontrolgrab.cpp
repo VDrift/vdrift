@@ -12,10 +12,9 @@ std::string GUICONTROLGRAB::Str[] =
 GUICONTROLGRAB::CONTROLWIDGET::CONTROLWIDGET() :
 	once(true),
 	down(false),
+	keycode(0),
 	joy_index(0),
-	joy_button(0),
 	joy_axis(0),
-	mouse_button(0),
 	deadzone(0),
 	exponent(1),
 	gain(1)
@@ -34,7 +33,7 @@ GUICONTROLGRAB::GUICONTROLGRAB() :
 	analog(false),
 	once(false)
 {
-	// ctor
+	active_widget = &addbutton;
 }
 
 GUICONTROLGRAB::~GUICONTROLGRAB()
@@ -66,27 +65,11 @@ void GUICONTROLGRAB::SetVisible(SCENENODE & scene, bool newvis)
 	}
 }
 
-std::string GUICONTROLGRAB::GetDescription() const
-{
-	if (!tempdescription.empty())
-	{
-		return tempdescription;
-	}
-	return description;
-}
-
-void GUICONTROLGRAB::SetDescription(const std::string & newdesc)
-{
-	description = newdesc;
-}
-
 bool GUICONTROLGRAB::ProcessInput(
 	SCENENODE & scene,
 	float cursorx, float cursory,
 	bool cursordown, bool cursorjustup)
 {
-	tempdescription.clear();
-
 	bool infocus = (cursorx > x - w * 0.5 &&
 		cursorx < x + w * 0.5 &&
 		cursory > y - h * 0.5 &&
@@ -98,7 +81,11 @@ bool GUICONTROLGRAB::ProcessInput(
 		topnoderef, cursorx, cursory,
 		cursordown, cursorjustup))
 	{
-		tempdescription = Str[ADDNEW_STR];
+		if (active_widget != &addbutton)
+		{
+			SetDescription(Str[ADDNEW_STR]);
+			active_widget = &addbutton;
+		}
 		if (cursorjustup)
 		{
 			signal_control(
@@ -106,7 +93,6 @@ bool GUICONTROLGRAB::ProcessInput(
 				std::string(analog ? "y " : "n ") +
 				std::string(once ? "y " : "n ") +
 				setting);
-			signal_action();
 		}
 		return infocus;
 	}
@@ -115,142 +101,21 @@ bool GUICONTROLGRAB::ProcessInput(
 	SCENENODE & ctrlnoderef = topnoderef.GetNode(ctrlnode);
 	for (std::list <CONTROLWIDGET>::iterator i = controlbuttons.begin(); i != controlbuttons.end(); ++i)
 	{
-		if (!i->widget.ProcessInput(
+		if (i->widget.ProcessInput(
 			ctrlnoderef, cursorx, cursory,
 			cursordown, cursorjustup))
 		{
-			continue;
+			if (active_widget != &i->widget)
+			{
+				SetDescription(i->widget.GetDescription());
+				active_widget = &i->widget;
+			}
+			if (cursorjustup)
+			{
+				signal_control("edit " +  GetControlString(*i) + setting);
+			}
+			break;
 		}
-
-		if (i->type == "key")
-		{
-			std::stringstream desc;
-			desc << Str[EDIT_STR] << " " << Str[KEY_STR];
-			if (i->key.empty())
-			{
-				desc << " #" << i->keycode;
-			}
-			else
-			{
-				desc << " " << i->key;
-			}
-			desc << " " << (i->down ? Str[PRESS_STR] : Str[RELEASE_STR]) <<
-					" (" << (i->once ? Str[ONCE_STR] : Str[HELD_STR]) << ")";
-			tempdescription = desc.str();
-		}
-		else if (i->type == "joy")
-		{
-			std::stringstream desc;
-			desc << Str[EDIT_STR] << " " << Str[JOY_STR] << " " << i->joy_index << " ";
-			if (i->joy_type == "button")
-			{
-				desc << Str[BUTTON_STR] << " " << i->joy_button <<
-					" " << (i->down ? Str[PRESS_STR] : Str[RELEASE_STR]) <<
-					" (" << (i->once ? Str[ONCE_STR] : Str[HELD_STR]) << ")";
-			}
-			else if (i->joy_type == "axis")
-			{
-				desc << Str[AXIS_STR] << " " << i->joy_axis << " " <<
-					"(" << (i->joy_axis_type == "negative" ? "-" : "+") << ")";
-			}
-			tempdescription = desc.str();
-		}
-		else if (i->type == "mouse")
-		{
-			std::stringstream desc;
-			desc << Str[EDIT_STR] + " " << Str[MOUSE_STR] << " ";
-			if (i->mouse_type == "button")
-			{
-				desc << Str[BUTTON_STR] << " " << i->mouse_button <<
-					" " << (i->down ? Str[PRESS_STR] : Str[RELEASE_STR]) <<
-					" (" << (i->once ? Str[ONCE_STR] : Str[HELD_STR]) << ")";
-			}
-			else if (i->mouse_type == "motion")
-			{
-				desc << Str[MOTION_STR] << " " << i->mouse_motion;
-			}
-			tempdescription = desc.str();
-		}
-
-		// action string is based on the DebugPrint string representation of a CONTROL
-		if (cursorjustup)
-		{
-			CARCONTROLMAP_LOCAL::CONTROL newctrl;
-			newctrl.deadzone = i->deadzone;
-			newctrl.exponent = i->exponent;
-			newctrl.gain = i->gain;
-			newctrl.onetime = i->once;
-			newctrl.type = CARCONTROLMAP_LOCAL::CONTROL::UNKNOWN;
-
-			if (i->type == "key")
-			{
-				newctrl.type = CARCONTROLMAP_LOCAL::CONTROL::KEY;
-				std::stringstream keycodestr(i->keycode);
-				keycodestr >> newctrl.keycode;
-				newctrl.keypushdown = i->down;
-			}
-			else if (i->type == "joy")
-			{
-				newctrl.type = CARCONTROLMAP_LOCAL::CONTROL::JOY;
-				newctrl.joynum = i->joy_index;
-				newctrl.joytype = CARCONTROLMAP_LOCAL::CONTROL::JOYBUTTON;
-				newctrl.joybutton = i->joy_button;
-				newctrl.joypushdown = i->down;
-
-				if (i->joy_type == "axis")
-				{
-					newctrl.joytype = CARCONTROLMAP_LOCAL::CONTROL::JOYAXIS;
-					newctrl.joyaxistype = CARCONTROLMAP_LOCAL::CONTROL::POSITIVE;
-					newctrl.joyaxis = i->joy_axis;
-
-					if (i->joy_axis_type == "negative")
-					{
-						newctrl.joyaxistype = CARCONTROLMAP_LOCAL::CONTROL::NEGATIVE;
-					}
-					else if (i->joy_axis_type == "both")
-					{
-						newctrl.joyaxistype = CARCONTROLMAP_LOCAL::CONTROL::BOTH;
-					}
-				}
-				else if (i->joy_type == "hat")
-				{
-					newctrl.joytype = CARCONTROLMAP_LOCAL::CONTROL::JOYHAT;
-				}
-			}
-			else if (i->type == "mouse")
-			{
-				newctrl.type = CARCONTROLMAP_LOCAL::CONTROL::MOUSE;
-				newctrl.mousetype = CARCONTROLMAP_LOCAL::CONTROL::MOUSEBUTTON;
-				newctrl.mbutton = i->mouse_button;
-				newctrl.mouse_push_down = i->down;
-
-				if (i->mouse_type == "motion")
-				{
-					newctrl.mousetype = CARCONTROLMAP_LOCAL::CONTROL::MOUSEMOTION;
-					newctrl.mdir = CARCONTROLMAP_LOCAL::CONTROL::RIGHT;
-
-					if (i->mouse_motion == "up")
-					{
-						newctrl.mdir = CARCONTROLMAP_LOCAL::CONTROL::UP;
-					}
-					else if (i->mouse_motion == "down")
-					{
-						newctrl.mdir = CARCONTROLMAP_LOCAL::CONTROL::DOWN;
-					}
-					else if (i->mouse_motion == "left")
-					{
-						newctrl.mdir = CARCONTROLMAP_LOCAL::CONTROL::LEFT;
-					}
-				}
-			}
-
-			std::stringstream controlstring;
-			newctrl.DebugPrint(controlstring);
-			signal_control("edit " + controlstring.str() + setting);
-			signal_action();
-		}
-
-		break;
 	}
 
 	return infocus;
@@ -275,10 +140,8 @@ void GUICONTROLGRAB::SetupDrawable(
 	z = newz;
 	h = scaley;
 	w = 0.5;
-
 	scale_x = scalex;
 	scale_y = scaley;
-
 	analog = newanalog;
 	once = newonly_one;
 
@@ -287,7 +150,7 @@ void GUICONTROLGRAB::SetupDrawable(
 		font, 0, scalex * 1.5, scaley * 1.5,
 		x, y, scalex * 2, scaley, z,
 		m_r ,m_g, m_b);
-	addbutton.SetText(topnoderef, "+");
+	addbutton.SetText("+");
 
 	LoadControls(scene, c, font);
 }
@@ -316,12 +179,12 @@ void GUICONTROLGRAB::LoadControls(SCENENODE & scene, const CONFIG & c, const FON
 			c.GetParam(section, "keycode", button.keycode);
 			c.GetParam(section, "joy_type", button.joy_type);
 			c.GetParam(section, "joy_index", button.joy_index);
-			c.GetParam(section, "joy_button", button.joy_button);
+			c.GetParam(section, "joy_button", button.keycode);
 			c.GetParam(section, "joy_axis", button.joy_axis);
 			c.GetParam(section, "joy_axis_type", button.joy_axis_type);
 			c.GetParam(section, "mouse_type", button.mouse_type);
 			c.GetParam(section, "mouse_motion", button.mouse_motion);
-			c.GetParam(section, "mouse_button", button.mouse_button);
+			c.GetParam(section, "mouse_button", button.keycode);
 			c.GetParam(section, "deadzone", button.deadzone);
 			c.GetParam(section, "exponent", button.exponent);
 			c.GetParam(section, "gain", button.gain);
@@ -336,7 +199,7 @@ void GUICONTROLGRAB::LoadControls(SCENENODE & scene, const CONFIG & c, const FON
 				if (button.joy_type == "button")
 				{
 					std::stringstream s;
-					s << button.joy_button;
+					s << button.keycode;
 					text = "button " + s.str();
 				}
 				else if (button.joy_type == "axis")
@@ -355,7 +218,7 @@ void GUICONTROLGRAB::LoadControls(SCENENODE & scene, const CONFIG & c, const FON
 				else
 				{
 					std::stringstream s;
-					s << button.mouse_button;
+					s << button.keycode;
 					text = "mouse " + s.str();
 				}
 			}
@@ -367,7 +230,8 @@ void GUICONTROLGRAB::LoadControls(SCENENODE & scene, const CONFIG & c, const FON
 				0, scale_x, scale_y,
 				bx, by, scale_x * 4, scale_y, z,
 				m_r, m_g, m_b);
-			button.widget.SetText(parentnode, text);
+			button.widget.SetText(text);
+			button.widget.SetDescription(GetDescription(button));
 		}
 	}
 }
@@ -375,4 +239,139 @@ void GUICONTROLGRAB::LoadControls(SCENENODE & scene, const CONFIG & c, const FON
 keyed_container <SCENENODE>::handle GUICONTROLGRAB::GetNode()
 {
 	return topnode;
+}
+
+std::string GUICONTROLGRAB::GetDescription(CONTROLWIDGET & widget)
+{
+	if (widget.type == "key")
+	{
+		std::stringstream desc;
+		desc << Str[EDIT_STR] << " " << Str[KEY_STR];
+
+		if (widget.key.empty())
+		{
+			desc << " #" << widget.keycode;
+		}
+		else
+		{
+			desc << " " << widget.key;
+		}
+
+		desc << " " << (widget.down ? Str[PRESS_STR] : Str[RELEASE_STR]) <<
+				" (" << (widget.once ? Str[ONCE_STR] : Str[HELD_STR]) << ")";
+
+		return desc.str();
+	}
+
+	if (widget.type == "joy")
+	{
+		std::stringstream desc;
+		desc << Str[EDIT_STR] << " " << Str[JOY_STR] << " " << widget.joy_index << " ";
+
+		if (widget.joy_type == "button")
+		{
+			desc << Str[BUTTON_STR] << " " << widget.keycode <<
+				" " << (widget.down ? Str[PRESS_STR] : Str[RELEASE_STR]) <<
+				" (" << (widget.once ? Str[ONCE_STR] : Str[HELD_STR]) << ")";
+		}
+		else if (widget.joy_type == "axis")
+		{
+			desc << Str[AXIS_STR] << " " << widget.joy_axis << " " <<
+				"(" << (widget.joy_axis_type == "negative" ? "-" : "+") << ")";
+		}
+
+		return desc.str();
+	}
+
+	if (widget.type == "mouse")
+	{
+		std::stringstream desc;
+		desc << Str[EDIT_STR] + " " << Str[MOUSE_STR] << " ";
+
+		if (widget.mouse_type == "button")
+		{
+			desc << Str[BUTTON_STR] << " " << widget.keycode <<
+				" " << (widget.down ? Str[PRESS_STR] : Str[RELEASE_STR]) <<
+				" (" << (widget.once ? Str[ONCE_STR] : Str[HELD_STR]) << ")";
+		}
+		else if (widget.mouse_type == "motion")
+		{
+			desc << Str[MOTION_STR] << " " << widget.mouse_motion;
+		}
+
+		return desc.str();
+	}
+
+	return "";
+}
+
+std::string GUICONTROLGRAB::GetControlString(CONTROLWIDGET & widget)
+{
+	CARCONTROLMAP_LOCAL::CONTROL newctrl;
+	newctrl.deadzone = widget.deadzone;
+	newctrl.exponent = widget.exponent;
+	newctrl.gain = widget.gain;
+	newctrl.onetime = widget.once;
+	newctrl.pushdown = widget.down;
+	newctrl.keycode = widget.keycode;
+	newctrl.type = CARCONTROLMAP_LOCAL::CONTROL::UNKNOWN;
+
+	if (widget.type == "key")
+	{
+		newctrl.type = CARCONTROLMAP_LOCAL::CONTROL::KEY;
+	}
+	else if (widget.type == "joy")
+	{
+		newctrl.type = CARCONTROLMAP_LOCAL::CONTROL::JOY;
+		newctrl.joynum = widget.joy_index;
+		newctrl.joytype = CARCONTROLMAP_LOCAL::CONTROL::JOYBUTTON;
+
+		if (widget.joy_type == "axis")
+		{
+			newctrl.joytype = CARCONTROLMAP_LOCAL::CONTROL::JOYAXIS;
+			newctrl.joyaxistype = CARCONTROLMAP_LOCAL::CONTROL::POSITIVE;
+			newctrl.joyaxis = widget.joy_axis;
+
+			if (widget.joy_axis_type == "negative")
+			{
+				newctrl.joyaxistype = CARCONTROLMAP_LOCAL::CONTROL::NEGATIVE;
+			}
+			else if (widget.joy_axis_type == "both")
+			{
+				newctrl.joyaxistype = CARCONTROLMAP_LOCAL::CONTROL::BOTH;
+			}
+		}
+		else if (widget.joy_type == "hat")
+		{
+			newctrl.joytype = CARCONTROLMAP_LOCAL::CONTROL::JOYHAT;
+		}
+	}
+	else if (widget.type == "mouse")
+	{
+		newctrl.type = CARCONTROLMAP_LOCAL::CONTROL::MOUSE;
+		newctrl.mousetype = CARCONTROLMAP_LOCAL::CONTROL::MOUSEBUTTON;
+
+		if (widget.mouse_type == "motion")
+		{
+			newctrl.mousetype = CARCONTROLMAP_LOCAL::CONTROL::MOUSEMOTION;
+			newctrl.mdir = CARCONTROLMAP_LOCAL::CONTROL::RIGHT;
+
+			if (widget.mouse_motion == "up")
+			{
+				newctrl.mdir = CARCONTROLMAP_LOCAL::CONTROL::UP;
+			}
+			else if (widget.mouse_motion == "down")
+			{
+				newctrl.mdir = CARCONTROLMAP_LOCAL::CONTROL::DOWN;
+			}
+			else if (widget.mouse_motion == "left")
+			{
+				newctrl.mdir = CARCONTROLMAP_LOCAL::CONTROL::LEFT;
+			}
+		}
+	}
+
+	std::stringstream controlstring;
+	newctrl.DebugPrint(controlstring);
+	return controlstring.str();
 }

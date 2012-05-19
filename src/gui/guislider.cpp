@@ -8,8 +8,7 @@ GUISLIDER::GUISLIDER() :
 	m_w(0),
 	m_h(0),
 	m_percent(false),
-	m_fill(false),
-	m_focus(false)
+	m_fill(false)
 {
 	set_value.call.bind<GUISLIDER, &GUISLIDER::SetValue>(this);
 }
@@ -21,59 +20,21 @@ GUISLIDER::~GUISLIDER()
 
 void GUISLIDER::SetAlpha(SCENENODE & scene, float value)
 {
+	float slider_alpha = value > 0.6 ? value * 0.5 : 0.0;
 	m_label_value.SetAlpha(scene, value);
 	m_label_left.SetAlpha(scene, value);
 	m_label_right.SetAlpha(scene, value);
-	m_slider.SetAlpha(scene, value * 0.5);
-	m_bar.SetAlpha(scene, value * 0.25);
+	m_slider.SetAlpha(scene, slider_alpha);
+	m_bar.SetAlpha(scene, slider_alpha * 0.5);
 }
 
 void GUISLIDER::SetVisible(SCENENODE & scene, bool value)
 {
 	m_label_value.SetVisible(scene, value);
-	m_label_left.SetVisible(scene, m_focus && value);
-	m_label_right.SetVisible(scene, m_focus && value);
-	m_slider.SetVisible(scene, m_focus && value);
-	m_bar.SetVisible(scene, m_focus && value);
-}
-
-bool GUISLIDER::ProcessInput(
-	SCENENODE & scene,
-	float cursorx, float cursory,
-	bool cursordown, bool cursorjustup)
-{
-	m_focus = InFocus(cursorx, cursory);
-	m_label_left.SetVisible(scene, m_focus);
-	m_label_right.SetVisible(scene, m_focus);
-	m_slider.SetVisible(scene, m_focus);
-	m_bar.SetVisible(scene, m_focus);
-
-	if (!m_focus)
-		return false;
-
-	if (cursordown)
-	{
-		float xmin = (m_xmin + m_xmax - m_w) * 0.5;
-		float coeff = (cursorx - xmin) / m_w;
-		coeff = (coeff > 0.0) ? (coeff < 1.0) ? coeff : 1.0 : 0.0;
-		m_current = coeff * (m_max - m_min) + m_min;
-
-		std::stringstream s;
-		s << m_current;
-		signal_value(s.str());
-	}
-
-	return true;
-}
-
-std::string GUISLIDER::GetDescription() const
-{
-	return m_description;
-}
-
-void GUISLIDER::SetDescription(const std::string & value)
-{
-	m_description = value;
+	m_label_left.SetVisible(scene, value);
+	m_label_right.SetVisible(scene, value);
+	m_slider.SetVisible(scene, value);
+	m_bar.SetVisible(scene, value);
 }
 
 void GUISLIDER::Update(SCENENODE & scene, float dt)
@@ -110,10 +71,33 @@ void GUISLIDER::Update(SCENENODE & scene, float dt)
 		{
 			s << "%";
 		}
-		m_label_value.SetText(scene, s.str());
+		m_label_value.SetText(s.str());
 
 		m_update = false;
 	}
+}
+
+bool GUISLIDER::ProcessInput(
+	SCENENODE & scene,
+	float cursorx, float cursory,
+	bool cursordown, bool cursorjustup)
+{
+	if (!InFocus(cursorx, cursory))
+		return false;
+
+	if (cursordown)
+	{
+		float xmin = (m_xmin + m_xmax - m_w) * 0.5;
+		float coeff = (cursorx - xmin) / m_w;
+		coeff = (coeff > 0.0) ? (coeff < 1.0) ? coeff : 1.0 : 0.0;
+		m_current = coeff * (m_max - m_min) + m_min;
+
+		std::stringstream s;
+		s << m_current;
+		signal_value(s.str());
+	}
+
+	return true;
 }
 
 void GUISLIDER::SetColor(SCENENODE & scene, float r, float g, float b)
@@ -158,9 +142,7 @@ void GUISLIDER::SetupDrawable(
 
 	m_bar.Load(scene, bgtex, z, error_output);
 	m_bar.SetToBillboard(m_xmin + dx, m_ymin + dy, m_w, m_h - dy);
-	m_bar.SetVisible(scene, m_focus);
 	m_bar.SetColor(scene, 0.7, 0.7, 0.7);
-	m_bar.SetAlpha(scene, 0.25);
 
 	m_label_value.SetupDrawable(
 		scene, font, 0, scalex, scaley,
@@ -177,8 +159,8 @@ void GUISLIDER::SetupDrawable(
 		centerx + w * 0.25, centery, w * 0.5, h, z + 2,
 		m_r, m_g, m_b);
 
-	m_label_left.SetText(scene, " <");
-	m_label_right.SetText(scene, "> ");
+	m_label_left.SetText(" <");
+	m_label_right.SetText("> ");
 
 	m_slider.Load(scene, bartex, z + 1, error_output);
 
@@ -196,8 +178,7 @@ void GUISLIDER::SetupDrawable(
 void GUISLIDER::SetValue(const std::string & valuestr)
 {
 	float value;
-	std::stringstream s;
-	s << valuestr;
+	std::stringstream s(valuestr);
 	s >> value;
 	if (value != m_current)
 	{

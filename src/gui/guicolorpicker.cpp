@@ -34,14 +34,16 @@ void GUICOLORPICKER::SetVisible(SCENENODE & scene, bool newvis)
 	sv_cursor.SetVisible(scene, newvis);
 }
 
-void GUICOLORPICKER::SetDescription(const std::string & newdesc)
+void GUICOLORPICKER::Update(SCENENODE & scene, float dt)
 {
-	description = newdesc;
-}
-
-std::string GUICOLORPICKER::GetDescription() const
-{
-	return description;
+	if (update)
+	{
+		float r, g, b;
+		HSVtoRGB(hsv[0], 1, 1, r, g, b);
+		sv_bg.SetColor(scene, r, g, b);
+		UpdatePosition();
+		update = false;
+	}
 }
 
 bool GUICOLORPICKER::ProcessInput(
@@ -97,22 +99,10 @@ bool GUICOLORPICKER::ProcessInput(
 		std::stringstream s;
 		s << rgbnew;
 		signal_value(s.str());
-		signal_action();
+		OnSelect();
 		return true;
 	}
 	return false;
-}
-
-void GUICOLORPICKER::Update(SCENENODE & scene, float dt)
-{
-	if (update)
-	{
-		float r, g, b;
-		HSVtoRGB(hsv[0], 1, 1, r, g, b);
-		sv_bg.SetColor(scene, r, g, b);
-		UpdatePosition();
-		update = false;
-	}
 }
 
 void GUICOLORPICKER::SetupDrawable(
