@@ -411,7 +411,7 @@ void AI_Car_Standard::updateGasBrake()
 		}
 	}
 
-	std::cout << speed_limit << std::endl;
+	//std::cout << speed_limit << std::endl;
 	if (car->GetGear() == 0)
 	{
 		inputs[CARINPUT::SHIFT_UP] = 1.0;
@@ -505,7 +505,7 @@ void AI_Car_Standard::updateSteer()
 #endif
 
 	const BEZIER *curr_patch_ptr = GetCurrentPatch(car);
-	
+
 	//if car has no contact with track, just let it roll
 	if (!curr_patch_ptr)
 	{
