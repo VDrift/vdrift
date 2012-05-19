@@ -1,4 +1,3 @@
-
 #include "AI_Car_Experimental.h"
 #include "car.h"
 #include "bezier.h"
@@ -13,6 +12,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <ctime>
 #include <algorithm>
 #include <iostream>
 
@@ -72,7 +72,7 @@ template<class T> bool AI_Car_Experimental::isnan(const T & x)
 
 //maximum change in brake value per second
 #define BRAKE_RATE_LIMIT 2.0 // 500 milisec
-#define THROTTLE_RATE_LIMIT 2.0 
+#define THROTTLE_RATE_LIMIT 2.0
 
 float AI_Car_Experimental::clamp(float val, float min, float max)
 {
@@ -578,7 +578,7 @@ bool AI_Car_Experimental::recover(const BEZIER* patch)
 	// break to zero speed and then switch to first gear back and leave recover mode.
 	const float maxRayDistant = 3;
 
-	
+
 	if(car->GetSpeed() < 1)
 	{
 		//If the car is not moving, there may be a wall in the front.
@@ -626,7 +626,7 @@ void AI_Car_Experimental::updateSteer()
 #endif
 
 	const BEZIER *curr_patch_ptr = GetCurrentPatch(car);
-	
+
 	//if car has no contact with track, just let it roll
 	if (!curr_patch_ptr || isRecovering)
 	{
