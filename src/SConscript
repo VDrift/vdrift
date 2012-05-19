@@ -55,6 +55,7 @@ src = Split("""aabb.cpp
 		gui/gui.cpp
 		gui/guibutton.cpp
 		gui/guicolorpicker.cpp
+		gui/guicontrol.cpp
 		gui/guicontrolgrab.cpp
 		gui/guiimage.cpp
 		gui/guilabel.cpp
