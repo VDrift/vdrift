@@ -847,112 +847,87 @@ void GAME::AdvanceGameLogic()
 
 	eventsystem.ProcessEvents();
 
+	float last_steer = 0;
+	float car_speed = 0;
+	if (carcontrols_local.first)
+	{
+		last_steer = carcontrols_local.first->GetLastSteer();
+		car_speed = carcontrols_local.first->GetSpeed();
+	}
+	carcontrols_local.second.ProcessInput(
+			settings.GetJoyType(),
+			eventsystem,
+			last_steer,
+			TickPeriod(),
+			settings.GetJoy200(),
+			car_speed,
+			settings.GetSpeedSensitivity(),
+			window.GetW(),
+			window.GetH(),
+			settings.GetButtonRamp(),
+			settings.GetHGateShifter());
+
 	ProcessGUIInputs();
 
 	ProcessGameInputs();
 
 	//PROFILER.endBlock("input-processing");
 
-	if (track.Loaded())
+	if (track.Loaded() && !pause && !gui.Active())
 	{
-		if (pause && carcontrols_local.first)
+		PROFILER.beginBlock("ai");
+		ai.Visualize();
+		ai.update(TickPeriod(), cars);
+		PROFILER.endBlock("ai");
+
+		PROFILER.beginBlock("physics");
+		dynamics.update(TickPeriod());
+		PROFILER.endBlock("physics");
+
+		PROFILER.beginBlock("car");
+		for (std::list <CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
 		{
-			sound.Pause(true);
-			//cout << "Paused" << std::endl;
-
-			// This next line is required so that the game will see the unpause key...
-			carcontrols_local.second.ProcessInput(
-				settings.GetJoyType(),
-				eventsystem,
-				carcontrols_local.first->GetLastSteer(),
-				TickPeriod(),
-				settings.GetJoy200(),
-				carcontrols_local.first->GetSpeed(),
-				settings.GetSpeedSensitivity(),
-				window.GetW(),
-				window.GetH(),
-				settings.GetButtonRamp(),
-				settings.GetHGateShifter());
+			UpdateCar(*i, TickPeriod());
 		}
-		else
-		{
-			//cout << "Not paused" << std::endl;
-			// Keep the game paused when the gui is up...
-			if (gui.Active())
-			{
-				// Stop sounds when the gui is up...
-				if (sound.Enabled())
-					sound.Pause(true);
-			}
-			else
-			{
-				if (sound.Enabled())
-					sound.Pause(false);
+		PROFILER.endBlock("car");
 
-				PROFILER.beginBlock("ai");
-				ai.Visualize();
-				ai.update(TickPeriod(), cars);
-				PROFILER.endBlock("ai");
+		// Update dynamic track objects.
+		track.Update();
 
-				PROFILER.beginBlock("physics");
-				dynamics.update(TickPeriod());
-				PROFILER.endBlock("physics");
+		//PROFILER.beginBlock("timer");
+		UpdateTimer();
+		//PROFILER.endBlock("timer");
 
-				PROFILER.beginBlock("car");
-				for (std::list <CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
-				{
-					UpdateCar(*i, TickPeriod());
-				}
-				PROFILER.endBlock("car");
+		//PROFILER.beginBlock("particles");
+		UpdateParticleSystems(TickPeriod());
+		//PROFILER.endBlock("particles");
 
-				// Update dynamic track objects.
-				track.Update();
-
-				//PROFILER.beginBlock("timer");
-				UpdateTimer();
-				//PROFILER.endBlock("timer");
-
-				//PROFILER.beginBlock("particles");
-				UpdateParticleSystems(TickPeriod());
-				//PROFILER.endBlock("particles");
-			}
-		}
+		//PROFILER.beginBlock("trackmap-update");
+		UpdateTrackMap();
+		//PROFILER.endBlock("trackmap-update");
 	}
-	else
-	{
-		// If there's no car yet, we still want to process game inputs.
-		carcontrols_local.second.ProcessInput(
-					settings.GetJoyType(),
-					eventsystem,
-					0,
-					TickPeriod(),
-					settings.GetJoy200(),
-					0,
-					settings.GetSpeedSensitivity(),
-					window.GetW(),
-					window.GetH(),
-					settings.GetButtonRamp(),
-					settings.GetHGateShifter());
-	}
-
-	//PROFILER.beginBlock("trackmap-update");
-	UpdateTrackMap();
-	//PROFILER.endBlock("trackmap-update");
 
 	if (sound.Enabled())
 	{
-		PROFILER.beginBlock("sound");
-		MATHVECTOR <float, 3> pos;
-		QUATERNION <float> rot;
-		if (active_camera)
+		if (pause || gui.Active())
 		{
-			pos = active_camera->GetPosition();
-			rot = active_camera->GetOrientation();
+			sound.Pause(true);
 		}
-		sound.SetListenerPosition(pos[0], pos[1], pos[2]);
-		sound.SetListenerRotation(rot[0], rot[1], rot[2], rot[3]);
-		sound.Update();
-		PROFILER.endBlock("sound");
+		else
+		{
+			PROFILER.beginBlock("sound");
+			MATHVECTOR <float, 3> pos;
+			QUATERNION <float> rot;
+			if (active_camera)
+			{
+				pos = active_camera->GetPosition();
+				rot = active_camera->GetOrientation();
+			}
+			sound.SetListenerPosition(pos[0], pos[1], pos[2]);
+			sound.SetListenerRotation(rot[0], rot[1], rot[2], rot[3]);
+			sound.Update();
+			PROFILER.endBlock("sound");
+		}
 	}
 
 	//PROFILER.beginBlock("force-feedback");
@@ -1126,7 +1101,7 @@ void GAME::ProcessGUIInputs()
 	if (!gui.Active())
 	{
 		// Handle the ESCAPE key with dedicated logic...
-		if (eventsystem.GetKeyState(SDLK_ESCAPE).just_down)
+		if (eventsystem.GetKeyState(SDLK_ESCAPE).just_up)
 		{
 			// Show in-game GUI
 			ShowHUD(false);
@@ -1295,33 +1270,20 @@ void GAME::UpdateCar(CAR & car, double dt)
 void GAME::UpdateCarInputs(CAR & car)
 {
 	std::vector <float> carinputs(CARINPUT::INVALID, 0.0f);
-
 	if (carcontrols_local.first == &car)
 	{
 		if (replay.GetPlaying())
 		{
 			const std::vector <float> & inputarray = replay.PlayFrame(car);
 			assert(inputarray.size() <= carinputs.size());
-			for (unsigned int i = 0; i < inputarray.size(); i++)
+			for (size_t i = 0; i < inputarray.size(); ++i)
 			{
 				carinputs[i] = inputarray[i];
 			}
 		}
 		else
 		{
-			//carinputs = carcontrols_local.second.GetInputs();
-			carinputs = carcontrols_local.second.ProcessInput(
-					settings.GetJoyType(),
-					eventsystem,
-					car.GetLastSteer(),
-					TickPeriod(),
-					settings.GetJoy200(),
-					car.GetSpeed(),
-					settings.GetSpeedSensitivity(),
-					window.GetW(),
-					window.GetH(),
-					settings.GetButtonRamp(),
-					settings.GetHGateShifter());
+			carinputs = carcontrols_local.second.GetInputs();
 		}
 	}
 	else
@@ -1345,23 +1307,6 @@ void GAME::UpdateCarInputs(CAR & car)
 		replay.RecordFrame(carinputs, car);
 
 	inputgraph.Update(carinputs);
-
-	if (replay.GetPlaying())
-	{
-		// This next line allows game inputs to be processed.
-		carcontrols_local.second.ProcessInput(
-			settings.GetJoyType(),
-			eventsystem,
-			car.GetLastSteer(),
-			TickPeriod(),
-			settings.GetJoy200(),
-			car.GetSpeed(),
-			settings.GetSpeedSensitivity(),
-			window.GetW(),
-			window.GetH(),
-			settings.GetButtonRamp(),
-			settings.GetHGateShifter());
-	}
 
 	std::stringstream debug_info1, debug_info2, debug_info3, debug_info4;
 	if (debugmode)
