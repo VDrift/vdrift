@@ -909,11 +909,9 @@ void GAME::AdvanceGameLogic()
 
 	if (sound.Enabled())
 	{
-		if (pause || gui.Active())
-		{
-			sound.Pause(true);
-		}
-		else
+		bool pause_sound = pause || gui.Active();
+		sound.Pause(pause_sound);
+		if (!pause_sound)
 		{
 			PROFILER.beginBlock("sound");
 			MATHVECTOR <float, 3> pos;
