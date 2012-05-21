@@ -148,7 +148,7 @@ solution "VDrift"
 
 	configuration {"windows", "codeblocks"}
 		links {"mingw32"}
-		linkoptions {"-static-libstdc++"}
+		linkoptions {"-static-libstdc++", "-static-libgcc"}
 
 	configuration {"vs*"}
 		defines {"__PRETTY_FUNCTION__=__FUNCSIG__", "_USE_MATH_DEFINES", "NOMINMAX"}
