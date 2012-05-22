@@ -48,7 +48,7 @@ bool GUIPAGE::Load(
 	const FONT & font,
 	const std::map <std::string, std::string> & languagemap,
 	std::map <std::string, GUIOPTION> & optionmap,
-	std::map <std::string, Slot0*> & actionmap,
+	std::map <std::string, Slot0*> actionmap,
 	SCENENODE & parentnode,
 	ContentManager & content,
 	std::ostream & error_output)

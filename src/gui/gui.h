@@ -42,7 +42,7 @@ public:
 		const std::string & texsize,
 		const float screenhwratio,
 		const std::map <std::string, FONT> & fonts,
-		std::map <std::string, Slot0*> & actionmap,
+		std::map <std::string, Slot0*> actionmap,
 		ContentManager & content,
 		std::ostream & info_output,
 		std::ostream & error_output);
