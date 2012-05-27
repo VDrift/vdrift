@@ -46,7 +46,7 @@ public:
 	std::string GetTrackRecordsPath() const;
 	std::string GetSettingsFile() const;
 	std::string GetLogFile() const;
-	std::string GetTracksPath() const;
+	std::string GetTracksPath(const std::string & carname) const;
 	std::string GetCarPath(const std::string & carname) const;
 	std::string GetCarPaintPath(const std::string & carname) const;
 	std::string GetGUIMenuPath(const std::string & skinname) const;
