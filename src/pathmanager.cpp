@@ -235,9 +235,13 @@ std::string PATHMANAGER::GetLogFile() const
 	return settings_path+"/log.txt";
 }
 
-std::string PATHMANAGER::GetTracksPath() const
+std::string PATHMANAGER::GetTracksPath(const std::string & trackname) const
 {
-	return GetDataPath()+"/"+GetTracksDir();
+    // Check writeable track path first (check for presence of .txt files).
+	if (FileExists(GetWriteableDataPath() + "/" + GetTracksDir() + "/" + trackname + "/" + "track.txt"))
+		return GetWriteableDataPath() + "/" + GetTracksDir() + "/" + trackname;
+	else
+		return GetDataPath() + "/" + GetTracksDir()  + "/" + trackname;
 }
 
 std::string PATHMANAGER::GetCarPath(const std::string & carname) const
