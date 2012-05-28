@@ -2177,7 +2177,7 @@ bool GAME::LoadTrack(const std::string & trackname)
 	if (!track.DeferredLoad(
 			content, dynamics,
 			info_output, error_output,
-			pathmanager.GetTracksPath()+"/"+trackname,
+			pathmanager.GetTracksPath(trackname),
 			pathmanager.GetTracksDir()+"/"+trackname,
 			pathmanager.GetEffectsTextureDir(),
 			pathmanager.GetTrackPartsPath(),
