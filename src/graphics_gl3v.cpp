@@ -295,7 +295,7 @@ void GRAPHICS_GL3V::SetupScene(float fov, float new_view_distance, const MATHVEC
 	// TODO: read this from the track definition
 	float reflectedLightColor[4];
 	for (int i = 0; i < 3; i++)
-		reflectedLightColor[i] = 1.0;
+		reflectedLightColor[i] = 0.5;
 	reflectedLightColor[3] = 1.;
 	renderer.setGlobalUniform(RenderUniformEntry(stringMap.addStringId("reflectedLightColor"), reflectedLightColor, 4));
 
@@ -303,7 +303,7 @@ void GRAPHICS_GL3V::SetupScene(float fov, float new_view_distance, const MATHVEC
 	// TODO: read this from the track definition
 	float ambientLightColor[4];
 	for (int i = 0; i < 3; i++)
-		ambientLightColor[i] = 3;
+		ambientLightColor[i] = 1.56;
 	ambientLightColor[3] = 1.;
 	renderer.setGlobalUniform(RenderUniformEntry(stringMap.addStringId("ambientLightColor"), ambientLightColor, 4));
 
@@ -311,7 +311,7 @@ void GRAPHICS_GL3V::SetupScene(float fov, float new_view_distance, const MATHVEC
 	// TODO: read this from the track definition
 	float directionalLightColor[4];
 	for (int i = 0; i < 3; i++)
-		directionalLightColor[i] = 8.0;
+		directionalLightColor[i] = 8.3;
 	directionalLightColor[3] = 1.;
 	renderer.setGlobalUniform(RenderUniformEntry(stringMap.addStringId("directionalLightColor"), directionalLightColor, 4));
 }
