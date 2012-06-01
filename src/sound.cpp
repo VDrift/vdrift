@@ -392,17 +392,17 @@ void SOUND::ProcessSources()
 		if (!src.playing) continue;
 
 		float gain1 = 0.0, gain2 = 0.0;
-		if (src.gain > 0.0)
+		if (src.gain > 0)
 		{
 			if (src.is3d)
 			{
 				MATHVECTOR <float, 3> relvec = src.position - listener_pos;
 				float len = relvec.Magnitude();
-				if (len < 0.1) len = 0.1;
+				if (len < 0.1f) len = 0.1f;
 
-				float cgain = 0.25 / log(100) * (log(1000) - 1.6 * log(len));
-				if (cgain > 1.0) cgain = 1.0;
-				if (cgain < 0.0) cgain = 0.0;
+				float cgain = 0.25f / log(100.f) * (log(1000.f) - 1.6f * log(len));
+				if (cgain > 1) cgain = 1;
+				if (cgain < 0) cgain = 0;
 
 				listener_rot.RotateVector(relvec);
 				float xcoord = -relvec.Normalize()[1];
@@ -411,8 +411,8 @@ void SOUND::ProcessSources()
 				if (pgain1 < 0) pgain1 = 0;
 				if (pgain2 < 0) pgain2 = 0;
 
-				gain1 = cgain * src.gain * (1.0 - pgain1);
-				gain2 = cgain * src.gain * (1.0 - pgain2);
+				gain1 = cgain * src.gain * (1 - pgain1);
+				gain2 = cgain * src.gain * (1 - pgain2);
 			}
 			else
 			{
