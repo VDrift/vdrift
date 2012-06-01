@@ -1,45 +1,55 @@
 #include "gui/guiimage.h"
+#include "contentmanager.h"
 
-void GUIIMAGE::SetAlpha(SCENENODE & node, float newalpha)
+GUIIMAGE::GUIIMAGE()
 {
-	GetDrawable(node).SetColor(1, 1, 1, newalpha);
+	set_image.call.bind<GUIIMAGE, &GUIIMAGE::SetImage>(this);
 }
 
-void GUIIMAGE::SetVisible(SCENENODE & node, bool newvis)
+GUIIMAGE::~GUIIMAGE()
 {
-	GetDrawable(node).SetDrawEnable(newvis);
+	// dtor
+}
+
+void GUIIMAGE::Update(SCENENODE & scene, float dt)
+{
+	if (m_update)
+	{
+		assert(m_content);
+		TEXTUREINFO texinfo;
+		texinfo.mipmap = false;
+		texinfo.repeatu = false;
+		texinfo.repeatv = false;
+		std::tr1::shared_ptr<TEXTURE> texture;
+		if (m_content->load(m_imagepath, m_imagename, texinfo, texture))
+			GetDrawable(scene).SetDiffuseMap(texture);
+		
+		GUIWIDGET::Update(scene, dt);
+	}
 }
 
 void GUIIMAGE::SetupDrawable(
 	SCENENODE & scene,
-	const std::tr1::shared_ptr<TEXTURE> teximage,
-	float x, float y, float w, float h, int z,
-	bool button_mode,
-	float screenhwratio)
+	ContentManager & content,
+	const std::string & imagepath,
+	float x, float y, float w, float h, float z)
 {
-	float r(1), g(1), b(1), a(1);
-	MATHVECTOR <float, 2> dim(w, h);
-	MATHVECTOR <float, 2> center(x, y);
-	corner1 = center - dim * 0.5;
-	corner2 = center + dim * 0.5;
+	m_content = &content;
+	m_imagepath = imagepath;
+	m_varray.SetToBillboard(x - w * 0.5f, y - h * 0.5f, x + w * 0.5f, y + h * 0.5f);
 
-	draw = scene.GetDrawlist().twodim.insert(DRAWABLE());
+	m_draw = scene.GetDrawlist().twodim.insert(DRAWABLE());
 	DRAWABLE & drawref = GetDrawable(scene);
-	drawref.SetDiffuseMap(teximage);
-	drawref.SetVertArray(&varray);
+	drawref.SetVertArray(&m_varray);
 	drawref.SetCull(false, false);
-	drawref.SetColor(r, g, b, a);
 	drawref.SetDrawOrder(z);
+}
 
-	if (button_mode)
+void GUIIMAGE::SetImage(const std::string & value)
+{
+	if (m_imagename != value)
 	{
-		float sidewidth = h / (screenhwratio * 3.0);
-		varray.SetTo2DButton(x, y, w, h, sidewidth);
-		corner1[0] -= sidewidth;
-		corner2[0] += sidewidth;
-	}
-	else
-	{
-		varray.SetToBillboard(corner1[0], corner1[1], corner2[0], corner2[1]);
+		m_imagename = value;
+		m_update = true;
 	}
 }

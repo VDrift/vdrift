@@ -265,19 +265,29 @@ public:
 		return normalmaps;
 	}
 
-	const std::string & GetPlayerCar() const
+	const std::string & GetCar() const
 	{
-		return player;
+		return car;
 	}
 
-	const std::string & GetPlayerCarPaint() const
+	const std::string & GetCarPaint() const
 	{
-		return player_paint;
+		return car_paint;
 	}
 
-	unsigned GetPlayerCarColor() const
+	float GetCarColorHue() const
 	{
-		return player_color;
+		return car_color_hue;
+	}
+
+	float GetCarColorSat() const
+	{
+		return car_color_sat;
+	}
+
+	float GetCarColorVal() const
+	{
+		return car_color_val;
 	}
 
 	float GetCameraBounce() const
@@ -396,9 +406,12 @@ private:
 	int lighting;
 	bool bloom;
 	bool normalmaps;
-	std::string player;
-	std::string player_paint;
-	unsigned player_color;
+	std::string car;
+	std::string car_paint;
+	float car_color_hue;
+	float car_color_sat;
+	float car_color_val;
+	int cars_num;
 	int camera_id;
 	float camera_bounce;
 	int number_of_laps;

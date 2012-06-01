@@ -16,13 +16,12 @@ public:
 
 	GUIOPTION & operator=(const GUIOPTION & other);
 
-	void ReplaceValues(const std::list <std::pair<std::string, std::string> > & newvalues);
+	/// will move new value elements to option list
+	void SetValues(const std::string & curvalue, std::list <std::pair<std::string, std::string> > & newvalues);
 
 	void SetInfo(const std::string & newtext, const std::string & newdesc, const std::string & newtype);
 
-	void Insert(const std::string & stored_value, const std::string & display_value);
-
-	void SetMinMaxPercentage(float newmin, float newmax, bool newpercentage);
+	void SetMinMaxPercentage(float newmin, float newmax, bool newpercent);
 
 	/// reset to first value if passed value invalid
 	void SetCurrentValue(const std::string & storedvaluename);
@@ -49,13 +48,13 @@ public:
 
 	float GetMax() const {return max;}
 
-	bool GetPercentage() const {return percentage;}
-
-	/// option signals
+	/// option signals (normalized value, value, string)
+	Signal1<const std::string &> signal_valn;
 	Signal1<const std::string &> signal_val;
 	Signal1<const std::string &> signal_str;
 
-	/// option slots
+	/// option slots (normalized value, value, string, increment, decrement)
+	Slot1<const std::string &> set_valn;
 	Slot1<const std::string &> set_val;
 	Slot0 prev_val;
 	Slot0 next_val;
@@ -69,10 +68,10 @@ private:
 	std::string type;
 	float min;
 	float max;
-	bool percentage;
-	static const std::string null; // returned if current value is not valid
+	bool percent;
 
 	void SignalValue();
+	void SetCurrentValueNorm(const std::string & value);
 };
 
 #endif

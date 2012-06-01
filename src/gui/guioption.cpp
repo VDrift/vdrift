@@ -2,14 +2,15 @@
 
 #include <sstream>
 
-const std::string GUIOPTION::null;
+static const std::string null;
 
 GUIOPTION::GUIOPTION() :
 	min(0),
-	max(1),
-	percentage(true)
+	max(0),
+	percent(false)
 {
 	current_value = values.begin();
+	set_valn.call.bind<GUIOPTION, &GUIOPTION::SetCurrentValueNorm>(this);
 	set_val.call.bind<GUIOPTION, &GUIOPTION::SetCurrentValue>(this);
 	prev_val.call.bind<GUIOPTION, &GUIOPTION::Decrement>(this);
 	next_val.call.bind<GUIOPTION, &GUIOPTION::Increment>(this);
@@ -18,6 +19,7 @@ GUIOPTION::GUIOPTION() :
 GUIOPTION::GUIOPTION(const GUIOPTION & other)
 {
 	*this = other;
+	set_valn.call.bind<GUIOPTION, &GUIOPTION::SetCurrentValueNorm>(this);
 	set_val.call.bind<GUIOPTION, &GUIOPTION::SetCurrentValue>(this);
 	prev_val.call.bind<GUIOPTION, &GUIOPTION::Decrement>(this);
 	next_val.call.bind<GUIOPTION, &GUIOPTION::Increment>(this);
@@ -33,16 +35,17 @@ GUIOPTION & GUIOPTION::operator=(const GUIOPTION & other)
 	type = other.type;
 	min = other.min;
 	max = other.max;
-	percentage = other.percentage;
+	percent = other.percent;
 	signal_val = other.signal_val;
 	signal_str = other.signal_str;
 	return *this;
 }
 
-void GUIOPTION::ReplaceValues(const std::list <std::pair<std::string, std::string> > & newvalues)
+void GUIOPTION::SetValues(const std::string & curvalue, std::list <std::pair<std::string, std::string> > & newvalues)
 {
-	values = newvalues;
-	SetToFirstValue();
+	values.clear();
+	values.splice(values.begin(), newvalues);
+	SetCurrentValue(curvalue);
 }
 
 void GUIOPTION::SetInfo(const std::string & newtext, const std::string & newdesc, const std::string & newtype)
@@ -52,16 +55,11 @@ void GUIOPTION::SetInfo(const std::string & newtext, const std::string & newdesc
 	type = newtype;
 }
 
-void GUIOPTION::Insert(const std::string & stored_value, const std::string & display_value)
-{
-	values.push_back(std::pair<std::string, std::string>(stored_value, display_value));
-}
-
-void GUIOPTION::SetMinMaxPercentage(float newmin, float newmax, bool newpercentage)
+void GUIOPTION::SetMinMaxPercentage(float newmin, float newmax, bool newpercent)
 {
 	min = newmin;
 	max = newmax;
-	percentage = newpercentage;
+	percent = newpercent;
 }
 
 void GUIOPTION::SetCurrentValue(const std::string & storedvaluename)
@@ -69,36 +67,10 @@ void GUIOPTION::SetCurrentValue(const std::string & storedvaluename)
 	if (values.empty())
 	{
 		non_value_data = storedvaluename;
-		signal_val(storedvaluename);
-		signal_str(storedvaluename);
-		return;
-	}
-
-	bool current_valid = false;
-	if (type == "float")
-	{
-		float storedvaluefloat(0);
-		{
-			std::stringstream floatstr;
-			floatstr.str(storedvaluename);
-			floatstr >> storedvaluefloat;
-		}
-		for (std::list <std::pair<std::string, std::string> >::iterator i = values.begin(); i != values.end(); ++i)
-		{
-			float ifloat(0);
-			std::stringstream floatstr;
-			floatstr.str(i->first);
-			floatstr >> ifloat;
-			if (ifloat == storedvaluefloat)
-			{
-				current_valid = true;
-				current_value = i;
-				break;
-			}
-		}
 	}
 	else
 	{
+		bool current_valid = false;
 		for (std::list <std::pair<std::string, std::string> >::iterator i = values.begin(); i != values.end(); ++i)
 		{
 			if (i->first == storedvaluename)
@@ -108,11 +80,11 @@ void GUIOPTION::SetCurrentValue(const std::string & storedvaluename)
 				break;
 			}
 		}
-	}
 
-	// if value not found set first value
-	if (!current_valid)
-		current_value = values.begin();
+		// if value not found set first value
+		if (!current_valid)
+			current_value = values.begin();
+	}
 
 	SignalValue();
 }
@@ -123,14 +95,14 @@ void GUIOPTION::Increment()
 	{
 		if (type == "float")
 		{
+			std::stringstream s, v;
 			float f;
-			std::stringstream sf(non_value_data);
-			sf >> f;
+			v << non_value_data;
+			v >> f;
 			f += (max - min) / 16;	// hardcoded for now
 			if (f > max) f = max;
-			std::stringstream fs;
-			fs << f;
-			non_value_data = fs.str();
+			s << f;
+			non_value_data = s.str();
 		}
 		else
 		{
@@ -154,21 +126,21 @@ void GUIOPTION::Increment()
 
 	SignalValue();
 }
-//#include <iostream>
+
 void GUIOPTION::Decrement()
 {
 	if (values.empty())
 	{
 		if (type == "float")
 		{
+			std::stringstream s, v;
 			float f;
-			std::stringstream sf(non_value_data);
-			sf >> f;
+			v << non_value_data;
+			v >> f;
 			f -= (max - min) / 16;	// hardcoded for now
 			if (f < min) f = min;
-			std::stringstream fs;
-			fs << f;
-			non_value_data = fs.str();
+			s << f;
+			non_value_data = s.str();
 		}
 		else
 		{
@@ -223,12 +195,66 @@ void GUIOPTION::SignalValue()
 {
 	if (values.empty())
 	{
+		if (type != "float")
+		{
+			signal_val(non_value_data);
+			signal_str(non_value_data);
+			return;
+		}
+
+		if (min != 0 || max != 1)
+		{
+			std::stringstream s, v;
+			float f;
+			v << non_value_data;
+			v >> f;
+			s << (f - min) / (max - min);
+			signal_valn(s.str());
+		}
+		else
+		{
+			signal_valn(non_value_data);
+		}
 		signal_val(non_value_data);
-		signal_str(non_value_data);
+		
+		if (percent)
+		{
+			std::stringstream s, v;
+			float f;
+			v << non_value_data;
+			v >> f;
+			s << int(f * 100) << "%";
+			signal_str(s.str());
+		}
+		else
+		{
+			signal_str(non_value_data);
+		}
 	}
 	else
 	{
 		signal_val(current_value->first);
 		signal_str(current_value->second);
+	}
+}
+
+void GUIOPTION::SetCurrentValueNorm(const std::string & value)
+{
+	// only valid for floats
+	if (type != "float")
+		return;
+	
+	if (min != 0 || max != 1)
+	{
+		std::stringstream s, v;
+		float f;
+		v << value;
+		v >> f;
+		s << f * (max - min) + min;
+		SetCurrentValue(s.str());
+	}
+	else
+	{
+		SetCurrentValue(value);
 	}
 }

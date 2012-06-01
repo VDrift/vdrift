@@ -5,66 +5,52 @@
 #include <string>
 
 class SCENENODE;
+class DRAWABLE;
 
 class GUIWIDGET
 {
 public:
-	/// true if x, y within widget rectangle
-	virtual bool InFocus(float x, float y) const;
-
-	/// scale widget alpha [0, 1]
-	virtual void SetAlpha(SCENENODE & scene, float value);
-
-	/// override visibility
-	virtual void SetVisible(SCENENODE & scene, bool value);
+	/// base destructor
+	virtual ~GUIWIDGET();
 
 	/// update widget state
 	virtual void Update(SCENENODE & scene, float dt);
 
-	/// base destructor
-	virtual ~GUIWIDGET();
+	/// scale widget alpha [0, 1]
+	void SetAlpha(SCENENODE & scene, float value);
+
+	/// override visibility
+	void SetVisible(SCENENODE & scene, bool value);
+
+	/// properties
+	void SetColor(float r, float g, float b);
+	void SetAlpha(float value);
+	void SetHue(float value);
+	void SetSat(float value);
+	void SetVal(float value);
+
+	/// add support for typed signals
+	Slot1<const std::string &> set_color;
+	Slot1<const std::string &> set_alpha;
+	Slot1<const std::string &> set_hue;
+	Slot1<const std::string &> set_sat;
+	Slot1<const std::string &> set_val;
 
 protected:
-	float m_xmin, m_ymin, m_xmax, m_ymax;
+	//static const float m_ease_factor;
+	//float m_r1, m_g1, m_b1, m_a1;
 	float m_r, m_g, m_b, m_a;
 	bool m_visible;
 	bool m_update;
 
 	GUIWIDGET();
+	virtual DRAWABLE & GetDrawable(SCENENODE & scene) = 0;
+	void SetColor(const std::string & value);
+	void SetAlpha(const std::string & value);
+	void SetHue(const std::string & value);
+	void SetSat(const std::string & value);
+	void SetVal(const std::string & value);
+
 };
 
-inline bool GUIWIDGET::InFocus(float x, float y) const
-{
-	return x < m_xmax && x > m_xmin && y < m_ymax && y > m_ymin;
-}
-
-inline void GUIWIDGET::SetAlpha(SCENENODE & scene, float value)
-{
-	//GetDrawable(scene).SetColor(m_r, m_g, m_b, m_a * value);
-}
-
-inline void GUIWIDGET::SetVisible(SCENENODE & scene, bool value)
-{
-	//GetDrawable(scene).SetDrawEnable(m_visible & value);
-}
-
-inline void GUIWIDGET::Update(SCENENODE & scene, float dt)
-{
-	// optional
-}
-
-inline GUIWIDGET::~GUIWIDGET()
-{
-	// destructor
-}
-
-inline GUIWIDGET::GUIWIDGET() :
-	m_xmin(0), m_ymin(0), m_xmax(0), m_ymax(0),
-	m_r(1), m_g(1), m_b(1), m_a(0),
-	m_visible(true),
-	m_update(false)
-{
-	// constructor
-}
-
-#endif // _GUIH
+#endif // _GUIWIDGET_H

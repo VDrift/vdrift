@@ -248,7 +248,7 @@ bool CAR::LoadGraphics(
 	const std::string & carpath,
 	const std::string & carname,
 	const std::string & carpaint,
-	const unsigned carcolor,
+	const MATHVECTOR <float, 3> & carcolor,
 	const int anisotropy,
 	const float camerabounce,
 	const bool damage,
@@ -385,10 +385,7 @@ bool CAR::LoadGraphics(
 		cameras.push_back(cam);
 	}
 
-	float r = float((carcolor >> 16) & 255) / 255;
-	float g = float((carcolor >> 8) & 255) / 255;
-	float b = float((carcolor >> 0) & 255) / 255;
-	SetColor(r, g, b);
+	SetColor(carcolor[0], carcolor[1], carcolor[2]);
 
 	return true;
 }

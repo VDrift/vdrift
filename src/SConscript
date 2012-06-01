@@ -53,18 +53,13 @@ src = Split("""aabb.cpp
 		graphics_gl3v.cpp
 		graphics_renderers.cpp
 		gui/gui.cpp
-		gui/guibutton.cpp
-		gui/guicolorpicker.cpp
 		gui/guicontrol.cpp
-		gui/guicontrolgrab.cpp
 		gui/guiimage.cpp
 		gui/guilabel.cpp
-		gui/guimultiimage.cpp
 		gui/guioption.cpp
 		gui/guipage.cpp
 		gui/guislider.cpp
-		gui/guispinningcar.cpp
-		gui/guistringwheel.cpp
+		gui/guiwidget.cpp
 		http.cpp
 		hud.cpp
 		hudbar.cpp

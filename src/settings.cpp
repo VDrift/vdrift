@@ -67,9 +67,12 @@ SETTINGS::SETTINGS() :
 	lighting(0),
 	bloom(false),
 	normalmaps(false),
-	player("XS"),
-	player_paint("default"),
-	player_color(0xFF0000),
+	car("XS"),
+	car_paint("default"),
+	car_color_hue(0.5),
+	car_color_sat(1.0),
+	car_color_val(0.5),
+	cars_num(1),
 	camera_id(0),
 	camera_bounce(1.0),
 	number_of_laps(1),
@@ -94,9 +97,12 @@ void SETTINGS::Serialize(bool write, CONFIG & config)
 	Param(config, write, section, "traction_control", tcs);
 	Param(config, write, section, "record", recordreplay);
 	Param(config, write, section, "selected_replay", selected_replay);
-	Param(config, write, section, "player", player);
-	Param(config, write, section, "player_paint", player_paint);
-	Param(config, write, section, "player_color", player_color);
+	Param(config, write, section, "car", car);
+	Param(config, write, section, "car_paint", car_paint);
+	Param(config, write, section, "car_color_hue", car_color_hue);
+	Param(config, write, section, "car_color_sat", car_color_sat);
+	Param(config, write, section, "car_color_val", car_color_val);
+	Param(config, write, section, "cars_num", cars_num);
 	Param(config, write, section, "reverse", trackreverse);
 	Param(config, write, section, "track_dynamic", trackdynamic);
 	Param(config, write, section, "batch_geometry", batch_geometry);

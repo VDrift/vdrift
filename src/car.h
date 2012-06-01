@@ -32,7 +32,7 @@ public:
 		const std::string & carpath,
 		const std::string & carname,
 		const std::string & carpaint,
-		const unsigned carcolor,
+		const MATHVECTOR <float, 3> & carcolor,
 		const int anisotropy,
 		const float camerabounce,
 		const bool damage,

@@ -10,16 +10,17 @@
 #include <string>
 #include <ostream>
 
-class GUILABEL;
-class GUIBUTTON;
-class GUICONTROLGRAB;
-class GUIOPTION;
 class GUIWIDGET;
 class GUICONTROL;
+class GUILABEL;
 class CONFIG;
 class FONT;
 class PATHMANAGER;
 class ContentManager;
+
+typedef std::map <std::string, Signal1<const std::string &>*> VSIGNALMAP;
+typedef std::map <std::string, Slot1<const std::string &>*> VACTIONMAP;
+typedef std::map <std::string, Slot0*> ACTIONMAP;
 
 class GUIPAGE
 {
@@ -31,13 +32,12 @@ public:
 	bool Load(
 		const std::string & path,
 		const std::string & texpath,
-		const PATHMANAGER & pathmanager,
 		const float screenhwratio,
-		const CONFIG & controlsconfig,
-		const FONT & fonts,
+		const FONT & font,
 		const std::map <std::string, std::string> & languagemap,
-		std::map <std::string, GUIOPTION> & optionmap,
-		std::map <std::string, Slot0*> actionmap,
+		VSIGNALMAP vsignalmap,
+		VACTIONMAP vactionmap,
+		ACTIONMAP actionmap,
 		SCENENODE & parentnode,
 		ContentManager & content,
 		std::ostream & error_output);
@@ -46,12 +46,8 @@ public:
 
 	void SetAlpha(SCENENODE & parent, float value);
 
-	/// update controlgrab widgets
-	void UpdateControls(SCENENODE & parent, const CONFIG & controls, const FONT & font);
-
 	/// execute game actions and update gui options
 	void ProcessInput(
-		SCENENODE & parent,
 		float cursorx, float cursory,
 		bool cursordown, bool cursorjustup,
 		bool moveleft, bool moveright,
@@ -62,65 +58,63 @@ public:
 	/// tell all child widgets to do as update tick
 	void Update(SCENENODE & parent, float dt);
 
-	GUILABEL * GetLabel(const std::string & name);
+	void SetLabelText(const std::map<std::string, std::string> & label_text);
 
-	GUIBUTTON * GetButton(const std::string & name);
+	GUILABEL * GetLabel(const std::string & name);
 
 	SCENENODE & GetNode(SCENENODE & parentnode);
 
 private:
-	static const float inactive_alpha = 0.6;
 	std::map <std::string, GUILABEL *> labels;
-	std::map <std::string, GUIBUTTON *> buttons;
-	std::vector <GUICONTROLGRAB *> controlgrabs;	// input edit widgets
-	std::vector <GUICONTROL *> awidgets;			// active widgets (process input)
-	std::vector <GUIWIDGET *> pwidgets;				// passive widgets
-	GUICONTROL * default_widget;					// default active widget
-	GUICONTROL * active_widget;						// current active widget
-	GUICONTROL * active_widget_next;				// next active widget
-	GUILABEL * tooltip_widget;						// tooltip, hardcoded
+	std::vector <GUICONTROL *> controls;			// active widgets (process input)
+	std::vector <GUIWIDGET *> widgets;				// passive widgets
+	GUICONTROL * default_control;					// default active control
+	GUICONTROL * active_control;					// current active control
 	keyed_container <SCENENODE>::handle s;
 	std::string name;
-	bool dialog;
 
-	struct WIDGETCB
+	struct ControlFocusCb
 	{
 		GUIPAGE * page;
-		GUICONTROL * widget;
+		GUICONTROL * control;
 		Slot0 action;
 
-		WIDGETCB();
-		WIDGETCB(const WIDGETCB & other);
-		WIDGETCB & operator=(const WIDGETCB & other);
+		ControlFocusCb();
+		ControlFocusCb(const ControlFocusCb & other);
+		ControlFocusCb & operator=(const ControlFocusCb & other);
 		void call();
 	};
-	std::vector<WIDGETCB> widget_activate;			// active widget actions
-	Signal0 oncancel;								// page cancel action
+	struct WidgetCb
+	{
+		float value;
+		Delegate1<void, float> set;
+		Slot0 action;
+		
+		WidgetCb();
+		WidgetCb(const WidgetCb & other);
+		WidgetCb & operator=(const WidgetCb & other);
+		void call();
+	};
+	struct ActionCb
+	{
+		std::string value;
+		Signal1<const std::string &> signal;
+		Slot0 action;
+
+		ActionCb();
+		ActionCb(const ActionCb & other);
+		ActionCb & operator=(const ActionCb & other);
+		void call();
+	};
+	std::vector<ControlFocusCb> control_focus;		// control focus callbacks
+	std::vector<WidgetCb> widget_set;				// widget property callbacks
+	std::vector<ActionCb> action_set;				// action value callbacks
+	Signal1<const std::string &> tooltip;			// tooltip signal
+	Signal0 onfocus, oncancel;						// page actions
 
 	void Clear(SCENENODE & parentnode);
 
 	void SetActiveWidget(GUICONTROL & widget);
 };
-
-inline GUILABEL * GUIPAGE::GetLabel(const std::string & name)
-{
-	std::map <std::string, GUILABEL*>::const_iterator i = labels.find(name);
-	if (i != labels.end())
-		return i->second;
-	return 0;
-}
-
-inline GUIBUTTON * GUIPAGE::GetButton(const std::string & name)
-{
-	std::map <std::string, GUIBUTTON*>::const_iterator i = buttons.find(name);
-	if (i != buttons.end())
-		return i->second;
-	return 0;
-}
-
-inline SCENENODE & GUIPAGE::GetNode(SCENENODE & parentnode)
-{
-	return parentnode.GetNode(s);
-}
 
 #endif

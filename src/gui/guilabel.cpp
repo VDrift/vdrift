@@ -10,22 +10,12 @@ GUILABEL::GUILABEL() :
 	m_scaley(0),
 	m_align(0)
 {
-	// constructor
+	set_value.call.bind<GUILABEL, &GUILABEL::SetText>(this);
 }
 
 GUILABEL::~GUILABEL()
 {
 	// destructor
-}
-
-void GUILABEL::SetAlpha(SCENENODE & scene, float value)
-{
-	GetDrawable(scene).SetColor(m_r, m_g, m_b, value);
-}
-
-void GUILABEL::SetVisible(SCENENODE & scene, bool value)
-{
-	GetDrawable(scene).SetDrawEnable(value);
 }
 
 void GUILABEL::SetupDrawable(
@@ -34,39 +24,26 @@ void GUILABEL::SetupDrawable(
 	int align,
 	float scalex, float scaley,
 	float x, float y,
-	float w, float h, float z,
-	float r, float g, float b)
+	float w, float h, float z)
 {
 	m_font = &font;
-	m_r = r;
-	m_b = b;
-	m_g = g;
 	m_x = x;
 	m_y = y;
+	m_w = w;
+	m_h = h;
 	m_scalex = scalex;
 	m_scaley = scaley;
 	m_align = align;
-	m_xmin = x - w * 0.5;
-	m_xmax = x + w * 0.5;
-	m_ymin = y - h * 0.5;
-	m_ymax = y + h * 0.5;
 
 	m_draw = scene.GetDrawlist().text.insert(DRAWABLE());
 	DRAWABLE & drawref = GetDrawable(scene);
 	drawref.SetDrawOrder(z);
 
 	float textw = 0;
-	if (align == -1) x = m_xmin ;
-	else if (align == 0) x = x - textw * 0.5;
-	else if (align == 1) x = m_xmax - textw;
-	m_text_draw.Set(drawref, font, m_text, x, y, scalex, scaley, r, g, b);
-}
-
-void GUILABEL::ReviseDrawable(const std::string & text)
-{
-	assert(m_font);
-	m_text = text;
-	m_text_draw.Revise(*m_font, m_text);
+	if (align == -1) x -= w * 0.5;
+	else if (align == 0) x -= textw * 0.5;
+	else if (align == 1) x -= (textw - w * 0.5);
+	m_text_draw.Set(drawref, font, m_text, x, y, scalex, scaley, m_r, m_g, m_b);
 }
 
 void GUILABEL::SetText(const std::string & text)
@@ -75,9 +52,9 @@ void GUILABEL::SetText(const std::string & text)
 	m_text = text;
 	float x = m_x;
 	float textw = m_font->GetWidth(m_text) * m_scalex;
-	if (m_align == -1) x = m_xmin;
-	else if (m_align == 0) x = x - textw * 0.5;
-	else if (m_align == 1) x = m_xmax - textw;
+	if (m_align == -1) x -= m_w * 0.5;
+	else if (m_align == 0) x -= textw * 0.5;
+	else if (m_align == 1) x -= (textw - m_w * 0.5);
 	m_text_draw.Revise(*m_font, m_text, x, m_y, m_scalex, m_scaley);
 }
 

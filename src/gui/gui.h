@@ -15,9 +15,9 @@ class GUI
 public:
 	GUI();
 
-	std::string GetActivePageName();
+	const std::string & GetActivePageName() const;
 
-	std::string GetLastPageName();
+	const std::string & GetLastPageName() const;
 
 	SCENENODE & GetNode();
 
@@ -27,18 +27,19 @@ public:
 
 	bool Active() const;
 
+	bool GetInGame() const;
+
 	void SetInGame(bool value);
 
 	bool Load(
 		const std::list <std::string> & pagelist,
 		const std::map<std::string, std::list <std::pair <std::string, std::string> > > & valuelists,
+		const std::string & datapath,
 		const std::string & optionsfile,
-		const std::string & carcontrolsfile,
 		const std::string & menupath,
 		const std::string & languagedir,
 		const std::string & language,
 		const std::string & texpath,
-		const PATHMANAGER & pathmanager,
 		const std::string & texsize,
 		const float screenhwratio,
 		const std::map <std::string, FONT> & fonts,
@@ -50,8 +51,6 @@ public:
     /// Clears out all variables and reset the class to what it looked like when it was originally initialized.
     /// Can be called whether the GUI is currently loaded or not.
     void Unload();
-
-	void UpdateControls(const std::string & pagename, const CONFIG & controlfile);
 
 	void Deactivate();
 
@@ -78,21 +77,27 @@ public:
 	void GetOptions(std::map <std::string, std::string> & options) const;
 	void SetOptions(const std::map <std::string, std::string> & options);
 
-	void ReplaceOptionValues(
+	void SetOptionValues(
 		const std::string & optionname,
-		const std::list <std::pair <std::string, std::string> > & newvalues,
+		const std::string & curvalue,
+		std::list <std::pair <std::string, std::string> > & newvalues,
 		std::ostream & error_output);
 
 	/// returns false if the specified page/label does not exist
 	bool SetLabelText(const std::string & page, const std::string & label, const std::string & text);
 	bool GetLabelText(const std::string & page, const std::string & label, std::string & text_output);
+	
+	/// iterate trough all pages and update labels, slow
+	void SetLabelText(const std::string & page, const std::map<std::string, std::string> & label_text);
+	void SetLabelText(const std::map<std::string, std::string> & label_text);
 
 	/// returns false if the specified page/label does not exist
 	bool SetButtonEnabled(const std::string & page, const std::string & button, bool enable);
 
-	/// access option values
+	/// access options
 	std::string GetOptionValue(const std::string & name) const;
 	void SetOptionValue(const std::string & name, const std::string & value);
+	GUIOPTION & GetOption(const std::string & name);
 
 private:
 	typedef std::map<std::string, GUIOPTION> OPTIONMAP;
@@ -133,7 +138,7 @@ private:
 		std::ostream & error_output);
 
 	/// add option slots to action map
-	void RegisterOptions(std::map <std::string, Slot0*> & actionmap);
+	void RegisterOptions(VSIGNALMAP & vsignalmap, VACTIONMAP & vactionmap, ACTIONMAP & actionmap);
 };
 
 #endif

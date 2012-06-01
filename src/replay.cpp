@@ -101,7 +101,7 @@ void REPLAY::GetReadyToRecord()
 void REPLAY::StartRecording(
 	const std::string & newcartype,
 	const std::string & newcarpaint,
-	unsigned newcarcolor,
+	const MATHVECTOR<float, 3> & newcarcolor,
 	const PTree & carconfig,
 	const std::string & trackname,
 	std::ostream & error_log)
