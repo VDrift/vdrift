@@ -165,9 +165,9 @@ void SOUND::Update()
 	{
 		GetSamplerChanges();
 
-		ProcessSamplerRemove();
-
 		ProcessSamplerAdd();
+		
+		ProcessSamplerRemove();
 
 		SetSourceChanges();
 
@@ -597,9 +597,9 @@ void SOUND::Callback16bitStereo(void *myself, Uint8 *stream, int len)
 
 	ProcessSamplers(stream, len);
 
-	ProcessSamplerRemove();
-
 	ProcessSamplerAdd();
+
+	ProcessSamplerRemove();
 
 	SetSourceChanges();
 }
