@@ -152,7 +152,7 @@ solution "VDrift"
 
 	configuration {"vs*"}
 		defines {"__PRETTY_FUNCTION__=__FUNCSIG__", "_USE_MATH_DEFINES", "NOMINMAX"}
-		buildoptions {"/wd4100", "/wd4127", "/wd4244", "/wd4245", "/wd4305", "/wd4512", "/wd4800"}
+		buildoptions {"/wd4100", "/wd4127", "/wd4244", "/wd4245", "/wd4305", "/wd4355", "/wd4512", "/wd4800"}
 
 	configuration {"vs*", "Debug"}
 		linkoptions {"/NODEFAULTLIB:\"msvcrt.lib\""}
