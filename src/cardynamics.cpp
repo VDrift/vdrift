@@ -525,17 +525,6 @@ bool CARDYNAMICS::Load(
 	world.addAction(this);
 	this->world = &world;
 
-	// init body state
-	linear_velocity = body->getLinearVelocity();
-	angular_velocity = body->getAngularVelocity();
-	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
-	{
-		suspension_force[i].setValue(0, 0, 0);
-		wheel_velocity[i].setValue(0, 0, 0);
-		wheel_position[i] = LocalToWorld(suspension[i]->GetWheelPosition());
-		wheel_orientation[i] = LocalToWorld(suspension[i]->GetWheelOrientation());
-	}
-
 	// position is the center of a 2 x 4 x 1 meter box on track surface
 	// move car to fit bounding box front lower edge of the position box
 	btVector3 bmin, bmax;
@@ -548,6 +537,16 @@ bool CARDYNAMICS::Load(
 
 	// realign with ground
 	//AlignWithGround();
+
+	// init cached state
+	linear_velocity = body->getLinearVelocity();
+	angular_velocity = body->getAngularVelocity();
+	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
+	{
+		wheel_orientation[i] = LocalToWorld(suspension[i]->GetWheelOrientation());
+		wheel_velocity[i].setValue(0, 0, 0);
+		suspension_force[i].setValue(0, 0, 0);
+	}
 
 	// initialize telemetry
 	telemetry.clear();
@@ -754,13 +753,15 @@ bool CARDYNAMICS::GetTCSActive() const
 
 void CARDYNAMICS::SetPosition(const btVector3 & position)
 {
-	transform.setOrigin(position);
 	body->translate(position - body->getCenterOfMassPosition());
+
+	transform.setOrigin(position);
+	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
+		wheel_position[i] = LocalToWorld(suspension[i]->GetWheelPosition());
 }
 
 void CARDYNAMICS::AlignWithGround()
 {
-	UpdateWheelTransform();
 	UpdateWheelContacts();
 
 	btScalar min_height = 0;
@@ -779,11 +780,10 @@ void CARDYNAMICS::AlignWithGround()
 	btVector3 trimmed_position = transform.getOrigin() + delta;
 
 	SetPosition(trimmed_position);
+	UpdateWheelContacts();
+
 	body->setAngularVelocity(btVector3(0, 0, 0));
 	body->setLinearVelocity(btVector3(0, 0, 0));
-
-	UpdateWheelTransform();
-	UpdateWheelContacts();
 }
 
 // ugh, ugly code
