@@ -1775,7 +1775,7 @@ bool GAME::SetGarageCar()
 	sound.Update();
 
 	// camera setup
-	for (std::size_t i = car.GetCameras().size() - 1; i >= 0 ; --i)
+	for (size_t i = 0; i < car.GetCameras().size(); ++i)
 	{
 		active_camera = car.GetCameras()[i];
 		if (active_camera->GetName() == "orbit") break;
