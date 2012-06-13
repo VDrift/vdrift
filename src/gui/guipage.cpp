@@ -106,21 +106,16 @@ bool GUIPAGE::Load(
 	{
 		if (section->first.empty()) continue;
 
+		GUIWIDGET * widget(0);
+		std::string text, image, slider;
 		std::vector<float> xy(2, 0.5);
 		float w(0), h(0), z(0);
-		std::string color, alpha, hue, sat, val;
 		pagefile.GetParam(section, "center", xy);
 		pagefile.GetParam(section, "width", w);
 		pagefile.GetParam(section, "height", h);
 		pagefile.GetParam(section, "layer", z);
-		pagefile.GetParam(section, "color", color);
-		pagefile.GetParam(section, "alpha", alpha);
-		pagefile.GetParam(section, "hue", hue);
-		pagefile.GetParam(section, "sat", sat);
-		pagefile.GetParam(section, "val", val);
 		z = z + z0;
 
-		std::string text;
 		if (pagefile.GetParam(section, "text", text))
 		{
 			// none is reserved for empty text string
@@ -148,23 +143,15 @@ bool GUIPAGE::Load(
 			new_widget->SetupDrawable(
 				sref, font, align, scalex, scaley,
 				xy[0], xy[1], w, h, z);
-
+			
 			ConnectAction(text, vsignalmap, new_widget->set_value);
-			ConnectAction(color, vsignalmap, new_widget->set_color);
-			ConnectAction(alpha, vsignalmap, new_widget->set_alpha);
-			ConnectAction(hue, vsignalmap, new_widget->set_hue);
-			ConnectAction(sat, vsignalmap, new_widget->set_sat);
-			ConnectAction(val, vsignalmap, new_widget->set_val);
-
-			widgetmap[section->first] = new_widget;
-			widgets.push_back(new_widget);
+			widget = new_widget; 
 
 			std::string name;
 			if (pagefile.GetParam(section, "name", name))
 				labels[name] = new_widget;
 		}
 
-		std::string image;
 		if (pagefile.GetParam(section, "image", image))
 		{
 			std::string path = texpath;
@@ -174,17 +161,9 @@ bool GUIPAGE::Load(
 			new_widget->SetupDrawable(sref, content, path, xy[0], xy[1], w, h, z);
 
 			ConnectAction(image, vsignalmap, new_widget->set_image);
-			ConnectAction(color, vsignalmap, new_widget->set_color);
-			ConnectAction(alpha, vsignalmap, new_widget->set_alpha);
-			ConnectAction(hue, vsignalmap, new_widget->set_hue);
-			ConnectAction(sat, vsignalmap, new_widget->set_sat);
-			ConnectAction(val, vsignalmap, new_widget->set_val);
-
-			widgetmap[section->first] = new_widget;
-			widgets.push_back(new_widget);
+			widget = new_widget;
 		}
 
-		std::string slider;
 		if (pagefile.GetParam(section, "slider", slider))
 		{
 			bool fill = false;
@@ -204,14 +183,26 @@ bool GUIPAGE::Load(
 				fill, error_output);
 
 			ConnectAction(slider, vsignalmap, new_widget->set_value);
-			ConnectAction(color, vsignalmap, new_widget->set_color);
-			ConnectAction(alpha, vsignalmap, new_widget->set_alpha);
-			ConnectAction(hue, vsignalmap, new_widget->set_hue);
-			ConnectAction(sat, vsignalmap, new_widget->set_sat);
-			ConnectAction(val, vsignalmap, new_widget->set_val);
+			widget = new_widget;
+		}
 
-			widgetmap[section->first] = new_widget;
-			widgets.push_back(new_widget);
+		if (widget)
+		{
+			std::string color, alpha, hue, sat, val;
+			pagefile.GetParam(section, "color", color);
+			pagefile.GetParam(section, "alpha", alpha);
+			pagefile.GetParam(section, "hue", hue);
+			pagefile.GetParam(section, "sat", sat);
+			pagefile.GetParam(section, "val", val);
+
+			ConnectAction(color, vsignalmap, widget->set_color);
+			ConnectAction(alpha, vsignalmap, widget->set_alpha);
+			ConnectAction(hue, vsignalmap, widget->set_hue);
+			ConnectAction(sat, vsignalmap, widget->set_sat);
+			ConnectAction(val, vsignalmap, widget->set_val);
+			
+			widgetmap[section->first] = widget;
+			widgets.push_back(widget);
 		}
 
 		bool focus;
@@ -265,7 +256,7 @@ bool GUIPAGE::Load(
 				std::string action;
 				st >> action;
 
-				// is it a action with parameters?
+				// action with parameters?
 				size_t n = action.find(':');
 				if (n == 0 || n == std::string::npos)
 					continue;
@@ -278,7 +269,7 @@ bool GUIPAGE::Load(
 					continue;
 				}
 
-				// is it a widget property?
+				// widget property?
 				size_t m = action.find('.');
 				if (m == 0 || m == std::string::npos)
 					continue;
@@ -293,6 +284,7 @@ bool GUIPAGE::Load(
 		}
 	}
 
+	// actions with parameters
 	action_set.reserve(action_value_set.size());
 	for (std::set<ActionValue>::iterator i = action_value_set.begin(); i != action_value_set.end(); ++i)
 	{
@@ -303,6 +295,7 @@ bool GUIPAGE::Load(
 		actionmap[i->first] = &ac.action;
 	}
 
+	// widget properties(float)
 	widget_set.reserve(widget_prop_set.size());
 	for (std::set<std::string>::const_iterator i = widget_prop_set.begin(); i != widget_prop_set.end(); ++i)
 	{
