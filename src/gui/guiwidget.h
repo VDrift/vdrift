@@ -37,9 +37,8 @@ public:
 	Slot1<const std::string &> set_val;
 
 protected:
-	//static const float m_ease_factor;
-	//float m_r1, m_g1, m_b1, m_a1;
-	float m_r, m_g, m_b, m_a;
+	float m_r, m_g, m_b, m_a;	// color and alpha
+	float m_h, m_s, m_v;		// hue, sat, val cache
 	bool m_visible;
 	bool m_update;
 
