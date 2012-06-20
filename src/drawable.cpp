@@ -70,7 +70,6 @@ RenderModelExternal & DRAWABLE::generateRenderModelData(GLWrapper & gl, StringId
 	static StringId misc2Id = stringMap.addStringId("normalMapTexture");
 	static StringId transformId = stringMap.addStringId("modelMatrix");
 	static StringId colorId = stringMap.addStringId("colorTint");
-	static StringId depthOffsetId = stringMap.addStringId("depthOffset");
 
 	// textures
 	if (texturesChanged)
@@ -109,11 +108,6 @@ RenderModelExternal & DRAWABLE::generateRenderModelData(GLWrapper & gl, StringId
 			srgb_alpha[3] = a;
 			renderModel.uniforms.push_back(RenderUniformEntry(colorId, srgb_alpha, 4));
 		}
-		/*if (decal) // only add it if it's not the default of zero
-		{
-			float depthOffset = -0.005;
-			renderModel.uniforms.push_back(RenderUniformEntry(depthOffsetId, &depthOffset, 1));
-		}*/
 
 		uniformsChanged = false;
 	}
