@@ -21,8 +21,9 @@ AI_Car* AI_Car_Experimental_Factory::create(CAR * car, float difficulty){
 }
 
 AI_Car_Experimental::AI_Car_Experimental (CAR * new_car, float newdifficulty) :
-	AI_Car(new_car, newdifficulty), shift_time(0.0), use_racingline(true),
-	longitude_mu(0.9), lateral_mu(0.9), last_patch(NULL), isRecovering(false)
+	AI_Car(new_car, newdifficulty), shift_time(0.0), longitude_mu(0.9),
+	lateral_mu(0.9), last_patch(NULL), use_racingline(true),
+	isRecovering(false)
 {
 	assert(car->GetTCSEnabled());
 	assert(car->GetABSEnabled());
