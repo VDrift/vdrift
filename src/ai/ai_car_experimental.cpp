@@ -535,9 +535,9 @@ float AI_Car_Experimental::RayCastDistance( MATHVECTOR <float, 3> direction, flo
 		);
 	float depth = contact.GetDepth();
 	float dist = std::min(max_length, depth);
+#ifdef VISUALIZE_AI_DEBUG
 	MATHVECTOR<float, 3> pos_start(ToMathVector<float>(pos));
 	MATHVECTOR<float, 3> pos_end = pos_start + (ToMathVector<float>(dir) * dist);
-#ifdef VISUALIZE_AI_DEBUG
 	AddLinePoint(raycastshape, pos_start);
 	AddLinePoint(raycastshape, pos_end);
 #endif
