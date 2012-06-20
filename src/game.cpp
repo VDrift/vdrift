@@ -2435,7 +2435,7 @@ void GAME::PopulateValueLists(std::map<std::string, std::list <std::pair <std::s
 	std::vector <std::string> AI_Types(ai.ListFactoryTypes());
 
 	std::list <std::pair<std::string, std::string> > AI_Type_list;
-	for (int i=0;i< AI_Types.size(); i++)
+	for (unsigned int i=0; i < AI_Types.size(); i++)
 	{
 		AI_Type_list.push_back(std::make_pair(AI_Types[i], AI_Types[i]));
 	}
