@@ -21,8 +21,9 @@ AI_Car* AI_Car_Experimental_Factory::create(CAR * car, float difficulty){
 }
 
 AI_Car_Experimental::AI_Car_Experimental (CAR * new_car, float newdifficulty) :
-	AI_Car(new_car, newdifficulty), shift_time(0.0), use_racingline(true),
-	longitude_mu(0.9), lateral_mu(0.9), last_patch(NULL), isRecovering(false)
+	AI_Car(new_car, newdifficulty), shift_time(0.0), longitude_mu(0.9),
+	lateral_mu(0.9), last_patch(NULL), use_racingline(true),
+	isRecovering(false)
 {
 	assert(car->GetTCSEnabled());
 	assert(car->GetABSEnabled());
@@ -534,9 +535,9 @@ float AI_Car_Experimental::RayCastDistance( MATHVECTOR <float, 3> direction, flo
 		);
 	float depth = contact.GetDepth();
 	float dist = std::min(max_length, depth);
+#ifdef VISUALIZE_AI_DEBUG
 	MATHVECTOR<float, 3> pos_start(ToMathVector<float>(pos));
 	MATHVECTOR<float, 3> pos_end = pos_start + (ToMathVector<float>(dir) * dist);
-#ifdef VISUALIZE_AI_DEBUG
 	AddLinePoint(raycastshape, pos_start);
 	AddLinePoint(raycastshape, pos_end);
 #endif

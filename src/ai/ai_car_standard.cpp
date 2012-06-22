@@ -20,8 +20,8 @@ AI_Car* AI_Car_Standard_Factory::create(CAR * car, float difficulty){
 }
 
 AI_Car_Standard::AI_Car_Standard (CAR * new_car, float newdifficulty) :
-	AI_Car(new_car, newdifficulty), shift_time(0.0), use_racingline(true),
-	longitude_mu(0.9), lateral_mu(0.9), last_patch(NULL)
+	AI_Car(new_car, newdifficulty), shift_time(0.0), longitude_mu(0.9),
+	lateral_mu(0.9), last_patch(NULL), use_racingline(true)
 {
 	assert(car->GetTCSEnabled());
 	assert(car->GetABSEnabled());
