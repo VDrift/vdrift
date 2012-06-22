@@ -71,7 +71,7 @@ void AI::remove_car(CAR * car)
 {
 	assert(car);
 
-	for (unsigned int i = 0; i < AI_Cars.size(); i++)
+	for (size_t i = 0; i < AI_Cars.size(); i++)
 	{
 		if(AI_Cars[i]->GetCar() == car)
 		{
