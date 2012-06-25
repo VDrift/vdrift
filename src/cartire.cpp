@@ -236,7 +236,7 @@ btVector3 CARTIRE::GetForce(
 	btScalar Fy = Fc * sqrt((1-s) * (1-s) * cosa * cosa * Fy0 * Fy0 + sina * sina * Cs * Cs) / (Cs * cosa);
 */
 
-	btScalar Mz = PacejkaMz(sigma, alpha, Fz, gamma, friction_coeff, max_Mz);
+	btScalar Mz = PacejkaMz(alpha, Fz, gamma, friction_coeff, max_Mz);
 
 	feedback = Mz;
 	camber = inclination;
@@ -372,7 +372,7 @@ btScalar CARTIRE::PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScala
 	return Fy;
 }
 
-btScalar CARTIRE::PacejkaMz(btScalar sigma, btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff, btScalar & max_Mz) const
+btScalar CARTIRE::PacejkaMz(btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff, btScalar & max_Mz) const
 {
 	const std::vector<btScalar> & c = aligning;
 

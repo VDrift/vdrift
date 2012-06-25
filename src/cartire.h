@@ -107,7 +107,7 @@ private:
 	btScalar PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff, btScalar & max_Fy) const;
 
 	/// pacejka magic formula function, aligning
-	btScalar PacejkaMz(btScalar sigma, btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff, btScalar & max_Mz) const;
+	btScalar PacejkaMz(btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff, btScalar & max_Mz) const;
 
 	bool LoadParameters(const PTree & cfg, std::ostream & error);
 
