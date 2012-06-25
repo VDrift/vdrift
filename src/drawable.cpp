@@ -58,7 +58,7 @@ void DRAWABLE::SetAlpha(float na)
 	uniformsChanged = true;
 }
 
-RenderModelExternal & DRAWABLE::generateRenderModelData(GLWrapper & gl, StringIdMap & stringMap)
+RenderModelExternal & DRAWABLE::generateRenderModelData(StringIdMap & stringMap)
 {
 	// copy data over to the GL3V renderModel object
 	// eventually this should only be done when we update the values, but for now
