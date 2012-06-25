@@ -2127,10 +2127,10 @@ bool GAME::LoadCar(
 
 	std::string cardir = pathmanager.GetCarsDir() + "/" + carname;
 	if (!car.LoadGraphics(
-		carconf, cardir, carname, pathmanager.GetCarPartsPath(),
+		carconf, cardir, carname,
 		carcolor, carpaint, settings.GetAnisotropy(),
-		settings.GetCameraBounce(), settings.GetVehicleDamage(), debugmode,
-		content, info_output, error_output))
+		settings.GetCameraBounce(),
+		content, error_output))
 	{
 		error_output << "Error loading car: " << carname << std::endl;
 		cars.pop_back();

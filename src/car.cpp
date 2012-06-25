@@ -242,15 +242,11 @@ bool CAR::LoadGraphics(
 	const PTree & cfg,
 	const std::string & carpath,
 	const std::string & carname,
-	const std::string & partspath,
 	const MATHVECTOR <float, 3> & carcolor,
 	const std::string & carpaint,
 	const int anisotropy,
 	const float camerabounce,
-	const bool damage,
-	const bool debugmode,
 	ContentManager & content,
-	std::ostream & info_output,
 	std::ostream & error_output)
 {
 	//write_inf(cfg, std::cerr);
