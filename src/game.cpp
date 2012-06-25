@@ -1715,7 +1715,7 @@ void GAME::UpdateCarInputs(CAR & car)
 		carinputs[CARINPUT::BRAKE] = 1.0;
 	}
 
-	car.HandleInputs(carinputs, TickPeriod());
+	car.HandleInputs(carinputs);
 
 	if (carcontrols_local.first != &car)
 		return;

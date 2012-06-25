@@ -142,7 +142,7 @@ void PERFORMANCE_TESTING::TestMaxSpeed(std::ostream & info_output, std::ostream 
 	std::string downforcestr = "N/A";
 	while (t < maxtime)
 	{
-		car.HandleInputs(inputs, dt);
+		car.HandleInputs(inputs);
 
 		world.update(dt);
 
@@ -232,7 +232,7 @@ void PERFORMANCE_TESTING::TestStoppingDistance(bool abs, std::ostream & info_out
 			inputs[CARINPUT::NEUTRAL] = 1.0;
 		}
 
-		car.HandleInputs(inputs, dt);
+		car.HandleInputs(inputs);
 
 		world.update(dt);
 

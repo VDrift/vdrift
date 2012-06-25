@@ -994,7 +994,7 @@ void CAR::GetEngineSoundList(std::list <SOUNDSOURCE *> & outputlist)
 	}
 }
 
-void CAR::HandleInputs(const std::vector <float> & inputs, float dt)
+void CAR::HandleInputs(const std::vector <float> & inputs)
 {
 	assert(inputs.size() == CARINPUT::INVALID); //this looks weird, but it ensures that our inputs vector contains exactly one item per input
 

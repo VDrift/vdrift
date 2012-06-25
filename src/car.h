@@ -85,7 +85,7 @@ public:
 		return dynamics.GetWheelContact(wheel_index);
 	}
 
-	void HandleInputs(const std::vector <float> & inputs, float dt);
+	void HandleInputs(const std::vector <float> & inputs);
 
 	const std::vector<CAMERA*> & GetCameras() const
 	{
