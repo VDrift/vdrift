@@ -145,8 +145,7 @@ static bool LoadBrake(
 static bool LoadWheel(
 	const PTree & cfg,
 	const CARTIRE & tire,
-	CARWHEEL & wheel,
-	std::ostream & error_output)
+	CARWHEEL & wheel)
 {
 	btScalar mass, inertia;
 
@@ -484,7 +483,7 @@ bool CARDYNAMICS::Load(
 		if (!cfg_wheel.get("brake", cfg_brake, error)) return false;
 		if (!tire[i].Load(*cfg_tire, error)) return false;
 		if (!LoadBrake(*cfg_brake, brake[i], error)) return false;
-		if (!LoadWheel(cfg_wheel, tire[i], wheel[i], error)) return false;
+		if (!LoadWheel(cfg_wheel, tire[i], wheel[i])) return false;
 		if (!CARSUSPENSION::Load(cfg_wheel, suspension[i], error)) return false;
 		if (suspension[i]->GetMaxSteeringAngle() > maxangle)
 		{
