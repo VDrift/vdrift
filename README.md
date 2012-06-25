@@ -253,7 +253,7 @@ Injecting Build Dependencies on Mac OS
 Download platform specific build dependencies on Mac OS:
 
     cd VDrift
-    git clone https://github.com/VDrift/VDrift-mac.git
+    git clone https://github.com/VDrift/vdrift-mac.git
 
 Injecting Build Dependencies on Windows
 ---------------------------------------
