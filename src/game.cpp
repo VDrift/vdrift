@@ -361,7 +361,6 @@ void GAME::InitCoreSubsystems()
 		settings.GetFullscreen(),
 		// Explicitly disable antialiasing for the GL3 path because we're using image-based AA...
 		usingGL3 ? 0 : settings.GetAntialiasing(),
-		enableGL3,
 		info_output, error_output);
 
 	const int rendererCount = 2;
