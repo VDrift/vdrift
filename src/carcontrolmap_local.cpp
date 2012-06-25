@@ -305,14 +305,14 @@ bool CARCONTROLMAP_LOCAL::Load(const std::string & controlfile, std::ostream & i
 	return true;
 }
 
-void CARCONTROLMAP_LOCAL::Save(const std::string & controlfile, std::ostream & info_output, std::ostream & error_output)
+void CARCONTROLMAP_LOCAL::Save(const std::string & controlfile)
 {
 	CONFIG controls_config;
-	Save(controls_config, info_output, error_output);
+	Save(controls_config);
 	controls_config.Write(true, controlfile);
 }
 
-void CARCONTROLMAP_LOCAL::Save(CONFIG & controls_config, std::ostream & info_output, std::ostream & error_output)
+void CARCONTROLMAP_LOCAL::Save(CONFIG & controls_config)
 {
 	int id = 0;
 	for (std::map <CARINPUT::CARINPUT, std::vector <CONTROL> >::iterator n = controls.begin(); n != controls.end(); ++n)

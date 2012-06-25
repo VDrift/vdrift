@@ -20,9 +20,9 @@ public:
 
 	bool Load(const std::string & controlfile, std::ostream & info_output, std::ostream & error_output);
 
-	void Save(const std::string & controlfile, std::ostream & info_output, std::ostream & error_output);
+	void Save(const std::string & controlfile);
 
-	void Save(CONFIG & controlfile, std::ostream & info_output, std::ostream & error_output);
+	void Save(CONFIG & controlfile);
 
 	void AddInputKey(const std::string & inputname, bool analog, bool only_one, SDLKey key, std::ostream & error_output);
 

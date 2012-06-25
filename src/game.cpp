@@ -160,7 +160,7 @@ void GAME::Start(std::list <std::string> & args)
 	{
 		info_output << "Car control file " << pathmanager.GetCarControlsFile() << " doesn't exist; using defaults" << std::endl;
 		carcontrols_local.second.Load(pathmanager.GetDefaultCarControlsFile(), info_output, error_output);
-		carcontrols_local.second.Save(pathmanager.GetCarControlsFile(), info_output, error_output);
+		carcontrols_local.second.Save(pathmanager.GetCarControlsFile());
 	}
 
 	// Init car update manager
@@ -1210,7 +1210,7 @@ void GAME::ProcessGUIInputs()
 			gui.GetLastPageName() != "EditAnalogControl")
 		{
 			// Write out controls.
-			carcontrols_local.second.Save(pathmanager.GetCarControlsFile(), info_output, error_output);
+			carcontrols_local.second.Save(pathmanager.GetCarControlsFile());
 			//std::cout << "Control files are being saved: " << gui.GetActivePageName() << ", " << gui.GetLastPageName() << std::endl;
 		}
 	}
@@ -1332,7 +1332,7 @@ void GAME::LoadControlsIntoGUIPage(const std::string & pagename)
 	CONFIG controlfile;
 	std::map<std::string, std::list <std::pair <std::string, std::string> > > valuelists;
 	PopulateValueLists(valuelists);
-	carcontrols_local.second.Save(controlfile, info_output, error_output);
+	carcontrols_local.second.Save(controlfile);
 	gui.UpdateControls(pagename, controlfile);
 }
 
