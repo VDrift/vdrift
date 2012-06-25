@@ -2147,7 +2147,7 @@ bool GAME::LoadCar(
 		carconf, cardir, start_position, start_orientation,
 		settings.GetABS() || isai, settings.GetTCS() || isai,
 		settings.GetVehicleDamage(), content, dynamics,
-		info_output, error_output))
+        error_output))
 	{
 		error_output << "Failed to load physics for car " << carname << std::endl;
 		return false;

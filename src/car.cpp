@@ -392,7 +392,6 @@ bool CAR::LoadPhysics(
 	const bool damage,
 	ContentManager & content,
 	DynamicsWorld & world,
-	std::ostream & info_output,
 	std::ostream & error_output)
 {
 	std::string carmodel;
