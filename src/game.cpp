@@ -1257,7 +1257,7 @@ bool GAME::AssignControls()
 
 			if (eventsystem.GetJoyAxis(j, i) - controlgrab_joystick_state[j].GetAxis(i) > 0.4)
 			{
-				carcontrols_local.second.AddInputJoyAxis(controlgrab_input, controlgrab_analog,
+				carcontrols_local.second.AddInputJoyAxis(controlgrab_input,
 						controlgrab_only_one, j, i, "positive", error_output);
 
 				return true;
@@ -1265,7 +1265,7 @@ bool GAME::AssignControls()
 
 			if (eventsystem.GetJoyAxis(j, i) - controlgrab_joystick_state[j].GetAxis(i) < -0.4)
 			{
-				carcontrols_local.second.AddInputJoyAxis(controlgrab_input, controlgrab_analog,
+				carcontrols_local.second.AddInputJoyAxis(controlgrab_input,
 						controlgrab_only_one, j, i, "negative", error_output);
 
 				return true;
@@ -1303,7 +1303,7 @@ bool GAME::AssignControls()
 
 	if (!motion.empty())
 	{
-		carcontrols_local.second.AddInputMouseMotion(controlgrab_input, controlgrab_analog,
+		carcontrols_local.second.AddInputMouseMotion(controlgrab_input,
 				controlgrab_only_one, motion, error_output);
 
 		return true;

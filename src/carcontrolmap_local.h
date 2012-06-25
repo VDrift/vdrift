@@ -28,11 +28,11 @@ public:
 
 	void AddInputMouseButton(const std::string & inputname, bool analog, bool only_one, int mouse_btn, std::ostream & error_output);
 
-	void AddInputMouseMotion(const std::string & inputname, bool analog, bool only_one, const std::string & mouse_direction, std::ostream & error_output);
+	void AddInputMouseMotion(const std::string & inputname, bool only_one, const std::string & mouse_direction, std::ostream & error_output);
 
 	void AddInputJoyButton(const std::string & inputname, bool analog, bool only_one, int joy_num, int joy_btn, std::ostream & error_output);
 
-	void AddInputJoyAxis(const std::string & inputname, bool analog, bool only_one, int joy_num, int joy_axis, const std::string & axis_type, std::ostream & error_output);
+	void AddInputJoyAxis(const std::string & inputname, bool only_one, int joy_num, int joy_axis, const std::string & axis_type, std::ostream & error_output);
 
 	/// query the eventsystem for info, then return the resulting input array
 	const std::vector <float> & ProcessInput(const std::string & joytype, EVENTSYSTEM_SDL & eventsystem, float steerpos, float dt, bool joy_200, float carms, float speedsens, int screenw, int screenh, float button_ramp, bool hgateshifter);

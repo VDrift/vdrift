@@ -452,7 +452,7 @@ void CARCONTROLMAP_LOCAL::AddInputMouseButton(const std::string & inputname, boo
 	AddControl(newctrl, inputname, only_one, error_output);
 }
 
-void CARCONTROLMAP_LOCAL::AddInputMouseMotion(const std::string & inputname, bool analog, bool only_one, const std::string & mouse_direction, std::ostream & error_output)
+void CARCONTROLMAP_LOCAL::AddInputMouseMotion(const std::string & inputname, bool only_one, const std::string & mouse_direction, std::ostream & error_output)
 {
 	CONTROL newctrl;
 
@@ -468,8 +468,6 @@ void CARCONTROLMAP_LOCAL::AddInputMouseMotion(const std::string & inputname, boo
 		newctrl.mdir = CONTROL::DOWN;
 	else
 		return;
-
-	//std::cout << "Assigning input " << inputname << " keycode " << key << " onlyone " << only_one << std::endl;
 
 	AddControl(newctrl, inputname, only_one, error_output);
 }
@@ -490,7 +488,7 @@ void CARCONTROLMAP_LOCAL::AddInputJoyButton(const std::string & inputname, bool 
 	AddControl(newctrl, inputname, only_one, error_output);
 }
 
-void CARCONTROLMAP_LOCAL::AddInputJoyAxis(const std::string & inputname, bool analog, bool only_one, int joy_num, int joy_axis, const std::string & axis_type, std::ostream & error_output)
+void CARCONTROLMAP_LOCAL::AddInputJoyAxis(const std::string & inputname, bool only_one, int joy_num, int joy_axis, const std::string & axis_type, std::ostream & error_output)
 {
 	CONTROL newctrl;
 
@@ -520,8 +518,6 @@ void CARCONTROLMAP_LOCAL::AddInputJoyAxis(const std::string & inputname, bool an
 	newctrl.deadzone = ( deadzone );
 	newctrl.exponent = ( exponent );
 	newctrl.gain = ( gain );
-
-	//std::cout << "Assigning input " << inputname << " keycode " << key << " onlyone " << only_one << std::endl;
 
 	AddControl(newctrl, inputname, only_one, error_output);
 }
