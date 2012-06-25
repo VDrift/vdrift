@@ -91,7 +91,7 @@ void UPDATE_MANAGER::StartCheckForUpdates(GAME_DOWNLOADER downloader, GUI & gui)
 	autoupdate.Write(updatefile);
 
 	// attempt to download updates.config
-	DownloadRemoteConfig(downloader, gui);
+	DownloadRemoteConfig(downloader);
 }
 
 void UPDATE_MANAGER::Show(GUI & gui)
@@ -205,7 +205,7 @@ bool UPDATE_MANAGER::ApplyUpdate(GAME_DOWNLOADER downloader, GUI & gui, const PA
 	}
 
 	// check that we have a recent enough release
-	if (!DownloadRemoteConfig(downloader, gui))
+	if (!DownloadRemoteConfig(downloader))
 	{
 		error_output << "ApplyUpdate: unable to retrieve version information" << std::endl;
 		gui.ActivatePage("DataConnectionError", 0.25, error_output);
@@ -269,7 +269,7 @@ bool UPDATE_MANAGER::ApplyUpdate(GAME_DOWNLOADER downloader, GUI & gui, const PA
 	return true;
 }
 
-bool UPDATE_MANAGER::DownloadRemoteConfig(GAME_DOWNLOADER downloader, GUI & gui)
+bool UPDATE_MANAGER::DownloadRemoteConfig(GAME_DOWNLOADER downloader)
 {
 	if (remoteconfig.get())
 	{

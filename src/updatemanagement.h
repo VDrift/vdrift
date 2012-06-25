@@ -63,7 +63,7 @@ private:
 	// retrieve updates.config from HEAD in the SVN data repository and store it in remoteconfig
 	// if remoteconfig is already set, returns true immediately
 	// returns true on success
-	bool DownloadRemoteConfig(GAME_DOWNLOADER downloader, GUI & gui);
+	bool DownloadRemoteConfig(GAME_DOWNLOADER downloader);
 };
 
 #endif
