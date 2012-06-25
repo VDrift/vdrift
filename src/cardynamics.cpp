@@ -1250,7 +1250,7 @@ void CARDYNAMICS::ComputeSuspensionDisplacement ( int i, btScalar dt )
 
 	btScalar relative_displacement = wheel_contact[i].GetDepth() - 2 * tire[i].GetRadius() - bumpoffset;
 	assert ( !isnan ( relative_displacement ) );
-	suspension[i]->SetDisplacement ( suspension[i]->GetDisplacement()-relative_displacement, dt );
+	suspension[i]->SetDisplacement ( suspension[i]->GetDisplacement()-relative_displacement );
 	assert ( !isnan ( suspension[i]->GetDisplacement() ) );
 }
 

@@ -74,7 +74,7 @@ public:
 	/// steering: -1.0 is maximum right lock and 1.0 is maximum left lock
 	virtual void SetSteering(const btScalar & value);
 
-	void SetDisplacement ( const btScalar & value, btScalar dt );
+	void SetDisplacement ( const btScalar & value );
 
 	btScalar GetForce ( btScalar dt );
 
