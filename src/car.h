@@ -41,7 +41,6 @@ public:
 		const std::string & carpath,
 		const std::string & carname,
 		ContentManager & content,
-		std::ostream & info_output,
 		std::ostream & error_output);
 
 	bool LoadPhysics(

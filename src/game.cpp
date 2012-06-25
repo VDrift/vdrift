@@ -2137,7 +2137,7 @@ bool GAME::LoadCar(
 		return false;
 	}
 
-	if (sound.Enabled() && !car.LoadSounds(cardir, carname, content, info_output, error_output))
+	if (sound.Enabled() && !car.LoadSounds(cardir, carname, content, error_output))
 	{
 		error_output << "Failed to load sounds for car " << carname << std::endl;
 		return false;
