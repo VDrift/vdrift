@@ -46,7 +46,7 @@ void WINDOW_SDL::Init(const std::string & windowcaption, unsigned int resx, unsi
 		assert(0);
 	}
 
-	ChangeDisplay(resx, resy, bpp, depthbpp, fullscreen, antialiasing, enableGL3, info_output, error_output);
+	ChangeDisplay(resx, resy, bpp, depthbpp, fullscreen, antialiasing, info_output, error_output);
 
 	SDL_WM_SetCaption(windowcaption.c_str(), NULL);
 
@@ -111,7 +111,7 @@ float WINDOW_SDL::GetWHRatio() const
     return (float)w/(float)h;
 }
 
-void WINDOW_SDL::ChangeDisplay(const int width, const int height, const int bpp, const int dbpp, const bool fullscreen, unsigned int antialiasing, bool enableGL3, std::ostream & info_output, std::ostream & error_output)
+void WINDOW_SDL::ChangeDisplay(const int width, const int height, const int bpp, const int dbpp, const bool fullscreen, unsigned int antialiasing, std::ostream & info_output, std::ostream & error_output)
 {
 	const SDL_VideoInfo *videoInfo = SDL_GetVideoInfo();
 

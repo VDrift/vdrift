@@ -45,7 +45,7 @@ private:
 	bool initialized;
 	unsigned int fsaa;
 
-	void ChangeDisplay(const int width, const int height, const int bpp, const int dbpp, const bool fullscreen, unsigned int antialiasing, bool enableGL3, std::ostream & info_output, std::ostream & error_output);
+	void ChangeDisplay(const int width, const int height, const int bpp, const int dbpp, const bool fullscreen, unsigned int antialiasing, std::ostream & info_output, std::ostream & error_output);
 };
 
 #endif
