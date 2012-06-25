@@ -1108,7 +1108,7 @@ void CARDYNAMICS::UpdateWheelTransform()
 	}
 }
 
-void CARDYNAMICS::ApplyEngineTorqueToBody ( btVector3 & force, btVector3 & torque )
+void CARDYNAMICS::ApplyEngineTorqueToBody ( btVector3 & torque )
 {
 	btVector3 engine_torque ( -engine.GetTorque(), 0, 0 );
 	assert ( !isnan ( engine_torque[0] ) );
