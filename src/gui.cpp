@@ -141,10 +141,8 @@ void GUI::DeactivateAll()
 }
 
 std::list <std::string> GUI::ProcessInput(
-	bool movedown, bool moveup,
 	float cursorx, float cursory,
 	bool cursordown, bool cursorjustup,
-	float screenhwratio,
 	std::ostream & error_output)
 {
 	std::list <std::pair <std::string, bool> > actions;

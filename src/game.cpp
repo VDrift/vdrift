@@ -1160,13 +1160,10 @@ void GAME::ProcessGUIInputs()
 		{
 			// Send input to the gui and get output into the gui_actions list.
 			gui_actions = gui.ProcessInput(
-				eventsystem.GetKeyState(SDLK_UP).just_down,
-				eventsystem.GetKeyState(SDLK_DOWN).just_down,
 				eventsystem.GetMousePosition()[0] / (float)window.GetW(),
 				eventsystem.GetMousePosition()[1] / (float)window.GetH(),
 				eventsystem.GetMouseButtonState(1).down,
 				eventsystem.GetMouseButtonState(1).just_up,
-				(float)window.GetH() / window.GetW(),
 				error_output);
 		}
 

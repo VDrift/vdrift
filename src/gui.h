@@ -91,10 +91,8 @@ public:
 	/// or joystick, while the cursor variables are set for mouse navigation.
 	/// returns a list of actions for processing by the game.
 	std::list <std::string> ProcessInput(
-		bool movedown, bool moveup,
 		float cursorx, float cursory,
 		bool cursordown, bool cursorjustup,
-		float screenhwratio,
 		std::ostream & error_output);
 
 	void Update(float dt);
