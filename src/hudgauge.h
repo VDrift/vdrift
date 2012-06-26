@@ -33,7 +33,7 @@ public:
 		float endvalue,
 		float valuedelta);
 
-	void Update(SCENENODE & parent, float value);
+	void Update(float value);
 
 private:
 	keyed_container<DRAWABLE>::handle pointer_draw;
