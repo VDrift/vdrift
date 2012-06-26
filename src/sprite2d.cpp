@@ -56,8 +56,7 @@ bool SPRITE2D::Load(
 bool SPRITE2D::Load(
 	SCENENODE & parent,
 	std::tr1::shared_ptr<TEXTURE> texture2d,
-	float draworder,
-	std::ostream & error_output)
+	float draworder)
 {
 	Unload(parent);
 
