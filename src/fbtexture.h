@@ -63,7 +63,7 @@ class FBTEXTURE : public TEXTURE_INTERFACE
 			depthcomparisonenabled(true)
 			{}
 		~FBTEXTURE() {DeInit();}
-		void Init(GLSTATEMANAGER & glstate, int sizex, int sizey, TARGET target, FORMAT newformat, bool filternearest, bool usemipmap, std::ostream & error_output, int newmultisample = 0, bool newdepthcomparisonenabled = true);
+		void Init(int sizex, int sizey, TARGET target, FORMAT newformat, bool filternearest, bool usemipmap, std::ostream & error_output, int newmultisample = 0, bool newdepthcomparisonenabled = true);
 		void DeInit();
 		virtual void Activate() const;
 		virtual void Deactivate() const;
