@@ -20,10 +20,6 @@
 #ifndef _AI_H
 #define _AI_H
 
-//#include "carinput.h"
-//#include "reseatable_reference.h"
-//#include "scenenode.h"
-
 #include "car.h"
 
 #include <string>
