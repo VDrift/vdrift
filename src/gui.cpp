@@ -153,8 +153,8 @@ std::list <std::string> GUI::ProcessInput(
 	{
 		actions = active_page->second.ProcessInput(
 			node,
-			movedown, moveup, cursorx, cursory,
-			cursordown, cursorjustup, screenhwratio);
+			cursorx, cursory,
+			cursordown, cursorjustup);
 	}
 
 	std::list <std::string> gameactions;
