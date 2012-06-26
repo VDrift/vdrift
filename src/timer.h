@@ -18,7 +18,7 @@ public:
 
 	~TIMER() {Unload();}
 
-	bool Load(const std::string & trackrecordspath, float stagingtime, std::ostream & error_output);
+	bool Load(const std::string & trackrecordspath, float stagingtime);
 
 	///add a car of the given type and return the integer identifier that the track system will use
 	int AddCar(const std::string & cartype);

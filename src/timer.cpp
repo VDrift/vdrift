@@ -9,7 +9,7 @@ using std::endl;
 using std::vector;
 using std::stringstream;
 
-bool TIMER::Load(const std::string & trackrecordspath, float stagingtime, std::ostream & error_output)
+bool TIMER::Load(const std::string & trackrecordspath, float stagingtime)
 {
 	Unload();
 
