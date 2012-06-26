@@ -309,7 +309,7 @@ void CARCONTROLMAP_LOCAL::Save(const std::string & controlfile)
 {
 	CONFIG controls_config;
 	Save(controls_config);
-	controls_config.Write(true, controlfile);
+	controls_config.Write(controlfile);
 }
 
 void CARCONTROLMAP_LOCAL::Save(CONFIG & controls_config)

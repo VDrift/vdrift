@@ -36,8 +36,7 @@ void TIMER::Unload()
 {
 	if (loaded)
 	{
-		trackrecords.Write(true, trackrecordsfile);
-		//std::cout << "Writing records to: " << trackrecordsfile << endl;
+		trackrecords.Write(trackrecordsfile);
 	}
 	trackrecords.Clear();
 	loaded = false;

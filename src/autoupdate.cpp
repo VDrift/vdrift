@@ -62,7 +62,7 @@ bool AUTOUPDATE::Write(const std::string & path) const
 	conf.SetParam("", "url", url);
 
 	// Write to disk.
-	return conf.Write(true, path);
+	return conf.Write(path);
 }
 
 bool AUTOUPDATE::Load(const std::string & path)
