@@ -149,8 +149,6 @@ void ROADSTRIP::CreateRacingLine(
 		} else {
 			nextpatch = &(*patches.begin());
 		}
-		i->AddRacinglineScenenode(parentnode, nextpatch, racingline_texture, error_output);
+		i->AddRacinglineScenenode(parentnode, nextpatch, racingline_texture);
 	}
 }
-
-
