@@ -47,9 +47,7 @@ bool GUI::Load(
 	const std::string & language,
 	const std::string & texpath,
 	const PATHMANAGER & pathmanager,
-	const std::string & texsize,
 	const float screenhwratio,
-	const std::map <std::string, FONT> & fonts,
 	ContentManager & content,
 	std::ostream & info_output,
 	std::ostream & error_output)

@@ -467,9 +467,7 @@ bool GAME::InitGUI()
 			settings.GetLanguage(),
 			pathmanager.GetGUITextureDir(settings.GetSkin()),
 			pathmanager,
-			settings.GetTextureSize(),
 			(float)window.GetH()/window.GetW(),
-			fonts,
 			content,
 			info_output,
 			error_output))
