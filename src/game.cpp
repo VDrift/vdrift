@@ -1028,7 +1028,7 @@ void GAME::UpdateTimer()
 		if (advance)
 		{
 			// Only count it if the car's current sector isn't -1 which is the default value when the car is loaded...
-			timer.Lap(carid, i->GetSector(), nextsector, (i->GetSector() >= 0));
+			timer.Lap(carid, nextsector, (i->GetSector() >= 0));
 			i->SetSector(nextsector);
 		}
 

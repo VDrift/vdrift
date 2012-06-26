@@ -64,7 +64,7 @@ void TIMER::Tick(float dt)
 		i->Tick(elapsed_time);
 }
 
-void TIMER::Lap(const unsigned int carid, const int prevsector, const int nextsector, const bool countit)
+void TIMER::Lap(const unsigned int carid, const int nextsector, const bool countit)
 {
 	assert(carid < car.size());
 

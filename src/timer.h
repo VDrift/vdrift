@@ -31,7 +31,7 @@ public:
 
 	void Tick(float dt);
 
-	void Lap(const unsigned int carid, const int prevsector, const int nextsector, const bool countit);
+	void Lap(const unsigned int carid, const int nextsector, const bool countit);
 
 	void UpdateDistance(const unsigned int carid, const double newdistance);
 
