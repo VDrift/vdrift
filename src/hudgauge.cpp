@@ -196,7 +196,7 @@ void HUDGAUGE::Revise(
 		startangle, endangle, startvalue, endvalue, valuedelta);
 }
 
-void HUDGAUGE::Update(SCENENODE & parent, float value)
+void HUDGAUGE::Update(float value)
 {
 	float angle = value * scale + startangle;
 	pointer_rotated = pointer;

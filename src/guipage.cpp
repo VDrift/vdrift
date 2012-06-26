@@ -542,8 +542,8 @@ void GUIPAGE::UpdateOptions(SCENENODE & parent, bool save_to, std::map<std::stri
 }
 
 std::list <std::pair <std::string, bool> > GUIPAGE::ProcessInput(
-	SCENENODE & parent, bool movedown, bool moveup, float cursorx, float cursory,
-	bool cursordown, bool cursorjustup, float screenhwratio)
+	SCENENODE & parent, float cursorx, float cursory,
+	bool cursordown, bool cursorjustup)
 {
 	assert(tooltip_widget);
 

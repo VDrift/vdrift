@@ -52,10 +52,8 @@ public:
 	///returns a list of actions that were generated
 	std::list <std::pair <std::string, bool> > ProcessInput(
 		SCENENODE & parent,
-		bool movedown, bool moveup,
 		float cursorx, float cursory,
-		bool cursordown, bool cursorjustup,
-		float screenhwratio);
+		bool cursordown, bool cursorjustup);
 
 	///tell all child widgets to do as update tick
 	void Update(SCENENODE & parent, float dt);

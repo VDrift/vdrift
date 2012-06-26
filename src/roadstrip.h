@@ -29,8 +29,7 @@ public:
 
 	void CreateRacingLine(
 		SCENENODE & parentnode,
-		std::tr1::shared_ptr<TEXTURE> racingline_texture,
-		std::ostream & error_output);
+		std::tr1::shared_ptr<TEXTURE> racingline_texture);
 
 	bool GetClosed() const
 	{

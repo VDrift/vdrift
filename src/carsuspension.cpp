@@ -66,7 +66,7 @@ void CARSUSPENSION::SetSteering(const btScalar & value)
 	orientation = steer * orientation_ext;
 }
 
-void CARSUSPENSION::SetDisplacement ( const btScalar & value, btScalar dt )
+void CARSUSPENSION::SetDisplacement ( const btScalar & value )
 {
 	last_displacement = displacement;
 	displacement = value;

@@ -9,7 +9,7 @@ using std::endl;
 using std::vector;
 using std::stringstream;
 
-bool TIMER::Load(const std::string & trackrecordspath, float stagingtime, std::ostream & error_output)
+bool TIMER::Load(const std::string & trackrecordspath, float stagingtime)
 {
 	Unload();
 
@@ -36,8 +36,7 @@ void TIMER::Unload()
 {
 	if (loaded)
 	{
-		trackrecords.Write(true, trackrecordsfile);
-		//std::cout << "Writing records to: " << trackrecordsfile << endl;
+		trackrecords.Write(trackrecordsfile);
 	}
 	trackrecords.Clear();
 	loaded = false;
@@ -65,7 +64,7 @@ void TIMER::Tick(float dt)
 		i->Tick(elapsed_time);
 }
 
-void TIMER::Lap(const unsigned int carid, const int prevsector, const int nextsector, const bool countit)
+void TIMER::Lap(const unsigned int carid, const int nextsector, const bool countit)
 {
 	assert(carid < car.size());
 

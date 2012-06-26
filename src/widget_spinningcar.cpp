@@ -210,11 +210,11 @@ void WIDGET_SPINNINGCAR::Load(SCENENODE & parent)
 	std::string partspath = pathptr->GetCarPartsDir();
 	std::string cardir = pathptr->GetCarsDir()+"/"+carname;
 	if (!car.back().LoadGraphics(
-			carconf, cardir, carname, partspath,
+			carconf, cardir, carname,
 			MATHVECTOR<float, 3>(r, g, b),
 			carpaint, anisotropy,
-			camerabounce, damage, debugmode,
-			*contentptr, loadlog, loadlog))
+			camerabounce,
+			*contentptr, loadlog))
 	{
 		*errptr << "Couldn't load spinning car: " << carname << std::endl;
 		if (!loadlog.str().empty())

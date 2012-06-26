@@ -145,8 +145,7 @@ static bool LoadBrake(
 static bool LoadWheel(
 	const PTree & cfg,
 	const CARTIRE & tire,
-	CARWHEEL & wheel,
-	std::ostream & error_output)
+	CARWHEEL & wheel)
 {
 	btScalar mass, inertia;
 
@@ -484,7 +483,7 @@ bool CARDYNAMICS::Load(
 		if (!cfg_wheel.get("brake", cfg_brake, error)) return false;
 		if (!tire[i].Load(*cfg_tire, error)) return false;
 		if (!LoadBrake(*cfg_brake, brake[i], error)) return false;
-		if (!LoadWheel(cfg_wheel, tire[i], wheel[i], error)) return false;
+		if (!LoadWheel(cfg_wheel, tire[i], wheel[i])) return false;
 		if (!CARSUSPENSION::Load(cfg_wheel, suspension[i], error)) return false;
 		if (suspension[i]->GetMaxSteeringAngle() > maxangle)
 		{
@@ -1109,7 +1108,7 @@ void CARDYNAMICS::UpdateWheelTransform()
 	}
 }
 
-void CARDYNAMICS::ApplyEngineTorqueToBody ( btVector3 & force, btVector3 & torque )
+void CARDYNAMICS::ApplyEngineTorqueToBody ( btVector3 & torque )
 {
 	btVector3 engine_torque ( -engine.GetTorque(), 0, 0 );
 	assert ( !isnan ( engine_torque[0] ) );
@@ -1251,7 +1250,7 @@ void CARDYNAMICS::ComputeSuspensionDisplacement ( int i, btScalar dt )
 
 	btScalar relative_displacement = wheel_contact[i].GetDepth() - 2 * tire[i].GetRadius() - bumpoffset;
 	assert ( !isnan ( relative_displacement ) );
-	suspension[i]->SetDisplacement ( suspension[i]->GetDisplacement()-relative_displacement, dt );
+	suspension[i]->SetDisplacement ( suspension[i]->GetDisplacement()-relative_displacement );
 	assert ( !isnan ( suspension[i]->GetDisplacement() ) );
 }
 

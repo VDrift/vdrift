@@ -141,8 +141,8 @@ void WIDGET_SLIDER::SetupDrawable(
 	h = nh;
 	setting = newsetting;
 
-	wedge.Load(scene, wedgetex, draworder, error_output);
-	cursor.Load(scene, cursortex, draworder + 1, error_output);
+	wedge.Load(scene, wedgetex, draworder);
+	cursor.Load(scene, cursortex, draworder + 1);
 
 	corner1.Set(x - w * 4.0 * 0.5, y - h * 0.5);
 	corner2.Set(x + w * 4.0 * 0.5, y + h * 0.5);

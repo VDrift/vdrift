@@ -183,8 +183,7 @@ public:
 		const std::list <std::string> & texlist,
 		const std::string & texpath,
 		int anisotropy,
-		ContentManager & content,
-		std::ostream & error_output);
+		ContentManager & content);
 
 	void Update(
 		float dt,
@@ -195,9 +194,6 @@ public:
 	void AddParticle(
 		const MATHVECTOR <float,3> & position,
 		float newspeed,
-		float newtrans,
-		float newlong,
-		float newsize,
 		bool testonly=false);
 
 	void Clear();

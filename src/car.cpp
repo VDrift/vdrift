@@ -242,15 +242,11 @@ bool CAR::LoadGraphics(
 	const PTree & cfg,
 	const std::string & carpath,
 	const std::string & carname,
-	const std::string & partspath,
 	const MATHVECTOR <float, 3> & carcolor,
 	const std::string & carpaint,
 	const int anisotropy,
 	const float camerabounce,
-	const bool damage,
-	const bool debugmode,
 	ContentManager & content,
-	std::ostream & info_output,
 	std::ostream & error_output)
 {
 	//write_inf(cfg, std::cerr);
@@ -396,7 +392,6 @@ bool CAR::LoadPhysics(
 	const bool damage,
 	ContentManager & content,
 	DynamicsWorld & world,
-	std::ostream & info_output,
 	std::ostream & error_output)
 {
 	std::string carmodel;
@@ -422,7 +417,6 @@ bool CAR::LoadSounds(
 	const std::string & carpath,
 	const std::string & carname,
 	ContentManager & content,
-	std::ostream & info_output,
 	std::ostream & error_output)
 {
 	//check for sound specification file
@@ -998,7 +992,7 @@ void CAR::GetEngineSoundList(std::list <SOUNDSOURCE *> & outputlist)
 	}
 }
 
-void CAR::HandleInputs(const std::vector <float> & inputs, float dt)
+void CAR::HandleInputs(const std::vector <float> & inputs)
 {
 	assert(inputs.size() == CARINPUT::INVALID); //this looks weird, but it ensures that our inputs vector contains exactly one item per input
 

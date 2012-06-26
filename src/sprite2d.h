@@ -59,14 +59,12 @@ public:
 		const std::string & texturepath,
 		const std::string & texturename,
 		ContentManager & content,
-		float draworder,
-		std::ostream & error_output);
+        float draworder);
 
 	bool Load(
 		SCENENODE & parent,
 		std::tr1::shared_ptr<TEXTURE> texture2d,
-		float draworder,
-		std::ostream & error_output);
+		float draworder);
 
 	///get the transformation data associated with this sprite's scenenode.
 	///this can be used to get the current translation and rotation or set new ones.

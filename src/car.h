@@ -30,22 +30,17 @@ public:
 		const PTree & cfg,
 		const std::string & carpath,
 		const std::string & carname,
-		const std::string & partspath,
 		const MATHVECTOR <float, 3> & carcolor,
 		const std::string & carpaint,
 		const int anisotropy,
 		const float camerabounce,
-		const bool damage,
-		const bool debugmode,
 		ContentManager & content,
-		std::ostream & info_output,
 		std::ostream & error_output);
 
 	bool LoadSounds(
 		const std::string & carpath,
 		const std::string & carname,
 		ContentManager & content,
-		std::ostream & info_output,
 		std::ostream & error_output);
 
 	bool LoadPhysics(
@@ -58,7 +53,6 @@ public:
 		const bool damage,
 		ContentManager & content,
 		DynamicsWorld & world,
-		std::ostream & info_output,
 		std::ostream & error_output);
 
 	// change car color
@@ -89,7 +83,7 @@ public:
 		return dynamics.GetWheelContact(wheel_index);
 	}
 
-	void HandleInputs(const std::vector <float> & inputs, float dt);
+	void HandleInputs(const std::vector <float> & inputs);
 
 	const std::vector<CAMERA*> & GetCameras() const
 	{

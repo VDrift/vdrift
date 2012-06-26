@@ -7,8 +7,7 @@ bool PARTICLE_SYSTEM::Load(
 	const std::list <std::string> & texlist,
 	const std::string & texpath,
 	int anisotropy,
-	ContentManager & content,
-	std::ostream & error_output)
+	ContentManager & content)
 {
 	TEXTUREINFO texinfo;
 	texinfo.anisotropy = anisotropy;
@@ -83,9 +82,6 @@ void PARTICLE_SYSTEM::Update(float dt, const QUATERNION <float> & camdir, const 
 void PARTICLE_SYSTEM::AddParticle(
 	const MATHVECTOR <float,3> & position,
 	float newspeed,
-	float newtrans,
-	float newlong,
-	float newsize,
 	bool testonly)
 {
 	if (cur_texture == textures.end())
@@ -145,13 +141,13 @@ QT_TEST(particle_test)
 	PARTICLE_SYSTEM s;
 	ContentManager c(out);
 	s.SetParameters(1.0,1.0,0.5,1.0,1.0,1.0,1.0,1.0,MATHVECTOR<float,3>(0,1,0));
-	s.Load(std::list<std::string> (), std::string(), 0, c, out);
+	s.Load(std::list<std::string> (), std::string(), 0, c);
 
 	//test basic particle management:  adding particles and letting them expire and get removed over time
 	QT_CHECK_EQUAL(s.NumParticles(),0);
-	s.AddParticle(MATHVECTOR<float,3>(0,0,0),0,0,0,0,true);
+	s.AddParticle(MATHVECTOR<float,3>(0,0,0),0,true);
 	QT_CHECK_EQUAL(s.NumParticles(),1);
-	s.AddParticle(MATHVECTOR<float,3>(0,0,0),1,1,1,1,true);
+	s.AddParticle(MATHVECTOR<float,3>(0,0,0),1,true);
 	QT_CHECK_EQUAL(s.NumParticles(),2);
 	QUATERNION <float> dir;
 	MATHVECTOR <float, 3> pos;

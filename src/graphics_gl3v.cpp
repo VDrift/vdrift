@@ -363,7 +363,7 @@ void GRAPHICS_GL3V::assembleDrawList(const std::vector <DRAWABLE*> & drawables, 
 		for (std::vector <DRAWABLE*>::const_iterator i = drawables.begin(); i != drawables.end(); i++)
 		{
 			if (!frustumCull(*i, *frustum) && !contributionCull(*i, camPos))
-				out.push_back(&(*i)->generateRenderModelData(gl, stringMap));
+				out.push_back(&(*i)->generateRenderModelData(stringMap));
 		}
 	}
 	else if (frustum)
@@ -371,14 +371,14 @@ void GRAPHICS_GL3V::assembleDrawList(const std::vector <DRAWABLE*> & drawables, 
 		for (std::vector <DRAWABLE*>::const_iterator i = drawables.begin(); i != drawables.end(); i++)
 		{
 			if (!frustumCull(*i, *frustum))
-				out.push_back(&(*i)->generateRenderModelData(gl, stringMap));
+				out.push_back(&(*i)->generateRenderModelData(stringMap));
 		}
 	}
 	else
 	{
 		for (std::vector <DRAWABLE*>::const_iterator i = drawables.begin(); i != drawables.end(); i++)
 		{
-			out.push_back(&(*i)->generateRenderModelData(gl, stringMap));
+			out.push_back(&(*i)->generateRenderModelData(stringMap));
 		}
 	}
 }
@@ -400,14 +400,14 @@ void GRAPHICS_GL3V::assembleDrawList(const AABB_SPACE_PARTITIONING_NODE_ADAPTER 
 		for (std::vector <DRAWABLE*>::const_iterator i = drawables.begin(); i != drawables.end(); i++)
 		{
 			if (!contributionCull(*i, camPos))
-				out.push_back(&(*i)->generateRenderModelData(gl, stringMap));
+				out.push_back(&(*i)->generateRenderModelData(stringMap));
 		}
 	}
 	else
 	{
 		for (std::vector <DRAWABLE*>::const_iterator i = drawables.begin(); i != drawables.end(); i++)
 		{
-			out.push_back(&(*i)->generateRenderModelData(gl, stringMap));
+			out.push_back(&(*i)->generateRenderModelData(stringMap));
 		}
 	}
 }

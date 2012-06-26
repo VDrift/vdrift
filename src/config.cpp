@@ -236,12 +236,12 @@ void CONFIG::DebugPrint(std::ostream & out, bool with_brackets) const
 	}
 }
 
-bool CONFIG::Write(bool with_brackets) const
+bool CONFIG::Write() const
 {
-	return Write(with_brackets, filename);
+	return Write(filename);
 }
 
-bool CONFIG::Write(bool with_brackets, std::string save_as) const
+bool CONFIG::Write(std::string save_as) const
 {
 	std::ofstream f(save_as.c_str());
 	if (!f) return false;

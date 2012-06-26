@@ -221,7 +221,7 @@ protected:
 
 	void UpdateWheelTransform();
 
-	void ApplyEngineTorqueToBody ( btVector3 & force, btVector3 & torque );
+	void ApplyEngineTorqueToBody ( btVector3 & torque );
 
 	void ApplyAerodynamicsToBody ( btVector3 & force, btVector3 & torque );
 

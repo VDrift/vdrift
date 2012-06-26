@@ -1105,7 +1105,7 @@ bool TRACK::LOADER::CreateRacingLines()
 		}
 		//else error_output << "Couldn't create racing line for roadstrip " << n << std::endl;
 
-		i->CreateRacingLine(data.racingline_node, data.racingline_texture, error_output);
+		i->CreateRacingLine(data.racingline_node, data.racingline_texture);
 	}
 
 	return true;

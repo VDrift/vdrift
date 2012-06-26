@@ -272,11 +272,11 @@ void WIDGET_COLORPICKER::SetupDrawable(
 
 	setting = set;
 
-	sv_bg.Load(scene, bgtex, draworder-1, error_output);
-	sv_plane.Load(scene, svtex, draworder, error_output);
-	h_bar.Load(scene, htex, draworder, error_output);
-	sv_cursor.Load(scene, cursortex, draworder+1, error_output);
-	h_cursor.Load(scene, cursortex, draworder+1, error_output);
+	sv_bg.Load(scene, bgtex, draworder-1);
+	sv_plane.Load(scene, svtex, draworder);
+	h_bar.Load(scene, htex, draworder);
+	sv_cursor.Load(scene, cursortex, draworder+1);
+	h_cursor.Load(scene, cursortex, draworder+1);
 
 	size2 = h / 16;
 	h_min[0] = x + w - 3 * size2;

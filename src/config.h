@@ -28,9 +28,9 @@ public:
 
 	void DebugPrint(std::ostream & out, bool with_brackets = true) const;
 
-	bool Write(bool with_brackets = true) const;
+	bool Write() const;
 
-	bool Write(bool with_brackets, std::string save_as) const;
+	bool Write(std::string save_as) const;
 
 	void SuppressError(bool newse) {SUPPRESS_ERROR = newse;}
 
