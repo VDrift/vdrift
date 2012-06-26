@@ -82,9 +82,6 @@ void PARTICLE_SYSTEM::Update(float dt, const QUATERNION <float> & camdir, const 
 void PARTICLE_SYSTEM::AddParticle(
 	const MATHVECTOR <float,3> & position,
 	float newspeed,
-	float newtrans,
-	float newlong,
-	float newsize,
 	bool testonly)
 {
 	if (cur_texture == textures.end())
@@ -148,9 +145,9 @@ QT_TEST(particle_test)
 
 	//test basic particle management:  adding particles and letting them expire and get removed over time
 	QT_CHECK_EQUAL(s.NumParticles(),0);
-	s.AddParticle(MATHVECTOR<float,3>(0,0,0),0,0,0,0,true);
+	s.AddParticle(MATHVECTOR<float,3>(0,0,0),0,true);
 	QT_CHECK_EQUAL(s.NumParticles(),1);
-	s.AddParticle(MATHVECTOR<float,3>(0,0,0),1,1,1,1,true);
+	s.AddParticle(MATHVECTOR<float,3>(0,0,0),1,true);
 	QT_CHECK_EQUAL(s.NumParticles(),2);
 	QUATERNION <float> dir;
 	MATHVECTOR <float, 3> pos;

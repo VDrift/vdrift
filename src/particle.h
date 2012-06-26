@@ -194,9 +194,6 @@ public:
 	void AddParticle(
 		const MATHVECTOR <float,3> & position,
 		float newspeed,
-		float newtrans,
-		float newlong,
-		float newsize,
 		bool testonly=false);
 
 	void Clear();

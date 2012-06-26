@@ -2697,7 +2697,7 @@ void GAME::AddTireSmokeParticles(float dt, CAR & car)
 			{
 				tire_smoke.AddParticle(
 					car.GetWheelPosition(WHEEL_POSITION(i)) - MATHVECTOR<float,3>(0,0,car.GetTireRadius(WHEEL_POSITION(i))),
-					0.5, 0.7, 1.0, 0.03);
+					0.5);
 			}
 		}
 	}
