@@ -59,8 +59,7 @@ public:
 		const std::string & texturepath,
 		const std::string & texturename,
 		ContentManager & content,
-        float draworder,
-        std::ostream & error_output);
+        float draworder);
 
 	bool Load(
 		SCENENODE & parent,
