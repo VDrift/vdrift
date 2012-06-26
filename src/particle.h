@@ -183,8 +183,7 @@ public:
 		const std::list <std::string> & texlist,
 		const std::string & texpath,
 		int anisotropy,
-		ContentManager & content,
-		std::ostream & error_output);
+		ContentManager & content);
 
 	void Update(
 		float dt,

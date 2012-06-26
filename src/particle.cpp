@@ -7,8 +7,7 @@ bool PARTICLE_SYSTEM::Load(
 	const std::list <std::string> & texlist,
 	const std::string & texpath,
 	int anisotropy,
-	ContentManager & content,
-	std::ostream & error_output)
+	ContentManager & content)
 {
 	TEXTUREINFO texinfo;
 	texinfo.anisotropy = anisotropy;
@@ -145,7 +144,7 @@ QT_TEST(particle_test)
 	PARTICLE_SYSTEM s;
 	ContentManager c(out);
 	s.SetParameters(1.0,1.0,0.5,1.0,1.0,1.0,1.0,1.0,MATHVECTOR<float,3>(0,1,0));
-	s.Load(std::list<std::string> (), std::string(), 0, c, out);
+	s.Load(std::list<std::string> (), std::string(), 0, c);
 
 	//test basic particle management:  adding particles and letting them expire and get removed over time
 	QT_CHECK_EQUAL(s.NumParticles(),0);

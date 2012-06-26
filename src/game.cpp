@@ -265,8 +265,7 @@ void GAME::Start(std::list <std::string> & args)
 			smoketexlist,
 			pathmanager.GetTireSmokeTextureDir(),
 			settings.GetAnisotropy(),
-			content,
-			error_output))
+			content))
 	{
 		error_output << "Error loading tire smoke particle system" << std::endl;
 		return;
