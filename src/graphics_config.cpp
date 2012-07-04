@@ -95,7 +95,7 @@ std::string skipUntil(std::istream & in, const std::string & skipchars, int * li
 }
 
 // reads lines as value=whatever pairs until the end of the file or until a line that begins with [ is encountered
-std::map <std::string, std::string> readValuePairs(std::istream & f, std::ostream & error_output, int & line)
+std::map <std::string, std::string> readValuePairs(std::istream & f, int & line)
 {
 	const char terminator = '[';
 
@@ -122,7 +122,7 @@ std::map <std::string, std::string> readValuePairs(std::istream & f, std::ostrea
 bool readSection(std::istream & f, std::ostream & error_output, int & line, const std::vector <std::string> & reqd, std::map <std::string, std::string> & outputmap)
 {
 	int sectionline = line;
-	outputmap = readValuePairs(f, error_output, line);
+	outputmap = readValuePairs(f, line);
 	for (std::vector <std::string>::const_iterator i = reqd.begin(); i != reqd.end(); i++)
 	{
 		if (outputmap[*i].empty())

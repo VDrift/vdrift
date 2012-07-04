@@ -132,7 +132,7 @@ public:
 	void printRendererStatus(RendererStatusVerbosity verbosity, const StringIdMap & stringMap, std::ostream & out) const;
 
 	/// Print some human readable profiling information.
-	void printProfilingInfo(const StringIdMap & stringMap, std::ostream & out) const;
+	void printProfilingInfo(std::ostream & out) const;
 
 private:
 	bool loadShader(const std::string & path, const std::string & name, const std::set <std::string> & defines, GLenum shaderType, std::ostream & errorOutput);

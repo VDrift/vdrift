@@ -552,8 +552,7 @@ void GRAPHICS_FALLBACK::EnableShaders(const std::string & shaderpath, std::ostre
 						fbms = fsaa;
 
 					// initialize fbtexture
-					fbtex.Init(glstate,
-							   i->width.GetSize(w),
+					fbtex.Init(i->width.GetSize(w),
 							   i->height.GetSize(h),
 							   type,
 							   TextureFormatFromString(i->format),

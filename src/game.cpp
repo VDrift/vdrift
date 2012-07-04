@@ -160,7 +160,7 @@ void GAME::Start(std::list <std::string> & args)
 	{
 		info_output << "Car control file " << pathmanager.GetCarControlsFile() << " doesn't exist; using defaults" << std::endl;
 		carcontrols_local.second.Load(pathmanager.GetDefaultCarControlsFile(), info_output, error_output);
-		carcontrols_local.second.Save(pathmanager.GetCarControlsFile(), info_output, error_output);
+		carcontrols_local.second.Save(pathmanager.GetCarControlsFile());
 	}
 
 	// Init car update manager
@@ -265,8 +265,7 @@ void GAME::Start(std::list <std::string> & args)
 			smoketexlist,
 			pathmanager.GetTireSmokeTextureDir(),
 			settings.GetAnisotropy(),
-			content,
-			error_output))
+			content))
 	{
 		error_output << "Error loading tire smoke particle system" << std::endl;
 		return;
@@ -361,7 +360,6 @@ void GAME::InitCoreSubsystems()
 		settings.GetFullscreen(),
 		// Explicitly disable antialiasing for the GL3 path because we're using image-based AA...
 		usingGL3 ? 0 : settings.GetAntialiasing(),
-		enableGL3,
 		info_output, error_output);
 
 	const int rendererCount = 2;
@@ -468,9 +466,7 @@ bool GAME::InitGUI()
 			settings.GetLanguage(),
 			pathmanager.GetGUITextureDir(settings.GetSkin()),
 			pathmanager,
-			settings.GetTextureSize(),
 			(float)window.GetH()/window.GetW(),
-			fonts,
 			content,
 			info_output,
 			error_output))
@@ -1031,7 +1027,7 @@ void GAME::UpdateTimer()
 		if (advance)
 		{
 			// Only count it if the car's current sector isn't -1 which is the default value when the car is loaded...
-			timer.Lap(carid, i->GetSector(), nextsector, (i->GetSector() >= 0));
+			timer.Lap(carid, nextsector, (i->GetSector() >= 0));
 			i->SetSector(nextsector);
 		}
 
@@ -1163,13 +1159,10 @@ void GAME::ProcessGUIInputs()
 		{
 			// Send input to the gui and get output into the gui_actions list.
 			gui_actions = gui.ProcessInput(
-				eventsystem.GetKeyState(SDLK_UP).just_down,
-				eventsystem.GetKeyState(SDLK_DOWN).just_down,
 				eventsystem.GetMousePosition()[0] / (float)window.GetW(),
 				eventsystem.GetMousePosition()[1] / (float)window.GetH(),
 				eventsystem.GetMouseButtonState(1).down,
 				eventsystem.GetMouseButtonState(1).just_up,
-				(float)window.GetH() / window.GetW(),
 				error_output);
 		}
 
@@ -1210,7 +1203,7 @@ void GAME::ProcessGUIInputs()
 			gui.GetLastPageName() != "EditAnalogControl")
 		{
 			// Write out controls.
-			carcontrols_local.second.Save(pathmanager.GetCarControlsFile(), info_output, error_output);
+			carcontrols_local.second.Save(pathmanager.GetCarControlsFile());
 			//std::cout << "Control files are being saved: " << gui.GetActivePageName() << ", " << gui.GetLastPageName() << std::endl;
 		}
 	}
@@ -1257,7 +1250,7 @@ bool GAME::AssignControls()
 
 			if (eventsystem.GetJoyAxis(j, i) - controlgrab_joystick_state[j].GetAxis(i) > 0.4)
 			{
-				carcontrols_local.second.AddInputJoyAxis(controlgrab_input, controlgrab_analog,
+				carcontrols_local.second.AddInputJoyAxis(controlgrab_input,
 						controlgrab_only_one, j, i, "positive", error_output);
 
 				return true;
@@ -1265,7 +1258,7 @@ bool GAME::AssignControls()
 
 			if (eventsystem.GetJoyAxis(j, i) - controlgrab_joystick_state[j].GetAxis(i) < -0.4)
 			{
-				carcontrols_local.second.AddInputJoyAxis(controlgrab_input, controlgrab_analog,
+				carcontrols_local.second.AddInputJoyAxis(controlgrab_input,
 						controlgrab_only_one, j, i, "negative", error_output);
 
 				return true;
@@ -1303,7 +1296,7 @@ bool GAME::AssignControls()
 
 	if (!motion.empty())
 	{
-		carcontrols_local.second.AddInputMouseMotion(controlgrab_input, controlgrab_analog,
+		carcontrols_local.second.AddInputMouseMotion(controlgrab_input,
 				controlgrab_only_one, motion, error_output);
 
 		return true;
@@ -1332,7 +1325,7 @@ void GAME::LoadControlsIntoGUIPage(const std::string & pagename)
 	CONFIG controlfile;
 	std::map<std::string, std::list <std::pair <std::string, std::string> > > valuelists;
 	PopulateValueLists(valuelists);
-	carcontrols_local.second.Save(controlfile, info_output, error_output);
+	carcontrols_local.second.Save(controlfile);
 	gui.UpdateControls(pagename, controlfile);
 }
 
@@ -1715,7 +1708,7 @@ void GAME::UpdateCarInputs(CAR & car)
 		carinputs[CARINPUT::BRAKE] = 1.0;
 	}
 
-	car.HandleInputs(carinputs, TickPeriod());
+	car.HandleInputs(carinputs);
 
 	if (carcontrols_local.first != &car)
 		return;
@@ -1974,7 +1967,7 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	float pretime = 0.0f;
 	if (num_laps > 0)
 		pretime = 3.0f;
-	if (!timer.Load(pathmanager.GetTrackRecordsPath()+"/"+trackname+".txt", pretime, error_output))
+	if (!timer.Load(pathmanager.GetTrackRecordsPath()+"/"+trackname+".txt", pretime))
 	{
 		error_output << "Unable to load timer" << std::endl;
 		return false;
@@ -2127,17 +2120,17 @@ bool GAME::LoadCar(
 
 	std::string cardir = pathmanager.GetCarsDir() + "/" + carname;
 	if (!car.LoadGraphics(
-		carconf, cardir, carname, pathmanager.GetCarPartsPath(),
+		carconf, cardir, carname,
 		carcolor, carpaint, settings.GetAnisotropy(),
-		settings.GetCameraBounce(), settings.GetVehicleDamage(), debugmode,
-		content, info_output, error_output))
+		settings.GetCameraBounce(),
+		content, error_output))
 	{
 		error_output << "Error loading car: " << carname << std::endl;
 		cars.pop_back();
 		return false;
 	}
 
-	if (sound.Enabled() && !car.LoadSounds(cardir, carname, content, info_output, error_output))
+	if (sound.Enabled() && !car.LoadSounds(cardir, carname, content, error_output))
 	{
 		error_output << "Failed to load sounds for car " << carname << std::endl;
 		return false;
@@ -2147,7 +2140,7 @@ bool GAME::LoadCar(
 		carconf, cardir, start_position, start_orientation,
 		settings.GetABS() || isai, settings.GetTCS() || isai,
 		settings.GetVehicleDamage(), content, dynamics,
-		info_output, error_output))
+        error_output))
 	{
 		error_output << "Failed to load physics for car " << carname << std::endl;
 		return false;
@@ -2704,7 +2697,7 @@ void GAME::AddTireSmokeParticles(float dt, CAR & car)
 			{
 				tire_smoke.AddParticle(
 					car.GetWheelPosition(WHEEL_POSITION(i)) - MATHVECTOR<float,3>(0,0,car.GetTireRadius(WHEEL_POSITION(i))),
-					0.5, 0.7, 1.0, 0.03);
+					0.5);
 			}
 		}
 	}

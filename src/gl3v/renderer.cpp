@@ -453,7 +453,7 @@ void Renderer::printRendererStatus(RendererStatusVerbosity verbosity, const Stri
 	}
 }
 
-void Renderer::printProfilingInfo(const StringIdMap & stringMap, std::ostream & out) const
+void Renderer::printProfilingInfo(std::ostream & out) const
 {
 	for (std::vector <RenderPass>::const_iterator i = passes.begin(); i != passes.end(); i++)
 		out << i->getName() << ": " << i->getLastTime()*1e6 << " us" << std::endl;

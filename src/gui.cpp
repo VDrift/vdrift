@@ -47,9 +47,7 @@ bool GUI::Load(
 	const std::string & language,
 	const std::string & texpath,
 	const PATHMANAGER & pathmanager,
-	const std::string & texsize,
 	const float screenhwratio,
-	const std::map <std::string, FONT> & fonts,
 	ContentManager & content,
 	std::ostream & info_output,
 	std::ostream & error_output)
@@ -143,10 +141,8 @@ void GUI::DeactivateAll()
 }
 
 std::list <std::string> GUI::ProcessInput(
-	bool movedown, bool moveup,
 	float cursorx, float cursory,
 	bool cursordown, bool cursorjustup,
-	float screenhwratio,
 	std::ostream & error_output)
 {
 	std::list <std::pair <std::string, bool> > actions;
@@ -155,8 +151,8 @@ std::list <std::string> GUI::ProcessInput(
 	{
 		actions = active_page->second.ProcessInput(
 			node,
-			movedown, moveup, cursorx, cursory,
-			cursordown, cursorjustup, screenhwratio);
+			cursorx, cursory,
+			cursordown, cursorjustup);
 	}
 
 	std::list <std::string> gameactions;

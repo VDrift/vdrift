@@ -135,8 +135,7 @@ void ROADSTRIP::Reverse()
 
 void ROADSTRIP::CreateRacingLine(
 	SCENENODE & parentnode,
-	std::tr1::shared_ptr<TEXTURE> racingline_texture,
-	std::ostream & error_output)
+	std::tr1::shared_ptr<TEXTURE> racingline_texture)
 {
 	for (std::vector<ROADPATCH>::iterator i = patches.begin(); i != patches.end(); ++i)
 	{
@@ -149,8 +148,6 @@ void ROADSTRIP::CreateRacingLine(
 		} else {
 			nextpatch = &(*patches.begin());
 		}
-		i->AddRacinglineScenenode(parentnode, nextpatch, racingline_texture, error_output);
+		i->AddRacinglineScenenode(parentnode, nextpatch, racingline_texture);
 	}
 }
-
-

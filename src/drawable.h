@@ -85,7 +85,7 @@ public:
 
 	/// this gets called if we are using the GL3 renderer
 	/// it returns a reference to the RenderModelExternal structure
-	RenderModelExternal & generateRenderModelData(GLWrapper & gl, StringIdMap & stringMap);
+	RenderModelExternal & generateRenderModelData(StringIdMap & stringMap);
 
 	void setVertexArrayObject(GLuint vao, unsigned int elementCount);
 
