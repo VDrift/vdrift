@@ -31,7 +31,11 @@ public:
 		float r, float g, float b,
 		const PTree & carconfig,
 		const std::string & trackname,
-		std::ostream & error_log);
+		std::ostream & error_log,
+		const std::vector <std::string> & opponents,
+		const std::vector <std::string> & opponents_paint,
+		const std::vector < MATHVECTOR <float, 3> > & opponents_color,
+		int num_laps);
 
 	///< if replayfilename is empty, do not save the data
 	void StopRecording(const std::string & replayfilename);
@@ -68,6 +72,22 @@ public:
 		r = carcolor_r;
 		g = carcolor_g;
 		b = carcolor_b;
+	}
+
+	const std::vector <std::string> & GetOpponents() const {
+		return opponents;
+	}
+
+	const std::vector <std::string> & GetOpponentsPaint() const {
+		return opponents_paint;
+	}
+
+	const std::vector < MATHVECTOR <float, 3> > & GetOpponentsColor() const {
+		return opponents_color;
+	}
+
+	int GetNumberLaps() const {
+		return number_laps;
 	}
 
 private:
@@ -191,6 +211,11 @@ private:
 	float carcolor_r;
 	float carcolor_g;
 	float carcolor_b;
+	std::vector <std::string> opponents;
+	std::vector <std::string> opponents_paint;
+	std::vector < MATHVECTOR <float, 3> > opponents_color;
+	int number_laps; 
+
 	std::vector<INPUTFRAME> inputframes;
 	std::vector<STATEFRAME> stateframes;
 
