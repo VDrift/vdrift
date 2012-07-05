@@ -106,6 +106,9 @@ GAME::GAME(std::ostream & info_out, std::ostream & error_out) :
 	dumpfps(false),
 	pause(false),
 	controlgrab_id(0),
+	cars_name(1),
+	cars_paint(1),
+	cars_color_hsv(1),
 	car_edit_id(0),
 	active_camera(0),
 	race_laps(0),
@@ -240,7 +243,7 @@ void GAME::Start(std::list <std::string> & args)
 	inputgraph.Hide();
 
 	// Initialize GUI.
-	if (!InitGUI())
+	if (!InitGUI("Main"))
 	{
 		error_output << "Error initializing graphical user interface" << std::endl;
 		return;
@@ -437,7 +440,7 @@ void TraverseScene(SCENENODE & node, GRAPHICS_INTERFACE::dynamicdrawlist_type & 
 	//std::cout << node.Nodes() << "," << node.Drawables() << std::endl;
 }
 
-bool GAME::InitGUI()
+bool GAME::InitGUI(const std::string & pagename)
 {
 	std::list <std::string> menufiles;
 	std::string menufolder = pathmanager.GetGUIMenuPath(settings.GetSkin());
@@ -509,7 +512,7 @@ bool GAME::InitGUI()
 	LoadControlsIntoGUI();
 
 	// Show main page.
-	gui.ActivatePage("Main", 0.5, error_output);
+	gui.ActivatePage(pagename, 0.5, error_output);
 	if (settings.GetMouseGrab())
 		eventsystem.SetMouseCursorVisibility(true);
 
@@ -991,14 +994,10 @@ void GAME::ProcessGameInputs()
 		// First, save the active page name so we can get back to in...
 		std::string currentPage = gui.GetActivePageName();
 
-		if (!InitGUI())
+		// Reload GUI
+		if (!InitGUI(currentPage))
 		{
 			error_output << "Error reloading GUI" << std::endl;
-		}
-		else
-		{
-			// Attempt to return to the last active page.  This may fail if the page is gone now...
-			gui.ActivatePage(currentPage, 0.001, error_output);
 		}
 	}
 
@@ -1988,17 +1987,8 @@ void GAME::PopulateValueLists(std::map<std::string, std::list <std::pair <std::s
 	}
 	valuelists["cars"] = carlist;
 
-	// Set player car.
-	if (cars_name.empty())
-	{
-		cars_name.resize(1);
-		cars_paint.resize(1);
-		cars_color_hsv.resize(1);
-	}
-
 	// Populate car paints.
-	PopulateCarPaintList(cars_name[0], valuelists["player_paints"]);
-	PopulateCarPaintList(cars_name.back(), valuelists["opponent_paints"]);
+	PopulateCarPaintList(cars_name[0], valuelists["car_paints"]);
 
 	// Populate anisotropy list.
 	int max_aniso = graphics_interface->GetMaxAnisotropy();
@@ -2023,7 +2013,7 @@ void GAME::PopulateValueLists(std::map<std::string, std::list <std::pair <std::s
 	PopulateReplayList(valuelists["replays"]);
 
 	// Populate other lists.
-	valuelists["joy_indeces"].push_back(std::make_pair("0","0"));
+	valuelists["joy_indices"].push_back(std::make_pair("0","0"));
 
 	// Populate skins.
 	std::list <std::string> skinlist;

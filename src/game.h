@@ -66,7 +66,7 @@ private:
 
 	bool InitSound();
 
-	bool InitGUI();
+	bool InitGUI(const std::string & pagename);
 
 	void Test();
 
