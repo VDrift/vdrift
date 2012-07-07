@@ -31,7 +31,7 @@
 #include "contentmanager.h"
 #include "http.h"
 #include "gl3v/stringidmap.h"
-#include "updatemanagement.h"
+#include "updatemanager.h"
 #include "game_downloader.h"
 
 #include <ostream>

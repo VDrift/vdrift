@@ -113,7 +113,7 @@ src = Split("""aabb.cpp
 		track.cpp
 		trackloader.cpp
 		trackmap.cpp
-		updatemanagement.cpp
+		updatemanager.cpp
 		utils.cpp
 		vertexarray.cpp
 		window.cpp

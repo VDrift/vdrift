@@ -1,4 +1,4 @@
-#include "updatemanagement.h"
+#include "updatemanager.h"
 
 #include "svn_sourceforge.h"
 #include "gui/gui.h"
