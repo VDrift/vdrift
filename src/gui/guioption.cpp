@@ -29,10 +29,9 @@ GUIOPTION & GUIOPTION::operator=(const GUIOPTION & other)
 {
 	values = other.values;
 	current_value = values.begin(); // fixme
-	non_value_data = other.non_value_data;
 	description = other.description;
-	text = other.text;
 	type = other.type;
+	non_value_data = other.non_value_data;
 	min = other.min;
 	max = other.max;
 	percent = other.percent;
@@ -48,9 +47,8 @@ void GUIOPTION::SetValues(const std::string & curvalue, std::list <std::pair<std
 	SetCurrentValue(curvalue);
 }
 
-void GUIOPTION::SetInfo(const std::string & newtext, const std::string & newdesc, const std::string & newtype)
+void GUIOPTION::SetInfo(const std::string & newdesc, const std::string & newtype)
 {
-	text = newtext;
 	description = newdesc;
 	type = newtype;
 }
@@ -219,6 +217,7 @@ void GUIOPTION::SignalValue()
 		
 		if (percent)
 		{
+			// format value string
 			std::stringstream s, v;
 			float f;
 			v << non_value_data;
@@ -228,7 +227,15 @@ void GUIOPTION::SignalValue()
 		}
 		else
 		{
-			signal_str(non_value_data);
+			// format value string
+			std::stringstream s, v;
+			float f;
+			v << non_value_data;
+			v >> f;
+			s.setf(std::ios::fixed);
+			s.precision(2);
+			s << f;
+			signal_str(s.str());
 		}
 	}
 	else

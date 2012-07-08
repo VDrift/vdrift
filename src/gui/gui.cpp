@@ -332,7 +332,7 @@ bool GUI::LoadOptions(
 	{
 		if (i->first.empty()) continue;
 
-		std::string cat, name, defaultval, values, text, desc, type;
+		std::string cat, name, defaultval, values, desc, type;
 		if (!opt.GetParam(i, "cat", cat, error_output)) return false;
 		if (!opt.GetParam(i, "name", name, error_output)) return false;
 		if (!opt.GetParam(i, "default", defaultval, error_output)) return false;
@@ -341,7 +341,6 @@ bool GUI::LoadOptions(
 		if (!opt.GetParam(i, "type", type, error_output)) return false;
 
 		std::map<std::string, std::string>::const_iterator li;
-		if ((li = languagemap.find(text)) != languagemap.end()) text = li->second;
 		if ((li = languagemap.find(desc)) != languagemap.end()) desc = li->second;
 
 		float min(0), max(1);
@@ -353,7 +352,7 @@ bool GUI::LoadOptions(
 		std::string optionname = cat + "." + name;
 		GUIOPTION & option = options[optionname];
 
-		option.SetInfo(text, desc, type);
+		option.SetInfo(desc, type);
 		option.SetMinMaxPercentage(min, max, percent);
 
 		// different ways to populate the options

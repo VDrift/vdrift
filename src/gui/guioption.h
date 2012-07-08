@@ -19,7 +19,7 @@ public:
 	/// will move new value elements to option list
 	void SetValues(const std::string & curvalue, std::list <std::pair<std::string, std::string> > & newvalues);
 
-	void SetInfo(const std::string & newtext, const std::string & newdesc, const std::string & newtype);
+	void SetInfo(const std::string & newdesc, const std::string & newtype);
 
 	void SetMinMaxPercentage(float newmin, float newmax, bool newpercent);
 
@@ -42,8 +42,6 @@ public:
 
 	const std::string & GetDescription() const {return description;};
 
-	const std::string & GetText() const {return text;};
-
 	float GetMin() const {return min;}
 
 	float GetMax() const {return max;}
@@ -60,12 +58,17 @@ public:
 	Slot0 next_val;
 
 private:
+	/// list option
 	std::list <std::pair<std::string, std::string> >::iterator current_value;
 	std::list <std::pair<std::string, std::string> > values; //the first element of the pair is the (sometimes numeric) stored value, while the second element is the display value.  sometimes they are the same.
-	std::string non_value_data; //this is used when the values map is empty, such as for numeric settings
+	
+	/// meta data
 	std::string description;
-	std::string text;
 	std::string type;
+
+	/// string/int/float option
+	std::string non_value_data;
+	float fvalue;
 	float min;
 	float max;
 	bool percent;
