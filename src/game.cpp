@@ -2586,12 +2586,16 @@ void GAME::SyncSettings()
 
 void GAME::EditFirstCar()
 {
-	if (cars_name.size() == 1)
+	if (cars_name.size() == 1 || car_edit_id == 0)
 		return;
 
 	car_edit_id = 0;
 	if (cars_name[0] != cars_name.back())
+	{
 		gui.SetOptionValue("game.car", cars_name[0]);
+		SetGarageCar();
+	}
+
 	gui.SetOptionValue("game.car_paint", cars_paint[0]);
 	gui.SetOptionValue("game.car_color_hue", cast(cars_color_hsv[0][0]));
 	gui.SetOptionValue("game.car_color_sat", cast(cars_color_hsv[0][1]));
@@ -2600,12 +2604,16 @@ void GAME::EditFirstCar()
 
 void GAME::EditLastCar()
 {
-	if (cars_name.size() == 1)
+	if (cars_name.size() == 1 || car_edit_id == cars_name.size() - 1)
 		return;
 
 	car_edit_id = cars_name.size() - 1;
 	if (cars_name[0] != cars_name.back())
+	{
 		gui.SetOptionValue("game.car", cars_name.back());
+		SetGarageCar();
+	}
+
 	gui.SetOptionValue("game.car_paint", cars_paint.back());
 	gui.SetOptionValue("game.car_color_hue", cast(cars_color_hsv.back()[0]));
 	gui.SetOptionValue("game.car_color_sat", cast(cars_color_hsv.back()[1]));
@@ -2614,6 +2622,9 @@ void GAME::EditLastCar()
 
 void GAME::SetCarName(const std::string & value)
 {
+	if (cars_name[car_edit_id] == value)
+		return;
+
 	cars_name[car_edit_id] = value;
 	UpdateStartList(car_edit_id, cars_name[car_edit_id]);
 
