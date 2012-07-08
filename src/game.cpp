@@ -106,6 +106,7 @@ GAME::GAME(std::ostream & info_out, std::ostream & error_out) :
 	dumpfps(false),
 	pause(false),
 	controlgrab_id(0),
+	garage_camera("garagecam"),
 	cars_name(1),
 	cars_paint(1),
 	cars_color_hsv(1),
@@ -1774,14 +1775,13 @@ bool GAME::SetGarageCar()
 	sound.Update();
 
 	// camera setup
-	for (size_t i = 0; i < car.GetCameras().size(); ++i)
-	{
-		active_camera = car.GetCameras()[i];
-		if (active_camera->GetName() == "orbit") break;
-	}
-	active_camera->Update(car.GetPosition(), car.GetOrientation(), timestep);
-	static_cast<CAMERA_ORBIT*>(active_camera)->Rotate(-M_PI * 0.05, M_PI * 1.15);
-	static_cast<CAMERA_ORBIT*>(active_camera)->Move(0, 0, 4);
+	MATHVECTOR<float, 3> offset(1.75, 5.75, 0.75);
+	track.GetStart(0).second.RotateVector(offset);
+	MATHVECTOR<float, 3> pos = track.GetStart(0).first + offset;
+	QUATERNION<float> rot = LookAt(pos, car.GetPosition(), direction::Up);
+	garage_camera.SetOffset(MATHVECTOR<float, 3>(0));
+	garage_camera.Reset(pos, rot);
+	active_camera = &garage_camera;
 
 	return true;
 }

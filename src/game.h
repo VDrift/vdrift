@@ -20,6 +20,7 @@
 #include "inputgraph.h"
 #include "sound.h"
 #include "camera.h"
+#include "camera_free.h"
 #include "trackmap.h"
 #include "loadingscreen.h"
 #include "timer.h"
@@ -256,6 +257,7 @@ private:
 	std::string controlgrab_input;
 	size_t controlgrab_id;
 
+	CAMERA_FREE garage_camera;
 	std::vector <std::string> cars_name;
 	std::vector <std::string> cars_paint;
 	std::vector <MATHVECTOR<float, 3> > cars_color_hsv;
