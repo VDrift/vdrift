@@ -408,8 +408,8 @@ bool CAR::LoadPhysics(
 	if (!cfg.get("body.mesh", carmodel, error_output)) return false;
 	if (!content.load(carpath, carmodel, modelptr)) return false;
 
-	btVector3 size = ToBulletVector(modelptr->GetAABB().GetSize());
-	btVector3 center = ToBulletVector(modelptr->GetAABB().GetCenter());
+	btVector3 size = ToBulletVector(modelptr->GetSize());
+	btVector3 center = ToBulletVector(modelptr->GetCenter());
 	btVector3 position = ToBulletVector(initial_position);
 	btQuaternion rotation = ToBulletQuaternion(initial_orientation);
 
