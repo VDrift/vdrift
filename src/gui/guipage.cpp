@@ -107,15 +107,51 @@ bool GUIPAGE::Load(
 		if (section->first.empty()) continue;
 
 		GUIWIDGET * widget(0);
-		std::string text, image, slider;
-		std::vector<float> xy(2, 0.5);
-		float w(0), h(0), z(0);
-		pagefile.GetParam(section, "center", xy);
-		pagefile.GetParam(section, "width", w);
-		pagefile.GetParam(section, "height", h);
+
+		// get widget rectangle
+		float x(0.5), y(0.5), w(0), h(0);
+		if (pagefile.GetParam(section, "width", w))
+		{
+			float l(0), r(0);
+			if (pagefile.GetParam(section, "left", l))
+				x = l * screenhwratio;
+			else if (pagefile.GetParam(section, "right", r))
+				x = 1 - (r + w) * screenhwratio;
+			w = w * screenhwratio;
+		}
+		else
+		{
+			float l(0), r(0);
+			pagefile.GetParam(section, "left", l);
+			pagefile.GetParam(section, "right", r);
+			x = l * screenhwratio;
+			w = 1 - (l + r) * screenhwratio;
+		}
+		if (pagefile.GetParam(section, "height", h))
+		{
+			float t(0), b(0);
+			if (pagefile.GetParam(section, "top", t))
+				y = t;
+			else if (pagefile.GetParam(section, "bottom", b))
+				y = 1 - b - h;
+		}
+		else
+		{
+			float t(0), b(0);
+			pagefile.GetParam(section, "top", t);
+			pagefile.GetParam(section, "bottom", b);
+			h = 1 - t - b;
+			y = t;
+		}
+		// widgets expect rectangle center
+		x = x + w * 0.5;
+		y = y + h * 0.5;
+
+		float z(0);
 		pagefile.GetParam(section, "layer", z);
 		z = z + z0;
-
+		
+		std::string text;
 		if (pagefile.GetParam(section, "text", text))
 		{
 			// none is reserved for empty text string
@@ -133,16 +169,13 @@ bool GUIPAGE::Load(
 			float scaley = fontsize;
 			float scalex = fontsize * screenhwratio;
 
-			if (h == 0) h = scaley;
-			if (w == 0) w = scaley;
-
 			std::map<std::string, std::string>::const_iterator li;
 			if ((li = languagemap.find(text)) != languagemap.end()) text = li->second;
 
 			GUILABEL * new_widget = new GUILABEL();
 			new_widget->SetupDrawable(
 				sref, font, align, scalex, scaley,
-				xy[0], xy[1], w, h, z);
+				x, y, w, h, z);
 			
 			ConnectAction(text, vsignalmap, new_widget->set_value);
 			widget = new_widget; 
@@ -151,19 +184,21 @@ bool GUIPAGE::Load(
 			if (pagefile.GetParam(section, "name", name))
 				labels[name] = new_widget;
 		}
-
+		
+		std::string image;
 		if (pagefile.GetParam(section, "image", image))
 		{
 			std::string path = texpath;
 			pagefile.GetParam(section, "path", path);
 
 			GUIIMAGE * new_widget = new GUIIMAGE();
-			new_widget->SetupDrawable(sref, content, path, xy[0], xy[1], w, h, z);
+			new_widget->SetupDrawable(sref, content, path, x, y, w, h, z);
 
 			ConnectAction(image, vsignalmap, new_widget->set_image);
 			widget = new_widget;
 		}
-
+		
+		std::string slider;
 		if (pagefile.GetParam(section, "slider", slider))
 		{
 			bool fill = false;
@@ -179,7 +214,7 @@ bool GUIPAGE::Load(
 			GUISLIDER * new_widget = new GUISLIDER();
 			new_widget->SetupDrawable(
 				sref, bartex,
-				xy[0], xy[1], w, h, z,
+				x, y, w, h, z,
 				fill, error_output);
 
 			ConnectAction(slider, vsignalmap, new_widget->set_value);
@@ -215,7 +250,7 @@ bool GUIPAGE::Load(
 			if ((li = languagemap.find(desc)) != languagemap.end()) desc = li->second;
 
 			GUICONTROL * control = new GUICONTROL();
-			control->SetRect(xy[0] - w * 0.5, xy[1] - h * 0.5, xy[0] + w * 0.5, xy[1] + h * 0.5);
+			control->SetRect(x - w * 0.5, y - h * 0.5, x + w * 0.5, y + h * 0.5);
 			control->SetDescription(desc);
 
 			controls.push_back(control);
