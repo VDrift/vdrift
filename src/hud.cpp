@@ -347,7 +347,7 @@ bool HUD::Init(
 	}
 #endif
 
-	Hide();
+	SetVisible(false);
 
 	debug_hud_info = debugon;
 
@@ -366,6 +366,9 @@ void HUD::Update(
 	bool outofgas, bool nosactive, float nosamount,
 	bool drifting, float driftscore, float thisdriftscore)
 {
+	if (!lastvisible)
+		return;
+
 	float screenhwratio = displayheight/displaywidth;
 
 	if (debug_hud_info)
@@ -614,4 +617,25 @@ void HUD::Update(
 		placeindicator.SetDrawEnable(hudroot, false);
 		raceprompt.SetDrawEnable(hudroot, false);
 	}
+}
+
+SCENENODE & HUD::GetNode()
+{
+	return hudroot;
+}
+
+void HUD::SetVisible(bool value)
+{
+	if (value != lastvisible)
+	{
+		hudroot.SetChildVisibility(value);
+		//hudroot.GetNode(timernode).SetChildVisibility(value);
+		SetDebugVisible(value && debug_hud_info);
+		lastvisible = value;
+	}
+}
+
+void HUD::SetDebugVisible(bool value)
+{
+	hudroot.GetNode(debugnode).SetChildVisibility(value);
 }

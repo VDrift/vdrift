@@ -101,7 +101,7 @@ void REPLAY::GetReadyToRecord()
 void REPLAY::StartRecording(
 	const std::string & newcartype,
 	const std::string & newcarpaint,
-	float r, float g, float b,
+	const MATHVECTOR<float, 3> & newcarcolor,
 	const PTree & carconfig,
 	const std::string & trackname,
 	std::ostream & error_log)
@@ -109,9 +109,7 @@ void REPLAY::StartRecording(
 	track = trackname;
 	cartype = newcartype;
 	carpaint = newcarpaint;
-	carcolor_r = r;
-	carcolor_g = g;
-	carcolor_b = b;
+	carcolor = newcarcolor;
 
 	GetReadyToRecord();
 
@@ -284,9 +282,7 @@ bool REPLAY::Serialize(joeserialize::Serializer & s)
 	_SERIALIZE_(s, cartype);
 	_SERIALIZE_(s, carpaint);
 	_SERIALIZE_(s, carfile);
-	_SERIALIZE_(s, carcolor_r);
-	_SERIALIZE_(s, carcolor_g);
-	_SERIALIZE_(s, carcolor_b);
+	_SERIALIZE_(s, carcolor);
 	return true;
 }
 

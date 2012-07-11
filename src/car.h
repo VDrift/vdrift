@@ -4,7 +4,6 @@
 #include "cardynamics.h"
 #include "tobullet.h"
 #include "scenenode.h"
-#include "soundsource.h"
 #include "crashdetection.h"
 #include "enginesoundinfo.h"
 #include "joeserialize.h"
@@ -14,6 +13,7 @@ class BEZIER;
 class CAMERA;
 class PERFORMANCE_TESTING;
 class MODEL;
+class SOUND;
 class ContentManager;
 class PTree;
 
@@ -28,18 +28,23 @@ public:
 
 	bool LoadGraphics(
 		const PTree & cfg,
+		const std::string & partspath,
 		const std::string & carpath,
 		const std::string & carname,
-		const MATHVECTOR <float, 3> & carcolor,
 		const std::string & carpaint,
+		const MATHVECTOR <float, 3> & carcolor,
 		const int anisotropy,
 		const float camerabounce,
+		const bool damage,
+		const bool debugmode,
 		ContentManager & content,
+		std::ostream & info_output,
 		std::ostream & error_output);
 
 	bool LoadSounds(
 		const std::string & carpath,
 		const std::string & carname,
+		SOUND & sound,
 		ContentManager & content,
 		std::ostream & error_output);
 
@@ -62,10 +67,6 @@ public:
 	void SetPosition(const MATHVECTOR <float, 3> & position);
 
 	void Update(double dt);
-
-	void GetSoundList(std::list <SOUNDSOURCE *> & outputlist);
-
-	void GetEngineSoundList(std::list <SOUNDSOURCE *> & outputlist);
 
 	// interpolated
 	const MATHVECTOR <float, 3> GetWheelPosition(const WHEEL_POSITION wpos) const
@@ -112,7 +113,7 @@ public:
 
 	bool GetNosActive() const
 	{
-		return nosactive;
+		return nos_active;
 	}
 
 	int GetGear() const
@@ -210,7 +211,7 @@ public:
 	// returns a float from 0.0 to 1.0 with the amount of tire squealing going on
 	float GetTireSquealAmount(WHEEL_POSITION i) const;
 
-	void EnableGlass(bool enable);
+	void SetInteriorView(bool value);
 
 	void DebugPrint(std::ostream & out, bool p1, bool p2, bool p3, bool p4) const
 	{
@@ -328,16 +329,17 @@ protected:
 	CRASHDETECTION crashdetection;
 	std::vector<CAMERA*> cameras;
 
-	std::list<std::pair <ENGINESOUNDINFO, SOUNDSOURCE> > enginesounds;
-	SOUNDSOURCE tiresqueal[WHEEL_POSITION_SIZE];
-	SOUNDSOURCE tirebump[WHEEL_POSITION_SIZE];
-	SOUNDSOURCE grasssound[WHEEL_POSITION_SIZE];
-	SOUNDSOURCE gravelsound[WHEEL_POSITION_SIZE];
-	SOUNDSOURCE crashsound;
-	SOUNDSOURCE gearsound;
-	SOUNDSOURCE brakesound;
-	SOUNDSOURCE handbrakesound;
-	SOUNDSOURCE roadnoise;
+	std::vector<ENGINESOUNDINFO> enginesounds;
+	size_t tiresqueal[WHEEL_POSITION_SIZE];
+	size_t tirebump[WHEEL_POSITION_SIZE];
+	size_t grasssound[WHEEL_POSITION_SIZE];
+	size_t gravelsound[WHEEL_POSITION_SIZE];
+	size_t crashsound;
+	size_t gearsound;
+	size_t brakesound;
+	size_t handbrakesound;
+	size_t roadnoise;
+	SOUND * psound;
 
 	int gearsound_check;
 	bool brakesound_check;
@@ -348,17 +350,20 @@ protected:
 	QUATERNION<float> steer_rotation;
 	float steer_angle_max;
 
-	//internal variables that might change during driving (so, they need to be serialized)
+	// internal variables that might change during driving (so, they need to be serialized)
 	float last_steer;
-	bool nosactive;
+	bool nos_active;
+	bool driver_view;
 
 	std::string cartype;
-	int sector; //the last lap timing sector that the car hit
+	int sector; // the last lap timing sector that the car hit
 	const BEZIER * curpatch[WHEEL_POSITION_SIZE]; //the last bezier patch that each wheel hit
 
-	float applied_brakes; ///< cached so we can update the brake light
+	float applied_brakes; // cached so we can update the brake light
 
 	float mz_nominalmax; //the nominal maximum Mz force, used to scale force feedback
+
+	void RemoveSounds();
 
 	void UpdateSounds(float dt);
 

@@ -19,11 +19,11 @@ void CAMERA_FREE::SetOffset(const MATHVECTOR <float, 3> & value)
 	}
 }
 
-void CAMERA_FREE::Reset(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> &)
+void CAMERA_FREE::Reset(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newquat)
 {
 	leftright_rotation = 0;
 	updown_rotation = 0;
-	Rotate(0, 0);
+	rotation = newquat;
 	position = newpos + offset;
 }
 

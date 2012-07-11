@@ -28,7 +28,7 @@ public:
 	void StartRecording(
 		const std::string & newcartype,
 		const std::string & newcarpaint,
-		float r, float g, float b,
+		const MATHVECTOR<float, 3> & newcarcolor,
 		const PTree & carconfig,
 		const std::string & trackname,
 		std::ostream & error_log);
@@ -63,11 +63,9 @@ public:
 		return carpaint;
 	}
 
-	void GetCarColor(float & r, float & g, float & b) const
+	MATHVECTOR<float, 3> GetCarColorHSV() const
 	{
-		r = carcolor_r;
-		g = carcolor_g;
-		b = carcolor_b;
+		return carcolor;
 	}
 
 private:
@@ -188,9 +186,7 @@ private:
 	std::string cartype; //car type, used for loading graphics and sound
 	std::string carpaint; //car paint id string
 	std::string carfile; //entire contents of the car file (e.g. XS.car)
-	float carcolor_r;
-	float carcolor_g;
-	float carcolor_b;
+	MATHVECTOR<float, 3> carcolor;
 	std::vector<INPUTFRAME> inputframes;
 	std::vector<STATEFRAME> stateframes;
 

@@ -622,7 +622,7 @@ bool GRAPHICS_GL3V::ReloadShaders(const std::string & shaderpath, std::ostream &
 			}
 
 			// set viewport size
-			float viewportSize[2] = {w,h};
+			float viewportSize[2] = {float(w), float(h)};
 			RenderUniformEntry viewportSizeUniform(stringMap.addStringId("viewportSize"), viewportSize, 2);
 			renderer.setGlobalUniform(viewportSizeUniform);
 

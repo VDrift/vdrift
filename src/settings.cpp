@@ -1,6 +1,5 @@
 #include "settings.h"
 #include "config.h"
-#include "ai/ai.h"
 
 template <typename T>
 static void Param(
@@ -21,17 +20,17 @@ static void Param(
 }
 
 SETTINGS::SETTINGS() :
+	resolution(2),
 	res_override(false),
-	resolution_x(800),
-	resolution_y(600),
-	bpp(16),
+	bpp(32),
 	depthbpp(24),
 	fullscreen(false),
 	shaders(true),
 	skin("simple"),
 	language("English"),
 	show_fps(false),
-	mastervolume(1.0),
+	sound_volume(1.0),
+	sound_sources(64),
 	mph(true),
 	track("paulricard88"),
 	antialiasing(0),
@@ -68,13 +67,12 @@ SETTINGS::SETTINGS() :
 	lighting(0),
 	bloom(false),
 	normalmaps(false),
-	player("XS"),
-	opponent("XS"),
-	player_paint("default"),
-	opponent_paint("default"),
-	opponent_type(AI::default_ai_type),
-	player_color(3, 1.0),
-	opponent_color(3, 1.0),
+	car("XS"),
+	car_paint("default"),
+	car_color_hue(0.5),
+	car_color_sat(1.0),
+	car_color_val(0.5),
+	cars_num(1),
 	camera_id(0),
 	camera_bounce(1.0),
 	number_of_laps(1),
@@ -83,7 +81,8 @@ SETTINGS::SETTINGS() :
 	ai_difficulty(1.0),
 	vehicle_damage(false)
 {
-	// ctor
+	resolution[0] = 800;
+	resolution[1] = 600;
 }
 
 void SETTINGS::Serialize(bool write, CONFIG & config)
@@ -98,13 +97,12 @@ void SETTINGS::Serialize(bool write, CONFIG & config)
 	Param(config, write, section, "traction_control", tcs);
 	Param(config, write, section, "record", recordreplay);
 	Param(config, write, section, "selected_replay", selected_replay);
-	Param(config, write, section, "player", player);
-	Param(config, write, section, "player_paint", player_paint);
-	Param(config, write, section, "player_color", player_color);
-	Param(config, write, section, "opponent", opponent);
-	Param(config, write, section, "opponent_paint", opponent_paint);
-	Param(config, write, section, "opponent_color", opponent_color);
-	Param(config, write, section, "opponent_type", opponent_type);
+	Param(config, write, section, "car", car);
+	Param(config, write, section, "car_paint", car_paint);
+	Param(config, write, section, "car_color_hue", car_color_hue);
+	Param(config, write, section, "car_color_sat", car_color_sat);
+	Param(config, write, section, "car_color_val", car_color_val);
+	Param(config, write, section, "cars_num", cars_num);
 	Param(config, write, section, "reverse", trackreverse);
 	Param(config, write, section, "track_dynamic", trackdynamic);
 	Param(config, write, section, "batch_geometry", batch_geometry);
@@ -113,10 +111,7 @@ void SETTINGS::Serialize(bool write, CONFIG & config)
 
 	config.GetSection("display", section);
 	if (!res_override)
-	{
-		Param(config, write, section, "width", resolution_x);
-		Param(config, write, section, "height", resolution_y);
-	}
+		Param(config, write, section, "resolution", resolution);
 	Param(config, write, section, "depth", bpp);
 	Param(config, write, section, "zdepth", depthbpp);
 	Param(config, write, section, "fullscreen", fullscreen);
@@ -145,7 +140,8 @@ void SETTINGS::Serialize(bool write, CONFIG & config)
 	Param(config, write, section, "contrast", contrast);
 
 	config.GetSection("sound", section);
-	Param(config, write, section, "volume", mastervolume);
+	Param(config, write, section, "sources", sound_sources);
+	Param(config, write, section, "volume", sound_volume);
 
 	config.GetSection("joystick", section);
 	Param(config, write, section, "type", joytype);

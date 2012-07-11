@@ -54,9 +54,14 @@ src = Split("""aabb.cpp
 		graphics_fallback.cpp
 		graphics_gl3v.cpp
 		graphics_renderers.cpp
-		gui.cpp
-		guioption.cpp
-		guipage.cpp
+		gui/gui.cpp
+		gui/guicontrol.cpp
+		gui/guiimage.cpp
+		gui/guilabel.cpp
+		gui/guioption.cpp
+		gui/guipage.cpp
+		gui/guislider.cpp
+		gui/guiwidget.cpp
 		http.cpp
 		hud.cpp
 		hudbar.cpp
@@ -100,7 +105,6 @@ src = Split("""aabb.cpp
 		sound.cpp
 		soundbuffer.cpp
 		soundfilter.cpp
-		soundsource.cpp
 		sprite2d.cpp
 		suspensionbumpdetection.cpp
 		svn_sourceforge.cpp
@@ -111,20 +115,9 @@ src = Split("""aabb.cpp
 		track.cpp
 		trackloader.cpp
 		trackmap.cpp
-		updatemanagement.cpp
+		updatemanager.cpp
 		utils.cpp
 		vertexarray.cpp
-		widget_button.cpp
-		widget_colorpicker.cpp
-		widget_controlgrab.cpp
-		widget_doublestringwheel.cpp
-		widget_image.cpp
-		widget_label.cpp
-		widget_multiimage.cpp
-		widget_slider.cpp
-		widget_spinningcar.cpp
-		widget_stringwheel.cpp
-		widget_toggle.cpp
 		window.cpp
 		cfg/inf.cpp
 		cfg/ini.cpp

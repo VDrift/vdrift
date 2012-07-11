@@ -454,10 +454,10 @@ void MODEL_JOE03::ReadData ( FILE * m_FilePointer, const JOEPACK * pack, JOEObje
 		cout << v_vertices[i*3] << "," << v_vertices[i*3+1] << "," << v_vertices[i*3+2] << endl;*/
 
 	//assign to our mesh
-	mesh.SetFaces(&v_faces[0], v_faces.size());
-	mesh.SetVertices(&v_vertices[0], v_vertices.size());
-	mesh.SetNormals(&v_normals[0], v_normals.size());
-	mesh.SetTexCoordSets(1);
-	mesh.SetTexCoords(0, &v_texcoords[0], v_texcoords.size());
+	m_mesh.SetFaces(&v_faces[0], v_faces.size());
+	m_mesh.SetVertices(&v_vertices[0], v_vertices.size());
+	m_mesh.SetNormals(&v_normals[0], v_normals.size());
+	m_mesh.SetTexCoordSets(1);
+	m_mesh.SetTexCoords(0, &v_texcoords[0], v_texcoords.size());
 }
 

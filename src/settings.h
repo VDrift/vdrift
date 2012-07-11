@@ -25,12 +25,12 @@ public:
 
 	unsigned int GetResolutionX() const
 	{
-		return resolution_x;
+		return resolution[0];
 	}
 
 	unsigned int GetResolutionY() const
 	{
-		return resolution_y;
+		return resolution[1];
 	}
 
 	unsigned int GetBpp() const
@@ -68,9 +68,14 @@ public:
 		return show_fps;
 	}
 
-	float GetMasterVolume() const
+	float GetSoundVolume() const
 	{
-		return mastervolume;
+		return sound_volume;
+	}
+
+	int GetMaxSoundSources() const
+	{
+		return sound_sources;
 	}
 
 	bool GetMPH() const
@@ -260,43 +265,29 @@ public:
 		return normalmaps;
 	}
 
-	const std::string & GetPlayerCar() const
+	const std::string & GetCar() const
 	{
-		return player;
+		return car;
 	}
 
-	const std::string & GetPlayerCarPaint() const
+	const std::string & GetCarPaint() const
 	{
-		return player_paint;
+		return car_paint;
 	}
 
-	void GetPlayerColor(float & r, float & g, float & b) const
+	float GetCarColorHue() const
 	{
-		r = player_color[0];
-		g = player_color[1];
-		b = player_color[2];
+		return car_color_hue;
 	}
 
-	const std::string & GetOpponentCar() const
+	float GetCarColorSat() const
 	{
-		return opponent;
+		return car_color_sat;
 	}
 
-	const std::string & GetOpponentCarPaint() const
+	float GetCarColorVal() const
 	{
-		return opponent_paint;
-	}
-
-	const std::string & GetOpponentType() const
-	{
-		return opponent_type;
-	}
-
-	void GetOpponentColor(float & r, float & g, float & b) const
-	{
-		r = opponent_color[0];
-		g = opponent_color[1];
-		b = opponent_color[2];
+		return car_color_val;
 	}
 
 	float GetCameraBounce() const
@@ -334,19 +325,14 @@ public:
 		return vehicle_damage;
 	}
 
-	void SetResolutionX ( unsigned int theValue )
+	void SetResolutionX ( unsigned value )
 	{
-		resolution_x = theValue;
+		resolution[0] = value;
 	}
 
-	void SetResolutionY ( unsigned int value )
+	void SetResolutionY ( unsigned value )
 	{
-		resolution_y = value;
-	}
-
-	void SetMasterVolume ( float value )
-	{
-		mastervolume = value;
+		resolution[1] = value;
 	}
 
 	void SetSelectedReplay ( int value )
@@ -373,9 +359,8 @@ public:
 	}
 
 private:
+	std::vector<unsigned> resolution;
 	bool res_override;
-	int resolution_x;
-	int resolution_y;
 	int bpp;
 	int depthbpp;
 	bool fullscreen;
@@ -383,7 +368,8 @@ private:
 	std::string skin;
 	std::string language;
 	bool show_fps;
-	float mastervolume;
+	float sound_volume;
+	int sound_sources;
 	bool mph; //if false, KPH
 	std::string track;
 	int antialiasing; //0 or 1 mean off
@@ -420,19 +406,19 @@ private:
 	int lighting;
 	bool bloom;
 	bool normalmaps;
-	std::string player;
-	std::string opponent;
-	std::string player_paint;
-	std::string opponent_paint;
-	std::string opponent_type;
-	std::vector<float> player_color;
-	std::vector<float> opponent_color;
+	std::string car;
+	std::string car_paint;
+	float car_color_hue;
+	float car_color_sat;
+	float car_color_val;
+	int cars_num;
 	int camera_id;
 	float camera_bounce;
 	int number_of_laps;
 	float contrast;
 	bool hgateshifter;
 	float ai_difficulty;
+	std::string ai_type;
 	bool vehicle_damage;
 };
 

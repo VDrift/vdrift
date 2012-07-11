@@ -23,7 +23,6 @@
 #include "opengl_utility.h"
 #include "vertexarray.h"
 #include "mathvector.h"
-#include "aabb.h"
 
 /// Loading data into the mesh vertexarray is implemented by derived classes.
 class MODEL
@@ -66,13 +65,16 @@ public:
 
 	void ClearMeshData();
 
-	int GetListID() const;
+	unsigned GetListID() const;
 
+	/// Get aabb size.
+	MATHVECTOR <float, 3> GetSize() const;
+
+	/// Get aabb center.
+	MATHVECTOR <float, 3> GetCenter() const;
+
+	/// Get bounding radius relative to center.
 	float GetRadius() const;
-
-	float GetRadiusXZ() const;
-
-	MATHVECTOR <float, 3> GetCenter();
 
 	bool HaveMeshData() const;
 
@@ -90,35 +92,25 @@ public:
 
 	bool Loaded();
 
-	void Translate(float x, float y, float z);
-
-	void Rotate(float a, float x, float y, float z);
-
-	void Scale(float x, float y, float z);
-
-	AABB <float> GetAABB() const;
-
 protected:
 	/// To be filled by the derived classes.
-	VERTEXARRAY mesh;
+	VERTEXARRAY m_mesh;
 
 private:
-	bool generatedlistid;
-	bool generatedmetrics;
-	int listid;
-
-	bool generatedvao;
 	/// VAO means vertex array object.
 	GLuint vao;
 	std::vector <GLuint> vbos;
 	GLuint elementVbo;
-	unsigned int elementCount;
+	unsigned elementCount;
+	unsigned listid;			///< listid 0 is invalid, means no display list compiled
 
 	// Metrics.
+	MATHVECTOR <float, 3> min;
+	MATHVECTOR <float, 3> max;
 	float radius;
-	float radiusxz;
-	MATHVECTOR <float, 3> bboxmin;
-	MATHVECTOR <float, 3> bboxmax;
+
+	bool generatedmetrics;
+	bool generatedvao;
 
 	void RequireMetrics() const;
 

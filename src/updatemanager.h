@@ -1,5 +1,5 @@
-#ifndef _UPDATEMANAGEMENT_H
-#define _UPDATEMANAGEMENT_H
+#ifndef _UPDATEMANAGER_H
+#define _UPDATEMANAGER_H
 
 #include "autoupdate.h"
 #include "game_downloader.h"

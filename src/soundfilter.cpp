@@ -2,12 +2,27 @@
 
 #include <cassert>
 
-//the coefficients are arrays of size xcoeff[neworder+1]
+SOUNDFILTER::SOUNDFILTER() :
+	order(0)
+{
+	ClearState();
+}
+
+void SOUNDFILTER::ClearState()
+{
+	for (int c = 0; c < 2; ++c)
+	{
+		for (int i = 0; i < MAX_FILTER_ORDER; ++i)
+		{
+			statex[c][i] = 0.0;
+			statey[c][i] = 0.0;
+		}
+	}
+}
+
 void SOUNDFILTER::SetFilter(const int neworder, const float * xcoeff, const float * ycoeff)
 {
 	assert(!(neworder > MAX_FILTER_ORDER || neworder < 0));
-		//cerr << __FILE__ << "," << __LINE__ << "Filter order is larger than maximum order" << endl;
-		//UNRECOVERABLE_ERROR_FUNCTION(__FILE__,__LINE__,"Filter order is larger than maximum order");
 
 	order = neworder;
 	for (int i = 0; i < neworder+1; i++)
@@ -21,7 +36,7 @@ void SOUNDFILTER::Filter(int * chan1, int * chan2, const int len)
 {
 	for (int i = 0; i < len; i++)
 	{
-		//store old state
+		// store old state
 		for (int s = 1; s <= order; s++)
 		{
 			statex[0][s] = statex[0][s-1];
@@ -31,7 +46,7 @@ void SOUNDFILTER::Filter(int * chan1, int * chan2, const int len)
 			statey[1][s] = statey[1][s-1];
 		}
 
-		//set the sample state for now to the current input
+		// set the sample state for now to the current input
 		statex[0][0] = chan1[i];
 		statex[1][0] = chan2[i];
 
@@ -49,12 +64,11 @@ void SOUNDFILTER::Filter(int * chan1, int * chan2, const int len)
 				break;
 		}
 
-		//store the state of the output
+		// store the state of the output
 		statey[0][0] = chan1[i];
 		statey[1][0] = chan2[i];
 	}
 }
-
 
 void SOUNDFILTER::SetFilterOrder1(float xc0, float xc1, float yc1)
 {

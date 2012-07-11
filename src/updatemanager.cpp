@@ -1,7 +1,7 @@
-#include "updatemanagement.h"
+#include "updatemanager.h"
 
 #include "svn_sourceforge.h"
-#include "gui.h"
+#include "gui/gui.h"
 #include "http.h"
 #include "pathmanager.h"
 #include "utils.h"
@@ -76,7 +76,7 @@ void UPDATE_MANAGER::StartCheckForUpdates(GAME_DOWNLOADER downloader, GUI & gui)
 		UTILS::print_vector(updates.second, info_output);
 		info_output << "]" << std::endl;
 	}
-	
+
 	if (!updates.first.empty())
 	{
 		std::stringstream updatesummary;

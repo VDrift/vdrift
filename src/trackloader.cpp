@@ -105,7 +105,10 @@ TRACK::LOADER::~LOADER()
 void TRACK::LOADER::Clear()
 {
 	bodies.clear();
+	combined.clear();
 	track_config.clear();
+	objectfile.close();
+	pack.Close();
 }
 
 bool TRACK::LOADER::BeginLoad()
@@ -320,9 +323,9 @@ bool TRACK::LOADER::LoadShape(const PTree & cfg, const MODEL & model, BODY & bod
 		if (!shape)
 		{
 			// fall back to model bounding box
-			btVector3 size = ToBulletVector(model.GetAABB().GetSize());
+			btVector3 size = ToBulletVector(model.GetSize());
 			shape = new btBoxShape(size * 0.5);
-			center = center + ToBulletVector(model.GetAABB().GetCenter());
+			center = center + ToBulletVector(model.GetCenter());
 		}
 		if (compound)
 		{

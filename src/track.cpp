@@ -2,6 +2,7 @@
 #include "trackloader.h"
 #include "dynamicsworld.h"
 #include "tobullet.h"
+#include "coordinatesystem.h"
 #include "reseatable_reference.h"
 
 #include <algorithm>
@@ -87,14 +88,14 @@ void TRACK::Clear()
 		delete data.objects[i];
 	}
 	data.objects.clear();
-    
+
 	for (int i = 0, n = data.shapes.size(); i < n; ++i)
 	{
 		btCollisionShape * shape = data.shapes[i];
 		delete shape;
 	}
 	data.shapes.clear();
-    
+
 	for (int i = 0, n = data.meshes.size(); i < n; ++i)
 		delete data.meshes[i];
 	data.meshes.clear();
@@ -138,7 +139,7 @@ bool TRACK::CastRay(const MATHVECTOR <float, 3> & origin, const MATHVECTOR <floa
 void TRACK::Update()
 {
 	if (!data.loaded) return;
-    
+
 	std::list<MotionState>::const_iterator t = data.body_transforms.begin();
 	for (int i = 0, e = data.body_nodes.size(); i < e; ++i, ++t)
 	{
@@ -151,12 +152,11 @@ void TRACK::Update()
 std::pair <MATHVECTOR <float, 3>, QUATERNION <float> > TRACK::GetStart(unsigned int index) const
 {
 	assert(!data.start_positions.empty());
-	unsigned int laststart = data.start_positions.size()-1;
+	unsigned int laststart = data.start_positions.size() - 1;
 	if (index > laststart)
 	{
 		std::pair <MATHVECTOR <float, 3>, QUATERNION <float> > sp = data.start_positions[laststart];
-		MATHVECTOR <float, 3> backward(6,0,0);
-		backward = backward * (index-laststart);
+		MATHVECTOR <float, 3> backward = -direction::Forward * 6 * (index - laststart);
 		sp.second.RotateVector(backward);
 		sp.first = sp.first + backward;
 		return sp;

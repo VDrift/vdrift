@@ -20,6 +20,8 @@
 #include "model.h"
 #include "utils.h"
 #include "vertexattribs.h"
+#include <limits>
+
 using namespace VERTEX_ATTRIBS;
 
 #define ERROR_CHECK OPENGL_UTILITY::CheckForOpenGLErrors(std::string(__PRETTY_FUNCTION__)+":"+__FILE__+":"+UTILS::tostr(__LINE__), error_output)
@@ -28,12 +30,26 @@ static const std::string file_magic = "OGLVARRAYV01";
 
 static const bool vaoDebug = false;
 
-MODEL::MODEL() : generatedlistid(false), generatedmetrics(false), generatedvao(false), vao(0), elementVbo(0), elementCount(0), radius(0), radiusxz(0)
+MODEL::MODEL() :
+	vao(0),
+	elementVbo(0),
+	elementCount(0),
+	listid(0),
+	radius(0),
+	generatedmetrics(false),
+	generatedvao(false)
 {
 	// Constructor.
 }
 
-MODEL::MODEL(const std::string & filepath, std::ostream & error_output) : generatedlistid(false), generatedmetrics(false), generatedvao(false), vao(0), elementVbo(0), elementCount(0), radius(0), radiusxz(0)
+MODEL::MODEL(const std::string & filepath, std::ostream & error_output) :
+	vao(0),
+	elementVbo(0),
+	elementCount(0),
+	listid(0),
+	radius(0),
+	generatedmetrics(false),
+	generatedvao(false)
 {
 	if (filepath.size() > 4 && filepath.substr(filepath.size()-4) == ".ova")
 		ReadFromFile(filepath, error_output, false);
@@ -73,7 +89,7 @@ bool MODEL::Load(const VERTEXARRAY & varray, std::ostream & error_output, bool g
 
 bool MODEL::Serialize(joeserialize::Serializer & s)
 {
-	_SERIALIZE_(s,mesh);
+	_SERIALIZE_(s, m_mesh);
 	return true;
 }
 
@@ -146,10 +162,10 @@ void MODEL::GenerateListID(std::ostream & error_output)
 	int normcount;
 	int tccount[1];
 
-	mesh.GetFaces(faces, facecount);
-	mesh.GetVertices(verts, vertcount);
-	mesh.GetNormals(norms, normcount);
-	mesh.GetTexCoords(0, tc[0], tccount[0]);
+	m_mesh.GetFaces(faces, facecount);
+	m_mesh.GetVertices(verts, vertcount);
+	m_mesh.GetNormals(norms, normcount);
+	m_mesh.GetTexCoords(0, tc[0], tccount[0]);
 
 	assert(facecount > 0);
 	assert(vertcount > 0);
@@ -163,7 +179,7 @@ void MODEL::GenerateListID(std::ostream & error_output)
 	glVertexPointer(3, GL_FLOAT, 0, verts);
 	glNormalPointer(GL_FLOAT, 0, norms);
 	glTexCoordPointer(2, GL_FLOAT, 0, tc[0]);
-	
+
 	glNewList(listid, GL_COMPILE);
 	glDrawElements(GL_TRIANGLES, facecount, GL_UNSIGNED_INT, faces);
 	glEndList();
@@ -171,8 +187,6 @@ void MODEL::GenerateListID(std::ostream & error_output)
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 	glDisableClientState(GL_NORMAL_ARRAY);
 	glDisableClientState(GL_VERTEX_ARRAY);
-
-	generatedlistid = true;
 
 	OPENGL_UTILITY::CheckForOpenGLErrors("model list ID generation", error_output);
 }
@@ -204,7 +218,7 @@ void MODEL::GenerateVertexArrayObject(std::ostream & error_output)
 	// Buffer object for faces.
 	const int * faces;
 	int facecount;
-	mesh.GetFaces(faces, facecount);
+	m_mesh.GetFaces(faces, facecount);
 	assert(faces && facecount > 0);
 	glGenBuffers(1, &elementVbo);ERROR_CHECK;
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementVbo);ERROR_CHECK;
@@ -214,7 +228,7 @@ void MODEL::GenerateVertexArrayObject(std::ostream & error_output)
 	// Calculate the number of vertices (vertcount is the size of the verts array).
 	const float * verts;
 	int vertcount;
-	mesh.GetVertices(verts, vertcount);
+	m_mesh.GetVertices(verts, vertcount);
 	assert(verts && vertcount > 0);
 	unsigned int vertexCount = vertcount/3;
 
@@ -224,7 +238,7 @@ void MODEL::GenerateVertexArrayObject(std::ostream & error_output)
 	// Generate buffer object for normals.
 	const float * norms;
 	int normcount;
-	mesh.GetNormals(norms, normcount);
+	m_mesh.GetNormals(norms, normcount);
 	if (!norms || normcount <= 0)
 		glDisableVertexAttribArray(VERTEX_NORMAL);
 	else
@@ -242,10 +256,10 @@ void MODEL::GenerateVertexArrayObject(std::ostream & error_output)
 	// Generate buffer object for texture coordinates.
 	const float * tc[1];
 	int tccount[1];
-	if (mesh.GetTexCoordSets() > 0)
+	if (m_mesh.GetTexCoordSets() > 0)
 	{
 		// TODO: Make this work for UV1 and UV2.
-		mesh.GetTexCoords(0, tc[0], tccount[0]);
+		m_mesh.GetTexCoords(0, tc[0], tccount[0]);
 		assert((unsigned int)tccount[0] == vertexCount*2);
 		vbos.push_back(GenerateBufferObject(tc[0], VERTEX_UV0, vertexCount, 2, error_output));
 	}
@@ -291,7 +305,7 @@ void MODEL::ClearVertexArrayObject()
 			vao = 0;
 		}
 	}
-	generatedlistid = false;
+	listid = 0;
 }
 
 bool MODEL::GetVertexArrayObject(GLuint & vao_out, unsigned int & elementCount_out) const
@@ -307,98 +321,64 @@ bool MODEL::GetVertexArrayObject(GLuint & vao_out, unsigned int & elementCount_o
 
 void MODEL::GenerateMeshMetrics()
 {
-	float maxv[3] = {0, 0, 0};
-	float minv[3] = {0, 0, 0};
-	bool havevals[6];
-	for (int n = 0; n < 6; n++)
-		havevals[n] = false;
+	const float flt_max = std::numeric_limits<float>::max();
+	const float flt_min = std::numeric_limits<float>::min();
+	float maxv[3] = {flt_min, flt_min, flt_min};
+	float minv[3] = {flt_max, flt_max, flt_max};
 
 	const float * verts;
-	int vnum;
-	mesh.GetVertices(verts, vnum);
-	vnum /= 3;
-	for (int v = 0; v < vnum; v++)
+	int vnum3;
+	m_mesh.GetVertices(verts, vnum3);
+	assert(vnum3);
+
+	for (int n = 0; n < vnum3; n += 3)
 	{
-		MATHVECTOR <float, 3> temp;
-
-		temp.Set(verts + v*3);
-
-		// Cache for bbox stuff.
-		for (int n = 0; n < 3; n++)
-		{
-			if (!havevals[n])
-			{
-				maxv[n] = temp[n];
-				havevals[n] = true;
-			}
-			else if (temp[n] > maxv[n])
-				maxv[n] = temp[n];
-
-			if (!havevals[n+3])
-			{
-				minv[n] = temp[n];
-				havevals[n+3] = true;
-			}
-			else if (temp[n] < minv[n])
-				minv[n] = temp[n];
-		}
-
-		float r = temp.Magnitude();
-		MATHVECTOR <float, 2> tempxz;
-		tempxz.Set(temp[0], temp[2]);
-		float rxz = tempxz.Magnitude();
-		if (r > radius)
-			radius = r;
-		if (rxz > radiusxz)
-			radiusxz = rxz;
+		const float * v = verts + n;
+		if (v[0] > maxv[0]) maxv[0] = v[0];
+		if (v[1] > maxv[1]) maxv[1] = v[1];
+		if (v[2] > maxv[2]) maxv[2] = v[2];
+		if (v[0] < minv[0]) minv[0] = v[0];
+		if (v[1] < minv[1]) minv[1] = v[1];
+		if (v[2] < minv[2]) minv[2] = v[2];
 	}
 
-	bboxmin.Set(minv[0], minv[1], minv[2]);
-	bboxmax.Set(maxv[0], maxv[1], maxv[2]);
-
-	MATHVECTOR <float, 3> center;
-	center = (bboxmin + bboxmax)*0.5;
-	radius = (bboxmin - center).Magnitude();
-
-	MATHVECTOR <float, 3> minv_noy = bboxmin;
-	minv_noy[1] = 0;
-	center[1] = 0;
-	radiusxz = (minv_noy - center).Magnitude();
+	min.Set(minv[0], minv[1], minv[2]);
+	max.Set(maxv[0], maxv[1], maxv[2]);
+	radius = GetSize().Magnitude() * 0.5f + 0.001f;	// 0.001 margin
 
 	generatedmetrics = true;
 }
 
 void MODEL::ClearMeshData()
 {
-	mesh.Clear();
+	m_mesh.Clear();
 }
 
-int MODEL::GetListID() const
+unsigned MODEL::GetListID() const
 {
 	RequireListID();
 	return listid;
 }
 
+MATHVECTOR <float, 3> MODEL::GetSize() const
+{
+	return max - min;
+}
+
+MATHVECTOR <float, 3> MODEL::GetCenter() const
+{
+	return (max + min) * 0.5f;
+}
+
 float MODEL::GetRadius() const
 {
 	RequireMetrics();
-	return radius + 0.5f;
-}
-
-float MODEL::GetRadiusXZ() const
-{
-	RequireMetrics();
-	return radiusxz;
-}
-
-MATHVECTOR <float, 3> MODEL::GetCenter()
-{
-	return (bboxmax + bboxmin) * 0.5;
+	return radius;
 }
 
 bool MODEL::HaveMeshData() const
 {
-	return (mesh.GetNumFaces() > 0);
+	return (m_mesh.GetNumFaces() > 0);
 }
 
 bool MODEL::HaveMeshMetrics() const
@@ -408,7 +388,7 @@ bool MODEL::HaveMeshMetrics() const
 
 bool MODEL::HaveListID() const
 {
-	return generatedlistid;
+	return listid;
 }
 
 void MODEL::Clear()
@@ -421,48 +401,24 @@ void MODEL::Clear()
 
 const VERTEXARRAY & MODEL::GetVertexArray() const
 {
-	return mesh;
+	return m_mesh;
 }
 
 void MODEL::SetVertexArray(const VERTEXARRAY & newmesh)
 {
 	Clear();
-	mesh = newmesh;
+	m_mesh = newmesh;
 }
 
 void MODEL::BuildFromVertexArray(const VERTEXARRAY & newmesh)
 {
 	SetVertexArray(newmesh);
-
-	// Generate metrics such as bounding box, etc.
 	GenerateMeshMetrics();
 }
 
 bool MODEL::Loaded()
 {
-	return (mesh.GetNumFaces() > 0);
-}
-
-void MODEL::Translate(float x, float y, float z)
-{
-	mesh.Translate(x, y, z);
-}
-
-void MODEL::Rotate(float a, float x, float y, float z)
-{
-	mesh.Rotate(a, x, y, z);
-}
-
-void MODEL::Scale(float x, float y, float z)
-{
-	mesh.Scale(x,y,z);
-}
-
-AABB <float> MODEL::GetAABB() const
-{
-	AABB <float> output;
-	output.SetFromCorners(bboxmin, bboxmax);
-	return output;
+	return (m_mesh.GetNumFaces() > 0);
 }
 
 void MODEL::RequireMetrics() const
@@ -474,14 +430,14 @@ void MODEL::RequireMetrics() const
 void MODEL::RequireListID() const
 {
 	// Mesh id needs to be generated.
-	assert(generatedlistid);
+	assert(listid);
 }
 
 void MODEL::ClearListID()
 {
-	if (generatedlistid)
+	if (listid)
 		glDeleteLists(listid, 1);
-	generatedlistid = false;
+	listid = 0;
 }
 
 void MODEL::ClearMetrics()
