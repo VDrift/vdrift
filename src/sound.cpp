@@ -1,5 +1,6 @@
 #include "sound.h"
 
+#include "coordinatesystem.h"
 #include <SDL/SDL.h>
 #include <algorithm>
 #include <cassert>
@@ -166,7 +167,7 @@ void SOUND::Update()
 		GetSamplerChanges();
 
 		ProcessSamplerAdd();
-		
+
 		ProcessSamplerRemove();
 
 		SetSourceChanges();
@@ -400,14 +401,17 @@ void SOUND::ProcessSources()
 				float len = relvec.Magnitude();
 				if (len < 0.1f) len = 0.1f;
 
-				float cgain = 0.25f / log(100.f) * (log(1000.f) - 1.6f * log(len));
-				if (cgain > 1) cgain = 1;
-				if (cgain < 0) cgain = 0;
+				// distance attenuation
+				float cgain = 0.25f / log(100.f) * (log(1000.f) - 1.5f * log(len));
+				cgain = clamp(cgain, 0.0f, 1.0f);
 
-				listener_rot.RotateVector(relvec);
-				float xcoord = -relvec.Normalize()[1];
-				float pgain1 = -xcoord;
-				float pgain2 = xcoord;
+				// directional attenuation
+				// maximum at 0.75 (source on opposite side)
+				relvec = relvec * (1.0f / len);
+				(-listener_rot).RotateVector(relvec);
+				float xcoord = relvec.dot(direction::Right) * 0.75f;
+				float pgain1 = xcoord;			// left attenuation
+				float pgain2 = -xcoord;			// right attenuation
 				if (pgain1 < 0) pgain1 = 0;
 				if (pgain2 < 0) pgain2 = 0;
 
