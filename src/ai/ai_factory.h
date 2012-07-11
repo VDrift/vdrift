@@ -28,6 +28,7 @@ class AI_Factory
 {
 public:
 	virtual AI_Car* create(CAR * car, float difficulty) = 0;
+	virtual ~AI_Factory() {};
 };
 
 #endif // _AI_FACTORY_H
