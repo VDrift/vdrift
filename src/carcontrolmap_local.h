@@ -109,19 +109,19 @@ private:
 	std::vector <float> lastinputs;
 
 	/// max number of controls per input
-	static const int max_controls = 3;
+	static const size_t max_controls = 3;
 
 	/// used to stringify/destringify the CARINPUT enum
 	static const std::map <std::string, CARINPUT::CARINPUT> carinput_stringmap;
 	static const std::vector<std::string> carinput_strings;
-	
+
 	/// used to turn legacy key names from older vdrift releases into keycodes
 	static const std::map <std::string, int> keycode_stringmap;
 
 	static std::map <std::string, CARINPUT::CARINPUT> InitCarInputStringMap();
 	static std::vector<std::string> InitCarInputStrings();
 	static std::map <std::string, int> InitKeycodeStringMap();
-	
+
 	static const std::string & GetStringFromInput(const CARINPUT::CARINPUT input);
 	static CARINPUT::CARINPUT GetInputFromString(const std::string & str);
 	static const std::string & GetStringFromKeycode(const int code);
