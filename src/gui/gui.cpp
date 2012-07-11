@@ -7,6 +7,8 @@
 static const std::string null;
 
 GUI::GUI() :
+	m_cursorx(0),
+	m_cursory(0),
 	animation_counter(0),
 	animation_count_start(0),
 	ingame(false)
@@ -183,25 +185,27 @@ void GUI::ProcessInput(
 	bool cursordown, bool cursorjustup,
 	bool moveleft, bool moveright,
 	bool moveup, bool movedown,
-	bool select, bool cancel,
-	float screenhwratio)
+	bool select, bool cancel)
 {
-	if (active_page != pages.end())
-	{
-		active_page->second.ProcessInput(
-			cursorx, cursory,
-			cursordown, cursorjustup,
-			moveleft, moveright,
-			moveup, movedown,
-			select, cancel,
-			screenhwratio);
-	}
+	if (active_page == pages.end())
+		return;
+
+	bool cursormoved = m_cursorx != cursorx || m_cursory != cursory;
+	m_cursorx = cursorx;
+	m_cursory = cursory;
+
+	active_page->second.ProcessInput(
+		cursorx, cursory, cursormoved,
+		cursordown, cursorjustup,
+		moveleft, moveright,
+		moveup, movedown,
+		select, cancel);
 }
 
 void GUI::Update(float dt)
 {
 	bool fadein = animation_counter > 0;
-	
+
 	animation_counter -= dt;
 	if (animation_counter < 0)
 		animation_counter = 0;

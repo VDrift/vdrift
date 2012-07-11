@@ -95,9 +95,6 @@ bool GUIPAGE::Load(
 	// register tooltip signal
 	vsignalmap["gui.tooltip"] = &tooltip;
 
-	// draw order offset
-	float z0 = 100;
-
 	// load widgets
 	active_control = 0;
 	std::vector<std::string> controlid;				// controls
@@ -149,8 +146,9 @@ bool GUIPAGE::Load(
 
 		float z(0);
 		pagefile.GetParam(section, "layer", z);
-		z = z + z0;
-		
+		// draw order offset
+		z = z + 100;
+
 		std::string text;
 		if (pagefile.GetParam(section, "text", text))
 		{
@@ -176,15 +174,15 @@ bool GUIPAGE::Load(
 			new_widget->SetupDrawable(
 				sref, font, align, scalex, scaley,
 				x, y, w, h, z);
-			
+
 			ConnectAction(text, vsignalmap, new_widget->set_value);
-			widget = new_widget; 
+			widget = new_widget;
 
 			std::string name;
 			if (pagefile.GetParam(section, "name", name))
 				labels[name] = new_widget;
 		}
-		
+
 		std::string image;
 		if (pagefile.GetParam(section, "image", image))
 		{
@@ -197,7 +195,7 @@ bool GUIPAGE::Load(
 			ConnectAction(image, vsignalmap, new_widget->set_image);
 			widget = new_widget;
 		}
-		
+
 		std::string slider;
 		if (pagefile.GetParam(section, "slider", slider))
 		{
@@ -235,7 +233,7 @@ bool GUIPAGE::Load(
 			ConnectAction(hue, vsignalmap, widget->set_hue);
 			ConnectAction(sat, vsignalmap, widget->set_sat);
 			ConnectAction(val, vsignalmap, widget->set_val);
-			
+
 			widgetmap[section->first] = widget;
 			widgets.push_back(widget);
 		}
@@ -419,11 +417,10 @@ void GUIPAGE::SetAlpha(SCENENODE & parent, float value)
 
 void GUIPAGE::ProcessInput(
 	float cursorx, float cursory,
-	bool cursordown, bool cursorjustup,
+	bool cursormoved, bool cursordown, bool cursorjustup,
 	bool moveleft, bool moveright,
 	bool moveup, bool movedown,
-	bool select, bool cancel,
-	float screenhwratio)
+	bool select, bool cancel)
 {
 	if (cancel)
 	{
@@ -432,13 +429,17 @@ void GUIPAGE::ProcessInput(
 	}
 
 	// set active widget from cursor
-	for (std::vector <GUICONTROL *>::iterator i = controls.begin(); i != controls.end(); ++i)
+	bool cursoraction = cursormoved || cursordown || cursorjustup;
+	if (cursoraction)
 	{
-		if ((**i).InFocus(cursorx, cursory))
+		for (std::vector<GUICONTROL *>::iterator i = controls.begin(); i != controls.end(); ++i)
 		{
-			SetActiveWidget(**i);
-			select |= cursorjustup;	// cursor select
-			break;
+			if ((**i).InFocus(cursorx, cursory))
+			{
+				SetActiveWidget(**i);
+				select |= cursorjustup;	// cursor select
+				break;
+			}
 		}
 	}
 

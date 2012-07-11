@@ -49,11 +49,10 @@ public:
 	/// execute game actions and update gui options
 	void ProcessInput(
 		float cursorx, float cursory,
-		bool cursordown, bool cursorjustup,
+		bool cursormoved, bool cursordown, bool cursorjustup,
 		bool moveleft, bool moveright,
 		bool moveup, bool movedown,
-		bool select, bool cancel,
-		float screenhwratio);
+		bool select, bool cancel);
 
 	/// tell all child widgets to do as update tick
 	void Update(SCENENODE & parent, float dt);
@@ -89,7 +88,7 @@ private:
 		float value;
 		Delegate1<void, float> set;
 		Slot0 action;
-		
+
 		WidgetCb();
 		WidgetCb(const WidgetCb & other);
 		WidgetCb & operator=(const WidgetCb & other);

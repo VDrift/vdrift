@@ -1143,8 +1143,7 @@ void GAME::ProcessGUIInputs()
 		carcontrols_local.second.GetInput(CARINPUT::GUI_UP),
 		carcontrols_local.second.GetInput(CARINPUT::GUI_DOWN),
 		carcontrols_local.second.GetInput(CARINPUT::GUI_SELECT),
-		carcontrols_local.second.GetInput(CARINPUT::GUI_CANCEL),
-		(float)window.GetH() / window.GetW());
+		carcontrols_local.second.GetInput(CARINPUT::GUI_CANCEL));
 }
 
 /* Look for keyboard, mouse, joystick input, assign local car controls... */

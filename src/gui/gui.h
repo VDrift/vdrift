@@ -67,8 +67,7 @@ public:
 		bool cursordown, bool cursorjustup,
 		bool moveleft, bool moveright,
 		bool moveup, bool movedown,
-		bool select, bool cancel,
-		float screenhwratio);
+		bool select, bool cancel);
 
 	void Update(float dt);
 
@@ -86,7 +85,7 @@ public:
 	/// returns false if the specified page/label does not exist
 	bool SetLabelText(const std::string & page, const std::string & label, const std::string & text);
 	bool GetLabelText(const std::string & page, const std::string & label, std::string & text_output);
-	
+
 	/// iterate trough all pages and update labels, slow
 	void SetLabelText(const std::string & page, const std::map<std::string, std::string> & label_text);
 	void SetLabelText(const std::map<std::string, std::string> & label_text);
@@ -108,6 +107,7 @@ private:
 	PAGEMAP::iterator active_page;
 	SCENENODE node;
 	FONT font;
+	float m_cursorx, m_cursory;			///< cache cursor position
 	float animation_counter;
 	float animation_count_start;
 	bool ingame;
