@@ -1291,6 +1291,38 @@ void GAME::UpdateCarInputs(CAR & car)
 		else
 		{
 			carinputs = carcontrols_local.second.GetInputs();
+
+#ifdef VISUALIZE_AI_DEBUG
+			// It allows to activate the AI on the player car with F9 button.
+			// AI will override player inputs.
+			// This is useful for bringing the car in strange
+			// situations and test how the AI solves it.
+			static bool aiControlled = false;
+			static bool buttonPressed = false;
+			if (buttonPressed != eventsystem.GetKeyState(SDLK_F9).just_down)
+			{
+				buttonPressed = !buttonPressed;
+				if (buttonPressed)
+				{
+					aiControlled = !aiControlled;
+					if (aiControlled)
+					{
+						info_output << "Switching to AI controlled player." << std::endl;
+						ai.add_car(&car, 1.0);
+					}
+					else
+					{
+						info_output << "Switching to user controlled player." << std::endl;
+						ai.remove_car(&car);
+					}
+				}
+			}
+			if(aiControlled)
+			{
+				carinputs = ai.GetInputs(&car);
+				assert(carinputs.size() == CARINPUT::INVALID);
+			}
+#endif
 		}
 	}
 	else
