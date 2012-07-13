@@ -23,12 +23,12 @@
 #include "ai_car_standard.h"
 #include "ai_car_experimental.h"
 
-const std::string AI::default_ai_type = "Standard AI";
+const std::string AI::default_ai_type = "standard";
 
 AI::AI() : empty_input(CARINPUT::INVALID, 0.0)
 {
-	AddAIFactory("Standard AI", new AI_Car_Standard_Factory());
-	AddAIFactory("Experimental AI", new AI_Car_Experimental_Factory());
+	AddAIFactory("standard", new AI_Car_Standard_Factory());
+	AddAIFactory("experimental", new AI_Car_Experimental_Factory());
 }
 
 AI::~AI()
@@ -45,7 +45,7 @@ AI::~AI()
 	AI_Factories.clear();
 }
 
-void AI::add_car(CAR * car, float difficulty, std::string type)
+void AI::add_car(CAR * car, float difficulty, const std::string & type)
 {
 	assert(car);
 	assert(AI_Factories.size() > 0);

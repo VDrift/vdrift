@@ -193,6 +193,8 @@ private:
 	void SetCarColorHue(const std::string & value);
 	void SetCarColorSat(const std::string & value);
 	void SetCarColorVal(const std::string & value);
+	void SetCarAIType(const std::string & value);
+	void SetCarAILevel(const std::string & value);
 	void SetCarsNum(const std::string & value);
 	void SetTrackImage(const std::string & value);
 	void SetControl(const std::string & value);
@@ -205,6 +207,8 @@ private:
 	Slot1<const std::string &> set_car_color_hue;
 	Slot1<const std::string &> set_car_color_sat;
 	Slot1<const std::string &> set_car_color_val;
+	Slot1<const std::string &> set_car_ai_type;
+	Slot1<const std::string &> set_car_ai_level;
 	Slot1<const std::string &> set_cars_num;
 	Slot1<const std::string &> set_track_image;
 	Slot1<const std::string &> set_control;
@@ -260,9 +264,9 @@ private:
 	CAMERA_FREE garage_camera;
 	std::vector <std::string> cars_name;
 	std::vector <std::string> cars_paint;
-	std::vector <std::string> ai_type;
-	std::vector <float> ai_difficulty;
 	std::vector <MATHVECTOR<float, 3> > cars_color_hsv;
+	std::vector <std::string> cars_ai_type;
+	std::vector <float> cars_ai_level;
 	size_t car_edit_id;
 
 	CAMERA * active_camera;

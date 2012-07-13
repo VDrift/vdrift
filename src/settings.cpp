@@ -78,7 +78,8 @@ SETTINGS::SETTINGS() :
 	number_of_laps(1),
 	contrast(1.0),
 	hgateshifter(false),
-	ai_difficulty(1.0),
+	ai_type("standard"),
+	ai_level(1.0),
 	vehicle_damage(false)
 {
 	resolution[0] = 800;
@@ -91,7 +92,8 @@ void SETTINGS::Serialize(bool write, CONFIG & config)
 
 	config.GetSection("game", section);
 	Param(config, write, section, "vehicle_damage", vehicle_damage);
-	Param(config, write, section, "ai_difficulty", ai_difficulty);
+	Param(config, write, section, "ai_type", ai_type);
+	Param(config, write, section, "ai_level", ai_level);
 	Param(config, write, section, "track", track);
 	Param(config, write, section, "antilock", abs);
 	Param(config, write, section, "traction_control", tcs);

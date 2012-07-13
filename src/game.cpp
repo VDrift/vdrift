@@ -110,12 +110,20 @@ GAME::GAME(std::ostream & info_out, std::ostream & error_out) :
 	cars_name(1),
 	cars_paint(1),
 	cars_color_hsv(1),
+	cars_ai_type(1),
+	cars_ai_level(1),
 	car_edit_id(0),
 	active_camera(0),
 	race_laps(0),
 	practice(true),
-	collisiondispatch(&collisionconfig),
-	dynamics(&collisiondispatch, &collisionbroadphase, &collisionsolver, &collisionconfig, timestep),
+	collisiondispatch(
+		&collisionconfig),
+	dynamics(
+		&collisiondispatch,
+		&collisionbroadphase,
+		&collisionsolver,
+		&collisionconfig,
+		timestep),
 	dynamics_drawmode(0),
 	particle_timer(0),
 	track(),
@@ -498,6 +506,8 @@ bool GAME::InitGUI(const std::string & pagename)
 	set_car_color_hue.connect(gui.GetOption("game.car_color_hue").signal_val);
 	set_car_color_sat.connect(gui.GetOption("game.car_color_sat").signal_val);
 	set_car_color_val.connect(gui.GetOption("game.car_color_val").signal_val);
+	set_car_ai_type.connect(gui.GetOption("game.ai_type").signal_val);
+	set_car_ai_level.connect(gui.GetOption("game.ai_level").signal_val);
 	set_cars_num.connect(gui.GetOption("game.cars_num").signal_val);
 	set_track_image.connect(gui.GetOption("game.track").signal_val);
 	set_control.connect(gui.GetOption("controledit.string").signal_val);
@@ -1516,21 +1526,20 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	size_t cars_num = (addopponents) ? cars_name.size() : 1;
 	for (size_t i = 0; i < cars_num; ++i)
 	{
-		bool isai = i > 0;
+		bool isai = (i > 0);
+
 		if (!LoadCar(cars_name[i], cars_paint[i], cars_color_hsv[i],
 			track.GetStart(i).first, track.GetStart(i).second,
 			!isai, isai, carfile)) return false;
 
 		if (isai)
-			ai.add_car(&cars.back(), settings.GetAIDifficulty());
+			ai.add_car(&cars.back(), cars_ai_level[i], cars_ai_type[i]);
 		else
 			carfile.clear();
 	}
 
 	// Load the timer.
-	float pretime = 0.0f;
-	if (num_laps > 0)
-		pretime = 3.0f;
+	float pretime = (num_laps > 0) ? 3.0f : 0.0f;
 	if (!timer.Load(pathmanager.GetTrackRecordsPath()+"/"+trackname+".txt", pretime))
 	{
 		error_output << "Unable to load timer" << std::endl;
@@ -2620,38 +2629,46 @@ void GAME::SyncSettings()
 
 void GAME::EditFirstCar()
 {
-	if (cars_name.size() == 1 || car_edit_id == 0)
+	if (car_edit_id == 0)
 		return;
 
-	car_edit_id = 0;
-	if (cars_name[0] != cars_name.back())
+	// set player car as active car
+	size_t id = car_edit_id = 0;
+
+	// if player car differs from last car force reload
+	if (cars_name[id] != cars_name.back())
 	{
-		gui.SetOptionValue("game.car", cars_name[0]);
+		gui.SetOptionValue("game.car", cars_name[id]);
 		SetGarageCar();
 	}
 
-	gui.SetOptionValue("game.car_paint", cars_paint[0]);
-	gui.SetOptionValue("game.car_color_hue", cast(cars_color_hsv[0][0]));
-	gui.SetOptionValue("game.car_color_sat", cast(cars_color_hsv[0][1]));
-	gui.SetOptionValue("game.car_color_val", cast(cars_color_hsv[0][2]));
+	// reset paint, color
+	gui.SetOptionValue("game.car_paint", cars_paint[id]);
+	gui.SetOptionValue("game.car_color_hue", cast(cars_color_hsv[id][0]));
+	gui.SetOptionValue("game.car_color_sat", cast(cars_color_hsv[id][1]));
+	gui.SetOptionValue("game.car_color_val", cast(cars_color_hsv[id][2]));
 }
 
 void GAME::EditLastCar()
 {
-	if (cars_name.size() == 1 || car_edit_id == cars_name.size() - 1)
+	if (car_edit_id != 0)
 		return;
 
-	car_edit_id = cars_name.size() - 1;
-	if (cars_name[0] != cars_name.back())
+	// set last car as active car
+	size_t id = car_edit_id = cars_name.size() - 1;
+
+	// if player car differs from last car force reload
+	if (cars_name[id] != cars_name.back())
 	{
-		gui.SetOptionValue("game.car", cars_name.back());
+		gui.SetOptionValue("game.car", cars_name[id]);
 		SetGarageCar();
 	}
 
-	gui.SetOptionValue("game.car_paint", cars_paint.back());
-	gui.SetOptionValue("game.car_color_hue", cast(cars_color_hsv.back()[0]));
-	gui.SetOptionValue("game.car_color_sat", cast(cars_color_hsv.back()[1]));
-	gui.SetOptionValue("game.car_color_val", cast(cars_color_hsv.back()[2]));
+	// reset paint, color
+	gui.SetOptionValue("game.car_paint", cars_paint[id]);
+	gui.SetOptionValue("game.car_color_hue", cast(cars_color_hsv[id][0]));
+	gui.SetOptionValue("game.car_color_sat", cast(cars_color_hsv[id][1]));
+	gui.SetOptionValue("game.car_color_val", cast(cars_color_hsv[id][2]));
 }
 
 void GAME::SetCarName(const std::string & value)
@@ -2696,6 +2713,16 @@ void GAME::SetCarColorVal(const std::string & value)
 	SetCarColor();
 }
 
+void GAME::SetCarAIType(const std::string & value)
+{
+	cars_ai_type[car_edit_id] = value;
+}
+
+void GAME::SetCarAILevel(const std::string & value)
+{
+	cars_ai_level[car_edit_id] = cast<float>(value);
+}
+
 void GAME::SetCarsNum(const std::string & value)
 {
 	size_t cars_num = cast<size_t>(value);
@@ -2711,6 +2738,8 @@ void GAME::SetCarsNum(const std::string & value)
 			cars_name.pop_back();
 			cars_paint.pop_back();
 			cars_color_hsv.pop_back();
+			cars_ai_type.pop_back();
+			cars_ai_level.pop_back();
 		}
 	}
 	else if (delta > 0)
@@ -2718,6 +2747,8 @@ void GAME::SetCarsNum(const std::string & value)
 		cars_name.reserve(cars_num);
 		cars_paint.reserve(cars_num);
 		cars_color_hsv.reserve(cars_num);
+		cars_ai_type.reserve(cars_num);
+		cars_ai_level.reserve(cars_num);
 		for (size_t i = cars_name.size(); i < cars_num; ++i)
 		{
 			// variate color, lame version
@@ -2728,16 +2759,20 @@ void GAME::SetCarsNum(const std::string & value)
 			cars_name.push_back(cars_name.back());
 			cars_paint.push_back(cars_paint.back());
 			cars_color_hsv.push_back(color);
+			cars_ai_type.push_back(cars_ai_type.back());
+			cars_ai_level.push_back(cars_ai_level.back());
 			UpdateStartList(i, cars_name.back());
 		}
 	}
 
-	car_edit_id = cars_num - 1;
-	gui.SetOptionValue("game.car", cars_name[car_edit_id]);
-	gui.SetOptionValue("game.car_paint", cars_paint[car_edit_id]);
-	gui.SetOptionValue("game.car_color_hue", cast(cars_color_hsv[car_edit_id][0]));
-	gui.SetOptionValue("game.car_color_sat", cast(cars_color_hsv[car_edit_id][1]));
-	gui.SetOptionValue("game.car_color_val", cast(cars_color_hsv[car_edit_id][2]));
+	size_t id = car_edit_id = cars_num - 1;
+	gui.SetOptionValue("game.car", cars_name[id]);
+	gui.SetOptionValue("game.car_paint", cars_paint[id]);
+	gui.SetOptionValue("game.car_color_hue", cast(cars_color_hsv[id][0]));
+	gui.SetOptionValue("game.car_color_sat", cast(cars_color_hsv[id][1]));
+	gui.SetOptionValue("game.car_color_val", cast(cars_color_hsv[id][2]));
+	gui.SetOptionValue("game.ai_type", cars_ai_type[id]);
+	gui.SetOptionValue("game.ai_level", cast(cars_ai_level[id]));
 }
 
 void GAME::SetTrackImage(const std::string & value)
@@ -2803,6 +2838,8 @@ void GAME::RegisterActions()
 	set_car_color_hue.call.bind<GAME, &GAME::SetCarColorHue>(this);
 	set_car_color_sat.call.bind<GAME, &GAME::SetCarColorSat>(this);
 	set_car_color_val.call.bind<GAME, &GAME::SetCarColorVal>(this);
+	set_car_ai_type.call.bind<GAME, &GAME::SetCarAIType>(this);
+	set_car_ai_level.call.bind<GAME, &GAME::SetCarAILevel>(this);
 	set_cars_num.call.bind<GAME, &GAME::SetCarsNum>(this);
 	set_track_image.call.bind<GAME, &GAME::SetTrackImage>(this);
 	set_control.call.bind<GAME, &GAME::SetControl>(this);
