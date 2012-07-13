@@ -13,7 +13,7 @@
 /* GNU General Public License for more details.                         */
 /*                                                                      */
 /* You should have received a copy of the GNU General Public License    */
-/* along with Foobar.  If not, see <http://www.gnu.org/licenses/>.      */
+/* along with VDrift.  If not, see <http://www.gnu.org/licenses/>.      */
 /*                                                                      */
 /************************************************************************/
 
@@ -55,7 +55,7 @@ private:
 	float brakeFromOthers(float speed_diff); ///< returns a float that should be added into the brake command. speed_diff is the difference between the desired speed and speed limit of this area of the track
 	double Angle(double x1, double y1); ///< returns the angle in degrees of the normalized 2-vector
 	BEZIER RevisePatch(const BEZIER * origpatch, bool use_racingline);
-	
+
 	/*
 	/// for replanning the path
 	struct PATH_REVISION
@@ -89,7 +89,7 @@ private:
 	float lateral_mu; ///<friction coefficient of the tire - lateral direction
 	const BEZIER * last_patch; ///<last patch the car was on, used in case car is off track
 	bool use_racingline; ///<true allows the AI to take a proper racing line
-	bool isRecovering; ///< tries to get back to the road. 
+	bool isRecovering; ///< tries to get back to the road.
 	time_t recoverStartTime;
 
 	template<class T> static bool isnan(const T & x);
@@ -111,11 +111,11 @@ private:
 	/// This is only useful if the car is outside of the road.
 	/// Optionally, you can pass a helper bezier to improve performance, which should be near to the car, but maybe not the nearest.
 	const BEZIER* getNearestPatch(const BEZIER* helper = 0);
-	
+
 	bool recover(const BEZIER* patch);
 	/// Creates a ray from the middle of the car. Returns the distance to the first colliding object or max_length.
 	float RayCastDistance( MATHVECTOR <float, 3> direction, float max_length);
-	
+
 #ifdef VISUALIZE_AI_DEBUG
 	VERTEXARRAY brakeshape;
 	VERTEXARRAY steershape;

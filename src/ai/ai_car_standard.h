@@ -13,7 +13,7 @@
 /* GNU General Public License for more details.                         */
 /*                                                                      */
 /* You should have received a copy of the GNU General Public License    */
-/* along with Foobar.  If not, see <http://www.gnu.org/licenses/>.      */
+/* along with VDrift.  If not, see <http://www.gnu.org/licenses/>.      */
 /*                                                                      */
 /************************************************************************/
 
@@ -55,7 +55,7 @@ private:
 	float brakeFromOthers(float speed_diff); ///< returns a float that should be added into the brake command. speed_diff is the difference between the desired speed and speed limit of this area of the track
 	double Angle(double x1, double y1); ///< returns the angle in degrees of the normalized 2-vector
 	BEZIER RevisePatch(const BEZIER * origpatch, bool use_racingline);
-	
+
 	/*
 	/// for replanning the path
 	struct PATH_REVISION
@@ -104,7 +104,7 @@ private:
 	static void TrimPatch(BEZIER & patch, float trimleft_front, float trimright_front, float trimleft_back, float trimright_back);
 	static float GetHorizontalDistanceAlongPatch(const BEZIER & patch, MATHVECTOR <float, 3> carposition);
 	static float RampBetween(float val, float startat, float endat);
-	
+
 #ifdef VISUALIZE_AI_DEBUG
 	VERTEXARRAY brakeshape;
 	VERTEXARRAY steershape;
