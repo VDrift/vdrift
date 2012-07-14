@@ -1746,18 +1746,56 @@ void GAME::LoadGarage()
 {
 	LeaveGame();
 
-	if (!LoadTrack("garage"))
+	// Load track explicitly to avoid track reversed car orientation issue.
+	// Proper fix would be to support reversed car orientation in garage.
+
+	LoadingScreen(0.0, 1.0, false, "", 0.5, 0.5);
+
+	std::string trackname = "garage";
+	bool track_reverse = false;
+	bool track_dynamic = false;
+	if (!track.DeferredLoad(
+			content, dynamics,
+			info_output, error_output,
+			pathmanager.GetTracksPath(trackname),
+			pathmanager.GetTracksDir() + "/" + trackname,
+			pathmanager.GetEffectsTextureDir(),
+			pathmanager.GetTrackPartsPath(),
+			settings.GetAnisotropy(),
+			track_reverse, track_dynamic,
+			graphics_interface->GetShadows(),
+			settings.GetBatchGeometry()))
 	{
-		error_output << "Error loading garage." << std::endl;
+		error_output << "Error loading track: " << trackname << std::endl;
 		return;
 	}
 
-	SetGarageCar();
+	bool success = true;
+	int count = 0;
+	while (!track.Loaded() && success)
+	{
+		int displayevery = track.ObjectsNum() / 50;
+		if (displayevery == 0 || count % displayevery == 0)
+		{
+			LoadingScreen(count, track.ObjectsNum(), false, "", 0.5, 0.5);
+		}
+		success = track.ContinueDeferredLoad();
+		count++;
+	}
 
-//	trackmap.SetVisible(false);
-//	track.SetRacingLineVisibility(false);
-//	inputgraph.Hide();
-//	hud.Hide();
+	if (!success)
+	{
+		error_output << "Error loading track (deferred): " << trackname << std::endl;
+		return;
+	}
+
+	// Build static drawlist.
+#ifdef USE_STATIC_OPTIMIZATION_FOR_TRACK
+	graphics_interface->AddStaticNode(track.GetTrackNode());
+#endif
+
+	// Load car.
+	SetGarageCar();
 }
 
 bool GAME::SetGarageCar()
