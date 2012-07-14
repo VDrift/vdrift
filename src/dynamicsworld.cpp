@@ -120,7 +120,7 @@ bool DynamicsWorld::castRay(
 		c = ray.m_collisionObject;
 		if (c->isStaticObject())
 		{
-			TRACKSURFACE* tsc = (TRACKSURFACE*)c->getUserPointer();
+			TRACKSURFACE* tsc = static_cast<TRACKSURFACE*>(c->getUserPointer());
 			const std::vector<TRACKSURFACE> & surfaces = track->GetSurfaces();
 			if (tsc >= &surfaces[0] && tsc <= &surfaces[surfaces.size()-1])
 			{
@@ -129,7 +129,7 @@ bool DynamicsWorld::castRay(
 #ifndef EXTBULLET
 			else if (c->getCollisionShape()->isCompound())
 			{
-				TRACKSURFACE* tss = (TRACKSURFACE*)ray.m_shape->getUserPointer();
+				TRACKSURFACE* tss = static_cast<TRACKSURFACE*>(ray.m_shape->getUserPointer());
 				if (tss >= &surfaces[0] && tss <= &surfaces[surfaces.size()-1])
 				{
 					s = tss;
@@ -230,10 +230,10 @@ void DynamicsWorld::fractureCallback()
 	{
 		btPersistentManifold* manifold = getDispatcher()->getManifoldByIndexInternal(i);
 		if (!manifold->getNumContacts()) continue;
-
-		if (((btCollisionObject*)manifold->getBody0())->getInternalType() & CO_FRACTURE_TYPE)
+		
+		FractureBody* body = static_cast<FractureBody*>(manifold->getBody0());
+		if (body->getInternalType() & CO_FRACTURE_TYPE)
 		{
-			FractureBody* body = static_cast<FractureBody*>(manifold->getBody0());
 			for (int k = 0; k < manifold->getNumContacts(); ++k)
 			{
 				btManifoldPoint& point = manifold->getContactPoint(k);
@@ -246,9 +246,9 @@ void DynamicsWorld::fractureCallback()
 			}
 		}
 
-		if (((btCollisionObject*)manifold->getBody1())->getInternalType() & CO_FRACTURE_TYPE)
+		body = static_cast<FractureBody*>(manifold->getBody1());
+		if (body->getInternalType() & CO_FRACTURE_TYPE)
 		{
-			FractureBody* body = static_cast<FractureBody*>(manifold->getBody1());
 			for (int k = 0; k < manifold->getNumContacts(); ++k)
 			{
 				btManifoldPoint& point = manifold->getContactPoint(k);
