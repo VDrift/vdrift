@@ -146,9 +146,7 @@ bool REPLAY::StartPlaying(const std::string & replayfilename, std::ostream & err
 	if (!LoadHeader(replaystream, error_output)) return false;
 
 	//load all of the input/state frame chunks from the file until we hit the EOF
-	while (Load(replaystream))
-	{
-	}
+	while (Load(replaystream));
 
 	return true;
 }

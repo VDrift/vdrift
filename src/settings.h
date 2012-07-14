@@ -180,7 +180,7 @@ public:
 		return recordreplay;
 	}
 
-	int GetSelectedReplay() const
+	const std::string & GetSelectedReplay() const
 	{
 		return selected_replay;
 	}
@@ -340,7 +340,7 @@ public:
 		resolution[1] = value;
 	}
 
-	void SetSelectedReplay ( int value )
+	void SetSelectedReplay ( const std::string & value )
 	{
 		selected_replay = value;
 	}
@@ -394,7 +394,7 @@ private:
 	bool racingline;
 	bool mousegrab;
 	bool recordreplay;
-	int selected_replay;
+	std::string selected_replay;
 	std::string texturesize;
 	float button_ramp;
 	std::string ff_device;

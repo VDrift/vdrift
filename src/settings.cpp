@@ -50,7 +50,7 @@ SETTINGS::SETTINGS() :
 	racingline(false),
 	mousegrab(true),
 	recordreplay(false),
-	selected_replay(0),
+	selected_replay("none"),
 	texturesize("large"),
 	button_ramp(5),
 	ff_device("/dev/input/event0"),

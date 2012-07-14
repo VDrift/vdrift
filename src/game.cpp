@@ -1457,72 +1457,50 @@ void GAME::UpdateCarInputs(CAR & car)
 	graphics_interface->SetCloseShadow(incar ? 1.0 : 5.0);
 }
 
-/* Start a new game. LeaveGame() is called first thing, which should take care of clearing out all current data... */
 bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 {
-	// This should clear out all data...
+	// This should clear out all data.
 	LeaveGame();
 
 	// Cache number of laps for gui.
 	race_laps = num_laps;
 
-	if (playreplay)
-	{
-		std::stringstream replayfilenamestream;
-
-		if (benchmode)
-		{
-			replayfilenamestream << pathmanager.GetReplayPath() << "/benchmark.vdr";
-		}
-		else
-		{
-			std::list <std::pair <std::string, std::string> > replaylist;
-
-			unsigned sel_index = settings.GetSelectedReplay() - 1;
-
-			PopulateReplayList(replaylist);
-
-			std::list<std::pair <std::string, std::string> >::iterator it = replaylist.begin();
-			advance(it, sel_index);
-
-			replayfilenamestream << pathmanager.GetReplayPath() << "/" << it->second;
-		}
-
-		std::string replayfilename = replayfilenamestream.str();
-		info_output << "Loading replay file " << replayfilename << std::endl;
-		if (!replay.StartPlaying(replayfilename, error_output))
-		{
-			error_output << "Unable to load replay file " << replayfilename << std::endl;
-			return false;
-		}
-	}
-
-	// Set the track name.
-	std::string trackname;
-	if (playreplay)
-		trackname = replay.GetTrack();
-	else
-		trackname = settings.GetTrack();
-
-	if (!LoadTrack(trackname))
-	{
-		error_output << "Error during track loading: " << trackname << std::endl;
-		return false;
-	}
-
 	// Start out with no camera.
 	active_camera = NULL;
 
-	// Load car.
+	// Set track, car config file.
+	std::string trackname = settings.GetTrack();
 	std::string carfile;
+
 	if (playreplay)
 	{
+		// Load replay.
+		std::string replayfilename = pathmanager.GetReplayPath();
+		if (benchmode)
+			replayfilename += "/benchmark.vdr";
+		else
+			replayfilename += "/" + settings.GetSelectedReplay();
+
+		info_output << "Loading replay file: " << replayfilename << std::endl;
+
+		if (!replay.StartPlaying(replayfilename, error_output))
+			return false;
+
+		trackname = replay.GetTrack();
 		carfile = replay.GetCarFile();
 		cars_name[0] = replay.GetCarType();
 		cars_paint[0] = replay.GetCarPaint();
 		cars_color_hsv[0] = replay.GetCarColorHSV();
 	}
 
+	// Load track.
+	if (!LoadTrack(trackname))
+	{
+		error_output << "Error during track loading: " << trackname << std::endl;
+		return false;
+	}
+
+	// Load cars.
 	size_t cars_num = (addopponents) ? cars_name.size() : 1;
 	for (size_t i = 0; i < cars_num; ++i)
 	{
@@ -1538,7 +1516,7 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 			carfile.clear();
 	}
 
-	// Load the timer.
+	// Load timer.
 	float pretime = (num_laps > 0) ? 3.0f : 0.0f;
 	if (!timer.Load(pathmanager.GetTrackRecordsPath()+"/"+trackname+".txt", pretime))
 	{
@@ -1600,8 +1578,8 @@ std::string GAME::GetReplayRecordingFilename()
 	tm now = *localtime(&curtime);
 
 	// Time string.
-	char timestr[]= "YYYY-MM-DD-hh-mm-ss";
-	const char format[] = "%Y-%m-%d-%H-%M-%S";
+	char timestr[]= "MM-DD-hh-mm";
+	const char format[] = "%m-%d-%H-%M";
 	strftime(timestr, sizeof(timestr), format, &now);
 
 	// Replay file name.
@@ -1610,7 +1588,6 @@ std::string GAME::GetReplayRecordingFilename()
 	return s.str();
 }
 
-/* Add a car, optionally controlled by the local player... */
 bool GAME::LoadCar(
 	const std::string & car_name,
 	const std::string & car_paint,
@@ -1932,24 +1909,28 @@ void GAME::PopulateReplayList(std::list <std::pair <std::string, std::string> > 
 	{
 		for (std::list<std::string>::iterator i = replayfoldercontents.begin(); i != replayfoldercontents.end(); ++i)
 		{
-			if (*i != "benchmark.vdr" && i->find(".vdr") == i->length()-4)
+			// Replay expects a formatted string: "MM-DD-hh-mm-trackname.vdr".
+			if (*i != "benchmark.vdr" &&
+				i->find(".vdr") == i->length() - 4 &&
+				i->length() > 16)
 			{
-				replaylist.push_back(std::make_pair(cast(numreplays+1), *i));
-				numreplays++;
+				// Parse replay name.
+				std::string str = i->substr(0, i->length() - 4);
+				str[2] = '/';
+				str[5] = ' ';
+				str[8] = ':';
+				str[11] = ' ';
+
+				replaylist.push_back(std::make_pair(*i, str));
+				++numreplays;
 			}
 		}
 	}
 
 	if (numreplays == 0)
-	{
-        // Replay zero is a special value that the GAME class interprets as "None".
-		replaylist.push_back(std::make_pair("0", "None"));
-		settings.SetSelectedReplay(0);
-	}
-	else
-	{
-		settings.SetSelectedReplay(1);
-	}
+		replaylist.push_back(std::make_pair("", "None"));
+
+	settings.SetSelectedReplay(replaylist.begin()->first);
 }
 
 void GAME::PopulateCarPaintList(const std::string & carname, std::list <std::pair <std::string, std::string> > & carpaintlist)
@@ -1964,8 +1945,8 @@ void GAME::PopulateCarPaintList(const std::string & carname, std::list <std::pai
 	{
 		for (std::list <std::string>::iterator i = paintfolder.begin(); i != paintfolder.end(); ++i)
 		{
-			std::string paintname = i->substr(0, i->length()-4);
-			carpaintlist.push_back(std::make_pair("skins/"+*i, paintname));
+			std::string paintname = i->substr(0, i->length() - 4);
+			carpaintlist.push_back(std::make_pair("skins/" + *i, paintname));
 		}
 	}
 }
@@ -2471,7 +2452,7 @@ void GAME::RestartGame()
 
 void GAME::StartReplay()
 {
-	if (settings.GetSelectedReplay() && !NewGame(true))
+	if (!settings.GetSelectedReplay().empty() && !NewGame(true))
 	{
 		gui.ActivatePage("ReplayStartError", 0.25, error_output);
 	}
