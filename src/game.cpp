@@ -1548,7 +1548,6 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 
 		std::string cartype = carcontrols_local.first->GetCarType();
 		std::string carname = cars_name[0];
-		std::string cardir = pathmanager.GetCarsDir() + "/" + carname;
 
 		PTree carconfig;
 		file_open_basic fopen(pathmanager.GetCarPath(carname), pathmanager.GetCarPartsPath());
@@ -1939,7 +1938,6 @@ void GAME::PopulateCarPaintList(const std::string & carname, std::list <std::pai
 	carpaintlist.push_back(std::make_pair("default", "default"));
 
 	std::list <std::string> paintfolder;
-	std::string cardir = carname.substr(0, carname.rfind("/"));
 	std::string paintdir = pathmanager.GetCarPaintPath(carname);
 	if (pathmanager.GetFileList(paintdir, paintfolder, ".png"))
 	{
