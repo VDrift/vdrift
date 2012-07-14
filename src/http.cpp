@@ -143,7 +143,7 @@ void HTTP::SetTemporaryFolder(const std::string & temporary_folder)
 
 int ProgressCallback(void * ptr, double TotalToDownload, double NowDownloaded, double TotalToUpload, double NowUploaded)
 {
-	PROGRESSINFO * info = (PROGRESSINFO*)ptr;
+	PROGRESSINFO * info = static_cast<PROGRESSINFO*>(ptr);
 	assert(info->http && info->easyhandle);
 	info->http->UpdateProgress(info->easyhandle, TotalToDownload, NowDownloaded);
 	return 0;
