@@ -153,34 +153,32 @@ void UPDATE_MANAGER::Show(GUI & gui)
 		std::pair <int, int> revs = autoupdate.GetVersions(group, objectname);
 		gui.ActivatePage(guipage, 0.0001, error_output);
 		gui.SetLabelText(guipage, "name", objectname);
-		gui.SetLabelText(guipage, "version", "Version: " + UTILS::tostr(revs.first));
+		gui.SetLabelText(guipage, "version_local", UTILS::tostr(revs.first));
+		gui.SetLabelText(guipage, "version_remote", UTILS::tostr(revs.second));
 
 		if (!revs.second)
 		{
 			// either they haven't checked for updates or the car/track is local only
 			if (autoupdate.empty())
 			{
-				gui.SetLabelText(guipage, "updateinfo", "You need to check for updates");
+				gui.SetLabelText(guipage, "update_info", "Check for updates");
 			}
 			else
 			{
 				// car/track doesn't exist remotely; either it was deleted from the remote repo or
 				// the user created this car/track locally
-				gui.SetLabelText(guipage, "updateinfo", "No update available");
+				gui.SetLabelText(guipage, "update_info", "No update available");
 			}
-			gui.SetButtonEnabled(guipage, "Updatebutton", false);
 		}
 		else
 		{
 			if (revs.first >= revs.second) // this checks that the local rev is at least the remote rev
 			{
-				gui.SetLabelText(guipage, "updateinfo", "Local version is up to date");
-				gui.SetButtonEnabled(guipage, "Updatebutton", false);
+				gui.SetLabelText(guipage, "update_info", "Local version up to date");
 			}
 			else // local rev is less than the remote rev
 			{
-				gui.SetLabelText(guipage, "updateinfo", "An update is available");
-				gui.SetButtonEnabled(guipage, "Updatebutton", true);
+				gui.SetLabelText(guipage, "update_info", "An update is available");
 				info_output << objectname << ": local version: " << revs.first << " remote version: " << revs.second << std::endl;
 			}
 		}
