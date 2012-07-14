@@ -610,7 +610,7 @@ void SOUND::Callback16bitStereo(void *myself, Uint8 *stream, int len)
 
 void SOUND::CallbackWrapper(void *sound, unsigned char *stream, int len)
 {
-	((SOUND*)sound)->Callback16bitStereo(sound, stream, len);
+	static_cast<SOUND*>(sound)->Callback16bitStereo(sound, stream, len);
 }
 
 void SOUND::SampleAndAdvanceWithPitch16bit(
