@@ -373,6 +373,7 @@ private:
 	std::string skin;
 	std::string language;
 	bool show_fps;
+	float music_volume;
 	float sound_volume;
 	int sound_sources;
 	bool mph; //if false, KPH
@@ -410,6 +411,7 @@ private:
 	bool input_graph;
 	int lighting;
 	bool bloom;
+	bool motionblur;
 	bool normalmaps;
 	std::string car;
 	std::string car_paint;
