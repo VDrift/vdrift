@@ -1549,7 +1549,7 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 
 		if (!LoadCar(cars_name[i], cars_paint[i], cars_color_hsv[i],
 			track.GetStart(i).first, track.GetStart(i).second,
-			!isai, isai, cars_file[i]), car_ids[i]) return false;
+			!isai, isai, cars_file[i], car_ids[i])) return false;
 
 		if (isai)
 			ai.add_car(&cars.back(), cars_ai_level[i], cars_ai_type[i]);
