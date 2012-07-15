@@ -23,15 +23,14 @@ public:
 	///< returns true if the replay system is currently playing
 	bool GetPlaying() const { return (replaymode == PLAYING); }
 
-	const std::vector<float> & PlayFrame(CAR & car);
+	void PlayFrame(std::list<CAR> & cars);
+	const std::vector<float> & PlayFrameCar(CAR & car);
 
 	void StartRecording(
-		const std::string & newcartype,
-		const std::string & newcarpaint,
-		const MATHVECTOR<float, 3> & newcarcolor,
-		const PTree & carconfig,
 		const std::string & trackname,
-		std::ostream & error_log);
+		std::ostream & error_log,
+		const std::list <CAR> & cars,
+ 		int num_laps);
 
 	///< if replayfilename is empty, do not save the data
 	void StopRecording(const std::string & replayfilename);
@@ -39,18 +38,19 @@ public:
 	///< returns true if the replay system is currently recording
 	bool GetRecording() const { return (replaymode == RECORDING); }
 
-	void RecordFrame(const std::vector <float> & inputs, CAR & car);
+	void RecordFrame(const std::list<CAR> & cars);
+	void RecordFrameCar(const std::vector <float> & inputs, CAR & car);
 
 	bool Serialize(joeserialize::Serializer & s);
 
-	std::string GetCarType() const
+	std::string GetCarType(CARID car_id) const
 	{
-		return cartype;
+		return cartypes.at(car_id);
 	}
 
-	std::string GetCarFile() const
+	std::string GetCarFile(CARID car_id) const
 	{
-		return carfile;
+		return carfiles.at(car_id);
 	}
 
 	std::string GetTrack() const
@@ -58,14 +58,27 @@ public:
 		return track;
 	}
 
-	std::string GetCarPaint() const
+	std::string GetCarPaint(CARID car_id) const
 	{
-		return carpaint;
+		return carpaints.at(car_id);
 	}
 
-	MATHVECTOR<float, 3> GetCarColorHSV() const
+	MATHVECTOR<float, 3> GetCarColorHSV(CARID car_id) const
 	{
-		return carcolor;
+		return carcolors.at(car_id);
+	}
+
+	int GetNumberLaps() const {
+		return number_laps;
+	}
+
+	unsigned int GetNumberCars() const
+	{
+		return cartypes.size();
+	}
+
+	const std::vector<CARID>& GetCarIds() const {
+		return carids;
 	}
 
 private:
@@ -105,14 +118,17 @@ private:
 			return true;
 		}
 
-		void AddInput(int index, float value)
+		void AddInput(CARID car_id, int index, float value)
 		{
-			inputs.push_back(std::make_pair(index, value));
+			inputs[car_id].push_back(std::make_pair(index, value));
 		}
 
-		unsigned GetNumInputs() const
+		unsigned GetNumInputs(CARID car_id) const
 		{
-			return inputs.size();
+			if (inputs.find(car_id) != inputs.end())
+				return inputs.at(car_id).size();
+			else
+				return 0;
 		}
 
 		int GetFrame() const
@@ -121,16 +137,16 @@ private:
 		}
 
 		///returns a pair for the <control id, value> of the indexed input
-		const std::pair<int, float>& GetInput(unsigned index) const
+		const std::pair<int, float>& GetInput(CARID car_id, unsigned index) const
 		{
-			assert(index < inputs.size());
-			return inputs[index];
+			assert(index < inputs.at(car_id).size());
+			return inputs.at(car_id)[index];
 		}
 
 	private:
 		friend class joeserialize::Serializer;
 		int frame;
-		std::vector<std::pair<int, float> > inputs;
+		std::map<CARID, std::vector<std::pair<int, float> > > inputs;
 	};
 
 	class STATEFRAME
@@ -148,9 +164,9 @@ private:
 			return true;
 		}
 
-		void SetBinaryStateData(const std::string & value)
+		void SetBinaryStateData(CARID car_id, const std::string & value)
 		{
-			binary_state_data = value;
+			binary_state_data[car_id] = value;
 		}
 
 		int GetFrame() const
@@ -158,35 +174,40 @@ private:
 			return frame;
 		}
 
-		std::string GetBinaryStateData() const
+		std::string GetBinaryStateData(CARID car_id) const
 		{
-			return binary_state_data;
+			return binary_state_data.at(car_id);
 		}
 
-		const std::vector<float> & GetInputSnapshot() const
+		const std::vector<float> & GetInputSnapshot(CARID car_id) const
 		{
-			return input_snapshot;
+			return input_snapshot.at(car_id);
 		}
 
-		void SetInputSnapshot(const std::vector<float>& value)
+		void SetInputSnapshot(CARID car_id, const std::vector<float>& value)
 		{
-			input_snapshot = value;
+			input_snapshot[car_id] = value;
 		}
 
 	private:
 		friend class joeserialize::Serializer;
 		int frame;
-		std::string binary_state_data;
-		std::vector<float> input_snapshot;
+		std::map<CARID, std::string> binary_state_data;
+		std::map<CARID, std::vector<float> > input_snapshot;
 	};
 
 	// serialized data
 	VERSION version_info;
 	std::string track;
-	std::string cartype; //car type, used for loading graphics and sound
-	std::string carpaint; //car paint id string
-	std::string carfile; //entire contents of the car file (e.g. XS.car)
-	MATHVECTOR<float, 3> carcolor;
+
+	std::vector<CARID>			 carids; // a list of the cars IDs
+	std::map<CARID, std::string> cartypes; //car type, used for loading graphics and sound
+	std::map<CARID, std::string> carpaints; //car paint id string
+	std::map<CARID, std::string> carfiles; //entire contents of the car file (e.g. XS.car)
+	std::map<CARID, MATHVECTOR <float, 3> > carcolors;
+
+	int number_laps;
+
 	std::vector<INPUTFRAME> inputframes;
 	std::vector<STATEFRAME> stateframes;
 
@@ -197,13 +218,17 @@ private:
 		RECORDING,
 		PLAYING
 	} replaymode;
-	std::vector<float> inputbuffer;
+	
+	std::map<CARID, std::vector<float> > inputbuffers;
+
 	unsigned cur_inputframe;
 	unsigned cur_stateframe;
 
+	bool should_record_state;
+
 	// functions
-	void ProcessPlayInputFrame(const INPUTFRAME & frame);
-	void ProcessPlayStateFrame(const STATEFRAME & frame, CAR & car);
+	void ProcessPlayInputFrame(const INPUTFRAME & frame, std::list<CAR> & cars);
+	void ProcessPlayStateFrame(const STATEFRAME & frame, std::list<CAR> & cars);
 	bool Load(std::istream & instream); ///< load one input and state frame chunk from the stream. returns true on success, returns false for EOF
 	bool LoadHeader(std::istream & instream, std::ostream & error_output); ///< returns true on success.
 	void Save(std::ostream & outstream); ///< save all input and state frames to the stream and then clear them

@@ -908,6 +908,18 @@ void GAME::AdvanceGameLogic()
 		dynamics.update(TickPeriod());
 		PROFILER.endBlock("physics");
 
+		PROFILER.beginBlock("replay");
+		if (replay.GetPlaying())
+		{
+			replay.PlayFrame(cars);
+		}
+		
+		if (replay.GetRecording())
+		{
+			replay.RecordFrame(cars);
+		}
+		PROFILER.endBlock("replay");
+
 		PROFILER.beginBlock("car");
 		for (std::list <CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
 		{
@@ -1291,7 +1303,7 @@ void GAME::UpdateCarInputs(CAR & car)
 	{
 		if (replay.GetPlaying())
 		{
-			const std::vector <float> & inputarray = replay.PlayFrame(car);
+			const std::vector <float> & inputarray = replay.PlayFrameCar(car);
 			assert(inputarray.size() <= carinputs.size());
 			for (size_t i = 0; i < inputarray.size(); ++i)
 			{
@@ -1337,8 +1349,20 @@ void GAME::UpdateCarInputs(CAR & car)
 	}
 	else
 	{
-		carinputs = ai.GetInputs(&car);
-		assert(carinputs.size() == CARINPUT::INVALID);
+		if (replay.GetPlaying())
+		{
+			const std::vector <float> & inputarray = replay.PlayFrameCar(car);
+			assert(inputarray.size() <= carinputs.size());
+			for (unsigned int i = 0; i < inputarray.size(); i++)
+			{
+				carinputs[i] = inputarray[i];
+			}
+		}
+		else 
+		{
+			carinputs = ai.GetInputs(&car);
+			assert(carinputs.size() == CARINPUT::INVALID);
+		}
 	}
 
 	// Force brake and clutch during staging and once the race is over.
@@ -1349,11 +1373,11 @@ void GAME::UpdateCarInputs(CAR & car)
 
 	car.HandleInputs(carinputs);
 
+	if (replay.GetRecording())
+		replay.RecordFrameCar(carinputs, car);
+
 	if (carcontrols_local.first != &car)
 		return;
-
-	if (replay.GetRecording())
-		replay.RecordFrame(carinputs, car);
 
 	inputgraph.Update(carinputs);
 
@@ -1462,15 +1486,13 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	// This should clear out all data.
 	LeaveGame();
 
-	// Cache number of laps for gui.
-	race_laps = num_laps;
-
 	// Start out with no camera.
 	active_camera = NULL;
 
 	// Set track, car config file.
 	std::string trackname = settings.GetTrack();
-	std::string carfile;
+	std::vector<std::string> cars_file(cars_name.size(), "");
+	std::vector<CARID> car_ids(cars_name.size(), 0);
 
 	if (playreplay)
 	{
@@ -1487,11 +1509,31 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 			return false;
 
 		trackname = replay.GetTrack();
-		carfile = replay.GetCarFile();
-		cars_name[0] = replay.GetCarType();
-		cars_paint[0] = replay.GetCarPaint();
-		cars_color_hsv[0] = replay.GetCarColorHSV();
+		
+		if (replay.GetNumberCars() > 1)
+			addopponents = true;
+		
+		num_laps = replay.GetNumberLaps();
+
+		cars_name.resize(replay.GetNumberCars(), "");
+		cars_paint.resize(replay.GetNumberCars(), "");
+		cars_color_hsv.resize(replay.GetNumberCars());
+		cars_file.resize(replay.GetNumberCars(), "");
+
+		car_ids = replay.GetCarIds();
+
+		for (unsigned int i=0; i<car_ids.size(); ++i)
+		{
+			CARID id = car_ids[i];
+			cars_name[i] = replay.GetCarType(id);
+			cars_paint[i] = replay.GetCarPaint(id);
+			cars_color_hsv[i] = replay.GetCarColorHSV(id);
+			cars_file[i] = replay.GetCarFile(id);
+		}
 	}
+
+	// Cache number of laps for gui.
+	race_laps = num_laps;
 
 	// Load track.
 	if (!LoadTrack(trackname))
@@ -1501,19 +1543,16 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	}
 
 	// Load cars.
-	size_t cars_num = (addopponents) ? cars_name.size() : 1;
-	for (size_t i = 0; i < cars_num; ++i)
+	for (size_t i = 0; i < cars_name.size(); ++i)
 	{
 		bool isai = (i > 0);
 
 		if (!LoadCar(cars_name[i], cars_paint[i], cars_color_hsv[i],
 			track.GetStart(i).first, track.GetStart(i).second,
-			!isai, isai, carfile)) return false;
+			!isai, isai, cars_file[i]), car_ids[i]) return false;
 
 		if (isai)
 			ai.add_car(&cars.back(), cars_ai_level[i], cars_ai_type[i]);
-		else
-			carfile.clear();
 	}
 
 	// Load timer.
@@ -1546,24 +1585,7 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	{
 		assert(carcontrols_local.first);
 
-		std::string cartype = carcontrols_local.first->GetCarType();
-		std::string carname = cars_name[0];
-
-		PTree carconfig;
-		file_open_basic fopen(pathmanager.GetCarPath(carname), pathmanager.GetCarPartsPath());
-		if (!read_ini(carname + ".car", fopen, carconfig))
-		{
-			error_output << "Failed to load " << carname << std::endl;
-			return false;
-		}
-
-		replay.StartRecording(
-			cartype,
-			cars_paint[0],
-			cars_color_hsv[0],
-			carconfig,
-			settings.GetTrack(),
-			error_output);
+		replay.StartRecording(settings.GetTrack(), error_output, cars, num_laps);
 	}
 
 	content.sweep(info_output);
@@ -1594,7 +1616,8 @@ bool GAME::LoadCar(
 	const MATHVECTOR <float, 3> & start_position,
 	const QUATERNION <float> & start_orientation,
 	bool islocal, bool isai,
-	const std::string & carfile)
+	const std::string & carfile,
+	const CARID car_id)
 {
 	PTree carconf;
 	if (carfile.empty())
@@ -1620,7 +1643,7 @@ bool GAME::LoadCar(
 		car_color_hsv[0], car_color_hsv[1], car_color_hsv[2],
 		car_color_rgb[0], car_color_rgb[1], car_color_rgb[2]);
 
-	cars.push_back(CAR());
+	cars.push_back(CAR(car_id));
 	CAR & car = cars.back();
 	if (!car.LoadGraphics(
 		carconf, pathmanager.GetCarPartsPath(), car_dir, car_name,

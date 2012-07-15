@@ -102,7 +102,8 @@ private:
 		const MATHVECTOR <float, 3> & start_position,
 		const QUATERNION <float> & start_orientation,
 		bool islocal, bool isai,
-		const std::string & carfile="");
+		const std::string & carfile="",
+		const CARID car_id = 0);
 
 	bool LoadTrack(const std::string & trackname);
 

@@ -9,8 +9,7 @@
 REPLAY::REPLAY(float framerate) :
 	version_info("VDRIFTREPLAYV14", CARINPUT::GAME_ONLY_INPUTS_START_HERE, framerate),
 	frame(0),
-	replaymode(IDLE),
-	inputbuffer(CARINPUT::GAME_ONLY_INPUTS_START_HERE, 0)
+	replaymode(IDLE)
 {
 	// ctor
 }
@@ -94,36 +93,47 @@ void REPLAY::GetReadyToRecord()
 	replaymode = RECORDING;
 	inputframes.clear();
 	stateframes.clear();
-	inputbuffer.clear();
-	inputbuffer.resize(CARINPUT::GAME_ONLY_INPUTS_START_HERE, 0);
 }
 
 void REPLAY::StartRecording(
-	const std::string & newcartype,
-	const std::string & newcarpaint,
-	const MATHVECTOR<float, 3> & newcarcolor,
-	const PTree & carconfig,
 	const std::string & trackname,
-	std::ostream & error_log)
+	std::ostream & error_log,
+	const std::list <CAR> & cars,
+ 	int num_laps)
 {
 	track = trackname;
-	cartype = newcartype;
-	carpaint = newcarpaint;
-	carcolor = newcarcolor;
 
+	carids.clear();
+	cartypes.clear();
+	carpaints.clear();
+	carcolors.clear();
+	carfiles.clear();
+	
+	for (std::list <CAR>::const_iterator i = cars.begin(); i != cars.end(); ++i)
+	{
+		carids.push_back(i->GetCarId());
+		cartypes[i->GetCarId()] = i->GetCarType();
+		carpaints[i->GetCarId()] = i->GetCarPaint();
+		carcolors[i->GetCarId()] = i->GetCarColor();
+	
+		std::stringstream carstream;
+		i->GetCarConfig().write(carstream);
+		carfiles[i->GetCarId()] = carstream.str();
+	}
+	
+	number_laps = num_laps;
+
+	inputbuffers.clear();
+	for (std::list<CAR>::const_iterator i = cars.begin(); i != cars.end(); ++i)
+		inputbuffers[i->GetCarId()].resize(CARINPUT::GAME_ONLY_INPUTS_START_HERE, 0);
+	
 	GetReadyToRecord();
-
-	std::stringstream carstream;
-	carconfig.write(carstream);
-	carfile = carstream.str();
 }
 
 void REPLAY::GetReadyToPlay()
 {
 	frame = 0;
 	replaymode = PLAYING;
-	inputbuffer.clear();
-	inputbuffer.resize(CARINPUT::GAME_ONLY_INPUTS_START_HERE, 0);
 
 	//set the playback position at the beginning
 	cur_inputframe = 0;
@@ -148,6 +158,14 @@ bool REPLAY::StartPlaying(const std::string & replayfilename, std::ostream & err
 	//load all of the input/state frame chunks from the file until we hit the EOF
 	while (Load(replaystream));
 
+	carids.clear();
+	inputbuffers.clear();
+	for (std::map<CARID, std::string>::const_iterator iter = cartypes.begin(); iter != cartypes.end(); ++iter) 
+	{
+		carids.push_back(iter->first);
+		inputbuffers[iter->first].resize(CARINPUT::GAME_ONLY_INPUTS_START_HERE, 0);
+	}
+
 	return true;
 }
 
@@ -170,7 +188,7 @@ void REPLAY::StopPlaying()
 	replaymode = IDLE;
 }
 
-void REPLAY::RecordFrame(const std::vector <float> & inputs, CAR & car)
+void REPLAY::RecordFrame(const std::list<CAR> & cars)
 {
 	if (!GetRecording())
 		return;
@@ -180,107 +198,139 @@ void REPLAY::RecordFrame(const std::vector <float> & inputs, CAR & car)
 		StopRecording("");
 	}
 
+	//create input frame
+	inputframes.push_back(INPUTFRAME(frame));
+	
+	//create state frame
+	int framespersecond = 1.0/version_info.framerate;
+	should_record_state = (frame % framespersecond == 0); //once per second
+	
+	if (should_record_state)
+	{
+		stateframes.push_back(STATEFRAME(frame));
+	}
+	
+	frame++;
+}
+	
+void REPLAY::RecordFrameCar(const std::vector <float> & inputs, CAR & car) 
+{
+	if (!GetRecording())
+		return;
+	
+	std::vector<float>& inputbuffer = inputbuffers[car.GetCarId()];
+	
+
 	assert(inputbuffer.size() == CARINPUT::GAME_ONLY_INPUTS_START_HERE);
 	assert((unsigned int) version_info.inputs_supported == CARINPUT::GAME_ONLY_INPUTS_START_HERE);
 
-	//record inputs
-	INPUTFRAME newinputframe(frame);
-
+	//record the car inputs in the current input frame
 	for (unsigned i = 0; i < CARINPUT::GAME_ONLY_INPUTS_START_HERE; i++)
 	{
 		if (inputs[i] != inputbuffer[i])
 		{
 			inputbuffer[i] = inputs[i];
-			newinputframe.AddInput(i, inputs[i]);
+			inputframes.back().AddInput(car.GetCarId(), i, inputs[i]);
 		}
 	}
 
-	if (newinputframe.GetNumInputs() > 0)
-		inputframes.push_back(newinputframe);
 
-
-	//record state
-	int framespersecond = 1.0/version_info.framerate;
-	if (frame % framespersecond == 0) //once per second
+	//record the car state in the current state frame
+	if (should_record_state) //once per second
 	{
 		std::stringstream statestream;
 		joeserialize::BinaryOutputSerializer serialize_output(statestream);
 		car.Serialize(serialize_output);
-		stateframes.push_back(STATEFRAME(frame));
-		//stateframes.push_back(STATEFRAME(11189196)); //for debugging; in hex, 11189196 is AABBCC
-		//cout << "Recording state size: " << statestream.str().length() << endl; //should be ~984
-		stateframes.back().SetBinaryStateData(statestream.str());
-		stateframes.back().SetInputSnapshot(inputs);
+		stateframes.back().SetBinaryStateData(car.GetCarId(), statestream.str());
+		stateframes.back().SetInputSnapshot(car.GetCarId(), inputs);
 	}
-
-	frame++;
 }
 
-const std::vector <float> & REPLAY::PlayFrame(CAR & car)
+void REPLAY::PlayFrame(std::list<CAR> & cars)
 {
 	if (!GetPlaying())
 	{
-		return inputbuffer;
+		return;
 	}
 
-	frame++;
-
-	assert(inputbuffer.size() == CARINPUT::GAME_ONLY_INPUTS_START_HERE);
 	assert((unsigned int) version_info.inputs_supported == CARINPUT::GAME_ONLY_INPUTS_START_HERE);
 
 	//fast forward through the inputframes until we're up to date
 	while (cur_inputframe < inputframes.size() && inputframes[cur_inputframe].GetFrame() <= frame)
 	{
-		ProcessPlayInputFrame(inputframes[cur_inputframe]);
+		ProcessPlayInputFrame(inputframes[cur_inputframe], cars);
 		cur_inputframe++;
 	}
 
 	//fast forward through the stateframes until we're up to date
 	while (cur_stateframe < stateframes.size() && stateframes[cur_stateframe].GetFrame() <= frame)
 	{
-		if (stateframes[cur_stateframe].GetFrame() == frame) ProcessPlayStateFrame(stateframes[cur_stateframe], car);
+		if (stateframes[cur_stateframe].GetFrame() == frame)
+			ProcessPlayStateFrame(stateframes[cur_stateframe], cars);
 		cur_stateframe++;
 	}
 
 	//detect end of input
-	if (cur_stateframe == stateframes.size() && cur_inputframe == inputframes.size())
+	if (cur_stateframe >= stateframes.size() || cur_inputframe >= inputframes.size())
 	{
 		StopPlaying();
 	}
 
-	return inputbuffer;
+	frame++;
 }
 
-void REPLAY::ProcessPlayInputFrame(const INPUTFRAME & frame)
+const std::vector<float> & REPLAY::PlayFrameCar(CAR & car)
 {
-	for (unsigned i = 0; i < frame.GetNumInputs(); i++)
+	return inputbuffers[car.GetCarId()];
+} 
+
+void REPLAY::ProcessPlayInputFrame(const INPUTFRAME & frame, std::list<CAR> & cars)
+{
+	for (std::list<CAR>::iterator car = cars.begin(); car != cars.end(); ++car)
 	{
-		std::pair <int, float> input_pair = frame.GetInput(i);
-		inputbuffer[input_pair.first] = input_pair.second;
+		std::vector<float>& inputbuffer = inputbuffers[car->GetCarId()];
+		
+		for (unsigned i = 0; i < frame.GetNumInputs(car->GetCarId()); i++)
+		{
+			std::pair <int, float> input_pair = frame.GetInput(car->GetCarId(), i);
+			inputbuffer[input_pair.first] = input_pair.second;
+		}
 	}
 }
 
-void REPLAY::ProcessPlayStateFrame(const STATEFRAME & frame, CAR & car)
+void REPLAY::ProcessPlayStateFrame(const STATEFRAME & frame, std::list<CAR> & cars)
 {
 	//process input snapshot
-	for (unsigned i = 0; i < inputbuffer.size() && i < frame.GetInputSnapshot().size(); i++)
+	for (std::list<CAR>::iterator car = cars.begin(); car != cars.end(); ++car)
 	{
-		inputbuffer[i] = frame.GetInputSnapshot()[i];
-	}
+		std::vector<float>& inputbuffer = inputbuffers[car->GetCarId()];
+		
+		//process input snapshot
+		for (unsigned i = 0; i < inputbuffer.size() && i < frame.GetInputSnapshot(car->GetCarId()).size(); i++)
+		{
+			inputbuffer[i] = frame.GetInputSnapshot(car->GetCarId())[i];
+		}
 
-	//process binary car state
-	std::stringstream statestream(frame.GetBinaryStateData());
-	joeserialize::BinaryInputSerializer serialize_input(statestream);
-	car.Serialize(serialize_input);
+		//process binary car state
+		std::stringstream statestream(frame.GetBinaryStateData(car->GetCarId()));
+		joeserialize::BinaryInputSerializer serialize_input(statestream);
+		car->Serialize(serialize_input);
+	}
 }
 
 bool REPLAY::Serialize(joeserialize::Serializer & s)
 {
 	_SERIALIZE_(s, track);
-	_SERIALIZE_(s, cartype);
-	_SERIALIZE_(s, carpaint);
-	_SERIALIZE_(s, carfile);
-	_SERIALIZE_(s, carcolor);
+	_SERIALIZE_(s, cartypes);
+	_SERIALIZE_(s, carpaints);
+	_SERIALIZE_(s, carfiles);
+	_SERIALIZE_(s, carcolors);
+	
+	_SERIALIZE_(s, inputframes);
+	_SERIALIZE_(s, stateframes);
+	
+	_SERIALIZE_(s, number_laps);
+
 	return true;
 }
 
