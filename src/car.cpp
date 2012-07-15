@@ -176,7 +176,9 @@ static bool LoadWheel(
 	return true;
 }
 
-CAR::CAR() :
+CARID CAR::next_id = 1;
+
+CAR::CAR(CARID car_id) :
 	psound(0),
 	gearsound_check(0),
 	brakesound_check(false),
@@ -189,6 +191,10 @@ CAR::CAR() :
 	applied_brakes(0)
 {
 	// ctor
+	if (car_id == 0)
+		id = next_id++;
+	else
+		id = car_id;
 }
 
 CAR::~CAR()
@@ -259,6 +265,10 @@ bool CAR::LoadGraphics(
 {
 	//write_inf(cfg, std::cerr);
 	cartype = carname;
+	this->carpaint = carpaint;
+	this->carcolor = carcolor;
+	config = cfg;
+
 	LoadDrawable loadDrawable(carpath, anisotropy, content, models, error_output);
 
 	// load body first
@@ -1079,5 +1089,6 @@ bool CAR::Serialize(joeserialize::Serializer & s)
 {
 	_SERIALIZE_(s,dynamics);
 	_SERIALIZE_(s,last_steer);
+	_SERIALIZE_(s,id);
 	return true;
 }

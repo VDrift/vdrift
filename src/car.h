@@ -8,6 +8,7 @@
 #include "enginesoundinfo.h"
 #include "joeserialize.h"
 #include "macros.h"
+#include "cfg/ptree.h"
 
 class BEZIER;
 class CAMERA;
@@ -15,14 +16,18 @@ class PERFORMANCE_TESTING;
 class MODEL;
 class SOUND;
 class ContentManager;
-class PTree;
+
+typedef unsigned int CARID;
 
 class CAR
 {
+
+static CARID next_id;
+
 friend class PERFORMANCE_TESTING;
 friend class joeserialize::Serializer;
 public:
-	CAR();
+	CAR(CARID car_id = 0);
 
 	virtual ~CAR();
 
@@ -176,6 +181,21 @@ public:
 		return cartype;
 	}
 
+	std::string GetCarPaint() const
+	{
+		return carpaint;
+	}
+	
+	MATHVECTOR <float, 3> GetCarColor() const
+	{
+		return carcolor;
+	}
+	
+	const PTree& GetCarConfig() const
+	{
+		return config;
+	}
+
 	void SetSector(int value)
 	{
 		sector = value;
@@ -309,7 +329,14 @@ public:
 
 	SCENENODE & GetNode() {return topnode;}
 
+	CARID GetCarId() const 
+	{ 
+		return id;
+	}
+
 protected:
+	CARID id;
+
 	SCENENODE topnode;
 	CARDYNAMICS dynamics;
 
@@ -356,6 +383,10 @@ protected:
 	bool driver_view;
 
 	std::string cartype;
+	std::string carpaint;
+	MATHVECTOR <float, 3> carcolor;
+	PTree config;
+
 	int sector; // the last lap timing sector that the car hit
 	const BEZIER * curpatch[WHEEL_POSITION_SIZE]; //the last bezier patch that each wheel hit
 
