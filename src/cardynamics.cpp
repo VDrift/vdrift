@@ -353,6 +353,7 @@ CARDYNAMICS::CARDYNAMICS() :
 	linear_velocity(0,0,0),
 	angular_velocity(0,0,0),
 	drive(NONE),
+	driveshaft_rpm(0),
 	tacho_rpm(0),
 	autoclutch(true),
 	autoshift(false),
@@ -363,7 +364,8 @@ CARDYNAMICS::CARDYNAMICS() :
 	abs(false),
 	tcs(false),
 	maxangle(0),
-	maxspeed(0)
+	maxspeed(0),
+	feedback(0)
 {
 	suspension.resize(WHEEL_POSITION_SIZE);
 	wheel.resize(WHEEL_POSITION_SIZE);
@@ -554,6 +556,9 @@ bool CARDYNAMICS::Load(
 	//etc
 
 	maxspeed = CalculateMaxSpeed();
+
+	// init steering force feedback value
+	feedback = 0;
 
 	return true;
 }
