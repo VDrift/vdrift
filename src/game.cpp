@@ -1769,58 +1769,97 @@ void GAME::LoadGarage()
 {
 	LeaveGame();
 
-	if (!LoadTrack("garage"))
+	// Load track explicitly to avoid track reversed car orientation issue.
+	// Proper fix would be to support reversed car orientation in garage.
+
+	LoadingScreen(0.0, 1.0, false, "", 0.5, 0.5);
+
+	std::string trackname = "garage";
+	bool track_reverse = false;
+	bool track_dynamic = false;
+	if (!track.DeferredLoad(
+			content, dynamics,
+			info_output, error_output,
+			pathmanager.GetTracksPath(trackname),
+			pathmanager.GetTracksDir() + "/" + trackname,
+			pathmanager.GetEffectsTextureDir(),
+			pathmanager.GetTrackPartsPath(),
+			settings.GetAnisotropy(),
+			track_reverse, track_dynamic,
+			graphics_interface->GetShadows(),
+			settings.GetBatchGeometry()))
 	{
-		error_output << "Error loading garage." << std::endl;
+		error_output << "Error loading track: " << trackname << std::endl;
 		return;
 	}
 
-	SetGarageCar();
+	bool success = true;
+	int count = 0;
+	while (!track.Loaded() && success)
+	{
+		int displayevery = track.ObjectsNum() / 50;
+		if (displayevery == 0 || count % displayevery == 0)
+		{
+			LoadingScreen(count, track.ObjectsNum(), false, "", 0.5, 0.5);
+		}
+		success = track.ContinueDeferredLoad();
+		count++;
+	}
 
-//	trackmap.SetVisible(false);
-//	track.SetRacingLineVisibility(false);
-//	inputgraph.Hide();
-//	hud.Hide();
+	if (!success)
+	{
+		error_output << "Error loading track (deferred): " << trackname << std::endl;
+		return;
+	}
+
+	// Build static drawlist.
+#ifdef USE_STATIC_OPTIMIZATION_FOR_TRACK
+	graphics_interface->AddStaticNode(track.GetTrackNode());
+#endif
+
+	// Load car.
+	SetGarageCar();
 }
 
-bool GAME::SetGarageCar()
+void GAME::SetGarageCar()
 {
 	if (gui.GetInGame() || !track.Loaded())
-		return false;
+		return;
 
-	cars.clear();
+	// get car start position marker for camera setup
+	MATHVECTOR<float, 3> car_pos = track.GetStart(0).first;
 
 	// car setup
-	if (!LoadCar(
+	cars.clear();
+
+	if (LoadCar(
 		cars_name[car_edit_id],
 		cars_paint[car_edit_id],
 		cars_color_hsv[car_edit_id],
-		track.GetStart(0).first,
-		track.GetStart(0).second,
+		car_pos, track.GetStart(0).second,
 		true, false))
 	{
-		return false;
+		// update car
+		CAR & car = cars.back();
+		dynamics.update(timestep);
+		car.Update(timestep);
+
+		// process car sound sources
+		// should they be loaded for garage car in the first place?
+		sound.Update();
+		
+		// use car shape center for camera setup
+		car_pos = car.GetPosition();
 	}
-
-	// update car position
-	CAR & car = cars.back();
-	dynamics.update(timestep);
-	car.Update(timestep);
-
-	// process car sound sources
-	// should they be loaded for garage car in the first place?
-	sound.Update();
 
 	// camera setup
 	MATHVECTOR<float, 3> offset(1.75, 5.75, 0.75);
 	track.GetStart(0).second.RotateVector(offset);
 	MATHVECTOR<float, 3> pos = track.GetStart(0).first + offset;
-	QUATERNION<float> rot = LookAt(pos, car.GetPosition(), direction::Up);
+	QUATERNION<float> rot = LookAt(pos, car_pos, direction::Up);
 	garage_camera.SetOffset(MATHVECTOR<float, 3>(0));
 	garage_camera.Reset(pos, rot);
 	active_camera = &garage_camera;
-
-	return true;
 }
 
 void GAME::SetCarColor()

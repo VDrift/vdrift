@@ -41,7 +41,7 @@ public:
 
 private:
 	std::vector<ROADPATCH> patches;
-	AABB_SPACE_PARTITIONING_NODE <int> aabb_part;
+	AABB_SPACE_PARTITIONING_NODE <unsigned> aabb_part;
 	bool closed;
 
 	void GenerateSpacePartitioning();

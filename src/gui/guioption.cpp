@@ -5,6 +5,7 @@
 static const std::string null;
 
 GUIOPTION::GUIOPTION() :
+	type(type_float),
 	min(0),
 	max(0),
 	percent(false)
@@ -50,7 +51,11 @@ void GUIOPTION::SetValues(const std::string & curvalue, std::list <std::pair<std
 void GUIOPTION::SetInfo(const std::string & newdesc, const std::string & newtype)
 {
 	description = newdesc;
-	type = newtype;
+
+	if (newtype == "float")
+		type = type_float;
+	else
+		type = type_other;
 }
 
 void GUIOPTION::SetMinMaxPercentage(float newmin, float newmax, bool newpercent)
@@ -60,18 +65,30 @@ void GUIOPTION::SetMinMaxPercentage(float newmin, float newmax, bool newpercent)
 	percent = newpercent;
 }
 
-void GUIOPTION::SetCurrentValue(const std::string & storedvaluename)
+void GUIOPTION::SetCurrentValue(const std::string & value)
 {
 	if (values.empty())
 	{
-		non_value_data = storedvaluename;
+		non_value_data = value;
 	}
 	else
 	{
 		bool current_valid = false;
 		for (std::list <std::pair<std::string, std::string> >::iterator i = values.begin(); i != values.end(); ++i)
 		{
-			if (i->first == storedvaluename)
+			bool match;
+			if (type == type_float)
+			{
+				// number of trailing zeros might differ, use min match
+				size_t len = std::min(i->first.length(), value.length());
+				match = !i->first.compare(0, len, value, 0, len);
+			}
+			else
+			{
+				match = (i->first == value);
+			}
+
+			if (match)
 			{
 				current_valid = true;
 				current_value = i;
@@ -91,7 +108,7 @@ void GUIOPTION::Increment()
 {
 	if (values.empty())
 	{
-		if (type == "float")
+		if (type == type_float)
 		{
 			std::stringstream s, v;
 			float f;
@@ -129,7 +146,7 @@ void GUIOPTION::Decrement()
 {
 	if (values.empty())
 	{
-		if (type == "float")
+		if (type == type_float)
 		{
 			std::stringstream s, v;
 			float f;
@@ -193,7 +210,7 @@ void GUIOPTION::SignalValue()
 {
 	if (values.empty())
 	{
-		if (type != "float")
+		if (type != type_float)
 		{
 			signal_val(non_value_data);
 			signal_str(non_value_data);
@@ -214,7 +231,7 @@ void GUIOPTION::SignalValue()
 			signal_valn(non_value_data);
 		}
 		signal_val(non_value_data);
-		
+
 		if (percent)
 		{
 			// format value string
@@ -248,9 +265,8 @@ void GUIOPTION::SignalValue()
 void GUIOPTION::SetCurrentValueNorm(const std::string & value)
 {
 	// only valid for floats
-	if (type != "float")
-		return;
-	
+	assert(type == type_float);
+
 	if (min != 0 || max != 1)
 	{
 		std::stringstream s, v;

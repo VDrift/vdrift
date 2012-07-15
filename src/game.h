@@ -109,7 +109,7 @@ private:
 
 	void LoadGarage();
 
-	bool SetGarageCar();
+	void SetGarageCar();
 
 	void SetCarColor();
 

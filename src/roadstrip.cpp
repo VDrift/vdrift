@@ -54,7 +54,7 @@ bool ROADSTRIP::ReadFrom(std::istream & openfile, std::ostream & error_output)
 void ROADSTRIP::GenerateSpacePartitioning()
 {
 	aabb_part.Clear();
-	for (int i = 0; i < (int)patches.size(); ++i)
+	for (unsigned i = 0; i < patches.size(); ++i)
 	{
 		aabb_part.Add(i, patches[i].GetPatch().GetAABB());
 	}
@@ -106,31 +106,29 @@ bool ROADSTRIP::Collide(
 
 void ROADSTRIP::Reverse()
 {
+	// Reverse patch order.
 	std::reverse(patches.begin(), patches.end());
 
+	// Reverse patches.
 	for (std::vector<ROADPATCH>::iterator i = patches.begin(); i != patches.end(); ++i)
 	{
 		i->GetPatch().Reverse();
 		i->GetPatch().ResetDistFromStart();
 	}
 
-	//fix pointers to next patches for race placement
-	for (std::vector<ROADPATCH>::iterator i = patches.begin(); i != patches.end(); ++i)
+	// Reattach patches.
+	for (std::vector<ROADPATCH>::iterator i = patches.begin(); i != patches.end() - 1; ++i)
 	{
-		std::vector<ROADPATCH>::iterator n = i;
-		n++;
-		BEZIER * nextpatchptr = 0;
-		if (n != patches.end())
-		{
-			nextpatchptr = &(n->GetPatch());
-			i->GetPatch().Attach(*nextpatchptr);
-		}
-		else
-		{
-			i->GetPatch().ResetNextPatch();
-			i->GetPatch().Attach(patches.front().GetPatch());
-		}
+		std::vector<ROADPATCH>::iterator n = i + 1;
+		i->GetPatch().Attach(n->GetPatch());
 	}
+	if (closed)
+	{
+		patches.back().GetPatch().Attach(patches.front().GetPatch());
+	}
+
+	// Rerun space partitioning due to patch order reversal.
+	GenerateSpacePartitioning();
 }
 
 void ROADSTRIP::CreateRacingLine(

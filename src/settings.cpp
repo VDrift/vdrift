@@ -29,6 +29,7 @@ SETTINGS::SETTINGS() :
 	skin("simple"),
 	language("English"),
 	show_fps(false),
+	music_volume(1.0),
 	sound_volume(1.0),
 	sound_sources(64),
 	mph(true),
@@ -66,6 +67,7 @@ SETTINGS::SETTINGS() :
 	input_graph(false),
 	lighting(0),
 	bloom(false),
+	motionblur(false),
 	normalmaps(false),
 	car("XS"),
 	car_paint("default"),
@@ -137,6 +139,7 @@ void SETTINGS::Serialize(bool write, CONFIG & config)
 	Param(config, write, section, "input_graph", input_graph);
 	Param(config, write, section, "lighting", lighting);
 	Param(config, write, section, "bloom", bloom);
+	Param(config, write, section, "motionblur", motionblur);
 	Param(config, write, section, "normalmaps", normalmaps);
 	Param(config, write, section, "camerabounce", camera_bounce);
 	Param(config, write, section, "contrast", contrast);
@@ -144,6 +147,7 @@ void SETTINGS::Serialize(bool write, CONFIG & config)
 	config.GetSection("sound", section);
 	Param(config, write, section, "sources", sound_sources);
 	Param(config, write, section, "volume", sound_volume);
+	Param(config, write, section, "music_volume", music_volume);
 
 	config.GetSection("joystick", section);
 	Param(config, write, section, "type", joytype);

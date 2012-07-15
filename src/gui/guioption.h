@@ -24,7 +24,7 @@ public:
 	void SetMinMaxPercentage(float newmin, float newmax, bool newpercent);
 
 	/// reset to first value if passed value invalid
-	void SetCurrentValue(const std::string & storedvaluename);
+	void SetCurrentValue(const std::string & value);
 
 	/// increment the current_value to the next value in the values list
 	void Increment();
@@ -64,11 +64,10 @@ private:
 	
 	/// meta data
 	std::string description;
-	std::string type;
+	enum type {type_float, type_other} type;
 
 	/// string/int/float option
 	std::string non_value_data;
-	float fvalue;
 	float min;
 	float max;
 	bool percent;
