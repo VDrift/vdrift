@@ -42,7 +42,7 @@ class TASK
 			quit = false;
 			sem_frame_start = SDL_CreateSemaphore(0);
 			sem_frame_end = SDL_CreateSemaphore(0);
-			thread = SDL_CreateThread(Dispatch, this);
+			thread = SDL_CreateThread(Dispatch, NULL, this);
 		}
 
 		~TASK()
