@@ -55,7 +55,7 @@ void WINDOW_SDL::Init(const std::string & windowcaption, unsigned int resx, unsi
 {
 	Uint32 sdl_flags = SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK;
 #if SDL_VERSION_ATLEAST(2,0,0)
-	flags |= SDL_INIT_HAPTIC;
+	sdl_flags |= SDL_INIT_HAPTIC;
 #endif
 	if (SDL_Init(sdl_flags) < 0)
 	{
