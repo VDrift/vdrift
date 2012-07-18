@@ -11,7 +11,6 @@
 
 class ContentManager;
 class TEXTURE;
-struct SDL_Surface;
 
 class TRACKMAP
 {
@@ -57,8 +56,6 @@ private:
 
 	//size of the car dot on screen
 	MATHVECTOR <float, 2> dot_size;
-
-	SDL_Surface* surface;
 
 	SCENENODE mapnode;
 	keyed_container <DRAWABLE>::handle mapdraw;

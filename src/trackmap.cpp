@@ -5,7 +5,7 @@
 #ifdef __APPLE__
 #include <SDL_gfx/SDL_gfxPrimitives.h>
 #else
-#include <SDL/SDL_gfxPrimitives.h> //part of the SDL_gfx package
+#include <SDL/SDL_gfxPrimitives.h>
 #endif
 
 #include "float.h"
@@ -17,7 +17,7 @@ using std::list;
 using std::vector;
 using std::pair;
 
-TRACKMAP::TRACKMAP() : scale(1.0), MAP_WIDTH(256),MAP_HEIGHT(256),surface(NULL)
+TRACKMAP::TRACKMAP() : scale(1.0), MAP_WIDTH(256),MAP_HEIGHT(256)
 {
 }
 
@@ -29,16 +29,8 @@ TRACKMAP::~TRACKMAP()
 void TRACKMAP::Unload()
 {
 	dotlist.clear();
-
 	mapnode.Clear();
-
 	mapdraw.invalidate();
-
-	if (surface)
-	{
-		SDL_FreeSurface(surface);
-		surface = NULL;
-	}
 }
 
 bool TRACKMAP::BuildMap(
@@ -53,7 +45,6 @@ bool TRACKMAP::BuildMap(
 
 	int outsizex = MAP_WIDTH;
 	int outsizey = MAP_HEIGHT;
-
 	int bpp = 32;
 
 	// SDL interprets each pixel as a 32-bit number, so our masks must depend
@@ -71,7 +62,7 @@ bool TRACKMAP::BuildMap(
 	amask = 0xff000000;
 #endif
 
-	surface = SDL_CreateRGBSurface(SDL_SWSURFACE, outsizex, outsizey, bpp, rmask, gmask, bmask, amask);
+	SDL_Surface * surface = SDL_CreateRGBSurface(SDL_SWSURFACE, outsizex, outsizey, bpp, rmask, gmask, bmask, amask);
 
 	//find the map width and height
 	mapsize.Set(0,0);
@@ -199,29 +190,23 @@ bool TRACKMAP::BuildMap(
 		error_output << "Can't load generated track map texture" << std::endl;
 		return false;
 	}
+	SDL_FreeSurface(surface);
+
+	mapdraw = mapnode.GetDrawlist().twodim.insert(DRAWABLE());
+	DRAWABLE & mapdrawref = mapnode.GetDrawlist().twodim.get(mapdraw);
+	mapdrawref.SetDiffuseMap(track_map);
+	mapdrawref.SetVertArray(&mapverts);
+	mapdrawref.SetCull(false, false);
+	mapdrawref.SetColor(1,1,1,0.7);
+	mapdrawref.SetDrawOrder(0);
+	mapverts.SetToBillboard(position[0], position[1], position[0]+size[0], position[1]+size[1]);
 
 	//std::cout << "Loading track map dots" << std::endl;
 	TEXTUREINFO dotinfo;
-	if (!content.load(texturepath, "cardot0.png", dotinfo, cardot0))
-	{
-		error_output << "Can't load cardot0" << std::endl;
-		return false;
-	}
-	if (!content.load(texturepath, "cardot1.png", dotinfo, cardot1))
-	{
-		error_output << "Can't load cardot1" << std::endl;
-		return false;
-	}
-	if (!content.load(texturepath, "cardot0_focused.png", dotinfo, cardot0_focused))
-	{
-		error_output << "Can't load cardot0_focused" << std::endl;
-		return false;
-	}
-	if (!content.load(texturepath, "cardot1_focused.png", dotinfo, cardot1_focused))
-	{
-		error_output << "Can't load cardot1_focused" << std::endl;
-		return false;
-	}
+	if (!content.load(texturepath, "cardot0.png", dotinfo, cardot0)) return false;
+	if (!content.load(texturepath, "cardot1.png", dotinfo, cardot1)) return false;
+	if (!content.load(texturepath, "cardot0_focused.png", dotinfo, cardot0_focused)) return false;
+	if (!content.load(texturepath, "cardot1_focused.png", dotinfo, cardot1_focused)) return false;
 
 	// calculate map position, size
 	screen[0] = (float)w;
@@ -232,15 +217,6 @@ bool TRACKMAP::BuildMap(
 	size[1] = MAP_HEIGHT / screen[1];
 	dot_size[0] = cardot0->GetW() / 2.0 / screen[0];
 	dot_size[1] = cardot0->GetH() / 2.0 / screen[1];
-
-	mapdraw = mapnode.GetDrawlist().twodim.insert(DRAWABLE());
-	DRAWABLE & mapdrawref = mapnode.GetDrawlist().twodim.get(mapdraw);
-	mapdrawref.SetDiffuseMap(track_map);
-	mapdrawref.SetVertArray(&mapverts);
-	mapdrawref.SetCull(false, false);
-	mapdrawref.SetColor(1,1,1,0.7);
-	mapdrawref.SetDrawOrder(0);
-	mapverts.SetToBillboard(position[0], position[1], position[0]+size[0], position[1]+size[1]);
 
 	return true;
 }
