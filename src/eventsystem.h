@@ -10,6 +10,10 @@
 #include <iostream>
 #include <cassert>
 
+#if SDL_VERSION_ATLEAST(2,0,0)
+typedef SDL_Keycode SDLKey;
+#endif
+
 class EVENTSYSTEM_SDL
 {
 public:
@@ -170,26 +174,6 @@ public:
 
 	BUTTON_STATE GetMouseButtonState(int id) const;
 	BUTTON_STATE GetKeyState(SDLKey id) const;
-	BUTTON_STATE GetKeyState(int id) const
-	{
-		SDLKey keyid = (SDLKey) id;
-		return GetKeyState(keyid);
-	}
-
-	///note that when the mouse cursor is hidden, it is also grabbed (confined to the application window)
-	void SetMouseCursorVisibility(bool visible)
-	{
-		if (visible)
-		{
-			SDL_ShowCursor(SDL_ENABLE);
-			SDL_WM_GrabInput(SDL_GRAB_OFF);
-		}
-		else
-		{
-			SDL_ShowCursor(SDL_DISABLE);
-			SDL_WM_GrabInput(SDL_GRAB_ON);
-		}
-	}
 
 	std::map <SDLKey, TOGGLE> & GetKeyMap() {return keymap;}
 

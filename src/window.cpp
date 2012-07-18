@@ -1,38 +1,52 @@
 /************************************************************************/
-/*                                                                      */
-/* This file is part of VDrift.                                         */
-/*                                                                      */
-/* VDrift is free software: you can redistribute it and/or modify       */
+/*																	  */
+/* This file is part of VDrift.										 */
+/*																	  */
+/* VDrift is free software: you can redistribute it and/or modify	   */
 /* it under the terms of the GNU General Public License as published by */
-/* the Free Software Foundation, either version 3 of the License, or    */
-/* (at your option) any later version.                                  */
-/*                                                                      */
-/* VDrift is distributed in the hope that it will be useful,            */
-/* but WITHOUT ANY WARRANTY; without even the implied warranty of       */
-/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the        */
-/* GNU General Public License for more details.                         */
-/*                                                                      */
-/* You should have received a copy of the GNU General Public License    */
-/* along with VDrift.  If not, see <http://www.gnu.org/licenses/>.      */
-/*                                                                      */
+/* the Free Software Foundation, either version 3 of the License, or	*/
+/* (at your option) any later version.								  */
+/*																	  */
+/* VDrift is distributed in the hope that it will be useful,			*/
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of	   */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the		*/
+/* GNU General Public License for more details.						 */
+/*																	  */
+/* You should have received a copy of the GNU General Public License	*/
+/* along with VDrift.  If not, see <http://www.gnu.org/licenses/>.	  */
+/*																	  */
 /************************************************************************/
 
-#ifdef __APPLE__
-#include <OpenGL/gl.h>
-#else
-#include <GL/gl.h>
-#endif
-#include <SDL/SDL.h>
-#include <cassert>
 #include "window.h"
+#include <gl.h>
+#include <SDL/SDL.h>
+#include <SDL/SDL_syswm.h>
+#include <cassert>
 
-WINDOW_SDL::WINDOW_SDL() : surface(NULL), initialized(false), fsaa(1)
+WINDOW_SDL::WINDOW_SDL() :
+	surface(NULL),
+	window(NULL),
+	initialized(false),
+	fsaa(1)
 {
-    // Constructor.
+	// Constructor.
 }
 
 WINDOW_SDL::~WINDOW_SDL()
 {
+#if SDL_VERSION_ATLEAST(2,0,0)
+	if (surface)
+	{
+		surface->flags &= ~SDL_DONTFREE;
+		SDL_FreeSurface(surface);
+	}
+
+	if (glcontext)
+		SDL_GL_DeleteContext(glcontext);
+
+	if (window)
+		SDL_DestroyWindow(window);
+#endif
 	if (initialized)
 		SDL_Quit();
 }
@@ -41,21 +55,50 @@ void WINDOW_SDL::Init(const std::string & windowcaption, unsigned int resx, unsi
 {
 	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK) < 0)
 	{
-        // Die...
 		error_output << "SDL initialization failed: " << SDL_GetError() << std::endl;
 		assert(0);
 	}
 
 	ChangeDisplay(resx, resy, bpp, depthbpp, fullscreen, antialiasing, info_output, error_output);
 
+#if SDL_VERSION_ATLEAST(2,0,0)
+	SDL_SetWindowTitle(window, windowcaption.c_str());
+#else
 	SDL_WM_SetCaption(windowcaption.c_str(), NULL);
+#endif
 
 	initialized = true;
 }
 
 void WINDOW_SDL::SwapBuffers()
 {
+#if SDL_VERSION_ATLEAST(2,0,0)
+	SDL_GL_SwapWindow(window);
+#else
 	SDL_GL_SwapBuffers();
+#endif
+}
+
+void WINDOW_SDL::ShowMouseCursor(bool value)
+{
+	if (value)
+	{
+		SDL_ShowCursor(SDL_ENABLE);
+#if SDL_VERSION_ATLEAST(2,0,0)
+		SDL_SetWindowGrab(window, SDL_FALSE);
+#else
+		SDL_WM_GrabInput(SDL_GRAB_OFF);
+#endif
+	}
+	else
+	{
+		SDL_ShowCursor(SDL_DISABLE);
+#if SDL_VERSION_ATLEAST(2,0,0)
+		SDL_SetWindowGrab(window, SDL_TRUE);
+#else
+		SDL_WM_GrabInput(SDL_GRAB_ON);
+#endif
+	}
 }
 
 void WINDOW_SDL::Screenshot(std::string filename)
@@ -66,20 +109,13 @@ void WINDOW_SDL::Screenshot(std::string filename)
 	int i;
 
 	screen = surface;
-
-	if (!(screen->flags & SDL_OPENGL))
-	{
-		SDL_SaveBMP(temp, filename.c_str());
-		return;
-	}
-
 	temp = SDL_CreateRGBSurface(SDL_SWSURFACE, screen->w, screen->h, 24,
 #if SDL_BYTEORDER == SDL_LIL_ENDIAN
-                                0x000000FF, 0x0000FF00, 0x00FF0000, 0
+								0x000000FF, 0x0000FF00, 0x00FF0000, 0
 #else
-                                0x00FF0000, 0x0000FF00, 0x000000FF, 0
+								0x00FF0000, 0x0000FF00, 0x000000FF, 0
 #endif
-                                );
+								);
 
 	assert(temp);
 
@@ -98,30 +134,58 @@ void WINDOW_SDL::Screenshot(std::string filename)
 
 unsigned int WINDOW_SDL::GetW() const
 {
-    return w;
+	return w;
 }
 
 unsigned int WINDOW_SDL::GetH() const
 {
-    return h;
+	return h;
 }
 
 float WINDOW_SDL::GetWHRatio() const
 {
-    return (float)w/(float)h;
+	return (float)w/(float)h;
 }
 
-void WINDOW_SDL::ChangeDisplay(const int width, const int height, const int bpp, const int dbpp, const bool fullscreen, unsigned int antialiasing, std::ostream & info_output, std::ostream & error_output)
+static int GetVideoDisplay()
 {
-	const SDL_VideoInfo *videoInfo = SDL_GetVideoInfo();
+	const char *variable = SDL_getenv("SDL_VIDEO_FULLSCREEN_DISPLAY");
+	if (!variable)
+		variable = SDL_getenv("SDL_VIDEO_FULLSCREEN_HEAD");
+	
+	if (variable)
+		return SDL_atoi(variable);
+	else
+		return 0;
+}
 
-	if (!videoInfo)
-	{
-		error_output << "SDL video query failed: " << SDL_GetError() << std::endl;
-		assert (0);
-	}
+bool WINDOW_SDL::ResizeWindow(int width, int height)
+{
+#if SDL_VERSION_ATLEAST(2,0,0)
+	// We can't resize something we don't have.
+	if (!surface)
+		return false;
 
-	int videoFlags = SDL_OPENGL | SDL_GL_DOUBLEBUFFER | SDL_HWPALETTE;
+	// Resize window
+	int w, h;
+	SDL_GetWindowSize(window, &w, &h);
+	if (w != width || h != height)
+		SDL_SetWindowSize(window, width, height);
+
+	surface->w = width;
+	surface->h = height;
+#endif
+	return true;
+}
+
+void WINDOW_SDL::ChangeDisplay(
+	int width, int height,
+	int bpp, int dbpp,
+	bool fullscreen,
+	unsigned int antialiasing,
+	std::ostream & info_output,
+	std::ostream & error_output)
+{
 
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, dbpp);
@@ -130,12 +194,90 @@ void WINDOW_SDL::ChangeDisplay(const int width, const int height, const int bpp,
 	if (antialiasing > 1)
 	{
 		fsaa = antialiasing;
-		info_output << "Enabling antialiasing: " << fsaa << "X" << std::endl;
 		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, fsaa);
+		info_output << "Enabling antialiasing: " << fsaa << "X" << std::endl;
 	}
 	else
+	{
 		info_output << "Disabling antialiasing" << std::endl;
+	}
 
+#if SDL_VERSION_ATLEAST(2,0,0)
+	SDL_DisplayMode desktop_mode;
+	int display = GetVideoDisplay();
+	
+	SDL_GetDesktopDisplayMode(display, &desktop_mode);
+	
+	if (width == 0)
+		width = desktop_mode.w;
+	
+	if (height == 0)
+		height = desktop_mode.h;
+	
+	if (bpp == 0)
+		bpp = SDL_BITSPERPIXEL(desktop_mode.format);
+
+	// Try to resize the existing window and surface
+	if (!fullscreen && ResizeWindow(width, height))
+		return;
+
+	// Destroy existing window
+	if (surface)
+	{
+		surface->flags &= ~SDL_DONTFREE;
+		SDL_FreeSurface(surface);
+		surface = NULL;
+	}
+
+	if (glcontext)
+	{
+		SDL_GL_DeleteContext(glcontext);
+		glcontext = NULL;
+	}
+
+	if (window)
+	{
+		SDL_DestroyWindow(window);
+	}
+
+	// Create a new window
+	Uint32 window_flags = SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL;
+	if (fullscreen)
+		window_flags |= SDL_WINDOW_FULLSCREEN;
+
+	window = SDL_CreateWindow(NULL,
+		SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
+		width, height, window_flags);
+	if (!window)
+	{
+		assert(0);
+	}
+//	SDL_SetWindowIcon(window, SDL_VideoIcon);
+
+	glcontext = SDL_GL_CreateContext(window);
+	if (!glcontext)
+	{
+		assert(0);
+	}
+	if (SDL_GL_MakeCurrent(window, glcontext) < 0)
+	{
+		assert(0);
+	}
+
+	surface = SDL_CreateRGBSurfaceFrom(NULL, width, height, bpp, 0, 0, 0, 0, 0);
+	if (!surface)
+	{
+		assert(0);
+	}
+#else
+	const SDL_VideoInfo *videoInfo = SDL_GetVideoInfo();
+	if (!videoInfo)
+	{
+		error_output << "SDL video query failed: " << SDL_GetError() << std::endl;
+		assert (0);
+	}
+
+	int videoFlags = SDL_OPENGL | SDL_GL_DOUBLEBUFFER | SDL_HWPALETTE;
 	if (fullscreen)
 		videoFlags |= (SDL_HWSURFACE | SDL_ANYFORMAT | SDL_FULLSCREEN);
 	else
@@ -146,8 +288,8 @@ void WINDOW_SDL::ChangeDisplay(const int width, const int height, const int bpp,
 		SDL_FreeSurface(surface);
 		surface = NULL;
 	}
-
 	surface = SDL_SetVideoMode(width, height, bpp, videoFlags);
+#endif
 
 	if (!surface)
 	{
@@ -155,7 +297,9 @@ void WINDOW_SDL::ChangeDisplay(const int width, const int height, const int bpp,
 		assert (0);
 	}
 	else
+	{
 		info_output << "Display change was successful: " << width << "x" << height << "x" << bpp << " " << dbpp << "z fullscreen=" << fullscreen << std::endl;
+	}
 
 	w = width;
 	h = height;

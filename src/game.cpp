@@ -24,7 +24,6 @@
 #include "matrix4.h"
 #include "carwheelposition.h"
 #include "numprocessors.h"
-#include "parallel_task.h"
 #include "performance_testing.h"
 #include "quickprof.h"
 #include "tracksurface.h"
@@ -523,7 +522,7 @@ bool GAME::InitGUI(const std::string & pagename)
 	// Show main page.
 	gui.ActivatePage(pagename, 0.5, error_output);
 	if (settings.GetMouseGrab())
-		eventsystem.SetMouseCursorVisibility(true);
+		window.ShowMouseCursor(true);
 
 	return true;
 }
@@ -1125,7 +1124,7 @@ void GAME::ProcessGUIInputs()
 			ShowHUD(false);
 			gui.ActivatePage("InGameMain", 0.25, error_output);
 			if (settings.GetMouseGrab())
-				eventsystem.SetMouseCursorVisibility(true);
+				window.ShowMouseCursor(true);
 		}
 		return;
 	}
@@ -1539,7 +1538,7 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	gui.Deactivate();
 	ShowHUD(true);
 	if (settings.GetMouseGrab())
-		eventsystem.SetMouseCursorVisibility(false);
+		window.ShowMouseCursor(false);
 
 	// Record a replay.
 	if (settings.GetRecordReplay() && !playreplay)
@@ -2471,7 +2470,7 @@ void GAME::ReturnToGame()
 	if (gui.Active())
 	{
 		if (settings.GetMouseGrab())
-			eventsystem.SetMouseCursorVisibility(false);
+			window.ShowMouseCursor(false);
 		gui.Deactivate();
 		ShowHUD(true);
 	}

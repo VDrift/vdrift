@@ -24,28 +24,48 @@
 #include <ostream>
 
 struct SDL_Surface;
+struct SDL_Window;
 
 class WINDOW_SDL
 {
 public:
 	WINDOW_SDL();
+	
 	~WINDOW_SDL();
 
 	void Init(const std::string & windowcaption, unsigned int resx, unsigned int resy, unsigned int bpp, unsigned int depthbpp, bool fullscreen, unsigned int antialiasing, std::ostream & info_output, std::ostream & error_output);
+	
 	void SwapBuffers();
+
+	/// Note that when the mouse cursor is hidden, it is also grabbed (confined to the application window)
+	void ShowMouseCursor(bool value);
+
 	void Screenshot(std::string filename);
+	
 	unsigned int GetW() const;
+	
 	unsigned int GetH() const;
+	
 	float GetWHRatio() const;
 
 private:
 	// Configuration variables, internal data.
 	unsigned int w, h;
-	SDL_Surface * surface;
 	bool initialized;
 	unsigned int fsaa;
+	SDL_Surface * surface;
+	SDL_Window * window;
+	void * glcontext;
 
-	void ChangeDisplay(const int width, const int height, const int bpp, const int dbpp, const bool fullscreen, unsigned int antialiasing, std::ostream & info_output, std::ostream & error_output);
+	bool ResizeWindow(int width, int height);
+
+	void ChangeDisplay(
+		int width, int height,
+		int bpp, int dbpp,
+		bool fullscreen,
+		unsigned int antialiasing,
+		std::ostream & info_output,
+		std::ostream & error_output);
 };
 
 #endif

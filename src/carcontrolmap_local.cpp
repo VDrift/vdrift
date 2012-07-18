@@ -188,7 +188,7 @@ bool CARCONTROLMAP_LOCAL::Load(const std::string & controlfile, std::ostream & i
 
 			if (!controls_config.GetParam(i, "down", key_down, error_output)) continue;
 			if (!controls_config.GetParam(i, "once", key_once, error_output)) continue;
-			if (keycode < SDLK_LAST && keycode > SDLK_FIRST)
+			if (keycode != SDLK_UNKNOWN)
 			{
 				newctrl.keycode = SDLKey(keycode);
 			}
