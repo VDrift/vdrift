@@ -42,7 +42,11 @@ class TASK
 			quit = false;
 			sem_frame_start = SDL_CreateSemaphore(0);
 			sem_frame_end = SDL_CreateSemaphore(0);
+#if SDL_VERSION_ATLEAST(2,0,0)
 			thread = SDL_CreateThread(Dispatch, NULL, this);
+#else
+			thread = SDL_CreateThread(Dispatch, this);
+#endif
 		}
 
 		~TASK()
