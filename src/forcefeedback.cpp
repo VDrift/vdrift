@@ -1,5 +1,7 @@
 #include "forcefeedback.h"
 
+#include <cstring>
+
 #if SDL_VERSION_ATLEAST(2,0,0)
 
 FORCEFEEDBACK::FORCEFEEDBACK(
@@ -125,7 +127,6 @@ void FORCEFEEDBACK::update(
 
 #elif defined(linux) || defined(__linux)
 
-#include <cstring>
 #include <linux/input.h>
 #include <fcntl.h>
 #include <unistd.h>
