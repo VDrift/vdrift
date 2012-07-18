@@ -1,33 +1,33 @@
 /************************************************************************/
-/*																	  */
-/* This file is part of VDrift.										 */
-/*																	  */
-/* VDrift is free software: you can redistribute it and/or modify	   */
+/*                                                                      */
+/* This file is part of VDrift.                                         */
+/*                                                                      */
+/* VDrift is free software: you can redistribute it and/or modify       */
 /* it under the terms of the GNU General Public License as published by */
-/* the Free Software Foundation, either version 3 of the License, or	*/
-/* (at your option) any later version.								  */
-/*																	  */
-/* VDrift is distributed in the hope that it will be useful,			*/
-/* but WITHOUT ANY WARRANTY; without even the implied warranty of	   */
-/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the		*/
-/* GNU General Public License for more details.						 */
-/*																	  */
-/* You should have received a copy of the GNU General Public License	*/
-/* along with VDrift.  If not, see <http://www.gnu.org/licenses/>.	  */
-/*																	  */
+/* the Free Software Foundation, either version 3 of the License, or    */
+/* (at your option) any later version.                                  */
+/*                                                                      */
+/* VDrift is distributed in the hope that it will be useful,            */
+/* but WITHOUT ANY WARRANTY; without even the implied warranty of       */
+/* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the        */
+/* GNU General Public License for more details.                         */
+/*                                                                      */
+/* You should have received a copy of the GNU General Public License    */
+/* along with VDrift.  If not, see <http://www.gnu.org/licenses/>.      */
+/*                                                                      */
 /************************************************************************/
 
 #include "window.h"
 #include <gl.h>
 #include <SDL/SDL.h>
-#include <SDL/SDL_syswm.h>
 #include <cassert>
 
 WINDOW_SDL::WINDOW_SDL() :
+	initialized(false),
+	fsaa(1),
 	surface(NULL),
 	window(NULL),
-	initialized(false),
-	fsaa(1)
+	glcontext(0)
 {
 	// Constructor.
 }
@@ -147,12 +147,13 @@ float WINDOW_SDL::GetWHRatio() const
 	return (float)w/(float)h;
 }
 
+#if SDL_VERSION_ATLEAST(2,0,0)
 static int GetVideoDisplay()
 {
 	const char *variable = SDL_getenv("SDL_VIDEO_FULLSCREEN_DISPLAY");
 	if (!variable)
 		variable = SDL_getenv("SDL_VIDEO_FULLSCREEN_HEAD");
-	
+
 	if (variable)
 		return SDL_atoi(variable);
 	else
@@ -161,7 +162,6 @@ static int GetVideoDisplay()
 
 bool WINDOW_SDL::ResizeWindow(int width, int height)
 {
-#if SDL_VERSION_ATLEAST(2,0,0)
 	// We can't resize something we don't have.
 	if (!surface)
 		return false;
@@ -174,9 +174,9 @@ bool WINDOW_SDL::ResizeWindow(int width, int height)
 
 	surface->w = width;
 	surface->h = height;
-#endif
 	return true;
 }
+#endif
 
 void WINDOW_SDL::ChangeDisplay(
 	int width, int height,
@@ -205,15 +205,15 @@ void WINDOW_SDL::ChangeDisplay(
 #if SDL_VERSION_ATLEAST(2,0,0)
 	SDL_DisplayMode desktop_mode;
 	int display = GetVideoDisplay();
-	
+
 	SDL_GetDesktopDisplayMode(display, &desktop_mode);
-	
+
 	if (width == 0)
 		width = desktop_mode.w;
-	
+
 	if (height == 0)
 		height = desktop_mode.h;
-	
+
 	if (bpp == 0)
 		bpp = SDL_BITSPERPIXEL(desktop_mode.format);
 
