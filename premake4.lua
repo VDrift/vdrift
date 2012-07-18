@@ -33,9 +33,6 @@ write_definitions_h = function()
 	f:write("#define _DEFINITIONS_H\n")
 	f:write("#define SETTINGS_DIR \"".._OPTIONS["settings"].."\"\n")
 	f:write("#define DATA_DIR \"".._OPTIONS["datadir"].."\"\n")
-	if _OPTIONS["force_feedback"] == "yes" then
-		f:write("#define ENABLE_FORCE_FEEDBACK\n")
-	end
 	if _OPTIONS["binreloc"] == "yes" then
 		f:write("#define ENABLE_BINRELOC\n")
 	end
@@ -61,13 +58,6 @@ newoption {
 	trigger = "bindir",
 	value = "PATH",
 	description = "Path where VDrift executable will be installed."
-}
-
-newoption {
-	trigger = "force_feedback",
-	value = "VALUE",
-	description = "Enable force feedback.",
-	allowed = {{"yes", "Enable option"}, {"no", "Disable option"}}
 }
 
 newoption {
@@ -161,7 +151,7 @@ solution "VDrift"
 		location "."
 		includedirs {"vdrift-win/include", "vdrift-win/bullet"}
 		libdirs {"vdrift-win/lib"}
-		links {"opengl32", "glu32", "glew32", "SDLmain", "SDL", "SDL_image", "SDL_gfx", "vorbisfile", "libcurl", "libarchive-2", "wsock32", "ws2_32"}
+		links {"opengl32", "glu32", "glew32", "SDL2main", "SDL2", "SDL2_image", "SDL2_gfx", "vorbisfile", "libcurl", "libarchive-2", "wsock32", "ws2_32"}
 		files {"vdrift-win/bullet/**.h", "vdrift-win/bullet/**.cpp"}
 		postbuildcommands {"xcopy /d /y /f .\\vdrift-win\\lib\\*.dll .\\"}
 
