@@ -484,49 +484,41 @@ bool TEXTURE::Load(const std::string & path, const TEXTUREINFO & info, std::ostr
 	SDL_Surface * texture_surface = orig_surface;
 	if (orig_surface)
 	{
-	    origw = texture_surface->w;
-        origh = texture_surface->h;
+		origw = texture_surface->w;
+		origh = texture_surface->h;
+
+		scale = Scale(info.maxsize, orig_surface->w, orig_surface->h);
+		float scalew = scale;
+		float scaleh = scale;
 
 		//scale to power of two if necessary
 		bool norescale = (IsPowerOfTwo(orig_surface->w) && IsPowerOfTwo(orig_surface->h)) ||
 					(info.npot && (GLEW_VERSION_2_0 || GLEW_ARB_texture_non_power_of_two));
+		
 		if (!norescale)
-	    {
-	        int newx = orig_surface->w;
-	        int maxsize = 2048;
-	        if (!IsPowerOfTwo(orig_surface->w))
-	        {
-	            for (newx = 1; newx <= maxsize && newx <= orig_surface->w; newx = newx * 2)
-	            {
-	            }
-	        }
+		{
+			int maxsize = 2048;
+			int new_w = orig_surface->w;
+			int new_h = orig_surface->h;
 
-	        int newy = orig_surface->h;
-	        if (!IsPowerOfTwo(orig_surface->h))
-	        {
-	            for (newy = 1; newy <= maxsize && newy <= orig_surface->h; newy = newy * 2)
-	            {
-	            }
-	        }
+			if (!IsPowerOfTwo(orig_surface->w))
+			{
+				for (new_w = 1; new_w <= maxsize && new_w <= orig_surface->w * scale; new_w = new_w * 2);
+			}
+			
+			if (!IsPowerOfTwo(orig_surface->h))
+			{
+				 for (new_h = 1; new_h <= maxsize && new_h <= orig_surface->h * scale; new_h = new_h * 2);
+			}
 
-	        float scalew = ((float)newx+0.5) / orig_surface->w;
-	        float scaleh = ((float)newy+0.5) / orig_surface->h;
-
-	        SDL_Surface * pot_surface = zoomSurface(orig_surface, scalew, scaleh, SMOOTHING_ON);
-
-	        assert(IsPowerOfTwo(pot_surface->w));
-	        assert(IsPowerOfTwo(pot_surface->h));
-
-	        SDL_FreeSurface(orig_surface);
-	        orig_surface = pot_surface;
-	        texture_surface = orig_surface;
-	    }
+			scalew = ((float)new_w + 0.5) / orig_surface->w;
+			scaleh = ((float)new_h + 0.5) / orig_surface->h;
+		}
 
 		//scale texture down if necessary
-		scale = Scale(info.maxsize, orig_surface->w, orig_surface->h);
-		if (scale < 1.0)
+		if (scalew < 1.0 || scaleh < 1.0)
 		{
-			texture_surface = zoomSurface(orig_surface, scale, scale, SMOOTHING_ON);
+			texture_surface = zoomSurface(orig_surface, scalew, scaleh, SMOOTHING_ON);
 		}
 
 		//store dimensions
