@@ -290,10 +290,8 @@ void GAME::Start(std::list <std::string> & args)
 	tire_smoke.SetParameters(0.4,0.9, 1,2, 0.3,0.6, 0.02,0.06, MATHVECTOR<float,3>(0.4,0.2,1));
 
 	// Initialize force feedback.
-#ifdef ENABLE_FORCE_FEEDBACK
 	forcefeedback.reset(new FORCEFEEDBACK(settings.GetFFDevice(), error_output, info_output));
 	ff_update_time = 0;
-#endif
 
 	LoadGarage();
 
@@ -2240,7 +2238,6 @@ bool GAME::Download(const std::vector <std::string> & urls)
 
 void GAME::UpdateForceFeedback(float dt)
 {
-#ifdef ENABLE_FORCE_FEEDBACK
 	if (carcontrols_local.first)
 	{
 		//static ofstream file("ff_output.txt");
@@ -2254,20 +2251,10 @@ void GAME::UpdateForceFeedback(float dt)
 			feedback = settings.GetFFGain() * feedback / 100.0;
 			if (settings.GetFFInvert()) feedback = -feedback;
 
-			if (feedback > 1.0)
-				feedback = 1.0;
-			if (feedback < -1.0)
-				feedback = -1.0;
-			//feedback += 0.5;
-			/*
-			static double motion_frequency = 0.1;
-			static double motion_amplitude = 4.0;
-			static double spring_strength = 1.0;
-			*/
-			//double center = sin( timefactor * 2 * M_PI * motion_frequency ) * motion_amplitude;
-			double force = feedback;
+			if (feedback > 1.0) feedback = 1.0;
+			if (feedback < -1.0) feedback = -1.0;
 
-			//std::cout << "ff_update_time: " << ff_update_time << " force: " << force << std::endl;
+			double force = feedback;
 			forcefeedback->update(force, &feedback, ffdt, error_output);
 		}
 	}
@@ -2277,7 +2264,6 @@ void GAME::UpdateForceFeedback(float dt)
 		double pos=0;
 		forcefeedback->update(0, &pos, 0.02, error_output);
 	}
-#endif
 }
 
 void GAME::AddTireSmokeParticles(float dt, CAR & car)

@@ -1,11 +1,135 @@
-#include "definitions.h" // this is needed for #ifdef ENABLE_FORCE_FEEDBACK
-
-#ifdef ENABLE_FORCE_FEEDBACK
-
 #include "forcefeedback.h"
 
+#if SDL_VERSION_ATLEAST(2,0,0)
+
+FORCEFEEDBACK::FORCEFEEDBACK(
+	std::string device,
+	std::ostream & error_output,
+	std::ostream & info_output) :
+	device_name(device),
+	enabled(true),
+	stop_and_play(false),
+	lastforce(0),
+	haptic(0),
+	effect_id(-1)
+{
+	// Close haptic if already open.
+	if (haptic)
+		SDL_HapticClose(haptic);
+
+	// Does the device support haptic?
+	//if (!SDL_JoystickIsHaptic(joystick))
+	//	return;
+
+	// Try to create haptic device.
+	//haptic = SDL_HapticOpenFromJoystick(joystick);
+
+	// Does the device support haptic?
+	int haptic_id = 0;
+	int haptic_num = SDL_NumHaptics();/*
+	while (haptic_id < haptic_num)
+	{
+		std::string haptic_name(SDL_HapticName(haptic_id++));
+		if (haptic_name == device_name)
+			break;
+	}*/
+	if (haptic_id == haptic_num)
+		return;
+
+	// Try to create haptic device.
+	haptic = SDL_HapticOpen(haptic_id);
+	if (!haptic)
+	{
+		error_output << "Failed to initialize force feedback device: " << SDL_GetError();
+		return;
+	}
+
+	// Check for constant force support.
+	unsigned int haptic_query = SDL_HapticQuery(haptic);
+	if (!(haptic_query & SDL_HAPTIC_CONSTANT))
+	{
+		SDL_HapticClose(haptic);
+		haptic = NULL;
+		return;
+	}
+
+	// Create the effect.
+	memset(&effect, 0, sizeof(SDL_HapticEffect) ); // 0 is safe default
+	effect.type = SDL_HAPTIC_CONSTANT;
+	effect.constant.direction.type = SDL_HAPTIC_CARTESIAN; // Using cartesian direction encoding.
+	effect.constant.direction.dir[0] = 1; // X position
+	effect.constant.direction.dir[1] = 0; // Y position
+	effect.constant.length = 0xffff;
+	effect.constant.delay = 0;
+	effect.constant.button = 0;
+	effect.constant.interval = 0;
+	effect.constant.level = 0;
+	effect.constant.attack_length = 0;
+	effect.constant.attack_level = 0;
+	effect.constant.fade_length = 0;
+	effect.constant.fade_level = 0;
+
+	// Upload the effect.
+	effect_id = SDL_HapticNewEffect(haptic, &effect);
+	if (effect_id == -1)
+	{
+		error_output << "Failed to initialize force feedback effect: " << SDL_GetError();
+		return;
+	}
+
+	info_output << "Force feedback enabled." << std::endl;
+}
+
+FORCEFEEDBACK::~FORCEFEEDBACK()
+{
+	if (haptic)
+		SDL_HapticClose(haptic);
+}
+
+void FORCEFEEDBACK::update(
+	double force,
+	double * position,
+	double dt,
+	std::ostream & error_output)
+{
+	if (!enabled || !haptic || (effect_id != -1))
+		return;
+
+	// Clamp force.
+	if (force > 1.0) force = 1.0;
+	if (force < -1.0) force = -1.0;
+
+	// Low pass filter.
+	lastforce = (lastforce + force) * 0.5;
+
+	// Update effect.
+	effect.constant.level = Sint16(lastforce * 32767.0);
+	int new_effect_id = SDL_HapticUpdateEffect(haptic, effect_id, &effect);
+	if (new_effect_id == -1)
+	{
+		//error_output << "Failed to update force feedback effect: " << SDL_GetError();
+		//return;
+	}
+	else
+	{
+		effect_id = new_effect_id;
+	}
+
+	// Run effect.
+	if (SDL_HapticRunEffect(haptic, effect_id, 1) == -1)
+	{
+		error_output << "Failed to run force feedback effect: " << SDL_GetError();
+		return;
+	}
+}
+
+#elif defined(linux) || defined(__linux)
+
 #include <cstring>
-#include <string>
+#include <linux/input.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <errno.h>
 
 using std::string;
 using std::endl;
@@ -31,8 +155,14 @@ using std::endl;
 /* Test the bit with given index=offset in an unsigned char array */
 #define testBit(bit, array)    ((array[ucharIndexForBit(bit)] >> bitOffsetInUchar(bit)) & 1)
 
-FORCEFEEDBACK::FORCEFEEDBACK( string device, std::ostream & error_output, std::ostream & info_output )
-	: device_name(device), enabled(true), stop_and_play(false), lastforce(0)
+FORCEFEEDBACK::FORCEFEEDBACK(
+	string device,
+	std::ostream & error_output,
+	std::ostream & info_output) :
+	device_name(device),
+	enabled(true),
+	stop_and_play(false),
+	lastforce(0)
 {
 	unsigned char key_bits[1 + KEY_MAX/8/sizeof(unsigned char)];
 	unsigned char abs_bits[1 + ABS_MAX/8/sizeof(unsigned char)];
@@ -162,7 +292,16 @@ FORCEFEEDBACK::FORCEFEEDBACK( string device, std::ostream & error_output, std::o
 	info_output << "Force feedback initialized successfully" << std::endl;
 }
 
-void FORCEFEEDBACK::update(double force, double * position, double dt, std::ostream & error_output)
+FORCEFEEDBACK::~FORCEFEEDBACK()
+{
+	// dtor
+}
+
+void FORCEFEEDBACK::update(
+	double force,
+	double * position,
+	double dt,
+	std::ostream & error_output)
 {
 	if ( !enabled )
 		return;
@@ -180,20 +319,17 @@ void FORCEFEEDBACK::update(double force, double * position, double dt, std::ostr
 		effect.id=-1;
 	}
 
-        // Set force
+	// Clamp force
 	if (force>1.0) force=1.0;
 	if (force<-1.0) force=-1.0;
+
+	// Low pass filter
+	lastforce = (lastforce + force) * 0.5;
+
 	effect.direction=0xC000;
-	//force = -1.0;
-	effect.u.constant.level=(short)(force*32767.0); /* only to be safe */
+	effect.u.constant.level=(short)(lastforce * 32767.0); /* only to be safe */
 	effect.u.constant.envelope.attack_level=effect.u.constant.level;
 	effect.u.constant.envelope.fade_level=effect.u.constant.level;
-	/*effect.u.constant.envelope.attack_level = (short)(lastforce*32767.0);
-	effect.u.constant.envelope.attack_length = (short)(dt*1000.0);
-	effect.u.constant.envelope.fade_length = (short)(dt*1000.0);
-	//effect.u.constant.envelope.attack_level=(short)(force*32767.0);*/
-
-	lastforce = force;
 
         // Upload effect
 	if (ioctl(device_handle,EVIOCSFF,&effect)==-1)
@@ -229,5 +365,33 @@ void FORCEFEEDBACK::update(double force, double * position, double dt, std::ostr
 		}
 	}
 }
+#else
 
-#endif // ENABLE_FORCE_FEEDBACK
+FORCEFEEDBACK::FORCEFEEDBACK(
+	std::string device,
+	std::ostream & error_output,
+	std::ostream & info_output)
+{
+	// Constructor
+}
+
+FORCEFEEDBACK::~FORCEFEEDBACK()
+{
+	// Destructor
+}
+
+void FORCEFEEDBACK::update(
+	double force,
+	double * position,
+	double dt,
+	std::ostream & error_output)
+{
+	// No force feedback support
+}
+
+#endif
+
+void FORCEFEEDBACK::disable()
+{
+	enabled = false;
+}

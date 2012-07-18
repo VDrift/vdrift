@@ -53,7 +53,11 @@ WINDOW_SDL::~WINDOW_SDL()
 
 void WINDOW_SDL::Init(const std::string & windowcaption, unsigned int resx, unsigned int resy, unsigned int bpp, unsigned int depthbpp, bool fullscreen, unsigned int antialiasing, std::ostream & info_output, std::ostream & error_output)
 {
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK) < 0)
+	Uint32 sdl_flags = SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK;
+#if SDL_VERSION_ATLEAST(2,0,0)
+	flags |= SDL_INIT_HAPTIC;
+#endif
+	if (SDL_Init(sdl_flags) < 0)
 	{
 		error_output << "SDL initialization failed: " << SDL_GetError() << std::endl;
 		assert(0);
