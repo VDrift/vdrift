@@ -135,7 +135,7 @@ bool TRACKMAP::BuildMap(
 			x[3] = int((back_r[0] - map_w_min) * scale) + 1;
 			y[3] = int((back_r[2] - map_h_min) * scale) + 1;
 			filledPolygonRGBA(surface, x, y, 4, 255, 255, 255, 255);
-			aapolygonRGBA(surface, x, y, 4, 255, 255, 255, 255);
+			//aapolygonRGBA(surface, x, y, 4, 255, 255, 255, 255); // draw artifacts with SDL2
 		}
 	}
 
