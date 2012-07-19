@@ -30,27 +30,27 @@ class WINDOW_SDL
 {
 public:
 	WINDOW_SDL();
-	
+
 	~WINDOW_SDL();
 
 	void Init(const std::string & windowcaption, unsigned int resx, unsigned int resy, unsigned int bpp, unsigned int depthbpp, bool fullscreen, unsigned int antialiasing, std::ostream & info_output, std::ostream & error_output);
-	
+
 	void SwapBuffers();
 
 	/// Note that when the mouse cursor is hidden, it is also grabbed (confined to the application window)
 	void ShowMouseCursor(bool value);
 
 	void Screenshot(std::string filename);
-	
-	unsigned int GetW() const;
-	
-	unsigned int GetH() const;
-	
+
+	int GetW() const;
+
+	int GetH() const;
+
 	float GetWHRatio() const;
 
 private:
 	// Configuration variables, internal data.
-	unsigned int w, h;
+	int w, h;
 	bool initialized;
 	unsigned int fsaa;
 	SDL_Surface * surface;

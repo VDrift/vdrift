@@ -23,11 +23,12 @@
 #include <cassert>
 
 WINDOW_SDL::WINDOW_SDL() :
+	w(0), h(0),
 	initialized(false),
 	fsaa(1),
 	surface(NULL),
 	window(NULL),
-	glcontext(0)
+	glcontext(NULL)
 {
 	// Constructor.
 }
@@ -35,12 +36,6 @@ WINDOW_SDL::WINDOW_SDL() :
 WINDOW_SDL::~WINDOW_SDL()
 {
 #if SDL_VERSION_ATLEAST(2,0,0)
-	if (surface)
-	{
-		surface->flags &= ~SDL_DONTFREE;
-		SDL_FreeSurface(surface);
-	}
-
 	if (glcontext)
 		SDL_GL_DeleteContext(glcontext);
 
@@ -107,48 +102,41 @@ void WINDOW_SDL::ShowMouseCursor(bool value)
 
 void WINDOW_SDL::Screenshot(std::string filename)
 {
-	SDL_Surface *screen;
-	SDL_Surface *temp = NULL;
-	unsigned char *pixels;
-	int i;
-
-	screen = surface;
-	temp = SDL_CreateRGBSurface(SDL_SWSURFACE, screen->w, screen->h, 24,
+	SDL_Surface * temp = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, 24,
 #if SDL_BYTEORDER == SDL_LIL_ENDIAN
 								0x000000FF, 0x0000FF00, 0x00FF0000, 0
 #else
 								0x00FF0000, 0x0000FF00, 0x000000FF, 0
 #endif
 								);
-
 	assert(temp);
 
-	pixels = (unsigned char *) malloc(3 * screen->w * screen->h);
+	unsigned char *pixels = (unsigned char *) malloc(3 * w * h);
 	assert(pixels);
 
-	glReadPixels(0, 0, screen->w, screen->h, GL_RGB, GL_UNSIGNED_BYTE, pixels);
+	glReadPixels(0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, pixels);
 
-	for (i=0; i<screen->h; i++)
-		memcpy(((char *) temp->pixels) + temp->pitch * i, pixels + 3*screen->w * (screen->h-i-1), screen->w*3);
+	for (int i = 0; i < h; i++)
+		memcpy(((char *) temp->pixels) + temp->pitch * i, pixels + 3 * w * (h - i - 1), w * 3);
 	free(pixels);
 
 	SDL_SaveBMP(temp, filename.c_str());
 	SDL_FreeSurface(temp);
 }
 
-unsigned int WINDOW_SDL::GetW() const
+int WINDOW_SDL::GetW() const
 {
 	return w;
 }
 
-unsigned int WINDOW_SDL::GetH() const
+int WINDOW_SDL::GetH() const
 {
 	return h;
 }
 
 float WINDOW_SDL::GetWHRatio() const
 {
-	return (float)w/(float)h;
+	return (float)w / (float)h;
 }
 
 #if SDL_VERSION_ATLEAST(2,0,0)
@@ -167,17 +155,16 @@ static int GetVideoDisplay()
 bool WINDOW_SDL::ResizeWindow(int width, int height)
 {
 	// We can't resize something we don't have.
-	if (!surface)
+	if (!window)
 		return false;
 
 	// Resize window
-	int w, h;
 	SDL_GetWindowSize(window, &w, &h);
 	if (w != width || h != height)
 		SDL_SetWindowSize(window, width, height);
 
-	surface->w = width;
-	surface->h = height;
+	w = width;
+	h = height;
 	return true;
 }
 #endif
@@ -225,14 +212,6 @@ void WINDOW_SDL::ChangeDisplay(
 	if (!fullscreen && ResizeWindow(width, height))
 		return;
 
-	// Destroy existing window
-	if (surface)
-	{
-		surface->flags &= ~SDL_DONTFREE;
-		SDL_FreeSurface(surface);
-		surface = NULL;
-	}
-
 	if (glcontext)
 	{
 		SDL_GL_DeleteContext(glcontext);
@@ -256,7 +235,6 @@ void WINDOW_SDL::ChangeDisplay(
 	{
 		assert(0);
 	}
-//	SDL_SetWindowIcon(window, SDL_VideoIcon);
 
 	glcontext = SDL_GL_CreateContext(window);
 	if (!glcontext)
@@ -268,11 +246,6 @@ void WINDOW_SDL::ChangeDisplay(
 		assert(0);
 	}
 
-	surface = SDL_CreateRGBSurfaceFrom(NULL, width, height, bpp, 0, 0, 0, 0, 0);
-	if (!surface)
-	{
-		assert(0);
-	}
 #else
 	const SDL_VideoInfo *videoInfo = SDL_GetVideoInfo();
 	if (!videoInfo)
@@ -293,8 +266,6 @@ void WINDOW_SDL::ChangeDisplay(
 		surface = NULL;
 	}
 	surface = SDL_SetVideoMode(width, height, bpp, videoFlags);
-#endif
-
 	if (!surface)
 	{
 		error_output << "Display change failed: " << width << "x" << height << "x" << bpp << " " << dbpp << "z fullscreen=" << fullscreen << std::endl << "Error: " << SDL_GetError() << std::endl;
@@ -304,7 +275,7 @@ void WINDOW_SDL::ChangeDisplay(
 	{
 		info_output << "Display change was successful: " << width << "x" << height << "x" << bpp << " " << dbpp << "z fullscreen=" << fullscreen << std::endl;
 	}
-
+#endif
 	w = width;
 	h = height;
 }
