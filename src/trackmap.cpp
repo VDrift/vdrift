@@ -192,15 +192,6 @@ bool TRACKMAP::BuildMap(
 	}
 	SDL_FreeSurface(surface);
 
-	mapdraw = mapnode.GetDrawlist().twodim.insert(DRAWABLE());
-	DRAWABLE & mapdrawref = mapnode.GetDrawlist().twodim.get(mapdraw);
-	mapdrawref.SetDiffuseMap(track_map);
-	mapdrawref.SetVertArray(&mapverts);
-	mapdrawref.SetCull(false, false);
-	mapdrawref.SetColor(1,1,1,0.7);
-	mapdrawref.SetDrawOrder(0);
-	mapverts.SetToBillboard(position[0], position[1], position[0]+size[0], position[1]+size[1]);
-
 	//std::cout << "Loading track map dots" << std::endl;
 	TEXTUREINFO dotinfo;
 	if (!content.load(texturepath, "cardot0.png", dotinfo, cardot0)) return false;
@@ -217,6 +208,15 @@ bool TRACKMAP::BuildMap(
 	size[1] = MAP_HEIGHT / screen[1];
 	dot_size[0] = cardot0->GetW() / 2.0 / screen[0];
 	dot_size[1] = cardot0->GetH() / 2.0 / screen[1];
+
+	mapverts.SetToBillboard(position[0], position[1], position[0]+size[0], position[1]+size[1]);
+	mapdraw = mapnode.GetDrawlist().twodim.insert(DRAWABLE());
+	DRAWABLE & mapdrawref = mapnode.GetDrawlist().twodim.get(mapdraw);
+	mapdrawref.SetDiffuseMap(track_map);
+	mapdrawref.SetVertArray(&mapverts);
+	mapdrawref.SetCull(false, false);
+	mapdrawref.SetColor(1,1,1,0.7);
+	mapdrawref.SetDrawOrder(0);
 
 	return true;
 }
