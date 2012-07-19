@@ -1821,7 +1821,7 @@ void GAME::SetGarageCar()
 		// process car sound sources
 		// should they be loaded for garage car in the first place?
 		sound.Update();
-		
+
 		// use car shape center for camera setup
 		car_pos = car.GetPosition();
 	}
@@ -2248,9 +2248,13 @@ void GAME::UpdateForceFeedback(float dt)
 			ff_update_time = 0.0;
 			double feedback = -carcontrols_local.first->GetFeedback();
 
-			feedback = settings.GetFFGain() * feedback / 100.0;
+			// scale
+			feedback = feedback * settings.GetFFGain() * 0.2;
+
+			// invert
 			if (settings.GetFFInvert()) feedback = -feedback;
 
+			// clamp
 			if (feedback > 1.0) feedback = 1.0;
 			if (feedback < -1.0) feedback = -1.0;
 

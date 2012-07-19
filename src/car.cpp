@@ -416,7 +416,7 @@ bool CAR::LoadPhysics(
 	dynamics.SetABS(defaultabs);
 	dynamics.SetTCS(defaulttcs);
 
-	mz_nominalmax = (GetTireMaxMz(FRONT_LEFT) + GetTireMaxMz(FRONT_RIGHT)) * 0.5;
+	mz_nominalmax = GetTireMaxMz(FRONT_LEFT) + GetTireMaxMz(FRONT_RIGHT);
 
 	return true;
 }
@@ -1033,7 +1033,7 @@ void CAR::HandleInputs(const std::vector <float> & inputs)
 
 float CAR::GetFeedback()
 {
-	return dynamics.GetFeedback() / (mz_nominalmax * 0.025);
+	return dynamics.GetFeedback() / mz_nominalmax;
 }
 
 float CAR::GetTireSquealAmount(WHEEL_POSITION i) const
