@@ -557,9 +557,6 @@ bool CARDYNAMICS::Load(
 
 	maxspeed = CalculateMaxSpeed();
 
-	// init steering force feedback value
-	feedback = 0;
-
 	return true;
 }
 
@@ -1503,15 +1500,15 @@ void CARDYNAMICS::updateAction(btCollisionWorld * collisionWorld, btScalar dt)
 	body->setAngularVelocity(angular_velocity);
 	UpdateWheelContacts();
 
+	feedback = 0;
 	int repeats = 10;
-	btScalar dt_internal = dt / repeats;
 	for (int i = 0; i < repeats; ++i)
 	{
-		Tick(dt_internal, force, torque);
+		Tick(dt / repeats, force, torque);
 
-		feedback += 0.5 * (tire[FRONT_LEFT].GetFeedback() + tire[FRONT_RIGHT].GetFeedback());
+		feedback += tire[FRONT_LEFT].GetFeedback() + tire[FRONT_RIGHT].GetFeedback();
 	}
-	feedback /= (repeats + 1);
+	feedback /= repeats;
 
 	//update fuel tank
 	fuel_tank.Consume ( engine.FuelRate() * dt );
