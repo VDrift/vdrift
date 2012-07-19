@@ -100,79 +100,26 @@ public:
 			}
 	};
 
-private:
-	double lasttick;
-	double dt;
-	bool quit;
+	EVENTSYSTEM_SDL();
 
-	std::map <SDLKey, TOGGLE> keymap;
-	std::map <int, TOGGLE> mbutmap;
-
-	int mousex, mousey, mousexrel, mouseyrel;
-
-	unsigned int fps_memory_window;
-	std::list <float> fps_memory;
-
-	enum DIRECTION {UP, DOWN};
-	void HandleMouseMotion(int x, int y, int xrel, int yrel);
-
-	template <class T>
-	void HandleToggle(std::map <T, TOGGLE> & togglemap, const DIRECTION dir, const T & id)
-	{
-		togglemap[id].Tick();
-		togglemap[id].Set(dir == DOWN);
-	}
-	void HandleMouseButton(DIRECTION dir, int id);
-	void HandleKey(DIRECTION dir, SDLKey id);
-
-	void RecordFPS(const float fps);
-
-	void HandleQuit() {quit = true;}
-	template <class T>
-	void AgeToggles(std::map <T, TOGGLE> & togglemap)
-	{
-		std::list <typename std::map<T, TOGGLE>::iterator> todel;
-		for (typename std::map <T, TOGGLE>::iterator i = togglemap.begin(); i != togglemap.end(); ++i)
-		{
-			i->second.Tick();
-			if (!i->second.GetState() && !i->second.GetImpulseFalling())
-				todel.push_back(i);
-		}
-
-		for (typename std::list <typename std::map<T, TOGGLE>::iterator>::iterator i = todel.begin(); i != todel.end(); ++i)
-			togglemap.erase(*i);
-	}
-
-	template <class T>
-	BUTTON_STATE GetToggle(const std::map <T, TOGGLE> & togglemap, const T & id) const
-	{
-		BUTTON_STATE s;
-		s.down = s.just_down = s.just_up = false;
-		typename std::map <T, TOGGLE>::const_iterator i = togglemap.find(id);
-		if (i != togglemap.end())
-		{
-			s.down = i->second.GetState();
-			s.just_down = i->second.GetImpulseRising();
-			s.just_up = i->second.GetImpulseFalling();
-		}
-		return s;
-	}
-
-	std::vector <JOYSTICK> joystick;
-
-public:
-	EVENTSYSTEM_SDL() : lasttick(0),dt(0),quit(false),mousex(0), mousey(0), mousexrel(0),mouseyrel(0),fps_memory_window(10) {}
-	~EVENTSYSTEM_SDL() {}
+	~EVENTSYSTEM_SDL();
 
 	void Init(std::ostream & info_output);
+
 	void BeginFrame();
+
 	void EndFrame() {}
+
 	inline double Get_dt() {return dt;}
+
 	inline bool GetQuit() const {return quit;}
+
 	void Quit() {quit = true;}
+
 	void ProcessEvents();
 
 	BUTTON_STATE GetMouseButtonState(int id) const;
+
 	BUTTON_STATE GetKeyState(SDLKey id) const;
 
 	std::map <SDLKey, TOGGLE> & GetKeyMap() {return keymap;}
@@ -213,7 +160,10 @@ public:
 			return TOGGLE();
 	}
 
-	int GetNumJoysticks() const {return joystick.size();}
+	int GetNumJoysticks() const
+	{
+		return joystick.size();
+	}
 
 	int GetNumAxes(unsigned int joynum) const
 	{
@@ -231,7 +181,73 @@ public:
 			return 0;
 	}
 
-	std::vector <JOYSTICK> & GetJoysticks() {return joystick;}
+	std::vector <JOYSTICK> & GetJoysticks()
+	{
+		return joystick;
+	}
+
+private:
+	double lasttick;
+	double dt;
+	bool quit;
+
+	std::vector <JOYSTICK> joystick;
+	std::map <SDLKey, TOGGLE> keymap;
+	std::map <int, TOGGLE> mbutmap;
+
+	int mousex, mousey, mousexrel, mouseyrel;
+
+	unsigned int fps_memory_window;
+	std::list <float> fps_memory;
+
+	enum DIRECTION {UP, DOWN};
+
+	void HandleMouseMotion(int x, int y, int xrel, int yrel);
+
+	template <class T>
+	void HandleToggle(std::map <T, TOGGLE> & togglemap, const DIRECTION dir, const T & id)
+	{
+		togglemap[id].Tick();
+		togglemap[id].Set(dir == DOWN);
+	}
+
+	void HandleMouseButton(DIRECTION dir, int id);
+
+	void HandleKey(DIRECTION dir, SDLKey id);
+
+	void RecordFPS(const float fps);
+
+	void HandleQuit() {quit = true;}
+
+	template <class T>
+	void AgeToggles(std::map <T, TOGGLE> & togglemap)
+	{
+		std::list <typename std::map<T, TOGGLE>::iterator> todel;
+		for (typename std::map <T, TOGGLE>::iterator i = togglemap.begin(); i != togglemap.end(); ++i)
+		{
+			i->second.Tick();
+			if (!i->second.GetState() && !i->second.GetImpulseFalling())
+				todel.push_back(i);
+		}
+
+		for (typename std::list <typename std::map<T, TOGGLE>::iterator>::iterator i = todel.begin(); i != todel.end(); ++i)
+			togglemap.erase(*i);
+	}
+
+	template <class T>
+	BUTTON_STATE GetToggle(const std::map <T, TOGGLE> & togglemap, const T & id) const
+	{
+		BUTTON_STATE s;
+		s.down = s.just_down = s.just_up = false;
+		typename std::map <T, TOGGLE>::const_iterator i = togglemap.find(id);
+		if (i != togglemap.end())
+		{
+			s.down = i->second.GetState();
+			s.just_down = i->second.GetImpulseRising();
+			s.just_up = i->second.GetImpulseFalling();
+		}
+		return s;
+	}
 };
 
 #endif

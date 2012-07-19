@@ -1,21 +1,35 @@
 #include "eventsystem.h"
 #include "unittest.h"
 
-#include <vector>
-using std::vector;
-
 #include <map>
-using std::map;
-
 #include <list>
-using std::list;
-
+#include <vector>
 #include <iostream>
-using std::endl;
-
+#include <numeric>
 #include <cassert>
 
-#include <numeric>
+using std::vector;
+using std::map;
+using std::list;
+using std::endl;
+
+EVENTSYSTEM_SDL::EVENTSYSTEM_SDL() :
+	lasttick(0),
+	dt(0),
+	quit(false),
+	mousex(0),
+	mousey(0),
+	mousexrel(0),
+	mouseyrel(0),
+	fps_memory_window(10)
+{
+	// ctor
+}
+
+EVENTSYSTEM_SDL::~EVENTSYSTEM_SDL()
+{
+	// dtor
+}
 
 void EVENTSYSTEM_SDL::Init(std::ostream & info_output)
 {
