@@ -130,7 +130,8 @@ private:
 
 	void ProcessNewSettings();
 
-	bool AssignControls();
+	/// Look for keyboard, mouse, joystick input, assign local car controls.
+	bool AssignControl();
 
 	void LoadControlsIntoGUIPage();
 
@@ -176,6 +177,7 @@ private:
 	void TrackManagerNext();
 	void TrackManagerPrev();
 	void ApplyTrackUpdate();
+	void EditControl();
 	void CancelControl();
 	void DeleteControl();
 	void SetButtonControl();
@@ -257,9 +259,11 @@ private:
 
 	std::vector <EVENTSYSTEM_SDL::JOYSTICK> controlgrab_joystick_state;
 	std::pair <int,int> controlgrab_mouse_coords;
-	CARCONTROLMAP_LOCAL::CONTROL controlgrab_editcontrol;
+	CARCONTROLMAP_LOCAL::CONTROL controlgrab_control;
+	std::string controlgrab_page;
 	std::string controlgrab_input;
 	size_t controlgrab_id;
+	bool controlgrab;
 
 	CAMERA_FREE garage_camera;
 	std::vector <std::string> cars_name;

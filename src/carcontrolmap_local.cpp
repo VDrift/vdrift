@@ -1184,7 +1184,7 @@ void CARCONTROLMAP_LOCAL::CONTROL::ReadFrom(std::istream & in)
 }
 
 CARCONTROLMAP_LOCAL::CONTROL::CONTROL() :
-	type(UNKNOWN), onetime(true), pushdown(true), keycode(0),
+	type(UNKNOWN), onetime(true), pushdown(false), keycode(0),
 	joynum(0), joyaxis(0), joyaxistype(POSITIVE), joytype(JOYAXIS),
 	mousetype(MOUSEBUTTON), mdir(UP), last_mouse_state(false),
 	deadzone(0.0), exponent(1.0), gain(1.0)

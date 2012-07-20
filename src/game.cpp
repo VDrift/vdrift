@@ -105,6 +105,7 @@ GAME::GAME(std::ostream & info_out, std::ostream & error_out) :
 	dumpfps(false),
 	pause(false),
 	controlgrab_id(0),
+	controlgrab(false),
 	garage_camera("garagecam"),
 	cars_name(1),
 	cars_paint(1),
@@ -1127,13 +1128,13 @@ void GAME::ProcessGUIInputs()
 		return;
 	}
 
-	if (gui.GetActivePageName() == "AssignControl")
+	if (controlgrab)
 	{
 		// Handle control assignment
-		if (AssignControls())
+		if (AssignControl())
 		{
-			gui.ActivatePage(gui.GetLastPageName(), 0.25, error_output);
-			LoadControlsIntoGUIPage();
+			controlgrab = false;
+			EditControl();
 		}
 		return;
 	}
@@ -1151,8 +1152,7 @@ void GAME::ProcessGUIInputs()
 		carcontrols_local.second.GetInput(CARINPUT::GUI_CANCEL));
 }
 
-/* Look for keyboard, mouse, joystick input, assign local car controls... */
-bool GAME::AssignControls()
+bool GAME::AssignControl()
 {
 	// Check for key inputs.
 	std::map <SDLKey, TOGGLE> & keymap = eventsystem.GetKeyMap();
@@ -1160,10 +1160,9 @@ bool GAME::AssignControls()
 	{
 		if (i->second.GetImpulseRising())
 		{
-			CARCONTROLMAP_LOCAL::CONTROL newctrl;
-			newctrl.type = CARCONTROLMAP_LOCAL::CONTROL::KEY;
-			newctrl.keycode = i->first;
-			carcontrols_local.second.SetControl(controlgrab_input, controlgrab_id, newctrl);
+			controlgrab_control.type = CARCONTROLMAP_LOCAL::CONTROL::KEY;
+			controlgrab_control.keycode = i->first;
+			carcontrols_local.second.SetControl(controlgrab_input, controlgrab_id, controlgrab_control);
 			return true;
 		}
 	}
@@ -1176,12 +1175,11 @@ bool GAME::AssignControls()
 		{
 			if (eventsystem.GetJoyButton(j, i).GetImpulseRising())
 			{
-				CARCONTROLMAP_LOCAL::CONTROL newctrl;
-				newctrl.type = CARCONTROLMAP_LOCAL::CONTROL::JOY;
-				newctrl.joynum = j;
-				newctrl.joytype = CARCONTROLMAP_LOCAL::CONTROL::JOYBUTTON;
-				newctrl.keycode = i;
-				carcontrols_local.second.SetControl(controlgrab_input, controlgrab_id, newctrl);
+				controlgrab_control.type = CARCONTROLMAP_LOCAL::CONTROL::JOY;
+				controlgrab_control.joynum = j;
+				controlgrab_control.joytype = CARCONTROLMAP_LOCAL::CONTROL::JOYBUTTON;
+				controlgrab_control.keycode = i;
+				carcontrols_local.second.SetControl(controlgrab_input, controlgrab_id, controlgrab_control);
 				return true;
 			}
 		}
@@ -1198,16 +1196,15 @@ bool GAME::AssignControls()
 			if (delta < -0.4) axis = -1;
 			if (axis)
 			{
-				CARCONTROLMAP_LOCAL::CONTROL newctrl;
-				newctrl.type = CARCONTROLMAP_LOCAL::CONTROL::JOY;
-				newctrl.joytype = CARCONTROLMAP_LOCAL::CONTROL::JOYAXIS;
-				newctrl.joynum = j;
-				newctrl.joyaxis = i;
+				controlgrab_control.type = CARCONTROLMAP_LOCAL::CONTROL::JOY;
+				controlgrab_control.joytype = CARCONTROLMAP_LOCAL::CONTROL::JOYAXIS;
+				controlgrab_control.joynum = j;
+				controlgrab_control.joyaxis = i;
 				if (axis > 0)
-					newctrl.joyaxistype = CARCONTROLMAP_LOCAL::CONTROL::POSITIVE;
+					controlgrab_control.joyaxistype = CARCONTROLMAP_LOCAL::CONTROL::POSITIVE;
 				else if (axis < 0)
-					newctrl.joyaxistype = CARCONTROLMAP_LOCAL::CONTROL::NEGATIVE;
-				carcontrols_local.second.SetControl(controlgrab_input, controlgrab_id, newctrl);
+					controlgrab_control.joyaxistype = CARCONTROLMAP_LOCAL::CONTROL::NEGATIVE;
+				carcontrols_local.second.SetControl(controlgrab_input, controlgrab_id, controlgrab_control);
 				return true;
 			}
 		}
@@ -1218,11 +1215,10 @@ bool GAME::AssignControls()
 	{
 		if (eventsystem.GetMouseButtonState(i).just_down)
 		{
-			CARCONTROLMAP_LOCAL::CONTROL newctrl;
-			newctrl.type = CARCONTROLMAP_LOCAL::CONTROL::MOUSE;
-			newctrl.mousetype = CARCONTROLMAP_LOCAL::CONTROL::MOUSEBUTTON;
-			newctrl.keycode = i;
-			carcontrols_local.second.SetControl(controlgrab_input, controlgrab_id, newctrl);
+			controlgrab_control.type = CARCONTROLMAP_LOCAL::CONTROL::MOUSE;
+			controlgrab_control.mousetype = CARCONTROLMAP_LOCAL::CONTROL::MOUSEBUTTON;
+			controlgrab_control.keycode = i;
+			carcontrols_local.second.SetControl(controlgrab_input, controlgrab_id, controlgrab_control);
 			return true;
 		}
 	}
@@ -1231,21 +1227,19 @@ bool GAME::AssignControls()
 	int dx = eventsystem.GetMousePosition()[0] - controlgrab_mouse_coords.first;
 	int dy = eventsystem.GetMousePosition()[1] - controlgrab_mouse_coords.second;
 	int threshold = 200;
-
 	if (dx < -threshold || dx > threshold || dy < -threshold || dy > threshold)
 	{
-		CARCONTROLMAP_LOCAL::CONTROL newctrl;
-		newctrl.type = CARCONTROLMAP_LOCAL::CONTROL::MOUSE;
-		newctrl.mousetype = CARCONTROLMAP_LOCAL::CONTROL::MOUSEMOTION;
+		controlgrab_control.type = CARCONTROLMAP_LOCAL::CONTROL::MOUSE;
+		controlgrab_control.mousetype = CARCONTROLMAP_LOCAL::CONTROL::MOUSEMOTION;
 		if (dx < -threshold)
-			newctrl.mdir = CARCONTROLMAP_LOCAL::CONTROL::LEFT;
+			controlgrab_control.mdir = CARCONTROLMAP_LOCAL::CONTROL::LEFT;
 		else if (dx > threshold)
-			newctrl.mdir = CARCONTROLMAP_LOCAL::CONTROL::RIGHT;
+			controlgrab_control.mdir = CARCONTROLMAP_LOCAL::CONTROL::RIGHT;
 		else if (dy < -threshold)
-			newctrl.mdir = CARCONTROLMAP_LOCAL::CONTROL::UP;
+			controlgrab_control.mdir = CARCONTROLMAP_LOCAL::CONTROL::UP;
 		else if (dy > threshold)
-			newctrl.mdir = CARCONTROLMAP_LOCAL::CONTROL::DOWN;
-		carcontrols_local.second.SetControl(controlgrab_input, controlgrab_id, newctrl);
+			controlgrab_control.mdir = CARCONTROLMAP_LOCAL::CONTROL::DOWN;
+		carcontrols_local.second.SetControl(controlgrab_input, controlgrab_id, controlgrab_control);
 		return true;
 	}
 
@@ -2550,33 +2544,68 @@ void GAME::ApplyTrackUpdate()
 	trackupdater.ApplyUpdate(GAME_DOWNLOADER(*this, http), gui, pathmanager);
 }
 
+void GAME::EditControl()
+{
+	if (controlgrab_control.IsAnalog())
+	{
+		// edit analog control
+		std::string control = controlgrab_control.GetInfo();
+		std::string deadzone = cast(controlgrab_control.deadzone);
+		std::string exponent = cast(controlgrab_control.exponent);
+		std::string gain = cast(controlgrab_control.gain);
+
+		gui.SetOptionValue("controledit.control", control);
+		gui.SetOptionValue("controledit.deadzone", deadzone);
+		gui.SetOptionValue("controledit.exponent", exponent);
+		gui.SetOptionValue("controledit.gain", gain);
+
+		gui.ActivatePage("EditAnalogControl", 0.25, error_output);
+	}
+	else
+	{
+		// edit button control
+		std::string control = controlgrab_control.GetInfo();
+		bool down = controlgrab_control.pushdown;
+		bool once = controlgrab_control.onetime;
+
+		gui.SetOptionValue("controledit.control", control);
+		gui.SetOptionValue("controledit.once", once ? "true" : "false");
+		gui.SetOptionValue("controledit.down", down ? "true" : "false");
+
+		gui.ActivatePage("EditButtonControl", 0.25, error_output);
+	}
+}
+
 void GAME::CancelControl()
 {
-	gui.ActivatePage(gui.GetLastPageName(), 0.25, error_output);
+	gui.ActivatePage(controlgrab_page, 0.25, error_output);
+	LoadControlsIntoGUIPage();
 }
 
 void GAME::DeleteControl()
 {
 	carcontrols_local.second.DeleteControl(controlgrab_input, controlgrab_id);
-	gui.ActivatePage(gui.GetLastPageName(), 0.25, error_output);
+	gui.ActivatePage(controlgrab_page, 0.25, error_output);
 	LoadControlsIntoGUIPage();
 }
 
 void GAME::SetButtonControl()
 {
-	controlgrab_editcontrol.onetime = (gui.GetOptionValue("controledit.held_once") == "true");
-	controlgrab_editcontrol.pushdown = (gui.GetOptionValue("controledit.up_down") == "true");
-	carcontrols_local.second.SetControl(controlgrab_input, controlgrab_id, controlgrab_editcontrol);
-	gui.ActivatePage(gui.GetLastPageName(), 0.25, error_output);
+	controlgrab_control.onetime = (gui.GetOptionValue("controledit.once") == "true");
+	controlgrab_control.pushdown = (gui.GetOptionValue("controledit.down") == "true");
+	carcontrols_local.second.SetControl(controlgrab_input, controlgrab_id, controlgrab_control);
+	gui.ActivatePage(controlgrab_page, 0.25, error_output);
+	LoadControlsIntoGUIPage();
 }
 
 void GAME::SetAnalogControl()
 {
-	controlgrab_editcontrol.deadzone = cast<float>(gui.GetOptionValue("controledit.deadzone"));
-	controlgrab_editcontrol.exponent = cast<float>(gui.GetOptionValue("controledit.exponent"));
-	controlgrab_editcontrol.gain = cast<float>(gui.GetOptionValue("controledit.gain"));
-	carcontrols_local.second.SetControl(controlgrab_input, controlgrab_id, controlgrab_editcontrol);
-	gui.ActivatePage(gui.GetLastPageName(), 0.25, error_output);
+	controlgrab_control.deadzone = cast<float>(gui.GetOptionValue("controledit.deadzone"));
+	controlgrab_control.exponent = cast<float>(gui.GetOptionValue("controledit.exponent"));
+	controlgrab_control.gain = cast<float>(gui.GetOptionValue("controledit.gain"));
+	carcontrols_local.second.SetControl(controlgrab_input, controlgrab_id, controlgrab_control);
+	gui.ActivatePage(controlgrab_page, 0.25, error_output);
+	LoadControlsIntoGUIPage();
 }
 
 void GAME::LoadControls()
@@ -2790,51 +2819,39 @@ void GAME::SetTrackImage(const std::string & value)
 void GAME::SetControl(const std::string & value)
 {
 	std::stringstream vs(value);
-	std::string inputstr, idstr;
+	std::string inputstr, idstr, oncestr, downstr;
 	getline(vs, inputstr, ':');
-	getline(vs, idstr);
+	getline(vs, idstr, ':');
+	getline(vs, oncestr, ':');
+	getline(vs, downstr);
 
 	size_t id = 0;
 	std::stringstream ns(idstr);
 	ns >> id;
 
-	controlgrab_editcontrol = carcontrols_local.second.GetControl(inputstr, id);
+	controlgrab_control = carcontrols_local.second.GetControl(inputstr, id);
+	controlgrab_page = gui.GetActivePageName();
 	controlgrab_input = inputstr;
 	controlgrab_id = id;
 
-	if (controlgrab_editcontrol.type == CARCONTROLMAP_LOCAL::CONTROL::UNKNOWN)
+	if (controlgrab_control.type == CARCONTROLMAP_LOCAL::CONTROL::UNKNOWN)
 	{
 		// assign control
 		controlgrab_mouse_coords = std::make_pair(eventsystem.GetMousePosition()[0], eventsystem.GetMousePosition()[1]);
 		controlgrab_joystick_state = eventsystem.GetJoysticks();
 
+		// default control settings
+		if (!oncestr.empty())
+			controlgrab_control.onetime = (oncestr == "once");
+		if (!downstr.empty())
+			controlgrab_control.pushdown = (downstr == "down");
+
 		gui.ActivatePage("AssignControl", 0.25, error_output);
+		controlgrab = true;
 		return;
 	}
-	else if (controlgrab_editcontrol.IsAnalog())
-	{
-		// edit analog control
-		std::string deadzone = cast(controlgrab_editcontrol.deadzone);
-		std::string exponent = cast(controlgrab_editcontrol.exponent);
-		std::string gain = cast(controlgrab_editcontrol.gain);
 
-		gui.SetOptionValue("controledit.deadzone", deadzone);
-		gui.SetOptionValue("controledit.exponent", exponent);
-		gui.SetOptionValue("controledit.gain", gain);
-
-		gui.ActivatePage("EditAnalogControl", 0.25, error_output);
-	}
-	else
-	{
-		// edit button control
-		bool pushdown = controlgrab_editcontrol.pushdown;
-		bool once = controlgrab_editcontrol.onetime;
-
-		gui.SetOptionValue("controledit.held_once", once ? "true" : "false");
-		gui.SetOptionValue("controledit.up_down", pushdown ? "true" : "false");
-
-		gui.ActivatePage("EditButtonControl", 0.25, error_output);
-	}
+	EditControl();
 }
 
 
