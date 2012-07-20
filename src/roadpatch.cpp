@@ -14,11 +14,9 @@ bool ROADPATCH::Collide(
 
 void ROADPATCH::AddRacinglineScenenode(
 	SCENENODE & node,
-	ROADPATCH * nextpatch,
+	const ROADPATCH & nextpatch,
 	std::tr1::shared_ptr<TEXTURE> racingline_texture)
 {
-	if (!nextpatch) return;
-
 	//Create racing line scenenode
 	keyed_container <DRAWABLE>::handle drawhandle = node.GetDrawlist().normal_blend.insert(DRAWABLE());
 	DRAWABLE & draw = node.GetDrawlist().normal_blend.get(drawhandle);
@@ -29,8 +27,8 @@ void ROADPATCH::AddRacinglineScenenode(
 
 	MATHVECTOR <float, 3> v0 = racing_line + (patch.GetPoint(0,0) - racing_line).Normalize()*0.1;
 	MATHVECTOR <float, 3> v1 = racing_line + (patch.GetPoint(0,3) - racing_line).Normalize()*0.1;
-	MATHVECTOR <float, 3> v2 = nextpatch->racing_line + (nextpatch->GetPatch().GetPoint(0,3) - nextpatch->racing_line).Normalize()*0.1;
-	MATHVECTOR <float, 3> v3 = nextpatch->racing_line + (nextpatch->GetPatch().GetPoint(0,0) - nextpatch->racing_line).Normalize()*0.1;
+	MATHVECTOR <float, 3> v2 = nextpatch.racing_line + (nextpatch.GetPatch().GetPoint(0,3) - nextpatch.racing_line).Normalize()*0.1;
+	MATHVECTOR <float, 3> v3 = nextpatch.racing_line + (nextpatch.GetPatch().GetPoint(0,0) - nextpatch.racing_line).Normalize()*0.1;
 
 	//transform from bezier space into world space
 	v0.Set(v0[2],v0[0],v0[1]);

@@ -76,7 +76,6 @@ private:
 	const std::string & texturedir;
 	const std::string & sharedobjectpath;
 	const int anisotropy;
-	const bool reverse;
 	const bool dynamic_objects;
 	const bool dynamic_shadows;
 	const bool agressive_combining;
@@ -139,17 +138,15 @@ private:
 	const PTree * nodes;
 	PTree::const_iterator node_it;
 
-	bool LoadParameters();
-
 	bool LoadSurfaces();
 
 	bool LoadRoads();
 
-	void ReverseRoads();
-
-	bool LoadLapSequence();
-
 	bool CreateRacingLines();
+
+	bool LoadStartPositions(const PTree & info);
+
+	bool LoadLapSections(const PTree & info);
 
 	bool BeginObjectLoad();
 

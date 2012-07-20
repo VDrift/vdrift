@@ -1,18 +1,26 @@
 #include "roadstrip.h"
 #include <algorithm>
 
-bool ROADSTRIP::ReadFrom(std::istream & openfile, std::ostream & error_output)
+ROADSTRIP::ROADSTRIP() : 
+	closed(false)
+{
+	// ctor
+}
+
+bool ROADSTRIP::ReadFrom(
+	std::istream & openfile,
+	bool reverse,
+	std::ostream & error_output)
 {
 	assert(openfile);
 
-	//number of patches in this road strip
 	int num = 0;
 	openfile >> num;
 
 	patches.clear();
 	patches.reserve(num);
 
-	//add all road patches to this strip
+	// Add all road patches to this strip.
 	int badcount = 0;
 	for (int i = 0; i < num; ++i)
 	{
@@ -34,16 +42,30 @@ bool ROADSTRIP::ReadFrom(std::istream & openfile, std::ostream & error_output)
 	if (badcount > 0)
 		error_output << "Rejected " << badcount << " bezier patch(es) from roadstrip due to errors" << std::endl;
 
-	//close the roadstrip
-	if (patches.size() > 2)
+	// Reverse patches.
+	if (reverse)
 	{
-		//only close it if it ends near where it starts
-		if (((patches.back().GetPatch().GetFL() - patches.front().GetPatch().GetBL()).Magnitude() < 0.1) &&
-		    ((patches.back().GetPatch().GetFR() - patches.front().GetPatch().GetBR()).Magnitude() < 0.1))
+		std::reverse(patches.begin(), patches.end());
+		for (std::vector<ROADPATCH>::iterator i = patches.begin(); i != patches.end(); ++i)
 		{
-			patches.back().GetPatch().Attach(patches.front().GetPatch());
-			closed = true;
+			i->GetPatch().Reverse();
 		}
+	}
+
+	// Close the roadstrip if it ends near where it starts.
+	closed = (patches.size() > 2) &&
+		((patches.back().GetPatch().GetFL() - patches.front().GetPatch().GetBL()).Magnitude() < 0.1) &&
+		((patches.back().GetPatch().GetFR() - patches.front().GetPatch().GetBR()).Magnitude() < 0.1);
+
+	// Connect patches.
+	for (std::vector<ROADPATCH>::iterator i = patches.begin(); i != patches.end() - 1; ++i)
+	{
+		std::vector<ROADPATCH>::iterator n = i + 1;
+		i->GetPatch().Attach(n->GetPatch());
+	}
+	if (closed)
+	{
+		patches.back().GetPatch().Attach(patches.front().GetPatch());
 	}
 
 	GenerateSpacePartitioning();
@@ -104,48 +126,16 @@ bool ROADSTRIP::Collide(
 	return col;
 }
 
-void ROADSTRIP::Reverse()
-{
-	// Reverse patch order.
-	std::reverse(patches.begin(), patches.end());
-
-	// Reverse patches.
-	for (std::vector<ROADPATCH>::iterator i = patches.begin(); i != patches.end(); ++i)
-	{
-		i->GetPatch().Reverse();
-		i->GetPatch().ResetDistFromStart();
-	}
-
-	// Reattach patches.
-	for (std::vector<ROADPATCH>::iterator i = patches.begin(); i != patches.end() - 1; ++i)
-	{
-		std::vector<ROADPATCH>::iterator n = i + 1;
-		i->GetPatch().Attach(n->GetPatch());
-	}
-	if (closed)
-	{
-		patches.back().GetPatch().Attach(patches.front().GetPatch());
-	}
-
-	// Rerun space partitioning due to patch order reversal.
-	GenerateSpacePartitioning();
-}
-
 void ROADSTRIP::CreateRacingLine(
 	SCENENODE & parentnode,
 	std::tr1::shared_ptr<TEXTURE> racingline_texture)
 {
 	for (std::vector<ROADPATCH>::iterator i = patches.begin(); i != patches.end(); ++i)
 	{
-		std::vector<ROADPATCH>::iterator n = i;
-		n++;
-		ROADPATCH * nextpatch(0);
-		if (n != patches.end())
-		{
-			nextpatch = &(*n);
-		} else {
-			nextpatch = &(*patches.begin());
-		}
-		i->AddRacinglineScenenode(parentnode, nextpatch, racingline_texture);
+		std::vector<ROADPATCH>::iterator n = i + 1;
+		if (n == patches.end())
+			n = patches.begin();
+		
+		i->AddRacinglineScenenode(parentnode, *n, racingline_texture);
 	}
 }

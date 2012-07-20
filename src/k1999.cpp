@@ -265,7 +265,7 @@ void K1999::CalcRaceLine()
 //VDrift specific functions below
 //
 
-bool K1999::LoadData(ROADSTRIP* road)
+bool K1999::LoadData(const ROADSTRIP & road)
 {
 	tx.clear();
 	ty.clear();
@@ -276,7 +276,7 @@ bool K1999::LoadData(ROADSTRIP* road)
 	tyRight.clear();
 	tLane.clear();
 
-	const std::vector<ROADPATCH> & patchlist = road->GetPatches();
+	const std::vector<ROADPATCH> & patchlist = road.GetPatches();
 	Divs = patchlist.size();
 
 	int count = 0;
@@ -296,15 +296,15 @@ bool K1999::LoadData(ROADSTRIP* road)
 		count++;
 	}
 
-	if (road->GetClosed()) //a closed circuit
+	if (road.GetClosed()) //a closed circuit
 		return true;
 	else
 		return false;
 }
 
-void K1999::UpdateRoadStrip(ROADSTRIP* road)
+void K1999::UpdateRoadStrip(ROADSTRIP & road)
 {
-	std::vector<ROADPATCH> & patchlist = road->GetPatches();
+	std::vector<ROADPATCH> & patchlist = road.GetPatches();
 	int count = 0;
 
 	for (std::vector<ROADPATCH>::iterator i = patchlist.begin(); i != patchlist.end(); ++i)

@@ -569,7 +569,7 @@ const BEZIER* AI_Car_Experimental::getNearestPatch(const BEZIER* helper)
 	// TODO: Implement backward chaining for BEZIER, to just look around the helper if passed.
 	const BEZIER* b;
 	const BEZIER* b_end;
-	b_end = car->GetDynamicsWorld()->GetLapSequence(0);
+	b_end = car->GetDynamicsWorld()->GetSectorPatch(0);
 	b = b_end->GetNextPatch();
 	const BEZIER* b_nearest = 0;
 	float v_nearDist = 1000000.0f;

@@ -8,9 +8,12 @@
 class ROADSTRIP
 {
 public:
-	ROADSTRIP() : closed(false) {}
+	ROADSTRIP();
 
-	bool ReadFrom(std::istream & openfile, std::ostream & error_output);
+	bool ReadFrom(
+		std::istream & openfile,
+		bool reverse,
+		std::ostream & error_output);
 
 	bool Collide(
 		const MATHVECTOR <float, 3> & origin,
@@ -21,23 +24,24 @@ public:
 		const BEZIER * & colpatch,
 		MATHVECTOR <float, 3> & normal) const;
 
-	void Reverse();
-
-	const std::vector<ROADPATCH> & GetPatches() const {return patches;}
-
-	std::vector<ROADPATCH> & GetPatches() {return patches;}
-
 	void CreateRacingLine(
 		SCENENODE & parentnode,
 		std::tr1::shared_ptr<TEXTURE> racingline_texture);
+
+	const std::vector<ROADPATCH> & GetPatches() const
+	{
+		return patches;
+	}
+
+	std::vector<ROADPATCH> & GetPatches()
+	{
+		return patches;
+	}
 
 	bool GetClosed() const
 	{
 		return closed;
 	}
-
-	///either returns a const BEZIER * to the roadpatch at the given (positive or negative) offset from the supplied bezier (looping around if necessary) or does not return a value if the bezier is not found in this roadstrip.
-	optional <const BEZIER *> FindBezierAtOffset(const BEZIER * bezier, int offset=0) const;
 
 private:
 	std::vector<ROADPATCH> patches;

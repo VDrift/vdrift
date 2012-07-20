@@ -1031,15 +1031,16 @@ void GAME::UpdateTimer()
 		{
 			nextsector = (i->GetSector() + 1) % track.GetSectors();
 			//cout << "next " << nextsector << ", cur " << i->GetSector() << ", track " << track.GetSectors() << std::endl;
-			for (int p = 0; p < 4; p++)
+			for (int p = 0; p < 4; ++p)
 			{
-				if (i->GetCurPatch(WHEEL_POSITION(p)) == track.GetLapSequence(nextsector))
+				if (i->GetCurPatch(WHEEL_POSITION(p)) == track.GetSectorPatch(nextsector))
 				{
 					advance = true;
-					//cout << "Drove over new sector " << nextsector << " patch " << i->GetCurPatch(p) << std::endl;
-					//cout << p << ". " << i->GetCurPatch(p) << ", " << track.GetLapSequence(nextsector) << std::endl;
+					//info_output << "New sector " << nextsector << "/" << track.GetSectors();
+					//info_output << " patch " << i->GetCurPatch(WHEEL_POSITION(p)) << std::endl;
+					//info_output <<  ", " << track.GetSectorPatch(nextsector) << std::endl;
 				}
-				//else cout << p << ". " << i->GetCurPatch(p) << ", " << track.GetLapSequence(nextsector) << std::endl;
+				//else cout << p << ". " << i->GetCurPatch(p) << ", " << track.GetSectorPatch(nextsector) << std::endl;
 			}
 		}
 
@@ -1088,10 +1089,10 @@ void GAME::UpdateTimer()
 			//std::cout << curpatch->GetDistFromStart() + dist_from_back << std::endl;
 		}
 
-		/*info_output << "sector=" << i->GetSector() << ", next=" << track.GetLapSequence(nextsector) << ", ";
+		/*info_output << "sector=" << i->GetSector() << ", next=" << track.GetSectorPatch(nextsector) << ", ";
 		for (int w = 0; w < 4; w++)
 		{
-			info_output << w << "=" << i->GetCurPatch(w) << ", ";
+			info_output << w << "=" << i->GetCurPatch(WHEEL_POSITION(w)) << ", ";
 		}
 		info_output << std::endl;*/
 	}

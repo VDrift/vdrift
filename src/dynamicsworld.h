@@ -32,7 +32,7 @@ public:
 	// set custon contact callback
 	void setContactAddedCallback(ContactAddedCallback cb);
 
-	const BEZIER* GetLapSequence(int i);
+	const BEZIER* GetSectorPatch(int i);
 
 	// cast ray into collision world, returns first hit, caster is excluded fom hits
 	bool castRay(

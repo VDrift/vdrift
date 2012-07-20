@@ -88,8 +88,8 @@ DynamicsWorld::~DynamicsWorld()
 	reset();
 }
 
-const BEZIER* DynamicsWorld::GetLapSequence(int i){
-	return track->GetLapSequence(i);
+const BEZIER* DynamicsWorld::GetSectorPatch(int i){
+	return track->GetSectorPatch(i);
 }
 
 bool DynamicsWorld::castRay(
@@ -142,18 +142,16 @@ bool DynamicsWorld::castRay(
 		// track bezierpatch collision
 		if (track)
 		{
-			MATHVECTOR<float, 3> bezierspace_raystart(origin[1], origin[2], origin[0]);
-			MATHVECTOR<float, 3> bezierspace_dir(direction[1], direction[2], direction[0]);
+			MATHVECTOR<float, 3> org(ToMathVector<float>(origin));
+			MATHVECTOR<float, 3> dir(ToMathVector<float>(direction));
 			MATHVECTOR<float, 3> colpoint;
 			MATHVECTOR<float, 3> colnormal;
 			patch_id = contact.GetPatchId();
-
-			if (track->CastRay(bezierspace_raystart, bezierspace_dir, length,
-				patch_id, colpoint, b, colnormal))
+			if (track->CastRay(org, dir, length, patch_id, colpoint, b, colnormal))
 			{
-				p = btVector3(colpoint[2], colpoint[0], colpoint[1]);
-				n = btVector3(colnormal[2], colnormal[0], colnormal[1]);
-				d = (colpoint - bezierspace_raystart).Magnitude();
+				p = ToBulletVector(colpoint);
+				n = ToBulletVector(colnormal);
+				d = (colpoint - org).Magnitude();
 			}
 		}
 

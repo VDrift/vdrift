@@ -51,7 +51,7 @@ public:
 
 	void AddRacinglineScenenode(
 		SCENENODE & node,
-		ROADPATCH * nextpatch,
+		const ROADPATCH & nextpatch,
 		std::tr1::shared_ptr<TEXTURE> racingline_texture);
 
 private:

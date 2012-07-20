@@ -41,9 +41,9 @@ private:
 #endif
 
 public:
-	bool LoadData(ROADSTRIP* road);
+	bool LoadData(const ROADSTRIP & road);
 	void CalcRaceLine();
-	void UpdateRoadStrip(ROADSTRIP* road);
+	void UpdateRoadStrip(ROADSTRIP & road);
 };
 
 #endif //_K1999_H

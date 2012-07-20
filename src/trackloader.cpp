@@ -3,6 +3,7 @@
 #include "loadcollisionshape.h"
 #include "contentmanager.h"
 #include "textureinfo.h"
+#include "coordinatesystem.h"
 #include "tobullet.h"
 #include "k1999.h"
 
@@ -79,7 +80,6 @@ TRACK::LOADER::LOADER(
 	texturedir(texturedir),
 	sharedobjectpath(sharedobjectpath),
 	anisotropy(anisotropy),
-	reverse(reverse),
 	dynamic_objects(dynamic_objects),
 	dynamic_shadows(dynamic_shadows),
 	agressive_combining(agressive_combining),
@@ -95,6 +95,7 @@ TRACK::LOADER::LOADER(
 {
 	objectpath = trackpath + "/objects";
 	objectdir = trackdir + "/objects";
+	data.reverse = reverse;
 }
 
 TRACK::LOADER::~LOADER()
@@ -117,28 +118,15 @@ bool TRACK::LOADER::BeginLoad()
 
 	info_output << "Loading track from path: " << trackpath << std::endl;
 
-	//load parameters
-	if (!LoadParameters())
-	{
-		return false;
-	}
-
 	if (!LoadSurfaces())
 	{
 		info_output << "No Surfaces File. Continuing with standard surfaces" << std::endl;
 	}
 
-	//load roads
 	if (!LoadRoads())
 	{
 		error_output << "Error during road loading; continuing with an unsmoothed track" << std::endl;
 		data.roads.clear();
-	}
-
-	//load the lap sequence
-	if (!LoadLapSequence())
-	{
-		return false;
 	}
 
 	if (!CreateRacingLines())
@@ -146,7 +134,32 @@ bool TRACK::LOADER::BeginLoad()
 		return false;
 	}
 
-	//load objects
+	// load info
+	std::string info_path = trackpath + "/track.txt";
+	std::ifstream file(info_path.c_str());
+	if (!file.good())
+	{
+		error_output << "Can't find track configfile: " << info_path << std::endl;
+		return false;
+	}
+
+	// parse info
+	PTree info;
+	read_ini(file, info);
+
+	info.get("vertical tracking skyboxes", data.vertical_tracking_skyboxes);
+	info.get("cull faces", data.cull);
+
+	if (!LoadStartPositions(info))
+	{
+		return false;
+	}
+
+	if (!LoadLapSections(info))
+	{
+		return false;
+	}
+
 	if (!BeginObjectLoad())
 	{
 		return false;
@@ -829,56 +842,6 @@ std::pair<bool, bool> TRACK::LOADER::ContinueOld()
 	return std::make_pair(false, true);
 }
 
-bool TRACK::LOADER::LoadParameters()
-{
-	std::string parampath = trackpath + "/track.txt";
-	std::ifstream file(parampath.c_str());
-	if (!file.good())
-	{
-		error_output << "Can't find track configfile: " << parampath << std::endl;
-		return false;
-	}
-
-	PTree param;
-	read_ini(file, param);
-
-	param.get("vertical tracking skyboxes", data.vertical_tracking_skyboxes);
-
-	int sp_num = 0;
-	std::stringstream sp_name;
-	sp_name << "start position " << sp_num;
-	std::vector<float> f3(3);
-	while (param.get(sp_name.str(), f3))
-	{
-		std::stringstream so_name;
-		so_name << "start orientation " << sp_num;
-		QUATERNION <float> q;
-		std::vector <float> angle(3, 0.0);
-		if (param.get(so_name.str(), angle, error_output))
-		{
-			q.SetEulerZYX(angle[0] * M_PI/180, angle[1] * M_PI/180, angle[2] * M_PI/180);
-		}
-
-		QUATERNION <float> orient(q[2], q[0], q[1], q[3]);
-
-		//due to historical reasons the initial orientation places the car faces the wrong way
-		QUATERNION <float> fixer;
-		fixer.Rotate(M_PI_2, 0, 0, 1);
-		orient = fixer * orient;
-
-		MATHVECTOR <float, 3> pos(f3[2], f3[0], f3[1]);
-
-		data.start_positions.push_back(
-			std::pair <MATHVECTOR <float, 3>, QUATERNION <float> >(pos, orient));
-
-		sp_num++;
-		sp_name.str("");
-		sp_name << "start position " << sp_num;
-	}
-
-	return true;
-}
-
 bool TRACK::LOADER::LoadSurfaces()
 {
 	std::string path = trackpath + "/surfaces.txt";
@@ -947,144 +910,13 @@ bool TRACK::LOADER::LoadRoads()
 		return false;
 	}
 
-	int numroads;
-
+	int numroads = 0;
 	trackfile >> numroads;
-
-	for (int i = 0; i < numroads && trackfile; i++)
+	for (int i = 0; i < numroads && trackfile; ++i)
 	{
 		data.roads.push_back(ROADSTRIP());
-		data.roads.back().ReadFrom(trackfile, error_output);
+		data.roads.back().ReadFrom(trackfile, data.reverse, error_output);
 	}
-
-	if (reverse)
-	{
-		ReverseRoads();
-		data.direction = DATA::DIRECTION_REVERSE;
-	}
-	else
-		data.direction = DATA::DIRECTION_FORWARD;
-
-	return true;
-}
-
-void TRACK::LOADER::ReverseRoads()
-{
-	//move timing sector 0 back 1 patch so we'll still drive over it when going in reverse around the track
-	if (!data.lap.empty())
-	{
-		int counts = 0;
-
-		for (std::list <ROADSTRIP>::iterator i = data.roads.begin(); i != data.roads.end(); ++i)
-		{
-			optional <const BEZIER *> newstartline = i->FindBezierAtOffset(data.lap[0], -1);
-			if (newstartline)
-			{
-				data.lap[0] = newstartline.get();
-				counts++;
-			}
-		}
-
-		assert(counts == 1); //do a sanity check, because I don't trust the FindBezierAtOffset function
-	}
-
-	//reverse the timing sectors
-	if (data.lap.size() > 1)
-	{
-		//reverse the lap sequence, but keep the first bezier where it is (remember, the track is a loop)
-		//so, for example, now instead of 1 2 3 4 we should have 1 4 3 2
-		std::vector <const BEZIER *>::iterator secondbezier = data.lap.begin();
-		++secondbezier;
-		assert(secondbezier != data.lap.end());
-		std::reverse(secondbezier, data.lap.end());
-	}
-
-
-	//flip start positions
-	for (std::vector <std::pair <MATHVECTOR <float, 3>, QUATERNION <float> > >::iterator i = data.start_positions.begin();
-		i != data.start_positions.end(); ++i)
-	{
-		i->second.Rotate(3.141593, 0,0,1);
-	}
-
-	//reverse start positions
-	std::reverse(data.start_positions.begin(), data.start_positions.end());
-
-	//reverse roads
-	std::for_each(data.roads.begin(), data.roads.end(), std::mem_fun_ref(&ROADSTRIP::Reverse));
-}
-
-bool TRACK::LOADER::LoadLapSequence()
-{
-	std::string parampath = trackpath + "/track.txt";
-	std::ifstream file(parampath.c_str());
-	if (!file.good())
-	{
-		error_output << "Can't find track configfile: " << parampath << std::endl;
-		return false;
-	}
-
-	PTree param;
-	read_ini(file, param);
-	param.get("cull faces", data.cull);
-
-	int lapmarkers = 0;
-	if (param.get("lap sequences", lapmarkers))
-	{
-		for (int l = 0; l < lapmarkers; l++)
-		{
-			std::vector<float> lapraw(3);
-			std::stringstream lapname;
-			lapname << "lap sequence " << l;
-			param.get(lapname.str(), lapraw);
-			int roadid = lapraw[0];
-			int patchid = lapraw[1];
-
-			//info_output << "Looking for lap sequence: " << roadid << ", " << patchid << endl;
-			int curroad = 0;
-			for (std::list <ROADSTRIP>::iterator i = data.roads.begin(); i != data.roads.end(); ++i)
-			{
-				if (curroad == roadid)
-				{
-					int curpatch = 0;
-					for (std::vector<ROADPATCH>::const_iterator p = i->GetPatches().begin(); p != i->GetPatches().end(); ++p)
-					{
-						if (curpatch == patchid)
-						{
-							data.lap.push_back(&p->GetPatch());
-							//info_output << "Lap sequence found: " << roadid << ", " << patchid << "= " << &p->GetPatch() << endl;
-						}
-						curpatch++;
-					}
-				}
-				curroad++;
-			}
-		}
-	}
-
-	// calculate distance from starting line for each patch to account for those tracks
-	// where starting line is not on the 1st patch of the road
-	// note this only updates the road with lap sequence 0 on it
-	if (!data.lap.empty())
-	{
-		BEZIER* start_patch = const_cast <BEZIER *> (data.lap[0]);
-		start_patch->dist_from_start = 0.0;
-		BEZIER* curr_patch = start_patch->next_patch;
-		float total_dist = start_patch->length;
-		int count = 0;
-		while ( curr_patch && curr_patch != start_patch)
-		{
-			count++;
-			curr_patch->dist_from_start = total_dist;
-			total_dist += curr_patch->length;
-			curr_patch = curr_patch->next_patch;
-		}
-	}
-
-	if (lapmarkers == 0)
-		info_output << "No lap sequence found; lap timing will not be possible" << std::endl;
-	else
-		info_output << "Track timing sectors: " << lapmarkers << std::endl;
 
 	return true;
 }
@@ -1098,18 +930,166 @@ bool TRACK::LOADER::CreateRacingLines()
 	}
 
 	K1999 k1999data;
-	int n = 0;
-	for (std::list <ROADSTRIP>::iterator i = data.roads.begin(); i != data.roads.end(); ++i,++n)
+	for (std::list <ROADSTRIP>::iterator i = data.roads.begin(); i != data.roads.end(); ++i)
 	{
-		if (k1999data.LoadData(&(*i)))
+		if (k1999data.LoadData(*i))
 		{
 			k1999data.CalcRaceLine();
-			k1999data.UpdateRoadStrip(&(*i));
+			k1999data.UpdateRoadStrip(*i);
 		}
 		//else error_output << "Couldn't create racing line for roadstrip " << n << std::endl;
 
 		i->CreateRacingLine(data.racingline_node, data.racingline_texture);
 	}
 
+	return true;
+}
+
+bool TRACK::LOADER::LoadStartPositions(const PTree & info)
+{
+	int sp_num = 0;
+	std::stringstream sp_name;
+	sp_name << "start position " << sp_num;
+	std::vector<float> f3(3);
+	while (info.get(sp_name.str(), f3))
+	{
+		std::stringstream so_name;
+		so_name << "start orientation " << sp_num;
+		QUATERNION <float> q;
+		std::vector <float> angle(3, 0.0);
+		if (info.get(so_name.str(), angle, error_output))
+		{
+			q.SetEulerZYX(angle[0] * M_PI/180, angle[1] * M_PI/180, angle[2] * M_PI/180);
+		}
+
+		QUATERNION <float> orient(q[2], q[0], q[1], q[3]);
+
+		//due to historical reasons the initial orientation places the car faces the wrong way
+		QUATERNION <float> fixer;
+		fixer.Rotate(M_PI_2, 0, 0, 1);
+		orient = fixer * orient;
+
+		MATHVECTOR <float, 3> pos(f3[2], f3[0], f3[1]);
+
+		data.start_positions.push_back(
+			std::pair <MATHVECTOR <float, 3>, QUATERNION <float> >(pos, orient));
+
+		sp_num++;
+		sp_name.str("");
+		sp_name << "start position " << sp_num;
+	}
+
+	if (data.reverse)
+	{
+		// flip start positions
+		for (std::vector <std::pair <MATHVECTOR <float, 3>, QUATERNION <float> > >::iterator i = data.start_positions.begin();
+			i != data.start_positions.end(); ++i)
+		{
+			i->second.Rotate(M_PI, 0, 0, 1);
+		}
+
+		// reverse start positions
+		std::reverse(data.start_positions.begin(), data.start_positions.end());
+	}
+
+	return true;
+}
+
+bool TRACK::LOADER::LoadLapSections(const PTree & info)
+{
+	// get timing sectors
+	int lapmarkers = 0;
+	if (info.get("lap sequences", lapmarkers))
+	{
+		for (int l = 0; l < lapmarkers; l++)
+		{
+			std::vector<float> lapraw(3);
+			std::stringstream lapname;
+			lapname << "lap sequence " << l;
+			info.get(lapname.str(), lapraw);
+			int roadid = lapraw[0];
+			int patchid = lapraw[1];
+
+			int curroad = 0;
+			for (std::list<ROADSTRIP>::iterator i = data.roads.begin(); i != data.roads.end(); ++i, ++curroad)
+			{
+				if (curroad == roadid)
+				{
+					int num_patches = i->GetPatches().size();
+					assert(patchid < num_patches);
+					
+					// adjust id for reverse case
+					if (data.reverse)
+						patchid = num_patches - patchid;
+					
+					data.lap.push_back(&i->GetPatches()[patchid].GetPatch());
+					break;
+				}
+			}
+		}
+	}
+
+	if (data.lap.empty())
+	{
+		info_output << "No lap sequence found. Lap timing will not be possible." << std::endl;
+		return true;
+	}
+	
+	// adjust timing sectors if reverse
+	if (data.reverse)
+	{
+		if (data.lap.size() > 1)
+		{
+			// reverse the lap sequence, but keep the first bezier where it is (remember, the track is a loop)
+			// so, for example, now instead of 1 2 3 4 we should have 1 4 3 2
+			std::vector<const BEZIER *>::iterator secondbezier = data.lap.begin() + 1;
+			assert(secondbezier != data.lap.end());
+			std::reverse(secondbezier, data.lap.end());
+		}
+
+		// move timing sector 0 back so we'll still drive over it when going in reverse around the track
+		// find patch in front of first start position
+		const BEZIER * lap0 = 0;
+		float minlen2 = 10E6;
+		MATHVECTOR<float, 3> pos = data.start_positions[0].first;
+		MATHVECTOR<float, 3> dir = direction::Forward;
+		data.start_positions[0].second.RotateVector(dir);
+		MATHVECTOR<float, 3> bpos(pos[1], pos[2], pos[0]);
+		MATHVECTOR<float, 3> bdir(dir[1], dir[2], dir[0]);
+		for (std::list<ROADSTRIP>::iterator r = data.roads.begin(); r != data.roads.end(); ++r)
+		{
+			for (std::vector<ROADPATCH>::iterator p = r->GetPatches().begin(); p != r->GetPatches().end(); ++p)
+			{
+				MATHVECTOR<float, 3> vec = p->GetPatch().GetBL() - bpos;
+				float len2 = vec.MagnitudeSquared();
+				bool fwd = vec.dot(bdir) > 0;
+				if (fwd && len2 < minlen2)
+				{
+					minlen2 = len2;
+					lap0 = &p->GetPatch();
+				}
+			}
+		}
+		if (lap0)
+			data.lap[0] = lap0;
+	}
+
+	// calculate distance from starting line for each patch to account for those tracks
+	// where starting line is not on the 1st patch of the road
+	// note this only updates the road with lap sequence 0 on it
+	BEZIER* start_patch = const_cast <BEZIER *> (data.lap[0]);
+	start_patch->dist_from_start = 0.0;
+	BEZIER* curr_patch = start_patch->next_patch;
+	float total_dist = start_patch->length;
+	int count = 0;
+	while ( curr_patch && curr_patch != start_patch)
+	{
+		count++;
+		curr_patch->dist_from_start = total_dist;
+		total_dist += curr_patch->length;
+		curr_patch = curr_patch->next_patch;
+	}
+
+	info_output << "Track timing sectors: " << lapmarkers << std::endl;
 	return true;
 }

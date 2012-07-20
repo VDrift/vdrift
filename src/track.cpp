@@ -113,26 +113,40 @@ void TRACK::Clear()
 	data.loaded = false;
 }
 
-bool TRACK::CastRay(const MATHVECTOR <float, 3> & origin, const MATHVECTOR <float, 3> & direction, const float seglen, int & patch_id, MATHVECTOR <float, 3> & outtri, const BEZIER * & colpatch, MATHVECTOR <float, 3> & normal) const
+bool TRACK::CastRay(
+	const MATHVECTOR <float, 3> & origin,
+	const MATHVECTOR <float, 3> & direction,
+	const float seglen,
+	int & patch_id,
+	MATHVECTOR <float, 3> & outtri,
+	const BEZIER * & colpatch,
+	MATHVECTOR <float, 3> & normal) const
 {
+	// transform into bezier space
+	MATHVECTOR<float, 3> borigin(origin[1], origin[2], origin[0]);
+	MATHVECTOR<float, 3> bdirection(direction[1], direction[2], direction[0]);
+
 	bool col = false;
 	for (std::list <ROADSTRIP>::const_iterator i = data.roads.begin(); i != data.roads.end(); ++i)
 	{
 		MATHVECTOR <float, 3> coltri, colnorm;
 		const BEZIER * colbez = NULL;
-		if (i->Collide(origin, direction, seglen, patch_id, coltri, colbez, colnorm))
+		if (i->Collide(borigin, bdirection, seglen, patch_id, coltri, colbez, colnorm))
 		{
-			if (!col || (coltri-origin).Magnitude() < (outtri-origin).Magnitude())
+			if (!col || (coltri - borigin).MagnitudeSquared() < (outtri - borigin).MagnitudeSquared())
 			{
 				outtri = coltri;
 				normal = colnorm;
 				colpatch = colbez;
 			}
-
 			col = true;
 		}
 	}
 
+	// transform into world space
+	outtri = MATHVECTOR<float, 3>(outtri[2], outtri[0], outtri[1]);
+	normal = MATHVECTOR<float, 3>(normal[2], normal[0], normal[1]);
+	
 	return col;
 }
 
@@ -164,77 +178,15 @@ std::pair <MATHVECTOR <float, 3>, QUATERNION <float> > TRACK::GetStart(unsigned 
 	return data.start_positions[index];
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-TRACK::DATA::DATA(): world(0), vertical_tracking_skyboxes(false), loaded(false), cull(true)
+TRACK::DATA::DATA() :
+	world(0),
+	vertical_tracking_skyboxes(false),
+	reverse(false),
+	loaded(false),
+	cull(true)
 {
 	// Constructor.
 }
 
-
-
-
-
-optional <const BEZIER *> ROADSTRIP::FindBezierAtOffset(const BEZIER * bezier, int offset) const
-{
-	std::vector<ROADPATCH>::const_iterator it = patches.end(); //this iterator will hold the found ROADPATCH
-
-	//search for the roadpatch containing the bezier and store an iterator to it in "it"
-	for (std::vector<ROADPATCH>::const_iterator i = patches.begin(); i != patches.end(); ++i)
-	{
-		if (&i->GetPatch() == bezier)
-		{
-			it = i;
-			break;
-		}
-	}
-
-	if (it == patches.end())
-		return optional <const BEZIER *>(); //return nothing
-	else
-	{
-		//now do the offset
-		int curoffset = offset;
-		while (curoffset != 0)
-		{
-			if (curoffset < 0)
-			{
-				//why is this so difficult?  all i'm trying to do is make the iterator loop around
-				std::vector<ROADPATCH>::const_reverse_iterator rit(it);
-				if (rit == patches.rend())
-					rit = patches.rbegin();
-				rit++;
-				if (rit == patches.rend())
-					rit = patches.rbegin();
-				it = rit.base();
-				if (it == patches.end())
-					it = patches.begin();
-
-				curoffset++;
-			}
-			else if (curoffset > 0)
-			{
-				it++;
-				if (it == patches.end())
-					it = patches.begin();
-
-				curoffset--;
-			}
-		}
-
-		assert(it != patches.end());
-		return optional <const BEZIER *>(&it->GetPatch());
-	}
-}
 
 

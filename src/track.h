@@ -66,7 +66,14 @@ public:
 
 	void Clear();
 
-	bool CastRay(const MATHVECTOR <float, 3> & origin, const MATHVECTOR <float, 3> & direction, const float seglen, int & patch_id, MATHVECTOR <float, 3> & outtri, const BEZIER * & colpatch, MATHVECTOR <float, 3> & normal) const;
+	bool CastRay(
+		const MATHVECTOR <float, 3> & origin,
+		const MATHVECTOR <float, 3> & direction,
+		const float seglen,
+		int & patch_id,
+		MATHVECTOR <float, 3> & outtri,
+		const BEZIER * & colpatch,
+		MATHVECTOR <float, 3> & normal) const;
 
 	/// Synchronize graphics and physics.
 	void Update();
@@ -88,7 +95,7 @@ public:
 		return data.lap.size();
 	}
 
-	const BEZIER * GetLapSequence(unsigned int sector) const
+	const BEZIER * GetSectorPatch(unsigned int sector) const
 	{
 		assert (sector < data.lap.size());
 		return data.lap[sector];
@@ -101,7 +108,7 @@ public:
 
 	bool IsReversed() const
 	{
-		return data.direction == DATA::DIRECTION_REVERSE;
+		return data.reverse;
 	}
 
 	const std::vector<TRACKSURFACE> & GetSurfaces() const
@@ -136,9 +143,9 @@ private:
 		SCENENODE static_node;
 		std::vector<TRACKSURFACE> surfaces;
 		std::vector<std::tr1::shared_ptr<MODEL> > models;
-		btAlignedObjectArray<btStridingMeshInterface*> meshes;
-		btAlignedObjectArray<btCollisionShape*> shapes;
-		btAlignedObjectArray<btCollisionObject*> objects;
+		std::vector<btStridingMeshInterface*> meshes;
+		std::vector<btCollisionShape*> shapes;
+		std::vector<btCollisionObject*> objects;
 
 		// dynamic track objects
 		SCENENODE dynamic_node;
@@ -155,8 +162,8 @@ private:
 		std::tr1::shared_ptr<TEXTURE> racingline_texture;
 
 		// track state
-		enum { DIRECTION_FORWARD, DIRECTION_REVERSE } direction;
 		bool vertical_tracking_skyboxes;
+		bool reverse;
 		bool loaded;
 		bool cull;
 
