@@ -402,7 +402,10 @@ void SOUND::ProcessSources()
 				if (len < 0.1f) len = 0.1f;
 
 				// distance attenuation
-				float cgain = 0.25f / log(100.f) * (log(1000.f) - 1.5f * log(len));
+				// v1: 1.5 at 1m, 0 at 200m distance
+				//float cgain = log(1000.0 / pow((double)len, 1.3)) / log(100.0);
+				// scaled v1 by 0.5: 0.75 at 1m, 0 at 200m distance
+				float cgain = 0.5f / log(100.f) * (log(1000.f) - 1.3f * log(len));
 				cgain = clamp(cgain, 0.0f, 1.0f);
 
 				// directional attenuation
