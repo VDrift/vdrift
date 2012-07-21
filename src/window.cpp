@@ -21,6 +21,7 @@
 #include <gl.h>
 #include <SDL/SDL.h>
 #include <cassert>
+#include <cstring>
 
 WINDOW_SDL::WINDOW_SDL() :
 	w(0), h(0),
