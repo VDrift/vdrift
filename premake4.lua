@@ -3,7 +3,6 @@ update_options = function()
 	options["settings"]=".vdrift"
 	options["bindir"]="/usr/local/bin"
 	options["datadir"]="/usr/local/share/games/vdrift/data"
-	options["force_feedback"]="no"
 	options["binreloc"]="no"
 	local f = io.open("vdrift.cfg", "r")
 	if f then
