@@ -19,6 +19,12 @@
 #include <sstream>
 #include <string>
 
+template <typename T>
+static inline T clamp(T val, T min, T max)
+{
+	return (val < max) ? (val > min) ? val : min : max;
+}
+
 enum WHICHDRAWLIST
 {
 	BLEND,
@@ -822,17 +828,11 @@ void CAR::UpdateSounds(float dt)
 		btVector3 pos_wheel = dynamics.GetWheelPosition(WHEEL_POSITION(i));
 		btVector3 vel_wheel = dynamics.GetWheelVelocity(WHEEL_POSITION(i));
 		float pitch = (vel_wheel.length() - 5.0) * 0.1;
-		if (pitch < 0)
-			pitch = 0;
-		if (pitch > 1)
-			pitch = 1;
+		pitch = clamp(pitch, 0.0f, 1.0f);
 		pitch = 1.0 - pitch;
 		pitch *= pitchvariation;
 		pitch = pitch + (1.0 - pitchvariation);
-		if (pitch < 0.1)
-			pitch = 0.1;
-		if (pitch > 4.0)
-			pitch = 4.0;
+		pitch = clamp(pitch, 0.1f, 4.0f);
 
 		psound->SetSourcePosition(sound_active[i], pos_wheel[0], pos_wheel[1], pos_wheel[2]);
 		psound->SetSourcePitch(sound_active[i], pitch);
@@ -842,10 +842,9 @@ void CAR::UpdateSounds(float dt)
 	//update road noise sound
 	{
 		float gain = dynamics.GetVelocity().length();
-		if (gain < 0) gain = -gain;
 		gain *= 0.02;
 		gain *= gain;
-		if (gain > 1.0)	gain = 1.0;
+		if (gain > 1) gain = 1;
 		psound->SetSourceGain(roadnoise, gain);
 	}
 /*
@@ -877,41 +876,31 @@ void CAR::UpdateSounds(float dt)
 			}
 		}
 	}
-
+*/
 	//update crash sound
+	crashdetection.Update(GetSpeed(), dt);
+	float crashdecel = crashdetection.GetMaxDecel();
+	if (crashdecel > 0)
 	{
-		crashdetection.Update(GetSpeed(), dt);
-		float crashdecel = crashdetection.GetMaxDecel();
-		if (crashdecel > 0)
-		{
-			const float mingainat = 500;
-			const float maxgainat = 3000;
-			const float mingain = 0.1;
-			float gain = (crashdecel-mingainat)/(maxgainat-mingainat);
-			if (gain > 1)
-				gain = 1;
-			if (gain < mingain)
-				gain = mingain;
+		const float mingainat = 200;
+		const float maxgainat = 2000;
+		float gain = (crashdecel - mingainat) / (maxgainat - mingainat);
+		gain = clamp(gain, 0.1f, 1.0f);
 
-			if (!crashsound.Audible())
-			{
-				crashsound.SetGain(gain);
-				crashsound.Stop();
-				crashsound.Play();
-			}
+		if (!psound->GetSourcePlaying(crashsound))
+		{
+			psound->ResetSource(crashsound);
+			psound->SetSourceGain(crashsound, gain);
 		}
 	}
-*/
+
 	// update gear sound
 	if (driver_view && gearsound_check != GetGear())
 	{
 		float gain = 0.0;
 		if (GetEngineRPM() != 0.0)
 			gain = GetEngineRPMLimit() / GetEngineRPM();
-		if (gain > 0.5)
-			gain = 0.5;
-		if (gain < 0.25)
-			gain = 0.25;
+		gain = clamp(gain, 0.25f, 0.50f);
 
 		if (!psound->GetSourcePlaying(gearsound))
 		{
@@ -1004,7 +993,7 @@ void CAR::HandleInputs(const std::vector <float> & inputs)
 	// update interior sounds
 	if (!psound || !driver_view) return;
 
-	// brake sound
+/*	// disable brake sound, sounds wierd
 	if (inputs[CARINPUT::BRAKE] > 0 && !brakesound_check)
 	{
 		if (!psound->GetSourcePlaying(brakesound))
@@ -1016,7 +1005,7 @@ void CAR::HandleInputs(const std::vector <float> & inputs)
 	}
 	if (inputs[CARINPUT::BRAKE] <= 0)
 		brakesound_check = false;
-
+*/
 	// handbrake sound
 	if (inputs[CARINPUT::HANDBRAKE] > 0 && !handbrakesound_check)
 	{
