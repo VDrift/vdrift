@@ -173,7 +173,10 @@ bool CARCONTROLMAP_LOCAL::Load(const std::string & controlfile, std::ostream & i
 			int keycode = 0;
 			bool key_down = false;
 			bool key_once = false;
+#if !SDL_VERSION_ATLEAST(2,0,0)
+			// use keyname to get keycode for backward compatibility, temporary
 			if (!controls_config.GetParam(i, "keycode", keycode))
+#endif
 			{
 				std::string keyname;
 				if (!controls_config.GetParam(i, "key", keyname, error_output)) continue;
@@ -755,132 +758,134 @@ std::vector<std::string> CARCONTROLMAP_LOCAL::InitCarInputStrings()
 std::map <std::string, int> CARCONTROLMAP_LOCAL::InitKeycodeStringMap()
 {
 	std::map <std::string, int> keycodes;
-	keycodes["BACKSPACE"] = 8;
-	keycodes["TAB"] = 9;
-	keycodes["CLEAR"] = 12;
-	keycodes["RETURN"] = 13;
-	keycodes["PAUSE"] = 19;
-	keycodes["ESCAPE"] = 27;
-	keycodes["SPACE"] = 32;
-	keycodes["EXCLAIM"] = 33;
-	keycodes["QUOTEDBL"] = 34;
-	keycodes["HASH"] = 35;
-	keycodes["DOLLAR"] = 36;
-	keycodes["AMPERSAND"] = 38;
-	keycodes["QUOTE"] = 39;
-	keycodes["LEFTPAREN"] = 40;
-	keycodes["RIGHTPAREN"] = 41;
-	keycodes["ASTERISK"] = 42;
-	keycodes["PLUS"] = 43;
-	keycodes["COMMA"] = 44;
-	keycodes["MINUS"] = 45;
-	keycodes["PERIOD"] = 46;
-	keycodes["SLASH"] = 47;
-	keycodes["0"] = 48;
-	keycodes["1"] = 49;
-	keycodes["2"] = 50;
-	keycodes["3"] = 51;
-	keycodes["4"] = 52;
-	keycodes["5"] = 53;
-	keycodes["6"] = 54;
-	keycodes["7"] = 55;
-	keycodes["8"] = 56;
-	keycodes["9"] = 57;
-	keycodes["COLON"] = 58;
-	keycodes["SEMICOLON"] = 59;
-	keycodes["LESS"] = 60;
-	keycodes["EQUALS"] = 61;
-	keycodes["GREATER"] = 62;
-	keycodes["QUESTION"] = 63;
-	keycodes["AT"] = 64;
-	keycodes["LEFTBRACKET"] = 91;
-	keycodes["BACKSLASH"] = 92;
-	keycodes["RIGHTBRACKET"] = 93;
-	keycodes["CARET"] = 94;
-	keycodes["UNDERSCORE"] = 95;
-	keycodes["BACKQUOTE"] = 96;
-	keycodes["a"] = 97;
-	keycodes["b"] = 98;
-	keycodes["c"] = 99;
-	keycodes["d"] = 100;
-	keycodes["e"] = 101;
-	keycodes["f"] = 102;
-	keycodes["g"] = 103;
-	keycodes["h"] = 104;
-	keycodes["i"] = 105;
-	keycodes["j"] = 106;
-	keycodes["k"] = 107;
-	keycodes["l"] = 108;
-	keycodes["m"] = 109;
-	keycodes["n"] = 110;
-	keycodes["o"] = 111;
-	keycodes["p"] = 112;
-	keycodes["q"] = 113;
-	keycodes["r"] = 114;
-	keycodes["s"] = 115;
-	keycodes["t"] = 116;
-	keycodes["u"] = 117;
-	keycodes["v"] = 118;
-	keycodes["w"] = 119;
-	keycodes["x"] = 120;
-	keycodes["y"] = 121;
-	keycodes["z"] = 122;
-	keycodes["DELETE"] = 127;
-	keycodes["KP0"] = 256;
-	keycodes["KP1"] = 257;
-	keycodes["KP2"] = 258;
-	keycodes["KP3"] = 259;
-	keycodes["KP4"] = 260;
-	keycodes["KP5"] = 261;
-	keycodes["KP6"] = 262;
-	keycodes["KP7"] = 263;
-	keycodes["KP8"] = 264;
-	keycodes["KP9"] = 265;
-	keycodes["KP_PERIOD"] = 266;
-	keycodes["KP_DIVIDE"] = 267;
-	keycodes["KP_MULTIPLY"] = 268;
-	keycodes["KP_MINUS"] = 269;
-	keycodes["KP_PLUS"] = 270;
-	keycodes["KP_ENTER"] = 271;
-	keycodes["KP_EQUALS"] = 272;
-	keycodes["UP"] = 273;
-	keycodes["DOWN"] = 274;
-	keycodes["RIGHT"] = 275;
-	keycodes["LEFT"] = 276;
-	keycodes["INSERT"] = 277;
-	keycodes["HOME"] = 278;
-	keycodes["END"] = 279;
-	keycodes["PAGEUP"] = 280;
-	keycodes["PAGEDOWN"] = 281;
-	keycodes["F1"] = 282;
-	keycodes["F2"] = 283;
-	keycodes["F3"] = 284;
-	keycodes["F4"] = 285;
-	keycodes["F5"] = 286;
-	keycodes["F6"] = 287;
-	keycodes["F7"] = 288;
-	keycodes["F8"] = 289;
-	keycodes["F9"] = 290;
-	keycodes["F10"] = 291;
-	keycodes["F11"] = 292;
-	keycodes["F12"] = 293;
-	keycodes["F13"] = 294;
-	keycodes["F14"] = 295;
-	keycodes["F15"] = 296;
-	keycodes["NUMLOCK"] = 300;
-	keycodes["CAPSLOCK"] = 301;
-	keycodes["SCROLLOCK"] = 302;
-	keycodes["RSHIFT"] = 303;
-	keycodes["LSHIFT"] = 304;
-	keycodes["RCTRL"] = 305;
-	keycodes["LCTRL"] = 306;
-	keycodes["RALT"] = 307;
-	keycodes["LALT"] = 308;
-	keycodes["RMETA"] = 309;
-	keycodes["LMETA"] = 310;
-	keycodes["LSUPER"] = 311;
-	keycodes["RSUPER"] = 312;
-	keycodes["ALTGR"] = 313;
+	keycodes["UNKNOWN"] = SDLK_UNKNOWN;
+	keycodes["BACKSPACE"] = SDLK_BACKSPACE;
+	keycodes["TAB"] = SDLK_TAB;
+	keycodes["CLEAR"] = SDLK_CLEAR;
+	keycodes["RETURN"] = SDLK_RETURN;
+	keycodes["PAUSE"] = SDLK_PAUSE;
+	keycodes["ESCAPE"] = SDLK_ESCAPE;
+	keycodes["SPACE"] = SDLK_SPACE;
+	keycodes["EXCLAIM"] = SDLK_EXCLAIM;
+	keycodes["QUOTEDBL"] = SDLK_QUOTEDBL;
+	keycodes["HASH"] = SDLK_HASH;
+	keycodes["DOLLAR"] = SDLK_DOLLAR;
+	keycodes["AMPERSAND"] = SDLK_AMPERSAND;
+	keycodes["QUOTE"] = SDLK_QUOTE;
+	keycodes["LEFTPAREN"] = SDLK_LEFTPAREN;
+	keycodes["RIGHTPAREN"] = SDLK_RIGHTPAREN;
+	keycodes["ASTERISK"] = SDLK_ASTERISK;
+	keycodes["PLUS"] = SDLK_PLUS;
+	keycodes["COMMA"] = SDLK_COMMA;
+	keycodes["MINUS"] = SDLK_MINUS;
+	keycodes["PERIOD"] = SDLK_PERIOD;
+	keycodes["SLASH"] = SDLK_SLASH;
+	keycodes["0"] = SDLK_0;
+	keycodes["1"] = SDLK_1;
+	keycodes["2"] = SDLK_2;
+	keycodes["3"] = SDLK_3;
+	keycodes["4"] = SDLK_4;
+	keycodes["5"] = SDLK_5;
+	keycodes["6"] = SDLK_6;
+	keycodes["7"] = SDLK_7;
+	keycodes["8"] = SDLK_8;
+	keycodes["9"] = SDLK_9;
+	keycodes["COLON"] = SDLK_COLON;
+	keycodes["SEMICOLON"] = SDLK_SEMICOLON;
+	keycodes["LESS"] = SDLK_LESS;
+	keycodes["EQUALS"] = SDLK_EQUALS;
+	keycodes["GREATER"] = SDLK_GREATER;
+	keycodes["QUESTION"] = SDLK_QUESTION;
+	keycodes["AT"] = SDLK_AT;
+	keycodes["LEFTBRACKET"] = SDLK_LEFTBRACKET;
+	keycodes["BACKSLASH"] = SDLK_BACKSLASH;
+	keycodes["RIGHTBRACKET"] = SDLK_RIGHTBRACKET;
+	keycodes["CARET"] = SDLK_CARET;
+	keycodes["UNDERSCORE"] = SDLK_UNDERSCORE;
+	keycodes["BACKQUOTE"] = SDLK_BACKQUOTE;
+	keycodes["a"] = SDLK_a;
+	keycodes["b"] = SDLK_b;
+	keycodes["c"] = SDLK_c;
+	keycodes["d"] = SDLK_d;
+	keycodes["e"] = SDLK_e;
+	keycodes["f"] = SDLK_f;
+	keycodes["g"] = SDLK_g;
+	keycodes["h"] = SDLK_h;
+	keycodes["i"] = SDLK_i;
+	keycodes["j"] = SDLK_j;
+	keycodes["k"] = SDLK_k;
+	keycodes["l"] = SDLK_l;
+	keycodes["m"] = SDLK_m;
+	keycodes["n"] = SDLK_n;
+	keycodes["o"] = SDLK_o;
+	keycodes["p"] = SDLK_p;
+	keycodes["q"] = SDLK_q;
+	keycodes["r"] = SDLK_r;
+	keycodes["s"] = SDLK_s;
+	keycodes["t"] = SDLK_t;
+	keycodes["u"] = SDLK_u;
+	keycodes["v"] = SDLK_v;
+	keycodes["w"] = SDLK_w;
+	keycodes["x"] = SDLK_x;
+	keycodes["y"] = SDLK_y;
+	keycodes["z"] = SDLK_z;
+	keycodes["DELETE"] = SDLK_DELETE;
+	keycodes["KP0"] = SDLK_KP_0;
+	keycodes["KP1"] = SDLK_KP_1;
+	keycodes["KP2"] = SDLK_KP_2;
+	keycodes["KP3"] = SDLK_KP_3;
+	keycodes["KP4"] = SDLK_KP_4;
+	keycodes["KP5"] = SDLK_KP_5;
+	keycodes["KP6"] = SDLK_KP_6;
+	keycodes["KP7"] = SDLK_KP_7;
+	keycodes["KP8"] = SDLK_KP_8;
+	keycodes["KP9"] = SDLK_KP_9;
+	keycodes["KP_PERIOD"] = SDLK_KP_PERIOD;
+	keycodes["KP_DIVIDE"] = SDLK_KP_DIVIDE;
+	keycodes["KP_MULTIPLY"] = SDLK_KP_MULTIPLY;
+	keycodes["KP_MINUS"] = SDLK_KP_MINUS;
+	keycodes["KP_PLUS"] = SDLK_KP_PLUS;
+	keycodes["KP_ENTER"] = SDLK_KP_ENTER;
+	keycodes["KP_EQUALS"] = SDLK_KP_EQUALS;
+	keycodes["UP"] = SDLK_UP;
+	keycodes["DOWN"] = SDLK_DOWN;
+	keycodes["RIGHT"] = SDLK_RIGHT;
+	keycodes["LEFT"] = SDLK_LEFT;
+	keycodes["INSERT"] = SDLK_INSERT;
+	keycodes["HOME"] = SDLK_HOME;
+	keycodes["END"] = SDLK_END;
+	keycodes["PAGEUP"] = SDLK_PAGEUP;
+	keycodes["PAGEDOWN"] = SDLK_PAGEDOWN;
+	keycodes["F1"] = SDLK_F1;
+	keycodes["F2"] = SDLK_F2;
+	keycodes["F3"] = SDLK_F3;
+	keycodes["F4"] = SDLK_F4;
+	keycodes["F5"] = SDLK_F5;
+	keycodes["F6"] = SDLK_F6;
+	keycodes["F7"] = SDLK_F7;
+	keycodes["F8"] = SDLK_F8;
+	keycodes["F9"] = SDLK_F9;
+	keycodes["F10"] = SDLK_F10;
+	keycodes["F11"] = SDLK_F11;
+	keycodes["F12"] = SDLK_F12;
+	keycodes["F13"] = SDLK_F13;
+	keycodes["F14"] = SDLK_F14;
+	keycodes["F15"] = SDLK_F15;
+	keycodes["MENU"] = SDLK_MENU;
+	keycodes["APPLICATION"] = SDLK_APPLICATION;
+	keycodes["NUMLOCK"] = SDLK_NUMLOCKCLEAR;
+	keycodes["CAPSLOCK"] = SDLK_CAPSLOCK;
+	keycodes["SCROLLLOCK"] = SDLK_SCROLLLOCK;
+	keycodes["RSHIFT"] = SDLK_RSHIFT;
+	keycodes["LSHIFT"] = SDLK_LSHIFT;
+	keycodes["RCTRL"] = SDLK_RCTRL;
+	keycodes["LCTRL"] = SDLK_LCTRL;
+	keycodes["RALT"] = SDLK_RALT;
+	keycodes["LALT"] = SDLK_LALT;
+	keycodes["RMETA"] = SDLK_RGUI;
+	keycodes["LMETA"] = SDLK_LGUI;
+	keycodes["LSUPER"] = SDLK_LGUI;
+	keycodes["RSUPER"] = SDLK_RGUI;
 	return keycodes;
 }
 
@@ -894,7 +899,7 @@ CARINPUT::CARINPUT CARCONTROLMAP_LOCAL::GetInputFromString(const std::string & s
 	std::map <std::string, CARINPUT::CARINPUT>::const_iterator i = carinput_stringmap.find(str);
 	if (i != carinput_stringmap.end())
 		return i->second;
-	
+
 	return CARINPUT::INVALID;
 }
 
@@ -903,7 +908,7 @@ const std::string & CARCONTROLMAP_LOCAL::GetStringFromKeycode(const int code)
 	for (std::map <std::string, int>::const_iterator i = keycode_stringmap.begin(); i != keycode_stringmap.end(); ++i)
 		if (i->second == code)
 			return i->first;
-	
+
 	return invalid;
 }
 
@@ -912,7 +917,7 @@ int CARCONTROLMAP_LOCAL::GetKeycodeFromString(const std::string & str)
 	std::map <std::string, int>::const_iterator i = keycode_stringmap.find(str);
 	if (i != keycode_stringmap.end())
 		return i->second;
-	
+
 	return 0;
 }
 
@@ -1056,25 +1061,25 @@ std::string CARCONTROLMAP_LOCAL::CONTROL::GetInfo() const
 
 		if (joytype == JOYAXIS)
 		{
+			s << "JOY" << joynum << "AXIS" << joyaxis;
+
 			if (joyaxistype == NEGATIVE)
 				s << "-";
 			else
 				s << "+";
-			
-			s << "JOY" << joynum << ":AXIS" << joyaxis;
-		
+
 			return s.str();
 		}
 
 		if (joytype == JOYBUTTON)
 		{
-			s << "JOY" << joynum << ":BUTTON" << keycode;
+			s << "JOY" << joynum << "BUTTON" << keycode;
 			return s.str();
 		}
 
 		if (joytype == JOYHAT)
 		{
-			s << "JOY" << joynum << ":HAT" << keycode;
+			s << "JOY" << joynum << "HAT" << keycode;
 			return s.str();
 		}
 	}
@@ -1094,7 +1099,7 @@ std::string CARCONTROLMAP_LOCAL::CONTROL::GetInfo() const
 			s << "LEFT";
 		else if (mdir == RIGHT)
 			s << "RIGHT";
-		
+
 		return s.str();
 	}
 
