@@ -179,6 +179,7 @@ bool TEXTURE::LoadCubeVerticalCross(const std::string & path, const TEXTUREINFO 
 	else
 	{
 		error << "Error loading texture file: " + path << std::endl;
+		error << IMG_GetError();
 		return false;
 	}
 
@@ -303,6 +304,7 @@ bool TEXTURE::LoadCube(const std::string & path, const TEXTUREINFO & info, std::
 		else
 		{
 			error << "Error loading texture file: " + path + " (" + cubefiles[i] + ")" << std::endl;
+			error << IMG_GetError();
 			return false;
 		}
 
@@ -477,6 +479,7 @@ bool TEXTURE::Load(const std::string & path, const TEXTUREINFO & info, std::ostr
 		if (!orig_surface)
 		{
 			error << "Error loading texture file: " << path << std::endl;
+			error << IMG_GetError();
 			return false;
 		}
 	}
