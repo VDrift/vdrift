@@ -16,7 +16,7 @@ public:
 
 	const std::string & GetName() const { return name; }
 
-	void SetFOV(float value) { fov = std::max(40.0f, std::min(160.0f, value)); }
+	void SetFOV(float value) { fov = std::max(0.0f, std::min(120.0f, value)); }
 
 	float GetFOV() const { return fov; }
 
