@@ -201,6 +201,7 @@ private:
 	void SetTrackImage(const std::string & value);
 	void SetControl(const std::string & value);
 
+	void BindActionsToGUI();
 	void RegisterActions();
 	void InitActionMap(std::map<std::string, Slot0*> & actionmap);
 

@@ -499,16 +499,7 @@ bool GAME::InitGUI(const std::string & pagename)
 	}
 
 	// Connect game actions to gui options
-	set_car_name.connect(gui.GetOption("game.car").signal_val);
-	set_car_paint.connect(gui.GetOption("game.car_paint").signal_val);
-	set_car_color_hue.connect(gui.GetOption("game.car_color_hue").signal_val);
-	set_car_color_sat.connect(gui.GetOption("game.car_color_sat").signal_val);
-	set_car_color_val.connect(gui.GetOption("game.car_color_val").signal_val);
-	set_car_ai_type.connect(gui.GetOption("game.ai_type").signal_val);
-	set_car_ai_level.connect(gui.GetOption("game.ai_level").signal_val);
-	set_cars_num.connect(gui.GetOption("game.cars_num").signal_val);
-	set_track_image.connect(gui.GetOption("game.track").signal_val);
-	set_control.connect(gui.GetOption("controledit.string").signal_val);
+	BindActionsToGUI();
 
 	// Set options from game settings.
 	std::map<std::string, std::string> optionmap;
@@ -2855,6 +2846,19 @@ void GAME::SetControl(const std::string & value)
 	EditControl();
 }
 
+void GAME::BindActionsToGUI()
+{
+	set_car_name.connect(gui.GetOption("game.car").signal_val);
+	set_car_paint.connect(gui.GetOption("game.car_paint").signal_val);
+	set_car_color_hue.connect(gui.GetOption("game.car_color_hue").signal_val);
+	set_car_color_sat.connect(gui.GetOption("game.car_color_sat").signal_val);
+	set_car_color_val.connect(gui.GetOption("game.car_color_val").signal_val);
+	set_car_ai_type.connect(gui.GetOption("game.ai_type").signal_val);
+	set_car_ai_level.connect(gui.GetOption("game.ai_level").signal_val);
+	set_cars_num.connect(gui.GetOption("game.cars_num").signal_val);
+	set_track_image.connect(gui.GetOption("game.track").signal_val);
+	set_control.connect(gui.GetOption("controledit.string").signal_val);
+}
 
 void GAME::RegisterActions()
 {
