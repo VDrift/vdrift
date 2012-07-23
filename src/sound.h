@@ -33,11 +33,8 @@ public:
 	// disable sound
 	void Disable();
 
-	// pause sound
-	void Pause(bool value);
-
 	// commit state changes
-	void Update();
+	void Update(bool pause);
 
 	// active sources limit can be adjusted at runtime
 	void SetMaxActiveSources(size_t value);
@@ -69,14 +66,14 @@ public:
 	void SetVolume(float value);
 
 private:
+	std::ostream * log_error;
 	SOUNDINFO deviceinfo;
-	SOUNDFILTER volume_filter;
 	MATHVECTOR<float, 3> listener_pos;
 	MATHVECTOR<float, 3> listener_vel;
 	QUATERNION<float> listener_rot;
+	float sound_volume;
 	bool initdone;
 	bool disable;
-	bool paused;
 
 	// state structs
 	struct Source
@@ -95,8 +92,8 @@ private:
 
 	struct Sampler
 	{
-		static const int denom = 1 << 15;
-		static const int max_gain_delta = (denom * 100) / 44100;
+		static const int denom = 32768;
+		static const int max_gain_delta = (denom * 173) / 44100; // 256 samples from min to max gain
 		const SOUNDBUFFER * buffer;
 		int samples_per_channel;
 		int sample_pos;
@@ -135,21 +132,24 @@ private:
 	TrippleBuffer<SamplerUpdate> sampler_update;
 	TrippleBuffer<SamplerAdd> sampler_add;
 	TrippleBuffer<size_t> sampler_remove;
-	TrippleBuffer<size_t> source_remove;
 	TrippleBuffer<size_t> source_stop;
 	SDL_mutex * sampler_lock;
 	SDL_mutex * source_lock;
+	bool set_pause;
 
 	// sound sources state
 	std::vector<SourceActive> sources_active;
 	std::vector<Source> sources;
 	size_t max_active_sources;
 	size_t sources_num;
+	bool sources_pause;
 
 	// sound thread state
 	std::vector<int> buffer1, buffer2;
 	std::vector<Sampler> samplers;
 	size_t samplers_num;
+	bool samplers_pause;
+	bool samplers_fade;
 
 	// main thread methods
 	void GetSourceChanges();

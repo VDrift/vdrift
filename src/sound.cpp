@@ -30,17 +30,20 @@ bool SOUND::SourceActive::operator<(const SOUND::SourceActive & other)
 }
 
 SOUND::SOUND() :
+	log_error(0),
 	deviceinfo(0, 0, 0, 0),
+	sound_volume(0),
 	initdone(false),
 	disable(false),
-	paused(true),
 	sampler_lock(0),
 	source_lock(0),
+	set_pause(true),
 	max_active_sources(64),
 	sources_num(0),
-	samplers_num(0)
+	sources_pause(true),
+	samplers_num(0),
+	samplers_pause(true)
 {
-	volume_filter.SetFilterOrder0(1.0);
 	sources.reserve(64);
 	samplers.reserve(64);
 }
@@ -115,10 +118,12 @@ bool SOUND::Init(int buffersize, std::ostream & info_output, std::ostream & erro
 	}
 
 	deviceinfo = SOUNDINFO(samples, frequency, channels, bytespersample);
-
+	log_error = &error_output;
 	initdone = true;
-
 	SetVolume(1.0);
+
+	// enable sound, run callback
+	SDL_PauseAudio(false);
 
 	return true;
 }
@@ -138,46 +143,21 @@ void SOUND::Disable()
 	disable = true;
 }
 
-void SOUND::Pause(bool value)
-{
-	if (paused != value)
-	{
-		SDL_PauseAudio(value);
-		paused = value;
-	}
-}
-
-void SOUND::Update()
+void SOUND::Update(bool pause)
 {
 	if (disable) return;
+
+	set_pause = pause;
 
 	GetSourceChanges();
 
 	ProcessSourceStop();
 
-	ProcessSourceRemove();
-
 	ProcessSources();
 
+	ProcessSourceRemove();
+
 	SetSamplerChanges();
-
-	// short circuit if paused(sound thread blocked)
-	if (paused)
-	{
-		GetSamplerChanges();
-
-		ProcessSamplerAdd();
-
-		ProcessSamplerRemove();
-
-		SetSourceChanges();
-
-		GetSourceChanges();
-
-		ProcessSourceStop();
-
-		ProcessSourceRemove();
-	}
 }
 
 void SOUND::SetMaxActiveSources(size_t value)
@@ -192,18 +172,24 @@ inline size_t AddItem(T & item, std::vector<T> & items, size_t & item_num)
 	size_t id = item_num;
 	if (id < items.size())
 	{
+		// reuse free slot
 		size_t idn = items[id].id;
 		if (idn != id)
 		{
-			// swap back redirected item
+			// free slot is redirecting to other item
 			assert(idn < id);
+
+			// swap redirected item back
 			items[id] = items[idn];
+
+			// use now free slot
 			id = idn;
 		}
 		items[id] = item;
 	}
 	else
 	{
+		// add item to new slot
 		items.push_back(item);
 	}
 	items[id].id = id;
@@ -217,9 +203,14 @@ template <class T>
 inline void RemoveItem(size_t id, std::vector<T> & items, size_t & item_num)
 {
 	assert(id < items.size());
+
+	// get item true id
 	size_t idn = items[id].id;
 	assert(idn < item_num);
+
+	// pop last item
 	--item_num;
+
 	// swap last item with current
 	size_t idl = items[item_num].id;
 	if (idl != item_num)
@@ -270,14 +261,13 @@ size_t SOUND::AddSource(std::tr1::shared_ptr<SOUNDBUFFER> buffer, float offset, 
 	ns.id = -1;
 	sampler_add.getFirst().push_back(ns);
 
-	//std::cout << "Add sound source: " << id << " " << buffer->GetName() << std::endl;
+	//*log_error << "Add sound source: " << id << " " << buffer->GetName() << std::endl;
 	return id;
 }
 
 void SOUND::RemoveSource(size_t id)
 {
-	// notify sound thread, it will notify main thread to remove the source
-	//std::cout << "To be removed source: " << id << " " << sources[sources[id].id].buffer->GetName() << std::endl;
+	// notify sound and main thread to remove the source/sampler
 	sampler_remove.getFirst().push_back(id);
 }
 
@@ -343,14 +333,13 @@ void SOUND::SetListenerRotation(float x, float y, float z, float w)
 
 void SOUND::SetVolume(float value)
 {
-	volume_filter.SetFilterOrder0(clamp(value, 0.f, 1.f));
+	sound_volume = value;
 }
 
 void SOUND::GetSourceChanges()
 {
 	Lock(source_lock);
 	source_stop.swapFirst();
-	source_remove.swapFirst();
 	Unlock(source_lock);
 }
 
@@ -368,17 +357,18 @@ void SOUND::ProcessSourceStop()
 
 void SOUND::ProcessSourceRemove()
 {
-	std::vector<size_t> & sremove = source_remove.getFirst();
+	std::vector<size_t> & sremove = sampler_remove.getFirst();
 	for (size_t i = 0; i < sremove.size(); ++i)
 	{
 		size_t id = sremove[i];
 		assert(id < sources.size());
+
 		size_t idn = sources[id].id;
 		assert(idn < sources_num);
-		//std::cout << "Remove sound source: " << id << " " << sources[idn].buffer->GetName() << std::endl;
+		//*log_error << "Remove sound source: " << id << " " << sources[idn].buffer->GetName() << std::endl;
+
 		RemoveItem(id, sources, sources_num);
 	}
-	sremove.clear();
 }
 
 void SOUND::ProcessSources()
@@ -436,8 +426,11 @@ void SOUND::ProcessSources()
 			}
 		}
 
-		supdate[i].gain1 = gain1 * Sampler::denom;
-		supdate[i].gain2 = gain2 * Sampler::denom;
+		// fade sound volume
+		float volume = set_pause ? 0 : sound_volume;
+
+		supdate[i].gain1 = volume * gain1 * Sampler::denom;
+		supdate[i].gain2 = volume * gain2 * Sampler::denom;
 		supdate[i].pitch = src.pitch * Sampler::denom;
 	}
 
@@ -471,6 +464,7 @@ void SOUND::SetSamplerChanges()
 	if (sampler_update.getFirst().size()) sampler_update.swapFirst();
 	if (sampler_add.getFirst().size()) sampler_add.swapFirst();
 	if (sampler_remove.getFirst().size()) sampler_remove.swapFirst();
+	sources_pause = set_pause;
 	Unlock(sampler_lock);
 }
 
@@ -478,33 +472,41 @@ void SOUND::GetSamplerChanges()
 {
 	Lock(sampler_lock);
 	sampler_update.swapLast();
-	sampler_remove.swapLast();
 	sampler_add.swapLast();
+	sampler_remove.swapLast();
+	samplers_fade = samplers_pause != sources_pause;
+	samplers_pause = sources_pause;
 	Unlock(sampler_lock);
 }
 
 void SOUND::ProcessSamplerUpdate()
 {
 	std::vector<SamplerUpdate> & supdate = sampler_update.getLast();
-	if (samplers_num == supdate.size())
+	if (supdate.empty()) return;
+	
+	assert(samplers_num == supdate.size());
+	for (size_t i = 0; i < samplers_num; ++i)
 	{
-		for (size_t i = 0; i < samplers_num; ++i)
-		{
-			samplers[i].gain1 = supdate[i].gain1;
-			samplers[i].gain2 = supdate[i].gain2;
-			samplers[i].pitch = supdate[i].pitch;
-		}
+		samplers[i].gain1 = supdate[i].gain1;
+		samplers[i].gain2 = supdate[i].gain2;
+		samplers[i].pitch = supdate[i].pitch;
 	}
 	supdate.clear();
 }
 
 void SOUND::ProcessSamplers(unsigned char *stream, int len)
 {
-	// set buffers and clear stream
+	// clear stream
+	memset(stream, 0, len);
+
+	// pause sampling
+	if (samplers_pause && !samplers_fade)
+		return;
+
+	// init sampling buffers
 	int len4 = len / 4;
 	buffer1.resize(len4);
 	buffer2.resize(len4);
-	memset(stream, 0, len);
 
 	// run samplers
 	short * sstream = (short*)stream;
@@ -519,13 +521,17 @@ void SOUND::ProcessSamplers(unsigned char *stream, int len)
 		{
 			SampleAndAdvanceWithPitch16bit(smp, &buffer1[0], &buffer2[0], len4);
 
-			volume_filter.Filter(&buffer1[0], &buffer2[0], len4);
-
 			for (int n = 0; n < len4; ++n)
 			{
 				int pos = n * 2;
-				sstream[pos] = clamp(sstream[pos] + buffer1[n], -32768, 32767);
-				sstream[pos + 1] = clamp(sstream[pos + 1] + buffer2[n], -32768, 32767);
+				int val1 = sstream[pos] + buffer1[n];
+				int val2 = sstream[pos + 1] + buffer2[n];
+
+				val1 = clamp(val1, -32768, 32767);
+				val2 = clamp(val2, -32768, 32767);
+
+				sstream[pos] = val1;
+				sstream[pos + 1] = val2;
 			}
 		}
 		else
@@ -541,17 +547,13 @@ void SOUND::ProcessSamplers(unsigned char *stream, int len)
 void SOUND::ProcessSamplerRemove()
 {
 	std::vector<size_t> & sremove = sampler_remove.getLast();
-	if (!sremove.empty())
+	for (size_t i = 0; i < sremove.size(); ++i)
 	{
-		for (size_t i = 0; i < sremove.size(); ++i)
-		{
-			size_t id = sremove[i];
-			assert(id < samplers.size());
-			RemoveItem(id, samplers, samplers_num);
-		}
-		source_remove.getLast() = sremove;
-		sremove.clear();
+		size_t id = sremove[i];
+		assert(id < samplers.size());
+		RemoveItem(id, samplers, samplers_num);
 	}
+	sremove.clear();
 }
 
 void SOUND::ProcessSamplerAdd()
@@ -589,7 +591,6 @@ void SOUND::SetSourceChanges()
 {
 	Lock(source_lock);
 	if (source_stop.getLast().size()) source_stop.swapLast();
-	if (source_remove.getLast().size()) source_remove.swapLast();
 	Unlock(source_lock);
 }
 
@@ -600,11 +601,11 @@ void SOUND::Callback16bitStereo(void *myself, Uint8 *stream, int len)
 
 	GetSamplerChanges();
 
+	ProcessSamplerAdd();
+
 	ProcessSamplerUpdate();
 
 	ProcessSamplers(stream, len);
-
-	ProcessSamplerAdd();
 
 	ProcessSamplerRemove();
 
@@ -622,9 +623,10 @@ void SOUND::SampleAndAdvanceWithPitch16bit(
 	assert(len > 0);
 	assert(sampler.buffer);
 
-	// if not playing, fill output buffers with silence, should not happen
+	// if not playing, fill output buffers with silence
 	if (!sampler.playing)
 	{
+		// should be dealt with before getting here
 		assert(0);
 		for (int i = 0; i < len; ++i)
 		{

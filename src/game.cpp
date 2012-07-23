@@ -324,10 +324,6 @@ void GAME::End()
 
 	info_output << "Shutting down..." << std::endl;
 
-	// Stop the sound thread.
-	if (sound.Enabled())
-		sound.Pause(true);
-
 	LeaveGame();
 
 	// Save settings first incase later deinits cause crashes.
@@ -522,7 +518,6 @@ bool GAME::InitSound()
 	if (sound.Init(2048, info_output, error_output))
 	{
 		sound.SetVolume(settings.GetSoundVolume());
-		//sound.Pause(false);
 		content.setSound(sound.GetDeviceInfo());
 	}
 	else
@@ -923,22 +918,18 @@ void GAME::AdvanceGameLogic()
 	if (sound.Enabled())
 	{
 		bool pause_sound = pause || gui.Active();
-		sound.Pause(pause_sound);
-		if (!pause_sound)
+		PROFILER.beginBlock("sound");
+		MATHVECTOR <float, 3> pos;
+		QUATERNION <float> rot;
+		if (active_camera)
 		{
-			PROFILER.beginBlock("sound");
-			MATHVECTOR <float, 3> pos;
-			QUATERNION <float> rot;
-			if (active_camera)
-			{
-				pos = active_camera->GetPosition();
-				rot = active_camera->GetOrientation();
-			}
-			sound.SetListenerPosition(pos[0], pos[1], pos[2]);
-			sound.SetListenerRotation(rot[0], rot[1], rot[2], rot[3]);
-			sound.Update();
-			PROFILER.endBlock("sound");
+			pos = active_camera->GetPosition();
+			rot = active_camera->GetOrientation();
 		}
+		sound.SetListenerPosition(pos[0], pos[1], pos[2]);
+		sound.SetListenerRotation(rot[0], rot[1], rot[2], rot[3]);
+		sound.Update(pause_sound);
+		PROFILER.endBlock("sound");
 	}
 
 	//PROFILER.beginBlock("force-feedback");
@@ -1789,8 +1780,11 @@ void GAME::SetGarageCar()
 	// get car start position marker for camera setup
 	MATHVECTOR<float, 3> car_pos = track.GetStart(0).first;
 
-	// car setup
+	// clear previous car
 	cars.clear();
+
+	// remove previous car sounds
+	sound.Update(true);
 
 	if (LoadCar(
 		cars_name[car_edit_id],
@@ -1799,14 +1793,13 @@ void GAME::SetGarageCar()
 		car_pos, track.GetStart(0).second,
 		true, false))
 	{
-		// update car
+		// set car
 		CAR & car = cars.back();
 		dynamics.update(timestep);
 		car.Update(timestep);
 
-		// process car sound sources
-		// should they be loaded for garage car in the first place?
-		sound.Update();
+		// add car sounds
+		sound.Update(true);
 
 		// use car shape center for camera setup
 		car_pos = car.GetPosition();
@@ -2402,6 +2395,7 @@ void GAME::LeaveGame()
 
 	track.Clear();
 	cars.clear();
+	sound.Update(true);
 	hud.SetVisible(false);
 	inputgraph.Hide();
 	trackmap.Unload();
@@ -2410,7 +2404,6 @@ void GAME::LeaveGame()
 	pause = false;
 	race_laps = 0;
 	tire_smoke.Clear();
-	sound.Update();
 }
 
 void GAME::StartPractice()
