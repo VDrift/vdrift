@@ -901,8 +901,8 @@ std::map <std::string, int> CARCONTROLMAP_LOCAL::InitKeycodeStringMap()
 	keycodes["COMPOSE"] = SDLK_COMPOSE;
 	keycodes["NUMLOCK"] = SDLK_NUMLOCK;
 	keycodes["SCROLLLOCK"] = SDLK_SCROLLOCK;
-	keycodes["RMETA"] = SDLK_RSUPER;
-	keycodes["LMETA"] = SDLK_LSUPER;
+	keycodes["LMETA"] = SDLK_LMETA;
+	keycodes["RMETA"] = SDLK_RMETA;
 	keycodes["LSUPER"] = SDLK_LSUPER;
 	keycodes["RSUPER"] = SDLK_RSUPER;
 #endif
