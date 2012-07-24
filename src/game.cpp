@@ -1942,7 +1942,7 @@ void GAME::PopulateReplayList(std::list <std::pair <std::string, std::string> > 
 	}
 
 	if (numreplays == 0)
-		replaylist.push_back(std::make_pair("", "None"));
+		replaylist.push_back(std::make_pair("none", "None"));
 
 	settings.SetSelectedReplay(replaylist.begin()->first);
 }
@@ -2457,7 +2457,7 @@ void GAME::RestartGame()
 
 void GAME::StartReplay()
 {
-	if (!settings.GetSelectedReplay().empty() && !NewGame(true))
+	if (settings.GetSelectedReplay() != "none"  && !NewGame(true))
 	{
 		gui.ActivatePage("ReplayStartError", 0.25, error_output);
 	}
