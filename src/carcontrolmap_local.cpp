@@ -830,16 +830,6 @@ std::map <std::string, int> CARCONTROLMAP_LOCAL::InitKeycodeStringMap()
 	keycodes["y"] = SDLK_y;
 	keycodes["z"] = SDLK_z;
 	keycodes["DELETE"] = SDLK_DELETE;
-	keycodes["KP0"] = SDLK_KP_0;
-	keycodes["KP1"] = SDLK_KP_1;
-	keycodes["KP2"] = SDLK_KP_2;
-	keycodes["KP3"] = SDLK_KP_3;
-	keycodes["KP4"] = SDLK_KP_4;
-	keycodes["KP5"] = SDLK_KP_5;
-	keycodes["KP6"] = SDLK_KP_6;
-	keycodes["KP7"] = SDLK_KP_7;
-	keycodes["KP8"] = SDLK_KP_8;
-	keycodes["KP9"] = SDLK_KP_9;
 	keycodes["KP_PERIOD"] = SDLK_KP_PERIOD;
 	keycodes["KP_DIVIDE"] = SDLK_KP_DIVIDE;
 	keycodes["KP_MULTIPLY"] = SDLK_KP_MULTIPLY;
@@ -872,20 +862,50 @@ std::map <std::string, int> CARCONTROLMAP_LOCAL::InitKeycodeStringMap()
 	keycodes["F14"] = SDLK_F14;
 	keycodes["F15"] = SDLK_F15;
 	keycodes["MENU"] = SDLK_MENU;
-	keycodes["APPLICATION"] = SDLK_APPLICATION;
-	keycodes["NUMLOCK"] = SDLK_NUMLOCKCLEAR;
 	keycodes["CAPSLOCK"] = SDLK_CAPSLOCK;
-	keycodes["SCROLLLOCK"] = SDLK_SCROLLLOCK;
 	keycodes["RSHIFT"] = SDLK_RSHIFT;
 	keycodes["LSHIFT"] = SDLK_LSHIFT;
 	keycodes["RCTRL"] = SDLK_RCTRL;
 	keycodes["LCTRL"] = SDLK_LCTRL;
 	keycodes["RALT"] = SDLK_RALT;
 	keycodes["LALT"] = SDLK_LALT;
+#if SDL_VERSION_ATLEAST(2,0,0)
+	keycodes["KP0"] = SDLK_KP_0;
+	keycodes["KP1"] = SDLK_KP_1;
+	keycodes["KP2"] = SDLK_KP_2;
+	keycodes["KP3"] = SDLK_KP_3;
+	keycodes["KP4"] = SDLK_KP_4;
+	keycodes["KP5"] = SDLK_KP_5;
+	keycodes["KP6"] = SDLK_KP_6;
+	keycodes["KP7"] = SDLK_KP_7;
+	keycodes["KP8"] = SDLK_KP_8;
+	keycodes["KP9"] = SDLK_KP_9;
+	keycodes["COMPOSE"] = SDLK_APPLICATION;
+	keycodes["NUMLOCK"] = SDLK_NUMLOCKCLEAR;
+	keycodes["SCROLLLOCK"] = SDLK_SCROLLLOCK;
 	keycodes["RMETA"] = SDLK_RGUI;
 	keycodes["LMETA"] = SDLK_LGUI;
 	keycodes["LSUPER"] = SDLK_LGUI;
 	keycodes["RSUPER"] = SDLK_RGUI;
+#else
+	keycodes["KP0"] = SDLK_KP0;
+	keycodes["KP1"] = SDLK_KP1;
+	keycodes["KP2"] = SDLK_KP2;
+	keycodes["KP3"] = SDLK_KP3;
+	keycodes["KP4"] = SDLK_KP4;
+	keycodes["KP5"] = SDLK_KP5;
+	keycodes["KP6"] = SDLK_KP6;
+	keycodes["KP7"] = SDLK_KP7;
+	keycodes["KP8"] = SDLK_KP8;
+	keycodes["KP9"] = SDLK_KP9;
+	keycodes["COMPOSE"] = SDLK_COMPOSE;
+	keycodes["NUMLOCK"] = SDLK_NUMLOCK;
+	keycodes["SCROLLLOCK"] = SDLK_SCROLLOCK;
+	keycodes["RMETA"] = SDLK_RSUPER;
+	keycodes["LMETA"] = SDLK_LSUPER;
+	keycodes["LSUPER"] = SDLK_LSUPER;
+	keycodes["RSUPER"] = SDLK_RSUPER;
+#endif
 	return keycodes;
 }
 
