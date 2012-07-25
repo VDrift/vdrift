@@ -20,6 +20,7 @@
 #include "model.h"
 #include "utils.h"
 #include "vertexattribs.h"
+#include "opengl_utility.h"
 #include <limits>
 
 using namespace VERTEX_ATTRIBS;

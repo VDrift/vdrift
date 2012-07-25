@@ -1,14 +1,7 @@
 #ifndef _SHADER_H
 #define _SHADER_H
 
-#ifdef __APPLE__
-#include <GLEW/glew.h>
-#include <OpenGL/gl.h>
-#else
-#include <GL/glew.h>
-#include <GL/gl.h>
-#endif
-
+#include "glew.h"
 #include <string>
 #include <iostream>
 #include <vector>

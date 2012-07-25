@@ -8,36 +8,22 @@
 #include "reseatable_reference.h"
 #include "containeralgorithm.h"
 #include "drawable.h"
-
-#ifdef __APPLE__
-#include <GLEW/glew.h>
-#include <OpenGL/gl.h>
-#include <OpenGL/glu.h>
-#else
-#include <GL/glew.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
-#endif
+#include "glew.h"
 
 #include <cassert>
-
 #include <sstream>
-using std::stringstream;
-
 #include <string>
-using std::string;
-
 #include <iostream>
+#include <map>
+#include <vector>
+#include <algorithm>
+
+using std::stringstream;
+using std::string;
 using std::pair;
 using std::endl;
-
-#include <map>
 using std::map;
-
-#include <vector>
 using std::vector;
-
-#include <algorithm>
 
 void ExtractFrustum(FRUSTUM & frustum)
 {
@@ -678,7 +664,7 @@ void RENDER_INPUT_SCENE::DrawList(GLSTATEMANAGER & glstate, std::vector <DRAWABL
 						}
 
 						glDrawElements(GL_TRIANGLES, facecount, GL_UNSIGNED_INT, faces);
-			
+
 						glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 						glDisableClientState(GL_NORMAL_ARRAY);
 					}

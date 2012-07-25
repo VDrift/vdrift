@@ -3,14 +3,7 @@
 
 #include "fbtexture.h"
 #include "glstatemanager.h"
-
-#ifdef __APPLE__
-#include <GLEW/glew.h>
-#include <OpenGL/gl.h>
-#else
-#include <GL/glew.h>
-#include <GL/gl.h>
-#endif
+#include "glew.h"
 
 #include <iostream>
 #include <vector>

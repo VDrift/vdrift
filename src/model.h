@@ -20,9 +20,9 @@
 #ifndef _MODEL_H
 #define _MODEL_H
 
-#include "opengl_utility.h"
 #include "vertexarray.h"
 #include "mathvector.h"
+#include "glew.h"
 
 /// Loading data into the mesh vertexarray is implemented by derived classes.
 class MODEL

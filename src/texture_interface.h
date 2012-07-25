@@ -1,11 +1,7 @@
 #ifndef _TEXTURE_INTERFACE_H
 #define _TEXTURE_INTERFACE_H
 
-#ifdef __APPLE__
-#include <GLEW/glew.h>
-#else
-#include <GL/glew.h>
-#endif
+#include "glew.h"
 
 class GLSTATEMANAGER;
 class GRAPHICS_FALLBACK;

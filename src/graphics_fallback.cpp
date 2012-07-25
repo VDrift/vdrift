@@ -7,16 +7,7 @@
 #include "reseatable_reference.h"
 #include "containeralgorithm.h"
 #include "graphics_config.h"
-
-#ifdef __APPLE__
-#include <GLEW/glew.h>
-#include <OpenGL/gl.h>
-#include <OpenGL/glu.h>
-#else
-#include <GL/glew.h>
-#include <GL/gl.h>
-#include <GL/glu.h>
-#endif
+#include "glew.h"
 
 #include <cassert>
 

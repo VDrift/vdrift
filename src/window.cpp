@@ -18,7 +18,7 @@
 /************************************************************************/
 
 #include "window.h"
-#include <gl.h>
+#include "glew.h"
 #include <SDL/SDL.h>
 #include <cassert>
 #include <cstring>

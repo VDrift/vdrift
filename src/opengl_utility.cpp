@@ -1,8 +1,10 @@
 #include "opengl_utility.h"
-
+#include "glew.h"
 #include <cassert>
 
-bool OPENGL_UTILITY::CheckForOpenGLErrors(std::string activity_description, std::ostream & error_output)
+bool OPENGL_UTILITY::CheckForOpenGLErrors(
+	const std::string & activity_description,
+	std::ostream & error_output)
 {
 #if defined(WIN32) || defined(_WIN32) || defined (__WIN32) || defined(__WIN32__) \
 	|| defined (_WIN64) || defined(__CYGWIN__) || defined(__MINGW32__)

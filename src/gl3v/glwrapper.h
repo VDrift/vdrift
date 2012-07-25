@@ -21,7 +21,6 @@
 #define _GLWRAPPER
 
 #include "glew.h"
-#include "gl.h"
 #include "renderuniformvector.h"
 #include <iostream>
 #include <vector>
