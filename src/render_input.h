@@ -4,7 +4,7 @@
 #include <ostream>
 
 class GLSTATEMANAGER;
-class FRUSTUM;
+struct FRUSTUM;
 
 /// supported blend modes
 namespace BLENDMODE
