@@ -10,9 +10,11 @@
 #include "texture.h"
 #include "reseatable_reference.h"
 #include "glstatemanager.h"
-#include "graphics_renderers.h"
 #include "graphics_config.h"
 #include "graphics_interface.h"
+#include "render_input_postprocess.h"
+#include "render_input_scene.h"
+#include "render_output.h"
 
 #include <string>
 #include <ostream>

@@ -52,7 +52,6 @@ src = Split("""aabb.cpp
 		graphics_config_condition.cpp
 		graphics_fallback.cpp
 		graphics_gl3v.cpp
-		graphics_renderers.cpp
 		gui/gui.cpp
 		gui/guicontrol.cpp
 		gui/guiimage.cpp
@@ -91,6 +90,10 @@ src = Split("""aabb.cpp
 		performance_testing.cpp
 		quaternion.cpp
 		random.cpp
+		render_input.cpp
+		render_input_postprocess.cpp
+		render_input_scene.cpp
+		render_output.cpp
 		rendermodelext_drawable.cpp
 		replay.cpp
 		reseatable_reference.cpp

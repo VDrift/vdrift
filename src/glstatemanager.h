@@ -1,6 +1,7 @@
 #ifndef _GLSTATEMANAGER_H
 #define _GLSTATEMANAGER_H
 
+#include "texture_interface.h"
 #include <vector>
 #include <cassert>
 
