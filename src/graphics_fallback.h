@@ -10,8 +10,8 @@
 #include "render_input_scene.h"
 #include "render_output.h"
 
+struct GRAPHICS_CAMERA;
 class SCENENODE;
-class GRAPHICS_CAMERA;
 class SHADER_GLSL;
 
 /// the graphics rendering system used as a fallback
