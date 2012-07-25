@@ -1,10 +1,10 @@
-#ifndef _OPENGL_UTILITY_H
-#define _OPENGL_UTILITY_H
+#ifndef _GLUTIL_H
+#define _GLUTIL_H
 
 #include <string>
 #include <iostream>
 
-namespace OPENGL_UTILITY
+namespace GLUTIL
 {
 	/// returns true on error
 	bool CheckForOpenGLErrors(

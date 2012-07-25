@@ -1,6 +1,6 @@
 #include "graphics_fallback.h"
 
-#include "opengl_utility.h"
+#include "glutil.h"
 #include "mathvector.h"
 #include "texture.h"
 #include "vertexarray.h"
@@ -252,7 +252,7 @@ bool GRAPHICS_FALLBACK::Init(const std::string & shaderpath,
 
 	info_output << "Maximum anisotropy: " << max_anisotropy << endl;
 
-	OPENGL_UTILITY::CheckForOpenGLErrors("Shader loading", error_output);
+	GLUTIL::CheckForOpenGLErrors("Shader loading", error_output);
 
 	initialized = true;
 
@@ -271,7 +271,7 @@ void GRAPHICS_FALLBACK::ChangeDisplay(const int width, const int height, const i
 	glMatrixMode( GL_MODELVIEW );
 	glLoadIdentity( );
 
-	OPENGL_UTILITY::CheckForOpenGLErrors("ChangeDisplay", error_output);
+	GLUTIL::CheckForOpenGLErrors("ChangeDisplay", error_output);
 
 	w = width;
 	h = height;
@@ -302,7 +302,7 @@ void GRAPHICS_FALLBACK::BeginScene(std::ostream & error_output)
 
 	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	OPENGL_UTILITY::CheckForOpenGLErrors("BeginScene", error_output);
+	GLUTIL::CheckForOpenGLErrors("BeginScene", error_output);
 }
 
 ///note that if variant is passed in, it is used as the shader name and the shader is also loaded with the variant_defines set
@@ -427,7 +427,7 @@ void GRAPHICS_FALLBACK::EnableShaders(const std::string & shaderpath, std::ostre
 		info_output << "Texture units: " << tufull << " full, " << tu << " partial" << std::endl;
 	}
 
-	OPENGL_UTILITY::CheckForOpenGLErrors("EnableShaders: start", error_output);
+	GLUTIL::CheckForOpenGLErrors("EnableShaders: start", error_output);
 
 	// unload current shaders
 	glUseProgramObjectARB(0);
@@ -438,7 +438,7 @@ void GRAPHICS_FALLBACK::EnableShaders(const std::string & shaderpath, std::ostre
 	shadermap.clear();
 	activeshader = shadermap.end();
 
-	OPENGL_UTILITY::CheckForOpenGLErrors("EnableShaders: shader unload", error_output);
+	GLUTIL::CheckForOpenGLErrors("EnableShaders: shader unload", error_output);
 
 	// reload configuration
 	config = GRAPHICS_CONFIG();
@@ -458,7 +458,7 @@ void GRAPHICS_FALLBACK::EnableShaders(const std::string & shaderpath, std::ostre
 		shader_load_success = shader_load_success && LoadShader(shaderpath, s->folder, info_output, error_output, s->name, s->defines);
 	}
 
-	OPENGL_UTILITY::CheckForOpenGLErrors("EnableShaders: shader loading", error_output);
+	GLUTIL::CheckForOpenGLErrors("EnableShaders: shader loading", error_output);
 
 	if (shader_load_success)
 	{
@@ -470,7 +470,7 @@ void GRAPHICS_FALLBACK::EnableShaders(const std::string & shaderpath, std::ostre
 		texture_outputs.clear();
 		texture_inputs.clear();
 
-		OPENGL_UTILITY::CheckForOpenGLErrors("EnableShaders: FBO deinit", error_output);
+		GLUTIL::CheckForOpenGLErrors("EnableShaders: FBO deinit", error_output);
 
 		bool ssao = (lighting > 0);
 		bool ssao_low = (lighting == 1);
@@ -641,7 +641,7 @@ void GRAPHICS_FALLBACK::DisableShaders(const std::string & shaderpath, std::ostr
 
 void GRAPHICS_FALLBACK::EndScene(std::ostream & error_output)
 {
-	OPENGL_UTILITY::CheckForOpenGLErrors("EndScene", error_output);
+	GLUTIL::CheckForOpenGLErrors("EndScene", error_output);
 }
 
 void GRAPHICS_FALLBACK::SetupScene(float fov, float new_view_distance, const MATHVECTOR <float, 3> cam_position, const QUATERNION <float> & cam_rotation,
@@ -841,7 +841,7 @@ void AttachCubeSide(int i, FBOBJECT & reflection_fbo, std::ostream & error_outpu
 		break;
 	};
 
-	OPENGL_UTILITY::CheckForOpenGLErrors("cubemap generation: FBO cube side attachment", error_output);
+	GLUTIL::CheckForOpenGLErrors("cubemap generation: FBO cube side attachment", error_output);
 }
 
 GLint DepthModeFromString(const std::string & mode)
@@ -1165,7 +1165,7 @@ void GRAPHICS_FALLBACK::DrawScene(std::ostream & error_output)
 							continue;
 						}
 
-						OPENGL_UTILITY::CheckForOpenGLErrors("render setup", error_output);
+						GLUTIL::CheckForOpenGLErrors("render setup", error_output);
 
 						// car paint hack for non-shader path
 						if (!using_shaders && (*d == "nocamtrans_noblend" || *d == "car_noblend"))
@@ -1214,7 +1214,7 @@ void GRAPHICS_FALLBACK::RenderDrawlists(std::vector <DRAWABLE*> & dynamic_drawli
 	if (dynamic_drawlist.empty() && static_drawlist.empty() && !render_scene.GetClear().first && !render_scene.GetClear().second)
 		return;
 
-	OPENGL_UTILITY::CheckForOpenGLErrors("RenderDrawlists start", error_output);
+	GLUTIL::CheckForOpenGLErrors("RenderDrawlists start", error_output);
 
 	for (unsigned int i = 0; i < extra_textures.size(); i++)
 	{
@@ -1223,7 +1223,7 @@ void GRAPHICS_FALLBACK::RenderDrawlists(std::vector <DRAWABLE*> & dynamic_drawli
 			glActiveTexture(GL_TEXTURE0+i);
 			extra_textures[i]->Activate();
 
-			if (OPENGL_UTILITY::CheckForOpenGLErrors("RenderDrawlists extra texture bind", error_output))
+			if (GLUTIL::CheckForOpenGLErrors("RenderDrawlists extra texture bind", error_output))
 			{
 				error_output << "this error occurred while binding texture " << i << ": id=" << extra_textures[i]->GetID() << " loaded=" << extra_textures[i]->Loaded() << std::endl;
 			}
@@ -1234,7 +1234,7 @@ void GRAPHICS_FALLBACK::RenderDrawlists(std::vector <DRAWABLE*> & dynamic_drawli
 
 	render_scene.SetDrawLists(dynamic_drawlist, static_drawlist);
 
-	OPENGL_UTILITY::CheckForOpenGLErrors("RenderDrawlists SetDrawLists", error_output);
+	GLUTIL::CheckForOpenGLErrors("RenderDrawlists SetDrawLists", error_output);
 
 	Render(&render_scene, render_output, error_output);
 
@@ -1245,7 +1245,7 @@ void GRAPHICS_FALLBACK::RenderDrawlists(std::vector <DRAWABLE*> & dynamic_drawli
 			glActiveTexture(GL_TEXTURE0+i);
 			extra_textures[i]->Deactivate();
 
-			if (OPENGL_UTILITY::CheckForOpenGLErrors("RenderDrawlists extra texture unbind", error_output))
+			if (GLUTIL::CheckForOpenGLErrors("RenderDrawlists extra texture unbind", error_output))
 			{
 				error_output << "this error occurred while binding texture " << i << ": id=" << extra_textures[i]->GetID() << " loaded=" << extra_textures[i]->Loaded() << std::endl;
 			}
@@ -1334,15 +1334,15 @@ void GRAPHICS_FALLBACK::Render(RENDER_INPUT * input, RENDER_OUTPUT & output, std
 {
 	output.Begin(glstate, error_output);
 
-	OPENGL_UTILITY::CheckForOpenGLErrors("render output begin", error_output);
+	GLUTIL::CheckForOpenGLErrors("render output begin", error_output);
 
 	input->Render(glstate, error_output);
 
-	OPENGL_UTILITY::CheckForOpenGLErrors("render finish", error_output);
+	GLUTIL::CheckForOpenGLErrors("render finish", error_output);
 
 	output.End(glstate, error_output);
 
-	OPENGL_UTILITY::CheckForOpenGLErrors("render output end", error_output);
+	GLUTIL::CheckForOpenGLErrors("render output end", error_output);
 }
 
 void GRAPHICS_FALLBACK::AddStaticNode(SCENENODE & node, bool clearcurrent)

@@ -1,5 +1,5 @@
 #include "render_input_scene.h"
-#include "opengl_utility.h"
+#include "glutil.h"
 #include "glstatemanager.h"
 #include "drawable.h"
 #include "texture.h"

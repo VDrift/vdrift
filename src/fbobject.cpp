@@ -1,6 +1,6 @@
 #include "fbobject.h"
 
-#include "opengl_utility.h"
+#include "glutil.h"
 
 #include <SDL/SDL.h>
 
@@ -40,7 +40,7 @@ std::string FormatToString(FBTEXTURE::FORMAT value)
 
 void FBOBJECT::Init(GLSTATEMANAGER & glstate, std::vector <FBTEXTURE*> newtextures, std::ostream & error_output, bool force_multisample_off)
 {
-	OPENGL_UTILITY::CheckForOpenGLErrors("FBO init start", error_output);
+	GLUTIL::CheckForOpenGLErrors("FBO init start", error_output);
 
 	const bool verbose = false;
 
@@ -50,7 +50,7 @@ void FBOBJECT::Init(GLSTATEMANAGER & glstate, std::vector <FBTEXTURE*> newtextur
 
 		DeInit();
 
-		OPENGL_UTILITY::CheckForOpenGLErrors("FBO deinit", error_output);
+		GLUTIL::CheckForOpenGLErrors("FBO deinit", error_output);
 	}
 
 	textures = newtextures;
@@ -148,12 +148,12 @@ void FBOBJECT::Init(GLSTATEMANAGER & glstate, std::vector <FBTEXTURE*> newtextur
 
 	if (verbose) error_output << "INFO: generated FBO " << framebuffer_object << std::endl;
 
-	OPENGL_UTILITY::CheckForOpenGLErrors("FBO generation", error_output);
+	GLUTIL::CheckForOpenGLErrors("FBO generation", error_output);
 
 	//bind the framebuffer
 	glstate.BindFramebuffer(framebuffer_object);
 
-	OPENGL_UTILITY::CheckForOpenGLErrors("FBO binding", error_output);
+	GLUTIL::CheckForOpenGLErrors("FBO binding", error_output);
 
 	//initialize renderbuffer object that's used for our depth buffer if we're not using
 	//a depth texture
@@ -164,7 +164,7 @@ void FBOBJECT::Init(GLSTATEMANAGER & glstate, std::vector <FBTEXTURE*> newtextur
 
 		if (verbose) error_output << "INFO: generating depth renderbuffer" << std::endl;
 
-		OPENGL_UTILITY::CheckForOpenGLErrors("FBO renderbuffer generation", error_output);
+		GLUTIL::CheckForOpenGLErrors("FBO renderbuffer generation", error_output);
 
 		if (multisample > 0)
 		{
@@ -176,14 +176,14 @@ void FBOBJECT::Init(GLSTATEMANAGER & glstate, std::vector <FBTEXTURE*> newtextur
 		else
 			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, width, height);
 
-		OPENGL_UTILITY::CheckForOpenGLErrors("FBO renderbuffer initialization", error_output);
+		GLUTIL::CheckForOpenGLErrors("FBO renderbuffer initialization", error_output);
 
 		//attach the render buffer to the FBO
 		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, renderbuffer_depth);
 
 		if (verbose) error_output << "INFO: depth renderbuffer attached to FBO" << std::endl;
 
-		OPENGL_UTILITY::CheckForOpenGLErrors("FBO renderbuffer attachment", error_output);
+		GLUTIL::CheckForOpenGLErrors("FBO renderbuffer attachment", error_output);
 	}
 
 	GLenum buffers[4] = {GL_NONE, GL_NONE, GL_NONE, GL_NONE};
@@ -201,7 +201,7 @@ void FBOBJECT::Init(GLSTATEMANAGER & glstate, std::vector <FBTEXTURE*> newtextur
 	if (verbose) error_output << "INFO: set draw buffers: " << buffers[0] << ", " << buffers[1] << ", " << buffers[2] << ", " << buffers[3] << std::endl;
 	if (verbose) error_output << "INFO: set read buffer: " << buffers[0] << std::endl;
 
-	OPENGL_UTILITY::CheckForOpenGLErrors("FBO buffer mask set", error_output);
+	GLUTIL::CheckForOpenGLErrors("FBO buffer mask set", error_output);
 
 	//add separate multisample color buffers for each color texture
 	if (multisample > 0)
@@ -217,7 +217,7 @@ void FBOBJECT::Init(GLSTATEMANAGER & glstate, std::vector <FBTEXTURE*> newtextur
 
 			if (verbose) error_output << "INFO: generating separate multisample color buffer " << count << std::endl;
 
-			OPENGL_UTILITY::CheckForOpenGLErrors("FBO multisample color renderbuffer", error_output);
+			GLUTIL::CheckForOpenGLErrors("FBO multisample color renderbuffer", error_output);
 		}
 	}
 
@@ -271,7 +271,7 @@ void FBOBJECT::Init(GLSTATEMANAGER & glstate, std::vector <FBTEXTURE*> newtextur
 		}
 	}
 
-	OPENGL_UTILITY::CheckForOpenGLErrors("FBO attachment", error_output);
+	GLUTIL::CheckForOpenGLErrors("FBO attachment", error_output);
 
 	bool status_ok = CheckStatus(error_output);
 	if (!status_ok)
@@ -288,7 +288,7 @@ void FBOBJECT::Init(GLSTATEMANAGER & glstate, std::vector <FBTEXTURE*> newtextur
 
 	glstate.BindFramebuffer(0);
 
-	OPENGL_UTILITY::CheckForOpenGLErrors("FBO unbinding", error_output);
+	GLUTIL::CheckForOpenGLErrors("FBO unbinding", error_output);
 
 	// if multisampling is on, create another framebuffer object for the single sample version of these textures
 	if (multisample > 0)
@@ -389,7 +389,7 @@ void FBOBJECT::DeInit()
 
 void FBOBJECT::Begin(GLSTATEMANAGER & glstate, std::ostream & error_output, float viewscale)
 {
-	OPENGL_UTILITY::CheckForOpenGLErrors("before FBO begin", error_output);
+	GLUTIL::CheckForOpenGLErrors("before FBO begin", error_output);
 
 	assert(inited);
 	assert(framebuffer_object > 0);
@@ -397,12 +397,12 @@ void FBOBJECT::Begin(GLSTATEMANAGER & glstate, std::ostream & error_output, floa
 
 	glstate.BindFramebuffer(framebuffer_object);
 
-	OPENGL_UTILITY::CheckForOpenGLErrors("FBO bind to framebuffer", error_output);
+	GLUTIL::CheckForOpenGLErrors("FBO bind to framebuffer", error_output);
 
 	if (textures.back()->texture_target == FBTEXTURE::CUBEMAP)
 	{
 		glFramebufferTexture2D(GL_FRAMEBUFFER, textures.back()->texture_attachment, textures.back()->cur_side, textures.back()->fbtexture, 0);
-		OPENGL_UTILITY::CheckForOpenGLErrors("FBO cubemap side attachment", error_output);
+		GLUTIL::CheckForOpenGLErrors("FBO cubemap side attachment", error_output);
 	}
 
 	bool status_ok = CheckStatus(error_output);
@@ -411,12 +411,12 @@ void FBOBJECT::Begin(GLSTATEMANAGER & glstate, std::ostream & error_output, floa
 	glPushAttrib(GL_VIEWPORT_BIT);
 	glViewport(0,0,(int)(textures.back()->sizew*viewscale),(int)(textures.back()->sizeh*viewscale));
 
-	OPENGL_UTILITY::CheckForOpenGLErrors("during FBO begin", error_output);
+	GLUTIL::CheckForOpenGLErrors("during FBO begin", error_output);
 }
 
 void FBOBJECT::End(GLSTATEMANAGER & glstate, std::ostream & error_output)
 {
-	OPENGL_UTILITY::CheckForOpenGLErrors("start of FBO end", error_output);
+	GLUTIL::CheckForOpenGLErrors("start of FBO end", error_output);
 
 	assert(!textures.empty());
 
@@ -432,17 +432,17 @@ void FBOBJECT::End(GLSTATEMANAGER & glstate, std::ostream & error_output)
 		assert(glCheckFramebufferStatus(GL_READ_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
 		assert(glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) == GL_FRAMEBUFFER_COMPLETE);
 
-		OPENGL_UTILITY::CheckForOpenGLErrors("FBO end multisample binding", error_output);
+		GLUTIL::CheckForOpenGLErrors("FBO end multisample binding", error_output);
 
 		glBlitFramebuffer(0, 0, textures.back()->sizew, textures.back()->sizeh, 0, 0, textures.back()->sizew, textures.back()->sizeh, GL_COLOR_BUFFER_BIT, GL_NEAREST);
 
-		OPENGL_UTILITY::CheckForOpenGLErrors("FBO end multisample blit", error_output);
+		GLUTIL::CheckForOpenGLErrors("FBO end multisample blit", error_output);
 	}
 
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glstate.BindFramebuffer(0);
 
-	OPENGL_UTILITY::CheckForOpenGLErrors("FBO multisample blit", error_output);
+	GLUTIL::CheckForOpenGLErrors("FBO multisample blit", error_output);
 
 	glPopAttrib(); //viewport attrib
 
@@ -457,5 +457,5 @@ void FBOBJECT::End(GLSTATEMANAGER & glstate, std::ostream & error_output)
 		}
 	}
 
-	OPENGL_UTILITY::CheckForOpenGLErrors("end of FBO end", error_output);
+	GLUTIL::CheckForOpenGLErrors("end of FBO end", error_output);
 }

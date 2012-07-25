@@ -1,5 +1,5 @@
 #include "texture.h"
-#include "opengl_utility.h"
+#include "glutil.h"
 
 #ifdef __APPLE__
 #include <SDL_image/SDL_image.h>
@@ -51,7 +51,7 @@ bool TEXTURE::LoadCubeVerticalCross(const std::string & path, const TEXTUREINFO 
 
 	GLuint new_handle = 0;
 	glGenTextures(1, &new_handle);
-	OPENGL_UTILITY::CheckForOpenGLErrors("Cubemap ID generation", error);
+	GLUTIL::CheckForOpenGLErrors("Cubemap ID generation", error);
 	id = new_handle;
 
 	glBindTexture(GL_TEXTURE_CUBE_MAP, new_handle);
@@ -209,7 +209,7 @@ bool TEXTURE::LoadCubeVerticalCross(const std::string & path, const TEXTUREINFO 
 
 	glDisable(GL_TEXTURE_CUBE_MAP);
 
-	OPENGL_UTILITY::CheckForOpenGLErrors("Cubemap creation", error);
+	GLUTIL::CheckForOpenGLErrors("Cubemap creation", error);
 
 	return true;
 }
@@ -231,7 +231,7 @@ bool TEXTURE::LoadCube(const std::string & path, const TEXTUREINFO & info, std::
 
 	GLuint new_handle = 0;
 	glGenTextures(1, &new_handle);
-	OPENGL_UTILITY::CheckForOpenGLErrors("Cubemap texture ID generation", error);
+	GLUTIL::CheckForOpenGLErrors("Cubemap texture ID generation", error);
 	id = new_handle;
 
 	glBindTexture(GL_TEXTURE_CUBE_MAP, new_handle);
@@ -324,7 +324,7 @@ bool TEXTURE::LoadCube(const std::string & path, const TEXTUREINFO & info, std::
 
 	glDisable(GL_TEXTURE_CUBE_MAP);
 
-	OPENGL_UTILITY::CheckForOpenGLErrors("Cubemap creation", error);
+	GLUTIL::CheckForOpenGLErrors("Cubemap creation", error);
 
 	return true;
 }
@@ -376,7 +376,7 @@ void GenTexture(const SDL_Surface * surface, const TEXTUREINFO & info, GLuint & 
 	}
 
 	glGenTextures(1, &id);
-	OPENGL_UTILITY::CheckForOpenGLErrors("Texture ID generation", error);
+	GLUTIL::CheckForOpenGLErrors("Texture ID generation", error);
 
 	// Create MipMapped Texture
 	glBindTexture(GL_TEXTURE_2D, id);
@@ -418,7 +418,7 @@ void GenTexture(const SDL_Surface * surface, const TEXTUREINFO & info, GLuint & 
 		}
 	}
 	glTexImage2D( GL_TEXTURE_2D, 0, internalformat, surface->w, surface->h, 0, format, GL_UNSIGNED_BYTE, surface->pixels );
-	OPENGL_UTILITY::CheckForOpenGLErrors("Texture creation", error);
+	GLUTIL::CheckForOpenGLErrors("Texture creation", error);
 
 	// If we support generatemipmap, go ahead and do it regardless of the info.mipmap setting.
 	// In the GL3 renderer the sampler decides whether or not to do mip filtering, so we conservatively make mipmaps available for all textures.
@@ -497,7 +497,7 @@ bool TEXTURE::Load(const std::string & path, const TEXTUREINFO & info, std::ostr
 		//scale to power of two if necessary
 		bool norescale = (IsPowerOfTwo(orig_surface->w) && IsPowerOfTwo(orig_surface->h)) ||
 					(info.npot && (GLEW_VERSION_2_0 || GLEW_ARB_texture_non_power_of_two));
-		
+
 		if (!norescale)
 		{
 			int maxsize = 2048;
@@ -508,7 +508,7 @@ bool TEXTURE::Load(const std::string & path, const TEXTUREINFO & info, std::ostr
 			{
 				for (new_w = 1; new_w <= maxsize && new_w <= orig_surface->w * scale; new_w = new_w * 2);
 			}
-			
+
 			if (!IsPowerOfTwo(orig_surface->h))
 			{
 				 for (new_h = 1; new_h <= maxsize && new_h <= orig_surface->h * scale; new_h = new_h * 2);

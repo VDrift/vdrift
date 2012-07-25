@@ -1,5 +1,5 @@
 #include "render_input_postprocess.h"
-#include "opengl_utility.h"
+#include "glutil.h"
 #include "glstatemanager.h"
 #include "matrix4.h"
 #include "shader.h"
@@ -37,7 +37,7 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 {
 	assert(shader);
 
-	OPENGL_UTILITY::CheckForOpenGLErrors("postprocess begin", error_output);
+	GLUTIL::CheckForOpenGLErrors("postprocess begin", error_output);
 
 	glstate.SetColorMask(writecolor, writealpha);
 	glstate.SetDepthMask(writedepth);
@@ -51,7 +51,7 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 
 	shader->Enable();
 
-	OPENGL_UTILITY::CheckForOpenGLErrors("postprocess shader enable", error_output);
+	GLUTIL::CheckForOpenGLErrors("postprocess shader enable", error_output);
 
 	glMatrixMode(GL_PROJECTION);
 	glPushMatrix();
@@ -118,7 +118,7 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE);
 	glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_LUMINANCE);
 
-	OPENGL_UTILITY::CheckForOpenGLErrors("postprocess flag set", error_output);
+	GLUTIL::CheckForOpenGLErrors("postprocess flag set", error_output);
 
 	// put the camera transform into texture3
 	glActiveTexture(GL_TEXTURE3);
@@ -134,7 +134,7 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 	//std::cout << "postprocess: " << std::endl;
 	PushShadowMatrices();
 
-	OPENGL_UTILITY::CheckForOpenGLErrors("shader parameter upload", error_output);
+	GLUTIL::CheckForOpenGLErrors("shader parameter upload", error_output);
 
 	float maxu = 1.f;
 	float maxv = 1.f;
@@ -162,7 +162,7 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 	}
 	glActiveTexture(GL_TEXTURE0);
 
-	OPENGL_UTILITY::CheckForOpenGLErrors("postprocess texture set", error_output);
+	GLUTIL::CheckForOpenGLErrors("postprocess texture set", error_output);
 
 	// build the frustum corners
 	float ratio = w/h;
@@ -215,7 +215,7 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 
 	glEnd();
 
-	OPENGL_UTILITY::CheckForOpenGLErrors("postprocess draw", error_output);
+	GLUTIL::CheckForOpenGLErrors("postprocess draw", error_output);
 
 	glMatrixMode(GL_PROJECTION);
 	glPopMatrix();
@@ -236,7 +236,7 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 	}
 	glActiveTexture(GL_TEXTURE0);
 
-	OPENGL_UTILITY::CheckForOpenGLErrors("postprocess end", error_output);
+	GLUTIL::CheckForOpenGLErrors("postprocess end", error_output);
 }
 
 void RENDER_INPUT_POSTPROCESS::SetWriteColor(bool write)

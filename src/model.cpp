@@ -20,12 +20,12 @@
 #include "model.h"
 #include "utils.h"
 #include "vertexattribs.h"
-#include "opengl_utility.h"
+#include "glutil.h"
 #include <limits>
 
 using namespace VERTEX_ATTRIBS;
 
-#define ERROR_CHECK OPENGL_UTILITY::CheckForOpenGLErrors(std::string(__PRETTY_FUNCTION__)+":"+__FILE__+":"+UTILS::tostr(__LINE__), error_output)
+#define ERROR_CHECK GLUTIL::CheckForOpenGLErrors(std::string(__PRETTY_FUNCTION__)+":"+__FILE__+":"+UTILS::tostr(__LINE__), error_output)
 
 static const std::string file_magic = "OGLVARRAYV01";
 
@@ -189,7 +189,7 @@ void MODEL::GenerateListID(std::ostream & error_output)
 	glDisableClientState(GL_NORMAL_ARRAY);
 	glDisableClientState(GL_VERTEX_ARRAY);
 
-	OPENGL_UTILITY::CheckForOpenGLErrors("model list ID generation", error_output);
+	GLUTIL::CheckForOpenGLErrors("model list ID generation", error_output);
 }
 
 template <typename T>

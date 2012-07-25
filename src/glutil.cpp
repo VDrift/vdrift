@@ -1,8 +1,8 @@
-#include "opengl_utility.h"
+#include "glutil.h"
 #include "glew.h"
 #include <cassert>
 
-bool OPENGL_UTILITY::CheckForOpenGLErrors(
+bool GLUTIL::CheckForOpenGLErrors(
 	const std::string & activity_description,
 	std::ostream & error_output)
 {

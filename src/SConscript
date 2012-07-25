@@ -48,6 +48,7 @@ src = Split("""aabb.cpp
 		forcefeedback.cpp
 		fracturebody.cpp
 		game.cpp
+		glutil.cpp
 		graphics_config.cpp
 		graphics_config_condition.cpp
 		graphics_fallback.cpp
@@ -82,7 +83,6 @@ src = Split("""aabb.cpp
 		model.cpp
 		model_joe03.cpp
 		model_obj.cpp
-		opengl_utility.cpp
 		optional.cpp
 		parallel_task.cpp
 		particle.cpp
