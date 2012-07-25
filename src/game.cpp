@@ -427,7 +427,7 @@ void GAME::InitCoreSubsystems()
 
 /* Write the scenegraph to the output drawlist... */
 template <bool clearfirst>
-void TraverseScene(SCENENODE & node, GRAPHICS_INTERFACE::dynamicdrawlist_type & output)
+void TraverseScene(SCENENODE & node, GRAPHICS::dynamicdrawlist_type & output)
 {
 	if (clearfirst)
 	{

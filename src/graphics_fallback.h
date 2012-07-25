@@ -11,7 +11,7 @@
 #include "reseatable_reference.h"
 #include "glstatemanager.h"
 #include "graphics_config.h"
-#include "graphics_interface.h"
+#include "graphics.h"
 #include "render_input_postprocess.h"
 #include "render_input_scene.h"
 #include "render_output.h"
@@ -47,7 +47,7 @@ struct GRAPHICS_CAMERA
 };
 
 /// the graphics rendering system used as a fallback
-class GRAPHICS_FALLBACK : public GRAPHICS_INTERFACE
+class GRAPHICS_FALLBACK : public GRAPHICS
 {
 private:
 	// avoids sending excessive state changes to OpenGL

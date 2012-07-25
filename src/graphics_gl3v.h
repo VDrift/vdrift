@@ -6,7 +6,7 @@
 #include "staticdrawables.h"
 #include "matrix4.h"
 #include "texture.h"
-#include "graphics_interface.h"
+#include "graphics.h"
 #include "frustum.h"
 #include "graphics_config_condition.h"
 #include "gl3v/glwrapper.h"
@@ -22,7 +22,7 @@
 class SCENENODE;
 
 /// a wrapper around the gl3v renderer
-class GRAPHICS_GL3V : public GRAPHICS_INTERFACE
+class GRAPHICS_GL3V : public GRAPHICS
 {
 public:
 	///reflection_type is 0 (low=OFF), 1 (medium=static), 2 (high=dynamic)

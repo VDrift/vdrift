@@ -1,5 +1,5 @@
-#ifndef _GRAPHICS_INTERFACE_H
-#define _GRAPHICS_INTERFACE_H
+#ifndef _GRAPHICS_H
+#define _GRAPHICS_H
 
 #include "mathvector.h"
 #include "quaternion.h"
@@ -11,7 +11,7 @@
 class SCENENODE;
 
 /// an abstract base class that defines the graphics interface
-class GRAPHICS_INTERFACE
+class GRAPHICS
 {
 public:
 	typedef DRAWABLE_CONTAINER <PTRVECTOR> dynamicdrawlist_type;
@@ -48,7 +48,7 @@ public:
 	virtual void SetContrast ( float value ) = 0;
 	virtual void printProfilingInfo(std::ostream & out) const {}
 
-	virtual ~GRAPHICS_INTERFACE() {}
+	virtual ~GRAPHICS() {}
 };
 
 #endif

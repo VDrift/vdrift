@@ -2,7 +2,7 @@
 #define _GAME_H
 
 #include "window.h"
-#include "graphics_interface.h"
+#include "graphics.h"
 #include "eventsystem.h"
 #include "settings.h"
 #include "pathmanager.h"
@@ -229,7 +229,7 @@ private:
 	PATHMANAGER pathmanager;
 	SETTINGS settings;
 	WINDOW_SDL window;
-	GRAPHICS_INTERFACE * graphics_interface;
+	GRAPHICS * graphics_interface;
 	bool enableGL3;
 	bool usingGL3;
 	StringIdMap stringMap;
