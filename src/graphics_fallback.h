@@ -1,54 +1,81 @@
 #ifndef _GRAPHICS_FALLBACK_H
 #define _GRAPHICS_FALLBACK_H
 
-#include "shader.h"
-#include "mathvector.h"
-#include "fbtexture.h"
-#include "fbobject.h"
-#include "scenenode.h"
-#include "staticdrawables.h"
-#include "texture.h"
-#include "reseatable_reference.h"
-#include "glstatemanager.h"
-#include "graphics_config.h"
 #include "graphics.h"
+#include "graphics_config.h"
+#include "glstatemanager.h"
+#include "texture.h"
+#include "staticdrawables.h"
 #include "render_input_postprocess.h"
 #include "render_input_scene.h"
 #include "render_output.h"
 
-#include <string>
-#include <ostream>
-#include <map>
-#include <list>
-#include <vector>
-
 class SCENENODE;
-
-struct GRAPHICS_CAMERA
-{
-	float fov;
-	float view_distance;
-	MATHVECTOR <float, 3> pos;
-	QUATERNION <float> orient;
-	float w;
-	float h;
-
-	bool orthomode;
-	MATHVECTOR <float, 3> orthomin;
-	MATHVECTOR <float, 3> orthomax;
-
-	GRAPHICS_CAMERA() :
-		fov(45),
-		view_distance(10000),
-		w(1),
-		h(1),
-		orthomode(false)
-		{}
-};
+class GRAPHICS_CAMERA;
+class SHADER_GLSL;
 
 /// the graphics rendering system used as a fallback
 class GRAPHICS_FALLBACK : public GRAPHICS
 {
+public:
+	GRAPHICS_FALLBACK();
+
+	~GRAPHICS_FALLBACK();
+
+	/// reflection_type is 0 (low=OFF), 1 (medium=static), 2 (high=dynamic)
+	/// returns true on success
+	virtual bool Init(
+		const std::string & shaderpath,
+		unsigned int resx, unsigned int resy, unsigned int bpp,
+		unsigned int depthbpp, bool fullscreen, bool shaders,
+		unsigned int antialiasing, bool enableshadows,
+		int shadow_distance, int shadow_quality,
+		int reflection_type,
+		const std::string & static_reflectionmap_file,
+		const std::string & static_ambientmap_file,
+		int anisotropy, int texturesize,
+		int lighting_quality, bool newbloom, bool newnormalmaps,
+		const std::string & renderconfig,
+		std::ostream & info_output, std::ostream & error_output);
+
+	virtual void Deinit();
+
+	virtual void BeginScene(std::ostream & error_output);
+
+	virtual DRAWABLE_CONTAINER <PTRVECTOR> & GetDynamicDrawlist();
+
+	virtual void AddStaticNode(SCENENODE & node, bool clearcurrent = true);
+
+	virtual void SetupScene(
+		float field_of_view,
+		float new_view_distance,
+		const MATHVECTOR <float, 3> cam_position,
+		const QUATERNION <float> & cam_rotation,
+		const MATHVECTOR <float, 3> & dynamic_reflection_sample_pos);
+
+	virtual void DrawScene(std::ostream & error_output);
+
+	virtual void EndScene(std::ostream & error_output);
+
+	virtual int GetMaxAnisotropy() const;
+
+	virtual bool AntialiasingSupported() const;
+
+	virtual bool GetUsingShaders() const;
+
+	virtual bool ReloadShaders(
+		const std::string & shaderpath,
+		std::ostream & info_output,
+		std::ostream & error_output);
+
+	virtual void SetCloseShadow(float value);
+
+	virtual bool GetShadows() const;
+
+	virtual void SetSunDirection(const QUATERNION< float > & value);
+
+	virtual void SetContrast(float value);
+
 private:
 	// avoids sending excessive state changes to OpenGL
 	GLSTATEMANAGER glstate;
@@ -67,7 +94,6 @@ private:
 	bool bloom;
 	bool normalmaps;
 	float contrast;
-	bool aticard;
 	enum {REFLECTION_DISABLED, REFLECTION_STATIC, REFLECTION_DYNAMIC} reflection_status;
 	TEXTURE static_reflection;
 	TEXTURE static_ambient;
@@ -105,89 +131,74 @@ private:
 
 	QUATERNION <float> lightdirection;
 
-	void ChangeDisplay(const int width, const int height, const int bpp, const int dbpp, const bool fullscreen,
-			   unsigned int antialiasing, std::ostream & info_output, std::ostream & error_output);
-	void SetActiveShader(const std::string name);
-	bool LoadShader(const std::string & shaderpath, const std::string & name, std::ostream & info_output, std::ostream & error_output, std::string variant="", std::string variant_defines="");
-	void EnableShaders(const std::string & shaderpath, std::ostream & info_output, std::ostream & error_output);
-	void DisableShaders(const std::string & shaderpath, std::ostream & error_output);
-	void DrawBox(const MATHVECTOR <float, 3> & corner1, const MATHVECTOR <float, 3> & corner2) const;
-	void RenderDrawlist(std::vector <DRAWABLE*> & drawlist,
-						RENDER_INPUT_SCENE & render_scene,
-						RENDER_OUTPUT & render_output,
-						std::ostream & error_output);
-	void RenderDrawlists(std::vector <DRAWABLE*> & dynamic_drawlist,
-						std::vector <DRAWABLE*> & static_drawlist,
-						const std::vector <TEXTURE_INTERFACE*> & extra_textures,
-						RENDER_INPUT_SCENE & render_scene,
-						RENDER_OUTPUT & render_output,
-						std::ostream & error_output);
-	void RenderPostProcess(const std::string & shadername,
-						const std::vector <TEXTURE_INTERFACE*> & textures,
-						RENDER_OUTPUT & render_output,
-						bool write_color,
-						bool write_alpha,
-						std::ostream & error_output);
+	void ChangeDisplay(
+		const int width, const int height,
+		const int bpp, const int dbpp,
+		const bool fullscreen,
+		unsigned int antialiasing,
+		std::ostream & info_output,
+		std::ostream & error_output);
 
-	void Render(RENDER_INPUT * input, RENDER_OUTPUT & output, std::ostream & error_output);
-public:
-	GRAPHICS_FALLBACK();
-	~GRAPHICS_FALLBACK();
+	/// note that if variant is passed in, it is used as the shader name and the shader is also loaded with the variant_defines set
+	/// this allows loading multiple shaders from the same shader file, just with different defines set
+	/// variant_defines is a space delimited list of defines
+	bool LoadShader(
+		const std::string & shaderpath,
+		const std::string & name,
+		std::ostream & info_output,
+		std::ostream & error_output,
+		std::string variant="",
+		std::string variant_defines="");
 
-	///reflection_type is 0 (low=OFF), 1 (medium=static), 2 (high=dynamic)
-	/// returns true on success
-	virtual bool Init(const std::string & shaderpath,
-				unsigned int resx, unsigned int resy, unsigned int bpp,
-				unsigned int depthbpp, bool fullscreen, bool shaders,
-				unsigned int antialiasing, bool enableshadows,
-				int shadow_distance, int shadow_quality,
-				int reflection_type,
-				const std::string & static_reflectionmap_file,
-				const std::string & static_ambientmap_file,
-				int anisotropy, int texturesize,
-				int lighting_quality, bool newbloom, bool newnormalmaps,
-				const std::string & renderconfig,
-				std::ostream & info_output, std::ostream & error_output);
-	virtual void Deinit();
-	virtual void BeginScene(std::ostream & error_output);
-	virtual DRAWABLE_CONTAINER <PTRVECTOR> & GetDynamicDrawlist() {return dynamic_drawlist;}
-	virtual void AddStaticNode(SCENENODE & node, bool clearcurrent = true);
-	virtual void SetupScene(float fov, float new_view_distance, const MATHVECTOR <float, 3> cam_position, const QUATERNION <float> & cam_rotation,
-					const MATHVECTOR <float, 3> & dynamic_reflection_sample_pos);
-	virtual void DrawScene(std::ostream & error_output);
-	virtual void EndScene(std::ostream & error_output);
-	virtual int GetMaxAnisotropy() const {return max_anisotropy;}
-	virtual bool AntialiasingSupported() const {return GLEW_ARB_multisample;}
+	void EnableShaders(
+		const std::string & shaderpath,
+		std::ostream & info_output,
+		std::ostream & error_output);
 
-	virtual bool GetUsingShaders() const
-	{
-		return using_shaders;
-	}
+	void DisableShaders(
+		const std::string & shaderpath,
+		std::ostream & error_output);
 
-	virtual bool ReloadShaders(const std::string & shaderpath, std::ostream & info_output, std::ostream & error_output);
+	void CullScenePass(
+		const GRAPHICS_CONFIG_PASS & pass,
+		std::map <std::string, PTRVECTOR <DRAWABLE> > & culled_static_drawlist,
+		std::ostream & error_output);
 
-	virtual void SetCloseShadow ( float value )
-	{
-		closeshadow = value;
-	}
+	void DrawScenePass(
+		const GRAPHICS_CONFIG_PASS & pass,
+		std::map <std::string, PTRVECTOR <DRAWABLE> > & culled_static_drawlist,
+		std::ostream & error_output);
 
-	virtual bool GetShadows() const
-	{
-		return shadows;
-	}
+	void RenderDrawlist(
+		std::vector <DRAWABLE*> & drawlist,
+		RENDER_INPUT_SCENE & render_scene,
+		RENDER_OUTPUT & render_output,
+		std::ostream & error_output);
 
-	virtual void SetSunDirection ( const QUATERNION< float >& value )
-	{
-		lightdirection = value;
-	}
+	void RenderDrawlists(
+		std::vector <DRAWABLE*> & dynamic_drawlist,
+		std::vector <DRAWABLE*> & static_drawlist,
+		const std::vector <TEXTURE_INTERFACE*> & extra_textures,
+		RENDER_INPUT_SCENE & render_scene,
+		RENDER_OUTPUT & render_output,
+		std::ostream & error_output);
 
-	virtual void SetContrast ( float value )
-	{
-		contrast = value;
-	}
+	void RenderPostProcess(
+		const std::string & shadername,
+		const std::vector <TEXTURE_INTERFACE*> & textures,
+		RENDER_OUTPUT & render_output,
+		bool write_color,
+		bool write_alpha,
+		std::ostream & error_output);
 
-	bool HaveATICard() {return aticard;}
+	void Render(
+		RENDER_INPUT * input,
+		RENDER_OUTPUT & output,
+		std::ostream & error_output);
+
+	void DrawBox(
+		const MATHVECTOR <float, 3> & corner1,
+		const MATHVECTOR <float, 3> & corner2) const;
 };
 
 #endif
-
