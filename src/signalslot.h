@@ -149,9 +149,9 @@ inline Signal<Delegate>::Signal(const Signal & other)
 template <class Delegate>
 inline Signal<Delegate> & Signal<Delegate>::operator=(const Signal & other)
 {
-	for (std::size_t i = 0; i < m_connections.size(); ++i)
+	for (std::size_t i = 0; i < other.m_connections.size(); ++i)
 	{
-		m_connections[i].slot->connect(*this);
+		other.m_connections[i].slot->connect(*this);
 	}
 	return *this;
 }
