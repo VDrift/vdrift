@@ -191,9 +191,10 @@ inline Signal0::Signal0(void)
 	// ctor
 }
 
-inline Signal0::Signal0(const Signal0 & other)
+inline Signal0::Signal0(const Signal0 & other) :
+	Signal<Delegate0<void> >(other)
 {
-	*this = other;
+	// copy ctor
 }
 
 inline Signal0 & Signal0::operator=(const Signal0 & other)
@@ -217,9 +218,10 @@ inline Signal1<P>::Signal1(void)
 }
 
 template <typename P>
-inline Signal1<P>::Signal1(const Signal1 & other)
+inline Signal1<P>::Signal1(const Signal1 & other) :
+	Signal<Delegate1<void, P> >(other)
 {
-	*this = other;
+	// copy ctor
 }
 
 template <typename P>
