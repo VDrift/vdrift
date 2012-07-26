@@ -51,7 +51,7 @@ src = Split("""aabb.cpp
 		glutil.cpp
 		graphics_config.cpp
 		graphics_config_condition.cpp
-		graphics_fallback.cpp
+		graphics_gl2.cpp
 		graphics_gl3v.cpp
 		gui/gui.cpp
 		gui/guicontrol.cpp

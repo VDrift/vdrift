@@ -42,10 +42,6 @@ GLWrapper::GLWrapper() : initialized(false), infoOutput(NULL), errorOutput(NULL)
 
 bool GLWrapper::initialize()
 {
-	logOutput(std::string("GL Renderer: ")+UTILS::tostr(glGetString(GL_RENDERER)));
-	logOutput(std::string("GL Vendor: ")+UTILS::tostr(glGetString(GL_VENDOR)));
-	logOutput(std::string("GL Version: ")+UTILS::tostr(glGetString(GL_VERSION)));
-
 	GLenum glew_err = glewInit();
 	if (glew_err != GLEW_OK)
 	{
@@ -53,7 +49,9 @@ bool GLWrapper::initialize()
 		return false;
 	}
 	else
+	{
 		logOutput(std::string("Initialized GLEW ")+UTILS::tostr(glewGetString(GLEW_VERSION)));
+	}
 
 	// Check through all OpenGL versions to determine the highest supported OpenGL version.
 	bool supportsRequiredVersion = glewIsSupported(REQUIRED_GL_VERSION);
@@ -178,7 +176,7 @@ bool GLWrapper::createAndCompileShader(const std::string & shaderSource, GLenum 
 	GLLOG(glCompileShader(handle));ERROR_CHECK;
 	GLint compileStatus(0);
 	GLLOG(glGetShaderiv(handle, GL_COMPILE_STATUS, &compileStatus));ERROR_CHECK;
-    
+
 	GLint bufferSize(0);
 	GLLOG(glGetShaderiv(handle, GL_INFO_LOG_LENGTH, &bufferSize));ERROR_CHECK;
 	GLchar* infoLog = new GLchar[bufferSize+1];
@@ -243,10 +241,10 @@ bool GLWrapper::relinkShaderProgram(GLuint handle, std::ostream & shaderErrorOut
 {
 	if (!handle)
 		return false;
-    
+
 	// Attempt to link the program.
 	GLLOG(glLinkProgram(handle));ERROR_CHECK;
-    
+
 	// Handle the result.
 	GLint linkStatus;
 	GLLOG(glGetProgramiv(handle, GL_LINK_STATUS, &linkStatus));
@@ -385,7 +383,7 @@ void GLWrapper::BindTexture(GLenum target, GLuint handle)
 		GLLOG(glBindTexture(target,handle));ERROR_CHECK;
 		return;
 	}
-    
+
 	// Check the cache.
 	bool send = false;
 	if (curActiveTexture < boundTextures.size())
@@ -398,7 +396,7 @@ void GLWrapper::BindTexture(GLenum target, GLuint handle)
 		boundTextures.resize(curActiveTexture+1,0);
 		send = true;
 	}
-    
+
 	if (send)
 	{
 		GLLOG(glBindTexture(target,handle));ERROR_CHECK;

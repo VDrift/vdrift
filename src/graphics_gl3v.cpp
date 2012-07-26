@@ -275,7 +275,7 @@ void GRAPHICS_GL3V::SetupScene(float fov, float new_view_distance, const MATHVEC
 	// send sun light direction for the default camera
 
 	// this computes the worldspace light direction
-	// it is a little funky but at least matches what's done in GRAPHICS_FALLBACK::DrawScene
+	// it is a little funky but at least matches what's done in GRAPHICS_GL2::DrawScene
 	// TODO: use a 3D vector for sun direction instead of a quaternion and read it from the track.txt
 	MATHVECTOR <float, 3> lightDirection(0,0,1);
 	(-sunDirection).RotateVector(lightDirection);

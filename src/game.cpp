@@ -28,7 +28,7 @@
 #include "quickprof.h"
 #include "tracksurface.h"
 #include "utils.h"
-#include "graphics_fallback.h"
+#include "graphics_gl2.h"
 #include "graphics_gl3v.h"
 #include "cfg/ptree.h"
 #include "svn_sourceforge.h"
@@ -389,7 +389,7 @@ void GAME::InitCoreSubsystems()
 		}
 		else
 		{
-			graphics_interface = new GRAPHICS_FALLBACK();
+			graphics_interface = new GRAPHICS_GL2();
 			content.setVBO(false);
 			content.setSRGB(false);
 		}

@@ -1,11 +1,7 @@
-#include "graphics_fallback.h"
+#include "graphics_gl2.h"
 #include "graphics_camera.h"
 #include "glutil.h"
 #include "shader.h"
-#include <map>
-
-//#define _SHADOWMAP_DEBUG_
-//#define _DYNAMIC_REFLECT_DEBUG_
 
 /// break up the input into a vector of strings using the token characters given
 std::vector <std::string> Tokenize(const std::string & input, const std::string & tokens)
@@ -181,7 +177,7 @@ static BLENDMODE::BLENDMODE BlendModeFromString(const std::string & mode)
 	return BLENDMODE::DISABLED;
 }
 
-GRAPHICS_FALLBACK::GRAPHICS_FALLBACK() :
+GRAPHICS_GL2::GRAPHICS_GL2() :
 	initialized(false),
 	using_shaders(false),
 	max_anisotropy(0),
@@ -198,14 +194,14 @@ GRAPHICS_FALLBACK::GRAPHICS_FALLBACK() :
 	activeshader = shadermap.end();
 }
 
-GRAPHICS_FALLBACK::~GRAPHICS_FALLBACK()
+GRAPHICS_GL2::~GRAPHICS_GL2()
 {
 	render_outputs.clear();
 	texture_outputs.clear();
 	texture_inputs.clear();
 }
 
-bool GRAPHICS_FALLBACK::Init(
+bool GRAPHICS_GL2::Init(
 	const std::string & shaderpath,
 	unsigned int resx, unsigned int resy, unsigned int bpp,
 	unsigned int depthbpp, bool fullscreen, bool shaders,
@@ -237,27 +233,7 @@ bool GRAPHICS_FALLBACK::Init(
 	if (antialiasing > 1)
 		fsaa = antialiasing;
 
-	std::stringstream cardinfo;
-	cardinfo << "Video card information:" << std::endl;
-	cardinfo << "Vendor: " << glGetString(GL_VENDOR) << std::endl;
-	cardinfo << "Renderer: " << glGetString(GL_RENDERER) << std::endl;
-	cardinfo << "Version: " << glGetString(GL_VERSION) << std::endl;
-	GLint texSize;
-	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &texSize);
-	cardinfo << "Maximum texture size: " << texSize << std::endl;
-	GLint maxfloats(0);
-	glGetIntegerv(GL_MAX_VARYING_FLOATS_ARB, &maxfloats);
-	cardinfo << "Maximum varying floats: " << maxfloats << std::endl;
-	info_output << cardinfo.str();
-	if (cardinfo.str().find("NVIDIA") == std::string::npos &&
-		cardinfo.str().find("ATI") == std::string::npos &&
-		cardinfo.str().find("AMD") == std::string::npos)
-	{
-		error_output << "You don't have an NVIDIA or ATI/AMD card.  This game may not run correctly or at all." << std::endl;
-	}
-
 	//initialize GLEW
-	//glewExperimental = GL_TRUE; // expose all avaiable extensions
 	GLenum glew_err = glewInit();
 	if ( glew_err != GLEW_OK )
 	{
@@ -367,7 +343,7 @@ bool GRAPHICS_FALLBACK::Init(
 	return true;
 }
 
-void GRAPHICS_FALLBACK::Deinit()
+void GRAPHICS_GL2::Deinit()
 {
 	if (GLEW_ARB_shading_language_100)
 	{
@@ -377,7 +353,7 @@ void GRAPHICS_FALLBACK::Deinit()
 	}
 }
 
-void GRAPHICS_FALLBACK::BeginScene(std::ostream & error_output)
+void GRAPHICS_GL2::BeginScene(std::ostream & error_output)
 {
 	glstate.Disable(GL_TEXTURE_2D);
 	glShadeModel( GL_SMOOTH );
@@ -395,17 +371,17 @@ void GRAPHICS_FALLBACK::BeginScene(std::ostream & error_output)
 	GLUTIL::CheckForOpenGLErrors("BeginScene", error_output);
 }
 
-DRAWABLE_CONTAINER <PTRVECTOR> & GRAPHICS_FALLBACK::GetDynamicDrawlist()
+DRAWABLE_CONTAINER <PTRVECTOR> & GRAPHICS_GL2::GetDynamicDrawlist()
 {
 	return dynamic_drawlist;
 }
 
-void GRAPHICS_FALLBACK::AddStaticNode(SCENENODE & node, bool clearcurrent)
+void GRAPHICS_GL2::AddStaticNode(SCENENODE & node, bool clearcurrent)
 {
 	static_drawlist.Generate(node, clearcurrent);
 }
 
-void GRAPHICS_FALLBACK::SetupScene(
+void GRAPHICS_GL2::SetupScene(
 	float fov, float new_view_distance,
 	const MATHVECTOR <float, 3> cam_position,
 	const QUATERNION <float> & cam_rotation,
@@ -521,7 +497,7 @@ void GRAPHICS_FALLBACK::SetupScene(
 	}
 }
 
-void GRAPHICS_FALLBACK::DrawScene(std::ostream & error_output)
+void GRAPHICS_GL2::DrawScene(std::ostream & error_output)
 {
 	renderscene.SetFlags(using_shaders);
 	renderscene.SetFSAA(fsaa);
@@ -556,27 +532,27 @@ void GRAPHICS_FALLBACK::DrawScene(std::ostream & error_output)
 	}
 }
 
-void GRAPHICS_FALLBACK::EndScene(std::ostream & error_output)
+void GRAPHICS_GL2::EndScene(std::ostream & error_output)
 {
 	GLUTIL::CheckForOpenGLErrors("EndScene", error_output);
 }
 
-int GRAPHICS_FALLBACK::GetMaxAnisotropy() const
+int GRAPHICS_GL2::GetMaxAnisotropy() const
 {
 	return max_anisotropy;
 }
 
-bool GRAPHICS_FALLBACK::AntialiasingSupported() const
+bool GRAPHICS_GL2::AntialiasingSupported() const
 {
 	return GLEW_ARB_multisample;
 }
 
-bool GRAPHICS_FALLBACK::GetUsingShaders() const
+bool GRAPHICS_GL2::GetUsingShaders() const
 {
 	return using_shaders;
 }
 
-bool GRAPHICS_FALLBACK::ReloadShaders(
+bool GRAPHICS_GL2::ReloadShaders(
 	const std::string & shaderpath,
 	std::ostream & info_output,
 	std::ostream & error_output)
@@ -586,27 +562,27 @@ bool GRAPHICS_FALLBACK::ReloadShaders(
 	return GetUsingShaders();
 }
 
-void GRAPHICS_FALLBACK::SetCloseShadow(float value)
+void GRAPHICS_GL2::SetCloseShadow(float value)
 {
 	closeshadow = value;
 }
 
-bool GRAPHICS_FALLBACK::GetShadows() const
+bool GRAPHICS_GL2::GetShadows() const
 {
 	return shadows;
 }
 
-void GRAPHICS_FALLBACK::SetSunDirection(const QUATERNION< float > & value)
+void GRAPHICS_GL2::SetSunDirection(const QUATERNION< float > & value)
 {
 	lightdirection = value;
 }
 
-void GRAPHICS_FALLBACK::SetContrast(float value)
+void GRAPHICS_GL2::SetContrast(float value)
 {
 	contrast = value;
 }
 
-void GRAPHICS_FALLBACK::ChangeDisplay(
+void GRAPHICS_GL2::ChangeDisplay(
 	const int width, const int height, const int bpp, const int dbpp,
 	const bool fullscreen, unsigned int antialiasing,
     std::ostream & info_output, std::ostream & error_output)
@@ -625,7 +601,7 @@ void GRAPHICS_FALLBACK::ChangeDisplay(
 	h = height;
 }
 
-bool GRAPHICS_FALLBACK::LoadShader(
+bool GRAPHICS_GL2::LoadShader(
 	const std::string & shaderpath,
 	const std::string & name,
 	std::ostream & info_output,
@@ -718,20 +694,12 @@ bool GRAPHICS_FALLBACK::LoadShader(
 	return success;
 }
 
-void GRAPHICS_FALLBACK::EnableShaders(
+void GRAPHICS_GL2::EnableShaders(
 	const std::string & shaderpath,
 	std::ostream & info_output,
 	std::ostream & error_output)
 {
 	bool shader_load_success = true;
-
-	{
-		GLint tu;
-		glGetIntegerv( GL_MAX_TEXTURE_IMAGE_UNITS,&tu );
-		GLint tufull;
-		glGetIntegerv( GL_MAX_TEXTURE_UNITS,&tufull );
-		info_output << "Texture units: " << tufull << " full, " << tu << " partial" << std::endl;
-	}
 
 	GLUTIL::CheckForOpenGLErrors("EnableShaders: start", error_output);
 
@@ -913,7 +881,7 @@ void GRAPHICS_FALLBACK::EnableShaders(
 	}
 }
 
-void GRAPHICS_FALLBACK::DisableShaders(const std::string & shaderpath, std::ostream & error_output)
+void GRAPHICS_GL2::DisableShaders(const std::string & shaderpath, std::ostream & error_output)
 {
 	shadermap.clear();
 	using_shaders = false;
@@ -938,7 +906,7 @@ void GRAPHICS_FALLBACK::DisableShaders(const std::string & shaderpath, std::ostr
 	render_outputs["framebuffer"].RenderToFramebuffer();
 }
 
-void GRAPHICS_FALLBACK::CullScenePass(
+void GRAPHICS_GL2::CullScenePass(
 	const GRAPHICS_CONFIG_PASS & pass,
 	std::map <std::string, PTRVECTOR <DRAWABLE> > & culled_static_drawlist,
 	std::ostream & error_output)
@@ -1051,7 +1019,7 @@ void GRAPHICS_FALLBACK::CullScenePass(
 	}
 }
 
-void GRAPHICS_FALLBACK::DrawScenePass(
+void GRAPHICS_GL2::DrawScenePass(
 	const GRAPHICS_CONFIG_PASS & pass,
 	std::map <std::string, PTRVECTOR <DRAWABLE> > & culled_static_drawlist,
 	std::ostream & error_output)
@@ -1231,7 +1199,7 @@ void GRAPHICS_FALLBACK::DrawScenePass(
 	}
 }
 
-void GRAPHICS_FALLBACK::RenderDrawlist(
+void GRAPHICS_GL2::RenderDrawlist(
 	std::vector <DRAWABLE*> & drawlist,
 	RENDER_INPUT_SCENE & render_scene,
 	RENDER_OUTPUT & render_output,
@@ -1245,7 +1213,7 @@ void GRAPHICS_FALLBACK::RenderDrawlist(
 	Render(&render_scene, render_output, error_output);
 }
 
-void GRAPHICS_FALLBACK::RenderDrawlists(
+void GRAPHICS_GL2::RenderDrawlists(
 	std::vector <DRAWABLE*> & dynamic_drawlist,
 	std::vector <DRAWABLE*> & static_drawlist,
 	const std::vector <TEXTURE_INTERFACE*> & extra_textures,
@@ -1297,7 +1265,7 @@ void GRAPHICS_FALLBACK::RenderDrawlists(
 	glActiveTexture(GL_TEXTURE0);
 }
 
-void GRAPHICS_FALLBACK::RenderPostProcess(
+void GRAPHICS_GL2::RenderPostProcess(
 	const std::string & shadername,
 	const std::vector <TEXTURE_INTERFACE*> & textures,
 	RENDER_OUTPUT & render_output,
@@ -1314,7 +1282,7 @@ void GRAPHICS_FALLBACK::RenderPostProcess(
 	Render(&postprocess, render_output, error_output);
 }
 
-void GRAPHICS_FALLBACK::Render(RENDER_INPUT * input, RENDER_OUTPUT & output, std::ostream & error_output)
+void GRAPHICS_GL2::Render(RENDER_INPUT * input, RENDER_OUTPUT & output, std::ostream & error_output)
 {
 	output.Begin(glstate, error_output);
 
@@ -1329,7 +1297,7 @@ void GRAPHICS_FALLBACK::Render(RENDER_INPUT * input, RENDER_OUTPUT & output, std
 	GLUTIL::CheckForOpenGLErrors("render output end", error_output);
 }
 
-void GRAPHICS_FALLBACK::DrawBox(
+void GRAPHICS_GL2::DrawBox(
 	const MATHVECTOR <float, 3> & corner1,
 	const MATHVECTOR <float, 3> & corner2) const
 {

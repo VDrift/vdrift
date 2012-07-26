@@ -22,6 +22,7 @@
 #include <SDL/SDL.h>
 #include <cassert>
 #include <cstring>
+#include <sstream>
 
 WINDOW_SDL::WINDOW_SDL() :
 	w(0), h(0),
@@ -47,7 +48,13 @@ WINDOW_SDL::~WINDOW_SDL()
 		SDL_Quit();
 }
 
-void WINDOW_SDL::Init(const std::string & windowcaption, unsigned int resx, unsigned int resy, unsigned int bpp, unsigned int depthbpp, bool fullscreen, unsigned int antialiasing, std::ostream & info_output, std::ostream & error_output)
+void WINDOW_SDL::Init(
+	const std::string & windowcaption,
+	unsigned int resx, unsigned int resy,
+	unsigned int bpp, unsigned int depthbpp,
+	bool fullscreen, unsigned int antialiasing,
+	std::ostream & info_output,
+	std::ostream & error_output)
 {
 	Uint32 sdl_flags = SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK;
 #if SDL_VERSION_ATLEAST(2,0,0)
@@ -66,6 +73,8 @@ void WINDOW_SDL::Init(const std::string & windowcaption, unsigned int resx, unsi
 #else
 	SDL_WM_SetCaption(windowcaption.c_str(), NULL);
 #endif
+
+	LogOpenGLInfo(info_output);
 
 	initialized = true;
 }
@@ -279,4 +288,30 @@ void WINDOW_SDL::ChangeDisplay(
 #endif
 	w = width;
 	h = height;
+}
+
+void WINDOW_SDL::LogOpenGLInfo(std::ostream & info_output)
+{
+	std::stringstream cardinfo;
+	cardinfo << "Video card information:" << std::endl;
+	cardinfo << "GL Vendor: " << glGetString(GL_VENDOR) << std::endl;
+	cardinfo << "GL Renderer: " << glGetString(GL_RENDERER) << std::endl;
+	cardinfo << "GL Version: " << glGetString(GL_VERSION) << std::endl;
+
+	GLint texUnits(0), texUnitsFull(0), texSize(0), maxFloats(0);
+	glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &texUnits);
+	glGetIntegerv(GL_MAX_TEXTURE_UNITS, &texUnitsFull);
+	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &texSize);
+	glGetIntegerv(GL_MAX_VARYING_FLOATS_ARB, &maxFloats);
+	cardinfo << "Texture units: " << texUnitsFull << " full, " << texUnits << " partial" << std::endl;
+	cardinfo << "Maximum texture size: " << texSize << std::endl;
+	cardinfo << "Maximum varying floats: " << maxFloats;
+
+	info_output << cardinfo.str() << std::endl;
+	if (cardinfo.str().find("NVIDIA") == std::string::npos &&
+		cardinfo.str().find("ATI") == std::string::npos &&
+		cardinfo.str().find("AMD") == std::string::npos)
+	{
+		info_output << "You don't have an NVIDIA or ATI/AMD card. This game may not run correctly or at all." << std::endl;
+	}
 }

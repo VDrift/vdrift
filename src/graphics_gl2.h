@@ -1,5 +1,5 @@
-#ifndef _GRAPHICS_FALLBACK_H
-#define _GRAPHICS_FALLBACK_H
+#ifndef _GRAPHICS_GL2_H
+#define _GRAPHICS_GL2_H
 
 #include "graphics.h"
 #include "graphics_config.h"
@@ -11,16 +11,15 @@
 #include "render_output.h"
 
 struct GRAPHICS_CAMERA;
-class SCENENODE;
 class SHADER_GLSL;
+class SCENENODE;
 
-/// the graphics rendering system used as a fallback
-class GRAPHICS_FALLBACK : public GRAPHICS
+class GRAPHICS_GL2 : public GRAPHICS
 {
 public:
-	GRAPHICS_FALLBACK();
+	GRAPHICS_GL2();
 
-	~GRAPHICS_FALLBACK();
+	~GRAPHICS_GL2();
 
 	/// reflection_type is 0 (low=OFF), 1 (medium=static), 2 (high=dynamic)
 	/// returns true on success

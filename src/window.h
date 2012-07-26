@@ -33,7 +33,13 @@ public:
 
 	~WINDOW_SDL();
 
-	void Init(const std::string & windowcaption, unsigned int resx, unsigned int resy, unsigned int bpp, unsigned int depthbpp, bool fullscreen, unsigned int antialiasing, std::ostream & info_output, std::ostream & error_output);
+	void Init(
+		const std::string & windowcaption,
+		unsigned int resx, unsigned int resy,
+		unsigned int bpp, unsigned int depthbpp,
+		bool fullscreen, unsigned int antialiasing,
+		std::ostream & info_output,
+		std::ostream & error_output);
 
 	void SwapBuffers();
 
@@ -66,6 +72,8 @@ private:
 		unsigned int antialiasing,
 		std::ostream & info_output,
 		std::ostream & error_output);
+
+	void LogOpenGLInfo(std::ostream & info_output);
 };
 
 #endif
