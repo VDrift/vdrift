@@ -45,9 +45,9 @@ public:
 
 	virtual void AddStaticNode(SCENENODE & node, bool clearcurrent = true);
 
+	/// Setup scene cameras
 	virtual void SetupScene(
-		float field_of_view,
-		float new_view_distance,
+		float fov, float new_view_distance,
 		const MATHVECTOR <float, 3> cam_position,
 		const QUATERNION <float> & cam_rotation,
 		const MATHVECTOR <float, 3> & dynamic_reflection_sample_pos);
@@ -167,6 +167,17 @@ private:
 		const GRAPHICS_CONFIG_PASS & pass,
 		std::map <std::string, PTRVECTOR <DRAWABLE> > & culled_static_drawlist,
 		std::ostream & error_output);
+
+	/// draw postprocess scene pass
+	void DrawScenePassPost(
+		const GRAPHICS_CONFIG_PASS & pass,
+		std::map <std::string, PTRVECTOR <DRAWABLE> > & culled_static_drawlist,
+		std::ostream & error_output);
+
+	/// get input textures vector from config inputs
+	void GetScenePassInputTextures(
+		const GRAPHICS_CONFIG_INPUTS & inputs,
+		std::vector <TEXTURE_INTERFACE*> & input_textures);
 
 	void RenderDrawlist(
 		std::vector <DRAWABLE*> & drawlist,
