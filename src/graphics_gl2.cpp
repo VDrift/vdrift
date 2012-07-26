@@ -1196,8 +1196,8 @@ void GRAPHICS_GL2::DrawScenePassLayer(
 		renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h);
 
 		// setup dynamic drawlist
-		reseatable_reference <PTRVECTOR <DRAWABLE> > container = dynamic_drawlist.GetByName(layer);
-		if (!container)
+		reseatable_reference <PTRVECTOR <DRAWABLE> > container_dynamic = dynamic_drawlist.GetByName(layer);
+		if (!container_dynamic)
 		{
 			ReportOnce(&pass, "Drawable container " + layer + " couldn't be found", error_output);
 			return;
@@ -1220,7 +1220,7 @@ void GRAPHICS_GL2::DrawScenePassLayer(
 		renderscene.SetCarPaintHack(carhack);
 
 		// render
-		RenderDrawlists(*container,
+		RenderDrawlists(*container_dynamic,
 			container_static->second,
 			input_textures,
 			renderscene,
