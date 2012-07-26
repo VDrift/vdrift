@@ -1037,12 +1037,33 @@ void GRAPHICS_GL2::DrawScenePass(
 	std::vector <TEXTURE_INTERFACE*> input_textures;
 	GetScenePassInputTextures(pass.inputs, input_textures);
 
+	// setup render input
 	renderscene.SetBlendMode(BlendModeFromString(pass.blendmode));
 	renderscene.SetDepthMode(DepthModeFromString(pass.depthtest));
+	renderscene.SetClear(pass.clear_color, pass.clear_depth);
+	renderscene.SetWriteColor(pass.write_color);
+	renderscene.SetWriteAlpha(pass.write_alpha);
+	renderscene.SetWriteDepth(pass.write_depth);
+
+	// setup shader
+	if (using_shaders)
+	{
+		shader_map_type::iterator si = shadermap.find(pass.shader);
+		if (si == shadermap.end())
+		{
+			ReportOnce(&pass, "Shader " + pass.shader + " couldn't be found", error_output);
+			return;
+		}
+		renderscene.SetDefaultShader(si->second);
+	}
 
 	for (std::vector <std::string>::const_iterator d = pass.draw.begin(); d != pass.draw.end(); d++)
 	{
+		// draw layer
 		DrawScenePassLayer(*d, pass, input_textures, culled_static_drawlist, error_output);
+
+		// disable color, zclear
+		renderscene.SetClear(false, false);
 	}
 }
 
@@ -1103,7 +1124,8 @@ void GRAPHICS_GL2::DrawScenePassPost(
 		renderscene.DisableOrtho();
 
 	renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h);
-	postprocess.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h); //so we have this later if we want
+
+	postprocess.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h);
 	postprocess.SetDepthMode(DepthModeFromString(pass.depthtest));
 	postprocess.SetWriteDepth(pass.write_depth);
 	postprocess.SetClear(pass.clear_color, pass.clear_depth);
@@ -1172,27 +1194,6 @@ void GRAPHICS_GL2::DrawScenePassLayer(
 		else
 			renderscene.DisableOrtho();
 		renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h);
-
-		// setup shader
-		if (using_shaders)
-		{
-			shader_map_type::iterator si = shadermap.find(pass.shader);
-			if (si == shadermap.end())
-			{
-				ReportOnce(&pass, "Shader " + pass.shader + " couldn't be found", error_output);
-				return;
-			}
-			renderscene.SetDefaultShader(si->second);
-		}
-
-		// setup other flags
-		if (layer == *pass.draw.begin())
-			renderscene.SetClear(pass.clear_color, pass.clear_depth);
-		else
-			renderscene.SetClear(false, false);
-		renderscene.SetWriteColor(pass.write_color);
-		renderscene.SetWriteAlpha(pass.write_alpha);
-		renderscene.SetWriteDepth(pass.write_depth);
 
 		// setup dynamic drawlist
 		reseatable_reference <PTRVECTOR <DRAWABLE> > container = dynamic_drawlist.GetByName(layer);
