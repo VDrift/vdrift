@@ -97,6 +97,7 @@ private:
 	bool writealpha;
 	bool writedepth;
 	bool carpainthack;
+	bool vlighting;
 	BLENDMODE::BLENDMODE blendmode;
 
 	void DrawList(GLSTATEMANAGER & glstate, const std::vector <DRAWABLE*> & drawlist, bool preculled);

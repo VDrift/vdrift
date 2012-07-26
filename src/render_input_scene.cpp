@@ -16,6 +16,7 @@ RENDER_INPUT_SCENE::RENDER_INPUT_SCENE():
 	writecolor(true),
 	writedepth(true),
 	carpainthack(false),
+	vlighting(false),
 	blendmode(BLENDMODE::DISABLED)
 {
 	MATHVECTOR <float, 3> front(1,0,0);
@@ -208,24 +209,42 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 	{
 		if (carpainthack)
 		{
-			glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-			// rgb
-			glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_INTERPOLATE);
-			glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB, GL_TEXTURE);
-			glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB, GL_PRIMARY_COLOR);
-			glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE2_RGB, GL_TEXTURE);
-			glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
-			glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_COLOR);
-			glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND2_RGB, GL_SRC_ALPHA);
-			// reset alpha
-			float mycolor[4] = {0.0, 0.0, 0.0, 1.0};
-			glTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, mycolor);
-			glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
-			glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA, GL_CONSTANT);
-			glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
+			if (!vlighting)
+			{
+				// turn on lighting for cars only atm
+				MATHVECTOR <float, 3> lightvec = lightposition;
+				(cam_rotation).RotateVector(lightvec);
+
+				// push some sane values, should be configurable ideally
+				GLfloat pos[] = {lightvec[0], lightvec[1], lightvec[2], 0.0f};
+				GLfloat specular[] = {1.0f, 1.0f, 1.0f, 1.0f};
+				GLfloat diffuse[] = {1.0f, 1.0f, 1.0f, 1.0f};
+				GLfloat ambient[] = {0.5f, 0.5f, 0.5f, 1.0f};
+				GLfloat global_ambient[] = {0.25f, 0.25f, 0.25f, 1.0f};
+
+				glEnable(GL_LIGHTING);
+				glLightModelfv(GL_LIGHT_MODEL_AMBIENT, global_ambient);
+				glLightfv(GL_LIGHT0, GL_SPECULAR, specular);
+				glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
+				glLightfv(GL_LIGHT0, GL_AMBIENT, ambient);
+				glLightfv(GL_LIGHT0, GL_POSITION, pos);
+				glEnable(GL_LIGHT0);
+
+				float mcolor[] = {1.0f, 1.0f, 1.0f, 1.0f};
+				glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, mcolor);
+
+				vlighting = true;
+			}
 		}
 		else
 		{
+			if (vlighting)
+			{
+				// turn off lighting for everything else
+				glDisable(GL_LIGHTING);
+				vlighting = false;
+			}
+
 			glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 		}
 	}
@@ -556,6 +575,45 @@ void RENDER_INPUT_SCENE::SelectTexturing(DRAWABLE & forme, GLSTATEMANAGER & glst
 	}
 
 	glstate.BindTexture2D(0, i->GetDiffuseMap());
+	if (carpainthack)
+	{
+		// car color
+		GLfloat color[4] = {0.0, 0.0, 0.0, 1.0};
+		forme.GetColor(color[0], color[1], color[2], color[3]);
+		glTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, color);
+
+		// first combiner
+		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_INTERPOLATE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB, GL_TEXTURE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB, GL_CONSTANT);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE2_RGB, GL_TEXTURE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
+		glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_COLOR);
+		glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND2_RGB, GL_SRC_ALPHA);
+		// don't care about alpha; set it to something harmless
+		glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA, GL_CONSTANT);
+		glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
+
+		// second combiner (bind some dummy texture)
+		//glstate.BindTexture2D(1, i->GetDiffuseMap()); //fails???
+		glActiveTexture(GL_TEXTURE1);
+		glEnable(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D, i->GetDiffuseMap()->GetID());
+
+		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB, GL_PREVIOUS);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB, GL_PRIMARY_COLOR);
+		glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
+		glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_COLOR);
+		// don't care about alpha; set it to something harmless
+		glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA, GL_PREVIOUS);
+		glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
+	}
+
 	if (shaders)
 	{
 		glstate.BindTexture2D(1, i->GetMiscMap1());
