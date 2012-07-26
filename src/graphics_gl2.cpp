@@ -227,7 +227,7 @@ bool GRAPHICS_GL2::Init(
 	else if (reflection_type == 2)
 		reflection_status = REFLECTION_DYNAMIC;
 
-	ChangeDisplay(resx, resy, bpp, depthbpp, fullscreen, antialiasing, info_output, error_output);
+	ChangeDisplay(resx, resy, error_output);
 
 	fsaa = 1;
 	if (antialiasing > 1)
@@ -583,9 +583,8 @@ void GRAPHICS_GL2::SetContrast(float value)
 }
 
 void GRAPHICS_GL2::ChangeDisplay(
-	const int width, const int height, const int bpp, const int dbpp,
-	const bool fullscreen, unsigned int antialiasing,
-    std::ostream & info_output, std::ostream & error_output)
+	const int width, const int height,
+	std::ostream & error_output)
 {
 	GLfloat ratio = ( GLfloat )width / ( GLfloat )height;
 	glViewport( 0, 0, ( GLint )width, ( GLint )height );
@@ -734,150 +733,150 @@ void GRAPHICS_GL2::EnableShaders(
 
 	GLUTIL::CheckForOpenGLErrors("EnableShaders: shader loading", error_output);
 
-	if (shader_load_success)
+	if (!shader_load_success)
 	{
-		using_shaders = true;
-		info_output << "Successfully enabled shaders" << std::endl;
+		// no shaders fallback
+		error_output << "Disabling shaders due to shader loading error" << std::endl;
+		DisableShaders(shaderpath, error_output);
+		return;
+	}
 
-		// unload current outputs
-		render_outputs.clear();
-		texture_outputs.clear();
-		texture_inputs.clear();
+	info_output << "Successfully enabled shaders" << std::endl;
+	using_shaders = true;
 
-		GLUTIL::CheckForOpenGLErrors("EnableShaders: FBO deinit", error_output);
+	// unload current outputs
+	render_outputs.clear();
+	texture_outputs.clear();
+	texture_inputs.clear();
 
-		bool ssao = (lighting > 0);
-		bool ssao_low = (lighting == 1);
-		bool ssao_high = (lighting == 2);
-		bool reflection_disabled = (reflection_status == REFLECTION_DISABLED);
-		bool reflection_dynamic = (reflection_status == REFLECTION_DYNAMIC);
-		bool shadows_near = shadows;
-		bool shadows_medium = shadows && shadow_distance > 0;
-		bool shadows_far = shadows && shadow_distance > 1;
-		bool shadow_quality_low = shadows && (shadow_quality == 0);
-		bool shadow_quality_medium = shadows && (shadow_quality == 1);
-		bool shadow_quality_high = shadows && (shadow_quality == 2);
-		bool shadow_quality_vhigh = shadows && (shadow_quality == 3);
-		bool shadow_quality_ultra = shadows && (shadow_quality == 4);
+	GLUTIL::CheckForOpenGLErrors("EnableShaders: FBO deinit", error_output);
 
-		// for now, map vhigh and ultra to high
-		shadow_quality_high = shadow_quality_high || shadow_quality_vhigh || shadow_quality_ultra;
-		shadow_quality_vhigh = false;
-		shadow_quality_ultra = true;
+	bool ssao = (lighting > 0);
+	bool ssao_low = (lighting == 1);
+	bool ssao_high = (lighting == 2);
+	bool reflection_disabled = (reflection_status == REFLECTION_DISABLED);
+	bool reflection_dynamic = (reflection_status == REFLECTION_DYNAMIC);
+	bool shadows_near = shadows;
+	bool shadows_medium = shadows && shadow_distance > 0;
+	bool shadows_far = shadows && shadow_distance > 1;
+	bool shadow_quality_low = shadows && (shadow_quality == 0);
+	bool shadow_quality_medium = shadows && (shadow_quality == 1);
+	bool shadow_quality_high = shadows && (shadow_quality == 2);
+	bool shadow_quality_vhigh = shadows && (shadow_quality == 3);
+	bool shadow_quality_ultra = shadows && (shadow_quality == 4);
 
-		conditions.clear();
-		if (fsaa > 1) conditions.insert("fsaa");
-		#define ADDCONDITION(x) if (x) conditions.insert(#x)
-		ADDCONDITION(bloom);
-		ADDCONDITION(normalmaps);
-		ADDCONDITION(ssao);
-		ADDCONDITION(ssao_low);
-		ADDCONDITION(ssao_high);
-		ADDCONDITION(reflection_disabled);
-		ADDCONDITION(reflection_dynamic);
-		ADDCONDITION(shadows_near);
-		ADDCONDITION(shadows_medium);
-		ADDCONDITION(shadows_far);
-		ADDCONDITION(shadow_quality_low);
-		ADDCONDITION(shadow_quality_medium);
-		ADDCONDITION(shadow_quality_high);
-		ADDCONDITION(shadow_quality_vhigh);
+	// for now, map vhigh and ultra to high
+	shadow_quality_high = shadow_quality_high || shadow_quality_vhigh || shadow_quality_ultra;
+	shadow_quality_vhigh = false;
+	shadow_quality_ultra = true;
+
+	conditions.clear();
+	if (fsaa > 1) conditions.insert("fsaa");
+	#define ADDCONDITION(x) if (x) conditions.insert(#x)
+	ADDCONDITION(bloom);
+	ADDCONDITION(normalmaps);
+	ADDCONDITION(ssao);
+	ADDCONDITION(ssao_low);
+	ADDCONDITION(ssao_high);
+	ADDCONDITION(reflection_disabled);
+	ADDCONDITION(reflection_dynamic);
+	ADDCONDITION(shadows_near);
+	ADDCONDITION(shadows_medium);
+	ADDCONDITION(shadows_far);
+	ADDCONDITION(shadow_quality_low);
+	ADDCONDITION(shadow_quality_medium);
+	ADDCONDITION(shadow_quality_high);
+	ADDCONDITION(shadow_quality_vhigh);
 // 		ADDCONDITION(shadow_quality_ultra);
-		#undef ADDCONDITION
+	#undef ADDCONDITION
 
-		// add some common textures
-		if (reflection_status == REFLECTION_STATIC)
-			texture_inputs["reflection_cube"] = static_reflection;
-		texture_inputs["ambient_cube"] = static_ambient;
+	// add some common textures
+	if (reflection_status == REFLECTION_STATIC)
+		texture_inputs["reflection_cube"] = static_reflection;
+	texture_inputs["ambient_cube"] = static_ambient;
 
-		for (std::vector <GRAPHICS_CONFIG_OUTPUT>::const_iterator i = config.outputs.begin(); i != config.outputs.end(); i++)
+	for (std::vector <GRAPHICS_CONFIG_OUTPUT>::const_iterator i = config.outputs.begin(); i != config.outputs.end(); i++)
+	{
+		if (i->conditions.Satisfied(conditions))
 		{
-			if (i->conditions.Satisfied(conditions))
+			if (texture_outputs.find(i->name) != texture_outputs.end())
 			{
-				if (texture_outputs.find(i->name) != texture_outputs.end())
+				error_output << "Detected duplicate output name in render config: " << i->name << ", only the first output will be constructed." << std::endl;
+				continue;
+			}
+
+			if (i->type == "framebuffer")
+			{
+				render_outputs[i->name].RenderToFramebuffer();
+			}
+			else
+			{
+				FBTEXTURE & fbtex = texture_outputs[i->name];
+				FBTEXTURE::TARGET type = FBTEXTURE::NORMAL;
+				if (i->type == "rectangle")
+					type = FBTEXTURE::RECTANGLE;
+				else if (i->type == "cube")
+					type = FBTEXTURE::CUBEMAP;
+				int fbms = 0;
+				if (i->multisample < 0)
+					fbms = fsaa;
+
+				// initialize fbtexture
+				fbtex.Init(i->width.GetSize(w),
+						   i->height.GetSize(h),
+						   type,
+						   TextureFormatFromString(i->format),
+						   (i->filter == "nearest"),
+						   i->mipmap,
+						   error_output,
+						   fbms,
+						   (i->format == "depthshadow"));
+
+				// map to input texture
+				texture_inputs[i->name] = fbtex;
+			}
+
+			info_output << "Initialized render output: " << i->name << (i->type != "framebuffer" ? " (FBO)" : " (framebuffer alias)") << std::endl;
+		}
+	}
+
+	render_outputs["framebuffer"].RenderToFramebuffer();
+
+	// go through all pass outputs and construct the actual FBOs, which can consist of one or more fbtextures
+	for (std::vector <GRAPHICS_CONFIG_PASS>::const_iterator i = config.passes.begin(); i != config.passes.end(); i++)
+	{
+		if (i->conditions.Satisfied(conditions))
+		{
+			// see if it already exists
+			std::string outname = i->output;
+			render_output_map_type::iterator curout = render_outputs.find(outname);
+			if (curout == render_outputs.end())
+			{
+				// tokenize the output list
+				std::vector <std::string> outputs = Tokenize(outname, " ");
+
+				// collect a list of textures for the outputs
+				std::vector <FBTEXTURE*> fbotex;
+				for (std::vector <std::string>::const_iterator o = outputs.begin(); o != outputs.end(); o++)
 				{
-					error_output << "Detected duplicate output name in render config: " << i->name << ", only the first output will be constructed." << std::endl;
+					texture_output_map_type::iterator to = texture_outputs.find(*o);
+					if (to != texture_outputs.end())
+					{
+						fbotex.push_back(&to->second);
+					}
+				}
+
+				if (fbotex.empty())
+				{
+					error_output << "None of these outputs are active: " << error_output << ", this pass will not have an output." << std::endl;
 					continue;
 				}
 
-				if (i->type == "framebuffer")
-				{
-					render_outputs[i->name].RenderToFramebuffer();
-				}
-				else
-				{
-					FBTEXTURE & fbtex = texture_outputs[i->name];
-					FBTEXTURE::TARGET type = FBTEXTURE::NORMAL;
-					if (i->type == "rectangle")
-						type = FBTEXTURE::RECTANGLE;
-					else if (i->type == "cube")
-						type = FBTEXTURE::CUBEMAP;
-					int fbms = 0;
-					if (i->multisample < 0)
-						fbms = fsaa;
-
-					// initialize fbtexture
-					fbtex.Init(i->width.GetSize(w),
-							   i->height.GetSize(h),
-							   type,
-							   TextureFormatFromString(i->format),
-							   (i->filter == "nearest"),
-							   i->mipmap,
-							   error_output,
-							   fbms,
-							   (i->format == "depthshadow"));
-
-					// map to input texture
-					texture_inputs[i->name] = fbtex;
-				}
-
-				info_output << "Initialized render output: " << i->name << (i->type != "framebuffer" ? " (FBO)" : " (framebuffer alias)") << std::endl;
+				// initialize fbo
+				FBOBJECT & fbo = render_outputs[outname].RenderToFBO();
+				fbo.Init(glstate, fbotex, error_output);
 			}
 		}
-
-		render_outputs["framebuffer"].RenderToFramebuffer();
-
-		// go through all pass outputs and construct the actual FBOs, which can consist of one or more fbtextures
-		for (std::vector <GRAPHICS_CONFIG_PASS>::const_iterator i = config.passes.begin(); i != config.passes.end(); i++)
-		{
-			if (i->conditions.Satisfied(conditions))
-			{
-				// see if it already exists
-				std::string outname = i->output;
-				render_output_map_type::iterator curout = render_outputs.find(outname);
-				if (curout == render_outputs.end())
-				{
-					// tokenize the output list
-					std::vector <std::string> outputs = Tokenize(outname, " ");
-
-					// collect a list of textures for the outputs
-					std::vector <FBTEXTURE*> fbotex;
-					for (std::vector <std::string>::const_iterator o = outputs.begin(); o != outputs.end(); o++)
-					{
-						texture_output_map_type::iterator to = texture_outputs.find(*o);
-						if (to != texture_outputs.end())
-						{
-							fbotex.push_back(&to->second);
-						}
-					}
-
-					if (fbotex.empty())
-					{
-						error_output << "None of these outputs are active: " << error_output << ", this pass will not have an output." << std::endl;
-						continue;
-					}
-
-					// initialize fbo
-					FBOBJECT & fbo = render_outputs[outname].RenderToFBO();
-					fbo.Init(glstate, fbotex, error_output);
-				}
-			}
-		}
-	}
-	else
-	{
-		error_output << "Disabling shaders due to shader loading error" << std::endl;
-		DisableShaders(shaderpath, error_output);
 	}
 }
 

@@ -132,10 +132,6 @@ private:
 
 	void ChangeDisplay(
 		const int width, const int height,
-		const int bpp, const int dbpp,
-		const bool fullscreen,
-		unsigned int antialiasing,
-		std::ostream & info_output,
 		std::ostream & error_output);
 
 	/// note that if variant is passed in, it is used as the shader name and the shader is also loaded with the variant_defines set
