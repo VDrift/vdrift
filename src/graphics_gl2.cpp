@@ -1030,7 +1030,7 @@ void GRAPHICS_GL2::DrawScenePass(
 	assert(!pass.draw.empty());
 	if (pass.draw.back() == "postprocess")
 	{
-		DrawScenePassPost(pass, culled_static_drawlist, error_output);
+		DrawScenePassPost(pass, error_output);
 		return;
 	}
 
@@ -1075,40 +1075,8 @@ void GRAPHICS_GL2::DrawScenePass(
 	}
 }
 
-void GRAPHICS_GL2::GetScenePassInputTextures(
-	const GRAPHICS_CONFIG_INPUTS & inputs,
-	std::vector <TEXTURE_INTERFACE*> & input_textures)
-{
-	for (std::map <unsigned int, std::string>::const_iterator t = inputs.tu.begin(); t != inputs.tu.end(); t++)
-	{
-		unsigned int tuid = t->first;
-
-		unsigned int cursize = input_textures.size();
-		for (unsigned int extra = cursize; extra < tuid; extra++)
-			input_textures.push_back(NULL);
-
-		const std::string & texname = t->second;
-
-		// quietly ignore invalid names
-		// this allows us to specify outputs that are only present for certain conditions
-		// and then always specify those outputs as inputs to later stages, and have
-		// them be ignored if the conditions aren't met
-		if (texture_inputs.find(texname) != texture_inputs.end())
-		{
-			input_textures.push_back(&*texture_inputs[texname]);
-		}
-		else
-		{
-			//TODO: decide if i want to do fancier error detection here to catch typos in render.conf
-			//std::cout << "warning: " << texname << " not found" << std::endl;
-			input_textures.push_back(NULL);
-		}
-	}
-}
-
 void GRAPHICS_GL2::DrawScenePassPost(
 	const GRAPHICS_CONFIG_PASS & pass,
-	std::map <std::string, PTRVECTOR <DRAWABLE> > & culled_static_drawlist,
 	std::ostream & error_output)
 {
 	assert(pass.draw.back() == "postprocess");
@@ -1151,6 +1119,37 @@ void GRAPHICS_GL2::DrawScenePassPost(
 		render_outputs[pass.output],
 		pass.write_color, pass.write_alpha,
 		error_output);
+}
+
+void GRAPHICS_GL2::GetScenePassInputTextures(
+	const GRAPHICS_CONFIG_INPUTS & inputs,
+	std::vector <TEXTURE_INTERFACE*> & input_textures)
+{
+	for (std::map <unsigned int, std::string>::const_iterator t = inputs.tu.begin(); t != inputs.tu.end(); t++)
+	{
+		unsigned int tuid = t->first;
+
+		unsigned int cursize = input_textures.size();
+		for (unsigned int extra = cursize; extra < tuid; extra++)
+			input_textures.push_back(NULL);
+
+		const std::string & texname = t->second;
+
+		// quietly ignore invalid names
+		// this allows us to specify outputs that are only present for certain conditions
+		// and then always specify those outputs as inputs to later stages, and have
+		// them be ignored if the conditions aren't met
+		if (texture_inputs.find(texname) != texture_inputs.end())
+		{
+			input_textures.push_back(&*texture_inputs[texname]);
+		}
+		else
+		{
+			//TODO: decide if i want to do fancier error detection here to catch typos in render.conf
+			//std::cout << "warning: " << texname << " not found" << std::endl;
+			input_textures.push_back(NULL);
+		}
+	}
 }
 
 void GRAPHICS_GL2::DrawScenePassLayer(

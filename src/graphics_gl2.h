@@ -171,7 +171,6 @@ private:
 	/// draw postprocess scene pass
 	void DrawScenePassPost(
 		const GRAPHICS_CONFIG_PASS & pass,
-		std::map <std::string, PTRVECTOR <DRAWABLE> > & culled_static_drawlist,
 		std::ostream & error_output);
 
 	/// get input textures vector from config inputs
