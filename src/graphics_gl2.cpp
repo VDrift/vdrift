@@ -1037,14 +1037,6 @@ void GRAPHICS_GL2::DrawScenePass(
 	std::vector <TEXTURE_INTERFACE*> input_textures;
 	GetScenePassInputTextures(pass.inputs, input_textures);
 
-	// setup render input
-	renderscene.SetBlendMode(BlendModeFromString(pass.blendmode));
-	renderscene.SetDepthMode(DepthModeFromString(pass.depthtest));
-	renderscene.SetClear(pass.clear_color, pass.clear_depth);
-	renderscene.SetWriteColor(pass.write_color);
-	renderscene.SetWriteAlpha(pass.write_alpha);
-	renderscene.SetWriteDepth(pass.write_depth);
-
 	// setup shader
 	if (using_shaders)
 	{
@@ -1057,10 +1049,26 @@ void GRAPHICS_GL2::DrawScenePass(
 		renderscene.SetDefaultShader(si->second);
 	}
 
+	// setup render input
+	renderscene.SetBlendMode(BlendModeFromString(pass.blendmode));
+	renderscene.SetDepthMode(DepthModeFromString(pass.depthtest));
+	renderscene.SetClear(pass.clear_color, pass.clear_depth);
+	renderscene.SetWriteColor(pass.write_color);
+	renderscene.SetWriteAlpha(pass.write_alpha);
+	renderscene.SetWriteDepth(pass.write_depth);
+
+	// setup render output
+	render_output_map_type::iterator oi = render_outputs.find(pass.output);
+	if (oi == render_outputs.end())
+	{
+		ReportOnce(&pass, "Render output " + pass.output + " couldn't be found", error_output);
+		return;
+	}
+
 	for (std::vector <std::string>::const_iterator d = pass.draw.begin(); d != pass.draw.end(); d++)
 	{
 		// draw layer
-		DrawScenePassLayer(*d, pass, input_textures, culled_static_drawlist, error_output);
+		DrawScenePassLayer(*d, pass, input_textures, culled_static_drawlist, oi->second, error_output);
 
 		// disable color, zclear
 		renderscene.SetClear(false, false);
@@ -1149,20 +1157,12 @@ void GRAPHICS_GL2::DrawScenePassLayer(
 	const std::string & layer,
 	const GRAPHICS_CONFIG_PASS & pass,
 	const std::vector <TEXTURE_INTERFACE*> & input_textures,
-	std::map <std::string, PTRVECTOR <DRAWABLE> > & culled_static_drawlist,
+	const std::map <std::string, PTRVECTOR <DRAWABLE> > & culled_static_drawlist,
+	RENDER_OUTPUT & render_output,
 	std::ostream & error_output)
 {
-	// setup render output
-	render_output_map_type::iterator oi = render_outputs.find(pass.output);
-
-	if (oi == render_outputs.end())
-	{
-		ReportOnce(&pass, "Render output " + pass.output + " couldn't be found", error_output);
-		return;
-	}
-
 	// handle the cubemap case
-	bool cubemap = (oi->second.IsFBO() && oi->second.RenderToFBO().IsCubemap());
+	bool cubemap = (render_output.IsFBO() && render_output.RenderToFBO().IsCubemap());
 	std::string cameraname = pass.camera;
 	const int cubesides = cubemap ? 6 : 1;
 
@@ -1176,7 +1176,7 @@ void GRAPHICS_GL2::DrawScenePassLayer(
 			cameraname = converter.str();
 
 			// attach the correct cube side on the render output
-			AttachCubeSide(cubeside, oi->second.RenderToFBO(), error_output);
+			AttachCubeSide(cubeside, render_output.RenderToFBO(), error_output);
 		}
 
 		// setup camera
@@ -1197,7 +1197,6 @@ void GRAPHICS_GL2::DrawScenePassLayer(
 
 		// setup dynamic drawlist
 		reseatable_reference <PTRVECTOR <DRAWABLE> > container = dynamic_drawlist.GetByName(layer);
-
 		if (!container)
 		{
 			ReportOnce(&pass, "Drawable container " + layer + " couldn't be found", error_output);
@@ -1206,9 +1205,8 @@ void GRAPHICS_GL2::DrawScenePassLayer(
 
 		// setup static drawlist
 		const std::string drawlist_key = BuildKey(cameraname, layer);
-		std::map <std::string, PTRVECTOR <DRAWABLE> >::iterator container_static =
+		std::map <std::string, PTRVECTOR <DRAWABLE> >::const_iterator container_static =
 			culled_static_drawlist.find(drawlist_key);
-
 		if (container_static == culled_static_drawlist.end())
 		{
 			ReportOnce(&pass, "Couldn't find culled static drawlist for camera/draw combination: " + drawlist_key, error_output);
@@ -1226,7 +1224,7 @@ void GRAPHICS_GL2::DrawScenePassLayer(
 			container_static->second,
 			input_textures,
 			renderscene,
-			oi->second,
+			render_output,
 			error_output);
 
 		// cleanup
@@ -1235,7 +1233,7 @@ void GRAPHICS_GL2::DrawScenePassLayer(
 }
 
 void GRAPHICS_GL2::RenderDrawlist(
-	std::vector <DRAWABLE*> & drawlist,
+	const std::vector <DRAWABLE*> & drawlist,
 	RENDER_INPUT_SCENE & render_scene,
 	RENDER_OUTPUT & render_output,
 	std::ostream & error_output)
@@ -1249,8 +1247,8 @@ void GRAPHICS_GL2::RenderDrawlist(
 }
 
 void GRAPHICS_GL2::RenderDrawlists(
-	std::vector <DRAWABLE*> & dynamic_drawlist,
-	std::vector <DRAWABLE*> & static_drawlist,
+	const std::vector <DRAWABLE*> & dynamic_drawlist,
+	const std::vector <DRAWABLE*> & static_drawlist,
 	const std::vector <TEXTURE_INTERFACE*> & extra_textures,
 	RENDER_INPUT_SCENE & render_scene,
 	RENDER_OUTPUT & render_output,

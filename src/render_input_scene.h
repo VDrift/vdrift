@@ -22,8 +22,8 @@ public:
 	~RENDER_INPUT_SCENE();
 
 	void SetDrawLists(
-		std::vector <DRAWABLE*> & dl_dynamic,
-		std::vector <DRAWABLE*> & dl_static);
+		const std::vector <DRAWABLE*> & dl_dynamic,
+		const std::vector <DRAWABLE*> & dl_static);
 
 	void DisableOrtho();
 
@@ -71,8 +71,8 @@ public:
 	void SetBlendMode(BLENDMODE::BLENDMODE mode);
 
 private:
-	reseatable_reference <std::vector <DRAWABLE*> > dynamic_drawlist_ptr;
-	reseatable_reference <std::vector <DRAWABLE*> > static_drawlist_ptr;
+	reseatable_reference <const std::vector <DRAWABLE*> > dynamic_drawlist_ptr;
+	reseatable_reference <const std::vector <DRAWABLE*> > static_drawlist_ptr;
 	bool last_transform_valid;
 	MATRIX4 <float> last_transform;
 	QUATERNION <float> cam_rotation; //used for the skybox effect
@@ -99,7 +99,7 @@ private:
 	bool carpainthack;
 	BLENDMODE::BLENDMODE blendmode;
 
-	void DrawList(GLSTATEMANAGER & glstate, std::vector <DRAWABLE*> & drawlist, bool preculled);
+	void DrawList(GLSTATEMANAGER & glstate, const std::vector <DRAWABLE*> & drawlist, bool preculled);
 
 	/// returns true if the object was culled and should not be drawn
 	bool FrustumCull(DRAWABLE & tocull);

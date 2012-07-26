@@ -31,8 +31,8 @@ RENDER_INPUT_SCENE::~RENDER_INPUT_SCENE()
 }
 
 void RENDER_INPUT_SCENE::SetDrawLists(
-	std::vector <DRAWABLE*> & dl_dynamic,
-	std::vector <DRAWABLE*> & dl_static)
+	const std::vector <DRAWABLE*> & dl_dynamic,
+	const std::vector <DRAWABLE*> & dl_static)
 {
 	dynamic_drawlist_ptr = &dl_dynamic;
 	static_drawlist_ptr = &dl_static;
@@ -351,12 +351,12 @@ void RENDER_INPUT_SCENE::SetBlendMode(BLENDMODE::BLENDMODE mode)
 	blendmode = mode;
 }
 
-void RENDER_INPUT_SCENE::DrawList(GLSTATEMANAGER & glstate, std::vector <DRAWABLE*> & drawlist, bool preculled)
+void RENDER_INPUT_SCENE::DrawList(GLSTATEMANAGER & glstate, const std::vector <DRAWABLE*> & drawlist, bool preculled)
 {
 	unsigned int drawcount = 0;
 	unsigned int loopcount = 0;
 
-	for (std::vector <DRAWABLE*>::iterator ptr = drawlist.begin(); ptr != drawlist.end(); ptr++, loopcount++)
+	for (std::vector <DRAWABLE*>::const_iterator ptr = drawlist.begin(); ptr != drawlist.end(); ptr++, loopcount++)
 	{
 		DRAWABLE * i = *ptr;
 		if (preculled || !FrustumCull(*i))

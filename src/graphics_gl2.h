@@ -183,18 +183,19 @@ private:
 		const std::string & layer,
 		const GRAPHICS_CONFIG_PASS & pass,
 		const std::vector <TEXTURE_INTERFACE*> & input_textures,
-		std::map <std::string, PTRVECTOR <DRAWABLE> > & culled_static_drawlist,
+		const std::map <std::string, PTRVECTOR <DRAWABLE> > & culled_static_drawlist,
+		RENDER_OUTPUT & render_output,
 		std::ostream & error_output);
 
 	void RenderDrawlist(
-		std::vector <DRAWABLE*> & drawlist,
+		const std::vector <DRAWABLE*> & drawlist,
 		RENDER_INPUT_SCENE & render_scene,
 		RENDER_OUTPUT & render_output,
 		std::ostream & error_output);
 
 	void RenderDrawlists(
-		std::vector <DRAWABLE*> & dynamic_drawlist,
-		std::vector <DRAWABLE*> & static_drawlist,
+		const std::vector <DRAWABLE*> & dynamic_drawlist,
+		const std::vector <DRAWABLE*> & static_drawlist,
 		const std::vector <TEXTURE_INTERFACE*> & extra_textures,
 		RENDER_INPUT_SCENE & render_scene,
 		RENDER_OUTPUT & render_output,
