@@ -179,6 +179,13 @@ private:
 		const GRAPHICS_CONFIG_INPUTS & inputs,
 		std::vector <TEXTURE_INTERFACE*> & input_textures);
 
+	void DrawScenePassLayer(
+		const std::string & layer,
+		const GRAPHICS_CONFIG_PASS & pass,
+		const std::vector <TEXTURE_INTERFACE*> & input_textures,
+		std::map <std::string, PTRVECTOR <DRAWABLE> > & culled_static_drawlist,
+		std::ostream & error_output);
+
 	void RenderDrawlist(
 		std::vector <DRAWABLE*> & drawlist,
 		RENDER_INPUT_SCENE & render_scene,

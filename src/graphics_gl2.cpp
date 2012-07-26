@@ -1042,106 +1042,7 @@ void GRAPHICS_GL2::DrawScenePass(
 
 	for (std::vector <std::string>::const_iterator d = pass.draw.begin(); d != pass.draw.end(); d++)
 	{
-		// setup render output
-		render_output_map_type::iterator oi = render_outputs.find(pass.output);
-
-		if (oi == render_outputs.end())
-		{
-			ReportOnce(&pass, "Render output "+pass.output+" couldn't be found", error_output);
-			return;
-		}
-
-		// handle the cubemap case
-		bool cubemap = (oi->second.IsFBO() && oi->second.RenderToFBO().IsCubemap());
-		std::string cameraname = pass.camera;
-		const int cubesides = cubemap ? 6 : 1;
-
-		for (int cubeside = 0; cubeside < cubesides; cubeside++)
-		{
-			if (cubemap)
-			{
-				// build a name for the sub camera
-				std::stringstream converter;
-				converter << pass.camera << "_cubeside" << cubeside;
-				cameraname = converter.str();
-
-				// attach the correct cube side on the render output
-				AttachCubeSide(cubeside, oi->second.RenderToFBO(), error_output);
-			}
-
-			// setup camera
-			camera_map_type::iterator ci = cameras.find(cameraname);
-
-			if (ci == cameras.end())
-			{
-				ReportOnce(&pass, "Camera "+pass.camera+" couldn't be found", error_output);
-				return;
-			}
-
-			GRAPHICS_CAMERA & cam = ci->second;
-			if (cam.orthomode)
-				renderscene.SetOrtho(cam.orthomin, cam.orthomax);
-			else
-				renderscene.DisableOrtho();
-			renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h);
-
-			// setup shader
-			if (using_shaders)
-			{
-				shader_map_type::iterator si = shadermap.find(pass.shader);
-				if (si == shadermap.end())
-				{
-					ReportOnce(&pass, "Shader "+pass.shader+" couldn't be found", error_output);
-					return;
-				}
-				renderscene.SetDefaultShader(si->second);
-			}
-
-			// setup other flags
-			if (d == pass.draw.begin())
-				renderscene.SetClear(pass.clear_color, pass.clear_depth);
-			else
-				renderscene.SetClear(false, false);
-			renderscene.SetWriteColor(pass.write_color);
-			renderscene.SetWriteAlpha(pass.write_alpha);
-			renderscene.SetWriteDepth(pass.write_depth);
-
-			// setup dynamic drawlist
-			reseatable_reference <PTRVECTOR <DRAWABLE> > container = dynamic_drawlist.GetByName(*d);
-
-			if (!container)
-			{
-				ReportOnce(&pass, "Drawable container "+*d+" couldn't be found", error_output);
-				return;
-			}
-
-			// setup static drawlist
-			std::map <std::string, PTRVECTOR <DRAWABLE> >::iterator container_static =
-						culled_static_drawlist.find(BuildKey(cameraname,*d));
-
-			if (container_static == culled_static_drawlist.end())
-			{
-				ReportOnce(&pass, "Couldn't find culled static drawlist for camera/draw combination: "+BuildKey(cameraname,*d), error_output);
-				return;
-			}
-
-			GLUTIL::CheckForOpenGLErrors("render setup", error_output);
-
-			// car paint hack for non-shader path
-			bool carhack = !using_shaders && (*d == "nocamtrans_noblend" || *d == "car_noblend");
-			renderscene.SetCarPaintHack(carhack);
-
-			// render
-			RenderDrawlists(*container,
-				container_static->second,
-				input_textures,
-				renderscene,
-				oi->second,
-				error_output);
-
-			// cleanup
-			renderscene.DisableOrtho();
-		}
+		DrawScenePassLayer(*d, pass, input_textures, culled_static_drawlist, error_output);
 	}
 }
 
@@ -1220,6 +1121,116 @@ void GRAPHICS_GL2::DrawScenePassPost(
 		render_outputs[pass.output],
 		pass.write_color, pass.write_alpha,
 		error_output);
+}
+
+void GRAPHICS_GL2::DrawScenePassLayer(
+	const std::string & layer,
+	const GRAPHICS_CONFIG_PASS & pass,
+	const std::vector <TEXTURE_INTERFACE*> & input_textures,
+	std::map <std::string, PTRVECTOR <DRAWABLE> > & culled_static_drawlist,
+	std::ostream & error_output)
+{
+	// setup render output
+	render_output_map_type::iterator oi = render_outputs.find(pass.output);
+
+	if (oi == render_outputs.end())
+	{
+		ReportOnce(&pass, "Render output " + pass.output + " couldn't be found", error_output);
+		return;
+	}
+
+	// handle the cubemap case
+	bool cubemap = (oi->second.IsFBO() && oi->second.RenderToFBO().IsCubemap());
+	std::string cameraname = pass.camera;
+	const int cubesides = cubemap ? 6 : 1;
+
+	for (int cubeside = 0; cubeside < cubesides; cubeside++)
+	{
+		if (cubemap)
+		{
+			// build a name for the sub camera
+			std::stringstream converter;
+			converter << pass.camera << "_cubeside" << cubeside;
+			cameraname = converter.str();
+
+			// attach the correct cube side on the render output
+			AttachCubeSide(cubeside, oi->second.RenderToFBO(), error_output);
+		}
+
+		// setup camera
+		camera_map_type::iterator ci = cameras.find(cameraname);
+
+		if (ci == cameras.end())
+		{
+			ReportOnce(&pass, "Camera " + pass.camera + " couldn't be found", error_output);
+			return;
+		}
+
+		GRAPHICS_CAMERA & cam = ci->second;
+		if (cam.orthomode)
+			renderscene.SetOrtho(cam.orthomin, cam.orthomax);
+		else
+			renderscene.DisableOrtho();
+		renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h);
+
+		// setup shader
+		if (using_shaders)
+		{
+			shader_map_type::iterator si = shadermap.find(pass.shader);
+			if (si == shadermap.end())
+			{
+				ReportOnce(&pass, "Shader " + pass.shader + " couldn't be found", error_output);
+				return;
+			}
+			renderscene.SetDefaultShader(si->second);
+		}
+
+		// setup other flags
+		if (layer == *pass.draw.begin())
+			renderscene.SetClear(pass.clear_color, pass.clear_depth);
+		else
+			renderscene.SetClear(false, false);
+		renderscene.SetWriteColor(pass.write_color);
+		renderscene.SetWriteAlpha(pass.write_alpha);
+		renderscene.SetWriteDepth(pass.write_depth);
+
+		// setup dynamic drawlist
+		reseatable_reference <PTRVECTOR <DRAWABLE> > container = dynamic_drawlist.GetByName(layer);
+
+		if (!container)
+		{
+			ReportOnce(&pass, "Drawable container " + layer + " couldn't be found", error_output);
+			return;
+		}
+
+		// setup static drawlist
+		const std::string drawlist_key = BuildKey(cameraname, layer);
+		std::map <std::string, PTRVECTOR <DRAWABLE> >::iterator container_static =
+			culled_static_drawlist.find(drawlist_key);
+
+		if (container_static == culled_static_drawlist.end())
+		{
+			ReportOnce(&pass, "Couldn't find culled static drawlist for camera/draw combination: " + drawlist_key, error_output);
+			return;
+		}
+
+		GLUTIL::CheckForOpenGLErrors("render setup", error_output);
+
+		// car paint hack for non-shader path
+		bool carhack = !using_shaders && (layer == "nocamtrans_noblend" || layer == "car_noblend");
+		renderscene.SetCarPaintHack(carhack);
+
+		// render
+		RenderDrawlists(*container,
+			container_static->second,
+			input_textures,
+			renderscene,
+			oi->second,
+			error_output);
+
+		// cleanup
+		renderscene.DisableOrtho();
+	}
 }
 
 void GRAPHICS_GL2::RenderDrawlist(
