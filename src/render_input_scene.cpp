@@ -280,6 +280,15 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 			{
 				// turn off lighting for everything else
 				glDisable(GL_LIGHTING);
+
+				// reset first texture combiner
+				glActiveTexture(GL_TEXTURE0);
+				glDisable(GL_TEXTURE_2D);
+
+				// reset second texture combiner
+				glActiveTexture(GL_TEXTURE1);
+				glDisable(GL_TEXTURE_2D);
+
 				vlighting = false;
 			}
 
