@@ -217,14 +217,13 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 				(cam_rotation).RotateVector(lightvec);
 
 				// push some sane values, should be configurable maybe?
+				// vcol = light_ambient * material_ambient
+				// vcol += L.N * light_diffuse * material_diffuse
+				// vcol += (H.N)^n * light_specular * material_specular
 				GLfloat pos[] = {lightvec[0], lightvec[1], lightvec[2], 0.0f};
-				GLfloat specular[] = {1.0f, 1.0f, 1.0f, 1.0f};
-				GLfloat diffuse[] = {1.0f, 1.0f, 1.0f, 1.0f};
-				GLfloat ambient[] = {0.5f, 0.5f, 0.5f, 1.0f};
-				GLfloat global_ambient[] = {0.25f, 0.25f, 0.25f, 1.0f};
+				GLfloat diffuse[] = {0.4f, 0.4f, 0.4f, 1.0f};
+				GLfloat ambient[] = {0.6f, 0.6f, 0.6f, 1.0f};
 				glEnable(GL_LIGHTING);
-				glLightModelfv(GL_LIGHT_MODEL_AMBIENT, global_ambient);
-				glLightfv(GL_LIGHT0, GL_SPECULAR, specular);
 				glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
 				glLightfv(GL_LIGHT0, GL_AMBIENT, ambient);
 				glLightfv(GL_LIGHT0, GL_POSITION, pos);
