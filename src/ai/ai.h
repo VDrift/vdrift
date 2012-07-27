@@ -20,7 +20,6 @@
 #ifndef _AI_H
 #define _AI_H
 
-#include "car.h"
 #include "ai_car.h"
 #include <string>
 #include <vector>
