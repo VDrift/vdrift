@@ -104,9 +104,9 @@ src = Split("""aabb.cpp
 		scenenode.cpp
 		settings.cpp
 		shader.cpp
-		sound.cpp
-		soundbuffer.cpp
-		soundfilter.cpp
+		sound/sound.cpp
+		sound/soundbuffer.cpp
+		sound/soundfilter.cpp
 		sprite2d.cpp
 		suspensionbumpdetection.cpp
 		svn_sourceforge.cpp

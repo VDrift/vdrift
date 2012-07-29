@@ -30,7 +30,7 @@
 #include "loadcamera.h"
 #include "camera.h"
 #include "cfg/ptree.h"
-#include "sound.h"
+#include "sound/sound.h"
 
 #include <map>
 #include <list>

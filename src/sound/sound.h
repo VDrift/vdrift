@@ -20,8 +20,8 @@
 #ifndef _SOUND_H
 #define _SOUND_H
 
-#include "soundbuffer.h"
-#include "soundfilter.h"
+#include "sound/soundbuffer.h"
+#include "sound/soundfilter.h"
 #include "tripplebuffer.h"
 #include "mathvector.h"
 #include "quaternion.h"

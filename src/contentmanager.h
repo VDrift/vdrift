@@ -20,7 +20,7 @@
 #ifndef _CONTENTMANAGER_H
 #define _CONTENTMANAGER_H
 
-#include "soundinfo.h"
+#include "sound/soundinfo.h"
 #include "textureinfo.h"
 #include "memory.h"
 #include <map>

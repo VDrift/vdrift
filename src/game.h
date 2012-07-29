@@ -37,7 +37,7 @@
 #include "carcontrolmap_local.h"
 #include "hud.h"
 #include "inputgraph.h"
-#include "sound.h"
+#include "sound/sound.h"
 #include "camera.h"
 #include "camera_free.h"
 #include "trackmap.h"

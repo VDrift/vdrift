@@ -20,7 +20,7 @@
 #include "contentmanager.h"
 #include "texture.h"
 #include "model_joe03.h"
-#include "soundbuffer.h"
+#include "sound/soundbuffer.h"
 
 #include <fstream>
 
