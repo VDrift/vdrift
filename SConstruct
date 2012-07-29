@@ -498,6 +498,8 @@ env.Alias(target = 'bin-package', source = bin_archive)
 #----------------#
 Export(['env', 'version', 'src_dir', 'bin_dir'])
 if 'install' in COMMAND_LINE_TARGETS:
+    if not os.path.isfile('data/SConscript'):
+        raise 'VDrift data not found. Please make sure data is placed in vdrift directory. See README.md and http://wiki.vdrift.net.' 
     SConscript('data/SConscript')
 
 if 'src-package' in COMMAND_LINE_TARGETS:
