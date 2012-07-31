@@ -17,38 +17,38 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _PERFORMANCE_TESTING_H
-#define _PERFORMANCE_TESTING_H
+#ifndef _MODELFACTORY_H
+#define _MODELFACTORY_H
 
-#include "cardynamics.h"
+#include "content/contentfactory.h"
 
-class ContentManager;
+class MODEL;
 
-class PERFORMANCE_TESTING
+template <>
+class Factory<MODEL>
 {
 public:
-	PERFORMANCE_TESTING(DynamicsWorld & world);
+	struct empty {};
 
-	void Test(
-		const std::string & cardir,
-		const std::string & carname,
-		ContentManager & content,
-		std::ostream & info_output,
-		std::ostream & error_output);
+	Factory();
+
+	/// use VBOs instead of draw lists for models
+	void init(bool use_vbo);
+
+	template <class P>
+	bool create(
+		std::tr1::shared_ptr<MODEL> & sptr,
+		std::ostream & error,
+		const std::string & basepath,
+		const std::string & path,
+		const std::string & name,
+		const P & param);
+
+	std::tr1::shared_ptr<MODEL> getDefault() const;
 
 private:
-	DynamicsWorld & world;
-	TRACKSURFACE surface;
-	CARDYNAMICS car;
-	std::string carstate;
-
-	void SimulateFlatRoad();
-
-	void ResetCar();
-
-	void TestMaxSpeed(std::ostream & info_output, std::ostream & error_output);
-
-	void TestStoppingDistance(bool abs, std::ostream & info_output, std::ostream & error_output);
+	std::tr1::shared_ptr<MODEL> m_default;
+	bool m_vbo;
 };
 
-#endif
+#endif // _MODELFACTORY_H

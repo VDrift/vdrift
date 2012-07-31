@@ -18,7 +18,7 @@
 /************************************************************************/
 
 #include "font.h"
-#include "contentmanager.h"
+#include "content/contentmanager.h"
 #include "texture.h"
 
 #include <sstream>
@@ -75,7 +75,7 @@ bool FONT::Load(
 	texinfo.mipmap = mipmap;
 	texinfo.repeatu = false;
 	texinfo.repeatv = false;
-	if (!content.load(texpath, texname, texinfo, font_texture)) return false;
+	content.load(font_texture, texpath, texname, texinfo);
 
 	std::ifstream fontinfo(fontinfopath.c_str());
 	if (!fontinfo)

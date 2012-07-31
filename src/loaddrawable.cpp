@@ -18,7 +18,7 @@
 /************************************************************************/
 
 #include "loaddrawable.h"
-#include "contentmanager.h"
+#include "content/contentmanager.h"
 #include "textureinfo.h"
 #include "cfg/ptree.h"
 
@@ -74,27 +74,27 @@ bool LoadDrawable::operator()(
 	}
 	if (texname.size() > 0)
 	{
-		if (!content.load(path, texname[0], texinfo, tex)) return false;
+		content.load(tex, path, texname[0], texinfo);
 		drawable.SetDiffuseMap(tex);
 	}
 	if (texname.size() > 1)
 	{
-		if (!content.load(path, texname[1], texinfo, tex)) return false;
+		content.load(tex, path, texname[1], texinfo);
 		drawable.SetMiscMap1(tex);
 	}
 	if (texname.size() > 2)
 	{
-		if (!content.load(path, texname[2], texinfo, tex)) return false;
+		content.load(tex, path, texname[2], texinfo);
 		drawable.SetMiscMap2(tex);
 	}
 
 	// set mesh
 	std::tr1::shared_ptr<MODEL> mesh;
-	if (!content.load(path, meshname, mesh)) return false;
+	content.load(mesh, path, meshname);
 
 	std::string scalestr;
 	if (cfg.get("scale", scalestr) &&
-		!content.get(path, meshname + scalestr, mesh))
+		!content.get(mesh, path, meshname + scalestr))
 	{
 		MATHVECTOR<float, 3> scale;
 		std::stringstream s(scalestr);
@@ -102,7 +102,7 @@ bool LoadDrawable::operator()(
 
 		VERTEXARRAY meshva = mesh->GetVertexArray();
 		meshva.Scale(scale[0], scale[1], scale[2]);
-		content.load(path, meshname + scalestr, meshva, mesh);
+		content.load(mesh, path, meshname + scalestr, meshva);
 	}
 	drawable.SetModel(*mesh);
 	modellist.push_back(mesh);

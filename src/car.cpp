@@ -22,7 +22,7 @@
 #include "dynamicsworld.h"
 #include "tracksurface.h"
 #include "carinput.h"
-#include "contentmanager.h"
+#include "content/contentmanager.h"
 #include "textureinfo.h"
 #include "model_joe03.h"
 #include "mesh_gen.h"
@@ -133,39 +133,42 @@ static bool LoadWheel(
 
 	// get wheel disk mesh
 	std::tr1::shared_ptr<MODEL> mesh;
-	if (!content.load(path, meshname, mesh)) return false;
+	content.load(mesh, path, meshname);
 
 	// gen wheel mesh
-	if (!content.get(path, meshname+tiredim, mesh))
+	if (!content.get(mesh, path, meshname + tiredim))
 	{
 		VERTEXARRAY rimva, diskva;
 		MESHGEN::mg_rim(rimva, size[0], size[1], size[2], 10);
 		diskva = mesh->GetVertexArray();
 		diskva.Translate(-0.75 * 0.5, 0, 0);
 		diskva.Scale(width, diameter, diameter);
-		content.load(path, meshname+tiredim, rimva + diskva, mesh);
+		content.load(mesh, path, meshname + tiredim, rimva + diskva);
 	}
 
 	// load wheel
-	if (!loadDrawable(meshname+tiredim, texname, cfg_wheel, topnode, &wheelnode))
+	if (!loadDrawable(meshname + tiredim, texname, cfg_wheel, topnode, &wheelnode))
 	{
 		return false;
 	}
 
 	// tire (optional)
 	texname.clear();
-	if (!cfg_tire->get("texture", texname, error_output)) return true;
+	if (!cfg_tire->get("texture", texname, error_output))
+	{
+		return true;
+	}
 
 	// gen tire mesh
-	if (!content.get(path, "tire"+tiredim, mesh))
+	if (!content.get(mesh, path, "tire" + tiredim))
 	{
 		VERTEXARRAY tireva;
 		MESHGEN::mg_tire(tireva, size[0], size[1], size[2]);
-		content.load(path, "tire"+tiredim, tireva, mesh);
+		content.load(mesh, path, "tire" + tiredim, tireva);
 	}
 
 	// load tire
-	if (!loadDrawable("tire"+tiredim, texname, *cfg_tire, topnode.GetNode(wheelnode)))
+	if (!loadDrawable("tire" + tiredim, texname, *cfg_tire, topnode.GetNode(wheelnode)))
 	{
 		return false;
 	}
@@ -183,17 +186,17 @@ static bool LoadWheel(
 	cfg_brake->get("radius", radiusstr);
 
 	// gen brake disk mesh
-	if (!content.get(path, "brake"+radiusstr, mesh))
+	if (!content.get(mesh, path, "brake" + radiusstr))
 	{
 		float diameter_mm = radius * 2 * 1000;
 		float thickness_mm = 0.025 * 1000;
 		VERTEXARRAY brakeva;
 		MESHGEN::mg_brake_rotor(brakeva, diameter_mm, thickness_mm);
-		content.load(path, "brake"+radiusstr, brakeva, mesh);
+		content.load(mesh, path, "brake" + radiusstr, brakeva);
 	}
 
 	// load brake disk
-	if (!loadDrawable("brake"+radiusstr, texname, *cfg_brake, topnode.GetNode(wheelnode)))
+	if (!loadDrawable("brake" + radiusstr, texname, *cfg_brake, topnode.GetNode(wheelnode)))
 	{
 		return false;
 	}
@@ -246,12 +249,12 @@ bool CAR::LoadLight(
 	node.GetTransform().SetTranslation(MATHVECTOR<float,3>(pos[0], pos[1], pos[2]));
 
 	std::tr1::shared_ptr<MODEL> mesh;
-	if (!content.get("", "cube"+radiusstr, mesh))
+	if (!content.get(mesh, "", "cube" + radiusstr))
 	{
 		VERTEXARRAY varray;
 		varray.SetToUnitCube();
 		varray.Scale(radius, radius, radius);
-		content.load("", "cube"+radiusstr, varray, mesh);
+		content.load(mesh, "", "cube" + radiusstr, varray);
 	}
     models.push_back(mesh);
 
@@ -269,17 +272,13 @@ bool CAR::LoadLight(
 
 bool CAR::LoadGraphics(
 	const PTree & cfg,
-	const std::string & partspath,
 	const std::string & carpath,
 	const std::string & carname,
 	const std::string & carpaint,
 	const MATHVECTOR <float, 3> & carcolor,
 	const int anisotropy,
 	const float camerabounce,
-	const bool damage,
-	const bool debugmode,
 	ContentManager & content,
-	std::ostream & info_output,
 	std::ostream & error_output)
 {
 	//write_inf(cfg, std::cerr);
@@ -423,17 +422,19 @@ bool CAR::LoadPhysics(
 	const bool defaultabs,
 	const bool defaulttcs,
 	const bool damage,
-	ContentManager & content,
 	DynamicsWorld & world,
+	ContentManager & content,
 	std::ostream & error_output)
 {
 	std::string carmodel;
-	std::tr1::shared_ptr<MODEL> modelptr;
-	if (!cfg.get("body.mesh", carmodel, error_output)) return false;
-	if (!content.load(carpath, carmodel, modelptr)) return false;
+	if (!cfg.get("body.mesh", carmodel, error_output))
+		return false;
 
-	btVector3 size = ToBulletVector(modelptr->GetSize());
-	btVector3 center = ToBulletVector(modelptr->GetCenter());
+	std::tr1::shared_ptr<MODEL> model;
+	content.load(model, carpath, carmodel);
+
+	btVector3 size = ToBulletVector(model->GetSize());
+	btVector3 center = ToBulletVector(model->GetCenter());
 	btVector3 position = ToBulletVector(initial_position);
 	btQuaternion rotation = ToBulletQuaternion(initial_orientation);
 
@@ -548,7 +549,7 @@ bool CAR::LoadSounds(
 	else
 	{
 		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
-		if (!content.load(carpath, "engine", soundptr)) return false;
+		content.load(soundptr, carpath, "engine");
 		enginesounds.push_back(ENGINESOUNDINFO());
 		enginesounds.back().sound_source = sound.AddSource(soundptr, 0, true, true);
 	}
@@ -557,7 +558,7 @@ bool CAR::LoadSounds(
 	for (int i = 0; i < 4; ++i)
 	{
 		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
-		if (!content.load(carpath, "tire_squeal", soundptr)) return false;
+		content.load(soundptr, carpath, "tire_squeal");
 		tiresqueal[i] = sound.AddSource(soundptr, i * 0.25, true, true);
 	}
 
@@ -565,7 +566,7 @@ bool CAR::LoadSounds(
 	for (int i = 0; i < 4; ++i)
 	{
 		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
-		if (!content.load(carpath, "gravel", soundptr)) return false;
+		content.load(soundptr, carpath, "gravel");
 		gravelsound[i] = sound.AddSource(soundptr, i * 0.25, true, true);
 	}
 
@@ -573,7 +574,7 @@ bool CAR::LoadSounds(
 	for (int i = 0; i < 4; ++i)
 	{
 		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
-		if (!content.load(carpath, "grass", soundptr)) return false;
+		content.load(soundptr, carpath, "grass");
 		grasssound[i] = sound.AddSource(soundptr, i * 0.25, true, true);
 	}
 
@@ -583,11 +584,11 @@ bool CAR::LoadSounds(
 		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
 		if (i >= 2)
 		{
-			if (!content.load(carpath, "bump_rear", soundptr)) return false;
+			content.load(soundptr, carpath, "bump_rear");
 		}
 		else
 		{
-			if (!content.load(carpath, "bump_front", soundptr)) return false;
+			content.load(soundptr, carpath, "bump_front");
 		}
 		tirebump[i] = sound.AddSource(soundptr, 0, true, false);
 	}
@@ -595,34 +596,34 @@ bool CAR::LoadSounds(
 	//set up crash sound
 	{
 		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
-		if (!content.load(carpath, "crash", soundptr)) return false;
+		content.load(soundptr, carpath, "crash");
 		crashsound = sound.AddSource(soundptr, 0, true, false);
 	}
 
 	//set up gear sound
 	{
 		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
-		if (!content.load(carpath, "gear", soundptr)) return false;
+		content.load(soundptr, carpath, "gear");
 		gearsound = sound.AddSource(soundptr, 0, true, false);
 	}
 
 	//set up brake sound
 	{
 		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
-		if (!content.load(carpath, "brake", soundptr)) return false;
+		content.load(soundptr, carpath, "brake");
 		brakesound = sound.AddSource(soundptr, 0, true, false);
 	}
 
 	//set up handbrake sound
 	{
 		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
-		if (!content.load(carpath, "handbrake", soundptr)) return false;
+		content.load(soundptr, carpath, "handbrake");
 		handbrakesound = sound.AddSource(soundptr, 0, true, false);
 	}
 
 	{
 		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
-		if (!content.load(carpath, "wind", soundptr)) return false;
+		content.load(soundptr, carpath, "wind");
 		roadnoise = sound.AddSource(soundptr, 0, true, true);
 	}
 

@@ -37,10 +37,10 @@ struct ini
 {
 	std::istream & in;
 	PTree & root;
-	const file_open * fopen;
-	PTree cache;
+	Include * include;
 
-	ini(std::istream & in, PTree & root, const file_open * fopen = 0) : in(in), root(root), fopen(fopen)
+	ini(std::istream & in, PTree & root, Include * inc) :
+		in(in), root(root), include(inc)
 	{
 		// Constructor.
 	}
@@ -81,31 +81,25 @@ struct ini
 			size_t next2 = line.find_first_not_of(" \t\r", next+1);
 			next = line.find_last_not_of(" \t", next-1);
 			if (next2 >= end)
+			{
 				continue;
+			}
 
+			// New property.
 			name = line.substr(begin, next+1);
-			if (!fopen || line.at(next2) != '&')
+			//std::string value = line.substr(next2, end-next2-1);
+			if (include && line.at(next2) == '&')//name == "include")
 			{
-				// New property.
-				std::string value = line.substr(next2, end-next2);
+				// Value is a reference, include.
+				std::string value = line.substr(next2+1, end-next2);
+				//(*include)(node, value);
+				(*include)(node.set(name, value), value);
+			}
+			else
+			{
+				std::string value = line.substr(next2, end-next2-1);
 				node.set(name, value);
-				continue;
 			}
-
-			// Value is a reference.
-			std::string value = line.substr(next2+1, end-next2-1);
-			const PTree * ref_ptr;
-			if (root.get(value, ref_ptr) || cache.get(value, ref_ptr))
-			{
-				node.set(name, *ref_ptr);
-				continue;
-			}
-
-			// Load external reference.
-			PTree ref;
-			read_ini(value, *fopen, ref);
-			cache.set(value, ref);
-			node.set(name, ref);
 		}
 	}
 };
@@ -131,25 +125,10 @@ static void write_ini(const PTree & p, std::ostream & out, std::string key_name)
 	}
 }
 
-void read_ini(std::istream & in, PTree & p)
+void read_ini(std::istream & in, PTree & p, Include * inc)
 {
-	ini reader(in, p);
+	ini reader(in, p, inc);
 	reader.read();
-}
-
-bool read_ini(const std::string & file_name, const file_open & fopen, PTree & p)
-{
-	p.value() = file_name;
-	std::istream * in = fopen(file_name);
-	if (in->good())
-	{
-		ini reader(*in, p, &fopen);
-		reader.read();
-		delete in;
-		return true;
-	}
-	delete in;
-	return false;
 }
 
 void write_ini(const PTree & p, std::ostream & out)

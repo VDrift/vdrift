@@ -133,7 +133,7 @@ void REPLAY::StartRecording(
 	GetReadyToRecord();
 
 	std::stringstream carstream;
-	carconfig.write(carstream);
+	write_ini(carconfig, carstream);
 	carfile = carstream.str();
 }
 

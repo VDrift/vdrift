@@ -20,7 +20,7 @@
 #include "trackloader.h"
 #include "dynamicsworld.h"
 #include "loadcollisionshape.h"
-#include "contentmanager.h"
+#include "content/contentmanager.h"
 #include "textureinfo.h"
 #include "coordinatesystem.h"
 #include "tobullet.h"
@@ -126,7 +126,6 @@ void TRACK::LOADER::Clear()
 {
 	bodies.clear();
 	combined.clear();
-	track_config.clear();
 	objectfile.close();
 	pack.Close();
 }
@@ -211,7 +210,7 @@ bool TRACK::LOADER::ContinueLoad()
 				if (!model->HaveMeshMetrics())
 				{
 					// cache combined model
-					content.load(objectdir, i->first, model->GetVertexArray(), model);
+					content.load(model, objectdir, i->first, model->GetVertexArray());
 				}
 				AddObject(i->second);
 			}
@@ -274,12 +273,11 @@ std::pair<bool, bool> TRACK::LOADER::ContinueObjectLoad()
 
 bool TRACK::LOADER::Begin()
 {
-	file_open_basic fopen(objectpath, sharedobjectpath);
-	if (read_ini("objects.txt", fopen, track_config))
+	content.load(track_config, objectdir, "objects.txt");
+	if (track_config.get())
 	{
-		//write_inf(track_config, std::cerr);
 		nodes = 0;
-		if (track_config.get("object", nodes))
+		if (track_config->get("object", nodes))
 		{
 			node_it = nodes->begin();
 			numobjects = nodes->size();
@@ -311,8 +309,8 @@ std::pair<bool, bool> TRACK::LOADER::Continue()
 bool TRACK::LOADER::LoadModel(const std::string & name)
 {
 	std::tr1::shared_ptr<MODEL> model;
-	if ((packload && content.load(objectdir, name, pack, model)) ||
-		content.load(objectdir, name, model))
+	if ((packload && content.load(model, objectdir, name, pack)) ||
+		content.load(model, objectdir, name))
 	{
 		data.models.push_back(model);
 		return true;
@@ -446,23 +444,15 @@ TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const PTree & cfg)
 	texinfo.repeatu = clampuv != 1 && clampuv != 2;
 	texinfo.repeatv = clampuv != 1 && clampuv != 3;
 
-	std::tr1::shared_ptr<TEXTURE> diffuse;
-	if (!content.load(objectdir, texture_names[0], texinfo, diffuse))
-	{
-		info_output << "Failed to load body " << cfg.value() << " texture " << texture_names[0] << std::endl;
-		return bodies.end();
-	}
-
-	std::tr1::shared_ptr<TEXTURE> miscmap1;
+	std::tr1::shared_ptr<TEXTURE> diffuse, miscmap1, miscmap2;
+	content.load(diffuse, objectdir, texture_names[0], texinfo);
 	if (texture_names[1].length() > 0)
 	{
-		content.load(objectdir, texture_names[1], texinfo, miscmap1);
+		content.load(miscmap1, objectdir, texture_names[1], texinfo);
 	}
-
-	std::tr1::shared_ptr<TEXTURE> miscmap2;
 	if (texture_names[2].length() > 0)
 	{
-		content.load(objectdir, texture_names[2], texinfo, miscmap2);
+		content.load(miscmap2, objectdir, texture_names[2], texinfo);
 	}
 
 	// setup drawable
@@ -698,7 +688,7 @@ bool TRACK::LOADER::AddObject(const OBJECT & object)
 	texinfo.repeatv = object.clamptexture != 1 && object.clamptexture != 3;
 
 	std::tr1::shared_ptr<TEXTURE> diffuse_texture;
-	if (!content.load(objectdir, object.texture, texinfo, diffuse_texture))
+	if (!content.load(diffuse_texture, objectdir, object.texture, texinfo))
 	{
 		return false;
 	}
@@ -709,7 +699,7 @@ bool TRACK::LOADER::AddObject(const OBJECT & object)
 		std::string filepath = objectpath + "/" + texture_name;
 		if (std::ifstream(filepath.c_str()))
 		{
-			content.load(objectdir, texture_name, texinfo, miscmap1_texture);
+			content.load(miscmap1_texture, objectdir, texture_name, texinfo);
 		}
 	}
 
@@ -719,7 +709,7 @@ bool TRACK::LOADER::AddObject(const OBJECT & object)
 		std::string filepath = objectpath + "/" + texture_name;
 		if (std::ifstream(filepath.c_str()))
 		{
-			content.load(objectdir, texture_name, texinfo, miscmap2_texture);
+			content.load(miscmap2_texture, objectdir, texture_name, texinfo);
 		}
 	}
 
@@ -824,17 +814,11 @@ std::pair<bool, bool> TRACK::LOADER::ContinueOld()
 
 	if (packload)
 	{
-		if (!content.load(objectdir, model_name, pack, object.model))
-		{
-			return std::make_pair(true, false);
-		}
+		content.load(object.model, objectdir, model_name, pack);
 	}
 	else
 	{
-		if (!content.load(objectdir, model_name, object.model))
-		{
-			return std::make_pair(true, false);
-		}
+		content.load(object.model, objectdir, model_name);
 	}
 
 	if (agressive_combining)
@@ -846,7 +830,7 @@ std::pair<bool, bool> TRACK::LOADER::ContinueOld()
 		}
 		else
 		{
-			object.cached = content.get(objectdir, object.texture, object.model);
+			object.cached = content.get(object.model, objectdir, object.texture);
 			combined[object.texture] = object;
 		}
 	}
@@ -943,10 +927,7 @@ bool TRACK::LOADER::LoadRoads()
 bool TRACK::LOADER::CreateRacingLines()
 {
 	TEXTUREINFO texinfo;
-	if (!content.load(texturedir, "racingline.png", texinfo, data.racingline_texture))
-	{
-		return false;
-	}
+	content.load(data.racingline_texture, texturedir, "racingline.png", texinfo);
 
 	K1999 k1999data;
 	for (std::list <ROADSTRIP>::iterator i = data.roads.begin(); i != data.roads.end(); ++i)
@@ -1036,11 +1017,11 @@ bool TRACK::LOADER::LoadLapSections(const PTree & info)
 				{
 					int num_patches = i->GetPatches().size();
 					assert(patchid < num_patches);
-					
+
 					// adjust id for reverse case
 					if (data.reverse)
 						patchid = num_patches - patchid;
-					
+
 					data.lap.push_back(&i->GetPatches()[patchid].GetPatch());
 					break;
 				}
@@ -1053,7 +1034,7 @@ bool TRACK::LOADER::LoadLapSections(const PTree & info)
 		info_output << "No lap sequence found. Lap timing will not be possible." << std::endl;
 		return true;
 	}
-	
+
 	// adjust timing sectors if reverse
 	if (data.reverse)
 	{

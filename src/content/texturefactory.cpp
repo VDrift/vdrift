@@ -17,38 +17,64 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _PERFORMANCE_TESTING_H
-#define _PERFORMANCE_TESTING_H
+#include "content/texturefactory.h"
+#include "texture.h"
+#include <fstream>
+#include <sstream>
 
-#include "cardynamics.h"
-
-class ContentManager;
-
-class PERFORMANCE_TESTING
+Factory<TEXTURE>::Factory() :
+	m_default(new TEXTURE()),
+	m_size(TEXTUREINFO::LARGE),
+	m_srgb(false)
 {
-public:
-	PERFORMANCE_TESTING(DynamicsWorld & world);
+	// ctor
+}
 
-	void Test(
-		const std::string & cardir,
-		const std::string & carname,
-		ContentManager & content,
-		std::ostream & info_output,
-		std::ostream & error_output);
+void Factory<TEXTURE>::init(int max_size, bool use_srgb)
+{
+	m_size = max_size;
+	m_srgb = use_srgb;
 
-private:
-	DynamicsWorld & world;
-	TRACKSURFACE surface;
-	CARDYNAMICS car;
-	std::string carstate;
+	// init default texture
+	std::stringstream error;
+	char white[] = {255, 255, 255, 255};
+	TEXTUREINFO info;
+	info.data = white;
+	info.width = 1;
+	info.height = 1;
+	info.bytespp = 4;
+	info.maxsize = TEXTUREINFO::Size(m_size);
+	info.mipmap = false;
+	info.srgb = m_srgb;
+	m_default->Load("", info, error);
+}
 
-	void SimulateFlatRoad();
+template <>
+bool Factory<TEXTURE>::create(
+	std::tr1::shared_ptr<TEXTURE> & sptr,
+	std::ostream & error,
+	const std::string & basepath,
+	const std::string & path,
+	const std::string & name,
+	const TEXTUREINFO& info)
+{
+	const std::string abspath = basepath + "/" + path + "/" + name;
+	if (info.data || std::ifstream(abspath.c_str()))
+	{
+		TEXTUREINFO info_temp = info;
+		info_temp.srgb = m_srgb;
+		info_temp.maxsize = TEXTUREINFO::Size(m_size);
+		std::tr1::shared_ptr<TEXTURE> temp(new TEXTURE());
+		if (temp->Load(abspath, info_temp, error))
+		{
+			sptr = temp;
+			return true;
+		}
+	}
+	return false;
+}
 
-	void ResetCar();
-
-	void TestMaxSpeed(std::ostream & info_output, std::ostream & error_output);
-
-	void TestStoppingDistance(bool abs, std::ostream & info_output, std::ostream & error_output);
-};
-
-#endif
+std::tr1::shared_ptr<TEXTURE> Factory<TEXTURE>::getDefault() const
+{
+	return m_default;
+}

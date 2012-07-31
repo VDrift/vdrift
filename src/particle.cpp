@@ -18,7 +18,7 @@
 /************************************************************************/
 
 #include "particle.h"
-#include "contentmanager.h"
+#include "content/contentmanager.h"
 #include "textureinfo.h"
 #include "unittest.h"
 
@@ -33,7 +33,7 @@ bool PARTICLE_SYSTEM::Load(
 	for (std::list <std::string>::const_iterator i = texlist.begin(); i != texlist.end(); ++i)
 	{
 		std::tr1::shared_ptr<TEXTURE> tex;
-		content.load(texpath, *i, texinfo, tex);
+		content.load(tex, texpath, *i, texinfo);
 		textures.push_back(tex);
 	}
 	cur_texture = textures.end();

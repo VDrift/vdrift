@@ -30,6 +30,7 @@ class SOUNDBUFFER
 public:
 	SOUNDBUFFER() :
 		info(0, 0, 0, 0),
+		size(0),
 		loaded(false),
 		sound_buffer(0)
 	{

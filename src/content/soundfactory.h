@@ -17,38 +17,39 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _PERFORMANCE_TESTING_H
-#define _PERFORMANCE_TESTING_H
+#ifndef _SOUNDFACTORY_H
+#define _SOUNDFACTORY_H
 
-#include "cardynamics.h"
+#include "content/contentfactory.h"
+#include "sound/soundinfo.h"
 
-class ContentManager;
+class SOUNDBUFFER;
 
-class PERFORMANCE_TESTING
+template <>
+class Factory<SOUNDBUFFER>
 {
 public:
-	PERFORMANCE_TESTING(DynamicsWorld & world);
+	struct empty {};
 
-	void Test(
-		const std::string & cardir,
-		const std::string & carname,
-		ContentManager & content,
-		std::ostream & info_output,
-		std::ostream & error_output);
+	Factory();
+
+	/// sound device setting
+	void init(const SOUNDINFO& value);
+
+	template <class P>
+	bool create(
+		std::tr1::shared_ptr<SOUNDBUFFER> & sptr,
+		std::ostream & error,
+		const std::string & basepath,
+		const std::string & path,
+		const std::string & name,
+		const P & param);
+
+	std::tr1::shared_ptr<SOUNDBUFFER> getDefault() const;
 
 private:
-	DynamicsWorld & world;
-	TRACKSURFACE surface;
-	CARDYNAMICS car;
-	std::string carstate;
-
-	void SimulateFlatRoad();
-
-	void ResetCar();
-
-	void TestMaxSpeed(std::ostream & info_output, std::ostream & error_output);
-
-	void TestStoppingDistance(bool abs, std::ostream & info_output, std::ostream & error_output);
+	std::tr1::shared_ptr<SOUNDBUFFER> m_default;
+	SOUNDINFO m_info;
 };
 
-#endif
+#endif // _SOUNDFACTORY_H

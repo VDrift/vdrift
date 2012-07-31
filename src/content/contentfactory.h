@@ -17,38 +17,27 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _PERFORMANCE_TESTING_H
-#define _PERFORMANCE_TESTING_H
+#ifndef _CONTENTFACTORY_H
+#define _CONTENTFACTORY_H
 
-#include "cardynamics.h"
+#include "memory.h"
+#include <ostream>
+#include <string>
 
-class ContentManager;
-
-class PERFORMANCE_TESTING
+template <class Content>
+class Factory
 {
 public:
-	PERFORMANCE_TESTING(DynamicsWorld & world);
-
-	void Test(
-		const std::string & cardir,
-		const std::string & carname,
-		ContentManager & content,
-		std::ostream & info_output,
-		std::ostream & error_output);
-
-private:
-	DynamicsWorld & world;
-	TRACKSURFACE surface;
-	CARDYNAMICS car;
-	std::string carstate;
-
-	void SimulateFlatRoad();
-
-	void ResetCar();
-
-	void TestMaxSpeed(std::ostream & info_output, std::ostream & error_output);
-
-	void TestStoppingDistance(bool abs, std::ostream & info_output, std::ostream & error_output);
+	template <class P>
+	bool create(
+		std::tr1::shared_ptr<Content> & sptr,
+		std::ostream & error,
+		const std::string & basepath,
+		const std::string & path,
+		const std::string & name,
+		const P & param);
+	
+	std::tr1::shared_ptr<Content> getDefault() const;
 };
 
-#endif
+#endif // _CONTENTFACTORY_H

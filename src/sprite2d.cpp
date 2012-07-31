@@ -18,7 +18,7 @@
 /************************************************************************/
 
 #include "sprite2d.h"
-#include "contentmanager.h"
+#include "content/contentmanager.h"
 #include "textureinfo.h"
 
 void SPRITE2D::Unload(SCENENODE & parent)
@@ -53,7 +53,7 @@ bool SPRITE2D::Load(
 	texinfo.repeatv = false;
 	texinfo.npot = false;
 	std::tr1::shared_ptr<TEXTURE> texture;
-	if (!content.load(texturepath, texturename, texinfo, texture)) return false;
+	content.load(texture, texturepath, texturename, texinfo);
 
 	node = parent.AddNode();
 	SCENENODE & noderef = parent.GetNode(node);

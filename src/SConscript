@@ -35,7 +35,12 @@ src = Split("""aabb.cpp
 		cartire.cpp
 		config.cpp
 		containeralgorithm.cpp
-		contentmanager.cpp
+		content/cotentmanager.cpp
+		content/cotentfactory.cpp
+		content/configfactory.cpp
+		content/modelfactory.cpp
+		content/soundfactory.cpp
+		content/texturefactory.cpp
 		crashdetection.cpp
 		downloadable.cpp
 		drawable.cpp

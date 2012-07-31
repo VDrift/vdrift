@@ -47,17 +47,13 @@ public:
 
 	bool LoadGraphics(
 		const PTree & cfg,
-		const std::string & partspath,
 		const std::string & carpath,
 		const std::string & carname,
 		const std::string & carpaint,
 		const MATHVECTOR <float, 3> & carcolor,
 		const int anisotropy,
 		const float camerabounce,
-		const bool damage,
-		const bool debugmode,
 		ContentManager & content,
-		std::ostream & info_output,
 		std::ostream & error_output);
 
 	bool LoadSounds(
@@ -75,8 +71,8 @@ public:
 		const bool defaultabs,
 		const bool defaulttcs,
 		const bool damage,
-		ContentManager & content,
 		DynamicsWorld & world,
+		ContentManager & content,
 		std::ostream & error_output);
 
 	// change car color

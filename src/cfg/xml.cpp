@@ -33,9 +33,9 @@
 
 #include "ptree.h"
 
-static void read_xml(std::istream & in, PTree & p, std::string key)
+static void read_xml(std::istream & in, PTree & node, Include * include, std::string key)
 {
-	std::string line, escape("/"+p.value());
+	std::string line, escape("/" + node.value());
 	while (in.good())
 	{
 		std::getline(in, line, '\n');
@@ -68,14 +68,25 @@ static void read_xml(std::istream & in, PTree & p, std::string key)
 		size_t next = line.find("</"+key);
 		if (next < end)
 		{
+			// New property.
 			std::string value = line.substr(0, next);
-			p.set(key, value);
+
+			// Include?
+			if (include && key == "include")
+			{
+				(*include)(node, value);
+			}
+			else
+			{
+				node.set(key, value);
+			}
 		}
 		else
 		{
+			// New node.
 			end = line.find(" ");
 			std::string child_key = line.substr(0, end);
-			read_xml(in, p.set(key, PTree()), child_key);
+			read_xml(in, node.set(key, PTree()), include, child_key);
 		}
 		key.clear();
 	}
@@ -99,9 +110,9 @@ static void write_xml(const PTree & p, std::ostream & out, std::string indent)
 	}
 }
 
-void read_xml(std::istream & in, PTree & p)
+void read_xml(std::istream & in, PTree & p, Include * inc)
 {
-	read_xml(in, p, std::string());
+	read_xml(in, p, inc, std::string());
 }
 
 void write_xml(const PTree & p, std::ostream & out)

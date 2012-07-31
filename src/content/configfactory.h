@@ -17,38 +17,46 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _PERFORMANCE_TESTING_H
-#define _PERFORMANCE_TESTING_H
+#ifndef _CONFIGFACTORY_H
+#define _CONFIGFACTORY_H
 
-#include "cardynamics.h"
+#include "content/contentfactory.h"
+#include <istream>
 
+class PTree;
 class ContentManager;
+struct Include;
 
-class PERFORMANCE_TESTING
+template <>
+class Factory<PTree>
 {
 public:
-	PERFORMANCE_TESTING(DynamicsWorld & world);
+	struct empty {};
 
-	void Test(
-		const std::string & cardir,
-		const std::string & carname,
-		ContentManager & content,
-		std::ostream & info_output,
-		std::ostream & error_output);
+	Factory();
+
+	// content manager is needed for include functionality
+	void init(
+		void (&read)(std::istream &, PTree &, Include *),
+		void (&write)(const PTree &, std::ostream &),
+		ContentManager & content);
+
+	template <class P>
+	bool create(
+		std::tr1::shared_ptr<PTree> & sptr,
+		std::ostream & error,
+		const std::string & basepath,
+		const std::string & path,
+		const std::string & name,
+		const P & param);
+
+	std::tr1::shared_ptr<PTree> getDefault() const;
 
 private:
-	DynamicsWorld & world;
-	TRACKSURFACE surface;
-	CARDYNAMICS car;
-	std::string carstate;
-
-	void SimulateFlatRoad();
-
-	void ResetCar();
-
-	void TestMaxSpeed(std::ostream & info_output, std::ostream & error_output);
-
-	void TestStoppingDistance(bool abs, std::ostream & info_output, std::ostream & error_output);
+	std::tr1::shared_ptr<PTree> m_default;
+	void (*m_read)(std::istream &, PTree &, Include *);
+	void (*m_write)(const PTree &, std::ostream &);
+	ContentManager * m_content;
 };
 
-#endif
+#endif // _CONFIGFACTORY_H

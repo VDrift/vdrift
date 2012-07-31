@@ -48,7 +48,7 @@
 #include "particle.h"
 #include "ai/ai.h"
 #include "quickmp.h"
-#include "contentmanager.h"
+#include "content/contentmanager.h"
 #include "http.h"
 #include "gl3v/stringidmap.h"
 #include "updatemanager.h"

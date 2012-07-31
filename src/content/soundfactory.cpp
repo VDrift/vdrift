@@ -17,38 +17,50 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _PERFORMANCE_TESTING_H
-#define _PERFORMANCE_TESTING_H
+#include "content/soundfactory.h"
+#include "sound/soundbuffer.h"
+#include <fstream>
 
-#include "cardynamics.h"
-
-class ContentManager;
-
-class PERFORMANCE_TESTING
+Factory<SOUNDBUFFER>::Factory() :
+	m_default(new SOUNDBUFFER()),
+	m_info(0, 0, 0, 0)
 {
-public:
-	PERFORMANCE_TESTING(DynamicsWorld & world);
+	// ctor
+}
 
-	void Test(
-		const std::string & cardir,
-		const std::string & carname,
-		ContentManager & content,
-		std::ostream & info_output,
-		std::ostream & error_output);
+void Factory<SOUNDBUFFER>::init(const SOUNDINFO& value)
+{
+	m_info = value;
+}
 
-private:
-	DynamicsWorld & world;
-	TRACKSURFACE surface;
-	CARDYNAMICS car;
-	std::string carstate;
+template <>
+bool Factory<SOUNDBUFFER>::create(
+	std::tr1::shared_ptr<SOUNDBUFFER> & sptr,
+	std::ostream & error,
+	const std::string & basepath,
+	const std::string & path,
+	const std::string & name,
+	const empty&)
+{
+	const std::string abspath = basepath + "/" + path + "/" + name;
+	std::string filepath = abspath + ".ogg";
+	if (!std::ifstream(filepath.c_str()))
+	{
+		filepath = abspath + ".wav";
+	}
+	if (std::ifstream(filepath.c_str()))
+	{
+		std::tr1::shared_ptr<SOUNDBUFFER> temp(new SOUNDBUFFER());
+		if (temp->Load(filepath, m_info, error))
+		{
+			sptr = temp;
+			return true;
+		}
+	}
+	return false;
+}
 
-	void SimulateFlatRoad();
-
-	void ResetCar();
-
-	void TestMaxSpeed(std::ostream & info_output, std::ostream & error_output);
-
-	void TestStoppingDistance(bool abs, std::ostream & info_output, std::ostream & error_output);
-};
-
-#endif
+std::tr1::shared_ptr<SOUNDBUFFER> Factory<SOUNDBUFFER>::getDefault() const
+{
+	return m_default;
+}

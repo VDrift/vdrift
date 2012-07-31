@@ -24,9 +24,6 @@
 #include "cfg/ptree.h"
 #include "joepack.h"
 
-#include <ostream>
-#include <string>
-
 /*
 [object.foo]
 #position = 0, 0, 0
@@ -53,6 +50,7 @@ class ContentManager;
 class btStridingMeshInterface;
 class btCompoundShape;
 class btCollisionShape;
+class PTree;
 
 class TRACK::LOADER
 {
@@ -153,7 +151,7 @@ private:
 	btCompoundShape * track_shape;
 
 	// track config
-	PTree track_config;
+	std::tr1::shared_ptr<PTree> track_config;
 	const PTree * nodes;
 	PTree::const_iterator node_it;
 

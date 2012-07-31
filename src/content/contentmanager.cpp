@@ -17,38 +17,71 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _PERFORMANCE_TESTING_H
-#define _PERFORMANCE_TESTING_H
+#include "content/contentmanager.h"
 
-#include "cardynamics.h"
-
-class ContentManager;
-
-class PERFORMANCE_TESTING
+ContentManager::ContentManager(std::ostream & error) :
+	error(error)
 {
-public:
-	PERFORMANCE_TESTING(DynamicsWorld & world);
+	// ctor
+}
 
-	void Test(
-		const std::string & cardir,
-		const std::string & carname,
-		ContentManager & content,
-		std::ostream & info_output,
-		std::ostream & error_output);
+ContentManager::~ContentManager()
+{
+	sweep();
+	_logleaks();
+}
 
-private:
-	DynamicsWorld & world;
-	TRACKSURFACE surface;
-	CARDYNAMICS car;
-	std::string carstate;
+void ContentManager::addSharedPath(const std::string & path)
+{
+	sharedpaths.push_back(path);
+}
 
-	void SimulateFlatRoad();
+void ContentManager::addPath(const std::string & path)
+{
+	basepaths.push_back(path);
+}
 
-	void ResetCar();
+void ContentManager::sweep()
+{
+	for (size_t i = 0; i < factory_cached.m_caches.size(); ++i)
+	{
+		factory_cached.m_caches[i]->sweep();
+	}
+}
 
-	void TestMaxSpeed(std::ostream & info_output, std::ostream & error_output);
+bool ContentManager::_logleaks()
+{
+	size_t n = 0;
+	for (size_t i = 0; i < factory_cached.m_caches.size(); ++i)
+	{
+		n += factory_cached.m_caches[i]->size();
+	}
+	if (n == 0)
+		return false;
 
-	void TestStoppingDistance(bool abs, std::ostream & info_output, std::ostream & error_output);
-};
+	error << "Leaked " << n << " cached objects:";
+	for (size_t i = 0; i < factory_cached.m_caches.size(); ++i)
+	{
+		error << "\n";
+		factory_cached.m_caches[i]->log(error);
+	}
+	error << std::endl;
+	return false;
+}
 
-#endif
+bool ContentManager::_logerror(
+	const std::string & path,
+	const std::string & name)
+{
+	error << "Failed to load \"" << name << "\" from:";
+	for (size_t i = 0; i < basepaths.size(); ++i)
+	{
+		error << "\n" << basepaths[i] + '/' + path;
+	}
+	for (size_t i = 0; i < sharedpaths.size(); ++i)
+	{
+		error << "\n" << sharedpaths[i];
+	}
+	error << std::endl;
+	return false;
+}

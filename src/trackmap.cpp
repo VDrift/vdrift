@@ -18,7 +18,7 @@
 /************************************************************************/
 
 #include "trackmap.h"
-#include "contentmanager.h"
+#include "content/contentmanager.h"
 #include "texture.h"
 
 #ifdef __APPLE__
@@ -204,19 +204,16 @@ bool TRACKMAP::BuildMap(
 	texinfo.repeatu = false;
 	texinfo.repeatv = false;
 	std::tr1::shared_ptr<TEXTURE> track_map;
-	if (!content.load(std::string(), trackname, texinfo, track_map))
-	{
-		error_output << "Can't load generated track map texture" << std::endl;
-		return false;
-	}
+	content.load(track_map, "", trackname, texinfo);
+
 	SDL_FreeSurface(surface);
 
 	//std::cout << "Loading track map dots" << std::endl;
 	TEXTUREINFO dotinfo;
-	if (!content.load(texturepath, "cardot0.png", dotinfo, cardot0)) return false;
-	if (!content.load(texturepath, "cardot1.png", dotinfo, cardot1)) return false;
-	if (!content.load(texturepath, "cardot0_focused.png", dotinfo, cardot0_focused)) return false;
-	if (!content.load(texturepath, "cardot1_focused.png", dotinfo, cardot1_focused)) return false;
+	content.load(cardot0, texturepath, "cardot0.png", dotinfo);
+	content.load(cardot1, texturepath, "cardot1.png", dotinfo);
+	content.load(cardot0_focused, texturepath, "cardot0_focused.png", dotinfo);
+	content.load(cardot1_focused, texturepath, "cardot1_focused.png", dotinfo);
 
 	// calculate map position, size
 	screen[0] = (float)w;

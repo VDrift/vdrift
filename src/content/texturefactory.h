@@ -17,38 +17,42 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _PERFORMANCE_TESTING_H
-#define _PERFORMANCE_TESTING_H
+#ifndef _TEXTUREFACTORY_H
+#define _TEXTUREFACTORY_H
 
-#include "cardynamics.h"
+#include "content/contentfactory.h"
+#include "textureinfo.h"
 
-class ContentManager;
+class TEXTURE;
 
-class PERFORMANCE_TESTING
+template <>
+class Factory<TEXTURE>
 {
 public:
-	PERFORMANCE_TESTING(DynamicsWorld & world);
+	struct empty {};
 
-	void Test(
-		const std::string & cardir,
-		const std::string & carname,
-		ContentManager & content,
-		std::ostream & info_output,
-		std::ostream & error_output);
+	Factory();
+
+	/// in general all textures on disk will be in the SRGB colorspace, so if the renderer wants to do
+	/// gamma correct lighting, it will want all textures to be gamma corrected using the SRGB flag
+	/// limit texture size to max size
+	void init(int max_size, bool use_srgb);
+
+	template <class P>
+	bool create(
+		std::tr1::shared_ptr<TEXTURE> & sptr,
+		std::ostream & error,
+		const std::string & basepath,
+		const std::string & path,
+		const std::string & name,
+		const P & param);
+
+	std::tr1::shared_ptr<TEXTURE> getDefault() const;
 
 private:
-	DynamicsWorld & world;
-	TRACKSURFACE surface;
-	CARDYNAMICS car;
-	std::string carstate;
-
-	void SimulateFlatRoad();
-
-	void ResetCar();
-
-	void TestMaxSpeed(std::ostream & info_output, std::ostream & error_output);
-
-	void TestStoppingDistance(bool abs, std::ostream & info_output, std::ostream & error_output);
+	std::tr1::shared_ptr<TEXTURE> m_default;
+	int m_size;
+	bool m_srgb;
 };
 
-#endif
+#endif // _TEXTUREFACTORY_H

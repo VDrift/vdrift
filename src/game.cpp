@@ -244,7 +244,7 @@ void GAME::Start(std::list <std::string> & args)
 	hud.SetVisible(false);
 
 	// Initialise input graph.
-	if (!inputgraph.Init(pathmanager.GetGUITextureDir(settings.GetSkin()), content, error_output))
+	if (!inputgraph.Init(pathmanager.GetGUITextureDir(settings.GetSkin()), content))
 	{
 		error_output << "Error initializing input graph" << std::endl;
 		return;
@@ -342,22 +342,15 @@ void GAME::InitCoreSubsystems()
 	settings.Load(pathmanager.GetSettingsFile(), error_output);
 
 	// global texture size override
-	int texturesize = TEXTUREINFO::LARGE;
+	int texture_size = TEXTUREINFO::LARGE;
 	if (settings.GetTextureSize() == "small")
 	{
-		texturesize = TEXTUREINFO::SMALL;
+		texture_size = TEXTUREINFO::SMALL;
 	}
 	else if (settings.GetTextureSize() == "medium")
 	{
-		texturesize = TEXTUREINFO::MEDIUM;
+		texture_size = TEXTUREINFO::MEDIUM;
 	}
-
-	// always add the writeable data paths first so they are checked first
-	content.addPath(pathmanager.GetWriteableDataPath());
-	content.addPath(pathmanager.GetDataPath());
-	content.addSharedPath(pathmanager.GetCarPartsPath());
-	content.addSharedPath(pathmanager.GetTrackPartsPath());
-	content.setTexSize(texturesize);
 
 	if (!LastStartWasSuccessful())
 	{
@@ -383,15 +376,11 @@ void GAME::InitCoreSubsystems()
 		if (enableGL3 && i == 0 && settings.GetShaders())
 		{
 			graphics_interface = new GRAPHICS_GL3V(stringMap);
-			content.setVBO(true);
-			content.setSRGB(true);
 			usingGL3 = true;
 		}
 		else
 		{
 			graphics_interface = new GRAPHICS_GL2();
-			content.setVBO(false);
-			content.setSRGB(false);
 		}
 
 		bool success = graphics_interface->Init(pathmanager.GetShaderPath(),
@@ -401,7 +390,7 @@ void GAME::InitCoreSubsystems()
 			settings.GetShadowDistance(), settings.GetShadowQuality(),
 			settings.GetReflections(), pathmanager.GetStaticReflectionMap(),
 			pathmanager.GetStaticAmbientMap(),
-			settings.GetAnisotropic(), texturesize,
+			settings.GetAnisotropic(), texture_size,
 			settings.GetLighting(), settings.GetBloom(), settings.GetNormalMaps(),
 			renderconfigfile,
 			info_output, error_output);
@@ -418,9 +407,21 @@ void GAME::InitCoreSubsystems()
 	}
 
 	QUATERNION <float> ldir;
-	ldir.Rotate(3.141593*0.1,0,1,0);
-	ldir.Rotate(-3.141593*0.2,1,0,0);
+	ldir.Rotate(M_PI * 0.1, 0, 1, 0);
+	ldir.Rotate(-M_PI * 0.2, 1, 0, 0);
 	graphics_interface->SetSunDirection(ldir);
+
+	// Init content factories
+	content.getFactory<TEXTURE>().init(texture_size, usingGL3);
+	content.getFactory<MODEL>().init(usingGL3);
+	content.getFactory<PTree>().init(read_ini, write_ini, content);
+
+	// Init content paths
+	// Always add writeable data paths first so they are checked first
+	content.addPath(pathmanager.GetWriteableDataPath());
+	content.addPath(pathmanager.GetDataPath());
+	content.addSharedPath(pathmanager.GetCarPartsPath());
+	content.addSharedPath(pathmanager.GetTrackPartsPath());
 
 	eventsystem.Init(info_output);
 }
@@ -518,7 +519,7 @@ bool GAME::InitSound()
 	if (sound.Init(2048, info_output, error_output))
 	{
 		sound.SetVolume(settings.GetSoundVolume());
-		content.setSound(sound.GetDeviceInfo());
+		content.getFactory<SOUNDBUFFER>().init(sound.GetDeviceInfo());
 	}
 	else
 	{
@@ -581,11 +582,11 @@ bool GAME::ParseArguments(std::list <std::string> & args)
 
 	if (!argmap["-cartest"].empty())
 	{
+		const std::string carname = argmap["-cartest"];
+		const std::string cardir = pathmanager.GetCarsDir() + "/" + carname;
 		pathmanager.Init(info_output, error_output);
 		PERFORMANCE_TESTING perftest(dynamics);
-		const std::string carname = argmap["-cartest"];
-		perftest.Test(pathmanager.GetCarPath(carname), pathmanager.GetCarPartsPath(),
-			carname, info_output, error_output);
+		perftest.Test(cardir, carname, content, info_output, error_output);
 		continue_game = false;
 	}
 	arghelp["-cartest CAR"] = "Run car performance testing on given CAR.";
@@ -624,8 +625,7 @@ bool GAME::ParseArguments(std::list <std::string> & args)
 		{
 			int xres = cast<int>(restoken[0]);
 			int yres = cast<int>(restoken[1]);
-			settings.SetResolutionX(xres);
-			settings.SetResolutionY(yres);
+			settings.SetResolution(xres, yres);
 			settings.SetResolutionOverride(true);
 		}
 	}
@@ -1481,8 +1481,8 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 		bool isai = (i > 0);
 
 		if (!LoadCar(cars_name[i], cars_paint[i], cars_color_hsv[i],
-			track.GetStart(i).first, track.GetStart(i).second,
-			!isai, isai, carfile)) return false;
+			track.GetStart(i).first, track.GetStart(i).second, !isai, isai, carfile))
+			return false;
 
 		if (isai)
 			ai.add_car(&cars.back(), cars_ai_level[i], cars_ai_type[i]);
@@ -1519,28 +1519,22 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	if (settings.GetRecordReplay() && !playreplay)
 	{
 		assert(carcontrols_local.first);
+		const std::string cartype = carcontrols_local.first->GetCarType();
+		const std::string cardir = pathmanager.GetCarsDir() + "/" + cars_name[0];
 
-		std::string cartype = carcontrols_local.first->GetCarType();
-		std::string carname = cars_name[0];
-
-		PTree carconfig;
-		file_open_basic fopen(pathmanager.GetCarPath(carname), pathmanager.GetCarPartsPath());
-		if (!read_ini(carname + ".car", fopen, carconfig))
-		{
-			error_output << "Failed to load " << carname << std::endl;
-			return false;
-		}
+		std::tr1::shared_ptr<PTree> carconfig;
+		content.load(carconfig, cardir, cars_name[0] + ".car");
 
 		replay.StartRecording(
 			cartype,
 			cars_paint[0],
 			cars_color_hsv[0],
-			carconfig,
+			*carconfig,
 			settings.GetTrack(),
 			error_output);
 	}
 
-	content.sweep(info_output);
+	content.sweep();
 	return true;
 }
 
@@ -1570,12 +1564,12 @@ bool GAME::LoadCar(
 	bool islocal, bool isai,
 	const std::string & carfile)
 {
-	PTree carconf;
+	std::string car_dir = pathmanager.GetCarsDir() + "/" + car_name;
+	std::tr1::shared_ptr<PTree> carconf;
 	if (carfile.empty())
 	{
-		// If no file is passed in, then load it from disk.
-		file_open_basic fopen(pathmanager.GetCarPath(car_name), pathmanager.GetCarPartsPath());
-		if (!read_ini(car_name + ".car", fopen, carconf))
+		content.load(carconf, car_dir, car_name + ".car");
+		if (!carconf->size())
 		{
 			error_output << "Failed to load " << car_name << std::endl;
 			return false;
@@ -1583,11 +1577,10 @@ bool GAME::LoadCar(
 	}
 	else
 	{
+		carconf.reset(new PTree());
 		std::stringstream carstream(carfile);
-		read_ini(carstream, carconf);
+		read_ini(carstream, *carconf);
 	}
-
-	std::string car_dir = pathmanager.GetCarsDir() + "/" + car_name;
 
 	MATHVECTOR<float, 3> car_color_rgb;
 	HSVtoRGB(
@@ -1597,10 +1590,9 @@ bool GAME::LoadCar(
 	cars.push_back(CAR());
 	CAR & car = cars.back();
 	if (!car.LoadGraphics(
-		carconf, pathmanager.GetCarPartsPath(), car_dir, car_name,
-		car_paint, car_color_rgb, settings.GetAnisotropy(),
-		settings.GetCameraBounce(), settings.GetVehicleDamage(), debugmode,
-		content, info_output, error_output))
+		*carconf, car_dir, car_name, car_paint, car_color_rgb,
+		settings.GetAnisotropy(), settings.GetCameraBounce(),
+		content, error_output))
 	{
 		error_output << "Error loading car: " << car_name << std::endl;
 		cars.pop_back();
@@ -1614,10 +1606,10 @@ bool GAME::LoadCar(
 	}
 
 	if (!car.LoadPhysics(
-		carconf, car_dir, start_position, start_orientation,
+		*carconf, car_dir, start_position, start_orientation,
 		settings.GetABS() || isai, settings.GetTCS() || isai,
-		settings.GetVehicleDamage(), content, dynamics,
-        error_output))
+		settings.GetVehicleDamage(), dynamics,
+        content, error_output))
 	{
 		error_output << "Failed to load physics for car " << car_name << std::endl;
 		return false;

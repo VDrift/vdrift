@@ -206,7 +206,7 @@ std::string PATHMANAGER::GetWriteableDataPath() const
 
 std::string PATHMANAGER::GetCarPartsPath() const
 {
-	return GetDataPath()+"/"+GetCarPartsDir();
+	return GetDataPath()+"/carparts";
 }
 
 std::string PATHMANAGER::GetTrackPartsPath() const

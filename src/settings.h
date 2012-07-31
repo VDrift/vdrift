@@ -349,14 +349,10 @@ public:
 		return vehicle_damage;
 	}
 
-	void SetResolutionX ( unsigned value )
+	void SetResolution(unsigned w, unsigned h)
 	{
-		resolution[0] = value;
-	}
-
-	void SetResolutionY ( unsigned value )
-	{
-		resolution[1] = value;
+		resolution[0] = w;
+		resolution[1] = h;
 	}
 
 	void SetSelectedReplay ( const std::string & value )

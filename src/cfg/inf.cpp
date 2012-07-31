@@ -35,7 +35,7 @@
 
 #include "ptree.h"
 
-static void read_inf(std::istream & in, PTree & node, bool child)
+static void read_inf(std::istream & in, PTree & node, Include * include, bool child)
 {
 	std::string line, name;
 	while (in.good())
@@ -56,7 +56,8 @@ static void read_inf(std::istream & in, PTree & node, bool child)
 		line = line.substr(begin, end);
 		if (line[0] == '{' && name.length())
 		{
-			read_inf(in, node.set(name, PTree()), true);
+			// New node.
+			read_inf(in, node.set(name, PTree()), include, true);
 			continue;
 		}
 
@@ -70,8 +71,18 @@ static void read_inf(std::istream & in, PTree & node, bool child)
 		name = line.substr(0, next);
 		if (next < end)
 		{
+			// New property.
 			std::string value = line.substr(next+1, end);
-			node.set(name, value);
+
+			// Include?
+			if (include && name == "include")
+			{
+				(*include)(node, value);
+			}
+			else
+			{
+				node.set(name, value);
+			}
 			name.clear();
 		}
 	}
@@ -96,9 +107,9 @@ static void write_inf(const PTree & p, std::ostream & out, std::string indent)
 	}
 }
 
-void read_inf(std::istream & in, PTree & p)
+void read_inf(std::istream & in, PTree & p, Include * inc)
 {
-	read_inf(in, p, false);
+	read_inf(in, p, inc, false);
 }
 
 void write_inf(const PTree & p, std::ostream & out)

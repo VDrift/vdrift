@@ -18,7 +18,7 @@
 /************************************************************************/
 
 #include "gui/guiimage.h"
-#include "contentmanager.h"
+#include "content/contentmanager.h"
 
 GUIIMAGE::GUIIMAGE()
 {
@@ -40,9 +40,9 @@ void GUIIMAGE::Update(SCENENODE & scene, float dt)
 		texinfo.repeatu = false;
 		texinfo.repeatv = false;
 		std::tr1::shared_ptr<TEXTURE> texture;
-		if (m_content->load(m_imagepath, m_imagename, texinfo, texture))
-			GetDrawable(scene).SetDiffuseMap(texture);
-		
+		m_content->load(texture, m_imagepath, m_imagename, texinfo);
+		GetDrawable(scene).SetDiffuseMap(texture);
+
 		GUIWIDGET::Update(scene, dt);
 	}
 }

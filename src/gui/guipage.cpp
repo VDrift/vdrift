@@ -23,7 +23,7 @@
 #include "gui/guiimage.h"
 #include "gui/guilabel.h"
 #include "gui/guislider.h"
-#include "contentmanager.h"
+#include "content/contentmanager.h"
 #include "textureinfo.h"
 #include "config.h"
 
@@ -226,7 +226,7 @@ bool GUIPAGE::Load(
 			texinfo.repeatu = false;
 			texinfo.repeatv = false;
 			std::tr1::shared_ptr<TEXTURE> bartex;
-			if (!content.load(texpath, "white.png", texinfo, bartex)) return false;
+			content.load(bartex, texpath, "white.png", texinfo);
 
 			GUISLIDER * new_widget = new GUISLIDER();
 			new_widget->SetupDrawable(

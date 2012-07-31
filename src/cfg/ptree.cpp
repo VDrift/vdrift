@@ -19,32 +19,7 @@
 
 #include "ptree.h"
 #include "unittest.h"
-
 #include <fstream>
-
-file_open_basic::file_open_basic(const std::string & path, const std::string & path_alt) :
-	path(path), path_alt(path_alt)
-{
-	// ctor
-}
-
-std::istream * file_open_basic::operator()(const std::string & name) const
-{
-	std::ifstream * file = new std::ifstream();
-
-	// external config in track path
-	std::string file_path = path + "/" + name;
-	file->open(file_path.c_str());
-	if (!file->good())
-	{
-		// external config in shared path
-		file_path = path_alt + "/" + name;
-		file->close();
-		file->clear();
-		file->open(file_path.c_str());
-	}
-	return file;
-}
 
 QT_TEST(ptree)
 {

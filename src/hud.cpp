@@ -18,7 +18,7 @@
 /************************************************************************/
 
 #include "hud.h"
-#include "contentmanager.h"
+#include "content/contentmanager.h"
 #include "texture.h"
 
 //#define GAUGES
@@ -113,7 +113,7 @@ bool HUD::Init(
 		timerboxtexinfo.repeatu = true;
 		timerboxtexinfo.repeatv = false;
 		std::tr1::shared_ptr<TEXTURE> timerboxtex;
-		if (!content.load(texturepath, "timerbox.png", timerboxtexinfo, timerboxtex)) return false;
+		content.load(timerboxtex, texturepath, "timerbox.png", timerboxtexinfo);
 
 		float totalsizex = timerboxdimx * 6.05;
 		float totalsizey = timerboxdimy * 2.0;
@@ -205,8 +205,8 @@ bool HUD::Init(
 
 #ifndef GAUGES
 	std::tr1::shared_ptr<TEXTURE> bartex, progbartex;
-	if (!content.load(texturepath, "hudbox.png", texinfo, bartex)) return false;
-	if (!content.load(texturepath, "progressbar.png", texinfo, progbartex)) return false;
+	content.load(bartex, texturepath, "hudbox.png", texinfo);
+	content.load(progbartex, texturepath, "progressbar.png", texinfo);
 
 	rpmbar = AddDrawable(hudroot);
 	rpmredbar = AddDrawable(hudroot);
@@ -289,7 +289,7 @@ bool HUD::Init(
 		tinfo.bytespp = 4;
 		tinfo.mipmap = false;
 		std::tr1::shared_ptr<TEXTURE> texture;
-		content.load("", "white1x1", tinfo, texture);
+		content.load(texture, "", "white1x1", tinfo);
 
 		float r = 0.12;
 		float x0 = 0.15;

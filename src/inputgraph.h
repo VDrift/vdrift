@@ -41,7 +41,7 @@ private:
 		graphroot.SetChildVisibility(newvis);
 	}
 public:
-	bool Init(const std::string & texturepath, ContentManager & content, std::ostream & error_output)
+	bool Init(const std::string & texturepath, ContentManager & content)
 	{
 		float hheight, hball_scale, hx_pos, hy_pos;
 		float vwidth, vx_pos, vy_pos;
