@@ -28,11 +28,6 @@ src = Split("""aabb.cpp
 		camera_orbit.cpp
 		car.cpp
 		carcontrolmap_local.cpp
-		cardifferential.cpp
-		cardynamics.cpp
-		carengine.cpp
-		carsuspension.cpp
-		cartire.cpp
 		config.cpp
 		containeralgorithm.cpp
 		content/cotentmanager.cpp
@@ -44,14 +39,12 @@ src = Split("""aabb.cpp
 		crashdetection.cpp
 		downloadable.cpp
 		drawable.cpp
-		dynamicsworld.cpp
 		dynamicsdraw.cpp
 		eventsystem.cpp
 		fbobject.cpp
 		fbtexture.cpp
 		font.cpp
 		forcefeedback.cpp
-		fracturebody.cpp
 		game.cpp
 		glutil.cpp
 		graphics_config.cpp
@@ -74,7 +67,6 @@ src = Split("""aabb.cpp
 		joeserialize.cpp
 		k1999.cpp
 		keyed_container.cpp
-		linearframe.cpp
 		linearinterp.cpp
 		loadcamera.cpp
 		loadcollisionshape.cpp
@@ -93,6 +85,16 @@ src = Split("""aabb.cpp
 		particle.cpp
 		pathmanager.cpp
 		performance_testing.cpp
+		physics/cardifferential.cpp
+		physics/cardynamics.cpp
+		physics/carengine.cpp
+		physics/carsuspension.cpp
+		physics/cartire.cpp
+		physics/dynamicsworld.cpp
+		physics/fracturebody.cpp
+		physics/linearframe.cpp
+		physics/rigidbody.cpp
+		physics/rotationalframe.cpp
 		quaternion.cpp
 		random.cpp
 		render_input.cpp
@@ -102,10 +104,8 @@ src = Split("""aabb.cpp
 		rendermodelext_drawable.cpp
 		replay.cpp
 		reseatable_reference.cpp
-		rigidbody.cpp
 		roadpatch.cpp
 		roadstrip.cpp
-		rotationalframe.cpp
 		scenenode.cpp
 		settings.cpp
 		shader.cpp

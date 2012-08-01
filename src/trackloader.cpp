@@ -18,13 +18,13 @@
 /************************************************************************/
 
 #include "trackloader.h"
-#include "dynamicsworld.h"
 #include "loadcollisionshape.h"
-#include "content/contentmanager.h"
-#include "textureinfo.h"
+#include "physics/dynamicsworld.h"
 #include "coordinatesystem.h"
 #include "tobullet.h"
 #include "k1999.h"
+#include "content/contentmanager.h"
+#include "textureinfo.h"
 
 #define EXTBULLET
 

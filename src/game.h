@@ -32,7 +32,7 @@
 #include "text_draw.h"
 #include "gui/gui.h"
 #include "car.h"
-#include "dynamicsworld.h"
+#include "physics/dynamicsworld.h"
 #include "dynamicsdraw.h"
 #include "carcontrolmap_local.h"
 #include "hud.h"

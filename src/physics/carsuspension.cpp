@@ -17,9 +17,8 @@
 /*                                                                      */
 /************************************************************************/
 
-#include "carsuspension.h"
+#include "physics/carsuspension.h"
 #include "coordinatesystem.h"
-#include "tobullet.h"
 #include "cfg/ptree.h"
 
 CARSUSPENSIONINFO::CARSUSPENSIONINFO() :

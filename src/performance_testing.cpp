@@ -18,8 +18,8 @@
 /************************************************************************/
 
 #include "performance_testing.h"
-#include "dynamicsworld.h"
-#include "tracksurface.h"
+#include "physics/dynamicsworld.h"
+#include "physics/tracksurface.h"
 #include "content/contentmanager.h"
 #include "cfg/ptree.h"
 

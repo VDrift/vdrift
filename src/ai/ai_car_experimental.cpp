@@ -23,11 +23,11 @@
 #include "track.h"
 #include "carinput.h"
 #include "mathvector.h"
-#include "carwheelposition.h"
+#include "physics/carwheelposition.h"
+#include "physics/dynamicsworld.h"
 #include "coordinatesystem.h"
 #include "optional.h"
 #include "unittest.h"
-#include "dynamicsworld.h"
 
 #include <cassert>
 #include <cmath>

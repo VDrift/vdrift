@@ -20,7 +20,7 @@
 #ifndef _CAR_H
 #define _CAR_H
 
-#include "cardynamics.h"
+#include "physics/cardynamics.h"
 #include "tobullet.h"
 #include "scenenode.h"
 #include "crashdetection.h"

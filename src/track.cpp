@@ -19,18 +19,9 @@
 
 #include "track.h"
 #include "trackloader.h"
-#include "dynamicsworld.h"
-#include "tobullet.h"
+#include "physics/dynamicsworld.h"
 #include "coordinatesystem.h"
-#include "reseatable_reference.h"
-
-#include <algorithm>
-#include <list>
-#include <map>
-#include <string>
-#include <iostream>
-#include <fstream>
-#include <sstream>
+#include "tobullet.h"
 
 TRACK::TRACK() : racingline_visible(false)
 {
@@ -165,7 +156,7 @@ bool TRACK::CastRay(
 	// transform into world space
 	outtri = MATHVECTOR<float, 3>(outtri[2], outtri[0], outtri[1]);
 	normal = MATHVECTOR<float, 3>(normal[2], normal[0], normal[1]);
-	
+
 	return col;
 }
 

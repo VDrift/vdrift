@@ -20,12 +20,8 @@
 #ifndef _RIGIDBODY_H
 #define _RIGIDBODY_H
 
-#include "linearframe.h"
-#include "rotationalframe.h"
-#include "mathvector.h"
-#include "quaternion.h"
-#include "joeserialize.h"
-#include "macros.h"
+#include "physics/linearframe.h"
+#include "physics/rotationalframe.h"
 
 template <typename T>
 class RIGIDBODY

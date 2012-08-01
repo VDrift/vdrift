@@ -17,7 +17,7 @@
 /*                                                                      */
 /************************************************************************/
 
-#include "rotationalframe.h"
+#include "physics/rotationalframe.h"
 #include "unittest.h"
 
 #include <iostream>

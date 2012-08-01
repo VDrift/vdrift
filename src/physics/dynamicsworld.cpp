@@ -17,9 +17,9 @@
 /*                                                                      */
 /************************************************************************/
 
-#include "dynamicsworld.h"
-#include "fracturebody.h"
-#include "collision_contact.h"
+#include "physics/dynamicsworld.h"
+#include "physics/fracturebody.h"
+#include "physics/collision_contact.h"
 #include "tobullet.h"
 #include "model.h"
 #include "track.h"
@@ -247,7 +247,7 @@ void DynamicsWorld::fractureCallback()
 	{
 		btPersistentManifold* manifold = getDispatcher()->getManifoldByIndexInternal(i);
 		if (!manifold->getNumContacts()) continue;
-		
+
 		FractureBody* body = static_cast<FractureBody*>(manifold->getBody0());
 		if (body->getInternalType() & CO_FRACTURE_TYPE)
 		{

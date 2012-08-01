@@ -18,10 +18,10 @@
 /************************************************************************/
 
 #include "car.h"
-#include "carwheelposition.h"
-#include "dynamicsworld.h"
-#include "tracksurface.h"
 #include "carinput.h"
+#include "physics/carwheelposition.h"
+#include "physics/dynamicsworld.h"
+#include "physics/tracksurface.h"
 #include "content/contentmanager.h"
 #include "textureinfo.h"
 #include "model_joe03.h"

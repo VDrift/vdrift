@@ -20,7 +20,7 @@
 #ifndef _PERFORMANCE_TESTING_H
 #define _PERFORMANCE_TESTING_H
 
-#include "cardynamics.h"
+#include "physics/cardynamics.h"
 
 class ContentManager;
 

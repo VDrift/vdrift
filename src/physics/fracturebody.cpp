@@ -17,11 +17,11 @@
 /*                                                                      */
 /************************************************************************/
 
-#include "fracturebody.h"
-#include "motionstate.h"
+#include "physics/fracturebody.h"
 #include "BulletCollision/CollisionShapes/btCompoundShape.h"
 #include "BulletCollision/CollisionDispatch/btCollisionWorld.h"
 #include "BulletDynamics/Dynamics/btDynamicsWorld.h"
+#include "motionstate.h"
 
 template <typename T0, typename T1>
 static inline T0 cast(const T1 & t)

@@ -21,12 +21,11 @@
 #define _TRACK_H
 
 #include "scenenode.h"
-#include "tracksurface.h"
 #include "roadstrip.h"
 #include "mathvector.h"
 #include "quaternion.h"
-#include "motionstate.h"
-#include "LinearMath/btAlignedObjectArray.h"
+#include "physics/motionstate.h"
+#include "physics/tracksurface.h"
 
 #include <string>
 #include <iostream>
@@ -55,19 +54,19 @@ public:
     /// Use Loaded() to see if loading is complete yet.
     /// Returns true if successful.
 	bool DeferredLoad(
-                      ContentManager & content,
-                      DynamicsWorld & world,
-                      std::ostream & info_output,
-                      std::ostream & error_output,
-                      const std::string & trackpath,
-                      const std::string & trackdir,
-                      const std::string & effects_texturepath,
-                      const std::string & sharedobjectpath,
-                      const int anisotropy,
-                      const bool reverse,
-                      const bool dynamicobjects,
-                      const bool dynamicshadowsenabled,
-                      const bool doagressivecombining);
+		ContentManager & content,
+		DynamicsWorld & world,
+		std::ostream & info_output,
+		std::ostream & error_output,
+		const std::string & trackpath,
+		const std::string & trackdir,
+		const std::string & effects_texturepath,
+		const std::string & sharedobjectpath,
+		const int anisotropy,
+		const bool reverse,
+		const bool dynamicobjects,
+		const bool dynamicshadowsenabled,
+		const bool doagressivecombining);
 
 	bool ContinueDeferredLoad();
 
