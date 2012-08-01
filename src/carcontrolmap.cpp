@@ -18,7 +18,7 @@
 /************************************************************************/
 
 #include "carcontrolmap.h"
-#include "config.h"
+#include "cfg/config.h"
 
 #include <string>
 #include <list>

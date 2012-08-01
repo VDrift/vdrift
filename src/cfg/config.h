@@ -239,12 +239,7 @@ inline bool CONFIG::GetParam(const const_iterator & section, const std::string &
 	if (i != section->second.end())
 	{
 		output = false;
-		if (i->second == "1")
-			output = true;
-		else if (i->second == "true")
-			output = true;
-		else if (i->second == "on")
-			output = true;
+		output = (i->second == "1" || i->second == "true" || i->second == "on");
 		return true;
 	}
 	return false;

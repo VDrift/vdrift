@@ -20,7 +20,7 @@
 #ifndef _AUTOUPDATE_H
 #define _AUTOUPDATE_H
 
-#include "config.h"
+#include "cfg/config.h"
 
 #include <string>
 #include <map>

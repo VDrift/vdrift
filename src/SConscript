@@ -28,7 +28,6 @@ src = Split("""aabb.cpp
 		camera_orbit.cpp
 		car.cpp
 		carcontrolmap.cpp
-		config.cpp
 		containeralgorithm.cpp
 		content/cotentmanager.cpp
 		content/cotentfactory.cpp
@@ -139,6 +138,7 @@ src = Split("""aabb.cpp
 		updatemanager.cpp
 		utils.cpp
 		window.cpp
+		cfg/config.cpp
 		cfg/ptree.cpp
 		cfg/ptree_inf.cpp
 		cfg/ptree_ini.cpp

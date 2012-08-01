@@ -18,7 +18,7 @@
 /************************************************************************/
 
 #include "settings.h"
-#include "config.h"
+#include "cfg/config.h"
 
 template <typename T>
 static void Param(

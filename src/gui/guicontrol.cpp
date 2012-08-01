@@ -18,7 +18,7 @@
 /************************************************************************/
 
 #include "guicontrol.h"
-#include "config.h"
+#include "cfg/config.h"
 
 static std::vector<std::string> GetSignals()
 {

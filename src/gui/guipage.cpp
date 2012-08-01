@@ -25,7 +25,7 @@
 #include "guislider.h"
 #include "content/contentmanager.h"
 #include "graphics/textureinfo.h"
-#include "config.h"
+#include "cfg/config.h"
 #include <fstream>
 #include <sstream>
 

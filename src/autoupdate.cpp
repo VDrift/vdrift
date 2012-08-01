@@ -19,7 +19,7 @@
 
 #include <sstream>
 #include "autoupdate.h"
-#include "config.h"
+#include "cfg/config.h"
 
 const std::string AVAILABLE_PREFIX = "available_";
 
