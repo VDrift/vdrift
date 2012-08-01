@@ -21,7 +21,6 @@
 #include "fracturebody.h"
 #include "collision_contact.h"
 #include "tobullet.h"
-#include "graphics/model.h"
 #include "track.h"
 
 #define EXTBULLET
