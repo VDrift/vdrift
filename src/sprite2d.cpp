@@ -19,7 +19,7 @@
 
 #include "sprite2d.h"
 #include "content/contentmanager.h"
-#include "textureinfo.h"
+#include "graphics/textureinfo.h"
 
 void SPRITE2D::Unload(SCENENODE & parent)
 {

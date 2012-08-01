@@ -21,7 +21,8 @@
 #define _GAME_H
 
 #include "window.h"
-#include "graphics.h"
+#include "graphics/graphics.h"
+#include "graphics/gl3v/stringidmap.h"
 #include "eventsystem.h"
 #include "settings.h"
 #include "pathmanager.h"
@@ -50,7 +51,6 @@
 #include "quickmp.h"
 #include "content/contentmanager.h"
 #include "http.h"
-#include "gl3v/stringidmap.h"
 #include "updatemanager.h"
 #include "game_downloader.h"
 

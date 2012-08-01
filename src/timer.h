@@ -20,8 +20,8 @@
 #ifndef _TIMER_H
 #define _TIMER_H
 
-#include "texture.h"
-#include "vertexarray.h"
+#include "graphics/texture.h"
+#include "graphics/vertexarray.h"
 #include "config.h"
 #include "font.h"
 

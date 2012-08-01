@@ -21,8 +21,8 @@
 #define _GUIIMAGE_H
 
 #include "guiwidget.h"
-#include "scenenode.h"
-#include "vertexarray.h"
+#include "graphics/scenenode.h"
+#include "graphics/vertexarray.h"
 
 class TEXTURE;
 class ContentManager;

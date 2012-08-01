@@ -22,7 +22,7 @@
 
 #include "physics/cardynamics.h"
 #include "tobullet.h"
-#include "scenenode.h"
+#include "graphics/scenenode.h"
 #include "crashdetection.h"
 #include "enginesoundinfo.h"
 #include "joeserialize.h"

@@ -21,7 +21,7 @@
 #define _DYNAMICSDRAW_H
 
 #include "LinearMath/btIDebugDraw.h"
-#include "scenenode.h"
+#include "graphics/scenenode.h"
 
 class DynamicsDraw : public btIDebugDraw
 {

@@ -19,7 +19,7 @@
 
 #include "loadingscreen.h"
 #include "content/contentmanager.h"
-#include "textureinfo.h"
+#include "graphics/textureinfo.h"
 
 void LOADINGSCREEN::Update(float percentage, const std::string & optional_text, float posx, float posy)
 {

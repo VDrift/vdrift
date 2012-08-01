@@ -19,7 +19,7 @@
 
 #include "particle.h"
 #include "content/contentmanager.h"
-#include "textureinfo.h"
+#include "graphics/textureinfo.h"
 #include "unittest.h"
 
 bool PARTICLE_SYSTEM::Load(

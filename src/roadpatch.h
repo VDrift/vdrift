@@ -22,7 +22,7 @@
 
 #include "bezier.h"
 #include "mathvector.h"
-#include "vertexarray.h"
+#include "graphics/vertexarray.h"
 #include "memory.h"
 
 class TEXTURE;

@@ -19,7 +19,7 @@
 
 #include "font.h"
 #include "content/contentmanager.h"
-#include "texture.h"
+#include "graphics/texture.h"
 
 #include <sstream>
 #include <fstream>

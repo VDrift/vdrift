@@ -24,7 +24,7 @@
 #include "tobullet.h"
 #include "k1999.h"
 #include "content/contentmanager.h"
-#include "textureinfo.h"
+#include "graphics/textureinfo.h"
 
 #define EXTBULLET
 

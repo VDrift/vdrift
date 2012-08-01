@@ -21,8 +21,8 @@
 #define _TEXT_DRAW_H
 
 #include "font.h"
-#include "scenenode.h"
-#include "vertexarray.h"
+#include "graphics/scenenode.h"
+#include "graphics/vertexarray.h"
 
 #include <string>
 #include <cassert>

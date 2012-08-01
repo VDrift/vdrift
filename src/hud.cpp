@@ -19,7 +19,7 @@
 
 #include "hud.h"
 #include "content/contentmanager.h"
-#include "texture.h"
+#include "graphics/texture.h"
 
 //#define GAUGES
 

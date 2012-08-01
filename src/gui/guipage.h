@@ -20,7 +20,7 @@
 #ifndef _GUIPAGE_H
 #define _GUIPAGE_H
 
-#include "scenenode.h"
+#include "graphics/scenenode.h"
 #include "signalslot.h"
 
 #include <map>

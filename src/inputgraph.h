@@ -21,7 +21,7 @@
 #define _INPUTGRAPH_H
 
 #include "sprite2d.h"
-#include "scenenode.h"
+#include "graphics/scenenode.h"
 
 #include <string>
 

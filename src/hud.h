@@ -20,7 +20,6 @@
 #ifndef _HUD_H
 #define _HUD_H
 
-#include "scenenode.h"
 #include "text_draw.h"
 #include "hudgauge.h"
 #include "hudbar.h"

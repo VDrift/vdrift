@@ -24,7 +24,7 @@
 #include "guilabel.h"
 #include "guislider.h"
 #include "content/contentmanager.h"
-#include "textureinfo.h"
+#include "graphics/textureinfo.h"
 #include "config.h"
 #include <fstream>
 #include <sstream>

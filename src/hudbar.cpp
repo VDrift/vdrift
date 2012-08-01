@@ -18,7 +18,7 @@
 /************************************************************************/
 
 #include "hudbar.h"
-#include "scenenode.h"
+#include "graphics/scenenode.h"
 
 void HUDBAR::Set(
 	SCENENODE & parent,

@@ -19,18 +19,17 @@
 
 #include "car.h"
 #include "carinput.h"
+#include "content/contentmanager.h"
 #include "physics/carwheelposition.h"
 #include "physics/dynamicsworld.h"
 #include "physics/tracksurface.h"
-#include "content/contentmanager.h"
-#include "textureinfo.h"
-#include "model_joe03.h"
-#include "mesh_gen.h"
+#include "graphics/textureinfo.h"
+#include "graphics/mesh_gen.h"
+#include "sound/sound.h"
+#include "cfg/ptree.h"
 #include "loaddrawable.h"
 #include "loadcamera.h"
 #include "camera.h"
-#include "cfg/ptree.h"
-#include "sound/sound.h"
 
 #include <map>
 #include <list>

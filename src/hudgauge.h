@@ -20,7 +20,7 @@
 #ifndef _HUDGAUGE_H
 #define _HUDGAUGE_H
 
-#include "scenenode.h"
+#include "graphics/scenenode.h"
 
 class FONT;
 

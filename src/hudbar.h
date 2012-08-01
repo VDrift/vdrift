@@ -20,8 +20,8 @@
 #ifndef _HUDBAR_H
 #define _HUDBAR_H
 
-#include "vertexarray.h"
-#include "drawable.h"
+#include "graphics/vertexarray.h"
+#include "graphics/drawable.h"
 
 class SCENENODE;
 class TEXTURE;

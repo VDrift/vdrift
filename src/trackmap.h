@@ -21,7 +21,7 @@
 #define _TRACKMAP_H
 
 #include "mathvector.h"
-#include "scenenode.h"
+#include "graphics/scenenode.h"
 #include "roadstrip.h"
 
 #include <list>

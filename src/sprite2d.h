@@ -20,8 +20,8 @@
 #ifndef _SPRITE2D_H
 #define _SPRITE2D_H
 
-#include "scenenode.h"
-#include "vertexarray.h"
+#include "graphics/scenenode.h"
+#include "graphics/vertexarray.h"
 
 #include <string>
 #include <cassert>

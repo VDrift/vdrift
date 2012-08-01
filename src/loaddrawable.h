@@ -20,7 +20,7 @@
 #ifndef _LOADDRAWABLE_H
 #define _LOADDRAWABLE_H
 
-#include "scenenode.h"
+#include "graphics/scenenode.h"
 
 class ContentManager;
 class PTree;

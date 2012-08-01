@@ -38,19 +38,45 @@ src = Split("""aabb.cpp
 		content/texturefactory.cpp
 		crashdetection.cpp
 		downloadable.cpp
-		drawable.cpp
 		dynamicsdraw.cpp
 		eventsystem.cpp
-		fbobject.cpp
-		fbtexture.cpp
 		font.cpp
 		forcefeedback.cpp
 		game.cpp
-		glutil.cpp
-		graphics_config.cpp
-		graphics_config_condition.cpp
-		graphics_gl2.cpp
-		graphics_gl3v.cpp
+		graphics/drawable.cpp
+		graphics/fbobject.cpp
+		graphics/fbtexture.cpp
+		graphics/glutil.cpp
+		graphics/graphics_config.cpp
+		graphics/graphics_config_condition.cpp
+		graphics/graphics_gl2.cpp
+		graphics/graphics_gl3v.cpp
+		graphics/mesh_gen.cpp
+		graphics/model.cpp
+		graphics/model_joe03.cpp
+		graphics/model_obj.cpp
+		graphics/render_input.cpp
+		graphics/render_input_postprocess.cpp
+		graphics/render_input_scene.cpp
+		graphics/render_output.cpp
+		graphics/rendermodelext_drawable.cpp
+		graphics/scenenode.cpp
+		graphics/shader.cpp
+		graphics/texture.cpp
+		graphics/vertexarray.cpp
+		graphics/gl3v/glenums.cpp
+		graphics/gl3v/glwrapper.cpp
+		graphics/gl3v/renderdimensions.cpp
+		graphics/gl3v/renderer.cpp
+		graphics/gl3v/rendermodel.cpp
+		graphics/gl3v/rendermodelext.cpp
+		graphics/gl3v/renderpass.cpp
+		graphics/gl3v/rendersampler.cpp
+		graphics/gl3v/renderstate.cpp
+		graphics/gl3v/rendertextureentry.cpp
+		graphics/gl3v/renderuniform.cpp
+		graphics/gl3v/renderuniformentry.cpp
+		graphics/gl3v/stringidmap.cpp
 		gui/gui.cpp
 		gui/guicontrol.cpp
 		gui/guiimage.cpp
@@ -76,10 +102,6 @@ src = Split("""aabb.cpp
 		mathplane.cpp
 		mathvector.cpp
 		matrix4.cpp
-		mesh_gen.cpp
-		model.cpp
-		model_joe03.cpp
-		model_obj.cpp
 		optional.cpp
 		parallel_task.cpp
 		particle.cpp
@@ -97,25 +119,17 @@ src = Split("""aabb.cpp
 		physics/rotationalframe.cpp
 		quaternion.cpp
 		random.cpp
-		render_input.cpp
-		render_input_postprocess.cpp
-		render_input_scene.cpp
-		render_output.cpp
-		rendermodelext_drawable.cpp
 		replay.cpp
 		reseatable_reference.cpp
 		roadpatch.cpp
 		roadstrip.cpp
-		scenenode.cpp
 		settings.cpp
-		shader.cpp
 		sound/sound.cpp
 		sound/soundbuffer.cpp
 		sound/soundfilter.cpp
 		sprite2d.cpp
 		suspensionbumpdetection.cpp
 		svn_sourceforge.cpp
-		texture.cpp
 		text_draw.cpp
 		timer.cpp
 		toggle.cpp
@@ -124,25 +138,11 @@ src = Split("""aabb.cpp
 		trackmap.cpp
 		updatemanager.cpp
 		utils.cpp
-		vertexarray.cpp
 		window.cpp
 		cfg/inf.cpp
 		cfg/ini.cpp
 		cfg/ptree.cpp
-		cfg/xml.cpp
-		gl3v/glenums.cpp
-		gl3v/glwrapper.cpp
-		gl3v/renderdimensions.cpp
-		gl3v/renderer.cpp
-		gl3v/rendermodel.cpp
-		gl3v/rendermodelext.cpp
-		gl3v/renderpass.cpp
-		gl3v/rendersampler.cpp
-		gl3v/renderstate.cpp
-		gl3v/rendertextureentry.cpp
-		gl3v/renderuniform.cpp
-		gl3v/renderuniformentry.cpp
-		gl3v/stringidmap.cpp""")
+		cfg/xml.cpp""")
 
 src.sort(lambda x, y: cmp(x.lower(),y.lower()))
 

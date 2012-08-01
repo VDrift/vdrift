@@ -21,8 +21,8 @@
 #define _PARTICLE_H
 
 #include "mathvector.h"
-#include "scenenode.h"
-#include "vertexarray.h"
+#include "graphics/scenenode.h"
+#include "graphics/vertexarray.h"
 
 #include <ostream>
 #include <utility> // std::pair

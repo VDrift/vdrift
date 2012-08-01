@@ -18,7 +18,7 @@
 /************************************************************************/
 
 #include "roadpatch.h"
-#include "scenenode.h"
+#include "graphics/scenenode.h"
 
 bool ROADPATCH::Collide(
 	const MATHVECTOR <float, 3> & origin,

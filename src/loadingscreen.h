@@ -20,10 +20,7 @@
 #ifndef _LOADINGSCREEN_H
 #define _LOADINGSCREEN_H
 
-#include "scenenode.h"
-#include "vertexarray.h"
 #include "text_draw.h"
-
 #include <ostream>
 #include <string>
 

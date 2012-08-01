@@ -18,7 +18,7 @@
 /************************************************************************/
 
 #include "texturefactory.h"
-#include "texture.h"
+#include "graphics/texture.h"
 #include <fstream>
 #include <sstream>
 

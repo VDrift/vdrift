@@ -21,7 +21,7 @@
 #define _TEXTUREFACTORY_H
 
 #include "contentfactory.h"
-#include "textureinfo.h"
+#include "graphics/textureinfo.h"
 
 class TEXTURE;
 

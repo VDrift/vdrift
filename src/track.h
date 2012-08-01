@@ -20,10 +20,10 @@
 #ifndef _TRACK_H
 #define _TRACK_H
 
-#include "scenenode.h"
 #include "roadstrip.h"
 #include "mathvector.h"
 #include "quaternion.h"
+#include "graphics/scenenode.h"
 #include "physics/motionstate.h"
 #include "physics/tracksurface.h"
 

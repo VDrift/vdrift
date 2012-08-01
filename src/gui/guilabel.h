@@ -21,7 +21,6 @@
 #define _GUILABEL_H
 
 #include "guiwidget.h"
-#include "scenenode.h"
 #include "text_draw.h"
 
 class TEXTURE;

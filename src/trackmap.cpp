@@ -19,7 +19,7 @@
 
 #include "trackmap.h"
 #include "content/contentmanager.h"
-#include "texture.h"
+#include "graphics/texture.h"
 
 #ifdef __APPLE__
 #include <SDL_gfx/SDL_gfxPrimitives.h>
