@@ -17,8 +17,8 @@
 /*                                                                      */
 /************************************************************************/
 
-#include "content/configfactory.h"
-#include "content/contentmanager.h"
+#include "configfactory.h"
+#include "contentmanager.h"
 #include "cfg/ptree.h"
 #include <fstream>
 

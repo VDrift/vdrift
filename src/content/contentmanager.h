@@ -20,13 +20,12 @@
 #ifndef _CONTENTMANAGER_H
 #define _CONTENTMANAGER_H
 
-#include "content/soundfactory.h"
-#include "content/texturefactory.h"
-#include "content/modelfactory.h"
-#include "content/configfactory.h"
-
-#include <map>
+#include "soundfactory.h"
+#include "texturefactory.h"
+#include "modelfactory.h"
+#include "configfactory.h"
 #include <vector>
+#include <map>
 
 class ContentManager
 {
@@ -144,7 +143,7 @@ private:
 		const std::string & relpath,
 		const std::string & name,
 		const P & param);
-	
+
 	/// get default object instance
 	template <class T>
 	bool _getdefault(std::tr1::shared_ptr<T> & sptr);

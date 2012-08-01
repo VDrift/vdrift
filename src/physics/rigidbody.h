@@ -20,8 +20,8 @@
 #ifndef _RIGIDBODY_H
 #define _RIGIDBODY_H
 
-#include "physics/linearframe.h"
-#include "physics/rotationalframe.h"
+#include "linearframe.h"
+#include "rotationalframe.h"
 
 template <typename T>
 class RIGIDBODY

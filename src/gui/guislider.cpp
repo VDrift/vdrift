@@ -17,7 +17,7 @@
 /*                                                                      */
 /************************************************************************/
 
-#include "gui/guislider.h"
+#include "guislider.h"
 
 GUISLIDER::GUISLIDER() :
 	m_value(0), m_x(0), m_y(0), m_w(0), m_h(0), m_fill(false)
@@ -42,7 +42,7 @@ void GUISLIDER::Update(SCENENODE & scene, float dt)
 			w = m_h * 0.2;
 		}
 		m_slider.SetToBillboard(x, m_y, w, m_h);
-		
+
 		GUIWIDGET::Update(scene, dt);
 	}
 }

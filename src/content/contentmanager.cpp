@@ -17,7 +17,7 @@
 /*                                                                      */
 /************************************************************************/
 
-#include "content/contentmanager.h"
+#include "contentmanager.h"
 
 ContentManager::ContentManager(std::ostream & error) :
 	error(error)

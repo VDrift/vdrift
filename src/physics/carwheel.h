@@ -20,7 +20,7 @@
 #ifndef _CARWHEEL_H
 #define _CARWHEEL_H
 
-#include "physics/driveshaft.h"
+#include "driveshaft.h"
 #include "joeserialize.h"
 #include "macros.h"
 

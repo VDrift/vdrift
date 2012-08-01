@@ -18,7 +18,6 @@
 /************************************************************************/
 
 #include "sound.h"
-
 #include "coordinatesystem.h"
 #include <SDL/SDL.h>
 #include <algorithm>
@@ -502,7 +501,7 @@ void SOUND::ProcessSamplerUpdate()
 {
 	std::vector<SamplerUpdate> & supdate = sampler_update.getLast();
 	if (supdate.empty()) return;
-	
+
 	assert(samplers_num == supdate.size());
 	for (size_t i = 0; i < samplers_num; ++i)
 	{

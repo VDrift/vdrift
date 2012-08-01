@@ -17,7 +17,7 @@
 /*                                                                      */
 /************************************************************************/
 
-#include "content/modelfactory.h"
+#include "modelfactory.h"
 #include "model_joe03.h"
 #include <fstream>
 

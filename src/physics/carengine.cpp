@@ -17,7 +17,7 @@
 /*                                                                      */
 /************************************************************************/
 
-#include "physics/carengine.h"
+#include "carengine.h"
 #include "cfg/ptree.h"
 #include "linearinterp.h"
 

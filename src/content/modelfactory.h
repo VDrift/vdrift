@@ -20,7 +20,7 @@
 #ifndef _MODELFACTORY_H
 #define _MODELFACTORY_H
 
-#include "content/contentfactory.h"
+#include "contentfactory.h"
 
 class MODEL;
 

@@ -17,7 +17,7 @@
 /*                                                                      */
 /************************************************************************/
 
-#include "gui/guiwidget.h"
+#include "guiwidget.h"
 #include "hsvtorgb.h"
 #include "drawable.h"
 

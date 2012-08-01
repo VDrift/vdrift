@@ -17,7 +17,7 @@
 /*                                                                      */
 /************************************************************************/
 
-#include "physics/carsuspension.h"
+#include "carsuspension.h"
 #include "coordinatesystem.h"
 #include "cfg/ptree.h"
 

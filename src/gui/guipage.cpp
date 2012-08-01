@@ -17,16 +17,15 @@
 /*                                                                      */
 /************************************************************************/
 
-#include "gui/guipage.h"
-#include "gui/guiwidget.h"
-#include "gui/guicontrol.h"
-#include "gui/guiimage.h"
-#include "gui/guilabel.h"
-#include "gui/guislider.h"
+#include "guipage.h"
+#include "guiwidget.h"
+#include "guicontrol.h"
+#include "guiimage.h"
+#include "guilabel.h"
+#include "guislider.h"
 #include "content/contentmanager.h"
 #include "textureinfo.h"
 #include "config.h"
-
 #include <fstream>
 #include <sstream>
 

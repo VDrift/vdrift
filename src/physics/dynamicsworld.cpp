@@ -17,9 +17,9 @@
 /*                                                                      */
 /************************************************************************/
 
-#include "physics/dynamicsworld.h"
-#include "physics/fracturebody.h"
-#include "physics/collision_contact.h"
+#include "dynamicsworld.h"
+#include "fracturebody.h"
+#include "collision_contact.h"
 #include "tobullet.h"
 #include "model.h"
 #include "track.h"

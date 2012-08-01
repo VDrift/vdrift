@@ -17,8 +17,7 @@
 /*                                                                      */
 /************************************************************************/
 
-#include "gui/guioption.h"
-
+#include "guioption.h"
 #include <sstream>
 
 static const std::string null;

@@ -20,7 +20,7 @@
 #ifndef _GUILABEL_H
 #define _GUILABEL_H
 
-#include "gui/guiwidget.h"
+#include "guiwidget.h"
 #include "scenenode.h"
 #include "text_draw.h"
 
@@ -31,7 +31,7 @@ class GUILABEL : public GUIWIDGET
 {
 public:
 	GUILABEL();
-	
+
 	virtual ~GUILABEL();
 
 	// align: -1 left, 0 center, +1 right
@@ -44,7 +44,7 @@ public:
 		float w, float h, float z);
 
 	void SetText(const std::string & text);
-	
+
 	const std::string & GetText() const;
 
 	Slot1<const std::string &> set_value;

@@ -20,7 +20,7 @@
 #ifndef _CARENGINE_H
 #define _CARENGINE_H
 
-#include "physics/driveshaft.h"
+#include "driveshaft.h"
 #include "LinearMath/btVector3.h"
 #include "spline.h"
 #include "joeserialize.h"

@@ -17,10 +17,10 @@
 /*                                                                      */
 /************************************************************************/
 
-#include "physics/cardynamics.h"
-#include "physics/tracksurface.h"
-#include "physics/dynamicsworld.h"
-#include "physics/fracturebody.h"
+#include "cardynamics.h"
+#include "tracksurface.h"
+#include "dynamicsworld.h"
+#include "fracturebody.h"
 #include "loadcollisionshape.h"
 #include "coordinatesystem.h"
 #include "cfg/ptree.h"

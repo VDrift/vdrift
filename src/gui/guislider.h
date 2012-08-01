@@ -20,7 +20,7 @@
 #ifndef _GUISLIDER_H
 #define _GUISLIDER_H
 
-#include "gui/guiwidget.h"
+#include "guiwidget.h"
 #include "sprite2d.h"
 
 class GUISLIDER : public GUIWIDGET

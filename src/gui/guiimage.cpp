@@ -17,7 +17,7 @@
 /*                                                                      */
 /************************************************************************/
 
-#include "gui/guiimage.h"
+#include "guiimage.h"
 #include "content/contentmanager.h"
 
 GUIIMAGE::GUIIMAGE()

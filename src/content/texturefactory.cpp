@@ -17,7 +17,7 @@
 /*                                                                      */
 /************************************************************************/
 
-#include "content/texturefactory.h"
+#include "texturefactory.h"
 #include "texture.h"
 #include <fstream>
 #include <sstream>

@@ -17,7 +17,7 @@
 /*                                                                      */
 /************************************************************************/
 
-#include "physics/cartire.h"
+#include "cartire.h"
 #include "cfg/ptree.h"
 
 CARTIRE::CARTIRE() :

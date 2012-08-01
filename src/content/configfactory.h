@@ -20,7 +20,7 @@
 #ifndef _CONFIGFACTORY_H
 #define _CONFIGFACTORY_H
 
-#include "content/contentfactory.h"
+#include "contentfactory.h"
 #include <istream>
 
 class PTree;

@@ -17,7 +17,7 @@
 /*                                                                      */
 /************************************************************************/
 
-#include "physics/rigidbody.h"
+#include "rigidbody.h"
 #include "unittest.h"
 
 #include <iostream>

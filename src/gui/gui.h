@@ -20,8 +20,8 @@
 #ifndef _GUI_H
 #define _GUI_H
 
-#include "gui/guipage.h"
-#include "gui/guioption.h"
+#include "guipage.h"
+#include "guioption.h"
 #include "font.h"
 
 #include <map>

@@ -17,10 +17,9 @@
 /*                                                                      */
 /************************************************************************/
 
-#include "gui/gui.h"
-#include "gui/guilabel.h"
+#include "gui.h"
+#include "guilabel.h"
 #include "config.h"
-
 #include <sstream>
 
 static const std::string null;

@@ -20,7 +20,7 @@
 #ifndef SOUNDBUFFER_H
 #define SOUNDBUFFER_H
 
-#include "sound/soundinfo.h"
+#include "soundinfo.h"
 
 #include <string>
 #include <ostream>

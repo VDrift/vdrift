@@ -20,7 +20,7 @@
 #ifndef _GUIIMAGE_H
 #define _GUIIMAGE_H
 
-#include "gui/guiwidget.h"
+#include "guiwidget.h"
 #include "scenenode.h"
 #include "vertexarray.h"
 

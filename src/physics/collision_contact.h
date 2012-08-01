@@ -20,7 +20,7 @@
 #ifndef _COLLISION_CONTACT_H
 #define _COLLISION_CONTACT_H
 
-#include "physics/tracksurface.h"
+#include "tracksurface.h"
 #include "LinearMath/btVector3.h"
 
 class BEZIER;

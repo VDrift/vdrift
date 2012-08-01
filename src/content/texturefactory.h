@@ -20,7 +20,7 @@
 #ifndef _TEXTUREFACTORY_H
 #define _TEXTUREFACTORY_H
 
-#include "content/contentfactory.h"
+#include "contentfactory.h"
 #include "textureinfo.h"
 
 class TEXTURE;

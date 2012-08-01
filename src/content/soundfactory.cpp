@@ -17,7 +17,7 @@
 /*                                                                      */
 /************************************************************************/
 
-#include "content/soundfactory.h"
+#include "soundfactory.h"
 #include "sound/soundbuffer.h"
 #include <fstream>
 

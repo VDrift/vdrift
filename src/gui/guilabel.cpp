@@ -17,8 +17,7 @@
 /*                                                                      */
 /************************************************************************/
 
-#include "gui/guilabel.h"
-
+#include "guilabel.h"
 #include <cassert>
 
 GUILABEL::GUILABEL() :

@@ -20,7 +20,7 @@
 #ifndef _SOUNDFACTORY_H
 #define _SOUNDFACTORY_H
 
-#include "content/contentfactory.h"
+#include "contentfactory.h"
 #include "sound/soundinfo.h"
 
 class SOUNDBUFFER;
