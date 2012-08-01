@@ -17,8 +17,8 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _CARCONTROLMAP_LOCAL_H
-#define _CARCONTROLMAP_LOCAL_H
+#ifndef _CARCONTROLMAP_H
+#define _CARCONTROLMAP_H
 
 #include "eventsystem.h"
 #include "carinput.h"
@@ -31,10 +31,10 @@
 class CONFIG;
 class GAME;
 
-class CARCONTROLMAP_LOCAL
+class CARCONTROLMAP
 {
 public:
-	CARCONTROLMAP_LOCAL();
+	CARCONTROLMAP();
 
 	bool Load(const std::string & controlfile, std::ostream & info_output, std::ostream & error_output);
 

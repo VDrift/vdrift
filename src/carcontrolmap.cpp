@@ -17,7 +17,7 @@
 /*                                                                      */
 /************************************************************************/
 
-#include "carcontrolmap_local.h"
+#include "carcontrolmap.h"
 #include "config.h"
 
 #include <string>
@@ -93,19 +93,19 @@ static inline float ApplyExponent(float exponent, float val)
 
 static const std::string invalid("INVALID");
 
-const std::vector<std::string> CARCONTROLMAP_LOCAL::carinput_strings = CARCONTROLMAP_LOCAL::InitCarInputStrings();
+const std::vector<std::string> CARCONTROLMAP::carinput_strings = CARCONTROLMAP::InitCarInputStrings();
 
-const std::map <std::string, CARINPUT::CARINPUT> CARCONTROLMAP_LOCAL::carinput_stringmap = CARCONTROLMAP_LOCAL::InitCarInputStringMap();
+const std::map <std::string, CARINPUT::CARINPUT> CARCONTROLMAP::carinput_stringmap = CARCONTROLMAP::InitCarInputStringMap();
 
-const std::map <std::string, int> CARCONTROLMAP_LOCAL::keycode_stringmap = CARCONTROLMAP_LOCAL::InitKeycodeStringMap();
+const std::map <std::string, int> CARCONTROLMAP::keycode_stringmap = CARCONTROLMAP::InitKeycodeStringMap();
 
-CARCONTROLMAP_LOCAL::CARCONTROLMAP_LOCAL() :
+CARCONTROLMAP::CARCONTROLMAP() :
 	controls(CARINPUT::INVALID)
 {
 	// constructor
 }
 
-bool CARCONTROLMAP_LOCAL::Load(const std::string & controlfile, std::ostream & info_output, std::ostream & error_output)
+bool CARCONTROLMAP::Load(const std::string & controlfile, std::ostream & info_output, std::ostream & error_output)
 {
 	CONFIG controls_config;
 	if (!controls_config.Load(controlfile))
@@ -288,14 +288,14 @@ bool CARCONTROLMAP_LOCAL::Load(const std::string & controlfile, std::ostream & i
 	return true;
 }
 
-void CARCONTROLMAP_LOCAL::Save(const std::string & controlfile)
+void CARCONTROLMAP::Save(const std::string & controlfile)
 {
 	CONFIG controls_config;
 	Save(controls_config);
 	controls_config.Write(controlfile);
 }
 
-void CARCONTROLMAP_LOCAL::Save(CONFIG & controls_config)
+void CARCONTROLMAP::Save(CONFIG & controls_config)
 {
 	int id = 0;
 	for (size_t n = 0; n < controls.size(); ++n)
@@ -397,7 +397,7 @@ void CARCONTROLMAP_LOCAL::Save(CONFIG & controls_config)
 	}
 }
 
-const std::vector <float> & CARCONTROLMAP_LOCAL::ProcessInput(const std::string & joytype, EVENTSYSTEM_SDL & eventsystem, float steerpos, float dt, bool joy_200, float carms, float speedsens, int screenw, int screenh, float button_ramp, bool hgateshifter)
+const std::vector <float> & CARCONTROLMAP::ProcessInput(const std::string & joytype, EVENTSYSTEM_SDL & eventsystem, float steerpos, float dt, bool joy_200, float carms, float speedsens, int screenw, int screenh, float button_ramp, bool hgateshifter)
 {
 	//this looks weird, but it ensures that our inputs vector contains exactly one item per input
 	assert(inputs.size() == CARINPUT::INVALID);
@@ -635,7 +635,7 @@ const std::vector <float> & CARCONTROLMAP_LOCAL::ProcessInput(const std::string 
 	return inputs;
 }
 
-void CARCONTROLMAP_LOCAL::GetControlsInfo(std::map<std::string, std::string> & info) const
+void CARCONTROLMAP::GetControlsInfo(std::map<std::string, std::string> & info) const
 {
 	for (size_t n = 0; n < CARINPUT::INVALID; ++n)
 	{
@@ -663,7 +663,7 @@ void CARCONTROLMAP_LOCAL::GetControlsInfo(std::map<std::string, std::string> & i
 	}
 }
 
-CARCONTROLMAP_LOCAL::CONTROL CARCONTROLMAP_LOCAL::GetControl(const std::string & inputname, size_t controlid)
+CARCONTROLMAP::CONTROL CARCONTROLMAP::GetControl(const std::string & inputname, size_t controlid)
 {
 	size_t input = GetInputFromString(inputname);
 	if (input == CARINPUT::INVALID)
@@ -676,7 +676,7 @@ CARCONTROLMAP_LOCAL::CONTROL CARCONTROLMAP_LOCAL::GetControl(const std::string &
 		return CONTROL();
 }
 
-void CARCONTROLMAP_LOCAL::SetControl(const std::string & inputname, size_t controlid, const CONTROL & control)
+void CARCONTROLMAP::SetControl(const std::string & inputname, size_t controlid, const CONTROL & control)
 {
 	CARINPUT::CARINPUT input = GetInputFromString(inputname);
 	if (input == CARINPUT::INVALID)
@@ -692,7 +692,7 @@ void CARCONTROLMAP_LOCAL::SetControl(const std::string & inputname, size_t contr
 	input_controls[controlid] = control;
 }
 
-void CARCONTROLMAP_LOCAL::DeleteControl(const std::string & inputname, size_t controlid)
+void CARCONTROLMAP::DeleteControl(const std::string & inputname, size_t controlid)
 {
 	CARINPUT::CARINPUT input = GetInputFromString(inputname);
 	if (input == CARINPUT::INVALID)
@@ -708,7 +708,7 @@ void CARCONTROLMAP_LOCAL::DeleteControl(const std::string & inputname, size_t co
 	input_controls.pop_back();
 }
 
-std::map <std::string, CARINPUT::CARINPUT> CARCONTROLMAP_LOCAL::InitCarInputStringMap()
+std::map <std::string, CARINPUT::CARINPUT> CARCONTROLMAP::InitCarInputStringMap()
 {
 	std::map <std::string, CARINPUT::CARINPUT> stringmap;
 	for (size_t i = 0; i < carinput_strings.size(); ++i)
@@ -718,7 +718,7 @@ std::map <std::string, CARINPUT::CARINPUT> CARCONTROLMAP_LOCAL::InitCarInputStri
 	return stringmap;
 }
 
-std::vector<std::string> CARCONTROLMAP_LOCAL::InitCarInputStrings()
+std::vector<std::string> CARCONTROLMAP::InitCarInputStrings()
 {
 	std::vector<std::string> strings(CARINPUT::INVALID);
 	strings[CARINPUT::THROTTLE] = "gas";
@@ -774,7 +774,7 @@ std::vector<std::string> CARCONTROLMAP_LOCAL::InitCarInputStrings()
 	return strings;
 }
 
-std::map <std::string, int> CARCONTROLMAP_LOCAL::InitKeycodeStringMap()
+std::map <std::string, int> CARCONTROLMAP::InitKeycodeStringMap()
 {
 	std::map <std::string, int> keycodes;
 	keycodes["UNKNOWN"] = SDLK_UNKNOWN;
@@ -928,12 +928,12 @@ std::map <std::string, int> CARCONTROLMAP_LOCAL::InitKeycodeStringMap()
 	return keycodes;
 }
 
-const std::string & CARCONTROLMAP_LOCAL::GetStringFromInput(const CARINPUT::CARINPUT input)
+const std::string & CARCONTROLMAP::GetStringFromInput(const CARINPUT::CARINPUT input)
 {
 	return carinput_strings[input];
 }
 
-CARINPUT::CARINPUT CARCONTROLMAP_LOCAL::GetInputFromString(const std::string & str)
+CARINPUT::CARINPUT CARCONTROLMAP::GetInputFromString(const std::string & str)
 {
 	std::map <std::string, CARINPUT::CARINPUT>::const_iterator i = carinput_stringmap.find(str);
 	if (i != carinput_stringmap.end())
@@ -942,7 +942,7 @@ CARINPUT::CARINPUT CARCONTROLMAP_LOCAL::GetInputFromString(const std::string & s
 	return CARINPUT::INVALID;
 }
 
-const std::string & CARCONTROLMAP_LOCAL::GetStringFromKeycode(const int code)
+const std::string & CARCONTROLMAP::GetStringFromKeycode(const int code)
 {
 	for (std::map <std::string, int>::const_iterator i = keycode_stringmap.begin(); i != keycode_stringmap.end(); ++i)
 		if (i->second == code)
@@ -951,7 +951,7 @@ const std::string & CARCONTROLMAP_LOCAL::GetStringFromKeycode(const int code)
 	return invalid;
 }
 
-int CARCONTROLMAP_LOCAL::GetKeycodeFromString(const std::string & str)
+int CARCONTROLMAP::GetKeycodeFromString(const std::string & str)
 {
 	std::map <std::string, int>::const_iterator i = keycode_stringmap.find(str);
 	if (i != keycode_stringmap.end())
@@ -960,7 +960,7 @@ int CARCONTROLMAP_LOCAL::GetKeycodeFromString(const std::string & str)
 	return 0;
 }
 
-void CARCONTROLMAP_LOCAL::AddControl(CONTROL newctrl, const std::string & inputname, std::ostream & error_output)
+void CARCONTROLMAP::AddControl(CONTROL newctrl, const std::string & inputname, std::ostream & error_output)
 {
 	CARINPUT::CARINPUT input = GetInputFromString(inputname);
 	if (input != CARINPUT::INVALID)
@@ -969,7 +969,7 @@ void CARCONTROLMAP_LOCAL::AddControl(CONTROL newctrl, const std::string & inputn
 		error_output << "Input named " << inputname << " couldn't be assigned because it isn't used" << std::endl;
 }
 
-void CARCONTROLMAP_LOCAL::ProcessSteering(const std::string & joytype, float steerpos, float dt, bool joy_200, float carmph, float speedsens)
+void CARCONTROLMAP::ProcessSteering(const std::string & joytype, float steerpos, float dt, bool joy_200, float carmph, float speedsens)
 {
 	//std::cout << "steerpos: " << steerpos << std::endl;
 
@@ -1082,12 +1082,12 @@ void CARCONTROLMAP_LOCAL::ProcessSteering(const std::string & joytype, float ste
 	}*/
 }
 
-bool CARCONTROLMAP_LOCAL::CONTROL::IsAnalog() const
+bool CARCONTROLMAP::CONTROL::IsAnalog() const
 {
 	return (type == JOY && joytype == JOYAXIS) || (type == MOUSE && mousetype == MOUSEMOTION);
 }
 
-std::string CARCONTROLMAP_LOCAL::CONTROL::GetInfo() const
+std::string CARCONTROLMAP::CONTROL::GetInfo() const
 {
 	if (type == KEY)
 	{
@@ -1145,7 +1145,7 @@ std::string CARCONTROLMAP_LOCAL::CONTROL::GetInfo() const
 	return invalid;
 }
 
-void CARCONTROLMAP_LOCAL::CONTROL::DebugPrint(std::ostream & out) const
+void CARCONTROLMAP::CONTROL::DebugPrint(std::ostream & out) const
 {
 	out << type << " " << onetime << " " << pushdown << " " << keycode << " " <<
 		joynum << " " << joyaxis << " " << joyaxistype << " " << joytype << " " <<
@@ -1153,7 +1153,7 @@ void CARCONTROLMAP_LOCAL::CONTROL::DebugPrint(std::ostream & out) const
 		deadzone << " " << exponent << " " << gain << std::endl;
 }
 
-bool CARCONTROLMAP_LOCAL::CONTROL::operator==(const CONTROL & other) const
+bool CARCONTROLMAP::CONTROL::operator==(const CONTROL & other) const
 {
 	CONTROL me = *this;
 	CONTROL them = other;
@@ -1189,7 +1189,7 @@ bool CARCONTROLMAP_LOCAL::CONTROL::operator==(const CONTROL & other) const
 	//bool equality = (type == other.type) && (type == other.type) &&
 }
 
-bool CARCONTROLMAP_LOCAL::CONTROL::operator<(const CONTROL & other) const
+bool CARCONTROLMAP::CONTROL::operator<(const CONTROL & other) const
 {
 	CONTROL me = *this;
 	CONTROL them = other;
@@ -1213,7 +1213,7 @@ bool CARCONTROLMAP_LOCAL::CONTROL::operator<(const CONTROL & other) const
 	return (mestr.str() < themstr.str());
 }
 
-void CARCONTROLMAP_LOCAL::CONTROL::ReadFrom(std::istream & in)
+void CARCONTROLMAP::CONTROL::ReadFrom(std::istream & in)
 {
 	int newtype, newjoyaxistype, newjoytype, newmousetype, newmdir;
 	in >> newtype >> onetime >> pushdown >> keycode >>
@@ -1227,7 +1227,7 @@ void CARCONTROLMAP_LOCAL::CONTROL::ReadFrom(std::istream & in)
 	mdir = MOUSEDIRECTION(newmdir);
 }
 
-CARCONTROLMAP_LOCAL::CONTROL::CONTROL() :
+CARCONTROLMAP::CONTROL::CONTROL() :
 	type(UNKNOWN), onetime(true), pushdown(false), keycode(0),
 	joynum(0), joyaxis(0), joyaxistype(POSITIVE), joytype(JOYAXIS),
 	mousetype(MOUSEBUTTON), mdir(UP), last_mouse_state(false),

@@ -35,7 +35,7 @@
 #include "car.h"
 #include "physics/dynamicsworld.h"
 #include "dynamicsdraw.h"
-#include "carcontrolmap_local.h"
+#include "carcontrolmap.h"
 #include "hud.h"
 #include "inputgraph.h"
 #include "sound/sound.h"
@@ -279,7 +279,7 @@ private:
 
 	std::vector <EVENTSYSTEM_SDL::JOYSTICK> controlgrab_joystick_state;
 	std::pair <int,int> controlgrab_mouse_coords;
-	CARCONTROLMAP_LOCAL::CONTROL controlgrab_control;
+	CARCONTROLMAP::CONTROL controlgrab_control;
 	std::string controlgrab_page;
 	std::string controlgrab_input;
 	size_t controlgrab_id;
@@ -294,7 +294,7 @@ private:
 	size_t car_edit_id;
 
 	CAMERA * active_camera;
-	std::pair <CAR *, CARCONTROLMAP_LOCAL> carcontrols_local;
+	std::pair <CAR *, CARCONTROLMAP> carcontrols_local;
 	std::map <CAR *, int> cartimerids;
 	std::list <CAR> cars;
 	int race_laps;

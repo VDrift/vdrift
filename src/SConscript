@@ -27,7 +27,7 @@ src = Split("""aabb.cpp
 		camera_mount.cpp
 		camera_orbit.cpp
 		car.cpp
-		carcontrolmap_local.cpp
+		carcontrolmap.cpp
 		config.cpp
 		containeralgorithm.cpp
 		content/cotentmanager.cpp
