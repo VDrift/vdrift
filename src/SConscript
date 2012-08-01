@@ -139,10 +139,10 @@ src = Split("""aabb.cpp
 		updatemanager.cpp
 		utils.cpp
 		window.cpp
-		cfg/inf.cpp
-		cfg/ini.cpp
 		cfg/ptree.cpp
-		cfg/xml.cpp""")
+		cfg/ptree_inf.cpp
+		cfg/ptree_ini.cpp
+		cfg/ptree_xml.cpp""")
 
 src.sort(lambda x, y: cmp(x.lower(),y.lower()))
 
