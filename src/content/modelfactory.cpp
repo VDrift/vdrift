@@ -18,7 +18,7 @@
 /************************************************************************/
 
 #include "modelfactory.h"
-#include "model_joe03.h"
+#include "graphics/model_joe03.h"
 #include <fstream>
 
 Factory<MODEL>::Factory() :

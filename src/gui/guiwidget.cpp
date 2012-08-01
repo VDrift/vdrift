@@ -19,7 +19,7 @@
 
 #include "guiwidget.h"
 #include "hsvtorgb.h"
-#include "drawable.h"
+#include "graphics/drawable.h"
 
 GUIWIDGET::GUIWIDGET() :
 	m_r(1), m_g(1), m_b(1), m_a(1),
