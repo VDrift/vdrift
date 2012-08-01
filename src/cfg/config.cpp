@@ -69,30 +69,30 @@ static std::string GetAbsolutePath(std::string dir, std::string relpath)
 	return dir + "/" + relpath;
 }
 
-CONFIG::CONFIG()
+Config::Config() :
+	SUPPRESS_ERROR(false)
 {
-	SUPPRESS_ERROR = false;
+	// ctor
 }
 
-CONFIG::CONFIG(std::string fname)
+Config::Config(const std::string & fname) :
+	SUPPRESS_ERROR(false)
 {
-
-	SUPPRESS_ERROR = false;
-	Load(fname);
+	load(fname);
 }
 
-CONFIG::~CONFIG()
+Config::~Config()
 {
-	Clear();
+	clear();
 }
 
-void CONFIG::Clear()
+void Config::clear()
 {
 	filename.clear();
 	sections.clear();
 }
 
-bool CONFIG::Load(std::string fname)
+bool Config::load(const std::string & fname)
 {
 	if (filename.length() == 0)
 	{
@@ -105,34 +105,34 @@ bool CONFIG::Load(std::string fname)
 	include.insert(fname);
 
 	std::ifstream f(fname.c_str());
-	return Load(f);
+	return load(f);
 }
 
-bool CONFIG::Load(std::istream & f)
+bool Config::load(std::istream & f)
 {
 	if (!SUPPRESS_ERROR && (!f || f.eof()))
 	{
 		return false;
 	}
 
-	iterator section = sections.insert(std::pair<std::string, SECTION>("", SECTION())).first;
+	iterator section = sections.insert(std::pair<std::string, Section>("", Section())).first;
 	std::string line;
 	while (f && !f.eof())
 	{
 		std::getline(f, line, '\n');
-		bool process_success = ProcessLine(section, line);
+		bool process_success = processLine(section, line);
 		if (!process_success)
 		{
 			return false;
 		}
 	}
 
-	//DebugPrint(std::cerr);
+	//Print(std::cerr);
 
 	return true;
 }
 
-bool CONFIG::ProcessLine(CONFIG::iterator & section, std::string & linestr)
+bool Config::processLine(Config::iterator & section, std::string & linestr)
 {
 	linestr = Trim(linestr);
 	linestr = Strip(linestr, '\r');
@@ -180,7 +180,7 @@ bool CONFIG::ProcessLine(CONFIG::iterator & section, std::string & linestr)
 			std::string::size_type pos = filename.rfind('/');
 			if (pos != std::string::npos) dir = filename.substr(0, pos);
 			std::string path = GetAbsolutePath(dir, relpath);
-			bool include_load_success = Load(path);
+			bool include_load_success = load(path);
 			if (!SUPPRESS_ERROR && !include_load_success)
 			{
 				//std::cout << "the included file failed to load, bail" << std::endl;
@@ -210,7 +210,7 @@ bool CONFIG::ProcessLine(CONFIG::iterator & section, std::string & linestr)
 					return false;
 				}
 
-				SECTION::const_iterator child_iter = parent_iter->second.find(child);
+				Section::const_iterator child_iter = parent_iter->second.find(child);
 				if (!SUPPRESS_ERROR && (child_iter != parent_iter->second.end()))
 				{
 					std::cout << "child already exists, this must be a duplicate section. error" << std::endl;
@@ -230,14 +230,14 @@ bool CONFIG::ProcessLine(CONFIG::iterator & section, std::string & linestr)
 				/// or perhaps just don't worry about it?
 			}
 			*/
-			section = sections.insert(std::pair<std::string, SECTION>(section_name, SECTION())).first;
+			section = sections.insert(std::pair<std::string, Section>(section_name, Section())).first;
 		}
 	}
 
 	return true;
 }
 
-void CONFIG::DebugPrint(std::ostream & out, bool with_brackets) const
+void Config::print(std::ostream & out, bool with_brackets) const
 {
 	for (const_iterator im = sections.begin(); im != sections.end(); ++im)
 	{
@@ -247,7 +247,7 @@ void CONFIG::DebugPrint(std::ostream & out, bool with_brackets) const
 			if (with_brackets) out << "[" << sectionname << "]" << std::endl;
 			else out << sectionname << std::endl;
 		}
-		for (SECTION::const_iterator is = im->second.begin(); is != im->second.end(); ++is)
+		for (Section::const_iterator is = im->second.begin(); is != im->second.end(); ++is)
 		{
 			out << is->first << " = " << is->second << std::endl;
 		}
@@ -255,18 +255,17 @@ void CONFIG::DebugPrint(std::ostream & out, bool with_brackets) const
 	}
 }
 
-bool CONFIG::Write() const
+bool Config::write() const
 {
-	return Write(filename);
+	return write(filename);
 }
 
-bool CONFIG::Write(std::string save_as) const
+bool Config::write(std::string save_as) const
 {
 	std::ofstream f(save_as.c_str());
 	if (!f) return false;
 
-	DebugPrint(f);
-
+	print(f);
 	return true;
 }
 
@@ -291,33 +290,33 @@ QT_TEST(configfile_test)
 		"this is a duplicate = 2\n"
 		"unterminated line = good?";
 
-	CONFIG testconfig;
-	testconfig.Load(instream);
+	Config testconfig;
+	testconfig.load(instream);
 	std::string tstr = "notfound";
-	QT_CHECK(testconfig.GetParam("", "variable outside of", tstr));
+	QT_CHECK(testconfig.get("", "variable outside of", tstr));
 	QT_CHECK_EQUAL(tstr, "a section");
 	tstr = "notfound";
-	QT_CHECK(testconfig.GetParam("section    dos??", "why won't you", tstr));
+	QT_CHECK(testconfig.get("section    dos??", "why won't you", tstr));
 	QT_CHECK_EQUAL(tstr, "breeeak");
 	tstr = "notfound";
-	QT_CHECK(testconfig.GetParam("", "variable outside of", tstr));
+	QT_CHECK(testconfig.get("", "variable outside of", tstr));
 	QT_CHECK_EQUAL(tstr, "a section");
 	tstr = "notfound";
-	QT_CHECK(!testconfig.GetParam("nosection", "novariable", tstr));
+	QT_CHECK(!testconfig.get("nosection", "novariable", tstr));
 	QT_CHECK_EQUAL(tstr, "notfound");
 	tstr = "notfound";
 	std::vector<float> vec(3);
-	QT_CHECK(testconfig.GetParam("what about", "even vectors", vec));
+	QT_CHECK(testconfig.get("what about", "even vectors", vec));
 	QT_CHECK_EQUAL(vec[0], 2.1f);
 	QT_CHECK_EQUAL(vec[1], 0.9f);
 	QT_CHECK_EQUAL(vec[2], 0.f);
 	tstr = "notfound";
-	QT_CHECK(testconfig.GetParam("what about", "unterminated line", tstr));
+	QT_CHECK(testconfig.get("what about", "unterminated line", tstr));
 	QT_CHECK_EQUAL(tstr, "good?");
-	//testconfig.DebugPrint(std::cout);
+	//testconfig.Print(std::cout);
 
 	{
-		CONFIG::const_iterator i = testconfig.begin();
+		Config::const_iterator i = testconfig.begin();
 		QT_CHECK_EQUAL(i->first, "");
 		i++;
 		QT_CHECK_EQUAL(i->first, "section    dos??");
@@ -331,10 +330,10 @@ QT_TEST(configfile_test)
 
 	{
 		std::string value;
-		CONFIG::const_iterator i;
-		testconfig.GetSection("test section numero UNO", i);
-		QT_CHECK_EQUAL(testconfig.GetParam(i, "i'm so great", value), true);
-		QT_CHECK_EQUAL(testconfig.GetParam(i, "look at me", value), true);
+		Config::const_iterator i;
+		testconfig.get("test section numero UNO", i);
+		QT_CHECK_EQUAL(testconfig.get(i, "i'm so great", value), true);
+		QT_CHECK_EQUAL(testconfig.get(i, "look at me", value), true);
 	}
 }
 
@@ -351,35 +350,35 @@ QT_TEST(config_include)
 	std::string verify_file = path.GetDataPath() + "/test/verify.cfg";
 
 	bool cfg_bad_include_file_loaded = false;
-	CONFIG cfg_bad_include;
-	cfg_bad_include_file_loaded = cfg_bad_include.Load(bad_include_file);
-	//cfg_bad_include.DebugPrint(std::cerr);
+	Config cfg_bad_include;
+	cfg_bad_include_file_loaded = cfg_bad_include.load(bad_include_file);
+	//cfg_bad_include.Print(std::cerr);
 	QT_CHECK(!cfg_bad_include_file_loaded);
 
 	bool cfg_test_file_loaded = false;
-	CONFIG cfg_test;
-	cfg_test_file_loaded = cfg_test.Load(test_file);
-	//cfg_test.DebugPrint(std::cerr);
+	Config cfg_test;
+	cfg_test_file_loaded = cfg_test.load(test_file);
+	//cfg_test.Print(std::cerr);
 	QT_CHECK(cfg_test_file_loaded);
 
 	bool cfg_verify_file_loaded = false;
-	CONFIG cfg_verify;
-	cfg_verify_file_loaded = cfg_verify.Load(verify_file);
-	//cfg_verify.DebugPrint(std::cerr);
+	Config cfg_verify;
+	cfg_verify_file_loaded = cfg_verify.load(verify_file);
+	//cfg_verify.Print(std::cerr);
 
 	QT_CHECK(cfg_verify_file_loaded);
 	if (!(cfg_test_file_loaded && cfg_verify_file_loaded)) return;
 
-	for (CONFIG::const_iterator s = cfg_verify.begin(); s != cfg_verify.end(); ++s)
+	for (Config::const_iterator s = cfg_verify.begin(); s != cfg_verify.end(); ++s)
 	{
-		CONFIG::const_iterator ts;
-		QT_CHECK(cfg_test.GetSection(s->first, ts, error));
+		Config::const_iterator ts;
+		QT_CHECK(cfg_test.get(s->first, ts, error));
 		if (ts == cfg_test.end()) continue;
 
-		for (CONFIG::SECTION::const_iterator p = s->second.begin(); p != s->second.end(); ++p)
+		for (Config::Section::const_iterator p = s->second.begin(); p != s->second.end(); ++p)
 		{
 			std::string value;
-			QT_CHECK(cfg_test.GetParam(ts, p->first, value, error));
+			QT_CHECK(cfg_test.get(ts, p->first, value, error));
 			QT_CHECK(p->second == value);
 		}
 	}

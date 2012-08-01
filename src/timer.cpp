@@ -38,7 +38,7 @@ bool TIMER::Load(const std::string & trackrecordspath, float stagingtime)
 
 	trackrecordsfile = trackrecordspath;
 
-	trackrecords.Load(trackrecordsfile);
+	trackrecords.load(trackrecordsfile);
 
 	loaded = true;
 
@@ -55,9 +55,9 @@ void TIMER::Unload()
 {
 	if (loaded)
 	{
-		trackrecords.Write(trackrecordsfile);
+		trackrecords.write(trackrecordsfile);
 	}
-	trackrecords.Clear();
+	trackrecords.clear();
 	loaded = false;
 }
 
@@ -92,18 +92,18 @@ void TIMER::Lap(const unsigned int carid, const int nextsector, const bool count
 		stringstream secstr;
 		secstr << "sector " << nextsector;
 		string lastcar;
-		/*if (trackrecords.GetParam("last.car", lastcar))
+		/*if (trackrecords.get("last.car", lastcar))
 		{
 			if (lastcar != car[carid].GetCarType()) //clear last lap time
-			trackrecords.SetParam("last.sector 0", (float)0.0);
+			trackrecords.set("last.sector 0", (float)0.0);
 		}*/
-		trackrecords.SetParam("last", secstr.str(), (float) car[carid].GetTime());
-		trackrecords.SetParam("last", "car", car[carid].GetCarType());
+		trackrecords.set("last", secstr.str(), (float) car[carid].GetTime());
+		trackrecords.set("last", "car", car[carid].GetCarType());
 
 		float prevbest = 0;
-		bool haveprevbest = trackrecords.GetParam(car[carid].GetCarType(), secstr.str(), prevbest);
+		bool haveprevbest = trackrecords.get(car[carid].GetCarType(), secstr.str(), prevbest);
 		if (car[carid].GetTime() < prevbest || !haveprevbest)
-			trackrecords.SetParam(car[carid].GetCarType(), secstr.str(), (float) car[carid].GetTime());
+			trackrecords.set(car[carid].GetCarType(), secstr.str(), (float) car[carid].GetTime());
 	}
 
 	if (nextsector == 0)

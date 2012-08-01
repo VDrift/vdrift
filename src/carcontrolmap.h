@@ -28,8 +28,7 @@
 #include <iostream>
 #include <vector>
 
-class CONFIG;
-class GAME;
+class Config;
 
 class CARCONTROLMAP
 {
@@ -40,7 +39,7 @@ public:
 
 	void Save(const std::string & controlfile);
 
-	void Save(CONFIG & controlfile);
+	void Save(Config & controlfile);
 
 	/// query the eventsystem for info, then return the resulting input array
 	const std::vector <float> & ProcessInput(const std::string & joytype, EVENTSYSTEM_SDL & eventsystem, float steerpos, float dt, bool joy_200, float carms, float speedsens, int screenw, int screenh, float button_ramp, bool hgateshifter);

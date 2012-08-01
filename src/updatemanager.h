@@ -22,6 +22,7 @@
 
 #include "autoupdate.h"
 #include "game_downloader.h"
+#include "cfg/config.h"
 
 #include <string>
 #include <vector>
@@ -31,7 +32,7 @@
 
 class GUI;
 class PATHMANAGER;
-class CONFIG;
+class Config;
 
 class UPDATE_MANAGER
 {
@@ -77,7 +78,7 @@ private:
 	std::map<std::string, std::list <std::pair <std::string, std::string> > > valuelists;
 
 	// holds settings/updates.config from HEAD in the SVN data repository
-	std::auto_ptr <CONFIG> remoteconfig;
+	Config remoteconfig;
 
 	// retrieve updates.config from HEAD in the SVN data repository and store it in remoteconfig
 	// if remoteconfig is already set, returns true immediately

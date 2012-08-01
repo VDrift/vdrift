@@ -230,9 +230,9 @@ bool UPDATE_MANAGER::ApplyUpdate(GAME_DOWNLOADER downloader, GUI & gui, const PA
 	}
 
 	// DownloadRemoteConfig should only return true if remoteconfig is set
-	assert(remoteconfig.get());
+	assert(remoteconfig.size());
 	int version = 0;
-	if (!remoteconfig->GetParam("formats", group, version, error_output))
+	if (!remoteconfig.get("formats", group, version, error_output))
 	{
 		error_output << "ApplyUpdate: missing version information" << std::endl;
 		return false;
@@ -288,7 +288,7 @@ bool UPDATE_MANAGER::ApplyUpdate(GAME_DOWNLOADER downloader, GUI & gui, const PA
 
 bool UPDATE_MANAGER::DownloadRemoteConfig(GAME_DOWNLOADER downloader)
 {
-	if (remoteconfig.get())
+	if (remoteconfig.size())
 	{
 		info_output << "DownloadRemoteConfig: already have the remote updates.config" << std::endl;
 		return true;
@@ -314,9 +314,8 @@ bool UPDATE_MANAGER::DownloadRemoteConfig(GAME_DOWNLOADER downloader)
 	}
 
 	std::stringstream f(updatesconfig);
-	CONFIG * conf = new CONFIG();
-	remoteconfig.reset(conf);
-	if (!conf->Load(f))
+	remoteconfig.clear();
+	if (!remoteconfig.load(f))
 	{
 		error_output << "DownloadRemoteConfig: failed to load updates.config" << std::endl;
 		return false;

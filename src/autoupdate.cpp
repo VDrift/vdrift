@@ -31,7 +31,7 @@ AUTOUPDATE::AUTOUPDATE() :
 
 bool AUTOUPDATE::Write(const std::string & path) const
 {
-	CONFIG conf;
+	Config conf;
 
 	// Iterate over all groups (cars, tracks).
 	// Each group will be a section in the config file.
@@ -41,7 +41,7 @@ bool AUTOUPDATE::Write(const std::string & path) const
 
 		// Iterate over all paths in this group (360, XS).
 		for (pair_type::const_iterator p = g->second.begin(); p != g->second.end(); p++)
-			conf.SetParam(section, p->first, p->second);
+			conf.set(section, p->first, p->second);
 	}
 
 	// Now repeat the above for the available_updates groups.
@@ -51,35 +51,35 @@ bool AUTOUPDATE::Write(const std::string & path) const
 
 		// Iterate over all paths in this group (360, XS).
 		for (pair_type::const_iterator p = g->second.begin(); p != g->second.end(); p++)
-			conf.SetParam(section, p->first, p->second);
+			conf.set(section, p->first, p->second);
 	}
 
 	// Now write formats.
 	for (pair_type::const_iterator p = formats.begin(); p != formats.end(); p++)
-		conf.SetParam("formats", p->first, p->second);
+		conf.set("formats", p->first, p->second);
 
 	// Write data url.
-	conf.SetParam("", "url", url);
+	conf.set("", "url", url);
 
 	// Write to disk.
-	return conf.Write(path);
+	return conf.write(path);
 }
 
 bool AUTOUPDATE::Load(const std::string & path)
 {
-	CONFIG conf;
+	Config conf;
 
-	if (!conf.Load(path))
+	if (!conf.load(path))
 		return false;
 
 	// Clear the existing data.
 	groups.clear();
 
 	// Get data url
-	conf.GetParam("", "url", url);
+	conf.get("", "url", url);
 
 	// Iterate over all sections.
-	for (CONFIG::const_iterator s = conf.begin(); s != conf.end(); s++)
+	for (Config::const_iterator s = conf.begin(); s != conf.end(); s++)
 	{
 		// Get the group corresponding to this section (creating it if necessary).
 		pair_type * group = NULL;
@@ -94,7 +94,7 @@ bool AUTOUPDATE::Load(const std::string & path)
 		}
 
 		// Iterate over all paths in this group.
-		for (CONFIG::SECTION::const_iterator p = s->second.begin(); p != s->second.end(); p++)
+		for (Config::Section::const_iterator p = s->second.begin(); p != s->second.end(); p++)
 		{
 			// Convert the configfile string var to an int.
 			int revnum(0);

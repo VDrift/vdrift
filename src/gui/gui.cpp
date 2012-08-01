@@ -117,20 +117,20 @@ bool GUI::Load(
 	Unload();
 
 	// load language font
-	CONFIG languageconfig;
-	languageconfig.Load(datapath + "/" + languagedir + "/" + language + ".lng");
+	Config languageconfig;
+	languageconfig.load(datapath + "/" + languagedir + "/" + language + ".lng");
 
 	std::string fontinfo, fonttex;
-	if (!languageconfig.GetParam("font", "info", fontinfo, error_output)) return false;
-	if (!languageconfig.GetParam("font", "texture", fonttex, error_output)) return false;
+	if (!languageconfig.get("font", "info", fontinfo, error_output)) return false;
+	if (!languageconfig.get("font", "texture", fonttex, error_output)) return false;
 
 	std::string fontinfopath = datapath + "/" + languagedir + "/" + fontinfo;
 	if (!font.Load(fontinfopath, languagedir, fonttex, content, error_output)) return false;
 
 	// load language map
-	CONFIG::const_iterator section;
+	Config::const_iterator section;
 	std::map<std::string, std::string> languagemap;
-	if (languageconfig.GetSection("strings", section))
+	if (languageconfig.get("strings", section))
 	{
 		languagemap = section->second;
 	}
@@ -342,34 +342,34 @@ bool GUI::LoadOptions(
 	const std::map<std::string, std::string> & languagemap,
 	std::ostream & error_output)
 {
-	CONFIG opt;
-	if (!opt.Load(optionfile))
+	Config opt;
+	if (!opt.load(optionfile))
 	{
 		error_output << "Can't find options file: " << optionfile << std::endl;
 		return false;
 	}
 
 	//opt.DebugPrint(error_output);
-	for (CONFIG::const_iterator i = opt.begin(); i != opt.end(); ++i)
+	for (Config::const_iterator i = opt.begin(); i != opt.end(); ++i)
 	{
 		if (i->first.empty()) continue;
 
 		std::string cat, name, defaultval, values, desc, type;
-		if (!opt.GetParam(i, "cat", cat, error_output)) return false;
-		if (!opt.GetParam(i, "name", name, error_output)) return false;
-		if (!opt.GetParam(i, "default", defaultval, error_output)) return false;
-		if (!opt.GetParam(i, "values", values, error_output)) return false;
-		if (!opt.GetParam(i, "desc", desc, error_output)) return false;
-		if (!opt.GetParam(i, "type", type, error_output)) return false;
+		if (!opt.get(i, "cat", cat, error_output)) return false;
+		if (!opt.get(i, "name", name, error_output)) return false;
+		if (!opt.get(i, "default", defaultval, error_output)) return false;
+		if (!opt.get(i, "values", values, error_output)) return false;
+		if (!opt.get(i, "desc", desc, error_output)) return false;
+		if (!opt.get(i, "type", type, error_output)) return false;
 
 		std::map<std::string, std::string>::const_iterator li;
 		if ((li = languagemap.find(desc)) != languagemap.end()) desc = li->second;
 
 		float min(0), max(1);
 		bool percent(false);
-		opt.GetParam(i, "min", min);
-		opt.GetParam(i, "max", max);
-		opt.GetParam(i, "percent", percent);
+		opt.get(i, "min", min);
+		opt.get(i, "max", max);
+		opt.get(i, "percent", percent);
 
 		std::string optionname = cat + "." + name;
 		GUIOPTION & option = options[optionname];
@@ -382,7 +382,7 @@ bool GUI::LoadOptions(
 		if (values == "list")
 		{
 			int valuenum;
-			if (!opt.GetParam(i, "num_vals", valuenum, error_output)) return false;
+			if (!opt.get(i, "num_vals", valuenum, error_output)) return false;
 
 			for (int n = 0; n < valuenum; n++)
 			{
@@ -392,8 +392,8 @@ bool GUI::LoadOptions(
 				tstr << n;
 
 				std::string displaystr, storestr;
-				if (!opt.GetParam(i, "opt"+tstr.str(), displaystr, error_output)) return false;
-				if (!opt.GetParam(i, "val"+tstr.str(), storestr, error_output)) return false;
+				if (!opt.get(i, "opt"+tstr.str(), displaystr, error_output)) return false;
+				if (!opt.get(i, "val"+tstr.str(), storestr, error_output)) return false;
 				if ((li = languagemap.find(displaystr)) != languagemap.end()) displaystr = li->second;
 				opvals.push_back(std::make_pair(storestr, displaystr));
 			}
@@ -401,8 +401,8 @@ bool GUI::LoadOptions(
 		else if (values == "bool")
 		{
 			std::string truestr, falsestr;
-			if (!opt.GetParam(i, "true", truestr, error_output)) return false;
-			if (!opt.GetParam(i, "false", falsestr, error_output)) return false;
+			if (!opt.get(i, "true", truestr, error_output)) return false;
+			if (!opt.get(i, "false", falsestr, error_output)) return false;
 			opvals.push_back(std::make_pair("true", truestr));
 			opvals.push_back(std::make_pair("false", falsestr));
 		}

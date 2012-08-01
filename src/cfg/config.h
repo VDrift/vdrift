@@ -28,201 +28,258 @@
 #include <iostream>
 #include <cassert>
 
-//see the user's guide at the bottom of the file
-class CONFIG
+/// see the user's guide at the bottom of the file
+class Config
 {
 public:
-	CONFIG();
+	typedef std::map<std::string, std::string> Section;
 
-	CONFIG(std::string fname);
+	typedef std::map<std::string, Section> SectionMap;
 
-	~CONFIG();
+	typedef SectionMap::const_iterator const_iterator;
 
-	bool Load(std::string fname);
+	typedef SectionMap::iterator iterator;
 
-	// will fail to process include directives
-	bool Load(std::istream & f);
+	Config();
 
-	void Clear();
+	Config(const std::string & fname);
 
-	void DebugPrint(std::ostream & out, bool with_brackets = true) const;
+	~Config();
 
-	bool Write() const;
+	bool load(const std::string & fname);
 
-	bool Write(std::string save_as) const;
+	bool load(std::istream & f);
 
-	void SuppressError(bool newse) {SUPPRESS_ERROR = newse;}
+	void clear();
 
-	const std::string & GetName() const {return filename;}
+	void print(std::ostream & out, bool with_brackets = true) const;
 
-	typedef std::map<std::string, std::string> SECTION;
+	bool write() const;
 
-	typedef std::map<std::string, SECTION> SECTIONMAP;
+	bool write(std::string save_as) const;
 
-	typedef SECTIONMAP::const_iterator const_iterator;
+	const std::string & name() const;
 
-	typedef SECTIONMAP::iterator iterator;
+	void suppressError(bool newse);
 
-	const_iterator begin() const {return sections.begin();}
+	const_iterator begin() const;
 
-	const_iterator end() const {return sections.end();}
+	const_iterator end() const;
 
-	size_t size() const {return sections.size();}
-
-	bool GetSection(const std::string & section, const_iterator & it) const
-	{
-		it = sections.find(section);
-		if (it != sections.end())
-		{
-			return true;
-		}
-		return false;
-	}
+	size_t size() const;
 
 	/// will create section if not available
-	void GetSection(const std::string & section, iterator & it)
-	{
-		it = sections.insert(std::pair<const std::string, SECTION>(section, SECTION())).first;
-	}
+	void get(const std::string & section, iterator & it);
 
-	bool GetSection(const std::string & section, const_iterator & it, std::ostream & error_output) const
-	{
-		if (!GetSection(section, it))
-		{
-			error_output << "Couldn't get section \"" << section << "\" from \"" << filename << "\"" << std::endl;
-			return false;
-		}
-		return true;
-	}
+	bool get(const std::string & section, const_iterator & it) const;
+
+	bool get(const std::string & section, const_iterator & it, std::ostream & error) const;
 
 	template <typename T>
-	bool GetParam(const const_iterator & section, const std::string & param, T & output) const
-	{
-		assert(section != sections.end());
-		SECTION::const_iterator i = section->second.find(param);
-		if (i != section->second.end())
-		{
-			std::stringstream st(i->second);
-			st >> std::boolalpha >> output;
-			return true;
-		}
-		return false;
-	}
+	bool get(const const_iterator & section, const std::string & param, T & output) const;
 
 	template <typename T>
-	bool GetParam(const const_iterator & section, const std::string & param, std::vector<T> & out) const
-	{
-		assert(section != sections.end());
-		SECTION::const_iterator i = section->second.find(param);
-		if (i != section->second.end())
-		{
-			std::stringstream st(i->second);
-			if (out.size() > 0)
-			{
-				// set vector
-				for (size_t i = 0; i < out.size() && !st.eof(); ++i)
-				{
-					std::string str;
-					std::getline(st, str, ',');
-					std::stringstream s(str);
-					s >> out[i];
-				}
-			}
-			else
-			{
-				// fill vector
-				while (!st.eof())
-				{
-					std::string str;
-					std::getline(st, str, ',');
-					std::stringstream s(str);
-					T value;
-					s >> value;
-					out.push_back(value);
-				}
-			}
-			return true;
-		}
-		return false;
-	}
+	bool get(const const_iterator & section, const std::string & param, std::vector<T> & out) const;
 
 	template <typename T>
-	bool GetParam(const const_iterator & section, const std::string & param, T & output, std::ostream & error_output) const
-	{
-		assert(section != sections.end());
-		if (!GetParam(section, param, output))
-		{
-			error_output << "Couldn't get parameter \"" << section->first << "." << param << "\" from \"" << filename << "\"" << std::endl;
-			return false;
-		}
-		return true;
-	}
+	bool get(const const_iterator & section, const std::string & param, T & output, std::ostream & error) const;
 
 	template <typename T>
-	bool GetParam(const std::string & section, const std::string & param, T & output) const
-	{
-		const_iterator it = end();
-		return GetSection(section, it) && GetParam(it, param, output);
-	}
+	bool get(const std::string & section, const std::string & param, T & output) const;
 
 	template <typename T>
-	bool GetParam(const std::string & section, const std::string & param, T & output, std::ostream & error_output) const
-	{
-		const_iterator it = end();
-		return GetSection(section, it, error_output) && GetParam(it, param, output, error_output);
-	}
+	bool get(const std::string & section, const std::string & param, T & output, std::ostream & error) const;
 
 	/// will create param if not available
 	template <typename T>
-	void SetParam(iterator section, const std::string & param, const T & invar)
-	{
-		if (section != sections.end())
-		{
-			std::stringstream st;
-			st << std::boolalpha << invar;
-			section->second[param] = st.str();
-		}
-	}
+	void set(iterator section, const std::string & param, const T & invar);
 
 	template <typename T>
-	void SetParam(iterator section, const std::string & param, const std::vector<T> & invar)
-	{
-		if (section != sections.end())
-		{
-			std::stringstream st;
-			typename std::vector<T>::const_iterator it = invar.begin();
-			while (it < invar.end() - 1)
-			{
-				st << *it++ << ",";
-			}
-			st << *it;
-			section->second[param] = st.str();
-		}
-	}
+	void set(iterator section, const std::string & param, const std::vector<T> & invar);
 
 	template <typename T>
-	void SetParam(const std::string & section, const std::string & param, const T & invar)
-	{
-		iterator it;
-		GetSection(section, it);
-		SetParam(it, param, invar);
-	}
+	void set(const std::string & section, const std::string & param, const T & invar);
 
 private:
-	SECTIONMAP sections;
+	SectionMap sections;
 	std::set<std::string> include;
 	std::string filename;
 	bool SUPPRESS_ERROR;
 
-	bool ProcessLine(CONFIG::iterator & section, std::string & linestr);
+	bool processLine(Config::iterator & section, std::string & linestr);
 };
 
-// specializations
-template <>
-inline bool CONFIG::GetParam(const const_iterator & section, const std::string & param, std::string & output) const
+// implementation
+
+inline const std::string & Config::name() const
+{
+	return filename;
+}
+
+inline void Config::suppressError(bool newse)
+{
+	SUPPRESS_ERROR = newse;
+}
+
+inline Config::const_iterator Config::begin() const
+{
+	return sections.begin();
+}
+
+inline Config::const_iterator Config::end() const
+{
+	return sections.end();
+}
+
+inline size_t Config::size() const
+{
+	return sections.size();
+}
+
+inline bool Config::get(const std::string & section, const_iterator & it) const
+{
+	it = sections.find(section);
+	if (it != sections.end())
+	{
+		return true;
+	}
+	return false;
+}
+
+inline void Config::get(const std::string & section, iterator & it)
+{
+	it = sections.insert(std::pair<const std::string, Section>(section, Section())).first;
+}
+
+inline bool Config::get(const std::string & section, const_iterator & it, std::ostream & error) const
+{
+	if (!get(section, it))
+	{
+		error << "Couldn't get section \"" << section << "\" from \"" << filename << "\"" << std::endl;
+		return false;
+	}
+	return true;
+}
+
+template <typename T>
+inline bool Config::get(const const_iterator & section, const std::string & param, T & output) const
 {
 	assert(section != sections.end());
-	SECTION::const_iterator i = section->second.find(param);
+	Section::const_iterator i = section->second.find(param);
+	if (i != section->second.end())
+	{
+		std::stringstream st(i->second);
+		st >> std::boolalpha >> output;
+		return true;
+	}
+	return false;
+}
+
+template <typename T>
+inline bool Config::get(const const_iterator & section, const std::string & param, std::vector<T> & out) const
+{
+	assert(section != sections.end());
+	Section::const_iterator i = section->second.find(param);
+	if (i != section->second.end())
+	{
+		std::stringstream st(i->second);
+		if (out.size() > 0)
+		{
+			// set vector
+			for (size_t i = 0; i < out.size() && !st.eof(); ++i)
+			{
+				std::string str;
+				std::getline(st, str, ',');
+				std::stringstream s(str);
+				s >> out[i];
+			}
+		}
+		else
+		{
+			// fill vector
+			while (!st.eof())
+			{
+				std::string str;
+				std::getline(st, str, ',');
+				std::stringstream s(str);
+				T value;
+				s >> value;
+				out.push_back(value);
+			}
+		}
+		return true;
+	}
+	return false;
+}
+
+template <typename T>
+inline bool Config::get(const const_iterator & section, const std::string & param, T & output, std::ostream & error) const
+{
+	assert(section != sections.end());
+	if (!get(section, param, output))
+	{
+		error << "Couldn't get parameter \"" << section->first << "." << param << "\" from \"" << filename << "\"" << std::endl;
+		return false;
+	}
+	return true;
+}
+
+template <typename T>
+inline bool Config::get(const std::string & section, const std::string & param, T & output) const
+{
+	const_iterator it = end();
+	return get(section, it) && get(it, param, output);
+}
+
+template <typename T>
+inline bool Config::get(const std::string & section, const std::string & param, T & output, std::ostream & error) const
+{
+	const_iterator it = end();
+	return get(section, it, error) && get(it, param, output, error);
+}
+
+template <typename T>
+inline void Config::set(iterator section, const std::string & param, const T & invar)
+{
+	if (section != sections.end())
+	{
+		std::stringstream st;
+		st << std::boolalpha << invar;
+		section->second[param] = st.str();
+	}
+}
+
+template <typename T>
+inline void Config::set(iterator section, const std::string & param, const std::vector<T> & invar)
+{
+	if (section != sections.end())
+	{
+		std::stringstream st;
+		typename std::vector<T>::const_iterator it = invar.begin();
+		while (it < invar.end() - 1)
+		{
+			st << *it++ << ",";
+		}
+		st << *it;
+		section->second[param] = st.str();
+	}
+}
+
+template <typename T>
+inline void Config::set(const std::string & section, const std::string & param, const T & invar)
+{
+	iterator it;
+	get(section, it);
+	set(it, param, invar);
+}
+
+// specializations
+
+template <>
+inline bool Config::get(const const_iterator & section, const std::string & param, std::string & output) const
+{
+	assert(section != sections.end());
+	Section::const_iterator i = section->second.find(param);
 	if (i != section->second.end())
 	{
 		output = i->second;
@@ -232,10 +289,10 @@ inline bool CONFIG::GetParam(const const_iterator & section, const std::string &
 }
 
 template <>
-inline bool CONFIG::GetParam(const const_iterator & section, const std::string & param, bool & output) const
+inline bool Config::get(const const_iterator & section, const std::string & param, bool & output) const
 {
 	assert(section != sections.end());
-	SECTION::const_iterator i = section->second.find(param);
+	Section::const_iterator i = section->second.find(param);
 	if (i != section->second.end())
 	{
 		output = false;
@@ -246,7 +303,7 @@ inline bool CONFIG::GetParam(const const_iterator & section, const std::string &
 }
 
 template <>
-inline void CONFIG::SetParam(iterator section, const std::string & param, const std::string & invar)
+inline void Config::set(iterator section, const std::string & param, const std::string & invar)
 {
 	if (section != sections.end())
 	{
@@ -260,17 +317,17 @@ inline void CONFIG::SetParam(iterator section, const std::string & param, const 
 
 Paste the file included below somewhere, then run this code:
 
-	CONFIG testconfig("/home/joe/.vdrift/test.cfg");
+	Config testconfig("/home/joe/.vdrift/test.cfg");
 	testconfig.DebugPrint();
 	string tstr = "notfound";
 	cout << "!!! test vectors: " << endl;
-	testconfig.GetParam("variable outside of", tstr);
+	testconfig.get("variable outside of", tstr);
 	cout << tstr << endl;
 	tstr = "notfound";
-	testconfig.GetParam(".variable outside of", tstr);
+	testconfig.get(".variable outside of", tstr);
 	cout << tstr << endl;
 	float vec[3];
-	testconfig.GetParam("what about.even vectors", vec);
+	testconfig.get("what about.even vectors", vec);
 	cout << vec[0] << "," << vec[1] << "," << vec[2] << endl;
 
 your output should be the debug print of all sections, then:

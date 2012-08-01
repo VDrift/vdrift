@@ -107,8 +107,8 @@ CARCONTROLMAP::CARCONTROLMAP() :
 
 bool CARCONTROLMAP::Load(const std::string & controlfile, std::ostream & info_output, std::ostream & error_output)
 {
-	CONFIG controls_config;
-	if (!controls_config.Load(controlfile))
+	Config controls_config;
+	if (!controls_config.load(controlfile))
 	{
 		info_output << "Failed to load car controls file " << controlfile << std::endl;
 		return false;
@@ -116,11 +116,11 @@ bool CARCONTROLMAP::Load(const std::string & controlfile, std::ostream & info_ou
 
 	controls.clear();
 	controls.resize(CARINPUT::INVALID);
-	for (CONFIG::const_iterator i = controls_config.begin(); i != controls_config.end(); ++i)
+	for (Config::const_iterator i = controls_config.begin(); i != controls_config.end(); ++i)
 	{
 		std::string type, name;
-		if (!controls_config.GetParam(i, "type", type)) continue;
-		if (!controls_config.GetParam(i, "name", name)) continue;
+		if (!controls_config.get(i, "type", type)) continue;
+		if (!controls_config.get(i, "name", name)) continue;
 
 		CARINPUT::CARINPUT carinput = GetInputFromString(name);
 		if (carinput == CARINPUT::INVALID)
@@ -134,8 +134,8 @@ bool CARCONTROLMAP::Load(const std::string & controlfile, std::ostream & info_ou
 		{
 			newctrl.joynum = 0;
 			std::string joy_type;
-			if (!controls_config.GetParam(i, "joy_index", newctrl.joynum, error_output)) continue;
-			if (!controls_config.GetParam(i, "joy_type", joy_type, error_output)) continue;
+			if (!controls_config.get(i, "joy_index", newctrl.joynum, error_output)) continue;
+			if (!controls_config.get(i, "joy_type", joy_type, error_output)) continue;
 
 			newctrl.type = CONTROL::JOY;
 			if (joy_type == "button")
@@ -144,9 +144,9 @@ bool CARCONTROLMAP::Load(const std::string & controlfile, std::ostream & info_ou
 				newctrl.keycode = 0;
 				newctrl.pushdown = false;
 				newctrl.onetime = false;
-				if (!controls_config.GetParam(i, "joy_button", newctrl.keycode, error_output)) continue;
-				if (!controls_config.GetParam(i, "down", newctrl.pushdown, error_output)) continue;
-				if (!controls_config.GetParam(i, "once", newctrl.onetime, error_output)) continue;
+				if (!controls_config.get(i, "joy_button", newctrl.keycode, error_output)) continue;
+				if (!controls_config.get(i, "down", newctrl.pushdown, error_output)) continue;
+				if (!controls_config.get(i, "once", newctrl.onetime, error_output)) continue;
 			}
 			else if (joy_type == "axis")
 			{
@@ -156,11 +156,11 @@ bool CARCONTROLMAP::Load(const std::string & controlfile, std::ostream & info_ou
 				float deadzone = 0.0;
 				float exponent = 0.0;
 				float gain = 0.0;
-				if (!controls_config.GetParam(i, "joy_axis", joy_axis, error_output)) continue;
-				if (!controls_config.GetParam(i, "joy_axis_type", axis_type, error_output)) continue;
-				if (!controls_config.GetParam(i, "deadzone", deadzone, error_output)) continue;
-				if (!controls_config.GetParam(i, "exponent", exponent, error_output)) continue;
-				if (!controls_config.GetParam(i, "gain", gain, error_output)) continue;
+				if (!controls_config.get(i, "joy_axis", joy_axis, error_output)) continue;
+				if (!controls_config.get(i, "joy_axis_type", axis_type, error_output)) continue;
+				if (!controls_config.get(i, "deadzone", deadzone, error_output)) continue;
+				if (!controls_config.get(i, "exponent", exponent, error_output)) continue;
+				if (!controls_config.get(i, "gain", gain, error_output)) continue;
 
 				newctrl.joyaxis = joy_axis;
 				if (axis_type == "positive")
@@ -194,11 +194,11 @@ bool CARCONTROLMAP::Load(const std::string & controlfile, std::ostream & info_ou
 			bool key_once = false;
 #if !SDL_VERSION_ATLEAST(2,0,0)
 			// use keyname to get keycode for backward compatibility, temporary
-			if (!controls_config.GetParam(i, "keycode", keycode))
+			if (!controls_config.get(i, "keycode", keycode))
 #endif
 			{
 				std::string keyname;
-				if (!controls_config.GetParam(i, "key", keyname, error_output)) continue;
+				if (!controls_config.get(i, "key", keyname, error_output)) continue;
 
 				keycode = GetKeycodeFromString(keyname);
 				if (keycode == 0)
@@ -208,8 +208,8 @@ bool CARCONTROLMAP::Load(const std::string & controlfile, std::ostream & info_ou
 				}
 			}
 
-			if (!controls_config.GetParam(i, "down", key_down, error_output)) continue;
-			if (!controls_config.GetParam(i, "once", key_once, error_output)) continue;
+			if (!controls_config.get(i, "down", key_down, error_output)) continue;
+			if (!controls_config.get(i, "once", key_once, error_output)) continue;
 			if (keycode != SDLK_UNKNOWN)
 			{
 				newctrl.keycode = SDLKey(keycode);
@@ -223,16 +223,16 @@ bool CARCONTROLMAP::Load(const std::string & controlfile, std::ostream & info_ou
 
 			std::string mouse_type = "";
 			std::string mouse_direction = "";
-			controls_config.GetParam(i, "mouse_type", mouse_type );
+			controls_config.get(i, "mouse_type", mouse_type );
 			if (mouse_type == "button")
 			{
 				int mouse_btn = 0;
 				bool mouse_btn_down = false;
 				bool mouse_btn_once = false;
 				newctrl.mousetype = CONTROL::MOUSEBUTTON;
-				controls_config.GetParam(i, "mouse_button", mouse_btn);
-				controls_config.GetParam(i, "down", mouse_btn_down);
-				controls_config.GetParam(i, "once", mouse_btn_once);
+				controls_config.get(i, "mouse_button", mouse_btn);
+				controls_config.get(i, "down", mouse_btn_down);
+				controls_config.get(i, "once", mouse_btn_once);
 				newctrl.keycode = mouse_btn;
 				newctrl.pushdown = mouse_btn_down;
 				newctrl.onetime = mouse_btn_once;
@@ -240,7 +240,7 @@ bool CARCONTROLMAP::Load(const std::string & controlfile, std::ostream & info_ou
 			else if (mouse_type == "motion")
 			{
 				newctrl.mousetype = CONTROL::MOUSEMOTION;
-				controls_config.GetParam(i, "mouse_motion", mouse_direction);
+				controls_config.get(i, "mouse_motion", mouse_direction);
 				if (mouse_direction == "left")
 				{
 					newctrl.mdir = CONTROL::LEFT;
@@ -265,9 +265,9 @@ bool CARCONTROLMAP::Load(const std::string & controlfile, std::ostream & info_ou
 				newctrl.deadzone=0;
 				newctrl.exponent=1;
 				newctrl.gain=1;
-				controls_config.GetParam(i, "deadzone", newctrl.deadzone);
-				controls_config.GetParam(i, "exponent", newctrl.exponent);
-				controls_config.GetParam(i, "gain", newctrl.gain);
+				controls_config.get(i, "deadzone", newctrl.deadzone);
+				controls_config.get(i, "exponent", newctrl.exponent);
+				controls_config.get(i, "gain", newctrl.gain);
 			}
 			else
 			{
@@ -290,12 +290,12 @@ bool CARCONTROLMAP::Load(const std::string & controlfile, std::ostream & info_ou
 
 void CARCONTROLMAP::Save(const std::string & controlfile)
 {
-	CONFIG controls_config;
+	Config controls_config;
 	Save(controls_config);
-	controls_config.Write(controlfile);
+	controls_config.write(controlfile);
 }
 
-void CARCONTROLMAP::Save(CONFIG & controls_config)
+void CARCONTROLMAP::Save(Config & controls_config)
 {
 	int id = 0;
 	for (size_t n = 0; n < controls.size(); ++n)
@@ -309,58 +309,58 @@ void CARCONTROLMAP::Save(CONFIG & controls_config)
 			std::stringstream ss;
 			ss << "control mapping " << std::setfill('0') << std::setw(2) << id;
 
-			CONFIG::iterator section;
-			controls_config.GetSection(ss.str(), section);
-			controls_config.SetParam(section, "name", ctrl_name);
+			Config::iterator section;
+			controls_config.get(ss.str(), section);
+			controls_config.set(section, "name", ctrl_name);
 
 			CONTROL & curctrl = controls[n][i];
 			if (curctrl.type == CONTROL::JOY)
 			{
-				controls_config.SetParam(section, "type", "joy");
-				controls_config.SetParam(section, "joy_index", curctrl.joynum);
+				controls_config.set(section, "type", "joy");
+				controls_config.set(section, "joy_index", curctrl.joynum);
 
 				if (curctrl.joytype == CONTROL::JOYAXIS)
 				{
-					controls_config.SetParam(section, "joy_type", "axis");
-					controls_config.SetParam(section, "joy_axis", curctrl.joyaxis );
+					controls_config.set(section, "joy_type", "axis");
+					controls_config.set(section, "joy_axis", curctrl.joyaxis );
 					switch (curctrl.joyaxistype) {
 						case CONTROL::POSITIVE:
-							controls_config.SetParam(section, "joy_axis_type", "positive");
+							controls_config.set(section, "joy_axis_type", "positive");
 							break;
 						case CONTROL::NEGATIVE:
-							controls_config.SetParam(section, "joy_axis_type", "negative");
+							controls_config.set(section, "joy_axis_type", "negative");
 							break;
 					}
-					controls_config.SetParam(section, "deadzone", curctrl.deadzone);
-					controls_config.SetParam(section, "exponent", curctrl.exponent);
-					controls_config.SetParam(section, "gain", curctrl.gain);
+					controls_config.set(section, "deadzone", curctrl.deadzone);
+					controls_config.set(section, "exponent", curctrl.exponent);
+					controls_config.set(section, "gain", curctrl.gain);
 				}
 				else if (curctrl.joytype == CONTROL::JOYBUTTON)
 				{
-					controls_config.SetParam(section, "joy_type", "button");
-					controls_config.SetParam(section, "joy_button", curctrl.keycode);
-					controls_config.SetParam(section, "once", curctrl.onetime);
-					controls_config.SetParam(section, "down", curctrl.pushdown);
+					controls_config.set(section, "joy_type", "button");
+					controls_config.set(section, "joy_button", curctrl.keycode);
+					controls_config.set(section, "once", curctrl.onetime);
+					controls_config.set(section, "down", curctrl.pushdown);
 				}
 			}
 			else if (curctrl.type == CONTROL::KEY)
 			{
-				controls_config.SetParam(section, "type", "key");
+				controls_config.set(section, "type", "key");
 				std::string keyname = GetStringFromKeycode(curctrl.keycode);
-				controls_config.SetParam(section, "key", keyname);
-				controls_config.SetParam(section, "keycode", curctrl.keycode);
-				controls_config.SetParam(section, "once", curctrl.onetime);
-				controls_config.SetParam(section, "down", curctrl.pushdown);
+				controls_config.set(section, "key", keyname);
+				controls_config.set(section, "keycode", curctrl.keycode);
+				controls_config.set(section, "once", curctrl.onetime);
+				controls_config.set(section, "down", curctrl.pushdown);
 			}
 			else if (curctrl.type == CONTROL::MOUSE)
 			{
-				controls_config.SetParam(section, "type", "mouse");
+				controls_config.set(section, "type", "mouse");
 				if (curctrl.mousetype == CONTROL::MOUSEBUTTON)
 				{
-					controls_config.SetParam(section, "mouse_type", "button");
-					controls_config.SetParam(section, "mouse_button", curctrl.keycode );
-					controls_config.SetParam(section, "once", curctrl.onetime );
-					controls_config.SetParam(section, "down", curctrl.pushdown );
+					controls_config.set(section, "mouse_type", "button");
+					controls_config.set(section, "mouse_button", curctrl.keycode );
+					controls_config.set(section, "once", curctrl.onetime );
+					controls_config.set(section, "down", curctrl.pushdown );
 				}
 				else if (curctrl.mousetype == CONTROL::MOUSEMOTION)
 				{
@@ -383,12 +383,12 @@ void CARCONTROLMAP::Save(CONFIG & controls_config)
 						direction = "right";
 					}
 
-					controls_config.SetParam(section, "mouse_type", "motion");
-					controls_config.SetParam(section, "mouse_motion", direction);
+					controls_config.set(section, "mouse_type", "motion");
+					controls_config.set(section, "mouse_motion", direction);
 
-					controls_config.SetParam(section, "deadzone", curctrl.deadzone);
-					controls_config.SetParam(section, "exponent", curctrl.exponent);
-					controls_config.SetParam(section, "gain", curctrl.gain);
+					controls_config.set(section, "deadzone", curctrl.deadzone);
+					controls_config.set(section, "exponent", curctrl.exponent);
+					controls_config.set(section, "gain", curctrl.gain);
 				}
 			}
 

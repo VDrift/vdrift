@@ -32,9 +32,9 @@
 class GUIWIDGET;
 class GUICONTROL;
 class GUILABEL;
-class CONFIG;
 class FONT;
 class PATHMANAGER;
+class Config;
 class ContentManager;
 
 typedef std::map <std::string, Signal1<const std::string &>*> VSIGNALMAP;

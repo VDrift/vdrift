@@ -616,7 +616,7 @@ bool TRACK::LOADER::LoadNode(const PTree & sec)
 /// read from the file stream and put it in "output".
 /// return true if the get was successful, else false
 template <typename T>
-static bool GetParam(std::ifstream & f, T & output)
+static bool get(std::ifstream & f, T & output)
 {
 	if (!f.good()) return false;
 
@@ -643,14 +643,14 @@ void TRACK::LOADER::CalculateNumOld()
 	std::string objectlist = objectpath + "/list.txt";
 	std::ifstream f(objectlist.c_str());
 	int params_per_object;
-	if (GetParam(f, params_per_object))
+	if (get(f, params_per_object))
 	{
 		std::string junk;
-		while (GetParam(f, junk))
+		while (get(f, junk))
 		{
 			for (int i = 0; i < params_per_object-1; ++i)
 			{
-				GetParam(f, junk);
+				get(f, junk);
 			}
 			numobjects++;
 		}
@@ -663,7 +663,7 @@ bool TRACK::LOADER::BeginOld()
 
 	data.models.reserve(numobjects);
 
-	if (!GetParam(objectfile, params_per_object))
+	if (!get(objectfile, params_per_object))
 	{
 			return false;
 	}
@@ -777,7 +777,7 @@ bool TRACK::LOADER::AddObject(const OBJECT & object)
 std::pair<bool, bool> TRACK::LOADER::ContinueOld()
 {
 	std::string model_name;
-	if (!GetParam(objectfile, model_name))
+	if (!get(objectfile, model_name))
 	{
 		return std::make_pair(false, false);
 	}
@@ -786,25 +786,25 @@ std::pair<bool, bool> TRACK::LOADER::ContinueOld()
 	bool isashadow;
 	std::string junk;
 
-	GetParam(objectfile, object.texture);
-	GetParam(objectfile, object.mipmap);
-	GetParam(objectfile, object.nolighting);
-	GetParam(objectfile, object.skybox);
-	GetParam(objectfile, object.transparent_blend);
-	GetParam(objectfile, junk);//bump_wavelength);
-	GetParam(objectfile, junk);//bump_amplitude);
-	GetParam(objectfile, junk);//driveable);
-	GetParam(objectfile, object.collideable);
-	GetParam(objectfile, junk);//friction_notread);
-	GetParam(objectfile, junk);//friction_tread);
-	GetParam(objectfile, junk);//rolling_resistance);
-	GetParam(objectfile, junk);//rolling_drag);
-	GetParam(objectfile, isashadow);
-	GetParam(objectfile, object.clamptexture);
-	GetParam(objectfile, object.surface);
+	get(objectfile, object.texture);
+	get(objectfile, object.mipmap);
+	get(objectfile, object.nolighting);
+	get(objectfile, object.skybox);
+	get(objectfile, object.transparent_blend);
+	get(objectfile, junk);//bump_wavelength);
+	get(objectfile, junk);//bump_amplitude);
+	get(objectfile, junk);//driveable);
+	get(objectfile, object.collideable);
+	get(objectfile, junk);//friction_notread);
+	get(objectfile, junk);//friction_tread);
+	get(objectfile, junk);//rolling_resistance);
+	get(objectfile, junk);//rolling_drag);
+	get(objectfile, isashadow);
+	get(objectfile, object.clamptexture);
+	get(objectfile, object.surface);
 	for (int i = 0; i < params_per_object - expected_params; i++)
 	{
-		GetParam(objectfile, junk);
+		get(objectfile, junk);
 	}
 
 	if (dynamic_shadows && isashadow)

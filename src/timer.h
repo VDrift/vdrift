@@ -65,7 +65,7 @@ public:
 		assert(playercarindex<car.size());
 		float curbestlap = car[playercarindex].GetBestLap();
 		float prevbest(0);
-		bool haveprevbest = trackrecords.GetParam(car[playercarindex].GetCarType(), "sector 0", prevbest);
+		bool haveprevbest = trackrecords.get(car[playercarindex].GetCarType(), "sector 0", prevbest);
 		if (haveprevbest)
 		{
 			if (curbestlap == 0)
@@ -134,7 +134,7 @@ private:
 	class LAPINFO;
 	std::vector <LAPINFO> car;
 
-	CONFIG trackrecords; //the track records configfile
+	Config trackrecords; //the track records configfile
 	std::string trackrecordsfile; //the filename for the track records
 	float pretime; //amount of time left in staging
 	unsigned int playercarindex; //the index for the player's car; defaults to zero

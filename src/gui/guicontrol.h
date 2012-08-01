@@ -24,7 +24,7 @@
 #include <string>
 #include <map>
 
-class CONFIG;
+class Config;
 class SCENENODE;
 
 class GUICONTROL
@@ -36,7 +36,7 @@ public:
 
 	/// Return true if control in focus
 	bool InFocus(float x, float y) const;
-	
+
 	void OnSelect(float x, float y) const;
 
 	void OnSelect() const;
@@ -64,7 +64,7 @@ public:
 		const std::map<std::string, Slot1<const std::string &>*> & vactionmap,
 		const std::map<std::string, Slot0*> & actionmap,
 		const std::string & name,
-		const CONFIG & cfg);
+		const Config & cfg);
 
 	/// Register event actions to signal
 	static void SetActions(

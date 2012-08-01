@@ -22,19 +22,19 @@
 
 template <typename T>
 static void Param(
-	CONFIG & config,
+	Config & config,
 	bool write,
-	CONFIG::iterator & section,
+	Config::iterator & section,
 	const std::string & name,
 	T & value)
 {
 	if (write)
 	{
-		config.SetParam(section, name, value);
+		config.set(section, name, value);
 	}
 	else
 	{
-		config.GetParam(section, name, value);
+		config.get(section, name, value);
 	}
 }
 
@@ -107,11 +107,11 @@ SETTINGS::SETTINGS() :
 	resolution[1] = 600;
 }
 
-void SETTINGS::Serialize(bool write, CONFIG & config)
+void SETTINGS::Serialize(bool write, Config & config)
 {
-	CONFIG::iterator section;
+	Config::iterator section;
 
-	config.GetSection("game", section);
+	config.get("game", section);
 	Param(config, write, section, "vehicle_damage", vehicle_damage);
 	Param(config, write, section, "ai_type", ai_type);
 	Param(config, write, section, "ai_level", ai_level);
@@ -132,7 +132,7 @@ void SETTINGS::Serialize(bool write, CONFIG & config)
 	Param(config, write, section, "number_of_laps", number_of_laps);
 	Param(config, write, section, "camera_id", camera_id);
 
-	config.GetSection("display", section);
+	config.get("display", section);
 	if (!res_override)
 		Param(config, write, section, "resolution", resolution);
 	Param(config, write, section, "depth", bpp);
@@ -163,12 +163,12 @@ void SETTINGS::Serialize(bool write, CONFIG & config)
 	Param(config, write, section, "camerabounce", camera_bounce);
 	Param(config, write, section, "contrast", contrast);
 
-	config.GetSection("sound", section);
+	config.get("sound", section);
 	Param(config, write, section, "sources", sound_sources);
 	Param(config, write, section, "volume", sound_volume);
 	Param(config, write, section, "music_volume", music_volume);
 
-	config.GetSection("joystick", section);
+	config.get("joystick", section);
 	Param(config, write, section, "type", joytype);
 	Param(config, write, section, "two_hundred", joy200);
 	joy200 = false;
@@ -178,7 +178,7 @@ void SETTINGS::Serialize(bool write, CONFIG & config)
 	Param(config, write, section, "ff_invert", ff_invert);
 	Param(config, write, section, "hgateshifter", hgateshifter);
 
-	config.GetSection("control", section);
+	config.get("control", section);
 	Param(config, write, section, "speed_sens_steering", speed_sensitivity);
 	Param(config, write, section, "autoclutch", autoclutch);
 	Param(config, write, section, "autotrans", autoshift);
@@ -188,8 +188,8 @@ void SETTINGS::Serialize(bool write, CONFIG & config)
 
 void SETTINGS::Load(const std::string & settingsfile, std::ostream & error)
 {
-	CONFIG config;
-	if (!config.Load(settingsfile))
+	Config config;
+	if (!config.load(settingsfile))
 	{
 		error << "Failed to load " << settingsfile << std::endl;
 	}
@@ -198,13 +198,13 @@ void SETTINGS::Load(const std::string & settingsfile, std::ostream & error)
 
 void SETTINGS::Save(const std::string & settingsfile, std::ostream & error)
 {
-	CONFIG config;
-	if (!config.Load(settingsfile))
+	Config config;
+	if (!config.load(settingsfile))
 	{
 		error << "Failed to load " << settingsfile << std::endl;
 	}
 	Serialize(true, config);
-	if (!config.Write())
+	if (!config.write())
 	{
 		error << "Failed to save " << settingsfile << std::endl;
 	}
@@ -212,12 +212,12 @@ void SETTINGS::Save(const std::string & settingsfile, std::ostream & error)
 
 void SETTINGS::Get(std::map<std::string, std::string> & options)
 {
-	CONFIG tempconfig;
+	Config tempconfig;
 	Serialize(true, tempconfig);
-	for (CONFIG::const_iterator ic = tempconfig.begin(); ic != tempconfig.end(); ++ic)
+	for (Config::const_iterator ic = tempconfig.begin(); ic != tempconfig.end(); ++ic)
 	{
 		std::string section = ic->first;
-		for (CONFIG::SECTION::const_iterator is = ic->second.begin(); is != ic->second.end(); ++is)
+		for (Config::Section::const_iterator is = ic->second.begin(); is != ic->second.end(); ++is)
 		{
 			if (section.length() > 0)
 				options[section + "." + is->first] = is->second;
@@ -229,7 +229,7 @@ void SETTINGS::Get(std::map<std::string, std::string> & options)
 
 void SETTINGS::Set(const std::map<std::string, std::string> & options)
 {
-	CONFIG tempconfig;
+	Config tempconfig;
 	for (std::map<std::string, std::string>::const_iterator i = options.begin(); i != options.end(); ++i)
 	{
 		std::string section;
@@ -240,7 +240,7 @@ void SETTINGS::Set(const std::map<std::string, std::string> & options)
 			section = param.substr(0, n);
 			param.erase(0, n + 1);
 		}
-		tempconfig.SetParam(section, param, i->second);
+		tempconfig.set(section, param, i->second);
 	}
 	Serialize(false, tempconfig);
 }

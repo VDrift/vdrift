@@ -135,37 +135,37 @@ void GUICONTROL::RegisterActions(
 	const std::map<std::string, Slot1<const std::string &>*> & vactionmap,
 	const std::map<std::string, Slot0*> & actionmap,
 	const std::string & name,
-	const CONFIG & cfg)
+	const Config & cfg)
 {
-	CONFIG::const_iterator section;
-	cfg.GetSection(name, section);
+	Config::const_iterator section;
+	cfg.get(name, section);
 	std::string actionstr;
 
-	if (cfg.GetParam(section, "onselectx", actionstr))
+	if (cfg.get(section, "onselectx", actionstr))
 		SetActions(vactionmap, actionstr, onselectx);
 
-	if (cfg.GetParam(section, "onselecty", actionstr))
+	if (cfg.get(section, "onselecty", actionstr))
 		SetActions(vactionmap, actionstr, onselecty);
 
-	if (cfg.GetParam(section, "onselect", actionstr))
+	if (cfg.get(section, "onselect", actionstr))
 		SetActions(actionmap, actionstr, onselect);
 
-	if (cfg.GetParam(section, "onfocus", actionstr))
+	if (cfg.get(section, "onfocus", actionstr))
 		SetActions(actionmap, actionstr, onfocus);
 
-	if (cfg.GetParam(section, "onblur", actionstr))
+	if (cfg.get(section, "onblur", actionstr))
 		SetActions(actionmap, actionstr, onblur);
 
-	if (cfg.GetParam(section, "onmoveup", actionstr))
+	if (cfg.get(section, "onmoveup", actionstr))
 		SetActions(actionmap, actionstr, onmoveup);
 
-	if (cfg.GetParam(section, "onmovedown", actionstr))
+	if (cfg.get(section, "onmovedown", actionstr))
 		SetActions(actionmap, actionstr, onmovedown);
 
-	if (cfg.GetParam(section, "onmoveleft", actionstr))
+	if (cfg.get(section, "onmoveleft", actionstr))
 		SetActions(actionmap, actionstr, onmoveleft);
 
-	if (cfg.GetParam(section, "onmoveright", actionstr))
+	if (cfg.get(section, "onmoveright", actionstr))
 		SetActions(actionmap, actionstr, onmoveright);
 }
 

@@ -94,20 +94,20 @@ bool GUIPAGE::Load(
 
 	//error_output << "Loading " << path << std::endl;
 
-	CONFIG pagefile;
-	if (!pagefile.Load(path))
+	Config pagefile;
+	if (!pagefile.load(path))
 	{
 		error_output << "Couldn't find GUI page file: " << path << std::endl;
 		return false;
 	}
 
-	if (!pagefile.GetParam("", "name", name)) return false;
+	if (!pagefile.get("", "name", name)) return false;
 
 	// set page event handlers
 	std::string actionstr;
-	if (pagefile.GetParam("", "onfocus", actionstr))
+	if (pagefile.get("", "onfocus", actionstr))
 		GUICONTROL::SetActions(actionmap, actionstr, onfocus);
-	if (pagefile.GetParam("", "oncancel", actionstr))
+	if (pagefile.get("", "oncancel", actionstr))
 		GUICONTROL::SetActions(actionmap, actionstr, oncancel);
 
 	// register tooltip signal
@@ -117,7 +117,7 @@ bool GUIPAGE::Load(
 	active_control = 0;
 	std::vector<std::string> controlid;				// controls
 	std::map<std::string, GUIWIDGET*> widgetmap;	// images, sliders
-	for (CONFIG::const_iterator section = pagefile.begin(); section != pagefile.end(); ++section)
+	for (Config::const_iterator section = pagefile.begin(); section != pagefile.end(); ++section)
 	{
 		if (section->first.empty()) continue;
 
@@ -125,36 +125,36 @@ bool GUIPAGE::Load(
 
 		// get widget rectangle
 		float x(0.5), y(0.5), w(0), h(0);
-		if (pagefile.GetParam(section, "width", w))
+		if (pagefile.get(section, "width", w))
 		{
 			float l(0), r(0);
-			if (pagefile.GetParam(section, "left", l))
+			if (pagefile.get(section, "left", l))
 				x = l * screenhwratio;
-			else if (pagefile.GetParam(section, "right", r))
+			else if (pagefile.get(section, "right", r))
 				x = 1 - (r + w) * screenhwratio;
 			w = w * screenhwratio;
 		}
 		else
 		{
 			float l(0), r(0);
-			pagefile.GetParam(section, "left", l);
-			pagefile.GetParam(section, "right", r);
+			pagefile.get(section, "left", l);
+			pagefile.get(section, "right", r);
 			x = l * screenhwratio;
 			w = 1 - (l + r) * screenhwratio;
 		}
-		if (pagefile.GetParam(section, "height", h))
+		if (pagefile.get(section, "height", h))
 		{
 			float t(0), b(0);
-			if (pagefile.GetParam(section, "top", t))
+			if (pagefile.get(section, "top", t))
 				y = t;
-			else if (pagefile.GetParam(section, "bottom", b))
+			else if (pagefile.get(section, "bottom", b))
 				y = 1 - b - h;
 		}
 		else
 		{
 			float t(0), b(0);
-			pagefile.GetParam(section, "top", t);
-			pagefile.GetParam(section, "bottom", b);
+			pagefile.get(section, "top", t);
+			pagefile.get(section, "bottom", b);
 			h = 1 - t - b;
 			y = t;
 		}
@@ -163,20 +163,20 @@ bool GUIPAGE::Load(
 		y = y + h * 0.5;
 
 		float z(0);
-		pagefile.GetParam(section, "layer", z);
+		pagefile.get(section, "layer", z);
 		// draw order offset
 		z = z + 100;
 
 		std::string text;
-		if (pagefile.GetParam(section, "text", text))
+		if (pagefile.get(section, "text", text))
 		{
 			// none is reserved for empty text string
 			if (text == "none") text.clear();
 
 			std::string alignstr;
 			float fontsize = 0.03;
-			pagefile.GetParam(section, "fontsize", fontsize);
-			pagefile.GetParam(section, "align", alignstr);
+			pagefile.get(section, "fontsize", fontsize);
+			pagefile.get(section, "align", alignstr);
 
 			int align = 0;
 			if (alignstr == "right") align = 1;
@@ -197,15 +197,15 @@ bool GUIPAGE::Load(
 			widget = new_widget;
 
 			std::string name;
-			if (pagefile.GetParam(section, "name", name))
+			if (pagefile.get(section, "name", name))
 				labels[name] = new_widget;
 		}
 
 		std::string image;
-		if (pagefile.GetParam(section, "image", image))
+		if (pagefile.get(section, "image", image))
 		{
 			std::string path = texpath;
-			pagefile.GetParam(section, "path", path);
+			pagefile.get(section, "path", path);
 
 			GUIIMAGE * new_widget = new GUIIMAGE();
 			new_widget->SetupDrawable(sref, content, path, x, y, w, h, z);
@@ -215,10 +215,10 @@ bool GUIPAGE::Load(
 		}
 
 		std::string slider;
-		if (pagefile.GetParam(section, "slider", slider))
+		if (pagefile.get(section, "slider", slider))
 		{
 			bool fill = false;
-			pagefile.GetParam(section, "fill", fill);
+			pagefile.get(section, "fill", fill);
 
 			TEXTUREINFO texinfo;
 			texinfo.mipmap = false;
@@ -240,11 +240,11 @@ bool GUIPAGE::Load(
 		if (widget)
 		{
 			std::string color, alpha, hue, sat, val;
-			pagefile.GetParam(section, "color", color);
-			pagefile.GetParam(section, "alpha", alpha);
-			pagefile.GetParam(section, "hue", hue);
-			pagefile.GetParam(section, "sat", sat);
-			pagefile.GetParam(section, "val", val);
+			pagefile.get(section, "color", color);
+			pagefile.get(section, "alpha", alpha);
+			pagefile.get(section, "hue", hue);
+			pagefile.get(section, "sat", sat);
+			pagefile.get(section, "val", val);
 
 			ConnectAction(color, vsignalmap, widget->set_color);
 			ConnectAction(alpha, vsignalmap, widget->set_alpha);
@@ -257,10 +257,10 @@ bool GUIPAGE::Load(
 		}
 
 		bool focus;
-		if (pagefile.GetParam(section, "focus", focus))
+		if (pagefile.get(section, "focus", focus))
 		{
 			std::string desc;
-			pagefile.GetParam(section, "tip", desc);
+			pagefile.get(section, "tip", desc);
 
 			std::map<std::string, std::string>::const_iterator li;
 			if ((li = languagemap.find(desc)) != languagemap.end()) desc = li->second;
@@ -293,12 +293,12 @@ bool GUIPAGE::Load(
 	std::set<std::string> widget_prop_set;
 	for (size_t i = 0; i < controls.size(); ++i)
 	{
-		CONFIG::const_iterator section;
-		pagefile.GetSection(controlid[i], section);
+		Config::const_iterator section;
+		pagefile.get(controlid[i], section);
 		for (size_t j = 0; j < GUICONTROL::signals.size(); ++j)
 		{
 			std::string actions;
-			if (!pagefile.GetParam(section, GUICONTROL::signals[j], actions))
+			if (!pagefile.get(section, GUICONTROL::signals[j], actions))
 				continue;
 
 			std::stringstream st(actions);

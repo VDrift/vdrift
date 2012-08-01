@@ -25,14 +25,14 @@
 #include <vector>
 #include <ostream>
 
-class CONFIG;
+class Config;
 
 class SETTINGS
 {
 public:
 	SETTINGS();
 
-	void Serialize(bool write, CONFIG & config);
+	void Serialize(bool write, Config & config);
 
 	void Load(const std::string & settingsfile, std::ostream & error);
 
