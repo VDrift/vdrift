@@ -91,13 +91,13 @@ struct ini
 			if (include && line.at(next2) == '&')//name == "include")
 			{
 				// Value is a reference, include.
-				std::string value = line.substr(next2+1, end-next2);
+				std::string value = line.substr(next2+1, end-next2-1);
 				//(*include)(node, value);
 				(*include)(node.set(name, value), value);
 			}
 			else
 			{
-				std::string value = line.substr(next2, end-next2-1);
+				std::string value = line.substr(next2, end-next2);
 				node.set(name, value);
 			}
 		}
