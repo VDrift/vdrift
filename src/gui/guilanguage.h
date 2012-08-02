@@ -20,6 +20,7 @@
 #ifndef _GUILANGUAGE_H
 #define _GUILANGUAGE_H
 
+#include <ostream>
 #include <string>
 #include <map>
 
@@ -36,7 +37,7 @@ public:
 
 	/// langage id is a two char string
 	/// en, de, fr, ru ...
-	void Set(const std::string & lang_id);
+	void Set(const std::string & lang_id, std::ostream & error);
 
 	/// translation operator
 	const std::string & operator()(const std::string & str) const;
@@ -53,7 +54,7 @@ private:
 	void * m_iconv;
 
 	/// load current language string map
-	void LoadLanguage();
+	void LoadLanguage(std::ostream & error);
 };
 
 // implementation

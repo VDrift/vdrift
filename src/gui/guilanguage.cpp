@@ -44,14 +44,14 @@ static char * convert(iconv_t cd, char *input);
 
 GUILANGUAGE::GUILANGUAGE() :
 	m_lang_id("en"),
-	m_iconv(0)
+	m_iconv(iconv_t(-1))
 {
 	//ctor
 }
 
 GUILANGUAGE::~GUILANGUAGE()
 {
-	if (m_iconv)
+	if (m_iconv != iconv_t(-1))
 		iconv_close(m_iconv);
 }
 
@@ -60,12 +60,12 @@ void GUILANGUAGE::Init(const std::string & lang_path)
 	m_lang_path = lang_path;
 }
 
-void GUILANGUAGE::Set(const std::string & lang_id)
+void GUILANGUAGE::Set(const std::string & lang_id, std::ostream & error)
 {
 	if (m_lang_id != lang_id)
 	{
 		m_lang_id = lang_id;
-		LoadLanguage();
+		LoadLanguage(error);
 	}
 }
 
@@ -77,24 +77,29 @@ const std::string & GUILANGUAGE::GetCodePageId(const std::string & lang_id)
 	return default_codepage;
 }
 
-void GUILANGUAGE::LoadLanguage()
+void GUILANGUAGE::LoadLanguage(std::ostream & error)
 {
-	Config cfg(m_lang_path + "/" + m_lang_id + ".txt");
-	Config::const_iterator i;
-	if (!cfg.get("", i))
-		return;
+	m_strings.clear();
 
-	const std::string to = "CP" + GetCodePageId(m_lang_id);
-	if (m_iconv)
-		iconv_close(m_iconv);
-	m_iconv = iconv_open(to.c_str(), "UTF-8");
-	if (m_iconv == iconv_t(-1))
+	Config cfg(m_lang_path + "/" + m_lang_id + ".txt");
+	Config::const_iterator i = cfg.end();
+	if (!cfg.get("", i))
 	{
+		// empty section is always available
 		assert(0);
 		return;
 	}
 
-	m_strings.clear();
+	const std::string to = "CP" + GetCodePageId(m_lang_id);
+	if (m_iconv != iconv_t(-1))
+		iconv_close(m_iconv);
+	m_iconv = iconv_open(to.c_str(), "UTF-8");
+	if (m_iconv == iconv_t(-1))
+	{
+		error << "Failed code conversion: UTF-8 to " << to << std::endl;
+		return;
+	}
+
 	const Config::Section & sn = i->second;
 	for (Config::Section::const_iterator n = sn.begin(); n != sn.end(); ++n)
 	{

@@ -117,7 +117,7 @@ bool GUI::Load(
 
 	// setup language
 	lang.Init(langpath);
-	lang.Set(language);
+	lang.Set(language, error_output);
 
 	// load font (hardcoded for now)
 	const std::string fontcp = lang.GetCodePageId(language);
