@@ -115,7 +115,16 @@ bool Config::load(std::istream & f)
 		return false;
 	}
 
+	// strip UTF-8 BOM
+	if (f.get() != 0xEF || f.get() != 0xBB || f.get() != 0xBF)
+	{
+		f.seekg(0);
+	}
+
+	// create empty section
 	iterator section = sections.insert(std::pair<std::string, Section>("", Section())).first;
+	
+	// start parsing
 	std::string line;
 	while (f && !f.eof())
 	{
