@@ -150,7 +150,7 @@ solution "VDrift"
 		location "."
 		includedirs {"vdrift-win/include", "vdrift-win/bullet"}
 		libdirs {"vdrift-win/lib"}
-		links {"opengl32", "glu32", "glew32", "SDL2main", "SDL2", "SDL2_image", "SDL2_gfx", "vorbisfile", "libcurl", "libarchive-2", "wsock32", "ws2_32"}
+		links {"opengl32", "glu32", "glew32", "SDL2main", "SDL2", "SDL2_image", "SDL2_gfx", "vorbisfile", "iconv", "libcurl", "libarchive-2", "wsock32", "ws2_32"}
 		files {"vdrift-win/bullet/**.h", "vdrift-win/bullet/**.cpp"}
 		postbuildcommands {"xcopy /d /y /f .\\vdrift-win\\lib\\*.dll .\\"}
 

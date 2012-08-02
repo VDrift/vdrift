@@ -30,7 +30,6 @@ src = Split("""aabb.cpp
 		carcontrolmap.cpp
 		containeralgorithm.cpp
 		content/cotentmanager.cpp
-		content/cotentfactory.cpp
 		content/configfactory.cpp
 		content/modelfactory.cpp
 		content/soundfactory.cpp
@@ -80,6 +79,7 @@ src = Split("""aabb.cpp
 		gui/guicontrol.cpp
 		gui/guiimage.cpp
 		gui/guilabel.cpp
+		gui/guilanguage.cpp
 		gui/guioption.cpp
 		gui/guipage.cpp
 		gui/guislider.cpp

@@ -479,13 +479,10 @@ bool GAME::InitGUI(const std::string & pagename)
 			valuelists,
 			pathmanager.GetDataPath(),
 			pathmanager.GetOptionsFile(),
-			menufolder,
-			pathmanager.GetGUILanguageDir(settings.GetSkin()),
+			settings.GetSkin(),
 			settings.GetLanguage(),
-			pathmanager.GetGUITextureDir(settings.GetSkin()),
 			settings.GetTextureSize(),
-			(float)window.GetH()/window.GetW(),
-			fonts,
+			(float)window.GetH() / window.GetW(),
 			actionmap,
 			content,
 			info_output,
@@ -2061,7 +2058,7 @@ void GAME::PopulateValueLists(std::map<std::string, std::list <std::pair <std::s
 	// Populate languages.
 	std::list <std::string> languages;
 	std::string skinfolder = pathmanager.GetDataPath() + "/" + pathmanager.GetGUILanguageDir(settings.GetSkin()) + "/";
-	pathmanager.GetFileList(skinfolder, languages, ".lng");
+	pathmanager.GetFileList(skinfolder, languages, ".txt");
 	for (std::list <std::string>::iterator i = languages.begin(); i != languages.end(); ++i)
 	{
 		if (pathmanager.FileExists(skinfolder + *i))

@@ -18,6 +18,7 @@
 /************************************************************************/
 
 #include "guipage.h"
+#include "guilanguage.h"
 #include "guiwidget.h"
 #include "guicontrol.h"
 #include "guiimage.h"
@@ -76,8 +77,8 @@ bool GUIPAGE::Load(
 	const std::string & path,
 	const std::string & texpath,
 	const float screenhwratio,
+	const GUILANGUAGE & lang,
 	const FONT & font,
-	const std::map <std::string, std::string> & languagemap,
 	VSIGNALMAP vsignalmap,
 	VACTIONMAP vactionmap,
 	ACTIONMAP actionmap,
@@ -185,8 +186,7 @@ bool GUIPAGE::Load(
 			float scaley = fontsize;
 			float scalex = fontsize * screenhwratio;
 
-			std::map<std::string, std::string>::const_iterator li;
-			if ((li = languagemap.find(text)) != languagemap.end()) text = li->second;
+			text = lang(text);
 
 			GUILABEL * new_widget = new GUILABEL();
 			new_widget->SetupDrawable(
@@ -262,8 +262,7 @@ bool GUIPAGE::Load(
 			std::string desc;
 			pagefile.get(section, "tip", desc);
 
-			std::map<std::string, std::string>::const_iterator li;
-			if ((li = languagemap.find(desc)) != languagemap.end()) desc = li->second;
+			desc = lang(desc);
 
 			GUICONTROL * control = new GUICONTROL();
 			control->SetRect(x - w * 0.5, y - h * 0.5, x + w * 0.5, y + h * 0.5);

@@ -46,7 +46,7 @@ SETTINGS::SETTINGS() :
 	fullscreen(false),
 	shaders(true),
 	skin("simple"),
-	language("English"),
+	language("en"),
 	show_fps(false),
 	music_volume(1.0),
 	sound_volume(1.0),

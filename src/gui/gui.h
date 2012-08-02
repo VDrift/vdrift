@@ -22,12 +22,8 @@
 
 #include "guipage.h"
 #include "guioption.h"
+#include "guilanguage.h"
 #include "font.h"
-
-#include <map>
-#include <list>
-#include <string>
-#include <iostream>
 
 class GUI
 {
@@ -39,8 +35,6 @@ public:
 	const std::string & GetLastPageName() const;
 
 	SCENENODE & GetNode();
-
-	SCENENODE & GetPageNode(const std::string & name);
 
 	GUIPAGE & GetPage(const std::string & name);
 
@@ -55,13 +49,10 @@ public:
 		const std::map<std::string, std::list <std::pair <std::string, std::string> > > & valuelists,
 		const std::string & datapath,
 		const std::string & optionsfile,
-		const std::string & menupath,
-		const std::string & languagedir,
+		const std::string & skinname,
 		const std::string & language,
-		const std::string & texpath,
 		const std::string & texsize,
 		const float screenhwratio,
-		const std::map <std::string, FONT> & fonts,
 		std::map <std::string, Slot0*> actionmap,
 		ContentManager & content,
 		std::ostream & info_output,
@@ -109,9 +100,6 @@ public:
 	void SetLabelText(const std::string & page, const std::map<std::string, std::string> & label_text);
 	void SetLabelText(const std::map<std::string, std::string> & label_text);
 
-	/// returns false if the specified page/label does not exist
-	bool SetButtonEnabled(const std::string & page, const std::string & button, bool enable);
-
 	/// access options
 	std::string GetOptionValue(const std::string & name) const;
 	void SetOptionValue(const std::string & name, const std::string & value);
@@ -125,12 +113,14 @@ private:
 	PAGEMAP::iterator last_active_page;
 	PAGEMAP::iterator active_page;
 	SCENENODE node;
+	GUILANGUAGE lang;
 	FONT font;
 	float m_cursorx, m_cursory;			///< cache cursor position
 	float animation_counter;
 	float animation_count_start;
 	bool ingame;
 
+	/// page activate callback
 	struct PAGECB
 	{
 		GUI * gui;
@@ -153,7 +143,6 @@ private:
 	bool LoadOptions(
 		const std::string & optionfile,
 		const std::map<std::string, std::list <std::pair <std::string, std::string> > > & valuelists,
-		const std::map<std::string, std::string> & languagemap,
 		std::ostream & error_output);
 
 	/// add option slots to action map

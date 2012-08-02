@@ -51,12 +51,6 @@ SCENENODE & GUI::GetNode()
 	return node;
 }
 
-SCENENODE & GUI::GetPageNode(const std::string & name)
-{
-	assert(pages.find(name) != pages.end());
-	return pages[name].GetNode(node);
-}
-
 GUIPAGE & GUI::GetPage(const std::string & name)
 {
 	assert(pages.find(name) != pages.end());
@@ -102,13 +96,10 @@ bool GUI::Load(
 	const std::map<std::string, std::list <std::pair <std::string, std::string> > > & valuelists,
 	const std::string & datapath,
 	const std::string & optionsfile,
-	const std::string & menupath,
-	const std::string & languagedir,
+	const std::string & skinname,
 	const std::string & language,
-	const std::string & texpath,
 	const std::string & texsize,
 	const float screenhwratio,
-	const std::map <std::string, FONT> & fonts,
 	std::map <std::string, Slot0*> actionmap,
 	ContentManager & content,
 	std::ostream & info_output,
@@ -116,28 +107,28 @@ bool GUI::Load(
 {
 	Unload();
 
-	// load language font
-	Config languageconfig;
-	languageconfig.load(datapath + "/" + languagedir + "/" + language + ".lng");
+	// serious mess here, needs cleanup
+	const std::string fonttexpath = "skins/" + skinname + "/fonts";
+	const std::string texpath = "skins/" + skinname + "/textures";
+	const std::string skinpath = datapath + "/skins/" + skinname;
+	const std::string fontpath = skinpath + "/fonts";
+	const std::string langpath = skinpath + "/languages";
+	const std::string menupath = skinpath + "/menus";
 
-	std::string fontinfo, fonttex;
-	if (!languageconfig.get("font", "info", fontinfo, error_output)) return false;
-	if (!languageconfig.get("font", "texture", fonttex, error_output)) return false;
+	// setup language
+	lang.Init(langpath);
+	lang.Set(language);
 
-	std::string fontinfopath = datapath + "/" + languagedir + "/" + fontinfo;
-	if (!font.Load(fontinfopath, languagedir, fonttex, content, error_output)) return false;
-
-	// load language map
-	Config::const_iterator section;
-	std::map<std::string, std::string> languagemap;
-	if (languageconfig.get("strings", section))
-	{
-		languagemap = section->second;
-	}
-	//languageconfig.DebugPrint(std::clog);
+	// load font (hardcoded for now)
+	const std::string fontcp = lang.GetCodePageId(language);
+	const std::string fonttex = "freesansbold_" + fontcp + "_sdf.png";
+	const std::string fontinfo = fontpath + "/freesansbold_" + fontcp + ".txt";
+	if (!font.Load(fontinfo, fonttexpath, fonttex, content, error_output))
+		return false;
 
 	// load options
-	if (!LoadOptions(optionsfile, valuelists, languagemap, error_output)) return false;
+	if (!LoadOptions(optionsfile, valuelists, error_output))
+		return false;
 
 	VSIGNALMAP vsignalmap;
 	VACTIONMAP vactionmap;
@@ -166,8 +157,8 @@ bool GUI::Load(
 	{
 		const std::string pagepath = menupath + "/" + i->first;
 		if (!i->second.Load(
-			pagepath, texpath, screenhwratio, font,
-			languagemap, vsignalmap, vactionmap, actionmap,
+			pagepath, texpath, screenhwratio, lang, font,
+			vsignalmap, vactionmap, actionmap,
 			node, content, error_output))
 		{
 			error_output << "Error loading GUI page: " << pagepath << std::endl;
@@ -339,7 +330,6 @@ bool GUI::ActivatePage(
 bool GUI::LoadOptions(
 	const std::string & optionfile,
 	const std::map<std::string, std::list <std::pair <std::string, std::string> > > & valuelists,
-	const std::map<std::string, std::string> & languagemap,
 	std::ostream & error_output)
 {
 	Config opt;
@@ -362,8 +352,7 @@ bool GUI::LoadOptions(
 		if (!opt.get(i, "desc", desc, error_output)) return false;
 		if (!opt.get(i, "type", type, error_output)) return false;
 
-		std::map<std::string, std::string>::const_iterator li;
-		if ((li = languagemap.find(desc)) != languagemap.end()) desc = li->second;
+		desc = lang(desc);
 
 		float min(0), max(1);
 		bool percent(false);
@@ -394,7 +383,7 @@ bool GUI::LoadOptions(
 				std::string displaystr, storestr;
 				if (!opt.get(i, "opt"+tstr.str(), displaystr, error_output)) return false;
 				if (!opt.get(i, "val"+tstr.str(), storestr, error_output)) return false;
-				if ((li = languagemap.find(displaystr)) != languagemap.end()) displaystr = li->second;
+				displaystr = lang(displaystr);
 				opvals.push_back(std::make_pair(storestr, displaystr));
 			}
 		}
@@ -502,13 +491,6 @@ void GUI::SetLabelText(const std::map<std::string, std::string> & label_text)
 	{
 		p->second.SetLabelText(label_text);
 	}
-}
-
-bool GUI::SetButtonEnabled(const std::string & pagename, const std::string & buttonname, bool enable)
-{
-	if (pages.find(pagename) == pages.end())
-		return false;
-	return true;
 }
 
 std::string GUI::GetOptionValue(const std::string & name) const

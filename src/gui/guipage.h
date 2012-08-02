@@ -29,6 +29,7 @@
 #include <string>
 #include <ostream>
 
+class GUILANGUAGE;
 class GUIWIDGET;
 class GUICONTROL;
 class GUILABEL;
@@ -52,8 +53,8 @@ public:
 		const std::string & path,
 		const std::string & texpath,
 		const float screenhwratio,
+		const GUILANGUAGE & lang,
 		const FONT & font,
-		const std::map <std::string, std::string> & languagemap,
 		VSIGNALMAP vsignalmap,
 		VACTIONMAP vactionmap,
 		ACTIONMAP actionmap,
