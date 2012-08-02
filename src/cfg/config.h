@@ -33,11 +33,8 @@ class Config
 {
 public:
 	typedef std::map<std::string, std::string> Section;
-
 	typedef std::map<std::string, Section> SectionMap;
-
 	typedef SectionMap::const_iterator const_iterator;
-
 	typedef SectionMap::iterator iterator;
 
 	Config();
