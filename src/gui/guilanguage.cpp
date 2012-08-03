@@ -24,7 +24,7 @@
 #include <cstring>
 #include <cerrno>
 
-#ifndef POSIX
+#if defined(WIN32) || defined(_WIN32)
 // inbuf not const due to iconv interface (posix wtf!?)
 size_t iconv(iconv_t cd, char** inbuf, size_t* inbytesleft, char** outbuf, size_t* outbytesleft)
 {
