@@ -29,7 +29,7 @@ src = Split("""aabb.cpp
 		car.cpp
 		carcontrolmap.cpp
 		containeralgorithm.cpp
-		content/cotentmanager.cpp
+		content/contentmanager.cpp
 		content/configfactory.cpp
 		content/modelfactory.cpp
 		content/soundfactory.cpp
