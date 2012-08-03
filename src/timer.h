@@ -23,7 +23,7 @@
 #include "graphics/texture.h"
 #include "graphics/vertexarray.h"
 #include "cfg/config.h"
-#include "font.h"
+#include "gui/font.h"
 
 #include <ostream>
 #include <string>

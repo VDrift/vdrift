@@ -20,7 +20,7 @@
 #ifndef _HUD_H
 #define _HUD_H
 
-#include "text_draw.h"
+#include "gui/text_draw.h"
 #include "hudgauge.h"
 #include "hudbar.h"
 

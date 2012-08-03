@@ -20,7 +20,7 @@
 #ifndef _LOADINGSCREEN_H
 #define _LOADINGSCREEN_H
 
-#include "text_draw.h"
+#include "gui/text_draw.h"
 #include <ostream>
 #include <string>
 
