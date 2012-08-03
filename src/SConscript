@@ -38,7 +38,6 @@ src = Split("""aabb.cpp
 		downloadable.cpp
 		dynamicsdraw.cpp
 		eventsystem.cpp
-		font.cpp
 		forcefeedback.cpp
 		game.cpp
 		graphics/drawable.cpp
@@ -84,6 +83,8 @@ src = Split("""aabb.cpp
 		gui/guipage.cpp
 		gui/guislider.cpp
 		gui/guiwidget.cpp
+		gui/text_draw.cpp
+		gui/font.cpp
 		http.cpp
 		hud.cpp
 		hudbar.cpp
@@ -129,7 +130,6 @@ src = Split("""aabb.cpp
 		sprite2d.cpp
 		suspensionbumpdetection.cpp
 		svn_sourceforge.cpp
-		text_draw.cpp
 		timer.cpp
 		toggle.cpp
 		track.cpp
