@@ -791,14 +791,14 @@ void CAR::UpdateSounds(float dt)
 	if (!psound) return;
 
 	MATHVECTOR <float, 3> pos_car = GetPosition();
+	MATHVECTOR <float, 3> pos_eng = ToMathVector<float>(dynamics.getEngine().getPosition());
+
 	psound->SetSourcePosition(roadnoise, pos_car[0], pos_car[1], pos_car[2]);
 	psound->SetSourcePosition(crashsound, pos_car[0], pos_car[1], pos_car[2]);
 	psound->SetSourcePosition(gearsound, pos_car[0], pos_car[1], pos_car[2]);
 	psound->SetSourcePosition(brakesound, pos_car[0], pos_car[1], pos_car[2]);
 	psound->SetSourcePosition(handbrakesound, pos_car[0], pos_car[1], pos_car[2]);
 
-
-	MATHVECTOR <float, 3> pos_eng = engine_position;
 	GetOrientation().RotateVector(pos_eng);
 	pos_eng = pos_eng + pos_car;
 
@@ -923,8 +923,7 @@ void CAR::UpdateSounds(float dt)
 
 	//update road noise sound
 	{
-		float gain = dynamics.getSpeed();
-		gain = 0.02 * gain * gain;
+		float gain = 4E-4 * dynamics.getVelocity().length2();
 		if (gain > 1) gain = 1;
 		psound->SetSourceGain(roadnoise, gain);
 	}
@@ -1073,7 +1072,7 @@ void CAR::ProcessInputs(const std::vector <float> & inputs)
 	// update interior sounds
 	if (!psound || !driver_view) return;
 
-/*	// disable brake sound, sounds wierd
+/*	// disable brake sound, sounds weird
 	if (inputs[CARINPUT::BRAKE] > 0 && !brakesound_check)
 	{
 		if (!psound->GetSourcePlaying(brakesound))

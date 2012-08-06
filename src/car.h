@@ -340,9 +340,6 @@ protected:
 	bool brakesound_check;
 	bool handbrakesound_check;
 
-	// relative engine position, used for engine sounds
-	MATHVECTOR<float, 3> engine_position;
-
 	// steering wheel
 	QUATERNION<float> steer_orientation;
 	QUATERNION<float> steer_rotation;
