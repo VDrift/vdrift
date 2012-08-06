@@ -83,7 +83,7 @@ bool Factory<PTree>::create(
 	std::ifstream file(abspath.c_str());
 	if (file.good())
 	{
-		std::tr1::shared_ptr<PTree> temp(new PTree());
+		std::tr1::shared_ptr<PTree> temp(new PTree(abspath));
 		if (m_content)
 		{
 			// include support

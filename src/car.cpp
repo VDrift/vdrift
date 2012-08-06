@@ -20,13 +20,14 @@
 #include "car.h"
 #include "carinput.h"
 #include "content/contentmanager.h"
-#include "physics/carwheelposition.h"
-#include "physics/dynamicsworld.h"
-#include "physics/tracksurface.h"
+#include "physics/world.h"
+#include "physics/vehicleinfo.h"
 #include "graphics/textureinfo.h"
 #include "graphics/mesh_gen.h"
 #include "sound/sound.h"
 #include "cfg/ptree.h"
+#include "tracksurface.h"
+#include "loadvehicle.h"
 #include "loaddrawable.h"
 #include "loadcamera.h"
 #include "camera.h"
@@ -109,93 +110,132 @@ static bool LoadWheel(
 	const PTree & cfg_wheel,
 	struct LoadDrawable & loadDrawable,
 	SCENENODE & topnode,
-	std::ostream & error_output)
+	std::ostream & error)
 {
-	keyed_container<SCENENODE>::handle wheelnode = topnode.AddNode();
 	ContentManager & content = loadDrawable.content;
-	const std::string& path = loadDrawable.path;
+	const std::string & path = loadDrawable.path;
 
 	std::string meshname;
 	std::vector<std::string> texname;
-	if (!cfg_wheel.get("mesh", meshname, error_output)) return false;
-	if (!cfg_wheel.get("texture", texname, error_output)) return false;
-
-	std::string tiredim;
-	const PTree * cfg_tire;
-	if (!cfg_wheel.get("tire", cfg_tire, error_output)) return false;
-	if (!cfg_tire->get("size", tiredim, error_output)) return false;
-
-	MATHVECTOR<float, 3> size(0);
-	cfg_tire->get("size", size);
-	float width = size[0] * 0.001;
-	float diameter = size[2] * 0.0254;
-
-	// get wheel disk mesh
 	std::tr1::shared_ptr<MODEL> mesh;
-	content.load(mesh, path, meshname);
 
-	// gen wheel mesh
-	if (!content.get(mesh, path, meshname + tiredim))
+	// wheel size
+	std::string sizestr;
+	if (!cfg_wheel.get("size", sizestr, error))
 	{
-		VERTEXARRAY rimva, diskva;
-		MESHGEN::mg_rim(rimva, size[0], size[1], size[2], 10);
-		diskva = mesh->GetVertexArray();
-		diskva.Translate(-0.75 * 0.5, 0, 0);
-		diskva.Scale(width, diameter, diameter);
-		content.load(mesh, path, meshname + tiredim, rimva + diskva);
+		return false;
+	}
+	MATHVECTOR<float, 3> size(0);
+	cfg_wheel.get("size", size);
+	float width = size[0] * 0.001f;
+	float ratio = size[1] * 0.01f;
+	float diameter = size[2] * 0.0254f;
+
+	// root node for wheel components
+	keyed_container<SCENENODE>::handle wheelnode = topnode.AddNode();
+	MATHVECTOR<float, 3> pos, rot;
+	if (cfg_wheel.get("position", pos) | cfg_wheel.get("rotation", rot))
+	{
+		QUATERNION<float> q(rot[0]/180*M_PI, rot[1]/180*M_PI, rot[2]/180*M_PI);
+		SCENENODE & node = topnode.GetNode(wheelnode);
+		node.GetTransform().SetTranslation(pos);
+		node.GetTransform().SetRotation(q);
 	}
 
-	// load wheel
-	if (!loadDrawable(meshname + tiredim, texname, cfg_wheel, topnode, &wheelnode))
+	// rim
+	const PTree * cfg_rim;
+	if (!cfg_wheel.get("rim", cfg_rim) ||
+		!cfg_rim->get("texture", texname, error))
+	{
+		return false;
+	}
+
+	// gen rim mesh (optional)
+	if (!cfg_rim->get("mesh", meshname))
+	{
+		if (!cfg_rim->get("hubmesh", meshname, error) ||
+			!content.load(mesh, path, meshname))
+		{
+			return false;
+		}
+
+		meshname = meshname + sizestr;
+		if (!content.get(mesh, path, meshname))
+		{
+			VERTEXARRAY va;
+			MESHGEN::RimSpec spec;
+			spec.set(width, ratio, diameter);
+			spec.hub = &mesh->GetVertexArray();
+			MESHGEN::CreateRim(va, spec);
+			content.load(mesh, path, meshname, va);
+		}
+	}
+
+	// load rim
+	if (!loadDrawable(meshname, texname, *cfg_rim, topnode.GetNode(wheelnode)))
 	{
 		return false;
 	}
 
 	// tire (optional)
-	texname.clear();
-	if (!cfg_tire->get("texture", texname, error_output))
+	const PTree * cfg_tire;
+	if (!cfg_wheel.get("tire", cfg_tire) ||
+		!cfg_tire->get("texture", texname))
 	{
 		return true;
 	}
 
-	// gen tire mesh
-	if (!content.get(mesh, path, "tire" + tiredim))
+	// gen tire mesh (optional)
+	if (!cfg_tire->get("mesh", meshname))
 	{
-		VERTEXARRAY tireva;
-		MESHGEN::mg_tire(tireva, size[0], size[1], size[2]);
-		content.load(mesh, path, "tire" + tiredim, tireva);
+		meshname = "tire" + sizestr;
+		if (!content.get(mesh, path, meshname))
+		{
+			VERTEXARRAY va;
+			MESHGEN::TireSpec spec;
+			spec.set(width, ratio, diameter);
+			MESHGEN::CreateTire(va, spec);
+			content.load(mesh, path, meshname, va);
+			//MODEL_OBJ obj;
+			//obj.SetVertexArray(mesh->GetVertexArray());
+			//obj.Save("tire"+sizestr+".joe", error_output);
+		}
 	}
 
 	// load tire
-	if (!loadDrawable("tire" + tiredim, texname, *cfg_tire, topnode.GetNode(wheelnode)))
+	if (!loadDrawable(meshname, texname, *cfg_tire, topnode.GetNode(wheelnode)))
 	{
 		return false;
 	}
 
-	// brake (optional)
-	texname.clear();
-	std::string brakename;
+	// brake disk (optional)
 	const PTree * cfg_brake;
-	if (!cfg_wheel.get("brake", cfg_brake, error_output)) return true;
-	if (!cfg_brake->get("texture", texname)) return true;
-
-	float radius;
-	std::string radiusstr;
-	cfg_brake->get("radius", radius);
-	cfg_brake->get("radius", radiusstr);
-
-	// gen brake disk mesh
-	if (!content.get(mesh, path, "brake" + radiusstr))
+	if (!cfg_wheel.get("brake", cfg_brake) ||
+		!cfg_brake->get("texture", texname))
 	{
-		float diameter_mm = radius * 2 * 1000;
-		float thickness_mm = 0.025 * 1000;
-		VERTEXARRAY brakeva;
-		MESHGEN::mg_brake_rotor(brakeva, diameter_mm, thickness_mm);
-		content.load(mesh, path, "brake" + radiusstr, brakeva);
+		return true;
+	}
+
+	// gen brake disk mesh (optional)
+	if (!cfg_brake->get("mesh", meshname))
+	{
+		float radius = 0.15f;
+		float thickness = 0.025f;
+		std::string radiusstr;
+		cfg_brake->get("radius", radius);
+		cfg_brake->get("radius", radiusstr);
+
+		meshname = "brake" + radiusstr;
+		if (!content.get(mesh, path, meshname))
+		{
+			VERTEXARRAY va;
+			MESHGEN::CreateRotor(va, radius, thickness);
+			content.load(mesh, path, meshname, va);
+		}
 	}
 
 	// load brake disk
-	if (!loadDrawable("brake" + radiusstr, texname, *cfg_brake, topnode.GetNode(wheelnode)))
+	if (!loadDrawable(meshname, texname, *cfg_brake, topnode.GetNode(wheelnode)))
 	{
 		return false;
 	}
@@ -229,14 +269,14 @@ CAR::~CAR()
 bool CAR::LoadLight(
 	const PTree & cfg,
 	ContentManager & content,
-	std::ostream & error_output)
+	std::ostream & error)
 {
 	float radius;
 	std::string radiusstr;
 	MATHVECTOR<float, 3> pos(0), col(0);
-	if (!cfg.get("position", pos, error_output)) return false;
-	if (!cfg.get("color", col, error_output)) return false;
-	if (!cfg.get("radius", radius, error_output)) return false;
+	if (!cfg.get("position", pos, error)) return false;
+	if (!cfg.get("color", col, error)) return false;
+	if (!cfg.get("radius", radius, error)) return false;
 	cfg.get("radius", radiusstr);
 
 	lights.push_back(LIGHT());
@@ -255,7 +295,7 @@ bool CAR::LoadLight(
 		varray.Scale(radius, radius, radius);
 		content.load(mesh, "", "cube" + radiusstr, varray);
 	}
-    models.push_back(mesh);
+	models.push_back(mesh);
 
 	keyed_container <DRAWABLE> & dlist = GetDrawlist(node, OMNI);
 	lights.back().draw = dlist.insert(DRAWABLE());
@@ -278,34 +318,34 @@ bool CAR::LoadGraphics(
 	const int anisotropy,
 	const float camerabounce,
 	ContentManager & content,
-	std::ostream & error_output)
+	std::ostream & error)
 {
 	//write_inf(cfg, std::cerr);
 	cartype = carname;
-	LoadDrawable loadDrawable(carpath, anisotropy, content, models, error_output);
+	LoadDrawable loadDrawable(carpath, anisotropy, content, models, error);
 
 	// load body first
 	const PTree * cfg_body;
 	std::string meshname;
 	std::vector<std::string> texname;
-	if (!cfg.get("body", cfg_body, error_output))
+	if (!cfg.get("body", cfg_body, error))
 	{
-		error_output << "there is a problem with the .car file" << std::endl;
+		error << "there is a problem with the .car file" << std::endl;
 		return false;
 	}
-	if (!cfg_body->get("mesh", meshname, error_output)) return false;
-	if (!cfg_body->get("texture", texname, error_output)) return false;
+	if (!cfg_body->get("mesh", meshname, error)) return false;
+	if (!cfg_body->get("texture", texname, error)) return false;
 	if (carpaint != "default") texname[0] = carpaint;
 	if (!loadDrawable(meshname, texname, *cfg_body, topnode, &bodynode)) return false;
 
 	// load wheels
 	const PTree * cfg_wheel;
-	if (!cfg.get("wheel", cfg_wheel, error_output)) return false;
+	if (!cfg.get("wheel", cfg_wheel, error)) return false;
 	for (PTree::const_iterator i = cfg_wheel->begin(); i != cfg_wheel->end(); ++i)
 	{
-		if (!LoadWheel(i->second, loadDrawable, topnode, error_output))
+		if (!LoadWheel(i->second, loadDrawable, topnode, error))
 		{
-			error_output << "Failed to load wheels." << std::endl;
+			error << "Failed to load wheels." << std::endl;
 			return false;
 		}
 	}
@@ -330,7 +370,7 @@ bool CAR::LoadGraphics(
 		SCENENODE & bodynoderef = topnode.GetNode(bodynode);
 		if (!loadDrawable(*cfg_steer, bodynoderef, &steernode, 0))
 		{
-			error_output << "Failed to load steering wheel." << std::endl;
+			error << "Failed to load steering wheel." << std::endl;
 			return false;
 		}
 		cfg_steer->get("max-angle", steer_angle_max);
@@ -345,9 +385,9 @@ bool CAR::LoadGraphics(
 	const PTree * cfg_light;
 	while (cfg.get("light-brake-"+istr, cfg_light))
 	{
-		if (!LoadLight(*cfg_light, content, error_output))
+		if (!LoadLight(*cfg_light, content, error))
 		{
-			error_output << "Failed to load lights." << std::endl;
+			error << "Failed to load lights." << std::endl;
 			return false;
 		}
 
@@ -359,9 +399,9 @@ bool CAR::LoadGraphics(
 	istr = "0";
 	while (cfg.get("light-reverse-"+istr, cfg_light))
 	{
-		if (!LoadLight(*cfg_light, content, error_output))
+		if (!LoadLight(*cfg_light, content, error))
 		{
-			error_output << "Failed to load lights." << std::endl;
+			error << "Failed to load lights." << std::endl;
 			return false;
 		}
 
@@ -376,7 +416,7 @@ bool CAR::LoadGraphics(
 		SCENENODE & bodynoderef = topnode.GetNode(bodynode);
 		if (!loadDrawable(*cfg_light, bodynoderef, 0, &brakelights))
 		{
-			error_output << "Failed to load lights." << std::endl;
+			error << "Failed to load lights." << std::endl;
 			return false;
 		}
 	}
@@ -385,7 +425,7 @@ bool CAR::LoadGraphics(
 		SCENENODE & bodynoderef = topnode.GetNode(bodynode);
 		if (!loadDrawable(*cfg_light, bodynoderef, 0, &reverselights))
 		{
-			error_output << "Failed to load lights." << std::endl;
+			error << "Failed to load lights." << std::endl;
 			return false;
 		}
 	}
@@ -397,13 +437,13 @@ bool CAR::LoadGraphics(
 	}
 	if (!cfg_cams->size())
 	{
-		error_output << "No cameras defined." << std::endl;
+		error << "No cameras defined." << std::endl;
 		return false;
 	}
 	cameras.reserve(cfg_cams->size());
 	for (PTree::const_iterator i = cfg_cams->begin(); i != cfg_cams->end(); ++i)
 	{
-		CAMERA * cam = LoadCamera(i->second, camerabounce, error_output);
+		CAMERA * cam = LoadCamera(i->second, camerabounce, error);
 		if (!cam) return false;
 		cameras.push_back(cam);
 	}
@@ -421,12 +461,12 @@ bool CAR::LoadPhysics(
 	const bool defaultabs,
 	const bool defaulttcs,
 	const bool damage,
-	DynamicsWorld & world,
+	sim::World & world,
 	ContentManager & content,
-	std::ostream & error_output)
+	std::ostream & error)
 {
 	std::string carmodel;
-	if (!cfg.get("body.mesh", carmodel, error_output))
+	if (!cfg.get("body.mesh", carmodel, error))
 		return false;
 
 	std::tr1::shared_ptr<MODEL> model;
@@ -437,21 +477,34 @@ bool CAR::LoadPhysics(
 	btVector3 position = ToBulletVector(initial_position);
 	btQuaternion rotation = ToBulletQuaternion(initial_orientation);
 
-	if (!dynamics.Load(cfg, size, center, position, rotation, damage, world, error_output)) return false;
-	dynamics.SetABS(defaultabs);
-	dynamics.SetTCS(defaulttcs);
+	// init motion states
+	motion_state.resize(topnode.Nodes());
 
-	mz_nominalmax = GetTireMaxMz(FRONT_LEFT) + GetTireMaxMz(FRONT_RIGHT);
+	sim::VehicleInfo vinfo;
+	vinfo.motionstate.resize(motion_state.size());
+	for (int i = 0; i < motion_state.size(); ++i)
+	{
+		vinfo.motionstate[i] = &motion_state[i];
+	}
+	if (!LoadVehicle(cfg, damage, center, size, vinfo, error))
+	{
+		return false;
+	}
 
+	dynamics.init(vinfo, position, rotation, world);
+	dynamics.setABS(defaultabs);
+	dynamics.setTCS(defaulttcs);
+	mz_nominalmax = 1;//(GetTireMaxMz(0) + GetTireMaxMz(1)) * 0.5; // fixme
 	return true;
 }
 
 bool CAR::LoadSounds(
+	const PTree & cfg,
 	const std::string & carpath,
 	const std::string & carname,
 	SOUND & sound,
 	ContentManager & content,
-	std::ostream & error_output)
+	std::ostream & error)
 {
 	psound = &sound;
 
@@ -469,17 +522,17 @@ bool CAR::LoadSounds(
 
 			std::string filename;
 			std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
-			if (!audi.get("filename", filename, error_output)) return false;
+			if (!audi.get("filename", filename, error)) return false;
 
 			enginesounds.push_back(ENGINESOUNDINFO());
 			ENGINESOUNDINFO & info = enginesounds.back();
 
-			if (!audi.get("MinimumRPM", info.minrpm, error_output)) return false;
-			if (!audi.get("MaximumRPM", info.maxrpm, error_output)) return false;
-			if (!audi.get("NaturalRPM", info.naturalrpm, error_output)) return false;
+			if (!audi.get("MinimumRPM", info.minrpm, error)) return false;
+			if (!audi.get("MaximumRPM", info.maxrpm, error)) return false;
+			if (!audi.get("NaturalRPM", info.naturalrpm, error)) return false;
 
 			bool powersetting;
-			if (!audi.get("power", powersetting, error_output)) return false;
+			if (!audi.get("power", powersetting, error)) return false;
 			if (powersetting)
 				info.power = ENGINESOUNDINFO::POWERON;
 			else if (!powersetting)
@@ -553,16 +606,35 @@ bool CAR::LoadSounds(
 		enginesounds.back().sound_source = sound.AddSource(soundptr, 0, true, true);
 	}
 
+	// init tire sounds
+	const PTree *wheel_cfg;
+	if (!cfg.get("wheel", wheel_cfg, error))
+	{
+		return false;
+	}
+
+	int wheel_count = wheel_cfg->size();
+	if (wheel_count < 2)
+	{
+		error << "Weel count: " << wheel_count << ". At least two wheels expected." << std::endl;
+		return false;
+	}
+
+	roadsound.resize(wheel_count);
+	gravelsound.resize(wheel_count);
+	grasssound.resize(wheel_count);
+	bumpsound.resize(wheel_count);
+
 	//set up tire squeal sounds
-	for (int i = 0; i < 4; ++i)
+	for (int i = 0; i < wheel_count; ++i)
 	{
 		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
 		content.load(soundptr, carpath, "tire_squeal");
-		tiresqueal[i] = sound.AddSource(soundptr, i * 0.25, true, true);
+		roadsound[i] = sound.AddSource(soundptr, i * 0.25, true, true);
 	}
 
 	//set up tire gravel sounds
-	for (int i = 0; i < 4; ++i)
+	for (int i = 0; i < wheel_count; ++i)
 	{
 		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
 		content.load(soundptr, carpath, "gravel");
@@ -570,7 +642,7 @@ bool CAR::LoadSounds(
 	}
 
 	//set up tire grass sounds
-	for (int i = 0; i < 4; ++i)
+	for (int i = 0; i < wheel_count; ++i)
 	{
 		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
 		content.load(soundptr, carpath, "grass");
@@ -578,7 +650,7 @@ bool CAR::LoadSounds(
 	}
 
 	//set up bump sounds
-	for (int i = 0; i < 4; ++i)
+	for (int i = 0; i < wheel_count; ++i)
 	{
 		std::tr1::shared_ptr<SOUNDBUFFER> soundptr;
 		if (i >= 2)
@@ -589,7 +661,7 @@ bool CAR::LoadSounds(
 		{
 			content.load(soundptr, carpath, "bump_front");
 		}
-		tirebump[i] = sound.AddSource(soundptr, 0, true, false);
+		bumpsound[i] = sound.AddSource(soundptr, 0, true, false);
 	}
 
 	//set up crash sound
@@ -642,21 +714,22 @@ void CAR::SetColor(float r, float g, float b)
 void CAR::SetPosition(const MATHVECTOR <float, 3> & new_position)
 {
 	btVector3 newpos = ToBulletVector(new_position);
-	dynamics.SetPosition(newpos);
-	dynamics.AlignWithGround();
+	dynamics.setPosition(newpos);
+	dynamics.alignWithGround();
 }
 
 void CAR::UpdateGraphics()
 {
 	if (!bodynode.valid()) return;
-	assert(dynamics.GetNumBodies() == topnode.Nodes());
 
-	unsigned int i = 0;
+	assert(unsigned(motion_state.size()) == topnode.Nodes());
+
+	int i = 0;
 	keyed_container<SCENENODE> & childlist = topnode.GetNodelist();
 	for (keyed_container<SCENENODE>::iterator ni = childlist.begin(); ni != childlist.end(); ++ni, ++i)
 	{
-		MATHVECTOR<float, 3> pos = ToMathVector<float>(dynamics.GetPosition(i));
-		QUATERNION<float> rot = ToMathQuaternion<float>(dynamics.GetOrientation(i));
+		MATHVECTOR<float, 3> pos = ToMathVector<float>(motion_state[i].position);
+		QUATERNION<float> rot = ToMathQuaternion<float>(motion_state[i].rotation);
 		ni->GetTransform().SetTranslation(pos);
 		ni->GetTransform().SetRotation(rot);
 	}
@@ -697,19 +770,19 @@ void CAR::RemoveSounds()
 	psound->RemoveSource(gearsound);
 	psound->RemoveSource(crashsound);
 
-	for (int i = WHEEL_POSITION_SIZE - 1; i >= 0; --i)
-		psound->RemoveSource(tirebump[i]);
+	for (size_t i = bumpsound.size() - 1; i; --i)
+		psound->RemoveSource(bumpsound[i]);
 
-	for (int i = WHEEL_POSITION_SIZE - 1; i >= 0; --i)
+	for (size_t i = grasssound.size() - 1; i; --i)
 		psound->RemoveSource(grasssound[i]);
 
-	for (int i = WHEEL_POSITION_SIZE - 1; i >= 0; --i)
+	for (size_t i = gravelsound.size() - 1; i; --i)
 		psound->RemoveSource(gravelsound[i]);
 
-	for (int i = WHEEL_POSITION_SIZE - 1; i >= 0; --i)
-		psound->RemoveSource(tiresqueal[i]);
+	for (size_t i = roadsound.size() - 1; i; --i)
+		psound->RemoveSource(roadsound[i]);
 
-	for (int i = enginesounds.size() - 1; i >= 0; --i)
+	for (size_t i = enginesounds.size() - 1; i; --i)
 		psound->RemoveSource(enginesounds[i].sound_source);
 }
 
@@ -718,17 +791,20 @@ void CAR::UpdateSounds(float dt)
 	if (!psound) return;
 
 	MATHVECTOR <float, 3> pos_car = GetPosition();
-	MATHVECTOR <float, 3> pos_eng = ToMathVector<float>(dynamics.GetEnginePosition());
-
 	psound->SetSourcePosition(roadnoise, pos_car[0], pos_car[1], pos_car[2]);
 	psound->SetSourcePosition(crashsound, pos_car[0], pos_car[1], pos_car[2]);
 	psound->SetSourcePosition(gearsound, pos_car[0], pos_car[1], pos_car[2]);
 	psound->SetSourcePosition(brakesound, pos_car[0], pos_car[1], pos_car[2]);
 	psound->SetSourcePosition(handbrakesound, pos_car[0], pos_car[1], pos_car[2]);
 
+
+	MATHVECTOR <float, 3> pos_eng = engine_position;
+	GetOrientation().RotateVector(pos_eng);
+	pos_eng = pos_eng + pos_car;
+
 	// update engine sounds
 	float rpm = GetEngineRPM();
-	float throttle = dynamics.GetEngine().GetThrottle();
+	float throttle = dynamics.getEngine().getThrottle();
 	float total_gain = 0.0;
 
 	std::vector<std::pair<size_t, float> > gainlist;
@@ -799,70 +875,56 @@ void CAR::UpdateSounds(float dt)
 	}
 
 	// update tire squeal sounds
-	for (int i = 0; i < 4; i++)
+	for (size_t i = 0; i < roadsound.size(); ++i)
 	{
 		// make sure we don't get overlap
 		psound->SetSourceGain(gravelsound[i], 0.0);
 		psound->SetSourceGain(grasssound[i], 0.0);
-		psound->SetSourceGain(tiresqueal[i], 0.0);
+		psound->SetSourceGain(roadsound[i], 0.0);
 
-		float squeal = GetTireSquealAmount(WHEEL_POSITION(i));
-		float maxgain = 0.3;
-		float pitchvariation = 0.4;
+		float squeal = GetTireSquealAmount(i);
+		size_t * sound_active = &roadsound[i];
+		float pitchvariation = 0.0;
+		float maxgain = 0.0;
 
-		size_t * sound_active;
-		const TRACKSURFACE & surface = dynamics.GetWheelContact(WHEEL_POSITION(i)).GetSurface();
-		if (surface.type == TRACKSURFACE::ASPHALT)
+		const sim::Surface * surface = dynamics.getWheel(i).ray.getSurface();
+		if (surface)
 		{
-			sound_active = tiresqueal;
-		}
-		else if (surface.type == TRACKSURFACE::GRASS)
-		{
-			sound_active = grasssound;
-			maxgain = 0.4; // up the grass sound volume a little
-		}
-		else if (surface.type == TRACKSURFACE::GRAVEL)
-		{
-			sound_active = gravelsound;
-			maxgain = 0.4;
-		}
-		else if (surface.type == TRACKSURFACE::CONCRETE)
-		{
-			sound_active = tiresqueal;
-			maxgain = 0.3;
-			pitchvariation = 0.25;
-		}
-		else if (surface.type == TRACKSURFACE::SAND)
-		{
-			sound_active = grasssound;
-			maxgain = 0.25; // quieter for sand
-			pitchvariation = 0.25;
-		}
-		else
-		{
-			sound_active = tiresqueal;
-			maxgain = 0.0;
-		}
+			const TRACKSURFACE * ts = static_cast<const TRACKSURFACE *>(surface);
+			pitchvariation = ts->pitch_variation;
+			maxgain = ts->max_gain;
+			if (ts->sound_id == 0)
+			{
+				sound_active = &roadsound[i];
+			}
+			else if (ts->sound_id == 1)
+			{
+				sound_active = &gravelsound[i];
+			}
+			else if (ts->sound_id == 2)
+			{
+				sound_active = &grasssound[i];
+			}
 
-		btVector3 pos_wheel = dynamics.GetWheelPosition(WHEEL_POSITION(i));
-		btVector3 vel_wheel = dynamics.GetWheelVelocity(WHEEL_POSITION(i));
-		float pitch = (vel_wheel.length() - 5.0) * 0.1;
-		pitch = clamp(pitch, 0.0f, 1.0f);
-		pitch = 1.0 - pitch;
-		pitch *= pitchvariation;
-		pitch = pitch + (1.0 - pitchvariation);
-		pitch = clamp(pitch, 0.1f, 4.0f);
+			MATHVECTOR <float, 3> pos_wheel = GetWheelPosition(i); // interpolated??
+			btVector3 vel_wheel(0,0,0);// = dynamics.getWheelVelocity(i); // fixme
+			float pitch = (vel_wheel.length() - 5.0) * 0.1;
+			pitch = clamp(pitch, 0.0f, 1.0f);
+			pitch = 1.0 - pitch;
+			pitch *= pitchvariation;
+			pitch = pitch + (1.0 - pitchvariation);
+			pitch = clamp(pitch, 0.1f, 4.0f);
 
-		psound->SetSourcePosition(sound_active[i], pos_wheel[0], pos_wheel[1], pos_wheel[2]);
-		psound->SetSourcePitch(sound_active[i], pitch);
-		psound->SetSourceGain(sound_active[i], squeal * maxgain);
+			psound->SetSourcePosition(*sound_active, pos_wheel[0], pos_wheel[1], pos_wheel[2]);
+			psound->SetSourcePitch(*sound_active, pitch);
+			psound->SetSourceGain(*sound_active, squeal * maxgain);
+		}
 	}
 
 	//update road noise sound
 	{
-		float gain = dynamics.GetVelocity().length();
-		gain *= 0.02;
-		gain *= gain;
+		float gain = dynamics.getSpeed();
+		gain = 0.02 * gain * gain;
 		if (gain > 1) gain = 1;
 		psound->SetSourceGain(roadnoise, gain);
 	}
@@ -872,8 +934,8 @@ void CAR::UpdateSounds(float dt)
 		for (int i = 0; i < 4; i++)
 		{
 			suspensionbumpdetection[i].Update(
-				dynamics.GetSuspension(WHEEL_POSITION(i)).GetVelocity(),
-				dynamics.GetSuspension(WHEEL_POSITION(i)).GetDisplacementFraction(),
+				dynamics.GetSuspension(i).GetVelocity(),
+				dynamics.GetSuspension(i).GetDisplacementFraction(),
 				dt);
 			if (suspensionbumpdetection[i].JustSettled())
 			{
@@ -936,24 +998,24 @@ void CAR::Update(double dt)
 	UpdateSounds(dt);
 }
 
-void CAR::HandleInputs(const std::vector <float> & inputs)
+void CAR::ProcessInputs(const std::vector <float> & inputs)
 {
 	 // ensure that our inputs vector contains exactly one item per input
 	assert(inputs.size() == CARINPUT::INVALID);
 
 	// recover from a rollover
 	if (inputs[CARINPUT::ROLLOVER_RECOVER])
-		dynamics.RolloverRecover();
+		dynamics.rolloverRecover();
 
-	// set brakes
-	dynamics.SetBrake(inputs[CARINPUT::BRAKE]);
-	dynamics.SetHandBrake(inputs[CARINPUT::HANDBRAKE]);
+	//set brakes
+	dynamics.setBrake(inputs[CARINPUT::BRAKE]);
+	dynamics.setHandBrake(inputs[CARINPUT::HANDBRAKE]);
 
 	// do steering
 	float steer_value = inputs[CARINPUT::STEER_RIGHT];
 	if (std::abs(inputs[CARINPUT::STEER_LEFT]) > std::abs(inputs[CARINPUT::STEER_RIGHT])) //use whichever control is larger
 		steer_value = -inputs[CARINPUT::STEER_LEFT];
-	dynamics.SetSteering(steer_value);
+	dynamics.setSteering(steer_value);
 	last_steer = steer_value;
 	QUATERNION<float> steer;
 	steer.Rotate(-steer_value * steer_angle_max, 0, 0, 1);
@@ -961,7 +1023,7 @@ void CAR::HandleInputs(const std::vector <float> & inputs)
 
     // start the engine if requested
 	if (inputs[CARINPUT::START_ENGINE])
-		dynamics.StartEngine();
+		dynamics.startEngine();
 
 	// do shifting
 	int gear_change = 0;
@@ -969,7 +1031,7 @@ void CAR::HandleInputs(const std::vector <float> & inputs)
 		gear_change = 1;
 	if (inputs[CARINPUT::SHIFT_DOWN] == 1.0)
 		gear_change = -1;
-	int cur_gear = dynamics.GetTransmission().GetGear();
+	int cur_gear = dynamics.getTransmission().getGear();
 	int new_gear = cur_gear + gear_change;
 
 	if (inputs[CARINPUT::REVERSE])
@@ -997,17 +1059,16 @@ void CAR::HandleInputs(const std::vector <float> & inputs)
 
 	nos_active = nos > 0;
 
-	dynamics.ShiftGear(new_gear);
-	dynamics.SetThrottle(throttle);
-	dynamics.SetClutch(clutch);
-	dynamics.SetNOS(nos);
+	dynamics.setGear(new_gear);
+	dynamics.setThrottle(throttle);
+	dynamics.setClutch(clutch);
+	dynamics.setNOS(nos);
 
 	// do driver aid toggles
 	if (inputs[CARINPUT::ABS_TOGGLE])
-		dynamics.SetABS(!dynamics.GetABSEnabled());
-
+		dynamics.setABS(!dynamics.getABSEnabled());
 	if (inputs[CARINPUT::TCS_TOGGLE])
-		dynamics.SetTCS(!dynamics.GetTCSEnabled());
+		dynamics.setTCS(!dynamics.getTCSEnabled());
 
 	// update interior sounds
 	if (!psound || !driver_view) return;
@@ -1041,30 +1102,27 @@ void CAR::HandleInputs(const std::vector <float> & inputs)
 
 float CAR::GetFeedback()
 {
-	return dynamics.GetFeedback() / mz_nominalmax;
+	return dynamics.getFeedback() / mz_nominalmax;
 }
 
-float CAR::GetTireSquealAmount(WHEEL_POSITION i) const
+float CAR::GetTireSquealAmount(int i) const
 {
-	const TRACKSURFACE & surface = dynamics.GetWheelContact(WHEEL_POSITION(i)).GetSurface();
-	if (surface.type == TRACKSURFACE::NONE) return 0;
+	const sim::Surface * surface = dynamics.getWheel(i).ray.getSurface();
+	if (!surface || surface == sim::Surface::None())
+		return 0.0f;
 
-	btQuaternion wheelspace = dynamics.GetUprightOrientation(WHEEL_POSITION(i));
-	btVector3 groundvel = quatRotate(wheelspace.inverse(), dynamics.GetWheelVelocity(WHEEL_POSITION(i)));
-	float wheelspeed = dynamics.GetWheel(WHEEL_POSITION(i)).GetAngularVelocity() * dynamics.GetTire(WHEEL_POSITION(i)).GetRadius();
-	groundvel[0] -= wheelspeed;
-	groundvel[1] *= 2.0;
-	groundvel[2] = 0;
-	float squeal = (groundvel.length() - 3.0) * 0.2;
+	// scale squeal with thermal load
+	float load = dynamics.getTireThermalLoad(i);
+	float squeal = clamp(load * 1E-3f, 0.0f, 1.0f);
 
-	double slide = dynamics.GetTire(i).GetSlide() / dynamics.GetTire(i).GetIdealSlide();
-	double slip = dynamics.GetTire(i).GetSlip() / dynamics.GetTire(i).GetIdealSlip();
-	double maxratio = std::max(std::abs(slide), std::abs(slip));
-	float squealfactor = std::max(0.0, maxratio - 1.0);
-	squeal *= squealfactor;
-	if (squeal < 0) squeal = 0;
-	if (squeal > 1) squeal = 1;
+	// abuse squeal to indicate ideal slip, slide
+	const sim::Tire & tire = dynamics.getWheel(i).tire;
+	float slip = tire.getSlip() / tire.getIdealSlip();
+	float slide = tire.getSlide() / tire.getIdealSlide();
+	float squeal_factor = std::max(std::abs(slip), std::abs(slide)) - 1.0f;
+	squeal_factor = clamp(squeal_factor, 0.0f, 1.0f);
 
+	squeal = squeal * squeal_factor;
 	return squeal;
 }
 
@@ -1083,9 +1141,14 @@ void CAR::SetInteriorView(bool value)
 	}
 }
 
+void CAR::DebugPrint(std::ostream & out, bool p1, bool p2, bool p3, bool p4) const
+{
+	dynamics.print(out, p1, p2, p3, p4);
+}
+
 bool CAR::Serialize(joeserialize::Serializer & s)
 {
-	_SERIALIZE_(s,dynamics);
-	_SERIALIZE_(s,last_steer);
+	//_SERIALIZE_(s,dynamics); fixme
+	//_SERIALIZE_(s,last_steer);
 	return true;
 }

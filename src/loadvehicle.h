@@ -17,64 +17,21 @@
 /*                                                                      */
 /************************************************************************/
 
-#include "texturefactory.h"
-#include "graphics/texture.h"
-#include <fstream>
-#include <sstream>
+#ifndef _LOADVEHICLE_H
+#define _LOADVEHICLE_H
 
-Factory<TEXTURE>::Factory() :
-	m_default(new TEXTURE()),
-	m_size(TEXTUREINFO::LARGE),
-	m_srgb(false)
-{
-	// ctor
-}
+#include <ostream>
 
-void Factory<TEXTURE>::init(int max_size, bool use_srgb)
-{
-	m_size = max_size;
-	m_srgb = use_srgb;
+class PTree;
+class btVector3;
+namespace sim { struct VehicleInfo; }
 
-	// init default texture
-	std::stringstream error;
-	unsigned char white[] = {255, 255, 255, 255};
-	TEXTUREINFO info;
-	info.data = white;
-	info.width = 1;
-	info.height = 1;
-	info.bytespp = 4;
-	info.maxsize = TEXTUREINFO::Size(m_size);
-	info.mipmap = false;
-	info.srgb = m_srgb;
-	m_default->Load("", info, error);
-}
+bool LoadVehicle(
+	const PTree & cfg,
+	const bool damage,
+	const btVector3 & modelcenter,
+	const btVector3 & modelsize,
+	sim::VehicleInfo & info,
+	std::ostream & error);
 
-template <>
-bool Factory<TEXTURE>::create(
-	std::tr1::shared_ptr<TEXTURE> & sptr,
-	std::ostream & error,
-	const std::string & basepath,
-	const std::string & path,
-	const std::string & name,
-	const TEXTUREINFO& info)
-{
-	const std::string abspath = basepath + "/" + path + "/" + name;
-	if (info.data || std::ifstream(abspath.c_str()))
-	{
-		TEXTUREINFO info_temp = info;
-		info_temp.srgb = m_srgb;
-		info_temp.maxsize = TEXTUREINFO::Size(m_size);
-		std::tr1::shared_ptr<TEXTURE> temp(new TEXTURE());
-		if (temp->Load(abspath, info_temp, error))
-		{
-			sptr = temp;
-			return true;
-		}
-	}
-	return false;
-}
-
-std::tr1::shared_ptr<TEXTURE> Factory<TEXTURE>::getDefault() const
-{
-	return m_default;
-}
+#endif // _LOADVEHICLE_H

@@ -17,92 +17,46 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _CARWHEEL_H
-#define _CARWHEEL_H
+#ifndef _SIM_SURFACE_H
+#define _SIM_SURFACE_H
 
-#include "driveshaft.h"
-#include "joeserialize.h"
-#include "macros.h"
-
-#include <iostream>
-
-class CARWHEEL
+namespace sim
 {
-friend class joeserialize::Serializer;
-public:
-	CARWHEEL() : mass(20) {}
 
-	btScalar GetRotation() const
-	{
-		return shaft.angle;
-	}
+struct Surface
+{
+	float bumpWaveLength;
+	float bumpAmplitude;
+	float frictionNonTread;
+	float frictionTread;
+	float rollResistanceCoefficient;
+	float rollingDrag;
 
-	btScalar GetRPM() const
-	{
-		return shaft.ang_velocity * 30.0 / 3.141593;
-	}
+	Surface();
 
-	btScalar GetAngularVelocity() const
-	{
-		return shaft.ang_velocity;
-	}
-
-	void SetAngularVelocity(btScalar value)
-	{
-		shaft.ang_velocity = value;
-	}
-
-	void SetMass(btScalar value)
-	{
-		mass = value;
-	}
-
-	btScalar GetMass() const
-	{
-		return mass;
-	}
-
-	void SetInertia(btScalar value)
-	{
-		shaft.inv_inertia = 1 / value;
-	}
-
-	btScalar GetInertia() const
-	{
-		return 1 / shaft.inv_inertia;
-	}
-
-	void Integrate(btScalar dt)
-	{
-		shaft.integrate(dt);
-	}
-
-	btScalar GetTorque(btScalar new_angvel, btScalar dt) const
-	{
-		return shaft.getMomentum(new_angvel) / dt;
-	}
-
-	void SetTorque(btScalar torque, btScalar dt)
-	{
-		shaft.applyMomentum(torque * dt);
-	}
-
-	void DebugPrint(std::ostream & out) const
-	{
-		out << "---Wheel---" << "\n";
-		out << "RPM: " << GetRPM() << "\n";
-	}
-
-	bool Serialize(joeserialize::Serializer & s)
-	{
-		_SERIALIZE_(s, shaft.ang_velocity);
-		_SERIALIZE_(s, shaft.angle);
-		return true;
-	}
-
-private:
-	DriveShaft shaft;
-	btScalar mass;
+	static const Surface * None();
 };
 
+// implementation
+
+inline Surface::Surface() :
+	bumpWaveLength(1),
+	bumpAmplitude(0),
+	frictionNonTread(0),
+	frictionTread(0),
+	rollResistanceCoefficient(0),
+	rollingDrag(0)
+{
+	// ctor
+}
+
+inline const Surface * Surface::None()
+{
+	static const Surface s;
+	return &s;
+}
+
+}
+
 #endif
+

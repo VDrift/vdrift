@@ -20,14 +20,15 @@
 #ifndef _PERFORMANCE_TESTING_H
 #define _PERFORMANCE_TESTING_H
 
-#include "physics/cardynamics.h"
+#include "physics/vehicle.h"
+#include "physics/surface.h"
 
 class ContentManager;
 
 class PERFORMANCE_TESTING
 {
 public:
-	PERFORMANCE_TESTING(DynamicsWorld & world);
+	PERFORMANCE_TESTING(sim::World & world);
 
 	void Test(
 		const std::string & cardir,
@@ -37,9 +38,9 @@ public:
 		std::ostream & error_output);
 
 private:
-	DynamicsWorld & world;
-	TRACKSURFACE surface;
-	CARDYNAMICS car;
+	sim::World & world;
+	sim::Surface surface;
+	sim::Vehicle car;
 	std::string carstate;
 
 	void SimulateFlatRoad();

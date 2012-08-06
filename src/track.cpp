@@ -19,9 +19,13 @@
 
 #include "track.h"
 #include "trackloader.h"
-#include "physics/dynamicsworld.h"
+#include "physics/world.h"
 #include "coordinatesystem.h"
 #include "tobullet.h"
+
+// required to be able to call the destructor
+#include "BulletCollision/CollisionShapes/btCollisionShape.h"
+#include "BulletCollision/CollisionShapes/btStridingMeshInterface.h"
 
 TRACK::TRACK() : racingline_visible(false)
 {
@@ -35,7 +39,7 @@ TRACK::~TRACK()
 
 bool TRACK::DeferredLoad(
 	ContentManager & content,
-	DynamicsWorld & world,
+	sim::World & world,
 	std::ostream & info_output,
 	std::ostream & error_output,
 	const std::string & trackpath,
@@ -50,7 +54,6 @@ bool TRACK::DeferredLoad(
 {
 	Clear();
 
-	world.reset(*this);
 	data.world = &world;
 
 	loader.reset(
@@ -164,8 +167,8 @@ void TRACK::Update()
 {
 	if (!data.loaded) return;
 
-	std::list<MotionState>::const_iterator t = data.body_transforms.begin();
-	for (int i = 0, e = data.body_nodes.size(); i < e; ++i, ++t)
+	std::list<sim::MotionState>::const_iterator t = data.body_transforms.begin();
+	for (size_t i = 0, e = data.body_nodes.size(); i < e; ++i, ++t)
 	{
 		TRANSFORM & vt = data.dynamic_node.GetNode(data.body_nodes[i]).GetTransform();
 		vt.SetRotation(ToMathQuaternion<float>(t->rotation));
@@ -176,7 +179,7 @@ void TRACK::Update()
 std::pair <MATHVECTOR <float, 3>, QUATERNION <float> > TRACK::GetStart(unsigned int index) const
 {
 	assert(!data.start_positions.empty());
-	unsigned int laststart = data.start_positions.size() - 1;
+	size_t laststart = data.start_positions.size() - 1;
 	if (index > laststart)
 	{
 		std::pair <MATHVECTOR <float, 3>, QUATERNION <float> > sp = data.start_positions[laststart];

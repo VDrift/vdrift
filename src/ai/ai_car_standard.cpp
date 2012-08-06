@@ -23,7 +23,6 @@
 #include "track.h"
 #include "carinput.h"
 #include "mathvector.h"
-#include "physics/carwheelposition.h"
 #include "coordinatesystem.h"
 #include "optional.h"
 #include "unittest.h"
@@ -123,10 +122,10 @@ MATHVECTOR <float, 3> AI_Car_Standard::TransformToPatchspace(const MATHVECTOR <f
 
 const BEZIER * AI_Car_Standard::GetCurrentPatch(const CAR *c)
 {
-	const BEZIER *curr_patch = c->GetCurPatch(WHEEL_POSITION(0));
+	const BEZIER *curr_patch = c->GetCurPatch(0);
 	if (!curr_patch)
 	{
-		curr_patch = c->GetCurPatch(WHEEL_POSITION(1)); //let's try the other wheel
+		curr_patch = c->GetCurPatch(1); //let's try the other wheel
 		if (!curr_patch) return NULL;
 	}
 
@@ -295,6 +294,28 @@ BEZIER AI_Car_Standard::RevisePatch(const BEZIER * origpatch, bool use_racinglin
 	return patch;
 }
 
+float AI_Car_Standard::calcSpeedLimit(
+	const BEZIER * patch,
+	const BEZIER * nextpatch,
+	float extraradius) const
+{
+	assert(patch);
+
+	//adjust the radius at corner exit to allow a higher speed.
+	//this will get the car to accellerate out of corner
+	float radius = GetPatchRadius(*patch);
+	if (nextpatch)
+	{
+		if (GetPatchRadius(*nextpatch) > radius &&
+			GetPatchRadius(*patch) > LOOKAHEAD_MIN_RADIUS)
+		{
+			radius += extraradius;
+		}
+	}
+
+	return car->GetMaxVelocity(radius);
+}
+
 void AI_Car_Standard::updateGasBrake()
 {
 #ifdef VISUALIZE_AI_DEBUG
@@ -309,8 +330,6 @@ void AI_Car_Standard::updateGasBrake()
 		inputs[CARINPUT::START_ENGINE] = 1.0;
 	else
 		inputs[CARINPUT::START_ENGINE] = 0.0;
-
-	calcMu();
 
 	const BEZIER *curr_patch_ptr = GetCurrentPatch(car);
 	//if car is not on track, just let it roll
@@ -335,17 +354,19 @@ void AI_Car_Standard::updateGasBrake()
 
 	//check speed against speed limit of current patch
 	float speed_limit = 0;
+	float extraradius = GetPatchWidthVector(*curr_patch_ptr).Magnitude();
 	if (!curr_patch.GetNextPatch())
 	{
-		speed_limit = calcSpeedLimit(&curr_patch, NULL, lateral_mu, GetPatchWidthVector(*curr_patch_ptr).Magnitude())*speed_percent;
+
+		speed_limit = calcSpeedLimit(&curr_patch, NULL, extraradius);
 	}
 	else
 	{
 		BEZIER next_patch = RevisePatch(curr_patch.GetNextPatch(), use_racingline);
-		speed_limit = calcSpeedLimit(&curr_patch, &next_patch, lateral_mu, GetPatchWidthVector(*curr_patch_ptr).Magnitude())*speed_percent;
+		speed_limit = calcSpeedLimit(&curr_patch, &next_patch, extraradius);
 	}
 
-	speed_limit *= difficulty;
+	speed_limit = speed_limit * speed_percent * difficulty;
 
 	float speed_diff = speed_limit - currentspeed;
 
@@ -374,8 +395,7 @@ void AI_Car_Standard::updateGasBrake()
 	}
 
 	//check upto maxlookahead distance
-	float maxlookahead = calcBrakeDist(currentspeed, 0.0, longitude_mu)+10;
-	//maxlookahead = 0.1;
+	float maxlookahead = 10 + car->GetBrakingDistance(0);
 	float dist_checked = 0.0;
 	float brake_dist = 0.0;
 	BEZIER patch_to_check = curr_patch;
@@ -402,19 +422,20 @@ void AI_Car_Standard::updateGasBrake()
 		brakelook.push_back(patch_to_check);
 #endif
 
-		//speed_limit = calcSpeedLimit(c, &patch_to_check, lateral_mu)*speed_percent;
+		float extraradius = GetPatchWidthVector(*unmodified_patch_to_check).Magnitude();
 		if (!patch_to_check.GetNextPatch())
 		{
-			speed_limit = calcSpeedLimit(&patch_to_check, NULL, lateral_mu, GetPatchWidthVector(*unmodified_patch_to_check).Magnitude())*speed_percent;
+			speed_limit = calcSpeedLimit(&patch_to_check, NULL, extraradius);
 		}
 		else
 		{
 			BEZIER next_patch = RevisePatch(patch_to_check.GetNextPatch(), use_racingline);
-			speed_limit = calcSpeedLimit(&patch_to_check, &next_patch, lateral_mu, GetPatchWidthVector(*unmodified_patch_to_check).Magnitude())*speed_percent;
+			speed_limit = calcSpeedLimit(&patch_to_check, &next_patch, extraradius);
 		}
+		speed_limit = speed_limit * speed_percent;
 
 		dist_checked += GetPatchDirection(patch_to_check).Magnitude();
-		brake_dist = calcBrakeDist(currentspeed, speed_limit, longitude_mu);
+		brake_dist = car->GetBrakingDistance(speed_limit);
 
 		//if (brake_dist + CORNER_BRAKE_OFFSET > dist_checked)
 		if (brake_dist > dist_checked)
@@ -454,66 +475,6 @@ void AI_Car_Standard::updateGasBrake()
 
 	//inputs[CARINPUT::THROTTLE] = 0.0;
 	//inputs[CARINPUT::BRAKE] = 1.0;
-}
-
-void AI_Car_Standard::calcMu()
-{
-	int i;
-	float long_friction = 0.0;
-	float lat_friction = 0.0;
-
-	for (i=0; i<4; i++)
-	{
-		long_friction += car->GetTireMaxFx(WHEEL_POSITION(i));
-		lat_friction += car->GetTireMaxFy(WHEEL_POSITION(i));
-	}
-
-	float long_mu = FRICTION_FACTOR_LONG * long_friction * car->GetInvMass() / GRAVITY;
-	float lat_mu = FRICTION_FACTOR_LAT * lat_friction * car->GetInvMass() / GRAVITY;
-	if (!isnan(long_mu)) longitude_mu = long_mu;
-	if (!isnan(lat_mu)) lateral_mu = lat_mu;
-}
-
-float AI_Car_Standard::calcSpeedLimit(const BEZIER* patch, const BEZIER * nextpatch, float friction, float extraradius=0)
-{
-	assert(patch);
-
-	//adjust the radius at corner exit to allow a higher speed.
-	//this will get the car to accelerate out of corner
-	//double track_width = GetPatchWidthVector(*patch).Magnitude();
-	double adjusted_radius = GetPatchRadius(*patch);
-	if (nextpatch)
-	{
-		if (GetPatchRadius(*nextpatch) > adjusted_radius &&
-			GetPatchRadius(*patch) > LOOKAHEAD_MIN_RADIUS)
-		{
-			adjusted_radius += extraradius;
-		}
-	}
-
-	//no downforce
-	//float v1 = sqrt(friction * GRAVITY * adjusted_radius);
-
-	//take into account downforce
-	double denom = (1.0 - std::min(1.01, adjusted_radius * -(car->GetAerodynamicDownforceCoefficient()) * friction * car->GetInvMass()));
-	double real = (friction * GRAVITY * adjusted_radius) / denom;
-	double v2 = 1000.0; //some really big number
-	if (real > 0)
-		v2 = sqrt(real);
-
-	//std::cout << v2 << ", " << sqrt(friction * GRAVITY * adjusted_radius) << ", " << GetPatchRadius(*patch) << ", " << acos((-GetPatchDirection(*patch)).Normalize().dot(GetPatchDirection(*patch->GetNextPatch()).Normalize()))*180.0/3.141593 << " --- " << -GetPatchDirection(*patch) << " --- " << GetPatchDirection(*patch->GetNextPatch()) << std::endl;
-
-	return v2;
-}
-
-float AI_Car_Standard::calcBrakeDist(float current_speed, float allowed_speed, float friction)
-{
-	float c = friction * GRAVITY;
-	float d = (-(car->GetAerodynamicDownforceCoefficient()) * friction +
-				car->GetAeordynamicDragCoefficient()) * car->GetInvMass();
-	float v1sqr = current_speed * current_speed;
-	float v2sqr = allowed_speed * allowed_speed;
-	return -log((c + v2sqr*d)/(c + v1sqr*d))/(2.0*d);
 }
 
 void AI_Car_Standard::updateSteer()
@@ -615,7 +576,7 @@ void AI_Car_Standard::updateSteer()
 	else if (angle > 180.0 && angle <= 360.0)
 		angle = 360.0 - angle;
 
-	float optimum_range = car->GetOptimumSteeringAngle();
+	float optimum_range = car->GetIdealSteeringAngle();
 	angle = clamp(angle, -optimum_range, optimum_range);
 
 	float steer_value = angle / car->GetMaxSteeringAngle();

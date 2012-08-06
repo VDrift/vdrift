@@ -18,7 +18,7 @@
 /************************************************************************/
 
 #include "hudgauge.h"
-#include "text_draw.h"
+#include "gui/text_draw.h"
 #include <sstream>
 
 static keyed_container<DRAWABLE>::handle AddDrawable(SCENENODE & node)

@@ -23,8 +23,8 @@
 #include "track.h"
 #include "carinput.h"
 #include "mathvector.h"
-#include "physics/carwheelposition.h"
-#include "physics/dynamicsworld.h"
+#include "physics/world.h"
+#include "physics/ray.h"
 #include "coordinatesystem.h"
 #include "optional.h"
 #include "unittest.h"
@@ -140,10 +140,10 @@ MATHVECTOR <float, 3> AI_Car_Experimental::TransformToPatchspace(const MATHVECTO
 
 const BEZIER * AI_Car_Experimental::GetCurrentPatch(const CAR *c)
 {
-	const BEZIER *curr_patch = c->GetCurPatch(WHEEL_POSITION(0));
+	const BEZIER *curr_patch = c->GetCurPatch(0);
 	if (!curr_patch)
 	{
-		curr_patch = c->GetCurPatch(WHEEL_POSITION(1)); //let's try the other wheel
+		curr_patch = c->GetCurPatch(1); //let's try the other wheel
 		if (!curr_patch) return NULL;
 	}
 
@@ -328,8 +328,6 @@ void AI_Car_Experimental::updateGasBrake()
 	else
 		inputs[CARINPUT::START_ENGINE] = 0.0;
 
-	calcMu();
-
 	const BEZIER *curr_patch_ptr = GetCurrentPatch(car);
 	//if car is not on track, just let it roll
     if (!curr_patch_ptr)
@@ -392,7 +390,7 @@ void AI_Car_Experimental::updateGasBrake()
 	}
 
 	//check upto maxlookahead distance
-	float maxlookahead = calcBrakeDist(currentspeed, 0.0, longitude_mu)+10;
+	float maxlookahead = 10 + car->GetBrakingDistance(0);
 	//maxlookahead = 0.1;
 	float dist_checked = 0.0;
 	float brake_dist = 0.0;
@@ -432,7 +430,7 @@ void AI_Car_Experimental::updateGasBrake()
 		}
 
 		dist_checked += GetPatchDirection(patch_to_check).Magnitude();
-		brake_dist = calcBrakeDist(currentspeed, speed_limit, longitude_mu) * 1.4;
+		brake_dist = car->GetBrakingDistance(speed_limit) * 1.4;
 
 		//if (brake_dist + CORNER_BRAKE_OFFSET > dist_checked)
 		if (brake_dist > dist_checked)
@@ -469,102 +467,40 @@ void AI_Car_Experimental::updateGasBrake()
 	inputs[CARINPUT::BRAKE] = brake_value;
 }
 
-void AI_Car_Experimental::calcMu()
-{
-	int i;
-	float long_friction = 0.0;
-	float lat_friction = 0.0;
-
-	for (i=0; i<4; i++)
-	{
-		long_friction += car->GetTireMaxFx(WHEEL_POSITION(i));
-		lat_friction += car->GetTireMaxFy(WHEEL_POSITION(i));
-	}
-
-	float long_mu = FRICTION_FACTOR_LONG * long_friction * car->GetInvMass() / GRAVITY;
-	float lat_mu = FRICTION_FACTOR_LAT * lat_friction * car->GetInvMass() / GRAVITY;
-	if (!isnan(long_mu)) longitude_mu = long_mu;
-	if (!isnan(lat_mu)) lateral_mu = lat_mu;
-}
-
 float AI_Car_Experimental::calcSpeedLimit(const BEZIER* patch, const BEZIER * nextpatch, float friction, float extraradius=0)
 {
 	assert(patch);
 
-	//adjust the radius at corner exit to allow a higher speed.
-	//this will get the car to accelerate out of corner
-	//double track_width = GetPatchWidthVector(*patch).Magnitude();
-	double adjusted_radius = GetPatchRadius(*patch);
-	if (nextpatch)
-	{
-		if (GetPatchRadius(*nextpatch) > adjusted_radius &&
-			GetPatchRadius(*patch) > LOOKAHEAD_MIN_RADIUS)
-		{
-			adjusted_radius += extraradius;
-		}
-	}
-
-	//no downforce
-	//float v1 = sqrt(friction * GRAVITY * adjusted_radius);
-
-	//take into account downforce
-	double denom = (1.0 - std::min(1.01, adjusted_radius * -(car->GetAerodynamicDownforceCoefficient()) * friction * car->GetInvMass()));
-	double real = (friction * GRAVITY * adjusted_radius) / denom;
-	double v2 = 1000.0; //some really big number
-	if (real > 0)
-		v2 = sqrt(real);
-
-	//std::cout << v2 << ", " << sqrt(friction * GRAVITY * adjusted_radius) << ", " << GetPatchRadius(*patch) << ", " << acos((-GetPatchDirection(*patch)).Normalize().dot(GetPatchDirection(*patch->GetNextPatch()).Normalize()))*180.0/3.141593 << " --- " << -GetPatchDirection(*patch) << " --- " << GetPatchDirection(*patch->GetNextPatch()) << std::endl;
-
-	return v2;
+	// fixme
+	return 0;
 }
 
-float AI_Car_Experimental::calcBrakeDist(float current_speed, float allowed_speed, float friction)
+float AI_Car_Experimental::RayCastDistance( MATHVECTOR <float, 3> direction, float max_length)
 {
-	// Old way, which returns very big breaking distances:
-	// float c = friction * GRAVITY;
-	// float d = (-(car->GetAerodynamicDownforceCoefficient()) * friction +
-	// 			car->GetAeordynamicDragCoefficient()) * car->GetInvMass();
-	// float v1sqr = current_speed * current_speed;
-	// float v2sqr = allowed_speed * allowed_speed;
-	// return (c + v2sqr*d)/(c + v1sqr*d)/(2.0*d);*/
+	const btTransform & tr = car->GetCarDynamics().getTransform();
+	btVector3 pos = tr.getOrigin();
+	btVector3 dir = tr.getBasis() * ToBulletVector(direction);
 
-	if (allowed_speed < current_speed){
-		// equations used:
-		// mu * mass * gravity * distance = 0.5 * mass * (Initial_velocity^2 - Final_velocity^2)
-		// where distance is:
-		//  distance = (Initial_velocity^2 - Final_velocity^2) / (2 * mu * gravity)
-		return (current_speed*current_speed - allowed_speed*allowed_speed) / ( 2.0 * friction * GRAVITY);
-	} else {
-		//if allowed speed  is bigger then the current speed then break distance is 0.
-		return 0;
-	}
-}
-float AI_Car_Experimental::RayCastDistance( MATHVECTOR <float, 3> direction, float max_length){
-	btVector3 pos = car->GetCarDynamics().GetPosition();
-	btVector3 dir = car->GetCarDynamics().LocalToWorld(ToBulletVector(direction));
-	dir -= pos;
-	COLLISION_CONTACT contact;
-	car->GetDynamicsWorld()->castRay(
-		pos,
-		dir,
-		max_length,
-		&car->GetCarDynamics().getCollisionObject(),
-		contact
-		);
-	float depth = contact.GetDepth();
+	sim::Ray ray;
+	ray.set(pos, dir, max_length);
+	ray.m_exclude = car->GetCarDynamics().getCollisionObject();
+	car->GetDynamicsWorld()->rayTest(ray.m_rayFrom, ray.m_rayTo, ray);
+	float depth = ray.getDepth();
 	float dist = std::min(max_length, depth);
+
 #ifdef VISUALIZE_AI_DEBUG
 	MATHVECTOR<float, 3> pos_start(ToMathVector<float>(pos));
 	MATHVECTOR<float, 3> pos_end = pos_start + (ToMathVector<float>(dir) * dist);
 	AddLinePoint(raycastshape, pos_start);
 	AddLinePoint(raycastshape, pos_end);
 #endif
+
 	return dist;
 }
 
 const BEZIER* AI_Car_Experimental::getNearestPatch(const BEZIER* helper)
 {
+/*	fixme
 	// At the moment this is very slow!
 	// TODO: Implement backward chaining for BEZIER, to just look around the helper if passed.
 	const BEZIER* b;
@@ -589,6 +525,8 @@ const BEZIER* AI_Car_Experimental::getNearestPatch(const BEZIER* helper)
 	}
 	assert(b_nearest);
 	return b_nearest;
+*/
+	return helper;
 }
 bool AI_Car_Experimental::recover(const BEZIER* patch)
 {
@@ -744,7 +682,7 @@ void AI_Car_Experimental::updateSteer()
 	else if (angle > 180.0 && angle <= 360.0)
 		angle = 360.0 - angle;
 
-	float optimum_range = car->GetOptimumSteeringAngle();
+	float optimum_range = car->GetIdealSteeringAngle();
 	angle = clamp(angle, -optimum_range, optimum_range);
 
 	float steer_value = angle / car->GetMaxSteeringAngle();

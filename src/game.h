@@ -33,7 +33,7 @@
 #include "gui/text_draw.h"
 #include "gui/font.h"
 #include "car.h"
-#include "physics/dynamicsworld.h"
+#include "physics/world.h"
 #include "dynamicsdraw.h"
 #include "carcontrolmap.h"
 #include "hud.h"
@@ -300,12 +300,9 @@ private:
 	int race_laps;
 	bool practice;
 
-	btDefaultCollisionConfiguration collisionconfig;
-	btCollisionDispatcher collisiondispatch;
-	btDbvtBroadphase collisionbroadphase;
-	btSequentialImpulseConstraintSolver collisionsolver;
+	sim::Config dynamics_config;
+	sim::World dynamics;
 	DynamicsDraw dynamicsdraw;
-	DynamicsWorld dynamics;
 	int dynamics_drawmode;
 
 	PARTICLE_SYSTEM tire_smoke;

@@ -25,7 +25,7 @@
 #include "quaternion.h"
 #include "graphics/scenenode.h"
 #include "physics/motionstate.h"
-#include "physics/tracksurface.h"
+#include "tracksurface.h"
 
 #include <string>
 #include <iostream>
@@ -37,11 +37,11 @@ class TEXTUREMANAGER;
 class MODELMANAGER;
 class OBJECTLOADER;
 class ROADSTRIP;
-class DynamicsWorld;
-class ContentManager;
 class btStridingMeshInterface;
 class btCollisionShape;
 class btCollisionObject;
+class ContentManager;
+namespace sim { class World; }
 
 class TRACK
 {
@@ -55,7 +55,7 @@ public:
     /// Returns true if successful.
 	bool DeferredLoad(
 		ContentManager & content,
-		DynamicsWorld & world,
+		sim::World & world,
 		std::ostream & info_output,
 		std::ostream & error_output,
 		const std::string & trackpath,
@@ -155,7 +155,7 @@ public:
 private:
 	struct DATA
 	{
-		DynamicsWorld* world;
+		sim::World* world;
 
 		// static track objects
 		SCENENODE static_node;
@@ -168,7 +168,7 @@ private:
 		// dynamic track objects
 		SCENENODE dynamic_node;
 		std::vector<keyed_container<SCENENODE>::handle> body_nodes;
-		std::list<MotionState> body_transforms;
+		std::list<sim::MotionState> body_transforms;
 
 		// road information
 		std::vector<const BEZIER*> lap;

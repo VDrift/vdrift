@@ -17,64 +17,31 @@
 /*                                                                      */
 /************************************************************************/
 
-#include "texturefactory.h"
-#include "graphics/texture.h"
-#include <fstream>
-#include <sstream>
+#ifndef _SIM_WHEELCONTACT_H
+#define _SIM_WHEELCONTACT_H
 
-Factory<TEXTURE>::Factory() :
-	m_default(new TEXTURE()),
-	m_size(TEXTUREINFO::LARGE),
-	m_srgb(false)
+#include "constraintrow.h"
+
+namespace sim
 {
-	// ctor
+
+struct WheelContact
+{
+	ConstraintRow response;		///< contact normal constraint
+	ConstraintRow friction1;	///< contact friction constraint
+	ConstraintRow friction2;	///< contact friction constraint
+	btRigidBody * bodyA;		///< contact body a
+	btRigidBody * bodyB;		///< contact body b
+	btVector3 rA;				///< contact position relative to bodyA
+	btVector3 rB;				///< contact position relative to bodyB
+	btScalar v1;				///< velocity along longitudinal constraint
+	btScalar v2;				///< velocity along lateral constraint
+	btScalar frictionCoeff; 	///< surface friction coefficient
+	btScalar camber;			///< wheel camber in degrees
+	btScalar vR;				///< wheel rim velocity w * r
+	int id;						///< custom id
+};
+
 }
 
-void Factory<TEXTURE>::init(int max_size, bool use_srgb)
-{
-	m_size = max_size;
-	m_srgb = use_srgb;
-
-	// init default texture
-	std::stringstream error;
-	unsigned char white[] = {255, 255, 255, 255};
-	TEXTUREINFO info;
-	info.data = white;
-	info.width = 1;
-	info.height = 1;
-	info.bytespp = 4;
-	info.maxsize = TEXTUREINFO::Size(m_size);
-	info.mipmap = false;
-	info.srgb = m_srgb;
-	m_default->Load("", info, error);
-}
-
-template <>
-bool Factory<TEXTURE>::create(
-	std::tr1::shared_ptr<TEXTURE> & sptr,
-	std::ostream & error,
-	const std::string & basepath,
-	const std::string & path,
-	const std::string & name,
-	const TEXTUREINFO& info)
-{
-	const std::string abspath = basepath + "/" + path + "/" + name;
-	if (info.data || std::ifstream(abspath.c_str()))
-	{
-		TEXTUREINFO info_temp = info;
-		info_temp.srgb = m_srgb;
-		info_temp.maxsize = TEXTUREINFO::Size(m_size);
-		std::tr1::shared_ptr<TEXTURE> temp(new TEXTURE());
-		if (temp->Load(abspath, info_temp, error))
-		{
-			sptr = temp;
-			return true;
-		}
-	}
-	return false;
-}
-
-std::tr1::shared_ptr<TEXTURE> Factory<TEXTURE>::getDefault() const
-{
-	return m_default;
-}
+#endif

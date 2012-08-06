@@ -17,36 +17,84 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _DRIVESHAFT_H
-#define _DRIVESHAFT_H
+#ifndef _SIM_RAY_H
+#define _SIM_RAY_H
 
-#include "LinearMath/btScalar.h"
+#include "world.h"
 
-struct DriveShaft
+class BEZIER;
+
+namespace sim
 {
-	btScalar inv_inertia;
-	btScalar ang_velocity;
-	btScalar angle;
 
-	DriveShaft() : inv_inertia(1), ang_velocity(0), angle(0) {}
+struct Surface;
 
-	// amount of momentum to reach angular velocity
-	btScalar getMomentum(btScalar angvel) const
-	{
-		return (angvel - ang_velocity) / inv_inertia;
-	}
+struct Ray : public btCollisionWorld::RayResultCallback
+{
+	btVector3 m_rayFrom;
+	btVector3 m_rayTo;
+	btScalar m_rayLen;
 
-	// update angular velocity
-	void applyMomentum(btScalar momentum)
-	{
-		ang_velocity += inv_inertia * momentum;
-	}
+	btVector3 m_hitNormal;
+	btVector3 m_hitPoint;
+	btScalar m_depth;
 
-	// update angle
-	void integrate(btScalar dt)
-	{
-		angle += ang_velocity * dt;
-	}
+	const btCollisionObject * m_exclude;
+	const Surface * m_surface;
+	const BEZIER * m_patch;
+
+	Ray();
+
+	const btVector3 & getPoint() const;
+
+	const btVector3 & getNormal() const;
+
+	const btScalar getDepth() const;
+
+	const Surface * getSurface() const;
+
+	const BEZIER * getPatch() const;
+
+	void set(const btVector3 & rayFrom, const btVector3 & rayDir, btScalar rayLen);
+
+	btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace);
 };
 
-#endif // _DRIVESHAFT_H
+// implementation
+
+inline Ray::Ray() :
+	m_exclude(0),
+	m_surface(0),
+	m_patch(0)
+{
+	// ctor
+}
+
+inline const btVector3 & Ray::getPoint() const
+{
+	return m_hitPoint;
+}
+
+inline const btVector3 & Ray::getNormal() const
+{
+	return m_hitNormal;
+}
+
+inline const btScalar Ray::getDepth() const
+{
+	return m_depth;
+}
+
+inline const Surface * Ray::getSurface() const
+{
+	return m_surface;
+}
+
+inline const BEZIER * Ray::getPatch() const
+{
+	return m_patch;
+}
+
+}
+
+#endif

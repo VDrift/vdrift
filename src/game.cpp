@@ -22,8 +22,7 @@
 #include "definitions.h"
 #include "joepack.h"
 #include "matrix4.h"
-#include "physics/carwheelposition.h"
-#include "physics/tracksurface.h"
+#include "physics/surface.h"
 #include "numprocessors.h"
 #include "performance_testing.h"
 #include "quickprof.h"
@@ -116,14 +115,8 @@ GAME::GAME(std::ostream & info_out, std::ostream & error_out) :
 	active_camera(0),
 	race_laps(0),
 	practice(true),
-	collisiondispatch(
-		&collisionconfig),
-	dynamics(
-		&collisiondispatch,
-		&collisionbroadphase,
-		&collisionsolver,
-		&collisionconfig,
-		timestep),
+	dynamics_config(timestep, 8),
+	dynamics(dynamics_config),
 	dynamics_drawmode(0),
 	particle_timer(0),
 	track(),
@@ -131,7 +124,7 @@ GAME::GAME(std::ostream & info_out, std::ostream & error_out) :
 	http("/tmp")
 {
 	carcontrols_local.first = 0;
-	dynamics.setContactAddedCallback(&CARDYNAMICS::WheelContactCallback);
+	dynamics.setContactAddedCallback(&sim::Vehicle::WheelContactCallback);
 	RegisterActions();
 }
 
@@ -1012,11 +1005,11 @@ void GAME::UpdateTimer()
 			//cout << "next " << nextsector << ", cur " << i->GetSector() << ", track " << track.GetSectors() << std::endl;
 			for (int p = 0; p < 4; ++p)
 			{
-				if (i->GetCurPatch(WHEEL_POSITION(p)) == track.GetSectorPatch(nextsector))
+				if (i->GetCurPatch(p) == track.GetSectorPatch(nextsector))
 				{
 					advance = true;
 					//info_output << "New sector " << nextsector << "/" << track.GetSectors();
-					//info_output << " patch " << i->GetCurPatch(WHEEL_POSITION(p)) << std::endl;
+					//info_output << " patch " << i->GetCurPatch(p) << std::endl;
 					//info_output <<  ", " << track.GetSectorPatch(nextsector) << std::endl;
 				}
 				//else cout << p << ". " << i->GetCurPatch(p) << ", " << track.GetSectorPatch(nextsector) << std::endl;
@@ -1032,10 +1025,10 @@ void GAME::UpdateTimer()
 
 		// Update how far the car is on the track...
 		// Find the patch under the front left wheel...
-		const BEZIER * curpatch = i->GetCurPatch(FRONT_LEFT);
+		const BEZIER * curpatch = i->GetCurPatch(0);
 		if (!curpatch)
 			// Try the other wheel...
-			curpatch = i->GetCurPatch(FRONT_RIGHT);
+			curpatch = i->GetCurPatch(1);
 
 		// Only update if car is on track.
 		if (curpatch)
@@ -1071,7 +1064,7 @@ void GAME::UpdateTimer()
 		/*info_output << "sector=" << i->GetSector() << ", next=" << track.GetSectorPatch(nextsector) << ", ";
 		for (int w = 0; w < 4; w++)
 		{
-			info_output << w << "=" << i->GetCurPatch(WHEEL_POSITION(w)) << ", ";
+			info_output << w << "=" << i->GetCurPatch(0) << ", ";
 		}
 		info_output << std::endl;*/
 	}
@@ -1318,7 +1311,7 @@ void GAME::UpdateCarInputs(CAR & car)
 		carinputs[CARINPUT::BRAKE] = 1.0;
 	}
 
-	car.HandleInputs(carinputs);
+	car.ProcessInputs(carinputs);
 
 	if (carcontrols_local.first != &car)
 		return;
@@ -1561,6 +1554,12 @@ bool GAME::LoadCar(
 	bool islocal, bool isai,
 	const std::string & carfile)
 {
+	if (islocal)
+	{
+		// Reset local car pointer.
+		carcontrols_local.first = 0;
+	}
+
 	std::string car_dir = pathmanager.GetCarsDir() + "/" + car_name;
 	std::tr1::shared_ptr<PTree> carconf;
 	if (carfile.empty())
@@ -1596,7 +1595,9 @@ bool GAME::LoadCar(
 		return false;
 	}
 
-	if (sound.Enabled() && !car.LoadSounds(car_dir, car_name, sound, content, error_output))
+	if (sound.Enabled() && !car.LoadSounds(
+		*carconf, car_dir, car_name, sound,
+		content, error_output))
 	{
 		error_output << "Failed to load sounds for car " << car_name << std::endl;
 		return false;
@@ -2246,11 +2247,11 @@ void GAME::AddTireSmokeParticles(float dt, CAR & car)
 	{
 		for (int i = 0; i < 4; i++)
 		{
-			float squeal = car.GetTireSquealAmount(WHEEL_POSITION(i));
+			float squeal = car.GetTireSquealAmount(i);
 			if (squeal > 0)
 			{
 				tire_smoke.AddParticle(
-					car.GetWheelPosition(WHEEL_POSITION(i)) - MATHVECTOR<float,3>(0,0,car.GetTireRadius(WHEEL_POSITION(i))),
+					car.GetWheelPosition(i) - MATHVECTOR<float,3>(0,0,car.GetTireRadius(i)),
 					0.5);
 			}
 		}
@@ -2281,7 +2282,7 @@ void GAME::UpdateDriftScore(CAR & car, double dt)
 	int wheel_count = 0;
 	for (int i=0; i < 4; i++)
 	{
-		if ( car.GetCurPatch ( WHEEL_POSITION(i) ) ) wheel_count++;
+		if ( car.GetCurPatch ( i ) ) wheel_count++;
 	}
 
 	bool on_track = ( wheel_count > 1 );

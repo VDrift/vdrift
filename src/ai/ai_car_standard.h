@@ -44,16 +44,20 @@ class AI_Car_Standard :
 	public AI_Car
 {
 private:
+	float calcSpeedLimit(const BEZIER * patch, const BEZIER * nextpatch, float extraradius) const;
 
 	void updateGasBrake();
-	void calcMu();
-	float calcSpeedLimit(const BEZIER* patch, const BEZIER* nextpatch, float friction, float extraradius);
-	float calcBrakeDist(float current_speed, float allowed_speed, float friction);
+
 	void updateSteer();
+
 	void analyzeOthers(float dt, const std::list <CAR> & othercars);
+
 	float steerAwayFromOthers(); ///< returns a float that should be added into the steering wheel command
+
 	float brakeFromOthers(float speed_diff); ///< returns a float that should be added into the brake command. speed_diff is the difference between the desired speed and speed limit of this area of the track
+
 	double Angle(double x1, double y1); ///< returns the angle in degrees of the normalized 2-vector
+
 	BEZIER RevisePatch(const BEZIER * origpatch, bool use_racingline);
 
 	/*

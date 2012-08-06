@@ -17,17 +17,58 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _CARWHEELPOSITION_H
-#define _CARWHEELPOSITION_H
+#ifndef _SIM_DIFFERENTIALJOINT_H
+#define _SIM_DIFFERENTIALJOINT_H
 
-enum WHEEL_POSITION
+#include "shaft.h"
+
+namespace sim
 {
-	FRONT_LEFT = 0,
-	FRONT_RIGHT = 1,
-	REAR_LEFT = 2,
-	REAR_RIGHT = 3,
 
-	WHEEL_POSITION_SIZE
+/// shafts are co-rotating to simplify joint chains
+struct DifferentialJoint
+{
+	Shaft * shaft1;
+	Shaft * shaft2a;
+	Shaft * shaft2b;
+	btScalar gearRatio;
+	btScalar inertiaEff;
+	btScalar impulseLimit;
+	btScalar accumulatedImpulse;
+	
+	/// calculate effective inertia, reset solver variables
+	void init();
+	
+	/// one solver iteration
+	void solve();
 };
+
+// implementation
+
+inline void DifferentialJoint::init()
+{
+	accumulatedImpulse = 0;
+	impulseLimit = SIMD_INFINITY;
+	inertiaEff = 1 / (shaft1->getInertiaInv() +
+		gearRatio * gearRatio / (shaft2a->getInertia() + shaft2b->getInertia()));
+}
+
+inline void DifferentialJoint::solve()
+{
+	btScalar velocityError = shaft1->getAngularVelocity() -
+		0.5 * gearRatio * (shaft2a->getAngularVelocity() + shaft2b->getAngularVelocity());
+	btScalar lambda = -velocityError * inertiaEff;
+
+	btScalar accumulatedImpulseOld = accumulatedImpulse;
+	accumulatedImpulse += lambda;
+	btClamp(accumulatedImpulse, -impulseLimit, impulseLimit);
+	lambda = accumulatedImpulse - accumulatedImpulseOld;
+
+	shaft1->applyImpulse(lambda);
+	shaft2a->applyImpulse(-lambda * 0.5 * gearRatio);
+	shaft2b->applyImpulse(-lambda * 0.5 * gearRatio);
+}
+
+}
 
 #endif

@@ -18,9 +18,8 @@
 /************************************************************************/
 
 #include "performance_testing.h"
-#include "physics/dynamicsworld.h"
-#include "physics/tracksurface.h"
 #include "content/contentmanager.h"
+#include "physics/world.h"
 #include "cfg/ptree.h"
 
 #include <vector>
@@ -37,10 +36,9 @@ static inline float ConvertToFeet(float meters)
 	return meters * 3.2808399;
 }
 
-PERFORMANCE_TESTING::PERFORMANCE_TESTING(DynamicsWorld & world) :
+PERFORMANCE_TESTING::PERFORMANCE_TESTING(sim::World & world) :
 	world(world)
 {
-	surface.type = TRACKSURFACE::ASPHALT;
 	surface.bumpWaveLength = 1;
 	surface.bumpAmplitude = 0;
 	surface.frictionNonTread = 1;
@@ -57,7 +55,7 @@ void PERFORMANCE_TESTING::Test(
 	std::ostream & error_output)
 {
 	info_output << "Beginning car performance test on " << carname << std::endl;
-
+/*
 	//load the car dynamics
 	std::tr1::shared_ptr<PTree> cfg;
 	content.load(cfg, cardir, carname + ".car");
@@ -76,12 +74,12 @@ void PERFORMANCE_TESTING::Test(
 
 	info_output << "Car dynamics loaded" << std::endl;
 	info_output << carname << " Summary:\n" <<
-			"Mass (kg) including driver and fuel: " << 1 / car.GetInvMass() << "\n" <<
-			"Center of mass (m): " << car.GetCenterOfMass() << std::endl;
+		"Mass (kg) including driver and fuel: " << 1 / car.GetInvMass() << "\n" <<
+		"Center of mass (m): " << car.GetCenterOfMass() << std::endl;
 
 	std::stringstream statestream;
 	joeserialize::BinaryOutputSerializer serialize_output(statestream);
-	if (!car.Serialize(serialize_output))
+	if (!car.serialize(serialize_output))
 	{
 		error_output << "Serialization error" << std::endl;
 	}
@@ -97,19 +95,24 @@ void PERFORMANCE_TESTING::Test(
 	TestStoppingDistance(true, info_output, error_output);
 
 	info_output << "Car performance test complete." << std::endl;
+*/
+	// fixme
+	info_output << "Car performance test broken - exiting." << std::endl;
+	return;
 }
 
 void PERFORMANCE_TESTING::ResetCar()
 {
+/*	fixme
 	std::stringstream statestream(carstate);
 	joeserialize::BinaryInputSerializer serialize_input(statestream);
-	car.Serialize(serialize_input);
-
-	car.SetPosition(btVector3(0, 0, 0));
-	car.SetTCS(true);
-	car.SetABS(true);
-	car.SetAutoShift(true);
-	car.SetAutoClutch(true);
+	car.serialize(serialize_input);
+*/
+	car.setPosition(btVector3(0, 0, 0));
+	car.setTCS(true);
+	car.setABS(true);
+	car.setAutoShift(true);
+	car.setAutoClutch(true);
 }
 
 ///designed to be called inside a test's main loop  // broken, fixme
@@ -118,11 +121,11 @@ void PERFORMANCE_TESTING::SimulateFlatRoad()
 /*	//simulate an infinite, flat road
 	for (int i = 0; i < 4; i++)
 	{
-		btVector3 wp = car.dynamics.GetWheelPosition(WHEEL_POSITION(i));
-		btScalar depth = wp.z() - car.GetTireRadius(WHEEL_POSITION(i)); //should really project along the car's down vector, but... oh well
+		btVector3 wp = car.dynamics.GetWheelPosition(i);
+		btScalar depth = wp.z() - car.GetTireRadius(i); //should really project along the car's down vector, but... oh well
 		btVector3 pos(wp[0], wp[1], 0);
 		btVector3 norm(0, 0, 1);
-		car.GetWheelContact(WHEEL_POSITION(i)).Set(pos, norm, depth, &surface, 0, 0);
+		car.GetWheelContact(i).Set(pos, norm, depth, &surface, 0, 0);
 	}*/
 }
 
@@ -154,18 +157,20 @@ void PERFORMANCE_TESTING::TestMaxSpeed(std::ostream & info_output, std::ostream 
 	std::string downforcestr = "N/A";
 	while (t < maxtime)
 	{
-		car.SetThrottle(1.0f);
+		car.setThrottle(1.0f);
 
 		world.update(dt);
 
-		float car_speed = car.GetSpeed();
+		float car_speed = car.getSpeed();
 
 		if (car_speed > maxspeed.second)
 		{
 			maxspeed.first = t;
-			maxspeed.second = car.GetSpeed();
+			maxspeed.second = car_speed;
+			btVector3 aero = car.getTotalAero();
+
 			std::stringstream dfs;
-			dfs << -car.GetTotalAero()[2] << " N; " << -car.GetTotalAero()[2]/car.GetTotalAero()[0] << ":1 lift/drag";
+			dfs << -aero[2] << " N; " << -aero[2] / aero[0] << ":1 lift/drag";
 			downforcestr = dfs.str();
 		}
 
@@ -175,7 +180,7 @@ void PERFORMANCE_TESTING::TestMaxSpeed(std::ostream & info_output, std::ostream 
 		if (car_speed < 26.8224)
 			timeto60 = t;
 
-		if (car.GetCenterOfMass().length() > 402.3 && timetoquarter == maxtime)
+		if (car.getPosition().length() > 402.3 && timetoquarter == maxtime)
 		{
 			//quarter mile!
 			timetoquarter = t - timeto60start;
@@ -191,7 +196,7 @@ void PERFORMANCE_TESTING::TestMaxSpeed(std::ostream & info_output, std::ostream 
 					//info_output << "Maximum speed attained at " << maxspeed.first << " s" << std::endl;
 					break;
 				}
-				if (!car.GetEngine().GetCombustion())
+				if (!car.getEngine().getCombustion())
 				{
 					error_output << "Car stalled during launch, t=" << t << std::endl;
 					break;
@@ -216,7 +221,7 @@ void PERFORMANCE_TESTING::TestStoppingDistance(bool abs, std::ostream & info_out
 	info_output << "Testing stopping distance" << std::endl;
 
 	ResetCar();
-	car.SetABS(abs);
+	car.setABS(abs);
 
 	double maxtime = 300.0;
 	double t = 0.;
@@ -232,24 +237,24 @@ void PERFORMANCE_TESTING::TestStoppingDistance(bool abs, std::ostream & info_out
 	{
 		if (accelerating)
 		{
-			car.SetThrottle(1);
-			car.SetBrake(0);
+			car.setThrottle(1);
+			car.setBrake(0);
 		}
 		else
 		{
-			car.SetThrottle(0);
-			car.SetBrake(1);
-			car.ShiftGear(0);
+			car.setThrottle(0);
+			car.setBrake(1);
+			car.setGear(0);
 		}
 
 		world.update(dt);
 
-		float car_speed = car.GetSpeed();
+		float car_speed = car.getSpeed();
 
 		if (car_speed >= brakestartspeed && accelerating) //stop accelerating and hit the brakes
 		{
 			accelerating = false;
-			stopstart = car.GetWheelPosition(WHEEL_POSITION(0));
+			stopstart = car.getPosition();
 			//std::cout << "hitting the brakes at " << t << ", " << car_speed << std::endl;
 		}
 
@@ -258,7 +263,7 @@ void PERFORMANCE_TESTING::TestStoppingDistance(bool abs, std::ostream & info_out
 			break;
 		}
 
-		if (!car.GetEngine().GetCombustion())
+		if (!car.getEngine().getCombustion())
 		{
 			error_output << "Car stalled during launch, t=" << t << std::endl;
 			break;
@@ -273,12 +278,12 @@ void PERFORMANCE_TESTING::TestStoppingDistance(bool abs, std::ostream & info_out
 		i++;
 	}
 
-	btVector3 stopend = car.GetWheelPosition(WHEEL_POSITION(0));
+	btVector3 stopend = car.getPosition();
 
 	info_output << "60-0 stopping distance ";
 	if (abs)
 		info_output << "(ABS)";
 	else
 		info_output << "(no ABS)";
-	info_output << ": " << ConvertToFeet((stopend-stopstart).length()) << " ft" << std::endl;
+	info_output << ": " << ConvertToFeet((stopend - stopstart).length()) << " ft" << std::endl;
 }

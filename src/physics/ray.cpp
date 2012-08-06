@@ -17,64 +17,45 @@
 /*                                                                      */
 /************************************************************************/
 
-#include "texturefactory.h"
-#include "graphics/texture.h"
-#include <fstream>
-#include <sstream>
+#include "ray.h"
+#include "BulletCollision/CollisionShapes/btCollisionShape.h"
 
-Factory<TEXTURE>::Factory() :
-	m_default(new TEXTURE()),
-	m_size(TEXTUREINFO::LARGE),
-	m_srgb(false)
+namespace sim
 {
-	// ctor
+
+void Ray::set(const btVector3 & rayFrom, const btVector3 & rayDir, btScalar rayLen)
+{
+	m_closestHitFraction = 1;
+	m_rayFrom = rayFrom;
+	m_rayTo = rayFrom + rayDir * rayLen;
+	m_rayLen = rayLen;
+	m_hitNormal = -rayDir;
+	m_hitPoint = m_rayTo;
+	m_depth = rayLen;
+	m_surface = 0;
 }
 
-void Factory<TEXTURE>::init(int max_size, bool use_srgb)
+btScalar Ray::addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace)
 {
-	m_size = max_size;
-	m_srgb = use_srgb;
+	if (rayResult.m_collisionObject == m_exclude) return 1.0;
 
-	// init default texture
-	std::stringstream error;
-	unsigned char white[] = {255, 255, 255, 255};
-	TEXTUREINFO info;
-	info.data = white;
-	info.width = 1;
-	info.height = 1;
-	info.bytespp = 4;
-	info.maxsize = TEXTUREINFO::Size(m_size);
-	info.mipmap = false;
-	info.srgb = m_srgb;
-	m_default->Load("", info, error);
-}
-
-template <>
-bool Factory<TEXTURE>::create(
-	std::tr1::shared_ptr<TEXTURE> & sptr,
-	std::ostream & error,
-	const std::string & basepath,
-	const std::string & path,
-	const std::string & name,
-	const TEXTUREINFO& info)
-{
-	const std::string abspath = basepath + "/" + path + "/" + name;
-	if (info.data || std::ifstream(abspath.c_str()))
+	btCollisionShape * s = rayResult.m_collisionObject->getCollisionShape();
+	m_closestHitFraction = rayResult.m_hitFraction;
+	if (normalInWorldSpace)
 	{
-		TEXTUREINFO info_temp = info;
-		info_temp.srgb = m_srgb;
-		info_temp.maxsize = TEXTUREINFO::Size(m_size);
-		std::tr1::shared_ptr<TEXTURE> temp(new TEXTURE());
-		if (temp->Load(abspath, info_temp, error))
-		{
-			sptr = temp;
-			return true;
-		}
+		m_hitNormal = rayResult.m_hitNormalLocal;
 	}
-	return false;
+	else
+	{
+		m_hitNormal = m_collisionObject->getWorldTransform().getBasis() * rayResult.m_hitNormalLocal;
+	}
+	m_hitPoint.setInterpolate3(m_rayFrom, m_rayTo, rayResult.m_hitFraction);
+	m_collisionObject = rayResult.m_collisionObject;
+	m_surface = static_cast<const Surface *>(s->getUserPointer());
+	//m_patch = si->patch;  fixme
+	m_depth = m_rayLen * m_closestHitFraction;
+
+	return rayResult.m_hitFraction;
 }
 
-std::tr1::shared_ptr<TEXTURE> Factory<TEXTURE>::getDefault() const
-{
-	return m_default;
 }

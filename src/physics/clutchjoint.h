@@ -17,64 +17,55 @@
 /*                                                                      */
 /************************************************************************/
 
-#include "texturefactory.h"
-#include "graphics/texture.h"
-#include <fstream>
-#include <sstream>
+#ifndef _SIM_CLUTCHJOINT_H
+#define _SIM_CLUTCHJOINT_H
 
-Factory<TEXTURE>::Factory() :
-	m_default(new TEXTURE()),
-	m_size(TEXTUREINFO::LARGE),
-	m_srgb(false)
+#include "shaft.h"
+
+namespace sim
 {
-	// ctor
+
+/// shaft 1 and 2 are co-rotating
+/// gearRatio has to remain unequal to 0 at any time
+struct ClutchJoint
+{
+	Shaft * shaft1;
+	Shaft * shaft2;
+	btScalar gearRatio;
+	btScalar impulseLimit;
+	btScalar inertiaEff;
+	btScalar accumulatedImpulse;
+	
+	/// calculate effective inertia, reset impulse accuulator
+	void init();
+	
+	/// one solver ieration
+	void solve();
+};
+
+// implementation
+
+inline void ClutchJoint::init()
+{
+	accumulatedImpulse = 0;
+	inertiaEff = 1.0 / (shaft1->getInertiaInv() +
+		gearRatio * gearRatio * shaft2->getInertiaInv());
 }
 
-void Factory<TEXTURE>::init(int max_size, bool use_srgb)
+inline void ClutchJoint::solve()
 {
-	m_size = max_size;
-	m_srgb = use_srgb;
+	btScalar velocityError = shaft1->getAngularVelocity() - gearRatio * shaft2->getAngularVelocity();
+	btScalar lambda = -velocityError * inertiaEff;
 
-	// init default texture
-	std::stringstream error;
-	unsigned char white[] = {255, 255, 255, 255};
-	TEXTUREINFO info;
-	info.data = white;
-	info.width = 1;
-	info.height = 1;
-	info.bytespp = 4;
-	info.maxsize = TEXTUREINFO::Size(m_size);
-	info.mipmap = false;
-	info.srgb = m_srgb;
-	m_default->Load("", info, error);
+	btScalar accumulatedImpulseOld = accumulatedImpulse;
+	accumulatedImpulse += lambda;
+	btClamp(accumulatedImpulse, -impulseLimit, impulseLimit);
+	lambda = accumulatedImpulse - accumulatedImpulseOld;
+
+	shaft1->applyImpulse(lambda);
+	shaft2->applyImpulse(-lambda * gearRatio);
 }
 
-template <>
-bool Factory<TEXTURE>::create(
-	std::tr1::shared_ptr<TEXTURE> & sptr,
-	std::ostream & error,
-	const std::string & basepath,
-	const std::string & path,
-	const std::string & name,
-	const TEXTUREINFO& info)
-{
-	const std::string abspath = basepath + "/" + path + "/" + name;
-	if (info.data || std::ifstream(abspath.c_str()))
-	{
-		TEXTUREINFO info_temp = info;
-		info_temp.srgb = m_srgb;
-		info_temp.maxsize = TEXTUREINFO::Size(m_size);
-		std::tr1::shared_ptr<TEXTURE> temp(new TEXTURE());
-		if (temp->Load(abspath, info_temp, error))
-		{
-			sptr = temp;
-			return true;
-		}
-	}
-	return false;
 }
 
-std::tr1::shared_ptr<TEXTURE> Factory<TEXTURE>::getDefault() const
-{
-	return m_default;
-}
+#endif
