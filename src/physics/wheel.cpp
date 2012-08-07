@@ -219,7 +219,7 @@ bool Wheel::update(btScalar dt, WheelContact & contact)
 		contact.friction2.angularCompA = bodyA->getInvInertiaTensorWorld() * rA.cross(normal);
 		contact.friction2.angularCompB = bodyB->getInvInertiaTensorWorld() * rB.cross(normal);
 	}
-/*
+
 	// ABS
 	abs_active = false;
 	btScalar brake_torque = brake.getTorque();
@@ -269,7 +269,7 @@ bool Wheel::update(btScalar dt, WheelContact & contact)
 
 	// store old angular velocity
 	angvel = shaft.getAngularVelocity();
-*/
+
 	return true;
 }
 
