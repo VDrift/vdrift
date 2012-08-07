@@ -228,10 +228,10 @@ const btScalar Vehicle::getInvMass() const
 
 const btCollisionObject * Vehicle::getCollisionObject() const
 {
-	return static_cast<const btCollisionObject *>(body);
+	return body;
 }
 
-const World * Vehicle::getWorld() const
+const btCollisionWorld * Vehicle::getCollisionWorld() const
 {
 	return world;
 }

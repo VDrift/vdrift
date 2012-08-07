@@ -36,6 +36,7 @@ class MODEL;
 class SOUND;
 class ContentManager;
 class PTree;
+class btCollisionWorld;
 
 class CAR
 {
@@ -282,9 +283,9 @@ public:
 	}
 
 	// allows to create raycasts
-	const btDynamicsWorld * GetDynamicsWorld() const
+	const btCollisionWorld * GetCollisionWorld() const
 	{
-		return dynamics.getWorld();
+		return dynamics.getCollisionWorld();
 	}
 
 	sim::Vehicle & GetCarDynamics()

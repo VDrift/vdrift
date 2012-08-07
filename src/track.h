@@ -84,15 +84,6 @@ public:
 
 	void Clear();
 
-	bool CastRay(
-		const MATHVECTOR <float, 3> & origin,
-		const MATHVECTOR <float, 3> & direction,
-		const float seglen,
-		int & patch_id,
-		MATHVECTOR <float, 3> & outtri,
-		const BEZIER * & colpatch,
-		MATHVECTOR <float, 3> & normal) const;
-
 	/// Synchronize graphics and physics.
 	void Update();
 
@@ -119,9 +110,9 @@ public:
 		return data.lap[sector];
 	}
 
-	void SetRacingLineVisibility(bool newvis)
+	void SetRacingLineVisibility(bool value)
 	{
-		racingline_visible = newvis;
+		data.racingline_visible = value;
 	}
 
 	bool IsReversed() const
@@ -136,10 +127,10 @@ public:
 
 	SCENENODE & GetRacinglineNode()
 	{
-		if (racingline_visible)
+		if (data.racingline_visible)
 			return data.racingline_node;
 		else
-			return empty_node;
+			return data.empty_node;
 	}
 
 	SCENENODE & GetTrackNode()
@@ -153,8 +144,13 @@ public:
 	}
 
 private:
+	// track roads ray test processor
+	struct RayTestProcessor;
+
+	// track data
 	struct DATA
 	{
+		// pointer to world instance
 		sim::World* world;
 
 		// static track objects
@@ -174,23 +170,24 @@ private:
 		std::vector<const BEZIER*> lap;
 		std::list<ROADSTRIP> roads;
 		std::vector<std::pair<MATHVECTOR<float, 3>, QUATERNION<float> > > start_positions;
+		RayTestProcessor * rayTestProcessor;
 
 		// racing line data
+		SCENENODE empty_node;
 		SCENENODE racingline_node;
 		std::tr1::shared_ptr<TEXTURE> racingline_texture;
 
 		// track state
 		bool vertical_tracking_skyboxes;
+		bool racingline_visible;
 		bool reverse;
 		bool loaded;
 		bool cull;
 
 		DATA();
+		~DATA();
 	};
-
 	DATA data;
-	bool racingline_visible;
-	SCENENODE empty_node;
 
 	// temporary loading data
 	class LOADER;

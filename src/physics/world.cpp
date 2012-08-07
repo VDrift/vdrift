@@ -19,6 +19,7 @@
 
 #include "world.h"
 #include "fracturebody.h"
+#include "ray.h"
 #include "BulletCollision/CollisionShapes/btCollisionShape.h"
 
 namespace sim
@@ -40,7 +41,7 @@ World::World(Config & config) :
 		&config.config),
 	timeStep(config.timeStep),
 	maxSubSteps(config.maxSubSteps),
-	rayTestProc(0)
+	rayProc(0)
 {
 	setGravity(btVector3(0.0, 0.0, -9.81));
 	setForceUpdateAllAabbs(false);
@@ -51,25 +52,22 @@ World::~World()
 	reset();
 }
 
-void World::rayTest(
-	const btVector3& rayFromWorld,
-	const btVector3& rayToWorld,
-	RayTestCallback& resultCallback) const
+void World::rayTest(Ray & ray) const
 {
-	if (rayTestProc)
+	if (rayProc)
 	{
-		rayTestProc->rayTest(rayFromWorld, rayToWorld, resultCallback);
-		btDiscreteDynamicsWorld::rayTest(rayFromWorld, rayToWorld, *rayTestProc);
+		rayProc->set(ray);
+		btDiscreteDynamicsWorld::rayTest(ray.m_rayFrom, ray.m_rayTo, *rayProc);
 	}
 	else
 	{
-		btDiscreteDynamicsWorld::rayTest(rayFromWorld, rayToWorld, resultCallback);
+		btDiscreteDynamicsWorld::rayTest(ray.m_rayFrom, ray.m_rayTo, ray);
 	}
 }
 
-void World::setRayTestProcessor(RayTestProcessor & rtp)
+void World::setRayProcessor(RayProcessor & pr)
 {
-	rayTestProc = &rtp;
+	rayProc = &pr;
 }
 
 void World::setContactAddedCallback(ContactAddedCallback cb)

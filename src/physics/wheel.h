@@ -26,13 +26,12 @@
 #include "tire.h"
 #include "ray.h"
 
-class btCollisionWorld;
-
 namespace sim
 {
 
 struct WheelContact;
 class FractureBody;
+class World;
 
 struct WheelInfo
 {
@@ -54,7 +53,7 @@ public:
 	/// init before usage
 	void init(
 		const WheelInfo & info,
-		btCollisionWorld & world,
+		World & world,
 		FractureBody & body);
 
 	/// wheel ray test
@@ -82,10 +81,10 @@ public:
 
 	/// true if abs active
 	bool getABS() const;
-	
+
 	/// true if tcs active
 	bool getTCS() const;
-	
+
 	/// wheel components
 	Suspension suspension;
 	Shaft shaft;
@@ -94,7 +93,7 @@ public:
 	Ray ray;
 
 private:
-	btCollisionWorld * world;
+	World * world;
 	FractureBody * body;
 	btTransform transform;
 	btScalar angvel;

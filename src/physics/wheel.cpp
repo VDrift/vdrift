@@ -18,6 +18,7 @@
 /************************************************************************/
 
 #include "wheel.h"
+#include "world.h"
 #include "fracturebody.h"
 #include "wheelcontact.h"
 #include "surface.h"
@@ -49,7 +50,7 @@ Wheel::Wheel() :
 
 void Wheel::init(
 	const WheelInfo & info,
-	btCollisionWorld & nworld,
+	World & nworld,
 	FractureBody & nbody)
 {
 	tire.init(info.tire);
@@ -78,7 +79,7 @@ bool Wheel::updateContact(btScalar raylen)
 	btVector3 rayStart = wheelPos - rayDir * radius;
 	ray.set(rayStart, rayDir, rayLen);
 	ray.m_exclude = body;
-	world->rayTest(ray.m_rayFrom, ray.m_rayTo, ray);
+	world->rayTest(ray);
 
 	// surface bumpiness
 	btScalar bump = 0;

@@ -20,7 +20,7 @@
 #ifndef _SIM_RAY_H
 #define _SIM_RAY_H
 
-#include "world.h"
+#include "BulletCollision/CollisionDispatch/btCollisionWorld.h"
 
 class BEZIER;
 
@@ -42,6 +42,7 @@ struct Ray : public btCollisionWorld::RayResultCallback
 	const btCollisionObject * m_exclude;
 	const Surface * m_surface;
 	const BEZIER * m_patch;
+	int m_patchid;
 
 	Ray();
 
@@ -65,7 +66,8 @@ struct Ray : public btCollisionWorld::RayResultCallback
 inline Ray::Ray() :
 	m_exclude(0),
 	m_surface(0),
-	m_patch(0)
+	m_patch(0),
+	m_patchid(0)
 {
 	// ctor
 }
@@ -97,4 +99,4 @@ inline const BEZIER * Ray::getPatch() const
 
 }
 
-#endif
+#endif //_SIM_RAY_H

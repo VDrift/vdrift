@@ -20,6 +20,7 @@
 #include "track.h"
 #include "trackloader.h"
 #include "physics/world.h"
+#include "physics/ray.h"
 #include "coordinatesystem.h"
 #include "tobullet.h"
 
@@ -27,7 +28,21 @@
 #include "BulletCollision/CollisionShapes/btCollisionShape.h"
 #include "BulletCollision/CollisionShapes/btStridingMeshInterface.h"
 
-TRACK::TRACK() : racingline_visible(false)
+struct TRACK::RayTestProcessor : public sim::World::RayProcessor
+{
+	DATA & m_data;
+	sim::Ray * m_ray;
+
+	RayTestProcessor(DATA & data);
+
+	void set(sim::Ray & ray);
+
+	btScalar addSingleResult(
+		btCollisionWorld::LocalRayResult & rayResult,
+		bool normalInWorldSpace);
+};
+
+TRACK::TRACK()
 {
 	// Constructor.
 }
@@ -54,6 +69,7 @@ bool TRACK::DeferredLoad(
 {
 	Clear();
 
+	world.setRayProcessor(*data.rayTestProcessor);
 	data.world = &world;
 
 	loader.reset(
@@ -126,43 +142,6 @@ void TRACK::Clear()
 	data.loaded = false;
 }
 
-bool TRACK::CastRay(
-	const MATHVECTOR <float, 3> & origin,
-	const MATHVECTOR <float, 3> & direction,
-	const float seglen,
-	int & patch_id,
-	MATHVECTOR <float, 3> & outtri,
-	const BEZIER * & colpatch,
-	MATHVECTOR <float, 3> & normal) const
-{
-	// transform into bezier space
-	MATHVECTOR<float, 3> borigin(origin[1], origin[2], origin[0]);
-	MATHVECTOR<float, 3> bdirection(direction[1], direction[2], direction[0]);
-
-	bool col = false;
-	for (std::list <ROADSTRIP>::const_iterator i = data.roads.begin(); i != data.roads.end(); ++i)
-	{
-		MATHVECTOR <float, 3> coltri, colnorm;
-		const BEZIER * colbez = NULL;
-		if (i->Collide(borigin, bdirection, seglen, patch_id, coltri, colbez, colnorm))
-		{
-			if (!col || (coltri - borigin).MagnitudeSquared() < (outtri - borigin).MagnitudeSquared())
-			{
-				outtri = coltri;
-				normal = colnorm;
-				colpatch = colbez;
-			}
-			col = true;
-		}
-	}
-
-	// transform into world space
-	outtri = MATHVECTOR<float, 3>(outtri[2], outtri[0], outtri[1]);
-	normal = MATHVECTOR<float, 3>(normal[2], normal[0], normal[1]);
-
-	return col;
-}
-
 void TRACK::Update()
 {
 	if (!data.loaded) return;
@@ -194,12 +173,89 @@ std::pair <MATHVECTOR <float, 3>, QUATERNION <float> > TRACK::GetStart(unsigned 
 TRACK::DATA::DATA() :
 	world(0),
 	vertical_tracking_skyboxes(false),
+	racingline_visible(false),
 	reverse(false),
 	loaded(false),
 	cull(true)
 {
-	// Constructor.
+	rayTestProcessor = new RayTestProcessor(*this);
 }
 
+TRACK::DATA::~DATA()
+{
+	assert(rayTestProcessor);
+	delete rayTestProcessor;
+}
 
+TRACK::RayTestProcessor::RayTestProcessor(DATA & data) :
+	m_data(data),
+	m_ray(0)
+{
+	// Constructor
+}
 
+void TRACK::RayTestProcessor::set(sim::Ray & ray)
+{
+	m_ray = &ray;
+}
+
+btScalar TRACK::RayTestProcessor::addSingleResult(
+	btCollisionWorld::LocalRayResult & rayResult,
+	bool normalInWorldSpace)
+{
+	// We only support static mesh collision shapes
+	if (!(rayResult.m_collisionObject->getCollisionFlags() & btCollisionObject::CF_STATIC_OBJECT) &&
+		(rayResult.m_collisionObject->getCollisionShape()->getShapeType() != TRIANGLE_MESH_SHAPE_PROXYTYPE))
+	{
+		return 1.0;
+	}
+	//std::cerr << rayResult.m_hitFraction << "    ";
+
+	// Road bezier patch ray test
+	assert(m_ray);
+	btVector3 rayFrom = m_ray->m_rayFrom;
+	btVector3 rayTo = m_ray->m_rayTo;
+	btScalar rayLen = m_ray->m_rayLen;
+	btVector3 rayVec = rayTo - rayFrom;
+
+	// patch space
+	MATHVECTOR<float, 3> from(rayFrom[1], rayFrom[2], rayFrom[0]);
+	MATHVECTOR<float, 3> to(rayTo[1], rayTo[2], rayTo[0]);
+	MATHVECTOR<float, 3> dir(rayVec[1], rayVec[2], rayVec[0]);
+	dir = dir / rayLen;
+
+	int patchId = m_ray->m_patchid;
+	const BEZIER * colBez = 0;
+	MATHVECTOR<float, 3> colPoint;
+	MATHVECTOR<float, 3> colNormal;
+	for (std::list<ROADSTRIP>::const_iterator i = m_data.roads.begin(); i != m_data.roads.end(); ++i)
+	{
+		const BEZIER * bez(0);
+		MATHVECTOR<float, 3> norm;
+		MATHVECTOR<float, 3> point(to);
+		if (i->Collide(from, dir, rayLen, patchId, point, bez, norm) &&
+			((point - from).MagnitudeSquared() < (colPoint - from).MagnitudeSquared()))
+		{
+			colPoint = point;
+			colNormal = norm;
+			colBez = bez;
+		}
+	}
+
+	if (colBez)
+	{
+		btVector3 hitPoint(colPoint[2], colPoint[0], colPoint[1]);
+		btVector3 hitNormal(colNormal[2], colNormal[0], colNormal[1]);
+		btScalar dist_p = hitNormal.dot(hitPoint);
+		btScalar dist_a = hitNormal.dot(rayFrom);
+		btScalar dist_b = hitNormal.dot(rayTo);
+		btScalar fraction = (dist_a - dist_p) / (dist_a - dist_b);
+		rayResult.m_hitFraction = fraction;
+		rayResult.m_hitNormalLocal = hitNormal;
+		m_ray->m_patch = colBez;
+		m_ray->m_patchid = patchId;
+	}
+	//std::cerr << rayResult.m_hitFraction << "    ";
+
+	return m_ray->addSingleResult(rayResult, true);
+}

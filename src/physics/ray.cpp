@@ -52,7 +52,6 @@ btScalar Ray::addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool 
 	m_hitPoint.setInterpolate3(m_rayFrom, m_rayTo, rayResult.m_hitFraction);
 	m_collisionObject = rayResult.m_collisionObject;
 	m_surface = static_cast<const Surface *>(s->getUserPointer());
-	//m_patch = si->patch;  fixme
 	m_depth = m_rayLen * m_closestHitFraction;
 
 	return rayResult.m_hitFraction;

@@ -24,7 +24,6 @@
 #include "carinput.h"
 #include "mathvector.h"
 #include "physics/world.h"
-#include "physics/ray.h"
 #include "coordinatesystem.h"
 #include "optional.h"
 #include "unittest.h"
@@ -475,18 +474,32 @@ float AI_Car_Experimental::calcSpeedLimit(const BEZIER* patch, const BEZIER * ne
 	return 0;
 }
 
+struct RayResultCb : public btCollisionWorld::RayResultCallback
+{
+	const btCollisionObject * m_exclude;
+
+	RayResultCb(const btCollisionObject * exclude = 0) : m_exclude(exclude) {}
+
+	btScalar addSingleResult(btCollisionWorld::LocalRayResult & rayResult, bool)
+	{
+		if (rayResult.m_collisionObject == m_exclude)
+			return 1.0;
+
+		m_closestHitFraction = rayResult.m_hitFraction;
+		return m_closestHitFraction;
+	}
+};
+
 float AI_Car_Experimental::RayCastDistance( MATHVECTOR <float, 3> direction, float max_length)
 {
 	const btTransform & tr = car->GetCarDynamics().getTransform();
-	btVector3 pos = tr.getOrigin();
-	btVector3 dir = tr.getBasis() * ToBulletVector(direction);
+	btVector3 ray_dir = tr.getBasis() * ToBulletVector(direction);
+	btVector3 ray_from = tr.getOrigin();
+	btVector3 ray_to = ray_from + ray_dir * max_length;
 
-	sim::Ray ray;
-	ray.set(pos, dir, max_length);
-	ray.m_exclude = car->GetCarDynamics().getCollisionObject();
-	car->GetDynamicsWorld()->rayTest(ray.m_rayFrom, ray.m_rayTo, ray);
-	float depth = ray.getDepth();
-	float dist = std::min(max_length, depth);
+	RayResultCb raycb(car->GetCarDynamics().getCollisionObject());
+	car->GetCollisionWorld()->rayTest(ray_from, ray_to, raycb);
+	float dist = raycb.m_closestHitFraction * max_length;
 
 #ifdef VISUALIZE_AI_DEBUG
 	MATHVECTOR<float, 3> pos_start(ToMathVector<float>(pos));

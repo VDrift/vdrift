@@ -30,6 +30,7 @@ namespace sim
 {
 
 class FractureBody;
+struct Ray;
 
 /// simulation configuration
 struct Config
@@ -44,6 +45,7 @@ struct Config
 	Config(btScalar timeStep = 1/60.0f, int maxSubSteps = 10);
 };
 
+/// discrete dynamics world with fracture body support
 class World : public btDiscreteDynamicsWorld
 {
 public:
@@ -52,16 +54,12 @@ public:
 	~World();
 
 	/// alternative ray test which supports a ray test result processor
-	struct RayTestCallback;
-	void rayTest(
-		const btVector3 & rayFromWorld,
-		const btVector3 & rayToWorld,
-		RayTestCallback & resultCallback) const;
+	void rayTest(Ray & ray) const;
 
 	/// optional ray test processor, wraps the ray test callback,
 	/// allows additional operations on ray test result
-	struct RayTestProcessor;
-	void setRayTestProcessor(RayTestProcessor & rtp);
+	struct RayProcessor;
+	void setRayProcessor(RayProcessor & pr);
 
 	/// set a callback to be executed when a new contact is added
 	void setContactAddedCallback(ContactAddedCallback cb);
@@ -84,22 +82,16 @@ protected:
 	btScalar timeStep;
 	int maxSubSteps;
 
-	RayTestProcessor * rayTestProc;
+	RayProcessor * rayProc;
 
 	void solveConstraints(btContactSolverInfo& solverInfo);
 
 	void fractureCallback();
 };
 
-struct World::RayTestCallback : public btCollisionWorld::RayResultCallback
+struct World::RayProcessor : public btCollisionWorld::RayResultCallback
 {
-	RayTestCallback() : userPointer(0) {}
-	void * userPointer;
-};
-
-struct World::RayTestProcessor : public World::RayTestCallback
-{
-	virtual void rayTest(const btVector3 & rayFromWorld, const btVector3 & rayToWorld, World::RayResultCallback& cb) = 0;
+	virtual void set(Ray & ray) = 0;
 };
 
 }

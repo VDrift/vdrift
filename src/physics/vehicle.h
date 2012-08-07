@@ -90,7 +90,7 @@ public:
 	const btVector3 & getVelocity() const;
 	const btScalar getInvMass() const;
 	const btCollisionObject * getCollisionObject() const;
-	const World * getWorld() const;
+	const btCollisionWorld * getCollisionWorld() const;
 
 	/// linear velocity magnitude
 	btScalar getSpeed() const;
