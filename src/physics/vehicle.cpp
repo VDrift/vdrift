@@ -25,7 +25,7 @@
 #include "BulletCollision/CollisionShapes/btCompoundShape.h"
 #include "BulletCollision/CollisionShapes/btCylinderShape.h"
 
-static std::ofstream clog("log.txt");
+//static std::ofstream clog("log.txt");
 
 namespace sim
 {
@@ -101,6 +101,7 @@ void Vehicle::init(
 		aero_device[i] = AeroDevice(info.aerodevice[i]);
 	}
 
+	antiroll = info.antiroll;
 	differential.resize(info.differential.size());
 	wheel.resize(info.wheel.size());
 	wheel_contact.resize(wheel.size());
@@ -287,7 +288,7 @@ void Vehicle::alignWithGround()
 	bool no_min_height = true;
 	for (int i = 0; i < wheel.size(); ++i)
 	{
-		wheel[i].updateContact(ray_len);
+		wheel[i].updateDisplacement(ray_len);
 		btScalar height = wheel[i].ray.getDepth() - ray_len;
 		if (height < min_height || no_min_height)
 		{
@@ -301,7 +302,7 @@ void Vehicle::alignWithGround()
 	setPosition(trimmed_position);
 	for (int i = 0; i < wheel.size(); ++i)
 	{
-		wheel[i].updateContact(ray_len);
+		wheel[i].updateDisplacement(ray_len);
 	}
 
 	body->setAngularVelocity(btVector3(0, 0, 0));
@@ -469,14 +470,43 @@ void Vehicle::updateDynamics(btScalar dt)
 		ccount++;
 	}
 
-	// wheels
+	// wheel displacement
+	for (int i = 0; i < wheel.size(); ++i)
+	{
+		wheel[i].updateDisplacement(2 * wheel[i].getRadius());
+	}
+
+	// anti-roll bar approximation by adjusting suspension stiffness
+	for (int i = 0; i < antiroll.size(); ++i)
+	{
+		// move this into antirollbar class ?
+
+		// calculate anti-roll contributed stiffness
+		btScalar kr = antiroll[i].stiffness;
+		int i0 = antiroll[i].wheel0;
+		int i1 = antiroll[i].wheel1;
+		btScalar d0 = wheel[i0].suspension.getDisplacement();
+		btScalar d1 = wheel[i1].suspension.getDisplacement();
+		btScalar dr = d0 - d1;
+		btScalar k0 = (d0 > 0) ? kr * dr / d0 : 0.0f;
+		btScalar k1 = (d1 > 0) ? -kr * dr / d1 : 0.0f;
+
+		// avoid negative stiffness
+		if (wheel[i0].suspension.getStiffness() + k0 < 0) k0 = 0.0f;
+		if (wheel[i1].suspension.getStiffness() + k1 < 0) k1 = 0.0f;
+
+		wheel[i0].setAntiRollStiffness(k0);
+		wheel[i1].setAntiRollStiffness(k1);
+	}
+
+	// wheel contacts
 	int mcount = 0;
 	int wcount = 0;
 	abs_active = false;
 	tcs_active = false;
 	for (int i = 0; i < wheel.size(); ++i)
 	{
-		if (wheel[i].update(dt, wheel_contact[wcount]))
+		if (wheel[i].updateContact(dt, wheel_contact[wcount]))
 		{
 			wheel_contact[wcount].id = i;
 

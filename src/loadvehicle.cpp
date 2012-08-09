@@ -252,7 +252,6 @@ static bool LoadCoilover(
 	if (!cfg.get("bounce", info.bounce, error)) return false;
 	if (!cfg.get("rebound", info.rebound, error)) return false;
 	if (!cfg.get("travel", info.travel, error)) return false;
-	if (!cfg.get("anti-roll", info.antiroll, error)) return false;
 	//LoadPoints(cfg, "damper-factor-", info.damper_factors);
 	//LoadPoints(cfg, "spring-factor-", info.spring_factors);
 	return true;
@@ -299,7 +298,7 @@ static bool LoadArm(
 	return true;
 }
 
-bool LoadSuspension(
+static bool LoadSuspension(
 	const PTree & cfg_wheel,
 	sim::SuspensionInfo & info,
 	std::ostream & error)
@@ -343,6 +342,36 @@ bool LoadSuspension(
 	return true;
 }
 
+static bool LoadAntiRollBar(
+	const PTree & cfg,
+	const std::map<std::string, int> wheel_map,
+	sim::AntiRollBar & info,
+	std::ostream & error)
+{
+	if (!cfg.get("stiffness", info.stiffness, error)) return false;
+
+	std::string link0, link1;
+	if (!cfg.get("link-a", link0, error)) return false;
+	if (!cfg.get("link-b", link1, error)) return false;
+
+	std::map<std::string, int>::const_iterator it0 = wheel_map.find(link0);
+	if (it0 == wheel_map.end())
+	{
+		error << cfg.fullname() << " link: " << link0 << " not found." << std::endl;
+		return false;
+	}
+	std::map<std::string, int>::const_iterator it1 = wheel_map.find(link1);
+	if (it1 == wheel_map.end())
+	{
+		error << cfg.fullname() << " link: " << link1 << " not found." << std::endl;
+		return false;
+	}
+
+	info.wheel0 = it0->second;
+	info.wheel1 = it1->second;
+	return true;
+}
+
 static void CalculateWheelMass(
 	btScalar tire_radius,
 	btScalar tire_width,
@@ -369,7 +398,7 @@ static void CalculateWheelMass(
 	inertia = (tire_inertia + rim_inertia);
 }
 
-bool LoadWheel(
+static bool LoadWheel(
 	const PTree & cfg_wheel,
 	sim::WheelInfo & info,
 	std::ostream & error)
@@ -594,7 +623,7 @@ bool LoadVehicle(
 			CreateCollisionShape(modelcenter, modelsize));
 	}
 
-	// load driveline
+	// get wheel shafts for linkage
 	int shaft_id = 0;
 	std::map<std::string, int> shaft_map;
 	for (PTree::const_iterator it = cfg_wheels->begin(); it != cfg_wheels->end(); ++it)
@@ -602,6 +631,19 @@ bool LoadVehicle(
 		shaft_map["wheel." + it->first] = shaft_id++;
 	}
 
+	// load anti-roll bars
+	const PTree * cfg_bar;
+	if (cfg.get("antiroll", cfg_bar))
+	{
+		for (PTree::const_iterator it = cfg_bar->begin(); it != cfg_bar->end(); ++it)
+		{
+			sim::AntiRollBar bar;
+			LoadAntiRollBar(it->second, shaft_map, bar, error);
+			info.antiroll.push_back(bar);
+		}
+	}
+
+	// load differentials
 	const PTree * cfg_diff;
 	if (cfg.get("differential", cfg_diff))
 	{

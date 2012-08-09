@@ -41,7 +41,6 @@ struct SuspensionInfo
 	btVector3 steering_axis;	///< steering axis relative to wheel hub, calculated from caster, camber, toe
 	btQuaternion orientation0;	///< wheel rotation relative to wheel hub, calculated from caster, camber, toe
 	btVector3 position0;		///< position of the wheel hub when the suspension is fully extended (zero g)
-	btScalar antiroll;			///< anti-roll bar spring constant
 	btScalar stiffness;			///< suspension spring constant
 	btScalar bounce;			///< suspension compression damping
 	btScalar rebound;			///< suspension decompression damping

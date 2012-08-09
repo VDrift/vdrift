@@ -26,7 +26,6 @@ SuspensionInfo::SuspensionInfo() :
 	steering_axis(0, 0, 1),
 	orientation0(btQuaternion::getIdentity()),
 	position0(0, 0, 0),
-	antiroll(8000),
 	stiffness(50000),
 	bounce(2500),
 	rebound(4000),

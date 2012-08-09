@@ -56,13 +56,19 @@ public:
 		World & world,
 		FractureBody & body);
 
-	/// wheel ray test
+	/// update wheel displacement (ray test)
+	/// raylen should be greater than wheel radius
 	/// returns false if there is no contact
-	bool updateContact(btScalar raylen = 2);
+	bool updateDisplacement(btScalar raylen = 2);
 
-	/// update contact and setup wheel constraint
+	/// dynamic stiffness delta to account for anti-roll effect
+	/// k = antiroll_stiffness_const * wheels_dislacement_delta / displacement
+	/// when no anti roll bar installed set to 0
+	void setAntiRollStiffness(btScalar value);
+
+	/// update contact, make sure to update displacement first
 	/// returns false if there is no contact
-	bool update(btScalar dt, WheelContact & contact);
+	bool updateContact(btScalar dt, WheelContact & contact);
 
 	/// enable/disable abs
 	void setABS(bool value);
@@ -71,7 +77,7 @@ public:
 	void setTCS(bool value);
 
 	/// wheel (center) world space position
-	const btVector3 &  getPosition() const;
+	const btVector3 & getPosition() const;
 
 	/// wheel radius
 	btScalar getRadius() const;
@@ -100,6 +106,8 @@ private:
 	btScalar radius;
 	btScalar width;
 	btScalar mass;
+	btScalar antiroll;
+	bool has_contact;
 	bool abs_enabled;
 	bool tcs_enabled;
 	bool abs_active;
@@ -107,6 +115,11 @@ private:
 };
 
 // implementation
+
+inline void Wheel::setAntiRollStiffness(btScalar value)
+{
+	antiroll = value;
+}
 
 inline void Wheel::setABS(bool value)
 {
@@ -118,7 +131,7 @@ inline void Wheel::setTCS(bool value)
 	tcs_enabled = value;
 }
 
-inline const btVector3 &  Wheel::getPosition() const
+inline const btVector3 & Wheel::getPosition() const
 {
 	return transform.getOrigin();
 }

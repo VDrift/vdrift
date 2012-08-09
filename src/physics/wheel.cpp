@@ -40,6 +40,8 @@ Wheel::Wheel() :
 	radius(0.3),
 	width(0.2),
 	mass(1),
+	antiroll(0),
+	has_contact(false),
 	abs_enabled(false),
 	tcs_enabled(false),
 	abs_active(false),
@@ -65,7 +67,7 @@ void Wheel::init(
 	body = &nbody;
 }
 
-bool Wheel::updateContact(btScalar raylen)
+bool Wheel::updateDisplacement(btScalar raylen)
 {
 	// update wheel transform
 	transform.setOrigin(body->getCenterOfMassOffset() + suspension.getPosition());
@@ -99,18 +101,15 @@ bool Wheel::updateContact(btScalar raylen)
 	btScalar displacement = suspension.getDisplacement() + relDisplacement;
 	suspension.setDisplacement(displacement);
 
-	return displacement >= 0;
+	has_contact = surface && displacement >= 0;
+	return has_contact;
 }
 
-bool Wheel::update(btScalar dt, WheelContact & contact)
+bool Wheel::updateContact(btScalar dt, WheelContact & contact)
 {
-	if (!updateContact(2 * radius))
-		return false;
+	if (!has_contact) return false;
 
 	const Surface * surface = ray.getSurface();
-	if (!surface)
-		return false;
-
 	contact.frictionCoeff = tire.getTread() * surface->frictionTread +
 		(1.0 - tire.getTread()) * surface->frictionNonTread;
 
@@ -129,7 +128,7 @@ bool Wheel::update(btScalar dt, WheelContact & contact)
 	btVector3 contactPointA = ray.getPoint();
 	btVector3 contactPointB = ray.getPoint();
 
-	btScalar stiffnessConstant = suspension.getStiffness();
+	btScalar stiffnessConstant = suspension.getStiffness() + antiroll;
 	btScalar dampingConstant = suspension.getDamping();
 	btScalar displacement = suspension.getDisplacement();
 
@@ -160,6 +159,7 @@ bool Wheel::update(btScalar dt, WheelContact & contact)
 	// set suspension constraint
 	{
 		// CFM and ERP from spring stiffness and damping constants
+		btAssert(stiffnessConstant >= 0);
 		btScalar softness = 1.0f / (dt * (dt * stiffnessConstant + dampingConstant));
 		btScalar biasFactor = stiffnessConstant / (dt * stiffnessConstant + dampingConstant);
 		btScalar velocityError = -biasFactor * displacement;

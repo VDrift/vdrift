@@ -21,6 +21,7 @@
 #define _SIM_VEHICLE_H
 
 #include "aerodevice.h"
+#include "antirollbar.h"
 #include "differential.h"
 #include "wheel.h"
 #include "transmission.h"
@@ -156,6 +157,7 @@ protected:
 	btTransform transform;
 	btAlignedObjectArray<AeroDevice> aero_device;
 	btAlignedObjectArray<Differential> differential;
+	btAlignedObjectArray<AntiRollBar> antiroll;
 	btAlignedObjectArray<Wheel> wheel;
 	Transmission transmission;
 	Clutch clutch;
