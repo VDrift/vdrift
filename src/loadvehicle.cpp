@@ -635,11 +635,13 @@ bool LoadVehicle(
 	const PTree * cfg_bar;
 	if (cfg.get("antiroll", cfg_bar))
 	{
+		sim::AntiRollBar bar;
 		for (PTree::const_iterator it = cfg_bar->begin(); it != cfg_bar->end(); ++it)
 		{
-			sim::AntiRollBar bar;
-			LoadAntiRollBar(it->second, shaft_map, bar, error);
-			info.antiroll.push_back(bar);
+			if (LoadAntiRollBar(it->second, shaft_map, bar, error))
+			{
+				info.antiroll.push_back(bar);
+			}
 		}
 	}
 
