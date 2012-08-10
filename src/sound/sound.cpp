@@ -171,9 +171,9 @@ void SOUND::Update(bool pause)
 
 	ProcessSourceStop();
 
-	ProcessSources();
-
 	ProcessSourceRemove();
+
+	ProcessSources();
 
 	SetSamplerChanges();
 }
@@ -259,6 +259,7 @@ inline void RemoveItem(size_t id, std::vector<T> & items, size_t & item_num)
 
 size_t SOUND::AddSource(std::tr1::shared_ptr<SOUNDBUFFER> buffer, float offset, bool is3d, bool loop)
 {
+	// add source
 	Source src;
 	src.buffer = buffer;
 	src.position.Set(0, 0, 0);
@@ -271,7 +272,7 @@ size_t SOUND::AddSource(std::tr1::shared_ptr<SOUNDBUFFER> buffer, float offset, 
 	src.loop = loop;
 	size_t id = AddItem(src, sources, sources_num);
 
-	// notify sound thread
+	// add sampler (sound thread)
 	SamplerAdd ns;
 	ns.buffer = buffer.get();
 	ns.offset = offset * Sampler::denom;
@@ -291,11 +292,12 @@ void SOUND::RemoveSource(size_t id)
 
 void SOUND::ResetSource(size_t id)
 {
+	// reset source
 	size_t idn = sources[id].id;
 	Source & src = sources[idn];
 	src.playing = true;
 
-	// notify sound thread
+	// reset sampler (sound thread)
 	SamplerAdd ns;
 	ns.buffer = src.buffer.get();
 	ns.offset = src.offset * Sampler::denom;
@@ -621,11 +623,11 @@ void SOUND::Callback16bitStereo(void *myself, Uint8 *stream, int len)
 
 	ProcessSamplerAdd();
 
+	ProcessSamplerRemove();
+
 	ProcessSamplerUpdate();
 
 	ProcessSamplers(stream, len);
-
-	ProcessSamplerRemove();
 
 	SetSourceChanges();
 }
