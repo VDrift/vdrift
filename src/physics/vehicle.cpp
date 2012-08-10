@@ -405,14 +405,6 @@ btScalar Vehicle::getFeedback() const
 	return feedback;
 }
 
-btScalar Vehicle::getTireThermalLoad(int i) const
-{
-	btAssert(i < wheel_contact.size());
-	btScalar w1 = wheel_contact[i].friction1.accumImpulse * wheel_contact[i].v1;
-	btScalar w2 = wheel_contact[i].friction2.accumImpulse * wheel_contact[i].v2;
-	return btSqrt(w1 * w1 + w2 * w2);
-}
-
 btVector3 Vehicle::getDownVector() const
 {
 	return -body->getCenterOfMassTransform().getBasis().getColumn(2);

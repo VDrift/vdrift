@@ -123,6 +123,7 @@ public:
 	/// driveline state access
 	int getWeelCount() const;
 	const Wheel & getWheel(int i) const;
+	const WheelContact & getWheelContact(int i) const;
 	const Transmission & getTransmission() const;
 	const Clutch & getClutch() const;
 	const Engine & getEngine() const;
@@ -134,9 +135,6 @@ public:
 	bool getTCSEnabled() const;
 	bool getABSActive() const;
 	bool getTCSActive() const;
-
-	/// power dissipated by the tire in Ws: contact impulse * vel
-	btScalar getTireThermalLoad(int i) const;
 
 	/// debugging
 	void print(std::ostream & out, bool p1, bool p2, bool p3, bool p4) const;
@@ -243,6 +241,11 @@ inline int Vehicle::getWeelCount() const
 inline const Wheel & Vehicle::getWheel(int i) const
 {
 	return wheel[i];
+}
+
+inline const WheelContact & Vehicle::getWheelContact(int i) const
+{
+	return wheel_contact[i];
 }
 
 inline const Transmission & Vehicle::getTransmission() const

@@ -906,16 +906,17 @@ void CAR::UpdateSounds(float dt)
 				sound_active = &grasssound[i];
 			}
 
-			MATHVECTOR <float, 3> pos_wheel = GetWheelPosition(i); // interpolated??
-			btVector3 vel_wheel(0,0,0);// = dynamics.getWheelVelocity(i); // fixme
-			float pitch = (vel_wheel.length() - 5.0) * 0.1;
+			const sim::WheelContact & c = dynamics.getWheelContact(i);
+			btVector3 cp = dynamics.getTransform() * c.rA;
+			float cv = btSqrt(c.v1 * c.v1 + c.v2 * c.v2);
+			float pitch = (cv - 5.0) * 0.1;
 			pitch = clamp(pitch, 0.0f, 1.0f);
 			pitch = 1.0 - pitch;
 			pitch *= pitchvariation;
 			pitch = pitch + (1.0 - pitchvariation);
 			pitch = clamp(pitch, 0.1f, 4.0f);
 
-			psound->SetSourcePosition(*sound_active, pos_wheel[0], pos_wheel[1], pos_wheel[2]);
+			psound->SetSourcePosition(*sound_active, cp[0], cp[1], cp[2]);
 			psound->SetSourcePitch(*sound_active, pitch);
 			psound->SetSourceGain(*sound_active, squeal * maxgain);
 		}
@@ -1110,9 +1111,15 @@ float CAR::GetTireSquealAmount(int i) const
 	if (!surface || surface == sim::Surface::None())
 		return 0.0f;
 
+	// tire thermal load (dissipated power * time step)
+	const sim::WheelContact & c = dynamics.getWheelContact(i);
+	float w1 = c.friction1.accumImpulse * c.v1;
+	float w2 = c.friction2.accumImpulse * c.v2;
+	float thermal_load = sqrtf(w1 * w1 + w2 * w2);
+
 	// scale squeal with thermal load
-	float load = dynamics.getTireThermalLoad(i);
-	float squeal = clamp(load * 1E-3f, 0.0f, 1.0f);
+	float squeal = thermal_load * 2E-3f - 0.1f;
+	squeal = clamp(squeal, 0.0f, 1.0f);
 
 	// abuse squeal to indicate ideal slip, slide
 	const sim::Tire & tire = dynamics.getWheel(i).tire;
