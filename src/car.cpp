@@ -909,11 +909,9 @@ void CAR::UpdateSounds(float dt)
 			const sim::WheelContact & c = dynamics.getWheelContact(i);
 			btVector3 cp = dynamics.getTransform() * c.rA;
 			float cv = btSqrt(c.v1 * c.v1 + c.v2 * c.v2);
-			float pitch = (cv - 5.0) * 0.1;
+			float pitch = 0.1f * cv - 0.5f;
 			pitch = clamp(pitch, 0.0f, 1.0f);
-			pitch = 1.0 - pitch;
-			pitch *= pitchvariation;
-			pitch = pitch + (1.0 - pitchvariation);
+			pitch = 1.0 - pitch * pitchvariation;
 			pitch = clamp(pitch, 0.1f, 4.0f);
 
 			psound->SetSourcePosition(*sound_active, cp[0], cp[1], cp[2]);
