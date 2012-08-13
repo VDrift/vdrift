@@ -350,13 +350,19 @@ btScalar Vehicle::getMaxSteeringAngle() const
 
 btScalar Vehicle::getBrakingDistance(btScalar target_speed) const
 {
-	btScalar g = 9.81;
-	btScalar c = lon_friction_coeff * g;
-	btScalar im = body->getInvMass();
-	btScalar d = (getDragCoefficient() - getLiftCoefficient() * lon_friction_coeff) * im;
-	btScalar v1sqr = body->getLinearVelocity().length2();
-	btScalar v2sqr = target_speed * target_speed;
-	return -log((c + v2sqr * d) / (c + v1sqr * d)) / (2 * d);
+	// Braking distance estimation (ignoring aerodynamic drag)
+	// mu * mass * gravity * distance = 0.5 * mass * (Initial_velocity^2 - Final_velocity^2)
+	// Distance is:
+	// distance = (Initial_velocity^2 - Final_velocity^2) / (2 * mu * gravity)
+	btScalar current_speed_2 = body->getLinearVelocity().length2();
+	btScalar target_speed_2 = target_speed * target_speed;
+	btScalar friction = lon_friction_coeff;
+	btScalar gravity = 9.81;
+	if (target_speed_2 < current_speed_2)
+	{
+		return (current_speed_2 - target_speed_2) / (2.0 * friction * gravity);
+	}
+	return 0;
 }
 
 btScalar Vehicle::getMaxVelocity(btScalar radius) const
@@ -818,9 +824,11 @@ void Vehicle::calculateFrictionCoefficient(btScalar & lon_mu, btScalar & lat_mu)
 	btScalar lat_friction = 0.0;
 	for (int i = 0; i < wheel.size(); ++i)
 	{
-		lon_friction += wheel[i].tire.getMaxFx(force) / force;
-		lat_friction += wheel[i].tire.getMaxFy(force, 0.0) / force;
+		lon_friction += wheel[i].tire.getMaxFx(force);
+		lat_friction += wheel[i].tire.getMaxFy(force, 0.0);
 	}
+	lon_friction /= force;
+	lat_friction /= force;
 
 	lon_mu = lon_friction_factor * lon_friction;
 	lat_mu = lat_friction_factor * lat_friction;
