@@ -128,7 +128,7 @@ public:
 	const Clutch & getClutch() const;
 	const Engine & getEngine() const;
 	btScalar getNosAmount() const;
-	bool getOutOfGas() const;
+	btScalar getFuelAmount() const;
 
 	/// traction control state
 	bool getABSEnabled() const;
@@ -268,9 +268,9 @@ inline btScalar Vehicle::getNosAmount() const
 	return engine.getNos();
 }
 
-inline bool Vehicle::getOutOfGas() const
+inline float Vehicle::getFuelAmount() const
 {
-	return engine.getFuel() < 1E-3;
+	return engine.getFuel();
 }
 
 inline bool Vehicle::getABSEnabled() const

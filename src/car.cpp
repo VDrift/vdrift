@@ -480,12 +480,14 @@ bool CAR::LoadPhysics(
 	// init motion states
 	motion_state.resize(topnode.Nodes());
 
+	// register motion states
 	sim::VehicleInfo vinfo;
 	vinfo.motionstate.resize(motion_state.size());
 	for (int i = 0; i < motion_state.size(); ++i)
 	{
 		vinfo.motionstate[i] = &motion_state[i];
 	}
+
 	if (!LoadVehicle(cfg, damage, center, size, vinfo, error))
 	{
 		return false;
@@ -494,7 +496,7 @@ bool CAR::LoadPhysics(
 	dynamics.init(vinfo, position, rotation, world);
 	dynamics.setABS(defaultabs);
 	dynamics.setTCS(defaulttcs);
-	mz_nominalmax = 1;//(GetTireMaxMz(0) + GetTireMaxMz(1)) * 0.5; // fixme
+	mz_nominalmax = 1;//dynamics.getWheel(0).tire.getMaxMz() + dynamics.getWheel(1).tire.getMaxMz();
 	return true;
 }
 
@@ -709,13 +711,6 @@ void CAR::SetColor(float r, float g, float b)
 	{
 		i->SetColor(r, g, b, 1);
 	}
-}
-
-void CAR::SetPosition(const MATHVECTOR <float, 3> & new_position)
-{
-	btVector3 newpos = ToBulletVector(new_position);
-	dynamics.setPosition(newpos);
-	dynamics.alignWithGround();
 }
 
 void CAR::UpdateGraphics()
