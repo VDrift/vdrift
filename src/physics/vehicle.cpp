@@ -818,7 +818,7 @@ void Vehicle::calculateFrictionCoefficient(btScalar & lon_mu, btScalar & lat_mu)
 	btScalar lat_friction_factor = 0.62;
 	btScalar gravity = 9.81;
 	btScalar mass = 1 / body->getInvMass();
-	btScalar force = 0.25 * gravity * mass;
+	btScalar force = gravity * mass / wheel.size();
 
 	btScalar lon_friction = 0.0;
 	btScalar lat_friction = 0.0;
