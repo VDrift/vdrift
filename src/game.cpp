@@ -360,23 +360,30 @@ void GAME::InitCoreSubsystems()
 	}
 	BeginStartingUp();
 
+	// choose renderer
+	usingGL3 = enableGL3 && settings.GetShaders();
+
+	// disable antialiasing for the GL3 path because we're using image-based AA...
+	unsigned antialiasing = usingGL3 ? 0 : settings.GetAntialiasing();
+
+	// make sure to use at least 24bit depth buffer for shadows
+	unsigned depth_bpp = settings.GetDepthbpp();
+	if (settings.GetShadows() && depth_bpp < 24)
+		depth_bpp = 24;
+
 	window.Init("VDrift",
 		settings.GetResolutionX(), settings.GetResolutionY(),
-		settings.GetBpp(),
-		settings.GetShadows() ? std::max(settings.GetDepthbpp(),(unsigned int)24) : settings.GetDepthbpp(),
-		settings.GetFullscreen(),
-		// Explicitly disable antialiasing for the GL3 path because we're using image-based AA...
-		usingGL3 ? 0 : settings.GetAntialiasing(),
+		settings.GetBpp(), depth_bpp,
+		settings.GetFullscreen(), antialiasing,
 		info_output, error_output);
 
 	const int rendererCount = 2;
 	for (int i = 0; i < rendererCount; i++)
 	{
 		// Attempt to enable the GL3 renderer...
-		if (enableGL3 && i == 0 && settings.GetShaders())
+		if (usingGL3)
 		{
 			graphics_interface = new GRAPHICS_GL3V(stringMap);
-			usingGL3 = true;
 		}
 		else
 		{
@@ -403,6 +410,7 @@ void GAME::InitCoreSubsystems()
 		{
 			delete graphics_interface;
 			graphics_interface = NULL;
+			usingGL3 = false;
 		}
 	}
 
