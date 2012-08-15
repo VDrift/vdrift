@@ -30,6 +30,7 @@
 class SCENENODE;
 
 /// an abstract base class that defines the graphics interface
+/// expects a valid OpenGL context with initialized extension entry points (glewInit)
 class GRAPHICS
 {
 public:

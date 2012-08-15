@@ -42,17 +42,6 @@ GLWrapper::GLWrapper() : initialized(false), infoOutput(NULL), errorOutput(NULL)
 
 bool GLWrapper::initialize()
 {
-	GLenum glew_err = glewInit();
-	if (glew_err != GLEW_OK)
-	{
-		logError(std::string("GLEW failed to initialize: ")+UTILS::tostr(glewGetErrorString(glew_err)));
-		return false;
-	}
-	else
-	{
-		logOutput(std::string("Initialized GLEW ")+UTILS::tostr(glewGetString(GLEW_VERSION)));
-	}
-
 	// Check through all OpenGL versions to determine the highest supported OpenGL version.
 	bool supportsRequiredVersion = glewIsSupported(REQUIRED_GL_VERSION);
 

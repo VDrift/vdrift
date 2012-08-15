@@ -77,6 +77,19 @@ void WINDOW_SDL::Init(
 	LogOpenGLInfo(info_output);
 
 	initialized = true;
+
+	// initialize GLEW
+	GLenum glew_err = glewInit();
+	if (glew_err != GLEW_OK)
+	{
+		error_output << "GLEW failed to initialize: " << glewGetErrorString(glew_err) << std::endl;
+		assert(glew_err == GLEW_OK);
+		initialized = false;
+	}
+	else
+	{
+		info_output << "Using GLEW " << glewGetString(GLEW_VERSION) << std::endl;
+	}
 }
 
 void WINDOW_SDL::SwapBuffers()
@@ -286,6 +299,7 @@ void WINDOW_SDL::ChangeDisplay(
 		info_output << "Display change was successful: " << width << "x" << height << "x" << bpp << " " << dbpp << "z fullscreen=" << fullscreen << std::endl;
 	}
 #endif
+
 	w = width;
 	h = height;
 }

@@ -252,18 +252,6 @@ bool GRAPHICS_GL2::Init(
 	if (antialiasing > 1)
 		fsaa = antialiasing;
 
-	//initialize GLEW
-	GLenum glew_err = glewInit();
-	if ( glew_err != GLEW_OK )
-	{
-		error_output << "GLEW failed to initialize: " << glewGetErrorString ( glew_err ) << std::endl;
-		assert(glew_err == GLEW_OK);
-	}
-	else
-	{
-		info_output << "Using GLEW " << glewGetString ( GLEW_VERSION ) << std::endl;
-	}
-
 	if (!GLEW_ARB_multitexture)
 	{
 		info_output << "Your video card doesn't support multitexturing.  Disabling shaders." << std::endl;
