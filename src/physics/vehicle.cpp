@@ -49,6 +49,7 @@ static Shaft * LinkShaft(
 Vehicle::Vehicle() :
 	world(0),
 	body(0),
+	brake_value(0),
 	last_auto_clutch(1),
 	remaining_shift_time(0),
 	tacho_rpm(0),
@@ -183,6 +184,7 @@ void Vehicle::setClutch(btScalar value)
 
 void Vehicle::setBrake(btScalar value)
 {
+	brake_value = value;
 	for (int i = 0; i < wheel.size(); ++i)
 	{
 		wheel[i].brake.setBrakeFactor(value);
@@ -671,7 +673,7 @@ void Vehicle::updateTransmission(btScalar dt)
 		remaining_shift_time = 0;
 	}
 
-	if (!shifted && remaining_shift_time < transmission.getShiftTime() * 0.5f)
+	if (!shifted && remaining_shift_time <= transmission.getShiftTime() * 0.5f)
 	{
 		transmission.shift(shift_gear);
 		shifted = true;
@@ -685,12 +687,7 @@ void Vehicle::updateTransmission(btScalar dt)
 		}
 
 		btScalar throttle = engine.getThrottle();
-		throttle = shiftAutoClutchThrottle(clutch_rpm, throttle, dt);
-		if (engine.getRPM() < engine.getStartRPM() &&
-			throttle < engine.getIdleThrottle())
-		{
-			throttle = engine.getIdleThrottle();
-		}
+		throttle = autoClutchThrottle(clutch_rpm, throttle, dt);
 		engine.setThrottle(throttle);
 
 		btScalar new_clutch = autoClutch(clutch_rpm, last_auto_clutch, dt);
@@ -724,12 +721,20 @@ btScalar Vehicle::autoClutch(btScalar clutch_rpm, btScalar last_clutch, btScalar
 	}
 //	clog << " cstall: " << clutch_value;
 
-	// shift time
-	clutch_value *= shiftAutoClutch();
+	// shift gear
+	const btScalar shift_time = transmission.getShiftTime();
+	if (remaining_shift_time > shift_time * 0.5)
+	    clutch_value = 0.0;
+	else if (remaining_shift_time > 0.0)
+	    clutch_value *= (1.0 - remaining_shift_time / (shift_time * 0.5));
 //	clog << " shift: " << clutch_value;
 
+	// declutch when braking
+	if (brake_value > 1E-3)
+		clutch_value = 0.0;
+
 	// rate limit the autoclutch
-	btScalar engage_limit = 20 * dt;	// 5 steps at 90Hz
+	btScalar engage_limit = 10 * dt;	// 10 steps
 	btScalar clutch_delta = clutch_value - last_clutch;
 	btClamp(clutch_delta, -engage_limit, engage_limit);
 	clutch_value = last_clutch + clutch_delta;
@@ -739,34 +744,30 @@ btScalar Vehicle::autoClutch(btScalar clutch_rpm, btScalar last_clutch, btScalar
 	return clutch_value;
 }
 
-btScalar Vehicle::shiftAutoClutch() const
+btScalar Vehicle::autoClutchThrottle(btScalar clutch_rpm, btScalar throttle, btScalar dt)
 {
-	const btScalar shift_time = transmission.getShiftTime();
-	btScalar shift_clutch = 1.0;
-	if (remaining_shift_time > shift_time * 0.5)
-	    shift_clutch = 0.0;
-	else if (remaining_shift_time > 0.0)
-	    shift_clutch = 1.0 - remaining_shift_time / (shift_time * 0.5);
-	return shift_clutch;
-}
+	if (engine.getRPM() < engine.getStartRPM() &&
+		throttle < engine.getIdleThrottle())
+	{
+		// avoid stall
+		throttle = engine.getIdleThrottle();
+	}
 
-btScalar Vehicle::shiftAutoClutchThrottle(btScalar clutch_rpm, btScalar throttle, btScalar dt)
-{
 	if (remaining_shift_time > 0.0)
 	{
 		// try to match clutch rpm
 		const btScalar current_rpm = engine.getRPM();
-		const btScalar target_rpm = clutch_rpm * 0.95;
-		if (current_rpm < target_rpm && current_rpm < engine.getRedline())
+		if (current_rpm < clutch_rpm && current_rpm < engine.getRedline())
 		{
 			remaining_shift_time += dt;
-			return 1.0;
+			throttle = 1.0;
 		}
 		else
 		{
-			return 0.5 * throttle;
+			throttle = 0.5 * throttle;
 		}
 	}
+
 	return throttle;
 }
 
@@ -795,11 +796,12 @@ int Vehicle::getNextGear(btScalar clutch_rpm) const
 
 btScalar Vehicle::getDownshiftRPM(int gear) const
 {
+	// target rpm is 70% redline in the next lower gear
 	btScalar shift_down_point = 0.0;
 	if (gear > 1)
 	{
-        btScalar current_gear_ratio = transmission.getGearRatio(gear);
-        btScalar lower_gear_ratio = transmission.getGearRatio(gear - 1);
+		btScalar current_gear_ratio = transmission.getGearRatio(gear);
+		btScalar lower_gear_ratio = transmission.getGearRatio(gear - 1);
 		btScalar peak_engine_speed = engine.getRedline();
 		shift_down_point = 0.7 * peak_engine_speed / lower_gear_ratio * current_gear_ratio;
 	}
@@ -860,12 +862,14 @@ void Vehicle::print(std::ostream & out, bool p1, bool p2, bool p3, bool p4) cons
 	{
 		out << "\n\n\n\n\n\n\n";
 		out << "---Engine---\n";
+		out << "Throttle: " << engine.getThrottle() << "\n";
 		out << "RPM: " << engine.getRPM() << "\n";
 		out << "Power: " << engine.getTorque() * engine.getAngularVelocity() * 0.001 << "\n";
 		out << "\n";
 
 		int n = differential.size();
 		out << "---Transmission---\n";
+		out << "Clutch: " << clutch.getPosition() << "\n";
 		out << "Gear Ratio: " << clutch_joint[n].gearRatio << "\n";
 		out << "Engine Load: " << clutch_joint[n].accumulatedImpulse * freq * clutch_joint[n].shaft1->getAngularVelocity() * 0.001 << "\n";
 		out << "Drive Load: " << -clutch_joint[n].accumulatedImpulse * freq * clutch_joint[n].gearRatio * clutch_joint[n].shaft2->getAngularVelocity() * 0.001 << "\n";
@@ -890,11 +894,12 @@ void Vehicle::print(std::ostream & out, bool p1, bool p2, bool p3, bool p4) cons
 		for (int i = 0; i < wheel.size(); ++i)
 		{
 			out << "---Wheel---\n";
-			out << "RPM: " <<  wheel[i].shaft.getAngularVelocity() * 30 / M_PI << "\n";
+			out << "Travel: " <<  wheel[i].suspension.getDisplacement() << "\n";
 			out << "Fz: " <<  wheel_contact[i].response.accumImpulse * freq * 1E-3 << "\n";
 			out << "Ideal Slip: " <<  wheel[i].tire.getIdealSlide() << "\n";
 			out << "Slip: " <<  wheel[i].tire.getSlide() << "\n";
 			out << "Slip Angle: " <<  wheel[i].tire.getSlip() << "\n";
+			out << "RPM: " <<  wheel[i].shaft.getAngularVelocity() * 30 / M_PI << "\n";
 			if (wheel_contact[i].response.accumImpulse > 1E-3)
 			{
 				out << "Friction Load: " << motor_joint[n].accumulatedImpulse * freq * motor_joint[n].shaft->getAngularVelocity() * 0.001 << "\n";

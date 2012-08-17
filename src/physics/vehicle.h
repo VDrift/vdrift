@@ -168,6 +168,7 @@ protected:
 	btAlignedObjectArray<MotorJoint> motor_joint;
 
 	/// vehicle logic state
+	btScalar brake_value;
 	btScalar last_auto_clutch;
 	btScalar remaining_shift_time;
 	btScalar tacho_rpm;
@@ -207,11 +208,11 @@ protected:
 	/// update wheel position, rotation
 	void updateWheelTransform(btScalar dt);
 
+	/// calulate new clutch value
 	btScalar autoClutch(btScalar clutch_rpm, btScalar last_clutch, btScalar dt) const;
 
-	btScalar shiftAutoClutch() const;
-
-	btScalar shiftAutoClutchThrottle(btScalar clutch_rpm, btScalar throttle, btScalar dt);
+	/// override throttle value
+	btScalar autoClutchThrottle(btScalar clutch_rpm, btScalar throttle, btScalar dt);
 
 	/// return the gear change (0 for no change, -1 for shift down, 1 for shift up)
 	int getNextGear(btScalar clutch_rpm) const;
