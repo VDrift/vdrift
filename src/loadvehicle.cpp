@@ -68,7 +68,7 @@ static bool LoadTransmission(
 		s << "gear-ratio-" << i-1;
 		if (!cfg_trans->get(s.str(), info.gear_ratios[i], error)) return false;
 	}
-	cfg_trans->get("shift-time", info.shift_time);
+	if (!cfg_trans->get("shift-time", info.shift_time, error)) return false;
 
 	return true;
 }
@@ -324,7 +324,7 @@ static bool LoadSuspension(
 	if (!LoadCoilover(*cfg_coil, info, error)) return false;
 
 	const PTree * cfg_arm;
-	if (!cfg_wheel.get("lower-arm", cfg_arm)) return false;
+	if (!cfg_wheel.get("lower-arm", cfg_arm, error)) return false;
 	if (!LoadArm(*cfg_arm, info.lower_arm, error)) return false;
 	//info.type = sim::SuspensionInfo::HINGE;
 
