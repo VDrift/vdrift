@@ -1340,7 +1340,7 @@ void GAME::UpdateCarInputs(CAR & car)
 		car.GetSpeedMPS(), car.GetMaxSpeedMPS(), settings.GetMPH(), car.GetClutch(), car.GetGear(),
 		debug_info1.str(), debug_info2.str(), debug_info3.str(), debug_info4.str(),
 		car.GetABSEnabled(), car.GetABSActive(), car.GetTCSEnabled(), car.GetTCSActive(),
-		car.GetFuelAmount() > 1E-5, car.GetNosActive(), car.GetNosAmount(),
+		car.GetFuelAmount() < 1E-5, car.GetNosActive(), car.GetNosAmount(),
 		timer.GetIsDrifting(tid), timer.GetDriftScore(tid), timer.GetThisDriftScore(tid));
 
 	// Handle camera mode change inputs.
