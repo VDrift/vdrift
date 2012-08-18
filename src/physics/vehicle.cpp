@@ -702,10 +702,10 @@ void Vehicle::updateTransmission(btScalar dt)
 
 btScalar Vehicle::autoClutch(btScalar clutch_rpm, btScalar last_clutch, btScalar dt) const
 {
-//	clog << "last: " << last_clutch;
+	btScalar clutch_value = 1;				// default clutch value
+	btScalar clutch_engage_limit = 10 * dt; // default engage rate limit
 
 	// limit clutch load to keep engine rpm above stall
-	btScalar clutch_value = 1;
 	btScalar rpm_min = engine.getStartRPM();
 	btScalar rpm_clutch = transmission.getClutchRPM();
 	if (rpm_clutch < rpm_min)
@@ -719,31 +719,45 @@ btScalar Vehicle::autoClutch(btScalar clutch_rpm, btScalar last_clutch, btScalar
 			torque_limit = engine.getTorque();
 		}
 		clutch_value = torque_limit / clutch.getTorqueMax();
-//		clog << " stall: " << clutch_value;
-
 		btClamp(clutch_value, btScalar(0), btScalar(1));
 	}
-//	clog << " cstall: " << clutch_value;
 
-	// shift gear
+	// declutch when shifting
 	const btScalar shift_time = transmission.getShiftTime();
 	if (remaining_shift_time > shift_time * 0.5)
-	    clutch_value = 0.0;
-	else if (remaining_shift_time > 0.0)
-	    clutch_value *= (1.0 - remaining_shift_time / (shift_time * 0.5));
-//	clog << " shift: " << clutch_value;
-
-	// declutch when braking
-	if (brake_value > 1E-3)
+	{
 		clutch_value = 0.0;
+	}
+	else if (remaining_shift_time > 0.0)
+	{
+	    clutch_value *= (1.0 - remaining_shift_time / (shift_time * 0.5));
+	}
+
+	if (brake_value > 1E-3)
+	{
+		// declutch when braking
+		clutch_value = 0.0;
+	}
+	else if (engine.getThrottle() < 1E-3)
+	{
+		// declutch to avoid driven wheels traction loss
+		// helps with wheel lock to roll transitions after hard braking
+		for (int i = 0; i < wheel.size(); ++i)
+		{
+			btScalar slide = std::abs(wheel[i].tire.getSlide());
+			btScalar slide_limit = 0.25 * wheel[i].tire.getIdealSlide();
+			if (slide > slide_limit)
+			{
+				clutch_value = 0;
+				break;
+			}
+		}
+	}
 
 	// rate limit the autoclutch
-	btScalar engage_limit = 10 * dt;	// 10 steps
 	btScalar clutch_delta = clutch_value - last_clutch;
-	btClamp(clutch_delta, -engage_limit, engage_limit);
+	btClamp(clutch_delta, -clutch_engage_limit, clutch_engage_limit);
 	clutch_value = last_clutch + clutch_delta;
-//	clog << " limit: " << clutch_value;
-//	clog << " rpmc: " << rpm_clutch << " rpme: " << engine.getRPM() << "\n";
 
 	return clutch_value;
 }
