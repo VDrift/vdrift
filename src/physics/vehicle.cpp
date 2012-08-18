@@ -452,7 +452,11 @@ void Vehicle::updateDynamics(btScalar dt)
 		cjoint.shaft1 = &differential[i].getShaft1();
 		cjoint.shaft2 = &differential[i].getShaft2();
 		cjoint.gearRatio = 1;
-		cjoint.impulseLimit = differential[i].getAntiSlipTorque() * dt;
+		// 1 way lsd, make it configurable?
+		if (djoint.getVelocityDelta() > 0)
+			cjoint.impulseLimit = differential[i].getAntiSlipTorque() * dt;
+		else
+			cjoint.impulseLimit = 0;
 		cjoint.init();
 	}
 
