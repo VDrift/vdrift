@@ -74,7 +74,7 @@ public:
 private:
 	void End();
 
-	float TickPeriod() const {return timestep;}
+	float GetTimeStep() const { return 1 / 90.0; }
 
 	void MainLoop();
 
@@ -243,7 +243,6 @@ private:
 	unsigned int displayframe; ///< display frame counter
 	double clocktime; ///< elapsed wall clock time
 	double target_time;
-	const float timestep; ///< simulation time step
 
 	PATHMANAGER pathmanager;
 	SETTINGS settings;

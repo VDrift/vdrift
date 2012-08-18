@@ -85,7 +85,6 @@ GAME::GAME(std::ostream & info_out, std::ostream & error_out) :
 	displayframe(0),
 	clocktime(0),
 	target_time(0),
-	timestep(1/90.0),
 	graphics_interface(NULL),
 	enableGL3(true),
 	usingGL3(false),
@@ -115,12 +114,12 @@ GAME::GAME(std::ostream & info_out, std::ostream & error_out) :
 	active_camera(0),
 	race_laps(0),
 	practice(true),
-	dynamics_config(timestep, 8),
+	dynamics_config(GetTimeStep(), 8),
 	dynamics(dynamics_config),
 	dynamics_drawmode(0),
 	particle_timer(0),
 	track(),
-	replay(timestep),
+	replay(GetTimeStep()),
 	http("/tmp")
 {
 	carcontrols_local.first = 0;
@@ -802,7 +801,7 @@ void GAME::Tick(float deltat)
 	// This is the minimum fps the game will run at before it starts slowing down time.
 	const float minfps = 10.0f;
 	// Slow the game down if we can't process fast enough.
-	const unsigned int maxticks = (int) (1.0f / (minfps * timestep));
+	const unsigned int maxticks = (int) (1.0f / (minfps * GetTimeStep()));
 	// Slow the game down if we can't process fast enough.
 	const float maxtime = 1.0 / minfps;
 	unsigned int curticks = 0;
@@ -816,7 +815,7 @@ void GAME::Tick(float deltat)
 	http.Tick();
 
 	// Increment game logic by however many tick periods have passed since the last GAME::Tick...
-	while (target_time - TickPeriod() * frame > TickPeriod() && curticks < maxticks)
+	while (target_time - GetTimeStep() * frame > GetTimeStep() && curticks < maxticks)
 	{
 		frame++;
 
@@ -856,7 +855,7 @@ void GAME::AdvanceGameLogic()
 			settings.GetJoyType(),
 			eventsystem,
 			last_steer,
-			TickPeriod(),
+			GetTimeStep(),
 			settings.GetJoy200(),
 			car_speed,
 			settings.GetSpeedSensitivity(),
@@ -875,17 +874,17 @@ void GAME::AdvanceGameLogic()
 	{
 		PROFILER.beginBlock("ai");
 		ai.Visualize();
-		ai.update(TickPeriod(), cars);
+		ai.update(GetTimeStep(), cars);
 		PROFILER.endBlock("ai");
 
 		PROFILER.beginBlock("physics");
-		dynamics.update(TickPeriod());
+		dynamics.update(GetTimeStep());
 		PROFILER.endBlock("physics");
 
 		PROFILER.beginBlock("car");
 		for (std::list <CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
 		{
-			UpdateCar(*i, TickPeriod());
+			UpdateCar(*i, GetTimeStep());
 		}
 		PROFILER.endBlock("car");
 
@@ -897,7 +896,7 @@ void GAME::AdvanceGameLogic()
 		//PROFILER.endBlock("timer");
 
 		//PROFILER.beginBlock("particles");
-		UpdateParticleSystems(TickPeriod());
+		UpdateParticleSystems(GetTimeStep());
 		//PROFILER.endBlock("particles");
 
 		//PROFILER.beginBlock("trackmap-update");
@@ -923,7 +922,7 @@ void GAME::AdvanceGameLogic()
 	}
 
 	//PROFILER.beginBlock("force-feedback");
-	UpdateForceFeedback(TickPeriod());
+	UpdateForceFeedback(GetTimeStep());
 	//PROFILER.endBlock("force-feedback");
 }
 
@@ -1069,7 +1068,7 @@ void GAME::UpdateTimer()
 		info_output << std::endl;*/
 	}
 
-	timer.Tick(TickPeriod());
+	timer.Tick(GetTimeStep());
 	//timer.DebugPrint(info_output);
 }
 
@@ -1403,13 +1402,13 @@ void GAME::UpdateCarInputs(CAR & car)
 	}
 	else
 	{
-		active_camera->Update(pos, rot, TickPeriod());
+		active_camera->Update(pos, rot, GetTimeStep());
 	}
 
 	// Handle camera inputs.
-	float left = TickPeriod() * (carcontrol.GetInput(CARINPUT::PAN_LEFT) - carcontrol.GetInput(CARINPUT::PAN_RIGHT));
-	float up = TickPeriod() * (carcontrol.GetInput(CARINPUT::PAN_UP) - carcontrol.GetInput(CARINPUT::PAN_DOWN));
-	float dy = TickPeriod() * (carcontrol.GetInput(CARINPUT::ZOOM_IN) - carcontrol.GetInput(CARINPUT::ZOOM_OUT));
+	float left = GetTimeStep() * (carcontrol.GetInput(CARINPUT::PAN_LEFT) - carcontrol.GetInput(CARINPUT::PAN_RIGHT));
+	float up = GetTimeStep() * (carcontrol.GetInput(CARINPUT::PAN_UP) - carcontrol.GetInput(CARINPUT::PAN_DOWN));
+	float dy = GetTimeStep() * (carcontrol.GetInput(CARINPUT::ZOOM_IN) - carcontrol.GetInput(CARINPUT::ZOOM_OUT));
 	MATHVECTOR<float, 3> zoom(direction::Forward * 4 * dy);
 	active_camera->Rotate(up, left);
 	active_camera->Move(zoom[0], zoom[1], zoom[2]);
@@ -1785,8 +1784,8 @@ void GAME::SetGarageCar()
 	{
 		// set car
 		CAR & car = cars.back();
-		dynamics.update(timestep);
-		car.Update(timestep);
+		dynamics.update(GetTimeStep());
+		car.Update(GetTimeStep());
 
 		// add car sounds
 		sound.Update(true);
@@ -2270,7 +2269,7 @@ void GAME::UpdateParticleSystems(float dt)
 	}
 
 	particle_timer++;
-	particle_timer = particle_timer % (unsigned int)((1.0/TickPeriod()));
+	particle_timer = particle_timer % (unsigned int)((1.0 / GetTimeStep()));
 }
 
 void GAME::UpdateDriftScore(CAR & car, double dt)
