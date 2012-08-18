@@ -35,12 +35,15 @@ struct DifferentialJoint
 	btScalar inertiaEff;
 	btScalar impulseLimit;
 	btScalar accumulatedImpulse;
-	
+
 	/// calculate effective inertia, reset solver variables
 	void init();
-	
+
 	/// one solver iteration
 	void solve();
+
+	/// angular velocity difference between shaft 1 and children shafts 2a/b
+	btScalar getVelocityDelta();
 };
 
 // implementation
@@ -55,8 +58,7 @@ inline void DifferentialJoint::init()
 
 inline void DifferentialJoint::solve()
 {
-	btScalar velocityError = shaft1->getAngularVelocity() -
-		0.5 * gearRatio * (shaft2a->getAngularVelocity() + shaft2b->getAngularVelocity());
+	btScalar velocityError = getVelocityDelta();
 	btScalar lambda = -velocityError * inertiaEff;
 
 	btScalar accumulatedImpulseOld = accumulatedImpulse;
@@ -67,6 +69,12 @@ inline void DifferentialJoint::solve()
 	shaft1->applyImpulse(lambda);
 	shaft2a->applyImpulse(-lambda * 0.5 * gearRatio);
 	shaft2b->applyImpulse(-lambda * 0.5 * gearRatio);
+}
+
+inline btScalar DifferentialJoint::getVelocityDelta()
+{
+	return shaft1->getAngularVelocity() - 0.5 * gearRatio *
+		(shaft2a->getAngularVelocity() + shaft2b->getAngularVelocity());
 }
 
 }
