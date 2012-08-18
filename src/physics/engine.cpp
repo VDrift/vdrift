@@ -125,11 +125,14 @@ btScalar Engine::getCombustionTorque(btScalar throttle, btScalar angvel) const
 
 btScalar Engine::getFrictionTorque(btScalar throttle, btScalar angvel) const
 {
+	return getCombustionTorque(-0.25, angvel) * (1 - throttle);
+/*
 	btScalar velsign = angvel < 0 ? -1.0 : 1.0;
 	btScalar A = 0;
 	btScalar B = -600 * info.friction; //-1300 * info.friction;
 	btScalar C = 0;
 	return (A + angvel * B + -velsign * C * angvel * angvel) * (1.0 - throttle);
+*/
 }
 
 btScalar Engine::calcIdleThrottle() const
