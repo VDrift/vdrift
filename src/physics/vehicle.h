@@ -169,7 +169,7 @@ protected:
 
 	/// vehicle logic state
 	btScalar brake_value;
-	btScalar last_auto_clutch;
+	btScalar last_clutch;
 	btScalar remaining_shift_time;
 	btScalar tacho_rpm;
 	int shift_gear;

@@ -50,7 +50,7 @@ Vehicle::Vehicle() :
 	world(0),
 	body(0),
 	brake_value(0),
-	last_auto_clutch(1),
+	last_clutch(1),
 	remaining_shift_time(0),
 	tacho_rpm(0),
 	shift_gear(0),
@@ -690,10 +690,10 @@ void Vehicle::updateTransmission(btScalar dt)
 		throttle = autoClutchThrottle(clutch_rpm, throttle, dt);
 		engine.setThrottle(throttle);
 
-		btScalar new_clutch = autoClutch(clutch_rpm, last_auto_clutch, dt);
+		btScalar new_clutch = autoClutch(clutch_rpm, last_clutch, dt);
 		clutch.setPosition(new_clutch);
-		last_auto_clutch = new_clutch;
 	}
+	last_clutch = clutch.getPosition();
 }
 
 btScalar Vehicle::autoClutch(btScalar clutch_rpm, btScalar last_clutch, btScalar dt) const
@@ -862,14 +862,13 @@ void Vehicle::print(std::ostream & out, bool p1, bool p2, bool p3, bool p4) cons
 	{
 		out << "\n\n\n\n\n\n\n";
 		out << "---Engine---\n";
-		out << "Throttle: " << engine.getThrottle() << "\n";
 		out << "RPM: " << engine.getRPM() << "\n";
 		out << "Power: " << engine.getTorque() * engine.getAngularVelocity() * 0.001 << "\n";
 		out << "\n";
 
 		int n = differential.size();
 		out << "---Transmission---\n";
-		out << "Clutch: " << clutch.getPosition() << "\n";
+		out << "Clutch: " << last_clutch << "\n";
 		out << "Gear Ratio: " << clutch_joint[n].gearRatio << "\n";
 		out << "Engine Load: " << clutch_joint[n].accumulatedImpulse * freq * clutch_joint[n].shaft1->getAngularVelocity() * 0.001 << "\n";
 		out << "Drive Load: " << -clutch_joint[n].accumulatedImpulse * freq * clutch_joint[n].gearRatio * clutch_joint[n].shaft2->getAngularVelocity() * 0.001 << "\n";
