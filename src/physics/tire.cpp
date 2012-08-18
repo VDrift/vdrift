@@ -36,7 +36,11 @@ Tire::Tire() :
 	slide(0),
 	slip(0),
 	ideal_slide(0),
-	ideal_slip(0)
+	ideal_slip(0),
+	fx(0),
+	fy(0),
+	fz(0),
+	mz(0)
 {
 	// ctor
 }
@@ -87,6 +91,7 @@ btVector3 Tire::getForce(
 	if (normal_force < 1E-3 || friction_coeff < 1E-3)
 	{
 		slide = slip = 0;
+		ideal_slide = ideal_slip = 1;
 		fx = fy = fz = mz = 0;
 		return btVector3(0, 0, 0);
 	}
