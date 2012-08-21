@@ -275,17 +275,17 @@ inline const std::vector<CAMERA*> & CAR::GetCameras() const
 
 inline MATHVECTOR<float, 3> CAR::GetPosition() const
 {
-	return ToMathVector<float>(motion_state[0].position);
+	return cast(motion_state[0].position);
 }
 
 inline QUATERNION<float> CAR::GetOrientation() const
 {
-	return ToMathQuaternion<float>(motion_state[0].rotation);
+	return cast(motion_state[0].rotation);
 }
 
 inline MATHVECTOR<float, 3> CAR::GetWheelPosition(int i) const
 {
-	return ToMathVector<float>(motion_state[i+1].position);
+	return cast(motion_state[i+1].position);
 }
 
 inline float CAR::GetTireRadius(int i) const
@@ -410,7 +410,7 @@ inline float CAR::GetInvMass() const
 
 inline MATHVECTOR <float, 3> CAR::GetVelocity() const
 {
-	return ToMathVector<float>(dynamics.getVelocity());
+	return cast(dynamics.getVelocity());
 }
 
 inline float CAR::GetBrakingDistance(float target_velocity)
@@ -445,7 +445,7 @@ inline sim::Vehicle & CAR::GetCarDynamics()
 
 inline MATHVECTOR<float, 3> CAR::GetCenterOfMassPosition() const
 {
-	return ToMathVector<float>(dynamics.getPosition());
+	return cast(dynamics.getPosition());
 }
 
 inline SCENENODE & CAR::GetNode()

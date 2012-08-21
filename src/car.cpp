@@ -472,10 +472,10 @@ bool CAR::LoadPhysics(
 	std::tr1::shared_ptr<MODEL> model;
 	content.load(model, carpath, carmodel);
 
-	btVector3 size = ToBulletVector(model->GetSize());
-	btVector3 center = ToBulletVector(model->GetCenter());
-	btVector3 position = ToBulletVector(initial_position);
-	btQuaternion rotation = ToBulletQuaternion(initial_orientation);
+	btVector3 size = cast(model->GetSize());
+	btVector3 center = cast(model->GetCenter());
+	btVector3 position = cast(initial_position);
+	btQuaternion rotation = cast(initial_orientation);
 
 	// init motion states
 	motion_state.resize(topnode.Nodes());
@@ -723,8 +723,8 @@ void CAR::UpdateGraphics()
 	keyed_container<SCENENODE> & childlist = topnode.GetNodelist();
 	for (keyed_container<SCENENODE>::iterator ni = childlist.begin(); ni != childlist.end(); ++ni, ++i)
 	{
-		MATHVECTOR<float, 3> pos = ToMathVector<float>(motion_state[i].position);
-		QUATERNION<float> rot = ToMathQuaternion<float>(motion_state[i].rotation);
+		MATHVECTOR<float, 3> pos = cast(motion_state[i].position);
+		QUATERNION<float> rot = cast(motion_state[i].rotation);
 		ni->GetTransform().SetTranslation(pos);
 		ni->GetTransform().SetRotation(rot);
 	}
@@ -786,7 +786,7 @@ void CAR::UpdateSounds(float dt)
 	if (!psound) return;
 
 	MATHVECTOR <float, 3> pos_car = GetPosition();
-	MATHVECTOR <float, 3> pos_eng = ToMathVector<float>(dynamics.getEngine().getPosition());
+	MATHVECTOR <float, 3> pos_eng = cast(dynamics.getEngine().getPosition());
 
 	psound->SetSourcePosition(roadnoise, pos_car[0], pos_car[1], pos_car[2]);
 	psound->SetSourcePosition(crashsound, pos_car[0], pos_car[1], pos_car[2]);

@@ -357,9 +357,9 @@ bool TRACK::LOADER::LoadShape(const PTree & cfg, const MODEL & model, BODY & bod
 		if (!shape)
 		{
 			// fall back to model bounding box
-			btVector3 size = ToBulletVector(model.GetSize());
+			btVector3 size = cast(model.GetSize());
 			shape = new btBoxShape(size * 0.5);
-			center = center + ToBulletVector(model.GetCenter());
+			center = center + cast(model.GetCenter());
 		}
 		if (compound)
 		{
@@ -545,8 +545,8 @@ bool TRACK::LOADER::LoadNode(const PTree & sec)
 		{
 			// static geometry collidable
 			btTransform transform;
-			transform.setOrigin(ToBulletVector(position));
-			transform.setRotation(ToBulletQuaternion(rotation));
+			transform.setOrigin(cast(position));
+			transform.setRotation(cast(rotation));
 #ifndef EXTBULLET
 			track_shape->addChildShape(transform, body.shape);
 #else
@@ -563,7 +563,7 @@ bool TRACK::LOADER::LoadNode(const PTree & sec)
 	else
 	{
 		// fix postion due to rotation around mass center
-		MATHVECTOR<float, 3> center_local = ToMathVector<float>(body.center);
+		MATHVECTOR<float, 3> center_local = cast(body.center);
 		MATHVECTOR<float, 3> center_world = center_local;
 		rotation.RotateVector(center_world);
 		position = position - center_local + center_world;
@@ -572,8 +572,8 @@ bool TRACK::LOADER::LoadNode(const PTree & sec)
 		{
 			// dynamic geometry
 			data.body_transforms.push_back(sim::MotionState());
-			data.body_transforms.back().rotation = ToBulletQuaternion(rotation);
-			data.body_transforms.back().position = ToBulletVector(position);
+			data.body_transforms.back().rotation = cast(rotation);
+			data.body_transforms.back().position = cast(position);
 			data.body_transforms.back().massCenterOffset = -body.center;
 
 			btRigidBody::btRigidBodyConstructionInfo info(body.mass, &data.body_transforms.back(), body.shape, body.inertia);
@@ -595,8 +595,8 @@ bool TRACK::LOADER::LoadNode(const PTree & sec)
 		{
 			// dynamic geometry as static geometry collidable
 			btTransform transform;
-			transform.setOrigin(ToBulletVector(position));
-			transform.setRotation(ToBulletQuaternion(rotation));
+			transform.setOrigin(cast(position));
+			transform.setRotation(cast(rotation));
 
 			btCollisionObject * object = new btCollisionObject();
 			object->setActivationState(DISABLE_SIMULATION);

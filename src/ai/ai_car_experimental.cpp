@@ -493,7 +493,7 @@ struct RayResultCb : public btCollisionWorld::RayResultCallback
 float AI_Car_Experimental::RayCastDistance( MATHVECTOR <float, 3> direction, float max_length)
 {
 	const btTransform & tr = car->GetCarDynamics().getTransform();
-	btVector3 ray_dir = tr.getBasis() * ToBulletVector(direction);
+	btVector3 ray_dir = tr.getBasis() * cast(direction);
 	btVector3 ray_from = tr.getOrigin();
 	btVector3 ray_to = ray_from + ray_dir * max_length;
 
@@ -502,8 +502,8 @@ float AI_Car_Experimental::RayCastDistance( MATHVECTOR <float, 3> direction, flo
 	float dist = raycb.m_closestHitFraction * max_length;
 
 #ifdef VISUALIZE_AI_DEBUG
-	MATHVECTOR<float, 3> pos_start(ToMathVector<float>(pos));
-	MATHVECTOR<float, 3> pos_end = pos_start + (ToMathVector<float>(dir) * dist);
+	MATHVECTOR<float, 3> pos_start(cast(pos));
+	MATHVECTOR<float, 3> pos_end = pos_start + (cast(dir) * dist);
 	AddLinePoint(raycastshape, pos_start);
 	AddLinePoint(raycastshape, pos_end);
 #endif

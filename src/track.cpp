@@ -150,8 +150,8 @@ void TRACK::Update()
 	for (size_t i = 0, e = data.body_nodes.size(); i < e; ++i, ++t)
 	{
 		TRANSFORM & vt = data.dynamic_node.GetNode(data.body_nodes[i]).GetTransform();
-		vt.SetRotation(ToMathQuaternion<float>(t->rotation));
-		vt.SetTranslation(ToMathVector<float>(t->position));
+		vt.SetRotation(cast(t->rotation));
+		vt.SetTranslation(cast(t->position));
 	}
 }
 
