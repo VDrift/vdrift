@@ -112,6 +112,7 @@ void PERFORMANCE_TESTING::Test(
 	car.setAutoClutch(true);
 	car.setABS(true);
 	car.setTCS(true);
+	car.startEngine();
 	car.setBrake(1.0);
 	car.setGear(1.0);
 
@@ -262,7 +263,7 @@ void PERFORMANCE_TESTING::TestStoppingDistance(bool abs, std::ostream & info_out
 		{
 			accelerating = false;
 			stopstart = car.getPosition();
-			//std::cout << "hitting the brakes at " << t << ", " << car_speed << std::endl;
+			//info_output << "hitting the brakes at " << t << ", " << ConvertToMPH(car_speed) << " MPH" << std::endl;
 		}
 
 		if (!accelerating && car_speed < stopthreshold)
@@ -273,7 +274,7 @@ void PERFORMANCE_TESTING::TestStoppingDistance(bool abs, std::ostream & info_out
 		if (!car.getEngine().getCombustion())
 		{
 			error_output << "Car stalled during launch, t=" << t << std::endl;
-			break;
+			//break;
 		}
 
 		if (i % (int)(1.0/dt) == 0) //every second
