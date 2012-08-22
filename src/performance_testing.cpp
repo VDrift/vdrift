@@ -114,7 +114,6 @@ void PERFORMANCE_TESTING::Test(
 	car.setTCS(true);
 	car.startEngine();
 	car.setBrake(1.0);
-	car.setGear(1.0);
 
 	// get initial state
 	car.getState(carstate);
@@ -163,6 +162,12 @@ void PERFORMANCE_TESTING::TestMaxSpeed(std::ostream & info_output, std::ostream 
 	std::string downforcestr = "N/A";
 	while (t < maxtime)
 	{
+		// rev up before start
+		if (car.getTransmission().getGear() == 0 &&
+			car.getEngine().getRPM() > 0.7 * car.getEngine().getRPMLimit())
+		{
+			car.setGear(1);
+		}
 		car.setThrottle(1.0f);
 		car.setBrake(0.0f);
 
@@ -230,6 +235,7 @@ void PERFORMANCE_TESTING::TestStoppingDistance(bool abs, std::ostream & info_out
 
 	ResetCar();
 	car.setABS(abs);
+	car.setGear(1);
 
 	double maxtime = 300.0;
 	double t = 0.;
