@@ -105,7 +105,7 @@ void PERFORMANCE_TESTING::Test(
 
 	// init vehicle
 	// position is the center of a 2 x 4 x 1 meter box on track surface
-	btVector3 position(0.0, -4.0, 0.5);
+	btVector3 position(0.0, -2.0, 0.5);
 	btQuaternion rotation = btQuaternion::getIdentity();
 	car.init(vinfo, position, rotation, world);
 	car.setAutoShift(true);
