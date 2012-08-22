@@ -177,7 +177,7 @@ void PERFORMANCE_TESTING::TestMaxSpeed(std::ostream & info_output, std::ostream 
 			btVector3 aero = car.getTotalAero();
 
 			std::stringstream dfs;
-			dfs << -aero[2] << " N; " << -aero[2] / aero[0] << ":1 lift/drag";
+			dfs << -aero.z() << " N; lift/drag: " << aero.z() / aero.y();
 			downforcestr = dfs.str();
 		}
 
