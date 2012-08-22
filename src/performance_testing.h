@@ -21,6 +21,7 @@
 #define _PERFORMANCE_TESTING_H
 
 #include "physics/vehicle.h"
+#include "physics/vehiclestate.h"
 #include "physics/surface.h"
 
 class ContentManager;
@@ -29,6 +30,8 @@ class PERFORMANCE_TESTING
 {
 public:
 	PERFORMANCE_TESTING(sim::World & world);
+
+	~PERFORMANCE_TESTING();
 
 	void Test(
 		const std::string & cardir,
@@ -40,10 +43,12 @@ public:
 private:
 	sim::World & world;
 	sim::Surface surface;
+	sim::VehicleState carstate;
 	sim::Vehicle car;
-	std::string carstate;
 
-	void SimulateFlatRoad();
+	/// flat plane test track
+	btCollisionObject * track;
+	btCollisionShape * plane;
 
 	void ResetCar();
 

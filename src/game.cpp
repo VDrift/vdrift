@@ -571,9 +571,16 @@ bool GAME::ParseArguments(std::list <std::string> & args)
 
 	if (!argmap["-cartest"].empty())
 	{
+		pathmanager.Init(info_output, error_output);
+		content.getFactory<PTree>().init(read_ini, write_ini, content);
+		content.addPath(pathmanager.GetWriteableDataPath());
+		content.addPath(pathmanager.GetDataPath());
+		content.addSharedPath(pathmanager.GetCarPartsPath());
+		content.addSharedPath(pathmanager.GetTrackPartsPath());
+
 		const std::string carname = argmap["-cartest"];
 		const std::string cardir = pathmanager.GetCarsDir() + "/" + carname;
-		pathmanager.Init(info_output, error_output);
+
 		PERFORMANCE_TESTING perftest(dynamics);
 		perftest.Test(cardir, carname, content, info_output, error_output);
 		continue_game = false;

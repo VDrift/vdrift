@@ -18,9 +18,12 @@
 /************************************************************************/
 
 #include "performance_testing.h"
-#include "content/contentmanager.h"
+#include "loadvehicle.h"
+#include "physics/vehicleinfo.h"
 #include "physics/world.h"
+#include "content/contentmanager.h"
 #include "cfg/ptree.h"
+#include "BulletCollision/CollisionShapes/btStaticPlaneShape.h"
 
 #include <vector>
 #include <iostream>
@@ -37,7 +40,7 @@ static inline float ConvertToFeet(float meters)
 }
 
 PERFORMANCE_TESTING::PERFORMANCE_TESTING(sim::World & world) :
-	world(world)
+	world(world), track(0), plane(0)
 {
 	surface.bumpWaveLength = 1;
 	surface.bumpAmplitude = 0;
@@ -47,6 +50,19 @@ PERFORMANCE_TESTING::PERFORMANCE_TESTING(sim::World & world) :
 	surface.rollingDrag = 0;
 }
 
+PERFORMANCE_TESTING::~PERFORMANCE_TESTING()
+{
+	if (track)
+	{
+		world.removeCollisionObject(track);
+		delete track;
+	}
+	if (plane)
+	{
+		delete plane;
+	}
+}
+
 void PERFORMANCE_TESTING::Test(
 	const std::string & cardir,
 	const std::string & carname,
@@ -54,79 +70,68 @@ void PERFORMANCE_TESTING::Test(
 	std::ostream & info_output,
 	std::ostream & error_output)
 {
-	info_output << "Beginning car performance test on " << carname << std::endl;
-/*
-	//load the car dynamics
+	info_output << "Beginning car performance test with " << carname << std::endl;
+
+	// init track
+	assert(!track);
+	assert(!plane);
+	btVector3 planeNormal(0, 0, 1);
+	btScalar planeConstant = 0;
+	plane = new btStaticPlaneShape(planeNormal, planeConstant);
+	plane->setUserPointer(static_cast<void*>(&surface));
+	track = new btCollisionObject();
+	track->setCollisionShape(plane);
+	track->setActivationState(DISABLE_SIMULATION);
+	world.addCollisionObject(track);
+
+	// load car config
 	std::tr1::shared_ptr<PTree> cfg;
 	content.load(cfg, cardir, carname + ".car");
 	if (!cfg->size())
 	{
+		error_output << "Failed to load " << carname << ".car" << std::endl;
 		return;
 	}
 
-	btVector3 size(0, 0, 0), center(0, 0, 0), pos(0, 0, 0); // collision shape from wheel data
-	btQuaternion rot = btQuaternion::getIdentity();
+	// load vehicle info
+	sim::VehicleInfo vinfo;
 	bool damage = false;
-	if (!car.Load(*cfg, size, center, pos, rot, damage, world, error_output))
+	btVector3 center(0.0, 0.0, 0.0);
+	btVector3 size(1.0, 2.0, 0.25);
+	if (!LoadVehicle(*cfg, damage, center, size, vinfo, error_output))
 	{
 		return;
 	}
 
-	info_output << "Car dynamics loaded" << std::endl;
-	info_output << carname << " Summary:\n" <<
-		"Mass (kg) including driver and fuel: " << 1 / car.GetInvMass() << "\n" <<
-		"Center of mass (m): " << car.GetCenterOfMass() << std::endl;
+	// init vehicle
+	// position is the center of a 2 x 4 x 1 meter box on track surface
+	btVector3 position(0.0, -4.0, 0.5);
+	btQuaternion rotation = btQuaternion::getIdentity();
+	car.init(vinfo, position, rotation, world);
+	car.setAutoShift(true);
+	car.setAutoClutch(true);
+	car.setABS(true);
+	car.setTCS(true);
+	car.setBrake(1.0);
+	car.setGear(1.0);
 
-	std::stringstream statestream;
-	joeserialize::BinaryOutputSerializer serialize_output(statestream);
-	if (!car.serialize(serialize_output))
-	{
-		error_output << "Serialization error" << std::endl;
-	}
-	//else info_output << "Car state: " << statestream.str();
-	carstate = statestream.str();
+	// get initial state
+	car.getState(carstate);
 
-	// fixme
-	info_output << "Car performance test broken - exiting." << std::endl;
-	return;
+	info_output << carname << " Summary:\n";
+	info_output << "Mass (kg) including driver and fuel: " << 1 / car.getInvMass() << "\n";
+	//info_output << "Center of mass (m): " << car.getCenterOfMass() << std::endl;
 
 	TestMaxSpeed(info_output, error_output);
 	TestStoppingDistance(false, info_output, error_output);
 	TestStoppingDistance(true, info_output, error_output);
 
 	info_output << "Car performance test complete." << std::endl;
-*/
-	// fixme
-	info_output << "Car performance test broken - exiting." << std::endl;
-	return;
 }
 
 void PERFORMANCE_TESTING::ResetCar()
 {
-/*	fixme
-	std::stringstream statestream(carstate);
-	joeserialize::BinaryInputSerializer serialize_input(statestream);
-	car.serialize(serialize_input);
-*/
-	car.setPosition(btVector3(0, 0, 0));
-	car.setTCS(true);
-	car.setABS(true);
-	car.setAutoShift(true);
-	car.setAutoClutch(true);
-}
-
-///designed to be called inside a test's main loop  // broken, fixme
-void PERFORMANCE_TESTING::SimulateFlatRoad()
-{
-/*	//simulate an infinite, flat road
-	for (int i = 0; i < 4; i++)
-	{
-		btVector3 wp = car.dynamics.GetWheelPosition(i);
-		btScalar depth = wp.z() - car.GetTireRadius(i); //should really project along the car's down vector, but... oh well
-		btVector3 pos(wp[0], wp[1], 0);
-		btVector3 norm(0, 0, 1);
-		car.GetWheelContact(i).Set(pos, norm, depth, &surface, 0, 0);
-	}*/
+	car.setState(carstate);
 }
 
 void PERFORMANCE_TESTING::TestMaxSpeed(std::ostream & info_output, std::ostream & error_output)
@@ -136,8 +141,8 @@ void PERFORMANCE_TESTING::TestMaxSpeed(std::ostream & info_output, std::ostream 
 	ResetCar();
 
 	double maxtime = 300.0;
-	double t = 0.;
-	double dt = .004;
+	double t = 0.0;
+	double dt = 0.05;
 	int i = 0;
 
 	std::pair <float, float> maxspeed;
@@ -158,6 +163,7 @@ void PERFORMANCE_TESTING::TestMaxSpeed(std::ostream & info_output, std::ostream 
 	while (t < maxtime)
 	{
 		car.setThrottle(1.0f);
+		car.setBrake(0.0f);
 
 		world.update(dt);
 
@@ -204,6 +210,7 @@ void PERFORMANCE_TESTING::TestMaxSpeed(std::ostream & info_output, std::ostream 
 			}
 			lastsecondspeed = car_speed;
 			//std::cout << t << ", " << car_speed << ", " << car.GetGear() << ", " << car.GetEngineRPM() << std::endl;
+			//car.print(info_output, true, true, true, true);
 		}
 
 		t += dt;
@@ -225,7 +232,7 @@ void PERFORMANCE_TESTING::TestStoppingDistance(bool abs, std::ostream & info_out
 
 	double maxtime = 300.0;
 	double t = 0.;
-	double dt = .004;
+	double dt = 0.05;
 	int i = 0;
 
 	float stopthreshold = 0.1; //if the speed (in m/s) is less than this value, discontinue the testing
