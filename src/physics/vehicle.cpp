@@ -19,6 +19,7 @@
 
 #include "vehicle.h"
 #include "vehicleinfo.h"
+#include "vehiclestate.h"
 #include "solveconstraintrow.h"
 #include "world.h"
 #include "coordinatesystem.h"
@@ -141,6 +142,66 @@ void Vehicle::init(
 	btVector3 up_offset = -up * (0.5 + bmin.z());
 	setPosition(body->getCenterOfMassPosition() + up_offset + fwd_offset);
 	//alignWithGround();
+}
+
+void Vehicle::setState(const VehicleState & state)
+{
+	int n = 1 + wheel.size() + differential.size();
+	btAssert(state.shaft_angvel.size() == n);
+	engine.getShaft().setAngularVelocity(state.shaft_angvel[0]);
+	int offset = 1;
+	for (int i = 0; i < wheel.size(); ++i)
+	{
+		wheel[i].shaft.setAngularVelocity(state.shaft_angvel[i + offset]);
+	}
+	offset = 1 + wheel.size();
+	for (int i = 0; i < differential.size(); ++i)
+	{
+		differential[i].getShaft().setAngularVelocity(state.shaft_angvel[i + offset]);
+	}
+	body->setCenterOfMassTransform(state.transform);
+	body->setLinearVelocity(state.lin_velocity);
+	body->setAngularVelocity(state.ang_velocity);
+	brake_value = state.brake;
+	last_clutch = state.clutch;
+	remaining_shift_time = state.shift_time;
+	tacho_rpm = state.tacho_rpm;
+	shift_gear = state.gear;
+	shifted = state.shifted;
+	autoshift = state.auto_shift;
+	autoclutch = state.auto_clutch;
+	abs = state.abs_enabled;
+	tcs = state.tcs_enabled;
+}
+
+void Vehicle::getState(VehicleState & state) const
+{
+	int n = 1 + wheel.size() + differential.size();
+	state.shaft_angvel.resize(n);
+	state.shaft_angvel[0] = engine.getShaft().getAngularVelocity();
+	int offset = 1;
+	for (int i = 0; i < wheel.size(); ++i)
+	{
+		state.shaft_angvel[i + offset] = wheel[i].shaft.getAngularVelocity();
+	}
+	offset = 1 + wheel.size();
+	for (int i = 0; i < differential.size(); ++i)
+	{
+		state.shaft_angvel[i + offset] = differential[i].getShaft().getAngularVelocity();
+	}
+	state.transform = body->getCenterOfMassTransform();
+	state.lin_velocity = body->getLinearVelocity();
+	state.ang_velocity = body->getAngularVelocity();
+	state.brake = brake_value;
+	state.clutch = last_clutch;
+	state.shift_time = remaining_shift_time;
+	state.tacho_rpm = tacho_rpm;
+	state.gear = shift_gear;
+	state.shifted = shifted;
+	state.auto_shift = autoshift;
+	state.auto_clutch = autoclutch;
+	state.abs_enabled = abs;
+	state.tcs_enabled = tcs;
 }
 
 void Vehicle::debugDraw(btIDebugDraw*)

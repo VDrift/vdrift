@@ -41,6 +41,7 @@ namespace sim
 class World;
 class FractureBody;
 struct VehicleInfo;
+struct VehicleState;
 
 class Vehicle : public btActionInterface
 {
@@ -55,6 +56,12 @@ public:
 		const btVector3 & position,
 		const btQuaternion & rotation,
 		World & world);
+
+	/// set current vehicle state
+	void setState(const VehicleState & state);
+
+	/// get current vehicle state
+	void getState(VehicleState & state) const;
 
 	/// car controls
 	void setSteering(btScalar value);	///< [-1, 1] left, right

@@ -41,22 +41,23 @@ class Differential : private DifferentialInfo
 public:
 	/// Default constructor (use init to initialize)
 	Differential();
-	
+
 	/// Setup differential
 	void init(const DifferentialInfo & info, Shaft & sha, Shaft & shb);
-	
+
 	/// Max differential friction coupling torque
 	btScalar getAntiSlipTorque() const;
-	
+
 	/// Gear ratio between driving and driven shafts
 	btScalar getFinalDrive() const;
-	
+
 	/// Driving shaft
+	const Shaft & getShaft() const;
 	Shaft & getShaft();
-	
+
 	/// Driven shaft 1
 	Shaft & getShaft1();
-	
+
 	/// Driven shaft 2
 	Shaft & getShaft2();
 
@@ -100,6 +101,11 @@ inline btScalar Differential::getAntiSlipTorque() const
 inline btScalar Differential::getFinalDrive() const
 {
 	return final_drive;
+}
+
+inline const Shaft & Differential::getShaft() const
+{
+	return shaft;
 }
 
 inline Shaft & Differential::getShaft()

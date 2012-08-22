@@ -47,6 +47,9 @@ public:
 	/// init shaft
 	void setInertia(btScalar value);
 
+	/// override shaft velocity rad/s
+	void setAngularVelocity(btScalar value);
+
 	/// apply angular momentum/impulse to shaft
     void applyImpulse(btScalar impulse);
 
@@ -98,6 +101,11 @@ inline void Shaft::setInertia(btScalar value)
 {
 	inertia = value;
 	inertiaInv = 1 / value;
+}
+
+inline void Shaft::setAngularVelocity(btScalar value)
+{
+	angularVelocity = value;
 }
 
 inline void Shaft::applyImpulse(btScalar impulse)

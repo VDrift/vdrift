@@ -488,15 +488,23 @@ bool CAR::LoadPhysics(
 		vinfo.motionstate[i] = &motion_state[i];
 	}
 
+	// get vehicle info
 	if (!LoadVehicle(cfg, damage, center, size, vinfo, error))
 	{
 		return false;
 	}
 
-	dynamics.init(vinfo, position, rotation, world);
-	dynamics.setABS(defaultabs);
-	dynamics.setTCS(defaulttcs);
-	mz_nominalmax = 1;//dynamics.getWheel(0).tire.getMaxMz() + dynamics.getWheel(1).tire.getMaxMz();
+	// init vehicle
+	vehicle.init(vinfo, position, rotation, world);
+	vehicle.setABS(defaultabs);
+	vehicle.setTCS(defaulttcs);
+
+	// init vehicle state
+	vehicle.getState(vstate);
+
+	// steering torque scale factor
+	mz_nominalmax = 1;//vehicle.getWheel(0).tire.getMaxMz() + vehicle.getWheel(1).tire.getMaxMz();
+
 	return true;
 }
 
@@ -786,7 +794,7 @@ void CAR::UpdateSounds(float dt)
 	if (!psound) return;
 
 	MATHVECTOR <float, 3> pos_car = GetPosition();
-	MATHVECTOR <float, 3> pos_eng = cast(dynamics.getEngine().getPosition());
+	MATHVECTOR <float, 3> pos_eng = cast(vehicle.getEngine().getPosition());
 
 	psound->SetSourcePosition(roadnoise, pos_car[0], pos_car[1], pos_car[2]);
 	psound->SetSourcePosition(crashsound, pos_car[0], pos_car[1], pos_car[2]);
@@ -799,7 +807,7 @@ void CAR::UpdateSounds(float dt)
 
 	// update engine sounds
 	float rpm = GetEngineRPM();
-	float throttle = dynamics.getEngine().getThrottle();
+	float throttle = vehicle.getEngine().getThrottle();
 	float total_gain = 0.0;
 
 	std::vector<std::pair<size_t, float> > gainlist;
@@ -882,7 +890,7 @@ void CAR::UpdateSounds(float dt)
 		float pitchvariation = 0.0;
 		float maxgain = 0.0;
 
-		const sim::Surface * surface = dynamics.getWheel(i).ray.getSurface();
+		const sim::Surface * surface = vehicle.getWheel(i).ray.getSurface();
 		if (surface)
 		{
 			const TRACKSURFACE * ts = static_cast<const TRACKSURFACE *>(surface);
@@ -901,8 +909,8 @@ void CAR::UpdateSounds(float dt)
 				sound_active = &grasssound[i];
 			}
 
-			const sim::WheelContact & c = dynamics.getWheelContact(i);
-			btVector3 cp = dynamics.getTransform() * c.rA;
+			const sim::WheelContact & c = vehicle.getWheelContact(i);
+			btVector3 cp = vehicle.getTransform() * c.rA;
 			float cv = btSqrt(c.v1 * c.v1 + c.v2 * c.v2);
 			float pitch = 0.1f * cv - 0.5f;
 			pitch = clamp(pitch, 0.0f, 1.0f);
@@ -917,7 +925,7 @@ void CAR::UpdateSounds(float dt)
 
 	//update road noise sound
 	{
-		float gain = 4E-4 * dynamics.getVelocity().length2();
+		float gain = 4E-4 * vehicle.getVelocity().length2();
 		if (gain > 1) gain = 1;
 		psound->SetSourceGain(roadnoise, gain);
 	}
@@ -927,8 +935,8 @@ void CAR::UpdateSounds(float dt)
 		for (int i = 0; i < 4; i++)
 		{
 			suspensionbumpdetection[i].Update(
-				dynamics.GetSuspension(i).GetVelocity(),
-				dynamics.GetSuspension(i).GetDisplacementFraction(),
+				vehicle.GetSuspension(i).GetVelocity(),
+				vehicle.GetSuspension(i).GetDisplacementFraction(),
 				dt);
 			if (suspensionbumpdetection[i].JustSettled())
 			{
@@ -998,17 +1006,17 @@ void CAR::ProcessInputs(const std::vector <float> & inputs)
 
 	// recover from a rollover
 	if (inputs[CARINPUT::ROLLOVER_RECOVER])
-		dynamics.rolloverRecover();
+		vehicle.rolloverRecover();
 
 	//set brakes
-	dynamics.setBrake(inputs[CARINPUT::BRAKE]);
-	dynamics.setHandBrake(inputs[CARINPUT::HANDBRAKE]);
+	vehicle.setBrake(inputs[CARINPUT::BRAKE]);
+	vehicle.setHandBrake(inputs[CARINPUT::HANDBRAKE]);
 
 	// do steering
 	float steer_value = inputs[CARINPUT::STEER_RIGHT];
 	if (std::abs(inputs[CARINPUT::STEER_LEFT]) > std::abs(inputs[CARINPUT::STEER_RIGHT])) //use whichever control is larger
 		steer_value = -inputs[CARINPUT::STEER_LEFT];
-	dynamics.setSteering(steer_value);
+	vehicle.setSteering(steer_value);
 	last_steer = steer_value;
 	QUATERNION<float> steer;
 	steer.Rotate(-steer_value * steer_angle_max, 0, 0, 1);
@@ -1016,7 +1024,7 @@ void CAR::ProcessInputs(const std::vector <float> & inputs)
 
     // start the engine if requested
 	if (inputs[CARINPUT::START_ENGINE])
-		dynamics.startEngine();
+		vehicle.startEngine();
 
 	// do shifting
 	int gear_change = 0;
@@ -1024,7 +1032,7 @@ void CAR::ProcessInputs(const std::vector <float> & inputs)
 		gear_change = 1;
 	if (inputs[CARINPUT::SHIFT_DOWN] == 1.0)
 		gear_change = -1;
-	int cur_gear = dynamics.getTransmission().getGear();
+	int cur_gear = vehicle.getTransmission().getGear();
 	int new_gear = cur_gear + gear_change;
 
 	if (inputs[CARINPUT::REVERSE])
@@ -1052,16 +1060,16 @@ void CAR::ProcessInputs(const std::vector <float> & inputs)
 
 	nos_active = nos > 0;
 
-	dynamics.setGear(new_gear);
-	dynamics.setThrottle(throttle);
-	dynamics.setClutch(clutch);
-	dynamics.setNOS(nos);
+	vehicle.setGear(new_gear);
+	vehicle.setThrottle(throttle);
+	vehicle.setClutch(clutch);
+	vehicle.setNOS(nos);
 
 	// do driver aid toggles
 	if (inputs[CARINPUT::ABS_TOGGLE])
-		dynamics.setABS(!dynamics.getABSEnabled());
+		vehicle.setABS(!vehicle.getABSEnabled());
 	if (inputs[CARINPUT::TCS_TOGGLE])
-		dynamics.setTCS(!dynamics.getTCSEnabled());
+		vehicle.setTCS(!vehicle.getTCSEnabled());
 
 	// update interior sounds
 	if (!psound || !driver_view) return;
@@ -1095,17 +1103,17 @@ void CAR::ProcessInputs(const std::vector <float> & inputs)
 
 float CAR::GetFeedback()
 {
-	return dynamics.getFeedback() / mz_nominalmax;
+	return vehicle.getFeedback() / mz_nominalmax;
 }
 
 float CAR::GetTireSquealAmount(int i) const
 {
-	const sim::Surface * surface = dynamics.getWheel(i).ray.getSurface();
+	const sim::Surface * surface = vehicle.getWheel(i).ray.getSurface();
 	if (!surface || surface == sim::Surface::None())
 		return 0.0f;
 
 	// tire thermal load (dissipated power * time step)
-	const sim::WheelContact & c = dynamics.getWheelContact(i);
+	const sim::WheelContact & c = vehicle.getWheelContact(i);
 	float w1 = c.friction1.accumImpulse * c.v1;
 	float w2 = c.friction2.accumImpulse * c.v2;
 	float thermal_load = sqrtf(w1 * w1 + w2 * w2);
@@ -1115,7 +1123,7 @@ float CAR::GetTireSquealAmount(int i) const
 	squeal = clamp(squeal, 0.0f, 1.0f);
 
 	// abuse squeal to indicate ideal slip, slide
-	const sim::Tire & tire = dynamics.getWheel(i).tire;
+	const sim::Tire & tire = vehicle.getWheel(i).tire;
 	float slip = tire.getSlip() / tire.getIdealSlip();
 	float slide = tire.getSlide() / tire.getIdealSlide();
 	float squeal_factor = std::max(std::abs(slip), std::abs(slide)) - 1.0f;
@@ -1142,12 +1150,58 @@ void CAR::SetInteriorView(bool value)
 
 void CAR::DebugPrint(std::ostream & out, bool p1, bool p2, bool p3, bool p4) const
 {
-	dynamics.print(out, p1, p2, p3, p4);
+	vehicle.print(out, p1, p2, p3, p4);
+}
+
+static bool serialize(joeserialize::Serializer & s, btVector3 & v)
+{
+	_SERIALIZE_(s, v[0]);
+	_SERIALIZE_(s, v[1]);
+	_SERIALIZE_(s, v[2]);
+	return true;
+}
+
+static bool serialize(joeserialize::Serializer & s, btMatrix3x3 & m)
+{
+	if (!serialize(s, m[0])) return false;
+	if (!serialize(s, m[1])) return false;
+	if (!serialize(s, m[2])) return false;
+	return true;
+}
+
+static bool serialize(joeserialize::Serializer & s, btTransform & t)
+{
+	if (!serialize(s, t.getBasis())) return false;
+	if (!serialize(s, t.getOrigin())) return false;
+	return true;
 }
 
 bool CAR::Serialize(joeserialize::Serializer & s)
 {
-	//_SERIALIZE_(s,dynamics); fixme
-	//_SERIALIZE_(s,last_steer);
+	bool write = (s.GetIODirection() == joeserialize::Serializer::DIRECTION_INPUT);
+	if (!write) vehicle.getState(vstate);
+	for (int i = 0; i < vstate.shaft_angvel.size(); ++i)
+	{
+		_SERIALIZE_(s, vstate.shaft_angvel[i]);
+	}
+	if (!serialize(s, vstate.transform)) return false;
+	if (!serialize(s, vstate.lin_velocity)) return false;
+	if (!serialize(s, vstate.ang_velocity)) return false;
+	_SERIALIZE_(s, vstate.brake);
+	_SERIALIZE_(s, vstate.clutch);
+	_SERIALIZE_(s, vstate.shift_time);
+	_SERIALIZE_(s, vstate.tacho_rpm);
+	_SERIALIZE_(s, vstate.gear);
+	_SERIALIZE_(s, vstate.shifted);
+	_SERIALIZE_(s, vstate.auto_shift);
+	_SERIALIZE_(s, vstate.auto_clutch);
+	_SERIALIZE_(s, vstate.abs_enabled);
+	_SERIALIZE_(s, vstate.tcs_enabled);
+	if (write) vehicle.setState(vstate);
+
+	_SERIALIZE_(s, last_steer);
+	_SERIALIZE_(s, nos_active);
+	_SERIALIZE_(s, driver_view);
+	_SERIALIZE_(s, sector);
 	return true;
 }
