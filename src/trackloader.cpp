@@ -688,10 +688,7 @@ bool TRACK::LOADER::AddObject(const OBJECT & object)
 	texinfo.repeatv = object.clamptexture != 1 && object.clamptexture != 3;
 
 	std::tr1::shared_ptr<TEXTURE> diffuse_texture;
-	if (!content.load(diffuse_texture, objectdir, object.texture, texinfo))
-	{
-		return false;
-	}
+	content.load(diffuse_texture, objectdir, object.texture, texinfo);
 
 	std::tr1::shared_ptr<TEXTURE> miscmap1_texture;
 	{
