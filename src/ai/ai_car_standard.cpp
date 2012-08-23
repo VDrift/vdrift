@@ -32,19 +32,22 @@
 #include <algorithm>
 #include <iostream>
 
-AI_Car* AI_Car_Standard_Factory::create(CAR * car, float difficulty){
+AI_Car* AI_Car_Standard_Factory::create(CAR * car, float difficulty)
+{
 	return new AI_Car_Standard(car, difficulty);
 }
 
-AI_Car_Standard::AI_Car_Standard (CAR * new_car, float newdifficulty) :
-	AI_Car(new_car, newdifficulty), shift_time(0.0), longitude_mu(0.9),
-	lateral_mu(0.9), last_patch(NULL), use_racingline(true)
+AI_Car_Standard::AI_Car_Standard(CAR * new_car, float newdifficulty) :
+	AI_Car(new_car, newdifficulty),
+	last_patch(NULL),
+	use_racingline(true)
 {
 	assert(car->GetTCSEnabled());
 	assert(car->GetABSEnabled());
 	car->SetAutoShift(true);
 	car->SetAutoClutch(true);
 }
+
 AI_Car_Standard::~AI_Car_Standard ()
 {
 #ifdef VISUALIZE_AI_DEBUG
@@ -416,7 +419,9 @@ void AI_Car_Standard::updateGasBrake()
 			break;
 		}
 		else
+		{
 			patch_to_check = RevisePatch(patch_to_check.GetNextPatch(), use_racingline);
+		}
 
 #ifdef VISUALIZE_AI_DEBUG
 		brakelook.push_back(patch_to_check);

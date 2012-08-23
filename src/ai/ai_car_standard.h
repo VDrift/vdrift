@@ -31,18 +31,24 @@
 #include <list>
 #include <map>
 
-class CAR;
-class TRACK;
-
-class AI_Car_Standard_Factory :
-	public AI_Factory
+class AI_Car_Standard_Factory : public AI_Factory
 {
 	AI_Car* create(CAR * car, float difficulty);
 };
 
-class AI_Car_Standard :
-	public AI_Car
+class AI_Car_Standard : public AI_Car
 {
+public:
+	AI_Car_Standard(CAR * new_car, float newdifficulty);
+
+	~AI_Car_Standard();
+
+	void Update(float dt, const std::list <CAR> & checkcars);
+
+#ifdef VISUALIZE_AI_DEBUG
+	void Visualize();
+#endif
+
 private:
 	float calcSpeedLimit(const BEZIER * patch, const BEZIER * nextpatch, float extraradius) const;
 
@@ -85,12 +91,7 @@ private:
 		float eta;
 		bool active;
 	};
-
 	std::map <const CAR *, OTHERCARINFO> othercars;
-
-	float shift_time;
-	float longitude_mu; ///<friction coefficient of the tire - longitude direction
-	float lateral_mu; ///<friction coefficient of the tire - lateral direction
 	const BEZIER * last_patch; ///<last patch the car was on, used in case car is off track
 	bool use_racingline; ///<true allows the AI to take a proper racing line
 
@@ -121,15 +122,6 @@ private:
 
 	static void ConfigureDrawable(keyed_container <DRAWABLE>::handle & ref, SCENENODE & topnode, float r, float g, float b);
 	static void AddLinePoint(VERTEXARRAY & va, const MATHVECTOR<float, 3> & p);
-#endif
-
-public:
-	AI_Car_Standard (CAR * new_car, float newdifficulty);
-	~AI_Car_Standard();
-	void Update(float dt, const std::list <CAR> & checkcars);
-
-#ifdef VISUALIZE_AI_DEBUG
-	void Visualize();
 #endif
 };
 

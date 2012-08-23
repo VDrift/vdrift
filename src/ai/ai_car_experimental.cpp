@@ -34,13 +34,15 @@
 #include <algorithm>
 #include <iostream>
 
-AI_Car* AI_Car_Experimental_Factory::create(CAR * car, float difficulty){
+AI_Car* AI_Car_Experimental_Factory::create(CAR * car, float difficulty)
+{
 	return new AI_Car_Experimental(car, difficulty);
 }
 
-AI_Car_Experimental::AI_Car_Experimental (CAR * new_car, float newdifficulty) :
-	AI_Car(new_car, newdifficulty), shift_time(0.0), longitude_mu(0.9),
-	lateral_mu(0.9), last_patch(NULL), use_racingline(true),
+AI_Car_Experimental::AI_Car_Experimental(CAR * new_car, float newdifficulty) :
+	AI_Car(new_car, newdifficulty),
+	last_patch(NULL),
+	use_racingline(true),
 	isRecovering(false)
 {
 	assert(car->GetTCSEnabled());
@@ -48,6 +50,7 @@ AI_Car_Experimental::AI_Car_Experimental (CAR * new_car, float newdifficulty) :
 	car->SetAutoShift(true);
 	car->SetAutoClutch(true);
 }
+
 AI_Car_Experimental::~AI_Car_Experimental ()
 {
 #ifdef VISUALIZE_AI_DEBUG
@@ -350,17 +353,18 @@ void AI_Car_Experimental::updateGasBrake()
 
 	//check speed against speed limit of current patch
 	float speed_limit = 0;
+	float extraradius = GetPatchWidthVector(*curr_patch_ptr).Magnitude();
 	if (!curr_patch.GetNextPatch())
 	{
-		speed_limit = calcSpeedLimit(&curr_patch, NULL, lateral_mu, GetPatchWidthVector(*curr_patch_ptr).Magnitude())*speed_percent;
+		speed_limit = calcSpeedLimit(&curr_patch, NULL, extraradius);
 	}
 	else
 	{
 		BEZIER next_patch = RevisePatch(curr_patch.GetNextPatch(), use_racingline);
-		speed_limit = calcSpeedLimit(&curr_patch, &next_patch, lateral_mu, GetPatchWidthVector(*curr_patch_ptr).Magnitude())*speed_percent;
+		speed_limit = calcSpeedLimit(&curr_patch, &next_patch, extraradius);
 	}
 
-	speed_limit *= difficulty;
+	speed_limit = speed_limit * speed_percent * difficulty;
 
 	float speed_diff = speed_limit - currentspeed;
 
@@ -411,22 +415,25 @@ void AI_Car_Experimental::updateGasBrake()
 			break;
 		}
 		else
+		{
 			patch_to_check = RevisePatch(patch_to_check.GetNextPatch(), use_racingline);
+		}
 
 #ifdef VISUALIZE_AI_DEBUG
 		brakelook.push_back(patch_to_check);
 #endif
 
-		//speed_limit = calcSpeedLimit(c, &patch_to_check, lateral_mu)*speed_percent;
+		float extraradius = GetPatchWidthVector(*unmodified_patch_to_check).Magnitude();
 		if (!patch_to_check.GetNextPatch())
 		{
-			speed_limit = calcSpeedLimit(&patch_to_check, NULL, lateral_mu, GetPatchWidthVector(*unmodified_patch_to_check).Magnitude())*speed_percent;
+			speed_limit = calcSpeedLimit(&patch_to_check, NULL, extraradius);
 		}
 		else
 		{
 			BEZIER next_patch = RevisePatch(patch_to_check.GetNextPatch(), use_racingline);
-			speed_limit = calcSpeedLimit(&patch_to_check, &next_patch, lateral_mu, GetPatchWidthVector(*unmodified_patch_to_check).Magnitude())*speed_percent;
+			speed_limit = calcSpeedLimit(&patch_to_check, &next_patch, extraradius);
 		}
+		speed_limit = speed_limit * speed_percent;
 
 		dist_checked += GetPatchDirection(patch_to_check).Magnitude();
 		brake_dist = car->GetBrakingDistance(speed_limit) * 1.4;
@@ -466,12 +473,23 @@ void AI_Car_Experimental::updateGasBrake()
 	inputs[CARINPUT::BRAKE] = brake_value;
 }
 
-float AI_Car_Experimental::calcSpeedLimit(const BEZIER* patch, const BEZIER * nextpatch, float friction, float extraradius=0)
+float AI_Car_Experimental::calcSpeedLimit(const BEZIER* patch, const BEZIER * nextpatch, float extraradius)
 {
 	assert(patch);
 
-	// fixme
-	return 0;
+	//adjust the radius at corner exit to allow a higher speed.
+	//this will get the car to accellerate out of corner
+	float radius = GetPatchRadius(*patch);
+	if (nextpatch)
+	{
+		if (GetPatchRadius(*nextpatch) > radius &&
+			GetPatchRadius(*patch) > LOOKAHEAD_MIN_RADIUS)
+		{
+			radius += extraradius;
+		}
+	}
+
+	return car->GetMaxVelocity(radius);
 }
 
 struct RayResultCb : public btCollisionWorld::RayResultCallback
