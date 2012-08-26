@@ -52,9 +52,6 @@ public:
 	// disable sound
 	void Disable();
 
-	// commit state changes
-	void Update(bool pause);
-
 	// active sources limit can be adjusted at runtime
 	void SetMaxActiveSources(size_t value);
 
@@ -70,8 +67,6 @@ public:
 
 	void SetSourcePosition(size_t id, float x, float y, float z);
 
-	void SetSourceRotation(size_t id, float x, float y, float z, float w);
-
 	void SetSourcePitch(size_t id, float value);
 
 	void SetSourceGain(size_t id, float value);
@@ -84,6 +79,9 @@ public:
 
 	void SetVolume(float value);
 
+	// commit state changes
+	void Update(bool pause);
+
 private:
 	std::ostream * log_error;
 	SOUNDINFO deviceinfo;
@@ -93,8 +91,15 @@ private:
 	float sound_volume;
 	bool initdone;
 	bool disable;
+	bool set_pause;
 
 	// state structs
+	struct SourceActive
+	{
+		bool operator<(const SourceActive & other) const;
+		int gain, id;
+	};
+
 	struct Source
 	{
 		std::tr1::shared_ptr<SOUNDBUFFER> buffer;
@@ -127,18 +132,7 @@ private:
 		size_t id;
 	};
 
-	struct SourceActive
-	{
-		bool operator<(const SourceActive & other);
-		int gain, id;
-	};
-
 	// message structs
-	struct SamplerUpdate
-	{
-		int gain1, gain2, pitch;
-	};
-
 	struct SamplerAdd
 	{
 		const SOUNDBUFFER * buffer;
@@ -147,20 +141,33 @@ private:
 		int id;
 	};
 
+	struct SamplerSet
+	{
+		int gain1, gain2, pitch;
+	};
+
+	struct SamplersUpdate
+	{
+		std::vector<SamplerSet> sset;
+		std::vector<SamplerAdd> sadd;
+		std::vector<size_t> sremove;
+		size_t id;
+		bool empty() const;
+	};
+
 	// sound thread message system
-	TrippleBuffer<SamplerUpdate> sampler_update;
-	TrippleBuffer<SamplerAdd> sampler_add;
-	TrippleBuffer<size_t> sampler_remove;
-	TrippleBuffer<size_t> source_stop;
+	TrippleBuffer<SamplersUpdate> samplers_update;
+	TrippleBuffer<std::vector<size_t> > sources_stop;
 	SDL_mutex * sampler_lock;
 	SDL_mutex * source_lock;
-	bool set_pause;
 
 	// sound sources state
 	std::vector<SourceActive> sources_active;
+	std::vector<size_t> sources_remove;
 	std::vector<Source> sources;
 	size_t max_active_sources;
 	size_t sources_num;
+	size_t update_id;
 	bool sources_pause;
 
 	// sound thread state

@@ -23,28 +23,98 @@
 #include <algorithm>
 #include <cassert>
 
+//static std::ofstream logso("logso.txt");
+//static std::ofstream logsa("logsa.txt");
+
 template <class T>
 static inline T clamp(T val, T min, T max)
 {
 	return val > min ? (val < max ? val : max) : min;
 }
 
-static inline void Lock(SDL_mutex * mutex)
+// add item to a compactifying vector
+template <class T>
+static inline size_t AddItem(T & item, std::vector<T> & items, size_t & item_num)
 {
-	if (SDL_mutexP(mutex) == -1)
-		assert(0 && "Couldn't lock mutex");
+	size_t id = item_num;
+	if (id < items.size())
+	{
+		// reuse free slot
+		size_t idn = items[id].id;
+		if (idn != id)
+		{
+			// free slot is redirecting to other item
+			assert(idn < id);
+
+			// swap redirected item back
+			items[id] = items[idn];
+
+			// use now free slot
+			id = idn;
+		}
+		items[id] = item;
+	}
+	else
+	{
+		// add item to new slot
+		items.push_back(item);
+	}
+	items[id].id = id;
+	++item_num;
+
+	return id;
 }
 
-static inline void Unlock(SDL_mutex * mutex)
+// remove item from a compactifying vector
+template <class T>
+static inline void RemoveItem(size_t id, std::vector<T> & items, size_t & item_num)
 {
-	if (SDL_mutexV(mutex) == -1)
-		assert(0 && "Couldn't unlock mutex");
+	assert(id < items.size());
+
+	// get item true id
+	size_t idn = items[id].id;
+	assert(idn < item_num);
+
+	// pop last item
+	--item_num;
+
+	// swap last item with current
+	size_t idl = items[item_num].id;
+	if (idl != item_num)
+	{
+		// move redirected last item into free slot
+		items[idn] = items[item_num];
+
+		// redirect to new item position
+		items[idl].id = idn;
+
+		// invalidate old redirection
+		items[item_num].id = item_num;
+	}
+	else
+	{
+		// move last item into free slot
+		items[idn] = items[item_num];
+
+		// redirect to new item position
+		items[item_num].id = idn;
+	}
+	if (id != idn)
+	{
+		// invalidate redirecting item
+		items[id].id = id;
+	}
 }
 
-bool SOUND::SourceActive::operator<(const SOUND::SourceActive & other)
+bool SOUND::SourceActive::operator<(const SOUND::SourceActive & other) const
 {
 	// reverse op as partial sort sorts for the smallest elemets
 	return this->gain > other.gain;
+}
+
+bool SOUND::SamplersUpdate::empty() const
+{
+	return sset.empty() && sadd.empty() && sremove.empty();
 }
 
 SOUND::SOUND() :
@@ -53,11 +123,12 @@ SOUND::SOUND() :
 	sound_volume(0),
 	initdone(false),
 	disable(false),
+	set_pause(true),
 	sampler_lock(0),
 	source_lock(0),
-	set_pause(true),
 	max_active_sources(64),
 	sources_num(0),
+	update_id(0),
 	sources_pause(true),
 	samplers_num(0),
 	samplers_pause(true)
@@ -161,100 +232,9 @@ void SOUND::Disable()
 	disable = true;
 }
 
-void SOUND::Update(bool pause)
-{
-	if (disable) return;
-
-	set_pause = pause;
-
-	GetSourceChanges();
-
-	ProcessSourceStop();
-
-	ProcessSources();
-
-	ProcessSourceRemove();
-
-	SetSamplerChanges();
-}
-
 void SOUND::SetMaxActiveSources(size_t value)
 {
 	max_active_sources = value;
-}
-
-// add item to a compactifying vector
-template <class T>
-inline size_t AddItem(T & item, std::vector<T> & items, size_t & item_num)
-{
-	size_t id = item_num;
-	if (id < items.size())
-	{
-		// reuse free slot
-		size_t idn = items[id].id;
-		if (idn != id)
-		{
-			// free slot is redirecting to other item
-			assert(idn < id);
-
-			// swap redirected item back
-			items[id] = items[idn];
-
-			// use now free slot
-			id = idn;
-		}
-		items[id] = item;
-	}
-	else
-	{
-		// add item to new slot
-		items.push_back(item);
-	}
-	items[id].id = id;
-	++item_num;
-
-	return id;
-}
-
-// remove item from a compactifying vector
-template <class T>
-inline void RemoveItem(size_t id, std::vector<T> & items, size_t & item_num)
-{
-	assert(id < items.size());
-
-	// get item true id
-	size_t idn = items[id].id;
-	assert(idn < item_num);
-
-	// pop last item
-	--item_num;
-
-	// swap last item with current
-	size_t idl = items[item_num].id;
-	if (idl != item_num)
-	{
-		// move redirected last item into free slot
-		items[idn] = items[item_num];
-
-		// redirect to new item position
-		items[idl].id = idn;
-
-		// invalidate old redirection
-		items[item_num].id = item_num;
-	}
-	else
-	{
-		// move last item into free slot
-		items[idn] = items[item_num];
-
-		// redirect to new item position
-		items[item_num].id = idn;
-	}
-	if (id != idn)
-	{
-		// invalidate redirecting item
-		items[id].id = id;
-	}
 }
 
 size_t SOUND::AddSource(std::tr1::shared_ptr<SOUNDBUFFER> buffer, float offset, bool is3d, bool loop)
@@ -277,7 +257,7 @@ size_t SOUND::AddSource(std::tr1::shared_ptr<SOUNDBUFFER> buffer, float offset, 
 	ns.offset = offset * Sampler::denom;
 	ns.loop = loop;
 	ns.id = -1;
-	sampler_add.getFirst().push_back(ns);
+	samplers_update.getFirst().sadd.push_back(ns);
 
 	//*log_error << "Add sound source: " << id << " " << buffer->GetName() << std::endl;
 	return id;
@@ -285,8 +265,8 @@ size_t SOUND::AddSource(std::tr1::shared_ptr<SOUNDBUFFER> buffer, float offset, 
 
 void SOUND::RemoveSource(size_t id)
 {
-	// notify sound and main thread to remove the source/sampler
-	sampler_remove.getFirst().push_back(id);
+	samplers_update.getFirst().sremove.push_back(id);
+	sources_remove.push_back(id);
 }
 
 void SOUND::ResetSource(size_t id)
@@ -301,7 +281,7 @@ void SOUND::ResetSource(size_t id)
 	ns.offset = src.offset * Sampler::denom;
 	ns.loop = src.loop;
 	ns.id = idn;
-	sampler_add.getFirst().push_back(ns);
+	samplers_update.getFirst().sadd.push_back(ns);
 }
 
 bool SOUND::GetSourcePlaying(size_t id) const
@@ -317,11 +297,6 @@ void SOUND::SetSourceVelocity(size_t id, float x, float y, float z)
 void SOUND::SetSourcePosition(size_t id, float x, float y, float z)
 {
 	sources[sources[id].id].position.Set(x, y, z);
-}
-
-void SOUND::SetSourceRotation(size_t id, float x, float y, float z, float w)
-{
-	//sources[sources[id].id].rotation.Set(x, y, z, w);
 }
 
 void SOUND::SetSourcePitch(size_t id, float value)
@@ -354,16 +329,55 @@ void SOUND::SetVolume(float value)
 	sound_volume = value;
 }
 
+void SOUND::Update(bool pause)
+{
+	if (disable) return;
+
+	set_pause = pause;
+
+	// get source stop messages from sound thread
+	GetSourceChanges();
+
+	// process source stop messages
+	ProcessSourceStop();
+
+	// ProcessSourceAdd is implicit
+
+	// calculate sampler changes from sources
+	ProcessSources();
+/*
+	logso << "id: " <<samplers_update.getFirst().id;
+	logso << " add: " << samplers_update.getFirst().sadd.size();
+	logso << " del: " << samplers_update.getFirst().sremove.size();
+	logso << " set: " << samplers_update.getFirst().sset.size();
+	logso << " sources: " << sources_num;
+	logso << std::endl;
+*/
+	size_t old_update_id = update_id;
+
+	// commit sampler changes to sound thread
+	SetSamplerChanges();
+	
+	// use update id to determine whether sampler updates have been comitted
+	if (old_update_id != update_id)
+	{
+		ProcessSourceRemove();
+	}
+}
+
 void SOUND::GetSourceChanges()
 {
-	Lock(source_lock);
-	source_stop.swapFirst();
-	Unlock(source_lock);
+	SDL_LockMutex(source_lock);
+	if (!sources_stop.getSecond().empty())
+	{
+		sources_stop.swapFirst();
+	}
+	SDL_UnlockMutex(source_lock);
 }
 
 void SOUND::ProcessSourceStop()
 {
-	std::vector<size_t> & sstop = source_stop.getFirst();
+	std::vector<size_t> & sstop = sources_stop.getFirst();
 	for (size_t i = 0; i < sstop.size(); ++i)
 	{
 		size_t id = sstop[i];
@@ -375,23 +389,22 @@ void SOUND::ProcessSourceStop()
 
 void SOUND::ProcessSourceRemove()
 {
-	std::vector<size_t> & sremove = sampler_remove.getFirst();
-	for (size_t i = 0; i < sremove.size(); ++i)
+	for (size_t i = 0; i < sources_remove.size(); ++i)
 	{
-		size_t id = sremove[i];
+		size_t id = sources_remove[i];
 		assert(id < sources.size());
 
 		size_t idn = sources[id].id;
 		assert(idn < sources_num);
-		//*log_error << "Remove sound source: " << id << " " << sources[idn].buffer->GetName() << std::endl;
 
 		RemoveItem(id, sources, sources_num);
 	}
+	sources_remove.clear();
 }
 
 void SOUND::ProcessSources()
 {
-	std::vector<SamplerUpdate> & supdate = sampler_update.getFirst();
+	std::vector<SamplerSet> & supdate = samplers_update.getFirst().sset;
 	supdate.resize(sources_num);
 
 	sources_active.clear();
@@ -468,7 +481,7 @@ void SOUND::LimitActiveSources()
 		sources_active.end());
 
 	// mute remaining sources
-	std::vector<SamplerUpdate> & supdate = sampler_update.getFirst();
+	std::vector<SamplerSet> & supdate = samplers_update.getFirst().sset;
 	for (size_t i = max_active_sources; i < sources_active.size(); ++i)
 	{
 		supdate[sources_active[i].id].gain1 = 0;
@@ -478,29 +491,36 @@ void SOUND::LimitActiveSources()
 
 void SOUND::SetSamplerChanges()
 {
-	Lock(sampler_lock);
-	if (sampler_update.getFirst().size()) sampler_update.swapFirst();
-	if (sampler_add.getFirst().size()) sampler_add.swapFirst();
-	if (sampler_remove.getFirst().size()) sampler_remove.swapFirst();
+	if (samplers_update.getFirst().empty())
+		return;
+
+	SDL_LockMutex(sampler_lock);
+	if (samplers_update.getSecond().empty())
+	{
+		samplers_update.getFirst().id = update_id++;
+		samplers_update.swapFirst();
+	}
 	sources_pause = set_pause;
-	Unlock(sampler_lock);
+	SDL_UnlockMutex(sampler_lock);
 }
 
 void SOUND::GetSamplerChanges()
 {
-	Lock(sampler_lock);
-	sampler_update.swapLast();
-	sampler_add.swapLast();
-	sampler_remove.swapLast();
-	samplers_fade = samplers_pause != sources_pause;
+	SDL_LockMutex(sampler_lock);
+	if (!samplers_update.getSecond().empty())
+	{
+		samplers_update.swapLast();
+	}
+	samplers_fade = (samplers_pause != sources_pause);
 	samplers_pause = sources_pause;
-	Unlock(sampler_lock);
+	SDL_UnlockMutex(sampler_lock);
 }
 
 void SOUND::ProcessSamplerUpdate()
 {
-	std::vector<SamplerUpdate> & supdate = sampler_update.getLast();
-	if (supdate.empty()) return;
+	std::vector<SamplerSet> & supdate = samplers_update.getLast().sset;
+	if (supdate.empty())
+		return;
 
 	assert(samplers_num == supdate.size());
 	for (size_t i = 0; i < samplers_num; ++i)
@@ -558,13 +578,13 @@ void SOUND::ProcessSamplers(unsigned char *stream, int len)
 		}
 
 		if (!smp.playing)
-			source_stop.getLast().push_back(i);
+			sources_stop.getLast().push_back(i);
 	}
 }
 
 void SOUND::ProcessSamplerRemove()
 {
-	std::vector<size_t> & sremove = sampler_remove.getLast();
+	std::vector<size_t> & sremove = samplers_update.getLast().sremove;
 	for (size_t i = 0; i < sremove.size(); ++i)
 	{
 		size_t id = sremove[i];
@@ -576,7 +596,7 @@ void SOUND::ProcessSamplerRemove()
 
 void SOUND::ProcessSamplerAdd()
 {
-	std::vector<SamplerAdd> & sadd = sampler_add.getLast();
+	std::vector<SamplerAdd> & sadd = samplers_update.getLast().sadd;
 	for (size_t i = 0; i < sadd.size(); ++i)
 	{
 		Sampler smp;
@@ -607,9 +627,12 @@ void SOUND::ProcessSamplerAdd()
 
 void SOUND::SetSourceChanges()
 {
-	Lock(source_lock);
-	if (source_stop.getLast().size()) source_stop.swapLast();
-	Unlock(source_lock);
+	if (sources_stop.getLast().empty())
+		return;
+
+	SDL_LockMutex(source_lock);
+	sources_stop.swapLast();
+	SDL_UnlockMutex(source_lock);
 }
 
 void SOUND::Callback16bitStereo(void *myself, Uint8 *stream, int len)
@@ -618,7 +641,14 @@ void SOUND::Callback16bitStereo(void *myself, Uint8 *stream, int len)
 	assert(initdone);
 
 	GetSamplerChanges();
-
+/*
+	logsa << "id: " << samplers_update.getLast().id;
+	logsa << " add: " << samplers_update.getLast().sadd.size();
+	logsa << " del: " << samplers_update.getLast().sremove.size();
+	logsa << " set: " << samplers_update.getLast().sset.size();
+	logsa << " samplers: " << samplers_num;
+	logsa << std::endl;
+*/
 	ProcessSamplerAdd();
 
 	ProcessSamplerUpdate();

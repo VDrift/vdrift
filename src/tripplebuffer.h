@@ -20,7 +20,7 @@
 #ifndef _TRIPPLEBUFFER_H
 #define _TRIPPLEBUFFER_H
 
-#include <vector>
+#include <cassert>
 
 template <class T>
 class TrippleBuffer
@@ -28,17 +28,19 @@ class TrippleBuffer
 public:
 	TrippleBuffer();
 
-	std::vector<T> & getFirst();
-
-	std::vector<T> & getLast();
+	T & getFirst();
+	
+	T & getSecond();
+	
+	T & getLast();
 
 	void swapFirst();
 
 	void swapLast();
 
 private:
-	std::vector<T> buffer1, buffer2, buffer3;
-	std::vector<T> * buffer1p, * buffer2p, * buffer3p;
+	T buffer1, buffer2, buffer3;
+	T * buffer1p, * buffer2p, * buffer3p;
 };
 
 
@@ -51,13 +53,19 @@ inline TrippleBuffer<T>::TrippleBuffer()
 }
 
 template <class T>
-inline std::vector<T> & TrippleBuffer<T>::getFirst()
+inline T & TrippleBuffer<T>::getFirst()
 {
 	return *buffer1p;
 }
 
 template <class T>
-inline std::vector<T> & TrippleBuffer<T>::getLast()
+inline T & TrippleBuffer<T>::getSecond()
+{
+	return *buffer2p;
+}
+
+template <class T>
+inline T & TrippleBuffer<T>::getLast()
 {
 	return *buffer3p;
 }
@@ -66,12 +74,19 @@ template <class T>
 inline void TrippleBuffer<T>::swapFirst()
 {
 	std::swap(buffer1p, buffer2p);
+	assert(buffer1p != buffer2p);
+	assert(buffer2p != buffer3p);
+	assert(buffer3p != buffer1p);
+
 }
 
 template <class T>
 inline void TrippleBuffer<T>::swapLast()
 {
 	std::swap(buffer2p, buffer3p);
+	assert(buffer1p != buffer2p);
+	assert(buffer2p != buffer3p);
+	assert(buffer3p != buffer1p);
 }
 
 #endif
