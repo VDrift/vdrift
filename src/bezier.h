@@ -27,7 +27,6 @@
 
 class AI;
 class TRACK;
-//class ROADPATCH;
 
 class BEZIER
 {
@@ -151,7 +150,6 @@ private:
 
 	MATHVECTOR <float, 3> points[4][4];
 	MATHVECTOR <float, 3> center;
-	float radius;
 	float length;
 	float dist_from_start;
 

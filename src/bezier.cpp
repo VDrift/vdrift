@@ -97,17 +97,7 @@ void BEZIER::SetFromCorners(const MATHVECTOR <float, 3> & fl, const MATHVECTOR <
 {
 	MATHVECTOR <float, 3> temp;
 
-	center = fl + fr + bl + br;
-	center = center*0.25;
-	radius = 0;
-	if ((fl - center).Magnitude() > radius)
-		radius = (fl - center).Magnitude();
-	if ((fr - center).Magnitude() > radius)
-		radius = (fr - center).Magnitude();
-	if ((bl - center).Magnitude() > radius)
-		radius = (bl - center).Magnitude();
-	if ((br - center).Magnitude() > radius)
-		radius = (br - center).Magnitude();
+	center = (fl + fr + bl + br) * 0.25;
 
 	//assign corners
 	points[0][0] = fl;
@@ -117,45 +107,19 @@ void BEZIER::SetFromCorners(const MATHVECTOR <float, 3> & fl, const MATHVECTOR <
 
 	//calculate intermediate front and back points
 	temp = fr - fl;
-	if (temp.Magnitude() < 0.0001)
-	{
-		points[0][1] = fl;
-		points[0][2] = fl;
-	}
-	else
-	{
-		points[0][1] = fl + temp.Normalize()*(temp.Magnitude()/3.0);
-		points[0][2] = fl + temp.Normalize()*(2.0*temp.Magnitude()/3.0);
-	}
+	points[0][1] = fl + temp * 1.0/3.0;
+	points[0][2] = fl + temp * 2.0/3.0;
 
 	temp = br - bl;
-	if (temp.Magnitude() < 0.0001)
-	{
-		points[3][1] = bl;
-		points[3][2] = bl;
-	}
-	else
-	{
-		points[3][1] = bl + temp.Normalize()*(temp.Magnitude()/3.0);
-		points[3][2] = bl + temp.Normalize()*(2.0*temp.Magnitude()/3.0);
-	}
-
+	points[3][1] = bl + temp * 1.0/3.0;
+	points[3][2] = bl + temp * 2.0/3.0;
 
 	//calculate intermediate left and right points
-	int i;
-	for (i = 0; i < 4; i++)
+	for (int i = 0; i < 4; ++i)
 	{
 		temp = points[3][i] - points[0][i];
-		if (temp.Magnitude() > 0.0001)
-		{
-			points[1][i] = points[0][i] + temp.Normalize()*(temp.Magnitude()/3.0);
-			points[2][i] = points[0][i] + temp.Normalize()*(2.0*temp.Magnitude()/3.0);
-		}
-		else
-		{
-			points[1][i] = points[0][i];
-			points[2][i] = points[0][i];
-		}
+		points[1][i] = points[0][i] + temp * 1.0/3.0;
+		points[2][i] = points[0][i] + temp * 2.0/3.0;
 	}
 
 	//CheckForProblems();
@@ -467,7 +431,6 @@ BEZIER & BEZIER::CopyFrom(const BEZIER &other)
 	}
 
 	center = other.center;
-	radius = other.radius;
 	length = other.length;
 	dist_from_start = other.dist_from_start;
 	next_patch = other.next_patch;
