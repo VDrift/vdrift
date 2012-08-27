@@ -112,7 +112,8 @@ void Engine::update(btScalar dt)
 btScalar Engine::getCombustionTorque(btScalar throttle, btScalar angvel) const
 {
 	btScalar rpm = angvel * 30.0 / M_PI;
-	if (rpm < info.rpm_stall || rpm > info.rpm_limit - 1E-3) return 0.0;
+	if (rpm < info.rpm_stall || rpm > info.rpm_limit - 1E-3)
+		return 0.0;
 
 	btScalar scale = (info.torque.size() - 1) / (info.rpm_limit - info.rpm_stall); // constant
 	btScalar f = (rpm - info.rpm_stall) * scale;
@@ -125,7 +126,7 @@ btScalar Engine::getCombustionTorque(btScalar throttle, btScalar angvel) const
 
 btScalar Engine::getFrictionTorque(btScalar throttle, btScalar angvel) const
 {
-	btClamp(angvel, info.rpm_stall, info.rpm_limit);
+	btClamp(angvel, info.rpm_stall, info.rpm_limit - 1);
 	return getCombustionTorque(-0.25, angvel) * (1 - throttle);
 /*
 	btScalar velsign = angvel < 0 ? -1.0 : 1.0;
