@@ -118,7 +118,7 @@ btScalar Engine::getCombustionTorque(btScalar throttle, btScalar angvel) const
 	btScalar f = (rpm - info.rpm_stall) * scale;
 	int n = int(f); // floor(f)
 	btScalar fraction = f - n;
-	btAssert(n + 1 < info.torque.size());
+	btAssert(n + 1 < int(info.torque.size()));
 	btScalar torque = (1 - fraction) * info.torque[n] + fraction * info.torque[n + 1];
 	return throttle * torque;
 }
