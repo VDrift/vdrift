@@ -265,11 +265,16 @@ void PERFORMANCE_TESTING::TestStoppingDistance(bool abs, std::ostream & info_out
 
 		float car_speed = car.getSpeed();
 
-		if (car_speed >= brakestartspeed && accelerating) //stop accelerating and hit the brakes
+		if (car_speed >= brakestartspeed && accelerating)
 		{
+			// stop accelerating and hit the brakes
 			accelerating = false;
 			stopstart = car.getPosition();
-			//info_output << "hitting the brakes at " << t << ", " << ConvertToMPH(car_speed) << " MPH" << std::endl;
+
+			// stopping distance estimation
+			float d = car.getBrakingDistance(0);
+			info_output << "60-0 stopping distance estimation: ";
+			info_output << ConvertToFeet(d) << " ft" << std::endl;
 		}
 
 		if (!accelerating && car_speed < stopthreshold)
@@ -296,8 +301,8 @@ void PERFORMANCE_TESTING::TestStoppingDistance(bool abs, std::ostream & info_out
 
 	info_output << "60-0 stopping distance ";
 	if (abs)
-		info_output << "(ABS)";
+		info_output << "(ABS): ";
 	else
-		info_output << "(no ABS)";
-	info_output << ": " << ConvertToFeet((stopend - stopstart).length()) << " ft" << std::endl;
+		info_output << "(no ABS): ";
+	info_output << ConvertToFeet((stopend - stopstart).length()) << " ft" << std::endl;
 }
