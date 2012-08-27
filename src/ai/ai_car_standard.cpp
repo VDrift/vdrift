@@ -232,15 +232,10 @@ float AI_Car_Standard::calcSpeedLimit(
 	//adjust the radius at corner exit to allow a higher speed.
 	//this will get the car to accellerate out of corner
 	float radius = GetPatchRadius(*patch);
-	if (nextpatch)
+	if (nextpatch && radius > LOOKAHEAD_MIN_RADIUS && GetPatchRadius(*nextpatch) > radius)
 	{
-		if (GetPatchRadius(*nextpatch) > radius &&
-			GetPatchRadius(*patch) > LOOKAHEAD_MIN_RADIUS)
-		{
-			radius += extraradius;
-		}
+		radius += extraradius;
 	}
-
 	return car->GetMaxVelocity(radius);
 }
 
@@ -401,7 +396,12 @@ void AI_Car_Standard::updateSteer()
 		else
 		{
 			// use last patch to get the car back on track
-			curr_patch_ptr = last_patch;
+			// get next closest patch 8 meter in front of the car
+			MATHVECTOR <float, 3> offset = direction::Forward * 8;
+			car->GetOrientation().RotateVector(offset);
+			MATHVECTOR <float, 3> pos = car->GetPosition() + offset;
+			pos = TransformToPatchspace(pos);
+			curr_patch_ptr = last_patch->GetNextClosestPatch(pos);
 		}
 	}
 

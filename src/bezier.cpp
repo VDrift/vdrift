@@ -35,18 +35,31 @@ std::ostream & operator << (std::ostream &os, const BEZIER & b)
 	return os;
 }
 
-BEZIER::BEZIER()
+BEZIER::BEZIER() :
+	length(0),
+	dist_from_start(0),
+	next_patch(NULL),
+	track_radius(0),
+	track_curvature(0),
+	turn(0),
+	have_racingline(false)
 {
-	next_patch = NULL;
-	turn = 0;
-	dist_from_start = 0.0;
-	length = 0.0;
-	have_racingline = false;
+	// ctor
 }
 
 BEZIER::~BEZIER()
 {
+	// dtor
+}
 
+BEZIER::BEZIER(const BEZIER & other)
+{
+	CopyFrom(other);
+}
+
+BEZIER & BEZIER::operator=(const BEZIER & other)
+{
+	return CopyFrom(other);
 }
 
 AABB <float> BEZIER::GetAABB() const
@@ -93,11 +106,13 @@ AABB <float> BEZIER::GetAABB() const
 	return box;
 }
 
-void BEZIER::SetFromCorners(const MATHVECTOR <float, 3> & fl, const MATHVECTOR <float, 3> & fr, const MATHVECTOR <float, 3> & bl, const MATHVECTOR <float, 3> & br)
+void BEZIER::SetFromCorners(
+	const MATHVECTOR <float, 3> & fl,
+	const MATHVECTOR <float, 3> & fr,
+	const MATHVECTOR <float, 3> & bl,
+	const MATHVECTOR <float, 3> & br)
 {
 	MATHVECTOR <float, 3> temp;
-
-	center = (fl + fr + bl + br) * 0.25;
 
 	//assign corners
 	points[0][0] = fl;
@@ -267,40 +282,6 @@ void BEZIER::FitMidPoint(MATHVECTOR <float, 3> p[])
 
 void BEZIER::Attach(BEZIER & other, bool reverse)
 {
-	/*if (!reverse)
-	{
-		//move the other patch to the location of this patch and force its
-		// intermediate points into a nice grid layout
-		other.SetFromCorners(other.points[0][0], other.points[0][3], points[0][0], points[0][3]);
-
-		for (int x = 0; x < 4; x++)
-		{
-			//slope points in the forward direction
-			MATHVECTOR <float, 3> slope = other.points[0][x] - points[3][x];
-			if (slope.Magnitude() > 0.0001)
-				slope = slope.Normalize();
-
-			float otherlen = (other.points[0][x] - other.points[3][x]).Magnitude();
-			float mylen = (points[0][x] - points[3][x]).Magnitude();
-
-			float meanlen = (otherlen + mylen)/2.0;
-			float leglen = meanlen / 3.0;
-
-			if (slope.Magnitude() > 0.0001)
-			{
-				other.points[2][x] = other.points[3][x] + slope*leglen;
-				points[1][x] = points[0][x] + slope*(-leglen);
-			}
-			else
-			{
-				other.points[2][x] = other.points[3][x];
-				points[1][x] = points[0][x];
-			}
-		}
-	}*/
-
-	//CheckForProblems();
-
 	//store the pointer to next patch
 	next_patch = &other;
 
@@ -314,11 +295,8 @@ void BEZIER::Attach(BEZIER & other, bool reverse)
 		a = SurfCoord(0.5,1.0);
 		b = SurfCoord(0.5,0.0);
 		c = other.SurfCoord(0.5,0.0);
-
-		//Reverse();
 	}
 
-	//racing_line = a;
 	MATHVECTOR <float, 3> d1 = a - b;
 	MATHVECTOR <float, 3> d2 = c - b;
 	float diff = d2.Magnitude() - d1.Magnitude();
@@ -343,7 +321,8 @@ void BEZIER::Attach(BEZIER & other, bool reverse)
 	else turn = 1; //right turn ahead
 
 	//calculate distance from start of the road
-	if (other.next_patch == NULL || reverse) other.dist_from_start = dist_from_start + d1.Magnitude();
+	if (other.next_patch == NULL || reverse)
+		other.dist_from_start = dist_from_start + d1.Magnitude();
 	length = d1.Magnitude();
 }
 
@@ -420,6 +399,26 @@ MATHVECTOR <float, 3> BEZIER::SurfNorm(float px, float py) const
 	return n;
 }
 
+const BEZIER * BEZIER::GetNextClosestPatch(const MATHVECTOR<float, 3> & point) const
+{
+	float dist2 = (point -(GetFL() + GetFR()) * 0.5).MagnitudeSquared();
+	const BEZIER * p0 = this;
+	const BEZIER * p1 = next_patch;
+	while (p1)
+	{
+		float next_dist2 = (point - (p1->GetFL() + p1->GetFR()) * 0.5).MagnitudeSquared();
+		if (next_dist2 > dist2)
+		{
+			return p0;
+		}
+		dist2 = next_dist2;
+		p0 = p1;
+		p1 = p0->next_patch;
+		assert(p1 != this);
+	}
+	return p0;
+}
+
 BEZIER & BEZIER::CopyFrom(const BEZIER &other)
 {
 	for (int x = 0; x < 4; x++)
@@ -430,7 +429,6 @@ BEZIER & BEZIER::CopyFrom(const BEZIER &other)
 		}
 	}
 
-	center = other.center;
 	length = other.length;
 	dist_from_start = other.dist_from_start;
 	next_patch = other.next_patch;

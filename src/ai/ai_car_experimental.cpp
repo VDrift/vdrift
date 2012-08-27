@@ -405,7 +405,7 @@ void AI_Car_Experimental::updateGasBrake()
 
 	while (dist_checked < maxlookahead)
 	{
-		BEZIER * unmodified_patch_to_check = patch_to_check.GetNextPatch();
+		const BEZIER * unmodified_patch_to_check = patch_to_check.GetNextPatch();
 
 		//if there is no next patch(probably a non-closed track, just let it roll
 		if (!patch_to_check.GetNextPatch())
@@ -520,8 +520,8 @@ float AI_Car_Experimental::RayCastDistance( MATHVECTOR <float, 3> direction, flo
 	float dist = raycb.m_closestHitFraction * max_length;
 
 #ifdef VISUALIZE_AI_DEBUG
-	MATHVECTOR<float, 3> pos_start(cast(pos));
-	MATHVECTOR<float, 3> pos_end = pos_start + (cast(dir) * dist);
+	MATHVECTOR<float, 3> pos_start(cast(ray_from));
+	MATHVECTOR<float, 3> pos_end = pos_start + (cast(ray_dir) * dist);
 	AddLinePoint(raycastshape, pos_start);
 	AddLinePoint(raycastshape, pos_end);
 #endif
