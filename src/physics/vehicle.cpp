@@ -422,13 +422,14 @@ btScalar Vehicle::getBrakingDistance(btScalar target_speed) const
 	// mu * mass * gravity * distance = 0.5 * mass * (Initial_velocity^2 - Final_velocity^2)
 	// Distance is:
 	// distance = (Initial_velocity^2 - Final_velocity^2) / (2 * mu * gravity)
+	btScalar gravity = 9.81;
+	btScalar lon_friction_factor = 0.70; // friction factor
+	btScalar friction_coeff = lon_friction_coeff * lon_friction_factor;
 	btScalar current_speed_2 = body->getLinearVelocity().length2();
 	btScalar target_speed_2 = target_speed * target_speed;
-	btScalar friction = lon_friction_coeff;
-	btScalar gravity = 9.81;
 	if (target_speed_2 < current_speed_2)
 	{
-		return (current_speed_2 - target_speed_2) / (2.0 * friction * gravity);
+		return (current_speed_2 - target_speed_2) / (2.0 * friction_coeff * gravity);
 	}
 	return 0;
 }
@@ -438,12 +439,14 @@ btScalar Vehicle::getMaxVelocity(btScalar radius) const
 	// Max curve velocity estimation
 	// m * v * v / r = friction_coeff * (m * g + lift_coeff * v * v)
 	// v * v = r * friction_coeff  * g / (1 - r * friction_coeff * lift_coeff / m)
-	btAssert(radius >= 0);
+	btScalar gravity = 9.81;
+	btScalar lat_friction_factor = 0.65; // friction factor
+	btScalar friction_coeff = lat_friction_coeff * lat_friction_factor;
 	btScalar minv = body->getInvMass();
-	btScalar d = 1.0 - radius * lat_friction_coeff * getLiftCoefficient() * minv;
+	btScalar d = 1.0 - radius * friction_coeff * getLiftCoefficient() * minv;
 	if (d < 1E-6)
 		return 1000;
-	btScalar v = sqrt(radius * lat_friction_coeff * 9.81 / d);
+	btScalar v = sqrt(radius * friction_coeff * gravity / d);
 	return v;
 }
 
@@ -900,11 +903,8 @@ btScalar Vehicle::calculateMaxSpeed() const
 
 void Vehicle::calculateFrictionCoefficient(btScalar & lon_mu, btScalar & lat_mu) const
 {
-	btScalar lon_friction_factor = 0.68;
-	btScalar lat_friction_factor = 0.62;
 	btScalar gravity = 9.81;
-	btScalar mass = 1 / body->getInvMass();
-	btScalar force = gravity * mass / wheel.size();
+	btScalar force = gravity / body->getInvMass() / wheel.size();
 
 	btScalar lon_friction = 0.0;
 	btScalar lat_friction = 0.0;
@@ -916,8 +916,8 @@ void Vehicle::calculateFrictionCoefficient(btScalar & lon_mu, btScalar & lat_mu)
 	lon_friction = lon_friction / (force * wheel.size());
 	lat_friction = lat_friction / (force * wheel.size());
 
-	lon_mu = lon_friction_factor * lon_friction;
-	lat_mu = lat_friction_factor * lat_friction;
+	lon_mu = lon_friction;
+	lat_mu = lat_friction;
 }
 
 static inline std::ostream & operator << (std::ostream & os, const btVector3 & v)
