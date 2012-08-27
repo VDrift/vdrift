@@ -910,8 +910,8 @@ void Vehicle::calculateFrictionCoefficient(btScalar & lon_mu, btScalar & lat_mu)
 		lon_friction += wheel[i].tire.getMaxFx(force);
 		lat_friction += wheel[i].tire.getMaxFy(force, 0.0);
 	}
-	lon_friction /= force;
-	lat_friction /= force;
+	lon_friction = lon_friction / (force * wheel.size());
+	lat_friction = lat_friction / (force * wheel.size());
 
 	lon_mu = lon_friction_factor * lon_friction;
 	lat_mu = lat_friction_factor * lat_friction;
