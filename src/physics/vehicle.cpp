@@ -435,12 +435,15 @@ btScalar Vehicle::getBrakingDistance(btScalar target_speed) const
 
 btScalar Vehicle::getMaxVelocity(btScalar radius) const
 {
-	btScalar g = 9.81;
-	btScalar im = body->getInvMass();
-	btScalar d = 1.0 - btMin(btScalar(1.01), -radius * getLiftCoefficient() * lat_friction_coeff * im);
-	btScalar real = lat_friction_coeff * g * radius / d;
-	btScalar v = 1000.0;
-	if (real > 0) v = sqrt(real);
+	// Max curve velocity estimation
+	// m * v * v / r = friction_coeff * (m * g + lift_coeff * v * v)
+	// v * v = r * friction_coeff  * g / (1 - r * friction_coeff * lift_coeff / m)
+	btAssert(radius >= 0);
+	btScalar minv = body->getInvMass();
+	btScalar d = 1.0 - radius * lat_friction_coeff * getLiftCoefficient() * minv;
+	if (d < 1E-6)
+		return 1000;
+	btScalar v = sqrt(radius * lat_friction_coeff * 9.81 / d);
 	return v;
 }
 
