@@ -33,6 +33,8 @@ void Ray::set(const btVector3 & rayFrom, const btVector3 & rayDir, btScalar rayL
 	m_hitPoint = m_rayTo;
 	m_depth = rayLen;
 	m_surface = 0;
+	m_patch = 0;
+	m_patchid = 0;
 }
 
 btScalar Ray::addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace)
