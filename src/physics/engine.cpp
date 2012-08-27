@@ -126,7 +126,8 @@ btScalar Engine::getCombustionTorque(btScalar throttle, btScalar angvel) const
 
 btScalar Engine::getFrictionTorque(btScalar throttle, btScalar angvel) const
 {
-	btClamp(angvel, info.rpm_stall, info.rpm_limit - 1);
+	const btScalar scale = M_PI / 30.0;
+	btClamp(angvel, info.rpm_stall * scale, info.rpm_limit * scale - 1);
 	return getCombustionTorque(-0.25, angvel) * (1 - throttle);
 /*
 	btScalar velsign = angvel < 0 ? -1.0 : 1.0;
