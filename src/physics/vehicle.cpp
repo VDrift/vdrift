@@ -440,7 +440,7 @@ btScalar Vehicle::getMaxVelocity(btScalar radius) const
 	// m * v * v / r = friction_coeff * (m * g + lift_coeff * v * v)
 	// v * v = r * friction_coeff  * g / (1 - r * friction_coeff * lift_coeff / m)
 	btScalar gravity = 9.81;
-	btScalar lat_friction_factor = 0.65; // friction factor
+	btScalar lat_friction_factor = 0.70; // friction factor
 	btScalar friction_coeff = lat_friction_coeff * lat_friction_factor;
 	btScalar minv = body->getInvMass();
 	btScalar d = 1.0 - radius * friction_coeff * getLiftCoefficient() * minv;
