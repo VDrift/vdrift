@@ -50,7 +50,7 @@ struct Ray : public btCollisionWorld::RayResultCallback
 
 	const btVector3 & getNormal() const;
 
-	const btScalar getDepth() const;
+	btScalar getDepth() const;
 
 	const Surface * getSurface() const;
 
@@ -82,7 +82,7 @@ inline const btVector3 & Ray::getNormal() const
 	return m_hitNormal;
 }
 
-inline const btScalar Ray::getDepth() const
+inline btScalar Ray::getDepth() const
 {
 	return m_depth;
 }

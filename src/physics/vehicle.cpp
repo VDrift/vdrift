@@ -285,7 +285,7 @@ const btVector3 & Vehicle::getVelocity() const
 	return body->getLinearVelocity();
 }
 
-const btScalar Vehicle::getInvMass() const
+btScalar Vehicle::getInvMass() const
 {
 	return body->getInvMass();
 }

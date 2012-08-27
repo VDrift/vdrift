@@ -96,7 +96,7 @@ public:
 	const btTransform & getTransform() const;
 	const btVector3 & getPosition() const;
 	const btVector3 & getVelocity() const;
-	const btScalar getInvMass() const;
+	btScalar getInvMass() const;
 	const btCollisionObject * getCollisionObject() const;
 	const btCollisionWorld * getCollisionWorld() const;
 
