@@ -96,18 +96,29 @@ private:
 	bool use_racingline; ///<true allows the AI to take a proper racing line
 
 	template<class T> static bool isnan(const T & x);
+
 	static float clamp(float val, float min, float max);
+
 	static float RateLimit(float old_value, float new_value, float rate_limit_pos, float rate_limit_neg);
+
 	static MATHVECTOR <float, 3> TransformToWorldspace(const MATHVECTOR <float, 3> & bezierspace);
+
 	static MATHVECTOR <float, 3> TransformToPatchspace(const MATHVECTOR <float, 3> & bezierspace);
+
 	static const BEZIER * GetCurrentPatch(const CAR *c);
+
 	static MATHVECTOR <float, 3> GetPatchFrontCenter(const BEZIER & patch);
+
 	static MATHVECTOR <float, 3> GetPatchBackCenter(const BEZIER & patch);
+
 	static MATHVECTOR <float, 3> GetPatchDirection(const BEZIER & patch);
+
 	static MATHVECTOR <float, 3> GetPatchWidthVector(const BEZIER & patch);
+
 	static double GetPatchRadius(const BEZIER & patch);
-	static void TrimPatch(BEZIER & patch, float trimleft_front, float trimright_front, float trimleft_back, float trimright_back);
+
 	static float GetHorizontalDistanceAlongPatch(const BEZIER & patch, MATHVECTOR <float, 3> carposition);
+
 	static float RampBetween(float val, float startat, float endat);
 
 #ifdef VISUALIZE_AI_DEBUG
@@ -121,6 +132,7 @@ private:
 	keyed_container <DRAWABLE>::handle avoidancedraw;
 
 	static void ConfigureDrawable(keyed_container <DRAWABLE>::handle & ref, SCENENODE & topnode, float r, float g, float b);
+
 	static void AddLinePoint(VERTEXARRAY & va, const MATHVECTOR<float, 3> & p);
 #endif
 };
