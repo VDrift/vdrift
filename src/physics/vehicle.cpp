@@ -771,21 +771,18 @@ btScalar Vehicle::autoClutch(btScalar clutch_rpm, btScalar last_clutch, btScalar
 	btScalar clutch_value = 1;				// default clutch value
 	btScalar clutch_engage_limit = 10 * dt; // default engage rate limit
 
-	// limit clutch load to keep engine rpm above stall
+	// keep engine rpm above stall
 	btScalar rpm_min = engine.getStartRPM();
 	btScalar rpm_clutch = transmission.getClutchRPM();
 	if (rpm_clutch < rpm_min)
 	{
-		// this seems to be pretty much binary(on, off)
 		btScalar rpm = engine.getRPM();
 		btScalar inertia = engine.getShaft().getInertia();
 		btScalar torque_limit = inertia * (rpm - rpm_min) / dt;
-		if (torque_limit > engine.getTorque())
+		if (torque_limit + engine.getTorque() < 0)
 		{
-			torque_limit = engine.getTorque();
+			clutch_value = 0;
 		}
-		clutch_value = torque_limit / clutch.getTorqueMax();
-		btClamp(clutch_value, btScalar(0), btScalar(1));
 	}
 
 	// declutch when shifting
