@@ -103,7 +103,12 @@ void Vehicle::init(
 		aero_device[i] = AeroDevice(info.aerodevice[i]);
 	}
 
-	antiroll = info.antiroll;
+	antiroll.resize(info.antiroll.size());
+	for (int i = 0; i < info.antiroll.size(); ++i)
+	{
+		antiroll[i] = info.antiroll[i];
+	}
+
 	differential.resize(info.differential.size());
 	wheel.resize(info.wheel.size());
 	wheel_contact.resize(wheel.size());
