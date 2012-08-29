@@ -766,27 +766,27 @@ void CAR::RemoveSounds()
 {
 	if (!psound) return;
 
-	// reverse order
+	// reverse order (really worth it?)
 	psound->RemoveSource(roadnoise);
 	psound->RemoveSource(handbrakesound);
 	psound->RemoveSource(brakesound);
 	psound->RemoveSource(gearsound);
 	psound->RemoveSource(crashsound);
 
-	for (size_t i = bumpsound.size() - 1; i; --i)
-		psound->RemoveSource(bumpsound[i]);
+	size_t i = bumpsound.size();
+	while (i) psound->RemoveSource(bumpsound[--i]);
 
-	for (size_t i = grasssound.size() - 1; i; --i)
-		psound->RemoveSource(grasssound[i]);
+	i = grasssound.size();
+	while (i) psound->RemoveSource(grasssound[--i]);
 
-	for (size_t i = gravelsound.size() - 1; i; --i)
-		psound->RemoveSource(gravelsound[i]);
+	i = gravelsound.size();
+	while (i) psound->RemoveSource(gravelsound[--i]);
 
-	for (size_t i = roadsound.size() - 1; i; --i)
-		psound->RemoveSource(roadsound[i]);
+	i = roadsound.size();
+	while (i) psound->RemoveSource(roadsound[--i]);
 
-	for (size_t i = enginesounds.size() - 1; i; --i)
-		psound->RemoveSource(enginesounds[i].sound_source);
+	i = enginesounds.size();
+	while (i) psound->RemoveSource(enginesounds[--i].sound_source);
 }
 
 void CAR::UpdateSounds(float dt)
