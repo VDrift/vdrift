@@ -24,6 +24,8 @@ namespace sim
 
 TireInfo::TireInfo() :
 	tread(0),
+	max_load(1E5),
+	max_camber(15),
 	longitudinal(11),
 	lateral(15),
 	aligning(18)
@@ -102,10 +104,10 @@ btVector3 Tire::getForce(
 	getSigmaHatAlphaHat(normal_force, sigma_hat, alpha_hat);
 
 	// limit input
-	btScalar Fz = normal_force * 1E-3;
-	btClamp(Fz, btScalar(0), btScalar(15));
-	btClamp(inclination, btScalar(-15), btScalar(15));
+	btClamp(normal_force, btScalar(0), btScalar(max_load));
+	btClamp(inclination, -max_camber, max_camber);
 
+	btScalar Fz = normal_force * 1E-3;								// pacejka in kN
 	btScalar gamma = inclination;									// positive when tire top tilts to the right, viewed from rear
 	btScalar denom = btMax(btFabs(lon_velocity), btScalar(1E-3));
 	btScalar sigma = (ang_velocity - lon_velocity) / denom;			// longitudinal slip: negative in braking, positive in traction
