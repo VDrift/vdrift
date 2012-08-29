@@ -17,44 +17,47 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _PERFORMANCE_TESTING_H
-#define _PERFORMANCE_TESTING_H
+#ifndef _SIM_VEHICLEINFO_H
+#define _SIM_VEHICLEINFO_H
 
-#include "physics/vehicle.h"
-#include "physics/vehiclestate.h"
-#include "physics/surface.h"
+#include "fracturebody.h"
+#include "aerodevice.h"
+#include "differential.h"
+#include "antirollbar.h"
+#include "wheel.h"
+#include "transmission.h"
+#include "clutch.h"
+#include "engine.h"
 
-class ContentManager;
-
-class PERFORMANCE_TESTING
+namespace sim
 {
-public:
-	PERFORMANCE_TESTING(sim::World & world);
 
-	~PERFORMANCE_TESTING();
+struct VehicleInfo
+{
+	// has to contain at least wheels + body, first n bodies are the wheels
+	// motion states are for: vehicle body + n wheels + m children bodies
+	// minimum number of wheels is 2
+	FractureBodyInfo body;
+	btAlignedObjectArray<MotionState*> motionstate;
+	btAlignedObjectArray<AeroDeviceInfo> aerodevice;
+	btAlignedObjectArray<DifferentialInfo> differential;
+	btAlignedObjectArray<AntiRollBar> antiroll;
+	btAlignedObjectArray<WheelInfo> wheel;
+	TransmissionInfo transmission;
+	ClutchInfo clutch;
+	EngineInfo engine;
 
-	void Test(
-		const std::string & cardir,
-		const std::string & carname,
-		ContentManager & content,
-		std::ostream & info_output,
-		std::ostream & error_output);
+	// driveline link targets are n wheels + m differentials
+	// 0 <= shaft id < wheel.size() + differential.size()
+	// the link graph has to be without cycles (tree)
+	// differential link count is equal to differential count
+	btAlignedObjectArray<int> differential_link_a;
+	btAlignedObjectArray<int> differential_link_b;
+	int transmission_link;
 
-private:
-	sim::World & world;
-	sim::Surface surface;
-	sim::VehicleState carstate;
-	sim::Vehicle car;
-
-	/// flat plane test track
-	btCollisionObject * track;
-	btCollisionShape * plane;
-
-	void ResetCar();
-
-	void TestMaxSpeed(std::ostream & info_output, std::ostream & error_output);
-
-	void TestStoppingDistance(bool abs, std::ostream & info_output, std::ostream & error_output);
+	VehicleInfo() : body(motionstate) {}
 };
 
-#endif
+}
+
+#endif // _SIM_VEHICLEINFO_H

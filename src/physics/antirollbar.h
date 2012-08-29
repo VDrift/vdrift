@@ -17,44 +17,21 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _PERFORMANCE_TESTING_H
-#define _PERFORMANCE_TESTING_H
+#ifndef _SIM_ANTIROLLBAR_H
+#define _SIM_ANTIROLLBAR_H
 
-#include "physics/vehicle.h"
-#include "physics/vehiclestate.h"
-#include "physics/surface.h"
+#include "LinearMath/btScalar.h"
 
-class ContentManager;
-
-class PERFORMANCE_TESTING
+namespace sim
 {
-public:
-	PERFORMANCE_TESTING(sim::World & world);
 
-	~PERFORMANCE_TESTING();
-
-	void Test(
-		const std::string & cardir,
-		const std::string & carname,
-		ContentManager & content,
-		std::ostream & info_output,
-		std::ostream & error_output);
-
-private:
-	sim::World & world;
-	sim::Surface surface;
-	sim::VehicleState carstate;
-	sim::Vehicle car;
-
-	/// flat plane test track
-	btCollisionObject * track;
-	btCollisionShape * plane;
-
-	void ResetCar();
-
-	void TestMaxSpeed(std::ostream & info_output, std::ostream & error_output);
-
-	void TestStoppingDistance(bool abs, std::ostream & info_output, std::ostream & error_output);
+struct AntiRollBar
+{
+	btScalar stiffness;
+	int wheel0;
+	int wheel1;
 };
 
-#endif
+}
+
+#endif // _SIM_ANTIROLLBAR_H

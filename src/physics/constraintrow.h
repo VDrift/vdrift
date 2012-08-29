@@ -17,44 +17,27 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _PERFORMANCE_TESTING_H
-#define _PERFORMANCE_TESTING_H
+#ifndef _SIM_CONSTRAINTROW_H
+#define _SIM_CONSTRAINTROW_H
 
-#include "physics/vehicle.h"
-#include "physics/vehiclestate.h"
-#include "physics/surface.h"
+#include "LinearMath/btVector3.h"
 
-class ContentManager;
-
-class PERFORMANCE_TESTING
+namespace sim
 {
-public:
-	PERFORMANCE_TESTING(sim::World & world);
 
-	~PERFORMANCE_TESTING();
-
-	void Test(
-		const std::string & cardir,
-		const std::string & carname,
-		ContentManager & content,
-		std::ostream & info_output,
-		std::ostream & error_output);
-
-private:
-	sim::World & world;
-	sim::Surface surface;
-	sim::VehicleState carstate;
-	sim::Vehicle car;
-
-	/// flat plane test track
-	btCollisionObject * track;
-	btCollisionShape * plane;
-
-	void ResetCar();
-
-	void TestMaxSpeed(std::ostream & info_output, std::ostream & error_output);
-
-	void TestStoppingDistance(bool abs, std::ostream & info_output, std::ostream & error_output);
+struct ConstraintRow
+{
+	btVector3 normal;
+	btVector3 angularCompA;
+	btVector3 angularCompB;
+	btScalar rhs;
+	btScalar cfm;
+	btScalar jacDiagInv;
+	btScalar lowerLimit;
+	btScalar upperLimit;
+	btScalar accumImpulse;
 };
+
+}
 
 #endif

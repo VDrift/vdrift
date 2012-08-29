@@ -17,44 +17,33 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _PERFORMANCE_TESTING_H
-#define _PERFORMANCE_TESTING_H
+#ifndef _SIM_VEHICLESTATE_H
+#define _SIM_VEHICLESTATE_H
 
-#include "physics/vehicle.h"
-#include "physics/vehiclestate.h"
-#include "physics/surface.h"
+#include "LinearMath/btAlignedObjectArray.h"
+#include "LinearMath/btTransform.h"
 
-class ContentManager;
-
-class PERFORMANCE_TESTING
+namespace sim
 {
-public:
-	PERFORMANCE_TESTING(sim::World & world);
 
-	~PERFORMANCE_TESTING();
-
-	void Test(
-		const std::string & cardir,
-		const std::string & carname,
-		ContentManager & content,
-		std::ostream & info_output,
-		std::ostream & error_output);
-
-private:
-	sim::World & world;
-	sim::Surface surface;
-	sim::VehicleState carstate;
-	sim::Vehicle car;
-
-	/// flat plane test track
-	btCollisionObject * track;
-	btCollisionShape * plane;
-
-	void ResetCar();
-
-	void TestMaxSpeed(std::ostream & info_output, std::ostream & error_output);
-
-	void TestStoppingDistance(bool abs, std::ostream & info_output, std::ostream & error_output);
+struct VehicleState
+{
+	btAlignedObjectArray<btScalar> shaft_angvel;
+	btTransform transform;
+	btVector3 lin_velocity;
+	btVector3 ang_velocity;
+	btScalar brake;
+	btScalar clutch;
+	btScalar shift_time;
+	btScalar tacho_rpm;
+	int gear;
+	bool shifted;
+	bool auto_shift;
+	bool auto_clutch;
+	bool abs_enabled;
+	bool tcs_enabled;
 };
 
-#endif
+}
+
+#endif // _SIM_VEHICLESTATE_H

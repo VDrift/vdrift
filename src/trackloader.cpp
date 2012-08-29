@@ -18,13 +18,17 @@
 /************************************************************************/
 
 #include "trackloader.h"
-#include "loadcollisionshape.h"
-#include "physics/dynamicsworld.h"
-#include "coordinatesystem.h"
-#include "tobullet.h"
-#include "k1999.h"
 #include "content/contentmanager.h"
 #include "graphics/textureinfo.h"
+#include "coordinatesystem.h"
+#include "loadcollisionshape.h"
+#include "physics/world.h"
+#include "tobullet.h"
+#include "k1999.h"
+#include "BulletCollision/CollisionShapes/btTriangleIndexVertexArray.h"
+#include "BulletCollision/CollisionShapes/btBvhTriangleMeshShape.h"
+#include "BulletCollision/CollisionShapes/btCompoundShape.h"
+#include "BulletCollision/CollisionShapes/btBoxShape.h"
 
 #define EXTBULLET
 
@@ -76,7 +80,7 @@ static btIndexedMesh GetIndexedMesh(const MODEL & model)
 
 TRACK::LOADER::LOADER(
 	ContentManager & content,
-	DynamicsWorld & world,
+	sim::World & world,
 	DATA & data,
 	std::ostream & info_output,
 	std::ostream & error_output,
@@ -353,9 +357,9 @@ bool TRACK::LOADER::LoadShape(const PTree & cfg, const MODEL & model, BODY & bod
 		if (!shape)
 		{
 			// fall back to model bounding box
-			btVector3 size = ToBulletVector(model.GetSize());
+			btVector3 size = cast(model.GetSize());
 			shape = new btBoxShape(size * 0.5);
-			center = center + ToBulletVector(model.GetCenter());
+			center = center + cast(model.GetCenter());
 		}
 		if (compound)
 		{
@@ -541,8 +545,8 @@ bool TRACK::LOADER::LoadNode(const PTree & sec)
 		{
 			// static geometry collidable
 			btTransform transform;
-			transform.setOrigin(ToBulletVector(position));
-			transform.setRotation(ToBulletQuaternion(rotation));
+			transform.setOrigin(cast(position));
+			transform.setRotation(cast(rotation));
 #ifndef EXTBULLET
 			track_shape->addChildShape(transform, body.shape);
 #else
@@ -559,7 +563,7 @@ bool TRACK::LOADER::LoadNode(const PTree & sec)
 	else
 	{
 		// fix postion due to rotation around mass center
-		MATHVECTOR<float, 3> center_local = ToMathVector<float>(body.center);
+		MATHVECTOR<float, 3> center_local = cast(body.center);
 		MATHVECTOR<float, 3> center_world = center_local;
 		rotation.RotateVector(center_world);
 		position = position - center_local + center_world;
@@ -567,9 +571,9 @@ bool TRACK::LOADER::LoadNode(const PTree & sec)
 		if (dynamic_objects)
 		{
 			// dynamic geometry
-			data.body_transforms.push_back(MotionState());
-			data.body_transforms.back().rotation = ToBulletQuaternion(rotation);
-			data.body_transforms.back().position = ToBulletVector(position);
+			data.body_transforms.push_back(sim::MotionState());
+			data.body_transforms.back().rotation = cast(rotation);
+			data.body_transforms.back().position = cast(position);
 			data.body_transforms.back().massCenterOffset = -body.center;
 
 			btRigidBody::btRigidBodyConstructionInfo info(body.mass, &data.body_transforms.back(), body.shape, body.inertia);
@@ -591,8 +595,8 @@ bool TRACK::LOADER::LoadNode(const PTree & sec)
 		{
 			// dynamic geometry as static geometry collidable
 			btTransform transform;
-			transform.setOrigin(ToBulletVector(position));
-			transform.setRotation(ToBulletQuaternion(rotation));
+			transform.setOrigin(cast(position));
+			transform.setRotation(cast(rotation));
 
 			btCollisionObject * object = new btCollisionObject();
 			object->setActivationState(DISABLE_SIMULATION);
@@ -865,9 +869,45 @@ bool TRACK::LOADER::LoadSurfaces()
 		data.surfaces.push_back(TRACKSURFACE());
 		TRACKSURFACE & surface = data.surfaces.back();
 
+		// hardcoded for now
 		std::string type;
 		surf_cfg.get("Type", type);
-		surface.setType(type);
+		if (type == "asphalt")
+		{
+			surface.sound_id = 0;
+			surface.max_gain = 0.3;
+			surface.pitch_variation = 0.4;
+		}
+		else if (type == "grass")
+		{
+			surface.sound_id = 2;
+			surface.max_gain = 0.4;
+			surface.pitch_variation = 0.4;
+		}
+		else if (type == "gravel")
+		{
+			surface.sound_id = 1;
+			surface.max_gain = 0.4;
+			surface.pitch_variation = 0.4;
+		}
+		else if (type == "concrete")
+		{
+			surface.sound_id = 0;
+			surface.max_gain = 0.3;
+			surface.pitch_variation = 0.25;
+		}
+		else if (type == "sand")
+		{
+			surface.sound_id = 2;
+			surface.max_gain = 0.25;
+			surface.pitch_variation = 0.25;
+		}
+		else
+		{
+			surface.sound_id = 0;
+			surface.max_gain = 0.0;
+			surface.pitch_variation = 0.0;
+		}
 
 		float temp = 0.0;
 		surf_cfg.get("BumpWaveLength", temp, error_output);

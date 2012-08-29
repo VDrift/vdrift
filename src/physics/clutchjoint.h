@@ -17,44 +17,55 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _PERFORMANCE_TESTING_H
-#define _PERFORMANCE_TESTING_H
+#ifndef _SIM_CLUTCHJOINT_H
+#define _SIM_CLUTCHJOINT_H
 
-#include "physics/vehicle.h"
-#include "physics/vehiclestate.h"
-#include "physics/surface.h"
+#include "shaft.h"
 
-class ContentManager;
-
-class PERFORMANCE_TESTING
+namespace sim
 {
-public:
-	PERFORMANCE_TESTING(sim::World & world);
 
-	~PERFORMANCE_TESTING();
-
-	void Test(
-		const std::string & cardir,
-		const std::string & carname,
-		ContentManager & content,
-		std::ostream & info_output,
-		std::ostream & error_output);
-
-private:
-	sim::World & world;
-	sim::Surface surface;
-	sim::VehicleState carstate;
-	sim::Vehicle car;
-
-	/// flat plane test track
-	btCollisionObject * track;
-	btCollisionShape * plane;
-
-	void ResetCar();
-
-	void TestMaxSpeed(std::ostream & info_output, std::ostream & error_output);
-
-	void TestStoppingDistance(bool abs, std::ostream & info_output, std::ostream & error_output);
+/// shaft 1 and 2 are co-rotating
+/// gearRatio has to remain unequal to 0 at any time
+struct ClutchJoint
+{
+	Shaft * shaft1;
+	Shaft * shaft2;
+	btScalar gearRatio;
+	btScalar impulseLimit;
+	btScalar inertiaEff;
+	btScalar accumulatedImpulse;
+	
+	/// calculate effective inertia, reset impulse accuulator
+	void init();
+	
+	/// one solver ieration
+	void solve();
 };
+
+// implementation
+
+inline void ClutchJoint::init()
+{
+	accumulatedImpulse = 0;
+	inertiaEff = 1.0 / (shaft1->getInertiaInv() +
+		gearRatio * gearRatio * shaft2->getInertiaInv());
+}
+
+inline void ClutchJoint::solve()
+{
+	btScalar velocityError = shaft1->getAngularVelocity() - gearRatio * shaft2->getAngularVelocity();
+	btScalar lambda = -velocityError * inertiaEff;
+
+	btScalar accumulatedImpulseOld = accumulatedImpulse;
+	accumulatedImpulse += lambda;
+	btClamp(accumulatedImpulse, -impulseLimit, impulseLimit);
+	lambda = accumulatedImpulse - accumulatedImpulseOld;
+
+	shaft1->applyImpulse(lambda);
+	shaft2->applyImpulse(-lambda * gearRatio);
+}
+
+}
 
 #endif

@@ -49,6 +49,9 @@ static inline btVector3 getPrincipalInertia(const btVector3 & p, const btScalar 
 		p.x() * p.x() + p.y() * p.y());
 }
 
+namespace sim
+{
+
 FractureBody::FractureBody(const FractureBodyInfo & info) :
 	btRigidBody(btRigidBodyConstructionInfo(1, 0, info.m_shape, btVector3(1, 1, 1))),
 	m_connections(info.m_connections),
@@ -71,13 +74,13 @@ FractureBody::FractureBody(const FractureBodyInfo & info) :
 	// set motion states
 	if (info.m_states.size() == m_connections.size() + 1)
 	{
-		info.m_states[0].massCenterOffset = m_centerOfMassOffset;
-		new (&m_motionState) MotionState(*this, &info.m_states[0]);
+		info.m_states[0]->massCenterOffset = m_centerOfMassOffset;
+		new (&m_motionState) FrMotionState(*this, info.m_states[0]);
 		setMotionState(&m_motionState);
 
 		for (int i = 0; i < m_connections.size(); ++i)
 		{
-			m_connections[i].m_body->setMotionState(&info.m_states[i + 1]);
+			m_connections[i].m_body->setMotionState(info.m_states[i + 1]);
 		}
 	}
 }
@@ -94,17 +97,6 @@ bool FractureBody::isChildConnected(int i) const
 {
 	btAssert(i >= 0 && i < m_connections.size());
 	return m_connections[i].m_shapeId >= 0;
-}
-
-int FractureBody::getNumChildren() const
-{
-	return m_connections.size();
-}
-
-btRigidBody* FractureBody::getChildBody(int i) const
-{
-	btAssert(i >= 0 && i < m_connections.size());
-	return m_connections[i].m_body;
 }
 
 void FractureBody::setChildTransform(int i, const btTransform& transform)
@@ -189,7 +181,59 @@ btRigidBody* FractureBody::breakConnection(int con_id)
 	return child;
 }
 
-FractureBodyInfo::FractureBodyInfo(btAlignedObjectArray<MotionState>& states) :
+void FractureBody::clear(btDynamicsWorld& world)
+{
+	for (int i = 0; i < m_connections.size(); ++i)
+	{
+		btRigidBody* cb = m_connections[i].m_body;
+		btAssert(!cb->getCollisionShape()->isCompound());
+		if (cb->isInWorld())
+		{
+			world.removeRigidBody(cb);
+		}
+		delete cb->getCollisionShape();
+		delete cb;
+	}
+	m_connections.clear();
+}
+
+FractureBody::FrMotionState::FrMotionState(FractureBody & body, btMotionState * state) :
+	m_body(body),
+	m_state(state)
+{
+	// ctor
+}
+
+FractureBody::FrMotionState::~FrMotionState()
+{
+	// dtor
+}
+
+void FractureBody::FrMotionState::getWorldTransform(btTransform & worldTrans) const
+{
+	btAssert(m_state);
+	m_state->getWorldTransform(worldTrans);
+}
+
+void FractureBody::FrMotionState::setWorldTransform(const btTransform & worldTrans)
+{
+	btAssert(m_state);
+	m_state->setWorldTransform(worldTrans);
+
+	// children motion states
+	const btCompoundShape* compound = static_cast<btCompoundShape*>(m_body.m_collisionShape);
+	for (int i = 0; i < compound->getNumChildShapes(); ++i)
+	{
+		int con_id = getConId(*compound->getChildShape(i));
+		if (con_id == -1) continue;
+
+		btAssert(con_id < m_body.m_connections.size());
+		btTransform transform = worldTrans * compound->getChildTransform(i);
+		m_body.m_connections[con_id].m_body->getMotionState()->setWorldTransform(transform);
+	}
+}
+
+FractureBodyInfo::FractureBodyInfo(btAlignedObjectArray<MotionState*>& states) :
 	m_shape(new btCompoundShape(false)),
 	m_states(states),
 	m_inertia(0, 0, 0),
@@ -261,33 +305,10 @@ FractureBody::Connection::Connection() :
 	// ctor
 }
 
-FractureBody::MotionState::MotionState(FractureBody & body, btMotionState * state) :
-	m_body(body),
-	m_state(state)
-{
-	// ctor
-}
 
-void FractureBody::MotionState::getWorldTransform(btTransform & worldTrans) const
-{
-	btAssert(m_state);
-	m_state->getWorldTransform(worldTrans);
-}
 
-void FractureBody::MotionState::setWorldTransform(const btTransform & worldTrans)
-{
-	btAssert(m_state);
-	m_state->setWorldTransform(worldTrans);
 
-	// children motion states
-	const btCompoundShape* compound = static_cast<btCompoundShape*>(m_body.m_collisionShape);
-	for (int i = 0; i < compound->getNumChildShapes(); ++i)
-	{
-		int con_id = getConId(*compound->getChildShape(i));
-		if (con_id == -1) continue;
 
-		btAssert(con_id < m_body.m_connections.size());
-		btTransform transform = worldTrans * compound->getChildTransform(i);
-		m_body.m_connections[con_id].m_body->getMotionState()->setWorldTransform(transform);
-	}
+
+
 }

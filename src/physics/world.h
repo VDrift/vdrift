@@ -17,74 +17,83 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _DYNAMICSWORLD_H
-#define _DYNAMICSWORLD_H
+#ifndef _SIM_WORLD_H
+#define _SIM_WORLD_H
 
-#include "btBulletCollisionCommon.h"
-#include "btBulletDynamicsCommon.h"
+#include "BulletCollision/CollisionDispatch/btDefaultCollisionConfiguration.h"
+#include "BulletCollision/CollisionDispatch/btCollisionDispatcher.h"
+#include "BulletCollision/BroadphaseCollision/btDbvtBroadphase.h"
+#include "BulletDynamics/ConstraintSolver/btSequentialImpulseConstraintSolver.h"
+#include "BulletDynamics/Dynamics/btDiscreteDynamicsWorld.h"
 
-#include <ostream>
+namespace sim
+{
 
-class TRACK;
-class COLLISION_CONTACT;
 class FractureBody;
-class BEZIER;
+struct Ray;
 
-class DynamicsWorld  : public btDiscreteDynamicsWorld
+/// simulation configuration
+struct Config
+{
+	btDefaultCollisionConfiguration config;
+	btCollisionDispatcher dispatch;
+	btDbvtBroadphase broadphase;
+	btSequentialImpulseConstraintSolver solver;
+	btScalar timeStep;
+	int maxSubSteps;
+
+	Config(btScalar timeStep = 1/60.0f, int maxSubSteps = 10);
+};
+
+/// discrete dynamics world with fracture body support
+class World : public btDiscreteDynamicsWorld
 {
 public:
-	DynamicsWorld(
-		btDispatcher* dispatcher,
-		btBroadphaseInterface* broadphase,
-		btConstraintSolver* constraintSolver,
-		btCollisionConfiguration* collisionConfig,
-		btScalar timeStep = 1/60.0,
-		int maxSubSteps = 10);
+	World(Config & config);
 
-	~DynamicsWorld();
+	~World();
 
-	void addCollisionObject(btCollisionObject* object);
+	/// alternative ray test which supports a ray test result processor
+	void rayTest(Ray & ray) const;
 
-	// reset collision world (unloads previous track)
-	void reset(const TRACK & t);
+	/// optional ray test processor, wraps the ray test callback,
+	/// allows additional operations on ray test result
+	struct RayProcessor;
+	void setRayProcessor(RayProcessor & pr);
 
-	// set custon contact callback
+	/// set a callback to be executed when a new contact is added
 	void setContactAddedCallback(ContactAddedCallback cb);
 
-	const BEZIER* GetSectorPatch(int i);
-
-	// cast ray into collision world, returns first hit, caster is excluded fom hits
-	bool castRay(
-		const btVector3 & position,
-		const btVector3 & direction,
-		const btScalar length,
-		const btCollisionObject * caster,
-		COLLISION_CONTACT & contact) const;
+	void addCollisionObject(btCollisionObject * object);
 
 	void update(btScalar dt);
 
-	void draw();
-
-	void debugPrint(std::ostream & out) const;
+	void reset();
 
 protected:
 	struct ActiveCon
 	{
 		ActiveCon() : body(0), id(-1) {}
-		ActiveCon(FractureBody* body, int id) : body(body), id(id) {}
-		FractureBody* body;
+		ActiveCon(FractureBody * body, int id) : body(body), id(id) {}
+		FractureBody * body;
 		int id;
 	};
 	btAlignedObjectArray<ActiveCon> m_activeConnections;
-	const TRACK * track;
 	btScalar timeStep;
 	int maxSubSteps;
 
-	void reset();
+	RayProcessor * rayProc;
 
 	void solveConstraints(btContactSolverInfo& solverInfo);
 
 	void fractureCallback();
 };
 
-#endif // _DYNAMICSWORLD_H
+struct World::RayProcessor : public btCollisionWorld::RayResultCallback
+{
+	virtual void set(Ray & ray) = 0;
+};
+
+}
+
+#endif

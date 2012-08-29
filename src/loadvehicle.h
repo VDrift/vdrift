@@ -17,44 +17,21 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _PERFORMANCE_TESTING_H
-#define _PERFORMANCE_TESTING_H
+#ifndef _LOADVEHICLE_H
+#define _LOADVEHICLE_H
 
-#include "physics/vehicle.h"
-#include "physics/vehiclestate.h"
-#include "physics/surface.h"
+#include <ostream>
 
-class ContentManager;
+class PTree;
+class btVector3;
+namespace sim { struct VehicleInfo; }
 
-class PERFORMANCE_TESTING
-{
-public:
-	PERFORMANCE_TESTING(sim::World & world);
+bool LoadVehicle(
+	const PTree & cfg,
+	const bool damage,
+	const btVector3 & modelcenter,
+	const btVector3 & modelsize,
+	sim::VehicleInfo & info,
+	std::ostream & error);
 
-	~PERFORMANCE_TESTING();
-
-	void Test(
-		const std::string & cardir,
-		const std::string & carname,
-		ContentManager & content,
-		std::ostream & info_output,
-		std::ostream & error_output);
-
-private:
-	sim::World & world;
-	sim::Surface surface;
-	sim::VehicleState carstate;
-	sim::Vehicle car;
-
-	/// flat plane test track
-	btCollisionObject * track;
-	btCollisionShape * plane;
-
-	void ResetCar();
-
-	void TestMaxSpeed(std::ostream & info_output, std::ostream & error_output);
-
-	void TestStoppingDistance(bool abs, std::ostream & info_output, std::ostream & error_output);
-};
-
-#endif
+#endif // _LOADVEHICLE_H

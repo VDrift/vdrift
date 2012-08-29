@@ -20,7 +20,9 @@
 #ifndef _CAR_H
 #define _CAR_H
 
-#include "physics/cardynamics.h"
+#include "physics/vehicle.h"
+#include "physics/vehiclestate.h"
+#include "physics/motionstate.h"
 #include "tobullet.h"
 #include "graphics/scenenode.h"
 #include "crashdetection.h"
@@ -35,6 +37,7 @@ class MODEL;
 class SOUND;
 class ContentManager;
 class PTree;
+class btCollisionWorld;
 
 class CAR
 {
@@ -54,14 +57,15 @@ public:
 		const int anisotropy,
 		const float camerabounce,
 		ContentManager & content,
-		std::ostream & error_output);
+		std::ostream & error);
 
 	bool LoadSounds(
+		const PTree & cfg,
 		const std::string & carpath,
 		const std::string & carname,
 		SOUND & sound,
 		ContentManager & content,
-		std::ostream & error_output);
+		std::ostream & error);
 
 	bool LoadPhysics(
 		const PTree & cfg,
@@ -71,262 +75,121 @@ public:
 		const bool defaultabs,
 		const bool defaulttcs,
 		const bool damage,
-		DynamicsWorld & world,
+		sim::World & world,
 		ContentManager & content,
-		std::ostream & error_output);
+		std::ostream & error);
 
 	// change car color
 	void SetColor(float r, float g, float b);
 
-	// will align car relative to track surface
-	void SetPosition(const MATHVECTOR <float, 3> & position);
+	void SetInteriorView(bool value);
+
+    void SetGear(int gear);
+
+	void SetAutoClutch(bool value);
+
+	void SetAutoShift(bool value);
+
+	void ProcessInputs(const std::vector<float> & inputs);
 
 	void Update(double dt);
 
-	// interpolated
-	const MATHVECTOR <float, 3> GetWheelPosition(const WHEEL_POSITION wpos) const
-	{
-		return ToMathVector<float>(dynamics.GetWheelPosition(wpos));
-	}
+	const std::vector<CAMERA*> & GetCameras() const;
 
-	float GetTireRadius(const WHEEL_POSITION wpos) const
-	{
-		return dynamics.GetTire(wpos).GetRadius();
-	}
+	/// interpolated car center position
+	MATHVECTOR<float, 3> GetPosition() const;
 
-	COLLISION_CONTACT & GetWheelContact(WHEEL_POSITION wheel_index)
-	{
-		return dynamics.GetWheelContact(wheel_index);
-	}
+	/// interpolated car center orientation
+	QUATERNION<float> GetOrientation() const;
 
-	void HandleInputs(const std::vector <float> & inputs);
+	/// interpolated wheel position
+	MATHVECTOR<float, 3> GetWheelPosition(int i) const;
 
-	const std::vector<CAMERA*> & GetCameras() const
-	{
-		return cameras;
-	}
+	float GetTireRadius(int i) const;
 
-	int GetEngineRedline() const
-	{
-		return dynamics.GetEngine().GetRedline();
-	}
+	int GetWheelCount() const;
 
-	int GetEngineRPMLimit() const
-	{
-		return dynamics.GetEngine().GetRPMLimit();
-	}
+	int GetEngineRedline() const;
 
-	bool GetOutOfGas() const
-	{
-		return dynamics.GetOutOfGas();
-	}
+	int GetEngineRPMLimit() const;
 
-	float GetNosAmount() const
-	{
-		return dynamics.GetNosAmount();
-	}
+	float GetFuelAmount() const;
 
-	bool GetNosActive() const
-	{
-		return nos_active;
-	}
+	float GetNosAmount() const;
 
-	int GetGear() const
-	{
-		return dynamics.GetTransmission().GetGear();
-	}
+	bool GetNosActive() const;
 
-    void SetGear(int gear)
-	{
-	    dynamics.ShiftGear(gear);
-	}
+	int GetGear() const;
 
-	float GetClutch()
-	{
-		return dynamics.GetClutch().GetClutch();
-	}
+	float GetClutch();
 
-	void SetAutoClutch(bool value)
-	{
-		dynamics.SetAutoClutch(value);
-	}
+	bool GetABSEnabled() const;
 
-	void SetAutoShift(bool value)
-	{
-		dynamics.SetAutoShift(value);
-	}
+	bool GetABSActive() const;
 
-	bool GetABSEnabled() const
-	{
-		return dynamics.GetABSEnabled();
-	}
+	bool GetTCSEnabled() const;
 
-	bool GetABSActive() const
-	{
-		return dynamics.GetABSActive();
-	}
+	bool GetTCSActive() const;
 
-	bool GetTCSEnabled() const
-	{
-		return dynamics.GetTCSEnabled();
-	}
+	float GetSpeedMPS();
 
-	bool GetTCSActive() const
-	{
-		return dynamics.GetTCSActive();
-	}
+	float GetMaxSpeedMPS();
 
-	float GetSpeedMPS()
-	{
-		return dynamics.GetSpeedMPS();
-	}
+	const std::string & GetCarType() const;
 
-	float GetMaxSpeedMPS()
-	{
-		return dynamics.GetMaxSpeedMPS();
-	}
+	void SetSector(int value);
 
-	std::string GetCarType() const
-	{
-		return cartype;
-	}
+	int GetSector() const;
 
-	void SetSector(int value)
-	{
-		sector = value;
-	}
+	const BEZIER * GetCurPatch(int i) const;
 
-	int GetSector() const
-	{
-		return sector;
-	}
+	float GetLastSteer() const;
 
-	const BEZIER * GetCurPatch(WHEEL_POSITION wheel) const
-	{
-		return dynamics.GetWheelContact(wheel).GetPatch();
-	}
-
-	float GetLastSteer() const
-	{
-		return last_steer;
-	}
-
-	float GetSpeed()
-	{
-		return dynamics.GetSpeed();
-	}
-
-	MATHVECTOR <float, 3> GetTotalAero() const
-	{
-		return ToMathVector<float>(dynamics.GetTotalAero());
-	}
+	float GetSpeed();
 
 	float GetFeedback();
 
 	// returns a float from 0.0 to 1.0 with the amount of tire squealing going on
-	float GetTireSquealAmount(WHEEL_POSITION i) const;
+	float GetTireSquealAmount(int i) const;
 
-	void SetInteriorView(bool value);
+	int GetEngineRPM() const;
 
-	void DebugPrint(std::ostream & out, bool p1, bool p2, bool p3, bool p4) const
-	{
-		dynamics.DebugPrint(out, p1, p2, p3, p4);
-	}
+	int GetEngineStallRPM() const;
+
+	float GetInvMass() const;
+
+	MATHVECTOR <float, 3> GetVelocity() const;
+
+	float GetBrakingDistance(float target_velocity);
+
+	float GetMaxVelocity(float radius);
+
+	// ideal steering angle in degrees
+	float GetIdealSteeringAngle() const;
+
+	// maximum steering angle in degrees
+	float GetMaxSteeringAngle() const;
+
+	// allows to create raycasts
+	const btCollisionWorld * GetCollisionWorld() const;
+
+	sim::Vehicle & GetCarDynamics();
+
+	MATHVECTOR<float, 3> GetCenterOfMassPosition() const;
+
+	SCENENODE & GetNode();
+
+	void DebugPrint(std::ostream & out, bool p1, bool p2, bool p3, bool p4) const;
 
 	bool Serialize(joeserialize::Serializer & s);
 
-/// AI interface
-	int GetEngineRPM() const
-	{
-		return dynamics.GetTachoRPM();
-	}
-
-	int GetEngineStallRPM() const
-	{
-		return dynamics.GetEngine().GetStallRPM();
-	}
-
-	// interpoated position
-	MATHVECTOR <float, 3> GetCenterOfMassPosition() const
-	{
-		return ToMathVector<float>(dynamics.GetCenterOfMass());
-	}
-
-	// interpolated position
-	MATHVECTOR <float, 3> GetPosition() const
-	{
-		return ToMathVector<float>(dynamics.GetPosition());
-	}
-
-	// interpolated orientation
-	QUATERNION <float> GetOrientation() const
-	{
-		return ToMathQuaternion<float>(dynamics.GetOrientation());
-	}
-
-	float GetAerodynamicDownforceCoefficient() const
-	{
-		return dynamics.GetAerodynamicDownforceCoefficient();
-	}
-
-	float GetAeordynamicDragCoefficient() const
-	{
-		return dynamics.GetAeordynamicDragCoefficient();
-	}
-
-	float GetInvMass() const
-	{
-		return dynamics.GetInvMass();
-	}
-
-	MATHVECTOR <float, 3> GetVelocity() const
-	{
-		return ToMathVector<float>(dynamics.GetVelocity());
-	}
-
-	float GetTireMaxFx(WHEEL_POSITION tire_index) const
-	{
-		return dynamics.GetTire(tire_index).GetMaxFx(0.25*9.81/GetInvMass());
-	}
-
-	float GetTireMaxFy(WHEEL_POSITION tire_index) const
-	{
-		return dynamics.GetTire(tire_index).GetMaxFy(0.25*9.81/GetInvMass(), 0.0);
-	}
-
-	float GetTireMaxMz(WHEEL_POSITION tire_index) const
-	{
-		return dynamics.GetTire(tire_index).GetMaxMz(0.25*9.81/GetInvMass(), 0.0);
-	}
-
-	// optimum steering angle in degrees
-	float GetOptimumSteeringAngle() const
-	{
-		return dynamics.GetTire(FRONT_LEFT).GetIdealSlip();
-	}
-
-	// maximum steering angle in degrees
-	float GetMaxSteeringAngle() const
-	{
-		return dynamics.GetMaxSteeringAngle();
-	}
-
-	// allows to create raycasts
-	DynamicsWorld* GetDynamicsWorld()
-	{
-		return dynamics.getDynamicsWorld();
-	}
-
-	CARDYNAMICS& GetCarDynamics()
-	{
-		return dynamics;
-	}
-
-	SCENENODE & GetNode() {return topnode;}
-
 protected:
 	SCENENODE topnode;
-	CARDYNAMICS dynamics;
+
+	// body + n wheels + m children shapes
+	btAlignedObjectArray<sim::MotionState> motion_state;
+	sim::VehicleState vstate;
+	sim::Vehicle vehicle;
 
 	keyed_container<SCENENODE>::handle bodynode;
 	keyed_container<SCENENODE>::handle steernode;
@@ -345,10 +208,10 @@ protected:
 	std::vector<CAMERA*> cameras;
 
 	std::vector<ENGINESOUNDINFO> enginesounds;
-	size_t tiresqueal[WHEEL_POSITION_SIZE];
-	size_t tirebump[WHEEL_POSITION_SIZE];
-	size_t grasssound[WHEEL_POSITION_SIZE];
-	size_t gravelsound[WHEEL_POSITION_SIZE];
+	std::vector<size_t> roadsound;
+	std::vector<size_t> gravelsound;
+	std::vector<size_t> grasssound;
+	std::vector<size_t> bumpsound;
 	size_t crashsound;
 	size_t gearsound;
 	size_t brakesound;
@@ -371,8 +234,8 @@ protected:
 	bool driver_view;
 
 	std::string cartype;
-	int sector; // the last lap timing sector that the car hit
-	const BEZIER * curpatch[WHEEL_POSITION_SIZE]; //the last bezier patch that each wheel hit
+	int sector; //the last lap timing sector that the car hit
+	std::vector<const BEZIER *> curpatch; //the last bezier patch that each wheel hit
 
 	float applied_brakes; // cached so we can update the brake light
 
@@ -387,7 +250,209 @@ protected:
 	bool LoadLight(
 		const PTree & cfg,
 		ContentManager & content,
-		std::ostream & error_output);
+		std::ostream & error);
 };
+
+// implementation
+
+inline void CAR::SetGear(int gear)
+{
+	vehicle.setGear(gear);
+}
+
+inline void CAR::SetAutoClutch(bool value)
+{
+	vehicle.setAutoClutch(value);
+}
+
+inline void CAR::SetAutoShift(bool value)
+{
+	vehicle.setAutoShift(value);
+}
+
+inline const std::vector<CAMERA*> & CAR::GetCameras() const
+{
+	return cameras;
+}
+
+inline MATHVECTOR<float, 3> CAR::GetPosition() const
+{
+	return cast(motion_state[0].position);
+}
+
+inline QUATERNION<float> CAR::GetOrientation() const
+{
+	return cast(motion_state[0].rotation);
+}
+
+inline MATHVECTOR<float, 3> CAR::GetWheelPosition(int i) const
+{
+	return cast(motion_state[i+1].position);
+}
+
+inline float CAR::GetTireRadius(int i) const
+{
+	return vehicle.getWheel(i).getRadius();
+}
+
+inline int CAR::GetWheelCount() const
+{
+	return vehicle.getWeelCount();
+}
+
+inline int CAR::GetEngineRedline() const
+{
+	return vehicle.getEngine().getRedline();
+}
+
+inline int CAR::GetEngineRPMLimit() const
+{
+	return vehicle.getEngine().getRPMLimit();
+}
+
+inline float CAR::GetFuelAmount() const
+{
+	return vehicle.getFuelAmount();
+}
+
+inline float CAR::GetNosAmount() const
+{
+	return vehicle.getNosAmount();
+}
+
+inline bool CAR::GetNosActive() const
+{
+	return nos_active;
+}
+
+inline int CAR::GetGear() const
+{
+	return vehicle.getTransmission().getGear();
+}
+
+inline float CAR::GetClutch()
+{
+	return vehicle.getClutch().getPosition();
+}
+
+inline bool CAR::GetABSEnabled() const
+{
+	return vehicle.getABSEnabled();
+}
+
+inline bool CAR::GetABSActive() const
+{
+	return vehicle.getABSActive();
+}
+
+inline bool CAR::GetTCSEnabled() const
+{
+	return vehicle.getTCSEnabled();
+}
+
+inline bool CAR::GetTCSActive() const
+{
+	return vehicle.getTCSActive();
+}
+
+inline float CAR::GetSpeedMPS()
+{
+	return vehicle.getSpeedMPS();
+}
+
+inline float CAR::GetMaxSpeedMPS()
+{
+	return vehicle.getMaxSpeedMPS();
+}
+
+inline const std::string & CAR::GetCarType() const
+{
+	return cartype;
+}
+
+inline void CAR::SetSector(int value)
+{
+	sector = value;
+}
+
+inline int CAR::GetSector() const
+{
+	return sector;
+}
+
+inline const BEZIER * CAR::GetCurPatch(int i) const
+{
+	return vehicle.getWheel(i).ray.getPatch();
+}
+
+inline float CAR::GetLastSteer() const
+{
+	return last_steer;
+}
+
+inline float CAR::GetSpeed()
+{
+	return vehicle.getSpeed();
+}
+
+inline int CAR::GetEngineRPM() const
+{
+	return vehicle.getTachoRPM();
+}
+
+inline int CAR::GetEngineStallRPM() const
+{
+	return vehicle.getEngine().getStallRPM();
+}
+
+inline float CAR::GetInvMass() const
+{
+	return vehicle.getInvMass();
+}
+
+inline MATHVECTOR <float, 3> CAR::GetVelocity() const
+{
+	return cast(vehicle.getVelocity());
+}
+
+inline float CAR::GetBrakingDistance(float target_velocity)
+{
+	return vehicle.getBrakingDistance(target_velocity);
+}
+
+inline float CAR::GetMaxVelocity(float radius)
+{
+	return vehicle.getMaxVelocity(radius);
+}
+
+inline float CAR::GetIdealSteeringAngle() const
+{
+	return vehicle.getWheel(0).tire.getIdealSlip();
+}
+
+inline float CAR::GetMaxSteeringAngle() const
+{
+	return vehicle.getMaxSteeringAngle();
+}
+
+inline const btCollisionWorld * CAR::GetCollisionWorld() const
+{
+	return vehicle.getCollisionWorld();
+}
+
+inline sim::Vehicle & CAR::GetCarDynamics()
+{
+	return vehicle;
+}
+
+inline MATHVECTOR<float, 3> CAR::GetCenterOfMassPosition() const
+{
+	return cast(vehicle.getPosition());
+}
+
+inline SCENENODE & CAR::GetNode()
+{
+	return topnode;
+}
 
 #endif

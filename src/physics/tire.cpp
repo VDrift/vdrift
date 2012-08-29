@@ -17,90 +17,46 @@
 /*                                                                      */
 /************************************************************************/
 
-#include "cartire.h"
-#include "cfg/ptree.h"
+#include "tire.h"
 
-CARTIRE::CARTIRE() :
-	radius(0.3),
-	aspect_ratio(0.5),
-	sidewall_width(0.185),
+namespace sim
+{
+
+TireInfo::TireInfo() :
 	tread(0),
-	rolling_resistance_linear(0),
-	rolling_resistance_quadratic(0),
+	max_load(1E5),
+	max_camber(15),
 	longitudinal(11),
 	lateral(15),
-	aligning(18),
-	camber(0),
-	slide(0),
-	slip(0),
-	ideal_slide(0),
-	ideal_slip(0)
+	aligning(18)
 {
 	// ctor
 }
 
-bool CARTIRE::LoadParameters(const PTree & cfg, std::ostream & error)
+Tire::Tire() :
+	camber(0),
+	slide(0),
+	slip(0),
+	ideal_slide(0),
+	ideal_slip(0),
+	fx(0),
+	fy(0),
+	fz(0),
+	mz(0)
 {
-	//read lateral
-	int numinfile;
-	for (int i = 0; i < 15; i++)
-	{
-		numinfile = i;
-		if (i == 11)
-			numinfile = 111;
-		else if (i == 12)
-			numinfile = 112;
-		else if (i > 12)
-			numinfile -= 1;
-		std::stringstream st;
-		st << "a" << numinfile;
-		if (!cfg.get(st.str(), lateral[i], error)) return false;
-	}
-
-	//read longitudinal, error_output)) return false;
-	for (int i = 0; i < 11; i++)
-	{
-		std::stringstream st;
-		st << "b" << i;
-		if (!cfg.get(st.str(), longitudinal[i], error)) return false;
-	}
-
-	//read aligning, error_output)) return false;
-	for (int i = 0; i < 18; i++)
-	{
-		std::stringstream st;
-		st << "c" << i;
-		if (!cfg.get(st.str(), aligning[i], error)) return false;
-	}
-
-	std::vector<float> rolling_resistance(3);
-	if (!cfg.get("rolling-resistance", rolling_resistance, error)) return false;
-	rolling_resistance_linear = rolling_resistance[0];
-	rolling_resistance_quadratic = rolling_resistance[1];
-
-	if (!cfg.get("tread", tread, error)) return false;
-
-	return true;
+	// ctor
 }
 
-bool CARTIRE::Load(
-	const PTree & cfg,
-	std::ostream & error)
+void Tire::init(const TireInfo & info)
 {
-	const PTree * type;
-	std::vector<btScalar> size(3, 0);
-	if (!cfg.get("size",size, error)) return false;
-	if (!cfg.get("type", type, error)) return false;
-	if (!LoadParameters(*type, error)) return false;
-	SetDimensions(size[0], size[1], size[2]);
-	CalculateSigmaHatAlphaHat();
-	return true;
+	TireInfo::operator=(info);
+	calculateSigmaHatAlphaHat();
 }
 
-void CARTIRE::GetSigmaHatAlphaHat(btScalar load, btScalar & sh, btScalar & ah) const
+void Tire::getSigmaHatAlphaHat(btScalar load, btScalar & sh, btScalar & ah) const
 {
-	assert(!sigma_hat.empty());
-	assert(!alpha_hat.empty());
+	btAssert(!sigma_hat.empty());
+	btAssert(!alpha_hat.empty());
 
 	int HAT_ITERATIONS = sigma_hat.size();
 
@@ -113,24 +69,20 @@ void CARTIRE::GetSigmaHatAlphaHat(btScalar load, btScalar & sh, btScalar & ah) c
 	}
 	else if (nf >= HAT_LOAD * HAT_ITERATIONS)
 	{
-		sh = sigma_hat[HAT_ITERATIONS-1];
-		ah = alpha_hat[HAT_ITERATIONS-1];
+		sh = sigma_hat[HAT_ITERATIONS - 1];
+		ah = alpha_hat[HAT_ITERATIONS - 1];
 	}
 	else
 	{
-		int lbound = (int)(nf/HAT_LOAD);
-		lbound--;
-		if (lbound < 0)
-			lbound = 0;
-		if (lbound >= (int)sigma_hat.size())
-			lbound = (int)sigma_hat.size()-1;
-		btScalar blend = (nf-HAT_LOAD*(lbound+1))/HAT_LOAD;
-		sh = sigma_hat[lbound]*(1.0-blend)+sigma_hat[lbound+1]*blend;
-		ah = alpha_hat[lbound]*(1.0-blend)+alpha_hat[lbound+1]*blend;
+		int lbound = int(nf / HAT_LOAD) - 1;
+		btClamp(lbound, 0, (int)sigma_hat.size() - 1);
+		btScalar blend = (nf - HAT_LOAD * (lbound + 1)) / HAT_LOAD;
+		sh = sigma_hat[lbound] * (1.0 - blend) + sigma_hat[lbound + 1] * blend;
+		ah = alpha_hat[lbound] * (1.0 - blend) + alpha_hat[lbound + 1] * blend;
 	}
 }
 
-btVector3 CARTIRE::GetForce(
+btVector3 Tire::getForce(
 	btScalar normal_force,
 	btScalar friction_coeff,
 	btScalar inclination,
@@ -140,23 +92,25 @@ btVector3 CARTIRE::GetForce(
 {
 	if (normal_force < 1E-3 || friction_coeff < 1E-3)
 	{
+		slide = slip = 0;
+		ideal_slide = ideal_slip = 1;
+		fx = fy = fz = mz = 0;
 		return btVector3(0, 0, 0);
 	}
-
-	btScalar Fz = normal_force * 0.001;
-
-	// limit input
-	btSetMin(Fz, btScalar(30));
-	btClamp(inclination, btScalar(-30), btScalar(30));
 
 	// get ideal slip ratio
 	btScalar sigma_hat(0);
 	btScalar alpha_hat(0);
-	GetSigmaHatAlphaHat(normal_force, sigma_hat, alpha_hat);
+	getSigmaHatAlphaHat(normal_force, sigma_hat, alpha_hat);
 
+	// limit input
+	btClamp(normal_force, btScalar(0), btScalar(max_load));
+	btClamp(inclination, -max_camber, max_camber);
+
+	btScalar Fz = normal_force * 1E-3;								// pacejka in kN
 	btScalar gamma = inclination;									// positive when tire top tilts to the right, viewed from rear
 	btScalar denom = btMax(btFabs(lon_velocity), btScalar(1E-3));
-	btScalar sigma = (ang_velocity * radius - lon_velocity) / denom;	// longitudinal slip: negative in braking, positive in traction
+	btScalar sigma = (ang_velocity - lon_velocity) / denom;			// longitudinal slip: negative in braking, positive in traction
 	btScalar alpha = -btAtan(lat_velocity / denom) * 180.0 / M_PI; 	// sideslip angle: positive in a right turn(opposite to SAE tire coords)
 	btScalar max_Fx(0), max_Fy(0), max_Mz(0);
 
@@ -255,46 +209,30 @@ btVector3 CARTIRE::GetForce(
 	btScalar Fy = Fc * sqrt((1-s) * (1-s) * cosa * cosa * Fy0 * Fy0 + sina * sina * Cs * Cs) / (Cs * cosa);
 */
 
-	btScalar Mz = PacejkaMz(alpha, Fz, gamma, friction_coeff, max_Mz);
+	btScalar Mz = PacejkaMz(sigma, alpha, Fz, gamma, friction_coeff, max_Mz);
 
-	feedback = Mz;
 	camber = inclination;
 	slide = sigma;
 	slip = alpha;
 	ideal_slide = sigma_hat;
 	ideal_slip = alpha_hat;
-
-	// debugging
-	fx = Fx; fy = Fy; fz = Fz;
+	fx = Fx;
+	fy = Fy;
+	fz = Fz;
+	mz = Mz;
 
 	// Fx positive during traction, Fy positive in a right turn, Mz positive in a left turn
 	return btVector3(Fx, Fy, Mz);
 }
 
-btScalar CARTIRE::GetRollingResistance(const btScalar velocity, const btScalar rolling_resistance_factor) const
-{
-	// surface influence on rolling resistance
-	btScalar rolling_resistance = rolling_resistance_linear * rolling_resistance_factor;
-
-	// heat due to tire deformation increases rolling resistance
-	// approximate by quadratic function
-	rolling_resistance += velocity * velocity * rolling_resistance_quadratic;
-
-	// rolling resistance direction
-	btScalar resistance = -rolling_resistance;
-	if (velocity < 0) resistance = -resistance;
-
-	return resistance;
-}
-
-btScalar CARTIRE::GetMaxFx(btScalar load) const
+btScalar Tire::getMaxFx(btScalar load) const
 {
 	const std::vector<btScalar> & b = longitudinal;
 	btScalar Fz = load * 0.001;
 	return (b[1] * Fz + b[2]) * Fz;
 }
 
-btScalar CARTIRE::GetMaxFy(btScalar load, btScalar camber) const
+btScalar Tire::getMaxFy(btScalar load, btScalar camber) const
 {
 	const std::vector<btScalar> & a = lateral;
 	btScalar Fz = load * 0.001;
@@ -306,7 +244,7 @@ btScalar CARTIRE::GetMaxFy(btScalar load, btScalar camber) const
 	return D + Sv;
 }
 
-btScalar CARTIRE::GetMaxMz(btScalar load, btScalar camber) const
+btScalar Tire::getMaxMz(btScalar load, btScalar camber) const
 {
 	const std::vector<btScalar> & c = aligning;
 	btScalar Fz = load * 0.001;
@@ -318,7 +256,7 @@ btScalar CARTIRE::GetMaxMz(btScalar load, btScalar camber) const
 	return -(D + Sv);
 }
 
-btScalar CARTIRE::PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coeff, btScalar & max_Fx) const
+btScalar Tire::PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coeff, btScalar & max_Fx) const
 {
 	const std::vector<btScalar> & b = longitudinal;
 
@@ -349,11 +287,10 @@ btScalar CARTIRE::PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coeff
 	Fx = Fx * friction_coeff;
 	max_Fx = D * friction_coeff;
 
-	btAssert(Fx == Fx);
 	return Fx;
 }
 
-btScalar CARTIRE::PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff, btScalar & max_Fy) const
+btScalar Tire::PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff, btScalar & max_Fy) const
 {
 	const std::vector<btScalar> & a = lateral;
 
@@ -391,7 +328,7 @@ btScalar CARTIRE::PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScala
 	return Fy;
 }
 
-btScalar CARTIRE::PacejkaMz(btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff, btScalar & max_Mz) const
+btScalar Tire::PacejkaMz(btScalar sigma, btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff, btScalar & max_Mz) const
 {
 	const std::vector<btScalar> & c = aligning;
 
@@ -425,14 +362,7 @@ btScalar CARTIRE::PacejkaMz(btScalar alpha, btScalar Fz, btScalar gamma, btScala
 	return Mz;
 }
 
-void CARTIRE::SetDimensions(btScalar width_mm, btScalar ratio_percent, btScalar diameter_in)
-{
-	radius = width_mm * 0.001 * ratio_percent * 0.01 + diameter_in * 0.0254 * 0.5;
-	aspect_ratio = ratio_percent * 0.01;
-	sidewall_width = width_mm * 0.001;
-}
-
-void CARTIRE::FindSigmaHatAlphaHat(btScalar load, btScalar & output_sigmahat, btScalar & output_alphahat, int iterations)
+void Tire::findSigmaHatAlphaHat(btScalar load, btScalar & output_sigmahat, btScalar & output_alphahat, int iterations)
 {
 	btScalar x, y, ymax, junk;
 	ymax = 0;
@@ -458,59 +388,15 @@ void CARTIRE::FindSigmaHatAlphaHat(btScalar load, btScalar & output_sigmahat, bt
 	}
 }
 
-void CARTIRE::CalculateSigmaHatAlphaHat(int tablesize)
+void Tire::calculateSigmaHatAlphaHat(int tablesize)
 {
 	btScalar HAT_LOAD = 0.5;
 	sigma_hat.resize(tablesize, 0);
 	alpha_hat.resize(tablesize, 0);
 	for (int i = 0; i < tablesize; i++)
 	{
-		FindSigmaHatAlphaHat((btScalar)(i+1)*HAT_LOAD, sigma_hat[i], alpha_hat[i]);
+		findSigmaHatAlphaHat((btScalar)(i+1)*HAT_LOAD, sigma_hat[i], alpha_hat[i]);
 	}
 }
 
-/// testing
-#include "pathmanager.h"
-#include "unittest.h"
-#include <fstream>
-
-QT_TEST(tire_test)
-{
-	std::stringbuf log;
-	std::ostream info(&log), error(&log);
-	PATHMANAGER path;
-	path.Init(info, error);
-
-	std::string tire_path = path.GetCarPartsPath() + "/touring";
-	std::fstream tire_param(tire_path.c_str());
-
-	std::stringstream tire_str;
-	tire_str << tire_param.rdbuf();
-	tire_str << "\nsize = 185,60,14\ntype = tire-touring\n";
-
-	PTree cfg;
-	read_ini(tire_str, cfg);
-	//cfg.DebugPrint(std::clog);
-
-	// some sanity tests
-	CARTIRE tire;
-	QT_CHECK(tire.Load(cfg, error));
-
-	btScalar normal_force = 1000;
-	btScalar friction_coeff = 1;
-	btScalar lon_velocity = 10;
-	btScalar lat_velocity = -5;
-	btScalar ang_velocity = 0.5 * lon_velocity / tire.GetRadius();
-	btScalar inclination = 15;
-
-	btVector3 f0, f1;
-	f0 = tire.GetForce(normal_force, friction_coeff, inclination, ang_velocity, lon_velocity, lat_velocity);
-	f1 = tire.GetForce(normal_force, friction_coeff, -inclination, ang_velocity, lon_velocity, lat_velocity);
-
-	QT_CHECK_CLOSE(f1[0], f0[0], 0.001);
-	QT_CHECK_LESS(f0[0], 0);
-	QT_CHECK_LESS(f1[0], 0);
-	QT_CHECK_GREATER(f0[1], 0);
-	QT_CHECK_GREATER(f1[1], 0);
-	QT_CHECK_LESS(f0[1], f1[1]);
 }

@@ -17,33 +17,40 @@
 /*                                                                      */
 /************************************************************************/
 
-#include "rigidbody.h"
-#include "unittest.h"
+#ifndef _SIM_SOLVECONSTRAINTROW_H
+#define _SIM_SOLVECONSTRAINTROW_H
 
-#include <iostream>
-using std::cout;
-using std::endl;
+#include "constraintrow.h"
+#include "BulletDynamics/Dynamics/btRigidBody.h"
 
-QT_TEST(rigidbody_test)
+namespace sim
 {
-	RIGIDBODY <float> body;
-	MATHVECTOR <float, 3> initpos;
-	QUATERNION <float> quat;
-	initpos.Set(0,0,10);
-	body.SetPosition(initpos);
-	quat.Rotate(-3.141593*0.5, 1, 0, 0);
-	body.SetOrientation(quat);
 
-	MATHVECTOR <float, 3> localcoords;
-	localcoords.Set(0,0,1);
-	MATHVECTOR <float, 3> expected;
-	expected.Set(0,1,10);
-	MATHVECTOR <float, 3> pos = body.TransformLocalToWorld(localcoords);
-	QT_CHECK_CLOSE(pos[0], expected[0], 0.0001);
-	QT_CHECK_CLOSE(pos[1], expected[1], 0.0001);
-	QT_CHECK_CLOSE(pos[2], expected[2], 0.0001);
+inline void SolveConstraintRow(
+	ConstraintRow & constraint,
+	btRigidBody & bodyA,
+	btRigidBody & bodyB,
+	btVector3 & rA,
+	btVector3 & rB,
+	btScalar velocityError = 0)
+{
+	btVector3 normal = constraint.normal;
+	btVector3 dVA = bodyA.getLinearVelocity() + bodyA.getAngularVelocity().cross(rA);
+	btVector3 dVB = bodyB.getLinearVelocity() + bodyB.getAngularVelocity().cross(rB);
+	velocityError += normal.dot(dVA - dVB);
+	btScalar deltaImpulse = constraint.rhs + constraint.cfm * constraint.accumImpulse - velocityError * constraint.jacDiagInv;
 
-	QT_CHECK_CLOSE(body.TransformWorldToLocal(pos)[0], localcoords[0], 0.0001);
-	QT_CHECK_CLOSE(body.TransformWorldToLocal(pos)[1], localcoords[1], 0.0001);
-	QT_CHECK_CLOSE(body.TransformWorldToLocal(pos)[2], localcoords[2], 0.0001);
+	btScalar oldImpulse = constraint.accumImpulse;
+	constraint.accumImpulse = oldImpulse + deltaImpulse;
+	btClamp(constraint.accumImpulse, constraint.lowerLimit, constraint.upperLimit);
+	deltaImpulse = constraint.accumImpulse - oldImpulse;
+
+	bodyA.setLinearVelocity(bodyA.getLinearVelocity() + deltaImpulse * bodyA.internalGetInvMass() * normal);
+	bodyA.setAngularVelocity(bodyA.getAngularVelocity() + deltaImpulse * constraint.angularCompA);
+	bodyB.setLinearVelocity(bodyB.getLinearVelocity() - deltaImpulse * bodyB.internalGetInvMass() * normal);
+	bodyB.setAngularVelocity(bodyB.getAngularVelocity() - deltaImpulse * constraint.angularCompB);
 }
+
+}
+
+#endif

@@ -17,44 +17,86 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _PERFORMANCE_TESTING_H
-#define _PERFORMANCE_TESTING_H
+#ifndef _SIM_RAY_H
+#define _SIM_RAY_H
 
-#include "physics/vehicle.h"
-#include "physics/vehiclestate.h"
-#include "physics/surface.h"
+#include "BulletCollision/CollisionDispatch/btCollisionWorld.h"
 
-class ContentManager;
+class BEZIER;
 
-class PERFORMANCE_TESTING
+namespace sim
 {
-public:
-	PERFORMANCE_TESTING(sim::World & world);
 
-	~PERFORMANCE_TESTING();
+struct Surface;
 
-	void Test(
-		const std::string & cardir,
-		const std::string & carname,
-		ContentManager & content,
-		std::ostream & info_output,
-		std::ostream & error_output);
+struct Ray : public btCollisionWorld::RayResultCallback
+{
+	btVector3 m_rayFrom;
+	btVector3 m_rayTo;
+	btScalar m_rayLen;
 
-private:
-	sim::World & world;
-	sim::Surface surface;
-	sim::VehicleState carstate;
-	sim::Vehicle car;
+	btVector3 m_hitNormal;
+	btVector3 m_hitPoint;
+	btScalar m_depth;
 
-	/// flat plane test track
-	btCollisionObject * track;
-	btCollisionShape * plane;
+	const btCollisionObject * m_exclude;
+	const Surface * m_surface;
+	const BEZIER * m_patch;
+	int m_patchid;
 
-	void ResetCar();
+	Ray();
 
-	void TestMaxSpeed(std::ostream & info_output, std::ostream & error_output);
+	const btVector3 & getPoint() const;
 
-	void TestStoppingDistance(bool abs, std::ostream & info_output, std::ostream & error_output);
+	const btVector3 & getNormal() const;
+
+	btScalar getDepth() const;
+
+	const Surface * getSurface() const;
+
+	const BEZIER * getPatch() const;
+
+	void set(const btVector3 & rayFrom, const btVector3 & rayDir, btScalar rayLen);
+
+	btScalar addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace);
 };
 
-#endif
+// implementation
+
+inline Ray::Ray() :
+	m_exclude(0),
+	m_surface(0),
+	m_patch(0),
+	m_patchid(0)
+{
+	// ctor
+}
+
+inline const btVector3 & Ray::getPoint() const
+{
+	return m_hitPoint;
+}
+
+inline const btVector3 & Ray::getNormal() const
+{
+	return m_hitNormal;
+}
+
+inline btScalar Ray::getDepth() const
+{
+	return m_depth;
+}
+
+inline const Surface * Ray::getSurface() const
+{
+	return m_surface;
+}
+
+inline const BEZIER * Ray::getPatch() const
+{
+	return m_patch;
+}
+
+}
+
+#endif //_SIM_RAY_H

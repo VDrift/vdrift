@@ -37,7 +37,7 @@ void Factory<TEXTURE>::init(int max_size, bool use_srgb)
 
 	// init default texture
 	std::stringstream error;
-	char white[] = {255, 255, 255, 255};
+	unsigned char white[] = {255, 255, 255, 255};
 	TEXTUREINFO info;
 	info.data = white;
 	info.width = 1;

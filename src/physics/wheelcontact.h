@@ -17,44 +17,31 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _PERFORMANCE_TESTING_H
-#define _PERFORMANCE_TESTING_H
+#ifndef _SIM_WHEELCONTACT_H
+#define _SIM_WHEELCONTACT_H
 
-#include "physics/vehicle.h"
-#include "physics/vehiclestate.h"
-#include "physics/surface.h"
+#include "constraintrow.h"
 
-class ContentManager;
-
-class PERFORMANCE_TESTING
+namespace sim
 {
-public:
-	PERFORMANCE_TESTING(sim::World & world);
 
-	~PERFORMANCE_TESTING();
-
-	void Test(
-		const std::string & cardir,
-		const std::string & carname,
-		ContentManager & content,
-		std::ostream & info_output,
-		std::ostream & error_output);
-
-private:
-	sim::World & world;
-	sim::Surface surface;
-	sim::VehicleState carstate;
-	sim::Vehicle car;
-
-	/// flat plane test track
-	btCollisionObject * track;
-	btCollisionShape * plane;
-
-	void ResetCar();
-
-	void TestMaxSpeed(std::ostream & info_output, std::ostream & error_output);
-
-	void TestStoppingDistance(bool abs, std::ostream & info_output, std::ostream & error_output);
+struct WheelContact
+{
+	ConstraintRow response;		///< contact normal constraint
+	ConstraintRow friction1;	///< contact friction constraint
+	ConstraintRow friction2;	///< contact friction constraint
+	btRigidBody * bodyA;		///< contact body a
+	btRigidBody * bodyB;		///< contact body b
+	btVector3 rA;				///< contact position relative to bodyA
+	btVector3 rB;				///< contact position relative to bodyB
+	btScalar v1;				///< velocity along longitudinal constraint
+	btScalar v2;				///< velocity along lateral constraint
+	btScalar frictionCoeff; 	///< surface friction coefficient
+	btScalar camber;			///< wheel camber in degrees
+	btScalar vR;				///< wheel rim velocity w * r
+	int id;						///< custom id
 };
+
+}
 
 #endif

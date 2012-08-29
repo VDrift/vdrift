@@ -17,36 +17,49 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _DRIVESHAFT_H
-#define _DRIVESHAFT_H
+#ifndef _SIM_MOTORJOINT_H
+#define _SIM_MOTORJOINT_H
 
-#include "LinearMath/btScalar.h"
+#include "shaft.h"
 
-struct DriveShaft
+namespace sim
 {
-	btScalar inv_inertia;
-	btScalar ang_velocity;
-	btScalar angle;
 
-	DriveShaft() : inv_inertia(1), ang_velocity(0), angle(0) {}
+/// target velocity determines whether the impulse limit is accelerating or decelerating
+struct MotorJoint
+{
+	Shaft * shaft;
+	btScalar impulseLimit;
+	btScalar targetVelocity;
+	btScalar accumulatedImpulse;
 
-	// amount of momentum to reach angular velocity
-	btScalar getMomentum(btScalar angvel) const
-	{
-		return (angvel - ang_velocity) / inv_inertia;
-	}
+	/// reset solver
+	void init();
 
-	// update angular velocity
-	void applyMomentum(btScalar momentum)
-	{
-		ang_velocity += inv_inertia * momentum;
-	}
-
-	// update angle
-	void integrate(btScalar dt)
-	{
-		angle += ang_velocity * dt;
-	}
+	/// one solver iteration
+	void solve();
 };
 
-#endif // _DRIVESHAFT_H
+// implementation
+
+inline void MotorJoint::init()
+{
+	accumulatedImpulse = 0;
+}
+
+inline void MotorJoint::solve()
+{
+	btScalar velocityError = shaft->getAngularVelocity() - targetVelocity;
+	btScalar lambda = -velocityError * shaft->getInertia();
+
+	btScalar accumulatedImpulseOld = accumulatedImpulse;
+	accumulatedImpulse += lambda;
+	btClamp(accumulatedImpulse, -impulseLimit, impulseLimit);
+	lambda = accumulatedImpulse - accumulatedImpulseOld;
+
+	shaft->applyImpulse(lambda);
+}
+
+}
+
+#endif
