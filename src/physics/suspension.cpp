@@ -49,6 +49,7 @@ Suspension::Suspension() :
 	position(0, 0, 0),
 	steering_angle(0),
 	displacement(0),
+	overtravel(0),
 	damping(0)
 {
 	// ctor
@@ -70,8 +71,13 @@ void Suspension::setDisplacement(btScalar value)
 {
 	btScalar delta = value - displacement;
 	damping = (delta > 0) ? bounce : rebound;
-	displacement = value;
-	btClamp(displacement, btScalar(0), travel);
+	displacement = btMax(btScalar(0), value);
+	overtravel = 0;
+	if (displacement > travel)
+	{
+		overtravel = displacement - travel;
+		displacement = travel;
+	}
 
 	btVector3 up(0, 0, 1);
 	btVector3 old_dir = lower_arm.dir * lower_arm.length; // constant
