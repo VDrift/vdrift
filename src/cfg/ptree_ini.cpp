@@ -87,7 +87,7 @@ struct ini
 
 			// New property.
 			name = line.substr(begin, next+1);
-			std::string value = line.substr(next2, end-next2-1);
+			std::string value = line.substr(next2, end-next2);
 			if (include && name == "include")
 			{
 				// Value is a reference, include.
