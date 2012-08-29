@@ -75,7 +75,7 @@ inline DifferentialInfo::DifferentialInfo() :
 	anti_slip_factor(0),
 	deceleration_factor(0),
 	torque_split(0.5),
-	inertia(0.25)
+	inertia(0.1)
 {
 	// ctor
 }

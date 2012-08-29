@@ -29,8 +29,8 @@ namespace sim
 struct TireInfo
 {
 	btScalar tread;						///< 1.0 means a pure off-road tire, 0.0 is a pure road tire
-	btScalar max_load;					///< maximum tire load
-	btScalar max_camber;				///< maximum tire camber
+	btScalar max_load;					///< maximum tire load in N
+	btScalar max_camber;				///< maximum tire camber in degrees
 	std::vector<btScalar> longitudinal;	///< the parameters of the longitudinal pacejka equation.  this is series b
 	std::vector<btScalar> lateral;		///< the parameters of the lateral pacejka equation.  this is series a
 	std::vector<btScalar> aligning;		///< the parameters of the aligning moment pacejka equation.  this is series c
@@ -82,12 +82,12 @@ public:
 	btScalar getMaxMz(btScalar load, btScalar camber) const;
 
 private:
-	btScalar camber;		///< tire camber relative to track surface
-	btScalar slide;			///< ratio of tire contact patch speed to road speed, minus one
-	btScalar slip;			///< the angle (in degrees) between the wheel heading and the wheel's actual velocity
-	btScalar ideal_slide;	///< ideal slide ratio
-	btScalar ideal_slip;	///< ideal slip angle
-	btScalar fx, fy, fz, mz;
+	btScalar camber;			///< tire camber relative to track surface
+	btScalar slide;				///< ratio of tire contact patch speed to road speed, minus one
+	btScalar slip;				///< angle (in degrees) between the wheel heading and the wheel velocity
+	btScalar ideal_slide;		///< ideal slide ratio
+	btScalar ideal_slip;		///< ideal slip angle
+	btScalar fx, fy, fz, mz;	///< contact force and aligning torque
 
 	/// pacejka magic formula longitudinal friction
 	btScalar PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coeff, btScalar & max_Fx) const;
