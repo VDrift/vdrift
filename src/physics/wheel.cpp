@@ -128,9 +128,18 @@ bool Wheel::updateContact(btScalar dt, WheelContact & contact)
 	btVector3 contactPointA = ray.getPoint();
 	btVector3 contactPointB = ray.getPoint();
 
+	// suspension response
 	btScalar stiffnessConstant = suspension.getStiffness() + antiroll;
 	btScalar dampingConstant = suspension.getDamping();
 	btScalar displacement = suspension.getDisplacement();
+	if (suspension.getOvertravel() > 0.0)
+	{
+		// combine spring and bump stiffness
+		btScalar bumpStiffness = 5E5;
+		btScalar overtravel = suspension.getOvertravel();
+		displacement += overtravel;
+		stiffnessConstant += bumpStiffness * overtravel / displacement;
+	}
 
 	// update constraints
 	btVector3 rA = contactPointA - bodyA->getCenterOfMassPosition();

@@ -76,6 +76,9 @@ public:
 	/// current suspension displacement
 	btScalar getDisplacement() const;
 
+	/// current susension overtravel
+	btScalar getOvertravel() const;
+
 	/// current suspension stiffness coefficient
 	btScalar getStiffness() const;
 
@@ -88,6 +91,7 @@ private:
 	btVector3 position;				// wheel position
 	btScalar steering_angle;
 	btScalar displacement;
+	btScalar overtravel;
 	btScalar damping;
 };
 
@@ -111,6 +115,11 @@ inline const btVector3 & Suspension::getPosition() const
 inline btScalar Suspension::getDisplacement() const
 {
 	return displacement;
+}
+
+inline btScalar Suspension::getOvertravel() const
+{
+	return overtravel;
 }
 
 inline btScalar Suspension::getStiffness() const
