@@ -597,7 +597,7 @@ void SOUND::ProcessSamplers(unsigned char *stream, int len)
 		}
 
 		if (!smp.playing)
-			sources_stop.getLast().push_back(i);
+			sources_stop.getLast().push_back(smp.id);
 	}
 }
 
