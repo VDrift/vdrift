@@ -106,6 +106,24 @@ static inline void RemoveItem(size_t id, std::vector<T> & items, size_t & item_n
 	}
 }
 
+template <class T>
+static inline T & GetItem(size_t id, std::vector<T> & items, size_t item_num)
+{
+	assert(id < items.size());
+	size_t idn = items[id].id;
+	assert(idn < item_num);
+	return items[idn];
+}
+
+template <class T>
+static inline const T & GetItem(size_t id, const std::vector<T> & items, size_t item_num)
+{
+	assert(id < items.size());
+	size_t idn = items[id].id;
+	assert(idn < item_num);
+	return items[idn];
+}
+
 bool SOUND::SourceActive::operator<(const SOUND::SourceActive & other) const
 {
 	// reverse op as partial sort sorts for the smallest elemets
@@ -286,27 +304,27 @@ void SOUND::ResetSource(size_t id)
 
 bool SOUND::GetSourcePlaying(size_t id) const
 {
-	return sources[sources[id].id].playing;
+	return GetItem(id, sources, sources_num).playing;
 }
 
 void SOUND::SetSourceVelocity(size_t id, float x, float y, float z)
 {
-	sources[sources[id].id].velocity.Set(x, y, z);
+	GetItem(id, sources, sources_num).velocity.Set(x, y, z);
 }
 
 void SOUND::SetSourcePosition(size_t id, float x, float y, float z)
 {
-	sources[sources[id].id].position.Set(x, y, z);
+	GetItem(id, sources, sources_num).position.Set(x, y, z);
 }
 
 void SOUND::SetSourcePitch(size_t id, float value)
 {
-	sources[sources[id].id].pitch = value;
+	GetItem(id, sources, sources_num).pitch = value;
 }
 
 void SOUND::SetSourceGain(size_t id, float value)
 {
-	sources[sources[id].id].gain = value;
+	GetItem(id, sources, sources_num).gain = value;
 }
 
 void SOUND::SetListenerVelocity(float x, float y, float z)
@@ -357,7 +375,7 @@ void SOUND::Update(bool pause)
 
 	// commit sampler changes to sound thread
 	SetSamplerChanges();
-	
+
 	// use update id to determine whether sampler updates have been comitted
 	if (old_update_id != update_id)
 	{
@@ -381,8 +399,14 @@ void SOUND::ProcessSourceStop()
 	for (size_t i = 0; i < sstop.size(); ++i)
 	{
 		size_t id = sstop[i];
-		assert(id < sources_num);
-		sources[id].playing = false;
+		size_t idn = sources[id].id;
+		if (idn < sources_num)
+		{
+			// if source is still there, stop playing
+			// this still might cause issues if the source has been replaced
+			// will need unique identifiers eventually
+			sources[idn].playing = false;
+		}
 	}
 	sstop.clear();
 }
@@ -392,11 +416,6 @@ void SOUND::ProcessSourceRemove()
 	for (size_t i = 0; i < sources_remove.size(); ++i)
 	{
 		size_t id = sources_remove[i];
-		assert(id < sources.size());
-
-		size_t idn = sources[id].id;
-		assert(idn < sources_num);
-
 		RemoveItem(id, sources, sources_num);
 	}
 	sources_remove.clear();
