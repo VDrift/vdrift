@@ -783,11 +783,13 @@ btScalar Vehicle::autoClutch(btScalar clutch_rpm, btScalar last_clutch, btScalar
 	if (rpm_clutch < rpm_min)
 	{
 		btScalar rpm = engine.getRPM();
-		btScalar inertia = engine.getShaft().getInertia();
-		btScalar torque_limit = inertia * (rpm - rpm_min) / dt;
-		if (torque_limit + engine.getTorque() < 0)
+		if (rpm < rpm_min * 1.25)
 		{
-			clutch_value = 0;
+			btScalar rpm_stall = engine.getStallRPM();
+			btScalar ramp = 0.8 * (rpm - rpm_stall) / (rpm_min - rpm_stall);
+			btScalar torque_limit = engine.getTorque() * ramp;
+			clutch_value = torque_limit / clutch.getTorqueMax();
+			btClamp(clutch_value, btScalar(0), btScalar(1));
 		}
 	}
 
