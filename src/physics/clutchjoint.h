@@ -35,11 +35,11 @@ struct ClutchJoint
 	btScalar impulseLimit;
 	btScalar inertiaEff;
 	btScalar accumulatedImpulse;
-	
+
 	/// calculate effective inertia, reset impulse accuulator
 	void init();
-	
-	/// one solver ieration
+
+	/// one solver iteration
 	void solve();
 };
 

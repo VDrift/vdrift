@@ -53,7 +53,7 @@ class Engine
 public:
 	/// default constructor (use init)
 	Engine();
-	
+
 	/// setup engine
 	void init(const EngineInfo & info);
 
@@ -68,40 +68,40 @@ public:
 
 	/// set nitrous injection boost factor 0.0 - 1.0
 	void setNosBoost(btScalar value);
-	
+
 	/// maximum possible rpm
 	btScalar getRPMLimit() const;
-	
+
 	/// maximum allowed rpm
 	btScalar getRedline() const;
-	
+
 	/// throttle position to keep engine at idle rpm
 	btScalar getIdleThrottle() const;
-	
+
 	/// engine stall rpm
 	btScalar getStallRPM() const;
-	
+
 	/// rpm at engine start
 	btScalar getStartRPM() const;
-	
-	/// relative engine position 
+
+	/// relative engine position
 	const btVector3 & getPosition() const;
-	
+
 	/// engine shaft inertia
 	btScalar getInertia() const;
-	
+
 	/// engine mass in kg
 	btScalar getMass() const;
-	
+
 	/// current rpm
 	btScalar getRPM() const;
-	
+
 	/// current throttle position
 	btScalar getThrottle() const;
-	
+
 	/// current angular velocity rad/s
 	btScalar getAngularVelocity() const;
-	
+
 	/// current shaft torgue in Nm
 	btScalar getTorque() const;
 
@@ -113,7 +113,7 @@ public:
 
 	/// available nos fraction
 	btScalar getNos() const;
-	
+
 	/// get engine crankshaft
 	const Shaft & getShaft() const;
 	Shaft & getShaft();
@@ -215,19 +215,16 @@ inline btScalar Engine::getTorque() const
 	return combustion_torque + friction_torque;
 }
 
-/// returns true if the engine is combusting fuel
 inline bool Engine::getCombustion() const
 {
 	return !stalled;
 }
 
-/// available fuel fraction
 inline btScalar Engine::getFuel() const
 {
 	return fuel_mass / info.fuel_capacity;
 }
 
-/// available nos fraction
 inline btScalar Engine::getNos() const
 {
 	return nos_mass / info.nos_mass;

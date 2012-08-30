@@ -41,20 +41,26 @@ struct AeroDeviceInfo
 class AeroDevice
 {
 public:
+	/// relative position
 	const btVector3 & getPosition() const;
 
+	/// lift vector in local space
 	const btVector3 & getLift() const;
 
+	/// drag vector in local space
 	const btVector3 & getDrag() const;
 
+	/// lift coefficient contant
 	btScalar getLiftCoefficient() const;
 
+	/// drag coeficient constant
 	btScalar getDragCoefficient() const;
 
+	/// get lift and drag sum in local space
 	btVector3 getForce(const btVector3 & bodyspace_wind_vector);
 
 	AeroDevice();
-	
+
 	AeroDevice(const AeroDeviceInfo & info);
 
 private:
