@@ -241,7 +241,8 @@ btScalar Tire::getSqueal() const
 		btScalar vy_ideal = btTan(-ideal_slip / 180 * M_PI) * vx_body;
 		btScalar vx_squeal = btFabs(vx / vx_ideal);
 		btScalar vy_squeal = btFabs(vy / vy_ideal);
-		squeal = 1.5 * (btMax(vx_squeal, vy_squeal) - 0.95);
+		// start squeal at 80% of the ideal slide/slip, max out at 160%
+		squeal = 1.25 * btMax(vx_squeal, vy_squeal) - 1.0;
 		btClamp(squeal, btScalar(0), btScalar(1));
 	}
 	return squeal;
