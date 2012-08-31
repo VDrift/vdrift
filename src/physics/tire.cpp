@@ -42,7 +42,9 @@ Tire::Tire() :
 	fx(0),
 	fy(0),
 	fz(0),
-	mz(0)
+	mz(0),
+	vx(0),
+	vy(0)
 {
 	// ctor
 }
@@ -95,6 +97,7 @@ btVector3 Tire::getForce(
 		slide = slip = 0;
 		ideal_slide = ideal_slip = 1;
 		fx = fy = fz = mz = 0;
+		vx = vy = 0;
 		return btVector3(0, 0, 0);
 	}
 
@@ -110,7 +113,8 @@ btVector3 Tire::getForce(
 	btScalar Fz = normal_force * 1E-3;								// pacejka in kN
 	btScalar gamma = inclination;									// positive when tire top tilts to the right, viewed from rear
 	btScalar denom = btMax(btFabs(lon_velocity), btScalar(1E-3));
-	btScalar sigma = (ang_velocity - lon_velocity) / denom;			// longitudinal slip: negative in braking, positive in traction
+	btScalar lon_contact_velocity = ang_velocity - lon_velocity;
+	btScalar sigma = lon_contact_velocity / denom;					// longitudinal slip: negative in braking, positive in traction
 	btScalar alpha = -btAtan(lat_velocity / denom) * 180.0 / M_PI; 	// sideslip angle: positive in a right turn(opposite to SAE tire coords)
 	btScalar max_Fx(0), max_Fy(0), max_Mz(0);
 
@@ -220,9 +224,27 @@ btVector3 Tire::getForce(
 	fy = Fy;
 	fz = Fz;
 	mz = Mz;
+	vx = lon_contact_velocity;
+	vy = lat_velocity;
 
 	// Fx positive during traction, Fy positive in a right turn, Mz positive in a left turn
 	return btVector3(Fx, Fy, Mz);
+}
+
+btScalar Tire::getSqueal() const
+{
+	btScalar squeal = 0.0;
+	if (vx * vx > 1E-2 && slide * slide > 1E-6)
+	{
+		btScalar vx_body = vx / slide;
+		btScalar vx_ideal = ideal_slide * vx_body;
+		btScalar vy_ideal = btTan(-ideal_slip / 180 * M_PI) * vx_body;
+		btScalar vx_squeal = btFabs(vx / vx_ideal);
+		btScalar vy_squeal = btFabs(vy / vy_ideal);
+		squeal = 1.5 * (btMax(vx_squeal, vy_squeal) - 0.95);
+		btClamp(squeal, btScalar(0), btScalar(1));
+	}
+	return squeal;
 }
 
 btScalar Tire::getMaxFx(btScalar load) const

@@ -72,6 +72,9 @@ public:
 	btScalar getIdealSlide() const;
 	btScalar getIdealSlip() const;
 
+	/// calculate tire squeal factor [0, 1] based on ideal slide/slip
+	btScalar getSqueal() const;
+
 	/// load is the normal force in newtons.
 	btScalar getMaxFx(btScalar load) const;
 
@@ -88,6 +91,7 @@ private:
 	btScalar ideal_slide;		///< ideal slide ratio
 	btScalar ideal_slip;		///< ideal slip angle
 	btScalar fx, fy, fz, mz;	///< contact force and aligning torque
+	btScalar vx, vy;			///< contact velocity in tire space
 
 	/// pacejka magic formula longitudinal friction
 	btScalar PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coeff, btScalar & max_Fx) const;

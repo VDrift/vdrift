@@ -911,6 +911,8 @@ void CAR::UpdateSounds(float dt)
 
 			const sim::WheelContact & c = vehicle.getWheelContact(i);
 			btVector3 cp = vehicle.getTransform() * c.rA;
+
+			// sqeal pitch variation
 			float cv = btSqrt(c.v1 * c.v1 + c.v2 * c.v2);
 			float pitch = 0.1f * cv - 0.5f;
 			pitch = clamp(pitch, 0.0f, 1.0f);
@@ -1111,7 +1113,7 @@ float CAR::GetTireSquealAmount(int i) const
 	const sim::Surface * surface = vehicle.getWheel(i).ray.getSurface();
 	if (!surface || surface == sim::Surface::None())
 		return 0.0f;
-
+/*
 	// tire thermal load (dissipated power * time step)
 	const sim::WheelContact & c = vehicle.getWheelContact(i);
 	float w1 = c.friction1.accumImpulse * c.v1;
@@ -1121,15 +1123,10 @@ float CAR::GetTireSquealAmount(int i) const
 	// scale squeal with thermal load
 	float squeal = thermal_load * 2E-3f - 0.1f;
 	squeal = clamp(squeal, 0.0f, 1.0f);
-
-	// abuse squeal to indicate ideal slip, slide
+*/
+	float squeal = 1.0f;
 	const sim::Tire & tire = vehicle.getWheel(i).tire;
-	float slip = tire.getSlip() / tire.getIdealSlip();
-	float slide = tire.getSlide() / tire.getIdealSlide();
-	float squeal_factor = std::max(std::abs(slip), std::abs(slide)) - 1.0f;
-	squeal_factor = clamp(squeal_factor, 0.0f, 1.0f);
-
-	squeal = squeal * squeal_factor;
+	squeal *= tire.getSqueal();
 	return squeal;
 }
 
