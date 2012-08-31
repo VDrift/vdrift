@@ -164,6 +164,7 @@ void Vehicle::setState(const VehicleState & state)
 	{
 		differential[i].getShaft().setAngularVelocity(state.shaft_angvel[i + offset]);
 	}
+	transform = state.transform;
 	body->setCenterOfMassTransform(state.transform);
 	body->setLinearVelocity(state.lin_velocity);
 	body->setAngularVelocity(state.ang_velocity);
@@ -505,6 +506,7 @@ void Vehicle::updateAction(btCollisionWorld * collisionWorld, btScalar dt)
 	body->setCenterOfMassTransform(transform);
 	body->predictIntegratedTransform(dt, transform);
 	body->proceedToTransform(transform);
+
 	updateWheelTransform(dt);
 }
 
