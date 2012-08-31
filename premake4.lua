@@ -148,6 +148,7 @@ solution "VDrift"
 
 	configuration {"windows"}
 		location "."
+		defines {"HAVE_LIBC"} --SDL2
 		includedirs {"vdrift-win/include", "vdrift-win/bullet"}
 		libdirs {"vdrift-win/lib"}
 		links {"opengl32", "glu32", "glew32", "SDL2main", "SDL2", "SDL2_image", "SDL2_gfx", "vorbisfile", "iconv", "libcurl", "libarchive-2", "wsock32", "ws2_32"}
