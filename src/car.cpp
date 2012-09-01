@@ -1113,7 +1113,7 @@ float CAR::GetTireSquealAmount(int i) const
 	const sim::Surface * surface = vehicle.getWheel(i).ray.getSurface();
 	if (!surface || surface == sim::Surface::None())
 		return 0.0f;
-/*
+
 	// tire thermal load (dissipated power * time step)
 	const sim::WheelContact & c = vehicle.getWheelContact(i);
 	float w1 = c.friction1.accumImpulse * c.v1;
@@ -1121,10 +1121,9 @@ float CAR::GetTireSquealAmount(int i) const
 	float thermal_load = sqrtf(w1 * w1 + w2 * w2);
 
 	// scale squeal with thermal load
-	float squeal = thermal_load * 2E-3f - 0.1f;
+	float squeal = thermal_load * 5E-3f - 0.1f;
 	squeal = clamp(squeal, 0.0f, 1.0f);
-*/
-	float squeal = 1.0f;
+
 	const sim::Tire & tire = vehicle.getWheel(i).tire;
 	squeal *= tire.getSqueal();
 	return squeal;
