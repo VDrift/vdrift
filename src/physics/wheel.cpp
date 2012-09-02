@@ -234,14 +234,15 @@ bool Wheel::updateContact(btScalar dt, WheelContact & contact)
 	btScalar brake_torque = brake.getTorque();
 	btScalar slide = tire.getSlide();
 	btScalar ideal_slide = tire.getIdealSlide();
-	if (abs_enabled && (brake_torque > 1E-3) && (btFabs(contact.v1) > 3) && (slide < -ideal_slide))
+	if (abs_enabled && brake_torque > 1E-3 &&
+		btFabs(contact.v1) > 3 && slide < -0.70 * ideal_slide)
 	{
 		// predict new angvel
 		btScalar angvel_delta = shaft.getAngularVelocity() - angvel;
 		btScalar angvel_new = shaft.getAngularVelocity() + angvel_delta;
 
-		// calculate brake torque correction to reach 95% ideal_slide
-		btScalar angvel_target = (0.95 * ideal_slide + 1) * contact.v1 / radius;
+		// calculate brake torque correction to reach ideal_slide
+		btScalar angvel_target = ideal_slide * btFabs(contact.v1) + contact.v1;
 		angvel_delta = angvel_new - angvel_target;
 		if (angvel_delta < 0)
 		{
@@ -256,7 +257,7 @@ bool Wheel::updateContact(btScalar dt, WheelContact & contact)
 
 	// TCS
 	tcs_active = false;
-	if (tcs_enabled && (slide > ideal_slide))
+	if (tcs_enabled && slide > 0.70 * ideal_slide)
 	{
 		// predict new angvel
 		btScalar angvel_delta = shaft.getAngularVelocity() - angvel;
