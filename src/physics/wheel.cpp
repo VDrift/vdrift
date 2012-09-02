@@ -257,7 +257,7 @@ bool Wheel::updateContact(btScalar dt, WheelContact & contact)
 
 	// TCS (only in fwd direction)
 	tcs_active = false;
-	if (tcs_enabled && slide > ideal_slide)
+	if (tcs_enabled && shaft.getAngularVelocity() > 10 && slide > ideal_slide)
 	{
 		// predict new angvel
 		btScalar angvel_delta = shaft.getAngularVelocity() - angvel;
@@ -265,6 +265,9 @@ bool Wheel::updateContact(btScalar dt, WheelContact & contact)
 
 		// calculate brake torque correction to reach ideal slide
 		btScalar angvel_target = (ideal_slide + 1) * contact.v1;
+		// acceleration non linear, need better estimation
+		// use fudge factor 3 (best 0-60mph time for F1-02)
+		angvel_target *= 3;
 		angvel_delta = angvel_new - angvel_target;
 		if (angvel_delta > 0)
 		{
