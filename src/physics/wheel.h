@@ -102,7 +102,6 @@ private:
 	World * world;
 	FractureBody * body;
 	btTransform transform;
-	btScalar angvel;
 	btScalar radius;
 	btScalar width;
 	btScalar mass;

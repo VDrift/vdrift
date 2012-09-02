@@ -36,7 +36,6 @@ static btRigidBody & getFixedBody()
 Wheel::Wheel() :
 	world(0),
 	body(0),
-	angvel(0),
 	radius(0.3),
 	width(0.2),
 	mass(1),
@@ -231,23 +230,20 @@ bool Wheel::updateContact(btScalar dt, WheelContact & contact)
 
 	// ABS (only in fwd direction)
 	abs_active = false;
+	btScalar angvel = shaft.getAngularVelocity();
 	btScalar brake_torque = brake.getTorque();
 	btScalar slide = tire.getSlide();
 	btScalar ideal_slide = tire.getIdealSlide();
 	if (abs_enabled && brake_torque > 1E-3 &&
 		contact.v1 > 3 && slide < -0.70 * ideal_slide)
 	{
-		// predict new angvel
-		btScalar angvel_delta = shaft.getAngularVelocity() - angvel;
-		btScalar angvel_new = shaft.getAngularVelocity() + angvel_delta;
-
 		// calculate brake torque correction to reach ideal slide
-		btScalar angvel_target = (ideal_slide + 1) * contact.v1;
-		angvel_delta = angvel_new - angvel_target;
-		if (angvel_delta < 0)
+		btScalar angvel_target = (-ideal_slide + 1) / (slide + 1) * angvel;
+		btScalar angvel_error = angvel - angvel_target;
+		if (angvel_error < 0)
 		{
 			// set brake torque to reach angvel_target
-			brake_torque += angvel_delta / dt * shaft.getInertia();
+			brake_torque += angvel_error / dt * shaft.getInertia();
 			btScalar factor = brake_torque / brake.getMaxTorque();
 			btClamp(factor, btScalar(0), btScalar(1));
 			brake.setBrakeFactor(factor);
@@ -257,31 +253,21 @@ bool Wheel::updateContact(btScalar dt, WheelContact & contact)
 
 	// TCS (only in fwd direction)
 	tcs_active = false;
-	if (tcs_enabled && shaft.getAngularVelocity() > 10 && slide > ideal_slide)
+	if (tcs_enabled && slide > ideal_slide)
 	{
-		// predict new angvel
-		btScalar angvel_delta = shaft.getAngularVelocity() - angvel;
-		btScalar angvel_new = shaft.getAngularVelocity() + angvel_delta;
-
 		// calculate brake torque correction to reach ideal slide
-		btScalar angvel_target = (ideal_slide + 1) * contact.v1;
-		// acceleration non linear, need better estimation
-		// use fudge factor 3 (best 0-60mph time for F1-02)
-		angvel_target *= 3;
-		angvel_delta = angvel_new - angvel_target;
-		if (angvel_delta > 0)
+		btScalar angvel_target = (ideal_slide + 1) / (slide + 1) * angvel;
+		btScalar angvel_error = angvel - angvel_target;
+		if (angvel_error > 0)
 		{
 			// set brake torque to reach angvel_target
-			btScalar brake_torque = angvel_delta / dt * shaft.getInertia();
+			btScalar brake_torque = angvel_error / dt * shaft.getInertia();
 			btScalar factor = brake_torque / brake.getMaxTorque();
 			btClamp(factor, brake.getBrakeFactor(), btScalar(1));
 			brake.setBrakeFactor(factor);
 			tcs_active = true;
 		}
 	}
-
-	// store old angular velocity
-	angvel = shaft.getAngularVelocity();
 
 	return true;
 }
