@@ -297,7 +297,7 @@ inline float CAR::GetTireRadius(int i) const
 
 inline int CAR::GetWheelCount() const
 {
-	return vehicle.getWeelCount();
+	return vehicle.getWheelCount();
 }
 
 inline int CAR::GetEngineRedline() const

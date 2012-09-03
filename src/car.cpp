@@ -626,7 +626,7 @@ bool CAR::LoadSounds(
 	int wheel_count = wheel_cfg->size();
 	if (wheel_count < 2)
 	{
-		error << "Weel count: " << wheel_count << ". At least two wheels expected." << std::endl;
+		error << "Wheel count: " << wheel_count << ". At least two wheels expected." << std::endl;
 		return false;
 	}
 

@@ -128,7 +128,7 @@ public:
 	btScalar getFeedback() const;
 
 	/// driveline state access
-	int getWeelCount() const;
+	int getWheelCount() const;
 	const Wheel & getWheel(int i) const;
 	const WheelContact & getWheelContact(int i) const;
 	const Transmission & getTransmission() const;
@@ -241,7 +241,7 @@ protected:
 
 // implementation
 
-inline int Vehicle::getWeelCount() const
+inline int Vehicle::getWheelCount() const
 {
 	return wheel.size();
 }
