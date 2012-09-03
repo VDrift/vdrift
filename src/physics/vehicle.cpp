@@ -316,16 +316,6 @@ btScalar Vehicle::getSpeedMPS() const
 	return wheel[0].getRadius() * wheel[0].shaft.getAngularVelocity();
 }
 
-btScalar Vehicle::getMaxSpeedMPS() const
-{
-	return maxspeed;
-}
-
-btScalar Vehicle::getTachoRPM() const
-{
-	return tacho_rpm;
-}
-
 void Vehicle::setABS(bool value)
 {
 	abs = value;
@@ -412,11 +402,6 @@ void Vehicle::setSteering(const btScalar value)
 	}
 }
 
-btScalar Vehicle::getMaxSteeringAngle() const
-{
-	return maxangle;
-}
-
 btScalar Vehicle::getBrakingDistance(btScalar target_speed) const
 {
 	// Braking distance estimation (ignoring aerodynamic drag)
@@ -479,11 +464,6 @@ btScalar Vehicle::getDragCoefficient() const
 		coeff += aero_device[i].getDragCoefficient();
 	}
 	return coeff;
-}
-
-btScalar Vehicle::getFeedback() const
-{
-	return feedback;
 }
 
 btVector3 Vehicle::getDownVector() const
@@ -623,6 +603,9 @@ void Vehicle::updateDynamics(btScalar dt)
 		}
 	}
 
+	// steering feedback
+	steering_torque = 0;
+
 	// solver loop
 	const int iterations = 8;
 	for (int n = 0; n < iterations; ++n)
@@ -694,12 +677,17 @@ void Vehicle::updateDynamics(btScalar dt)
 			btScalar vel = w.shaft.getAngularVelocity() * w.getRadius();
 			SolveConstraintRow(c.friction1, *c.bodyA, *c.bodyB, c.rA, c.rB, -vel);
 			SolveConstraintRow(c.friction2, *c.bodyA, *c.bodyB, c.rA, c.rB);
+
+			// steering feedback
+			if (w.suspension.getMaxSteeringAngle() > 1E-3)
+			{
+				steering_torque += w.tire.getMz();
+			}
 		}
 		//clog << "\n";
-		//feedback += 0.5 * (wheel[0].tire.getFeedback() + wheel[1].tire.getFeedback()); fixme
 	}
 	//clog << "\n";
-	//feedback /= (steps + 1);
+	steering_torque /= iterations;
 }
 
 void Vehicle::updateAerodynamics(btScalar dt)
@@ -943,6 +931,7 @@ void Vehicle::print(std::ostream & out, bool p1, bool p2, bool p3, bool p4) cons
 		out << "Position: " << body->getCenterOfMassPosition() << "\n";
 		out << "Center of mass: " << -body->getCenterOfMassOffset() << "\n";
 		out << "Total mass: " << 1 / body->getInvMass() << "\n";
+		out << "Steering torque: " << steering_torque << "\n";
 		out << "\n";
 	}
 

@@ -112,6 +112,9 @@ public:
 	/// engine rpm
 	btScalar getTachoRPM() const;
 
+	/// get wheel steering torque
+	btScalar getSteeringTorque() const;
+
 	/// get the maximum steering angle in degrees
 	btScalar getMaxSteeringAngle() const;
 
@@ -123,9 +126,6 @@ public:
 
 	/// caculate aerodynamic force in world space
 	btVector3 getTotalAero() const;
-
-	/// steering feedback
-	btScalar getFeedback() const;
 
 	/// driveline state access
 	int getWheelCount() const;
@@ -197,9 +197,12 @@ protected:
 	btScalar lon_friction_coeff;
 	btScalar lat_friction_coeff;
 
+	/// wheel steering torque
+	btScalar steering_torque;
+
+	/// vehicle constants
 	btScalar maxangle;
 	btScalar maxspeed;
-	btScalar feedback;
 
 	btVector3 getDownVector() const;
 
@@ -240,6 +243,26 @@ protected:
 };
 
 // implementation
+
+inline btScalar Vehicle::getMaxSpeedMPS() const
+{
+	return maxspeed;
+}
+
+inline btScalar Vehicle::getTachoRPM() const
+{
+	return tacho_rpm;
+}
+
+inline btScalar Vehicle::getSteeringTorque() const
+{
+	return steering_torque;
+}
+
+inline btScalar Vehicle::getMaxSteeringAngle() const
+{
+	return maxangle;
+}
 
 inline int Vehicle::getWheelCount() const
 {

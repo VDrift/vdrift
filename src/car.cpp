@@ -503,7 +503,16 @@ bool CAR::LoadPhysics(
 	vehicle.getState(vstate);
 
 	// steering torque scale factor
-	mz_nominalmax = 1;//vehicle.getWheel(0).tire.getMaxMz() + vehicle.getWheel(1).tire.getMaxMz();
+	btScalar load = 1 / (vehicle.getInvMass() * vehicle.getWheelCount());
+	for (int i = 0; i < vehicle.getWheelCount(); ++i)
+	{
+		if (vehicle.getWheel(i).suspension.getMaxSteeringAngle() > 1E-3)
+		{
+			mz_nominalmax += vehicle.getWheel(i).tire.getMaxMz(load, 0);
+		}
+	}
+	if (mz_nominalmax < 1)
+		mz_nominalmax = 1;
 
 	return true;
 }
@@ -1105,7 +1114,7 @@ void CAR::ProcessInputs(const std::vector <float> & inputs)
 
 float CAR::GetFeedback()
 {
-	return vehicle.getFeedback() / mz_nominalmax;
+	return vehicle.getSteeringTorque() / mz_nominalmax;
 }
 
 float CAR::GetTireSquealAmount(int i) const

@@ -66,11 +66,11 @@ public:
 		btScalar lat_velocity);
 
 	/// cached state, modified by getForce
-	btScalar getFeedback() const;
 	btScalar getSlide() const;
 	btScalar getSlip() const;
 	btScalar getIdealSlide() const;
 	btScalar getIdealSlip() const;
+	btScalar getMz() const;
 
 	/// calculate tire squeal factor [0, 1] based on ideal slide/slip
 	btScalar getSqueal() const;
@@ -119,11 +119,6 @@ inline btScalar Tire::getTread() const
 	return tread;
 }
 
-inline btScalar Tire::getFeedback() const
-{
-	return mz;
-}
-
 inline btScalar Tire::getSlide() const
 {
 	return slide;
@@ -142,6 +137,11 @@ inline btScalar Tire::getIdealSlide() const
 inline btScalar Tire::getIdealSlip() const
 {
 	return ideal_slip;
+}
+
+inline btScalar Tire::getMz() const
+{
+	return mz;
 }
 
 }
