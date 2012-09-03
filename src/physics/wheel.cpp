@@ -36,6 +36,7 @@ static btRigidBody & getFixedBody()
 Wheel::Wheel() :
 	world(0),
 	body(0),
+	angvel(0),
 	radius(0.3),
 	width(0.2),
 	mass(1),
@@ -230,12 +231,10 @@ bool Wheel::updateContact(btScalar dt, WheelContact & contact)
 
 	// ABS (only in fwd direction)
 	abs_active = false;
-	btScalar angvel = shaft.getAngularVelocity();
 	btScalar brake_torque = brake.getTorque();
 	btScalar slide = tire.getSlide();
 	btScalar ideal_slide = tire.getIdealSlide();
-	if (abs_enabled && brake_torque > 1E-3 &&
-		contact.v1 > 3 && slide < -0.70 * ideal_slide)
+	if (abs_enabled && brake_torque > 1E-3 && contact.v1 > 3)
 	{
 		// calculate brake torque correction to reach ideal slide
 		btScalar angvel_target = (-ideal_slide + 1) / (slide + 1) * angvel;
@@ -253,7 +252,7 @@ bool Wheel::updateContact(btScalar dt, WheelContact & contact)
 
 	// TCS (only in fwd direction)
 	tcs_active = false;
-	if (tcs_enabled && slide > ideal_slide)
+	if (tcs_enabled && shaft.getAngularVelocity() > 10 && slide > ideal_slide)
 	{
 		// calculate brake torque correction to reach ideal slide
 		btScalar angvel_target = (ideal_slide + 1) / (slide + 1) * angvel;
@@ -268,6 +267,8 @@ bool Wheel::updateContact(btScalar dt, WheelContact & contact)
 			tcs_active = true;
 		}
 	}
+
+	angvel = shaft.getAngularVelocity();
 
 	return true;
 }
