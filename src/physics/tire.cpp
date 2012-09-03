@@ -62,9 +62,9 @@ void Tire::getSigmaHatAlphaHat(btScalar load, btScalar & sh, btScalar & ah) cons
 
 	int tablesize = sigma_hat.size();
 	btScalar rload = load / max_load * tablesize - 1;
-	btClamp(rload, btScalar(0), btScalar(tablesize - 1));
+	btClamp(rload, btScalar(0), btScalar(tablesize - 1 - 1E-9));
 	int lbound = int(rload);
-	btAssert(lbound < tablesize);
+	btAssert(lbound < tablesize - 2);
 
 	btScalar blend = rload - lbound;
 	sh = sigma_hat[lbound] * (1.0 - blend) + sigma_hat[lbound + 1] * blend;
