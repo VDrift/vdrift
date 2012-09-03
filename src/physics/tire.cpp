@@ -24,7 +24,7 @@ namespace sim
 
 TireInfo::TireInfo() :
 	tread(0),
-	max_load(1E5),
+	max_load(10),
 	max_camber(15),
 	longitudinal(11),
 	lateral(15),
@@ -60,28 +60,15 @@ void Tire::getSigmaHatAlphaHat(btScalar load, btScalar & sh, btScalar & ah) cons
 	btAssert(!sigma_hat.empty());
 	btAssert(!alpha_hat.empty());
 
-	int HAT_ITERATIONS = sigma_hat.size();
+	int tablesize = sigma_hat.size();
+	btScalar rload = load / max_load * tablesize - 1;
+	btClamp(rload, btScalar(0), btScalar(tablesize - 1));
+	int lbound = int(rload);
+	btAssert(lbound < tablesize);
 
-	btScalar HAT_LOAD = 0.5;
-	btScalar nf = load * 0.001;
-	if (nf < HAT_LOAD)
-	{
-		sh = sigma_hat[0];
-		ah = alpha_hat[0];
-	}
-	else if (nf >= HAT_LOAD * HAT_ITERATIONS)
-	{
-		sh = sigma_hat[HAT_ITERATIONS - 1];
-		ah = alpha_hat[HAT_ITERATIONS - 1];
-	}
-	else
-	{
-		int lbound = int(nf / HAT_LOAD) - 1;
-		btClamp(lbound, 0, (int)sigma_hat.size() - 1);
-		btScalar blend = (nf - HAT_LOAD * (lbound + 1)) / HAT_LOAD;
-		sh = sigma_hat[lbound] * (1.0 - blend) + sigma_hat[lbound + 1] * blend;
-		ah = alpha_hat[lbound] * (1.0 - blend) + alpha_hat[lbound + 1] * blend;
-	}
+	btScalar blend = rload - lbound;
+	sh = sigma_hat[lbound] * (1.0 - blend) + sigma_hat[lbound + 1] * blend;
+	ah = alpha_hat[lbound] * (1.0 - blend) + alpha_hat[lbound + 1] * blend;
 }
 
 btVector3 Tire::getForce(
@@ -101,16 +88,19 @@ btVector3 Tire::getForce(
 		return btVector3(0, 0, 0);
 	}
 
-	// get ideal slip ratio
-	btScalar sigma_hat(0);
-	btScalar alpha_hat(0);
-	getSigmaHatAlphaHat(normal_force, sigma_hat, alpha_hat);
+	// pacejka in kN
+	normal_force = normal_force * 1E-3;
 
 	// limit input
 	btClamp(normal_force, btScalar(0), btScalar(max_load));
 	btClamp(inclination, -max_camber, max_camber);
 
-	btScalar Fz = normal_force * 1E-3;								// pacejka in kN
+	// get ideal slip ratio
+	btScalar sigma_hat(0);
+	btScalar alpha_hat(0);
+	getSigmaHatAlphaHat(normal_force, sigma_hat, alpha_hat);
+
+	btScalar Fz = normal_force;
 	btScalar gamma = inclination;									// positive when tire top tilts to the right, viewed from rear
 	btScalar denom = btMax(btFabs(lon_velocity), btScalar(1E-3));
 	btScalar lon_contact_velocity = ang_velocity - lon_velocity;
@@ -176,6 +166,8 @@ btVector3 Tire::getForce(
 */
 /*
 	//combining method 4: traction ellipse (prioritize Fx)
+	btScalar Fx = PacejkaFx(sigma, Fz, friction_coeff, max_Fx);
+	btScalar Fy = PacejkaFy(alpha, Fz, gamma, friction_coeff, max_Fy);
 	//std::cout << "Fy0=" << Fy << ", ";
 	if (Fx >= max_Fx)
 	{
@@ -188,6 +180,8 @@ btVector3 Tire::getForce(
 */
 /*
 	//combining method 5: traction ellipse (prioritize Fy)
+	btScalar Fx = PacejkaFx(sigma, Fz, friction_coeff, max_Fx);
+	btScalar Fy = PacejkaFy(alpha, Fz, gamma, friction_coeff, max_Fy);
 	if (Fy >= max_Fy)
 	{
 		Fy = max_Fy;
@@ -203,7 +197,8 @@ btVector3 Tire::getForce(
 	}
 */
 /*
-	// modified Nicolas-Comstock Model(Modeling Combined Braking and Steering Tire Forces)
+	// combining method 6: modified Nicolas-Comstock Model
+	// source: Modeling Combined Braking and Steering Tire Forces
 	btScalar Fx0 = PacejkaFx(sigma, Fz, friction_coeff, max_Fx);
 	btScalar Fy0 = PacejkaFy(alpha, Fz, gamma, friction_coeff, max_Fy);
 	// 0 <= a <= pi/2 and 0 <= s <= 1
@@ -212,7 +207,9 @@ btVector3 Tire::getForce(
 	btScalar Fx = Fc * sqrt(s * s * Ca * Ca + (1-s) * (1-s) * cosa * cosa * Fx0 * Fx0) / Ca;
 	btScalar Fy = Fc * sqrt((1-s) * (1-s) * cosa * cosa * Fy0 * Fy0 + sina * sina * Cs * Cs) / (Cs * cosa);
 */
-
+	// no combining
+	//btScalar Fx = PacejkaFx(sigma, Fz, friction_coeff, max_Fx);
+	//btScalar Fy = PacejkaFy(alpha, Fz, gamma, friction_coeff, max_Fy);
 	btScalar Mz = PacejkaMz(sigma, alpha, Fz, gamma, friction_coeff, max_Mz);
 
 	camber = inclination;
@@ -402,7 +399,7 @@ void Tire::findSigmaHatAlphaHat(btScalar load, btScalar & output_sigmahat, btSca
 	ymax = 0;
 	for (x = -20; x < 20; x += 40.0/iterations)
 	{
-		y = PacejkaFy(x, load, 0, 1.0, junk);
+		y = PacejkaFy(x, load, 0.0, 1.0, junk);
 		if (y > ymax)
 		{
 			output_alphahat = x;
@@ -413,12 +410,12 @@ void Tire::findSigmaHatAlphaHat(btScalar load, btScalar & output_sigmahat, btSca
 
 void Tire::calculateSigmaHatAlphaHat(int tablesize)
 {
-	btScalar HAT_LOAD = 0.5;
+	btScalar load_delta = max_load / tablesize;
 	sigma_hat.resize(tablesize, 0);
 	alpha_hat.resize(tablesize, 0);
-	for (int i = 0; i < tablesize; i++)
+	for (int i = 0; i < tablesize; ++i)
 	{
-		findSigmaHatAlphaHat((btScalar)(i+1)*HAT_LOAD, sigma_hat[i], alpha_hat[i]);
+		findSigmaHatAlphaHat((btScalar)(i + 1) * load_delta, sigma_hat[i], alpha_hat[i]);
 	}
 }
 

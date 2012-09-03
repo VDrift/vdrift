@@ -29,7 +29,7 @@ namespace sim
 struct TireInfo
 {
 	btScalar tread;						///< 1.0 means a pure off-road tire, 0.0 is a pure road tire
-	btScalar max_load;					///< maximum tire load in N
+	btScalar max_load;					///< maximum tire load in kN
 	btScalar max_camber;				///< maximum tire camber in degrees
 	std::vector<btScalar> longitudinal;	///< the parameters of the longitudinal pacejka equation.  this is series b
 	std::vector<btScalar> lateral;		///< the parameters of the lateral pacejka equation.  this is series a
@@ -51,7 +51,7 @@ public:
 	/// get tire tread fraction
 	btScalar getTread() const;
 
-	/// normal_force: tire load in newton
+	/// normal_force: tire load in N
 	/// friction_coeff: contact surface friction coefficient
 	/// inclination: wheel inclination (camber) in degrees
 	/// ang_velocity: tire angular velocity (w * r)
@@ -75,13 +75,13 @@ public:
 	/// calculate tire squeal factor [0, 1] based on ideal slide/slip
 	btScalar getSqueal() const;
 
-	/// load is the normal force in newtons.
+	/// load is the normal force in N
 	btScalar getMaxFx(btScalar load) const;
 
-	/// load is the normal force in newtons, camber is in degrees
+	/// load is the normal force in N, camber is in degrees
 	btScalar getMaxFy(btScalar load, btScalar camber) const;
 
-	/// load is the normal force in newtons, camber is in degrees
+	/// load is the normal force in N, camber is in degrees
 	btScalar getMaxMz(btScalar load, btScalar camber) const;
 
 private:
@@ -93,19 +93,19 @@ private:
 	btScalar fx, fy, fz, mz;	///< contact force and aligning torque
 	btScalar vx, vy;			///< contact velocity in tire space
 
-	/// pacejka magic formula longitudinal friction
+	/// pacejka magic formula longitudinal friction, Fz in kN
 	btScalar PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coeff, btScalar & max_Fx) const;
 
-	/// pacejka magic formula lateral friction
+	/// pacejka magic formula lateral friction, Fz in kN
 	btScalar PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff, btScalar & max_Fy) const;
 
-	/// pacejka magic formula aligning torque
+	/// pacejka magic formula aligning torque, Fz in kN
 	btScalar PacejkaMz(btScalar sigma, btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff, btScalar & max_Mz) const;
 
-	/// get ideal slide ratio, slip angle
+	/// get ideal slide ratio, slip angle, load in kN
 	void getSigmaHatAlphaHat(btScalar load, btScalar & sh, btScalar & ah) const;
 
-	/// find ideal slip, slide for given parameters
+	/// find ideal slip, slide for given parameters, load in kN
 	void findSigmaHatAlphaHat(btScalar load, btScalar & output_sigmahat, btScalar & output_alphahat, int iterations=400);
 
 	/// calculate sigma_hat, alpha_hat tables
