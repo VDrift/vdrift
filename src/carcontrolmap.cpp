@@ -741,7 +741,7 @@ std::vector<std::string> CARCONTROLMAP::InitCarInputStrings()
 	strings[CARINPUT::FIFTH_GEAR] = "fifth_gear";
 	strings[CARINPUT::SIXTH_GEAR] = "sixth_gear";
 	strings[CARINPUT::REVERSE] = "reverse";
-	strings[CARINPUT::ROLLOVER_RECOVER] = "rollover_recover";
+	strings[CARINPUT::RECOVER] = "rollover_recover";
 	strings[CARINPUT::VIEW_REAR] = "rear_view";
 	strings[CARINPUT::VIEW_PREV] = "view_prev";
 	strings[CARINPUT::VIEW_NEXT] = "view_next";

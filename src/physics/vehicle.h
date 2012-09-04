@@ -41,6 +41,7 @@ namespace sim
 class World;
 class FractureBody;
 struct VehicleInfo;
+struct VehicleInput;
 struct VehicleState;
 
 class Vehicle : public btActionInterface
@@ -57,34 +58,14 @@ public:
 		const btQuaternion & rotation,
 		World & world);
 
+	/// vehicle controls input, call before sim step(updateAction)
+	void setInput(const VehicleInput & input);
+
 	/// set current vehicle state
 	void setState(const VehicleState & state);
 
 	/// get current vehicle state
 	void getState(VehicleState & state) const;
-
-	/// car controls
-	void setSteering(btScalar value);	///< [-1, 1] left, right
-	void setGear(int value);			///< [nrev, nfwd]
-	void setThrottle(btScalar value);	///< [0, 1]
-	void setNOS(btScalar value);		///< [0, 1]
-	void setClutch(btScalar value);		///< [0, 1]
-	void setBrake(btScalar value);		///< [0, 1]
-	void setHandBrake(btScalar value);	///< [0, 1]
-	void setAutoClutch(bool value);
-	void setAutoShift(bool value);
-	void setABS(bool value);
-	void setTCS(bool value);
-	void startEngine();
-
-	/// set body position
-	void setPosition(const btVector3 & pos);
-
-	/// move the car along z-axis until it is touching the ground
-	void alignWithGround();
-
-	/// rotate car back onto it's wheels after rollover
-	void rolloverRecover();
 
 	/// executed as last function(after integration) in bullet singlestepsimulation
 	void updateAction(btCollisionWorld * collisionWorld, btScalar dt);
@@ -138,8 +119,6 @@ public:
 	btScalar getFuelAmount() const;
 
 	/// traction control state
-	bool getABSEnabled() const;
-	bool getTCSEnabled() const;
 	bool getABSActive() const;
 	bool getTCSActive() const;
 
@@ -185,8 +164,8 @@ protected:
 	bool shifted;
 	bool abs_active;
 	bool tcs_active;
-	bool abs;
-	bool tcs;
+	//bool abs_enabled;
+	//bool tcs_enabled;
 
 	/// aerodynamic force and torque for debugging
 	btVector3 aero_force;
@@ -204,7 +183,54 @@ protected:
 	btScalar maxangle;
 	btScalar maxspeed;
 
+
+	/// get body down direction
 	btVector3 getDownVector() const;
+
+	/// set body position
+	void setPosition(const btVector3 & pos);
+
+	/// move the car along z-axis until it is touching the ground
+	void alignWithGround();
+
+	/// rotate car back onto it's wheels
+	void rolloverRecover();
+
+	/// start vehicle engine (force rpm to start_rpm)
+	void startEngine();
+
+	/// set car steering [-1, 1] left, right
+	void setSteering(btScalar value);
+
+	/// select gear [nrev, nfwd]
+	void setGear(int value);
+
+	/// set engine throttle [0, 1]
+	void setThrottle(btScalar value);
+
+	/// set N2O injection value [0, 1]
+	void setNOS(btScalar value);
+
+	/// set clutch [0, 1]
+	void setClutch(btScalar value);
+
+	/// set brakes [0, 1]
+	void setBrake(btScalar value);
+
+	/// set handbrake value [0, 1]
+	void setHandBrake(btScalar value);
+
+	/// use auto clutch logic
+	void setAutoClutch(bool value);
+
+	/// use auto shift logic
+	void setAutoShift(bool value);
+
+	/// enable ABS
+	void setABS(bool value);
+
+	/// enable TCS
+	void setTCS(bool value);
 
 	/// update driveline, chassis
 	void updateDynamics(btScalar dt);
@@ -236,9 +262,10 @@ protected:
 	/// calculate total longitudinal and lateral friction coefficients
 	void calculateFrictionCoefficient(btScalar & lon_mu, btScalar & lat_mu) const;
 
-	/// aerodynamics
+	/// total aerodynamic lift coefficient
 	btScalar getLiftCoefficient() const;
 
+	/// total aerodynamic drag coefficient
 	btScalar getDragCoefficient() const;
 };
 
@@ -296,22 +323,12 @@ inline const Engine & Vehicle::getEngine() const
 
 inline btScalar Vehicle::getNosAmount() const
 {
-	return engine.getNos();
+	return engine.getNosAmount();
 }
 
 inline float Vehicle::getFuelAmount() const
 {
-	return engine.getFuel();
-}
-
-inline bool Vehicle::getABSEnabled() const
-{
-	return abs;
-}
-
-inline bool Vehicle::getTCSEnabled() const
-{
-	return tcs;
+	return engine.getFuelAmount();
 }
 
 inline bool Vehicle::getABSActive() const

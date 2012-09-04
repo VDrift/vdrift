@@ -108,12 +108,6 @@ void PERFORMANCE_TESTING::Test(
 	btVector3 position(0.0, -2.0, 0.5);
 	btQuaternion rotation = btQuaternion::getIdentity();
 	car.init(vinfo, position, rotation, world);
-	car.setAutoShift(true);
-	car.setAutoClutch(true);
-	car.setABS(true);
-	car.setTCS(true);
-	car.startEngine();
-	car.setBrake(1.0);
 
 	// get initial state
 	car.getState(carstate);
@@ -122,9 +116,16 @@ void PERFORMANCE_TESTING::Test(
 	info_output << "Mass (kg) including driver and fuel: " << 1 / car.getInvMass() << "\n";
 	//info_output << "Center of mass (m): " << car.getCenterOfMass() << std::endl;
 
-	TestMaxSpeed(info_output, error_output);
-	TestStoppingDistance(false, info_output, error_output);
-	TestStoppingDistance(true, info_output, error_output);
+	// maxspeed test
+	float maxspeed = TestMaxSpeed(info_output, error_output);
+
+	// 60 - 0 mph stopping distance
+	float brakestartspeed = 26.82;
+	if (maxspeed < brakestartspeed)
+		brakestartspeed = maxspeed - 0.1;
+
+	TestStoppingDistance(false, brakestartspeed, info_output, error_output);
+	TestStoppingDistance(true, brakestartspeed, info_output, error_output);
 
 	info_output << "Car performance test complete." << std::endl;
 }
@@ -132,9 +133,17 @@ void PERFORMANCE_TESTING::Test(
 void PERFORMANCE_TESTING::ResetCar()
 {
 	car.setState(carstate);
+	carinput.clear();
+	carinput.set(sim::VehicleInput::STARTENG, true);
+	carinput.set(sim::VehicleInput::AUTOCLUTCH, true);
+	carinput.set(sim::VehicleInput::AUTOSHIFT, true);
+	carinput.set(sim::VehicleInput::ABS, true);
+	carinput.set(sim::VehicleInput::TCS, true);
+	carinput.set(sim::VehicleInput::BRAKE, 1);
+	carinput.shiftgear = 1;
 }
 
-void PERFORMANCE_TESTING::TestMaxSpeed(std::ostream & info_output, std::ostream & error_output)
+float PERFORMANCE_TESTING::TestMaxSpeed(std::ostream & info_output, std::ostream & error_output)
 {
 	info_output << "Testing maximum speed" << std::endl;
 
@@ -149,11 +158,10 @@ void PERFORMANCE_TESTING::TestMaxSpeed(std::ostream & info_output, std::ostream 
 	maxspeed.first = 0;
 	maxspeed.second = 0;
 	float lastsecondspeed = 0;
-	float stopthreshold = 0.001; //if the accel (in m/s^2) is less than this value, discontinue the testing
+	float stopthreshold = 0.001; // if the accel (in m/s^2) is less than this value, discontinue the testing
 
-	float timeto60start = 0; //don't start the 0-60 clock until the car is moving at a threshold speed to account for the crappy launch that the autoclutch gives
-	float timeto60startthreshold = 2.23; //threshold speed to start 0-60 clock in m/s
-	//float timeto60startthreshold = 0.01; //threshold speed to start 0-60 clock in m/s
+	float timeto60start = 0; // don't start the 0-60 clock until the car is moving at start speed
+	float start_speed = 2; // threshold speed to start timer in m/s
 	float timeto60 = maxtime;
 
 	float timetoquarter = maxtime;
@@ -163,17 +171,33 @@ void PERFORMANCE_TESTING::TestMaxSpeed(std::ostream & info_output, std::ostream 
 	while (t < maxtime)
 	{
 		// rev up before start
-		if (car.getTransmission().getGear() == 0 &&
-			car.getEngine().getRPM() > 0.7 * car.getEngine().getRPMLimit())
+		if (car.getTransmission().getGear() == 1 &&
+			car.getEngine().getRPM() > 0.8 * car.getEngine().getRedline())
 		{
-			car.setGear(1);
+			carinput.set(sim::VehicleInput::BRAKE, 0);
 		}
-		car.setThrottle(1.0f);
-		car.setBrake(0.0f);
+		carinput.set(sim::VehicleInput::THROTTLE, 1);
 
+		car.setInput(carinput);
 		world.update(dt);
 
+		// autoshift
+		carinput.shiftgear = 0;
+
 		float car_speed = car.getSpeed();
+
+		if (car_speed > start_speed && timeto60start == 0)
+			timeto60start = t;
+
+		if (car_speed < 26.8224)
+			timeto60 = t;
+
+		if (car.getPosition().length() > 402.3 && timetoquarter == maxtime)
+		{
+			//quarter mile!
+			timetoquarter = t;
+			quarterspeed = car_speed;
+		}
 
 		if (car_speed > maxspeed.second)
 		{
@@ -184,19 +208,6 @@ void PERFORMANCE_TESTING::TestMaxSpeed(std::ostream & info_output, std::ostream 
 			std::stringstream dfs;
 			dfs << -aero.z() << " N; lift/drag: " << aero.z() / aero.y();
 			downforcestr = dfs.str();
-		}
-
-		if (car_speed < timeto60startthreshold)
-			timeto60start = t;
-
-		if (car_speed < 26.8224)
-			timeto60 = t;
-
-		if (car.getPosition().length() > 402.3 && timetoquarter == maxtime)
-		{
-			//quarter mile!
-			timetoquarter = t - timeto60start;
-			quarterspeed = car_speed;
 		}
 
 		if (i % (int)(1.0/dt) == 0) //every second
@@ -223,45 +234,57 @@ void PERFORMANCE_TESTING::TestMaxSpeed(std::ostream & info_output, std::ostream 
 		i++;
 	}
 
-	info_output << "Maximum speed: " << ConvertToMPH(maxspeed.second) << " MPH at " << maxspeed.first << " s" << std::endl;
+	info_output << "Maximum speed: " << ConvertToMPH(maxspeed.second) << " MPH at ";
+	info_output << maxspeed.first - timeto60start << " s" << std::endl;
 	info_output << "Downforce at maximum speed: " << downforcestr << std::endl;
-	info_output << "0-60 MPH time: " << timeto60-timeto60start << " s" << std::endl;
-	info_output << "1/4 mile time: " << timetoquarter << " s" << " at " << ConvertToMPH(quarterspeed) << " MPH" << std::endl;
+	info_output << "0-60 MPH time: " << timeto60 - timeto60start << " s" << std::endl;
+	info_output << "1/4 mile time: " << timetoquarter - timeto60start << " s at ";
+	info_output << ConvertToMPH(quarterspeed) << " MPH" << std::endl;
+
+	return maxspeed.second;
 }
 
-void PERFORMANCE_TESTING::TestStoppingDistance(bool abs, std::ostream & info_output, std::ostream & error_output)
+void PERFORMANCE_TESTING::TestStoppingDistance(
+	bool abs, float brakestartspeed,
+	std::ostream & info_output, std::ostream & error_output)
 {
-	info_output << "Testing stopping distance" << std::endl;
+	info_output << "Testing stopping distance ";
+	info_output << std::fixed << std::setprecision(0) << ConvertToMPH(brakestartspeed) << "-0 MPH ";
+	if (abs)
+		info_output << "(ABS):\n";
+	else
+		info_output << "(no ABS):\n";
 
 	ResetCar();
-	car.setABS(abs);
-	car.setGear(1);
+
+	carinput.set(sim::VehicleInput::ABS, abs);
 
 	double maxtime = 300.0;
-	double t = 0.;
-	double dt = 0.05;
+	double t = 0.0;
+	double dt = 1 / 90.0;
 	int i = 0;
 
 	float stopthreshold = 0.1; //if the speed (in m/s) is less than this value, discontinue the testing
 	btVector3 stopstart; //where the stopping starts
-	float brakestartspeed = 26.82; //speed at which to start braking, in m/s (26.82 m/s is 60 mph)
-
 	bool accelerating = true; //switches to false once 60 mph is reached
 	while (t < maxtime)
 	{
 		if (accelerating)
 		{
-			car.setThrottle(1);
-			car.setBrake(0);
+			carinput.set(sim::VehicleInput::THROTTLE, 1);
+			carinput.set(sim::VehicleInput::BRAKE, 0);
 		}
 		else
 		{
-			car.setThrottle(0);
-			car.setBrake(1);
-			car.setGear(0);
+			carinput.set(sim::VehicleInput::THROTTLE, 0);
+			carinput.set(sim::VehicleInput::BRAKE, 1);
 		}
 
+		car.setInput(carinput);
 		world.update(dt);
+
+		// autoshift
+		carinput.shiftgear = 0;
 
 		float car_speed = car.getSpeed();
 
@@ -273,8 +296,8 @@ void PERFORMANCE_TESTING::TestStoppingDistance(bool abs, std::ostream & info_out
 
 			// stopping distance estimation
 			float d = car.getBrakingDistance(0);
-			info_output << "60-0 stopping distance estimation: ";
-			info_output << ConvertToFeet(d) << " ft" << std::endl;
+			info_output << "Stopping distance estimation: ";
+			info_output << ConvertToFeet(d) << " ft\n";
 		}
 
 		if (!accelerating && car_speed < stopthreshold)
@@ -284,8 +307,7 @@ void PERFORMANCE_TESTING::TestStoppingDistance(bool abs, std::ostream & info_out
 
 		if (!car.getEngine().getCombustion())
 		{
-			error_output << "Car stalled during launch, t=" << t << std::endl;
-			//break;
+			error_output << "Car stalled during launch, t=" << t << "\n";
 		}
 
 		if (i % (int)(1.0/dt) == 0) //every second
@@ -299,10 +321,6 @@ void PERFORMANCE_TESTING::TestStoppingDistance(bool abs, std::ostream & info_out
 
 	btVector3 stopend = car.getPosition();
 
-	info_output << "60-0 stopping distance ";
-	if (abs)
-		info_output << "(ABS): ";
-	else
-		info_output << "(no ABS): ";
+	info_output << "Stopping distance ";
 	info_output << ConvertToFeet((stopend - stopstart).length()) << " ft" << std::endl;
 }

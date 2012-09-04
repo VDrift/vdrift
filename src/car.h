@@ -21,6 +21,7 @@
 #define _CAR_H
 
 #include "physics/vehicle.h"
+#include "physics/vehicleinput.h"
 #include "physics/vehiclestate.h"
 #include "physics/motionstate.h"
 #include "tobullet.h"
@@ -72,6 +73,8 @@ public:
 		const std::string & carpath,
 		const MATHVECTOR <float, 3> & position,
 		const QUATERNION <float> & orientation,
+		const bool autoclutch,
+		const bool autoshift,
 		const bool defaultabs,
 		const bool defaulttcs,
 		const bool damage,
@@ -83,8 +86,6 @@ public:
 	void SetColor(float r, float g, float b);
 
 	void SetInteriorView(bool value);
-
-    void SetGear(int gear);
 
 	void SetAutoClutch(bool value);
 
@@ -188,6 +189,7 @@ protected:
 
 	// body + n wheels + m children shapes
 	btAlignedObjectArray<sim::MotionState> motion_state;
+	sim::VehicleInput vinput;
 	sim::VehicleState vstate;
 	sim::Vehicle vehicle;
 
@@ -254,21 +256,6 @@ protected:
 };
 
 // implementation
-
-inline void CAR::SetGear(int gear)
-{
-	vehicle.setGear(gear);
-}
-
-inline void CAR::SetAutoClutch(bool value)
-{
-	vehicle.setAutoClutch(value);
-}
-
-inline void CAR::SetAutoShift(bool value)
-{
-	vehicle.setAutoShift(value);
-}
 
 inline const std::vector<CAMERA*> & CAR::GetCameras() const
 {
@@ -337,7 +324,7 @@ inline float CAR::GetClutch()
 
 inline bool CAR::GetABSEnabled() const
 {
-	return vehicle.getABSEnabled();
+	return vinput.logic & sim::VehicleInput::ABS;
 }
 
 inline bool CAR::GetABSActive() const
@@ -347,7 +334,7 @@ inline bool CAR::GetABSActive() const
 
 inline bool CAR::GetTCSEnabled() const
 {
-	return vehicle.getTCSEnabled();
+	return vinput.logic & sim::VehicleInput::TCS;
 }
 
 inline bool CAR::GetTCSActive() const

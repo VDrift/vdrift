@@ -45,7 +45,7 @@ enum CARINPUT
    	FIFTH_GEAR,
     SIXTH_GEAR,
     REVERSE,
-	ROLLOVER_RECOVER,
+	RECOVER,
 
     //inputs that are used elsewhere in the game only
     GAME_ONLY_INPUTS_START_HERE,

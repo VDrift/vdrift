@@ -458,6 +458,8 @@ bool CAR::LoadPhysics(
 	const std::string & carpath,
 	const MATHVECTOR <float, 3> & initial_position,
 	const QUATERNION <float> & initial_orientation,
+	const bool autoclutch,
+	const bool autoshift,
 	const bool defaultabs,
 	const bool defaulttcs,
 	const bool damage,
@@ -496,13 +498,21 @@ bool CAR::LoadPhysics(
 
 	// init vehicle
 	vehicle.init(vinfo, position, rotation, world);
-	vehicle.setABS(defaultabs);
-	vehicle.setTCS(defaulttcs);
 
-	// init vehicle state
+	// init vehicle input
+	vinput.clear();
+	SetAutoClutch(autoclutch);
+	SetAutoShift(autoshift);
+	vinput.set(sim::VehicleInput::ABS, defaultabs);
+	vinput.set(sim::VehicleInput::TCS, defaulttcs);
+	vinput.set(sim::VehicleInput::STARTENG, true);
+	vinput.shiftgear = 1;
+	vehicle.setInput(vinput);
+
+	// get/init vehicle state
 	vehicle.getState(vstate);
 
-	// steering torque scale factor
+	// get steering torque scale factor
 	btScalar load = 1 / (vehicle.getInvMass() * vehicle.getWheelCount());
 	for (int i = 0; i < vehicle.getWheelCount(); ++i)
 	{
@@ -1010,77 +1020,78 @@ void CAR::Update(double dt)
 	UpdateSounds(dt);
 }
 
+void CAR::SetAutoClutch(bool value)
+{
+	vinput.set(sim::VehicleInput::AUTOCLUTCH, value);
+}
+
+void CAR::SetAutoShift(bool value)
+{
+	vinput.set(sim::VehicleInput::AUTOSHIFT, value);
+}
+
 void CAR::ProcessInputs(const std::vector <float> & inputs)
 {
-	 // ensure that our inputs vector contains exactly one item per input
+	// ensure that our inputs vector contains exactly one item per input
 	assert(inputs.size() == CARINPUT::INVALID);
-
-	// recover from a rollover
-	if (inputs[CARINPUT::ROLLOVER_RECOVER])
-		vehicle.rolloverRecover();
-
-	//set brakes
-	vehicle.setBrake(inputs[CARINPUT::BRAKE]);
-	vehicle.setHandBrake(inputs[CARINPUT::HANDBRAKE]);
 
 	// do steering
 	float steer_value = inputs[CARINPUT::STEER_RIGHT];
 	if (std::abs(inputs[CARINPUT::STEER_LEFT]) > std::abs(inputs[CARINPUT::STEER_RIGHT])) //use whichever control is larger
 		steer_value = -inputs[CARINPUT::STEER_LEFT];
-	vehicle.setSteering(steer_value);
 	last_steer = steer_value;
+
 	QUATERNION<float> steer;
 	steer.Rotate(-steer_value * steer_angle_max, 0, 0, 1);
 	steer_rotation = steer_orientation * steer;
 
-    // start the engine if requested
-	if (inputs[CARINPUT::START_ENGINE])
-		vehicle.startEngine();
-
 	// do shifting
-	int gear_change = 0;
+	int shiftgear = 0;
+	int gear = vehicle.getTransmission().getGear();
 	if (inputs[CARINPUT::SHIFT_UP] == 1.0)
-		gear_change = 1;
+		shiftgear = 1;
 	if (inputs[CARINPUT::SHIFT_DOWN] == 1.0)
-		gear_change = -1;
-	int cur_gear = vehicle.getTransmission().getGear();
-	int new_gear = cur_gear + gear_change;
-
+		shiftgear = -1;
 	if (inputs[CARINPUT::REVERSE])
-		new_gear = -1;
+		shiftgear = -1 - gear;
 	if (inputs[CARINPUT::NEUTRAL])
-		new_gear = 0;
+		shiftgear = 0 - gear;
 	if (inputs[CARINPUT::FIRST_GEAR])
-		new_gear = 1;
+		shiftgear = 1 - gear;
 	if (inputs[CARINPUT::SECOND_GEAR])
-		new_gear = 2;
+		shiftgear = 2 - gear;
 	if (inputs[CARINPUT::THIRD_GEAR])
-		new_gear = 3;
+		shiftgear = 3 - gear;
 	if (inputs[CARINPUT::FOURTH_GEAR])
-		new_gear = 4;
+		shiftgear = 4 - gear;
 	if (inputs[CARINPUT::FIFTH_GEAR])
-		new_gear = 5;
+		shiftgear = 5 - gear;
 	if (inputs[CARINPUT::SIXTH_GEAR])
-		new_gear = 6;
+		shiftgear = 6 - gear;
 
+	// do the rest
 	applied_brakes = inputs[CARINPUT::BRAKE];
+	nos_active = inputs[CARINPUT::NOS];
 
-	float throttle = inputs[CARINPUT::THROTTLE];
-	float clutch = 1 - inputs[CARINPUT::CLUTCH];
-	float nos = inputs[CARINPUT::NOS];
-
-	nos_active = nos > 0;
-
-	vehicle.setGear(new_gear);
-	vehicle.setThrottle(throttle);
-	vehicle.setClutch(clutch);
-	vehicle.setNOS(nos);
-
-	// do driver aid toggles
+	// set vehicle input
+	vinput.shiftgear = shiftgear;
+	vinput.set(sim::VehicleInput::STEER, steer_value);
+	vinput.set(sim::VehicleInput::THROTTLE, inputs[CARINPUT::THROTTLE]);
+	vinput.set(sim::VehicleInput::BRAKE, inputs[CARINPUT::BRAKE]);
+	vinput.set(sim::VehicleInput::HBRAKE, inputs[CARINPUT::HANDBRAKE]);
+	vinput.set(sim::VehicleInput::CLUTCH, inputs[CARINPUT::CLUTCH]);
+	vinput.set(sim::VehicleInput::NOS, inputs[CARINPUT::NOS]);
+	vinput.set(sim::VehicleInput::RECOVER, inputs[CARINPUT::RECOVER]);
+	vinput.set(sim::VehicleInput::STARTENG, inputs[CARINPUT::START_ENGINE]);
 	if (inputs[CARINPUT::ABS_TOGGLE])
-		vehicle.setABS(!vehicle.getABSEnabled());
+	{
+		vinput.set(sim::VehicleInput::ABS, vinput.logic & sim::VehicleInput::ABS);
+	}
 	if (inputs[CARINPUT::TCS_TOGGLE])
-		vehicle.setTCS(!vehicle.getTCSEnabled());
+	{
+		vinput.set(sim::VehicleInput::TCS, vinput.logic & sim::VehicleInput::TCS);
+	}
+	vehicle.setInput(vinput);
 
 	// update interior sounds
 	if (!psound || !driver_view) return;
@@ -1183,15 +1194,20 @@ static bool serialize(joeserialize::Serializer & s, btTransform & t)
 
 bool CAR::Serialize(joeserialize::Serializer & s)
 {
+	// serialize vehicle state
 	bool write = (s.GetIODirection() == joeserialize::Serializer::DIRECTION_INPUT);
-	if (!write) vehicle.getState(vstate);
+	if (!write)
+		vehicle.getState(vstate);
+
 	for (int i = 0; i < vstate.shaft_angvel.size(); ++i)
 	{
 		_SERIALIZE_(s, vstate.shaft_angvel[i]);
 	}
-	if (!serialize(s, vstate.transform)) return false;
-	if (!serialize(s, vstate.lin_velocity)) return false;
-	if (!serialize(s, vstate.ang_velocity)) return false;
+	if (!serialize(s, vstate.body[0].transform)) return false;
+	if (!serialize(s, vstate.body[0].lin_velocity)) return false;
+	if (!serialize(s, vstate.body[0].ang_velocity)) return false;
+	_SERIALIZE_(s, vstate.fuel_amount);
+	_SERIALIZE_(s, vstate.nos_amount);
 	_SERIALIZE_(s, vstate.brake);
 	_SERIALIZE_(s, vstate.clutch);
 	_SERIALIZE_(s, vstate.shift_time);
@@ -1200,13 +1216,17 @@ bool CAR::Serialize(joeserialize::Serializer & s)
 	_SERIALIZE_(s, vstate.shifted);
 	_SERIALIZE_(s, vstate.auto_shift);
 	_SERIALIZE_(s, vstate.auto_clutch);
-	_SERIALIZE_(s, vstate.abs_enabled);
-	_SERIALIZE_(s, vstate.tcs_enabled);
-	if (write) vehicle.setState(vstate);
+	//_SERIALIZE_(s, vstate.abs_enabled);
+	//_SERIALIZE_(s, vstate.tcs_enabled);
 
+	if (write)
+		vehicle.setState(vstate);
+
+	// serialize car state
 	_SERIALIZE_(s, last_steer);
 	_SERIALIZE_(s, nos_active);
 	_SERIALIZE_(s, driver_view);
 	_SERIALIZE_(s, sector);
+
 	return true;
 }

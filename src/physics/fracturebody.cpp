@@ -93,6 +93,12 @@ int FractureBody::getConnectionId(int shape_id) const
 	return getConId(*child_shape);
 }
 
+int FractureBody::getNumChildren() const
+{
+	// one body per connection
+	return m_connections.size();
+}
+
 bool FractureBody::isChildConnected(int i) const
 {
 	btAssert(i >= 0 && i < m_connections.size());

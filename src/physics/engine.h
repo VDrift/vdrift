@@ -69,6 +69,12 @@ public:
 	/// set nitrous injection boost factor 0.0 - 1.0
 	void setNosBoost(btScalar value);
 
+	/// set available fuel [0, 1]
+	void setFuelAmount(btScalar value);
+
+	/// set available nos [0, 1]
+	void setNosAmount(btScalar value);
+
 	/// maximum possible rpm
 	btScalar getRPMLimit() const;
 
@@ -109,10 +115,10 @@ public:
 	bool getCombustion() const;
 
 	/// available fuel fraction
-	btScalar getFuel() const;
+	btScalar getFuelAmount() const;
 
 	/// available nos fraction
-	btScalar getNos() const;
+	btScalar getNosAmount() const;
 
 	/// get engine crankshaft
 	const Shaft & getShaft() const;
@@ -153,6 +159,16 @@ inline void Engine::setThrottle(btScalar value)
 inline void Engine::setNosBoost(btScalar value)
 {
 	nos_boost_factor = value;
+}
+
+inline void Engine::setFuelAmount(btScalar value)
+{
+	fuel_mass = value * info.fuel_capacity;
+}
+
+inline void Engine::setNosAmount(btScalar value)
+{
+	nos_mass = value * info.nos_mass;
 }
 
 inline btScalar Engine::getRPMLimit() const
@@ -220,12 +236,12 @@ inline bool Engine::getCombustion() const
 	return !stalled;
 }
 
-inline btScalar Engine::getFuel() const
+inline btScalar Engine::getFuelAmount() const
 {
 	return fuel_mass / info.fuel_capacity;
 }
 
-inline btScalar Engine::getNos() const
+inline btScalar Engine::getNosAmount() const
 {
 	return nos_mass / info.nos_mass;
 }

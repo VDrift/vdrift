@@ -17,40 +17,48 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _SIM_VEHICLESTATE_H
-#define _SIM_VEHICLESTATE_H
-
-#include "LinearMath/btAlignedObjectArray.h"
-#include "LinearMath/btTransform.h"
+#ifndef _SIM_VEHICLEINPUT_H
+#define _SIM_VEHICLEINPUT_H
 
 namespace sim
 {
 
-struct BodyState
+struct VehicleInput
 {
-	btTransform transform;
-	btVector3 lin_velocity;
-	btVector3 ang_velocity;
+	enum Control {STEER, THROTTLE, BRAKE, HBRAKE, CLUTCH, NOS, CTRLNUM};
+	enum Logic {STARTENG=1, RECOVER=2, TCS=4, ABS=8, AUTOCLUTCH=16, AUTOSHIFT=32};
+	float controls[CTRLNUM];	///< controls are normalized [0, 1], steering [-1, 1]
+	short shiftgear;			///< new gear offset relative to current
+	short logic;				///< vehicle logic
+
+	/// some convenience functions
+	void set(Control n, btScalar value);
+	void set(Logic n, bool value);
+	void clear();
 };
 
-struct VehicleState
+// implementation
+
+inline void VehicleInput::set(Control n, btScalar value)
 {
-	btAlignedObjectArray<btScalar> shaft_angvel;
-	btAlignedObjectArray<BodyState> body;
-	btScalar fuel_amount;
-	btScalar nos_amount;
-	btScalar brake;
-	btScalar clutch;
-	btScalar shift_time;
-	btScalar tacho_rpm;
-	int gear;
-	bool shifted;
-	bool auto_shift;
-	bool auto_clutch;
-	//bool abs_enabled;
-	//bool tcs_enabled;
-};
+	controls[n] = value;
+}
+
+inline void VehicleInput::set(Logic n, bool value)
+{
+	if (value)
+		logic |= n;
+	else
+		logic &= ~n;
+}
+
+inline void VehicleInput::clear()
+{
+	for (int i = 0; i < CTRLNUM; ++i)
+		controls[i] = 0;
+	logic = 0;
+}
 
 }
 
-#endif // _SIM_VEHICLESTATE_H
+#endif // _SIM_VEHICLEINPUT_H

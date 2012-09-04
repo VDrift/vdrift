@@ -19,6 +19,7 @@
 
 #include "vehicle.h"
 #include "vehicleinfo.h"
+#include "vehicleinput.h"
 #include "vehiclestate.h"
 #include "solveconstraintrow.h"
 #include "world.h"
@@ -60,8 +61,8 @@ Vehicle::Vehicle() :
 	shifted(true),
 	abs_active(false),
 	tcs_active(false),
-	abs(false),
-	tcs(false),
+	//abs_enabled(false),
+	//tcs_enabled(false),
 	maxangle(0),
 	maxspeed(0)
 {
@@ -149,6 +150,26 @@ void Vehicle::init(
 	//alignWithGround();
 }
 
+void Vehicle::setInput(const VehicleInput & input)
+{
+	setSteering(input.controls[VehicleInput::STEER]);
+	setThrottle(input.controls[VehicleInput::THROTTLE]);
+	setBrake(input.controls[VehicleInput::BRAKE]);
+	setHandBrake(input.controls[VehicleInput::HBRAKE]);
+	setClutch(1 - input.controls[VehicleInput::CLUTCH]);
+	setNOS(input.controls[VehicleInput::NOS]);
+
+	setGear(transmission.getGear() + input.shiftgear);
+	autoshift = (input.logic & VehicleInput::AUTOSHIFT);
+	autoclutch = (input.logic & VehicleInput::AUTOCLUTCH);
+	setABS(input.logic & VehicleInput::ABS);
+	setTCS(input.logic & VehicleInput::TCS);
+	if (input.logic & VehicleInput::STARTENG)
+		startEngine();
+	if (input.logic & VehicleInput::RECOVER)
+		rolloverRecover();
+}
+
 void Vehicle::setState(const VehicleState & state)
 {
 	int n = 1 + wheel.size() + differential.size();
@@ -164,10 +185,13 @@ void Vehicle::setState(const VehicleState & state)
 	{
 		differential[i].getShaft().setAngularVelocity(state.shaft_angvel[i + offset]);
 	}
-	transform = state.transform;
-	body->setCenterOfMassTransform(state.transform);
-	body->setLinearVelocity(state.lin_velocity);
-	body->setAngularVelocity(state.ang_velocity);
+	btAssert(state.body.size() == body->getNumChildren() + 1);
+	transform = state.body[0].transform;
+	body->setCenterOfMassTransform(state.body[0].transform);
+	body->setLinearVelocity(state.body[0].lin_velocity);
+	body->setAngularVelocity(state.body[0].ang_velocity);
+	engine.setFuelAmount(state.fuel_amount);
+	engine.setNosAmount(state.nos_amount);
 	brake_value = state.brake;
 	last_clutch = state.clutch;
 	remaining_shift_time = state.shift_time;
@@ -176,8 +200,8 @@ void Vehicle::setState(const VehicleState & state)
 	shifted = state.shifted;
 	autoshift = state.auto_shift;
 	autoclutch = state.auto_clutch;
-	abs = state.abs_enabled;
-	tcs = state.tcs_enabled;
+	//abs_enabled = state.abs_enabled;
+	//tcs_enabled = state.tcs_enabled;
 }
 
 void Vehicle::getState(VehicleState & state) const
@@ -195,9 +219,12 @@ void Vehicle::getState(VehicleState & state) const
 	{
 		state.shaft_angvel[i + offset] = differential[i].getShaft().getAngularVelocity();
 	}
-	state.transform = body->getCenterOfMassTransform();
-	state.lin_velocity = body->getLinearVelocity();
-	state.ang_velocity = body->getAngularVelocity();
+	state.body.resize(body->getNumChildren() + 1);
+	state.body[0].transform = body->getCenterOfMassTransform();
+	state.body[0].lin_velocity = body->getLinearVelocity();
+	state.body[0].ang_velocity = body->getAngularVelocity();
+	state.fuel_amount = engine.getFuelAmount();
+	state.nos_amount = engine.getNosAmount();
 	state.brake = brake_value;
 	state.clutch = last_clutch;
 	state.shift_time = remaining_shift_time;
@@ -206,74 +233,13 @@ void Vehicle::getState(VehicleState & state) const
 	state.shifted = shifted;
 	state.auto_shift = autoshift;
 	state.auto_clutch = autoclutch;
-	state.abs_enabled = abs;
-	state.tcs_enabled = tcs;
+	//state.abs_enabled = abs_enabled;
+	//state.tcs_enabled = tcs_enabled;
 }
 
 void Vehicle::debugDraw(btIDebugDraw*)
 {
 	// nothing to do here
-}
-
-void Vehicle::startEngine()
-{
-	//clutch.setPosition(0);
-	engine.start();
-}
-
-void Vehicle::setGear(int value)
-{
-	if (shifted &&
-		value != transmission.getGear() &&
-		value <= transmission.getForwardGears() &&
-		value >= -transmission.getReverseGears())
-	{
-		remaining_shift_time = transmission.getShiftTime();
-		shift_gear = value;
-		shifted = false;
-	}
-}
-
-void Vehicle::setThrottle(btScalar value)
-{
-	engine.setThrottle(value);
-}
-
-void Vehicle::setNOS(btScalar value)
-{
-	engine.setNosBoost(value);
-}
-
-void Vehicle::setClutch(btScalar value)
-{
-	clutch.setPosition(value);
-}
-
-void Vehicle::setBrake(btScalar value)
-{
-	brake_value = value;
-	for (int i = 0; i < wheel.size(); ++i)
-	{
-		wheel[i].brake.setBrakeFactor(value);
-	}
-}
-
-void Vehicle::setHandBrake(btScalar value)
-{
-	for (int i = 0; i < wheel.size(); ++i)
-	{
-		wheel[i].brake.setHandbrakeFactor(value);
-	}
-}
-
-void Vehicle::setAutoClutch(bool value)
-{
-	autoclutch = value;
-}
-
-void Vehicle::setAutoShift(bool value)
-{
-	autoshift = value;
 }
 
 const btTransform & Vehicle::getTransform() const
@@ -314,92 +280,6 @@ btScalar Vehicle::getSpeed() const
 btScalar Vehicle::getSpeedMPS() const
 {
 	return wheel[0].getRadius() * wheel[0].shaft.getAngularVelocity();
-}
-
-void Vehicle::setABS(bool value)
-{
-	abs = value;
-	for (int i = 0; i < wheel.size(); ++i)
-	{
-		wheel[i].setABS(value);
-	}
-}
-
-void Vehicle::setTCS(bool value)
-{
-	tcs = value;
-	for (int i = 0; i < wheel.size(); ++i)
-	{
-		wheel[i].setTCS(value);
-	}
-}
-
-void Vehicle::setPosition(const btVector3 & position)
-{
-	body->translate(position - body->getCenterOfMassPosition());
-	transform.setOrigin(position);
-}
-
-void Vehicle::alignWithGround()
-{
-	btScalar ray_len = 8;
-	btScalar min_height = 0;
-	bool no_min_height = true;
-	for (int i = 0; i < wheel.size(); ++i)
-	{
-		wheel[i].updateDisplacement(ray_len);
-		btScalar height = wheel[i].ray.getDepth() - ray_len;
-		if (height < min_height || no_min_height)
-		{
-			min_height = height;
-			no_min_height = false;
-		}
-	}
-
-	btVector3 delta = getDownVector() * min_height;
-	btVector3 trimmed_position = body->getCenterOfMassPosition() + delta;
-	setPosition(trimmed_position);
-	for (int i = 0; i < wheel.size(); ++i)
-	{
-		wheel[i].updateDisplacement(ray_len);
-	}
-
-	body->setAngularVelocity(btVector3(0, 0, 0));
-	body->setLinearVelocity(btVector3(0, 0, 0));
-}
-
-// ugh, ugly code
-void Vehicle::rolloverRecover()
-{
-	btTransform transform = body->getCenterOfMassTransform();
-
-	btVector3 z(direction::up);
-	btVector3 y_car = transform.getBasis() * direction::forward;
-	y_car = y_car - z * z.dot(y_car);
-	y_car.normalize();
-
-	btVector3 z_car = transform.getBasis() * direction::up;
-	z_car = z_car - y_car * y_car.dot(z_car);
-	z_car.normalize();
-
-	btScalar angle = z_car.angle(z);
-	if (fabs(angle) < M_PI / 4.0) return;
-
-	btQuaternion rot(y_car, angle);
-	rot = rot * transform.getRotation();
-	transform.setRotation(rot);
-
-	body->setCenterOfMassTransform(transform);
-
-	alignWithGround();
-}
-
-void Vehicle::setSteering(const btScalar value)
-{
-	for (int i = 0; i < wheel.size(); ++i)
-	{
-		wheel[i].suspension.setSteering(value);
-	}
 }
 
 btScalar Vehicle::getBrakingDistance(btScalar target_speed) const
@@ -466,11 +346,6 @@ btScalar Vehicle::getDragCoefficient() const
 	return coeff;
 }
 
-btVector3 Vehicle::getDownVector() const
-{
-	return -body->getCenterOfMassTransform().getBasis().getColumn(2);
-}
-
 void Vehicle::updateAction(btCollisionWorld * collisionWorld, btScalar dt)
 {
 	updateAerodynamics(dt);
@@ -488,6 +363,159 @@ void Vehicle::updateAction(btCollisionWorld * collisionWorld, btScalar dt)
 	body->proceedToTransform(transform);
 
 	updateWheelTransform(dt);
+}
+
+btVector3 Vehicle::getDownVector() const
+{
+	return -body->getCenterOfMassTransform().getBasis().getColumn(2);
+}
+
+void Vehicle::setPosition(const btVector3 & position)
+{
+	body->translate(position - body->getCenterOfMassPosition());
+	transform.setOrigin(position);
+}
+
+void Vehicle::alignWithGround()
+{
+	btScalar ray_len = 8;
+	btScalar min_height = 0;
+	bool no_min_height = true;
+	for (int i = 0; i < wheel.size(); ++i)
+	{
+		wheel[i].updateDisplacement(ray_len);
+		btScalar height = wheel[i].ray.getDepth() - ray_len;
+		if (height < min_height || no_min_height)
+		{
+			min_height = height;
+			no_min_height = false;
+		}
+	}
+
+	btVector3 delta = getDownVector() * min_height;
+	btVector3 trimmed_position = body->getCenterOfMassPosition() + delta;
+	setPosition(trimmed_position);
+	for (int i = 0; i < wheel.size(); ++i)
+	{
+		wheel[i].updateDisplacement(ray_len);
+	}
+
+	body->setAngularVelocity(btVector3(0, 0, 0));
+	body->setLinearVelocity(btVector3(0, 0, 0));
+}
+
+void Vehicle::rolloverRecover()
+{
+	btTransform transform = body->getCenterOfMassTransform();
+
+	btVector3 z(direction::up);
+	btVector3 y_car = transform.getBasis() * direction::forward;
+	y_car = y_car - z * z.dot(y_car);
+	y_car.normalize();
+
+	btVector3 z_car = transform.getBasis() * direction::up;
+	z_car = z_car - y_car * y_car.dot(z_car);
+	z_car.normalize();
+
+	btScalar angle = z_car.angle(z);
+	if (fabs(angle) < M_PI / 4.0) return;
+
+	btQuaternion rot(y_car, angle);
+	rot = rot * transform.getRotation();
+	transform.setRotation(rot);
+
+	body->setCenterOfMassTransform(transform);
+
+	alignWithGround();
+}
+
+void Vehicle::startEngine()
+{
+	if (!engine.getCombustion())
+	{
+		engine.start();
+	}
+}
+
+void Vehicle::setSteering(const btScalar value)
+{
+	for (int i = 0; i < wheel.size(); ++i)
+	{
+		wheel[i].suspension.setSteering(value);
+	}
+}
+
+void Vehicle::setGear(int value)
+{
+	if (shifted &&
+		value != transmission.getGear() &&
+		value <= transmission.getForwardGears() &&
+		value >= -transmission.getReverseGears())
+	{
+		remaining_shift_time = transmission.getShiftTime();
+		shift_gear = value;
+		shifted = false;
+	}
+}
+
+void Vehicle::setThrottle(btScalar value)
+{
+	engine.setThrottle(value);
+}
+
+void Vehicle::setNOS(btScalar value)
+{
+	engine.setNosBoost(value);
+}
+
+void Vehicle::setClutch(btScalar value)
+{
+	clutch.setPosition(value);
+}
+
+void Vehicle::setBrake(btScalar value)
+{
+	brake_value = value;
+	for (int i = 0; i < wheel.size(); ++i)
+	{
+		wheel[i].brake.setBrakeFactor(value);
+	}
+}
+
+void Vehicle::setHandBrake(btScalar value)
+{
+	for (int i = 0; i < wheel.size(); ++i)
+	{
+		wheel[i].brake.setHandbrakeFactor(value);
+	}
+}
+
+void Vehicle::setAutoClutch(bool value)
+{
+	autoclutch = value;
+}
+
+void Vehicle::setAutoShift(bool value)
+{
+	autoshift = value;
+}
+
+void Vehicle::setABS(bool value)
+{
+	//abs_enabled = value;
+	for (int i = 0; i < wheel.size(); ++i)
+	{
+		wheel[i].setABS(value);
+	}
+}
+
+void Vehicle::setTCS(bool value)
+{
+	//tcs_enabled = value;
+	for (int i = 0; i < wheel.size(); ++i)
+	{
+		wheel[i].setTCS(value);
+	}
 }
 
 void Vehicle::updateDynamics(btScalar dt)

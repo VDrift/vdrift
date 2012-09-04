@@ -1619,9 +1619,10 @@ bool GAME::LoadCar(
 
 	if (!car.LoadPhysics(
 		*carconf, car_dir, start_position, start_orientation,
-		settings.GetABS() || isai, settings.GetTCS() || isai,
+		settings.GetAutoClutch() | isai, settings.GetAutoShift() | isai,
+		settings.GetABS() | isai, settings.GetTCS() | isai,
 		settings.GetVehicleDamage(), dynamics,
-        content, error_output))
+		content, error_output))
 	{
 		error_output << "Failed to load physics for car " << car_name << std::endl;
 		return false;
@@ -1635,10 +1636,6 @@ bool GAME::LoadCar(
 
 		// Setup auto clutch and auto shift.
 		ProcessNewSettings();
-
-		// Shift into first gear if autoshift enabled.
-		if (carcontrols_local.first && settings.GetAutoShift())
-			carcontrols_local.first->SetGear(1);
 	}
 
 	return true;

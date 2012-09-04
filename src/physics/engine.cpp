@@ -59,7 +59,7 @@ void Engine::init(const EngineInfo & info)
 	fuel_mass = info.fuel_mass;
 	nos_mass = info.nos_mass;
 	rev_limit_exceeded = false;
-	stalled = false;
+	stalled = true;
 }
 
 void Engine::start()

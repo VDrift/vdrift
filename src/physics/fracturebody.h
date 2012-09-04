@@ -42,6 +42,9 @@ public:
 	/// returns >= 0 if shape is connected
 	int getConnectionId(int shape_id) const;
 
+	/// return number if children bodies
+	int getNumChildren() const;
+
 	/// true if child connected
 	bool isChildConnected(int i) const;
 
@@ -94,7 +97,7 @@ struct FractureBodyInfo
 	btVector3 m_massCenter;
 	btScalar m_mass;
 
-    FractureBodyInfo(btAlignedObjectArray<MotionState*>& m_states);	
+    FractureBodyInfo(btAlignedObjectArray<MotionState*>& m_states);
 
 	void addMass(
 		const btVector3& position,

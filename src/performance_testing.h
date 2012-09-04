@@ -21,6 +21,7 @@
 #define _PERFORMANCE_TESTING_H
 
 #include "physics/vehicle.h"
+#include "physics/vehicleinput.h"
 #include "physics/vehiclestate.h"
 #include "physics/surface.h"
 
@@ -43,6 +44,7 @@ public:
 private:
 	sim::World & world;
 	sim::Surface surface;
+	sim::VehicleInput carinput;
 	sim::VehicleState carstate;
 	sim::Vehicle car;
 
@@ -52,9 +54,12 @@ private:
 
 	void ResetCar();
 
-	void TestMaxSpeed(std::ostream & info_output, std::ostream & error_output);
+	/// return max reached speed in m/s
+	float TestMaxSpeed(std::ostream & info_output, std::ostream & error_output);
 
-	void TestStoppingDistance(bool abs, std::ostream & info_output, std::ostream & error_output);
+	void TestStoppingDistance(
+		bool abs, float brakestartspeed,
+		std::ostream & info_output, std::ostream & error_output);
 };
 
 #endif
