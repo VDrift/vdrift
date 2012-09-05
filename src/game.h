@@ -96,11 +96,11 @@ private:
 
 	void AdvanceGameLogic();
 
-	void UpdateCar(CAR & car, double dt);
+	void UpdateCar(int carid, CAR & car, double dt);
 
 	void UpdateDriftScore(CAR & car, double dt);
 
-	void UpdateCarInputs(CAR & car);
+	void UpdateCarInputs(int carid, CAR & car);
 
 	void UpdateTimer();
 
