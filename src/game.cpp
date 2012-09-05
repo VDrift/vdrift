@@ -905,9 +905,10 @@ void GAME::AdvanceGameLogic()
 		PROFILER.endBlock("physics");
 
 		PROFILER.beginBlock("car");
+		unsigned carid = 0;
 		for (std::list <CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
 		{
-			UpdateCar(*i, TickPeriod());
+			UpdateCar(carid++, *i, TickPeriod());
 		}
 		PROFILER.endBlock("car");
 
@@ -1262,64 +1263,60 @@ void GAME::UpdateStartList(unsigned i, const std::string & value)
 	gui.SetLabelText("SingleRace", s.str(), value);
 }
 
-void GAME::UpdateCar(CAR & car, double dt)
+void GAME::UpdateCar(int carid, CAR & car, double dt)
 {
 	car.Update(dt);
-	UpdateCarInputs(car);
+	UpdateCarInputs(carid, car);
 	AddTireSmokeParticles(dt, car);
 	UpdateDriftScore(car, dt);
 }
 
-void GAME::UpdateCarInputs(CAR & car)
+void GAME::UpdateCarInputs(int carid, CAR & car)
 {
 	std::vector <float> carinputs(CARINPUT::INVALID, 0.0f);
-	if (carcontrols_local.first == &car)
+	if (replay.GetPlaying())
 	{
-		if (replay.GetPlaying())
+		const std::vector<float> inputs = replay.PlayFrame(carid, car);
+		assert(inputs.size() <= carinputs.size());
+		for (size_t i = 0; i < inputs.size(); ++i)
 		{
-			const std::vector <float> & inputarray = replay.PlayFrame(car);
-			assert(inputarray.size() <= carinputs.size());
-			for (size_t i = 0; i < inputarray.size(); ++i)
-			{
-				carinputs[i] = inputarray[i];
-			}
+			carinputs[i] = inputs[i];
 		}
-		else
-		{
-			carinputs = carcontrols_local.second.GetInputs();
-
+	}
+	else if (carcontrols_local.first == &car)
+	{
+		carinputs = carcontrols_local.second.GetInputs();
 #ifdef VISUALIZE_AI_DEBUG
-			// It allows to activate the AI on the player car with F9 button.
-			// AI will override player inputs.
-			// This is useful for bringing the car in strange
-			// situations and test how the AI solves it.
-			static bool aiControlled = false;
-			static bool buttonPressed = false;
-			if (buttonPressed != eventsystem.GetKeyState(SDLK_F9).just_down)
+		// It allows to activate the AI on the player car with F9 button.
+		// AI will override player inputs.
+		// This is useful for bringing the car in strange
+		// situations and test how the AI solves it.
+		static bool aiControlled = false;
+		static bool buttonPressed = false;
+		if (buttonPressed != eventsystem.GetKeyState(SDLK_F9).just_down)
+		{
+			buttonPressed = !buttonPressed;
+			if (buttonPressed)
 			{
-				buttonPressed = !buttonPressed;
-				if (buttonPressed)
+				aiControlled = !aiControlled;
+				if (aiControlled)
 				{
-					aiControlled = !aiControlled;
-					if (aiControlled)
-					{
-						info_output << "Switching to AI controlled player." << std::endl;
-						ai.add_car(&car, 1.0);
-					}
-					else
-					{
-						info_output << "Switching to user controlled player." << std::endl;
-						ai.remove_car(&car);
-					}
+					info_output << "Switching to AI controlled player." << std::endl;
+					ai.add_car(&car, 1.0);
+				}
+				else
+				{
+					info_output << "Switching to user controlled player." << std::endl;
+					ai.remove_car(&car);
 				}
 			}
-			if(aiControlled)
-			{
-				carinputs = ai.GetInputs(&car);
-				assert(carinputs.size() == CARINPUT::INVALID);
-			}
-#endif
 		}
+		if (aiControlled)
+		{
+			carinputs = ai.GetInputs(&car);
+			assert(carinputs.size() == CARINPUT::INVALID);
+		}
+#endif
 	}
 	else
 	{
@@ -1327,19 +1324,23 @@ void GAME::UpdateCarInputs(CAR & car)
 		assert(carinputs.size() == CARINPUT::INVALID);
 	}
 
-	// Force brake and clutch during staging and once the race is over.
-	if (timer.Staging() || ((int)timer.GetCurrentLap(cartimerids[&car]) > race_laps && race_laps > 0))
+	// Force brake once the race is over.
+	if (timer.Staging() ||  ((int)timer.GetCurrentLap(cartimerids[&car]) > race_laps && race_laps > 0))
 	{
 		carinputs[CARINPUT::BRAKE] = 1.0;
 	}
 
 	car.HandleInputs(carinputs);
 
+	// Record car state.
+	if (replay.GetRecording())
+	{
+		replay.RecordFrame(carid, carinputs, car);
+	}
+
+	// Local player input processing starts here.
 	if (carcontrols_local.first != &car)
 		return;
-
-	if (replay.GetRecording())
-		replay.RecordFrame(carinputs, car);
 
 	inputgraph.Update(carinputs);
 
@@ -1454,9 +1455,12 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	// Start out with no camera.
 	active_camera = NULL;
 
+	// Get cars count.
+	size_t cars_num = addopponents ? cars_name.size() : 1;
+
 	// Set track, car config file.
 	std::string trackname = settings.GetTrack();
-	std::string carfile;
+	std::vector<std::string> cars_config(cars_name.size());
 
 	if (playreplay)
 	{
@@ -1473,10 +1477,11 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 			return false;
 
 		trackname = replay.GetTrack();
-		carfile = replay.GetCarFile();
-		cars_name[0] = replay.GetCarType();
-		cars_paint[0] = replay.GetCarPaint();
-		cars_color_hsv[0] = replay.GetCarColorHSV();
+		cars_name = replay.GetCarTypes();
+		cars_paint = replay.GetCarPaints();
+		cars_config = replay.GetCarFiles();
+		cars_color_hsv = replay.GetCarColors();
+		cars_num = replay.GetCarsRecorded();
 	}
 
 	// Load track.
@@ -1487,19 +1492,21 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	}
 
 	// Load cars.
-	size_t cars_num = (addopponents) ? cars_name.size() : 1;
 	for (size_t i = 0; i < cars_num; ++i)
 	{
 		bool isai = (i > 0);
 
 		if (!LoadCar(cars_name[i], cars_paint[i], cars_color_hsv[i],
-			track.GetStart(i).first, track.GetStart(i).second, !isai, isai, carfile))
+			track.GetStart(i).first, track.GetStart(i).second,
+			!isai, isai, cars_config[i]))
+		{
 			return false;
+		}
 
 		if (isai)
+		{
 			ai.add_car(&cars.back(), cars_ai_level[i], cars_ai_type[i]);
-		else
-			carfile.clear();
+		}
 	}
 
 	// Load timer.
@@ -1525,25 +1532,37 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	gui.Deactivate();
 	ShowHUD(true);
 	if (settings.GetMouseGrab())
+	{
 		window.ShowMouseCursor(false);
+	}
 
 	// Record a replay.
 	if (settings.GetRecordReplay() && !playreplay)
 	{
-		assert(carcontrols_local.first);
-		const std::string cartype = carcontrols_local.first->GetCarType();
-		const std::string cardir = pathmanager.GetCarsDir() + "/" + cars_name[0];
+		//std::vector<std::string> cars_config(cars_name.size());
+		std::string prev_car_name;
+		for (size_t i = 0; i < cars_name.size(); ++i)
+		{
+			if (prev_car_name == cars_name[i])
+			{
+				cars_config[i] = cars_config[i-1];
+			}
+			else
+			{
+				const std::string cardir = pathmanager.GetCarsDir() + "/" + cars_name[i];
+				std::tr1::shared_ptr<PTree> carcfg;
+				content.load(carcfg, cardir, cars_name[i] + ".car");
 
-		std::tr1::shared_ptr<PTree> carconfig;
-		content.load(carconfig, cardir, cars_name[0] + ".car");
+				std::stringstream carstream;
+				write_ini(*carcfg, carstream);
+				cars_config[i] = carstream.str();
 
-		replay.StartRecording(
-			cartype,
-			cars_paint[0],
-			cars_color_hsv[0],
-			*carconfig,
-			settings.GetTrack(),
-			error_output);
+				prev_car_name = cars_name[i];
+			}
+		}
+
+		replay.StartRecording(cars_name, cars_paint, cars_config, cars_color_hsv,
+			settings.GetTrack(), error_output);
 	}
 
 	content.sweep();
@@ -2388,7 +2407,7 @@ void GAME::LeaveGame()
 	}
 
 	if (replay.GetPlaying())
-		replay.StopPlaying();
+		replay.Reset();
 
 	gui.SetInGame(false);
 	gui.ActivatePage("Main", 0.25, error_output);
