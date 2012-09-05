@@ -762,7 +762,7 @@ void GAME::BeginDraw()
 	TraverseScene<false>(trackmap.GetNode(), graphics_interface->GetDynamicDrawlist());
 	TraverseScene<false>(inputgraph.GetNode(), graphics_interface->GetDynamicDrawlist());
 	TraverseScene<false>(tire_smoke.GetNode(), graphics_interface->GetDynamicDrawlist());
-	for (std::list <CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
+	for (std::vector<CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
 	{
 		TraverseScene<false>(i->GetNode(), graphics_interface->GetDynamicDrawlist());
 	}
@@ -897,10 +897,9 @@ void GAME::AdvanceGameLogic()
 		PROFILER.endBlock("physics");
 
 		PROFILER.beginBlock("car");
-		unsigned carid = 0;
-		for (std::list <CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
+		for (size_t i = 0; i < cars.size(); ++i)
 		{
-			UpdateCar(carid++, *i, GetTimeStep());
+			UpdateCar(i, cars[i], GetTimeStep());
 		}
 		PROFILER.endBlock("car");
 
@@ -1008,7 +1007,7 @@ void GAME::ProcessGameInputs()
 void GAME::UpdateTimer()
 {
 	// Check for cars doing a lap.
-	for (std::list <CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
+	for (std::vector<CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
 	{
 		int carid = cartimerids[&(*i)];
 
@@ -1091,7 +1090,7 @@ void GAME::UpdateTimer()
 void GAME::UpdateTrackMap()
 {
 	std::list <std::pair<MATHVECTOR <float, 3>, bool> > carpositions;
-	for (std::list <CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
+	for (std::vector<CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
 	{
 		bool playercar = (carcontrols_local.first == &(*i));
 		carpositions.push_back(std::make_pair(i->GetCenterOfMassPosition(), playercar));
@@ -1485,6 +1484,7 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	}
 
 	// Load cars.
+	cars.reserve(cars_num); // reserve to avoid reallocations
 	for (size_t i = 0; i < cars_num; ++i)
 	{
 		bool isai = (i > 0);
@@ -1512,7 +1512,7 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 
 	// Add cars to the timer system.
 	int count = 0;
-	for (std::list<CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
+	for (std::vector<CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
 	{
 		cartimerids[&(*i)] = timer.AddCar(i->GetCarType());
 		if (carcontrols_local.first == &(*i))

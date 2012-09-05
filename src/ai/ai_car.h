@@ -23,7 +23,6 @@
 #include "carinput.h"
 
 #include <vector>
-#include <list>
 
 class CAR;
 
@@ -48,7 +47,7 @@ public:
 	float						GetDifficulty() { return difficulty; }
 	const std::vector<float>&	GetInputs() { return inputs; }
 
-	virtual void Update(float dt, const std::list<CAR>& othercars) = 0;
+	virtual void Update(float dt, const std::vector<CAR> & cars) = 0;
 
 	/// This is optional for drawing debug stuff.
 	/// It will only be called, when VISUALIZE_AI_DEBUG macro is defined.

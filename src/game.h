@@ -295,7 +295,7 @@ private:
 	CAMERA * active_camera;
 	std::pair <CAR *, CARCONTROLMAP> carcontrols_local;
 	std::map <CAR *, int> cartimerids;
-	std::list <CAR> cars;
+	std::vector <CAR> cars;	// Warning: CAR is not safely copyable!
 	int race_laps;
 	bool practice;
 

@@ -96,7 +96,7 @@ float AI_Car_Standard::RateLimit(float old_value, float new_value, float rate_li
 		return new_value;
 }
 
-void AI_Car_Standard::Update(float dt, const std::list <CAR> & checkcars)
+void AI_Car_Standard::Update(float dt, const std::vector<CAR> & checkcars)
 {
 	analyzeOthers(dt, checkcars);
 	updateGasBrake();
@@ -555,7 +555,7 @@ float AI_Car_Standard::brakeFromOthers(float speed_diff)
 	return bias;
 }
 
-void AI_Car_Standard::analyzeOthers(float dt, const std::list <CAR> & checkcars)
+void AI_Car_Standard::analyzeOthers(float dt, const std::vector<CAR> & checkcars)
 {
 	//const float speed = std::max(1.0f,car->GetVelocity().Magnitude());
 	const float half_carlength = 1.25; //in meters
@@ -569,7 +569,7 @@ void AI_Car_Standard::analyzeOthers(float dt, const std::list <CAR> & checkcars)
 	//avoidancedraw->ClearLine();
 #endif
 
-	for (std::list <CAR>::const_iterator i = checkcars.begin(); i != checkcars.end(); ++i)
+	for (std::vector<CAR>::const_iterator i = checkcars.begin(); i != checkcars.end(); ++i)
 	{
 		if (&(*i) != car)
 		{

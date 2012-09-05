@@ -113,7 +113,7 @@ float AI_Car_Experimental::RateLimit(float old_value, float new_value, float rat
 		return new_value;
 }
 
-void AI_Car_Experimental::Update(float dt, const std::list <CAR> & checkcars)
+void AI_Car_Experimental::Update(float dt, const std::vector<CAR> & checkcars)
 {
 	float lastThrottle = inputs[CARINPUT::THROTTLE];
 	float lastBreak = inputs[CARINPUT::BRAKE];
@@ -797,7 +797,7 @@ float AI_Car_Experimental::brakeFromOthers(float speed_diff)
 	return bias;
 }
 
-void AI_Car_Experimental::analyzeOthers(float dt, const std::list <CAR> & checkcars)
+void AI_Car_Experimental::analyzeOthers(float dt, const std::vector<CAR> & checkcars)
 {
 	//const float speed = std::max(1.0f,car->GetVelocity().Magnitude());
 	const float half_carlength = 1.25; //in meters
@@ -811,7 +811,7 @@ void AI_Car_Experimental::analyzeOthers(float dt, const std::list <CAR> & checkc
 	//avoidancedraw->ClearLine();
 #endif
 
-	for (std::list <CAR>::const_iterator i = checkcars.begin(); i != checkcars.end(); ++i)
+	for (std::vector<CAR>::const_iterator i = checkcars.begin(); i != checkcars.end(); ++i)
 	{
 		if (&(*i) != car)
 		{

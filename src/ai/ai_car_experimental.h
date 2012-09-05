@@ -28,7 +28,6 @@
 #include "bezier.h"
 
 #include <vector>
-#include <list>
 #include <map>
 
 class CAR;
@@ -46,7 +45,7 @@ public:
 
 	~AI_Car_Experimental();
 
-	void Update(float dt, const std::list <CAR> & checkcars);
+	void Update(float dt, const std::vector<CAR> & checkcars);
 
 #ifdef VISUALIZE_AI_DEBUG
 	void Visualize();
@@ -59,7 +58,7 @@ private:
 
 	void updateSteer();
 
-	void analyzeOthers(float dt, const std::list <CAR> & othercars);
+	void analyzeOthers(float dt, const std::vector<CAR> & othercars);
 
 	float steerAwayFromOthers(); ///< returns a float that should be added into the steering wheel command
 
