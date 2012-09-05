@@ -1114,18 +1114,9 @@ bool TRACK::LOADER::LoadLapSections(const PTree & info)
 	// calculate distance from starting line for each patch to account for those tracks
 	// where starting line is not on the 1st patch of the road
 	// note this only updates the road with lap sequence 0 on it
-	BEZIER* start_patch = const_cast <BEZIER *> (data.lap[0]);
-	start_patch->dist_from_start = 0.0;
-	BEZIER* curr_patch = start_patch->next_patch;
-	float total_dist = start_patch->length;
-	int count = 0;
-	while ( curr_patch && curr_patch != start_patch)
-	{
-		count++;
-		curr_patch->dist_from_start = total_dist;
-		total_dist += curr_patch->length;
-		curr_patch = curr_patch->next_patch;
-	}
+	BEZIER * start_patch = const_cast<BEZIER *>(data.lap[0]);
+	if (start_patch)
+		BEZIER::CalculateDistFromStart(*start_patch);
 
 	info_output << "Track timing sectors: " << lapmarkers << std::endl;
 	return true;

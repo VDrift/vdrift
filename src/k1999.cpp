@@ -328,10 +328,7 @@ void K1999::UpdateRoadStrip(ROADSTRIP & road)
 
 	for (std::vector<ROADPATCH>::iterator i = patchlist.begin(); i != patchlist.end(); ++i)
 	{
-		i->SetTrackCurvature(tRInverse[count]);
-		i->SetRacingLine(i->GetPatch().GetPoint(3,0)*(1.0-tLane[count]) + i->GetPatch().GetPoint(3,3)*(tLane[count]));
-		//std::cout << i->GetPatch().GetPoint(3,0)*(1.0-tLane[count]) + i->GetPatch().GetPoint(3,3)*(tLane[count]) << std::endl;
-
+		i->GetPatch().SetRacingLine(tLane[count], tRInverse[count]);
 		count++;
 	}
 

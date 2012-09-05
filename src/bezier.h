@@ -25,15 +25,8 @@
 
 #include <iostream>
 
-class AI;
-class TRACK;
-
 class BEZIER
 {
-friend class AI;
-friend class TRACK;
-friend class ROADPATCH;
-
 public:
 	BEZIER();
 
@@ -60,14 +53,21 @@ public:
 	/// will modify point[1] and point[2]
 	void FitMidPoint(MATHVECTOR <float, 3> p[]);
 
-	/// attach this bezier and the other bezier by moving them and adjusting control points as necessary.
+	/// attach this bezier and the other bezier by moving them
+	/// and adjusting control points as necessary.
 	/// note that the other patch will be modified
-	void Attach(BEZIER & other, bool reverse = false);
+	void Attach(BEZIER & other);
 
-	///return true if the ray starting at the given origin going in the given direction intersects this bezier.
+	/// set racing line, position as width fraction between BR an BL points
+	void SetRacingLine(float width_fraction, float curvature);
+
+	/// return true if the ray starting at the given origin going in the given direction intersects this bezier.
 	/// output the contact point and normal to the given outtri and normal variables.
-	bool CollideSubDivQuadSimple(const MATHVECTOR <float, 3> & origin, const MATHVECTOR <float, 3> & direction, MATHVECTOR <float, 3> &outtri) const;
-	bool CollideSubDivQuadSimpleNorm(const MATHVECTOR <float, 3> & origin, const MATHVECTOR <float, 3> & direction, MATHVECTOR <float, 3> &outtri, MATHVECTOR <float, 3> & normal) const;
+	bool CollideSubDivQuadSimpleNorm(
+		const MATHVECTOR <float, 3> & origin,
+		const MATHVECTOR <float, 3> & direction,
+		MATHVECTOR <float, 3> & outtri,
+		MATHVECTOR <float, 3> & normal) const;
 
 	/// read/write IO operations (ascii format)
 	void ReadFrom(std::istream & openfile);
@@ -101,34 +101,54 @@ public:
 	AABB <float> GetAABB() const;
 
 	/// return the 3D point on the bezier surface at the given normalized coordinates px and py
-	MATHVECTOR <float, 3> SurfCoord(float px, float py) const;
+	MATHVECTOR <float, 3> SurfPoint(float px, float py) const;
 
 	/// return the normal of the bezier surface at the given normalized coordinates px and py
 	MATHVECTOR <float, 3> SurfNorm(float px, float py) const;
 
+	/// get total distance from first patch
+	/// for a closed track the first patch contains total track length
 	float GetDistFromStart() const;
 
+	/// get next patch, zero if no followup patches
 	const BEZIER * GetNextPatch() const;
 
+	/// get next closest patch from point
 	const BEZIER * GetNextClosestPatch(const MATHVECTOR<float, 3> & point) const;
 
-	const MATHVECTOR <float, 3> & GetRacingLine() const;
+	/// patch width at front
+	float GetTrackWidth() const;
 
+	/// track radius = 1 / curvature at front center
 	float GetTrackRadius() const;
 
+	/// get racing line point
+	const MATHVECTOR <float, 3> & GetRacingLine() const;
+
+	/// get racing line width fraction
+	float GetRacingLineFraction() const;
+
+	/// get 1 / racing_line_curvature
+	float GetRacingLineRadius() const;
+
+	/// check if bezier has a racing line
 	bool HasRacingline() const;
 
-private:
-	MATHVECTOR <float, 3> points[4][4];
-	float length;
-	float dist_from_start;
+	/// iterate trough patches, recalculate distance from start
+	static void CalculateDistFromStart(BEZIER & start_patch);
 
-	BEZIER *next_patch;
-	float track_radius;
-	float track_curvature;
-	int turn; //-1 - this is a left turn, +1 - a right turn, 0 - straight
-	MATHVECTOR <float, 3> racing_line;
-	bool have_racingline;
+private:
+	MATHVECTOR <float, 3> points[4][4];	///< 16 patch control points
+	float length;						///< patch length along center line
+	float width;						///< patch width at back
+	float radius;						///< 1 / curvature at back center
+	float dist_from_start;				///< accumulated length
+	BEZIER * next_patch;				///< attached patch
+
+	MATHVECTOR <float, 3> racing_line;	///< racing line point
+	float racing_line_fraction;			///< racing_line = lerp(bl, br, fraction)
+	float racing_line_radius;			///< 1 / racing_line_curvature
+	bool have_racingline;				///< flag wheter racing line is set
 
 	/// return the bernstein given the normalized coordinate u (zero to one) and an array of four points p
 	MATHVECTOR <float, 3> Bernstein(float u, const MATHVECTOR <float, 3> p[]) const;
@@ -151,6 +171,14 @@ private:
 std::ostream & operator << (std::ostream & os, const BEZIER & b);
 
 // implementation
+
+inline void BEZIER::SetRacingLine(float width_fraction, float curvature)
+{
+	have_racingline = true;
+	racing_line = GetBL() * (1.0 - width_fraction) + GetBR() * width_fraction;
+	racing_line_fraction = width_fraction;
+	racing_line_radius = (fabs(curvature) > 1E-4) ? 1 / curvature : 1E4;
+}
 
 inline const MATHVECTOR <float, 3> & BEZIER::GetFL() const
 {
@@ -197,14 +225,29 @@ inline const BEZIER * BEZIER::GetNextPatch() const
 	return next_patch;
 }
 
+inline float BEZIER::GetTrackWidth() const
+{
+	return width;
+}
+
+inline float BEZIER::GetTrackRadius() const
+{
+	return radius;
+}
+
 inline const MATHVECTOR <float, 3> & BEZIER::GetRacingLine() const
 {
 	return racing_line;
 }
 
-inline float BEZIER::GetTrackRadius() const
+inline float BEZIER::GetRacingLineFraction() const
 {
-	return track_radius;
+	return racing_line_fraction;
+}
+
+inline float BEZIER::GetRacingLineRadius() const
+{
+	return racing_line_radius;
 }
 
 inline bool BEZIER::HasRacingline() const

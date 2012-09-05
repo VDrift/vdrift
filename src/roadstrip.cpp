@@ -20,7 +20,7 @@
 #include "roadstrip.h"
 #include <algorithm>
 
-ROADSTRIP::ROADSTRIP() : 
+ROADSTRIP::ROADSTRIP() :
 	closed(false)
 {
 	// ctor
@@ -43,23 +43,18 @@ bool ROADSTRIP::ReadFrom(
 	int badcount = 0;
 	for (int i = 0; i < num; ++i)
 	{
-		BEZIER * prevbezier = 0;
-		if (!patches.empty()) prevbezier = &patches.back().GetPatch();
-
 		patches.push_back(ROADPATCH());
 		patches.back().GetPatch().ReadFrom(openfile);
-
-		if (prevbezier) prevbezier->Attach(patches.back().GetPatch());
-
 		if (patches.back().GetPatch().CheckForProblems())
 		{
 			badcount++;
 			patches.pop_back();
 		}
 	}
-
 	if (badcount > 0)
+	{
 		error_output << "Rejected " << badcount << " bezier patch(es) from roadstrip due to errors" << std::endl;
+	}
 
 	// Reverse patches.
 	if (reverse)
@@ -154,7 +149,7 @@ void ROADSTRIP::CreateRacingLine(
 		std::vector<ROADPATCH>::iterator n = i + 1;
 		if (n == patches.end())
 			n = patches.begin();
-		
+
 		i->AddRacinglineScenenode(parentnode, *n, racingline_texture);
 	}
 }
