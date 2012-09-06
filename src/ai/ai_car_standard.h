@@ -22,8 +22,6 @@
 
 #include "ai_car.h"
 #include "ai_factory.h"
-#include "carinput.h"
-#include "reseatable_reference.h"
 #include "graphics/scenenode.h"
 #include "bezier.h"
 
@@ -42,45 +40,13 @@ public:
 
 	~AI_Car_Standard();
 
-	void Update(float dt, const std::vector<CAR> & checkcars);
+	void Update(float dt, const std::vector<CAR> & cars);
 
 #ifdef VISUALIZE_AI_DEBUG
 	void Visualize();
 #endif
 
 private:
-	float calcSpeedLimit(const BEZIER * patch, const BEZIER * nextpatch, float extraradius) const;
-
-	void updateGasBrake();
-
-	void updateSteer();
-
-	void analyzeOthers(float dt, const std::vector<CAR> & othercars);
-
-	float steerAwayFromOthers(); ///< returns a float that should be added into the steering wheel command
-
-	float brakeFromOthers(float speed_diff); ///< returns a float that should be added into the brake command. speed_diff is the difference between the desired speed and speed limit of this area of the track
-
-	double Angle(double x1, double y1); ///< returns the angle in degrees of the normalized 2-vector
-
-	BEZIER RevisePatch(const BEZIER * origpatch, bool use_racingline);
-
-	/*
-	/// for replanning the path
-	struct PATH_REVISION
-	{
-		PATH_REVISION() : trimleft_front(0), trimright_front(0), trimleft_back(0), trimright_back(0), car_pos_along_track(0) {}
-
-		float trimleft_front;
-		float trimright_front;
-		float trimleft_back;
-		float trimright_back;
-		float car_pos_along_track;
-	};
-
-	std::map <const CAR *, PATH_REVISION> path_revisions;
-	*/
-
 	struct OTHERCARINFO
 	{
 		OTHERCARINFO() : active(false) {}
@@ -91,10 +57,24 @@ private:
 		bool active;
 	};
 	std::map <const CAR *, OTHERCARINFO> othercars;
-	const BEZIER * last_patch; ///<last patch the car was on, used in case car is off track
-	bool use_racingline; ///<true allows the AI to take a proper racing line
+	const BEZIER * last_patch; ///< last patch the car was on, used in case car is off track
 
-	template<class T> static bool isnan(const T & x);
+	float GetSpeedLimit(const BEZIER * patch, const BEZIER * nextpatch, float extraradius) const;
+
+	void UpdateGasBrake();
+
+	void UpdateSteer();
+
+	void AnalyzeOthers(float dt, const std::vector<CAR> & othercars);
+
+	/// returns a float that should be added into the steering wheel command
+	float SteerAwayFromOthers();
+
+	/// returns a float that should be added into the brake command
+	/// speed_diff is the difference between the desired speed and speed limit of this area of the track
+	float BrakeFromOthers(float speed_diff);
+
+	template <class T> static bool isnan(const T & x);
 
 	static float clamp(float val, float min, float max);
 
@@ -106,15 +86,9 @@ private:
 
 	static const BEZIER * GetCurrentPatch(const CAR *c);
 
-	static MATHVECTOR <float, 3> GetPatchFrontCenter(const BEZIER & patch);
-
-	static MATHVECTOR <float, 3> GetPatchBackCenter(const BEZIER & patch);
-
-	static MATHVECTOR <float, 3> GetPatchDirection(const BEZIER & patch);
-
-	static MATHVECTOR <float, 3> GetPatchWidthVector(const BEZIER & patch);
-
 	static double GetPatchRadius(const BEZIER & patch);
+
+	static BEZIER RevisePatch(const BEZIER * origpatch);
 
 	static float GetHorizontalDistanceAlongPatch(const BEZIER & patch, MATHVECTOR <float, 3> carposition);
 

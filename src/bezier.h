@@ -96,7 +96,7 @@ public:
 	MATHVECTOR <float, 3> GetBackCenter() const;
 	MATHVECTOR <float, 3> GetCenter() const;
 	MATHVECTOR <float, 3> GetCenterWidth() const;
-	MATHVECTOR <float, 3> GetDirection() const;
+	MATHVECTOR <float, 3> GetCenterLine() const;
 
 	/// access the bezier points where x = n % 4 and y = n / 4
 	const MATHVECTOR <float, 3> & operator[](const int n) const;
@@ -125,6 +125,9 @@ public:
 
 	/// get patch width at back
 	float GetTrackWidth() const;
+
+	/// get patch center line length
+	float GetLength() const;
 
 	/// get racing line point (at patch back)
 	/// if racingline not set return back center
@@ -221,7 +224,7 @@ inline MATHVECTOR <float, 3> BEZIER::GetCenterWidth() const
 	return (GetFL() - GetFR() + GetBL() - GetBR()) * 0.5;
 }
 
-inline MATHVECTOR <float, 3> BEZIER::GetDirection() const
+inline MATHVECTOR <float, 3> BEZIER::GetCenterLine() const
 {
 	return (GetFrontCenter() - GetBackCenter()) * 0.5;
 }
@@ -254,6 +257,11 @@ inline const BEZIER * BEZIER::GetNextPatch() const
 inline float BEZIER::GetTrackWidth() const
 {
 	return width;
+}
+
+inline float BEZIER::GetLength() const
+{
+	return length;
 }
 
 inline const MATHVECTOR <float, 3> & BEZIER::GetRacingLine() const
