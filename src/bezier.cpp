@@ -286,7 +286,7 @@ void BEZIER::Attach(BEZIER & next)
 	// we want C1 continuity between attached patches
 	// this means the second front interior point has to be collinear
 	// to the first interior point of the next patch
-	// additionally they have to have the same distance the edge point
+	// additionally they have to have the same distance to the joint point
 
 	// get left tangent
 	MATHVECTOR<float, 3> dl1 = GetBL() - GetFL();
@@ -344,7 +344,7 @@ void BEZIER::Attach(BEZIER & next)
 	// width at patch back
 	width = (GetBL() - GetBR()).Magnitude();
 
-	// set radius from 3 points approximation
+	// get radius at track center from circle through 3 points approximation
 	next.radius = 10000;
 	float sinalpha = dl1.cross(dl2).Magnitude() / (dl1_len * dl2_len);
 	if (std::fabs(sinalpha) > 0.001)
@@ -357,21 +357,16 @@ void BEZIER::Attach(BEZIER & next)
 			MATHVECTOR<float, 3> p3 = (next.GetFL() + next.GetFR()) * 0.5;
 			MATHVECTOR<float, 3> p2 = (GetFL() + GetFR()) * 0.5;
 			MATHVECTOR<float, 3> p1 = p2 + dl1 / dl1_len * d2_len;
-			MATHVECTOR<float, 3> p13 = p1 - p3;
-			next.radius = p13.Magnitude() / (2.0 * sinalpha);
+			next.radius = (p1 - p3).Magnitude() / (2.0 * sinalpha);
 		}
 		else
 		{
 			MATHVECTOR<float, 3> p1 = (GetBL() + GetBR()) * 0.5;
 			MATHVECTOR<float, 3> p2 = (GetFL() + GetFR()) * 0.5;
 			MATHVECTOR<float, 3> p3 = p2 + dl2 / dl2_len * d1_len;
-			MATHVECTOR<float, 3> p13 = p1 - p3;
-			next.radius = p13.Magnitude() / (2.0 * sinalpha);
+			next.radius = (p1 - p3).Magnitude() / (2.0 * sinalpha);
 		}
 	}
-
-	// calculate distance from start of the road
-	next.dist_from_start = dist_from_start + length;
 
 	// store the pointer to next patch
 	next_patch = &next;
