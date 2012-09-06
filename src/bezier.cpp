@@ -38,12 +38,10 @@ std::ostream & operator << (std::ostream &os, const BEZIER & b)
 BEZIER::BEZIER() :
 	length(0),
 	width(1),
-	radius(0),
 	dist_from_start(0),
 	next_patch(0),
 	racing_line_fraction(0),
-	racing_line_radius(0),
-	have_racingline(false)
+	racing_line_radius(0)
 {
 	// ctor
 }
@@ -344,8 +342,11 @@ void BEZIER::Attach(BEZIER & next)
 	// width at patch back
 	width = (GetBL() - GetBR()).Magnitude();
 
-	// get radius at track center from circle through 3 points approximation
-	next.radius = 10000;
+	// set next patch racing line info to some sensible values
+	// radius at track center from circle through 3 points approximation
+	next.racing_line = (next.GetBL() - next.GetBR()) * 0.5;
+	next.racing_line_fraction = 0.5;
+	next.racing_line_radius = 10000;
 	float sinalpha = dl1.cross(dl2).Magnitude() / (dl1_len * dl2_len);
 	if (std::fabs(sinalpha) > 0.001)
 	{
@@ -357,14 +358,14 @@ void BEZIER::Attach(BEZIER & next)
 			MATHVECTOR<float, 3> p3 = (next.GetFL() + next.GetFR()) * 0.5;
 			MATHVECTOR<float, 3> p2 = (GetFL() + GetFR()) * 0.5;
 			MATHVECTOR<float, 3> p1 = p2 + dl1 / dl1_len * d2_len;
-			next.radius = (p1 - p3).Magnitude() / (2.0 * sinalpha);
+			next.racing_line_radius = (p1 - p3).Magnitude() / (2.0 * sinalpha);
 		}
 		else
 		{
 			MATHVECTOR<float, 3> p1 = (GetBL() + GetBR()) * 0.5;
 			MATHVECTOR<float, 3> p2 = (GetFL() + GetFR()) * 0.5;
 			MATHVECTOR<float, 3> p3 = p2 + dl2 / dl2_len * d1_len;
-			next.radius = (p1 - p3).Magnitude() / (2.0 * sinalpha);
+			next.racing_line_radius = (p1 - p3).Magnitude() / (2.0 * sinalpha);
 		}
 	}
 
@@ -446,12 +447,12 @@ MATHVECTOR <float, 3> BEZIER::SurfNorm(float px, float py) const
 
 const BEZIER * BEZIER::GetNextClosestPatch(const MATHVECTOR<float, 3> & point) const
 {
-	float dist2 = (point -(GetFL() + GetFR()) * 0.5).MagnitudeSquared();
+	float dist2 = (point - GetFrontCenter()).MagnitudeSquared();
 	const BEZIER * p0 = this;
 	const BEZIER * p1 = next_patch;
 	while (p1)
 	{
-		float next_dist2 = (point - (p1->GetFL() + p1->GetFR()) * 0.5).MagnitudeSquared();
+		float next_dist2 = (point - p1->GetFrontCenter()).MagnitudeSquared();
 		if (next_dist2 > dist2)
 		{
 			return p0;
@@ -466,24 +467,20 @@ const BEZIER * BEZIER::GetNextClosestPatch(const MATHVECTOR<float, 3> & point) c
 
 BEZIER & BEZIER::CopyFrom(const BEZIER &other)
 {
-	for (int x = 0; x < 4; x++)
+	for (int x = 0; x < 4; ++x)
 	{
-		for (int y = 0; y < 4; y++)
+		for (int y = 0; y < 4; ++y)
 		{
 			points[x][y] = other.points[x][y];
 		}
 	}
-
 	length = other.length;
 	width = other.width;
-	radius = other.radius;
 	dist_from_start = other.dist_from_start;
 	next_patch = other.next_patch;
 	racing_line = other.racing_line;
 	racing_line_fraction = other.racing_line_fraction;
 	racing_line_radius = other.racing_line_radius;
-	have_racingline = other.have_racingline;
-
 	return *this;
 }
 
@@ -835,8 +832,8 @@ QT_TEST(bezier_test)
 	c[1].Attach(c[2]);
 	c[2].Attach(c[3]);
 	c[3].Attach(c[0]);
-	QT_CHECK_EQUAL(c[0].GetTrackRadius(), 3);
-	QT_CHECK_EQUAL(c[1].GetTrackRadius(), 3);
-	QT_CHECK_EQUAL(c[2].GetTrackRadius(), 3);
-	QT_CHECK_EQUAL(c[3].GetTrackRadius(), 3);
+	QT_CHECK_EQUAL(c[0].GetRacingLineRadius(), 3);
+	QT_CHECK_EQUAL(c[1].GetRacingLineRadius(), 3);
+	QT_CHECK_EQUAL(c[2].GetRacingLineRadius(), 3);
+	QT_CHECK_EQUAL(c[3].GetRacingLineRadius(), 3);
 }

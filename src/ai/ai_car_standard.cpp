@@ -176,7 +176,7 @@ double AI_Car_Standard::GetPatchRadius(const BEZIER & patch)
 
 BEZIER AI_Car_Standard::RevisePatch(const BEZIER * origpatch, bool use_racingline)
 {
-	if (!use_racingline || !origpatch->GetNextPatch() || !origpatch->HasRacingline())
+	if (!use_racingline || !origpatch->GetNextPatch())
 		return *origpatch;
 
 	const BEZIER * nextpatch = origpatch->GetNextPatch();

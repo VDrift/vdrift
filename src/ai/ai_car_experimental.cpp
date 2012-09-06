@@ -249,7 +249,7 @@ BEZIER AI_Car_Experimental::RevisePatch(const BEZIER * origpatch, bool use_racin
 
 	//take into account the racing line
 	//use_racingline = false;
-	if (use_racingline && patch.GetNextPatch() && patch.HasRacingline())
+	if (use_racingline && patch.GetNextPatch())
 	{
 		float widthfront = std::min((patch.GetNextPatch()->GetRacingLine()-patch.GetPoint(0,0)).Magnitude(),
 									 (patch.GetNextPatch()->GetRacingLine()-patch.GetPoint(0,3)).Magnitude());

@@ -91,6 +91,13 @@ public:
 	const MATHVECTOR <float, 3> & GetBL() const;
 	const MATHVECTOR <float, 3> & GetBR() const;
 
+	/// points derived from corners (not necessary on surface), direction not normalized
+	MATHVECTOR <float, 3> GetFrontCenter() const;
+	MATHVECTOR <float, 3> GetBackCenter() const;
+	MATHVECTOR <float, 3> GetCenter() const;
+	MATHVECTOR <float, 3> GetCenterWidth() const;
+	MATHVECTOR <float, 3> GetDirection() const;
+
 	/// access the bezier points where x = n % 4 and y = n / 4
 	const MATHVECTOR <float, 3> & operator[](const int n) const;
 
@@ -116,23 +123,20 @@ public:
 	/// get next closest patch from point
 	const BEZIER * GetNextClosestPatch(const MATHVECTOR<float, 3> & point) const;
 
-	/// patch width at front
+	/// get patch width at back
 	float GetTrackWidth() const;
 
-	/// track radius = 1 / curvature at front center
-	float GetTrackRadius() const;
-
-	/// get racing line point
+	/// get racing line point (at patch back)
+	/// if racingline not set return back center
 	const MATHVECTOR <float, 3> & GetRacingLine() const;
 
-	/// get racing line width fraction
+	/// get racing line width fraction: p = bl * (1 - fraction) + br * fraction
+	/// if racing line not set return 0.5
 	float GetRacingLineFraction() const;
 
 	/// get 1 / racing_line_curvature
+	/// if racing line not set return back center radius
 	float GetRacingLineRadius() const;
-
-	/// check if bezier has a racing line
-	bool HasRacingline() const;
 
 	/// iterate trough patches, recalculate distance from start
 	static void CalculateDistFromStart(BEZIER & start_patch);
@@ -141,14 +145,12 @@ private:
 	MATHVECTOR <float, 3> points[4][4];	///< 16 patch control points
 	float length;						///< patch length along center line
 	float width;						///< patch width at back
-	float radius;						///< 1 / curvature at back center
 	float dist_from_start;				///< accumulated length
 	BEZIER * next_patch;				///< attached patch
 
 	MATHVECTOR <float, 3> racing_line;	///< racing line point
-	float racing_line_fraction;			///< racing_line = lerp(bl, br, fraction)
-	float racing_line_radius;			///< 1 / racing_line_curvature
-	bool have_racingline;				///< flag wheter racing line is set
+	float racing_line_fraction;			///< racing line width fraction
+	float racing_line_radius;			///< 1 / racing line curvature
 
 	/// return the bernstein given the normalized coordinate u (zero to one) and an array of four points p
 	MATHVECTOR <float, 3> Bernstein(float u, const MATHVECTOR <float, 3> p[]) const;
@@ -174,7 +176,6 @@ std::ostream & operator << (std::ostream & os, const BEZIER & b);
 
 inline void BEZIER::SetRacingLine(float width_fraction, float curvature)
 {
-	have_racingline = true;
 	racing_line = GetBL() * (1.0 - width_fraction) + GetBR() * width_fraction;
 	racing_line_fraction = width_fraction;
 	racing_line_radius = (fabs(curvature) > 1E-4) ? 1 / curvature : 1E4;
@@ -198,6 +199,31 @@ inline const MATHVECTOR <float, 3> & BEZIER::GetBL() const
 inline const MATHVECTOR <float, 3> & BEZIER::GetBR() const
 {
 	return points[3][3];
+}
+
+inline MATHVECTOR <float, 3> BEZIER::GetFrontCenter() const
+{
+	return (GetFL() + GetFR()) * 0.5;
+}
+
+inline MATHVECTOR <float, 3> BEZIER::GetBackCenter() const
+{
+	return (GetBL() + GetBR()) * 0.5;
+}
+
+inline MATHVECTOR <float, 3> BEZIER::GetCenter() const
+{
+	return (GetFrontCenter() + GetBackCenter()) * 0.5;
+}
+
+inline MATHVECTOR <float, 3> BEZIER::GetCenterWidth() const
+{
+	return (GetFL() - GetFR() + GetBL() - GetBR()) * 0.5;
+}
+
+inline MATHVECTOR <float, 3> BEZIER::GetDirection() const
+{
+	return (GetFrontCenter() - GetBackCenter()) * 0.5;
 }
 
 inline const MATHVECTOR <float, 3> & BEZIER::operator[](const int n) const
@@ -230,11 +256,6 @@ inline float BEZIER::GetTrackWidth() const
 	return width;
 }
 
-inline float BEZIER::GetTrackRadius() const
-{
-	return radius;
-}
-
 inline const MATHVECTOR <float, 3> & BEZIER::GetRacingLine() const
 {
 	return racing_line;
@@ -248,11 +269,6 @@ inline float BEZIER::GetRacingLineFraction() const
 inline float BEZIER::GetRacingLineRadius() const
 {
 	return racing_line_radius;
-}
-
-inline bool BEZIER::HasRacingline() const
-{
-	return have_racingline;
 }
 
 #endif
