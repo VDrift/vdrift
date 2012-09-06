@@ -161,9 +161,9 @@ public:
 
 	MATHVECTOR <float, 3> GetVelocity() const;
 
-	float GetBrakingDistance(float target_velocity);
+	float GetBrakingDistance(float target_velocity) const;
 
-	float GetMaxVelocity(float radius);
+	float GetMaxVelocity(float radius) const;
 
 	// ideal steering angle in degrees
 	float GetIdealSteeringAngle() const;
@@ -402,12 +402,12 @@ inline MATHVECTOR <float, 3> CAR::GetVelocity() const
 	return cast(vehicle.getVelocity());
 }
 
-inline float CAR::GetBrakingDistance(float target_velocity)
+inline float CAR::GetBrakingDistance(float target_velocity) const
 {
 	return vehicle.getBrakingDistance(target_velocity);
 }
 
-inline float CAR::GetMaxVelocity(float radius)
+inline float CAR::GetMaxVelocity(float radius) const
 {
 	return vehicle.getMaxVelocity(radius);
 }
