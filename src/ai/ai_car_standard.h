@@ -59,7 +59,7 @@ private:
 	std::map <const CAR *, OTHERCARINFO> othercars;
 	const BEZIER * last_patch; ///< last patch the car was on, used in case car is off track
 
-	float GetSpeedLimit(const BEZIER * patch, const BEZIER * nextpatch, float extraradius) const;
+	float GetSpeedLimit(const BEZIER * patch, const BEZIER * nextpatch) const;
 
 	void UpdateGasBrake(float dt);
 
@@ -98,8 +98,8 @@ private:
 	VERTEXARRAY brakeshape;
 	VERTEXARRAY steershape;
 	VERTEXARRAY avoidanceshape;
-	std::vector <BEZIER> brakelook;
-	std::vector <BEZIER> steerlook;
+	const BEZIER * brakelook;
+	const BEZIER * steerlook;
 	keyed_container <DRAWABLE>::handle brakedraw;
 	keyed_container <DRAWABLE>::handle steerdraw;
 	keyed_container <DRAWABLE>::handle avoidancedraw;
