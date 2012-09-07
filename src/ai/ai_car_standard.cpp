@@ -329,6 +329,11 @@ void AI_Car_Standard::UpdateSteer(float dt)
 	steerlook.clear();
 #endif
 
+	// current position and direction
+	MATHVECTOR <float, 3> car_position = car->GetCenterOfMassPosition();
+	MATHVECTOR <float, 3> car_direction = direction::Forward;
+	(car->GetOrientation()).RotateVector(car_direction);
+
 	const BEZIER * curr_patch = GetCurrentPatch(car);
 	if (!curr_patch)
 	{
@@ -342,9 +347,7 @@ void AI_Car_Standard::UpdateSteer(float dt)
 		{
 			// use last patch to get the car back on track
 			// get next closest patch 8 meter in front of the car
-			MATHVECTOR <float, 3> offset = direction::Forward * 8;
-			car->GetOrientation().RotateVector(offset);
-			MATHVECTOR <float, 3> pos = car->GetCenterOfMassPosition() + offset;
+			MATHVECTOR <float, 3> pos = car_position + car_direction * 8;
 			pos = TransformToPatchspace(pos);
 			curr_patch = last_patch->GetNextClosestPatch(pos);
 		}
@@ -411,26 +414,22 @@ void AI_Car_Standard::UpdateSteer(float dt)
 	}
 
 	MATHVECTOR <float, 3> next_position = TransformToWorldspace(dest_point);
-	MATHVECTOR <float, 3> car_position = car->GetCenterOfMassPosition();
-	MATHVECTOR <float, 3> car_orientation = direction::Forward;
-	(car->GetOrientation()).RotateVector(car_orientation);
-
-	MATHVECTOR <float, 3> desire_orientation = next_position - car_position;
+	MATHVECTOR <float, 3> desire_direction = next_position - car_position;
 
 	// car's direction on the horizontal plane
-	car_orientation[2] = 0;
+	car_direction[2] = 0;
 
 	// desired direction on the horizontal plane
-	desire_orientation[2] = 0;
+	desire_direction[2] = 0;
 
-	car_orientation = car_orientation.Normalize();
-	desire_orientation = desire_orientation.Normalize();
+	car_direction = car_direction.Normalize();
+	desire_direction = desire_direction.Normalize();
 
 	// the angle between car's direction and unit y vector (forward direction)
-	double alpha = atan2(car_orientation[1], car_orientation[0]) * 180.0 / M_PI;
+	double alpha = atan2(car_direction[1], car_direction[0]) * 180.0 / M_PI;
 
 	// the angle between desired direction and unit y vector (forward direction)
-	double beta = atan2(desire_orientation[1], desire_orientation[0]) * 180.0 / M_PI;
+	double beta = atan2(desire_direction[1], desire_direction[0]) * 180.0 / M_PI;
 
 	// calculate steering angle and direction
 	double angle = beta - alpha;
@@ -447,14 +446,12 @@ void AI_Car_Standard::UpdateSteer(float dt)
 	else if (angle > 180.0 && angle <= 360.0)
 		angle = 360.0 - angle;
 
-	float optimum_range = car->GetIdealSteeringAngle();
-	angle = clamp(angle, -optimum_range, optimum_range);
+	float ideal_angle = car->GetIdealSteeringAngle();
+	angle = clamp(angle, -ideal_angle, ideal_angle);
 
 	float steer_value = angle / car->GetMaxSteeringAngle();
-	if (steer_value > 1.0) steer_value = 1.0;
-	else if (steer_value < -1.0) steer_value = -1.0;
+	steer_value = clamp(steer_value, -1.0f, 1.0f);
 
-	assert(!isnan(steer_value));
 	inputs[CARINPUT::STEER_RIGHT] = steer_value;
 }
 
