@@ -108,6 +108,9 @@ public:
 	/// caculate aerodynamic force in world space
 	btVector3 getTotalAero() const;
 
+	/// get vehicle width (used by ai)
+	btScalar getWidth() const;
+
 	/// driveline state access
 	int getWheelCount() const;
 	const Wheel & getWheel(int i) const;
@@ -182,7 +185,7 @@ protected:
 	/// vehicle constants
 	btScalar maxangle;
 	btScalar maxspeed;
-
+	btScalar width;
 
 	/// get body down direction
 	btVector3 getDownVector() const;
@@ -289,6 +292,11 @@ inline btScalar Vehicle::getSteeringTorque() const
 inline btScalar Vehicle::getMaxSteeringAngle() const
 {
 	return maxangle;
+}
+
+inline btScalar Vehicle::getWidth() const
+{
+	return width;
 }
 
 inline int Vehicle::getWheelCount() const

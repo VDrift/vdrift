@@ -124,7 +124,7 @@ public:
 	const BEZIER * GetNextClosestPatch(const MATHVECTOR<float, 3> & point) const;
 
 	/// get patch width at back
-	float GetTrackWidth() const;
+	float GetWidth() const;
 
 	/// get patch center line length
 	float GetLength() const;
@@ -254,7 +254,7 @@ inline const BEZIER * BEZIER::GetNextPatch() const
 	return next_patch;
 }
 
-inline float BEZIER::GetTrackWidth() const
+inline float BEZIER::GetWidth() const
 {
 	return width;
 }

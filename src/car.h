@@ -171,6 +171,9 @@ public:
 	// maximum steering angle in degrees
 	float GetMaxSteeringAngle() const;
 
+	// get car width
+	float GetWidth() const;
+
 	// allows to create raycasts
 	const btCollisionWorld * GetCollisionWorld() const;
 
@@ -420,6 +423,11 @@ inline float CAR::GetIdealSteeringAngle() const
 inline float CAR::GetMaxSteeringAngle() const
 {
 	return vehicle.getMaxSteeringAngle();
+}
+
+inline float CAR::GetWidth() const
+{
+	return vehicle.getWidth();
 }
 
 inline const btCollisionWorld * CAR::GetCollisionWorld() const

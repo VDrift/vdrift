@@ -658,7 +658,7 @@ void AI_Car_Experimental::updateSteer()
 		steerlook.push_back(next_patch);
 #endif
 
-		length += GetPatchDirection(next_patch).Magnitude();
+		length += next_patch.GetCenterLine().Magnitude();
 		dest_point = GetPatchFrontCenter(next_patch);
 
 		//if there is no next patch for whatever reason, stop lookahead

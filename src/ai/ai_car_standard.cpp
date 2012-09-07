@@ -22,8 +22,6 @@
 
 #include <cassert>
 #include <cmath>
-//#include <algorithm>
-//#include <iostream>
 
 // used to calculate brake value
 #define MAX_SPEED_DIFF 6.0
@@ -91,8 +89,8 @@ float AI_Car_Standard::RateLimit(float old_value, float new_value, float rate_li
 void AI_Car_Standard::Update(float dt, const std::vector<CAR> & cars)
 {
 	AnalyzeOthers(dt, cars);
-	UpdateGasBrake();
-	UpdateSteer();
+	UpdateGasBrake(dt);
+	UpdateSteer(dt);
 }
 
 MATHVECTOR <float, 3> AI_Car_Standard::TransformToWorldspace(const MATHVECTOR <float, 3> & bezierspace)
@@ -107,13 +105,11 @@ MATHVECTOR <float, 3> AI_Car_Standard::TransformToPatchspace(const MATHVECTOR <f
 
 const BEZIER * AI_Car_Standard::GetCurrentPatch(const CAR *c)
 {
-	const BEZIER *curr_patch = c->GetCurPatch(0);
+	const BEZIER * curr_patch = c->GetCurPatch(0);
 	if (!curr_patch)
 	{
-		curr_patch = c->GetCurPatch(1); //let's try the other wheel
-		if (!curr_patch) return NULL;
+		curr_patch = c->GetCurPatch(1); // let's try the other wheel
 	}
-
 	return curr_patch;
 }
 
@@ -197,15 +193,16 @@ float AI_Car_Standard::GetSpeedLimit(
 
 	//adjust the radius at corner exit to allow a higher speed.
 	//this will get the car to accellerate out of corner
-	float radius = GetPatchRadius(*patch);
-	if (nextpatch && radius > LOOKAHEAD_MIN_RADIUS && GetPatchRadius(*nextpatch) > radius)
+	float radius = fabs(patch->GetRacingLineRadius());
+	float nextradius = fabs(nextpatch->GetRacingLineRadius());
+	if (nextpatch && radius > LOOKAHEAD_MIN_RADIUS && nextradius > radius)
 	{
 		radius += extraradius;
 	}
 	return car->GetMaxVelocity(radius);
 }
 
-void AI_Car_Standard::UpdateGasBrake()
+void AI_Car_Standard::UpdateGasBrake(float dt)
 {
 #ifdef VISUALIZE_AI_DEBUG
 	brakelook.clear();
@@ -237,16 +234,8 @@ void AI_Car_Standard::UpdateGasBrake()
 
 	// check speed against speed limit of current patch
 	float speed_limit = 0;
-	float extraradius = curr_patch_ptr->GetTrackWidth();
-	if (!curr_patch.GetNextPatch())
-	{
-		speed_limit = GetSpeedLimit(&curr_patch, NULL, extraradius);
-	}
-	else
-	{
-		BEZIER next_patch = RevisePatch(curr_patch.GetNextPatch());
-		speed_limit = GetSpeedLimit(&curr_patch, &next_patch, extraradius);
-	}
+	float extraradius = curr_patch_ptr->GetWidth();
+	speed_limit = GetSpeedLimit(curr_patch_ptr, curr_patch.GetNextPatch(), extraradius);
 	speed_limit *= difficulty;
 
 	float speed_diff = speed_limit - currentspeed;
@@ -293,7 +282,7 @@ void AI_Car_Standard::UpdateGasBrake()
 			break;
 		}
 
-		float extraradius = patch_to_check.GetNextPatch()->GetTrackWidth();
+		float extraradius = patch_to_check.GetNextPatch()->GetWidth();
 		patch_to_check = RevisePatch(patch_to_check.GetNextPatch());
 #ifdef VISUALIZE_AI_DEBUG
 		brakelook.push_back(patch_to_check);
@@ -319,16 +308,6 @@ void AI_Car_Standard::UpdateGasBrake()
 		}
 	}
 
-	if (car->GetGear() == 0)
-	{
-		inputs[CARINPUT::SHIFT_UP] = 1.0;
-		gas_value = 0.2;
-	}
-	else
-	{
-		inputs[CARINPUT::SHIFT_UP] = 0.0;
-	}
-
 	// consider traffic avoidance bias
 	/*float trafficbrake = brakeFromOthers(c, dt, othercars, speed_diff);
 	if (trafficbrake > 0)
@@ -340,18 +319,18 @@ void AI_Car_Standard::UpdateGasBrake()
 	inputs[CARINPUT::THROTTLE] = RateLimit(
 		inputs[CARINPUT::THROTTLE], gas_value, THROTTLE_RATE_LIMIT, THROTTLE_RATE_LIMIT);
 
-	inputs[CARINPUT::BRAKE] =
-		RateLimit(inputs[CARINPUT::BRAKE], brake_value, BRAKE_RATE_LIMIT, BRAKE_RATE_LIMIT);
+	inputs[CARINPUT::BRAKE] = RateLimit(
+		inputs[CARINPUT::BRAKE], brake_value, BRAKE_RATE_LIMIT, BRAKE_RATE_LIMIT);
 }
 
-void AI_Car_Standard::UpdateSteer()
+void AI_Car_Standard::UpdateSteer(float dt)
 {
 #ifdef VISUALIZE_AI_DEBUG
 	steerlook.clear();
 #endif
 
-	const BEZIER * curr_patch_ptr = GetCurrentPatch(car);
-	if (!curr_patch_ptr)
+	const BEZIER * curr_patch = GetCurrentPatch(car);
+	if (!curr_patch)
 	{
 		// no contact with track
 		if (!last_patch)
@@ -367,41 +346,68 @@ void AI_Car_Standard::UpdateSteer()
 			car->GetOrientation().RotateVector(offset);
 			MATHVECTOR <float, 3> pos = car->GetCenterOfMassPosition() + offset;
 			pos = TransformToPatchspace(pos);
-			curr_patch_ptr = last_patch->GetNextClosestPatch(pos);
+			curr_patch = last_patch->GetNextClosestPatch(pos);
 		}
 	}
 
 	// store the last patch car was on
-	last_patch = curr_patch_ptr;
+	last_patch = curr_patch;
 
-	BEZIER curr_patch = RevisePatch(curr_patch_ptr);
 #ifdef VISUALIZE_AI_DEBUG
-	steerlook.push_back(curr_patch);
+	steerlook.push_back(*curr_patch);
 #endif
 
-	if (!curr_patch.GetNextPatch())
+	if (!curr_patch->GetNextPatch())
 	{
 		// no next patch (probably a non-closed track), let it roll
 		return;
 	}
 
 	// find the point to steer towards
-	BEZIER next_patch = RevisePatch(curr_patch.GetNextPatch());
-	MATHVECTOR <float, 3> dest_point = next_patch.GetFrontCenter();
-
-	// lookahead if next patch is not too sharp
-	while (GetPatchRadius(next_patch) < LOOKAHEAD_MIN_RADIUS)
+	MATHVECTOR <float, 3> dest_point;
+	const BEZIER * next_patch = curr_patch->GetNextPatch();
+	float lookahead = 2.0 + car->GetSpeed() * dt;
+	float length = 0;
+	while (true)
 	{
 #ifdef VISUALIZE_AI_DEBUG
-		steerlook.push_back(next_patch);
+		steerlook.push_back(*next_patch);
 #endif
-		// if there is no next patch for whatever reason, stop lookahead
-		if (!next_patch.GetNextPatch())
+		// get steer destination
+		dest_point = next_patch->GetRacingLine();
+
+		// take car width into account
+		float track_width = next_patch->GetWidth();
+		float border_offset = track_width * next_patch->GetRacingLineFraction();
+		float safe_offset = 0.5 * car->GetWidth() + 0.1;
+		if (border_offset < safe_offset)
 		{
-			break;
+			float width_fraction = safe_offset / track_width;
+			dest_point = next_patch->GetBL() * (1.0 - width_fraction) + next_patch->GetBR() * width_fraction;
 		}
-		next_patch = RevisePatch(next_patch.GetNextPatch());
-		dest_point = next_patch.GetFrontCenter();
+		else if (track_width - border_offset < safe_offset)
+		{
+			float width_fraction = 1 - safe_offset / track_width;
+			dest_point = next_patch->GetBL() * (1.0 - width_fraction) + next_patch->GetBR() * width_fraction;
+		}
+
+		// limit lookahead
+		if (length > lookahead)
+			break;
+
+		// check for track end
+		if (!next_patch->GetNextPatch())
+			break;
+
+		// check for sharp corner
+		if (fabs(next_patch->GetRacingLineRadius()) < LOOKAHEAD_MIN_RADIUS)
+			break;
+
+		// proceed to next patch
+		next_patch = next_patch->GetNextPatch();
+
+		// update current lookahead distance
+		length += next_patch->GetLength();
 	}
 
 	MATHVECTOR <float, 3> next_position = TransformToWorldspace(dest_point);

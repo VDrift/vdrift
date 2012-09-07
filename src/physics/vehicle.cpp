@@ -64,7 +64,8 @@ Vehicle::Vehicle() :
 	//abs_enabled(false),
 	//tcs_enabled(false),
 	maxangle(0),
-	maxspeed(0)
+	maxspeed(0),
+	width(2)
 {
 	// Constructor
 }
@@ -135,9 +136,6 @@ void Vehicle::init(
 	clutch.init(info.clutch);
 	engine.init(info.engine);
 
-	calculateFrictionCoefficient(lon_friction_coeff, lat_friction_coeff);
-	maxspeed = calculateMaxSpeed();
-
 	// position is the center of a 2 x 4 x 1 meter box on track surface
 	// move car to fit bounding box front lower edge of the position box
 	btVector3 bmin, bmax;
@@ -148,6 +146,11 @@ void Vehicle::init(
 	btVector3 up_offset = -up * (0.5 + bmin.z());
 	setPosition(body->getCenterOfMassPosition() + up_offset + fwd_offset);
 	//alignWithGround();
+
+	// init constants
+	calculateFrictionCoefficient(lon_friction_coeff, lat_friction_coeff);
+	maxspeed = calculateMaxSpeed();
+	width = (bmax - bmin).dot(direction::right);
 }
 
 void Vehicle::setInput(const VehicleInput & input)

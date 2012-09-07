@@ -61,9 +61,9 @@ private:
 
 	float GetSpeedLimit(const BEZIER * patch, const BEZIER * nextpatch, float extraradius) const;
 
-	void UpdateGasBrake();
+	void UpdateGasBrake(float dt);
 
-	void UpdateSteer();
+	void UpdateSteer(float dt);
 
 	void AnalyzeOthers(float dt, const std::vector<CAR> & othercars);
 
