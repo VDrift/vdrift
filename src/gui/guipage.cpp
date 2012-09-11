@@ -239,15 +239,15 @@ bool GUIPAGE::Load(
 
 		if (widget)
 		{
-			std::string color, alpha, hue, sat, val;
+			std::string color, opacity, hue, sat, val;
 			pagefile.get(section, "color", color);
-			pagefile.get(section, "alpha", alpha);
+			pagefile.get(section, "opacity", opacity);
 			pagefile.get(section, "hue", hue);
 			pagefile.get(section, "sat", sat);
 			pagefile.get(section, "val", val);
 
 			ConnectAction(color, vsignalmap, widget->set_color);
-			ConnectAction(alpha, vsignalmap, widget->set_alpha);
+			ConnectAction(opacity, vsignalmap, widget->set_opacity);
 			ConnectAction(hue, vsignalmap, widget->set_hue);
 			ConnectAction(sat, vsignalmap, widget->set_sat);
 			ConnectAction(val, vsignalmap, widget->set_val);
@@ -372,8 +372,8 @@ bool GUIPAGE::Load(
 			wc.set.bind<GUIWIDGET, &GUIWIDGET::SetSat>(widget);
 		else if (pname == "val")
 			wc.set.bind<GUIWIDGET, &GUIWIDGET::SetVal>(widget);
-		else if (pname == "alpha")
-			wc.set.bind<GUIWIDGET, &GUIWIDGET::SetAlpha>(widget);
+		else if (pname == "opacity")
+			wc.set.bind<GUIWIDGET, &GUIWIDGET::SetOpacity>(widget);
 		else
 		{
 			error_output << "Failed to set action: " << *i << std::endl;
