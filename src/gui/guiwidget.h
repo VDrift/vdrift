@@ -43,14 +43,14 @@ public:
 
 	/// properties
 	void SetColor(float r, float g, float b);
-	void SetAlpha(float value);
+	void SetOpacity(float value);
 	void SetHue(float value);
 	void SetSat(float value);
 	void SetVal(float value);
 
-	/// add support for typed signals
+	/// todo: add support for typed signals
 	Slot1<const std::string &> set_color;
-	Slot1<const std::string &> set_alpha;
+	Slot1<const std::string &> set_opacity;
 	Slot1<const std::string &> set_hue;
 	Slot1<const std::string &> set_sat;
 	Slot1<const std::string &> set_val;
@@ -64,7 +64,7 @@ protected:
 	GUIWIDGET();
 	virtual DRAWABLE & GetDrawable(SCENENODE & scene) = 0;
 	void SetColor(const std::string & value);
-	void SetAlpha(const std::string & value);
+	void SetOpacity(const std::string & value);
 	void SetHue(const std::string & value);
 	void SetSat(const std::string & value);
 	void SetVal(const std::string & value);

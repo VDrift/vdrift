@@ -28,7 +28,7 @@ GUIWIDGET::GUIWIDGET() :
 	m_update(false)
 {
 	set_color.call.bind<GUIWIDGET, &GUIWIDGET::SetColor>(this);
-	set_alpha.call.bind<GUIWIDGET, &GUIWIDGET::SetAlpha>(this);
+	set_opacity.call.bind<GUIWIDGET, &GUIWIDGET::SetOpacity>(this);
 	set_hue.call.bind<GUIWIDGET, &GUIWIDGET::SetHue>(this);
 	set_sat.call.bind<GUIWIDGET, &GUIWIDGET::SetSat>(this);
 	set_val.call.bind<GUIWIDGET, &GUIWIDGET::SetVal>(this);
@@ -66,9 +66,9 @@ void GUIWIDGET::SetColor(float r, float g, float b)
 	m_update = true;
 }
 
-void GUIWIDGET::SetAlpha(float value)
+void GUIWIDGET::SetOpacity(float value)
 {
-	m_a = (value > 0) ? (value < 1) ? value : 1 : 0;
+	m_a = (value > 0) ? (value < 1) ? 1 - value : 0 : 1;
 	m_update = true;
 }
 
@@ -103,14 +103,14 @@ void GUIWIDGET::SetColor(const std::string & value)
 	SetColor(v[0], v[1], v[2]);
 }
 
-void GUIWIDGET::SetAlpha(const std::string & value)
+void GUIWIDGET::SetOpacity(const std::string & value)
 {
 	if (value.empty()) return;
 
 	std::stringstream s(value);
 	float v;
 	s >> v;
-	SetAlpha(v);
+	SetOpacity(v);
 }
 
 void GUIWIDGET::SetHue(const std::string & value)
