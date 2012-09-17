@@ -93,13 +93,15 @@ private:
 	btScalar fx, fy, fz, mz;	///< contact force and aligning torque
 	btScalar vx, vy;			///< contact velocity in tire space
 
-	/// pacejka magic formula longitudinal friction, Fz in kN
+	/// Pure slip "Magic Formula" tire model 1989
+
+	/// longitudinal friction, Fz in kN
 	btScalar PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coeff, btScalar & max_Fx) const;
 
-	/// pacejka magic formula lateral friction, Fz in kN
+	/// lateral friction, Fz in kN
 	btScalar PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff, btScalar & max_Fy) const;
 
-	/// pacejka magic formula aligning torque, Fz in kN
+	/// aligning torque, Fz in kN
 	btScalar PacejkaMz(btScalar sigma, btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff, btScalar & max_Mz) const;
 
 	/// get ideal slide ratio, slip angle, load in kN

@@ -100,41 +100,45 @@ btVector3 Tire::getForce(
 	getSigmaHatAlphaHat(normal_force, sigma_hat, alpha_hat);
 
 	btScalar Fz = normal_force;
-	btScalar gamma = inclination;									// positive when tire top tilts to the right, viewed from rear
+	btScalar gamma = inclination; // positive when tire top tilts to the right, viewed from rear
 	btScalar denom = btMax(btFabs(lon_velocity), btScalar(1E-3));
-	btScalar lon_contact_velocity = ang_velocity - lon_velocity;
-	btScalar sigma = lon_contact_velocity / denom;					// longitudinal slip: negative in braking, positive in traction
-	btScalar alpha = -btAtan(lat_velocity / denom) * 180.0 / M_PI; 	// sideslip angle: positive in a right turn(opposite to SAE tire coords)
+	btScalar lon_slip_velocity = lon_velocity - ang_velocity;
+	btScalar sigma = -lon_slip_velocity / denom; // longitudinal slip: negative in braking, positive in traction
+	btScalar tan_alpha = lat_velocity / denom;
+	btScalar alpha = -atan(tan_alpha) * 180.0 / M_PI; // sideslip angle: positive in a right turn(opposite to SAE tire coords)
 	btScalar max_Fx(0), max_Fy(0), max_Mz(0);
 
-	//combining method 1: beckman method for pre-combining longitudinal and lateral forces
+	// combining method 1: beckman method for pre-combining longitudinal and lateral forces
+	// seems to be a variant of Bakker 1987:
+	// refined Kamm Circle for non-isotropic tire characteristics
+	// and slip normalization to guarantee simultaneous sliding
 	btScalar s = sigma / sigma_hat;
 	btScalar a = alpha / alpha_hat;
-	btScalar rho = btMax(btScalar(sqrt(s * s + a * a)), btScalar(1E-4)); // avoid divide-by-zero
+	btScalar rho = btMax(btSqrt(s * s + a * a), btScalar(1E-4)); // normalized slip
 	btScalar Fx = (s / rho) * PacejkaFx(rho * sigma_hat, Fz, friction_coeff, max_Fx);
 	btScalar Fy = (a / rho) * PacejkaFy(rho * alpha_hat, Fz, gamma, friction_coeff, max_Fy);
+	// Bakker (with unknown factor e(rho) to get the correct direction for large slip):
+	// btScalar Fx = -s * PacejkaFx(rho * sigma_hat, Fz, friction_coeff, max_Fx);
+	// btScalar Fy = -a * e(rho) * PacejkaFy(rho * alpha_hat, Fz, gamma, friction_coeff, max_Fy);
 
 /*
-	//combining method 2: orangutan
-	btScalar alpha_rad = alpha * M_PI / 180.0;
+	// combining method 2: orangutan
 	btScalar Fx = PacejkaFx(sigma, Fz, friction_coeff, max_Fx);
 	btScalar Fy = PacejkaFy(alpha, Fz, gamma, friction_coeff, max_Fy);
-	btScalar x = cos(alpha_rad);
-	x = fabs(Fx) / (fabs(Fx) + fabs(Fy));
-	btScalar y = 1.0 - x;
-	btScalar one = 1.0;
-	if (sigma < 0.0) one = -1.0;
+
+	btScalar one = (sigma < 0.0) ? -1.0 : 1.0;
 	btScalar pure_sigma = sigma / (one + sigma);
-	btScalar pure_alpha = tan(alpha_rad) / (one + sigma);
+	btScalar pure_alpha = -tan_alpha / (one + sigma);
 	btScalar pure_combined = sqrt(pure_sigma * pure_sigma + pure_alpha * pure_alpha);
 	btScalar kappa_combined = pure_combined / (1.0 - pure_combined);
 	btScalar alpha_combined = atan((one + sigma) * pure_combined);
-	btScalar Flimit_lng = PacejkaFx(kappa_combined, Fz, friction_coeff, max_Fx);
-	btScalar Flimit_lat = PacejkaFy(alpha_combined * 180.0 / M_PI, Fz, gamma, friction_coeff, max_Fy);
+	btScalar Flimitx = PacejkaFx(kappa_combined, Fz, friction_coeff, max_Fx);
+	btScalar Flimity = PacejkaFy(alpha_combined * 180.0 / M_PI, Fz, gamma, friction_coeff, max_Fy);
 
-	btScalar Flimit = (fabs(x * Flimit_lng) + fabs(y * Flimit_lat));
+	btScalar x = fabs(Fx) / (fabs(Fx) + fabs(Fy));
+	btScalar y = 1.0 - x;
+	btScalar Flimit = (fabs(x * Flimitx) + fabs(y * Flimity));
 	btScalar Fmag = sqrt(Fx * Fx + Fy * Fy);
-
 	if (Fmag > Flimit)
 	{
 		btScalar scale = Flimit / Fmag;
@@ -164,51 +168,40 @@ btVector3 Tire::getForce(
 	}
 */
 /*
-	//combining method 4: traction ellipse (prioritize Fx)
+	// combining method 4: traction ellipse (prioritize Fx)
+	// issue: assumes that adhesion limits are fully reached for combined forces
 	btScalar Fx = PacejkaFx(sigma, Fz, friction_coeff, max_Fx);
 	btScalar Fy = PacejkaFy(alpha, Fz, gamma, friction_coeff, max_Fy);
-	//std::cout << "Fy0=" << Fy << ", ";
-	if (Fx >= max_Fx)
+	if (Fx < max_Fx)
+	{
+		Fy = Fy * sqrt(1.0 - (Fx / max_Fx) * (Fx / max_Fx));
+	}
+	else
 	{
 		Fx = max_Fx;
 		Fy = 0;
 	}
-	else
-		Fy = Fy*sqrt(1.0-(Fx/max_Fx)*(Fx/max_Fx));
-	//std::cout << "Fy=" << Fy << ", Fx=Fx0=" << Fx << ", Fxmax=" << max_Fx << ", Fymax=" << max_Fy << std::endl;
 */
 /*
-	//combining method 5: traction ellipse (prioritize Fy)
+	// combining method 5: traction ellipse (prioritize Fy)
+	// issue: assumes that adhesion limits are fully reached for combined forces
 	btScalar Fx = PacejkaFx(sigma, Fz, friction_coeff, max_Fx);
 	btScalar Fy = PacejkaFy(alpha, Fz, gamma, friction_coeff, max_Fy);
-	if (Fy >= max_Fy)
+	if (Fy < max_Fy)
+	{
+		Fx = Fx * sqrt(1.0 - (Fy / max_Fy) * (Fy / max_Fy));
+	}
+	else
 	{
 		Fy = max_Fy;
 		Fx = 0;
 	}
-	else
-	{
-		btScalar scale = sqrt(1.0-(Fy/max_Fy)*(Fy/max_Fy));
-		if (scale != scale)
-			Fx = 0;
-		else
-			Fx = Fx*scale;
-	}
 */
 /*
-	// combining method 6: modified Nicolas-Comstock Model
-	// source: Modeling Combined Braking and Steering Tire Forces
-	btScalar Fx0 = PacejkaFx(sigma, Fz, friction_coeff, max_Fx);
-	btScalar Fy0 = PacejkaFy(alpha, Fz, gamma, friction_coeff, max_Fy);
-	// 0 <= a <= pi/2 and 0 <= s <= 1
-	// Cs = a0 and Ca = b0 longitudinal and lateral slip stiffness ?
-	btScalar Fc = Fx0 * Fy0 / sqrt(s * s * Fy0 * Fy0 + Fx0 * Fx0 * tana * tana);
-	btScalar Fx = Fc * sqrt(s * s * Ca * Ca + (1-s) * (1-s) * cosa * cosa * Fx0 * Fx0) / Ca;
-	btScalar Fy = Fc * sqrt((1-s) * (1-s) * cosa * cosa * Fy0 * Fy0 + sina * sina * Cs * Cs) / (Cs * cosa);
-*/
 	// no combining
-	//btScalar Fx = PacejkaFx(sigma, Fz, friction_coeff, max_Fx);
-	//btScalar Fy = PacejkaFy(alpha, Fz, gamma, friction_coeff, max_Fy);
+	btScalar Fx = PacejkaFx(sigma, Fz, friction_coeff, max_Fx);
+	btScalar Fy = PacejkaFy(alpha, Fz, gamma, friction_coeff, max_Fy);
+*/
 	btScalar Mz = PacejkaMz(sigma, alpha, Fz, gamma, friction_coeff, max_Mz);
 
 	camber = inclination;
@@ -220,7 +213,7 @@ btVector3 Tire::getForce(
 	fy = Fy;
 	fz = Fz;
 	mz = Mz;
-	vx = lon_contact_velocity;
+	vx = lon_slip_velocity;
 	vy = lat_velocity;
 
 	// Fx positive during traction, Fy positive in a right turn, Mz positive in a left turn
@@ -285,6 +278,7 @@ btScalar Tire::PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coeff, b
 	// peak factor
 	btScalar D = (b[1] * Fz + b[2]) * Fz;
 
+	// slope at origin
 	btScalar BCD = (b[3] * Fz + b[4]) * Fz * exp(-b[5] * Fz);
 
 	// stiffness factor
@@ -293,11 +287,17 @@ btScalar Tire::PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coeff, b
 	// curvature factor
 	btScalar E = b[6] * Fz * Fz + b[7] * Fz + b[8];
 
+	// curvature factor 1993
+	//E = E * (1 - b[13] * sgn(S));
+
 	// horizontal shift
-	btScalar Sh = 0;//beckmann//b[9] * Fz + b[10];
+	btScalar Sh = b[9] * Fz + b[10];
+
+	// vertical shift 1993
+	//btScalar Sv = b[11] * Fz + b[12];
 
 	// composite
-	btScalar S = 100 * sigma + Sh;
+	btScalar S = 100 * sigma + Sh; // factor 100, percent?
 
 	// longitudinal force
 	btScalar Fx = D * sin(C * atan(B * S - E * (B * S - atan(B * S))));
@@ -319,6 +319,10 @@ btScalar Tire::PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScalar f
 	// peak factor
 	btScalar D = (a[1] * Fz + a[2]) * Fz;
 
+	// peak factor 1993
+	// D = D * (1 - a[15] * gamma * gamma);
+
+	// slope at origin
 	btScalar BCD = a[3] * sin(2.0 * atan(Fz / a[4])) * (1.0 - a[5] * btFabs(gamma));
 
 	// stiffness factor
@@ -327,11 +331,20 @@ btScalar Tire::PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScalar f
 	// curvature factor
 	btScalar E = a[6] * Fz + a[7];
 
+	// curvature factor 1993
+	// E = E * (1 - (a[16] * gamma + a[17]) * sgn(alpha + Sh));
+
 	// horizontal shift
-	btScalar Sh = 0;//beckmann//a[8] * gamma + a[9] * Fz + a[10];
+	btScalar Sh = a[8] * gamma + a[9] * Fz + a[10];
+
+	// horizontal shift 1993
+	// Sh = a[8] * Fz + a[9] + a[10] * gamma;
 
 	// vertical shift
 	btScalar Sv = ((a[11] * Fz + a[12]) * gamma + a[13]) * Fz + a[14];
+
+	// vertical shift 1993
+	// Sv = a[11] * Fz + a[12] + (a[13] * Fz * Fz + a[14] * Fz) * gamma;
 
 	// composite
 	btScalar S = alpha + Sh;
@@ -343,7 +356,6 @@ btScalar Tire::PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScalar f
 	Fy = Fy * friction_coeff;
 	max_Fy = (D + Sv) * friction_coeff;
 
-	btAssert(Fy == Fy);
 	return Fy;
 }
 
@@ -356,6 +368,10 @@ btScalar Tire::PacejkaMz(btScalar sigma, btScalar alpha, btScalar Fz, btScalar g
 	// peak factor
 	btScalar D = (c[1] * Fz + c[2]) * Fz;
 
+	// peak factor 1993
+	// D = D * (1 - c[18] * gamma * gamma);
+
+	// slope at origin
 	btScalar BCD = (c[3] * Fz + c[4]) * Fz * (1.0 - c[6] * btFabs(gamma)) * exp (-c[5] * Fz);
 
 	// stiffness factor
@@ -364,11 +380,23 @@ btScalar Tire::PacejkaMz(btScalar sigma, btScalar alpha, btScalar Fz, btScalar g
 	// curvature factor
 	btScalar E = (c[7] * Fz * Fz + c[8] * Fz + c[9]) * (1.0 - c[10] * btFabs(gamma));
 
-	// slip angle + horizontal shift
-	btScalar S = alpha + c[11] * gamma + c[12] * Fz + c[13];
+	// curvature factor 1993
+	// E = (c[7] * Fz * Fz + c[8] * Fz + c[9]) * (1.0 - (c[19] * gamma + c[20]) * sgn(S)) / (1.0 - c[10] * btFabs(gamma));
+
+	// horizontal shift
+	btScalar Sh = c[11] * gamma + c[12] * Fz + c[13];
+
+	// horizontal shift 1993
+	// Sh = c[11] * Fz + c[12] + c[13] * gamma;
 
 	// vertical shift
 	btScalar Sv = (c[14] * Fz * Fz + c[15] * Fz) * gamma + c[16] * Fz + c[17];
+
+	// vertical shift 1993
+	// Sv = c[14] * Fz + c[15] + (c[16] * Fz * Fz + c[17] * Fz) * gamma;
+
+	// composite
+	btScalar S = alpha + Sh;
 
 	// self-aligning torque
 	btScalar Mz = D * sin(c[0] * atan(B * S - E * (B * S - atan(B * S)))) + Sv;
