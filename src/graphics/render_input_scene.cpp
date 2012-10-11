@@ -181,10 +181,7 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 		QUATERNION <float> cuberotation;
 		cuberotation = (-camlook) * (-cam_rotation); //experimentally derived
 		(cuberotation).GetMatrix4(temp_matrix);
-		//(cam_rotation).GetMatrix4(temp_matrix);
 		glLoadMatrixf(temp_matrix);
-		//glTranslatef(-cam_position[0],-cam_position[1],-cam_position[2]);
-		//glLoadIdentity();
 
 		glActiveTexture(GL_TEXTURE0);
 		glMatrixMode(GL_MODELVIEW);
@@ -192,34 +189,10 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 		//send light position to the shaders
 		MATHVECTOR <float, 3> lightvec = lightposition;
 		(cam_rotation).RotateVector(lightvec);
-		//(cuberotation).RotateVector(lightvec);
 		shader->Enable();
 		shader->UploadActiveShaderParameter3f("lightposition", lightvec[0], lightvec[1], lightvec[2]);
 		shader->UploadActiveShaderParameter1f("contrast", contrast);
-		/*float lightarray[3];
-		for (int i = 0; i < 3; i++)
-		lightarray[i] = lightvec[i];
-		glLightfv(GL_LIGHT0, GL_POSITION, lightarray);*/
 
-		// if we have no reflection texture supplied, don't touch the TU because
-		// someone else may be supplying one
-		/*if (reflection && reflection->Loaded())
-		{
-			glActiveTexture(GL_TEXTURE2);
-			reflection->Activate();
-			glActiveTexture(GL_TEXTURE0);
-		}*/
-
-		/*glActiveTexture(GL_TEXTURE3);
-		if (ambient && ambient->Loaded())
-		{
-			ambient->Activate();
-		}
-		else
-		{
-			glBindTexture(GL_TEXTURE_CUBE_MAP,0);
-			//assert(0);
-		}*/
 		glActiveTexture(GL_TEXTURE0);
 
 		PushShadowMatrices();
@@ -253,16 +226,11 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 
 				vlighting = true;
 
-				// setup texture combiners here
-
-				// need some dummy texture
+				// dummy texture required to set the combiner
 				DRAWABLE & d = *dynamic_drawlist_ptr->front();
 
 				// setup first combiner
-				//glstate.BindTexture2D(0, d.GetDiffuseMap()); //fails???
-				glActiveTexture(GL_TEXTURE0);
-				glEnable(GL_TEXTURE_2D);
-				glBindTexture(GL_TEXTURE_2D, d.GetDiffuseMap()->GetID());
+				glstate.BindTexture2D(0, d.GetDiffuseMap());
 				glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
 				glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_INTERPOLATE);
 				glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB, GL_TEXTURE);
@@ -271,13 +239,14 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 				glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
 				glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_COLOR);
 				glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND2_RGB, GL_SRC_ALPHA);
-				// don't care about alpha; set it to something harmless
+				// don't care about alpha, set it to something harmless
 				glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
 				glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA, GL_CONSTANT);
 				glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
 
-				// setup second combiner
-				//glstate.BindTexture2D(1, d.GetDiffuseMap()); //fails???
+				// setup second combiner explicitely
+				// statemanager doesnt allow to enable/disable textures per tu
+				//glstate.BindTexture2D(1, d.GetDiffuseMap());
 				glActiveTexture(GL_TEXTURE1);
 				glEnable(GL_TEXTURE_2D);
 				glBindTexture(GL_TEXTURE_2D, d.GetDiffuseMap()->GetID());
@@ -287,10 +256,11 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 				glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB, GL_PRIMARY_COLOR);
 				glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
 				glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_COLOR);
-				// don't care about alpha; set it to something harmless
+				// don't care about alpha, set it to something harmless
 				glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
 				glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA, GL_PREVIOUS);
 				glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
+				glActiveTexture(GL_TEXTURE0);
 			}
 		}
 		else
@@ -300,13 +270,13 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 				// turn off lighting for everything else
 				glDisable(GL_LIGHTING);
 
-				// reset first texture combiner
-				glActiveTexture(GL_TEXTURE0);
-				glDisable(GL_TEXTURE_2D);
-
-				// reset second texture combiner
+				// reset second texture combiner explicitely
 				glActiveTexture(GL_TEXTURE1);
 				glDisable(GL_TEXTURE_2D);
+				glActiveTexture(GL_TEXTURE0);
+
+				// reset first texture combiner
+				glstate.Disable(GL_TEXTURE_2D);
 
 				vlighting = false;
 			}
@@ -625,16 +595,9 @@ void RENDER_INPUT_SCENE::SelectTexturing(DRAWABLE & forme, GLSTATEMANAGER & glst
 {
 	DRAWABLE * i(&forme);
 
-	bool enabletex = true;
-
 	const TEXTURE * diffusetexture = i->GetDiffuseMap();
 
-	if (!diffusetexture)
-		enabletex = false;
-	else if (!diffusetexture->Loaded())
-		enabletex = false;
-
-	if (!enabletex)
+	if (!diffusetexture || !diffusetexture->Loaded())
 	{
 		glstate.Disable(GL_TEXTURE_2D);
 		return;
