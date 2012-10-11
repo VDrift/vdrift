@@ -244,7 +244,7 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 				glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA, GL_CONSTANT);
 				glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
 
-				// setup second combiner explicitely
+				// setup second combiner explicitly
 				// statemanager doesnt allow to enable/disable textures per tu
 				//glstate.BindTexture2D(1, d.GetDiffuseMap());
 				glActiveTexture(GL_TEXTURE1);
@@ -270,7 +270,7 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 				// turn off lighting for everything else
 				glDisable(GL_LIGHTING);
 
-				// reset second texture combiner explicitely
+				// reset second texture combiner explicitly
 				glActiveTexture(GL_TEXTURE1);
 				glDisable(GL_TEXTURE_2D);
 				glActiveTexture(GL_TEXTURE0);
