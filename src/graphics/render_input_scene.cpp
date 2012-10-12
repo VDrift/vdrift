@@ -433,23 +433,16 @@ void RENDER_INPUT_SCENE::SetBlendMode(BLENDMODE::BLENDMODE mode)
 
 void RENDER_INPUT_SCENE::DrawList(GLSTATEMANAGER & glstate, const std::vector <DRAWABLE*> & drawlist, bool preculled)
 {
-	unsigned int drawcount = 0;
-	unsigned int loopcount = 0;
-
-	for (std::vector <DRAWABLE*>::const_iterator ptr = drawlist.begin(); ptr != drawlist.end(); ptr++, loopcount++)
+	for (std::vector <DRAWABLE*>::const_iterator ptr = drawlist.begin(); ptr != drawlist.end(); ++ptr)
 	{
 		DRAWABLE * i = *ptr;
 		if (preculled || !FrustumCull(*i))
 		{
-			drawcount++;
-
 			SelectFlags(*i, glstate);
 
 			SelectTexturing(*i, glstate);
 
 			bool need_pop = SelectTransformStart(*i, glstate);
-
-			//assert(i->GetDraw()->GetVertArray() || i->GetDraw()->IsDrawList() || !i->GetDraw()->GetLine().empty());
 
 			if (i->IsDrawList())
 			{
@@ -459,57 +452,60 @@ void RENDER_INPUT_SCENE::DrawList(GLSTATEMANAGER & glstate, const std::vector <D
 			}
 			else if (i->GetVertArray())
 			{
-				const float * verts;
-				int vertcount;
-				i->GetVertArray()->GetVertices(verts, vertcount);
-				if (vertcount > 0 && verts)
-				{
-					glVertexPointer(3, GL_FLOAT, 0, verts);
-					glEnableClientState(GL_VERTEX_ARRAY);
-
-					const int * faces;
-					int facecount;
-					i->GetVertArray()->GetFaces(faces, facecount);
-					if (facecount > 0 && faces)
-					{
-						const float * norms;
-						int normcount;
-						i->GetVertArray()->GetNormals(norms, normcount);
-						if (normcount > 0 && norms)
-						{
-							glNormalPointer(GL_FLOAT, 0, norms);
-							glEnableClientState(GL_NORMAL_ARRAY);
-						}
-
-						const float * tc[1];
-						int tccount[1];
-						if (i->GetVertArray()->GetTexCoordSets() > 0)
-						{
-							i->GetVertArray()->GetTexCoords(0, tc[0], tccount[0]);
-							if (tc[0] && tccount[0])
-							{
-								glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-								glTexCoordPointer(2, GL_FLOAT, 0, tc[0]);
-							}
-						}
-
-						glDrawElements(GL_TRIANGLES, facecount, GL_UNSIGNED_INT, faces);
-
-						glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-						glDisableClientState(GL_NORMAL_ARRAY);
-					}
-					else if (i->GetLineSize() > 0)
-					{
-						glstate.Enable(GL_LINE_SMOOTH);
-						glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-						glLineWidth(i->GetLineSize());
-						glDrawArrays(GL_LINES,  0, vertcount/3);
-					}
-					glDisableClientState(GL_VERTEX_ARRAY);
-				}
+				DrawVertexArray(*i->GetVertArray(), i->GetLineSize());
 			}
 			SelectTransformEnd(*i, need_pop);
 		}
+	}
+}
+
+void RENDER_INPUT_SCENE::DrawVertexArray(const VERTEXARRAY & va, float linesize) const
+{
+	const float * verts;
+	int vertcount;
+	va.GetVertices(verts, vertcount);
+	if (vertcount > 0 && verts)
+	{
+		glVertexPointer(3, GL_FLOAT, 0, verts);
+		glEnableClientState(GL_VERTEX_ARRAY);
+
+		const int * faces;
+		int facecount;
+		va.GetFaces(faces, facecount);
+		if (facecount > 0 && faces)
+		{
+			const float * norms;
+			int normcount;
+			va.GetNormals(norms, normcount);
+			if (normcount > 0 && norms)
+			{
+				glNormalPointer(GL_FLOAT, 0, norms);
+				glEnableClientState(GL_NORMAL_ARRAY);
+			}
+
+			const float * tc[1];
+			int tccount[1];
+			if (va.GetTexCoordSets() > 0)
+			{
+				va.GetTexCoords(0, tc[0], tccount[0]);
+				if (tc[0] && tccount[0])
+				{
+					glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+					glTexCoordPointer(2, GL_FLOAT, 0, tc[0]);
+				}
+			}
+
+			glDrawElements(GL_TRIANGLES, facecount, GL_UNSIGNED_INT, faces);
+
+			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+			glDisableClientState(GL_NORMAL_ARRAY);
+		}
+		else if (linesize > 0)
+		{
+			glLineWidth(linesize);
+			glDrawArrays(GL_LINES, 0, vertcount/3);
+		}
+		glDisableClientState(GL_VERTEX_ARRAY);
 	}
 }
 
@@ -667,22 +663,6 @@ bool RENDER_INPUT_SCENE::SelectTransformStart(DRAWABLE & forme, GLSTATEMANAGER &
 		else need_a_pop = false;
 	}
 
-	// throw information about the object into the texture 1 matrix
-	/*glActiveTexture(GL_TEXTURE1);
-	glMatrixMode(GL_TEXTURE);
-	glLoadIdentity();
-	static float temp_matrix[16];
-	for (int n = 0; n < 3; n++)
-		temp_matrix[n] = i->GetObjectCenter()[n];
-	temp_matrix[3] = 1.0;
-	MATRIX4<float> m;
-	glGetFloatv (GL_MODELVIEW_MATRIX, m.GetArray());
-	m.MultiplyVector4(temp_matrix); //eyespace light center in 0, 1, 2
-	temp_matrix[3] = 0.1; //attenuation factor in 3
-	glLoadMatrixf(temp_matrix);
-	glActiveTexture(GL_TEXTURE0);
-	glMatrixMode(GL_MODELVIEW);*/
-
 	return need_a_pop;
 }
 
@@ -693,11 +673,6 @@ void RENDER_INPUT_SCENE::SelectTransformEnd(DRAWABLE & forme, bool need_pop)
 		glPopMatrix();
 	}
 }
-
-/*SCENEDRAW * PointerTo(const SCENEDRAW & sd)
-{
-	return const_cast<SCENEDRAW *> (&sd);
-}*/
 
 /*unsigned int GRAPHICS_SDLGL::RENDER_INPUT_SCENE::CombineDrawlists()
 {
