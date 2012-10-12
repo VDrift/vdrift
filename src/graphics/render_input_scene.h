@@ -124,8 +124,6 @@ private:
 	/// returns true if the object was culled and should not be drawn
 	bool FrustumCull(DRAWABLE & tocull);
 
-	void SelectAppropriateShader(DRAWABLE & forme);
-
 	void SelectFlags(DRAWABLE & forme, GLSTATEMANAGER & glstate);
 
 	void SelectTexturing(DRAWABLE & forme, GLSTATEMANAGER & glstate);

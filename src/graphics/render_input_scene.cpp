@@ -445,8 +445,6 @@ void RENDER_INPUT_SCENE::DrawList(GLSTATEMANAGER & glstate, const std::vector <D
 
 			SelectFlags(*i, glstate);
 
-			if (shaders) SelectAppropriateShader(*i);
-
 			SelectTexturing(*i, glstate);
 
 			bool need_pop = SelectTransformStart(*i, glstate);
@@ -554,12 +552,6 @@ bool RENDER_INPUT_SCENE::FrustumCull(DRAWABLE & tocull)
 	return false;
 }
 
-void RENDER_INPUT_SCENE::SelectAppropriateShader(DRAWABLE & forme)
-{
-	(void)forme;
-	// deprecated! put the appropriate shader for the drawable group in your render.conf
-}
-
 void RENDER_INPUT_SCENE::SelectFlags(DRAWABLE & forme, GLSTATEMANAGER & glstate)
 {
 	DRAWABLE * i(&forme);
@@ -575,16 +567,15 @@ void RENDER_INPUT_SCENE::SelectFlags(DRAWABLE & forme, GLSTATEMANAGER & glstate)
 	if (i->GetCull())
 	{
 		glstate.Enable(GL_CULL_FACE);
-		if (i->GetCull())
-		{
-			if (i->GetCullFront())
-				glstate.SetCullFace(GL_FRONT);
-			else
-				glstate.SetCullFace(GL_BACK);
-		}
+		if (i->GetCullFront())
+			glstate.SetCullFace(GL_FRONT);
+		else
+			glstate.SetCullFace(GL_BACK);
 	}
 	else
+	{
 		glstate.Disable(GL_CULL_FACE);
+	}
 
 	float r,g,b,a;
 	i->GetColor(r,g,b,a);
