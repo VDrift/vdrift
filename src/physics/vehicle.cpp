@@ -651,7 +651,7 @@ void Vehicle::updateDynamics(btScalar dt)
 
 			// load doesn't change much(under 1%) after second iteration
 			// cache friction coefficients
-			if (n < 2)
+			if (n < 2 && c.response.accumImpulse > 1E-3)
 			{
 				btScalar Fz = c.response.accumImpulse / dt;
 				btVector3 Fxy = w.tire.getForce(Fz, c.muS, c.camber, c.vR, c.v1, c.v2);
