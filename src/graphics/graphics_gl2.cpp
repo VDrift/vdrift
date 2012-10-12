@@ -363,12 +363,14 @@ void GRAPHICS_GL2::Deinit()
 void GRAPHICS_GL2::BeginScene(std::ostream & error_output)
 {
 	glstate.Disable(GL_TEXTURE_2D);
-	glShadeModel( GL_SMOOTH );
+	glstate.Enable(GL_LINE_SMOOTH);
+	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+	glShadeModel(GL_SMOOTH);
 	glClearColor(0,0,0,0);
-	glClearDepth( 1.0f );
+	glClearDepth(1.0f);
 	glstate.Enable(GL_DEPTH_TEST);
-	glDepthFunc( GL_LEQUAL );
-	glHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST );
+	glDepthFunc(GL_LEQUAL);
+	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 	glstate.Disable(GL_LIGHTING);
 	glstate.SetColor(0.5,0.5,0.5,1.0);
 	glPolygonOffset(-1.0,-1.0);
