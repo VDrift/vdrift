@@ -649,28 +649,37 @@ void Vehicle::updateDynamics(btScalar dt)
 
 			SolveConstraintRow(c.response, *c.bodyA, *c.bodyB, c.rA, c.rB);
 
-			btScalar load = c.response.accumImpulse / dt;
-			btVector3 friction = w.tire.getForce(load, c.frictionCoeff, c.camber, c.vR, c.v1, c.v2);
+			// load doesn't change much(under 1%) after second iteration
+			// cache friction coefficients
+			if (n < 2)
+			{
+				btScalar Fz = c.response.accumImpulse / dt;
+				btVector3 Fxy = w.tire.getForce(Fz, c.muS, c.camber, c.vR, c.v1, c.v2);
+				c.mu1 = Fxy[0] / Fz;
+				c.mu2 = Fxy[1] / Fz;
+			}
+			btScalar limit1 = c.response.accumImpulse * c.mu1;
+			btScalar limit2 = c.response.accumImpulse * c.mu2;
 
 			// lateral friction constraint
-			if (friction[1] * dt > c.friction2.upperLimit)
+			if (limit2 > c.friction2.upperLimit)
 			{
-				c.friction2.upperLimit = friction[1] * dt;
+				c.friction2.upperLimit = limit2;
 			}
-			else if (friction[1] * dt < c.friction2.lowerLimit)
+			else if (limit2 < c.friction2.lowerLimit)
 			{
-				c.friction2.lowerLimit = friction[1] * dt;
+				c.friction2.lowerLimit = limit2;
 			}
-			//clog << friction[0] << " " << w.tire.getSlide() << "; ";
 
 			// tire friction torque
-			btScalar impulseLimit = btFabs(friction[0]) * w.getRadius() * dt;
+			btScalar impulseLimit = btFabs(limit1) * w.getRadius();
 			if (impulseLimit > motor_joint[i].impulseLimit)
 			{
 				motor_joint[i].impulseLimit = impulseLimit;
 			}
 			motor_joint[i].targetVelocity = c.v1 / w.getRadius();
 		}
+		//clog << "\n";
 
 		// driveline
 		for (int i = 0; i < mcount; ++i)

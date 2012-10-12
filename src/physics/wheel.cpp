@@ -110,8 +110,10 @@ bool Wheel::updateContact(btScalar dt, WheelContact & contact)
 	if (!has_contact) return false;
 
 	const Surface * surface = ray.getSurface();
-	contact.frictionCoeff = tire.getTread() * surface->frictionTread +
+	contact.muS = tire.getTread() * surface->frictionTread +
 		(1.0 - tire.getTread()) * surface->frictionNonTread;
+	contact.mu1 = 1.0;
+	contact.mu2 = 1.0;
 
 	btRigidBody * bodyA = body;
 	btRigidBody * bodyB = &getFixedBody();
