@@ -658,26 +658,11 @@ void Vehicle::updateDynamics(btScalar dt)
 				c.mu1 = Fxy[0] / Fz;
 				c.mu2 = Fxy[1] / Fz;
 			}
+
+			// tire friction torque limit
 			btScalar limit1 = c.response.accumImpulse * c.mu1;
-			btScalar limit2 = c.response.accumImpulse * c.mu2;
-
-			// lateral friction constraint
-			if (limit2 > c.friction2.upperLimit)
-			{
-				c.friction2.upperLimit = limit2;
-			}
-			else if (limit2 < c.friction2.lowerLimit)
-			{
-				c.friction2.lowerLimit = limit2;
-			}
-
-			// tire friction torque
-			btScalar impulseLimit = btFabs(limit1) * w.getRadius();
-			if (impulseLimit > motor_joint[i].impulseLimit)
-			{
-				motor_joint[i].impulseLimit = impulseLimit;
-			}
-			motor_joint[i].targetVelocity = c.v1 / w.getRadius();
+			motor_joint[i].impulseLimit = btFabs(limit1) * w.getRadius();
+			//clog << motor_joint[i].impulseLimit << " ";
 		}
 		//clog << "\n";
 
@@ -703,16 +688,18 @@ void Vehicle::updateDynamics(btScalar dt)
 			Wheel & w = wheel[c.id];
 
 			// longitudinal friction costraint from tire friction torque
-			btScalar impulseLimit = -motor_joint[i].accumulatedImpulse / w.getRadius();
-			if (impulseLimit > c.friction1.upperLimit)
-			{
-				c.friction1.upperLimit = impulseLimit;
-			}
-			else if (impulseLimit < c.friction1.lowerLimit)
-			{
-				c.friction1.lowerLimit = impulseLimit;
-			}
-			//clog << -impulseLimit / w.getRadius() << " ";
+			btScalar limit1 = -motor_joint[i].accumulatedImpulse / w.getRadius();
+			if (limit1 > 0)
+				c.friction1.upperLimit = limit1;
+			else
+				c.friction1.lowerLimit = limit1;
+
+			// lateral friction constraint
+			btScalar limit2 = c.response.accumImpulse * c.mu2;
+			if (limit2 > 0)
+				c.friction2.upperLimit = limit2;
+			else
+				c.friction2.lowerLimit = limit2;
 
 			btScalar vel = w.shaft.getAngularVelocity() * w.getRadius();
 			SolveConstraintRow(c.friction1, *c.bodyA, *c.bodyB, c.rA, c.rB, -vel);
