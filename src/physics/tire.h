@@ -57,7 +57,7 @@ public:
 	/// ang_velocity: tire angular velocity (w * r)
 	/// lon_velocty: tire longitudinal velocity relative to surface
 	/// lat_velocty: tire lateral velocity relative to surface
-	btVector3 getForce(
+	void update(
 		btScalar normal_force,
 		btScalar friction_coeff,
 		btScalar inclination,
@@ -65,12 +65,16 @@ public:
 		btScalar lon_velocty,
 		btScalar lat_velocity);
 
-	/// cached state, modified by getForce
-	btScalar getSlide() const;
-	btScalar getSlip() const;
-	btScalar getIdealSlide() const;
-	btScalar getIdealSlip() const;
-	btScalar getMz() const;
+	/// cached state, modified by update
+	btScalar getSlipRatio() const;
+	btScalar getSlipAngle() const;
+	btScalar getIdealSlipRatio() const;
+	btScalar getIdealSlipAngle() const;
+	btScalar getAligningTorque() const;
+
+	/// current friction coefficients (signed)
+	btScalar getFrictionLon() const;
+	btScalar getFrictionLat() const;
 
 	/// calculate tire squeal factor [0, 1] based on ideal slide/slip
 	btScalar getSqueal() const;
@@ -86,11 +90,12 @@ public:
 
 private:
 	btScalar camber;			///< tire camber relative to track surface
-	btScalar slide;				///< ratio of tire contact patch speed to road speed, minus one
-	btScalar slip;				///< angle (in degrees) between the wheel heading and the wheel velocity
-	btScalar ideal_slide;		///< ideal slide ratio
-	btScalar ideal_slip;		///< ideal slip angle
+	btScalar slipratio;			///< ratio of tire contact patch speed to road speed, minus one
+	btScalar slipangle;			///< angle (in degrees) between the wheel heading and the wheel velocity
+	btScalar slipratio_ideal;	///< ideal slide ratio
+	btScalar slipangle_ideal;	///< ideal slip angle
 	btScalar fx, fy, fz, mz;	///< contact force and aligning torque
+	btScalar mux, muy;			///< current friction coefficients
 	btScalar vx, vy;			///< contact velocity in tire space
 
 	/// Pure slip "Magic Formula" tire model 1989
@@ -121,29 +126,39 @@ inline btScalar Tire::getTread() const
 	return tread;
 }
 
-inline btScalar Tire::getSlide() const
+inline btScalar Tire::getSlipRatio() const
 {
-	return slide;
+	return slipratio;
 }
 
-inline btScalar Tire::getSlip() const
+inline btScalar Tire::getSlipAngle() const
 {
-	return slip;
+	return slipangle;
 }
 
-inline btScalar Tire::getIdealSlide() const
+inline btScalar Tire::getIdealSlipRatio() const
 {
-	return ideal_slide;
+	return slipratio_ideal;
 }
 
-inline btScalar Tire::getIdealSlip() const
+inline btScalar Tire::getIdealSlipAngle() const
 {
-	return ideal_slip;
+	return slipangle_ideal;
 }
 
-inline btScalar Tire::getMz() const
+inline btScalar Tire::getAligningTorque() const
 {
 	return mz;
+}
+
+inline btScalar Tire::getFrictionLon() const
+{
+	return mux;
+}
+
+inline btScalar Tire::getFrictionLat() const
+{
+	return muy;
 }
 
 }

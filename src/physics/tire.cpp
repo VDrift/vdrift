@@ -35,10 +35,10 @@ TireInfo::TireInfo() :
 
 Tire::Tire() :
 	camber(0),
-	slide(0),
-	slip(0),
-	ideal_slide(0),
-	ideal_slip(0),
+	slipratio(0),
+	slipangle(0),
+	slipratio_ideal(0),
+	slipangle_ideal(0),
 	fx(0),
 	fy(0),
 	fz(0),
@@ -70,7 +70,7 @@ void Tire::getSigmaHatAlphaHat(btScalar load, btScalar & sh, btScalar & ah) cons
 	ah = alpha_hat[lbound] * (1.0 - blend) + alpha_hat[lbound + 1] * blend;
 }
 
-btVector3 Tire::getForce(
+void Tire::update(
 	btScalar normal_force,
 	btScalar friction_coeff,
 	btScalar inclination,
@@ -78,162 +78,63 @@ btVector3 Tire::getForce(
 	btScalar lon_velocity,
 	btScalar lat_velocity)
 {
-	if (normal_force < 1E-3 || friction_coeff < 1E-3)
+	if (normal_force * friction_coeff < 1E-3)
 	{
-		slide = slip = 0;
-		ideal_slide = ideal_slip = 1;
+		slipratio = slipangle = 0;
+		slipratio_ideal = slipangle_ideal = 1;
 		fx = fy = fz = mz = 0;
+		mux = muy = 0;
 		vx = vy = 0;
-		return btVector3(0, 0, 0);
+		return;
 	}
 
 	// pacejka in kN
-	normal_force = normal_force * 1E-3;
+	fz = normal_force * 1E-3;
 
-	// limit input
-	btClamp(normal_force, btScalar(0), btScalar(max_load));
+	// clamp tire load and camber
+	btClamp(fz, btScalar(0), btScalar(max_load));
 	btClamp(inclination, -max_camber, max_camber);
 
-	// get ideal slip ratio
-	btScalar sigma_hat(0);
-	btScalar alpha_hat(0);
-	getSigmaHatAlphaHat(normal_force, sigma_hat, alpha_hat);
+	// get ideal slip
+	getSigmaHatAlphaHat(fz, slipratio_ideal, slipangle_ideal);
 
-	btScalar Fz = normal_force;
-	btScalar gamma = inclination; // positive when tire top tilts to the right, viewed from rear
+	camber = inclination; // positive when tire top tilts to the right, viewed from rear
+	vx = lon_velocity - ang_velocity;
+	vy = lat_velocity;
 	btScalar denom = btMax(btFabs(lon_velocity), btScalar(1E-3));
-	btScalar lon_slip_velocity = lon_velocity - ang_velocity;
-	btScalar sigma = -lon_slip_velocity / denom; // longitudinal slip: negative in braking, positive in traction
-	btScalar tan_alpha = lat_velocity / denom;
-	btScalar alpha = -atan(tan_alpha) * 180.0 / M_PI; // sideslip angle: positive in a right turn(opposite to SAE tire coords)
-	btScalar max_Fx(0), max_Fy(0), max_Mz(0);
+	slipratio = -vx / denom; // longitudinal slip: negative in braking, positive in traction
+	slipangle = -atan(vy / denom) * 180.0 / M_PI; // sideslip angle: positive in a right turn (opposite to SAE tire coords)
+
+	// clamp slip
+	btClamp(slipratio, btScalar(-1), btScalar(1));
+	btClamp(slipangle, btScalar(-60), btScalar(60));
 
 	// combining method 1: beckman method for pre-combining longitudinal and lateral forces
 	// seems to be a variant of Bakker 1987:
 	// refined Kamm Circle for non-isotropic tire characteristics
 	// and slip normalization to guarantee simultaneous sliding
-	btScalar s = sigma / sigma_hat;
-	btScalar a = alpha / alpha_hat;
+	btScalar s = slipratio / slipratio_ideal;
+	btScalar a = slipangle / slipangle_ideal;
 	btScalar rho = btMax(btSqrt(s * s + a * a), btScalar(1E-4)); // normalized slip
-	btScalar Fx = (s / rho) * PacejkaFx(rho * sigma_hat, Fz, friction_coeff, max_Fx);
-	btScalar Fy = (a / rho) * PacejkaFy(rho * alpha_hat, Fz, gamma, friction_coeff, max_Fy);
-	// Bakker (with unknown factor e(rho) to get the correct direction for large slip):
-	// btScalar Fx = -s * PacejkaFx(rho * sigma_hat, Fz, friction_coeff, max_Fx);
-	// btScalar Fy = -a * e(rho) * PacejkaFy(rho * alpha_hat, Fz, gamma, friction_coeff, max_Fy);
+	btScalar max_Fx(0), max_Fy(0), max_Mz(0);
+	fx = (s / rho) * PacejkaFx(rho * slipratio_ideal, fz, friction_coeff, max_Fx);
+	fy = (a / rho) * PacejkaFy(rho * slipangle_ideal, fz, camber, friction_coeff, max_Fy);
+	mz = PacejkaMz(slipratio, slipangle, fz, camber, friction_coeff, max_Mz);
 
-/*
-	// combining method 2: orangutan
-	btScalar Fx = PacejkaFx(sigma, Fz, friction_coeff, max_Fx);
-	btScalar Fy = PacejkaFy(alpha, Fz, gamma, friction_coeff, max_Fy);
-
-	btScalar one = (sigma < 0.0) ? -1.0 : 1.0;
-	btScalar pure_sigma = sigma / (one + sigma);
-	btScalar pure_alpha = -tan_alpha / (one + sigma);
-	btScalar pure_combined = sqrt(pure_sigma * pure_sigma + pure_alpha * pure_alpha);
-	btScalar kappa_combined = pure_combined / (1.0 - pure_combined);
-	btScalar alpha_combined = atan((one + sigma) * pure_combined);
-	btScalar Flimitx = PacejkaFx(kappa_combined, Fz, friction_coeff, max_Fx);
-	btScalar Flimity = PacejkaFy(alpha_combined * 180.0 / M_PI, Fz, gamma, friction_coeff, max_Fy);
-
-	btScalar x = fabs(Fx) / (fabs(Fx) + fabs(Fy));
-	btScalar y = 1.0 - x;
-	btScalar Flimit = (fabs(x * Flimitx) + fabs(y * Flimity));
-	btScalar Fmag = sqrt(Fx * Fx + Fy * Fy);
-	if (Fmag > Flimit)
-	{
-		btScalar scale = Flimit / Fmag;
-		Fx *= scale;
-		Fy *= scale;
-	}
-*/
-/*
-	// combining method 3: traction circle
-	btScalar Fx = PacejkaFx(sigma, Fz, friction_coeff, max_Fx);
-	btScalar Fy = PacejkaFy(alpha, Fz, gamma, friction_coeff, max_Fy);
-
-	// determine to what extent the tires are long (x) gripping vs lat (y) gripping
-	// 1.0 when Fy is zero, 0.0 when Fx is zero
-	btScalar longfactor = 1.0;
-	btScalar combforce = btFabs(Fx) + btFabs(Fy);
-	if (combforce > 1) longfactor = btFabs(Fx) / combforce;
-
-	// determine the maximum force for this amount of long vs lat grip by linear interpolation
-	btScalar maxforce = btFabs(max_Fx) * longfactor + (1.0 - longfactor) * btFabs(max_Fy);
-
-	// scale down forces to fit into the maximum
-	if (combforce > maxforce)
-	{
-		Fx *= maxforce / combforce;
-		Fy *= maxforce / combforce;
-	}
-*/
-/*
-	// combining method 4: traction ellipse (prioritize Fx)
-	// issue: assumes that adhesion limits are fully reached for combined forces
-	btScalar Fx = PacejkaFx(sigma, Fz, friction_coeff, max_Fx);
-	btScalar Fy = PacejkaFy(alpha, Fz, gamma, friction_coeff, max_Fy);
-	if (Fx < max_Fx)
-	{
-		Fy = Fy * sqrt(1.0 - (Fx / max_Fx) * (Fx / max_Fx));
-	}
-	else
-	{
-		Fx = max_Fx;
-		Fy = 0;
-	}
-*/
-/*
-	// combining method 5: traction ellipse (prioritize Fy)
-	// issue: assumes that adhesion limits are fully reached for combined forces
-	btScalar Fx = PacejkaFx(sigma, Fz, friction_coeff, max_Fx);
-	btScalar Fy = PacejkaFy(alpha, Fz, gamma, friction_coeff, max_Fy);
-	if (Fy < max_Fy)
-	{
-		Fx = Fx * sqrt(1.0 - (Fy / max_Fy) * (Fy / max_Fy));
-	}
-	else
-	{
-		Fy = max_Fy;
-		Fx = 0;
-	}
-*/
-/*
-	// no combining
-	btScalar Fx = PacejkaFx(sigma, Fz, friction_coeff, max_Fx);
-	btScalar Fy = PacejkaFy(alpha, Fz, gamma, friction_coeff, max_Fy);
-*/
-	btScalar Mz = PacejkaMz(sigma, alpha, Fz, gamma, friction_coeff, max_Mz);
-
-	camber = inclination;
-	slide = sigma;
-	slip = alpha;
-	ideal_slide = sigma_hat;
-	ideal_slip = alpha_hat;
-	fx = Fx;
-	fy = Fy;
-	fz = Fz;
-	mz = Mz;
-	vx = lon_slip_velocity;
-	vy = lat_velocity;
-
-	// Fx positive during traction, Fy positive in a right turn, Mz positive in a left turn
-	return btVector3(Fx, Fy, Mz);
+	// friction coefficients
+	mux = fx / normal_force;
+	muy = fy / normal_force;
 }
 
 btScalar Tire::getSqueal() const
 {
-	btScalar squeal = 0.0;
-	if (vx * vx > 1E-2 && slide * slide > 1E-6)
-	{
-		btScalar vx_body = vx / slide;
-		btScalar vx_ideal = ideal_slide * vx_body;
-		btScalar vy_ideal = btTan(-ideal_slip / 180 * M_PI) * vx_body;
-		btScalar vx_squeal = btFabs(vx / vx_ideal);
-		btScalar vy_squeal = btFabs(vy / vy_ideal);
-		// start squeal at 80% of the ideal slide/slip, max out at 160%
-		squeal = 1.25 * btMax(vx_squeal, vy_squeal) - 1.0;
-		btClamp(squeal, btScalar(0), btScalar(1));
-	}
+	if (btFabs(slipratio) < 1E-3)
+		return 0.0;
+
+	btScalar vsq = vx * vx + vy * vy;
+	btScalar vx_ideal = vx * slipratio_ideal / slipratio;
+	btScalar squeal = vsq - vx_ideal * vx_ideal;
+	btClamp(squeal, btScalar(0), btScalar(1));
 	return squeal;
 }
 
@@ -413,7 +314,7 @@ void Tire::findSigmaHatAlphaHat(btScalar load, btScalar & output_sigmahat, btSca
 {
 	btScalar x, y, ymax, junk;
 	ymax = 0;
-	for (x = -2; x < 2; x += 4.0/iterations)
+	for (x = -1; x < 1; x += 2.0 / iterations)
 	{
 		y = PacejkaFx(x, load, 1.0, junk);
 		if (y > ymax)
@@ -424,7 +325,7 @@ void Tire::findSigmaHatAlphaHat(btScalar load, btScalar & output_sigmahat, btSca
 	}
 
 	ymax = 0;
-	for (x = -20; x < 20; x += 40.0/iterations)
+	for (x = -20; x < 20; x += 40.0 / iterations)
 	{
 		y = PacejkaFy(x, load, 0.0, 1.0, junk);
 		if (y > ymax)

@@ -597,8 +597,8 @@ void Vehicle::updateDynamics(btScalar dt)
 	{
 		if (wheel[i].updateContact(dt, wheel_contact[wcount]))
 		{
+			// contact, init contact friction joint
 			wheel_contact[wcount].id = i;
-
 			MotorJoint & joint = motor_joint[mcount];
 			joint.shaft = &wheel[i].shaft;
 			joint.impulseLimit = 0;
@@ -608,6 +608,11 @@ void Vehicle::updateDynamics(btScalar dt)
 			tcs_active |= wheel[i].getTCS();
 			mcount++;
 			wcount++;
+		}
+		else
+		{
+			// no contact, reset tire state
+			wheel[i].tire.update(0, 0, 0, 0, 0, 0);
 		}
 	}
 
@@ -634,9 +639,6 @@ void Vehicle::updateDynamics(btScalar dt)
 		}
 	}
 
-	// steering feedback
-	steering_torque = 0;
-
 	// solver loop
 	const int iterations = 8;
 	for (int n = 0; n < iterations; ++n)
@@ -647,38 +649,24 @@ void Vehicle::updateDynamics(btScalar dt)
 			WheelContact & c = wheel_contact[i];
 			Wheel & w = wheel[c.id];
 
+			// suspension response
 			SolveConstraintRow(c.response, *c.bodyA, *c.bodyB, c.rA, c.rB);
 
-			// load doesn't change much(under 1%) after second iteration
-			// cache friction coefficients
-			if (n < 2 && c.response.accumImpulse > 1E-3)
-			{
-				btScalar Fz = c.response.accumImpulse / dt;
-				btVector3 Fxy = w.tire.getForce(Fz, c.muS, c.camber, c.vR, c.v1, c.v2);
-				c.mu1 = Fxy[0] / Fz;
-				c.mu2 = Fxy[1] / Fz;
-			}
-
 			// tire friction torque limit
-			btScalar limit1 = c.response.accumImpulse * c.mu1;
+			btScalar limit1 = c.response.accumImpulse * w.tire.getFrictionLon();
 			motor_joint[i].impulseLimit = btFabs(limit1) * w.getRadius();
-			//clog << motor_joint[i].impulseLimit << " ";
 		}
 		//clog << "\n";
 
 		// driveline
 		for (int i = 0; i < mcount; ++i)
-		{
 			motor_joint[i].solve();
-		}
+
 		for (int i = 0; i < dcount; ++i)
-		{
 			diff_joint[i].solve();
-		}
+
 		for (int i = 0; i < ccount; ++i)
-		{
 			clutch_joint[i].solve();
-		}
 		//clog << "  ";
 
 		// wheel friction
@@ -695,7 +683,7 @@ void Vehicle::updateDynamics(btScalar dt)
 				c.friction1.lowerLimit = limit1;
 
 			// lateral friction constraint
-			btScalar limit2 = c.response.accumImpulse * c.mu2;
+			btScalar limit2 = c.response.accumImpulse * w.tire.getFrictionLat();
 			if (limit2 > 0)
 				c.friction2.upperLimit = limit2;
 			else
@@ -704,17 +692,31 @@ void Vehicle::updateDynamics(btScalar dt)
 			btScalar vel = w.shaft.getAngularVelocity() * w.getRadius();
 			SolveConstraintRow(c.friction1, *c.bodyA, *c.bodyB, c.rA, c.rB, -vel);
 			SolveConstraintRow(c.friction2, *c.bodyA, *c.bodyB, c.rA, c.rB);
-
-			// steering feedback
-			if (w.suspension.getMaxSteeringAngle() > 1E-3)
-			{
-				steering_torque += w.tire.getMz();
-			}
 		}
 		//clog << "\n";
 	}
 	//clog << "\n";
-	steering_torque /= iterations;
+
+	// update tire state for valid contacts
+	// we are one timestep behind the simulation
+	steering_torque = 0;
+	for (int i = 0; i < wcount; ++i)
+	{
+		WheelContact & c = wheel_contact[i];
+		Wheel & w = wheel[c.id];
+		btVector3 v = c.bodyA->getVelocityInLocalPoint(c.rA);
+		btScalar fz = c.response.accumImpulse / dt;
+		btScalar vr = w.shaft.getAngularVelocity() * w.getRadius();
+		btScalar vx = c.friction1.normal.dot(v);
+		btScalar vy = c.friction2.normal.dot(v);
+		w.tire.update(fz, c.mus, c.camber, vr, vx, vy);
+
+		// steering feedback
+		if (w.suspension.getMaxSteeringAngle() > 1E-3)
+		{
+			steering_torque += w.tire.getAligningTorque();
+		}
+	}
 }
 
 void Vehicle::updateAerodynamics(btScalar dt)
@@ -832,9 +834,9 @@ btScalar Vehicle::autoClutch(btScalar clutch_rpm, btScalar last_clutch, btScalar
 		// helps with wheel lock to roll transitions after hard braking
 		for (int i = 0; i < wheel.size(); ++i)
 		{
-			btScalar slide = std::abs(wheel[i].tire.getSlide());
-			btScalar slide_limit = 0.25 * wheel[i].tire.getIdealSlide();
-			if (slide > slide_limit)
+			btScalar sr = btFabs(wheel[i].tire.getSlipRatio());
+			btScalar srmax = 0.25 * wheel[i].tire.getIdealSlipRatio();
+			if (sr > srmax)
 			{
 				clutch_value = 0;
 				break;
@@ -999,9 +1001,8 @@ void Vehicle::print(std::ostream & out, bool p1, bool p2, bool p3, bool p4) cons
 			out << "---Wheel---\n";
 			out << "Travel: " <<  wheel[i].suspension.getDisplacement() << "\n";
 			out << "Fz: " <<  wheel_contact[i].response.accumImpulse * freq * 1E-3 << "\n";
-			out << "Ideal Slip: " <<  wheel[i].tire.getIdealSlide() << "\n";
-			out << "Slip: " <<  wheel[i].tire.getSlide() << "\n";
-			out << "Slip Angle: " <<  wheel[i].tire.getSlip() << "\n";
+			out << "Slip Ratio: " <<  wheel[i].tire.getSlipRatio() << " " <<  wheel[i].tire.getIdealSlipRatio() << "\n";
+			out << "Slip Angle: " <<  wheel[i].tire.getSlipAngle() << " " <<  wheel[i].tire.getIdealSlipAngle() << "\n";
 			out << "RPM: " <<  wheel[i].shaft.getAngularVelocity() * 30 / M_PI << "\n";
 			if (wheel_contact[i].response.accumImpulse > 1E-3)
 			{

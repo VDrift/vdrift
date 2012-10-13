@@ -36,9 +36,7 @@ struct WheelContact
 	btVector3 rB;				///< contact position relative to bodyB
 	btScalar v1;				///< velocity along longitudinal constraint
 	btScalar v2;				///< velocity along lateral constraint
-	btScalar mu1;				///< longitudinal friction coefficient
-	btScalar mu2;				///< lateral friction coefficient
-	btScalar muS; 				///< surface friction coefficient
+	btScalar mus; 				///< surface friction coefficient
 	btScalar camber;			///< wheel camber in degrees
 	btScalar vR;				///< wheel rim velocity w * r
 	int id;						///< custom id

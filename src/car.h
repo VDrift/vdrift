@@ -417,7 +417,7 @@ inline float CAR::GetMaxVelocity(float radius) const
 
 inline float CAR::GetIdealSteeringAngle() const
 {
-	return vehicle.getWheel(0).tire.getIdealSlip();
+	return vehicle.getWheel(0).tire.getIdealSlipAngle();
 }
 
 inline float CAR::GetMaxSteeringAngle() const

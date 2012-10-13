@@ -110,10 +110,8 @@ bool Wheel::updateContact(btScalar dt, WheelContact & contact)
 	if (!has_contact) return false;
 
 	const Surface * surface = ray.getSurface();
-	contact.muS = tire.getTread() * surface->frictionTread +
+	contact.mus = tire.getTread() * surface->frictionTread +
 		(1.0 - tire.getTread()) * surface->frictionNonTread;
-	contact.mu1 = 1.0;
-	contact.mu2 = 1.0;
 
 	btRigidBody * bodyA = body;
 	btRigidBody * bodyB = &getFixedBody();
@@ -234,8 +232,8 @@ bool Wheel::updateContact(btScalar dt, WheelContact & contact)
 	// ABS (only in fwd direction)
 	abs_active = false;
 	btScalar brake_torque = brake.getTorque();
-	btScalar slide = tire.getSlide();
-	btScalar ideal_slide = tire.getIdealSlide();
+	btScalar slide = tire.getSlipRatio();
+	btScalar ideal_slide = tire.getIdealSlipRatio();
 	if (abs_enabled && brake_torque > 1E-3 && contact.v1 > 3)
 	{
 		// calculate brake torque correction to reach ideal slide
