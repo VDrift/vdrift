@@ -109,7 +109,7 @@ void Tire::update(
 	btClamp(slipratio, btScalar(-1), btScalar(1));
 	btClamp(slipangle, btScalar(-60), btScalar(60));
 
-	// combining method 1: beckman method for pre-combining longitudinal and lateral forces
+	// beckman method for pre-combining longitudinal and lateral forces
 	// seems to be a variant of Bakker 1987:
 	// refined Kamm Circle for non-isotropic tire characteristics
 	// and slip normalization to guarantee simultaneous sliding
