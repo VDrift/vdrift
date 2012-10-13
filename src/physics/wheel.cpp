@@ -36,7 +36,6 @@ static btRigidBody & getFixedBody()
 Wheel::Wheel() :
 	world(0),
 	body(0),
-	angvel(0),
 	radius(0.3),
 	width(0.2),
 	mass(1),
