@@ -70,12 +70,6 @@ public:
 	/// returns false if there is no contact
 	bool updateContact(btScalar dt, WheelContact & contact);
 
-	/// enable/disable abs
-	void setABS(bool value);
-
-	/// enable/disable abs
-	void setTCS(bool value);
-
 	/// wheel (center) world space position
 	const btVector3 & getPosition() const;
 
@@ -85,11 +79,11 @@ public:
 	/// wheel width
 	btScalar getWidth() const;
 
-	/// true if abs active
-	bool getABS() const;
+	/// adjust brake torque to match ideal slide on deceleration, true if active
+	bool applyABS(btScalar dt);
 
-	/// true if tcs active
-	bool getTCS() const;
+	/// adjust brake torque to match ideal slide on acceleration, true if active
+	bool applyTCS(btScalar dt);
 
 	/// wheel components
 	Suspension suspension;
@@ -108,10 +102,6 @@ private:
 	btScalar mass;
 	btScalar antiroll;
 	bool has_contact;
-	bool abs_enabled;
-	bool tcs_enabled;
-	bool abs_active;
-	bool tcs_active;
 };
 
 // implementation
@@ -119,16 +109,6 @@ private:
 inline void Wheel::setAntiRollStiffness(btScalar value)
 {
 	antiroll = value;
-}
-
-inline void Wheel::setABS(bool value)
-{
-	abs_enabled = value;
-}
-
-inline void Wheel::setTCS(bool value)
-{
-	tcs_enabled = value;
 }
 
 inline const btVector3 & Wheel::getPosition() const
@@ -144,16 +124,6 @@ inline btScalar Wheel::getRadius() const
 inline btScalar Wheel::getWidth() const
 {
 	return width;
-}
-
-inline bool Wheel::getABS() const
-{
-	return abs_active;
-}
-
-inline bool Wheel::getTCS() const
-{
-	return tcs_active;
 }
 
 }

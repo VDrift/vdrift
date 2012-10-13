@@ -61,8 +61,8 @@ Vehicle::Vehicle() :
 	shifted(true),
 	abs_active(false),
 	tcs_active(false),
-	//abs_enabled(false),
-	//tcs_enabled(false),
+	abs_enabled(false),
+	tcs_enabled(false),
 	maxangle(0),
 	maxspeed(0),
 	width(2)
@@ -203,8 +203,8 @@ void Vehicle::setState(const VehicleState & state)
 	shifted = state.shifted;
 	autoshift = state.auto_shift;
 	autoclutch = state.auto_clutch;
-	//abs_enabled = state.abs_enabled;
-	//tcs_enabled = state.tcs_enabled;
+	abs_enabled = state.abs_enabled;
+	tcs_enabled = state.tcs_enabled;
 }
 
 void Vehicle::getState(VehicleState & state) const
@@ -236,8 +236,8 @@ void Vehicle::getState(VehicleState & state) const
 	state.shifted = shifted;
 	state.auto_shift = autoshift;
 	state.auto_clutch = autoclutch;
-	//state.abs_enabled = abs_enabled;
-	//state.tcs_enabled = tcs_enabled;
+	state.abs_enabled = abs_enabled;
+	state.tcs_enabled = tcs_enabled;
 }
 
 void Vehicle::debugDraw(btIDebugDraw*)
@@ -356,6 +356,8 @@ void Vehicle::updateAction(btCollisionWorld * collisionWorld, btScalar dt)
 	updateTransmission(dt);
 
 	engine.update(dt);
+
+	updateStabilityControl(dt);
 
 	updateDynamics(dt);
 
@@ -505,20 +507,12 @@ void Vehicle::setAutoShift(bool value)
 
 void Vehicle::setABS(bool value)
 {
-	//abs_enabled = value;
-	for (int i = 0; i < wheel.size(); ++i)
-	{
-		wheel[i].setABS(value);
-	}
+	abs_enabled = value;
 }
 
 void Vehicle::setTCS(bool value)
 {
-	//tcs_enabled = value;
-	for (int i = 0; i < wheel.size(); ++i)
-	{
-		wheel[i].setTCS(value);
-	}
+	tcs_enabled = value;
 }
 
 void Vehicle::updateDynamics(btScalar dt)
@@ -568,8 +562,6 @@ void Vehicle::updateDynamics(btScalar dt)
 	// anti-roll bar approximation by adjusting suspension stiffness
 	for (int i = 0; i < antiroll.size(); ++i)
 	{
-		// move this into antirollbar class ?
-
 		// calculate anti-roll contributed stiffness
 		btScalar kr = antiroll[i].stiffness;
 		int i0 = antiroll[i].wheel0;
@@ -591,8 +583,6 @@ void Vehicle::updateDynamics(btScalar dt)
 	// wheel contacts
 	int mcount = 0;
 	int wcount = 0;
-	abs_active = false;
-	tcs_active = false;
 	for (int i = 0; i < wheel.size(); ++i)
 	{
 		if (wheel[i].updateContact(dt, wheel_contact[wcount]))
@@ -604,8 +594,6 @@ void Vehicle::updateDynamics(btScalar dt)
 			joint.impulseLimit = 0;
 			joint.targetVelocity = wheel_contact[wcount].v1 / wheel[i].getRadius();
 			joint.accumulatedImpulse = 0;
-			abs_active |= wheel[i].getABS();
-			tcs_active |= wheel[i].getTCS();
 			mcount++;
 			wcount++;
 		}
@@ -749,6 +737,68 @@ void Vehicle::updateWheelTransform(btScalar dt)
 		rot *= btQuaternion(direction::right, -wheel[i].shaft.getAngle());
 		btVector3 pos = wheel[i].suspension.getPosition() + body->getCenterOfMassOffset();
 		body->setChildTransform(i, btTransform(rot, pos));
+	}
+}
+
+void Vehicle::updateStabilityControl(btScalar dt)
+{
+	abs_active = false;
+	tcs_active = false;
+
+	// scs
+	if (abs_enabled && tcs_enabled)
+	{
+		// stability control operating slip angles 8 - 16 deg, min velocity 3 m/s
+		const btScalar slip_min = btTan(8.0 / 180.0 * M_PI);
+		const btScalar slip_max = btTan(16.0 / 180.0 * M_PI);
+		const btScalar vmin = 3.0;
+
+		const btVector3 & v = body->getLinearVelocity();
+		const btVector3 & w = body->getAngularVelocity();
+		const btMatrix3x3 & m = body->getCenterOfMassTransform().getBasis();
+		btScalar vr = m.getColumn(0).dot(v);
+		btScalar vf = m.getColumn(1).dot(v);
+		btScalar wz = m.getColumn(2).dot(w);
+		if (vf > vmin && btFabs(vr) > vf * slip_min && vr * wz > 0)
+		{
+			btScalar slip_factor = (btFabs(vr) / vf - slip_min) / (slip_max - slip_min);
+			btClamp(slip_factor, btScalar(0.0), btScalar(1.0));
+
+			for (int i = 0; i < wheel_contact.size(); ++i)
+			{
+				if (wheel_contact[i].id < 0)
+					break;
+
+				// figure out if wheel can be used for stabilization
+				// by calculating wheel contact braking torque axis
+				const btVector3 & dir = wheel_contact[i].friction1.normal;
+				const btVector3 & arm = wheel_contact[i].rA;
+				btVector3 axis = arm.cross(-dir);
+				btScalar rotdir = m.getColumn(2).dot(axis);
+				btScalar brake_factor = rotdir * vr < 0 ? slip_factor : 0.0;
+				wheel[wheel_contact[i].id].brake.setBrakeFactor(brake_factor);
+			}
+			abs_active = true;
+			tcs_active = true;
+		}
+	}
+
+	// abs
+	if (abs_enabled)
+	{
+		for (int i = 0; i < wheel.size(); ++i)
+		{
+			abs_active |= wheel[i].applyABS(dt);
+		}
+	}
+
+	// tcs
+	if (tcs_enabled)
+	{
+		for (int i = 0; i < wheel.size(); ++i)
+		{
+			tcs_active |= wheel[i].applyTCS(dt);
+		}
 	}
 }
 

@@ -167,8 +167,8 @@ protected:
 	bool shifted;
 	bool abs_active;
 	bool tcs_active;
-	//bool abs_enabled;
-	//bool tcs_enabled;
+	bool abs_enabled;
+	bool tcs_enabled;
 
 	/// aerodynamic force and torque for debugging
 	btVector3 aero_force;
@@ -246,6 +246,9 @@ protected:
 
 	/// update wheel position, rotation
 	void updateWheelTransform(btScalar dt);
+
+	/// update vehicle stability control: ABS, TCS, SCS
+	void updateStabilityControl(btScalar dt);
 
 	/// calulate new clutch value
 	btScalar autoClutch(btScalar clutch_rpm, btScalar last_clutch, btScalar dt) const;

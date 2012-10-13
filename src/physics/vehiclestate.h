@@ -47,8 +47,8 @@ struct VehicleState
 	bool shifted;
 	bool auto_shift;
 	bool auto_clutch;
-	//bool abs_enabled;
-	//bool tcs_enabled;
+	bool abs_enabled;
+	bool tcs_enabled;
 };
 
 }

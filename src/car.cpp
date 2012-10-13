@@ -1216,8 +1216,8 @@ bool CAR::Serialize(joeserialize::Serializer & s)
 	_SERIALIZE_(s, vstate.shifted);
 	_SERIALIZE_(s, vstate.auto_shift);
 	_SERIALIZE_(s, vstate.auto_clutch);
-	//_SERIALIZE_(s, vstate.abs_enabled);
-	//_SERIALIZE_(s, vstate.tcs_enabled);
+	_SERIALIZE_(s, vstate.abs_enabled);
+	_SERIALIZE_(s, vstate.tcs_enabled);
 
 	if (write)
 		vehicle.setState(vstate);
