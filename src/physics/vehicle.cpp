@@ -287,20 +287,21 @@ btScalar Vehicle::getSpeedMPS() const
 
 btScalar Vehicle::getBrakingDistance(btScalar target_speed) const
 {
-	// Braking distance estimation (ignoring aerodynamic drag)
-	// mu * mass * gravity * distance = 0.5 * mass * (Initial_velocity^2 - Final_velocity^2)
-	// Distance is:
-	// distance = (Initial_velocity^2 - Final_velocity^2) / (2 * mu * gravity)
-	btScalar gravity = 9.81;
-	btScalar lon_friction_factor = 0.70; // friction factor
-	btScalar friction_coeff = lon_friction_coeff * lon_friction_factor;
-	btScalar current_speed_2 = body->getLinearVelocity().length2();
-	btScalar target_speed_2 = target_speed * target_speed;
-	if (target_speed_2 < current_speed_2)
-	{
-		return (current_speed_2 - target_speed_2) / (2.0 * friction_coeff * gravity);
-	}
-	return 0;
+	// Braking distance with drag
+	// Derivation: "Uncertainty Analysis for the Evaluation of a Passive Runway Arresting System"
+	// d = -0.5 * m / k * ln((m * g * mu + k * v1^2) / (m * g * mu + k * v0^2))
+	// k: drag coefficient F = -k * v^2, in our case k = mu * cl + cd
+	btScalar v0_2 = body->getLinearVelocity().length2();
+	btScalar v1_2 = target_speed * target_speed;
+	if (v0_2 < v1_2) return 0.0;
+
+	btScalar m = 1 / body->getInvMass();
+	btScalar g = 9.81;
+	btScalar mu = lon_friction_coeff * 0.70; // scale by friction factor
+	btScalar cl = -getLiftCoefficient(); // lift coeff magnitude
+	btScalar k = mu * cl + getDragCoefficient();
+	btScalar d = -0.5 * m / k * log((m * g * mu + k * v1_2) / (m * g * mu + k * v0_2));
+	return d;
 }
 
 btScalar Vehicle::getMaxVelocity(btScalar radius) const
@@ -309,12 +310,12 @@ btScalar Vehicle::getMaxVelocity(btScalar radius) const
 	// m * v * v / r = friction_coeff * (m * g + lift_coeff * v * v)
 	// v * v = r * friction_coeff  * g / (1 - r * friction_coeff * lift_coeff / m)
 	btScalar gravity = 9.81;
-	btScalar lat_friction_factor = 0.70; // friction factor
-	btScalar friction_coeff = lat_friction_coeff * lat_friction_factor;
+	btScalar friction_coeff = lat_friction_coeff * 0.70;
+	btScalar lift_coeff = -getLiftCoefficient();
 	btScalar minv = body->getInvMass();
-	btScalar d = 1.0 - radius * friction_coeff * getLiftCoefficient() * minv;
-	if (d < 1E-6)
-		return 1000;
+	btScalar d = 1.0 - radius * friction_coeff * lift_coeff * minv;
+	if (d < 1E-6) return 1000;
+
 	btScalar v = sqrt(radius * friction_coeff * gravity / d);
 	return v;
 }
