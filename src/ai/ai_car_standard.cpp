@@ -19,56 +19,33 @@
 
 #include "ai_car_standard.h"
 #include "car.h"
+#include "bezier.h"
+#include "track.h"
+#include "carinput.h"
+#include "mathvector.h"
+#include "physics/carwheelposition.h"
+#include "coordinatesystem.h"
+#include "optional.h"
+#include "unittest.h"
 
 #include <cassert>
 #include <cmath>
+#include <algorithm>
+#include <iostream>
 
-// used to calculate brake value
-#define MAX_SPEED_DIFF 6.0
-#define MIN_SPEED_DIFF 1.0
-
-// used to detect very sharp corners like Circuit de Pau
-#define LOOKAHEAD_MIN_RADIUS 8.0
-
-// maximum change in brake value per second
-#define BRAKE_RATE_LIMIT 0.1
-#define THROTTLE_RATE_LIMIT 0.1
-
-AI_Car* AI_Car_Standard_Factory::create(CAR * car, float difficulty)
-{
+AI_Car* AI_Car_Standard_Factory::create(CAR * car, float difficulty){
 	return new AI_Car_Standard(car, difficulty);
 }
 
-AI_Car_Standard::AI_Car_Standard(CAR * new_car, float newdifficulty) :
-	AI_Car(new_car, newdifficulty),
-	last_patch(NULL)
+AI_Car_Standard::AI_Car_Standard (CAR * new_car, float newdifficulty) :
+	AI_Car(new_car, newdifficulty), shift_time(0.0), longitude_mu(0.9),
+	lateral_mu(0.9), last_patch(NULL), use_racingline(true)
 {
-	assert(car);
 	assert(car->GetTCSEnabled());
 	assert(car->GetABSEnabled());
 	car->SetAutoShift(true);
 	car->SetAutoClutch(true);
-
-#ifdef VISUALIZE_AI_DEBUG
-	brakelook = 0;
-	steerlook = 0;
-
-	SCENENODE & topnode  = car->GetNode();
-	ConfigureDrawable(brakedraw, topnode, 0, 1, 0);
-	ConfigureDrawable(steerdraw, topnode, 0, 0, 1);
-	//ConfigureDrawable(avoidancedraw, topnode, 1, 0, 0);
-
-	DRAWABLE & brakedrawable = topnode.GetDrawlist().normal_noblend.get(brakedraw);
-	DRAWABLE & steerdrawable = topnode.GetDrawlist().normal_noblend.get(steerdraw);
-
-	brakedrawable.SetLineSize(4);
-	brakedrawable.SetVertArray(&brakeshape);
-
-	steerdrawable.SetLineSize(4);
-	steerdrawable.SetVertArray(&steershape);
-#endif
 }
-
 AI_Car_Standard::~AI_Car_Standard ()
 {
 #ifdef VISUALIZE_AI_DEBUG
@@ -84,15 +61,36 @@ AI_Car_Standard::~AI_Car_Standard ()
 #endif
 }
 
-template <class T> bool AI_Car_Standard::isnan(const T & x)
+template<class T> bool AI_Car_Standard::isnan(const T & x)
 {
 	return x != x;
 }
 
+#define GRAVITY 9.8
+
+//used to calculate brake value
+#define MAX_SPEED_DIFF 6.0
+#define MIN_SPEED_DIFF 1.0
+
+//used to find the point the car should steer towards to
+#define LOOKAHEAD_FACTOR1 2.25
+#define LOOKAHEAD_FACTOR2 0.33
+
+//used to detect very sharp corners like Circuit de Pau
+#define LOOKAHEAD_MIN_RADIUS 8.0
+
+//used to calculate friction coefficient
+#define FRICTION_FACTOR_LONG 0.68
+#define FRICTION_FACTOR_LAT 0.62
+
+//maximum change in brake value per second
+#define BRAKE_RATE_LIMIT 0.1
+#define THROTTLE_RATE_LIMIT 0.1
+
 float AI_Car_Standard::clamp(float val, float min, float max)
 {
 	assert(min <= max);
-	return std::min(max, std::max(min, val));
+	return std::min(max,std::max(min,val));
 }
 
 //note that rate_limit_neg should be positive, it gets inverted inside the function
@@ -106,11 +104,11 @@ float AI_Car_Standard::RateLimit(float old_value, float new_value, float rate_li
 		return new_value;
 }
 
-void AI_Car_Standard::Update(float dt, const std::vector<CAR> & cars)
+void AI_Car_Standard::Update(float dt, const std::list <CAR> & checkcars)
 {
-	AnalyzeOthers(dt, cars);
-	UpdateGasBrake(dt);
-	UpdateSteer(dt);
+	analyzeOthers(dt, checkcars);
+	updateGasBrake();
+	updateSteer();
 }
 
 MATHVECTOR <float, 3> AI_Car_Standard::TransformToWorldspace(const MATHVECTOR <float, 3> & bezierspace)
@@ -125,12 +123,35 @@ MATHVECTOR <float, 3> AI_Car_Standard::TransformToPatchspace(const MATHVECTOR <f
 
 const BEZIER * AI_Car_Standard::GetCurrentPatch(const CAR *c)
 {
-	const BEZIER * curr_patch = c->GetCurPatch(0);
+	const BEZIER *curr_patch = c->GetCurPatch(WHEEL_POSITION(0));
 	if (!curr_patch)
 	{
-		curr_patch = c->GetCurPatch(1); // let's try the other wheel
+		curr_patch = c->GetCurPatch(WHEEL_POSITION(1)); //let's try the other wheel
+		if (!curr_patch) return NULL;
 	}
+
 	return curr_patch;
+}
+
+MATHVECTOR <float, 3> AI_Car_Standard::GetPatchFrontCenter(const BEZIER & patch)
+{
+	return (patch.GetPoint(0,0) + patch.GetPoint(0,3)) * 0.5;
+}
+
+MATHVECTOR <float, 3> AI_Car_Standard::GetPatchBackCenter(const BEZIER & patch)
+{
+	return (patch.GetPoint(3,0) + patch.GetPoint(3,3)) * 0.5;
+}
+
+MATHVECTOR <float, 3> AI_Car_Standard::GetPatchDirection(const BEZIER & patch)
+{
+	return (GetPatchFrontCenter(patch) - GetPatchBackCenter(patch)) * 0.5;
+}
+
+MATHVECTOR <float, 3> AI_Car_Standard::GetPatchWidthVector(const BEZIER & patch)
+{
+	return ((patch.GetPoint(0,0) + patch.GetPoint(3,0)) -
+			(patch.GetPoint(0,3) + patch.GetPoint(3,3))) * 0.5;
 }
 
 double AI_Car_Standard::GetPatchRadius(const BEZIER & patch)
@@ -138,6 +159,9 @@ double AI_Car_Standard::GetPatchRadius(const BEZIER & patch)
 	if (patch.GetNextPatch() && patch.GetNextPatch()->GetNextPatch())
 	{
 		double track_radius = 0;
+
+		/*MATHVECTOR <float, 3> d1 = -GetPatchDirection(patch);
+		MATHVECTOR <float, 3> d2 = GetPatchDirection(*patch.GetNextPatch());*/
 		MATHVECTOR <float, 3> d1 = -(patch.GetNextPatch()->GetRacingLine() - patch.GetRacingLine());
 		MATHVECTOR <float, 3> d2 = patch.GetNextPatch()->GetNextPatch()->GetRacingLine() - patch.GetNextPatch()->GetRacingLine();
 		d1[1] = 0;
@@ -151,119 +175,183 @@ double AI_Car_Standard::GetPatchRadius(const BEZIER & patch)
 		float alpha = (d1d2mag < 0.0001) ? 0.0f : (M_PI * diff + 2.0 * d1mag * angle) / d1d2mag / 2.0;
 		if (fabs(alpha - M_PI/2.0) < 0.001) track_radius = 10000.0;
 		else track_radius = d1mag / 2.0 / cos(alpha);
+
 		return track_radius;
 	}
-	return 0;
+	else //fall back
+		return 0;
 }
 
-BEZIER AI_Car_Standard::RevisePatch(const BEZIER * origpatch)
+///trim the patch's width in-place
+void AI_Car_Standard::TrimPatch(BEZIER & patch, float trimleft_front, float trimright_front, float trimleft_back, float trimright_back)
 {
-	if (!origpatch->GetNextPatch())
-		return *origpatch;
+	MATHVECTOR <float, 3> frontvector = (patch.GetPoint(0,3) - patch.GetPoint(0,0));
+	MATHVECTOR <float, 3> backvector = (patch.GetPoint(3,3) - patch.GetPoint(3,0));
+	float frontwidth = frontvector.Magnitude();
+	float backwidth = backvector.Magnitude();
+	if (trimleft_front + trimright_front > frontwidth)
+	{
+		float scale = frontwidth/(trimleft_front + trimright_front);
+		trimleft_front *= scale;
+		trimright_front *= scale;
+	}
+	if (trimleft_back + trimright_back > backwidth)
+	{
+		float scale = backwidth/(trimleft_back + trimright_back);
+		trimleft_back *= scale;
+		trimright_back *= scale;
+	}
 
-	const BEZIER * nextpatch = origpatch->GetNextPatch();
+	MATHVECTOR <float, 3> newfl = patch.GetPoint(0,0);
+	MATHVECTOR <float, 3> newfr = patch.GetPoint(0,3);
+	MATHVECTOR <float, 3> newbl = patch.GetPoint(3,0);
+	MATHVECTOR <float, 3> newbr = patch.GetPoint(3,3);
+
+	if (frontvector.Magnitude() > 0.001)
+	{
+		MATHVECTOR <float, 3> trimdirection_front = frontvector.Normalize();
+		newfl = patch.GetPoint(0,0) + trimdirection_front*trimleft_front;
+		newfr = patch.GetPoint(0,3) - trimdirection_front*trimright_front;
+	}
+
+	if (backvector.Magnitude() > 0.001)
+	{
+		MATHVECTOR <float, 3> trimdirection_back = backvector.Normalize();
+		newbl = patch.GetPoint(3,0) + trimdirection_back*trimleft_back;
+		newbr = patch.GetPoint(3,3) - trimdirection_back*trimright_back;
+	}
+
+	patch.SetFromCorners(newfl, newfr, newbl, newbr);
+}
+
+BEZIER AI_Car_Standard::RevisePatch(const BEZIER * origpatch, bool use_racingline)
+{
 	BEZIER patch = *origpatch;
 
-	MATHVECTOR <float, 3> vfront = (patch.GetPoint(0,3) - patch.GetPoint(0,0));
-	MATHVECTOR <float, 3> vback = (patch.GetPoint(3,3) - patch.GetPoint(3,0));
-	MATHVECTOR <float, 3> vfrontleft = nextpatch->GetRacingLine() - patch.GetPoint(0,0);
-	MATHVECTOR <float, 3> vbackleft = patch.GetRacingLine() - patch.GetPoint(3,0);
-
-	// front/back width fractions
-	float width_fl = vfront.dot(vfrontleft) / vfront.dot(vfront);
-	float width_bl = vback.dot(vbackleft) / vback.dot(vback);
-	float width_fm = std::min(width_fl, 1 - width_fl);
-	float width_bm = std::min(width_bl, 1 - width_bl);
-
-	// front/back trims
-	float trim_fl = width_fl - width_fm;
-	float trim_bl = width_bl - width_bm;
-	float trim_fr = 1 - width_fl - width_fm;
-	float trim_br = 1 - width_bl - width_bm;
-
-	if (trim_fl + trim_fr > 1)
+	//take into account the racing line
+	//use_racingline = false;
+	if (use_racingline && patch.GetNextPatch() && patch.HasRacingline())
 	{
-		float scale = 1 / (trim_fl + trim_fr);
-		trim_fl *= scale;
-		trim_fr *= scale;
+		float widthfront = std::min((patch.GetNextPatch()->GetRacingLine()-patch.GetPoint(0,0)).Magnitude(),
+									 (patch.GetNextPatch()->GetRacingLine()-patch.GetPoint(0,3)).Magnitude());
+		float widthback = std::min((patch.GetRacingLine()-patch.GetPoint(3,0)).Magnitude(),
+									(patch.GetRacingLine()-patch.GetPoint(3,3)).Magnitude());
+		float trimleft_front = (patch.GetNextPatch()->GetRacingLine() - patch.GetPoint(0,0)).Magnitude()-widthfront;
+		float trimright_front = (patch.GetNextPatch()->GetRacingLine() - patch.GetPoint(0,3)).Magnitude()-widthfront;
+		float trimleft_back = (patch.GetRacingLine() - patch.GetPoint(3,0)).Magnitude()-widthback;
+		float trimright_back = (patch.GetRacingLine() - patch.GetPoint(3,3)).Magnitude()-widthback;
+		TrimPatch(patch, trimleft_front, trimright_front, trimleft_back, trimright_back);
 	}
 
-	if (trim_bl + trim_br > 1)
+	//check for revisions due to other cars
+	/*const float trim_falloff_distance = 100.0; //trim fallof distance in meters per (meters per second)
+	const MATHVECTOR <float, 3> throttle_axis(-1,0,0); //positive is in front of the car
+	std::map <const CAR *, PATH_REVISION> & revmap = path_revisions;
+	for (std::map <const CAR *, PATH_REVISION>::iterator i = revmap.begin(); i != revmap.end(); i++)
 	{
-		float scale = 1 / (trim_bl + trim_br);
-		trim_bl *= scale;
-		trim_br *= scale;
-	}
+		if (i->first != car)
+		{
+			//compute relative info
+			MATHVECTOR <float, 3> myvel = car->GetVelocity();
+			MATHVECTOR <float, 3> othervel = i->first->GetVelocity();
+			(-car->GetOrientation()).RotateVector(myvel);
+			(-i->first->GetOrientation()).RotateVector(othervel);
+			float speed_diff = myvel.dot(throttle_axis) - othervel.dot(throttle_axis); //positive if other car is faster //actually positive if my car is faster, right?
 
-	MATHVECTOR <float, 3> fl = patch.GetPoint(0,0) + vfront * trim_fl;
-	MATHVECTOR <float, 3> fr = patch.GetPoint(0,3) - vfront * trim_fr;
-	MATHVECTOR <float, 3> bl = patch.GetPoint(3,0) + vback * trim_bl;
-	MATHVECTOR <float, 3> br = patch.GetPoint(3,3) - vback * trim_br;
-	patch.SetFromCorners(fl, fr, bl, br);
+			float cardist_back = patch.dist_from_start - i->second.car_pos_along_track; //positive if patch is ahead of car
+			float patchlen = GetPatchDirection(patch).Magnitude();
+			float cardist_front = (patch.dist_from_start+patchlen) - i->second.car_pos_along_track;
+
+			const float minfalloff = 10;
+			const float maxfalloff = 60;
+			float cur_trim_falloff_distance_fwd = minfalloff;
+			float cur_trim_falloff_distance_rear = minfalloff;
+			float falloff = clamp(trim_falloff_distance*std::abs(speed_diff),minfalloff,maxfalloff);
+			if (speed_diff > 0)
+			{
+				//cur_trim_falloff_distance_fwd = falloff;
+			}
+			else
+				cur_trim_falloff_distance_rear = falloff;
+
+			float scale_front = clamp(1.0f-cardist_front/cur_trim_falloff_distance_fwd, 0, 1);
+			if (cardist_front < 0)
+				scale_front = clamp(1.0f+cardist_front/cur_trim_falloff_distance_rear, 0, 1);
+			float scale_back = clamp(1.0f-cardist_back/cur_trim_falloff_distance_fwd, 0, 1);
+			if (cardist_back < 0)
+				scale_back = clamp(1.0f+cardist_back/cur_trim_falloff_distance_rear, 0, 1);
+
+			std::cout << speed_diff << ", " << cur_trim_falloff_distance_fwd << ", " << cur_trim_falloff_distance_rear << ", " << cardist_front << ", " << cardist_back << ", " << scale_front << ", " << scale_back << std::endl;
+
+			float trimleft_front = i->second.trimleft_front*scale_front;
+			float trimright_front = i->second.trimright_front*scale_front;
+			float trimleft_back = i->second.trimleft_back*scale_back;
+			float trimright_back = i->second.trimright_back*scale_back;
+
+			TrimPatch(patch, trimleft_front, trimright_front, trimleft_back, trimright_back);
+		}
+	}*/
 
 	return patch;
 }
 
-float AI_Car_Standard::GetSpeedLimit(const BEZIER * patch, const BEZIER * nextpatch) const
-{
-	assert(patch);
-
-	// adjust the radius at corner exit to allow a higher speed.
-	// this will get the car to accellerate out of corner
-	float radius = fabs(patch->GetRacingLineRadius());
-	float next_radius = fabs(nextpatch->GetRacingLineRadius());
-	if (nextpatch && radius > LOOKAHEAD_MIN_RADIUS && next_radius > radius)
-	{
-		// racing line width fraction is from left to right border
-		// positive radius means curvature to the left
-		float extra_radius = 0;
-		float track_width = nextpatch->GetWidth();
-		float racing_line_width = track_width * nextpatch->GetRacingLineFraction();
-		if (nextpatch->GetRacingLineRadius() < 0)
-			extra_radius = racing_line_width;
-		else
-			extra_radius = track_width - racing_line_width;
-		radius += extra_radius * 0.5;
-	}
-	return car->GetMaxVelocity(radius);
-}
-
-void AI_Car_Standard::UpdateGasBrake(float dt)
+void AI_Car_Standard::updateGasBrake()
 {
 #ifdef VISUALIZE_AI_DEBUG
-	brakelook = 0;
+	brakelook.clear();
 #endif
 
 	float brake_value = 0.0;
 	float gas_value = 0.5;
+	const float speed_percent = 1.0;
 
 	if (car->GetEngineRPM() < car->GetEngineStallRPM())
 		inputs[CARINPUT::START_ENGINE] = 1.0;
 	else
 		inputs[CARINPUT::START_ENGINE] = 0.0;
 
-	const BEZIER * curr_patch = GetCurrentPatch(car);
-	if (!curr_patch)
+	calcMu();
+
+	const BEZIER *curr_patch_ptr = GetCurrentPatch(car);
+	//if car is not on track, just let it roll
+    if (!curr_patch_ptr)
 	{
-		// if car is not on track, just let it roll
 		inputs[CARINPUT::THROTTLE] = 0.8;
 		inputs[CARINPUT::BRAKE] = 0.0;
 		return;
 	}
 
-	// get velocity along tangent vector, it should calculate a lower current speed
-	// fixme: patch tangent is ok, racingline tangent would be better?
-	MATHVECTOR<float, 3> patch_direction = TransformToWorldspace(curr_patch->GetCenterLine());
-	float current_speed = car->GetVelocity().dot(patch_direction.Normalize());
+	BEZIER curr_patch = RevisePatch(curr_patch_ptr, use_racingline);
+	//BEZIER curr_patch = *curr_patch_ptr;
 
-	// check speed against speed limit of current patch
-	float speed_limit = GetSpeedLimit(curr_patch, curr_patch->GetNextPatch());
+	MATHVECTOR <float, 3> patch_direction = TransformToWorldspace(GetPatchDirection(curr_patch));
+
+	//this version uses the velocity along tangent vector. it should calculate a lower current speed,
+	//hence higher gas value or lower brake value
+	//float currentspeed = car->chassis().cm_velocity().component(direction_vector);
+	float currentspeed = car->GetVelocity().dot(patch_direction.Normalize());
+	//this version just uses the velocity, do not care about the direction
+	//float currentspeed = car->chassis().cm_velocity().magnitude();
+
+	//check speed against speed limit of current patch
+	float speed_limit = 0;
+	if (!curr_patch.GetNextPatch())
+	{
+		speed_limit = calcSpeedLimit(&curr_patch, NULL, lateral_mu, GetPatchWidthVector(*curr_patch_ptr).Magnitude())*speed_percent;
+	}
+	else
+	{
+		BEZIER next_patch = RevisePatch(curr_patch.GetNextPatch(), use_racingline);
+		speed_limit = calcSpeedLimit(&curr_patch, &next_patch, lateral_mu, GetPatchWidthVector(*curr_patch_ptr).Magnitude())*speed_percent;
+	}
+
 	speed_limit *= difficulty;
 
-	float speed_diff = speed_limit - current_speed;
+	float speed_diff = speed_limit - currentspeed;
+
 	if (speed_diff < 0.0)
 	{
-		if (-speed_diff < MIN_SPEED_DIFF) // no need to brake if diff is small
+		if (-speed_diff < MIN_SPEED_DIFF) //no need to brake if diff is small
 		{
 			brake_value = 0.0;
 		}
@@ -285,162 +373,238 @@ void AI_Car_Standard::UpdateGasBrake(float dt)
 		brake_value = 0.0;
 	}
 
-	// check upto max lookahead distance
-	float maxlookahead = car->GetBrakingDistance(0);
+	//check upto maxlookahead distance
+	float maxlookahead = calcBrakeDist(currentspeed, 0.0, longitude_mu)+10;
+	//maxlookahead = 0.1;
 	float dist_checked = 0.0;
 	float brake_dist = 0.0;
-	const BEZIER * next_patch = curr_patch;
+	BEZIER patch_to_check = curr_patch;
+
+#ifdef VISUALIZE_AI_DEBUG
+	brakelook.push_back(patch_to_check);
+#endif
+
 	while (dist_checked < maxlookahead)
 	{
-		// if there is no next patch(probably a non-closed track, just let it roll
-		if (!next_patch->GetNextPatch())
+		BEZIER * unmodified_patch_to_check = patch_to_check.GetNextPatch();
+
+		//if there is no next patch(probably a non-closed track, just let it roll
+		if (!patch_to_check.GetNextPatch())
 		{
 			brake_value = 0.0;
+			dist_checked = maxlookahead;
 			break;
 		}
+		else
+			patch_to_check = RevisePatch(patch_to_check.GetNextPatch(), use_racingline);
 
-		next_patch = next_patch->GetNextPatch();
-		speed_limit = GetSpeedLimit(next_patch, next_patch->GetNextPatch());
+#ifdef VISUALIZE_AI_DEBUG
+		brakelook.push_back(patch_to_check);
+#endif
 
-		dist_checked += next_patch->GetLength(); // need racing line length here to be more correct
-		brake_dist = car->GetBrakingDistance(speed_limit);
+		//speed_limit = calcSpeedLimit(c, &patch_to_check, lateral_mu)*speed_percent;
+		if (!patch_to_check.GetNextPatch())
+		{
+			speed_limit = calcSpeedLimit(&patch_to_check, NULL, lateral_mu, GetPatchWidthVector(*unmodified_patch_to_check).Magnitude())*speed_percent;
+		}
+		else
+		{
+			BEZIER next_patch = RevisePatch(patch_to_check.GetNextPatch(), use_racingline);
+			speed_limit = calcSpeedLimit(&patch_to_check, &next_patch, lateral_mu, GetPatchWidthVector(*unmodified_patch_to_check).Magnitude())*speed_percent;
+		}
+
+		dist_checked += GetPatchDirection(patch_to_check).Magnitude();
+		brake_dist = calcBrakeDist(currentspeed, speed_limit, longitude_mu);
+
+		//if (brake_dist + CORNER_BRAKE_OFFSET > dist_checked)
 		if (brake_dist > dist_checked)
 		{
+			//std::cout << "brake: limit " << speed_limit << ", cur " << currentspeed << ", brake " << brake_dist << ", dist " << dist_checked << std::endl;
+
+			/*brake_value = (brake_dist + CORNER_BRAKE_OFFSET - dist_checked)*CORNER_BRAKE_GAIN;
+			if (brake_value > 1.0) brake_value = 1.0;*/
 			brake_value = 1.0;
 			gas_value = 0.0;
 			break;
 		}
 	}
-#ifdef VISUALIZE_AI_DEBUG
-		brakelook = next_patch;
-#endif
 
-	// consider traffic avoidance bias
-	/*float trafficbrake = brakeFromOthers(c, dt, othercars, speed_diff);
+	//std::cout << speed_limit << std::endl;
+	if (car->GetGear() == 0)
+	{
+		inputs[CARINPUT::SHIFT_UP] = 1.0;
+		gas_value = 0.2;
+	}
+	else
+	{
+		inputs[CARINPUT::SHIFT_UP] = 0.0;
+	}
+
+	/*float trafficbrake = brakeFromOthers(c, dt, othercars, speed_diff); //consider traffic avoidance bias
 	if (trafficbrake > 0)
 	{
 		gas_value = 0.0;
 		brake_value = std::max(trafficbrake, brake_value);
 	}*/
 
-	inputs[CARINPUT::THROTTLE] = RateLimit(
-		inputs[CARINPUT::THROTTLE], gas_value, THROTTLE_RATE_LIMIT, THROTTLE_RATE_LIMIT);
+	inputs[CARINPUT::THROTTLE] = RateLimit(inputs[CARINPUT::THROTTLE], gas_value,
+											  THROTTLE_RATE_LIMIT, THROTTLE_RATE_LIMIT);
+	inputs[CARINPUT::BRAKE] = RateLimit(inputs[CARINPUT::BRAKE], brake_value,
+										   BRAKE_RATE_LIMIT, BRAKE_RATE_LIMIT);
 
-	inputs[CARINPUT::BRAKE] = RateLimit(
-		inputs[CARINPUT::BRAKE], brake_value, BRAKE_RATE_LIMIT, BRAKE_RATE_LIMIT);
+	//inputs[CARINPUT::THROTTLE] = 0.0;
+	//inputs[CARINPUT::BRAKE] = 1.0;
 }
 
-void AI_Car_Standard::UpdateSteer(float dt)
+void AI_Car_Standard::calcMu()
+{
+	int i;
+	float long_friction = 0.0;
+	float lat_friction = 0.0;
+
+	for (i=0; i<4; i++)
+	{
+		long_friction += car->GetTireMaxFx(WHEEL_POSITION(i));
+		lat_friction += car->GetTireMaxFy(WHEEL_POSITION(i));
+	}
+
+	float long_mu = FRICTION_FACTOR_LONG * long_friction * car->GetInvMass() / GRAVITY;
+	float lat_mu = FRICTION_FACTOR_LAT * lat_friction * car->GetInvMass() / GRAVITY;
+	if (!isnan(long_mu)) longitude_mu = long_mu;
+	if (!isnan(lat_mu)) lateral_mu = lat_mu;
+}
+
+float AI_Car_Standard::calcSpeedLimit(const BEZIER* patch, const BEZIER * nextpatch, float friction, float extraradius=0)
+{
+	assert(patch);
+
+	//adjust the radius at corner exit to allow a higher speed.
+	//this will get the car to accelerate out of corner
+	//double track_width = GetPatchWidthVector(*patch).Magnitude();
+	double adjusted_radius = GetPatchRadius(*patch);
+	if (nextpatch)
+	{
+		if (GetPatchRadius(*nextpatch) > adjusted_radius &&
+			GetPatchRadius(*patch) > LOOKAHEAD_MIN_RADIUS)
+		{
+			adjusted_radius += extraradius;
+		}
+	}
+
+	//no downforce
+	//float v1 = sqrt(friction * GRAVITY * adjusted_radius);
+
+	//take into account downforce
+	double denom = (1.0 - std::min(1.01, adjusted_radius * -(car->GetAerodynamicDownforceCoefficient()) * friction * car->GetInvMass()));
+	double real = (friction * GRAVITY * adjusted_radius) / denom;
+	double v2 = 1000.0; //some really big number
+	if (real > 0)
+		v2 = sqrt(real);
+
+	//std::cout << v2 << ", " << sqrt(friction * GRAVITY * adjusted_radius) << ", " << GetPatchRadius(*patch) << ", " << acos((-GetPatchDirection(*patch)).Normalize().dot(GetPatchDirection(*patch->GetNextPatch()).Normalize()))*180.0/3.141593 << " --- " << -GetPatchDirection(*patch) << " --- " << GetPatchDirection(*patch->GetNextPatch()) << std::endl;
+
+	return v2;
+}
+
+float AI_Car_Standard::calcBrakeDist(float current_speed, float allowed_speed, float friction)
+{
+	float c = friction * GRAVITY;
+	float d = (-(car->GetAerodynamicDownforceCoefficient()) * friction +
+				car->GetAeordynamicDragCoefficient()) * car->GetInvMass();
+	float v1sqr = current_speed * current_speed;
+	float v2sqr = allowed_speed * allowed_speed;
+	return -log((c + v2sqr*d)/(c + v1sqr*d))/(2.0*d);
+}
+
+void AI_Car_Standard::updateSteer()
 {
 #ifdef VISUALIZE_AI_DEBUG
-	steerlook = 0;
+	steerlook.clear();
 #endif
 
-	// current position and direction, speed
-	MATHVECTOR <float, 3> car_position = car->GetCenterOfMassPosition();
-	MATHVECTOR <float, 3> car_direction = direction::Forward;
-	(car->GetOrientation()).RotateVector(car_direction);
-	float car_speed = car->GetSpeed();
+	const BEZIER *curr_patch_ptr = GetCurrentPatch(car);
 
-	const BEZIER * curr_patch = GetCurrentPatch(car);
-	if (!curr_patch)
+	//if car has no contact with track, just let it roll
+	if (!curr_patch_ptr)
 	{
-		// no contact with track
-		if (!last_patch)
-		{
-			// no valid last patch, just let it roll
-			return;
-		}
-		else
-		{
-			// use last patch to get the car back on track
-			// get next closest patch 8 meter in front of the car
-			MATHVECTOR <float, 3> pos = car_position + car_direction * 8;
-			pos = TransformToPatchspace(pos);
-			curr_patch = last_patch->GetNextClosestPatch(pos);
-		}
+		if (!last_patch) return;
+		//if car is off track, steer the car towards the last patch it was on
+		//this should get the car back on track
+		else curr_patch_ptr = last_patch;
 	}
 
-	// store the last patch car was on
-	last_patch = curr_patch;
+	last_patch = curr_patch_ptr; //store the last patch car was on
 
-	if (!curr_patch->GetNextPatch())
-	{
-		// no next patch (probably a non-closed track), let it roll
-		return;
-	}
-
-	// find the point to steer towards
-	MATHVECTOR <float, 3> dest_point;
-	const BEZIER * next_patch = curr_patch->GetNextPatch();
-	float lookahead = 2.0 + car_speed * dt;
-	float length = 0;
-	while (true)
-	{
-		// get steer destination
-		dest_point = next_patch->GetRacingLine();
-
-		// take car width into account
-		float track_width = next_patch->GetWidth();
-		float border_offset = track_width * next_patch->GetRacingLineFraction();
-		float safe_offset = 0.5 * car->GetWidth() + 0.1;
-		if (border_offset < safe_offset)
-		{
-			float width_fraction = safe_offset / track_width;
-			dest_point = next_patch->GetBL() * (1.0 - width_fraction) + next_patch->GetBR() * width_fraction;
-		}
-		else if (track_width - border_offset < safe_offset)
-		{
-			float width_fraction = 1 - safe_offset / track_width;
-			dest_point = next_patch->GetBL() * (1.0 - width_fraction) + next_patch->GetBR() * width_fraction;
-		}
-
-		// limit lookahead
-		if (length > lookahead)
-			break;
-
-		// check for track end
-		if (!next_patch->GetNextPatch())
-			break;
-
-		// check for sharp corner
-		if (fabs(next_patch->GetRacingLineRadius()) < LOOKAHEAD_MIN_RADIUS)
-			break;
-
-		// proceed to next patch
-		next_patch = next_patch->GetNextPatch();
-
-		// update current lookahead distance
-		length += next_patch->GetLength();
-	}
+	BEZIER curr_patch = RevisePatch(curr_patch_ptr, use_racingline);
 
 #ifdef VISUALIZE_AI_DEBUG
-	steerlook = next_patch;
+	steerlook.push_back(curr_patch);
 #endif
 
+	//if there is no next patch (probably a non-closed track), let it roll
+	if (!curr_patch.GetNextPatch()) return;
+
+	BEZIER next_patch = RevisePatch(curr_patch.GetNextPatch(), use_racingline);
+
+	//find the point to steer towards
+	float track_width = GetPatchWidthVector(curr_patch).Magnitude();
+	float lookahead = track_width * LOOKAHEAD_FACTOR1 +
+			car->GetVelocity().Magnitude() * LOOKAHEAD_FACTOR2;
+	lookahead = 1.0;
+	float length = 0.0;
+	MATHVECTOR <float, 3> dest_point = GetPatchFrontCenter(next_patch);
+
+	while (length < lookahead)
+	{
+#ifdef VISUALIZE_AI_DEBUG
+		steerlook.push_back(next_patch);
+#endif
+
+		length += GetPatchDirection(next_patch).Magnitude()*2.0;
+		dest_point = GetPatchFrontCenter(next_patch);
+
+		//if there is no next patch for whatever reason, stop lookahead
+		if (!next_patch.GetNextPatch())
+		{
+			length = lookahead;
+			break;
+		}
+
+		next_patch = RevisePatch(next_patch.GetNextPatch(), use_racingline);
+
+		//if next patch is a very sharp corner, stop lookahead
+		if (GetPatchRadius(next_patch) < LOOKAHEAD_MIN_RADIUS)
+		{
+			length = lookahead;
+			break;
+		}
+	}
+
 	MATHVECTOR <float, 3> next_position = TransformToWorldspace(dest_point);
-	MATHVECTOR <float, 3> desire_direction = next_position - car_position;
+	MATHVECTOR <float, 3> car_position = car->GetCenterOfMassPosition();
+	MATHVECTOR <float, 3> car_orientation = direction::Forward;
+	(car->GetOrientation()).RotateVector(car_orientation);
 
-	// car's direction on the horizontal plane
-	car_direction[2] = 0;
+	MATHVECTOR <float, 3> desire_orientation = next_position - car_position;
 
-	// desired direction on the horizontal plane
-	desire_direction[2] = 0;
+	//car's direction on the horizontal plane
+	car_orientation[2] = 0;
+	//desired direction on the horizontal plane
+	desire_orientation[2] = 0;
 
-	car_direction = car_direction.Normalize();
-	desire_direction = desire_direction.Normalize();
+	car_orientation = car_orientation.Normalize();
+	desire_orientation = desire_orientation.Normalize();
 
-	// the angle between car's direction and unit y vector (forward direction)
-	double alpha = atan2(car_direction[1], car_direction[0]) * 180.0 / M_PI;
+	//the angle between car's direction and unit y vector (forward direction)
+	double alpha = Angle(car_orientation[0], car_orientation[1]);
 
-	// the angle between desired direction and unit y vector (forward direction)
-	double beta = atan2(desire_direction[1], desire_direction[0]) * 180.0 / M_PI;
+	//the angle between desired direction and unit y vector (forward direction)
+	double beta = Angle(desire_orientation[0], desire_orientation[1]);
 
-	// calculate steering angle and direction
+	//calculate steering angle and direction
 	double angle = beta - alpha;
 
-	// sum in traffic avoidance bias
-	//angle += steerAwayFromOthers(c, dt, othercars, angle);
+	//angle += steerAwayFromOthers(c, dt, othercars, angle); //sum in traffic avoidance bias
 
 	if (angle > -360.0 && angle <= -180.0)
 		angle = -(360.0 + angle);
@@ -451,16 +615,14 @@ void AI_Car_Standard::UpdateSteer(float dt)
 	else if (angle > 180.0 && angle <= 360.0)
 		angle = 360.0 - angle;
 
-	// enforce ideal steering angle if car speed is greather than 30kph
-	if (car_speed > 8.0)
-	{
-		float ideal_angle = car->GetIdealSteeringAngle();
-		angle = clamp(angle, -ideal_angle, ideal_angle);
-	}
+	float optimum_range = car->GetOptimumSteeringAngle();
+	angle = clamp(angle, -optimum_range, optimum_range);
 
 	float steer_value = angle / car->GetMaxSteeringAngle();
-	steer_value = clamp(steer_value, -1.0f, 1.0f);
+	if (steer_value > 1.0) steer_value = 1.0;
+	else if (steer_value < -1.0) steer_value = -1.0;
 
+	assert(!isnan(steer_value));
 	inputs[CARINPUT::STEER_RIGHT] = steer_value;
 }
 
@@ -480,7 +642,7 @@ float AI_Car_Standard::RampBetween(float val, float startat, float endat)
 	return (clamp(val,startat,endat)-startat)/(endat-startat);
 }
 
-float AI_Car_Standard::BrakeFromOthers(float speed_diff)
+float AI_Car_Standard::brakeFromOthers(float speed_diff)
 {
 	const float nobiasdiff = 30;
 	const float fullbiasdiff = 0;
@@ -533,7 +695,7 @@ float AI_Car_Standard::BrakeFromOthers(float speed_diff)
 	return bias;
 }
 
-void AI_Car_Standard::AnalyzeOthers(float dt, const std::vector<CAR> & checkcars)
+void AI_Car_Standard::analyzeOthers(float dt, const std::list <CAR> & checkcars)
 {
 	//const float speed = std::max(1.0f,car->GetVelocity().Magnitude());
 	const float half_carlength = 1.25; //in meters
@@ -547,7 +709,7 @@ void AI_Car_Standard::AnalyzeOthers(float dt, const std::vector<CAR> & checkcars
 	//avoidancedraw->ClearLine();
 #endif
 
-	for (std::vector<CAR>::const_iterator i = checkcars.begin(); i != checkcars.end(); ++i)
+	for (std::list <CAR>::const_iterator i = checkcars.begin(); i != checkcars.end(); ++i)
 	{
 		if (&(*i) != car)
 		{
@@ -697,7 +859,7 @@ void AI_Car_Standard::AnalyzeOthers(float dt, const std::vector<CAR> & checkcars
 	return 0.0;
 }*/
 
-float AI_Car_Standard::SteerAwayFromOthers()
+float AI_Car_Standard::steerAwayFromOthers()
 {
 	const float spacingdistance = 3.5; //how far left and right we target for our spacing in meters (center of mass to center of mass)
 	const float horizontal_meters_per_second = 5.0; //how fast we want to steer away in horizontal meters per second
@@ -738,6 +900,10 @@ float AI_Car_Standard::SteerAwayFromOthers()
 	return (bias/spacingdistance)*authority;
 }
 
+double AI_Car_Standard::Angle(double x1, double y1)
+{
+	return atan2(y1, x1) * 180.0 / M_PI;
+}
 #ifdef VISUALIZE_AI_DEBUG
 void AI_Car_Standard::ConfigureDrawable(keyed_container <DRAWABLE>::handle & ref, SCENENODE & topnode, float r, float g, float b)
 {
@@ -772,10 +938,20 @@ void AI_Car_Standard::AddLinePoint(VERTEXARRAY & va, const MATHVECTOR<float, 3> 
 
 void AI_Car_Standard::Visualize()
 {
+	SCENENODE& topnode  = car->GetNode();
+	ConfigureDrawable(brakedraw, topnode, 0,1,0);
+	ConfigureDrawable(steerdraw, topnode, 0,0,1);
+	//ConfigureDrawable(avoidancedraw, topnode, 1,0,0);
+
+	DRAWABLE & brakedrawable = topnode.GetDrawlist().normal_noblend.get(brakedraw);
+	DRAWABLE & steerdrawable = topnode.GetDrawlist().normal_noblend.get(steerdraw);
+
+	brakedrawable.SetLineSize(4);
+	brakedrawable.SetVertArray(&brakeshape);
 	brakeshape.Clear();
-	if (brakelook)
+	for (std::vector <BEZIER>::iterator i = brakelook.begin(); i != brakelook.end(); ++i)
 	{
-		const BEZIER & patch = *brakelook;
+		BEZIER & patch = *i;
 		AddLinePoint(brakeshape, TransformToWorldspace(patch.GetBL()));
 		AddLinePoint(brakeshape, TransformToWorldspace(patch.GetFL()));
 		AddLinePoint(brakeshape, TransformToWorldspace(patch.GetFR()));
@@ -783,10 +959,12 @@ void AI_Car_Standard::Visualize()
 		AddLinePoint(brakeshape, TransformToWorldspace(patch.GetBL()));
 	}
 
+	steerdrawable.SetLineSize(4);
+	steerdrawable.SetVertArray(&steershape);
 	steershape.Clear();
-	if (steerlook)
+	for (std::vector <BEZIER>::iterator i = steerlook.begin(); i != steerlook.end(); ++i)
 	{
-		const BEZIER & patch = *steerlook;
+		BEZIER & patch = *i;
 		AddLinePoint(steershape, TransformToWorldspace(patch.GetBL()));
 		AddLinePoint(steershape, TransformToWorldspace(patch.GetFL()));
 		AddLinePoint(steershape, TransformToWorldspace(patch.GetBR()));
@@ -795,3 +973,21 @@ void AI_Car_Standard::Visualize()
 	}
 }
 #endif
+/*
+optional <float> GetDistanceFromPatchToPatch(const BEZIER * frontpatch, const BEZIER * backpatch)
+{
+	float dist = 0;
+	const BEZIER * curpatch = backpatch;
+	while (curpatch != frontpatch && curpatch)
+	{
+		dist += GetPatchDirection(*curpatch).Magnitude();
+
+		if (curpatch == frontpatch)
+			return optional <float> (dist);
+
+		curpatch = curpatch->GetNextPatch();
+	}
+
+	return optional <float> ();
+}
+*/

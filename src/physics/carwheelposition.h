@@ -17,46 +17,17 @@
 /*                                                                      */
 /************************************************************************/
 
-#include "ray.h"
-#include "BulletCollision/CollisionShapes/btCollisionShape.h"
+#ifndef _CARWHEELPOSITION_H
+#define _CARWHEELPOSITION_H
 
-namespace sim
+enum WHEEL_POSITION
 {
+	FRONT_LEFT = 0,
+	FRONT_RIGHT = 1,
+	REAR_LEFT = 2,
+	REAR_RIGHT = 3,
 
-void Ray::set(const btVector3 & rayFrom, const btVector3 & rayDir, btScalar rayLen)
-{
-	m_closestHitFraction = 1;
-	m_rayFrom = rayFrom;
-	m_rayTo = rayFrom + rayDir * rayLen;
-	m_rayLen = rayLen;
-	m_hitNormal = -rayDir;
-	m_hitPoint = m_rayTo;
-	m_depth = rayLen;
-	m_surface = 0;
-	m_patch = 0;
-	m_patchid = 0;
-}
+	WHEEL_POSITION_SIZE
+};
 
-btScalar Ray::addSingleResult(btCollisionWorld::LocalRayResult& rayResult, bool normalInWorldSpace)
-{
-	if (rayResult.m_collisionObject == m_exclude) return 1.0;
-
-	btCollisionShape * s = rayResult.m_collisionObject->getCollisionShape();
-	m_closestHitFraction = rayResult.m_hitFraction;
-	if (normalInWorldSpace)
-	{
-		m_hitNormal = rayResult.m_hitNormalLocal;
-	}
-	else
-	{
-		m_hitNormal = m_collisionObject->getWorldTransform().getBasis() * rayResult.m_hitNormalLocal;
-	}
-	m_hitPoint.setInterpolate3(m_rayFrom, m_rayTo, rayResult.m_hitFraction);
-	m_collisionObject = rayResult.m_collisionObject;
-	m_surface = static_cast<const Surface *>(s->getUserPointer());
-	m_depth = m_rayLen * m_closestHitFraction;
-
-	return rayResult.m_hitFraction;
-}
-
-}
+#endif

@@ -33,7 +33,7 @@
 #include "gui/text_draw.h"
 #include "gui/font.h"
 #include "car.h"
-#include "physics/world.h"
+#include "physics/dynamicsworld.h"
 #include "dynamicsdraw.h"
 #include "carcontrolmap.h"
 #include "hud.h"
@@ -74,7 +74,7 @@ public:
 private:
 	void End();
 
-	float GetTimeStep() const { return 1 / 90.0; }
+	float TickPeriod() const {return timestep;}
 
 	void MainLoop();
 
@@ -96,11 +96,11 @@ private:
 
 	void AdvanceGameLogic();
 
-	void UpdateCar(int carid, CAR & car, double dt);
+	void UpdateCar(CAR & car, double dt);
 
 	void UpdateDriftScore(CAR & car, double dt);
 
-	void UpdateCarInputs(int carid, CAR & car);
+	void UpdateCarInputs(CAR & car);
 
 	void UpdateTimer();
 
@@ -243,6 +243,7 @@ private:
 	unsigned int displayframe; ///< display frame counter
 	double clocktime; ///< elapsed wall clock time
 	double target_time;
+	const float timestep; ///< simulation time step
 
 	PATHMANAGER pathmanager;
 	SETTINGS settings;
@@ -295,13 +296,16 @@ private:
 	CAMERA * active_camera;
 	std::pair <CAR *, CARCONTROLMAP> carcontrols_local;
 	std::map <CAR *, int> cartimerids;
-	std::vector <CAR> cars;	// Warning: CAR is not safely copyable!
+	std::list <CAR> cars;
 	int race_laps;
 	bool practice;
 
-	sim::Config dynamics_config;
-	sim::World dynamics;
+	btDefaultCollisionConfiguration collisionconfig;
+	btCollisionDispatcher collisiondispatch;
+	btDbvtBroadphase collisionbroadphase;
+	btSequentialImpulseConstraintSolver collisionsolver;
 	DynamicsDraw dynamicsdraw;
+	DynamicsWorld dynamics;
 	int dynamics_drawmode;
 
 	PARTICLE_SYSTEM tire_smoke;

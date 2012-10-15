@@ -20,65 +20,72 @@
 #ifndef _REPLAY_H
 #define _REPLAY_H
 
-#include "mathvector.h"
+#include "car.h"
 #include "joeserialize.h"
 #include "macros.h"
 
 #include <iostream>
 #include <string>
 
-class CAR;
-
 class REPLAY
 {
 public:
 	REPLAY(float framerate);
 
-	/// return number of recorded car states
-	unsigned GetCarsRecorded() const;
-
-	/// true on success
+	///< returns true on success
 	bool StartPlaying(
 		const std::string & replayfilename,
 		std::ostream & error_output);
 
-	/// stops playing/recording, clears state
-	void Reset();
+	void StopPlaying();
 
-	/// true if the replay system is currently playing
-	bool GetPlaying() const;
+	///< returns true if the replay system is currently playing
+	bool GetPlaying() const { return (replaymode == PLAYING); }
+
+	const std::vector<float> & PlayFrame(CAR & car);
 
 	void StartRecording(
-		const std::vector<std::string> & cartype,
-		const std::vector<std::string> & carpaint,
-		const std::vector<std::string> & carconfig,
-		const std::vector<MATHVECTOR<float, 3> > & carcolor,
+		const std::string & newcartype,
+		const std::string & newcarpaint,
+		const MATHVECTOR<float, 3> & newcarcolor,
+		const PTree & carconfig,
 		const std::string & trackname,
 		std::ostream & error_log);
 
-	/// if replayfilename is empty, do not save the data
+	///< if replayfilename is empty, do not save the data
 	void StopRecording(const std::string & replayfilename);
 
-	/// true if the replay system is currently recording
-	bool GetRecording() const;
+	///< returns true if the replay system is currently recording
+	bool GetRecording() const { return (replaymode == RECORDING); }
 
-	/// set car state, return car inputs
-	const std::vector<float> & PlayFrame(unsigned carid, CAR & car);
-
-	/// record car inputs and state
-	void RecordFrame(unsigned carid, const std::vector <float> & inputs, CAR & car);
+	void RecordFrame(const std::vector <float> & inputs, CAR & car);
 
 	bool Serialize(joeserialize::Serializer & s);
 
-	const std::vector<std::string> & GetCarTypes() const;
+	std::string GetCarType() const
+	{
+		return cartype;
+	}
 
-	const std::vector<std::string> & GetCarFiles() const;
+	std::string GetCarFile() const
+	{
+		return carfile;
+	}
 
-	const std::vector<std::string> & GetCarPaints() const;
+	std::string GetTrack() const
+	{
+		return track;
+	}
 
-	const std::vector<MATHVECTOR<float, 3> > & GetCarColors() const;
+	std::string GetCarPaint() const
+	{
+		return carpaint;
+	}
 
-	const std::string & GetTrack() const;
+	MATHVECTOR<float, 3> GetCarColorHSV() const
+	{
+		return carcolor;
+	}
 
 private:
 	friend class joeserialize::Serializer;
@@ -103,143 +110,125 @@ private:
 		bool operator==(const VERSION & other) const;
 	};
 
-	/// input delta frame (p-frame)
 	class INPUTFRAME
 	{
 	public:
-		INPUTFRAME();
+		INPUTFRAME() : frame(0) {}
 
-		INPUTFRAME(unsigned newframe);
+		INPUTFRAME(int newframe) : frame(newframe) {}
 
-		bool Serialize(joeserialize::Serializer & s);
+		bool Serialize(joeserialize::Serializer & s)
+		{
+			_SERIALIZE_(s, frame);
+			_SERIALIZE_(s, inputs);
+			return true;
+		}
 
-		void AddInput(int index, float value);
+		void AddInput(int index, float value)
+		{
+			inputs.push_back(std::make_pair(index, value));
+		}
 
-		unsigned GetNumInputs() const;
+		unsigned GetNumInputs() const
+		{
+			return inputs.size();
+		}
 
-		unsigned GetFrame() const;
+		int GetFrame() const
+		{
+			return frame;
+		}
 
-		const std::pair<int, float>& GetInput(unsigned index) const;
+		///returns a pair for the <control id, value> of the indexed input
+		const std::pair<int, float>& GetInput(unsigned index) const
+		{
+			assert(index < inputs.size());
+			return inputs[index];
+		}
 
 	private:
 		friend class joeserialize::Serializer;
-		unsigned frame;
-		std::vector< std::pair<int, float> > inputs;
+		int frame;
+		std::vector<std::pair<int, float> > inputs;
 	};
 
-	/// input and vehicle state frame (i-frame)
 	class STATEFRAME
 	{
 	public:
-		STATEFRAME();
+		STATEFRAME() : frame(0) {}
 
-		STATEFRAME(unsigned newframe);
+		STATEFRAME(int newframe) : frame(newframe) {}
 
-		bool Serialize(joeserialize::Serializer & s);
+		bool Serialize(joeserialize::Serializer & s)
+		{
+			_SERIALIZE_(s, frame);
+			_SERIALIZE_(s, binary_state_data);
+			_SERIALIZE_(s, input_snapshot);
+			return true;
+		}
 
-		void SetBinaryStateData(const std::string & value);
+		void SetBinaryStateData(const std::string & value)
+		{
+			binary_state_data = value;
+		}
 
-		unsigned GetFrame() const;
+		int GetFrame() const
+		{
+			return frame;
+		}
 
-		const std::string & GetBinaryStateData() const;
+		std::string GetBinaryStateData() const
+		{
+			return binary_state_data;
+		}
 
-		const std::vector<float> & GetInputSnapshot() const;
+		const std::vector<float> & GetInputSnapshot() const
+		{
+			return input_snapshot;
+		}
 
-		void SetInputSnapshot(const std::vector<float>& value);
+		void SetInputSnapshot(const std::vector<float>& value)
+		{
+			input_snapshot = value;
+		}
 
 	private:
 		friend class joeserialize::Serializer;
-		unsigned frame;
+		int frame;
 		std::string binary_state_data;
 		std::vector<float> input_snapshot;
 	};
 
-	struct CARSTATE
-	{
-		/// serialized
-		std::vector<INPUTFRAME> inputframes;
-		std::vector<STATEFRAME> stateframes;
-
-		/// not serialized
-		std::vector<float> inputbuffer; // buffer for input delta frame decoding
-		unsigned cur_inputframe;
-		unsigned cur_stateframe;
-		unsigned frame;
-
-		/// true if we have zero recorded frames
-		bool Empty() const;
-
-		/// reset state
-		void Reset();
-
-		/// write state into outstream
-		bool Serialize(joeserialize::Serializer & s);
-
-		/// set car, update inputbuffer, false if we are out of frames
-		bool PlayFrame(CAR & car);
-
-		/// get car state, save input delta frame
-		void RecordFrame(const std::vector<float> & inputs, CAR & car);
-
-		void ProcessPlayInputFrame(const INPUTFRAME & frame);
-
-		void ProcessPlayStateFrame(const STATEFRAME & frame, CAR & car);
-	};
-
-	/// serialized
+	// serialized data
 	VERSION version_info;
 	std::string track;
-	std::vector<std::string> cartype;	//car type, used for loading graphics and sound
-	std::vector<std::string> carpaint;	//car paint id string
-	std::vector<std::string> carconfig;	//entire contents of the car file (e.g. XS.car)
-	std::vector<MATHVECTOR<float, 3> > carcolor;
-	std::vector<CARSTATE> carstate;
+	std::string cartype; //car type, used for loading graphics and sound
+	std::string carpaint; //car paint id string
+	std::string carfile; //entire contents of the car file (e.g. XS.car)
+	MATHVECTOR<float, 3> carcolor;
+	std::vector<INPUTFRAME> inputframes;
+	std::vector<STATEFRAME> stateframes;
 
-	/// not serialized
-	enum {IDLE, RECORDING, PLAYING} replaymode;
+	// not stored in the replay file
+	int frame;
+	enum {
+		IDLE,
+		RECORDING,
+		PLAYING
+	} replaymode;
+	std::vector<float> inputbuffer;
+	unsigned cur_inputframe;
+	unsigned cur_stateframe;
 
-	/// load all input and state frames to the stream
-	bool Load(std::istream & instream, std::ostream & error_output);
-
-	/// save all input and state frames to the stream and then clear them
-	void Save(std::ostream & outstream);
+	// functions
+	void ProcessPlayInputFrame(const INPUTFRAME & frame);
+	void ProcessPlayStateFrame(const STATEFRAME & frame, CAR & car);
+	bool Load(std::istream & instream); ///< load one input and state frame chunk from the stream. returns true on success, returns false for EOF
+	bool LoadHeader(std::istream & instream, std::ostream & error_output); ///< returns true on success.
+	void Save(std::ostream & outstream); ///< save all input and state frames to the stream and then clear them
+	void SaveHeader(std::ostream & outstream); ///< write only the header information to the stream
+	void GetReadyToPlay();
+	void GetReadyToRecord();
 };
-
-// implementation
-
-inline bool REPLAY::GetPlaying() const
-{
-	return (replaymode == PLAYING);
-}
-
-inline bool REPLAY::GetRecording() const
-{
-	return (replaymode == RECORDING);
-}
-
-inline const std::vector<std::string> & REPLAY::GetCarTypes() const
-{
-	return cartype;
-}
-
-inline const std::vector<std::string> & REPLAY::GetCarFiles() const
-{
-	return carconfig;
-}
-
-inline const std::vector<std::string> & REPLAY::GetCarPaints() const
-{
-	return carpaint;
-}
-
-inline const std::vector<MATHVECTOR<float, 3> > & REPLAY::GetCarColors() const
-{
-	return carcolor;
-}
-
-inline const std::string & REPLAY::GetTrack() const
-{
-	return track;
-}
 
 #endif

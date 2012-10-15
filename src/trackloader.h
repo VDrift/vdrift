@@ -45,7 +45,7 @@ model = body.joe
 #size = 1, 1, 1 # axis aligned bounding box
 */
 
-namespace sim { class World; }
+class DynamicsWorld;
 class ContentManager;
 class btStridingMeshInterface;
 class btCompoundShape;
@@ -57,7 +57,7 @@ class TRACK::LOADER
 public:
 	LOADER(
 		ContentManager & content,
-		sim::World & world,
+		DynamicsWorld & world,
 		DATA & data,
 		std::ostream & info_output,
 		std::ostream & error_output,
@@ -83,7 +83,7 @@ public:
 
 private:
 	ContentManager & content;
-	sim::World & world;
+	DynamicsWorld & world;
 	DATA & data;
 	std::ostream & info_output;
 	std::ostream & error_output;

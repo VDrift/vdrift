@@ -20,10 +20,7 @@
 #include <cassert>
 #include "crashdetection.h"
 
-CRASHDETECTION::CRASHDETECTION() :
-	lastvel(0),
-	curmaxdecel(0),
-	maxdecel(0)
+CRASHDETECTION::CRASHDETECTION() : lastvel(0), curmaxdecel(0), maxdecel(0), deceltrigger(200)
 {
     // Constructor.
 }

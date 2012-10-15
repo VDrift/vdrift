@@ -17,9 +17,9 @@ def addbulletpath( val ):
 src = Split("""
 		aabb.cpp
 		aabb_space_partitioning.cpp
-		ai/ai.cpp
 		ai/ai_car_experimental.cpp
 		ai/ai_car_standard.cpp
+		ai/ai.cpp
 		archiveutils.cpp
 		autoupdate.cpp
 		bezier.cpp
@@ -27,8 +27,8 @@ src = Split("""
 		camera_free.cpp
 		camera_mount.cpp
 		camera_orbit.cpp
-		car.cpp
 		carcontrolmap.cpp
+		car.cpp
 		cfg/config.cpp
 		cfg/ptree.cpp
 		cfg/ptree_inf.cpp
@@ -63,8 +63,8 @@ src = Split("""
 		graphics/gl3v/renderuniformentry.cpp
 		graphics/gl3v/stringidmap.cpp
 		graphics/glutil.cpp
-		graphics/graphics_config.cpp
 		graphics/graphics_config_condition.cpp
+		graphics/graphics_config.cpp
 		graphics/graphics_gl2.cpp
 		graphics/graphics_gl3v.cpp
 		graphics/mesh_gen.cpp
@@ -74,15 +74,15 @@ src = Split("""
 		graphics/render_input.cpp
 		graphics/render_input_postprocess.cpp
 		graphics/render_input_scene.cpp
-		graphics/render_output.cpp
 		graphics/rendermodelext_drawable.cpp
+		graphics/render_output.cpp
 		graphics/scenenode.cpp
 		graphics/shader.cpp
 		graphics/texture.cpp
 		graphics/vertexarray.cpp
 		gui/font.cpp
-		gui/gui.cpp
 		gui/guicontrol.cpp
+		gui/gui.cpp
 		gui/guiimage.cpp
 		gui/guilabel.cpp
 		gui/guilanguage.cpp
@@ -92,8 +92,8 @@ src = Split("""
 		gui/guiwidget.cpp
 		gui/text_draw.cpp
 		http.cpp
-		hud.cpp
 		hudbar.cpp
+		hud.cpp
 		hudgauge.cpp
 		joepack.cpp
 		joeserialize.cpp
@@ -104,7 +104,6 @@ src = Split("""
 		loadcollisionshape.cpp
 		loaddrawable.cpp
 		loadingscreen.cpp
-		loadvehicle.cpp
 		main.cpp
 		mathplane.cpp
 		mathvector.cpp
@@ -114,14 +113,16 @@ src = Split("""
 		particle.cpp
 		pathmanager.cpp
 		performance_testing.cpp
-		physics/engine.cpp
+		physics/cardifferential.cpp
+		physics/cardynamics.cpp
+		physics/carengine.cpp
+		physics/carsuspension.cpp
+		physics/cartire.cpp
+		physics/dynamicsworld.cpp
 		physics/fracturebody.cpp
-		physics/ray.cpp
-		physics/suspension.cpp
-		physics/tire.cpp
-		physics/vehicle.cpp
-		physics/wheel.cpp
-		physics/world.cpp
+		physics/linearframe.cpp
+		physics/rigidbody.cpp
+		physics/rotationalframe.cpp
 		quaternion.cpp
 		random.cpp
 		replay.cpp
@@ -129,8 +130,8 @@ src = Split("""
 		roadpatch.cpp
 		roadstrip.cpp
 		settings.cpp
-		sound/sound.cpp
 		sound/soundbuffer.cpp
+		sound/sound.cpp
 		sound/soundfilter.cpp
 		sprite2d.cpp
 		suspensionbumpdetection.cpp

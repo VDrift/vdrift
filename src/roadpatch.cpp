@@ -44,12 +44,10 @@ void ROADPATCH::AddRacinglineScenenode(
 	draw.SetDecal(true);
 	draw.SetVertArray(&racingline_vertexarray);
 
-	const MATHVECTOR <float, 3> & r0 = patch.GetRacingLine();
-	const MATHVECTOR <float, 3> & r1 = nextpatch.patch.GetRacingLine();
-	MATHVECTOR <float, 3> v0 = r0 + (patch.GetPoint(0,0) - r0).Normalize()*0.1;
-	MATHVECTOR <float, 3> v1 = r0 + (patch.GetPoint(0,3) - r0).Normalize()*0.1;
-	MATHVECTOR <float, 3> v2 = r1 + (nextpatch.GetPatch().GetPoint(0,3) - r1).Normalize()*0.1;
-	MATHVECTOR <float, 3> v3 = r1 + (nextpatch.GetPatch().GetPoint(0,0) - r1).Normalize()*0.1;
+	MATHVECTOR <float, 3> v0 = racing_line + (patch.GetPoint(0,0) - racing_line).Normalize()*0.1;
+	MATHVECTOR <float, 3> v1 = racing_line + (patch.GetPoint(0,3) - racing_line).Normalize()*0.1;
+	MATHVECTOR <float, 3> v2 = nextpatch.racing_line + (nextpatch.GetPatch().GetPoint(0,3) - nextpatch.racing_line).Normalize()*0.1;
+	MATHVECTOR <float, 3> v3 = nextpatch.racing_line + (nextpatch.GetPatch().GetPoint(0,0) - nextpatch.racing_line).Normalize()*0.1;
 
 	//transform from bezier space into world space
 	v0.Set(v0[2],v0[0],v0[1]);

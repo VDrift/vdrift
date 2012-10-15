@@ -30,7 +30,6 @@ public:
 	GLSTATEMANAGER() :
 		used(65536, false),
 		state(65536),
-		curtu(255),
 		r(1),g(1),b(1),a(1),
 		depthmask(true),
 		alphamode(GL_NEVER),
@@ -121,33 +120,28 @@ public:
 		}
 	}
 
-	void BindTexture2D(unsigned tu, const TEXTURE_INTERFACE * texture)
+	void BindTexture2D(unsigned int tu, const TEXTURE_INTERFACE * texture)
 	{
 		if (tu >= tex2d.size())
-			tex2d.resize(tu + 1, 0);
+			tex2d.resize(tu+1,0);
 
 		GLuint & curid = tex2d[tu];
-		GLuint id = texture ? texture->GetID() : 0;
+		GLuint id = 0;
+		if (texture)
+			id = texture->GetID();
 		if (curid != id)
 		{
-			if (curtu != tu)
-			{
-				glActiveTexture(GL_TEXTURE0 + tu);
-				curtu = tu;
-			}
-
-			Enable(GL_TEXTURE_2D); // fixme: should be done per texture unit
-
+			glActiveTexture(GL_TEXTURE0+tu);
 			glBindTexture(GL_TEXTURE_2D, id);
 			curid = id;
+			Enable(GL_TEXTURE_2D);
 		}
 	}
 
 private:
 	std::vector <bool> used; //on modern compilers this should result in a lower memory usage bit_vector-type arrangement
 	std::vector <bool> state;
-	std::vector <GLuint> tex2d; //active textures
-	unsigned curtu; //selected texture unit
+	std::vector <GLuint> tex2d;
 
 	float r, g, b, a;
 	bool depthmask;

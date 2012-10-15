@@ -20,19 +20,14 @@
 #ifndef _PERFORMANCE_TESTING_H
 #define _PERFORMANCE_TESTING_H
 
-#include "physics/vehicle.h"
-#include "physics/vehicleinput.h"
-#include "physics/vehiclestate.h"
-#include "physics/surface.h"
+#include "physics/cardynamics.h"
 
 class ContentManager;
 
 class PERFORMANCE_TESTING
 {
 public:
-	PERFORMANCE_TESTING(sim::World & world);
-
-	~PERFORMANCE_TESTING();
+	PERFORMANCE_TESTING(DynamicsWorld & world);
 
 	void Test(
 		const std::string & cardir,
@@ -42,24 +37,18 @@ public:
 		std::ostream & error_output);
 
 private:
-	sim::World & world;
-	sim::Surface surface;
-	sim::VehicleInput carinput;
-	sim::VehicleState carstate;
-	sim::Vehicle car;
+	DynamicsWorld & world;
+	TRACKSURFACE surface;
+	CARDYNAMICS car;
+	std::string carstate;
 
-	/// flat plane test track
-	btCollisionObject * track;
-	btCollisionShape * plane;
+	void SimulateFlatRoad();
 
 	void ResetCar();
 
-	/// return max reached speed in m/s
-	float TestMaxSpeed(std::ostream & info_output, std::ostream & error_output);
+	void TestMaxSpeed(std::ostream & info_output, std::ostream & error_output);
 
-	void TestStoppingDistance(
-		bool abs, float brakestartspeed,
-		std::ostream & info_output, std::ostream & error_output);
+	void TestStoppingDistance(bool abs, std::ostream & info_output, std::ostream & error_output);
 };
 
 #endif

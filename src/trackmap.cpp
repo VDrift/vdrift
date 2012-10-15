@@ -197,7 +197,7 @@ bool TRACKMAP::BuildMap(
 	}
 
 	TEXTUREINFO texinfo;
-	texinfo.data = static_cast<unsigned char*>(surface->pixels);
+	texinfo.data = (char*)surface->pixels;
 	texinfo.width = surface->w;
 	texinfo.height = surface->h;
 	texinfo.bytespp = surface->format->BitsPerPixel / 8;

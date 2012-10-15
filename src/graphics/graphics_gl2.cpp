@@ -363,14 +363,12 @@ void GRAPHICS_GL2::Deinit()
 void GRAPHICS_GL2::BeginScene(std::ostream & error_output)
 {
 	glstate.Disable(GL_TEXTURE_2D);
-	glstate.Enable(GL_LINE_SMOOTH);
-	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-	glShadeModel(GL_SMOOTH);
+	glShadeModel( GL_SMOOTH );
 	glClearColor(0,0,0,0);
-	glClearDepth(1.0f);
+	glClearDepth( 1.0f );
 	glstate.Enable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LEQUAL);
-	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+	glDepthFunc( GL_LEQUAL );
+	glHint( GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST );
 	glstate.Disable(GL_LIGHTING);
 	glstate.SetColor(0.5,0.5,0.5,1.0);
 	glPolygonOffset(-1.0,-1.0);
@@ -1337,3 +1335,63 @@ void GRAPHICS_GL2::Render(RENDER_INPUT * input, RENDER_OUTPUT & output, std::ost
 	GLUTIL::CheckForOpenGLErrors("render output end", error_output);
 }
 
+void GRAPHICS_GL2::DrawBox(
+	const MATHVECTOR <float, 3> & corner1,
+	const MATHVECTOR <float, 3> & corner2) const
+{
+	//enforce corner order
+	MATHVECTOR <float, 3> corner_max;
+	MATHVECTOR <float, 3> corner_min;
+	for (int i = 0; i < 3; i++)
+	{
+		if (corner1[i] >= corner2[i])
+		{
+			corner_max[i] = corner1[i];
+			corner_min[i] = corner2[i];
+		}
+		else
+		{
+			corner_max[i] = corner2[i];
+			corner_min[i] = corner1[i];
+		}
+	}
+
+	glBegin(GL_QUADS);
+	// Front Face
+	glNormal3f( 0.0f, 0.0f, 1.0f);
+	glTexCoord2f(0.0f, 0.0f); glVertex3f(corner_min[0], corner_min[1], corner_max[2]);
+	glTexCoord2f(1.0f, 0.0f); glVertex3f(corner_max[0], corner_min[1], corner_max[2]);
+	glTexCoord2f(1.0f, 1.0f); glVertex3f(corner_max[0], corner_max[1], corner_max[2]);
+	glTexCoord2f(0.0f, 1.0f); glVertex3f(corner_min[0], corner_max[1], corner_max[2]);
+	// Back Face
+	glNormal3f( 0.0f, 0.0f,-1.0f);
+	glTexCoord2f(1.0f, 0.0f); glVertex3f(corner_min[0], corner_min[1], corner_min[2]);
+	glTexCoord2f(1.0f, 1.0f); glVertex3f(corner_min[0], corner_max[1], corner_min[2]);
+	glTexCoord2f(0.0f, 1.0f); glVertex3f(corner_max[0], corner_max[1], corner_min[2]);
+	glTexCoord2f(0.0f, 0.0f); glVertex3f(corner_max[0], corner_min[1], corner_min[2]);
+	// Top Face
+	glNormal3f( 0.0f, 1.0f, 0.0f);
+	glTexCoord2f(0.0f, 1.0f); glVertex3f(corner_min[0], corner_max[1], corner_min[2]);
+	glTexCoord2f(0.0f, 0.0f); glVertex3f(corner_min[0], corner_max[1], corner_max[2]);
+	glTexCoord2f(1.0f, 0.0f); glVertex3f(corner_max[0], corner_max[1], corner_max[2]);
+	glTexCoord2f(1.0f, 1.0f); glVertex3f(corner_max[0], corner_max[1], corner_min[2]);
+	// Bottom Face
+	glNormal3f( 0.0f,-1.0f, 0.0f);
+	glTexCoord2f(1.0f, 1.0f); glVertex3f(corner_min[0], corner_min[1], corner_min[2]);
+	glTexCoord2f(0.0f, 1.0f); glVertex3f(corner_max[0], corner_min[1], corner_min[2]);
+	glTexCoord2f(0.0f, 0.0f); glVertex3f(corner_max[0], corner_min[1], corner_max[2]);
+	glTexCoord2f(1.0f, 0.0f); glVertex3f(corner_min[0], corner_min[1], corner_max[2]);
+	// Right face
+	glNormal3f( 1.0f, 0.0f, 0.0f);
+	glTexCoord2f(1.0f, 0.0f); glVertex3f(corner_max[0], corner_min[1], corner_min[2]);
+	glTexCoord2f(1.0f, 1.0f); glVertex3f(corner_max[0], corner_max[1], corner_min[2]);
+	glTexCoord2f(0.0f, 1.0f); glVertex3f(corner_max[0], corner_max[1], corner_max[2]);
+	glTexCoord2f(0.0f, 0.0f); glVertex3f(corner_max[0], corner_min[1], corner_max[2]);
+	// Left Face
+	glNormal3f(-1.0f, 0.0f, 0.0f);
+	glTexCoord2f(0.0f, 0.0f); glVertex3f(corner_min[0], corner_min[1], corner_min[2]);
+	glTexCoord2f(1.0f, 0.0f); glVertex3f(corner_min[0], corner_min[1], corner_max[2]);
+	glTexCoord2f(1.0f, 1.0f); glVertex3f(corner_min[0], corner_max[1], corner_max[2]);
+	glTexCoord2f(0.0f, 1.0f); glVertex3f(corner_min[0], corner_max[1], corner_min[2]);
+	glEnd();
+}

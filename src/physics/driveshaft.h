@@ -17,40 +17,36 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _SIM_VEHICLESTATE_H
-#define _SIM_VEHICLESTATE_H
+#ifndef _DRIVESHAFT_H
+#define _DRIVESHAFT_H
 
-#include "LinearMath/btAlignedObjectArray.h"
-#include "LinearMath/btTransform.h"
+#include "LinearMath/btScalar.h"
 
-namespace sim
+struct DriveShaft
 {
+	btScalar inv_inertia;
+	btScalar ang_velocity;
+	btScalar angle;
 
-struct BodyState
-{
-	btTransform transform;
-	btVector3 lin_velocity;
-	btVector3 ang_velocity;
+	DriveShaft() : inv_inertia(1), ang_velocity(0), angle(0) {}
+
+	// amount of momentum to reach angular velocity
+	btScalar getMomentum(btScalar angvel) const
+	{
+		return (angvel - ang_velocity) / inv_inertia;
+	}
+
+	// update angular velocity
+	void applyMomentum(btScalar momentum)
+	{
+		ang_velocity += inv_inertia * momentum;
+	}
+
+	// update angle
+	void integrate(btScalar dt)
+	{
+		angle += ang_velocity * dt;
+	}
 };
 
-struct VehicleState
-{
-	btAlignedObjectArray<btScalar> shaft_angvel;
-	btAlignedObjectArray<BodyState> body;
-	btScalar fuel_amount;
-	btScalar nos_amount;
-	btScalar brake;
-	btScalar clutch;
-	btScalar shift_time;
-	btScalar tacho_rpm;
-	int gear;
-	bool shifted;
-	bool auto_shift;
-	bool auto_clutch;
-	bool abs_enabled;
-	bool tcs_enabled;
-};
-
-}
-
-#endif // _SIM_VEHICLESTATE_H
+#endif // _DRIVESHAFT_H

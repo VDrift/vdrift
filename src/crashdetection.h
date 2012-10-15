@@ -30,10 +30,10 @@ public:
 	float GetMaxDecel() const;
 
 private:
-	static const float deceltrigger = 200;
 	float lastvel;
 	float curmaxdecel;
 	float maxdecel;
+	const float deceltrigger;
 };
 
 #endif // _CRASHDETECTION_H

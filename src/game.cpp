@@ -22,7 +22,8 @@
 #include "definitions.h"
 #include "joepack.h"
 #include "matrix4.h"
-#include "physics/surface.h"
+#include "physics/carwheelposition.h"
+#include "physics/tracksurface.h"
 #include "numprocessors.h"
 #include "performance_testing.h"
 #include "quickprof.h"
@@ -85,6 +86,7 @@ GAME::GAME(std::ostream & info_out, std::ostream & error_out) :
 	displayframe(0),
 	clocktime(0),
 	target_time(0),
+	timestep(1/90.0),
 	graphics_interface(NULL),
 	enableGL3(true),
 	usingGL3(false),
@@ -114,16 +116,22 @@ GAME::GAME(std::ostream & info_out, std::ostream & error_out) :
 	active_camera(0),
 	race_laps(0),
 	practice(true),
-	dynamics_config(GetTimeStep(), 8),
-	dynamics(dynamics_config),
+	collisiondispatch(
+		&collisionconfig),
+	dynamics(
+		&collisiondispatch,
+		&collisionbroadphase,
+		&collisionsolver,
+		&collisionconfig,
+		timestep),
 	dynamics_drawmode(0),
 	particle_timer(0),
 	track(),
-	replay(GetTimeStep()),
+	replay(timestep),
 	http("/tmp")
 {
 	carcontrols_local.first = 0;
-	dynamics.setContactAddedCallback(&sim::Vehicle::WheelContactCallback);
+	dynamics.setContactAddedCallback(&CARDYNAMICS::WheelContactCallback);
 	RegisterActions();
 }
 
@@ -579,16 +587,9 @@ bool GAME::ParseArguments(std::list <std::string> & args)
 
 	if (!argmap["-cartest"].empty())
 	{
-		pathmanager.Init(info_output, error_output);
-		content.getFactory<PTree>().init(read_ini, write_ini, content);
-		content.addPath(pathmanager.GetWriteableDataPath());
-		content.addPath(pathmanager.GetDataPath());
-		content.addSharedPath(pathmanager.GetCarPartsPath());
-		content.addSharedPath(pathmanager.GetTrackPartsPath());
-
 		const std::string carname = argmap["-cartest"];
 		const std::string cardir = pathmanager.GetCarsDir() + "/" + carname;
-
+		pathmanager.Init(info_output, error_output);
 		PERFORMANCE_TESTING perftest(dynamics);
 		perftest.Test(cardir, carname, content, info_output, error_output);
 		continue_game = false;
@@ -734,7 +735,7 @@ void GAME::BeginDraw()
 
 		MATHVECTOR <float, 3> reflection_sample_location = active_camera->GetPosition();
 		if (carcontrols_local.first)
-			reflection_sample_location = carcontrols_local.first->GetPosition();
+			reflection_sample_location = carcontrols_local.first->GetCenterOfMassPosition();
 
 		QUATERNION <float> camlook;
 		camlook.Rotate(M_PI_2, 1, 0, 0);
@@ -762,7 +763,7 @@ void GAME::BeginDraw()
 	TraverseScene<false>(trackmap.GetNode(), graphics_interface->GetDynamicDrawlist());
 	TraverseScene<false>(inputgraph.GetNode(), graphics_interface->GetDynamicDrawlist());
 	TraverseScene<false>(tire_smoke.GetNode(), graphics_interface->GetDynamicDrawlist());
-	for (std::vector<CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
+	for (std::list <CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
 	{
 		TraverseScene<false>(i->GetNode(), graphics_interface->GetDynamicDrawlist());
 	}
@@ -816,7 +817,7 @@ void GAME::Tick(float deltat)
 	// This is the minimum fps the game will run at before it starts slowing down time.
 	const float minfps = 10.0f;
 	// Slow the game down if we can't process fast enough.
-	const unsigned int maxticks = (int) (1.0f / (minfps * GetTimeStep()));
+	const unsigned int maxticks = (int) (1.0f / (minfps * timestep));
 	// Slow the game down if we can't process fast enough.
 	const float maxtime = 1.0 / minfps;
 	unsigned int curticks = 0;
@@ -830,7 +831,7 @@ void GAME::Tick(float deltat)
 	http.Tick();
 
 	// Increment game logic by however many tick periods have passed since the last GAME::Tick...
-	while (target_time - GetTimeStep() * frame > GetTimeStep() && curticks < maxticks)
+	while (target_time - TickPeriod() * frame > TickPeriod() && curticks < maxticks)
 	{
 		frame++;
 
@@ -870,7 +871,7 @@ void GAME::AdvanceGameLogic()
 			settings.GetJoyType(),
 			eventsystem,
 			last_steer,
-			GetTimeStep(),
+			TickPeriod(),
 			settings.GetJoy200(),
 			car_speed,
 			settings.GetSpeedSensitivity(),
@@ -889,17 +890,17 @@ void GAME::AdvanceGameLogic()
 	{
 		PROFILER.beginBlock("ai");
 		ai.Visualize();
-		ai.update(GetTimeStep(), cars);
+		ai.update(TickPeriod(), cars);
 		PROFILER.endBlock("ai");
 
 		PROFILER.beginBlock("physics");
-		dynamics.update(GetTimeStep());
+		dynamics.update(TickPeriod());
 		PROFILER.endBlock("physics");
 
 		PROFILER.beginBlock("car");
-		for (size_t i = 0; i < cars.size(); ++i)
+		for (std::list <CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
 		{
-			UpdateCar(i, cars[i], GetTimeStep());
+			UpdateCar(*i, TickPeriod());
 		}
 		PROFILER.endBlock("car");
 
@@ -911,7 +912,7 @@ void GAME::AdvanceGameLogic()
 		//PROFILER.endBlock("timer");
 
 		//PROFILER.beginBlock("particles");
-		UpdateParticleSystems(GetTimeStep());
+		UpdateParticleSystems(TickPeriod());
 		//PROFILER.endBlock("particles");
 
 		//PROFILER.beginBlock("trackmap-update");
@@ -937,7 +938,7 @@ void GAME::AdvanceGameLogic()
 	}
 
 	//PROFILER.beginBlock("force-feedback");
-	UpdateForceFeedback(GetTimeStep());
+	UpdateForceFeedback(TickPeriod());
 	//PROFILER.endBlock("force-feedback");
 }
 
@@ -1007,7 +1008,7 @@ void GAME::ProcessGameInputs()
 void GAME::UpdateTimer()
 {
 	// Check for cars doing a lap.
-	for (std::vector<CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
+	for (std::list <CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
 	{
 		int carid = cartimerids[&(*i)];
 
@@ -1019,11 +1020,11 @@ void GAME::UpdateTimer()
 			//cout << "next " << nextsector << ", cur " << i->GetSector() << ", track " << track.GetSectors() << std::endl;
 			for (int p = 0; p < 4; ++p)
 			{
-				if (i->GetCurPatch(p) == track.GetSectorPatch(nextsector))
+				if (i->GetCurPatch(WHEEL_POSITION(p)) == track.GetSectorPatch(nextsector))
 				{
 					advance = true;
 					//info_output << "New sector " << nextsector << "/" << track.GetSectors();
-					//info_output << " patch " << i->GetCurPatch(p) << std::endl;
+					//info_output << " patch " << i->GetCurPatch(WHEEL_POSITION(p)) << std::endl;
 					//info_output <<  ", " << track.GetSectorPatch(nextsector) << std::endl;
 				}
 				//else cout << p << ". " << i->GetCurPatch(p) << ", " << track.GetSectorPatch(nextsector) << std::endl;
@@ -1039,10 +1040,10 @@ void GAME::UpdateTimer()
 
 		// Update how far the car is on the track...
 		// Find the patch under the front left wheel...
-		const BEZIER * curpatch = i->GetCurPatch(0);
+		const BEZIER * curpatch = i->GetCurPatch(FRONT_LEFT);
 		if (!curpatch)
 			// Try the other wheel...
-			curpatch = i->GetCurPatch(1);
+			curpatch = i->GetCurPatch(FRONT_RIGHT);
 
 		// Only update if car is on track.
 		if (curpatch)
@@ -1078,19 +1079,19 @@ void GAME::UpdateTimer()
 		/*info_output << "sector=" << i->GetSector() << ", next=" << track.GetSectorPatch(nextsector) << ", ";
 		for (int w = 0; w < 4; w++)
 		{
-			info_output << w << "=" << i->GetCurPatch(0) << ", ";
+			info_output << w << "=" << i->GetCurPatch(WHEEL_POSITION(w)) << ", ";
 		}
 		info_output << std::endl;*/
 	}
 
-	timer.Tick(GetTimeStep());
+	timer.Tick(TickPeriod());
 	//timer.DebugPrint(info_output);
 }
 
 void GAME::UpdateTrackMap()
 {
 	std::list <std::pair<MATHVECTOR <float, 3>, bool> > carpositions;
-	for (std::vector<CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
+	for (std::list <CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
 	{
 		bool playercar = (carcontrols_local.first == &(*i));
 		carpositions.push_back(std::make_pair(i->GetCenterOfMassPosition(), playercar));
@@ -1254,60 +1255,64 @@ void GAME::UpdateStartList(unsigned i, const std::string & value)
 	gui.SetLabelText("SingleRace", s.str(), value);
 }
 
-void GAME::UpdateCar(int carid, CAR & car, double dt)
+void GAME::UpdateCar(CAR & car, double dt)
 {
 	car.Update(dt);
-	UpdateCarInputs(carid, car);
+	UpdateCarInputs(car);
 	AddTireSmokeParticles(dt, car);
 	UpdateDriftScore(car, dt);
 }
 
-void GAME::UpdateCarInputs(int carid, CAR & car)
+void GAME::UpdateCarInputs(CAR & car)
 {
 	std::vector <float> carinputs(CARINPUT::INVALID, 0.0f);
-	if (replay.GetPlaying())
+	if (carcontrols_local.first == &car)
 	{
-		const std::vector<float> inputs = replay.PlayFrame(carid, car);
-		assert(inputs.size() <= carinputs.size());
-		for (size_t i = 0; i < inputs.size(); ++i)
+		if (replay.GetPlaying())
 		{
-			carinputs[i] = inputs[i];
-		}
-	}
-	else if (carcontrols_local.first == &car)
-	{
-		carinputs = carcontrols_local.second.GetInputs();
-#ifdef VISUALIZE_AI_DEBUG
-		// It allows to activate the AI on the player car with F9 button.
-		// AI will override player inputs.
-		// This is useful for bringing the car in strange
-		// situations and test how the AI solves it.
-		static bool aiControlled = false;
-		static bool buttonPressed = false;
-		if (buttonPressed != eventsystem.GetKeyState(SDLK_F9).just_down)
-		{
-			buttonPressed = !buttonPressed;
-			if (buttonPressed)
+			const std::vector <float> & inputarray = replay.PlayFrame(car);
+			assert(inputarray.size() <= carinputs.size());
+			for (size_t i = 0; i < inputarray.size(); ++i)
 			{
-				aiControlled = !aiControlled;
-				if (aiControlled)
-				{
-					info_output << "Switching to AI controlled player." << std::endl;
-					ai.add_car(&car, 1.0);
-				}
-				else
-				{
-					info_output << "Switching to user controlled player." << std::endl;
-					ai.remove_car(&car);
-				}
+				carinputs[i] = inputarray[i];
 			}
 		}
-		if (aiControlled)
+		else
 		{
-			carinputs = ai.GetInputs(&car);
-			assert(carinputs.size() == CARINPUT::INVALID);
-		}
+			carinputs = carcontrols_local.second.GetInputs();
+
+#ifdef VISUALIZE_AI_DEBUG
+			// It allows to activate the AI on the player car with F9 button.
+			// AI will override player inputs.
+			// This is useful for bringing the car in strange
+			// situations and test how the AI solves it.
+			static bool aiControlled = false;
+			static bool buttonPressed = false;
+			if (buttonPressed != eventsystem.GetKeyState(SDLK_F9).just_down)
+			{
+				buttonPressed = !buttonPressed;
+				if (buttonPressed)
+				{
+					aiControlled = !aiControlled;
+					if (aiControlled)
+					{
+						info_output << "Switching to AI controlled player." << std::endl;
+						ai.add_car(&car, 1.0);
+					}
+					else
+					{
+						info_output << "Switching to user controlled player." << std::endl;
+						ai.remove_car(&car);
+					}
+				}
+			}
+			if(aiControlled)
+			{
+				carinputs = ai.GetInputs(&car);
+				assert(carinputs.size() == CARINPUT::INVALID);
+			}
 #endif
+		}
 	}
 	else
 	{
@@ -1315,24 +1320,19 @@ void GAME::UpdateCarInputs(int carid, CAR & car)
 		assert(carinputs.size() == CARINPUT::INVALID);
 	}
 
-	// Force brake once the race is over.
-	if (timer.Staging() ||  ((int)timer.GetCurrentLap(cartimerids[&car]) > race_laps && race_laps > 0))
+	// Force brake and clutch during staging and once the race is over.
+	if (timer.Staging() || ((int)timer.GetCurrentLap(cartimerids[&car]) > race_laps && race_laps > 0))
 	{
 		carinputs[CARINPUT::BRAKE] = 1.0;
 	}
 
-	// Process inputs.
-	car.ProcessInputs(carinputs);
+	car.HandleInputs(carinputs);
 
-	// Record car state.
-	if (replay.GetRecording())
-	{
-		replay.RecordFrame(carid, carinputs, car);
-	}
-
-	// Local player input processing starts here.
 	if (carcontrols_local.first != &car)
 		return;
+
+	if (replay.GetRecording())
+		replay.RecordFrame(carinputs, car);
 
 	inputgraph.Update(carinputs);
 
@@ -1355,7 +1355,7 @@ void GAME::UpdateCarInputs(int carid, CAR & car)
 		car.GetSpeedMPS(), car.GetMaxSpeedMPS(), settings.GetMPH(), car.GetClutch(), car.GetGear(),
 		debug_info1.str(), debug_info2.str(), debug_info3.str(), debug_info4.str(),
 		car.GetABSEnabled(), car.GetABSActive(), car.GetTCSEnabled(), car.GetTCSActive(),
-		car.GetFuelAmount() < 1E-5, car.GetNosActive(), car.GetNosAmount(),
+		car.GetOutOfGas(), car.GetNosActive(), car.GetNosAmount(),
 		timer.GetIsDrifting(tid), timer.GetDriftScore(tid), timer.GetThisDriftScore(tid));
 
 	// Handle camera mode change inputs.
@@ -1418,13 +1418,13 @@ void GAME::UpdateCarInputs(int carid, CAR & car)
 	}
 	else
 	{
-		active_camera->Update(pos, rot, GetTimeStep());
+		active_camera->Update(pos, rot, TickPeriod());
 	}
 
 	// Handle camera inputs.
-	float left = GetTimeStep() * (carcontrol.GetInput(CARINPUT::PAN_LEFT) - carcontrol.GetInput(CARINPUT::PAN_RIGHT));
-	float up = GetTimeStep() * (carcontrol.GetInput(CARINPUT::PAN_UP) - carcontrol.GetInput(CARINPUT::PAN_DOWN));
-	float dy = GetTimeStep() * (carcontrol.GetInput(CARINPUT::ZOOM_IN) - carcontrol.GetInput(CARINPUT::ZOOM_OUT));
+	float left = TickPeriod() * (carcontrol.GetInput(CARINPUT::PAN_LEFT) - carcontrol.GetInput(CARINPUT::PAN_RIGHT));
+	float up = TickPeriod() * (carcontrol.GetInput(CARINPUT::PAN_UP) - carcontrol.GetInput(CARINPUT::PAN_DOWN));
+	float dy = TickPeriod() * (carcontrol.GetInput(CARINPUT::ZOOM_IN) - carcontrol.GetInput(CARINPUT::ZOOM_OUT));
 	MATHVECTOR<float, 3> zoom(direction::Forward * 4 * dy);
 	active_camera->Rotate(up, left);
 	active_camera->Move(zoom[0], zoom[1], zoom[2]);
@@ -1447,12 +1447,9 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	// Start out with no camera.
 	active_camera = NULL;
 
-	// Get cars count.
-	size_t cars_num = addopponents ? cars_name.size() : 1;
-
 	// Set track, car config file.
 	std::string trackname = settings.GetTrack();
-	std::vector<std::string> cars_config(cars_name.size());
+	std::string carfile;
 
 	if (playreplay)
 	{
@@ -1469,11 +1466,10 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 			return false;
 
 		trackname = replay.GetTrack();
-		cars_name = replay.GetCarTypes();
-		cars_paint = replay.GetCarPaints();
-		cars_config = replay.GetCarFiles();
-		cars_color_hsv = replay.GetCarColors();
-		cars_num = replay.GetCarsRecorded();
+		carfile = replay.GetCarFile();
+		cars_name[0] = replay.GetCarType();
+		cars_paint[0] = replay.GetCarPaint();
+		cars_color_hsv[0] = replay.GetCarColorHSV();
 	}
 
 	// Load track.
@@ -1484,22 +1480,19 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	}
 
 	// Load cars.
-	cars.reserve(cars_num); // reserve to avoid reallocations
+	size_t cars_num = (addopponents) ? cars_name.size() : 1;
 	for (size_t i = 0; i < cars_num; ++i)
 	{
 		bool isai = (i > 0);
 
 		if (!LoadCar(cars_name[i], cars_paint[i], cars_color_hsv[i],
-			track.GetStart(i).first, track.GetStart(i).second,
-			!isai, isai, cars_config[i]))
-		{
+			track.GetStart(i).first, track.GetStart(i).second, !isai, isai, carfile))
 			return false;
-		}
 
 		if (isai)
-		{
 			ai.add_car(&cars.back(), cars_ai_level[i], cars_ai_type[i]);
-		}
+		else
+			carfile.clear();
 	}
 
 	// Load timer.
@@ -1512,7 +1505,7 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 
 	// Add cars to the timer system.
 	int count = 0;
-	for (std::vector<CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
+	for (std::list<CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
 	{
 		cartimerids[&(*i)] = timer.AddCar(i->GetCarType());
 		if (carcontrols_local.first == &(*i))
@@ -1525,37 +1518,25 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	gui.Deactivate();
 	ShowHUD(true);
 	if (settings.GetMouseGrab())
-	{
 		window.ShowMouseCursor(false);
-	}
 
 	// Record a replay.
 	if (settings.GetRecordReplay() && !playreplay)
 	{
-		//std::vector<std::string> cars_config(cars_name.size());
-		std::string prev_car_name;
-		for (size_t i = 0; i < cars_name.size(); ++i)
-		{
-			if (prev_car_name == cars_name[i])
-			{
-				cars_config[i] = cars_config[i-1];
-			}
-			else
-			{
-				const std::string cardir = pathmanager.GetCarsDir() + "/" + cars_name[i];
-				std::tr1::shared_ptr<PTree> carcfg;
-				content.load(carcfg, cardir, cars_name[i] + ".car");
+		assert(carcontrols_local.first);
+		const std::string cartype = carcontrols_local.first->GetCarType();
+		const std::string cardir = pathmanager.GetCarsDir() + "/" + cars_name[0];
 
-				std::stringstream carstream;
-				write_ini(*carcfg, carstream);
-				cars_config[i] = carstream.str();
+		std::tr1::shared_ptr<PTree> carconfig;
+		content.load(carconfig, cardir, cars_name[0] + ".car");
 
-				prev_car_name = cars_name[i];
-			}
-		}
-
-		replay.StartRecording(cars_name, cars_paint, cars_config, cars_color_hsv,
-			settings.GetTrack(), error_output);
+		replay.StartRecording(
+			cartype,
+			cars_paint[0],
+			cars_color_hsv[0],
+			*carconfig,
+			settings.GetTrack(),
+			error_output);
 	}
 
 	content.sweep();
@@ -1588,12 +1569,6 @@ bool GAME::LoadCar(
 	bool islocal, bool isai,
 	const std::string & carfile)
 {
-	if (islocal)
-	{
-		// Reset local car pointer.
-		carcontrols_local.first = 0;
-	}
-
 	std::string car_dir = pathmanager.GetCarsDir() + "/" + car_name;
 	std::tr1::shared_ptr<PTree> carconf;
 	if (carfile.empty())
@@ -1629,9 +1604,7 @@ bool GAME::LoadCar(
 		return false;
 	}
 
-	if (sound.Enabled() && !car.LoadSounds(
-		*carconf, car_dir, car_name, sound,
-		content, error_output))
+	if (sound.Enabled() && !car.LoadSounds(car_dir, car_name, sound, content, error_output))
 	{
 		error_output << "Failed to load sounds for car " << car_name << std::endl;
 		return false;
@@ -1639,10 +1612,9 @@ bool GAME::LoadCar(
 
 	if (!car.LoadPhysics(
 		*carconf, car_dir, start_position, start_orientation,
-		settings.GetAutoClutch() | isai, settings.GetAutoShift() | isai,
-		settings.GetABS() | isai, settings.GetTCS() | isai,
+		settings.GetABS() || isai, settings.GetTCS() || isai,
 		settings.GetVehicleDamage(), dynamics,
-		content, error_output))
+        content, error_output))
 	{
 		error_output << "Failed to load physics for car " << car_name << std::endl;
 		return false;
@@ -1656,6 +1628,10 @@ bool GAME::LoadCar(
 
 		// Setup auto clutch and auto shift.
 		ProcessNewSettings();
+
+		// Shift into first gear if autoshift enabled.
+		if (carcontrols_local.first && settings.GetAutoShift())
+			carcontrols_local.first->SetGear(1);
 	}
 
 	return true;
@@ -1816,8 +1792,8 @@ void GAME::SetGarageCar()
 	{
 		// set car
 		CAR & car = cars.back();
-		dynamics.update(GetTimeStep());
-		car.Update(GetTimeStep());
+		dynamics.update(timestep);
+		car.Update(timestep);
 
 		// add car sounds
 		sound.Update(true);
@@ -2278,11 +2254,11 @@ void GAME::AddTireSmokeParticles(float dt, CAR & car)
 	{
 		for (int i = 0; i < 4; i++)
 		{
-			float squeal = car.GetTireSquealAmount(i);
+			float squeal = car.GetTireSquealAmount(WHEEL_POSITION(i));
 			if (squeal > 0)
 			{
 				tire_smoke.AddParticle(
-					car.GetWheelPosition(i) - MATHVECTOR<float,3>(0,0,car.GetTireRadius(i)),
+					car.GetWheelPosition(WHEEL_POSITION(i)) - MATHVECTOR<float,3>(0,0,car.GetTireRadius(WHEEL_POSITION(i))),
 					0.5);
 			}
 		}
@@ -2301,7 +2277,7 @@ void GAME::UpdateParticleSystems(float dt)
 	}
 
 	particle_timer++;
-	particle_timer = particle_timer % (unsigned int)((1.0 / GetTimeStep()));
+	particle_timer = particle_timer % (unsigned int)((1.0/TickPeriod()));
 }
 
 void GAME::UpdateDriftScore(CAR & car, double dt)
@@ -2313,7 +2289,7 @@ void GAME::UpdateDriftScore(CAR & car, double dt)
 	int wheel_count = 0;
 	for (int i=0; i < 4; i++)
 	{
-		if ( car.GetCurPatch ( i ) ) wheel_count++;
+		if ( car.GetCurPatch ( WHEEL_POSITION(i) ) ) wheel_count++;
 	}
 
 	bool on_track = ( wheel_count > 1 );
@@ -2405,7 +2381,7 @@ void GAME::LeaveGame()
 	}
 
 	if (replay.GetPlaying())
-		replay.Reset();
+		replay.StopPlaying();
 
 	gui.SetInGame(false);
 	gui.ActivatePage("Main", 0.25, error_output);

@@ -30,7 +30,6 @@
 
 class SCENENODE;
 class DRAWABLE;
-class VERTEXARRAY;
 class TEXTURE_INTERFACE;
 class SHADER_GLSL;
 
@@ -122,10 +121,10 @@ private:
 
 	void DrawList(GLSTATEMANAGER & glstate, const std::vector <DRAWABLE*> & drawlist, bool preculled);
 
-	void DrawVertexArray(const VERTEXARRAY & va, float linesize) const;
-
 	/// returns true if the object was culled and should not be drawn
 	bool FrustumCull(DRAWABLE & tocull);
+
+	void SelectAppropriateShader(DRAWABLE & forme);
 
 	void SelectFlags(DRAWABLE & forme, GLSTATEMANAGER & glstate);
 

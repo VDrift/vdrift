@@ -23,7 +23,7 @@
 struct TEXTUREINFO
 {
 	enum Size { SMALL, LARGE, MEDIUM };
-	unsigned char* data;	///< raw data pointer
+	char* data;				///< raw data pointer
 	short width;			///< texture width, only set if data not null
 	short height;			///< texture height, only set if data not null
 	char bytespp;			///< bytes per pixel, only set if data not null

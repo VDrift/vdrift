@@ -17,8 +17,8 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _SIM_FRACTURE_BODY
-#define _SIM_FRACTURE_BODY
+#ifndef _FRACTUREBODY_H
+#define _FRACTUREBODY_H
 
 #include "BulletDynamics/Dynamics/btRigidBody.h"
 #include "LinearMath/btAlignedObjectArray.h"
@@ -27,10 +27,6 @@
 
 class btDynamicsWorld;
 class btCompoundShape;
-
-namespace sim
-{
-
 struct MotionState;
 struct FractureBodyInfo;
 
@@ -39,29 +35,32 @@ class FractureBody : public btRigidBody
 public:
 	FractureBody(const FractureBodyInfo & info);
 
-	/// returns >= 0 if shape is connected
+	// returns >= 0 if shape is connected
 	int getConnectionId(int shape_id) const;
 
-	/// return number if children bodies
-	int getNumChildren() const;
-
-	/// true if child connected
+	// true if chil is connected
 	bool isChildConnected(int i) const;
 
-	/// only applied if child is connected to body
+	// number of connected children
+	int getNumChildren() const;
+
+	// true if child connected
+	btRigidBody* getChildBody(int i) const;
+
+	// only applied if child is connected to body
 	void setChildTransform(int i, const btTransform& transform);
 
-	/// apply impulse to connection, return true if connection is activated
+	// apply impulse to connection, return true if connection is activated
 	bool applyImpulse(int con_id, btScalar impulse);
 
-	/// if accumulated impulse breaks connection return child else null
+	// if accumulated impulse breaks connection return child else null
 	btRigidBody* updateConnection(int con_id);
 
-	/// remove connections, remove child shapes from world
-	void clear(btDynamicsWorld& world);
-
-	/// center of mass offset from original shape coordinate system
-	const btVector3 & getCenterOfMassOffset() const;
+	// center of mass offset from original shape coordinate system
+	const btVector3 & getCenterOfMassOffset() const
+	{
+		return m_centerOfMassOffset;
+	}
 
 	struct Connection;
 
@@ -69,12 +68,11 @@ private:
 	btAlignedObjectArray<Connection> m_connections;
 	btVector3 m_centerOfMassOffset;
 
-	/// motion state wrapper, updates children motion states
-	class FrMotionState : public btMotionState
+	// motion state wrapper, updates children motion states
+	class MotionState : public btMotionState
 	{
 	public:
-		FrMotionState(FractureBody & body, btMotionState * state = 0);
-		~FrMotionState();
+		MotionState(FractureBody & body, btMotionState * state = 0);
 		void getWorldTransform(btTransform & worldTrans) const;
 		void setWorldTransform(const btTransform & worldTrans);
 
@@ -82,23 +80,14 @@ private:
 		FractureBody & m_body;
 		btMotionState * m_state;
 	};
-	FrMotionState m_motionState;
+	MotionState m_motionState;
 
-	/// separate shape, return child body
+	// separate shape, return child body
 	btRigidBody* breakConnection(int con_id);
 };
 
 struct FractureBodyInfo
 {
-	btCompoundShape* m_shape;
-    btAlignedObjectArray<MotionState*>& m_states;
-	btAlignedObjectArray<FractureBody::Connection> m_connections;
-	btVector3 m_inertia;
-	btVector3 m_massCenter;
-	btScalar m_mass;
-
-    FractureBodyInfo(btAlignedObjectArray<MotionState*>& m_states);
-
 	void addMass(
 		const btVector3& position,
 		btScalar mass);
@@ -117,6 +106,15 @@ struct FractureBodyInfo
 		btScalar mass,
 		btScalar elasticLimit,
 		btScalar plasticLimit);
+
+	FractureBodyInfo(btAlignedObjectArray<MotionState>& m_states);
+
+	btCompoundShape* m_shape;
+	btAlignedObjectArray<MotionState>& m_states;
+	btAlignedObjectArray<FractureBody::Connection> m_connections;
+	btVector3 m_inertia;
+	btVector3 m_massCenter;
+	btScalar m_mass;
 };
 
 struct FractureCallback
@@ -135,12 +133,5 @@ struct FractureBody::Connection
 	int m_shapeId;
 	Connection();
 };
-
-inline const btVector3 & FractureBody::getCenterOfMassOffset() const
-{
-	return m_centerOfMassOffset;
-}
-
-}
 
 #endif

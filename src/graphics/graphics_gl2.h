@@ -227,6 +227,10 @@ private:
 		RENDER_INPUT * input,
 		RENDER_OUTPUT & output,
 		std::ostream & error_output);
+
+	void DrawBox(
+		const MATHVECTOR <float, 3> & corner1,
+		const MATHVECTOR <float, 3> & corner2) const;
 };
 
 #endif

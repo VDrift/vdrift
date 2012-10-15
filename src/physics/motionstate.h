@@ -17,55 +17,40 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _SIM_MOTIONSTATE_H
-#define _SIM_MOTIONSTATE_H
+#ifndef _MOTIONSTATE_H
+#define _MOTIONSTATE_H
 
 #include "LinearMath/btMotionState.h"
 
-namespace sim
-{
-
-struct MotionState : public btMotionState
-{
+struct MotionState : public btMotionState {
 	btQuaternion rotation;
 	btVector3 position;
 	btQuaternion massCenterRotation;
 	btVector3 massCenterOffset;
 
-	MotionState();
+	MotionState() : rotation(0,0,0,1), position(0,0,0),
+		massCenterRotation(0,0,0,1), massCenterOffset(0,0,0)
+	{
+		// ctor
+	}
 
 	/// from user to physics
-	virtual void getWorldTransform(btTransform& centerOfMassWorldTrans) const;
+	virtual void getWorldTransform(btTransform& centerOfMassWorldTrans) const
+	{
+		//centerOfMassWorldTrans = m_graphicsWorldTrans * m_centerOfMassOffset.inverse();
+		btQuaternion rot = rotation * massCenterRotation.inverse();
+		btVector3 pos = position - quatRotate(rot, massCenterOffset);
+		centerOfMassWorldTrans.setRotation(rot);
+		centerOfMassWorldTrans.setOrigin(pos);
+	}
 
 	/// from physics to user (for active objects)
-	virtual void setWorldTransform(const btTransform& centerOfMassWorldTrans);
+	virtual void setWorldTransform(const btTransform& centerOfMassWorldTrans)
+	{
+		//m_graphicsWorldTrans = centerOfMassWorldTrans * m_centerOfMassOffset;
+		rotation = centerOfMassWorldTrans * massCenterRotation;
+		position = centerOfMassWorldTrans * massCenterOffset;
+	}
 };
-
-inline MotionState::MotionState() :
-	rotation(0,0,0,1),
-	position(0,0,0),
-	massCenterRotation(0,0,0,1),
-	massCenterOffset(0,0,0)
-{
-	// ctor
-}
-
-inline void MotionState::getWorldTransform(btTransform& centerOfMassWorldTrans) const
-{
-	//centerOfMassWorldTrans = m_graphicsWorldTrans * m_centerOfMassOffset.inverse();
-	btQuaternion rot = rotation * massCenterRotation.inverse();
-	btVector3 pos = position - quatRotate(rot, massCenterOffset);
-	centerOfMassWorldTrans.setRotation(rot);
-	centerOfMassWorldTrans.setOrigin(pos);
-}
-
-inline void MotionState::setWorldTransform(const btTransform& centerOfMassWorldTrans)
-{
-	//m_graphicsWorldTrans = centerOfMassWorldTrans * m_centerOfMassOffset;
-	rotation = centerOfMassWorldTrans * massCenterRotation;
-	position = centerOfMassWorldTrans * massCenterOffset;
-}
-
-}
 
 #endif

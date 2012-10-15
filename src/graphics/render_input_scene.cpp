@@ -181,7 +181,10 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 		QUATERNION <float> cuberotation;
 		cuberotation = (-camlook) * (-cam_rotation); //experimentally derived
 		(cuberotation).GetMatrix4(temp_matrix);
+		//(cam_rotation).GetMatrix4(temp_matrix);
 		glLoadMatrixf(temp_matrix);
+		//glTranslatef(-cam_position[0],-cam_position[1],-cam_position[2]);
+		//glLoadIdentity();
 
 		glActiveTexture(GL_TEXTURE0);
 		glMatrixMode(GL_MODELVIEW);
@@ -189,10 +192,34 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 		//send light position to the shaders
 		MATHVECTOR <float, 3> lightvec = lightposition;
 		(cam_rotation).RotateVector(lightvec);
+		//(cuberotation).RotateVector(lightvec);
 		shader->Enable();
 		shader->UploadActiveShaderParameter3f("lightposition", lightvec[0], lightvec[1], lightvec[2]);
 		shader->UploadActiveShaderParameter1f("contrast", contrast);
+		/*float lightarray[3];
+		for (int i = 0; i < 3; i++)
+		lightarray[i] = lightvec[i];
+		glLightfv(GL_LIGHT0, GL_POSITION, lightarray);*/
 
+		// if we have no reflection texture supplied, don't touch the TU because
+		// someone else may be supplying one
+		/*if (reflection && reflection->Loaded())
+		{
+			glActiveTexture(GL_TEXTURE2);
+			reflection->Activate();
+			glActiveTexture(GL_TEXTURE0);
+		}*/
+
+		/*glActiveTexture(GL_TEXTURE3);
+		if (ambient && ambient->Loaded())
+		{
+			ambient->Activate();
+		}
+		else
+		{
+			glBindTexture(GL_TEXTURE_CUBE_MAP,0);
+			//assert(0);
+		}*/
 		glActiveTexture(GL_TEXTURE0);
 
 		PushShadowMatrices();
@@ -226,11 +253,16 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 
 				vlighting = true;
 
-				// dummy texture required to set the combiner
+				// setup texture combiners here
+
+				// need some dummy texture
 				DRAWABLE & d = *dynamic_drawlist_ptr->front();
 
 				// setup first combiner
-				glstate.BindTexture2D(0, d.GetDiffuseMap());
+				//glstate.BindTexture2D(0, d.GetDiffuseMap()); //fails???
+				glActiveTexture(GL_TEXTURE0);
+				glEnable(GL_TEXTURE_2D);
+				glBindTexture(GL_TEXTURE_2D, d.GetDiffuseMap()->GetID());
 				glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
 				glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_INTERPOLATE);
 				glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB, GL_TEXTURE);
@@ -239,14 +271,13 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 				glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
 				glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_COLOR);
 				glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND2_RGB, GL_SRC_ALPHA);
-				// don't care about alpha, set it to something harmless
+				// don't care about alpha; set it to something harmless
 				glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
 				glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA, GL_CONSTANT);
 				glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
 
-				// setup second combiner explicitly
-				// statemanager doesnt allow to enable/disable textures per tu
-				//glstate.BindTexture2D(1, d.GetDiffuseMap());
+				// setup second combiner
+				//glstate.BindTexture2D(1, d.GetDiffuseMap()); //fails???
 				glActiveTexture(GL_TEXTURE1);
 				glEnable(GL_TEXTURE_2D);
 				glBindTexture(GL_TEXTURE_2D, d.GetDiffuseMap()->GetID());
@@ -256,11 +287,10 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 				glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB, GL_PRIMARY_COLOR);
 				glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
 				glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_COLOR);
-				// don't care about alpha, set it to something harmless
+				// don't care about alpha; set it to something harmless
 				glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
 				glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA, GL_PREVIOUS);
 				glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
-				glActiveTexture(GL_TEXTURE0);
 			}
 		}
 		else
@@ -270,13 +300,13 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 				// turn off lighting for everything else
 				glDisable(GL_LIGHTING);
 
-				// reset second texture combiner explicitly
+				// reset first texture combiner
+				glActiveTexture(GL_TEXTURE0);
+				glDisable(GL_TEXTURE_2D);
+
+				// reset second texture combiner
 				glActiveTexture(GL_TEXTURE1);
 				glDisable(GL_TEXTURE_2D);
-				glActiveTexture(GL_TEXTURE0);
-
-				// reset first texture combiner
-				glstate.Disable(GL_TEXTURE_2D);
 
 				vlighting = false;
 			}
@@ -433,16 +463,25 @@ void RENDER_INPUT_SCENE::SetBlendMode(BLENDMODE::BLENDMODE mode)
 
 void RENDER_INPUT_SCENE::DrawList(GLSTATEMANAGER & glstate, const std::vector <DRAWABLE*> & drawlist, bool preculled)
 {
-	for (std::vector <DRAWABLE*>::const_iterator ptr = drawlist.begin(); ptr != drawlist.end(); ++ptr)
+	unsigned int drawcount = 0;
+	unsigned int loopcount = 0;
+
+	for (std::vector <DRAWABLE*>::const_iterator ptr = drawlist.begin(); ptr != drawlist.end(); ptr++, loopcount++)
 	{
 		DRAWABLE * i = *ptr;
 		if (preculled || !FrustumCull(*i))
 		{
+			drawcount++;
+
 			SelectFlags(*i, glstate);
+
+			if (shaders) SelectAppropriateShader(*i);
 
 			SelectTexturing(*i, glstate);
 
 			bool need_pop = SelectTransformStart(*i, glstate);
+
+			//assert(i->GetDraw()->GetVertArray() || i->GetDraw()->IsDrawList() || !i->GetDraw()->GetLine().empty());
 
 			if (i->IsDrawList())
 			{
@@ -452,60 +491,57 @@ void RENDER_INPUT_SCENE::DrawList(GLSTATEMANAGER & glstate, const std::vector <D
 			}
 			else if (i->GetVertArray())
 			{
-				DrawVertexArray(*i->GetVertArray(), i->GetLineSize());
+				const float * verts;
+				int vertcount;
+				i->GetVertArray()->GetVertices(verts, vertcount);
+				if (vertcount > 0 && verts)
+				{
+					glVertexPointer(3, GL_FLOAT, 0, verts);
+					glEnableClientState(GL_VERTEX_ARRAY);
+
+					const int * faces;
+					int facecount;
+					i->GetVertArray()->GetFaces(faces, facecount);
+					if (facecount > 0 && faces)
+					{
+						const float * norms;
+						int normcount;
+						i->GetVertArray()->GetNormals(norms, normcount);
+						if (normcount > 0 && norms)
+						{
+							glNormalPointer(GL_FLOAT, 0, norms);
+							glEnableClientState(GL_NORMAL_ARRAY);
+						}
+
+						const float * tc[1];
+						int tccount[1];
+						if (i->GetVertArray()->GetTexCoordSets() > 0)
+						{
+							i->GetVertArray()->GetTexCoords(0, tc[0], tccount[0]);
+							if (tc[0] && tccount[0])
+							{
+								glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+								glTexCoordPointer(2, GL_FLOAT, 0, tc[0]);
+							}
+						}
+
+						glDrawElements(GL_TRIANGLES, facecount, GL_UNSIGNED_INT, faces);
+
+						glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+						glDisableClientState(GL_NORMAL_ARRAY);
+					}
+					else if (i->GetLineSize() > 0)
+					{
+						glstate.Enable(GL_LINE_SMOOTH);
+						glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+						glLineWidth(i->GetLineSize());
+						glDrawArrays(GL_LINES,  0, vertcount/3);
+					}
+					glDisableClientState(GL_VERTEX_ARRAY);
+				}
 			}
 			SelectTransformEnd(*i, need_pop);
 		}
-	}
-}
-
-void RENDER_INPUT_SCENE::DrawVertexArray(const VERTEXARRAY & va, float linesize) const
-{
-	const float * verts;
-	int vertcount;
-	va.GetVertices(verts, vertcount);
-	if (vertcount > 0 && verts)
-	{
-		glVertexPointer(3, GL_FLOAT, 0, verts);
-		glEnableClientState(GL_VERTEX_ARRAY);
-
-		const int * faces;
-		int facecount;
-		va.GetFaces(faces, facecount);
-		if (facecount > 0 && faces)
-		{
-			const float * norms;
-			int normcount;
-			va.GetNormals(norms, normcount);
-			if (normcount > 0 && norms)
-			{
-				glNormalPointer(GL_FLOAT, 0, norms);
-				glEnableClientState(GL_NORMAL_ARRAY);
-			}
-
-			const float * tc[1];
-			int tccount[1];
-			if (va.GetTexCoordSets() > 0)
-			{
-				va.GetTexCoords(0, tc[0], tccount[0]);
-				if (tc[0] && tccount[0])
-				{
-					glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-					glTexCoordPointer(2, GL_FLOAT, 0, tc[0]);
-				}
-			}
-
-			glDrawElements(GL_TRIANGLES, facecount, GL_UNSIGNED_INT, faces);
-
-			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-			glDisableClientState(GL_NORMAL_ARRAY);
-		}
-		else if (linesize > 0)
-		{
-			glLineWidth(linesize);
-			glDrawArrays(GL_LINES, 0, vertcount/3);
-		}
-		glDisableClientState(GL_VERTEX_ARRAY);
 	}
 }
 
@@ -548,6 +584,12 @@ bool RENDER_INPUT_SCENE::FrustumCull(DRAWABLE & tocull)
 	return false;
 }
 
+void RENDER_INPUT_SCENE::SelectAppropriateShader(DRAWABLE & forme)
+{
+	(void)forme;
+	// deprecated! put the appropriate shader for the drawable group in your render.conf
+}
+
 void RENDER_INPUT_SCENE::SelectFlags(DRAWABLE & forme, GLSTATEMANAGER & glstate)
 {
 	DRAWABLE * i(&forme);
@@ -563,15 +605,16 @@ void RENDER_INPUT_SCENE::SelectFlags(DRAWABLE & forme, GLSTATEMANAGER & glstate)
 	if (i->GetCull())
 	{
 		glstate.Enable(GL_CULL_FACE);
-		if (i->GetCullFront())
-			glstate.SetCullFace(GL_FRONT);
-		else
-			glstate.SetCullFace(GL_BACK);
+		if (i->GetCull())
+		{
+			if (i->GetCullFront())
+				glstate.SetCullFace(GL_FRONT);
+			else
+				glstate.SetCullFace(GL_BACK);
+		}
 	}
 	else
-	{
 		glstate.Disable(GL_CULL_FACE);
-	}
 
 	float r,g,b,a;
 	i->GetColor(r,g,b,a);
@@ -582,9 +625,16 @@ void RENDER_INPUT_SCENE::SelectTexturing(DRAWABLE & forme, GLSTATEMANAGER & glst
 {
 	DRAWABLE * i(&forme);
 
+	bool enabletex = true;
+
 	const TEXTURE * diffusetexture = i->GetDiffuseMap();
 
-	if (!diffusetexture || !diffusetexture->Loaded())
+	if (!diffusetexture)
+		enabletex = false;
+	else if (!diffusetexture->Loaded())
+		enabletex = false;
+
+	if (!enabletex)
 	{
 		glstate.Disable(GL_TEXTURE_2D);
 		return;
@@ -663,6 +713,22 @@ bool RENDER_INPUT_SCENE::SelectTransformStart(DRAWABLE & forme, GLSTATEMANAGER &
 		else need_a_pop = false;
 	}
 
+	// throw information about the object into the texture 1 matrix
+	/*glActiveTexture(GL_TEXTURE1);
+	glMatrixMode(GL_TEXTURE);
+	glLoadIdentity();
+	static float temp_matrix[16];
+	for (int n = 0; n < 3; n++)
+		temp_matrix[n] = i->GetObjectCenter()[n];
+	temp_matrix[3] = 1.0;
+	MATRIX4<float> m;
+	glGetFloatv (GL_MODELVIEW_MATRIX, m.GetArray());
+	m.MultiplyVector4(temp_matrix); //eyespace light center in 0, 1, 2
+	temp_matrix[3] = 0.1; //attenuation factor in 3
+	glLoadMatrixf(temp_matrix);
+	glActiveTexture(GL_TEXTURE0);
+	glMatrixMode(GL_MODELVIEW);*/
+
 	return need_a_pop;
 }
 
@@ -673,6 +739,11 @@ void RENDER_INPUT_SCENE::SelectTransformEnd(DRAWABLE & forme, bool need_pop)
 		glPopMatrix();
 	}
 }
+
+/*SCENEDRAW * PointerTo(const SCENEDRAW & sd)
+{
+	return const_cast<SCENEDRAW *> (&sd);
+}*/
 
 /*unsigned int GRAPHICS_SDLGL::RENDER_INPUT_SCENE::CombineDrawlists()
 {

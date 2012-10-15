@@ -35,30 +35,18 @@ std::ostream & operator << (std::ostream &os, const BEZIER & b)
 	return os;
 }
 
-BEZIER::BEZIER() :
-	length(0),
-	width(1),
-	dist_from_start(0),
-	next_patch(0),
-	racing_line_fraction(0),
-	racing_line_radius(0)
+BEZIER::BEZIER()
 {
-	// ctor
+	next_patch = NULL;
+	turn = 0;
+	dist_from_start = 0.0;
+	length = 0.0;
+	have_racingline = false;
 }
 
 BEZIER::~BEZIER()
 {
-	// dtor
-}
 
-BEZIER::BEZIER(const BEZIER & other)
-{
-	CopyFrom(other);
-}
-
-BEZIER & BEZIER::operator=(const BEZIER & other)
-{
-	return CopyFrom(other);
 }
 
 AABB <float> BEZIER::GetAABB() const
@@ -105,13 +93,21 @@ AABB <float> BEZIER::GetAABB() const
 	return box;
 }
 
-void BEZIER::SetFromCorners(
-	const MATHVECTOR <float, 3> & fl,
-	const MATHVECTOR <float, 3> & fr,
-	const MATHVECTOR <float, 3> & bl,
-	const MATHVECTOR <float, 3> & br)
+void BEZIER::SetFromCorners(const MATHVECTOR <float, 3> & fl, const MATHVECTOR <float, 3> & fr, const MATHVECTOR <float, 3> & bl, const MATHVECTOR <float, 3> & br)
 {
 	MATHVECTOR <float, 3> temp;
+
+	center = fl + fr + bl + br;
+	center = center*0.25;
+	radius = 0;
+	if ((fl - center).Magnitude() > radius)
+		radius = (fl - center).Magnitude();
+	if ((fr - center).Magnitude() > radius)
+		radius = (fr - center).Magnitude();
+	if ((bl - center).Magnitude() > radius)
+		radius = (bl - center).Magnitude();
+	if ((br - center).Magnitude() > radius)
+		radius = (br - center).Magnitude();
 
 	//assign corners
 	points[0][0] = fl;
@@ -121,19 +117,45 @@ void BEZIER::SetFromCorners(
 
 	//calculate intermediate front and back points
 	temp = fr - fl;
-	points[0][1] = fl + temp * 1.0/3.0;
-	points[0][2] = fl + temp * 2.0/3.0;
+	if (temp.Magnitude() < 0.0001)
+	{
+		points[0][1] = fl;
+		points[0][2] = fl;
+	}
+	else
+	{
+		points[0][1] = fl + temp.Normalize()*(temp.Magnitude()/3.0);
+		points[0][2] = fl + temp.Normalize()*(2.0*temp.Magnitude()/3.0);
+	}
 
 	temp = br - bl;
-	points[3][1] = bl + temp * 1.0/3.0;
-	points[3][2] = bl + temp * 2.0/3.0;
+	if (temp.Magnitude() < 0.0001)
+	{
+		points[3][1] = bl;
+		points[3][2] = bl;
+	}
+	else
+	{
+		points[3][1] = bl + temp.Normalize()*(temp.Magnitude()/3.0);
+		points[3][2] = bl + temp.Normalize()*(2.0*temp.Magnitude()/3.0);
+	}
+
 
 	//calculate intermediate left and right points
-	for (int i = 0; i < 4; ++i)
+	int i;
+	for (i = 0; i < 4; i++)
 	{
 		temp = points[3][i] - points[0][i];
-		points[1][i] = points[0][i] + temp * 1.0/3.0;
-		points[2][i] = points[0][i] + temp * 2.0/3.0;
+		if (temp.Magnitude() > 0.0001)
+		{
+			points[1][i] = points[0][i] + temp.Normalize()*(temp.Magnitude()/3.0);
+			points[2][i] = points[0][i] + temp.Normalize()*(2.0*temp.Magnitude()/3.0);
+		}
+		else
+		{
+			points[1][i] = points[0][i];
+			points[2][i] = points[0][i];
+		}
 	}
 
 	//CheckForProblems();
@@ -279,98 +301,86 @@ void BEZIER::FitMidPoint(MATHVECTOR <float, 3> p[])
 	p[2] = pm;
 }
 
-void BEZIER::Attach(BEZIER & next)
+void BEZIER::Attach(BEZIER & other, bool reverse)
 {
-	// we want C1 continuity between attached patches
-	// this means the second front interior point has to be collinear
-	// to the first interior point of the next patch
-	// additionally they have to have the same distance to the joint point
-
-	// get left tangent
-	MATHVECTOR<float, 3> dl1 = GetBL() - GetFL();
-	MATHVECTOR<float, 3> dl2 = next.GetFL() - next.GetBL();
-	float dl1_len = dl1.Magnitude();
-	float dl2_len = dl2.Magnitude();
-	MATHVECTOR<float, 3> nl = dl1 / dl1_len + dl2 / dl2_len;	// normal
-	MATHVECTOR<float, 3> bl = nl.cross(dl2);					// binormal
-	MATHVECTOR<float, 3> tl;									// tangent
-	float tl_len = std::min(dl1_len, dl2_len) / 3.0;			// tangent length
-	if (bl.MagnitudeSquared() > 0.0001)
+	/*if (!reverse)
 	{
-		tl = bl.cross(nl).Normalize();
-		//tl_len = std::min(-tl.dot(dl1), tl.dot(dl2)) / 3.0;	// proj length
-	}
-	else
-	{
-		tl = dl2 / dl2_len;
-		//tl_len = std::min(dl1_len, dl2_len) / 3.0;
-	}
+		//move the other patch to the location of this patch and force its
+		// intermediate points into a nice grid layout
+		other.SetFromCorners(other.points[0][0], other.points[0][3], points[0][0], points[0][3]);
 
-	// get right tangent
-	MATHVECTOR<float, 3> dr1 = GetBR() - GetFR();
-	MATHVECTOR<float, 3> dr2 = next.GetFR() - next.GetBR();
-	float dr1_len = dr1.Magnitude();
-	float dr2_len = dr2.Magnitude();
-	MATHVECTOR<float, 3> nr = dr1 / dr1_len + dr2 / dr2_len;
-	MATHVECTOR<float, 3> br = nr.cross(dr2);
-	MATHVECTOR<float, 3> tr;
-	float tr_len = std::min(dr1_len, dr2_len) / 3.0;
-	if (br.MagnitudeSquared() > 0.0001)
-	{
-		tr = br.cross(nr).Normalize();
-		//tr_len = std::min(-tr.dot(dr1), tr.dot(dr2)) / 3.0;
-	}
-	else
-	{
-		tr = dr2 / dr2_len;
-		//tr_len = std::min(dr1_len, dr2_len) / 3.0;
-	}
-
-	// adjust interior control points
-	points[1][0] = points[0][0] - tl * tl_len;
-	points[1][1] = points[1][0] * 2 / 3.0 + points[1][3] * 1 / 3.0;
-	points[1][2] = points[1][0] * 1 / 3.0 + points[1][3] * 2 / 3.0;
-	points[1][3] = points[0][3] - tr * tr_len;
-	next.points[2][0] = next.points[3][0] + tl * tl_len;
-	next.points[2][1] = next.points[2][0] * 2 / 3.0 + next.points[2][3] * 1 / 3.0;
-	next.points[2][2] = next.points[2][0] * 1 / 3.0 + next.points[2][3] * 2 / 3.0;
-	next.points[2][3] = next.points[3][3] + tr * tr_len;
-
-	// length along center
-	length = (dl1_len + dr2_len) * 0.5;
-
-	// width at patch back
-	width = (GetBL() - GetBR()).Magnitude();
-
-	// set next patch racing line info to some sensible values
-	// radius at track center from circle through 3 points approximation
-	next.racing_line = (next.GetBL() - next.GetBR()) * 0.5;
-	next.racing_line_fraction = 0.5;
-	next.racing_line_radius = 10000;
-	float sinalpha = dl1.cross(dl2).Magnitude() / (dl1_len * dl2_len);
-	if (std::fabs(sinalpha) > 0.001)
-	{
-		// assume dl collinear to dr
-		float d1_len = (dl1_len + dr1_len) * 0.5;
-		float d2_len = (dl2_len + dr2_len) * 0.5;
-		if (d1_len > d2_len)
+		for (int x = 0; x < 4; x++)
 		{
-			MATHVECTOR<float, 3> p3 = (next.GetFL() + next.GetFR()) * 0.5;
-			MATHVECTOR<float, 3> p2 = (GetFL() + GetFR()) * 0.5;
-			MATHVECTOR<float, 3> p1 = p2 + dl1 / dl1_len * d2_len;
-			next.racing_line_radius = (p1 - p3).Magnitude() / (2.0 * sinalpha);
+			//slope points in the forward direction
+			MATHVECTOR <float, 3> slope = other.points[0][x] - points[3][x];
+			if (slope.Magnitude() > 0.0001)
+				slope = slope.Normalize();
+
+			float otherlen = (other.points[0][x] - other.points[3][x]).Magnitude();
+			float mylen = (points[0][x] - points[3][x]).Magnitude();
+
+			float meanlen = (otherlen + mylen)/2.0;
+			float leglen = meanlen / 3.0;
+
+			if (slope.Magnitude() > 0.0001)
+			{
+				other.points[2][x] = other.points[3][x] + slope*leglen;
+				points[1][x] = points[0][x] + slope*(-leglen);
+			}
+			else
+			{
+				other.points[2][x] = other.points[3][x];
+				points[1][x] = points[0][x];
+			}
 		}
-		else
-		{
-			MATHVECTOR<float, 3> p1 = (GetBL() + GetBR()) * 0.5;
-			MATHVECTOR<float, 3> p2 = (GetFL() + GetFR()) * 0.5;
-			MATHVECTOR<float, 3> p3 = p2 + dl2 / dl2_len * d1_len;
-			next.racing_line_radius = (p1 - p3).Magnitude() / (2.0 * sinalpha);
-		}
+	}*/
+
+	//CheckForProblems();
+
+	//store the pointer to next patch
+	next_patch = &other;
+
+	//calculate the track radius at the connection of this patch and next patch
+	MATHVECTOR <float, 3> a = SurfCoord(0.5,0.0);
+	MATHVECTOR <float, 3> b = SurfCoord(0.5,1.0);
+	MATHVECTOR <float, 3> c = other.SurfCoord(0.5,1.0);
+
+	if (reverse)
+	{
+		a = SurfCoord(0.5,1.0);
+		b = SurfCoord(0.5,0.0);
+		c = other.SurfCoord(0.5,0.0);
+
+		//Reverse();
 	}
 
-	// store the pointer to next patch
-	next_patch = &next;
+	//racing_line = a;
+	MATHVECTOR <float, 3> d1 = a - b;
+	MATHVECTOR <float, 3> d2 = c - b;
+	float diff = d2.Magnitude() - d1.Magnitude();
+	double dd = ((d1.Magnitude() < 0.0001) || (d2.Magnitude() < 0.0001)) ? 0.0 : d1.Normalize().dot(d2.Normalize());
+	float angle = acos((dd>=1.0L)?1.0L:(dd<=-1.0L)?-1.0L:dd);
+	float d1d2mag = d1.Magnitude() + d2.Magnitude();
+	float alpha = (d1d2mag < 0.0001) ? 0.0f : (M_PI * diff + 2.0 * d1.Magnitude() * angle) / d1d2mag / 2.0;
+	if (fabs(alpha - M_PI/2.0) < 0.001) track_radius = 10000.0;
+	else track_radius = d1.Magnitude() / 2.0 / cos(alpha);
+	if (d1.Magnitude() < 0.0001)
+		track_curvature = 0.0;
+	else
+		track_curvature = 2.0 * cos(alpha) / d1.Magnitude();
+
+	//determine it's a left or right turn at the connection
+	MATHVECTOR <float, 3> d = d1.cross(d2);
+	if (fabs(d[0]) < 0.1 && fabs(d[1]) < 0.1 && fabs(d[2]) < 0.1)
+	{
+		turn = 0; //straight ahead
+	}
+	else if (d[1] > 0.0) turn = -1; //left turn ahead
+	else turn = 1; //right turn ahead
+
+	//calculate distance from start of the road
+	if (other.next_patch == NULL || reverse) other.dist_from_start = dist_from_start + d1.Magnitude();
+	length = d1.Magnitude();
 }
 
 void BEZIER::Reverse()
@@ -405,14 +415,15 @@ MATHVECTOR <float, 3> BEZIER::BernsteinTangent(float u, const MATHVECTOR <float,
 	return a+b+c;
 }
 
-MATHVECTOR <float, 3> BEZIER::SurfPoint(float px, float py) const
+MATHVECTOR <float, 3> BEZIER::SurfCoord(float px, float py) const
 {
-	// get splines along x axis
+	//get splines along x axis
 	MATHVECTOR <float, 3> temp[4];
 	for (int j = 0; j < 4; ++j)
 	{
 		temp[j] = Bernstein(px, points[j]);
 	}
+
 	return Bernstein(py, temp);
 }
 
@@ -422,13 +433,13 @@ MATHVECTOR <float, 3> BEZIER::SurfNorm(float px, float py) const
 	MATHVECTOR <float, 3> tempx[4];
 	MATHVECTOR <float, 3> temp2[4];
 
-	// get splines along x axis
+	//get splines along x axis
 	for (int j = 0; j < 4; ++j)
 	{
 		tempy[j] = Bernstein(px, points[j]);
 	}
 
-	// get splines along y axis
+	//get splines along y axis
 	for (int j = 0; j < 4; ++j)
 	{
 		for (int i = 0; i < 4; ++i)
@@ -445,42 +456,27 @@ MATHVECTOR <float, 3> BEZIER::SurfNorm(float px, float py) const
 	return n;
 }
 
-const BEZIER * BEZIER::GetNextClosestPatch(const MATHVECTOR<float, 3> & point) const
-{
-	float dist2 = (point - GetFrontCenter()).MagnitudeSquared();
-	const BEZIER * p0 = this;
-	const BEZIER * p1 = next_patch;
-	while (p1)
-	{
-		float next_dist2 = (point - p1->GetFrontCenter()).MagnitudeSquared();
-		if (next_dist2 > dist2)
-		{
-			return p0;
-		}
-		dist2 = next_dist2;
-		p0 = p1;
-		p1 = p0->next_patch;
-		assert(p1 != this);
-	}
-	return p0;
-}
-
 BEZIER & BEZIER::CopyFrom(const BEZIER &other)
 {
-	for (int x = 0; x < 4; ++x)
+	for (int x = 0; x < 4; x++)
 	{
-		for (int y = 0; y < 4; ++y)
+		for (int y = 0; y < 4; y++)
 		{
 			points[x][y] = other.points[x][y];
 		}
 	}
+
+	center = other.center;
+	radius = other.radius;
 	length = other.length;
-	width = other.width;
 	dist_from_start = other.dist_from_start;
 	next_patch = other.next_patch;
+	track_radius = other.track_radius;
+	turn = other.turn;
+	track_curvature = other.track_curvature;
 	racing_line = other.racing_line;
-	racing_line_fraction = other.racing_line_fraction;
-	racing_line_radius = other.racing_line_radius;
+	have_racingline = other.have_racingline;
+
 	return *this;
 }
 
@@ -516,11 +512,13 @@ void BEZIER::WriteTo(std::ostream &openfile) const
 	}
 }
 
-bool BEZIER::CollideSubDivQuadSimpleNorm(
-	const MATHVECTOR <float, 3> & origin,
-	const MATHVECTOR <float, 3> & direction,
-	MATHVECTOR <float, 3> & outtri,
-	MATHVECTOR <float, 3> & normal) const
+bool BEZIER::CollideSubDivQuadSimple(const MATHVECTOR <float, 3> & origin, const MATHVECTOR <float, 3> & direction, MATHVECTOR <float, 3> &outtri) const
+{
+	MATHVECTOR <float, 3> normal;
+	return CollideSubDivQuadSimpleNorm(origin, direction, outtri, normal);
+}
+
+bool BEZIER::CollideSubDivQuadSimpleNorm(const MATHVECTOR <float, 3> & origin, const MATHVECTOR <float, 3> & direction, MATHVECTOR <float, 3> &outtri, MATHVECTOR <float, 3> & normal) const
 {
 	bool col = false;
 	const int COLLISION_QUAD_DIVS = 6;
@@ -564,10 +562,10 @@ bool BEZIER::CollideSubDivQuadSimpleNorm(
 			if (tv[1] > 1)
 				tv[1] = 1;
 
-			ul = SurfPoint(tu[0], tv[0]);
-			ur = SurfPoint(tu[1], tv[0]);
-			br = SurfPoint(tu[1], tv[1]);
-			bl = SurfPoint(tu[0], tv[1]);
+			ul = SurfCoord(tu[0], tv[0]);
+			ur = SurfCoord(tu[1], tv[0]);
+			br = SurfCoord(tu[1], tv[1]);
+			bl = SurfCoord(tu[0], tv[1]);
 		}
 
 		col = IntersectQuadrilateralF(origin, direction, ul, ur, br, bl, t, u, v);
@@ -594,7 +592,7 @@ bool BEZIER::CollideSubDivQuadSimpleNorm(
 		}
 	}
 
-	outtri = SurfPoint(su, sv);
+	outtri = SurfCoord(su, sv);
 	normal = SurfNorm(su, sv);
 	return true;
 }
@@ -776,19 +774,6 @@ bool BEZIER::IntersectQuadrilateralF(
 	return true;
 }
 
-void BEZIER::CalculateDistFromStart(BEZIER & start_patch)
-{
-	start_patch.dist_from_start = 0.0;
-	BEZIER * curr_patch = start_patch.next_patch;
-	float total_dist = start_patch.length;
-	while (curr_patch && curr_patch != &start_patch)
-	{
-		curr_patch->dist_from_start = total_dist;
-		total_dist += curr_patch->length;
-		curr_patch = curr_patch->next_patch;
-	}
-}
-
 QT_TEST(bezier_test)
 {
 	MATHVECTOR <float, 3> p[4], l[4], r[4];
@@ -797,7 +782,7 @@ QT_TEST(bezier_test)
 	p[2].Set(1,1,0);
 	p[3].Set(1,0,0);
 	BEZIER b;
-	b.DeCasteljauHalveCurve(p, l, r);
+	b.DeCasteljauHalveCurve(p,l,r);
 	QT_CHECK_EQUAL(l[0],(MATHVECTOR <float, 3>(-1,0,0)));
 	QT_CHECK_EQUAL(l[1],(MATHVECTOR <float, 3>(-1,0.5,0)));
 	QT_CHECK_EQUAL(l[2],(MATHVECTOR <float, 3>(-0.5,0.75,0)));
@@ -808,32 +793,6 @@ QT_TEST(bezier_test)
 	QT_CHECK_EQUAL(r[1],(MATHVECTOR <float, 3>(0.5,0.75,0)));
 	QT_CHECK_EQUAL(r[0],(MATHVECTOR <float, 3>(0,0.75,0)));
 
-	MATHVECTOR <float, 3> p0(1,0,1);
-	MATHVECTOR <float, 3> p1(-1,0,1);
-	MATHVECTOR <float, 3> p2(1,0,-1);
-	MATHVECTOR <float, 3> p3(-1,0,-1);
-	b.SetFromCorners(p0, p1, p2, p3);
+	b.SetFromCorners(MATHVECTOR <float, 3>(1,0,1),MATHVECTOR <float, 3>(-1,0,1),MATHVECTOR <float, 3>(1,0,-1),MATHVECTOR <float, 3>(-1,0,-1));
 	QT_CHECK(!b.CheckForProblems());
-
-	l[0].Set(4, 0, 0);
-	l[1].Set(0, 0, 4);
-	l[2].Set(-4, 0, 0);
-	l[3].Set(0, 0, -4);
-	r[0].Set(2, 0, 0);
-	r[1].Set(0, 0, 2);
-	r[2].Set(-2, 0, 0);
-	r[3].Set(0, 0, -2);
-	BEZIER c[4];
-	c[0].SetFromCorners(l[0], r[0], l[3], r[3]);
-	c[1].SetFromCorners(l[1], r[1], l[0], r[0]);
-	c[2].SetFromCorners(l[2], r[2], l[1], r[1]);
-	c[3].SetFromCorners(l[3], r[3], l[2], r[2]);
-	c[0].Attach(c[1]);
-	c[1].Attach(c[2]);
-	c[2].Attach(c[3]);
-	c[3].Attach(c[0]);
-	QT_CHECK_EQUAL(c[0].GetRacingLineRadius(), 3);
-	QT_CHECK_EQUAL(c[1].GetRacingLineRadius(), 3);
-	QT_CHECK_EQUAL(c[2].GetRacingLineRadius(), 3);
-	QT_CHECK_EQUAL(c[3].GetRacingLineRadius(), 3);
 }
