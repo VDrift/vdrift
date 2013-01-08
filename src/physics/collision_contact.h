@@ -22,6 +22,7 @@
 
 #include "tracksurface.h"
 #include "LinearMath/btVector3.h"
+#include <cassert>
 
 class BEZIER;
 class btCollisionObject;

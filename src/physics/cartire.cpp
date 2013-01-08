@@ -19,6 +19,7 @@
 
 #include "cartire.h"
 #include "cfg/ptree.h"
+#include <cassert>
 
 CARTIRE::CARTIRE() :
 	radius(0.3),
