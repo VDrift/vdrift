@@ -392,6 +392,8 @@ bool GUI::LoadOptions(
 			std::string truestr, falsestr;
 			if (!opt.get(i, "true", truestr, error_output)) return false;
 			if (!opt.get(i, "false", falsestr, error_output)) return false;
+			truestr = lang(truestr);
+			falsestr = lang(falsestr);
 			opvals.push_back(std::make_pair("true", truestr));
 			opvals.push_back(std::make_pair("false", falsestr));
 		}
