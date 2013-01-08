@@ -28,6 +28,7 @@ class PERFORMANCE_TESTING
 {
 public:
 	PERFORMANCE_TESTING(DynamicsWorld & world);
+	~PERFORMANCE_TESTING();
 
 	void Test(
 		const std::string & cardir,
@@ -42,7 +43,9 @@ private:
 	CARDYNAMICS car;
 	std::string carstate;
 
-	void SimulateFlatRoad();
+	/// flat plane test track
+	btCollisionObject * track;
+	btCollisionShape * plane;
 
 	void ResetCar();
 

@@ -38,7 +38,7 @@ static inline float ConvertToFeet(float meters)
 }
 
 PERFORMANCE_TESTING::PERFORMANCE_TESTING(DynamicsWorld & world) :
-	world(world)
+	world(world), track(0), plane(0)
 {
 	surface.type = TRACKSURFACE::ASPHALT;
 	surface.bumpWaveLength = 1;
@@ -47,6 +47,19 @@ PERFORMANCE_TESTING::PERFORMANCE_TESTING(DynamicsWorld & world) :
 	surface.frictionTread = 1;
 	surface.rollResistanceCoefficient = 1;
 	surface.rollingDrag = 0;
+}
+
+PERFORMANCE_TESTING::~PERFORMANCE_TESTING()
+{
+	if (track)
+	{
+		world.removeCollisionObject(track);
+		delete track;
+	}
+	if (plane)
+	{
+		delete plane;
+	}
 }
 
 void PERFORMANCE_TESTING::Test(
@@ -58,6 +71,19 @@ void PERFORMANCE_TESTING::Test(
 {
 	info_output << "Beginning car performance test on " << carname << std::endl;
 
+	// init track
+	assert(!track);
+	assert(!plane);
+	btVector3 planeNormal(0, 0, 1);
+	btScalar planeConstant = 0;
+	plane = new btStaticPlaneShape(planeNormal, planeConstant);
+	plane->setUserPointer(static_cast<void*>(&surface));
+	track = new btCollisionObject();
+	track->setCollisionShape(plane);
+	track->setActivationState(DISABLE_SIMULATION);
+	track->setUserPointer(static_cast<void*>(&surface));
+	world.addCollisionObject(track);
+
 	//load the car dynamics
 	std::tr1::shared_ptr<PTree> cfg;
 	content.load(cfg, cardir, carname + ".car");
@@ -66,8 +92,12 @@ void PERFORMANCE_TESTING::Test(
 		return;
 	}
 
-	btVector3 size(0, 0, 0), center(0, 0, 0), pos(0, 0, 0); // collision shape from wheel data
-	btQuaternion rot = btQuaternion::getIdentity();
+	// position is the center of a 2 x 4 x 1 meter box on track surface
+	btVector3 pos(0.0, -2.0, 0.5);
+	btQuaternion rot(btQuaternion::getIdentity());
+	// collision shape
+	btVector3 size(1.0, 2.0, 0.2);
+	btVector3 center(0, 0, 0);
 	bool damage = false;
 	if (!car.Load(*cfg, size, center, pos, rot, damage, world, error_output))
 	{
@@ -88,10 +118,6 @@ void PERFORMANCE_TESTING::Test(
 	//else info_output << "Car state: " << statestream.str();
 	carstate = statestream.str();
 
-	// fixme
-	info_output << "Car performance test broken - exiting." << std::endl;
-	return;
-
 	TestMaxSpeed(info_output, error_output);
 	TestStoppingDistance(false, info_output, error_output);
 	TestStoppingDistance(true, info_output, error_output);
@@ -105,25 +131,12 @@ void PERFORMANCE_TESTING::ResetCar()
 	joeserialize::BinaryInputSerializer serialize_input(statestream);
 	car.Serialize(serialize_input);
 
-	car.SetPosition(btVector3(0, 0, 0));
 	car.SetTCS(true);
 	car.SetABS(true);
 	car.SetAutoShift(true);
 	car.SetAutoClutch(true);
-}
-
-///designed to be called inside a test's main loop  // broken, fixme
-void PERFORMANCE_TESTING::SimulateFlatRoad()
-{
-/*	//simulate an infinite, flat road
-	for (int i = 0; i < 4; i++)
-	{
-		btVector3 wp = car.dynamics.GetWheelPosition(WHEEL_POSITION(i));
-		btScalar depth = wp.z() - car.GetTireRadius(WHEEL_POSITION(i)); //should really project along the car's down vector, but... oh well
-		btVector3 pos(wp[0], wp[1], 0);
-		btVector3 norm(0, 0, 1);
-		car.GetWheelContact(WHEEL_POSITION(i)).Set(pos, norm, depth, &surface, 0, 0);
-	}*/
+	car.ShiftGear(1);
+	car.SetBrake(1);
 }
 
 void PERFORMANCE_TESTING::TestMaxSpeed(std::ostream & info_output, std::ostream & error_output)
@@ -134,7 +147,7 @@ void PERFORMANCE_TESTING::TestMaxSpeed(std::ostream & info_output, std::ostream 
 
 	double maxtime = 300.0;
 	double t = 0.;
-	double dt = .004;
+	double dt = 1/90.0;
 	int i = 0;
 
 	std::pair <float, float> maxspeed;
@@ -155,6 +168,11 @@ void PERFORMANCE_TESTING::TestMaxSpeed(std::ostream & info_output, std::ostream 
 	while (t < maxtime)
 	{
 		car.SetThrottle(1.0f);
+		if (car.GetTransmission().GetGear() == 1 &&
+			car.GetEngine().GetRPM() > 0.8 * car.GetEngine().GetRedline())
+		{
+			car.SetBrake(0.0f);
+		}
 
 		world.update(dt);
 
@@ -220,7 +238,7 @@ void PERFORMANCE_TESTING::TestStoppingDistance(bool abs, std::ostream & info_out
 
 	double maxtime = 300.0;
 	double t = 0.;
-	double dt = .004;
+	double dt = 1/90.0;
 	int i = 0;
 
 	float stopthreshold = 0.1; //if the speed (in m/s) is less than this value, discontinue the testing
