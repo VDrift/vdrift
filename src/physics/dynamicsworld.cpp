@@ -123,7 +123,7 @@ bool DynamicsWorld::castRay(
 	int patch_id = -1;
 	const BEZIER * b = 0;
 	const TRACKSURFACE * s = TRACKSURFACE::None();
-	btCollisionObject * c = 0;
+	const btCollisionObject * c = 0;
 
 	MyRayResultCallback ray(origin, p, caster);
 	rayTest(origin, p, ray);
@@ -239,6 +239,7 @@ void DynamicsWorld::setContactAddedCallback(ContactAddedCallback cb)
 
 void DynamicsWorld::fractureCallback()
 {
+#if (BT_BULLET_VERSION < 281)
 	m_activeConnections.resize(0);
 
 	int numManifolds = getDispatcher()->getNumManifolds();
@@ -286,4 +287,5 @@ void DynamicsWorld::fractureCallback()
 		btRigidBody* child = body->updateConnection(con_id);
 		if (child) addRigidBody(child);
 	}
+#endif
 }

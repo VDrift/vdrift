@@ -1810,25 +1810,31 @@ btScalar CARDYNAMICS::CalculateMaxSpeed() const
 
 bool CARDYNAMICS::WheelContactCallback(
 	btManifoldPoint& cp,
-	const btCollisionObject* colObj0,
+	const btCollisionObjectWrapper* col0,
 	int partId0,
 	int index0,
-	const btCollisionObject* colObj1,
+	const btCollisionObjectWrapper* col1,
 	int partId1,
 	int index1)
 {
-	// cars are fracture bodies, wheel is a cylinder shape
-	const btCollisionShape* shape = colObj0->getCollisionShape();
-	if ((colObj0->getInternalType() & CO_FRACTURE_TYPE) &&
+	// invalidate wheel shape contact with ground as we are handling it separately
+#if (BT_BULLET_VERSION < 281)
+	const btCollisionObject* obj = col0;
+	const btCollisionShape* shape = obj->getCollisionShape();
+	const btCollisionShape* rootshape = obj->getRootCollisionShape();
+#else
+	const btCollisionObject* obj = col0->getCollisionObject();
+	const btCollisionShape* shape = col0->getCollisionShape();
+	const btCollisionShape* rootshape = obj->getCollisionShape();
+#endif
+	if ((obj->getInternalType() & CO_FRACTURE_TYPE) &&
 		(shape->getShapeType() == CYLINDER_SHAPE_PROXYTYPE))
 	{
-		// is contact within contact patch?
-		const btCompoundShape* car = static_cast<const btCompoundShape*>(colObj0->getRootCollisionShape());
-		const btCylinderShapeX* wheel = static_cast<const btCylinderShapeX*>(shape);
-		btVector3 contactPoint = cp.m_localPointA - car->getChildTransform(cp.m_index0).getOrigin();
-		if (-direction::up.dot(contactPoint) > 0.5 * wheel->getRadius())
+		const btCompoundShape* carshape = static_cast<const btCompoundShape*>(rootshape);
+		const btCylinderShapeX* wheelshape = static_cast<const btCylinderShapeX*>(shape);
+		btVector3 contactPoint = cp.m_localPointA - carshape->getChildTransform(cp.m_index0).getOrigin();
+		if (-direction::up.dot(contactPoint) > 0.5 * wheelshape->getRadius())
 		{
-			// break contact (hack)
 			cp.m_normalWorldOnB = btVector3(0, 0, 0);
 			cp.m_distance1 = 0;
 			cp.m_combinedFriction = 0;

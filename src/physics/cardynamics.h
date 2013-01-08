@@ -37,6 +37,12 @@
 #include "joeserialize.h"
 #include "BulletDynamics/Dynamics/btActionInterface.h"
 
+#if (BT_BULLET_VERSION < 281)
+#define btCollisionObjectWrapper btCollisionObject
+#else
+struct btCollisionObjectWrapper;
+#endif
+
 class btCollisionWorld;
 class btManifoldPoint;
 class btIDebugDraw;
@@ -170,10 +176,10 @@ public:
 
 	static bool WheelContactCallback(
 		btManifoldPoint& cp,
-		const btCollisionObject* colObj0,
+		const btCollisionObjectWrapper* col0,
 		int partId0,
 		int index0,
-		const btCollisionObject* colObj1,
+		const btCollisionObjectWrapper* col1,
 		int partId1,
 		int index1);
 
