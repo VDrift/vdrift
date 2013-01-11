@@ -105,15 +105,15 @@ bool HUD::Init(
 	str[LAPTIME] = lang("Lap time:");
 	str[LASTLAP] = lang("Last lap:");
 	str[BESTLAP] = lang("Best lap:");
-	str[SCORE] = lang("Score ");
-	str[LAP] = lang("Lap ");
-	str[PLACE] = lang("Place ");
+	str[SCORE] = lang("Score");
+	str[LAP] = lang("Lap");
+	str[PLACE] = lang("Place");
 	str[READY] = lang("Ready");
 	str[GO] = lang("GO");
 	str[YOUWON] = lang("You won!");
 	str[YOULOST] = lang("You lost");
-	str[MPH] = lang(" MPH");
-	str[KPH] = lang(" KPH");
+	str[MPH] = lang("MPH");
+	str[KPH] = lang("KPH");
 
 	TEXTUREINFO texinfo;
 	texinfo.mipmap = false;
@@ -505,9 +505,9 @@ void HUD::Update(
 
 	std::stringstream speedo;
 	if (mph)
-		speedo << std::abs((int)(2.23693629 * speed)) << str[MPH];
+		speedo << std::abs((int)(2.23693629 * speed)) << " " << str[MPH];
 	else
-		speedo << std::abs((int)(3.6 * speed)) << str[KPH];
+		speedo << std::abs((int)(3.6 * speed)) << " " << str[KPH];
 	float fontscalex = mphtext.GetScale().first;
 	float fontscaley = mphtext.GetScale().second;
 	float speedotextwidth = lcdfont.GetWidth(speedo.str()) * fontscalex;
@@ -579,7 +579,7 @@ void HUD::Update(
 	if (numlaps == 0) //this is how we determine practice mode, for now
 	{
 		std::stringstream scorestream;
-		scorestream << str[SCORE] << (int)driftscore;
+		scorestream << str[SCORE] << " " << (int)driftscore;
 		if (drifting)
 		{
 			scorestream << " + " << (int)thisdriftscore;
@@ -602,12 +602,12 @@ void HUD::Update(
 		//update lap
 		std::stringstream lapstream;
 		//std::cout << curlapnum << std::endl;
-		lapstream << str[LAP] << std::max(1, std::min(curlapnum, numlaps)) << "/" << numlaps;
+		lapstream << str[LAP] << " " << std::max(1, std::min(curlapnum, numlaps)) << "/" << numlaps;
 		lapindicator.Revise(lapstream.str());
 
 		//update place
 		std::stringstream stream;
-		stream << str[PLACE] << curplace << "/" << numcars;
+		stream << str[PLACE] << " " << curplace << "/" << numcars;
 		placeindicator.Revise(stream.str());
 
 		//update race prompt
