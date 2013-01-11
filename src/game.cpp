@@ -225,6 +225,13 @@ void GAME::Start(std::list <std::string> & args)
 		return;
 	}
 
+	// Initialize GUI.
+	if (!InitGUI("Main"))
+	{
+		error_output << "Error initializing graphical user interface" << std::endl;
+		return;
+	}
+
 	// Load loading screen assets.
 	if (!loadingscreen.Init(
 			pathmanager.GetGUITextureDir(settings.GetSkin()),
@@ -236,7 +243,10 @@ void GAME::Start(std::list <std::string> & args)
 	}
 
 	// Initialize HUD.
-	if (!hud.Init(pathmanager.GetGUITextureDir(settings.GetSkin()), content, fonts["lcd"], fonts["futuresans"], fonts["futuresans-noshader"], window.GetW(), window.GetH(), debugmode, error_output))
+	if (!hud.Init(
+		pathmanager.GetGUITextureDir(settings.GetSkin()), gui.GetLanguageDict(),
+		content, fonts["lcd"], fonts["futuresans"], fonts["futuresans-noshader"],
+		window.GetW(), window.GetH(), debugmode, error_output))
 	{
 		error_output << "Error initializing HUD" << std::endl;
 		return;
@@ -250,13 +260,6 @@ void GAME::Start(std::list <std::string> & args)
 		return;
 	}
 	inputgraph.Hide();
-
-	// Initialize GUI.
-	if (!InitGUI("Main"))
-	{
-		error_output << "Error initializing graphical user interface" << std::endl;
-		return;
-	}
 
 	// Initialize FPS counter.
 	{

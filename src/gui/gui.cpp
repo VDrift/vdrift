@@ -521,6 +521,11 @@ GUIOPTION & GUI::GetOption(const std::string & name)
 	return it->second;
 }
 
+const GUILANGUAGE & GUI::GetLanguageDict() const
+{
+	return lang;
+}
+
 GUI::PAGECB::PAGECB()
 {
 	action.call.bind<PAGECB, &PAGECB::call>(this);

@@ -29,6 +29,7 @@
 #include <list>
 
 class FONT;
+class GUILANGUAGE;
 class ContentManager;
 
 class HUD
@@ -38,6 +39,7 @@ public:
 
 	bool Init(
 		const std::string & texturepath,
+		const GUILANGUAGE & lang,
 		ContentManager & content,
 		FONT & lcdfont,
 		FONT & sansfont,
@@ -125,6 +127,9 @@ private:
 	float maxspeed;
 	float speedscale;
 	bool mph;
+
+	// hud strings
+	std::vector<std::string> str;
 
 	bool debug_hud_info;
 	bool racecomplete;

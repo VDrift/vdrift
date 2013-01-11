@@ -20,6 +20,7 @@
 #include "hud.h"
 #include "content/contentmanager.h"
 #include "graphics/texture.h"
+#include "gui/guilanguage.h"
 
 //#define GAUGES
 
@@ -65,6 +66,12 @@ static void GetTimeString(float time, std::string & outtime)
 	}
 }
 
+enum HUDStrEnum
+{
+	LAPTIME, LASTLAP, BESTLAP, SCORE, LAP, PLACE,
+	READY, GO, YOUWON, YOULOST, MPH, KPH, STRNUM
+};
+
 HUD::HUD() :
 	maxrpm(9000),
 	maxspeed(240),
@@ -79,6 +86,7 @@ HUD::HUD() :
 
 bool HUD::Init(
 	const std::string & texturepath,
+	const GUILANGUAGE & lang,
 	ContentManager & content,
 	FONT & lcdfont,
 	FONT & sansfont,
@@ -92,6 +100,20 @@ bool HUD::Init(
 	const float screenhwratio = displayheight / displaywidth;
 	const float barheight = 64.0 / displayheight;
 	const float barwidth = 256.0 / displaywidth;
+
+	str.resize(STRNUM);
+	str[LAPTIME] = lang("Lap time:");
+	str[LASTLAP] = lang("Last lap:");
+	str[BESTLAP] = lang("Best lap:");
+	str[SCORE] = lang("Score ");
+	str[LAP] = lang("Lap ");
+	str[PLACE] = lang("Place ");
+	str[READY] = lang("Ready");
+	str[GO] = lang("GO");
+	str[YOUWON] = lang("You won!");
+	str[YOULOST] = lang("You lost");
+	str[MPH] = lang(" MPH");
+	str[KPH] = lang(" KPH");
 
 	TEXTUREINFO texinfo;
 	texinfo.mipmap = false;
@@ -135,13 +157,13 @@ bool HUD::Init(
 		float startx = timerboxdimx * 0.45 - timerboxdimx * 0.15;
 		float xinc = timerboxdimx * 1.5;
 
-		laptime_label.Init(timernoderef, sansfont, "Lap time:", startx, timerboxdimy*0.9-timerboxdimy*0.3, fontscalex, fontscaley);
+		laptime_label.Init(timernoderef, sansfont, str[LAPTIME], startx, timerboxdimy*0.9-timerboxdimy*0.3, fontscalex, fontscaley);
 		laptime_label.SetDrawOrder(timernoderef, 0.2);
 
-		lastlaptime_label.Init(timernoderef, sansfont, "Last lap:", startx+xinc, timerboxdimy*.9-timerboxdimy*0.3, fontscalex, fontscaley);
+		lastlaptime_label.Init(timernoderef, sansfont, str[LASTLAP], startx+xinc, timerboxdimy*.9-timerboxdimy*0.3, fontscalex, fontscaley);
 		lastlaptime_label.SetDrawOrder(timernoderef, 0.2);
 
-		bestlaptime_label.Init(timernoderef, sansfont, "Best lap:", startx+xinc*2.0, timerboxdimy*.9-timerboxdimy*0.3, fontscalex, fontscaley);
+		bestlaptime_label.Init(timernoderef, sansfont, str[BESTLAP], startx+xinc*2.0, timerboxdimy*.9-timerboxdimy*0.3, fontscalex, fontscaley);
 		bestlaptime_label.SetDrawOrder(timernoderef, 0.2);
 
 		laptime.Init(timernoderef, lcdfont, "", startx, timerboxdimy*1.2-timerboxdimy*0.3, fontscalex, fontscaley);
@@ -374,7 +396,8 @@ bool HUD::Init(
 }
 
 void HUD::Update(
-	FONT & lcdfont, FONT & sansfont, FONT & sansfont_noshader, float displaywidth, float displayheight,
+	FONT & lcdfont, FONT & sansfont, FONT & sansfont_noshader,
+	float displaywidth, float displayheight,
 	float curlap, float lastlap, float bestlap, float stagingtimeleft,
 	int curlapnum, int numlaps, int curplace, int numcars,
 	float rpm, float redrpm, float maxrpm,
@@ -482,9 +505,9 @@ void HUD::Update(
 
 	std::stringstream speedo;
 	if (mph)
-		speedo << std::abs((int)(2.23693629 * speed)) << " MPH";
+		speedo << std::abs((int)(2.23693629 * speed)) << str[MPH];
 	else
-		speedo << std::abs((int)(3.6 * speed)) << " KPH";
+		speedo << std::abs((int)(3.6 * speed)) << str[KPH];
 	float fontscalex = mphtext.GetScale().first;
 	float fontscaley = mphtext.GetScale().second;
 	float speedotextwidth = lcdfont.GetWidth(speedo.str()) * fontscalex;
@@ -556,7 +579,7 @@ void HUD::Update(
 	if (numlaps == 0) //this is how we determine practice mode, for now
 	{
 		std::stringstream scorestream;
-		scorestream << "Score " << (int)driftscore;
+		scorestream << str[SCORE] << (int)driftscore;
 		if (drifting)
 		{
 			scorestream << " + " << (int)thisdriftscore;
@@ -579,12 +602,12 @@ void HUD::Update(
 		//update lap
 		std::stringstream lapstream;
 		//std::cout << curlapnum << std::endl;
-		lapstream << "Lap " << std::max(1, std::min(curlapnum, numlaps)) << "/" << numlaps;
+		lapstream << str[LAP] << std::max(1, std::min(curlapnum, numlaps)) << "/" << numlaps;
 		lapindicator.Revise(lapstream.str());
 
 		//update place
 		std::stringstream stream;
-		stream << "Place " << curplace << "/" << numcars;
+		stream << str[PLACE] << curplace << "/" << numcars;
 		placeindicator.Revise(stream.str());
 
 		//update race prompt
@@ -597,24 +620,24 @@ void HUD::Update(
 		}
 		else if (stagingtimeleft > 0.0)
 		{
-			t << "Ready";
+			t << str[READY];
 			raceprompt.SetColor(hudroot, 1,1,0);
 		}
 		else if (stagingtimeleft < 0.0f && stagingtimeleft > -1.0f) //stagingtimeleft needs to go negative to get the GO message
 		{
-			t << "GO";
+			t << str[GO];
 			raceprompt.SetColor(hudroot, 0,1,0);
 		}
 		else if (curlapnum > numlaps && !racecomplete)
 		{
 			if (curplace == 1)
 			{
-				t << "You won!";
+				t << str[YOUWON];
 				raceprompt.SetColor(hudroot, 0,1,0);
 			}
 			else
 			{
-				t << "You lost";
+				t << str[YOULOST];
 				raceprompt.SetColor(hudroot, 1,0,0);
 			}
 			raceprompt.Revise(t.str());
