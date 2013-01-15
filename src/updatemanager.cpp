@@ -29,8 +29,12 @@
 
 typedef SVN_SOURCEFORGE repo_type;
 
-UPDATE_MANAGER::UPDATE_MANAGER(AUTOUPDATE & autoupdate, std::ostream & info, std::ostream & err) :
-	autoupdate(autoupdate), info_output(info), error_output(err), cur_object_id(0)
+UPDATE_MANAGER::UPDATE_MANAGER(AUTOUPDATE &update, std::ostream & info, std::ostream & err) :
+	autoupdate(update),
+	info_output(info),
+	error_output(err),
+	updates_num(0),
+	cur_object_id(0)
 {
 	// Constructor
 }
@@ -42,6 +46,7 @@ bool UPDATE_MANAGER::Init(
 	const std::string & newguipage,
 	const std::string & newgroup)
 {
+	updates_num = 0;
 	updatefile = newupdatefile;
 	updatefilebackup = newupdatefilebackup;
 	guipage = newguipage;
@@ -84,7 +89,7 @@ void UPDATE_MANAGER::StartCheckForUpdates(GAME_DOWNLOADER downloader, GUI & gui)
 
 	// check the current SVN picture against what's in our update manager to find things we can update
 	autoupdate.SetAvailableUpdates(group, res);
-	std::pair <std::vector <std::string>,std::vector <std::string> > updates = autoupdate.CheckUpdate(group);
+	std::pair <std::vector <std::string>, std::vector <std::string> > updates = autoupdate.CheckUpdate(group);
 	info_output << "Updates: " << updates.first.size() << " update(s), " << updates.second.size() << " deletion(s) found" << std::endl;
 	if (verbose)
 	{
@@ -96,15 +101,7 @@ void UPDATE_MANAGER::StartCheckForUpdates(GAME_DOWNLOADER downloader, GUI & gui)
 		info_output << "]" << std::endl;
 	}
 
-	if (!updates.first.empty())
-	{
-		std::stringstream updatesummary;
-		updatesummary << updates.first.size() << " " << group << " update";
-		if (updates.first.size() > 1)
-			updatesummary << "s";
-		updatesummary << " available";
-		gui.SetLabelText("UpdatesFound", group, updatesummary.str());
-	}
+	updates_num = updates.first.size();
 
 	// store the new set of available updates
 	autoupdate.Write(updatefile);

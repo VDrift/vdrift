@@ -2506,6 +2506,8 @@ void GAME::StartCheckForUpdates()
 {
 	carupdater.StartCheckForUpdates(GAME_DOWNLOADER(*this, http), gui);
 	trackupdater.StartCheckForUpdates(GAME_DOWNLOADER(*this, http), gui);
+	gui.SetOptionValue("update.cars", cast(carupdater.GetUpdatesNum()));
+	gui.SetOptionValue("update.tracks", cast(trackupdater.GetUpdatesNum()));
 	gui.ActivatePage("UpdatesFound", 0.25, error_output);
 }
 

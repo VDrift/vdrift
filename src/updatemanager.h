@@ -37,7 +37,7 @@ class Config;
 class UPDATE_MANAGER
 {
 public:
-	UPDATE_MANAGER(AUTOUPDATE & autoupdate, std::ostream & info, std::ostream & err);
+	UPDATE_MANAGER(AUTOUPDATE & update, std::ostream & info, std::ostream & err);
 
 	// returns true on success
 	bool Init(
@@ -57,6 +57,8 @@ public:
 
 	void StartCheckForUpdates(GAME_DOWNLOADER downloader, GUI & gui);
 
+	size_t GetUpdatesNum() const { return updates_num; }
+
 	// returns true on success
 	bool ApplyUpdate(GAME_DOWNLOADER downloader, GUI & gui, const PATHMANAGER & pathmanager);
 
@@ -67,6 +69,7 @@ private:
 	std::ostream & info_output;
 	std::ostream & error_output;
 
+	size_t updates_num;
 	int cur_object_id;
 	std::string updatefilebase;
 	std::string updatefile;
