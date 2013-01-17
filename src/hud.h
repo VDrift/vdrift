@@ -40,17 +40,17 @@ public:
 	bool Init(
 		const std::string & texturepath,
 		const GUILANGUAGE & lang,
-		ContentManager & content,
-		FONT & lcdfont,
-		FONT & sansfont,
-		FONT & sansfont_noshader,
+		const FONT & sansfont,
+		const FONT & lcdfont,
 		float displaywidth,
 		float displayheight,
 		bool debugon,
+		ContentManager & content,
 		std::ostream & error_output);
 
 	void Update(
-		FONT & lcdfont, FONT & sansfont, FONT & sansfont_noshader, float displaywidth, float displayheight,
+		const FONT & sansfont, const FONT & lcdfont,
+		float displaywidth, float displayheight,
 		float curlap, float lastlap, float bestlap, float stagingtimeleft,
 		int curlapnum, int numlaps, int curplace, int numcars,
 		float rpm, float redrpm, float maxrpm,

@@ -35,8 +35,8 @@ static DRAWABLE & GetDrawable(SCENENODE & node, const keyed_container <DRAWABLE>
 }
 
 static keyed_container <DRAWABLE>::handle SetupText(
-	SCENENODE & parent, FONT & font,
-	TEXT_DRAW & textdraw, const std::string & str,
+	SCENENODE & parent, TEXT_DRAW & textdraw,
+	const std::string & str, const FONT & font,
 	float x, float y, float scalex, float scaley,
 	float r, float g , float b, float zorder = 0)
 {
@@ -87,13 +87,12 @@ HUD::HUD() :
 bool HUD::Init(
 	const std::string & texturepath,
 	const GUILANGUAGE & lang,
-	ContentManager & content,
-	FONT & lcdfont,
-	FONT & sansfont,
-    FONT & sansfont_noshader,
+	const FONT & sansfont,
+	const FONT & lcdfont,
 	float displaywidth,
 	float displayheight,
 	bool debugon,
+	ContentManager & content,
 	std::ostream & error_output)
 {
 	const float opacity = 0.8;
@@ -219,10 +218,10 @@ bool HUD::Init(
 
 		debugnode = hudroot.AddNode();
 		SCENENODE & debugnoderef = hudroot.GetNode(debugnode);
-		debugtextdraw1 = SetupText(debugnoderef, sansfont, debugtext1, "", 0.01, fontscaley, fontscalex, fontscaley, 1, 1, 1, 10);
-		debugtextdraw2 = SetupText(debugnoderef, sansfont, debugtext2, "", 0.25, fontscaley, fontscalex, fontscaley, 1, 1, 1, 10);
-		debugtextdraw3 = SetupText(debugnoderef, sansfont, debugtext3, "", 0.5, fontscaley, fontscalex, fontscaley, 1, 1, 1, 10);
-		debugtextdraw4 = SetupText(debugnoderef, sansfont, debugtext4, "", 0.75, fontscaley, fontscalex, fontscaley, 1, 1, 1, 10);
+		debugtextdraw1 = SetupText(debugnoderef, debugtext1, "", sansfont, 0.01, fontscaley, fontscalex, fontscaley, 1, 1, 1, 10);
+		debugtextdraw2 = SetupText(debugnoderef, debugtext2, "", sansfont, 0.25, fontscaley, fontscalex, fontscaley, 1, 1, 1, 10);
+		debugtextdraw3 = SetupText(debugnoderef, debugtext3, "", sansfont, 0.50, fontscaley, fontscalex, fontscaley, 1, 1, 1, 10);
+		debugtextdraw4 = SetupText(debugnoderef, debugtext4, "", sansfont, 0.75, fontscaley, fontscalex, fontscaley, 1, 1, 1, 10);
 	}
 
 #ifndef GAUGES
@@ -270,8 +269,8 @@ bool HUD::Init(
 		float x0 = screenhwratio * 0.02;
 		float x1 = 1.0 - screenhwratio * 0.02;
 
-		geartextdraw = SetupText(hudroot, lcdfont, geartext, "N", x0, y, fontscalex, fontscaley, 1, 1, 1, 4);
-		mphtextdraw = SetupText(hudroot, lcdfont, mphtext, "0", x1, y, fontscalex, fontscaley, 1, 1, 1, 4);
+		geartextdraw = SetupText(hudroot, geartext, "N", lcdfont, x0, y, fontscalex, fontscaley, 1, 1, 1, 4);
+		mphtextdraw = SetupText(hudroot, mphtext, "0", lcdfont, x1, y, fontscalex, fontscaley, 1, 1, 1, 4);
 	}
 
 	{
@@ -396,7 +395,7 @@ bool HUD::Init(
 }
 
 void HUD::Update(
-	FONT & lcdfont, FONT & sansfont, FONT & sansfont_noshader,
+	const FONT & sansfont, const FONT & lcdfont,
 	float displaywidth, float displayheight,
 	float curlap, float lastlap, float bestlap, float stagingtimeleft,
 	int curlapnum, int numlaps, int curplace, int numcars,

@@ -526,6 +526,11 @@ const GUILANGUAGE & GUI::GetLanguageDict() const
 	return lang;
 }
 
+const FONT & GUI::GetFont() const
+{
+	return font;
+}
+
 GUI::PAGECB::PAGECB()
 {
 	action.call.bind<PAGECB, &PAGECB::call>(this);

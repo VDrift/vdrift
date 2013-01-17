@@ -105,8 +105,9 @@ public:
 	void SetOptionValue(const std::string & name, const std::string & value);
 	GUIOPTION & GetOption(const std::string & name);
 
-	/// access to language dict for translation purposes
+	/// access to language dict and font for translation purposes
 	const GUILANGUAGE & GetLanguageDict() const;
+	const FONT & GetFont() const;
 
 private:
 	typedef std::map<std::string, GUIOPTION> OPTIONMAP;

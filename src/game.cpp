@@ -244,9 +244,10 @@ void GAME::Start(std::list <std::string> & args)
 
 	// Initialize HUD.
 	if (!hud.Init(
-		pathmanager.GetGUITextureDir(settings.GetSkin()), gui.GetLanguageDict(),
-		content, fonts["lcd"], fonts["futuresans"], fonts["futuresans-noshader"],
-		window.GetW(), window.GetH(), debugmode, error_output))
+		pathmanager.GetGUITextureDir(settings.GetSkin()),
+		gui.GetLanguageDict(), gui.GetFont(), fonts["lcd"],
+		window.GetW(), window.GetH(),
+		debugmode, content, error_output))
 	{
 		error_output << "Error initializing HUD" << std::endl;
 		return;
@@ -1359,7 +1360,7 @@ void GAME::UpdateCarInputs(int carid, CAR & car)
 	std::pair <int, int> curplace = timer.GetPlayerPlace();
 	int tid = cartimerids[&car];
 	hud.Update(
-		fonts["lcd"], fonts["futuresans"], fonts["futuresans-noshader"], window.GetW(), window.GetH(),
+		gui.GetFont(), fonts["lcd"], window.GetW(), window.GetH(),
 		timer.GetPlayerTime(), timer.GetLastLap(), timer.GetBestLap(), timer.GetStagingTimeLeft(),
 		timer.GetPlayerCurrentLap(), race_laps, curplace.first, curplace.second,
 		car.GetEngineRPM(), car.GetEngineRedline(), car.GetEngineRPMLimit(),
