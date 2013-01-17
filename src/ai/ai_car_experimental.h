@@ -95,8 +95,6 @@ private:
 	template<class T> static bool isnan(const T & x);
 	static float clamp(float val, float min, float max);
 	static float RateLimit(float old_value, float new_value, float rate_limit_pos, float rate_limit_neg);
-	static MATHVECTOR <float, 3> TransformToWorldspace(const MATHVECTOR <float, 3> & bezierspace);
-	static MATHVECTOR <float, 3> TransformToPatchspace(const MATHVECTOR <float, 3> & bezierspace);
 	static const BEZIER * GetCurrentPatch(const CAR *c);
 	static MATHVECTOR <float, 3> GetPatchFrontCenter(const BEZIER & patch);
 	static MATHVECTOR <float, 3> GetPatchBackCenter(const BEZIER & patch);

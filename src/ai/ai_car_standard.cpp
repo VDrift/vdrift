@@ -33,39 +33,6 @@
 #include <algorithm>
 #include <iostream>
 
-AI_Car* AI_Car_Standard_Factory::create(CAR * car, float difficulty){
-	return new AI_Car_Standard(car, difficulty);
-}
-
-AI_Car_Standard::AI_Car_Standard (CAR * new_car, float newdifficulty) :
-	AI_Car(new_car, newdifficulty), shift_time(0.0), longitude_mu(0.9),
-	lateral_mu(0.9), last_patch(NULL), use_racingline(true)
-{
-	assert(car->GetTCSEnabled());
-	assert(car->GetABSEnabled());
-	car->SetAutoShift(true);
-	car->SetAutoClutch(true);
-}
-AI_Car_Standard::~AI_Car_Standard ()
-{
-#ifdef VISUALIZE_AI_DEBUG
-	SCENENODE& topnode  = car->GetNode();
-	if (brakedraw.valid())
-	{
-		topnode.GetDrawlist().normal_noblend.erase(brakedraw);
-	}
-	if (steerdraw.valid())
-	{
-		topnode.GetDrawlist().normal_noblend.erase(steerdraw);
-	}
-#endif
-}
-
-template<class T> bool AI_Car_Standard::isnan(const T & x)
-{
-	return x != x;
-}
-
 #define GRAVITY 9.8
 
 //used to calculate brake value
@@ -86,6 +53,40 @@ template<class T> bool AI_Car_Standard::isnan(const T & x)
 //maximum change in brake value per second
 #define BRAKE_RATE_LIMIT 0.1
 #define THROTTLE_RATE_LIMIT 0.1
+
+AI_Car* AI_Car_Standard_Factory::create(CAR * car, float difficulty){
+	return new AI_Car_Standard(car, difficulty);
+}
+
+AI_Car_Standard::AI_Car_Standard (CAR * new_car, float newdifficulty) :
+	AI_Car(new_car, newdifficulty), shift_time(0.0), longitude_mu(0.9),
+	lateral_mu(0.9), last_patch(NULL), use_racingline(true)
+{
+	assert(car->GetTCSEnabled());
+	assert(car->GetABSEnabled());
+	car->SetAutoShift(true);
+	car->SetAutoClutch(true);
+}
+
+AI_Car_Standard::~AI_Car_Standard ()
+{
+#ifdef VISUALIZE_AI_DEBUG
+	SCENENODE& topnode  = car->GetNode();
+	if (brakedraw.valid())
+	{
+		topnode.GetDrawlist().normal_noblend.erase(brakedraw);
+	}
+	if (steerdraw.valid())
+	{
+		topnode.GetDrawlist().normal_noblend.erase(steerdraw);
+	}
+#endif
+}
+
+template<class T> bool AI_Car_Standard::isnan(const T & x)
+{
+	return x != x;
+}
 
 float AI_Car_Standard::clamp(float val, float min, float max)
 {
@@ -109,16 +110,6 @@ void AI_Car_Standard::Update(float dt, const std::list <CAR> & checkcars)
 	analyzeOthers(dt, checkcars);
 	updateGasBrake();
 	updateSteer();
-}
-
-MATHVECTOR <float, 3> AI_Car_Standard::TransformToWorldspace(const MATHVECTOR <float, 3> & bezierspace)
-{
-	return MATHVECTOR <float, 3> (bezierspace[2], bezierspace[0], bezierspace[1]);
-}
-
-MATHVECTOR <float, 3> AI_Car_Standard::TransformToPatchspace(const MATHVECTOR <float, 3> & bezierspace)
-{
-	return MATHVECTOR <float, 3> (bezierspace[1], bezierspace[2], bezierspace[0]);
 }
 
 const BEZIER * AI_Car_Standard::GetCurrentPatch(const CAR *c)
@@ -164,8 +155,8 @@ double AI_Car_Standard::GetPatchRadius(const BEZIER & patch)
 		MATHVECTOR <float, 3> d2 = GetPatchDirection(*patch.GetNextPatch());*/
 		MATHVECTOR <float, 3> d1 = -(patch.GetNextPatch()->GetRacingLine() - patch.GetRacingLine());
 		MATHVECTOR <float, 3> d2 = patch.GetNextPatch()->GetNextPatch()->GetRacingLine() - patch.GetNextPatch()->GetRacingLine();
-		d1[1] = 0;
-		d2[1] = 0;
+		d1[2] = 0;
+		d2[2] = 0;
 		float d1mag = d1.Magnitude();
 		float d2mag = d2.Magnitude();
 		float diff = d2mag - d1mag;
@@ -324,7 +315,7 @@ void AI_Car_Standard::updateGasBrake()
 	BEZIER curr_patch = RevisePatch(curr_patch_ptr, use_racingline);
 	//BEZIER curr_patch = *curr_patch_ptr;
 
-	MATHVECTOR <float, 3> patch_direction = TransformToWorldspace(GetPatchDirection(curr_patch));
+	MATHVECTOR <float, 3> patch_direction = GetPatchDirection(curr_patch);
 
 	//this version uses the velocity along tangent vector. it should calculate a lower current speed,
 	//hence higher gas value or lower brake value
@@ -580,12 +571,11 @@ void AI_Car_Standard::updateSteer()
 		}
 	}
 
-	MATHVECTOR <float, 3> next_position = TransformToWorldspace(dest_point);
 	MATHVECTOR <float, 3> car_position = car->GetCenterOfMassPosition();
 	MATHVECTOR <float, 3> car_orientation = direction::Forward;
 	(car->GetOrientation()).RotateVector(car_orientation);
 
-	MATHVECTOR <float, 3> desire_orientation = next_position - car_position;
+	MATHVECTOR <float, 3> desire_orientation = dest_point - car_position;
 
 	//car's direction on the horizontal plane
 	car_orientation[2] = 0;
@@ -626,7 +616,6 @@ void AI_Car_Standard::updateSteer()
 	inputs[CARINPUT::STEER_RIGHT] = steer_value;
 }
 
-///note that carposition must be in patch space
 ///returns distance from left side of the track
 float AI_Car_Standard::GetHorizontalDistanceAlongPatch(const BEZIER & patch, MATHVECTOR <float, 3> carposition)
 {
@@ -744,8 +733,8 @@ void AI_Car_Standard::analyzeOthers(float dt, const std::list <CAR> & checkcars)
 
 				if (othercarpatch && mycarpatch)
 				{
-					float my_track_placement = GetHorizontalDistanceAlongPatch(*mycarpatch, TransformToPatchspace(car->GetCenterOfMassPosition()));
-					float their_track_placement = GetHorizontalDistanceAlongPatch(*othercarpatch, TransformToPatchspace(i->GetCenterOfMassPosition()));
+					float my_track_placement = GetHorizontalDistanceAlongPatch(*mycarpatch, car->GetCenterOfMassPosition());
+					float their_track_placement = GetHorizontalDistanceAlongPatch(*othercarpatch, i->GetCenterOfMassPosition());
 
 					float speed_diff_denom = clamp(speed_diff, -100, -0.01);
 					float eta = (fore_position-fore_position_offset)/-speed_diff_denom;
@@ -952,11 +941,11 @@ void AI_Car_Standard::Visualize()
 	for (std::vector <BEZIER>::iterator i = brakelook.begin(); i != brakelook.end(); ++i)
 	{
 		BEZIER & patch = *i;
-		AddLinePoint(brakeshape, TransformToWorldspace(patch.GetBL()));
-		AddLinePoint(brakeshape, TransformToWorldspace(patch.GetFL()));
-		AddLinePoint(brakeshape, TransformToWorldspace(patch.GetFR()));
-		AddLinePoint(brakeshape, TransformToWorldspace(patch.GetBR()));
-		AddLinePoint(brakeshape, TransformToWorldspace(patch.GetBL()));
+		AddLinePoint(brakeshape, patch.GetBL());
+		AddLinePoint(brakeshape, patch.GetFL());
+		AddLinePoint(brakeshape, patch.GetFR());
+		AddLinePoint(brakeshape, patch.GetBR());
+		AddLinePoint(brakeshape, patch.GetBL());
 	}
 
 	steerdrawable.SetLineSize(4);
@@ -965,11 +954,11 @@ void AI_Car_Standard::Visualize()
 	for (std::vector <BEZIER>::iterator i = steerlook.begin(); i != steerlook.end(); ++i)
 	{
 		BEZIER & patch = *i;
-		AddLinePoint(steershape, TransformToWorldspace(patch.GetBL()));
-		AddLinePoint(steershape, TransformToWorldspace(patch.GetFL()));
-		AddLinePoint(steershape, TransformToWorldspace(patch.GetBR()));
-		AddLinePoint(steershape, TransformToWorldspace(patch.GetFR()));
-		AddLinePoint(steershape, TransformToWorldspace(patch.GetBL()));
+		AddLinePoint(steershape, patch.GetBL());
+		AddLinePoint(steershape, patch.GetFL());
+		AddLinePoint(steershape, patch.GetBR());
+		AddLinePoint(steershape, patch.GetFR());
+		AddLinePoint(steershape, patch.GetBL());
 	}
 }
 #endif

@@ -44,16 +44,12 @@ void ROADPATCH::AddRacinglineScenenode(
 	draw.SetDecal(true);
 	draw.SetVertArray(&racingline_vertexarray);
 
-	MATHVECTOR <float, 3> v0 = racing_line + (patch.GetPoint(0,0) - racing_line).Normalize()*0.1;
-	MATHVECTOR <float, 3> v1 = racing_line + (patch.GetPoint(0,3) - racing_line).Normalize()*0.1;
-	MATHVECTOR <float, 3> v2 = nextpatch.racing_line + (nextpatch.GetPatch().GetPoint(0,3) - nextpatch.racing_line).Normalize()*0.1;
-	MATHVECTOR <float, 3> v3 = nextpatch.racing_line + (nextpatch.GetPatch().GetPoint(0,0) - nextpatch.racing_line).Normalize()*0.1;
-
-	//transform from bezier space into world space
-	v0.Set(v0[2],v0[0],v0[1]);
-	v1.Set(v1[2],v1[0],v1[1]);
-	v2.Set(v2[2],v2[0],v2[1]);
-	v3.Set(v3[2],v3[0],v3[1]);
+	const MATHVECTOR <float, 3> & r0 = patch.GetRacingLine();
+	const MATHVECTOR <float, 3> & r1 = nextpatch.patch.GetRacingLine();
+	MATHVECTOR <float, 3> v0 = r0 + (patch.GetPoint(0,0) - r0).Normalize()*0.1;
+	MATHVECTOR <float, 3> v1 = r0 + (patch.GetPoint(0,3) - r0).Normalize()*0.1;
+	MATHVECTOR <float, 3> v2 = r1 + (nextpatch.GetPatch().GetPoint(0,3) - r1).Normalize()*0.1;
+	MATHVECTOR <float, 3> v3 = r1 + (nextpatch.GetPatch().GetPoint(0,0) - r1).Normalize()*0.1;
 
 	float trackoffset = 0.1;
 	v0[2] += trackoffset;
@@ -65,15 +61,10 @@ void ROADPATCH::AddRacinglineScenenode(
 	float uvs[8];
 	int bfaces[6];
 
-	//std::cout << v0 << std::endl;
-
 	vcorners[0] = v0[0]; vcorners[1] = v0[1]; vcorners[2] = v0[2];
 	vcorners[3] = v1[0]; vcorners[4] = v1[1]; vcorners[5] = v1[2];
 	vcorners[6] = v2[0]; vcorners[7] = v2[1]; vcorners[8] = v2[2];
 	vcorners[9] = v3[0]; vcorners[10] = v3[1]; vcorners[11] = v3[2];
-
-	//std::cout << v0 << endl;
-	//std::cout << racing_line << endl;
 
 	uvs[0] = 0;
 	uvs[1] = 0;

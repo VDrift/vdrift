@@ -132,18 +132,14 @@ bool TRACK::CastRay(
 	const BEZIER * & colpatch,
 	MATHVECTOR <float, 3> & normal) const
 {
-	// transform into bezier space
-	MATHVECTOR<float, 3> borigin(origin[1], origin[2], origin[0]);
-	MATHVECTOR<float, 3> bdirection(direction[1], direction[2], direction[0]);
-
 	bool col = false;
 	for (std::list <ROADSTRIP>::const_iterator i = data.roads.begin(); i != data.roads.end(); ++i)
 	{
 		MATHVECTOR <float, 3> coltri, colnorm;
 		const BEZIER * colbez = NULL;
-		if (i->Collide(borigin, bdirection, seglen, patch_id, coltri, colbez, colnorm))
+		if (i->Collide(origin, direction, seglen, patch_id, coltri, colbez, colnorm))
 		{
-			if (!col || (coltri - borigin).MagnitudeSquared() < (outtri - borigin).MagnitudeSquared())
+			if (!col || (coltri - origin).MagnitudeSquared() < (outtri - origin).MagnitudeSquared())
 			{
 				outtri = coltri;
 				normal = colnorm;
@@ -152,11 +148,6 @@ bool TRACK::CastRay(
 			col = true;
 		}
 	}
-
-	// transform into world space
-	outtri = MATHVECTOR<float, 3>(outtri[2], outtri[0], outtri[1]);
-	normal = MATHVECTOR<float, 3>(normal[2], normal[0], normal[1]);
-
 	return col;
 }
 

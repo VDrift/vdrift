@@ -36,8 +36,10 @@ using std::list;
 using std::vector;
 using std::pair;
 
-TRACKMAP::TRACKMAP() : scale(1.0), MAP_WIDTH(256),MAP_HEIGHT(256)
+TRACKMAP::TRACKMAP() :
+	scale(1.0), MAP_WIDTH(256), MAP_HEIGHT(256)
 {
+	// ctor
 }
 
 TRACKMAP::~TRACKMAP()
@@ -93,28 +95,29 @@ bool TRACKMAP::BuildMap(
 	for (list <ROADSTRIP>::const_iterator road = roads.begin(); road != roads.end(); road++)
 	{
 		for (vector<ROADPATCH>::const_iterator curp = road->GetPatches().begin();
-		     curp != road->GetPatches().end(); curp++)
+			curp != road->GetPatches().end(); curp++)
 		{
+			const BEZIER & b = curp->GetPatch();
 			for (int i = 0; i < 4; i++)
 			{
 				for (int j = 0; j < 4; j++)
 				{
-					MATHVECTOR <float, 3> p = curp->GetPatch()[i+j*4];
-					if (p[0] < map_w_min)
+					const MATHVECTOR <float, 3> & p = b[i + j * 4];
+					if (p[1] < map_w_min)
 					{
-						map_w_min = p[0];
+						map_w_min = p[1];
 					}
-					if (p[0] > map_w_max)
+					if (p[1] > map_w_max)
 					{
-						map_w_max = p[0];
+						map_w_max = p[1];
 					}
-					if (p[2] < map_h_min)
+					if (p[0] < map_h_min)
 					{
-						map_h_min = p[2];
+						map_h_min = p[0];
 					}
-					if (p[2] > map_h_max)
+					if (p[0] > map_h_max)
 					{
-						map_h_max = p[2];
+						map_h_max = p[0];
 					}
 				}
 			}
@@ -128,31 +131,31 @@ bool TRACKMAP::BuildMap(
 	//we will leave a 1 pixel border
 	float scale_w = (outsizex-2) / mapsize[0];
 	float scale_h = (outsizey-2) / mapsize[1];
-	scale = (scale_w < scale_h)?scale_w:scale_h;
+	scale = (scale_w < scale_h) ? scale_w : scale_h;
 
 	boxRGBA(surface, 0, 0, outsizex-1, outsizey-1, 0, 0, 0, 0);
 
 	for (list <ROADSTRIP>::const_iterator road = roads.begin(); road != roads.end(); road++)
 	{
 		for (vector<ROADPATCH>::const_iterator curp = road->GetPatches().begin();
-		     curp != road->GetPatches().end(); curp++)
+			curp != road->GetPatches().end(); curp++)
 		{
 			Sint16 x[4], y[4];
 
-			const BEZIER & b(curp->GetPatch());
-			MATHVECTOR <float, 3> back_l = b.GetBL();
-			MATHVECTOR <float, 3> back_r = b.GetBR();
-			MATHVECTOR <float, 3> front_l = b.GetFL();
-			MATHVECTOR <float, 3> front_r = b.GetFR();
+			const BEZIER & b = curp->GetPatch();
+			const MATHVECTOR <float, 3> & back_l = b.GetBL();
+			const MATHVECTOR <float, 3> & back_r = b.GetBR();
+			const MATHVECTOR <float, 3> & front_l = b.GetFL();
+			const MATHVECTOR <float, 3> & front_r = b.GetFR();
 
-			x[0] = int((back_l[0] - map_w_min) * scale) + 1;
-			y[0] = int((back_l[2] - map_h_min) * scale) + 1;
-			x[1] = int((front_l[0] - map_w_min) * scale) + 1;
-			y[1] = int((front_l[2] - map_h_min) * scale) + 1;
-			x[2] = int((front_r[0] - map_w_min) * scale) + 1;
-			y[2] = int((front_r[2] - map_h_min) * scale) + 1;
-			x[3] = int((back_r[0] - map_w_min) * scale) + 1;
-			y[3] = int((back_r[2] - map_h_min) * scale) + 1;
+			x[0] = int((back_l[1] - map_w_min) * scale) + 1;
+			y[0] = int((back_l[0] - map_h_min) * scale) + 1;
+			x[1] = int((front_l[1] - map_w_min) * scale) + 1;
+			y[1] = int((front_l[0] - map_h_min) * scale) + 1;
+			x[2] = int((front_r[1] - map_w_min) * scale) + 1;
+			y[2] = int((front_r[0] - map_h_min) * scale) + 1;
+			x[3] = int((back_r[1] - map_w_min) * scale) + 1;
+			y[3] = int((back_r[0] - map_h_min) * scale) + 1;
 			filledPolygonRGBA(surface, x, y, 4, 255, 255, 255, 255);
 			//aapolygonRGBA(surface, x, y, 4, 255, 255, 255, 255); // draw artifacts with SDL2
 		}
@@ -197,7 +200,7 @@ bool TRACKMAP::BuildMap(
 	}
 
 	TEXTUREINFO texinfo;
-	texinfo.data = (char*)surface->pixels;
+	texinfo.data = static_cast<char*>(surface->pixels);
 	texinfo.width = surface->w;
 	texinfo.height = surface->h;
 	texinfo.bytespp = surface->format->BitsPerPixel / 8;

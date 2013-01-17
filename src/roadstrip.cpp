@@ -47,7 +47,7 @@ bool ROADSTRIP::ReadFrom(
 		if (!patches.empty()) prevbezier = &patches.back().GetPatch();
 
 		patches.push_back(ROADPATCH());
-		patches.back().GetPatch().ReadFrom(openfile);
+		patches.back().GetPatch().ReadFromYZX(openfile);
 
 		if (prevbezier) prevbezier->Attach(patches.back().GetPatch());
 

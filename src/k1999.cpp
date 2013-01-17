@@ -302,10 +302,10 @@ bool K1999::LoadData(const ROADSTRIP & road)
 
 	for (std::vector<ROADPATCH>::const_iterator i = patchlist.begin(); i != patchlist.end(); ++i)
 	{
-		txLeft.push_back(i->GetPatch().GetPoint(3,0)[0]);
-		tyLeft.push_back(-i->GetPatch().GetPoint(3,0)[2]);//this originally looked at the z coordinate -JDV
-		txRight.push_back(i->GetPatch().GetPoint(3,3)[0]);
-		tyRight.push_back(-i->GetPatch().GetPoint(3,3)[2]);//this originally looked at the z coordinate -JDV
+		txLeft.push_back(i->GetPatch().GetPoint(3,0)[1]);
+		tyLeft.push_back(-i->GetPatch().GetPoint(3,0)[0]);
+		txRight.push_back(i->GetPatch().GetPoint(3,3)[1]);
+		tyRight.push_back(-i->GetPatch().GetPoint(3,3)[0]);
 		tLane.push_back(0.5);
 		tx.push_back(0.0);
 		ty.push_back(0.0);

@@ -68,8 +68,9 @@ public:
 	bool CollideSubDivQuadSimpleNorm(const MATHVECTOR <float, 3> & origin, const MATHVECTOR <float, 3> & direction, MATHVECTOR <float, 3> &outtri, MATHVECTOR <float, 3> & normal) const;
 
 	///read/write IO operations (ascii format)
-	void ReadFrom(std::istream &openfile);
-	void WriteTo(std::ostream &openfile) const;
+	void ReadFrom(std::istream & openfile);
+	void ReadFromYZX(std::istream & openfile);
+	void WriteTo(std::ostream & openfile) const;
 
 	///flip points on both axes
 	void Reverse();

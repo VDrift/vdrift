@@ -497,6 +497,20 @@ void BEZIER::ReadFrom(std::istream &openfile)
 	}
 }
 
+void BEZIER::ReadFromYZX(std::istream &openfile)
+{
+	assert(openfile);
+	for (int x = 0; x < 4; x++)
+	{
+		for (int y = 0; y < 4; y++)
+		{
+			openfile >> points[x][y][1];
+			openfile >> points[x][y][2];
+			openfile >> points[x][y][0];
+		}
+	}
+}
+
 void BEZIER::WriteTo(std::ostream &openfile) const
 {
 	assert(openfile);
