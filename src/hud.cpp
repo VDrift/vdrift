@@ -605,25 +605,7 @@ void HUD::Update(
 		bestlaptime.Revise(tempstr);
 	}
 
-	//update drift score
-	if (numlaps == 0) //this is how we determine practice mode, for now
-	{
-		std::stringstream scorestream;
-		scorestream << (int)driftscore;
-
-		SCENENODE & infonoderef = hudroot.GetNode(infonode);
-		if (drifting)
-		{
-			scorestream << " + " << (int)thisdriftscore;
-			driftscoreindicator.SetColor(infonoderef, 1, 0, 0);
-		}
-		else
-		{
-			driftscoreindicator.SetColor(infonoderef, 1, 1, 1);
-		}
-		driftscoreindicator.Revise(scorestream.str());
-	}
-
+	std::string rps;
 	if (numlaps > 0)
 	{
 		//update lap
@@ -637,47 +619,63 @@ void HUD::Update(
 		placeindicator.Revise(stream.str());
 
 		//update race prompt
-		std::stringstream t;
 		if (stagingtimeleft > 0.5)
 		{
-			t << ((int)stagingtimeleft)+1;
+			std::stringstream s;
+			s << (int)stagingtimeleft + 1;
+			rps  = s.str();
 			raceprompt.SetColor(hudroot, 1,0,0);
 			racecomplete = false;
 		}
 		else if (stagingtimeleft > 0.0)
 		{
-			t << str[READY];
+			rps = str[READY];
 			raceprompt.SetColor(hudroot, 1,1,0);
 		}
 		else if (stagingtimeleft < 0.0f && stagingtimeleft > -1.0f) //stagingtimeleft needs to go negative to get the GO message
 		{
-			t << str[GO];
+			rps = str[GO];
 			raceprompt.SetColor(hudroot, 0,1,0);
 		}
-		else if (curlapnum > numlaps && !racecomplete)
+		else if (curlapnum > numlaps)
 		{
 			if (curplace == 1)
 			{
-				t << str[YOUWON];
+				rps = str[YOUWON];
 				raceprompt.SetColor(hudroot, 0,1,0);
 			}
 			else
 			{
-				t << str[YOULOST];
+				rps = str[YOULOST];
 				raceprompt.SetColor(hudroot, 1,0,0);
 			}
-			raceprompt.Revise(t.str());
-			float width = raceprompt.GetWidth();
-			raceprompt.SetPosition(0.5-width*0.5,0.5);
 			racecomplete = true;
 		}
+	}
 
-		if (!racecomplete)
+	//update drift score
+	if (!racecomplete)
+	{
+		std::stringstream scorestream;
+		scorestream << (int)driftscore;
+		driftscoreindicator.Revise(scorestream.str());
+
+		if (drifting && rps.empty())
 		{
-			raceprompt.Revise(t.str());
-			float width = raceprompt.GetWidth();
-			raceprompt.SetPosition(0.5-width*0.5,0.5);
+			std::stringstream s;
+			s << "+" << (int)thisdriftscore;
+			rps = s.str();
+			raceprompt.SetColor(hudroot, 1, 0, 0);
 		}
+	}
+
+	//update race prompt
+	if (!rps.empty())
+	{
+		raceprompt.Revise(rps);
+		float width = raceprompt.GetWidth();
+		raceprompt.SetPosition(0.5 - width * 0.5, 0.4);
+		raceprompt.SetDrawEnable(hudroot, true);
 	}
 	else
 	{
