@@ -67,20 +67,27 @@ public:
 
 private:
 	SCENENODE hudroot;
+	keyed_container<SCENENODE>::handle infonode;
 
 	// timer
-	keyed_container<SCENENODE>::handle timernode;
 	keyed_container<DRAWABLE>::handle timerboxdraw;
 	VERTEXARRAY timerboxverts;
 	TEXT_DRAWABLE laptime_label;
-	TEXT_DRAWABLE laptime;
 	TEXT_DRAWABLE lastlaptime_label;
-	TEXT_DRAWABLE lastlaptime;
 	TEXT_DRAWABLE bestlaptime_label;
+	TEXT_DRAWABLE laptime;
+	TEXT_DRAWABLE lastlaptime;
 	TEXT_DRAWABLE bestlaptime;
+
+	// race info
+	keyed_container<DRAWABLE>::handle infoboxdraw;
+	VERTEXARRAY infoboxverts;
+	TEXT_DRAWABLE place_label;
+	TEXT_DRAWABLE lap_label;
+	TEXT_DRAWABLE drift_label;
+	TEXT_DRAWABLE placeindicator;
 	TEXT_DRAWABLE lapindicator;
 	TEXT_DRAWABLE driftscoreindicator;
-	TEXT_DRAWABLE placeindicator;
 	TEXT_DRAWABLE raceprompt;
 
 	// debug info

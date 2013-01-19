@@ -104,9 +104,9 @@ bool HUD::Init(
 	str[LAPTIME] = lang("Lap time:");
 	str[LASTLAP] = lang("Last lap:");
 	str[BESTLAP] = lang("Best lap:");
-	str[SCORE] = lang("Score");
-	str[LAP] = lang("Lap");
-	str[PLACE] = lang("Place");
+	str[SCORE] = lang("Score:");
+	str[LAP] = lang("Lap:");
+	str[PLACE] = lang("Place:");
 	str[READY] = lang("Ready");
 	str[GO] = lang("GO");
 	str[YOUWON] = lang("You won!");
@@ -114,92 +114,118 @@ bool HUD::Init(
 	str[MPH] = lang("MPH");
 	str[KPH] = lang("KPH");
 
-	TEXTUREINFO texinfo;
-	texinfo.mipmap = false;
-	texinfo.repeatu = false;
-	texinfo.repeatv = false;
+	infonode = hudroot.AddNode();
+	SCENENODE & infonoderef = hudroot.GetNode(infonode);
 
-	float timerbox_lowery = 0;
+	TEXTUREINFO boxtexinfo;
+	boxtexinfo.mipmap = false;
+	boxtexinfo.repeatu = true;
+	boxtexinfo.repeatv = false;
+	std::tr1::shared_ptr<TEXTURE> boxtex;
+	content.load(boxtex, texturepath, "timerbox.png", boxtexinfo);
+
 	{
-		timernode = hudroot.AddNode();
-		SCENENODE & timernoderef = hudroot.GetNode(timernode);
+		timerboxdraw = AddDrawable(infonoderef);
+		DRAWABLE & timerboxdrawref = GetDrawable(infonoderef, timerboxdraw);
 
 		float timerboxdimx = 96.0 / displaywidth;
-		float timerboxdimy = 64.0 / displayheight;
-		timerboxdraw = AddDrawable(timernoderef);
-		DRAWABLE & timerboxdrawref = GetDrawable(timernoderef, timerboxdraw);
-
-		TEXTUREINFO timerboxtexinfo;
-		timerboxtexinfo.mipmap = false;
-		timerboxtexinfo.repeatu = true;
-		timerboxtexinfo.repeatv = false;
-		std::tr1::shared_ptr<TEXTURE> timerboxtex;
-		content.load(timerboxtex, texturepath, "timerbox.png", timerboxtexinfo);
-
+		float timerboxdimy = 60.0 / displayheight;
 		float totalsizex = timerboxdimx * 6.05;
 		float totalsizey = timerboxdimy * 2.0;
 		float x = totalsizex * 0.5 - timerboxdimx * 0.65;
 		float y = totalsizey * 0.5 - timerboxdimy * 0.25;
 		float w = totalsizex - timerboxdimx * 2;
 		float h = totalsizey - timerboxdimy * 2;
-		timerboxverts.SetTo2DBox(x, y, w, h, timerboxdimx, timerboxdimy);
-		timerbox_lowery = y + timerboxdimy * 0.5;
 
-		timerboxdrawref.SetDiffuseMap(timerboxtex);
+		float fontscaley = timerboxdimy * 0.35;
+		float fontscalex = fontscaley * screenhwratio;
+		float startx = timerboxdimx * 0.3;
+		float xinc = timerboxdimx * 1.5;
+		float x0 = startx;
+		float x1 = startx + xinc;
+		float x2 = startx + xinc * 2.0;
+		float y0 = timerboxdimy * 0.5;
+		float y1 = timerboxdimy * 0.9;
+
+		timerboxverts.SetTo2DBox(x, y, w, h, timerboxdimx, timerboxdimy);
+		timerboxdrawref.SetDiffuseMap(boxtex);
 		timerboxdrawref.SetVertArray(&timerboxverts);
 		timerboxdrawref.SetCull(false, false);
 		timerboxdrawref.SetColor(1, 1, 1, opacity);
 		timerboxdrawref.SetDrawOrder(0.1);
 
-		float fontscaley = timerboxdimy * 0.4;
+		laptime_label.Init(infonoderef, sansfont, str[LAPTIME], x0, y0, fontscalex, fontscaley);
+		laptime_label.SetDrawOrder(infonoderef, 0.2);
+
+		lastlaptime_label.Init(infonoderef, sansfont, str[LASTLAP], x1, y0, fontscalex, fontscaley);
+		lastlaptime_label.SetDrawOrder(infonoderef, 0.2);
+
+		bestlaptime_label.Init(infonoderef, sansfont, str[BESTLAP], x2, y0, fontscalex, fontscaley);
+		bestlaptime_label.SetDrawOrder(infonoderef, 0.2);
+
+		fontscaley = timerboxdimy * 0.4;
+		fontscalex = fontscaley * screenhwratio;
+
+		laptime.Init(infonoderef, lcdfont, "", x0, y1, fontscalex, fontscaley);
+		laptime.SetDrawOrder(infonoderef, 0.2);
+
+		lastlaptime.Init(infonoderef, lcdfont, "", x1, y1, fontscalex, fontscaley);
+		lastlaptime.SetDrawOrder(infonoderef, 0.2);
+
+		bestlaptime.Init(infonoderef, lcdfont, "", x2, y1, fontscalex, fontscaley);
+		bestlaptime.SetDrawOrder(infonoderef, 0.2);
+	}
+
+	{
+		infoboxdraw = AddDrawable(infonoderef);
+		DRAWABLE & infoboxdrawref = GetDrawable(infonoderef, infoboxdraw);
+
+		float infoboxdimx = 60.0 / displaywidth;
+		float infoboxdimy = 60.0 / displayheight;
+		float totalsizex = infoboxdimx * 6.05;
+		float totalsizey = infoboxdimy * 2.0;
+		float x = 1.0 - (totalsizex * 0.5 - infoboxdimx * 0.65);
+		float y = totalsizey * 0.5 - infoboxdimy * 0.25;
+		float w = totalsizex - infoboxdimx * 2;
+		float h = totalsizey - infoboxdimy * 2;
+
+		float fontscaley = infoboxdimy * 0.35;
 		float fontscalex = fontscaley * screenhwratio;
-		float startx = timerboxdimx * 0.45 - timerboxdimx * 0.15;
-		float xinc = timerboxdimx * 1.5;
+		float startx = 1.0 - totalsizex * 0.75 + infoboxdimx * 0.3;
+		float xinc = infoboxdimx * 1.5;
+		float x0 = startx;
+		float x1 = startx + xinc;
+		float x2 = startx + xinc * 2.0;
+		float y0 = infoboxdimy * 0.5;
+		float y1 = infoboxdimy * 0.9;
 
-		laptime_label.Init(timernoderef, sansfont, str[LAPTIME], startx, timerboxdimy*0.9-timerboxdimy*0.3, fontscalex, fontscaley);
-		laptime_label.SetDrawOrder(timernoderef, 0.2);
+		infoboxverts.SetTo2DBox(x, y, w, h, infoboxdimx, infoboxdimy);
+		infoboxdrawref.SetDiffuseMap(boxtex);
+		infoboxdrawref.SetVertArray(&infoboxverts);
+		infoboxdrawref.SetCull(false, false);
+		infoboxdrawref.SetColor(1, 1, 1, opacity);
+		infoboxdrawref.SetDrawOrder(0.1);
 
-		lastlaptime_label.Init(timernoderef, sansfont, str[LASTLAP], startx+xinc, timerboxdimy*.9-timerboxdimy*0.3, fontscalex, fontscaley);
-		lastlaptime_label.SetDrawOrder(timernoderef, 0.2);
+		place_label.Init(infonoderef, sansfont, str[PLACE], x0, y0, fontscalex, fontscaley);
+		place_label.SetDrawOrder(infonoderef, 0.2);
 
-		bestlaptime_label.Init(timernoderef, sansfont, str[BESTLAP], startx+xinc*2.0, timerboxdimy*.9-timerboxdimy*0.3, fontscalex, fontscaley);
-		bestlaptime_label.SetDrawOrder(timernoderef, 0.2);
+		lap_label.Init(infonoderef, sansfont, str[LAP], x1, y0, fontscalex, fontscaley);
+		lap_label.SetDrawOrder(infonoderef, 0.2);
 
-		laptime.Init(timernoderef, lcdfont, "", startx, timerboxdimy*1.2-timerboxdimy*0.3, fontscalex, fontscaley);
-		laptime.SetDrawOrder(timernoderef, 0.2);
+		drift_label.Init(infonoderef, sansfont, str[SCORE], x2, y0, fontscalex, fontscaley);
+		drift_label.SetDrawOrder(infonoderef, 0.2);
 
-		lastlaptime.Init(timernoderef, lcdfont, "", startx+xinc, timerboxdimy*1.2-timerboxdimy*0.3, fontscalex, fontscaley);
-		lastlaptime.SetDrawOrder(timernoderef, 0.2);
+		fontscaley = infoboxdimy * 0.4;
+		fontscalex = fontscaley * screenhwratio;
 
-		bestlaptime.Init(timernoderef, lcdfont, "", startx+xinc*2.0, timerboxdimy*1.2-timerboxdimy*0.3, fontscalex, fontscaley);
-		bestlaptime.SetDrawOrder(timernoderef, 0.2);
-	}
+		placeindicator.Init(infonoderef, lcdfont, "-/-", x0, y1, fontscalex, fontscaley);
+		placeindicator.SetDrawOrder(infonoderef, 0.2);
 
-	{
-		float fontscaley = barheight * 0.5;
-		float fontscalex = screenhwratio * fontscaley;
-		float x = fontscalex * 0.25;
-		float y = timerbox_lowery + fontscaley;
-		driftscoreindicator.Init(hudroot, sansfont, "", x, y, fontscalex, fontscaley);
-		driftscoreindicator.SetDrawOrder(hudroot, 0.2);
-	}
+		lapindicator.Init(infonoderef, lcdfont, "-/-", x1, y1, fontscalex, fontscaley);
+		lapindicator.SetDrawOrder(infonoderef, 0.2);
 
-	{
-		float fontscaley = barheight * 0.5;
-		float fontscalex = screenhwratio * fontscaley;
-		float x = fontscalex * 0.25;
-		float y = timerbox_lowery + fontscaley * 2;
-		lapindicator.Init(hudroot, sansfont, "", x, y, fontscalex, fontscaley);
-		lapindicator.SetDrawOrder(hudroot, 0.2);
-	}
-
-	{
-		float fontscaley = barheight * 0.5;
-		float fontscalex = screenhwratio * fontscaley;
-		float x = fontscalex * 0.25;
-		float y = timerbox_lowery + fontscaley * 3;
-		placeindicator.Init(hudroot, sansfont, "", x, y, fontscalex, fontscaley);
-		placeindicator.SetDrawOrder(hudroot, 0.2);
+		driftscoreindicator.Init(infonoderef, lcdfont, "0", x2, y1, fontscalex, fontscaley);
+		driftscoreindicator.SetDrawOrder(infonoderef, 0.2);
 	}
 
 	{
@@ -225,6 +251,11 @@ bool HUD::Init(
 	}
 
 #ifndef GAUGES
+	TEXTUREINFO texinfo;
+	texinfo.mipmap = false;
+	texinfo.repeatu = false;
+	texinfo.repeatv = false;
+
 	std::tr1::shared_ptr<TEXTURE> bartex, progbartex;
 	content.load(bartex, texturepath, "hudbox.png", texinfo);
 	content.load(progbartex, texturepath, "progressbar.png", texinfo);
@@ -578,35 +609,31 @@ void HUD::Update(
 	if (numlaps == 0) //this is how we determine practice mode, for now
 	{
 		std::stringstream scorestream;
-		scorestream << str[SCORE] << " " << (int)driftscore;
+		scorestream << (int)driftscore;
+
+		SCENENODE & infonoderef = hudroot.GetNode(infonode);
 		if (drifting)
 		{
 			scorestream << " + " << (int)thisdriftscore;
-			driftscoreindicator.SetColor(hudroot, 1,0,0);
+			driftscoreindicator.SetColor(infonoderef, 1, 0, 0);
 		}
 		else
 		{
-			driftscoreindicator.SetColor(hudroot, 1,1,1);
+			driftscoreindicator.SetColor(infonoderef, 1, 1, 1);
 		}
 		driftscoreindicator.Revise(scorestream.str());
 	}
-	else
-	{
-		driftscoreindicator.SetDrawEnable(hudroot, false);
-	}
-
 
 	if (numlaps > 0)
 	{
 		//update lap
 		std::stringstream lapstream;
-		//std::cout << curlapnum << std::endl;
-		lapstream << str[LAP] << " " << std::max(1, std::min(curlapnum, numlaps)) << "/" << numlaps;
+		lapstream << std::max(1, std::min(curlapnum, numlaps)) << "/" << numlaps;
 		lapindicator.Revise(lapstream.str());
 
 		//update place
 		std::stringstream stream;
-		stream << str[PLACE] << " " << curplace << "/" << numcars;
+		stream << curplace << "/" << numcars;
 		placeindicator.Revise(stream.str());
 
 		//update race prompt
@@ -654,8 +681,6 @@ void HUD::Update(
 	}
 	else
 	{
-		lapindicator.SetDrawEnable(hudroot, false);
-		placeindicator.SetDrawEnable(hudroot, false);
 		raceprompt.SetDrawEnable(hudroot, false);
 	}
 }
