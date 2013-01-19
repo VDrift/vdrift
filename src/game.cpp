@@ -1062,18 +1062,17 @@ void GAME::UpdateTimer()
 		{
 			MATHVECTOR <float, 3> pos = i->GetCenterOfMassPosition();
 			MATHVECTOR <float, 3> back_left, back_right, front_left;
-
 			if (!track.IsReversed())
 			{
-				back_left = MATHVECTOR <float, 3> (curpatch->GetBL()[2], curpatch->GetBL()[0], curpatch->GetBL()[1]);
-				back_right = MATHVECTOR <float, 3> (curpatch->GetBR()[2], curpatch->GetBR()[0], curpatch->GetBR()[1]);
-				front_left = MATHVECTOR <float, 3> (curpatch->GetFL()[2], curpatch->GetFL()[0], curpatch->GetFL()[1]);
+				back_left = curpatch->GetBL();
+				back_right = curpatch->GetBR();
+				front_left = curpatch->GetFL();
 			}
 			else
 			{
-				back_left = MATHVECTOR <float, 3> (curpatch->GetFL()[2], curpatch->GetFL()[0], curpatch->GetFL()[1]);
-				back_right = MATHVECTOR <float, 3> (curpatch->GetFR()[2], curpatch->GetFR()[0], curpatch->GetFR()[1]);
-				front_left = MATHVECTOR <float, 3> (curpatch->GetBL()[2], curpatch->GetBL()[0], curpatch->GetBL()[1]);
+				back_left = curpatch->GetFL();
+				back_right = curpatch->GetFR();
+				front_left = curpatch->GetBL();
 			}
 
 			MATHVECTOR <float, 3> forwardvec = front_left - back_left;
