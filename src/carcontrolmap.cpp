@@ -1112,7 +1112,7 @@ std::string CARCONTROLMAP::CONTROL::GetInfo() const
 
 		if (joytype == JOYBUTTON)
 		{
-			s << "JOY" << joynum << "BUTTON" << keycode;
+			s << "JOY" << joynum << "BTN" << keycode;
 			return s.str();
 		}
 
