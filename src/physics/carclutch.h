@@ -30,11 +30,7 @@ class CARCLUTCH
 {
 friend class joeserialize::Serializer;
 private:
-	//constants (not actually declared as const because they can be changed after object creation)
-	btScalar sliding_friction; ///< torque on the clutch is found by dividing the clutch pressure by the value in the area tag and multiplying by the radius and sliding (friction) parameters
-	btScalar radius; ///< torque on the clutch is found by dividing the clutch pressure by the value in the area tag and multiplying by the radius and sliding (friction) parameters
-	btScalar area; ///< torque on the clutch is found by dividing the clutch pressure by the value in the area tag and multiplying by the radius and sliding (friction) parameters
-	btScalar max_pressure; ///< maximum allowed pressure on the plates
+	btScalar max_torque;
 
 	//variables
 	btScalar clutch_position;
@@ -47,12 +43,9 @@ private:
 
 
 public:
-	//default constructor makes an S2000-like car
+	/// default constructor makes an S2000-like car
 	CARCLUTCH() :
-		sliding_friction(0.27),
-		radius(0.15),
-		area(0.75),
-		max_pressure(11079.26),
+		max_torque(0),
 		clutch_position(0),
 		locked(false),
 		last_torque(0),
@@ -70,28 +63,12 @@ public:
 		out << "Drive speed: " << drive_speed << "\n";
 	}
 
-	void SetSlidingFriction ( const btScalar& value )
+	void Set(btScalar sliding_friction, btScalar max_pressure, btScalar area, btScalar radius)
 	{
-		sliding_friction = value;
+		max_torque = sliding_friction * max_pressure * area * radius;
 	}
 
-	void SetRadius ( const btScalar& value )
-	{
-		radius = value;
-	}
-
-	void SetArea ( const btScalar& value )
-	{
-		area = value;
-	}
-
-	void SetMaxPressure ( const btScalar& value )
-	{
-		max_pressure = value;
-	}
-
-	///set the clutch engagement, where 1.0 is fully engaged
-	void SetClutch ( const btScalar& value )
+	void SetClutch(btScalar value)
 	{
 		clutch_position = value;
 	}
@@ -101,30 +78,33 @@ public:
 		return clutch_position;
 	}
 
+	btScalar GetMaxTorque() const
+	{
+		return max_torque;
+	}
+
 	btScalar GetTorque(btScalar n_engine_speed, btScalar n_drive_speed)
 	{
 		engine_speed = n_engine_speed;
 		drive_speed = n_drive_speed;
-		btScalar new_speed_diff = drive_speed - engine_speed;
 		locked = true;
 
-		btScalar torque_capacity = sliding_friction * max_pressure * area * radius; // constant
-		btScalar max_torque = clutch_position * torque_capacity;
-		btScalar friction_torque = max_torque * new_speed_diff;	// highly viscous coupling (locked clutch)
-		if (friction_torque > max_torque)					// slipping clutch
+		btScalar new_speed_diff = drive_speed - engine_speed;
+		btScalar torque_limit = clutch_position * max_torque;
+		btScalar friction_torque = torque_limit * new_speed_diff;	// highly viscous coupling (locked clutch)
+		if (friction_torque > torque_limit)							// slipping clutch
 		{
-			friction_torque = max_torque;
+			friction_torque = torque_limit;
 			locked = false;
 		}
-		else if (friction_torque < -max_torque)
+		else if (friction_torque < -torque_limit)
 		{
-			friction_torque = -max_torque;
+			friction_torque = -torque_limit;
 			locked = false;
 		}
 
-		btScalar torque = friction_torque;
-		last_torque = torque;
-		return torque;
+		last_torque = friction_torque;
+		return friction_torque;
 	}
 
 	bool IsLocked() const

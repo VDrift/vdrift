@@ -222,8 +222,9 @@ protected:
 	bool autoshift;
 	bool shifted;
 	int shift_gear;
-	btScalar last_auto_clutch;
 	btScalar remaining_shift_time;
+	btScalar clutch_value;
+	btScalar brake_value;
 
 	// traction control state
 	bool abs;
@@ -285,9 +286,7 @@ protected:
 
 	bool WheelDriven(int i) const;
 
-	btScalar AutoClutch(btScalar last_clutch, btScalar dt) const;
-
-	btScalar ShiftAutoClutch() const;
+	btScalar AutoClutch(btScalar dt);
 
 	btScalar ShiftAutoClutchThrottle(btScalar throttle, btScalar dt);
 

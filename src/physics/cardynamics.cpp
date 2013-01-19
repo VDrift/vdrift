@@ -58,10 +58,7 @@ static bool LoadClutch(
 	if (!cfg_clutch->get("area", area, error_output)) return false;
 	if (!cfg_clutch->get("max-pressure", max_pressure, error_output)) return false;
 
-	clutch.SetSlidingFriction(sliding);
-	clutch.SetRadius(radius);
-	clutch.SetArea(area);
-	clutch.SetMaxPressure(max_pressure);
+	clutch.Set(sliding, max_pressure, area, radius);
 
 	return true;
 }
@@ -378,8 +375,9 @@ CARDYNAMICS::CARDYNAMICS() :
 	autoshift(false),
 	shifted(true),
 	shift_gear(0),
-	last_auto_clutch(1),
 	remaining_shift_time(0),
+	clutch_value(1),
+	brake_value(0),
 	abs(false),
 	tcs(false),
 	maxangle(0),
@@ -702,6 +700,7 @@ void CARDYNAMICS::SetClutch(btScalar value)
 
 void CARDYNAMICS::SetBrake(btScalar value)
 {
+	brake_value = value;
 	for (int i = 0; i < brake.size(); ++i)
 	{
 		brake[i].SetBrakeFactor(value);
@@ -1066,7 +1065,7 @@ bool CARDYNAMICS::Serialize ( joeserialize::Serializer & s )
 	_SERIALIZE_(s, abs_active);
 	_SERIALIZE_(s, tcs);
 	_SERIALIZE_(s, tcs_active);
-	_SERIALIZE_(s, last_auto_clutch);
+	_SERIALIZE_(s, clutch_value);
 	_SERIALIZE_(s, remaining_shift_time);
 	_SERIALIZE_(s, shift_gear);
 	_SERIALIZE_(s, shifted);
@@ -1684,9 +1683,8 @@ void CARDYNAMICS::UpdateTransmission(btScalar dt)
 		throttle = ShiftAutoClutchThrottle(throttle, dt);
 		engine.SetThrottle(throttle);
 
-		btScalar new_clutch = AutoClutch(last_auto_clutch, dt);
+		btScalar new_clutch = AutoClutch(dt);
 		clutch.SetClutch(new_clutch);
-		last_auto_clutch = new_clutch;
 	}
 }
 
@@ -1695,40 +1693,54 @@ bool CARDYNAMICS::WheelDriven(int i) const
 	return (1 << i) & drive;
 }
 
-btScalar CARDYNAMICS::AutoClutch(btScalar last_clutch, btScalar dt) const
+btScalar CARDYNAMICS::AutoClutch(btScalar dt)
 {
+	btScalar clutch_engage_limit = 10.0f * dt;
+	btScalar clutch_old = clutch_value;
+	btScalar clutch_new = 1.0f;
 	btScalar rpm = engine.GetRPM();
-	btScalar stallrpm = engine.GetStallRPM();
-	btScalar clutchrpm = driveshaft_rpm; //clutch rpm on driveshaft/transmission side
+	btScalar rpm_clutch = driveshaft_rpm;//transmission.GetClutchRPM();
 
-	// clutch slip
-	btScalar clutch = (5.0 * rpm + clutchrpm) / (9.0 * stallrpm) - 1.5;
-	if (clutch < 0.0) clutch = 0.0;
-	else if (clutch > 1.0) clutch = 1.0;
-
-	// shift time
-	clutch *= ShiftAutoClutch();
-
-	// rate limit the autoclutch
-	btScalar min_engage_time = 0.05;
-	btScalar engage_limit = dt / min_engage_time;
-	if (last_clutch - clutch > engage_limit)
+	// clutch slip at low rpm
+	btScalar rpm_min = engine.GetStartRPM();
+	if (rpm_clutch < rpm_min && rpm < rpm_min * 1.25f)
 	{
-		clutch = last_clutch - engage_limit;
+		btScalar rpm_stall = engine.GetStallRPM();
+		btScalar ramp = 0.8f * (rpm - rpm_stall) / (rpm_min - rpm_stall);
+		btScalar torque_limit = engine.GetTorque() * ramp;
+		clutch_new = torque_limit / clutch.GetMaxTorque();
+		btClamp(clutch_new, 0.0f, 1.0f);
 	}
 
-	return clutch;
-}
-
-btScalar CARDYNAMICS::ShiftAutoClutch() const
-{
+	// declutch when shifting
 	const btScalar shift_time = transmission.GetShiftTime();
-	btScalar shift_clutch = 1.0;
-	if (remaining_shift_time > shift_time * 0.5)
-	    shift_clutch = 0.0;
-	else if (remaining_shift_time > 0.0)
-	    shift_clutch = 1.0 - remaining_shift_time / (shift_time * 0.5);
-	return shift_clutch;
+	if (remaining_shift_time > shift_time * 0.5f)
+	{
+		clutch_new = 0.0f;
+	}
+	else if (remaining_shift_time > 0.0f)
+	{
+		clutch_new *= (1.0f - remaining_shift_time / (shift_time * 0.5f));
+	}
+
+	// declutch when braking
+	if (brake_value > 0.01f)
+	{
+		clutch_new = 0.0f;
+	}
+
+	// softer clutch when coasting
+	if (rpm_clutch - rpm)
+	{
+		clutch_engage_limit *= 0.1f;
+	}
+
+	// rate limit the autoclutch
+	btScalar clutch_delta = clutch_new - clutch_old;
+	btClamp(clutch_delta, -clutch_engage_limit, clutch_engage_limit);
+	clutch_value = clutch_old + clutch_delta;
+
+	return clutch_value;
 }
 
 btScalar CARDYNAMICS::ShiftAutoClutchThrottle(btScalar throttle, btScalar dt)
