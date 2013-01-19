@@ -623,7 +623,7 @@ void HUD::Update(
 		{
 			std::stringstream s;
 			s << (int)stagingtimeleft + 1;
-			rps  = s.str();
+			rps = s.str();
 			raceprompt.SetColor(hudroot, 1,0,0);
 			racecomplete = false;
 		}
@@ -649,13 +649,17 @@ void HUD::Update(
 				rps = str[YOULOST];
 				raceprompt.SetColor(hudroot, 1,0,0);
 			}
+			raceprompt.Revise(rps);
+			float width = raceprompt.GetWidth();
+			raceprompt.SetPosition(0.5 - width * 0.5, 0.4);
+			raceprompt.SetDrawEnable(hudroot, true);
 			racecomplete = true;
 		}
 	}
 
-	//update drift score
 	if (!racecomplete)
 	{
+		//update drift score
 		std::stringstream scorestream;
 		scorestream << (int)driftscore;
 		driftscoreindicator.Revise(scorestream.str());
@@ -667,19 +671,19 @@ void HUD::Update(
 			rps = s.str();
 			raceprompt.SetColor(hudroot, 1, 0, 0);
 		}
-	}
 
-	//update race prompt
-	if (!rps.empty())
-	{
-		raceprompt.Revise(rps);
-		float width = raceprompt.GetWidth();
-		raceprompt.SetPosition(0.5 - width * 0.5, 0.4);
-		raceprompt.SetDrawEnable(hudroot, true);
-	}
-	else
-	{
-		raceprompt.SetDrawEnable(hudroot, false);
+		//update race prompt
+		if (!rps.empty())
+		{
+			raceprompt.Revise(rps);
+			float width = raceprompt.GetWidth();
+			raceprompt.SetPosition(0.5 - width * 0.5, 0.4);
+			raceprompt.SetDrawEnable(hudroot, true);
+		}
+		else
+		{
+			raceprompt.SetDrawEnable(hudroot, false);
+		}
 	}
 }
 
