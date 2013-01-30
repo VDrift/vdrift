@@ -842,7 +842,7 @@ void GAME::Tick(float deltat)
 	http.Tick();
 
 	// Increment game logic by however many tick periods have passed since the last GAME::Tick...
-	while (target_time - TickPeriod() * frame > TickPeriod() && curticks < maxticks)
+	while (target_time - timestep * frame > timestep && curticks < maxticks)
 	{
 		frame++;
 
@@ -882,7 +882,7 @@ void GAME::AdvanceGameLogic()
 			settings.GetJoyType(),
 			eventsystem,
 			last_steer,
-			TickPeriod(),
+			timestep,
 			settings.GetJoy200(),
 			car_speed,
 			settings.GetSpeedSensitivity(),
@@ -901,18 +901,18 @@ void GAME::AdvanceGameLogic()
 	{
 		PROFILER.beginBlock("ai");
 		ai.Visualize();
-		ai.update(TickPeriod(), cars);
+		ai.update(timestep, cars);
 		PROFILER.endBlock("ai");
 
 		PROFILER.beginBlock("physics");
-		dynamics.update(TickPeriod());
+		dynamics.update(timestep);
 		PROFILER.endBlock("physics");
 
 		PROFILER.beginBlock("car");
 		unsigned carid = 0;
 		for (std::list <CAR>::iterator i = cars.begin(); i != cars.end(); ++i)
 		{
-			UpdateCar(carid++, *i, TickPeriod());
+			UpdateCar(carid++, *i, timestep);
 		}
 		PROFILER.endBlock("car");
 
@@ -924,7 +924,7 @@ void GAME::AdvanceGameLogic()
 		//PROFILER.endBlock("timer");
 
 		//PROFILER.beginBlock("particles");
-		UpdateParticleSystems(TickPeriod());
+		UpdateParticleSystems(timestep);
 		//PROFILER.endBlock("particles");
 
 		//PROFILER.beginBlock("trackmap-update");
@@ -950,7 +950,7 @@ void GAME::AdvanceGameLogic()
 	}
 
 	//PROFILER.beginBlock("force-feedback");
-	UpdateForceFeedback(TickPeriod());
+	UpdateForceFeedback(timestep);
 	//PROFILER.endBlock("force-feedback");
 }
 
@@ -1095,7 +1095,7 @@ void GAME::UpdateTimer()
 		info_output << std::endl;*/
 	}
 
-	timer.Tick(TickPeriod());
+	timer.Tick(timestep);
 	//timer.DebugPrint(info_output);
 }
 
@@ -1429,13 +1429,13 @@ void GAME::UpdateCarInputs(int carid, CAR & car)
 	}
 	else
 	{
-		active_camera->Update(pos, rot, TickPeriod());
+		active_camera->Update(pos, rot, timestep);
 	}
 
 	// Handle camera inputs.
-	float left = TickPeriod() * (carcontrol.GetInput(CARINPUT::PAN_LEFT) - carcontrol.GetInput(CARINPUT::PAN_RIGHT));
-	float up = TickPeriod() * (carcontrol.GetInput(CARINPUT::PAN_UP) - carcontrol.GetInput(CARINPUT::PAN_DOWN));
-	float dy = TickPeriod() * (carcontrol.GetInput(CARINPUT::ZOOM_IN) - carcontrol.GetInput(CARINPUT::ZOOM_OUT));
+	float left = timestep * (carcontrol.GetInput(CARINPUT::PAN_LEFT) - carcontrol.GetInput(CARINPUT::PAN_RIGHT));
+	float up = timestep * (carcontrol.GetInput(CARINPUT::PAN_UP) - carcontrol.GetInput(CARINPUT::PAN_DOWN));
+	float dy = timestep * (carcontrol.GetInput(CARINPUT::ZOOM_IN) - carcontrol.GetInput(CARINPUT::ZOOM_OUT));
 	MATHVECTOR<float, 3> zoom(direction::Forward * 4 * dy);
 	active_camera->Rotate(up, left);
 	active_camera->Move(zoom[0], zoom[1], zoom[2]);
@@ -2306,7 +2306,7 @@ void GAME::UpdateParticleSystems(float dt)
 	}
 
 	particle_timer++;
-	particle_timer = particle_timer % (unsigned int)((1.0/TickPeriod()));
+	particle_timer = particle_timer % (unsigned int)((1.0/timestep));
 }
 
 void GAME::UpdateDriftScore(CAR & car, double dt)

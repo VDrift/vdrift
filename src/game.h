@@ -74,8 +74,6 @@ public:
 private:
 	void End();
 
-	float TickPeriod() const {return timestep;}
-
 	void MainLoop();
 
 	bool ParseArguments(std::list <std::string> & args);
