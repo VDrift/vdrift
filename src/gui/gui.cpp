@@ -383,8 +383,7 @@ bool GUI::LoadOptions(
 				std::string displaystr, storestr;
 				if (!opt.get(i, "opt"+tstr.str(), displaystr, error_output)) return false;
 				if (!opt.get(i, "val"+tstr.str(), storestr, error_output)) return false;
-				displaystr = lang(displaystr);
-				opvals.push_back(std::make_pair(storestr, displaystr));
+				opvals.push_back(std::make_pair(storestr, lang(displaystr)));
 			}
 		}
 		else if (values == "bool")
@@ -392,10 +391,8 @@ bool GUI::LoadOptions(
 			std::string truestr, falsestr;
 			if (!opt.get(i, "true", truestr, error_output)) return false;
 			if (!opt.get(i, "false", falsestr, error_output)) return false;
-			truestr = lang(truestr);
-			falsestr = lang(falsestr);
-			opvals.push_back(std::make_pair("true", truestr));
-			opvals.push_back(std::make_pair("false", falsestr));
+			opvals.push_back(std::make_pair("true", lang(truestr)));
+			opvals.push_back(std::make_pair("false", lang(falsestr)));
 		}
 		else if (values == "ip_valid")
 		{
@@ -427,7 +424,7 @@ bool GUI::LoadOptions(
 			}
 			for (std::list <std::pair<std::string,std::string> >::const_iterator n = vlist->second.begin(); n != vlist->second.end(); n++)
 			{
-				opvals.push_back(std::make_pair(n->first, n->second));
+				opvals.push_back(std::make_pair(n->first, lang(n->second)));
 			}
 		}
 		option.SetValues(defaultval, opvals);
