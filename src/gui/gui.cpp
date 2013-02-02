@@ -121,8 +121,8 @@ bool GUI::Load(
 
 	// load font (hardcoded for now)
 	const std::string fontcp = lang.GetCodePageId(language);
-	const std::string fonttex = "freesansbold_" + fontcp + "_sdf.png";
-	const std::string fontinfo = fontpath + "/freesansbold_" + fontcp + ".txt";
+	const std::string fonttex = "robotobold_" + fontcp + "_sdf.png";
+	const std::string fontinfo = fontpath + "/robotobold_" + fontcp + ".txt";
 	if (!font.Load(fontinfo, fonttexpath, fonttex, content, error_output))
 		return false;
 
