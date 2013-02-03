@@ -143,7 +143,7 @@ private:
 
 	void SetTextures(const DRAWABLE & d, GLSTATEMANAGER & glstate);
 
-	bool SetTransform(const DRAWABLE & d, GLSTATEMANAGER & glstate);
+	void SetTransform(const DRAWABLE & d, GLSTATEMANAGER & glstate);
 };
 
 #endif // _RENDER_INPUT_SCENE_H

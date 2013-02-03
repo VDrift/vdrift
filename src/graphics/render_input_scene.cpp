@@ -443,7 +443,7 @@ void RENDER_INPUT_SCENE::DrawList(GLSTATEMANAGER & glstate, const std::vector <D
 
 			SetTextures(d, glstate);
 
-			bool need_pop = SetTransform(d, glstate);
+			SetTransform(d, glstate);
 
 			if (d.IsDrawList())
 			{
@@ -455,9 +455,6 @@ void RENDER_INPUT_SCENE::DrawList(GLSTATEMANAGER & glstate, const std::vector <D
 			{
 				DrawVertexArray(*d.GetVertArray(), d.GetLineSize());
 			}
-
-			if (need_pop)
-				glPopMatrix();
 		}
 	}
 }
@@ -602,54 +599,40 @@ void RENDER_INPUT_SCENE::SetTextures(const DRAWABLE & d, GLSTATEMANAGER & glstat
 	}
 }
 
-bool RENDER_INPUT_SCENE::SetTransform(const DRAWABLE & d, GLSTATEMANAGER & glstate)
+void RENDER_INPUT_SCENE::SetTransform(const DRAWABLE & d, GLSTATEMANAGER & glstate)
 {
-	bool need_a_pop = true;
-	if (!d.GetCameraTransformEnable()) //do our own transform only and ignore the camera position / orientation
+	if (!d.GetCameraTransformEnable())
 	{
-		if (last_transform_valid)
-			glPopMatrix();
-		last_transform_valid = false;
-
-		glPushMatrix();
+		// do our own transform only and ignore the camera position / orientation
 		glLoadMatrixf(d.GetTransform().GetArray());
+		last_transform_valid = false;
 	}
 	else if (d.GetSkybox())
 	{
-		if (last_transform_valid)
-			glPopMatrix();
-		last_transform_valid = false;
-
-		glPushMatrix();
-		float temp_matrix[16];
-		cam_rotation.GetMatrix4(temp_matrix);
-		glLoadMatrixf(temp_matrix);
+		MATRIX4<float> viewMat;
+		cam_rotation.GetMatrix4(viewMat);
 		if (d.GetVerticalTrack())
 		{
 			MATHVECTOR< float, 3 > objpos(d.GetObjectCenter());
 			d.GetTransform().TransformVectorOut(objpos[0], objpos[1], objpos[2]);
-			glTranslatef(0.0, 0.0, -objpos[2]);
+			float translate[4] = {0.0, 0.0, -objpos[2], 0.0};
+			viewMat.MultiplyVector4(translate);
+			viewMat.Translate(translate[0], translate[1], translate[2]);
 		}
-		glMultMatrixf(d.GetTransform().GetArray());
+		MATRIX4<float> worldTrans = d.GetTransform().Multiply(viewMat);
+		glLoadMatrixf(worldTrans.GetArray());
+		last_transform_valid = false;
 	}
 	else
 	{
-		bool need_new_transform = !last_transform_valid;
-		if (last_transform_valid)
-			need_new_transform = (!last_transform.Equals(d.GetTransform()));
-		if (need_new_transform)
+		if (!last_transform_valid || !last_transform.Equals(d.GetTransform()))
 		{
-			if (last_transform_valid)
-				glPopMatrix();
-
-			glPushMatrix();
-			glMultMatrixf(d.GetTransform().GetArray());
+			MATRIX4<float> worldTrans = d.GetTransform().Multiply(viewMatrix);
+			glLoadMatrixf(worldTrans.GetArray());
 			last_transform = d.GetTransform();
 			last_transform_valid = true;
 		}
-		need_a_pop = false;
 	}
-	return need_a_pop;
 }
 
 /*unsigned int GRAPHICS_SDLGL::RENDER_INPUT_SCENE::CombineDrawlists()
