@@ -83,48 +83,7 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 	glColor4f(1,1,1,1);
 	glstate.SetColor(1,1,1,1);
 
-	assert(blendmode != BLENDMODE::ALPHATEST);
-	switch (blendmode)
-	{
-		case BLENDMODE::DISABLED:
-		{
-			glstate.Disable(GL_ALPHA_TEST);
-			glstate.Disable(GL_BLEND);
-			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-		}
-		break;
-
-		case BLENDMODE::ADD:
-		{
-			glstate.Disable(GL_ALPHA_TEST);
-			glstate.Enable(GL_BLEND);
-			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-			glstate.SetBlendFunc(GL_ONE, GL_ONE);
-		}
-		break;
-
-		case BLENDMODE::ALPHABLEND:
-		{
-			glstate.Disable(GL_ALPHA_TEST);
-			glstate.Enable(GL_BLEND);
-			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-			glstate.SetBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		}
-		break;
-
-		case BLENDMODE::PREMULTIPLIED_ALPHA:
-		{
-			glstate.Disable(GL_ALPHA_TEST);
-			glstate.Enable(GL_BLEND);
-			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-			glstate.SetBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-		}
-		break;
-
-		default:
-		assert(0);
-		break;
-	}
+	SetBlendMode(glstate);
 
 	if (writedepth || depth_mode != GL_ALWAYS)
 		glstate.Enable(GL_DEPTH_TEST);
@@ -339,4 +298,50 @@ void RENDER_INPUT_POSTPROCESS::SetCameraInfo(
 void RENDER_INPUT_POSTPROCESS::SetSunDirection(const MATHVECTOR <float, 3> & newsun)
 {
 	lightposition = newsun;
+}
+
+void RENDER_INPUT_POSTPROCESS::SetBlendMode(GLSTATEMANAGER & glstate)
+{
+	assert(blendmode != BLENDMODE::ALPHATEST);
+	switch (blendmode)
+	{
+		case BLENDMODE::DISABLED:
+		{
+			glstate.Disable(GL_ALPHA_TEST);
+			glstate.Disable(GL_BLEND);
+			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+		}
+		break;
+
+		case BLENDMODE::ADD:
+		{
+			glstate.Disable(GL_ALPHA_TEST);
+			glstate.Enable(GL_BLEND);
+			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+			glstate.SetBlendFunc(GL_ONE, GL_ONE);
+		}
+		break;
+
+		case BLENDMODE::ALPHABLEND:
+		{
+			glstate.Disable(GL_ALPHA_TEST);
+			glstate.Enable(GL_BLEND);
+			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+			glstate.SetBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		}
+		break;
+
+		case BLENDMODE::PREMULTIPLIED_ALPHA:
+		{
+			glstate.Disable(GL_ALPHA_TEST);
+			glstate.Enable(GL_BLEND);
+			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+			glstate.SetBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+		}
+		break;
+
+		default:
+		assert(0);
+		break;
+	}
 }

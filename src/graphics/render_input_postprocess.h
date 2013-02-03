@@ -83,6 +83,8 @@ private:
 	bool cleardepth;
 	BLENDMODE::BLENDMODE blendmode;
 	float contrast;
+
+	void SetBlendMode(GLSTATEMANAGER & glstate);
 };
 
 #endif // _RENDER_INPUT_POSTPROCESS_H
