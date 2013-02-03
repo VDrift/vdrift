@@ -447,21 +447,33 @@ void GRAPHICS_GL2::SetupScene(
 	{
 		GRAPHICS_CAMERA & cam = cameras["2d"];
 
-		// this is the glOrtho call we want:
-		//glOrtho( 0, 1, 1, 0, -1, 1 );
-
+		// this is the glOrtho call we want: glOrtho( 0, 1, 1, 0, -1, 1 );
 		cam.orthomode = true;
-		cam.orthomin = MATHVECTOR <float, 3> (0,1,-1);
-		cam.orthomax = MATHVECTOR <float, 3> (1,0,1);
+		cam.orthomin = MATHVECTOR <float, 3> (0, 1, -1);
+		cam.orthomax = MATHVECTOR <float, 3> (1, 0, 1);
 	}
+
+	// put the default camera transform into texture3, needed by shaders only
+	MATRIX4<float> viewMatrix;
+	cam_rotation.GetMatrix4(viewMatrix);
+	float translate[4] = {-cam_position[0], -cam_position[1], -cam_position[2], 0};
+	viewMatrix.MultiplyVector4(translate);
+	viewMatrix.Translate(translate[0], translate[1], translate[2]);
+
+	glActiveTexture(GL_TEXTURE3);
+	glMatrixMode(GL_TEXTURE);
+	glLoadMatrixf(viewMatrix.GetArray());
 
 	// create cameras for shadow passes
 	if (shadows)
 	{
+		MATRIX4<float> viewMatrixInv = viewMatrix.Inverse();
+
 		std::vector <std::string> shadow_names;
 		shadow_names.push_back("near");
 		shadow_names.push_back("medium");
 		shadow_names.push_back("far");
+
 		for (int i = 0; i < 3; i++)
 		{
 			float shadow_radius = (1<<i)*closeshadow+(i)*20.0; //5,30,60
@@ -482,6 +494,7 @@ void GRAPHICS_GL2::SetupScene(
 			cam.orient = lightdirection;
 
 			// go through and extract the clip matrix, storing it in a texture matrix
+			// premultiply the clip matrix with default camera view inverse matrix
 			renderscene.SetOrtho(cam.orthomin, cam.orthomax);
 			renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h);
 
@@ -490,15 +503,15 @@ void GRAPHICS_GL2::SetupScene(
 			clipmat.Translate(0.5f, 0.5f, 0.5f);
 			clipmat = renderscene.GetProjMatrix().Multiply(clipmat);
 			clipmat = renderscene.GetViewMatrix().Multiply(clipmat);
+			clipmat = viewMatrixInv.Multiply(clipmat);
 
-			//glMatrixMode(GL_MODELVIEW);
 			glActiveTexture(GL_TEXTURE4+i);
-			glMatrixMode(GL_TEXTURE);
 			glLoadMatrixf(clipmat.GetArray());
 		}
-		glMatrixMode(GL_MODELVIEW);
-		glActiveTexture(GL_TEXTURE0);
 	}
+
+	glMatrixMode(GL_MODELVIEW);
+	glActiveTexture(GL_TEXTURE0);
 }
 
 void GRAPHICS_GL2::DrawScene(std::ostream & error_output)

@@ -157,11 +157,6 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 	{
 		assert(shader);
 
-		// camera transform goes in texture3
-		glActiveTexture(GL_TEXTURE3);
-		glMatrixMode(GL_TEXTURE);
-		glLoadMatrixf(viewMatrix.GetArray());
-
 		// cubemap transform goes in texture2
 		QUATERNION <float> camlook;
 		camlook.Rotate(M_PI_2, 1, 0, 0);
@@ -174,7 +169,6 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 		glActiveTexture(GL_TEXTURE2);
 		glMatrixMode(GL_TEXTURE);
 		glLoadMatrixf(cubeMatrix.GetArray());
-
 		glActiveTexture(GL_TEXTURE0);
 		glMatrixMode(GL_MODELVIEW);
 
@@ -184,10 +178,6 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 		shader->Enable();
 		shader->UploadActiveShaderParameter3f("lightposition", lightvec[0], lightvec[1], lightvec[2]);
 		shader->UploadActiveShaderParameter1f("contrast", contrast);
-
-		glActiveTexture(GL_TEXTURE0);
-
-		PushShadowMatrices();
 	}
 	else
 	{
@@ -217,19 +207,13 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 
 	SetBlendMode(glstate);
 
-	last_transform_valid = false;
-
 	glColor4f(1,1,1,1);
 	glstate.SetColor(1,1,1,1);
 
+	last_transform_valid = false;
+
 	DrawList(glstate, *dynamic_drawlist_ptr, false);
 	DrawList(glstate, *static_drawlist_ptr, true);
-
-	if (last_transform_valid)
-		glPopMatrix();
-
-	if (shaders)
-		PopShadowMatrices();
 }
 
 void RENDER_INPUT_SCENE::SetReflection(TEXTURE_INTERFACE * value)

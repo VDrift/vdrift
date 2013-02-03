@@ -42,11 +42,6 @@ class RENDER_INPUT
 {
 public:
 	virtual void Render(GLSTATEMANAGER & glstate, std::ostream & error_output) = 0;
-
-	/// transform the shadow matrices in texture4-6 by the inverse of the camera transform in texture3
-	static void PushShadowMatrices();
-
-	static void PopShadowMatrices();
 };
 
 #endif //_RENDER_INPUT_H

@@ -100,23 +100,6 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 
 	GLUTIL::CheckForOpenGLErrors("postprocess flag set", error_output);
 
-	// put the camera transform into texture3
-	cam_rotation.GetMatrix4(viewMatrix);
-	float translate[4] = {-cam_position[0], -cam_position[1], -cam_position[2], 0};
-	viewMatrix.MultiplyVector4(translate);
-	viewMatrix.Translate(translate[0], translate[1], translate[2]);
-
-	glActiveTexture(GL_TEXTURE3);
-	glMatrixMode(GL_TEXTURE);
-	glLoadMatrixf(viewMatrix.GetArray());
-
-	glActiveTexture(GL_TEXTURE0);
-	glMatrixMode(GL_MODELVIEW);
-
-	//std::cout << "postprocess: " << std::endl;
-	PushShadowMatrices();
-
-	GLUTIL::CheckForOpenGLErrors("shader parameter upload", error_output);
 
 	float maxu = 1.f;
 	float maxv = 1.f;
@@ -198,8 +181,6 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 	glEnd();
 
 	GLUTIL::CheckForOpenGLErrors("postprocess draw", error_output);
-
-	PopShadowMatrices();
 
 	glstate.Enable(GL_DEPTH_TEST);
 	glstate.Disable(GL_TEXTURE_2D);
