@@ -590,13 +590,18 @@ void GRAPHICS_GL2::ChangeDisplay(
 	const int width, const int height,
 	std::ostream & error_output)
 {
-	GLfloat ratio = ( GLfloat )width / ( GLfloat )height;
-	glViewport( 0, 0, ( GLint )width, ( GLint )height );
-	glMatrixMode( GL_PROJECTION );
-	glLoadIdentity();
-	gluPerspective( 45.0f, ratio, 0.1f, 100.0f );
-	glMatrixMode( GL_MODELVIEW );
-	glLoadIdentity( );
+	glViewport(0, 0, (GLint)width, (GLint)height);
+
+	GLfloat ratio = (GLfloat)width / (GLfloat)height;
+	MATRIX4<float> m;
+
+	glMatrixMode(GL_PROJECTION);
+	m.Perspective(45.0f, ratio, 0.1f, 100.0f);
+	glLoadMatrixf(m.GetArray());
+
+	glMatrixMode(GL_MODELVIEW);
+	m.LoadIdentity();
+	glLoadMatrixf(m.GetArray());
 
 	GLUTIL::CheckForOpenGLErrors("ChangeDisplay", error_output);
 
