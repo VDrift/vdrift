@@ -23,7 +23,6 @@
 #include <ostream>
 
 class GLSTATEMANAGER;
-struct FRUSTUM;
 
 /// supported blend modes
 namespace BLENDMODE
@@ -43,9 +42,6 @@ class RENDER_INPUT
 {
 public:
 	virtual void Render(GLSTATEMANAGER & glstate, std::ostream & error_output) = 0;
-
-	/// get frustum from current mjp matrix
-	static void ExtractFrustum(FRUSTUM & frustum);
 
 	/// transform the shadow matrices in texture4-6 by the inverse of the camera transform in texture3
 	static void PushShadowMatrices();
