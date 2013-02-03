@@ -58,6 +58,10 @@ public:
 		float neww, float newh,
 		bool restore_matrices = true);
 
+	const MATRIX4<float> & GetProjMatrix() const;
+
+	const MATRIX4<float> & GetViewMatrix() const;
+
 	void SetSunDirection(const MATHVECTOR <float, 3> & newsun);
 
 	void SetFlags(bool newshaders);
@@ -102,6 +106,8 @@ private:
 	MATHVECTOR <float, 3> orthomax;
 	float w, h;
 	float camfov;
+	MATRIX4<float> projMatrix;
+	MATRIX4<float> viewMatrix;
 	FRUSTUM frustum; //used for frustum culling
 	float lod_far; //used for distance culling
 	bool shaders;

@@ -86,33 +86,28 @@ FRUSTUM RENDER_INPUT_SCENE::SetCameraInfo(
 	w = neww;
 	h = newh;
 
-	glMatrixMode( GL_PROJECTION );
-	if (restore_matrices)
-		glPushMatrix();
-	glLoadIdentity();
 	if (orthomode)
-	{
-		glOrtho(orthomin[0], orthomax[0], orthomin[1], orthomax[1], orthomin[2], orthomax[2]);
-	}
+		projMatrix.SetOrthographic(orthomin[0], orthomax[0], orthomin[1], orthomax[1], orthomin[2], orthomax[2]);
 	else
-	{
-		gluPerspective( camfov, w/(float)h, 0.1f, lod_far );
-	}
-	glMatrixMode( GL_MODELVIEW );
-	if (restore_matrices)
-		glPushMatrix();
-	float temp_matrix[16];
-	(cam_rotation).GetMatrix4(temp_matrix);
-	glLoadMatrixf(temp_matrix);
-	glTranslatef(-cam_position[0],-cam_position[1],-cam_position[2]);
-	ExtractFrustum(frustum);
-	glMatrixMode( GL_PROJECTION );
-	if (restore_matrices)
-		glPopMatrix();
-	glMatrixMode( GL_MODELVIEW );
-	if (restore_matrices)
-		glPopMatrix();
+		projMatrix.Perspective(camfov, w/(float)h, 0.1f, lod_far);
+
+	cam_rotation.GetMatrix4(viewMatrix);
+	float translate[4] = {-cam_position[0], -cam_position[1], -cam_position[2], 0};
+	viewMatrix.MultiplyVector4(translate);
+	viewMatrix.Translate(translate[0], translate[1], translate[2]);
+
+	frustum.Extract(projMatrix.GetArray(), viewMatrix.GetArray());
 	return frustum;
+}
+
+const MATRIX4<float> & RENDER_INPUT_SCENE::GetProjMatrix() const
+{
+	return projMatrix;
+}
+
+const MATRIX4<float> & RENDER_INPUT_SCENE::GetViewMatrix() const
+{
+	return viewMatrix;
 }
 
 void RENDER_INPUT_SCENE::SetSunDirection(const MATHVECTOR <float, 3> & newsun)
@@ -139,54 +134,51 @@ void RENDER_INPUT_SCENE::SetClear(bool newclearcolor, bool newcleardepth)
 
 void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_output)
 {
+	if (orthomode)
+		projMatrix.SetOrthographic(orthomin[0], orthomax[0], orthomin[1], orthomax[1], orthomin[2], orthomax[2]);
+	else
+		projMatrix.Perspective(camfov, w/(float)h, 0.1f, lod_far);
+
+	cam_rotation.GetMatrix4(viewMatrix);
+	float translate[4] = {-cam_position[0], -cam_position[1], -cam_position[2], 0};
+	viewMatrix.MultiplyVector4(translate);
+	viewMatrix.Translate(translate[0], translate[1], translate[2]);
+
+	frustum.Extract(projMatrix.GetArray(), viewMatrix.GetArray());
+
+	glMatrixMode(GL_PROJECTION);
+	glLoadMatrixf(projMatrix.GetArray());
+
+	glMatrixMode(GL_MODELVIEW);
+	glLoadMatrixf(viewMatrix.GetArray());
+
+	// send information to the shaders
 	if (shaders)
+	{
 		assert(shader);
 
-	glMatrixMode( GL_PROJECTION );
-	glLoadIdentity();
-	if (orthomode)
-	{
-		glOrtho(orthomin[0], orthomax[0], orthomin[1], orthomax[1], orthomin[2], orthomax[2]);
-		//std::cout << "ortho near/far: " << orthomin[2] << "/" << orthomax[2] << std::endl;
-	}
-	else
-	{
-		gluPerspective( camfov, w/(float)h, 0.1f, lod_far );
-	}
-	glMatrixMode( GL_MODELVIEW );
-	float temp_matrix[16];
-	(cam_rotation).GetMatrix4(temp_matrix);
-	glLoadMatrixf(temp_matrix);
-	glTranslatef(-cam_position[0],-cam_position[1],-cam_position[2]);
-	ExtractFrustum(frustum);
-
-	//send information to the shaders
-	if (shaders)
-	{
-		//camera transform goes in texture3
+		// camera transform goes in texture3
 		glActiveTexture(GL_TEXTURE3);
 		glMatrixMode(GL_TEXTURE);
-		glLoadIdentity();
-		(cam_rotation).GetMatrix4(temp_matrix);
-		glLoadMatrixf(temp_matrix);
-		glTranslatef(-cam_position[0],-cam_position[1],-cam_position[2]);
+		glLoadMatrixf(viewMatrix.GetArray());
 
-		//cubemap transform goes in texture2
+		// cubemap transform goes in texture2
+		QUATERNION <float> camlook;
+		camlook.Rotate(M_PI_2, 1, 0, 0);
+		camlook.Rotate(-M_PI_2, 0, 0, 1);
+		QUATERNION <float> cuberotation;
+		cuberotation = (-camlook) * (-cam_rotation); // experimentally derived
+		MATRIX4<float> cubeMatrix;
+		cuberotation.GetMatrix4(cubeMatrix);
+
 		glActiveTexture(GL_TEXTURE2);
 		glMatrixMode(GL_TEXTURE);
-		glLoadIdentity();
-		QUATERNION <float> camlook;
-		camlook.Rotate(3.141593*0.5,1,0,0);
-		camlook.Rotate(-3.141593*0.5,0,0,1);
-		QUATERNION <float> cuberotation;
-		cuberotation = (-camlook) * (-cam_rotation); //experimentally derived
-		(cuberotation).GetMatrix4(temp_matrix);
-		glLoadMatrixf(temp_matrix);
+		glLoadMatrixf(cubeMatrix.GetArray());
 
 		glActiveTexture(GL_TEXTURE0);
 		glMatrixMode(GL_MODELVIEW);
 
-		//send light position to the shaders
+		// send light position to the shaders
 		MATHVECTOR <float, 3> lightvec = lightposition;
 		(cam_rotation).RotateVector(lightvec);
 		shader->Enable();

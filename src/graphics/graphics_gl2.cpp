@@ -483,26 +483,21 @@ void GRAPHICS_GL2::SetupScene(
 
 			// go through and extract the clip matrix, storing it in a texture matrix
 			renderscene.SetOrtho(cam.orthomin, cam.orthomax);
-			renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h, false);
-			float mv[16], mp[16], clipmat[16];
-			glGetFloatv( GL_PROJECTION_MATRIX, mp );
-			glGetFloatv( GL_MODELVIEW_MATRIX, mv );
-			glMatrixMode( GL_TEXTURE );
-			glPushMatrix();
-			glLoadIdentity();
-			glTranslatef (0.5, 0.5, 0.5);
-			glScalef (0.5, 0.5, 0.5);
-			glMultMatrixf(mp);
-			glMultMatrixf(mv);
-			glGetFloatv(GL_TEXTURE_MATRIX, clipmat);
-			glPopMatrix();
-			glMatrixMode( GL_MODELVIEW );
+			renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h);
+
+			MATRIX4<float> clipmat;
+			clipmat.Scale(0.5f);
+			clipmat.Translate(0.5f, 0.5f, 0.5f);
+			clipmat = renderscene.GetProjMatrix().Multiply(clipmat);
+			clipmat = renderscene.GetViewMatrix().Multiply(clipmat);
+
+			//glMatrixMode(GL_MODELVIEW);
 			glActiveTexture(GL_TEXTURE4+i);
-			glMatrixMode( GL_TEXTURE );
-			glLoadMatrixf(clipmat);
-			glMatrixMode( GL_MODELVIEW );
-			glActiveTexture(GL_TEXTURE0);
+			glMatrixMode(GL_TEXTURE);
+			glLoadMatrixf(clipmat.GetArray());
 		}
+		glMatrixMode(GL_MODELVIEW);
+		glActiveTexture(GL_TEXTURE0);
 	}
 }
 
