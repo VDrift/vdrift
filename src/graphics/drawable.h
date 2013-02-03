@@ -58,7 +58,7 @@ public:
 	void SetLineSize(float size) { linesize = size; renderModel.SetLineSize(size);}
 	float GetLineSize() const { return linesize; }
 
-	const MATRIX4 <float> & GetTransform() {return transform;}
+	const MATRIX4 <float> & GetTransform() const {return transform;}
 	void SetTransform(const MATRIX4 <float> & value);
 
 	/// used for bounding sphere frustum culling
