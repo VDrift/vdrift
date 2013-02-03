@@ -201,91 +201,10 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 	{
 		// carpainthack is only used with dynamic objects(cars)
 		if (carpainthack && !dynamic_drawlist_ptr->empty())
-		{
-			// turn on lighting for cars only atm
-			if (!vlighting)
-			{
-				MATHVECTOR <float, 3> lightvec = lightposition;
-				(cam_rotation).RotateVector(lightvec);
-
-				// push some sane values, should be configurable maybe?
-				// vcol = light_ambient * material_ambient
-				// vcol += L.N * light_diffuse * material_diffuse
-				// vcol += (H.N)^n * light_specular * material_specular
-				GLfloat pos[] = {lightvec[0], lightvec[1], lightvec[2], 0.0f};
-				GLfloat diffuse[] = {0.4f, 0.4f, 0.4f, 1.0f};
-				GLfloat ambient[] = {0.6f, 0.6f, 0.6f, 1.0f};
-				glEnable(GL_LIGHTING);
-				glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
-				glLightfv(GL_LIGHT0, GL_AMBIENT, ambient);
-				glLightfv(GL_LIGHT0, GL_POSITION, pos);
-				glEnable(GL_LIGHT0);
-
-				GLfloat mcolor[] = {1.0f, 1.0f, 1.0f, 1.0f};
-				glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, mcolor);
-
-				vlighting = true;
-
-				// dummy texture required to set the combiner
-				DRAWABLE & d = *dynamic_drawlist_ptr->front();
-
-				// setup first combiner
-				glstate.BindTexture2D(0, d.GetDiffuseMap());
-				glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-				glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_INTERPOLATE);
-				glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB, GL_TEXTURE);
-				glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB, GL_CONSTANT);
-				glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE2_RGB, GL_TEXTURE);
-				glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
-				glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_COLOR);
-				glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND2_RGB, GL_SRC_ALPHA);
-				// don't care about alpha, set it to something harmless
-				glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
-				glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA, GL_CONSTANT);
-				glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
-
-				// setup second combiner explicitly
-				// statemanager doesnt allow to enable/disable textures per tu
-				//glstate.BindTexture2D(1, d.GetDiffuseMap());
-				glActiveTexture(GL_TEXTURE1);
-				glEnable(GL_TEXTURE_2D);
-				glBindTexture(GL_TEXTURE_2D, d.GetDiffuseMap()->GetID());
-				glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-				glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
-				glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB, GL_PREVIOUS);
-				glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB, GL_PRIMARY_COLOR);
-				glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
-				glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_COLOR);
-				// don't care about alpha, set it to something harmless
-				glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
-				glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA, GL_PREVIOUS);
-				glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
-				glActiveTexture(GL_TEXTURE0);
-			}
-		}
+			EnableCarPaint(glstate);
 		else
-		{
-			if (vlighting)
-			{
-				// turn off lighting for everything else
-				glDisable(GL_LIGHTING);
-
-				// reset second texture combiner explicitly
-				glActiveTexture(GL_TEXTURE1);
-				glDisable(GL_TEXTURE_2D);
-				glActiveTexture(GL_TEXTURE0);
-
-				// reset first texture combiner
-				glstate.Disable(GL_TEXTURE_2D);
-
-				vlighting = false;
-			}
-
-			glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-		}
+			DisableCarPaint(glstate);
 	}
-
-	//std::cout << "scene: " << std::endl;
 
 	glstate.SetColorMask(writecolor, writealpha);
 	glstate.SetDepthMask(writedepth);
@@ -302,61 +221,9 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 	else
 		glstate.Disable(GL_DEPTH_TEST);
 
-	glDepthFunc( depth_mode );
+	glDepthFunc(depth_mode);
 
-	switch (blendmode)
-	{
-		case BLENDMODE::DISABLED:
-		{
-			glstate.Disable(GL_ALPHA_TEST);
-			glstate.Disable(GL_BLEND);
-			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-		}
-		break;
-
-		case BLENDMODE::ADD:
-		{
-			glstate.Disable(GL_ALPHA_TEST);
-			glstate.Enable(GL_BLEND);
-			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-			glstate.SetBlendFunc(GL_SRC_ALPHA, GL_ONE);
-		}
-		break;
-
-		case BLENDMODE::ALPHABLEND:
-		{
-			glstate.Disable(GL_ALPHA_TEST);
-			glstate.Enable(GL_BLEND);
-			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-			glstate.SetBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		}
-		break;
-
-		case BLENDMODE::PREMULTIPLIED_ALPHA:
-		{
-			glstate.Disable(GL_ALPHA_TEST);
-			glstate.Enable(GL_BLEND);
-			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-			glstate.SetBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-		}
-		break;
-
-		case BLENDMODE::ALPHATEST:
-		{
-			glstate.Enable(GL_ALPHA_TEST);
-			glstate.Disable(GL_BLEND);
-			if (fsaa > 1 && shaders)
-			{
-				glstate.Enable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-			}
-			glstate.SetAlphaFunc(GL_GREATER, 0.5f);
-		}
-		break;
-
-		default:
-		assert(0);
-		break;
-	}
+	SetBlendMode(glstate);
 
 	last_transform_valid = false;
 
@@ -429,6 +296,148 @@ void RENDER_INPUT_SCENE::SetCarPaintHack(bool hack)
 void RENDER_INPUT_SCENE::SetBlendMode(BLENDMODE::BLENDMODE mode)
 {
 	blendmode = mode;
+}
+
+void RENDER_INPUT_SCENE::EnableCarPaint(GLSTATEMANAGER & glstate)
+{
+	// turn on lighting for cars only atm
+	if (!vlighting)
+	{
+		MATHVECTOR <float, 3> lightvec = lightposition;
+		cam_rotation.RotateVector(lightvec);
+
+		// push some sane values, should be configurable maybe?
+		// vcol = light_ambient * material_ambient
+		// vcol += L.N * light_diffuse * material_diffuse
+		// vcol += (H.N)^n * light_specular * material_specular
+		GLfloat pos[] = {lightvec[0], lightvec[1], lightvec[2], 0.0f};
+		GLfloat diffuse[] = {0.4f, 0.4f, 0.4f, 1.0f};
+		GLfloat ambient[] = {0.6f, 0.6f, 0.6f, 1.0f};
+		glEnable(GL_LIGHTING);
+		glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
+		glLightfv(GL_LIGHT0, GL_AMBIENT, ambient);
+		glLightfv(GL_LIGHT0, GL_POSITION, pos);
+		glEnable(GL_LIGHT0);
+
+		GLfloat mcolor[] = {1.0f, 1.0f, 1.0f, 1.0f};
+		glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, mcolor);
+
+		vlighting = true;
+
+		// dummy texture required to set the combiner
+		DRAWABLE & d = *dynamic_drawlist_ptr->front();
+
+		// setup first combiner
+		glstate.BindTexture2D(0, d.GetDiffuseMap());
+		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_INTERPOLATE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB, GL_TEXTURE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB, GL_CONSTANT);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE2_RGB, GL_TEXTURE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
+		glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_COLOR);
+		glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND2_RGB, GL_SRC_ALPHA);
+		// don't care about alpha, set it to something harmless
+		glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA, GL_CONSTANT);
+		glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
+
+		// setup second combiner explicitly
+		// statemanager doesnt allow to enable/disable textures per tu
+		//glstate.BindTexture2D(1, d.GetDiffuseMap());
+		glActiveTexture(GL_TEXTURE1);
+		glEnable(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D, d.GetDiffuseMap()->GetID());
+		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB, GL_PREVIOUS);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB, GL_PRIMARY_COLOR);
+		glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
+		glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_COLOR);
+		// don't care about alpha, set it to something harmless
+		glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
+		glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA, GL_PREVIOUS);
+		glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
+		glActiveTexture(GL_TEXTURE0);
+	}
+}
+
+void RENDER_INPUT_SCENE::DisableCarPaint(GLSTATEMANAGER & glstate)
+{
+	if (vlighting)
+	{
+		// turn off lighting for everything else
+		glDisable(GL_LIGHTING);
+
+		// reset second texture combiner explicitly
+		glActiveTexture(GL_TEXTURE1);
+		glDisable(GL_TEXTURE_2D);
+		glActiveTexture(GL_TEXTURE0);
+
+		// reset first texture combiner
+		glstate.Disable(GL_TEXTURE_2D);
+
+		vlighting = false;
+	}
+
+	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+}
+
+void RENDER_INPUT_SCENE::SetBlendMode(GLSTATEMANAGER & glstate)
+{
+	switch (blendmode)
+	{
+		case BLENDMODE::DISABLED:
+		{
+			glstate.Disable(GL_ALPHA_TEST);
+			glstate.Disable(GL_BLEND);
+			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+		}
+		break;
+
+		case BLENDMODE::ADD:
+		{
+			glstate.Disable(GL_ALPHA_TEST);
+			glstate.Enable(GL_BLEND);
+			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+			glstate.SetBlendFunc(GL_SRC_ALPHA, GL_ONE);
+		}
+		break;
+
+		case BLENDMODE::ALPHABLEND:
+		{
+			glstate.Disable(GL_ALPHA_TEST);
+			glstate.Enable(GL_BLEND);
+			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+			glstate.SetBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		}
+		break;
+
+		case BLENDMODE::PREMULTIPLIED_ALPHA:
+		{
+			glstate.Disable(GL_ALPHA_TEST);
+			glstate.Enable(GL_BLEND);
+			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+			glstate.SetBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+		}
+		break;
+
+		case BLENDMODE::ALPHATEST:
+		{
+			glstate.Enable(GL_ALPHA_TEST);
+			glstate.Disable(GL_BLEND);
+			if (fsaa > 1 && shaders)
+			{
+				glstate.Enable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+			}
+			glstate.SetAlphaFunc(GL_GREATER, 0.5f);
+		}
+		break;
+
+		default:
+		assert(0);
+		break;
+	}
 }
 
 void RENDER_INPUT_SCENE::DrawList(GLSTATEMANAGER & glstate, const std::vector <DRAWABLE*> & drawlist, bool preculled)

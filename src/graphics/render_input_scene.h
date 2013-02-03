@@ -120,6 +120,12 @@ private:
 	bool vlighting;
 	BLENDMODE::BLENDMODE blendmode;
 
+	void EnableCarPaint(GLSTATEMANAGER & glstate);
+
+	void DisableCarPaint(GLSTATEMANAGER & glstate);
+
+	void SetBlendMode(GLSTATEMANAGER & glstate);
+
 	void DrawList(GLSTATEMANAGER & glstate, const std::vector <DRAWABLE*> & drawlist, bool preculled);
 
 	void DrawVertexArray(const VERTEXARRAY & va, float linesize) const;
