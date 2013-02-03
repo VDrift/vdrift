@@ -72,13 +72,15 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 
 	GLUTIL::CheckForOpenGLErrors("postprocess shader enable", error_output);
 
+	MATRIX4<float> projMatrix, viewMatrix;
+	projMatrix.SetOrthographic(0, 1, 0, 1, -1, 1);
+	viewMatrix.LoadIdentity();
+
 	glMatrixMode(GL_PROJECTION);
-	glPushMatrix();
-	glLoadIdentity();
-	glOrtho( 0, 1, 0, 1, -1, 1 );
+	glLoadMatrixf(projMatrix.GetArray());
+
 	glMatrixMode(GL_MODELVIEW);
-	glPushMatrix();
-	glLoadIdentity();
+	glLoadMatrixf(viewMatrix.GetArray());
 
 	glColor4f(1,1,1,1);
 	glstate.SetColor(1,1,1,1);
@@ -99,13 +101,15 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 	GLUTIL::CheckForOpenGLErrors("postprocess flag set", error_output);
 
 	// put the camera transform into texture3
+	cam_rotation.GetMatrix4(viewMatrix);
+	float translate[4] = {-cam_position[0], -cam_position[1], -cam_position[2], 0};
+	viewMatrix.MultiplyVector4(translate);
+	viewMatrix.Translate(translate[0], translate[1], translate[2]);
+
 	glActiveTexture(GL_TEXTURE3);
 	glMatrixMode(GL_TEXTURE);
-	glLoadIdentity();
-	float temp_matrix[16];
-	(cam_rotation).GetMatrix4(temp_matrix);
-	glLoadMatrixf(temp_matrix);
-	glTranslatef(-cam_position[0],-cam_position[1],-cam_position[2]);
+	glLoadMatrixf(viewMatrix.GetArray());
+
 	glActiveTexture(GL_TEXTURE0);
 	glMatrixMode(GL_MODELVIEW);
 
