@@ -444,26 +444,28 @@ void RENDER_INPUT_SCENE::DrawList(GLSTATEMANAGER & glstate, const std::vector <D
 {
 	for (std::vector <DRAWABLE*>::const_iterator ptr = drawlist.begin(); ptr != drawlist.end(); ++ptr)
 	{
-		DRAWABLE * i = *ptr;
-		if (preculled || !FrustumCull(*i))
+		const DRAWABLE & d = **ptr;
+		if (preculled || !FrustumCull(d))
 		{
-			SelectFlags(*i, glstate);
+			SetFlags(d, glstate);
 
-			SelectTexturing(*i, glstate);
+			SetTextures(d, glstate);
 
-			bool need_pop = SelectTransformStart(*i, glstate);
+			bool need_pop = SetTransform(d, glstate);
 
-			if (i->IsDrawList())
+			if (d.IsDrawList())
 			{
-				const unsigned int numlists = i->GetDrawLists().size();
+				const unsigned int numlists = d.GetDrawLists().size();
 				for (unsigned int n = 0; n < numlists; ++n)
-					glCallList(i->GetDrawLists()[n]);
+					glCallList(d.GetDrawLists()[n]);
 			}
-			else if (i->GetVertArray())
+			else if (d.GetVertArray())
 			{
-				DrawVertexArray(*i->GetVertArray(), i->GetLineSize());
+				DrawVertexArray(*d.GetVertArray(), d.GetLineSize());
 			}
-			SelectTransformEnd(*i, need_pop);
+
+			if (need_pop)
+				glPopMatrix();
 		}
 	}
 }
@@ -518,28 +520,24 @@ void RENDER_INPUT_SCENE::DrawVertexArray(const VERTEXARRAY & va, float linesize)
 	}
 }
 
-bool RENDER_INPUT_SCENE::FrustumCull(DRAWABLE & tocull)
+bool RENDER_INPUT_SCENE::FrustumCull(const DRAWABLE & d)
 {
-	//return false;
-
-	DRAWABLE * d (&tocull);
-	//if (d->GetRadius() != 0.0 && d->parent != NULL && !d->skybox)
-	if (d->GetRadius() != 0.0 && !d->GetSkybox() && d->GetCameraTransformEnable())
+	if (d.GetRadius() != 0.0 && !d.GetSkybox() && d.GetCameraTransformEnable())
 	{
 		//do frustum culling
-		MATHVECTOR <float, 3> objpos(d->GetObjectCenter());
-		d->GetTransform().TransformVectorOut(objpos[0],objpos[1],objpos[2]);
+		MATHVECTOR <float, 3> objpos(d.GetObjectCenter());
+		d.GetTransform().TransformVectorOut(objpos[0],objpos[1],objpos[2]);
 		float dx=objpos[0]-cam_position[0]; float dy=objpos[1]-cam_position[1]; float dz=objpos[2]-cam_position[2];
 		float rc=dx*dx+dy*dy+dz*dz;
-		float temp_lod_far = lod_far + d->GetRadius();
+		float temp_lod_far = lod_far + d.GetRadius();
 		if (rc > temp_lod_far*temp_lod_far)
 			return true;
-		else if (rc < d->GetRadius()*d->GetRadius())
+		else if (rc < d.GetRadius()*d.GetRadius())
 			return false;
 		else
 		{
 			float bound, rd;
-			bound = d->GetRadius();
+			bound = d.GetRadius();
 			for (int i=0; i<6; i++)
 			{
 				rd=frustum.frustum[i][0]*objpos[0]+
@@ -557,10 +555,9 @@ bool RENDER_INPUT_SCENE::FrustumCull(DRAWABLE & tocull)
 	return false;
 }
 
-void RENDER_INPUT_SCENE::SelectFlags(DRAWABLE & forme, GLSTATEMANAGER & glstate)
+void RENDER_INPUT_SCENE::SetFlags(const DRAWABLE & d, GLSTATEMANAGER & glstate)
 {
-	DRAWABLE * i(&forme);
-	if (i->GetDecal())
+	if (d.GetDecal())
 	{
 		glstate.Enable(GL_POLYGON_OFFSET_FILL);
 	}
@@ -569,10 +566,10 @@ void RENDER_INPUT_SCENE::SelectFlags(DRAWABLE & forme, GLSTATEMANAGER & glstate)
 		glstate.Disable(GL_POLYGON_OFFSET_FILL);
 	}
 
-	if (i->GetCull())
+	if (d.GetCull())
 	{
 		glstate.Enable(GL_CULL_FACE);
-		if (i->GetCullFront())
+		if (d.GetCullFront())
 			glstate.SetCullFace(GL_FRONT);
 		else
 			glstate.SetCullFace(GL_BACK);
@@ -583,15 +580,13 @@ void RENDER_INPUT_SCENE::SelectFlags(DRAWABLE & forme, GLSTATEMANAGER & glstate)
 	}
 
 	float r,g,b,a;
-	i->GetColor(r,g,b,a);
+	d.GetColor(r,g,b,a);
 	glstate.SetColor(r,g,b,a);
 }
 
-void RENDER_INPUT_SCENE::SelectTexturing(DRAWABLE & forme, GLSTATEMANAGER & glstate)
+void RENDER_INPUT_SCENE::SetTextures(const DRAWABLE & d, GLSTATEMANAGER & glstate)
 {
-	DRAWABLE * i(&forme);
-
-	const TEXTURE * diffusetexture = i->GetDiffuseMap();
+	const TEXTURE * diffusetexture = d.GetDiffuseMap();
 
 	if (!diffusetexture || !diffusetexture->Loaded())
 	{
@@ -599,38 +594,35 @@ void RENDER_INPUT_SCENE::SelectTexturing(DRAWABLE & forme, GLSTATEMANAGER & glst
 		return;
 	}
 
-	glstate.BindTexture2D(0, i->GetDiffuseMap());
+	glstate.BindTexture2D(0, d.GetDiffuseMap());
 
 	if (carpainthack)
 	{
 		GLfloat color[4] = {0.0, 0.0, 0.0, 1.0};
-		forme.GetColor(color[0], color[1], color[2], color[3]);
+		d.GetColor(color[0], color[1], color[2], color[3]);
 		glTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, color);
 	}
 
 	if (shaders)
 	{
-		glstate.BindTexture2D(1, i->GetMiscMap1());
-		glstate.BindTexture2D(2, i->GetMiscMap2());
+		glstate.BindTexture2D(1, d.GetMiscMap1());
+		glstate.BindTexture2D(2, d.GetMiscMap2());
 	}
 }
 
-///returns true if the matrix was pushed
-bool RENDER_INPUT_SCENE::SelectTransformStart(DRAWABLE & forme, GLSTATEMANAGER & glstate)
+bool RENDER_INPUT_SCENE::SetTransform(const DRAWABLE & d, GLSTATEMANAGER & glstate)
 {
 	bool need_a_pop = true;
-
-	DRAWABLE * i(&forme);
-	if (!i->GetCameraTransformEnable()) //do our own transform only and ignore the camera position / orientation
+	if (!d.GetCameraTransformEnable()) //do our own transform only and ignore the camera position / orientation
 	{
 		if (last_transform_valid)
 			glPopMatrix();
 		last_transform_valid = false;
 
 		glPushMatrix();
-		glLoadMatrixf(i->GetTransform().GetArray());
+		glLoadMatrixf(d.GetTransform().GetArray());
 	}
-	else if (i->GetSkybox())
+	else if (d.GetSkybox())
 	{
 		if (last_transform_valid)
 			glPopMatrix();
@@ -640,47 +632,32 @@ bool RENDER_INPUT_SCENE::SelectTransformStart(DRAWABLE & forme, GLSTATEMANAGER &
 		float temp_matrix[16];
 		cam_rotation.GetMatrix4(temp_matrix);
 		glLoadMatrixf(temp_matrix);
-		if (i->GetVerticalTrack())
+		if (d.GetVerticalTrack())
 		{
-			MATHVECTOR< float, 3 > objpos(i->GetObjectCenter());
-			//std::cout << "Vertical offset: " << objpos;
-			i->GetTransform().TransformVectorOut(objpos[0],objpos[1],objpos[2]);
-			//std::cout << " || " << objpos << endl;
-			//glTranslatef(-objpos.x,-objpos.y,-objpos.z);
-			//glTranslatef(0,game.cam.position.y,0);
-			glTranslatef(0.0,0.0,-objpos[2]);
+			MATHVECTOR< float, 3 > objpos(d.GetObjectCenter());
+			d.GetTransform().TransformVectorOut(objpos[0], objpos[1], objpos[2]);
+			glTranslatef(0.0, 0.0, -objpos[2]);
 		}
-		glMultMatrixf(i->GetTransform().GetArray());
+		glMultMatrixf(d.GetTransform().GetArray());
 	}
 	else
 	{
 		bool need_new_transform = !last_transform_valid;
 		if (last_transform_valid)
-			need_new_transform = (!last_transform.Equals(i->GetTransform()));
+			need_new_transform = (!last_transform.Equals(d.GetTransform()));
 		if (need_new_transform)
 		{
 			if (last_transform_valid)
 				glPopMatrix();
 
 			glPushMatrix();
-			glMultMatrixf(i->GetTransform().GetArray());
-			last_transform = i->GetTransform();
+			glMultMatrixf(d.GetTransform().GetArray());
+			last_transform = d.GetTransform();
 			last_transform_valid = true;
-
-			need_a_pop = false;
 		}
-		else need_a_pop = false;
+		need_a_pop = false;
 	}
-
 	return need_a_pop;
-}
-
-void RENDER_INPUT_SCENE::SelectTransformEnd(DRAWABLE & forme, bool need_pop)
-{
-	if (need_pop)
-	{
-		glPopMatrix();
-	}
 }
 
 /*unsigned int GRAPHICS_SDLGL::RENDER_INPUT_SCENE::CombineDrawlists()

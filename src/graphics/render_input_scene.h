@@ -131,15 +131,13 @@ private:
 	void DrawVertexArray(const VERTEXARRAY & va, float linesize) const;
 
 	/// returns true if the object was culled and should not be drawn
-	bool FrustumCull(DRAWABLE & tocull);
+	bool FrustumCull(const DRAWABLE & d);
 
-	void SelectFlags(DRAWABLE & forme, GLSTATEMANAGER & glstate);
+	void SetFlags(const DRAWABLE & d, GLSTATEMANAGER & glstate);
 
-	void SelectTexturing(DRAWABLE & forme, GLSTATEMANAGER & glstate);
+	void SetTextures(const DRAWABLE & d, GLSTATEMANAGER & glstate);
 
-	bool SelectTransformStart(DRAWABLE & forme, GLSTATEMANAGER & glstate);
-
-	void SelectTransformEnd(DRAWABLE & forme, bool need_pop);
+	bool SetTransform(const DRAWABLE & d, GLSTATEMANAGER & glstate);
 };
 
 #endif // _RENDER_INPUT_SCENE_H
