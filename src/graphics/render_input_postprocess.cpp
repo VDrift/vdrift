@@ -199,11 +199,6 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 
 	GLUTIL::CheckForOpenGLErrors("postprocess draw", error_output);
 
-	glMatrixMode(GL_PROJECTION);
-	glPopMatrix();
-	glMatrixMode(GL_MODELVIEW);
-	glPopMatrix();
-
 	PopShadowMatrices();
 
 	glstate.Enable(GL_DEPTH_TEST);
