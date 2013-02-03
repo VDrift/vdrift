@@ -265,34 +265,6 @@ void RENDER_INPUT_POSTPROCESS::SetCameraInfo(
 	lod_far = newlodfar;
 	w = neww;
 	h = newh;
-
-	const bool restore_matrices = true;
-	glMatrixMode( GL_PROJECTION );
-	if (restore_matrices)
-		glPushMatrix();
-	glLoadIdentity();
-	/*if (orthomode)
-	{
-		glOrtho(orthomin[0], orthomax[0], orthomin[1], orthomax[1], orthomin[2], orthomax[2]);
-	}
-	else*/
-	{
-		gluPerspective( camfov, w/(float)h, 0.1f, lod_far );
-	}
-	glMatrixMode( GL_MODELVIEW );
-	if (restore_matrices)
-		glPushMatrix();
-	float temp_matrix[16];
-	(cam_rotation).GetMatrix4(temp_matrix);
-	glLoadMatrixf(temp_matrix);
-	glTranslatef(-cam_position[0],-cam_position[1],-cam_position[2]);
-	ExtractFrustum(frustum);
-	glMatrixMode( GL_PROJECTION );
-	if (restore_matrices)
-		glPopMatrix();
-	glMatrixMode( GL_MODELVIEW );
-	if (restore_matrices)
-		glPopMatrix();
 }
 
 void RENDER_INPUT_POSTPROCESS::SetSunDirection(const MATHVECTOR <float, 3> & newsun)

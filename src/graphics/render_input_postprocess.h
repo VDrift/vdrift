@@ -21,7 +21,6 @@
 #define _RENDER_INPUT_POSTPROCESS_H
 
 #include "render_input.h"
-#include "frustum.h"
 #include "mathvector.h"
 #include "quaternion.h"
 #include <vector>
@@ -77,7 +76,6 @@ private:
 	float w, h;
 	float camfov;
 	float lod_far;
-	FRUSTUM frustum;
 	int depth_mode;
 	bool clearcolor;
 	bool cleardepth;
