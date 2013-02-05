@@ -48,8 +48,8 @@ SETTINGS::SETTINGS() :
 	skin("simple"),
 	language("en"),
 	show_fps(false),
-	music_volume(1.0),
-	sound_volume(1.0),
+	music_volume(0.5),
+	sound_volume(0.5),
 	sound_sources(64),
 	mph(true),
 	track("paulricard88"),
@@ -101,7 +101,8 @@ SETTINGS::SETTINGS() :
 	hgateshifter(false),
 	ai_type("standard"),
 	ai_level(1.0),
-	vehicle_damage(false)
+	vehicle_damage(false),
+	particles(512)
 {
 	resolution[0] = 800;
 	resolution[1] = 600;
@@ -162,6 +163,7 @@ void SETTINGS::Serialize(bool write, Config & config)
 	Param(config, write, section, "normalmaps", normalmaps);
 	Param(config, write, section, "camerabounce", camera_bounce);
 	Param(config, write, section, "contrast", contrast);
+	Param(config, write, section, "particles", particles);
 
 	config.get("sound", section);
 	Param(config, write, section, "sources", sound_sources);

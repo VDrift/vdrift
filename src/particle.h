@@ -173,9 +173,10 @@ private:
 		}
 	};
 
-	std::vector <PARTICLE> particles;
 	std::list <std::tr1::shared_ptr<TEXTURE> > textures;
 	std::list <std::tr1::shared_ptr<TEXTURE> >::iterator cur_texture;
+	std::vector <PARTICLE> particles;
+	unsigned max_particles;
 
 	std::pair <float,float> transparency_range;
 	std::pair <float,float> longevity_range;
@@ -187,13 +188,13 @@ private:
 
 public:
 	PARTICLE_SYSTEM() :
+		max_particles(512),
 		transparency_range(0.5,1),
 		longevity_range(5,14),
 		speed_range(0.3,1),
 		size_range(0.5,1),
 		direction(0,1,0)
 	{
-		particles.reserve(128);
 		cur_texture = textures.end();
 	}
 
@@ -213,11 +214,12 @@ public:
 	void AddParticle(
 		const MATHVECTOR <float,3> & position,
 		float newspeed,
-		bool testonly=false);
+		bool testonly = false);
 
 	void Clear();
 
 	void SetParameters(
+		int maxparticles,
 		float transmin,
 		float transmax,
 		float longmin,

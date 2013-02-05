@@ -324,6 +324,11 @@ public:
 		return contrast;
 	}
 
+	float GetParticles() const
+	{
+		return particles;
+	}
+
 	int GetCamera() const
 	{
 		return camera_id;
@@ -442,6 +447,7 @@ private:
 	std::string ai_type;
 	float ai_level;
 	bool vehicle_damage;
+	int particles;
 };
 
 #endif

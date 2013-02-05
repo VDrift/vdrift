@@ -292,7 +292,7 @@ void GAME::Start(std::list <std::string> & args)
 		error_output << "Error loading tire smoke particle system" << std::endl;
 		return;
 	}
-	tire_smoke.SetParameters(0.4,0.9, 1,2, 0.3,0.6, 0.02,0.06, MATHVECTOR<float,3>(0.4,0.2,1));
+	tire_smoke.SetParameters(settings.GetParticles(), 0.4,0.9, 1,2, 0.3,0.6, 0.02,0.06, MATHVECTOR<float,3>(0.4,0.2,1));
 
 	// Initialize force feedback.
 	forcefeedback.reset(new FORCEFEEDBACK(settings.GetFFDevice(), error_output, info_output));
@@ -2299,7 +2299,7 @@ void GAME::UpdateParticleSystems(float dt)
 	if (track.Loaded() && active_camera)
 	{
 		QUATERNION <float> camlook;
-		camlook.Rotate(3.141593*0.5, 1, 0, 0);
+		camlook.Rotate(M_PI_2, 1, 0, 0);
 		QUATERNION <float> camorient = -(active_camera->GetOrientation() * camlook);
 
 		tire_smoke.Update(dt, camorient, active_camera->GetPosition());

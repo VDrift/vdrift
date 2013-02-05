@@ -47,6 +47,9 @@ bool inverseorder(int i1, int i2)
 
 void PARTICLE_SYSTEM::Update(float dt, const QUATERNION <float> & camdir, const MATHVECTOR <float, 3> & campos)
 {
+	if (max_particles == 0)
+		return;
+
 	QUATERNION <float> camdir_conj = -camdir;
 
 	std::vector <int> expired_list;
@@ -103,6 +106,9 @@ void PARTICLE_SYSTEM::AddParticle(
 	float newspeed,
 	bool testonly)
 {
+	if (max_particles == 0)
+		return;
+
 	if (cur_texture == textures.end())
 		cur_texture = textures.begin();
 
@@ -112,8 +118,6 @@ void PARTICLE_SYSTEM::AddParticle(
 		assert(cur_texture != textures.end()); //this should only happen if the textures array is empty, which should never happen unless we're doing a unit test
 		tex = *cur_texture;
 	}
-
-	const unsigned int max_particles = 8*128;
 
 	while (particles.size() >= max_particles)
 		particles.pop_back();
@@ -139,10 +143,21 @@ void PARTICLE_SYSTEM::Clear()
 	particles.clear();
 }
 
-void PARTICLE_SYSTEM::SetParameters(float transmin, float transmax, float longmin, float longmax,
-	float speedmin, float speedmax, float sizemin, float sizemax,
+void PARTICLE_SYSTEM::SetParameters(
+	int maxparticles,
+	float transmin,
+	float transmax,
+	float longmin,
+	float longmax,
+	float speedmin,
+	float speedmax,
+	float sizemin,
+	float sizemax,
 	MATHVECTOR <float,3> newdir)
 {
+	max_particles = maxparticles < 0 ? 0 : (maxparticles > 1024 ? 1024 : maxparticles);
+	particles.reserve(max_particles);
+
 	transparency_range.first = transmin;
 	transparency_range.second = transmax;
 	longevity_range.first = longmin;
@@ -159,7 +174,7 @@ QT_TEST(particle_test)
 	std::stringstream out;
 	PARTICLE_SYSTEM s;
 	ContentManager c(out);
-	s.SetParameters(1.0,1.0,0.5,1.0,1.0,1.0,1.0,1.0,MATHVECTOR<float,3>(0,1,0));
+	s.SetParameters(4,1.0,1.0,0.5,1.0,1.0,1.0,1.0,1.0,MATHVECTOR<float,3>(0,1,0));
 	s.Load(std::list<std::string> (), std::string(), 0, c);
 
 	//test basic particle management:  adding particles and letting them expire and get removed over time
