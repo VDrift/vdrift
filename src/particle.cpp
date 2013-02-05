@@ -40,64 +40,32 @@ bool PARTICLE_SYSTEM::Load(
 	return !textures.empty();
 }
 
-bool inverseorder(int i1, int i2)
-{
-	return i2 < i1;
-}
-
 void PARTICLE_SYSTEM::Update(float dt, const QUATERNION <float> & camdir, const MATHVECTOR <float, 3> & campos)
 {
 	if (max_particles == 0)
 		return;
 
-	QUATERNION <float> camdir_conj = -camdir;
-
-	std::vector <int> expired_list;
-
-	for (unsigned int i = 0; i < particles.size(); i++)
+	//  update particles
+	const QUATERNION <float> camdir_conj = -camdir;
+	for (size_t i = 0; i < particles.size(); i++)
 	{
 		particles[i].Update(node, dt, camdir_conj, campos);
+	}
+
+	// remove expired particles
+	for (size_t i = 0; i < particles.size(); i++)
+	{
 		if (particles[i].Expired())
-			expired_list.push_back(i);
-	}
-
-	//must sort our expired list so highest numbers come first or swap & pop won't work
-	std::sort(expired_list.begin(), expired_list.end(), inverseorder);
-
-	if (expired_list.size() == particles.size() && !particles.empty())
-	{
-		//std::cout << "Clearing all nodes" << std::endl;
-		Clear();
-	}
-	else if (!expired_list.empty())
-	{
-		assert(expired_list.size() < particles.size());
-
-		//std::cout << "Getting ready to delete " << expired_list.size() << "/" << particles.size() << std::endl;
-
-		//do the old swap & pop trick to remove expired particles quickly.
-		//all swaps must be done before the popping starts, because popping invalidates iterators
-		int newback = particles.size()-1;
-		for (std::vector <int>::iterator i = expired_list.begin(); i != expired_list.end(); ++i)
 		{
+			node.Delete(particles[i].GetNode());
+
 			//only bother to swap if it's not already at the end
-			if (*i != newback)
-			{
-				std::swap(particles[*i], particles[newback]);
-			}
+			size_t last = particles.size() - 1;
+			if (i != last)
+				particles[i] = particles[last];
 
-			//std::cout << "Deleted node: " << &particles[newback].GetNode() << endl;
-			node.Delete(particles[newback].GetNode());
-
-			newback--;
-		}
-
-		//do all of the pops
-		//std::cout << expired_list.size() << ", " << particles.size() << ", " << newback << std::endl;
-		assert((int)particles.size() - (int)expired_list.size() == newback + 1);
-		for (unsigned int i = 0; i < expired_list.size(); i++)
 			particles.pop_back();
-		//assert((int)expired_list.size() == (int)particles.size() - newback);
+		}
 	}
 }
 
@@ -115,7 +83,7 @@ void PARTICLE_SYSTEM::AddParticle(
 	std::tr1::shared_ptr<TEXTURE> tex;
 	if (!testonly)
 	{
-		assert(cur_texture != textures.end()); //this should only happen if the textures array is empty, which should never happen unless we're doing a unit test
+		assert(cur_texture != textures.end()); //this never happen unless we're doing a unit test
 		tex = *cur_texture;
 	}
 
@@ -139,7 +107,6 @@ void PARTICLE_SYSTEM::Clear()
 	{
 		node.Delete(i->GetNode());
 	}
-
 	particles.clear();
 }
 
