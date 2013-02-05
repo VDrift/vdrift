@@ -157,28 +157,51 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 		shader->UploadActiveShaderParameter3f("frustum_corner_tl_delta", frustum_corners[3]-frustum_corners[0]);
 	}
 
+	// draw a quad
+	unsigned faces[2 * 3] = {
+		0, 1, 2,
+		2, 3, 0,
+	};
+	float pos[4 * 3] = {
+		0.0f,  0.0f, 0.0f,
+		1.0f,  0.0f, 0.0f,
+		1.0f,  1.0f, 0.0f,
+		0.0f,  1.0f, 0.0f,
+	};
+	// send the UV corners in UV set 0
+	float tc0[4 * 2] = {
+		0.0f, 0.0f,
+		maxu, 0.0f,
+		maxu, maxv,
+		0.0f, maxv,
+	};
+	// send the frustum corners in UV set 1
+	float tc1[4 * 3] = {
+		frustum_corners[0][0], frustum_corners[0][1], frustum_corners[0][2],
+		frustum_corners[1][0], frustum_corners[1][1], frustum_corners[1][2],
+		frustum_corners[2][0], frustum_corners[2][1], frustum_corners[2][2],
+		frustum_corners[3][0], frustum_corners[3][1], frustum_corners[3][2],
+	};
 
-	glBegin(GL_QUADS);
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glVertexPointer(3, GL_FLOAT, 0, pos);
 
-	// send the UV corners in UV set 0, send the frustum corners in UV set 1
+	glClientActiveTexture(GL_TEXTURE0);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	glTexCoordPointer(2, GL_FLOAT, 0, tc0);
 
-	glMultiTexCoord2f(GL_TEXTURE0, 0.0f, 0.0f);
-	glMultiTexCoord3f(GL_TEXTURE1, frustum_corners[0][0], frustum_corners[0][1], frustum_corners[0][2]);
-	glVertex3f( 0.0f,  0.0f,  0.0f);
+	glClientActiveTexture(GL_TEXTURE1);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	glTexCoordPointer(3, GL_FLOAT, 0, tc1);
 
-	glMultiTexCoord2f(GL_TEXTURE0, maxu, 0.0f);
-	glMultiTexCoord3f(GL_TEXTURE1, frustum_corners[1][0], frustum_corners[1][1], frustum_corners[1][2]);
-	glVertex3f( 1.0f,  0.0f,  0.0f);
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, faces);
 
-	glMultiTexCoord2f(GL_TEXTURE0, maxu, maxv);
-	glMultiTexCoord3f(GL_TEXTURE1, frustum_corners[2][0], frustum_corners[2][1], frustum_corners[2][2]);
-	glVertex3f( 1.0f,  1.0f,  0.0f);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
-	glMultiTexCoord2f(GL_TEXTURE0, 0.0f, maxv);
-	glMultiTexCoord3f(GL_TEXTURE1, frustum_corners[3][0], frustum_corners[3][1], frustum_corners[3][2]);
-	glVertex3f( 0.0f,  1.0f,  0.0f);
+	glClientActiveTexture(GL_TEXTURE0);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
-	glEnd();
+	glDisableClientState(GL_VERTEX_ARRAY);
 
 	GLUTIL::CheckForOpenGLErrors("postprocess draw", error_output);
 
