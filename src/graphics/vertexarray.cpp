@@ -18,92 +18,39 @@
 /************************************************************************/
 
 #include "vertexarray.h"
-#include "unittest.h"
-#include "mathvector.h"
 #include "quaternion.h"
+#include "unittest.h"
 
-#include <cassert>
-
-QT_TEST(vertexarray_test)
+VERTEXARRAY::VERTEXARRAY()
 {
-	VERTEXARRAY testarray;
-
-	const float * ptr;
-	int ptrnum;
-	float somevec[3];
-	somevec[0] = somevec[2] = 0;
-	somevec[1] = 1000.0;
-	testarray.SetNormals(somevec, 3);
-	testarray.GetNormals(ptr, ptrnum);
-	QT_CHECK_EQUAL(ptr[1], 1000.0);
-	QT_CHECK_EQUAL(ptrnum, 3);
-	testarray.SetNormals(0, 0);
-	testarray.GetNormals(ptr, ptrnum);
-	QT_CHECK_EQUAL(ptrnum, 0);
-	QT_CHECK_EQUAL(ptr, 0);
-
-	//by similarity, the vertex and face assignment functions are OK if the above normal test is OK
-
-	testarray.SetTexCoordSets(2);
-	QT_CHECK_EQUAL(testarray.GetTexCoordSets(), 2);
-	testarray.GetTexCoords(0, ptr, ptrnum);
-	QT_CHECK_EQUAL(ptrnum, 0);
-	QT_CHECK_EQUAL(ptr, 0);
-	testarray.SetTexCoords(1, somevec, 2);
-	testarray.GetTexCoords(1, ptr, ptrnum);
-	QT_CHECK_EQUAL(ptrnum, 2);
-	QT_CHECK_EQUAL(ptr[1], 1000.0);
-
-	testarray.Clear();
-	testarray.SetNormals(somevec, 3);
-	VERTEXARRAY otherarray(testarray);
-	otherarray.GetNormals(ptr, ptrnum);
-	QT_CHECK_EQUAL(ptr[1], 1000.0);
-	QT_CHECK_EQUAL(ptrnum, 3);
-	otherarray.Clear();
-	otherarray.GetNormals(ptr, ptrnum);
-	QT_CHECK_EQUAL(ptrnum, 0);
-	otherarray = testarray;
-	otherarray.GetNormals(ptr, ptrnum);
-	QT_CHECK_EQUAL(ptr[1], 1000.0);
-	QT_CHECK_EQUAL(ptrnum, 3);
-
-	VERTEXARRAY addarray;
-	otherarray.Clear();
-	testarray.Clear();
-	testarray.SetNormals(somevec, 3);
-	otherarray.SetNormals(somevec, 3);
-	addarray = testarray + otherarray;
-	addarray.GetNormals(ptr, ptrnum);
-	QT_CHECK_EQUAL(ptrnum, 6);
-	QT_CHECK_EQUAL(ptr[1], 1000.0);
-	QT_CHECK_EQUAL(ptr[4], 1000.0);
-
-	testarray.Clear();
-	VERTEXARRAY facearray1, facearray2;
-	int someint[3];
-	someint[0] = 0;
-	someint[1] = 1;
-	someint[2] = 2;
-	facearray1.SetFaces(someint, 3);
-	facearray2.SetFaces(someint, 3);
-	testarray = facearray1 + facearray2;
-	const int * ptri;
-	testarray.GetFaces(ptri, ptrnum);
-	QT_CHECK_EQUAL(ptrnum, 6);
-	QT_CHECK_EQUAL(ptri[1], 1);
-	QT_CHECK_EQUAL(ptri[4], 1);
-	testarray.Clear();
-	facearray1.SetVertices(somevec, 3);
-	facearray2.SetVertices(somevec, 3);
-	testarray = facearray1 + facearray2;
-	testarray.GetFaces(ptri, ptrnum);
-	QT_CHECK_EQUAL(ptrnum, 6);
-	QT_CHECK_EQUAL(ptri[1], 1);
-	QT_CHECK_EQUAL(ptri[4], 2);
+	// ctor
 }
 
-void VERTEXARRAY::SetNormals(float * array, size_t count, size_t offset)
+VERTEXARRAY::~VERTEXARRAY()
+{
+	Clear();
+}
+
+void VERTEXARRAY::SetColors(unsigned char array[], size_t count, size_t offset)
+{
+	size_t size = offset + count;
+
+	// Tried to assign values that aren't in sets of 4
+	assert(size % 4 == 0);
+
+	if (size != colors.size())
+	{
+		colors.resize(size);
+	}
+
+	unsigned char * myarray = &(colors[offset]);
+	for (size_t i = 0; i < count; ++i)
+	{
+		myarray[i] = array[i];
+	}
+}
+
+void VERTEXARRAY::SetNormals(float array[], size_t count, size_t offset)
 {
 	size_t size = offset + count;
 
@@ -122,7 +69,7 @@ void VERTEXARRAY::SetNormals(float * array, size_t count, size_t offset)
 	}
 }
 
-void VERTEXARRAY::SetVertices(float * array, size_t count, size_t offset)
+void VERTEXARRAY::SetVertices(float array[], size_t count, size_t offset)
 {
 	size_t size = offset + count;
 
@@ -141,7 +88,7 @@ void VERTEXARRAY::SetVertices(float * array, size_t count, size_t offset)
 	}
 }
 
-void VERTEXARRAY::SetFaces(int * newarray, size_t newarraycount)
+void VERTEXARRAY::SetFaces(int newarray[], size_t newarraycount)
 {
 	//Tried to assign values that aren't in sets of 3
 	assert (newarraycount % 3 == 0);
@@ -155,11 +102,6 @@ void VERTEXARRAY::SetFaces(int * newarray, size_t newarraycount)
 	{
 		myarray[i] = newarray[i];
 	}
-
-	/*for (int i = 0; i < newarraycount; i++)
-	{
-		faces[i] = newarray[i];
-	}*/
 }
 
 void VERTEXARRAY::SetTexCoordSets(int newtcsets)
@@ -168,8 +110,7 @@ void VERTEXARRAY::SetTexCoordSets(int newtcsets)
 	texcoords.resize(newtcsets);
 }
 
-//set is zero indexed
-void VERTEXARRAY::SetTexCoords(size_t set, float * newarray, size_t newarraycount)
+void VERTEXARRAY::SetTexCoords(size_t set, float newarray[], size_t newarraycount)
 {
 	//Tried to assign a tex coord set beyond the allocated number of sets
 	assert(set < texcoords.size());
@@ -185,11 +126,12 @@ void VERTEXARRAY::SetTexCoords(size_t set, float * newarray, size_t newarraycoun
 	{
 		myarray[i] = newarray[i];
 	}
+}
 
-	/*for (int i = 0; i < newarraycount; i++)
-	{
-		texcoords[set][i] = newarray[i];
-	}*/
+void VERTEXARRAY::GetColors(const unsigned char * & output_array_pointer, int & output_array_num) const
+{
+	output_array_num = colors.size();
+	output_array_pointer = colors.empty() ? NULL : &colors[0];
 }
 
 void VERTEXARRAY::GetNormals(const float * & output_array_pointer, int & output_array_num) const
@@ -229,24 +171,17 @@ VERTEXARRAY VERTEXARRAY::operator+ (const VERTEXARRAY & v) const
 {
 	VERTEXARRAY out;
 
-	//out.normals.reserve(normals.size() + v.normals.size());
-	//out.normals.insert(out.normals.end(), normals.begin(), normals.end());
-	//out.normals.insert(out.normals.end(), v.normals.begin(), v.normals.end());
+	COMBINEVECTORS(colors);
 
-	int idxoffset = vertices.size()/3;
+	COMBINEVECTORS(normals);
 
-	COMBINEVECTORS(normals)
-	COMBINEVECTORS(vertices)
+	COMBINEVECTORS(vertices);
 
-	//COMBINEVECTORS(faces)
+	int idxoffset = vertices.size() / 3;
 	out.faces.reserve(faces.size() + v.faces.size());
 	out.faces.insert(out.faces.end(), faces.begin(), faces.end());
-	//out.faces.insert(out.faces.end(), v.faces.begin(), v.faces.end());
-	//size_t startat = out.faces.size();
 	for (size_t i = 0; i < v.faces.size(); i++)
 	{
-		//out.faces[faces.size() + i] = v.faces[i] + idxoffset;
-		//out.faces[startat + i] = v.faces[i];
 		out.faces.push_back(v.faces[i]+idxoffset);
 	}
 
@@ -256,7 +191,6 @@ VERTEXARRAY VERTEXARRAY::operator+ (const VERTEXARRAY & v) const
 	int tcsets1 = GetTexCoordSets();
 	int tcsets2 = v.GetTexCoordSets();
 	out.SetTexCoordSets(maxtcsets);
-	//ITERVEC(vector <float>,texcoords,i)
 	for (int i = 0; i < maxtcsets; i++)
 	{
 		if (i >= tcsets1 && i < tcsets2)
@@ -269,16 +203,28 @@ VERTEXARRAY VERTEXARRAY::operator+ (const VERTEXARRAY & v) const
 		}
 		else if (i < tcsets1 && i < tcsets2)
 		{
-			COMBINEVECTORS(texcoords[i])
+			COMBINEVECTORS(texcoords[i]);
 		}
 	}
 
 	return out;
 }
 
-void VERTEXARRAY::Add(float * newnorm, int newnormcount, float * newvert, int newvertcount,
-			int * newfaces, int newfacecount,
-			float * newtc, int newtccount)
+void VERTEXARRAY::Clear()
+{
+	texcoords.clear();
+	colors.clear();
+	normals.clear();
+	vertices.clear();
+	faces.clear();
+}
+
+void VERTEXARRAY::Add(
+	unsigned char newcol[], int newcolcount,
+	float newnorm[], int newnormcount,
+	float newvert[], int newvertcount,
+	int newfaces[], int newfacecount,
+	float newtc[], int newtccount)
 {
 	int idxoffset = vertices.size()/3;
 
@@ -372,12 +318,6 @@ void VERTEXARRAY::Add(float * newnorm, int newnormcount, float * newvert, int ne
 
 void VERTEXARRAY::SetToBillboard(float x1, float y1, float x2, float y2)
 {
-	/*glNormal3f( 0.0f, 0.0f, 1.0f);
-	glTexCoord2f(0.0f, 0.0f); glVertex3f( 0, -scale,  -scale);
-	glTexCoord2f(1.0f, 0.0f); glVertex3f( 0, -scale,  scale);
-	glTexCoord2f(1.0f, 1.0f); glVertex3f( 0,  scale,  scale);
-	glTexCoord2f(0.0f, 1.0f); glVertex3f( 0,  scale,  -scale);*/
-
 	int bfaces[6];
 	bfaces[0] = 0;
 	bfaces[1] = 1;
@@ -396,17 +336,12 @@ void VERTEXARRAY::SetToBillboard(float x1, float y1, float x2, float y2)
 	}
 	SetNormals(normals, 12);
 
-	float verts[12];
-
-	/*verts[0] = verts[3] = verts[6] = verts[9] = 0.0;
-	verts[1] = verts[2] = verts[4] = verts[11] = -scale;
-	verts[5] = verts[7] = verts[8] = verts[10] = scale;*/
-
 	//build this:
 	//x1, y1, 0
 	//x2, y1, 0
 	//x2, y2, 0
 	//x1, y2, 0
+	float verts[12];
 	verts[2] = verts[5] = verts[8] = verts[11] = 0.0;
 	verts[0] = verts[9] = x1;
 	verts[3] = verts[6] = x2;
@@ -589,6 +524,51 @@ void VERTEXARRAY::SetTo2DBox(float x, float y, float w, float h, float marginwid
 	SetTexCoords(0, uvs, 8*quads);
 }
 
+void VERTEXARRAY::SetToUnitCube()
+{
+	std::vector <VERTEXARRAY::TRIFLOAT> verts;
+	verts.push_back(VERTEXARRAY::TRIFLOAT(0,0,0));
+	verts.push_back(VERTEXARRAY::TRIFLOAT(0.5,-0.5,-0.5)); //1
+	verts.push_back(VERTEXARRAY::TRIFLOAT(0.5,-0.5,0.5));
+	verts.push_back(VERTEXARRAY::TRIFLOAT(-0.5,-0.5,0.5));
+	verts.push_back(VERTEXARRAY::TRIFLOAT(-0.5,-0.5,-0.5)); //4
+	verts.push_back(VERTEXARRAY::TRIFLOAT(0.5,0.5,-0.5)); //5
+	verts.push_back(VERTEXARRAY::TRIFLOAT(0.5,0.5,0.5));
+	verts.push_back(VERTEXARRAY::TRIFLOAT(-0.5,0.5,0.5));
+	verts.push_back(VERTEXARRAY::TRIFLOAT(-0.5,0.5,-0.5)); //8
+
+	std::vector <VERTEXARRAY::TRIFLOAT> norms;
+	norms.push_back(VERTEXARRAY::TRIFLOAT(0,0,0));
+	norms.push_back(VERTEXARRAY::TRIFLOAT(0.0,0.0,-1.0));
+	norms.push_back(VERTEXARRAY::TRIFLOAT(-1.0,-0.0,-0.0));
+	norms.push_back(VERTEXARRAY::TRIFLOAT(-0.0,-0.0,1.0));
+	norms.push_back(VERTEXARRAY::TRIFLOAT(-0.0,0.0,1.0));
+	norms.push_back(VERTEXARRAY::TRIFLOAT(1.0,-0.0,0.0));
+	norms.push_back(VERTEXARRAY::TRIFLOAT(1.0,0.0,0.0));
+	norms.push_back(VERTEXARRAY::TRIFLOAT(0.0,1.0,-0.0));
+	norms.push_back(VERTEXARRAY::TRIFLOAT(-0.0,-1.0,0.0));
+
+	std::vector <VERTEXARRAY::TWOFLOAT> texcoords(1);
+	texcoords[0].u = 0;
+	texcoords[0].v = 0;
+
+	std::vector <VERTEXARRAY::FACE> cubesides;
+	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[5],norms[1],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[1],norms[1],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[8],norms[1],texcoords[0])));
+	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[1],norms[1],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[4],norms[1],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[8],norms[1],texcoords[0])));
+	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[3],norms[2],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[7],norms[2],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[8],norms[2],texcoords[0])));
+	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[3],norms[2],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[8],norms[2],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[4],norms[2],texcoords[0])));
+	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[2],norms[3],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[6],norms[3],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[3],norms[3],texcoords[0])));
+	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[6],norms[4],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[7],norms[4],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[3],norms[4],texcoords[0])));
+	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[1],norms[5],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[5],norms[5],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[2],norms[5],texcoords[0])));
+	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[5],norms[6],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[6],norms[6],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[2],norms[6],texcoords[0])));
+	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[5],norms[7],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[8],norms[7],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[7],norms[7],texcoords[0])));
+	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[5],norms[7],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[7],norms[7],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[6],norms[7],texcoords[0])));
+	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[1],norms[8],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[2],norms[8],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[3],norms[8],texcoords[0])));
+	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[1],norms[8],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[3],norms[8],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[4],norms[8],texcoords[0])));
+
+	BuildFromFaces(cubesides);
+}
+
 void VERTEXARRAY::BuildFromFaces(const std::vector <FACE> & newfaces)
 {
 	std::map <VERTEXDATA, unsigned int> indexmap;
@@ -597,9 +577,9 @@ void VERTEXARRAY::BuildFromFaces(const std::vector <FACE> & newfaces)
 
 	for (std::vector <FACE>::const_iterator i = newfaces.begin(); i != newfaces.end(); ++i) //loop through input triangles
 	{
-		for (int v = 0; v < 3; v++) //loop through vertices in triangle
+		for (int n = 0; n < 3; n++) //loop through vertices in triangle
 		{
-			const VERTEXDATA & curvertdata = i->GetVertexData(v); //grab vertex
+			const VERTEXDATA & curvertdata = i->v[n]; //grab vertex
 			std::map <VERTEXDATA, unsigned int>::iterator result = indexmap.find(curvertdata);
 			if (result == indexmap.end()) //new vertex
 			{
@@ -629,6 +609,11 @@ void VERTEXARRAY::BuildFromFaces(const std::vector <FACE> & newfaces)
 	assert(faces.size()/3 == newfaces.size());
 	assert(vertices.size()/3 == normals.size()/3 && normals.size()/3 == texcoords[0].size()/2);
 	assert(vertices.size()/3 <= faces.size());
+}
+
+void VERTEXARRAY::SetColor(float r, float g, float b, float a)
+{
+	assert(0); // fixme
 }
 
 void VERTEXARRAY::Translate(float x, float y, float z)
@@ -690,51 +675,6 @@ void VERTEXARRAY::Scale(float x, float y, float z)
     }
 }
 
-void VERTEXARRAY::SetToUnitCube()
-{
-	std::vector <VERTEXARRAY::TRIFLOAT> verts;
-	verts.push_back(VERTEXARRAY::TRIFLOAT(0,0,0));
-	verts.push_back(VERTEXARRAY::TRIFLOAT(0.5,-0.5,-0.5)); //1
-	verts.push_back(VERTEXARRAY::TRIFLOAT(0.5,-0.5,0.5));
-	verts.push_back(VERTEXARRAY::TRIFLOAT(-0.5,-0.5,0.5));
-	verts.push_back(VERTEXARRAY::TRIFLOAT(-0.5,-0.5,-0.5)); //4
-	verts.push_back(VERTEXARRAY::TRIFLOAT(0.5,0.5,-0.5)); //5
-	verts.push_back(VERTEXARRAY::TRIFLOAT(0.5,0.5,0.5));
-	verts.push_back(VERTEXARRAY::TRIFLOAT(-0.5,0.5,0.5));
-	verts.push_back(VERTEXARRAY::TRIFLOAT(-0.5,0.5,-0.5)); //8
-
-	std::vector <VERTEXARRAY::TRIFLOAT> norms;
-	norms.push_back(VERTEXARRAY::TRIFLOAT(0,0,0));
-	norms.push_back(VERTEXARRAY::TRIFLOAT(0.0,0.0,-1.0));
-	norms.push_back(VERTEXARRAY::TRIFLOAT(-1.0,-0.0,-0.0));
-	norms.push_back(VERTEXARRAY::TRIFLOAT(-0.0,-0.0,1.0));
-	norms.push_back(VERTEXARRAY::TRIFLOAT(-0.0,0.0,1.0));
-	norms.push_back(VERTEXARRAY::TRIFLOAT(1.0,-0.0,0.0));
-	norms.push_back(VERTEXARRAY::TRIFLOAT(1.0,0.0,0.0));
-	norms.push_back(VERTEXARRAY::TRIFLOAT(0.0,1.0,-0.0));
-	norms.push_back(VERTEXARRAY::TRIFLOAT(-0.0,-1.0,0.0));
-
-	std::vector <VERTEXARRAY::TWOFLOAT> texcoords(1);
-	texcoords[0].u = 0;
-	texcoords[0].v = 0;
-
-	std::vector <VERTEXARRAY::FACE> cubesides;
-	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[5],norms[1],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[1],norms[1],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[8],norms[1],texcoords[0])));
-	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[1],norms[1],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[4],norms[1],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[8],norms[1],texcoords[0])));
-	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[3],norms[2],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[7],norms[2],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[8],norms[2],texcoords[0])));
-	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[3],norms[2],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[8],norms[2],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[4],norms[2],texcoords[0])));
-	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[2],norms[3],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[6],norms[3],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[3],norms[3],texcoords[0])));
-	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[6],norms[4],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[7],norms[4],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[3],norms[4],texcoords[0])));
-	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[1],norms[5],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[5],norms[5],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[2],norms[5],texcoords[0])));
-	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[5],norms[6],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[6],norms[6],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[2],norms[6],texcoords[0])));
-	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[5],norms[7],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[8],norms[7],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[7],norms[7],texcoords[0])));
-	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[5],norms[7],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[7],norms[7],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[6],norms[7],texcoords[0])));
-	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[1],norms[8],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[2],norms[8],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[3],norms[8],texcoords[0])));
-	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[1],norms[8],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[3],norms[8],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[4],norms[8],texcoords[0])));
-
-	BuildFromFaces(cubesides);
-}
-
 void VERTEXARRAY::FlipNormals()
 {
 	assert(normals.size() % 3 == 0);
@@ -742,6 +682,95 @@ void VERTEXARRAY::FlipNormals()
 	{
 		*i = -*i;
 	}
+}
+
+bool VERTEXARRAY::Serialize(joeserialize::Serializer & s)
+{
+	_SERIALIZE_(s,vertices);
+	_SERIALIZE_(s,normals);
+	//_SERIALIZE_(s,colors); fixme
+	_SERIALIZE_(s,texcoords);
+	_SERIALIZE_(s,faces);
+	return true;
+}
+
+QT_TEST(vertexarray_test)
+{
+	VERTEXARRAY testarray;
+
+	const float * ptr;
+	int ptrnum;
+	float somevec[3];
+	somevec[0] = somevec[2] = 0;
+	somevec[1] = 1000.0;
+	testarray.SetNormals(somevec, 3);
+	testarray.GetNormals(ptr, ptrnum);
+	QT_CHECK_EQUAL(ptr[1], 1000.0);
+	QT_CHECK_EQUAL(ptrnum, 3);
+	testarray.SetNormals(0, 0);
+	testarray.GetNormals(ptr, ptrnum);
+	QT_CHECK_EQUAL(ptrnum, 0);
+	QT_CHECK_EQUAL(ptr, 0);
+
+	//by similarity, the vertex and face assignment functions are OK if the above normal test is OK
+
+	testarray.SetTexCoordSets(2);
+	QT_CHECK_EQUAL(testarray.GetTexCoordSets(), 2);
+	testarray.GetTexCoords(0, ptr, ptrnum);
+	QT_CHECK_EQUAL(ptrnum, 0);
+	QT_CHECK_EQUAL(ptr, 0);
+	testarray.SetTexCoords(1, somevec, 2);
+	testarray.GetTexCoords(1, ptr, ptrnum);
+	QT_CHECK_EQUAL(ptrnum, 2);
+	QT_CHECK_EQUAL(ptr[1], 1000.0);
+
+	testarray.Clear();
+	testarray.SetNormals(somevec, 3);
+	VERTEXARRAY otherarray(testarray);
+	otherarray.GetNormals(ptr, ptrnum);
+	QT_CHECK_EQUAL(ptr[1], 1000.0);
+	QT_CHECK_EQUAL(ptrnum, 3);
+	otherarray.Clear();
+	otherarray.GetNormals(ptr, ptrnum);
+	QT_CHECK_EQUAL(ptrnum, 0);
+	otherarray = testarray;
+	otherarray.GetNormals(ptr, ptrnum);
+	QT_CHECK_EQUAL(ptr[1], 1000.0);
+	QT_CHECK_EQUAL(ptrnum, 3);
+
+	VERTEXARRAY addarray;
+	otherarray.Clear();
+	testarray.Clear();
+	testarray.SetNormals(somevec, 3);
+	otherarray.SetNormals(somevec, 3);
+	addarray = testarray + otherarray;
+	addarray.GetNormals(ptr, ptrnum);
+	QT_CHECK_EQUAL(ptrnum, 6);
+	QT_CHECK_EQUAL(ptr[1], 1000.0);
+	QT_CHECK_EQUAL(ptr[4], 1000.0);
+
+	testarray.Clear();
+	VERTEXARRAY facearray1, facearray2;
+	int someint[3];
+	someint[0] = 0;
+	someint[1] = 1;
+	someint[2] = 2;
+	facearray1.SetFaces(someint, 3);
+	facearray2.SetFaces(someint, 3);
+	testarray = facearray1 + facearray2;
+	const int * ptri;
+	testarray.GetFaces(ptri, ptrnum);
+	QT_CHECK_EQUAL(ptrnum, 6);
+	QT_CHECK_EQUAL(ptri[1], 1);
+	QT_CHECK_EQUAL(ptri[4], 1);
+	testarray.Clear();
+	facearray1.SetVertices(somevec, 3);
+	facearray2.SetVertices(somevec, 3);
+	testarray = facearray1 + facearray2;
+	testarray.GetFaces(ptri, ptrnum);
+	QT_CHECK_EQUAL(ptrnum, 6);
+	QT_CHECK_EQUAL(ptri[1], 1);
+	QT_CHECK_EQUAL(ptri[4], 2);
 }
 
 QT_TEST(vertexarray_buldfromfaces_test)

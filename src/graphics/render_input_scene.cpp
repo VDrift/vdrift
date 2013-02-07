@@ -448,47 +448,63 @@ void RENDER_INPUT_SCENE::DrawVertexArray(const VERTEXARRAY & va, float linesize)
 	const float * verts;
 	int vertcount;
 	va.GetVertices(verts, vertcount);
-	if (vertcount > 0 && verts)
+	if (verts)
 	{
 		glVertexPointer(3, GL_FLOAT, 0, verts);
 		glEnableClientState(GL_VERTEX_ARRAY);
 
+		const unsigned char * cols;
+		int colcount;
+		va.GetColors(cols, colcount);
+		if (cols)
+		{
+			glColorPointer(4, GL_UNSIGNED_BYTE, 0, cols);
+			glEnableClientState(GL_COLOR_ARRAY);
+		}
+
 		const int * faces;
 		int facecount;
 		va.GetFaces(faces, facecount);
-		if (facecount > 0 && faces)
+		if (faces)
 		{
 			const float * norms;
 			int normcount;
 			va.GetNormals(norms, normcount);
-			if (normcount > 0 && norms)
+			if (norms)
 			{
 				glNormalPointer(GL_FLOAT, 0, norms);
 				glEnableClientState(GL_NORMAL_ARRAY);
 			}
 
-			const float * tc[1];
-			int tccount[1];
+			const float * tc = 0;
+			int tccount;
 			if (va.GetTexCoordSets() > 0)
 			{
-				va.GetTexCoords(0, tc[0], tccount[0]);
-				if (tc[0] && tccount[0])
+				va.GetTexCoords(0, tc, tccount);
+				if (tc)
 				{
 					glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-					glTexCoordPointer(2, GL_FLOAT, 0, tc[0]);
+					glTexCoordPointer(2, GL_FLOAT, 0, tc);
 				}
 			}
 
 			glDrawElements(GL_TRIANGLES, facecount, GL_UNSIGNED_INT, faces);
 
-			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-			glDisableClientState(GL_NORMAL_ARRAY);
+			if (tc)
+				glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+
+			if (norms)
+				glDisableClientState(GL_NORMAL_ARRAY);
 		}
 		else if (linesize > 0)
 		{
 			glLineWidth(linesize);
-			glDrawArrays(GL_LINES, 0, vertcount/3);
+			glDrawArrays(GL_LINES, 0, vertcount / 3);
 		}
+
+		if (cols)
+			glDisableClientState(GL_COLOR_ARRAY);
+
 		glDisableClientState(GL_VERTEX_ARRAY);
 	}
 }

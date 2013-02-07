@@ -52,7 +52,7 @@ float TEXT_DRAW::RenderCharacter(
 	else
 	{
 		float * n = 0;
-		output_array.Add(n, 0, v, 12, f, 6, t, 8);
+		output_array.Add(0, 0, n, 0, v, 12, f, 6, t, 8);
 	}
 
 	return ci->xadvance * invsize * scalex;
