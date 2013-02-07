@@ -48,7 +48,6 @@ private:
 		float time; ///< time since the particle was created; i.e. the particle's age
 		int tid; ///< particle texture atlas tile id 0-8
 
-		keyed_container <SCENENODE>::handle node;
 		keyed_container <DRAWABLE>::handle draw;
 		VERTEXARRAY varray;
 
@@ -67,14 +66,13 @@ private:
 			size = other.size;
 			time = other.time;
 			tid = other.tid;
-			node = other.node;
 			draw = other.draw;
 			varray = other.varray;
 		}
 
 	public:
 		PARTICLE(
-			SCENENODE & parentnode,
+			SCENENODE & node,
 			const VEC & new_start_position,
 			const VEC & new_dir,
 			float newspeed,
@@ -92,14 +90,13 @@ private:
 			time(0),
 			tid(newtid)
 		{
-			node = parentnode.AddNode();
-			SCENENODE & noderef = parentnode.GetNode(node);
-			draw = GetDrawlist(noderef).insert(DRAWABLE());
-			DRAWABLE & drawref = GetDrawlist(noderef).get(draw);
+			draw = GetDrawlist(node).insert(DRAWABLE());
+			DRAWABLE & drawref = GetDrawlist(node).get(draw);
 			drawref.SetDrawEnable(false);
 			drawref.SetVertArray(&varray);
 			drawref.SetDiffuseMap(texture);
-			drawref.SetCull(false,false);
+			drawref.SetCull(false, false);
+			varray.SetTexCoordSets(1);
 		}
 
 		PARTICLE(const PARTICLE & other)
@@ -113,11 +110,6 @@ private:
 			return *this;
 		}
 
-		keyed_container <SCENENODE>::handle & GetNode()
-		{
-			return node;
-		}
-
 		float lerp(float x, float y, float s)
 		{
 			float sclamp = std::max(0.f,std::min(1.0f,s));
@@ -125,30 +117,33 @@ private:
 		}
 
 		void Update(
-			SCENENODE & parent,
+			SCENENODE & node,
 			float dt,
-			const QUATERNION <float> & camdir_conjugate,
+			const QUATERNION <float> & camdir,
 			const MATHVECTOR <float, 3> & campos)
 		{
 			time += dt;
 
-			SCENENODE & noderef = parent.GetNode(node);
-			DRAWABLE & drawref = GetDrawlist(noderef).get(draw);
+			DRAWABLE & drawref = GetDrawlist(node).get(draw);
 			drawref.SetVertArray(&varray);
 
-			MATHVECTOR <float, 3> curpos = start_position + direction * time * speed;
-			noderef.GetTransform().SetTranslation(curpos);
-			noderef.GetTransform().SetRotation(camdir_conjugate);
+			MATHVECTOR <float, 3> pos = start_position + direction * time * speed;
+			pos = pos - campos;
+			camdir.RotateVector(pos);
 
 			float sizescale = 1.0;
 			float trans = transparency*std::pow((double)(1.0-time/longevity),4.0);
-			float transmax = 1.0;
-			if (trans > transmax)
-				trans = transmax;
-			if (trans < 0.0)
-				trans = 0.0;
-
+			if (trans > 1.0) trans = 1.0;
+			if (trans < 0.0) trans = 0.0;
 			sizescale = 0.2*(time/longevity)+0.4;
+
+			// scale the alpha by the closeness to the camera
+			// if we get too close, don't draw
+			// this prevents major slowdown when there are a lot of particles right next to the camera
+			float camdist = pos.Magnitude();
+			const float camdist_off = 3.0;
+			const float camdist_full = 4.0;
+			trans = lerp(0.f,trans,(camdist-camdist_off)/(camdist_full-camdist_off));
 
 			// assume 9 tiles in texture atlas
 			int vi = tid / 3;
@@ -162,24 +157,34 @@ private:
 			float x2 = sizescale;
 			float y2 = sizescale * 4 / 3.0f;
 
-			varray.SetTo2DQuad(x1, y1, x2, y2, u1, v1, u2, v2);
-			drawref.SetRadius(sizescale);
-
-			bool drawenable = true;
-
-			// scale the alpha by the closeness to the camera
-			// if we get too close, don't draw
-			// this prevents major slowdown when there are a lot of particles right next to the camera
-			float camdist = (curpos - campos).Magnitude();
-			//std::cout << camdist << std::endl;
-			const float camdist_off = 3.0;
-			const float camdist_full = 4.0;
-			trans = lerp(0.f,trans,(camdist-camdist_off)/(camdist_full-camdist_off));
-			if (trans <= 0)
-				drawenable = false;
+			const int faces[6] = {
+				0, 2, 1,
+				0, 3, 2,
+			};
+			const float verts[12] = {
+				pos[0] + x1, pos[1] + y1, pos[2],
+				pos[0] + x2, pos[1] + y1, pos[2],
+				pos[0] + x2, pos[1] + y2, pos[2],
+				pos[0] + x1, pos[1] + y2, pos[2],
+			};
+			const float uvs[8] = {
+				u1, v1,
+				u2, v1,
+				u2, v2,
+				u1, v2,
+			};
+			varray.SetFaces(faces, 6);
+			varray.SetVertices(verts, 12);
+			//varray.SetColors(cols, 16);
+			varray.SetTexCoords(0, uvs, 8);
 
 			drawref.SetColor(1,1,1,trans);
-			drawref.SetDrawEnable(drawenable);
+			drawref.SetDrawEnable(trans > 0);
+		}
+
+		void Delete(SCENENODE & node)
+		{
+			GetDrawlist(node).erase(draw);
 		}
 
 		bool Expired() const

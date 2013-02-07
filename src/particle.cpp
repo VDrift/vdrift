@@ -38,11 +38,13 @@ void PARTICLE_SYSTEM::Update(float dt, const QUATERNION <float> & camdir, const 
 	if (max_particles == 0)
 		return;
 
+	node.GetTransform().SetTranslation(campos);
+	node.GetTransform().SetRotation(-camdir);
+
 	//  update particles
-	const QUATERNION <float> camdir_conj = -camdir;
 	for (size_t i = 0; i < particles.size(); i++)
 	{
-		particles[i].Update(node, dt, camdir_conj, campos);
+		particles[i].Update(node, dt, camdir, campos);
 	}
 
 	// remove expired particles
@@ -50,7 +52,7 @@ void PARTICLE_SYSTEM::Update(float dt, const QUATERNION <float> & camdir, const 
 	{
 		if (particles[i].Expired())
 		{
-			node.Delete(particles[i].GetNode());
+			particles[i].Delete(node);
 
 			//only bother to swap if it's not already at the end
 			size_t last = particles.size() - 1;
@@ -88,7 +90,7 @@ void PARTICLE_SYSTEM::Clear()
 {
 	for (std::vector <PARTICLE>::iterator i = particles.begin(); i != particles.end(); ++i)
 	{
-		node.Delete(i->GetNode());
+		i->Delete(node);
 	}
 	particles.clear();
 }
