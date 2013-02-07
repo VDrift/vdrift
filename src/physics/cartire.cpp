@@ -477,23 +477,21 @@ void CARTIRE::CalculateSigmaHatAlphaHat(int tablesize)
 
 QT_TEST(tire_test)
 {
-	std::stringbuf log;
-	std::ostream info(&log), error(&log);
+	std::stringstream info, error;
+
 	PATHMANAGER path;
 	path.Init(info, error);
 
-	std::string tire_path = path.GetCarPartsPath() + "/touring";
-	std::fstream tire_param(tire_path.c_str());
+	const std::string tire_path = path.GetCarPartsPath() + "/tire/touring";
+	std::ifstream tire_file(tire_path.c_str());
 
 	std::stringstream tire_str;
-	tire_str << tire_param.rdbuf();
-	tire_str << "\nsize = 185,60,14\ntype = tire-touring\n";
+	tire_str << "\nsize = 185,60,14\n[type]\n";
+	tire_str << tire_file.rdbuf();
 
 	PTree cfg;
 	read_ini(tire_str, cfg);
-	//cfg.DebugPrint(std::clog);
 
-	// some sanity tests
 	CARTIRE tire;
 	QT_CHECK(tire.Load(cfg, error));
 
@@ -514,4 +512,10 @@ QT_TEST(tire_test)
 	QT_CHECK_GREATER(f0[1], 0);
 	QT_CHECK_GREATER(f1[1], 0);
 	QT_CHECK_LESS(f0[1], f1[1]);
+
+	const std::string errorstr = error.str();
+	if (!errorstr.empty())
+	{
+		QT_PRINT(errorstr);
+	}
 }
