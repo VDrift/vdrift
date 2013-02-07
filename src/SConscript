@@ -123,6 +123,7 @@ src = Split("""
 		physics/rigidbody.cpp
 		physics/rotationalframe.cpp
 		quaternion.cpp
+		radix.cpp
 		random.cpp
 		replay.cpp
 		reseatable_reference.cpp
