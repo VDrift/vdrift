@@ -31,7 +31,7 @@ VERTEXARRAY::~VERTEXARRAY()
 	Clear();
 }
 
-void VERTEXARRAY::SetColors(unsigned char array[], size_t count, size_t offset)
+void VERTEXARRAY::SetColors(const unsigned char array[], size_t count, size_t offset)
 {
 	size_t size = offset + count;
 
@@ -50,7 +50,7 @@ void VERTEXARRAY::SetColors(unsigned char array[], size_t count, size_t offset)
 	}
 }
 
-void VERTEXARRAY::SetNormals(float array[], size_t count, size_t offset)
+void VERTEXARRAY::SetNormals(const float array[], size_t count, size_t offset)
 {
 	size_t size = offset + count;
 
@@ -69,7 +69,7 @@ void VERTEXARRAY::SetNormals(float array[], size_t count, size_t offset)
 	}
 }
 
-void VERTEXARRAY::SetVertices(float array[], size_t count, size_t offset)
+void VERTEXARRAY::SetVertices(const float array[], size_t count, size_t offset)
 {
 	size_t size = offset + count;
 
@@ -88,7 +88,7 @@ void VERTEXARRAY::SetVertices(float array[], size_t count, size_t offset)
 	}
 }
 
-void VERTEXARRAY::SetFaces(int newarray[], size_t newarraycount)
+void VERTEXARRAY::SetFaces(const int newarray[], size_t newarraycount)
 {
 	//Tried to assign values that aren't in sets of 3
 	assert (newarraycount % 3 == 0);
@@ -110,7 +110,7 @@ void VERTEXARRAY::SetTexCoordSets(int newtcsets)
 	texcoords.resize(newtcsets);
 }
 
-void VERTEXARRAY::SetTexCoords(size_t set, float newarray[], size_t newarraycount)
+void VERTEXARRAY::SetTexCoords(size_t set, const float newarray[], size_t newarraycount)
 {
 	//Tried to assign a tex coord set beyond the allocated number of sets
 	assert(set < texcoords.size());
@@ -220,11 +220,11 @@ void VERTEXARRAY::Clear()
 }
 
 void VERTEXARRAY::Add(
-	unsigned char newcol[], int newcolcount,
-	float newnorm[], int newnormcount,
-	float newvert[], int newvertcount,
-	int newfaces[], int newfacecount,
-	float newtc[], int newtccount)
+	const unsigned char newcol[], int newcolcount,
+	const float newnorm[], int newnormcount,
+	const float newvert[], int newvertcount,
+	const int newfaces[], int newfacecount,
+	const float newtc[], int newtccount)
 {
 	int idxoffset = vertices.size()/3;
 

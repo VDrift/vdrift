@@ -39,26 +39,26 @@ public:
 
 	void Clear();
 
-	void SetColors(unsigned char array[], size_t count, size_t offset = 0);
+	void SetColors(const unsigned char array[], size_t count, size_t offset = 0);
 
-	void SetNormals(float array[], size_t count, size_t offset = 0);
+	void SetNormals(const float array[], size_t count, size_t offset = 0);
 
-	void SetVertices(float array[], size_t count, size_t offset = 0);
+	void SetVertices(const float array[], size_t count, size_t offset = 0);
 
-	void SetFaces(int newarray[], size_t newarraycount);
+	void SetFaces(const int newarray[], size_t newarraycount);
 
 	void SetTexCoordSets(int newtcsets);
 
 	/// set is zero indexed
-	void SetTexCoords(size_t set, float newarray[], size_t newarraycount);
+	void SetTexCoords(size_t set, const float newarray[], size_t newarraycount);
 
 	/// assumes there is 1 tex coord set
 	void Add(
-		unsigned char newcol[], int newcolcount,
-		float newnorm[], int newnormcount,
-		float newvert[], int newvertcount,
-		int newfaces[], int newfacecount,
-		float newtc[], int newtccount);
+		const unsigned char newcol[], int newcolcount,
+		const float newnorm[], int newnormcount,
+		const float newvert[], int newvertcount,
+		const int newfaces[], int newfacecount,
+		const float newtc[], int newtccount);
 
 	/// C style interface functions
 
