@@ -23,21 +23,14 @@
 #include "unittest.h"
 
 bool PARTICLE_SYSTEM::Load(
-	const std::list <std::string> & texlist,
 	const std::string & texpath,
+	const std::string & texname,
 	int anisotropy,
 	ContentManager & content)
 {
 	TEXTUREINFO texinfo;
 	texinfo.anisotropy = anisotropy;
-	for (std::list <std::string>::const_iterator i = texlist.begin(); i != texlist.end(); ++i)
-	{
-		std::tr1::shared_ptr<TEXTURE> tex;
-		content.load(tex, texpath, *i, texinfo);
-		textures.push_back(tex);
-	}
-	cur_texture = textures.end();
-	return !textures.empty();
+	return content.load(texture_atlas, texpath, texname, texinfo);
 }
 
 void PARTICLE_SYSTEM::Update(float dt, const QUATERNION <float> & camdir, const MATHVECTOR <float, 3> & campos)
@@ -77,28 +70,18 @@ void PARTICLE_SYSTEM::AddParticle(
 	if (max_particles == 0)
 		return;
 
-	if (cur_texture == textures.end())
-		cur_texture = textures.begin();
-
-	std::tr1::shared_ptr<TEXTURE> tex;
-	if (!testonly)
-	{
-		assert(cur_texture != textures.end()); //this never happen unless we're doing a unit test
-		tex = *cur_texture;
-	}
-
 	while (particles.size() >= max_particles)
 		particles.pop_back();
 
-	particles.push_back(PARTICLE(node, position, direction,
-			    speed_range.first+newspeed*(speed_range.second-speed_range.first),
-			    transparency_range.first+newspeed*(transparency_range.second-transparency_range.first),
-			    longevity_range.first+newspeed*(longevity_range.second-longevity_range.first),
-			    size_range.first+newspeed*(size_range.second-size_range.first),
-				tex));
+	particles.push_back(PARTICLE(
+		node, position, direction,
+		speed_range.first + newspeed * (speed_range.second - speed_range.first),
+		transparency_range.first + newspeed * (transparency_range.second - transparency_range.first),
+		longevity_range.first + newspeed * (longevity_range.second - longevity_range.first),
+		size_range.first + newspeed * (size_range.second - size_range.first),
+		cur_texture_tile, texture_atlas));
 
-	if (cur_texture != textures.end())
-		cur_texture++;
+	cur_texture_tile = (cur_texture_tile + 1) % texture_tiles;
 }
 
 void PARTICLE_SYSTEM::Clear()
@@ -142,7 +125,7 @@ QT_TEST(particle_test)
 	PARTICLE_SYSTEM s;
 	ContentManager c(out);
 	s.SetParameters(4,1.0,1.0,0.5,1.0,1.0,1.0,1.0,1.0,MATHVECTOR<float,3>(0,1,0));
-	s.Load(std::list<std::string> (), std::string(), 0, c);
+	s.Load(std::string(), std::string(), 0, c);
 
 	//test basic particle management:  adding particles and letting them expire and get removed over time
 	QT_CHECK_EQUAL(s.NumParticles(),0);

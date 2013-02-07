@@ -46,6 +46,7 @@ private:
 		VEC direction;
 		float size;
 		float time; ///< time since the particle was created; i.e. the particle's age
+		int tid; ///< particle texture atlas tile id 0-8
 
 		keyed_container <SCENENODE>::handle node;
 		keyed_container <DRAWABLE>::handle draw;
@@ -65,6 +66,7 @@ private:
 			direction = other.direction;
 			size = other.size;
 			time = other.time;
+			tid = other.tid;
 			node = other.node;
 			draw = other.draw;
 			varray = other.varray;
@@ -79,18 +81,19 @@ private:
 			float newtrans,
 			float newlong,
 			float newsize,
-			std::tr1::shared_ptr<TEXTURE> texture) :
+			int newtid,
+			std::tr1::shared_ptr<TEXTURE> & texture) :
 			transparency(newtrans),
 			longevity(newlong),
 			start_position(new_start_position),
 			speed(newspeed),
 			direction(new_dir),
 			size(newsize),
-			time(0)
+			time(0),
+			tid(newtid)
 		{
 			node = parentnode.AddNode();
 			SCENENODE & noderef = parentnode.GetNode(node);
-			//std::cout << "Created node: " << &node.get() << endl;
 			draw = GetDrawlist(noderef).insert(DRAWABLE());
 			DRAWABLE & drawref = GetDrawlist(noderef).get(draw);
 			drawref.SetDrawEnable(false);
@@ -147,7 +150,19 @@ private:
 
 			sizescale = 0.2*(time/longevity)+0.4;
 
-			varray.SetToBillboard(-sizescale,-sizescale,sizescale,sizescale);
+			// assume 9 tiles in texture atlas
+			int vi = tid / 3;
+			int ui = tid - vi * 3;
+			float u1 = ui * 1 / 3.0f;
+			float v1 = vi * 1 / 3.0f;
+			float u2 = u1 + 1 / 3.0f;
+			float v2 = v1 + 1 / 3.0f;
+			float x1 = -sizescale;
+			float y1 = -sizescale * 2 / 3.0f;
+			float x2 = sizescale;
+			float y2 = sizescale * 4 / 3.0f;
+
+			varray.SetTo2DQuad(x1, y1, x2, y2, u1, v1, u2, v2);
 			drawref.SetRadius(sizescale);
 
 			bool drawenable = true;
@@ -173,10 +188,11 @@ private:
 		}
 	};
 
-	std::list <std::tr1::shared_ptr<TEXTURE> > textures;
-	std::list <std::tr1::shared_ptr<TEXTURE> >::iterator cur_texture;
+	std::tr1::shared_ptr<TEXTURE> texture_atlas;
 	std::vector <PARTICLE> particles;
 	unsigned max_particles;
+	unsigned cur_texture_tile;
+	const unsigned texture_tiles;
 
 	std::pair <float,float> transparency_range;
 	std::pair <float,float> longevity_range;
@@ -189,19 +205,21 @@ private:
 public:
 	PARTICLE_SYSTEM() :
 		max_particles(512),
+		cur_texture_tile(0),
+		texture_tiles(9),
 		transparency_range(0.5,1),
 		longevity_range(5,14),
 		speed_range(0.3,1),
 		size_range(0.5,1),
 		direction(0,1,0)
 	{
-		cur_texture = textures.end();
+		// ctor
 	}
 
-	///returns true if at least one particle texture was loaded
+	/// returns true if particle texture atlas was loaded
 	bool Load(
-		const std::list <std::string> & texlist,
 		const std::string & texpath,
+		const std::string & texname,
 		int anisotropy,
 		ContentManager & content);
 

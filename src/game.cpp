@@ -279,15 +279,12 @@ void GAME::Start(std::list <std::string> & args)
 		profiling_text.SetDrawOrder(debugnode, 150);
 	}
 
-	// Load particle systems.
-	std::list <std::string> smoketexlist;
-	std::string smoketexpath = pathmanager.GetDataPath()+"/"+pathmanager.GetTireSmokeTextureDir();
-	pathmanager.GetFileList(smoketexpath, smoketexlist, ".png");
+	// Load particle system.
 	if (!tire_smoke.Load(
-			smoketexlist,
-			pathmanager.GetTireSmokeTextureDir(),
-			settings.GetAnisotropy(),
-			content))
+		pathmanager.GetTireSmokeTextureDir(),
+		"smoke.png",
+		settings.GetAnisotropy(),
+		content))
 	{
 		error_output << "Error loading tire smoke particle system" << std::endl;
 		return;
@@ -731,6 +728,8 @@ bool GAME::ParseArguments(std::list <std::string> & args)
 
 void GAME::Test()
 {
+	QT_SET_OUTPUT(&info_output);
+
 	QT_RUN_TESTS;
 
 	info_output << std::endl;
