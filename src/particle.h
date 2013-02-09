@@ -157,6 +157,9 @@ private:
 			float x2 = sizescale;
 			float y2 = sizescale * 4 / 3.0f;
 
+			// vetex color 0xAABBGGRR
+			unsigned color = unsigned(trans * 255) << 24 | 0X00FFFFFF;
+
 			const int faces[6] = {
 				0, 2, 1,
 				0, 3, 2,
@@ -173,12 +176,14 @@ private:
 				u2, v2,
 				u1, v2,
 			};
+			const unsigned cols[4] = {
+				color, color, color, color,
+			};
 			varray.SetFaces(faces, 6);
 			varray.SetVertices(verts, 12);
-			//varray.SetColors(cols, 16);
 			varray.SetTexCoords(0, uvs, 8);
+			varray.SetColors((const unsigned char *)cols, 16);
 
-			drawref.SetColor(1,1,1,trans);
 			drawref.SetDrawEnable(trans > 0);
 		}
 
