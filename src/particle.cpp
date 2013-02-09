@@ -30,7 +30,8 @@ bool PARTICLE_SYSTEM::Load(
 {
 	TEXTUREINFO texinfo;
 	texinfo.anisotropy = anisotropy;
-	return content.load(texture_atlas, texpath, texname, texinfo);
+	content.load(texture_atlas, texpath, texname, texinfo);
+	return true;
 }
 
 void PARTICLE_SYSTEM::Update(float dt, const QUATERNION <float> & camdir, const MATHVECTOR <float, 3> & campos)
