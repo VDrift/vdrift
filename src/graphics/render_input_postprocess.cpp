@@ -82,7 +82,6 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 	glMatrixMode(GL_MODELVIEW);
 	glLoadMatrixf(viewMatrix.GetArray());
 
-	glColor4f(1,1,1,1);
 	glstate.SetColor(1,1,1,1);
 
 	SetBlendMode(glstate);

@@ -207,7 +207,6 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 
 	SetBlendMode(glstate);
 
-	glColor4f(1,1,1,1);
 	glstate.SetColor(1,1,1,1);
 
 	last_transform_valid = false;
