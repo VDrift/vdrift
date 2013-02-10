@@ -33,16 +33,16 @@ void RenderModelExternalDrawable::draw(GLWrapper & gl) const
 	{
 		gl.unbindVertexArray();
 
-		const float * verts;
-		int vertcount;
+		const float * verts = 0;
+		int vertcount = 0;
 		vert_array->GetVertices(verts, vertcount);
 		if (verts)
 		{
 			gl.VertexAttribPointer(VERTEX_POSITION, 3, GL_FLOAT, GL_FALSE, 0, verts);
 			gl.EnableVertexAttribArray(VERTEX_POSITION);
 
-			const float * norms;
-			int normcount;
+			const float * norms = 0;
+			int normcount = 0;
 			vert_array->GetNormals(norms, normcount);
 			if (norms)
 			{
@@ -54,10 +54,20 @@ void RenderModelExternalDrawable::draw(GLWrapper & gl) const
 
 			gl.DisableVertexAttribArray(VERTEX_TANGENT);
 			gl.DisableVertexAttribArray(VERTEX_BITANGENT);
-			gl.DisableVertexAttribArray(VERTEX_COLOR);
 
-			const float * tc[1];
-			int tccount[1];
+			const unsigned char * cols = 0;
+			int colcount = 0;
+			vert_array->GetColors(cols, colcount);
+			if (cols)
+			{
+				gl.VertexAttribPointer(VERTEX_COLOR, 4, GL_UNSIGNED_BYTE, GL_FALSE, 0, cols);
+				gl.EnableVertexAttribArray(VERTEX_COLOR);
+			}
+			else
+				gl.DisableVertexAttribArray(VERTEX_COLOR);
+
+			const float * tc[1] = {0};
+			int tccount[1] = {0};
 			if (vert_array->GetTexCoordSets() > 0)
 			{
 				// TODO: make this work for UV1 and UV2
@@ -72,10 +82,9 @@ void RenderModelExternalDrawable::draw(GLWrapper & gl) const
 			gl.DisableVertexAttribArray(VERTEX_UV1);
 			gl.DisableVertexAttribArray(VERTEX_UV2);
 
-			const int * faces;
-			int facecount;
+			const int * faces = 0;
+			int facecount = 0;
 			vert_array->GetFaces(faces, facecount);
-
             if (faces)
             {
                 gl.DrawElements(GL_TRIANGLES, facecount, GL_UNSIGNED_INT, faces);

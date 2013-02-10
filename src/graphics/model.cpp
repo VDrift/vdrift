@@ -252,7 +252,17 @@ void MODEL::GenerateVertexArrayObject(std::ostream & error_output)
 	glDisableVertexAttribArray(VERTEX_TANGENT);
 	glDisableVertexAttribArray(VERTEX_BITANGENT);
 
-	glDisableVertexAttribArray(VERTEX_COLOR);
+	// Generate buffer object for colors.
+	const unsigned char * cols = 0;
+	int colcount = 0;
+	m_mesh.GetColors(cols, colcount);
+	if (cols && colcount)
+	{
+		assert((unsigned int)colcount == vertexCount*4);
+		vbos.push_back(GenerateBufferObject(cols, VERTEX_COLOR, vertexCount, 4, error_output));
+	}
+	else
+		glDisableVertexAttribArray(VERTEX_COLOR);
 
 	// Generate buffer object for texture coordinates.
 	const float * tc[1];
