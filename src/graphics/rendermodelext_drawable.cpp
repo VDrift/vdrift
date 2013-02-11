@@ -60,7 +60,7 @@ void RenderModelExternalDrawable::draw(GLWrapper & gl) const
 			vert_array->GetColors(cols, colcount);
 			if (cols)
 			{
-				gl.VertexAttribPointer(VERTEX_COLOR, 4, GL_UNSIGNED_BYTE, GL_FALSE, 0, cols);
+				gl.VertexAttribPointer(VERTEX_COLOR, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, cols);
 				gl.EnableVertexAttribArray(VERTEX_COLOR);
 			}
 			else

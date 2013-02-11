@@ -22,6 +22,20 @@
 #include "graphics/textureinfo.h"
 #include "unittest.h"
 
+
+PARTICLE_SYSTEM::PARTICLE_SYSTEM() :
+	max_particles(512),
+	cur_texture_tile(0),
+	texture_tiles(9),
+	transparency_range(0.5,1),
+	longevity_range(5,14),
+	speed_range(0.3,1),
+	size_range(0.5,1),
+	direction(0,1,0)
+{
+	// ctor
+}
+
 bool PARTICLE_SYSTEM::Load(
 	const std::string & texpath,
 	const std::string & texname,
@@ -34,7 +48,10 @@ bool PARTICLE_SYSTEM::Load(
 	return true;
 }
 
-void PARTICLE_SYSTEM::Update(float dt, const QUATERNION <float> & camdir, const MATHVECTOR <float, 3> & campos)
+void PARTICLE_SYSTEM::Update(
+	float dt,
+	const QUATERNION <float> & camdir,
+	const MATHVECTOR <float, 3> & campos)
 {
 	if (max_particles == 0)
 		return;

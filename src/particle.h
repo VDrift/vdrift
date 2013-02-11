@@ -33,6 +33,45 @@ class ContentManager;
 
 class PARTICLE_SYSTEM
 {
+public:
+	PARTICLE_SYSTEM();
+
+	/// returns true if particle texture atlas was loaded
+	bool Load(
+		const std::string & texpath,
+		const std::string & texname,
+		int anisotropy,
+		ContentManager & content);
+
+	void Update(
+		float dt,
+		const QUATERNION <float> & camdir,
+		const MATHVECTOR <float, 3> & campos);
+
+	/// all of the parameters are from 0.0 to 1.0 and scale to the ranges set with SetParameters.  testonly should be kept false and is only used for unit testing.
+	void AddParticle(
+		const MATHVECTOR <float,3> & position,
+		float newspeed,
+		bool testonly = false);
+
+	void Clear();
+
+	void SetParameters(
+		int maxparticles,
+		float transmin,
+		float transmax,
+		float longmin,
+		float longmax,
+		float speedmin,
+		float speedmax,
+		float sizemin,
+		float sizemax,
+		MATHVECTOR <float,3> newdir);
+
+	unsigned int NumParticles() {return particles.size();}
+
+	SCENENODE & GetNode() {return node;}
+
 private:
 	class PARTICLE
 	{
@@ -110,10 +149,15 @@ private:
 			return *this;
 		}
 
+
+		float clamp(float v, float vmin, float vmax)
+		{
+			return std::max(vmin, std::min(vmax, v));
+		}
+
 		float lerp(float x, float y, float s)
 		{
-			float sclamp = std::max(0.f,std::min(1.0f,s));
-			return x + sclamp*(y-x);
+			return x + clamp(s, 0, 1) * (y - x);
 		}
 
 		void Update(
@@ -131,12 +175,11 @@ private:
 			pos = pos - campos;
 			camdir.RotateVector(pos);
 
-			float sizescale = 1.0;
-			float trans = transparency*std::pow((double)(1.0-time/longevity),4.0);
-			if (trans > 1.0) trans = 1.0;
-			if (trans < 0.0) trans = 0.0;
-			sizescale = 0.2*(time/longevity)+0.4;
+			float trans = transparency * std::pow((1.0f - time / longevity), 4);
+			trans = clamp(trans, 0.0f, 1.0f);
 
+			float sizescale = 0.2f * (time / longevity) + 0.4f;
+/*
 			// scale the alpha by the closeness to the camera
 			// if we get too close, don't draw
 			// this prevents major slowdown when there are a lot of particles right next to the camera
@@ -144,7 +187,7 @@ private:
 			const float camdist_off = 3.0;
 			const float camdist_full = 4.0;
 			trans = lerp(0.f,trans,(camdist-camdist_off)/(camdist_full-camdist_off));
-
+*/
 			// assume 9 tiles in texture atlas
 			int vi = tid / 3;
 			int ui = tid - vi * 3;
@@ -156,9 +199,6 @@ private:
 			float y1 = -sizescale * 2 / 3.0f;
 			float x2 = sizescale;
 			float y2 = sizescale * 4 / 3.0f;
-
-			// vetex color 0xAABBGGRR
-			unsigned color = unsigned(trans * 255) << 24 | 0X00FFFFFF;
 
 			const int faces[6] = {
 				0, 2, 1,
@@ -176,14 +216,19 @@ private:
 				u2, v2,
 				u1, v2,
 			};
-			const unsigned cols[4] = {
-				color, color, color, color,
+			const unsigned char alpha = trans * 255;
+			const unsigned char cols[16] = {
+				255, 255, 255, alpha,
+				255, 255, 255, alpha,
+				255, 255, 255, alpha,
+				255, 255, 255, alpha,
 			};
 			varray.SetFaces(faces, 6);
 			varray.SetVertices(verts, 12);
 			varray.SetTexCoords(0, uvs, 8);
-			varray.SetColors((const unsigned char *)cols, 16);
+			varray.SetColors(cols, 16);
 
+			drawref.SetColor(1, 1, 1, trans);
 			drawref.SetDrawEnable(trans > 0);
 		}
 
@@ -211,56 +256,6 @@ private:
 	MATHVECTOR <float, 3> direction;
 
 	SCENENODE node;
-
-public:
-	PARTICLE_SYSTEM() :
-		max_particles(512),
-		cur_texture_tile(0),
-		texture_tiles(9),
-		transparency_range(0.5,1),
-		longevity_range(5,14),
-		speed_range(0.3,1),
-		size_range(0.5,1),
-		direction(0,1,0)
-	{
-		// ctor
-	}
-
-	/// returns true if particle texture atlas was loaded
-	bool Load(
-		const std::string & texpath,
-		const std::string & texname,
-		int anisotropy,
-		ContentManager & content);
-
-	void Update(
-		float dt,
-		const QUATERNION <float> & camdir,
-		const MATHVECTOR <float, 3> & campos);
-
-	/// all of the parameters are from 0.0 to 1.0 and scale to the ranges set with SetParameters.  testonly should be kept false and is only used for unit testing.
-	void AddParticle(
-		const MATHVECTOR <float,3> & position,
-		float newspeed,
-		bool testonly = false);
-
-	void Clear();
-
-	void SetParameters(
-		int maxparticles,
-		float transmin,
-		float transmax,
-		float longmin,
-		float longmax,
-		float speedmin,
-		float speedmax,
-		float sizemin,
-		float sizemax,
-		MATHVECTOR <float,3> newdir);
-
-	unsigned int NumParticles() {return particles.size();}
-
-	SCENENODE & GetNode() {return node;}
 };
 
 #endif

@@ -193,14 +193,21 @@ void MODEL::GenerateListID(std::ostream & error_output)
 }
 
 template <typename T>
-GLuint GenerateBufferObject(T * data, unsigned int i, unsigned int vertexCount, unsigned int elementsPerVertex, std::ostream & error_output)
+GLuint GenerateBufferObject(
+	std::ostream & error_output,
+	unsigned attribId,
+	const T * data,
+	unsigned vertexCount,
+	unsigned elementsPerVertex,
+	GLenum type = GL_FLOAT,
+	bool normalized = false)
 {
 	GLuint vboHandle;
 	glGenBuffers(1, &vboHandle);ERROR_CHECK;
 	glBindBuffer(GL_ARRAY_BUFFER, vboHandle);ERROR_CHECK;
 	glBufferData(GL_ARRAY_BUFFER, vertexCount*elementsPerVertex*sizeof(T), data, GL_STATIC_DRAW);ERROR_CHECK;
-	glVertexAttribPointer(i, elementsPerVertex, GL_FLOAT, GL_FALSE, 0, 0);ERROR_CHECK;
-	glEnableVertexAttribArray(i);ERROR_CHECK;
+	glVertexAttribPointer(attribId, elementsPerVertex, type, normalized, 0, 0);ERROR_CHECK;
+	glEnableVertexAttribArray(attribId);ERROR_CHECK;
 
 	return vboHandle;
 }
@@ -234,7 +241,7 @@ void MODEL::GenerateVertexArrayObject(std::ostream & error_output)
 	unsigned int vertexCount = vertcount/3;
 
 	// Generate buffer object for vertex positions.
-	vbos.push_back(GenerateBufferObject(verts, VERTEX_POSITION, vertexCount, 3, error_output));
+	vbos.push_back(GenerateBufferObject(error_output, VERTEX_POSITION, verts, vertexCount, 3));
 
 	// Generate buffer object for normals.
 	const float * norms;
@@ -245,7 +252,7 @@ void MODEL::GenerateVertexArrayObject(std::ostream & error_output)
 	else
 	{
 		assert((unsigned int)normcount == vertexCount*3);
-		vbos.push_back(GenerateBufferObject(norms, VERTEX_NORMAL, vertexCount, 3, error_output));
+		vbos.push_back(GenerateBufferObject(error_output, VERTEX_NORMAL, norms, vertexCount, 3));
 	}
 
 	// TODO: Generate tangent and bitangent.
@@ -259,7 +266,7 @@ void MODEL::GenerateVertexArrayObject(std::ostream & error_output)
 	if (cols && colcount)
 	{
 		assert((unsigned int)colcount == vertexCount*4);
-		vbos.push_back(GenerateBufferObject(cols, VERTEX_COLOR, vertexCount, 4, error_output));
+		vbos.push_back(GenerateBufferObject(error_output, VERTEX_COLOR, cols, vertexCount, 4, GL_UNSIGNED_BYTE, true));
 	}
 	else
 		glDisableVertexAttribArray(VERTEX_COLOR);
@@ -272,7 +279,7 @@ void MODEL::GenerateVertexArrayObject(std::ostream & error_output)
 		// TODO: Make this work for UV1 and UV2.
 		m_mesh.GetTexCoords(0, tc[0], tccount[0]);
 		assert((unsigned int)tccount[0] == vertexCount*2);
-		vbos.push_back(GenerateBufferObject(tc[0], VERTEX_UV0, vertexCount, 2, error_output));
+		vbos.push_back(GenerateBufferObject(error_output, VERTEX_UV0, tc[0], vertexCount, 2));
 	}
 	else
 		glDisableVertexAttribArray(VERTEX_UV0);
