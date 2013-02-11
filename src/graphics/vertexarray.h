@@ -147,7 +147,9 @@ public:
 	{
 		VERTEXDATA v[3];
 
-		FACE(VERTEXDATA v1, VERTEXDATA v2, VERTEXDATA v3) : v((VERTEXDATA[3]){v1, v2, v3}) {}
+		FACE(VERTEXDATA v1, VERTEXDATA v2, VERTEXDATA v3) {
+			v[0] = v1; v[1] = v2; v[3] = v3;
+		}
 
 		FACE() {}
 	};
