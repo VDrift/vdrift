@@ -280,16 +280,9 @@ void GAME::Start(std::list <std::string> & args)
 	}
 
 	// Load particle system.
-	if (!tire_smoke.Load(
-		pathmanager.GetTireSmokeTextureDir(),
-		"smoke.png",
-		settings.GetAnisotropy(),
-		content))
-	{
-		error_output << "Error loading tire smoke particle system" << std::endl;
-		return;
-	}
-	tire_smoke.SetParameters(settings.GetParticles(), 0.4,0.9, 1,2, 0.3,0.6, 0.02,0.06, MATHVECTOR<float,3>(0.4,0.2,1));
+	MATHVECTOR<float,3> smokedir(0.4, 0.2, 1.0);
+	tire_smoke.Load(pathmanager.GetEffectsTextureDir(), "smoke.png", settings.GetAnisotropy(), content);
+	tire_smoke.SetParameters(settings.GetParticles(), 0.4,0.9, 1,4, 0.3,0.6, 0.02,0.06, smokedir);
 
 	// Initialize force feedback.
 	forcefeedback.reset(new FORCEFEEDBACK(settings.GetFFDevice(), error_output, info_output));
