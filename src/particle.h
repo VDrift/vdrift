@@ -228,7 +228,6 @@ private:
 			varray.SetTexCoords(0, uvs, 8);
 			varray.SetColors(cols, 16);
 
-			drawref.SetColor(1, 1, 1, trans);
 			drawref.SetDrawEnable(trans > 0);
 		}
 
