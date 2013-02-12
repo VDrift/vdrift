@@ -90,7 +90,9 @@ void PARTICLE_SYSTEM::Update(float dt)
 
 void PARTICLE_SYSTEM::UpdateGraphics(
 	const QUATERNION <float> & camdir,
-	const MATHVECTOR <float, 3> & campos)
+	const MATHVECTOR <float, 3> & campos,
+	float znear, float zfar,
+	float fovy, float fovz)
 {
 	if (max_particles == 0)
 		return;
@@ -107,8 +109,8 @@ void PARTICLE_SYSTEM::UpdateGraphics(
 		pos = pos + p.direction * p.time * p.speed - campos;
 		camdir.RotateVector(pos);
 
-		// signed distance along y-axis in camera space
-		distance_from_cam.push_back(-pos[1]);
+		// signed distance along z-axis in camera space
+		distance_from_cam.push_back(-pos[2]);
 
 		// store camera space position
 		p.position = pos;
@@ -121,8 +123,9 @@ void PARTICLE_SYSTEM::UpdateGraphics(
 	varrays[cur_varray].SetTexCoordSets(1);
 	for (size_t i = 0; i < particles.size(); ++i)
 	{
-		// cull particles not within (znear, zfar)
-		if (distance_from_cam[i] < 0)
+		// cull particles outside of [znear, zfar]
+		// todo: cull particles outside of view frustum
+		if (distance_from_cam[i] < znear || distance_from_cam[i] > zfar)
 			continue;
 
 		PARTICLE & p = particles[i];

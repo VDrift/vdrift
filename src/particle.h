@@ -56,7 +56,9 @@ public:
 	/// Call once per frame.
 	void UpdateGraphics(
 		const QUATERNION<float> & camdir,
-		const MATHVECTOR<float, 3> & campos);
+		const MATHVECTOR<float, 3> & campos,
+		float znear, float zfar,
+		float fovy = 0, float fovz = 0);
 
 	/// Particle system is double buffered
 	/// Call SyncGraphics between FinishDraw and BeginDraw

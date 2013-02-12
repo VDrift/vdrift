@@ -2304,8 +2304,10 @@ void GAME::UpdateParticleGraphics()
 		QUATERNION <float> camlook;
 		camlook.Rotate(M_PI_2, 1, 0, 0);
 		QUATERNION <float> camorient = -(active_camera->GetOrientation() * camlook);
-
-		tire_smoke.UpdateGraphics(camorient, active_camera->GetPosition());
+		MATHVECTOR <float, 3> campos = active_camera->GetPosition();
+		float znear = 0.1f; // hardcoded in graphics
+		float zfar = settings.GetViewDistance();
+		tire_smoke.UpdateGraphics(camorient, campos, znear, zfar);
 	}
 }
 
