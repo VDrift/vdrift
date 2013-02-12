@@ -156,7 +156,11 @@ private:
 
 	void UpdateForceFeedback(float dt);
 
-	void UpdateParticleSystems(float dt);
+	void UpdateParticles(float dt);
+
+	void UpdateParticleGraphics();
+
+	void SyncParticleGraphics();
 
 	void AddTireSmokeParticles(float dt, CAR & car);
 

@@ -20,14 +20,15 @@
 #ifndef _PARTICLE_H
 #define _PARTICLE_H
 
-#include "mathvector.h"
 #include "graphics/scenenode.h"
 #include "graphics/vertexarray.h"
+#include "mathvector.h"
+#include "quaternion.h"
 
 #include <ostream>
+#include <string>
 #include <utility> // std::pair
 #include <vector>
-#include <list>
 
 class ContentManager;
 
@@ -36,23 +37,31 @@ class PARTICLE_SYSTEM
 public:
 	PARTICLE_SYSTEM();
 
-	/// returns true if particle texture atlas was loaded
-	bool Load(
+	/// Load texture atlas and setup drawable.
+	void Load(
 		const std::string & texpath,
 		const std::string & texname,
 		int anisotropy,
 		ContentManager & content);
 
-	void Update(
-		float dt,
-		const QUATERNION <float> & camdir,
-		const MATHVECTOR <float, 3> & campos);
-
-	/// all of the parameters are from 0.0 to 1.0 and scale to the ranges set with SetParameters.  testonly should be kept false and is only used for unit testing.
+	/// Parameters are from 0.0 to 1.0 and scale to the ranges set with SetParameters.
 	void AddParticle(
-		const MATHVECTOR <float,3> & position,
-		float newspeed,
-		bool testonly = false);
+		const MATHVECTOR<float,3> & position,
+		float newspeed);
+
+	/// Particle physics update.
+	void Update(float dt);
+
+	/// Partcles graphics update based on last physics state.
+	/// Call once per frame.
+	void UpdateGraphics(
+		const QUATERNION<float> & camdir,
+		const MATHVECTOR<float, 3> & campos);
+
+	/// Particle system is double buffered
+	/// Call SyncGraphics between FinishDraw and BeginDraw
+	/// to submit latest particle state for drawing
+	void SyncGraphics();
 
 	void Clear();
 
@@ -66,195 +75,46 @@ public:
 		float speedmax,
 		float sizemin,
 		float sizemax,
-		MATHVECTOR <float,3> newdir);
+		MATHVECTOR<float,3> newdir);
 
-	unsigned int NumParticles() {return particles.size();}
+	unsigned NumParticles() { return particles.size(); }
 
-	SCENENODE & GetNode() {return node;}
+	SCENENODE & GetNode() { return node; }
 
 private:
-	class PARTICLE
+	struct PARTICLE
 	{
-	private:
-		typedef MATHVECTOR<float,3> VEC;
-
-		float transparency;
-		float longevity;
-		VEC start_position;
-		float speed;
-		VEC direction;
-		float size;
-		float time; ///< time since the particle was created; i.e. the particle's age
-		int tid; ///< particle texture atlas tile id 0-8
-
-		keyed_container <DRAWABLE>::handle draw;
-		VERTEXARRAY varray;
-
-		static keyed_container <DRAWABLE> & GetDrawlist(SCENENODE & node)
-		{
-			return node.GetDrawlist().particle;
-		}
-
-		void Set(const PARTICLE & other)
-		{
-			transparency = other.transparency;
-			longevity = other.longevity;
-			start_position = other.start_position;
-			speed = other.speed;
-			direction = other.direction;
-			size = other.size;
-			time = other.time;
-			tid = other.tid;
-			draw = other.draw;
-			varray = other.varray;
-		}
-
-	public:
-		PARTICLE(
-			SCENENODE & node,
-			const VEC & new_start_position,
-			const VEC & new_dir,
-			float newspeed,
-			float newtrans,
-			float newlong,
-			float newsize,
-			int newtid,
-			std::tr1::shared_ptr<TEXTURE> & texture) :
-			transparency(newtrans),
-			longevity(newlong),
-			start_position(new_start_position),
-			speed(newspeed),
-			direction(new_dir),
-			size(newsize),
-			time(0),
-			tid(newtid)
-		{
-			draw = GetDrawlist(node).insert(DRAWABLE());
-			DRAWABLE & drawref = GetDrawlist(node).get(draw);
-			drawref.SetDrawEnable(false);
-			drawref.SetVertArray(&varray);
-			drawref.SetDiffuseMap(texture);
-			drawref.SetCull(false, false);
-			varray.SetTexCoordSets(1);
-		}
-
-		PARTICLE(const PARTICLE & other)
-		{
-			Set(other);
-		}
-
-		PARTICLE & operator=(const PARTICLE & other)
-		{
-			Set(other);
-			return *this;
-		}
-
-
-		float clamp(float v, float vmin, float vmax)
-		{
-			return std::max(vmin, std::min(vmax, v));
-		}
-
-		float lerp(float x, float y, float s)
-		{
-			return x + clamp(s, 0, 1) * (y - x);
-		}
-
-		void Update(
-			SCENENODE & node,
-			float dt,
-			const QUATERNION <float> & camdir,
-			const MATHVECTOR <float, 3> & campos)
-		{
-			time += dt;
-
-			DRAWABLE & drawref = GetDrawlist(node).get(draw);
-			drawref.SetVertArray(&varray);
-
-			MATHVECTOR <float, 3> pos = start_position + direction * time * speed;
-			pos = pos - campos;
-			camdir.RotateVector(pos);
-
-			float trans = transparency * std::pow((1.0f - time / longevity), 4);
-			trans = clamp(trans, 0.0f, 1.0f);
-
-			float sizescale = 0.2f * (time / longevity) + 0.4f;
-/*
-			// scale the alpha by the closeness to the camera
-			// if we get too close, don't draw
-			// this prevents major slowdown when there are a lot of particles right next to the camera
-			float camdist = pos.Magnitude();
-			const float camdist_off = 3.0;
-			const float camdist_full = 4.0;
-			trans = lerp(0.f,trans,(camdist-camdist_off)/(camdist_full-camdist_off));
-*/
-			// assume 9 tiles in texture atlas
-			int vi = tid / 3;
-			int ui = tid - vi * 3;
-			float u1 = ui * 1 / 3.0f;
-			float v1 = vi * 1 / 3.0f;
-			float u2 = u1 + 1 / 3.0f;
-			float v2 = v1 + 1 / 3.0f;
-			float x1 = -sizescale;
-			float y1 = -sizescale * 2 / 3.0f;
-			float x2 = sizescale;
-			float y2 = sizescale * 4 / 3.0f;
-
-			const int faces[6] = {
-				0, 2, 1,
-				0, 3, 2,
-			};
-			const float verts[12] = {
-				pos[0] + x1, pos[1] + y1, pos[2],
-				pos[0] + x2, pos[1] + y1, pos[2],
-				pos[0] + x2, pos[1] + y2, pos[2],
-				pos[0] + x1, pos[1] + y2, pos[2],
-			};
-			const float uvs[8] = {
-				u1, v1,
-				u2, v1,
-				u2, v2,
-				u1, v2,
-			};
-			const unsigned char alpha = trans * 255;
-			const unsigned char cols[16] = {
-				255, 255, 255, alpha,
-				255, 255, 255, alpha,
-				255, 255, 255, alpha,
-				255, 255, 255, alpha,
-			};
-			varray.SetFaces(faces, 6);
-			varray.SetVertices(verts, 12);
-			varray.SetTexCoords(0, uvs, 8);
-			varray.SetColors(cols, 16);
-
-			drawref.SetDrawEnable(trans > 0);
-		}
-
-		void Delete(SCENENODE & node)
-		{
-			GetDrawlist(node).erase(draw);
-		}
-
-		bool Expired() const
-		{
-			return (time > longevity);
-		}
+		MATHVECTOR<float,3> start_position; ///< start position in world space
+		MATHVECTOR<float,3> direction;		///< direction in world space
+		MATHVECTOR<float,3> position;		///< position in camera space
+		float transparency; ///< transparency factor
+		float speed;		///< initial velocity along direction
+		float size;			///< initial size
+		float longevity;	///< particle age limit
+		float time;			///< particle age, time since the particle was created
+		int tid;			///< particle texture atlas tile id 0-8
 	};
-
-	std::tr1::shared_ptr<TEXTURE> texture_atlas;
-	std::vector <PARTICLE> particles;
+	std::vector<PARTICLE> particles;
+	std::vector<float> distance_from_cam;
 	unsigned max_particles;
+	unsigned texture_tiles;
 	unsigned cur_texture_tile;
-	const unsigned texture_tiles;
+	unsigned cur_varray;
 
-	std::pair <float,float> transparency_range;
-	std::pair <float,float> longevity_range;
-	std::pair <float,float> speed_range;
-	std::pair <float,float> size_range;
-	MATHVECTOR <float, 3> direction;
+	std::pair<float,float> transparency_range;
+	std::pair<float,float> longevity_range;
+	std::pair<float,float> speed_range;
+	std::pair<float,float> size_range;
+	MATHVECTOR<float, 3> direction;
 
+	keyed_container<DRAWABLE>::handle draw;
+	VERTEXARRAY varrays[2]; ///< use double buffered vertex array
 	SCENENODE node;
+
+	static keyed_container<DRAWABLE> & GetDrawlist(SCENENODE & node)
+	{
+		return node.GetDrawlist().particle;
+	}
 };
 
 #endif

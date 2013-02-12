@@ -45,12 +45,12 @@ public:
 
 	void SetVertices(const float array[], size_t count, size_t offset = 0);
 
-	void SetFaces(const int newarray[], size_t newarraycount);
+	void SetFaces(const int array[], size_t count, size_t offset = 0, size_t idoffset = 0);
 
 	void SetTexCoordSets(int newtcsets);
 
 	/// set is zero indexed
-	void SetTexCoords(size_t set, const float newarray[], size_t newarraycount);
+	void SetTexCoords(size_t set, const float array[], size_t count, size_t offset = 0);
 
 	/// assumes there is 1 tex coord set
 	void Add(

@@ -800,10 +800,15 @@ void GAME::MainLoop()
 		// Do CPU intensive stuff in parallel with the GPU...
 		Tick(eventsystem.Get_dt());
 
+		UpdateParticleGraphics();
+
 		gui.Update(eventsystem.Get_dt());
 
 		// Sync CPU and GPU (flip the page).
 		FinishDraw();
+
+		SyncParticleGraphics();
+
 		BeginDraw();
 
 		eventsystem.EndFrame();
@@ -916,7 +921,7 @@ void GAME::AdvanceGameLogic()
 		//PROFILER.endBlock("timer");
 
 		//PROFILER.beginBlock("particles");
-		UpdateParticleSystems(timestep);
+		UpdateParticles(timestep);
 		//PROFILER.endBlock("particles");
 
 		//PROFILER.beginBlock("trackmap-update");
@@ -2286,7 +2291,13 @@ void GAME::AddTireSmokeParticles(float dt, CAR & car)
 	}
 }
 
-void GAME::UpdateParticleSystems(float dt)
+void GAME::UpdateParticles(float dt)
+{
+	tire_smoke.Update(dt);
+	particle_timer = (particle_timer + 1) % (unsigned int)((1.0 / timestep));
+}
+
+void GAME::UpdateParticleGraphics()
 {
 	if (track.Loaded() && active_camera)
 	{
@@ -2294,11 +2305,13 @@ void GAME::UpdateParticleSystems(float dt)
 		camlook.Rotate(M_PI_2, 1, 0, 0);
 		QUATERNION <float> camorient = -(active_camera->GetOrientation() * camlook);
 
-		tire_smoke.Update(dt, camorient, active_camera->GetPosition());
+		tire_smoke.UpdateGraphics(camorient, active_camera->GetPosition());
 	}
+}
 
-	particle_timer++;
-	particle_timer = particle_timer % (unsigned int)((1.0/timestep));
+void GAME::SyncParticleGraphics()
+{
+	tire_smoke.SyncGraphics();
 }
 
 void GAME::UpdateDriftScore(CAR & car, double dt)

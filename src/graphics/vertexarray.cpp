@@ -39,9 +39,7 @@ void VERTEXARRAY::SetColors(const unsigned char array[], size_t count, size_t of
 	assert(size % 4 == 0);
 
 	if (size != colors.size())
-	{
 		colors.resize(size);
-	}
 
 	unsigned char * myarray = &(colors[offset]);
 	for (size_t i = 0; i < count; ++i)
@@ -58,9 +56,7 @@ void VERTEXARRAY::SetNormals(const float array[], size_t count, size_t offset)
 	assert(size % 3 == 0);
 
 	if (size != normals.size())
-	{
 		normals.resize(size);
-	}
 
 	float * myarray = &(normals[offset]);
 	for (size_t i = 0; i < count; ++i)
@@ -77,9 +73,7 @@ void VERTEXARRAY::SetVertices(const float array[], size_t count, size_t offset)
 	assert(size % 3 == 0);
 
 	if (size != vertices.size())
-	{
 		vertices.resize(size);
-	}
 
 	float * myarray = &(vertices[offset]);
 	for (size_t i = 0; i < count; ++i)
@@ -88,19 +82,20 @@ void VERTEXARRAY::SetVertices(const float array[], size_t count, size_t offset)
 	}
 }
 
-void VERTEXARRAY::SetFaces(const int newarray[], size_t newarraycount)
+void VERTEXARRAY::SetFaces(const int array[], size_t count, size_t offset, size_t idoffset)
 {
 	//Tried to assign values that aren't in sets of 3
-	assert (newarraycount % 3 == 0);
+	assert (count % 3 == 0);
 
-	if (newarraycount != faces.size())
-		faces.resize(newarraycount);
+	size_t size = offset + count;
 
+	if (size != faces.size())
+		faces.resize(size);
 
-	int * myarray = &(faces[0]);
-	for (size_t i = 0; i < newarraycount; ++i)
+	int * myarray = &(faces[offset]);
+	for (size_t i = 0; i < count; ++i)
 	{
-		myarray[i] = newarray[i];
+		myarray[i] = array[i] + idoffset;
 	}
 }
 
@@ -110,21 +105,23 @@ void VERTEXARRAY::SetTexCoordSets(int newtcsets)
 	texcoords.resize(newtcsets);
 }
 
-void VERTEXARRAY::SetTexCoords(size_t set, const float newarray[], size_t newarraycount)
+void VERTEXARRAY::SetTexCoords(size_t set, const float array[], size_t count, size_t offset)
 {
 	//Tried to assign a tex coord set beyond the allocated number of sets
 	assert(set < texcoords.size());
 
 	//Tried to assign values that aren't in sets of 2
-	assert(newarraycount % 2 == 0);
+	assert(count % 2 == 0);
 
-	if (texcoords[set].size() != newarraycount)
-		texcoords[set].resize(newarraycount);
+	size_t size = offset + count;
 
-	float * myarray = &(texcoords[set][0]);
-	for (size_t i = 0; i < newarraycount; ++i)
+	if (size != texcoords[set].size())
+		texcoords[set].resize(size);
+
+	float * myarray = &(texcoords[set][offset]);
+	for (size_t i = 0; i < count; ++i)
 	{
-		myarray[i] = newarray[i];
+		myarray[i] = array[i];
 	}
 }
 
@@ -226,94 +223,12 @@ void VERTEXARRAY::Add(
 	const int newfaces[], int newfacecount,
 	const float newtc[], int newtccount)
 {
-	int idxoffset = vertices.size()/3;
-
-	//add normals
-	{
-		int newcount = newnormcount;
-		int origsize = normals.size();
-
-		//Tried to assign values that aren't in sets of 3
-		assert(newcount % 3 == 0);
-
-		int newsize = origsize + newcount;
-		if (newcount > 0)
-			normals.resize(newsize);
-		if (normals.size() != 0)
-		{
-			float * myarray = &(normals[0]);
-			for (int i = 0; i < newcount; ++i)
-			{
-				myarray[i+origsize] = newnorm[i];
-			}
-		}
-	}
-
-	//add verts
-	{
-		int newcount = newvertcount;
-		int origsize = vertices.size();
-
-		//Tried to assign values that aren't in sets of 3
-		assert(newcount % 3 == 0);
-
-		int newsize = origsize + newcount;
-		if (newcount > 0)
-			vertices.resize(newsize);
-		if (vertices.size() != 0)
-		{
-			float * myarray = &(vertices[0]);
-			for (int i = 0; i < newcount; ++i)
-			{
-				myarray[i+origsize] = newvert[i];
-			}
-		}
-	}
-
-	//add faces
-	{
-		int newcount = newfacecount;
-		int origsize = faces.size();
-
-		//Tried to assign values that aren't in sets of 3
-		assert (newcount % 3 == 0);
-
-		int newsize = origsize + newcount;
-		if (newcount > 0)
-			faces.resize(newsize);
-		if (faces.size() != 0)
-		{
-			int * myarray = &(faces[0]);
-			for (int i = 0; i < newcount; ++i)
-			{
-				myarray[i+origsize] = newfaces[i] + idxoffset;
-			}
-		}
-	}
-
-	//add tex coords
-	{
-		//This version of VERTEXARRAY::Add assumes texcoordsets == 1
-		assert(GetTexCoordSets() == 1);
-
-		int newcount = newtccount;
-		int origsize = texcoords[0].size();
-
-		//Tried to assign values that aren't in sets of 2
-		assert(newcount % 2 == 0);
-
-		int newsize = origsize + newcount;
-		if (newcount > 0)
-			texcoords[0].resize(newsize);
-		if (texcoords.size() != 0)
-		{
-			float * myarray = &(texcoords[0][0]);
-			for (int i = 0; i < newcount; ++i)
-			{
-				myarray[i+origsize] = newtc[i];
-			}
-		}
-	}
+	assert(texcoords.size() == 1);
+	SetFaces(newfaces, newfacecount, faces.size(), vertices.size() / 3);
+	SetVertices(newvert, newvertcount, vertices.size());
+	SetNormals(newnorm, newnormcount, normals.size());
+	SetColors(newcol, newcolcount, colors.size());
+	SetTexCoords(0, newtc, newtccount, texcoords[0].size());
 }
 
 void VERTEXARRAY::SetToBillboard(float x1, float y1, float x2, float y2)
