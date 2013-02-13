@@ -117,87 +117,99 @@ static bool LoadWheel(
 
 	std::string meshname;
 	std::vector<std::string> texname;
+	std::tr1::shared_ptr<MODEL> mesh;
+	const PTree * cfg_tire;
+	MATHVECTOR<float, 3> size(0);
+	std::string sizestr;
+
 	if (!cfg_wheel.get("mesh", meshname, error_output)) return false;
 	if (!cfg_wheel.get("texture", texname, error_output)) return false;
-
-	std::string tiredim;
-	const PTree * cfg_tire;
 	if (!cfg_wheel.get("tire", cfg_tire, error_output)) return false;
-	if (!cfg_tire->get("size", tiredim, error_output)) return false;
-
-	MATHVECTOR<float, 3> size(0);
-	cfg_tire->get("size", size);
-	float width = size[0] * 0.001;
-	float diameter = size[2] * 0.0254;
-
-	// get wheel disk mesh
-	std::tr1::shared_ptr<MODEL> mesh;
-	content.load(mesh, path, meshname);
-
-	// gen wheel mesh
-	if (!content.get(mesh, path, meshname + tiredim))
-	{
-		VERTEXARRAY rimva, diskva;
-		MESHGEN::mg_rim(rimva, size[0], size[1], size[2], 10);
-		diskva = mesh->GetVertexArray();
-		diskva.Translate(-0.75 * 0.5, 0, 0);
-		diskva.Scale(width, diameter, diameter);
-		content.load(mesh, path, meshname + tiredim, rimva + diskva);
-	}
+	if (!cfg_tire->get("size", sizestr, error_output)) return false;
+	if (!cfg_tire->get("size", size, error_output)) return false;
 
 	// load wheel
-	if (!loadDrawable(meshname + tiredim, texname, cfg_wheel, topnode, &wheelnode))
+	bool genrim = true;
+	cfg_wheel.get("genrim", genrim);
+	if (genrim)
+	{
+		// get wheel disk mesh
+		content.load(mesh, path, meshname);
+
+		// gen wheel mesh
+		meshname = meshname + sizestr;
+		if (!content.get(mesh, path, meshname))
+		{
+			float width = size[0] * 0.001;
+			float diameter = size[2] * 0.0254;
+
+			VERTEXARRAY rimva, diskva;
+			MESHGEN::mg_rim(rimva, size[0], size[1], size[2], 10);
+			diskva = mesh->GetVertexArray();
+			diskva.Translate(-0.75 * 0.5, 0, 0);
+			diskva.Scale(width, diameter, diameter);
+			content.load(mesh, path, meshname, rimva + diskva);
+		}
+	}
+
+	if (!loadDrawable(meshname, texname, cfg_wheel, topnode, &wheelnode))
 	{
 		return false;
 	}
 
-	// tire (optional)
+	// load tire (optional)
 	texname.clear();
-	if (!cfg_tire->get("texture", texname, error_output))
+	if (cfg_tire->get("texture", texname))
 	{
-		return true;
+		meshname.clear();
+		if (!cfg_tire->get("mesh", meshname))
+		{
+			// gen tire mesh
+			meshname = "tire" + sizestr;
+			if (!content.get(mesh, path, meshname))
+			{
+				VERTEXARRAY tireva;
+				MESHGEN::mg_tire(tireva, size[0], size[1], size[2]);
+				content.load(mesh, path, meshname, tireva);
+			}
+		}
+
+		if (!loadDrawable(meshname, texname, *cfg_tire, topnode.GetNode(wheelnode)))
+		{
+			return false;
+		}
 	}
 
-	// gen tire mesh
-	if (!content.get(mesh, path, "tire" + tiredim))
-	{
-		VERTEXARRAY tireva;
-		MESHGEN::mg_tire(tireva, size[0], size[1], size[2]);
-		content.load(mesh, path, "tire" + tiredim, tireva);
-	}
-
-	// load tire
-	if (!loadDrawable("tire" + tiredim, texname, *cfg_tire, topnode.GetNode(wheelnode)))
-	{
-		return false;
-	}
-
-	// brake (optional)
+	// load brake (optional)
 	texname.clear();
-	std::string brakename;
 	const PTree * cfg_brake;
-	if (!cfg_wheel.get("brake", cfg_brake, error_output)) return true;
-	if (!cfg_brake->get("texture", texname)) return true;
-
-	float radius;
-	std::string radiusstr;
-	cfg_brake->get("radius", radius);
-	cfg_brake->get("radius", radiusstr);
-
-	// gen brake disk mesh
-	if (!content.get(mesh, path, "brake" + radiusstr))
+	if (cfg_wheel.get("brake", cfg_brake, error_output) &&
+		cfg_brake->get("texture", texname))
 	{
-		float diameter_mm = radius * 2 * 1000;
-		float thickness_mm = 0.025 * 1000;
-		VERTEXARRAY brakeva;
-		MESHGEN::mg_brake_rotor(brakeva, diameter_mm, thickness_mm);
-		content.load(mesh, path, "brake" + radiusstr, brakeva);
-	}
+		float radius;
+		std::string radiusstr;
+		cfg_brake->get("radius", radius);
+		cfg_brake->get("radius", radiusstr);
 
-	// load brake disk
-	if (!loadDrawable("brake" + radiusstr, texname, *cfg_brake, topnode.GetNode(wheelnode)))
-	{
-		return false;
+		meshname.clear();
+		if (!cfg_brake->get("mesh", meshname))
+		{
+			// gen brake disk mesh
+			meshname = "brake" + radiusstr;
+			if (!content.get(mesh, path, meshname))
+			{
+				float diameter_mm = radius * 2 * 1000;
+				float thickness_mm = 0.025 * 1000;
+				VERTEXARRAY brakeva;
+				MESHGEN::mg_brake_rotor(brakeva, diameter_mm, thickness_mm);
+				content.load(mesh, path, meshname, brakeva);
+			}
+		}
+
+		if (!loadDrawable(meshname, texname, *cfg_brake, topnode.GetNode(wheelnode)))
+		{
+			return false;
+		}
 	}
 
 	return true;
