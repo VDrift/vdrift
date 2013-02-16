@@ -73,13 +73,20 @@ protected:
 
 class Slot0 : public Slot<Delegate0<void> >
 {
-	// template typedef here
+	// template typedef hack
 };
 
 template <typename P>
 class Slot1 : public Slot<Delegate1<void, P> >
 {
-	// template typedef here
+	// template typedef hack
+};
+
+
+template <typename P, typename R>
+class Slot2 : public Slot<Delegate2<void, P, R> >
+{
+	// template typedef hack
 };
 
 class Signal0 : public Signal<Delegate0<void> >
@@ -87,7 +94,6 @@ class Signal0 : public Signal<Delegate0<void> >
 public:
 	Signal0(void);
 	Signal0(const Signal0 & other);
-	Signal0 & operator=(const Signal0 & other);
 	void operator()() const;
 };
 
@@ -97,8 +103,16 @@ class Signal1 : public Signal<Delegate1<void, P> >
 public:
 	Signal1(void);
 	Signal1(const Signal1 & other);
-	Signal1 & operator=(const Signal1 & other);
 	void operator()(P p) const;
+};
+
+template <typename P, typename R>
+class Signal2 : public Signal<Delegate2<void, P, R> >
+{
+public:
+	Signal2(void);
+	Signal2(const Signal2 & other);
+	void operator()(P p, R r) const;
 };
 
 // Implementation
@@ -118,11 +132,14 @@ inline Slot<Delegate>::~Slot()
 template <class Delegate>
 inline Slot<Delegate> & Slot<Delegate>::operator=(const Slot<Delegate> & other)
 {
-	for (std::size_t i = 0; i < m_connections.size(); ++i)
+	if (this != &other)
 	{
-		connect(*m_connections[i].signal);
+		for (std::size_t i = 0; i < m_connections.size(); ++i)
+		{
+			connect(*m_connections[i].signal);
+		}
+		call = other.call;
 	}
-	call = other.call;
 	return *this;
 }
 
@@ -168,9 +185,12 @@ inline Signal<Delegate>::Signal(const Signal & other)
 template <class Delegate>
 inline Signal<Delegate> & Signal<Delegate>::operator=(const Signal & other)
 {
-	for (std::size_t i = 0; i < other.m_connections.size(); ++i)
+	if (this != &other)
 	{
-		other.m_connections[i].slot->connect(*this);
+		for (std::size_t i = 0; i < other.m_connections.size(); ++i)
+		{
+			other.m_connections[i].slot->connect(*this);
+		}
 	}
 	return *this;
 }
@@ -216,12 +236,6 @@ inline Signal0::Signal0(const Signal0 & other) :
 	// copy ctor
 }
 
-inline Signal0 & Signal0::operator=(const Signal0 & other)
-{
-	Signal<Delegate0<void> >::operator=(other);
-	return *this;
-}
-
 inline void Signal0::operator()() const
 {
 	for (std::size_t i = 0; i < m_connections.size(); ++i)
@@ -244,18 +258,33 @@ inline Signal1<P>::Signal1(const Signal1 & other) :
 }
 
 template <typename P>
-inline Signal1<P> & Signal1<P>::operator=(const Signal1 & other)
-{
-	Signal<Delegate1<void, P> >::operator=(other);
-	return *this;
-}
-
-template <typename P>
 inline void Signal1<P>::operator()(P p) const
 {
 	for (std::size_t i = 0; i < Signal<Delegate1<void, P> >::m_connections.size(); ++i)
 	{
 		Signal<Delegate1<void, P> >::m_connections[i].slot->call(p);
+	}
+}
+
+template <typename P, typename R>
+inline Signal2<P, R>::Signal2(void)
+{
+	// ctor
+}
+
+template <typename P, typename R>
+inline Signal2<P, R>::Signal2(const Signal2 & other) :
+	Signal<Delegate2<void, P, R> >(other)
+{
+	// copy ctor
+}
+
+template <typename P, typename R>
+inline void Signal2<P, R>::operator()(P p, R r) const
+{
+	for (std::size_t i = 0; i < Signal<Delegate2<void, P, R> >::m_connections.size(); ++i)
+	{
+		Signal<Delegate2<void, P, R> >::m_connections[i].slot->call(p, r);
 	}
 }
 
