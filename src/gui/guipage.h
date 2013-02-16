@@ -92,17 +92,22 @@ private:
 	keyed_container <SCENENODE>::handle s;
 	std::string name;
 
-	struct ControlFocusCb
+	// each control registers a ControlCB
+	// which other controls can signal to focus(activate) it
+	// it uses PAGE::SetActiveControl
+	struct ControlCb
 	{
 		GUIPAGE * page;
 		GUICONTROL * control;
 		Slot0 action;
 
-		ControlFocusCb();
-		ControlFocusCb(const ControlFocusCb & other);
-		ControlFocusCb & operator=(const ControlFocusCb & other);
+		ControlCb();
+		ControlCb(const ControlCb & other);
+		ControlCb & operator=(const ControlCb & other);
 		void call();
 	};
+	// for a control to be able to modify a float property of a widget
+	// a WidgetCB holding the value is registered
 	struct WidgetCb
 	{
 		float value;
@@ -114,6 +119,8 @@ private:
 		WidgetCb & operator=(const WidgetCb & other);
 		void call();
 	};
+	// AcionCb allows a conrol to signal slots with a parameter
+	// it can be seen as an adapter from Signal0 + value to Slot1
 	struct ActionCb
 	{
 		std::string value;
@@ -125,15 +132,15 @@ private:
 		ActionCb & operator=(const ActionCb & other);
 		void call();
 	};
-	std::vector<ControlFocusCb> control_focus;		// control focus callbacks
-	std::vector<WidgetCb> widget_set;				// widget property callbacks
-	std::vector<ActionCb> action_set;				// action value callbacks
-	Signal1<const std::string &> tooltip;			// tooltip signal
-	Signal0 onfocus, oncancel;						// page actions
+	std::vector<ControlCb> control_set;		// control focus callbacks
+	std::vector<WidgetCb> widget_set;		// widget property callbacks
+	std::vector<ActionCb> action_set;		// action value callbacks
+	Signal1<const std::string &> tooltip;	// tooltip text signal
+	Signal0 onfocus, oncancel;				// page action signals
 
 	void Clear(SCENENODE & parentnode);
 
-	void SetActiveWidget(GUICONTROL & widget);
+	void SetActiveControl(GUICONTROL & control);
 };
 
 #endif

@@ -134,11 +134,9 @@ void GUICONTROL::SetRect(float xmin, float ymin, float xmax, float ymax)
 void GUICONTROL::RegisterActions(
 	const std::map<std::string, Slot1<const std::string &>*> & vactionmap,
 	const std::map<std::string, Slot0*> & actionmap,
-	const std::string & name,
+	const Config::const_iterator section,
 	const Config & cfg)
 {
-	Config::const_iterator section;
-	cfg.get(name, section);
 	std::string actionstr;
 
 	if (cfg.get(section, "onselectx", actionstr))

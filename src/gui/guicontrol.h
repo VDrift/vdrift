@@ -21,10 +21,10 @@
 #define _GUICONTROL_H
 
 #include "signalslot.h"
+#include "cfg/config.h"
 #include <string>
 #include <map>
 
-class Config;
 class SCENENODE;
 
 class GUICONTROL
@@ -63,7 +63,7 @@ public:
 	void RegisterActions(
 		const std::map<std::string, Slot1<const std::string &>*> & vactionmap,
 		const std::map<std::string, Slot0*> & actionmap,
-		const std::string & name,
+		const Config::const_iterator section,
 		const Config & cfg);
 
 	/// Register event actions to signal
