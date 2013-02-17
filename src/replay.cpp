@@ -33,13 +33,6 @@ REPLAY::REPLAY(float framerate) :
 	// ctor
 }
 
-unsigned REPLAY::GetCarsRecorded() const
-{
-	unsigned i = 0;
-	while (i < carstate.size() && !carstate[i].Empty()) i++;
-	return i;
-}
-
 bool REPLAY::StartPlaying(const std::string & replayfilename, std::ostream & error_output)
 {
 	Reset();
@@ -68,35 +61,22 @@ void REPLAY::Reset()
 {
 	replaymode = IDLE;
 	track.clear();
-	cartype.clear();
-	carpaint.clear();
-	carconfig.clear();
-	carcolor.clear();
+	carinfo.clear();
 	carstate.clear();
 }
 
 void REPLAY::StartRecording(
-	const std::vector<std::string> & ncartype,
-	const std::vector<std::string> & ncarpaint,
-	const std::vector<std::string> & ncarconfig,
-	const std::vector<MATHVECTOR<float, 3> > & ncarcolor,
+	const std::vector<CARINFO> & ncarinfo,
 	const std::string & trackname,
 	std::ostream & error_log)
 {
-	assert(ncartype.size() == ncarpaint.size());
-	assert(ncartype.size() == ncarconfig.size());
-	assert(ncartype.size() == ncarcolor.size());
-
 	Reset();
 
 	replaymode = RECORDING;
-	cartype = ncartype;
-	carpaint = ncarpaint;
-	carconfig = ncarconfig;
-	carcolor = ncarcolor;
+	carinfo = ncarinfo;
 	track = trackname;
 
-	carstate.resize(cartype.size());
+	carstate.resize(carinfo.size());
 	for (size_t i = 0; i < carstate.size(); ++i)
 	{
 		carstate[i].Reset();
@@ -226,10 +206,7 @@ void REPLAY::CARSTATE::ProcessPlayStateFrame(const STATEFRAME & frame, CAR & car
 bool REPLAY::Serialize(joeserialize::Serializer & s)
 {
 	_SERIALIZE_(s, track);
-	_SERIALIZE_(s, cartype);
-	_SERIALIZE_(s, carpaint);
-	_SERIALIZE_(s, carconfig);
-	_SERIALIZE_(s, carcolor);
+	_SERIALIZE_(s, carinfo);
 	_SERIALIZE_(s, carstate);
 	return true;
 }

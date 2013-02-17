@@ -118,8 +118,7 @@ void UPDATE_MANAGER::Show(GUI & gui)
 	// including those that we don't have yet but know about
 	std::set <std::string> allobjects;
 
-	// start off with the list of cars/tracks we have on disk
-	const std::list <std::pair <std::string, std::string> > & disklist = valuelists[group];
+	// start off with the list we have on disk
 	for (std::list <std::pair <std::string, std::string> >::const_iterator i = disklist.begin(); i != disklist.end(); i++)
 	{
 		allobjects.insert(i->first);

@@ -34,11 +34,6 @@ GUIWIDGET::GUIWIDGET() :
 	set_val.call.bind<GUIWIDGET, &GUIWIDGET::SetVal>(this);
 }
 
-GUIWIDGET::~GUIWIDGET()
-{
-	// destructor
-}
-
 void GUIWIDGET::Update(SCENENODE & scene, float dt)
 {
 	if (m_update)

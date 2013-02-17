@@ -33,6 +33,7 @@
 #include "gui/text_draw.h"
 #include "gui/font.h"
 #include "car.h"
+#include "carinfo.h"
 #include "physics/dynamicsworld.h"
 #include "dynamicsdraw.h"
 #include "carcontrolmap.h"
@@ -82,6 +83,8 @@ private:
 
 	void InitThreading();
 
+	void InitPlayerCar();
+
 	bool InitSound();
 
 	bool InitGUI(const std::string & pagename);
@@ -107,7 +110,9 @@ private:
 
 	void ProcessGameInputs();
 
-	void UpdateStartList(unsigned i, const std::string & value);
+	void UpdateStartList();
+
+	void UpdateCarEditList();
 
 	bool NewGame(bool playreplay=false, bool opponents=false, int num_laps=0);
 
@@ -133,11 +138,27 @@ private:
 
 	void CalculateFPS();
 
-	void PopulateValueLists(std::map<std::string, std::list <std::pair<std::string,std::string> > > & valuelists);
+	void PopulateValueLists(std::map<std::string, std::list<std::pair<std::string,std::string> > > & valuelists);
 
-	void PopulateReplayList(std::list <std::pair <std::string, std::string> > & replaylist);
+	void PopulateTrackList(std::list<std::pair<std::string, std::string> > & tracklist);
 
-	void PopulateCarPaintList(const std::string & carname, std::list <std::pair <std::string, std::string> > & carpaintlist);
+	void PopulateCarList(std::list<std::pair<std::string, std::string> > & carlist);
+
+	void PopulateCarPaintList(const std::string & carname, std::list<std::pair<std::string, std::string> > & carpaintlist);
+
+	void PopulateDriverList(std::list<std::pair<std::string, std::string> > & driverlist);
+
+	void PopulateStartList(std::list<std::pair<std::string, std::string> > & startlist);
+
+	void PopulateReplayList(std::list<std::pair<std::string, std::string> > & replaylist);
+
+	void PopulateGUISkinList(std::list<std::pair<std::string, std::string> > & skinlist);
+
+	void PopulateGUILangList(std::list<std::pair<std::string, std::string> > & langlist);
+
+	void PopulateAnisoList(std::list<std::pair<std::string, std::string> > & anisolist);
+
+	void PopulateAntialiasList(std::list<std::pair<std::string, std::string> > & antialiaslist);
 
 	void UpdateTrackMap();
 
@@ -207,16 +228,16 @@ private:
 	void SaveControls();
 	void SyncOptions();
 	void SyncSettings();
-	void EditFirstCar();
-	void EditLastCar();
+	void EditPlayerCar();
 
+	void SetCarToEdit(const std::string & value);
 	void SetCarName(const std::string & value);
 	void SetCarPaint(const std::string & value);
 	void SetCarColor(const std::string & value);
 	void SetCarColorHue(const std::string & value);
 	void SetCarColorSat(const std::string & value);
 	void SetCarColorVal(const std::string & value);
-	void SetCarAIType(const std::string & value);
+	void SetCarDriver(const std::string & value);
 	void SetCarAILevel(const std::string & value);
 	void SetCarsNum(const std::string & value);
 	void SetTrackImage(const std::string & value);
@@ -226,13 +247,14 @@ private:
 	void RegisterActions();
 	void InitActionMap(std::map<std::string, Slot0*> & actionmap);
 
+	Slot1<const std::string &> set_car_toedit;
 	Slot1<const std::string &> set_car_name;
 	Slot1<const std::string &> set_car_paint;
 	Slot1<const std::string &> set_car_color_hue;
 	Slot1<const std::string &> set_car_color_sat;
 	Slot1<const std::string &> set_car_color_val;
-	Slot1<const std::string &> set_car_ai_type;
-	Slot1<const std::string &> set_car_ai_level;
+	Slot1<const std::string &> set_car_driver;
+	Slot1<const std::string &> set_car_ailevel;
 	Slot1<const std::string &> set_cars_num;
 	Slot1<const std::string &> set_track_image;
 	Slot1<const std::string &> set_control;
@@ -288,11 +310,8 @@ private:
 	bool controlgrab;
 
 	CAMERA_FREE garage_camera;
-	std::vector <std::string> cars_name;
-	std::vector <std::string> cars_paint;
-	std::vector <MATHVECTOR<float, 3> > cars_color_hsv;
-	std::vector <std::string> cars_ai_type;
-	std::vector <float> cars_ai_level;
+	std::vector <CARINFO> car_info;
+	size_t player_car_id;
 	size_t car_edit_id;
 
 	CAMERA * active_camera;

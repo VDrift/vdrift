@@ -99,7 +99,6 @@ SETTINGS::SETTINGS() :
 	number_of_laps(1),
 	contrast(1.0),
 	hgateshifter(false),
-	ai_type("standard"),
 	ai_level(1.0),
 	vehicle_damage(false),
 	particles(512)
@@ -114,7 +113,6 @@ void SETTINGS::Serialize(bool write, Config & config)
 
 	config.get("game", section);
 	Param(config, write, section, "vehicle_damage", vehicle_damage);
-	Param(config, write, section, "ai_type", ai_type);
 	Param(config, write, section, "ai_level", ai_level);
 	Param(config, write, section, "track", track);
 	Param(config, write, section, "antilock", abs);

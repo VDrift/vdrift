@@ -17,40 +17,37 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _AI_H
-#define _AI_H
+#ifndef _GUILABELLIST_H
+#define _GUILABELLIST_H
 
-#include "ai_car.h"
-#include <string>
-#include <vector>
-#include <map>
+#include "guiwidgetlist.h"
 
-class AI_Factory;
+class FONT;
 
-/// Manages all AI cars.
-class AI
+class GUILABELLIST : public GUIWIDGETLIST
 {
-private:
-	std::vector <AI_Car*> AI_Cars;
-	std::map <std::string, AI_Factory*> AI_Factories;
-	std::vector <float> empty_input;
-
 public:
-	AI();
-	~AI();
+	GUILABELLIST();
 
-	void add_car(CAR * car, float difficulty, const std::string & type = default_type);
-	void remove_car(CAR * car);
-	void clear_cars();
-	void update(float dt, const std::list <CAR> & othercars);
-	const std::vector <float>& GetInputs(CAR * car) const; ///< Returns an empty vector if the car isn't AI-controlled.
+	~GUILABELLIST();
 
-	void AddAIFactory(const std::string& type_name, AI_Factory* factory);
-	std::vector<std::string> ListFactoryTypes();
+	void SetupDrawable(
+		const FONT & font, int align,
+		float scalex, float scaley, float z);
 
-	void Visualize();
+protected:
+	float m_scalex, m_scaley, m_z;
+	const FONT * m_font;
+	int m_align;
 
-	static const std::string default_type;
+	/// verboten
+	GUILABELLIST(const GUILABELLIST & other);
+
+	/// called during Update to process m_values
+	void UpdateElements(SCENENODE & scene);
+
+	/// ugh, dead weight
+	DRAWABLE & GetDrawable(SCENENODE & scene);
 };
 
-#endif //_AI_H
+#endif // _GUILABELLIST_H

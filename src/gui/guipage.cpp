@@ -23,6 +23,7 @@
 #include "guicontrol.h"
 #include "guiimage.h"
 #include "guilabel.h"
+#include "guilabellist.h"
 #include "guislider.h"
 #include "content/contentmanager.h"
 #include "graphics/textureinfo.h"
@@ -143,6 +144,7 @@ bool GUIPAGE::Load(
 	const GUILANGUAGE & lang,
 	const FONT & font,
 	VSIGNALMAP vsignalmap,
+	VNACTIONMAP vnactionmap,
 	VACTIONMAP vactionmap,
 	ACTIONMAP actionmap,
 	SCENENODE & parentnode,
@@ -184,9 +186,14 @@ bool GUIPAGE::Load(
 
 		Rect r = LoadRect(pagefile, section, screenhwratio);
 
+		float x0 = r.x - r.w * 0.5;
+		float y0 = r.y - r.h * 0.5;
+		float x1 = r.x + r.w * 0.5;
+		float y1 = r.y + r.h * 0.5;
+
 		GUIWIDGET * widget = 0;
 
-		// load widget
+		// load widget(list)
 		std::string value;
 		if (pagefile.get(section, "text", value))
 		{
@@ -202,23 +209,57 @@ bool GUIPAGE::Load(
 			float scaley = fontsize;
 			float scalex = fontsize * screenhwratio;
 
-			// none is reserved for empty text string
-			if (value == "none")
-				value.clear();
+			unsigned rows(1), cols(1);
+			if (pagefile.get(section, "rows", rows) |
+				pagefile.get(section, "cols", cols))
+			{
+				// value is a list
+				VNACTIONMAP::iterator vni = vnactionmap.find(value);
+				VSIGNALMAP::iterator vsi = vsignalmap.find(value + ".update");
+				if (vni == vnactionmap.end() || vsi == vsignalmap.end())
+				{
+					error_output << value << " is not a list" << std::endl;
+					continue;
+				}
+
+				float xpad(0), ypad(0);
+				bool vert(true);
+				pagefile.get(section, "padding-rl", xpad);
+				pagefile.get(section, "padding-tb", ypad);
+				pagefile.get(section, "vertical", vert);
+
+				GUILABELLIST * new_widget = new GUILABELLIST();
+				new_widget->SetupDrawable(font, align, scalex, scaley, r.z);
+				new_widget->SetupList(rows, cols, x0, y0, x1, y1, xpad, ypad, vert);
+
+				// connect with the value list
+				new_widget->update_list.connect(*vsi->second);
+				vni->second->connect(new_widget->get_values);
+				new_widget->update_list.call("");
+
+				widget = new_widget;
+			}
 			else
-				value = lang(value);
+			{
+				// none is reserved for empty text string
+				if (value == "none")
+					value.clear();
+				else
+					value = lang(value);
 
-			GUILABEL * new_widget = new GUILABEL();
-			new_widget->SetupDrawable(
-				sref, font, align, scalex, scaley,
-				r.x, r.y, r.w, r.h, r.z);
+				GUILABEL * new_widget = new GUILABEL();
+				new_widget->SetupDrawable(
+					sref, font, align, scalex, scaley,
+					r.x, r.y, r.w, r.h, r.z);
 
-			ConnectAction(value, vsignalmap, new_widget->set_value);
-			widget = new_widget;
+				ConnectAction(value, vsignalmap, new_widget->set_value);
 
-			std::string name;
-			if (pagefile.get(section, "name", name))
-				labels[name] = new_widget;
+				std::string name;
+				if (pagefile.get(section, "name", name))
+					labels[name] = new_widget;
+
+				widget = new_widget;
+			}
 		}
 		else if (pagefile.get(section, "image", value))
 		{
@@ -283,11 +324,6 @@ bool GUIPAGE::Load(
 			pagefile.get(section, "tip", desc);
 			desc = lang(desc);
 
-			float x0 = r.x - r.w * 0.5;
-			float y0 = r.y - r.h * 0.5;
-			float x1 = r.x + r.w * 0.5;
-			float y1 = r.y + r.h * 0.5;
-
 			GUICONTROL * control = new GUICONTROL();
 			control->SetRect(x0, y0, x1, y1);
 			control->SetDescription(desc);
@@ -312,10 +348,10 @@ bool GUIPAGE::Load(
 	for (size_t i = 0; i < controlit.size(); ++i)
 	{
 		const Config::const_iterator & section = controlit[i];
-		for (size_t j = 0; j < GUICONTROL::signals.size(); ++j)
+		for (size_t j = 0; j < GUICONTROL::signal_names.size(); ++j)
 		{
 			std::string actions;
-			if (!pagefile.get(section, GUICONTROL::signals[j], actions))
+			if (!pagefile.get(section, GUICONTROL::signal_names[j], actions))
 				continue;
 
 			std::stringstream st(actions);
@@ -431,7 +467,7 @@ bool GUIPAGE::Load(
 		active_control = controls[0];
 	if (active_control)
 	{
-		active_control->OnFocus();
+		active_control->Signal(GUICONTROL::FOCUS);
 		tooltip(active_control->GetDescription());
 	}
 
@@ -488,7 +524,7 @@ void GUIPAGE::ProcessInput(
 	{
 		for (std::vector<GUICONTROL *>::iterator i = controls.begin(); i != controls.end(); ++i)
 		{
-			if ((**i).InFocus(cursorx, cursory))
+			if ((**i).HasFocus(cursorx, cursory))
 			{
 				SetActiveControl(**i);
 				select |= cursorjustup;	// cursor select
@@ -501,17 +537,17 @@ void GUIPAGE::ProcessInput(
 	if (active_control)
 	{
 		if (cursordown)
-			active_control->OnSelect(cursorx, cursory);
+			active_control->Select(cursorx, cursory);
 		else if (select)
-			active_control->OnSelect();
+			active_control->Signal(GUICONTROL::SELECT);
 		else if (moveleft)
-			active_control->OnMoveLeft();
+			active_control->Signal(GUICONTROL::MOVELEFT);
 		else if (moveright)
-			active_control->OnMoveRight();
+			active_control->Signal(GUICONTROL::MOVERIGHT);
 		else if (moveup)
-			active_control->OnMoveUp();
+			active_control->Signal(GUICONTROL::MOVEUP);
 		else if (movedown)
-			active_control->OnMoveDown();
+			active_control->Signal(GUICONTROL::MOVEDOWN);
 	}
 }
 
@@ -578,9 +614,9 @@ void GUIPAGE::SetActiveControl(GUICONTROL & control)
 	if (active_control != &control)
 	{
 		assert(active_control);
-		active_control->OnBlur();
+		active_control->Signal(GUICONTROL::BLUR);
 		active_control = &control;
-		active_control->OnFocus();
+		active_control->Signal(GUICONTROL::FOCUS);
 		tooltip(active_control->GetDescription());
 	}
 }

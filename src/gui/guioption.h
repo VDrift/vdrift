@@ -29,6 +29,11 @@
 class GUIOPTION
 {
 public:
+	/// the first element of the pair is the (sometimes numeric) stored value
+	/// while the second element is the display value
+	/// sometimes they are the same
+	typedef std::list <std::pair<std::string, std::string> > VALUELIST;
+
 	GUIOPTION();
 
 	GUIOPTION(const GUIOPTION & other);
@@ -36,7 +41,7 @@ public:
 	GUIOPTION & operator=(const GUIOPTION & other);
 
 	/// will move new value elements to option list
-	void SetValues(const std::string & curvalue, std::list <std::pair<std::string, std::string> > & newvalues);
+	void SetValues(const std::string & curvalue, VALUELIST & newvalues);
 
 	void SetInfo(const std::string & newdesc, const std::string & newtype);
 
@@ -57,13 +62,15 @@ public:
 
 	const std::string & GetCurrentStorageValue() const;
 
-	const std::list <std::pair<std::string,std::string> > & GetValueList() const;
+	const VALUELIST & GetValueList() const;
 
 	const std::string & GetDescription() const {return description;};
 
-	float GetMin() const {return min;}
+	const bool IsFloat() const { return type == type_float; };
 
-	float GetMax() const {return max;}
+	/// option values list access
+	Slot2<int, std::vector<std::string> &> get_values;
+	Signal1<const std::string &> signal_update;
 
 	/// option signals (normalized value, value, string)
 	Signal1<const std::string &> signal_valn;
@@ -78,9 +85,9 @@ public:
 
 private:
 	/// list option
-	std::list <std::pair<std::string, std::string> >::iterator current_value;
-	std::list <std::pair<std::string, std::string> > values; //the first element of the pair is the (sometimes numeric) stored value, while the second element is the display value.  sometimes they are the same.
-	
+	VALUELIST::iterator current_value;
+	VALUELIST values;
+
 	/// meta data
 	std::string description;
 	enum type {type_float, type_other} type;
@@ -92,7 +99,10 @@ private:
 	bool percent;
 
 	void SignalValue();
+
 	void SetCurrentValueNorm(const std::string & value);
+
+	void GetValues(int offset, std::vector<std::string> & vals);
 };
 
 #endif

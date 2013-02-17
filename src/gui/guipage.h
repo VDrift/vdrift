@@ -38,9 +38,10 @@ class PATHMANAGER;
 class Config;
 class ContentManager;
 
-typedef std::map <std::string, Signal1<const std::string &>*> VSIGNALMAP;
-typedef std::map <std::string, Slot1<const std::string &>*> VACTIONMAP;
-typedef std::map <std::string, Slot0*> ACTIONMAP;
+typedef std::map<std::string, Signal1<const std::string &>*> VSIGNALMAP;
+typedef std::map<std::string, Slot2<int, std::vector<std::string> &>*> VNACTIONMAP;
+typedef std::map<std::string, Slot1<const std::string &>*> VACTIONMAP;
+typedef std::map<std::string, Slot0*> ACTIONMAP;
 
 class GUIPAGE
 {
@@ -56,6 +57,7 @@ public:
 		const GUILANGUAGE & lang,
 		const FONT & font,
 		VSIGNALMAP vsignalmap,
+		VNACTIONMAP vnactionmap,
 		VACTIONMAP vactionmap,
 		ACTIONMAP actionmap,
 		SCENENODE & parentnode,

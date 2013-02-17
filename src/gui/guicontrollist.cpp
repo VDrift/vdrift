@@ -17,40 +17,25 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _AI_H
-#define _AI_H
+#include "guicontrollist.h"
 
-#include "ai_car.h"
-#include <string>
-#include <vector>
-#include <map>
-
-class AI_Factory;
-
-/// Manages all AI cars.
-class AI
+GUICONTROLLIST::GUICONTROLLIST()
 {
-private:
-	std::vector <AI_Car*> AI_Cars;
-	std::map <std::string, AI_Factory*> AI_Factories;
-	std::vector <float> empty_input;
+	// ctor
+}
 
-public:
-	AI();
-	~AI();
+GUICONTROLLIST::~GUICONTROLLIST()
+{
+	// dtor
+}
 
-	void add_car(CAR * car, float difficulty, const std::string & type = default_type);
-	void remove_car(CAR * car);
-	void clear_cars();
-	void update(float dt, const std::list <CAR> & othercars);
-	const std::vector <float>& GetInputs(CAR * car) const; ///< Returns an empty vector if the car isn't AI-controlled.
+void GUICONTROLLIST::Select(float x, float y) const
+{
+	// todo
+}
 
-	void AddAIFactory(const std::string& type_name, AI_Factory* factory);
-	std::vector<std::string> ListFactoryTypes();
-
-	void Visualize();
-
-	static const std::string default_type;
-};
-
-#endif //_AI_H
+void GUICONTROLLIST::Signal(EVENT ev) const
+{
+	m_signal[ev]();
+	m_signaln[ev](m_active_element);
+}

@@ -30,33 +30,36 @@ class SCENENODE;
 class GUICONTROL
 {
 public:
+	enum EVENT
+	{
+		SELECT = 0,
+		FOCUS,
+		BLUR,
+		MOVEUP,
+		MOVEDOWN,
+		MOVELEFT,
+		MOVERIGHT,
+		EVENTNUM
+	};
+
 	GUICONTROL();
 
 	virtual ~GUICONTROL();
 
-	/// Return true if control in focus
-	bool InFocus(float x, float y) const;
+	/// Return true if control contains x, y
+	bool HasFocus(float x, float y) const;
 
-	void OnSelect(float x, float y) const;
+	/// Signal to slots attached to selectx, selecty
+	virtual void Select(float x, float y) const;
 
-	void OnSelect() const;
-
-	void OnFocus() const;
-
-	void OnBlur() const;
-
-	void OnMoveUp() const;
-
-	void OnMoveDown() const;
-
-	void OnMoveLeft() const;
-
-	void OnMoveRight() const;
+	/// Signal to slots attached to events
+	virtual void Signal(EVENT ev) const;
 
 	const std::string & GetDescription() const;
 
 	void SetDescription(const std::string & value);
 
+	/// Set control rectangle
 	void SetRect(float xmin, float ymin, float xmax, float ymax);
 
 	/// Register event actions
@@ -72,25 +75,21 @@ public:
 		const std::string & actionstr,
 		Signal0 & signal);
 
+	/// Register event value actions to signal (onselectx, onselecty)
 	static void SetActions(
 		const std::map<std::string, Slot1<const std::string &>*> & actionmap,
 		const std::string & actionstr,
 		Signal1<const std::string &> & signal);
 
-	static const std::vector<std::string> signals;
+	/// available control signals
+	static const std::vector<std::string> signal_names;
 
 protected:
 	float m_xmin, m_ymin, m_xmax, m_ymax;
 	std::string m_description;
-	Signal1<const std::string &> onselectx;
-	Signal1<const std::string &> onselecty;
-	Signal0 onselect;
-	Signal0 onfocus;
-	Signal0 onblur;
-	Signal0 onmoveup;
-	Signal0 onmovedown;
-	Signal0 onmoveleft;
-	Signal0 onmoveright;
+	Signal1<const std::string &> m_selectx;
+	Signal1<const std::string &> m_selecty;
+	Signal0 m_signal[EVENTNUM];
 };
 
 #endif //_GUICONTROL_H

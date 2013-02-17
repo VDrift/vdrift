@@ -131,8 +131,9 @@ bool GUI::Load(
 		return false;
 
 	VSIGNALMAP vsignalmap;
+	VNACTIONMAP vnactionmap;
 	VACTIONMAP vactionmap;
-	RegisterOptions(vsignalmap, vactionmap, actionmap);
+	RegisterOptions(vsignalmap, vnactionmap, vactionmap, actionmap);
 
 	// init pages
 	size_t pagecount = 0;
@@ -158,7 +159,7 @@ bool GUI::Load(
 		const std::string pagepath = menupath + "/" + i->first;
 		if (!i->second.Load(
 			pagepath, texpath, screenhwratio, lang, font,
-			vsignalmap, vactionmap, actionmap,
+			vsignalmap, vnactionmap, vactionmap, actionmap,
 			node, content, error_output))
 		{
 			error_output << "Error loading GUI page: " << pagepath << std::endl;
@@ -433,17 +434,34 @@ bool GUI::LoadOptions(
 	return true;
 }
 
-void GUI::RegisterOptions(VSIGNALMAP & vsignalmap, VACTIONMAP & vactionmap, ACTIONMAP & actionmap)
+void GUI::RegisterOptions(
+	VSIGNALMAP & vsignalmap,
+	VNACTIONMAP & vnactionmap,
+	VACTIONMAP & vactionmap,
+	ACTIONMAP & actionmap)
 {
 	for (OPTIONMAP::iterator i = options.begin(); i != options.end(); ++i)
 	{
-		vsignalmap[i->first + ".str"] = &i->second.signal_str;
-		vsignalmap[i->first + ".norm"] = &i->second.signal_valn;
-		vactionmap[i->first + ".norm"] = &i->second.set_valn;
-		vsignalmap[i->first] = &i->second.signal_val;
-		vactionmap[i->first] = &i->second.set_val;
-		actionmap[i->first + ".next"] = &i->second.next_val;
-		actionmap[i->first + ".prev"] = &i->second.prev_val;
+		const std::string & opname = i->first;
+		GUIOPTION & option = i->second;
+
+		if (!option.GetValueList().empty())
+		{
+			// option is a list
+			vsignalmap[opname + ".update"] = &option.signal_update;
+			vnactionmap[opname] = &option.get_values;
+		}
+		else if (option.IsFloat())
+		{
+			// option is a float
+			vsignalmap[opname + ".norm"] = &option.signal_valn;
+			vactionmap[opname + ".norm"] = &option.set_valn;
+		}
+		vsignalmap[opname + ".str"] = &option.signal_str;
+		vsignalmap[opname] = &option.signal_val;
+		vactionmap[opname] = &option.set_val;
+		actionmap[opname + ".next"] = &option.next_val;
+		actionmap[opname + ".prev"] = &option.prev_val;
 	}
 }
 

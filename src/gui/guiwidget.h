@@ -26,20 +26,24 @@
 class SCENENODE;
 class DRAWABLE;
 
+/// Widget base class
 class GUIWIDGET
 {
 public:
 	/// base destructor
-	virtual ~GUIWIDGET();
+	virtual ~GUIWIDGET() {};
 
 	/// update widget state
 	virtual void Update(SCENENODE & scene, float dt);
 
 	/// scale widget alpha [0, 1]
-	void SetAlpha(SCENENODE & scene, float value);
+	virtual void SetAlpha(SCENENODE & scene, float value);
 
 	/// override visibility
-	void SetVisible(SCENENODE & scene, bool value);
+	virtual void SetVisible(SCENENODE & scene, bool value);
+
+	/// todo: need to ge rid of this one
+	virtual DRAWABLE & GetDrawable(SCENENODE & scene) = 0;
 
 	/// properties
 	void SetColor(float r, float g, float b);
@@ -47,6 +51,12 @@ public:
 	void SetHue(float value);
 	void SetSat(float value);
 	void SetVal(float value);
+
+	void SetColor(const std::string & value);
+	void SetOpacity(const std::string & value);
+	void SetHue(const std::string & value);
+	void SetSat(const std::string & value);
+	void SetVal(const std::string & value);
 
 	/// todo: add support for typed signals
 	Slot1<const std::string &> set_color;
@@ -62,13 +72,6 @@ protected:
 	bool m_update;
 
 	GUIWIDGET();
-	virtual DRAWABLE & GetDrawable(SCENENODE & scene) = 0;
-	void SetColor(const std::string & value);
-	void SetOpacity(const std::string & value);
-	void SetHue(const std::string & value);
-	void SetSat(const std::string & value);
-	void SetVal(const std::string & value);
-
 };
 
 #endif // _GUIWIDGET_H

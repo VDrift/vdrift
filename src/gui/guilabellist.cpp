@@ -17,40 +17,61 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _AI_H
-#define _AI_H
+#include "guilabellist.h"
+#include "guilabel.h"
 
-#include "ai_car.h"
-#include <string>
-#include <vector>
-#include <map>
-
-class AI_Factory;
-
-/// Manages all AI cars.
-class AI
+GUILABELLIST::GUILABELLIST() :
+	m_scalex(0.1), m_scaley(0.1), m_z(0), m_font(0), m_align(0)
 {
-private:
-	std::vector <AI_Car*> AI_Cars;
-	std::map <std::string, AI_Factory*> AI_Factories;
-	std::vector <float> empty_input;
+	// ctor
+}
 
-public:
-	AI();
-	~AI();
+GUILABELLIST::~GUILABELLIST()
+{
+	// dtor
+}
 
-	void add_car(CAR * car, float difficulty, const std::string & type = default_type);
-	void remove_car(CAR * car);
-	void clear_cars();
-	void update(float dt, const std::list <CAR> & othercars);
-	const std::vector <float>& GetInputs(CAR * car) const; ///< Returns an empty vector if the car isn't AI-controlled.
+void GUILABELLIST::SetupDrawable(
+	const FONT & font, int align,
+	float scalex, float scaley, float z)
+{
+	m_scalex = scalex;
+	m_scaley = scaley;
+	m_z = z;
+	m_font = &font;
+	m_align = align;
+}
 
-	void AddAIFactory(const std::string& type_name, AI_Factory* factory);
-	std::vector<std::string> ListFactoryTypes();
+void GUILABELLIST::UpdateElements(SCENENODE & scene)
+{
+	unsigned num_new = m_values.size();
+	unsigned num_old = m_elements.size();
+	for (unsigned i = num_new; i < num_old; ++i)
+	{
+		static_cast<GUILABEL*>(m_elements[i])->Remove(scene);
+		delete m_elements[i];
+	}
+	m_elements.resize(num_new);
+	for (unsigned i = num_old; i < num_new; ++i)
+	{
+		float x, y;
+		GetElemPos(i, x, y);
 
-	void Visualize();
+		GUILABEL * element = new GUILABEL();
+		element->SetupDrawable(
+			scene, *m_font, m_align, m_scalex, m_scaley,
+			x, y, m_elemw, m_elemh, m_z);
 
-	static const std::string default_type;
-};
+		m_elements[i] = element;
+	}
+	for (unsigned i = 0; i < num_new; ++i)
+	{
+		static_cast<GUILABEL*>(m_elements[i])->SetText(m_values[i]);
+	}
+}
 
-#endif //_AI_H
+DRAWABLE & GUILABELLIST::GetDrawable(SCENENODE & scene)
+{
+	assert(0); // don't want to end up here
+	return m_elements[0]->GetDrawable(scene);
+}

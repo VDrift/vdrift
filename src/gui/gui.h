@@ -150,7 +150,11 @@ private:
 		std::ostream & error_output);
 
 	/// add option slots to action map
-	void RegisterOptions(VSIGNALMAP & vsignalmap, VACTIONMAP & vactionmap, ACTIONMAP & actionmap);
+	void RegisterOptions(
+		VSIGNALMAP & vsignalmap,
+		VNACTIONMAP & vnactionmap,
+		VACTIONMAP & vactionmap,
+		ACTIONMAP & actionmap);
 };
 
 #endif

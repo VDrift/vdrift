@@ -20,7 +20,7 @@
 #ifndef _REPLAY_H
 #define _REPLAY_H
 
-#include "mathvector.h"
+#include "carinfo.h"
 #include "joeserialize.h"
 #include "macros.h"
 
@@ -34,9 +34,6 @@ class REPLAY
 public:
 	REPLAY(float framerate);
 
-	/// return number of recorded car states
-	unsigned GetCarsRecorded() const;
-
 	/// true on success
 	bool StartPlaying(
 		const std::string & replayfilename,
@@ -49,10 +46,7 @@ public:
 	bool GetPlaying() const;
 
 	void StartRecording(
-		const std::vector<std::string> & cartype,
-		const std::vector<std::string> & carpaint,
-		const std::vector<std::string> & carconfig,
-		const std::vector<MATHVECTOR<float, 3> > & carcolor,
+		const std::vector<CARINFO> & carinfo,
 		const std::string & trackname,
 		std::ostream & error_log);
 
@@ -70,13 +64,7 @@ public:
 
 	bool Serialize(joeserialize::Serializer & s);
 
-	const std::vector<std::string> & GetCarTypes() const;
-
-	const std::vector<std::string> & GetCarFiles() const;
-
-	const std::vector<std::string> & GetCarPaints() const;
-
-	const std::vector<MATHVECTOR<float, 3> > & GetCarColors() const;
+	const std::vector<CARINFO> & GetCarInfo() const;
 
 	const std::string & GetTrack() const;
 
@@ -189,10 +177,7 @@ private:
 	/// serialized
 	VERSION version_info;
 	std::string track;
-	std::vector<std::string> cartype;	//car type, used for loading graphics and sound
-	std::vector<std::string> carpaint;	//car paint id string
-	std::vector<std::string> carconfig;	//entire contents of the car file (e.g. XS.car)
-	std::vector<MATHVECTOR<float, 3> > carcolor;
+	std::vector<CARINFO> carinfo;
 	std::vector<CARSTATE> carstate;
 
 	/// not serialized
@@ -217,24 +202,9 @@ inline bool REPLAY::GetRecording() const
 	return (replaymode == RECORDING);
 }
 
-inline const std::vector<std::string> & REPLAY::GetCarTypes() const
+inline const std::vector<CARINFO> & REPLAY::GetCarInfo() const
 {
-	return cartype;
-}
-
-inline const std::vector<std::string> & REPLAY::GetCarFiles() const
-{
-	return carconfig;
-}
-
-inline const std::vector<std::string> & REPLAY::GetCarPaints() const
-{
-	return carpaint;
-}
-
-inline const std::vector<MATHVECTOR<float, 3> > & REPLAY::GetCarColors() const
-{
-	return carcolor;
+	return carinfo;
 }
 
 inline const std::string & REPLAY::GetTrack() const

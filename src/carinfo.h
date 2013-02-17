@@ -17,40 +17,34 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _AI_H
-#define _AI_H
+#ifndef _CARINFO_H
+#define _CARINFO_H
 
-#include "ai_car.h"
+#include "mathvector.h"
+#include "joeserialize.h"
+#include "macros.h"
+
 #include <string>
-#include <vector>
-#include <map>
 
-class AI_Factory;
-
-/// Manages all AI cars.
-class AI
+struct CARINFO
 {
-private:
-	std::vector <AI_Car*> AI_Cars;
-	std::map <std::string, AI_Factory*> AI_Factories;
-	std::vector <float> empty_input;
+	std::string config;
+	std::string driver;
+	std::string name;
+	std::string paint;
+	MATHVECTOR<float, 3> hsv;
+	float ailevel;
 
-public:
-	AI();
-	~AI();
-
-	void add_car(CAR * car, float difficulty, const std::string & type = default_type);
-	void remove_car(CAR * car);
-	void clear_cars();
-	void update(float dt, const std::list <CAR> & othercars);
-	const std::vector <float>& GetInputs(CAR * car) const; ///< Returns an empty vector if the car isn't AI-controlled.
-
-	void AddAIFactory(const std::string& type_name, AI_Factory* factory);
-	std::vector<std::string> ListFactoryTypes();
-
-	void Visualize();
-
-	static const std::string default_type;
+	bool Serialize(joeserialize::Serializer & s)
+	{
+		_SERIALIZE_(s, config);
+		_SERIALIZE_(s, driver);
+		_SERIALIZE_(s, name);
+		_SERIALIZE_(s, paint);
+		_SERIALIZE_(s, hsv);
+		_SERIALIZE_(s, ailevel);
+		return true;
+	}
 };
 
-#endif //_AI_H
+#endif // _CARINFO_H

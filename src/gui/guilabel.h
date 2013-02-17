@@ -42,6 +42,10 @@ public:
 		float centerx, float centery,
 		float w, float h, float z);
 
+	// call to remove label from scene
+	// warning: will invalidate the drawable
+	void Remove(SCENENODE & scene);
+
 	void SetText(const std::string & text);
 
 	const std::string & GetText() const;

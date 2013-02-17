@@ -339,11 +339,6 @@ public:
 		return hgateshifter;
 	}
 
-	const std::string & GetAIType() const
-	{
-		return ai_type;
-	}
-
 	float GetAILevel() const
 	{
 		return ai_level;
@@ -444,7 +439,6 @@ private:
 	int number_of_laps;
 	float contrast;
 	bool hgateshifter;
-	std::string ai_type;
 	float ai_level;
 	bool vehicle_damage;
 	int particles;

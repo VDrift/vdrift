@@ -64,6 +64,12 @@ void GUILABEL::SetupDrawable(
 	m_text_draw.Set(drawref, font, m_text, x, y, scalex, scaley, m_r, m_g, m_b);
 }
 
+void GUILABEL::Remove(SCENENODE & scene)
+{
+	scene.GetDrawlist().text.erase(m_draw);
+	m_visible = false;
+}
+
 void GUILABEL::SetText(const std::string & text)
 {
 	assert(m_font);

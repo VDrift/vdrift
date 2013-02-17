@@ -18,23 +18,19 @@
 /************************************************************************/
 
 #include "guicontrol.h"
-#include "cfg/config.h"
 
-static std::vector<std::string> GetSignals()
-{
-	std::vector<std::string> v(9);
-	v.push_back("onselectx");
-	v.push_back("onselecty");
-	v.push_back("onselect");
-	v.push_back("onfocus");
-	v.push_back("onblur");
-	v.push_back("onmoveup");
-	v.push_back("onmovedown");
-	v.push_back("onmoveleft");
-	v.push_back("onmoveright");
-	return v;
-}
-const std::vector<std::string> GUICONTROL::signals(GetSignals());
+static const std::string names[] = {
+	"onselectx",
+	"onselecty",
+	"onselect",
+	"onfocus",
+	"onblur",
+	"onmoveup",
+	"onmovedown",
+	"onmoveleft",
+	"onmoveright",
+};
+const std::vector<std::string> GUICONTROL::signal_names(names, names + sizeof(names) / sizeof(names[0]));
 
 GUICONTROL::GUICONTROL() :
 	m_xmin(0),
@@ -50,67 +46,37 @@ GUICONTROL::~GUICONTROL()
 	// dtor
 }
 
-bool GUICONTROL::InFocus(float x, float y) const
+bool GUICONTROL::HasFocus(float x, float y) const
 {
 	return x <= m_xmax && x >= m_xmin && y <= m_ymax && y >= m_ymin;
 }
 
-void GUICONTROL::OnSelect(float x, float y) const
+void GUICONTROL::Select(float x, float y) const
 {
-	if (!InFocus(x, y))
+	if (!HasFocus(x, y))
 		return;
 
-	if (onselectx.connected())
+	if (m_selectx.connected())
 	{
 		float sx = (x - m_xmin) / (m_xmax - m_xmin);
 		sx = (sx <= 1) ? (sx >= 0) ? sx : 0 : 1;
 		std::stringstream s;
 		s << sx;
-		onselectx(s.str());
+		m_selectx(s.str());
 	}
 
-	if (onselecty.connected())
+	if (m_selecty.connected())
 	{
 		float sy = (y - m_ymin) / (m_ymax - m_ymin);
 		std::stringstream s;
 		s << sy;
-		onselectx(s.str());
+		m_selecty(s.str());
 	}
 }
 
-void GUICONTROL::OnSelect() const
+void GUICONTROL::Signal(EVENT ev) const
 {
-	onselect();
-}
-
-void GUICONTROL::OnFocus() const
-{
-	onfocus();
-}
-
-void GUICONTROL::OnBlur() const
-{
-	onblur();
-}
-
-void GUICONTROL::OnMoveUp() const
-{
-	onmoveup();
-}
-
-void GUICONTROL::OnMoveDown() const
-{
-	onmovedown();
-}
-
-void GUICONTROL::OnMoveLeft() const
-{
-	onmoveleft();
-}
-
-void GUICONTROL::OnMoveRight() const
-{
-	onmoveright();
+	m_signal[ev]();
 }
 
 const std::string & GUICONTROL::GetDescription() const
@@ -139,32 +105,17 @@ void GUICONTROL::RegisterActions(
 {
 	std::string actionstr;
 
-	if (cfg.get(section, "onselectx", actionstr))
-		SetActions(vactionmap, actionstr, onselectx);
+	if (cfg.get(section, signal_names[0], actionstr))
+		SetActions(vactionmap, actionstr, m_selectx);
 
-	if (cfg.get(section, "onselecty", actionstr))
-		SetActions(vactionmap, actionstr, onselecty);
+	if (cfg.get(section, signal_names[1], actionstr))
+		SetActions(vactionmap, actionstr, m_selecty);
 
-	if (cfg.get(section, "onselect", actionstr))
-		SetActions(actionmap, actionstr, onselect);
-
-	if (cfg.get(section, "onfocus", actionstr))
-		SetActions(actionmap, actionstr, onfocus);
-
-	if (cfg.get(section, "onblur", actionstr))
-		SetActions(actionmap, actionstr, onblur);
-
-	if (cfg.get(section, "onmoveup", actionstr))
-		SetActions(actionmap, actionstr, onmoveup);
-
-	if (cfg.get(section, "onmovedown", actionstr))
-		SetActions(actionmap, actionstr, onmovedown);
-
-	if (cfg.get(section, "onmoveleft", actionstr))
-		SetActions(actionmap, actionstr, onmoveleft);
-
-	if (cfg.get(section, "onmoveright", actionstr))
-		SetActions(actionmap, actionstr, onmoveright);
+	for (size_t i = 0; i < EVENTNUM; ++i)
+	{
+		if (cfg.get(section, signal_names[i + 2], actionstr))
+			SetActions(actionmap, actionstr, m_signal[i]);
+	}
 }
 
 void GUICONTROL::SetActions(

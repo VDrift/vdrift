@@ -23,12 +23,12 @@
 #include "ai_car_standard.h"
 #include "ai_car_experimental.h"
 
-const std::string AI::default_ai_type = "standard";
+const std::string AI::default_type = "aistd";
 
 AI::AI() : empty_input(CARINPUT::INVALID, 0.0)
 {
-	AddAIFactory("standard", new AI_Car_Standard_Factory());
-	AddAIFactory("experimental", new AI_Car_Experimental_Factory());
+	AddAIFactory("aistd", new AI_Car_Standard_Factory());
+	AddAIFactory("aiexp", new AI_Car_Experimental_Factory());
 }
 
 AI::~AI()

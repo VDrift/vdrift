@@ -17,40 +17,30 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _AI_H
-#define _AI_H
+#ifndef _GUICONTROLLIST_H
+#define _GUICONTROLLIST_H
 
-#include "ai_car.h"
-#include <string>
-#include <vector>
-#include <map>
+#include "guilist.h"
+#include "guicontrol.h"
 
-class AI_Factory;
-
-/// Manages all AI cars.
-class AI
+/// a widget that mimics a list of controls
+class GUICONTROLLIST : public GUICONTROL, public GUILIST
 {
-private:
-	std::vector <AI_Car*> AI_Cars;
-	std::map <std::string, AI_Factory*> AI_Factories;
-	std::vector <float> empty_input;
-
 public:
-	AI();
-	~AI();
+	GUICONTROLLIST();
 
-	void add_car(CAR * car, float difficulty, const std::string & type = default_type);
-	void remove_car(CAR * car);
-	void clear_cars();
-	void update(float dt, const std::list <CAR> & othercars);
-	const std::vector <float>& GetInputs(CAR * car) const; ///< Returns an empty vector if the car isn't AI-controlled.
+	~GUICONTROLLIST();
 
-	void AddAIFactory(const std::string& type_name, AI_Factory* factory);
-	std::vector<std::string> ListFactoryTypes();
+	/// Signal slots attached to selectx, selecty
+	void Select(float x, float y) const;
 
-	void Visualize();
+	/// Signal slots attached to events
+	void Signal(EVENT ev) const;
 
-	static const std::string default_type;
+	/// todo: register actions
+
+private:
+	Signal1<unsigned> m_signaln[EVENTNUM];
 };
 
-#endif //_AI_H
+#endif // _GUICONTROLLIST_H
