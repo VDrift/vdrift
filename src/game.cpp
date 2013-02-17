@@ -2805,6 +2805,8 @@ void GAME::SetCarName(const std::string & value)
 	if (info.name == value)
 		return;
 
+	car_info[car_edit_id].name = value;
+
 	std::list <std::pair <std::string, std::string> > carpaintlist;
 	PopulateCarPaintList(value, carpaintlist);
 	gui.SetOptionValues("game.car_paint", info.paint, carpaintlist, error_output);
