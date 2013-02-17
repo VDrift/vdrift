@@ -2769,19 +2769,19 @@ void GAME::SyncSettings()
 
 void GAME::EditPlayerCar()
 {
-	SetCarToEdit(cast(player_car_id));
+	gui.SetOptionValue("game.car_edit", cast(player_car_id));
 }
 
 void GAME::SetCarToEdit(const std::string & value)
 {
-	// set player car as active car
+	// set current car as active car
 	size_t prev_edit_id = car_edit_id;
 	car_edit_id = cast<size_t>(value);
 
 	if (car_edit_id == prev_edit_id)
 		return;
 
-	// if player car differs from last car force reload
+	// if car differs from last car force reload
 	const CARINFO & info_prev = car_info[prev_edit_id];
 	const CARINFO & info = car_info[car_edit_id];
 	if (info.name != info_prev.name)
