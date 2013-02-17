@@ -81,14 +81,17 @@ src = Split("""
 		graphics/vertexarray.cpp
 		gui/font.cpp
 		gui/guicontrol.cpp
+		gui/guicontrollist.cpp
 		gui/gui.cpp
 		gui/guiimage.cpp
 		gui/guilabel.cpp
+		gui/guilabellist.cpp
 		gui/guilanguage.cpp
 		gui/guioption.cpp
 		gui/guipage.cpp
 		gui/guislider.cpp
 		gui/guiwidget.cpp
+		gui/guiwidgetlist.cpp
 		gui/text_draw.cpp
 		http.cpp
 		hudbar.cpp
