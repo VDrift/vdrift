@@ -105,18 +105,23 @@ private:
 
 	void UpdateTimer();
 
-	///< Check eventsystem state and update GUI
+	/// Check eventsystem state and update GUI
 	void ProcessGUIInputs();
 
 	void ProcessGameInputs();
 
+	/// Notify gui of startlist change
 	void UpdateStartList();
 
+	/// Notify gui of car selection change
 	void UpdateCarEditList();
+
+	/// Notify gui of selected car change
+	void UpdateCarInfo();
 
 	bool NewGame(bool playreplay=false, bool opponents=false, int num_laps=0);
 
-	///< carfile is a string containing an entire .car file (e.g. XS.car) and is used instead of reading from disk.  this is optional
+	/// carfile is a string containing an entire .car file (e.g. XS.car) and is used instead of reading from disk.  this is optional
 	bool LoadCar(
 		const std::string & carname,
 		const std::string & carpaint,

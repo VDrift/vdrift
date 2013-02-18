@@ -1294,6 +1294,18 @@ void GAME::UpdateCarEditList()
 	gui.SetOptionValues("game.car_edit", edit_id_str, edit_id_list, error_output);
 }
 
+void GAME::UpdateCarInfo()
+{
+	const CARINFO & info = car_info[car_edit_id];
+	gui.SetOptionValue("game.driver", info.driver);
+	gui.SetOptionValue("game.car", info.name);
+	gui.SetOptionValue("game.car_paint", info.paint);
+	gui.SetOptionValue("game.car_color_hue", cast(info.hsv[0]));
+	gui.SetOptionValue("game.car_color_sat", cast(info.hsv[1]));
+	gui.SetOptionValue("game.car_color_val", cast(info.hsv[2]));
+	gui.SetOptionValue("game.ai_level", cast(info.ailevel));
+}
+
 void GAME::UpdateCar(int carid, CAR & car, double dt)
 {
 	car.Update(dt);
@@ -2789,14 +2801,7 @@ void GAME::SetCarToEdit(const std::string & value)
 		SetGarageCar();
 	}
 
-	// reset car info
-	gui.SetOptionValue("game.driver", info.driver);
-	gui.SetOptionValue("game.car", info.name);
-	gui.SetOptionValue("game.car_paint", info.paint);
-	gui.SetOptionValue("game.car_color_hue", cast(info.hsv[0]));
-	gui.SetOptionValue("game.car_color_sat", cast(info.hsv[1]));
-	gui.SetOptionValue("game.car_color_val", cast(info.hsv[2]));
-	gui.SetOptionValue("game.ai_level", cast(info.ailevel));
+	UpdateCarInfo();
 }
 
 void GAME::SetCarName(const std::string & value)
@@ -2923,15 +2928,7 @@ void GAME::SetCarsNum(const std::string & value)
 
 	UpdateStartList();
 
-	// update gui options
-	const CARINFO & info = car_info[car_edit_id];
-	gui.SetOptionValue("game.driver", info.driver);
-	gui.SetOptionValue("game.car", info.name);
-	gui.SetOptionValue("game.car_paint", info.paint);
-	gui.SetOptionValue("game.car_color_hue", cast(info.hsv[0]));
-	gui.SetOptionValue("game.car_color_sat", cast(info.hsv[1]));
-	gui.SetOptionValue("game.car_color_val", cast(info.hsv[2]));
-	gui.SetOptionValue("game.ai_level", cast(info.ailevel));
+	UpdateCarInfo();
 }
 
 void GAME::SetTrackImage(const std::string & value)
