@@ -23,6 +23,12 @@
 #include "archiveutils.h"
 #include "pathmanager.h"
 
+// Support libarchive < 3
+#if ARCHIVE_VERSION_NUMBER < 3000000
+#define archive_read_support_filter_all archive_read_support_compression_all
+#define archive_read_free archive_read_finish
+#endif
+
 #define BUFFSIZE 10240
 
 bool Decompress(const std::string & file, const std::string & output_path, std::ostream & info_output, std::ostream & error_output)
