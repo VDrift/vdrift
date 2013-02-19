@@ -31,7 +31,7 @@ bool Decompress(const std::string & file, const std::string & output_path, std::
 	PATHMANAGER::MakeDir(output_path);
 
 	struct archive * a = archive_read_new();
-	archive_read_support_compression_all(a);
+	archive_read_support_filter_all(a);
 	archive_read_support_format_all(a);
 	if (archive_read_open_filename(a, file.c_str(), BUFFSIZE) != ARCHIVE_OK)
 	{
@@ -73,7 +73,7 @@ bool Decompress(const std::string & file, const std::string & output_path, std::
 
 		archive_read_data_skip(a);
 	}
-	if (archive_read_finish(a) != ARCHIVE_OK)
+	if (archive_read_free(a) != ARCHIVE_OK)
 	{
 		error_output << "Unable to finish read of " << file << std::endl;
 		return false;
