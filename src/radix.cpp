@@ -328,6 +328,7 @@ bool Radix::sort(const std::vector<float> & input, bool greater_than_zero)
 
 
 #include "unittest.h"
+#include <cstdlib>
 
 QT_TEST(radix_test)
 {
