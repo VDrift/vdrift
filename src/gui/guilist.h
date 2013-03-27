@@ -43,11 +43,17 @@ protected:
 	float m_xpad, m_ypad;
 	bool m_vertical;
 
-	unsigned m_active_element;
 	int m_list_offset;
+	int m_list_size;
 
-	/// get nth list element position
-	void GetElemPos(unsigned n, float & x, float & y) const;
+	/// get nth element row, column
+	void GetElemPos(int n, unsigned & row, unsigned & col) const;
+
+	/// get nth element coordinates
+	void GetElemPos(int n, float & x, float & y) const;
+
+	/// get element index from position
+	int GetElemId(float x, float y) const;
 
 	/// used as base class only
 	GUILIST();
@@ -73,9 +79,8 @@ inline void GUILIST::SetupList(
 	m_elemh = (listh - m_rows * m_ypad * 2) / m_rows;
 }
 
-inline void GUILIST::GetElemPos(unsigned n, float & x, float & y) const
+inline void GUILIST::GetElemPos(int n, unsigned & col, unsigned & row) const
 {
-	unsigned col, row;
 	if (m_vertical)
 	{
 		col = n / m_rows;
@@ -86,8 +91,36 @@ inline void GUILIST::GetElemPos(unsigned n, float & x, float & y) const
 		row = n / m_cols;
 		col = n - row * m_cols;
 	}
+}
+
+inline void GUILIST::GetElemPos(int n, float & x, float & y) const
+{
+	unsigned col, row;
+	GetElemPos(n, col, row);
 	x = m_xmin + (col + 0.5f) * (m_elemw + 2 * m_xpad);
 	y = m_ymin + (row + 0.5f) * (m_elemh + 2 * m_ypad);
+}
+
+template <typename T>
+inline int clamp(T v, T vmin, T vmax)
+{
+	return (v < vmin) ? vmin : ((v > vmax) ? vmax : v);
+}
+
+inline int GUILIST::GetElemId(float x, float y) const
+{
+	int col = m_cols * (x - m_xmin) / (m_xmax - m_xmin);
+	int row = m_rows * (y - m_ymin) / (m_ymax - m_ymin);
+	col = clamp<int>(col, 0, m_cols - 1);
+	row = clamp<int>(row, 0, m_rows - 1);
+	if (m_vertical)
+	{
+		return col * m_rows + row;
+	}
+	else
+	{
+		return row * m_cols + col;
+	}
 }
 
 inline GUILIST::GUILIST() :
@@ -96,8 +129,8 @@ inline GUILIST::GUILIST() :
 	m_xmax(1), m_ymax(1),
 	m_xpad(0), m_ypad(0),
 	m_vertical(true),
-	m_active_element(0),
-	m_list_offset(0)
+	m_list_offset(0),
+	m_list_size(0)
 {
 	// ctor
 }

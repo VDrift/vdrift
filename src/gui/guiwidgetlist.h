@@ -43,20 +43,26 @@ public:
 	/// override visibility
 	void SetVisible(SCENENODE & scene, bool value);
 
+	/// element property setters
+	void SetColor(int n, const std::string & value);
+	void SetOpacity(int n, const std::string & value);
+	void SetHue(int n, const std::string & value);
+	void SetSat(int n, const std::string & value);
+	void SetVal(int n, const std::string & value);
+
+	/// scroll list, value designates scroll direction: fwd, rev
+	void ScrollList(int n, const std::string & value);
+
+	/// update list, parameter holds list item count
+	void UpdateList(const std::string & vnum);
+
 	/// element property slots
-	Slot2<unsigned, const std::string &> set_color;
-	Slot2<unsigned, const std::string &> set_opacity;
-	Slot2<unsigned, const std::string &> set_hue;
-	Slot2<unsigned, const std::string &> set_sat;
-	Slot2<unsigned, const std::string &> set_val;
-
-	/// list navigation slots (could be Slot0, but whatever)
-	Slot1<unsigned> prev_row;
-	Slot1<unsigned> next_row;
-	Slot1<unsigned> prev_col;
-	Slot1<unsigned> next_col;
-
-	/// widget list update slot (could be Slot0, but ...)
+	Slot2<int, const std::string &> set_color;
+	Slot2<int, const std::string &> set_opacity;
+	Slot2<int, const std::string &> set_hue;
+	Slot2<int, const std::string &> set_sat;
+	Slot2<int, const std::string &> set_val;
+	Slot2<int, const std::string &> scroll_list;
 	Slot1<const std::string &> update_list;
 
 	/// value list range access signal
@@ -68,26 +74,21 @@ protected:
 
 	/// verboten
 	GUIWIDGETLIST();
-
-	/// element property setters
-	void SetColor(unsigned n, const std::string & value);
-	void SetOpacity(unsigned n, const std::string & value);
-	void SetHue(unsigned n, const std::string & value);
-	void SetSat(unsigned n, const std::string & value);
-	void SetVal(unsigned n, const std::string & value);
-
-	/// list navigation metods
-	void SelectPrevRow(unsigned n);
-	void SelectNextRow(unsigned n);
-	void SelectPrevCol(unsigned n);
-	void SelectNextCol(unsigned n);
-
-	/// attached to update_list slot
-	/// calls get_values to update value list
-	void UpdateList(const std::string & value);
+	GUIWIDGETLIST(const GUIWIDGETLIST & other);
+	GUIWIDGETLIST & operator=(const GUIWIDGETLIST & other);
 
 	/// called during Update to process m_values
 	virtual void UpdateElements(SCENENODE & scene) = 0;
+
+	/// override widget property callbacks
+	void SetColor1(const std::string & value);
+	void SetOpacity1(const std::string & value);
+	void SetHue1(const std::string & value);
+	void SetSat1(const std::string & value);
+	void SetVal1(const std::string & value);
+
+	/// ugh, dead weight
+	DRAWABLE & GetDrawable(SCENENODE & scene);
 };
 
 #endif // _GUIWIDGETLIST_H

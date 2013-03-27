@@ -119,7 +119,7 @@ void UPDATE_MANAGER::Show(GUI & gui)
 	std::set <std::string> allobjects;
 
 	// start off with the list we have on disk
-	for (std::list <std::pair <std::string, std::string> >::const_iterator i = disklist.begin(); i != disklist.end(); i++)
+	for (std::vector<std::pair <std::string, std::string> >::const_iterator i = disklist.begin(); i != disklist.end(); i++)
 	{
 		allobjects.insert(i->first);
 	}

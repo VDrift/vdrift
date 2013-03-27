@@ -31,23 +31,17 @@ public:
 
 	~GUILABELLIST();
 
+	/// Create label elements. To be called after SetupList!
 	void SetupDrawable(
-		const FONT & font, int align,
+		SCENENODE & scene, const FONT & font, int align,
 		float scalex, float scaley, float z);
 
 protected:
-	float m_scalex, m_scaley, m_z;
-	const FONT * m_font;
-	int m_align;
-
 	/// verboten
 	GUILABELLIST(const GUILABELLIST & other);
 
 	/// called during Update to process m_values
 	void UpdateElements(SCENENODE & scene);
-
-	/// ugh, dead weight
-	DRAWABLE & GetDrawable(SCENENODE & scene);
 };
 
 #endif // _GUILABELLIST_H

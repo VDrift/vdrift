@@ -34,15 +34,23 @@ void GUIIMAGE::Update(SCENENODE & scene, float dt)
 {
 	if (m_update)
 	{
-		assert(m_content);
-		TEXTUREINFO texinfo;
-		texinfo.mipmap = false;
-		texinfo.repeatu = false;
-		texinfo.repeatv = false;
-		std::tr1::shared_ptr<TEXTURE> texture;
-		m_content->load(texture, m_imagepath, m_imagename, texinfo);
-		GetDrawable(scene).SetDiffuseMap(texture);
-
+		DRAWABLE & d = GetDrawable(scene);
+		if (m_imagename.empty())
+		{
+			m_visible = false;
+		}
+		else
+		{
+			assert(m_content);
+			TEXTUREINFO texinfo;
+			texinfo.mipmap = false;
+			texinfo.repeatu = false;
+			texinfo.repeatv = false;
+			std::tr1::shared_ptr<TEXTURE> texture;
+			m_content->load(texture, m_imagepath, m_imagename, texinfo);
+			d.SetDiffuseMap(texture);
+			m_visible = true;
+		}
 		GUIWIDGET::Update(scene, dt);
 	}
 }
@@ -58,10 +66,10 @@ void GUIIMAGE::SetupDrawable(
 	m_varray.SetToBillboard(x - w * 0.5f, y - h * 0.5f, x + w * 0.5f, y + h * 0.5f);
 
 	m_draw = scene.GetDrawlist().twodim.insert(DRAWABLE());
-	DRAWABLE & drawref = GetDrawable(scene);
-	drawref.SetVertArray(&m_varray);
-	drawref.SetCull(false, false);
-	drawref.SetDrawOrder(z);
+	DRAWABLE & d = GetDrawable(scene);
+	d.SetVertArray(&m_varray);
+	d.SetCull(false, false);
+	d.SetDrawOrder(z);
 }
 
 void GUIIMAGE::SetImage(const std::string & value)

@@ -17,61 +17,35 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _GUICONTROLLIST_H
-#define _GUICONTROLLIST_H
+#ifndef _GUIIMAGELIST_H
+#define _GUIIMAGELIST_H
 
-#include "guilist.h"
-#include "guicontrol.h"
+#include "guiwidgetlist.h"
 
-/// a widget that mimics a list of controls
-class GUICONTROLLIST : public GUICONTROL, public GUILIST
+class ContentManager;
+
+class GUIIMAGELIST : public GUIWIDGETLIST
 {
 public:
-	GUICONTROLLIST();
+	GUIIMAGELIST();
 
-	~GUICONTROLLIST();
+	~GUIIMAGELIST();
 
-	/// Return true if control contains x, y
-	bool Focus(float x, float y);
+	/// Create image elements. To be called after SetupList!
+	void SetupDrawable(
+		SCENENODE & scene, ContentManager & content,
+		const std::string & path, float z);
 
-	/// Signal slots attached to events
-	void Signal(EVENT ev);
+	/// Special case: list of identical images
+	void SetImage(const std::string & value);
 
-	/// Register event actions
-	void RegisterActions(
-		const std::map<std::string, Slot1<int>*> & actionmap,
-		const Config::const_iterator section,
-		const Config & cfg);
+protected:
+	/// verboten
+	GUIIMAGELIST(const GUIIMAGELIST & other);
+	GUIIMAGELIST & operator=(const GUIIMAGELIST & other);
 
-	/// Register event actions to signal
-	static void SetActions(
-		const std::map<std::string, Slot1<int>*> & actionmap,
-		const std::string & actionstr,
-		Signal1<int> & signal);
-
-	/// List update slot, parameter holds list item count
-	Slot1<const std::string &> update_list;
-
-	/// Set active element, parameter holds list item index
-	Slot1<const std::string &> set_nth;
-
-	/// List scroll slots
-	Slot0 scroll_fwd;
-	Slot0 scroll_rev;
-
-private:
-	Signal1<int> m_signaln[EVENTNUM];
-	int m_active_element;
-
-	void UpdateList(const std::string & value);
-
-	void SetToNth(const std::string & value);
-
-	void ScrollFwd();
-
-	void ScrollRev();
-
-	void SetActiveElement(int active_element);
+	/// called during Update to process m_values
+	void UpdateElements(SCENENODE & scene);
 };
 
-#endif // _GUICONTROLLIST_H
+#endif // _GUIIMAGELIST_H

@@ -36,15 +36,10 @@ public:
 	// align: -1 left, 0 center, +1 right
 	void SetupDrawable(
 		SCENENODE & scene,
-		const FONT & font,
-		int align,
+		const FONT & font, int align,
 		float scalex, float scaley,
 		float centerx, float centery,
 		float w, float h, float z);
-
-	// call to remove label from scene
-	// warning: will invalidate the drawable
-	void Remove(SCENENODE & scene);
 
 	void SetText(const std::string & text);
 

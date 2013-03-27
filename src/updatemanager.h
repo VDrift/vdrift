@@ -62,7 +62,7 @@ public:
 	// returns true on success
 	bool ApplyUpdate(GAME_DOWNLOADER downloader, GUI & gui, const PATHMANAGER & pathmanager);
 
-	std::list<std::pair<std::string, std::string> > & GetValueList() {return disklist;}
+	std::vector<std::pair<std::string, std::string> > & GetValueList() {return disklist;}
 
 private:
 	AUTOUPDATE & autoupdate;
@@ -78,7 +78,7 @@ private:
 	std::string group;
 
 	// mirrors mappings used in the GUI, used to get the list of cars/tracks on disk
-	std::list<std::pair<std::string, std::string> > disklist;
+	std::vector<std::pair<std::string, std::string> > disklist;
 
 	// holds settings/updates.config from HEAD in the SVN data repository
 	Config remoteconfig;

@@ -84,6 +84,7 @@ src = Split("""
 		gui/guicontrollist.cpp
 		gui/gui.cpp
 		gui/guiimage.cpp
+		gui/guiimagelist.cpp
 		gui/guilabel.cpp
 		gui/guilabellist.cpp
 		gui/guilanguage.cpp

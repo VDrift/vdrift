@@ -20,8 +20,7 @@
 #include "guilabellist.h"
 #include "guilabel.h"
 
-GUILABELLIST::GUILABELLIST() :
-	m_scalex(0.1), m_scaley(0.1), m_z(0), m_font(0), m_align(0)
+GUILABELLIST::GUILABELLIST()
 {
 	// ctor
 }
@@ -32,46 +31,33 @@ GUILABELLIST::~GUILABELLIST()
 }
 
 void GUILABELLIST::SetupDrawable(
-	const FONT & font, int align,
+	SCENENODE & scene, const FONT & font, int align,
 	float scalex, float scaley, float z)
 {
-	m_scalex = scalex;
-	m_scaley = scaley;
-	m_z = z;
-	m_font = &font;
-	m_align = align;
-}
-
-void GUILABELLIST::UpdateElements(SCENENODE & scene)
-{
-	unsigned num_new = m_values.size();
-	unsigned num_old = m_elements.size();
-	for (unsigned i = num_new; i < num_old; ++i)
-	{
-		static_cast<GUILABEL*>(m_elements[i])->Remove(scene);
-		delete m_elements[i];
-	}
-	m_elements.resize(num_new);
-	for (unsigned i = num_old; i < num_new; ++i)
+	m_elements.resize(m_rows * m_cols);
+	for (size_t i = 0; i < m_rows * m_cols; ++i)
 	{
 		float x, y;
 		GetElemPos(i, x, y);
 
 		GUILABEL * element = new GUILABEL();
 		element->SetupDrawable(
-			scene, *m_font, m_align, m_scalex, m_scaley,
-			x, y, m_elemw, m_elemh, m_z);
+			scene, font, align, scalex, scaley,
+			x, y, m_elemw, m_elemh, z);
 
 		m_elements[i] = element;
 	}
-	for (unsigned i = 0; i < num_new; ++i)
+}
+
+void GUILABELLIST::UpdateElements(SCENENODE &)
+{
+	assert(m_values.size() <= m_elements.size());
+	for (size_t i = 0; i < m_values.size(); ++i)
 	{
 		static_cast<GUILABEL*>(m_elements[i])->SetText(m_values[i]);
 	}
-}
-
-DRAWABLE & GUILABELLIST::GetDrawable(SCENENODE & scene)
-{
-	assert(0); // don't want to end up here
-	return m_elements[0]->GetDrawable(scene);
+	for (size_t i = m_values.size(); i < m_elements.size(); ++i)
+	{
+		static_cast<GUILABEL*>(m_elements[i])->SetText("");
+	}
 }

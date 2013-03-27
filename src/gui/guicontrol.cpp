@@ -20,23 +20,25 @@
 #include "guicontrol.h"
 
 static const std::string names[] = {
-	"onselectx",
-	"onselecty",
-	"onselect",
 	"onfocus",
 	"onblur",
 	"onmoveup",
 	"onmovedown",
 	"onmoveleft",
 	"onmoveright",
+	"onselect",
+	"onselectd",
+	"onscrollf",
+	"onscrollr",
+	"onselectx",
+	"onselecty",
 };
 const std::vector<std::string> GUICONTROL::signal_names(names, names + sizeof(names) / sizeof(names[0]));
 
 GUICONTROL::GUICONTROL() :
-	m_xmin(0),
-	m_ymin(0),
-	m_xmax(0),
-	m_ymax(0)
+	m_xmin(0), m_ymin(0),
+	m_xmax(0), m_ymax(0),
+	m_focusx(0), m_focusy(0)
 {
 	// ctor
 }
@@ -46,36 +48,38 @@ GUICONTROL::~GUICONTROL()
 	// dtor
 }
 
-bool GUICONTROL::HasFocus(float x, float y) const
+bool GUICONTROL::Focus(float x, float y)
 {
-	return x <= m_xmax && x >= m_xmin && y <= m_ymax && y >= m_ymin;
+	if (x <= m_xmax && x >= m_xmin && y <= m_ymax && y >= m_ymin)
+	{
+		m_focusx = x;
+		m_focusy = y;
+		return true;
+	}
+	return false;
 }
 
-void GUICONTROL::Select(float x, float y) const
+void GUICONTROL::Signal(EVENT ev)
 {
-	if (!HasFocus(x, y))
-		return;
-
-	if (m_selectx.connected())
+	if (ev == SELECTDOWN)
 	{
-		float sx = (x - m_xmin) / (m_xmax - m_xmin);
-		sx = (sx <= 1) ? (sx >= 0) ? sx : 0 : 1;
-		std::stringstream s;
-		s << sx;
-		m_selectx(s.str());
-	}
+		if (m_signalv[SELECTX].connected())
+		{
+			float sx = (m_focusx - m_xmin) / (m_xmax - m_xmin);
+			sx = (sx <= 1) ? (sx >= 0) ? sx : 0 : 1;
+			std::stringstream s;
+			s << sx;
+			m_signalv[SELECTX](s.str());
+		}
 
-	if (m_selecty.connected())
-	{
-		float sy = (y - m_ymin) / (m_ymax - m_ymin);
-		std::stringstream s;
-		s << sy;
-		m_selecty(s.str());
+		if (m_signalv[SELECTX].connected())
+		{
+			float sy = (m_focusy - m_ymin) / (m_ymax - m_ymin);
+			std::stringstream s;
+			s << sy;
+			m_signalv[SELECTY](s.str());
+		}
 	}
-}
-
-void GUICONTROL::Signal(EVENT ev) const
-{
 	m_signal[ev]();
 }
 
@@ -104,17 +108,15 @@ void GUICONTROL::RegisterActions(
 	const Config & cfg)
 {
 	std::string actionstr;
-
-	if (cfg.get(section, signal_names[0], actionstr))
-		SetActions(vactionmap, actionstr, m_selectx);
-
-	if (cfg.get(section, signal_names[1], actionstr))
-		SetActions(vactionmap, actionstr, m_selecty);
-
 	for (size_t i = 0; i < EVENTNUM; ++i)
 	{
-		if (cfg.get(section, signal_names[i + 2], actionstr))
+		if (cfg.get(section, signal_names[i], actionstr))
 			SetActions(actionmap, actionstr, m_signal[i]);
+	}
+	for (size_t i = 0; i < EVENTVNUM; ++i)
+	{
+		if (cfg.get(section, signal_names[i + EVENTNUM], actionstr))
+			SetActions(vactionmap, actionstr, m_signalv[i]);
 	}
 }
 

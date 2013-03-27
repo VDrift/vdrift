@@ -225,7 +225,7 @@ void GAME::Start(std::list <std::string> & args)
 		return;
 	}
 
-	// Initialize GUI.
+	// Load GUI.
 	if (!InitGUI("Main"))
 	{
 		error_output << "Error initializing graphical user interface" << std::endl;
@@ -485,7 +485,7 @@ bool GAME::InitGUI(const std::string & pagename)
 		}
 	}
 
-	std::map<std::string, std::list <std::pair <std::string, std::string> > > valuelists;
+	std::map<std::string, GUIOPTION::LIST> valuelists;
 	PopulateValueLists(valuelists);
 
 	std::map<std::string, Slot0*> actionmap;
@@ -1278,7 +1278,7 @@ void GAME::LoadControlsIntoGUI()
 
 void GAME::UpdateStartList()
 {
-	std::list<std::pair<std::string, std::string> > startlist;
+	GUIOPTION::LIST startlist;
 	PopulateStartList(startlist);
 	gui.SetOptionValues("game.startlist", "1", startlist, error_output);
 }
@@ -1286,7 +1286,8 @@ void GAME::UpdateStartList()
 void GAME::UpdateCarEditList()
 {
 	const std::string edit_id_str = cast(car_edit_id);
-	std::list<std::pair<std::string, std::string> > edit_id_list;
+	GUIOPTION::LIST edit_id_list;
+	edit_id_list.reserve(car_info.size());
 	for (size_t i = 0; i < car_info.size(); ++i)
 	{
 		edit_id_list.push_back(std::make_pair(cast(i), cast(i + 1)));
@@ -1971,13 +1972,6 @@ void GAME::CalculateFPS()
 	}
 }
 
-static bool SortStringPairBySecond(
-	const std::pair<std::string, std::string> & first,
-	const std::pair<std::string, std::string> & second)
-{
-	return first.second < second.second;
-}
-
 static void PopulateCarSet(std::set<std::pair<std::string, std::string> > & set, const std::string & path, const PATHMANAGER & pathmanager)
 {
 	std::list<std::string> folderlist;
@@ -2008,7 +2002,16 @@ static void PopulateTrackSet(std::set<std::pair<std::string, std::string> > & se
 	}
 }
 
-void GAME::PopulateTrackList(std::list<std::pair<std::string, std::string> > & tracklist)
+template <class T0, class T1>
+struct SortPairBySecond
+{
+	bool operator()(const std::pair<T0, T1> & first, const std::pair<T0, T1> & second)
+	{
+		return first.second < second.second;
+	}
+};
+
+void GAME::PopulateTrackList(GUIOPTION::LIST & tracklist)
 {
 	// Use set to avoid duplicate entries.
 	std::set<std::pair<std::string, std::string> > trackset;
@@ -2020,10 +2023,11 @@ void GAME::PopulateTrackList(std::list<std::pair<std::string, std::string> > & t
 	{
 		tracklist.push_back(*i);
 	}
-	tracklist.sort(SortStringPairBySecond);
+
+	std::sort(tracklist.begin(), tracklist.end(), SortPairBySecond<std::string, std::string>());
 }
 
-void GAME::PopulateCarList(std::list<std::pair<std::string, std::string> > & carlist)
+void GAME::PopulateCarList(GUIOPTION::LIST & carlist)
 {
 	// Use set to avoid duplicate entries.
 	std::set <std::pair<std::string, std::string> > carset;
@@ -2037,7 +2041,7 @@ void GAME::PopulateCarList(std::list<std::pair<std::string, std::string> > & car
 	}
 }
 
-void GAME::PopulateCarPaintList(const std::string & carname, std::list<std::pair<std::string, std::string> > & carpaintlist)
+void GAME::PopulateCarPaintList(const std::string & carname, GUIOPTION::LIST & carpaintlist)
 {
 	carpaintlist.clear();
 	carpaintlist.push_back(std::make_pair("default", "default"));
@@ -2054,7 +2058,7 @@ void GAME::PopulateCarPaintList(const std::string & carname, std::list<std::pair
 	}
 }
 
-void GAME::PopulateDriverList(std::list<std::pair<std::string, std::string> > & driverlist)
+void GAME::PopulateDriverList(GUIOPTION::LIST & driverlist)
 {
 	const std::vector<std::string> aitypes = ai.ListFactoryTypes();
 	driverlist.clear();
@@ -2065,7 +2069,7 @@ void GAME::PopulateDriverList(std::list<std::pair<std::string, std::string> > & 
 	}
 }
 
-void GAME::PopulateStartList(std::list<std::pair<std::string, std::string> > & startlist)
+void GAME::PopulateStartList(GUIOPTION::LIST & startlist)
 {
 	startlist.clear();
 	for (size_t i = 0; i < car_info.size(); ++i)
@@ -2083,7 +2087,7 @@ void GAME::PopulateStartList(std::list<std::pair<std::string, std::string> > & s
 	}
 }
 
-void GAME::PopulateReplayList(std::list<std::pair<std::string, std::string> > & replaylist)
+void GAME::PopulateReplayList(GUIOPTION::LIST & replaylist)
 {
 	replaylist.clear();
 	int numreplays = 0;
@@ -2116,7 +2120,7 @@ void GAME::PopulateReplayList(std::list<std::pair<std::string, std::string> > & 
 	settings.SetSelectedReplay(replaylist.begin()->first);
 }
 
-void GAME::PopulateGUISkinList(std::list<std::pair<std::string, std::string> > & skinlist)
+void GAME::PopulateGUISkinList(GUIOPTION::LIST & skinlist)
 {
 	std::list<std::string> skins;
 	pathmanager.GetFileList(pathmanager.GetSkinPath(), skins);
@@ -2131,7 +2135,7 @@ void GAME::PopulateGUISkinList(std::list<std::pair<std::string, std::string> > &
 	}
 }
 
-void GAME::PopulateGUILangList(std::list<std::pair<std::string, std::string> > & langlist)
+void GAME::PopulateGUILangList(GUIOPTION::LIST & langlist)
 {
 	std::list<std::string> languages;
 	std::string skinfolder = pathmanager.GetDataPath() + "/" + pathmanager.GetGUILanguageDir(settings.GetSkin()) + "/";
@@ -2148,7 +2152,7 @@ void GAME::PopulateGUILangList(std::list<std::pair<std::string, std::string> > &
 	}
 }
 
-void GAME::PopulateAnisoList(std::list<std::pair<std::string, std::string> > & anisolist)
+void GAME::PopulateAnisoList(GUIOPTION::LIST & anisolist)
 {
 	anisolist.clear();
 	anisolist.push_back(std::make_pair("0", "Off"));
@@ -2163,7 +2167,7 @@ void GAME::PopulateAnisoList(std::list<std::pair<std::string, std::string> > & a
 	}
 }
 
-void GAME::PopulateAntialiasList(std::list<std::pair<std::string, std::string> > & antialiaslist)
+void GAME::PopulateAntialiasList(GUIOPTION::LIST & antialiaslist)
 {
 	antialiaslist.clear();
 	antialiaslist.push_back(std::make_pair("0", "Off"));
@@ -2174,7 +2178,7 @@ void GAME::PopulateAntialiasList(std::list<std::pair<std::string, std::string> >
 	}
 }
 
-void GAME::PopulateValueLists(std::map<std::string, std::list<std::pair <std::string, std::string> > > & valuelists)
+void GAME::PopulateValueLists(std::map<std::string, GUIOPTION::LIST> & valuelists)
 {
 	PopulateTrackList(valuelists["tracks"]);
 
@@ -2509,7 +2513,7 @@ void GAME::LeaveGame()
 		info_output << "Saving replay to " << replayname << std::endl;
 		replay.StopRecording(replayname);
 
-		std::list <std::pair <std::string, std::string> > replaylist;
+		GUIOPTION::LIST replaylist;
 		PopulateReplayList(replaylist);
 		gui.SetOptionValues("game.selected_replay", "", replaylist, error_output);
 	}
@@ -2812,7 +2816,7 @@ void GAME::SetCarName(const std::string & value)
 
 	car_info[car_edit_id].name = value;
 
-	std::list <std::pair <std::string, std::string> > carpaintlist;
+	GUIOPTION::LIST carpaintlist;
 	PopulateCarPaintList(value, carpaintlist);
 	gui.SetOptionValues("game.car_paint", info.paint, carpaintlist, error_output);
 
@@ -2933,7 +2937,7 @@ void GAME::SetCarsNum(const std::string & value)
 
 void GAME::SetTrackImage(const std::string & value)
 {
-	gui.SetOptionValue("game.track.image", value + "/trackshot.png");
+	gui.SetOptionValue("game.track_image", value + "/trackshot.png");
 }
 
 void GAME::SetControl(const std::string & value)

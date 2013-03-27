@@ -143,27 +143,27 @@ private:
 
 	void CalculateFPS();
 
-	void PopulateValueLists(std::map<std::string, std::list<std::pair<std::string,std::string> > > & valuelists);
+	void PopulateValueLists(std::map<std::string, GUIOPTION::LIST> & valuelists);
 
-	void PopulateTrackList(std::list<std::pair<std::string, std::string> > & tracklist);
+	void PopulateTrackList(GUIOPTION::LIST & tracklist);
 
-	void PopulateCarList(std::list<std::pair<std::string, std::string> > & carlist);
+	void PopulateCarList(GUIOPTION::LIST & carlist);
 
-	void PopulateCarPaintList(const std::string & carname, std::list<std::pair<std::string, std::string> > & carpaintlist);
+	void PopulateCarPaintList(const std::string & carname, GUIOPTION::LIST & carpaintlist);
 
-	void PopulateDriverList(std::list<std::pair<std::string, std::string> > & driverlist);
+	void PopulateDriverList(GUIOPTION::LIST & driverlist);
 
-	void PopulateStartList(std::list<std::pair<std::string, std::string> > & startlist);
+	void PopulateStartList(GUIOPTION::LIST & startlist);
 
-	void PopulateReplayList(std::list<std::pair<std::string, std::string> > & replaylist);
+	void PopulateReplayList(GUIOPTION::LIST & replaylist);
 
-	void PopulateGUISkinList(std::list<std::pair<std::string, std::string> > & skinlist);
+	void PopulateGUISkinList(GUIOPTION::LIST & skinlist);
 
-	void PopulateGUILangList(std::list<std::pair<std::string, std::string> > & langlist);
+	void PopulateGUILangList(GUIOPTION::LIST & langlist);
 
-	void PopulateAnisoList(std::list<std::pair<std::string, std::string> > & anisolist);
+	void PopulateAnisoList(GUIOPTION::LIST & anisolist);
 
-	void PopulateAntialiasList(std::list<std::pair<std::string, std::string> > & antialiaslist);
+	void PopulateAntialiasList(GUIOPTION::LIST & antialiaslist);
 
 	void UpdateTrackMap();
 

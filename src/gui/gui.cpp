@@ -24,6 +24,114 @@
 
 static const std::string null;
 
+static bool LoadOptions(
+	const Config & cfg,
+	const GUILANGUAGE & lang,
+	GUI::OPTIONMAP & options,
+	std::ostream & error_output)
+{
+	for (Config::const_iterator i = cfg.begin(); i != cfg.end(); ++i)
+	{
+		std::string type, desc;
+		if (i->first.empty() || !(cfg.get(i, "type", type) && cfg.get(i, "desc", desc)))
+			continue;
+
+		float min(0), max(1);
+		bool percent(false);
+		cfg.get(i, "min", min);
+		cfg.get(i, "max", max);
+		cfg.get(i, "percent", percent);
+
+		options[i->first].SetInfo(lang(desc), type, min, max, percent);
+	}
+	return true;
+}
+
+static bool LoadOptionValues(
+	const Config & cfg,
+	const GUILANGUAGE & lang,
+	const std::map<std::string, GUIOPTION::LIST> & valuelists,
+	GUI::OPTIONMAP & options,
+	std::ostream & error_output)
+{
+	for (GUI::OPTIONMAP::iterator op = options.begin(); op != options.end(); ++op)
+	{
+		const std::string & name = op->first;
+		GUIOPTION & option = op->second;
+
+		Config::const_iterator ci;
+		if (!cfg.get(name, ci, error_output)) return false;
+
+		std::string defaultval, values;
+		if (!cfg.get(ci, "default", defaultval, error_output)) return false;
+		if (!cfg.get(ci, "values", values, error_output)) return false;
+
+		// different ways to populate the options
+		GUIOPTION::LIST opvals;
+		if (values == "list")
+		{
+			int valuenum;
+			if (!cfg.get(ci, "num_vals", valuenum, error_output)) return false;
+
+			for (int n = 0; n < valuenum; n++)
+			{
+				std::stringstream tstr;
+				tstr.width(2);
+				tstr.fill('0');
+				tstr << n;
+
+				std::string displaystr, storestr;
+				if (!cfg.get(ci, "opt"+tstr.str(), displaystr, error_output)) return false;
+				if (!cfg.get(ci, "val"+tstr.str(), storestr, error_output)) return false;
+				opvals.push_back(std::make_pair(storestr, lang(displaystr)));
+			}
+		}
+		else if (values == "bool")
+		{
+			std::string truestr, falsestr;
+			if (!cfg.get(ci, "true", truestr, error_output)) return false;
+			if (!cfg.get(ci, "false", falsestr, error_output)) return false;
+			opvals.push_back(std::make_pair("true", lang(truestr)));
+			opvals.push_back(std::make_pair("false", lang(falsestr)));
+		}
+		else if (values == "ip_valid")
+		{
+
+		}
+		else if (values == "port_valid")
+		{
+
+		}
+		else if (values == "int")
+		{
+
+		}
+		else if (values == "float")
+		{
+
+		}
+		else if (values == "string")
+		{
+
+		}
+		else //assume it's "values", meaning the GAME populates the values
+		{
+			std::map<std::string, GUIOPTION::LIST>::const_iterator vlist = valuelists.find(values);
+			if (vlist == valuelists.end())
+			{
+				error_output << "Can't find value type \"" << values << "\" in list of GAME values" << std::endl;
+				return false;
+			}
+			for (GUIOPTION::LIST::const_iterator n = vlist->second.begin(); n != vlist->second.end(); n++)
+			{
+				opvals.push_back(std::make_pair(n->first, lang(n->second)));
+			}
+		}
+		option.SetValues(defaultval, opvals);
+	}
+	return true;
+}
+
 GUI::GUI() :
 	m_cursorx(0),
 	m_cursory(0),
@@ -93,7 +201,7 @@ void GUI::Unload()
 
 bool GUI::Load(
 	const std::list <std::string> & pagelist,
-	const std::map<std::string, std::list <std::pair <std::string, std::string> > > & valuelists,
+	const std::map<std::string, GUIOPTION::LIST> & valuelists,
 	const std::string & datapath,
 	const std::string & optionsfile,
 	const std::string & skinname,
@@ -127,13 +235,24 @@ bool GUI::Load(
 		return false;
 
 	// load options
-	if (!LoadOptions(optionsfile, valuelists, error_output))
+	Config opt;
+	if (!opt.load(optionsfile))
+	{
+		error_output << "Failed to load options file: " << optionsfile << std::endl;
 		return false;
+	}
+	if (!LoadOptions(opt, lang, options, error_output))
+	{
+		error_output << "Failed to load options." << std::endl;
+		return false;
+	}
 
+	// register options
 	VSIGNALMAP vsignalmap;
 	VNACTIONMAP vnactionmap;
+	NACTIONMAP nactionmap;
 	VACTIONMAP vactionmap;
-	RegisterOptions(vsignalmap, vnactionmap, vactionmap, actionmap);
+	RegisterOptions(vsignalmap, vnactionmap, vactionmap, nactionmap, actionmap);
 
 	// init pages
 	size_t pagecount = 0;
@@ -159,17 +278,24 @@ bool GUI::Load(
 		const std::string pagepath = menupath + "/" + i->first;
 		if (!i->second.Load(
 			pagepath, texpath, screenhwratio, lang, font,
-			vsignalmap, vnactionmap, vactionmap, actionmap,
+			vsignalmap, vnactionmap, vactionmap, nactionmap, actionmap,
 			node, content, error_output))
 		{
 			error_output << "Error loading GUI page: " << pagepath << std::endl;
 			return false;
 		}
 	}
-
 	if (pages.find("Main") == pages.end())
 	{
 		error_output << "Couldn't find GUI Main menu in: " << menupath << std::endl;
+		return false;
+	}
+
+	// populate option values
+	// has to happen after page loading to sync gui with options
+	if (!LoadOptionValues(opt, lang, valuelists, options, error_output))
+	{
+		error_output << "Failed to load option values." << std::endl;
 		return false;
 	}
 
@@ -273,7 +399,7 @@ void GUI::SetOptions(const std::map <std::string, std::string> & options)
 void GUI::SetOptionValues(
 	const std::string & optionname,
 	const std::string & curvalue,
-	std::list <std::pair <std::string, std::string> > & newvalues,
+	const GUIOPTION::LIST & newvalues,
 	std::ostream & error_output)
 {
 	OPTIONMAP::iterator op = options.find(optionname);
@@ -328,140 +454,36 @@ bool GUI::ActivatePage(
 	return true;
 }
 
-bool GUI::LoadOptions(
-	const std::string & optionfile,
-	const std::map<std::string, std::list <std::pair <std::string, std::string> > > & valuelists,
-	std::ostream & error_output)
-{
-	Config opt;
-	if (!opt.load(optionfile))
-	{
-		error_output << "Can't find options file: " << optionfile << std::endl;
-		return false;
-	}
-
-	//opt.DebugPrint(error_output);
-	for (Config::const_iterator i = opt.begin(); i != opt.end(); ++i)
-	{
-		if (i->first.empty()) continue;
-
-		std::string cat, name, defaultval, values, desc, type;
-		if (!opt.get(i, "cat", cat, error_output)) return false;
-		if (!opt.get(i, "name", name, error_output)) return false;
-		if (!opt.get(i, "default", defaultval, error_output)) return false;
-		if (!opt.get(i, "values", values, error_output)) return false;
-		if (!opt.get(i, "desc", desc, error_output)) return false;
-		if (!opt.get(i, "type", type, error_output)) return false;
-
-		desc = lang(desc);
-
-		float min(0), max(1);
-		bool percent(false);
-		opt.get(i, "min", min);
-		opt.get(i, "max", max);
-		opt.get(i, "percent", percent);
-
-		std::string optionname = cat + "." + name;
-		GUIOPTION & option = options[optionname];
-
-		option.SetInfo(desc, type);
-		option.SetMinMaxPercentage(min, max, percent);
-
-		// different ways to populate the options
-		std::list <std::pair<std::string, std::string> >  opvals;
-		if (values == "list")
-		{
-			int valuenum;
-			if (!opt.get(i, "num_vals", valuenum, error_output)) return false;
-
-			for (int n = 0; n < valuenum; n++)
-			{
-				std::stringstream tstr;
-				tstr.width(2);
-				tstr.fill('0');
-				tstr << n;
-
-				std::string displaystr, storestr;
-				if (!opt.get(i, "opt"+tstr.str(), displaystr, error_output)) return false;
-				if (!opt.get(i, "val"+tstr.str(), storestr, error_output)) return false;
-				opvals.push_back(std::make_pair(storestr, lang(displaystr)));
-			}
-		}
-		else if (values == "bool")
-		{
-			std::string truestr, falsestr;
-			if (!opt.get(i, "true", truestr, error_output)) return false;
-			if (!opt.get(i, "false", falsestr, error_output)) return false;
-			opvals.push_back(std::make_pair("true", lang(truestr)));
-			opvals.push_back(std::make_pair("false", lang(falsestr)));
-		}
-		else if (values == "ip_valid")
-		{
-
-		}
-		else if (values == "port_valid")
-		{
-
-		}
-		else if (values == "int")
-		{
-
-		}
-		else if (values == "float")
-		{
-
-		}
-		else if (values == "string")
-		{
-
-		}
-		else //assume it's "values", meaning the GAME populates the values
-		{
-			std::map<std::string, std::list <std::pair<std::string,std::string> > >::const_iterator vlist = valuelists.find(values);
-			if (vlist == valuelists.end())
-			{
-				error_output << "Can't find value type \"" << values << "\" in list of GAME values" << std::endl;
-				return false;
-			}
-			for (std::list <std::pair<std::string,std::string> >::const_iterator n = vlist->second.begin(); n != vlist->second.end(); n++)
-			{
-				opvals.push_back(std::make_pair(n->first, lang(n->second)));
-			}
-		}
-		option.SetValues(defaultval, opvals);
-	}
-
-	return true;
-}
-
 void GUI::RegisterOptions(
 	VSIGNALMAP & vsignalmap,
 	VNACTIONMAP & vnactionmap,
 	VACTIONMAP & vactionmap,
+	NACTIONMAP & nactionmap,
 	ACTIONMAP & actionmap)
 {
 	for (OPTIONMAP::iterator i = options.begin(); i != options.end(); ++i)
 	{
 		const std::string & opname = i->first;
 		GUIOPTION & option = i->second;
-
-		if (!option.GetValueList().empty())
-		{
-			// option is a list
-			vsignalmap[opname + ".update"] = &option.signal_update;
-			vnactionmap[opname] = &option.get_values;
-		}
-		else if (option.IsFloat())
+		if (option.IsFloat())
 		{
 			// option is a float
 			vsignalmap[opname + ".norm"] = &option.signal_valn;
 			vactionmap[opname + ".norm"] = &option.set_valn;
 		}
+		else
+		{
+			// option is a list
+			vsignalmap[opname + ".update"] = &option.signal_update;
+			vnactionmap[opname] = &option.get_values;
+		}
+		vsignalmap[opname + ".nth"] = &option.signal_nth;
 		vsignalmap[opname + ".str"] = &option.signal_str;
 		vsignalmap[opname] = &option.signal_val;
 		vactionmap[opname] = &option.set_val;
-		actionmap[opname + ".next"] = &option.next_val;
-		actionmap[opname + ".prev"] = &option.prev_val;
+		nactionmap[opname + ".nth"] = &option.set_nth;
+		actionmap[opname + ".next"] = &option.set_next;
+		actionmap[opname + ".prev"] = &option.set_prev;
 	}
 }
 
@@ -481,7 +503,6 @@ bool GUI::SetLabelText(const std::string & pagename, const std::string & labelna
 
 bool GUI::GetLabelText(const std::string & pagename, const std::string & labelname, std::string & text_output)
 {
-
 	PAGEMAP::iterator p = pages.find(pagename);
 	if (p == pages.end())
 		return false;

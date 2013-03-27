@@ -169,7 +169,7 @@ void SETTINGS::Serialize(bool write, Config & config)
 	Param(config, write, section, "music_volume", music_volume);
 
 	config.get("joystick", section);
-	Param(config, write, section, "type", joytype);
+	Param(config, write, section, "device_type", joytype);
 	Param(config, write, section, "two_hundred", joy200);
 	joy200 = false;
 	Param(config, write, section, "calibrated", joystick_calibrated);

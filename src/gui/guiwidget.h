@@ -46,7 +46,8 @@ public:
 	virtual DRAWABLE & GetDrawable(SCENENODE & scene) = 0;
 
 	/// properties
-	void SetColor(float r, float g, float b);
+	void SetHSV(float h, float s, float v);
+	void SetRGB(float r, float g, float b);
 	void SetOpacity(float value);
 	void SetHue(float value);
 	void SetSat(float value);
@@ -58,7 +59,6 @@ public:
 	void SetSat(const std::string & value);
 	void SetVal(const std::string & value);
 
-	/// todo: add support for typed signals
 	Slot1<const std::string &> set_color;
 	Slot1<const std::string &> set_opacity;
 	Slot1<const std::string &> set_hue;

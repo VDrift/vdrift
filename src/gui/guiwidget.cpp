@@ -54,7 +54,14 @@ void GUIWIDGET::SetVisible(SCENENODE & scene, bool value)
 	GetDrawable(scene).SetDrawEnable(m_visible & value);
 }
 
-void GUIWIDGET::SetColor(float r, float g, float b)
+void GUIWIDGET::SetHSV(float h, float s, float v)
+{
+	m_h = h; m_s = s; m_v = v;
+	HSVtoRGB(m_h, m_s, m_v, m_r, m_g, m_b);
+	m_update = true;
+}
+
+void GUIWIDGET::SetRGB(float r, float g, float b)
 {
 	m_r = r, m_g = g, m_b = b;
 	RGBtoHSV(m_r, m_g, m_b, m_h, m_s, m_v);
@@ -95,7 +102,7 @@ void GUIWIDGET::SetColor(const std::string & value)
 	std::stringstream s(value);
 	MATHVECTOR<float, 3> v;
 	s >> v;
-	SetColor(v[0], v[1], v[2]);
+	SetRGB(v[0], v[1], v[2]);
 }
 
 void GUIWIDGET::SetOpacity(const std::string & value)

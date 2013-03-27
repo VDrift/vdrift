@@ -32,14 +32,23 @@ class GUICONTROL
 public:
 	enum EVENT
 	{
-		SELECT = 0,
-		FOCUS,
+		FOCUS = 0,
 		BLUR,
 		MOVEUP,
 		MOVEDOWN,
 		MOVELEFT,
 		MOVERIGHT,
+		SELECTUP,
+		SELECTDOWN,
+		SCROLLF,
+		SCROLLR,
 		EVENTNUM
+	};
+	enum EVENTV
+	{
+		SELECTX = 0,
+		SELECTY,
+		EVENTVNUM
 	};
 
 	GUICONTROL();
@@ -47,13 +56,10 @@ public:
 	virtual ~GUICONTROL();
 
 	/// Return true if control contains x, y
-	bool HasFocus(float x, float y) const;
-
-	/// Signal to slots attached to selectx, selecty
-	virtual void Select(float x, float y) const;
+	virtual bool Focus(float x, float y);
 
 	/// Signal to slots attached to events
-	virtual void Signal(EVENT ev) const;
+	virtual void Signal(EVENT ev);
 
 	const std::string & GetDescription() const;
 
@@ -86,10 +92,10 @@ public:
 
 protected:
 	float m_xmin, m_ymin, m_xmax, m_ymax;
+	float m_focusx, m_focusy;
 	std::string m_description;
-	Signal1<const std::string &> m_selectx;
-	Signal1<const std::string &> m_selecty;
 	Signal0 m_signal[EVENTNUM];
+	Signal1<const std::string &> m_signalv[EVENTVNUM];
 };
 
 #endif //_GUICONTROL_H

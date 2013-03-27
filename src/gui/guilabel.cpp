@@ -38,8 +38,7 @@ GUILABEL::~GUILABEL()
 
 void GUILABEL::SetupDrawable(
 	SCENENODE & scene,
-	const FONT & font,
-	int align,
+	const FONT & font, int align,
 	float scalex, float scaley,
 	float x, float y,
 	float w, float h, float z)
@@ -62,12 +61,6 @@ void GUILABEL::SetupDrawable(
 	else if (align == 0) x -= textw * 0.5;
 	else if (align == 1) x -= (textw - w * 0.5);
 	m_text_draw.Set(drawref, font, m_text, x, y, scalex, scaley, m_r, m_g, m_b);
-}
-
-void GUILABEL::Remove(SCENENODE & scene)
-{
-	scene.GetDrawlist().text.erase(m_draw);
-	m_visible = false;
 }
 
 void GUILABEL::SetText(const std::string & text)

@@ -42,6 +42,8 @@ public:
 		const std::string & imagepath,
 		float x, float y, float w, float h, float z);
 
+	void SetImage(const std::string & value);
+
 	Slot1<const std::string &> set_image;
 
 private:
@@ -49,8 +51,6 @@ private:
 	std::string m_imagepath, m_imagename;
 	keyed_container <DRAWABLE>::handle m_draw;
 	VERTEXARRAY m_varray;
-
-	void SetImage(const std::string & value);
 
 	DRAWABLE & GetDrawable(SCENENODE & scene)
 	{

@@ -23,8 +23,10 @@
 #include "guicontrol.h"
 #include "guiimage.h"
 #include "guilabel.h"
-#include "guilabellist.h"
 #include "guislider.h"
+#include "guicontrollist.h"
+#include "guiimagelist.h"
+#include "guilabellist.h"
 #include "content/contentmanager.h"
 #include "graphics/textureinfo.h"
 #include "cfg/config.h"
@@ -94,6 +96,30 @@ static Rect LoadRect(
 	return re;
 }
 
+template <class LIST>
+static bool LoadList(
+	const Config & pagefile,
+	const Config::const_iterator section,
+	const float x0, const float y0,
+	const float x1, const float y1,
+	LIST *& list)
+{
+	unsigned rows(1), cols(1);
+	if (pagefile.get(section, "rows", rows) | pagefile.get(section, "cols", cols))
+	{
+		float xpad(0), ypad(0);
+		bool vert(true);
+		pagefile.get(section, "padding-rl", xpad);
+		pagefile.get(section, "padding-tb", ypad);
+		pagefile.get(section, "vertical", vert);
+
+		list = new LIST();
+		list->SetupList(rows, cols, x0, y0, x1, y1, xpad, ypad, vert);
+		return true;
+	}
+	return false;
+}
+
 template <class SlotMap, class Signal>
 static void ConnectSignal(
 	const std::string & valuestr,
@@ -144,8 +170,9 @@ bool GUIPAGE::Load(
 	const GUILANGUAGE & lang,
 	const FONT & font,
 	VSIGNALMAP vsignalmap,
-	VNACTIONMAP vnactionmap,
-	VACTIONMAP vactionmap,
+	const VNACTIONMAP & vnactionmap,
+	const VACTIONMAP & vactionmap,
+	NACTIONMAP nactionmap,
 	ACTIONMAP actionmap,
 	SCENENODE & parentnode,
 	ContentManager & content,
@@ -178,14 +205,16 @@ bool GUIPAGE::Load(
 
 	// load widgets and controls
 	active_control = 0;
-	std::map<std::string, GUIWIDGET*> widgetmap;	// labels, images, sliders
-	std::vector<Config::const_iterator> controlit;	// control iterator cache
+	std::map<std::string, GUIWIDGET*> widgetmap;			// labels, images, sliders
+	std::map<std::string, GUIWIDGETLIST*> widgetlistmap;	// labels, images lists
+	std::vector<Config::const_iterator> controlit;			// control iterator cache
+	std::vector<Config::const_iterator> controlnit;			// control list iterator cache
+	std::vector<GUICONTROLLIST*> controllists;				// control list cache
 	for (Config::const_iterator section = pagefile.begin(); section != pagefile.end(); ++section)
 	{
 		if (section->first.empty()) continue;
 
 		Rect r = LoadRect(pagefile, section, screenhwratio);
-
 		float x0 = r.x - r.w * 0.5;
 		float y0 = r.y - r.h * 0.5;
 		float x1 = r.x + r.w * 0.5;
@@ -209,35 +238,26 @@ bool GUIPAGE::Load(
 			float scaley = fontsize;
 			float scalex = fontsize * screenhwratio;
 
-			unsigned rows(1), cols(1);
-			if (pagefile.get(section, "rows", rows) |
-				pagefile.get(section, "cols", cols))
+			GUILABELLIST * widget_list = 0;
+			if (LoadList(pagefile, section, x0, y0, x1, y1, widget_list))
 			{
-				// value is a list
-				VNACTIONMAP::iterator vni = vnactionmap.find(value);
-				VSIGNALMAP::iterator vsi = vsignalmap.find(value + ".update");
-				if (vni == vnactionmap.end() || vsi == vsignalmap.end())
+				// connect with the value list
+				VNACTIONMAP::const_iterator vni = vnactionmap.find(value);
+				if (vni != vnactionmap.end())
 				{
-					error_output << value << " is not a list" << std::endl;
-					continue;
+					VSIGNALMAP::const_iterator vsi = vsignalmap.find(value + ".update");
+					if (vsi != vsignalmap.end())
+					{
+						widget_list->update_list.connect(*vsi->second);
+						vni->second->connect(widget_list->get_values);
+					}
 				}
 
-				float xpad(0), ypad(0);
-				bool vert(true);
-				pagefile.get(section, "padding-rl", xpad);
-				pagefile.get(section, "padding-tb", ypad);
-				pagefile.get(section, "vertical", vert);
+				// init drawable
+				widget_list->SetupDrawable(sref, font, align, scalex, scaley, r.z);
 
-				GUILABELLIST * new_widget = new GUILABELLIST();
-				new_widget->SetupDrawable(font, align, scalex, scaley, r.z);
-				new_widget->SetupList(rows, cols, x0, y0, x1, y1, xpad, ypad, vert);
-
-				// connect with the value list
-				new_widget->update_list.connect(*vsi->second);
-				vni->second->connect(new_widget->get_values);
-				new_widget->update_list.call("");
-
-				widget = new_widget;
+				widgetlistmap[section->first] = widget_list;
+				widget = widget_list;
 			}
 			else
 			{
@@ -258,6 +278,7 @@ bool GUIPAGE::Load(
 				if (pagefile.get(section, "name", name))
 					labels[name] = new_widget;
 
+				widgetmap[section->first] = new_widget;
 				widget = new_widget;
 			}
 		}
@@ -266,13 +287,44 @@ bool GUIPAGE::Load(
 			std::string path = texpath;
 			pagefile.get(section, "path", path);
 
-			GUIIMAGE * new_widget = new GUIIMAGE();
-			new_widget->SetupDrawable(
-				sref, content, path,
-				r.x, r.y, r.w, r.h, r.z);
+			GUIIMAGELIST * widget_list = 0;
+			if (LoadList(pagefile, section, x0, y0, x1, y1, widget_list))
+			{
+				// init drawable
+				widget_list->SetupDrawable(sref, content, path, r.z);
 
-			ConnectAction(value, vsignalmap, new_widget->set_image);
-			widget = new_widget;
+				// connect with the value list
+				VNACTIONMAP::const_iterator vni = vnactionmap.find(value);
+				if (vni != vnactionmap.end())
+				{
+					VSIGNALMAP::const_iterator vsi = vsignalmap.find(value + ".update");
+					if (vsi != vsignalmap.end())
+					{
+						widget_list->update_list.connect(*vsi->second);
+						vni->second->connect(widget_list->get_values);
+					}
+				}
+				else
+				{
+					// special case of list containing the same image?
+					widget_list->SetImage(value);
+				}
+
+				widgetlistmap[section->first] = widget_list;
+				widget = widget_list;
+			}
+			else
+			{
+				GUIIMAGE * new_widget = new GUIIMAGE();
+				new_widget->SetupDrawable(
+					sref, content, path,
+					r.x, r.y, r.w, r.h, r.z);
+
+				ConnectAction(value, vsignalmap, new_widget->set_image);
+
+				widgetmap[section->first] = new_widget;
+				widget = new_widget;
+			}
 		}
 		else if (pagefile.get(section, "slider", value))
 		{
@@ -293,6 +345,8 @@ bool GUIPAGE::Load(
 				fill, error_output);
 
 			ConnectAction(value, vsignalmap, new_widget->set_value);
+
+			widgetmap[section->first] = new_widget;
 			widget = new_widget;
 		}
 
@@ -312,7 +366,6 @@ bool GUIPAGE::Load(
 			ConnectAction(sat, vsignalmap, widget->set_sat);
 			ConnectAction(val, vsignalmap, widget->set_val);
 
-			widgetmap[section->first] = widget;
 			widgets.push_back(widget);
 		}
 
@@ -320,16 +373,45 @@ bool GUIPAGE::Load(
 		bool focus;
 		if (pagefile.get(section, "focus", focus))
 		{
-			std::string desc;
-			pagefile.get(section, "tip", desc);
-			desc = lang(desc);
+			GUICONTROL * control = 0;
+			GUICONTROLLIST * control_list = 0;
+			if (LoadList(pagefile, section, x0, y0, x1, y1, control_list))
+			{
+				// register control list scroll actions
+				actionmap[section->first + ".scrollf"] = &control_list->scroll_fwd;
+				actionmap[section->first + ".scrollr"] = &control_list->scroll_rev;
 
-			GUICONTROL * control = new GUICONTROL();
+				// connect with item list
+				if (pagefile.get(section, "list", value))
+				{
+					VSIGNALMAP::const_iterator vsu = vsignalmap.find(value + ".update");
+					VSIGNALMAP::const_iterator vsn = vsignalmap.find(value + ".nth");
+					if (vsu != vsignalmap.end() && vsn != vsignalmap.end())
+					{
+						control_list->update_list.connect(*vsu->second);
+						control_list->set_nth.connect(*vsn->second);
+					}
+					else
+					{
+						error_output << value << " is not a list." << std::endl;
+					}
+				}
+
+				controlnit.push_back(section);
+				controllists.push_back(control_list);
+				control = control_list;
+			}
+			else
+			{
+				control = new GUICONTROL();
+			}
 			control->SetRect(x0, y0, x1, y1);
-			control->SetDescription(desc);
-
-			controls.push_back(control);
 			controlit.push_back(section);
+			controls.push_back(control);
+
+			std::string desc;
+			if (pagefile.get(section, "tip", desc))
+				control->SetDescription(lang(desc));
 
 			if (focus)
 				active_control = control;
@@ -380,11 +462,48 @@ bool GUIPAGE::Load(
 				if (m == 0 || m == std::string::npos)
 					continue;
 
-				std::string wname(action.substr(0, m));
+				const std::string wname(action.substr(0, m));
 				std::map<std::string, GUIWIDGET*>::const_iterator wi = widgetmap.find(wname);
 				if (wi != widgetmap.end())
 				{
 					widget_prop_set.insert(std::make_pair(action, wi->second));
+				}
+			}
+		}
+	}
+	// iterate over control list signals now
+	typedef std::pair<std::string, GUIWIDGETLIST*> WidgetListProp;
+	std::set<WidgetListProp> widgetn_prop_set;
+	for (size_t i = 0; i < controlnit.size(); ++i)
+	{
+		const Config::const_iterator & section = controlnit[i];
+		for (size_t j = 0; j < GUICONTROLLIST::signal_names.size(); ++j)
+		{
+			std::string actions;
+			if (!pagefile.get(section, GUICONTROLLIST::signal_names[j], actions))
+				continue;
+
+			std::stringstream st(actions);
+			while(st.good())
+			{
+				std::string action;
+				st >> action;
+
+				// if action is setting a widget property for an existing widget
+				// push it into widget_prop_set
+				size_t m = action.find('.');
+				if (m == 0 || m == std::string::npos)
+					continue;
+
+				size_t n = action.find(':', m);
+				if (n == std::string::npos)
+					continue;
+
+				const std::string wname(action.substr(0, m));
+				std::map<std::string, GUIWIDGETLIST*>::const_iterator wi = widgetlistmap.find(wname);
+				if (wi != widgetlistmap.end())
+				{
+					widgetn_prop_set.insert(std::make_pair(action, wi->second));
 				}
 			}
 		}
@@ -401,13 +520,14 @@ bool GUIPAGE::Load(
 		actionmap[controlit[i]->first] = &control_set.back().action;
 	}
 
+
 	// register action calls with a parameter, so that they can be signaled by controls
 	// extra pass to avoid action_set reallocations
 	action_set.reserve(action_value_set.size());
 	for (std::set<ActionValue>::iterator i = action_value_set.begin(); i != action_value_set.end(); ++i)
 	{
-		action_set.push_back(ActionCb());
-		ActionCb & cb = action_set.back();
+		action_set.push_back(SignalVal());
+		SignalVal & cb = action_set.back();
 
 		cb.value = i->first.substr(i->first.find(':') + 1);
 		i->second->connect(cb.signal);
@@ -421,31 +541,27 @@ bool GUIPAGE::Load(
 	{
 		// get widget and property
 		const std::string & action = i->first;
-		std::string wprop(action.substr(action.find('.') + 1));
+		const std::string prop(action.substr(action.find('.') + 1));
 		GUIWIDGET * widget = i->second;
 
 		// get property name and value
-		size_t m = wprop.find(':');
-		if (m == 0 || m == std::string::npos)
-			continue;
-
-		float pvalue = 0;
-		std::stringstream pvaluestr(wprop.substr(m + 1));
-		pvaluestr >> pvalue;
-		std::string pname(wprop.substr(0, m));
+		size_t m = prop.find(':');
+		assert (m > 0 && m < std::string::npos);
+		const std::string pname(prop.substr(0, m));
+		const std::string pvalue(prop.substr(m + 1));
 
 		// set widget property callback
-		widget_set.push_back(WidgetCb());
-		WidgetCb & cb = widget_set.back();
+		widget_set.push_back(SignalVal());
+		SignalVal & cb = widget_set.back();
 		cb.value = pvalue;
 		if (pname == "hue")
-			cb.set.bind<GUIWIDGET, &GUIWIDGET::SetHue>(widget);
+			widget->set_hue.connect(cb.signal);
 		else if (pname == "sat")
-			cb.set.bind<GUIWIDGET, &GUIWIDGET::SetSat>(widget);
+			widget->set_sat.connect(cb.signal);
 		else if (pname == "val")
-			cb.set.bind<GUIWIDGET, &GUIWIDGET::SetVal>(widget);
+			widget->set_val.connect(cb.signal);
 		else if (pname == "opacity")
-			cb.set.bind<GUIWIDGET, &GUIWIDGET::SetOpacity>(widget);
+			widget->set_opacity.connect(cb.signal);
 		else
 		{
 			error_output << "Failed to set property: " << action << std::endl;
@@ -455,23 +571,66 @@ bool GUIPAGE::Load(
 		// register property callback to action map
 		actionmap[action] = &cb.action;
 	}
+	widgetn_set.reserve(widgetn_prop_set.size());
+	for (std::set<WidgetListProp>::const_iterator i = widgetn_prop_set.begin(); i != widgetn_prop_set.end(); ++i)
+	{
+		// get widget and property
+		const std::string & action = i->first;
+		const std::string prop(action.substr(action.find('.') + 1));
+		GUIWIDGETLIST * widget = i->second;
+
+		// get property name and value
+		size_t m = prop.find(':');
+		assert (m > 0 && m < std::string::npos);
+		const std::string pname(prop.substr(0, m));
+		const std::string pvalue(prop.substr(m + 1));
+
+		// set widget property callback
+		widgetn_set.push_back(SignalValn());
+		SignalValn & cb = widgetn_set.back();
+		cb.value = pvalue;
+		if (pname == "hue")
+			widget->set_hue.connect(cb.signal);
+		else if (pname == "sat")
+			widget->set_sat.connect(cb.signal);
+		else if (pname == "val")
+			widget->set_val.connect(cb.signal);
+		else if (pname == "opacity")
+			widget->set_opacity.connect(cb.signal);
+		else if (pname == "scroll")
+			widget->scroll_list.connect(cb.signal);
+		else
+		{
+			error_output << "Failed to set property: " << action << std::endl;
+			continue;
+		}
+
+		// register property callback to action map
+		nactionmap[action] = &cb.action;
+	}
 
 	// final pass to connect control signals with their actions
 	for (size_t i = 0; i < controlit.size(); ++i)
 	{
 		controls[i]->RegisterActions(vactionmap, actionmap, controlit[i], pagefile);
 	}
+	for (size_t i = 0; i < controlnit.size(); ++i)
+	{
+		controllists[i]->RegisterActions(nactionmap, controlnit[i], pagefile);
+	}
 
 	// set active control
 	if (!active_control && !controls.empty())
+	{
 		active_control = controls[0];
+	}
 	if (active_control)
 	{
 		active_control->Signal(GUICONTROL::FOCUS);
 		tooltip(active_control->GetDescription());
 	}
 
-	// set default control(activated on page focus) to active
+	// set default control
 	default_control = active_control;
 
 	return true;
@@ -524,7 +683,7 @@ void GUIPAGE::ProcessInput(
 	{
 		for (std::vector<GUICONTROL *>::iterator i = controls.begin(); i != controls.end(); ++i)
 		{
-			if ((**i).HasFocus(cursorx, cursory))
+			if ((**i).Focus(cursorx, cursory))
 			{
 				SetActiveControl(**i);
 				select |= cursorjustup;	// cursor select
@@ -537,9 +696,9 @@ void GUIPAGE::ProcessInput(
 	if (active_control)
 	{
 		if (cursordown)
-			active_control->Select(cursorx, cursory);
+			active_control->Signal(GUICONTROL::SELECTDOWN);
 		else if (select)
-			active_control->Signal(GUICONTROL::SELECT);
+			active_control->Signal(GUICONTROL::SELECTUP);
 		else if (moveleft)
 			active_control->Signal(GUICONTROL::MOVELEFT);
 		else if (moveright)
@@ -599,6 +758,7 @@ void GUIPAGE::Clear(SCENENODE & parentnode)
 	labels.clear();
 	control_set.clear();
 	widget_set.clear();
+	widgetn_set.clear();
 	action_set.clear();
 
 	if (s.valid())
@@ -649,48 +809,49 @@ void GUIPAGE::ControlCb::call()
 }
 
 
-GUIPAGE::WidgetCb::WidgetCb()
+GUIPAGE::SignalVal::SignalVal()
 {
-	value = 0;
-	action.call.bind<WidgetCb, &WidgetCb::call>(this);
+	action.call.bind<SignalVal, &SignalVal::call>(this);
 }
 
-GUIPAGE::WidgetCb::WidgetCb(const WidgetCb & other)
-{
-	*this = other;
-}
-
-GUIPAGE::WidgetCb & GUIPAGE::WidgetCb::operator=(const WidgetCb & other)
-{
-	value = other.value;
-	set = other.set;
-	action.call.bind<WidgetCb, &WidgetCb::call>(this);
-	return *this;
-}
-
-void GUIPAGE::WidgetCb::call()
-{
-	set(value);
-}
-
-GUIPAGE::ActionCb::ActionCb()
-{
-	action.call.bind<ActionCb, &ActionCb::call>(this);
-}
-
-GUIPAGE::ActionCb::ActionCb(const ActionCb & other)
+GUIPAGE::SignalVal::SignalVal(const SignalVal & other)
 {
 	*this = other;
 }
 
-GUIPAGE::ActionCb & GUIPAGE::ActionCb::operator=(const ActionCb & other)
+GUIPAGE::SignalVal & GUIPAGE::SignalVal::operator=(const SignalVal & other)
 {
-	action.call.bind<ActionCb, &ActionCb::call>(this);
+	action.call.bind<SignalVal, &SignalVal::call>(this);
+	signal = other.signal;
 	value = other.value;
 	return *this;
 }
 
-void GUIPAGE::ActionCb::call()
+void GUIPAGE::SignalVal::call()
 {
 	signal(value);
+}
+
+
+GUIPAGE::SignalValn::SignalValn()
+{
+	action.call.bind<SignalValn, &SignalValn::call>(this);
+}
+
+GUIPAGE::SignalValn::SignalValn(const SignalValn & other)
+{
+	*this = other;
+}
+
+GUIPAGE::SignalValn & GUIPAGE::SignalValn::operator=(const SignalValn & other)
+{
+	action.call.bind<SignalValn, &SignalValn::call>(this);
+	signal = other.signal;
+	value = other.value;
+	return *this;
+}
+
+void GUIPAGE::SignalValn::call(int n)
+{
+	signal(n, value);
 }

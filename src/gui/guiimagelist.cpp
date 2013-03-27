@@ -17,61 +17,55 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _GUICONTROLLIST_H
-#define _GUICONTROLLIST_H
+#include "guiimagelist.h"
+#include "guiimage.h"
 
-#include "guilist.h"
-#include "guicontrol.h"
-
-/// a widget that mimics a list of controls
-class GUICONTROLLIST : public GUICONTROL, public GUILIST
+GUIIMAGELIST::GUIIMAGELIST()
 {
-public:
-	GUICONTROLLIST();
+	//ctor
+}
 
-	~GUICONTROLLIST();
+GUIIMAGELIST::~GUIIMAGELIST()
+{
+	//dtor
+}
 
-	/// Return true if control contains x, y
-	bool Focus(float x, float y);
+void GUIIMAGELIST::SetupDrawable(
+	SCENENODE & scene, ContentManager & content,
+	const std::string & path, float z)
+{
+	m_elements.resize(m_rows * m_cols);
+	for (size_t i = 0; i < m_elements.size(); ++i)
+	{
+		float x, y;
+		GetElemPos(i, x, y);
 
-	/// Signal slots attached to events
-	void Signal(EVENT ev);
+		GUIIMAGE * element = new GUIIMAGE();
+		element->SetupDrawable(
+			scene, content, path,
+			x, y, m_elemw, m_elemh, z);
 
-	/// Register event actions
-	void RegisterActions(
-		const std::map<std::string, Slot1<int>*> & actionmap,
-		const Config::const_iterator section,
-		const Config & cfg);
+		m_elements[i] = element;
+	}
+}
 
-	/// Register event actions to signal
-	static void SetActions(
-		const std::map<std::string, Slot1<int>*> & actionmap,
-		const std::string & actionstr,
-		Signal1<int> & signal);
+void GUIIMAGELIST::SetImage(const std::string & value)
+{
+	for (size_t i = 0; i < m_elements.size(); ++i)
+	{
+		static_cast<GUIIMAGE*>(m_elements[i])->SetImage(value);
+	}
+}
 
-	/// List update slot, parameter holds list item count
-	Slot1<const std::string &> update_list;
-
-	/// Set active element, parameter holds list item index
-	Slot1<const std::string &> set_nth;
-
-	/// List scroll slots
-	Slot0 scroll_fwd;
-	Slot0 scroll_rev;
-
-private:
-	Signal1<int> m_signaln[EVENTNUM];
-	int m_active_element;
-
-	void UpdateList(const std::string & value);
-
-	void SetToNth(const std::string & value);
-
-	void ScrollFwd();
-
-	void ScrollRev();
-
-	void SetActiveElement(int active_element);
-};
-
-#endif // _GUICONTROLLIST_H
+void GUIIMAGELIST::UpdateElements(SCENENODE & scene)
+{
+	assert(m_values.size() <= m_elements.size());
+	for (size_t i = 0; i < m_values.size(); ++i)
+	{
+		static_cast<GUIIMAGE*>(m_elements[i])->SetImage(m_values[i]);
+	}
+	for (size_t i = m_values.size(); i < m_elements.size(); ++i)
+	{
+		static_cast<GUIIMAGE*>(m_elements[i])->SetImage("");
+	}
+}

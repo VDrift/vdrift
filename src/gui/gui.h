@@ -46,7 +46,7 @@ public:
 
 	bool Load(
 		const std::list <std::string> & pagelist,
-		const std::map<std::string, std::list <std::pair <std::string, std::string> > > & valuelists,
+		const std::map<std::string, GUIOPTION::LIST> & valuelists,
 		const std::string & datapath,
 		const std::string & optionsfile,
 		const std::string & skinname,
@@ -89,7 +89,7 @@ public:
 	void SetOptionValues(
 		const std::string & optionname,
 		const std::string & curvalue,
-		std::list <std::pair <std::string, std::string> > & newvalues,
+		const GUIOPTION::LIST & newvalues,
 		std::ostream & error_output);
 
 	/// returns false if the specified page/label does not exist
@@ -109,9 +109,10 @@ public:
 	const GUILANGUAGE & GetLanguageDict() const;
 	const FONT & GetFont() const;
 
-private:
 	typedef std::map<std::string, GUIOPTION> OPTIONMAP;
 	typedef std::map<std::string, GUIPAGE> PAGEMAP;
+
+private:
 	OPTIONMAP options;
 	PAGEMAP pages;
 	PAGEMAP::iterator last_active_page;
@@ -143,17 +144,12 @@ private:
 		const std::string & pagename,
 		float activation_time);
 
-	/// return false on failure
-	bool LoadOptions(
-		const std::string & optionfile,
-		const std::map<std::string, std::list <std::pair <std::string, std::string> > > & valuelists,
-		std::ostream & error_output);
-
 	/// add option slots to action map
 	void RegisterOptions(
 		VSIGNALMAP & vsignalmap,
 		VNACTIONMAP & vnactionmap,
 		VACTIONMAP & vactionmap,
+		NACTIONMAP & nactionmap,
 		ACTIONMAP & actionmap);
 };
 

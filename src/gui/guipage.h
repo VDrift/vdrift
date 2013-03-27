@@ -24,7 +24,6 @@
 #include "signalslot.h"
 
 #include <map>
-#include <list>
 #include <vector>
 #include <string>
 #include <ostream>
@@ -41,6 +40,7 @@ class ContentManager;
 typedef std::map<std::string, Signal1<const std::string &>*> VSIGNALMAP;
 typedef std::map<std::string, Slot2<int, std::vector<std::string> &>*> VNACTIONMAP;
 typedef std::map<std::string, Slot1<const std::string &>*> VACTIONMAP;
+typedef std::map<std::string, Slot1<int>*> NACTIONMAP;
 typedef std::map<std::string, Slot0*> ACTIONMAP;
 
 class GUIPAGE
@@ -57,8 +57,9 @@ public:
 		const GUILANGUAGE & lang,
 		const FONT & font,
 		VSIGNALMAP vsignalmap,
-		VNACTIONMAP vnactionmap,
-		VACTIONMAP vactionmap,
+		const VNACTIONMAP & vnactionmap,
+		const VACTIONMAP & vactionmap,
+		NACTIONMAP nactionmap,
 		ACTIONMAP actionmap,
 		SCENENODE & parentnode,
 		ContentManager & content,
@@ -108,35 +109,34 @@ private:
 		ControlCb & operator=(const ControlCb & other);
 		void call();
 	};
-	// for a control to be able to modify a float property of a widget
-	// a WidgetCB holding the value is registered
-	struct WidgetCb
-	{
-		float value;
-		Delegate1<void, float> set;
-		Slot0 action;
-
-		WidgetCb();
-		WidgetCb(const WidgetCb & other);
-		WidgetCb & operator=(const WidgetCb & other);
-		void call();
-	};
-	// AcionCb allows a conrol to signal slots with a parameter
-	// it can be seen as an adapter from Signal0 + value to Slot1
-	struct ActionCb
+	// allow a conrol to signal slots with an extra parameter
+	struct SignalVal
 	{
 		std::string value;
 		Signal1<const std::string &> signal;
 		Slot0 action;
 
-		ActionCb();
-		ActionCb(const ActionCb & other);
-		ActionCb & operator=(const ActionCb & other);
+		SignalVal();
+		SignalVal(const SignalVal & other);
+		SignalVal & operator=(const SignalVal & other);
 		void call();
 	};
+	// allow a control list to signal slots with an extra parameter
+	struct SignalValn
+	{
+		std::string value;
+		Signal2<int, const std::string&> signal;
+		Slot1<int> action;
+
+		SignalValn();
+		SignalValn(const SignalValn & other);
+		SignalValn & operator=(const SignalValn & other);
+		void call(int n);
+	};
 	std::vector<ControlCb> control_set;		// control focus callbacks
-	std::vector<WidgetCb> widget_set;		// widget property callbacks
-	std::vector<ActionCb> action_set;		// action value callbacks
+	std::vector<SignalVal> widget_set;		// widget property callbacks
+	std::vector<SignalValn> widgetn_set;	// widget list property callbacks
+	std::vector<SignalVal> action_set;		// action value callbacks
 	Signal1<const std::string &> tooltip;	// tooltip text signal
 	Signal0 onfocus, oncancel;				// page action signals
 

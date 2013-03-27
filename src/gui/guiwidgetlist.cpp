@@ -19,18 +19,23 @@
 
 #include "guiwidgetlist.h"
 #include "guiwidget.h"
+#include <sstream>
 
 GUIWIDGETLIST::GUIWIDGETLIST()
 {
+	// override widget callbacks (ugly)
+	GUIWIDGET::set_color.call.bind<GUIWIDGETLIST, &GUIWIDGETLIST::SetColor1>(this);
+	GUIWIDGET::set_opacity.call.bind<GUIWIDGETLIST, &GUIWIDGETLIST::SetOpacity1>(this);
+	GUIWIDGET::set_hue.call.bind<GUIWIDGETLIST, &GUIWIDGETLIST::SetHue1>(this);
+	GUIWIDGET::set_sat.call.bind<GUIWIDGETLIST, &GUIWIDGETLIST::SetSat1>(this);
+	GUIWIDGET::set_val.call.bind<GUIWIDGETLIST, &GUIWIDGETLIST::SetVal1>(this);
+
 	set_color.call.bind<GUIWIDGETLIST, &GUIWIDGETLIST::SetColor>(this);
 	set_opacity.call.bind<GUIWIDGETLIST, &GUIWIDGETLIST::SetOpacity>(this);
 	set_hue.call.bind<GUIWIDGETLIST, &GUIWIDGETLIST::SetHue>(this);
 	set_sat.call.bind<GUIWIDGETLIST, &GUIWIDGETLIST::SetSat>(this);
 	set_val.call.bind<GUIWIDGETLIST, &GUIWIDGETLIST::SetVal>(this);
-	prev_row.call.bind<GUIWIDGETLIST, &GUIWIDGETLIST::SelectPrevRow>(this);
-	next_row.call.bind<GUIWIDGETLIST, &GUIWIDGETLIST::SelectNextRow>(this);
-	prev_col.call.bind<GUIWIDGETLIST, &GUIWIDGETLIST::SelectPrevCol>(this);
-	next_col.call.bind<GUIWIDGETLIST, &GUIWIDGETLIST::SelectNextCol>(this);
+	scroll_list.call.bind<GUIWIDGETLIST, &GUIWIDGETLIST::ScrollList>(this);
 	update_list.call.bind<GUIWIDGETLIST, &GUIWIDGETLIST::UpdateList>(this);
 }
 
@@ -72,71 +77,129 @@ void GUIWIDGETLIST::SetVisible(SCENENODE & scene, bool value)
 	}
 }
 
-void GUIWIDGETLIST::SetColor(unsigned n, const std::string & value)
+void GUIWIDGETLIST::SetColor(int n, const std::string & value)
 {
-	if (n < m_elements.size())
+	size_t i = n - m_list_offset;
+	if (i < m_elements.size())
 	{
-		m_elements[n]->SetColor(value);
+		m_elements[i]->SetColor(value);
 	}
 }
 
-void GUIWIDGETLIST::SetOpacity(unsigned n, const std::string & value)
+void GUIWIDGETLIST::SetOpacity(int n, const std::string & value)
 {
-	if (n < m_elements.size())
+	size_t i = n - m_list_offset;
+	if (i < m_elements.size())
 	{
-		m_elements[n]->SetOpacity(value);
+		m_elements[i]->SetOpacity(value);
 	}
 }
 
-void GUIWIDGETLIST::SetHue(unsigned n, const std::string & value)
+void GUIWIDGETLIST::SetHue(int n, const std::string & value)
 {
-	if (n < m_elements.size())
+	size_t i = n - m_list_offset;
+	if (i < m_elements.size())
 	{
-		m_elements[n]->SetHue(value);
+		m_elements[i]->SetHue(value);
 	}
 }
 
-void GUIWIDGETLIST::SetSat(unsigned n, const std::string & value)
+void GUIWIDGETLIST::SetSat(int n, const std::string & value)
 {
-	if (n < m_elements.size())
+	size_t i = n - m_list_offset;
+	if (i >= 0 && i < m_elements.size())
 	{
-		m_elements[n]->SetSat(value);
+		m_elements[i]->SetSat(value);
 	}
 }
 
-void GUIWIDGETLIST::SetVal(unsigned n, const std::string & value)
+void GUIWIDGETLIST::SetVal(int n, const std::string & value)
 {
-	if (n < m_elements.size())
+	size_t i = n - m_list_offset;
+	if (i < m_elements.size())
 	{
-		m_elements[n]->SetVal(value);
+		m_elements[i]->SetVal(value);
 	}
 }
 
-void GUIWIDGETLIST::SelectPrevRow(unsigned)
+void GUIWIDGETLIST::ScrollList(int n, const std::string & value)
 {
-	// todo
+	if (value == "fwd")
+	{
+		int delta = m_vertical ? m_rows : m_cols;
+		if (m_list_offset < m_list_size - delta)
+		{
+			m_list_offset += delta;
+			if (get_values.connected())
+			{
+				m_values.resize(m_rows * m_cols);
+				get_values(m_list_offset, m_values);
+			}
+		}
+	}
+	else if (value == "rev")
+	{
+		int delta = m_vertical ? m_rows : m_cols;
+		if (m_list_offset >= delta)
+		{
+			m_list_offset -= delta;
+			if (get_values.connected())
+			{
+				m_values.resize(m_rows * m_cols);
+				get_values(m_list_offset, m_values);
+			}
+		}
+	}
 }
 
-void GUIWIDGETLIST::SelectNextRow(unsigned)
+void GUIWIDGETLIST::UpdateList(const std::string & vnum)
 {
-	// todo
-}
+	int list_size(0), list_item (0);
+	std::stringstream s(vnum);
+	s >> list_size >> list_item;
 
-void GUIWIDGETLIST::SelectPrevCol(unsigned)
-{
-	// todo
-}
+	m_list_size = list_size;
+	m_list_offset = list_item - list_item % (m_rows * m_cols);
 
-void GUIWIDGETLIST::SelectNextCol(unsigned)
-{
-	// todo
-}
-
-void GUIWIDGETLIST::UpdateList(const std::string &)
-{
 	if (get_values.connected())
 	{
 		m_values.resize(m_rows * m_cols);
 		get_values(m_list_offset, m_values);
 	}
+}
+
+void GUIWIDGETLIST::SetColor1(const std::string & value)
+{
+	for (size_t i = 0; i < m_elements.size(); ++i)
+		m_elements[i]->SetColor(value);
+}
+
+void GUIWIDGETLIST::SetOpacity1(const std::string & value)
+{
+	for (size_t i = 0; i < m_elements.size(); ++i)
+		m_elements[i]->SetOpacity(value);
+}
+
+void GUIWIDGETLIST::SetHue1(const std::string & value)
+{
+	for (size_t i = 0; i < m_elements.size(); ++i)
+		m_elements[i]->SetHue(value);
+}
+
+void GUIWIDGETLIST::SetSat1(const std::string & value)
+{
+	for (size_t i = 0; i < m_elements.size(); ++i)
+		m_elements[i]->SetSat(value);
+}
+
+void GUIWIDGETLIST::SetVal1(const std::string & value)
+{
+	for (size_t i = 0; i < m_elements.size(); ++i)
+		m_elements[i]->SetVal(value);
+}
+
+DRAWABLE & GUIWIDGETLIST::GetDrawable(SCENENODE & scene)
+{
+	assert(0); // don't want to end up here
+	return m_elements[0]->GetDrawable(scene);
 }

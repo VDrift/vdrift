@@ -24,15 +24,12 @@
 
 #include <map>
 #include <string>
-#include <list>
+#include <vector>
 
 class GUIOPTION
 {
 public:
-	/// the first element of the pair is the (sometimes numeric) stored value
-	/// while the second element is the display value
-	/// sometimes they are the same
-	typedef std::list <std::pair<std::string, std::string> > VALUELIST;
+	typedef std::vector< std::pair<std::string, std::string> > LIST;
 
 	GUIOPTION();
 
@@ -41,20 +38,25 @@ public:
 	GUIOPTION & operator=(const GUIOPTION & other);
 
 	/// will move new value elements to option list
-	void SetValues(const std::string & curvalue, VALUELIST & newvalues);
+	void SetValues(const std::string & curvalue, const LIST & values);
 
-	void SetInfo(const std::string & newdesc, const std::string & newtype);
-
-	void SetMinMaxPercentage(float newmin, float newmax, bool newpercent);
+	void SetInfo(
+		const std::string & newdesc,
+		const std::string & newtype,
+		float newmin, float newmax,
+		bool newpercent);
 
 	/// reset to first value if passed value invalid
 	void SetCurrentValue(const std::string & value);
 
-	/// increment the current_value to the next value in the values list
+	/// increment current_value to the next in the values list
 	void Increment();
 
-	/// decrement the current_value to the previous value in the values list
+	/// decrement current_value to the previous in the values list
 	void Decrement();
+
+	/// set current value to nth in the value list
+	void SetToNthValue(int n);
 
 	void SetToFirstValue();
 
@@ -62,41 +64,45 @@ public:
 
 	const std::string & GetCurrentStorageValue() const;
 
-	const VALUELIST & GetValueList() const;
+	const LIST & GetValueList() const;
 
-	const std::string & GetDescription() const {return description;};
+	const std::string & GetDescription() const {return m_description;};
 
-	const bool IsFloat() const { return type == type_float; };
+	const bool IsFloat() const { return m_type == type_float; };
 
-	/// option values list access
+	/// get value range, parameters are offset and value range vector
 	Slot2<int, std::vector<std::string> &> get_values;
+
+	/// signal values update, parameter is value count
 	Signal1<const std::string &> signal_update;
 
-	/// option signals (normalized value, value, string)
+	/// option signals (normalized value, value, string, index)
 	Signal1<const std::string &> signal_valn;
 	Signal1<const std::string &> signal_val;
 	Signal1<const std::string &> signal_str;
+	Signal1<const std::string &> signal_nth;
 
 	/// option slots (normalized value, value, string, increment, decrement)
 	Slot1<const std::string &> set_valn;
 	Slot1<const std::string &> set_val;
-	Slot0 prev_val;
-	Slot0 next_val;
+	Slot1<int> set_nth;
+	Slot0 set_prev;
+	Slot0 set_next;
 
 private:
 	/// list option
-	VALUELIST::iterator current_value;
-	VALUELIST values;
+	LIST m_values;
+	size_t m_current_value;
 
 	/// meta data
-	std::string description;
-	enum type {type_float, type_other} type;
+	std::string m_description;
+	enum type {type_float, type_other} m_type;
 
 	/// string/int/float option
-	std::string non_value_data;
-	float min;
-	float max;
-	bool percent;
+	std::string m_data;
+	float m_min;
+	float m_max;
+	bool m_percent;
 
 	void SignalValue();
 
