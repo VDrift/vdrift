@@ -39,7 +39,8 @@ public:
 	void SetupDrawable(
 		SCENENODE & scene,
 		ContentManager & content,
-		const std::string & imagepath,
+		const std::string & path,
+		const std::string & ext,
 		float x, float y, float w, float h, float z);
 
 	void SetImage(const std::string & value);
@@ -48,7 +49,7 @@ public:
 
 private:
 	ContentManager * m_content;
-	std::string m_imagepath, m_imagename;
+	std::string m_path, m_name, m_ext;
 	keyed_container <DRAWABLE>::handle m_draw;
 	VERTEXARRAY m_varray;
 

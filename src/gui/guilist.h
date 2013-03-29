@@ -32,7 +32,8 @@ public:
 		unsigned rows, unsigned cols,
 		float xmin, float ymin,
 		float xmax, float ymax,
-		float xpad, float ypad,
+		float xpad0, float ypad0,
+		float xpad1, float ypad1,
 		bool vertical = true);
 
 protected:
@@ -40,7 +41,8 @@ protected:
 	float m_elemw, m_elemh;
 	float m_xmin, m_ymin;
 	float m_xmax, m_ymax;
-	float m_xpad, m_ypad;
+	float m_xpad0, m_ypad0;
+	float m_xpad1, m_ypad1;
 	bool m_vertical;
 
 	int m_list_offset;
@@ -49,7 +51,7 @@ protected:
 	/// get nth element row, column
 	void GetElemPos(int n, unsigned & row, unsigned & col) const;
 
-	/// get nth element coordinates
+	/// get nth element upper left corner coordinates
 	void GetElemPos(int n, float & x, float & y) const;
 
 	/// get element index from position
@@ -64,19 +66,23 @@ inline void GUILIST::SetupList(
 	unsigned rows, unsigned cols,
 	float xmin, float ymin,
 	float xmax, float ymax,
-	float xpad, float ypad,
+	float xpad0, float ypad0,
+	float xpad1, float ypad1,
 	bool vertical)
 {
 	m_rows = rows; m_cols = cols;
 	m_xmin = xmin; m_ymin = ymin;
 	m_xmax = xmax; m_ymax = ymax;
-	m_xpad = xpad; m_ypad = ypad;
+	m_xpad0 = xpad0; m_ypad0 = ypad0;
+	m_xpad1 = xpad1; m_ypad1 = ypad1;
 	m_vertical = vertical;
 
 	float listw = (m_xmax - m_xmin);
 	float listh = (m_ymax - m_ymin);
-	m_elemw = (listw - m_cols * m_xpad * 2) / m_cols;
-	m_elemh = (listh - m_rows * m_ypad * 2) / m_rows;
+	float padw = (m_xpad0 + m_xpad1);
+	float padh = (m_ypad0 + m_ypad1);
+	m_elemw = (listw - m_cols * padw) / m_cols;
+	m_elemh = (listh - m_rows * padh) / m_rows;
 }
 
 inline void GUILIST::GetElemPos(int n, unsigned & col, unsigned & row) const
@@ -97,8 +103,8 @@ inline void GUILIST::GetElemPos(int n, float & x, float & y) const
 {
 	unsigned col, row;
 	GetElemPos(n, col, row);
-	x = m_xmin + (col + 0.5f) * (m_elemw + 2 * m_xpad);
-	y = m_ymin + (row + 0.5f) * (m_elemh + 2 * m_ypad);
+	x = m_xmin + col * (m_elemw + m_xpad0 + m_xpad1) + m_xpad0;
+	y = m_ymin + row * (m_elemh + m_ypad0 + m_ypad1) + m_ypad0;
 }
 
 template <typename T>
@@ -127,7 +133,8 @@ inline GUILIST::GUILIST() :
 	m_rows(1), m_cols(1),
 	m_xmin(0), m_ymin(0),
 	m_xmax(1), m_ymax(1),
-	m_xpad(0), m_ypad(0),
+	m_xpad0(0), m_ypad0(0),
+	m_xpad1(0), m_ypad1(0),
 	m_vertical(true),
 	m_list_offset(0),
 	m_list_size(0)

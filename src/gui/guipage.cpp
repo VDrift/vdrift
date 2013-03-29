@@ -107,14 +107,25 @@ static bool LoadList(
 	unsigned rows(1), cols(1);
 	if (pagefile.get(section, "rows", rows) | pagefile.get(section, "cols", cols))
 	{
-		float xpad(0), ypad(0);
 		bool vert(true);
-		pagefile.get(section, "padding-rl", xpad);
-		pagefile.get(section, "padding-tb", ypad);
 		pagefile.get(section, "vertical", vert);
 
+		float xp0(0), yp0(0), xp1(0), yp1(0);
+		pagefile.get(section, "padding", xp0);
+		yp1 = xp1 = yp0 = xp0;
+
+		pagefile.get(section, "padding-lr", xp0);
+		pagefile.get(section, "padding-tb", yp0);
+		yp1 = yp0;
+		xp1 = xp0;
+
+		pagefile.get(section, "padding-left", xp0);
+		pagefile.get(section, "padding-right", xp1);
+		pagefile.get(section, "padding-top", yp0);
+		pagefile.get(section, "padding-bottom", yp1);
+
 		list = new LIST();
-		list->SetupList(rows, cols, x0, y0, x1, y1, xpad, ypad, vert);
+		list->SetupList(rows, cols, x0, y0, x1, y1, xp0, yp0, xp1, yp1, vert);
 		return true;
 	}
 	return false;
@@ -284,14 +295,15 @@ bool GUIPAGE::Load(
 		}
 		else if (pagefile.get(section, "image", value))
 		{
-			std::string path = texpath;
+			std::string ext, path = texpath;
 			pagefile.get(section, "path", path);
+			pagefile.get(section, "ext", ext);
 
 			GUIIMAGELIST * widget_list = 0;
 			if (LoadList(pagefile, section, x0, y0, x1, y1, widget_list))
 			{
 				// init drawable
-				widget_list->SetupDrawable(sref, content, path, r.z);
+				widget_list->SetupDrawable(sref, content, path, ext, r.z);
 
 				// connect with the value list
 				VNACTIONMAP::const_iterator vni = vnactionmap.find(value);
@@ -317,7 +329,7 @@ bool GUIPAGE::Load(
 			{
 				GUIIMAGE * new_widget = new GUIIMAGE();
 				new_widget->SetupDrawable(
-					sref, content, path,
+					sref, content, path, ext,
 					r.x, r.y, r.w, r.h, r.z);
 
 				ConnectAction(value, vsignalmap, new_widget->set_image);

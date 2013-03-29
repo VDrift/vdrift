@@ -43,7 +43,7 @@ void GUILABELLIST::SetupDrawable(
 		GUILABEL * element = new GUILABEL();
 		element->SetupDrawable(
 			scene, font, align, scalex, scaley,
-			x, y, m_elemw, m_elemh, z);
+			x + m_elemw * 0.5f, y + m_elemh * 0.5f, m_elemw, m_elemh, z);
 
 		m_elements[i] = element;
 	}

@@ -33,8 +33,11 @@ public:
 
 	/// Create image elements. To be called after SetupList!
 	void SetupDrawable(
-		SCENENODE & scene, ContentManager & content,
-		const std::string & path, float z);
+		SCENENODE & scene,
+		ContentManager & content,
+		const std::string & path,
+		const std::string & ext,
+		float z);
 
 	/// Special case: list of identical images
 	void SetImage(const std::string & value);

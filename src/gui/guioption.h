@@ -71,7 +71,8 @@ public:
 	const bool IsFloat() const { return m_type == type_float; };
 
 	/// get value range, parameters are offset and value range vector
-	Slot2<int, std::vector<std::string> &> get_values;
+	Slot2<int, std::vector<std::string> &> get_val;
+	Slot2<int, std::vector<std::string> &> get_str;
 
 	/// signal values update, parameter is value count
 	Signal1<const std::string &> signal_update;
@@ -108,7 +109,9 @@ private:
 
 	void SetCurrentValueNorm(const std::string & value);
 
-	void GetValues(int offset, std::vector<std::string> & vals);
+	void GetDisplayValues(int offset, std::vector<std::string> & vals);
+
+	void GetStorageValues(int offset, std::vector<std::string> & vals);
 };
 
 #endif

@@ -31,8 +31,11 @@ GUIIMAGELIST::~GUIIMAGELIST()
 }
 
 void GUIIMAGELIST::SetupDrawable(
-	SCENENODE & scene, ContentManager & content,
-	const std::string & path, float z)
+	SCENENODE & scene,
+	ContentManager & content,
+	const std::string & path,
+	const std::string & ext,
+	float z)
 {
 	m_elements.resize(m_rows * m_cols);
 	for (size_t i = 0; i < m_elements.size(); ++i)
@@ -42,8 +45,8 @@ void GUIIMAGELIST::SetupDrawable(
 
 		GUIIMAGE * element = new GUIIMAGE();
 		element->SetupDrawable(
-			scene, content, path,
-			x, y, m_elemw, m_elemh, z);
+			scene, content, path, ext,
+			x + m_elemw * 0.5f, y + m_elemh * 0.5f, m_elemw, m_elemh, z);
 
 		m_elements[i] = element;
 	}

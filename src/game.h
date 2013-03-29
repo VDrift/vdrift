@@ -245,7 +245,6 @@ private:
 	void SetCarDriver(const std::string & value);
 	void SetCarAILevel(const std::string & value);
 	void SetCarsNum(const std::string & value);
-	void SetTrackImage(const std::string & value);
 	void SetControl(const std::string & value);
 
 	void BindActionsToGUI();
@@ -261,7 +260,6 @@ private:
 	Slot1<const std::string &> set_car_driver;
 	Slot1<const std::string &> set_car_ailevel;
 	Slot1<const std::string &> set_cars_num;
-	Slot1<const std::string &> set_track_image;
 	Slot1<const std::string &> set_control;
 	std::vector<Slot0> actions;
 

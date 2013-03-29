@@ -474,8 +474,10 @@ void GUI::RegisterOptions(
 		else
 		{
 			// option is a list
+			vsignalmap[opname + ".str.update"] = &option.signal_update;
 			vsignalmap[opname + ".update"] = &option.signal_update;
-			vnactionmap[opname] = &option.get_values;
+			vnactionmap[opname + ".str"] = &option.get_str;
+			vnactionmap[opname] = &option.get_val;
 		}
 		vsignalmap[opname + ".nth"] = &option.signal_nth;
 		vsignalmap[opname + ".str"] = &option.signal_str;

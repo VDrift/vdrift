@@ -152,7 +152,7 @@ void GUICONTROLLIST::SetToNth(const std::string & value)
 void GUICONTROLLIST::ScrollFwd()
 {
 	int delta = m_vertical ? m_rows : m_cols;
-	if (m_list_offset < m_list_size - delta)
+	if (m_list_offset < m_list_size - int(m_rows * m_cols))
 	{
 		m_list_offset += delta;
 		m_active_element -= delta;

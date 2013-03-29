@@ -35,7 +35,7 @@ void GUIIMAGE::Update(SCENENODE & scene, float dt)
 	if (m_update)
 	{
 		DRAWABLE & d = GetDrawable(scene);
-		if (m_imagename.empty())
+		if (m_name.empty())
 		{
 			m_visible = false;
 		}
@@ -47,7 +47,7 @@ void GUIIMAGE::Update(SCENENODE & scene, float dt)
 			texinfo.repeatu = false;
 			texinfo.repeatv = false;
 			std::tr1::shared_ptr<TEXTURE> texture;
-			m_content->load(texture, m_imagepath, m_imagename, texinfo);
+			m_content->load(texture, m_path, m_name + m_ext, texinfo);
 			d.SetDiffuseMap(texture);
 			m_visible = true;
 		}
@@ -58,13 +58,14 @@ void GUIIMAGE::Update(SCENENODE & scene, float dt)
 void GUIIMAGE::SetupDrawable(
 	SCENENODE & scene,
 	ContentManager & content,
-	const std::string & imagepath,
+	const std::string & path,
+	const std::string & ext,
 	float x, float y, float w, float h, float z)
 {
 	m_content = &content;
-	m_imagepath = imagepath;
+	m_path = path;
+	m_ext = ext;
 	m_varray.SetToBillboard(x - w * 0.5f, y - h * 0.5f, x + w * 0.5f, y + h * 0.5f);
-
 	m_draw = scene.GetDrawlist().twodim.insert(DRAWABLE());
 	DRAWABLE & d = GetDrawable(scene);
 	d.SetVertArray(&m_varray);
@@ -74,9 +75,9 @@ void GUIIMAGE::SetupDrawable(
 
 void GUIIMAGE::SetImage(const std::string & value)
 {
-	if (m_imagename != value)
+	if (m_name != value)
 	{
-		m_imagename = value;
+		m_name = value;
 		m_update = true;
 	}
 }

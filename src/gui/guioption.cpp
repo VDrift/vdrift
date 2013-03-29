@@ -29,7 +29,8 @@ GUIOPTION::GUIOPTION() :
 	m_max(0),
 	m_percent(false)
 {
-	get_values.call.bind<GUIOPTION, &GUIOPTION::GetValues>(this);
+	get_val.call.bind<GUIOPTION, &GUIOPTION::GetStorageValues>(this);
+	get_str.call.bind<GUIOPTION, &GUIOPTION::GetDisplayValues>(this);
 	set_valn.call.bind<GUIOPTION, &GUIOPTION::SetCurrentValueNorm>(this);
 	set_val.call.bind<GUIOPTION, &GUIOPTION::SetCurrentValue>(this);
 	set_nth.call.bind<GUIOPTION, &GUIOPTION::SetToNthValue>(this);
@@ -39,7 +40,8 @@ GUIOPTION::GUIOPTION() :
 
 GUIOPTION::GUIOPTION(const GUIOPTION & other)
 {
-	get_values.call.bind<GUIOPTION, &GUIOPTION::GetValues>(this);
+	get_val.call.bind<GUIOPTION, &GUIOPTION::GetStorageValues>(this);
+	get_str.call.bind<GUIOPTION, &GUIOPTION::GetDisplayValues>(this);
 	set_valn.call.bind<GUIOPTION, &GUIOPTION::SetCurrentValueNorm>(this);
 	set_val.call.bind<GUIOPTION, &GUIOPTION::SetCurrentValue>(this);
 	set_nth.call.bind<GUIOPTION, &GUIOPTION::SetToNthValue>(this);
@@ -311,7 +313,7 @@ void GUIOPTION::SetCurrentValueNorm(const std::string & value)
 	}
 }
 
-void GUIOPTION::GetValues(int offset, std::vector<std::string> & vals)
+void GUIOPTION::GetDisplayValues(int offset, std::vector<std::string> & vals)
 {
 	// clamp offset
 	size_t noffset = (offset < 0) ? 0 : offset;
@@ -321,6 +323,21 @@ void GUIOPTION::GetValues(int offset, std::vector<std::string> & vals)
 	while (n < vals.size() && n + noffset < m_values.size())
 	{
 		vals[n] = m_values[n + noffset].second;
+		++n;
+	}
+	vals.resize(n);
+}
+
+void GUIOPTION::GetStorageValues(int offset, std::vector<std::string> & vals)
+{
+	// clamp offset
+	size_t noffset = (offset < 0) ? 0 : offset;
+
+	// get values
+	size_t n = 0;
+	while (n < vals.size() && n + noffset < m_values.size())
+	{
+		vals[n] = m_values[n + noffset].first;
 		++n;
 	}
 	vals.resize(n);

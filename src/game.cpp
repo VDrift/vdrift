@@ -2935,11 +2935,6 @@ void GAME::SetCarsNum(const std::string & value)
 	UpdateCarInfo();
 }
 
-void GAME::SetTrackImage(const std::string & value)
-{
-	gui.SetOptionValue("game.track_image", value + "/trackshot.png");
-}
-
 void GAME::SetControl(const std::string & value)
 {
 	std::stringstream vs(value);
@@ -2989,7 +2984,6 @@ void GAME::BindActionsToGUI()
 	set_car_driver.connect(gui.GetOption("game.driver").signal_val);
 	set_car_ailevel.connect(gui.GetOption("game.ai_level").signal_val);
 	set_cars_num.connect(gui.GetOption("game.cars_num").signal_val);
-	set_track_image.connect(gui.GetOption("game.track").signal_val);
 	set_control.connect(gui.GetOption("controledit.string").signal_val);
 }
 
@@ -3004,7 +2998,6 @@ void GAME::RegisterActions()
 	set_car_driver.call.bind<GAME, &GAME::SetCarDriver>(this);
 	set_car_ailevel.call.bind<GAME, &GAME::SetCarAILevel>(this);
 	set_cars_num.call.bind<GAME, &GAME::SetCarsNum>(this);
-	set_track_image.call.bind<GAME, &GAME::SetTrackImage>(this);
 	set_control.call.bind<GAME, &GAME::SetControl>(this);
 
 	actions.resize(26);
