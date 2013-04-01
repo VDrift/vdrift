@@ -627,8 +627,12 @@ bool TEXTURE::LoadDDS(const std::string & path, const TEXTUREINFO & info, std::o
 		return false;
 	}
 
-	// have alpha channel
+	// set properties
+	m_w = width;
+	m_h = height;
+	m_scale = 1.0f;
 	m_alpha = (format != GL_BGR);
+	m_cube = false;
 
 	// load texture
 	assert(!m_id);
