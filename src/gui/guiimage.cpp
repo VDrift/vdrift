@@ -20,7 +20,8 @@
 #include "guiimage.h"
 #include "content/contentmanager.h"
 
-GUIIMAGE::GUIIMAGE()
+GUIIMAGE::GUIIMAGE() :
+	m_load(false)
 {
 	set_image.call.bind<GUIIMAGE, &GUIIMAGE::SetImage>(this);
 }
@@ -32,26 +33,19 @@ GUIIMAGE::~GUIIMAGE()
 
 void GUIIMAGE::Update(SCENENODE & scene, float dt)
 {
-	if (m_update)
+	GUIWIDGET::Update(scene, dt);
+	DRAWABLE & d = GetDrawable(scene);
+	if (d.GetDrawEnable() && m_load)
 	{
-		DRAWABLE & d = GetDrawable(scene);
-		if (m_name.empty())
-		{
-			m_visible = false;
-		}
-		else
-		{
-			assert(m_content);
-			TEXTUREINFO texinfo;
-			texinfo.mipmap = false;
-			texinfo.repeatu = false;
-			texinfo.repeatv = false;
-			std::tr1::shared_ptr<TEXTURE> texture;
-			m_content->load(texture, m_path, m_name + m_ext, texinfo);
-			d.SetDiffuseMap(texture);
-			m_visible = true;
-		}
-		GUIWIDGET::Update(scene, dt);
+		assert(m_content);
+		TEXTUREINFO texinfo;
+		texinfo.mipmap = false;
+		texinfo.repeatu = false;
+		texinfo.repeatv = false;
+		std::tr1::shared_ptr<TEXTURE> texture;
+		m_content->load(texture, m_path, m_name + m_ext, texinfo);
+		d.SetDiffuseMap(texture);
+		m_load = false;
 	}
 }
 
@@ -78,6 +72,8 @@ void GUIIMAGE::SetImage(const std::string & value)
 	if (m_name != value)
 	{
 		m_name = value;
+		m_load = !value.empty();
+		m_visible = m_load;
 		m_update = true;
 	}
 }

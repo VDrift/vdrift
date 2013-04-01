@@ -52,6 +52,7 @@ private:
 	std::string m_path, m_name, m_ext;
 	keyed_container <DRAWABLE>::handle m_draw;
 	VERTEXARRAY m_varray;
+	bool m_load;
 
 	DRAWABLE & GetDrawable(SCENENODE & scene)
 	{
