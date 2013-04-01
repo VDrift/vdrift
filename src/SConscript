@@ -46,6 +46,7 @@ src = Split("""
 		eventsystem.cpp
 		forcefeedback.cpp
 		game.cpp
+		graphics/dds.cpp
 		graphics/drawable.cpp
 		graphics/fbobject.cpp
 		graphics/fbtexture.cpp
