@@ -20,8 +20,6 @@
 #ifndef _TEXTURE_INTERFACE_H
 #define _TEXTURE_INTERFACE_H
 
-#include "glew.h"
-
 /// an abstract base class for a simple texture interface
 class TEXTURE_INTERFACE
 {
@@ -30,9 +28,9 @@ public:
 	virtual void Activate() const = 0;
 	virtual void Deactivate() const = 0;
 	virtual bool IsRect() const {return false;}
-	virtual unsigned int GetW() const = 0;
-	virtual unsigned int GetH() const = 0;
-	virtual GLuint GetID() const = 0;
+	virtual unsigned GetW() const = 0;
+	virtual unsigned GetH() const = 0;
+	virtual unsigned GetID() const = 0;
 };
 
 #endif // _TEXTURE_INTERFACE_H

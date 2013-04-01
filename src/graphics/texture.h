@@ -27,58 +27,44 @@
 class TEXTURE : public TEXTURE_INTERFACE
 {
 public:
-	TEXTURE():
-		id(0),
-		w(0),
-		h(0),
-		origw(0),
-		origh(0),
-		scale(1.0),
-		alpha(false),
-		cube(false)
-	{
-		// ctor
-	}
+	TEXTURE();
 
-	virtual ~TEXTURE() {Unload();}
-
-	virtual GLuint GetID() const {return id;}
+	virtual ~TEXTURE();
 
 	virtual void Activate() const;
 
 	virtual void Deactivate() const;
 
-	virtual bool Loaded() const {return id;}
+	virtual bool Loaded() const {return m_id;}
+
+	virtual unsigned GetW() const {return m_w;}
+
+	virtual unsigned GetH() const {return m_h;}
+
+	virtual unsigned GetID() const {return m_id;}
+
+	/// scale factor from original size.  allows the user to determine
+	/// what the texture size scaling did to the texture dimensions
+	float GetScale() const {return m_scale;}
+
+	bool IsCube() const {return m_cube;}
 
 	bool Load(const std::string & path, const TEXTUREINFO & info, std::ostream & error);
 
 	void Unload();
 
-	virtual unsigned int GetW() const {return w;}
-
-	virtual unsigned int GetH() const {return h;}
-
-	unsigned short int GetOriginalW() const {return origw;}
-
-	unsigned short int GetOriginalH() const {return origh;}
-
-	///scale factor from original size.  allows the user to determine
-	///what the texture size scaling did to the texture dimensions
-	float GetScale() const {return scale;}
-
-	bool IsCube() const {return cube;}
-
 private:
-	GLuint id;
-	unsigned int w, h; ///< w and h are post-texture-size transform
-	unsigned int origw, origh; ///< w and h are pre-texture-size transform
-	float scale; ///< gets the amount of scaling applied by the texture-size transform, so the original w and h can be backed out
-	bool alpha;
-	bool cube;
+	unsigned m_id;
+	unsigned m_w, m_h;	///< w and h are post-texture-size transform
+	float m_scale;		///< amount of scaling applied by the texture-size transform
+	bool m_alpha;
+	bool m_cube;
+
+	bool LoadCubeVerticalCross(const std::string & path, const TEXTUREINFO & info, std::ostream & error);
 
 	bool LoadCube(const std::string & path, const TEXTUREINFO & info, std::ostream & error);
 
-	bool LoadCubeVerticalCross(const std::string & path, const TEXTUREINFO & info, std::ostream & error);
+	bool LoadDDS(const std::string & path, const TEXTUREINFO & info, std::ostream & error);
 };
 
 #endif //_TEXTURE_H

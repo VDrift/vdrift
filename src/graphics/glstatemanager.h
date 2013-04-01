@@ -21,6 +21,7 @@
 #define _GLSTATEMANAGER_H
 
 #include "texture_interface.h"
+#include "glew.h"
 #include <vector>
 #include <cassert>
 
