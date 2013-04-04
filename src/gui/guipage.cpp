@@ -43,7 +43,7 @@ struct Rect
 static Rect LoadRect(
 	const Config & pagefile,
 	const Config::const_iterator section,
-	const float screenhwratio)
+	const float hwratio)
 {
 	float x(0.5), y(0.5), w(0), h(0), z(0);
 
@@ -51,18 +51,18 @@ static Rect LoadRect(
 	{
 		float l(0), r(0);
 		if (pagefile.get(section, "left", l))
-			x = l * screenhwratio;
+			x = l * hwratio;
 		else if (pagefile.get(section, "right", r))
-			x = 1 - (r + w) * screenhwratio;
-		w = w * screenhwratio;
+			x = 1 - (r + w) * hwratio;
+		w = w * hwratio;
 	}
 	else
 	{
 		float l(0), r(0);
 		pagefile.get(section, "left", l);
 		pagefile.get(section, "right", r);
-		x = l * screenhwratio;
-		w = 1 - (l + r) * screenhwratio;
+		x = l * hwratio;
+		w = 1 - (l + r) * hwratio;
 	}
 	if (pagefile.get(section, "height", h))
 	{
@@ -102,30 +102,85 @@ static bool LoadList(
 	const Config::const_iterator section,
 	const float x0, const float y0,
 	const float x1, const float y1,
+	const float hwratio,
 	LIST *& list)
 {
 	unsigned rows(1), cols(1);
 	if (pagefile.get(section, "rows", rows) | pagefile.get(section, "cols", cols))
 	{
+		// limit rows/cols to 64
+		rows = rows < 64 ? rows : 64;
+		cols = cols < 64 ? cols : 64;
+
+		// padding
+		float pl(0), pr(0), pt(0), pb(0);
+		bool haspl(false), haspr(false);
+		bool haspt(false), haspb(false);
+
+		haspl |= pagefile.get(section, "padding", pl);
+		haspb = haspt = haspr = haspl;
+		pb = pt = pr = pl;
+
+		haspl |= pagefile.get(section, "padding-lr", pl);
+		haspt |= pagefile.get(section, "padding-tb", pt);
+		haspr = haspl;
+		haspb = haspt;
+		pr = pl;
+		pb = pt;
+
+		haspl |= pagefile.get(section, "padding-left", pl);
+		haspr |= pagefile.get(section, "padding-right", pr);
+		haspt |= pagefile.get(section, "padding-top", pt);
+		haspb |= pagefile.get(section, "padding-bottom", pb);
+		pl *= hwratio;
+		pr *= hwratio;
+
+		// width (overrides padding)
+		float cw(0);
+		if (pagefile.get(section, "col-width", cw))
+		{
+			cw *= hwratio;
+			float w = x1 - x0;
+			float p = w / cols - cw;
+			if (haspl && haspr)
+			{
+				float delta = (p - pl - pr) * 0.5f;
+				pl += delta;
+				pr += delta;
+			}
+			else if (haspl)
+				pr = p - pl;
+			else if (haspr)
+				pl = p - pr;
+			else
+				pl = pr = p * 0.5f;
+		}
+
+		// height (overrides padding)
+		float rh(0);
+		if (pagefile.get(section, "row-height", rh))
+		{
+			float h = y1 - y0;
+			float p = h / rows - rh;
+			if (haspt && haspb)
+			{
+				float delta = (p - pt - pb) * 0.5f;
+				pt += delta;
+				pb += delta;
+			}
+			else if (haspt)
+				pb = p - pt;
+			else if (haspb)
+				pt = p - pb;
+			else
+				pt = pb = p * 0.5f;
+		}
+
 		bool vert(true);
 		pagefile.get(section, "vertical", vert);
 
-		float xp0(0), yp0(0), xp1(0), yp1(0);
-		pagefile.get(section, "padding", xp0);
-		yp1 = xp1 = yp0 = xp0;
-
-		pagefile.get(section, "padding-lr", xp0);
-		pagefile.get(section, "padding-tb", yp0);
-		yp1 = yp0;
-		xp1 = xp0;
-
-		pagefile.get(section, "padding-left", xp0);
-		pagefile.get(section, "padding-right", xp1);
-		pagefile.get(section, "padding-top", yp0);
-		pagefile.get(section, "padding-bottom", yp1);
-
 		list = new LIST();
-		list->SetupList(rows, cols, x0, y0, x1, y1, xp0, yp0, xp1, yp1, vert);
+		list->SetupList(rows, cols, x0, y0, x1, y1, pl, pt, pr, pb, vert);
 		return true;
 	}
 	return false;
@@ -177,7 +232,7 @@ GUIPAGE::~GUIPAGE()
 bool GUIPAGE::Load(
 	const std::string & path,
 	const std::string & texpath,
-	const float screenhwratio,
+	const float hwratio,
 	const GUILANGUAGE & lang,
 	const FONT & font,
 	VSIGNALMAP vsignalmap,
@@ -225,7 +280,7 @@ bool GUIPAGE::Load(
 	{
 		if (section->first.empty()) continue;
 
-		Rect r = LoadRect(pagefile, section, screenhwratio);
+		Rect r = LoadRect(pagefile, section, hwratio);
 		float x0 = r.x - r.w * 0.5;
 		float y0 = r.y - r.h * 0.5;
 		float x1 = r.x + r.w * 0.5;
@@ -247,10 +302,10 @@ bool GUIPAGE::Load(
 			else if (alignstr == "left") align = -1;
 
 			float scaley = fontsize;
-			float scalex = fontsize * screenhwratio;
+			float scalex = fontsize * hwratio;
 
 			GUILABELLIST * widget_list = 0;
-			if (LoadList(pagefile, section, x0, y0, x1, y1, widget_list))
+			if (LoadList(pagefile, section, x0, y0, x1, y1, hwratio, widget_list))
 			{
 				// connect with the value list
 				VNACTIONMAP::const_iterator vni = vnactionmap.find(value);
@@ -300,7 +355,7 @@ bool GUIPAGE::Load(
 			pagefile.get(section, "ext", ext);
 
 			GUIIMAGELIST * widget_list = 0;
-			if (LoadList(pagefile, section, x0, y0, x1, y1, widget_list))
+			if (LoadList(pagefile, section, x0, y0, x1, y1, hwratio, widget_list))
 			{
 				// init drawable
 				widget_list->SetupDrawable(sref, content, path, ext, r.z);
@@ -387,7 +442,7 @@ bool GUIPAGE::Load(
 		{
 			GUICONTROL * control = 0;
 			GUICONTROLLIST * control_list = 0;
-			if (LoadList(pagefile, section, x0, y0, x1, y1, control_list))
+			if (LoadList(pagefile, section, x0, y0, x1, y1, hwratio, control_list))
 			{
 				// register control list scroll actions
 				actionmap[section->first + ".scrollf"] = &control_list->scroll_fwd;
