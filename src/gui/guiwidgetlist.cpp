@@ -154,18 +154,17 @@ void GUIWIDGETLIST::ScrollList(int n, const std::string & value)
 
 void GUIWIDGETLIST::UpdateList(const std::string & vnum)
 {
-	int list_size(0), list_item (0);
+	if (!get_values.connected())
+		return;
+
 	std::stringstream s(vnum);
-	s >> list_size >> list_item;
+	s >> m_list_size;
 
-	m_list_size = list_size;
-	m_list_offset = list_item - list_item % (m_rows * m_cols);
+	if (m_list_size <= m_list_offset)
+		m_list_offset = m_list_size - m_list_size % (m_rows * m_cols);
 
-	if (get_values.connected())
-	{
-		m_values.resize(m_rows * m_cols);
-		get_values(m_list_offset, m_values);
-	}
+	m_values.resize(m_rows * m_cols);
+	get_values(m_list_offset, m_values);
 }
 
 void GUIWIDGETLIST::SetColor1(const std::string & value)

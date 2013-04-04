@@ -112,17 +112,30 @@ void GUICONTROLLIST::SetActions(
 
 void GUICONTROLLIST::UpdateList(const std::string & value)
 {
-	int list_size(0);
 	std::stringstream s(value);
-	s >> list_size;
+	s >> m_list_size;
 
-	m_list_size = list_size;
-	/* fixme
-	if (m_active_element + m_list_offset >= list_size)
+	int list_item = m_active_element + m_list_offset;
+	if (list_item >= m_list_size)
 	{
-		m_active_element = list_item % (m_rows * m_cols);
-		m_list_offset = list_item - m_active_element;
-	}*/
+		m_signaln[BLUR](list_item);
+		list_item = m_list_size - 1;
+
+		if (list_item < 0)
+		{
+			m_active_element = 0;
+			m_list_offset = 0;
+			return;
+		}
+
+		if (list_item < m_list_offset)
+		{
+			m_active_element = list_item % (m_rows * m_cols);
+			m_list_offset = list_item - m_active_element;
+		}
+
+		m_signaln[FOCUS](list_item);
+	}
 }
 
 void GUICONTROLLIST::SetToNth(const std::string & value)
@@ -139,11 +152,16 @@ void GUICONTROLLIST::SetToNth(const std::string & value)
 		int list_offset = list_item - active_element;
 		int delta = list_offset - m_list_offset;
 		m_active_element = active_element + delta;
-
 		if (delta > 0)
-			while (list_offset > m_list_offset) ScrollFwd();
+		{
+			while (list_offset > m_list_offset)
+				ScrollFwd();
+		}
 		else if (delta < 0)
-			while (list_offset < m_list_offset) ScrollRev();
+		{
+			while (list_offset < m_list_offset)
+				ScrollRev();
+		}
 
 		m_signaln[FOCUS](m_active_element + m_list_offset);
 	}
@@ -152,7 +170,7 @@ void GUICONTROLLIST::SetToNth(const std::string & value)
 void GUICONTROLLIST::ScrollFwd()
 {
 	int delta = m_vertical ? m_rows : m_cols;
-	if (m_list_offset < m_list_size - int(m_rows * m_cols))
+	if (m_list_offset < m_list_size - m_list_size % int(m_rows * m_cols))
 	{
 		m_list_offset += delta;
 		m_active_element -= delta;
