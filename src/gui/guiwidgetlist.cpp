@@ -107,7 +107,7 @@ void GUIWIDGETLIST::SetHue(int n, const std::string & value)
 void GUIWIDGETLIST::SetSat(int n, const std::string & value)
 {
 	size_t i = n - m_list_offset;
-	if (i >= 0 && i < m_elements.size())
+	if (i < m_elements.size())
 	{
 		m_elements[i]->SetSat(value);
 	}
