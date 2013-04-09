@@ -21,6 +21,7 @@
 #include "content/contentmanager.h"
 
 GUIIMAGE::GUIIMAGE() :
+	m_content(0),
 	m_load(false)
 {
 	set_image.call.bind<GUIIMAGE, &GUIIMAGE::SetImage>(this);
@@ -61,6 +62,7 @@ void GUIIMAGE::SetupDrawable(
 	m_ext = ext;
 	m_varray.SetToBillboard(x - w * 0.5f, y - h * 0.5f, x + w * 0.5f, y + h * 0.5f);
 	m_draw = scene.GetDrawlist().twodim.insert(DRAWABLE());
+	m_visible = false;
 	DRAWABLE & d = GetDrawable(scene);
 	d.SetVertArray(&m_varray);
 	d.SetCull(false, false);
