@@ -42,7 +42,7 @@ struct Rect
 
 static Rect LoadRect(
 	const Config & pagefile,
-	const Config::const_iterator section,
+	const Config::const_iterator & section,
 	const float hwratio)
 {
 	float x(0.5), y(0.5), w(0), h(0), z(0);
@@ -99,7 +99,7 @@ static Rect LoadRect(
 template <class LIST>
 static bool LoadList(
 	const Config & pagefile,
-	const Config::const_iterator section,
+	const Config::const_iterator & section,
 	const float x0, const float y0,
 	const float x1, const float y1,
 	const float hwratio,
