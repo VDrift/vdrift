@@ -2038,22 +2038,16 @@ void GAME::PopulateCarPaintList(const std::string & carname, GUIOPTION::LIST & p
 
 void GAME::PopulateCarTireList(const std::string & carname, GUIOPTION::LIST & tirelist)
 {
-#ifndef VDRIFTN
-	const std::string ext(".tire");
-#else
-	const std::string ext(".tiren");
-#endif
-
 	tirelist.clear();
 	tirelist.push_back(std::make_pair("default", "default"));
 
 	std::list<std::string> filelist;
-	if (pathmanager.GetFileList(pathmanager.GetCarPartsPath() + "/tire", filelist, ext))
+	if (pathmanager.GetFileList(pathmanager.GetCarPartsPath() + "/tire", filelist, ".tire"))
 	{
 		for (std::list<std::string>::iterator i = filelist.begin(); i != filelist.end(); ++i)
 		{
 			std::string name = i->substr(0, i->find('.'));
-			tirelist.push_back(std::make_pair("tire/" + name, name));
+			tirelist.push_back(std::make_pair("tire/" + *i, name));
 		}
 	}
 }
