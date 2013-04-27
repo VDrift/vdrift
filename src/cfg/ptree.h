@@ -159,6 +159,9 @@ public:
 	/// overwrite value and children
 	void set(const PTree & other);
 
+	/// overwrite value and merge children
+	void merge(const PTree & other);
+
 	/// clear children and value
 	void clear();
 
@@ -283,6 +286,12 @@ inline void PTree::set(const PTree & other)
 	_children = other._children;
 }
 
+inline void PTree::merge(const PTree & other)
+{
+	_value = other._value;
+	_children.insert(other._children.begin(), other._children.end());
+}
+
 inline void PTree::clear()
 {
 	_children.clear();
@@ -295,14 +304,14 @@ inline std::string PTree::fullname(const std::string & name) const
 	{
 		full_name = '.' + name;
 	}
-		
+
 	const PTree * node = this;
 	while (node && !node->_value.empty())
 	{
 		full_name = '.' + node->_value + full_name;
 		node = node->_parent;
 	}
-		
+
 	return full_name;
 }
 
