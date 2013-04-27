@@ -52,7 +52,7 @@ SETTINGS::SETTINGS() :
 	sound_volume(0.5),
 	sound_sources(64),
 	mph(true),
-	track("paulricard88"),
+	track("ruudskogen"),
 	antialiasing(0),
 	anisotropic(0),
 	trackmap(true),
@@ -90,6 +90,8 @@ SETTINGS::SETTINGS() :
 	normalmaps(false),
 	car("XS"),
 	car_paint("default"),
+	car_tire("default"),
+	car_wheel("default"),
 	car_color_hue(0.5),
 	car_color_sat(1.0),
 	car_color_val(0.5),
@@ -121,6 +123,8 @@ void SETTINGS::Serialize(bool write, Config & config)
 	Param(config, write, section, "selected_replay", selected_replay);
 	Param(config, write, section, "car", car);
 	Param(config, write, section, "car_paint", car_paint);
+	Param(config, write, section, "car_tire", car_tire);
+	Param(config, write, section, "car_wheel", car_wheel);
 	Param(config, write, section, "car_color_hue", car_color_hue);
 	Param(config, write, section, "car_color_sat", car_color_sat);
 	Param(config, write, section, "car_color_val", car_color_val);

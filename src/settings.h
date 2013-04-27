@@ -430,6 +430,8 @@ private:
 	bool normalmaps;
 	std::string car;
 	std::string car_paint;
+	std::string car_tire;
+	std::string car_wheel;
 	float car_color_hue;
 	float car_color_sat;
 	float car_color_val;

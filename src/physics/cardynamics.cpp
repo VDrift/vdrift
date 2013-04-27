@@ -158,20 +158,70 @@ static bool LoadBrake(
 	return true;
 }
 
-static bool LoadWheel(
-	const PTree & cfg,
-	const CARTIRE & tire,
-	CARWHEEL & wheel)
+static bool LoadTire(const PTree & cfg, CARTIRE & tire, std::ostream & error_output)
 {
-	btScalar mass, inertia;
+	TIREINFO info;
+
+	if (!cfg.get("tread", info.tread, error_output)) return false;
+
+	btVector3 rolling_resistance;
+	if (!cfg.get("rolling-resistance", rolling_resistance, error_output)) return false;
+	info.rolling_resistance_lin = rolling_resistance[0];
+	info.rolling_resistance_quad = rolling_resistance[1];
+
+	// read lateral
+	int numinfile;
+	for (int i = 0; i < 15; i++)
+	{
+		numinfile = i;
+		if (i == 11)
+			numinfile = 111;
+		else if (i == 12)
+			numinfile = 112;
+		else if (i > 12)
+			numinfile -= 1;
+		std::stringstream st;
+		st << "a" << numinfile;
+		if (!cfg.get(st.str(), info.lateral[i], error_output)) return false;
+	}
+
+	// read longitudinal
+	for (int i = 0; i < 11; i++)
+	{
+		std::stringstream st;
+		st << "b" << i;
+		if (!cfg.get(st.str(), info.longitudinal[i], error_output)) return false;
+	}
+
+	// read aligning
+	for (int i = 0; i < 18; i++)
+	{
+		std::stringstream st;
+		st << "c" << i;
+		if (!cfg.get(st.str(), info.aligning[i], error_output)) return false;
+	}
+
+	tire.init(info);
+
+	return true;
+}
+
+static bool LoadWheel(const PTree & cfg, CARWHEEL & wheel, std::ostream & error_output)
+{
+	const PTree * cfg_tire;
+	btVector3 tire_size;
+	if (!cfg.get("tire", cfg_tire, error_output)) return false;
+	if (!cfg_tire->get("size", tire_size, error_output)) return false;
+
+	btScalar tire_width = tire_size[0] * 0.001f;
+	btScalar tire_aspect_ratio = tire_size[1] * 0.01f;
+	btScalar tire_radius = tire_size[2] * 0.5f * 0.0254f + tire_width * tire_aspect_ratio;
 
 	// calculate mass, inertia from dimensions
-	btScalar tire_radius = tire.GetRadius();
-	btScalar tire_width = tire.GetWidth();
 	btScalar tire_thickness = 0.05;
 	btScalar tire_density = 8E3;
 
-	btScalar rim_radius = tire_radius - tire_width * tire.GetAspectRatio();
+	btScalar rim_radius = tire_radius - tire_width * tire_aspect_ratio;
 	btScalar rim_width = tire_width;
 	btScalar rim_thickness = 0.01;
 	btScalar rim_density = 3E5;
@@ -183,15 +233,17 @@ static bool LoadWheel(
 	btScalar tire_inertia = tire_mass * tire_radius * tire_radius;
 	btScalar rim_inertia = rim_mass * rim_radius * rim_radius;
 
-	mass = tire_mass + rim_mass;
-	inertia = (tire_inertia + rim_inertia) * 4;	// scale inertia fixme
+	btScalar mass = tire_mass + rim_mass;
+	btScalar inertia = (tire_inertia + rim_inertia) * 4;	// scale inertia fixme
 
 	// override mass, inertia
-	cfg.get("mass", mass);
 	cfg.get("inertia", inertia);
+	cfg.get("mass", mass);
 
-	wheel.SetMass(mass);
 	wheel.SetInertia(inertia);
+	wheel.SetRadius(tire_radius);
+	wheel.SetWidth(tire_width);
+	wheel.SetMass(mass);
 
 	return true;
 }
@@ -442,14 +494,15 @@ CARDYNAMICS::~CARDYNAMICS()
 }
 
 bool CARDYNAMICS::Load(
+	std::ostream & error,
+	DynamicsWorld & world,
 	const PTree & cfg,
 	const btVector3 & meshsize,
 	const btVector3 & meshcenter,
 	const btVector3 & position,
 	const btQuaternion & rotation,
 	const bool damage,
-	DynamicsWorld & world,
-	std::ostream & error)
+	const PTree * tirealt)
 {
 	if (!LoadClutch(cfg, clutch, error)) return false;
 	if (!LoadTransmission(cfg, transmission, error)) return false;
@@ -498,20 +551,18 @@ bool CARDYNAMICS::Load(
 	{
 		const PTree & cfg_wheel = it->second;
 		const PTree * cfg_tire, * cfg_brake;
-		if (!cfg_wheel.get("tire", cfg_tire, error)) return false;
+		if (!cfg_wheel.get("tire.type", cfg_tire, error)) return false;
 		if (!cfg_wheel.get("brake", cfg_brake, error)) return false;
-		if (!tire[i].Load(*cfg_tire, error)) return false;
+		if (!LoadTire(tirealt ? *tirealt : *cfg_tire, tire[i], error)) return false;
 		if (!LoadBrake(*cfg_brake, brake[i], error)) return false;
-		if (!LoadWheel(cfg_wheel, tire[i], wheel[i])) return false;
+		if (!LoadWheel(cfg_wheel, wheel[i], error)) return false;
 		if (!CARSUSPENSION::Load(cfg_wheel, suspension[i], error)) return false;
 		if (suspension[i]->GetMaxSteeringAngle() > maxangle)
-		{
 			maxangle = suspension[i]->GetMaxSteeringAngle();
-		}
 
 		btScalar mass = wheel[i].GetMass();
-		btScalar width = tire[i].GetWidth();
-		btScalar radius = tire[i].GetRadius();
+		btScalar width = wheel[i].GetWidth();
+		btScalar radius = wheel[i].GetRadius();
 		btVector3 size(width * 0.5f, radius, radius);
 		btCollisionShape * shape = new btCylinderShapeX(size);
 		loadBody(cfg_wheel, error, shape, mass, true);
@@ -727,7 +778,7 @@ void CARDYNAMICS::SetAutoShift(bool value)
 
 btScalar CARDYNAMICS::GetSpeedMPS() const
 {
-	return tire[0].GetRadius() * wheel[0].GetAngularVelocity();
+	return wheel[0].GetRadius() * wheel[0].GetAngularVelocity();
 }
 
 btScalar CARDYNAMICS::GetMaxSpeedMPS() const
@@ -787,7 +838,7 @@ void CARDYNAMICS::AlignWithGround()
 	bool no_min_height = true;
 	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
 	{
-		btScalar height = wheel_contact[i].GetDepth() - 2 * tire[i].GetRadius();
+		btScalar height = wheel_contact[i].GetDepth() - 2 * wheel[i].GetRadius();
 		if (height < min_height || no_min_height)
 		{
 			min_height = height;
@@ -885,9 +936,20 @@ void CARDYNAMICS::UpdateTelemetry(btScalar dt)
 	}
 }
 
-std::ostream & operator << (std::ostream & os, const btVector3 & v)
+static std::ostream & operator << (std::ostream & os, const btVector3 & v)
 {
 	os << v[0] << ", " << v[1] << ", " << v[2];
+	return os;
+}
+
+static std::ostream & operator << (std::ostream & os, const CARTIRE & tire)
+{
+	os << "Fx: " << tire.getFx() << "\n";
+	os << "Fy: " << tire.getFy() << "\n";
+	os << "Slip Ang: " << tire.getSlipAngle() * SIMD_DEGS_PER_RAD << " / ";
+	os << tire.getIdealSlipAngle() * SIMD_DEGS_PER_RAD << "\n";
+	os << "Slip: " << tire.getSlip() << " / ";
+	os << tire.getIdealSlip() << "\n";
 	return os;
 }
 
@@ -970,28 +1032,19 @@ void CARDYNAMICS::DebugPrint ( std::ostream & out, bool p1, bool p2, bool p3, bo
 		out << "\n";
 		out << "(front left)" << "\n";
 		wheel[FRONT_LEFT].DebugPrint ( out );
+		out << tire[FRONT_LEFT] << "\n";
 		out << "\n";
 		out << "(front right)" << "\n";
 		wheel[FRONT_RIGHT].DebugPrint ( out );
+		out << tire[FRONT_RIGHT] << "\n";
 		out << "\n";
 		out << "(rear left)" << "\n";
 		wheel[REAR_LEFT].DebugPrint ( out );
+		out << tire[REAR_LEFT] << "\n";
 		out << "\n";
 		out << "(rear right)" << "\n";
 		wheel[REAR_RIGHT].DebugPrint ( out );
-
-		out << "\n";
-		out << "(front left)" << "\n";
-		tire[FRONT_LEFT].DebugPrint ( out );
-		out << "\n";
-		out << "(front right)" << "\n";
-		tire[FRONT_RIGHT].DebugPrint ( out );
-		out << "\n";
-		out << "(rear left)" << "\n";
-		tire[REAR_LEFT].DebugPrint ( out );
-		out << "\n";
-		out << "(rear right)" << "\n";
-		tire[REAR_RIGHT].DebugPrint ( out );
+		out << tire[REAR_RIGHT];
 	}
 
 	if ( p4 )
@@ -1078,7 +1131,7 @@ bool CARDYNAMICS::Serialize ( joeserialize::Serializer & s )
 	{
 		_SERIALIZE_(s, wheel[i]);
 		_SERIALIZE_(s, brake[i]);
-		_SERIALIZE_(s, tire[i]);
+		//_SERIALIZE_(s, tire[i]);
 		_SERIALIZE_(s, *suspension[i]);
 		if (!serialize(s, wheel_velocity[i])) return false;
 		if (!serialize(s, wheel_position[i])) return false;
@@ -1160,12 +1213,6 @@ void CARDYNAMICS::ApplyAerodynamicsToBody ( btVector3 & force, btVector3 & torqu
 ///do traction control system (wheelspin prevention) calculations and modify the throttle position if necessary
 void CARDYNAMICS::DoTCS ( int i, btScalar suspension_force )
 {
-	btScalar sp ( 0 ), ah ( 0 );
-	tire[i].GetSigmaHatAlphaHat ( suspension_force, sp, ah );
-	//sp is the ideal slip ratio given tire loading
-
-	btScalar gasthresh = 0.1;
-
 	btScalar sense = 1.0;
 	if ( transmission.GetGear() < 0 )
 		sense = -1.0;
@@ -1173,6 +1220,7 @@ void CARDYNAMICS::DoTCS ( int i, btScalar suspension_force )
 	btScalar gas = engine.GetThrottle();
 
 	//only active if throttle commanded past threshold
+	btScalar gasthresh = 0.1;
 	if ( gas > gasthresh )
 	{
 		//see if we're spinning faster than the rest of the wheels
@@ -1190,7 +1238,8 @@ void CARDYNAMICS::DoTCS ( int i, btScalar suspension_force )
 		//don't engage if all wheels are moving at the same rate
 		if ( maxspindiff > 1.0 )
 		{
-			btScalar error = tire[i].GetSlide() *sense - sp;
+			btScalar sp = tire[i].getIdealSlip();
+			btScalar error = tire[i].getSlip() * sense - sp;
 			btScalar thresholdeng = 0.0;
 			btScalar thresholddis = -sp/2.0;
 
@@ -1223,9 +1272,6 @@ void CARDYNAMICS::DoTCS ( int i, btScalar suspension_force )
 void CARDYNAMICS::DoABS ( int i, btScalar suspension_force )
 {
 	//an ideal ABS algorithm
-	btScalar sp ( 0 ), ah ( 0 );
-	tire[i].GetSigmaHatAlphaHat ( suspension_force, sp, ah );
-	//sp is the ideal slip ratio given tire loading
 
 	//only active if brakes commanded past threshold
 	btScalar brakesetting = brake[i].GetBrakeFactor();
@@ -1241,7 +1287,8 @@ void CARDYNAMICS::DoABS ( int i, btScalar suspension_force )
 		//don't engage ABS if all wheels are moving slowly
 		if ( maxspeed > 6.0 )
 		{
-			btScalar error = - tire[i].GetSlide() - sp;
+			btScalar sp = tire[i].getIdealSlip();
+			btScalar error = - tire[i].getSlip() - sp;
 			btScalar thresholdeng = 0.0;
 			btScalar thresholddis = -sp/2.0;
 
@@ -1272,7 +1319,7 @@ void CARDYNAMICS::ComputeSuspensionDisplacement ( int i, btScalar dt )
 	btScalar amplitude = 0.25 * surface.bumpAmplitude;
 	btScalar bumpoffset = amplitude * ( sin ( phase + shift ) + sin ( M_PI_2*phase ) - 2.0 );
 
-	btScalar relative_displacement = wheel_contact[i].GetDepth() - 2 * tire[i].GetRadius() - bumpoffset;
+	btScalar relative_displacement = wheel_contact[i].GetDepth() - 2 * wheel[i].GetRadius() - bumpoffset;
 	assert ( !isnan ( relative_displacement ) );
 	suspension[i]->SetDisplacement ( suspension[i]->GetDisplacement()-relative_displacement );
 	assert ( !isnan ( suspension[i]->GetDisplacement() ) );
@@ -1311,7 +1358,7 @@ btVector3 CARDYNAMICS::ApplySuspensionForceToBody ( int i, btScalar dt, btVector
 	btVector3 suspension_force_application_point = wheel_position[i] - body->getCenterOfMassPosition();
 
 	btScalar overtravel = suspension[i]->GetOvertravel();
-	if ( overtravel > 0 )
+	if (overtravel > 0)
 	{
 		btScalar correction_factor = 0.0;
 		btScalar dv = body->getVelocityInLocalPoint(suspension_force_application_point).dot(forcedirection);
@@ -1345,20 +1392,19 @@ btVector3 CARDYNAMICS::ComputeTireFrictionForce (int i, btScalar dt, btScalar no
 	btVector3 Aproj = B.cross(A.cross(B)); //project the ground normal onto our forward facing plane
 	assert(Aproj.length() > 0.001); //ensure the wheel isn't in an odd orientation
 	Aproj = Aproj.normalize();
-	btScalar camber_rads = btAcos(Aproj.dot(direction::up)); //find the angular difference in the camber axis between up and the projected ground normal
-	assert(!isnan(camber_rads));
+	btScalar camber = btAcos(Aproj.dot(direction::up)); //find the angular difference in the camber axis between up and the projected ground normal
+	assert(!isnan(camber));
 	//btVector3 crosscheck = Aproj.cross(up); //find axis of rotation between Aproj and up
-	//camber_rads = (crosscheck[0] < 0) ? -camber_rads : camber_rads; //correct sign of angular distance
-	camber_rads = -camber_rads;
+	//camber = (crosscheck[0] < 0) ? -camber : camber; //correct sign of angular distance
+	camber = -camber;
 
-	btScalar camber = camber_rads * SIMD_DEGS_PER_RAD;
 	btScalar lonvel = direction::forward.dot(groundvel);
 	btScalar latvel = -direction::right.dot(groundvel);
 	btScalar friction_coeff =
-		tire[i].GetTread() * wheel_contact[i].GetSurface().frictionTread +
-		(1.0 - tire[i].GetTread()) * wheel_contact[i].GetSurface().frictionNonTread;
+		tire[i].getTread() * wheel_contact[i].GetSurface().frictionTread +
+		(1.0 - tire[i].getTread()) * wheel_contact[i].GetSurface().frictionNonTread;
 
-	btVector3 friction_force = tire[i].GetForce(
+	btVector3 friction_force = tire[i].getForce(
 		normal_force, friction_coeff, camber, angvel, lonvel, latvel);
 
 	for (int n = 0; n < 3; ++n) assert(!isnan(friction_force[n]));
@@ -1368,26 +1414,19 @@ btVector3 CARDYNAMICS::ComputeTireFrictionForce (int i, btScalar dt, btScalar no
 
 void CARDYNAMICS::ApplyWheelForces ( btScalar dt, btScalar wheel_drive_torque, int i, const btVector3 & suspension_force, btVector3 & force, btVector3 & torque )
 {
+	btScalar normal_force = suspension_force.length();
 	btVector3 groundvel = quatRotate ( wheel_orientation[i].inverse(), wheel_velocity[i] );
-
-#ifdef SUSPENSION_FORCE_DIRECTION
-	btVector3 wheel_normal = quatRotate ( wheel_orientation[i], up );
-	//btScalar normal_force = suspension_force.dot(wheel_normal);
-	btScalar normal_force = suspension_force.length();
-#else
-	btScalar normal_force = suspension_force.length();
-#endif
-	assert(!isnan(normal_force));
 
 	btVector3 friction_force = ComputeTireFrictionForce ( i, dt, normal_force, wheel[i].GetAngularVelocity(), groundvel, wheel_orientation[i] );
 
 	//calculate friction torque
 	btVector3 tire_force = direction::forward * friction_force[0] - direction::right * friction_force[1];
-	btScalar tire_friction_torque = friction_force[0] * tire[i].GetRadius();
+	btScalar tire_friction_torque = friction_force[0] * wheel[i].GetRadius();
 	assert ( !isnan ( tire_friction_torque ) );
 
 	//calculate brake torque
-	btScalar wheel_brake_torque = (0 - wheel[i].GetAngularVelocity()) / dt * wheel[i].GetInertia() - wheel_drive_torque + tire_friction_torque;
+	btScalar wheel_lock_torque = -wheel[i].GetAngularVelocity() / dt * wheel[i].GetInertia();
+	btScalar wheel_brake_torque = wheel_lock_torque - wheel_drive_torque + tire_friction_torque;
 	if (wheel_brake_torque > 0 && wheel_brake_torque > brake[i].GetTorque())
 	{
 		wheel_brake_torque = brake[i].GetTorque();
@@ -1407,22 +1446,24 @@ void CARDYNAMICS::ApplyWheelForces ( btScalar dt, btScalar wheel_drive_torque, i
 	btVector3 tire_torque = direction::right * reaction_torque - direction::up * friction_force[2];
 
 	//set wheel torque due to tire rolling resistance
-	btScalar rolling_resistance = -tire[i].GetRollingResistance(wheel[i].GetAngularVelocity(), wheel_contact[i].GetSurface().rollResistanceCoefficient);
-	btScalar tire_rolling_resistance_torque = rolling_resistance * tire[i].GetRadius() - tire_friction_torque;
-	assert(!isnan(tire_rolling_resistance_torque));
-
-	tire_force -= groundvel * wheel_contact[i].GetSurface().rollingDrag;
+	btScalar rolling_resistance = -tire[i].getRollingResistance(wheel[i].GetAngularVelocity(), wheel_contact[i].GetSurface().rollResistanceCoefficient);
+	btScalar rolling_resistance_torque = rolling_resistance * wheel[i].GetRadius() - tire_friction_torque;
+	btScalar wheel_torque = wheel_drive_torque + wheel_brake_torque + rolling_resistance_torque;
 
 	//have the wheels internally apply forces, or just forcibly set the wheel speed if the brakes are locked
-	wheel[i].SetTorque ( wheel_drive_torque+wheel_brake_torque+tire_rolling_resistance_torque, dt );
+	wheel[i].SetTorque ( wheel_torque, dt );
 	wheel[i].Integrate ( dt );
 
+	//viscous tire contact drag
+	tire_force -= groundvel * wheel_contact[i].GetSurface().rollingDrag;
+
 	//apply forces to body
+	btVector3 tire_pos = wheel_position[i] - body->getCenterOfMassPosition();
 	btVector3 world_tire_force = quatRotate ( wheel_orientation[i], tire_force );
 	btVector3 world_tire_torque = quatRotate ( wheel_orientation[i],  tire_torque);
-	btVector3 tirepos = wheel_position[i] - body->getCenterOfMassPosition();
+	world_tire_torque += tire_pos.cross(world_tire_force);
 	force = force + world_tire_force;
-	torque = torque + world_tire_torque + tirepos.cross(world_tire_force);
+	torque = torque + world_tire_torque;
 }
 
 ///the core function of the car dynamics simulation:  find and apply all forces on the car and components.
@@ -1524,7 +1565,7 @@ void CARDYNAMICS::updateAction(btCollisionWorld * collisionWorld, btScalar dt)
 	{
 		Tick(dt / repeats, force, torque);
 
-		feedback += tire[FRONT_LEFT].GetFeedback() + tire[FRONT_RIGHT].GetFeedback();
+		feedback += tire[FRONT_LEFT].getMz() + tire[FRONT_RIGHT].getMz();
 	}
 	feedback /= repeats;
 
@@ -1548,7 +1589,7 @@ void CARDYNAMICS::UpdateWheelContacts()
 	btScalar raylen = 4;
 	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
 	{
-		btVector3 raystart = wheel_position[i] - raydir * tire[i].GetRadius();
+		btVector3 raystart = wheel_position[i] - raydir * wheel[i].GetRadius();
 		if (body->getChildBody(i)->isInWorld())
 		{
 			// wheel separated
@@ -1567,7 +1608,7 @@ void CARDYNAMICS::InterpolateWheelContacts()
 	btScalar raylen = 4;
 	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
 	{
-		btVector3 raystart = wheel_position[i] - raydir * tire[i].GetRadius();
+		btVector3 raystart = wheel_position[i] - raydir * wheel[i].GetRadius();
 		GetWheelContact(WHEEL_POSITION(i)).CastRay(raystart, raydir, raylen);
 	}
 }
@@ -1804,18 +1845,18 @@ btScalar CARDYNAMICS::CalculateMaxSpeed() const
 	if (drive == RWD)
 	{
 		ratio *= differential_rear.GetFinalDrive();
-		maxspeed = tire[REAR_LEFT].GetRadius() * engine.GetRPMLimit() * M_PI / 30 / ratio;
+		maxspeed = wheel[REAR_LEFT].GetRadius() * engine.GetRPMLimit() * M_PI / 30 / ratio;
 	}
 	else if (drive == FWD)
 	{
 		ratio *= differential_front.GetFinalDrive();
-		maxspeed = tire[FRONT_LEFT].GetRadius() * engine.GetRPMLimit() * M_PI / 30 / ratio;
+		maxspeed = wheel[FRONT_LEFT].GetRadius() * engine.GetRPMLimit() * M_PI / 30 / ratio;
 	}
 	else if (drive == AWD)
 	{
 		ratio *= differential_front.GetFinalDrive();
 		ratio *= differential_center.GetFinalDrive();
-		maxspeed = tire[FRONT_LEFT].GetRadius() * engine.GetRPMLimit() * M_PI / 30 / ratio;
+		maxspeed = wheel[FRONT_LEFT].GetRadius() * engine.GetRPMLimit() * M_PI / 30 / ratio;
 	}
 	return maxspeed;
 }

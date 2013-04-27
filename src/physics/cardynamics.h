@@ -59,15 +59,17 @@ public:
 
 	~CARDYNAMICS();
 
+	// tirealt is optional tire config, overrides default tire type
 	bool Load(
+		std::ostream & error,
+		DynamicsWorld & world,
 		const PTree & cfg,
 		const btVector3 & meshsize,
 		const btVector3 & meshcenter,
 		const btVector3 & position,
 		const btQuaternion & rotation,
 		const bool damage,
-		DynamicsWorld & world,
-		std::ostream & error_output);
+		const PTree * tirealt = 0);
 
 	// bullet interface
 	void updateAction(btCollisionWorld * collisionWorld, btScalar dt);

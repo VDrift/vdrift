@@ -121,15 +121,10 @@ private:
 
 	bool NewGame(bool playreplay=false, bool opponents=false, int num_laps=0);
 
-	/// carfile is a string containing an entire .car file (e.g. XS.car) and is used instead of reading from disk.  this is optional
 	bool LoadCar(
-		const std::string & carname,
-		const std::string & carpaint,
-		const MATHVECTOR <float, 3> & carcolorhsv,
-		const MATHVECTOR <float, 3> & start_position,
-		const QUATERNION <float> & start_orientation,
-		bool islocal, bool isai,
-		const std::string & carfile="");
+		const CARINFO & carinfo,
+		const MATHVECTOR <float, 3> & position,
+		const QUATERNION <float> & orientation);
 
 	bool LoadTrack(const std::string & trackname);
 
@@ -149,7 +144,11 @@ private:
 
 	void PopulateCarList(GUIOPTION::LIST & carlist);
 
-	void PopulateCarPaintList(const std::string & carname, GUIOPTION::LIST & carpaintlist);
+	void PopulateCarPaintList(const std::string & carname, GUIOPTION::LIST & paintlist);
+
+	void PopulateCarTireList(const std::string & carname, GUIOPTION::LIST & tirelist);
+
+	void PopulateCarWheelList(const std::string & carname, GUIOPTION::LIST & wheellist);
 
 	void PopulateDriverList(GUIOPTION::LIST & driverlist);
 
@@ -238,6 +237,8 @@ private:
 	void SetCarToEdit(const std::string & value);
 	void SetCarName(const std::string & value);
 	void SetCarPaint(const std::string & value);
+	void SetCarTire(const std::string & value);
+	void SetCarWheel(const std::string & value);
 	void SetCarColor(const std::string & value);
 	void SetCarColorHue(const std::string & value);
 	void SetCarColorSat(const std::string & value);
@@ -254,6 +255,8 @@ private:
 	Slot1<const std::string &> set_car_toedit;
 	Slot1<const std::string &> set_car_name;
 	Slot1<const std::string &> set_car_paint;
+	Slot1<const std::string &> set_car_tire;
+	Slot1<const std::string &> set_car_wheel;
 	Slot1<const std::string &> set_car_color_hue;
 	Slot1<const std::string &> set_car_color_sat;
 	Slot1<const std::string &> set_car_color_val;

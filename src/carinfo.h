@@ -32,6 +32,8 @@ struct CARINFO
 	std::string driver;
 	std::string name;
 	std::string paint;
+	std::string tire;
+	std::string wheel;
 	MATHVECTOR<float, 3> hsv;
 	float ailevel;
 
@@ -41,6 +43,8 @@ struct CARINFO
 		_SERIALIZE_(s, driver);
 		_SERIALIZE_(s, name);
 		_SERIALIZE_(s, paint);
+		_SERIALIZE_(s, tire);
+		_SERIALIZE_(s, wheel);
 		_SERIALIZE_(s, hsv);
 		_SERIALIZE_(s, ailevel);
 		return true;

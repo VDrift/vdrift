@@ -99,7 +99,7 @@ void PERFORMANCE_TESTING::Test(
 	btVector3 size(1.0, 2.0, 0.2);
 	btVector3 center(0, 0, 0);
 	bool damage = false;
-	if (!car.Load(*cfg, size, center, pos, rot, damage, world, error_output))
+	if (!car.Load(error_output, world, *cfg, size, center, pos, rot, damage))
 	{
 		return;
 	}

@@ -49,6 +49,7 @@ public:
 		const PTree & cfg,
 		const std::string & carpath,
 		const std::string & carname,
+		const std::string & carwheel,
 		const std::string & carpaint,
 		const MATHVECTOR <float, 3> & carcolor,
 		const int anisotropy,
@@ -66,6 +67,7 @@ public:
 	bool LoadPhysics(
 		const PTree & cfg,
 		const std::string & carpath,
+		const std::string & cartire,
 		const MATHVECTOR <float, 3> & position,
 		const QUATERNION <float> & orientation,
 		const bool defaultabs,
@@ -89,9 +91,9 @@ public:
 		return ToMathVector<float>(dynamics.GetWheelPosition(wpos));
 	}
 
-	float GetTireRadius(const WHEEL_POSITION wpos) const
+	float GetWheelRadius(const WHEEL_POSITION wpos) const
 	{
-		return dynamics.GetTire(wpos).GetRadius();
+		return dynamics.GetWheel(wpos).GetRadius();
 	}
 
 	COLLISION_CONTACT & GetWheelContact(WHEEL_POSITION wheel_index)
@@ -286,23 +288,18 @@ public:
 
 	float GetTireMaxFx(WHEEL_POSITION tire_index) const
 	{
-		return dynamics.GetTire(tire_index).GetMaxFx(0.25*9.81/GetInvMass());
+		return dynamics.GetTire(tire_index).getMaxFx(0.25*9.81/GetInvMass());
 	}
 
 	float GetTireMaxFy(WHEEL_POSITION tire_index) const
 	{
-		return dynamics.GetTire(tire_index).GetMaxFy(0.25*9.81/GetInvMass(), 0.0);
-	}
-
-	float GetTireMaxMz(WHEEL_POSITION tire_index) const
-	{
-		return dynamics.GetTire(tire_index).GetMaxMz(0.25*9.81/GetInvMass(), 0.0);
+		return dynamics.GetTire(tire_index).getMaxFy(0.25*9.81/GetInvMass(), 0.0);
 	}
 
 	// optimum steering angle in degrees
 	float GetOptimumSteeringAngle() const
 	{
-		return dynamics.GetTire(FRONT_LEFT).GetIdealSlip();
+		return dynamics.GetTire(FRONT_LEFT).getIdealSlipAngle() * SIMD_DEGS_PER_RAD;
 	}
 
 	// maximum steering angle in degrees

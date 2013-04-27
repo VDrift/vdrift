@@ -25,6 +25,7 @@
 #include "physics/tracksurface.h"
 #include "graphics/textureinfo.h"
 #include "graphics/mesh_gen.h"
+#include "graphics/model_obj.h"
 #include "sound/sound.h"
 #include "cfg/ptree.h"
 #include "loaddrawable.h"
@@ -149,6 +150,10 @@ static bool LoadWheel(
 			diskva.Translate(-0.75 * 0.5, 0, 0);
 			diskva.Scale(width, diameter, diameter);
 			content.load(mesh, path, meshname, rimva + diskva);
+
+			//MODEL_OBJ mo("wheel.obj", error_output);
+			//mo.SetVertexArray(mesh->GetVertexArray());
+			//mo.Save("wheel.obj", error_output);
 		}
 	}
 
@@ -171,6 +176,10 @@ static bool LoadWheel(
 				VERTEXARRAY tireva;
 				MESHGEN::mg_tire(tireva, size[0], size[1], size[2]);
 				content.load(mesh, path, meshname, tireva);
+
+				//MODEL_OBJ mo("wheel.obj", error_output);
+				//mo.SetVertexArray(mesh->GetVertexArray());
+				//mo.Save("tire.obj", error_output);
 			}
 		}
 
@@ -285,6 +294,7 @@ bool CAR::LoadGraphics(
 	const PTree & cfg,
 	const std::string & carpath,
 	const std::string & carname,
+	const std::string & carwheel,
 	const std::string & carpaint,
 	const MATHVECTOR <float, 3> & carcolor,
 	const int anisotropy,
@@ -294,28 +304,41 @@ bool CAR::LoadGraphics(
 {
 	//write_inf(cfg, std::cerr);
 	cartype = carname;
+
+	// init drawable load functor
 	LoadDrawable loadDrawable(carpath, anisotropy, content, models, error_output);
 
 	// load body first
 	const PTree * cfg_body;
 	std::string meshname;
 	std::vector<std::string> texname;
-	if (!cfg.get("body", cfg_body, error_output))
-	{
-		error_output << "there is a problem with the .car file" << std::endl;
-		return false;
-	}
+	if (!cfg.get("body", cfg_body, error_output)) return false;
 	if (!cfg_body->get("mesh", meshname, error_output)) return false;
 	if (!cfg_body->get("texture", texname, error_output)) return false;
 	if (carpaint != "default") texname[0] = carpaint;
 	if (!loadDrawable(meshname, texname, *cfg_body, topnode, &bodynode)) return false;
 
 	// load wheels
-	const PTree * cfg_wheel;
-	if (!cfg.get("wheel", cfg_wheel, error_output)) return false;
-	for (PTree::const_iterator i = cfg_wheel->begin(); i != cfg_wheel->end(); ++i)
+	const PTree * cfg_wheels;
+	if (!cfg.get("wheel", cfg_wheels, error_output)) return false;
+
+	std::tr1::shared_ptr<PTree> sel_wheel;
+	if (carwheel != "default" && !content.load(sel_wheel, carpath, carwheel)) return false;
+
+	for (PTree::const_iterator i = cfg_wheels->begin(); i != cfg_wheels->end(); ++i)
 	{
-		if (!LoadWheel(i->second, loadDrawable, topnode, error_output))
+		const PTree * cfg_wheel = &i->second;
+
+		// override default wheel with selected, not very efficient, fixme
+		PTree opt_wheel;
+		if (sel_wheel.get())
+		{
+			opt_wheel.set(*sel_wheel);
+			opt_wheel.merge(*cfg_wheel);
+			cfg_wheel = &opt_wheel;
+		}
+
+		if (!LoadWheel(*cfg_wheel, loadDrawable, topnode, error_output))
 		{
 			error_output << "Failed to load wheels." << std::endl;
 			return false;
@@ -428,6 +451,7 @@ bool CAR::LoadGraphics(
 bool CAR::LoadPhysics(
 	const PTree & cfg,
 	const std::string & carpath,
+	const std::string & cartire,
 	const MATHVECTOR <float, 3> & initial_position,
 	const QUATERNION <float> & initial_orientation,
 	const bool defaultabs,
@@ -449,11 +473,21 @@ bool CAR::LoadPhysics(
 	btVector3 position = ToBulletVector(initial_position);
 	btQuaternion rotation = ToBulletQuaternion(initial_orientation);
 
-	if (!dynamics.Load(cfg, size, center, position, rotation, damage, world, error_output)) return false;
+	std::tr1::shared_ptr<PTree> tire;
+	if (!cartire.empty() && cartire != "default")
+		content.load(tire, carpath, cartire);
+
+	if (!dynamics.Load(error_output, world,
+		cfg, size, center, position, rotation, damage,
+		tire.get()))
+	{
+		return false;
+	}
+
 	dynamics.SetABS(defaultabs);
 	dynamics.SetTCS(defaulttcs);
 
-	mz_nominalmax = GetTireMaxMz(FRONT_LEFT) + GetTireMaxMz(FRONT_RIGHT);
+	mz_nominalmax = 0.05f * 9.81f / dynamics.GetInvMass(); // fixme: make this a steering feedback parameter
 
 	return true;
 }
@@ -1063,15 +1097,15 @@ float CAR::GetTireSquealAmount(WHEEL_POSITION i) const
 
 	btQuaternion wheelspace = dynamics.GetUprightOrientation(WHEEL_POSITION(i));
 	btVector3 groundvel = quatRotate(wheelspace.inverse(), dynamics.GetWheelVelocity(WHEEL_POSITION(i)));
-	float wheelspeed = dynamics.GetWheel(WHEEL_POSITION(i)).GetAngularVelocity() * dynamics.GetTire(WHEEL_POSITION(i)).GetRadius();
+	float wheelspeed = dynamics.GetWheel(WHEEL_POSITION(i)).GetAngularVelocity() * dynamics.GetWheel(WHEEL_POSITION(i)).GetRadius();
 	groundvel[0] -= wheelspeed;
 	groundvel[1] *= 2.0;
 	groundvel[2] = 0;
 	float squeal = (groundvel.length() - 3.0) * 0.2;
 
-	double slide = dynamics.GetTire(i).GetSlide() / dynamics.GetTire(i).GetIdealSlide();
-	double slip = dynamics.GetTire(i).GetSlip() / dynamics.GetTire(i).GetIdealSlip();
-	double maxratio = std::max(std::abs(slide), std::abs(slip));
+	double sr = dynamics.GetTire(i).getSlip() / dynamics.GetTire(i).getIdealSlip();
+	double ar = dynamics.GetTire(i).getSlipAngle() / dynamics.GetTire(i).getIdealSlipAngle();
+	double maxratio = std::max(std::abs(sr), std::abs(ar));
 	float squealfactor = std::max(0.0, maxratio - 1.0);
 	squeal *= squealfactor;
 	if (squeal < 0) squeal = 0;

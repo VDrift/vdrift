@@ -30,7 +30,7 @@ class CARWHEEL
 {
 friend class joeserialize::Serializer;
 public:
-	CARWHEEL() : mass(20) {}
+	CARWHEEL() : radius(0.3), width(0.2), mass(20) {}
 
 	btScalar GetRotation() const
 	{
@@ -60,6 +60,26 @@ public:
 	btScalar GetMass() const
 	{
 		return mass;
+	}
+
+	void SetWidth(float value)
+	{
+		width = value;
+	}
+
+	btScalar GetWidth() const
+	{
+		return width;
+	}
+
+	void SetRadius(float value)
+	{
+		radius = value;
+	}
+
+	btScalar GetRadius() const
+	{
+		return radius;
 	}
 
 	void SetInertia(btScalar value)
@@ -102,6 +122,8 @@ public:
 
 private:
 	DriveShaft shaft;
+	btScalar radius;
+	btScalar width;
 	btScalar mass;
 };
 

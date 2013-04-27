@@ -1534,19 +1534,13 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 	// Load cars.
 	for (size_t i = 0; i < cars_num; ++i)
 	{
-		const CARINFO & info = car_info[i];
-		bool isai = (info.driver != "user");
-
-		if (!LoadCar(info.name, info.paint, info.hsv,
-			track.GetStart(i).first, track.GetStart(i).second,
-			!isai, isai, info.config))
+		if (!LoadCar(car_info[i], track.GetStart(i).first, track.GetStart(i).second))
 		{
 			return false;
 		}
-
-		if (isai)
+		if (car_info[i].driver != "user")
 		{
-			ai.add_car(&cars.back(), info.ailevel, info.driver);
+			ai.add_car(&cars.back(), car_info[i].ailevel, car_info[i].driver);
 		}
 	}
 
@@ -1628,67 +1622,62 @@ std::string GAME::GetReplayRecordingFilename()
 }
 
 bool GAME::LoadCar(
-	const std::string & car_name,
-	const std::string & car_paint,
-	const MATHVECTOR <float, 3> & car_color_hsv,
-	const MATHVECTOR <float, 3> & start_position,
-	const QUATERNION <float> & start_orientation,
-	bool islocal, bool isai,
-	const std::string & carfile)
+	const CARINFO & info,
+	const MATHVECTOR <float, 3> & position,
+	const QUATERNION <float> & orientation)
 {
-	std::string car_dir = pathmanager.GetCarsDir() + "/" + car_name;
+	std::string cardir = pathmanager.GetCarsDir() + "/" + info.name;
 	std::tr1::shared_ptr<PTree> carconf;
-	if (carfile.empty())
+	if (info.config.empty())
 	{
-		content.load(carconf, car_dir, car_name + ".car");
+		content.load(carconf, cardir, info.name + ".car");
 		if (!carconf->size())
 		{
-			error_output << "Failed to load " << car_name << std::endl;
+			error_output << "Failed to load " << info.name << std::endl;
 			return false;
 		}
 	}
 	else
 	{
 		carconf.reset(new PTree());
-		std::stringstream carstream(carfile);
+		std::stringstream carstream(info.config);
 		read_ini(carstream, *carconf);
 	}
 
-	MATHVECTOR<float, 3> car_color_rgb;
-	HSVtoRGB(
-		car_color_hsv[0], car_color_hsv[1], car_color_hsv[2],
-		car_color_rgb[0], car_color_rgb[1], car_color_rgb[2]);
+	MATHVECTOR<float, 3> color;
+	HSVtoRGB(info.hsv[0], info.hsv[1], info.hsv[2], color[0], color[1], color[2]);
 
 	cars.push_back(CAR());
 	CAR & car = cars.back();
 	if (!car.LoadGraphics(
-		*carconf, car_dir, car_name, car_paint, car_color_rgb,
+		*carconf, cardir, info.name, info.wheel, info.paint, color,
 		settings.GetAnisotropy(), settings.GetCameraBounce(),
 		content, error_output))
 	{
-		error_output << "Error loading car: " << car_name << std::endl;
+		error_output << "Error loading car: " << info.name << std::endl;
 		cars.pop_back();
 		return false;
 	}
 
-	if (sound.Enabled() && !car.LoadSounds(car_dir, car_name, sound, content, error_output))
+	if (sound.Enabled() && !car.LoadSounds(cardir, info.name, sound, content, error_output))
 	{
-		error_output << "Failed to load sounds for car " << car_name << std::endl;
+		error_output << "Failed to load sounds for car " << info.name << std::endl;
 		return false;
 	}
 
+	bool isai = (info.driver != "user");
 	if (!car.LoadPhysics(
-		*carconf, car_dir, start_position, start_orientation,
+		*carconf, cardir, info.tire, position, orientation,
 		settings.GetABS() || isai, settings.GetTCS() || isai,
 		settings.GetVehicleDamage(), dynamics,
         content, error_output))
 	{
-		error_output << "Failed to load physics for car " << car_name << std::endl;
+		error_output << "Failed to load physics for car " << info.name << std::endl;
 		return false;
 	}
 
-	info_output << "Car loading was successful: " << car_name << std::endl;
-	if (islocal)
+	info_output << "Car loading was successful: " << info.name << std::endl;
+	if (!isai)
 	{
 		// Load local controls.
 		carcontrols_local.first = &cars.back();
@@ -1789,22 +1778,21 @@ void GAME::LoadGarage()
 
 	LoadingScreen(0.0, 1.0, false, "", 0.5, 0.5);
 
-	std::string trackname = "garage";
 	bool track_reverse = false;
 	bool track_dynamic = false;
 	if (!track.DeferredLoad(
-			content, dynamics,
-			info_output, error_output,
-			pathmanager.GetTracksPath(trackname),
-			pathmanager.GetTracksDir() + "/" + trackname,
-			pathmanager.GetEffectsTextureDir(),
-			pathmanager.GetTrackPartsPath(),
-			settings.GetAnisotropy(),
-			track_reverse, track_dynamic,
-			graphics_interface->GetShadows(),
-			settings.GetBatchGeometry()))
+		content, dynamics,
+		info_output, error_output,
+		pathmanager.GetSkinsPath() + "/" + settings.GetSkin(),
+		pathmanager.GetSkinsDir() + "/" + settings.GetSkin(),
+		pathmanager.GetEffectsTextureDir(),
+		pathmanager.GetTrackPartsPath(),
+		settings.GetAnisotropy(),
+		track_reverse, track_dynamic,
+		graphics_interface->GetShadows(),
+		settings.GetBatchGeometry()))
 	{
-		error_output << "Error loading track: " << trackname << std::endl;
+		error_output << "Error loading garage: " << settings.GetSkin() << std::endl;
 		return;
 	}
 
@@ -1823,7 +1811,7 @@ void GAME::LoadGarage()
 
 	if (!success)
 	{
-		error_output << "Error loading track (deferred): " << trackname << std::endl;
+		error_output << "Error loading garage: " << settings.GetSkin() << std::endl;
 		return;
 	}
 
@@ -1841,39 +1829,29 @@ void GAME::SetGarageCar()
 	if (gui.GetInGame() || !track.Loaded())
 		return;
 
-	// get car start position marker for camera setup
-	MATHVECTOR<float, 3> car_pos = track.GetStart(0).first;
-
 	// clear previous car
 	cars.clear();
 
 	// remove previous car sounds
 	sound.Update(true);
 
-	const CARINFO & info = car_info[car_edit_id];
-	if (LoadCar(
-		info.name, info.paint, info.hsv,
-		car_pos, track.GetStart(0).second,
-		true, false))
+	// load car
+	MATHVECTOR<float, 3> car_pos = track.GetStart(0).first;
+	QUATERNION<float> car_rot = track.GetStart(0).second;
+	if (LoadCar(car_info[car_edit_id], car_pos, car_rot))
 	{
 		// set car
 		CAR & car = cars.back();
 		dynamics.update(timestep);
 		car.Update(timestep);
-
-		// add car sounds
 		sound.Update(true);
-
-		// use car shape center for camera setup
-		car_pos = car.GetPosition();
 	}
 
 	// camera setup
-	MATHVECTOR<float, 3> offset(1.75, 5.75, 0.75);
-	track.GetStart(0).second.RotateVector(offset);
-	MATHVECTOR<float, 3> pos = track.GetStart(0).first + offset;
+	MATHVECTOR<float, 3> offset(1.5, 3.0, 0.5);
+	MATHVECTOR<float, 3> pos = car_pos + offset;
 	QUATERNION<float> rot = LookAt(pos, car_pos, direction::Up);
-	garage_camera.SetOffset(MATHVECTOR<float, 3>(0));
+	garage_camera.SetOffset(offset);
 	garage_camera.Reset(pos, rot);
 	active_camera = &garage_camera;
 }
@@ -2041,19 +2019,57 @@ void GAME::PopulateCarList(GUIOPTION::LIST & carlist)
 	}
 }
 
-void GAME::PopulateCarPaintList(const std::string & carname, GUIOPTION::LIST & carpaintlist)
+void GAME::PopulateCarPaintList(const std::string & carname, GUIOPTION::LIST & paintlist)
 {
-	carpaintlist.clear();
-	carpaintlist.push_back(std::make_pair("default", "default"));
+	paintlist.clear();
+	paintlist.push_back(std::make_pair("default", "default"));
 
-	std::list<std::string> paintfolder;
+	std::list<std::string> filelist;
 	std::string paintdir = pathmanager.GetCarPaintPath(carname);
-	if (pathmanager.GetFileList(paintdir, paintfolder, ".png"))
+	if (pathmanager.GetFileList(paintdir, filelist, ".png"))
 	{
-		for (std::list<std::string>::iterator i = paintfolder.begin(); i != paintfolder.end(); ++i)
+		for (std::list<std::string>::iterator i = filelist.begin(); i != filelist.end(); ++i)
 		{
-			std::string paintname = i->substr(0, i->length() - 4);
-			carpaintlist.push_back(std::make_pair("skins/" + *i, paintname));
+			std::string paintname = i->substr(0, i->find('.'));
+			paintlist.push_back(std::make_pair("skins/" + *i, paintname));
+		}
+	}
+}
+
+void GAME::PopulateCarTireList(const std::string & carname, GUIOPTION::LIST & tirelist)
+{
+#ifndef VDRIFTN
+	const std::string ext(".tire");
+#else
+	const std::string ext(".tiren");
+#endif
+
+	tirelist.clear();
+	tirelist.push_back(std::make_pair("default", "default"));
+
+	std::list<std::string> filelist;
+	if (pathmanager.GetFileList(pathmanager.GetCarPartsPath() + "/tire", filelist, ext))
+	{
+		for (std::list<std::string>::iterator i = filelist.begin(); i != filelist.end(); ++i)
+		{
+			std::string name = i->substr(0, i->find('.'));
+			tirelist.push_back(std::make_pair("tire/" + name, name));
+		}
+	}
+}
+
+void GAME::PopulateCarWheelList(const std::string & carname, GUIOPTION::LIST & wheellist)
+{
+	wheellist.clear();
+	wheellist.push_back(std::make_pair("default", "default"));
+
+	std::list<std::string> filelist;
+	if (pathmanager.GetFileList(pathmanager.GetCarPartsPath() + "/wheel", filelist, ".wheel"))
+	{
+		for (std::list<std::string>::iterator i = filelist.begin(); i != filelist.end(); ++i)
+		{
+			std::string name = i->substr(0, i->find('.'));
+			wheellist.push_back(std::make_pair("wheel/" + *i, name));
 		}
 	}
 }
@@ -2123,12 +2139,12 @@ void GAME::PopulateReplayList(GUIOPTION::LIST & replaylist)
 void GAME::PopulateGUISkinList(GUIOPTION::LIST & skinlist)
 {
 	std::list<std::string> skins;
-	pathmanager.GetFileList(pathmanager.GetSkinPath(), skins);
+	pathmanager.GetFileList(pathmanager.GetSkinsPath(), skins);
 
 	skinlist.clear();
 	for (std::list<std::string>::iterator i = skins.begin(); i != skins.end(); ++i)
 	{
-		if (pathmanager.FileExists(pathmanager.GetSkinPath() + *i + "/menus/Main"))
+		if (pathmanager.FileExists(pathmanager.GetSkinsPath() + "/" + *i + "/menus/Main"))
 		{
 			skinlist.push_back(std::make_pair(*i, *i));
 		}
@@ -2185,6 +2201,10 @@ void GAME::PopulateValueLists(std::map<std::string, GUIOPTION::LIST> & valuelist
 	PopulateCarList(valuelists["cars"]);
 
 	PopulateCarPaintList(settings.GetCar(), valuelists["car_paints"]);
+
+	PopulateCarTireList(settings.GetCar(), valuelists["tires"]);
+
+	PopulateCarWheelList(settings.GetCar(), valuelists["wheels"]);
 
 	PopulateDriverList(valuelists["driver"]);
 
@@ -2386,7 +2406,7 @@ void GAME::AddTireSmokeParticles(float dt, CAR & car)
 			if (squeal > 0)
 			{
 				tire_smoke.AddParticle(
-					car.GetWheelPosition(WHEEL_POSITION(i)) - MATHVECTOR<float,3>(0,0,car.GetTireRadius(WHEEL_POSITION(i))),
+					car.GetWheelPosition(WHEEL_POSITION(i)) - MATHVECTOR<float,3>(0,0,car.GetWheelRadius(WHEEL_POSITION(i))),
 					0.5);
 			}
 		}
@@ -2747,6 +2767,8 @@ void GAME::SyncOptions()
 	assert(info.driver == "user");
 	info.name = optionmap["game.car"];
 	info.paint = optionmap["game.car_paint"];
+	info.tire = optionmap["game.car_tire"];
+	info.wheel = optionmap["game.car_wheel"];
 	info.hsv[0] = cast<float>(optionmap["game.car_color_hue"]);
 	info.hsv[1] = cast<float>(optionmap["game.car_color_sat"]);
 	info.hsv[2] = cast<float>(optionmap["game.car_color_val"]);
@@ -2755,6 +2777,8 @@ void GAME::SyncOptions()
 		optionmap.erase("game.driver");
 		optionmap.erase("game.car");
 		optionmap.erase("game.car_paint");
+		optionmap.erase("game.car_tire");
+		optionmap.erase("game.car_wheel");
 		optionmap.erase("game.car_color_hue");
 		optionmap.erase("game.car_color_sat");
 		optionmap.erase("game.car_color_val");
@@ -2775,6 +2799,8 @@ void GAME::SyncSettings()
 	optionmap["game.driver"] = info.driver;
 	optionmap["game.car"] = info.name;
 	optionmap["game.car_paint"] = info.paint;
+	optionmap["game.car_tire"] = info.tire;
+	optionmap["game.car_wheel"] = info.wheel;
 	optionmap["game.car_color_hue"] = cast(info.hsv[0]);
 	optionmap["game.car_color_sat"] = cast(info.hsv[1]);
 	optionmap["game.car_color_val"] = cast(info.hsv[2]);
@@ -2816,9 +2842,9 @@ void GAME::SetCarName(const std::string & value)
 
 	car_info[car_edit_id].name = value;
 
-	GUIOPTION::LIST carpaintlist;
-	PopulateCarPaintList(value, carpaintlist);
-	gui.SetOptionValues("game.car_paint", info.paint, carpaintlist, error_output);
+	GUIOPTION::LIST paintlist;
+	PopulateCarPaintList(value, paintlist);
+	gui.SetOptionValues("game.car_paint", info.paint, paintlist, error_output);
 
 	UpdateStartList();
 
@@ -2831,6 +2857,26 @@ void GAME::SetCarPaint(const std::string & value)
 	if (info.paint != value)
 	{
 		info.paint = value;
+		SetGarageCar();
+	}
+}
+
+void GAME::SetCarTire(const std::string & value)
+{
+	CARINFO & info = car_info[car_edit_id];
+	if (info.tire != value)
+	{
+		info.tire = value;
+		SetGarageCar();
+	}
+}
+
+void GAME::SetCarWheel(const std::string & value)
+{
+	CARINFO & info = car_info[car_edit_id];
+	if (info.wheel != value)
+	{
+		info.wheel = value;
 		SetGarageCar();
 	}
 }
@@ -2978,6 +3024,8 @@ void GAME::BindActionsToGUI()
 	set_car_toedit.connect(gui.GetOption("game.car_edit").signal_val);
 	set_car_name.connect(gui.GetOption("game.car").signal_val);
 	set_car_paint.connect(gui.GetOption("game.car_paint").signal_val);
+	set_car_tire.connect(gui.GetOption("game.car_tire").signal_val);
+	set_car_wheel.connect(gui.GetOption("game.car_wheel").signal_val);
 	set_car_color_hue.connect(gui.GetOption("game.car_color_hue").signal_val);
 	set_car_color_sat.connect(gui.GetOption("game.car_color_sat").signal_val);
 	set_car_color_val.connect(gui.GetOption("game.car_color_val").signal_val);
@@ -2992,6 +3040,8 @@ void GAME::RegisterActions()
 	set_car_toedit.call.bind<GAME, &GAME::SetCarToEdit>(this);
 	set_car_name.call.bind<GAME, &GAME::SetCarName>(this);
 	set_car_paint.call.bind<GAME, &GAME::SetCarPaint>(this);
+	set_car_tire.call.bind<GAME, &GAME::SetCarTire>(this);
+	set_car_wheel.call.bind<GAME, &GAME::SetCarWheel>(this);
 	set_car_color_hue.call.bind<GAME, &GAME::SetCarColorHue>(this);
 	set_car_color_sat.call.bind<GAME, &GAME::SetCarColorSat>(this);
 	set_car_color_val.call.bind<GAME, &GAME::SetCarColorVal>(this);
