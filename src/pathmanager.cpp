@@ -262,9 +262,9 @@ std::string PATHMANAGER::GetGUIMenuPath(const std::string & skinname) const
 	return GetDataPath()+"/skins/"+skinname+"/menus";
 }
 
-std::string PATHMANAGER::GetSkinPath() const
+std::string PATHMANAGER::GetSkinsPath() const
 {
-	return GetDataPath()+"/skins/";
+	return GetDataPath()+"/skins";
 }
 
 std::string PATHMANAGER::GetOptionsFile() const
@@ -334,22 +334,27 @@ std::string PATHMANAGER::GetCarsDir() const
 
 std::string PATHMANAGER::GetCarPartsDir() const
 {
-    return "carparts";
+	return "carparts";
+}
+
+std::string PATHMANAGER::GetSkinsDir() const
+{
+	return "skins";
 }
 
 std::string PATHMANAGER::GetGUITextureDir(const std::string & skinname) const
 {
-	return "skins/"+skinname+"/textures";
+	return GetSkinsDir()+"/"+skinname+"/textures";
 }
 
 std::string PATHMANAGER::GetGUILanguageDir(const std::string & skinname) const
 {
-	return "skins/"+skinname+"/languages";
+	return GetSkinsDir()+"/"+skinname+"/languages";
 }
 
 std::string PATHMANAGER::GetFontDir(const std::string & skinname) const
 {
-	return "/skins/"+skinname+"/fonts";
+	return GetSkinsDir()+"/"+skinname+"/fonts";
 }
 
 std::string PATHMANAGER::GetGenericSoundDir() const

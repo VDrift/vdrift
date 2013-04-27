@@ -51,7 +51,7 @@ public:
 	std::string GetCarPath(const std::string & carname) const;
 	std::string GetCarPaintPath(const std::string & carname) const;
 	std::string GetGUIMenuPath(const std::string & skinname) const;
-	std::string GetSkinPath() const;
+	std::string GetSkinsPath() const;
 	std::string GetOptionsFile() const;
 	std::string GetCarControlsFile() const;
 	std::string GetDefaultCarControlsFile() const;
@@ -67,6 +67,7 @@ public:
 	std::string GetTracksDir() const;
 	std::string GetCarsDir() const;
 	std::string GetCarPartsDir() const;
+	std::string GetSkinsDir() const;
 	std::string GetGUITextureDir(const std::string & skinname) const;
 	std::string GetGUILanguageDir(const std::string & skinname) const;
 	std::string GetFontDir(const std::string & skinname) const;
