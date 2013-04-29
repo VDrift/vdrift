@@ -1736,24 +1736,24 @@ bool CARDYNAMICS::WheelDriven(int i) const
 
 btScalar CARDYNAMICS::AutoClutch(btScalar dt)
 {
-	btScalar clutch_engage_limit = 10.0f * dt;
+	btScalar clutch_engage_limit = 10.0f * dt; // 0.1 seconds
 	btScalar clutch_old = clutch_value;
 	btScalar clutch_new = 1.0f;
-	btScalar rpm = engine.GetRPM();
-	btScalar rpm_clutch = driveshaft_rpm;//transmission.GetClutchRPM();
+	btScalar rpm_engine = engine.GetRPM();
+	btScalar rpm_clutch = driveshaft_rpm;
 
-	// clutch slip at low rpm
+	// antistall
 	btScalar rpm_min = engine.GetStartRPM();
-	if (rpm_clutch < rpm_min && rpm < rpm_min * 1.25f)
+	if (rpm_clutch < rpm_min && rpm_engine < rpm_min * 1.25f)
 	{
 		btScalar rpm_stall = engine.GetStallRPM();
-		btScalar ramp = 0.8f * (rpm - rpm_stall) / (rpm_min - rpm_stall);
+		btScalar ramp = 0.8f * (rpm_engine - rpm_stall) / (rpm_min - rpm_stall);
 		btScalar torque_limit = engine.GetTorque() * ramp;
 		clutch_new = torque_limit / clutch.GetMaxTorque();
 		btClamp(clutch_new, 0.0f, 1.0f);
 	}
 
-	// declutch when shifting
+	// shifting
 	const btScalar shift_time = transmission.GetShiftTime();
 	if (remaining_shift_time > shift_time * 0.5f)
 	{
@@ -1764,21 +1764,28 @@ btScalar CARDYNAMICS::AutoClutch(btScalar dt)
 		clutch_new *= (1.0f - remaining_shift_time / (shift_time * 0.5f));
 	}
 
-	// declutch when braking
+	// braking
 	if (brake_value > 0.01f)
 	{
 		clutch_new = 0.0f;
 	}
 
-	// softer clutch when coasting
-	if (rpm_clutch - rpm)
+	// coasting
+	if (clutch_new > 0.0f && rpm_clutch > rpm_engine)
 	{
-		clutch_engage_limit *= 0.1f;
+		// avoid rear wheel grip loss
+		if (drive != FWD)
+		{
+			btScalar ls = tire[REAR_LEFT].getSlip() / tire[REAR_LEFT].getIdealSlip();
+			btScalar rs = tire[REAR_RIGHT].getSlip() / tire[REAR_RIGHT].getIdealSlip();
+			btScalar s = btMin(ls, rs);
+			clutch_new = s < -0.4f ? (s > -0.9f ? 0.9f + s : 0.0f) : clutch_new;
+		}
 	}
 
 	// rate limit the autoclutch
 	btScalar clutch_delta = clutch_new - clutch_old;
-	btClamp(clutch_delta, -clutch_engage_limit, clutch_engage_limit);
+	btClamp(clutch_delta, -clutch_engage_limit * 2.0f, clutch_engage_limit);
 	clutch_value = clutch_old + clutch_delta;
 
 	return clutch_value;
