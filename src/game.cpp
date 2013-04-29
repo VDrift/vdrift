@@ -1280,19 +1280,19 @@ void GAME::UpdateStartList()
 {
 	GUIOPTION::LIST startlist;
 	PopulateStartList(startlist);
-	gui.SetOptionValues("game.startlist", "1", startlist, error_output);
+	gui.SetOptionValues("game.startlist", cast(car_edit_id), startlist, error_output);
 }
 
-void GAME::UpdateCarEditList()
+void GAME::UpdateCarPosList()
 {
-	const std::string edit_id_str = cast(car_edit_id);
-	GUIOPTION::LIST edit_id_list;
-	edit_id_list.reserve(car_info.size());
+	const std::string startpos = cast(car_edit_id);
+	GUIOPTION::LIST startpos_list;
+	startpos_list.reserve(car_info.size());
 	for (size_t i = 0; i < car_info.size(); ++i)
 	{
-		edit_id_list.push_back(std::make_pair(cast(i), cast(i + 1)));
+		startpos_list.push_back(std::make_pair(cast(i), cast(i + 1)));
 	}
-	gui.SetOptionValues("game.car_edit", edit_id_str, edit_id_list, error_output);
+	gui.SetOptionValues("game.car_startpos", startpos, startpos_list, error_output);
 }
 
 void GAME::UpdateCarInfo()
@@ -1304,6 +1304,7 @@ void GAME::UpdateCarInfo()
 	gui.SetOptionValue("game.car_color_hue", cast(info.hsv[0]));
 	gui.SetOptionValue("game.car_color_sat", cast(info.hsv[1]));
 	gui.SetOptionValue("game.car_color_val", cast(info.hsv[2]));
+	gui.SetOptionValue("game.car_startpos", cast(car_edit_id));
 	gui.SetOptionValue("game.ai_level", cast(info.ailevel));
 }
 
@@ -2084,16 +2085,7 @@ void GAME::PopulateStartList(GUIOPTION::LIST & startlist)
 	startlist.clear();
 	for (size_t i = 0; i < car_info.size(); ++i)
 	{
-		std::stringstream s;
-		s << (i + 1);
-
-		const std::string n = s.str();
-		if (n.size() == 1)
-			s << ".  " << car_info[i].name << "/" << car_info[i].driver;
-		else
-			s << ". " << car_info[i].name << "/" << car_info[i].driver;
-
-		startlist.push_back(std::make_pair(n, s.str()));
+		startlist.push_back(std::make_pair(cast(i), car_info[i].name + " / " + car_info[i].driver));
 	}
 }
 
@@ -2803,9 +2795,9 @@ void GAME::SyncSettings()
 	ProcessNewSettings();
 }
 
-void GAME::EditPlayerCar()
+void GAME::SelectPlayerCar()
 {
-	gui.SetOptionValue("game.car_edit", cast(player_car_id));
+	SetCarToEdit(cast(player_car_id));
 }
 
 void GAME::SetCarToEdit(const std::string & value)
@@ -2826,6 +2818,28 @@ void GAME::SetCarToEdit(const std::string & value)
 	}
 
 	UpdateCarInfo();
+}
+
+void GAME::SetCarStartPos(const std::string & value)
+{
+	const size_t car_pos_old = car_edit_id;
+	const size_t car_pos_new = cast<size_t>(value);
+	if (car_pos_new == car_pos_old)
+		return;
+
+	assert(car_pos_new < car_info.size());
+	CARINFO info = car_info[car_pos_new];
+	car_info[car_pos_new] = car_info[car_pos_old];
+	car_info[car_pos_old] = info;
+
+	if (player_car_id == car_pos_old)
+		player_car_id = car_pos_new;
+	else if (player_car_id == car_pos_new)
+		player_car_id = car_pos_old;
+
+	car_edit_id = car_pos_new;
+
+	UpdateStartList();
 }
 
 void GAME::SetCarName(const std::string & value)
@@ -2933,7 +2947,7 @@ void GAME::SetCarsNum(const std::string & value)
 {
 	size_t cars_num = cast<size_t>(value);
 	int delta = cars_num - car_info.size();
-	if (!delta)
+	if (delta == 0)
 		return;
 
 	if (delta < 0)
@@ -2968,7 +2982,7 @@ void GAME::SetCarsNum(const std::string & value)
 		}
 	}
 
-	UpdateCarEditList();
+	UpdateCarPosList();
 
 	UpdateStartList();
 
@@ -3015,7 +3029,8 @@ void GAME::SetControl(const std::string & value)
 
 void GAME::BindActionsToGUI()
 {
-	set_car_toedit.connect(gui.GetOption("game.car_edit").signal_val);
+	set_car_toedit.connect(gui.GetOption("game.startlist").signal_val);
+	set_car_startpos.connect(gui.GetOption("game.car_startpos").signal_val);
 	set_car_name.connect(gui.GetOption("game.car").signal_val);
 	set_car_paint.connect(gui.GetOption("game.car_paint").signal_val);
 	set_car_tire.connect(gui.GetOption("game.car_tire").signal_val);
@@ -3032,6 +3047,7 @@ void GAME::BindActionsToGUI()
 void GAME::RegisterActions()
 {
 	set_car_toedit.call.bind<GAME, &GAME::SetCarToEdit>(this);
+	set_car_startpos.call.bind<GAME, &GAME::SetCarStartPos>(this);
 	set_car_name.call.bind<GAME, &GAME::SetCarName>(this);
 	set_car_paint.call.bind<GAME, &GAME::SetCarPaint>(this);
 	set_car_tire.call.bind<GAME, &GAME::SetCarTire>(this);
@@ -3070,7 +3086,7 @@ void GAME::RegisterActions()
 	actions[22].call.bind<GAME, &GAME::SaveControls>(this);
 	actions[23].call.bind<GAME, &GAME::SyncOptions>(this);
 	actions[24].call.bind<GAME, &GAME::SyncSettings>(this);
-	actions[25].call.bind<GAME, &GAME::EditPlayerCar>(this);
+	actions[25].call.bind<GAME, &GAME::SelectPlayerCar>(this);
 }
 
 void GAME::InitActionMap(std::map<std::string, Slot0*> & actionmap)
@@ -3100,5 +3116,5 @@ void GAME::InitActionMap(std::map<std::string, Slot0*> & actionmap)
 	actionmap["SaveControls"] = &actions[22];
 	actionmap["gui.options.load"] = &actions[23];
 	actionmap["gui.options.save"] = &actions[24];
-	actionmap["EditPlayerCar"] = &actions[25];
+	actionmap["SelectPlayerCar"] = &actions[25];
 }

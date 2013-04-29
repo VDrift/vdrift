@@ -110,13 +110,10 @@ private:
 
 	void ProcessGameInputs();
 
-	/// Notify gui of startlist change
 	void UpdateStartList();
 
-	/// Notify gui of car selection change
-	void UpdateCarEditList();
+	void UpdateCarPosList();
 
-	/// Notify gui of selected car change
 	void UpdateCarInfo();
 
 	bool NewGame(bool playreplay=false, bool opponents=false, int num_laps=0);
@@ -232,9 +229,10 @@ private:
 	void SaveControls();
 	void SyncOptions();
 	void SyncSettings();
-	void EditPlayerCar();
+	void SelectPlayerCar();
 
 	void SetCarToEdit(const std::string & value);
+	void SetCarStartPos(const std::string & value);
 	void SetCarName(const std::string & value);
 	void SetCarPaint(const std::string & value);
 	void SetCarTire(const std::string & value);
@@ -253,6 +251,7 @@ private:
 	void InitActionMap(std::map<std::string, Slot0*> & actionmap);
 
 	Slot1<const std::string &> set_car_toedit;
+	Slot1<const std::string &> set_car_startpos;
 	Slot1<const std::string &> set_car_name;
 	Slot1<const std::string &> set_car_paint;
 	Slot1<const std::string &> set_car_tire;
