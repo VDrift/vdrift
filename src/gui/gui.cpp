@@ -262,8 +262,8 @@ bool GUI::Load(
 		pagecount++;
 	}
 
-	// register pages
-	page_activate.reserve(pagecount);
+	// register page activation callbacks
+	page_activate.reserve(pagecount + 1);
 	for (PAGEMAP::iterator i = pages.begin(); i != pages.end(); ++i)
 	{
 		page_activate.push_back(PAGECB());
@@ -271,6 +271,10 @@ bool GUI::Load(
 		page_activate.back().page = i->first;
 		actionmap[i->first] = &page_activate.back().action;
 	}
+	// register previous page activation callback
+	page_activate.push_back(PAGECB());
+	page_activate.back().gui = this;
+	actionmap["gui.page.prev"] = &page_activate.back().action;
 
 	// load pages
 	for (PAGEMAP::iterator i = pages.begin(); i != pages.end(); ++i)
@@ -590,6 +594,9 @@ GUI::PAGECB & GUI::PAGECB::operator=(const PAGECB & other)
 
 void GUI::PAGECB::call()
 {
-	assert(gui && !page.empty());
-	gui->ActivatePage(page, 0.25);
+	assert(gui);
+	if (!page.empty())
+		gui->ActivatePage(page, 0.25);
+	else if (!gui->GetLastPageName().empty())
+		gui->ActivatePage(gui->GetLastPageName(), 0.25);
 }

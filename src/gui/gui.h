@@ -140,6 +140,7 @@ private:
 	std::vector<PAGECB> page_activate;
 
 	/// return false on failure
+	/// on empty page name will attempt to load prev(last active) page
 	bool ActivatePage(
 		const std::string & pagename,
 		float activation_time);
