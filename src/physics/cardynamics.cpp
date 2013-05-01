@@ -201,6 +201,25 @@ static bool LoadTire(const PTree & cfg, CARTIRE & tire, std::ostream & error_out
 		if (!cfg.get(st.str(), info.aligning[i], error_output)) return false;
 	}
 
+	// asymmetric tires support (left right facing direction)
+	// fixme: should handle aligning torque too
+	std::string facing;
+	if (cfg.get("facing", facing))
+	{
+		// default facing direction is right
+		if (facing == "left")
+		{
+			info.lateral[13] = -info.lateral[13];
+			info.lateral[14] = -info.lateral[14];
+		}
+	}
+	else
+	{
+		// symmetric tire
+		info.lateral[13] = 0.0f;
+		info.lateral[14] = 0.0f;
+	}
+
 	tire.init(info);
 
 	return true;
