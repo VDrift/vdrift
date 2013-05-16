@@ -85,12 +85,16 @@ btVector3 CARTIRE::getForce(
 	btScalar max_Fx(0), max_Fy(0), max_Mz(0);
 
 	// beckman method for pre-combining longitudinal and lateral forces
+	// only samples positive side of the force curve, asymmetries not supported
 	btScalar s = sigma / sigma_hat;
 	btScalar a = alpha / alpha_hat;
 	btScalar rho = btMax(btScalar(sqrt(s * s + a * a)), btScalar(1E-4)); // avoid divide-by-zero
-	btScalar Fx = (s / rho) * PacejkaFx(rho * sigma_hat, Fz, friction_coeff, max_Fx);
-	btScalar Fy = (a / rho) * PacejkaFy(rho * alpha_hat, Fz, gamma, friction_coeff, max_Fy);
-
+	btScalar sp = rho * sigma_hat;
+	btScalar ap = rho * alpha_hat;
+	btScalar gx = s / rho;
+	btScalar gy = a / rho;
+	btScalar Fx = gx * PacejkaFx(sp, Fz, friction_coeff, max_Fx);
+	btScalar Fy = gy * PacejkaFy(ap, Fz, gamma, friction_coeff, max_Fy);
 	btScalar Mz = PacejkaMz(alpha, Fz, gamma, friction_coeff, max_Mz);
 
 	camber = inclination;
