@@ -251,14 +251,8 @@ static bool LoadTire(const PTree & cfg_wheel, const PTree & cfg, CARTIRE & tire,
 	std::string facing;
 	if (cfg_wheel.get("tire.facing", facing))
 		side_factor = (facing != "left") ? 1 : -1;
-	info.lateral[5]  *= side_factor;
-	// fixme: disable vertical shift params due to beckman combining not supporting asymmetries
-	//info.lateral[13] *= side_factor;
-	//info.lateral[14] *= side_factor;
-	info.lateral[11] *= 0;
-	info.lateral[12] *= 0;
-	info.lateral[13] *= 0;
-	info.lateral[14] *= 0;
+	info.lateral[13] *= side_factor;
+	info.lateral[14] *= side_factor;
 
 	tire.init(info);
 

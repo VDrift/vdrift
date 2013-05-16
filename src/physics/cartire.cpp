@@ -78,21 +78,26 @@ btVector3 CARTIRE::getForce(
 	btScalar alpha_hat(0);
 	getSigmaHatAlphaHat(normal_force, sigma_hat, alpha_hat);
 
-	btScalar gamma = inclination * SIMD_DEGS_PER_RAD; // positive when tire top tilts to the right, viewed from rear
+	// gamma: positive when tire top tilts to the right, viewed from rear in deg
+	// sigma: longitudinal slip is negative when braking, positive for acceleration
+	// alpha: sideslip angle is positive in a right turn(opposite to SAE tire coords)
+	btScalar gamma = inclination * SIMD_DEGS_PER_RAD;
 	btScalar denom = btMax(btFabs(lon_velocity), btScalar(1E-3));
-	btScalar sigma = (rot_velocity - lon_velocity) / denom;	// longitudinal slip: negative in braking, positive in traction
-	btScalar alpha = -btAtan(lat_velocity / denom) * 180.0 / M_PI; 	// sideslip angle: positive in a right turn(opposite to SAE tire coords)
+	btScalar sigma = (rot_velocity - lon_velocity) / denom;
+	btScalar alpha = -btAtan(lat_velocity / denom) * SIMD_DEGS_PER_RAD;
 	btScalar max_Fx(0), max_Fy(0), max_Mz(0);
 
 	// beckman method for pre-combining longitudinal and lateral forces
-	// only samples positive side of the force curve, asymmetries not supported
+	// assume sigma_hat and alpha_hat symmetric
+	btScalar sigma_sign = sigma < 0 ? -1 : 1;
+	btScalar alpha_sign = alpha < 0 ? -1 : 1;
 	btScalar s = sigma / sigma_hat;
 	btScalar a = alpha / alpha_hat;
-	btScalar rho = btMax(btScalar(sqrt(s * s + a * a)), btScalar(1E-4)); // avoid divide-by-zero
-	btScalar sp = rho * sigma_hat;
-	btScalar ap = rho * alpha_hat;
-	btScalar gx = s / rho;
-	btScalar gy = a / rho;
+	btScalar rho = btMax(btScalar(sqrt(s * s + a * a)), btScalar(1E-4));
+	btScalar sp = rho * sigma_hat * sigma_sign;
+	btScalar ap = rho * alpha_hat * alpha_sign;
+	btScalar gx = s / rho * sigma_sign;
+	btScalar gy = a / rho * alpha_sign;
 	btScalar Fx = gx * PacejkaFx(sp, Fz, friction_coeff, max_Fx);
 	btScalar Fy = gy * PacejkaFy(ap, Fz, gamma, friction_coeff, max_Fy);
 	btScalar Mz = PacejkaMz(alpha, Fz, gamma, friction_coeff, max_Mz);
@@ -131,7 +136,8 @@ btScalar CARTIRE::getMaxFx(btScalar load) const
 {
 	const std::vector<btScalar> & b = longitudinal;
 	btScalar Fz = load * 0.001;
-	return (b[1] * Fz + b[2]) * Fz;
+	btScalar D = (b[1] * Fz + b[2]) * Fz;
+	return D;
 }
 
 btScalar CARTIRE::getMaxFy(btScalar load, btScalar camber) const
@@ -139,10 +145,8 @@ btScalar CARTIRE::getMaxFy(btScalar load, btScalar camber) const
 	const std::vector<btScalar> & a = lateral;
 	btScalar Fz = load * 0.001;
 	btScalar gamma = camber;
-
 	btScalar D = (a[1] * Fz + a[2]) * Fz;
 	btScalar Sv = ((a[11] * Fz + a[12]) * gamma + a[13] ) * Fz + a[14];
-
 	return D + Sv;
 }
 
@@ -151,10 +155,8 @@ btScalar CARTIRE::getMaxMz(btScalar load, btScalar camber) const
 	const std::vector<btScalar> & c = aligning;
 	btScalar Fz = load * 0.001;
 	btScalar gamma = camber;
-
 	btScalar D = (c[1] * Fz + c[2]) * Fz;
 	btScalar Sv = (c[14] * Fz * Fz + c[15] * Fz) * gamma + c[16] * Fz + c[17];
-
 	return -(D + Sv);
 }
 
@@ -177,7 +179,7 @@ btScalar CARTIRE::PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coeff
 	btScalar E = b[6] * Fz * Fz + b[7] * Fz + b[8];
 
 	// horizontal shift
-	btScalar Sh = 0;//beckmann//b[9] * Fz + b[10];
+	btScalar Sh = 0;//breaks beckman//b[9] * Fz + b[10];
 
 	// composite
 	btScalar S = 100 * sigma + Sh;
@@ -212,12 +214,12 @@ btScalar CARTIRE::PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScala
 	btScalar E = a[6] * Fz + a[7];
 
 	// horizontal shift
-	btScalar Sh = 0;//beckmann//a[8] * gamma + a[9] * Fz + a[10];
+	btScalar Sh = 0;//breaks beckman//a[8] * gamma + a[9] * Fz + a[10];
 
 	// vertical shift
 	btScalar Sv = ((a[11] * Fz + a[12]) * gamma + a[13]) * Fz + a[14];
 
-	// composite
+	// composite slip angle
 	btScalar S = alpha + Sh;
 
 	// lateral force
@@ -248,8 +250,11 @@ btScalar CARTIRE::PacejkaMz(btScalar alpha, btScalar Fz, btScalar gamma, btScala
 	// curvature factor
 	btScalar E = (c[7] * Fz * Fz + c[8] * Fz + c[9]) * (1.0 - c[10] * btFabs(gamma));
 
-	// slip angle + horizontal shift
-	btScalar S = alpha + c[11] * gamma + c[12] * Fz + c[13];
+	// horizontal shift
+	btScalar Sh = c[11] * gamma + c[12] * Fz + c[13];
+
+	// composite slip angle
+	btScalar S = alpha + Sh;
 
 	// vertical shift
 	btScalar Sv = (c[14] * Fz * Fz + c[15] * Fz) * gamma + c[16] * Fz + c[17];
