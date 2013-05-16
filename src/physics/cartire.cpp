@@ -62,7 +62,7 @@ btVector3 CARTIRE::getForce(
 	btScalar lon_velocity,
 	btScalar lat_velocity)
 {
-	if (normal_force < 1E-3 || friction_coeff < 1E-3)
+	if (normal_force * friction_coeff < 1E-6)
 	{
 		return btVector3(0, 0, 0);
 	}

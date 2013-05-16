@@ -449,6 +449,9 @@ bool CAR::LoadGraphics(
 }
 
 bool CAR::LoadPhysics(
+	std::ostream & error_output,
+	ContentManager & content,
+	DynamicsWorld & world,
 	const PTree & cfg,
 	const std::string & carpath,
 	const std::string & cartire,
@@ -456,10 +459,7 @@ bool CAR::LoadPhysics(
 	const QUATERNION <float> & initial_orientation,
 	const bool defaultabs,
 	const bool defaulttcs,
-	const bool damage,
-	DynamicsWorld & world,
-	ContentManager & content,
-	std::ostream & error_output)
+	const bool damage)
 {
 	std::string carmodel;
 	if (!cfg.get("body.mesh", carmodel, error_output))
@@ -473,13 +473,11 @@ bool CAR::LoadPhysics(
 	btVector3 position = ToBulletVector(initial_position);
 	btQuaternion rotation = ToBulletQuaternion(initial_orientation);
 
-	std::tr1::shared_ptr<PTree> tire;
-	if (!cartire.empty() && cartire != "default")
-		content.load(tire, carpath, cartire);
-
-	if (!dynamics.Load(error_output, world,
-		cfg, size, center, position, rotation, damage,
-		tire.get()))
+	if (!dynamics.Load(
+		error_output, content, world,
+		cfg, carpath, cartire,
+		size, center, position, rotation,
+		damage))
 	{
 		return false;
 	}

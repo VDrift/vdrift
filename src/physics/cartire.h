@@ -20,6 +20,13 @@
 #ifndef _CARTIRE_H
 #define _CARTIRE_H
 
+#ifdef VDRIFTN
+
+#include "physics/tire.h"
+typedef Tire CARTIRE;
+
+#else
+
 #include "LinearMath/btVector3.h"
 #include "joeserialize.h"
 #include "macros.h"
@@ -162,5 +169,7 @@ inline bool CARTIRE::Serialize(joeserialize::Serializer & s)
 	//_SERIALIZE_(s, mz);
 	return true;
 }
+
+#endif
 
 #endif

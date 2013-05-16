@@ -23,6 +23,7 @@
 #include "fracturebody.h"
 #include "loadcollisionshape.h"
 #include "coordinatesystem.h"
+#include "content/contentmanager.h"
 #include "cfg/ptree.h"
 #include "macros.h"
 
@@ -133,7 +134,6 @@ static bool LoadEngine(
 	return true;
 }
 
-
 static bool LoadBrake(
 	const PTree & cfg,
 	CARBRAKE & brake,
@@ -158,7 +158,50 @@ static bool LoadBrake(
 	return true;
 }
 
-static bool LoadTire(const PTree & cfg, CARTIRE & tire, std::ostream & error_output)
+#ifdef VDRIFTN
+static bool LoadTire(const PTree & cfg_wheel, const PTree & cfg, CARTIRE & tire, std::ostream & error_output)
+{
+	TireInfo info;
+
+	if (!cfg.get("tread", info.tread, error_output)) return false;
+
+	btVector3 roll_resistance;
+	if (!cfg.get("rolling-resistance", roll_resistance, error_output)) return false;
+	info.roll_resistance_lin = roll_resistance[0];
+	info.roll_resistance_quad = roll_resistance[1];
+
+	if (!cfg.get("FZ0", info.nominal_load, error_output)) return false;
+	for (int i = 0; i < TireInfo::CNUM; ++i)
+	{
+		if (!cfg.get(info.coeffname[i], info.coefficients[i], error_output))
+			return false;
+	}
+
+	// asymmetric tires support (left right facing direction)
+	// default facing direction is right
+	// symmetric tire has side factor zero
+	btScalar side_factor = 0;
+	std::string facing;
+	if (cfg_wheel.get("tire.facing", facing))
+		side_factor = (facing != "left") ? 1 : -1;
+	info.coefficients[TireInfo::PEY3] *= side_factor;
+	info.coefficients[TireInfo::PEY4] *= side_factor;
+	info.coefficients[TireInfo::PVY1] *= side_factor;
+	info.coefficients[TireInfo::PVY2] *= side_factor;
+	info.coefficients[TireInfo::PHY1] *= side_factor;
+	info.coefficients[TireInfo::PHY2] *= side_factor;
+	info.coefficients[TireInfo::PHY3] *= side_factor;
+	info.coefficients[TireInfo::RBY3] *= side_factor;
+	info.coefficients[TireInfo::RHX1] *= side_factor;
+	info.coefficients[TireInfo::RHY1] *= side_factor;
+	info.coefficients[TireInfo::RVY5] *= side_factor;
+
+	tire.init(info);
+
+	return true;
+}
+#else
+static bool LoadTire(const PTree & cfg_wheel, const PTree & cfg, CARTIRE & tire, std::ostream & error_output)
 {
 	TIREINFO info;
 
@@ -202,35 +245,26 @@ static bool LoadTire(const PTree & cfg, CARTIRE & tire, std::ostream & error_out
 	}
 
 	// asymmetric tires support (left right facing direction)
-	// fixme: should handle aligning torque too
+	// default facing direction is right
+	// fixme: should handle aligning torque too?
+	btScalar side_factor = 0;
 	std::string facing;
-	if (cfg.get("facing", facing))
-	{
-		// default facing direction is right
-		if (facing == "left")
-		{
-			info.lateral[13] = -info.lateral[13];
-			info.lateral[14] = -info.lateral[14];
-		}
-	}
-	else
-	{
-		// symmetric tire
-		info.lateral[13] = 0.0f;
-		info.lateral[14] = 0.0f;
-	}
+	if (cfg_wheel.get("tire.facing", facing))
+		side_factor = (facing != "left") ? 1 : -1;
+	info.lateral[5]  *= side_factor;
+	info.lateral[13] *= side_factor;
+	info.lateral[14] *= side_factor;
 
 	tire.init(info);
 
 	return true;
 }
+#endif // VDRIFTN
 
 static bool LoadWheel(const PTree & cfg, CARWHEEL & wheel, std::ostream & error_output)
 {
-	const PTree * cfg_tire;
 	btVector3 tire_size;
-	if (!cfg.get("tire", cfg_tire, error_output)) return false;
-	if (!cfg_tire->get("size", tire_size, error_output)) return false;
+	if (!cfg.get("tire.size", tire_size, error_output)) return false;
 
 	btScalar tire_width = tire_size[0] * 0.001f;
 	btScalar tire_aspect_ratio = tire_size[1] * 0.01f;
@@ -514,14 +548,16 @@ CARDYNAMICS::~CARDYNAMICS()
 
 bool CARDYNAMICS::Load(
 	std::ostream & error,
+	ContentManager & content,
 	DynamicsWorld & world,
 	const PTree & cfg,
+	const std::string & cardir,
+	const std::string & cartire,
 	const btVector3 & meshsize,
 	const btVector3 & meshcenter,
 	const btVector3 & position,
 	const btQuaternion & rotation,
-	const bool damage,
-	const PTree * tirealt)
+	const bool damage)
 {
 	if (!LoadClutch(cfg, clutch, error)) return false;
 	if (!LoadTransmission(cfg, transmission, error)) return false;
@@ -569,12 +605,22 @@ bool CARDYNAMICS::Load(
 	for (PTree::const_iterator it = cfg_wheels->begin(); it != cfg_wheels->end(); ++it, ++i)
 	{
 		const PTree & cfg_wheel = it->second;
-		const PTree * cfg_tire, * cfg_brake;
-		if (!cfg_wheel.get("tire.type", cfg_tire, error)) return false;
-		if (!cfg_wheel.get("brake", cfg_brake, error)) return false;
-		if (!LoadTire(tirealt ? *tirealt : *cfg_tire, tire[i], error)) return false;
-		if (!LoadBrake(*cfg_brake, brake[i], error)) return false;
 		if (!LoadWheel(cfg_wheel, wheel[i], error)) return false;
+
+		std::string tirestr(cartire);
+		std::tr1::shared_ptr<PTree> cfg_tire;
+		if ((cartire.empty() || cartire == "default") &&
+			!cfg_wheel.get("tire.type", tirestr, error)) return false;
+		#ifdef VDRIFTN
+		tirestr += "n";
+		#endif
+		content.load(cfg_tire, cardir, tirestr);
+		if (!LoadTire(cfg_wheel, *cfg_tire, tire[i], error)) return false;
+
+		const PTree * cfg_brake;
+		if (!cfg_wheel.get("brake", cfg_brake, error)) return false;
+		if (!LoadBrake(*cfg_brake, brake[i], error)) return false;
+
 		if (!CARSUSPENSION::Load(cfg_wheel, suspension[i], error)) return false;
 		if (suspension[i]->GetMaxSteeringAngle() > maxangle)
 			maxangle = suspension[i]->GetMaxSteeringAngle();
@@ -983,6 +1029,7 @@ void CARDYNAMICS::DebugPrint ( std::ostream & out, bool p1, bool p2, bool p3, bo
 		out << "Position: " << GetPosition() << "\n";
 		out << "Center of mass: " << -GetCenterOfMassOffset() << "\n";
 		out << "Total mass: " << 1 / body->getInvMass() << "\n";
+		out << "VelocityL: " << body->getCenterOfMassTransform().getBasis().transpose() * GetVelocity() << "\n";
 		out << "\n";
 		fuel_tank.DebugPrint ( out );
 		out << "\n";
@@ -1400,31 +1447,28 @@ btVector3 CARDYNAMICS::ApplySuspensionForceToBody ( int i, btScalar dt, btVector
 }
 
 btVector3 CARDYNAMICS::ComputeTireFrictionForce (int i, btScalar dt, btScalar normal_force,
-        btScalar angvel, btVector3 & groundvel, const btQuaternion & wheel_orientation)
+        btScalar rotvel, const btVector3 & linvel, const btQuaternion & wheel_orientation)
 {
-	//determine camber relative to the road
-	//the component of vector A projected onto plane B = A || B = B × (A×B / |B|) / |B|
-	//plane B is the plane defined by using the tire's forward-facing vector as the plane's normal, in wheelspace
-	//vector A is the normal of the driving surface, in wheelspace
-	btVector3 B = direction::forward; //forward facing normal vector
-	btVector3 A = quatRotate(wheel_orientation.inverse(), wheel_contact[ WHEEL_POSITION ( i ) ].GetNormal() ) ; //driving surface normal in wheelspace
-	btVector3 Aproj = B.cross(A.cross(B)); //project the ground normal onto our forward facing plane
-	assert(Aproj.length() > 0.001); //ensure the wheel isn't in an odd orientation
-	Aproj = Aproj.normalize();
-	btScalar camber = btAcos(Aproj.dot(direction::up)); //find the angular difference in the camber axis between up and the projected ground normal
-	assert(!isnan(camber));
-	//btVector3 crosscheck = Aproj.cross(up); //find axis of rotation between Aproj and up
-	//camber = (crosscheck[0] < 0) ? -camber : camber; //correct sign of angular distance
-	camber = -camber;
+	btMatrix3x3 wheel_mat(wheel_orientation);
+	btVector3 xw = wheel_mat.getColumn(0);
+	btVector3 yw = wheel_mat.getColumn(1);
+	btVector3 z = wheel_contact[i].GetNormal();
 
-	btScalar lonvel = direction::forward.dot(groundvel);
-	btScalar latvel = -direction::right.dot(groundvel);
+	btScalar coszxw = z.dot(xw);
+	btScalar coszyw = z.dot(yw);
+	btVector3 x = (xw - z * coszxw).normalized();
+	btVector3 y = (yw - z * coszyw).normalized();
+
+	btScalar camber = M_PI_2 - btAcos(coszxw);
+	btScalar lonvel = y.dot(linvel);
+	btScalar latvel = -x.dot(linvel);
+
 	btScalar friction_coeff =
 		tire[i].getTread() * wheel_contact[i].GetSurface().frictionTread +
 		(1.0 - tire[i].getTread()) * wheel_contact[i].GetSurface().frictionNonTread;
 
 	btVector3 friction_force = tire[i].getForce(
-		normal_force, friction_coeff, camber, angvel, lonvel, latvel);
+		normal_force, friction_coeff, camber, rotvel, lonvel, latvel);
 
 	for (int n = 0; n < 3; ++n) assert(!isnan(friction_force[n]));
 
@@ -1434,9 +1478,8 @@ btVector3 CARDYNAMICS::ComputeTireFrictionForce (int i, btScalar dt, btScalar no
 void CARDYNAMICS::ApplyWheelForces ( btScalar dt, btScalar wheel_drive_torque, int i, const btVector3 & suspension_force, btVector3 & force, btVector3 & torque )
 {
 	btScalar normal_force = suspension_force.length();
-	btVector3 groundvel = quatRotate ( wheel_orientation[i].inverse(), wheel_velocity[i] );
-
-	btVector3 friction_force = ComputeTireFrictionForce ( i, dt, normal_force, wheel[i].GetAngularVelocity(), groundvel, wheel_orientation[i] );
+	btScalar rotvel = wheel[i].GetAngularVelocity() * wheel[i].GetRadius();
+	btVector3 friction_force = ComputeTireFrictionForce ( i, dt, normal_force, rotvel, wheel_velocity[i], wheel_orientation[i] );
 
 	//calculate friction torque
 	btVector3 tire_force = direction::forward * friction_force[0] - direction::right * friction_force[1];
@@ -1462,7 +1505,7 @@ void CARDYNAMICS::ApplyWheelForces ( btScalar dt, btScalar wheel_drive_torque, i
 	if ( ( applied_torque > 0 && reaction_torque > applied_torque ) ||
 			( applied_torque < 0 && reaction_torque < applied_torque ) )
 		reaction_torque = applied_torque;
-	btVector3 tire_torque = direction::right * reaction_torque - direction::up * friction_force[2];
+	btVector3 tire_torque = direction::right * reaction_torque;// - direction::up * friction_force[2];
 
 	//set wheel torque due to tire rolling resistance
 	btScalar rolling_resistance = -tire[i].getRollingResistance(wheel[i].GetAngularVelocity(), wheel_contact[i].GetSurface().rollResistanceCoefficient);
@@ -1473,13 +1516,14 @@ void CARDYNAMICS::ApplyWheelForces ( btScalar dt, btScalar wheel_drive_torque, i
 	wheel[i].SetTorque ( wheel_torque, dt );
 	wheel[i].Integrate ( dt );
 
-	//viscous tire contact drag
-	tire_force -= groundvel * wheel_contact[i].GetSurface().rollingDrag;
+	//viscous tire contact drag (hack)
+	btVector3 wheel_drag = -wheel_velocity[i] * wheel_contact[i].GetSurface().rollingDrag;
 
 	//apply forces to body
 	btVector3 tire_pos = wheel_position[i] - body->getCenterOfMassPosition();
 	btVector3 world_tire_force = quatRotate ( wheel_orientation[i], tire_force );
 	btVector3 world_tire_torque = quatRotate ( wheel_orientation[i],  tire_torque);
+	world_tire_force += wheel_drag;
 	world_tire_torque += tire_pos.cross(world_tire_force);
 	force = force + world_tire_force;
 	torque = torque + world_tire_torque;

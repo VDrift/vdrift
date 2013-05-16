@@ -65,6 +65,9 @@ public:
 		std::ostream & error_output);
 
 	bool LoadPhysics(
+		std::ostream & error_output,
+		ContentManager & content,
+		DynamicsWorld & world,
 		const PTree & cfg,
 		const std::string & carpath,
 		const std::string & cartire,
@@ -72,10 +75,7 @@ public:
 		const QUATERNION <float> & orientation,
 		const bool defaultabs,
 		const bool defaulttcs,
-		const bool damage,
-		DynamicsWorld & world,
-		ContentManager & content,
-		std::ostream & error_output);
+		const bool damage);
 
 	// change car color
 	void SetColor(float r, float g, float b);

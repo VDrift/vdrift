@@ -48,6 +48,7 @@ class btManifoldPoint;
 class btIDebugDraw;
 class DynamicsWorld;
 class FractureBody;
+class ContentManager;
 class PTree;
 
 class CARDYNAMICS : public btActionInterface
@@ -62,14 +63,16 @@ public:
 	// tirealt is optional tire config, overrides default tire type
 	bool Load(
 		std::ostream & error,
+		ContentManager & content,
 		DynamicsWorld & world,
 		const PTree & cfg,
+		const std::string & cardir,
+		const std::string & cartire,
 		const btVector3 & meshsize,
 		const btVector3 & meshcenter,
 		const btVector3 & position,
 		const btQuaternion & rotation,
-		const bool damage,
-		const PTree * tirealt = 0);
+		const bool damage);
 
 	// bullet interface
 	void updateAction(btCollisionWorld * collisionWorld, btScalar dt);
@@ -262,7 +265,7 @@ protected:
 	btVector3 ApplySuspensionForceToBody ( int i, btScalar dt, btVector3 & force, btVector3 & torque );
 
 	btVector3 ComputeTireFrictionForce ( int i, btScalar dt, btScalar normal_force,
-        btScalar angvel, btVector3 & groundvel, const btQuaternion & wheel_orientation );
+        btScalar rotvel, const btVector3 & linvel, const btQuaternion & wheel_orientation );
 
 	void ApplyWheelForces ( btScalar dt, btScalar wheel_drive_torque, int i, const btVector3 & suspension_force, btVector3 & force, btVector3 & torque );
 

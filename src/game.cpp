@@ -1668,10 +1668,10 @@ bool GAME::LoadCar(
 
 	bool isai = (info.driver != "user");
 	if (!car.LoadPhysics(
+		error_output, content, dynamics,
 		*carconf, cardir, info.tire, position, orientation,
 		settings.GetABS() || isai, settings.GetTCS() || isai,
-		settings.GetVehicleDamage(), dynamics,
-        content, error_output))
+		settings.GetVehicleDamage()))
 	{
 		error_output << "Failed to load physics for car " << info.name << std::endl;
 		return false;
