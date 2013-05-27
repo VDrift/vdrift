@@ -68,7 +68,7 @@ public:
 
 	const std::string & GetDescription() const {return m_description;};
 
-	const bool IsFloat() const { return m_type == type_float; };
+	bool IsFloat() const { return m_type == type_float; };
 
 	/// get value range, parameters are offset and value range vector
 	Slot2<int, std::vector<std::string> &> get_val;
