@@ -43,6 +43,9 @@
 #include <map>
 #include <set>
 
+typedef std::tr1::unordered_map <StringId, RenderTextureEntry, StringId::hash> NameTexMap;
+typedef std::tr1::unordered_map <StringId, unsigned int, StringId::hash> NameIdMap;
+
 class RenderPass
 {
 public:
@@ -101,7 +104,7 @@ public:
 
 private:
 	/// Returns true on success.
-	bool createFramebufferObject(GLWrapper & gl, unsigned int w, unsigned int h, StringIdMap & stringMap, const std::tr1::unordered_map <StringId, RenderTextureEntry, StringId::hash> & sharedTextures, std::ostream & errorOutput);
+	bool createFramebufferObject(GLWrapper & gl, unsigned int w, unsigned int h, StringIdMap & stringMap, const NameTexMap & sharedTextures, std::ostream & errorOutput);
 	void deleteFramebufferObject(GLWrapper & gl);
 
 	/// Returns true on success.
@@ -122,14 +125,14 @@ private:
 	// All of the models we'll be rendering in this pass.
 	// We keep two data structures, one for fast iteration during rendering which holds the actual RenderModel data, and another that is used to speed up updates and which simply holds handles to the keyed_container.
 	keyed_container <RenderModel> models;
-	typedef std::tr1::unordered_map <RenderModelHandle, keyed_container <RenderModel>::handle, keyed_container_hash> modelHandleMap;
-	modelHandleMap modelHandles;
+	typedef std::tr1::unordered_map <RenderModelHandle, keyed_container <RenderModel>::handle, keyed_container_hash> ModelHandleMap;
+	ModelHandleMap modelHandles;
 
 	// Theese fields are used to remember mappings so we can look them up when we get an update.
 	/// This is used to remember how variable names correspond to uniform locations.
-	std::tr1::unordered_map <StringId, GLuint, StringId::hash> variableNameToUniformLocation;
+	NameIdMap variableNameToUniformLocation;
 	/// This is used to remember how texture names correspond to texture unit numbers.
-	std::tr1::unordered_map <StringId, GLuint, StringId::hash> textureNameToTextureUnit;
+	NameIdMap textureNameToTextureUnit;
 
 	/// Which bitfields to clear when we start the pass.
 	GLbitfield clearMask;

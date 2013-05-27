@@ -172,7 +172,7 @@ RenderModelHandle Renderer::addModel(const RenderModelEntry & entry)
 	RenderModelHandle handle = models.insert(entry);
 
 	// For all passes that use this draw group, send them the model.
-	std::tr1::unordered_map <StringId, std::vector <unsigned int> >::iterator iter = drawGroupToPasses.find(models.get(handle).group);
+	NameIdVecMap::const_iterator iter = drawGroupToPasses.find(models.get(handle).group);
 	if (iter != drawGroupToPasses.end())
 	{
 		const std::vector <unsigned int> & passesWithDrawGroup = iter->second;
@@ -189,7 +189,7 @@ void Renderer::removeModel(RenderModelHandle handle)
 	models.erase(handle);
 
 	// For all passes that use this draw group, tell them to remove the model.
-	std::tr1::unordered_map <StringId, std::vector <unsigned int> >::iterator iter = drawGroupToPasses.find(models.get(handle).group);
+	NameIdVecMap::const_iterator iter = drawGroupToPasses.find(models.get(handle).group);
 	if (iter != drawGroupToPasses.end())
 	{
 		const std::vector <unsigned int> & passesWithDrawGroup = iter->second;
@@ -202,7 +202,7 @@ void Renderer::removeModel(RenderModelHandle handle)
 void Renderer::setModelTexture(RenderModelHandle handle, const RenderTextureEntry & texture)
 {
 	// For all passes that use this draw group, pass on the message.
-	std::tr1::unordered_map <StringId, std::vector <unsigned int> >::iterator iter = drawGroupToPasses.find(models.get(handle).group);
+	NameIdVecMap::const_iterator iter = drawGroupToPasses.find(models.get(handle).group);
 	if (iter != drawGroupToPasses.end())
 	{
 		const std::vector <unsigned int> & passesWithDrawGroup = iter->second;
@@ -215,7 +215,7 @@ void Renderer::setModelTexture(RenderModelHandle handle, const RenderTextureEntr
 void Renderer::removeModelTexture(RenderModelHandle handle, StringId name)
 {
 	// For all passes that use this draw group, pass on the message.
-	std::tr1::unordered_map <StringId, std::vector <unsigned int> >::iterator iter = drawGroupToPasses.find(models.get(handle).group);
+	NameIdVecMap::const_iterator iter = drawGroupToPasses.find(models.get(handle).group);
 	if (iter != drawGroupToPasses.end())
 	{
 		const std::vector <unsigned int> & passesWithDrawGroup = iter->second;
@@ -228,7 +228,7 @@ void Renderer::removeModelTexture(RenderModelHandle handle, StringId name)
 void Renderer::setModelUniform(RenderModelHandle handle, const RenderUniformEntry & uniform)
 {
 	// For all passes that use this draw group, pass on the message.
-	std::tr1::unordered_map <StringId, std::vector <unsigned int> >::iterator iter = drawGroupToPasses.find(models.get(handle).group);
+	NameIdVecMap::const_iterator iter = drawGroupToPasses.find(models.get(handle).group);
 	if (iter != drawGroupToPasses.end())
 	{
 		const std::vector <unsigned int> & passesWithDrawGroup = iter->second;
@@ -241,7 +241,7 @@ void Renderer::setModelUniform(RenderModelHandle handle, const RenderUniformEntr
 void Renderer::removeModelUniform(RenderModelHandle handle, StringId name)
 {
 	// For all passes that use this draw group, pass on the message.
-	std::tr1::unordered_map <StringId, std::vector <unsigned int> >::iterator iter = drawGroupToPasses.find(models.get(handle).group);
+	NameIdVecMap::const_iterator iter = drawGroupToPasses.find(models.get(handle).group);
 	if (iter != drawGroupToPasses.end())
 	{
 		const std::vector <unsigned int> & passesWithDrawGroup = iter->second;
@@ -271,20 +271,20 @@ void Renderer::removeGlobalTexture(StringId name)
 
 void Renderer::setPassTexture(StringId passName, StringId textureName, const RenderTextureEntry & texture)
 {
-	std::tr1::unordered_map <StringId, int>::iterator i = passIndexMap.find(passName);
+	NameIdMap::const_iterator i = passIndexMap.find(passName);
 	if (i != passIndexMap.end())
 	{
-		assert((unsigned int)i->second < passes.size());
+		assert(i->second < passes.size());
 		passes[i->second].setDefaultTexture(textureName, texture);
 	}
 }
 
 void Renderer::removePassTexture(StringId passName, StringId textureName)
 {
-	std::tr1::unordered_map <StringId, int>::iterator i = passIndexMap.find(passName);
+	NameIdMap::const_iterator i = passIndexMap.find(passName);
 	if (i != passIndexMap.end())
 	{
-		assert((unsigned int)i->second < passes.size());
+		assert(i->second < passes.size());
 		passes[i->second].removeDefaultTexture(textureName);
 	}
 }
@@ -310,30 +310,30 @@ void Renderer::removeGlobalUniform(StringId name)
 
 void Renderer::setPassUniform(StringId passName, const RenderUniformEntry & uniform)
 {
-	std::tr1::unordered_map <StringId, int>::iterator i = passIndexMap.find(passName);
+	NameIdMap::const_iterator i = passIndexMap.find(passName);
 	if (i != passIndexMap.end())
 	{
-		assert((unsigned int)i->second < passes.size());
+		assert(i->second < passes.size());
 		passes[i->second].setDefaultUniform(uniform);
 	}
 }
 
 void Renderer::removePassUniform(StringId passName, StringId uniformName)
 {
-	std::tr1::unordered_map <StringId, int>::iterator i = passIndexMap.find(passName);
+	NameIdMap::const_iterator i = passIndexMap.find(passName);
 	if (i != passIndexMap.end())
 	{
-		assert((unsigned int)i->second < passes.size());
+		assert(i->second < passes.size());
 		passes[i->second].removeDefaultUniform(uniformName);
 	}
 }
 
 bool Renderer::getPassUniform(StringId passName, StringId uniformName, RenderUniform & out)
 {
-	std::tr1::unordered_map <StringId, int>::iterator i = passIndexMap.find(passName);
+	NameIdMap::const_iterator i = passIndexMap.find(passName);
 	if (i != passIndexMap.end())
 	{
-		assert((unsigned int)i->second < passes.size());
+		assert(i->second < passes.size());
 		return passes[i->second].getDefaultUniform(uniformName, out);
 	}
 	else
@@ -342,20 +342,20 @@ bool Renderer::getPassUniform(StringId passName, StringId uniformName, RenderUni
 
 void Renderer::setPassEnabled(StringId passName, bool enable)
 {
-	std::tr1::unordered_map <StringId, int>::iterator i = passIndexMap.find(passName);
+	NameIdMap::const_iterator i = passIndexMap.find(passName);
 	if (i != passIndexMap.end())
 	{
-		assert((unsigned int)i->second < passes.size());
+		assert(i->second < passes.size());
 		passes[i->second].setEnabled(enable);
 	}
 }
 
 bool Renderer::getPassEnabled(StringId passName) const
 {
-	std::tr1::unordered_map <StringId, int>::const_iterator i = passIndexMap.find(passName);
+	NameIdMap::const_iterator i = passIndexMap.find(passName);
 	if (i != passIndexMap.end())
 	{
-		assert((unsigned int)i->second < passes.size());
+		assert(i->second < passes.size());
 		return passes[i->second].getEnabled();
 	}
 	return false;
@@ -364,10 +364,10 @@ bool Renderer::getPassEnabled(StringId passName) const
 static const std::map <std::string, std::string> emptyStringMap;
 const std::map <std::string, std::string> & Renderer::getUserDefinedFields(StringId passName) const
 {
-	std::tr1::unordered_map <StringId, int>::const_iterator i = passIndexMap.find(passName);
+	NameIdMap::const_iterator i = passIndexMap.find(passName);
 	if (i != passIndexMap.end())
 	{
-		assert((unsigned int)i->second < passes.size());
+		assert(i->second < passes.size());
 		return passes[i->second].getUserDefinedFields();
 	}
 	return emptyStringMap;
@@ -376,10 +376,10 @@ const std::map <std::string, std::string> & Renderer::getUserDefinedFields(Strin
 static const std::set <StringId> emptySet;
 const std::set <StringId> & Renderer::getDrawGroups(StringId passName) const
 {
-	std::tr1::unordered_map <StringId, int>::const_iterator i = passIndexMap.find(passName);
+	NameIdMap::const_iterator i = passIndexMap.find(passName);
 	if (i != passIndexMap.end())
 	{
-		assert((unsigned int)i->second < passes.size());
+		assert(i->second < passes.size());
 		return passes[i->second].getDrawGroups();
 	}
 	return emptySet;
@@ -427,7 +427,7 @@ void Renderer::printRendererStatus(RendererStatusVerbosity verbosity, const Stri
 	if (verbosity >= VERBOSITY_MODELS_TEXTURES)
 	{
 		out << "Global textures: " << sharedTextures.size() << std::endl;
-		for (std::tr1::unordered_map <StringId, RenderTextureEntry>::const_iterator i = sharedTextures.begin(); i != sharedTextures.end(); i++)
+		for (NameTexMap::const_iterator i = sharedTextures.begin(); i != sharedTextures.end(); i++)
 			out << passPrefix << stringMap.getString(i->first) << ", handle " << i->second.handle << std::endl;
 	}
 
@@ -439,7 +439,7 @@ void Renderer::printRendererStatus(RendererStatusVerbosity verbosity, const Stri
 
 		out << passPrefix << "Draw groups: ";
 		int dgcount = 0;
-		for (std::tr1::unordered_map <StringId, std::vector <unsigned int> >::const_iterator dg = drawGroupToPasses.begin(); dg != drawGroupToPasses.end(); dg++)
+		for (NameIdVecMap::const_iterator dg = drawGroupToPasses.begin(); dg != drawGroupToPasses.end(); dg++)
 			if (std::find(dg->second.begin(), dg->second.end(), passcount) != dg->second.end())
 			{
 				if (dgcount != 0)

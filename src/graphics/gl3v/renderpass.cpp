@@ -36,7 +36,7 @@ RenderPass::RenderPass() : configured(false), enabled(true), shaderProgram(0), f
 	// Constructor.
 }
 
-bool RenderPass::initialize(int passCount, const RealtimeExportPassInfo & config, StringIdMap & stringMap, GLWrapper & gl, RenderShader & vertexShader, RenderShader & fragmentShader, const std::tr1::unordered_map <StringId, RenderTextureEntry, StringId::hash> & sharedTextures, unsigned int w, unsigned int h, std::ostream & errorOutput)
+bool RenderPass::initialize(int passCount, const RealtimeExportPassInfo & config, StringIdMap & stringMap, GLWrapper & gl, RenderShader & vertexShader, RenderShader & fragmentShader, const NameTexMap & sharedTextures, unsigned int w, unsigned int h, std::ostream & errorOutput)
 {
 	originalConfiguration = config;
 
@@ -138,7 +138,7 @@ bool RenderPass::initialize(int passCount, const RealtimeExportPassInfo & config
 
 		// Fill default textures from passed-in shared textures.
 		// Fexture bindings that can be overridden (or not) by specific models.
-		std::tr1::unordered_map <StringId, RenderTextureEntry>::const_iterator defaultTexIter = sharedTextures.find(stringMap.addStringId(textureName));
+		NameTexMap::const_iterator defaultTexIter = sharedTextures.find(stringMap.addStringId(textureName));
 		if (defaultTexIter != sharedTextures.end())
 			defaultTextureBindings.push_back(RenderTexture(tu, defaultTexIter->second));
 	}
@@ -223,7 +223,7 @@ void RenderPass::clear(GLWrapper & gl)
 	configured = false;
 }
 
-bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringIdMap & stringMap, const std::vector <const std::vector <RenderModelExternal*>*> & externalModels, const std::tr1::unordered_map <StringId, RenderTextureEntry, StringId::hash> & sharedTextures, std::ostream & errorOutput)
+bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringIdMap & stringMap, const std::vector <const std::vector <RenderModelExternal*>*> & externalModels, const NameTexMap & sharedTextures, std::ostream & errorOutput)
 {
 	if (!enabled)
 		return false;
@@ -410,7 +410,7 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 					for (std::vector <RenderTextureEntry>::const_iterator t = m->textures.begin(); t != m->textures.end(); t++)
 					{
 						// Get the TU associated with this texture name id.
-						std::tr1::unordered_map <StringId, GLuint>::iterator tui = textureNameToTextureUnit.find(t->name);
+						NameIdMap::iterator tui = textureNameToTextureUnit.find(t->name);
 						if (tui != textureNameToTextureUnit.end()) // if the texture isn't used in this pass, it might not be in textureNameToTextureUnit.
 						{
 							GLuint tu = tui->second;
@@ -473,7 +473,7 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 				{
 					for (std::vector <RenderUniformEntry>::const_iterator u = m->uniforms.begin(); u != m->uniforms.end(); u++)
 					{
-						std::tr1::unordered_map <StringId, GLuint>::iterator loci = variableNameToUniformLocation.find(u->name);
+						NameIdMap::const_iterator loci = variableNameToUniformLocation.find(u->name);
 						if (loci != variableNameToUniformLocation.end()) // If the texture isn't used in this pass, it might not be in variableNameToUniformLocation.
 						{
 							GLuint location = loci->second;
@@ -535,7 +535,7 @@ void RenderPass::addModel(const RenderModelEntry & entry, RenderModelHandle hand
 void RenderPass::removeModel(RenderModelHandle handle)
 {
 	// Find the handle in our models container and erase it.
-	modelHandleMap::iterator iter = modelHandles.find(handle);
+	ModelHandleMap::const_iterator iter = modelHandles.find(handle);
 	if (iter != modelHandles.end())
 		models.erase(iter->second);
 	else
@@ -545,13 +545,13 @@ void RenderPass::removeModel(RenderModelHandle handle)
 void RenderPass::setModelTexture(RenderModelHandle handle, const RenderTextureEntry & texture)
 {
 	// Find the model from the handle.
-	modelHandleMap::iterator iter = modelHandles.find(handle);
+	ModelHandleMap::const_iterator iter = modelHandles.find(handle);
 	if (iter != modelHandles.end())
 	{
 		RenderModel & model = models.get(iter->second);
 
 		// First, see if there's an existing texture override with this name.
-		std::tr1::unordered_map <StringId, keyed_container <RenderTexture>::handle>::iterator existing = model.textureNameToTextureOverride.find(texture.name);
+		RenderModel::TextureMap::const_iterator existing = model.textureNameToTextureOverride.find(texture.name);
 		if (existing != model.textureNameToTextureOverride.end())
 		{
 			// There is an existing override. Change it!
@@ -561,7 +561,7 @@ void RenderPass::setModelTexture(RenderModelHandle handle, const RenderTextureEn
 		else
 		{
 			// This is a new override.
-			std::tr1::unordered_map <StringId, GLuint>::iterator tui = textureNameToTextureUnit.find(texture.name);
+			NameIdMap::const_iterator tui = textureNameToTextureUnit.find(texture.name);
 			assert(tui != textureNameToTextureUnit.end()); // textureNameToTextureUnit should have been populated when we loaded the sampler.
 			GLuint tu = tui->second;
 
@@ -576,13 +576,13 @@ void RenderPass::setModelTexture(RenderModelHandle handle, const RenderTextureEn
 void RenderPass::removeModelTexture(RenderModelHandle handle, StringId name)
 {
 	// Find the model from the handle.
-	modelHandleMap::iterator iter = modelHandles.find(handle);
+	ModelHandleMap::const_iterator iter = modelHandles.find(handle);
 	if (iter != modelHandles.end())
 	{
 		RenderModel & model = models.get(iter->second);
 
 		// Find the existing texture override with this name.
-		std::tr1::unordered_map <StringId, keyed_container <RenderTexture>::handle>::iterator existing = model.textureNameToTextureOverride.find(name);
+		RenderModel::TextureMap::const_iterator existing = model.textureNameToTextureOverride.find(name);
 		if (existing != model.textureNameToTextureOverride.end())
 		{
 			// There is an existing override. Remove it, then remove it from the mapping.
@@ -599,13 +599,13 @@ void RenderPass::removeModelTexture(RenderModelHandle handle, StringId name)
 void RenderPass::setModelUniform(RenderModelHandle handle, const RenderUniformEntry & uniform)
 {
 	// Find the model from the handle.
-	modelHandleMap::iterator iter = modelHandles.find(handle);
+	ModelHandleMap::const_iterator iter = modelHandles.find(handle);
 	if (iter != modelHandles.end())
 	{
 		RenderModel & model = models.get(iter->second);
 
 		// First, see if there's an existing override with this name.
-		std::tr1::unordered_map <StringId, keyed_container <RenderUniform>::handle>::iterator existing = model.variableNameToUniformOverride.find(uniform.name);
+		RenderModel::UniformMap::const_iterator existing = model.variableNameToUniformOverride.find(uniform.name);
 		if (existing != model.variableNameToUniformOverride.end())
 		{
 			// There is an existing override. Change it!
@@ -615,7 +615,7 @@ void RenderPass::setModelUniform(RenderModelHandle handle, const RenderUniformEn
 		else
 		{
 			// This is a new override.
-			std::tr1::unordered_map <StringId, GLuint>::iterator loci = variableNameToUniformLocation.find(uniform.name);
+			NameIdMap::const_iterator loci = variableNameToUniformLocation.find(uniform.name);
 			assert(loci != variableNameToUniformLocation.end()); // variableNameToUniformLocation should have been populated when we initialized.
 			GLuint loc = loci->second;
 
@@ -630,13 +630,13 @@ void RenderPass::setModelUniform(RenderModelHandle handle, const RenderUniformEn
 void RenderPass::removeModelUniform(RenderModelHandle handle, StringId name)
 {
 	// Find the model from the handle.
-	modelHandleMap::iterator iter = modelHandles.find(handle);
+	ModelHandleMap::const_iterator iter = modelHandles.find(handle);
 	if (iter != modelHandles.end())
 	{
 		RenderModel & model = models.get(iter->second);
 
 		// Find the existing uniform override with this name.
-		std::tr1::unordered_map <StringId, keyed_container <RenderUniform>::handle>::iterator existing = model.variableNameToUniformOverride.find(name);
+		RenderModel::UniformMap::const_iterator existing = model.variableNameToUniformOverride.find(name);
 		if (existing != model.variableNameToUniformOverride.end())
 		{
 			// There is an existing override. Remove it, then remove it from the mapping.
@@ -654,7 +654,7 @@ void RenderPass::setDefaultTexture(StringId name, const RenderTextureEntry & tex
 {
 	// See if we have a mapping for this name id.
 	// If we don't that's fine, just ignore the change.
-	std::tr1::unordered_map <StringId, GLuint>::const_iterator tuIter = textureNameToTextureUnit.find(name);
+	NameIdMap::const_iterator tuIter = textureNameToTextureUnit.find(name);
 	if (tuIter != textureNameToTextureUnit.end())
 	{
 		GLuint tu = tuIter->second;
@@ -677,7 +677,7 @@ void RenderPass::removeDefaultTexture(StringId name)
 {
 	// See if we have a mapping for this name id.
 	// If we don't that's fine, just ignore the change.
-	std::tr1::unordered_map <StringId, GLuint>::const_iterator tuIter = textureNameToTextureUnit.find(name);
+	NameIdMap::const_iterator tuIter = textureNameToTextureUnit.find(name);
 	if (tuIter != textureNameToTextureUnit.end())
 	{
 		GLuint tu = tuIter->second;
@@ -702,7 +702,7 @@ void RenderPass::removeDefaultTexture(StringId name)
 
 bool RenderPass::getDefaultUniform(StringId uniformName, RenderUniform & out)
 {
-	std::tr1::unordered_map <StringId, GLuint>::const_iterator locIter = variableNameToUniformLocation.find(uniformName);
+	NameIdMap::const_iterator locIter = variableNameToUniformLocation.find(uniformName);
 	if (locIter != variableNameToUniformLocation.end())
 	{
 		GLuint location = locIter->second;
@@ -723,7 +723,7 @@ bool RenderPass::setDefaultUniform(const RenderUniformEntry & uniform)
 {
 	// See if we have a mapping for this name id.
 	// If we don't that's fine, just ignore the change.
-	std::tr1::unordered_map <StringId, GLuint>::const_iterator locIter = variableNameToUniformLocation.find(uniform.name);
+	NameIdMap::const_iterator locIter = variableNameToUniformLocation.find(uniform.name);
 	if (locIter != variableNameToUniformLocation.end())
 	{
 		GLuint location = locIter->second;
@@ -749,7 +749,7 @@ void RenderPass::removeDefaultUniform(StringId name)
 {
 	// See if we have a mapping for this name id.
 	// If we don't that's fine, just ignore the change.
-	std::tr1::unordered_map <StringId, GLuint>::const_iterator locIter = variableNameToUniformLocation.find(name);
+	NameIdMap::const_iterator locIter = variableNameToUniformLocation.find(name);
 	if (locIter != variableNameToUniformLocation.end())
 	{
 		GLuint location = locIter->second;
@@ -997,7 +997,7 @@ float RenderPass::getLastTime() const
 	return lastTime;
 }
 
-bool RenderPass::createFramebufferObject(GLWrapper & gl, unsigned int w, unsigned int h, StringIdMap & stringMap, const std::tr1::unordered_map <StringId, RenderTextureEntry, StringId::hash> & sharedTextures, std::ostream & errorOutput)
+bool RenderPass::createFramebufferObject(GLWrapper & gl, unsigned int w, unsigned int h, StringIdMap & stringMap, const NameTexMap & sharedTextures, std::ostream & errorOutput)
 {
 	deleteFramebufferObject(gl);
 
@@ -1138,7 +1138,7 @@ bool RenderPass::createFramebufferObject(GLWrapper & gl, unsigned int w, unsigne
 		StringId renderTargetNameId = stringMap.addStringId(i->second.name);
 
 		// Either use an existing render target texture or create a new one.
-		std::tr1::unordered_map <StringId, RenderTextureEntry, StringId::hash>::const_iterator sharedRenderTarget = sharedTextures.find(renderTargetNameId);
+		NameTexMap::const_iterator sharedRenderTarget = sharedTextures.find(renderTargetNameId);
 		if (sharedRenderTarget != sharedTextures.end())
 		{
 			// This render target texture has already been created by a previous pass, we just want to use it.

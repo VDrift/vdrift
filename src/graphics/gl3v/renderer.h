@@ -142,13 +142,14 @@ private:
 	std::vector <RenderPass> passes;
 
 	/// Maps shared texture names to a RenderTexture; this is a copy of the RenderTexture that is bookkept either by the pass (for rendertargets) or externally (for shared textures).
-	std::tr1::unordered_map <StringId, RenderTextureEntry, StringId::hash> sharedTextures;
+	NameTexMap sharedTextures;
 
 	/// Maps pass names to indexes into the "passes" vector.
-	std::tr1::unordered_map <StringId, int, StringId::hash> passIndexMap;
+	NameIdMap passIndexMap;
 
 	/// Map of draw group string id to a list of pass indices that use the draw group.
-	std::tr1::unordered_map <StringId, std::vector <unsigned int>, StringId::hash> drawGroupToPasses;
+	typedef std::tr1::unordered_map <StringId, std::vector <unsigned int>, StringId::hash> NameIdVecMap;
+	NameIdVecMap drawGroupToPasses;
 
 	/// Internally shared resources: map of shader name to shader handle.
 	std::map <std::string, RenderShader> shaders;
