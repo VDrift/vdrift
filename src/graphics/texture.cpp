@@ -75,7 +75,7 @@ static void GetTextureFormat(
 	bool & alpha)
 {
 	bool compression = (surface->w > 512 || surface->h > 512) && !info.normalmap;
-	bool srgb = info.srgb;
+	bool srgb = info.srgb && !info.normalmap;
 
 	internalformat = compression ? (srgb ? GL_COMPRESSED_SRGB : GL_COMPRESSED_RGB) : (srgb ? GL_SRGB8 : GL_RGB);
 	switch (surface->format->BytesPerPixel)
