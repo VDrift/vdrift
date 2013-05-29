@@ -84,6 +84,7 @@ bool LoadDrawable::operator()(
 	}
 	if (texname.size() > 2)
 	{
+		texinfo.normalmap = true;
 		content.load(tex, path, texname[2], texinfo);
 		drawable.SetMiscMap2(tex);
 	}
