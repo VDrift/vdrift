@@ -118,6 +118,17 @@ static void GetTextureFormat(
 	}
 }
 
+static void GenerateMipmap(GLenum target)
+{
+	if (glGenerateMipmap)
+	{
+		glGenerateMipmap(target);
+		// mesa tampering with attribute arrays, reset explicitly
+		glDisableVertexAttribArray(0);
+		glDisableVertexAttribArray(1);
+	}
+}
+
 static void SetSampler(const TEXTUREINFO & info, bool hasmiplevels = false)
 {
 	if (info.repeatu)
@@ -186,8 +197,7 @@ static void GenTexture(
 
 	// If we support generatemipmap, go ahead and do it regardless of the info.mipmap setting.
 	// In the GL3 renderer the sampler decides whether or not to do mip filtering, so we conservatively make mipmaps available for all textures.
-	if (glGenerateMipmap)
-		glGenerateMipmap(GL_TEXTURE_2D);
+	GenerateMipmap(GL_TEXTURE_2D);
 
 	// check for anisotropy
 	if (info.anisotropy > 1)
@@ -481,11 +491,7 @@ bool TEXTURE::LoadCubeVerticalCross(const std::string & path, const TEXTUREINFO 
 	{
 		glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_LINEAR);
 		glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-
-		if (GLEW_ARB_framebuffer_object)
-		{
-			glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
-		}
+		GenerateMipmap(GL_TEXTURE_CUBE_MAP);
 	}
 
 	glDisable(GL_TEXTURE_CUBE_MAP);
@@ -667,8 +673,8 @@ bool TEXTURE::LoadDDS(const std::string & path, const TEXTUREINFO & info, std::o
 	}
 
 	// force mipmaps for GL3
-	if (levels == 1 && glGenerateMipmap)
-		glGenerateMipmap(GL_TEXTURE_2D);
+	if (levels == 1)
+		GenerateMipmap(GL_TEXTURE_2D);
 
 	return true;
 }
