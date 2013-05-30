@@ -139,7 +139,7 @@ private:
 
 	void PopulateTrackList(GUIOPTION::LIST & tracklist);
 
-	void PopulateCarList(GUIOPTION::LIST & carlist, bool multicar = true);
+	void PopulateCarList(GUIOPTION::LIST & carlist, bool cardironly = false);
 
 	void PopulateCarPaintList(const std::string & carname, GUIOPTION::LIST & paintlist);
 

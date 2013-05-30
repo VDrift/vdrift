@@ -195,7 +195,7 @@ void GAME::Start(std::list <std::string> & args)
 	else
 	{
 		// send GUI value lists to the carupdater so it knows about the cars on disk
-		PopulateCarList(carupdater.GetValueList(), false);
+		PopulateCarList(carupdater.GetValueList(), true);
 	}
 
 	// Init track update manager
@@ -1962,12 +1962,21 @@ static void PopulateCarSet(
 	std::set<std::pair<std::string, std::string> > & set,
 	const std::string & path,
 	const PATHMANAGER & pathmanager,
-	const bool multicar)
+	const bool cardironly)
 {
 	const std::string ext(".car");
 	std::list<std::string> folders;
 	pathmanager.GetFileList(path, folders);
-	if (multicar)
+	if (cardironly)
+	{
+		for (std::list<std::string>::iterator i = folders.begin(); i != folders.end(); ++i)
+		{
+			std::ifstream file((path + "/" + *i + "/" + *i + ext).c_str());
+			if (file)
+				set.insert(std::make_pair(*i, *i));
+		}
+	}
+	else
 	{
 		for (std::list<std::string>::iterator i = folders.begin(); i != folders.end(); ++i)
 		{
@@ -1979,16 +1988,6 @@ static void PopulateCarSet(
 				const std::string val = *i + "/" + opt;
 				set.insert(std::make_pair(val, opt));
 			}
-		}
-	}
-	else
-	{
-		for (std::list<std::string>::iterator i = folders.begin(); i != folders.end(); ++i)
-		{
-			const std::string val = *i + "/" + *i;
-			std::ifstream file((path + "/" + val + ext).c_str());
-			if (file)
-				set.insert(std::make_pair(val, *i));
 		}
 	}
 }
@@ -2037,12 +2036,12 @@ void GAME::PopulateTrackList(GUIOPTION::LIST & tracklist)
 	std::sort(tracklist.begin(), tracklist.end(), SortPairBySecond<std::string, std::string>());
 }
 
-void GAME::PopulateCarList(GUIOPTION::LIST & carlist, bool multicar)
+void GAME::PopulateCarList(GUIOPTION::LIST & carlist, bool cardironly)
 {
 	// Use set to avoid duplicate entries.
 	std::set <std::pair<std::string, std::string> > carset;
-	PopulateCarSet(carset, pathmanager.GetReadOnlyCarsPath(), pathmanager, multicar);
-	PopulateCarSet(carset, pathmanager.GetWriteableCarsPath(), pathmanager, multicar);
+	PopulateCarSet(carset, pathmanager.GetReadOnlyCarsPath(), pathmanager, cardironly);
+	PopulateCarSet(carset, pathmanager.GetWriteableCarsPath(), pathmanager, cardironly);
 
 	carlist.clear();
 	for (std::set<std::pair<std::string, std::string> >::const_iterator i = carset.begin(); i != carset.end(); i++)
