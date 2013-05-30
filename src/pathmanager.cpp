@@ -34,6 +34,19 @@
 #include <errno.h>
 #endif
 
+// true if ext empty or matches end of str
+static bool has_extension(const std::string & str, const std::string & ext)
+{
+	int strn = str.length();
+	int extn = ext.length();
+	if (extn >= strn)
+		return false;
+	while (extn > 0)
+		if (ext[--extn] != str[--strn])
+			return false;
+	return true;
+}
+
 void PATHMANAGER::Init(std::ostream & info_output, std::ostream & error_output)
 {
 	// Figure out the user's home directory.
@@ -123,13 +136,15 @@ bool PATHMANAGER::GetFileList(std::string folderpath, std::list <std::string> & 
 		while ((ep = readdir(dp)))
 		{
 			std::string newname = ep->d_name;
-			if (newname[0] != '.')
+			if (newname[0] != '.' && has_extension(newname, extension))
 				outputfolderlist.push_back(newname);
 		}
 		closedir(dp);
 	}
 	else
+	{
 		return false;
+	}
 	// End POSIX-specific folder listing code. Start WIN32 Specific code.
 #else
 	HANDLE          hList;
@@ -142,26 +157,23 @@ bool PATHMANAGER::GetFileList(std::string folderpath, std::list <std::string> & 
 	// Get the first file.
 	hList = FindFirstFile(szDir, &FileData);
 	if (hList != INVALID_HANDLE_VALUE)
+	{
 		// Traverse through the directory structure.
 		while (FindNextFile(hList, &FileData))
-			if (!(FileData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) && (FileData.cFileName[0] != '.'))
-				outputfolderlist.push_back(FileData.cFileName);
-
-	FindClose(hList);
+		{
+			std::string newname = FileData.cFileName;
+			if (!(FileData.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) &&
+				(newname[0] != '.') && has_extension(newname, extension))
+				outputfolderlist.push_back(newname);
+		}
+		FindClose(hList);
+	}
+	else
+	{
+		return false;
+	}
 	// End WIN32 specific folder listing code.
 #endif
-
-	// Remove non-matcthing extensions.
-	if (!extension.empty())
-	{
-		std::list <std::list <std::string>::iterator> todel;
-		for (std::list <std::string>::iterator i = outputfolderlist.begin(); i != outputfolderlist.end(); ++i)
-			if (i->find(extension) != i->length()-extension.length())
-                todel.push_back(i);
-
-		for (std::list <std::list <std::string>::iterator>::iterator i = todel.begin(); i != todel.end(); ++i)
-			outputfolderlist.erase(*i);
-	}
 
 	outputfolderlist.sort();
 	return true;
