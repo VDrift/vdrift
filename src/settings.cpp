@@ -88,7 +88,7 @@ SETTINGS::SETTINGS() :
 	bloom(false),
 	motionblur(false),
 	normalmaps(false),
-	car("XS"),
+	car("XS/XS"),
 	car_paint("default"),
 	car_tire("default"),
 	car_wheel("default"),

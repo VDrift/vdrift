@@ -1586,9 +1586,12 @@ bool GAME::NewGame(bool playreplay, bool addopponents, int num_laps)
 			}
 			else
 			{
-				const std::string cardir = pathmanager.GetCarsDir() + "/" + info.name;
+				const size_t n0 = info.name.find("/");
+				const size_t n1 = info.name.length();
+				const std::string carname = info.name.substr(n0 + 1, n1 - n0 - 1);
+				const std::string cardir = pathmanager.GetCarsDir() + "/" + info.name.substr(0, n0);
 				std::tr1::shared_ptr<PTree> carcfg;
-				content.load(carcfg, cardir, info.name + ".car");
+				content.load(carcfg, cardir, carname + ".car");
 
 				std::stringstream carstream;
 				write_ini(*carcfg, carstream);
@@ -1627,9 +1630,10 @@ bool GAME::LoadCar(
 	const MATHVECTOR <float, 3> & position,
 	const QUATERNION <float> & orientation)
 {
-	size_t n = info.name.find("/");
-	const std::string carname = info.name.substr(n + 1, info.name.length() - n - 1 - 4);
-	const std::string cardir = pathmanager.GetCarsDir() + "/" + info.name.substr(0, n);
+	const size_t n0 = info.name.find("/");
+	const size_t n1 = info.name.length();
+	const std::string carname = info.name.substr(n0 + 1, n1 - n0 - 1);
+	const std::string cardir = pathmanager.GetCarsDir() + "/" + info.name.substr(0, n0);
 
 	std::tr1::shared_ptr<PTree> carconf;
 	if (info.config.empty())
@@ -1971,9 +1975,9 @@ static void PopulateCarSet(
 			pathmanager.GetFileList(path + "/" + *i, files, ext);
 			for (std::list<std::string>::iterator j = files.begin(); j != files.end(); ++j)
 			{
-				const std::string name = j->substr(0, j->length() - ext.length());
-				const std::string filename = *i + "/" + *j;
-				set.insert(std::make_pair(filename, name));
+				const std::string opt = j->substr(0, j->length() - ext.length());
+				const std::string val = *i + "/" + opt;
+				set.insert(std::make_pair(val, opt));
 			}
 		}
 	}
@@ -1981,10 +1985,10 @@ static void PopulateCarSet(
 	{
 		for (std::list<std::string>::iterator i = folders.begin(); i != folders.end(); ++i)
 		{
-			const std::string filename = *i + "/" + *i + ext;
-			std::ifstream file((path + "/" + filename).c_str());
+			const std::string val = *i + "/" + *i;
+			std::ifstream file((path + "/" + val + ext).c_str());
 			if (file)
-				set.insert(std::make_pair(filename, *i));
+				set.insert(std::make_pair(val, *i));
 		}
 	}
 }
@@ -2053,7 +2057,8 @@ void GAME::PopulateCarPaintList(const std::string & carname, GUIOPTION::LIST & p
 	paintlist.push_back(std::make_pair("default", "default"));
 
 	std::list<std::string> filelist;
-	std::string paintdir = pathmanager.GetCarPaintPath(carname);
+	const std::string cardir = carname.substr(0, carname.find("/"));
+	const std::string paintdir = pathmanager.GetCarPaintPath(cardir);
 	if (pathmanager.GetFileList(paintdir, filelist, ".png"))
 	{
 		for (std::list<std::string>::iterator i = filelist.begin(); i != filelist.end(); ++i)
@@ -2112,7 +2117,10 @@ void GAME::PopulateStartList(GUIOPTION::LIST & startlist)
 	startlist.clear();
 	for (size_t i = 0; i < car_info.size(); ++i)
 	{
-		startlist.push_back(std::make_pair(cast(i), car_info[i].name + " / " + car_info[i].driver));
+		const size_t n0 = car_info[i].name.find("/") + 1;
+		const size_t n1 = car_info[i].name.length();
+		const std::string carname = car_info[i].name.substr(n0, n1 - n0);
+		startlist.push_back(std::make_pair(cast(i), carname + " / " + car_info[i].driver));
 	}
 }
 
