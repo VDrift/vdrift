@@ -195,7 +195,7 @@ void GAME::Start(std::list <std::string> & args)
 	else
 	{
 		// send GUI value lists to the carupdater so it knows about the cars on disk
-		PopulateCarList(carupdater.GetValueList());
+		PopulateCarList(carupdater.GetValueList(), false);
 	}
 
 	// Init track update manager
@@ -1627,11 +1627,14 @@ bool GAME::LoadCar(
 	const MATHVECTOR <float, 3> & position,
 	const QUATERNION <float> & orientation)
 {
-	std::string cardir = pathmanager.GetCarsDir() + "/" + info.name;
+	size_t n = info.name.find("/");
+	const std::string carname = info.name.substr(n + 1, info.name.length() - n - 1 - 4);
+	const std::string cardir = pathmanager.GetCarsDir() + "/" + info.name.substr(0, n);
+
 	std::tr1::shared_ptr<PTree> carconf;
 	if (info.config.empty())
 	{
-		content.load(carconf, cardir, info.name + ".car");
+		content.load(carconf, cardir, carname + ".car");
 		if (!carconf->size())
 		{
 			error_output << "Failed to load " << info.name << std::endl;
@@ -1651,7 +1654,7 @@ bool GAME::LoadCar(
 	cars.push_back(CAR());
 	CAR & car = cars.back();
 	if (!car.LoadGraphics(
-		*carconf, cardir, info.name, info.wheel, info.paint, color,
+		*carconf, cardir, carname, info.wheel, info.paint, color,
 		settings.GetAnisotropy(), settings.GetCameraBounce(),
 		content, error_output))
 	{
@@ -1660,7 +1663,7 @@ bool GAME::LoadCar(
 		return false;
 	}
 
-	if (sound.Enabled() && !car.LoadSounds(cardir, info.name, sound, content, error_output))
+	if (sound.Enabled() && !car.LoadSounds(cardir, carname, sound, content, error_output))
 	{
 		error_output << "Failed to load sounds for car " << info.name << std::endl;
 		return false;
@@ -1951,31 +1954,55 @@ void GAME::CalculateFPS()
 	}
 }
 
-static void PopulateCarSet(std::set<std::pair<std::string, std::string> > & set, const std::string & path, const PATHMANAGER & pathmanager)
+static void PopulateCarSet(
+	std::set<std::pair<std::string, std::string> > & set,
+	const std::string & path,
+	const PATHMANAGER & pathmanager,
+	const bool multicar)
 {
-	std::list<std::string> folderlist;
-	pathmanager.GetFileList(path, folderlist);
-	for (std::list<std::string>::iterator i = folderlist.begin(); i != folderlist.end(); ++i)
+	const std::string ext(".car");
+	std::list<std::string> folders;
+	pathmanager.GetFileList(path, folders);
+	if (multicar)
 	{
-		std::ifstream check((path + "/" + *i + "/" + *i + ".car").c_str());
-		if (check)
+		for (std::list<std::string>::iterator i = folders.begin(); i != folders.end(); ++i)
 		{
-			set.insert(std::make_pair(*i, *i));
+			std::list<std::string> files;
+			pathmanager.GetFileList(path + "/" + *i, files, ext);
+			for (std::list<std::string>::iterator j = files.begin(); j != files.end(); ++j)
+			{
+				const std::string name = j->substr(0, j->length() - ext.length());
+				const std::string filename = *i + "/" + *j;
+				set.insert(std::make_pair(filename, name));
+			}
+		}
+	}
+	else
+	{
+		for (std::list<std::string>::iterator i = folders.begin(); i != folders.end(); ++i)
+		{
+			const std::string filename = *i + "/" + *i + ext;
+			std::ifstream file((path + "/" + filename).c_str());
+			if (file)
+				set.insert(std::make_pair(filename, *i));
 		}
 	}
 }
 
-static void PopulateTrackSet(std::set<std::pair<std::string, std::string> > & set, const std::string & path, const PATHMANAGER & pathmanager)
+static void PopulateTrackSet(
+	std::set<std::pair<std::string, std::string> > & set,
+	const std::string & path,
+	const PATHMANAGER & pathmanager)
 {
 	std::list<std::string> folderlist;
 	pathmanager.GetFileList(path, folderlist);
 	for (std::list <std::string>::iterator i = folderlist.begin(); i != folderlist.end(); ++i)
 	{
-		std::ifstream check((path+"/"+*i+"/about.txt").c_str());
-		if (check)
+		std::ifstream file((path + "/" + *i + "/about.txt").c_str());
+		if (file)
 		{
 			std::string name;
-			getline(check, name);
+			getline(file, name);
 			set.insert(std::make_pair(*i, name));
 		}
 	}
@@ -2006,12 +2033,12 @@ void GAME::PopulateTrackList(GUIOPTION::LIST & tracklist)
 	std::sort(tracklist.begin(), tracklist.end(), SortPairBySecond<std::string, std::string>());
 }
 
-void GAME::PopulateCarList(GUIOPTION::LIST & carlist)
+void GAME::PopulateCarList(GUIOPTION::LIST & carlist, bool multicar)
 {
 	// Use set to avoid duplicate entries.
 	std::set <std::pair<std::string, std::string> > carset;
-	PopulateCarSet(carset, pathmanager.GetReadOnlyCarsPath(), pathmanager);
-	PopulateCarSet(carset, pathmanager.GetWriteableCarsPath(), pathmanager);
+	PopulateCarSet(carset, pathmanager.GetReadOnlyCarsPath(), pathmanager, multicar);
+	PopulateCarSet(carset, pathmanager.GetWriteableCarsPath(), pathmanager, multicar);
 
 	carlist.clear();
 	for (std::set<std::pair<std::string, std::string> >::const_iterator i = carset.begin(); i != carset.end(); i++)
