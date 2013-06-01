@@ -650,24 +650,26 @@ bool TEXTURE::LoadDDS(const std::string & path, const TEXTUREINFO & info, std::o
 	SetSampler(info, levels > 1);
 
 	const char * idata = texdata;
+	unsigned blocklen = 16 * texlen / (width * height);
 	unsigned ilen = texlen;
 	unsigned iw = width;
 	unsigned ih = height;
-	for (unsigned i = 0; i < levels; ++i)
+	for (unsigned i = 0; i < levels && iw * ih > 0; ++i)
 	{
 		if (format == GL_BGR || format == GL_BGRA)
 		{
 			// fixme: support compression here?
+			ilen = iw * ih * blocklen / 16;
 			glTexImage2D(GL_TEXTURE_2D, i, format, iw, ih, 0, format, GL_UNSIGNED_BYTE, idata);
 		}
 		else
 		{
+			ilen = std::max(1u, iw / 4) * std::max(1u, ih / 4) * blocklen;
 			glCompressedTexImage2D(GL_TEXTURE_2D, i, format, iw, ih, 0, ilen, idata);
 		}
 		GLUTIL::CheckForOpenGLErrors("Texture creation", error);
 
 		idata += ilen;
-		ilen /= 4;
 		iw /= 2;
 		ih /= 2;
 	}
@@ -675,6 +677,10 @@ bool TEXTURE::LoadDDS(const std::string & path, const TEXTUREINFO & info, std::o
 	// force mipmaps for GL3
 	if (levels == 1)
 		GenerateMipmap(GL_TEXTURE_2D);
+
+	// check for anisotropy
+	if (info.anisotropy > 1)
+		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, (float)info.anisotropy);
 
 	return true;
 }
