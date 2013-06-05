@@ -1177,6 +1177,48 @@ void GRAPHICS_GL2::GetScenePassInputTextures(
 	}
 }
 
+void GRAPHICS_GL2::BindInputTextures(
+	const std::vector <TEXTURE_INTERFACE*> & textures,
+	std::ostream & error_output)
+{
+	for (unsigned int i = 0; i < textures.size(); i++)
+	{
+		if (textures[i])
+		{
+			glActiveTexture(GL_TEXTURE0+i);
+			textures[i]->Activate();
+
+			if (GLUTIL::CheckForOpenGLErrors("RenderDrawlists extra texture bind", error_output))
+			{
+				error_output << "this error occurred while binding texture " << i << ": id=" << textures[i]->GetID() << " loaded=" << textures[i]->Loaded() << std::endl;
+			}
+		}
+	}
+
+	glActiveTexture(GL_TEXTURE0);
+}
+
+void GRAPHICS_GL2::UnbindInputTextures(
+	const std::vector <TEXTURE_INTERFACE*> & textures,
+	std::ostream & error_output)
+{
+	for (unsigned int i = 0; i < textures.size(); i++)
+	{
+		if (textures[i])
+		{
+			glActiveTexture(GL_TEXTURE0+i);
+			textures[i]->Deactivate();
+
+			if (GLUTIL::CheckForOpenGLErrors("RenderDrawlists extra texture unbind", error_output))
+			{
+				error_output << "this error occurred while binding texture " << i << ": id=" << textures[i]->GetID() << " loaded=" << textures[i]->Loaded() << std::endl;
+			}
+		}
+	}
+
+	glActiveTexture(GL_TEXTURE0);
+}
+
 void GRAPHICS_GL2::DrawScenePassLayer(
 	const std::string & layer,
 	const GRAPHICS_CONFIG_PASS & pass,
@@ -1244,7 +1286,8 @@ void GRAPHICS_GL2::DrawScenePassLayer(
 		renderscene.SetCarPaintHack(carhack);
 
 		// render
-		RenderDrawlists(*container_dynamic,
+		RenderDrawlists(
+			*container_dynamic,
 			container_static->second,
 			input_textures,
 			renderscene,
@@ -1278,26 +1321,13 @@ void GRAPHICS_GL2::RenderDrawlists(
 	RENDER_OUTPUT & render_output,
 	std::ostream & error_output)
 {
-	if (dynamic_drawlist.empty() && static_drawlist.empty() && !render_scene.GetClear().first && !render_scene.GetClear().second)
+	if (dynamic_drawlist.empty() && static_drawlist.empty() &&
+		!render_scene.GetClear().first && !render_scene.GetClear().second)
 		return;
 
 	GLUTIL::CheckForOpenGLErrors("RenderDrawlists start", error_output);
 
-	for (unsigned int i = 0; i < extra_textures.size(); i++)
-	{
-		if (extra_textures[i])
-		{
-			glActiveTexture(GL_TEXTURE0+i);
-			extra_textures[i]->Activate();
-
-			if (GLUTIL::CheckForOpenGLErrors("RenderDrawlists extra texture bind", error_output))
-			{
-				error_output << "this error occurred while binding texture " << i << ": id=" << extra_textures[i]->GetID() << " loaded=" << extra_textures[i]->Loaded() << std::endl;
-			}
-		}
-	}
-
-	glActiveTexture(GL_TEXTURE0);
+	BindInputTextures(extra_textures, error_output);
 
 	render_scene.SetDrawLists(dynamic_drawlist, static_drawlist);
 
@@ -1305,21 +1335,7 @@ void GRAPHICS_GL2::RenderDrawlists(
 
 	Render(&render_scene, render_output, error_output);
 
-	for (unsigned int i = 0; i < extra_textures.size(); i++)
-	{
-		if (extra_textures[i])
-		{
-			glActiveTexture(GL_TEXTURE0+i);
-			extra_textures[i]->Deactivate();
-
-			if (GLUTIL::CheckForOpenGLErrors("RenderDrawlists extra texture unbind", error_output))
-			{
-				error_output << "this error occurred while binding texture " << i << ": id=" << extra_textures[i]->GetID() << " loaded=" << extra_textures[i]->Loaded() << std::endl;
-			}
-		}
-	}
-
-	glActiveTexture(GL_TEXTURE0);
+	UnbindInputTextures(extra_textures, error_output);
 }
 
 void GRAPHICS_GL2::RenderPostProcess(

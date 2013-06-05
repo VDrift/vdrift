@@ -193,6 +193,14 @@ private:
 		const GRAPHICS_CONFIG_INPUTS & inputs,
 		std::vector <TEXTURE_INTERFACE*> & input_textures);
 
+	void BindInputTextures(
+		const std::vector <TEXTURE_INTERFACE*> & textures,
+		std::ostream & error_output);
+
+	void UnbindInputTextures(
+		const std::vector <TEXTURE_INTERFACE*> & textures,
+		std::ostream & error_output);
+
 	void DrawScenePassLayer(
 		const std::string & layer,
 		const GRAPHICS_CONFIG_PASS & pass,
