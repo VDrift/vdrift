@@ -32,6 +32,7 @@
 struct GRAPHICS_CAMERA;
 class SHADER_GLSL;
 class SCENENODE;
+class SKY;
 
 class GRAPHICS_GL2 : public GRAPHICS
 {
@@ -94,6 +95,19 @@ public:
 
 	virtual void SetContrast(float value);
 
+	// Allow external code to use gl state manager.
+	GLSTATEMANAGER & GetState();
+
+	// Get pointer to shader called name.
+	// Returns null on failure.
+	SHADER_GLSL * GetShader(const std::string & name);
+
+	// Add an render input texture (texture used by render passes).
+	// Warning: Existing texture (texture with the same name) will be overriden.
+	// Warning: The texture is expected to stay valid until graphics is destroyed.
+	// todo: RemoveInputTexture ?
+	void AddInputTexture(const std::string & name, TEXTURE_INTERFACE * texture);
+
 private:
 	// avoids sending excessive state changes to OpenGL
 	GLSTATEMANAGER glstate;
@@ -124,7 +138,6 @@ private:
 	// shaders
 	typedef std::map <std::string, SHADER_GLSL> shader_map_type;
 	shader_map_type shadermap;
-	shader_map_type::iterator activeshader;
 
 	// scenegraph output
 	DRAWABLE_CONTAINER <PTRVECTOR> dynamic_drawlist; //used for objects that move or change
@@ -148,6 +161,8 @@ private:
 	camera_map_type cameras;
 
 	QUATERNION <float> lightdirection;
+
+	std::auto_ptr<SKY> sky;
 
 	void ChangeDisplay(
 		const int width, const int height,

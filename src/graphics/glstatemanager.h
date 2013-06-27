@@ -20,7 +20,7 @@
 #ifndef _GLSTATEMANAGER_H
 #define _GLSTATEMANAGER_H
 
-#include "texture_interface.h"
+#include "texture.h"
 #include "glew.h"
 #include <vector>
 #include <cassert>
@@ -122,7 +122,7 @@ public:
 		}
 	}
 
-	void BindTexture2D(unsigned tu, const TEXTURE_INTERFACE * texture)
+	void BindTexture2D(unsigned tu, const TEXTURE * texture)
 	{
 		if (tu >= tex2d.size())
 			tex2d.resize(tu + 1, 0);

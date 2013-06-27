@@ -86,9 +86,6 @@ class FBTEXTURE : public TEXTURE_INTERFACE
 		virtual unsigned int GetH() const {return sizeh;}
 		bool IsCubemap() const {return (texture_target == CUBEMAP);}
 
-	protected:
-		virtual GLuint GetID() const {return fbtexture;}
-
 	private:
 		GLuint fbtexture;
 		GLuint renderbuffer_multisample;

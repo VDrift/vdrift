@@ -119,7 +119,7 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 			}
 		}
 	}
-	if (num_nonnull <= 0)
+	if (source_textures.size() && !num_nonnull)
 	{
 		error_output << "Out of the " << source_textures.size() << " input textures provided as inputs to this postprocess stage, zero are available. This stage will have no effect." << std::endl;
 		return;
@@ -135,12 +135,21 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 	frustum_corners[1].Set(lod_far,-lod_far,-lod_far);	//BR
 	frustum_corners[2].Set(lod_far,lod_far,-lod_far);	//TR
 	frustum_corners[3].Set(-lod_far,lod_far,-lod_far);	//TL
-	MATRIX4 <float> invproj;
-	invproj.InvPerspective(camfov, ratio, 0.1, lod_far);
+	MATRIX4 <float> inv_proj;
+	inv_proj.InvPerspective(camfov, ratio, 0.1, lod_far);
 	for (int i = 0; i < 4; i++)
 	{
-		invproj.TransformVectorOut(frustum_corners[i][0], frustum_corners[i][1], frustum_corners[i][2]);
+		inv_proj.TransformVectorOut(frustum_corners[i][0], frustum_corners[i][1], frustum_corners[i][2]);
 		frustum_corners[i][2] = -lod_far;
+	}
+	// frustum corners in world space for dynamic sky shader
+	std::vector <MATHVECTOR <float, 3> > frustum_corners_w(4);
+	MATRIX4<float> inv_view_rot;
+	(-cam_rotation).GetMatrix4(inv_view_rot);
+	for (int i = 0; i < 4; i++)
+	{
+		frustum_corners_w[i] = frustum_corners[i];
+		inv_view_rot.TransformVectorOut(frustum_corners_w[i][0], frustum_corners_w[i][1], frustum_corners_w[i][2]);
 	}
 
 	// send shader parameters
@@ -181,6 +190,13 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 		frustum_corners[2][0], frustum_corners[2][1], frustum_corners[2][2],
 		frustum_corners[3][0], frustum_corners[3][1], frustum_corners[3][2],
 	};
+	// fructum corners in world space in uv set 2
+	float tc2[4 * 3] = {
+		frustum_corners_w[0][0], frustum_corners_w[0][1], frustum_corners_w[0][2],
+		frustum_corners_w[1][0], frustum_corners_w[1][1], frustum_corners_w[1][2],
+		frustum_corners_w[2][0], frustum_corners_w[2][1], frustum_corners_w[2][2],
+		frustum_corners_w[3][0], frustum_corners_w[3][1], frustum_corners_w[3][2],
+	};
 
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glVertexPointer(3, GL_FLOAT, 0, pos);
@@ -193,8 +209,15 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 	glTexCoordPointer(3, GL_FLOAT, 0, tc1);
 
+	glClientActiveTexture(GL_TEXTURE2);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	glTexCoordPointer(3, GL_FLOAT, 0, tc2);
+
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, faces);
 
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+
+	glClientActiveTexture(GL_TEXTURE1);
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 
 	glClientActiveTexture(GL_TEXTURE0);

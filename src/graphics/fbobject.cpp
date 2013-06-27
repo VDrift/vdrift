@@ -458,7 +458,6 @@ void FBOBJECT::End(GLSTATEMANAGER & glstate, std::ostream & error_output)
 		GLUTIL::CheckForOpenGLErrors("FBO end multisample blit", error_output);
 	}
 
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glstate.BindFramebuffer(0);
 
 	GLUTIL::CheckForOpenGLErrors("FBO multisample blit", error_output);

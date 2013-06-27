@@ -21,6 +21,7 @@
 #include "graphics_camera.h"
 #include "glutil.h"
 #include "shader.h"
+#include "sky.h"
 
 /// break up the input into a vector of strings using the token characters given
 std::vector <std::string> Tokenize(const std::string & input, const std::string & tokens)
@@ -210,7 +211,7 @@ GRAPHICS_GL2::GRAPHICS_GL2() :
 	reflection_status(REFLECTION_DISABLED),
 	renderconfigfile("render.conf")
 {
-	activeshader = shadermap.end();
+	// ctor
 }
 
 GRAPHICS_GL2::~GRAPHICS_GL2()
@@ -529,22 +530,25 @@ void GRAPHICS_GL2::DrawScene(std::ostream & error_output)
 	renderscene.SetContrast(contrast);
 	postprocess.SetContrast(contrast);
 
-	// sort the two dimentional drawlist so we get correct ordering
-	std::sort(dynamic_drawlist.twodim.begin(),dynamic_drawlist.twodim.end(),&SortDraworder);
-
-	std::map <std::string, PTRVECTOR <DRAWABLE> > culled_static_drawlist;
-
-	// do fast culling queries for static geometry per pass
-	for (std::vector <GRAPHICS_CONFIG_PASS>::const_iterator i = config.passes.begin(); i != config.passes.end(); i++)
-	{
-		CullScenePass(*i, culled_static_drawlist, error_output);
-	}
-
 	// construct light position
 	MATHVECTOR <float, 3> lightposition(0,0,1);
 	(-lightdirection).RotateVector(lightposition);
 	renderscene.SetSunDirection(lightposition);
 	postprocess.SetSunDirection(lightposition);
+
+	// dynamic sky update
+	if (sky.get())
+		sky->Update();
+
+	// sort the two dimentional drawlist so we get correct ordering
+	std::sort(dynamic_drawlist.twodim.begin(),dynamic_drawlist.twodim.end(),&SortDraworder);
+
+	// do fast culling queries for static geometry per pass
+	std::map <std::string, PTRVECTOR <DRAWABLE> > culled_static_drawlist;
+	for (std::vector <GRAPHICS_CONFIG_PASS>::const_iterator i = config.passes.begin(); i != config.passes.end(); i++)
+	{
+		CullScenePass(*i, culled_static_drawlist, error_output);
+	}
 
 	// draw the passes
 	for (std::vector <GRAPHICS_CONFIG_PASS>::const_iterator i = config.passes.begin(); i != config.passes.end(); i++)
@@ -601,6 +605,25 @@ void GRAPHICS_GL2::SetSunDirection(const QUATERNION< float > & value)
 void GRAPHICS_GL2::SetContrast(float value)
 {
 	contrast = value;
+}
+
+GLSTATEMANAGER & GRAPHICS_GL2::GetState()
+{
+	return glstate;
+}
+
+SHADER_GLSL * GRAPHICS_GL2::GetShader(const std::string & name)
+{
+	shader_map_type::iterator it = shadermap.find(name);
+	if (it != shadermap.end())
+		return &it->second;
+	else
+		return 0;
+}
+
+void GRAPHICS_GL2::AddInputTexture(const std::string & name, TEXTURE_INTERFACE * texture)
+{
+	texture_inputs[name] = texture;
 }
 
 void GRAPHICS_GL2::ChangeDisplay(
@@ -735,7 +758,6 @@ void GRAPHICS_GL2::EnableShaders(
 		i->second.Unload();
 	}
 	shadermap.clear();
-	activeshader = shadermap.end();
 
 	GLUTIL::CheckForOpenGLErrors("EnableShaders: shader unload", error_output);
 
@@ -790,6 +812,7 @@ void GRAPHICS_GL2::EnableShaders(
 	bool shadow_quality_high = shadows && (shadow_quality == 2);
 	bool shadow_quality_vhigh = shadows && (shadow_quality == 3);
 	bool shadow_quality_ultra = shadows && (shadow_quality == 4);
+	bool sky_dynamic = true;
 
 	// for now, map vhigh and ultra to high
 	shadow_quality_high = shadow_quality_high || shadow_quality_vhigh || shadow_quality_ultra;
@@ -814,6 +837,7 @@ void GRAPHICS_GL2::EnableShaders(
 	ADDCONDITION(shadow_quality_high);
 	ADDCONDITION(shadow_quality_vhigh);
 // 		ADDCONDITION(shadow_quality_ultra);
+	ADDCONDITION(sky_dynamic);
 	#undef ADDCONDITION
 
 	// add some common textures
@@ -904,6 +928,10 @@ void GRAPHICS_GL2::EnableShaders(
 			}
 		}
 	}
+
+	sky.reset(new SKY(*this, error_output));
+	texture_inputs["sky"] = sky.get();
+	sky->UpdateComplete();
 }
 
 void GRAPHICS_GL2::DisableShaders(const std::string & shaderpath, std::ostream & error_output)
@@ -923,12 +951,13 @@ void GRAPHICS_GL2::DisableShaders(const std::string & shaderpath, std::ostream &
 	if (!config.Load(rcpath, error_output))
 	{
 		error_output << "Error loading non-shader render configuration file: " << rcpath << std::endl;
-
-		// uh oh, now we're really boned
-		assert(0);
+		assert(0); // uh oh, now we're really boned
 	}
 
 	render_outputs["framebuffer"].RenderToFramebuffer();
+
+	texture_inputs.erase("sky");
+	sky.reset(0);
 }
 
 void GRAPHICS_GL2::CullScenePass(
@@ -1190,7 +1219,7 @@ void GRAPHICS_GL2::BindInputTextures(
 
 			if (GLUTIL::CheckForOpenGLErrors("RenderDrawlists extra texture bind", error_output))
 			{
-				error_output << "this error occurred while binding texture " << i << ": id=" << textures[i]->GetID() << " loaded=" << textures[i]->Loaded() << std::endl;
+				error_output << "this error occurred while binding texture " << i << " loaded=" << textures[i]->Loaded() << std::endl;
 			}
 		}
 	}
@@ -1211,7 +1240,7 @@ void GRAPHICS_GL2::UnbindInputTextures(
 
 			if (GLUTIL::CheckForOpenGLErrors("RenderDrawlists extra texture unbind", error_output))
 			{
-				error_output << "this error occurred while binding texture " << i << ": id=" << textures[i]->GetID() << " loaded=" << textures[i]->Loaded() << std::endl;
+				error_output << "this error occurred while binding texture " << i << " loaded=" << textures[i]->Loaded() << std::endl;
 			}
 		}
 	}

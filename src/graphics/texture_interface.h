@@ -30,7 +30,6 @@ public:
 	virtual bool IsRect() const {return false;}
 	virtual unsigned GetW() const = 0;
 	virtual unsigned GetH() const = 0;
-	virtual unsigned GetID() const = 0;
 };
 
 #endif // _TEXTURE_INTERFACE_H

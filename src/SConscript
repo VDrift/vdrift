@@ -78,6 +78,7 @@ src = Split("""
 		graphics/render_output.cpp
 		graphics/scenenode.cpp
 		graphics/shader.cpp
+		graphics/sky.cpp
 		graphics/texture.cpp
 		graphics/vertexarray.cpp
 		gui/font.cpp
