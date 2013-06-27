@@ -55,7 +55,8 @@ public:
 				const std::string & static_reflectionmap_file,
 				const std::string & static_ambientmap_file,
 				int anisotropy, int texturesize,
-				int lighting_quality, bool newbloom, bool newnormalmaps,
+				int lighting_quality, bool newbloom,
+				bool newnormalmaps, bool dynamicsky,
 				const std::string & renderconfig,
 				std::ostream & info_output, std::ostream & error_output);
 	virtual void Deinit();

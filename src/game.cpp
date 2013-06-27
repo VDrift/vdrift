@@ -388,13 +388,12 @@ void GAME::InitCoreSubsystems()
 			settings.GetResolutionX(), settings.GetResolutionY(),
 			settings.GetBpp(), settings.GetDepthbpp(), settings.GetFullscreen(),
 			settings.GetShaders(), settings.GetAntialiasing(), settings.GetShadows(),
-			settings.GetShadowDistance(), settings.GetShadowQuality(),
-			settings.GetReflections(), pathmanager.GetStaticReflectionMap(),
-			pathmanager.GetStaticAmbientMap(),
+			settings.GetShadowDistance(), settings.GetShadowQuality(), settings.GetReflections(),
+			pathmanager.GetStaticReflectionMap(), pathmanager.GetStaticAmbientMap(),
 			settings.GetAnisotropic(), texture_size,
-			settings.GetLighting(), settings.GetBloom(), settings.GetNormalMaps(),
-			renderconfigfile,
-			info_output, error_output);
+			settings.GetLighting(), settings.GetBloom(),
+			settings.GetNormalMaps(), settings.GetDynamicSky(),
+			renderconfigfile, info_output, error_output);
 
 		if (success)
 		{

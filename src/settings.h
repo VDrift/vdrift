@@ -274,6 +274,11 @@ public:
 		return lighting;
 	}
 
+	bool GetDynamicSky() const
+	{
+		return dynamic_sky;
+	}
+
 	bool GetBloom() const
 	{
 		return bloom;
@@ -444,6 +449,7 @@ private:
 	float ai_level;
 	bool vehicle_damage;
 	int particles;
+	bool dynamic_sky;
 };
 
 #endif

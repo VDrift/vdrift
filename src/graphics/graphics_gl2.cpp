@@ -209,7 +209,8 @@ GRAPHICS_GL2::GRAPHICS_GL2() :
 	normalmaps(false),
 	contrast(1.0),
 	reflection_status(REFLECTION_DISABLED),
-	renderconfigfile("render.conf")
+	renderconfigfile("render.conf"),
+	sky_dynamic(false)
 {
 	// ctor
 }
@@ -230,7 +231,8 @@ bool GRAPHICS_GL2::Init(
 	const std::string & static_reflectionmap_file,
 	const std::string & static_ambientmap_file,
 	int anisotropy, int texturesize,
-	int lighting_quality, bool newbloom, bool newnormalmaps,
+	int lighting_quality, bool newbloom,
+	bool newnormalmaps, bool dynamicsky,
 	const std::string & renderconfig,
 	std::ostream & info_output, std::ostream & error_output)
 {
@@ -241,6 +243,7 @@ bool GRAPHICS_GL2::Init(
 	bloom = newbloom;
 	normalmaps = newnormalmaps;
 	renderconfigfile = renderconfig;
+	sky_dynamic = dynamicsky;
 
 	if (reflection_type == 1)
 		reflection_status = REFLECTION_STATIC;
@@ -812,7 +815,6 @@ void GRAPHICS_GL2::EnableShaders(
 	bool shadow_quality_high = shadows && (shadow_quality == 2);
 	bool shadow_quality_vhigh = shadows && (shadow_quality == 3);
 	bool shadow_quality_ultra = shadows && (shadow_quality == 4);
-	bool sky_dynamic = true;
 
 	// for now, map vhigh and ultra to high
 	shadow_quality_high = shadow_quality_high || shadow_quality_vhigh || shadow_quality_ultra;
@@ -929,9 +931,12 @@ void GRAPHICS_GL2::EnableShaders(
 		}
 	}
 
-	sky.reset(new SKY(*this, error_output));
-	texture_inputs["sky"] = sky.get();
-	sky->UpdateComplete();
+	if (sky_dynamic)
+	{
+		sky.reset(new SKY(*this, error_output));
+		texture_inputs["sky"] = sky.get();
+		sky->UpdateComplete();
+	}
 }
 
 void GRAPHICS_GL2::DisableShaders(const std::string & shaderpath, std::ostream & error_output)
@@ -956,8 +961,11 @@ void GRAPHICS_GL2::DisableShaders(const std::string & shaderpath, std::ostream &
 
 	render_outputs["framebuffer"].RenderToFramebuffer();
 
-	texture_inputs.erase("sky");
-	sky.reset(0);
+	if (sky_dynamic)
+	{
+		texture_inputs.erase("sky");
+		sky.reset(0);
+	}
 }
 
 void GRAPHICS_GL2::CullScenePass(

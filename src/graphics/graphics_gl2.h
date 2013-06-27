@@ -53,7 +53,8 @@ public:
 		const std::string & static_reflectionmap_file,
 		const std::string & static_ambientmap_file,
 		int anisotropy, int texturesize,
-		int lighting_quality, bool newbloom, bool newnormalmaps,
+		int lighting_quality, bool newbloom,
+		bool newnormalmaps, bool dynamicsky,
 		const std::string & renderconfig,
 		std::ostream & info_output, std::ostream & error_output);
 
@@ -163,6 +164,7 @@ private:
 	QUATERNION <float> lightdirection;
 
 	std::auto_ptr<SKY> sky;
+	bool sky_dynamic;
 
 	void ChangeDisplay(
 		const int width, const int height,

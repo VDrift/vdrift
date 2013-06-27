@@ -103,7 +103,8 @@ SETTINGS::SETTINGS() :
 	hgateshifter(false),
 	ai_level(1.0),
 	vehicle_damage(false),
-	particles(512)
+	particles(512),
+	dynamic_sky(false)
 {
 	resolution[0] = 800;
 	resolution[1] = 600;
@@ -166,6 +167,7 @@ void SETTINGS::Serialize(bool write, Config & config)
 	Param(config, write, section, "camerabounce", camera_bounce);
 	Param(config, write, section, "contrast", contrast);
 	Param(config, write, section, "particles", particles);
+	Param(config, write, section, "dynamic_sky", dynamic_sky);
 
 	config.get("sound", section);
 	Param(config, write, section, "sources", sound_sources);

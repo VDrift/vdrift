@@ -42,12 +42,12 @@ public:
 				unsigned int resx, unsigned int resy, unsigned int bpp,
 				unsigned int depthbpp, bool fullscreen, bool shaders,
 				unsigned int antialiasing, bool enableshadows,
-				int shadow_distance, int shadow_quality,
-				int reflection_type,
+				int shadow_distance, int shadow_quality, int reflection_type,
 				const std::string & static_reflectionmap_file,
 				const std::string & static_ambientmap_file,
 				int anisotropy, int texturesize,
-				int lighting_quality, bool newbloom, bool newnormalmaps,
+				int lighting_quality, bool newbloom,
+				bool newnormalmaps, bool dynamicsky,
 				const std::string & renderconfig,
 				std::ostream & info_output, std::ostream & error_output) = 0;
 	virtual void Deinit() = 0;

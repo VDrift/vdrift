@@ -47,7 +47,8 @@ bool GRAPHICS_GL3V::Init(const std::string & shaderpath,
 				const std::string & static_reflectionmap_file,
 				const std::string & static_ambientmap_file,
 				int anisotropy, int texturesize,
-				int lighting_quality, bool bloom, bool normalmaps,
+				int lighting_quality, bool bloom,
+				bool normalmaps, bool /*dynamicsky*/,
 				const std::string & renderconfig,
 				std::ostream & info_output, std::ostream & error_output)
 {
