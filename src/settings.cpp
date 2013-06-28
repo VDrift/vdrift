@@ -44,7 +44,7 @@ SETTINGS::SETTINGS() :
 	bpp(32),
 	depthbpp(24),
 	fullscreen(false),
-	shaders(true),
+	renderer("gl3"),
 	skin("simple"),
 	language("en"),
 	show_fps(false),
@@ -142,7 +142,7 @@ void SETTINGS::Serialize(bool write, Config & config)
 	Param(config, write, section, "depth", bpp);
 	Param(config, write, section, "zdepth", depthbpp);
 	Param(config, write, section, "fullscreen", fullscreen);
-	Param(config, write, section, "shaders", shaders);
+	Param(config, write, section, "renderer", renderer);
 	Param(config, write, section, "skin", skin);
 	Param(config, write, section, "language", language);
 	Param(config, write, section, "show_fps", show_fps);

@@ -88,8 +88,6 @@ GAME::GAME(std::ostream & info_out, std::ostream & error_out) :
 	target_time(0),
 	timestep(1/90.0),
 	graphics_interface(NULL),
-	enableGL3(true),
-	usingGL3(false),
 	content(error_out),
 	carupdater(autoupdate, info_out, error_out),
 	trackupdater(autoupdate, info_out, error_out),
@@ -355,10 +353,16 @@ void GAME::InitCoreSubsystems()
 	BeginStartingUp();
 
 	// choose renderer
-	usingGL3 = enableGL3 && settings.GetShaders();
+	bool using_gl3 = false;
+	bool using_gl2 = false;
+	if (settings.GetRenderer() == "gl3")
+		using_gl3 = true;
+	else if (settings.GetRenderer() == "gl2")
+		using_gl2 = true;
+	bool enable_shaders = using_gl3 || using_gl2;
 
 	// disable antialiasing for the GL3 path because we're using image-based AA...
-	unsigned antialiasing = usingGL3 ? 0 : settings.GetAntialiasing();
+	unsigned antialiasing = using_gl3 ? 0 : settings.GetAntialiasing();
 
 	// make sure to use at least 24bit depth buffer for shadows
 	unsigned depth_bpp = settings.GetDepthbpp();
@@ -371,11 +375,11 @@ void GAME::InitCoreSubsystems()
 		settings.GetFullscreen(), antialiasing,
 		info_output, error_output);
 
-	const int rendererCount = 2;
-	for (int i = 0; i < rendererCount; i++)
+	const int renderer_count = 2;
+	for (int i = 0; i < renderer_count; i++)
 	{
 		// Attempt to enable the GL3 renderer...
-		if (usingGL3)
+		if (using_gl3)
 		{
 			graphics_interface = new GRAPHICS_GL3V(stringMap);
 		}
@@ -387,7 +391,7 @@ void GAME::InitCoreSubsystems()
 		bool success = graphics_interface->Init(pathmanager.GetShaderPath(),
 			settings.GetResolutionX(), settings.GetResolutionY(),
 			settings.GetBpp(), settings.GetDepthbpp(), settings.GetFullscreen(),
-			settings.GetShaders(), settings.GetAntialiasing(), settings.GetShadows(),
+			enable_shaders, settings.GetAntialiasing(), settings.GetShadows(),
 			settings.GetShadowDistance(), settings.GetShadowQuality(), settings.GetReflections(),
 			pathmanager.GetStaticReflectionMap(), pathmanager.GetStaticAmbientMap(),
 			settings.GetAnisotropic(), texture_size,
@@ -403,7 +407,7 @@ void GAME::InitCoreSubsystems()
 		{
 			delete graphics_interface;
 			graphics_interface = NULL;
-			usingGL3 = false;
+			using_gl3 = false;
 		}
 	}
 
@@ -413,8 +417,8 @@ void GAME::InitCoreSubsystems()
 	graphics_interface->SetSunDirection(ldir);
 
 	// Init content factories
-	content.getFactory<TEXTURE>().init(texture_size, usingGL3);
-	content.getFactory<MODEL>().init(usingGL3);
+	content.getFactory<TEXTURE>().init(texture_size, using_gl3);
+	content.getFactory<MODEL>().init(using_gl3);
 	content.getFactory<PTree>().init(read_ini, write_ini, content);
 
 	// Init content paths
@@ -586,17 +590,6 @@ bool GAME::ParseArguments(std::list <std::string> & args)
 		debugmode = true;
 	}
 	arghelp["-debug"] = "Display car debugging information.";
-
-	if (argmap.find("-gl2") != argmap.end())
-	{
-		enableGL3 = false;
-	}
-	else if (argmap.find("-gl3") != argmap.end())
-	{
-		enableGL3 = true;
-	}
-	arghelp["-gl2"] = "Prefer OpenGL2 rendering if supported.";
-	arghelp["-gl3"] = "Prefer OpenGL3 rendering if supported.";
 
 	if (!argmap["-cartest"].empty())
 	{

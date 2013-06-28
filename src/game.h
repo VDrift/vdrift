@@ -278,8 +278,6 @@ private:
 	SETTINGS settings;
 	WINDOW_SDL window;
 	GRAPHICS * graphics_interface;
-	bool enableGL3;
-	bool usingGL3;
 	StringIdMap stringMap;
 	EVENTSYSTEM_SDL eventsystem;
 	ContentManager content;

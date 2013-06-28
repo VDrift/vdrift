@@ -67,9 +67,9 @@ public:
 		return fullscreen;
 	}
 
-	bool GetShaders() const
+	const std::string & GetRenderer() const
 	{
-		return shaders;
+		return renderer;
 	}
 
 	const std::string & GetSkin() const
@@ -379,7 +379,7 @@ public:
 	{
 		*this = SETTINGS();
 		depthbpp = 16;
-		shaders = false;
+		renderer = "gl1";
 		texturesize = "medium";
 	}
 
@@ -389,7 +389,7 @@ private:
 	int bpp;
 	int depthbpp;
 	bool fullscreen;
-	bool shaders;
+	std::string renderer;
 	std::string skin;
 	std::string language;
 	bool show_fps;
