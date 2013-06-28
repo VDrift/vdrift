@@ -74,24 +74,24 @@ static void GetTextureFormat(
 	int & format,
 	bool & alpha)
 {
-	bool compression = (surface->w > 512 || surface->h > 512) && !info.normalmap;
-	bool srgb = info.srgb && !info.normalmap;
+	bool compress = info.compress && (surface->w > 512 || surface->h > 512);
+	bool srgb = info.srgb;
 
-	internalformat = compression ? (srgb ? GL_COMPRESSED_SRGB : GL_COMPRESSED_RGB) : (srgb ? GL_SRGB8 : GL_RGB);
+	internalformat = compress ? (srgb ? GL_COMPRESSED_SRGB : GL_COMPRESSED_RGB) : (srgb ? GL_SRGB8 : GL_RGB);
 	switch (surface->format->BytesPerPixel)
 	{
 		case 1:
-			internalformat = compression ? GL_COMPRESSED_LUMINANCE : GL_LUMINANCE;
+			internalformat = compress ? GL_COMPRESSED_LUMINANCE : GL_LUMINANCE;
 			format = GL_LUMINANCE;
 			alpha = false;
 			break;
 		case 2:
-			internalformat = compression ? GL_COMPRESSED_LUMINANCE_ALPHA : GL_LUMINANCE_ALPHA;
+			internalformat = compress ? GL_COMPRESSED_LUMINANCE_ALPHA : GL_LUMINANCE_ALPHA;
 			format = GL_LUMINANCE_ALPHA;
 			alpha = true;
 			break;
 		case 3:
-			internalformat = compression ? (srgb ? GL_COMPRESSED_SRGB : GL_COMPRESSED_RGB) : (srgb ? GL_SRGB8 : GL_RGB);
+			internalformat = compress ? (srgb ? GL_COMPRESSED_SRGB : GL_COMPRESSED_RGB) : (srgb ? GL_SRGB8 : GL_RGB);
 #ifdef __APPLE__
 			format = GL_BGR;
 #else
@@ -100,7 +100,7 @@ static void GetTextureFormat(
 			alpha = false;
 			break;
 		case 4:
-			internalformat = compression ? (srgb ? GL_COMPRESSED_SRGB_ALPHA : GL_COMPRESSED_RGBA) : (srgb ? GL_SRGB8_ALPHA8 : GL_RGBA);
+			internalformat = compress ? (srgb ? GL_COMPRESSED_SRGB_ALPHA : GL_COMPRESSED_RGBA) : (srgb ? GL_SRGB8_ALPHA8 : GL_RGBA);
 #ifdef __APPLE__
 			format = GL_BGRA;
 #else
@@ -642,7 +642,7 @@ bool TEXTURE::LoadDDS(const std::string & path, const TEXTUREINFO & info, std::o
 
 	// gl3 renderer expects srgb
 	unsigned iformat = format;
-	if (info.srgb && !info.normalmap)
+	if (info.srgb)
 	{
 		if (format == GL_BGR)
 			iformat = GL_SRGB8;

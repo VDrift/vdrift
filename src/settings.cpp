@@ -71,7 +71,8 @@ SETTINGS::SETTINGS() :
 	mousegrab(true),
 	recordreplay(false),
 	selected_replay("none"),
-	texturesize("large"),
+	texture_size("large"),
+	texture_compress(true),
 	button_ramp(5),
 	ff_device("/dev/input/event0"),
 	ff_gain(2.0),
@@ -154,7 +155,8 @@ void SETTINGS::Serialize(bool write, Config & config)
 	Param(config, write, section, "mph", mph);
 	Param(config, write, section, "view_distance", view_distance);
 	Param(config, write, section, "racingline", racingline);
-	Param(config, write, section, "texture_size", texturesize);
+	Param(config, write, section, "texture_size", texture_size);
+	Param(config, write, section, "texture_compress", texture_compress);
 	Param(config, write, section, "shadows", shadows);
 	Param(config, write, section, "shadow_distance", shadow_distance);
 	Param(config, write, section, "shadow_quality", shadow_quality);

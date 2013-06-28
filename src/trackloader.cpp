@@ -452,7 +452,7 @@ TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const PTree & cfg)
 	}
 	if (texture_names[2].length() > 0)
 	{
-		texinfo.normalmap = true;
+		texinfo.compress = false;
 		content.load(miscmap2, objectdir, texture_names[2], texinfo);
 	}
 
@@ -703,7 +703,7 @@ bool TRACK::LOADER::AddObject(const OBJECT & object)
 
 	std::tr1::shared_ptr<TEXTURE> miscmap2_texture;
 	{
-		texinfo.normalmap = true;
+		texinfo.compress = false;
 		std::string texture_name = object.texture.substr(0, std::max(0, (int)object.texture.length()-4)) + "-misc2.png";
 		std::string filepath = objectpath + "/" + texture_name;
 		if (std::ifstream(filepath.c_str()))

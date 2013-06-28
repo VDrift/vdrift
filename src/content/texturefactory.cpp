@@ -25,15 +25,17 @@
 Factory<TEXTURE>::Factory() :
 	m_default(new TEXTURE()),
 	m_size(TEXTUREINFO::LARGE),
+	m_compress(true),
 	m_srgb(false)
 {
 	// ctor
 }
 
-void Factory<TEXTURE>::init(int max_size, bool use_srgb)
+void Factory<TEXTURE>::init(int max_size, bool use_srgb, bool compress)
 {
 	m_size = max_size;
 	m_srgb = use_srgb;
+	m_compress = compress;
 
 	// init default texture
 	std::stringstream error;
@@ -62,7 +64,8 @@ bool Factory<TEXTURE>::create(
 	if (info.data || std::ifstream(abspath.c_str()))
 	{
 		TEXTUREINFO info_temp = info;
-		info_temp.srgb = m_srgb;
+		info_temp.srgb = info.compress && m_srgb; 			// non compressible means non color data
+		info_temp.compress = info.compress && m_compress;	// allow to disable compression
 		info_temp.maxsize = TEXTUREINFO::Size(m_size);
 		std::tr1::shared_ptr<TEXTURE> temp(new TEXTURE());
 		if (temp->Load(abspath, info_temp, error))

@@ -32,7 +32,7 @@ struct TEXTUREINFO
 	bool mipmap;			///< build mip maps
 	bool cube;				///< is a cube map
 	bool verticalcross; 	///< is a vertical cross cube map
-	bool normalmap;			///< is a normal map
+	bool compress;			///< can be compressed (not a normal map e.g.)
 	bool repeatu;			///< repeat texture along u coordinate
 	bool repeatv;			///< repeat texture along v coordinate
 	bool npot;				///< is not power of two
@@ -50,7 +50,7 @@ struct TEXTUREINFO
 		mipmap(true),
 		cube(false),
 		verticalcross(false),
-		normalmap(false),
+		compress(true),
 		repeatu(true),
 		repeatv(true),
 		npot(true),

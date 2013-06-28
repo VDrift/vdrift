@@ -36,7 +36,7 @@ public:
 	/// in general all textures on disk will be in the SRGB colorspace, so if the renderer wants to do
 	/// gamma correct lighting, it will want all textures to be gamma corrected using the SRGB flag
 	/// limit texture size to max size
-	void init(int max_size, bool use_srgb);
+	void init(int max_size, bool use_srgb, bool compress);
 
 	template <class P>
 	bool create(
@@ -52,6 +52,7 @@ public:
 private:
 	std::tr1::shared_ptr<TEXTURE> m_default;
 	int m_size;
+	bool m_compress;
 	bool m_srgb;
 };
 

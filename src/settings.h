@@ -206,7 +206,12 @@ public:
 
 	const std::string & GetTextureSize() const
 	{
-		return texturesize;
+		return texture_size;
+	}
+
+	bool GetTextureCompress() const
+	{
+		return texture_compress;
 	}
 
 	float GetButtonRamp() const
@@ -380,7 +385,7 @@ public:
 		*this = SETTINGS();
 		depthbpp = 16;
 		renderer = "gl1";
-		texturesize = "medium";
+		texture_size = "medium";
 	}
 
 private:
@@ -416,7 +421,8 @@ private:
 	bool mousegrab;
 	bool recordreplay;
 	std::string selected_replay;
-	std::string texturesize;
+	std::string texture_size;
+	bool texture_compress;
 	float button_ramp;
 	std::string ff_device;
 	float ff_gain;

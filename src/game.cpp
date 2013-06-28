@@ -417,7 +417,7 @@ void GAME::InitCoreSubsystems()
 	graphics_interface->SetSunDirection(ldir);
 
 	// Init content factories
-	content.getFactory<TEXTURE>().init(texture_size, using_gl3);
+	content.getFactory<TEXTURE>().init(texture_size, using_gl3, settings.GetTextureCompress());
 	content.getFactory<MODEL>().init(using_gl3);
 	content.getFactory<PTree>().init(read_ini, write_ini, content);
 
