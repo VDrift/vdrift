@@ -205,6 +205,17 @@ void GRAPHICS_GL3V::SetupScene(float fov, float new_view_distance, const MATHVEC
 		w,
 		h);
 
+	// derive light rotation quaternion from light direction vector
+	QUATERNION<float> light_rotation;
+	MATHVECTOR<float, 3> up(0, 0, 1);
+	float cosa = up.dot(light_direction);
+	if (cosa * cosa < 1.0f)
+	{
+		float a = -acosf(cosa);
+		MATHVECTOR<float, 3> x = up.cross(light_direction).Normalize();
+		light_rotation.SetAxisAngle(a, x[0], x[1], x[2]);
+	}
+
 	// shadow cameras
 	for (int i = 0; i < 3; i++)
 	{
@@ -226,7 +237,7 @@ void GRAPHICS_GL3V::SetupScene(float fov, float new_view_distance, const MATHVEC
 		const float shadowMapResolution = 512;
 		float snapToGridSize = 2.f*shadowbox[0]/shadowMapResolution;
 		MATHVECTOR <float, 3> cameraSpaceShadowPosition = shadowPosition;
-		sunDirection.RotateVector(cameraSpaceShadowPosition);
+		light_rotation.RotateVector(cameraSpaceShadowPosition);
 		for (int n = 0; n < 3; n++)
 		{
 			float pos = cameraSpaceShadowPosition[n];
@@ -234,14 +245,14 @@ void GRAPHICS_GL3V::SetupScene(float fov, float new_view_distance, const MATHVEC
 			gridpos = floor(gridpos);
 			cameraSpaceShadowPosition[n] = gridpos*snapToGridSize;
 		}
-		(-sunDirection).RotateVector(cameraSpaceShadowPosition);
+		(-light_rotation).RotateVector(cameraSpaceShadowPosition);
 		shadowPosition = cameraSpaceShadowPosition;
 
 		std::string suffix = UTILS::tostr(i+1);
 
 		CameraMatrices & shadowcam = setCameraOrthographic("shadow"+suffix,
 			shadowPosition,
-			sunDirection,
+			light_rotation,
 			-shadowbox,
 			shadowbox);
 
@@ -294,16 +305,10 @@ void GRAPHICS_GL3V::SetupScene(float fov, float new_view_distance, const MATHVEC
 
 	// send sun light direction for the default camera
 
-	// this computes the worldspace light direction
-	// it is a little funky but at least matches what's done in GRAPHICS_GL2::DrawScene
-	// TODO: use a 3D vector for sun direction instead of a quaternion and read it from the track.txt
-	MATHVECTOR <float, 3> lightDirection(0,0,1);
-	(-sunDirection).RotateVector(lightDirection);
-
 	// transform to eyespace (view space)
 	MATHVECTOR <float, 4> lightDirection4;
 	for (int i = 0; i < 3; i++)
-		lightDirection4[i] = lightDirection[i];
+		lightDirection4[i] = light_direction[i];
 	lightDirection4[3] = 0;
 	defaultCamera.viewMatrix.MultiplyVector4(&lightDirection4[0]);
 
@@ -691,9 +696,9 @@ bool GRAPHICS_GL3V::GetShadows() const
 	return true;
 }
 
-void GRAPHICS_GL3V::SetSunDirection ( const QUATERNION< float >& value )
+void GRAPHICS_GL3V::SetSunDirection(const MATHVECTOR<float, 3> & value)
 {
-	sunDirection = value;
+	light_direction = value;
 }
 
 void GRAPHICS_GL3V::SetContrast ( float value )

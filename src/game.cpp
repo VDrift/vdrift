@@ -411,9 +411,8 @@ void GAME::InitCoreSubsystems()
 		}
 	}
 
-	QUATERNION <float> ldir;
-	ldir.Rotate(M_PI * 0.1, 0, 1, 0);
-	ldir.Rotate(-M_PI * 0.2, 1, 0, 0);
+	MATHVECTOR<float, 3> ldir(-0.250, -0.588, 0.769);
+	ldir = ldir.Normalize();
 	graphics_interface->SetSunDirection(ldir);
 
 	// Init content factories

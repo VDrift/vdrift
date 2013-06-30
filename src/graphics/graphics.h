@@ -62,10 +62,10 @@ public:
 	virtual bool AntialiasingSupported() const = 0;
 	virtual bool GetUsingShaders() const = 0;
 	virtual bool ReloadShaders(const std::string & shaderpath, std::ostream & info_output, std::ostream & error_output) = 0;
-	virtual void SetCloseShadow ( float value ) = 0;
+	virtual void SetCloseShadow(float value) = 0;
 	virtual bool GetShadows() const = 0;
-	virtual void SetSunDirection ( const QUATERNION< float >& value ) = 0;
-	virtual void SetContrast ( float value ) = 0;
+	virtual void SetSunDirection(const MATHVECTOR<float, 3> & value) = 0;
+	virtual void SetContrast(float value) = 0;
 	virtual void printProfilingInfo(std::ostream & out) const { (void)out; }
 
 	virtual ~GRAPHICS() {}

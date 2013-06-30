@@ -92,7 +92,7 @@ public:
 
 	virtual bool GetShadows() const;
 
-	virtual void SetSunDirection(const QUATERNION< float > & value);
+	virtual void SetSunDirection(const MATHVECTOR<float, 3> & value);
 
 	virtual void SetContrast(float value);
 
@@ -161,8 +161,7 @@ private:
 	typedef std::map <std::string, GRAPHICS_CAMERA> camera_map_type;
 	camera_map_type cameras;
 
-	QUATERNION <float> lightdirection;
-
+	MATHVECTOR<float, 3> light_direction;
 	std::auto_ptr<SKY> sky;
 	bool sky_dynamic;
 

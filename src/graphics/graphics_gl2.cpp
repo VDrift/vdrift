@@ -477,6 +477,17 @@ void GRAPHICS_GL2::SetupScene(
 	{
 		MATRIX4<float> viewMatrixInv = viewMatrix.Inverse();
 
+		// derive light rotation quaternion from light direction vector
+		QUATERNION<float> light_rotation;
+		MATHVECTOR<float, 3> up(0, 0, 1);
+		float cosa = up.dot(light_direction);
+		if (cosa * cosa < 1.0f)
+		{
+			float a = -acosf(cosa);
+			MATHVECTOR<float, 3> x = up.cross(light_direction).Normalize();
+			light_rotation.SetAxisAngle(a, x[0], x[1], x[2]);
+		}
+
 		std::vector <std::string> shadow_names;
 		shadow_names.push_back("near");
 		shadow_names.push_back("medium");
@@ -499,7 +510,7 @@ void GRAPHICS_GL2::SetupScene(
 			cam.orthomin = -shadowbox;
 			cam.orthomax = shadowbox;
 			cam.pos = cam.pos + shadowoffset;
-			cam.orient = lightdirection;
+			cam.orient = light_rotation;
 
 			// go through and extract the clip matrix, storing it in a texture matrix
 			// premultiply the clip matrix with default camera view inverse matrix
@@ -531,13 +542,10 @@ void GRAPHICS_GL2::DrawScene(std::ostream & error_output)
 		renderscene.SetReflection(&static_reflection);
 	renderscene.SetAmbient(static_ambient);
 	renderscene.SetContrast(contrast);
-	postprocess.SetContrast(contrast);
+	renderscene.SetSunDirection(light_direction);
 
-	// construct light position
-	MATHVECTOR <float, 3> lightposition(0,0,1);
-	(-lightdirection).RotateVector(lightposition);
-	renderscene.SetSunDirection(lightposition);
-	postprocess.SetSunDirection(lightposition);
+	postprocess.SetContrast(contrast);
+	postprocess.SetSunDirection(light_direction);
 
 	// dynamic sky update
 	if (sky.get())
@@ -600,9 +608,9 @@ bool GRAPHICS_GL2::GetShadows() const
 	return shadows;
 }
 
-void GRAPHICS_GL2::SetSunDirection(const QUATERNION< float > & value)
+void GRAPHICS_GL2::SetSunDirection(const MATHVECTOR<float, 3> & value)
 {
-	lightdirection = value;
+	light_direction = value;
 }
 
 void GRAPHICS_GL2::SetContrast(float value)

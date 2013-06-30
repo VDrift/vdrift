@@ -73,8 +73,8 @@ public:
 	virtual bool ReloadShaders(const std::string & shaderpath, std::ostream & info_output, std::ostream & error_output);
 	virtual void SetCloseShadow ( float value );
 	virtual bool GetShadows() const;
-	virtual void SetSunDirection ( const QUATERNION< float >& value );
-	virtual void SetContrast ( float value );
+	virtual void SetSunDirection(const MATHVECTOR<float, 3> & value);
+	virtual void SetContrast(float value);
 	virtual void printProfilingInfo(std::ostream & out) const {renderer.printProfilingInfo(out);}
 
 	GRAPHICS_GL3V(StringIdMap & map);
@@ -89,7 +89,7 @@ private:
 	bool logNextGlFrame; // used to take a gl log capture after reloading shaders if gl logging is enabled
 	bool initialized;
 	MATHVECTOR <float, 3> lastCameraPosition;
-	QUATERNION< float > sunDirection;
+	MATHVECTOR <float, 3> light_direction;
 
 	struct CameraMatrices
 	{
