@@ -267,7 +267,7 @@ bool GUIPAGE::Load(
 		GUICONTROL::SetActions(actionmap, actionstr, oncancel);
 
 	// register tooltip signal
-	vsignalmap["gui.tooltip"] = &tooltip;
+	vsignalmap["gui.tooltip.str"] = &tooltip;
 
 	// load widgets and controls
 	active_control = 0;

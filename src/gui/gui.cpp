@@ -224,7 +224,6 @@ bool GUI::Load(
 	const std::string menupath = skinpath + "/menus";
 
 	// setup language
-	lang.Init(langpath);
 	lang.Set(language, error_output);
 
 	// load font (hardcoded for now)

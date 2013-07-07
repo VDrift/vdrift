@@ -165,7 +165,7 @@ SConsignFile()
 #--------------------------#
 appdir = ""
 vdrift_install = None
-common_libs = ['SDL_image', 'SDL_gfx', 'vorbisfile', 'curl', 'archive']
+common_libs = ['SDL_image', 'SDL_gfx', 'vorbisfile', 'curl', 'archive', 'intl', 'iconv']
 
 if (sys.platform == 'freebsd6') or (sys.platform == 'freebsd7') or (sys.platform == 'freebsd8') or (sys.platform == 'freebsd9'):
     common_libs.append('libLinearMath')

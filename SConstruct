@@ -29,6 +29,7 @@ cppdefines = []
 default_settingsdir = ".vdrift"
 default_prefix = "/usr/local"
 default_datadir = "share/games/vdrift/data"
+default_localedir = "/usr/share/locale"
 default_bindir = "bin"
 
 #---------------#
@@ -161,7 +162,8 @@ opts.Add('settings', 'Directory under user\'s home dir where settings will be st
 opts.Add('prefix', 'Path prefix.', default_prefix)
 # in most case datadir doesn't exsist => do not use PathOption (Fails on build)
 opts.Add('datadir', 'Path suffix where where VDrift data will be installed', default_datadir) 
-opts.Add('bindir', 'Path suffix where vdrift binary executable will be installed', default_bindir)
+opts.Add('localedir', 'Path where VDrift locale will be installed', default_localedir)
+opts.Add('bindir', 'Path suffix where VDrift binary executable will be installed', default_bindir)
 
 # For the OSX package, but could be useful otherwise
 env['EXECUTABLE_NAME'] = 'vdrift'
@@ -321,8 +323,9 @@ Type: 'scons' to compile with the default options.
       'scons arch=axp' to compile for Athlon XP support (other options: a64, 686, p4, x86, prescott, nocona, core2)
       'scons prefix=/usr/local' to install everything in another prefix.
       'scons destdir=$PWD/tmp' to install to $PWD/tmp staging area.
-      'scons datadir= to install data files into an alternate directory'
-      'scons bindir=games/bin' to executable into an alternate directory.
+      'scons datadir=' to install data files into an alternate directory.
+      'scons bindir=games/bin' to install executable into an alternate directory.
+      'scons localedir=/usr/share/locale' to install language files into an alternate directory.
       'scons release=1' to turn off compiler optimizations and debugging info.
       'scons settings=.VDrift' to change settings directory.
       'scons install' (as root) to install VDrift.
@@ -365,13 +368,16 @@ if ( 'win32' == sys.platform or 'cygwin' == sys.platform ):
     env['use_binreloc'] = False
     env['use_apbuild'] = False
     env['data_directory'] = "./data"
+    env['locale_directory'] = "./data/locale"
     env['settings'] = "VDrift"
     cppdefines.append(("DATA_DIR", '"%s"' % env['data_directory']))
+    cppdefines.append(("LOCALE_DIR", '"%s"' % env['locale_directory']))
 #elif ('darwin' == env['PLATFORM']):
     #cppdefines.append(("DATA_DIR", "get_mac_data_dir()"))
 else:
     temp = env['prefix'] + '/' + env['datadir']
     cppdefines.append(("DATA_DIR", '"%s"' % temp))
+    cppdefines.append(("LOCALE_DIR", '"%s"' % env['localedir']))
 
 #------------------------#
 # Version, debug/release #

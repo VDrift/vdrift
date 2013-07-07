@@ -19,6 +19,10 @@
 
 #include "guilanguage.h"
 #include "cfg/config.h"
+#include "definitions.h"
+
+#include <libintl.h>
+#include <locale.h>
 #include <iconv.h>
 #include <cstdlib>
 #include <cstring>
@@ -37,27 +41,24 @@ static const std::map<std::string, std::string> InitCP();
 static const std::map<std::string, std::string> codepages(InitCP());
 static const std::string default_codepage("1252");
 
+// set application language
+static void init_locale(const char domain[], const char language[]);
+
 // convert input string using given conversion descriptor
 // the returned string has to be freed manually
 static char * convert(iconv_t cd, char *input);
-
 
 GUILANGUAGE::GUILANGUAGE() :
 	m_lang_id("en"),
 	m_iconv(iconv_t(-1))
 {
-	//ctor
+	// ctor
 }
 
 GUILANGUAGE::~GUILANGUAGE()
 {
 	if (m_iconv != iconv_t(-1))
 		iconv_close(m_iconv);
-}
-
-void GUILANGUAGE::Init(const std::string & lang_path)
-{
-	m_lang_path = lang_path;
 }
 
 void GUILANGUAGE::Set(const std::string & lang_id, std::ostream & error)
@@ -67,6 +68,23 @@ void GUILANGUAGE::Set(const std::string & lang_id, std::ostream & error)
 		m_lang_id = lang_id;
 		LoadLanguage(error);
 	}
+}
+
+const std::string & GUILANGUAGE::operator()(const std::string & str) const
+{
+	if (m_iconv == iconv_t(-1))
+		return str;
+
+	static std::string temp; // ugh
+	char * tstr = gettext(str.c_str());
+	char * cstr = convert(m_iconv, tstr);
+	if (cstr)
+	{
+		temp.assign(cstr);
+		free(cstr);
+		return temp;
+	}
+	return str;
 }
 
 const std::string & GUILANGUAGE::GetCodePageId(const std::string & lang_id)
@@ -79,16 +97,7 @@ const std::string & GUILANGUAGE::GetCodePageId(const std::string & lang_id)
 
 void GUILANGUAGE::LoadLanguage(std::ostream & error)
 {
-	m_strings.clear();
-
-	Config cfg(m_lang_path + "/" + m_lang_id + ".txt");
-	Config::const_iterator i = cfg.end();
-	if (!cfg.get("", i))
-	{
-		// empty section is always available
-		assert(0);
-		return;
-	}
+	init_locale("vdrift", m_lang_id.c_str());
 
 	const std::string to = "CP" + GetCodePageId(m_lang_id);
 	if (m_iconv != iconv_t(-1))
@@ -98,19 +107,6 @@ void GUILANGUAGE::LoadLanguage(std::ostream & error)
 	{
 		error << "Failed code conversion: UTF-8 to " << to << std::endl;
 		return;
-	}
-
-	const Config::Section & sn = i->second;
-	for (Config::Section::const_iterator n = sn.begin(); n != sn.end(); ++n)
-	{
-		char * str = strdup(n->second.c_str());
-		char * cstr = convert(m_iconv, str);
-		if (cstr)
-		{
-			m_strings[n->first] = std::string(cstr);
-			free(cstr);
-		}
-		free(str);
 	}
 }
 
@@ -155,6 +151,24 @@ const std::map<std::string, std::string> InitCP()
 	cp["tr"] = "1254";
 	cp["zh"] = "936";
 	return cp;
+}
+
+void init_locale(const char domain[], const char language[])
+{
+	// todo: add some error checking here
+	std::string localedir(LOCALE_DIR);
+/*	if (localedir[0] == '.')
+	{
+	    char buffer[PATH_MAX];
+		std::string cwd = getcwd(buffer, PATH_MAX);
+		localedir = cwd + localedir.substr(1, localedir.size() - 1);
+	}*/
+    bindtextdomain(domain, localedir.c_str());
+    bind_textdomain_codeset(domain, "UTF-8");
+    textdomain(domain);
+
+    setlocale(LC_MESSAGES, language);
+    setlocale(LC_ALL, "");
 }
 
 char * convert(iconv_t cd, char *input)
@@ -236,4 +250,3 @@ char * convert(iconv_t cd, char *input)
 
 	return output;
 }
-

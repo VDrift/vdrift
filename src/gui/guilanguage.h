@@ -22,7 +22,6 @@
 
 #include <ostream>
 #include <string>
-#include <map>
 
 class GUILANGUAGE
 {
@@ -30,10 +29,6 @@ public:
 	GUILANGUAGE();
 
 	~GUILANGUAGE();
-
-	/// language path to the directory containg language files(UTF-8)
-	/// en.txt, de.txt, fr.txt ...
-	void Init(const std::string & lang_path);
 
 	/// langage id is a two char string
 	/// en, de, fr, ru ...
@@ -46,26 +41,12 @@ public:
 	static const std::string & GetCodePageId(const std::string & lang_id);
 
 private:
-	std::map<std::string, std::string> m_strings;
-	std::string m_lang_path;
 	std::string m_lang_id;
-
-	// conversion descriptor
 	void * m_iconv;
 
 	/// load current language string map
 	void LoadLanguage(std::ostream & error);
 };
-
-// implementation
-
-inline const std::string & GUILANGUAGE::operator()(const std::string & str) const
-{
-	std::map<std::string, std::string>::const_iterator i = m_strings.find(str);
-	if (i != m_strings.end())
-		return i->second;
-	return str;
-}
 
 #endif // _GUILANGUAGE_H
 

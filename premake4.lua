@@ -3,6 +3,7 @@ update_options = function()
 	options["settings"]=".vdrift"
 	options["bindir"]="/usr/local/bin"
 	options["datadir"]="/usr/local/share/games/vdrift/data"
+	options["localedir"]="/usr/share/locale"
 	options["binreloc"]="no"
 	local f = io.open("vdrift.cfg", "r")
 	if f then
@@ -26,12 +27,14 @@ update_options = function()
 	f:close()
 end
 
-write_definitions_h = function()
+gen_definitions_h = function()
+	update_options()
 	local f = io.open("src/definitions.h", "w")
 	f:write("#ifndef _DEFINITIONS_H\n")
 	f:write("#define _DEFINITIONS_H\n")
 	f:write("#define SETTINGS_DIR \"".._OPTIONS["settings"].."\"\n")
 	f:write("#define DATA_DIR \"".._OPTIONS["datadir"].."\"\n")
+	f:write("#define LOCALE_DIR \"".._OPTIONS["localedir"].."\"\n")
 	if _OPTIONS["binreloc"] == "yes" then
 		f:write("#define ENABLE_BINRELOC\n")
 	end
@@ -51,6 +54,12 @@ newoption {
 	trigger = "datadir",
 	value = "PATH",
 	description = "Path where where VDrift data will be installed."
+}
+
+newoption {
+	trigger = "localedir",
+	value = "PATH",
+	description = "Path where where VDrift locale will be installed."
 }
 
 newoption {
@@ -120,8 +129,6 @@ solution "VDrift"
 		targetdir "."
 		includedirs {"src"}
 		files {"src/**.h", "src/**.cpp"}
-		update_options()
-		write_definitions_h()
 
 	platforms {"native", "universal"}
 
@@ -147,18 +154,22 @@ solution "VDrift"
 		linkoptions {"/NODEFAULTLIB:\"msvcrt.lib\""}
 
 	configuration {"windows"}
+		_OPTIONS["datadir"] = "./data"
+		_OPTIONS["localedir"] = "./data/locale"
+		gen_definitions_h()
 		location "."
 		defines {"HAVE_LIBC"} --SDL2
 		includedirs {"vdrift-win/include", "vdrift-win/bullet"}
 		libdirs {"vdrift-win/lib"}
-		links {"opengl32", "glu32", "glew32", "SDL2main", "SDL2", "SDL2_image", "SDL2_gfx", "vorbisfile", "iconv", "libcurl", "libarchive-2", "wsock32", "ws2_32"}
+		links {"opengl32", "glu32", "glew32", "SDL2main", "SDL2", "SDL2_image", "SDL2_gfx", "vorbisfile", "iconv2", "intl", "curl", "archive-2", "wsock32", "ws2_32"}
 		files {"vdrift-win/bullet/**.h", "vdrift-win/bullet/**.cpp"}
 		postbuildcommands {"xcopy /d /y /f .\\vdrift-win\\lib\\*.dll .\\"}
 
 	configuration {"linux"}
+		gen_definitions_h()
 		includedirs {"/usr/local/include/bullet/", "/usr/include/bullet"}
 		libdirs {"/usr/X11R6/lib"}
-		links {"archive", "curl", "BulletDynamics", "BulletCollision", "LinearMath", "GL", "GLU", "GLEW", "SDL", "vorbisfile", "SDL_image", "SDL_gfx"}
+		links {"archive", "curl", "vorbisfile", "iconv", "intl", "BulletDynamics", "BulletCollision", "LinearMath", "GL", "GLU", "GLEW", "SDL", "SDL_image", "SDL_gfx"}
 
 	configuration {"macosx"}
 		prebuildcommands {'if [ -f "SRCROOT"/../src/definitions.h ]; then\n    rm "SRCROOT"/../src/definitions.h\nfi\nDATE=`date +%Y-%m-%d`\necho "#ifndef _DEFINITIONS_H" > "$SRCROOT"/../src/definitions.h\necho "#define _DEFINITIONS_H" >> "$SRCROOT"/../src/definitions.h\necho "char* get_mac_data_dir();" >> "$SRCROOT"/../src/definitions.h\necho "#define SETTINGS_DIR \"Library/Preferences/VDrift\"" >> "$SRCROOT"/../src/definitions.h\necho "#define DATA_DIR get_mac_data_dir()" >> "$SRCROOT"/../src/definitions.h\necho "#define PACKAGE \"VDrift\"" >> "$SRCROOT"/../src/definitions.h\necho "#define LOCALEDIR \"/usr/share/locale\"" >> "$SRCROOT"/../src/definitions.h\necho "#ifndef VERSION" >> "$SRCROOT"/../src/definitions.h\necho "#define VERSION \"$DATE\"" >> "$SRCROOT"/../src/definitions.h\necho "#endif //VERSION" >> "$SRCROOT"/../src/definitions.h\necho "#ifndef REVISION" >> "$SRCROOT"/../src/definitions.h\necho "#define REVISION \"$DATE\"" >> "$SRCROOT"/../src/definitions.h  #No longer have svn revision to fetch, and can\'t get git, so use date at the moment.\necho "#endif //REVISION" >> "$SRCROOT"/../src/definitions.h\necho "#endif // _DEFINITIONS_H" >> "$SRCROOT"/../src/definitions.h\n'} --Generate definitions.h.
