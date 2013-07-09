@@ -126,6 +126,7 @@ The required build tools include:
 - premake - Automatically builds configuration from source code.
 
     Needed Windows and MacOS, only.
+- gettext - GNU libraries and utilities for producing multi-lingual messages
 
 Libraries
 ---------
