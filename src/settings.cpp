@@ -105,7 +105,9 @@ SETTINGS::SETTINGS() :
 	ai_level(1.0),
 	vehicle_damage(false),
 	particles(512),
-	dynamic_sky(false)
+	sky_dynamic(false),
+	sky_time(17),
+	sky_time_speed(1)
 {
 	resolution[0] = 800;
 	resolution[1] = 600;
@@ -169,7 +171,9 @@ void SETTINGS::Serialize(bool write, Config & config)
 	Param(config, write, section, "camerabounce", camera_bounce);
 	Param(config, write, section, "contrast", contrast);
 	Param(config, write, section, "particles", particles);
-	Param(config, write, section, "dynamic_sky", dynamic_sky);
+	Param(config, write, section, "sky_dynamic", sky_dynamic);
+	Param(config, write, section, "sky_time", sky_time);
+	Param(config, write, section, "sky_time_speed", sky_time_speed);
 
 	config.get("sound", section);
 	Param(config, write, section, "sources", sound_sources);

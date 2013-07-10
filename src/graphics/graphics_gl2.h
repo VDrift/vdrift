@@ -73,6 +73,8 @@ public:
 		const QUATERNION <float> & cam_rotation,
 		const MATHVECTOR <float, 3> & dynamic_reflection_sample_pos);
 
+	virtual void UpdateScene(float dt);
+
 	virtual void DrawScene(std::ostream & error_output);
 
 	virtual void EndScene(std::ostream & error_output);
@@ -95,6 +97,10 @@ public:
 	virtual void SetSunDirection(const MATHVECTOR<float, 3> & value);
 
 	virtual void SetContrast(float value);
+
+	virtual void SetLocalTime(float hours);
+
+	virtual void SetLocalTimeSpeed(float value);
 
 	// Allow external code to use gl state manager.
 	GLSTATEMANAGER & GetState();

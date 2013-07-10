@@ -279,9 +279,19 @@ public:
 		return lighting;
 	}
 
-	bool GetDynamicSky() const
+	bool GetSkyDynamic() const
 	{
-		return dynamic_sky;
+		return sky_dynamic;
+	}
+
+	int GetSkyTime() const
+	{
+		return sky_time;
+	}
+
+	int GetSkyTimeSpeed() const
+	{
+		return sky_time_speed;
 	}
 
 	bool GetBloom() const
@@ -455,7 +465,9 @@ private:
 	float ai_level;
 	bool vehicle_damage;
 	int particles;
-	bool dynamic_sky;
+	bool sky_dynamic;
+	int sky_time;
+	int sky_time_speed;
 };
 
 #endif

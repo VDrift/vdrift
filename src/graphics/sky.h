@@ -40,6 +40,14 @@ public:
 
 	bool Load(const std::string & path);
 
+	// Simulation time speed relative to real time: 0 - 32
+	// 0 means no updates (frozen sky)
+	void SetTimeSpeed(float value);
+
+	// Resets simulation clock to passed hours value: 0 - 23
+	// Will also reset buffer update in progress.
+	void SetTime(float hours);
+
 	void SetTime(const struct tm & value);
 
 	void SetTurbidity(float value);
@@ -48,7 +56,8 @@ public:
 
 	// A call to update renders a tile into current backbuffer.
 	// Buffers are swapped when all tiles have been rendered.
-	void Update();
+	// dt is time in seconds since last update call
+	void Update(float dt);
 
 	// Force full buffer update and swap
 	void UpdateComplete();
@@ -81,14 +90,11 @@ private:
 	unsigned side_updated;		// currently updated cube map [0, 4]
 	unsigned tile_updated;		// currently updated tile [0, tiles_num)
 
-	// scattering params
+	VEC3 sundir;
 	VEC3 suncolor;
 	VEC3 wavelength;
 	float turbidity;
 	float exposure;
-
-	// sun position
-	VEC3 sundir;
 	float ze;			// solar zenith angle
 	float az;			// solar azimuth angle (clockwise from north)
 	float azdelta;		// local orientation offset relative to north(z-axis)
@@ -99,6 +105,18 @@ private:
 	float hour;
 	float minute;
 	float second;
+
+	float time_multiplier;	// simulation time multiplier
+	float time_delta;		// time delta since last sky buffer swap (update)
+	bool need_update;		// flag that an update is reqiured
+
+	void Draw(unsigned elems, const unsigned faces[], const float pos[], const float tco[]);
+
+	void ResetSky();
+
+	void UpdateSky();
+
+	void UpdateTime();
 
 	void UpdateSunDir();
 

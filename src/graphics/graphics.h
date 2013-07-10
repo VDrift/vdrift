@@ -36,7 +36,7 @@ class GRAPHICS
 public:
 	typedef DRAWABLE_CONTAINER <PTRVECTOR> dynamicdrawlist_type;
 
-	///reflection_type is 0 (low=OFF), 1 (medium=static), 2 (high=dynamic)
+	/// reflection_type is 0 (low=OFF), 1 (medium=static), 2 (high=dynamic)
 	/// returns true on success
 	virtual bool Init(const std::string & shaderpath,
 				unsigned int resx, unsigned int resy, unsigned int bpp,
@@ -50,23 +50,52 @@ public:
 				bool newnormalmaps, bool dynamicsky,
 				const std::string & renderconfig,
 				std::ostream & info_output, std::ostream & error_output) = 0;
+
 	virtual void Deinit() = 0;
+
 	virtual void BeginScene(std::ostream & error_output) = 0;
+
 	virtual DRAWABLE_CONTAINER <PTRVECTOR> & GetDynamicDrawlist() = 0;
+
 	virtual void AddStaticNode(SCENENODE & node, bool clearcurrent = true) = 0;
-	virtual void SetupScene(float fov, float new_view_distance, const MATHVECTOR <float, 3> cam_position, const QUATERNION <float> & cam_rotation,
-					const MATHVECTOR <float, 3> & dynamic_reflection_sample_pos) = 0;
+
+	virtual void SetupScene(
+		float fov, float new_view_distance,
+		const MATHVECTOR <float, 3> cam_position, const QUATERNION <float> & cam_rotation,
+		const MATHVECTOR <float, 3> & dynamic_reflection_sample_pos) = 0;
+
+	/// optional (atm) scene animation update function
+	/// to be called after SetupScene and before DrawScene
+	virtual void UpdateScene(float dt) {};
+
 	virtual void DrawScene(std::ostream & error_output) = 0;
+
 	virtual void EndScene(std::ostream & error_output) = 0;
+
 	virtual int GetMaxAnisotropy() const = 0;
+
 	virtual bool AntialiasingSupported() const = 0;
+
 	virtual bool GetUsingShaders() const = 0;
+
 	virtual bool ReloadShaders(const std::string & shaderpath, std::ostream & info_output, std::ostream & error_output) = 0;
+
 	virtual void SetCloseShadow(float value) = 0;
+
 	virtual bool GetShadows() const = 0;
+
 	virtual void SetSunDirection(const MATHVECTOR<float, 3> & value) = 0;
+
 	virtual void SetContrast(float value) = 0;
-	virtual void printProfilingInfo(std::ostream & out) const { (void)out; }
+
+	/// optional advanced lighting simulation interface, should be factored out eventually
+	/// set scene local time in hours 0 - 23
+	virtual void SetLocalTime(float hours) {};
+
+	/// set scene local time speedup relative to real time: 0, 1, ..., 32
+	virtual void SetLocalTimeSpeed(float value) {};
+
+	virtual void printProfilingInfo(std::ostream & /*out*/) const { }
 
 	virtual ~GRAPHICS() {}
 };

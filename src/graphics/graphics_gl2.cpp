@@ -468,8 +468,9 @@ void GRAPHICS_GL2::SetupScene(
 	viewMatrix.MultiplyVector4(translate);
 	viewMatrix.Translate(translate[0], translate[1], translate[2]);
 
-	glActiveTexture(GL_TEXTURE3);
 	glMatrixMode(GL_TEXTURE);
+
+	glActiveTexture(GL_TEXTURE3);
 	glLoadMatrixf(viewMatrix.GetArray());
 
 	// create cameras for shadow passes
@@ -529,8 +530,17 @@ void GRAPHICS_GL2::SetupScene(
 		}
 	}
 
-	glMatrixMode(GL_MODELVIEW);
 	glActiveTexture(GL_TEXTURE0);
+	glMatrixMode(GL_MODELVIEW);
+}
+
+void GRAPHICS_GL2::UpdateScene(float dt)
+{
+	if (sky.get())
+	{
+		sky->Update(dt);
+		SetSunDirection(sky->GetSunDirection());
+	}
 }
 
 void GRAPHICS_GL2::DrawScene(std::ostream & error_output)
@@ -546,10 +556,6 @@ void GRAPHICS_GL2::DrawScene(std::ostream & error_output)
 
 	postprocess.SetContrast(contrast);
 	postprocess.SetSunDirection(light_direction);
-
-	// dynamic sky update
-	if (sky.get())
-		sky->Update();
 
 	// sort the two dimentional drawlist so we get correct ordering
 	std::sort(dynamic_drawlist.twodim.begin(),dynamic_drawlist.twodim.end(),&SortDraworder);
@@ -616,6 +622,18 @@ void GRAPHICS_GL2::SetSunDirection(const MATHVECTOR<float, 3> & value)
 void GRAPHICS_GL2::SetContrast(float value)
 {
 	contrast = value;
+}
+
+void GRAPHICS_GL2::SetLocalTime(float hours)
+{
+	if (sky.get())
+		sky->SetTime(hours);
+}
+
+void GRAPHICS_GL2::SetLocalTimeSpeed(float value)
+{
+	if (sky.get())
+		sky->SetTimeSpeed(value);
 }
 
 GLSTATEMANAGER & GRAPHICS_GL2::GetState()
@@ -943,7 +961,7 @@ void GRAPHICS_GL2::EnableShaders(
 	{
 		sky.reset(new SKY(*this, error_output));
 		texture_inputs["sky"] = sky.get();
-		sky->UpdateComplete();
+		//sky->UpdateComplete();
 	}
 }
 

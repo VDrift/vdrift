@@ -54,7 +54,24 @@ const VEC3 side_xyz[sides_num][3] = {
 
 SKY::SKY(GRAPHICS_GL2 & gfx, std::ostream & error) :
 	error_output(error),
-	graphics(gfx)
+	graphics(gfx),
+	texture_active(0),
+	side_updated(0),
+	tile_updated(0),
+	sundir(0, 0, 1),
+	suncolor(1, 1, 1),
+	wavelength(0.65, 0.57, 0.475),
+	turbidity(4),
+	exposure(1),
+	ze(0),
+	az(0),
+	azdelta(0),
+	timezone(-8),
+	longitude(-121),
+	latitude(36),
+	time_multiplier(1),
+	time_delta(0),
+	need_update(false)
 {
 	assert(graphics.GetUsingShaders());
 
@@ -63,17 +80,6 @@ SKY::SKY(GRAPHICS_GL2 & gfx, std::ostream & error) :
 
 	sky_fbos[0].Init(graphics.GetState(), std::vector<FBTEXTURE*>(1, &sky_textures[0]), error_output);
 	sky_fbos[1].Init(graphics.GetState(), std::vector<FBTEXTURE*>(1, &sky_textures[1]), error_output);
-
-	texture_active = 0;
-	side_updated = 0;
-	tile_updated = 0;
-
-	wavelength.Set(0.65f, 0.57f, 0.475f);
-	turbidity = 4;
-	exposure = 1;
-	timezone = -8;
-	longitude = -121;
-	latitude = 36;
 
 	time_t seconds = time(NULL);
 	struct tm datetime = *localtime(&seconds);
@@ -119,30 +125,100 @@ bool SKY::Load(const std::string & path)
 	return true;
 }
 
+void SKY::SetTimeSpeed(float value)
+{
+	time_multiplier = value;
+}
+
+void SKY::SetTime(float hours)
+{
+	hour = hours;
+	minute = 0;
+	second = 0;
+	ResetSky();
+}
+
 void SKY::SetTime(const struct tm & value)
 {
 	day = float(value.tm_yday + 1);
 	hour = float(value.tm_hour);
 	minute = float(value.tm_min);
 	second = float(value.tm_sec);
+	ResetSky();
 }
 
 void SKY::SetTurbidity(float value)
 {
 	turbidity = value;
+	ResetSky();
 }
 
 void SKY::SetExposure(float value)
 {
 	exposure = value;
+	ResetSky();
 }
 
-void SKY::Update()
+void SKY::Update(float dt)
+{
+	if (need_update || dt * time_multiplier > 0)
+	{
+		time_delta += dt * time_multiplier;
+		UpdateTime();
+		UpdateSunDir();
+		UpdateSunColor();
+		UpdateSky();
+	}
+}
+
+void SKY::UpdateComplete()
+{
+	side_updated = 0;
+	tile_updated = 0;
+	for (unsigned i = 0; i < tiles_num * sides_num; ++i)
+		UpdateSky();
+}
+
+void SKY::Draw(unsigned elems, const unsigned faces[], const float pos[], const float tco[])
+{
+	// disable blending, depth write
+	graphics.GetState().Disable(GL_ALPHA_TEST);
+	graphics.GetState().Disable(GL_BLEND);
+	graphics.GetState().Disable(GL_DEPTH_TEST);
+	graphics.GetState().SetDepthMask(false);
+
+	// bind fbo
+	unsigned texture_updated = (texture_active + 1) % 2;
+	FBOBJECT & fbo = sky_fbos[texture_updated];
+	fbo.SetCubeSide(side_enum[side_updated]);
+	fbo.Begin(graphics.GetState(), error_output);
+
+	// draw
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	glEnableClientState(GL_VERTEX_ARRAY);
+
+	glVertexPointer(3, GL_FLOAT, 0, pos);
+	glTexCoordPointer(3, GL_FLOAT, 0, tco);
+	glDrawElements(GL_TRIANGLES, elems, GL_UNSIGNED_INT, faces);
+
+	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+
+	// unbind fbo
+	fbo.End(graphics.GetState(), error_output);
+}
+
+void SKY::ResetSky()
+{
+	side_updated = 0;
+	tile_updated = 0;
+	need_update = true;
+}
+
+void SKY::UpdateSky()
 {
 	assert(tile_updated < tiles_num);
 	assert(side_updated < sides_num);
-
-	unsigned texture_updated = (texture_active + 1) % 2;
 
 	// tile corners in local space, (0, 0) top left and (1, 1) bottom right
 	float v0 = float(tile_updated / tiles_v) / tiles_v;
@@ -189,29 +265,8 @@ void SKY::Update()
 	shader->Enable();
 	shader->UploadActiveShaderParameter3f("uLightDirection", sundir[0], sundir[1], sundir[2]);
 
-	// disable blending, depth write
-	graphics.GetState().Disable(GL_ALPHA_TEST);
-	graphics.GetState().Disable(GL_BLEND);
-	graphics.GetState().Disable(GL_DEPTH_TEST);
-	graphics.GetState().SetDepthMask(false);
-
-	// bind fbo
-	FBOBJECT & fbo = sky_fbos[texture_updated];
-	fbo.SetCubeSide(side_enum[side_updated]);
-	fbo.Begin(graphics.GetState(), error_output);
-
-	// draw
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-	glEnableClientState(GL_VERTEX_ARRAY);
-
-	glVertexPointer(3, GL_FLOAT, 0, pos);
-	glTexCoordPointer(3, GL_FLOAT, 0, tco);
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, faces);
-
-	glDisableClientState(GL_VERTEX_ARRAY);
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
-	fbo.End(graphics.GetState(), error_output);
+	// draw tile
+	Draw(6, faces, pos, tco);
 
 	// move to next tile
 	tile_updated += 1;
@@ -224,26 +279,36 @@ void SKY::Update()
 		if (side_updated == sides_num)
 		{
 			// set fully updated texture as active
+			unsigned texture_updated = (texture_active + 1) % 2;
 			texture_active = texture_updated;
 
-			// update sky properties
-			UpdateSunDir();
-			UpdateSunColor();
-
-			// reset side counter
+			// reset side counter and update flag
 			side_updated = 0;
+			need_update = false;
 		}
 	}
 }
 
-void SKY::UpdateComplete()
+void SKY::UpdateTime()
 {
-	side_updated = 0;
-	tile_updated = 0;
-    for (unsigned i = 0; i < tiles_num * sides_num; ++i)
+	// handle seconds and minutes overflow, clamp hours for now
+	second += time_delta;
+	if (second >= 60)
 	{
-		Update();
+		float minutes_delta = floorf(second / 60);
+		second -= minutes_delta * 60;
+		minute += minutes_delta;
+		if (minute >= 60)
+		{
+			float hours_delta = floorf(minute / 60);
+			minute -= hours_delta * 60;
+			hour += hours_delta;
+			if (hour >= 24)
+				hour = 0;
+		}
 	}
+	//error_output << "dt " << time_delta << "  h " << hour << "  m " << minute << "  s " << second << std::endl;
+	time_delta = 0;
 }
 
 void SKY::UpdateSunDir()
@@ -286,10 +351,10 @@ void SKY::UpdateSunDir()
 
 	az += azdelta;
 	sundir[0] = sin(az) * sin(ze);   // east
-	sundir[1] = cos(ze);             // up
-	sundir[2] = cos(az) * sin(ze);   // north
+	sundir[1] = cos(az) * sin(ze);   // north
+	sundir[2] = cos(ze);             // up
 
-	sundir.Set(1, 1, 1); // override sun direction for testing
+	//error_output << "az " << az << "  ze " << ze << std::endl;
 }
 
 void SKY::UpdateSunColor()

@@ -396,7 +396,7 @@ void GAME::InitCoreSubsystems()
 			pathmanager.GetStaticReflectionMap(), pathmanager.GetStaticAmbientMap(),
 			settings.GetAnisotropic(), texture_size,
 			settings.GetLighting(), settings.GetBloom(),
-			settings.GetNormalMaps(), settings.GetDynamicSky(),
+			settings.GetNormalMaps(), settings.GetSkyDynamic(),
 			renderconfigfile, info_output, error_output);
 
 		if (success)
@@ -414,6 +414,8 @@ void GAME::InitCoreSubsystems()
 	MATHVECTOR<float, 3> ldir(-0.250, -0.588, 0.769);
 	ldir = ldir.Normalize();
 	graphics_interface->SetSunDirection(ldir);
+	graphics_interface->SetLocalTime(settings.GetSkyTime());
+	graphics_interface->SetLocalTimeSpeed(settings.GetSkyTimeSpeed());
 
 	// Init content factories
 	content.getFactory<TEXTURE>().init(texture_size, using_gl3, settings.GetTextureCompress());
@@ -739,7 +741,7 @@ void GAME::Test()
 	info_output << std::endl;
 }
 
-void GAME::BeginDraw()
+void GAME::BeginDraw(float dt)
 {
 	PROFILER.beginBlock("render");
 	// Send scene information to the graphics subsystem.
@@ -760,6 +762,8 @@ void GAME::BeginDraw()
 		graphics_interface->SetupScene(settings.GetFOV(), settings.GetViewDistance(), MATHVECTOR <float, 3> (), QUATERNION <float> (), MATHVECTOR <float, 3> ());
 
 	graphics_interface->SetContrast(settings.GetContrast());
+	graphics_interface->UpdateScene(dt);
+
 	graphics_interface->BeginScene(error_output);
 	PROFILER.endBlock("render");
 
@@ -820,7 +824,7 @@ void GAME::MainLoop()
 
 		SyncParticleGraphics();
 
-		BeginDraw();
+		BeginDraw(eventsystem.Get_dt());
 
 		eventsystem.EndFrame();
 
