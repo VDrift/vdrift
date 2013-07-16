@@ -241,19 +241,20 @@ bool TRACK::LOADER::BeginObjectLoad()
 	list = true;
 	packload = pack.Load(objectpath + "/objects.jpk");
 
+	std::string objectlist = objectpath + "/list.txt";
+	objectfile.open(objectlist.c_str());
+	if (objectfile.good())
+	{
+		return BeginOld();
+	}
+
 	if (Begin())
 	{
 		list = false;
 		return true;
 	}
 
-	std::string objectlist = objectpath + "/list.txt";
-	objectfile.open(objectlist.c_str());
-	if (!objectfile.good())
-	{
-		return false;
-	}
-	return BeginOld();
+	return false;
 }
 
 std::pair<bool, bool> TRACK::LOADER::ContinueObjectLoad()
