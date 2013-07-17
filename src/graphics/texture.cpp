@@ -507,7 +507,8 @@ bool TEXTURE::LoadCubeVerticalCross(const std::string & path, const TEXTUREINFO 
 		glTexImage2D(targetparam, 0, format, m_w, m_h, 0, format, GL_UNSIGNED_BYTE, &cubeface[0]);
 	}
 
-	GenerateMipmap(GL_TEXTURE_CUBE_MAP);
+	if (info.mipmap)
+		GenerateMipmap(GL_TEXTURE_CUBE_MAP);
 
 	glDisable(GL_TEXTURE_CUBE_MAP);
 
