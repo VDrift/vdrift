@@ -223,15 +223,29 @@ void TEXTURE::Activate() const
 {
 	assert(m_id);
 	if (m_cube)
+	{
+		glEnable(GL_TEXTURE_CUBE_MAP);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, m_id);
+	}
 	else
+	{
+		glEnable(GL_TEXTURE_2D);
 		glBindTexture(GL_TEXTURE_2D, m_id);
+	}
 }
 
 void TEXTURE::Deactivate() const
 {
-	glDisable(GL_TEXTURE_2D);
-	glBindTexture(GL_TEXTURE_2D, 0);
+	if (m_cube)
+	{
+		glDisable(GL_TEXTURE_CUBE_MAP);
+		glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
+	}
+	else
+	{
+		glDisable(GL_TEXTURE_2D);
+		glBindTexture(GL_TEXTURE_2D, 0);
+	}
 }
 
 bool TEXTURE::Load(const std::string & path, const TEXTUREINFO & info, std::ostream & error)
@@ -368,11 +382,26 @@ bool TEXTURE::LoadCubeVerticalCross(const std::string & path, const TEXTUREINFO 
 	glGenTextures(1, &id);
 	GLUTIL::CheckForOpenGLErrors("Cubemap ID generation", error);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, id);
+	glEnable(GL_TEXTURE_CUBE_MAP);
+
+	// set sampler
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	if (info.mipmap)
+	{
+		glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_LINEAR);
+		if (!glGenerateMipmap)
+			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_GENERATE_MIPMAP, GL_TRUE);
+	}
 
 	m_id = id;
 	m_w = surface->w / 3;
 	m_h = surface->h / 4;
 
+	// upload texture
 	unsigned bytespp = surface->format->BytesPerPixel;
 	std::vector<unsigned char> cubeface(m_w * m_h * bytespp);
 	for (int i = 0; i < 6; ++i)
@@ -478,27 +507,13 @@ bool TEXTURE::LoadCubeVerticalCross(const std::string & path, const TEXTUREINFO 
 		glTexImage2D(targetparam, 0, format, m_w, m_h, 0, format, GL_UNSIGNED_BYTE, &cubeface[0]);
 	}
 
-	SDL_FreeSurface(surface);
-
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-	if (info.mipmap)
-	{
-		glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_LINEAR);
-		glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-		if (!glGenerateMipmap)
-			glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
-		else
-			GenerateMipmap(GL_TEXTURE_CUBE_MAP);
-	}
+	GenerateMipmap(GL_TEXTURE_CUBE_MAP);
 
 	glDisable(GL_TEXTURE_CUBE_MAP);
 
 	GLUTIL::CheckForOpenGLErrors("Cubemap creation", error);
+
+	SDL_FreeSurface(surface);
 
 	return true;
 }
