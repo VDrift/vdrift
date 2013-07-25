@@ -181,7 +181,6 @@ std::pair <MATHVECTOR <float, 3>, QUATERNION <float> > TRACK::GetStart(unsigned 
 
 TRACK::DATA::DATA() :
 	world(0),
-	vertical_tracking_skyboxes(false),
 	reverse(false),
 	loaded(false),
 	cull(true)

@@ -180,7 +180,6 @@ private:
 		std::tr1::shared_ptr<TEXTURE> racingline_texture;
 
 		// track state
-		bool vertical_tracking_skyboxes;
 		bool reverse;
 		bool loaded;
 		bool cull;

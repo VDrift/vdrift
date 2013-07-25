@@ -497,7 +497,7 @@ void RENDER_INPUT_SCENE::DrawVertexArray(const VERTEXARRAY & va, float linesize)
 
 bool RENDER_INPUT_SCENE::FrustumCull(const DRAWABLE & d)
 {
-	if (d.GetRadius() > 0.0 && !d.GetSkybox())
+	if (d.GetRadius() > 0.0)
 	{
 		//do frustum culling
 		MATHVECTOR <float, 3> objpos(d.GetObjectCenter());
@@ -587,30 +587,11 @@ void RENDER_INPUT_SCENE::SetTextures(const DRAWABLE & d, GLSTATEMANAGER & glstat
 
 void RENDER_INPUT_SCENE::SetTransform(const DRAWABLE & d, GLSTATEMANAGER & glstate)
 {
-	if (d.GetSkybox())
+	if (!last_transform_valid || !last_transform.Equals(d.GetTransform()))
 	{
-		MATRIX4<float> viewMat;
-		cam_rotation.GetMatrix4(viewMat);
-		if (d.GetVerticalTrack())
-		{
-			MATHVECTOR< float, 3 > objpos(d.GetObjectCenter());
-			d.GetTransform().TransformVectorOut(objpos[0], objpos[1], objpos[2]);
-			float translate[4] = {0.0, 0.0, -objpos[2], 0.0};
-			viewMat.MultiplyVector4(translate);
-			viewMat.Translate(translate[0], translate[1], translate[2]);
-		}
-		MATRIX4<float> worldTrans = d.GetTransform().Multiply(viewMat);
+		MATRIX4<float> worldTrans = d.GetTransform().Multiply(viewMatrix);
 		glLoadMatrixf(worldTrans.GetArray());
-		last_transform_valid = false;
-	}
-	else
-	{
-		if (!last_transform_valid || !last_transform.Equals(d.GetTransform()))
-		{
-			MATRIX4<float> worldTrans = d.GetTransform().Multiply(viewMatrix);
-			glLoadMatrixf(worldTrans.GetArray());
-			last_transform = d.GetTransform();
-			last_transform_valid = true;
-		}
+		last_transform = d.GetTransform();
+		last_transform_valid = true;
 	}
 }

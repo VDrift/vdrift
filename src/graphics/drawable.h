@@ -91,13 +91,6 @@ public:
 	bool GetCullFront() const {return cull_front;}
 	void SetCull(bool newcull, bool newcullfront) {cull = newcull; cull_front = newcullfront;}
 
-	bool GetSkybox() const {return skybox;}
-	void SetSkybox(bool value) {skybox = value;}
-
-	/// used for so called "vertical tracking skyboxes"
-	bool GetVerticalTrack() const {return vertical_track;}
-	void SetVerticalTrack(bool value) {vertical_track = value;}
-
 	/// this gets called if we are using the GL3 renderer
 	/// it returns a reference to the RenderModelExternal structure
 	RenderModelExternal & generateRenderModelData(StringIdMap & stringMap);
@@ -114,8 +107,6 @@ public:
 		drawenabled(true),
 		cull(false),
 		cull_front(false),
-		skybox(false),
-		vertical_track(false),
 		texturesChanged(true),
 		uniformsChanged(true)
 	{
@@ -138,8 +129,6 @@ private:
 	bool drawenabled;
 	bool cull;
 	bool cull_front;
-	bool skybox;
-	bool vertical_track;
 
 	bool texturesChanged;
 	bool uniformsChanged;

@@ -113,13 +113,14 @@ private:
 	// pod for references
 	struct BODY
 	{
-		BODY() : nolighting(false), mesh(0), shape(0),
+		BODY() : nolighting(false), skybox(false), mesh(0), shape(0),
 			mass(0), surface(0), collidable(false)
 		{
 			// ctor
 		}
 		DRAWABLE drawable;
 		bool nolighting;
+		bool skybox;
 		btStridingMeshInterface * mesh;
 		btCollisionShape * shape;
 		btVector3 inertia;

@@ -164,8 +164,6 @@ bool TRACK::LOADER::BeginLoad()
 	// parse info
 	PTree info;
 	read_ini(file, info);
-
-	info.get("vertical tracking skyboxes", data.vertical_tracking_skyboxes);
 	info.get("cull faces", data.cull);
 
 	if (!LoadStartPositions(info))
@@ -388,10 +386,10 @@ TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const PTree & cfg)
 	cfg.get("model", model_name, error_output);
 	cfg.get("clampuv", clampuv);
 	cfg.get("mipmap", mipmap);
-	cfg.get("skybox", skybox);
 	cfg.get("alphablend", alphablend);
 	cfg.get("doublesided", doublesided);
 	cfg.get("isashadow", isashadow);
+	cfg.get("skybox", body.skybox);
 	cfg.get("nolighting", body.nolighting);
 
 	std::vector<std::string> texture_names(3);
@@ -465,10 +463,8 @@ TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const PTree & cfg)
 	drawable.SetMiscMap2(miscmap2);
 	drawable.SetDecal(alphablend);
 	drawable.SetCull(data.cull && !doublesided, false);
-	drawable.SetRadius(model.GetRadius());
 	drawable.SetObjectCenter(model.GetCenter());
-	drawable.SetSkybox(skybox);
-	drawable.SetVerticalTrack(skybox && data.vertical_tracking_skyboxes);
+	drawable.SetRadius(!skybox ? model.GetRadius() : 0.0f);
 
 	return bodies.insert(std::make_pair(name, body)).first;
 }
@@ -477,17 +473,8 @@ void TRACK::LOADER::AddBody(SCENENODE & scene, const BODY & body)
 {
 	bool nolighting = body.nolighting;
 	bool alphablend = body.drawable.GetDecal();
-	bool skybox = body.drawable.GetSkybox();
 	keyed_container<DRAWABLE> * dlist = &scene.GetDrawlist().normal_noblend;
-	if (alphablend)
-	{
-		dlist = &scene.GetDrawlist().normal_blend;
-	}
-	else if (nolighting)
-	{
-		dlist = &scene.GetDrawlist().normal_noblend_nolighting;
-	}
-	if (skybox)
+	if (body.skybox)
 	{
 		if (alphablend)
 		{
@@ -496,6 +483,17 @@ void TRACK::LOADER::AddBody(SCENENODE & scene, const BODY & body)
 		else
 		{
 			dlist = &scene.GetDrawlist().skybox_noblend;
+		}
+	}
+	else
+	{
+		if (alphablend)
+		{
+			dlist = &scene.GetDrawlist().normal_blend;
+		}
+		else if (nolighting)
+		{
+			dlist = &scene.GetDrawlist().normal_noblend_nolighting;
 		}
 	}
 	dlist->insert(body.drawable);
@@ -743,10 +741,8 @@ bool TRACK::LOADER::AddObject(const OBJECT & object)
 	drawable.SetMiscMap2(miscmap2_texture);
 	drawable.SetDecal(transparent);
 	drawable.SetCull(data.cull && (object.transparent_blend!=2), false);
-	drawable.SetRadius(object.model->GetRadius());
 	drawable.SetObjectCenter(object.model->GetCenter());
-	drawable.SetSkybox(object.skybox);
-	drawable.SetVerticalTrack(object.skybox && data.vertical_tracking_skyboxes);
+	drawable.SetRadius(!object.skybox ? object.model->GetRadius() : 0.0f);
 
 	if (object.collideable)
 	{
