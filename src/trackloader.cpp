@@ -742,7 +742,7 @@ bool TRACK::LOADER::AddObject(const OBJECT & object)
 	drawable.SetDecal(transparent);
 	drawable.SetCull(data.cull && (object.transparent_blend!=2), false);
 	drawable.SetObjectCenter(object.model->GetCenter());
-	drawable.SetRadius(!object.skybox ? object.model->GetRadius() : 0.0f);
+	drawable.SetRadius(object.model->GetRadius());
 
 	if (object.collideable)
 	{
