@@ -215,22 +215,9 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 	DrawList(glstate, *static_drawlist_ptr, true);
 }
 
-void RENDER_INPUT_SCENE::SetReflection(TEXTURE_INTERFACE * value)
-{
-	if (!value)
-		reflection.clear();
-	else
-		reflection = value;
-}
-
 void RENDER_INPUT_SCENE::SetFSAA(unsigned int value)
 {
 	fsaa = value;
-}
-
-void RENDER_INPUT_SCENE::SetAmbient(TEXTURE_INTERFACE & value)
-{
-	ambient = value;
 }
 
 void RENDER_INPUT_SCENE::SetContrast(float value)
@@ -633,24 +620,3 @@ void RENDER_INPUT_SCENE::SetTransform(const DRAWABLE & d, GLSTATEMANAGER & glsta
 		}
 	}
 }
-
-/*unsigned int GRAPHICS_SDLGL::RENDER_INPUT_SCENE::CombineDrawlists()
-{
-	combined_drawlist_cache.resize(0);
-	combined_drawlist_cache.reserve(drawlist_static->size()+drawlist_dynamic->size());
-
-	unsigned int already_culled = 0;
-
-	if (use_static_partitioning)
-	{
-		AABB<float>::FRUSTUM aabbfrustum(frustum);
-		//aabbfrustum.DebugPrint(std::cout);
-		static_partitioning->Query(aabbfrustum, combined_drawlist_cache);
-		already_culled = combined_drawlist_cache.size();
-	}
-	else
-		calgo::transform(*drawlist_static, std::back_inserter(combined_drawlist_cache), &PointerTo);
-	calgo::transform(*drawlist_dynamic, std::back_inserter(combined_drawlist_cache), &PointerTo);
-
-	return already_culled;
-}*/

@@ -72,11 +72,7 @@ public:
 
 	virtual void Render(GLSTATEMANAGER & glstate, std::ostream & error_output);
 
-	void SetReflection(TEXTURE_INTERFACE * value);
-
 	void SetFSAA(unsigned int value);
-
-	void SetAmbient(TEXTURE_INTERFACE & value);
 
 	void SetContrast(float value);
 
@@ -113,8 +109,6 @@ private:
 	bool shaders;
 	bool clearcolor, cleardepth;
 	reseatable_reference <SHADER_GLSL> shader;
-	reseatable_reference <TEXTURE_INTERFACE> reflection;
-	reseatable_reference <TEXTURE_INTERFACE> ambient;
 	bool orthomode;
 	unsigned int fsaa;
 	float contrast;

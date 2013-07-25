@@ -547,10 +547,6 @@ void GRAPHICS_GL2::DrawScene(std::ostream & error_output)
 {
 	renderscene.SetFlags(using_shaders);
 	renderscene.SetFSAA(fsaa);
-
-	if (reflection_status == REFLECTION_STATIC)
-		renderscene.SetReflection(&static_reflection);
-	renderscene.SetAmbient(static_ambient);
 	renderscene.SetContrast(contrast);
 	renderscene.SetSunDirection(light_direction);
 
