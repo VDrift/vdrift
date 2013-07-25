@@ -497,7 +497,7 @@ void RENDER_INPUT_SCENE::DrawVertexArray(const VERTEXARRAY & va, float linesize)
 
 bool RENDER_INPUT_SCENE::FrustumCull(const DRAWABLE & d)
 {
-	if (d.GetRadius() != 0.0 && !d.GetSkybox() && d.GetCameraTransformEnable())
+	if (d.GetRadius() > 0.0 && !d.GetSkybox())
 	{
 		//do frustum culling
 		MATHVECTOR <float, 3> objpos(d.GetObjectCenter());
@@ -587,13 +587,7 @@ void RENDER_INPUT_SCENE::SetTextures(const DRAWABLE & d, GLSTATEMANAGER & glstat
 
 void RENDER_INPUT_SCENE::SetTransform(const DRAWABLE & d, GLSTATEMANAGER & glstate)
 {
-	if (!d.GetCameraTransformEnable())
-	{
-		// do our own transform only and ignore the camera position / orientation
-		glLoadMatrixf(d.GetTransform().GetArray());
-		last_transform_valid = false;
-	}
-	else if (d.GetSkybox())
+	if (d.GetSkybox())
 	{
 		MATRIX4<float> viewMat;
 		cam_rotation.GetMatrix4(viewMat);

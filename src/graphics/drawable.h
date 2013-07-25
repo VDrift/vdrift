@@ -98,10 +98,6 @@ public:
 	bool GetVerticalTrack() const {return vertical_track;}
 	void SetVerticalTrack(bool value) {vertical_track = value;}
 
-	/// true for normal objects; if false camera transform and orientation aren't applied when the object is rendered
-	bool GetCameraTransformEnable() const {return cameratransform;}
-	void SetCameraTransformEnable(bool value) {cameratransform = value;}
-
 	/// this gets called if we are using the GL3 renderer
 	/// it returns a reference to the RenderModelExternal structure
 	RenderModelExternal & generateRenderModelData(StringIdMap & stringMap);
@@ -120,7 +116,6 @@ public:
 		cull_front(false),
 		skybox(false),
 		vertical_track(false),
-		cameratransform(true),
 		texturesChanged(true),
 		uniformsChanged(true)
 	{
@@ -145,7 +140,6 @@ private:
 	bool cull_front;
 	bool skybox;
 	bool vertical_track;
-	bool cameratransform;
 
 	bool texturesChanged;
 	bool uniformsChanged;

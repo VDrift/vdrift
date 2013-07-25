@@ -1341,7 +1341,7 @@ void GRAPHICS_GL2::DrawScenePassLayer(
 		GLUTIL::CheckForOpenGLErrors("render setup", error_output);
 
 		// car paint hack for non-shader path
-		bool carhack = !using_shaders && (layer == "nocamtrans_noblend" || layer == "car_noblend");
+		bool carhack = !using_shaders && (layer == "car_noblend");
 		renderscene.SetCarPaintHack(carhack);
 
 		// render
