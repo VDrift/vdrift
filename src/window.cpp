@@ -322,10 +322,4 @@ void WINDOW_SDL::LogOpenGLInfo(std::ostream & info_output)
 	cardinfo << "Maximum varying floats: " << maxFloats;
 
 	info_output << cardinfo.str() << std::endl;
-	if (cardinfo.str().find("NVIDIA") == std::string::npos &&
-		cardinfo.str().find("ATI") == std::string::npos &&
-		cardinfo.str().find("AMD") == std::string::npos)
-	{
-		info_output << "You don't have an NVIDIA or ATI/AMD card. This game may not run correctly or at all." << std::endl;
-	}
 }
