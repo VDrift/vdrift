@@ -209,7 +209,7 @@ GRAPHICS_GL2::GRAPHICS_GL2() :
 	normalmaps(false),
 	contrast(1.0),
 	reflection_status(REFLECTION_DISABLED),
-	renderconfigfile("render.conf"),
+	renderconfigfile("noshaders.conf"),
 	sky_dynamic(false)
 {
 	// ctor
@@ -224,9 +224,10 @@ GRAPHICS_GL2::~GRAPHICS_GL2()
 
 bool GRAPHICS_GL2::Init(
 	const std::string & shaderpath,
-	unsigned int resx, unsigned int resy, unsigned int bpp,
-	unsigned int depthbpp, bool fullscreen, bool shaders,
-	unsigned int antialiasing, bool enableshadows, int new_shadow_distance,
+	unsigned resx, unsigned resy,
+	unsigned bpp, unsigned depthbpp,
+	bool fullscreen, unsigned antialiasing,
+	bool enableshadows, int new_shadow_distance,
 	int new_shadow_quality, int reflection_type,
 	const std::string & static_reflectionmap_file,
 	const std::string & static_ambientmap_file,
@@ -234,7 +235,8 @@ bool GRAPHICS_GL2::Init(
 	int lighting_quality, bool newbloom,
 	bool newnormalmaps, bool dynamicsky,
 	const std::string & renderconfig,
-	std::ostream & info_output, std::ostream & error_output)
+	std::ostream & info_output,
+	std::ostream & error_output)
 {
 	shadows = enableshadows;
 	shadow_distance = new_shadow_distance;
@@ -256,7 +258,12 @@ bool GRAPHICS_GL2::Init(
 	if (antialiasing > 1)
 		fsaa = antialiasing;
 
-	if (!shaders)
+	if (GLEW_EXT_texture_filter_anisotropic)
+		glGetIntegerv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &max_anisotropy);
+
+	info_output << "Maximum anisotropy: " << max_anisotropy << std::endl;
+
+	if (renderconfigfile == "noshaders.conf")
 	{
 		DisableShaders(shaderpath, error_output);
 	}
@@ -268,16 +275,6 @@ bool GRAPHICS_GL2::Init(
 	else if (!GLEW_ARB_texture_cube_map)
 	{
 		info_output << "Your video card doesn't support cube maps.  Disabling shaders." << std::endl;
-		DisableShaders(shaderpath, error_output);
-	}
-	else if (!GLEW_ARB_framebuffer_object)
-	{
-		info_output << "Your video card doesn't support framebuffer objects.  Disabling shaders." << std::endl;
-		DisableShaders(shaderpath, error_output);
-	}
-	else if (!GLEW_ARB_draw_buffers)
-	{
-		info_output << "Your video card doesn't support multiple draw buffers.  Disabling shaders." << std::endl;
 		DisableShaders(shaderpath, error_output);
 	}
 	else if (!GLEW_ARB_texture_non_power_of_two)
@@ -295,66 +292,61 @@ bool GRAPHICS_GL2::Init(
 		info_output << "Your video card doesn't support 16-bit floats.  Disabling shaders." << std::endl;
 		DisableShaders(shaderpath, error_output);
 	}
-	else if (!GLEW_ARB_shader_texture_lod && !GLEW_VERSION_2_1) // texture2DLod in logluminance shader
-	{
-		info_output << "Your video card doesn't support texture2DLod.  Disabling shaders." << std::endl;
-		DisableShaders(shaderpath, error_output);
-	}
 	else
 	{
 		GLint maxattach;
 		glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxattach);
 		info_output << "Maximum color attachments: " << maxattach << std::endl;
 
-		const GLint reqmrt = 1;
-
-		GLint mrt;
+		const GLint mrtreq = 1;
+		GLint mrt = 0;
 		glGetIntegerv(GL_MAX_DRAW_BUFFERS, &mrt);
-		info_output << "Maximum draw buffers (" << reqmrt << " required): " << mrt << std::endl;
+		info_output << "Maximum draw buffers (" << mrtreq << " required): " << mrt << std::endl;
 
-		if (GLEW_ARB_shading_language_100 && GLEW_VERSION_2_0 && shaders && GLEW_ARB_fragment_shader && mrt >= reqmrt && maxattach >= reqmrt)
+		bool use_fbos = GLEW_ARB_framebuffer_object && mrt >= mrtreq && maxattach >= mrtreq;
+
+		if (renderconfigfile != "nofbos.conf" && !use_fbos)
 		{
+			info_output << "Your video card doesn't support framebuffer objects." << std::endl;
+			info_output << "Fall back to nofbos.conf." << std::endl;
+			renderconfigfile = "nofbos.conf";
+		}
+
+		if (GLEW_VERSION_2_0 && GLEW_ARB_shading_language_100 && GLEW_ARB_fragment_shader)
+		{
+			if ((reflection_status == REFLECTION_STATIC || reflection_status == REFLECTION_DYNAMIC) && !static_reflectionmap_file.empty())
+			{
+				TEXTUREINFO t;
+				t.cube = true;
+				t.verticalcross = true;
+				t.mipmap = true;
+				t.anisotropy = anisotropy;
+				t.maxsize = TEXTUREINFO::Size(texturesize);
+				static_reflection.Load(static_reflectionmap_file, t, error_output);
+			}
+
+			if (!static_ambientmap_file.empty())
+			{
+				TEXTUREINFO t;
+				t.cube = true;
+				t.verticalcross = true;
+				t.mipmap = false;
+				t.anisotropy = anisotropy;
+				t.maxsize = TEXTUREINFO::Size(texturesize);
+				static_ambient.Load(static_ambientmap_file, t, error_output);
+			}
+
 			EnableShaders(shaderpath, info_output, error_output);
 		}
 		else
 		{
-			info_output << "Disabling shaders" << std::endl;
+			info_output << "Your video card doesn't support shaders. Fall back to noshaders.conf." << std::endl;
 			DisableShaders(shaderpath, error_output);
 		}
 	}
 
-	//load static reflection map for dynamic reflections too, since we may need it
-	if ((reflection_status == REFLECTION_STATIC || reflection_status == REFLECTION_DYNAMIC) && !static_reflectionmap_file.empty())
-	{
-		TEXTUREINFO t;
-		t.cube = true;
-		t.verticalcross = true;
-		t.mipmap = true;
-		t.anisotropy = anisotropy;
-		t.maxsize = TEXTUREINFO::Size(texturesize);
-		static_reflection.Load(static_reflectionmap_file, t, error_output);
-	}
-
-	if (!static_ambientmap_file.empty())
-	{
-		TEXTUREINFO t;
-		t.cube = true;
-		t.verticalcross = true;
-		t.mipmap = false;
-		t.anisotropy = anisotropy;
-		t.maxsize = TEXTUREINFO::Size(texturesize);
-		static_ambient.Load(static_ambientmap_file, t, error_output);
-	}
-
-	if (GLEW_EXT_texture_filter_anisotropic)
-		glGetIntegerv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &max_anisotropy);
-
-	info_output << "Maximum anisotropy: " << max_anisotropy << std::endl;
-
-	GLUTIL::CheckForOpenGLErrors("Shader loading", error_output);
-
+	info_output << "Renderer: " << shaderpath << "/" << renderconfigfile << std::endl;
 	initialized = true;
-
 	return true;
 }
 
@@ -420,17 +412,6 @@ void GRAPHICS_GL2::SetupScene(
 		GRAPHICS_CAMERA & cam = cameras["skybox"];
 		cam = cameras["default"];
 		cam.view_distance = 10000.0;
-	}
-
-	// create a camera for 3d ui elements that has a fixed FOV
-	{
-		GRAPHICS_CAMERA & cam = cameras["ui3d"];
-		cam.fov = 45;
-		cam.pos = cam_position;
-		cam.orient = cam_rotation;
-		cam.view_distance = new_view_distance;
-		cam.w = w;
-		cam.h = h;
 	}
 
 	// create a camera for the dynamic reflections
@@ -675,14 +656,15 @@ void GRAPHICS_GL2::ChangeDisplay(
 }
 
 bool GRAPHICS_GL2::LoadShader(
-	const std::string & shaderpath,
-	const std::string & name,
+	const std::string & shader_name,
+	const std::string & shader_defines,
+	const std::string & shader_path,
+	const std::string & vert_shader_name,
+	const std::string & frag_shader_name,
 	std::ostream & info_output,
-	std::ostream & error_output,
-	std::string variant,
-	std::string variant_defines)
+	std::ostream & error_output)
 {
-	//generate preprocessor defines
+	//generate defines
 	std::vector <std::string> defines;
 
 	{
@@ -731,38 +713,26 @@ bool GRAPHICS_GL2::LoadShader(
 	if (lighting == 2)
 		defines.push_back("_SSAO_HIGH_");
 
-	std::string shadername = name;
-	if (!variant.empty())
+	if (!shader_defines.empty())
 	{
-		shadername = variant;
-		if (!variant_defines.empty())
+		std::stringstream s(shader_defines);
+		while (s)
 		{
-			std::stringstream s(variant_defines);
-			while (s)
-			{
-				std::string newdefine;
-				s >> newdefine;
-				if (!newdefine.empty())
-					defines.push_back(newdefine);
-			}
+			std::string newdefine;
+			s >> newdefine;
+			if (!newdefine.empty())
+				defines.push_back(newdefine);
 		}
 	}
-	std::pair <std::map <std::string, SHADER_GLSL >::iterator, bool> result = shadermap.insert(std::make_pair(shadername, SHADER_GLSL()));
-	std::map <std::string, SHADER_GLSL >::iterator i = result.first;
 
-	bool success = true;
-	//if (result.second) //if the insertion resulted in a new object being created, set it up
-	{
-		success = i->second.Load(shaderpath+"/"+name+"/vertex.glsl", shaderpath+"/"+name+"/fragment.glsl",
-					 defines, info_output, error_output);
-		if (success)
-		{
-			info_output << "Loaded shader package "+name;
-			if (!variant.empty() && variant != name)
-				info_output << ", variant " << variant;
-			info_output << std::endl;
-		}
-	}
+	std::pair <shader_map_type::iterator, bool> result = shadermap.insert(std::make_pair(shader_name, SHADER_GLSL()));
+	assert(result.second);
+
+	SHADER_GLSL & shader = result.first->second;
+	bool success = shader.Load(
+		shader_path + "/" + vert_shader_name,
+		shader_path + "/" + frag_shader_name,
+		defines, info_output, error_output);
 
 	return success;
 }
@@ -788,7 +758,7 @@ void GRAPHICS_GL2::EnableShaders(
 
 	// reload configuration
 	config = GRAPHICS_CONFIG();
-	std::string rcpath = shaderpath+"/" + renderconfigfile;
+	std::string rcpath = shaderpath + "/" + renderconfigfile;
 	if (!config.Load(rcpath, error_output))
 	{
 		error_output << "Error loading render configuration file: " << rcpath << std::endl;
@@ -801,7 +771,8 @@ void GRAPHICS_GL2::EnableShaders(
 	{
 		assert(shadernames.find(s->name) == shadernames.end());
 		shadernames.insert(s->name);
-		shader_load_success = shader_load_success && LoadShader(shaderpath, s->folder, info_output, error_output, s->name, s->defines);
+		shader_load_success = shader_load_success &&
+			LoadShader(s->name, s->defines, shaderpath, s->vertex, s->fragment, info_output, error_output);
 	}
 
 	GLUTIL::CheckForOpenGLErrors("EnableShaders: shader loading", error_output);
@@ -963,6 +934,7 @@ void GRAPHICS_GL2::EnableShaders(
 
 void GRAPHICS_GL2::DisableShaders(const std::string & shaderpath, std::ostream & error_output)
 {
+	renderconfigfile = "noshaders.conf";
 	shadermap.clear();
 	using_shaders = false;
 	shadows = false;
@@ -974,7 +946,7 @@ void GRAPHICS_GL2::DisableShaders(const std::string & shaderpath, std::ostream &
 
 	// load non-shader configuration
 	config = GRAPHICS_CONFIG();
-	std::string rcpath = shaderpath+"/render.conf.noshaders";
+	std::string rcpath = shaderpath + "/" + renderconfigfile;
 	if (!config.Load(rcpath, error_output))
 	{
 		error_output << "Error loading non-shader render configuration file: " << rcpath << std::endl;

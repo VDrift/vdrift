@@ -186,6 +186,8 @@ bool GRAPHICS_CONFIG_SHADER::Load(std::istream & f, std::ostream & error_output,
 {
 	std::vector <std::string> reqd;
 	reqd.push_back("name");
+	reqd.push_back("fragment");
+	reqd.push_back("vertex");
 
 	int sectionstart = line;
 
@@ -195,15 +197,12 @@ bool GRAPHICS_CONFIG_SHADER::Load(std::istream & f, std::ostream & error_output,
 
 	for (std::map <std::string, std::string>::const_iterator i = vars.begin(); i != vars.end(); i++)
 	{
-		if (!isOf(i->first, "name folder defines", &error_output, sectionstart)) return false;
+		if (!isOf(i->first, "name fragment vertex defines", &error_output, sectionstart)) return false;
 	}
 
-	// fill in defaults
-	if (vars["folder"].empty())
-		vars["folder"] = vars["name"];
-
 	ASSIGNVAR(name);
-	ASSIGNVAR(folder);
+	ASSIGNVAR(fragment);
+	ASSIGNVAR(vertex);
 	ASSIGNVAR(defines);
 
 	return true;

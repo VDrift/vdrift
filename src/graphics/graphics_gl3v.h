@@ -46,19 +46,21 @@ class GRAPHICS_GL3V : public GRAPHICS
 public:
 	///reflection_type is 0 (low=OFF), 1 (medium=static), 2 (high=dynamic)
 	/// returns true on success
-	virtual bool Init(const std::string & shaderpath,
-				unsigned int resx, unsigned int resy, unsigned int bpp,
-				unsigned int depthbpp, bool fullscreen, bool shaders,
-				unsigned int antialiasing, bool enableshadows,
-				int shadow_distance, int shadow_quality,
-				int reflection_type,
-				const std::string & static_reflectionmap_file,
-				const std::string & static_ambientmap_file,
-				int anisotropy, int texturesize,
-				int lighting_quality, bool newbloom,
-				bool newnormalmaps, bool dynamicsky,
-				const std::string & renderconfig,
-				std::ostream & info_output, std::ostream & error_output);
+	virtual bool Init(
+		const std::string & shaderpath,
+		unsigned resx, unsigned resy,
+		unsigned bpp, unsigned depthbpp,
+		bool fullscreen, unsigned antialiasing,
+		bool enableshadows, int shadow_distance,
+		int shadow_quality, int reflection_type,
+		const std::string & static_reflectionmap_file,
+		const std::string & static_ambientmap_file,
+		int anisotropy, int texturesize,
+		int lighting_quality, bool newbloom,
+		bool newnormalmaps, bool dynamicsky,
+		const std::string & renderconfig,
+		std::ostream & info_output,
+		std::ostream & error_output);
 	virtual void Deinit();
 	virtual void BeginScene(std::ostream & error_output);
 	virtual DRAWABLE_CONTAINER <PTRVECTOR> & GetDynamicDrawlist();
@@ -81,10 +83,10 @@ public:
 	~GRAPHICS_GL3V() {};
 
 private:
-
 	StringIdMap & stringMap;
 	GLWrapper gl;
 	Renderer renderer;
+	std::string rendercfg;
 	int w, h;
 	bool logNextGlFrame; // used to take a gl log capture after reloading shaders if gl logging is enabled
 	bool initialized;

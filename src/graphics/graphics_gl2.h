@@ -45,18 +45,19 @@ public:
 	/// returns true on success
 	virtual bool Init(
 		const std::string & shaderpath,
-		unsigned int resx, unsigned int resy, unsigned int bpp,
-		unsigned int depthbpp, bool fullscreen, bool shaders,
-		unsigned int antialiasing, bool enableshadows,
-		int shadow_distance, int shadow_quality,
-		int reflection_type,
+		unsigned resx, unsigned resy,
+		unsigned bpp, unsigned depthbpp,
+		bool fullscreen, unsigned antialiasing,
+		bool enableshadows, int shadow_distance,
+		int shadow_quality, int reflection_type,
 		const std::string & static_reflectionmap_file,
 		const std::string & static_ambientmap_file,
 		int anisotropy, int texturesize,
 		int lighting_quality, bool newbloom,
 		bool newnormalmaps, bool dynamicsky,
 		const std::string & renderconfig,
-		std::ostream & info_output, std::ostream & error_output);
+		std::ostream & info_output,
+		std::ostream & error_output);
 
 	virtual void Deinit();
 
@@ -175,16 +176,16 @@ private:
 		const int width, const int height,
 		std::ostream & error_output);
 
-	/// note that if variant is passed in, it is used as the shader name and the shader is also loaded with the variant_defines set
-	/// this allows loading multiple shaders from the same shader file, just with different defines set
-	/// variant_defines is a space delimited list of defines
+	/// shader name is used to distinquish between shaders with different defines set
+	/// shader_defines is a space delimited list of defines
 	bool LoadShader(
-		const std::string & shaderpath,
-		const std::string & name,
+		const std::string & shader_name,
+		const std::string & shader_defines,
+		const std::string & shader_path,
+		const std::string & vert_shader_name,
+		const std::string & frag_shader_name,
 		std::ostream & info_output,
-		std::ostream & error_output,
-		std::string variant="",
-		std::string variant_defines="");
+		std::ostream & error_output);
 
 	void EnableShaders(
 		const std::string & shaderpath,

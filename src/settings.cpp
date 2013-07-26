@@ -44,7 +44,7 @@ SETTINGS::SETTINGS() :
 	bpp(32),
 	depthbpp(24),
 	fullscreen(false),
-	renderer("gl3"),
+	renderer("gl3/vdrift1.rhr"),
 	skin("simple"),
 	language("en"),
 	show_fps(false),

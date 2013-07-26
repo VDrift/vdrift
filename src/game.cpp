@@ -91,7 +91,6 @@ GAME::GAME(std::ostream & info_out, std::ostream & error_out) :
 	content(error_out),
 	carupdater(autoupdate, info_out, error_out),
 	trackupdater(autoupdate, info_out, error_out),
-	renderconfigfile("render.conf.deferred"),
 	fps_track(10, 0),
 	fps_position(0),
 	fps_min(0),
@@ -353,13 +352,16 @@ void GAME::InitCoreSubsystems()
 	BeginStartingUp();
 
 	// choose renderer
-	bool using_gl3 = false;
-	bool using_gl2 = false;
-	if (settings.GetRenderer() == "gl3")
-		using_gl3 = true;
-	else if (settings.GetRenderer() == "gl2")
-		using_gl2 = true;
-	bool enable_shaders = using_gl3 || using_gl2;
+	std::string renderer = settings.GetRenderer();
+	if (!renderconfigfile.empty())
+		renderer = renderconfigfile;
+
+	std::string render_ver, render_cfg;
+	std::istringstream render_str(renderer);
+	std::getline(render_str, render_ver, '/');
+	std::getline(render_str, render_cfg);
+
+	bool using_gl3 = (render_ver == "gl3");
 
 	// disable antialiasing for the GL3 path because we're using image-based AA...
 	unsigned antialiasing = using_gl3 ? 0 : settings.GetAntialiasing();
@@ -388,16 +390,17 @@ void GAME::InitCoreSubsystems()
 			graphics_interface = new GRAPHICS_GL2();
 		}
 
-		bool success = graphics_interface->Init(pathmanager.GetShaderPath(),
+		bool success = graphics_interface->Init(
+			pathmanager.GetShaderPath() + "/" + render_ver,
 			settings.GetResolutionX(), settings.GetResolutionY(),
 			settings.GetBpp(), settings.GetDepthbpp(), settings.GetFullscreen(),
-			enable_shaders, settings.GetAntialiasing(), settings.GetShadows(),
+			settings.GetAntialiasing(), settings.GetShadows(),
 			settings.GetShadowDistance(), settings.GetShadowQuality(), settings.GetReflections(),
 			pathmanager.GetStaticReflectionMap(), pathmanager.GetStaticAmbientMap(),
 			settings.GetAnisotropic(), texture_size,
 			settings.GetLighting(), settings.GetBloom(),
 			settings.GetNormalMaps(), settings.GetSkyDynamic(),
-			renderconfigfile, info_output, error_output);
+			render_cfg, info_output, error_output);
 
 		if (success)
 		{
@@ -407,6 +410,7 @@ void GAME::InitCoreSubsystems()
 		{
 			delete graphics_interface;
 			graphics_interface = NULL;
+			render_ver = "gl2";
 			using_gl3 = false;
 		}
 	}
@@ -685,7 +689,7 @@ bool GAME::ParseArguments(std::list <std::string> & args)
 	}
 	arghelp["-benchmark"] = "Run in benchmark mode.";
 
-	arghelp["-render FILE"] = "Load the specified render configuration file instead of the default " + renderconfigfile + ".";
+	arghelp["-render FILE"] = "Load the specified render configuration file instead of the default gl3/vdrift1.rhr.";
 	if (!argmap["-render"].empty())
 	{
 		renderconfigfile = argmap["-render"];

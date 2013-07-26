@@ -38,26 +38,30 @@ GRAPHICS_GL3V::GRAPHICS_GL3V(StringIdMap & map) :
 	fullscreenquad.SetVertArray(&fullscreenquadVertices);
 }
 
-bool GRAPHICS_GL3V::Init(const std::string & shaderpath,
-				unsigned int resx, unsigned int resy, unsigned int bpp,
-				unsigned int depthbpp, bool fullscreen, bool shaders,
-				unsigned int antialiasing, bool shadows,
-				int shadow_distance, int shadow_quality,
-				int reflection_type,
-				const std::string & static_reflectionmap_file,
-				const std::string & static_ambientmap_file,
-				int anisotropy, int texturesize,
-				int lighting_quality, bool bloom,
-				bool normalmaps, bool /*dynamicsky*/,
-				const std::string & renderconfig,
-				std::ostream & info_output, std::ostream & error_output)
+bool GRAPHICS_GL3V::Init(
+	const std::string & shaderpath,
+	unsigned resx, unsigned resy,
+	unsigned bpp, unsigned depthbpp,
+	bool fullscreen, unsigned antialiasing,
+	bool shadows, int shadow_distance,
+	int shadow_quality, int reflection_type,
+	const std::string & static_reflectionmap_file,
+	const std::string & static_ambientmap_file,
+	int anisotropy, int texturesize,
+	int lighting_quality, bool bloom,
+	bool normalmaps, bool /*dynamicsky*/,
+	const std::string & renderconfig,
+	std::ostream & info_output,
+	std::ostream & error_output)
 {
+	rendercfg = renderconfig;
+
 	// first, see if we support the required gl version by attempting to initialize the GL wrapper
 	gl.setInfoOutput(info_output);
 	gl.setErrorOutput(error_output);
 	if (!gl.initialize())
 	{
-		error_output << "Initialization of GL3 failed; that's OK, falling back to GL 1 or 2" << std::endl;
+		error_output << "Initialization of GL3 failed." << std::endl;
 		return false;
 	}
 
@@ -192,16 +196,6 @@ void GRAPHICS_GL3V::SetupScene(float fov, float new_view_distance, const MATHVEC
 		fov,
 		0.0001f,
 		10000.f,
-		w,
-		h);
-
-	// create a camera for 3d ui elements that has a fixed FOV
-	setCameraPerspective("ui3d",
-		cam_position,
-		cam_rotation,
-		45,
-		nearDistance,
-		new_view_distance,
 		w,
 		h);
 
@@ -605,7 +599,7 @@ bool GRAPHICS_GL3V::ReloadShaders(const std::string & shaderpath, std::ostream &
 {
 	// reinitialize the entire renderer
 	std::vector <RealtimeExportPassInfo> passInfos;
-	bool passInfosLoaded = joeserialize::LoadObjectFromFile("passList", shaderpath+"/gl3/vdrift1.rhr", passInfos, false, true, info_output, error_output);
+	bool passInfosLoaded = joeserialize::LoadObjectFromFile("passList", shaderpath+"/"+rendercfg, passInfos, false, true, info_output, error_output);
 	if (passInfosLoaded)
 	{
 		// strip pass infos from the list that we pass to the renderer if they are disabled
@@ -633,7 +627,7 @@ bool GRAPHICS_GL3V::ReloadShaders(const std::string & shaderpath, std::ostream &
 			allcapsConditions.insert(s);
 		}
 
-		bool initSuccess = renderer.initialize(passInfos, stringMap, shaderpath+"/gl3", w, h, allcapsConditions, error_output);
+		bool initSuccess = renderer.initialize(passInfos, stringMap, shaderpath, w, h, allcapsConditions, error_output);
 		if (initSuccess)
 		{
 			// assign cameras to each pass

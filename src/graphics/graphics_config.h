@@ -32,7 +32,8 @@
 struct GRAPHICS_CONFIG_SHADER
 {
 	std::string name; ///< the name of the shader package
-	std::string folder; ///< the name of the folder where the shader package is
+	std::string fragment; ///< fragment shader name
+	std::string vertex; ///< vertex shader name
 	std::string defines; ///< space delimited list of #defines to be set
 
 	bool Load(std::istream & f, std::ostream & error_output, int & linecount);
