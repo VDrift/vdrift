@@ -64,23 +64,23 @@ bool SHADER_GLSL::Load(const std::string & vertex_filename, const std::string & 
 	assert(!vertexshader_source.empty());
 	assert(!fragmentshader_source.empty());
 
-	//prepend #define values
+	// prepend #define values
 	for (std::vector <std::string>::const_iterator i = preprocessor_defines.begin(); i != preprocessor_defines.end(); ++i)
 	{
 		vertexshader_source = "#define " + *i + "\n" + vertexshader_source;
 		fragmentshader_source = "#define " + *i + "\n" + fragmentshader_source;
 	}
 
-	//prepend #version
+	// prepend #version
 	vertexshader_source = "#version 120\n" + vertexshader_source;
 	fragmentshader_source = "#version 120\n" + fragmentshader_source;
 
-	//create shader objects
+	// create shader objects
 	program = glCreateProgramObjectARB();
 	vertex_shader = glCreateShaderObjectARB(GL_VERTEX_SHADER);
 	fragment_shader = glCreateShaderObjectARB(GL_FRAGMENT_SHADER);
 
-	//load shader sources
+	// load shader sources
 	GLcharARB * vertshad = new GLcharARB[vertexshader_source.length()+1];
 	strcpy(vertshad, vertexshader_source.c_str());
 	const GLcharARB * vertshad2 = vertshad;
@@ -93,48 +93,54 @@ bool SHADER_GLSL::Load(const std::string & vertex_filename, const std::string & 
 	glShaderSource(fragment_shader, 1, &fragshad2, NULL);
 	delete [] fragshad;
 
-	//compile the shaders
+	// compile the shaders
+	glCompileShader(vertex_shader);
+	glCompileShader(fragment_shader);
+
 	GLint vertex_compiled(0);
 	GLint fragment_compiled(0);
-
-	glCompileShader(vertex_shader);
-	PrintShaderLog(vertex_shader, vertex_filename, info_output);
-	glCompileShader(fragment_shader);
-	PrintShaderLog(fragment_shader, fragment_filename, info_output);
 
 	glGetObjectParameterivARB(vertex_shader, GL_OBJECT_COMPILE_STATUS_ARB, &vertex_compiled);
 	glGetObjectParameterivARB(fragment_shader, GL_OBJECT_COMPILE_STATUS_ARB, &fragment_compiled);
 
-	//attach shader objects to the program object
+	if (!vertex_compiled)
+		PrintShaderLog(vertex_shader, vertex_filename, error_output);
+
+	if (!fragment_compiled)
+		PrintShaderLog(fragment_shader, fragment_filename, error_output);
+
+	// attach shader objects to the program object
 	glAttachObjectARB(program, vertex_shader);
 	glAttachObjectARB(program, fragment_shader);
 
-	//link the program
+	// link the program
 	glLinkProgram(program);
+
 	GLint program_linked(0);
 	glGetProgramiv(program, GL_LINK_STATUS, &program_linked);
 
-	const bool success = (vertex_compiled && fragment_compiled && program_linked);
+	if (!program_linked)
+		PrintProgramLog(program, vertex_filename + " and " + fragment_filename, error_output);
 
-	//spit out any error info
-	PrintProgramLog(program, vertex_filename + " and " + fragment_filename, info_output);
-
-	if (!success)
+	if (!(vertex_compiled && fragment_compiled && program_linked))
 	{
 		error_output << "Shader compilation failure: " + vertex_filename + " and " + fragment_filename << endl << endl;
 		error_output << "Vertex shader:" << endl;
 		PrintWithLineNumbers(error_output, vertexshader_source);
 		error_output << endl;
+
 		error_output << "Fragment shader:" << endl;
 		PrintWithLineNumbers(error_output, fragmentshader_source);
 		error_output << endl;
+
+		loaded = false;
 	}
 	else
 	{
-		//need to enable to be able to set passed variable info
+		// need to enable to be able to set passed variable info
 		glUseProgramObjectARB(program);
 
-		//set passed variable information for tus
+		// set passed variable information for tus
 		for (int i = 0; i < 16; i++)
 		{
 			stringstream tustring;
@@ -152,11 +158,11 @@ bool SHADER_GLSL::Load(const std::string & vertex_filename, const std::string & 
 				glUniform1i(tu_loc, i);
 			}
 		}
+
+		loaded = true;
 	}
 
-	loaded = success;
-
-	return success;
+	return loaded;
 }
 
 void SHADER_GLSL::Unload()
