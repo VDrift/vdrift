@@ -57,11 +57,6 @@ void WINDOW_SDL::Init(
 	std::ostream & info_output,
 	std::ostream & error_output)
 {
-#ifndef _WIN32
-	// Force Mesa to advertise S3TC support
-	setenv("force_s3tc_enable", "true", 1);
-#endif
-
 	Uint32 sdl_flags = SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK;
 #if SDL_VERSION_ATLEAST(2,0,0)
 	sdl_flags |= SDL_INIT_HAPTIC;
