@@ -40,8 +40,7 @@ public:
 		blenddest(GL_ZERO),
 		cullmode(GL_BACK),
 		colormask(true),
-		alphamask(true),
-		framebuffer(0)
+		alphamask(true)
 	{
 	}
 
@@ -113,15 +112,6 @@ public:
 		}
 	}
 
-	void BindFramebuffer(GLuint fbid)
-	{
-		if (fbid != framebuffer)
-		{
-			glBindFramebuffer(GL_FRAMEBUFFER, fbid);
-			framebuffer = fbid;
-		}
-	}
-
 	void BindTexture2D(unsigned tu, const TEXTURE * texture)
 	{
 		if (tu >= tex2d.size())
@@ -159,7 +149,6 @@ private:
 	GLenum cullmode;
 	bool colormask;
 	bool alphamask;
-	GLuint framebuffer;
 
 	void Set(int stateid, bool newval)
 	{
