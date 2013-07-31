@@ -113,6 +113,14 @@ SETTINGS::SETTINGS() :
 	resolution[1] = 600;
 }
 
+void SETTINGS::SetFailsafeSettings()
+{
+	*this = SETTINGS();
+	depthbpp = 16;
+	renderer = "gl2/noshaders.conf";
+	texture_size = "medium";
+}
+
 void SETTINGS::Serialize(bool write, Config & config)
 {
 	Config::iterator section;

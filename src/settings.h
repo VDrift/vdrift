@@ -32,6 +32,8 @@ class SETTINGS
 public:
 	SETTINGS();
 
+	void SetFailsafeSettings();
+
 	void Serialize(bool write, Config & config);
 
 	void Load(const std::string & settingsfile, std::ostream & error);
@@ -388,14 +390,6 @@ public:
 	void SetResolutionOverride ( bool value )
 	{
 		res_override = value;
-	}
-
-	void SetFailsafeSettings()
-	{
-		*this = SETTINGS();
-		depthbpp = 16;
-		renderer = "gl1";
-		texture_size = "medium";
 	}
 
 private:
