@@ -388,9 +388,8 @@ bool GRAPHICS_CONFIG_PASS::Load(std::istream & f, std::ostream & error_output, i
 		{
 			std::stringstream parser(vars["draw"]);
 			std::string layer;
-			while (parser)
+			while (parser >> layer)
 			{
-				parser >> layer;
 				if (layer == "postprocess")
 				{
 					error_output << "Error: postprocess must be the only item in the draw list in the section starting on line " << sectionstart << std::endl;
