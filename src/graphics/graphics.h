@@ -81,7 +81,7 @@ public:
 
 	virtual bool GetUsingShaders() const = 0;
 
-	virtual bool ReloadShaders(const std::string & shaderpath, std::ostream & info_output, std::ostream & error_output) = 0;
+	virtual bool ReloadShaders(std::ostream & info_output, std::ostream & error_output) = 0;
 
 	virtual void SetCloseShadow(float value) = 0;
 

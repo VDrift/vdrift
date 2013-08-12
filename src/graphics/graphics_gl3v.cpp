@@ -39,7 +39,7 @@ GRAPHICS_GL3V::GRAPHICS_GL3V(StringIdMap & map) :
 }
 
 bool GRAPHICS_GL3V::Init(
-	const std::string & shaderpath,
+	const std::string & shader_path,
 	unsigned resx, unsigned resy,
 	unsigned bpp, unsigned depthbpp,
 	bool fullscreen, unsigned antialiasing,
@@ -50,11 +50,12 @@ bool GRAPHICS_GL3V::Init(
 	int anisotropy, int texturesize,
 	int lighting_quality, bool bloom,
 	bool normalmaps, bool /*dynamicsky*/,
-	const std::string & renderconfig,
+	const std::string & render_config,
 	std::ostream & info_output,
 	std::ostream & error_output)
 {
-	rendercfg = renderconfig;
+	rendercfg = render_config;
+	shaderpath = shader_path;
 
 	// first, see if we support the required gl version by attempting to initialize the GL wrapper
 	gl.setInfoOutput(info_output);
@@ -98,7 +99,7 @@ bool GRAPHICS_GL3V::Init(
 	h = resy;
 
 	// initialize the renderer
-	bool success = ReloadShaders(shaderpath, info_output, error_output);
+	bool success = ReloadShaders(info_output, error_output);
 	initialized = success;
 	return success;
 }
@@ -595,7 +596,7 @@ int upper(int c)
   return std::toupper((unsigned char)c);
 }
 
-bool GRAPHICS_GL3V::ReloadShaders(const std::string & shaderpath, std::ostream & info_output, std::ostream & error_output)
+bool GRAPHICS_GL3V::ReloadShaders(std::ostream & info_output, std::ostream & error_output)
 {
 	// reinitialize the entire renderer
 	std::vector <RealtimeExportPassInfo> passInfos;

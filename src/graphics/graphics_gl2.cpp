@@ -223,7 +223,7 @@ GRAPHICS_GL2::~GRAPHICS_GL2()
 }
 
 bool GRAPHICS_GL2::Init(
-	const std::string & shaderpath,
+	const std::string & newshaderpath,
 	unsigned resx, unsigned resy,
 	unsigned bpp, unsigned depthbpp,
 	bool fullscreen, unsigned antialiasing,
@@ -245,6 +245,7 @@ bool GRAPHICS_GL2::Init(
 	bloom = newbloom;
 	normalmaps = newnormalmaps;
 	renderconfigfile = renderconfig;
+	shaderpath = newshaderpath;
 	sky_dynamic = dynamicsky;
 
 	if (reflection_type == 1)
@@ -265,32 +266,32 @@ bool GRAPHICS_GL2::Init(
 
 	if (renderconfigfile == "noshaders.conf")
 	{
-		DisableShaders(shaderpath, error_output);
+		DisableShaders(error_output);
 	}
 	else if (!GLEW_ARB_multitexture)
 	{
 		info_output << "Your video card doesn't support multitexturing.  Disabling shaders." << std::endl;
-		DisableShaders(shaderpath, error_output);
+		DisableShaders(error_output);
 	}
 	else if (!GLEW_ARB_texture_cube_map)
 	{
 		info_output << "Your video card doesn't support cube maps.  Disabling shaders." << std::endl;
-		DisableShaders(shaderpath, error_output);
+		DisableShaders(error_output);
 	}
 	else if (!GLEW_ARB_texture_non_power_of_two)
 	{
 		info_output << "Your video card doesn't support non-power-of-two textures.  Disabling shaders." << std::endl;
-		DisableShaders(shaderpath, error_output);
+		DisableShaders(error_output);
 	}
 	else if (!GLEW_ARB_texture_float)
 	{
 		info_output << "Your video card doesn't support floating point textures.  Disabling shaders." << std::endl;
-		DisableShaders(shaderpath, error_output);
+		DisableShaders(error_output);
 	}
 	else if (!GLEW_ARB_half_float_pixel)
 	{
 		info_output << "Your video card doesn't support 16-bit floats.  Disabling shaders." << std::endl;
-		DisableShaders(shaderpath, error_output);
+		DisableShaders(error_output);
 	}
 	else
 	{
@@ -340,12 +341,12 @@ bool GRAPHICS_GL2::Init(
 				static_ambient.Load(static_ambientmap_file, t, error_output);
 			}
 
-			EnableShaders(shaderpath, info_output, error_output);
+			EnableShaders(info_output, error_output);
 		}
 		else
 		{
 			info_output << "Your video card doesn't support shaders. Fall back to noshaders.conf." << std::endl;
-			DisableShaders(shaderpath, error_output);
+			DisableShaders(error_output);
 		}
 	}
 
@@ -575,12 +576,9 @@ bool GRAPHICS_GL2::GetUsingShaders() const
 	return using_shaders;
 }
 
-bool GRAPHICS_GL2::ReloadShaders(
-	const std::string & shaderpath,
-	std::ostream & info_output,
-	std::ostream & error_output)
+bool GRAPHICS_GL2::ReloadShaders(std::ostream & info_output, std::ostream & error_output)
 {
-	EnableShaders(shaderpath, info_output, error_output);
+	EnableShaders(info_output, error_output);
 
 	return GetUsingShaders();
 }
@@ -741,10 +739,7 @@ bool GRAPHICS_GL2::LoadShader(
 	return success;
 }
 
-void GRAPHICS_GL2::EnableShaders(
-	const std::string & shaderpath,
-	std::ostream & info_output,
-	std::ostream & error_output)
+void GRAPHICS_GL2::EnableShaders(std::ostream & info_output, std::ostream & error_output)
 {
 	bool shader_load_success = true;
 
@@ -785,7 +780,7 @@ void GRAPHICS_GL2::EnableShaders(
 	{
 		// no shaders fallback
 		error_output << "Disabling shaders due to shader loading error" << std::endl;
-		DisableShaders(shaderpath, error_output);
+		DisableShaders(error_output);
 		return;
 	}
 
@@ -936,17 +931,17 @@ void GRAPHICS_GL2::EnableShaders(
 	}
 }
 
-void GRAPHICS_GL2::DisableShaders(const std::string & shaderpath, std::ostream & error_output)
+void GRAPHICS_GL2::DisableShaders(std::ostream & error_output)
 {
+	if (using_shaders)
+	{
+		glUseProgramObjectARB(0);
+	}
+
 	renderconfigfile = "noshaders.conf";
 	shadermap.clear();
 	using_shaders = false;
 	shadows = false;
-
-	if (GLEW_ARB_shading_language_100)
-	{
-		glUseProgramObjectARB(0);
-	}
 
 	// load non-shader configuration
 	config = GRAPHICS_CONFIG();

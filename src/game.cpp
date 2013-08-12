@@ -1003,7 +1003,7 @@ void GAME::ProcessGameInputs()
 	if (carcontrols_local.second.GetInput(CARINPUT::RELOAD_SHADERS) == 1.0)
 	{
 		info_output << "Reloading shaders" << std::endl;
-		if (!graphics_interface->ReloadShaders(pathmanager.GetShaderPath(), info_output, error_output))
+		if (!graphics_interface->ReloadShaders(info_output, error_output))
 		{
 			error_output << "Error reloading shaders" << std::endl;
 		}

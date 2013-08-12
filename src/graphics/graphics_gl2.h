@@ -86,10 +86,7 @@ public:
 
 	virtual bool GetUsingShaders() const;
 
-	virtual bool ReloadShaders(
-		const std::string & shaderpath,
-		std::ostream & info_output,
-		std::ostream & error_output);
+	virtual bool ReloadShaders(std::ostream & info_output, std::ostream & error_output);
 
 	virtual void SetCloseShadow(float value);
 
@@ -138,6 +135,7 @@ private:
 	TEXTURE static_reflection;
 	TEXTURE static_ambient;
 	std::string renderconfigfile;
+	std::string shaderpath;
 
 	// configuration variables in a data-driven friendly format
 	std::set <std::string> conditions;
@@ -187,14 +185,9 @@ private:
 		std::ostream & info_output,
 		std::ostream & error_output);
 
-	void EnableShaders(
-		const std::string & shaderpath,
-		std::ostream & info_output,
-		std::ostream & error_output);
+	void EnableShaders(std::ostream & info_output, std::ostream & error_output);
 
-	void DisableShaders(
-		const std::string & shaderpath,
-		std::ostream & error_output);
+	void DisableShaders(std::ostream & error_output);
 
 	void CullScenePass(
 		const GRAPHICS_CONFIG_PASS & pass,

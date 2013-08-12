@@ -72,7 +72,7 @@ public:
 	virtual int GetMaxAnisotropy() const;
 	virtual bool AntialiasingSupported() const;
 	virtual bool GetUsingShaders() const;
-	virtual bool ReloadShaders(const std::string & shaderpath, std::ostream & info_output, std::ostream & error_output);
+	virtual bool ReloadShaders(std::ostream & info_output, std::ostream & error_output);
 	virtual void SetCloseShadow ( float value );
 	virtual bool GetShadows() const;
 	virtual void SetSunDirection(const MATHVECTOR<float, 3> & value);
@@ -87,6 +87,7 @@ private:
 	GLWrapper gl;
 	Renderer renderer;
 	std::string rendercfg;
+	std::string shaderpath;
 	int w, h;
 	bool logNextGlFrame; // used to take a gl log capture after reloading shaders if gl logging is enabled
 	bool initialized;
