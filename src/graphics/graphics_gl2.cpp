@@ -1309,8 +1309,6 @@ void GRAPHICS_GL2::DrawScenePassLayer(
 			return;
 		}
 
-		GLUTIL::CheckForOpenGLErrors("render setup", error_output);
-
 		// car paint hack for non-shader path
 		bool carhack = !using_shaders && (layer == "car_noblend");
 		renderscene.SetCarPaintHack(carhack);
@@ -1355,13 +1353,9 @@ void GRAPHICS_GL2::RenderDrawlists(
 		!render_scene.GetClear().first && !render_scene.GetClear().second)
 		return;
 
-	GLUTIL::CheckForOpenGLErrors("RenderDrawlists start", error_output);
-
 	BindInputTextures(extra_textures, error_output);
 
 	render_scene.SetDrawLists(dynamic_drawlist, static_drawlist);
-
-	GLUTIL::CheckForOpenGLErrors("RenderDrawlists SetDrawLists", error_output);
 
 	Render(&render_scene, render_output, error_output);
 
