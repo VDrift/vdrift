@@ -283,16 +283,6 @@ bool GRAPHICS_GL2::Init(
 		info_output << "Your video card doesn't support non-power-of-two textures.  Disabling shaders." << std::endl;
 		DisableShaders(error_output);
 	}
-	else if (!GLEW_ARB_texture_float)
-	{
-		info_output << "Your video card doesn't support floating point textures.  Disabling shaders." << std::endl;
-		DisableShaders(error_output);
-	}
-	else if (!GLEW_ARB_half_float_pixel)
-	{
-		info_output << "Your video card doesn't support 16-bit floats.  Disabling shaders." << std::endl;
-		DisableShaders(error_output);
-	}
 	else
 	{
 		GLint maxattach;
@@ -839,6 +829,8 @@ void GRAPHICS_GL2::EnableShaders(std::ostream & info_output, std::ostream & erro
 		texture_inputs["reflection_cube"] = static_reflection;
 	texture_inputs["ambient_cube"] = static_ambient;
 
+	bool has_texture_float = GLEW_ARB_texture_float && GLEW_ARB_half_float_pixel;
+
 	for (std::vector <GRAPHICS_CONFIG_OUTPUT>::const_iterator i = config.outputs.begin(); i != config.outputs.end(); i++)
 	{
 		if (i->conditions.Satisfied(conditions))
@@ -865,16 +857,21 @@ void GRAPHICS_GL2::EnableShaders(std::ostream & info_output, std::ostream & erro
 				if (i->multisample < 0)
 					fbms = fsaa;
 
+				// check texture format
+				FBTEXTURE::FORMAT format = TextureFormatFromString(i->format);
+				if (!has_texture_float && (format == FBTEXTURE::RGBA16 || format == FBTEXTURE::RGB16))
+				{
+					error_output << "Your video card doesn't support floating point textures." << std::endl;
+					error_output << "Failed to load render output: " << i->name << " " << i->type << std::endl;
+					DisableShaders(error_output);
+					return;
+				}
+
 				// initialize fbtexture
-				fbtex.Init(i->width.GetSize(w),
-						   i->height.GetSize(h),
-						   type,
-						   TextureFormatFromString(i->format),
-						   (i->filter == "nearest"),
-						   i->mipmap,
-						   error_output,
-						   fbms,
-						   (i->format == "depthshadow"));
+				fbtex.Init(
+					i->width.GetSize(w), i->height.GetSize(h),
+					type, format, (i->filter == "nearest"), i->mipmap,
+					error_output, fbms, (i->format == "depthshadow"));
 
 				// map to input texture
 				texture_inputs[i->name] = fbtex;
