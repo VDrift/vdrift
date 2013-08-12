@@ -62,46 +62,46 @@ void FBTEXTURE::Init(int sizex, int sizey, TARGET target, FORMAT newformat, bool
 		assert(GLEW_ARB_texture_rectangle);
 	}
 
-	int texture_format1 = GL_RGB;
-	int texture_format2(GL_RGB);
-	int texture_format3(GL_UNSIGNED_BYTE);
+	int texture_format = GL_RGB;
+	int data_format = GL_RGB;
+	int data_type = GL_UNSIGNED_BYTE;
 
 	switch (texture_format)
 	{
 		case LUM8:
-		texture_format1 = GL_LUMINANCE8;
-		texture_format2 = GL_LUMINANCE;
-		texture_format3 = GL_UNSIGNED_BYTE;
+		texture_format = GL_LUMINANCE8;
+		data_format = GL_LUMINANCE;
+		data_type = GL_UNSIGNED_BYTE;
 		break;
 
 		case RGB8:
-		texture_format1 = GL_RGB;
-		texture_format2 = GL_RGB;
-		texture_format3 = GL_UNSIGNED_BYTE;
+		texture_format = GL_RGB;
+		data_format = GL_RGB;
+		data_type = GL_UNSIGNED_BYTE;
 		break;
 
 		case RGBA8:
-		texture_format1 = GL_RGBA8;
-		texture_format2 = GL_RGBA;
-		texture_format3 = GL_UNSIGNED_BYTE;
+		texture_format = GL_RGBA8;
+		data_format = GL_RGBA;
+		data_type = GL_UNSIGNED_BYTE;
 		break;
 
 		case RGB16:
-		texture_format1 = GL_RGB16F;
-		texture_format2 = GL_RGB;
-		texture_format3 = GL_HALF_FLOAT;
+		texture_format = GL_RGB16F;
+		data_format = GL_RGB;
+		data_type = GL_HALF_FLOAT;
 		break;
 
 		case RGBA16:
-		texture_format1 = GL_RGBA16F;
-		texture_format2 = GL_RGBA;
-		texture_format3 = GL_HALF_FLOAT;
+		texture_format = GL_RGBA16F;
+		data_format = GL_RGBA;
+		data_type = GL_HALF_FLOAT;
 		break;
 
 		case DEPTH24:
-		texture_format1 = GL_DEPTH_COMPONENT24;
-		texture_format2 = GL_DEPTH_COMPONENT;
-		texture_format3 = GL_UNSIGNED_INT;
+		texture_format = GL_DEPTH_COMPONENT24;
+		data_format = GL_DEPTH_COMPONENT;
+		data_type = GL_UNSIGNED_INT;
 		break;
 
 		default:
@@ -120,12 +120,12 @@ void FBTEXTURE::Init(int sizex, int sizey, TARGET target, FORMAT newformat, bool
 		// generate storage for each of the six sides
 		for (int i = 0; i < 6; i++)
 		{
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X+i, 0, texture_format1, sizex, sizey, 0, texture_format2, texture_format3, NULL);
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X+i, 0, texture_format, sizex, sizey, 0, data_format, data_type, NULL);
 		}
 	}
 	else
 	{
-		glTexImage2D(texture_target, 0, texture_format1, sizex, sizey, 0, texture_format2, texture_format3, NULL);
+		glTexImage2D(texture_target, 0, texture_format, sizex, sizey, 0, data_format, data_type, NULL);
 	}
 
 	GLUTIL::CheckForOpenGLErrors("FBTEX texture storage initialization", error_output);
@@ -155,10 +155,11 @@ void FBTEXTURE::Init(int sizex, int sizey, TARGET target, FORMAT newformat, bool
 		glTexParameteri(texture_target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	}
 
-	if (texture_format2 == GL_DEPTH_COMPONENT)
+	if (data_format == GL_DEPTH_COMPONENT)
 	{
 		glTexParameteri(texture_target, GL_DEPTH_TEXTURE_MODE, GL_LUMINANCE);
 		glTexParameteri(texture_target, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+
 		if (depthcomparisonenabled)
 			glTexParameteri(texture_target, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
 		else
@@ -170,9 +171,9 @@ void FBTEXTURE::Init(int sizex, int sizey, TARGET target, FORMAT newformat, bool
 	if (mipmap)
 	{
 		glGenerateMipmap(texture_target);
-	}
 
-	GLUTIL::CheckForOpenGLErrors("FBTEX initial mipmap generation", error_output);
+		GLUTIL::CheckForOpenGLErrors("FBTEX initial mipmap generation", error_output);
+	}
 
 	glBindTexture(texture_target, 0); // don't leave the texture bound
 
