@@ -30,7 +30,6 @@
 
 class BEZIER;
 class CAMERA;
-class PERFORMANCE_TESTING;
 class MODEL;
 class SOUND;
 class ContentManager;
@@ -38,8 +37,6 @@ class PTree;
 
 class CAR
 {
-friend class PERFORMANCE_TESTING;
-friend class joeserialize::Serializer;
 public:
 	CAR();
 
@@ -317,6 +314,8 @@ public:
 	SCENENODE & GetNode() {return topnode;}
 
 protected:
+	friend class joeserialize::Serializer;
+
 	SCENENODE topnode;
 	CARDYNAMICS dynamics;
 
