@@ -20,8 +20,7 @@
 #ifndef _ARCHIVE_H
 #define _ARCHIVE_H
 
-#include <string>
-#include <iostream>
+#include <iosfwd>
 
 /// Decompress a compressed file or folder to the specified path.
 /// Returns true on success and false on fail.

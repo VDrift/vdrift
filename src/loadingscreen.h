@@ -21,7 +21,6 @@
 #define _LOADINGSCREEN_H
 
 #include "gui/text_draw.h"
-#include <ostream>
 #include <string>
 
 class ContentManager;

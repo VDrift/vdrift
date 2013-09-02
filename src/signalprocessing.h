@@ -20,7 +20,6 @@
 #ifndef _SIGNALPROCESSING_H
 #define _SIGNALPROCESSING_H
 
-#include <ostream>
 #include <vector>
 #include <cassert>
 

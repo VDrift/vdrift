@@ -21,8 +21,8 @@
 #define _SHADER_H
 
 #include "glew.h"
+#include <iosfwd>
 #include <string>
-#include <iostream>
 #include <vector>
 
 class SHADER_GLSL

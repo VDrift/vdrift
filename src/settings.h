@@ -21,9 +21,9 @@
 #define _SETTINGS_H
 
 #include <map>
+#include <iosfwd>
 #include <string>
 #include <vector>
-#include <ostream>
 
 class Config;
 

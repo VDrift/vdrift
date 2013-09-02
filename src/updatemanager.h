@@ -24,6 +24,7 @@
 #include "game_downloader.h"
 #include "cfg/config.h"
 
+#include <iosfwd>
 #include <string>
 #include <vector>
 #include <list>

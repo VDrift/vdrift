@@ -26,7 +26,7 @@
 #include <map>
 #include <vector>
 #include <string>
-#include <ostream>
+#include <iosfwd>
 
 class GUILANGUAGE;
 class GUIWIDGET;

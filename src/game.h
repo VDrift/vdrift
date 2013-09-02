@@ -55,7 +55,7 @@
 #include "updatemanager.h"
 #include "game_downloader.h"
 
-#include <ostream>
+#include <iosfwd>
 #include <string>
 #include <list>
 #include <map>

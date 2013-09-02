@@ -21,9 +21,7 @@
 #define _MODEL_JOE03_H
 
 #include "model.h"
-
-#include <string>
-#include <ostream>
+#include <iosfwd>
 
 class JOEPACK;
 struct JOEObject;

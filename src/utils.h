@@ -20,7 +20,7 @@
 #ifndef _UTILS_H
 #define _UTILS_H
 
-#include <iostream>
+#include <iosfwd>
 #include <string>
 #include <sstream>
 #include <cassert>

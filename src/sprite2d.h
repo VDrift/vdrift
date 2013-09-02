@@ -25,7 +25,6 @@
 
 #include <string>
 #include <cassert>
-#include <iostream>
 
 class ContentManager;
 

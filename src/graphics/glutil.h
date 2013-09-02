@@ -20,8 +20,7 @@
 #ifndef _GLUTIL_H
 #define _GLUTIL_H
 
-#include <string>
-#include <iostream>
+#include <iosfwd>
 
 namespace GLUTIL
 {

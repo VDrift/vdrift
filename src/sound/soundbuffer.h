@@ -22,45 +22,19 @@
 
 #include "soundinfo.h"
 
+#include <iosfwd>
 #include <string>
-#include <ostream>
 
 class SOUNDBUFFER
 {
 public:
-	SOUNDBUFFER() :
-		info(0, 0, 0, 0),
-		size(0),
-		loaded(false),
-		sound_buffer(0)
-	{
-		// ctor
-	}
+	SOUNDBUFFER();
 
-	~SOUNDBUFFER()
-	{
-		Unload();
-	}
+	~SOUNDBUFFER();
 
-	bool Load(const std::string & filename, const SOUNDINFO & sound_device_info, std::ostream & error_output)
-	{
-		if (filename.find(".wav") != std::string::npos)
-			return LoadWAV(filename, sound_device_info, error_output);
-		else if (filename.find(".ogg") != std::string::npos)
-			return LoadOGG(filename, sound_device_info, error_output);
-		else
-		{
-			error_output << "Unable to determine file type from filename: " << filename << std::endl;
-			return false;
-		}
-	}
+	bool Load(const std::string & filename, const SOUNDINFO & sound_device_info, std::ostream & error_output);
 
-	void Unload()
-	{
-		if (loaded && sound_buffer)
-			delete [] sound_buffer;
-		sound_buffer = 0;
-	}
+	void Unload();
 
 	const SOUNDINFO & GetInfo() const
 	{

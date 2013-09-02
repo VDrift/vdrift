@@ -21,9 +21,7 @@
 #define _MODEL_OBJ_H
 
 #include "model.h"
-
-#include <string>
-#include <ostream>
+#include <iosfwd>
 
 class MODEL_OBJ : public MODEL
 {

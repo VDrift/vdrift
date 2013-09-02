@@ -21,7 +21,7 @@
 #define _RENDER_OUTPUT_H
 
 #include "fbobject.h"
-#include <ostream>
+#include <iosfwd>
 
 class GLSTATEMANAGER;
 

@@ -24,7 +24,7 @@
 #include "hudgauge.h"
 #include "hudbar.h"
 
-#include <ostream>
+#include <iosfwd>
 #include <string>
 #include <list>
 

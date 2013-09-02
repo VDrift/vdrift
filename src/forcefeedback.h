@@ -20,8 +20,8 @@
 #ifndef _FORCEFEEDBACK_H
 #define _FORCEFEEDBACK_H
 
+#include <iosfwd>
 #include <string>
-#include <iostream>
 
 #include <SDL/SDL_version.h>
 #if SDL_VERSION_ATLEAST(2,0,0)
@@ -34,7 +34,7 @@ class FORCEFEEDBACK
 {
 public:
 	FORCEFEEDBACK(
-		std::string device,
+		const std::string & device,
 		std::ostream & error_output,
 		std::ostream & info_output);
 

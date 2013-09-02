@@ -24,8 +24,7 @@
 #include "quaternion.h"
 #include "drawable_container.h"
 
-#include <string>
-#include <ostream>
+#include <iosfwd>
 
 class SCENENODE;
 

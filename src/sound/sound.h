@@ -27,9 +27,8 @@
 #include "quaternion.h"
 #include "memory.h"
 
+#include <iosfwd>
 #include <vector>
-#include <string>
-#include <ostream>
 
 struct SDL_mutex;
 

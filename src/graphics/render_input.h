@@ -20,7 +20,7 @@
 #ifndef _RENDER_INPUT_H
 #define _RENDER_INPUT_H
 
-#include <ostream>
+#include <iosfwd>
 
 class GLSTATEMANAGER;
 

@@ -22,7 +22,6 @@
 
 #include "pairsort.h"
 
-#include <ostream>
 #include <vector>
 #include <map>
 #include <algorithm>

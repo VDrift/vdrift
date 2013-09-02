@@ -21,8 +21,7 @@
 #define _CONTENTFACTORY_H
 
 #include "memory.h"
-#include <ostream>
-#include <string>
+#include <iosfwd>
 
 template <class Content>
 class Factory
@@ -36,7 +35,7 @@ public:
 		const std::string & path,
 		const std::string & name,
 		const P & param);
-	
+
 	std::tr1::shared_ptr<Content> getDefault() const;
 };
 

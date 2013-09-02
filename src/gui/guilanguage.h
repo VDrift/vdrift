@@ -20,7 +20,7 @@
 #ifndef _GUILANGUAGE_H
 #define _GUILANGUAGE_H
 
-#include <ostream>
+#include <iosfwd>
 #include <string>
 
 class GUILANGUAGE

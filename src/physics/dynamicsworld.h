@@ -23,7 +23,7 @@
 #include "btBulletCollisionCommon.h"
 #include "btBulletDynamicsCommon.h"
 
-#include <ostream>
+#include <iosfwd>
 
 class TRACK;
 class COLLISION_CONTACT;

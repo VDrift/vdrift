@@ -20,7 +20,7 @@
 #ifndef _LOADCAMERA_H
 #define _LOADCAMERA_H
 
-#include <ostream>
+#include <iosfwd>
 
 class PTree;
 class CAMERA;

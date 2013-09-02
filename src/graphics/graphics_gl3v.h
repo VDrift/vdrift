@@ -32,8 +32,8 @@
 #include "gl3v/renderer.h"
 #include "gl3v/stringidmap.h"
 
+#include <iosfwd>
 #include <string>
-#include <ostream>
 #include <map>
 #include <list>
 #include <vector>

@@ -25,7 +25,6 @@
 #include "mathvector.h"
 #include "quaternion.h"
 
-#include <ostream>
 #include <string>
 #include <utility> // std::pair
 #include <vector>

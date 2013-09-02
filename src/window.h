@@ -20,8 +20,7 @@
 #ifndef _WINDOW_H
 #define _WINDOW_H
 
-#include <string>
-#include <ostream>
+#include <iosfwd>
 
 struct SDL_Surface;
 struct SDL_Window;
@@ -46,7 +45,7 @@ public:
 	/// Note that when the mouse cursor is hidden, it is also grabbed (confined to the application window)
 	void ShowMouseCursor(bool value);
 
-	void Screenshot(std::string filename);
+	void Screenshot(const std::string & filename);
 
 	int GetW() const;
 

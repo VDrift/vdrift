@@ -26,7 +26,7 @@
 
 #include <list>
 #include <string>
-#include <iostream>
+#include <ostream>
 
 class ContentManager;
 class TEXTURE;

@@ -123,7 +123,7 @@ void WINDOW_SDL::ShowMouseCursor(bool value)
 	}
 }
 
-void WINDOW_SDL::Screenshot(std::string filename)
+void WINDOW_SDL::Screenshot(const std::string & filename)
 {
 	SDL_Surface * temp = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, 24,
 #if SDL_BYTEORDER == SDL_LIL_ENDIAN

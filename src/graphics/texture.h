@@ -22,7 +22,7 @@
 
 #include "texture_interface.h"
 #include "textureinfo.h"
-#include <string>
+#include <iosfwd>
 
 class TEXTURE : public TEXTURE_INTERFACE
 {

@@ -22,8 +22,7 @@
 
 #include "memory.h"
 #include <vector>
-#include <string>
-#include <iostream>
+#include <iosfwd>
 
 class ContentManager;
 class TEXTURE;

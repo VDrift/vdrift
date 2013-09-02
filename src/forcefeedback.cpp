@@ -19,12 +19,13 @@
 
 #include "forcefeedback.h"
 
+#include <ostream>
 #include <cstring>
 
 #if SDL_VERSION_ATLEAST(2,0,0)
 
 FORCEFEEDBACK::FORCEFEEDBACK(
-	std::string device,
+	const std::string & device,
 	std::ostream & error_output,
 	std::ostream & info_output) :
 	device_name(device),
@@ -176,7 +177,7 @@ using std::endl;
 #define testBit(bit, array)    ((array[ucharIndexForBit(bit)] >> bitOffsetInUchar(bit)) & 1)
 
 FORCEFEEDBACK::FORCEFEEDBACK(
-	string device,
+	const string & device,
 	std::ostream & error_output,
 	std::ostream & info_output) :
 	device_name(device),
@@ -388,7 +389,7 @@ void FORCEFEEDBACK::update(
 #else
 
 FORCEFEEDBACK::FORCEFEEDBACK(
-	std::string device,
+	const std::string & device,
 	std::ostream & error_output,
 	std::ostream & info_output)
 {

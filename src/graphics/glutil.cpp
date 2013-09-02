@@ -19,6 +19,7 @@
 
 #include "glutil.h"
 #include "glew.h"
+#include <ostream>
 
 bool GLUTIL::CheckForOpenGLErrors(
 	const std::string & activity_description,

@@ -27,15 +27,11 @@
 #include "physics/motionstate.h"
 #include "physics/tracksurface.h"
 
-#include <string>
-#include <iostream>
+#include <iosfwd>
 #include <list>
 #include <memory>
 #include <vector>
 
-class TEXTUREMANAGER;
-class MODELMANAGER;
-class OBJECTLOADER;
 class ROADSTRIP;
 class DynamicsWorld;
 class ContentManager;

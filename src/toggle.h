@@ -20,7 +20,7 @@
 #ifndef _TOGGLE_H
 #define _TOGGLE_H
 
-#include <ostream>
+#include <iosfwd>
 
 class TOGGLE
 {
