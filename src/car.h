@@ -218,11 +218,6 @@ public:
 		return dynamics.GetSpeed();
 	}
 
-	MATHVECTOR <float, 3> GetTotalAero() const
-	{
-		return ToMathVector<float>(dynamics.GetTotalAero());
-	}
-
 	float GetFeedback();
 
 	// returns a float from 0.0 to 1.0 with the amount of tire squealing going on
