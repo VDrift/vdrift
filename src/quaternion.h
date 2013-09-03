@@ -100,7 +100,7 @@ public:
 	T & w() {return v[3];}
 
 	template <typename T2>
-	const Quaternion <T> & operator = (const Quaternion <T2> & other)
+	Quaternion <T> & operator = (const Quaternion <T2> & other)
 	{
 		for (size_type i = 0; i < 4; ++i)
 			v[i] = other[i];

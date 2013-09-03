@@ -42,7 +42,7 @@ class Matrix3
 	public:
 		Matrix3() {LoadIdentity();}
 		Matrix3(const Matrix3 <T> & other) {Set(other);}
-		const Matrix3 & operator=(const Matrix3 <T> & other) {Set(other); return *this;}
+		Matrix3 & operator=(const Matrix3 <T> & other) {Set(other); return *this;}
 
 		const T & operator[](size_type n) const
 		{

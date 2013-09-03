@@ -44,7 +44,7 @@ public:
 	Aabb(const Aabb <T> & other) : pos(other.pos), center(other.center), size(other.size), radius(other.radius) {}
 	Aabb() : radius(0) {}
 
-	const Aabb <T> & operator = (const Aabb <T> & other)
+	Aabb <T> & operator = (const Aabb <T> & other)
 	{
 		pos = other.pos;
 		center = other.center;

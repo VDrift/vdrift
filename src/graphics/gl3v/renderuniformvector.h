@@ -48,7 +48,7 @@ class RenderUniformVector
 		iterator end() {return &data[curSize];}
 		const_iterator end() const {return &data[curSize];}
 
-		const RenderUniformVector & operator=(const RenderUniformVector & other) {Set(other); return *this;}
+		RenderUniformVector & operator=(const RenderUniformVector & other) {Set(other); return *this;}
 
 		inline const T & operator[](size_type n) const
 		{

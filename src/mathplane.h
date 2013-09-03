@@ -105,7 +105,7 @@ class MathPlane
 		}
 
 		template <typename T2>
-		const MathPlane <T> & operator = (const MathPlane <T2> & other)
+		MathPlane <T> & operator = (const MathPlane <T2> & other)
 		{
 			v.a = other[0];
 			v.b = other[1];

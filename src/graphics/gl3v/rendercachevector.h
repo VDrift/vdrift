@@ -37,7 +37,7 @@ class RenderCacheVector
 		iterator end() {return data.end();}
 		const_iterator end() const {return data.end();}
 
-		const RenderCacheVector & operator=(const RenderCacheVector & other) {Set(other); return *this;}
+		RenderCacheVector & operator=(const RenderCacheVector & other) {Set(other); return *this;}
 
 		void setResizeValue(const T & value)
 		{
