@@ -17,7 +17,7 @@
 /*                                                                      */
 /************************************************************************/
 
-#include "aabb_space_partitioning.h"
+#include "aabbtree.h"
 #include "unittest.h"
 
 QT_TEST(aabb_space_partitioning_test)

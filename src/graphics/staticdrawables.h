@@ -20,7 +20,7 @@
 #ifndef _STATICDRAWABLES_H
 #define _STATICDRAWABLES_H
 
-#include "aabb_space_partitioning.h"
+#include "aabbtree.h"
 #include "scenenode.h"
 
 #include <vector>

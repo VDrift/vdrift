@@ -21,7 +21,7 @@
 #define _ROADSTRIP_H
 
 #include "roadpatch.h"
-#include "aabb_space_partitioning.h"
+#include "aabbtree.h"
 #include "optional.h"
 
 class RoadStrip
