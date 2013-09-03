@@ -95,7 +95,7 @@ static const std::string invalid("INVALID");
 
 const std::vector<std::string> CarControlMap::carinput_strings = CarControlMap::InitCarInputStrings();
 
-const std::map <std::string, CarInput::CarInputEnum> CarControlMap::carinput_stringmap = CarControlMap::InitCarInputStringMap();
+const std::map <std::string, CarInput::Enum> CarControlMap::carinput_stringmap = CarControlMap::InitCarInputStringMap();
 
 const std::map <std::string, int> CarControlMap::keycode_stringmap = CarControlMap::InitKeycodeStringMap();
 
@@ -122,7 +122,7 @@ bool CarControlMap::Load(const std::string & controlfile, std::ostream & info_ou
 		if (!controls_config.get(i, "type", type)) continue;
 		if (!controls_config.get(i, "name", name)) continue;
 
-		CarInput::CarInputEnum carinput = GetInputFromString(name);
+		CarInput::Enum carinput = GetInputFromString(name);
 		if (carinput == CarInput::INVALID)
 		{
 			error_output << "Unknown input type in section " << i->first << std::endl;
@@ -300,7 +300,7 @@ void CarControlMap::Save(Config & controls_config)
 	int id = 0;
 	for (size_t n = 0; n < controls.size(); ++n)
 	{
-		std::string ctrl_name = GetStringFromInput(CarInput::CarInputEnum(n));
+		std::string ctrl_name = GetStringFromInput(CarInput::Enum(n));
 		if (ctrl_name.empty())
 			continue;
 
@@ -639,7 +639,7 @@ void CarControlMap::GetControlsInfo(std::map<std::string, std::string> & info) c
 {
 	for (size_t n = 0; n < CarInput::INVALID; ++n)
 	{
-		CarInput::CarInputEnum input = CarInput::CarInputEnum(n);
+		CarInput::Enum input = CarInput::Enum(n);
 		const std::string inputstr = GetStringFromInput(input);
 		const std::vector<Control> & ct = controls[input];
 		for (size_t m = 0; m < ct.size(); ++m)
@@ -678,7 +678,7 @@ CarControlMap::Control CarControlMap::GetControl(const std::string & inputname, 
 
 void CarControlMap::SetControl(const std::string & inputname, size_t controlid, const Control & control)
 {
-	CarInput::CarInputEnum input = GetInputFromString(inputname);
+	CarInput::Enum input = GetInputFromString(inputname);
 	if (input == CarInput::INVALID)
 		return;
 
@@ -694,7 +694,7 @@ void CarControlMap::SetControl(const std::string & inputname, size_t controlid, 
 
 void CarControlMap::DeleteControl(const std::string & inputname, size_t controlid)
 {
-	CarInput::CarInputEnum input = GetInputFromString(inputname);
+	CarInput::Enum input = GetInputFromString(inputname);
 	if (input == CarInput::INVALID)
 		return;
 
@@ -708,12 +708,12 @@ void CarControlMap::DeleteControl(const std::string & inputname, size_t controli
 	input_controls.pop_back();
 }
 
-std::map <std::string, CarInput::CarInputEnum> CarControlMap::InitCarInputStringMap()
+std::map <std::string, CarInput::Enum> CarControlMap::InitCarInputStringMap()
 {
-	std::map <std::string, CarInput::CarInputEnum> stringmap;
+	std::map <std::string, CarInput::Enum> stringmap;
 	for (size_t i = 0; i < carinput_strings.size(); ++i)
 	{
-		stringmap[carinput_strings[i]] = CarInput::CarInputEnum(i);
+		stringmap[carinput_strings[i]] = CarInput::Enum(i);
 	}
 	return stringmap;
 }
@@ -928,14 +928,14 @@ std::map <std::string, int> CarControlMap::InitKeycodeStringMap()
 	return keycodes;
 }
 
-const std::string & CarControlMap::GetStringFromInput(const CarInput::CarInputEnum input)
+const std::string & CarControlMap::GetStringFromInput(const CarInput::Enum input)
 {
 	return carinput_strings[input];
 }
 
-CarInput::CarInputEnum CarControlMap::GetInputFromString(const std::string & str)
+CarInput::Enum CarControlMap::GetInputFromString(const std::string & str)
 {
-	std::map <std::string, CarInput::CarInputEnum>::const_iterator i = carinput_stringmap.find(str);
+	std::map <std::string, CarInput::Enum>::const_iterator i = carinput_stringmap.find(str);
 	if (i != carinput_stringmap.end())
 		return i->second;
 
@@ -962,7 +962,7 @@ int CarControlMap::GetKeycodeFromString(const std::string & str)
 
 void CarControlMap::AddControl(Control newctrl, const std::string & inputname, std::ostream & error_output)
 {
-	CarInput::CarInputEnum input = GetInputFromString(inputname);
+	CarInput::Enum input = GetInputFromString(inputname);
 	if (input != CarInput::INVALID)
 		controls[input].push_back(newctrl);
 	else

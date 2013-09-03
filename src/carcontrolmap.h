@@ -46,7 +46,7 @@ public:
 
 	const std::vector< float > & GetInputs() const {return inputs;}
 
-	float GetInput(CarInput::CarInputEnum inputid) const {assert((unsigned int)inputid < inputs.size()); return inputs[inputid];}
+	float GetInput(CarInput::Enum inputid) const {assert((unsigned int)inputid < inputs.size()); return inputs[inputid];}
 
 	void GetControlsInfo(std::map<std::string, std::string> & info) const;
 
@@ -130,18 +130,18 @@ private:
 	static const size_t max_controls = 3;
 
 	/// used to stringify/destringify the CARINPUT enum
-	static const std::map <std::string, CarInput::CarInputEnum> carinput_stringmap;
+	static const std::map <std::string, CarInput::Enum> carinput_stringmap;
 	static const std::vector<std::string> carinput_strings;
 
 	/// used to turn legacy key names from older vdrift releases into keycodes
 	static const std::map <std::string, int> keycode_stringmap;
 
-	static std::map <std::string, CarInput::CarInputEnum> InitCarInputStringMap();
+	static std::map <std::string, CarInput::Enum> InitCarInputStringMap();
 	static std::vector<std::string> InitCarInputStrings();
 	static std::map <std::string, int> InitKeycodeStringMap();
 
-	static const std::string & GetStringFromInput(const CarInput::CarInputEnum input);
-	static CarInput::CarInputEnum GetInputFromString(const std::string & str);
+	static const std::string & GetStringFromInput(const CarInput::Enum input);
+	static CarInput::Enum GetInputFromString(const std::string & str);
 	static const std::string & GetStringFromKeycode(const int code);
 	static int GetKeycodeFromString(const std::string & str);
 
