@@ -324,12 +324,12 @@ protected:
 	keyed_container<Drawable>::handle brakelights;
 	keyed_container<Drawable>::handle reverselights;
 
-	struct LIGHT
+	struct Light
 	{
 		keyed_container<SceneNode>::handle node;
 		keyed_container<Drawable>::handle draw;
 	};
-	std::list<LIGHT> lights;
+	std::list<Light> lights;
 	std::list<std::tr1::shared_ptr<Model> > models;
 
 	CrashDetection crashdetection;

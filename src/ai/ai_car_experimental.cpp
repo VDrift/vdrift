@@ -52,7 +52,7 @@ AiCarExperimental::AiCarExperimental (Car * new_car, float newdifficulty) :
 AiCarExperimental::~AiCarExperimental ()
 {
 #ifdef VISUALIZE_AI_DEBUG
-	SCENENODE& topnode  = car->GetNode();
+	SceneNode& topnode  = car->GetNode();
 	if (brakedraw.valid())
 	{
 		topnode.GetDrawlist().normal_noblend.erase(brakedraw);
@@ -251,8 +251,8 @@ Bezier AiCarExperimental::RevisePatch(const Bezier * origpatch, bool use_racingl
 	//check for revisions due to other cars
 	/*const float trim_falloff_distance = 100.0; //trim fallof distance in meters per (meters per second)
 	const Vec3 throttle_axis(-1,0,0); //positive is in front of the car
-	std::map <const CAR *, PATH_REVISION> & revmap = path_revisions;
-	for (std::map <const CAR *, PATH_REVISION>::iterator i = revmap.begin(); i != revmap.end(); i++)
+	std::map <const Car *, PathRevision> & revmap = path_revisions;
+	for (std::map <const Car *, PathRevision>::iterator i = revmap.begin(); i != revmap.end(); i++)
 	{
 		if (i->first != car)
 		{
@@ -328,7 +328,7 @@ void AiCarExperimental::updateGasBrake()
 	}
 
 	Bezier curr_patch = RevisePatch(curr_patch_ptr, use_racingline);
-	//BEZIER curr_patch = *curr_patch_ptr;
+	//Bezier curr_patch = *curr_patch_ptr;
 
 	Vec3 patch_direction = GetPatchDirection(curr_patch);
 
@@ -774,7 +774,7 @@ float AiCarExperimental::brakeFromOthers(float speed_diff)
 	float mineta = 1000;
 	float mindistance = 1000;
 
-	for (std::map <const Car *, AiCarExperimental::OTHERCARINFO>::iterator i = othercars.begin(); i != othercars.end(); ++i)
+	for (std::map <const Car *, OtherCarInfo>::iterator i = othercars.begin(); i != othercars.end(); ++i)
 	{
 		if (i->second.active && std::abs(i->second.horizontal_distance) < horizontal_care)
 		{
@@ -832,7 +832,7 @@ void AiCarExperimental::analyzeOthers(float dt, const std::list <Car> & checkcar
 	{
 		if (&(*i) != car)
 		{
-			struct AiCarExperimental::OTHERCARINFO & info = othercars[&(*i)];
+			OtherCarInfo & info = othercars[&(*i)];
 
 			//find direction of other cars in our frame
 			Vec3 relative_position = i->GetCenterOfMassPosition() - car->GetCenterOfMassPosition();
@@ -915,69 +915,6 @@ void AiCarExperimental::analyzeOthers(float dt, const std::list <Car> & checkcar
 	}
 }
 
-/*float AI::steerAwayFromOthers(AI_Car *c, float dt, const std::list <CAR> & othercars, float cursteer)
-{
-	const float spacingdistance = 3.0; //how far left and right we target for our spacing in meters (center of mass to center of mass)
-	const float ignoredistance = 6.0;
-
-	float eta = 1000;
-	float min_horizontal_distance = 1000;
-	Quat otherorientation;
-
-	for (std::map <const CAR *, AI_Car::OTHERCARINFO>::iterator i = othercars.begin(); i != othercars.end(); i++)
-	{
-		if (i->second.active && std::abs(i->second.horizontal_distance) < std::abs(min_horizontal_distance))
-		{
-			min_horizontal_distance = i->second.horizontal_distance;
-			eta = i->second.eta;
-			otherorientation = i->first->GetOrientation();
-		}
-	}
-
-	if (min_horizontal_distance >= ignoredistance)
-		return 0.0;
-
-	float sidedist = min_horizontal_distance;
-	float d = std::abs(sidedist) - spacingdistance*0.5;
-	if (d < spacingdistance)
-	{
-		const Vec3 forward(1,0,0);
-		Vec3 otherdir = forward;
-		otherorientation.RotateVector(otherdir); //rotate to worldspace
-		(-car->GetOrientation()).RotateVector(otherdir); //rotate to this car space
-		otherdir[2] = 0; //remove vertical component
-		otherdir = otherdir.Normalize(); //resize to unit size
-		if (otherdir[0] > 0) //heading in the same direction
-		{
-			float diffangle = (180.0/3.141593)*asin(otherdir[1]); //positive when other car is pointing to our right
-
-			if (diffangle * -sidedist < 0) //heading toward collision
-			{
-				const float c = spacingdistance * 0.5;
-				d = std::max(0.0f, d - c);
-				float psteer = diffangle;
-
-				psteer = cursteer*(d/c)+1.5*psteer*(1.0f-d/c);
-
-				std::cout << diffangle << ", " << d/c << ", " << psteer << std::endl;
-
-				if (cursteer*psteer > 0 && std::abs(cursteer) > std::abs(psteer))
-					return 0.0; //no bias, already more than correcting
-				else
-					return psteer - cursteer;
-			}
-		}
-		else
-			std::cout << "wrong quadrant: " << otherdir << std::endl;
-	}
-	else
-	{
-		std::cout << "out of range: " << d << ", " << spacingdistance << std::endl;
-	}
-
-	return 0.0;
-}*/
-
 float AiCarExperimental::steerAwayFromOthers()
 {
 	const float spacingdistance = 3.5; //how far left and right we target for our spacing in meters (center of mass to center of mass)
@@ -991,7 +928,7 @@ float AiCarExperimental::steerAwayFromOthers()
 	float eta = 1000;
 	float min_horizontal_distance = 1000;
 
-	for (std::map <const Car *, AiCarExperimental::OTHERCARINFO>::iterator i = othercars.begin(); i != othercars.end(); ++i)
+	for (std::map <const Car *, OtherCarInfo>::iterator i = othercars.begin(); i != othercars.end(); ++i)
 	{
 		if (i->second.active && std::abs(i->second.horizontal_distance) < std::abs(min_horizontal_distance))
 		{
@@ -1024,18 +961,18 @@ double AiCarExperimental::Angle(double x1, double y1)
 	return atan2(y1, x1) * 180.0 / M_PI;
 }
 #ifdef VISUALIZE_AI_DEBUG
-void AI_Car_Experimental::ConfigureDrawable(keyed_container <DRAWABLE>::handle & ref, SCENENODE & topnode, float r, float g, float b)
+void AiCarExperimental::ConfigureDrawable(keyed_container <Drawable>::handle & ref, SceneNode & topnode, float r, float g, float b)
 {
 	if (!ref.valid())
 	{
-		ref = topnode.GetDrawlist().normal_noblend.insert(DRAWABLE());
-		DRAWABLE & d = topnode.GetDrawlist().normal_noblend.get(ref);
+		ref = topnode.GetDrawlist().normal_noblend.insert(Drawable());
+		Drawable & d = topnode.GetDrawlist().normal_noblend.get(ref);
 		d.SetColor(r,g,b,1);
 		d.SetDecal(true);
 	}
 }
 
-void AI_Car_Experimental::AddLinePoint(VERTEXARRAY & va, const MATHVECTOR<float, 3> & p)
+void AiCarExperimental::AddLinePoint(VertexArray & va, const Vec3 & p)
 {
 	int vsize;
 	const float* vbase;
@@ -1055,24 +992,24 @@ void AI_Car_Experimental::AddLinePoint(VERTEXARRAY & va, const MATHVECTOR<float,
 	}
 }
 
-void AI_Car_Experimental::Visualize()
+void AiCarExperimental::Visualize()
 {
-	SCENENODE& topnode  = car->GetNode();
+	SceneNode& topnode  = car->GetNode();
 	ConfigureDrawable(brakedraw, topnode, 0,1,0);
 	ConfigureDrawable(steerdraw, topnode, 0,0,1);
 	ConfigureDrawable(raycastdraw, topnode, 1,0,0);
 	//ConfigureDrawable(avoidancedraw, topnode, 1,0,0);
 
-	DRAWABLE & brakedrawable = topnode.GetDrawlist().normal_noblend.get(brakedraw);
-	DRAWABLE & steerdrawable = topnode.GetDrawlist().normal_noblend.get(steerdraw);
-	DRAWABLE & raycastdrawable = topnode.GetDrawlist().normal_noblend.get(raycastdraw);
+	Drawable & brakedrawable = topnode.GetDrawlist().normal_noblend.get(brakedraw);
+	Drawable & steerdrawable = topnode.GetDrawlist().normal_noblend.get(steerdraw);
+	Drawable & raycastdrawable = topnode.GetDrawlist().normal_noblend.get(raycastdraw);
 
 	brakedrawable.SetLineSize(4);
 	brakedrawable.SetVertArray(&brakeshape);
 	brakeshape.Clear();
-	for (std::vector <BEZIER>::iterator i = brakelook.begin(); i != brakelook.end(); ++i)
+	for (std::vector <Bezier>::iterator i = brakelook.begin(); i != brakelook.end(); ++i)
 	{
-		BEZIER & patch = *i;
+		Bezier & patch = *i;
 		AddLinePoint(brakeshape, patch.GetBL());
 		AddLinePoint(brakeshape, patch.GetFL());
 		AddLinePoint(brakeshape, patch.GetFR());
@@ -1083,9 +1020,9 @@ void AI_Car_Experimental::Visualize()
 	steerdrawable.SetLineSize(4);
 	steerdrawable.SetVertArray(&steershape);
 	steershape.Clear();
-	for (std::vector <BEZIER>::iterator i = steerlook.begin(); i != steerlook.end(); ++i)
+	for (std::vector <Bezier>::iterator i = steerlook.begin(); i != steerlook.end(); ++i)
 	{
-		BEZIER & patch = *i;
+		Bezier & patch = *i;
 		AddLinePoint(steershape, patch.GetBL());
 		AddLinePoint(steershape, patch.GetFL());
 		AddLinePoint(steershape, patch.GetBR());
@@ -1098,10 +1035,10 @@ void AI_Car_Experimental::Visualize()
 }
 #endif
 /*
-optional <float> GetDistanceFromPatchToPatch(const BEZIER * frontpatch, const BEZIER * backpatch)
+optional <float> GetDistanceFromPatchToPatch(const Bezier * frontpatch, const Bezier * backpatch)
 {
 	float dist = 0;
-	const BEZIER * curpatch = backpatch;
+	const Bezier * curpatch = backpatch;
 	while (curpatch != frontpatch && curpatch)
 	{
 		dist += GetPatchDirection(*curpatch).Magnitude();

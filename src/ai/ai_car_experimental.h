@@ -58,9 +58,9 @@ private:
 
 	/*
 	/// for replanning the path
-	struct PATH_REVISION
+	struct PathRevision
 	{
-		PATH_REVISION() : trimleft_front(0), trimright_front(0), trimleft_back(0), trimright_back(0), car_pos_along_track(0) {}
+		PathRevision() : trimleft_front(0), trimright_front(0), trimleft_back(0), trimright_back(0), car_pos_along_track(0) {}
 
 		float trimleft_front;
 		float trimright_front;
@@ -68,21 +68,19 @@ private:
 		float trimright_back;
 		float car_pos_along_track;
 	};
-
-	std::map <const CAR *, PATH_REVISION> path_revisions;
+	std::map <const Car *, PathRevision> path_revisions;
 	*/
 
-	struct OTHERCARINFO
+	struct OtherCarInfo
 	{
-		OTHERCARINFO() : active(false) {}
+		OtherCarInfo() : active(false) {}
 
 		float horizontal_distance;
 		float fore_distance;
 		float eta;
 		bool active;
 	};
-
-	std::map <const Car *, OTHERCARINFO> othercars;
+	std::map <const Car *, OtherCarInfo> othercars;
 
 	float shift_time;
 	float longitude_mu; ///<friction coefficient of the tire - longitude direction
@@ -115,19 +113,19 @@ private:
 	float RayCastDistance( Vec3 direction, float max_length);
 
 #ifdef VISUALIZE_AI_DEBUG
-	VERTEXARRAY brakeshape;
-	VERTEXARRAY steershape;
-	VERTEXARRAY avoidanceshape;
-	VERTEXARRAY raycastshape;
-	std::vector <BEZIER> brakelook;
-	std::vector <BEZIER> steerlook;
-	keyed_container <DRAWABLE>::handle brakedraw;
-	keyed_container <DRAWABLE>::handle steerdraw;
-	keyed_container <DRAWABLE>::handle avoidancedraw;
-	keyed_container <DRAWABLE>::handle raycastdraw;
+	VertexArray brakeshape;
+	VertexArray steershape;
+	VertexArray avoidanceshape;
+	VertexArray raycastshape;
+	std::vector <Bezier> brakelook;
+	std::vector <Bezier> steerlook;
+	keyed_container <Drawable>::handle brakedraw;
+	keyed_container <Drawable>::handle steerdraw;
+	keyed_container <Drawable>::handle avoidancedraw;
+	keyed_container <Drawable>::handle raycastdraw;
 
-	static void ConfigureDrawable(keyed_container <DRAWABLE>::handle & ref, SCENENODE & topnode, float r, float g, float b);
-	static void AddLinePoint(VERTEXARRAY & va, const MATHVECTOR<float, 3> & p);
+	static void ConfigureDrawable(keyed_container <Drawable>::handle & ref, SceneNode & topnode, float r, float g, float b);
+	static void AddLinePoint(VertexArray & va, const Vec3 & p);
 #endif
 
 public:

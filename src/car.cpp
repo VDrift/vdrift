@@ -260,7 +260,7 @@ bool Car::LoadLight(
 	if (!cfg.get("radius", radius, error_output)) return false;
 	cfg.get("radius", radiusstr);
 
-	lights.push_back(LIGHT());
+	lights.push_back(Light());
 
 	SceneNode & bodynoderef = topnode.GetNode(bodynode);
 	lights.back().node = bodynoderef.AddNode();
@@ -707,7 +707,7 @@ void Car::UpdateGraphics()
 
 	// brake/reverse lights
 	SceneNode & bodynoderef = topnode.GetNode(bodynode);
-	for (std::list<LIGHT>::iterator i = lights.begin(); i != lights.end(); i++)
+	for (std::list<Light>::iterator i = lights.begin(); i != lights.end(); i++)
 	{
 		SceneNode & node = bodynoderef.GetNode(i->node);
 		Drawable & draw = GetDrawlist(node, OMNI).get(i->draw);
