@@ -17,8 +17,8 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _AABB_SPACE_PARTITIONING_H
-#define _AABB_SPACE_PARTITIONING_H
+#ifndef _AABBTREE_H
+#define _AABBTREE_H
 
 #include "aabb.h"
 #include "mathvector.h"
@@ -347,4 +347,4 @@ private:
 	}
 };
 
-#endif
+#endif // _AABBTREE_H

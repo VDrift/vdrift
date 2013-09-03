@@ -16,7 +16,7 @@ def addbulletpath( val ):
 #---------#
 src = Split("""
 		aabb.cpp
-		aabb_space_partitioning.cpp
+		aabbtree.cpp
 		ai/ai_car_experimental.cpp
 		ai/ai_car_standard.cpp
 		ai/ai.cpp
