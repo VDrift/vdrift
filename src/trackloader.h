@@ -52,13 +52,13 @@ class btCompoundShape;
 class btCollisionShape;
 class PTree;
 
-class TRACK::LOADER
+class Track::Loader
 {
 public:
-	LOADER(
+	Loader(
 		ContentManager & content,
 		DynamicsWorld & world,
-		DATA & data,
+		Track::Data & data,
 		std::ostream & info_output,
 		std::ostream & error_output,
 		const std::string & trackpath,
@@ -71,7 +71,7 @@ public:
 		const bool dynamic_objects,
 		const bool agressive_combining);
 
-	~LOADER();
+	~Loader();
 
 	bool BeginLoad();
 
@@ -84,7 +84,7 @@ public:
 private:
 	ContentManager & content;
 	DynamicsWorld & world;
-	DATA & data;
+	Track::Data & data;
 	std::ostream & info_output;
 	std::ostream & error_output;
 
@@ -100,7 +100,7 @@ private:
 	std::string objectpath;
 	std::string objectdir;
 	std::ifstream objectfile;
-	JOEPACK pack;
+	JoePack pack;
 	bool packload;
 	int numobjects;
 	int numloaded;
@@ -111,14 +111,14 @@ private:
 	bool list;
 
 	// pod for references
-	struct BODY
+	struct Body
 	{
-		BODY() : nolighting(false), skybox(false), mesh(0), shape(0),
+		Body() : nolighting(false), skybox(false), mesh(0), shape(0),
 			mass(0), surface(0), collidable(false)
 		{
 			// ctor
 		}
-		DRAWABLE drawable;
+		Drawable drawable;
 		bool nolighting;
 		bool skybox;
 		btStridingMeshInterface * mesh;
@@ -129,13 +129,13 @@ private:
 		int surface;
 		bool collidable;
 	};
-	typedef std::map<std::string, BODY>::const_iterator body_iterator;
-	std::map<std::string, BODY> bodies;
+	typedef std::map<std::string, Body>::const_iterator body_iterator;
+	std::map<std::string, Body> bodies;
 
 	// batch static geometry with same diffuse texture
-	struct OBJECT
+	struct Object
 	{
-		std::tr1::shared_ptr<MODEL> model;
+		std::tr1::shared_ptr<Model> model;
 		std::string texture;
 		int transparent_blend;
 		int clamptexture;
@@ -146,7 +146,7 @@ private:
 		bool collideable;
 		bool cached;
 	};
-	std::map<std::string, OBJECT> combined;
+	std::map<std::string, Object> combined;
 
 	// compound track shape
 	btCompoundShape * track_shape;
@@ -184,13 +184,13 @@ private:
 
 	bool LoadModel(const std::string & name);
 
-	bool LoadShape(const PTree & body_cfg, const MODEL & body_model, BODY & body);
+	bool LoadShape(const PTree & body_cfg, const Model & body_model, Body & body);
 
 	body_iterator LoadBody(const PTree & cfg);
 
-	void AddBody(SCENENODE & scene, const BODY & body);
+	void AddBody(SceneNode & scene, const Body & body);
 
-	bool AddObject(const OBJECT & object);
+	bool AddObject(const Object & object);
 
 	void Clear();
 };

@@ -28,7 +28,7 @@
 #include <cassert>
 
 template <typename T>
-class SPLINE
+class Spline
 {
 private:
 	std::vector <std::pair <T, T> > points;
@@ -103,7 +103,7 @@ private:
 	}
 
 public:
-	SPLINE() : first_slope(0.0), last_slope(0.0), derivs_calculated(false), slope(0.0) {}
+	Spline() : first_slope(0.0), last_slope(0.0), derivs_calculated(false), slope(0.0) {}
 
 	void Clear()
 	{
@@ -116,7 +116,7 @@ public:
 	{
 		points.push_back(std::pair <T,T> (x,y));
 		derivs_calculated = false;
-		PAIRSORTER_FIRST <T> sorter;
+		PairSortFirst <T> sorter;
 		std::sort(points.begin(), points.end(), sorter);
 	}
 

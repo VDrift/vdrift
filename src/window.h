@@ -25,12 +25,12 @@
 struct SDL_Surface;
 struct SDL_Window;
 
-class WINDOW_SDL
+class Window
 {
 public:
-	WINDOW_SDL();
+	Window();
 
-	~WINDOW_SDL();
+	~Window();
 
 	void Init(
 		const std::string & windowcaption,

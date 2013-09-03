@@ -26,7 +26,7 @@
 #include <cassert>
 #include <vector>
 
-namespace UTILS
+namespace Utils
 {
 
 ///seeks to the token and returns the text minus the token

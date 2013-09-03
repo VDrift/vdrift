@@ -26,7 +26,7 @@
 
 #include <string>
 
-struct CARINFO
+struct CarInfo
 {
 	std::string config;
 	std::string driver;
@@ -34,7 +34,7 @@ struct CARINFO
 	std::string paint;
 	std::string tire;
 	std::string wheel;
-	MATHVECTOR<float, 3> hsv;
+	Vec3 hsv;
 	float ailevel;
 
 	bool Serialize(joeserialize::Serializer & s)

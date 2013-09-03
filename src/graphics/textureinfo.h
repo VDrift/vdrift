@@ -20,7 +20,7 @@
 #ifndef _TEXTUREINFO_H
 #define _TEXTUREINFO_H
 
-struct TEXTUREINFO
+struct TextureInfo
 {
 	enum Size { SMALL, LARGE, MEDIUM };
 	unsigned char* data;	///< raw data pointer
@@ -40,7 +40,7 @@ struct TEXTUREINFO
 	bool premultiply_alpha; ///< pre-multiply the color by the alpha value; allows using glstate.SetBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA); when drawing the texture to get correct blending
 	bool srgb; 				///< apply srgb colorspace correction
 
-	TEXTUREINFO() :
+	TextureInfo() :
 		data(0),
 		width(0),
 		height(0),

@@ -29,17 +29,17 @@
 #include "render_input_scene.h"
 #include "render_output.h"
 
-struct GRAPHICS_CAMERA;
-class SHADER_GLSL;
-class SCENENODE;
-class SKY;
+struct GraphicsCamera;
+class Shader;
+class SceneNode;
+class Sky;
 
-class GRAPHICS_GL2 : public GRAPHICS
+class GraphicsGL2 : public Graphics
 {
 public:
-	GRAPHICS_GL2();
+	GraphicsGL2();
 
-	~GRAPHICS_GL2();
+	~GraphicsGL2();
 
 	/// reflection_type is 0 (low=OFF), 1 (medium=static), 2 (high=dynamic)
 	/// returns true on success
@@ -63,16 +63,16 @@ public:
 
 	virtual void BeginScene(std::ostream & error_output);
 
-	virtual DRAWABLE_CONTAINER <PTRVECTOR> & GetDynamicDrawlist();
+	virtual DrawableContainer <PtrVector> & GetDynamicDrawlist();
 
-	virtual void AddStaticNode(SCENENODE & node, bool clearcurrent = true);
+	virtual void AddStaticNode(SceneNode & node, bool clearcurrent = true);
 
 	/// Setup scene cameras
 	virtual void SetupScene(
 		float fov, float new_view_distance,
-		const MATHVECTOR <float, 3> cam_position,
-		const QUATERNION <float> & cam_rotation,
-		const MATHVECTOR <float, 3> & dynamic_reflection_sample_pos);
+		const Vec3 cam_position,
+		const Quat & cam_rotation,
+		const Vec3 & dynamic_reflection_sample_pos);
 
 	virtual void UpdateScene(float dt);
 
@@ -92,7 +92,7 @@ public:
 
 	virtual bool GetShadows() const;
 
-	virtual void SetSunDirection(const MATHVECTOR<float, 3> & value);
+	virtual void SetSunDirection(const Vec3 & value);
 
 	virtual void SetContrast(float value);
 
@@ -101,21 +101,21 @@ public:
 	virtual void SetLocalTimeSpeed(float value);
 
 	// Allow external code to use gl state manager.
-	GLSTATEMANAGER & GetState();
+	GraphicsState & GetState();
 
 	// Get pointer to shader called name.
 	// Returns null on failure.
-	SHADER_GLSL * GetShader(const std::string & name);
+	Shader * GetShader(const std::string & name);
 
 	// Add an render input texture (texture used by render passes).
 	// Warning: Existing texture (texture with the same name) will be overriden.
 	// Warning: The texture is expected to stay valid until graphics is destroyed.
 	// todo: RemoveInputTexture ?
-	void AddInputTexture(const std::string & name, TEXTURE_INTERFACE * texture);
+	void AddInputTexture(const std::string & name, TextureInterface * texture);
 
 private:
 	// avoids sending excessive state changes to OpenGL
-	GLSTATEMANAGER glstate;
+	GraphicsState glstate;
 
 	// configuration variables, internal data
 	int w, h;
@@ -132,42 +132,42 @@ private:
 	bool normalmaps;
 	float contrast;
 	enum {REFLECTION_DISABLED, REFLECTION_STATIC, REFLECTION_DYNAMIC} reflection_status;
-	TEXTURE static_reflection;
-	TEXTURE static_ambient;
+	Texture static_reflection;
+	Texture static_ambient;
 	std::string renderconfigfile;
 	std::string shaderpath;
 
 	// configuration variables in a data-driven friendly format
 	std::set <std::string> conditions;
-	GRAPHICS_CONFIG config;
+	GraphicsConfig config;
 
 	// shaders
-	typedef std::map <std::string, SHADER_GLSL> shader_map_type;
+	typedef std::map <std::string, Shader> shader_map_type;
 	shader_map_type shadermap;
 
 	// scenegraph output
-	DRAWABLE_CONTAINER <PTRVECTOR> dynamic_drawlist; //used for objects that move or change
-	STATICDRAWABLES static_drawlist; //used for objects that will never change
+	DrawableContainer <PtrVector> dynamic_drawlist; //used for objects that move or change
+	StaticDrawables static_drawlist; //used for objects that will never change
 
 	// render outputs
-	typedef std::map <std::string, RENDER_OUTPUT> render_output_map_type;
+	typedef std::map <std::string, RenderOutput> render_output_map_type;
 	render_output_map_type render_outputs;
-	typedef std::map <std::string, FBTEXTURE> texture_output_map_type;
+	typedef std::map <std::string, FrameBufferTexture> texture_output_map_type;
 	texture_output_map_type texture_outputs;
 
 	// outputs and other textures used as inputs
-	std::map <std::string, reseatable_reference <TEXTURE_INTERFACE> > texture_inputs;
+	std::map <std::string, reseatable_reference <TextureInterface> > texture_inputs;
 
 	// render input objects
-	RENDER_INPUT_SCENE renderscene;
-	RENDER_INPUT_POSTPROCESS postprocess;
+	RenderInputScene renderscene;
+	RenderInputPostprocess postprocess;
 
 	// camera data
-	typedef std::map <std::string, GRAPHICS_CAMERA> camera_map_type;
+	typedef std::map <std::string, GraphicsCamera> camera_map_type;
 	camera_map_type cameras;
 
-	MATHVECTOR<float, 3> light_direction;
-	std::auto_ptr<SKY> sky;
+	Vec3 light_direction;
+	std::auto_ptr<Sky> sky;
 	bool sky_dynamic;
 
 	void ChangeDisplay(
@@ -190,66 +190,66 @@ private:
 	void DisableShaders(std::ostream & error_output);
 
 	void CullScenePass(
-		const GRAPHICS_CONFIG_PASS & pass,
-		std::map <std::string, PTRVECTOR <DRAWABLE> > & culled_static_drawlist,
+		const GraphicsConfigPass & pass,
+		std::map <std::string, PtrVector <Drawable> > & culled_static_drawlist,
 		std::ostream & error_output);
 
 	void DrawScenePass(
-		const GRAPHICS_CONFIG_PASS & pass,
-		std::map <std::string, PTRVECTOR <DRAWABLE> > & culled_static_drawlist,
+		const GraphicsConfigPass & pass,
+		std::map <std::string, PtrVector <Drawable> > & culled_static_drawlist,
 		std::ostream & error_output);
 
 	/// draw postprocess scene pass
 	void DrawScenePassPost(
-		const GRAPHICS_CONFIG_PASS & pass,
+		const GraphicsConfigPass & pass,
 		std::ostream & error_output);
 
 	/// get input textures vector from config inputs
 	void GetScenePassInputTextures(
-		const GRAPHICS_CONFIG_INPUTS & inputs,
-		std::vector <TEXTURE_INTERFACE*> & input_textures);
+		const GraphicsConfigInputs & inputs,
+		std::vector <TextureInterface*> & input_textures);
 
 	void BindInputTextures(
-		const std::vector <TEXTURE_INTERFACE*> & textures,
+		const std::vector <TextureInterface*> & textures,
 		std::ostream & error_output);
 
 	void UnbindInputTextures(
-		const std::vector <TEXTURE_INTERFACE*> & textures,
+		const std::vector <TextureInterface*> & textures,
 		std::ostream & error_output);
 
 	void DrawScenePassLayer(
 		const std::string & layer,
-		const GRAPHICS_CONFIG_PASS & pass,
-		const std::vector <TEXTURE_INTERFACE*> & input_textures,
-		const std::map <std::string, PTRVECTOR <DRAWABLE> > & culled_static_drawlist,
-		RENDER_OUTPUT & render_output,
+		const GraphicsConfigPass & pass,
+		const std::vector <TextureInterface*> & input_textures,
+		const std::map <std::string, PtrVector <Drawable> > & culled_static_drawlist,
+		RenderOutput & render_output,
 		std::ostream & error_output);
 
 	void RenderDrawlist(
-		const std::vector <DRAWABLE*> & drawlist,
-		RENDER_INPUT_SCENE & render_scene,
-		RENDER_OUTPUT & render_output,
+		const std::vector <Drawable*> & drawlist,
+		RenderInputScene & render_scene,
+		RenderOutput & render_output,
 		std::ostream & error_output);
 
 	void RenderDrawlists(
-		const std::vector <DRAWABLE*> & dynamic_drawlist,
-		const std::vector <DRAWABLE*> & static_drawlist,
-		const std::vector <TEXTURE_INTERFACE*> & extra_textures,
-		RENDER_INPUT_SCENE & render_scene,
-		RENDER_OUTPUT & render_output,
+		const std::vector <Drawable*> & dynamic_drawlist,
+		const std::vector <Drawable*> & static_drawlist,
+		const std::vector <TextureInterface*> & extra_textures,
+		RenderInputScene & render_scene,
+		RenderOutput & render_output,
 		std::ostream & error_output);
 
 	void RenderPostProcess(
 		const std::string & shadername,
-		const std::vector <TEXTURE_INTERFACE*> & textures,
-		RENDER_OUTPUT & render_output,
+		const std::vector <TextureInterface*> & textures,
+		RenderOutput & render_output,
 		bool write_color,
 		bool write_alpha,
 		std::ostream & error_output);
 
 	void Render(
-		RENDER_INPUT * input,
-		RENDER_OUTPUT & output,
+		RenderInput * input,
+		RenderOutput & output,
 		std::ostream & error_output);
 };
 

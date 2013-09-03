@@ -31,10 +31,10 @@
 
 class ContentManager;
 
-class PARTICLE_SYSTEM
+class ParticleSystem
 {
 public:
-	PARTICLE_SYSTEM();
+	ParticleSystem();
 
 	/// Load texture atlas and setup drawable.
 	void Load(
@@ -45,7 +45,7 @@ public:
 
 	/// Parameters are from 0.0 to 1.0 and scale to the ranges set with SetParameters.
 	void AddParticle(
-		const MATHVECTOR<float,3> & position,
+		const Vec3 & position,
 		float newspeed);
 
 	/// Particle physics update.
@@ -54,8 +54,8 @@ public:
 	/// Partcles graphics update based on last physics state.
 	/// Call once per frame.
 	void UpdateGraphics(
-		const QUATERNION<float> & camdir,
-		const MATHVECTOR<float, 3> & campos,
+		const Quat & camdir,
+		const Vec3 & campos,
 		float znear, float zfar,
 		float fovy = 0, float fovz = 0);
 
@@ -76,18 +76,18 @@ public:
 		float speedmax,
 		float sizemin,
 		float sizemax,
-		MATHVECTOR<float,3> newdir);
+		Vec3 newdir);
 
 	unsigned NumParticles() { return particles.size(); }
 
-	SCENENODE & GetNode() { return node; }
+	SceneNode & GetNode() { return node; }
 
 private:
-	struct PARTICLE
+	struct Particle
 	{
-		MATHVECTOR<float,3> start_position; ///< start position in world space
-		MATHVECTOR<float,3> direction;		///< direction in world space
-		MATHVECTOR<float,3> position;		///< position in camera space
+		Vec3 start_position; ///< start position in world space
+		Vec3 direction;		///< direction in world space
+		Vec3 position;		///< position in camera space
 		float transparency; ///< transparency factor
 		float speed;		///< initial velocity along direction
 		float size;			///< initial size
@@ -95,7 +95,7 @@ private:
 		float time;			///< particle age, time since the particle was created
 		int tid;			///< particle texture atlas tile id 0-8
 	};
-	std::vector<PARTICLE> particles;
+	std::vector<Particle> particles;
 	std::vector<float> distance_from_cam;
 	unsigned max_particles;
 	unsigned texture_tiles;
@@ -106,13 +106,13 @@ private:
 	std::pair<float,float> longevity_range;
 	std::pair<float,float> speed_range;
 	std::pair<float,float> size_range;
-	MATHVECTOR<float, 3> direction;
+	Vec3 direction;
 
-	keyed_container<DRAWABLE>::handle draw;
-	VERTEXARRAY varrays[2]; ///< use double buffered vertex array
-	SCENENODE node;
+	keyed_container<Drawable>::handle draw;
+	VertexArray varrays[2]; ///< use double buffered vertex array
+	SceneNode node;
 
-	static keyed_container<DRAWABLE> & GetDrawlist(SCENENODE & node)
+	static keyed_container<Drawable> & GetDrawlist(SceneNode & node)
 	{
 		return node.GetDrawlist().particle;
 	}

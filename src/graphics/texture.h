@@ -24,12 +24,12 @@
 #include "textureinfo.h"
 #include <iosfwd>
 
-class TEXTURE : public TEXTURE_INTERFACE
+class Texture : public TextureInterface
 {
 public:
-	TEXTURE();
+	Texture();
 
-	virtual ~TEXTURE();
+	virtual ~Texture();
 
 	virtual void Activate() const;
 
@@ -49,7 +49,7 @@ public:
 
 	bool IsCube() const {return m_cube;}
 
-	bool Load(const std::string & path, const TEXTUREINFO & info, std::ostream & error);
+	bool Load(const std::string & path, const TextureInfo & info, std::ostream & error);
 
 	void Unload();
 
@@ -60,11 +60,11 @@ private:
 	bool m_alpha;
 	bool m_cube;
 
-	bool LoadCubeVerticalCross(const std::string & path, const TEXTUREINFO & info, std::ostream & error);
+	bool LoadCubeVerticalCross(const std::string & path, const TextureInfo & info, std::ostream & error);
 
-	bool LoadCube(const std::string & path, const TEXTUREINFO & info, std::ostream & error);
+	bool LoadCube(const std::string & path, const TextureInfo & info, std::ostream & error);
 
-	bool LoadDDS(const std::string & path, const TEXTUREINFO & info, std::ostream & error);
+	bool LoadDDS(const std::string & path, const TextureInfo & info, std::ostream & error);
 };
 
 #endif //_TEXTURE_H

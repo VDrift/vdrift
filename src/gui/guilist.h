@@ -21,7 +21,7 @@
 #define _GUILIST_H
 
 /// gui element list base class
-class GUILIST
+class GuiList
 {
 public:
 	/// rows/cols the number of visible list elements
@@ -58,11 +58,11 @@ protected:
 	int GetElemId(float x, float y) const;
 
 	/// used as base class only
-	GUILIST();
-	~GUILIST();
+	GuiList();
+	~GuiList();
 };
 
-inline void GUILIST::SetupList(
+inline void GuiList::SetupList(
 	unsigned rows, unsigned cols,
 	float xmin, float ymin,
 	float xmax, float ymax,
@@ -85,7 +85,7 @@ inline void GUILIST::SetupList(
 	m_elemh = (listh - m_rows * padh) / m_rows;
 }
 
-inline void GUILIST::GetElemPos(int n, unsigned & col, unsigned & row) const
+inline void GuiList::GetElemPos(int n, unsigned & col, unsigned & row) const
 {
 	if (m_vertical)
 	{
@@ -99,7 +99,7 @@ inline void GUILIST::GetElemPos(int n, unsigned & col, unsigned & row) const
 	}
 }
 
-inline void GUILIST::GetElemPos(int n, float & x, float & y) const
+inline void GuiList::GetElemPos(int n, float & x, float & y) const
 {
 	unsigned col, row;
 	GetElemPos(n, col, row);
@@ -113,7 +113,7 @@ inline int clamp(T v, T vmin, T vmax)
 	return (v < vmin) ? vmin : ((v > vmax) ? vmax : v);
 }
 
-inline int GUILIST::GetElemId(float x, float y) const
+inline int GuiList::GetElemId(float x, float y) const
 {
 	int col = m_cols * (x - m_xmin) / (m_xmax - m_xmin);
 	int row = m_rows * (y - m_ymin) / (m_ymax - m_ymin);
@@ -129,7 +129,7 @@ inline int GUILIST::GetElemId(float x, float y) const
 	}
 }
 
-inline GUILIST::GUILIST() :
+inline GuiList::GuiList() :
 	m_rows(1), m_cols(1),
 	m_xmin(0), m_ymin(0),
 	m_xmax(1), m_ymax(1),
@@ -142,7 +142,7 @@ inline GUILIST::GUILIST() :
 	// ctor
 }
 
-inline GUILIST::~GUILIST()
+inline GuiList::~GuiList()
 {
 	// dtor
 }

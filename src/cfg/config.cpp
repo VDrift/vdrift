@@ -351,7 +351,7 @@ QT_TEST(config_include)
 {
 	std::stringbuf log;
 	std::ostream info(&log), error(&log);
-	PATHMANAGER path;
+	PathManager path;
 	path.Init(info, error);
 
 	std::string bad_include_file = path.GetDataPath() + "/test/badinclude.cfg";

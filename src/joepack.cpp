@@ -29,7 +29,7 @@ using std::string;
 using std::map;
 using std::ios_base;
 
-struct JOEPACK::IMPL
+struct JoePack::Impl
 {
 	struct FADATA
 	{
@@ -42,7 +42,7 @@ struct JOEPACK::IMPL
 	std::map <std::string, FADATA>::iterator curfa;
 	std::ifstream f;
 
-	IMPL();
+	Impl();
 	bool Load(const string & fn);
 	void Close();
 	void fclose();
@@ -50,12 +50,12 @@ struct JOEPACK::IMPL
 	int fread(void * buffer, const unsigned size, const unsigned count);
 };
 
-JOEPACK::IMPL::IMPL() : versionstr("JPK01.00")
+JoePack::Impl::Impl() : versionstr("JPK01.00")
 {
 	curfa = fat.end();
 }
 
-bool JOEPACK::IMPL::Load(const string & fn)
+bool JoePack::Impl::Load(const string & fn)
 {
 	Close();
 	f.clear();
@@ -115,19 +115,19 @@ bool JOEPACK::IMPL::Load(const string & fn)
 	}
 }
 
-void JOEPACK::IMPL::Close()
+void JoePack::Impl::Close()
 {
 	if (f.is_open()) f.close();
 	fat.clear();
 	curfa = fat.end();
 }
 
-void JOEPACK::IMPL::fclose()
+void JoePack::Impl::fclose()
 {
 	curfa = fat.end();
 }
 
-bool JOEPACK::IMPL::fopen(const string & fn)
+bool JoePack::Impl::fopen(const string & fn)
 {
 	curfa = fat.find(fn);
 	if (curfa == fat.end())
@@ -141,7 +141,7 @@ bool JOEPACK::IMPL::fopen(const string & fn)
 	}
 }
 
-int JOEPACK::IMPL::fread(void * buffer, const unsigned size, const unsigned count)
+int JoePack::Impl::fread(void * buffer, const unsigned size, const unsigned count)
 {
 	if (curfa != fat.end())
 	{
@@ -171,35 +171,35 @@ int JOEPACK::IMPL::fread(void * buffer, const unsigned size, const unsigned coun
 	}
 }
 
-JOEPACK::JOEPACK()
+JoePack::JoePack()
 {
-	impl = new IMPL();
+	impl = new Impl();
 }
 
-JOEPACK::~JOEPACK()
+JoePack::~JoePack()
 {
 	Close();
 	delete impl;
 }
 
-bool JOEPACK::Load(const std::string & fn)
+bool JoePack::Load(const std::string & fn)
 {
 	packpath = fn;
 	return impl->Load(fn);
 }
 
-void JOEPACK::Close()
+void JoePack::Close()
 {
 	packpath.clear();
 	impl->Close();
 }
 
-void JOEPACK::fclose() const
+void JoePack::fclose() const
 {
 	impl->fclose();
 }
 
-bool JOEPACK::fopen(const string & fn) const
+bool JoePack::fopen(const string & fn) const
 {
 	string newfn;
 	if (fn.find(packpath, 0) < fn.length())
@@ -213,14 +213,14 @@ bool JOEPACK::fopen(const string & fn) const
 	return impl->fopen(newfn);
 }
 
-int JOEPACK::fread(void * buffer, const unsigned size, const unsigned count) const
+int JoePack::fread(void * buffer, const unsigned size, const unsigned count) const
 {
 	return impl->fread(buffer, size, count);
 }
 
 QT_TEST(joepack_test)
 {
-	JOEPACK p;
+	JoePack p;
 	QT_CHECK(p.Load("data/test/test1.jpk"));
 	QT_CHECK(p.fopen("testlist.txt"));
 	char buf[1000];

@@ -23,20 +23,20 @@
 #include "guiwidget.h"
 #include "text_draw.h"
 
-class TEXTURE;
-class FONT;
+class Texture;
+class Font;
 
-class GUILABEL : public GUIWIDGET
+class GuiLabel : public GuiWidget
 {
 public:
-	GUILABEL();
+	GuiLabel();
 
-	virtual ~GUILABEL();
+	virtual ~GuiLabel();
 
 	// align: -1 left, 0 center, +1 right
 	void SetupDrawable(
-		SCENENODE & scene,
-		const FONT & font, int align,
+		SceneNode & scene,
+		const Font & font, int align,
 		float scalex, float scaley,
 		float centerx, float centery,
 		float w, float h, float z);
@@ -48,16 +48,16 @@ public:
 	Slot1<const std::string &> set_value;
 
 private:
-	keyed_container<DRAWABLE>::handle m_draw;
-	TEXT_DRAW m_text_draw;
+	keyed_container<Drawable>::handle m_draw;
+	TextDraw m_text_draw;
 	std::string m_text;
-	const FONT * m_font;
+	const Font * m_font;
 	float m_x, m_y, m_w, m_h;
 	float m_scalex, m_scaley;
 	int m_align;
 
-	DRAWABLE & GetDrawable(SCENENODE & scene);
-	GUILABEL(const GUILABEL & other);
+	Drawable & GetDrawable(SceneNode & scene);
+	GuiLabel(const GuiLabel & other);
 };
 
 #endif

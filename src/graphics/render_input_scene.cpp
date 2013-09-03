@@ -24,7 +24,7 @@
 #include "texture.h"
 #include "shader.h"
 
-RENDER_INPUT_SCENE::RENDER_INPUT_SCENE():
+RenderInputScene::RenderInputScene():
 	last_transform_valid(false),
 	shaders(false),
 	clearcolor(false),
@@ -36,45 +36,45 @@ RENDER_INPUT_SCENE::RENDER_INPUT_SCENE():
 	writedepth(true),
 	carpainthack(false),
 	vlighting(false),
-	blendmode(BLENDMODE::DISABLED)
+	blendmode(BlendMode::DISABLED)
 {
-	MATHVECTOR <float, 3> front(1,0,0);
+	Vec3 front(1,0,0);
 	lightposition = front;
-	QUATERNION <float> ldir;
+	Quat ldir;
 	ldir.Rotate(3.141593*0.5,1,0,0);
 	ldir.RotateVector(lightposition);
 }
 
-RENDER_INPUT_SCENE::~RENDER_INPUT_SCENE()
+RenderInputScene::~RenderInputScene()
 {
 	//dtor
 }
 
-void RENDER_INPUT_SCENE::SetDrawLists(
-	const std::vector <DRAWABLE*> & dl_dynamic,
-	const std::vector <DRAWABLE*> & dl_static)
+void RenderInputScene::SetDrawLists(
+	const std::vector <Drawable*> & dl_dynamic,
+	const std::vector <Drawable*> & dl_static)
 {
 	dynamic_drawlist_ptr = &dl_dynamic;
 	static_drawlist_ptr = &dl_static;
 }
 
-void RENDER_INPUT_SCENE::DisableOrtho()
+void RenderInputScene::DisableOrtho()
 {
 	orthomode = false;
 }
 
-void RENDER_INPUT_SCENE::SetOrtho(
-	const MATHVECTOR <float, 3> & neworthomin,
-	const MATHVECTOR <float, 3> & neworthomax)
+void RenderInputScene::SetOrtho(
+	const Vec3 & neworthomin,
+	const Vec3 & neworthomax)
 {
 	orthomode = true;
 	orthomin = neworthomin;
 	orthomax = neworthomax;
 }
 
-FRUSTUM RENDER_INPUT_SCENE::SetCameraInfo(
-	const MATHVECTOR <float, 3> & newpos,
-	const QUATERNION <float> & newrot,
+Frustum RenderInputScene::SetCameraInfo(
+	const Vec3 & newpos,
+	const Quat & newrot,
 	float newfov, float newlodfar,
 	float neww, float newh,
 	bool restore_matrices)
@@ -100,39 +100,39 @@ FRUSTUM RENDER_INPUT_SCENE::SetCameraInfo(
 	return frustum;
 }
 
-const MATRIX4<float> & RENDER_INPUT_SCENE::GetProjMatrix() const
+const Matrix4<float> & RenderInputScene::GetProjMatrix() const
 {
 	return projMatrix;
 }
 
-const MATRIX4<float> & RENDER_INPUT_SCENE::GetViewMatrix() const
+const Matrix4<float> & RenderInputScene::GetViewMatrix() const
 {
 	return viewMatrix;
 }
 
-void RENDER_INPUT_SCENE::SetSunDirection(const MATHVECTOR <float, 3> & newsun)
+void RenderInputScene::SetSunDirection(const Vec3 & newsun)
 {
 	lightposition = newsun;
 }
 
-void RENDER_INPUT_SCENE::SetFlags(bool newshaders)
+void RenderInputScene::SetFlags(bool newshaders)
 {
 	shaders = newshaders;
 }
 
-void RENDER_INPUT_SCENE::SetDefaultShader(SHADER_GLSL & newdefault)
+void RenderInputScene::SetDefaultShader(Shader & newdefault)
 {
 	assert(newdefault.GetLoaded());
 	shader = newdefault;
 }
 
-void RENDER_INPUT_SCENE::SetClear(bool newclearcolor, bool newcleardepth)
+void RenderInputScene::SetClear(bool newclearcolor, bool newcleardepth)
 {
 	clearcolor = newclearcolor;
 	cleardepth = newcleardepth;
 }
 
-void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_output)
+void RenderInputScene::Render(GraphicsState & glstate, std::ostream & error_output)
 {
 	if (orthomode)
 		projMatrix.SetOrthographic(orthomin[0], orthomax[0], orthomin[1], orthomax[1], orthomin[2], orthomax[2]);
@@ -158,12 +158,12 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 		assert(shader);
 
 		// cubemap transform goes in texture2
-		QUATERNION <float> camlook;
+		Quat camlook;
 		camlook.Rotate(M_PI_2, 1, 0, 0);
 		camlook.Rotate(-M_PI_2, 0, 0, 1);
-		QUATERNION <float> cuberotation;
+		Quat cuberotation;
 		cuberotation = (-camlook) * (-cam_rotation); // experimentally derived
-		MATRIX4<float> cubeMatrix;
+		Matrix4<float> cubeMatrix;
 		cuberotation.GetMatrix4(cubeMatrix);
 
 		glActiveTexture(GL_TEXTURE2);
@@ -173,7 +173,7 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 		glMatrixMode(GL_MODELVIEW);
 
 		// send light position to the shaders
-		MATHVECTOR <float, 3> lightvec = lightposition;
+		Vec3 lightvec = lightposition;
 		(cam_rotation).RotateVector(lightvec);
 		shader->Enable();
 		shader->UploadActiveShaderParameter3f("lightposition", lightvec[0], lightvec[1], lightvec[2]);
@@ -215,57 +215,57 @@ void RENDER_INPUT_SCENE::Render(GLSTATEMANAGER & glstate, std::ostream & error_o
 	DrawList(glstate, *static_drawlist_ptr, true);
 }
 
-void RENDER_INPUT_SCENE::SetFSAA(unsigned int value)
+void RenderInputScene::SetFSAA(unsigned int value)
 {
 	fsaa = value;
 }
 
-void RENDER_INPUT_SCENE::SetContrast(float value)
+void RenderInputScene::SetContrast(float value)
 {
 	contrast = value;
 }
 
-void RENDER_INPUT_SCENE::SetDepthMode(int mode)
+void RenderInputScene::SetDepthMode(int mode)
 {
 	depth_mode = mode;
 }
 
-void RENDER_INPUT_SCENE::SetWriteDepth(bool write)
+void RenderInputScene::SetWriteDepth(bool write)
 {
 	writedepth = write;
 }
 
-void RENDER_INPUT_SCENE::SetWriteColor(bool write)
+void RenderInputScene::SetWriteColor(bool write)
 {
 	writecolor = write;
 }
 
-void RENDER_INPUT_SCENE::SetWriteAlpha(bool write)
+void RenderInputScene::SetWriteAlpha(bool write)
 {
 	writealpha = write;
 }
 
-std::pair <bool, bool> RENDER_INPUT_SCENE::GetClear() const
+std::pair <bool, bool> RenderInputScene::GetClear() const
 {
 	return std::make_pair(clearcolor, cleardepth);
 }
 
-void RENDER_INPUT_SCENE::SetCarPaintHack(bool hack)
+void RenderInputScene::SetCarPaintHack(bool hack)
 {
 	carpainthack = hack;
 }
 
-void RENDER_INPUT_SCENE::SetBlendMode(BLENDMODE::BLENDMODE mode)
+void RenderInputScene::SetBlendMode(BlendMode::BLENDMODE mode)
 {
 	blendmode = mode;
 }
 
-void RENDER_INPUT_SCENE::EnableCarPaint(GLSTATEMANAGER & glstate)
+void RenderInputScene::EnableCarPaint(GraphicsState & glstate)
 {
 	// turn on lighting for cars only atm
 	if (!vlighting)
 	{
-		MATHVECTOR <float, 3> lightvec = lightposition;
+		Vec3 lightvec = lightposition;
 		cam_rotation.RotateVector(lightvec);
 
 		// push some sane values, should be configurable maybe?
@@ -287,7 +287,7 @@ void RENDER_INPUT_SCENE::EnableCarPaint(GLSTATEMANAGER & glstate)
 		vlighting = true;
 
 		// dummy texture required to set the combiner
-		DRAWABLE & d = *dynamic_drawlist_ptr->front();
+		Drawable & d = *dynamic_drawlist_ptr->front();
 
 		// setup first combiner
 		glstate.BindTexture2D(0, d.GetDiffuseMap());
@@ -324,7 +324,7 @@ void RENDER_INPUT_SCENE::EnableCarPaint(GLSTATEMANAGER & glstate)
 	}
 }
 
-void RENDER_INPUT_SCENE::DisableCarPaint(GLSTATEMANAGER & glstate)
+void RenderInputScene::DisableCarPaint(GraphicsState & glstate)
 {
 	if (vlighting)
 	{
@@ -345,11 +345,11 @@ void RENDER_INPUT_SCENE::DisableCarPaint(GLSTATEMANAGER & glstate)
 	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 }
 
-void RENDER_INPUT_SCENE::SetBlendMode(GLSTATEMANAGER & glstate)
+void RenderInputScene::SetBlendMode(GraphicsState & glstate)
 {
 	switch (blendmode)
 	{
-		case BLENDMODE::DISABLED:
+		case BlendMode::DISABLED:
 		{
 			glstate.Disable(GL_ALPHA_TEST);
 			glstate.Disable(GL_BLEND);
@@ -357,7 +357,7 @@ void RENDER_INPUT_SCENE::SetBlendMode(GLSTATEMANAGER & glstate)
 		}
 		break;
 
-		case BLENDMODE::ADD:
+		case BlendMode::ADD:
 		{
 			glstate.Disable(GL_ALPHA_TEST);
 			glstate.Enable(GL_BLEND);
@@ -366,7 +366,7 @@ void RENDER_INPUT_SCENE::SetBlendMode(GLSTATEMANAGER & glstate)
 		}
 		break;
 
-		case BLENDMODE::ALPHABLEND:
+		case BlendMode::ALPHABLEND:
 		{
 			glstate.Disable(GL_ALPHA_TEST);
 			glstate.Enable(GL_BLEND);
@@ -375,7 +375,7 @@ void RENDER_INPUT_SCENE::SetBlendMode(GLSTATEMANAGER & glstate)
 		}
 		break;
 
-		case BLENDMODE::PREMULTIPLIED_ALPHA:
+		case BlendMode::PREMULTIPLIED_ALPHA:
 		{
 			glstate.Disable(GL_ALPHA_TEST);
 			glstate.Enable(GL_BLEND);
@@ -384,7 +384,7 @@ void RENDER_INPUT_SCENE::SetBlendMode(GLSTATEMANAGER & glstate)
 		}
 		break;
 
-		case BLENDMODE::ALPHATEST:
+		case BlendMode::ALPHATEST:
 		{
 			glstate.Enable(GL_ALPHA_TEST);
 			glstate.Disable(GL_BLEND);
@@ -402,11 +402,11 @@ void RENDER_INPUT_SCENE::SetBlendMode(GLSTATEMANAGER & glstate)
 	}
 }
 
-void RENDER_INPUT_SCENE::DrawList(GLSTATEMANAGER & glstate, const std::vector <DRAWABLE*> & drawlist, bool preculled)
+void RenderInputScene::DrawList(GraphicsState & glstate, const std::vector <Drawable*> & drawlist, bool preculled)
 {
-	for (std::vector <DRAWABLE*>::const_iterator ptr = drawlist.begin(); ptr != drawlist.end(); ++ptr)
+	for (std::vector <Drawable*>::const_iterator ptr = drawlist.begin(); ptr != drawlist.end(); ++ptr)
 	{
-		const DRAWABLE & d = **ptr;
+		const Drawable & d = **ptr;
 		if (preculled || !FrustumCull(d))
 		{
 			SetFlags(d, glstate);
@@ -429,7 +429,7 @@ void RENDER_INPUT_SCENE::DrawList(GLSTATEMANAGER & glstate, const std::vector <D
 	}
 }
 
-void RENDER_INPUT_SCENE::DrawVertexArray(const VERTEXARRAY & va, float linesize) const
+void RenderInputScene::DrawVertexArray(const VertexArray & va, float linesize) const
 {
 	const float * verts;
 	int vertcount;
@@ -495,12 +495,12 @@ void RENDER_INPUT_SCENE::DrawVertexArray(const VERTEXARRAY & va, float linesize)
 	}
 }
 
-bool RENDER_INPUT_SCENE::FrustumCull(const DRAWABLE & d)
+bool RenderInputScene::FrustumCull(const Drawable & d)
 {
 	if (d.GetRadius() > 0.0)
 	{
 		//do frustum culling
-		MATHVECTOR <float, 3> objpos(d.GetObjectCenter());
+		Vec3 objpos(d.GetObjectCenter());
 		d.GetTransform().TransformVectorOut(objpos[0],objpos[1],objpos[2]);
 		float dx=objpos[0]-cam_position[0]; float dy=objpos[1]-cam_position[1]; float dz=objpos[2]-cam_position[2];
 		float rc=dx*dx+dy*dy+dz*dz;
@@ -530,7 +530,7 @@ bool RENDER_INPUT_SCENE::FrustumCull(const DRAWABLE & d)
 	return false;
 }
 
-void RENDER_INPUT_SCENE::SetFlags(const DRAWABLE & d, GLSTATEMANAGER & glstate)
+void RenderInputScene::SetFlags(const Drawable & d, GraphicsState & glstate)
 {
 	if (d.GetDecal())
 	{
@@ -559,9 +559,9 @@ void RENDER_INPUT_SCENE::SetFlags(const DRAWABLE & d, GLSTATEMANAGER & glstate)
 	glstate.SetColor(r,g,b,a);
 }
 
-void RENDER_INPUT_SCENE::SetTextures(const DRAWABLE & d, GLSTATEMANAGER & glstate)
+void RenderInputScene::SetTextures(const Drawable & d, GraphicsState & glstate)
 {
-	const TEXTURE * diffusetexture = d.GetDiffuseMap();
+	const Texture * diffusetexture = d.GetDiffuseMap();
 
 	if (!diffusetexture || !diffusetexture->Loaded())
 	{
@@ -585,11 +585,11 @@ void RENDER_INPUT_SCENE::SetTextures(const DRAWABLE & d, GLSTATEMANAGER & glstat
 	}
 }
 
-void RENDER_INPUT_SCENE::SetTransform(const DRAWABLE & d, GLSTATEMANAGER & glstate)
+void RenderInputScene::SetTransform(const Drawable & d, GraphicsState & glstate)
 {
 	if (!last_transform_valid || !last_transform.Equals(d.GetTransform()))
 	{
-		MATRIX4<float> worldTrans = d.GetTransform().Multiply(viewMatrix);
+		Matrix4<float> worldTrans = d.GetTransform().Multiply(viewMatrix);
 		glLoadMatrixf(worldTrans.GetArray());
 		last_transform = d.GetTransform();
 		last_transform_valid = true;

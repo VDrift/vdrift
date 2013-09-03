@@ -48,20 +48,20 @@ static void init_locale(const char domain[], const char language[]);
 // the returned string has to be freed manually
 static char * convert(iconv_t cd, char *input);
 
-GUILANGUAGE::GUILANGUAGE() :
+GuiLanguage::GuiLanguage() :
 	m_lang_id("en"),
 	m_iconv(iconv_t(-1))
 {
 	// ctor
 }
 
-GUILANGUAGE::~GUILANGUAGE()
+GuiLanguage::~GuiLanguage()
 {
 	if (m_iconv != iconv_t(-1))
 		iconv_close(m_iconv);
 }
 
-void GUILANGUAGE::Set(const std::string & lang_id, std::ostream & error)
+void GuiLanguage::Set(const std::string & lang_id, std::ostream & error)
 {
 	if (m_lang_id != lang_id)
 	{
@@ -70,7 +70,7 @@ void GUILANGUAGE::Set(const std::string & lang_id, std::ostream & error)
 	}
 }
 
-const std::string & GUILANGUAGE::operator()(const std::string & str) const
+const std::string & GuiLanguage::operator()(const std::string & str) const
 {
 	if (m_iconv == iconv_t(-1))
 		return str;
@@ -87,7 +87,7 @@ const std::string & GUILANGUAGE::operator()(const std::string & str) const
 	return str;
 }
 
-const std::string & GUILANGUAGE::GetCodePageId(const std::string & lang_id)
+const std::string & GuiLanguage::GetCodePageId(const std::string & lang_id)
 {
 	std::map<std::string, std::string>::const_iterator i = codepages.find(lang_id);
 	if (i != codepages.end())
@@ -95,7 +95,7 @@ const std::string & GUILANGUAGE::GetCodePageId(const std::string & lang_id)
 	return default_codepage;
 }
 
-void GUILANGUAGE::LoadLanguage(std::ostream & error)
+void GuiLanguage::LoadLanguage(std::ostream & error)
 {
 	init_locale("vdrift", m_lang_id.c_str());
 

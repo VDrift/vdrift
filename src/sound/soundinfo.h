@@ -23,7 +23,7 @@
 #include <string>
 #include <ostream>
 
-struct SOUNDINFO
+struct SoundInfo
 {
 	std::string name;
 	int samples;
@@ -31,7 +31,7 @@ struct SOUNDINFO
 	int bytespersample;
 	int channels;
 
-	SOUNDINFO(int numsamples, int freq, int chan, int bytespersamp) :
+	SoundInfo(int numsamples, int freq, int chan, int bytespersamp) :
 		samples(numsamples),
 		frequency(freq),
 		bytespersample(bytespersamp),
@@ -48,7 +48,7 @@ struct SOUNDINFO
 		out << "Bits per sample: " << bytespersample*8 << std::endl;
 	}
 
-	bool operator==(const SOUNDINFO & other) const
+	bool operator==(const SoundInfo & other) const
 	{
 		return (samples == other.samples &&
 				frequency == other.frequency &&

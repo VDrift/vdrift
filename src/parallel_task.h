@@ -30,12 +30,12 @@
 
 //#define VERBOSE
 
-namespace PARALLEL_TASK
+namespace Parallel
 {
 
 int Dispatch(void * data);
 
-class TASK
+class Task
 {
 	private:
 		bool quit;
@@ -48,10 +48,10 @@ class TASK
 		SDL_Thread * thread;
 
 	public:
-		TASK() : quit(false), sem_frame_start(NULL), sem_frame_end(NULL), executing(false), thread(NULL)
+		Task() : quit(false), sem_frame_start(NULL), sem_frame_end(NULL), executing(false), thread(NULL)
 		{}
 
-		void PARALLEL_TASK_INIT()
+		void Init()
 		{
 			//don't allow double init
 			assert (!sem_frame_start);
@@ -68,12 +68,12 @@ class TASK
 #endif
 		}
 
-		~TASK()
+		~Task()
 		{
-			PARALLEL_TASK_DEINIT();
+			Deinit();
 		}
 
-		void PARALLEL_TASK_DEINIT()
+		void Deinit()
 		{
 			//don't allow double deinit, or deinit with no init
 			if (!(sem_frame_start && sem_frame_end && thread))
@@ -105,12 +105,12 @@ class TASK
 			sem_frame_end = NULL;
 		}
 
-		void PARALLEL_TASK_RUN()
+		void Run()
 		{
 #ifdef VERBOSE
 			std::cout << "child thread run" << std::endl;
 #endif
-			this->PARALLEL_TASK_SETUP();
+			this->Setup();
 
 #ifdef VERBOSE
 			std::cout << "posting end semaphore to allow the main loop to run through the first iteration" << std::endl;
@@ -129,7 +129,7 @@ class TASK
 
 				executing = true;
 				if (!quit) //avoid doing the last tick if we don't have to
-					this->PARALLEL_TASK_EXECUTE();
+					this->Execute();
 				executing = false;
 
 #ifdef VERBOSE
@@ -142,7 +142,7 @@ class TASK
 #endif
 		}
 
-		void PARALLEL_TASK_START()
+		void Start()
 		{
 #ifdef VERBOSE
 			std::cout << "posting start semaphore" << std::endl;
@@ -150,7 +150,7 @@ class TASK
 			SDL_SemPost(sem_frame_start);
 		}
 
-		void PARALLEL_TASK_END()
+		void End()
 		{
 #ifdef VERBOSE
 			std::cout << "waiting for end semaphore" << std::endl;
@@ -161,8 +161,8 @@ class TASK
 #endif
 		}
 
-		virtual void PARALLEL_TASK_EXECUTE() = 0;
-		virtual void PARALLEL_TASK_SETUP() {}
+		virtual void Execute() = 0;
+		virtual void Setup() {}
 
 		bool GetExecuting() const
 		{

@@ -23,7 +23,7 @@
 #include <map>
 
 template <typename T>
-class PAIRSORTER_FIRST
+class PairSortFirst
 {
 	public:
 	bool operator() (const std::pair <T, T> & p1, const std::pair <T, T> & p2) const
@@ -33,7 +33,7 @@ class PAIRSORTER_FIRST
 };
 
 template <typename T>
-class PAIRSORTER_SECOND
+class PairSortSecond
 {
 	public:
 	bool operator() (const std::pair <T, T> & p1, const std::pair <T, T> & p2) const

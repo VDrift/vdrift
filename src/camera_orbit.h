@@ -22,24 +22,24 @@
 
 #include "camera.h"
 
-class CAMERA_ORBIT : public CAMERA
+class CameraOrbit : public Camera
 {
 public:
-	CAMERA_ORBIT(const std::string & name);
-	
-	void SetOffset(const MATHVECTOR <float, 3> & value);
+	CameraOrbit(const std::string & name);
 
-	void Reset(const MATHVECTOR <float, 3> & newfocus, const QUATERNION <float> & newquat);
+	void SetOffset(const Vec3 & value);
 
-	void Update(const MATHVECTOR <float, 3> & newfocus, const QUATERNION <float> & newquat, float dt);
+	void Reset(const Vec3 & newfocus, const Quat & newquat);
+
+	void Update(const Vec3 & newfocus, const Quat & newquat, float dt);
 
 	void Rotate(float up, float left);
 
 	void Move(float dx, float dy, float dz);
 
 private:
-	MATHVECTOR <float, 3> focus;
-	MATHVECTOR <float, 3> offset;
+	Vec3 focus;
+	Vec3 offset;
 	float distance;
 	float leftright_rotation;
 	float updown_rotation;

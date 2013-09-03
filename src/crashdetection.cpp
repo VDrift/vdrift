@@ -20,12 +20,12 @@
 #include <cassert>
 #include "crashdetection.h"
 
-CRASHDETECTION::CRASHDETECTION() : lastvel(0), curmaxdecel(0), maxdecel(0), deceltrigger(200)
+CrashDetection::CrashDetection() : lastvel(0), curmaxdecel(0), maxdecel(0), deceltrigger(200)
 {
     // Constructor.
 }
 
-void CRASHDETECTION::Update(float vel, float dt)
+void CrashDetection::Update(float vel, float dt)
 {
 	maxdecel = 0;
 
@@ -50,7 +50,7 @@ void CRASHDETECTION::Update(float vel, float dt)
 	lastvel = vel;
 }
 
-float CRASHDETECTION::GetMaxDecel() const
+float CrashDetection::GetMaxDecel() const
 {
     return maxdecel;
 }

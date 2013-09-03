@@ -24,32 +24,32 @@
 #include <cassert>
 
 ///a wrapper class to make it easy to put derived classes into STL containers
-template<typename T_BASECLASS>
-class DERIVED
+template<typename Base>
+class Derived
 {
 	private:
-		T_BASECLASS * ptr;
+		Base * ptr;
 
 	public:
-		DERIVED() : ptr(0) {}
-		DERIVED(T_BASECLASS * newobj) {ptr = newobj;}
-		DERIVED(const DERIVED & other) : ptr(0) {operator=(other);}
-		DERIVED & operator= (T_BASECLASS * newobj) {if (ptr) delete ptr;ptr=newobj;return *this;}
-		~DERIVED() {if (ptr) delete ptr;}
-		T_BASECLASS * Get() {return ptr;}
-		const T_BASECLASS * Get() const {return ptr;}
-		const T_BASECLASS * GetReadOnly() const {return ptr;}
-		T_BASECLASS * operator-> () {assert(ptr);return ptr;}
-		const T_BASECLASS * operator-> () const {assert(ptr);return ptr;}
-		T_BASECLASS & operator* ()  { assert(ptr);return *ptr; }
-		const T_BASECLASS & operator* () const { assert(ptr);return *ptr; }
-		DERIVED & operator= (const DERIVED & other)
+		Derived() : ptr(0) {}
+		Derived(Base * newobj) {ptr = newobj;}
+		Derived(const Derived & other) : ptr(0) {operator=(other);}
+		Derived & operator= (Base * newobj) {if (ptr) delete ptr;ptr=newobj;return *this;}
+		~Derived() {if (ptr) delete ptr;}
+		Base * Get() {return ptr;}
+		const Base * Get() const {return ptr;}
+		const Base * GetReadOnly() const {return ptr;}
+		Base * operator-> () {assert(ptr);return ptr;}
+		const Base * operator-> () const {assert(ptr);return ptr;}
+		Base & operator* ()  { assert(ptr);return *ptr; }
+		const Base & operator* () const { assert(ptr);return *ptr; }
+		Derived & operator= (const Derived & other)
 		{
 			if (other.GetReadOnly())
 				ptr = other.GetReadOnly()->clone();
 			return *this;
 		}
-		DERIVED & operator= (const T_BASECLASS & other)
+		Derived & operator= (const Base & other)
 		{
 			ptr = other.clone();
 			return *this;

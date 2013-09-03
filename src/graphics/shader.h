@@ -25,7 +25,7 @@
 #include <string>
 #include <vector>
 
-class SHADER_GLSL
+class Shader
 {
 private:
 	bool loaded;
@@ -37,8 +37,8 @@ private:
 	void PrintProgramLog(GLhandleARB & program, const std::string & name, std::ostream & out);
 
 public:
-	SHADER_GLSL() : loaded(false) {}
-	~SHADER_GLSL() {Unload();}
+	Shader() : loaded(false) {}
+	~Shader() {Unload();}
 
 	void Unload();
 	bool Load(const std::string & vertex_filename, const std::string & fragment_filename, const std::vector <std::string> & preprocessor_defines, std::ostream & info_output, std::ostream & error_output);

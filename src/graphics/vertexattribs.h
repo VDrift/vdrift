@@ -20,7 +20,7 @@
 #ifndef VERTEX_ATTRIBS_H
 #define VERTEX_ATTRIBS_H
 
-namespace VERTEX_ATTRIBS
+namespace VertexAttribs
 {
 	enum VERTEX_ATTRIBS
 	{

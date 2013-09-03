@@ -20,13 +20,13 @@
 #include "roadstrip.h"
 #include <algorithm>
 
-ROADSTRIP::ROADSTRIP() : 
+RoadStrip::RoadStrip() :
 	closed(false)
 {
 	// ctor
 }
 
-bool ROADSTRIP::ReadFrom(
+bool RoadStrip::ReadFrom(
 	std::istream & openfile,
 	bool reverse,
 	std::ostream & error_output)
@@ -43,10 +43,10 @@ bool ROADSTRIP::ReadFrom(
 	int badcount = 0;
 	for (int i = 0; i < num; ++i)
 	{
-		BEZIER * prevbezier = 0;
+		Bezier * prevbezier = 0;
 		if (!patches.empty()) prevbezier = &patches.back().GetPatch();
 
-		patches.push_back(ROADPATCH());
+		patches.push_back(RoadPatch());
 		patches.back().GetPatch().ReadFromYZX(openfile);
 
 		if (prevbezier) prevbezier->Attach(patches.back().GetPatch());
@@ -65,7 +65,7 @@ bool ROADSTRIP::ReadFrom(
 	if (reverse)
 	{
 		std::reverse(patches.begin(), patches.end());
-		for (std::vector<ROADPATCH>::iterator i = patches.begin(); i != patches.end(); ++i)
+		for (std::vector<RoadPatch>::iterator i = patches.begin(); i != patches.end(); ++i)
 		{
 			i->GetPatch().Reverse();
 		}
@@ -77,9 +77,9 @@ bool ROADSTRIP::ReadFrom(
 		((patches.back().GetPatch().GetFR() - patches.front().GetPatch().GetBR()).Magnitude() < 0.1);
 
 	// Connect patches.
-	for (std::vector<ROADPATCH>::iterator i = patches.begin(); i != patches.end() - 1; ++i)
+	for (std::vector<RoadPatch>::iterator i = patches.begin(); i != patches.end() - 1; ++i)
 	{
-		std::vector<ROADPATCH>::iterator n = i + 1;
+		std::vector<RoadPatch>::iterator n = i + 1;
 		i->GetPatch().Attach(n->GetPatch());
 	}
 	if (closed)
@@ -92,7 +92,7 @@ bool ROADSTRIP::ReadFrom(
 	return true;
 }
 
-void ROADSTRIP::GenerateSpacePartitioning()
+void RoadStrip::GenerateSpacePartitioning()
 {
 	aabb_part.Clear();
 	for (unsigned i = 0; i < patches.size(); ++i)
@@ -102,18 +102,18 @@ void ROADSTRIP::GenerateSpacePartitioning()
 	aabb_part.Optimize();
 }
 
-bool ROADSTRIP::Collide(
-	const MATHVECTOR <float, 3> & origin,
-	const MATHVECTOR <float, 3> & direction,
+bool RoadStrip::Collide(
+	const Vec3 & origin,
+	const Vec3 & direction,
 	const float seglen,
 	int & patch_id,
-	MATHVECTOR <float, 3> & outtri,
-	const BEZIER * & colpatch,
-	MATHVECTOR <float, 3> & normal) const
+	Vec3 & outtri,
+	const Bezier * & colpatch,
+	Vec3 & normal) const
 {
 	if (patch_id >= 0 && patch_id < (int)patches.size())
 	{
-		MATHVECTOR <float, 3> coltri, colnorm;
+		Vec3 coltri, colnorm;
 		if (patches[patch_id].Collide(origin, direction, seglen, coltri, colnorm))
 		{
 			outtri = coltri;
@@ -125,10 +125,10 @@ bool ROADSTRIP::Collide(
 
 	bool col = false;
 	std::vector<int> candidates;
-	aabb_part.Query(AABB<float>::RAY(origin, direction, seglen), candidates);
+	aabb_part.Query(Aabb<float>::Ray(origin, direction, seglen), candidates);
 	for (std::vector<int>::iterator i = candidates.begin(); i != candidates.end(); ++i)
 	{
-		MATHVECTOR <float, 3> coltri, colnorm;
+		Vec3 coltri, colnorm;
 		if (patches[*i].Collide(origin, direction, seglen, coltri, colnorm))
 		{
 			if (!col || (coltri-origin).MagnitudeSquared() < (outtri-origin).MagnitudeSquared())
@@ -145,16 +145,16 @@ bool ROADSTRIP::Collide(
 	return col;
 }
 
-void ROADSTRIP::CreateRacingLine(
-	SCENENODE & parentnode,
-	std::tr1::shared_ptr<TEXTURE> racingline_texture)
+void RoadStrip::CreateRacingLine(
+	SceneNode & parentnode,
+	std::tr1::shared_ptr<Texture> racingline_texture)
 {
-	for (std::vector<ROADPATCH>::iterator i = patches.begin(); i != patches.end(); ++i)
+	for (std::vector<RoadPatch>::iterator i = patches.begin(); i != patches.end(); ++i)
 	{
-		std::vector<ROADPATCH>::iterator n = i + 1;
+		std::vector<RoadPatch>::iterator n = i + 1;
 		if (n == patches.end())
 			n = patches.begin();
-		
+
 		i->AddRacinglineScenenode(parentnode, *n, racingline_texture);
 	}
 }

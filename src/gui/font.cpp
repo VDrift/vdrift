@@ -63,7 +63,7 @@ static bool Parse(
 	return true;
 }
 
-bool FONT::Load(
+bool Font::Load(
 	const std::string & fontinfopath,
 	const std::string & texpath,
 	const std::string & texname,
@@ -71,7 +71,7 @@ bool FONT::Load(
 	std::ostream & error_output,
 	bool mipmap)
 {
-	TEXTUREINFO texinfo;
+	TextureInfo texinfo;
 	texinfo.mipmap = mipmap;
 	texinfo.repeatu = false;
 	texinfo.repeatv = false;
@@ -96,7 +96,7 @@ bool FONT::Load(
 			unsigned int cur_id(0);
 			if (!Parse("id=", cur_id, fontinfo, fontinfopath, error_output)) return false;
 
-			CHARINFO & info = charinfo[cur_id];
+			CharInfo & info = charinfo[cur_id];
 			if (!Parse("x=", info.x, fontinfo, fontinfopath, error_output)) return false;
 			if (!Parse("y=", info.y, fontinfo, fontinfopath, error_output)) return false;
 			if (!Parse("width=", info.width, fontinfo, fontinfopath, error_output)) return false;
@@ -127,7 +127,7 @@ bool FONT::Load(
 	return true;
 }
 
-float FONT::GetWidth(const std::string & newtext) const
+float Font::GetWidth(const std::string & newtext) const
 {
 	float cursorx(0);
 	float linewidth(0);
@@ -140,7 +140,7 @@ float FONT::GetWidth(const std::string & newtext) const
 		}
 		else
 		{
-			const CHARINFO * cinfo(0);
+			const CharInfo * cinfo(0);
 			if (GetCharInfo(newtext[i], cinfo))
 			{
 				cursorx += cinfo->xadvance * inv_size;

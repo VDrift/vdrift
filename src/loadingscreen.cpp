@@ -21,7 +21,7 @@
 #include "content/contentmanager.h"
 #include "graphics/textureinfo.h"
 
-void LOADINGSCREEN::Update(float percentage, const std::string & optional_text, float posx, float posy)
+void LoadingScreen::Update(float percentage, const std::string & optional_text, float posx, float posy)
 {
 	if (percentage < 0)
 		percentage = 0;
@@ -51,29 +51,29 @@ void LOADINGSCREEN::Update(float percentage, const std::string & optional_text, 
 
 	text.Revise(optional_text);
 
-	root.GetTransform().SetTranslation(MATHVECTOR<float,3>(posx,posy,0));
+	root.GetTransform().SetTranslation(Vec3(posx,posy,0));
 }
 
 ///initialize the loading screen given the root node for the loading screen
-bool LOADINGSCREEN::Init(
+bool LoadingScreen::Init(
 	const std::string & texturepath,
 	int displayw,
 	int displayh,
 	ContentManager & content,
-	FONT & font)
+	Font & font)
 {
-	TEXTUREINFO texinfo;
+	TextureInfo texinfo;
 	texinfo.mipmap = false;
-	std::tr1::shared_ptr<TEXTURE> boxtex, bartex;
+	std::tr1::shared_ptr<Texture> boxtex, bartex;
 	content.load(boxtex, texturepath, "loadingbox.png", texinfo);
 	content.load(bartex, texturepath, "loadingbar.png", texinfo);
 
-	bardraw = root.GetDrawlist().twodim.insert(DRAWABLE());
-	boxdraw = root.GetDrawlist().twodim.insert(DRAWABLE());
-	barbackdraw = root.GetDrawlist().twodim.insert(DRAWABLE());
-	DRAWABLE & bardrawref = root.GetDrawlist().twodim.get(bardraw);
-	DRAWABLE & boxdrawref = root.GetDrawlist().twodim.get(boxdraw);
-	DRAWABLE & barbackdrawref = root.GetDrawlist().twodim.get(barbackdraw);
+	bardraw = root.GetDrawlist().twodim.insert(Drawable());
+	boxdraw = root.GetDrawlist().twodim.insert(Drawable());
+	barbackdraw = root.GetDrawlist().twodim.insert(Drawable());
+	Drawable & bardrawref = root.GetDrawlist().twodim.get(bardraw);
+	Drawable & boxdrawref = root.GetDrawlist().twodim.get(boxdraw);
+	Drawable & barbackdrawref = root.GetDrawlist().twodim.get(barbackdraw);
 
 	boxdrawref.SetDiffuseMap(boxtex);
 	boxdrawref.SetVertArray(&boxverts);

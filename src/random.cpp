@@ -367,22 +367,22 @@ unsigned int randtab[2048] =
 	0x5a99636a, 0x197b3453
 };
 
-DETERMINISTICRANDOM::DETERMINISTICRANDOM() : seed(0)
+DeterministicRandom::DeterministicRandom() : seed(0)
 {
 	// Constructor.
 }
 
-void DETERMINISTICRANDOM::ReSeed()
+void DeterministicRandom::ReSeed()
 {
 	seed = time(NULL) % 2048;
 }
 
-void DETERMINISTICRANDOM::ReSeed(unsigned int newseed)
+void DeterministicRandom::ReSeed(unsigned int newseed)
 {
 	seed = newseed % 2048;
 }
 
-double DETERMINISTICRANDOM::Get()
+double DeterministicRandom::Get()
 {
 	assert(seed < sizeof(randtab));
 	double value = randtab[seed]/4294967295.0;
@@ -390,30 +390,30 @@ double DETERMINISTICRANDOM::Get()
 	return value;
 }
 
-double DETERMINISTICRANDOM::Peek() const
+double DeterministicRandom::Peek() const
 {
 	assert(seed < sizeof(randtab));
 	double value = randtab[seed]/4294967295.0;
 	return value;
 }
 
-RANDOM::RANDOM() : seed(0)
+Random::Random() : seed(0)
 {
 	// Constructor.
 }
 
-void RANDOM::ReSeed()
+void Random::ReSeed()
 {
 	seed = time(NULL);
 	srand(seed);
 }
 
-void RANDOM::ReSeed(unsigned int newseed)
+void Random::ReSeed(unsigned int newseed)
 {
 	seed = newseed;srand(newseed);
 }
 
-double RANDOM::Get()
+double Random::Get()
 {
 	return (double) rand()/RAND_MAX;
 }

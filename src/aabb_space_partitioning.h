@@ -27,8 +27,8 @@
 #include <iostream>
 #include <map>
 
-template <typename DATATYPE, unsigned int ideal_objects_per_node = 1>
-class AABB_SPACE_PARTITIONING_NODE
+template <typename DataType, unsigned int ideal_objects_per_node = 1>
+class AabbTreeNode
 {
 public:
 	void DebugPrint(int level, int & objectcount, bool verbose, std::ostream & output) const
@@ -81,9 +81,9 @@ public:
 		DistributeObjectsToChildren(0);
 	}
 
-	void Add(DATATYPE & object, const AABB <float> & newaabb)
+	void Add(DataType & object, const Aabb <float> & newaabb)
 	{
-		objects.push_back(std::pair <DATATYPE, AABB <float> > (object, newaabb));
+		objects.push_back(std::pair <DataType, Aabb <float> > (object, newaabb));
 		if (objects.size() == 1) //don't combine if this is the first object, otherwise the AABB would be forced to include (0,0,0)
 			bbox = newaabb;
 		else
@@ -91,7 +91,7 @@ public:
 	}
 
 	///a slow delete that only requires the object
-	void Delete(DATATYPE & object)
+	void Delete(DataType & object)
 	{
 		typename std::list <typename objectlist_type::iterator> todel;
 
@@ -118,7 +118,7 @@ public:
 	}
 
 	///a faster delete that uses the supplied AABB to find the object
-	void Delete(DATATYPE & object, const AABB <float> & objaabb)
+	void Delete(DataType & object, const Aabb <float> & objaabb)
 	{
 		typename std::list <typename objectlist_type::iterator> todel;
 
@@ -156,7 +156,7 @@ public:
 		{
 			for (typename objectlist_type::const_iterator i = objects.begin(); i != objects.end(); ++i)
 			{
-				if (i->second.Intersect(shape) != AABB<float>::OUT)
+				if (i->second.Intersect(shape) != Aabb<float>::OUT)
 				{
 					outputlist.push_back(i->first);
 				}
@@ -173,13 +173,13 @@ public:
 		//if we have children, test them
 		for (typename childrenlist_type::const_iterator i = children.begin(); i != children.end(); ++i)
 		{
-			AABB<float>::INTERSECTION intersection = i->GetBBOX().Intersect(shape);
+			Aabb<float>::IntersectionEnum intersection = i->GetAabb().Intersect(shape);
 
-			if (intersection != AABB<float>::OUT)
+			if (intersection != Aabb<float>::OUT)
 			{
 				//our child intersects with the segment, dispatch a query
 				//only bother to test children if we were partially intersecting (if fully in, then we know all children are fully in too)
-				i->Query(shape, outputlist, intersection == AABB<float>::INTERSECT);
+				i->Query(shape, outputlist, intersection == Aabb<float>::INTERSECT);
 			}
 		}
 	}
@@ -188,8 +188,8 @@ public:
 
 	void Clear() {objects.clear(); children.clear();}
 
-	///traverse the entire tree putting pointers to all DATATYPE objects into the given outputlist
-	void GetContainedObjects(std::list <DATATYPE *> & outputlist)
+	///traverse the entire tree putting pointers to all DataType objects into the given outputlist
+	void GetContainedObjects(std::list <DataType *> & outputlist)
 	{
 		//if we've got objects, add them
 		for (typename objectlist_type::iterator i = objects.begin(); i != objects.end(); ++i)
@@ -205,16 +205,16 @@ public:
 	}
 
 private:
-	typedef std::vector <std::pair <DATATYPE, AABB <float> > > objectlist_type;
-	typedef std::vector <AABB_SPACE_PARTITIONING_NODE> childrenlist_type;
+	typedef std::vector <std::pair <DataType, Aabb <float> > > objectlist_type;
+	typedef std::vector <AabbTreeNode> childrenlist_type;
 	objectlist_type objects;
 	childrenlist_type children;
-	AABB <float> bbox;
+	Aabb <float> bbox;
 
-	const AABB <float> & GetBBOX() const {return bbox;}
+	const Aabb <float> & GetAabb() const {return bbox;}
 
 	///recursively send all objects and all childrens' objects to the target node, clearing out everything else
-	void CollapseTo(AABB_SPACE_PARTITIONING_NODE & collapse_target)
+	void CollapseTo(AabbTreeNode & collapse_target)
 	{
 		if (this != &collapse_target)
 		{
@@ -232,7 +232,7 @@ private:
 		children.clear();
 	}
 
-	///requires the DATATYPE class implements operator< and operator==
+	///requires the DataType class implements operator< and operator==
 	void RemoveDuplicateObjects()
 	{
 		//TODO:  re-enable this code and make it compile
@@ -260,7 +260,7 @@ private:
 		children.resize(ideal_children_per_node);
 
 		//determine the average center position of all objects
-		MATHVECTOR <float, 3> avgcenter;
+		Vec3 avgcenter;
 		int numobj = objects.size();
 		float incamount = 1.0 / numobj;
 		for (typename objectlist_type::iterator i = objects.begin(); i != objects.end(); ++i)
@@ -269,8 +269,8 @@ private:
 		}
 
 		//find axis of maximum change, so we know where to split
-		MATHVECTOR <float, 3> axismask(1,0,0);
-		MATHVECTOR <float, 3> bboxsize = bbox.GetSize();
+		Vec3 axismask(1,0,0);
+		Vec3 bboxsize = bbox.GetSize();
 		if (bboxsize[0] > bboxsize[1] && bboxsize[0] > bboxsize[2])
 		{
 			axismask.Set(1,0,0);

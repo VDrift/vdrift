@@ -30,11 +30,11 @@ static void distribute(float frustum[][4])
 
 QT_TEST(aabb_test)
 {
-	AABB <float> box1;
-	AABB <float> box2;
+	Aabb <float> box1;
+	Aabb <float> box2;
 
-	MATHVECTOR <float, 3> c1;
-	MATHVECTOR <float, 3> c2;
+	Vec3 c1;
+	Vec3 c2;
 
 	c1.Set(-1,-1,-1);
 	c2.Set(1,1,1);
@@ -46,24 +46,24 @@ QT_TEST(aabb_test)
 
 	QT_CHECK(box1.Intersect(box2));
 
-	AABB <float> box3;
+	Aabb <float> box3;
 	c1.Set(-0.01, -0.01, 2);
 	c2.Set(0.01,0.01, 3);
 	box3.SetFromCorners(c1, c2);
 
 	QT_CHECK(!box1.Intersect(box3));
 
-	MATHVECTOR <float, 3> orig;
-	MATHVECTOR <float, 3> dir;
+	Vec3 orig;
+	Vec3 dir;
 	orig.Set(0,0,4);
 	dir.Set(0,0,-1);
 
 	//QT_CHECK(box1.IntersectRay(orig,dir));
 	//QT_CHECK(!box1.IntersectRay(orig,dir*-1));
 
-	QT_CHECK(box1.Intersect(AABB<float>::RAY(orig,dir,4)));
-	QT_CHECK(!box1.Intersect(AABB<float>::RAY(orig,dir*-1,4)));
-	QT_CHECK(!box1.Intersect(AABB<float>::RAY(orig,dir,1)));
+	QT_CHECK(box1.Intersect(Aabb<float>::Ray(orig,dir,4)));
+	QT_CHECK(!box1.Intersect(Aabb<float>::Ray(orig,dir*-1,4)));
+	QT_CHECK(!box1.Intersect(Aabb<float>::Ray(orig,dir,1)));
 
 	{
 		float plane[6][4];
@@ -72,7 +72,7 @@ QT_TEST(aabb_test)
 		plane[0][2] = 1;
 		plane[0][3] = 10;
 		distribute(plane);
-		QT_CHECK(box1.Intersect(FRUSTUM(plane)));
+		QT_CHECK(box1.Intersect(Frustum(plane)));
 	}
 	{
 		float plane[6][4];
@@ -81,7 +81,7 @@ QT_TEST(aabb_test)
 		plane[0][2] = 1;
 		plane[0][3] = 0;
 		distribute(plane);
-		QT_CHECK(box1.Intersect(FRUSTUM(plane)));
+		QT_CHECK(box1.Intersect(Frustum(plane)));
 	}
 	{
 		float plane[6][4];
@@ -90,7 +90,7 @@ QT_TEST(aabb_test)
 		plane[0][2] = 1;
 		plane[0][3] = -10;
 		distribute(plane);
-		QT_CHECK(!box1.Intersect(FRUSTUM(plane)));
+		QT_CHECK(!box1.Intersect(Frustum(plane)));
 	}
 	{
 		float plane[6][4];
@@ -99,7 +99,7 @@ QT_TEST(aabb_test)
 		plane[0][2] = 0;
 		plane[0][3] = 10000;
 		distribute(plane);
-		QT_CHECK(box1.Intersect(FRUSTUM(plane)));
+		QT_CHECK(box1.Intersect(Frustum(plane)));
 	}
 	{
 		float plane[6][4];
@@ -108,6 +108,6 @@ QT_TEST(aabb_test)
 		plane[0][2] = 0;
 		plane[0][3] = -119;
 		distribute(plane);
-		QT_CHECK(!box1.Intersect(FRUSTUM(plane)));
+		QT_CHECK(!box1.Intersect(Frustum(plane)));
 	}
 }

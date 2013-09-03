@@ -26,16 +26,16 @@
 #include <vector>
 #include <cassert>
 
-class MODEL_OBJ;
+class ModelObj;
 
-class VERTEXARRAY
+class VertexArray
 {
 public:
-	VERTEXARRAY();
+	VertexArray();
 
-	~VERTEXARRAY();
+	~VertexArray();
 
-	VERTEXARRAY operator+ (const VERTEXARRAY & v) const;
+	VertexArray operator+ (const VertexArray & v) const;
 
 	void Clear();
 
@@ -92,35 +92,35 @@ public:
 
 	/// build the vertex array given the faces defined by the verts, normals, and texcoords passed in
 
-	struct TRIFLOAT
+	struct Float3
 	{
 		float x, y, z;
 
-		TRIFLOAT(float nx, float ny, float nz) : x(nx), y(ny), z(nz) {}
+		Float3(float nx, float ny, float nz) : x(nx), y(ny), z(nz) {}
 
-		TRIFLOAT() : x(0), y(0), z(0) {}
+		Float3() : x(0), y(0), z(0) {}
 	};
 
-	struct TWOFLOAT
+	struct Float2
 	{
 		float u,v;
 
-		TWOFLOAT(float nu, float nv) : u(nu), v(nv) {}
+		Float2(float nu, float nv) : u(nu), v(nv) {}
 
-		TWOFLOAT() : u(0), v(0) {}
+		Float2() : u(0), v(0) {}
 	};
 
-	struct VERTEXDATA
+	struct VertexData
 	{
-		TRIFLOAT vertex;
-		TRIFLOAT normal;
-		TWOFLOAT texcoord;
+		Float3 vertex;
+		Float3 normal;
+		Float2 texcoord;
 
-		VERTEXDATA(TRIFLOAT nv, TRIFLOAT nn, TWOFLOAT nt) : vertex(nv), normal(nn), texcoord(nt) {}
+		VertexData(Float3 nv, Float3 nn, Float2 nt) : vertex(nv), normal(nn), texcoord(nt) {}
 
-		VERTEXDATA() {}
+		VertexData() {}
 
-		bool operator<(const VERTEXDATA & other) const
+		bool operator<(const VertexData & other) const
 		{
 			if (vertex.x != other.vertex.x)
 				return vertex.x < other.vertex.x;
@@ -143,18 +143,18 @@ public:
 		}
 	};
 
-	struct FACE
+	struct Face
 	{
-		VERTEXDATA v[3];
+		VertexData v[3];
 
-		FACE(VERTEXDATA v1, VERTEXDATA v2, VERTEXDATA v3) {
+		Face(VertexData v1, VertexData v2, VertexData v3) {
 			v[0] = v1; v[1] = v2; v[2] = v3;
 		}
 
-		FACE() {}
+		Face() {}
 	};
 
-	void BuildFromFaces(const std::vector <FACE> & faces);
+	void BuildFromFaces(const std::vector <Face> & faces);
 
 	/// set color for all vertices
 	void SetColor(float r, float g, float b, float a);
@@ -171,7 +171,7 @@ public:
 
 private:
 	friend class joeserialize::Serializer;
-	friend class MODEL_OBJ;
+	friend class ModelObj;
 	std::vector < std::vector <float> > texcoords;
 	std::vector <unsigned char> colors;
 	std::vector <float> normals;

@@ -26,19 +26,19 @@
 #include <string>
 #include <vector>
 
-class GUIOPTION
+class GuiOption
 {
 public:
-	typedef std::vector< std::pair<std::string, std::string> > LIST;
+	typedef std::vector< std::pair<std::string, std::string> > List;
 
-	GUIOPTION();
+	GuiOption();
 
-	GUIOPTION(const GUIOPTION & other);
+	GuiOption(const GuiOption & other);
 
-	GUIOPTION & operator=(const GUIOPTION & other);
+	GuiOption & operator=(const GuiOption & other);
 
 	/// will move new value elements to option list
-	void SetValues(const std::string & curvalue, const LIST & values);
+	void SetValues(const std::string & curvalue, const List & values);
 
 	void SetInfo(
 		const std::string & newdesc,
@@ -64,7 +64,7 @@ public:
 
 	const std::string & GetCurrentStorageValue() const;
 
-	const LIST & GetValueList() const;
+	const List & GetValueList() const;
 
 	const std::string & GetDescription() const {return m_description;};
 
@@ -92,7 +92,7 @@ public:
 
 private:
 	/// list option
-	LIST m_values;
+	List m_values;
 	size_t m_current_value;
 
 	/// meta data

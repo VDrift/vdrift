@@ -21,42 +21,42 @@
 #include "texture.h"
 #include <cmath>
 
-void DRAWABLE::SetDiffuseMap(const std::tr1::shared_ptr<TEXTURE> & value)
+void Drawable::SetDiffuseMap(const std::tr1::shared_ptr<Texture> & value)
 {
 	diffuse_map = value;
 	texturesChanged = true;
 }
 
-void DRAWABLE::SetMiscMap1(const std::tr1::shared_ptr<TEXTURE> & value)
+void Drawable::SetMiscMap1(const std::tr1::shared_ptr<Texture> & value)
 {
 	misc_map1 = value;
 	texturesChanged = true;
 }
 
-void DRAWABLE::SetMiscMap2(const std::tr1::shared_ptr<TEXTURE> & value)
+void Drawable::SetMiscMap2(const std::tr1::shared_ptr<Texture> & value)
 {
 	misc_map2 = value;
 	texturesChanged = true;
 }
 
-void DRAWABLE::SetVertArray(const VERTEXARRAY* value)
+void Drawable::SetVertArray(const VertexArray* value)
 {
 	vert_array = value;
 	renderModel.SetVertArray(vert_array);
 }
 
-void DRAWABLE::setVertexArrayObject(GLuint vao, unsigned int elementCount)
+void Drawable::setVertexArrayObject(GLuint vao, unsigned int elementCount)
 {
 	renderModel.setVertexArrayObject(vao, elementCount);
 }
 
-void DRAWABLE::SetTransform(const MATRIX4 <float> & value)
+void Drawable::SetTransform(const Matrix4 <float> & value)
 {
 	transform = value;
 	uniformsChanged = true;
 }
 
-void DRAWABLE::SetColor(float nr, float ng, float nb, float na)
+void Drawable::SetColor(float nr, float ng, float nb, float na)
 {
 	r = nr;
 	g = ng;
@@ -64,20 +64,20 @@ void DRAWABLE::SetColor(float nr, float ng, float nb, float na)
 	a = na;
 	uniformsChanged = true;
 }
-void DRAWABLE::SetColor(float nr, float ng, float nb)
+void Drawable::SetColor(float nr, float ng, float nb)
 {
 	r = nr;
 	g = ng;
 	b = nb;
 	uniformsChanged = true;
 }
-void DRAWABLE::SetAlpha(float na)
+void Drawable::SetAlpha(float na)
 {
 	a = na;
 	uniformsChanged = true;
 }
 
-RenderModelExternal & DRAWABLE::generateRenderModelData(StringIdMap & stringMap)
+RenderModelExt & Drawable::generateRenderModelData(StringIdMap & stringMap)
 {
 	// copy data over to the GL3V renderModel object
 	// eventually this should only be done when we update the values, but for now
@@ -116,7 +116,7 @@ RenderModelExternal & DRAWABLE::generateRenderModelData(StringIdMap & stringMap)
 	{
 		renderModel.clearUniformCache();
 		renderModel.uniforms.clear();
-		if (transform != MATRIX4<float>()) // only add it if it's not the identity matrix
+		if (transform != Matrix4<float>()) // only add it if it's not the identity matrix
 			renderModel.uniforms.push_back(RenderUniformEntry(transformId, transform.GetArray(), 16));
 		if (r != 1 || g != 1 || b != 1 || a != 1) // only add it if it's not the default
 		{
@@ -134,7 +134,7 @@ RenderModelExternal & DRAWABLE::generateRenderModelData(StringIdMap & stringMap)
 	return renderModel;
 }
 
-void DRAWABLE::SetModel(const MODEL & model)
+void Drawable::SetModel(const Model & model)
 {
 	if (model.HaveListID())
 	{

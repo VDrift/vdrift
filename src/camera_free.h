@@ -22,21 +22,21 @@
 
 #include "camera.h"
 
-class CAMERA_FREE : public CAMERA
+class CameraFree : public Camera
 {
 public:
-	CAMERA_FREE(const std::string & name);
+	CameraFree(const std::string & name);
 
-	void SetOffset(const MATHVECTOR <float, 3> & value);
+	void SetOffset(const Vec3 & value);
 
-	void Reset(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newquat);
+	void Reset(const Vec3 & newpos, const Quat & newquat);
 
 	void Rotate(float up, float left);
 
 	void Move(float dx, float dy, float dz);
 
 private:
-	MATHVECTOR <float, 3> offset;
+	Vec3 offset;
 	float leftright_rotation;
 	float updown_rotation;
 };

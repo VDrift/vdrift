@@ -23,24 +23,24 @@
 #include "graphics/vertexarray.h"
 #include "graphics/drawable.h"
 
-class SCENENODE;
-class TEXTURE;
+class SceneNode;
+class Texture;
 
-class HUDBAR
+class HudBar
 {
 public:
 	void Set(
-		SCENENODE & parent,
-		std::tr1::shared_ptr<TEXTURE> bartex,
+		SceneNode & parent,
+		std::tr1::shared_ptr<Texture> bartex,
 		float x, float y, float w, float h,
 		float opacity,
 		bool flip);
 
-	void SetVisible(SCENENODE & parent, bool newvis);
+	void SetVisible(SceneNode & parent, bool newvis);
 
 private:
-	keyed_container<DRAWABLE>::handle draw;
-	VERTEXARRAY verts;
+	keyed_container<Drawable>::handle draw;
+	VertexArray verts;
 };
 
 #endif // _HUDBAR_H

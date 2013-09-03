@@ -37,10 +37,10 @@ static inline float ConvertToFeet(float meters)
 	return meters * 3.2808399;
 }
 
-PERFORMANCE_TESTING::PERFORMANCE_TESTING(DynamicsWorld & world) :
+PerformanceTesting::PerformanceTesting(DynamicsWorld & world) :
 	world(world), track(0), plane(0)
 {
-	surface.type = TRACKSURFACE::ASPHALT;
+	surface.type = TrackSurface::ASPHALT;
 	surface.bumpWaveLength = 1;
 	surface.bumpAmplitude = 0;
 	surface.frictionNonTread = 1;
@@ -49,7 +49,7 @@ PERFORMANCE_TESTING::PERFORMANCE_TESTING(DynamicsWorld & world) :
 	surface.rollingDrag = 0;
 }
 
-PERFORMANCE_TESTING::~PERFORMANCE_TESTING()
+PerformanceTesting::~PerformanceTesting()
 {
 	if (track)
 	{
@@ -62,7 +62,7 @@ PERFORMANCE_TESTING::~PERFORMANCE_TESTING()
 	}
 }
 
-void PERFORMANCE_TESTING::Test(
+void PerformanceTesting::Test(
 	const std::string & cardir,
 	const std::string & carname,
 	ContentManager & content,
@@ -125,7 +125,7 @@ void PERFORMANCE_TESTING::Test(
 	info_output << "Car performance test complete." << std::endl;
 }
 
-void PERFORMANCE_TESTING::ResetCar()
+void PerformanceTesting::ResetCar()
 {
 	std::stringstream statestream(carstate);
 	joeserialize::BinaryInputSerializer serialize_input(statestream);
@@ -139,7 +139,7 @@ void PERFORMANCE_TESTING::ResetCar()
 	car.SetBrake(1);
 }
 
-void PERFORMANCE_TESTING::TestMaxSpeed(std::ostream & info_output, std::ostream & error_output)
+void PerformanceTesting::TestMaxSpeed(std::ostream & info_output, std::ostream & error_output)
 {
 	info_output << "Testing maximum speed" << std::endl;
 
@@ -229,7 +229,7 @@ void PERFORMANCE_TESTING::TestMaxSpeed(std::ostream & info_output, std::ostream 
 	info_output << "1/4 mile time: " << timetoquarter << " s" << " at " << ConvertToMPH(quarterspeed) << " MPH" << std::endl;
 }
 
-void PERFORMANCE_TESTING::TestStoppingDistance(bool abs, std::ostream & info_output, std::ostream & error_output)
+void PerformanceTesting::TestStoppingDistance(bool abs, std::ostream & info_output, std::ostream & error_output)
 {
 	info_output << "Testing stopping distance" << std::endl;
 
@@ -267,7 +267,7 @@ void PERFORMANCE_TESTING::TestStoppingDistance(bool abs, std::ostream & info_out
 		if (car_speed >= brakestartspeed && accelerating) //stop accelerating and hit the brakes
 		{
 			accelerating = false;
-			stopstart = car.GetWheelPosition(WHEEL_POSITION(0));
+			stopstart = car.GetWheelPosition(WheelPosition(0));
 			//std::cout << "hitting the brakes at " << t << ", " << car_speed << std::endl;
 		}
 
@@ -291,7 +291,7 @@ void PERFORMANCE_TESTING::TestStoppingDistance(bool abs, std::ostream & info_out
 		i++;
 	}
 
-	btVector3 stopend = car.GetWheelPosition(WHEEL_POSITION(0));
+	btVector3 stopend = car.GetWheelPosition(WheelPosition(0));
 
 	info_output << "60-0 stopping distance ";
 	if (abs)

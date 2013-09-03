@@ -19,12 +19,12 @@
 
 #include "cardifferential.h"
 
-CARDIFFERENTIAL::CARDIFFERENTIAL() : final_drive(4.1), anti_slip(600.0), anti_slip_torque(0), anti_slip_torque_deceleration_factor(0), torque_split(0.5), side1_speed(0), side2_speed(0), side1_torque(0), side2_torque(0)
+CarDifferential::CarDifferential() : final_drive(4.1), anti_slip(600.0), anti_slip_torque(0), anti_slip_torque_deceleration_factor(0), torque_split(0.5), side1_speed(0), side2_speed(0), side1_torque(0), side2_torque(0)
 {
 	// Constructor.
 }
 
-void CARDIFFERENTIAL::DebugPrint(std::ostream & out) const
+void CarDifferential::DebugPrint(std::ostream & out) const
 {
 	out << "---Differential---" << "\n";
 	out << "Side 1 RPM: " << side1_speed * 30.0 / 3.141593 << "\n";
@@ -33,36 +33,36 @@ void CARDIFFERENTIAL::DebugPrint(std::ostream & out) const
 	out << "Side 2 Torque: " << side2_torque << "\n";
 }
 
-void CARDIFFERENTIAL::SetFinalDrive(const btScalar & value)
+void CarDifferential::SetFinalDrive(const btScalar & value)
 {
 	final_drive = value;
 }
 
-void CARDIFFERENTIAL::SetAntiSlip(btScalar as, btScalar ast, btScalar astdf)
+void CarDifferential::SetAntiSlip(btScalar as, btScalar ast, btScalar astdf)
 {
 	anti_slip = as;
 	anti_slip_torque = ast;
 	anti_slip_torque_deceleration_factor = astdf;
 }
 
-btScalar CARDIFFERENTIAL::CalculateDriveshaftSpeed(btScalar new_side1_speed, btScalar new_side2_speed)
+btScalar CarDifferential::CalculateDriveshaftSpeed(btScalar new_side1_speed, btScalar new_side2_speed)
 {
 	side1_speed = new_side1_speed;
 	side2_speed = new_side2_speed;
 	return final_drive * (side1_speed + side2_speed) * 0.5;
 }
 
-btScalar CARDIFFERENTIAL::GetDriveshaftSpeed() const
+btScalar CarDifferential::GetDriveshaftSpeed() const
 {
 	return final_drive * (side1_speed + side2_speed) * 0.5;
 }
 
-btScalar CARDIFFERENTIAL::clamp(btScalar val, btScalar min, btScalar max) const
+btScalar CarDifferential::clamp(btScalar val, btScalar min, btScalar max) const
 {
 	return std::max(std::min(val,max), min);
 }
 
-void CARDIFFERENTIAL::ComputeWheelTorques(btScalar driveshaft_torque)
+void CarDifferential::ComputeWheelTorques(btScalar driveshaft_torque)
 {
 	// Determine torque from the anti-slip mechanism.
 	btScalar current_anti_slip = anti_slip;
@@ -83,32 +83,32 @@ void CARDIFFERENTIAL::ComputeWheelTorques(btScalar driveshaft_torque)
 	side2_torque = torque * torque_split + drag;
 }
 
-const btScalar & CARDIFFERENTIAL::GetSide1Torque() const
+const btScalar & CarDifferential::GetSide1Torque() const
 {
 	return side1_torque;
 }
 
-const btScalar & CARDIFFERENTIAL::GetSide2Torque() const
+const btScalar & CarDifferential::GetSide2Torque() const
 {
 	return side2_torque;
 }
 
-const btScalar & CARDIFFERENTIAL::GetSide1Speed() const
+const btScalar & CarDifferential::GetSide1Speed() const
 {
 	return side1_speed;
 }
 
-const btScalar & CARDIFFERENTIAL::GetSide2Speed() const
+const btScalar & CarDifferential::GetSide2Speed() const
 {
 	return side2_speed;
 }
 
-btScalar CARDIFFERENTIAL::GetFinalDrive() const
+btScalar CarDifferential::GetFinalDrive() const
 {
 	return final_drive;
 }
 
-bool CARDIFFERENTIAL::Serialize(joeserialize::Serializer & s)
+bool CarDifferential::Serialize(joeserialize::Serializer & s)
 {
 	_SERIALIZE_(s, side1_speed);
 	_SERIALIZE_(s, side2_speed);

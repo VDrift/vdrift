@@ -24,20 +24,20 @@
 #include "graphics/scenenode.h"
 #include "graphics/vertexarray.h"
 
-class TEXTURE;
+class Texture;
 class ContentManager;
 
-class GUIIMAGE : public GUIWIDGET
+class GuiImage : public GuiWidget
 {
 public:
-	GUIIMAGE();
+	GuiImage();
 
-	~GUIIMAGE();
+	~GuiImage();
 
-	virtual void Update(SCENENODE & scene, float dt);
+	virtual void Update(SceneNode & scene, float dt);
 
 	void SetupDrawable(
-		SCENENODE & scene,
+		SceneNode & scene,
 		ContentManager & content,
 		const std::string & path,
 		const std::string & ext,
@@ -50,16 +50,16 @@ public:
 private:
 	ContentManager * m_content;
 	std::string m_path, m_name, m_ext;
-	keyed_container <DRAWABLE>::handle m_draw;
-	VERTEXARRAY m_varray;
+	keyed_container <Drawable>::handle m_draw;
+	VertexArray m_varray;
 	bool m_load;
 
-	DRAWABLE & GetDrawable(SCENENODE & scene)
+	Drawable & GetDrawable(SceneNode & scene)
 	{
 		return scene.GetDrawlist().twodim.get(m_draw);
 	}
 
-	GUIIMAGE(const GUIIMAGE & other);
+	GuiImage(const GuiImage & other);
 };
 
 #endif

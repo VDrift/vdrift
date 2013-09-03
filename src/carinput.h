@@ -20,9 +20,9 @@
 #ifndef _CARINPUT_H
 #define _CARINPUT_H
 
-namespace CARINPUT
+namespace CarInput
 {
-enum CARINPUT
+enum CarInputEnum
 {
 	//actual car inputs that the car uses
 	THROTTLE,

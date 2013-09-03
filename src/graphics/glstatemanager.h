@@ -17,18 +17,18 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _GLSTATEMANAGER_H
-#define _GLSTATEMANAGER_H
+#ifndef _GRAPHICS_STATE_H
+#define _GRAPHICS_STATE_H
 
 #include "texture.h"
 #include "glew.h"
 #include <vector>
 #include <cassert>
 
-class GLSTATEMANAGER
+class GraphicsState
 {
 public:
-	GLSTATEMANAGER() :
+	GraphicsState() :
 		used(65536, false),
 		state(65536),
 		curtu(255),
@@ -112,7 +112,7 @@ public:
 		}
 	}
 
-	void BindTexture2D(unsigned tu, const TEXTURE * texture)
+	void BindTexture2D(unsigned tu, const Texture * texture)
 	{
 		if (tu >= tex2d.size())
 			tex2d.resize(tu + 1, 0);
@@ -177,5 +177,5 @@ private:
 	}
 };
 
-#endif
+#endif // _GRAPHICS_STATE_H
 

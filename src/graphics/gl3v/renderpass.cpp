@@ -223,7 +223,7 @@ void RenderPass::clear(GLWrapper & gl)
 	configured = false;
 }
 
-bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringIdMap & stringMap, const std::vector <const std::vector <RenderModelExternal*>*> & externalModels, const NameTexMap & sharedTextures, std::ostream & errorOutput)
+bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringIdMap & stringMap, const std::vector <const std::vector <RenderModelExt*>*> & externalModels, const NameTexMap & sharedTextures, std::ostream & errorOutput)
 {
 	if (!enabled)
 		return false;
@@ -371,12 +371,12 @@ bool RenderPass::render(GLWrapper & gl, unsigned int w, unsigned int h, StringId
 	}
 
 	// For each external model.
-	for (std::vector <const std::vector <RenderModelExternal*>*>::const_iterator i = externalModels.begin(); i != externalModels.end(); i++)
+	for (std::vector <const std::vector <RenderModelExt*>*>::const_iterator i = externalModels.begin(); i != externalModels.end(); i++)
 	{
 		// Loop through all models in the draw group.
-		for (std::vector <RenderModelExternal*>::const_iterator n = (*i)->begin(); n != (*i)->end(); n++)
+		for (std::vector <RenderModelExt*>::const_iterator n = (*i)->begin(); n != (*i)->end(); n++)
 		{
-			RenderModelExternal * m = *n;
+			RenderModelExt * m = *n;
 			assert(m);
 
 			if (m->drawEnabled())
@@ -696,7 +696,7 @@ void RenderPass::removeDefaultTexture(StringId name)
 
 		// We have an entry, let's remove it.
 		if (foundIndex)
-			UTILS::eraseVectorUseSwapAndPop(indexToErase, defaultTextureBindings);
+			Utils::eraseVectorUseSwapAndPop(indexToErase, defaultTextureBindings);
 	}
 }
 
@@ -768,7 +768,7 @@ void RenderPass::removeDefaultUniform(StringId name)
 
 		// We have an entry, let's remove it.
 		if (foundIndex)
-			UTILS::eraseVectorUseSwapAndPop(indexToErase, defaultUniformBindings);
+			Utils::eraseVectorUseSwapAndPop(indexToErase, defaultUniformBindings);
 	}
 }
 
@@ -953,7 +953,7 @@ void RenderPass::printRendererStatus(RendererStatusVerbosity verbosity, const St
 	}
 
 	out << prefix << "Render dimensions: " << framebufferDimensions << std::endl;
-	out << prefix << "Framebuffer object: " << (framebufferObject == 0 ? "default" : UTILS::tostr(framebufferObject)) << std::endl;
+	out << prefix << "Framebuffer object: " << (framebufferObject == 0 ? "default" : Utils::tostr(framebufferObject)) << std::endl;
 	out << prefix << "Using depth renderbuffer: " << (renderbuffer == 0 ? "no" : "yes") << std::endl;
 	out << prefix << "Created render targets: " << renderTargets.size() << std::endl;
 	printContextPrefix = prefix+prefix;

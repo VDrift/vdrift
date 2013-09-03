@@ -25,13 +25,13 @@
 #include <vector>
 #include <list>
 
-class CAR;
+class Car;
 
 /// AI Car controller interface.
-class AI_Car
+class AiCar
 {
 protected:
-	CAR* car;
+	Car* car;
 	float difficulty;
 
 	/// Contains the car inputs, which is the output of the AI.
@@ -39,16 +39,16 @@ protected:
 	std::vector <float> inputs;
 
 public:
-	AI_Car(CAR* _car, float _difficulty) :
-		car(_car), difficulty(_difficulty), inputs(CARINPUT::INVALID, 0.0)
+	AiCar(Car* _car, float _difficulty) :
+		car(_car), difficulty(_difficulty), inputs(CarInput::INVALID, 0.0)
 	{ }
-	virtual ~AI_Car(){}
+	virtual ~AiCar(){}
 
-	CAR*						GetCar() { return car; }
+	Car*						GetCar() { return car; }
 	float						GetDifficulty() { return difficulty; }
 	const std::vector<float>&	GetInputs() { return inputs; }
 
-	virtual void Update(float dt, const std::list<CAR>& othercars) = 0;
+	virtual void Update(float dt, const std::list<Car>& othercars) = 0;
 
 	/// This is optional for drawing debug stuff.
 	/// It will only be called, when VISUALIZE_AI_DEBUG macro is defined.

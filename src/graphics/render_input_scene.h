@@ -28,49 +28,49 @@
 #include "reseatable_reference.h"
 #include <vector>
 
-class SCENENODE;
-class DRAWABLE;
-class VERTEXARRAY;
-class TEXTURE_INTERFACE;
-class SHADER_GLSL;
+class SceneNode;
+class Drawable;
+class VertexArray;
+class TextureInterface;
+class Shader;
 
-class RENDER_INPUT_SCENE : public RENDER_INPUT
+class RenderInputScene : public RenderInput
 {
 public:
-	RENDER_INPUT_SCENE();
+	RenderInputScene();
 
-	~RENDER_INPUT_SCENE();
+	~RenderInputScene();
 
 	void SetDrawLists(
-		const std::vector <DRAWABLE*> & dl_dynamic,
-		const std::vector <DRAWABLE*> & dl_static);
+		const std::vector <Drawable*> & dl_dynamic,
+		const std::vector <Drawable*> & dl_static);
 
 	void DisableOrtho();
 
 	void SetOrtho(
-		const MATHVECTOR <float, 3> & neworthomin,
-		const MATHVECTOR <float, 3> & neworthomax);
+		const Vec3 & neworthomin,
+		const Vec3 & neworthomax);
 
-	FRUSTUM SetCameraInfo(
-		const MATHVECTOR <float, 3> & newpos,
-		const QUATERNION <float> & newrot,
+	Frustum SetCameraInfo(
+		const Vec3 & newpos,
+		const Quat & newrot,
 		float newfov, float newlodfar,
 		float neww, float newh,
 		bool restore_matrices = true);
 
-	const MATRIX4<float> & GetProjMatrix() const;
+	const Matrix4<float> & GetProjMatrix() const;
 
-	const MATRIX4<float> & GetViewMatrix() const;
+	const Matrix4<float> & GetViewMatrix() const;
 
-	void SetSunDirection(const MATHVECTOR <float, 3> & newsun);
+	void SetSunDirection(const Vec3 & newsun);
 
 	void SetFlags(bool newshaders);
 
-	void SetDefaultShader(SHADER_GLSL & newdefault);
+	void SetDefaultShader(Shader & newdefault);
 
 	void SetClear(bool newclearcolor, bool newcleardepth);
 
-	virtual void Render(GLSTATEMANAGER & glstate, std::ostream & error_output);
+	virtual void Render(GraphicsState & glstate, std::ostream & error_output);
 
 	void SetFSAA(unsigned int value);
 
@@ -88,27 +88,27 @@ public:
 
 	void SetCarPaintHack(bool hack);
 
-	void SetBlendMode(BLENDMODE::BLENDMODE mode);
+	void SetBlendMode(BlendMode::BLENDMODE mode);
 
 private:
-	reseatable_reference <const std::vector <DRAWABLE*> > dynamic_drawlist_ptr;
-	reseatable_reference <const std::vector <DRAWABLE*> > static_drawlist_ptr;
+	reseatable_reference <const std::vector <Drawable*> > dynamic_drawlist_ptr;
+	reseatable_reference <const std::vector <Drawable*> > static_drawlist_ptr;
 	bool last_transform_valid;
-	MATRIX4 <float> last_transform;
-	QUATERNION <float> cam_rotation; //used for the skybox effect
-	MATHVECTOR <float, 3> cam_position;
-	MATHVECTOR <float, 3> lightposition;
-	MATHVECTOR <float, 3> orthomin;
-	MATHVECTOR <float, 3> orthomax;
+	Matrix4 <float> last_transform;
+	Quat cam_rotation; //used for the skybox effect
+	Vec3 cam_position;
+	Vec3 lightposition;
+	Vec3 orthomin;
+	Vec3 orthomax;
 	float w, h;
 	float camfov;
-	MATRIX4<float> projMatrix;
-	MATRIX4<float> viewMatrix;
-	FRUSTUM frustum; //used for frustum culling
+	Matrix4<float> projMatrix;
+	Matrix4<float> viewMatrix;
+	Frustum frustum; //used for frustum culling
 	float lod_far; //used for distance culling
 	bool shaders;
 	bool clearcolor, cleardepth;
-	reseatable_reference <SHADER_GLSL> shader;
+	reseatable_reference <Shader> shader;
 	bool orthomode;
 	unsigned int fsaa;
 	float contrast;
@@ -118,26 +118,26 @@ private:
 	bool writedepth;
 	bool carpainthack;
 	bool vlighting;
-	BLENDMODE::BLENDMODE blendmode;
+	BlendMode::BLENDMODE blendmode;
 
-	void EnableCarPaint(GLSTATEMANAGER & glstate);
+	void EnableCarPaint(GraphicsState & glstate);
 
-	void DisableCarPaint(GLSTATEMANAGER & glstate);
+	void DisableCarPaint(GraphicsState & glstate);
 
-	void SetBlendMode(GLSTATEMANAGER & glstate);
+	void SetBlendMode(GraphicsState & glstate);
 
-	void DrawList(GLSTATEMANAGER & glstate, const std::vector <DRAWABLE*> & drawlist, bool preculled);
+	void DrawList(GraphicsState & glstate, const std::vector <Drawable*> & drawlist, bool preculled);
 
-	void DrawVertexArray(const VERTEXARRAY & va, float linesize) const;
+	void DrawVertexArray(const VertexArray & va, float linesize) const;
 
 	/// returns true if the object was culled and should not be drawn
-	bool FrustumCull(const DRAWABLE & d);
+	bool FrustumCull(const Drawable & d);
 
-	void SetFlags(const DRAWABLE & d, GLSTATEMANAGER & glstate);
+	void SetFlags(const Drawable & d, GraphicsState & glstate);
 
-	void SetTextures(const DRAWABLE & d, GLSTATEMANAGER & glstate);
+	void SetTextures(const Drawable & d, GraphicsState & glstate);
 
-	void SetTransform(const DRAWABLE & d, GLSTATEMANAGER & glstate);
+	void SetTransform(const Drawable & d, GraphicsState & glstate);
 };
 
 #endif // _RENDER_INPUT_SCENE_H

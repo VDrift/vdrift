@@ -26,7 +26,7 @@
 
 #include <iostream>
 
-class CARCLUTCH
+class CarClutch
 {
 friend class joeserialize::Serializer;
 private:
@@ -44,7 +44,7 @@ private:
 
 public:
 	/// default constructor makes an S2000-like car
-	CARCLUTCH() :
+	CarClutch() :
 		max_torque(0),
 		clutch_position(0),
 		locked(false),

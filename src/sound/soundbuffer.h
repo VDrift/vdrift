@@ -25,18 +25,18 @@
 #include <iosfwd>
 #include <string>
 
-class SOUNDBUFFER
+class SoundBuffer
 {
 public:
-	SOUNDBUFFER();
+	SoundBuffer();
 
-	~SOUNDBUFFER();
+	~SoundBuffer();
 
-	bool Load(const std::string & filename, const SOUNDINFO & sound_device_info, std::ostream & error_output);
+	bool Load(const std::string & filename, const SoundInfo & sound_device_info, std::ostream & error_output);
 
 	void Unload();
 
-	const SOUNDINFO & GetInfo() const
+	const SoundInfo & GetInfo() const
 	{
 		return info;
 	}
@@ -62,15 +62,15 @@ public:
 	}
 
 private:
-	SOUNDINFO info;
+	SoundInfo info;
 	unsigned int size;
 	bool loaded;
 	char * sound_buffer;
 	std::string name;
 
-	bool LoadWAV(const std::string & filename, const SOUNDINFO & sound_device_info, std::ostream & error_output);
+	bool LoadWAV(const std::string & filename, const SoundInfo & sound_device_info, std::ostream & error_output);
 
-	bool LoadOGG(const std::string & filename, const SOUNDINFO & sound_device_info, std::ostream & error_output);
+	bool LoadOGG(const std::string & filename, const SoundInfo & sound_device_info, std::ostream & error_output);
 
 };
 

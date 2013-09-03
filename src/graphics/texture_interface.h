@@ -21,7 +21,7 @@
 #define _TEXTURE_INTERFACE_H
 
 /// an abstract base class for a simple texture interface
-class TEXTURE_INTERFACE
+class TextureInterface
 {
 public:
 	virtual bool Loaded() const = 0;

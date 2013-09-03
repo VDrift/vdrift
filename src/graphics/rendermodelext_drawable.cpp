@@ -21,13 +21,13 @@
 
 #include "vertexarray.h"
 #include "vertexattribs.h"
-using namespace VERTEX_ATTRIBS;
+using namespace VertexAttribs;
 
-void RenderModelExternalDrawable::draw(GLWrapper & gl) const
+void RenderModelExtDrawable::draw(GLWrapper & gl) const
 {
 	if (vao != 0)
 	{
-		RenderModelExternal::draw(gl);
+		RenderModelExt::draw(gl);
 	}
 	else if (vert_array)
 	{

@@ -23,7 +23,7 @@
 #include <iosfwd>
 
 class PTree;
-class CAMERA;
+class Camera;
 
 // Read camera from config file
 //
@@ -35,7 +35,7 @@ class CAMERA;
 // stiffness = 0		#optional used by mount
 // fov = 90				#optional [40, 160], overrides global fov
 //
-CAMERA * LoadCamera(
+Camera * LoadCamera(
 	const PTree & cfg,
 	float camera_bounce,
 	std::ostream & error_output);

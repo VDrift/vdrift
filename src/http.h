@@ -25,11 +25,11 @@
 #include <string>
 #include <map>
 
-struct HTTPINFO
+struct HttpInfo
 {
-    HTTPINFO();
+	HttpInfo();
 
-	enum STATE
+	enum StateEnum
 	{
 		CONNECTING,
 		DOWNLOADING,
@@ -43,34 +43,34 @@ struct HTTPINFO
 	double speed; ///< Downalod speed in bytes per second.
 
 	/// Convert a state enum to a string.
-	static const char * GetString(STATE state);
+	static const char * GetString(StateEnum state);
 
 	/// Pretty-printing functions.
 	static std::string FormatSize(double bytes);
 	static std::string FormatSpeed(double bytesPerSecond);
 
-	bool operator != (const HTTPINFO & other) const;
-	bool operator == (const HTTPINFO & other) const;
+	bool operator != (const HttpInfo & other) const;
+	bool operator == (const HttpInfo & other) const;
 
 	void print(std::ostream & s);
 };
 
 /// For internal use only.
-class HTTP;
-struct PROGRESSINFO
+class Http;
+struct ProgressInfo
 {
-    PROGRESSINFO();
-	PROGRESSINFO(HTTP * newhttp, CURL * newhandle);
-	HTTP * http;
+	ProgressInfo();
+	ProgressInfo(Http * newhttp, CURL * newhandle);
+	Http * http;
 	CURL * easyhandle;
 };
 
-/// This class manages one or many HTTP requests.
-class HTTP
+/// This class manages one or many http requests.
+class Http
 {
 public:
-	HTTP(const std::string & temporary_folder);
-	~HTTP();
+	Http(const std::string & temporary_folder);
+	~Http();
 
     /// Change temporary folder.
 	void SetTemporaryFolder(const std::string & temporary_folder);
@@ -88,7 +88,7 @@ public:
 	/// Gets info about a request for a url.
 	/// Returns true if the url is for a known request.
 	/// If the request is complete, then this function will remove the request from the info map and further calls to this function with the same url will return false
-	bool GetRequestInfo(const std::string & url, HTTPINFO & out);
+	bool GetRequestInfo(const std::string & url, HttpInfo & out);
 
 	void CancelAllRequests();
 
@@ -102,15 +102,15 @@ private:
 	std::string folder;
 	bool downloading;
 	CURLM * multihandle;
-	struct REQUEST
+	struct RequestState
 	{
 		std::string url;
 		FILE * file;
-		PROGRESSINFO progress_callback_data;
-		REQUEST(const std::string & newurl, FILE * newfile) : url(newurl), file(newfile) {}
+		ProgressInfo progress_callback_data;
+		RequestState(const std::string & newurl, FILE * newfile) : url(newurl), file(newfile) {}
 	};
-	std::map <CURL*, REQUEST> easyhandles; ///< Maps active curl easy handles to request info.
-	std::map <std::string, HTTPINFO> requests; ///< Info about requests.
+	std::map <CURL*, RequestState> easyhandles; ///< Maps active curl easy handles to request info.
+	std::map <std::string, HttpInfo> requests; ///< Info about requests.
 };
 
 #endif

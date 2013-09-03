@@ -26,7 +26,7 @@
 #include <cstring>
 
 template <typename T>
-class MATRIX3
+class Matrix3
 {
 	private:
 		typedef size_t size_type;
@@ -40,9 +40,9 @@ class MATRIX3
 		}
 
 	public:
-		MATRIX3() {LoadIdentity();}
-		MATRIX3(const MATRIX3 <T> & other) {Set(other);}
-		const MATRIX3 & operator=(const MATRIX3 <T> & other) {Set(other); return *this;}
+		Matrix3() {LoadIdentity();}
+		Matrix3(const Matrix3 <T> & other) {Set(other);}
+		const Matrix3 & operator=(const Matrix3 <T> & other) {Set(other); return *this;}
 
 		const T & operator[](size_type n) const
 		{
@@ -64,9 +64,9 @@ class MATRIX3
 			}
 		}
 
-		MATRIX3 <T> Multiply(const MATRIX3 <T> & other) const
+		Matrix3 <T> Multiply(const Matrix3 <T> & other) const
 		{
-			MATRIX3 out;
+			Matrix3 out;
 
 			for (int i = 0, i3 = 0; i < 3; i++,i3+=3)
 			{
@@ -95,11 +95,11 @@ class MATRIX3
 				data[i] = newdata[i];
 		}
 
-		void Set(const MATRIX3 <T> & other) {Set(other.data);}
+		void Set(const Matrix3 <T> & other) {Set(other.data);}
 
-		bool operator==(const MATRIX3 <T> & other) {return Equals(other);}
+		bool operator==(const Matrix3 <T> & other) {return Equals(other);}
 
-		bool Equals(const MATRIX3 <T> & other)
+		bool Equals(const Matrix3 <T> & other)
 		{
 			//return (memcmp(data,other.data,9*sizeof(T)) == 0); //high performance, but portability issues?
 			for (int i = 0; i < 9; i++)
@@ -111,7 +111,7 @@ class MATRIX3
 
 		void Scale(T scalar)
 		{
-			MATRIX3 <T> scalemat;
+			Matrix3 <T> scalemat;
 			scalemat.data[0] = scalemat.data[4] = scalemat.data[8] = scalar;
 			scalemat.data[1] = scalemat.data[2] = scalemat.data[3] = scalemat.data[5] = scalemat.data[6] = scalemat.data[7] = 0;
 			*this = Multiply(scalemat);
@@ -119,16 +119,16 @@ class MATRIX3
 
 		const T * GetArray() const {return data;}
 
-		MATHVECTOR <T, 3> Multiply(const MATHVECTOR <T, 3> & v) const
+		MathVector <T, 3> Multiply(const MathVector <T, 3> & v) const
 		{
-			MATHVECTOR <T, 3> output;
+			MathVector <T, 3> output;
 			output.Set(v[0]*data[0] + v[1]*data[3] + v[2]*data[6],
 				   v[0]*data[1] + v[1]*data[4] + v[2]*data[7],
        				   v[0]*data[2] + v[1]*data[5] + v[2]*data[8]);
 			return output;
 		}
 
-		MATRIX3 <T> Inverse() const
+		Matrix3 <T> Inverse() const
 		{
 			T a = data[0];//
 			T b = data[1];
@@ -147,7 +147,7 @@ class MATRIX3
 
 			T invdiv = 1.0 / Div;
 
-			MATRIX3 m;
+			Matrix3 m;
 			m.data[0] = -f*h+e*i;
 			m.data[1] = c*h-b*i;
 			m.data[2] = -c*e+b*f;
@@ -164,13 +164,13 @@ class MATRIX3
 			return m;
 		}
 
-		MATRIX3 <T> Transpose() const
+		Matrix3 <T> Transpose() const
 		{
 			//0 1 2
 			//3 4 5
 			//6 7 8
 
-			MATRIX3 <T> out;
+			Matrix3 <T> out;
 			out[0] = data[0];
 			out[1] = data[3];
 			out[2] = data[6];
@@ -185,7 +185,7 @@ class MATRIX3
 		}
 
 		// returns false on error
-		static bool Diagonalize(MATRIX3<T>& m, MATRIX3<T>& v, MATHVECTOR<T, 3>& w)
+		static bool Diagonalize(Matrix3<T>& m, Matrix3<T>& v, MathVector<T, 3>& w)
 		{
 			double sm[3][3], ev[3][3], ew[3];
 			for (int i = 0; i < 3; i++)
@@ -196,7 +196,7 @@ class MATRIX3
 				}
 			}
 
-			if (MATRIX3<T>::dsyevj3(sm, ev, ew)) return false;
+			if (Matrix3<T>::dsyevj3(sm, ev, ew)) return false;
 
 			for (int i = 0; i < 3; i++)
 			{

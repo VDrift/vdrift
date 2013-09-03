@@ -22,12 +22,12 @@
 
 #include <string>
 
-class JOEPACK
+class JoePack
 {
 public:
-	JOEPACK();
+	JoePack();
 
-	~JOEPACK();
+	~JoePack();
 
 	const std::string & GetPath() const {return packpath;}
 
@@ -43,8 +43,8 @@ public:
 
 private:
 	std::string packpath;
-	struct IMPL;
-	IMPL* impl;
+	struct Impl;
+	Impl* impl;
 };
 
 #endif

@@ -284,7 +284,7 @@ void K1999::CalcRaceLine()
 //VDrift specific functions below
 //
 
-bool K1999::LoadData(const ROADSTRIP & road)
+bool K1999::LoadData(const RoadStrip & road)
 {
 	tx.clear();
 	ty.clear();
@@ -295,12 +295,12 @@ bool K1999::LoadData(const ROADSTRIP & road)
 	tyRight.clear();
 	tLane.clear();
 
-	const std::vector<ROADPATCH> & patchlist = road.GetPatches();
+	const std::vector<RoadPatch> & patchlist = road.GetPatches();
 	Divs = patchlist.size();
 
 	int count = 0;
 
-	for (std::vector<ROADPATCH>::const_iterator i = patchlist.begin(); i != patchlist.end(); ++i)
+	for (std::vector<RoadPatch>::const_iterator i = patchlist.begin(); i != patchlist.end(); ++i)
 	{
 		txLeft.push_back(i->GetPatch().GetPoint(3,0)[1]);
 		tyLeft.push_back(-i->GetPatch().GetPoint(3,0)[0]);
@@ -321,12 +321,12 @@ bool K1999::LoadData(const ROADSTRIP & road)
 		return false;
 }
 
-void K1999::UpdateRoadStrip(ROADSTRIP & road)
+void K1999::UpdateRoadStrip(RoadStrip & road)
 {
-	std::vector<ROADPATCH> & patchlist = road.GetPatches();
+	std::vector<RoadPatch> & patchlist = road.GetPatches();
 	int count = 0;
 
-	for (std::vector<ROADPATCH>::iterator i = patchlist.begin(); i != patchlist.end(); ++i)
+	for (std::vector<RoadPatch>::iterator i = patchlist.begin(); i != patchlist.end(); ++i)
 	{
 		i->SetTrackCurvature(tRInverse[count]);
 		i->SetRacingLine(i->GetPatch().GetPoint(3,0)*(1.0-tLane[count]) + i->GetPatch().GetPoint(3,3)*(tLane[count]));

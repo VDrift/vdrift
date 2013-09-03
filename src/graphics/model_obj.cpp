@@ -82,7 +82,7 @@ bool ExtractRepeating(std::vector <T> & output_vector, unsigned int repeats, std
 	return true;
 }
 
-bool ExtractTriFloat(vector <VERTEXARRAY::TRIFLOAT> & output_vector, const std::string & section, std::istream & s,  std::ostream & error_log, const std::string & filepath)
+bool ExtractTriFloat(vector <VertexArray::Float3> & output_vector, const std::string & section, std::istream & s,  std::ostream & error_log, const std::string & filepath)
 {
 	vector <float> coords;
 	if (!ExtractRepeating(coords, 3, s))
@@ -90,11 +90,11 @@ bool ExtractTriFloat(vector <VERTEXARRAY::TRIFLOAT> & output_vector, const std::
 		error_log << "Error reading " << section << " in " << filepath << endl;
 		return false;
 	}
-	output_vector.push_back(VERTEXARRAY::TRIFLOAT(coords[0],coords[1],coords[2]));
+	output_vector.push_back(VertexArray::Float3(coords[0],coords[1],coords[2]));
 	return true;
 }
 
-bool ExtractTwoFloat(vector <VERTEXARRAY::TWOFLOAT> & output_vector, const std::string & section, std::istream & s,  std::ostream & error_log, const std::string & filepath)
+bool ExtractTwoFloat(vector <VertexArray::Float2> & output_vector, const std::string & section, std::istream & s,  std::ostream & error_log, const std::string & filepath)
 {
 	vector <float> coords;
 	if (!ExtractRepeating(coords, 2, s))
@@ -102,11 +102,11 @@ bool ExtractTwoFloat(vector <VERTEXARRAY::TWOFLOAT> & output_vector, const std::
 		error_log << "Error reading " << section << " in " << filepath << endl;
 		return false;
 	}
-	output_vector.push_back(VERTEXARRAY::TWOFLOAT(coords[0],coords[1]));
+	output_vector.push_back(VertexArray::Float2(coords[0],coords[1]));
 	return true;
 }
 
-bool BuildVertex(VERTEXARRAY::VERTEXDATA & outputvert, vector <VERTEXARRAY::TRIFLOAT> & verts, vector <VERTEXARRAY::TRIFLOAT> & normals, vector <VERTEXARRAY::TWOFLOAT> & texcoords, const string & facestr)
+bool BuildVertex(VertexArray::VertexData & outputvert, vector <VertexArray::Float3> & verts, vector <VertexArray::Float3> & normals, vector <VertexArray::Float2> & texcoords, const string & facestr)
 {
 	if (std::count(facestr.begin(), facestr.end(), '/') != 2)
 		return false;
@@ -129,7 +129,7 @@ bool BuildVertex(VERTEXARRAY::VERTEXDATA & outputvert, vector <VERTEXARRAY::TRIF
 	return true;
 }
 
-bool MODEL_OBJ::Load(const std::string & filepath, std::ostream & error_log, bool genlist)
+bool ModelObj::Load(const std::string & filepath, std::ostream & error_log, bool genlist)
 {
 	ifstream f(filepath.c_str());
 	if (!f)
@@ -138,10 +138,10 @@ bool MODEL_OBJ::Load(const std::string & filepath, std::ostream & error_log, boo
 		return false;
 	}
 
-	vector <VERTEXARRAY::TRIFLOAT> verts;
-	vector <VERTEXARRAY::TRIFLOAT> normals;
-	vector <VERTEXARRAY::TWOFLOAT> texcoords;
-	vector <VERTEXARRAY::FACE> faces;
+	vector <VertexArray::Float3> verts;
+	vector <VertexArray::Float3> normals;
+	vector <VertexArray::Float2> texcoords;
+	vector <VertexArray::Face> faces;
 
 	while (f)
 	{
@@ -168,7 +168,7 @@ bool MODEL_OBJ::Load(const std::string & filepath, std::ostream & error_log, boo
 				error_log << "Error reading faces in " << filepath << endl;
 				return false;
 			}
-			VERTEXARRAY::VERTEXDATA newverts[3];
+			VertexArray::VertexData newverts[3];
 			for (int i = 0; i < 3; i++)
 			{
 				if (!BuildVertex(newverts[i], verts, normals, texcoords, faceverts[i]))
@@ -177,7 +177,7 @@ bool MODEL_OBJ::Load(const std::string & filepath, std::ostream & error_log, boo
 					return false;
 				}
 			}
-			VERTEXARRAY::FACE newface(newverts[0], newverts[1], newverts[2]);
+			VertexArray::Face newface(newverts[0], newverts[1], newverts[2]);
 			faces.push_back(newface);
 		}
 	}
@@ -218,7 +218,7 @@ void WriteFace(std::ostream & s, int index)
 	s << index << "/" << index << "/" << index;
 }
 
-bool MODEL_OBJ::Save(const std::string & strFileName, std::ostream & error_output) const
+bool ModelObj::Save(const std::string & strFileName, std::ostream & error_output) const
 {
 	std::ofstream f(strFileName.c_str());
 	if (!f)

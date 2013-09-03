@@ -21,17 +21,17 @@
 #include "quaternion.h"
 #include "unittest.h"
 
-VERTEXARRAY::VERTEXARRAY()
+VertexArray::VertexArray()
 {
 	// ctor
 }
 
-VERTEXARRAY::~VERTEXARRAY()
+VertexArray::~VertexArray()
 {
 	Clear();
 }
 
-void VERTEXARRAY::SetColors(const unsigned char array[], size_t count, size_t offset)
+void VertexArray::SetColors(const unsigned char array[], size_t count, size_t offset)
 {
 	size_t size = offset + count;
 
@@ -48,7 +48,7 @@ void VERTEXARRAY::SetColors(const unsigned char array[], size_t count, size_t of
 	}
 }
 
-void VERTEXARRAY::SetNormals(const float array[], size_t count, size_t offset)
+void VertexArray::SetNormals(const float array[], size_t count, size_t offset)
 {
 	size_t size = offset + count;
 
@@ -65,7 +65,7 @@ void VERTEXARRAY::SetNormals(const float array[], size_t count, size_t offset)
 	}
 }
 
-void VERTEXARRAY::SetVertices(const float array[], size_t count, size_t offset)
+void VertexArray::SetVertices(const float array[], size_t count, size_t offset)
 {
 	size_t size = offset + count;
 
@@ -82,7 +82,7 @@ void VERTEXARRAY::SetVertices(const float array[], size_t count, size_t offset)
 	}
 }
 
-void VERTEXARRAY::SetFaces(const int array[], size_t count, size_t offset, size_t idoffset)
+void VertexArray::SetFaces(const int array[], size_t count, size_t offset, size_t idoffset)
 {
 	//Tried to assign values that aren't in sets of 3
 	assert (count % 3 == 0);
@@ -99,13 +99,13 @@ void VERTEXARRAY::SetFaces(const int array[], size_t count, size_t offset, size_
 	}
 }
 
-void VERTEXARRAY::SetTexCoordSets(int newtcsets)
+void VertexArray::SetTexCoordSets(int newtcsets)
 {
 	texcoords.clear();
 	texcoords.resize(newtcsets);
 }
 
-void VERTEXARRAY::SetTexCoords(size_t set, const float array[], size_t count, size_t offset)
+void VertexArray::SetTexCoords(size_t set, const float array[], size_t count, size_t offset)
 {
 	//Tried to assign a tex coord set beyond the allocated number of sets
 	assert(set < texcoords.size());
@@ -125,25 +125,25 @@ void VERTEXARRAY::SetTexCoords(size_t set, const float array[], size_t count, si
 	}
 }
 
-void VERTEXARRAY::GetColors(const unsigned char * & output_array_pointer, int & output_array_num) const
+void VertexArray::GetColors(const unsigned char * & output_array_pointer, int & output_array_num) const
 {
 	output_array_num = colors.size();
 	output_array_pointer = colors.empty() ? NULL : &colors[0];
 }
 
-void VERTEXARRAY::GetNormals(const float * & output_array_pointer, int & output_array_num) const
+void VertexArray::GetNormals(const float * & output_array_pointer, int & output_array_num) const
 {
 	output_array_num = normals.size();
 	output_array_pointer = normals.empty() ? NULL : &normals[0];
 }
 
-void VERTEXARRAY::GetVertices(const float * & output_array_pointer, int & output_array_num) const
+void VertexArray::GetVertices(const float * & output_array_pointer, int & output_array_num) const
 {
 	output_array_num = vertices.size();
 	output_array_pointer = vertices.empty() ? NULL : &vertices[0];
 }
 
-void VERTEXARRAY::GetFaces(const int * & output_array_pointer, int & output_array_num) const
+void VertexArray::GetFaces(const int * & output_array_pointer, int & output_array_num) const
 {
 	output_array_num = faces.size();
 	//output_array_pointer = faces.empty() ? NULL : &faces[0];
@@ -153,7 +153,7 @@ void VERTEXARRAY::GetFaces(const int * & output_array_pointer, int & output_arra
 		output_array_pointer = &faces[0];
 }
 
-void VERTEXARRAY::GetTexCoords(size_t set, const float * & output_array_pointer, int & output_array_num) const
+void VertexArray::GetTexCoords(size_t set, const float * & output_array_pointer, int & output_array_num) const
 {
 	//Tried to get a tex coord set beyond the allocated number of sets
 	assert(set < texcoords.size());
@@ -164,9 +164,9 @@ void VERTEXARRAY::GetTexCoords(size_t set, const float * & output_array_pointer,
 
 #define COMBINEVECTORS(vname) {out.vname.reserve(vname.size() + v.vname.size());out.vname.insert(out.vname.end(), vname.begin(), vname.end());out.vname.insert(out.vname.end(), v.vname.begin(), v.vname.end());}
 
-VERTEXARRAY VERTEXARRAY::operator+ (const VERTEXARRAY & v) const
+VertexArray VertexArray::operator+ (const VertexArray & v) const
 {
-	VERTEXARRAY out;
+	VertexArray out;
 
 	COMBINEVECTORS(colors);
 
@@ -207,7 +207,7 @@ VERTEXARRAY VERTEXARRAY::operator+ (const VERTEXARRAY & v) const
 	return out;
 }
 
-void VERTEXARRAY::Clear()
+void VertexArray::Clear()
 {
 	texcoords.clear();
 	colors.clear();
@@ -216,7 +216,7 @@ void VERTEXARRAY::Clear()
 	faces.clear();
 }
 
-void VERTEXARRAY::Add(
+void VertexArray::Add(
 	const unsigned char newcol[], int newcolcount,
 	const float newnorm[], int newnormcount,
 	const float newvert[], int newvertcount,
@@ -231,7 +231,7 @@ void VERTEXARRAY::Add(
 	SetTexCoords(0, newtc, newtccount, texcoords[0].size());
 }
 
-void VERTEXARRAY::SetToBillboard(float x1, float y1, float x2, float y2)
+void VertexArray::SetToBillboard(float x1, float y1, float x2, float y2)
 {
 	int bfaces[6];
 	bfaces[0] = 0;
@@ -271,7 +271,7 @@ void VERTEXARRAY::SetToBillboard(float x1, float y1, float x2, float y2)
 	SetTexCoords(0, tc, 8);
 }
 
-void VERTEXARRAY::SetTo2DQuad(float x1, float y1, float x2, float y2, float u1, float v1, float u2, float v2, float z)
+void VertexArray::SetTo2DQuad(float x1, float y1, float x2, float y2, float u1, float v1, float u2, float v2, float z)
 {
 	float vcorners[12];
 	float uvs[8];
@@ -285,7 +285,7 @@ void VERTEXARRAY::SetTo2DQuad(float x1, float y1, float x2, float y2, float u1, 
 	SetTexCoords(0, uvs, 8);
 }
 
-void VERTEXARRAY::SetVertexData2DQuad(float x1, float y1, float x2, float y2, float u1, float v1, float u2, float v2, float * vcorners, float * uvs, int * bfaces, int faceoffset) const
+void VertexArray::SetVertexData2DQuad(float x1, float y1, float x2, float y2, float u1, float v1, float u2, float v2, float * vcorners, float * uvs, int * bfaces, int faceoffset) const
 {
 	vcorners[0] = x1;
 	vcorners[1] = y1;
@@ -317,7 +317,7 @@ void VERTEXARRAY::SetVertexData2DQuad(float x1, float y1, float x2, float y2, fl
 	bfaces[5] = faceoffset+2;
 }
 
-void VERTEXARRAY::SetTo2DButton(float x, float y, float w, float h, float sidewidth, bool flip)
+void VertexArray::SetTo2DButton(float x, float y, float w, float h, float sidewidth, bool flip)
 {
 	float vcorners[12*3];
 	float uvs[8*3];
@@ -326,11 +326,11 @@ void VERTEXARRAY::SetTo2DButton(float x, float y, float w, float h, float sidewi
 	//y1 = 1.0 - y1;
 	//y2 = 1.0 - y2;
 
-	MATHVECTOR <float, 2> corner1;
-	MATHVECTOR <float, 2> corner2;
-	MATHVECTOR <float, 2> dim;
+	Vec2 corner1;
+	Vec2 corner2;
+	Vec2 dim;
 	dim.Set(w,h);
-	MATHVECTOR <float, 2> center;
+	Vec2 center;
 	center.Set(x,y);
 	corner1 = center - dim*0.5;
 	corner2 = center + dim*0.5;
@@ -362,7 +362,7 @@ void VERTEXARRAY::SetTo2DButton(float x, float y, float w, float h, float sidewi
 	SetTexCoords(0, uvs, 8*3);
 }
 
-void VERTEXARRAY::SetTo2DBox(float x, float y, float w, float h, float marginwidth, float marginheight, float clipx)
+void VertexArray::SetTo2DBox(float x, float y, float w, float h, float marginwidth, float marginheight, float clipx)
 {
 	const unsigned int quads = 9;
 	float vcorners[12*quads];
@@ -372,15 +372,15 @@ void VERTEXARRAY::SetTo2DBox(float x, float y, float w, float h, float marginwid
 	//y1 = 1.0 - y1;
 	//y2 = 1.0 - y2;
 
-	MATHVECTOR <float, 2> corner1;
-	MATHVECTOR <float, 2> corner2;
-	MATHVECTOR <float, 2> dim;
+	Vec2 corner1;
+	Vec2 corner2;
+	Vec2 dim;
 	dim.Set(w,h);
-	MATHVECTOR <float, 2> center;
+	Vec2 center;
 	center.Set(x,y);
 	corner1 = center - dim*0.5;
 	corner2 = center + dim*0.5;
-	MATHVECTOR <float, 2> margin;
+	Vec2 margin;
 	margin.Set(marginwidth, marginheight);
 
 	float lxmax = std::max((corner1-margin)[0],std::min(clipx,corner1[0]));
@@ -439,63 +439,63 @@ void VERTEXARRAY::SetTo2DBox(float x, float y, float w, float h, float marginwid
 	SetTexCoords(0, uvs, 8*quads);
 }
 
-void VERTEXARRAY::SetToUnitCube()
+void VertexArray::SetToUnitCube()
 {
-	std::vector <VERTEXARRAY::TRIFLOAT> verts;
-	verts.push_back(VERTEXARRAY::TRIFLOAT(0,0,0));
-	verts.push_back(VERTEXARRAY::TRIFLOAT(0.5,-0.5,-0.5)); //1
-	verts.push_back(VERTEXARRAY::TRIFLOAT(0.5,-0.5,0.5));
-	verts.push_back(VERTEXARRAY::TRIFLOAT(-0.5,-0.5,0.5));
-	verts.push_back(VERTEXARRAY::TRIFLOAT(-0.5,-0.5,-0.5)); //4
-	verts.push_back(VERTEXARRAY::TRIFLOAT(0.5,0.5,-0.5)); //5
-	verts.push_back(VERTEXARRAY::TRIFLOAT(0.5,0.5,0.5));
-	verts.push_back(VERTEXARRAY::TRIFLOAT(-0.5,0.5,0.5));
-	verts.push_back(VERTEXARRAY::TRIFLOAT(-0.5,0.5,-0.5)); //8
+	std::vector <VertexArray::Float3> verts;
+	verts.push_back(VertexArray::Float3(0,0,0));
+	verts.push_back(VertexArray::Float3(0.5,-0.5,-0.5)); //1
+	verts.push_back(VertexArray::Float3(0.5,-0.5,0.5));
+	verts.push_back(VertexArray::Float3(-0.5,-0.5,0.5));
+	verts.push_back(VertexArray::Float3(-0.5,-0.5,-0.5)); //4
+	verts.push_back(VertexArray::Float3(0.5,0.5,-0.5)); //5
+	verts.push_back(VertexArray::Float3(0.5,0.5,0.5));
+	verts.push_back(VertexArray::Float3(-0.5,0.5,0.5));
+	verts.push_back(VertexArray::Float3(-0.5,0.5,-0.5)); //8
 
-	std::vector <VERTEXARRAY::TRIFLOAT> norms;
-	norms.push_back(VERTEXARRAY::TRIFLOAT(0,0,0));
-	norms.push_back(VERTEXARRAY::TRIFLOAT(0.0,0.0,-1.0));
-	norms.push_back(VERTEXARRAY::TRIFLOAT(-1.0,-0.0,-0.0));
-	norms.push_back(VERTEXARRAY::TRIFLOAT(-0.0,-0.0,1.0));
-	norms.push_back(VERTEXARRAY::TRIFLOAT(-0.0,0.0,1.0));
-	norms.push_back(VERTEXARRAY::TRIFLOAT(1.0,-0.0,0.0));
-	norms.push_back(VERTEXARRAY::TRIFLOAT(1.0,0.0,0.0));
-	norms.push_back(VERTEXARRAY::TRIFLOAT(0.0,1.0,-0.0));
-	norms.push_back(VERTEXARRAY::TRIFLOAT(-0.0,-1.0,0.0));
+	std::vector <VertexArray::Float3> norms;
+	norms.push_back(VertexArray::Float3(0,0,0));
+	norms.push_back(VertexArray::Float3(0.0,0.0,-1.0));
+	norms.push_back(VertexArray::Float3(-1.0,-0.0,-0.0));
+	norms.push_back(VertexArray::Float3(-0.0,-0.0,1.0));
+	norms.push_back(VertexArray::Float3(-0.0,0.0,1.0));
+	norms.push_back(VertexArray::Float3(1.0,-0.0,0.0));
+	norms.push_back(VertexArray::Float3(1.0,0.0,0.0));
+	norms.push_back(VertexArray::Float3(0.0,1.0,-0.0));
+	norms.push_back(VertexArray::Float3(-0.0,-1.0,0.0));
 
-	std::vector <VERTEXARRAY::TWOFLOAT> texcoords(1);
+	std::vector <VertexArray::Float2> texcoords(1);
 	texcoords[0].u = 0;
 	texcoords[0].v = 0;
 
-	std::vector <VERTEXARRAY::FACE> cubesides;
-	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[5],norms[1],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[1],norms[1],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[8],norms[1],texcoords[0])));
-	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[1],norms[1],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[4],norms[1],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[8],norms[1],texcoords[0])));
-	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[3],norms[2],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[7],norms[2],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[8],norms[2],texcoords[0])));
-	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[3],norms[2],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[8],norms[2],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[4],norms[2],texcoords[0])));
-	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[2],norms[3],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[6],norms[3],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[3],norms[3],texcoords[0])));
-	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[6],norms[4],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[7],norms[4],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[3],norms[4],texcoords[0])));
-	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[1],norms[5],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[5],norms[5],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[2],norms[5],texcoords[0])));
-	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[5],norms[6],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[6],norms[6],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[2],norms[6],texcoords[0])));
-	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[5],norms[7],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[8],norms[7],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[7],norms[7],texcoords[0])));
-	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[5],norms[7],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[7],norms[7],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[6],norms[7],texcoords[0])));
-	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[1],norms[8],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[2],norms[8],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[3],norms[8],texcoords[0])));
-	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[1],norms[8],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[3],norms[8],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[4],norms[8],texcoords[0])));
+	std::vector <VertexArray::Face> cubesides;
+	cubesides.push_back(VertexArray::Face(VertexArray::VertexData(verts[5],norms[1],texcoords[0]),VertexArray::VertexData(verts[1],norms[1],texcoords[0]),VertexArray::VertexData(verts[8],norms[1],texcoords[0])));
+	cubesides.push_back(VertexArray::Face(VertexArray::VertexData(verts[1],norms[1],texcoords[0]),VertexArray::VertexData(verts[4],norms[1],texcoords[0]),VertexArray::VertexData(verts[8],norms[1],texcoords[0])));
+	cubesides.push_back(VertexArray::Face(VertexArray::VertexData(verts[3],norms[2],texcoords[0]),VertexArray::VertexData(verts[7],norms[2],texcoords[0]),VertexArray::VertexData(verts[8],norms[2],texcoords[0])));
+	cubesides.push_back(VertexArray::Face(VertexArray::VertexData(verts[3],norms[2],texcoords[0]),VertexArray::VertexData(verts[8],norms[2],texcoords[0]),VertexArray::VertexData(verts[4],norms[2],texcoords[0])));
+	cubesides.push_back(VertexArray::Face(VertexArray::VertexData(verts[2],norms[3],texcoords[0]),VertexArray::VertexData(verts[6],norms[3],texcoords[0]),VertexArray::VertexData(verts[3],norms[3],texcoords[0])));
+	cubesides.push_back(VertexArray::Face(VertexArray::VertexData(verts[6],norms[4],texcoords[0]),VertexArray::VertexData(verts[7],norms[4],texcoords[0]),VertexArray::VertexData(verts[3],norms[4],texcoords[0])));
+	cubesides.push_back(VertexArray::Face(VertexArray::VertexData(verts[1],norms[5],texcoords[0]),VertexArray::VertexData(verts[5],norms[5],texcoords[0]),VertexArray::VertexData(verts[2],norms[5],texcoords[0])));
+	cubesides.push_back(VertexArray::Face(VertexArray::VertexData(verts[5],norms[6],texcoords[0]),VertexArray::VertexData(verts[6],norms[6],texcoords[0]),VertexArray::VertexData(verts[2],norms[6],texcoords[0])));
+	cubesides.push_back(VertexArray::Face(VertexArray::VertexData(verts[5],norms[7],texcoords[0]),VertexArray::VertexData(verts[8],norms[7],texcoords[0]),VertexArray::VertexData(verts[7],norms[7],texcoords[0])));
+	cubesides.push_back(VertexArray::Face(VertexArray::VertexData(verts[5],norms[7],texcoords[0]),VertexArray::VertexData(verts[7],norms[7],texcoords[0]),VertexArray::VertexData(verts[6],norms[7],texcoords[0])));
+	cubesides.push_back(VertexArray::Face(VertexArray::VertexData(verts[1],norms[8],texcoords[0]),VertexArray::VertexData(verts[2],norms[8],texcoords[0]),VertexArray::VertexData(verts[3],norms[8],texcoords[0])));
+	cubesides.push_back(VertexArray::Face(VertexArray::VertexData(verts[1],norms[8],texcoords[0]),VertexArray::VertexData(verts[3],norms[8],texcoords[0]),VertexArray::VertexData(verts[4],norms[8],texcoords[0])));
 
 	BuildFromFaces(cubesides);
 }
 
-void VERTEXARRAY::BuildFromFaces(const std::vector <FACE> & newfaces)
+void VertexArray::BuildFromFaces(const std::vector <Face> & newfaces)
 {
-	std::map <VERTEXDATA, unsigned int> indexmap;
+	std::map <VertexData, unsigned int> indexmap;
 	Clear();
 	texcoords.resize(1);
 
-	for (std::vector <FACE>::const_iterator i = newfaces.begin(); i != newfaces.end(); ++i) //loop through input triangles
+	for (std::vector <Face>::const_iterator i = newfaces.begin(); i != newfaces.end(); ++i) //loop through input triangles
 	{
 		for (int n = 0; n < 3; n++) //loop through vertices in triangle
 		{
-			const VERTEXDATA & curvertdata = i->v[n]; //grab vertex
-			std::map <VERTEXDATA, unsigned int>::iterator result = indexmap.find(curvertdata);
+			const VertexData & curvertdata = i->v[n]; //grab vertex
+			std::map <VertexData, unsigned int>::iterator result = indexmap.find(curvertdata);
 			if (result == indexmap.end()) //new vertex
 			{
 				unsigned int newidx = indexmap.size();
@@ -526,12 +526,12 @@ void VERTEXARRAY::BuildFromFaces(const std::vector <FACE> & newfaces)
 	assert(vertices.size()/3 <= faces.size());
 }
 
-void VERTEXARRAY::SetColor(float r, float g, float b, float a)
+void VertexArray::SetColor(float r, float g, float b, float a)
 {
 	assert(0); // fixme
 }
 
-void VERTEXARRAY::Translate(float x, float y, float z)
+void VertexArray::Translate(float x, float y, float z)
 {
 	assert(vertices.size() % 3 == 0);
 	for (std::vector <float>::iterator i = vertices.begin(); i != vertices.end(); i += 3)
@@ -543,9 +543,9 @@ void VERTEXARRAY::Translate(float x, float y, float z)
     }
 }
 
-void VERTEXARRAY::Rotate(float a, float x, float y, float z)
+void VertexArray::Rotate(float a, float x, float y, float z)
 {
-	QUATERNION <float> q;
+	Quat q;
 	q.Rotate(a,x,y,z);
 
 	assert(vertices.size() % 3 == 0);
@@ -563,7 +563,7 @@ void VERTEXARRAY::Rotate(float a, float x, float y, float z)
     }
 }
 
-void VERTEXARRAY::Scale(float x, float y, float z)
+void VertexArray::Scale(float x, float y, float z)
 {
 	assert(vertices.size() % 3 == 0);
 	for (std::vector <float>::iterator i = vertices.begin(), e = vertices.end(); i != e; i += 3)
@@ -590,7 +590,7 @@ void VERTEXARRAY::Scale(float x, float y, float z)
     }
 }
 
-void VERTEXARRAY::FlipNormals()
+void VertexArray::FlipNormals()
 {
 	assert(normals.size() % 3 == 0);
 	for (std::vector <float>::iterator i = normals.begin(); i != normals.end(); i++)
@@ -599,7 +599,7 @@ void VERTEXARRAY::FlipNormals()
 	}
 }
 
-bool VERTEXARRAY::Serialize(joeserialize::Serializer & s)
+bool VertexArray::Serialize(joeserialize::Serializer & s)
 {
 	_SERIALIZE_(s,vertices);
 	_SERIALIZE_(s,normals);
@@ -611,7 +611,7 @@ bool VERTEXARRAY::Serialize(joeserialize::Serializer & s)
 
 QT_TEST(vertexarray_test)
 {
-	VERTEXARRAY testarray;
+	VertexArray testarray;
 
 	const float * ptr;
 	int ptrnum;
@@ -641,7 +641,7 @@ QT_TEST(vertexarray_test)
 
 	testarray.Clear();
 	testarray.SetNormals(somevec, 3);
-	VERTEXARRAY otherarray(testarray);
+	VertexArray otherarray(testarray);
 	otherarray.GetNormals(ptr, ptrnum);
 	QT_CHECK_EQUAL(ptr[1], 1000.0);
 	QT_CHECK_EQUAL(ptrnum, 3);
@@ -653,7 +653,7 @@ QT_TEST(vertexarray_test)
 	QT_CHECK_EQUAL(ptr[1], 1000.0);
 	QT_CHECK_EQUAL(ptrnum, 3);
 
-	VERTEXARRAY addarray;
+	VertexArray addarray;
 	otherarray.Clear();
 	testarray.Clear();
 	testarray.SetNormals(somevec, 3);
@@ -665,7 +665,7 @@ QT_TEST(vertexarray_test)
 	QT_CHECK_EQUAL(ptr[4], 1000.0);
 
 	testarray.Clear();
-	VERTEXARRAY facearray1, facearray2;
+	VertexArray facearray1, facearray2;
 	int someint[3];
 	someint[0] = 0;
 	someint[1] = 1;
@@ -690,47 +690,47 @@ QT_TEST(vertexarray_test)
 
 QT_TEST(vertexarray_buldfromfaces_test)
 {
-	std::vector <VERTEXARRAY::TRIFLOAT> verts;
-	verts.push_back(VERTEXARRAY::TRIFLOAT(0,0,0));
-	verts.push_back(VERTEXARRAY::TRIFLOAT(1.0,-1.0,-1.0));
-	verts.push_back(VERTEXARRAY::TRIFLOAT(1.0,-1.0,1.0));
-	verts.push_back(VERTEXARRAY::TRIFLOAT(-1.0,-1.0,1.0));
-	verts.push_back(VERTEXARRAY::TRIFLOAT(-1.0,-1.0,-1.0));
-	verts.push_back(VERTEXARRAY::TRIFLOAT(1.0,1.0,-1.0));
-	verts.push_back(VERTEXARRAY::TRIFLOAT(1.0,1.0,1.0));
-	verts.push_back(VERTEXARRAY::TRIFLOAT(-1.0,1.0,1.0));
-	verts.push_back(VERTEXARRAY::TRIFLOAT(-1.0,1.0,-1.0));
+	std::vector <VertexArray::Float3> verts;
+	verts.push_back(VertexArray::Float3(0,0,0));
+	verts.push_back(VertexArray::Float3(1.0,-1.0,-1.0));
+	verts.push_back(VertexArray::Float3(1.0,-1.0,1.0));
+	verts.push_back(VertexArray::Float3(-1.0,-1.0,1.0));
+	verts.push_back(VertexArray::Float3(-1.0,-1.0,-1.0));
+	verts.push_back(VertexArray::Float3(1.0,1.0,-1.0));
+	verts.push_back(VertexArray::Float3(1.0,1.0,1.0));
+	verts.push_back(VertexArray::Float3(-1.0,1.0,1.0));
+	verts.push_back(VertexArray::Float3(-1.0,1.0,-1.0));
 
-	std::vector <VERTEXARRAY::TRIFLOAT> norms;
-	norms.push_back(VERTEXARRAY::TRIFLOAT(0,0,0));
-	norms.push_back(VERTEXARRAY::TRIFLOAT(0.0,0.0,-1.0));
-	norms.push_back(VERTEXARRAY::TRIFLOAT(-1.0,-0.0,-0.0));
-	norms.push_back(VERTEXARRAY::TRIFLOAT(-0.0,-0.0,1.0));
-	norms.push_back(VERTEXARRAY::TRIFLOAT(-0.0,0.0,1.0));
-	norms.push_back(VERTEXARRAY::TRIFLOAT(1.0,-0.0,0.0));
-	norms.push_back(VERTEXARRAY::TRIFLOAT(1.0,0.0,0.0));
-	norms.push_back(VERTEXARRAY::TRIFLOAT(0.0,1.0,-0.0));
-	norms.push_back(VERTEXARRAY::TRIFLOAT(-0.0,-1.0,0.0));
+	std::vector <VertexArray::Float3> norms;
+	norms.push_back(VertexArray::Float3(0,0,0));
+	norms.push_back(VertexArray::Float3(0.0,0.0,-1.0));
+	norms.push_back(VertexArray::Float3(-1.0,-0.0,-0.0));
+	norms.push_back(VertexArray::Float3(-0.0,-0.0,1.0));
+	norms.push_back(VertexArray::Float3(-0.0,0.0,1.0));
+	norms.push_back(VertexArray::Float3(1.0,-0.0,0.0));
+	norms.push_back(VertexArray::Float3(1.0,0.0,0.0));
+	norms.push_back(VertexArray::Float3(0.0,1.0,-0.0));
+	norms.push_back(VertexArray::Float3(-0.0,-1.0,0.0));
 
-	std::vector <VERTEXARRAY::TWOFLOAT> texcoords(1);
+	std::vector <VertexArray::Float2> texcoords(1);
 	texcoords[0].u = 0;
 	texcoords[0].v = 0;
 
-	std::vector <VERTEXARRAY::FACE> cubesides;
-	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[5],norms[1],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[1],norms[1],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[8],norms[1],texcoords[0])));
-	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[1],norms[1],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[4],norms[1],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[8],norms[1],texcoords[0])));
-	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[3],norms[2],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[7],norms[2],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[8],norms[2],texcoords[0])));
-	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[3],norms[2],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[8],norms[2],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[4],norms[2],texcoords[0])));
-	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[2],norms[3],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[6],norms[3],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[3],norms[3],texcoords[0])));
-	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[6],norms[4],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[7],norms[4],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[3],norms[4],texcoords[0])));
-	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[1],norms[5],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[5],norms[5],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[2],norms[5],texcoords[0])));
-	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[5],norms[6],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[6],norms[6],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[2],norms[6],texcoords[0])));
-	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[5],norms[7],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[8],norms[7],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[7],norms[7],texcoords[0])));
-	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[5],norms[7],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[7],norms[7],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[6],norms[7],texcoords[0])));
-	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[1],norms[8],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[2],norms[8],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[3],norms[8],texcoords[0])));
-	cubesides.push_back(VERTEXARRAY::FACE(VERTEXARRAY::VERTEXDATA(verts[1],norms[8],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[3],norms[8],texcoords[0]),VERTEXARRAY::VERTEXDATA(verts[4],norms[8],texcoords[0])));
+	std::vector <VertexArray::Face> cubesides;
+	cubesides.push_back(VertexArray::Face(VertexArray::VertexData(verts[5],norms[1],texcoords[0]),VertexArray::VertexData(verts[1],norms[1],texcoords[0]),VertexArray::VertexData(verts[8],norms[1],texcoords[0])));
+	cubesides.push_back(VertexArray::Face(VertexArray::VertexData(verts[1],norms[1],texcoords[0]),VertexArray::VertexData(verts[4],norms[1],texcoords[0]),VertexArray::VertexData(verts[8],norms[1],texcoords[0])));
+	cubesides.push_back(VertexArray::Face(VertexArray::VertexData(verts[3],norms[2],texcoords[0]),VertexArray::VertexData(verts[7],norms[2],texcoords[0]),VertexArray::VertexData(verts[8],norms[2],texcoords[0])));
+	cubesides.push_back(VertexArray::Face(VertexArray::VertexData(verts[3],norms[2],texcoords[0]),VertexArray::VertexData(verts[8],norms[2],texcoords[0]),VertexArray::VertexData(verts[4],norms[2],texcoords[0])));
+	cubesides.push_back(VertexArray::Face(VertexArray::VertexData(verts[2],norms[3],texcoords[0]),VertexArray::VertexData(verts[6],norms[3],texcoords[0]),VertexArray::VertexData(verts[3],norms[3],texcoords[0])));
+	cubesides.push_back(VertexArray::Face(VertexArray::VertexData(verts[6],norms[4],texcoords[0]),VertexArray::VertexData(verts[7],norms[4],texcoords[0]),VertexArray::VertexData(verts[3],norms[4],texcoords[0])));
+	cubesides.push_back(VertexArray::Face(VertexArray::VertexData(verts[1],norms[5],texcoords[0]),VertexArray::VertexData(verts[5],norms[5],texcoords[0]),VertexArray::VertexData(verts[2],norms[5],texcoords[0])));
+	cubesides.push_back(VertexArray::Face(VertexArray::VertexData(verts[5],norms[6],texcoords[0]),VertexArray::VertexData(verts[6],norms[6],texcoords[0]),VertexArray::VertexData(verts[2],norms[6],texcoords[0])));
+	cubesides.push_back(VertexArray::Face(VertexArray::VertexData(verts[5],norms[7],texcoords[0]),VertexArray::VertexData(verts[8],norms[7],texcoords[0]),VertexArray::VertexData(verts[7],norms[7],texcoords[0])));
+	cubesides.push_back(VertexArray::Face(VertexArray::VertexData(verts[5],norms[7],texcoords[0]),VertexArray::VertexData(verts[7],norms[7],texcoords[0]),VertexArray::VertexData(verts[6],norms[7],texcoords[0])));
+	cubesides.push_back(VertexArray::Face(VertexArray::VertexData(verts[1],norms[8],texcoords[0]),VertexArray::VertexData(verts[2],norms[8],texcoords[0]),VertexArray::VertexData(verts[3],norms[8],texcoords[0])));
+	cubesides.push_back(VertexArray::Face(VertexArray::VertexData(verts[1],norms[8],texcoords[0]),VertexArray::VertexData(verts[3],norms[8],texcoords[0]),VertexArray::VertexData(verts[4],norms[8],texcoords[0])));
 
-	VERTEXARRAY varray;
+	VertexArray varray;
 	varray.BuildFromFaces(cubesides);
 
 	const float * tempfloat(NULL);

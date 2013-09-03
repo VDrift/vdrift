@@ -21,12 +21,12 @@
 #include "unittest.h"
 #include <cassert>
 
-HTTPINFO::HTTPINFO() : state(CONNECTING), totalsize(1), downloaded(0), speed(0)
+HttpInfo::HttpInfo() : state(CONNECTING), totalsize(1), downloaded(0), speed(0)
 {
     // Constructor.
 }
 
-const char * HTTPINFO::GetString(STATE state)
+const char * HttpInfo::GetString(StateEnum state)
 {
 	switch (state)
 	{
@@ -43,7 +43,7 @@ const char * HTTPINFO::GetString(STATE state)
 	};
 }
 
-std::string HTTPINFO::FormatSize(double bytes)
+std::string HttpInfo::FormatSize(double bytes)
 {
 	std::stringstream s;
 	s.precision(2);
@@ -59,7 +59,7 @@ std::string HTTPINFO::FormatSize(double bytes)
 	return s.str();
 }
 
-std::string HTTPINFO::FormatSpeed(double bytes)
+std::string HttpInfo::FormatSpeed(double bytes)
 {
 	std::stringstream s;
 	s.precision(2);
@@ -75,12 +75,12 @@ std::string HTTPINFO::FormatSpeed(double bytes)
 	return s.str();
 }
 
-bool HTTPINFO::operator != (const HTTPINFO & other) const
+bool HttpInfo::operator != (const HttpInfo & other) const
 {
 	return !(*this == other);
 }
 
-bool HTTPINFO::operator == (const HTTPINFO & other) const
+bool HttpInfo::operator == (const HttpInfo & other) const
 {
     if (state != other.state) return false;
     if (totalsize != other.totalsize) return false;
@@ -90,17 +90,17 @@ bool HTTPINFO::operator == (const HTTPINFO & other) const
 	return true;
 }
 
-void HTTPINFO::print(std::ostream & s)
+void HttpInfo::print(std::ostream & s)
 {
 	s << "State: " << GetString(state) << std::endl << "Total size: " << FormatSize(totalsize) << std::endl << "Downloaded: " << FormatSize(downloaded) << std::endl << "Speed: " << FormatSpeed(speed) << std::endl << "Error: " << (error.empty() ? "none" : error) << std::endl;
 }
 
-PROGRESSINFO::PROGRESSINFO() : http(NULL), easyhandle(NULL)
+ProgressInfo::ProgressInfo() : http(NULL), easyhandle(NULL)
 {
     // Cosntructor.
 }
 
-PROGRESSINFO::PROGRESSINFO(HTTP * newhttp, CURL * newhandle) : http(newhttp), easyhandle(newhandle) 
+ProgressInfo::ProgressInfo(Http * newhttp, CURL * newhandle) : http(newhttp), easyhandle(newhandle)
 {
     // Constructor.
 }
@@ -108,7 +108,7 @@ PROGRESSINFO::PROGRESSINFO(HTTP * newhttp, CURL * newhandle) : http(newhttp), ea
 // Just for storing curl initialization state.
 static bool s_curl_init = false;
 
-HTTP::HTTP(const std::string & temporary_folder) : folder(temporary_folder), downloading(false)
+Http::Http(const std::string & temporary_folder) : folder(temporary_folder), downloading(false)
 {
 	if (!s_curl_init)
 	{
@@ -120,9 +120,9 @@ HTTP::HTTP(const std::string & temporary_folder) : folder(temporary_folder), dow
 	multihandle = curl_multi_init();
 }
 
-HTTP::~HTTP()
+Http::~Http()
 {
-	for (std::map <CURL*, REQUEST>::iterator i = easyhandles.begin(); i != easyhandles.end(); i++)
+	for (std::map <CURL*, RequestState>::iterator i = easyhandles.begin(); i != easyhandles.end(); i++)
 	{
 		FILE * file = i->second.file;
 		fclose(file);
@@ -130,20 +130,20 @@ HTTP::~HTTP()
 	}
 	easyhandles.clear();
 	requests.clear();
-    
+
 	if (multihandle)
 		curl_multi_cleanup(multihandle);
 	multihandle = NULL;
 }
 
-void HTTP::SetTemporaryFolder(const std::string & temporary_folder)
+void Http::SetTemporaryFolder(const std::string & temporary_folder)
 {
     folder = temporary_folder;
 }
 
 int ProgressCallback(void * ptr, double TotalToDownload, double NowDownloaded, double TotalToUpload, double NowUploaded)
 {
-	PROGRESSINFO * info = static_cast<PROGRESSINFO*>(ptr);
+	ProgressInfo * info = static_cast<ProgressInfo*>(ptr);
 	assert(info->http && info->easyhandle);
 	info->http->UpdateProgress(info->easyhandle, TotalToDownload, NowDownloaded);
 	return 0;
@@ -154,26 +154,26 @@ static size_t write_data(void *ptr, size_t size, size_t nmemb, void *stream)
 	return fwrite(ptr, size, nmemb, (FILE *)stream);
 }
 
-bool HTTP::Request(const std::string & url, std::ostream & error_output)
+bool Http::Request(const std::string & url, std::ostream & error_output)
 {
 	if (!multihandle)
 	{
 		error_output << "HTTP::Request: multihandle initialization failed" << std::endl;
 		return false;
 	}
-    
+
 	// Each single transfer is built up with an easy handle.
 	CURL * easyhandle = curl_easy_init();
-    
+
 	if (easyhandle)
 	{
 		// Setup the appropriate options for the easy handle.
 		curl_easy_setopt(easyhandle, CURLOPT_URL, url.c_str());
-        
+
 		// This function call will make this multi_handle control the specified easy_handle.
 		// Furthermore, libcurl now initiates the connection associated with the specified easy_handle.
 		CURLMcode result = curl_multi_add_handle(multihandle, easyhandle);
-        
+
 		if (result == CURLM_OK)
 		{
 			// Open the destination file for write.
@@ -184,7 +184,7 @@ bool HTTP::Request(const std::string & url, std::ostream & error_output)
 				curl_multi_remove_handle(multihandle, easyhandle);
 				return false;
 			}
-            
+
 			std::string filename = folder+"/"+filepart;
 			FILE * file = fopen(filename.c_str(),"wb");
 			if (!file)
@@ -193,23 +193,23 @@ bool HTTP::Request(const std::string & url, std::ostream & error_output)
 				curl_multi_remove_handle(multihandle, easyhandle);
 				return false;
 			}
-            
+
 			// Setup file writing.
 			curl_easy_setopt(easyhandle, CURLOPT_WRITEFUNCTION, write_data);
 			curl_easy_setopt(easyhandle, CURLOPT_WRITEDATA, file);
-            
+
 			// Begin tracking the easyhandle.
-			REQUEST requestinfo(url,file);
+			RequestState requestinfo(url,file);
 			requestinfo.progress_callback_data.http = this;
 			requestinfo.progress_callback_data.easyhandle = easyhandle;
 			easyhandles.insert(std::make_pair(easyhandle,requestinfo));
-			requests.insert(std::make_pair(url,HTTPINFO()));
-            
+			requests.insert(std::make_pair(url,HttpInfo()));
+
 			// Setup the progress callback.
 			curl_easy_setopt(easyhandle, CURLOPT_NOPROGRESS, 0);
 			curl_easy_setopt(easyhandle, CURLOPT_PROGRESSFUNCTION, ProgressCallback);
 			curl_easy_setopt(easyhandle, CURLOPT_PROGRESSDATA, &(easyhandles.find(easyhandle)->second.progress_callback_data));
-            
+
 			return true;
 		}
 		else
@@ -228,7 +228,7 @@ bool HTTP::Request(const std::string & url, std::ostream & error_output)
 	}
 }
 
-bool HTTP::Tick()
+bool Http::Tick()
 {
 	// curl_multi_perform() returns as soon as the reads/writes are done.
 	// This function does not require that there actually is any data available for reading or that data can be written, it can be called just in case.
@@ -241,7 +241,7 @@ bool HTTP::Tick()
 		loopcheck++;
 		assert(loopcheck < 1000 && "infinite loop in HTTP::Tick()");
 	}
-    
+
 	CURLMsg * msg = NULL;
 	do
 	{
@@ -251,25 +251,25 @@ bool HTTP::Tick()
 		{
 			// Handle completion.
 			CURL * easyhandle = msg->easy_handle;
-            
+
 			// Get the url.
-			std::map <CURL*, REQUEST>::iterator u = easyhandles.find(easyhandle);
+			std::map <CURL*, RequestState>::iterator u = easyhandles.find(easyhandle);
 			assert(u != easyhandles.end() && "corruption in easyhandles map");
 			std::string url = u->second.url;
-            
+
 			if (msg->data.result == CURLE_OK)
 			{
 				// Completion.
-				requests[url].state = HTTPINFO::COMPLETE;
+				requests[url].state = HttpInfo::COMPLETE;
 				curl_easy_getinfo(easyhandle, CURLINFO_SPEED_DOWNLOAD, &requests[url].speed);
 			}
 			else
 			{
 				// Failure.
-				requests[url].state = HTTPINFO::FAILED;
+				requests[url].state = HttpInfo::FAILED;
 				requests[url].error = "unknown";
 			}
-            
+
 			// Cleanup.
 			curl_easy_cleanup(easyhandle);
 			fclose(u->second.file);
@@ -277,15 +277,15 @@ bool HTTP::Tick()
 		}
 
 		// Update status.
-		for (std::map <CURL*, REQUEST>::iterator i = easyhandles.begin(); i != easyhandles.end(); i++)
+		for (std::map <CURL*, RequestState>::iterator i = easyhandles.begin(); i != easyhandles.end(); i++)
 		{
 			CURL * easyhandle = i->first;
-			std::map <CURL*, REQUEST>::iterator u = easyhandles.find(easyhandle);
+			std::map <CURL*, RequestState>::iterator u = easyhandles.find(easyhandle);
 			assert(u != easyhandles.end() && "corruption in requestUrls map");
 			std::string url = u->second.url;
-            
+
 			curl_easy_getinfo(easyhandle, CURLINFO_SPEED_DOWNLOAD, &requests[url].speed);
-			requests[url].state = requests[url].downloaded > 0 ? HTTPINFO::DOWNLOADING : HTTPINFO::CONNECTING;
+			requests[url].state = requests[url].downloaded > 0 ? HttpInfo::DOWNLOADING : HttpInfo::CONNECTING;
 		}
 	}
 	while (msg);
@@ -295,28 +295,28 @@ bool HTTP::Tick()
 	return downloading;
 }
 
-bool HTTP::Downloading() const
+bool Http::Downloading() const
 {
     return downloading;
 }
 
-bool HTTP::GetRequestInfo(const std::string & url, HTTPINFO & out)
+bool Http::GetRequestInfo(const std::string & url, HttpInfo & out)
 {
-	std::map <std::string, HTTPINFO>::iterator i = requests.find(url);
+	std::map <std::string, HttpInfo>::iterator i = requests.find(url);
 	if (i == requests.end())
 		return false;
-    
+
 	out = i->second;
-    
-	if (i->second.state == HTTPINFO::FAILED || i->second.state == HTTPINFO::COMPLETE)
+
+	if (i->second.state == HttpInfo::FAILED || i->second.state == HttpInfo::COMPLETE)
 		requests.erase(i);
-    
+
 	return true;
 }
 
-void HTTP::CancelAllRequests()
+void Http::CancelAllRequests()
 {
-	for (std::map <CURL*, REQUEST>::iterator i = easyhandles.begin(); i != easyhandles.end(); i++)
+	for (std::map <CURL*, RequestState>::iterator i = easyhandles.begin(); i != easyhandles.end(); i++)
 	{
 		FILE * file = i->second.file;
 		fclose(file);
@@ -327,7 +327,7 @@ void HTTP::CancelAllRequests()
 	downloading = false;
 }
 
-std::string HTTP::ExtractFilenameFromUrl(const std::string & in)
+std::string Http::ExtractFilenameFromUrl(const std::string & in)
 {
 	std::string url = in;
 	size_t start = url.find_last_of('/');
@@ -351,14 +351,14 @@ std::string HTTP::ExtractFilenameFromUrl(const std::string & in)
 	return url.substr(start,end-start);
 }
 
-std::string HTTP::GetDownloadPath(const std::string & url) const
+std::string Http::GetDownloadPath(const std::string & url) const
 {
 	return folder+"/"+ExtractFilenameFromUrl(url);
 }
 
-void HTTP::UpdateProgress(CURL * handle, float total, float current)
+void Http::UpdateProgress(CURL * handle, float total, float current)
 {
-	std::map <CURL*, REQUEST>::iterator i = easyhandles.find(handle);
+	std::map <CURL*, RequestState>::iterator i = easyhandles.find(handle);
 	if (i == easyhandles.end())
 		return;
 
@@ -369,15 +369,15 @@ void HTTP::UpdateProgress(CURL * handle, float total, float current)
 
 QT_TEST(http)
 {
-	HTTP http("data/test");
+	Http http("data/test");
 	const bool verbose = false;
 
 	{
 		std::string testurl = "vdrift.net";
 		QT_CHECK(!http.Downloading());
 		QT_CHECK(http.Request(testurl, std::cerr));
-		HTTPINFO lastinfo;
-		HTTPINFO curinfo;
+		HttpInfo lastinfo;
+		HttpInfo curinfo;
 		while (http.Tick())
 		{
 			QT_CHECK(http.GetRequestInfo(testurl, curinfo));
@@ -399,8 +399,8 @@ QT_TEST(http)
 		std::string testurl = "badurl";
 		QT_CHECK(!http.Downloading());
 		QT_CHECK(http.Request(testurl, std::cerr));
-		HTTPINFO lastinfo;
-		HTTPINFO curinfo;
+		HttpInfo lastinfo;
+		HttpInfo curinfo;
 		while (http.Tick())
 		{
 			QT_CHECK(http.GetRequestInfo(testurl, curinfo));
@@ -409,24 +409,24 @@ QT_TEST(http)
 		}
 		QT_CHECK(!http.Downloading());
 		QT_CHECK(http.GetRequestInfo(testurl, curinfo));
-		QT_CHECK_EQUAL(curinfo.state,HTTPINFO::FAILED);
+		QT_CHECK_EQUAL(curinfo.state,HttpInfo::FAILED);
 		QT_CHECK(!http.GetRequestInfo(testurl, curinfo));
 	}
 
 	// check filename extraction from url
-	QT_CHECK_EQUAL(HTTP::ExtractFilenameFromUrl("vdrift.net"), std::string("vdrift.net"));
-	QT_CHECK_EQUAL(HTTP::ExtractFilenameFromUrl("http://vdrift.net"), std::string("vdrift.net"));
-	QT_CHECK_EQUAL(HTTP::ExtractFilenameFromUrl("HTTP://vdrift.net"), std::string("vdrift.net"));
-	QT_CHECK_EQUAL(HTTP::ExtractFilenameFromUrl("http://vdrift.net/test"), std::string("test"));
-	QT_CHECK_EQUAL(HTTP::ExtractFilenameFromUrl("vdrift.net/test"), std::string("test"));
-	QT_CHECK_EQUAL(HTTP::ExtractFilenameFromUrl("http://www.vdrift.net/test/second"), std::string("second"));
-	QT_CHECK_EQUAL(HTTP::ExtractFilenameFromUrl("http://www.vdrift.net/test/second.txt"), std::string("second.txt"));
-	QT_CHECK_EQUAL(HTTP::ExtractFilenameFromUrl("http://www.vdrift.net/test/second.txt?"), std::string("second.txt"));
-	QT_CHECK_EQUAL(HTTP::ExtractFilenameFromUrl("http://www.vdrift.net/test/second.txt?stuff=hello"), std::string("second.txt"));
-	QT_CHECK_EQUAL(HTTP::ExtractFilenameFromUrl("http://www.vdrift.net/test/e"), std::string("e"));
-	QT_CHECK_EQUAL(HTTP::ExtractFilenameFromUrl("http://www.vdrift.net/test/e?"), std::string("e"));
-	QT_CHECK_EQUAL(HTTP::ExtractFilenameFromUrl("http://www.vdrift.net/test/e???"), std::string("e"));
-	QT_CHECK_EQUAL(HTTP::ExtractFilenameFromUrl("http://www.vdrift.net/test/"), std::string("test"));
-	QT_CHECK_EQUAL(HTTP::ExtractFilenameFromUrl("http://www.vdrift.net/test/?aoeu"), std::string("test"));
+	QT_CHECK_EQUAL(Http::ExtractFilenameFromUrl("vdrift.net"), std::string("vdrift.net"));
+	QT_CHECK_EQUAL(Http::ExtractFilenameFromUrl("http://vdrift.net"), std::string("vdrift.net"));
+	QT_CHECK_EQUAL(Http::ExtractFilenameFromUrl("HTTP://vdrift.net"), std::string("vdrift.net"));
+	QT_CHECK_EQUAL(Http::ExtractFilenameFromUrl("http://vdrift.net/test"), std::string("test"));
+	QT_CHECK_EQUAL(Http::ExtractFilenameFromUrl("vdrift.net/test"), std::string("test"));
+	QT_CHECK_EQUAL(Http::ExtractFilenameFromUrl("http://www.vdrift.net/test/second"), std::string("second"));
+	QT_CHECK_EQUAL(Http::ExtractFilenameFromUrl("http://www.vdrift.net/test/second.txt"), std::string("second.txt"));
+	QT_CHECK_EQUAL(Http::ExtractFilenameFromUrl("http://www.vdrift.net/test/second.txt?"), std::string("second.txt"));
+	QT_CHECK_EQUAL(Http::ExtractFilenameFromUrl("http://www.vdrift.net/test/second.txt?stuff=hello"), std::string("second.txt"));
+	QT_CHECK_EQUAL(Http::ExtractFilenameFromUrl("http://www.vdrift.net/test/e"), std::string("e"));
+	QT_CHECK_EQUAL(Http::ExtractFilenameFromUrl("http://www.vdrift.net/test/e?"), std::string("e"));
+	QT_CHECK_EQUAL(Http::ExtractFilenameFromUrl("http://www.vdrift.net/test/e???"), std::string("e"));
+	QT_CHECK_EQUAL(Http::ExtractFilenameFromUrl("http://www.vdrift.net/test/"), std::string("test"));
+	QT_CHECK_EQUAL(Http::ExtractFilenameFromUrl("http://www.vdrift.net/test/?aoeu"), std::string("test"));
 }
 

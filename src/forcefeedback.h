@@ -30,15 +30,15 @@
 #include <linux/input.h>
 #endif
 
-class FORCEFEEDBACK
+class ForceFeedback
 {
 public:
-	FORCEFEEDBACK(
+	ForceFeedback(
 		const std::string & device,
 		std::ostream & error_output,
 		std::ostream & info_output);
 
-	~FORCEFEEDBACK();
+	~ForceFeedback();
 
 	void update(
 		double force,

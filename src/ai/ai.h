@@ -25,27 +25,27 @@
 #include <vector>
 #include <map>
 
-class AI_Factory;
+class AiFactory;
 
-/// Manages all AI cars.
-class AI
+/// Manages all Ai cars.
+class Ai
 {
 private:
-	std::vector <AI_Car*> AI_Cars;
-	std::map <std::string, AI_Factory*> AI_Factories;
+	std::vector <AiCar*> AI_Cars;
+	std::map <std::string, AiFactory*> AI_Factories;
 	std::vector <float> empty_input;
 
 public:
-	AI();
-	~AI();
+	Ai();
+	~Ai();
 
-	void add_car(CAR * car, float difficulty, const std::string & type = default_type);
-	void remove_car(CAR * car);
+	void add_car(Car * car, float difficulty, const std::string & type = default_type);
+	void remove_car(Car * car);
 	void clear_cars();
-	void update(float dt, const std::list <CAR> & othercars);
-	const std::vector <float>& GetInputs(CAR * car) const; ///< Returns an empty vector if the car isn't AI-controlled.
+	void update(float dt, const std::list <Car> & othercars);
+	const std::vector <float>& GetInputs(Car * car) const; ///< Returns an empty vector if the car isn't AI-controlled.
 
-	void AddAIFactory(const std::string& type_name, AI_Factory* factory);
+	void AddFactory(const std::string& type_name, AiFactory* factory);
 	std::vector<std::string> ListFactoryTypes();
 
 	void Visualize();

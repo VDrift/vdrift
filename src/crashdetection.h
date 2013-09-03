@@ -20,10 +20,10 @@
 #ifndef _CRASHDETECTION_H
 #define _CRASHDETECTION_H
 
-class CRASHDETECTION
+class CrashDetection
 {
 public:
-	CRASHDETECTION();
+	CrashDetection();
 
 	void Update(float vel, float dt);
 

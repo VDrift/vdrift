@@ -24,19 +24,17 @@
 #include "fbtexture.h"
 #include "mathvector.h"
 
-class GRAPHICS_GL2;
+class GraphicsGL2;
 struct tm;
 
 // Sky is double buffered to spread texture updates over multiple frames.
 // Default parameters are for laguna seca raceway.
-class SKY: public TEXTURE_INTERFACE
+class Sky: public TextureInterface
 {
 public:
-	typedef MATHVECTOR<float, 3> VEC3;
+	Sky(GraphicsGL2 & gfx, std::ostream & error);
 
-	SKY(GRAPHICS_GL2 & gfx, std::ostream & error);
-
-	~SKY();
+	~Sky();
 
 	bool Load(const std::string & path);
 
@@ -62,9 +60,9 @@ public:
 	// Force full buffer update and swap
 	void UpdateComplete();
 
-	const VEC3 & GetSunColor() const;
+	const Vec3 & GetSunColor() const;
 
-	const VEC3 & GetSunDirection() const;
+	const Vec3 & GetSunDirection() const;
 
 	float GetZenith() const;
 
@@ -82,17 +80,17 @@ public:
 
 private:
 	std::ostream & error_output;
-	GRAPHICS_GL2 & graphics;
+	GraphicsGL2 & graphics;
 
-	FBOBJECT sky_fbos[2];
-	FBTEXTURE sky_textures[2];	// double buffered sky cube map
+	FrameBufferObject sky_fbos[2];
+	FrameBufferTexture sky_textures[2];	// double buffered sky cube map
 	unsigned texture_active;	// curent frontbuffer id [0, 1]
 	unsigned side_updated;		// currently updated cube map [0, 4]
 	unsigned tile_updated;		// currently updated tile [0, tiles_num)
 
-	VEC3 sundir;
-	VEC3 suncolor;
-	VEC3 wavelength;
+	Vec3 sundir;
+	Vec3 suncolor;
+	Vec3 wavelength;
 	float turbidity;
 	float exposure;
 	float ze;			// solar zenith angle

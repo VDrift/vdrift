@@ -28,18 +28,18 @@
 #define OBJECTS_PER_NODE 64
 
 template <typename T>
-class AABB_SPACE_PARTITIONING_NODE_ADAPTER
+class AabbTreeNodeAdapter
 {
-friend class STATICDRAWABLES;
+friend class StaticDrawables;
 public:
-	AABB_SPACE_PARTITIONING_NODE_ADAPTER() : count(0) {}
+	AabbTreeNodeAdapter() : count(0) {}
 
 	void push_back(T * drawable)
 	{
-		MATHVECTOR <float, 3> objpos(drawable->GetObjectCenter());
+		Vec3 objpos(drawable->GetObjectCenter());
 		drawable->GetTransform().TransformVectorOut(objpos[0],objpos[1],objpos[2]);
 		float radius = drawable->GetRadius();
-		AABB <float> box;
+		Aabb <float> box;
 		box.SetFromSphere(objpos, radius);
 		spacetree.Add(drawable, box);
 	}
@@ -50,33 +50,33 @@ public:
 	void Query(const U & object, std::vector <T*> & output) const {spacetree.Query(object, output);}
 
 private:
-	AABB_SPACE_PARTITIONING_NODE <T*,OBJECTS_PER_NODE> spacetree;
+	AabbTreeNode <T*,OBJECTS_PER_NODE> spacetree;
 	unsigned int count; ///< cached from spacetree.size()
 };
 
-class STATICDRAWABLES
+class StaticDrawables
 {
 public:
-	void Generate(SCENENODE & node, bool clearfirst = true)
+	void Generate(SceneNode & node, bool clearfirst = true)
 	{
 		if (clearfirst)
 			drawables.clear();
 
-		MATRIX4 <float> identity;
+		Matrix4 <float> identity;
 		node.Traverse(drawables, identity);
 
 		drawables.ForEach(OptimizeFunctor());
 	}
 
-	DRAWABLE_CONTAINER <AABB_SPACE_PARTITIONING_NODE_ADAPTER> & GetDrawlist() {return drawables;}
+	DrawableContainer <AabbTreeNodeAdapter> & GetDrawlist() {return drawables;}
 
 private:
-	DRAWABLE_CONTAINER <AABB_SPACE_PARTITIONING_NODE_ADAPTER> drawables;
+	DrawableContainer <AabbTreeNodeAdapter> drawables;
 
 	struct OptimizeFunctor
 	{
 		template <typename T>
-		void operator()(AABB_SPACE_PARTITIONING_NODE_ADAPTER <T> & container)
+		void operator()(AabbTreeNodeAdapter <T> & container)
 		{
 			container.Optimize();
 		}

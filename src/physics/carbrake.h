@@ -26,7 +26,7 @@
 
 #include <iostream>
 
-class CARBRAKE
+class CarBrake
 {
 	friend class joeserialize::Serializer;
 	private:
@@ -49,7 +49,7 @@ class CARBRAKE
 
 	public:
 		//default constructor makes an S2000-like car
-		CARBRAKE() :
+		CarBrake() :
 			friction(0.73),
 			max_pressure(4e6),
 			radius(0.14),

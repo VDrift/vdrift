@@ -19,12 +19,12 @@
 
 #include "text_draw.h"
 
-float TEXT_DRAW::RenderCharacter(
-	const FONT & font, char c,
+float TextDraw::RenderCharacter(
+	const Font & font, char c,
 	float x, float y, float scalex, float scaley,
-	VERTEXARRAY & output_array)
+	VertexArray & output_array)
 {
-	const FONT::CHARINFO * ci = 0;
+	const Font::CharInfo * ci = 0;
 	if (!font.GetCharInfo(c, ci)) return 0;
 
 	float invsize = font.GetInvSize();
@@ -58,10 +58,10 @@ float TEXT_DRAW::RenderCharacter(
 	return ci->xadvance * invsize * scalex;
 }
 
-float TEXT_DRAW::RenderText(
-	const FONT & font, const std::string & text,
+float TextDraw::RenderText(
+	const Font & font, const std::string & text,
 	float x, float y, float scalex, float scaley,
-	VERTEXARRAY & output_array)
+	VertexArray & output_array)
 {
 	output_array.Clear();
 	float cursorx = x;
@@ -81,12 +81,12 @@ float TEXT_DRAW::RenderText(
 	return cursorx;
 }
 
-void TEXT_DRAW::SetText(
-	DRAWABLE & draw,
-	const FONT & font, const std::string & text,
+void TextDraw::SetText(
+	Drawable & draw,
+	const Font & font, const std::string & text,
 	float x, float y, float scalex, float scaley,
 	float r, float g, float b,
-	VERTEXARRAY & output_array)
+	VertexArray & output_array)
 {
 	RenderText(font, text, x, y, scalex, scaley, output_array);
 	draw.SetDiffuseMap(font.GetFontTexture());
@@ -95,14 +95,14 @@ void TEXT_DRAW::SetText(
 	draw.SetColor(r, g, b, 1.0);
 }
 
-TEXT_DRAW::TEXT_DRAW() : oldx(0), oldy(0), oldscalex(1), oldscaley(1)
+TextDraw::TextDraw() : oldx(0), oldy(0), oldscalex(1), oldscaley(1)
 {
 	// ctor
 }
 
-void TEXT_DRAW::Set(
-	DRAWABLE & draw,
-	const FONT & font, const std::string & newtext,
+void TextDraw::Set(
+	Drawable & draw,
+	const Font & font, const std::string & newtext,
 	float x,  float y, float newscalex, float newscaley,
 	float r, float g, float b)
 {
@@ -114,8 +114,8 @@ void TEXT_DRAW::Set(
 	oldscaley = newscaley;
 }
 
-void TEXT_DRAW::Revise(
-	const FONT & font, const std::string & newtext,
+void TextDraw::Revise(
+	const Font & font, const std::string & newtext,
 	float x, float y, float scalex, float scaley)
 {
 	RenderText(font, newtext, x, y, scalex, scaley, varray);
@@ -126,7 +126,7 @@ void TEXT_DRAW::Revise(
 	oldscaley = scaley;
 }
 
-void TEXT_DRAW::Revise(const FONT & font, const std::string & newtext)
+void TextDraw::Revise(const Font & font, const std::string & newtext)
 {
 	Revise(font, newtext, oldx, oldy, oldscalex, oldscaley);
 	text = newtext;

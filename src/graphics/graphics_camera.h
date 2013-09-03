@@ -23,20 +23,20 @@
 #include "mathvector.h"
 #include "quaternion.h"
 
-struct GRAPHICS_CAMERA
+struct GraphicsCamera
 {
 	float fov;
 	float view_distance;
-	MATHVECTOR <float, 3> pos;
-	QUATERNION <float> orient;
+	Vec3 pos;
+	Quat orient;
 	float w;
 	float h;
 
 	bool orthomode;
-	MATHVECTOR <float, 3> orthomin;
-	MATHVECTOR <float, 3> orthomax;
+	Vec3 orthomin;
+	Vec3 orthomax;
 
-	GRAPHICS_CAMERA() :
+	GraphicsCamera() :
 		fov(45),
 		view_distance(10000),
 		w(1),

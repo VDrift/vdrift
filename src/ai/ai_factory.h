@@ -20,15 +20,15 @@
 #ifndef _AI_FACTORY_H
 #define _AI_FACTORY_H
 
-class CAR;
-class AI_Car;
+class Car;
+class AiCar;
 
 /// Abstract Factory for the AI implementations
-class AI_Factory
+class AiFactory
 {
 public:
-	virtual AI_Car* create(CAR * car, float difficulty) = 0;
-	virtual ~AI_Factory() {};
+	virtual AiCar* create(Car * car, float difficulty) = 0;
+	virtual ~AiFactory() {};
 };
 
 #endif // _AI_FACTORY_H

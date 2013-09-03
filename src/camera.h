@@ -26,12 +26,12 @@
 #include <string>
 
 ///base class for a camera
-class CAMERA
+class Camera
 {
 public:
-	CAMERA(const std::string & camera_name) : name(camera_name), fov(0) {}
+	Camera(const std::string & camera_name) : name(camera_name), fov(0) {}
 
-	virtual ~CAMERA() {}
+	virtual ~Camera() {}
 
 	const std::string & GetName() const { return name; }
 
@@ -39,15 +39,15 @@ public:
 
 	float GetFOV() const { return fov; }
 
-	virtual const MATHVECTOR <float, 3> & GetPosition() const { return position; }
+	virtual const Vec3 & GetPosition() const { return position; }
 
-	virtual const QUATERNION <float> & GetOrientation() const { return rotation; }
+	virtual const Quat & GetOrientation() const { return rotation; }
 
 	// reset position, orientation
-	virtual void Reset(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newquat) {};
+	virtual void Reset(const Vec3 & newpos, const Quat & newquat) {};
 
 	// update position, orientation
-	virtual void Update(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newquat, float dt) {};
+	virtual void Update(const Vec3 & newpos, const Quat & newquat, float dt) {};
 
 	// move relative to current position, orientation
 	virtual void Move(float dx, float dy, float dz) {};
@@ -57,12 +57,12 @@ public:
 
 protected:
 	const std::string name;
-	MATHVECTOR <float, 3> position;
-	QUATERNION <float> rotation;
+	Vec3 position;
+	Quat rotation;
 	float fov;
 };
 
-inline float AngleBetween(MATHVECTOR <float, 3> vec1, MATHVECTOR <float, 3> vec2)
+inline float AngleBetween(Vec3 vec1, Vec3 vec2)
 {
 	float dotprod = vec1.Normalize().dot(vec2.Normalize());
 	float angle = acos(dotprod);
@@ -73,29 +73,29 @@ inline float AngleBetween(MATHVECTOR <float, 3> vec1, MATHVECTOR <float, 3> vec2
 	return angle;
 }
 
-inline QUATERNION <float> LookAt(
-	MATHVECTOR <float, 3> eye,
-	MATHVECTOR <float, 3> center,
-	MATHVECTOR <float, 3> up)
+inline Quat LookAt(
+	Vec3 eye,
+	Vec3 center,
+	Vec3 up)
 {
-	QUATERNION <float> rotation;
+	Quat rotation;
 
-	MATHVECTOR <float, 3> forward(center - eye);
+	Vec3 forward(center - eye);
 	forward = forward.Normalize();
-	MATHVECTOR <float, 3> side = (forward.cross(up)).Normalize();
-	MATHVECTOR <float, 3> realup = side.cross(forward);
+	Vec3 side = (forward.cross(up)).Normalize();
+	Vec3 realup = side.cross(forward);
 
 	//rotate so the camera is pointing along the forward line
-	float theta = AngleBetween(forward, direction::Forward);
+	float theta = AngleBetween(forward, Direction::Forward);
 	assert(theta == theta);
 	if (fabs(theta) > 0.001)
 	{
-		MATHVECTOR <float, 3> axis = forward.cross(direction::Forward).Normalize();
+		Vec3 axis = forward.cross(Direction::Forward).Normalize();
 		rotation.Rotate(-theta, axis[0], axis[1], axis[2]);
 	}
 
 	//now rotate the camera so it's pointing up
-	MATHVECTOR <float, 3> curup = direction::Up;
+	Vec3 curup = Direction::Up;
 	rotation.RotateVector(curup);
 
 	float rollangle = AngleBetween(realup, curup);
@@ -105,7 +105,7 @@ inline QUATERNION <float> LookAt(
 	}
 	assert(rollangle == rollangle);
 
-	MATHVECTOR <float, 3> axis = forward;
+	Vec3 axis = forward;
 	rotation.Rotate(rollangle, axis[0], axis[1], axis[2]);
 
 	return rotation;

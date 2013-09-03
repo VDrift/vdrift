@@ -33,7 +33,7 @@
 #include <iostream>
 #include <fstream>
 
-class ROADSTRIP;
+class RoadStrip;
 
 class K1999
 {
@@ -60,9 +60,9 @@ private:
 #endif
 
 public:
-	bool LoadData(const ROADSTRIP & road);
+	bool LoadData(const RoadStrip & road);
 	void CalcRaceLine();
-	void UpdateRoadStrip(ROADSTRIP & road);
+	void UpdateRoadStrip(RoadStrip & road);
 };
 
 #endif //_K1999_H

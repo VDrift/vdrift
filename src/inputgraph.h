@@ -25,14 +25,14 @@
 
 #include <string>
 
-class INPUTGRAPH
+class InputGraph
 {
 private:
-	SCENENODE graphroot;
-	SPRITE2D vslider;
-	SPRITE2D hslider;
-	SPRITE2D vball;
-	SPRITE2D hball;
+	SceneNode graphroot;
+	Sprite2D vslider;
+	Sprite2D hslider;
+	Sprite2D vball;
+	Sprite2D hball;
 	float hwidth;
 	float vheight;
 
@@ -74,12 +74,12 @@ public:
 
 	void Update(const std::vector <float> & inputs)
 	{
-		const float throttle = inputs[CARINPUT::THROTTLE]-inputs[CARINPUT::BRAKE];
-		float steer_value = inputs[CARINPUT::STEER_RIGHT];
-		MATHVECTOR<float,3> translation;
+		const float throttle = inputs[CarInput::THROTTLE]-inputs[CarInput::BRAKE];
+		float steer_value = inputs[CarInput::STEER_RIGHT];
+		Vec3 translation;
 
-		if (std::abs(inputs[CARINPUT::STEER_LEFT]) > std::abs(inputs[CARINPUT::STEER_RIGHT])) //use whichever control is larger
-			steer_value = -inputs[CARINPUT::STEER_LEFT];
+		if (std::abs(inputs[CarInput::STEER_LEFT]) > std::abs(inputs[CarInput::STEER_RIGHT])) //use whichever control is larger
+			steer_value = -inputs[CarInput::STEER_LEFT];
 
 		translation = hball.GetTransform(graphroot).GetTranslation();
 		translation[0] = steer_value*hwidth/2.7;
@@ -99,7 +99,7 @@ public:
 		SetVisible(true);
 	}
 
-	SCENENODE & GetNode() {return graphroot;}
+	SceneNode & GetNode() {return graphroot;}
 };
 
 #endif

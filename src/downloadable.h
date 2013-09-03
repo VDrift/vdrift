@@ -25,7 +25,7 @@
 #include <vector>
 
 /// A dictionary of downloadable assets.
-class DOWNLOADABLEMANAGER
+class DownloadableManager
 {
 public:
 	/// Initialize using the provided filename as the record-keeping method.

@@ -24,24 +24,24 @@
 
 //#define GAUGES
 
-static keyed_container<DRAWABLE>::handle AddDrawable(SCENENODE & node)
+static keyed_container<Drawable>::handle AddDrawable(SceneNode & node)
 {
-	return node.GetDrawlist().twodim.insert(DRAWABLE());
+	return node.GetDrawlist().twodim.insert(Drawable());
 }
 
-static DRAWABLE & GetDrawable(SCENENODE & node, const keyed_container <DRAWABLE>::handle & drawhandle)
+static Drawable & GetDrawable(SceneNode & node, const keyed_container <Drawable>::handle & drawhandle)
 {
 	return node.GetDrawlist().twodim.get(drawhandle);
 }
 
-static keyed_container <DRAWABLE>::handle SetupText(
-	SCENENODE & parent, TEXT_DRAW & textdraw,
-	const std::string & str, const FONT & font,
+static keyed_container <Drawable>::handle SetupText(
+	SceneNode & parent, TextDraw & textdraw,
+	const std::string & str, const Font & font,
 	float x, float y, float scalex, float scaley,
 	float r, float g , float b, float zorder = 0)
 {
-	keyed_container<DRAWABLE>::handle draw = parent.GetDrawlist().text.insert(DRAWABLE());
-	DRAWABLE & drawref = parent.GetDrawlist().text.get(draw);
+	keyed_container<Drawable>::handle draw = parent.GetDrawlist().text.insert(Drawable());
+	Drawable & drawref = parent.GetDrawlist().text.get(draw);
 	textdraw.Set(drawref, font, str, x, y, scalex, scaley, r, g, b);
 	drawref.SetDrawOrder(zorder);
 	return draw;
@@ -68,11 +68,11 @@ static void GetTimeString(float time, std::string & outtime)
 
 enum HUDStrEnum
 {
-	LAPTIME, LASTLAP, BESTLAP, SCORE, LAP, PLACE,
+	LAPTIME, LASTLAP, BESTLAP, SCORE, LAP, Place,
 	READY, GO, YOUWON, YOULOST, MPH, KPH, STRNUM
 };
 
-HUD::HUD() :
+Hud::Hud() :
 	maxrpm(9000),
 	maxspeed(240),
 	speedscale(3.6),
@@ -84,11 +84,11 @@ HUD::HUD() :
 	// ctor
 }
 
-bool HUD::Init(
+bool Hud::Init(
 	const std::string & texturepath,
-	const GUILANGUAGE & lang,
-	const FONT & sansfont,
-	const FONT & lcdfont,
+	const GuiLanguage & lang,
+	const Font & sansfont,
+	const Font & lcdfont,
 	float displaywidth,
 	float displayheight,
 	bool debugon,
@@ -106,7 +106,7 @@ bool HUD::Init(
 	str[BESTLAP] = lang("Best lap:");
 	str[SCORE] = lang("Score:");
 	str[LAP] = lang("Lap:");
-	str[PLACE] = lang("Place:");
+	str[Place] = lang("Place:");
 	str[READY] = lang("Ready");
 	str[GO] = lang("GO");
 	str[YOUWON] = lang("You won!");
@@ -115,18 +115,18 @@ bool HUD::Init(
 	str[KPH] = lang("KPH");
 
 	infonode = hudroot.AddNode();
-	SCENENODE & infonoderef = hudroot.GetNode(infonode);
+	SceneNode & infonoderef = hudroot.GetNode(infonode);
 
-	TEXTUREINFO boxtexinfo;
+	TextureInfo boxtexinfo;
 	boxtexinfo.mipmap = false;
 	boxtexinfo.repeatu = true;
 	boxtexinfo.repeatv = false;
-	std::tr1::shared_ptr<TEXTURE> boxtex;
+	std::tr1::shared_ptr<Texture> boxtex;
 	content.load(boxtex, texturepath, "timerbox.png", boxtexinfo);
 
 	{
 		timerboxdraw = AddDrawable(infonoderef);
-		DRAWABLE & timerboxdrawref = GetDrawable(infonoderef, timerboxdraw);
+		Drawable & timerboxdrawref = GetDrawable(infonoderef, timerboxdraw);
 
 		float timerboxdimx = 96.0 / displaywidth;
 		float timerboxdimy = 60.0 / displayheight;
@@ -178,7 +178,7 @@ bool HUD::Init(
 
 	{
 		infoboxdraw = AddDrawable(infonoderef);
-		DRAWABLE & infoboxdrawref = GetDrawable(infonoderef, infoboxdraw);
+		Drawable & infoboxdrawref = GetDrawable(infonoderef, infoboxdraw);
 
 		float infoboxdimx = 60.0 / displaywidth;
 		float infoboxdimy = 60.0 / displayheight;
@@ -206,7 +206,7 @@ bool HUD::Init(
 		infoboxdrawref.SetColor(1, 1, 1, opacity);
 		infoboxdrawref.SetDrawOrder(0.1);
 
-		place_label.Init(infonoderef, sansfont, str[PLACE], x0, y0, fontscalex, fontscaley);
+		place_label.Init(infonoderef, sansfont, str[Place], x0, y0, fontscalex, fontscaley);
 		place_label.SetDrawOrder(infonoderef, 0.2);
 
 		lap_label.Init(infonoderef, sansfont, str[LAP], x1, y0, fontscalex, fontscaley);
@@ -243,7 +243,7 @@ bool HUD::Init(
 		float fontscalex = screenhwratio * fontscaley;
 
 		debugnode = hudroot.AddNode();
-		SCENENODE & debugnoderef = hudroot.GetNode(debugnode);
+		SceneNode & debugnoderef = hudroot.GetNode(debugnode);
 		debugtextdraw1 = SetupText(debugnoderef, debugtext1, "", sansfont, 0.01, fontscaley, fontscalex, fontscaley, 1, 1, 1, 10);
 		debugtextdraw2 = SetupText(debugnoderef, debugtext2, "", sansfont, 0.25, fontscaley, fontscalex, fontscaley, 1, 1, 1, 10);
 		debugtextdraw3 = SetupText(debugnoderef, debugtext3, "", sansfont, 0.50, fontscaley, fontscalex, fontscaley, 1, 1, 1, 10);
@@ -251,12 +251,12 @@ bool HUD::Init(
 	}
 
 #ifndef GAUGES
-	TEXTUREINFO texinfo;
+	TextureInfo texinfo;
 	texinfo.mipmap = false;
 	texinfo.repeatu = false;
 	texinfo.repeatv = false;
 
-	std::tr1::shared_ptr<TEXTURE> bartex, progbartex;
+	std::tr1::shared_ptr<Texture> bartex, progbartex;
 	content.load(bartex, texturepath, "hudbox.png", texinfo);
 	content.load(progbartex, texturepath, "progressbar.png", texinfo);
 
@@ -264,21 +264,21 @@ bool HUD::Init(
 	rpmredbar = AddDrawable(hudroot);
 	rpmbox = AddDrawable(hudroot);
 
-	DRAWABLE & rpmboxref = GetDrawable(hudroot, rpmbox);
+	Drawable & rpmboxref = GetDrawable(hudroot, rpmbox);
 	rpmboxref.SetDiffuseMap(progbartex);
 	rpmboxref.SetVertArray(&rpmboxverts);
 	rpmboxref.SetDrawOrder(2);
 	rpmboxref.SetCull(false, false);
 	rpmboxref.SetColor(0.3, 0.3, 0.3, 0.4);
 
-	DRAWABLE & rpmbarref = GetDrawable(hudroot, rpmbar);
+	Drawable & rpmbarref = GetDrawable(hudroot, rpmbar);
 	rpmbarref.SetDiffuseMap(progbartex);
 	rpmbarref.SetVertArray(&rpmbarverts);
 	rpmbarref.SetDrawOrder(3);
 	rpmbarref.SetCull(false, false);
 	rpmbarref.SetColor(1.0, 1.0, 1.0, 0.7);
 
-	DRAWABLE & rpmredbarref = GetDrawable(hudroot, rpmredbar);
+	Drawable & rpmredbarref = GetDrawable(hudroot, rpmredbar);
 	rpmredbarref.SetDiffuseMap(progbartex);
 	rpmredbarref.SetVertArray(&rpmredbarverts);
 	rpmredbarref.SetColor(1.0, 0.2, 0.2, 0.7);
@@ -286,11 +286,11 @@ bool HUD::Init(
 	rpmredbarref.SetCull(false, false);
 
 	//lower left bar
-	bars.push_back(HUDBAR());
+	bars.push_back(HudBar());
 	bars.back().Set(hudroot, bartex, 0.0 + barwidth * 0.5, 1.0-barheight*0.5, barwidth, barheight, opacity, false);
 
 	//lower right bar
-	bars.push_back(HUDBAR());
+	bars.push_back(HudBar());
 	bars.back().Set(hudroot, bartex, 1.0 - barwidth * 0.175, 1.0-barheight*0.5, barwidth, barheight, opacity, false);
 
 	{
@@ -340,7 +340,7 @@ bool HUD::Init(
 		tinfo.height = 1;
 		tinfo.bytespp = 4;
 		tinfo.mipmap = false;
-		std::tr1::shared_ptr<TEXTURE> texture;
+		std::tr1::shared_ptr<Texture> texture;
 		content.load(texture, "", "white1x1", tinfo);
 
 		float r = 0.12;
@@ -362,21 +362,21 @@ bool HUD::Init(
 		float h = h0;
 		float x = x0 - gaugefont.GetWidth("rpm") * w * 0.5;
 		float y = y0 - r * 0.5;
-		DRAWABLE & rpmd = GetDrawable(hudroot, AddDrawable(hudroot));
+		Drawable & rpmd = GetDrawable(hudroot, AddDrawable(hudroot));
 		rpmlabel.Set(rpmd, gaugefont, "rpm", x, y, w, h, 1, 1, 1);
 
 		w = w0 * 0.65;
 		h = h0 * 0.65;
 		x = x0 - gaugefont.GetWidth("x1000") * w * 0.5;
 		y = y0 - r * 0.5 + h;
-		DRAWABLE & x1000d = GetDrawable(hudroot, AddDrawable(hudroot));
+		Drawable & x1000d = GetDrawable(hudroot, AddDrawable(hudroot));
 		rpmxlabel.Set(x1000d, gaugefont, "x1000", x, y, w, h, 1, 1, 1);
 
 		w = w0;
 		h = h0;
 		x = x1 - gaugefont.GetWidth("kph") * w * 0.5;
 		y = y0 - r * 0.5;
-		DRAWABLE & spdd = GetDrawable(hudroot, AddDrawable(hudroot));
+		Drawable & spdd = GetDrawable(hudroot, AddDrawable(hudroot));
 		speedlabel.Set(spdd, gaugefont, "kph", x, y, w, h, 1, 1, 1);
 
 		w = w0 * 2;
@@ -425,8 +425,8 @@ bool HUD::Init(
 	return true;
 }
 
-void HUD::Update(
-	const FONT & sansfont, const FONT & lcdfont,
+void Hud::Update(
+	const Font & sansfont, const Font & lcdfont,
 	float displaywidth, float displayheight,
 	float curlap, float lastlap, float bestlap, float stagingtimeleft,
 	int curlapnum, int numlaps, int curplace, int numcars,
@@ -489,7 +489,7 @@ void HUD::Update(
 
 	float geartext_alpha = clutch * 0.5 + 0.5;
 	if (newgear == 0) geartext_alpha = 1;
-	DRAWABLE & geartextdrawref = hudroot.GetDrawlist().text.get(geartextdraw);
+	Drawable & geartextdrawref = hudroot.GetDrawlist().text.get(geartextdraw);
 	geartextdrawref.SetColor(1, 1, 1, geartext_alpha);
 
 	// speed
@@ -512,7 +512,7 @@ void HUD::Update(
 	geartext.Revise(lcdfont, gearstr.str());
 
 	float geartext_alpha = (newgear == 0) ? 1 : clutch * 0.5 + 0.5;
-	DRAWABLE & geartextdrawref = hudroot.GetDrawlist().text.get(geartextdraw);
+	Drawable & geartextdrawref = hudroot.GetDrawlist().text.get(geartextdraw);
 	geartextdrawref.SetColor(1, 1, 1, geartext_alpha);
 
 	float rpmpercent = std::min(1.0f, rpm / maxrpm);
@@ -687,12 +687,12 @@ void HUD::Update(
 	}
 }
 
-SCENENODE & HUD::GetNode()
+SceneNode & Hud::GetNode()
 {
 	return hudroot;
 }
 
-void HUD::SetVisible(bool value)
+void Hud::SetVisible(bool value)
 {
 	if (value != lastvisible)
 	{
@@ -703,7 +703,7 @@ void HUD::SetVisible(bool value)
 	}
 }
 
-void HUD::SetDebugVisible(bool value)
+void Hud::SetDebugVisible(bool value)
 {
 	hudroot.GetNode(debugnode).SetChildVisibility(value);
 }

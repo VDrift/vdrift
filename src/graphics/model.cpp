@@ -23,15 +23,15 @@
 #include "glutil.h"
 #include <limits>
 
-using namespace VERTEX_ATTRIBS;
+using namespace VertexAttribs;
 
-#define ERROR_CHECK GLUTIL::CheckForOpenGLErrors(std::string(__PRETTY_FUNCTION__)+":"+__FILE__+":"+UTILS::tostr(__LINE__), error_output)
+#define ERROR_CHECK CheckForOpenGLErrors(std::string(__PRETTY_FUNCTION__)+":"+__FILE__+":"+Utils::tostr(__LINE__), error_output)
 
 static const std::string file_magic = "OGLVARRAYV01";
 
 static const bool vaoDebug = false;
 
-MODEL::MODEL() :
+Model::Model() :
 	vao(0),
 	elementVbo(0),
 	elementCount(0),
@@ -43,7 +43,7 @@ MODEL::MODEL() :
 	// Constructor.
 }
 
-MODEL::MODEL(const std::string & filepath, std::ostream & error_output) :
+Model::Model(const std::string & filepath, std::ostream & error_output) :
 	vao(0),
 	elementVbo(0),
 	elementCount(0),
@@ -58,27 +58,27 @@ MODEL::MODEL(const std::string & filepath, std::ostream & error_output) :
 		Load(filepath, error_output, false);
 }
 
-MODEL::~MODEL()
+Model::~Model()
 {
 	Clear();
 }
 
-bool MODEL::CanSave() const
+bool Model::CanSave() const
 {
 	return false;
 }
 
-bool MODEL::Save(const std::string & strFileName, std::ostream & error_output) const
+bool Model::Save(const std::string & strFileName, std::ostream & error_output) const
 {
 	return false;
 }
 
-bool MODEL::Load(const std::string & strFileName, std::ostream & error_output, bool genlist)
+bool Model::Load(const std::string & strFileName, std::ostream & error_output, bool genlist)
 {
 	return false;
 }
 
-bool MODEL::Load(const VERTEXARRAY & varray, std::ostream & error_output, bool genlist)
+bool Model::Load(const VertexArray & varray, std::ostream & error_output, bool genlist)
 {
 	BuildFromVertexArray(varray);
 	if (genlist)
@@ -88,13 +88,13 @@ bool MODEL::Load(const VERTEXARRAY & varray, std::ostream & error_output, bool g
 	return true;
 }
 
-bool MODEL::Serialize(joeserialize::Serializer & s)
+bool Model::Serialize(joeserialize::Serializer & s)
 {
 	_SERIALIZE_(s, m_mesh);
 	return true;
 }
 
-bool MODEL::WriteToFile(const std::string & filepath)
+bool Model::WriteToFile(const std::string & filepath)
 {
 	std::ofstream fileout(filepath.c_str());
 	if (!fileout)
@@ -105,7 +105,7 @@ bool MODEL::WriteToFile(const std::string & filepath)
 	return Serialize(s);
 }
 
-bool MODEL::ReadFromFile(const std::string & filepath, std::ostream & error_output, bool generatelistid)
+bool Model::ReadFromFile(const std::string & filepath, std::ostream & error_output, bool generatelistid)
 {
 	std::ifstream filein(filepath.c_str(), std::ios_base::binary);
 	if (!filein)
@@ -146,7 +146,7 @@ bool MODEL::ReadFromFile(const std::string & filepath, std::ostream & error_outp
 	return true;
 }
 
-void MODEL::GenerateListID(std::ostream & error_output)
+void Model::GenerateListID(std::ostream & error_output)
 {
 	if (HaveListID())
 		return;
@@ -189,7 +189,7 @@ void MODEL::GenerateListID(std::ostream & error_output)
 	glDisableClientState(GL_NORMAL_ARRAY);
 	glDisableClientState(GL_VERTEX_ARRAY);
 
-	GLUTIL::CheckForOpenGLErrors("model list ID generation", error_output);
+	CheckForOpenGLErrors("model list ID generation", error_output);
 }
 
 template <typename T>
@@ -212,7 +212,7 @@ GLuint GenerateBufferObject(
 	return vboHandle;
 }
 
-void MODEL::GenerateVertexArrayObject(std::ostream & error_output)
+void Model::GenerateVertexArrayObject(std::ostream & error_output)
 {
 	if (generatedvao)
 		return;
@@ -295,12 +295,12 @@ void MODEL::GenerateVertexArrayObject(std::ostream & error_output)
 	generatedvao = true;
 }
 
-bool MODEL::HaveVertexArrayObject() const
+bool Model::HaveVertexArrayObject() const
 {
 	return generatedvao;
 }
 
-void MODEL::ClearVertexArrayObject()
+void Model::ClearVertexArrayObject()
 {
 	if (generatedvao)
 	{
@@ -326,7 +326,7 @@ void MODEL::ClearVertexArrayObject()
 	listid = 0;
 }
 
-bool MODEL::GetVertexArrayObject(GLuint & vao_out, unsigned int & elementCount_out) const
+bool Model::GetVertexArrayObject(GLuint & vao_out, unsigned int & elementCount_out) const
 {
 	if (!generatedvao)
 		return false;
@@ -337,7 +337,7 @@ bool MODEL::GetVertexArrayObject(GLuint & vao_out, unsigned int & elementCount_o
 	return true;
 }
 
-void MODEL::GenerateMeshMetrics()
+void Model::GenerateMeshMetrics()
 {
 	const float flt_max = std::numeric_limits<float>::max();
 	const float flt_min = std::numeric_limits<float>::min();
@@ -367,49 +367,49 @@ void MODEL::GenerateMeshMetrics()
 	generatedmetrics = true;
 }
 
-void MODEL::ClearMeshData()
+void Model::ClearMeshData()
 {
 	m_mesh.Clear();
 }
 
-unsigned MODEL::GetListID() const
+unsigned Model::GetListID() const
 {
 	RequireListID();
 	return listid;
 }
 
-MATHVECTOR <float, 3> MODEL::GetSize() const
+Vec3 Model::GetSize() const
 {
 	return max - min;
 }
 
-MATHVECTOR <float, 3> MODEL::GetCenter() const
+Vec3 Model::GetCenter() const
 {
 	return (max + min) * 0.5f;
 }
 
-float MODEL::GetRadius() const
+float Model::GetRadius() const
 {
 	RequireMetrics();
 	return radius;
 }
 
-bool MODEL::HaveMeshData() const
+bool Model::HaveMeshData() const
 {
 	return (m_mesh.GetNumFaces() > 0);
 }
 
-bool MODEL::HaveMeshMetrics() const
+bool Model::HaveMeshMetrics() const
 {
 	return generatedmetrics;
 }
 
-bool MODEL::HaveListID() const
+bool Model::HaveListID() const
 {
 	return listid;
 }
 
-void MODEL::Clear()
+void Model::Clear()
 {
 	ClearMeshData();
 	ClearListID();
@@ -417,48 +417,48 @@ void MODEL::Clear()
 	ClearMetrics();
 }
 
-const VERTEXARRAY & MODEL::GetVertexArray() const
+const VertexArray & Model::GetVertexArray() const
 {
 	return m_mesh;
 }
 
-void MODEL::SetVertexArray(const VERTEXARRAY & newmesh)
+void Model::SetVertexArray(const VertexArray & newmesh)
 {
 	Clear();
 	m_mesh = newmesh;
 }
 
-void MODEL::BuildFromVertexArray(const VERTEXARRAY & newmesh)
+void Model::BuildFromVertexArray(const VertexArray & newmesh)
 {
 	SetVertexArray(newmesh);
 	GenerateMeshMetrics();
 }
 
-bool MODEL::Loaded()
+bool Model::Loaded()
 {
 	return (m_mesh.GetNumFaces() > 0);
 }
 
-void MODEL::RequireMetrics() const
+void Model::RequireMetrics() const
 {
 	// Mesh metrics need to be generated before they can be queried.
 	assert(generatedmetrics);
 }
 
-void MODEL::RequireListID() const
+void Model::RequireListID() const
 {
 	// Mesh id needs to be generated.
 	assert(listid);
 }
 
-void MODEL::ClearListID()
+void Model::ClearListID()
 {
 	if (listid)
 		glDeleteLists(listid, 1);
 	listid = 0;
 }
 
-void MODEL::ClearMetrics()
+void Model::ClearMetrics()
 {
 	generatedmetrics = false;
 }

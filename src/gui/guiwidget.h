@@ -23,27 +23,27 @@
 #include "signalslot.h"
 #include <string>
 
-class SCENENODE;
-class DRAWABLE;
+class SceneNode;
+class Drawable;
 
 /// Widget base class
-class GUIWIDGET
+class GuiWidget
 {
 public:
 	/// base destructor
-	virtual ~GUIWIDGET() {};
+	virtual ~GuiWidget() {};
 
 	/// update widget state
-	virtual void Update(SCENENODE & scene, float dt);
+	virtual void Update(SceneNode & scene, float dt);
 
 	/// scale widget alpha [0, 1]
-	virtual void SetAlpha(SCENENODE & scene, float value);
+	virtual void SetAlpha(SceneNode & scene, float value);
 
 	/// override visibility
-	virtual void SetVisible(SCENENODE & scene, bool value);
+	virtual void SetVisible(SceneNode & scene, bool value);
 
 	/// todo: need to ge rid of this one
-	virtual DRAWABLE & GetDrawable(SCENENODE & scene) = 0;
+	virtual Drawable & GetDrawable(SceneNode & scene) = 0;
 
 	/// properties
 	void SetHSV(float h, float s, float v);
@@ -71,7 +71,7 @@ protected:
 	bool m_visible;
 	bool m_update;
 
-	GUIWIDGET();
+	GuiWidget();
 };
 
 #endif // _GUIWIDGET_H

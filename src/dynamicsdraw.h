@@ -51,15 +51,15 @@ public:
 
 	int getDebugMode() const;
 
-	SCENENODE & getNode();
+	SceneNode & getNode();
 
 	// clear vertexarray after drawing
 	void clear();
 
 private:
-	VERTEXARRAY m_contacts;
-	VERTEXARRAY m_shapes;
-	SCENENODE m_node;
+	VertexArray m_contacts;
+	VertexArray m_shapes;
+	SceneNode m_node;
 	int m_debugMode;
 };
 

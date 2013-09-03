@@ -22,7 +22,7 @@
 DynamicsDraw::DynamicsDraw() :
 	m_debugMode(DBG_NoDebug)
 {
-	DRAWABLE drawable;
+	Drawable drawable;
 	drawable.SetLineSize(1.0);
 	drawable.SetDrawEnable(true);
 
@@ -91,7 +91,7 @@ int DynamicsDraw::getDebugMode() const
 	return m_debugMode;
 }
 
-SCENENODE & DynamicsDraw::getNode()
+SceneNode & DynamicsDraw::getNode()
 {
 	return m_node;
 }

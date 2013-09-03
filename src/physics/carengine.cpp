@@ -21,7 +21,7 @@
 #include "cfg/ptree.h"
 #include "linearinterp.h"
 
-CARENGINEINFO::CARENGINEINFO():
+CarEngineInfo::CarEngineInfo():
 	redline(7800),
 	rpm_limit(9000),
 	idle(0.02),
@@ -38,7 +38,7 @@ CARENGINEINFO::CARENGINEINFO():
 	// ctor
 }
 
-bool CARENGINEINFO::Load(const PTree & cfg, std::ostream & error_output)
+bool CarEngineInfo::Load(const PTree & cfg, std::ostream & error_output)
 {
 	std::vector<btScalar> pos(3);
 	if (!cfg.get("peak-engine-rpm", redline, error_output)) return false;
@@ -89,7 +89,7 @@ bool CARENGINEINFO::Load(const PTree & cfg, std::ostream & error_output)
 	return true;
 }
 
-void CARENGINEINFO::SetTorqueCurve(
+void CarEngineInfo::SetTorqueCurve(
 	const btScalar redline,
 	const std::vector<std::pair<btScalar, btScalar> > & torque)
 {
@@ -133,13 +133,13 @@ void CARENGINEINFO::SetTorqueCurve(
 	}
 }
 
-btScalar CARENGINEINFO::GetTorque(const btScalar throttle, const btScalar rpm) const
+btScalar CarEngineInfo::GetTorque(const btScalar throttle, const btScalar rpm) const
 {
 	if (rpm < 1) return 0.0; // no negative combustion torque
 	return torque_curve.Interpolate(rpm) * throttle;
 }
 
-btScalar CARENGINEINFO::GetFrictionTorque(
+btScalar CarEngineInfo::GetFrictionTorque(
 	btScalar angvel,
 	btScalar friction_factor,
 	btScalar throttle_position) const
@@ -153,12 +153,12 @@ btScalar CARENGINEINFO::GetFrictionTorque(
 	return (A + angvel * B + -velsign * C * angvel * angvel) * (1.0 - friction_factor * throttle_position);
 }
 
-CARENGINE::CARENGINE()
+CarEngine::CarEngine()
 {
 	Init(info);
 }
 
-void CARENGINE::Init(const CARENGINEINFO & info)
+void CarEngine::Init(const CarEngineInfo & info)
 {
 	this->info = info;
 	shaft.inv_inertia = 1 / info.inertia;
@@ -174,7 +174,7 @@ void CARENGINE::Init(const CARENGINEINFO & info)
 	stalled = false;
 }
 
-btScalar CARENGINE::Integrate(btScalar clutch_drag, btScalar clutch_angvel, btScalar dt)
+btScalar CarEngine::Integrate(btScalar clutch_drag, btScalar clutch_angvel, btScalar dt)
 {
 	clutch_torque = clutch_drag;
 
@@ -228,7 +228,7 @@ btScalar CARENGINE::Integrate(btScalar clutch_drag, btScalar clutch_angvel, btSc
 	return clutch_torque;
 }
 
-void CARENGINE::DebugPrint(std::ostream & out) const
+void CarEngine::DebugPrint(std::ostream & out) const
 {
 	out << "---Engine---" << "\n";
 	out << "Throttle position: " << throttle_position << "\n";
@@ -241,7 +241,7 @@ void CARENGINE::DebugPrint(std::ostream & out) const
 	out << "Running: " << !stalled << "\n";
 }
 
-bool CARENGINE::Serialize(joeserialize::Serializer & s)
+bool CarEngine::Serialize(joeserialize::Serializer & s)
 {
 	_SERIALIZE_(s, shaft.ang_velocity);
 	_SERIALIZE_(s, throttle_position);

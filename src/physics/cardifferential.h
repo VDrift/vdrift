@@ -25,12 +25,12 @@
 #include "macros.h"
 
 /// A differential that supports speed-sensitive limited slip functionality. Epicyclic (torque splitting) operation is also provided.
-class CARDIFFERENTIAL
+class CarDifferential
 {
 friend class joeserialize::Serializer;
 public:
 	/// Default constructor makes an S2000-like car.
-	CARDIFFERENTIAL();
+	CarDifferential();
 
 	void DebugPrint(std::ostream & out) const;
 

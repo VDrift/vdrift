@@ -27,12 +27,12 @@
 #include <ostream>
 
 template <typename T>
-class AABB
+class Aabb
 {
 private:
-	MATHVECTOR <T, 3> pos; ///< minimum corner (center-size*0.5)
-	MATHVECTOR <T, 3> center; ///< exact center of AABB
-	MATHVECTOR <T, 3> size; ///< size of AABB
+	MathVector <T, 3> pos; ///< minimum corner (center-size*0.5)
+	MathVector <T, 3> center; ///< exact center of AABB
+	MathVector <T, 3> size; ///< size of AABB
 	float radius; ///< size.Magnitude()*0.5
 
 	void recomputeRadius()
@@ -41,10 +41,10 @@ private:
 	}
 
 public:
-	AABB(const AABB <T> & other) : pos(other.pos), center(other.center), size(other.size), radius(other.radius) {}
-	AABB() : radius(0) {}
+	Aabb(const Aabb <T> & other) : pos(other.pos), center(other.center), size(other.size), radius(other.radius) {}
+	Aabb() : radius(0) {}
 
-	const AABB <T> & operator = (const AABB <T> & other)
+	const Aabb <T> & operator = (const Aabb <T> & other)
 	{
 		pos = other.pos;
 		center = other.center;
@@ -54,14 +54,14 @@ public:
 		return *this;
 	}
 
-	const MATHVECTOR <T, 3> & GetPos() const {return pos;}
-	const MATHVECTOR <T, 3> & GetSize() const {return size;}
-	const MATHVECTOR <T, 3> & GetCenter() const {return center;}
+	const MathVector <T, 3> & GetPos() const {return pos;}
+	const MathVector <T, 3> & GetSize() const {return size;}
+	const MathVector <T, 3> & GetCenter() const {return center;}
 
 	void DebugPrint(std::ostream & o) const
 	{
-		MATHVECTOR <T, 3> min(pos);
-		MATHVECTOR <T, 3> max(pos+size);
+		MathVector <T, 3> min(pos);
+		MathVector <T, 3> max(pos+size);
 		o << min[0] << "," << min[1] << "," << min[2] << " to " << max[0] << "," << max[1] << "," << max[2] << std::endl;
 	}
 
@@ -70,7 +70,7 @@ public:
 		o << "center: " << center[0] << "," << center[1] << "," << center[2] << " size: " << size[0] << "," << size[1] << "," << size[2] << std::endl;
 	}
 
-	void SetFromSphere(const MATHVECTOR <T, 3> & newcenter, float newRadius)
+	void SetFromSphere(const MathVector <T, 3> & newcenter, float newRadius)
 	{
 		center = newcenter;
 		size.Set(newRadius,newRadius,newRadius);
@@ -79,10 +79,10 @@ public:
 		radius = newRadius;
 	}
 
-	void SetFromCorners(const MATHVECTOR <T, 3> & c1, const MATHVECTOR <T, 3> & c2)
+	void SetFromCorners(const MathVector <T, 3> & c1, const MathVector <T, 3> & c2)
 	{
-		MATHVECTOR <T, 3> c1mod(c1);
-		MATHVECTOR <T, 3> c2mod(c2);
+		MathVector <T, 3> c1mod(c1);
+		MathVector <T, 3> c2mod(c2);
 
 		//ensure c1 is smaller than c2
 		if (c1[0] > c2[0])
@@ -101,24 +101,16 @@ public:
 			c2mod[2] = c1[2];
 		}
 
-		/*float fluff = 0.0001;
-		VERTEX fluffer;
-		fluffer.Set(fluff, fluff, fluff);
-
-		//add in some fudge factor
-		c1mod = c1mod + fluffer.ScaleR(-1.0);
-		c2mod = c2mod + fluffer;*/
-
 		pos = c1mod;
 		size = c2mod - c1mod;
 		center = pos + size * 0.5;
 		recomputeRadius();
 	}
 
-	void CombineWith(const AABB <T> & other)
+	void CombineWith(const Aabb <T> & other)
 	{
-		const MATHVECTOR <T, 3> & otherpos(other.GetPos());
-		MATHVECTOR <T, 3> min(0), max(0);
+		const MathVector <T, 3> & otherpos(other.GetPos());
+		MathVector <T, 3> min(0), max(0);
 		min = pos;
 		max = pos + size;
 		if (otherpos[0] < min[0])
@@ -128,7 +120,7 @@ public:
 		if (otherpos[2] < min[2])
 			min[2] = otherpos[2];
 
-		const MATHVECTOR <T, 3> & othermax(otherpos + other.GetSize());
+		const MathVector <T, 3> & othermax(otherpos + other.GetSize());
 		if (othermax[0] > max[0])
 			max[0] = othermax[0];
 		if (othermax[1] > max[1])
@@ -140,33 +132,33 @@ public:
 	}
 
 	// for intersection test returns
-	enum INTERSECTION
+	enum IntersectionEnum
 	{
 		OUT,
 		INTERSECT,
 		IN
 	};
 
-	class RAY
+	class Ray
 	{
 		public:
-			RAY(const MATHVECTOR <T, 3> & neworig, const MATHVECTOR <T, 3> & newdir, T newseglen) : orig(neworig), dir(newdir), seglen(newseglen) {}
+			Ray(const MathVector <T, 3> & neworig, const MathVector <T, 3> & newdir, T newseglen) : orig(neworig), dir(newdir), seglen(newseglen) {}
 
-			MATHVECTOR <T, 3> orig;
-			MATHVECTOR <T, 3> dir;
+			MathVector <T, 3> orig;
+			MathVector <T, 3> dir;
 			T seglen;
 	};
 
-	INTERSECTION Intersect(const RAY & ray) const
+	IntersectionEnum Intersect(const Ray & ray) const
 	{
 		//if (seglen>3e30f) return IntersectRay(orig, dir); // infinite ray
-		MATHVECTOR <T, 3> segdir(ray.dir * (0.5f * ray.seglen));
-		MATHVECTOR <T, 3> seg_center(ray.orig + segdir);
-		MATHVECTOR <T, 3> diff(seg_center - center);
+		MathVector <T, 3> segdir(ray.dir * (0.5f * ray.seglen));
+		MathVector <T, 3> seg_center(ray.orig + segdir);
+		MathVector <T, 3> diff(seg_center - center);
 
-		MATHVECTOR <T, 3> abs_segdir(segdir);
+		MathVector <T, 3> abs_segdir(segdir);
 		abs_segdir.absify();
-		MATHVECTOR <T, 3> abs_diff(diff);
+		MathVector <T, 3> abs_diff(diff);
 		abs_diff.absify();
 		T f = size[0] + abs_segdir[0];
 		if (abs_diff[0] > f) return OUT;
@@ -175,9 +167,9 @@ public:
 		f = size[2] + abs_segdir[2];
 		if (abs_diff[2] > f) return OUT;
 
-		MATHVECTOR <T, 3> cross(segdir.cross(diff));
+		MathVector <T, 3> cross(segdir.cross(diff));
 
-		MATHVECTOR <T, 3> abs_cross(cross);
+		MathVector <T, 3> abs_cross(cross);
 		abs_cross.absify();
 
 		f = size[1]*abs_segdir[2] + size[2]*abs_segdir[1];
@@ -192,13 +184,13 @@ public:
 		return INTERSECT;
 	}
 
-	INTERSECTION Intersect(const AABB <T> & other) const
+	IntersectionEnum Intersect(const Aabb <T> & other) const
 	{
-		MATHVECTOR <T, 3> otherc1 = other.GetPos();
-		MATHVECTOR <T, 3> otherc2 = otherc1 + other.GetSize();
+		MathVector <T, 3> otherc1 = other.GetPos();
+		MathVector <T, 3> otherc2 = otherc1 + other.GetSize();
 
-		MATHVECTOR <T, 3> c1 = pos;
-		MATHVECTOR <T, 3> c2 = pos + size;
+		MathVector <T, 3> c1 = pos;
+		MathVector <T, 3> c2 = pos + size;
 
 		//bias checks for non-collisions
 		if (c1[0] > otherc2[0] || c2[0] < otherc1[0])
@@ -213,7 +205,7 @@ public:
 		return INTERSECT;
 	}
 
-	INTERSECTION Intersect(const FRUSTUM & frustum) const
+	IntersectionEnum Intersect(const Frustum & frustum) const
 	{
 		float rd;
 		const float bound = radius;
@@ -243,7 +235,7 @@ public:
 	}
 
 	struct INTERSECT_ALWAYS{};
-	INTERSECTION Intersect(INTERSECT_ALWAYS always) const {return IN;}
+	IntersectionEnum Intersect(INTERSECT_ALWAYS always) const {return IN;}
 };
 
 #endif

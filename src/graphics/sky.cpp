@@ -35,24 +35,24 @@ const unsigned tiles_v = 4;
 const unsigned tiles_num = tiles_u * tiles_v;
 const unsigned sides_num = 5;
 
-const FBTEXTURE::CUBE_SIDE side_enum[sides_num] = {
-	FBTEXTURE::POSX,
-	FBTEXTURE::NEGX,
-	FBTEXTURE::POSY,
-	FBTEXTURE::NEGY,
-	FBTEXTURE::POSZ,
+const FrameBufferTexture::CUBE_SIDE side_enum[sides_num] = {
+	FrameBufferTexture::POSX,
+	FrameBufferTexture::NEGX,
+	FrameBufferTexture::POSY,
+	FrameBufferTexture::NEGY,
+	FrameBufferTexture::POSZ,
 };
 
-typedef MATHVECTOR<float, 3> VEC3;
-const VEC3 side_xyz[sides_num][3] = {
-	{VEC3( 0,  0, -1), VEC3( 0, -1,  0), VEC3( 1,  0,  0)},	// POSX
-	{VEC3( 0,  0,  1), VEC3( 0, -1,  0), VEC3(-1,  0,  0)},	// NEGX
-	{VEC3( 1,  0,  0), VEC3( 0,  0,  1), VEC3( 0,  1,  0)},	// POSY
-	{VEC3( 1,  0,  0), VEC3( 0,  0, -1), VEC3( 0, -1,  0)},	// NEGY
-	{VEC3( 1,  0,  0), VEC3( 0, -1,  0), VEC3( 0,  0,  1)},	// POSZ
+typedef Vec3 Vec3;
+const Vec3 side_xyz[sides_num][3] = {
+	{Vec3( 0,  0, -1), Vec3( 0, -1,  0), Vec3( 1,  0,  0)},	// POSX
+	{Vec3( 0,  0,  1), Vec3( 0, -1,  0), Vec3(-1,  0,  0)},	// NEGX
+	{Vec3( 1,  0,  0), Vec3( 0,  0,  1), Vec3( 0,  1,  0)},	// POSY
+	{Vec3( 1,  0,  0), Vec3( 0,  0, -1), Vec3( 0, -1,  0)},	// NEGY
+	{Vec3( 1,  0,  0), Vec3( 0, -1,  0), Vec3( 0,  0,  1)},	// POSZ
 };
 
-SKY::SKY(GRAPHICS_GL2 & gfx, std::ostream & error) :
+Sky::Sky(GraphicsGL2 & gfx, std::ostream & error) :
 	error_output(error),
 	graphics(gfx),
 	texture_active(0),
@@ -75,23 +75,23 @@ SKY::SKY(GRAPHICS_GL2 & gfx, std::ostream & error) :
 {
 	assert(graphics.GetUsingShaders());
 
-	sky_textures[0].Init(texture_size, texture_size, FBTEXTURE::CUBEMAP, FBTEXTURE::RGB8, true, false, error_output);
-	sky_textures[1].Init(texture_size, texture_size, FBTEXTURE::CUBEMAP, FBTEXTURE::RGB8, true, false, error_output);
+	sky_textures[0].Init(texture_size, texture_size, FrameBufferTexture::CUBEMAP, FrameBufferTexture::RGB8, true, false, error_output);
+	sky_textures[1].Init(texture_size, texture_size, FrameBufferTexture::CUBEMAP, FrameBufferTexture::RGB8, true, false, error_output);
 
-	sky_fbos[0].Init(graphics.GetState(), std::vector<FBTEXTURE*>(1, &sky_textures[0]), error_output);
-	sky_fbos[1].Init(graphics.GetState(), std::vector<FBTEXTURE*>(1, &sky_textures[1]), error_output);
+	sky_fbos[0].Init(graphics.GetState(), std::vector<FrameBufferTexture*>(1, &sky_textures[0]), error_output);
+	sky_fbos[1].Init(graphics.GetState(), std::vector<FrameBufferTexture*>(1, &sky_textures[1]), error_output);
 
 	time_t seconds = time(NULL);
 	struct tm datetime = *localtime(&seconds);
 	SetTime(datetime);
 }
 
-SKY::~SKY()
+Sky::~Sky()
 {
 	// dtor
 }
 
-bool SKY::Load(const std::string & path)
+bool Sky::Load(const std::string & path)
 {
 /*
 	std::string cpath = path + "/sky.txt";
@@ -125,12 +125,12 @@ bool SKY::Load(const std::string & path)
 	return true;
 }
 
-void SKY::SetTimeSpeed(float value)
+void Sky::SetTimeSpeed(float value)
 {
 	time_multiplier = value;
 }
 
-void SKY::SetTime(float hours)
+void Sky::SetTime(float hours)
 {
 	hour = hours;
 	minute = 0;
@@ -138,7 +138,7 @@ void SKY::SetTime(float hours)
 	ResetSky();
 }
 
-void SKY::SetTime(const struct tm & value)
+void Sky::SetTime(const struct tm & value)
 {
 	day = float(value.tm_yday + 1);
 	hour = float(value.tm_hour);
@@ -147,19 +147,19 @@ void SKY::SetTime(const struct tm & value)
 	ResetSky();
 }
 
-void SKY::SetTurbidity(float value)
+void Sky::SetTurbidity(float value)
 {
 	turbidity = value;
 	ResetSky();
 }
 
-void SKY::SetExposure(float value)
+void Sky::SetExposure(float value)
 {
 	exposure = value;
 	ResetSky();
 }
 
-void SKY::Update(float dt)
+void Sky::Update(float dt)
 {
 	if (need_update || dt * time_multiplier > 0)
 	{
@@ -171,7 +171,7 @@ void SKY::Update(float dt)
 	}
 }
 
-void SKY::UpdateComplete()
+void Sky::UpdateComplete()
 {
 	side_updated = 0;
 	tile_updated = 0;
@@ -179,7 +179,7 @@ void SKY::UpdateComplete()
 		UpdateSky();
 }
 
-void SKY::Draw(unsigned elems, const unsigned faces[], const float pos[], const float tco[])
+void Sky::Draw(unsigned elems, const unsigned faces[], const float pos[], const float tco[])
 {
 	// disable blending, depth write
 	graphics.GetState().Disable(GL_ALPHA_TEST);
@@ -189,7 +189,7 @@ void SKY::Draw(unsigned elems, const unsigned faces[], const float pos[], const 
 
 	// bind fbo
 	unsigned texture_updated = (texture_active + 1) % 2;
-	FBOBJECT & fbo = sky_fbos[texture_updated];
+	FrameBufferObject & fbo = sky_fbos[texture_updated];
 	fbo.SetCubeSide(side_enum[side_updated]);
 	fbo.Begin(graphics.GetState(), error_output);
 
@@ -208,14 +208,14 @@ void SKY::Draw(unsigned elems, const unsigned faces[], const float pos[], const 
 	fbo.End(graphics.GetState(), error_output);
 }
 
-void SKY::ResetSky()
+void Sky::ResetSky()
 {
 	side_updated = 0;
 	tile_updated = 0;
 	need_update = true;
 }
 
-void SKY::UpdateSky()
+void Sky::UpdateSky()
 {
 	assert(tile_updated < tiles_num);
 	assert(side_updated < sides_num);
@@ -231,11 +231,11 @@ void SKY::UpdateSky()
 	float x[2] = { u0 * 2 - 1, u1 * 2 - 1 };
 
 	// tile corners in world space
-	const VEC3 * xyz = side_xyz[side_updated];
-	VEC3 v00 = xyz[0] * x[0] + xyz[1] * y[0] + xyz[2];
-	VEC3 v10 = xyz[0] * x[1] + xyz[1] * y[0] + xyz[2];
-	VEC3 v01 = xyz[0] * x[0] + xyz[1] * y[1] + xyz[2];
-	VEC3 v11 = xyz[0] * x[1] + xyz[1] * y[1] + xyz[2];
+	const Vec3 * xyz = side_xyz[side_updated];
+	Vec3 v00 = xyz[0] * x[0] + xyz[1] * y[0] + xyz[2];
+	Vec3 v10 = xyz[0] * x[1] + xyz[1] * y[0] + xyz[2];
+	Vec3 v01 = xyz[0] * x[0] + xyz[1] * y[1] + xyz[2];
+	Vec3 v11 = xyz[0] * x[1] + xyz[1] * y[1] + xyz[2];
 
 	// tile quad
 	const unsigned faces[2 * 3] = {
@@ -256,7 +256,7 @@ void SKY::UpdateSky()
 	};
 
 	// set shader
-	SHADER_GLSL * shader = graphics.GetShader("skygen");
+	Shader * shader = graphics.GetShader("skygen");
 	if (!shader)
 	{
 		assert(0);
@@ -289,7 +289,7 @@ void SKY::UpdateSky()
 	}
 }
 
-void SKY::UpdateTime()
+void Sky::UpdateTime()
 {
 	// handle seconds and minutes overflow, clamp hours for now
 	second += time_delta;
@@ -311,7 +311,7 @@ void SKY::UpdateTime()
 	time_delta = 0;
 }
 
-void SKY::UpdateSunDir()
+void Sky::UpdateSunDir()
 {
 	float lat = latitude * pi / 180;
 
@@ -357,7 +357,7 @@ void SKY::UpdateSunDir()
 	//error_output << "az " << az << "  ze " << ze << std::endl;
 }
 
-void SKY::UpdateSunColor()
+void Sky::UpdateSunColor()
 {
 	// relative optical mass (Kasten and Young)
 	float m = 38;
@@ -383,47 +383,47 @@ void SKY::UpdateSunColor()
 	suncolor[2] = tau[2];
 }
 
-const SKY::VEC3 & SKY::GetSunColor() const
+const Vec3 & Sky::GetSunColor() const
 {
 	return suncolor;
 }
 
-const SKY::VEC3 & SKY::GetSunDirection() const
+const Vec3 & Sky::GetSunDirection() const
 {
 	return sundir;
 }
 
-float SKY::GetZenith() const
+float Sky::GetZenith() const
 {
 	return ze;
 }
 
-float SKY::GetAzimuth() const
+float Sky::GetAzimuth() const
 {
 	return az;
 }
 
-bool SKY::Loaded() const
+bool Sky::Loaded() const
 {
 	return sky_textures[texture_active].Loaded();
 }
 
-void SKY::Activate() const
+void Sky::Activate() const
 {
 	return sky_textures[texture_active].Activate();
 }
 
-void SKY::Deactivate() const
+void Sky::Deactivate() const
 {
 	return sky_textures[texture_active].Deactivate();
 }
 
-unsigned SKY::GetW() const
+unsigned Sky::GetW() const
 {
 	return sky_textures[texture_active].GetW();
 }
 
-unsigned SKY::GetH() const
+unsigned Sky::GetH() const
 {
 	return sky_textures[texture_active].GetH();
 }

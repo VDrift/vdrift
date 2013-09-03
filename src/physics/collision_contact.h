@@ -24,29 +24,29 @@
 #include "LinearMath/btVector3.h"
 #include <cassert>
 
-class BEZIER;
+class Bezier;
 class btCollisionObject;
 
-class COLLISION_CONTACT
+class CollisionContact
 {
 public:
-	COLLISION_CONTACT() :
+	CollisionContact() :
 		depth(0),
 		patchid(-1),
 		patch(0),
-		surface(TRACKSURFACE::None()),
+		surface(TrackSurface::None()),
 		col(0)
 	{
 		// ctor
 	}
 
-	COLLISION_CONTACT(
+	CollisionContact(
 		const btVector3 & p,
 		const btVector3 & n,
 		const btScalar d,
 		const int i,
-		const BEZIER * b,
-		const TRACKSURFACE * s,
+		const Bezier * b,
+		const TrackSurface * s,
 		const btCollisionObject * c) :
 		position(p),
 		normal(n),
@@ -74,7 +74,7 @@ public:
 		return depth;
 	}
 
-	const TRACKSURFACE & GetSurface() const
+	const TrackSurface & GetSurface() const
 	{
 		return *surface;
 	}
@@ -84,7 +84,7 @@ public:
 		return patchid;
 	}
 
-	const BEZIER * GetPatch() const
+	const Bezier * GetPatch() const
 	{
 		return patch;
 	}
@@ -118,8 +118,8 @@ private:
 	btVector3 normal;
 	btScalar depth;
 	int patchid;
-	const BEZIER * patch;
-	const TRACKSURFACE * surface;
+	const Bezier * patch;
+	const TrackSurface * surface;
 	const btCollisionObject * col;
 };
 

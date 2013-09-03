@@ -20,15 +20,15 @@
 #include "hudbar.h"
 #include "graphics/scenenode.h"
 
-void HUDBAR::Set(
-	SCENENODE & parent,
-	std::tr1::shared_ptr<TEXTURE> bartex,
+void HudBar::Set(
+	SceneNode & parent,
+	std::tr1::shared_ptr<Texture> bartex,
 	float x, float y, float w, float h,
 	float opacity,
 	bool flip)
 {
-	draw = parent.GetDrawlist().twodim.insert(DRAWABLE());
-	DRAWABLE & drawref = parent.GetDrawlist().twodim.get(draw);
+	draw = parent.GetDrawlist().twodim.insert(Drawable());
+	Drawable & drawref = parent.GetDrawlist().twodim.get(draw);
 
 	drawref.SetDiffuseMap(bartex);
 	drawref.SetVertArray(&verts);
@@ -39,8 +39,8 @@ void HUDBAR::Set(
 	verts.SetTo2DButton(x, y, w, h, h*0.75, flip);
 }
 
-void HUDBAR::SetVisible(SCENENODE & parent, bool newvis)
+void HudBar::SetVisible(SceneNode & parent, bool newvis)
 {
-	DRAWABLE & drawref = parent.GetDrawlist().twodim.get(draw);
+	Drawable & drawref = parent.GetDrawlist().twodim.get(draw);
 	drawref.SetDrawEnable(newvis);
 }

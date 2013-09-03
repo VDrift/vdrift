@@ -21,7 +21,7 @@
 #include "coordinatesystem.h"
 #include "cfg/ptree.h"
 
-CARSUSPENSIONINFO::CARSUSPENSIONINFO() :
+CarSuspensionInfo::CarSuspensionInfo() :
 	spring_constant(50000.0),
 	anti_roll(8000),
 	bounce(2500),
@@ -38,9 +38,9 @@ CARSUSPENSIONINFO::CARSUSPENSIONINFO() :
 	// ctor
 }
 
-CARSUSPENSION::CARSUSPENSION() :
-	orientation_ext(direction::up, 0),
-	steering_axis(direction::up),
+CarSuspension::CarSuspension() :
+	orientation_ext(Direction::up, 0),
+	steering_axis(Direction::up),
 	orientation(orientation_ext),
 	position(0, 0, 0),
 	steering_angle(0),
@@ -56,23 +56,23 @@ CARSUSPENSION::CARSUSPENSION() :
 	// ctor
 }
 
-void CARSUSPENSION::Init(const CARSUSPENSIONINFO & info)
+void CarSuspension::Init(const CarSuspensionInfo & info)
 {
 	this->info = info;
 
-	btQuaternion toe(direction::up, info.toe * M_PI / 180.0);
-	btQuaternion cam(direction::forward, -info.camber * M_PI / 180.0);
+	btQuaternion toe(Direction::up, info.toe * M_PI / 180.0);
+	btQuaternion cam(Direction::forward, -info.camber * M_PI / 180.0);
 	orientation_ext = toe * cam;
 
-	steering_axis = direction::up * cos(-info.caster * M_PI / 180.0) +
-		direction::right * sin(-info.caster * M_PI / 180.0);
+	steering_axis = Direction::up * cos(-info.caster * M_PI / 180.0) +
+		Direction::right * sin(-info.caster * M_PI / 180.0);
 
 	position = info.position;
 
 	SetSteering(0.0);
 }
 
-void CARSUSPENSION::SetSteering(const btScalar & value)
+void CarSuspension::SetSteering(const btScalar & value)
 {
 	btScalar alpha = -value * info.steering_angle * M_PI / 180.0;
 	steering_angle = 0.0;
@@ -84,7 +84,7 @@ void CARSUSPENSION::SetSteering(const btScalar & value)
 	orientation = steer * orientation_ext;
 }
 
-void CARSUSPENSION::SetDisplacement ( const btScalar & value )
+void CarSuspension::SetDisplacement ( const btScalar & value )
 {
 	last_displacement = displacement;
 	displacement = value;
@@ -108,7 +108,7 @@ void CARSUSPENSION::SetDisplacement ( const btScalar & value )
 	position = GetWheelPosition(displacement / info.travel);
 }
 
-btScalar CARSUSPENSION::GetForce ( btScalar dt )
+btScalar CarSuspension::GetForce ( btScalar dt )
 {
 	btScalar damping = info.bounce;
 	//note that displacement is defined opposite to the classical definition (positive values mean compressed instead of extended)
@@ -130,7 +130,7 @@ btScalar CARSUSPENSION::GetForce ( btScalar dt )
 	return spring_force + damp_force;
 }
 
-void CARSUSPENSION::DebugPrint(std::ostream & out) const
+void CarSuspension::DebugPrint(std::ostream & out) const
 {
 	out << "---Suspension---" << "\n";
 	out << "Displacement: " << displacement << "\n";
@@ -139,7 +139,7 @@ void CARSUSPENSION::DebugPrint(std::ostream & out) const
 	out << "Steering angle: " << steering_angle * 180 / M_PI << "\n";
 }
 
-class BASICSUSPENSION : public CARSUSPENSION
+class BasicSuspension : public CarSuspension
 {
 public:
 	btVector3 GetWheelPosition(btScalar displacement_fraction)
@@ -151,11 +151,11 @@ public:
 	}
 
 	void Init(
-		const CARSUSPENSIONINFO & info,
+		const CarSuspensionInfo & info,
 		const std::vector<btScalar> & ch,
 		const std::vector<btScalar> & wh)
 	{
-		CARSUSPENSION::Init(info);
+		CarSuspension::Init(info);
 		hinge_anchor.setValue(ch[0], ch[1], ch[2]);
 		btVector3 wheel_hub(wh[0], wh[1], wh[2]);
 		hinge_arm = wheel_hub - hinge_anchor;
@@ -181,10 +181,10 @@ inline btScalar side_from_angle(btScalar theta, btScalar a, btScalar h)
 	return sqrt(a * a + h * h - 2 * a * h * cos(theta));
 }
 
-class WISHBONESUSPENSION : public CARSUSPENSION
+class WishboneSuspension : public CarSuspension
 {
 public:
-	WISHBONESUSPENSION() : mountrot(btQuaternion::getIdentity()) {}
+	WishboneSuspension() : mountrot(btQuaternion::getIdentity()) {}
 
 	btVector3 GetWheelPosition(btScalar displacement_fraction)
 	{
@@ -215,7 +215,7 @@ public:
 	}
 
 	void Init(
-		const CARSUSPENSIONINFO & info,
+		const CarSuspensionInfo & info,
 		const std::vector<btScalar> & up_ch0, const std::vector<btScalar> & up_ch1,
 		const std::vector<btScalar> & lo_ch0, const std::vector<btScalar> & lo_ch1,
 		const std::vector<btScalar> & up_hub, const std::vector<btScalar> & lo_hub)
@@ -223,7 +223,7 @@ public:
 		btVector3 hingev[3];
 		btScalar innerangle[2];
 
-		CARSUSPENSION::Init(info);
+		CarSuspension::Init(info);
 
 		hingev[0].setValue(up_ch0[0], up_ch0[1], up_ch0[2]);
 		hingev[1].setValue(up_ch1[0], up_ch1[1], up_ch1[2]);
@@ -266,7 +266,7 @@ public:
 
 	void SetSteering(const btScalar & value)
 	{
-		CARSUSPENSION::SetSteering(value);
+		CarSuspension::SetSteering(value);
 		orientation = orientation * mountrot;
 	}
 
@@ -282,7 +282,7 @@ private:
 	btQuaternion mountrot;
 };
 
-class MACPHERSONSUSPENSION : public CARSUSPENSION
+class MacPhersonSuspension : public CarSuspension
 {
 public:
 	btVector3 GetWheelPosition(btScalar displacement_fraction)
@@ -315,12 +315,12 @@ public:
 	}
 
 	void Init(
-		const CARSUSPENSIONINFO & info,
+		const CarSuspensionInfo & info,
 		const std::vector<btScalar> & top,
 		const std::vector<btScalar> & end,
 		const std::vector<btScalar> & hinge)
 	{
-		CARSUSPENSION::Init(info);
+		CarSuspension::Init(info);
 		strut.top.setValue(top[0], top[1], top[2]);
 		strut.end.setValue(end[0], end[1], end[2]);
 		strut.hinge.setValue(hinge[0], hinge[1], hinge[2]);
@@ -328,7 +328,7 @@ public:
 
 	void SetSteering(const btScalar & value)
 	{
-		CARSUSPENSION::SetSteering(value);
+		CarSuspension::SetSteering(value);
 		orientation = orientation * mountrot;
 	}
 
@@ -350,7 +350,7 @@ private:
 };
 
 // 1-9 points
-static void LoadPoints(const PTree & cfg, const std::string & name, LINEARINTERP<btScalar> & points)
+static void LoadPoints(const PTree & cfg, const std::string & name, LinearInterp<btScalar> & points)
 {
 	int i = 1;
 	std::stringstream s;
@@ -366,7 +366,7 @@ static void LoadPoints(const PTree & cfg, const std::string & name, LINEARINTERP
 
 static bool LoadCoilover(
 	const PTree & cfg,
-	CARSUSPENSIONINFO & info,
+	CarSuspensionInfo & info,
 	std::ostream & error_output)
 {
 	if (!cfg.get("spring-constant", info.spring_constant, error_output)) return false;
@@ -379,12 +379,12 @@ static bool LoadCoilover(
 	return true;
 }
 
-bool CARSUSPENSION::Load(
+bool CarSuspension::Load(
 	const PTree & cfg_wheel,
-	CARSUSPENSION *& suspension,
+	CarSuspension *& suspension,
 	std::ostream & error_output)
 {
-	CARSUSPENSIONINFO info;
+	CarSuspensionInfo info;
 	std::vector<btScalar> p(3);
 	if (!cfg_wheel.get("position", p, error_output)) return false;
 	if (!cfg_wheel.get("camber", info.camber, error_output)) return false;
@@ -408,7 +408,7 @@ bool CARSUSPENSION::Load(
 		if (!cfg_susp->get("strut-top", strut_top, error_output)) return false;
 		if (!cfg_susp->get("strut-end", strut_end, error_output)) return false;
 
-		MACPHERSONSUSPENSION * mps = new MACPHERSONSUSPENSION();
+		MacPhersonSuspension * mps = new MacPhersonSuspension();
 		mps->Init(info, strut_top, strut_end, hinge);
 		suspension = mps;
 	}
@@ -423,7 +423,7 @@ bool CARSUSPENSION::Load(
 		if (!cfg_susp->get("upper-hub", up_hub, error_output)) return false;
 		if (!cfg_susp->get("lower-hub", lo_hub, error_output)) return false;
 
-		WISHBONESUSPENSION * wbs = new WISHBONESUSPENSION();
+		WishboneSuspension * wbs = new WishboneSuspension();
 		wbs->Init(info, up_ch0, up_ch1, lo_ch0, lo_ch1, up_hub, lo_hub);
 		suspension = wbs;
 	}*/
@@ -435,7 +435,7 @@ bool CARSUSPENSION::Load(
 		if (!cfg_susp->get("chassis", ch, error_output)) return false;
 		if (!cfg_susp->get("wheel", wh, error_output)) return false;
 
-		BASICSUSPENSION * bs = new BASICSUSPENSION();
+		BasicSuspension * bs = new BasicSuspension();
 		bs->Init(info, ch, wh);
 		suspension = bs;
 	}

@@ -20,13 +20,13 @@
 #include <fstream>
 #include "downloadable.h"
 
-void DOWNLOADABLEMANAGER::Initialize(const std::string & newfilename)
+void DownloadableManager::Initialize(const std::string & newfilename)
 {
 	filename = newfilename;
 	Load();
 }
 
-std::vector <std::string> DOWNLOADABLEMANAGER::GetUpdatables(const std::map <std::string, int> & remote_downloadables) const
+std::vector <std::string> DownloadableManager::GetUpdatables(const std::map <std::string, int> & remote_downloadables) const
 {
 	std::vector <std::string> update;
     
@@ -41,13 +41,13 @@ std::vector <std::string> DOWNLOADABLEMANAGER::GetUpdatables(const std::map <std
 	return update;
 }
 
-void DOWNLOADABLEMANAGER::SetDownloadable(const std::string & name, int new_version)
+void DownloadableManager::SetDownloadable(const std::string & name, int new_version)
 {
 	downloadables[name] = new_version;
 	Save();
 }
 
-void DOWNLOADABLEMANAGER::Load()
+void DownloadableManager::Load()
 {
 	std::ifstream f(filename.c_str());
 	while (f)
@@ -64,7 +64,7 @@ void DOWNLOADABLEMANAGER::Load()
 	}
 }
 
-void DOWNLOADABLEMANAGER::Save() const
+void DownloadableManager::Save() const
 {
 	std::ofstream f(filename.c_str());
 	for (std::map <std::string, int>::const_iterator i = downloadables.begin(); i != downloadables.end(); i++)

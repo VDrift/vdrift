@@ -36,26 +36,26 @@ using std::list;
 using std::vector;
 using std::pair;
 
-TRACKMAP::TRACKMAP() :
+TrackMap::TrackMap() :
 	scale(1.0), MAP_WIDTH(256), MAP_HEIGHT(256)
 {
 	// ctor
 }
 
-TRACKMAP::~TRACKMAP()
+TrackMap::~TrackMap()
 {
 	Unload();
 }
 
-void TRACKMAP::Unload()
+void TrackMap::Unload()
 {
 	dotlist.clear();
 	mapnode.Clear();
 	mapdraw.invalidate();
 }
 
-bool TRACKMAP::BuildMap(
-	const std::list <ROADSTRIP> & roads,
+bool TrackMap::BuildMap(
+	const std::list <RoadStrip> & roads,
 	int w, int h,
 	const std::string & trackname,
 	const std::string & texturepath,
@@ -92,17 +92,17 @@ bool TRACKMAP::BuildMap(
 	map_h_min = FLT_MAX;
 	map_h_max = FLT_MIN;
 
-	for (list <ROADSTRIP>::const_iterator road = roads.begin(); road != roads.end(); road++)
+	for (list <RoadStrip>::const_iterator road = roads.begin(); road != roads.end(); road++)
 	{
-		for (vector<ROADPATCH>::const_iterator curp = road->GetPatches().begin();
+		for (vector<RoadPatch>::const_iterator curp = road->GetPatches().begin();
 			curp != road->GetPatches().end(); curp++)
 		{
-			const BEZIER & b = curp->GetPatch();
+			const Bezier & b = curp->GetPatch();
 			for (int i = 0; i < 4; i++)
 			{
 				for (int j = 0; j < 4; j++)
 				{
-					const MATHVECTOR <float, 3> & p = b[i + j * 4];
+					const Vec3 & p = b[i + j * 4];
 					if (p[1] < map_w_min)
 					{
 						map_w_min = p[1];
@@ -135,18 +135,18 @@ bool TRACKMAP::BuildMap(
 
 	boxRGBA(surface, 0, 0, outsizex-1, outsizey-1, 0, 0, 0, 0);
 
-	for (list <ROADSTRIP>::const_iterator road = roads.begin(); road != roads.end(); road++)
+	for (list <RoadStrip>::const_iterator road = roads.begin(); road != roads.end(); road++)
 	{
-		for (vector<ROADPATCH>::const_iterator curp = road->GetPatches().begin();
+		for (vector<RoadPatch>::const_iterator curp = road->GetPatches().begin();
 			curp != road->GetPatches().end(); curp++)
 		{
 			Sint16 x[4], y[4];
 
-			const BEZIER & b = curp->GetPatch();
-			const MATHVECTOR <float, 3> & back_l = b.GetBL();
-			const MATHVECTOR <float, 3> & back_r = b.GetBR();
-			const MATHVECTOR <float, 3> & front_l = b.GetFL();
-			const MATHVECTOR <float, 3> & front_r = b.GetFR();
+			const Bezier & b = curp->GetPatch();
+			const Vec3 & back_l = b.GetBL();
+			const Vec3 & back_r = b.GetBR();
+			const Vec3 & front_l = b.GetFL();
+			const Vec3 & front_r = b.GetFR();
 
 			x[0] = int((back_l[1] - map_w_min) * scale) + 1;
 			y[0] = int((back_l[0] - map_h_min) * scale) + 1;
@@ -199,20 +199,20 @@ bool TRACKMAP::BuildMap(
 		}
 	}
 
-	TEXTUREINFO texinfo;
+	TextureInfo texinfo;
 	texinfo.data = static_cast<unsigned char*>(surface->pixels);
 	texinfo.width = surface->w;
 	texinfo.height = surface->h;
 	texinfo.bytespp = surface->format->BitsPerPixel / 8;
 	texinfo.repeatu = false;
 	texinfo.repeatv = false;
-	std::tr1::shared_ptr<TEXTURE> track_map;
+	std::tr1::shared_ptr<Texture> track_map;
 	content.load(track_map, "", trackname, texinfo);
 
 	SDL_FreeSurface(surface);
 
 	//std::cout << "Loading track map dots" << std::endl;
-	TEXTUREINFO dotinfo;
+	TextureInfo dotinfo;
 	content.load(cardot0, texturepath, "cardot0.png", dotinfo);
 	content.load(cardot1, texturepath, "cardot1.png", dotinfo);
 	content.load(cardot0_focused, texturepath, "cardot0_focused.png", dotinfo);
@@ -229,8 +229,8 @@ bool TRACKMAP::BuildMap(
 	dot_size[1] = cardot0->GetH() / 2.0 / screen[1];
 
 	mapverts.SetToBillboard(position[0], position[1], position[0]+size[0], position[1]+size[1]);
-	mapdraw = mapnode.GetDrawlist().twodim.insert(DRAWABLE());
-	DRAWABLE & mapdrawref = mapnode.GetDrawlist().twodim.get(mapdraw);
+	mapdraw = mapnode.GetDrawlist().twodim.insert(Drawable());
+	Drawable & mapdrawref = mapnode.GetDrawlist().twodim.get(mapdraw);
 	mapdrawref.SetDiffuseMap(track_map);
 	mapdrawref.SetVertArray(&mapverts);
 	mapdrawref.SetCull(false, false);
@@ -240,32 +240,32 @@ bool TRACKMAP::BuildMap(
 	return true;
 }
 
-void TRACKMAP::Update(bool mapvisible, const std::list <std::pair<MATHVECTOR <float, 3>, bool> > & carpositions)
+void TrackMap::Update(bool mapvisible, const std::list <std::pair<Vec3, bool> > & carpositions)
 {
 	//only update car positions when the map is visible, so we get a slight speedup if the map is hidden
 	if (mapvisible)
 	{
-		std::list <std::pair<MATHVECTOR <float, 3>, bool> >::const_iterator car = carpositions.begin();
-		std::list <CARDOT>::iterator dot = dotlist.begin();
+		std::list <std::pair<Vec3, bool> >::const_iterator car = carpositions.begin();
+		std::list <CarDot>::iterator dot = dotlist.begin();
 		int count = 0;
 		while (car != carpositions.end())
 		{
 			//determine which texture to use
-			std::tr1::shared_ptr<TEXTURE> tex = cardot0_focused;
+			std::tr1::shared_ptr<Texture> tex = cardot0_focused;
 			if (!car->second)
 				tex = cardot1;
 
 			//find the coordinates of the dot
-			MATHVECTOR <float, 2> dotpos = position;
+			Vec2 dotpos = position;
 			dotpos[0] += ((car->first[1] - map_w_min)*scale + 1) / screen[0];
 			dotpos[1] += ((car->first[0] - map_h_min)*scale + 1) / screen[1];
-			MATHVECTOR <float, 2> corner1 = dotpos - dot_size;
-			MATHVECTOR <float, 2> corner2 = dotpos + dot_size;
+			Vec2 corner1 = dotpos - dot_size;
+			Vec2 corner2 = dotpos + dot_size;
 
 			if (dot == dotlist.end())
 			{
 				//need to insert a new dot
-				dotlist.push_back(CARDOT());
+				dotlist.push_back(CarDot());
 				dotlist.back().Init(mapnode, tex, corner1, corner2);
 				dot = dotlist.end();
 
@@ -285,17 +285,17 @@ void TRACKMAP::Update(bool mapvisible, const std::list <std::pair<MATHVECTOR <fl
 			car++;
 			count++;
 		}
-		for (list <CARDOT>::iterator i = dot; i != dotlist.end(); ++i)
+		for (list <CarDot>::iterator i = dot; i != dotlist.end(); ++i)
 			mapnode.GetDrawlist().twodim.erase(i->GetDrawableHandle());
 		dotlist.erase(dot,dotlist.end());
 	}
 
 	if (mapdraw.valid())
 	{
-		DRAWABLE & mapdrawref = mapnode.GetDrawlist().twodim.get(mapdraw);
+		Drawable & mapdrawref = mapnode.GetDrawlist().twodim.get(mapdraw);
 		mapdrawref.SetDrawEnable(mapvisible);
 	}
-	for (list <CARDOT>::iterator i = dotlist.begin(); i != dotlist.end(); ++i)
+	for (list <CarDot>::iterator i = dotlist.begin(); i != dotlist.end(); ++i)
 		i->SetVisible(mapnode, mapvisible);
 
 	/*for (list <CARDOT>::iterator i = dotlist.begin(); i != dotlist.end(); i++)

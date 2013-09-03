@@ -33,9 +33,9 @@ static const std::string names[] = {
 	"onselectx",
 	"onselecty",
 };
-const std::vector<std::string> GUICONTROL::signal_names(names, names + sizeof(names) / sizeof(names[0]));
+const std::vector<std::string> GuiControl::signal_names(names, names + sizeof(names) / sizeof(names[0]));
 
-GUICONTROL::GUICONTROL() :
+GuiControl::GuiControl() :
 	m_xmin(0), m_ymin(0),
 	m_xmax(0), m_ymax(0),
 	m_focusx(0), m_focusy(0)
@@ -43,12 +43,12 @@ GUICONTROL::GUICONTROL() :
 	// ctor
 }
 
-GUICONTROL::~GUICONTROL()
+GuiControl::~GuiControl()
 {
 	// dtor
 }
 
-bool GUICONTROL::Focus(float x, float y)
+bool GuiControl::Focus(float x, float y)
 {
 	if (x <= m_xmax && x >= m_xmin && y <= m_ymax && y >= m_ymin)
 	{
@@ -59,7 +59,7 @@ bool GUICONTROL::Focus(float x, float y)
 	return false;
 }
 
-void GUICONTROL::Signal(EVENT ev)
+void GuiControl::Signal(Event ev)
 {
 	if (ev == SELECTDOWN)
 	{
@@ -83,17 +83,17 @@ void GUICONTROL::Signal(EVENT ev)
 	m_signal[ev]();
 }
 
-const std::string & GUICONTROL::GetDescription() const
+const std::string & GuiControl::GetDescription() const
 {
 	return m_description;
 }
 
-void GUICONTROL::SetDescription(const std::string & value)
+void GuiControl::SetDescription(const std::string & value)
 {
 	m_description = value;
 }
 
-void GUICONTROL::SetRect(float xmin, float ymin, float xmax, float ymax)
+void GuiControl::SetRect(float xmin, float ymin, float xmax, float ymax)
 {
 	m_xmin = xmin;
 	m_ymin = ymin;
@@ -101,7 +101,7 @@ void GUICONTROL::SetRect(float xmin, float ymin, float xmax, float ymax)
 	m_ymax = ymax;
 }
 
-void GUICONTROL::RegisterActions(
+void GuiControl::RegisterActions(
 	const std::map<std::string, Slot1<const std::string &>*> & vactionmap,
 	const std::map<std::string, Slot0*> & actionmap,
 	const Config::const_iterator section,
@@ -120,7 +120,7 @@ void GUICONTROL::RegisterActions(
 	}
 }
 
-void GUICONTROL::SetActions(
+void GuiControl::SetActions(
 	const std::map<std::string, Slot0*> & actionmap,
 	const std::string & actionstr,
 	Signal0 & signal)
@@ -136,7 +136,7 @@ void GUICONTROL::SetActions(
 	}
 }
 
-void GUICONTROL::SetActions(
+void GuiControl::SetActions(
 	const std::map<std::string, Slot1<const std::string &>*> & actionmap,
 	const std::string & actionstr,
 	Signal1<const std::string &> & signal)

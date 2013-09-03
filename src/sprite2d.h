@@ -28,92 +28,92 @@
 
 class ContentManager;
 
-///a higher level class that takes care of using the TEXTURE, DRAWABLE, and VERTEXARRAY objects to create a 2D sprite
-class SPRITE2D
+/// A higher level class using Texture, Drawable, and VertexArray objects to create a 2D sprite
+class Sprite2D
 {
 private:
-	VERTEXARRAY varray;
-	keyed_container <DRAWABLE>::handle draw;
-	keyed_container <SCENENODE>::handle node;
+	VertexArray varray;
+	keyed_container <Drawable>::handle draw;
+	keyed_container <SceneNode>::handle node;
 	float r, g, b, a;
 
-	DRAWABLE & GetDrawableFromParent(SCENENODE & parent)
+	Drawable & GetDrawableFromParent(SceneNode & parent)
 	{
-		SCENENODE & noderef = GetNode(parent);
+		SceneNode & noderef = GetNode(parent);
 		return GetDrawableFromNode(noderef);
 	}
-	const DRAWABLE & GetDrawableFromParent(const SCENENODE & parent) const
+	const Drawable & GetDrawableFromParent(const SceneNode & parent) const
 	{
-		const SCENENODE & noderef = GetNode(parent);
+		const SceneNode & noderef = GetNode(parent);
 		return GetDrawableFromNode(noderef);
 	}
 
-	DRAWABLE & GetDrawableFromNode(SCENENODE & noderef)
+	Drawable & GetDrawableFromNode(SceneNode & noderef)
 	{
 		return noderef.GetDrawlist().twodim.get(draw);
 	}
-	const DRAWABLE & GetDrawableFromNode(const SCENENODE & noderef) const
+	const Drawable & GetDrawableFromNode(const SceneNode & noderef) const
 	{
 		return noderef.GetDrawlist().twodim.get(draw);
 	}
 
 public:
-	SPRITE2D() :
+	Sprite2D() :
 		r(1), g(1), b(1), a(1)
 	{
 		// ctor
 	}
 
-	DRAWABLE & GetDrawable(SCENENODE & parent) {return GetDrawableFromParent(parent);}
+	Drawable & GetDrawable(SceneNode & parent) {return GetDrawableFromParent(parent);}
 
-	SCENENODE & GetNode(SCENENODE & parent) {return parent.GetNode(node);}
+	SceneNode & GetNode(SceneNode & parent) {return parent.GetNode(node);}
 
-	const SCENENODE & GetNode(const SCENENODE & parent) const {return parent.GetNode(node);}
+	const SceneNode & GetNode(const SceneNode & parent) const {return parent.GetNode(node);}
 
-	void Unload(SCENENODE & parent);
+	void Unload(SceneNode & parent);
 
 	bool Load(
-		SCENENODE & parent,
+		SceneNode & parent,
 		const std::string & texturepath,
 		const std::string & texturename,
 		ContentManager & content,
         float draworder);
 
 	bool Load(
-		SCENENODE & parent,
-		std::tr1::shared_ptr<TEXTURE> texture2d,
+		SceneNode & parent,
+		std::tr1::shared_ptr<Texture> texture2d,
 		float draworder);
 
 	///get the transformation data associated with this sprite's scenenode.
 	///this can be used to get the current translation and rotation or set new ones.
-	TRANSFORM & GetTransform(SCENENODE & parent)
+	Transform & GetTransform(SceneNode & parent)
 	{
-		SCENENODE & noderef = GetNode(parent);
+		SceneNode & noderef = GetNode(parent);
 		return noderef.GetTransform();
 	}
-	const TRANSFORM & GetTransform(const SCENENODE & parent) const
+	const Transform & GetTransform(const SceneNode & parent) const
 	{
-		const SCENENODE & noderef = GetNode(parent);
+		const SceneNode & noderef = GetNode(parent);
 		return noderef.GetTransform();
 	}
 
-	void SetAlpha(SCENENODE & parent, float na)
+	void SetAlpha(SceneNode & parent, float na)
 	{
 		a=na;
 		GetDrawableFromParent(parent).SetColor(r,g,b,a);
 	}
 
-	void SetVisible(SCENENODE & parent, bool newvis)
+	void SetVisible(SceneNode & parent, bool newvis)
 	{
 		GetDrawableFromParent(parent).SetDrawEnable(newvis);
 	}
 
-	bool GetVisible(const SCENENODE & parent) const
+	bool GetVisible(const SceneNode & parent) const
 	{
 		return GetDrawableFromParent(parent).GetDrawEnable();
 	}
 
-	void SetColor(SCENENODE & parent, float nr, float ng, float nb)
+	void SetColor(SceneNode & parent, float nr, float ng, float nb)
 	{
 		r = nr;
 		g = ng;

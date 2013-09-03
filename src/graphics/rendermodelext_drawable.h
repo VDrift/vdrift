@@ -22,21 +22,21 @@
 
 #include "gl3v/rendermodelext.h"
 
-class VERTEXARRAY;
-class DRAWABLE;
+class VertexArray;
+class Drawable;
 
-class RenderModelExternalDrawable : public RenderModelExternal
+class RenderModelExtDrawable : public RenderModelExt
 {
-	friend class DRAWABLE;
+	friend class Drawable;
 	public:
-		void SetVertArray(const VERTEXARRAY* value) {vert_array = value;if (vert_array) enabled = true;}
+		void SetVertArray(const VertexArray* value) {vert_array = value;if (vert_array) enabled = true;}
 		virtual void draw(GLWrapper & gl) const;
 
-		RenderModelExternalDrawable() : vert_array(NULL) {}
-		~RenderModelExternalDrawable() {}
+		RenderModelExtDrawable() : vert_array(NULL) {}
+		~RenderModelExtDrawable() {}
 
 	private:
-		const VERTEXARRAY * vert_array;
+		const VertexArray * vert_array;
         void SetLineSize(float size) { linesize = size; }
 
         float linesize;

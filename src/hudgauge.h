@@ -22,19 +22,19 @@
 
 #include "graphics/scenenode.h"
 
-class FONT;
+class Font;
 
-class HUDGAUGE
+class HudGauge
 {
 public:
-	HUDGAUGE();
+	HudGauge();
 
 	// startangle and endangle in rad
 	// startvalue + endvalue = n * valuedelta
 	void Set(
-		SCENENODE & parent,
-		const std::tr1::shared_ptr<TEXTURE> & texture,
-		const FONT & font,
+		SceneNode & parent,
+		const std::tr1::shared_ptr<Texture> & texture,
+		const Font & font,
 		float hwratio,
 		float centerx,
 		float centery,
@@ -46,8 +46,8 @@ public:
 		float valuedelta);
 
 	void Revise(
-		SCENENODE & parent,
-		const FONT & font,
+		SceneNode & parent,
+		const Font & font,
 		float startvalue,
 		float endvalue,
 		float valuedelta);
@@ -55,14 +55,14 @@ public:
 	void Update(float value);
 
 private:
-	keyed_container<DRAWABLE>::handle pointer_draw;
-	keyed_container<DRAWABLE>::handle dialnum_draw;
-	keyed_container<DRAWABLE>::handle dial_draw;
-	std::tr1::shared_ptr<TEXTURE> texture;
-	VERTEXARRAY pointer_rotated;
-	VERTEXARRAY pointer;
-	VERTEXARRAY dial_label;
-	VERTEXARRAY dial_marks;
+	keyed_container<Drawable>::handle pointer_draw;
+	keyed_container<Drawable>::handle dialnum_draw;
+	keyed_container<Drawable>::handle dial_draw;
+	std::tr1::shared_ptr<Texture> texture;
+	VertexArray pointer_rotated;
+	VertexArray pointer;
+	VertexArray dial_label;
+	VertexArray dial_marks;
 	float centerx;
 	float centery;
 	float scalex;

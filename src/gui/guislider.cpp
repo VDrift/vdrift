@@ -19,18 +19,18 @@
 
 #include "guislider.h"
 
-GUISLIDER::GUISLIDER() :
+GuiSlider::GuiSlider() :
 	m_value(0), m_x(0), m_y(0), m_w(0), m_h(0), m_fill(false)
 {
-	set_value.call.bind<GUISLIDER, &GUISLIDER::SetValue>(this);
+	set_value.call.bind<GuiSlider, &GuiSlider::SetValue>(this);
 }
 
-GUISLIDER::~GUISLIDER()
+GuiSlider::~GuiSlider()
 {
 	// dtor
 }
 
-void GUISLIDER::Update(SCENENODE & scene, float dt)
+void GuiSlider::Update(SceneNode & scene, float dt)
 {
 	if (m_update)
 	{
@@ -43,13 +43,13 @@ void GUISLIDER::Update(SCENENODE & scene, float dt)
 		}
 		m_slider.SetToBillboard(x, m_y, w, m_h);
 
-		GUIWIDGET::Update(scene, dt);
+		GuiWidget::Update(scene, dt);
 	}
 }
 
-void GUISLIDER::SetupDrawable(
-	SCENENODE & scene,
-	std::tr1::shared_ptr<TEXTURE> texture,
+void GuiSlider::SetupDrawable(
+	SceneNode & scene,
+	std::tr1::shared_ptr<Texture> texture,
 	float centerx, float centery,
 	float w, float h, float z, bool fill,
 	std::ostream & error_output)
@@ -63,7 +63,7 @@ void GUISLIDER::SetupDrawable(
 	m_slider.Load(scene, texture, z);
 }
 
-void GUISLIDER::SetValue(const std::string & valuestr)
+void GuiSlider::SetValue(const std::string & valuestr)
 {
 	float value;
 	std::stringstream s(valuestr);
@@ -75,7 +75,7 @@ void GUISLIDER::SetValue(const std::string & valuestr)
 	}
 }
 
-DRAWABLE & GUISLIDER::GetDrawable(SCENENODE & scene)
+Drawable & GuiSlider::GetDrawable(SceneNode & scene)
 {
 	return m_slider.GetDrawable(scene);
 }

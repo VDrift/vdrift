@@ -33,26 +33,26 @@
 typedef SDL_Keycode SDLKey;
 #endif
 
-class EVENTSYSTEM_SDL
+class EventSystem
 {
 public:
-	class BUTTON_STATE
+	class ButtonState
 	{
 	public:
 		bool down; 	//button is down (false for up)
 		bool just_down; //button was just pressed
 		bool just_up;	//button was just released
 
-		BUTTON_STATE() : down(false), just_down(false), just_up(false) {}
+		ButtonState() : down(false), just_down(false), just_up(false) {}
 	};
 
-	class JOYSTICK
+	class Joystick
 	{
 		public:
-			class HATPOSITION
+			class HatPosition
 			{
 				public:
-					HATPOSITION() : centered(true), up(false), right(false), down(false), left(false) {}
+					HatPosition() : centered(true), up(false), right(false), down(false), left(false) {}
 
 					bool centered;
 					bool up;
@@ -64,11 +64,11 @@ public:
 		private:
 			SDL_Joystick * sdl_joyptr;
 			std::vector <float> axis;
-			std::vector <TOGGLE> button;
-			std::vector <HATPOSITION> hat;
+			std::vector <Toggle> button;
+			std::vector <HatPosition> hat;
 
 		public:
-			JOYSTICK(SDL_Joystick * ptr, int numaxes, int numbuttons, int numhats) : sdl_joyptr(ptr)
+			Joystick(SDL_Joystick * ptr, int numaxes, int numbuttons, int numhats) : sdl_joyptr(ptr)
 			{
 				axis.resize(numaxes, 0);
 				button.resize(numbuttons);
@@ -81,7 +81,7 @@ public:
 
 			void AgeToggles()
 			{
-				for (std::vector <TOGGLE>::iterator i = button.begin(); i != button.end(); ++i)
+				for (std::vector <Toggle>::iterator i = button.begin(); i != button.end(); ++i)
 				{
 					i->Tick();
 				}
@@ -102,12 +102,12 @@ public:
 					return axis[axisid];
 			}
 
-			TOGGLE GetButton(unsigned int buttonid) const
+			Toggle GetButton(unsigned int buttonid) const
 			{
 				//don't want to assert since this could be due to a control file misconfiguration
 
 				if (buttonid >= button.size())
-					return TOGGLE();
+					return Toggle();
 				else
 					return button[buttonid];
 			}
@@ -119,9 +119,9 @@ public:
 			}
 	};
 
-	EVENTSYSTEM_SDL();
+	EventSystem();
 
-	~EVENTSYSTEM_SDL();
+	~EventSystem();
 
 	void Init(std::ostream & info_output);
 
@@ -137,11 +137,11 @@ public:
 
 	void ProcessEvents();
 
-	BUTTON_STATE GetMouseButtonState(int id) const;
+	ButtonState GetMouseButtonState(int id) const;
 
-	BUTTON_STATE GetKeyState(SDLKey id) const;
+	ButtonState GetKeyState(SDLKey id) const;
 
-	std::map <SDLKey, TOGGLE> & GetKeyMap() {return keymap;}
+	std::map <SDLKey, Toggle> & GetKeyMap() {return keymap;}
 
 	///returns a 2 element vector (x,y)
 	std::vector <int> GetMousePosition() const;
@@ -151,17 +151,17 @@ public:
 
 	float GetFPS() const;
 
-	enum TEST_STIM
+	enum StimEnum
 	{
 		STIM_AGE_KEYS,
   		STIM_AGE_MBUT,
-    		STIM_INSERT_KEY_DOWN,
-      		STIM_INSERT_KEY_UP,
-      		STIM_INSERT_MBUT_DOWN,
+		STIM_INSERT_KEY_DOWN,
+		STIM_INSERT_KEY_UP,
+		STIM_INSERT_MBUT_DOWN,
 		STIM_INSERT_MBUT_UP,
 		STIM_INSERT_MOTION
 	};
-	void TestStim(TEST_STIM stim);
+	void TestStim(StimEnum stim);
 
 	float GetJoyAxis(unsigned int joynum, int axisnum) const
 	{
@@ -171,12 +171,12 @@ public:
 			return 0.0;
 	}
 
-	TOGGLE GetJoyButton(unsigned int joynum, int buttonnum) const
+	Toggle GetJoyButton(unsigned int joynum, int buttonnum) const
 	{
 		if (joynum < joystick.size())
 			return joystick[joynum].GetButton(buttonnum);
 		else
-			return TOGGLE();
+			return Toggle();
 	}
 
 	int GetNumJoysticks() const
@@ -200,7 +200,7 @@ public:
 			return 0;
 	}
 
-	std::vector <JOYSTICK> & GetJoysticks()
+	std::vector <Joystick> & GetJoysticks()
 	{
 		return joystick;
 	}
@@ -210,55 +210,55 @@ private:
 	double dt;
 	bool quit;
 
-	std::vector <JOYSTICK> joystick;
-	std::map <SDLKey, TOGGLE> keymap;
-	std::map <int, TOGGLE> mbutmap;
+	std::vector <Joystick> joystick;
+	std::map <SDLKey, Toggle> keymap;
+	std::map <int, Toggle> mbutmap;
 
 	int mousex, mousey, mousexrel, mouseyrel;
 
 	unsigned int fps_memory_window;
 	std::list <float> fps_memory;
 
-	enum DIRECTION {UP, DOWN};
+	enum DirectionEnum {UP, DOWN};
 
 	void HandleMouseMotion(int x, int y, int xrel, int yrel);
 
 	template <class T>
-	void HandleToggle(std::map <T, TOGGLE> & togglemap, const DIRECTION dir, const T & id)
+	void HandleToggle(std::map <T, Toggle> & togglemap, const DirectionEnum dir, const T & id)
 	{
 		togglemap[id].Tick();
 		togglemap[id].Set(dir == DOWN);
 	}
 
-	void HandleMouseButton(DIRECTION dir, int id);
+	void HandleMouseButton(DirectionEnum dir, int id);
 
-	void HandleKey(DIRECTION dir, SDLKey id);
+	void HandleKey(DirectionEnum dir, SDLKey id);
 
 	void RecordFPS(const float fps);
 
 	void HandleQuit() {quit = true;}
 
 	template <class T>
-	void AgeToggles(std::map <T, TOGGLE> & togglemap)
+	void AgeToggles(std::map <T, Toggle> & togglemap)
 	{
-		std::list <typename std::map<T, TOGGLE>::iterator> todel;
-		for (typename std::map <T, TOGGLE>::iterator i = togglemap.begin(); i != togglemap.end(); ++i)
+		std::list <typename std::map<T, Toggle>::iterator> todel;
+		for (typename std::map <T, Toggle>::iterator i = togglemap.begin(); i != togglemap.end(); ++i)
 		{
 			i->second.Tick();
 			if (!i->second.GetState() && !i->second.GetImpulseFalling())
 				todel.push_back(i);
 		}
 
-		for (typename std::list <typename std::map<T, TOGGLE>::iterator>::iterator i = todel.begin(); i != todel.end(); ++i)
+		for (typename std::list <typename std::map<T, Toggle>::iterator>::iterator i = todel.begin(); i != todel.end(); ++i)
 			togglemap.erase(*i);
 	}
 
 	template <class T>
-	BUTTON_STATE GetToggle(const std::map <T, TOGGLE> & togglemap, const T & id) const
+	ButtonState GetToggle(const std::map <T, Toggle> & togglemap, const T & id) const
 	{
-		BUTTON_STATE s;
+		ButtonState s;
 		s.down = s.just_down = s.just_up = false;
-		typename std::map <T, TOGGLE>::const_iterator i = togglemap.find(id);
+		typename std::map <T, Toggle>::const_iterator i = togglemap.find(id);
 		if (i != togglemap.end())
 		{
 			s.down = i->second.GetState();

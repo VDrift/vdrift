@@ -106,7 +106,7 @@ DynamicsWorld::~DynamicsWorld()
 	reset();
 }
 
-const BEZIER* DynamicsWorld::GetSectorPatch(int i){
+const Bezier* DynamicsWorld::GetSectorPatch(int i){
 	return track->GetSectorPatch(i);
 }
 
@@ -115,14 +115,14 @@ bool DynamicsWorld::castRay(
 	const btVector3 & direction,
 	const btScalar length,
 	const btCollisionObject * caster,
-	COLLISION_CONTACT & contact) const
+	CollisionContact & contact) const
 {
 	btVector3 p = origin + direction * length;
 	btVector3 n = -direction;
 	btScalar d = length;
 	int patch_id = -1;
-	const BEZIER * b = 0;
-	const TRACKSURFACE * s = TRACKSURFACE::None();
+	const Bezier * b = 0;
+	const TrackSurface * s = TrackSurface::None();
 	const btCollisionObject * c = 0;
 
 	MyRayResultCallback ray(origin, p, caster);
@@ -138,8 +138,8 @@ bool DynamicsWorld::castRay(
 		c = ray.m_collisionObject;
 		if (c->isStaticObject())
 		{
-			TRACKSURFACE* tsc = static_cast<TRACKSURFACE*>(c->getUserPointer());
-			const std::vector<TRACKSURFACE> & surfaces = track->GetSurfaces();
+			TrackSurface* tsc = static_cast<TrackSurface*>(c->getUserPointer());
+			const std::vector<TrackSurface> & surfaces = track->GetSurfaces();
 			if (tsc >= &surfaces[0] && tsc <= &surfaces[surfaces.size()-1])
 			{
 				s = tsc;
@@ -160,10 +160,10 @@ bool DynamicsWorld::castRay(
 		// track bezierpatch collision
 		if (track)
 		{
-			MATHVECTOR<float, 3> org(ToMathVector<float>(origin));
-			MATHVECTOR<float, 3> dir(ToMathVector<float>(direction));
-			MATHVECTOR<float, 3> colpoint;
-			MATHVECTOR<float, 3> colnormal;
+			Vec3 org = ToMathVector<float>(origin);
+			Vec3 dir = ToMathVector<float>(direction);
+			Vec3 colpoint;
+			Vec3 colnormal;
 			patch_id = contact.GetPatchId();
 			if (track->CastRay(org, dir, length, patch_id, colpoint, b, colnormal))
 			{
@@ -173,12 +173,12 @@ bool DynamicsWorld::castRay(
 			}
 		}
 
-		contact = COLLISION_CONTACT(p, n, d, patch_id, b, s, c);
+		contact = CollisionContact(p, n, d, patch_id, b, s, c);
 		return true;
 	}
 
 	// should only happen on vehicle rollover
-	contact = COLLISION_CONTACT(p, n, d, patch_id, b, s, c);
+	contact = CollisionContact(p, n, d, patch_id, b, s, c);
 	return false;
 }
 
@@ -218,7 +218,7 @@ void DynamicsWorld::addCollisionObject(btCollisionObject* object)
 	btDiscreteDynamicsWorld::addCollisionObject(object);
 }
 
-void DynamicsWorld::reset(const TRACK & t)
+void DynamicsWorld::reset(const Track & t)
 {
 	reset();
 	track = &t;

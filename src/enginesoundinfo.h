@@ -20,13 +20,13 @@
 #ifndef _ENGINESOUNDINFO_H
 #define _ENGINESOUNDINFO_H
 
-struct ENGINESOUNDINFO
+struct EngineSoundInfo
 {
 	float minrpm, maxrpm, naturalrpm, fullgainrpmstart, fullgainrpmend;
 	enum { POWERON, POWEROFF, BOTH } power;
 	size_t sound_source;
 
-	ENGINESOUNDINFO() :
+	EngineSoundInfo() :
 		minrpm(1.0),
 		maxrpm(100000.0),
 		naturalrpm(7000.0),
@@ -38,7 +38,7 @@ struct ENGINESOUNDINFO
 		// ctor
 	}
 
-	bool operator < (const ENGINESOUNDINFO & other) const
+	bool operator < (const EngineSoundInfo & other) const
 	{
 		return minrpm < other.minrpm;
 	}

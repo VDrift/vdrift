@@ -22,12 +22,9 @@
 
 #include <iosfwd>
 
-namespace GLUTIL
-{
-	/// returns true on error
-	bool CheckForOpenGLErrors(
-		const std::string & activity_description,
-		std::ostream & error_output);
-}
+/// returns true on error
+bool CheckForOpenGLErrors(
+	const std::string & activity_description,
+	std::ostream & error_output);
 
 #endif

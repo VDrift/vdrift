@@ -26,11 +26,11 @@
 
 #include <iostream>
 
-class FBOBJECT;
+class FrameBufferObject;
 
-class FBTEXTURE : public TEXTURE_INTERFACE
+class FrameBufferTexture : public TextureInterface
 {
-	friend class FBOBJECT;
+	friend class FrameBufferObject;
 	public:
 		enum TARGET
 		{
@@ -59,7 +59,7 @@ class FBTEXTURE : public TEXTURE_INTERFACE
 			DEPTH24 = GL_DEPTH_COMPONENT24
 		};
 
-		FBTEXTURE() :
+		FrameBufferTexture() :
 			fbtexture(0),
 			renderbuffer_multisample(0),
 			inited(false),
@@ -74,7 +74,7 @@ class FBTEXTURE : public TEXTURE_INTERFACE
 			cur_side(POSX),
 			depthcomparisonenabled(true)
 			{}
-		~FBTEXTURE() {DeInit();}
+		~FrameBufferTexture() {DeInit();}
 		void Init(int sizex, int sizey, TARGET target, FORMAT newformat, bool filternearest, bool usemipmap, std::ostream & error_output, int newmultisample = 0, bool newdepthcomparisonenabled = true);
 		void DeInit();
 		virtual void Activate() const;

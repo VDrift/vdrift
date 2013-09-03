@@ -25,12 +25,12 @@
 #include <string>
 #include <map>
 
-class SCENENODE;
+class SceneNode;
 
-class GUICONTROL
+class GuiControl
 {
 public:
-	enum EVENT
+	enum Event
 	{
 		FOCUS = 0,
 		BLUR,
@@ -44,22 +44,22 @@ public:
 		SCROLLR,
 		EVENTNUM
 	};
-	enum EVENTV
+	enum EventV
 	{
 		SELECTX = 0,
 		SELECTY,
 		EVENTVNUM
 	};
 
-	GUICONTROL();
+	GuiControl();
 
-	virtual ~GUICONTROL();
+	virtual ~GuiControl();
 
 	/// Return true if control contains x, y
 	virtual bool Focus(float x, float y);
 
 	/// Signal to slots attached to events
-	virtual void Signal(EVENT ev);
+	virtual void Signal(Event ev);
 
 	const std::string & GetDescription() const;
 

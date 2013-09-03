@@ -25,18 +25,18 @@
 #include "guilanguage.h"
 #include "font.h"
 
-class GUI
+class Gui
 {
 public:
-	GUI();
+	Gui();
 
 	const std::string & GetActivePageName() const;
 
 	const std::string & GetLastPageName() const;
 
-	SCENENODE & GetNode();
+	SceneNode & GetNode();
 
-	GUIPAGE & GetPage(const std::string & name);
+	GuiPage & GetPage(const std::string & name);
 
 	bool Active() const;
 
@@ -46,7 +46,7 @@ public:
 
 	bool Load(
 		const std::list <std::string> & pagelist,
-		const std::map<std::string, GUIOPTION::LIST> & valuelists,
+		const std::map<std::string, GuiOption::List> & valuelists,
 		const std::string & datapath,
 		const std::string & optionsfile,
 		const std::string & skinname,
@@ -89,7 +89,7 @@ public:
 	void SetOptionValues(
 		const std::string & optionname,
 		const std::string & curvalue,
-		const GUIOPTION::LIST & newvalues,
+		const GuiOption::List & newvalues,
 		std::ostream & error_output);
 
 	/// returns false if the specified page/label does not exist
@@ -103,41 +103,41 @@ public:
 	/// access options
 	std::string GetOptionValue(const std::string & name) const;
 	void SetOptionValue(const std::string & name, const std::string & value);
-	GUIOPTION & GetOption(const std::string & name);
+	GuiOption & GetOption(const std::string & name);
 
 	/// access to language dict and font for translation purposes
-	const GUILANGUAGE & GetLanguageDict() const;
-	const FONT & GetFont() const;
+	const GuiLanguage & GetLanguageDict() const;
+	const Font & GetFont() const;
 
-	typedef std::map<std::string, GUIOPTION> OPTIONMAP;
-	typedef std::map<std::string, GUIPAGE> PAGEMAP;
+	typedef std::map<std::string, GuiOption> OptionMap;
+	typedef std::map<std::string, GuiPage> PageMap;
 
 private:
-	OPTIONMAP options;
-	PAGEMAP pages;
-	PAGEMAP::iterator last_active_page;
-	PAGEMAP::iterator active_page;
-	SCENENODE node;
-	GUILANGUAGE lang;
-	FONT font;
+	OptionMap options;
+	PageMap pages;
+	PageMap::iterator last_active_page;
+	PageMap::iterator active_page;
+	SceneNode node;
+	GuiLanguage lang;
+	Font font;
 	float m_cursorx, m_cursory;			///< cache cursor position
 	float animation_counter;
 	float animation_count_start;
 	bool ingame;
 
 	/// page activate callback
-	struct PAGECB
+	struct PageCb
 	{
-		GUI * gui;
+		Gui * gui;
 		std::string page;
 		Slot0 action;
 
-		PAGECB();
-		PAGECB(const PAGECB & other);
-		PAGECB & operator=(const PAGECB & other);
+		PageCb();
+		PageCb(const PageCb & other);
+		PageCb & operator=(const PageCb & other);
 		void call();
 	};
-	std::vector<PAGECB> page_activate;
+	std::vector<PageCb> page_activate;
 
 	/// return false on failure
 	/// on empty page name will attempt to load prev(last active) page
@@ -147,11 +147,11 @@ private:
 
 	/// add option slots to action map
 	void RegisterOptions(
-		VSIGNALMAP & vsignalmap,
-		VNACTIONMAP & vnactionmap,
-		VACTIONMAP & vactionmap,
-		NACTIONMAP & nactionmap,
-		ACTIONMAP & actionmap);
+		StrSignalMap & vsignalmap,
+		StrVecSlotlMap & vnactionmap,
+		StrSlotMap & vactionmap,
+		IntSlotMap & nactionmap,
+		SlotMap & actionmap);
 };
 
 #endif

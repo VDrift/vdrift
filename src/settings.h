@@ -27,10 +27,10 @@
 
 class Config;
 
-class SETTINGS
+class Settings
 {
 public:
-	SETTINGS();
+	Settings();
 
 	void SetFailsafeSettings();
 

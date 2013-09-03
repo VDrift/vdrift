@@ -32,7 +32,7 @@ static inline float lerp(float x, float y, float s)
 	return x + clamp(s, 0, 1) * (y - x);
 }
 
-PARTICLE_SYSTEM::PARTICLE_SYSTEM() :
+ParticleSystem::ParticleSystem() :
 	max_particles(512),
 	texture_tiles(9),
 	cur_texture_tile(0),
@@ -46,26 +46,26 @@ PARTICLE_SYSTEM::PARTICLE_SYSTEM() :
 	// ctor
 }
 
-void PARTICLE_SYSTEM::Load(
+void ParticleSystem::Load(
 	const std::string & texpath,
 	const std::string & texname,
 	int anisotropy,
 	ContentManager & content)
 {
-	TEXTUREINFO texinfo;
+	TextureInfo texinfo;
 	texinfo.anisotropy = anisotropy;
-	std::tr1::shared_ptr<TEXTURE> texture_atlas;
+	std::tr1::shared_ptr<Texture> texture_atlas;
 	content.load(texture_atlas, texpath, texname, texinfo);
 
-	draw = GetDrawlist(node).insert(DRAWABLE());
-	DRAWABLE & drawref = GetDrawlist(node).get(draw);
+	draw = GetDrawlist(node).insert(Drawable());
+	Drawable & drawref = GetDrawlist(node).get(draw);
 	drawref.SetDrawEnable(false);
 	drawref.SetVertArray(&varrays[cur_varray]);
 	drawref.SetDiffuseMap(texture_atlas);
 	drawref.SetCull(false, false);
 }
 
-void PARTICLE_SYSTEM::Update(float dt)
+void ParticleSystem::Update(float dt)
 {
 	//  update particles
 	for (size_t i = 0; i < particles.size(); i++)
@@ -88,9 +88,9 @@ void PARTICLE_SYSTEM::Update(float dt)
 	}
 }
 
-void PARTICLE_SYSTEM::UpdateGraphics(
-	const QUATERNION <float> & camdir,
-	const MATHVECTOR <float, 3> & campos,
+void ParticleSystem::UpdateGraphics(
+	const Quat & camdir,
+	const Vec3 & campos,
 	float znear, float zfar,
 	float fovy, float fovz)
 {
@@ -104,8 +104,8 @@ void PARTICLE_SYSTEM::UpdateGraphics(
 	distance_from_cam.clear();
 	for (unsigned i = 0; i < particles.size(); ++i)
 	{
-		PARTICLE & p = particles[i];
-		MATHVECTOR <float, 3> pos = p.start_position;
+		Particle & p = particles[i];
+		Vec3 pos = p.start_position;
 		pos = pos + p.direction * p.time * p.speed - campos;
 		camdir.RotateVector(pos);
 
@@ -128,8 +128,8 @@ void PARTICLE_SYSTEM::UpdateGraphics(
 		if (distance_from_cam[i] < znear || distance_from_cam[i] > zfar)
 			continue;
 
-		PARTICLE & p = particles[i];
-		MATHVECTOR <float, 3> pos = p.position;
+		Particle & p = particles[i];
+		Vec3 pos = p.position;
 
 		float trans = p.transparency * std::pow((1.0f - p.time / p.longevity), 4);
 		trans = clamp(trans, 0.0f, 1.0f);
@@ -183,19 +183,19 @@ void PARTICLE_SYSTEM::UpdateGraphics(
 	}
 }
 
-void PARTICLE_SYSTEM::SyncGraphics()
+void ParticleSystem::SyncGraphics()
 {
 	if (max_particles == 0)
 		return;
 
-	DRAWABLE & drawref = GetDrawlist(node).get(draw);
+	Drawable & drawref = GetDrawlist(node).get(draw);
 	drawref.SetVertArray(&varrays[cur_varray]);
 	drawref.SetDrawEnable(varrays[cur_varray].GetNumFaces());
 	cur_varray = (cur_varray + 1) % 2;
 }
 
-void PARTICLE_SYSTEM::AddParticle(
-	const MATHVECTOR <float,3> & position,
+void ParticleSystem::AddParticle(
+	const Vec3 & position,
 	float newspeed)
 {
 	if (max_particles == 0)
@@ -204,8 +204,8 @@ void PARTICLE_SYSTEM::AddParticle(
 	while (particles.size() >= max_particles)
 		particles.pop_back();
 
-	particles.push_back(PARTICLE());
-	PARTICLE & p = particles.back();
+	particles.push_back(Particle());
+	Particle & p = particles.back();
 	p.start_position = position;
 	p.direction = direction;
 	p.transparency = transparency_range.first + newspeed * (transparency_range.second - transparency_range.first);
@@ -218,12 +218,12 @@ void PARTICLE_SYSTEM::AddParticle(
 	cur_texture_tile = (cur_texture_tile + 1) % texture_tiles;
 }
 
-void PARTICLE_SYSTEM::Clear()
+void ParticleSystem::Clear()
 {
 	particles.clear();
 }
 
-void PARTICLE_SYSTEM::SetParameters(
+void ParticleSystem::SetParameters(
 	int maxparticles,
 	float transmin,
 	float transmax,
@@ -233,7 +233,7 @@ void PARTICLE_SYSTEM::SetParameters(
 	float speedmax,
 	float sizemin,
 	float sizemax,
-	MATHVECTOR <float,3> newdir)
+	Vec3 newdir)
 {
 	max_particles = maxparticles < 0 ? 0 : (maxparticles > 1024 ? 1024 : maxparticles);
 	particles.reserve(max_particles);
@@ -253,16 +253,16 @@ void PARTICLE_SYSTEM::SetParameters(
 QT_TEST(particle_test)
 {
 	std::stringstream out;
-	PARTICLE_SYSTEM s;
+	ParticleSystem s;
 	ContentManager c(out);
-	s.SetParameters(4,1.0,1.0,0.5,1.0,1.0,1.0,1.0,1.0,MATHVECTOR<float,3>(0,1,0));
+	s.SetParameters(4,1.0,1.0,0.5,1.0,1.0,1.0,1.0,1.0,Vec3(0,1,0));
 	s.Load(std::string(), std::string(), 0, c);
 
 	//test basic particle management:  adding particles and letting them expire and get removed over time
 	QT_CHECK_EQUAL(s.NumParticles(),0);
-	s.AddParticle(MATHVECTOR<float,3>(0,0,0),0);
+	s.AddParticle(Vec3(0,0,0),0);
 	QT_CHECK_EQUAL(s.NumParticles(),1);
-	s.AddParticle(MATHVECTOR<float,3>(0,0,0),1);
+	s.AddParticle(Vec3(0,0,0),1);
 	QT_CHECK_EQUAL(s.NumParticles(),2);
 	s.Update(0.45);
 	QT_CHECK_EQUAL(s.NumParticles(),2);

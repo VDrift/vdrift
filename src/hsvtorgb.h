@@ -106,7 +106,7 @@ inline void RGBtoHSV(float r, float g, float b, float & h, float & s, float & v)
 	}
 }
 
-inline unsigned packRGB(float r, float g, float b)
+inline unsigned PackRGB(float r, float g, float b)
 {
 	unsigned rgb = 0;
 	rgb |= (unsigned(r * 255) & 255) << 16;
@@ -115,7 +115,7 @@ inline unsigned packRGB(float r, float g, float b)
 	return rgb;
 }
 
-inline void unpackRGB(unsigned rgb, float & r, float & g, float & b)
+inline void UnpackRGB(unsigned rgb, float & r, float & g, float & b)
 {
 	r = float((rgb >> 16) & 255) / 255;
 	g = float((rgb >> 8) & 255) / 255;

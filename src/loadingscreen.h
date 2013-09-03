@@ -25,10 +25,10 @@
 
 class ContentManager;
 
-class LOADINGSCREEN
+class LoadingScreen
 {
 public:
-	SCENENODE & GetNode() {return root;}
+	SceneNode & GetNode() {return root;}
 
 	void Update(float percentage, const std::string & optional_text, float posx, float posy);
 
@@ -38,18 +38,18 @@ public:
 		int displayw,
 		int displayh,
 		ContentManager & content,
-		FONT & font);
+		Font & font);
 
 private:
-	SCENENODE root;
-	keyed_container <DRAWABLE>::handle bardraw;
-	VERTEXARRAY barverts;
-	keyed_container <DRAWABLE>::handle barbackdraw;
-	VERTEXARRAY barbackverts;
-	keyed_container <DRAWABLE>::handle boxdraw;
-	VERTEXARRAY boxverts;
+	SceneNode root;
+	keyed_container <Drawable>::handle bardraw;
+	VertexArray barverts;
+	keyed_container <Drawable>::handle barbackdraw;
+	VertexArray barbackverts;
+	keyed_container <Drawable>::handle boxdraw;
+	VertexArray boxverts;
 	float w, h, hscale;
-	TEXT_DRAWABLE text;
+	TextDrawable text;
 };
 
 #endif

@@ -23,14 +23,14 @@
 #include "model.h"
 #include <iosfwd>
 
-class JOEPACK;
-struct JOEObject;
+class JoePack;
+struct JoeObject;
 
 // This class handles all of the loading code
-class MODEL_JOE03 : public MODEL
+class ModelJoe03 : public Model
 {
 public:
-	virtual ~MODEL_JOE03()
+	virtual ~ModelJoe03()
 	{
 		Clear();
 	}
@@ -45,7 +45,7 @@ public:
 		return false;
 	}
 
-	bool Load(const std::string & strFileName, std::ostream & error_output, bool genlist, const JOEPACK * pack);
+	bool Load(const std::string & strFileName, std::ostream & error_output, bool genlist, const JoePack * pack);
 
 
 
@@ -55,9 +55,9 @@ private:
 	static const float MODEL_SCALE;
 
 	// This reads in the data from the MD2 file and stores it in the member variable
-	void ReadData(FILE * m_FilePointer, const JOEPACK * pack, JOEObject & Object);
+	void ReadData(FILE * m_FilePointer, const JoePack * pack, JoeObject & Object);
 
-	bool LoadFromHandle(FILE * f, const JOEPACK * pack, std::ostream & error_output);
+	bool LoadFromHandle(FILE * f, const JoePack * pack, std::ostream & error_output);
 };
 
 #endif

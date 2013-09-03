@@ -21,17 +21,17 @@
 #include "gui/text_draw.h"
 #include <sstream>
 
-static keyed_container<DRAWABLE>::handle AddDrawable(SCENENODE & node)
+static keyed_container<Drawable>::handle AddDrawable(SceneNode & node)
 {
-	return node.GetDrawlist().twodim.insert(DRAWABLE());
+	return node.GetDrawlist().twodim.insert(Drawable());
 }
 
-static DRAWABLE & GetDrawable(SCENENODE & node, const keyed_container<DRAWABLE>::handle & drawhandle)
+static Drawable & GetDrawable(SceneNode & node, const keyed_container<Drawable>::handle & drawhandle)
 {
 	return node.GetDrawlist().twodim.get(drawhandle);
 }
 
-static void EraseDrawable(SCENENODE & node, keyed_container<DRAWABLE>::handle & drawhandle)
+static void EraseDrawable(SceneNode & node, keyed_container<Drawable>::handle & drawhandle)
 {
 	if (drawhandle.valid())
 	{
@@ -40,17 +40,17 @@ static void EraseDrawable(SCENENODE & node, keyed_container<DRAWABLE>::handle & 
 	}
 }
 
-static keyed_container<DRAWABLE>::handle AddTextDrawable(SCENENODE & node)
+static keyed_container<Drawable>::handle AddTextDrawable(SceneNode & node)
 {
-	return node.GetDrawlist().twodim.insert(DRAWABLE());
+	return node.GetDrawlist().twodim.insert(Drawable());
 }
 
-static DRAWABLE & GetTextDrawable(SCENENODE & node, const keyed_container<DRAWABLE>::handle & drawhandle)
+static Drawable & GetTextDrawable(SceneNode & node, const keyed_container<Drawable>::handle & drawhandle)
 {
 	return node.GetDrawlist().twodim.get(drawhandle);
 }
 
-static void EraseTextDrawable(SCENENODE & node, keyed_container<DRAWABLE>::handle & drawhandle)
+static void EraseTextDrawable(SceneNode & node, keyed_container<Drawable>::handle & drawhandle)
 {
 	if (drawhandle.valid())
 	{
@@ -59,7 +59,7 @@ static void EraseTextDrawable(SCENENODE & node, keyed_container<DRAWABLE>::handl
 	}
 }
 
-HUDGAUGE::HUDGAUGE() :
+HudGauge::HudGauge() :
 	centerx(0),
 	centery(0),
 	scalex(1),
@@ -71,10 +71,10 @@ HUDGAUGE::HUDGAUGE() :
 	// ctor
 }
 
-void HUDGAUGE::Set(
-	SCENENODE & parent,
-	const std::tr1::shared_ptr<TEXTURE> & texture,
-	const FONT & font,
+void HudGauge::Set(
+	SceneNode & parent,
+	const std::tr1::shared_ptr<Texture> & texture,
+	const Font & font,
 	float hwratio,
 	float centerx,
 	float centery,
@@ -116,7 +116,7 @@ void HUDGAUGE::Set(
 		float pb[] = {-0.02, 1, 0, 0.02, 1, 0, 0.02, 0.92, 0, -0.02, 0.92, 0};
 		float t[] = {0, 0, 1, 0, 1, 1, 0, 1};
 		int f[] = {0, 2, 1, 0, 3, 2};
-		VERTEXARRAY bm;
+		VertexArray bm;
 		bm.SetVertices(pb, 12);
 		bm.SetTexCoordSets(1);
 		bm.SetTexCoords(0, t, 8);
@@ -124,7 +124,7 @@ void HUDGAUGE::Set(
 
 		// small marker
 		float ps[] = {-0.01, 1, 0, 0.01, 1, 0, 0.01, 0.95, 0, -0.01, 0.95, 0};
-		VERTEXARRAY sm;
+		VertexArray sm;
 		sm.SetVertices(ps, 12);
 		sm.SetTexCoordSets(1);
 		sm.SetTexCoords(0, t, 8);
@@ -134,7 +134,7 @@ void HUDGAUGE::Set(
 		float angle = startangle;
 		for (int i = 0; i <= 3 * segments; ++i)
 		{
-			VERTEXARRAY temp = (i % 3) ? sm : bm;
+			VertexArray temp = (i % 3) ? sm : bm;
 			temp.Rotate(angle, 0, 0, -1);
 			dial_marks = dial_marks + temp;
 			angle = angle + delta;
@@ -143,7 +143,7 @@ void HUDGAUGE::Set(
 		dial_marks.Translate(centerx, centery, 0.0);
 
 		dial_draw = AddDrawable(parent);
-		DRAWABLE & drawref = GetDrawable(parent, dial_draw);
+		Drawable & drawref = GetDrawable(parent, dial_draw);
 		drawref.SetDiffuseMap(texture);
 		drawref.SetVertArray(&dial_marks);
 		drawref.SetCull(false, false);
@@ -153,7 +153,7 @@ void HUDGAUGE::Set(
 
 	// dial label
 	{
-		VERTEXARRAY temp;
+		VertexArray temp;
 		float w = 0.25 * radius * hwratio;
 		float h = 0.25 * radius;
 		float angle = startangle;
@@ -168,7 +168,7 @@ void HUDGAUGE::Set(
 			sstr >> text;
 			float x = centerx + 0.75 * sin(angle) * radius * hwratio;
 			float y = centery + 0.75 * cos(angle) * radius;
-			float xn = TEXT_DRAW::RenderText(font, text, x, y, w, h, temp);
+			float xn = TextDraw::RenderText(font, text, x, y, w, h, temp);
 			temp.Translate((x - xn) * 0.5, 0, 0);
 			dial_label = dial_label + temp;
 			angle += angle_delta;
@@ -176,7 +176,7 @@ void HUDGAUGE::Set(
 		}
 
 		dialnum_draw = AddTextDrawable(parent);
-		DRAWABLE & drawref = GetTextDrawable(parent, dialnum_draw);
+		Drawable & drawref = GetTextDrawable(parent, dialnum_draw);
 		drawref.SetDiffuseMap(font.GetFontTexture());
 		drawref.SetVertArray(&dial_label);
 		drawref.SetCull(false, false);
@@ -195,7 +195,7 @@ void HUDGAUGE::Set(
 		pointer.SetFaces(f, 6);
 
 		pointer_draw = AddDrawable(parent);
-		DRAWABLE & drawref = GetDrawable(parent, pointer_draw);
+		Drawable & drawref = GetDrawable(parent, pointer_draw);
 		drawref.SetDiffuseMap(texture);
 		drawref.SetVertArray(&pointer_rotated);
 		drawref.SetCull(false, false);
@@ -204,9 +204,9 @@ void HUDGAUGE::Set(
 	}
 }
 
-void HUDGAUGE::Revise(
-	SCENENODE & parent,
-	const FONT & font,
+void HudGauge::Revise(
+	SceneNode & parent,
+	const Font & font,
 	float startvalue,
 	float endvalue,
 	float valuedelta)
@@ -215,7 +215,7 @@ void HUDGAUGE::Revise(
 		startangle, endangle, startvalue, endvalue, valuedelta);
 }
 
-void HUDGAUGE::Update(float value)
+void HudGauge::Update(float value)
 {
 	float angle = value * scale + startangle;
 	pointer_rotated = pointer;

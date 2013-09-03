@@ -31,14 +31,14 @@
 #include <map>
 #include <memory>
 
-class GUI;
-class PATHMANAGER;
+class Gui;
+class PathManager;
 class Config;
 
-class UPDATE_MANAGER
+class UpdateManager
 {
 public:
-	UPDATE_MANAGER(AUTOUPDATE & update, std::ostream & info, std::ostream & err);
+	UpdateManager(AutoUpdate & update, std::ostream & info, std::ostream & err);
 
 	// returns true on success
 	bool Init(
@@ -54,19 +54,19 @@ public:
 
 	void Decrement() {cur_object_id--;}
 
-	void Show(GUI & gui);
+	void Show(Gui & gui);
 
-	void StartCheckForUpdates(GAME_DOWNLOADER downloader, GUI & gui);
+	void StartCheckForUpdates(GameDownloader downloader, Gui & gui);
 
 	size_t GetUpdatesNum() const { return updates_num; }
 
 	// returns true on success
-	bool ApplyUpdate(GAME_DOWNLOADER downloader, GUI & gui, const PATHMANAGER & pathmanager);
+	bool ApplyUpdate(GameDownloader downloader, Gui & gui, const PathManager & pathmanager);
 
 	std::vector<std::pair<std::string, std::string> > & GetValueList() {return disklist;}
 
 private:
-	AUTOUPDATE & autoupdate;
+	AutoUpdate & autoupdate;
 	std::ostream & info_output;
 	std::ostream & error_output;
 
@@ -87,7 +87,7 @@ private:
 	// retrieve updates.config from HEAD in the SVN data repository and store it in remoteconfig
 	// if remoteconfig is already set, returns true immediately
 	// returns true on success
-	bool DownloadRemoteConfig(GAME_DOWNLOADER downloader);
+	bool DownloadRemoteConfig(GameDownloader downloader);
 };
 
 #endif

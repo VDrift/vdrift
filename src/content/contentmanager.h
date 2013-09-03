@@ -96,18 +96,18 @@ private:
 		CacheShared<T> T ## _cache;\
 		operator Factory<T>&() {return T ## _factory;}\
 		operator CacheShared<T>&() {return T ## _cache;}
-		REGISTER(SOUNDBUFFER)
-		REGISTER(TEXTURE)
-		REGISTER(MODEL)
+		REGISTER(SoundBuffer)
+		REGISTER(Texture)
+		REGISTER(Model)
 		REGISTER(PTree)
 		#undef REGISTER
 
 		FactoryCached()
 		{
 			#define INIT(T) m_caches.push_back(&T ## _cache);
-			INIT(SOUNDBUFFER)
-			INIT(TEXTURE)
-			INIT(MODEL)
+			INIT(SoundBuffer)
+			INIT(Texture)
+			INIT(Model)
 			INIT(PTree)
 			#undef INIT
 		}

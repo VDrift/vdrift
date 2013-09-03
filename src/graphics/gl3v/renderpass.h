@@ -66,7 +66,7 @@ public:
 	/// w and h are the width and height of the application's window.
 	/// Returns true if the framebuffer dimensions have changed, which is a signal that the render targets have been recreated.
 	/// externalModels is a map of draw group name ID to a vector array of pointers to external models to be drawn along with models that have been added to the pass with addModel.
-	bool render(GLWrapper & gl, unsigned int w, unsigned int h, StringIdMap & stringMap, const std::vector <const std::vector <RenderModelExternal*>*> & externalModels, const std::tr1::unordered_map <StringId, RenderTextureEntry, StringId::hash> & sharedTextures, std::ostream & errorOutput);
+	bool render(GLWrapper & gl, unsigned int w, unsigned int h, StringIdMap & stringMap, const std::vector <const std::vector <RenderModelExt*>*> & externalModels, const std::tr1::unordered_map <StringId, RenderTextureEntry, StringId::hash> & sharedTextures, std::ostream & errorOutput);
 
 	// These functions handle modifications to the models container.
 	void addModel(const RenderModelEntry & entry, RenderModelHandle handle);

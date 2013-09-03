@@ -28,20 +28,20 @@
 #include <string>
 #include <list>
 
-class FONT;
-class GUILANGUAGE;
+class Font;
+class GuiLanguage;
 class ContentManager;
 
-class HUD
+class Hud
 {
 public:
-	HUD();
+	Hud();
 
 	bool Init(
 		const std::string & texturepath,
-		const GUILANGUAGE & lang,
-		const FONT & sansfont,
-		const FONT & lcdfont,
+		const GuiLanguage & lang,
+		const Font & sansfont,
+		const Font & lcdfont,
 		float displaywidth,
 		float displayheight,
 		bool debugon,
@@ -49,7 +49,7 @@ public:
 		std::ostream & error_output);
 
 	void Update(
-		const FONT & sansfont, const FONT & lcdfont,
+		const Font & sansfont, const Font & lcdfont,
 		float displaywidth, float displayheight,
 		float curlap, float lastlap, float bestlap, float stagingtimeleft,
 		int curlapnum, int numlaps, int curplace, int numcars,
@@ -61,75 +61,75 @@ public:
 		bool outofgas, bool nosactive, float nosamount,
 		bool drifting, float driftscore, float thisdriftscore);
 
-	SCENENODE & GetNode();
+	SceneNode & GetNode();
 
 	void SetVisible(bool value);
 
 private:
-	SCENENODE hudroot;
-	keyed_container<SCENENODE>::handle infonode;
+	SceneNode hudroot;
+	keyed_container<SceneNode>::handle infonode;
 
 	// timer
-	keyed_container<DRAWABLE>::handle timerboxdraw;
-	VERTEXARRAY timerboxverts;
-	TEXT_DRAWABLE laptime_label;
-	TEXT_DRAWABLE lastlaptime_label;
-	TEXT_DRAWABLE bestlaptime_label;
-	TEXT_DRAWABLE laptime;
-	TEXT_DRAWABLE lastlaptime;
-	TEXT_DRAWABLE bestlaptime;
+	keyed_container<Drawable>::handle timerboxdraw;
+	VertexArray timerboxverts;
+	TextDrawable laptime_label;
+	TextDrawable lastlaptime_label;
+	TextDrawable bestlaptime_label;
+	TextDrawable laptime;
+	TextDrawable lastlaptime;
+	TextDrawable bestlaptime;
 
 	// race info
-	keyed_container<DRAWABLE>::handle infoboxdraw;
-	VERTEXARRAY infoboxverts;
-	TEXT_DRAWABLE place_label;
-	TEXT_DRAWABLE lap_label;
-	TEXT_DRAWABLE drift_label;
-	TEXT_DRAWABLE placeindicator;
-	TEXT_DRAWABLE lapindicator;
-	TEXT_DRAWABLE driftscoreindicator;
-	TEXT_DRAWABLE raceprompt;
+	keyed_container<Drawable>::handle infoboxdraw;
+	VertexArray infoboxverts;
+	TextDrawable place_label;
+	TextDrawable lap_label;
+	TextDrawable drift_label;
+	TextDrawable placeindicator;
+	TextDrawable lapindicator;
+	TextDrawable driftscoreindicator;
+	TextDrawable raceprompt;
 
 	// debug info
-	keyed_container<SCENENODE>::handle debugnode;
-	keyed_container<DRAWABLE>::handle debugtextdraw1;
-	keyed_container<DRAWABLE>::handle debugtextdraw2;
-	keyed_container<DRAWABLE>::handle debugtextdraw3;
-	keyed_container<DRAWABLE>::handle debugtextdraw4;
-	TEXT_DRAW debugtext1;
-	TEXT_DRAW debugtext2;
-	TEXT_DRAW debugtext3;
-	TEXT_DRAW debugtext4;
+	keyed_container<SceneNode>::handle debugnode;
+	keyed_container<Drawable>::handle debugtextdraw1;
+	keyed_container<Drawable>::handle debugtextdraw2;
+	keyed_container<Drawable>::handle debugtextdraw3;
+	keyed_container<Drawable>::handle debugtextdraw4;
+	TextDraw debugtext1;
+	TextDraw debugtext2;
+	TextDraw debugtext3;
+	TextDraw debugtext4;
 
 	// rpm/speed bar
-	std::list<HUDBAR> bars;
-	keyed_container<DRAWABLE>::handle rpmbar;
-	keyed_container<DRAWABLE>::handle rpmredbar;
-	keyed_container<DRAWABLE>::handle rpmbox;
-	VERTEXARRAY rpmbarverts;
-	VERTEXARRAY rpmredbarverts;
-	VERTEXARRAY rpmboxverts;
+	std::list<HudBar> bars;
+	keyed_container<Drawable>::handle rpmbar;
+	keyed_container<Drawable>::handle rpmredbar;
+	keyed_container<Drawable>::handle rpmbox;
+	VertexArray rpmbarverts;
+	VertexArray rpmredbarverts;
+	VertexArray rpmboxverts;
 
 	// gear/speed values
-	keyed_container<DRAWABLE>::handle geartextdraw;
-	keyed_container<DRAWABLE>::handle mphtextdraw;
-	TEXT_DRAW geartext;
-	TEXT_DRAW mphtext;
+	keyed_container<Drawable>::handle geartextdraw;
+	keyed_container<Drawable>::handle mphtextdraw;
+	TextDraw geartext;
+	TextDraw mphtext;
 
 	// abs/tcs/gas/nos indicators
-	TEXT_DRAWABLE abs;
-	TEXT_DRAWABLE tcs;
-	TEXT_DRAWABLE gas;
-	TEXT_DRAWABLE nos;
+	TextDrawable abs;
+	TextDrawable tcs;
+	TextDrawable gas;
+	TextDrawable nos;
 
 	// gauge labels
-	TEXT_DRAW speedlabel;
-	TEXT_DRAW rpmlabel;
-	TEXT_DRAW rpmxlabel;
+	TextDraw speedlabel;
+	TextDraw rpmlabel;
+	TextDraw rpmxlabel;
 
 	// gauges
-	HUDGAUGE rpmgauge;
-	HUDGAUGE speedgauge;
+	HudGauge rpmgauge;
+	HudGauge speedgauge;
 	float maxrpm;
 	float maxspeed;
 	float speedscale;

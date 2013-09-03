@@ -24,10 +24,10 @@
 #include <stdlib.h>
 #include <time.h>
 
-class DETERMINISTICRANDOM
+class DeterministicRandom
 {
 public:
-	DETERMINISTICRANDOM();
+	DeterministicRandom();
 	void ReSeed();
 	void ReSeed(unsigned int newseed);
 
@@ -38,10 +38,10 @@ private:
 	unsigned int seed;
 };
 
-class RANDOM
+class Random
 {
 public:
-	RANDOM();
+	Random();
 	void ReSeed();
 	void ReSeed(unsigned int newseed);
 

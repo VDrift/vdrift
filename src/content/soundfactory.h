@@ -23,10 +23,10 @@
 #include "contentfactory.h"
 #include "sound/soundinfo.h"
 
-class SOUNDBUFFER;
+class SoundBuffer;
 
 template <>
-class Factory<SOUNDBUFFER>
+class Factory<SoundBuffer>
 {
 public:
 	struct empty {};
@@ -34,22 +34,22 @@ public:
 	Factory();
 
 	/// sound device setting
-	void init(const SOUNDINFO& value);
+	void init(const SoundInfo& value);
 
 	template <class P>
 	bool create(
-		std::tr1::shared_ptr<SOUNDBUFFER> & sptr,
+		std::tr1::shared_ptr<SoundBuffer> & sptr,
 		std::ostream & error,
 		const std::string & basepath,
 		const std::string & path,
 		const std::string & name,
 		const P & param);
 
-	std::tr1::shared_ptr<SOUNDBUFFER> getDefault() const;
+	std::tr1::shared_ptr<SoundBuffer> getDefault() const;
 
 private:
-	std::tr1::shared_ptr<SOUNDBUFFER> m_default;
-	SOUNDINFO m_info;
+	std::tr1::shared_ptr<SoundBuffer> m_default;
+	SoundInfo m_info;
 };
 
 #endif // _SOUNDFACTORY_H

@@ -22,6 +22,6 @@
 
 QT_TEST(aabb_space_partitioning_test)
 {
-	AABB_SPACE_PARTITIONING_NODE <int> testnode;
+	AabbTreeNode <int> testnode;
 	QT_CHECK_EQUAL(testnode.size(), 0);
 }

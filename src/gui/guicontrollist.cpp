@@ -19,23 +19,23 @@
 
 #include "guicontrollist.h"
 
-GUICONTROLLIST::GUICONTROLLIST() :
+GuiControlList::GuiControlList() :
 	m_active_element(0)
 {
-	update_list.call.bind<GUICONTROLLIST, &GUICONTROLLIST::UpdateList>(this);
-	set_nth.call.bind<GUICONTROLLIST, &GUICONTROLLIST::SetToNth>(this);
-	scroll_fwd.call.bind<GUICONTROLLIST, &GUICONTROLLIST::ScrollFwd>(this);
-	scroll_rev.call.bind<GUICONTROLLIST, &GUICONTROLLIST::ScrollRev>(this);
+	update_list.call.bind<GuiControlList, &GuiControlList::UpdateList>(this);
+	set_nth.call.bind<GuiControlList, &GuiControlList::SetToNth>(this);
+	scroll_fwd.call.bind<GuiControlList, &GuiControlList::ScrollFwd>(this);
+	scroll_rev.call.bind<GuiControlList, &GuiControlList::ScrollRev>(this);
 }
 
-GUICONTROLLIST::~GUICONTROLLIST()
+GuiControlList::~GuiControlList()
 {
 	// dtor
 }
 
-bool GUICONTROLLIST::Focus(float x, float y)
+bool GuiControlList::Focus(float x, float y)
 {
-	if (GUICONTROL::Focus(x, y))
+	if (GuiControl::Focus(x, y))
 	{
 		int active_element = GetElemId(x, y);
 		SetActiveElement(active_element);
@@ -44,7 +44,7 @@ bool GUICONTROLLIST::Focus(float x, float y)
 	return false;
 }
 
-void GUICONTROLLIST::Signal(EVENT ev)
+void GuiControlList::Signal(Event ev)
 {
 	if (ev == MOVEUP)
 	{
@@ -77,11 +77,11 @@ void GUICONTROLLIST::Signal(EVENT ev)
 	else
 	{
 		m_signaln[ev](m_active_element + m_list_offset);
-		GUICONTROL::Signal(ev);
+		GuiControl::Signal(ev);
 	}
 }
 
-void GUICONTROLLIST::RegisterActions(
+void GuiControlList::RegisterActions(
 	const std::map<std::string, Slot1<int>*> & actionmap,
 	const Config::const_iterator section,
 	const Config & cfg)
@@ -94,7 +94,7 @@ void GUICONTROLLIST::RegisterActions(
 	}
 }
 
-void GUICONTROLLIST::SetActions(
+void GuiControlList::SetActions(
 	const std::map<std::string, Slot1<int>*> & actionmap,
 	const std::string & actionstr,
 	Signal1<int> & signal)
@@ -110,7 +110,7 @@ void GUICONTROLLIST::SetActions(
 	}
 }
 
-void GUICONTROLLIST::UpdateList(const std::string & value)
+void GuiControlList::UpdateList(const std::string & value)
 {
 	std::stringstream s(value);
 	s >> m_list_size;
@@ -138,7 +138,7 @@ void GUICONTROLLIST::UpdateList(const std::string & value)
 	}
 }
 
-void GUICONTROLLIST::SetToNth(const std::string & value)
+void GuiControlList::SetToNth(const std::string & value)
 {
 	int list_item(0);
 	std::stringstream s(value);
@@ -167,7 +167,7 @@ void GUICONTROLLIST::SetToNth(const std::string & value)
 	}
 }
 
-void GUICONTROLLIST::ScrollFwd()
+void GuiControlList::ScrollFwd()
 {
 	int delta = m_vertical ? m_rows : m_cols;
 	if (m_list_offset < m_list_size - m_list_size % int(m_rows * m_cols))
@@ -179,7 +179,7 @@ void GUICONTROLLIST::ScrollFwd()
 	}
 }
 
-void GUICONTROLLIST::ScrollRev()
+void GuiControlList::ScrollRev()
 {
 	int delta = m_vertical ? m_rows : m_cols;
 	if (m_list_offset >= delta)
@@ -191,7 +191,7 @@ void GUICONTROLLIST::ScrollRev()
 	}
 }
 
-void GUICONTROLLIST::SetActiveElement(int active_element)
+void GuiControlList::SetActiveElement(int active_element)
 {
 	int list_item = active_element + m_list_offset;
 	if (m_active_element != active_element &&

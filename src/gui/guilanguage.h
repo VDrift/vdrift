@@ -23,12 +23,12 @@
 #include <iosfwd>
 #include <string>
 
-class GUILANGUAGE
+class GuiLanguage
 {
 public:
-	GUILANGUAGE();
+	GuiLanguage();
 
-	~GUILANGUAGE();
+	~GuiLanguage();
 
 	/// langage id is a two char string
 	/// en, de, fr, ru ...

@@ -29,7 +29,7 @@
 
 #define enableContributionCull true
 
-GRAPHICS_GL3V::GRAPHICS_GL3V(StringIdMap & map) :
+GraphicsGL3::GraphicsGL3(StringIdMap & map) :
 	stringMap(map), renderer(gl), logNextGlFrame(false), initialized(false),
 	closeshadow(5.f)
 {
@@ -38,7 +38,7 @@ GRAPHICS_GL3V::GRAPHICS_GL3V(StringIdMap & map) :
 	fullscreenquad.SetVertArray(&fullscreenquadVertices);
 }
 
-bool GRAPHICS_GL3V::Init(
+bool GraphicsGL3::Init(
 	const std::string & shader_path,
 	unsigned resx, unsigned resy,
 	unsigned bpp, unsigned depthbpp,
@@ -85,12 +85,12 @@ bool GRAPHICS_GL3V::Init(
 	// load the reflection cubemap
 	if (!static_reflectionmap_file.empty())
 	{
-		TEXTUREINFO t;
+		TextureInfo t;
 		t.cube = true;
 		t.verticalcross = true;
 		t.mipmap = true;
 		t.anisotropy = anisotropy;
-		t.maxsize = TEXTUREINFO::Size(texturesize);
+		t.maxsize = TextureInfo::Size(texturesize);
 		static_reflection.Load(static_reflectionmap_file, t, error_output);
 	}
 
@@ -104,24 +104,24 @@ bool GRAPHICS_GL3V::Init(
 	return success;
 }
 
-void GRAPHICS_GL3V::Deinit()
+void GraphicsGL3::Deinit()
 {
 	renderer.clear();
 }
 
-void GRAPHICS_GL3V::BeginScene(std::ostream & error_output)
+void GraphicsGL3::BeginScene(std::ostream & error_output)
 {
 
 }
 
-DRAWABLE_CONTAINER <PTRVECTOR> & GRAPHICS_GL3V::GetDynamicDrawlist()
+DrawableContainer <PtrVector> & GraphicsGL3::GetDynamicDrawlist()
 {
 	return dynamic_drawlist;
 }
 
-GRAPHICS_GL3V::CameraMatrices & GRAPHICS_GL3V::setCameraPerspective(const std::string & name,
-	const MATHVECTOR <float, 3> & position,
-	const QUATERNION <float> & rotation,
+GraphicsGL3::CameraMatrices & GraphicsGL3::setCameraPerspective(const std::string & name,
+	const Vec3 & position,
+	const Quat & rotation,
 	float fov,
 	float nearDistance,
 	float farDistance,
@@ -132,7 +132,7 @@ GRAPHICS_GL3V::CameraMatrices & GRAPHICS_GL3V::setCameraPerspective(const std::s
 
 	// generate view matrix
 	rotation.GetMatrix4(matrices.viewMatrix);
-	MATHVECTOR <float, 3> rotated_cam_position = position;
+	Vec3 rotated_cam_position = position;
 	rotation.RotateVector(rotated_cam_position);
 	matrices.viewMatrix.Translate(-rotated_cam_position[0],-rotated_cam_position[1],-rotated_cam_position[2]);
 
@@ -148,17 +148,17 @@ GRAPHICS_GL3V::CameraMatrices & GRAPHICS_GL3V::setCameraPerspective(const std::s
 	return matrices;
 }
 
-GRAPHICS_GL3V::CameraMatrices & GRAPHICS_GL3V::setCameraOrthographic(const std::string & name,
-	const MATHVECTOR <float, 3> & position,
-	const QUATERNION <float> & rotation,
-	const MATHVECTOR <float, 3> & orthoMin,
-	const MATHVECTOR <float, 3> & orthoMax)
+GraphicsGL3::CameraMatrices & GraphicsGL3::setCameraOrthographic(const std::string & name,
+	const Vec3 & position,
+	const Quat & rotation,
+	const Vec3 & orthoMin,
+	const Vec3 & orthoMax)
 {
 	CameraMatrices & matrices = cameras[name];
 
 	// generate view matrix
 	rotation.GetMatrix4(matrices.viewMatrix);
-	MATHVECTOR <float, 3> rotated_cam_position = position;
+	Vec3 rotated_cam_position = position;
 	rotation.RotateVector(rotated_cam_position);
 	matrices.viewMatrix.Translate(-rotated_cam_position[0],-rotated_cam_position[1],-rotated_cam_position[2]);
 
@@ -174,8 +174,8 @@ GRAPHICS_GL3V::CameraMatrices & GRAPHICS_GL3V::setCameraOrthographic(const std::
 	return matrices;
 }
 
-void GRAPHICS_GL3V::SetupScene(float fov, float new_view_distance, const MATHVECTOR <float, 3> cam_position, const QUATERNION <float> & cam_rotation,
-				const MATHVECTOR <float, 3> & dynamic_reflection_sample_pos)
+void GraphicsGL3::SetupScene(float fov, float new_view_distance, const Vec3 cam_position, const Quat & cam_rotation,
+				const Vec3 & dynamic_reflection_sample_pos)
 {
 	lastCameraPosition = cam_position;
 
@@ -190,7 +190,7 @@ void GRAPHICS_GL3V::SetupScene(float fov, float new_view_distance, const MATHVEC
 		w,
 		h);
 
-	MATHVECTOR <float,3> skyboxCamPosition(0,0,0);
+	Vec3 skyboxCamPosition(0,0,0);
 	setCameraPerspective("skybox",
 		skyboxCamPosition,
 		cam_rotation,
@@ -201,13 +201,13 @@ void GRAPHICS_GL3V::SetupScene(float fov, float new_view_distance, const MATHVEC
 		h);
 
 	// derive light rotation quaternion from light direction vector
-	QUATERNION<float> light_rotation;
-	MATHVECTOR<float, 3> up(0, 0, 1);
+	Quat light_rotation;
+	Vec3 up(0, 0, 1);
 	float cosa = up.dot(light_direction);
 	if (cosa * cosa < 1.0f)
 	{
 		float a = -acosf(cosa);
-		MATHVECTOR<float, 3> x = up.cross(light_direction).Normalize();
+		Vec3 x = up.cross(light_direction).Normalize();
 		light_rotation.SetAxisAngle(a, x[0], x[1], x[2]);
 	}
 
@@ -217,21 +217,21 @@ void GRAPHICS_GL3V::SetupScene(float fov, float new_view_distance, const MATHVEC
 		//float shadow_radius = (1<<i)*closeshadow+(i)*20.0; //5,30,60
 		float shadow_radius = (1<<(2-i))*closeshadow+(2-i)*20.0;
 
-		MATHVECTOR <float, 3> shadowbox(1,1,1);
+		Vec3 shadowbox(1,1,1);
 		//shadowbox = shadowbox * (shadow_radius*sqrt(2.0));
 		shadowbox = shadowbox * (shadow_radius*1.5);
-		MATHVECTOR <float, 3> shadowoffset(0,0,-1);
+		Vec3 shadowoffset(0,0,-1);
 		shadowoffset = shadowoffset * shadow_radius;
 		(-cam_rotation).RotateVector(shadowoffset);
 		if (i == 2)
 			shadowbox[2] += 25.0;
-		MATHVECTOR <float, 3> shadowPosition = cam_position+shadowoffset;
+		Vec3 shadowPosition = cam_position+shadowoffset;
 
 		// snap the shadow camera's location to shadow map texels
 		// this can be commented out to minimize car aliasing at the expense of scenery aliasing
 		const float shadowMapResolution = 512;
 		float snapToGridSize = 2.f*shadowbox[0]/shadowMapResolution;
-		MATHVECTOR <float, 3> cameraSpaceShadowPosition = shadowPosition;
+		Vec3 cameraSpaceShadowPosition = shadowPosition;
 		light_rotation.RotateVector(cameraSpaceShadowPosition);
 		for (int n = 0; n < 3; n++)
 		{
@@ -243,7 +243,7 @@ void GRAPHICS_GL3V::SetupScene(float fov, float new_view_distance, const MATHVEC
 		(-light_rotation).RotateVector(cameraSpaceShadowPosition);
 		shadowPosition = cameraSpaceShadowPosition;
 
-		std::string suffix = UTILS::tostr(i+1);
+		std::string suffix = Utils::tostr(i+1);
 
 		CameraMatrices & shadowcam = setCameraOrthographic("shadow"+suffix,
 			shadowPosition,
@@ -256,7 +256,7 @@ void GRAPHICS_GL3V::SetupScene(float fov, float new_view_distance, const MATHVEC
 		// create and send shadow reconstruction matrices
 		// the reconstruction matrix should transform from view to world, then from world to shadow view, then from shadow view to shadow clip space
 		const CameraMatrices & defaultcam = cameras.find("default")->second;
-		MATRIX4 <float> shadowReconstruction = defaultcam.inverseViewMatrix.Multiply(shadowcam.viewMatrix).Multiply(shadowcam.projectionMatrix);
+		Matrix4 <float> shadowReconstruction = defaultcam.inverseViewMatrix.Multiply(shadowcam.viewMatrix).Multiply(shadowcam.projectionMatrix);
 		/*//MATRIX4 <float> shadowReconstruction = shadowcam.projectionMatrix.Multiply(shadowcam.viewMatrix.Multiply(defaultcam.inverseViewMatrix));
 		std::cout << "shadowcam.projectionMatrix: " << std::endl;
 		shadowcam.projectionMatrix.DebugPrint(std::cout);
@@ -301,7 +301,7 @@ void GRAPHICS_GL3V::SetupScene(float fov, float new_view_distance, const MATHVEC
 	// send sun light direction for the default camera
 
 	// transform to eyespace (view space)
-	MATHVECTOR <float, 4> lightDirection4;
+	MathVector <float, 4> lightDirection4;
 	for (int i = 0; i < 3; i++)
 		lightDirection4[i] = light_direction[i];
 	lightDirection4[3] = 0;
@@ -337,9 +337,9 @@ void GRAPHICS_GL3V::SetupScene(float fov, float new_view_distance, const MATHVEC
 }
 
 // returns true for cull, false for don't-cull
-static bool contributionCull(const DRAWABLE * d, const MATHVECTOR <float, 3> & cam)
+static bool contributionCull(const Drawable * d, const Vec3 & cam)
 {
-	const MATHVECTOR <float, 3> & obj = d->GetObjectCenter();
+	const Vec3 & obj = d->GetObjectCenter();
 	float radius = d->GetRadius();
 	float dist2 = (obj - cam).MagnitudeSquared();
 	const float fov = 90; // rough field-of-view estimation
@@ -354,11 +354,11 @@ static bool contributionCull(const DRAWABLE * d, const MATHVECTOR <float, 3> & c
 }
 
 // returns true for cull, false for don't-cull
-static bool frustumCull(const DRAWABLE * d, const FRUSTUM & frustum)
+static bool frustumCull(const Drawable * d, const Frustum & frustum)
 {
 	float rd;
 	const float bound = d->GetRadius();
-	const MATHVECTOR <float, 3> & center = d->GetObjectCenter();
+	const Vec3 & center = d->GetObjectCenter();
 
 	for (int i=0; i<6; i++)
 	{
@@ -376,11 +376,11 @@ static bool frustumCull(const DRAWABLE * d, const FRUSTUM & frustum)
 }
 
 // if frustum is NULL, don't do frustum or contribution culling
-void GRAPHICS_GL3V::assembleDrawList(const std::vector <DRAWABLE*> & drawables, std::vector <RenderModelExternal*> & out, FRUSTUM * frustum, const MATHVECTOR <float, 3> & camPos)
+void GraphicsGL3::assembleDrawList(const std::vector <Drawable*> & drawables, std::vector <RenderModelExt*> & out, Frustum * frustum, const Vec3 & camPos)
 {
 	if (frustum && enableContributionCull)
 	{
-		for (std::vector <DRAWABLE*>::const_iterator i = drawables.begin(); i != drawables.end(); i++)
+		for (std::vector <Drawable*>::const_iterator i = drawables.begin(); i != drawables.end(); i++)
 		{
 			if (!frustumCull(*i, *frustum) && !contributionCull(*i, camPos))
 				out.push_back(&(*i)->generateRenderModelData(stringMap));
@@ -388,7 +388,7 @@ void GRAPHICS_GL3V::assembleDrawList(const std::vector <DRAWABLE*> & drawables, 
 	}
 	else if (frustum)
 	{
-		for (std::vector <DRAWABLE*>::const_iterator i = drawables.begin(); i != drawables.end(); i++)
+		for (std::vector <Drawable*>::const_iterator i = drawables.begin(); i != drawables.end(); i++)
 		{
 			if (!frustumCull(*i, *frustum))
 				out.push_back(&(*i)->generateRenderModelData(stringMap));
@@ -396,7 +396,7 @@ void GRAPHICS_GL3V::assembleDrawList(const std::vector <DRAWABLE*> & drawables, 
 	}
 	else
 	{
-		for (std::vector <DRAWABLE*>::const_iterator i = drawables.begin(); i != drawables.end(); i++)
+		for (std::vector <Drawable*>::const_iterator i = drawables.begin(); i != drawables.end(); i++)
 		{
 			out.push_back(&(*i)->generateRenderModelData(stringMap));
 		}
@@ -404,20 +404,20 @@ void GRAPHICS_GL3V::assembleDrawList(const std::vector <DRAWABLE*> & drawables, 
 }
 
 // if frustum is NULL, don't do frustum or contribution culling
-void GRAPHICS_GL3V::assembleDrawList(const AABB_SPACE_PARTITIONING_NODE_ADAPTER <DRAWABLE> & adapter, std::vector <RenderModelExternal*> & out, FRUSTUM * frustum, const MATHVECTOR <float, 3> & camPos)
+void GraphicsGL3::assembleDrawList(const AabbTreeNodeAdapter <Drawable> & adapter, std::vector <RenderModelExt*> & out, Frustum * frustum, const Vec3 & camPos)
 {
-	static std::vector <DRAWABLE*> queryResults;
+	static std::vector <Drawable*> queryResults;
 	queryResults.clear();
 	if (frustum)
 		adapter.Query(*frustum, queryResults);
 	else
-		adapter.Query(AABB<float>::INTERSECT_ALWAYS(), queryResults);
+		adapter.Query(Aabb<float>::INTERSECT_ALWAYS(), queryResults);
 
-	const std::vector <DRAWABLE*> & drawables = queryResults;
+	const std::vector <Drawable*> & drawables = queryResults;
 
 	if (frustum && enableContributionCull)
 	{
-		for (std::vector <DRAWABLE*>::const_iterator i = drawables.begin(); i != drawables.end(); i++)
+		for (std::vector <Drawable*>::const_iterator i = drawables.begin(); i != drawables.end(); i++)
 		{
 			if (!contributionCull(*i, camPos))
 				out.push_back(&(*i)->generateRenderModelData(stringMap));
@@ -425,7 +425,7 @@ void GRAPHICS_GL3V::assembleDrawList(const AABB_SPACE_PARTITIONING_NODE_ADAPTER 
 	}
 	else
 	{
-		for (std::vector <DRAWABLE*>::const_iterator i = drawables.begin(); i != drawables.end(); i++)
+		for (std::vector <Drawable*>::const_iterator i = drawables.begin(); i != drawables.end(); i++)
 		{
 			out.push_back(&(*i)->generateRenderModelData(stringMap));
 		}
@@ -433,7 +433,7 @@ void GRAPHICS_GL3V::assembleDrawList(const AABB_SPACE_PARTITIONING_NODE_ADAPTER 
 }
 
 // returns empty string if no camera
-std::string GRAPHICS_GL3V::getCameraForPass(StringId pass) const
+std::string GraphicsGL3::getCameraForPass(StringId pass) const
 {
 	std::string passString = stringMap.getString(pass);
 	std::string cameraString;
@@ -443,18 +443,18 @@ std::string GRAPHICS_GL3V::getCameraForPass(StringId pass) const
 	return cameraString;
 }
 
-std::string GRAPHICS_GL3V::getCameraDrawGroupKey(StringId pass, StringId group) const
+std::string GraphicsGL3::getCameraDrawGroupKey(StringId pass, StringId group) const
 {
 	return getCameraForPass(pass)+"/"+stringMap.getString(group);
 }
 
-static bool SortDraworder(DRAWABLE * d1, DRAWABLE * d2)
+static bool SortDraworder(Drawable * d1, Drawable * d2)
 {
 	assert(d1 && d2);
 	return (d1->GetDrawOrder() < d2->GetDrawOrder());
 }
 
-void GRAPHICS_GL3V::DrawScene(std::ostream & error_output)
+void GraphicsGL3::DrawScene(std::ostream & error_output)
 {
 	//sort the two dimentional drawlist so we get correct ordering
 	std::sort(dynamic_drawlist.twodim.begin(),dynamic_drawlist.twodim.end(),&SortDraworder);
@@ -463,7 +463,7 @@ void GRAPHICS_GL3V::DrawScene(std::ostream & error_output)
 	// we want to do culling for each unique camera and draw group combination
 	// use "camera/group" as a unique key string
 	// this is cached to avoid extra memory allocations each frame, so we need to clear old data
-	for (std::map <std::string, std::vector <RenderModelExternal*> >::iterator i = cameraDrawGroupDrawLists.begin(); i != cameraDrawGroupDrawLists.end(); i++)
+	for (std::map <std::string, std::vector <RenderModelExt*> >::iterator i = cameraDrawGroupDrawLists.begin(); i != cameraDrawGroupDrawLists.end(); i++)
 	{
 		i->second.clear();
 	}
@@ -475,7 +475,7 @@ void GRAPHICS_GL3V::DrawScene(std::ostream & error_output)
 	// this maps passes to maps of draw groups and draw list vector pointers
 	// so drawMap[passName][drawGroup] is a pointer to a vector of RenderModelExternal pointers
 	// this is complicated but it lets us do culling per camera position and draw group combination
-	std::map <StringId, std::map <StringId, std::vector <RenderModelExternal*> *> > drawMap;
+	std::map <StringId, std::map <StringId, std::vector <RenderModelExt*> *> > drawMap;
 
 	// for each pass, do culling of the dynamic and static drawlists and put the results into the cameraDrawGroupDrawLists
 	std::vector <StringId> passes = renderer.getPassNames();
@@ -491,7 +491,7 @@ void GRAPHICS_GL3V::DrawScene(std::ostream & error_output)
 				std::string drawGroupString = stringMap.getString(drawGroupName);
 				std::string cameraDrawGroupKey = getCameraDrawGroupKey(passName, drawGroupName);
 
-				std::vector <RenderModelExternal*> & outDrawList = cameraDrawGroupDrawLists[cameraDrawGroupKey];
+				std::vector <RenderModelExt*> & outDrawList = cameraDrawGroupDrawLists[cameraDrawGroupKey];
 
 				// see if we have already generated this combination
 				if (cameraDrawGroupCombinationsGenerated.find(cameraDrawGroupKey) == cameraDrawGroupCombinationsGenerated.end())
@@ -510,8 +510,8 @@ void GRAPHICS_GL3V::DrawScene(std::ostream & error_output)
 						doCull = !(!doCull || !renderer.getPassUniform(passName, stringMap.addStringId("viewMatrix"), view));
 						doCull = !(!doCull || !renderer.getPassUniform(passName, stringMap.addStringId("projectionMatrix"), proj));
 					}
-					FRUSTUM frustum;
-					FRUSTUM * frustumPtr = NULL;
+					Frustum frustum;
+					Frustum * frustumPtr = NULL;
 					if (doCull)
 					{
 						frustum.Extract(&proj.data[0], &view.data[0]);
@@ -519,26 +519,26 @@ void GRAPHICS_GL3V::DrawScene(std::ostream & error_output)
 					}
 
 					// assemble dynamic entries
-					reseatable_reference <PTRVECTOR <DRAWABLE> > dynamicDrawablesPtr = dynamic_drawlist.GetByName(drawGroupString);
+					reseatable_reference <PtrVector <Drawable> > dynamicDrawablesPtr = dynamic_drawlist.GetByName(drawGroupString);
 					if (dynamicDrawablesPtr)
 					{
-						const std::vector <DRAWABLE*> & dynamicDrawables = *dynamicDrawablesPtr;
+						const std::vector <Drawable*> & dynamicDrawables = *dynamicDrawablesPtr;
 						//assembleDrawList(dynamicDrawables, outDrawList, frustumPtr, lastCameraPosition);
 						assembleDrawList(dynamicDrawables, outDrawList, NULL, lastCameraPosition); // TODO: the above line is commented out because frustum culling dynamic drawables doesen't work at the moment; is the object center in the drawable for the car in the correct space??
 					}
 
 					// assemble static entries
-					reseatable_reference <AABB_SPACE_PARTITIONING_NODE_ADAPTER <DRAWABLE> > staticDrawablesPtr = static_drawlist.GetDrawlist().GetByName(drawGroupString);
+					reseatable_reference <AabbTreeNodeAdapter <Drawable> > staticDrawablesPtr = static_drawlist.GetDrawlist().GetByName(drawGroupString);
 					if (staticDrawablesPtr)
 					{
-						const AABB_SPACE_PARTITIONING_NODE_ADAPTER <DRAWABLE> & staticDrawables = *staticDrawablesPtr;
+						const AabbTreeNodeAdapter <Drawable> & staticDrawables = *staticDrawablesPtr;
 						assembleDrawList(staticDrawables, outDrawList, frustumPtr, lastCameraPosition);
 					}
 
 					// if it's requesting the full screen rect draw group, feed it our special drawable
 					if (drawGroupString == "full screen rect")
 					{
-						std::vector <DRAWABLE*> rect;
+						std::vector <Drawable*> rect;
 						rect.push_back(&fullscreenquad);
 						assembleDrawList(rect, outDrawList, NULL, lastCameraPosition);
 					}
@@ -568,12 +568,12 @@ void GRAPHICS_GL3V::DrawScene(std::ostream & error_output)
 	logNextGlFrame = false;
 }
 
-void GRAPHICS_GL3V::EndScene(std::ostream & error_output)
+void GraphicsGL3::EndScene(std::ostream & error_output)
 {
 
 }
 
-int GRAPHICS_GL3V::GetMaxAnisotropy() const
+int GraphicsGL3::GetMaxAnisotropy() const
 {
 	int max_anisotropy = 1;
 	if (GLEW_EXT_texture_filter_anisotropic)
@@ -581,12 +581,12 @@ int GRAPHICS_GL3V::GetMaxAnisotropy() const
 	return max_anisotropy;
 }
 
-bool GRAPHICS_GL3V::AntialiasingSupported() const
+bool GraphicsGL3::AntialiasingSupported() const
 {
 	return true;
 }
 
-bool GRAPHICS_GL3V::GetUsingShaders() const
+bool GraphicsGL3::GetUsingShaders() const
 {
 	return true;
 }
@@ -596,7 +596,7 @@ int upper(int c)
   return std::toupper((unsigned char)c);
 }
 
-bool GRAPHICS_GL3V::ReloadShaders(std::ostream & info_output, std::ostream & error_output)
+bool GraphicsGL3::ReloadShaders(std::ostream & info_output, std::ostream & error_output)
 {
 	// reinitialize the entire renderer
 	std::vector <RealtimeExportPassInfo> passInfos;
@@ -611,7 +611,7 @@ bool GRAPHICS_GL3V::ReloadShaders(std::ostream & info_output, std::ostream & err
 			std::map <std::string, std::string>::const_iterator field = fields.find("conditions");
 			if (field != fields.end())
 			{
-				GRAPHICS_CONFIG_CONDITION condition;
+				GraphicsConfigCondition condition;
 				condition.Parse(field->second);
 				if (!condition.Satisfied(conditions))
 				{
@@ -676,27 +676,27 @@ bool GRAPHICS_GL3V::ReloadShaders(std::ostream & info_output, std::ostream & err
 	return true;
 }
 
-void GRAPHICS_GL3V::AddStaticNode(SCENENODE & node, bool clearcurrent)
+void GraphicsGL3::AddStaticNode(SceneNode & node, bool clearcurrent)
 {
 	static_drawlist.Generate(node, clearcurrent);
 }
 
-void GRAPHICS_GL3V::SetCloseShadow ( float value )
+void GraphicsGL3::SetCloseShadow ( float value )
 {
 	closeshadow = value;
 }
 
-bool GRAPHICS_GL3V::GetShadows() const
+bool GraphicsGL3::GetShadows() const
 {
 	return true;
 }
 
-void GRAPHICS_GL3V::SetSunDirection(const MATHVECTOR<float, 3> & value)
+void GraphicsGL3::SetSunDirection(const Vec3 & value)
 {
 	light_direction = value;
 }
 
-void GRAPHICS_GL3V::SetContrast ( float value )
+void GraphicsGL3::SetContrast ( float value )
 {
 
 }

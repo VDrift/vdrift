@@ -38,7 +38,7 @@ static void Param(
 	}
 }
 
-SETTINGS::SETTINGS() :
+Settings::Settings() :
 	resolution(2),
 	res_override(false),
 	bpp(32),
@@ -113,15 +113,15 @@ SETTINGS::SETTINGS() :
 	resolution[1] = 600;
 }
 
-void SETTINGS::SetFailsafeSettings()
+void Settings::SetFailsafeSettings()
 {
-	*this = SETTINGS();
+	*this = Settings();
 	depthbpp = 16;
 	renderer = "gl2/noshaders.conf";
 	texture_size = "medium";
 }
 
-void SETTINGS::Serialize(bool write, Config & config)
+void Settings::Serialize(bool write, Config & config)
 {
 	Config::iterator section;
 
@@ -206,7 +206,7 @@ void SETTINGS::Serialize(bool write, Config & config)
 	Param(config, write, section, "button_ramp", button_ramp);
 }
 
-void SETTINGS::Load(const std::string & settingsfile, std::ostream & error)
+void Settings::Load(const std::string & settingsfile, std::ostream & error)
 {
 	Config config;
 	if (!config.load(settingsfile))
@@ -216,7 +216,7 @@ void SETTINGS::Load(const std::string & settingsfile, std::ostream & error)
 	Serialize(false, config);
 }
 
-void SETTINGS::Save(const std::string & settingsfile, std::ostream & error)
+void Settings::Save(const std::string & settingsfile, std::ostream & error)
 {
 	Config config;
 	if (!config.load(settingsfile))
@@ -230,7 +230,7 @@ void SETTINGS::Save(const std::string & settingsfile, std::ostream & error)
 	}
 }
 
-void SETTINGS::Get(std::map<std::string, std::string> & options)
+void Settings::Get(std::map<std::string, std::string> & options)
 {
 	Config tempconfig;
 	Serialize(true, tempconfig);
@@ -247,7 +247,7 @@ void SETTINGS::Get(std::map<std::string, std::string> & options)
 	}
 }
 
-void SETTINGS::Set(const std::map<std::string, std::string> & options)
+void Settings::Set(const std::map<std::string, std::string> & options)
 {
 	Config tempconfig;
 	for (std::map<std::string, std::string>::const_iterator i = options.begin(); i != options.end(); ++i)

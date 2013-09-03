@@ -47,15 +47,15 @@ using std::vector;
 
 using namespace joeserialize;
 
-class TEST_VERTEX
+class TestVertex
 {
 	friend class ::Serializer;
 	public:
-		TEST_VERTEX() : x(0), y(0), z(0) {}
-		TEST_VERTEX(float nx, float ny, float nz) : x(nx),y(ny),z(nz) {}
+		TestVertex() : x(0), y(0), z(0) {}
+		TestVertex(float nx, float ny, float nz) : x(nx),y(ny),z(nz) {}
 		float x,y,z;
-		bool operator==(const TEST_VERTEX & other) const {return (memcmp(this,&other,sizeof(TEST_VERTEX)) == 0);}
-		bool operator!=(const TEST_VERTEX & other) const {return !operator==(other);}
+		bool operator==(const TestVertex & other) const {return (memcmp(this,&other,sizeof(TestVertex)) == 0);}
+		bool operator!=(const TestVertex & other) const {return !operator==(other);}
 
 		bool Serialize(joeserialize::Serializer & s)
 		{
@@ -66,7 +66,7 @@ class TEST_VERTEX
 		}
 };
 
-ostream& operator <<(ostream &os,const TEST_VERTEX &v)
+ostream& operator <<(ostream &os,const TestVertex &v)
 {
 	os << v.x << "," << v.y << "," << v.z;
 	return os;
@@ -76,29 +76,29 @@ ostream& operator <<(ostream &os,const TEST_VERTEX &v)
 #define _SERIALIZE_(ser,varname) if (!ser.Serialize(#varname,varname)) return false
 
 //example complex class
-class TEST_PLAYER
+class TestPlayer
 {
 	friend class ::Serializer;
 	//private:
 	public: //the test needs access to these; otherwise they'd be private
-		TEST_VERTEX position;
+		TestVertex position;
 		unsigned int animframe;
 		string name;
 		string player_description;
 		bool alive;
 		bool aiming;
 		list <int> simplelist;
-		list <TEST_VERTEX> complexlist;
-		map <string, TEST_VERTEX> mymap;
-		vector <TEST_VERTEX> myvector;
-		vector <TEST_VERTEX> myvector2;
+		list <TestVertex> complexlist;
+		map <string, TestVertex> mymap;
+		vector <TestVertex> myvector;
+		vector <TestVertex> myvector2;
 		double curtime;
 		float x;
 		pair <string, int> somepair;
 
 	public:
 		string & GetName() {return name;}
-		TEST_PLAYER(bool defaults)
+		TestPlayer(bool defaults)
 		{
 			if (defaults)
 			{
@@ -108,17 +108,17 @@ class TEST_PLAYER
 				animframe = 1337;
 				simplelist.push_back(9);
 				simplelist.push_back(8);
-				complexlist.push_back(TEST_VERTEX(7,6,5));
-				complexlist.push_back(TEST_VERTEX(4,3,2));
-				complexlist.push_back(TEST_VERTEX(1,0,-1));
+				complexlist.push_back(TestVertex(7,6,5));
+				complexlist.push_back(TestVertex(4,3,2));
+				complexlist.push_back(TestVertex(1,0,-1));
 
-				mymap["testing123"] = TEST_VERTEX(1,2,3);
-				mymap["testing654"] = TEST_VERTEX(6,5,4);
+				mymap["testing123"] = TestVertex(1,2,3);
+				mymap["testing654"] = TestVertex(6,5,4);
 
-				myvector.push_back(TEST_VERTEX(5,4,3));
-				myvector.push_back(TEST_VERTEX(2,1,0));
+				myvector.push_back(TestVertex(5,4,3));
+				myvector.push_back(TestVertex(2,1,0));
 
-				myvector2.push_back(TEST_VERTEX(9,8,7));
+				myvector2.push_back(TestVertex(9,8,7));
 
 				player_description = "Hello there.\nHow are you??";
 				alive = true;
@@ -155,7 +155,7 @@ QT_TEST(TextSerializer_test)
 {
 	stringstream serializestream;
 	{
-		TEST_PLAYER player1(true);
+		TestPlayer player1(true);
 		TextOutputSerializer out(serializestream);
 		QT_CHECK(player1.Serialize(out));
 	}
@@ -163,7 +163,7 @@ QT_TEST(TextSerializer_test)
 	//cout << "Text output follows:" << endl;
 	//cout << serializestream.str() << endl;
 
-	TEST_PLAYER player2(false); //our blank slate
+	TestPlayer player2(false); //our blank slate
 
 	{
 		TextInputSerializer in;
@@ -178,7 +178,7 @@ QT_TEST(TextSerializer_test)
 	}
 
 	//do our checks
-	QT_CHECK_EQUAL(player2.position,TEST_VERTEX(1,1,1));
+	QT_CHECK_EQUAL(player2.position,TestVertex(1,1,1));
 	QT_CHECK_EQUAL(player2.animframe,1337);
 	QT_CHECK_CLOSE(player2.x,1.337, 0.000001);
 	QT_CHECK_EQUAL(player2.name,"Test player");
@@ -187,10 +187,10 @@ QT_TEST(TextSerializer_test)
 	list <int> local_simplelist;
 	local_simplelist.push_back(9);
 	local_simplelist.push_back(8);
-	list <TEST_VERTEX> local_complexlist;
-	local_complexlist.push_back(TEST_VERTEX(7,6,5));
-	local_complexlist.push_back(TEST_VERTEX(4,3,2));
-	local_complexlist.push_back(TEST_VERTEX(1,0,-1));
+	list <TestVertex> local_complexlist;
+	local_complexlist.push_back(TestVertex(7,6,5));
+	local_complexlist.push_back(TestVertex(4,3,2));
+	local_complexlist.push_back(TestVertex(1,0,-1));
 
 	QT_CHECK_EQUAL(player2.simplelist.size(),local_simplelist.size());
 
@@ -208,8 +208,8 @@ QT_TEST(TextSerializer_test)
 	QT_CHECK_EQUAL(player2.complexlist.size(),local_complexlist.size());
 
 	{
-		list <TEST_VERTEX>::iterator i;
-		list <TEST_VERTEX>::iterator n;
+		list <TestVertex>::iterator i;
+		list <TestVertex>::iterator n;
 		int count;
 		for (i = player2.complexlist.begin(),
 			 n = local_complexlist.begin(),
@@ -221,18 +221,18 @@ QT_TEST(TextSerializer_test)
 	}
 
 	QT_CHECK_EQUAL(player2.mymap.size(), 2);
-	QT_CHECK_EQUAL(player2.mymap["testing123"], TEST_VERTEX(1,2,3));
-	QT_CHECK_EQUAL(player2.mymap["testing654"], TEST_VERTEX(6,5,4));
+	QT_CHECK_EQUAL(player2.mymap["testing123"], TestVertex(1,2,3));
+	QT_CHECK_EQUAL(player2.mymap["testing654"], TestVertex(6,5,4));
 
 	QT_CHECK_EQUAL(player2.myvector.size(), 2);
 	if (player2.myvector.size() == 2)
 	{
-		QT_CHECK_EQUAL(player2.myvector[0], TEST_VERTEX(5,4,3));
-		QT_CHECK_EQUAL(player2.myvector[1], TEST_VERTEX(2,1,0));
+		QT_CHECK_EQUAL(player2.myvector[0], TestVertex(5,4,3));
+		QT_CHECK_EQUAL(player2.myvector[1], TestVertex(2,1,0));
 	}
 
 	QT_CHECK_EQUAL(player2.myvector2.size(), 1);
-	if (player2.myvector2.size() == 1) QT_CHECK_EQUAL(player2.myvector2[0], TEST_VERTEX(9,8,7));
+	if (player2.myvector2.size() == 1) QT_CHECK_EQUAL(player2.myvector2[0], TestVertex(9,8,7));
 
 	QT_CHECK_EQUAL(player2.player_description, "Hello there.\nHow are you??");
 
@@ -249,7 +249,7 @@ QT_TEST(BinarySerializer_test)
 {
 	stringstream serializestream;
 	{
-		TEST_PLAYER player1(true);
+		TestPlayer player1(true);
 		BinaryOutputSerializer out(serializestream);
 		QT_CHECK(player1.Serialize(out));
 
@@ -261,7 +261,7 @@ QT_TEST(BinarySerializer_test)
 	//cout << "Text output follows:" << endl;
 	//cout << serializestream.str() << endl;
 
-	TEST_PLAYER player2(false); //our blank slate
+	TestPlayer player2(false); //our blank slate
 
 	{
 		BinaryInputSerializer in(serializestream);
@@ -274,7 +274,7 @@ QT_TEST(BinarySerializer_test)
 	}
 
 	//do our checks
-	QT_CHECK_EQUAL(player2.position,TEST_VERTEX(1,1,1));
+	QT_CHECK_EQUAL(player2.position,TestVertex(1,1,1));
 	QT_CHECK_EQUAL(player2.animframe,1337);
 	QT_CHECK_CLOSE(player2.x,1.337, 0.000001);
 	QT_CHECK_EQUAL(player2.name,"Test player");
@@ -283,10 +283,10 @@ QT_TEST(BinarySerializer_test)
 	list <int> local_simplelist;
 	local_simplelist.push_back(9);
 	local_simplelist.push_back(8);
-	list <TEST_VERTEX> local_complexlist;
-	local_complexlist.push_back(TEST_VERTEX(7,6,5));
-	local_complexlist.push_back(TEST_VERTEX(4,3,2));
-	local_complexlist.push_back(TEST_VERTEX(1,0,-1));
+	list <TestVertex> local_complexlist;
+	local_complexlist.push_back(TestVertex(7,6,5));
+	local_complexlist.push_back(TestVertex(4,3,2));
+	local_complexlist.push_back(TestVertex(1,0,-1));
 
 	QT_CHECK_EQUAL(player2.simplelist.size(),local_simplelist.size());
 
@@ -304,8 +304,8 @@ QT_TEST(BinarySerializer_test)
 	QT_CHECK_EQUAL(player2.complexlist.size(),local_complexlist.size());
 
 	{
-		list <TEST_VERTEX>::iterator i;
-		list <TEST_VERTEX>::iterator n;
+		list <TestVertex>::iterator i;
+		list <TestVertex>::iterator n;
 		int count;
 		for (i = player2.complexlist.begin(),
 			 n = local_complexlist.begin(),
@@ -317,18 +317,18 @@ QT_TEST(BinarySerializer_test)
 	}
 
 	QT_CHECK_EQUAL(player2.mymap.size(), 2);
-	QT_CHECK_EQUAL(player2.mymap["testing123"], TEST_VERTEX(1,2,3));
-	QT_CHECK_EQUAL(player2.mymap["testing654"], TEST_VERTEX(6,5,4));
+	QT_CHECK_EQUAL(player2.mymap["testing123"], TestVertex(1,2,3));
+	QT_CHECK_EQUAL(player2.mymap["testing654"], TestVertex(6,5,4));
 
 	QT_CHECK_EQUAL(player2.myvector.size(), 2);
 	if (player2.myvector.size() == 2)
 	{
-		QT_CHECK_EQUAL(player2.myvector[0], TEST_VERTEX(5,4,3));
-		QT_CHECK_EQUAL(player2.myvector[1], TEST_VERTEX(2,1,0));
+		QT_CHECK_EQUAL(player2.myvector[0], TestVertex(5,4,3));
+		QT_CHECK_EQUAL(player2.myvector[1], TestVertex(2,1,0));
 	}
 
 	QT_CHECK_EQUAL(player2.myvector2.size(), 1);
-	if (player2.myvector2.size() == 1) QT_CHECK_EQUAL(player2.myvector2[0], TEST_VERTEX(9,8,7));
+	if (player2.myvector2.size() == 1) QT_CHECK_EQUAL(player2.myvector2[0], TestVertex(9,8,7));
 
 	QT_CHECK_EQUAL(player2.player_description, "Hello there.\nHow are you??");
 
@@ -347,7 +347,7 @@ QT_TEST(ReflectionSerializer_test)
 	reflection.set_error_output(cerr);
 
 	{
-		TEST_PLAYER player1(true);
+		TestPlayer player1(true);
 		QT_CHECK(reflection.ReadFromObject(player1));
 	}
 
@@ -389,13 +389,13 @@ QT_TEST(ReflectionSerializer_test)
 		reflection.set_error_output(cerr);
 	}
 
-	TEST_PLAYER player2(false); //our blank slate
+	TestPlayer player2(false); //our blank slate
 	{
 		QT_CHECK(reflection.WriteToObject(player2));
 	}
 
 	//do our checks
-	QT_CHECK_EQUAL(player2.position,TEST_VERTEX(1,1,1));
+	QT_CHECK_EQUAL(player2.position,TestVertex(1,1,1));
 	QT_CHECK_EQUAL(player2.animframe,1337);
 	QT_CHECK_CLOSE(player2.x,1.337, 0.000001);
 	QT_CHECK_EQUAL(player2.name,"Test player");
@@ -404,10 +404,10 @@ QT_TEST(ReflectionSerializer_test)
 	list <int> local_simplelist;
 	local_simplelist.push_back(9);
 	local_simplelist.push_back(8);
-	list <TEST_VERTEX> local_complexlist;
-	local_complexlist.push_back(TEST_VERTEX(7,6,5));
-	local_complexlist.push_back(TEST_VERTEX(4,3,2));
-	local_complexlist.push_back(TEST_VERTEX(1,0,-1));
+	list <TestVertex> local_complexlist;
+	local_complexlist.push_back(TestVertex(7,6,5));
+	local_complexlist.push_back(TestVertex(4,3,2));
+	local_complexlist.push_back(TestVertex(1,0,-1));
 
 	QT_CHECK_EQUAL ( player2.simplelist.size(),local_simplelist.size() );
 
@@ -425,8 +425,8 @@ QT_TEST(ReflectionSerializer_test)
 	QT_CHECK_EQUAL ( player2.complexlist.size(),local_complexlist.size() );
 
 	{
-		list <TEST_VERTEX>::iterator i;
-		list <TEST_VERTEX>::iterator n;
+		list <TestVertex>::iterator i;
+		list <TestVertex>::iterator n;
 		int count;
 		for ( i = player2.complexlist.begin(),
 		        n = local_complexlist.begin(),
@@ -438,18 +438,18 @@ QT_TEST(ReflectionSerializer_test)
 	}
 
 	QT_CHECK_EQUAL ( player2.mymap.size(), 2 );
-	QT_CHECK_EQUAL ( player2.mymap["testing123"], TEST_VERTEX ( 1,2,3 ) );
-	QT_CHECK_EQUAL ( player2.mymap["testing654"], TEST_VERTEX ( 6,5,4 ) );
+	QT_CHECK_EQUAL ( player2.mymap["testing123"], TestVertex ( 1,2,3 ) );
+	QT_CHECK_EQUAL ( player2.mymap["testing654"], TestVertex ( 6,5,4 ) );
 
 	QT_CHECK_EQUAL ( player2.myvector.size(), 2 );
 	if ( player2.myvector.size() == 2 )
 	{
-		QT_CHECK_EQUAL ( player2.myvector[0], TEST_VERTEX ( 5,4,3 ) );
-		QT_CHECK_EQUAL ( player2.myvector[1], TEST_VERTEX ( 2,1,0 ) );
+		QT_CHECK_EQUAL ( player2.myvector[0], TestVertex ( 5,4,3 ) );
+		QT_CHECK_EQUAL ( player2.myvector[1], TestVertex ( 2,1,0 ) );
 	}
 
 	QT_CHECK_EQUAL(player2.myvector2.size(), 1);
-	if (player2.myvector2.size() == 1) QT_CHECK_EQUAL(player2.myvector2[0], TEST_VERTEX(9,8,7));
+	if (player2.myvector2.size() == 1) QT_CHECK_EQUAL(player2.myvector2[0], TestVertex(9,8,7));
 
 	QT_CHECK_EQUAL ( player2.player_description, "Hello there.\nHow are you??" );
 
@@ -465,7 +465,7 @@ QT_TEST(ReflectionSerializer_test)
 //check for compatibility of the binary format
 QT_TEST(serialization_test_bin_compatibility)
 {
-	TEST_PLAYER player2(false); //our blank slate
+	TestPlayer player2(false); //our blank slate
 
 	//read input
 	{
@@ -478,7 +478,7 @@ QT_TEST(serialization_test_bin_compatibility)
 	}
 
 	//do our checks
-	QT_CHECK_EQUAL(player2.position,TEST_VERTEX(1,1,1));
+	QT_CHECK_EQUAL(player2.position,TestVertex(1,1,1));
 	QT_CHECK_EQUAL(player2.animframe,1337);
 	QT_CHECK_CLOSE(player2.x,1.337, 0.000001);
 	QT_CHECK_EQUAL(player2.name,"Test player");
@@ -487,10 +487,10 @@ QT_TEST(serialization_test_bin_compatibility)
 	list <int> local_simplelist;
 	local_simplelist.push_back(9);
 	local_simplelist.push_back(8);
-	list <TEST_VERTEX> local_complexlist;
-	local_complexlist.push_back(TEST_VERTEX(7,6,5));
-	local_complexlist.push_back(TEST_VERTEX(4,3,2));
-	local_complexlist.push_back(TEST_VERTEX(1,0,-1));
+	list <TestVertex> local_complexlist;
+	local_complexlist.push_back(TestVertex(7,6,5));
+	local_complexlist.push_back(TestVertex(4,3,2));
+	local_complexlist.push_back(TestVertex(1,0,-1));
 
 	QT_CHECK_EQUAL(player2.simplelist.size(),local_simplelist.size());
 
@@ -508,8 +508,8 @@ QT_TEST(serialization_test_bin_compatibility)
 	QT_CHECK_EQUAL(player2.complexlist.size(),local_complexlist.size());
 
 	{
-		list <TEST_VERTEX>::iterator i;
-		list <TEST_VERTEX>::iterator n;
+		list <TestVertex>::iterator i;
+		list <TestVertex>::iterator n;
 		int count;
 		for (i = player2.complexlist.begin(),
 			 n = local_complexlist.begin(),
@@ -521,18 +521,18 @@ QT_TEST(serialization_test_bin_compatibility)
 	}
 
 	QT_CHECK_EQUAL(player2.mymap.size(), 2);
-	QT_CHECK_EQUAL(player2.mymap["testing123"], TEST_VERTEX(1,2,3));
-	QT_CHECK_EQUAL(player2.mymap["testing654"], TEST_VERTEX(6,5,4));
+	QT_CHECK_EQUAL(player2.mymap["testing123"], TestVertex(1,2,3));
+	QT_CHECK_EQUAL(player2.mymap["testing654"], TestVertex(6,5,4));
 
 	QT_CHECK_EQUAL(player2.myvector.size(), 2);
 	if (player2.myvector.size() == 2)
 	{
-		QT_CHECK_EQUAL(player2.myvector[0], TEST_VERTEX(5,4,3));
-		QT_CHECK_EQUAL(player2.myvector[1], TEST_VERTEX(2,1,0));
+		QT_CHECK_EQUAL(player2.myvector[0], TestVertex(5,4,3));
+		QT_CHECK_EQUAL(player2.myvector[1], TestVertex(2,1,0));
 	}
 
 	QT_CHECK_EQUAL(player2.myvector2.size(), 1);
-	if (player2.myvector2.size() == 1) QT_CHECK_EQUAL(player2.myvector2[0], TEST_VERTEX(9,8,7));
+	if (player2.myvector2.size() == 1) QT_CHECK_EQUAL(player2.myvector2[0], TestVertex(9,8,7));
 
 	QT_CHECK_EQUAL(player2.player_description, "Hello there.\nHow are you??");
 
@@ -545,14 +545,14 @@ QT_TEST(serialization_test_bin_compatibility)
 	QT_CHECK_EQUAL(player2.somepair.second, 4321);
 }
 
-class TEST_WHEEL
+class TestWheel
 {
 	friend class ::Serializer;
 	public:
-		TEST_VERTEX pos;
+		TestVertex pos;
 		float staticdata;
 
-		TEST_WHEEL() : staticdata(0) {}
+		TestWheel() : staticdata(0) {}
 
 		bool Serialize(joeserialize::Serializer & s)
 		{
@@ -561,12 +561,12 @@ class TEST_WHEEL
 		}
 };
 
-class TEST_CAR
+class TestCar
 {
 	friend class ::Serializer;
 	public:
-		std::vector <TEST_WHEEL> wheels;
-		TEST_CAR() : wheels(4) {}
+		std::vector <TestWheel> wheels;
+		TestCar() : wheels(4) {}
 
 		bool Serialize(joeserialize::Serializer & s)
 		{
@@ -577,7 +577,7 @@ class TEST_CAR
 
 QT_TEST(serialization_vector_bugs_test)
 {
-	TEST_CAR car;
+	TestCar car;
 	car.wheels[0].staticdata = 1337;
 
 	stringstream serializestream;
@@ -614,13 +614,13 @@ QT_TEST(serialization_vector_bugs_test)
 	}
 }
 
-class TEST_SETTINGS
+class TestSettings
 {
 	public:
 		std::string datapath;
 		std::string filename;
 
-		TEST_SETTINGS() : datapath("data/"), filename("image.png") {}
+		TestSettings() : datapath("data/"), filename("image.png") {}
 
 		bool Serialize(joeserialize::Serializer & s)
 		{

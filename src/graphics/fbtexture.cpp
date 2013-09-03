@@ -26,17 +26,17 @@
 #include <sstream>
 #include <string>
 
-void FBTEXTURE::Init(int sizex, int sizey, TARGET target, FORMAT newformat, bool filternearest, bool usemipmap, std::ostream & error_output, int newmultisample, bool newdepthcomparisonenabled)
+void FrameBufferTexture::Init(int sizex, int sizey, TARGET target, FORMAT newformat, bool filternearest, bool usemipmap, std::ostream & error_output, int newmultisample, bool newdepthcomparisonenabled)
 {
 	assert(!attached);
 
-	GLUTIL::CheckForOpenGLErrors("FBTEX init start", error_output);
+	CheckForOpenGLErrors("FBTEX init start", error_output);
 
 	if (inited)
 	{
 		DeInit();
 
-		GLUTIL::CheckForOpenGLErrors("FBTEX deinit", error_output);
+		CheckForOpenGLErrors("FBTEX deinit", error_output);
 	}
 
 	depthcomparisonenabled = newdepthcomparisonenabled;
@@ -113,7 +113,7 @@ void FBTEXTURE::Init(int sizex, int sizey, TARGET target, FORMAT newformat, bool
 	glGenTextures(1, &fbtexture);
 	glBindTexture(texture_target, fbtexture);
 
-	GLUTIL::CheckForOpenGLErrors("FBTEX texture generation and initial bind", error_output);
+	CheckForOpenGLErrors("FBTEX texture generation and initial bind", error_output);
 
 	if (texture_target == CUBEMAP)
 	{
@@ -128,7 +128,7 @@ void FBTEXTURE::Init(int sizex, int sizey, TARGET target, FORMAT newformat, bool
 		glTexImage2D(texture_target, 0, texture_format, sizex, sizey, 0, data_format, data_type, NULL);
 	}
 
-	GLUTIL::CheckForOpenGLErrors("FBTEX texture storage initialization", error_output);
+	CheckForOpenGLErrors("FBTEX texture storage initialization", error_output);
 
 	//glTexParameteri(texture_target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
 	//glTexParameteri(texture_target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
@@ -166,21 +166,21 @@ void FBTEXTURE::Init(int sizex, int sizey, TARGET target, FORMAT newformat, bool
 			glTexParameteri(texture_target, GL_TEXTURE_COMPARE_MODE, GL_NONE);
 	}
 
-	GLUTIL::CheckForOpenGLErrors("FBTEX texture setup", error_output);
+	CheckForOpenGLErrors("FBTEX texture setup", error_output);
 
 	if (mipmap)
 	{
 		glGenerateMipmap(texture_target);
 
-		GLUTIL::CheckForOpenGLErrors("FBTEX initial mipmap generation", error_output);
+		CheckForOpenGLErrors("FBTEX initial mipmap generation", error_output);
 	}
 
 	glBindTexture(texture_target, 0); // don't leave the texture bound
 
-	GLUTIL::CheckForOpenGLErrors("FBTEX texture unbinding", error_output);
+	CheckForOpenGLErrors("FBTEX texture unbinding", error_output);
 }
 
-void FBTEXTURE::DeInit()
+void FrameBufferTexture::DeInit()
 {
 	if (fbtexture > 0)
 		glDeleteTextures(1, &fbtexture);
@@ -188,14 +188,14 @@ void FBTEXTURE::DeInit()
 	inited = false;
 }
 
-void FBTEXTURE::Activate() const
+void FrameBufferTexture::Activate() const
 {
 	assert(inited);
 
 	glBindTexture(texture_target, fbtexture);
 }
 
-void FBTEXTURE::Deactivate() const
+void FrameBufferTexture::Deactivate() const
 {
     glDisable(texture_target);
     glBindTexture(texture_target,0);

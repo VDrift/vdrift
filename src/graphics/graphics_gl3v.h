@@ -38,10 +38,10 @@
 #include <list>
 #include <vector>
 
-class SCENENODE;
+class SceneNode;
 
 /// a wrapper around the gl3v renderer
-class GRAPHICS_GL3V : public GRAPHICS
+class GraphicsGL3 : public Graphics
 {
 public:
 	///reflection_type is 0 (low=OFF), 1 (medium=static), 2 (high=dynamic)
@@ -63,10 +63,10 @@ public:
 		std::ostream & error_output);
 	virtual void Deinit();
 	virtual void BeginScene(std::ostream & error_output);
-	virtual DRAWABLE_CONTAINER <PTRVECTOR> & GetDynamicDrawlist();
-	virtual void AddStaticNode(SCENENODE & node, bool clearcurrent = true);
-	virtual void SetupScene(float fov, float new_view_distance, const MATHVECTOR <float, 3> cam_position, const QUATERNION <float> & cam_rotation,
-					const MATHVECTOR <float, 3> & dynamic_reflection_sample_pos);
+	virtual DrawableContainer <PtrVector> & GetDynamicDrawlist();
+	virtual void AddStaticNode(SceneNode & node, bool clearcurrent = true);
+	virtual void SetupScene(float fov, float new_view_distance, const Vec3 cam_position, const Quat & cam_rotation,
+					const Vec3 & dynamic_reflection_sample_pos);
 	virtual void DrawScene(std::ostream & error_output);
 	virtual void EndScene(std::ostream & error_output);
 	virtual int GetMaxAnisotropy() const;
@@ -75,12 +75,12 @@ public:
 	virtual bool ReloadShaders(std::ostream & info_output, std::ostream & error_output);
 	virtual void SetCloseShadow ( float value );
 	virtual bool GetShadows() const;
-	virtual void SetSunDirection(const MATHVECTOR<float, 3> & value);
+	virtual void SetSunDirection(const Vec3 & value);
 	virtual void SetContrast(float value);
 	virtual void printProfilingInfo(std::ostream & out) const {renderer.printProfilingInfo(out);}
 
-	GRAPHICS_GL3V(StringIdMap & map);
-	~GRAPHICS_GL3V() {};
+	GraphicsGL3(StringIdMap & map);
+	~GraphicsGL3() {};
 
 private:
 	StringIdMap & stringMap;
@@ -91,48 +91,48 @@ private:
 	int w, h;
 	bool logNextGlFrame; // used to take a gl log capture after reloading shaders if gl logging is enabled
 	bool initialized;
-	MATHVECTOR <float, 3> lastCameraPosition;
-	MATHVECTOR <float, 3> light_direction;
+	Vec3 lastCameraPosition;
+	Vec3 light_direction;
 
 	struct CameraMatrices
 	{
-		MATRIX4 <float> projectionMatrix;
-		MATRIX4 <float> inverseProjectionMatrix;
-		MATRIX4 <float> viewMatrix;
-		MATRIX4 <float> inverseViewMatrix;
+		Matrix4 <float> projectionMatrix;
+		Matrix4 <float> inverseProjectionMatrix;
+		Matrix4 <float> viewMatrix;
+		Matrix4 <float> inverseViewMatrix;
 	};
 	std::map <std::string, CameraMatrices> cameras;
 	CameraMatrices & setCameraPerspective(const std::string & name,
-							  const MATHVECTOR <float, 3> & position,
-							  const QUATERNION <float> & rotation,
+							  const Vec3 & position,
+							  const Quat & rotation,
 							  float fov,
 							  float nearDistance,
 							  float farDistance,
 							  float w,
 							  float h);
 	CameraMatrices & setCameraOrthographic(const std::string & name,
-							   const MATHVECTOR <float, 3> & position,
-							   const QUATERNION <float> & rotation,
-							   const MATHVECTOR <float, 3> & orthoMin,
-							   const MATHVECTOR <float, 3> & orthoMax);
+							   const Vec3 & position,
+							   const Quat & rotation,
+							   const Vec3 & orthoMin,
+							   const Vec3 & orthoMax);
 
 	std::string getCameraDrawGroupKey(StringId pass, StringId group) const;
 	std::string getCameraForPass(StringId pass) const;
 
 	// scenegraph output
-	DRAWABLE_CONTAINER <PTRVECTOR> dynamic_drawlist; //used for objects that move or change
-	STATICDRAWABLES static_drawlist; //used for objects that will never change
+	DrawableContainer <PtrVector> dynamic_drawlist; //used for objects that move or change
+	StaticDrawables static_drawlist; //used for objects that will never change
 
 	// a special drawable that's used for fullscreen quad passes
-	DRAWABLE fullscreenquad;
-	VERTEXARRAY fullscreenquadVertices;
+	Drawable fullscreenquad;
+	VertexArray fullscreenquadVertices;
 
 	// drawlist cache
-	std::map <std::string, std::vector <RenderModelExternal*> > cameraDrawGroupDrawLists;
+	std::map <std::string, std::vector <RenderModelExt*> > cameraDrawGroupDrawLists;
 
 	// drawlist assembly functions
-	void assembleDrawList(const std::vector <DRAWABLE*> & drawables, std::vector <RenderModelExternal*> & out, FRUSTUM * frustum, const MATHVECTOR <float, 3> & camPos);
-	void assembleDrawList(const AABB_SPACE_PARTITIONING_NODE_ADAPTER <DRAWABLE> & adapter, std::vector <RenderModelExternal*> & out, FRUSTUM * frustum, const MATHVECTOR <float, 3> & camPos);
+	void assembleDrawList(const std::vector <Drawable*> & drawables, std::vector <RenderModelExt*> & out, Frustum * frustum, const Vec3 & camPos);
+	void assembleDrawList(const AabbTreeNodeAdapter <Drawable> & adapter, std::vector <RenderModelExt*> & out, Frustum * frustum, const Vec3 & camPos);
 
 	// a map that stores which camera each pass uses
 	std::map <std::string, std::string> passNameToCameraName;
@@ -140,7 +140,7 @@ private:
 	// a set storing all configuration option conditions (bloom enabled, etc)
 	std::set <std::string> conditions;
 
-	TEXTURE static_reflection;
+	Texture static_reflection;
 
 	float closeshadow;
 };

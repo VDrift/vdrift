@@ -22,16 +22,16 @@
 #include <fstream>
 #include <sstream>
 
-Factory<TEXTURE>::Factory() :
-	m_default(new TEXTURE()),
-	m_size(TEXTUREINFO::LARGE),
+Factory<Texture>::Factory() :
+	m_default(new Texture()),
+	m_size(TextureInfo::LARGE),
 	m_compress(true),
 	m_srgb(false)
 {
 	// ctor
 }
 
-void Factory<TEXTURE>::init(int max_size, bool use_srgb, bool compress)
+void Factory<Texture>::init(int max_size, bool use_srgb, bool compress)
 {
 	m_size = max_size;
 	m_srgb = use_srgb;
@@ -40,34 +40,34 @@ void Factory<TEXTURE>::init(int max_size, bool use_srgb, bool compress)
 	// init default texture
 	std::stringstream error;
 	unsigned char white[] = {255, 255, 255, 255};
-	TEXTUREINFO info;
+	TextureInfo info;
 	info.data = white;
 	info.width = 1;
 	info.height = 1;
 	info.bytespp = 4;
-	info.maxsize = TEXTUREINFO::Size(m_size);
+	info.maxsize = TextureInfo::Size(m_size);
 	info.mipmap = false;
 	info.srgb = m_srgb;
 	m_default->Load("", info, error);
 }
 
 template <>
-bool Factory<TEXTURE>::create(
-	std::tr1::shared_ptr<TEXTURE> & sptr,
+bool Factory<Texture>::create(
+	std::tr1::shared_ptr<Texture> & sptr,
 	std::ostream & error,
 	const std::string & basepath,
 	const std::string & path,
 	const std::string & name,
-	const TEXTUREINFO& info)
+	const TextureInfo& info)
 {
 	const std::string abspath = basepath + "/" + path + "/" + name;
 	if (info.data || std::ifstream(abspath.c_str()))
 	{
-		TEXTUREINFO info_temp = info;
+		TextureInfo info_temp = info;
 		info_temp.srgb = info.compress && m_srgb; 			// non compressible means non color data
 		info_temp.compress = info.compress && m_compress;	// allow to disable compression
-		info_temp.maxsize = TEXTUREINFO::Size(m_size);
-		std::tr1::shared_ptr<TEXTURE> temp(new TEXTURE());
+		info_temp.maxsize = TextureInfo::Size(m_size);
+		std::tr1::shared_ptr<Texture> temp(new Texture());
 		if (temp->Load(abspath, info_temp, error))
 		{
 			sptr = temp;
@@ -77,7 +77,7 @@ bool Factory<TEXTURE>::create(
 	return false;
 }
 
-std::tr1::shared_ptr<TEXTURE> Factory<TEXTURE>::getDefault() const
+std::tr1::shared_ptr<Texture> Factory<Texture>::getDefault() const
 {
 	return m_default;
 }

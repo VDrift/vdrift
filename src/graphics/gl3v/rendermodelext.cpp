@@ -19,33 +19,33 @@
 
 #include "rendermodelext.h"
 
-RenderModelExternal::RenderModelExternal() : vao(0), elementCount(0), enabled(false)
+RenderModelExt::RenderModelExt() : vao(0), elementCount(0), enabled(false)
 {
 	// Constructor.
 }
 
-RenderModelExternal::RenderModelExternal(const RenderModelEntry & m) : vao(m.vao), elementCount(m.elementCount)
+RenderModelExt::RenderModelExt(const RenderModelEntry & m) : vao(m.vao), elementCount(m.elementCount)
 {
 	if (elementCount > 0)
 		enabled = true;
 }
 
-RenderModelExternal::~RenderModelExternal()
+RenderModelExt::~RenderModelExt()
 {
 	// Destructor.
 }
 
-void RenderModelExternal::draw(GLWrapper & gl) const
+void RenderModelExt::draw(GLWrapper & gl) const
 {
 	gl.drawGeometry(vao, elementCount);
 }
 
-bool RenderModelExternal::drawEnabled() const
+bool RenderModelExt::drawEnabled() const
 {
 	return enabled;
 }
 
-void RenderModelExternal::setVertexArrayObject(GLuint newVao, unsigned int newElementCount)
+void RenderModelExt::setVertexArrayObject(GLuint newVao, unsigned int newElementCount)
 {
 	vao = newVao;
 	elementCount = newElementCount;
@@ -53,12 +53,12 @@ void RenderModelExternal::setVertexArrayObject(GLuint newVao, unsigned int newEl
 		enabled = true;
 }
 
-void RenderModelExternal::clearTextureCache()
+void RenderModelExt::clearTextureCache()
 {
 	perPassTextureCache.clear();
 }
 
-void RenderModelExternal::clearUniformCache()
+void RenderModelExt::clearUniformCache()
 {
 	perPassUniformCache.clear();
 }

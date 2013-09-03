@@ -33,14 +33,14 @@ class RenderPass;
 /// This class is similar to RenderModelEntry, but contains textures and uniforms.
 /// The idea is that these objects are stored externally from the renderer, and then arrays of pointers to them get passed into the renderer function at render time.
 /// If a different geometry draw method is desired, the class can be derived from.
-class RenderModelExternal
+class RenderModelExt
 {
 	friend class RenderPass;
 public:
-	RenderModelExternal();
-	RenderModelExternal(const RenderModelEntry & m);
+	RenderModelExt();
+	RenderModelExt(const RenderModelEntry & m);
 
-	virtual ~RenderModelExternal();
+	virtual ~RenderModelExt();
 	virtual void draw(GLWrapper & gl) const;
 	bool drawEnabled() const;
 	void setVertexArrayObject(GLuint newVao, unsigned int newElementCount);

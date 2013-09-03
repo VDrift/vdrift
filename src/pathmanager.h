@@ -24,7 +24,7 @@
 #include <string>
 #include <iostream>
 
-class PATHMANAGER
+class PathManager
 {
 public:
 	void Init(std::ostream & info_output, std::ostream & error_output);

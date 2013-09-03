@@ -41,15 +41,15 @@ static bool IsPowerOfTwo(int x)
 	return ((x != 0) && !(x & (x - 1)));
 }
 
-static float Scale(TEXTUREINFO::Size size, float width, float height)
+static float Scale(TextureInfo::Size size, float width, float height)
 {
 	float maxsize, minscale;
-	if (size == TEXTUREINFO::SMALL)
+	if (size == TextureInfo::SMALL)
 	{
 		maxsize = 128;
 		minscale = 0.25;
 	}
-	else if (size == TEXTUREINFO::MEDIUM)
+	else if (size == TextureInfo::MEDIUM)
 	{
 		maxsize = 256;
 		minscale = 0.5;
@@ -69,7 +69,7 @@ static float Scale(TEXTUREINFO::Size size, float width, float height)
 
 static void GetTextureFormat(
 	const SDL_Surface * surface,
-	const TEXTUREINFO & info,
+	const TextureInfo & info,
 	int & internalformat,
 	int & format,
 	bool & alpha)
@@ -129,7 +129,7 @@ static void GenerateMipmap(GLenum target)
 	}
 }
 
-static void SetSampler(const TEXTUREINFO & info, bool hasmiplevels = false)
+static void SetSampler(const TextureInfo & info, bool hasmiplevels = false)
 {
 	if (info.repeatu)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
@@ -177,7 +177,7 @@ static void SetSampler(const TEXTUREINFO & info, bool hasmiplevels = false)
 
 static void GenTexture(
 	const SDL_Surface * surface,
-	const TEXTUREINFO & info,
+	const TextureInfo & info,
 	unsigned & id,
 	bool & alpha,
 	std::ostream & error)
@@ -188,7 +188,7 @@ static void GenTexture(
 
 	// gen texture
 	glGenTextures(1, &id);
-	GLUTIL::CheckForOpenGLErrors("Texture ID generation", error);
+	CheckForOpenGLErrors("Texture ID generation", error);
 
 	// init texture
 	glBindTexture(GL_TEXTURE_2D, id);
@@ -196,14 +196,14 @@ static void GenTexture(
 	SetSampler(info);
 
 	glTexImage2D(GL_TEXTURE_2D, 0, internalformat, surface->w, surface->h, 0, format, GL_UNSIGNED_BYTE, surface->pixels);
-	GLUTIL::CheckForOpenGLErrors("Texture creation", error);
+	CheckForOpenGLErrors("Texture creation", error);
 
 	// If we support generatemipmap, go ahead and do it regardless of the info.mipmap setting.
 	// In the GL3 renderer the sampler decides whether or not to do mip filtering, so we conservatively make mipmaps available for all textures.
 	GenerateMipmap(GL_TEXTURE_2D);
 }
 
-TEXTURE::TEXTURE():
+Texture::Texture():
 	m_id(0),
 	m_w(0),
 	m_h(0),
@@ -214,12 +214,12 @@ TEXTURE::TEXTURE():
 	// ctor
 }
 
-TEXTURE::~TEXTURE()
+Texture::~Texture()
 {
 	Unload();
 }
 
-void TEXTURE::Activate() const
+void Texture::Activate() const
 {
 	assert(m_id);
 	if (m_cube)
@@ -234,7 +234,7 @@ void TEXTURE::Activate() const
 	}
 }
 
-void TEXTURE::Deactivate() const
+void Texture::Deactivate() const
 {
 	if (m_cube)
 	{
@@ -248,7 +248,7 @@ void TEXTURE::Deactivate() const
 	}
 }
 
-bool TEXTURE::Load(const std::string & path, const TEXTUREINFO & info, std::ostream & error)
+bool Texture::Load(const std::string & path, const TextureInfo & info, std::ostream & error)
 {
 	if (m_id)
 	{
@@ -361,14 +361,14 @@ bool TEXTURE::Load(const std::string & path, const TEXTUREINFO & info, std::ostr
 	return true;
 }
 
-void TEXTURE::Unload()
+void Texture::Unload()
 {
 	if (m_id)
 		glDeleteTextures(1, &m_id);
 	m_id = 0;
 }
 
-bool TEXTURE::LoadCubeVerticalCross(const std::string & path, const TEXTUREINFO & info, std::ostream & error)
+bool Texture::LoadCubeVerticalCross(const std::string & path, const TextureInfo & info, std::ostream & error)
 {
 	SDL_Surface * surface = IMG_Load(path.c_str());
 	if (!surface)
@@ -380,7 +380,7 @@ bool TEXTURE::LoadCubeVerticalCross(const std::string & path, const TEXTUREINFO 
 
 	unsigned id = 0;
 	glGenTextures(1, &id);
-	GLUTIL::CheckForOpenGLErrors("Cubemap ID generation", error);
+	CheckForOpenGLErrors("Cubemap ID generation", error);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, id);
 	glEnable(GL_TEXTURE_CUBE_MAP);
 
@@ -512,14 +512,14 @@ bool TEXTURE::LoadCubeVerticalCross(const std::string & path, const TEXTUREINFO 
 
 	glDisable(GL_TEXTURE_CUBE_MAP);
 
-	GLUTIL::CheckForOpenGLErrors("Cubemap creation", error);
+	CheckForOpenGLErrors("Cubemap creation", error);
 
 	SDL_FreeSurface(surface);
 
 	return true;
 }
 
-bool TEXTURE::LoadCube(const std::string & path, const TEXTUREINFO & info, std::ostream & error)
+bool Texture::LoadCube(const std::string & path, const TextureInfo & info, std::ostream & error)
 {
 	if (info.verticalcross)
 	{
@@ -536,7 +536,7 @@ bool TEXTURE::LoadCube(const std::string & path, const TEXTUREINFO & info, std::
 
 	unsigned id = 0;
 	glGenTextures(1, &id);
-	GLUTIL::CheckForOpenGLErrors("Cubemap texture ID generation", error);
+	CheckForOpenGLErrors("Cubemap texture ID generation", error);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, id);
 	m_id = id;
 
@@ -614,12 +614,12 @@ bool TEXTURE::LoadCube(const std::string & path, const TEXTUREINFO & info, std::
 
 	glDisable(GL_TEXTURE_CUBE_MAP);
 
-	GLUTIL::CheckForOpenGLErrors("Cubemap creation", error);
+	CheckForOpenGLErrors("Cubemap creation", error);
 
 	return true;
 }
 
-bool TEXTURE::LoadDDS(const std::string & path, const TEXTUREINFO & info, std::ostream & error)
+bool Texture::LoadDDS(const std::string & path, const TextureInfo & info, std::ostream & error)
 {
 	std::ifstream file(path.c_str(), std::ifstream::in | std::ifstream::binary);
 	if (!file)
@@ -628,7 +628,7 @@ bool TEXTURE::LoadDDS(const std::string & path, const TEXTUREINFO & info, std::o
 	// test for dds magic value
 	char magic[4];
 	file.read(magic, 4);
-	if (!isDDS(magic, 4))
+	if (!IsDDS(magic, 4))
 		return false;
 
 	// get length of file:
@@ -644,7 +644,7 @@ bool TEXTURE::LoadDDS(const std::string & path, const TEXTUREINFO & info, std::o
 	const char * texdata(0);
 	unsigned long texlen(0);
 	unsigned format(0), width(0), height(0), levels(0);
-	if (!readDDS(
+	if (!ReadDDS(
 		(void*)&data[0], length,
 		(const void*&)texdata, texlen,
 		format, width, height, levels))
@@ -678,7 +678,7 @@ bool TEXTURE::LoadDDS(const std::string & path, const TEXTUREINFO & info, std::o
 	// load texture
 	assert(!m_id);
 	glGenTextures(1, &m_id);
-	GLUTIL::CheckForOpenGLErrors("Texture ID generation", error);
+	CheckForOpenGLErrors("Texture ID generation", error);
 
 	glBindTexture(GL_TEXTURE_2D, m_id);
 
@@ -702,7 +702,7 @@ bool TEXTURE::LoadDDS(const std::string & path, const TEXTUREINFO & info, std::o
 			ilen = std::max(1u, iw / 4) * std::max(1u, ih / 4) * blocklen;
 			glCompressedTexImage2D(GL_TEXTURE_2D, i, iformat, iw, ih, 0, ilen, idata);
 		}
-		GLUTIL::CheckForOpenGLErrors("Texture creation", error);
+		CheckForOpenGLErrors("Texture creation", error);
 
 		idata += ilen;
 		iw = std::max(1u, iw / 2);

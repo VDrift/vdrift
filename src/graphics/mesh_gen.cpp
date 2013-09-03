@@ -31,7 +31,7 @@ static double cosD(double degrees)
 	return (double) cos(degrees * M_PI / 180.000f);
 }
 
-namespace MESHGEN
+namespace MeshGen
 {
 
 
@@ -40,7 +40,7 @@ namespace MESHGEN
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 // mg_tire
-void mg_tire(VERTEXARRAY & tire, float sectionWidth_mm, float aspectRatio, float rimDiameter_in)
+void mg_tire(VertexArray & tire, float sectionWidth_mm, float aspectRatio, float rimDiameter_in)
 {
 	// configurable parameters - set to defaults
 	int segmentsAround = 32;
@@ -374,10 +374,10 @@ void mg_tire(VERTEXARRAY & tire, float sectionWidth_mm, float aspectRatio, float
 	normalData.resize(vertexFloatCount);
 
 
-    MATHVECTOR <float, 3> tri1Edge;        // one of the edges of a triangle that goes around the tire's circle
-    MATHVECTOR <float, 3> tri2Edge;        // one of the edges of a triangle that goes around the tire's circle
-    MATHVECTOR <float, 3> triUpEdge;       // one of the edges that wraps around the tire's tread which both faces share, not used on the last vertex ring
-    MATHVECTOR <float, 3> triDownEdge;     // the other edges that wraps around the tire's tread which both faces share, not used on the first vertex ring
+    Vec3 tri1Edge;        // one of the edges of a triangle that goes around the tire's circle
+    Vec3 tri2Edge;        // one of the edges of a triangle that goes around the tire's circle
+    Vec3 triUpEdge;       // one of the edges that wraps around the tire's tread which both faces share, not used on the last vertex ring
+    Vec3 triDownEdge;     // the other edges that wraps around the tire's tread which both faces share, not used on the first vertex ring
 
 	for (int nlv=0 ; nlv<vertexCount ; nlv++)
 	{
@@ -467,10 +467,10 @@ void mg_tire(VERTEXARRAY & tire, float sectionWidth_mm, float aspectRatio, float
 		    }
 
 
-		    MATHVECTOR <float, 3> faceNormal1 = triUpEdge.cross(tri1Edge);
-            MATHVECTOR <float, 3> faceNormal2 = tri2Edge.cross(triUpEdge);
+		    Vec3 faceNormal1 = triUpEdge.cross(tri1Edge);
+            Vec3 faceNormal2 = tri2Edge.cross(triUpEdge);
 
-            MATHVECTOR <float, 3> vNormal = faceNormal1 + faceNormal2;
+            Vec3 vNormal = faceNormal1 + faceNormal2;
             vNormal = vNormal.Normalize();
             vNormal = vNormal * vertexNormalLength;
 
@@ -559,10 +559,10 @@ void mg_tire(VERTEXARRAY & tire, float sectionWidth_mm, float aspectRatio, float
 
 
             // all actual normal calculation takes place here
-            MATHVECTOR <float, 3> faceNormal1 = tri1Edge.cross(triUpEdge);
-            MATHVECTOR <float, 3> faceNormal2 = triUpEdge.cross(tri2Edge);
+            Vec3 faceNormal1 = tri1Edge.cross(triUpEdge);
+            Vec3 faceNormal2 = triUpEdge.cross(tri2Edge);
 
-            MATHVECTOR <float, 3> vNormal = faceNormal1 + faceNormal2;
+            Vec3 vNormal = faceNormal1 + faceNormal2;
             vNormal = vNormal.Normalize();
             vNormal = vNormal * vertexNormalLength;
 
@@ -684,13 +684,13 @@ void mg_tire(VERTEXARRAY & tire, float sectionWidth_mm, float aspectRatio, float
 		    }
 
 
-		    MATHVECTOR <float, 3> faceNormal1 = triUpEdge.cross(tri1Edge);
-            MATHVECTOR <float, 3> faceNormal2 = tri2Edge.cross(triUpEdge);
-            MATHVECTOR <float, 3> faceNormal3 = triDownEdge.cross(tri1Edge);
-            MATHVECTOR <float, 3> faceNormal4 = tri2Edge.cross(triDownEdge);
+		    Vec3 faceNormal1 = triUpEdge.cross(tri1Edge);
+            Vec3 faceNormal2 = tri2Edge.cross(triUpEdge);
+            Vec3 faceNormal3 = triDownEdge.cross(tri1Edge);
+            Vec3 faceNormal4 = tri2Edge.cross(triDownEdge);
 
 
-            MATHVECTOR <float, 3> vNormal = faceNormal1 + faceNormal2 + faceNormal3 + faceNormal4;
+            Vec3 vNormal = faceNormal1 + faceNormal2 + faceNormal3 + faceNormal4;
             vNormal = vNormal.Normalize();
             vNormal = vNormal * vertexNormalLength;
 
@@ -752,7 +752,7 @@ void mg_tire(VERTEXARRAY & tire, float sectionWidth_mm, float aspectRatio, float
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 // mg_wheelEdge
-void mg_rim(VERTEXARRAY & rim, float sectionWidth_mm, float aspectRatio, float rimDiameter_in, float flangeDisplacement_mm)
+void mg_rim(VertexArray & rim, float sectionWidth_mm, float aspectRatio, float rimDiameter_in, float flangeDisplacement_mm)
 {
     int segmentsAround = 32;
 
@@ -971,9 +971,9 @@ void mg_rim(VERTEXARRAY & rim, float sectionWidth_mm, float aspectRatio, float r
 	std::vector<float> normalData;
 	normalData.resize(vertexFloatCount);
 
-    MATHVECTOR <float, 3> tri1Edge;        // one of the edges of a triangle that goes around the tire's circle
-    MATHVECTOR <float, 3> tri2Edge;        // one of the edges of a triangle that goes around the tire's circle
-    MATHVECTOR <float, 3> triUpEdge;
+    Vec3 tri1Edge;        // one of the edges of a triangle that goes around the tire's circle
+    Vec3 tri2Edge;        // one of the edges of a triangle that goes around the tire's circle
+    Vec3 triUpEdge;
 
     for (int nlv=0 ; nlv<vertexCount ; nlv++)
     {
@@ -1051,10 +1051,10 @@ void mg_rim(VERTEXARRAY & rim, float sectionWidth_mm, float aspectRatio, float r
                     );
 		    }
 
-            MATHVECTOR <float, 3> faceNormal1 = tri1Edge.cross(triUpEdge);
-            MATHVECTOR <float, 3> faceNormal2 = triUpEdge.cross(tri2Edge);
+            Vec3 faceNormal1 = tri1Edge.cross(triUpEdge);
+            Vec3 faceNormal2 = triUpEdge.cross(tri2Edge);
 
-            MATHVECTOR <float, 3> vNormal = faceNormal1 + faceNormal2;
+            Vec3 vNormal = faceNormal1 + faceNormal2;
             vNormal = vNormal.Normalize();
             vNormal = vNormal * vertexNormalLength;
 
@@ -1075,7 +1075,7 @@ void mg_rim(VERTEXARRAY & rim, float sectionWidth_mm, float aspectRatio, float r
         else if ( nlv < vertexesAround *4 )
         {
 
-            MATHVECTOR <float,3> iNormal;
+            Vec3 iNormal;
             iNormal.Set( 0, vertexData[nlv*3 + 1] , vertexData[nlv*3 + 2]  );
             iNormal = iNormal * -1.0f;
             iNormal = iNormal.Normalize();
@@ -1154,10 +1154,10 @@ void mg_rim(VERTEXARRAY & rim, float sectionWidth_mm, float aspectRatio, float r
                     );
 		    }
 
-            MATHVECTOR <float, 3> faceNormal1 = tri1Edge.cross(triUpEdge);
-            MATHVECTOR <float, 3> faceNormal2 = triUpEdge.cross(tri2Edge);
+            Vec3 faceNormal1 = tri1Edge.cross(triUpEdge);
+            Vec3 faceNormal2 = triUpEdge.cross(tri2Edge);
 
-            MATHVECTOR <float, 3> vNormal = faceNormal1 + faceNormal2;
+            Vec3 vNormal = faceNormal1 + faceNormal2;
             vNormal = vNormal.Normalize();
             vNormal = vNormal * vertexNormalLength;
 
@@ -1210,7 +1210,7 @@ void mg_rim(VERTEXARRAY & rim, float sectionWidth_mm, float aspectRatio, float r
 
 //////////////////////////////////////////////////////////////////////
 // Brake Rotor
-void mg_brake_rotor(VERTEXARRAY & rotor, float diameter_mm, float thickness_mm)
+void mg_brake_rotor(VertexArray & rotor, float diameter_mm, float thickness_mm)
 {
     // tweak-able
     unsigned int segmentsAround = 32;
@@ -1494,7 +1494,7 @@ void mg_brake_rotor(VERTEXARRAY & rotor, float diameter_mm, float thickness_mm)
 
         else if ( nlv < vertexesAround* 3 )
         {
-            MATHVECTOR <float, 3> normal;
+            Vec3 normal;
 
             normal.Set(   0.0f,
                 vertexData[nlv*3+1],

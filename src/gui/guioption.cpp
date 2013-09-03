@@ -22,35 +22,35 @@
 
 static const std::string null;
 
-GUIOPTION::GUIOPTION() :
+GuiOption::GuiOption() :
 	m_current_value(0),
 	m_type(type_float),
 	m_min(0),
 	m_max(0),
 	m_percent(false)
 {
-	get_val.call.bind<GUIOPTION, &GUIOPTION::GetStorageValues>(this);
-	get_str.call.bind<GUIOPTION, &GUIOPTION::GetDisplayValues>(this);
-	set_valn.call.bind<GUIOPTION, &GUIOPTION::SetCurrentValueNorm>(this);
-	set_val.call.bind<GUIOPTION, &GUIOPTION::SetCurrentValue>(this);
-	set_nth.call.bind<GUIOPTION, &GUIOPTION::SetToNthValue>(this);
-	set_prev.call.bind<GUIOPTION, &GUIOPTION::Decrement>(this);
-	set_next.call.bind<GUIOPTION, &GUIOPTION::Increment>(this);
+	get_val.call.bind<GuiOption, &GuiOption::GetStorageValues>(this);
+	get_str.call.bind<GuiOption, &GuiOption::GetDisplayValues>(this);
+	set_valn.call.bind<GuiOption, &GuiOption::SetCurrentValueNorm>(this);
+	set_val.call.bind<GuiOption, &GuiOption::SetCurrentValue>(this);
+	set_nth.call.bind<GuiOption, &GuiOption::SetToNthValue>(this);
+	set_prev.call.bind<GuiOption, &GuiOption::Decrement>(this);
+	set_next.call.bind<GuiOption, &GuiOption::Increment>(this);
 }
 
-GUIOPTION::GUIOPTION(const GUIOPTION & other)
+GuiOption::GuiOption(const GuiOption & other)
 {
-	get_val.call.bind<GUIOPTION, &GUIOPTION::GetStorageValues>(this);
-	get_str.call.bind<GUIOPTION, &GUIOPTION::GetDisplayValues>(this);
-	set_valn.call.bind<GUIOPTION, &GUIOPTION::SetCurrentValueNorm>(this);
-	set_val.call.bind<GUIOPTION, &GUIOPTION::SetCurrentValue>(this);
-	set_nth.call.bind<GUIOPTION, &GUIOPTION::SetToNthValue>(this);
-	set_prev.call.bind<GUIOPTION, &GUIOPTION::Decrement>(this);
-	set_next.call.bind<GUIOPTION, &GUIOPTION::Increment>(this);
 	*this = other;
+	get_val.call.bind<GuiOption, &GuiOption::GetStorageValues>(this);
+	get_str.call.bind<GuiOption, &GuiOption::GetDisplayValues>(this);
+	set_valn.call.bind<GuiOption, &GuiOption::SetCurrentValueNorm>(this);
+	set_val.call.bind<GuiOption, &GuiOption::SetCurrentValue>(this);
+	set_nth.call.bind<GuiOption, &GuiOption::SetToNthValue>(this);
+	set_prev.call.bind<GuiOption, &GuiOption::Decrement>(this);
+	set_next.call.bind<GuiOption, &GuiOption::Increment>(this);
 }
 
-GUIOPTION & GUIOPTION::operator=(const GUIOPTION & other)
+GuiOption & GuiOption::operator=(const GuiOption & other)
 {
 	m_values = other.m_values;
 	m_current_value = other.m_current_value;
@@ -69,7 +69,7 @@ GUIOPTION & GUIOPTION::operator=(const GUIOPTION & other)
 	return *this;
 }
 
-void GUIOPTION::SetValues(const std::string & curvalue, const LIST & newvalues)
+void GuiOption::SetValues(const std::string & curvalue, const List & newvalues)
 {
 	m_values = newvalues;
 
@@ -80,7 +80,7 @@ void GUIOPTION::SetValues(const std::string & curvalue, const LIST & newvalues)
 	SetCurrentValue(curvalue);
 }
 
-void GUIOPTION::SetInfo(
+void GuiOption::SetInfo(
 	const std::string & newdesc,
 	const std::string & newtype,
 	float newmin, float newmax,
@@ -93,7 +93,7 @@ void GUIOPTION::SetInfo(
 	m_percent = newpercent;
 }
 
-void GUIOPTION::SetCurrentValue(const std::string & value)
+void GuiOption::SetCurrentValue(const std::string & value)
 {
 	if (m_values.empty())
 	{
@@ -102,7 +102,7 @@ void GUIOPTION::SetCurrentValue(const std::string & value)
 	else
 	{
 		size_t current_value = 0;
-		for (LIST::iterator i = m_values.begin(); i != m_values.end(); ++i)
+		for (List::iterator i = m_values.begin(); i != m_values.end(); ++i)
 		{
 			if (IsFloat())
 			{
@@ -122,7 +122,7 @@ void GUIOPTION::SetCurrentValue(const std::string & value)
 	SignalValue();
 }
 
-void GUIOPTION::Increment()
+void GuiOption::Increment()
 {
 	if (m_values.empty())
 	{
@@ -153,7 +153,7 @@ void GUIOPTION::Increment()
 	SignalValue();
 }
 
-void GUIOPTION::Decrement()
+void GuiOption::Decrement()
 {
 	if (m_values.empty())
 	{
@@ -184,7 +184,7 @@ void GUIOPTION::Decrement()
 	SignalValue();
 }
 
-void GUIOPTION::SetToNthValue(int n)
+void GuiOption::SetToNthValue(int n)
 {
 	if (m_values.empty())
 	{
@@ -199,13 +199,13 @@ void GUIOPTION::SetToNthValue(int n)
 	SignalValue();
 }
 
-void GUIOPTION::SetToFirstValue()
+void GuiOption::SetToFirstValue()
 {
 	m_current_value = 0;
 	SignalValue();
 }
 
-const std::string & GUIOPTION::GetCurrentDisplayValue() const
+const std::string & GuiOption::GetCurrentDisplayValue() const
 {
 	if (m_values.empty())
 		return m_data;
@@ -216,7 +216,7 @@ const std::string & GUIOPTION::GetCurrentDisplayValue() const
 	return m_values[m_current_value].second;
 }
 
-const std::string & GUIOPTION::GetCurrentStorageValue() const
+const std::string & GuiOption::GetCurrentStorageValue() const
 {
 	if (m_values.empty())
 		return m_data;
@@ -227,12 +227,12 @@ const std::string & GUIOPTION::GetCurrentStorageValue() const
 	return m_values[m_current_value].first;
 }
 
-const GUIOPTION::LIST & GUIOPTION::GetValueList() const
+const GuiOption::List & GuiOption::GetValueList() const
 {
 	return m_values;
 }
 
-void GUIOPTION::SignalValue()
+void GuiOption::SignalValue()
 {
 	if (m_values.empty())
 	{
@@ -294,7 +294,7 @@ void GUIOPTION::SignalValue()
 	}
 }
 
-void GUIOPTION::SetCurrentValueNorm(const std::string & value)
+void GuiOption::SetCurrentValueNorm(const std::string & value)
 {
 	// only valid for floats
 	assert(m_type == type_float);
@@ -313,7 +313,7 @@ void GUIOPTION::SetCurrentValueNorm(const std::string & value)
 	}
 }
 
-void GUIOPTION::GetDisplayValues(int offset, std::vector<std::string> & vals)
+void GuiOption::GetDisplayValues(int offset, std::vector<std::string> & vals)
 {
 	// clamp offset
 	size_t noffset = (offset < 0) ? 0 : offset;
@@ -328,7 +328,7 @@ void GUIOPTION::GetDisplayValues(int offset, std::vector<std::string> & vals)
 	vals.resize(n);
 }
 
-void GUIOPTION::GetStorageValues(int offset, std::vector<std::string> & vals)
+void GuiOption::GetStorageValues(int offset, std::vector<std::string> & vals)
 {
 	// clamp offset
 	size_t noffset = (offset < 0) ? 0 : offset;

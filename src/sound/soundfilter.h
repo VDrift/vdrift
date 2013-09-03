@@ -22,10 +22,10 @@
 
 #define MAX_FILTER_ORDER 5
 
-class SOUNDFILTER
+class SoundFilter
 {
 public:
-	SOUNDFILTER();
+	SoundFilter();
 
 	// reset filter
 	void ClearState();

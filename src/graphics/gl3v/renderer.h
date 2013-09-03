@@ -48,12 +48,12 @@ public:
 	/// Render all passes.
 	/// w and h are the width and height of the application's window.
 	/// ExternalModels is a map of draw group name ID to a vector array of pointers to external models to be drawn along with models that have been added to the pass with addModel.
-	void render(unsigned int w, unsigned int h, StringIdMap & stringMap, const std::map <StringId, std::vector <RenderModelExternal*> > & externalModels, std::ostream & errorOutput);
+	void render(unsigned int w, unsigned int h, StringIdMap & stringMap, const std::map <StringId, std::vector <RenderModelExt*> > & externalModels, std::ostream & errorOutput);
 
 	/// Render all passes.
 	/// w and h are the width and height of the application's window.
 	/// externalModels is a map of pass ID to a map of draw group name ID and a pointer to a vector array of pointers to external models to be drawn along with models that have been added to the pass with addModel.
-	void render(unsigned int w, unsigned int h, StringIdMap & stringMap, const std::map <StringId, std::map <StringId, std::vector <RenderModelExternal*> *> > & externalModels, std::ostream & errorOutput);
+	void render(unsigned int w, unsigned int h, StringIdMap & stringMap, const std::map <StringId, std::map <StringId, std::vector <RenderModelExt*> *> > & externalModels, std::ostream & errorOutput);
 
 	/// Cleanup all data.
 	void clear();

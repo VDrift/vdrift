@@ -24,7 +24,7 @@
 
 #if SDL_VERSION_ATLEAST(2,0,0)
 
-FORCEFEEDBACK::FORCEFEEDBACK(
+ForceFeedback::ForceFeedback(
 	const std::string & device,
 	std::ostream & error_output,
 	std::ostream & info_output) :
@@ -102,13 +102,13 @@ FORCEFEEDBACK::FORCEFEEDBACK(
 	info_output << "Force feedback enabled." << std::endl;
 }
 
-FORCEFEEDBACK::~FORCEFEEDBACK()
+ForceFeedback::~ForceFeedback()
 {
 	if (haptic)
 		SDL_HapticClose(haptic);
 }
 
-void FORCEFEEDBACK::update(
+void ForceFeedback::update(
 	double force,
 	double * position,
 	double dt,
@@ -176,7 +176,7 @@ using std::endl;
 /* Test the bit with given index=offset in an unsigned char array */
 #define testBit(bit, array)    ((array[ucharIndexForBit(bit)] >> bitOffsetInUchar(bit)) & 1)
 
-FORCEFEEDBACK::FORCEFEEDBACK(
+ForceFeedback::ForceFeedback(
 	const string & device,
 	std::ostream & error_output,
 	std::ostream & info_output) :
@@ -313,12 +313,12 @@ FORCEFEEDBACK::FORCEFEEDBACK(
 	info_output << "Force feedback initialized successfully" << std::endl;
 }
 
-FORCEFEEDBACK::~FORCEFEEDBACK()
+ForceFeedback::~ForceFeedback()
 {
 	// dtor
 }
 
-void FORCEFEEDBACK::update(
+void ForceFeedback::update(
 	double force,
 	double * position,
 	double dt,
@@ -388,7 +388,7 @@ void FORCEFEEDBACK::update(
 }
 #else
 
-FORCEFEEDBACK::FORCEFEEDBACK(
+ForceFeedback::ForceFeedback(
 	const std::string & device,
 	std::ostream & error_output,
 	std::ostream & info_output)
@@ -396,12 +396,12 @@ FORCEFEEDBACK::FORCEFEEDBACK(
 	// Constructor
 }
 
-FORCEFEEDBACK::~FORCEFEEDBACK()
+ForceFeedback::~ForceFeedback()
 {
 	// Destructor
 }
 
-void FORCEFEEDBACK::update(
+void ForceFeedback::update(
 	double force,
 	double * position,
 	double dt,
@@ -412,7 +412,7 @@ void FORCEFEEDBACK::update(
 
 #endif
 
-void FORCEFEEDBACK::disable()
+void ForceFeedback::disable()
 {
 	enabled = false;
 }

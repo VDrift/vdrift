@@ -41,29 +41,29 @@ struct LoadDrawable
 	const std::string & path;
 	const int anisotropy;
 	ContentManager & content;
-	std::list<std::tr1::shared_ptr<MODEL> > & modellist;
+	std::list<std::tr1::shared_ptr<Model> > & modellist;
 	std::ostream & error;
 
 	LoadDrawable(
 		const std::string & path,
 		const int anisotropy,
 		ContentManager & content,
-		std::list<std::tr1::shared_ptr<MODEL> > & modellist,
+		std::list<std::tr1::shared_ptr<Model> > & modellist,
 		std::ostream & error);
 
 	bool operator()(
 		const PTree & cfg,
-		SCENENODE & topnode,
-		keyed_container<SCENENODE>::handle * nodehandle = 0,
-		keyed_container<DRAWABLE>::handle * drawhandle = 0);
+		SceneNode & topnode,
+		keyed_container<SceneNode>::handle * nodehandle = 0,
+		keyed_container<Drawable>::handle * drawhandle = 0);
 
 	bool operator()(
 		const std::string & meshname,
 		const std::vector<std::string> & texname,
 		const PTree & cfg,
-		SCENENODE & topnode,
-		keyed_container<SCENENODE>::handle * nodeptr = 0,
-		keyed_container<DRAWABLE>::handle * drawptr = 0);
+		SceneNode & topnode,
+		keyed_container<SceneNode>::handle * nodeptr = 0,
+		keyed_container<Drawable>::handle * drawptr = 0);
 };
 
 #endif // _LOADDRAWABLE_H

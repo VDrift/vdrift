@@ -21,26 +21,26 @@
 #define _CAR_H
 
 #include "physics/cardynamics.h"
-#include "tobullet.h"
 #include "graphics/scenenode.h"
 #include "crashdetection.h"
 #include "enginesoundinfo.h"
+#include "tobullet.h"
 #include "joeserialize.h"
 #include "macros.h"
 
-class BEZIER;
-class CAMERA;
-class MODEL;
-class SOUND;
-class ContentManager;
+class Bezier;
+class Camera;
+class Model;
+class Sound;
 class PTree;
+class ContentManager;
 
-class CAR
+class Car
 {
 public:
-	CAR();
+	Car();
 
-	virtual ~CAR();
+	virtual ~Car();
 
 	bool LoadGraphics(
 		const PTree & cfg,
@@ -48,7 +48,7 @@ public:
 		const std::string & carname,
 		const std::string & carwheel,
 		const std::string & carpaint,
-		const MATHVECTOR <float, 3> & carcolor,
+		const Vec3 & carcolor,
 		const int anisotropy,
 		const float camerabounce,
 		ContentManager & content,
@@ -57,7 +57,7 @@ public:
 	bool LoadSounds(
 		const std::string & carpath,
 		const std::string & carname,
-		SOUND & sound,
+		Sound & sound,
 		ContentManager & content,
 		std::ostream & error_output);
 
@@ -68,8 +68,8 @@ public:
 		const PTree & cfg,
 		const std::string & carpath,
 		const std::string & cartire,
-		const MATHVECTOR <float, 3> & position,
-		const QUATERNION <float> & orientation,
+		const Vec3 & position,
+		const Quat & orientation,
 		const bool defaultabs,
 		const bool defaulttcs,
 		const bool damage);
@@ -78,29 +78,29 @@ public:
 	void SetColor(float r, float g, float b);
 
 	// will align car relative to track surface
-	void SetPosition(const MATHVECTOR <float, 3> & position);
+	void SetPosition(const Vec3 & position);
 
 	void Update(double dt);
 
 	// interpolated
-	const MATHVECTOR <float, 3> GetWheelPosition(const WHEEL_POSITION wpos) const
+	const Vec3 GetWheelPosition(const WheelPosition wpos) const
 	{
 		return ToMathVector<float>(dynamics.GetWheelPosition(wpos));
 	}
 
-	float GetWheelRadius(const WHEEL_POSITION wpos) const
+	float GetWheelRadius(const WheelPosition wpos) const
 	{
 		return dynamics.GetWheel(wpos).GetRadius();
 	}
 
-	COLLISION_CONTACT & GetWheelContact(WHEEL_POSITION wheel_index)
+	CollisionContact & GetWheelContact(WheelPosition wheel_index)
 	{
 		return dynamics.GetWheelContact(wheel_index);
 	}
 
 	void HandleInputs(const std::vector <float> & inputs);
 
-	const std::vector<CAMERA*> & GetCameras() const
+	const std::vector<Camera*> & GetCameras() const
 	{
 		return cameras;
 	}
@@ -200,7 +200,7 @@ public:
 		return sector;
 	}
 
-	const BEZIER * GetCurPatch(WHEEL_POSITION wheel) const
+	const Bezier * GetCurPatch(WheelPosition wheel) const
 	{
 		return dynamics.GetWheelContact(wheel).GetPatch();
 	}
@@ -218,7 +218,7 @@ public:
 	float GetFeedback();
 
 	// returns a float from 0.0 to 1.0 with the amount of tire squealing going on
-	float GetTireSquealAmount(WHEEL_POSITION i) const;
+	float GetTireSquealAmount(WheelPosition i) const;
 
 	void SetInteriorView(bool value);
 
@@ -241,21 +241,21 @@ public:
 	}
 
 	// interpoated position
-	MATHVECTOR <float, 3> GetCenterOfMassPosition() const
+	Vec3 GetCenterOfMassPosition() const
 	{
 		return ToMathVector<float>(dynamics.GetCenterOfMass());
 	}
 
 	// interpolated position
-	MATHVECTOR <float, 3> GetPosition() const
+	Vec3 GetPosition() const
 	{
 		return ToMathVector<float>(dynamics.GetPosition());
 	}
 
 	// interpolated orientation
-	QUATERNION <float> GetOrientation() const
+	Quat GetOrientation() const
 	{
-		return ToMathQuaternion<float>(dynamics.GetOrientation());
+		return ToQuaternion<float>(dynamics.GetOrientation());
 	}
 
 	float GetAerodynamicDownforceCoefficient() const
@@ -273,17 +273,17 @@ public:
 		return dynamics.GetInvMass();
 	}
 
-	MATHVECTOR <float, 3> GetVelocity() const
+	Vec3 GetVelocity() const
 	{
 		return ToMathVector<float>(dynamics.GetVelocity());
 	}
 
-	float GetTireMaxFx(WHEEL_POSITION tire_index) const
+	float GetTireMaxFx(WheelPosition tire_index) const
 	{
 		return dynamics.GetTire(tire_index).getMaxFx(0.25*9.81/GetInvMass());
 	}
 
-	float GetTireMaxFy(WHEEL_POSITION tire_index) const
+	float GetTireMaxFy(WheelPosition tire_index) const
 	{
 		return dynamics.GetTire(tire_index).getMaxFy(0.25*9.81/GetInvMass(), 0.0);
 	}
@@ -306,36 +306,36 @@ public:
 		return dynamics.getDynamicsWorld();
 	}
 
-	CARDYNAMICS& GetCarDynamics()
+	CarDynamics& GetCarDynamics()
 	{
 		return dynamics;
 	}
 
-	SCENENODE & GetNode() {return topnode;}
+	SceneNode & GetNode() {return topnode;}
 
 protected:
 	friend class joeserialize::Serializer;
 
-	SCENENODE topnode;
-	CARDYNAMICS dynamics;
+	SceneNode topnode;
+	CarDynamics dynamics;
 
-	keyed_container<SCENENODE>::handle bodynode;
-	keyed_container<SCENENODE>::handle steernode;
-	keyed_container<DRAWABLE>::handle brakelights;
-	keyed_container<DRAWABLE>::handle reverselights;
+	keyed_container<SceneNode>::handle bodynode;
+	keyed_container<SceneNode>::handle steernode;
+	keyed_container<Drawable>::handle brakelights;
+	keyed_container<Drawable>::handle reverselights;
 
 	struct LIGHT
 	{
-		keyed_container<SCENENODE>::handle node;
-		keyed_container<DRAWABLE>::handle draw;
+		keyed_container<SceneNode>::handle node;
+		keyed_container<Drawable>::handle draw;
 	};
 	std::list<LIGHT> lights;
-	std::list<std::tr1::shared_ptr<MODEL> > models;
+	std::list<std::tr1::shared_ptr<Model> > models;
 
-	CRASHDETECTION crashdetection;
-	std::vector<CAMERA*> cameras;
+	CrashDetection crashdetection;
+	std::vector<Camera*> cameras;
 
-	std::vector<ENGINESOUNDINFO> enginesounds;
+	std::vector<EngineSoundInfo> enginesounds;
 	size_t tiresqueal[WHEEL_POSITION_SIZE];
 	size_t tirebump[WHEEL_POSITION_SIZE];
 	size_t grasssound[WHEEL_POSITION_SIZE];
@@ -345,15 +345,15 @@ protected:
 	size_t brakesound;
 	size_t handbrakesound;
 	size_t roadnoise;
-	SOUND * psound;
+	Sound * psound;
 
 	int gearsound_check;
 	bool brakesound_check;
 	bool handbrakesound_check;
 
 	// steering wheel
-	QUATERNION<float> steer_orientation;
-	QUATERNION<float> steer_rotation;
+	Quat steer_orientation;
+	Quat steer_rotation;
 	float steer_angle_max;
 
 	// internal variables that might change during driving (so, they need to be serialized)
@@ -363,7 +363,7 @@ protected:
 
 	std::string cartype;
 	int sector; // the last lap timing sector that the car hit
-	const BEZIER * curpatch[WHEEL_POSITION_SIZE]; //the last bezier patch that each wheel hit
+	const Bezier * curpatch[WHEEL_POSITION_SIZE]; //the last bezier patch that each wheel hit
 
 	float applied_brakes; // cached so we can update the brake light
 

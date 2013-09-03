@@ -25,21 +25,21 @@
 #include "quaternion.h"
 #include <vector>
 
-class TEXTURE_INTERFACE;
-class SHADER_GLSL;
+class TextureInterface;
+class Shader;
 
-class RENDER_INPUT_POSTPROCESS : public RENDER_INPUT
+class RenderInputPostprocess : public RenderInput
 {
 public:
-	RENDER_INPUT_POSTPROCESS();
+	RenderInputPostprocess();
 
-	~RENDER_INPUT_POSTPROCESS();
+	~RenderInputPostprocess();
 
-	void SetSourceTextures(const std::vector <TEXTURE_INTERFACE*> & textures);
+	void SetSourceTextures(const std::vector <TextureInterface*> & textures);
 
-	void SetShader(SHADER_GLSL * newshader);
+	void SetShader(Shader * newshader);
 
-	virtual void Render(GLSTATEMANAGER & glstate, std::ostream & error_output);
+	virtual void Render(GraphicsState & glstate, std::ostream & error_output);
 
 	void SetWriteColor(bool write);
 
@@ -51,38 +51,38 @@ public:
 
 	void SetClear(bool newclearcolor, bool newcleardepth);
 
-	void SetBlendMode(BLENDMODE::BLENDMODE mode);
+	void SetBlendMode(BlendMode::BLENDMODE mode);
 
 	void SetContrast(float value);
 
 	// these are used only to upload uniforms to the shaders
 	void SetCameraInfo(
-		const MATHVECTOR <float, 3> & newpos,
-		const QUATERNION <float> & newrot,
+		const Vec3 & newpos,
+		const Quat & newrot,
 		float newfov, float newlodfar,
 		float neww, float newh);
 
-	void SetSunDirection(const MATHVECTOR <float, 3> & newsun);
+	void SetSunDirection(const Vec3 & newsun);
 
 private:
-	std::vector <TEXTURE_INTERFACE*> source_textures;
-	SHADER_GLSL * shader;
+	std::vector <TextureInterface*> source_textures;
+	Shader * shader;
 	bool writealpha;
 	bool writecolor;
 	bool writedepth;
-	MATHVECTOR <float, 3> lightposition;
-	QUATERNION <float> cam_rotation;
-	MATHVECTOR <float, 3> cam_position;
+	Vec3 lightposition;
+	Quat cam_rotation;
+	Vec3 cam_position;
 	float w, h;
 	float camfov;
 	float lod_far;
 	int depth_mode;
 	bool clearcolor;
 	bool cleardepth;
-	BLENDMODE::BLENDMODE blendmode;
+	BlendMode::BLENDMODE blendmode;
 	float contrast;
 
-	void SetBlendMode(GLSTATEMANAGER & glstate);
+	void SetBlendMode(GraphicsState & glstate);
 };
 
 #endif // _RENDER_INPUT_POSTPROCESS_H

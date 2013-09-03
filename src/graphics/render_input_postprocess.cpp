@@ -23,7 +23,7 @@
 #include "matrix4.h"
 #include "shader.h"
 
-RENDER_INPUT_POSTPROCESS::RENDER_INPUT_POSTPROCESS() :
+RenderInputPostprocess::RenderInputPostprocess() :
 	shader(NULL),
 	writealpha(true),
 	writecolor(true),
@@ -31,32 +31,32 @@ RENDER_INPUT_POSTPROCESS::RENDER_INPUT_POSTPROCESS() :
 	depth_mode(GL_LEQUAL),
 	clearcolor(false),
 	cleardepth(false),
-	blendmode(BLENDMODE::DISABLED),
+	blendmode(BlendMode::DISABLED),
 	contrast(1.0)
 {
 	//ctor
 }
 
-RENDER_INPUT_POSTPROCESS::~RENDER_INPUT_POSTPROCESS()
+RenderInputPostprocess::~RenderInputPostprocess()
 {
 	//dtor
 }
 
-void RENDER_INPUT_POSTPROCESS::SetSourceTextures(const std::vector <TEXTURE_INTERFACE*> & textures)
+void RenderInputPostprocess::SetSourceTextures(const std::vector <TextureInterface*> & textures)
 {
 	source_textures = textures;
 }
 
-void RENDER_INPUT_POSTPROCESS::SetShader(SHADER_GLSL * newshader)
+void RenderInputPostprocess::SetShader(Shader * newshader)
 {
 	shader = newshader;
 }
 
-void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & error_output)
+void RenderInputPostprocess::Render(GraphicsState & glstate, std::ostream & error_output)
 {
 	assert(shader);
 
-	GLUTIL::CheckForOpenGLErrors("postprocess begin", error_output);
+	CheckForOpenGLErrors("postprocess begin", error_output);
 
 	glstate.SetColorMask(writecolor, writealpha);
 	glstate.SetDepthMask(writedepth);
@@ -70,9 +70,9 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 
 	shader->Enable();
 
-	GLUTIL::CheckForOpenGLErrors("postprocess shader enable", error_output);
+	CheckForOpenGLErrors("postprocess shader enable", error_output);
 
-	MATRIX4<float> projMatrix, viewMatrix;
+	Matrix4<float> projMatrix, viewMatrix;
 	projMatrix.SetOrthographic(0, 1, 0, 1, -1, 1);
 	viewMatrix.LoadIdentity();
 
@@ -97,7 +97,7 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE);
 	glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_LUMINANCE);
 
-	GLUTIL::CheckForOpenGLErrors("postprocess flag set", error_output);
+	CheckForOpenGLErrors("postprocess flag set", error_output);
 
 
 	float maxu = 1.f;
@@ -126,16 +126,16 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 	}
 	glActiveTexture(GL_TEXTURE0);
 
-	GLUTIL::CheckForOpenGLErrors("postprocess texture set", error_output);
+	CheckForOpenGLErrors("postprocess texture set", error_output);
 
 	// build the frustum corners
 	float ratio = w/h;
-	std::vector <MATHVECTOR <float, 3> > frustum_corners(4);
+	std::vector <Vec3 > frustum_corners(4);
 	frustum_corners[0].Set(-lod_far,-lod_far,-lod_far);	//BL
 	frustum_corners[1].Set(lod_far,-lod_far,-lod_far);	//BR
 	frustum_corners[2].Set(lod_far,lod_far,-lod_far);	//TR
 	frustum_corners[3].Set(-lod_far,lod_far,-lod_far);	//TL
-	MATRIX4 <float> inv_proj;
+	Matrix4 <float> inv_proj;
 	inv_proj.InvPerspective(camfov, ratio, 0.1, lod_far);
 	for (int i = 0; i < 4; i++)
 	{
@@ -143,8 +143,8 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 		frustum_corners[i][2] = -lod_far;
 	}
 	// frustum corners in world space for dynamic sky shader
-	std::vector <MATHVECTOR <float, 3> > frustum_corners_w(4);
-	MATRIX4<float> inv_view_rot;
+	std::vector <Vec3 > frustum_corners_w(4);
+	Matrix4<float> inv_view_rot;
 	(-cam_rotation).GetMatrix4(inv_view_rot);
 	for (int i = 0; i < 4; i++)
 	{
@@ -154,7 +154,7 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 
 	// send shader parameters
 	{
-		MATHVECTOR <float, 3> lightvec = lightposition;
+		Vec3 lightvec = lightposition;
 		cam_rotation.RotateVector(lightvec);
 		shader->UploadActiveShaderParameter3f("directlight_eyespace_direction", lightvec);
 		shader->UploadActiveShaderParameter1f("contrast", contrast);
@@ -225,7 +225,7 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 
 	glDisableClientState(GL_VERTEX_ARRAY);
 
-	GLUTIL::CheckForOpenGLErrors("postprocess draw", error_output);
+	CheckForOpenGLErrors("postprocess draw", error_output);
 
 	glstate.Enable(GL_DEPTH_TEST);
 	glstate.Disable(GL_TEXTURE_2D);
@@ -239,48 +239,48 @@ void RENDER_INPUT_POSTPROCESS::Render(GLSTATEMANAGER & glstate, std::ostream & e
 	}
 	glActiveTexture(GL_TEXTURE0);
 
-	GLUTIL::CheckForOpenGLErrors("postprocess end", error_output);
+	CheckForOpenGLErrors("postprocess end", error_output);
 }
 
-void RENDER_INPUT_POSTPROCESS::SetWriteColor(bool write)
+void RenderInputPostprocess::SetWriteColor(bool write)
 {
 	writecolor = write;
 }
 
-void RENDER_INPUT_POSTPROCESS::SetWriteAlpha(bool write)
+void RenderInputPostprocess::SetWriteAlpha(bool write)
 {
 	writealpha = write;
 }
 
-void RENDER_INPUT_POSTPROCESS::SetWriteDepth(bool write)
+void RenderInputPostprocess::SetWriteDepth(bool write)
 {
 	writedepth = write;
 }
 
-void RENDER_INPUT_POSTPROCESS::SetDepthMode(int mode)
+void RenderInputPostprocess::SetDepthMode(int mode)
 {
 	depth_mode = mode;
 }
 
-void RENDER_INPUT_POSTPROCESS::SetClear(bool newclearcolor, bool newcleardepth)
+void RenderInputPostprocess::SetClear(bool newclearcolor, bool newcleardepth)
 {
 	clearcolor = newclearcolor;
 	cleardepth = newcleardepth;
 }
 
-void RENDER_INPUT_POSTPROCESS::SetBlendMode(BLENDMODE::BLENDMODE mode)
+void RenderInputPostprocess::SetBlendMode(BlendMode::BLENDMODE mode)
 {
 	blendmode = mode;
 }
 
-void RENDER_INPUT_POSTPROCESS::SetContrast(float value)
+void RenderInputPostprocess::SetContrast(float value)
 {
 	contrast = value;
 }
 
-void RENDER_INPUT_POSTPROCESS::SetCameraInfo(
-	const MATHVECTOR <float, 3> & newpos,
-	const QUATERNION <float> & newrot,
+void RenderInputPostprocess::SetCameraInfo(
+	const Vec3 & newpos,
+	const Quat & newrot,
 	float newfov, float newlodfar,
 	float neww, float newh)
 {
@@ -292,17 +292,17 @@ void RENDER_INPUT_POSTPROCESS::SetCameraInfo(
 	h = newh;
 }
 
-void RENDER_INPUT_POSTPROCESS::SetSunDirection(const MATHVECTOR <float, 3> & newsun)
+void RenderInputPostprocess::SetSunDirection(const Vec3 & newsun)
 {
 	lightposition = newsun;
 }
 
-void RENDER_INPUT_POSTPROCESS::SetBlendMode(GLSTATEMANAGER & glstate)
+void RenderInputPostprocess::SetBlendMode(GraphicsState & glstate)
 {
-	assert(blendmode != BLENDMODE::ALPHATEST);
+	assert(blendmode != BlendMode::ALPHATEST);
 	switch (blendmode)
 	{
-		case BLENDMODE::DISABLED:
+		case BlendMode::DISABLED:
 		{
 			glstate.Disable(GL_ALPHA_TEST);
 			glstate.Disable(GL_BLEND);
@@ -310,7 +310,7 @@ void RENDER_INPUT_POSTPROCESS::SetBlendMode(GLSTATEMANAGER & glstate)
 		}
 		break;
 
-		case BLENDMODE::ADD:
+		case BlendMode::ADD:
 		{
 			glstate.Disable(GL_ALPHA_TEST);
 			glstate.Enable(GL_BLEND);
@@ -319,7 +319,7 @@ void RENDER_INPUT_POSTPROCESS::SetBlendMode(GLSTATEMANAGER & glstate)
 		}
 		break;
 
-		case BLENDMODE::ALPHABLEND:
+		case BlendMode::ALPHABLEND:
 		{
 			glstate.Disable(GL_ALPHA_TEST);
 			glstate.Enable(GL_BLEND);
@@ -328,7 +328,7 @@ void RENDER_INPUT_POSTPROCESS::SetBlendMode(GLSTATEMANAGER & glstate)
 		}
 		break;
 
-		case BLENDMODE::PREMULTIPLIED_ALPHA:
+		case BlendMode::PREMULTIPLIED_ALPHA:
 		{
 			glstate.Disable(GL_ALPHA_TEST);
 			glstate.Enable(GL_BLEND);

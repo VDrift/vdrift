@@ -23,10 +23,10 @@
 #include "contentfactory.h"
 #include "graphics/textureinfo.h"
 
-class TEXTURE;
+class Texture;
 
 template <>
-class Factory<TEXTURE>
+class Factory<Texture>
 {
 public:
 	struct empty {};
@@ -40,17 +40,17 @@ public:
 
 	template <class P>
 	bool create(
-		std::tr1::shared_ptr<TEXTURE> & sptr,
+		std::tr1::shared_ptr<Texture> & sptr,
 		std::ostream & error,
 		const std::string & basepath,
 		const std::string & path,
 		const std::string & name,
 		const P & param);
 
-	std::tr1::shared_ptr<TEXTURE> getDefault() const;
+	std::tr1::shared_ptr<Texture> getDefault() const;
 
 private:
-	std::tr1::shared_ptr<TEXTURE> m_default;
+	std::tr1::shared_ptr<Texture> m_default;
 	int m_size;
 	bool m_compress;
 	bool m_srgb;

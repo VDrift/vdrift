@@ -25,27 +25,27 @@
 #include "http.h"
 #include "unittest.h"
 
-std::string SVN_SOURCEFORGE::GetDownloadLink(const std::string & dataurl, const std::string & group, const std::string & name)
+std::string SvnSourceforge::GetDownloadLink(const std::string & dataurl, const std::string & group, const std::string & name)
 {
 	return dataurl + group + "/" + name + "/?view=tar";
 }
 
-std::map <std::string, int> SVN_SOURCEFORGE::ParseFolderView(const std::string & folderfile)
+std::map <std::string, int> SvnSourceforge::ParseFolderView(const std::string & folderfile)
 {
 	std::map <std::string, int> folders;
 
 	std::stringstream s(folderfile);
 
 	// Fast forward to the start of the list.
-	UTILS::SeekTo(s,"&nbsp;Parent&nbsp;Directory");
+	Utils::SeekTo(s,"&nbsp;Parent&nbsp;Directory");
 
 	// Loop through each entry.
 	while (s)
 	{
-		UTILS::SeekTo(s,"<a name=\"");
-		std::string name = UTILS::SeekTo(s,"\"");
-		UTILS::SeekTo(s,"title=\"View directory revision log\"><strong>");
-		std::string revstr = UTILS::SeekTo(s,"</strong>");
+		Utils::SeekTo(s,"<a name=\"");
+		std::string name = Utils::SeekTo(s,"\"");
+		Utils::SeekTo(s,"title=\"View directory revision log\"><strong>");
+		std::string revstr = Utils::SeekTo(s,"</strong>");
 
 		if (name != "SConscript" && !name.empty() && !revstr.empty())
 		{
@@ -62,17 +62,17 @@ std::map <std::string, int> SVN_SOURCEFORGE::ParseFolderView(const std::string &
 
 QT_TEST(svn_sourceforge)
 {
-	HTTP http("data/test");
-	SVN_SOURCEFORGE svn;
+	Http http("data/test");
+	SvnSourceforge svn;
 	std::string testurl = "http://vdrift.svn.sourceforge.net/viewvc/vdrift/vdrift-data/cars/";
 
 	QT_CHECK(http.Request(testurl, std::cerr));
-	HTTPINFO curinfo;
+	HttpInfo curinfo;
 	while (http.Tick());
 	QT_CHECK(http.GetRequestInfo(testurl, curinfo));
-	QT_CHECK(curinfo.state == HTTPINFO::COMPLETE);
+	QT_CHECK(curinfo.state == HttpInfo::COMPLETE);
 
-	std::string page = UTILS::LoadFileIntoString(http.GetDownloadPath(testurl), std::cerr);
+	std::string page = Utils::LoadFileIntoString(http.GetDownloadPath(testurl), std::cerr);
 	std::map <std::string, int> res = svn.ParseFolderView(page);
 
 	QT_CHECK(res.size() > 10);

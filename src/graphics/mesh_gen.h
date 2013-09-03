@@ -20,16 +20,16 @@
 #ifndef _MESHGEN_H
 #define _MESHGEN_H
 
-class VERTEXARRAY;
+class VertexArray;
 
-namespace MESHGEN
+namespace MeshGen
 {
 
-void mg_tire(VERTEXARRAY & tire, float sectionWidth_mm, float aspectRatio, float rimDiameter_in);
+void mg_tire(VertexArray & tire, float sectionWidth_mm, float aspectRatio, float rimDiameter_in);
 
-void mg_rim(VERTEXARRAY & rim, float sectionWidth_mm, float aspectRatio, float rimDiameter_in, float flangeDisplacement_mm);
+void mg_rim(VertexArray & rim, float sectionWidth_mm, float aspectRatio, float rimDiameter_in, float flangeDisplacement_mm);
 
-void mg_brake_rotor(VERTEXARRAY & rotor, float diameter_mm, float thickness_mm);
+void mg_brake_rotor(VertexArray & rotor, float diameter_mm, float thickness_mm);
 
 }
 

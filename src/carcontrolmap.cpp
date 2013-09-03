@@ -93,19 +93,19 @@ static inline float ApplyExponent(float exponent, float val)
 
 static const std::string invalid("INVALID");
 
-const std::vector<std::string> CARCONTROLMAP::carinput_strings = CARCONTROLMAP::InitCarInputStrings();
+const std::vector<std::string> CarControlMap::carinput_strings = CarControlMap::InitCarInputStrings();
 
-const std::map <std::string, CARINPUT::CARINPUT> CARCONTROLMAP::carinput_stringmap = CARCONTROLMAP::InitCarInputStringMap();
+const std::map <std::string, CarInput::CarInputEnum> CarControlMap::carinput_stringmap = CarControlMap::InitCarInputStringMap();
 
-const std::map <std::string, int> CARCONTROLMAP::keycode_stringmap = CARCONTROLMAP::InitKeycodeStringMap();
+const std::map <std::string, int> CarControlMap::keycode_stringmap = CarControlMap::InitKeycodeStringMap();
 
-CARCONTROLMAP::CARCONTROLMAP() :
-	controls(CARINPUT::INVALID)
+CarControlMap::CarControlMap() :
+	controls(CarInput::INVALID)
 {
 	// constructor
 }
 
-bool CARCONTROLMAP::Load(const std::string & controlfile, std::ostream & info_output, std::ostream & error_output)
+bool CarControlMap::Load(const std::string & controlfile, std::ostream & info_output, std::ostream & error_output)
 {
 	Config controls_config;
 	if (!controls_config.load(controlfile))
@@ -115,21 +115,21 @@ bool CARCONTROLMAP::Load(const std::string & controlfile, std::ostream & info_ou
 	}
 
 	controls.clear();
-	controls.resize(CARINPUT::INVALID);
+	controls.resize(CarInput::INVALID);
 	for (Config::const_iterator i = controls_config.begin(); i != controls_config.end(); ++i)
 	{
 		std::string type, name;
 		if (!controls_config.get(i, "type", type)) continue;
 		if (!controls_config.get(i, "name", name)) continue;
 
-		CARINPUT::CARINPUT carinput = GetInputFromString(name);
-		if (carinput == CARINPUT::INVALID)
+		CarInput::CarInputEnum carinput = GetInputFromString(name);
+		if (carinput == CarInput::INVALID)
 		{
 			error_output << "Unknown input type in section " << i->first << std::endl;
 			continue;
 		}
 
-		CONTROL newctrl;
+		Control newctrl;
 		if (type == "joy")
 		{
 			newctrl.joynum = 0;
@@ -137,10 +137,10 @@ bool CARCONTROLMAP::Load(const std::string & controlfile, std::ostream & info_ou
 			if (!controls_config.get(i, "joy_index", newctrl.joynum, error_output)) continue;
 			if (!controls_config.get(i, "joy_type", joy_type, error_output)) continue;
 
-			newctrl.type = CONTROL::JOY;
+			newctrl.type = Control::JOY;
 			if (joy_type == "button")
 			{
-				newctrl.joytype = CONTROL::JOYBUTTON;
+				newctrl.joytype = Control::JOYBUTTON;
 				newctrl.keycode = 0;
 				newctrl.pushdown = false;
 				newctrl.onetime = false;
@@ -150,7 +150,7 @@ bool CARCONTROLMAP::Load(const std::string & controlfile, std::ostream & info_ou
 			}
 			else if (joy_type == "axis")
 			{
-				newctrl.joytype = CONTROL::JOYAXIS;
+				newctrl.joytype = Control::JOYAXIS;
 				int joy_axis = 0;
 				std::string axis_type;
 				float deadzone = 0.0;
@@ -165,11 +165,11 @@ bool CARCONTROLMAP::Load(const std::string & controlfile, std::ostream & info_ou
 				newctrl.joyaxis = joy_axis;
 				if (axis_type == "positive")
 				{
-					newctrl.joyaxistype = CONTROL::POSITIVE;
+					newctrl.joyaxistype = Control::POSITIVE;
 				}
 				else if (axis_type == "negative")
 				{
-					newctrl.joyaxistype = CONTROL::NEGATIVE;
+					newctrl.joyaxistype = Control::NEGATIVE;
 				}
 				else
 				{
@@ -188,7 +188,7 @@ bool CARCONTROLMAP::Load(const std::string & controlfile, std::ostream & info_ou
 		}
 		else if (type == "key")
 		{
-			newctrl.type = CONTROL::KEY;
+			newctrl.type = Control::KEY;
 			int keycode = 0;
 			bool key_down = false;
 			bool key_once = false;
@@ -219,7 +219,7 @@ bool CARCONTROLMAP::Load(const std::string & controlfile, std::ostream & info_ou
 		}
 		else if (type == "mouse")
 		{
-			newctrl.type = CONTROL::MOUSE;
+			newctrl.type = Control::MOUSE;
 
 			std::string mouse_type = "";
 			std::string mouse_direction = "";
@@ -229,7 +229,7 @@ bool CARCONTROLMAP::Load(const std::string & controlfile, std::ostream & info_ou
 				int mouse_btn = 0;
 				bool mouse_btn_down = false;
 				bool mouse_btn_once = false;
-				newctrl.mousetype = CONTROL::MOUSEBUTTON;
+				newctrl.mousetype = Control::MOUSEBUTTON;
 				controls_config.get(i, "mouse_button", mouse_btn);
 				controls_config.get(i, "down", mouse_btn_down);
 				controls_config.get(i, "once", mouse_btn_once);
@@ -239,23 +239,23 @@ bool CARCONTROLMAP::Load(const std::string & controlfile, std::ostream & info_ou
 			}
 			else if (mouse_type == "motion")
 			{
-				newctrl.mousetype = CONTROL::MOUSEMOTION;
+				newctrl.mousetype = Control::MOUSEMOTION;
 				controls_config.get(i, "mouse_motion", mouse_direction);
 				if (mouse_direction == "left")
 				{
-					newctrl.mdir = CONTROL::LEFT;
+					newctrl.mdir = Control::LEFT;
 				}
 				else if (mouse_direction == "right")
 				{
-					newctrl.mdir = CONTROL::RIGHT;
+					newctrl.mdir = Control::RIGHT;
 				}
 				else if (mouse_direction == "up")
 				{
-					newctrl.mdir = CONTROL::UP;
+					newctrl.mdir = Control::UP;
 				}
 				else if (mouse_direction == "down")
 				{
-					newctrl.mdir = CONTROL::DOWN;
+					newctrl.mdir = Control::DOWN;
 				}
 				else
 				{
@@ -283,24 +283,24 @@ bool CARCONTROLMAP::Load(const std::string & controlfile, std::ostream & info_ou
 		controls[carinput].push_back(newctrl);
 	}
 
-	inputs.resize(CARINPUT::INVALID, 0.0); //this looks weird, but it initialize all inputs and sets them to zero
-	lastinputs.resize(CARINPUT::INVALID, 0.0); //this looks weird, but it initialize all inputs and sets them to zero
+	inputs.resize(CarInput::INVALID, 0.0); //this looks weird, but it initialize all inputs and sets them to zero
+	lastinputs.resize(CarInput::INVALID, 0.0); //this looks weird, but it initialize all inputs and sets them to zero
 	return true;
 }
 
-void CARCONTROLMAP::Save(const std::string & controlfile)
+void CarControlMap::Save(const std::string & controlfile)
 {
 	Config controls_config;
 	Save(controls_config);
 	controls_config.write(controlfile);
 }
 
-void CARCONTROLMAP::Save(Config & controls_config)
+void CarControlMap::Save(Config & controls_config)
 {
 	int id = 0;
 	for (size_t n = 0; n < controls.size(); ++n)
 	{
-		std::string ctrl_name = GetStringFromInput(CARINPUT::CARINPUT(n));
+		std::string ctrl_name = GetStringFromInput(CarInput::CarInputEnum(n));
 		if (ctrl_name.empty())
 			continue;
 
@@ -313,21 +313,21 @@ void CARCONTROLMAP::Save(Config & controls_config)
 			controls_config.get(ss.str(), section);
 			controls_config.set(section, "name", ctrl_name);
 
-			CONTROL & curctrl = controls[n][i];
-			if (curctrl.type == CONTROL::JOY)
+			Control & curctrl = controls[n][i];
+			if (curctrl.type == Control::JOY)
 			{
 				controls_config.set(section, "type", "joy");
 				controls_config.set(section, "joy_index", curctrl.joynum);
 
-				if (curctrl.joytype == CONTROL::JOYAXIS)
+				if (curctrl.joytype == Control::JOYAXIS)
 				{
 					controls_config.set(section, "joy_type", "axis");
 					controls_config.set(section, "joy_axis", curctrl.joyaxis );
 					switch (curctrl.joyaxistype) {
-						case CONTROL::POSITIVE:
+						case Control::POSITIVE:
 							controls_config.set(section, "joy_axis_type", "positive");
 							break;
-						case CONTROL::NEGATIVE:
+						case Control::NEGATIVE:
 							controls_config.set(section, "joy_axis_type", "negative");
 							break;
 					}
@@ -335,7 +335,7 @@ void CARCONTROLMAP::Save(Config & controls_config)
 					controls_config.set(section, "exponent", curctrl.exponent);
 					controls_config.set(section, "gain", curctrl.gain);
 				}
-				else if (curctrl.joytype == CONTROL::JOYBUTTON)
+				else if (curctrl.joytype == Control::JOYBUTTON)
 				{
 					controls_config.set(section, "joy_type", "button");
 					controls_config.set(section, "joy_button", curctrl.keycode);
@@ -343,7 +343,7 @@ void CARCONTROLMAP::Save(Config & controls_config)
 					controls_config.set(section, "down", curctrl.pushdown);
 				}
 			}
-			else if (curctrl.type == CONTROL::KEY)
+			else if (curctrl.type == Control::KEY)
 			{
 				controls_config.set(section, "type", "key");
 				std::string keyname = GetStringFromKeycode(curctrl.keycode);
@@ -352,33 +352,33 @@ void CARCONTROLMAP::Save(Config & controls_config)
 				controls_config.set(section, "once", curctrl.onetime);
 				controls_config.set(section, "down", curctrl.pushdown);
 			}
-			else if (curctrl.type == CONTROL::MOUSE)
+			else if (curctrl.type == Control::MOUSE)
 			{
 				controls_config.set(section, "type", "mouse");
-				if (curctrl.mousetype == CONTROL::MOUSEBUTTON)
+				if (curctrl.mousetype == Control::MOUSEBUTTON)
 				{
 					controls_config.set(section, "mouse_type", "button");
 					controls_config.set(section, "mouse_button", curctrl.keycode );
 					controls_config.set(section, "once", curctrl.onetime );
 					controls_config.set(section, "down", curctrl.pushdown );
 				}
-				else if (curctrl.mousetype == CONTROL::MOUSEMOTION)
+				else if (curctrl.mousetype == Control::MOUSEMOTION)
 				{
 					std::string direction = "invalid";
-					CONTROL::MOUSEDIRECTION mdir = curctrl.mdir;
-					if ( mdir == CONTROL::UP )
+					Control::MouseDirectionEnum mdir = curctrl.mdir;
+					if ( mdir == Control::UP )
 					{
 						direction = "up";
 					}
-					else if ( mdir == CONTROL::DOWN )
+					else if ( mdir == Control::DOWN )
 					{
 						direction = "down";
 					}
-					else if ( mdir == CONTROL::LEFT )
+					else if ( mdir == Control::LEFT )
 					{
 						direction = "left";
 					}
-					else if ( mdir == CONTROL::RIGHT )
+					else if ( mdir == Control::RIGHT )
 					{
 						direction = "right";
 					}
@@ -397,29 +397,29 @@ void CARCONTROLMAP::Save(Config & controls_config)
 	}
 }
 
-const std::vector <float> & CARCONTROLMAP::ProcessInput(const std::string & joytype, EVENTSYSTEM_SDL & eventsystem, float steerpos, float dt, bool joy_200, float carms, float speedsens, int screenw, int screenh, float button_ramp, bool hgateshifter)
+const std::vector <float> & CarControlMap::ProcessInput(const std::string & joytype, EventSystem & eventsystem, float steerpos, float dt, bool joy_200, float carms, float speedsens, int screenw, int screenh, float button_ramp, bool hgateshifter)
 {
 	//this looks weird, but it ensures that our inputs vector contains exactly one item per input
-	assert(inputs.size() == CARINPUT::INVALID);
-	assert(lastinputs.size() == CARINPUT::INVALID);
+	assert(inputs.size() == CarInput::INVALID);
+	assert(lastinputs.size() == CarInput::INVALID);
 
 	for (size_t n = 0; n < controls.size(); ++n)
 	{
 		float newval = 0.0;
 
-		for (std::vector <CONTROL>::iterator i = controls[n].begin(); i != controls[n].end(); ++i)
+		for (std::vector <Control>::iterator i = controls[n].begin(); i != controls[n].end(); ++i)
 		{
 			bool handled = false;
 			float tempval = newval;
 
-			if (i->type == CONTROL::JOY)
+			if (i->type == Control::JOY)
 			{
 				//cout << "type joy" << std::endl;
 
-				if (i->joytype == CONTROL::JOYAXIS)
+				if (i->joytype == Control::JOYAXIS)
 				{
 					float val = eventsystem.GetJoyAxis(i->joynum, i->joyaxis);
-					if (i->joyaxistype == CONTROL::NEGATIVE)
+					if (i->joyaxistype == Control::NEGATIVE)
 						val = -val;
 					val = ApplyDeadzone(i->deadzone,val);
 					val = ApplyGain(i->gain,val);
@@ -438,9 +438,9 @@ const std::vector <float> & CARCONTROLMAP::ProcessInput(const std::string & joyt
 					tempval = val;
 					handled = true;
 				}
-				else if (i->joytype == CONTROL::JOYBUTTON)
+				else if (i->joytype == Control::JOYBUTTON)
 				{
-					TOGGLE button = eventsystem.GetJoyButton(i->joynum, i->keycode);
+					Toggle button = eventsystem.GetJoyButton(i->joynum, i->keycode);
 
 					if (i->onetime)
 					{
@@ -467,11 +467,11 @@ const std::vector <float> & CARCONTROLMAP::ProcessInput(const std::string & joyt
 					}
 				}
 			}
-			else if (i->type == CONTROL::KEY)
+			else if (i->type == Control::KEY)
 			{
 				//cout << "type key" << std::endl;
 
-				EVENTSYSTEM_SDL::BUTTON_STATE keystate = eventsystem.GetKeyState(SDLKey(i->keycode));
+				EventSystem::ButtonState keystate = eventsystem.GetKeyState(SDLKey(i->keycode));
 
 				if (i->onetime)
 				{
@@ -499,15 +499,15 @@ const std::vector <float> & CARCONTROLMAP::ProcessInput(const std::string & joyt
 					handled = true;
 				}
 			}
-			else if (i->type == CONTROL::MOUSE)
+			else if (i->type == Control::MOUSE)
 			{
 				//cout << "type mouse" << std::endl;
 
-				if (i->mousetype == CONTROL::MOUSEBUTTON)
+				if (i->mousetype == Control::MOUSEBUTTON)
 				{
 					//cout << "mousebutton" << std::endl;
 
-					EVENTSYSTEM_SDL::BUTTON_STATE buttonstate = eventsystem.GetMouseButtonState(i->keycode);
+					EventSystem::ButtonState buttonstate = eventsystem.GetMouseButtonState(i->keycode);
 
 					if (i->onetime)
 					{
@@ -533,7 +533,7 @@ const std::vector <float> & CARCONTROLMAP::ProcessInput(const std::string & joyt
 						handled = true;
 					}
 				}
-				else if (i->mousetype == CONTROL::MOUSEMOTION)
+				else if (i->mousetype == Control::MOUSEMOTION)
 				{
 					//cout << "mousemotion" << std::endl;
 
@@ -550,13 +550,13 @@ const std::vector <float> & CARCONTROLMAP::ProcessInput(const std::string & joyt
 
 					float val = 0;
 
-					if (i->mdir == CONTROL::UP)
+					if (i->mdir == Control::UP)
 						val = -yval;
-					else if (i->mdir == CONTROL::DOWN)
+					else if (i->mdir == Control::DOWN)
 						val = yval;
-					else if (i->mdir == CONTROL::LEFT)
+					else if (i->mdir == Control::LEFT)
 						val = -xval;
-					else if (i->mdir == CONTROL::RIGHT)
+					else if (i->mdir == Control::RIGHT)
 						val = xval;
 
 					if (val < 0)
@@ -616,15 +616,15 @@ const std::vector <float> & CARCONTROLMAP::ProcessInput(const std::string & joyt
 
 	if (hgateshifter)
 	{
-		bool havegear = inputs[CARINPUT::FIRST_GEAR] ||
-				inputs[CARINPUT::SECOND_GEAR] ||
-				inputs[CARINPUT::THIRD_GEAR] ||
-				inputs[CARINPUT::FOURTH_GEAR] ||
-				inputs[CARINPUT::FIFTH_GEAR] ||
-				inputs[CARINPUT::SIXTH_GEAR] ||
-				inputs[CARINPUT::REVERSE];
+		bool havegear = inputs[CarInput::FIRST_GEAR] ||
+				inputs[CarInput::SECOND_GEAR] ||
+				inputs[CarInput::THIRD_GEAR] ||
+				inputs[CarInput::FOURTH_GEAR] ||
+				inputs[CarInput::FIFTH_GEAR] ||
+				inputs[CarInput::SIXTH_GEAR] ||
+				inputs[CarInput::REVERSE];
 		if (!havegear)
-			inputs[CARINPUT::NEUTRAL] = 1.0;
+			inputs[CarInput::NEUTRAL] = 1.0;
 	}
 
 	lastinputs = inputs;
@@ -635,13 +635,13 @@ const std::vector <float> & CARCONTROLMAP::ProcessInput(const std::string & joyt
 	return inputs;
 }
 
-void CARCONTROLMAP::GetControlsInfo(std::map<std::string, std::string> & info) const
+void CarControlMap::GetControlsInfo(std::map<std::string, std::string> & info) const
 {
-	for (size_t n = 0; n < CARINPUT::INVALID; ++n)
+	for (size_t n = 0; n < CarInput::INVALID; ++n)
 	{
-		CARINPUT::CARINPUT input = CARINPUT::CARINPUT(n);
+		CarInput::CarInputEnum input = CarInput::CarInputEnum(n);
 		const std::string inputstr = GetStringFromInput(input);
-		const std::vector<CONTROL> & ct = controls[input];
+		const std::vector<Control> & ct = controls[input];
 		for (size_t m = 0; m < ct.size(); ++m)
 		{
 			std::stringstream s;
@@ -663,26 +663,26 @@ void CARCONTROLMAP::GetControlsInfo(std::map<std::string, std::string> & info) c
 	}
 }
 
-CARCONTROLMAP::CONTROL CARCONTROLMAP::GetControl(const std::string & inputname, size_t controlid)
+CarControlMap::Control CarControlMap::GetControl(const std::string & inputname, size_t controlid)
 {
 	size_t input = GetInputFromString(inputname);
-	if (input == CARINPUT::INVALID)
-		return CONTROL();
+	if (input == CarInput::INVALID)
+		return Control();
 
-	std::vector<CONTROL> & input_controls = controls[input];
+	std::vector<Control> & input_controls = controls[input];
 	if (controlid < input_controls.size())
 		return input_controls[controlid];
 	else
-		return CONTROL();
+		return Control();
 }
 
-void CARCONTROLMAP::SetControl(const std::string & inputname, size_t controlid, const CONTROL & control)
+void CarControlMap::SetControl(const std::string & inputname, size_t controlid, const Control & control)
 {
-	CARINPUT::CARINPUT input = GetInputFromString(inputname);
-	if (input == CARINPUT::INVALID)
+	CarInput::CarInputEnum input = GetInputFromString(inputname);
+	if (input == CarInput::INVALID)
 		return;
 
-	std::vector<CONTROL> & input_controls = controls[input];
+	std::vector<Control> & input_controls = controls[input];
 	if (controlid >= input_controls.size())
 	{
 		input_controls.push_back(control);
@@ -692,13 +692,13 @@ void CARCONTROLMAP::SetControl(const std::string & inputname, size_t controlid, 
 	input_controls[controlid] = control;
 }
 
-void CARCONTROLMAP::DeleteControl(const std::string & inputname, size_t controlid)
+void CarControlMap::DeleteControl(const std::string & inputname, size_t controlid)
 {
-	CARINPUT::CARINPUT input = GetInputFromString(inputname);
-	if (input == CARINPUT::INVALID)
+	CarInput::CarInputEnum input = GetInputFromString(inputname);
+	if (input == CarInput::INVALID)
 		return;
 
-	std::vector<CONTROL> & input_controls = controls[input];
+	std::vector<Control> & input_controls = controls[input];
 	if (controlid >= input_controls.size())
 		return;
 
@@ -708,73 +708,73 @@ void CARCONTROLMAP::DeleteControl(const std::string & inputname, size_t controli
 	input_controls.pop_back();
 }
 
-std::map <std::string, CARINPUT::CARINPUT> CARCONTROLMAP::InitCarInputStringMap()
+std::map <std::string, CarInput::CarInputEnum> CarControlMap::InitCarInputStringMap()
 {
-	std::map <std::string, CARINPUT::CARINPUT> stringmap;
+	std::map <std::string, CarInput::CarInputEnum> stringmap;
 	for (size_t i = 0; i < carinput_strings.size(); ++i)
 	{
-		stringmap[carinput_strings[i]] = CARINPUT::CARINPUT(i);
+		stringmap[carinput_strings[i]] = CarInput::CarInputEnum(i);
 	}
 	return stringmap;
 }
 
-std::vector<std::string> CARCONTROLMAP::InitCarInputStrings()
+std::vector<std::string> CarControlMap::InitCarInputStrings()
 {
-	std::vector<std::string> strings(CARINPUT::INVALID);
-	strings[CARINPUT::THROTTLE] = "gas";
-	strings[CARINPUT::NOS] = "nos";
-	strings[CARINPUT::BRAKE] = "brake";
-	strings[CARINPUT::HANDBRAKE] = "handbrake";
-	strings[CARINPUT::CLUTCH] = "clutch";
-	strings[CARINPUT::STEER_LEFT] = "steer_left";
-	strings[CARINPUT::STEER_RIGHT] = "steer_right";
-	strings[CARINPUT::SHIFT_UP] = "disengage_shift_up";
-	strings[CARINPUT::SHIFT_DOWN] = "disengage_shift_down";
-	strings[CARINPUT::START_ENGINE] = "start_engine";
-	strings[CARINPUT::ABS_TOGGLE] = "abs_toggle";
-	strings[CARINPUT::TCS_TOGGLE] = "tcs_toggle";
-	strings[CARINPUT::NEUTRAL] = "neutral";
-	strings[CARINPUT::FIRST_GEAR] = "first_gear";
-	strings[CARINPUT::SECOND_GEAR] = "second_gear";
-	strings[CARINPUT::THIRD_GEAR] = "third_gear";
-	strings[CARINPUT::FOURTH_GEAR] = "fourth_gear";
-	strings[CARINPUT::FIFTH_GEAR] = "fifth_gear";
-	strings[CARINPUT::SIXTH_GEAR] = "sixth_gear";
-	strings[CARINPUT::REVERSE] = "reverse";
-	strings[CARINPUT::ROLLOVER_RECOVER] = "rollover_recover";
-	strings[CARINPUT::VIEW_REAR] = "rear_view";
-	strings[CARINPUT::VIEW_PREV] = "view_prev";
-	strings[CARINPUT::VIEW_NEXT] = "view_next";
-	strings[CARINPUT::VIEW_HOOD] = "view_hood";
-	strings[CARINPUT::VIEW_INCAR] = "view_incar";
-	strings[CARINPUT::VIEW_CHASERIGID] = "view_chaserigid";
-	strings[CARINPUT::VIEW_CHASE] = "view_chase";
-	strings[CARINPUT::VIEW_ORBIT] = "view_orbit";
-	strings[CARINPUT::VIEW_FREE] = "view_free";
-	strings[CARINPUT::FOCUS_PREV] = "focus_prev_car";
-	strings[CARINPUT::FOCUS_NEXT] = "focus_next_car";
-	strings[CARINPUT::PAN_LEFT] = "pan_left";
-	strings[CARINPUT::PAN_RIGHT] = "pan_right";
-	strings[CARINPUT::PAN_UP] = "pan_up";
-	strings[CARINPUT::PAN_DOWN] = "pan_down";
-	strings[CARINPUT::ZOOM_IN] = "zoom_in";
-	strings[CARINPUT::ZOOM_OUT] = "zoom_out";
-	strings[CARINPUT::REPLAY_FF] = "replay_ff";
-	strings[CARINPUT::REPLAY_RW] = "replay_rw";
-	strings[CARINPUT::SCREENSHOT] = "screen_shot";
-	strings[CARINPUT::PAUSE] = "pause";
-	strings[CARINPUT::RELOAD_SHADERS] = "reload_shaders";
-	strings[CARINPUT::RELOAD_GUI] = "reload_gui";
-	strings[CARINPUT::GUI_LEFT] = "gui_left";
-	strings[CARINPUT::GUI_RIGHT] = "gui_right";
-	strings[CARINPUT::GUI_UP] = "gui_up";
-	strings[CARINPUT::GUI_DOWN] = "gui_down";
-	strings[CARINPUT::GUI_SELECT] = "gui_select";
-	strings[CARINPUT::GUI_CANCEL] = "gui_cancel";
+	std::vector<std::string> strings(CarInput::INVALID);
+	strings[CarInput::THROTTLE] = "gas";
+	strings[CarInput::NOS] = "nos";
+	strings[CarInput::BRAKE] = "brake";
+	strings[CarInput::HANDBRAKE] = "handbrake";
+	strings[CarInput::CLUTCH] = "clutch";
+	strings[CarInput::STEER_LEFT] = "steer_left";
+	strings[CarInput::STEER_RIGHT] = "steer_right";
+	strings[CarInput::SHIFT_UP] = "disengage_shift_up";
+	strings[CarInput::SHIFT_DOWN] = "disengage_shift_down";
+	strings[CarInput::START_ENGINE] = "start_engine";
+	strings[CarInput::ABS_TOGGLE] = "abs_toggle";
+	strings[CarInput::TCS_TOGGLE] = "tcs_toggle";
+	strings[CarInput::NEUTRAL] = "neutral";
+	strings[CarInput::FIRST_GEAR] = "first_gear";
+	strings[CarInput::SECOND_GEAR] = "second_gear";
+	strings[CarInput::THIRD_GEAR] = "third_gear";
+	strings[CarInput::FOURTH_GEAR] = "fourth_gear";
+	strings[CarInput::FIFTH_GEAR] = "fifth_gear";
+	strings[CarInput::SIXTH_GEAR] = "sixth_gear";
+	strings[CarInput::REVERSE] = "reverse";
+	strings[CarInput::ROLLOVER_RECOVER] = "rollover_recover";
+	strings[CarInput::VIEW_REAR] = "rear_view";
+	strings[CarInput::VIEW_PREV] = "view_prev";
+	strings[CarInput::VIEW_NEXT] = "view_next";
+	strings[CarInput::VIEW_HOOD] = "view_hood";
+	strings[CarInput::VIEW_INCAR] = "view_incar";
+	strings[CarInput::VIEW_CHASERIGID] = "view_chaserigid";
+	strings[CarInput::VIEW_CHASE] = "view_chase";
+	strings[CarInput::VIEW_ORBIT] = "view_orbit";
+	strings[CarInput::VIEW_FREE] = "view_free";
+	strings[CarInput::FOCUS_PREV] = "focus_prev_car";
+	strings[CarInput::FOCUS_NEXT] = "focus_next_car";
+	strings[CarInput::PAN_LEFT] = "pan_left";
+	strings[CarInput::PAN_RIGHT] = "pan_right";
+	strings[CarInput::PAN_UP] = "pan_up";
+	strings[CarInput::PAN_DOWN] = "pan_down";
+	strings[CarInput::ZOOM_IN] = "zoom_in";
+	strings[CarInput::ZOOM_OUT] = "zoom_out";
+	strings[CarInput::REPLAY_FF] = "replay_ff";
+	strings[CarInput::REPLAY_RW] = "replay_rw";
+	strings[CarInput::SCREENSHOT] = "screen_shot";
+	strings[CarInput::PAUSE] = "pause";
+	strings[CarInput::RELOAD_SHADERS] = "reload_shaders";
+	strings[CarInput::RELOAD_GUI] = "reload_gui";
+	strings[CarInput::GUI_LEFT] = "gui_left";
+	strings[CarInput::GUI_RIGHT] = "gui_right";
+	strings[CarInput::GUI_UP] = "gui_up";
+	strings[CarInput::GUI_DOWN] = "gui_down";
+	strings[CarInput::GUI_SELECT] = "gui_select";
+	strings[CarInput::GUI_CANCEL] = "gui_cancel";
 	return strings;
 }
 
-std::map <std::string, int> CARCONTROLMAP::InitKeycodeStringMap()
+std::map <std::string, int> CarControlMap::InitKeycodeStringMap()
 {
 	std::map <std::string, int> keycodes;
 	keycodes["UNKNOWN"] = SDLK_UNKNOWN;
@@ -928,21 +928,21 @@ std::map <std::string, int> CARCONTROLMAP::InitKeycodeStringMap()
 	return keycodes;
 }
 
-const std::string & CARCONTROLMAP::GetStringFromInput(const CARINPUT::CARINPUT input)
+const std::string & CarControlMap::GetStringFromInput(const CarInput::CarInputEnum input)
 {
 	return carinput_strings[input];
 }
 
-CARINPUT::CARINPUT CARCONTROLMAP::GetInputFromString(const std::string & str)
+CarInput::CarInputEnum CarControlMap::GetInputFromString(const std::string & str)
 {
-	std::map <std::string, CARINPUT::CARINPUT>::const_iterator i = carinput_stringmap.find(str);
+	std::map <std::string, CarInput::CarInputEnum>::const_iterator i = carinput_stringmap.find(str);
 	if (i != carinput_stringmap.end())
 		return i->second;
 
-	return CARINPUT::INVALID;
+	return CarInput::INVALID;
 }
 
-const std::string & CARCONTROLMAP::GetStringFromKeycode(const int code)
+const std::string & CarControlMap::GetStringFromKeycode(const int code)
 {
 	for (std::map <std::string, int>::const_iterator i = keycode_stringmap.begin(); i != keycode_stringmap.end(); ++i)
 		if (i->second == code)
@@ -951,7 +951,7 @@ const std::string & CARCONTROLMAP::GetStringFromKeycode(const int code)
 	return invalid;
 }
 
-int CARCONTROLMAP::GetKeycodeFromString(const std::string & str)
+int CarControlMap::GetKeycodeFromString(const std::string & str)
 {
 	std::map <std::string, int>::const_iterator i = keycode_stringmap.find(str);
 	if (i != keycode_stringmap.end())
@@ -960,27 +960,27 @@ int CARCONTROLMAP::GetKeycodeFromString(const std::string & str)
 	return 0;
 }
 
-void CARCONTROLMAP::AddControl(CONTROL newctrl, const std::string & inputname, std::ostream & error_output)
+void CarControlMap::AddControl(Control newctrl, const std::string & inputname, std::ostream & error_output)
 {
-	CARINPUT::CARINPUT input = GetInputFromString(inputname);
-	if (input != CARINPUT::INVALID)
+	CarInput::CarInputEnum input = GetInputFromString(inputname);
+	if (input != CarInput::INVALID)
 		controls[input].push_back(newctrl);
 	else
 		error_output << "Input named " << inputname << " couldn't be assigned because it isn't used" << std::endl;
 }
 
-void CARCONTROLMAP::ProcessSteering(const std::string & joytype, float steerpos, float dt, bool joy_200, float carmph, float speedsens)
+void CarControlMap::ProcessSteering(const std::string & joytype, float steerpos, float dt, bool joy_200, float carmph, float speedsens)
 {
 	//std::cout << "steerpos: " << steerpos << std::endl;
 
-	float val = inputs[CARINPUT::STEER_RIGHT];
-	if (std::abs(inputs[CARINPUT::STEER_LEFT]) > std::abs(inputs[CARINPUT::STEER_RIGHT])) //use whichever control is larger
-		val = -inputs[CARINPUT::STEER_LEFT];
+	float val = inputs[CarInput::STEER_RIGHT];
+	if (std::abs(inputs[CarInput::STEER_LEFT]) > std::abs(inputs[CarInput::STEER_RIGHT])) //use whichever control is larger
+		val = -inputs[CarInput::STEER_LEFT];
 
 	/*if (val != 0)
 	{
-		std::cout << "Initial steer left: " << inputs[CARINPUT::STEER_LEFT] << std::endl;
-		std::cout << "Initial steer right: " << inputs[CARINPUT::STEER_RIGHT] << std::endl;
+		std::cout << "Initial steer left: " << inputs[CarInput::STEER_LEFT] << std::endl;
+		std::cout << "Initial steer right: " << inputs[CarInput::STEER_RIGHT] << std::endl;
 		std::cout << "Initial val: " << val << std::endl;
 	}*/
 
@@ -1029,7 +1029,7 @@ void CARCONTROLMAP::ProcessSteering(const std::string & joytype, float steerpos,
 	//rate-limit non-wheel controls
 	if (joytype != "wheel")
 	{
-		//if (i->first == inputs[CARINPUT::STEER_LEFT])
+		//if (i->first == inputs[CarInput::STEER_LEFT])
 		//steerpos = -steerpos;
 		float steerstep = 5.0*dt;
 
@@ -1061,33 +1061,33 @@ void CARCONTROLMAP::ProcessSteering(const std::string & joytype, float steerpos,
 
 	//std::cout << "After rate limit val: " << val << std::endl;
 
-	//std::cout << "Steer left: " << inputs[CARINPUT::STEER_LEFT] << std::endl;
-	//std::cout << "Steer right: " << inputs[CARINPUT::STEER_RIGHT] << std::endl;
+	//std::cout << "Steer left: " << inputs[CarInput::STEER_LEFT] << std::endl;
+	//std::cout << "Steer right: " << inputs[CarInput::STEER_RIGHT] << std::endl;
 	//std::cout << "Current steering: " << car.GetLastSteer() << std::endl;
 	//std::cout << "New steering: " << val << std::endl;
 
-	inputs[CARINPUT::STEER_LEFT] = 0.0;
-	inputs[CARINPUT::STEER_RIGHT] = 0.0;
+	inputs[CarInput::STEER_LEFT] = 0.0;
+	inputs[CarInput::STEER_RIGHT] = 0.0;
 	if (val < 0)
-		inputs[CARINPUT::STEER_LEFT] = -val;
+		inputs[CarInput::STEER_LEFT] = -val;
 	else
-		inputs[CARINPUT::STEER_RIGHT] = val;
-	//inputs[CARINPUT::STEER_RIGHT] = val;
-	//inputs[CARINPUT::STEER_LEFT] = -val;
+		inputs[CarInput::STEER_RIGHT] = val;
+	//inputs[CarInput::STEER_RIGHT] = val;
+	//inputs[CarInput::STEER_LEFT] = -val;
 
 	/*if (val != 0)
 	{
-		std::cout << "Steer left: " << inputs[CARINPUT::STEER_LEFT] << std::endl;
-		std::cout << "Steer right: " << inputs[CARINPUT::STEER_RIGHT] << std::endl;
+		std::cout << "Steer left: " << inputs[CarInput::STEER_LEFT] << std::endl;
+		std::cout << "Steer right: " << inputs[CarInput::STEER_RIGHT] << std::endl;
 	}*/
 }
 
-bool CARCONTROLMAP::CONTROL::IsAnalog() const
+bool CarControlMap::Control::IsAnalog() const
 {
 	return (type == JOY && joytype == JOYAXIS) || (type == MOUSE && mousetype == MOUSEMOTION);
 }
 
-std::string CARCONTROLMAP::CONTROL::GetInfo() const
+std::string CarControlMap::Control::GetInfo() const
 {
 	if (type == KEY)
 	{
@@ -1145,7 +1145,7 @@ std::string CARCONTROLMAP::CONTROL::GetInfo() const
 	return invalid;
 }
 
-void CARCONTROLMAP::CONTROL::DebugPrint(std::ostream & out) const
+void CarControlMap::Control::DebugPrint(std::ostream & out) const
 {
 	out << type << " " << onetime << " " << pushdown << " " << keycode << " " <<
 		joynum << " " << joyaxis << " " << joyaxistype << " " << joytype << " " <<
@@ -1153,10 +1153,10 @@ void CARCONTROLMAP::CONTROL::DebugPrint(std::ostream & out) const
 		deadzone << " " << exponent << " " << gain << std::endl;
 }
 
-bool CARCONTROLMAP::CONTROL::operator==(const CONTROL & other) const
+bool CarControlMap::Control::operator==(const Control & other) const
 {
-	CONTROL me = *this;
-	CONTROL them = other;
+	Control me = *this;
+	Control them = other;
 
 	//don't care about certain flags
 	me.onetime = 1;
@@ -1189,10 +1189,10 @@ bool CARCONTROLMAP::CONTROL::operator==(const CONTROL & other) const
 	//bool equality = (type == other.type) && (type == other.type) &&
 }
 
-bool CARCONTROLMAP::CONTROL::operator<(const CONTROL & other) const
+bool CarControlMap::Control::operator<(const Control & other) const
 {
-	CONTROL me = *this;
-	CONTROL them = other;
+	Control me = *this;
+	Control them = other;
 
 	me.onetime = 1;
 	me.pushdown = 1;
@@ -1213,21 +1213,21 @@ bool CARCONTROLMAP::CONTROL::operator<(const CONTROL & other) const
 	return (mestr.str() < themstr.str());
 }
 
-void CARCONTROLMAP::CONTROL::ReadFrom(std::istream & in)
+void CarControlMap::Control::ReadFrom(std::istream & in)
 {
 	int newtype, newjoyaxistype, newjoytype, newmousetype, newmdir;
 	in >> newtype >> onetime >> pushdown >> keycode >>
 		joynum >> joyaxis >> newjoyaxistype >> newjoytype >>
 		newmousetype >> newmdir >> 	last_mouse_state >>
 		deadzone >> exponent >> gain;
-	type = TYPE(newtype);
-	joyaxistype = JOYAXISTYPE(newjoyaxistype);
-	joytype = JOYTYPE(newjoytype);
-	mousetype = MOUSETYPE(newmousetype);
-	mdir = MOUSEDIRECTION(newmdir);
+	type = TypeEnum(newtype);
+	joyaxistype = JoyAxisEnum(newjoyaxistype);
+	joytype = JoyTypeEnum(newjoytype);
+	mousetype = MouseTypeEnum(newmousetype);
+	mdir = MouseDirectionEnum(newmdir);
 }
 
-CARCONTROLMAP::CONTROL::CONTROL() :
+CarControlMap::Control::Control() :
 	type(UNKNOWN), onetime(true), pushdown(false), keycode(0),
 	joynum(0), joyaxis(0), joyaxistype(POSITIVE), joytype(JOYAXIS),
 	mousetype(MOUSEBUTTON), mdir(UP), last_mouse_state(false),

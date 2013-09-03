@@ -32,7 +32,7 @@ using std::map;
 using std::list;
 using std::endl;
 
-EVENTSYSTEM_SDL::EVENTSYSTEM_SDL() :
+EventSystem::EventSystem() :
 	lasttick(0),
 	dt(0),
 	quit(false),
@@ -45,12 +45,12 @@ EVENTSYSTEM_SDL::EVENTSYSTEM_SDL() :
 	// ctor
 }
 
-EVENTSYSTEM_SDL::~EVENTSYSTEM_SDL()
+EventSystem::~EventSystem()
 {
 	// dtor
 }
 
-void EVENTSYSTEM_SDL::Init(std::ostream & info_output)
+void EventSystem::Init(std::ostream & info_output)
 {
 	info_output << SDL_NumJoysticks() << " joystick";
 	if (SDL_NumJoysticks() != 1)
@@ -72,12 +72,12 @@ void EVENTSYSTEM_SDL::Init(std::ostream & info_output)
 	{
 		SDL_Joystick * ptr = SDL_JoystickOpen(j);
 		assert(ptr);
-		joystick.push_back(JOYSTICK(ptr, SDL_JoystickNumAxes(ptr), SDL_JoystickNumButtons(ptr), SDL_JoystickNumHats(ptr)));
+		joystick.push_back(Joystick(ptr, SDL_JoystickNumAxes(ptr), SDL_JoystickNumButtons(ptr), SDL_JoystickNumHats(ptr)));
 	}
 	assert((int)joystick.size() == SDL_NumJoysticks());
 }
 
-void EVENTSYSTEM_SDL::BeginFrame()
+void EventSystem::BeginFrame()
 {
 	if (lasttick == 0)
 		lasttick = SDL_GetTicks();
@@ -101,13 +101,13 @@ void EVENTSYSTEM_SDL::BeginFrame()
 	RecordFPS(1.0f/dt);
 }
 
-void EVENTSYSTEM_SDL::ProcessEvents()
+void EventSystem::ProcessEvents()
 {
 	SDL_Event event;
 
 	AgeToggles <SDLKey> (keymap);
 	AgeToggles <int> (mbutmap);
-	for (std::vector <JOYSTICK>::iterator i = joystick.begin(); i != joystick.end(); i++)
+	for (std::vector <Joystick>::iterator i = joystick.begin(); i != joystick.end(); i++)
 	{
 		i->AgeToggles();
 	}
@@ -155,7 +155,7 @@ void EVENTSYSTEM_SDL::ProcessEvents()
 	}
 }
 
-void EVENTSYSTEM_SDL::HandleMouseMotion(int x, int y, int xrel, int yrel)
+void EventSystem::HandleMouseMotion(int x, int y, int xrel, int yrel)
 {
 	mousex = x;
 	mousey = y;
@@ -163,30 +163,30 @@ void EVENTSYSTEM_SDL::HandleMouseMotion(int x, int y, int xrel, int yrel)
 	mouseyrel = yrel;
 }
 
-void EVENTSYSTEM_SDL::HandleMouseButton(DIRECTION dir, int id)
+void EventSystem::HandleMouseButton(DirectionEnum dir, int id)
 {
 	//std::cout << "Mouse button " << id << ", " << (dir==DOWN) << endl;
 	//mbutmap[id].Tick();
 	HandleToggle <int> (mbutmap, dir, id);
 }
 
-void EVENTSYSTEM_SDL::HandleKey(DIRECTION dir, SDLKey id)
+void EventSystem::HandleKey(DirectionEnum dir, SDLKey id)
 {
 	//if (dir == DOWN) std::cout << "Key #" << (int)id << " pressed" << endl;
 	HandleToggle <SDLKey> (keymap, dir, id);
 }
 
-EVENTSYSTEM_SDL::BUTTON_STATE EVENTSYSTEM_SDL::GetMouseButtonState(int id) const
+EventSystem::ButtonState EventSystem::GetMouseButtonState(int id) const
 {
 	return GetToggle <int> (mbutmap, id);
 }
 
-EVENTSYSTEM_SDL::BUTTON_STATE EVENTSYSTEM_SDL::GetKeyState(SDLKey id) const
+EventSystem::ButtonState EventSystem::GetKeyState(SDLKey id) const
 {
 	return GetToggle <SDLKey> (keymap, id);
 }
 
-vector <int> EVENTSYSTEM_SDL::GetMousePosition() const
+vector <int> EventSystem::GetMousePosition() const
 {
 	vector <int> o;
 	o.reserve(2);
@@ -195,7 +195,7 @@ vector <int> EVENTSYSTEM_SDL::GetMousePosition() const
 	return o;
 }
 
-vector <int> EVENTSYSTEM_SDL::GetMouseRelativeMotion() const
+vector <int> EventSystem::GetMouseRelativeMotion() const
 {
 	vector <int> o;
 	o.reserve(2);
@@ -204,7 +204,7 @@ vector <int> EVENTSYSTEM_SDL::GetMouseRelativeMotion() const
 	return o;
 }
 
-void EVENTSYSTEM_SDL::TestStim(TEST_STIM stim)
+void EventSystem::TestStim(StimEnum stim)
 {
 	if (stim == STIM_AGE_KEYS)
 	{
@@ -238,33 +238,33 @@ void EVENTSYSTEM_SDL::TestStim(TEST_STIM stim)
 
 QT_TEST(eventsystem_test)
 {
-	EVENTSYSTEM_SDL e;
+	EventSystem e;
 
 	//key stuff
 	{
 		//check key insertion
-		e.TestStim(EVENTSYSTEM_SDL::STIM_INSERT_KEY_DOWN);
-		EVENTSYSTEM_SDL::BUTTON_STATE tstate = e.GetKeyState(SDLK_t);
+		e.TestStim(EventSystem::STIM_INSERT_KEY_DOWN);
+		EventSystem::ButtonState tstate = e.GetKeyState(SDLK_t);
 		QT_CHECK(tstate.down && tstate.just_down && !tstate.just_up);
 
 		//check key aging
-		e.TestStim(EVENTSYSTEM_SDL::STIM_AGE_KEYS);
+		e.TestStim(EventSystem::STIM_AGE_KEYS);
 		tstate = e.GetKeyState(SDLK_t);
 		QT_CHECK(tstate.down && !tstate.just_down && !tstate.just_up);
-		e.TestStim(EVENTSYSTEM_SDL::STIM_AGE_KEYS); //age again
+		e.TestStim(EventSystem::STIM_AGE_KEYS); //age again
 		tstate = e.GetKeyState(SDLK_t);
 		QT_CHECK(tstate.down && !tstate.just_down && !tstate.just_up);
 
 		//check key removal
-		e.TestStim(EVENTSYSTEM_SDL::STIM_INSERT_KEY_UP);
+		e.TestStim(EventSystem::STIM_INSERT_KEY_UP);
 		tstate = e.GetKeyState(SDLK_t);
 		QT_CHECK(!tstate.down && !tstate.just_down && tstate.just_up);
 
 		//check key aging
-		e.TestStim(EVENTSYSTEM_SDL::STIM_AGE_KEYS);
+		e.TestStim(EventSystem::STIM_AGE_KEYS);
 		tstate = e.GetKeyState(SDLK_t);
 		QT_CHECK(!tstate.down && !tstate.just_down && !tstate.just_up);
-		e.TestStim(EVENTSYSTEM_SDL::STIM_AGE_KEYS); //age again
+		e.TestStim(EventSystem::STIM_AGE_KEYS); //age again
 		tstate = e.GetKeyState(SDLK_t);
 		QT_CHECK(!tstate.down && !tstate.just_down && !tstate.just_up);
 	}
@@ -272,35 +272,35 @@ QT_TEST(eventsystem_test)
 	//mouse button stuff
 	{
 		//check button insertion
-		e.TestStim(EVENTSYSTEM_SDL::STIM_INSERT_MBUT_DOWN);
-		EVENTSYSTEM_SDL::BUTTON_STATE tstate = e.GetMouseButtonState(SDL_BUTTON_LEFT);
+		e.TestStim(EventSystem::STIM_INSERT_MBUT_DOWN);
+		EventSystem::ButtonState tstate = e.GetMouseButtonState(SDL_BUTTON_LEFT);
 		QT_CHECK(tstate.down && tstate.just_down && !tstate.just_up);
 
 		//check button aging
-		e.TestStim(EVENTSYSTEM_SDL::STIM_AGE_MBUT);
+		e.TestStim(EventSystem::STIM_AGE_MBUT);
 		tstate = e.GetMouseButtonState(SDL_BUTTON_LEFT);
 		QT_CHECK(tstate.down && !tstate.just_down && !tstate.just_up);
-		e.TestStim(EVENTSYSTEM_SDL::STIM_AGE_MBUT); //age again
+		e.TestStim(EventSystem::STIM_AGE_MBUT); //age again
 		tstate = e.GetMouseButtonState(SDL_BUTTON_LEFT);
 		QT_CHECK(tstate.down && !tstate.just_down && !tstate.just_up);
 
 		//check button removal
-		e.TestStim(EVENTSYSTEM_SDL::STIM_INSERT_MBUT_UP);
+		e.TestStim(EventSystem::STIM_INSERT_MBUT_UP);
 		tstate = e.GetMouseButtonState(SDL_BUTTON_LEFT);
 		QT_CHECK(!tstate.down && !tstate.just_down && tstate.just_up);
 
 		//check button aging
-		e.TestStim(EVENTSYSTEM_SDL::STIM_AGE_MBUT);
+		e.TestStim(EventSystem::STIM_AGE_MBUT);
 		tstate = e.GetMouseButtonState(SDL_BUTTON_LEFT);
 		QT_CHECK(!tstate.down && !tstate.just_down && !tstate.just_up);
-		e.TestStim(EVENTSYSTEM_SDL::STIM_AGE_MBUT); //age again
+		e.TestStim(EventSystem::STIM_AGE_MBUT); //age again
 		tstate = e.GetMouseButtonState(SDL_BUTTON_LEFT);
 		QT_CHECK(!tstate.down && !tstate.just_down && !tstate.just_up);
 	}
 
 	//mouse motion stuff
 	{
-		e.TestStim(EVENTSYSTEM_SDL::STIM_INSERT_MOTION);
+		e.TestStim(EventSystem::STIM_INSERT_MOTION);
 		vector <int> mpos = e.GetMousePosition();
 		QT_CHECK_EQUAL(mpos.size(),2);
 		QT_CHECK_EQUAL(mpos[0],50);
@@ -312,7 +312,7 @@ QT_TEST(eventsystem_test)
 	}
 }
 
-void EVENTSYSTEM_SDL::RecordFPS(const float fps)
+void EventSystem::RecordFPS(const float fps)
 {
 	fps_memory.push_back(fps);
 	if (fps_memory.size() > fps_memory_window)
@@ -322,7 +322,7 @@ void EVENTSYSTEM_SDL::RecordFPS(const float fps)
 	assert(fps_memory.size() <= fps_memory_window);
 }
 
-float EVENTSYSTEM_SDL::GetFPS() const
+float EventSystem::GetFPS() const
 {
 	float avg = std::accumulate(fps_memory.begin(), fps_memory.end(), 0);
 

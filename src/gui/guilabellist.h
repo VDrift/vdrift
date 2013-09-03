@@ -22,26 +22,26 @@
 
 #include "guiwidgetlist.h"
 
-class FONT;
+class Font;
 
-class GUILABELLIST : public GUIWIDGETLIST
+class GuiLabelList : public GuiWidgetList
 {
 public:
-	GUILABELLIST();
+	GuiLabelList();
 
-	~GUILABELLIST();
+	~GuiLabelList();
 
 	/// Create label elements. To be called after SetupList!
 	void SetupDrawable(
-		SCENENODE & scene, const FONT & font, int align,
+		SceneNode & scene, const Font & font, int align,
 		float scalex, float scaley, float z);
 
 protected:
 	/// verboten
-	GUILABELLIST(const GUILABELLIST & other);
+	GuiLabelList(const GuiLabelList & other);
 
 	/// called during Update to process m_values
-	void UpdateElements(SCENENODE & scene);
+	void UpdateElements(SceneNode & scene);
 };
 
 #endif // _GUILABELLIST_H

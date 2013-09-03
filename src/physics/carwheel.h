@@ -26,11 +26,11 @@
 
 #include <iostream>
 
-class CARWHEEL
+class CarWheel
 {
 friend class joeserialize::Serializer;
 public:
-	CARWHEEL() : radius(0.3), width(0.2), mass(20) {}
+	CarWheel() : radius(0.3), width(0.2), mass(20) {}
 
 	btScalar GetRotation() const
 	{

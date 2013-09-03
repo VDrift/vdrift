@@ -29,18 +29,18 @@
 #include <ostream>
 
 class ContentManager;
-class TEXTURE;
+class Texture;
 
-class TRACKMAP
+class TrackMap
 {
 public:
-	TRACKMAP();
+	TrackMap();
 
-	~TRACKMAP();
+	~TrackMap();
 
 	///w and h are the display device dimensions in pixels.  returns true if successful.
 	bool BuildMap(
-		const std::list <ROADSTRIP> & roads,
+		const std::list <RoadStrip> & roads,
 		int w,
 		int h,
 		const std::string & trackname,
@@ -51,13 +51,13 @@ public:
 	void Unload();
 
 	///update the map with provided information for map visibility, as well as a list of car positions and whether or not they're the player car
-	void Update(bool mapvisible, const std::list <std::pair<MATHVECTOR <float, 3>, bool> > & carpositions);
+	void Update(bool mapvisible, const std::list <std::pair<Vec3, bool> > & carpositions);
 
-	SCENENODE & GetNode() {return mapnode;}
+	SceneNode & GetNode() {return mapnode;}
 
 private:
 	//track map size in real world
-	MATHVECTOR <float, 2> mapsize;
+	Vec2 mapsize;
 	float map_w_min, map_w_max;
 	float map_h_min, map_h_max;
 	float scale;
@@ -65,38 +65,38 @@ private:
 	const int MAP_HEIGHT;
 
 	//screen size
-	MATHVECTOR <float, 2> screen;
+	Vec2 screen;
 
 	//position of the trackmap on screen
-	MATHVECTOR <float, 2> position;
+	Vec2 position;
 
 	//size of the trackmap on screen
-	MATHVECTOR <float, 2> size;
+	Vec2 size;
 
 	//size of the car dot on screen
-	MATHVECTOR <float, 2> dot_size;
+	Vec2 dot_size;
 
-	SCENENODE mapnode;
-	keyed_container <DRAWABLE>::handle mapdraw;
-	VERTEXARRAY mapverts;
+	SceneNode mapnode;
+	keyed_container <Drawable>::handle mapdraw;
+	VertexArray mapverts;
 
 	// car dot textures
-	std::tr1::shared_ptr<TEXTURE> cardot0;
-	std::tr1::shared_ptr<TEXTURE> cardot1;
-	std::tr1::shared_ptr<TEXTURE> cardot0_focused;
-	std::tr1::shared_ptr<TEXTURE> cardot1_focused;
+	std::tr1::shared_ptr<Texture> cardot0;
+	std::tr1::shared_ptr<Texture> cardot1;
+	std::tr1::shared_ptr<Texture> cardot0_focused;
+	std::tr1::shared_ptr<Texture> cardot1_focused;
 
-	class CARDOT
+	class CarDot
 	{
 		public:
 			void Init(
-				SCENENODE & topnode,
-				std::tr1::shared_ptr<TEXTURE> tex,
-				const MATHVECTOR <float, 2> & corner1,
-				const MATHVECTOR <float, 2> & corner2)
+				SceneNode & topnode,
+				std::tr1::shared_ptr<Texture> tex,
+				const Vec2 & corner1,
+				const Vec2 & corner2)
 			{
-				dotdraw = topnode.GetDrawlist().twodim.insert(DRAWABLE());
-				DRAWABLE & drawref = GetDrawable(topnode);
+				dotdraw = topnode.GetDrawlist().twodim.insert(Drawable());
+				Drawable & drawref = GetDrawable(topnode);
 				drawref.SetVertArray(&dotverts);
 				drawref.SetCull(false, false);
 				drawref.SetColor(1,1,1,0.7);
@@ -104,45 +104,45 @@ private:
 				Retexture(topnode, tex);
 				Reposition(corner1, corner2);
 			}
-			void Retexture(SCENENODE & topnode, std::tr1::shared_ptr<TEXTURE> newtex)
+			void Retexture(SceneNode & topnode, std::tr1::shared_ptr<Texture> newtex)
 			{
 				assert(newtex.get());
 				GetDrawable(topnode).SetDiffuseMap(newtex);
 			}
-			void Reposition(const MATHVECTOR <float, 2> & corner1, const MATHVECTOR <float, 2> & corner2)
+			void Reposition(const Vec2 & corner1, const Vec2 & corner2)
 			{
 				dotverts.SetToBillboard(corner1[0], corner1[1], corner2[0], corner2[1]);
 			}
-			void SetVisible(SCENENODE & topnode, bool visible)
+			void SetVisible(SceneNode & topnode, bool visible)
 			{
 				GetDrawable(topnode).SetDrawEnable(visible);
 			}
-			void DebugPrint(SCENENODE & topnode, std::ostream & out) const
+			void DebugPrint(SceneNode & topnode, std::ostream & out) const
 			{
-				const DRAWABLE & drawref = GetDrawable(topnode);
+				const Drawable & drawref = GetDrawable(topnode);
 				out << &drawref << ": enable=" << drawref.GetDrawEnable() << ", tex=" << drawref.GetDiffuseMap() << ", verts=" << drawref.GetVertArray() << std::endl;
 			}
-			keyed_container <DRAWABLE>::handle & GetDrawableHandle()
+			keyed_container <Drawable>::handle & GetDrawableHandle()
 			{
 				return dotdraw;
 			}
 
 		private:
-			keyed_container <DRAWABLE>::handle dotdraw;
-			VERTEXARRAY dotverts;
+			keyed_container <Drawable>::handle dotdraw;
+			VertexArray dotverts;
 
-			DRAWABLE & GetDrawable(SCENENODE & topnode)
+			Drawable & GetDrawable(SceneNode & topnode)
 			{
 				return topnode.GetDrawlist().twodim.get(dotdraw);
 			}
 
-			const DRAWABLE & GetDrawable(SCENENODE & topnode) const
+			const Drawable & GetDrawable(SceneNode & topnode) const
 			{
 				return topnode.GetDrawlist().twodim.get(dotdraw);
 			}
 	};
 
-	std::list <CARDOT> dotlist;
+	std::list <CarDot> dotlist;
 };
 
 #endif

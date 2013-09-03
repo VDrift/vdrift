@@ -22,7 +22,7 @@
 
 #include <fstream>
 
-class CARTELEMETRY
+class CarTelemetry
 {
 	private:
 		typedef double T;
@@ -55,8 +55,8 @@ class CARTELEMETRY
 		}
 
 	public:
-		CARTELEMETRY(const std::string & name) : time(0), wroteheader(false), telemetryname(name), file((name+".dat").c_str()) {}
-		CARTELEMETRY(const CARTELEMETRY & other) : variable_names(other.variable_names), time(other.time), wroteheader(other.wroteheader), telemetryname(other.telemetryname), file((telemetryname+".dat").c_str()) {}
+		CarTelemetry(const std::string & name) : time(0), wroteheader(false), telemetryname(name), file((name+".dat").c_str()) {}
+		CarTelemetry(const CarTelemetry & other) : variable_names(other.variable_names), time(other.time), wroteheader(other.wroteheader), telemetryname(other.telemetryname), file((telemetryname+".dat").c_str()) {}
 
 		void AddRecord(const std::string & name, T value)
 		{

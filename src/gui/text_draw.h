@@ -27,22 +27,22 @@
 #include <string>
 #include <cassert>
 
-class TEXT_DRAW
+class TextDraw
 {
 public:
-	TEXT_DRAW();
+	TextDraw();
 
 	void Set(
-		DRAWABLE & draw,
-		const FONT & font, const std::string & newtext,
+		Drawable & draw,
+		const Font & font, const std::string & newtext,
 		float x,  float y, float newscalex, float newscaley,
 		float r, float g, float b);
 
 	void Revise(
-		const FONT & font, const std::string & newtext,
+		const Font & font, const std::string & newtext,
 		float x, float y, float scalex, float scaley);
 
-	void Revise(const FONT & font, const std::string & newtext);
+	void Revise(const Font & font, const std::string & newtext);
 
 	const std::string & GetText() const
 	{
@@ -55,41 +55,41 @@ public:
 	}
 
 	static float RenderCharacter(
-		const FONT & font, char c,
+		const Font & font, char c,
 		float x, float y, float scalex, float scaley,
-		VERTEXARRAY & output_array);
+		VertexArray & output_array);
 
 	static float RenderText(
-		const FONT & font, const std::string & newtext,
+		const Font & font, const std::string & newtext,
 		float x, float y, float scalex, float scaley,
-		VERTEXARRAY & output_array);
+		VertexArray & output_array);
 
 	static void SetText(
-		DRAWABLE & draw,
-		const FONT & font, const std::string & text,
+		Drawable & draw,
+		const Font & font, const std::string & text,
 		float x, float y, float scalex, float scaley,
 		float r, float g, float b,
-		VERTEXARRAY & output_array);
+		VertexArray & output_array);
 
 private:
-	VERTEXARRAY varray;
+	VertexArray varray;
 	std::string text;
 	float oldx, oldy, oldscalex, oldscaley;
 };
 
 ///a slightly higher level class than the TEXT_DRAW Class that contains its own DRAWABLE handle
-class TEXT_DRAWABLE
+class TextDrawable
 {
 public:
-	TEXT_DRAWABLE() : font(NULL),curx(0),cury(0),cr(1),cg(1),cb(1),ca(1) {}
+	TextDrawable() : font(NULL),curx(0),cury(0),cr(1),cg(1),cb(1),ca(1) {}
 
 	///this function will add a drawable to parentnode and store the result
-	void Init(SCENENODE & parentnode, const FONT & newfont, const std::string & newtext, const float x, const float y, const float newscalex, const float newscaley)
+	void Init(SceneNode & parentnode, const Font & newfont, const std::string & newtext, const float x, const float y, const float newscalex, const float newscaley)
 	{
 		assert(font == NULL);
 
-		draw = parentnode.GetDrawlist().text.insert(DRAWABLE());
-		DRAWABLE & drawref = GetDrawable(parentnode);
+		draw = parentnode.GetDrawlist().text.insert(Drawable());
+		Drawable & drawref = GetDrawable(parentnode);
 		font = &newfont;
 		curx = x;
 		cury = y;
@@ -118,18 +118,18 @@ public:
 		text.Revise(*font, text.GetText(), curx, cury, text.GetScale().first, text.GetScale().second);
 	}
 
-	void SetColor(SCENENODE & parentnode, const float r, const float g, const float b)
+	void SetColor(SceneNode & parentnode, const float r, const float g, const float b)
 	{
-		DRAWABLE & drawref = GetDrawable(parentnode);
+		Drawable & drawref = GetDrawable(parentnode);
 		cr = r;
 		cg = g;
 		cb = b;
 		drawref.SetColor(cr,cg,cb,ca);
 	}
 
-	void SetAlpha(SCENENODE & parentnode, const float a)
+	void SetAlpha(SceneNode & parentnode, const float a)
 	{
-		DRAWABLE & drawref = GetDrawable(parentnode);
+		Drawable & drawref = GetDrawable(parentnode);
 		ca = a;
 		drawref.SetColor(cr,cg,cb,ca);
 	}
@@ -146,33 +146,33 @@ public:
 		return font->GetWidth(newstr) * text.GetScale().first;
 	}
 
-	void SetDrawOrder(SCENENODE & parentnode, float newdo)
+	void SetDrawOrder(SceneNode & parentnode, float newdo)
 	{
-		DRAWABLE & drawref = GetDrawable(parentnode);
+		Drawable & drawref = GetDrawable(parentnode);
 		drawref.SetDrawOrder(newdo);
 	}
 
-	void SetDrawEnable(SCENENODE & parentnode, bool newvis)
+	void SetDrawEnable(SceneNode & parentnode, bool newvis)
 	{
-		DRAWABLE & drawref = GetDrawable(parentnode);
+		Drawable & drawref = GetDrawable(parentnode);
 		drawref.SetDrawEnable(newvis);
 	}
 
-	void ToggleDrawEnable(SCENENODE & parentnode)
+	void ToggleDrawEnable(SceneNode & parentnode)
 	{
-		DRAWABLE & drawref = GetDrawable(parentnode);
+		Drawable & drawref = GetDrawable(parentnode);
 		drawref.SetDrawEnable(!drawref.GetDrawEnable());
 	}
 
-	DRAWABLE & GetDrawable(SCENENODE & parentnode)
+	Drawable & GetDrawable(SceneNode & parentnode)
 	{
 		return parentnode.GetDrawlist().text.get(draw);
 	}
 
 private:
-	TEXT_DRAW text;
-	keyed_container <DRAWABLE>::handle draw;
-	const FONT * font;
+	TextDraw text;
+	keyed_container <Drawable>::handle draw;
+	const Font * font;
 	float curx, cury;
 	float cr,cg,cb,ca;
 };

@@ -20,7 +20,7 @@
 #include <sstream>
 #include "graphics_config_condition.h"
 
-void GRAPHICS_CONFIG_CONDITION::Parse(const std::string & str)
+void GraphicsConfigCondition::Parse(const std::string & str)
 {
 	std::stringstream parser(str);
 	while (parser)
@@ -50,7 +50,7 @@ void GRAPHICS_CONFIG_CONDITION::Parse(const std::string & str)
 	}
 }
 
-bool GRAPHICS_CONFIG_CONDITION::Satisfied(const std::set <std::string> & conditions) const
+bool GraphicsConfigCondition::Satisfied(const std::set <std::string> & conditions) const
 {
 	// If we don't find all of our positive conditions in the conditions set, return false.
 	for (std::set <std::string>::const_iterator i = positive_conditions.begin(); i != positive_conditions.end(); i++)

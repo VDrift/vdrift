@@ -26,12 +26,12 @@
 
 #include <iostream>
 
-class CARTRANSMISSION
+class CarTransmission
 {
 friend class joeserialize::Serializer;
 public:
 	//default constructor makes an S2000-like car
-	CARTRANSMISSION() :
+	CarTransmission() :
 		forward_gears(0),
 		reverse_gears(0),
 		shift_time(0.2),

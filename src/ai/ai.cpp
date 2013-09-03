@@ -23,20 +23,20 @@
 #include "ai_car_standard.h"
 #include "ai_car_experimental.h"
 
-const std::string AI::default_type = "aistd";
+const std::string Ai::default_type = "aistd";
 
-AI::AI() : empty_input(CARINPUT::INVALID, 0.0)
+Ai::Ai() : empty_input(CarInput::INVALID, 0.0)
 {
-	AddAIFactory("aistd", new AI_Car_Standard_Factory());
-	AddAIFactory("aiexp", new AI_Car_Experimental_Factory());
+	AddFactory("aistd", new AiCarStandardFactory());
+	AddFactory("aiexp", new AiCarExperimentalFactory());
 }
 
-AI::~AI()
+Ai::~Ai()
 {
-	AI::clear_cars();
+	Ai::clear_cars();
 
 	// Free factories
-	std::map <std::string, AI_Factory*>::iterator it;
+	std::map <std::string, AiFactory*>::iterator it;
 	for (it = AI_Factories.begin(); it != AI_Factories.end(); it++)
 	{
 		delete it->second;
@@ -45,19 +45,19 @@ AI::~AI()
 	AI_Factories.clear();
 }
 
-void AI::add_car(CAR * car, float difficulty, const std::string & type)
+void Ai::add_car(Car * car, float difficulty, const std::string & type)
 {
 	assert(car);
 	assert(AI_Factories.size() > 0);
 
-	std::map <std::string, AI_Factory*>::iterator it = AI_Factories.find(type);
+	std::map <std::string, AiFactory*>::iterator it = AI_Factories.find(type);
 	assert(it != AI_Factories.end());
-	AI_Factory* factory = it->second;
-	AI_Car* aicar = factory->create(car, difficulty);
+	AiFactory* factory = it->second;
+	AiCar* aicar = factory->create(car, difficulty);
 	AI_Cars.push_back(aicar);
 }
 
-void AI::remove_car(CAR * car)
+void Ai::remove_car(Car * car)
 {
 	assert(car);
 
@@ -72,7 +72,7 @@ void AI::remove_car(CAR * car)
 	}
 }
 
-void AI::clear_cars()
+void Ai::clear_cars()
 {
 	int size = AI_Cars.size();
 	for (int i = 0; i < size; i++)
@@ -82,7 +82,7 @@ void AI::clear_cars()
 	AI_Cars.clear();
 }
 
-void AI::update(float dt, const std::list <CAR> & othercars)
+void Ai::update(float dt, const std::list <Car> & othercars)
 {
 	int size = AI_Cars.size();
 	for (int i = 0; i < size; i++)
@@ -91,7 +91,7 @@ void AI::update(float dt, const std::list <CAR> & othercars)
 	}
 }
 
-const std::vector <float> & AI::GetInputs(CAR * car) const
+const std::vector <float> & Ai::GetInputs(Car * car) const
 {
 	int size = AI_Cars.size();
 	for (int i = 0; i < size; i++)
@@ -105,15 +105,15 @@ const std::vector <float> & AI::GetInputs(CAR * car) const
 	return empty_input;
 }
 
-void AI::AddAIFactory(const std::string& type_name, AI_Factory* factory)
+void Ai::AddFactory(const std::string& type_name, AiFactory* factory)
 {
 	AI_Factories.insert(std::make_pair(type_name, factory));
 }
 
-std::vector<std::string> AI::ListFactoryTypes()
+std::vector<std::string> Ai::ListFactoryTypes()
 {
 	std::vector<std::string> ret;
-	std::map<std::string, AI_Factory*>::iterator it;
+	std::map<std::string, AiFactory*>::iterator it;
 	for (it = AI_Factories.begin(); it != AI_Factories.end(); it++)
 	{
 		ret.push_back(it->first);
@@ -121,7 +121,7 @@ std::vector<std::string> AI::ListFactoryTypes()
 	return ret;
 }
 
-void AI::Visualize()
+void Ai::Visualize()
 {
 #ifdef VISUALIZE_AI_DEBUG
 	int size = AI_Cars.size();

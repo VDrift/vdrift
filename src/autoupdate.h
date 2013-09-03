@@ -26,10 +26,10 @@
 #include <map>
 
 /// A class that maintains version information about cars and tracks.
-class AUTOUPDATE
+class AutoUpdate
 {
 public:
-	AUTOUPDATE();
+	AutoUpdate();
 
 	/// Write the version information to a VDrift config format file.
 	/// Returns true on success and false on error.
@@ -67,11 +67,11 @@ public:
 
 private:
 	/// Map from group name to folder/version pairs.
-	typedef std::map <std::string, int> pair_type;
-	typedef std::map <std::string, pair_type> group_type;
-	group_type groups;
-	group_type available_updates;
-	pair_type formats;
+	typedef std::map <std::string, int> PairType;
+	typedef std::map <std::string, PairType> GroupType;
+	GroupType groups;
+	GroupType available_updates;
+	PairType formats;
 	std::string url;
 };
 

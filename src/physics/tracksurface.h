@@ -22,10 +22,10 @@
 
 #include <string>
 
-class TRACKSURFACE
+class TrackSurface
 {
 public:
-	enum TYPE
+	enum Type
 	{
 		NONE = 0,
 		ASPHALT = 1,
@@ -48,13 +48,13 @@ public:
 		else							type = NONE;
 	}
 
-	static const TRACKSURFACE * None()
+	static const TrackSurface * None()
 	{
-		static const TRACKSURFACE s;
+		static const TrackSurface s;
 		return &s;
 	}
 
-	TRACKSURFACE() :
+	TrackSurface() :
 		type(NONE),
 		bumpWaveLength(1),
 		bumpAmplitude(0),
@@ -66,7 +66,7 @@ public:
 
 	}
 
-	TYPE type;
+	Type type;
 	float bumpWaveLength;
 	float bumpAmplitude;
 	float frictionNonTread;

@@ -31,7 +31,7 @@
 
 class PTree;
 
-struct CARENGINEINFO
+struct CarEngineInfo
 {
 	btScalar redline; ///< the redline in RPMs (used only for the redline graphics)
 	btScalar rpm_limit; ///< peak engine RPMs after which limiting occurs
@@ -40,7 +40,7 @@ struct CARENGINEINFO
 	btScalar stall_rpm; ///< RPM at which the engine dies
 	btScalar fuel_rate; ///< fuel rate kg/Ws based on fuel heating value(4E7) and engine efficiency(0.35)
 	btScalar friction; ///< friction coefficient from the engine; this is calculated algorithmically
-	SPLINE<btScalar> torque_curve;
+	Spline<btScalar> torque_curve;
 	btVector3 position;
 	btScalar inertia;
 	btScalar mass;
@@ -50,7 +50,7 @@ struct CARENGINEINFO
 
 	/// default constructor makes an S2000-like car
 	/// SetTorqueCurve() has to be called explicitly to initialise carengineinfo
-	CARENGINEINFO();
+	CarEngineInfo();
 
 	/// load engine from config file
 	bool Load(const PTree & cfg, std::ostream & error_output);
@@ -71,13 +71,13 @@ struct CARENGINEINFO
 		btScalar throttle_position) const;
 };
 
-class CARENGINE
+class CarEngine
 {
 friend class joeserialize::Serializer;
 public:
-	CARENGINE();
+	CarEngine();
 
-	void Init(const CARENGINEINFO & info);
+	void Init(const CarEngineInfo & info);
 
 	btScalar GetRPMLimit() const
 	{
@@ -188,7 +188,7 @@ public:
 	bool Serialize(joeserialize::Serializer & s);
 
 private:
-	CARENGINEINFO info;
+	CarEngineInfo info;
 
 	DriveShaft shaft;
 	btScalar combustion_torque;

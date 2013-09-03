@@ -62,13 +62,13 @@
 #include <vector>
 #include <memory>
 
-class GAME
+class Game
 {
-friend class GAME_DOWNLOADER;
+friend class GameDownloader;
 public:
-	GAME(std::ostream & info_out, std::ostream & error_out);
+	Game(std::ostream & info_out, std::ostream & error_out);
 
-	~GAME();
+	~Game();
 
 	void Start(std::list <std::string> & args);
 
@@ -97,11 +97,11 @@ private:
 
 	void AdvanceGameLogic();
 
-	void UpdateCar(int carid, CAR & car, double dt);
+	void UpdateCar(int carid, Car & car, double dt);
 
-	void UpdateDriftScore(CAR & car, double dt);
+	void UpdateDriftScore(Car & car, double dt);
 
-	void UpdateCarInputs(int carid, CAR & car);
+	void UpdateCarInputs(int carid, Car & car);
 
 	void UpdateTimer();
 
@@ -119,9 +119,9 @@ private:
 	bool NewGame(bool playreplay=false, bool opponents=false, int num_laps=0);
 
 	bool LoadCar(
-		const CARINFO & carinfo,
-		const MATHVECTOR <float, 3> & position,
-		const QUATERNION <float> & orientation);
+		const CarInfo & carinfo,
+		const Vec3 & position,
+		const Quat & orientation);
 
 	bool LoadTrack(const std::string & trackname);
 
@@ -135,37 +135,37 @@ private:
 
 	void CalculateFPS();
 
-	void PopulateValueLists(std::map<std::string, GUIOPTION::LIST> & valuelists);
+	void PopulateValueLists(std::map<std::string, GuiOption::List> & valuelists);
 
-	void PopulateTrackList(GUIOPTION::LIST & tracklist);
+	void PopulateTrackList(GuiOption::List & tracklist);
 
-	void PopulateCarList(GUIOPTION::LIST & carlist, bool cardironly = false);
+	void PopulateCarList(GuiOption::List & carlist, bool cardironly = false);
 
-	void PopulateCarPaintList(const std::string & carname, GUIOPTION::LIST & paintlist);
+	void PopulateCarPaintList(const std::string & carname, GuiOption::List & paintlist);
 
-	void PopulateCarTireList(const std::string & carname, GUIOPTION::LIST & tirelist);
+	void PopulateCarTireList(const std::string & carname, GuiOption::List & tirelist);
 
-	void PopulateCarWheelList(const std::string & carname, GUIOPTION::LIST & wheellist);
+	void PopulateCarWheelList(const std::string & carname, GuiOption::List & wheellist);
 
-	void PopulateDriverList(GUIOPTION::LIST & driverlist);
+	void PopulateDriverList(GuiOption::List & driverlist);
 
-	void PopulateStartList(GUIOPTION::LIST & startlist);
+	void PopulateStartList(GuiOption::List & startlist);
 
-	void PopulateReplayList(GUIOPTION::LIST & replaylist);
+	void PopulateReplayList(GuiOption::List & replaylist);
 
-	void PopulateGUISkinList(GUIOPTION::LIST & skinlist);
+	void PopulateGUISkinList(GuiOption::List & skinlist);
 
-	void PopulateGUILangList(GUIOPTION::LIST & langlist);
+	void PopulateGUILangList(GuiOption::List & langlist);
 
-	void PopulateAnisoList(GUIOPTION::LIST & anisolist);
+	void PopulateAnisoList(GuiOption::List & anisolist);
 
-	void PopulateAntialiasList(GUIOPTION::LIST & antialiaslist);
+	void PopulateAntialiasList(GuiOption::List & antialiaslist);
 
 	void UpdateTrackMap();
 
 	void ShowHUD(bool value);
 
-	void LoadingScreen(float progress, float max, bool drawGui, const std::string & optionalText, float x, float y);
+	void ShowLoadingScreen(float progress, float max, bool drawGui, const std::string & optionalText, float x, float y);
 
 	void ProcessNewSettings();
 
@@ -184,7 +184,7 @@ private:
 
 	void SyncParticleGraphics();
 
-	void AddTireSmokeParticles(float dt, CAR & car);
+	void AddTireSmokeParticles(float dt, Car & car);
 
 	std::string GetReplayRecordingFilename();
 
@@ -274,23 +274,23 @@ private:
 	double target_time;
 	const float timestep; ///< simulation time step
 
-	PATHMANAGER pathmanager;
-	SETTINGS settings;
-	WINDOW_SDL window;
-	GRAPHICS * graphics_interface;
+	PathManager pathmanager;
+	Settings settings;
+	Window window;
+	Graphics * graphics_interface;
 	StringIdMap stringMap;
-	EVENTSYSTEM_SDL eventsystem;
+	EventSystem eventsystem;
 	ContentManager content;
-	SOUND sound;
-	AUTOUPDATE autoupdate;
-	UPDATE_MANAGER carupdater;
-	UPDATE_MANAGER trackupdater;
-	std::map <std::string, FONT> fonts;
+	Sound sound;
+	AutoUpdate autoupdate;
+	UpdateManager carupdater;
+	UpdateManager trackupdater;
+	std::map <std::string, Font> fonts;
 	std::string renderconfigfile;
 
-	SCENENODE debugnode;
-	TEXT_DRAWABLE fps_draw;
-	TEXT_DRAWABLE profiling_text;
+	SceneNode debugnode;
+	TextDrawable fps_draw;
+	TextDrawable profiling_text;
 
 	std::vector <float> fps_track;
 	int fps_position;
@@ -304,23 +304,23 @@ private:
 	bool dumpfps;
 	bool pause;
 
-	std::vector <EVENTSYSTEM_SDL::JOYSTICK> controlgrab_joystick_state;
+	std::vector <EventSystem::Joystick> controlgrab_joystick_state;
 	std::pair <int,int> controlgrab_mouse_coords;
-	CARCONTROLMAP::CONTROL controlgrab_control;
+	CarControlMap::Control controlgrab_control;
 	std::string controlgrab_page;
 	std::string controlgrab_input;
 	size_t controlgrab_id;
 	bool controlgrab;
 
-	CAMERA_FREE garage_camera;
-	std::vector <CARINFO> car_info;
+	CameraFree garage_camera;
+	std::vector <CarInfo> car_info;
 	size_t player_car_id;
 	size_t car_edit_id;
 
-	CAMERA * active_camera;
-	std::pair <CAR *, CARCONTROLMAP> carcontrols_local;
-	std::map <CAR *, int> cartimerids;
-	std::list <CAR> cars;
+	Camera * active_camera;
+	std::pair <Car *, CarControlMap> carcontrols_local;
+	std::map <Car *, int> cartimerids;
+	std::list <Car> cars;
 	int race_laps;
 	bool practice;
 
@@ -332,21 +332,21 @@ private:
 	DynamicsWorld dynamics;
 	int dynamics_drawmode;
 
-	PARTICLE_SYSTEM tire_smoke;
+	ParticleSystem tire_smoke;
 	unsigned int particle_timer;
 
-	TRACKMAP trackmap;
-	TRACK track;
-	GUI gui;
-	HUD hud;
-	INPUTGRAPH inputgraph;
-	LOADINGSCREEN loadingscreen;
-	TIMER timer;
-	REPLAY replay;
-	AI ai;
-	HTTP http;
+	TrackMap trackmap;
+	Track track;
+	Gui gui;
+	Hud hud;
+	InputGraph inputgraph;
+	LoadingScreen loadingscreen;
+	Timer timer;
+	Replay replay;
+	Ai ai;
+	Http http;
 
-	std::auto_ptr <FORCEFEEDBACK> forcefeedback;
+	std::auto_ptr <ForceFeedback> forcefeedback;
 	double ff_update_time;
 };
 

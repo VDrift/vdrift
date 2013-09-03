@@ -53,14 +53,14 @@ void PrintWithLineNumbers(ostream & out, const string & str)
 	}
 }
 
-bool SHADER_GLSL::Load(const std::string & vertex_filename, const std::string & fragment_filename, const std::vector <std::string> & preprocessor_defines, std::ostream & info_output, std::ostream & error_output)
+bool Shader::Load(const std::string & vertex_filename, const std::string & fragment_filename, const std::vector <std::string> & preprocessor_defines, std::ostream & info_output, std::ostream & error_output)
 {
 	assert(GLEW_ARB_shading_language_100);
 
 	Unload();
 
-	string vertexshader_source = UTILS::LoadFileIntoString(vertex_filename, error_output);
-	string fragmentshader_source = UTILS::LoadFileIntoString(fragment_filename, error_output);
+	string vertexshader_source = Utils::LoadFileIntoString(vertex_filename, error_output);
+	string fragmentshader_source = Utils::LoadFileIntoString(fragment_filename, error_output);
 	assert(!vertexshader_source.empty());
 	assert(!fragmentshader_source.empty());
 
@@ -165,20 +165,20 @@ bool SHADER_GLSL::Load(const std::string & vertex_filename, const std::string & 
 	return loaded;
 }
 
-void SHADER_GLSL::Unload()
+void Shader::Unload()
 {
 	if (loaded) glDeleteObjectARB(program);
 	loaded = false;
 }
 
-void SHADER_GLSL::Enable()
+void Shader::Enable()
 {
 	assert(loaded);
 
 	glUseProgramObjectARB(program);
 }
 
-bool SHADER_GLSL::UploadMat16(const string & varname, float * mat16)
+bool Shader::UploadMat16(const string & varname, float * mat16)
 {
 	Enable();
 
@@ -188,7 +188,7 @@ bool SHADER_GLSL::UploadMat16(const string & varname, float * mat16)
 }
 
 ///returns true on successful upload
-bool SHADER_GLSL::UploadActiveShaderParameter1i(const string & param, int val)
+bool Shader::UploadActiveShaderParameter1i(const string & param, int val)
 {
 	Enable();
 
@@ -198,7 +198,7 @@ bool SHADER_GLSL::UploadActiveShaderParameter1i(const string & param, int val)
 }
 
 ///returns true on successful upload
-bool SHADER_GLSL::UploadActiveShaderParameter1f(const string & param, float val)
+bool Shader::UploadActiveShaderParameter1f(const string & param, float val)
 {
 	Enable();
 
@@ -208,7 +208,7 @@ bool SHADER_GLSL::UploadActiveShaderParameter1f(const string & param, float val)
 }
 
 ///returns true on successful upload
-bool SHADER_GLSL::UploadActiveShaderParameter3f(const std::string & param, float val1, float val2, float val3)
+bool Shader::UploadActiveShaderParameter3f(const std::string & param, float val1, float val2, float val3)
 {
 	Enable();
 
@@ -218,7 +218,7 @@ bool SHADER_GLSL::UploadActiveShaderParameter3f(const std::string & param, float
 }
 
 ///query the card for the shader program link log and print it out
-void SHADER_GLSL::PrintProgramLog(GLhandleARB & program, const std::string & name, std::ostream & out)
+void Shader::PrintProgramLog(GLhandleARB & program, const std::string & name, std::ostream & out)
 {
 	const unsigned int logsize = 65536;
 	char shaderlog[logsize];
@@ -233,7 +233,7 @@ void SHADER_GLSL::PrintProgramLog(GLhandleARB & program, const std::string & nam
 }
 
 ///query the card for the shader compile log and print it out
-void SHADER_GLSL::PrintShaderLog(GLhandleARB & shader, const std::string & name, std::ostream & out)
+void Shader::PrintShaderLog(GLhandleARB & shader, const std::string & name, std::ostream & out)
 {
 	const unsigned int logsize = 65536;
 	char shaderlog[logsize];

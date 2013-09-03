@@ -47,10 +47,10 @@ bool Renderer::initialize(const std::vector <RealtimeExportPassInfo> & config, S
 		// Create unique names based on the path and define list.
 		std::string vertexShaderName = i->vertexShader;
 		if (!i->vertexShaderDefines.empty())
-			vertexShaderName += " "+UTILS::implode(i->vertexShaderDefines," ");
+			vertexShaderName += " "+Utils::implode(i->vertexShaderDefines," ");
 		std::string fragmentShaderName = i->fragmentShader;
 		if (!i->fragmentShaderDefines.empty())
-			fragmentShaderName += " "+UTILS::implode(i->fragmentShaderDefines," ");
+			fragmentShaderName += " "+Utils::implode(i->fragmentShaderDefines," ");
 
 		// Load shaders from the pass if necessary.
 		if ((shaders.find(vertexShaderName) == shaders.end()) && (!loadShader(shaderPath.empty() ? i->vertexShader : shaderPath+"/"+i->vertexShader, vertexShaderName, mergeSets(i->vertexShaderDefines, globalDefines), GL_VERTEX_SHADER, errorOutput)))
@@ -107,21 +107,21 @@ void Renderer::clear()
 
 void Renderer::render(unsigned int w, unsigned int h, StringIdMap & stringMap, std::ostream & errorOutput)
 {
-	render(w, h, stringMap, std::map <StringId, std::vector <RenderModelExternal*> >(), errorOutput);
+	render(w, h, stringMap, std::map <StringId, std::vector <RenderModelExt*> >(), errorOutput);
 }
 
-void Renderer::render(unsigned int w, unsigned int h, StringIdMap & stringMap, const std::map <StringId, std::vector <RenderModelExternal*> > & externalModels, std::ostream & errorOutput)
+void Renderer::render(unsigned int w, unsigned int h, StringIdMap & stringMap, const std::map <StringId, std::vector <RenderModelExt*> > & externalModels, std::ostream & errorOutput)
 {
 	for (std::vector <RenderPass>::iterator i = passes.begin(); i != passes.end(); i++)
 	{
 		// Extract the appropriate map and generate a drawlist.
 		// A vector of pointers to vectors of RenderModelExternal pointers.
-		std::vector <const std::vector <RenderModelExternal*>*> drawList;
+		std::vector <const std::vector <RenderModelExt*>*> drawList;
 
 		// For each draw group that this pass uses, add its models to the draw list.
 		for (std::set <StringId>::const_iterator dg = i->getDrawGroups().begin(); dg != i->getDrawGroups().end(); dg++)
 		{
-			std::map <StringId, std::vector <RenderModelExternal*> >::const_iterator drawGroupIter = externalModels.find(*dg);
+			std::map <StringId, std::vector <RenderModelExt*> >::const_iterator drawGroupIter = externalModels.find(*dg);
 			if (drawGroupIter != externalModels.end())
 				drawList.push_back(&drawGroupIter->second);
 		}
@@ -137,21 +137,21 @@ void Renderer::render(unsigned int w, unsigned int h, StringIdMap & stringMap, c
 	}
 }
 
-void Renderer::render(unsigned int w, unsigned int h, StringIdMap & stringMap, const std::map <StringId, std::map <StringId, std::vector <RenderModelExternal*> *> > & externalModels, std::ostream & errorOutput)
+void Renderer::render(unsigned int w, unsigned int h, StringIdMap & stringMap, const std::map <StringId, std::map <StringId, std::vector <RenderModelExt*> *> > & externalModels, std::ostream & errorOutput)
 {
 	for (std::vector <RenderPass>::iterator i = passes.begin(); i != passes.end(); i++)
 	{
 		// Extract the appropriate map and generate a drawlist.
 		// A vector of pointers to vectors of RenderModelExternal pointers.
-		std::vector <const std::vector <RenderModelExternal*>*> drawList;
+		std::vector <const std::vector <RenderModelExt*>*> drawList;
 
 		// Find the map appropriate to this pass.
-		std::map <StringId, std::map <StringId, std::vector <RenderModelExternal*> *> >::const_iterator drawMapIter = externalModels.find(i->getNameId());
+		std::map <StringId, std::map <StringId, std::vector <RenderModelExt*> *> >::const_iterator drawMapIter = externalModels.find(i->getNameId());
 		if (drawMapIter != externalModels.end())
 			// For each draw group that this pass uses, add its models to the draw list.
 			for (std::set <StringId>::const_iterator dg = i->getDrawGroups().begin(); dg != i->getDrawGroups().end(); dg++)
 			{
-				std::map <StringId, std::vector <RenderModelExternal*> *>::const_iterator drawGroupIter = drawMapIter->second.find(*dg);
+				std::map <StringId, std::vector <RenderModelExt*> *>::const_iterator drawGroupIter = drawMapIter->second.find(*dg);
 				if (drawGroupIter != drawMapIter->second.end())
 					drawList.push_back(drawGroupIter->second);
 			}
@@ -461,7 +461,7 @@ void Renderer::printProfilingInfo(std::ostream & out) const
 
 bool Renderer::loadShader(const std::string & path, const std::string & name, const std::set <std::string> & defines, GLenum shaderType, std::ostream & errorOutput)
 {
-	std::string shaderSource = UTILS::LoadFileIntoString(path, errorOutput);
+	std::string shaderSource = Utils::LoadFileIntoString(path, errorOutput);
 	if (shaderSource.empty())
 	{
 		errorOutput << "Couldn't open shader file: "+path << std::endl;

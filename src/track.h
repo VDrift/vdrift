@@ -32,18 +32,18 @@
 #include <memory>
 #include <vector>
 
-class ROADSTRIP;
+class RoadStrip;
 class DynamicsWorld;
 class ContentManager;
 class btStridingMeshInterface;
 class btCollisionShape;
 class btCollisionObject;
 
-class TRACK
+class Track
 {
 public:
-	TRACK();
-	~TRACK();
+	Track();
+	~Track();
 
 	/// Only begins loading the track.
     /// The track won't be loaded until more calls to ContinueDeferredLoad().
@@ -81,25 +81,25 @@ public:
 	void Clear();
 
 	bool CastRay(
-		const MATHVECTOR <float, 3> & origin,
-		const MATHVECTOR <float, 3> & direction,
+		const Vec3 & origin,
+		const Vec3 & direction,
 		const float seglen,
 		int & patch_id,
-		MATHVECTOR <float, 3> & outtri,
-		const BEZIER * & colpatch,
-		MATHVECTOR <float, 3> & normal) const;
+		Vec3 & outtri,
+		const Bezier * & colpatch,
+		Vec3 & normal) const;
 
 	/// Synchronize graphics and physics.
 	void Update();
 
-	std::pair <MATHVECTOR <float, 3>, QUATERNION <float> > GetStart(unsigned int index) const;
+	std::pair <Vec3, Quat > GetStart(unsigned int index) const;
 
 	int GetNumStartPositions() const
 	{
 		return data.start_positions.size();
 	}
 
-	const std::list <ROADSTRIP> & GetRoadList() const
+	const std::list <RoadStrip> & GetRoadList() const
 	{
 		return data.roads;
 	}
@@ -109,7 +109,7 @@ public:
 		return data.lap.size();
 	}
 
-	const BEZIER * GetSectorPatch(unsigned int sector) const
+	const Bezier * GetSectorPatch(unsigned int sector) const
 	{
 		assert (sector < data.lap.size());
 		return data.lap[sector];
@@ -125,12 +125,12 @@ public:
 		return data.reverse;
 	}
 
-	const std::vector<TRACKSURFACE> & GetSurfaces() const
+	const std::vector<TrackSurface> & GetSurfaces() const
 	{
 		return data.surfaces;
 	}
 
-	SCENENODE & GetRacinglineNode()
+	SceneNode & GetRacinglineNode()
 	{
 		if (racingline_visible)
 			return data.racingline_node;
@@ -138,58 +138,58 @@ public:
 			return empty_node;
 	}
 
-	SCENENODE & GetTrackNode()
+	SceneNode & GetTrackNode()
 	{
 		return data.static_node;
 	}
 
-	SCENENODE & GetBodyNode()
+	SceneNode & GetBodyNode()
 	{
 		return data.dynamic_node;
 	}
 
 private:
-	struct DATA
+	struct Data
 	{
 		DynamicsWorld* world;
 
 		// static track objects
-		SCENENODE static_node;
-		std::vector<TRACKSURFACE> surfaces;
-		std::vector<std::tr1::shared_ptr<MODEL> > models;
+		SceneNode static_node;
+		std::vector<TrackSurface> surfaces;
+		std::vector<std::tr1::shared_ptr<Model> > models;
 		std::vector<btStridingMeshInterface*> meshes;
 		std::vector<btCollisionShape*> shapes;
 		std::vector<btCollisionObject*> objects;
 
 		// dynamic track objects
-		SCENENODE dynamic_node;
-		std::vector<keyed_container<SCENENODE>::handle> body_nodes;
+		SceneNode dynamic_node;
+		std::vector<keyed_container<SceneNode>::handle> body_nodes;
 		std::list<MotionState> body_transforms;
 
 		// road information
-		std::vector<const BEZIER*> lap;
-		std::list<ROADSTRIP> roads;
-		std::vector<std::pair<MATHVECTOR<float, 3>, QUATERNION<float> > > start_positions;
+		std::vector<const Bezier*> lap;
+		std::list<RoadStrip> roads;
+		std::vector<std::pair<Vec3, Quat > > start_positions;
 
 		// racing line data
-		SCENENODE racingline_node;
-		std::tr1::shared_ptr<TEXTURE> racingline_texture;
+		SceneNode racingline_node;
+		std::tr1::shared_ptr<Texture> racingline_texture;
 
 		// track state
 		bool reverse;
 		bool loaded;
 		bool cull;
 
-		DATA();
+		Data();
 	};
 
-	DATA data;
+	Data data;
 	bool racingline_visible;
-	SCENENODE empty_node;
+	SceneNode empty_node;
 
 	// temporary loading data
-	class LOADER;
-	std::auto_ptr<LOADER> loader;
+	class Loader;
+	std::auto_ptr<Loader> loader;
 };
 
 #endif

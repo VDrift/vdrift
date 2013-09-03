@@ -23,28 +23,28 @@
 #include "fbobject.h"
 #include <iosfwd>
 
-class GLSTATEMANAGER;
+class GraphicsState;
 
-class RENDER_OUTPUT
+class RenderOutput
 {
 public:
-	RENDER_OUTPUT();
+	RenderOutput();
 
-	~RENDER_OUTPUT();
+	~RenderOutput();
 
 	/// returns the FBO that the user should set up as necessary
-	FBOBJECT & RenderToFBO();
+	FrameBufferObject & RenderToFBO();
 
 	void RenderToFramebuffer();
 
 	bool IsFBO() const;
 
-	void Begin(GLSTATEMANAGER & glstate, std::ostream & error_output);
+	void Begin(GraphicsState & glstate, std::ostream & error_output);
 
-	void End(GLSTATEMANAGER & glstate, std::ostream & error_output);
+	void End(GraphicsState & glstate, std::ostream & error_output);
 
 private:
-	FBOBJECT fbo;
+	FrameBufferObject fbo;
 	enum
 	{
 		RENDER_TO_FBO,

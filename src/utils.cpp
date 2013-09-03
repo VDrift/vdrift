@@ -24,7 +24,7 @@
 #include <fstream>
 #include <cassert>
 
-namespace UTILS
+namespace Utils
 {
 
 std::string LoadFileIntoString(const std::string & filepath, std::ostream & error_output)
@@ -154,7 +154,7 @@ std::vector <std::string> explode(const std::string & toExplode, const std::stri
 QT_TEST(utils_test)
 {
 	{
-		std::vector <std::string> exploded = UTILS::explode("/home/joe/code/test.hog", "/");
+		std::vector <std::string> exploded = Utils::explode("/home/joe/code/test.hog", "/");
 		QT_CHECK_EQUAL(exploded.size(), 5);
 		if (exploded.size() > 0) QT_CHECK_EQUAL(exploded[0], "");
 		if (exploded.size() > 1) QT_CHECK_EQUAL(exploded[1], "home");
@@ -164,7 +164,7 @@ QT_TEST(utils_test)
 	}
 
 	{
-		std::vector <std::string> exploded = UTILS::explode("/home/joe/code/", "/");
+		std::vector <std::string> exploded = Utils::explode("/home/joe/code/", "/");
 		QT_CHECK_EQUAL(exploded.size(), 5);
 		if (exploded.size() > 0) QT_CHECK_EQUAL(exploded[0], "");
 		if (exploded.size() > 1) QT_CHECK_EQUAL(exploded[1], "home");
@@ -174,7 +174,7 @@ QT_TEST(utils_test)
 	}
 
 	{
-		std::vector <std::string> exploded = UTILS::explode("c:/home/joe/code/test.hog", "/");
+		std::vector <std::string> exploded = Utils::explode("c:/home/joe/code/test.hog", "/");
 		QT_CHECK_EQUAL(exploded.size(), 5);
 		if (exploded.size() > 0) QT_CHECK_EQUAL(exploded[0], "c:");
 		if (exploded.size() > 1) QT_CHECK_EQUAL(exploded[1], "home");

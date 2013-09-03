@@ -22,13 +22,13 @@
 
 #include <iosfwd>
 
-class TOGGLE
+class Toggle
 {
 public:
-	TOGGLE();
+	Toggle();
 
 	void Set(bool nextstate);
-	void Set(const TOGGLE & other);
+	void Set(const Toggle & other);
 	bool GetState() const;
 	bool GetImpulseRising() const;
 	bool GetImpulseFalling() const;

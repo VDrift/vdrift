@@ -20,36 +20,36 @@
 #include "roadpatch.h"
 #include "graphics/scenenode.h"
 
-bool ROADPATCH::Collide(
-	const MATHVECTOR <float, 3> & origin,
-	const MATHVECTOR <float, 3> & direction,
-	float seglen, MATHVECTOR <float, 3> & outtri,
-	MATHVECTOR <float, 3> & normal) const
+bool RoadPatch::Collide(
+	const Vec3 & origin,
+	const Vec3 & direction,
+	float seglen, Vec3 & outtri,
+	Vec3 & normal) const
 {
 	bool col = patch.CollideSubDivQuadSimpleNorm(origin, direction, outtri, normal);
 	float len = (outtri - origin).Magnitude();
 	return col && len <= seglen;
 }
 
-void ROADPATCH::AddRacinglineScenenode(
-	SCENENODE & node,
-	const ROADPATCH & nextpatch,
-	std::tr1::shared_ptr<TEXTURE> racingline_texture)
+void RoadPatch::AddRacinglineScenenode(
+	SceneNode & node,
+	const RoadPatch & nextpatch,
+	std::tr1::shared_ptr<Texture> racingline_texture)
 {
 	//Create racing line scenenode
-	keyed_container <DRAWABLE>::handle drawhandle = node.GetDrawlist().normal_blend.insert(DRAWABLE());
-	DRAWABLE & draw = node.GetDrawlist().normal_blend.get(drawhandle);
+	keyed_container <Drawable>::handle drawhandle = node.GetDrawlist().normal_blend.insert(Drawable());
+	Drawable & draw = node.GetDrawlist().normal_blend.get(drawhandle);
 
 	draw.SetDiffuseMap(racingline_texture);
 	draw.SetDecal(true);
 	draw.SetVertArray(&racingline_vertexarray);
 
-	const MATHVECTOR <float, 3> & r0 = patch.GetRacingLine();
-	const MATHVECTOR <float, 3> & r1 = nextpatch.patch.GetRacingLine();
-	MATHVECTOR <float, 3> v0 = r0 + (patch.GetPoint(0,0) - r0).Normalize()*0.1;
-	MATHVECTOR <float, 3> v1 = r0 + (patch.GetPoint(0,3) - r0).Normalize()*0.1;
-	MATHVECTOR <float, 3> v2 = r1 + (nextpatch.GetPatch().GetPoint(0,3) - r1).Normalize()*0.1;
-	MATHVECTOR <float, 3> v3 = r1 + (nextpatch.GetPatch().GetPoint(0,0) - r1).Normalize()*0.1;
+	const Vec3 & r0 = patch.GetRacingLine();
+	const Vec3 & r1 = nextpatch.patch.GetRacingLine();
+	Vec3 v0 = r0 + (patch.GetPoint(0,0) - r0).Normalize()*0.1;
+	Vec3 v1 = r0 + (patch.GetPoint(0,3) - r0).Normalize()*0.1;
+	Vec3 v2 = r1 + (nextpatch.GetPatch().GetPoint(0,3) - r1).Normalize()*0.1;
+	Vec3 v3 = r1 + (nextpatch.GetPatch().GetPoint(0,0) - r1).Normalize()*0.1;
 
 	float trackoffset = 0.1;
 	v0[2] += trackoffset;

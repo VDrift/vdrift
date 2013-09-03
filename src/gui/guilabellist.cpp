@@ -20,18 +20,18 @@
 #include "guilabellist.h"
 #include "guilabel.h"
 
-GUILABELLIST::GUILABELLIST()
+GuiLabelList::GuiLabelList()
 {
 	// ctor
 }
 
-GUILABELLIST::~GUILABELLIST()
+GuiLabelList::~GuiLabelList()
 {
 	// dtor
 }
 
-void GUILABELLIST::SetupDrawable(
-	SCENENODE & scene, const FONT & font, int align,
+void GuiLabelList::SetupDrawable(
+	SceneNode & scene, const Font & font, int align,
 	float scalex, float scaley, float z)
 {
 	m_elements.resize(m_rows * m_cols);
@@ -40,7 +40,7 @@ void GUILABELLIST::SetupDrawable(
 		float x, y;
 		GetElemPos(i, x, y);
 
-		GUILABEL * element = new GUILABEL();
+		GuiLabel * element = new GuiLabel();
 		element->SetupDrawable(
 			scene, font, align, scalex, scaley,
 			x + m_elemw * 0.5f, y + m_elemh * 0.5f, m_elemw, m_elemh, z);
@@ -49,15 +49,15 @@ void GUILABELLIST::SetupDrawable(
 	}
 }
 
-void GUILABELLIST::UpdateElements(SCENENODE &)
+void GuiLabelList::UpdateElements(SceneNode &)
 {
 	assert(m_values.size() <= m_elements.size());
 	for (size_t i = 0; i < m_values.size(); ++i)
 	{
-		static_cast<GUILABEL*>(m_elements[i])->SetText(m_values[i]);
+		static_cast<GuiLabel*>(m_elements[i])->SetText(m_values[i]);
 	}
 	for (size_t i = m_values.size(); i < m_elements.size(); ++i)
 	{
-		static_cast<GUILABEL*>(m_elements[i])->SetText("");
+		static_cast<GuiLabel*>(m_elements[i])->SetText("");
 	}
 }

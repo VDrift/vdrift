@@ -21,13 +21,13 @@
 
 #include <cassert>
 
-SOUNDFILTER::SOUNDFILTER() :
+SoundFilter::SoundFilter() :
 	order(0)
 {
 	ClearState();
 }
 
-void SOUNDFILTER::ClearState()
+void SoundFilter::ClearState()
 {
 	for (int c = 0; c < 2; ++c)
 	{
@@ -39,7 +39,7 @@ void SOUNDFILTER::ClearState()
 	}
 }
 
-void SOUNDFILTER::SetFilter(const int neworder, const float * xcoeff, const float * ycoeff)
+void SoundFilter::SetFilter(const int neworder, const float * xcoeff, const float * ycoeff)
 {
 	assert(!(neworder > MAX_FILTER_ORDER || neworder < 0));
 
@@ -51,7 +51,7 @@ void SOUNDFILTER::SetFilter(const int neworder, const float * xcoeff, const floa
 	}
 }
 
-void SOUNDFILTER::Filter(int * chan1, int * chan2, const int len)
+void SoundFilter::Filter(int * chan1, int * chan2, const int len)
 {
 	for (int i = 0; i < len; i++)
 	{
@@ -89,7 +89,7 @@ void SOUNDFILTER::Filter(int * chan1, int * chan2, const int len)
 	}
 }
 
-void SOUNDFILTER::SetFilterOrder1(float xc0, float xc1, float yc1)
+void SoundFilter::SetFilterOrder1(float xc0, float xc1, float yc1)
 {
 	order = 1;
 	xc[0] = xc0;
@@ -97,7 +97,7 @@ void SOUNDFILTER::SetFilterOrder1(float xc0, float xc1, float yc1)
 	yc[1] = yc1;
 }
 
-void SOUNDFILTER::SetFilterOrder0(float xc0)
+void SoundFilter::SetFilterOrder0(float xc0)
 {
 	order = 0;
 	xc[0] = xc0;

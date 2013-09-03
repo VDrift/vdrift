@@ -23,22 +23,19 @@
 #include "quaternion.h"
 #include "mathvector.h"
 
-class TRANSFORM
+class Transform
 {
 public:
-	typedef QUATERNION<float> QUAT;
-	typedef MATHVECTOR<float,3> VEC3;
-
-	const QUAT & GetRotation() const {return rotation;}
-	const VEC3 & GetTranslation() const {return translation;}
-	void SetRotation(const QUAT & rot) {rotation = rot;}
-	void SetTranslation(const VEC3 & trans) {translation = trans;}
-	bool IsIdentityTransform() const {return (rotation == QUAT() && translation == VEC3());}
+	const Quat & GetRotation() const {return rotation;}
+	const Vec3 & GetTranslation() const {return translation;}
+	void SetRotation(const Quat & rot) {rotation = rot;}
+	void SetTranslation(const Vec3 & trans) {translation = trans;}
+	bool IsIdentityTransform() const {return (rotation == Quat() && translation == Vec3());}
 	void Clear() {rotation.LoadIdentity();translation.Set(0.0f);}
 
 private:
-	QUAT rotation;
-	VEC3 translation;
+	Quat rotation;
+	Vec3 translation;
 };
 
 #endif // _TRANSFORM_H

@@ -20,40 +20,40 @@
 #include "render_output.h"
 #include "glstatemanager.h"
 
-RENDER_OUTPUT::RENDER_OUTPUT() :
+RenderOutput::RenderOutput() :
 	target(RENDER_TO_FRAMEBUFFER)
 {
 	// ctor
 }
 
-RENDER_OUTPUT::~RENDER_OUTPUT()
+RenderOutput::~RenderOutput()
 {
 	// ctor
 }
 
-FBOBJECT & RENDER_OUTPUT::RenderToFBO()
+FrameBufferObject & RenderOutput::RenderToFBO()
 {
 	target = RENDER_TO_FBO;
 	return fbo;
 }
 
-void RENDER_OUTPUT::RenderToFramebuffer()
+void RenderOutput::RenderToFramebuffer()
 {
 	target = RENDER_TO_FRAMEBUFFER;
 }
 
-bool RENDER_OUTPUT::IsFBO() const
+bool RenderOutput::IsFBO() const
 {
 	return target == RENDER_TO_FBO;
 }
 
-void RENDER_OUTPUT::Begin(GLSTATEMANAGER & glstate, std::ostream & error_output)
+void RenderOutput::Begin(GraphicsState & glstate, std::ostream & error_output)
 {
 	if (target == RENDER_TO_FBO)
 		fbo.Begin(glstate, error_output);
 }
 
-void RENDER_OUTPUT::End(GLSTATEMANAGER & glstate, std::ostream & error_output)
+void RenderOutput::End(GraphicsState & glstate, std::ostream & error_output)
 {
 	if (target == RENDER_TO_FBO)
 		fbo.End(glstate, error_output);

@@ -29,7 +29,7 @@
 #include <iostream>
 #include <set>
 
-struct GRAPHICS_CONFIG_SHADER
+struct GraphicsConfigShader
 {
 	std::string name; ///< the name of the shader package
 	std::string fragment; ///< fragment shader name
@@ -39,9 +39,9 @@ struct GRAPHICS_CONFIG_SHADER
 	bool Load(std::istream & f, std::ostream & error_output, int & linecount);
 };
 
-struct GRAPHICS_CONFIG_OUTPUT
+struct GraphicsConfigOutput
 {
-	class SIZE
+	class Size
 	{
 	private:
 		unsigned int value;
@@ -49,7 +49,7 @@ struct GRAPHICS_CONFIG_OUTPUT
 		unsigned int fb_mult;
 
 	public:
-		SIZE() : value(0), fb_div(0), fb_mult(0) {}
+		Size() : value(0), fb_div(0), fb_mult(0) {}
 
 		unsigned int GetSize(unsigned int framebuffer_size) const
 		{
@@ -69,19 +69,19 @@ struct GRAPHICS_CONFIG_OUTPUT
 	};
 
 	std::string name; ///< the name of the output
-	SIZE width; ///< sizes can be absolute numbers, "framebuffer", "framebuffer/X" (where X is an int), or "framebuffer*X"
-	SIZE height;
+	Size width; ///< sizes can be absolute numbers, "framebuffer", "framebuffer/X" (where X is an int), or "framebuffer*X"
+	Size height;
 	std::string type; ///< can be "2D", "rectangle", "cube", or "framebuffer" -- note that if it's framebuffer, the other fields are ignored
 	std::string filter; ///< can be "linear" or "nearest"
 	std::string format; ///< can be "RGB", "RGBA", or "depth"
 	bool mipmap;
 	int multisample; ///< zero indicates no multisampling, any negative number means use the same as the framebuffer (can also specify "framebuffer")
-	GRAPHICS_CONFIG_CONDITION conditions;
+	GraphicsConfigCondition conditions;
 
 	bool Load(std::istream & f, std::ostream & error_output, int & linecount);
 };
 
-struct GRAPHICS_CONFIG_INPUTS
+struct GraphicsConfigInputs
 {
 	/// this maps texture units to output names (to be used as inputs)
 	std::map <unsigned int, std::string> tu;
@@ -90,11 +90,11 @@ struct GRAPHICS_CONFIG_INPUTS
 	void Parse(const std::string & str);
 };
 
-struct GRAPHICS_CONFIG_PASS
+struct GraphicsConfigPass
 {
 	std::string camera; ///< the name of the camera
 	std::vector <std::string> draw; ///< can be "postprocess" or a comma delimited list of drawable layers
-	GRAPHICS_CONFIG_INPUTS inputs; ///< assigns outputs of other passes to inputs
+	GraphicsConfigInputs inputs; ///< assigns outputs of other passes to inputs
 	std::string light; ///< the name of the scene-wide directional light
 	std::string output; ///< must correspond to a GRAPHICS_CONFIG_OUTPUT
 	std::string shader; ///< the name of the shader to use
@@ -106,16 +106,16 @@ struct GRAPHICS_CONFIG_PASS
 	bool cull; ///< whether or not to do frustum and distance culling
 	std::string blendmode; ///< which blending mode to use: "disabled" "add" "alphablend" "alphablend_premultiplied"
 	std::string depthtest; ///< values: lequal, equal, gequal, disabled
-	GRAPHICS_CONFIG_CONDITION conditions;
+	GraphicsConfigCondition conditions;
 
 	bool Load(std::istream & f, std::ostream & error_output, int & linecount);
 };
 
-struct GRAPHICS_CONFIG
+struct GraphicsConfig
 {
-	std::vector <GRAPHICS_CONFIG_SHADER> shaders;
-	std::vector <GRAPHICS_CONFIG_OUTPUT> outputs;
-	std::vector <GRAPHICS_CONFIG_PASS> passes;
+	std::vector <GraphicsConfigShader> shaders;
+	std::vector <GraphicsConfigOutput> outputs;
+	std::vector <GraphicsConfigPass> passes;
 
 	bool Load(const std::string & filename, std::ostream & error_output)
 	{

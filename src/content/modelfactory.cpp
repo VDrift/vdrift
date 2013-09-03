@@ -21,28 +21,28 @@
 #include "graphics/model_joe03.h"
 #include <fstream>
 
-Factory<MODEL>::Factory() :
-	m_default(new MODEL()),
+Factory<Model>::Factory() :
+	m_default(new Model()),
 	m_vbo(false)
 {
 	// ctor
 }
 
-void Factory<MODEL>::init(bool use_vbo)
+void Factory<Model>::init(bool use_vbo)
 {
 	m_vbo = use_vbo;
 
 	// init default model
 	std::stringstream error;
-	VERTEXARRAY va;
+	VertexArray va;
 	va.SetToUnitCube();
 	va.Scale(0.5, 0.5, 0.5);
 	m_default->Load(va, error, !m_vbo);
 }
 
 template <>
-bool Factory<MODEL>::create(
-	std::tr1::shared_ptr<MODEL>& sptr,
+bool Factory<Model>::create(
+	std::tr1::shared_ptr<Model>& sptr,
 	std::ostream& error,
 	const std::string& basepath,
 	const std::string& path,
@@ -52,7 +52,7 @@ bool Factory<MODEL>::create(
 	const std::string abspath = basepath + "/" + path + "/" + name;
 	if (std::ifstream(abspath.c_str()))
 	{
-		std::tr1::shared_ptr<MODEL_JOE03> temp(new MODEL_JOE03());
+		std::tr1::shared_ptr<ModelJoe03> temp(new ModelJoe03());
 		if (temp->Load(abspath, error, !m_vbo))
 		{
 			sptr = temp;
@@ -63,15 +63,15 @@ bool Factory<MODEL>::create(
 }
 
 template <>
-bool Factory<MODEL>::create(
-	std::tr1::shared_ptr<MODEL>& sptr,
+bool Factory<Model>::create(
+	std::tr1::shared_ptr<Model>& sptr,
 	std::ostream& error,
 	const std::string& basepath,
 	const std::string& path,
 	const std::string& name,
-	const JOEPACK& pack)
+	const JoePack& pack)
 {
-	std::tr1::shared_ptr<MODEL_JOE03> temp(new MODEL_JOE03());
+	std::tr1::shared_ptr<ModelJoe03> temp(new ModelJoe03());
 	if (temp->Load(name, error, !m_vbo, &pack))
 	{
 		sptr = temp;
@@ -81,15 +81,15 @@ bool Factory<MODEL>::create(
 }
 
 template <>
-bool Factory<MODEL>::create(
-	std::tr1::shared_ptr<MODEL>& sptr,
+bool Factory<Model>::create(
+	std::tr1::shared_ptr<Model>& sptr,
 	std::ostream& error,
 	const std::string& basepath,
 	const std::string& path,
 	const std::string& name,
-	const VERTEXARRAY& varray)
+	const VertexArray& varray)
 {
-	std::tr1::shared_ptr<MODEL> temp(new MODEL());
+	std::tr1::shared_ptr<Model> temp(new Model());
 	if (temp->Load(varray, error, !m_vbo))
 	{
 		sptr = temp;
@@ -98,7 +98,7 @@ bool Factory<MODEL>::create(
 	return false;
 }
 
-std::tr1::shared_ptr<MODEL> Factory<MODEL>::getDefault() const
+std::tr1::shared_ptr<Model> Factory<Model>::getDefault() const
 {
 	return m_default;
 }

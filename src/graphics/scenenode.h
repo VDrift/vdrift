@@ -24,39 +24,38 @@
 #include "keyed_container.h"
 #include "transform.h"
 
-class SCENENODE
+class SceneNode
 {
 public:
-	typedef MATRIX4<float> MAT4;
-	typedef MATHVECTOR<float,3> VEC3;
+	typedef Matrix4<float> Mat4;
 
-	keyed_container <SCENENODE>::handle AddNode() {return childlist.insert(SCENENODE());}
-	SCENENODE & GetNode(keyed_container <SCENENODE>::handle handle) {return childlist.get(handle);}
-	const SCENENODE & GetNode(keyed_container <SCENENODE>::handle handle) const {return childlist.get(handle);}
+	keyed_container <SceneNode>::handle AddNode() {return childlist.insert(SceneNode());}
+	SceneNode & GetNode(keyed_container <SceneNode>::handle handle) {return childlist.get(handle);}
+	const SceneNode & GetNode(keyed_container <SceneNode>::handle handle) const {return childlist.get(handle);}
 
-	keyed_container <SCENENODE> & GetNodelist() {return childlist;}
-	const keyed_container <SCENENODE> & GetNodelist() const {return childlist;}
-	DRAWABLE_CONTAINER <keyed_container> & GetDrawlist() {return drawlist;}
-	const DRAWABLE_CONTAINER <keyed_container> & GetDrawlist() const {return drawlist;}
+	keyed_container <SceneNode> & GetNodelist() {return childlist;}
+	const keyed_container <SceneNode> & GetNodelist() const {return childlist;}
+	DrawableContainer <keyed_container> & GetDrawlist() {return drawlist;}
+	const DrawableContainer <keyed_container> & GetDrawlist() const {return drawlist;}
 
-	TRANSFORM & GetTransform() {return transform;}
-	void SetTransform(const TRANSFORM & newtransform) {transform=newtransform;}
-	const TRANSFORM & GetTransform() const {return transform;}
+	Transform & GetTransform() {return transform;}
+	void SetTransform(const Transform & newtransform) {transform=newtransform;}
+	const Transform & GetTransform() const {return transform;}
 	unsigned int Nodes() const {return childlist.size();}
 	unsigned int Drawables() const {return drawlist.size();}
 	void Clear() {drawlist.clear();childlist.clear();}
-	void Delete(keyed_container <SCENENODE>::handle handle) {childlist.erase(handle);}
-	VEC3 TransformIntoWorldSpace() const {VEC3 zero;return TransformIntoWorldSpace(zero);}
-	VEC3 TransformIntoWorldSpace(const VEC3 & localspace) const;
-	VEC3 TransformIntoLocalSpace(const VEC3 & worldspace) const;
+	void Delete(keyed_container <SceneNode>::handle handle) {childlist.erase(handle);}
+	Vec3 TransformIntoWorldSpace() const {Vec3 zero;return TransformIntoWorldSpace(zero);}
+	Vec3 TransformIntoWorldSpace(const Vec3 & localspace) const;
+	Vec3 TransformIntoLocalSpace(const Vec3 & worldspace) const;
 	void SetChildVisibility(bool newvis);
 	void SetChildAlpha(float a);
 	void DebugPrint(std::ostream & out, int curdepth = 0) const;
 
 	template <template <typename U> class T>
-	void Traverse(DRAWABLE_CONTAINER <T> & drawlist_output, const MAT4 & prev_transform)
+	void Traverse(DrawableContainer <T> & drawlist_output, const Mat4 & prev_transform)
 	{
-		MAT4 this_transform(prev_transform);
+		Mat4 this_transform(prev_transform);
 
 		bool identitytransform = transform.IsIdentityTransform();
 		if (!identitytransform)
@@ -71,7 +70,7 @@ public:
 		else
 			drawlist.AppendTo<T,false>(drawlist_output, this_transform);
 
-		for (keyed_container <SCENENODE>::iterator i = childlist.begin(); i != childlist.end(); ++i)
+		for (keyed_container <SceneNode>::iterator i = childlist.begin(); i != childlist.end(); ++i)
 		{
 			i->Traverse(drawlist_output, this_transform);
 		}
@@ -86,7 +85,7 @@ public:
 	void ApplyDrawableContainerFunctor(T functor)
 	{
 		functor(drawlist);
-		for (keyed_container <SCENENODE>::iterator i = childlist.begin(); i != childlist.end(); ++i)
+		for (keyed_container <SceneNode>::iterator i = childlist.begin(); i != childlist.end(); ++i)
 		{
 			i->ApplyDrawableContainerFunctor(functor);
 		}
@@ -99,17 +98,17 @@ public:
 	void ApplyDrawableFunctor(T functor)
 	{
 		drawlist.ForEachDrawable(functor);
-		for (keyed_container <SCENENODE>::iterator i = childlist.begin(); i != childlist.end(); ++i)
+		for (keyed_container <SceneNode>::iterator i = childlist.begin(); i != childlist.end(); ++i)
 		{
 			i->ApplyDrawableFunctor(functor);
 		}
 	}
 
 private:
-	keyed_container <SCENENODE> childlist;
-	DRAWABLE_CONTAINER <keyed_container> drawlist;
-	TRANSFORM transform;
-	MAT4 cached_transform;
+	keyed_container <SceneNode> childlist;
+	DrawableContainer <keyed_container> drawlist;
+	Transform transform;
+	Mat4 cached_transform;
 };
 
 #endif // _SCENENODE_H

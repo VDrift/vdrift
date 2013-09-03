@@ -89,7 +89,7 @@ void GLWrapper::applyUniform(GLint location, const RenderUniformVector <float> &
 		break;
 
 	default:
-		logError("Encountered unexpected uniform size: " + UTILS::tostr(data.size()) + " location " +UTILS::tostr(location));
+		logError("Encountered unexpected uniform size: " + Utils::tostr(data.size()) + " location " +Utils::tostr(location));
 		assert(!"unexpected uniform size");
 	};
 }
@@ -115,7 +115,7 @@ void GLWrapper::applyUniform(GLint location, const RenderUniformVector <int> & d
 		break;
 
 	default:
-		logError("Encountered unexpected uniform size: " + UTILS::tostr(data.size()) + " location " +UTILS::tostr(location));
+		logError("Encountered unexpected uniform size: " + Utils::tostr(data.size()) + " location " +Utils::tostr(location));
 		assert(0 && "unexpected uniform size");
 	};
 }
@@ -646,8 +646,8 @@ bool GLWrapper::checkForOpenGLErrors(const char * function, const char * file, i
 		if (gl_error != GL_NO_ERROR)
 		{
 			const GLubyte *err_string = gluErrorString(gl_error);
-			std::string activity_description = std::string(function)+":"+file+":"+UTILS::tostr(line);
-			logError(std::string("OpenGL error \"")+UTILS::tostr(err_string)+"\" during: "+activity_description);
+			std::string activity_description = std::string(function)+":"+file+":"+Utils::tostr(line);
+			logError(std::string("OpenGL error \"")+Utils::tostr(err_string)+"\" during: "+activity_description);
 			assert(!breakOnError);
 			return false;
 		}

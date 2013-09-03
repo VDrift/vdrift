@@ -26,14 +26,14 @@
 #include <sstream>
 #include <fstream>
 
-REPLAY::REPLAY(float framerate) :
-	version_info("VDRIFTREPLAYV16", CARINPUT::GAME_ONLY_INPUTS_START_HERE, framerate),
+Replay::Replay(float framerate) :
+	version_info("VDRIFTREPLAYV16", CarInput::GAME_ONLY_INPUTS_START_HERE, framerate),
 	replaymode(IDLE)
 {
 	// ctor
 }
 
-bool REPLAY::StartPlaying(const std::string & replayfilename, std::ostream & error_output)
+bool Replay::StartPlaying(const std::string & replayfilename, std::ostream & error_output)
 {
 	Reset();
 
@@ -57,7 +57,7 @@ bool REPLAY::StartPlaying(const std::string & replayfilename, std::ostream & err
 	return true;
 }
 
-void REPLAY::Reset()
+void Replay::Reset()
 {
 	replaymode = IDLE;
 	track.clear();
@@ -65,8 +65,8 @@ void REPLAY::Reset()
 	carstate.clear();
 }
 
-void REPLAY::StartRecording(
-	const std::vector<CARINFO> & ncarinfo,
+void Replay::StartRecording(
+	const std::vector<CarInfo> & ncarinfo,
 	const std::string & trackname,
 	std::ostream & error_log)
 {
@@ -83,7 +83,7 @@ void REPLAY::StartRecording(
 	}
 }
 
-void REPLAY::StopRecording(const std::string & replayfilename)
+void Replay::StopRecording(const std::string & replayfilename)
 {
 	replaymode = IDLE;
 	if (!replayfilename.empty())
@@ -96,10 +96,10 @@ void REPLAY::StopRecording(const std::string & replayfilename)
 	}
 }
 
-const std::vector<float> & REPLAY::PlayFrame(unsigned carid, CAR & car)
+const std::vector<float> & Replay::PlayFrame(unsigned carid, Car & car)
 {
 	assert(carid < carstate.size());
-	assert(unsigned(version_info.inputs_supported) == CARINPUT::GAME_ONLY_INPUTS_START_HERE);
+	assert(unsigned(version_info.inputs_supported) == CarInput::GAME_ONLY_INPUTS_START_HERE);
 
 	if (GetPlaying() && !carstate[carid].PlayFrame(car))
 	{
@@ -108,10 +108,10 @@ const std::vector<float> & REPLAY::PlayFrame(unsigned carid, CAR & car)
 	return carstate[carid].inputbuffer;
 }
 
-void REPLAY::RecordFrame(unsigned carid, const std::vector <float> & inputs, CAR & car)
+void Replay::RecordFrame(unsigned carid, const std::vector <float> & inputs, Car & car)
 {
 	assert(carid < carstate.size());
-	assert(unsigned(version_info.inputs_supported)== CARINPUT::GAME_ONLY_INPUTS_START_HERE);
+	assert(unsigned(version_info.inputs_supported)== CarInput::GAME_ONLY_INPUTS_START_HERE);
 
 	if (GetRecording())
 	{
@@ -123,13 +123,13 @@ void REPLAY::RecordFrame(unsigned carid, const std::vector <float> & inputs, CAR
 	}
 }
 
-void REPLAY::CARSTATE::RecordFrame(const std::vector <float> & inputs, CAR & car)
+void Replay::CarState::RecordFrame(const std::vector <float> & inputs, Car & car)
 {
-	assert(inputbuffer.size() == CARINPUT::GAME_ONLY_INPUTS_START_HERE);
+	assert(inputbuffer.size() == CarInput::GAME_ONLY_INPUTS_START_HERE);
 
 	// record inputs, delta encoding
-	INPUTFRAME newinputframe(frame);
-	for (unsigned i = 0; i < CARINPUT::GAME_ONLY_INPUTS_START_HERE; i++)
+	InputFrame newinputframe(frame);
+	for (unsigned i = 0; i < CarInput::GAME_ONLY_INPUTS_START_HERE; i++)
 	{
 		if (inputs[i] != inputbuffer[i])
 		{
@@ -146,7 +146,7 @@ void REPLAY::CARSTATE::RecordFrame(const std::vector <float> & inputs, CAR & car
 		std::stringstream statestream;
 		joeserialize::BinaryOutputSerializer serialize_output(statestream);
 		car.Serialize(serialize_output);
-		stateframes.push_back(STATEFRAME(frame));
+		stateframes.push_back(StateFrame(frame));
 		stateframes.back().SetBinaryStateData(statestream.str());
 		stateframes.back().SetInputSnapshot(inputs);
 	}
@@ -154,11 +154,11 @@ void REPLAY::CARSTATE::RecordFrame(const std::vector <float> & inputs, CAR & car
 	frame++;
 }
 
-bool REPLAY::CARSTATE::PlayFrame(CAR & car)
+bool Replay::CarState::PlayFrame(Car & car)
 {
 	frame++;
 
-	assert(inputbuffer.size() == CARINPUT::GAME_ONLY_INPUTS_START_HERE);
+	assert(inputbuffer.size() == CarInput::GAME_ONLY_INPUTS_START_HERE);
 
 	// fast forward through the inputframes until we're up to date
 	while (cur_inputframe < inputframes.size() &&
@@ -180,7 +180,7 @@ bool REPLAY::CARSTATE::PlayFrame(CAR & car)
 	return (cur_stateframe != stateframes.size() || cur_inputframe != inputframes.size());
 }
 
-void REPLAY::CARSTATE::ProcessPlayInputFrame(const INPUTFRAME & frame)
+void Replay::CarState::ProcessPlayInputFrame(const InputFrame & frame)
 {
 	for (unsigned i = 0; i < frame.GetNumInputs(); i++)
 	{
@@ -189,7 +189,7 @@ void REPLAY::CARSTATE::ProcessPlayInputFrame(const INPUTFRAME & frame)
 	}
 }
 
-void REPLAY::CARSTATE::ProcessPlayStateFrame(const STATEFRAME & frame, CAR & car)
+void Replay::CarState::ProcessPlayStateFrame(const StateFrame & frame, Car & car)
 {
 	// process input snapshot
 	for (unsigned i = 0; i < inputbuffer.size() && i < frame.GetInputSnapshot().size(); i++)
@@ -203,7 +203,7 @@ void REPLAY::CARSTATE::ProcessPlayStateFrame(const STATEFRAME & frame, CAR & car
 	car.Serialize(serialize_input);
 }
 
-bool REPLAY::Serialize(joeserialize::Serializer & s)
+bool Replay::Serialize(joeserialize::Serializer & s)
 {
 	_SERIALIZE_(s, track);
 	_SERIALIZE_(s, carinfo);
@@ -211,7 +211,7 @@ bool REPLAY::Serialize(joeserialize::Serializer & s)
 	return true;
 }
 
-void REPLAY::Save(std::ostream & outstream)
+void Replay::Save(std::ostream & outstream)
 {
 	// write the file format version data manually
 	// if the serialization functions were used,
@@ -225,9 +225,9 @@ void REPLAY::Save(std::ostream & outstream)
 	Reset();
 }
 
-bool REPLAY::Load(std::istream & instream, std::ostream & error_output)
+bool Replay::Load(std::istream & instream, std::ostream & error_output)
 {
-	VERSION stream_version;
+	Version stream_version;
 	stream_version.Load(instream);
 
 	if (!(stream_version == version_info))
@@ -253,7 +253,7 @@ bool REPLAY::Load(std::istream & instream, std::ostream & error_output)
 	return true;
 }
 
-REPLAY::VERSION::VERSION() :
+Replay::Version::Version() :
 	format_version("VDRIFTREPLAYV??"),
 	inputs_supported(0),
 	framerate(0)
@@ -261,7 +261,7 @@ REPLAY::VERSION::VERSION() :
 	// ctor
 }
 
-REPLAY::VERSION::VERSION(const std::string & ver,  unsigned ins, float newfr) :
+Replay::Version::Version(const std::string & ver,  unsigned ins, float newfr) :
 	format_version(ver),
 	inputs_supported(ins),
 	framerate(newfr)
@@ -269,14 +269,14 @@ REPLAY::VERSION::VERSION(const std::string & ver,  unsigned ins, float newfr) :
 	// ctor
 }
 
-bool REPLAY::VERSION::Serialize(joeserialize::Serializer & s)
+bool Replay::Version::Serialize(joeserialize::Serializer & s)
 {
 	_SERIALIZE_(s, inputs_supported);
 	_SERIALIZE_(s, framerate);
 	return true;
 }
 
-void REPLAY::VERSION::Save(std::ostream & outstream)
+void Replay::Version::Save(std::ostream & outstream)
 {
 	// write the file format version data manually
 	// if the serialization functions were used,
@@ -289,7 +289,7 @@ void REPLAY::VERSION::Save(std::ostream & outstream)
 	Serialize(serialize_output);
 }
 
-void REPLAY::VERSION::Load(std::istream & instream)
+void Replay::Version::Load(std::istream & instream)
 {
 	// read the file format version data manually
 	const unsigned bufsize = format_version.length();
@@ -304,66 +304,66 @@ void REPLAY::VERSION::Load(std::istream & instream)
 	Serialize(serialize_input);
 }
 
-bool REPLAY::VERSION::operator==(const VERSION & other) const
+bool Replay::Version::operator==(const Version & other) const
 {
 	return (format_version == other.format_version &&
 		inputs_supported == other.inputs_supported &&
 			framerate == other.framerate);
 }
 
-REPLAY::INPUTFRAME::INPUTFRAME() :
+Replay::InputFrame::InputFrame() :
 	frame(0)
 {
 	// ctor
 }
 
-REPLAY::INPUTFRAME::INPUTFRAME(unsigned newframe) :
+Replay::InputFrame::InputFrame(unsigned newframe) :
 	frame(newframe)
 {
 	// ctor
 }
 
-bool REPLAY::INPUTFRAME::Serialize(joeserialize::Serializer & s)
+bool Replay::InputFrame::Serialize(joeserialize::Serializer & s)
 {
 	_SERIALIZE_(s, frame);
 	_SERIALIZE_(s, inputs);
 	return true;
 }
 
-void REPLAY::INPUTFRAME::AddInput(int index, float value)
+void Replay::InputFrame::AddInput(int index, float value)
 {
 	inputs.push_back(std::make_pair(index, value));
 }
 
-unsigned REPLAY::INPUTFRAME::GetNumInputs() const
+unsigned Replay::InputFrame::GetNumInputs() const
 {
 	return inputs.size();
 }
 
-unsigned REPLAY::INPUTFRAME::GetFrame() const
+unsigned Replay::InputFrame::GetFrame() const
 {
 	return frame;
 }
 
-const std::pair<int, float> & REPLAY::INPUTFRAME::GetInput(unsigned index) const
+const std::pair<int, float> & Replay::InputFrame::GetInput(unsigned index) const
 {
 	assert(index < inputs.size());
 	return inputs[index];
 }
 
-REPLAY::STATEFRAME::STATEFRAME() :
+Replay::StateFrame::StateFrame() :
 	frame(0)
 {
 	// ctor
 }
 
-REPLAY::STATEFRAME::STATEFRAME(unsigned newframe) :
+Replay::StateFrame::StateFrame(unsigned newframe) :
 	frame(newframe)
 {
 	// ctor
 }
 
-bool REPLAY::STATEFRAME::Serialize(joeserialize::Serializer & s)
+bool Replay::StateFrame::Serialize(joeserialize::Serializer & s)
 {
 	_SERIALIZE_(s, frame);
 	_SERIALIZE_(s, binary_state_data);
@@ -371,46 +371,46 @@ bool REPLAY::STATEFRAME::Serialize(joeserialize::Serializer & s)
 	return true;
 }
 
-void REPLAY::STATEFRAME::SetBinaryStateData(const std::string & value)
+void Replay::StateFrame::SetBinaryStateData(const std::string & value)
 {
 	binary_state_data = value;
 }
 
-unsigned REPLAY::STATEFRAME::GetFrame() const
+unsigned Replay::StateFrame::GetFrame() const
 {
 	return frame;
 }
 
-const std::string & REPLAY::STATEFRAME::GetBinaryStateData() const
+const std::string & Replay::StateFrame::GetBinaryStateData() const
 {
 	return binary_state_data;
 }
 
-const std::vector<float> & REPLAY::STATEFRAME::GetInputSnapshot() const
+const std::vector<float> & Replay::StateFrame::GetInputSnapshot() const
 {
 	return input_snapshot;
 }
 
-void REPLAY::STATEFRAME::SetInputSnapshot(const std::vector<float>& value)
+void Replay::StateFrame::SetInputSnapshot(const std::vector<float>& value)
 {
 	input_snapshot = value;
 }
 
-bool REPLAY::CARSTATE::Empty() const
+bool Replay::CarState::Empty() const
 {
 	return stateframes.empty() && inputframes.empty();
 }
 
-void REPLAY::CARSTATE::Reset()
+void Replay::CarState::Reset()
 {
 	inputbuffer.clear();
-	inputbuffer.resize(CARINPUT::GAME_ONLY_INPUTS_START_HERE, 0);
+	inputbuffer.resize(CarInput::GAME_ONLY_INPUTS_START_HERE, 0);
 	cur_inputframe = 0;
 	cur_stateframe = 0;
 	frame = 0;
 }
 
-bool REPLAY::CARSTATE::Serialize(joeserialize::Serializer & s)
+bool Replay::CarState::Serialize(joeserialize::Serializer & s)
 {
 	_SERIALIZE_(s, inputframes);
 	_SERIALIZE_(s, stateframes);

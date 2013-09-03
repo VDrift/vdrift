@@ -24,18 +24,18 @@
 #include "guicontrol.h"
 
 /// a widget that mimics a list of controls
-class GUICONTROLLIST : public GUICONTROL, public GUILIST
+class GuiControlList : public GuiControl, public GuiList
 {
 public:
-	GUICONTROLLIST();
+	GuiControlList();
 
-	~GUICONTROLLIST();
+	~GuiControlList();
 
 	/// Return true if control contains x, y
 	bool Focus(float x, float y);
 
 	/// Signal slots attached to events
-	void Signal(EVENT ev);
+	void Signal(Event ev);
 
 	/// Register event actions
 	void RegisterActions(

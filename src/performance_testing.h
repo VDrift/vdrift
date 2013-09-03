@@ -24,11 +24,11 @@
 
 class ContentManager;
 
-class PERFORMANCE_TESTING
+class PerformanceTesting
 {
 public:
-	PERFORMANCE_TESTING(DynamicsWorld & world);
-	~PERFORMANCE_TESTING();
+	PerformanceTesting(DynamicsWorld & world);
+	~PerformanceTesting();
 
 	void Test(
 		const std::string & cardir,
@@ -39,8 +39,8 @@ public:
 
 private:
 	DynamicsWorld & world;
-	TRACKSURFACE surface;
-	CARDYNAMICS car;
+	TrackSurface surface;
+	CarDynamics car;
 	std::string carstate;
 
 	/// flat plane test track

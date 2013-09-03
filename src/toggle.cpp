@@ -22,61 +22,61 @@
 
 using std::endl;
 
-TOGGLE::TOGGLE()
+Toggle::Toggle()
 {
 	Clear();
 }
 
-void TOGGLE::Set(bool nextstate)
+void Toggle::Set(bool nextstate)
 {
 	state = nextstate;
 }
 
-void TOGGLE::Set(const TOGGLE & other)
+void Toggle::Set(const Toggle & other)
 {
 	state = other.GetState();
 	laststate = (!state && other.GetImpulseFalling()) || (state && !other.GetImpulseRising());
 }
 
-bool TOGGLE::GetState() const
+bool Toggle::GetState() const
 {
 	return state;
 }
 
-bool TOGGLE::GetImpulseRising() const
+bool Toggle::GetImpulseRising() const
 {
 	return (state && !laststate);
 }
 
-bool TOGGLE::GetImpulseFalling() const
+bool Toggle::GetImpulseFalling() const
 {
 	return (!state && laststate);
 }
 
-bool TOGGLE::GetImpulse() const
+bool Toggle::GetImpulse() const
 {
 	return (GetImpulseRising() || GetImpulseFalling());
 }
 
-void TOGGLE::Clear()
+void Toggle::Clear()
 {
 	state = false;
 	laststate = false;
 }
 
-void TOGGLE::DebugPrint(std::ostream & out) const
+void Toggle::DebugPrint(std::ostream & out) const
 {
 	out << "State: " << state << "  Last state: " << laststate << endl;
 }
 
-void TOGGLE::Tick()
+void Toggle::Tick()
 {
 	laststate = state;
 }
 
 QT_TEST(toggle_test)
 {
-	TOGGLE t;
+	Toggle t;
 	t.Clear();
 	QT_CHECK(!t.GetState() && !t.GetImpulse() && !t.GetImpulseRising() && !t.GetImpulseFalling());
 	t.Tick();

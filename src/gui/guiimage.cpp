@@ -20,38 +20,38 @@
 #include "guiimage.h"
 #include "content/contentmanager.h"
 
-GUIIMAGE::GUIIMAGE() :
+GuiImage::GuiImage() :
 	m_content(0),
 	m_load(false)
 {
-	set_image.call.bind<GUIIMAGE, &GUIIMAGE::SetImage>(this);
+	set_image.call.bind<GuiImage, &GuiImage::SetImage>(this);
 }
 
-GUIIMAGE::~GUIIMAGE()
+GuiImage::~GuiImage()
 {
 	// dtor
 }
 
-void GUIIMAGE::Update(SCENENODE & scene, float dt)
+void GuiImage::Update(SceneNode & scene, float dt)
 {
-	GUIWIDGET::Update(scene, dt);
-	DRAWABLE & d = GetDrawable(scene);
+	GuiWidget::Update(scene, dt);
+	Drawable & d = GetDrawable(scene);
 	if (d.GetDrawEnable() && m_load)
 	{
 		assert(m_content);
-		TEXTUREINFO texinfo;
+		TextureInfo texinfo;
 		texinfo.mipmap = false;
 		texinfo.repeatu = false;
 		texinfo.repeatv = false;
-		std::tr1::shared_ptr<TEXTURE> texture;
+		std::tr1::shared_ptr<Texture> texture;
 		m_content->load(texture, m_path, m_name + m_ext, texinfo);
 		d.SetDiffuseMap(texture);
 		m_load = false;
 	}
 }
 
-void GUIIMAGE::SetupDrawable(
-	SCENENODE & scene,
+void GuiImage::SetupDrawable(
+	SceneNode & scene,
 	ContentManager & content,
 	const std::string & path,
 	const std::string & ext,
@@ -61,15 +61,15 @@ void GUIIMAGE::SetupDrawable(
 	m_path = path;
 	m_ext = ext;
 	m_varray.SetToBillboard(x - w * 0.5f, y - h * 0.5f, x + w * 0.5f, y + h * 0.5f);
-	m_draw = scene.GetDrawlist().twodim.insert(DRAWABLE());
+	m_draw = scene.GetDrawlist().twodim.insert(Drawable());
 	m_visible = false;
-	DRAWABLE & d = GetDrawable(scene);
+	Drawable & d = GetDrawable(scene);
 	d.SetVertArray(&m_varray);
 	d.SetCull(false, false);
 	d.SetDrawOrder(z);
 }
 
-void GUIIMAGE::SetImage(const std::string & value)
+void GuiImage::SetImage(const std::string & value)
 {
 	if (m_name != value)
 	{

@@ -23,7 +23,7 @@
 
 #ifndef VDRIFTN
 
-TIREINFO::TIREINFO() :
+CarTireInfo::CarTireInfo() :
 	longitudinal(11),
 	lateral(15),
 	aligning(18),
@@ -34,7 +34,7 @@ TIREINFO::TIREINFO() :
 	// ctor
 }
 
-CARTIRE::CARTIRE() :
+CarTire::CarTire() :
 	camber(0),
 	slide(0),
 	slip(0),
@@ -48,13 +48,13 @@ CARTIRE::CARTIRE() :
 	// ctor
 }
 
-void CARTIRE::init(const TIREINFO & info)
+void CarTire::init(const CarTireInfo & info)
 {
-	TIREINFO::operator=(info);
+	CarTireInfo::operator=(info);
 	initSigmaHatAlphaHat();
 }
 
-btVector3 CARTIRE::getForce(
+btVector3 CarTire::getForce(
 	btScalar normal_force,
 	btScalar friction_coeff,
 	btScalar inclination,
@@ -116,7 +116,7 @@ btVector3 CARTIRE::getForce(
 	return btVector3(Fx, Fy, Mz);
 }
 
-btScalar CARTIRE::getRollingResistance(const btScalar velocity, const btScalar resistance_factor) const
+btScalar CarTire::getRollingResistance(const btScalar velocity, const btScalar resistance_factor) const
 {
 	// surface influence on rolling resistance
 	btScalar rolling_resistance = rolling_resistance_lin * resistance_factor;
@@ -132,7 +132,7 @@ btScalar CARTIRE::getRollingResistance(const btScalar velocity, const btScalar r
 	return resistance;
 }
 
-btScalar CARTIRE::getMaxFx(btScalar load) const
+btScalar CarTire::getMaxFx(btScalar load) const
 {
 	const std::vector<btScalar> & b = longitudinal;
 	btScalar Fz = load * 0.001;
@@ -140,7 +140,7 @@ btScalar CARTIRE::getMaxFx(btScalar load) const
 	return D;
 }
 
-btScalar CARTIRE::getMaxFy(btScalar load, btScalar camber) const
+btScalar CarTire::getMaxFy(btScalar load, btScalar camber) const
 {
 	const std::vector<btScalar> & a = lateral;
 	btScalar Fz = load * 0.001;
@@ -150,7 +150,7 @@ btScalar CARTIRE::getMaxFy(btScalar load, btScalar camber) const
 	return D + Sv;
 }
 
-btScalar CARTIRE::getMaxMz(btScalar load, btScalar camber) const
+btScalar CarTire::getMaxMz(btScalar load, btScalar camber) const
 {
 	const std::vector<btScalar> & c = aligning;
 	btScalar Fz = load * 0.001;
@@ -160,7 +160,7 @@ btScalar CARTIRE::getMaxMz(btScalar load, btScalar camber) const
 	return -(D + Sv);
 }
 
-btScalar CARTIRE::PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coeff, btScalar & max_Fx) const
+btScalar CarTire::PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coeff, btScalar & max_Fx) const
 {
 	const std::vector<btScalar> & b = longitudinal;
 
@@ -195,7 +195,7 @@ btScalar CARTIRE::PacejkaFx(btScalar sigma, btScalar Fz, btScalar friction_coeff
 	return Fx;
 }
 
-btScalar CARTIRE::PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff, btScalar & max_Fy) const
+btScalar CarTire::PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff, btScalar & max_Fy) const
 {
 	const std::vector<btScalar> & a = lateral;
 
@@ -233,7 +233,7 @@ btScalar CARTIRE::PacejkaFy(btScalar alpha, btScalar Fz, btScalar gamma, btScala
 	return Fy;
 }
 
-btScalar CARTIRE::PacejkaMz(btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff, btScalar & max_Mz) const
+btScalar CarTire::PacejkaMz(btScalar alpha, btScalar Fz, btScalar gamma, btScalar friction_coeff, btScalar & max_Mz) const
 {
 	const std::vector<btScalar> & c = aligning;
 
@@ -270,7 +270,7 @@ btScalar CARTIRE::PacejkaMz(btScalar alpha, btScalar Fz, btScalar gamma, btScala
 	return Mz;
 }
 
-void CARTIRE::getSigmaHatAlphaHat(btScalar load, btScalar & sh, btScalar & ah) const
+void CarTire::getSigmaHatAlphaHat(btScalar load, btScalar & sh, btScalar & ah) const
 {
 	assert(!sigma_hat.empty());
 	assert(!alpha_hat.empty());
@@ -303,7 +303,7 @@ void CARTIRE::getSigmaHatAlphaHat(btScalar load, btScalar & sh, btScalar & ah) c
 	}
 }
 
-void CARTIRE::findSigmaHatAlphaHat(
+void CarTire::findSigmaHatAlphaHat(
 	btScalar load,
 	btScalar & output_sigmahat,
 	btScalar & output_alphahat,
@@ -333,7 +333,7 @@ void CARTIRE::findSigmaHatAlphaHat(
 	}
 }
 
-void CARTIRE::initSigmaHatAlphaHat(int tablesize)
+void CarTire::initSigmaHatAlphaHat(int tablesize)
 {
 	btScalar HAT_LOAD = 0.5;
 	sigma_hat.resize(tablesize, 0);

@@ -22,10 +22,10 @@
 
 #include <iosfwd>
 
-class GLSTATEMANAGER;
+class GraphicsState;
 
 /// supported blend modes
-namespace BLENDMODE
+namespace BlendMode
 {
 enum BLENDMODE
 {
@@ -38,10 +38,10 @@ enum BLENDMODE
 }
 
 /// purely abstract base class
-class RENDER_INPUT
+class RenderInput
 {
 public:
-	virtual void Render(GLSTATEMANAGER & glstate, std::ostream & error_output) = 0;
+	virtual void Render(GraphicsState & glstate, std::ostream & error_output) = 0;
 };
 
 #endif //_RENDER_INPUT_H

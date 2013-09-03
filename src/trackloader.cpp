@@ -52,7 +52,7 @@ static inline std::istream & operator >> (std::istream & lhs, std::vector<std::s
 	return lhs;
 }
 
-static btIndexedMesh GetIndexedMesh(const MODEL & model)
+static btIndexedMesh GetIndexedMesh(const Model & model)
 {
 	const float * vertices;
 	int vcount;
@@ -74,10 +74,10 @@ static btIndexedMesh GetIndexedMesh(const MODEL & model)
 	return mesh;
 }
 
-TRACK::LOADER::LOADER(
+Track::Loader::Loader(
 	ContentManager & content,
 	DynamicsWorld & world,
-	DATA & data,
+	Track::Data & data,
 	std::ostream & info_output,
 	std::ostream & error_output,
 	const std::string & trackpath,
@@ -117,12 +117,12 @@ TRACK::LOADER::LOADER(
 	data.reverse = reverse;
 }
 
-TRACK::LOADER::~LOADER()
+Track::Loader::~Loader()
 {
 	Clear();
 }
 
-void TRACK::LOADER::Clear()
+void Track::Loader::Clear()
 {
 	bodies.clear();
 	combined.clear();
@@ -130,7 +130,7 @@ void TRACK::LOADER::Clear()
 	pack.Close();
 }
 
-bool TRACK::LOADER::BeginLoad()
+bool Track::Loader::BeginLoad()
 {
 	Clear();
 
@@ -184,7 +184,7 @@ bool TRACK::LOADER::BeginLoad()
 	return true;
 }
 
-bool TRACK::LOADER::ContinueLoad()
+bool Track::Loader::ContinueLoad()
 {
 	if (data.loaded)
 	{
@@ -201,10 +201,10 @@ bool TRACK::LOADER::ContinueLoad()
 	{
 		if (agressive_combining)
 		{
-			std::map<std::string, OBJECT>::iterator i;
+			std::map<std::string, Object>::iterator i;
 			for (i = combined.begin(); i != combined.end(); ++i)
 			{
-				std::tr1::shared_ptr<MODEL> & model = i->second.model;
+				std::tr1::shared_ptr<Model> & model = i->second.model;
 				if (!model->HaveMeshMetrics())
 				{
 					// cache combined model
@@ -229,7 +229,7 @@ bool TRACK::LOADER::ContinueLoad()
 	return true;
 }
 
-bool TRACK::LOADER::BeginObjectLoad()
+bool Track::Loader::BeginObjectLoad()
 {
 #ifndef EXTBULLET
 	assert(track_shape == 0);
@@ -255,7 +255,7 @@ bool TRACK::LOADER::BeginObjectLoad()
 	return false;
 }
 
-std::pair<bool, bool> TRACK::LOADER::ContinueObjectLoad()
+std::pair<bool, bool> Track::Loader::ContinueObjectLoad()
 {
 	if (error)
 	{
@@ -270,7 +270,7 @@ std::pair<bool, bool> TRACK::LOADER::ContinueObjectLoad()
 	return Continue();
 }
 
-bool TRACK::LOADER::Begin()
+bool Track::Loader::Begin()
 {
 	content.load(track_config, objectdir, "objects.txt");
 	if (track_config.get())
@@ -288,7 +288,7 @@ bool TRACK::LOADER::Begin()
 	return false;
 }
 
-std::pair<bool, bool> TRACK::LOADER::Continue()
+std::pair<bool, bool> Track::Loader::Continue()
 {
 	if (node_it == nodes->end())
 	{
@@ -305,9 +305,9 @@ std::pair<bool, bool> TRACK::LOADER::Continue()
 	return std::make_pair(false, true);
 }
 
-bool TRACK::LOADER::LoadModel(const std::string & name)
+bool Track::Loader::LoadModel(const std::string & name)
 {
-	std::tr1::shared_ptr<MODEL> model;
+	std::tr1::shared_ptr<Model> model;
 	if ((packload && content.load(model, objectdir, name, pack)) ||
 		content.load(model, objectdir, name))
 	{
@@ -317,7 +317,7 @@ bool TRACK::LOADER::LoadModel(const std::string & name)
 	return false;
 }
 
-bool TRACK::LOADER::LoadShape(const PTree & cfg, const MODEL & model, BODY & body)
+bool Track::Loader::LoadShape(const PTree & cfg, const Model & model, Body & body)
 {
 	if (body.mass < 1E-3)
 	{
@@ -370,9 +370,9 @@ bool TRACK::LOADER::LoadShape(const PTree & cfg, const MODEL & model, BODY & bod
 	return true;
 }
 
-TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const PTree & cfg)
+Track::Loader::body_iterator Track::Loader::LoadBody(const PTree & cfg)
 {
-	BODY body;
+	Body body;
 	std::string texture_name;
 	std::string model_name;
 	int clampuv = 0;
@@ -428,7 +428,7 @@ TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const PTree & cfg)
 		return bodies.end();
 	}
 
-	MODEL & model = *data.models.back();
+	Model & model = *data.models.back();
 
 	body.collidable = cfg.get("mass", body.mass);
 	if (body.collidable)
@@ -437,13 +437,13 @@ TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const PTree & cfg)
 	}
 
 	// load textures
-	TEXTUREINFO texinfo;
+	TextureInfo texinfo;
 	texinfo.mipmap = mipmap || anisotropy; //always mipmap if anisotropy is on
 	texinfo.anisotropy = anisotropy;
 	texinfo.repeatu = clampuv != 1 && clampuv != 2;
 	texinfo.repeatv = clampuv != 1 && clampuv != 3;
 
-	std::tr1::shared_ptr<TEXTURE> diffuse, miscmap1, miscmap2;
+	std::tr1::shared_ptr<Texture> diffuse, miscmap1, miscmap2;
 	content.load(diffuse, objectdir, texture_names[0], texinfo);
 	if (texture_names[1].length() > 0)
 	{
@@ -456,7 +456,7 @@ TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const PTree & cfg)
 	}
 
 	// setup drawable
-	DRAWABLE & drawable = body.drawable;
+	Drawable & drawable = body.drawable;
 	drawable.SetModel(model);
 	drawable.SetDiffuseMap(diffuse);
 	drawable.SetMiscMap1(miscmap1);
@@ -469,11 +469,11 @@ TRACK::LOADER::body_iterator TRACK::LOADER::LoadBody(const PTree & cfg)
 	return bodies.insert(std::make_pair(name, body)).first;
 }
 
-void TRACK::LOADER::AddBody(SCENENODE & scene, const BODY & body)
+void Track::Loader::AddBody(SceneNode & scene, const Body & body)
 {
 	bool nolighting = body.nolighting;
 	bool alphablend = body.drawable.GetDecal();
-	keyed_container<DRAWABLE> * dlist = &scene.GetDrawlist().normal_noblend;
+	keyed_container<Drawable> * dlist = &scene.GetDrawlist().normal_noblend;
 	if (body.skybox)
 	{
 		if (alphablend)
@@ -499,7 +499,7 @@ void TRACK::LOADER::AddBody(SCENENODE & scene, const BODY & body)
 	dlist->insert(body.drawable);
 }
 
-bool TRACK::LOADER::LoadNode(const PTree & sec)
+bool Track::Loader::LoadNode(const PTree & sec)
 {
 	const PTree * sec_body;
 	if (!sec.get("body", sec_body, error_output))
@@ -514,19 +514,19 @@ bool TRACK::LOADER::LoadNode(const PTree & sec)
 		return true;
 	}
 
-	MATHVECTOR<float, 3> position, angle;
+	Vec3 position, angle;
 	bool has_transform = sec.get("position",  position) | sec.get("rotation", angle);
-	QUATERNION<float> rotation(angle[0]/180*M_PI, angle[1]/180*M_PI, angle[2]/180*M_PI);
+	Quat rotation(angle[0]/180*M_PI, angle[1]/180*M_PI, angle[2]/180*M_PI);
 
-	const BODY & body = ib->second;
+	const Body & body = ib->second;
 	if (body.mass < 1E-3)
 	{
 		// static geometry
 		if (has_transform)
 		{
 			// static geometry instanced
-			keyed_container <SCENENODE>::handle sh = data.static_node.AddNode();
-			SCENENODE & node = data.static_node.GetNode(sh);
+			keyed_container <SceneNode>::handle sh = data.static_node.AddNode();
+			SceneNode & node = data.static_node.GetNode(sh);
 			node.GetTransform().SetTranslation(position);
 			node.GetTransform().SetRotation(rotation);
 			AddBody(node, body);
@@ -559,8 +559,8 @@ bool TRACK::LOADER::LoadNode(const PTree & sec)
 	else
 	{
 		// fix postion due to rotation around mass center
-		MATHVECTOR<float, 3> center_local = ToMathVector<float>(body.center);
-		MATHVECTOR<float, 3> center_world = center_local;
+		Vec3 center_local = ToMathVector<float>(body.center);
+		Vec3 center_world = center_local;
 		rotation.RotateVector(center_world);
 		position = position - center_local + center_world;
 
@@ -580,8 +580,8 @@ bool TRACK::LOADER::LoadNode(const PTree & sec)
 			data.objects.push_back(object);
 			world.addRigidBody(object);
 
-			keyed_container<SCENENODE>::handle node_handle = data.dynamic_node.AddNode();
-			SCENENODE & node = data.dynamic_node.GetNode(node_handle);
+			keyed_container<SceneNode>::handle node_handle = data.dynamic_node.AddNode();
+			SceneNode & node = data.dynamic_node.GetNode(node_handle);
 			node.GetTransform().SetTranslation(position);
 			node.GetTransform().SetRotation(rotation);
 			data.body_nodes.push_back(node_handle);
@@ -602,8 +602,8 @@ bool TRACK::LOADER::LoadNode(const PTree & sec)
 			data.objects.push_back(object);
 			world.addCollisionObject(object);
 
-			keyed_container <SCENENODE>::handle sh = data.static_node.AddNode();
-			SCENENODE & node = data.static_node.GetNode(sh);
+			keyed_container <SceneNode>::handle sh = data.static_node.AddNode();
+			SceneNode & node = data.static_node.GetNode(sh);
 			node.GetTransform().SetTranslation(position);
 			node.GetTransform().SetRotation(rotation);
 			AddBody(node, body);
@@ -637,7 +637,7 @@ static bool get(std::ifstream & f, T & output)
 	return true;
 }
 
-void TRACK::LOADER::CalculateNumOld()
+void Track::Loader::CalculateNumOld()
 {
 	numobjects = 0;
 	std::string objectlist = objectpath + "/list.txt";
@@ -657,7 +657,7 @@ void TRACK::LOADER::CalculateNumOld()
 	}
 }
 
-bool TRACK::LOADER::BeginOld()
+bool Track::Loader::BeginOld()
 {
 	CalculateNumOld();
 
@@ -677,20 +677,20 @@ bool TRACK::LOADER::BeginOld()
 	return true;
 }
 
-bool TRACK::LOADER::AddObject(const OBJECT & object)
+bool Track::Loader::AddObject(const Object & object)
 {
 	data.models.push_back(object.model);
 
-	TEXTUREINFO texinfo;
+	TextureInfo texinfo;
 	texinfo.mipmap = object.mipmap || anisotropy; //always mipmap if anisotropy is on
 	texinfo.anisotropy = anisotropy;
 	texinfo.repeatu = object.clamptexture != 1 && object.clamptexture != 2;
 	texinfo.repeatv = object.clamptexture != 1 && object.clamptexture != 3;
 
-	std::tr1::shared_ptr<TEXTURE> diffuse_texture;
+	std::tr1::shared_ptr<Texture> diffuse_texture;
 	content.load(diffuse_texture, objectdir, object.texture, texinfo);
 
-	std::tr1::shared_ptr<TEXTURE> miscmap1_texture;
+	std::tr1::shared_ptr<Texture> miscmap1_texture;
 	{
 		std::string texture_name = object.texture.substr(0, std::max(0, (int)object.texture.length()-4)) + "-misc1.png";
 		std::string filepath = objectpath + "/" + texture_name;
@@ -700,7 +700,7 @@ bool TRACK::LOADER::AddObject(const OBJECT & object)
 		}
 	}
 
-	std::tr1::shared_ptr<TEXTURE> miscmap2_texture;
+	std::tr1::shared_ptr<Texture> miscmap2_texture;
 	{
 		texinfo.compress = false;
 		std::string texture_name = object.texture.substr(0, std::max(0, (int)object.texture.length()-4)) + "-misc2.png";
@@ -713,7 +713,7 @@ bool TRACK::LOADER::AddObject(const OBJECT & object)
 
 	//use a different drawlist layer where necessary
 	bool transparent = (object.transparent_blend==1);
-	keyed_container <DRAWABLE> * dlist = &data.static_node.GetDrawlist().normal_noblend;
+	keyed_container <Drawable> * dlist = &data.static_node.GetDrawlist().normal_noblend;
 	if (transparent)
 	{
 		dlist = &data.static_node.GetDrawlist().normal_blend;
@@ -733,8 +733,8 @@ bool TRACK::LOADER::AddObject(const OBJECT & object)
 			dlist = &data.static_node.GetDrawlist().skybox_noblend;
 		}
 	}
-	keyed_container <DRAWABLE>::handle dref = dlist->insert(DRAWABLE());
-	DRAWABLE & drawable = dlist->get(dref);
+	keyed_container <Drawable>::handle dref = dlist->insert(Drawable());
+	Drawable & drawable = dlist->get(dref);
 	drawable.SetModel(*object.model);
 	drawable.SetDiffuseMap(diffuse_texture);
 	drawable.SetMiscMap1(miscmap1_texture);
@@ -770,7 +770,7 @@ bool TRACK::LOADER::AddObject(const OBJECT & object)
 	return true;
 }
 
-std::pair<bool, bool> TRACK::LOADER::ContinueOld()
+std::pair<bool, bool> Track::Loader::ContinueOld()
 {
 	std::string model_name;
 	if (!get(objectfile, model_name))
@@ -778,7 +778,7 @@ std::pair<bool, bool> TRACK::LOADER::ContinueOld()
 		return std::make_pair(false, false);
 	}
 
-	OBJECT object;
+	Object object;
 	bool isashadow;
 	std::string junk;
 
@@ -819,7 +819,7 @@ std::pair<bool, bool> TRACK::LOADER::ContinueOld()
 
 	if (agressive_combining)
 	{
-		std::map<std::string, OBJECT>::iterator i = combined.find(object.texture);
+		std::map<std::string, Object>::iterator i = combined.find(object.texture);
 		if (i != combined.end() && !i->second.cached)
 		{
 			i->second.model->SetVertexArray(i->second.model->GetVertexArray() + object.model->GetVertexArray());
@@ -841,7 +841,7 @@ std::pair<bool, bool> TRACK::LOADER::ContinueOld()
 	return std::make_pair(false, true);
 }
 
-bool TRACK::LOADER::LoadSurfaces()
+bool Track::Loader::LoadSurfaces()
 {
 	std::string path = trackpath + "/surfaces.txt";
 	std::ifstream file(path.c_str());
@@ -861,8 +861,8 @@ bool TRACK::LOADER::LoadSurfaces()
 		}
 
 		const PTree & surf_cfg = is->second;
-		data.surfaces.push_back(TRACKSURFACE());
-		TRACKSURFACE & surface = data.surfaces.back();
+		data.surfaces.push_back(TrackSurface());
+		TrackSurface & surface = data.surfaces.back();
 
 		std::string type;
 		surf_cfg.get("Type", type);
@@ -897,7 +897,7 @@ bool TRACK::LOADER::LoadSurfaces()
 	return true;
 }
 
-bool TRACK::LOADER::LoadRoads()
+bool Track::Loader::LoadRoads()
 {
 	data.roads.clear();
 
@@ -913,20 +913,20 @@ bool TRACK::LOADER::LoadRoads()
 	trackfile >> numroads;
 	for (int i = 0; i < numroads && trackfile; ++i)
 	{
-		data.roads.push_back(ROADSTRIP());
+		data.roads.push_back(RoadStrip());
 		data.roads.back().ReadFrom(trackfile, data.reverse, error_output);
 	}
 
 	return true;
 }
 
-bool TRACK::LOADER::CreateRacingLines()
+bool Track::Loader::CreateRacingLines()
 {
-	TEXTUREINFO texinfo;
+	TextureInfo texinfo;
 	content.load(data.racingline_texture, texturedir, "racingline.png", texinfo);
 
 	K1999 k1999data;
-	for (std::list <ROADSTRIP>::iterator i = data.roads.begin(); i != data.roads.end(); ++i)
+	for (std::list <RoadStrip>::iterator i = data.roads.begin(); i != data.roads.end(); ++i)
 	{
 		if (k1999data.LoadData(*i))
 		{
@@ -941,7 +941,7 @@ bool TRACK::LOADER::CreateRacingLines()
 	return true;
 }
 
-bool TRACK::LOADER::LoadStartPositions(const PTree & info)
+bool Track::Loader::LoadStartPositions(const PTree & info)
 {
 	int sp_num = 0;
 	std::stringstream sp_name;
@@ -951,24 +951,24 @@ bool TRACK::LOADER::LoadStartPositions(const PTree & info)
 	{
 		std::stringstream so_name;
 		so_name << "start orientation " << sp_num;
-		QUATERNION <float> q;
+		Quat q;
 		std::vector <float> angle(3, 0.0);
 		if (info.get(so_name.str(), angle, error_output))
 		{
 			q.SetEulerZYX(angle[0] * M_PI/180, angle[1] * M_PI/180, angle[2] * M_PI/180);
 		}
 
-		QUATERNION <float> orient(q[2], q[0], q[1], q[3]);
+		Quat orient(q[2], q[0], q[1], q[3]);
 
 		//due to historical reasons the initial orientation places the car faces the wrong way
-		QUATERNION <float> fixer;
+		Quat fixer;
 		fixer.Rotate(M_PI_2, 0, 0, 1);
 		orient = fixer * orient;
 
-		MATHVECTOR <float, 3> pos(f3[2], f3[0], f3[1]);
+		Vec3 pos(f3[2], f3[0], f3[1]);
 
 		data.start_positions.push_back(
-			std::pair <MATHVECTOR <float, 3>, QUATERNION <float> >(pos, orient));
+			std::pair <Vec3, Quat >(pos, orient));
 
 		sp_num++;
 		sp_name.str("");
@@ -978,7 +978,7 @@ bool TRACK::LOADER::LoadStartPositions(const PTree & info)
 	if (data.reverse)
 	{
 		// flip start positions
-		for (std::vector <std::pair <MATHVECTOR <float, 3>, QUATERNION <float> > >::iterator i = data.start_positions.begin();
+		for (std::vector <std::pair <Vec3, Quat > >::iterator i = data.start_positions.begin();
 			i != data.start_positions.end(); ++i)
 		{
 			i->second.Rotate(M_PI, 0, 0, 1);
@@ -991,7 +991,7 @@ bool TRACK::LOADER::LoadStartPositions(const PTree & info)
 	return true;
 }
 
-bool TRACK::LOADER::LoadLapSections(const PTree & info)
+bool Track::Loader::LoadLapSections(const PTree & info)
 {
 	// get timing sectors
 	int lapmarkers = 0;
@@ -1007,7 +1007,7 @@ bool TRACK::LOADER::LoadLapSections(const PTree & info)
 			int patchid = lapraw[1];
 
 			int curroad = 0;
-			for (std::list<ROADSTRIP>::iterator i = data.roads.begin(); i != data.roads.end(); ++i, ++curroad)
+			for (std::list<RoadStrip>::iterator i = data.roads.begin(); i != data.roads.end(); ++i, ++curroad)
 			{
 				if (curroad == roadid)
 				{
@@ -1038,25 +1038,25 @@ bool TRACK::LOADER::LoadLapSections(const PTree & info)
 		{
 			// reverse the lap sequence, but keep the first bezier where it is (remember, the track is a loop)
 			// so, for example, now instead of 1 2 3 4 we should have 1 4 3 2
-			std::vector<const BEZIER *>::iterator secondbezier = data.lap.begin() + 1;
+			std::vector<const Bezier *>::iterator secondbezier = data.lap.begin() + 1;
 			assert(secondbezier != data.lap.end());
 			std::reverse(secondbezier, data.lap.end());
 		}
 
 		// move timing sector 0 back so we'll still drive over it when going in reverse around the track
 		// find patch in front of first start position
-		const BEZIER * lap0 = 0;
+		const Bezier * lap0 = 0;
 		float minlen2 = 10E6;
-		MATHVECTOR<float, 3> pos = data.start_positions[0].first;
-		MATHVECTOR<float, 3> dir = direction::Forward;
+		Vec3 pos = data.start_positions[0].first;
+		Vec3 dir = Direction::Forward;
 		data.start_positions[0].second.RotateVector(dir);
-		MATHVECTOR<float, 3> bpos(pos[1], pos[2], pos[0]);
-		MATHVECTOR<float, 3> bdir(dir[1], dir[2], dir[0]);
-		for (std::list<ROADSTRIP>::iterator r = data.roads.begin(); r != data.roads.end(); ++r)
+		Vec3 bpos(pos[1], pos[2], pos[0]);
+		Vec3 bdir(dir[1], dir[2], dir[0]);
+		for (std::list<RoadStrip>::iterator r = data.roads.begin(); r != data.roads.end(); ++r)
 		{
-			for (std::vector<ROADPATCH>::iterator p = r->GetPatches().begin(); p != r->GetPatches().end(); ++p)
+			for (std::vector<RoadPatch>::iterator p = r->GetPatches().begin(); p != r->GetPatches().end(); ++p)
 			{
-				MATHVECTOR<float, 3> vec = p->GetPatch().GetBL() - bpos;
+				Vec3 vec = p->GetPatch().GetBL() - bpos;
 				float len2 = vec.MagnitudeSquared();
 				bool fwd = vec.dot(bdir) > 0;
 				if (fwd && len2 < minlen2)
@@ -1073,9 +1073,9 @@ bool TRACK::LOADER::LoadLapSections(const PTree & info)
 	// calculate distance from starting line for each patch to account for those tracks
 	// where starting line is not on the 1st patch of the road
 	// note this only updates the road with lap sequence 0 on it
-	BEZIER* start_patch = const_cast <BEZIER *> (data.lap[0]);
+	Bezier* start_patch = const_cast <Bezier *> (data.lap[0]);
 	start_patch->dist_from_start = 0.0;
-	BEZIER* curr_patch = start_patch->next_patch;
+	Bezier* curr_patch = start_patch->next_patch;
 	float total_dist = start_patch->length;
 	int count = 0;
 	while ( curr_patch && curr_patch != start_patch)

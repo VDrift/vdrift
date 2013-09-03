@@ -124,18 +124,18 @@ static inline const T & GetItem(size_t id, const std::vector<T> & items, size_t 
 	return items[idn];
 }
 
-bool SOUND::SourceActive::operator<(const SOUND::SourceActive & other) const
+bool Sound::SourceActive::operator<(const Sound::SourceActive & other) const
 {
 	// reverse op as partial sort sorts for the smallest elemets
 	return this->gain > other.gain;
 }
 
-bool SOUND::SamplersUpdate::empty() const
+bool Sound::SamplersUpdate::empty() const
 {
 	return sset.empty() && sadd.empty() && sremove.empty();
 }
 
-SOUND::SOUND() :
+Sound::Sound() :
 	log_error(0),
 	deviceinfo(0, 0, 0, 0),
 	sound_volume(0),
@@ -155,7 +155,7 @@ SOUND::SOUND() :
 	samplers.reserve(64);
 }
 
-SOUND::~SOUND()
+Sound::~Sound()
 {
 	if (initdone)
 		SDL_CloseAudio();
@@ -167,7 +167,7 @@ SOUND::~SOUND()
 		SDL_DestroyMutex(source_lock);
 }
 
-bool SOUND::Init(int buffersize, std::ostream & info_output, std::ostream & error_output)
+bool Sound::Init(int buffersize, std::ostream & info_output, std::ostream & error_output)
 {
 	if (disable || initdone)
 		return false;
@@ -180,7 +180,7 @@ bool SOUND::Init(int buffersize, std::ostream & info_output, std::ostream & erro
 	desired.freq = 44100;
 	desired.format = AUDIO_S16SYS;
 	desired.samples = buffersize;
-	desired.callback = SOUND::CallbackWrapper;
+	desired.callback = Sound::CallbackWrapper;
 	desired.userdata = this;
 	desired.channels = 2;
 
@@ -224,7 +224,7 @@ bool SOUND::Init(int buffersize, std::ostream & info_output, std::ostream & erro
 		return false;
 	}
 
-	deviceinfo = SOUNDINFO(samples, frequency, channels, bytespersample);
+	deviceinfo = SoundInfo(samples, frequency, channels, bytespersample);
 	log_error = &error_output;
 	initdone = true;
 	SetVolume(1.0);
@@ -235,27 +235,27 @@ bool SOUND::Init(int buffersize, std::ostream & info_output, std::ostream & erro
 	return true;
 }
 
-const SOUNDINFO & SOUND::GetDeviceInfo() const
+const SoundInfo & Sound::GetDeviceInfo() const
 {
 	return deviceinfo;
 }
 
-bool SOUND::Enabled() const
+bool Sound::Enabled() const
 {
 	return !disable;
 }
 
-void SOUND::Disable()
+void Sound::Disable()
 {
 	disable = true;
 }
 
-void SOUND::SetMaxActiveSources(size_t value)
+void Sound::SetMaxActiveSources(size_t value)
 {
 	max_active_sources = value;
 }
 
-size_t SOUND::AddSource(std::tr1::shared_ptr<SOUNDBUFFER> buffer, float offset, bool is3d, bool loop)
+size_t Sound::AddSource(std::tr1::shared_ptr<SoundBuffer> buffer, float offset, bool is3d, bool loop)
 {
 	Source src;
 	src.buffer = buffer;
@@ -281,13 +281,13 @@ size_t SOUND::AddSource(std::tr1::shared_ptr<SOUNDBUFFER> buffer, float offset, 
 	return id;
 }
 
-void SOUND::RemoveSource(size_t id)
+void Sound::RemoveSource(size_t id)
 {
 	samplers_update.getFirst().sremove.push_back(id);
 	sources_remove.push_back(id);
 }
 
-void SOUND::ResetSource(size_t id)
+void Sound::ResetSource(size_t id)
 {
 	size_t idn = sources[id].id;
 	Source & src = sources[idn];
@@ -302,52 +302,52 @@ void SOUND::ResetSource(size_t id)
 	samplers_update.getFirst().sadd.push_back(ns);
 }
 
-bool SOUND::GetSourcePlaying(size_t id) const
+bool Sound::GetSourcePlaying(size_t id) const
 {
 	return GetItem(id, sources, sources_num).playing;
 }
 
-void SOUND::SetSourceVelocity(size_t id, float x, float y, float z)
+void Sound::SetSourceVelocity(size_t id, float x, float y, float z)
 {
 	GetItem(id, sources, sources_num).velocity.Set(x, y, z);
 }
 
-void SOUND::SetSourcePosition(size_t id, float x, float y, float z)
+void Sound::SetSourcePosition(size_t id, float x, float y, float z)
 {
 	GetItem(id, sources, sources_num).position.Set(x, y, z);
 }
 
-void SOUND::SetSourcePitch(size_t id, float value)
+void Sound::SetSourcePitch(size_t id, float value)
 {
 	GetItem(id, sources, sources_num).pitch = value;
 }
 
-void SOUND::SetSourceGain(size_t id, float value)
+void Sound::SetSourceGain(size_t id, float value)
 {
 	GetItem(id, sources, sources_num).gain = value;
 }
 
-void SOUND::SetListenerVelocity(float x, float y, float z)
+void Sound::SetListenerVelocity(float x, float y, float z)
 {
 	listener_vel.Set(x, y, z);
 }
 
-void SOUND::SetListenerPosition(float x, float y, float z)
+void Sound::SetListenerPosition(float x, float y, float z)
 {
 	listener_pos.Set(x, y, z);
 }
 
-void SOUND::SetListenerRotation(float x, float y, float z, float w)
+void Sound::SetListenerRotation(float x, float y, float z, float w)
 {
 	listener_rot.Set(x, y, z, w);
 }
 
-void SOUND::SetVolume(float value)
+void Sound::SetVolume(float value)
 {
 	sound_volume = value;
 }
 
-void SOUND::Update(bool pause)
+void Sound::Update(bool pause)
 {
 	if (disable) return;
 
@@ -383,7 +383,7 @@ void SOUND::Update(bool pause)
 	}
 }
 
-void SOUND::GetSourceChanges()
+void Sound::GetSourceChanges()
 {
 	SDL_LockMutex(source_lock);
 	if (!sources_stop.getSecond().empty())
@@ -393,7 +393,7 @@ void SOUND::GetSourceChanges()
 	SDL_UnlockMutex(source_lock);
 }
 
-void SOUND::ProcessSourceStop()
+void Sound::ProcessSourceStop()
 {
 	std::vector<size_t> & sstop = sources_stop.getFirst();
 	for (size_t i = 0; i < sstop.size(); ++i)
@@ -411,7 +411,7 @@ void SOUND::ProcessSourceStop()
 	sstop.clear();
 }
 
-void SOUND::ProcessSourceRemove()
+void Sound::ProcessSourceRemove()
 {
 	for (size_t i = 0; i < sources_remove.size(); ++i)
 	{
@@ -421,7 +421,7 @@ void SOUND::ProcessSourceRemove()
 	sources_remove.clear();
 }
 
-void SOUND::ProcessSources()
+void Sound::ProcessSources()
 {
 	std::vector<SamplerSet> & supdate = samplers_update.getFirst().sset;
 	supdate.resize(sources_num);
@@ -437,7 +437,7 @@ void SOUND::ProcessSources()
 		{
 			if (src.is3d)
 			{
-				MATHVECTOR <float, 3> relvec = src.position - listener_pos;
+				Vec3 relvec = src.position - listener_pos;
 				float len = relvec.Magnitude();
 				if (len < 0.1f) len = 0.1f;
 
@@ -452,7 +452,7 @@ void SOUND::ProcessSources()
 				// maximum at 0.75 (source on opposite side)
 				relvec = relvec * (1.0f / len);
 				(-listener_rot).RotateVector(relvec);
-				float xcoord = relvec.dot(direction::Right) * 0.75f;
+				float xcoord = relvec.dot(Direction::Right) * 0.75f;
 				float pgain1 = xcoord;			// left attenuation
 				float pgain2 = -xcoord;			// right attenuation
 				if (pgain1 < 0) pgain1 = 0;
@@ -487,7 +487,7 @@ void SOUND::ProcessSources()
 	LimitActiveSources();
 }
 
-void SOUND::LimitActiveSources()
+void Sound::LimitActiveSources()
 {
 	// limit active sources to max active sources
 	if (sources_active.size() <= max_active_sources)
@@ -508,7 +508,7 @@ void SOUND::LimitActiveSources()
 	}
 }
 
-void SOUND::SetSamplerChanges()
+void Sound::SetSamplerChanges()
 {
 	if (samplers_update.getFirst().empty())
 		return;
@@ -523,7 +523,7 @@ void SOUND::SetSamplerChanges()
 	SDL_UnlockMutex(sampler_lock);
 }
 
-void SOUND::GetSamplerChanges()
+void Sound::GetSamplerChanges()
 {
 	SDL_LockMutex(sampler_lock);
 	if (!samplers_update.getSecond().empty())
@@ -535,7 +535,7 @@ void SOUND::GetSamplerChanges()
 	SDL_UnlockMutex(sampler_lock);
 }
 
-void SOUND::ProcessSamplerUpdate()
+void Sound::ProcessSamplerUpdate()
 {
 	std::vector<SamplerSet> & supdate = samplers_update.getLast().sset;
 	if (supdate.empty())
@@ -551,7 +551,7 @@ void SOUND::ProcessSamplerUpdate()
 	supdate.clear();
 }
 
-void SOUND::ProcessSamplers(unsigned char *stream, int len)
+void Sound::ProcessSamplers(unsigned char *stream, int len)
 {
 	// clear stream
 	memset(stream, 0, len);
@@ -601,7 +601,7 @@ void SOUND::ProcessSamplers(unsigned char *stream, int len)
 	}
 }
 
-void SOUND::ProcessSamplerRemove()
+void Sound::ProcessSamplerRemove()
 {
 	std::vector<size_t> & sremove = samplers_update.getLast().sremove;
 	for (size_t i = 0; i < sremove.size(); ++i)
@@ -613,7 +613,7 @@ void SOUND::ProcessSamplerRemove()
 	sremove.clear();
 }
 
-void SOUND::ProcessSamplerAdd()
+void Sound::ProcessSamplerAdd()
 {
 	std::vector<SamplerAdd> & sadd = samplers_update.getLast().sadd;
 	for (size_t i = 0; i < sadd.size(); ++i)
@@ -644,7 +644,7 @@ void SOUND::ProcessSamplerAdd()
 	sadd.clear();
 }
 
-void SOUND::SetSourceChanges()
+void Sound::SetSourceChanges()
 {
 	if (sources_stop.getLast().empty())
 		return;
@@ -654,7 +654,7 @@ void SOUND::SetSourceChanges()
 	SDL_UnlockMutex(source_lock);
 }
 
-void SOUND::Callback16bitStereo(void *myself, Uint8 *stream, int len)
+void Sound::Callback16bitStereo(void *myself, Uint8 *stream, int len)
 {
 	assert(this == myself);
 	assert(initdone);
@@ -679,12 +679,12 @@ void SOUND::Callback16bitStereo(void *myself, Uint8 *stream, int len)
 	SetSourceChanges();
 }
 
-void SOUND::CallbackWrapper(void *sound, unsigned char *stream, int len)
+void Sound::CallbackWrapper(void *sound, unsigned char *stream, int len)
 {
-	static_cast<SOUND*>(sound)->Callback16bitStereo(sound, stream, len);
+	static_cast<Sound*>(sound)->Callback16bitStereo(sound, stream, len);
 }
 
-void SOUND::SampleAndAdvanceWithPitch16bit(
+void Sound::SampleAndAdvanceWithPitch16bit(
 	Sampler & sampler, int * chan1, int * chan2, int len)
 {
 	assert(len > 0);
@@ -768,7 +768,7 @@ void SOUND::SampleAndAdvanceWithPitch16bit(
 	}
 }
 
-void SOUND::AdvanceWithPitch(Sampler & sampler, int len)
+void Sound::AdvanceWithPitch(Sampler & sampler, int len)
 {
 	// advance playback position
 	sampler.sample_pos_remainder += len * sampler.pitch;

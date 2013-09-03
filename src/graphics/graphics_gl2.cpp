@@ -56,27 +56,27 @@ static void ReportOnce(const void * id, const std::string & message, std::ostrea
 	}
 }
 
-static FBTEXTURE::FORMAT TextureFormatFromString(const std::string & format)
+static FrameBufferTexture::FORMAT TextureFormatFromString(const std::string & format)
 {
 	if (format == "depth" || format == "depthshadow")
-		return FBTEXTURE::DEPTH24;
+		return FrameBufferTexture::DEPTH24;
 	else if (format == "luminance8")
-		return FBTEXTURE::LUM8;
+		return FrameBufferTexture::LUM8;
 	else if (format == "RGBA8")
-		return FBTEXTURE::RGBA8;
+		return FrameBufferTexture::RGBA8;
 	else if (format == "RGB8")
-		return FBTEXTURE::RGB8;
+		return FrameBufferTexture::RGB8;
 	else if (format == "RGBA16")
-		return FBTEXTURE::RGBA16;
+		return FrameBufferTexture::RGBA16;
 	else if (format == "RGB16")
-		return FBTEXTURE::RGB16;
+		return FrameBufferTexture::RGB16;
 	else
 		assert(0);
 
-	return FBTEXTURE::RGB8;
+	return FrameBufferTexture::RGB8;
 }
 
-static bool SortDraworder(DRAWABLE * d1, DRAWABLE * d2)
+static bool SortDraworder(Drawable * d1, Drawable * d2)
 {
 	assert(d1 && d2);
 	return (d1->GetDrawOrder() < d2->GetDrawOrder());
@@ -87,9 +87,9 @@ static std::string BuildKey(const std::string & camera, const std::string & draw
 	return camera + ";" + draw;
 }
 
-static QUATERNION <float> GetCubeSideOrientation(int i, const QUATERNION <float> & origorient, std::ostream & error_output)
+static Quat GetCubeSideOrientation(int i, const Quat & origorient, std::ostream & error_output)
 {
-	QUATERNION <float> orient = origorient;
+	Quat orient = origorient;
 
 	switch (i)
 	{
@@ -126,32 +126,32 @@ static QUATERNION <float> GetCubeSideOrientation(int i, const QUATERNION <float>
 	return orient;
 }
 
-static void AttachCubeSide(int i, FBOBJECT & reflection_fbo, std::ostream & error_output)
+static void AttachCubeSide(int i, FrameBufferObject & reflection_fbo, std::ostream & error_output)
 {
 	switch (i)
 	{
 		case 0:
-		reflection_fbo.SetCubeSide(FBTEXTURE::POSX);
+		reflection_fbo.SetCubeSide(FrameBufferTexture::POSX);
 		break;
 
 		case 1:
-		reflection_fbo.SetCubeSide(FBTEXTURE::NEGX);
+		reflection_fbo.SetCubeSide(FrameBufferTexture::NEGX);
 		break;
 
 		case 2:
-		reflection_fbo.SetCubeSide(FBTEXTURE::POSY);
+		reflection_fbo.SetCubeSide(FrameBufferTexture::POSY);
 		break;
 
 		case 3:
-		reflection_fbo.SetCubeSide(FBTEXTURE::NEGY);
+		reflection_fbo.SetCubeSide(FrameBufferTexture::NEGY);
 		break;
 
 		case 4:
-		reflection_fbo.SetCubeSide(FBTEXTURE::POSZ);
+		reflection_fbo.SetCubeSide(FrameBufferTexture::POSZ);
 		break;
 
 		case 5:
-		reflection_fbo.SetCubeSide(FBTEXTURE::NEGZ);
+		reflection_fbo.SetCubeSide(FrameBufferTexture::NEGZ);
 		break;
 
 		default:
@@ -160,7 +160,7 @@ static void AttachCubeSide(int i, FBOBJECT & reflection_fbo, std::ostream & erro
 		break;
 	};
 
-	GLUTIL::CheckForOpenGLErrors("cubemap generation: FBO cube side attachment", error_output);
+	CheckForOpenGLErrors("cubemap generation: FBO cube side attachment", error_output);
 }
 
 static GLint DepthModeFromString(const std::string & mode)
@@ -179,25 +179,25 @@ static GLint DepthModeFromString(const std::string & mode)
 	return GL_LEQUAL;
 }
 
-static BLENDMODE::BLENDMODE BlendModeFromString(const std::string & mode)
+static BlendMode::BLENDMODE BlendModeFromString(const std::string & mode)
 {
 	if (mode == "disabled")
-		return BLENDMODE::DISABLED;
+		return BlendMode::DISABLED;
 	else if (mode == "add")
-		return BLENDMODE::ADD;
+		return BlendMode::ADD;
 	else if (mode == "alphablend")
-		return BLENDMODE::ALPHABLEND;
+		return BlendMode::ALPHABLEND;
 	else if (mode == "alphablend_premultiplied")
-		return BLENDMODE::PREMULTIPLIED_ALPHA;
+		return BlendMode::PREMULTIPLIED_ALPHA;
 	else if (mode == "alphatest")
-		return BLENDMODE::ALPHATEST;
+		return BlendMode::ALPHATEST;
 	else
 		assert(0);
 
-	return BLENDMODE::DISABLED;
+	return BlendMode::DISABLED;
 }
 
-GRAPHICS_GL2::GRAPHICS_GL2() :
+GraphicsGL2::GraphicsGL2() :
 	initialized(false),
 	using_shaders(false),
 	max_anisotropy(0),
@@ -215,14 +215,14 @@ GRAPHICS_GL2::GRAPHICS_GL2() :
 	// ctor
 }
 
-GRAPHICS_GL2::~GRAPHICS_GL2()
+GraphicsGL2::~GraphicsGL2()
 {
 	render_outputs.clear();
 	texture_outputs.clear();
 	texture_inputs.clear();
 }
 
-bool GRAPHICS_GL2::Init(
+bool GraphicsGL2::Init(
 	const std::string & newshaderpath,
 	unsigned resx, unsigned resy,
 	unsigned bpp, unsigned depthbpp,
@@ -311,23 +311,23 @@ bool GRAPHICS_GL2::Init(
 		{
 			if ((reflection_status == REFLECTION_STATIC || reflection_status == REFLECTION_DYNAMIC) && !static_reflectionmap_file.empty())
 			{
-				TEXTUREINFO t;
+				TextureInfo t;
 				t.cube = true;
 				t.verticalcross = true;
 				t.mipmap = true;
 				t.anisotropy = anisotropy;
-				t.maxsize = TEXTUREINFO::Size(texturesize);
+				t.maxsize = TextureInfo::Size(texturesize);
 				static_reflection.Load(static_reflectionmap_file, t, error_output);
 			}
 
 			if (!static_ambientmap_file.empty())
 			{
-				TEXTUREINFO t;
+				TextureInfo t;
 				t.cube = true;
 				t.verticalcross = true;
 				t.mipmap = false;
 				t.anisotropy = anisotropy;
-				t.maxsize = TEXTUREINFO::Size(texturesize);
+				t.maxsize = TextureInfo::Size(texturesize);
 				static_ambient.Load(static_ambientmap_file, t, error_output);
 			}
 
@@ -345,7 +345,7 @@ bool GRAPHICS_GL2::Init(
 	return true;
 }
 
-void GRAPHICS_GL2::Deinit()
+void GraphicsGL2::Deinit()
 {
 	if (GLEW_ARB_shading_language_100)
 	{
@@ -355,7 +355,7 @@ void GRAPHICS_GL2::Deinit()
 	}
 }
 
-void GRAPHICS_GL2::BeginScene(std::ostream & error_output)
+void GraphicsGL2::BeginScene(std::ostream & error_output)
 {
 	glstate.Disable(GL_TEXTURE_2D);
 	glstate.Enable(GL_LINE_SMOOTH);
@@ -372,28 +372,28 @@ void GRAPHICS_GL2::BeginScene(std::ostream & error_output)
 
 	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	GLUTIL::CheckForOpenGLErrors("BeginScene", error_output);
+	CheckForOpenGLErrors("BeginScene", error_output);
 }
 
-DRAWABLE_CONTAINER <PTRVECTOR> & GRAPHICS_GL2::GetDynamicDrawlist()
+DrawableContainer <PtrVector> & GraphicsGL2::GetDynamicDrawlist()
 {
 	return dynamic_drawlist;
 }
 
-void GRAPHICS_GL2::AddStaticNode(SCENENODE & node, bool clearcurrent)
+void GraphicsGL2::AddStaticNode(SceneNode & node, bool clearcurrent)
 {
 	static_drawlist.Generate(node, clearcurrent);
 }
 
-void GRAPHICS_GL2::SetupScene(
+void GraphicsGL2::SetupScene(
 	float fov, float new_view_distance,
-	const MATHVECTOR <float, 3> cam_position,
-	const QUATERNION <float> & cam_rotation,
-	const MATHVECTOR <float, 3> & dynamic_reflection_sample_pos)
+	const Vec3 cam_position,
+	const Quat & cam_rotation,
+	const Vec3 & dynamic_reflection_sample_pos)
 {
 	// setup the default camera from the passed-in parameters
 	{
-		GRAPHICS_CAMERA & cam = cameras["default"];
+		GraphicsCamera & cam = cameras["default"];
 		cam.fov = fov;
 		cam.pos = cam_position;
 		cam.orient = cam_rotation;
@@ -404,14 +404,14 @@ void GRAPHICS_GL2::SetupScene(
 
 	// create a camera for the skybox with a long view distance
 	{
-		GRAPHICS_CAMERA & cam = cameras["skybox"];
+		GraphicsCamera & cam = cameras["skybox"];
 		cam = cameras["default"];
 		cam.view_distance = 10000.0;
 	}
 
 	// create a camera for the dynamic reflections
 	{
-		GRAPHICS_CAMERA & cam = cameras["dynamic_reflection"];
+		GraphicsCamera & cam = cameras["dynamic_reflection"];
 		cam.pos = dynamic_reflection_sample_pos;
 		cam.fov = 90; // this gets automatically overridden with the correct fov (which is 90 anyway)
 		cam.orient.LoadIdentity(); // this gets automatically rotated for each cube side
@@ -422,23 +422,23 @@ void GRAPHICS_GL2::SetupScene(
 
 	// create a camera for the dynamic reflection skybox
 	{
-		GRAPHICS_CAMERA & cam = cameras["dynamic_reflection_skybox"];
+		GraphicsCamera & cam = cameras["dynamic_reflection_skybox"];
 		cam = cameras["dynamic_reflection"];
 		cam.view_distance = 10000.f;
 	}
 
 	// create an ortho camera for 2d drawing
 	{
-		GRAPHICS_CAMERA & cam = cameras["2d"];
+		GraphicsCamera & cam = cameras["2d"];
 
 		// this is the glOrtho call we want: glOrtho( 0, 1, 1, 0, -1, 1 );
 		cam.orthomode = true;
-		cam.orthomin = MATHVECTOR <float, 3> (0, 1, -1);
-		cam.orthomax = MATHVECTOR <float, 3> (1, 0, 1);
+		cam.orthomin = Vec3 (0, 1, -1);
+		cam.orthomax = Vec3 (1, 0, 1);
 	}
 
 	// put the default camera transform into texture3, needed by shaders only
-	MATRIX4<float> viewMatrix;
+	Matrix4<float> viewMatrix;
 	cam_rotation.GetMatrix4(viewMatrix);
 	float translate[4] = {-cam_position[0], -cam_position[1], -cam_position[2], 0};
 	viewMatrix.MultiplyVector4(translate);
@@ -452,16 +452,16 @@ void GRAPHICS_GL2::SetupScene(
 	// create cameras for shadow passes
 	if (shadows)
 	{
-		MATRIX4<float> viewMatrixInv = viewMatrix.Inverse();
+		Matrix4<float> viewMatrixInv = viewMatrix.Inverse();
 
 		// derive light rotation quaternion from light direction vector
-		QUATERNION<float> light_rotation;
-		MATHVECTOR<float, 3> up(0, 0, 1);
+		Quat light_rotation;
+		Vec3 up(0, 0, 1);
 		float cosa = up.dot(light_direction);
 		if (cosa * cosa < 1.0f)
 		{
 			float a = -acosf(cosa);
-			MATHVECTOR<float, 3> x = up.cross(light_direction).Normalize();
+			Vec3 x = up.cross(light_direction).Normalize();
 			light_rotation.SetAxisAngle(a, x[0], x[1], x[2]);
 		}
 
@@ -474,14 +474,14 @@ void GRAPHICS_GL2::SetupScene(
 		{
 			float shadow_radius = (1<<i)*closeshadow+(i)*20.0; //5,30,60
 
-			MATHVECTOR <float, 3> shadowbox(1,1,1);
+			Vec3 shadowbox(1,1,1);
 			shadowbox = shadowbox * (shadow_radius*sqrt(2.0));
-			MATHVECTOR <float, 3> shadowoffset(0,0,-1);
+			Vec3 shadowoffset(0,0,-1);
 			shadowoffset = shadowoffset * shadow_radius;
 			(-cam_rotation).RotateVector(shadowoffset);
 			shadowbox[2] += 60.0;
 
-			GRAPHICS_CAMERA & cam = cameras["shadows_"+shadow_names[i]];
+			GraphicsCamera & cam = cameras["shadows_"+shadow_names[i]];
 			cam = cameras["default"];
 			cam.orthomode = true;
 			cam.orthomin = -shadowbox;
@@ -494,7 +494,7 @@ void GRAPHICS_GL2::SetupScene(
 			renderscene.SetOrtho(cam.orthomin, cam.orthomax);
 			renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h);
 
-			MATRIX4<float> clipmat;
+			Matrix4<float> clipmat;
 			clipmat.Scale(0.5f);
 			clipmat.Translate(0.5f, 0.5f, 0.5f);
 			clipmat = renderscene.GetProjMatrix().Multiply(clipmat);
@@ -510,7 +510,7 @@ void GRAPHICS_GL2::SetupScene(
 	glMatrixMode(GL_MODELVIEW);
 }
 
-void GRAPHICS_GL2::UpdateScene(float dt)
+void GraphicsGL2::UpdateScene(float dt)
 {
 	if (sky.get())
 	{
@@ -519,7 +519,7 @@ void GRAPHICS_GL2::UpdateScene(float dt)
 	}
 }
 
-void GRAPHICS_GL2::DrawScene(std::ostream & error_output)
+void GraphicsGL2::DrawScene(std::ostream & error_output)
 {
 	renderscene.SetFlags(using_shaders);
 	renderscene.SetFSAA(fsaa);
@@ -533,84 +533,84 @@ void GRAPHICS_GL2::DrawScene(std::ostream & error_output)
 	std::sort(dynamic_drawlist.twodim.begin(),dynamic_drawlist.twodim.end(),&SortDraworder);
 
 	// do fast culling queries for static geometry per pass
-	std::map <std::string, PTRVECTOR <DRAWABLE> > culled_static_drawlist;
-	for (std::vector <GRAPHICS_CONFIG_PASS>::const_iterator i = config.passes.begin(); i != config.passes.end(); i++)
+	std::map <std::string, PtrVector <Drawable> > culled_static_drawlist;
+	for (std::vector <GraphicsConfigPass>::const_iterator i = config.passes.begin(); i != config.passes.end(); i++)
 	{
 		CullScenePass(*i, culled_static_drawlist, error_output);
 	}
 
 	// draw the passes
-	for (std::vector <GRAPHICS_CONFIG_PASS>::const_iterator i = config.passes.begin(); i != config.passes.end(); i++)
+	for (std::vector <GraphicsConfigPass>::const_iterator i = config.passes.begin(); i != config.passes.end(); i++)
 	{
 		DrawScenePass(*i, culled_static_drawlist, error_output);
 	}
 }
 
-void GRAPHICS_GL2::EndScene(std::ostream & error_output)
+void GraphicsGL2::EndScene(std::ostream & error_output)
 {
-	GLUTIL::CheckForOpenGLErrors("EndScene", error_output);
+	CheckForOpenGLErrors("EndScene", error_output);
 }
 
-int GRAPHICS_GL2::GetMaxAnisotropy() const
+int GraphicsGL2::GetMaxAnisotropy() const
 {
 	return max_anisotropy;
 }
 
-bool GRAPHICS_GL2::AntialiasingSupported() const
+bool GraphicsGL2::AntialiasingSupported() const
 {
 	return GLEW_ARB_multisample;
 }
 
-bool GRAPHICS_GL2::GetUsingShaders() const
+bool GraphicsGL2::GetUsingShaders() const
 {
 	return using_shaders;
 }
 
-bool GRAPHICS_GL2::ReloadShaders(std::ostream & info_output, std::ostream & error_output)
+bool GraphicsGL2::ReloadShaders(std::ostream & info_output, std::ostream & error_output)
 {
 	EnableShaders(info_output, error_output);
 
 	return GetUsingShaders();
 }
 
-void GRAPHICS_GL2::SetCloseShadow(float value)
+void GraphicsGL2::SetCloseShadow(float value)
 {
 	closeshadow = value;
 }
 
-bool GRAPHICS_GL2::GetShadows() const
+bool GraphicsGL2::GetShadows() const
 {
 	return shadows;
 }
 
-void GRAPHICS_GL2::SetSunDirection(const MATHVECTOR<float, 3> & value)
+void GraphicsGL2::SetSunDirection(const Vec3 & value)
 {
 	light_direction = value;
 }
 
-void GRAPHICS_GL2::SetContrast(float value)
+void GraphicsGL2::SetContrast(float value)
 {
 	contrast = value;
 }
 
-void GRAPHICS_GL2::SetLocalTime(float hours)
+void GraphicsGL2::SetLocalTime(float hours)
 {
 	if (sky.get())
 		sky->SetTime(hours);
 }
 
-void GRAPHICS_GL2::SetLocalTimeSpeed(float value)
+void GraphicsGL2::SetLocalTimeSpeed(float value)
 {
 	if (sky.get())
 		sky->SetTimeSpeed(value);
 }
 
-GLSTATEMANAGER & GRAPHICS_GL2::GetState()
+GraphicsState & GraphicsGL2::GetState()
 {
 	return glstate;
 }
 
-SHADER_GLSL * GRAPHICS_GL2::GetShader(const std::string & name)
+Shader * GraphicsGL2::GetShader(const std::string & name)
 {
 	shader_map_type::iterator it = shadermap.find(name);
 	if (it != shadermap.end())
@@ -619,19 +619,19 @@ SHADER_GLSL * GRAPHICS_GL2::GetShader(const std::string & name)
 		return 0;
 }
 
-void GRAPHICS_GL2::AddInputTexture(const std::string & name, TEXTURE_INTERFACE * texture)
+void GraphicsGL2::AddInputTexture(const std::string & name, TextureInterface * texture)
 {
 	texture_inputs[name] = texture;
 }
 
-void GRAPHICS_GL2::ChangeDisplay(
+void GraphicsGL2::ChangeDisplay(
 	const int width, const int height,
 	std::ostream & error_output)
 {
 	glViewport(0, 0, (GLint)width, (GLint)height);
 
 	GLfloat ratio = (GLfloat)width / (GLfloat)height;
-	MATRIX4<float> m;
+	Matrix4<float> m;
 
 	glMatrixMode(GL_PROJECTION);
 	m.Perspective(45.0f, ratio, 0.1f, 100.0f);
@@ -641,13 +641,13 @@ void GRAPHICS_GL2::ChangeDisplay(
 	m.LoadIdentity();
 	glLoadMatrixf(m.GetArray());
 
-	GLUTIL::CheckForOpenGLErrors("ChangeDisplay", error_output);
+	CheckForOpenGLErrors("ChangeDisplay", error_output);
 
 	w = width;
 	h = height;
 }
 
-bool GRAPHICS_GL2::LoadShader(
+bool GraphicsGL2::LoadShader(
 	const std::string & shader_name,
 	const std::string & shader_defines,
 	const std::string & shader_path,
@@ -717,10 +717,10 @@ bool GRAPHICS_GL2::LoadShader(
 		}
 	}
 
-	std::pair <shader_map_type::iterator, bool> result = shadermap.insert(std::make_pair(shader_name, SHADER_GLSL()));
+	std::pair <shader_map_type::iterator, bool> result = shadermap.insert(std::make_pair(shader_name, Shader()));
 	assert(result.second);
 
-	SHADER_GLSL & shader = result.first->second;
+	Shader & shader = result.first->second;
 	bool success = shader.Load(
 		shader_path + "/" + vert_shader_name,
 		shader_path + "/" + frag_shader_name,
@@ -729,11 +729,11 @@ bool GRAPHICS_GL2::LoadShader(
 	return success;
 }
 
-void GRAPHICS_GL2::EnableShaders(std::ostream & info_output, std::ostream & error_output)
+void GraphicsGL2::EnableShaders(std::ostream & info_output, std::ostream & error_output)
 {
 	bool shader_load_success = true;
 
-	GLUTIL::CheckForOpenGLErrors("EnableShaders: start", error_output);
+	CheckForOpenGLErrors("EnableShaders: start", error_output);
 
 	// unload current shaders
 	glUseProgramObjectARB(0);
@@ -743,10 +743,10 @@ void GRAPHICS_GL2::EnableShaders(std::ostream & info_output, std::ostream & erro
 	}
 	shadermap.clear();
 
-	GLUTIL::CheckForOpenGLErrors("EnableShaders: shader unload", error_output);
+	CheckForOpenGLErrors("EnableShaders: shader unload", error_output);
 
 	// reload configuration
-	config = GRAPHICS_CONFIG();
+	config = GraphicsConfig();
 	std::string rcpath = shaderpath + "/" + renderconfigfile;
 	if (!config.Load(rcpath, error_output))
 	{
@@ -756,7 +756,7 @@ void GRAPHICS_GL2::EnableShaders(std::ostream & info_output, std::ostream & erro
 
 	// reload shaders
 	std::set <std::string> shadernames;
-	for (std::vector <GRAPHICS_CONFIG_SHADER>::const_iterator s = config.shaders.begin(); s != config.shaders.end(); s++)
+	for (std::vector <GraphicsConfigShader>::const_iterator s = config.shaders.begin(); s != config.shaders.end(); s++)
 	{
 		assert(shadernames.find(s->name) == shadernames.end());
 		shadernames.insert(s->name);
@@ -764,7 +764,7 @@ void GRAPHICS_GL2::EnableShaders(std::ostream & info_output, std::ostream & erro
 			LoadShader(s->name, s->defines, shaderpath, s->vertex, s->fragment, info_output, error_output);
 	}
 
-	GLUTIL::CheckForOpenGLErrors("EnableShaders: shader loading", error_output);
+	CheckForOpenGLErrors("EnableShaders: shader loading", error_output);
 
 	if (!shader_load_success)
 	{
@@ -782,7 +782,7 @@ void GRAPHICS_GL2::EnableShaders(std::ostream & info_output, std::ostream & erro
 	texture_outputs.clear();
 	texture_inputs.clear();
 
-	GLUTIL::CheckForOpenGLErrors("EnableShaders: FBO deinit", error_output);
+	CheckForOpenGLErrors("EnableShaders: FBO deinit", error_output);
 
 	bool ssao = (lighting > 0);
 	bool ssao_low = (lighting == 1);
@@ -831,7 +831,7 @@ void GRAPHICS_GL2::EnableShaders(std::ostream & info_output, std::ostream & erro
 
 	bool has_texture_float = GLEW_ARB_texture_float && GLEW_ARB_half_float_pixel;
 
-	for (std::vector <GRAPHICS_CONFIG_OUTPUT>::const_iterator i = config.outputs.begin(); i != config.outputs.end(); i++)
+	for (std::vector <GraphicsConfigOutput>::const_iterator i = config.outputs.begin(); i != config.outputs.end(); i++)
 	{
 		if (i->conditions.Satisfied(conditions))
 		{
@@ -847,19 +847,19 @@ void GRAPHICS_GL2::EnableShaders(std::ostream & info_output, std::ostream & erro
 			}
 			else
 			{
-				FBTEXTURE & fbtex = texture_outputs[i->name];
-				FBTEXTURE::TARGET type = FBTEXTURE::NORMAL;
+				FrameBufferTexture & fbtex = texture_outputs[i->name];
+				FrameBufferTexture::TARGET type = FrameBufferTexture::NORMAL;
 				if (i->type == "rectangle")
-					type = FBTEXTURE::RECTANGLE;
+					type = FrameBufferTexture::RECTANGLE;
 				else if (i->type == "cube")
-					type = FBTEXTURE::CUBEMAP;
+					type = FrameBufferTexture::CUBEMAP;
 				int fbms = 0;
 				if (i->multisample < 0)
 					fbms = fsaa;
 
 				// check texture format
-				FBTEXTURE::FORMAT format = TextureFormatFromString(i->format);
-				if (!has_texture_float && (format == FBTEXTURE::RGBA16 || format == FBTEXTURE::RGB16))
+				FrameBufferTexture::FORMAT format = TextureFormatFromString(i->format);
+				if (!has_texture_float && (format == FrameBufferTexture::RGBA16 || format == FrameBufferTexture::RGB16))
 				{
 					error_output << "Your video card doesn't support floating point textures." << std::endl;
 					error_output << "Failed to load render output: " << i->name << " " << i->type << std::endl;
@@ -884,7 +884,7 @@ void GRAPHICS_GL2::EnableShaders(std::ostream & info_output, std::ostream & erro
 	render_outputs["framebuffer"].RenderToFramebuffer();
 
 	// go through all pass outputs and construct the actual FBOs, which can consist of one or more fbtextures
-	for (std::vector <GRAPHICS_CONFIG_PASS>::const_iterator i = config.passes.begin(); i != config.passes.end(); i++)
+	for (std::vector <GraphicsConfigPass>::const_iterator i = config.passes.begin(); i != config.passes.end(); i++)
 	{
 		if (i->conditions.Satisfied(conditions))
 		{
@@ -897,7 +897,7 @@ void GRAPHICS_GL2::EnableShaders(std::ostream & info_output, std::ostream & erro
 				std::vector <std::string> outputs = Tokenize(outname, " ");
 
 				// collect a list of textures for the outputs
-				std::vector <FBTEXTURE*> fbotex;
+				std::vector <FrameBufferTexture*> fbotex;
 				for (std::vector <std::string>::const_iterator o = outputs.begin(); o != outputs.end(); o++)
 				{
 					texture_output_map_type::iterator to = texture_outputs.find(*o);
@@ -914,7 +914,7 @@ void GRAPHICS_GL2::EnableShaders(std::ostream & info_output, std::ostream & erro
 				}
 
 				// initialize fbo
-				FBOBJECT & fbo = render_outputs[outname].RenderToFBO();
+				FrameBufferObject & fbo = render_outputs[outname].RenderToFBO();
 				fbo.Init(glstate, fbotex, error_output);
 			}
 		}
@@ -922,13 +922,13 @@ void GRAPHICS_GL2::EnableShaders(std::ostream & info_output, std::ostream & erro
 
 	if (sky_dynamic)
 	{
-		sky.reset(new SKY(*this, error_output));
+		sky.reset(new Sky(*this, error_output));
 		texture_inputs["sky"] = sky.get();
 		//sky->UpdateComplete();
 	}
 }
 
-void GRAPHICS_GL2::DisableShaders(std::ostream & error_output)
+void GraphicsGL2::DisableShaders(std::ostream & error_output)
 {
 	if (using_shaders)
 	{
@@ -941,7 +941,7 @@ void GRAPHICS_GL2::DisableShaders(std::ostream & error_output)
 	shadows = false;
 
 	// load non-shader configuration
-	config = GRAPHICS_CONFIG();
+	config = GraphicsConfig();
 	std::string rcpath = shaderpath + "/" + renderconfigfile;
 	if (!config.Load(rcpath, error_output))
 	{
@@ -958,9 +958,9 @@ void GRAPHICS_GL2::DisableShaders(std::ostream & error_output)
 	}
 }
 
-void GRAPHICS_GL2::CullScenePass(
-	const GRAPHICS_CONFIG_PASS & pass,
-	std::map <std::string, PTRVECTOR <DRAWABLE> > & culled_static_drawlist,
+void GraphicsGL2::CullScenePass(
+	const GraphicsConfigPass & pass,
+	std::map <std::string, PtrVector <Drawable> > & culled_static_drawlist,
 	std::ostream & error_output)
 {
 	// for each pass, we have which camera and which draw layer to use
@@ -1010,14 +1010,14 @@ void GRAPHICS_GL2::CullScenePass(
 				}
 
 				// create our sub-camera
-				GRAPHICS_CAMERA & cam = cameras[cameraname];
+				GraphicsCamera & cam = cameras[cameraname];
 				cam = bci->second;
 
 				// set the sub-camera's properties
 				cam.orient = GetCubeSideOrientation(cubeside, cam.orient, error_output);
 				cam.fov = 90;
 				assert(oi->second.IsFBO());
-				const FBOBJECT & fbo = oi->second.RenderToFBO();
+				const FrameBufferObject & fbo = oi->second.RenderToFBO();
 				cam.w = fbo.GetWidth();
 				cam.h = fbo.GetHeight();
 			}
@@ -1033,15 +1033,15 @@ void GRAPHICS_GL2::CullScenePass(
 					return;
 				}
 
-				GRAPHICS_CAMERA & cam = ci->second;
+				GraphicsCamera & cam = ci->second;
 				if (culled_static_drawlist.find(key) == culled_static_drawlist.end())
 				{
 					if (cam.orthomode)
 						renderscene.SetOrtho(cam.orthomin, cam.orthomax);
 					else
 						renderscene.DisableOrtho();
-					FRUSTUM frustum = renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h);
-					reseatable_reference <AABB_SPACE_PARTITIONING_NODE_ADAPTER <DRAWABLE> > container =
+					Frustum frustum = renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h);
+					reseatable_reference <AabbTreeNodeAdapter <Drawable> > container =
 						static_drawlist.GetDrawlist().GetByName(*d);
 
 					if (!container)
@@ -1056,7 +1056,7 @@ void GRAPHICS_GL2::CullScenePass(
 			}
 			else
 			{
-				reseatable_reference <AABB_SPACE_PARTITIONING_NODE_ADAPTER <DRAWABLE> > container =
+				reseatable_reference <AabbTreeNodeAdapter <Drawable> > container =
 					static_drawlist.GetDrawlist().GetByName(*d);
 
 				if (!container)
@@ -1065,15 +1065,15 @@ void GRAPHICS_GL2::CullScenePass(
 					return;
 				}
 
-				container->Query(AABB<float>::INTERSECT_ALWAYS(), culled_static_drawlist[key]);
+				container->Query(Aabb<float>::INTERSECT_ALWAYS(), culled_static_drawlist[key]);
 			}
 		}
 	}
 }
 
-void GRAPHICS_GL2::DrawScenePass(
-	const GRAPHICS_CONFIG_PASS & pass,
-	std::map <std::string, PTRVECTOR <DRAWABLE> > & culled_static_drawlist,
+void GraphicsGL2::DrawScenePass(
+	const GraphicsConfigPass & pass,
+	std::map <std::string, PtrVector <Drawable> > & culled_static_drawlist,
 	std::ostream & error_output)
 {
 	if (!pass.conditions.Satisfied(conditions))
@@ -1086,7 +1086,7 @@ void GRAPHICS_GL2::DrawScenePass(
 		return;
 	}
 
-	std::vector <TEXTURE_INTERFACE*> input_textures;
+	std::vector <TextureInterface*> input_textures;
 	GetScenePassInputTextures(pass.inputs, input_textures);
 
 	// setup shader
@@ -1127,13 +1127,13 @@ void GRAPHICS_GL2::DrawScenePass(
 	}
 }
 
-void GRAPHICS_GL2::DrawScenePassPost(
-	const GRAPHICS_CONFIG_PASS & pass,
+void GraphicsGL2::DrawScenePassPost(
+	const GraphicsConfigPass & pass,
 	std::ostream & error_output)
 {
 	assert(pass.draw.back() == "postprocess");
 
-	std::vector <TEXTURE_INTERFACE*> input_textures;
+	std::vector <TextureInterface*> input_textures;
 	GetScenePassInputTextures(pass.inputs, input_textures);
 
 	// setup camera, even though we don't use it directly for the post process we want to have some info available
@@ -1145,7 +1145,7 @@ void GRAPHICS_GL2::DrawScenePassPost(
 		return;
 	}
 
-	GRAPHICS_CAMERA & cam = ci->second;
+	GraphicsCamera & cam = ci->second;
 	if (cam.orthomode)
 		renderscene.SetOrtho(cam.orthomin, cam.orthomax);
 	else
@@ -1173,9 +1173,9 @@ void GRAPHICS_GL2::DrawScenePassPost(
 		error_output);
 }
 
-void GRAPHICS_GL2::GetScenePassInputTextures(
-	const GRAPHICS_CONFIG_INPUTS & inputs,
-	std::vector <TEXTURE_INTERFACE*> & input_textures)
+void GraphicsGL2::GetScenePassInputTextures(
+	const GraphicsConfigInputs & inputs,
+	std::vector <TextureInterface*> & input_textures)
 {
 	for (std::map <unsigned int, std::string>::const_iterator t = inputs.tu.begin(); t != inputs.tu.end(); t++)
 	{
@@ -1204,8 +1204,8 @@ void GRAPHICS_GL2::GetScenePassInputTextures(
 	}
 }
 
-void GRAPHICS_GL2::BindInputTextures(
-	const std::vector <TEXTURE_INTERFACE*> & textures,
+void GraphicsGL2::BindInputTextures(
+	const std::vector <TextureInterface*> & textures,
 	std::ostream & error_output)
 {
 	for (unsigned int i = 0; i < textures.size(); i++)
@@ -1215,7 +1215,7 @@ void GRAPHICS_GL2::BindInputTextures(
 			glActiveTexture(GL_TEXTURE0+i);
 			textures[i]->Activate();
 
-			if (GLUTIL::CheckForOpenGLErrors("RenderDrawlists extra texture bind", error_output))
+			if (CheckForOpenGLErrors("RenderDrawlists extra texture bind", error_output))
 			{
 				error_output << "this error occurred while binding texture " << i << " loaded=" << textures[i]->Loaded() << std::endl;
 			}
@@ -1225,8 +1225,8 @@ void GRAPHICS_GL2::BindInputTextures(
 	glActiveTexture(GL_TEXTURE0);
 }
 
-void GRAPHICS_GL2::UnbindInputTextures(
-	const std::vector <TEXTURE_INTERFACE*> & textures,
+void GraphicsGL2::UnbindInputTextures(
+	const std::vector <TextureInterface*> & textures,
 	std::ostream & error_output)
 {
 	for (unsigned int i = 0; i < textures.size(); i++)
@@ -1236,7 +1236,7 @@ void GRAPHICS_GL2::UnbindInputTextures(
 			glActiveTexture(GL_TEXTURE0+i);
 			textures[i]->Deactivate();
 
-			if (GLUTIL::CheckForOpenGLErrors("RenderDrawlists extra texture unbind", error_output))
+			if (CheckForOpenGLErrors("RenderDrawlists extra texture unbind", error_output))
 			{
 				error_output << "this error occurred while binding texture " << i << " loaded=" << textures[i]->Loaded() << std::endl;
 			}
@@ -1246,12 +1246,12 @@ void GRAPHICS_GL2::UnbindInputTextures(
 	glActiveTexture(GL_TEXTURE0);
 }
 
-void GRAPHICS_GL2::DrawScenePassLayer(
+void GraphicsGL2::DrawScenePassLayer(
 	const std::string & layer,
-	const GRAPHICS_CONFIG_PASS & pass,
-	const std::vector <TEXTURE_INTERFACE*> & input_textures,
-	const std::map <std::string, PTRVECTOR <DRAWABLE> > & culled_static_drawlist,
-	RENDER_OUTPUT & render_output,
+	const GraphicsConfigPass & pass,
+	const std::vector <TextureInterface*> & input_textures,
+	const std::map <std::string, PtrVector <Drawable> > & culled_static_drawlist,
+	RenderOutput & render_output,
 	std::ostream & error_output)
 {
 	// handle the cubemap case
@@ -1281,7 +1281,7 @@ void GRAPHICS_GL2::DrawScenePassLayer(
 			return;
 		}
 
-		GRAPHICS_CAMERA & cam = ci->second;
+		GraphicsCamera & cam = ci->second;
 		if (cam.orthomode)
 			renderscene.SetOrtho(cam.orthomin, cam.orthomax);
 		else
@@ -1289,7 +1289,7 @@ void GRAPHICS_GL2::DrawScenePassLayer(
 		renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h);
 
 		// setup dynamic drawlist
-		reseatable_reference <PTRVECTOR <DRAWABLE> > container_dynamic = dynamic_drawlist.GetByName(layer);
+		reseatable_reference <PtrVector <Drawable> > container_dynamic = dynamic_drawlist.GetByName(layer);
 		if (!container_dynamic)
 		{
 			ReportOnce(&pass, "Drawable container " + layer + " couldn't be found", error_output);
@@ -1298,7 +1298,7 @@ void GRAPHICS_GL2::DrawScenePassLayer(
 
 		// setup static drawlist
 		const std::string drawlist_key = BuildKey(cameraname, layer);
-		std::map <std::string, PTRVECTOR <DRAWABLE> >::const_iterator container_static =
+		std::map <std::string, PtrVector <Drawable> >::const_iterator container_static =
 			culled_static_drawlist.find(drawlist_key);
 		if (container_static == culled_static_drawlist.end())
 		{
@@ -1324,26 +1324,26 @@ void GRAPHICS_GL2::DrawScenePassLayer(
 	}
 }
 
-void GRAPHICS_GL2::RenderDrawlist(
-	const std::vector <DRAWABLE*> & drawlist,
-	RENDER_INPUT_SCENE & render_scene,
-	RENDER_OUTPUT & render_output,
+void GraphicsGL2::RenderDrawlist(
+	const std::vector <Drawable*> & drawlist,
+	RenderInputScene & render_scene,
+	RenderOutput & render_output,
 	std::ostream & error_output)
 {
 	if (drawlist.empty() && !render_scene.GetClear().first && !render_scene.GetClear().second)
 		return;
 
-	std::vector <DRAWABLE*> empty;
+	std::vector <Drawable*> empty;
 	render_scene.SetDrawLists(drawlist, empty);
 	Render(&render_scene, render_output, error_output);
 }
 
-void GRAPHICS_GL2::RenderDrawlists(
-	const std::vector <DRAWABLE*> & dynamic_drawlist,
-	const std::vector <DRAWABLE*> & static_drawlist,
-	const std::vector <TEXTURE_INTERFACE*> & extra_textures,
-	RENDER_INPUT_SCENE & render_scene,
-	RENDER_OUTPUT & render_output,
+void GraphicsGL2::RenderDrawlists(
+	const std::vector <Drawable*> & dynamic_drawlist,
+	const std::vector <Drawable*> & static_drawlist,
+	const std::vector <TextureInterface*> & extra_textures,
+	RenderInputScene & render_scene,
+	RenderOutput & render_output,
 	std::ostream & error_output)
 {
 	if (dynamic_drawlist.empty() && static_drawlist.empty() &&
@@ -1359,35 +1359,35 @@ void GRAPHICS_GL2::RenderDrawlists(
 	UnbindInputTextures(extra_textures, error_output);
 }
 
-void GRAPHICS_GL2::RenderPostProcess(
+void GraphicsGL2::RenderPostProcess(
 	const std::string & shadername,
-	const std::vector <TEXTURE_INTERFACE*> & textures,
-	RENDER_OUTPUT & render_output,
+	const std::vector <TextureInterface*> & textures,
+	RenderOutput & render_output,
 	bool write_color,
 	bool write_alpha,
 	std::ostream & error_output)
 {
 	postprocess.SetWriteColor(write_color);
 	postprocess.SetWriteAlpha(write_alpha);
-	std::map <std::string, SHADER_GLSL>::iterator s = shadermap.find(shadername);
+	std::map <std::string, Shader>::iterator s = shadermap.find(shadername);
 	assert(s != shadermap.end());
 	postprocess.SetShader(&s->second);
 	postprocess.SetSourceTextures(textures);
 	Render(&postprocess, render_output, error_output);
 }
 
-void GRAPHICS_GL2::Render(RENDER_INPUT * input, RENDER_OUTPUT & output, std::ostream & error_output)
+void GraphicsGL2::Render(RenderInput * input, RenderOutput & output, std::ostream & error_output)
 {
 	output.Begin(glstate, error_output);
 
-	GLUTIL::CheckForOpenGLErrors("render output begin", error_output);
+	CheckForOpenGLErrors("render output begin", error_output);
 
 	input->Render(glstate, error_output);
 
-	GLUTIL::CheckForOpenGLErrors("render finish", error_output);
+	CheckForOpenGLErrors("render finish", error_output);
 
 	output.End(glstate, error_output);
 
-	GLUTIL::CheckForOpenGLErrors("render output end", error_output);
+	CheckForOpenGLErrors("render output end", error_output);
 }
 

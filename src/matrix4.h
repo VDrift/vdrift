@@ -28,16 +28,16 @@
 #include <cassert>
 
 template <typename T>
-class MATRIX4
+class Matrix4
 {
 	private:
 		typedef size_t size_type;
 		T data[16];
 
 	public:
-		MATRIX4() {LoadIdentity();}
-		MATRIX4(const MATRIX4 <T> & other) {Set(other);}
-		const MATRIX4 & operator=(const MATRIX4 <T> & other) {Set(other); return *this;}
+		Matrix4() {LoadIdentity();}
+		Matrix4(const Matrix4 <T> & other) {Set(other);}
+		const Matrix4 & operator=(const Matrix4 <T> & other) {Set(other); return *this;}
 
 		const T & operator[](size_type n) const
 		{
@@ -65,9 +65,9 @@ class MATRIX4
 		}
 
 		// this is actually other * this, not this * other
-		MATRIX4 <T> Multiply(const MATRIX4 <T> & other) const
+		Matrix4 <T> Multiply(const Matrix4 <T> & other) const
 		{
-			MATRIX4 out;
+			Matrix4 out;
 
 			for (int i = 0, i4 = 0; i < 4; i++,i4+=4)
 			{
@@ -123,7 +123,7 @@ class MATRIX4
 				data[i] = newdata[i];
 		}
 
-		inline void Set(const MATRIX4 <T> & other) {Set(other.data);}
+		inline void Set(const Matrix4 <T> & other) {Set(other.data);}
 
 		void Translate(const float tx, const float ty, const float tz)
 		{
@@ -132,10 +132,10 @@ class MATRIX4
 			data[14] += tz;
 		}
 
-		bool operator==(const MATRIX4 <T> & other) {return Equals(other);}
-		bool operator!=(const MATRIX4 <T> & other) {return !Equals(other);}
+		bool operator==(const Matrix4 <T> & other) {return Equals(other);}
+		bool operator!=(const Matrix4 <T> & other) {return !Equals(other);}
 
-		bool Equals(const MATRIX4 <T> & other)
+		bool Equals(const Matrix4 <T> & other)
 		{
 			return (memcmp(data,other.data,16*sizeof(T)) == 0); //high performance, but portability issues?
 			/*for (int i = 0; i < 16; i++)
@@ -173,7 +173,7 @@ class MATRIX4
 
 		void Scale(T scalar)
 		{
-			MATRIX4 <T> scalemat;
+			Matrix4 <T> scalemat;
 			scalemat.data[15] = 1;
 			scalemat.data[0] = scalemat.data[5] = scalemat.data[10] = scalar;
 			scalemat.data[1] = scalemat.data[2] = scalemat.data[3] = scalemat.data[4] = scalemat.data[6] = scalemat.data[7] = scalemat.data[8] = scalemat.data[9] = scalemat.data[11] = scalemat.data[12] = scalemat.data[13] = scalemat.data[14] = 0;
@@ -203,9 +203,9 @@ class MATRIX4
 			data[12] = 0; data[13] = 0; data[14] = -1; data[15] = (zfar + znear) / (2 * zfar * znear);
 		}
 
-		MATRIX4<T> Inverse() const
+		Matrix4<T> Inverse() const
 		{
-			MATRIX4<T> Inv;
+			Matrix4<T> Inv;
 
 			T A0 = data[ 0]*data[ 5] - data[ 1]*data[ 4];
 			T A1 = data[ 0]*data[ 6] - data[ 2]*data[ 4];
@@ -317,17 +317,17 @@ class MATRIX4
 			// ensure orthonormal basis vectors
 
 			// extract and normalize the x basis
-			MATHVECTOR <T, 3> xBasis;
+			MathVector <T, 3> xBasis;
 			xBasis.Set(&data[0]);
 			xBasis = xBasis.Normalize();
 
 			// extract and normalize the y basis
-			MATHVECTOR <T, 3> yBasis;
+			MathVector <T, 3> yBasis;
 			yBasis.Set(&data[4]);
 			yBasis = yBasis.Normalize();
 
 			// generate an orthonormal z basis
-			MATHVECTOR <T, 3> zBasis;
+			MathVector <T, 3> zBasis;
 			zBasis = xBasis.cross(yBasis);
 
 			// save our orthonormal basis vectors back to the matrix
@@ -363,7 +363,7 @@ class MATRIX4
 };
 
 template <typename T>
-std::ostream & operator << (std::ostream &os, const MATRIX4 <T> & m)
+std::ostream & operator << (std::ostream &os, const Matrix4 <T> & m)
 {
 	m.DebugPrint(os);
 	return os;

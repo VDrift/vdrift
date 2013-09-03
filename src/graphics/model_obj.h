@@ -23,12 +23,12 @@
 #include "model.h"
 #include <iosfwd>
 
-class MODEL_OBJ : public MODEL
+class ModelObj : public Model
 {
 private:
 
 public:
-	MODEL_OBJ(const std::string & filepath, std::ostream & error_output) : MODEL(filepath, error_output) {}
+	ModelObj(const std::string & filepath, std::ostream & error_output) : Model(filepath, error_output) {}
 
 	///returns true on success
 	virtual bool Load(const std::string & filepath, std::ostream & error_log, bool genlist = true);

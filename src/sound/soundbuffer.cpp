@@ -31,7 +31,7 @@
 #include <cstdio>
 #include <cstring>
 
-SOUNDBUFFER::SOUNDBUFFER() :
+SoundBuffer::SoundBuffer() :
 	info(0, 0, 0, 0),
 	size(0),
 	loaded(false),
@@ -40,12 +40,12 @@ SOUNDBUFFER::SOUNDBUFFER() :
 	// ctor
 }
 
-SOUNDBUFFER::~SOUNDBUFFER()
+SoundBuffer::~SoundBuffer()
 {
 	Unload();
 }
 
-bool SOUNDBUFFER::Load(const std::string & filename, const SOUNDINFO & sound_device_info, std::ostream & error_output)
+bool SoundBuffer::Load(const std::string & filename, const SoundInfo & sound_device_info, std::ostream & error_output)
 {
 	if (filename.find(".wav") != std::string::npos)
 		return LoadWAV(filename, sound_device_info, error_output);
@@ -58,14 +58,14 @@ bool SOUNDBUFFER::Load(const std::string & filename, const SOUNDINFO & sound_dev
 	}
 }
 
-void SOUNDBUFFER::Unload()
+void SoundBuffer::Unload()
 {
 	if (loaded && sound_buffer)
 		delete [] sound_buffer;
 	sound_buffer = 0;
 }
 
-bool SOUNDBUFFER::LoadWAV(const std::string & filename, const SOUNDINFO & sound_device_info, std::ostream & error_output)
+bool SoundBuffer::LoadWAV(const std::string & filename, const SoundInfo & sound_device_info, std::ostream & error_output)
 {
 	if (loaded)
 		Unload();
@@ -169,11 +169,11 @@ bool SOUNDBUFFER::LoadWAV(const std::string & filename, const SOUNDINFO & sound_
 					}
 #endif
 
-					info = SOUNDINFO(size/(bits_per_sample/8), sample_rate, channels, bits_per_sample/8);
-					SOUNDINFO original_info(size/(bits_per_sample/8), sample_rate, channels, bits_per_sample/8);
+					info = SoundInfo(size/(bits_per_sample/8), sample_rate, channels, bits_per_sample/8);
+					SoundInfo original_info(size/(bits_per_sample/8), sample_rate, channels, bits_per_sample/8);
 
 					loaded = true;
-					SOUNDINFO desired_info(original_info.samples, sound_device_info.frequency, original_info.channels, sound_device_info.bytespersample);
+					SoundInfo desired_info(original_info.samples, sound_device_info.frequency, original_info.channels, sound_device_info.bytespersample);
 					//ConvertTo(desired_info);
 					if (desired_info == original_info)
 					{
@@ -228,7 +228,7 @@ bool SOUNDBUFFER::LoadWAV(const std::string & filename, const SOUNDINFO & sound_
 	return true;
 }
 
-bool SOUNDBUFFER::LoadOGG(const std::string & filename, const SOUNDINFO & sound_device_info, std::ostream & error_output)
+bool SoundBuffer::LoadOGG(const std::string & filename, const SoundInfo & sound_device_info, std::ostream & error_output)
 {
 	if (loaded)
 		Unload();
@@ -251,9 +251,9 @@ bool SOUNDBUFFER::LoadOGG(const std::string & filename, const SOUNDINFO & sound_
 
 		//I assume ogg is always 16-bit (2 bytes per sample) -Venzon
 		samples = ov_pcm_total(&oggFile,-1);
-		info = SOUNDINFO(samples*pInfo->channels, pInfo->rate, pInfo->channels, 2);
+		info = SoundInfo(samples*pInfo->channels, pInfo->rate, pInfo->channels, 2);
 
-		SOUNDINFO desired_info(info.samples, sound_device_info.frequency, info.channels, sound_device_info.bytespersample);
+		SoundInfo desired_info(info.samples, sound_device_info.frequency, info.channels, sound_device_info.bytespersample);
 
 		if (!(desired_info == info))
 		{

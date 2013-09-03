@@ -268,14 +268,14 @@ static int parse_dds(
 
 
 // !!! FIXME: improve the crap out of this API later.
-int isDDS(const void *_ptr, const unsigned long _len)
+int IsDDS(const void *_ptr, const unsigned long _len)
 {
     size_t len = (size_t) _len;
     const uint8 *ptr = (const uint8 *) _ptr;
     return (readui32(ptr, len) == DDS_MAGIC);
 } // isDDS
 
-int readDDS(
+int ReadDDS(
     const void *_ptr, const unsigned long _len,
     const void *&_tex, unsigned long &_texlen,
     unsigned int &_glfmt, unsigned int &_w,

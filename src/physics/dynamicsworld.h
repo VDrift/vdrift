@@ -25,10 +25,10 @@
 
 #include <iosfwd>
 
-class TRACK;
-class COLLISION_CONTACT;
+class Track;
+class CollisionContact;
 class FractureBody;
-class BEZIER;
+class Bezier;
 
 class DynamicsWorld  : public btDiscreteDynamicsWorld
 {
@@ -46,12 +46,12 @@ public:
 	void addCollisionObject(btCollisionObject* object);
 
 	// reset collision world (unloads previous track)
-	void reset(const TRACK & t);
+	void reset(const Track & t);
 
 	// set custon contact callback
 	void setContactAddedCallback(ContactAddedCallback cb);
 
-	const BEZIER* GetSectorPatch(int i);
+	const Bezier* GetSectorPatch(int i);
 
 	// cast ray into collision world, returns first hit, caster is excluded fom hits
 	bool castRay(
@@ -59,7 +59,7 @@ public:
 		const btVector3 & direction,
 		const btScalar length,
 		const btCollisionObject * caster,
-		COLLISION_CONTACT & contact) const;
+		CollisionContact & contact) const;
 
 	void update(btScalar dt);
 
@@ -76,7 +76,7 @@ protected:
 		int id;
 	};
 	btAlignedObjectArray<ActiveCon> m_activeConnections;
-	const TRACK * track;
+	const Track * track;
 	btScalar timeStep;
 	int maxSubSteps;
 

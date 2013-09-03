@@ -30,12 +30,12 @@
 #include <vector>
 #include <map>
 
-class TIMER
+class Timer
 {
 public:
-	TIMER() : pretime(0.0), playercarindex(0), loaded(false) {}
+	Timer() : pretime(0.0), playercarindex(0), loaded(false) {}
 
-	~TIMER() {Unload();}
+	~Timer() {Unload();}
 
 	bool Load(const std::string & trackrecordspath, float stagingtime);
 

@@ -20,7 +20,7 @@
 #include "guilabel.h"
 #include <cassert>
 
-GUILABEL::GUILABEL() :
+GuiLabel::GuiLabel() :
 	m_font(0),
 	m_x(0),
 	m_y(0),
@@ -28,17 +28,17 @@ GUILABEL::GUILABEL() :
 	m_scaley(0),
 	m_align(0)
 {
-	set_value.call.bind<GUILABEL, &GUILABEL::SetText>(this);
+	set_value.call.bind<GuiLabel, &GuiLabel::SetText>(this);
 }
 
-GUILABEL::~GUILABEL()
+GuiLabel::~GuiLabel()
 {
 	// destructor
 }
 
-void GUILABEL::SetupDrawable(
-	SCENENODE & scene,
-	const FONT & font, int align,
+void GuiLabel::SetupDrawable(
+	SceneNode & scene,
+	const Font & font, int align,
 	float scalex, float scaley,
 	float x, float y,
 	float w, float h, float z)
@@ -52,8 +52,8 @@ void GUILABEL::SetupDrawable(
 	m_scaley = scaley;
 	m_align = align;
 
-	m_draw = scene.GetDrawlist().text.insert(DRAWABLE());
-	DRAWABLE & drawref = GetDrawable(scene);
+	m_draw = scene.GetDrawlist().text.insert(Drawable());
+	Drawable & drawref = GetDrawable(scene);
 	drawref.SetDrawOrder(z);
 
 	float textw = 0;
@@ -63,7 +63,7 @@ void GUILABEL::SetupDrawable(
 	m_text_draw.Set(drawref, font, m_text, x, y, scalex, scaley, m_r, m_g, m_b);
 }
 
-void GUILABEL::SetText(const std::string & text)
+void GuiLabel::SetText(const std::string & text)
 {
 	assert(m_font);
 	m_text = text;
@@ -75,12 +75,12 @@ void GUILABEL::SetText(const std::string & text)
 	m_text_draw.Revise(*m_font, m_text, x, m_y, m_scalex, m_scaley);
 }
 
-const std::string & GUILABEL::GetText() const
+const std::string & GuiLabel::GetText() const
 {
 	return m_text;
 }
 
-DRAWABLE & GUILABEL::GetDrawable(SCENENODE & scene)
+Drawable & GuiLabel::GetDrawable(SceneNode & scene)
 {
 	return scene.GetDrawlist().text.get(m_draw);
 }

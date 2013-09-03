@@ -22,10 +22,10 @@
 
 class CAR;
 
-class SUSPENSIONBUMPDETECTION
+class SuspensionBumpDetection
 {
 public:
-	SUSPENSIONBUMPDETECTION();
+	SuspensionBumpDetection();
 
 	void Update(float vel, float displacementpercent, float dt);
 

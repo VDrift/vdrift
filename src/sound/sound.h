@@ -32,18 +32,18 @@
 
 struct SDL_mutex;
 
-class SOUND
+class Sound
 {
 public:
-	SOUND();
+	Sound();
 
-	~SOUND();
+	~Sound();
 
 	// init sound device
 	bool Init(int buffersize, std::ostream & info, std::ostream & error);
 
 	// get device info
-	const SOUNDINFO & GetDeviceInfo() const;
+	const SoundInfo & GetDeviceInfo() const;
 
 	// return if sound enabled
 	bool Enabled() const;
@@ -54,7 +54,7 @@ public:
 	// active sources limit can be adjusted at runtime
 	void SetMaxActiveSources(size_t value);
 
-	size_t AddSource(std::tr1::shared_ptr<SOUNDBUFFER> buffer, float offset, bool is3d, bool loop);
+	size_t AddSource(std::tr1::shared_ptr<SoundBuffer> buffer, float offset, bool is3d, bool loop);
 
 	void RemoveSource(size_t id);
 
@@ -83,10 +83,10 @@ public:
 
 private:
 	std::ostream * log_error;
-	SOUNDINFO deviceinfo;
-	MATHVECTOR<float, 3> listener_pos;
-	MATHVECTOR<float, 3> listener_vel;
-	QUATERNION<float> listener_rot;
+	SoundInfo deviceinfo;
+	Vec3 listener_pos;
+	Vec3 listener_vel;
+	Quat listener_rot;
 	float sound_volume;
 	bool initdone;
 	bool disable;
@@ -101,9 +101,9 @@ private:
 
 	struct Source
 	{
-		std::tr1::shared_ptr<SOUNDBUFFER> buffer;
-		MATHVECTOR<float, 3> position;
-		MATHVECTOR<float, 3> velocity;
+		std::tr1::shared_ptr<SoundBuffer> buffer;
+		Vec3 position;
+		Vec3 velocity;
 		float offset;
 		float pitch;
 		float gain;
@@ -117,7 +117,7 @@ private:
 	{
 		static const int denom = 32768;
 		static const int max_gain_delta = (denom * 173) / 44100; // 256 samples from min to max gain
-		const SOUNDBUFFER * buffer;
+		const SoundBuffer * buffer;
 		int samples_per_channel;
 		int sample_pos;
 		int sample_pos_remainder;
@@ -134,7 +134,7 @@ private:
 	// message structs
 	struct SamplerAdd
 	{
-		const SOUNDBUFFER * buffer;
+		const SoundBuffer * buffer;
 		int offset;
 		bool loop;
 		int id;

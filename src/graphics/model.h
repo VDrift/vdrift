@@ -25,15 +25,15 @@
 #include "glew.h"
 
 /// Loading data into the mesh vertexarray is implemented by derived classes.
-class MODEL
+class Model
 {
 friend class joeserialize::Serializer;
 public:
-	MODEL();
+	Model();
 
-	MODEL(const std::string & filepath, std::ostream & error_output);
+	Model(const std::string & filepath, std::ostream & error_output);
 
-	virtual ~MODEL();
+	virtual ~Model();
 
 	/// Returns true if the model format is capable of saving to a file.
 	virtual bool CanSave() const;
@@ -43,7 +43,7 @@ public:
 
 	virtual bool Load(const std::string & strFileName, std::ostream & error_output, bool genlist);
 
-	bool Load(const VERTEXARRAY & varray, std::ostream & error_output, bool genlist);
+	bool Load(const VertexArray & varray, std::ostream & error_output, bool genlist);
 
 	bool Serialize(joeserialize::Serializer & s);
 
@@ -68,10 +68,10 @@ public:
 	unsigned GetListID() const;
 
 	/// Get aabb size.
-	MATHVECTOR <float, 3> GetSize() const;
+	Vec3 GetSize() const;
 
 	/// Get aabb center.
-	MATHVECTOR <float, 3> GetCenter() const;
+	Vec3 GetCenter() const;
 
 	/// Get bounding radius relative to center.
 	float GetRadius() const;
@@ -84,17 +84,17 @@ public:
 
 	void Clear();
 
-	const VERTEXARRAY & GetVertexArray() const;
+	const VertexArray & GetVertexArray() const;
 
-	void SetVertexArray(const VERTEXARRAY & newmesh);
+	void SetVertexArray(const VertexArray & newmesh);
 
-	void BuildFromVertexArray(const VERTEXARRAY & newmesh);
+	void BuildFromVertexArray(const VertexArray & newmesh);
 
 	bool Loaded();
 
 protected:
 	/// To be filled by the derived classes.
-	VERTEXARRAY m_mesh;
+	VertexArray m_mesh;
 
 private:
 	/// VAO means vertex array object.
@@ -105,8 +105,8 @@ private:
 	unsigned listid;			///< listid 0 is invalid, means no display list compiled
 
 	// Metrics.
-	MATHVECTOR <float, 3> min;
-	MATHVECTOR <float, 3> max;
+	Vec3 min;
+	Vec3 max;
 	float radius;
 
 	bool generatedmetrics;

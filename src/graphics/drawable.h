@@ -26,44 +26,44 @@
 #include "model.h"
 #include "memory.h"
 
-class TEXTURE;
-class VERTEXARRAY;
+class Texture;
+class VertexArray;
 class GLWrapper;
 class StringIdMap;
 
-class DRAWABLE
+class Drawable
 {
 public:
-	bool operator < (const DRAWABLE & other) const {return draw_order < other.draw_order;}
+	bool operator < (const Drawable & other) const {return draw_order < other.draw_order;}
 
 	bool IsDrawList() const {return !list_ids.empty();}
 
 	const std::vector <int> & GetDrawLists() const {return list_ids;}
 
-	void SetModel(const MODEL & model);
+	void SetModel(const Model & model);
 
-	const TEXTURE * GetDiffuseMap() const {return diffuse_map.get();}
-	void SetDiffuseMap(const std::tr1::shared_ptr<TEXTURE> & value);
+	const Texture * GetDiffuseMap() const {return diffuse_map.get();}
+	void SetDiffuseMap(const std::tr1::shared_ptr<Texture> & value);
 
-	const TEXTURE * GetMiscMap1() const {return misc_map1.get();}
-	void SetMiscMap1(const std::tr1::shared_ptr<TEXTURE> & value);
+	const Texture * GetMiscMap1() const {return misc_map1.get();}
+	void SetMiscMap1(const std::tr1::shared_ptr<Texture> & value);
 
-	const TEXTURE * GetMiscMap2() const {return misc_map2.get();}
-	void SetMiscMap2(const std::tr1::shared_ptr<TEXTURE> & value);
+	const Texture * GetMiscMap2() const {return misc_map2.get();}
+	void SetMiscMap2(const std::tr1::shared_ptr<Texture> & value);
 
-	const VERTEXARRAY * GetVertArray() const {return vert_array;}
-	void SetVertArray(const VERTEXARRAY* value);
+	const VertexArray * GetVertArray() const {return vert_array;}
+	void SetVertArray(const VertexArray* value);
 
 	/// draw vertex array as line segments if size > 0
 	void SetLineSize(float size) { linesize = size; renderModel.SetLineSize(size);}
 	float GetLineSize() const { return linesize; }
 
-	const MATRIX4 <float> & GetTransform() const {return transform;}
-	void SetTransform(const MATRIX4 <float> & value);
+	const Matrix4 <float> & GetTransform() const {return transform;}
+	void SetTransform(const Matrix4 <float> & value);
 
 	/// used for bounding sphere frustum culling
-	const MATHVECTOR <float, 3> & GetObjectCenter() const {return objcenter;}
-	void SetObjectCenter(const MATHVECTOR <float, 3> & value) {objcenter = value;}
+	const Vec3 & GetObjectCenter() const {return objcenter;}
+	void SetObjectCenter(const Vec3 & value) {objcenter = value;}
 
 	/// for bounding sphere frustum culling
 	float GetRadius() const {return radius;}
@@ -93,11 +93,11 @@ public:
 
 	/// this gets called if we are using the GL3 renderer
 	/// it returns a reference to the RenderModelExternal structure
-	RenderModelExternal & generateRenderModelData(StringIdMap & stringMap);
+	RenderModelExt & generateRenderModelData(StringIdMap & stringMap);
 
 	void setVertexArrayObject(GLuint vao, unsigned int elementCount);
 
-	DRAWABLE() :
+	Drawable() :
 		vert_array(0),
 		linesize(0),
 		radius(0),
@@ -114,14 +114,14 @@ public:
 	}
 
 private:
-	std::tr1::shared_ptr<TEXTURE> diffuse_map;
-	std::tr1::shared_ptr<TEXTURE> misc_map1;
-	std::tr1::shared_ptr<TEXTURE> misc_map2;
+	std::tr1::shared_ptr<Texture> diffuse_map;
+	std::tr1::shared_ptr<Texture> misc_map1;
+	std::tr1::shared_ptr<Texture> misc_map2;
 	std::vector <int> list_ids;
-	const VERTEXARRAY * vert_array;
+	const VertexArray * vert_array;
 	float linesize;
-	MATRIX4 <float> transform;
-	MATHVECTOR <float, 3> objcenter;
+	Matrix4 <float> transform;
+	Vec3 objcenter;
 	float radius;
 	float r, g, b, a; // these can never be reordered or interleaved with other data because we count on (&a == &r+3) and so on
 	float draw_order;
@@ -133,7 +133,7 @@ private:
 	bool texturesChanged;
 	bool uniformsChanged;
 
-	RenderModelExternalDrawable renderModel;
+	RenderModelExtDrawable renderModel;
 
 	void AddDrawList(int value) {list_ids.push_back(value);}
 };

@@ -21,11 +21,11 @@
 #include "content/contentmanager.h"
 #include "graphics/textureinfo.h"
 
-void SPRITE2D::Unload(SCENENODE & parent)
+void Sprite2D::Unload(SceneNode & parent)
 {
 	if (node.valid())
 	{
-		SCENENODE & noderef = GetNode(parent);
+		SceneNode & noderef = GetNode(parent);
 		noderef.GetDrawlist().twodim.erase(draw);
 		parent.Delete(node);
 	}
@@ -35,8 +35,8 @@ void SPRITE2D::Unload(SCENENODE & parent)
 	varray.Clear();
 }
 
-bool SPRITE2D::Load(
-	SCENENODE & parent,
+bool Sprite2D::Load(
+	SceneNode & parent,
 	const std::string & texturepath,
 	const std::string & texturename,
 	ContentManager & content,
@@ -47,18 +47,18 @@ bool SPRITE2D::Load(
 	assert(!draw.valid());
 	assert(!node.valid());
 
-	TEXTUREINFO texinfo;
+	TextureInfo texinfo;
 	texinfo.mipmap = false;
 	texinfo.repeatu = false;
 	texinfo.repeatv = false;
 	texinfo.npot = false;
-	std::tr1::shared_ptr<TEXTURE> texture;
+	std::tr1::shared_ptr<Texture> texture;
 	content.load(texture, texturepath, texturename, texinfo);
 
 	node = parent.AddNode();
-	SCENENODE & noderef = parent.GetNode(node);
-	draw = noderef.GetDrawlist().twodim.insert(DRAWABLE());
-	DRAWABLE & drawref = GetDrawableFromNode(noderef);
+	SceneNode & noderef = parent.GetNode(node);
+	draw = noderef.GetDrawlist().twodim.insert(Drawable());
+	Drawable & drawref = GetDrawableFromNode(noderef);
 
 	drawref.SetDiffuseMap(texture);
 	drawref.SetVertArray(&varray);
@@ -71,9 +71,9 @@ bool SPRITE2D::Load(
 	return true;
 }
 
-bool SPRITE2D::Load(
-	SCENENODE & parent,
-	std::tr1::shared_ptr<TEXTURE> texture2d,
+bool Sprite2D::Load(
+	SceneNode & parent,
+	std::tr1::shared_ptr<Texture> texture2d,
 	float draworder)
 {
 	Unload(parent);
@@ -82,9 +82,9 @@ bool SPRITE2D::Load(
 	assert(!node.valid());
 
 	node = parent.AddNode();
-	SCENENODE & noderef = parent.GetNode(node);
-	draw = noderef.GetDrawlist().twodim.insert(DRAWABLE());
-	DRAWABLE & drawref = GetDrawableFromNode(noderef);
+	SceneNode & noderef = parent.GetNode(node);
+	draw = noderef.GetDrawlist().twodim.insert(Drawable());
+	Drawable & drawref = GetDrawableFromNode(noderef);
 
 	drawref.SetDiffuseMap(texture2d);
 	drawref.SetVertArray(&varray);

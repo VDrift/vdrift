@@ -21,21 +21,21 @@
 #include "sound/soundbuffer.h"
 #include <fstream>
 
-Factory<SOUNDBUFFER>::Factory() :
-	m_default(new SOUNDBUFFER()),
+Factory<SoundBuffer>::Factory() :
+	m_default(new SoundBuffer()),
 	m_info(0, 0, 0, 0)
 {
 	// ctor
 }
 
-void Factory<SOUNDBUFFER>::init(const SOUNDINFO& value)
+void Factory<SoundBuffer>::init(const SoundInfo& value)
 {
 	m_info = value;
 }
 
 template <>
-bool Factory<SOUNDBUFFER>::create(
-	std::tr1::shared_ptr<SOUNDBUFFER> & sptr,
+bool Factory<SoundBuffer>::create(
+	std::tr1::shared_ptr<SoundBuffer> & sptr,
 	std::ostream & error,
 	const std::string & basepath,
 	const std::string & path,
@@ -50,7 +50,7 @@ bool Factory<SOUNDBUFFER>::create(
 	}
 	if (std::ifstream(filepath.c_str()))
 	{
-		std::tr1::shared_ptr<SOUNDBUFFER> temp(new SOUNDBUFFER());
+		std::tr1::shared_ptr<SoundBuffer> temp(new SoundBuffer());
 		if (temp->Load(filepath, m_info, error))
 		{
 			sptr = temp;
@@ -60,7 +60,7 @@ bool Factory<SOUNDBUFFER>::create(
 	return false;
 }
 
-std::tr1::shared_ptr<SOUNDBUFFER> Factory<SOUNDBUFFER>::getDefault() const
+std::tr1::shared_ptr<SoundBuffer> Factory<SoundBuffer>::getDefault() const
 {
 	return m_default;
 }

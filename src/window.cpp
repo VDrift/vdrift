@@ -25,7 +25,7 @@
 #include <cstdlib>
 #include <cstring>
 
-WINDOW_SDL::WINDOW_SDL() :
+Window::Window() :
 	w(0), h(0),
 	initialized(false),
 	fsaa(1),
@@ -36,7 +36,7 @@ WINDOW_SDL::WINDOW_SDL() :
 	// Constructor.
 }
 
-WINDOW_SDL::~WINDOW_SDL()
+Window::~Window()
 {
 #if SDL_VERSION_ATLEAST(2,0,0)
 	if (glcontext)
@@ -49,7 +49,7 @@ WINDOW_SDL::~WINDOW_SDL()
 		SDL_Quit();
 }
 
-void WINDOW_SDL::Init(
+void Window::Init(
 	const std::string & windowcaption,
 	unsigned int resx, unsigned int resy,
 	unsigned int bpp, unsigned int depthbpp,
@@ -92,7 +92,7 @@ void WINDOW_SDL::Init(
 	LogOpenGLInfo(info_output);
 }
 
-void WINDOW_SDL::SwapBuffers()
+void Window::SwapBuffers()
 {
 #if SDL_VERSION_ATLEAST(2,0,0)
 	SDL_GL_SwapWindow(window);
@@ -101,7 +101,7 @@ void WINDOW_SDL::SwapBuffers()
 #endif
 }
 
-void WINDOW_SDL::ShowMouseCursor(bool value)
+void Window::ShowMouseCursor(bool value)
 {
 	if (value)
 	{
@@ -123,7 +123,7 @@ void WINDOW_SDL::ShowMouseCursor(bool value)
 	}
 }
 
-void WINDOW_SDL::Screenshot(const std::string & filename)
+void Window::Screenshot(const std::string & filename)
 {
 	SDL_Surface * temp = SDL_CreateRGBSurface(SDL_SWSURFACE, w, h, 24,
 #if SDL_BYTEORDER == SDL_LIL_ENDIAN
@@ -147,17 +147,17 @@ void WINDOW_SDL::Screenshot(const std::string & filename)
 	SDL_FreeSurface(temp);
 }
 
-int WINDOW_SDL::GetW() const
+int Window::GetW() const
 {
 	return w;
 }
 
-int WINDOW_SDL::GetH() const
+int Window::GetH() const
 {
 	return h;
 }
 
-float WINDOW_SDL::GetWHRatio() const
+float Window::GetWHRatio() const
 {
 	return (float)w / (float)h;
 }
@@ -175,7 +175,7 @@ static int GetVideoDisplay()
 		return 0;
 }
 
-bool WINDOW_SDL::ResizeWindow(int width, int height)
+bool Window::ResizeWindow(int width, int height)
 {
 	// We can't resize something we don't have.
 	if (!window)
@@ -192,7 +192,7 @@ bool WINDOW_SDL::ResizeWindow(int width, int height)
 }
 #endif
 
-void WINDOW_SDL::ChangeDisplay(
+void Window::ChangeDisplay(
 	int width, int height,
 	int bpp, int dbpp,
 	bool fullscreen,
@@ -304,7 +304,7 @@ void WINDOW_SDL::ChangeDisplay(
 	h = height;
 }
 
-void WINDOW_SDL::LogOpenGLInfo(std::ostream & info_output)
+void Window::LogOpenGLInfo(std::ostream & info_output)
 {
 	std::stringstream cardinfo;
 	cardinfo << "Video card information:" << std::endl;

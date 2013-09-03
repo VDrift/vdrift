@@ -22,20 +22,20 @@
 
 #include "camera.h"
 
-class CAMERA_CHASE : public CAMERA
+class CameraChase : public Camera
 {
 public:
-	CAMERA_CHASE(const std::string & name);
-	
-	void SetOffset(const MATHVECTOR <float, 3> & value);
+	CameraChase(const std::string & name);
 
-	void Reset(const MATHVECTOR <float, 3> & newfocus, const QUATERNION <float> & focus_facing);
+	void SetOffset(const Vec3 & value);
 
-	void Update(const MATHVECTOR <float, 3> & newfocus, const QUATERNION <float> & focus_facing, float dt);
+	void Reset(const Vec3 & newfocus, const Quat & focus_facing);
+
+	void Update(const Vec3 & newfocus, const Quat & focus_facing, float dt);
 
 private:
-	MATHVECTOR <float, 3> focus;
-	MATHVECTOR <float, 3> offset;
+	Vec3 focus;
+	Vec3 offset;
 	bool posblend_on;
 };
 

@@ -30,7 +30,7 @@
 
 class PTree;
 
-struct CARSUSPENSIONINFO
+struct CarSuspensionInfo
 {
 	// coilover(const)
 	btScalar spring_constant; ///< the suspension spring constant
@@ -38,8 +38,8 @@ struct CARSUSPENSIONINFO
 	btScalar bounce; ///< suspension compression damping
 	btScalar rebound; ///< suspension decompression damping
 	btScalar travel; ///< how far the suspension can travel from the zero-g fully extended position around the hinge arc before wheel travel is stopped
-	LINEARINTERP<btScalar> damper_factors;
-	LINEARINTERP<btScalar> spring_factors;
+	LinearInterp<btScalar> damper_factors;
+	LinearInterp<btScalar> spring_factors;
 
 	// suspension geometry(const)
 	btVector3 position; ///< the position of the wheel when the suspension is fully extended (zero g)
@@ -49,15 +49,15 @@ struct CARSUSPENSIONINFO
 	btScalar caster; ///< caster angle in degrees. sign convention depends on the side
 	btScalar toe; ///< toe angle in degrees. sign convention depends on the side
 
-	CARSUSPENSIONINFO(); ///< default constructor makes an S2000-like car
+	CarSuspensionInfo(); ///< default constructor makes an S2000-like car
 };
 
-class CARSUSPENSION
+class CarSuspension
 {
 public:
-	CARSUSPENSION();
+	CarSuspension();
 
-	virtual ~CARSUSPENSION() {}
+	virtual ~CarSuspension() {}
 
 	const btScalar & GetAntiRoll() const {return info.anti_roll;}
 
@@ -108,13 +108,13 @@ public:
 
 	static bool Load(
 		const PTree & cfg_wheel,
-		CARSUSPENSION *& suspension,
+		CarSuspension *& suspension,
 		std::ostream & error);
 
 	friend class joeserialize::Serializer;
 
 protected:
-	CARSUSPENSIONINFO info;
+	CarSuspensionInfo info;
 
 	// suspension
 	btQuaternion orientation_ext;
@@ -133,7 +133,7 @@ protected:
 	btScalar wheel_velocity;
 	btScalar wheel_force;
 
-	void Init(const CARSUSPENSIONINFO & info);
+	void Init(const CarSuspensionInfo & info);
 };
 
 #endif

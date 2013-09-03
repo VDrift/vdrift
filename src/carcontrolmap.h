@@ -30,10 +30,10 @@
 
 class Config;
 
-class CARCONTROLMAP
+class CarControlMap
 {
 public:
-	CARCONTROLMAP();
+	CarControlMap();
 
 	bool Load(const std::string & controlfile, std::ostream & info_output, std::ostream & error_output);
 
@@ -42,17 +42,17 @@ public:
 	void Save(Config & controlfile);
 
 	/// query the eventsystem for info, then return the resulting input array
-	const std::vector <float> & ProcessInput(const std::string & joytype, EVENTSYSTEM_SDL & eventsystem, float steerpos, float dt, bool joy_200, float carms, float speedsens, int screenw, int screenh, float button_ramp, bool hgateshifter);
+	const std::vector <float> & ProcessInput(const std::string & joytype, EventSystem & eventsystem, float steerpos, float dt, bool joy_200, float carms, float speedsens, int screenw, int screenh, float button_ramp, bool hgateshifter);
 
 	const std::vector< float > & GetInputs() const {return inputs;}
 
-	float GetInput(CARINPUT::CARINPUT inputid) const {assert((unsigned int)inputid < inputs.size()); return inputs[inputid];}
+	float GetInput(CarInput::CarInputEnum inputid) const {assert((unsigned int)inputid < inputs.size()); return inputs[inputid];}
 
 	void GetControlsInfo(std::map<std::string, std::string> & info) const;
 
-	struct CONTROL
+	struct Control
 	{
-		enum TYPE
+		enum TypeEnum
 		{
 			KEY,
 			JOY,
@@ -65,24 +65,24 @@ public:
 
 		int joynum;
 		int joyaxis;
-		enum JOYAXISTYPE
+		enum JoyAxisEnum
 		{
 			POSITIVE,
 			NEGATIVE
 		} joyaxistype;
-		enum JOYTYPE
+		enum JoyTypeEnum
 		{
 			JOYAXIS,
 			JOYBUTTON,
 			JOYHAT
 		} joytype;
 
-		enum MOUSETYPE
+		enum MouseTypeEnum
 		{
 			MOUSEBUTTON,
 			MOUSEMOTION
 		} mousetype;
-		enum MOUSEDIRECTION
+		enum MouseDirectionEnum
 		{
 			UP,
 			DOWN,
@@ -101,26 +101,26 @@ public:
 
 		void DebugPrint(std::ostream & out) const;
 
-		bool operator==(const CONTROL & other) const;
+		bool operator==(const Control & other) const;
 
-		bool operator<(const CONTROL & other) const;
+		bool operator<(const Control & other) const;
 
 		void ReadFrom(std::istream & in);
 
-		CONTROL();
+		Control();
 	};
 
 	/// if controlid is greather than number of controls return unknown control
-	CONTROL GetControl(const std::string & inputname, size_t controlid);
+	Control GetControl(const std::string & inputname, size_t controlid);
 
 	/// if controlid greater than number of controls, add new control
-	void SetControl(const std::string & inputname, size_t controlid, const CONTROL & control);
+	void SetControl(const std::string & inputname, size_t controlid, const Control & control);
 
 	/// delete if controlid less than number of controls
 	void DeleteControl(const std::string & inputname, size_t controlid);
 
 private:
-	std::vector< std::vector<CONTROL> > controls;
+	std::vector< std::vector<Control> > controls;
 
 	/// the vector is indexed by CARINPUT values
 	std::vector <float> inputs;
@@ -130,22 +130,22 @@ private:
 	static const size_t max_controls = 3;
 
 	/// used to stringify/destringify the CARINPUT enum
-	static const std::map <std::string, CARINPUT::CARINPUT> carinput_stringmap;
+	static const std::map <std::string, CarInput::CarInputEnum> carinput_stringmap;
 	static const std::vector<std::string> carinput_strings;
 
 	/// used to turn legacy key names from older vdrift releases into keycodes
 	static const std::map <std::string, int> keycode_stringmap;
 
-	static std::map <std::string, CARINPUT::CARINPUT> InitCarInputStringMap();
+	static std::map <std::string, CarInput::CarInputEnum> InitCarInputStringMap();
 	static std::vector<std::string> InitCarInputStrings();
 	static std::map <std::string, int> InitKeycodeStringMap();
 
-	static const std::string & GetStringFromInput(const CARINPUT::CARINPUT input);
-	static CARINPUT::CARINPUT GetInputFromString(const std::string & str);
+	static const std::string & GetStringFromInput(const CarInput::CarInputEnum input);
+	static CarInput::CarInputEnum GetInputFromString(const std::string & str);
 	static const std::string & GetStringFromKeycode(const int code);
 	static int GetKeycodeFromString(const std::string & str);
 
-	void AddControl(CONTROL newctrl, const std::string & inputname, std::ostream & error_output);
+	void AddControl(Control newctrl, const std::string & inputname, std::ostream & error_output);
 
 	void ProcessSteering(const std::string & joytype, float steerpos, float dt, bool joy_200, float carmph, float speedsens);
 };

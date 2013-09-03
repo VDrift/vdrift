@@ -34,7 +34,7 @@
 bool Decompress(const std::string & file, const std::string & output_path, std::ostream & info_output, std::ostream & error_output)
 {
 	// Ensure the output path exists.
-	PATHMANAGER::MakeDir(output_path);
+	PathManager::MakeDir(output_path);
 
 	struct archive * a = archive_read_new();
 	archive_read_support_filter_all(a);
@@ -53,7 +53,7 @@ bool Decompress(const std::string & file, const std::string & output_path, std::
 		std::string fullpath = output_path + "/" + filename;
 
 		if (archive_entry_filetype(entry) == AE_IFDIR)
-			PATHMANAGER::MakeDir(fullpath);
+			PathManager::MakeDir(fullpath);
 		else
 		{
 			std::fstream f(fullpath.c_str(), std::ios_base::out | std::ios_base::binary | std::ios_base::trunc);

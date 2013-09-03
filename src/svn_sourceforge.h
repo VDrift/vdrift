@@ -26,7 +26,7 @@
 #include <map>
 
 /// A cheesy HTML parser that mines sourceforge SVN web viewer pages to get repo info.
-class SVN_SOURCEFORGE
+class SvnSourceforge
 {
 public:
 	/// Returns the download URL for any particular group (car, track) given a name.

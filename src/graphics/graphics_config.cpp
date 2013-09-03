@@ -182,7 +182,7 @@ bool isOf(std::map <std::string, std::string> & vars, const std::string & name, 
 	return isOf(vars[name], list, error_output, line);
 }
 
-bool GRAPHICS_CONFIG_SHADER::Load(std::istream & f, std::ostream & error_output, int & line)
+bool GraphicsConfigShader::Load(std::istream & f, std::ostream & error_output, int & line)
 {
 	std::vector <std::string> reqd;
 	reqd.push_back("name");
@@ -208,7 +208,7 @@ bool GRAPHICS_CONFIG_SHADER::Load(std::istream & f, std::ostream & error_output,
 	return true;
 }
 
-void GRAPHICS_CONFIG_OUTPUT::SIZE::Parse(const std::string & str)
+void GraphicsConfigOutput::Size::Parse(const std::string & str)
 {
 	std::stringstream parser(str);
 	std::string lhs = strTrim(skipUntil(parser, "/*"));
@@ -256,7 +256,7 @@ void fillDefault(std::map <std::string, std::string> & vars, const std::string &
 		vars[name] = value;
 }
 
-bool GRAPHICS_CONFIG_OUTPUT::Load(std::istream & f, std::ostream & error_output, int & line)
+bool GraphicsConfigOutput::Load(std::istream & f, std::ostream & error_output, int & line)
 {
 	int sectionstart = line;
 
@@ -305,7 +305,7 @@ bool GRAPHICS_CONFIG_OUTPUT::Load(std::istream & f, std::ostream & error_output,
 	return true;
 }
 
-void GRAPHICS_CONFIG_INPUTS::Parse(const std::string & str)
+void GraphicsConfigInputs::Parse(const std::string & str)
 {
 	int tucount = 0;
 	std::stringstream parser(str);
@@ -339,7 +339,7 @@ void GRAPHICS_CONFIG_INPUTS::Parse(const std::string & str)
 	}
 }
 
-bool GRAPHICS_CONFIG_PASS::Load(std::istream & f, std::ostream & error_output, int & line)
+bool GraphicsConfigPass::Load(std::istream & f, std::ostream & error_output, int & line)
 {
 	int sectionstart = line;
 
@@ -419,7 +419,7 @@ bool GRAPHICS_CONFIG_PASS::Load(std::istream & f, std::ostream & error_output, i
 	return true;
 }
 
-bool GRAPHICS_CONFIG::Load(std::istream & f, std::ostream & error_output)
+bool GraphicsConfig::Load(std::istream & f, std::ostream & error_output)
 {
 	int line = 1;
 
@@ -445,21 +445,21 @@ bool GRAPHICS_CONFIG::Load(std::istream & f, std::ostream & error_output)
 		// handle the section
 		if (type == "shader")
 		{
-			GRAPHICS_CONFIG_SHADER newsection;
+			GraphicsConfigShader newsection;
 			if (!newsection.Load(f, error_output, line))
 				return false;
 			shaders.push_back(newsection);
 		}
 		else if (type == "output")
 		{
-			GRAPHICS_CONFIG_OUTPUT newsection;
+			GraphicsConfigOutput newsection;
 			if (!newsection.Load(f, error_output, line))
 				return false;
 			outputs.push_back(newsection);
 		}
 		else if (type == "pass")
 		{
-			GRAPHICS_CONFIG_PASS newsection;
+			GraphicsConfigPass newsection;
 			if (!newsection.Load(f, error_output, line))
 				return false;
 			passes.push_back(newsection);

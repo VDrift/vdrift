@@ -26,14 +26,14 @@
 
 #include <iosfwd>
 
-class SCENENODE;
+class SceneNode;
 
 /// an abstract base class that defines the graphics interface
 /// expects a valid OpenGL context with initialized extension entry points (glewInit)
-class GRAPHICS
+class Graphics
 {
 public:
-	typedef DRAWABLE_CONTAINER <PTRVECTOR> dynamicdrawlist_type;
+	typedef DrawableContainer <PtrVector> dynamicdrawlist_type;
 
 	/// reflection_type is 0 (low=OFF), 1 (medium=static), 2 (high=dynamic)
 	/// returns true on success
@@ -57,14 +57,14 @@ public:
 
 	virtual void BeginScene(std::ostream & error_output) = 0;
 
-	virtual DRAWABLE_CONTAINER <PTRVECTOR> & GetDynamicDrawlist() = 0;
+	virtual DrawableContainer <PtrVector> & GetDynamicDrawlist() = 0;
 
-	virtual void AddStaticNode(SCENENODE & node, bool clearcurrent = true) = 0;
+	virtual void AddStaticNode(SceneNode & node, bool clearcurrent = true) = 0;
 
 	virtual void SetupScene(
 		float fov, float new_view_distance,
-		const MATHVECTOR <float, 3> cam_position, const QUATERNION <float> & cam_rotation,
-		const MATHVECTOR <float, 3> & dynamic_reflection_sample_pos) = 0;
+		const Vec3 cam_position, const Quat & cam_rotation,
+		const Vec3 & dynamic_reflection_sample_pos) = 0;
 
 	/// optional (atm) scene animation update function
 	/// to be called after SetupScene and before DrawScene
@@ -86,7 +86,7 @@ public:
 
 	virtual bool GetShadows() const = 0;
 
-	virtual void SetSunDirection(const MATHVECTOR<float, 3> & value) = 0;
+	virtual void SetSunDirection(const Vec3 & value) = 0;
 
 	virtual void SetContrast(float value) = 0;
 
@@ -99,7 +99,7 @@ public:
 
 	virtual void printProfilingInfo(std::ostream & /*out*/) const { }
 
-	virtual ~GRAPHICS() {}
+	virtual ~Graphics() {}
 };
 
 #endif

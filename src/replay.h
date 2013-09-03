@@ -27,12 +27,12 @@
 #include <iosfwd>
 #include <string>
 
-class CAR;
+class Car;
 
-class REPLAY
+class Replay
 {
 public:
-	REPLAY(float framerate);
+	Replay(float framerate);
 
 	/// true on success
 	bool StartPlaying(
@@ -46,7 +46,7 @@ public:
 	bool GetPlaying() const;
 
 	void StartRecording(
-		const std::vector<CARINFO> & carinfo,
+		const std::vector<CarInfo> & carinfo,
 		const std::string & trackname,
 		std::ostream & error_log);
 
@@ -57,30 +57,30 @@ public:
 	bool GetRecording() const;
 
 	/// set car state, return car inputs
-	const std::vector<float> & PlayFrame(unsigned carid, CAR & car);
+	const std::vector<float> & PlayFrame(unsigned carid, Car & car);
 
 	/// record car inputs and state
-	void RecordFrame(unsigned carid, const std::vector <float> & inputs, CAR & car);
+	void RecordFrame(unsigned carid, const std::vector <float> & inputs, Car & car);
 
 	bool Serialize(joeserialize::Serializer & s);
 
-	const std::vector<CARINFO> & GetCarInfo() const;
+	const std::vector<CarInfo> & GetCarInfo() const;
 
 	const std::string & GetTrack() const;
 
 private:
 	friend class joeserialize::Serializer;
 
-	class VERSION
+	class Version
 	{
 	public:
 		std::string format_version;
 		int inputs_supported;
 		float framerate;
 
-		VERSION();
+		Version();
 
-		VERSION(const std::string & ver, unsigned ins, float newfr);
+		Version(const std::string & ver, unsigned ins, float newfr);
 
 		bool Serialize(joeserialize::Serializer & s);
 
@@ -88,16 +88,16 @@ private:
 
 		void Load(std::istream & instream);
 
-		bool operator==(const VERSION & other) const;
+		bool operator==(const Version & other) const;
 	};
 
 	/// input delta frame (p-frame)
-	class INPUTFRAME
+	class InputFrame
 	{
 	public:
-		INPUTFRAME();
+		InputFrame();
 
-		INPUTFRAME(unsigned newframe);
+		InputFrame(unsigned newframe);
 
 		bool Serialize(joeserialize::Serializer & s);
 
@@ -116,12 +116,12 @@ private:
 	};
 
 	/// input and vehicle state frame (i-frame)
-	class STATEFRAME
+	class StateFrame
 	{
 	public:
-		STATEFRAME();
+		StateFrame();
 
-		STATEFRAME(unsigned newframe);
+		StateFrame(unsigned newframe);
 
 		bool Serialize(joeserialize::Serializer & s);
 
@@ -142,11 +142,11 @@ private:
 		std::vector<float> input_snapshot;
 	};
 
-	struct CARSTATE
+	struct CarState
 	{
 		/// serialized
-		std::vector<INPUTFRAME> inputframes;
-		std::vector<STATEFRAME> stateframes;
+		std::vector<InputFrame> inputframes;
+		std::vector<StateFrame> stateframes;
 
 		/// not serialized
 		std::vector<float> inputbuffer; // buffer for input delta frame decoding
@@ -164,21 +164,21 @@ private:
 		bool Serialize(joeserialize::Serializer & s);
 
 		/// set car, update inputbuffer, false if we are out of frames
-		bool PlayFrame(CAR & car);
+		bool PlayFrame(Car & car);
 
 		/// get car state, save input delta frame
-		void RecordFrame(const std::vector<float> & inputs, CAR & car);
+		void RecordFrame(const std::vector<float> & inputs, Car & car);
 
-		void ProcessPlayInputFrame(const INPUTFRAME & frame);
+		void ProcessPlayInputFrame(const InputFrame & frame);
 
-		void ProcessPlayStateFrame(const STATEFRAME & frame, CAR & car);
+		void ProcessPlayStateFrame(const StateFrame & frame, Car & car);
 	};
 
 	/// serialized
-	VERSION version_info;
+	Version version_info;
 	std::string track;
-	std::vector<CARINFO> carinfo;
-	std::vector<CARSTATE> carstate;
+	std::vector<CarInfo> carinfo;
+	std::vector<CarState> carstate;
 
 	/// not serialized
 	enum {IDLE, RECORDING, PLAYING} replaymode;
@@ -192,22 +192,22 @@ private:
 
 // implementation
 
-inline bool REPLAY::GetPlaying() const
+inline bool Replay::GetPlaying() const
 {
 	return (replaymode == PLAYING);
 }
 
-inline bool REPLAY::GetRecording() const
+inline bool Replay::GetRecording() const
 {
 	return (replaymode == RECORDING);
 }
 
-inline const std::vector<CARINFO> & REPLAY::GetCarInfo() const
+inline const std::vector<CarInfo> & Replay::GetCarInfo() const
 {
 	return carinfo;
 }
 
-inline const std::string & REPLAY::GetTrack() const
+inline const std::string & Replay::GetTrack() const
 {
 	return track;
 }

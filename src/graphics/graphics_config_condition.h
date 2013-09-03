@@ -25,7 +25,7 @@
 
 /// A space-delimited list of string conditions.
 /// Putting "!" before the condition negates it.
-class GRAPHICS_CONFIG_CONDITION
+class GraphicsConfigCondition
 {
 public:
 	void Parse(const std::string & str);

@@ -26,7 +26,7 @@ LoadDrawable::LoadDrawable(
 	const std::string & path,
 	const int anisotropy,
 	ContentManager & content,
-	std::list<std::tr1::shared_ptr<MODEL> > & modellist,
+	std::list<std::tr1::shared_ptr<Model> > & modellist,
 	std::ostream & error) :
 	path(path),
 	anisotropy(anisotropy),
@@ -39,9 +39,9 @@ LoadDrawable::LoadDrawable(
 
 bool LoadDrawable::operator()(
 	const PTree & cfg,
-	SCENENODE & topnode,
-	keyed_container<SCENENODE>::handle * nodehandle,
-	keyed_container<DRAWABLE>::handle * drawhandle)
+	SceneNode & topnode,
+	keyed_container<SceneNode>::handle * nodehandle,
+	keyed_container<Drawable>::handle * drawhandle)
 {
 	std::vector<std::string> texname;
 	if (!cfg.get("texture", texname)) return true;
@@ -56,17 +56,17 @@ bool LoadDrawable::operator()(
 	const std::string & meshname,
 	const std::vector<std::string> & texname,
 	const PTree & cfg,
-	SCENENODE & topnode,
-	keyed_container<SCENENODE>::handle * nodeptr,
-	keyed_container<DRAWABLE>::handle * drawptr)
+	SceneNode & topnode,
+	keyed_container<SceneNode>::handle * nodeptr,
+	keyed_container<Drawable>::handle * drawptr)
 {
-	DRAWABLE drawable;
+	Drawable drawable;
 
 	// set textures
-	TEXTUREINFO texinfo;
+	TextureInfo texinfo;
 	texinfo.mipmap = true;
 	texinfo.anisotropy = anisotropy;
-	std::tr1::shared_ptr<TEXTURE> tex;
+	std::tr1::shared_ptr<Texture> tex;
 	if (texname.size() == 0)
 	{
 		error << "No texture defined" << std::endl;
@@ -90,18 +90,18 @@ bool LoadDrawable::operator()(
 	}
 
 	// set mesh
-	std::tr1::shared_ptr<MODEL> mesh;
+	std::tr1::shared_ptr<Model> mesh;
 	content.load(mesh, path, meshname);
 
 	std::string scalestr;
 	if (cfg.get("scale", scalestr) &&
 		!content.get(mesh, path, meshname + scalestr))
 	{
-		MATHVECTOR<float, 3> scale;
+		Vec3 scale;
 		std::stringstream s(scalestr);
 		s >> scale;
 
-		VERTEXARRAY meshva = mesh->GetVertexArray();
+		VertexArray meshva = mesh->GetVertexArray();
 		meshva.Scale(scale[0], scale[1], scale[2]);
 		content.load(mesh, path, meshname + scalestr, meshva);
 	}
@@ -109,14 +109,14 @@ bool LoadDrawable::operator()(
 	modellist.push_back(mesh);
 
 	// set color
-	MATHVECTOR<float, 4> col(1);
+	MathVector<float, 4> col(1);
 	if (cfg.get("color", col))
 	{
 		drawable.SetColor(col[0], col[1], col[2], col[3]);
 	}
 
 	// set node
-	SCENENODE * node = &topnode;
+	SceneNode * node = &topnode;
 	if (nodeptr != 0)
 	{
 		if (!nodeptr->valid())
@@ -127,22 +127,22 @@ bool LoadDrawable::operator()(
 		node = &topnode.GetNode(*nodeptr);
 	}
 
-	MATHVECTOR<float, 3> pos, rot;
+	Vec3 pos, rot;
 	if (cfg.get("position", pos) | cfg.get("rotation", rot))
 	{
 		if (node == &topnode)
 		{
 			// position relative to parent, create child node
-			keyed_container <SCENENODE>::handle nodehandle = topnode.AddNode();
+			keyed_container <SceneNode>::handle nodehandle = topnode.AddNode();
 			node = &topnode.GetNode(nodehandle);
 		}
 		node->GetTransform().SetTranslation(pos);
-		node->GetTransform().SetRotation(QUATERNION<float>(rot[0]/180*M_PI, rot[1]/180*M_PI, rot[2]/180*M_PI));
+		node->GetTransform().SetRotation(Quat(rot[0]/180*M_PI, rot[1]/180*M_PI, rot[2]/180*M_PI));
 	}
 
 	// set drawable
-	keyed_container<DRAWABLE>::handle drawtemp;
-	keyed_container<DRAWABLE>::handle * draw = &drawtemp;
+	keyed_container<Drawable>::handle drawtemp;
+	keyed_container<Drawable>::handle * draw = &drawtemp;
 	if (drawptr != 0) draw = drawptr;
 
 	std::string drawtype;

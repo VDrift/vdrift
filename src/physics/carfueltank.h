@@ -26,12 +26,12 @@
 
 #include <iostream>
 
-class CARFUELTANK
+class CarFuelTank
 {
 friend class joeserialize::Serializer;
 public:
 	//default constructor makes an S2000-like car
-	CARFUELTANK() :
+	CarFuelTank() :
 		capacity(0.0492),
 		density(730.0),
 		mass(730.0*0.0492),

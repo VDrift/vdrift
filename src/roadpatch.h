@@ -25,33 +25,33 @@
 #include "graphics/vertexarray.h"
 #include "memory.h"
 
-class TEXTURE;
-class SCENENODE;
+class Texture;
+class SceneNode;
 
-class ROADPATCH
+class RoadPatch
 {
 public:
-	ROADPATCH() : track_curvature(0) {}
+	RoadPatch() : track_curvature(0) {}
 
-	const BEZIER & GetPatch() const {return patch;}
+	const Bezier & GetPatch() const {return patch;}
 
-	BEZIER & GetPatch() {return patch;}
+	Bezier & GetPatch() {return patch;}
 
 	///return true if the ray starting at the given origin going in the given direction intersects this patch.
 	/// output the contact point and normal to the given outtri and normal variables.
 	bool Collide(
-		const MATHVECTOR <float, 3> & origin,
-		const MATHVECTOR <float, 3> & direction,
+		const Vec3 & origin,
+		const Vec3 & direction,
 		float seglen,
-		MATHVECTOR <float, 3> & outtri,
-		MATHVECTOR <float, 3> & normal) const;
+		Vec3 & outtri,
+		Vec3 & normal) const;
 
 	float GetTrackCurvature() const
 	{
 		return track_curvature;
 	}
 
-	MATHVECTOR <float, 3> GetRacingLine() const
+	Vec3 GetRacingLine() const
 	{
 		return racing_line;
 	}
@@ -61,7 +61,7 @@ public:
 		track_curvature = value;
 	}
 
-	void SetRacingLine ( const MATHVECTOR< float, 3 >& value )
+	void SetRacingLine ( const MathVector< float, 3 >& value )
 	{
 		racing_line = value;
 		patch.racing_line = value;
@@ -69,15 +69,15 @@ public:
 	}
 
 	void AddRacinglineScenenode(
-		SCENENODE & node,
-		const ROADPATCH & nextpatch,
-		std::tr1::shared_ptr<TEXTURE> racingline_texture);
+		SceneNode & node,
+		const RoadPatch & nextpatch,
+		std::tr1::shared_ptr<Texture> racingline_texture);
 
 private:
-	BEZIER patch;
+	Bezier patch;
 	float track_curvature;
-	MATHVECTOR <float, 3> racing_line;
-	VERTEXARRAY racingline_vertexarray;
+	Vec3 racing_line;
+	VertexArray racingline_vertexarray;
 };
 
 #endif // _ROADPATCH_H

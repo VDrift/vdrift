@@ -27,24 +27,24 @@
 #include <iostream>
 #include <vector>
 
-class FBOBJECT
+class FrameBufferObject
 {
 public:
-	FBOBJECT();
+	FrameBufferObject();
 
-	~FBOBJECT();
+	~FrameBufferObject();
 
-	void Init(GLSTATEMANAGER & glstate, std::vector <FBTEXTURE*> newtextures, std::ostream & error_output, bool force_multisample_off = false);
+	void Init(GraphicsState & glstate, std::vector <FrameBufferTexture*> newtextures, std::ostream & error_output, bool force_multisample_off = false);
 
 	void DeInit();
 
-	void Begin(GLSTATEMANAGER & glstate, std::ostream & error_output, float viewscale = 1.0);
+	void Begin(GraphicsState & glstate, std::ostream & error_output, float viewscale = 1.0);
 
-	void End(GLSTATEMANAGER & glstate, std::ostream & error_output);
+	void End(GraphicsState & glstate, std::ostream & error_output);
 
-	void Screenshot(GLSTATEMANAGER & glstate, const std::string & filename, std::ostream & error_output);
+	void Screenshot(GraphicsState & glstate, const std::string & filename, std::ostream & error_output);
 
-	void SetCubeSide(FBTEXTURE::CUBE_SIDE side); ///< attach a specified cube side to the texture_attachment. for cube map FBOs only.
+	void SetCubeSide(FrameBufferTexture::CUBE_SIDE side); ///< attach a specified cube side to the texture_attachment. for cube map FBOs only.
 
 	int GetWidth() const {return width;}
 
@@ -56,18 +56,18 @@ public:
 
 private:
 	GLuint framebuffer_object;
-	std::vector <FBOBJECT> multisample_dest_singlesample_framebuffer_object;
+	std::vector <FrameBufferObject> multisample_dest_singlesample_framebuffer_object;
 	GLuint renderbuffer_depth;
 	bool inited;
 	int width;
 	int height;
 
-	std::vector <FBTEXTURE*> textures;
+	std::vector <FrameBufferTexture*> textures;
 
 	/// returns true if status is OK
 	bool CheckStatus(std::ostream & error_output);
 
-	FBTEXTURE & GetCubemapTexture();
+	FrameBufferTexture & GetCubemapTexture();
 };
 
 #endif

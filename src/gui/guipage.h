@@ -28,46 +28,46 @@
 #include <string>
 #include <iosfwd>
 
-class GUILANGUAGE;
-class GUIWIDGET;
-class GUICONTROL;
-class GUILABEL;
-class FONT;
-class PATHMANAGER;
+class GuiLanguage;
+class GuiWidget;
+class GuiControl;
+class GuiLabel;
+class Font;
 class Config;
 class ContentManager;
+class PathManager;
 
-typedef std::map<std::string, Signal1<const std::string &>*> VSIGNALMAP;
-typedef std::map<std::string, Slot2<int, std::vector<std::string> &>*> VNACTIONMAP;
-typedef std::map<std::string, Slot1<const std::string &>*> VACTIONMAP;
-typedef std::map<std::string, Slot1<int>*> NACTIONMAP;
-typedef std::map<std::string, Slot0*> ACTIONMAP;
+typedef std::map<std::string, Signal1<const std::string &>*> StrSignalMap;
+typedef std::map<std::string, Slot2<int, std::vector<std::string> &>*> StrVecSlotlMap;
+typedef std::map<std::string, Slot1<const std::string &>*> StrSlotMap;
+typedef std::map<std::string, Slot1<int>*> IntSlotMap;
+typedef std::map<std::string, Slot0*> SlotMap;
 
-class GUIPAGE
+class GuiPage
 {
 public:
-	GUIPAGE();
+	GuiPage();
 
-	~GUIPAGE();
+	~GuiPage();
 
 	bool Load(
 		const std::string & path,
 		const std::string & texpath,
 		const float screenhwratio,
-		const GUILANGUAGE & lang,
-		const FONT & font,
-		VSIGNALMAP vsignalmap,
-		const VNACTIONMAP & vnactionmap,
-		const VACTIONMAP & vactionmap,
-		NACTIONMAP nactionmap,
-		ACTIONMAP actionmap,
-		SCENENODE & parentnode,
+		const GuiLanguage & lang,
+		const Font & font,
+		StrSignalMap vsignalmap,
+		const StrVecSlotlMap & vnactionmap,
+		const StrSlotMap & vactionmap,
+		IntSlotMap nactionmap,
+		SlotMap actionmap,
+		SceneNode & parentnode,
 		ContentManager & content,
 		std::ostream & error_output);
 
-	void SetVisible(SCENENODE & parent, bool value);
+	void SetVisible(SceneNode & parent, bool value);
 
-	void SetAlpha(SCENENODE & parent, float value);
+	void SetAlpha(SceneNode & parent, float value);
 
 	/// execute game actions and update gui options
 	void ProcessInput(
@@ -78,21 +78,21 @@ public:
 		bool select, bool cancel);
 
 	/// tell all child widgets to do as update tick
-	void Update(SCENENODE & parent, float dt);
+	void Update(SceneNode & parent, float dt);
 
 	void SetLabelText(const std::map<std::string, std::string> & label_text);
 
-	GUILABEL * GetLabel(const std::string & name);
+	GuiLabel * GetLabel(const std::string & name);
 
-	SCENENODE & GetNode(SCENENODE & parentnode);
+	SceneNode & GetNode(SceneNode & parentnode);
 
 private:
-	std::map <std::string, GUILABEL *> labels;
-	std::vector <GUICONTROL *> controls;			// active widgets (process input)
-	std::vector <GUIWIDGET *> widgets;				// passive widgets
-	GUICONTROL * default_control;					// default active control
-	GUICONTROL * active_control;					// current active control
-	keyed_container <SCENENODE>::handle s;
+	std::map <std::string, GuiLabel *> labels;
+	std::vector <GuiControl *> controls;			// active widgets (process input)
+	std::vector <GuiWidget *> widgets;				// passive widgets
+	GuiControl * default_control;					// default active control
+	GuiControl * active_control;					// current active control
+	keyed_container <SceneNode>::handle s;
 	std::string name;
 
 	// each control registers a ControlCB
@@ -100,8 +100,8 @@ private:
 	// it uses PAGE::SetActiveControl
 	struct ControlCb
 	{
-		GUIPAGE * page;
-		GUICONTROL * control;
+		GuiPage * page;
+		GuiControl * control;
 		Slot0 action;
 
 		ControlCb();
@@ -140,9 +140,9 @@ private:
 	Signal1<const std::string &> tooltip;	// tooltip text signal
 	Signal0 onfocus, oncancel;				// page action signals
 
-	void Clear(SCENENODE & parentnode);
+	void Clear(SceneNode & parentnode);
 
-	void SetActiveControl(GUICONTROL & control);
+	void SetActiveControl(GuiControl & control);
 };
 
 #endif

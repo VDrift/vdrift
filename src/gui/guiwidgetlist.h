@@ -24,24 +24,24 @@
 #include "guiwidget.h"
 #include "signalslot.h"
 
-class SCENENODE;
-class DRAWABLE;
+class SceneNode;
+class Drawable;
 
 /// a widget that contains a list of widgets
-class GUIWIDGETLIST : public GUIWIDGET, public GUILIST
+class GuiWidgetList : public GuiWidget, public GuiList
 {
 public:
 	/// base destructor
-	virtual ~GUIWIDGETLIST();
+	virtual ~GuiWidgetList();
 
 	/// update state
-	void Update(SCENENODE & scene, float dt);
+	void Update(SceneNode & scene, float dt);
 
 	/// scale alpha [0, 1]
-	void SetAlpha(SCENENODE & scene, float value);
+	void SetAlpha(SceneNode & scene, float value);
 
 	/// override visibility
-	void SetVisible(SCENENODE & scene, bool value);
+	void SetVisible(SceneNode & scene, bool value);
 
 	/// element property setters
 	void SetColor(int n, const std::string & value);
@@ -69,16 +69,16 @@ public:
 	Signal2<int, std::vector<std::string> &> get_values;
 
 protected:
-	std::vector<GUIWIDGET*> m_elements;
+	std::vector<GuiWidget*> m_elements;
 	std::vector<std::string> m_values;
 
 	/// verboten
-	GUIWIDGETLIST();
-	GUIWIDGETLIST(const GUIWIDGETLIST & other);
-	GUIWIDGETLIST & operator=(const GUIWIDGETLIST & other);
+	GuiWidgetList();
+	GuiWidgetList(const GuiWidgetList & other);
+	GuiWidgetList & operator=(const GuiWidgetList & other);
 
 	/// called during Update to process m_values
-	virtual void UpdateElements(SCENENODE & scene) = 0;
+	virtual void UpdateElements(SceneNode & scene) = 0;
 
 	/// override widget property callbacks
 	void SetColor1(const std::string & value);
@@ -88,7 +88,7 @@ protected:
 	void SetVal1(const std::string & value);
 
 	/// ugh, dead weight
-	DRAWABLE & GetDrawable(SCENENODE & scene);
+	Drawable & GetDrawable(SceneNode & scene);
 };
 
 #endif // _GUIWIDGETLIST_H

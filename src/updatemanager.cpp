@@ -27,9 +27,9 @@
 #include "containeralgorithm.h"
 #include "archiveutils.h"
 
-typedef SVN_SOURCEFORGE repo_type;
+typedef SvnSourceforge repo_type;
 
-UPDATE_MANAGER::UPDATE_MANAGER(AUTOUPDATE &update, std::ostream & info, std::ostream & err) :
+UpdateManager::UpdateManager(AutoUpdate &update, std::ostream & info, std::ostream & err) :
 	autoupdate(update),
 	info_output(info),
 	error_output(err),
@@ -39,7 +39,7 @@ UPDATE_MANAGER::UPDATE_MANAGER(AUTOUPDATE &update, std::ostream & info, std::ost
 	// Constructor
 }
 
-bool UPDATE_MANAGER::Init(
+bool UpdateManager::Init(
 	const std::string & updatefilebase,
 	const std::string & newupdatefile,
 	const std::string & newupdatefilebackup,
@@ -68,7 +68,7 @@ bool UPDATE_MANAGER::Init(
 	return true;
 }
 
-void UPDATE_MANAGER::StartCheckForUpdates(GAME_DOWNLOADER downloader, GUI & gui)
+void UpdateManager::StartCheckForUpdates(GameDownloader downloader, Gui & gui)
 {
 	const bool verbose = true;
 	gui.ActivatePage("Downloading", 0.25, error_output);
@@ -84,7 +84,7 @@ void UPDATE_MANAGER::StartCheckForUpdates(GAME_DOWNLOADER downloader, GUI & gui)
 
 	// get the downloaded page
 	info_output << "Checking for updates..." << std::endl;
-	std::string page = UTILS::LoadFileIntoString(downloader.GetHttp().GetDownloadPath(url), error_output);
+	std::string page = Utils::LoadFileIntoString(downloader.GetHttp().GetDownloadPath(url), error_output);
 	std::map <std::string, int> res = svn.ParseFolderView(page);
 
 	// check the current SVN picture against what's in our update manager to find things we can update
@@ -94,10 +94,10 @@ void UPDATE_MANAGER::StartCheckForUpdates(GAME_DOWNLOADER downloader, GUI & gui)
 	if (verbose)
 	{
 		info_output << "Updates: [";
-		UTILS::print_vector(updates.first, info_output);
+		Utils::print_vector(updates.first, info_output);
 		info_output << "]" << std::endl;
 		info_output << "Deletions: [";
-		UTILS::print_vector(updates.second, info_output);
+		Utils::print_vector(updates.second, info_output);
 		info_output << "]" << std::endl;
 	}
 
@@ -110,7 +110,7 @@ void UPDATE_MANAGER::StartCheckForUpdates(GAME_DOWNLOADER downloader, GUI & gui)
 	DownloadRemoteConfig(downloader);
 }
 
-void UPDATE_MANAGER::Show(GUI & gui)
+void UpdateManager::Show(Gui & gui)
 {
 	const bool verbose = false;
 
@@ -168,8 +168,8 @@ void UPDATE_MANAGER::Show(GUI & gui)
 		std::pair <int, int> revs = autoupdate.GetVersions(group, objectname);
 		gui.ActivatePage(guipage, 0.0001, error_output);
 		gui.SetLabelText(guipage, "name", objectname);
-		gui.SetLabelText(guipage, "version_local", UTILS::tostr(revs.first));
-		gui.SetLabelText(guipage, "version_remote", UTILS::tostr(revs.second));
+		gui.SetLabelText(guipage, "version_local", Utils::tostr(revs.first));
+		gui.SetLabelText(guipage, "version_remote", Utils::tostr(revs.second));
 
 		if (!revs.second)
 		{
@@ -200,7 +200,7 @@ void UPDATE_MANAGER::Show(GUI & gui)
 	}
 }
 
-bool UPDATE_MANAGER::ApplyUpdate(GAME_DOWNLOADER downloader, GUI & gui, const PATHMANAGER & pathmanager)
+bool UpdateManager::ApplyUpdate(GameDownloader downloader, Gui & gui, const PathManager & pathmanager)
 {
 	const bool debug = false;
 	std::string objectname;
@@ -275,14 +275,14 @@ bool UPDATE_MANAGER::ApplyUpdate(GAME_DOWNLOADER downloader, GUI & gui, const PA
 	// remove temporary file
 	if (!debug)
 	{
-		PATHMANAGER::DeleteFile1(archivepath);
+		PathManager::DeleteFile1(archivepath);
 	}
 
 	gui.ActivatePage("UpdateSuccessful", 0.25, error_output);
 	return true;
 }
 
-bool UPDATE_MANAGER::DownloadRemoteConfig(GAME_DOWNLOADER downloader)
+bool UpdateManager::DownloadRemoteConfig(GameDownloader downloader)
 {
 	if (remoteconfig.size())
 	{
@@ -302,7 +302,7 @@ bool UPDATE_MANAGER::DownloadRemoteConfig(GAME_DOWNLOADER downloader)
 	std::string filepath = downloader.GetHttp().GetDownloadPath(url);
 	info_output << "DownloadRemoteConfig: download successful: " << filepath << std::endl;
 
-	std::string updatesconfig = UTILS::LoadFileIntoString(filepath, error_output);
+	std::string updatesconfig = Utils::LoadFileIntoString(filepath, error_output);
 	if (updatesconfig.empty())
 	{
 		error_output << "DownloadRemoteConfig: empty updates.config" << std::endl;
@@ -317,7 +317,7 @@ bool UPDATE_MANAGER::DownloadRemoteConfig(GAME_DOWNLOADER downloader)
 		return false;
 	}
 
-	PATHMANAGER::DeleteFile1(filepath);
+	PathManager::DeleteFile1(filepath);
 
 	return true;
 }

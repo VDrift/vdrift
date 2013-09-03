@@ -29,7 +29,7 @@
 #include <iostream>
 
 template <typename T>
-class QUATERNION
+class Quaternion
 {
 friend class joeserialize::Serializer;
 private:
@@ -38,12 +38,12 @@ private:
 public:
 	typedef size_t size_type;
 
-	QUATERNION()
+	Quaternion()
 	{
 		LoadIdentity();
 	}
 
-	QUATERNION(const T & nx, const T & ny, const T & nz, const T & nw)
+	Quaternion(const T & nx, const T & ny, const T & nz, const T & nw)
 	{
 		v[0] = nx;
 		v[1] = ny;
@@ -52,12 +52,12 @@ public:
 	}
 
 	///create quaternion from Euler angles ZYX convention
-	QUATERNION(const T & x, const T & y, const T & z)
+	Quaternion(const T & x, const T & y, const T & z)
 	{
 		SetEulerZYX(x, y, z);
 	}
 
-	QUATERNION(const QUATERNION <T> & other)
+	Quaternion(const Quaternion <T> & other)
 	{
 		*this = other;
 	}
@@ -100,7 +100,7 @@ public:
 	T & w() {return v[3];}
 
 	template <typename T2>
-	const QUATERNION <T> & operator = (const QUATERNION <T2> & other)
+	const Quaternion <T> & operator = (const Quaternion <T2> & other)
 	{
 		for (size_type i = 0; i < 4; ++i)
 			v[i] = other[i];
@@ -192,7 +192,7 @@ public:
 		destmat[8] = 1.0-2.0*(xx+yy);
 	}
 
-	MATHVECTOR<T, 3> AxisX() const
+	MathVector<T, 3> AxisX() const
 	{
 		T xy = v[0]*v[1];
 		T xz = v[0]*v[2];
@@ -200,10 +200,10 @@ public:
 		T yw = v[1]*v[3];
 		T zz = v[2]*v[2];
 		T zw = v[2]*v[3];
-		return MATHVECTOR<T, 3>(1.0-2.0*(yy+zz), 2.0*(xy+zw), 2.0*(xz-yw));
+		return MathVector<T, 3>(1.0-2.0*(yy+zz), 2.0*(xy+zw), 2.0*(xz-yw));
 	}
 
-	MATHVECTOR<T, 3> AxisY() const
+	MathVector<T, 3> AxisY() const
 	{
 		T xx = v[0]*v[0];
 		T xy = v[0]*v[1];
@@ -211,10 +211,10 @@ public:
 		T yz = v[1]*v[2];
 		T zz = v[2]*v[2];
 		T zw = v[2]*v[3];
-		return MATHVECTOR<T, 3>(2.0*(xy-zw), 1.0-2.0*(xx+zz), 2.0*(yz+xw));
+		return MathVector<T, 3>(2.0*(xy-zw), 1.0-2.0*(xx+zz), 2.0*(yz+xw));
 	}
 
-	MATHVECTOR<T, 3> AxisZ() const
+	MathVector<T, 3> AxisZ() const
 	{
 		T xx = v[0]*v[0];
 		T xz = v[0]*v[2];
@@ -222,20 +222,12 @@ public:
 		T yy = v[1]*v[1];
 		T yz = v[1]*v[2];
 		T yw = v[1]*v[3];
-		return MATHVECTOR<T, 3>(2.0*(xz+yw), 2.0*(yz-xw), 1.0-2.0*(xx+yy));
+		return MathVector<T, 3>(2.0*(xz+yw), 2.0*(yz-xw), 1.0-2.0*(xx+yy));
 	}
 
 	///has the potential to return a un-normalized quaternion
-	QUATERNION <T> operator*(const QUATERNION <T> & quat2 ) const
+	Quaternion <T> operator*(const Quaternion <T> & quat2 ) const
 	{
-		/*QUATERNION output(v[3]*quat2.v[0] + v[0]*quat2.v[3] + v[1]*quat2.v[2] - v[2]*quat2.v[1],
-			v[3]*quat2.v[1] + v[1]*quat2.v[3] + v[2]*quat2.v[0] - v[0]*quat2.v[2],
-			v[3]*quat2.v[2] + v[2]*quat2.v[3] + v[0]*quat2.v[1] - v[1]*quat2.v[0],
-   			v[3]*quat2.v[3] - v[0]*quat2.v[0] - v[1]*quat2.v[1] - v[2]*quat2.v[2]);
-
-		//output.Normalize();
-		return output;*/
-
 		T A, B, C, D, E, F, G, H;
 
 		A = (v[3] + v[0])*(quat2.v[3] + quat2.v[0]);
@@ -248,7 +240,7 @@ public:
 		H = (v[3] - v[1])*(quat2.v[3] + quat2.v[2]);
 
 
-		QUATERNION output(A - (E + F + G + H)*0.5,
+		Quaternion output(A - (E + F + G + H)*0.5,
 			C + (E - F + G - H)*0.5,
 			D + (E - F - G + H)*0.5,
 			B + (-E - F + G + H)*0.5);
@@ -256,25 +248,25 @@ public:
 	}
 
 	///has the potential to return a un-normalized quaternion
-	QUATERNION <T> operator*(const T & scalar ) const
+	Quaternion <T> operator*(const T & scalar ) const
 	{
-		QUATERNION output(v[0]*scalar, v[1]*scalar, v[2]*scalar, v[3]*scalar);
+		Quaternion output(v[0]*scalar, v[1]*scalar, v[2]*scalar, v[3]*scalar);
 
 		//output.Normalize();
 		return output;
 	}
 
 	///has the potential to return a un-normalized quaternion
-	QUATERNION <T> operator+(const QUATERNION <T> & quat2) const
+	Quaternion <T> operator+(const Quaternion <T> & quat2) const
 	{
-		QUATERNION output(v[0]+quat2.v[0], v[1]+quat2.v[1], v[2]+quat2.v[2], v[3]+quat2.v[3]);
+		Quaternion output(v[0]+quat2.v[0], v[1]+quat2.v[1], v[2]+quat2.v[2], v[3]+quat2.v[3]);
 
 		//output.Normalize();
 		return output;
 	}
 
 	template <typename T2>
-	bool operator== (const QUATERNION <T2> & other) const
+	bool operator== (const Quaternion <T2> & other) const
 	{
 		bool same(true);
 
@@ -287,15 +279,15 @@ public:
 	}
 
 	template <typename T2>
-	bool operator!= (const QUATERNION <T2> & other) const
+	bool operator!= (const Quaternion <T2> & other) const
 	{
 		return !(*this == other);
 	}
 
 	///returns the conjugate
-	QUATERNION <T> operator-() const
+	Quaternion <T> operator-() const
 	{
-		QUATERNION qtemp;
+		Quaternion qtemp;
 		qtemp.v[3] = v[3];
 		for (size_type i = 0; i < 3; i++)
 		{
@@ -308,15 +300,15 @@ public:
 	/// a is in radians.  the axis is assumed to be a unit vector
 	void Rotate(const T & a, const T & ax, const T & ay, const T & az)
 	{
-		QUATERNION output;
+		Quaternion output;
 		output.SetAxisAngle(a, ax, ay, az);
 		(*this) = output * (*this);
 		Normalize();
 	}
 
-	void Rotate(const T & a, const MATHVECTOR<T, 3> & axis)
+	void Rotate(const T & a, const MathVector<T, 3> & axis)
 	{
-		QUATERNION output;
+		Quaternion output;
 		output.SetAxisAngle(a, axis[0], axis[1], axis[2]);
 		(*this) = output * (*this);
 		Normalize();
@@ -361,20 +353,20 @@ public:
 	template <typename T2>
 	void RotateVector(T2 & vec) const
 	{
-		QUATERNION dirconj = -(*this);
-		QUATERNION qtemp;
+		Quaternion dirconj = -(*this);
+		Quaternion qtemp;
 		qtemp.v[3] = 0;
 		for (size_t i = 0; i < 3; i++)
 			qtemp.v[i] = vec[i];
 
-		QUATERNION qout = (*this) * qtemp * dirconj;
+		Quaternion qout = (*this) * qtemp * dirconj;
 
 		for (size_t i = 0; i < 3; i++)
 			vec[i] = qout.v[i];
 	}
 
 	///get the scalar angle (in radians) between two quaternions
-	const T GetAngleBetween(const QUATERNION <T> & quat2) const
+	const T GetAngleBetween(const Quaternion <T> & quat2) const
 	{
 		//establish a forward vector
 		T forward[3];
@@ -399,7 +391,7 @@ public:
 	}
 
 	///interpolate between this quaternion and another by scalar amount t [0,1] and return the result
-	QUATERNION <T> QuatSlerp (const QUATERNION <T> & quat2, const T & t) const
+	Quaternion <T> QuatSlerp (const Quaternion <T> & quat2, const T & t) const
 	{
 		T to1[4];
 		T omega, cosom, sinom, scale0, scale1;
@@ -445,7 +437,7 @@ public:
 		}
 
 		//calculate final values
-		QUATERNION <T> qout;
+		Quaternion <T> qout;
 		qout.v[0] = scale0 * v[0] + scale1 * to1[0];
 		qout.v[1] = scale0 * v[1] + scale1 * to1[1];
 		qout.v[2] = scale0 * v[2] + scale1 * to1[2];
@@ -462,98 +454,15 @@ public:
 		if (!s.Serialize("w",v[3])) return false;
 		return true;
 	}
-
-	/*///assuming the eye is at the given coordinates, set the orientation to look at center
-	void LookAt(T eyex,
-			T eyey,
-			T eyez,
-			T centerx,
-			T centery,
-			T centerz,
-			T upx,
-			T upy,
-			T upz)
-	{
-		MATHVECTOR <T,3> forward(centerx-eyex, centery-eyey, centerz-eyez);
-		MATHVECTOR <T,3> up(upx, upy, upz);
-
-		forward = forward.Normalize();
-		MATHVECTOR <T,3> side = (forward.cross(up)).Normalize();
-		up = side.cross(forward);
-
-		T m[16];
-		for (int i = 0; i < 16; i++)
-			m[i] = 0;
-		m[15] = 1;
-
-		// 0  1  2  3
-		// 4  5  6  7
-		// 8  9 10 11
-		//12 13 14 15
-
-		m[0] = side[0];
-		m[4] = side[1];
-		m[8] = side[2];
-
-		m[1] = up[0];
-		m[5] = up[1];
-		m[9] = up[2];
-
-		m[2] = -forward[0];
-		m[6] = -forward[1];
-		m[10] = -forward[2];
-
-		SetMatrix4(m);
-	}
-
-	///set the orientation to the orientation specified in the given 4x4 matrix
-	template <typename T2>
-	void SetMatrix4(T2 mat)
-	{
-		T S;
-
-		T t = 1 + mat[0] + mat[5] + mat[10];
-		if ( t > 0.00000001 )
-		{
-			S = sqrt(t) * 2;
-			v[0] = ( mat[9] - mat[6] ) / S;
-			v[1] = ( mat[2] - mat[8] ) / S;
-			v[2] = ( mat[4] - mat[1] ) / S;
-			v[3] = 0.25 * S;
-		}
-		else
-		{
-		if ( mat[0] > mat[5] && mat[0] > mat[10] )  {       // Column 0:
-			S  = sqrt( 1.0 + mat[0] - mat[5] - mat[10] ) * 2;
-			v[0] = 0.25 * S;
-			v[1] = (mat[4] + mat[1] ) / S;
-			v[2] = (mat[2] + mat[8] ) / S;
-			v[3] = (mat[9] - mat[6] ) / S;
-		} else if ( mat[5] > mat[10] ) {                    // Column 1:
-			S  = sqrt( 1.0 + mat[5] - mat[0] - mat[10] ) * 2;
-			v[0] = (mat[4] + mat[1] ) / S;
-			v[1] = 0.25 * S;
-			v[2] = (mat[9] + mat[6] ) / S;
-			v[3] = (mat[2] - mat[8] ) / S;
-		} else {                                            // Column 2:
-			S  = sqrt( 1.0 + mat[10] - mat[0] - mat[5] ) * 2;
-			v[0] = (mat[2] + mat[8] ) / S;
-			v[1] = (mat[9] + mat[6] ) / S;
-			v[2] = 0.25 * S;
-			v[3] = (mat[4] - mat[1] ) / S;
-		}
-		}
-
-		Normalize();
-		// *this = -*this;
-	}*/
 };
 
 template <typename T>
-std::ostream & operator << (std::ostream &os, const QUATERNION <T> & v)
+std::ostream & operator << (std::ostream &os, const Quaternion <T> & v)
 {
 	os << "x=" << v[0] << ", y=" << v[1] << ", z=" << v[2] << ", w=" << v[3];
 	return os;
 }
+
+typedef Quaternion <float> Quat;
 
 #endif

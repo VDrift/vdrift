@@ -24,7 +24,7 @@
 #include "camera_orbit.h"
 #include "cfg/ptree.h"
 
-CAMERA * LoadCamera(
+Camera * LoadCamera(
 	const PTree & cfg,
 	const float camerabounce,
 	std::ostream & error_output)
@@ -33,8 +33,8 @@ CAMERA * LoadCamera(
 	if (!cfg.get("type", type, error_output)) return 0;
 	if (!cfg.get("name", name, error_output)) return 0;
 
-	MATHVECTOR<float, 3> position;
-	MATHVECTOR<float, 3> lookat;
+	Vec3 position;
+	Vec3 lookat;
 	float fov = 0.0;
 	float stiffness = 0.0;
 	cfg.get("fov", fov);
@@ -42,13 +42,13 @@ CAMERA * LoadCamera(
 	cfg.get("position", position);
 	if (!cfg.get("lookat", lookat))
 	{
-		lookat = position + direction::Forward;
+		lookat = position + Direction::Forward;
 	}
 
-	CAMERA * cam;
+	Camera * cam;
 	if (type == "mount")
 	{
-		CAMERA_MOUNT * c = new CAMERA_MOUNT(name);
+		CameraMount * c = new CameraMount(name);
 		c->SetEffectStrength(camerabounce);
 		c->SetStiffness(stiffness);
 		c->SetOffset(position, lookat);
@@ -56,19 +56,19 @@ CAMERA * LoadCamera(
 	}
 	else if (type == "chase")
 	{
-		CAMERA_CHASE * c = new CAMERA_CHASE(name);
+		CameraChase * c = new CameraChase(name);
 		c->SetOffset(position);
 		cam = c;
 	}
 	else if (type == "orbit")
 	{
-		CAMERA_ORBIT * c = new CAMERA_ORBIT(name);
+		CameraOrbit * c = new CameraOrbit(name);
 		c->SetOffset(position);
 		cam = c;
 	}
 	else if (type == "free")
 	{
-		CAMERA_FREE * c = new CAMERA_FREE(name);
+		CameraFree * c = new CameraFree(name);
 		c->SetOffset(position);
 		cam = c;
 	}

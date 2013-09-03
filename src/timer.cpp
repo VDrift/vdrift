@@ -28,7 +28,7 @@ using std::endl;
 using std::vector;
 using std::stringstream;
 
-bool TIMER::Load(const std::string & trackrecordspath, float stagingtime)
+bool Timer::Load(const std::string & trackrecordspath, float stagingtime)
 {
 	Unload();
 
@@ -45,13 +45,13 @@ bool TIMER::Load(const std::string & trackrecordspath, float stagingtime)
 	return true;
 }
 
-int TIMER::AddCar(const std::string & cartype)
+int Timer::AddCar(const std::string & cartype)
 {
 	car.push_back(LAPINFO(cartype));
 	return car.size()-1;
 }
 
-void TIMER::Unload()
+void Timer::Unload()
 {
 	if (loaded)
 	{
@@ -61,7 +61,7 @@ void TIMER::Unload()
 	loaded = false;
 }
 
-void TIMER::Tick(float dt)
+void Timer::Tick(float dt)
 {
 	float elapsed_time = dt;
 
@@ -83,7 +83,7 @@ void TIMER::Tick(float dt)
 		i->Tick(elapsed_time);
 }
 
-void TIMER::Lap(const unsigned int carid, const int nextsector, const bool countit)
+void Timer::Lap(const unsigned int carid, const int nextsector, const bool countit)
 {
 	assert(carid < car.size());
 
@@ -110,13 +110,13 @@ void TIMER::Lap(const unsigned int carid, const int nextsector, const bool count
 		car[carid].Lap(countit);
 }
 
-void TIMER::UpdateDistance(const unsigned int carid, const double newdistance)
+void Timer::UpdateDistance(const unsigned int carid, const double newdistance)
 {
 	assert(carid < car.size());
 	car[carid].UpdateLapDistance(newdistance);
 }
 
-void TIMER::DebugPrint(std::ostream & out) const
+void Timer::DebugPrint(std::ostream & out) const
 {
 	for (unsigned int i = 0; i < car.size(); ++i)
 	{
@@ -125,7 +125,7 @@ void TIMER::DebugPrint(std::ostream & out) const
 	}
 }
 
-class PLACE
+class Place
 {
     private:
         int index;
@@ -133,11 +133,11 @@ class PLACE
         double distance;
 
     public:
-        PLACE(int newindex, int newlaps, double newdistance) : index(newindex), laps(newlaps), distance(newdistance) {}
+		Place(int newindex, int newlaps, double newdistance) : index(newindex), laps(newlaps), distance(newdistance) {}
 
         int GetIndex() const {return index;}
 
-        bool operator< (const PLACE & other) const
+		bool operator< (const Place & other) const
         {
             if (laps == other.laps)
                 return distance > other.distance;
@@ -146,7 +146,7 @@ class PLACE
         }
 };
 
-std::pair <int, int> TIMER::GetCarPlace(int index)
+std::pair <int, int> Timer::GetCarPlace(int index)
 {
     assert(index<(int)car.size());
     assert(index >= 0);
@@ -154,17 +154,17 @@ std::pair <int, int> TIMER::GetCarPlace(int index)
     int place = 1;
     int total = car.size();
 
-    std::list <PLACE> distances;
+	std::list <Place> distances;
 
     for (int i = 0; i < (int)car.size(); i++)
     {
-        distances.push_back(PLACE(i, car[i].GetCurrentLap(), car[i].GetLapDistance()));
+		distances.push_back(Place(i, car[i].GetCurrentLap(), car[i].GetLapDistance()));
     }
 
     distances.sort();
 
     int curplace = 1;
-    for (std::list <PLACE>::iterator i = distances.begin(); i != distances.end(); ++i)
+	for (std::list <Place>::iterator i = distances.begin(); i != distances.end(); ++i)
     {
         if (i->GetIndex() == index)
             place = curplace;

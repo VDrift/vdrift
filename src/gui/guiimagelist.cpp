@@ -20,18 +20,18 @@
 #include "guiimagelist.h"
 #include "guiimage.h"
 
-GUIIMAGELIST::GUIIMAGELIST()
+GuiImageList::GuiImageList()
 {
 	//ctor
 }
 
-GUIIMAGELIST::~GUIIMAGELIST()
+GuiImageList::~GuiImageList()
 {
 	//dtor
 }
 
-void GUIIMAGELIST::SetupDrawable(
-	SCENENODE & scene,
+void GuiImageList::SetupDrawable(
+	SceneNode & scene,
 	ContentManager & content,
 	const std::string & path,
 	const std::string & ext,
@@ -43,7 +43,7 @@ void GUIIMAGELIST::SetupDrawable(
 		float x, y;
 		GetElemPos(i, x, y);
 
-		GUIIMAGE * element = new GUIIMAGE();
+		GuiImage * element = new GuiImage();
 		element->SetupDrawable(
 			scene, content, path, ext,
 			x + m_elemw * 0.5f, y + m_elemh * 0.5f, m_elemw, m_elemh, z);
@@ -52,23 +52,23 @@ void GUIIMAGELIST::SetupDrawable(
 	}
 }
 
-void GUIIMAGELIST::SetImage(const std::string & value)
+void GuiImageList::SetImage(const std::string & value)
 {
 	for (size_t i = 0; i < m_elements.size(); ++i)
 	{
-		static_cast<GUIIMAGE*>(m_elements[i])->SetImage(value);
+		static_cast<GuiImage*>(m_elements[i])->SetImage(value);
 	}
 }
 
-void GUIIMAGELIST::UpdateElements(SCENENODE & scene)
+void GuiImageList::UpdateElements(SceneNode & scene)
 {
 	assert(m_values.size() <= m_elements.size());
 	for (size_t i = 0; i < m_values.size(); ++i)
 	{
-		static_cast<GUIIMAGE*>(m_elements[i])->SetImage(m_values[i]);
+		static_cast<GuiImage*>(m_elements[i])->SetImage(m_values[i]);
 	}
 	for (size_t i = m_values.size(); i < m_elements.size(); ++i)
 	{
-		static_cast<GUIIMAGE*>(m_elements[i])->SetImage("");
+		static_cast<GuiImage*>(m_elements[i])->SetImage("");
 	}
 }

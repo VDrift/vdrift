@@ -28,10 +28,10 @@
 #include <cassert>
 
 template <typename T>
-class LINEARINTERP
+class LinearInterp
 {
 public:
-	enum BOUNDSMODE
+	enum BoundaryEnum
 	{
 		CONSTANTSLOPE,
   		CONSTANTVALUE
@@ -42,7 +42,7 @@ private:
 	mutable T first_slope;
 	mutable T last_slope;
 	mutable bool slopes_calculated;
-	BOUNDSMODE mode;
+	BoundaryEnum mode;
 	T empty_value;
 
 	void Calculate() const
@@ -57,8 +57,8 @@ private:
 	}
 
 public:
-	LINEARINTERP() : first_slope(0.0), last_slope(0.0), slopes_calculated(false), mode(CONSTANTVALUE), empty_value(0) {}
-	LINEARINTERP(T empty_value_) : first_slope(0.0), last_slope(0.0), slopes_calculated(false), mode(CONSTANTVALUE), empty_value(empty_value_) {} ///< Interpolate will return the given empty_value if no points exist
+	LinearInterp() : first_slope(0.0), last_slope(0.0), slopes_calculated(false), mode(CONSTANTVALUE), empty_value(0) {}
+	LinearInterp(T empty_value_) : first_slope(0.0), last_slope(0.0), slopes_calculated(false), mode(CONSTANTVALUE), empty_value(empty_value_) {} ///< Interpolate will return the given empty_value if no points exist
 
 	void Clear()
 	{
@@ -70,7 +70,7 @@ public:
 	{
 		points.push_back(std::pair <T,T> (x,y));
 		slopes_calculated = false;
-		PAIRSORTER_FIRST <T> sorter;
+		PairSortFirst <T> sorter;
 		std::sort(points.begin(), points.end(), sorter);
 	}
 
@@ -130,7 +130,7 @@ public:
 	/// if the mode is set to CONSTANTSLOPE, then values outside of the bounds will be extrapolated based
 	/// on the slope of the closest points.  if set to CONSTANTVALUE, the values outside of the bounds will
 	/// be set to the value of the closest point.
-	void SetBoundaryMode ( const BOUNDSMODE& value )
+	void SetBoundaryMode ( const BoundaryEnum& value )
 	{
 		mode = value;
 	}

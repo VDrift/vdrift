@@ -24,10 +24,10 @@
 #include "aabb_space_partitioning.h"
 #include "optional.h"
 
-class ROADSTRIP
+class RoadStrip
 {
 public:
-	ROADSTRIP();
+	RoadStrip();
 
 	bool ReadFrom(
 		std::istream & openfile,
@@ -35,24 +35,24 @@ public:
 		std::ostream & error_output);
 
 	bool Collide(
-		const MATHVECTOR <float, 3> & origin,
-		const MATHVECTOR <float, 3> & direction,
+		const Vec3 & origin,
+		const Vec3 & direction,
 		const float seglen,
 		int & patch_id,
-		MATHVECTOR <float, 3> & outtri,
-		const BEZIER * & colpatch,
-		MATHVECTOR <float, 3> & normal) const;
+		Vec3 & outtri,
+		const Bezier * & colpatch,
+		Vec3 & normal) const;
 
 	void CreateRacingLine(
-		SCENENODE & parentnode,
-		std::tr1::shared_ptr<TEXTURE> racingline_texture);
+		SceneNode & parentnode,
+		std::tr1::shared_ptr<Texture> racingline_texture);
 
-	const std::vector<ROADPATCH> & GetPatches() const
+	const std::vector<RoadPatch> & GetPatches() const
 	{
 		return patches;
 	}
 
-	std::vector<ROADPATCH> & GetPatches()
+	std::vector<RoadPatch> & GetPatches()
 	{
 		return patches;
 	}
@@ -63,8 +63,8 @@ public:
 	}
 
 private:
-	std::vector<ROADPATCH> patches;
-	AABB_SPACE_PARTITIONING_NODE <unsigned> aabb_part;
+	std::vector<RoadPatch> patches;
+	AabbTreeNode <unsigned> aabb_part;
 	bool closed;
 
 	void GenerateSpacePartitioning();

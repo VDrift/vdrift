@@ -33,7 +33,7 @@
 #include <cmath>
 
 template <typename T, unsigned int dimension>
-class MATHVECTOR
+class MathVector
 {
 friend class joeserialize::Serializer;
 private:
@@ -42,22 +42,22 @@ private:
 public:
 	typedef size_t size_type;
 
-	MATHVECTOR()
+	MathVector()
 	{
 		for (size_type i = 0; i < dimension; ++i)
 			v[i] = 0;
 	}
 
-	MATHVECTOR(const T& t)
+	MathVector(const T& t)
 	{
 		for (size_type i = 0; i < dimension; ++i)
 			v[i] = t;
 	}
-	MATHVECTOR(const MATHVECTOR <T, dimension> & other)
+	MathVector(const MathVector <T, dimension> & other)
 	{
 		*this = other;
 	}
-	MATHVECTOR(const T x, const T y)
+	MathVector(const T x, const T y)
 	{
 		assert(dimension==2);
 		v[0] = x;
@@ -105,9 +105,9 @@ public:
 	}
 
 	///return a normalized vector
-	MATHVECTOR <T, dimension> Normalize() const
+	MathVector <T, dimension> Normalize() const
 	{
-		MATHVECTOR <T, dimension> output;
+		MathVector <T, dimension> output;
 
 		const T mag = (Magnitude());
 
@@ -122,7 +122,7 @@ public:
 	}
 
 	///return the scalar dot product between this and other
-	const T dot(const MATHVECTOR <T, dimension> & other) const
+	const T dot(const MathVector <T, dimension> & other) const
 	{
 		T output(0);
 		for (size_type i = 0; i < dimension; i++)
@@ -133,11 +133,11 @@ public:
 	}
 
 	///return the cross product between this vector and the given vector
-	const MATHVECTOR <T, 3> cross(const MATHVECTOR <T, 3> & other) const
+	const MathVector <T, 3> cross(const MathVector <T, 3> & other) const
 	{
 		assert(dimension==3);
 
-		MATHVECTOR <T, 3> output;
+		MathVector <T, 3> output;
 		output[0] = v[1]*other.v[2] - v[2]*other.v[1];
 		output[1] = v[2]*other.v[0] - v[0]*other.v[2];
 		output[2] = v[0]*other.v[1] - v[1]*other.v[0];
@@ -145,9 +145,9 @@ public:
 	}
 
 	///return the reflection of this vector around the given normal (must be unit length)
-	const MATHVECTOR <T, dimension> reflect(const MATHVECTOR <T, dimension> & other) const
+	const MathVector <T, dimension> reflect(const MathVector <T, dimension> & other) const
 	{
-		MATHVECTOR <T, dimension> output;
+		MathVector <T, dimension> output;
 
 		output = (*this)-other*T(2.0)*other.dot(*this);
 
@@ -167,9 +167,9 @@ public:
 	}
 
 	///scalar multiplication
-	MATHVECTOR <T, dimension> operator * (const T & scalar) const
+	MathVector <T, dimension> operator * (const T & scalar) const
 	{
-		MATHVECTOR <T, dimension> output;
+		MathVector <T, dimension> output;
 
 		for (size_type i = 0; i < dimension; i++)
 		{
@@ -180,11 +180,11 @@ public:
 	}
 
 	///scalar division
-	MATHVECTOR <T, dimension> operator / (const T & scalar) const
+	MathVector <T, dimension> operator / (const T & scalar) const
 	{
 		assert(scalar != 0);
 
-		MATHVECTOR <T, dimension> output;
+		MathVector <T, dimension> output;
 
 		for (size_type i = 0; i < dimension; i++)
 		{
@@ -194,9 +194,9 @@ public:
 		return output;
 	}
 
-	MATHVECTOR <T, dimension> operator + (const MATHVECTOR <T, dimension> & other) const
+	MathVector <T, dimension> operator + (const MathVector <T, dimension> & other) const
 	{
-		MATHVECTOR <T, dimension> output;
+		MathVector <T, dimension> output;
 
 		for (size_type i = 0; i < dimension; i++)
 		{
@@ -206,9 +206,9 @@ public:
 		return output;
 	}
 
-	MATHVECTOR <T, dimension> operator - (const MATHVECTOR <T, dimension> & other) const
+	MathVector <T, dimension> operator - (const MathVector <T, dimension> & other) const
 	{
-		MATHVECTOR <T, dimension> output;
+		MathVector <T, dimension> output;
 
 		for (size_type i = 0; i < dimension; i++)
 		{
@@ -219,7 +219,7 @@ public:
 	}
 
 	template <typename T2>
-	const MATHVECTOR <T, dimension> & operator = (const MATHVECTOR <T2, dimension> & other)
+	const MathVector <T, dimension> & operator = (const MathVector <T2, dimension> & other)
 	{
 		for (size_type i = 0; i < dimension; ++i)
 			v[i] = other[i];
@@ -228,7 +228,7 @@ public:
 	}
 
 	template <typename T2>
-	bool operator== (const MATHVECTOR <T2, dimension> & other) const
+	bool operator== (const MathVector <T2, dimension> & other) const
 	{
 		bool same(true);
 
@@ -241,15 +241,15 @@ public:
 	}
 
 	template <typename T2>
-	bool operator!= (const MATHVECTOR <T2, dimension> & other) const
+	bool operator!= (const MathVector <T2, dimension> & other) const
 	{
 		return !(*this == other);
 	}
 
 	///inversion
-	MATHVECTOR <T, dimension> operator-() const
+	MathVector <T, dimension> operator-() const
 	{
-		MATHVECTOR <T, dimension> output;
+		MathVector <T, dimension> output;
 		for (size_type i = 0; i < dimension; i++)
 		{
 			output.v[i] = -v[i];
@@ -271,7 +271,7 @@ public:
 
 ///we need a faster mathvector for 3-space, so specialize
 template <class T>
-class MATHVECTOR <T, 3>
+class MathVector <T, 3>
 {
 	friend class joeserialize::Serializer;
 	private:
@@ -287,20 +287,20 @@ class MATHVECTOR <T, 3>
 		} v;
 
 	public:
-		MATHVECTOR()
+		MathVector()
 		{
 		}
 
-		MATHVECTOR(const T& t) : v(t)
+		MathVector(const T& t) : v(t)
 		{
 		}
 
-		MATHVECTOR(const T x, const T y, const T z) : v(x,y,z)
+		MathVector(const T x, const T y, const T z) : v(x,y,z)
 		{
 		}
 
 		template <typename T2>
-		MATHVECTOR (const MATHVECTOR <T2, 3> & other)
+		MathVector (const MathVector <T2, 3> & other)
 		{
 			*this = other;
 		}
@@ -337,31 +337,31 @@ class MATHVECTOR <T, 3>
 		}
 
 		///return a normalized vector
-		MATHVECTOR <T, 3> Normalize() const
+		MathVector <T, 3> Normalize() const
 		{
 			const T mag = Magnitude();
 			assert(mag != 0);
 			const T maginv = (1.0/mag);
 
-			return MATHVECTOR <T, 3> (v.x*maginv, v.y*maginv, v.z*maginv);
+			return MathVector <T, 3> (v.x*maginv, v.y*maginv, v.z*maginv);
 		}
 
 		///return the scalar dot product between this and other
-		inline const T dot(const MATHVECTOR <T, 3> & other) const
+		inline const T dot(const MathVector <T, 3> & other) const
 		{
 			return v.x*other.v.x+v.y*other.v.y+v.z*other.v.z;
 		}
 
 		///return the cross product between this vector and the given vector
-		const MATHVECTOR <T, 3> cross(const MATHVECTOR <T, 3> & other) const
+		const MathVector <T, 3> cross(const MathVector <T, 3> & other) const
 		{
-			return MATHVECTOR <T, 3> (v[1]*other.v[2] - v[2]*other.v[1],
+			return MathVector <T, 3> (v[1]*other.v[2] - v[2]*other.v[1],
 					v[2]*other.v[0] - v[0]*other.v[2],
 					v[0]*other.v[1] - v[1]*other.v[0]);
 		}
 
 		///return the reflection of this vector around the given normal (must be unit length)
-		const MATHVECTOR <T, 3> reflect(const MATHVECTOR <T, 3> & other) const
+		const MathVector <T, 3> reflect(const MathVector <T, 3> & other) const
 		{
 			return (*this)-other*T(2.0)*other.dot(*this);
 		}
@@ -379,31 +379,31 @@ class MATHVECTOR <T, 3>
 		}
 
 		///scalar multiplication
-		MATHVECTOR <T, 3> operator * (const T & scalar) const
+		MathVector <T, 3> operator * (const T & scalar) const
 		{
-			return MATHVECTOR <T, 3> (v.x*scalar,v.y*scalar,v.z*scalar);
+			return MathVector <T, 3> (v.x*scalar,v.y*scalar,v.z*scalar);
 		}
 
 		///scalar division
-		MATHVECTOR <T, 3> operator / (const T & scalar) const
+		MathVector <T, 3> operator / (const T & scalar) const
 		{
 			assert(scalar != 0);
 			T invscalar = 1.0/scalar;
 			return (*this)*invscalar;
 		}
 
-		MATHVECTOR <T, 3> operator + (const MATHVECTOR <T, 3> & other) const
+		MathVector <T, 3> operator + (const MathVector <T, 3> & other) const
 		{
-			return MATHVECTOR <T, 3> (v.x+other.v.x,v.y+other.v.y,v.z+other.v.z);
+			return MathVector <T, 3> (v.x+other.v.x,v.y+other.v.y,v.z+other.v.z);
 		}
 
-		MATHVECTOR <T, 3> operator - (const MATHVECTOR <T, 3> & other) const
+		MathVector <T, 3> operator - (const MathVector <T, 3> & other) const
 		{
-			return MATHVECTOR <T, 3> (v.x-other.v.x,v.y-other.v.y,v.z-other.v.z);;
+			return MathVector <T, 3> (v.x-other.v.x,v.y-other.v.y,v.z-other.v.z);;
 		}
 
 		template <typename T2>
-		const MATHVECTOR <T, 3> & operator = (const MATHVECTOR <T2, 3> & other)
+		const MathVector <T, 3> & operator = (const MathVector <T2, 3> & other)
 		{
 			v.x = other[0];
 			v.y = other[1];
@@ -413,22 +413,22 @@ class MATHVECTOR <T, 3>
 		}
 
 		template <typename T2>
-		inline bool operator== (const MATHVECTOR <T2, 3> & other) const
+		inline bool operator== (const MathVector <T2, 3> & other) const
 		{
 			//return (std::memcmp(&v,&other.v,sizeof(MATHVECTOR_XYZ)) == 0);
 			return (v.x == other[0] && v.y == other[1] && v.z == other[2]);
 		}
 
 		template <typename T2>
-		inline bool operator!= (const MATHVECTOR <T2, 3> & other) const
+		inline bool operator!= (const MathVector <T2, 3> & other) const
 		{
 			return !(*this == other);
 		}
 
 		///inversion
-		MATHVECTOR <T, 3> operator-() const
+		MathVector <T, 3> operator-() const
 		{
-			return MATHVECTOR <T, 3> (-v.x, -v.y, -v.z);
+			return MathVector <T, 3> (-v.x, -v.y, -v.z);
 		}
 
 		///set all vector components to be positive
@@ -443,7 +443,7 @@ class MATHVECTOR <T, 3>
 		}
 
 		///project this vector onto the vector 'vec'.  neither needs to be a unit vector
-		MATHVECTOR <T, 3> project(const MATHVECTOR <T, 3> & vec) const
+		MathVector <T, 3> project(const MathVector <T, 3> & vec) const
 		{
 			T scalar_projection = dot(vec.Normalize());
 			return vec.Normalize() * scalar_projection;
@@ -459,7 +459,7 @@ class MATHVECTOR <T, 3>
 };
 
 template <typename T, unsigned int dimension>
-std::ostream & operator << (std::ostream &os, const MATHVECTOR <T, dimension> & v)
+std::ostream & operator << (std::ostream &os, const MathVector <T, dimension> & v)
 {
 	for (size_t i = 0; i < dimension-1; i++)
 	{
@@ -470,7 +470,7 @@ std::ostream & operator << (std::ostream &os, const MATHVECTOR <T, dimension> & 
 }
 
 template <typename T, unsigned int dimension>
-std::istream & operator >> (std::istream &is, MATHVECTOR <T, dimension> & v)
+std::istream & operator >> (std::istream &is, MathVector <T, dimension> & v)
 {
 	std::string value;
 	for (size_t i = 0; i < dimension && std::getline(is, value, ','); ++i)
@@ -480,5 +480,8 @@ std::istream & operator >> (std::istream &is, MATHVECTOR <T, dimension> & v)
 	}
 	return is;
 }
+
+typedef MathVector <float, 2> Vec2;
+typedef MathVector <float, 3> Vec3;
 
 #endif

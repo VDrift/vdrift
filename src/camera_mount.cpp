@@ -20,8 +20,8 @@
 #include "camera_mount.h"
 #include "coordinatesystem.h"
 
-CAMERA_MOUNT::CAMERA_MOUNT(const std::string & name) :
-	CAMERA(name),
+CameraMount::CameraMount(const std::string & name) :
+	Camera(name),
 	stiffness(0),
 	mass(1),
 	offset_effect_strength(1),
@@ -30,9 +30,9 @@ CAMERA_MOUNT::CAMERA_MOUNT(const std::string & name) :
 	rotation.LoadIdentity();
 }
 
-void CAMERA_MOUNT::Reset(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newquat)
+void CameraMount::Reset(const Vec3 & newpos, const Quat & newquat)
 {
-	MATHVECTOR <float, 3> pos = offset;
+	Vec3 pos = offset;
 	newquat.RotateVector(pos);
 	rotation = newquat * offsetrot;
 	displacement.Set(0, 0, 0);
@@ -40,15 +40,15 @@ void CAMERA_MOUNT::Reset(const MATHVECTOR <float, 3> & newpos, const QUATERNION 
 	UpdatePosition(pos + newpos);
 }
 
-void CAMERA_MOUNT::Update(const MATHVECTOR <float, 3> & newpos, const QUATERNION <float> & newdir, float dt)
+void CameraMount::Update(const Vec3 & newpos, const Quat & newdir, float dt)
 {
 	rotation = newdir * offsetrot;
 
-	MATHVECTOR <float, 3> pos = offset;
+	Vec3 pos = offset;
 	newdir.RotateVector(pos);
 	pos = pos + newpos;
 
-	MATHVECTOR <float, 3> vel = pos - position;
+	Vec3 vel = pos - position;
 	effect = (vel.Magnitude() - 0.02) / 0.04;
 	if (effect < 0) effect = 0;
 	else if (effect > 1) effect = 1;
@@ -62,21 +62,21 @@ void CAMERA_MOUNT::Update(const MATHVECTOR <float, 3> & newpos, const QUATERNION
 
 	float k = 800.0 + stiffness * 800.0 * 4.0;
 	float c = 2.0 * std::sqrt(k * mass) * 0.35;
-	MATHVECTOR <float, 3> bumpforce = direction::Up * bumpimpulse;
-	MATHVECTOR <float, 3> springforce = -displacement * k;
-	MATHVECTOR <float, 3> damperforce = -velocity * c;
-	
+	Vec3 bumpforce = Direction::Up * bumpimpulse;
+	Vec3 springforce = -displacement * k;
+	Vec3 damperforce = -velocity * c;
+
 	velocity = velocity + (springforce + damperforce + bumpforce) * dt;
 	displacement = displacement + velocity * dt;
 
 	UpdatePosition(pos);
 }
 
-void CAMERA_MOUNT::UpdatePosition(const MATHVECTOR <float, 3> & newpos)
+void CameraMount::UpdatePosition(const Vec3 & newpos)
 {
-	MATHVECTOR <float, 3> dp = displacement;
+	Vec3 dp = displacement;
 	rotation.RotateVector(dp);
-	MATHVECTOR <float, 3> maxdp(0.05, 0.05, 0.05);
+	Vec3 maxdp(0.05, 0.05, 0.05);
 	maxdp = maxdp * 1.0 / (stiffness + 1.0);
 	for (int i = 0; i < 3; i++)
 	{

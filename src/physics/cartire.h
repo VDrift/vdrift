@@ -23,7 +23,8 @@
 #ifdef VDRIFTN
 
 #include "physics/tire.h"
-typedef Tire CARTIRE;
+typedef Tire CarTire;
+typedef TireInfo CarTireInfo;
 
 #else
 
@@ -33,7 +34,7 @@ typedef Tire CARTIRE;
 
 #include <vector>
 
-struct TIREINFO
+struct CarTireInfo
 {
 	std::vector<btScalar> longitudinal; ///< the parameters of the longitudinal pacejka equation.  this is series b
 	std::vector<btScalar> lateral; ///< the parameters of the lateral pacejka equation.  this is series a
@@ -43,16 +44,16 @@ struct TIREINFO
 	btScalar rolling_resistance_quad; ///< quadratic rolling resistance on a hard surface
 	btScalar rolling_resistance_lin; ///< linear rolling resistance on a hard surface
 	btScalar tread; ///< 1.0 means a pure off-road tire, 0.0 is a pure road tire
-	TIREINFO();
+	CarTireInfo();
 };
 
-class CARTIRE : private TIREINFO
+class CarTire : private CarTireInfo
 {
 friend class joeserialize::Serializer;
 public:
-	CARTIRE();
+	CarTire();
 
-	void init(const TIREINFO & info);
+	void init(const CarTireInfo & info);
 
 	/// get tire tread fraction
 	btScalar getTread() const;
@@ -124,47 +125,47 @@ private:
 
 // implementation
 
-inline btScalar CARTIRE::getTread() const
+inline btScalar CarTire::getTread() const
 {
 	return tread;
 }
 
-inline btScalar CARTIRE::getSlip() const
+inline btScalar CarTire::getSlip() const
 {
 	return slide;
 }
 
-inline btScalar CARTIRE::getSlipAngle() const
+inline btScalar CarTire::getSlipAngle() const
 {
 	return slip;
 }
 
-inline btScalar CARTIRE::getIdealSlip() const
+inline btScalar CarTire::getIdealSlip() const
 {
 	return ideal_slide;
 }
 
-inline btScalar CARTIRE::getIdealSlipAngle() const
+inline btScalar CarTire::getIdealSlipAngle() const
 {
 	return ideal_slip;
 }
 
-inline btScalar CARTIRE::getFx() const
+inline btScalar CarTire::getFx() const
 {
 	return fx;
 }
 
-inline btScalar CARTIRE::getFy() const
+inline btScalar CarTire::getFy() const
 {
 	return fy;
 }
 
-inline btScalar CARTIRE::getMz() const
+inline btScalar CarTire::getMz() const
 {
 	return mz;
 }
 
-inline bool CARTIRE::Serialize(joeserialize::Serializer & s)
+inline bool CarTire::Serialize(joeserialize::Serializer & s)
 {
 	//_SERIALIZE_(s, mz);
 	return true;

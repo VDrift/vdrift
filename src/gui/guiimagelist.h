@@ -24,16 +24,16 @@
 
 class ContentManager;
 
-class GUIIMAGELIST : public GUIWIDGETLIST
+class GuiImageList : public GuiWidgetList
 {
 public:
-	GUIIMAGELIST();
+	GuiImageList();
 
-	~GUIIMAGELIST();
+	~GuiImageList();
 
 	/// Create image elements. To be called after SetupList!
 	void SetupDrawable(
-		SCENENODE & scene,
+		SceneNode & scene,
 		ContentManager & content,
 		const std::string & path,
 		const std::string & ext,
@@ -44,11 +44,11 @@ public:
 
 protected:
 	/// verboten
-	GUIIMAGELIST(const GUIIMAGELIST & other);
-	GUIIMAGELIST & operator=(const GUIIMAGELIST & other);
+	GuiImageList(const GuiImageList & other);
+	GuiImageList & operator=(const GuiImageList & other);
 
 	/// called during Update to process m_values
-	void UpdateElements(SCENENODE & scene);
+	void UpdateElements(SceneNode & scene);
 };
 
 #endif // _GUIIMAGELIST_H

@@ -51,7 +51,7 @@ int main (int argc, char * argv[])
 #endif
 
 	// Find the path of the log file.
-	PATHMANAGER paths;
+	PathManager paths;
 	std::stringstream dummy;
 	paths.Init(dummy, dummy);
 	string logfilename = paths.GetLogFile();
@@ -77,7 +77,7 @@ int main (int argc, char * argv[])
 	std::ostream error_output(&errorlog);
 
 	// Create the game object.
-	GAME game(info_output, error_output);
+	Game game(info_output, error_output);
 
 	// Start the real game.
 	list <string> args(argv, argv + argc);

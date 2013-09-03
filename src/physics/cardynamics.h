@@ -51,14 +51,14 @@ class FractureBody;
 class ContentManager;
 class PTree;
 
-class CARDYNAMICS : public btActionInterface
+class CarDynamics : public btActionInterface
 {
 friend class PERFORMANCE_TESTING;
 friend class joeserialize::Serializer;
 public:
-	CARDYNAMICS();
+	CarDynamics();
 
-	~CARDYNAMICS();
+	~CarDynamics();
 
 	// tirealt is optional tire config, overrides default tire type
 	bool Load(
@@ -82,9 +82,9 @@ public:
 	btVector3 GetEnginePosition() const;
 	const btVector3 & GetPosition() const;
 	const btQuaternion & GetOrientation() const;
-	const btVector3 & GetWheelPosition(WHEEL_POSITION wp) const;
-	const btQuaternion & GetWheelOrientation(WHEEL_POSITION wp) const;
-	btQuaternion GetUprightOrientation(WHEEL_POSITION wp) const;
+	const btVector3 & GetWheelPosition(WheelPosition wp) const;
+	const btQuaternion & GetWheelOrientation(WheelPosition wp) const;
+	btQuaternion GetUprightOrientation(WheelPosition wp) const;
 
 	// intepolated bodies transform: body, wheels, ...
 	unsigned GetNumBodies() const;
@@ -92,11 +92,11 @@ public:
 	const btQuaternion & GetOrientation(int i) const;
 
 	// collision world interface
-	const COLLISION_CONTACT & GetWheelContact(WHEEL_POSITION wp) const;
-	COLLISION_CONTACT & GetWheelContact(WHEEL_POSITION wp);
+	const CollisionContact & GetWheelContact(WheelPosition wp) const;
+	CollisionContact & GetWheelContact(WheelPosition wp);
 
 	// body
-	const btVector3 & GetWheelVelocity(WHEEL_POSITION wp) const;
+	const btVector3 & GetWheelVelocity(WheelPosition wp) const;
 	const btVector3 & GetCenterOfMass() const;
 	const btVector3 & GetVelocity() const;
 	btScalar GetInvMass() const;
@@ -123,12 +123,12 @@ public:
 	btScalar GetTachoRPM() const;
 
 	// driveline state access
-	const CARENGINE & GetEngine() const {return engine;}
-	const CARCLUTCH & GetClutch() const {return clutch;}
-	const CARTRANSMISSION & GetTransmission() const {return transmission;}
-	const CARBRAKE & GetBrake(WHEEL_POSITION pos) const {return brake[pos];}
-	const CARWHEEL & GetWheel(WHEEL_POSITION pos) const {return wheel[pos];}
-	const CARTIRE & GetTire(WHEEL_POSITION pos) const {return tire[pos];}
+	const CarEngine & GetEngine() const {return engine;}
+	const CarClutch & GetClutch() const {return clutch;}
+	const CarTransmission & GetTransmission() const {return transmission;}
+	const CarBrake & GetBrake(WheelPosition pos) const {return brake[pos];}
+	const CarWheel & GetWheel(WheelPosition pos) const {return wheel[pos];}
+	const CarTire & GetTire(WheelPosition pos) const {return tire[pos];}
 	btScalar GetNosAmount() const {return engine.GetNosAmount();}
 	bool GetOutOfGas() const {return fuel_tank.Empty();}
 
@@ -155,7 +155,7 @@ public:
 	// get the maximum steering angle in degrees
 	btScalar GetMaxSteeringAngle() const;
 
-	const CARSUSPENSION & GetSuspension(WHEEL_POSITION pos) const {return *suspension[pos];}
+	const CarSuspension & GetSuspension(WheelPosition pos) const {return *suspension[pos];}
 
 	btScalar GetAerodynamicDownforceCoefficient() const;
 
@@ -199,21 +199,21 @@ protected:
 	btAlignedObjectArray<MotionState> motion_state;
 
 	// driveline state
-	CARENGINE engine;
-	CARFUELTANK fuel_tank;
-	CARCLUTCH clutch;
-	CARTRANSMISSION transmission;
-	CARDIFFERENTIAL differential_front;
-	CARDIFFERENTIAL differential_rear;
-	CARDIFFERENTIAL differential_center;
-	btAlignedObjectArray<CARBRAKE> brake;
-	btAlignedObjectArray<CARWHEEL> wheel;
-	btAlignedObjectArray<CARTIRE> tire;
-	btAlignedObjectArray<CARSUSPENSION*> suspension;
+	CarEngine engine;
+	CarFuelTank fuel_tank;
+	CarClutch clutch;
+	CarTransmission transmission;
+	CarDifferential differential_front;
+	CarDifferential differential_rear;
+	CarDifferential differential_center;
+	btAlignedObjectArray<CarBrake> brake;
+	btAlignedObjectArray<CarWheel> wheel;
+	btAlignedObjectArray<CarTire> tire;
+	btAlignedObjectArray<CarSuspension*> suspension;
 	btAlignedObjectArray<AeroDevice> aerodevice;
 
 	// wheel contact state
-	btAlignedObjectArray<COLLISION_CONTACT> wheel_contact;
+	btAlignedObjectArray<CollisionContact> wheel_contact;
 	btAlignedObjectArray<btVector3> suspension_force;
 	btAlignedObjectArray<btVector3> wheel_velocity;
 	btAlignedObjectArray<btVector3> wheel_position;
@@ -236,7 +236,7 @@ protected:
 	bool tcs;
 	std::vector<int> abs_active;
 	std::vector<int> tcs_active;
-	std::list<CARTELEMETRY> telemetry;
+	std::list<CarTelemetry> telemetry;
 
 	btScalar maxangle;
 	btScalar maxspeed;
