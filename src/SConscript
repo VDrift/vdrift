@@ -125,9 +125,6 @@ src = Split("""
 		physics/cartire.cpp
 		physics/dynamicsworld.cpp
 		physics/fracturebody.cpp
-		physics/linearframe.cpp
-		physics/rigidbody.cpp
-		physics/rotationalframe.cpp
 		physics/tire.cpp
 		quaternion.cpp
 		radix.cpp
