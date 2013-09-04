@@ -46,11 +46,6 @@
 #include <algorithm>
 #include <cstdio>
 
-#if defined(unix) || defined(__unix) || defined(__unix__)
-#include <GL/glx.h>
-#include <SDL/SDL_syswm.h>
-#endif
-
 #ifdef _WIN32
 	#define OS_NAME "Windows"
 #elif defined(__APPLE__)
