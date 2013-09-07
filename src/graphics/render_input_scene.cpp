@@ -23,6 +23,7 @@
 #include "drawable.h"
 #include "texture.h"
 #include "shader.h"
+#include "vertexarray.h"
 
 RenderInputScene::RenderInputScene():
 	last_transform_valid(false),
@@ -415,11 +416,9 @@ void RenderInputScene::DrawList(GraphicsState & glstate, const std::vector <Draw
 
 			SetTransform(d, glstate);
 
-			if (d.IsDrawList())
+			if (d.GetDrawList())
 			{
-				const unsigned int numlists = d.GetDrawLists().size();
-				for (unsigned int n = 0; n < numlists; ++n)
-					glCallList(d.GetDrawLists()[n]);
+				glCallList(d.GetDrawList());
 			}
 			else if (d.GetVertArray())
 			{
@@ -554,9 +553,8 @@ void RenderInputScene::SetFlags(const Drawable & d, GraphicsState & glstate)
 		glstate.Disable(GL_CULL_FACE);
 	}
 
-	float r,g,b,a;
-	d.GetColor(r,g,b,a);
-	glstate.SetColor(r,g,b,a);
+	const Vec4 & color = d.GetColor();
+	glstate.SetColor(color[0], color[1], color[2], color[3]);
 }
 
 void RenderInputScene::SetTextures(const Drawable & d, GraphicsState & glstate)
@@ -573,9 +571,7 @@ void RenderInputScene::SetTextures(const Drawable & d, GraphicsState & glstate)
 
 	if (carpainthack)
 	{
-		GLfloat color[4] = {0.0, 0.0, 0.0, 1.0};
-		d.GetColor(color[0], color[1], color[2], color[3]);
-		glTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, color);
+		glTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, &d.GetColor()[0]);
 	}
 
 	if (shaders)

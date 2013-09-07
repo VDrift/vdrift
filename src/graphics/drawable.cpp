@@ -19,7 +19,26 @@
 
 #include "drawable.h"
 #include "texture.h"
+#include "model.h"
 #include <cmath>
+
+Drawable::Drawable() :
+	list_id(0),
+	vert_array(NULL),
+	linesize(0),
+	objcenter(0),
+	radius(0),
+	color(1),
+	draw_order(0),
+	decal(false),
+	drawenabled(true),
+	cull(false),
+	cull_front(false),
+	texturesChanged(true),
+	uniformsChanged(true)
+{
+	// ctor
+}
 
 void Drawable::SetDiffuseMap(const std::tr1::shared_ptr<Texture> & value)
 {
@@ -45,9 +64,15 @@ void Drawable::SetVertArray(const VertexArray* value)
 	renderModel.SetVertArray(vert_array);
 }
 
-void Drawable::setVertexArrayObject(GLuint vao, unsigned int elementCount)
+void Drawable::SetVertexArrayObject(GLuint vao, unsigned int elementCount)
 {
 	renderModel.setVertexArrayObject(vao, elementCount);
+}
+
+void Drawable::SetLineSize(float size)
+{
+	linesize = size;
+	renderModel.SetLineSize(size);
 }
 
 void Drawable::SetTransform(const Matrix4 <float> & value)
@@ -56,28 +81,57 @@ void Drawable::SetTransform(const Matrix4 <float> & value)
 	uniformsChanged = true;
 }
 
-void Drawable::SetColor(float nr, float ng, float nb, float na)
+void Drawable::SetObjectCenter(const Vec3 & value)
 {
-	r = nr;
-	g = ng;
-	b = nb;
-	a = na;
-	uniformsChanged = true;
+	objcenter = value;
 }
-void Drawable::SetColor(float nr, float ng, float nb)
+
+void Drawable::SetRadius(float value)
 {
-	r = nr;
-	g = ng;
-	b = nb;
-	uniformsChanged = true;
+	radius = value;
 }
-void Drawable::SetAlpha(float na)
+
+void Drawable::SetColor(float r, float g, float b, float a)
 {
-	a = na;
+	color[0] = r;
+	color[1] = g;
+	color[2] = b;
+	color[3] = a;
 	uniformsChanged = true;
 }
 
-RenderModelExt & Drawable::generateRenderModelData(StringIdMap & stringMap)
+void Drawable::SetColor(float r, float g, float b)
+{
+	color[0] = r;
+	color[1] = g;
+	color[2] = b;
+	uniformsChanged = true;
+}
+
+void Drawable::SetAlpha(float a)
+{
+	color[3] = a;
+	uniformsChanged = true;
+}
+
+void Drawable::SetDrawOrder(float value)
+{
+	draw_order = value;
+}
+
+void Drawable::SetDecal(bool value)
+{
+	decal = value;
+	uniformsChanged = true;
+}
+
+void Drawable::SetCull(bool newcull, bool newcullfront)
+{
+	cull = newcull;
+	cull_front = newcullfront;
+}
+
+RenderModelExt & Drawable::GenRenderModelData(StringIdMap & stringMap)
 {
 	// copy data over to the GL3V renderModel object
 	// eventually this should only be done when we update the values, but for now
@@ -116,16 +170,20 @@ RenderModelExt & Drawable::generateRenderModelData(StringIdMap & stringMap)
 	{
 		renderModel.clearUniformCache();
 		renderModel.uniforms.clear();
-		if (transform != Matrix4<float>()) // only add it if it's not the identity matrix
+
+		// only add it if it's not the identity matrix
+		if (transform != Matrix4<float>())
 			renderModel.uniforms.push_back(RenderUniformEntry(transformId, transform.GetArray(), 16));
-		if (r != 1 || g != 1 || b != 1 || a != 1) // only add it if it's not the default
+
+		// only add it if it's not the default
+		if (color != Vec4(1))
 		{
-			float srgb_alpha[4];
-			srgb_alpha[0] = r < 1 ? pow(r, 2.2f) : r;
-			srgb_alpha[1] = g < 1 ? pow(g, 2.2f) : g;
-			srgb_alpha[2] = b < 1 ? pow(b, 2.2f) : b;
-			srgb_alpha[3] = a;
-			renderModel.uniforms.push_back(RenderUniformEntry(colorId, srgb_alpha, 4));
+			float srgba[4];
+			srgba[0] = color[0] < 1 ? pow(color[0], 2.2f) : color[0];
+			srgba[1] = color[1] < 1 ? pow(color[1], 2.2f) : color[1];
+			srgba[2] = color[2] < 1 ? pow(color[2], 2.2f) : color[2];
+			srgba[3] = color[3];
+			renderModel.uniforms.push_back(RenderUniformEntry(colorId, srgba, 4));
 		}
 
 		uniformsChanged = false;
@@ -138,7 +196,7 @@ void Drawable::SetModel(const Model & model)
 {
 	if (model.HaveListID())
 	{
-		AddDrawList(model.GetListID());
+		list_id = model.GetListID();
 	}
 
 	if (model.HaveVertexArrayObject())
@@ -147,6 +205,6 @@ void Drawable::SetModel(const Model & model)
 		unsigned int elementCount;
 		bool haveVao = model.GetVertexArrayObject(vao, elementCount);
 		if (haveVao)
-			setVertexArrayObject(vao, elementCount);
+			SetVertexArrayObject(vao, elementCount);
 	}
 }

@@ -483,5 +483,6 @@ std::istream & operator >> (std::istream &is, MathVector <T, dimension> & v)
 
 typedef MathVector <float, 2> Vec2;
 typedef MathVector <float, 3> Vec3;
+typedef MathVector <float, 4> Vec4;
 
 #endif

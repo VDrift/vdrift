@@ -20,6 +20,7 @@
 #include "loaddrawable.h"
 #include "content/contentmanager.h"
 #include "graphics/textureinfo.h"
+#include "graphics/model.h"
 #include "cfg/ptree.h"
 
 LoadDrawable::LoadDrawable(

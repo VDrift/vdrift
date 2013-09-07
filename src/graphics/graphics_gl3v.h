@@ -20,12 +20,13 @@
 #ifndef _GRAPHICS_GL3V_H
 #define _GRAPHICS_GL3V_H
 
+#include "graphics.h"
 #include "mathvector.h"
 #include "scenenode.h"
 #include "staticdrawables.h"
 #include "matrix4.h"
 #include "texture.h"
-#include "graphics.h"
+#include "vertexarray.h"
 #include "frustum.h"
 #include "graphics_config_condition.h"
 #include "gl3v/glwrapper.h"

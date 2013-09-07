@@ -21,6 +21,7 @@
 #define _HUDGAUGE_H
 
 #include "graphics/scenenode.h"
+#include "graphics/vertexarray.h"
 
 class Font;
 

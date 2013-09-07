@@ -383,7 +383,7 @@ void GraphicsGL3::assembleDrawList(const std::vector <Drawable*> & drawables, st
 		for (std::vector <Drawable*>::const_iterator i = drawables.begin(); i != drawables.end(); i++)
 		{
 			if (!frustumCull(*i, *frustum) && !contributionCull(*i, camPos))
-				out.push_back(&(*i)->generateRenderModelData(stringMap));
+				out.push_back(&(*i)->GenRenderModelData(stringMap));
 		}
 	}
 	else if (frustum)
@@ -391,14 +391,14 @@ void GraphicsGL3::assembleDrawList(const std::vector <Drawable*> & drawables, st
 		for (std::vector <Drawable*>::const_iterator i = drawables.begin(); i != drawables.end(); i++)
 		{
 			if (!frustumCull(*i, *frustum))
-				out.push_back(&(*i)->generateRenderModelData(stringMap));
+				out.push_back(&(*i)->GenRenderModelData(stringMap));
 		}
 	}
 	else
 	{
 		for (std::vector <Drawable*>::const_iterator i = drawables.begin(); i != drawables.end(); i++)
 		{
-			out.push_back(&(*i)->generateRenderModelData(stringMap));
+			out.push_back(&(*i)->GenRenderModelData(stringMap));
 		}
 	}
 }
@@ -420,14 +420,14 @@ void GraphicsGL3::assembleDrawList(const AabbTreeNodeAdapter <Drawable> & adapte
 		for (std::vector <Drawable*>::const_iterator i = drawables.begin(); i != drawables.end(); i++)
 		{
 			if (!contributionCull(*i, camPos))
-				out.push_back(&(*i)->generateRenderModelData(stringMap));
+				out.push_back(&(*i)->GenRenderModelData(stringMap));
 		}
 	}
 	else
 	{
 		for (std::vector <Drawable*>::const_iterator i = drawables.begin(); i != drawables.end(); i++)
 		{
-			out.push_back(&(*i)->generateRenderModelData(stringMap));
+			out.push_back(&(*i)->GenRenderModelData(stringMap));
 		}
 	}
 }

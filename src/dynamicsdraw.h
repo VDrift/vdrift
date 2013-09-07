@@ -20,8 +20,9 @@
 #ifndef _DYNAMICSDRAW_H
 #define _DYNAMICSDRAW_H
 
-#include "LinearMath/btIDebugDraw.h"
 #include "graphics/scenenode.h"
+#include "graphics/vertexarray.h"
+#include "LinearMath/btIDebugDraw.h"
 
 class DynamicsDraw : public btIDebugDraw
 {

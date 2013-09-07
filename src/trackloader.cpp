@@ -25,6 +25,7 @@
 #include "k1999.h"
 #include "content/contentmanager.h"
 #include "graphics/textureinfo.h"
+#include "graphics/model.h"
 
 #define EXTBULLET
 

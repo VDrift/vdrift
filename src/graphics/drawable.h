@@ -23,107 +23,85 @@
 #include "rendermodelext_drawable.h"
 #include "mathvector.h"
 #include "matrix4.h"
-#include "model.h"
 #include "memory.h"
 
+class Model;
 class Texture;
 class VertexArray;
-class GLWrapper;
 class StringIdMap;
 
 class Drawable
 {
 public:
-	bool operator < (const Drawable & other) const {return draw_order < other.draw_order;}
+	Drawable();
 
-	bool IsDrawList() const {return !list_ids.empty();}
+	bool operator < (const Drawable & other) const;
 
-	const std::vector <int> & GetDrawLists() const {return list_ids;}
-
+	unsigned GetDrawList() const;
 	void SetModel(const Model & model);
 
-	const Texture * GetDiffuseMap() const {return diffuse_map.get();}
+	const Texture * GetDiffuseMap() const;
 	void SetDiffuseMap(const std::tr1::shared_ptr<Texture> & value);
 
-	const Texture * GetMiscMap1() const {return misc_map1.get();}
+	const Texture * GetMiscMap1() const;
 	void SetMiscMap1(const std::tr1::shared_ptr<Texture> & value);
 
-	const Texture * GetMiscMap2() const {return misc_map2.get();}
+	const Texture * GetMiscMap2() const;
 	void SetMiscMap2(const std::tr1::shared_ptr<Texture> & value);
 
-	const VertexArray * GetVertArray() const {return vert_array;}
-	void SetVertArray(const VertexArray* value);
+	const VertexArray * GetVertArray() const;
+	void SetVertArray(const VertexArray * value);
 
 	/// draw vertex array as line segments if size > 0
-	void SetLineSize(float size) { linesize = size; renderModel.SetLineSize(size);}
-	float GetLineSize() const { return linesize; }
+	float GetLineSize() const;
+	void SetLineSize(float size);
 
-	const Matrix4 <float> & GetTransform() const {return transform;}
+	const Matrix4 <float> & GetTransform() const;
 	void SetTransform(const Matrix4 <float> & value);
 
-	/// used for bounding sphere frustum culling
-	const Vec3 & GetObjectCenter() const {return objcenter;}
-	void SetObjectCenter(const Vec3 & value) {objcenter = value;}
+	/// bounding sphere frustum culling
+	const Vec3 & GetObjectCenter() const;
+	void SetObjectCenter(const Vec3 & value);
 
-	/// for bounding sphere frustum culling
-	float GetRadius() const {return radius;}
-	void SetRadius(float value) {radius = value;}
+	/// bounding sphere frustum culling
+	float GetRadius() const;
+	void SetRadius(float value);
 
-	void GetColor(float &nr, float &ng, float &nb, float &na) const {nr = r; ng = g; nb = b; na = a;}
+	const Vec4 & GetColor() const;
 	void SetColor(float nr, float ng, float nb, float na);
 	void SetColor(float nr, float ng, float nb);
 	void SetAlpha(float na);
 
-	float GetDrawOrder() const {return draw_order;}
-	void SetDrawOrder(float value) {draw_order = value;}
-	void SetDrawOrderFont() {SetDrawOrder(5);}
-	void SetDrawOrderCursor() {SetDrawOrder(10);}
-	void SetDrawOrderGUIBackground() {SetDrawOrder(2);}
-	void SetDrawOrderGUIForeground() {SetDrawOrder(4);}
+	float GetDrawOrder() const;
+	void SetDrawOrder(float value);
 
-	bool GetDecal() const {return decal;}
-	void SetDecal(bool newdecal) {decal = newdecal;uniformsChanged = true;}
+	bool GetDecal() const;
+	void SetDecal(bool value);
 
-	bool GetDrawEnable() const {return drawenabled;}
-	void SetDrawEnable(bool value) {drawenabled = value;}
+	bool GetDrawEnable() const;
+	void SetDrawEnable(bool value);
 
-	bool GetCull() const {return cull;}
-	bool GetCullFront() const {return cull_front;}
-	void SetCull(bool newcull, bool newcullfront) {cull = newcull; cull_front = newcullfront;}
+	bool GetCull() const;
+	bool GetCullFront() const;
+	void SetCull(bool newcull, bool newcullfront);
 
 	/// this gets called if we are using the GL3 renderer
 	/// it returns a reference to the RenderModelExternal structure
-	RenderModelExt & generateRenderModelData(StringIdMap & stringMap);
+	RenderModelExt & GenRenderModelData(StringIdMap & stringMap);
 
-	void setVertexArrayObject(GLuint vao, unsigned int elementCount);
-
-	Drawable() :
-		vert_array(0),
-		linesize(0),
-		radius(0),
-		r(1), g(1), b(1), a(1),
-		draw_order(0),
-		decal(false),
-		drawenabled(true),
-		cull(false),
-		cull_front(false),
-		texturesChanged(true),
-		uniformsChanged(true)
-	{
-		objcenter.Set(0.0);
-	}
+	void SetVertexArrayObject(GLuint vao, unsigned int elementCount);
 
 private:
 	std::tr1::shared_ptr<Texture> diffuse_map;
 	std::tr1::shared_ptr<Texture> misc_map1;
 	std::tr1::shared_ptr<Texture> misc_map2;
-	std::vector <int> list_ids;
+	unsigned list_id;
 	const VertexArray * vert_array;
 	float linesize;
 	Matrix4 <float> transform;
 	Vec3 objcenter;
 	float radius;
-	float r, g, b, a; // these can never be reordered or interleaved with other data because we count on (&a == &r+3) and so on
+	Vec4 color;
 	float draw_order;
 	bool decal;
 	bool drawenabled;
@@ -134,8 +112,91 @@ private:
 	bool uniformsChanged;
 
 	RenderModelExtDrawable renderModel;
-
-	void AddDrawList(int value) {list_ids.push_back(value);}
 };
+
+inline bool Drawable::operator < (const Drawable & other) const
+{
+	return draw_order < other.draw_order;
+}
+
+inline unsigned Drawable::GetDrawList() const
+{
+	return list_id;
+}
+
+inline const Texture * Drawable::GetDiffuseMap() const
+{
+	return diffuse_map.get();
+}
+
+inline const Texture * Drawable::GetMiscMap1() const
+{
+	return misc_map1.get();
+}
+
+inline const Texture * Drawable::GetMiscMap2() const
+{
+	return misc_map2.get();
+}
+
+inline const VertexArray * Drawable::GetVertArray() const
+{
+	return vert_array;
+}
+
+inline float Drawable::GetLineSize() const
+{
+	return linesize;
+}
+
+inline const Matrix4 <float> & Drawable::GetTransform() const
+{
+	return transform;
+}
+
+inline const Vec3 & Drawable::GetObjectCenter() const
+{
+	return objcenter;
+}
+
+inline float Drawable::GetRadius() const
+{
+	return radius;
+}
+
+inline const Vec4 & Drawable::GetColor() const
+{
+	return color;
+}
+
+inline float Drawable::GetDrawOrder() const
+{
+	return draw_order;
+}
+
+inline bool Drawable::GetDecal() const
+{
+	return decal;
+}
+
+inline bool Drawable::GetDrawEnable() const
+{
+	return drawenabled;
+}
+
+inline void Drawable::SetDrawEnable(bool value)
+{
+	drawenabled = value;
+}
+
+inline bool Drawable::GetCull() const
+{
+	return cull;
+}
+
+inline bool Drawable::GetCullFront() const
+{
+	return cull_front;
+}
 
 #endif // _DRAWABLE_H
