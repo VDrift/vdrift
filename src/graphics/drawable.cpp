@@ -75,7 +75,7 @@ void Drawable::SetLineSize(float size)
 	renderModel.SetLineSize(size);
 }
 
-void Drawable::SetTransform(const Matrix4 <float> & value)
+void Drawable::SetTransform(const Mat4 & value)
 {
 	transform = value;
 	uniformsChanged = true;
@@ -172,7 +172,7 @@ RenderModelExt & Drawable::GenRenderModelData(StringIdMap & stringMap)
 		renderModel.uniforms.clear();
 
 		// only add it if it's not the identity matrix
-		if (transform != Matrix4<float>())
+		if (transform != Mat4())
 			renderModel.uniforms.push_back(RenderUniformEntry(transformId, transform.GetArray(), 16));
 
 		// only add it if it's not the default

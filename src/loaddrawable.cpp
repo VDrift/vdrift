@@ -110,7 +110,7 @@ bool LoadDrawable::operator()(
 	modellist.push_back(mesh);
 
 	// set color
-	MathVector<float, 4> col(1);
+	Vec4 col(1);
 	if (cfg.get("color", col))
 	{
 		drawable.SetColor(col[0], col[1], col[2], col[3]);

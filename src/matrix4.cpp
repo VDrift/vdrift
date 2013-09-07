@@ -26,7 +26,7 @@ QT_TEST(matrix4_test)
 {
 	Quat quat;
 	Vec3 vec;
-	Matrix4 <float> mat;
+	Mat4 mat;
 
 	vec.Set(0,10,0);
 	quat.Rotate(3.141593*0.5,0,1,0);

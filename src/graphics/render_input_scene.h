@@ -58,9 +58,9 @@ public:
 		float neww, float newh,
 		bool restore_matrices = true);
 
-	const Matrix4<float> & GetProjMatrix() const;
+	const Mat4 & GetProjMatrix() const;
 
-	const Matrix4<float> & GetViewMatrix() const;
+	const Mat4 & GetViewMatrix() const;
 
 	void SetSunDirection(const Vec3 & newsun);
 
@@ -94,7 +94,7 @@ private:
 	reseatable_reference <const std::vector <Drawable*> > dynamic_drawlist_ptr;
 	reseatable_reference <const std::vector <Drawable*> > static_drawlist_ptr;
 	bool last_transform_valid;
-	Matrix4 <float> last_transform;
+	Mat4 last_transform;
 	Quat cam_rotation; //used for the skybox effect
 	Vec3 cam_position;
 	Vec3 lightposition;
@@ -102,8 +102,8 @@ private:
 	Vec3 orthomax;
 	float w, h;
 	float camfov;
-	Matrix4<float> projMatrix;
-	Matrix4<float> viewMatrix;
+	Mat4 projMatrix;
+	Mat4 viewMatrix;
 	Frustum frustum; //used for frustum culling
 	float lod_far; //used for distance culling
 	bool shaders;

@@ -440,7 +440,7 @@ void TraverseScene(SceneNode & node, Graphics::dynamicdrawlist_type & output)
 		output.clear();
 	}
 
-	Matrix4 <float> identity;
+	Mat4 identity;
 	node.Traverse(output, identity);
 
 	//std::cout << output.size() << std::endl;

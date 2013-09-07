@@ -369,4 +369,6 @@ std::ostream & operator << (std::ostream &os, const Matrix4 <T> & m)
 	return os;
 }
 
+typedef Matrix4 <float> Mat4;
+
 #endif

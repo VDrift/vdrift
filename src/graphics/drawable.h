@@ -56,8 +56,8 @@ public:
 	float GetLineSize() const;
 	void SetLineSize(float size);
 
-	const Matrix4 <float> & GetTransform() const;
-	void SetTransform(const Matrix4 <float> & value);
+	const Mat4 & GetTransform() const;
+	void SetTransform(const Mat4 & value);
 
 	/// bounding sphere frustum culling
 	const Vec3 & GetObjectCenter() const;
@@ -98,7 +98,7 @@ private:
 	unsigned list_id;
 	const VertexArray * vert_array;
 	float linesize;
-	Matrix4 <float> transform;
+	Mat4 transform;
 	Vec3 objcenter;
 	float radius;
 	Vec4 color;
@@ -149,7 +149,7 @@ inline float Drawable::GetLineSize() const
 	return linesize;
 }
 
-inline const Matrix4 <float> & Drawable::GetTransform() const
+inline const Mat4 & Drawable::GetTransform() const
 {
 	return transform;
 }

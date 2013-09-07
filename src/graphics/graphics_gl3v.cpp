@@ -256,8 +256,8 @@ void GraphicsGL3::SetupScene(float fov, float new_view_distance, const Vec3 cam_
 		// create and send shadow reconstruction matrices
 		// the reconstruction matrix should transform from view to world, then from world to shadow view, then from shadow view to shadow clip space
 		const CameraMatrices & defaultcam = cameras.find("default")->second;
-		Matrix4 <float> shadowReconstruction = defaultcam.inverseViewMatrix.Multiply(shadowcam.viewMatrix).Multiply(shadowcam.projectionMatrix);
-		/*//MATRIX4 <float> shadowReconstruction = shadowcam.projectionMatrix.Multiply(shadowcam.viewMatrix.Multiply(defaultcam.inverseViewMatrix));
+		Mat4 shadowReconstruction = defaultcam.inverseViewMatrix.Multiply(shadowcam.viewMatrix).Multiply(shadowcam.projectionMatrix);
+		/*//Mat4 shadowReconstruction = shadowcam.projectionMatrix.Multiply(shadowcam.viewMatrix.Multiply(defaultcam.inverseViewMatrix));
 		std::cout << "shadowcam.projectionMatrix: " << std::endl;
 		shadowcam.projectionMatrix.DebugPrint(std::cout);
 		std::cout << "defaultcam.inverseViewMatrix: " << std::endl;

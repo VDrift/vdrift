@@ -72,7 +72,7 @@ void RenderInputPostprocess::Render(GraphicsState & glstate, std::ostream & erro
 
 	CheckForOpenGLErrors("postprocess shader enable", error_output);
 
-	Matrix4<float> projMatrix, viewMatrix;
+	Mat4 projMatrix, viewMatrix;
 	projMatrix.SetOrthographic(0, 1, 0, 1, -1, 1);
 	viewMatrix.LoadIdentity();
 
@@ -135,7 +135,7 @@ void RenderInputPostprocess::Render(GraphicsState & glstate, std::ostream & erro
 	frustum_corners[1].Set(lod_far,-lod_far,-lod_far);	//BR
 	frustum_corners[2].Set(lod_far,lod_far,-lod_far);	//TR
 	frustum_corners[3].Set(-lod_far,lod_far,-lod_far);	//TL
-	Matrix4 <float> inv_proj;
+	Mat4 inv_proj;
 	inv_proj.InvPerspective(camfov, ratio, 0.1, lod_far);
 	for (int i = 0; i < 4; i++)
 	{
@@ -144,7 +144,7 @@ void RenderInputPostprocess::Render(GraphicsState & glstate, std::ostream & erro
 	}
 	// frustum corners in world space for dynamic sky shader
 	std::vector <Vec3 > frustum_corners_w(4);
-	Matrix4<float> inv_view_rot;
+	Mat4 inv_view_rot;
 	(-cam_rotation).GetMatrix4(inv_view_rot);
 	for (int i = 0; i < 4; i++)
 	{

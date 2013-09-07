@@ -101,12 +101,12 @@ Frustum RenderInputScene::SetCameraInfo(
 	return frustum;
 }
 
-const Matrix4<float> & RenderInputScene::GetProjMatrix() const
+const Mat4 & RenderInputScene::GetProjMatrix() const
 {
 	return projMatrix;
 }
 
-const Matrix4<float> & RenderInputScene::GetViewMatrix() const
+const Mat4 & RenderInputScene::GetViewMatrix() const
 {
 	return viewMatrix;
 }
@@ -164,7 +164,7 @@ void RenderInputScene::Render(GraphicsState & glstate, std::ostream & error_outp
 		camlook.Rotate(-M_PI_2, 0, 0, 1);
 		Quat cuberotation;
 		cuberotation = (-camlook) * (-cam_rotation); // experimentally derived
-		Matrix4<float> cubeMatrix;
+		Mat4 cubeMatrix;
 		cuberotation.GetMatrix4(cubeMatrix);
 
 		glActiveTexture(GL_TEXTURE2);
@@ -585,7 +585,7 @@ void RenderInputScene::SetTransform(const Drawable & d, GraphicsState & glstate)
 {
 	if (!last_transform_valid || !last_transform.Equals(d.GetTransform()))
 	{
-		Matrix4<float> worldTrans = d.GetTransform().Multiply(viewMatrix);
+		Mat4 worldTrans = d.GetTransform().Multiply(viewMatrix);
 		glLoadMatrixf(worldTrans.GetArray());
 		last_transform = d.GetTransform();
 		last_transform_valid = true;

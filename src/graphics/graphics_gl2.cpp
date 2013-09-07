@@ -438,7 +438,7 @@ void GraphicsGL2::SetupScene(
 	}
 
 	// put the default camera transform into texture3, needed by shaders only
-	Matrix4<float> viewMatrix;
+	Mat4 viewMatrix;
 	cam_rotation.GetMatrix4(viewMatrix);
 	float translate[4] = {-cam_position[0], -cam_position[1], -cam_position[2], 0};
 	viewMatrix.MultiplyVector4(translate);
@@ -452,7 +452,7 @@ void GraphicsGL2::SetupScene(
 	// create cameras for shadow passes
 	if (shadows)
 	{
-		Matrix4<float> viewMatrixInv = viewMatrix.Inverse();
+		Mat4 viewMatrixInv = viewMatrix.Inverse();
 
 		// derive light rotation quaternion from light direction vector
 		Quat light_rotation;
@@ -494,7 +494,7 @@ void GraphicsGL2::SetupScene(
 			renderscene.SetOrtho(cam.orthomin, cam.orthomax);
 			renderscene.SetCameraInfo(cam.pos, cam.orient, cam.fov, cam.view_distance, cam.w, cam.h);
 
-			Matrix4<float> clipmat;
+			Mat4 clipmat;
 			clipmat.Scale(0.5f);
 			clipmat.Translate(0.5f, 0.5f, 0.5f);
 			clipmat = renderscene.GetProjMatrix().Multiply(clipmat);
@@ -631,7 +631,7 @@ void GraphicsGL2::ChangeDisplay(
 	glViewport(0, 0, (GLint)width, (GLint)height);
 
 	GLfloat ratio = (GLfloat)width / (GLfloat)height;
-	Matrix4<float> m;
+	Mat4 m;
 
 	glMatrixMode(GL_PROJECTION);
 	m.Perspective(45.0f, ratio, 0.1f, 100.0f);

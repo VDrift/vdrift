@@ -97,10 +97,10 @@ private:
 
 	struct CameraMatrices
 	{
-		Matrix4 <float> projectionMatrix;
-		Matrix4 <float> inverseProjectionMatrix;
-		Matrix4 <float> viewMatrix;
-		Matrix4 <float> inverseViewMatrix;
+		Mat4 projectionMatrix;
+		Mat4 inverseProjectionMatrix;
+		Mat4 viewMatrix;
+		Mat4 inverseViewMatrix;
 	};
 	std::map <std::string, CameraMatrices> cameras;
 	CameraMatrices & setCameraPerspective(const std::string & name,

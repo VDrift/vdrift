@@ -85,7 +85,7 @@ struct ApplyFunctor
 	}
 };
 template <typename DrawableType, typename ContainerType, bool use_transform>
-void AddDrawableToContainer(DrawableType & drawable, ContainerType & container, const Matrix4 <float> & transform)
+void AddDrawableToContainer(DrawableType & drawable, ContainerType & container, const Mat4 & transform)
 {
 	if (drawable.GetDrawEnable())
 	{
@@ -96,7 +96,7 @@ void AddDrawableToContainer(DrawableType & drawable, ContainerType & container, 
 }
 /// adds elements from the first container to the second
 template <typename DrawableType, typename ContainerType, typename U, bool use_transform>
-void AddDrawablesToContainer(ContainerType & source, U & dest, const Matrix4 <float> & transform)
+void AddDrawablesToContainer(ContainerType & source, U & dest, const Mat4 & transform)
 {
 	for (typename ContainerType::iterator i = source.begin(); i != source.end(); i++)
 	{
@@ -139,7 +139,7 @@ struct DrawableContainer
 
 	/// adds elements from the first drawable container to the second
 	template <template <typename UU> class ContainerU, bool use_transform>
-	void AppendTo(DrawableContainer <ContainerU> & dest, const Matrix4 <float> & transform)
+	void AppendTo(DrawableContainer <ContainerU> & dest, const Mat4 & transform)
 	{
 		#define X(Y) DrawableContainerHelper::AddDrawablesToContainer<Drawable, Container<Drawable>, ContainerU<Drawable>, use_transform> (Y, dest.Y, transform);
 		#include "drawables.def"

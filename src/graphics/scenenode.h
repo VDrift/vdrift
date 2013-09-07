@@ -27,8 +27,6 @@
 class SceneNode
 {
 public:
-	typedef Matrix4<float> Mat4;
-
 	keyed_container <SceneNode>::handle AddNode() {return childlist.insert(SceneNode());}
 	SceneNode & GetNode(keyed_container <SceneNode>::handle handle) {return childlist.get(handle);}
 	const SceneNode & GetNode(keyed_container <SceneNode>::handle handle) const {return childlist.get(handle);}

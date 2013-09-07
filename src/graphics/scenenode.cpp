@@ -19,8 +19,6 @@
 
 #include "scenenode.h"
 
-typedef Matrix4<float> Mat4;
-
 Vec3 SceneNode::TransformIntoWorldSpace(const Vec3 & localspace) const
 {
 	Vec3 out(localspace);

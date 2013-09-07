@@ -62,7 +62,7 @@ public:
 		if (clearfirst)
 			drawables.clear();
 
-		Matrix4 <float> identity;
+		Mat4 identity;
 		node.Traverse(drawables, identity);
 
 		drawables.ForEach(OptimizeFunctor());
