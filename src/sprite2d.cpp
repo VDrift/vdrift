@@ -21,19 +21,7 @@
 #include "content/contentmanager.h"
 #include "graphics/textureinfo.h"
 
-void Sprite2D::Unload(SceneNode & parent)
-{
-	if (node.valid())
-	{
-		SceneNode & noderef = GetNode(parent);
-		noderef.GetDrawlist().twodim.erase(draw);
-		parent.Delete(node);
-	}
-	node.invalidate();
-	draw.invalidate();
-
-	varray.Clear();
-}
+#include <cassert>
 
 bool Sprite2D::Load(
 	SceneNode & parent,
@@ -93,4 +81,18 @@ bool Sprite2D::Load(
 	drawref.SetColor(r,g,b,a);
 
 	return true;
+}
+
+void Sprite2D::Unload(SceneNode & parent)
+{
+	if (node.valid())
+	{
+		SceneNode & noderef = GetNode(parent);
+		noderef.GetDrawlist().twodim.erase(draw);
+		parent.Delete(node);
+	}
+	node.invalidate();
+	draw.invalidate();
+
+	varray.Clear();
 }

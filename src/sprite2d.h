@@ -24,144 +24,203 @@
 #include "graphics/vertexarray.h"
 
 #include <string>
-#include <cassert>
 
 class ContentManager;
 
 /// A higher level class using Texture, Drawable, and VertexArray objects to create a 2D sprite
 class Sprite2D
 {
-private:
-	VertexArray varray;
-	keyed_container <Drawable>::handle draw;
-	keyed_container <SceneNode>::handle node;
-	float r, g, b, a;
-
-	Drawable & GetDrawableFromParent(SceneNode & parent)
-	{
-		SceneNode & noderef = GetNode(parent);
-		return GetDrawableFromNode(noderef);
-	}
-	const Drawable & GetDrawableFromParent(const SceneNode & parent) const
-	{
-		const SceneNode & noderef = GetNode(parent);
-		return GetDrawableFromNode(noderef);
-	}
-
-	Drawable & GetDrawableFromNode(SceneNode & noderef)
-	{
-		return noderef.GetDrawlist().twodim.get(draw);
-	}
-	const Drawable & GetDrawableFromNode(const SceneNode & noderef) const
-	{
-		return noderef.GetDrawlist().twodim.get(draw);
-	}
-
 public:
-	Sprite2D() :
-		r(1), g(1), b(1), a(1)
-	{
-		// ctor
-	}
-
-	Drawable & GetDrawable(SceneNode & parent) {return GetDrawableFromParent(parent);}
-
-	SceneNode & GetNode(SceneNode & parent) {return parent.GetNode(node);}
-
-	const SceneNode & GetNode(const SceneNode & parent) const {return parent.GetNode(node);}
-
-	void Unload(SceneNode & parent);
+	Sprite2D();
 
 	bool Load(
 		SceneNode & parent,
 		const std::string & texturepath,
 		const std::string & texturename,
 		ContentManager & content,
-        float draworder);
+		float draworder);
 
 	bool Load(
 		SceneNode & parent,
 		std::tr1::shared_ptr<Texture> texture2d,
 		float draworder);
 
-	///get the transformation data associated with this sprite's scenenode.
-	///this can be used to get the current translation and rotation or set new ones.
-	Transform & GetTransform(SceneNode & parent)
-	{
-		SceneNode & noderef = GetNode(parent);
-		return noderef.GetTransform();
-	}
-	const Transform & GetTransform(const SceneNode & parent) const
-	{
-		const SceneNode & noderef = GetNode(parent);
-		return noderef.GetTransform();
-	}
+	void Unload(SceneNode & parent);
 
-	void SetAlpha(SceneNode & parent, float na)
-	{
-		a=na;
-		GetDrawableFromParent(parent).SetColor(r,g,b,a);
-	}
+	bool Loaded() const;
 
-	void SetVisible(SceneNode & parent, bool newvis)
-	{
-		GetDrawableFromParent(parent).SetDrawEnable(newvis);
-	}
+	Drawable & GetDrawable(SceneNode & parent);
 
-	bool GetVisible(const SceneNode & parent) const
-	{
-		return GetDrawableFromParent(parent).GetDrawEnable();
-	}
+	const SceneNode & GetNode(const SceneNode & parent) const;
 
-	void SetColor(SceneNode & parent, float nr, float ng, float nb)
-	{
-		r = nr;
-		g = ng;
-		b = nb;
-		GetDrawableFromParent(parent).SetColor(r,g,b,a);
-	}
+	SceneNode & GetNode(SceneNode & parent);
 
-	///x and y represent the upper left corner.
-	///w and h are the width and height.
-	void SetToBillboard(float x, float y, float w, float h)
-	{
-		varray.SetToBillboard(x, y, x+w, y+h);
-	}
+	/// get the transformation data associated with this sprite's scenenode.
+	const Transform & GetTransform(const SceneNode & parent) const;
 
-	void SetTo2DButton(float x, float y, float w, float h, float sidewidth, bool flip=false)
-	{
-		varray.SetTo2DButton(x,y,w,h,sidewidth,flip);
-	}
+	Transform & GetTransform(SceneNode & parent);
 
-	void SetTo2DBox(float x, float y, float w, float h, float marginwidth, float marginheight)
-	{
-		varray.SetTo2DBox(x,y,w,h,marginwidth,marginheight);
-	}
+	void SetVisible(SceneNode & parent, bool newvis);
 
-	void SetTo2DQuad(float x1, float y1, float x2, float y2, float u1, float v1, float u2, float v2, float z)
-	{
-		varray.SetTo2DQuad(x1,y1,x2,y2,u1,v1,u2,v2,z);
-	}
+	bool GetVisible(const SceneNode & parent) const;
 
-	bool Loaded()
-	{
-		return (draw.valid());
-	}
+	void SetColor(SceneNode & parent, float nr, float ng, float nb);
 
-	float GetR() const
-	{
-		return r;
-	}
+	void SetAlpha(SceneNode & parent, float na);
 
-	float GetG() const
-	{
-		return g;
-	}
+	float GetR() const;
 
-	float GetB() const
-	{
-		return b;
-	}
+	float GetG() const;
+
+	float GetB() const;
+
+	/// x and y represent the upper left corner.
+	/// w and h are the width and height.
+	void SetToBillboard(float x, float y, float w, float h);
+
+	void SetTo2DButton(float x, float y, float w, float h, float sidewidth, bool flip = false);
+
+	void SetTo2DBox(float x, float y, float w, float h, float marginwidth, float marginheight);
+
+	void SetTo2DQuad(float x1, float y1, float x2, float y2, float u1, float v1, float u2, float v2, float z);
+
+private:
+	VertexArray varray;
+	keyed_container <Drawable>::handle draw;
+	keyed_container <SceneNode>::handle node;
+	float r, g, b, a;
+
+	Drawable & GetDrawableFromParent(SceneNode & parent);
+
+	const Drawable & GetDrawableFromParent(const SceneNode & parent) const;
+
+	Drawable & GetDrawableFromNode(SceneNode & noderef);
+
+	const Drawable & GetDrawableFromNode(const SceneNode & noderef) const;
 };
+
+// implementation
+
+inline Sprite2D::Sprite2D() :
+	r(1),
+	g(1),
+	b(1),
+	a(1)
+{
+	// ctor
+}
+
+inline bool Sprite2D::Loaded() const
+{
+	return draw.valid();
+}
+
+inline Drawable & Sprite2D::GetDrawable(SceneNode & parent)
+{
+	return GetDrawableFromParent(parent);
+}
+
+inline const SceneNode & Sprite2D::GetNode(const SceneNode & parent) const
+{
+	return parent.GetNode(node);
+}
+
+inline SceneNode & Sprite2D::GetNode(SceneNode & parent)
+{
+	return parent.GetNode(node);
+}
+
+inline const Transform & Sprite2D::GetTransform(const SceneNode & parent) const
+{
+	const SceneNode & noderef = GetNode(parent);
+	return noderef.GetTransform();
+}
+
+inline Transform & Sprite2D::GetTransform(SceneNode & parent)
+{
+	SceneNode & noderef = GetNode(parent);
+	return noderef.GetTransform();
+}
+
+inline void Sprite2D::SetVisible(SceneNode & parent, bool newvis)
+{
+	GetDrawableFromParent(parent).SetDrawEnable(newvis);
+}
+
+inline bool Sprite2D::GetVisible(const SceneNode & parent) const
+{
+	return GetDrawableFromParent(parent).GetDrawEnable();
+}
+
+inline void Sprite2D::SetColor(SceneNode & parent, float nr, float ng, float nb)
+{
+	r = nr;
+	g = ng;
+	b = nb;
+	GetDrawableFromParent(parent).SetColor(r, g, b, a);
+}
+
+inline void Sprite2D::SetAlpha(SceneNode & parent, float na)
+{
+	a = na;
+	GetDrawableFromParent(parent).SetColor(r, g, b, a);
+}
+
+inline float Sprite2D::GetR() const
+{
+	return r;
+}
+
+inline float Sprite2D::GetG() const
+{
+	return g;
+}
+
+inline float Sprite2D::GetB() const
+{
+	return b;
+}
+
+inline void Sprite2D::SetToBillboard(float x, float y, float w, float h)
+{
+	varray.SetToBillboard(x, y, x + w, y + h);
+}
+
+inline void Sprite2D::SetTo2DButton(float x, float y, float w, float h, float sidewidth, bool flip)
+{
+	varray.SetTo2DButton(x,y,w,h,sidewidth,flip);
+}
+
+inline void Sprite2D::SetTo2DBox(float x, float y, float w, float h, float marginwidth, float marginheight)
+{
+	varray.SetTo2DBox(x,y,w,h,marginwidth,marginheight);
+}
+
+inline void Sprite2D::SetTo2DQuad(float x1, float y1, float x2, float y2, float u1, float v1, float u2, float v2, float z)
+{
+	varray.SetTo2DQuad(x1,y1,x2,y2,u1,v1,u2,v2,z);
+}
+
+inline Drawable & Sprite2D::GetDrawableFromParent(SceneNode & parent)
+{
+	SceneNode & noderef = GetNode(parent);
+	return GetDrawableFromNode(noderef);
+}
+
+inline const Drawable & Sprite2D::GetDrawableFromParent(const SceneNode & parent) const
+{
+	const SceneNode & noderef = GetNode(parent);
+	return GetDrawableFromNode(noderef);
+}
+
+inline Drawable & Sprite2D::GetDrawableFromNode(SceneNode & noderef)
+{
+	return noderef.GetDrawlist().twodim.get(draw);
+}
+
+inline const Drawable & Sprite2D::GetDrawableFromNode(const SceneNode & noderef) const
+{
+	return noderef.GetDrawlist().twodim.get(draw);
+}
 
 #endif
