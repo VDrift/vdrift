@@ -37,24 +37,16 @@ Drawable::Drawable() :
 	texturesChanged(true),
 	uniformsChanged(true)
 {
-	// ctor
+	tex_id[0] = 0;
+	tex_id[1] = 0;
+	tex_id[2] = 0;
 }
 
-void Drawable::SetDiffuseMap(const std::tr1::shared_ptr<Texture> & value)
+void Drawable::SetTextures(unsigned id0, unsigned id1, unsigned id2)
 {
-	diffuse_map = value;
-	texturesChanged = true;
-}
-
-void Drawable::SetMiscMap1(const std::tr1::shared_ptr<Texture> & value)
-{
-	misc_map1 = value;
-	texturesChanged = true;
-}
-
-void Drawable::SetMiscMap2(const std::tr1::shared_ptr<Texture> & value)
-{
-	misc_map2 = value;
+	tex_id[0] = id0;
+	tex_id[1] = id1;
+	tex_id[2] = id2;
 	texturesChanged = true;
 }
 
@@ -64,7 +56,7 @@ void Drawable::SetVertArray(const VertexArray* value)
 	renderModel.SetVertArray(vert_array);
 }
 
-void Drawable::SetVertexArrayObject(GLuint vao, unsigned int elementCount)
+void Drawable::SetVertexArrayObject(unsigned vao, unsigned elementCount)
 {
 	renderModel.setVertexArrayObject(vao, elementCount);
 }
@@ -149,17 +141,17 @@ RenderModelExt & Drawable::GenRenderModelData(StringIdMap & stringMap)
 	{
 		renderModel.clearTextureCache();
 		renderModel.textures.clear();
-		if (diffuse_map && !diffuse_map->IsCube()) // for right now, restrict the diffuse map to 2d textures
+		if (tex_id[0])
 		{
-			renderModel.textures.push_back(RenderTextureEntry(diffuseId, diffuse_map->GetID(), GL_TEXTURE_2D));
+			renderModel.textures.push_back(RenderTextureEntry(diffuseId, tex_id[0], GL_TEXTURE_2D));
 		}
-		if (misc_map1 && !misc_map1->IsCube())
+		if (tex_id[1])
 		{
-			renderModel.textures.push_back(RenderTextureEntry(misc1Id, misc_map1->GetID(), GL_TEXTURE_2D));
+			renderModel.textures.push_back(RenderTextureEntry(misc1Id, tex_id[1], GL_TEXTURE_2D));
 		}
-		if (misc_map2 && !misc_map2->IsCube())
+		if (tex_id[2])
 		{
-			renderModel.textures.push_back(RenderTextureEntry(misc2Id, misc_map2->GetID(), GL_TEXTURE_2D));
+			renderModel.textures.push_back(RenderTextureEntry(misc2Id, tex_id[2], GL_TEXTURE_2D));
 		}
 
 		texturesChanged = false;

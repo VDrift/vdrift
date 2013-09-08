@@ -47,10 +47,15 @@ public:
 		const std::string & name,
 		const P & param);
 
-	std::tr1::shared_ptr<Texture> getDefault() const;
+	/// default texture is white: rgba (1, 1, 1, 1)
+	const std::tr1::shared_ptr<Texture> & getDefault() const;
+
+	/// zero texture is black: rgba (0, 0, 0, 0)
+	const std::tr1::shared_ptr<Texture> & getZero() const;
 
 private:
 	std::tr1::shared_ptr<Texture> m_default;
+	std::tr1::shared_ptr<Texture> m_zero;
 	int m_size;
 	bool m_compress;
 	bool m_srgb;

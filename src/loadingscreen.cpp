@@ -19,7 +19,7 @@
 
 #include "loadingscreen.h"
 #include "content/contentmanager.h"
-#include "graphics/textureinfo.h"
+#include "graphics/texture.h"
 
 void LoadingScreen::Update(float percentage, const std::string & optional_text, float posx, float posy)
 {
@@ -54,7 +54,6 @@ void LoadingScreen::Update(float percentage, const std::string & optional_text, 
 	root.GetTransform().SetTranslation(Vec3(posx,posy,0));
 }
 
-///initialize the loading screen given the root node for the loading screen
 bool LoadingScreen::Init(
 	const std::string & texturepath,
 	int displayw,
@@ -64,7 +63,6 @@ bool LoadingScreen::Init(
 {
 	TextureInfo texinfo;
 	texinfo.mipmap = false;
-	std::tr1::shared_ptr<Texture> boxtex, bartex;
 	content.load(boxtex, texturepath, "loadingbox.png", texinfo);
 	content.load(bartex, texturepath, "loadingbar.png", texinfo);
 
@@ -75,16 +73,16 @@ bool LoadingScreen::Init(
 	Drawable & boxdrawref = root.GetDrawlist().twodim.get(boxdraw);
 	Drawable & barbackdrawref = root.GetDrawlist().twodim.get(barbackdraw);
 
-	boxdrawref.SetDiffuseMap(boxtex);
+	boxdrawref.SetTextures(boxtex->GetID());
 	boxdrawref.SetVertArray(&boxverts);
 	boxdrawref.SetDrawOrder(10000);
 	boxdrawref.SetCull(false, false);
-	boxdrawref.SetColor(1,1,1,1);
+	boxdrawref.SetColor(1, 1, 1, 1);
 
 	w = 128.0/displayw*3.;
 	h = 128.0/displayw;
 
-	barbackdrawref.SetDiffuseMap(bartex);
+	barbackdrawref.SetTextures(bartex->GetID());
 	barbackdrawref.SetVertArray(&barbackverts);
 	barbackdrawref.SetDrawOrder(10001);
 	barbackdrawref.SetCull(false, false);
@@ -92,11 +90,11 @@ bool LoadingScreen::Init(
 
 	hscale = 0.3;
 
-	bardrawref.SetDiffuseMap(bartex);
+	bardrawref.SetTextures(bartex->GetID());
 	bardrawref.SetVertArray(&barverts);
 	bardrawref.SetDrawOrder(10002);
 	bardrawref.SetCull(false, false);
-	bardrawref.SetColor(1,1,1, 0.7);
+	bardrawref.SetColor(1, 1, 1, 0.7);
 
 	float screenhwratio = displayh/(float)displayw;
 	float fontscaley = 0.02;

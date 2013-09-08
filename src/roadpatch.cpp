@@ -34,15 +34,15 @@ bool RoadPatch::Collide(
 void RoadPatch::AddRacinglineScenenode(
 	SceneNode & node,
 	const RoadPatch & nextpatch,
-	std::tr1::shared_ptr<Texture> racingline_texture)
+	unsigned texture_id)
 {
 	//Create racing line scenenode
 	keyed_container <Drawable>::handle drawhandle = node.GetDrawlist().normal_blend.insert(Drawable());
 	Drawable & draw = node.GetDrawlist().normal_blend.get(drawhandle);
 
-	draw.SetDiffuseMap(racingline_texture);
-	draw.SetDecal(true);
+	draw.SetTextures(texture_id);
 	draw.SetVertArray(&racingline_vertexarray);
+	draw.SetDecal(true);
 
 	const Vec3 & r0 = patch.GetRacingLine();
 	const Vec3 & r1 = nextpatch.patch.GetRacingLine();

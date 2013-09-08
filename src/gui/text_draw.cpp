@@ -18,6 +18,7 @@
 /************************************************************************/
 
 #include "text_draw.h"
+#include "graphics/texture.h"
 
 float TextDraw::RenderCharacter(
 	const Font & font, char c,
@@ -89,13 +90,17 @@ void TextDraw::SetText(
 	VertexArray & output_array)
 {
 	RenderText(font, text, x, y, scalex, scaley, output_array);
-	draw.SetDiffuseMap(font.GetFontTexture());
+	draw.SetTextures(font.GetFontTexture()->GetID());
 	draw.SetVertArray(&output_array);
 	draw.SetCull(false, false);
 	draw.SetColor(r, g, b, 1.0);
 }
 
-TextDraw::TextDraw() : oldx(0), oldy(0), oldscalex(1), oldscaley(1)
+TextDraw::TextDraw() :
+	oldx(0),
+	oldy(0),
+	oldscalex(1),
+	oldscaley(1)
 {
 	// ctor
 }

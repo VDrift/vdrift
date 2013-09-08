@@ -23,9 +23,7 @@
 #include "bezier.h"
 #include "mathvector.h"
 #include "graphics/vertexarray.h"
-#include "memory.h"
 
-class Texture;
 class SceneNode;
 
 class RoadPatch
@@ -71,7 +69,7 @@ public:
 	void AddRacinglineScenenode(
 		SceneNode & node,
 		const RoadPatch & nextpatch,
-		std::tr1::shared_ptr<Texture> racingline_texture);
+		unsigned texture_id);
 
 private:
 	Bezier patch;

@@ -60,7 +60,7 @@ bool Factory<SoundBuffer>::create(
 	return false;
 }
 
-std::tr1::shared_ptr<SoundBuffer> Factory<SoundBuffer>::getDefault() const
+const std::tr1::shared_ptr<SoundBuffer> & Factory<SoundBuffer>::getDefault() const
 {
 	return m_default;
 }

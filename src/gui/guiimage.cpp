@@ -19,6 +19,7 @@
 
 #include "guiimage.h"
 #include "content/contentmanager.h"
+#include "graphics/texture.h"
 
 GuiImage::GuiImage() :
 	m_content(0),
@@ -43,9 +44,8 @@ void GuiImage::Update(SceneNode & scene, float dt)
 		texinfo.mipmap = false;
 		texinfo.repeatu = false;
 		texinfo.repeatv = false;
-		std::tr1::shared_ptr<Texture> texture;
-		m_content->load(texture, m_path, m_name + m_ext, texinfo);
-		d.SetDiffuseMap(texture);
+		m_content->load(m_texture, m_path, m_name + m_ext, texinfo);
+		d.SetTextures(m_texture->GetID());
 		m_load = false;
 	}
 }

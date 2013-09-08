@@ -21,9 +21,11 @@
 #define _LOADINGSCREEN_H
 
 #include "gui/text_draw.h"
+#include "memory.h"
 #include <string>
 
 class ContentManager;
+class Texture;
 
 class LoadingScreen
 {
@@ -43,10 +45,12 @@ public:
 private:
 	SceneNode root;
 	keyed_container <Drawable>::handle bardraw;
-	VertexArray barverts;
 	keyed_container <Drawable>::handle barbackdraw;
-	VertexArray barbackverts;
 	keyed_container <Drawable>::handle boxdraw;
+	std::tr1::shared_ptr<Texture> bartex;
+	std::tr1::shared_ptr<Texture> boxtex;
+	VertexArray barverts;
+	VertexArray barbackverts;
 	VertexArray boxverts;
 	float w, h, hscale;
 	TextDrawable text;

@@ -123,7 +123,7 @@ bool Factory<PTree>::create(
 	return false;
 }
 
-std::tr1::shared_ptr<PTree> Factory<PTree>::getDefault() const
+const std::tr1::shared_ptr<PTree> & Factory<PTree>::getDefault() const
 {
 	return m_default;
 }

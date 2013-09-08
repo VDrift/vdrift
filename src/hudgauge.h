@@ -22,8 +22,10 @@
 
 #include "graphics/scenenode.h"
 #include "graphics/vertexarray.h"
+#include "memory.h"
 
 class Font;
+class Texture;
 
 class HudGauge
 {

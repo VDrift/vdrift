@@ -24,7 +24,7 @@
 #include "tobullet.h"
 #include "k1999.h"
 #include "content/contentmanager.h"
-#include "graphics/textureinfo.h"
+#include "graphics/texture.h"
 #include "graphics/model.h"
 
 #define EXTBULLET
@@ -75,6 +75,20 @@ static btIndexedMesh GetIndexedMesh(const Model & model)
 	return mesh;
 }
 
+struct Track::Loader::Object
+{
+	std::tr1::shared_ptr<Model> model;
+	std::string texture;
+	int transparent_blend;
+	int clamptexture;
+	int surface;
+	bool mipmap;
+	bool nolighting;
+	bool skybox;
+	bool collideable;
+	bool cached;
+};
+
 Track::Loader::Loader(
 	ContentManager & content,
 	DynamicsWorld & world,
@@ -88,8 +102,7 @@ Track::Loader::Loader(
 	const int anisotropy,
 	const bool reverse,
 	const bool dynamic_objects,
-	const bool dynamic_shadows,
-	const bool agressive_combining) :
+	const bool dynamic_shadows) :
 	content(content),
 	world(world),
 	data(data),
@@ -102,7 +115,6 @@ Track::Loader::Loader(
 	anisotropy(anisotropy),
 	dynamic_objects(dynamic_objects),
 	dynamic_shadows(dynamic_shadows),
-	agressive_combining(agressive_combining),
 	packload(false),
 	numobjects(0),
 	numloaded(0),
@@ -126,7 +138,6 @@ Track::Loader::~Loader()
 void Track::Loader::Clear()
 {
 	bodies.clear();
-	combined.clear();
 	objectfile.close();
 	pack.Close();
 }
@@ -200,20 +211,6 @@ bool Track::Loader::ContinueLoad()
 
 	if (!loadstatus.second)
 	{
-		if (agressive_combining)
-		{
-			std::map<std::string, Object>::iterator i;
-			for (i = combined.begin(); i != combined.end(); ++i)
-			{
-				std::tr1::shared_ptr<Model> & model = i->second.model;
-				if (!model->HaveMeshMetrics())
-				{
-					// cache combined model
-					content.load(model, objectdir, i->first, model->GetVertexArray());
-				}
-				AddObject(i->second);
-			}
-		}
 #ifndef EXTBULLET
 		btCollisionObject * track_object = new btCollisionObject();
 		//track_shape->createAabbTreeFromChildren();
@@ -281,7 +278,6 @@ bool Track::Loader::Begin()
 		{
 			node_it = nodes->begin();
 			numobjects = nodes->size();
-			data.models.reserve(numobjects);
 			data.meshes.reserve(numobjects);
 			return true;
 		}
@@ -304,18 +300,6 @@ std::pair<bool, bool> Track::Loader::Continue()
 	node_it++;
 
 	return std::make_pair(false, true);
-}
-
-bool Track::Loader::LoadModel(const std::string & name)
-{
-	std::tr1::shared_ptr<Model> model;
-	if ((packload && content.load(model, objectdir, name, pack)) ||
-		content.load(model, objectdir, name))
-	{
-		data.models.push_back(model);
-		return true;
-	}
-	return false;
 }
 
 bool Track::Loader::LoadShape(const PTree & cfg, const Model & model, Body & body)
@@ -374,7 +358,7 @@ bool Track::Loader::LoadShape(const PTree & cfg, const Model & model, Body & bod
 Track::Loader::body_iterator Track::Loader::LoadBody(const PTree & cfg)
 {
 	Body body;
-	std::string texture_name;
+	std::string texture_str;
 	std::string model_name;
 	int clampuv = 0;
 	bool mipmap = true;
@@ -383,7 +367,7 @@ Track::Loader::body_iterator Track::Loader::LoadBody(const PTree & cfg)
 	bool doublesided = false;
 	bool isashadow = false;
 
-	cfg.get("texture", texture_name, error_output);
+	cfg.get("texture", texture_str, error_output);
 	cfg.get("model", model_name, error_output);
 	cfg.get("clampuv", clampuv);
 	cfg.get("mipmap", mipmap);
@@ -394,7 +378,7 @@ Track::Loader::body_iterator Track::Loader::LoadBody(const PTree & cfg)
 	cfg.get("nolighting", body.nolighting);
 
 	std::vector<std::string> texture_names(3);
-	std::stringstream s(texture_name);
+	std::stringstream s(texture_str);
 	s >> texture_names;
 
 	// set relative path for models and textures, ugly hack
@@ -413,8 +397,10 @@ Track::Loader::body_iterator Track::Loader::LoadBody(const PTree & cfg)
 			std::string rel_path = name.substr(0, npos+1);
 			model_name = rel_path + model_name;
 			texture_names[0] = rel_path + texture_names[0];
-			if (!texture_names[1].empty()) texture_names[1] = rel_path + texture_names[1];
-			if (!texture_names[2].empty()) texture_names[2] = rel_path + texture_names[2];
+			if (!texture_names[1].empty())
+				texture_names[1] = rel_path + texture_names[1];
+			if (!texture_names[2].empty())
+				texture_names[2] = rel_path + texture_names[2];
 		}
 	}
 
@@ -423,49 +409,60 @@ Track::Loader::body_iterator Track::Loader::LoadBody(const PTree & cfg)
 		return bodies.end();
 	}
 
-	if (!LoadModel(model_name))
+	std::tr1::shared_ptr<Model> model;
+	if ((packload && content.load(model, objectdir, model_name, pack)) ||
+		content.load(model, objectdir, model_name))
+	{
+		data.models.insert(model);
+	}
+	else
 	{
 		info_output << "Failed to load body " << cfg.value() << " model " << model_name << std::endl;
 		return bodies.end();
 	}
 
-	Model & model = *data.models.back();
-
 	body.collidable = cfg.get("mass", body.mass);
 	if (body.collidable)
 	{
-		LoadShape(cfg, model, body);
+		LoadShape(cfg, *model, body);
 	}
 
 	// load textures
+	std::tr1::shared_ptr<Texture> tex[3];
 	TextureInfo texinfo;
 	texinfo.mipmap = mipmap || anisotropy; //always mipmap if anisotropy is on
 	texinfo.anisotropy = anisotropy;
 	texinfo.repeatu = clampuv != 1 && clampuv != 2;
 	texinfo.repeatv = clampuv != 1 && clampuv != 3;
-
-	std::tr1::shared_ptr<Texture> diffuse, miscmap1, miscmap2;
-	content.load(diffuse, objectdir, texture_names[0], texinfo);
-	if (texture_names[1].length() > 0)
+	content.load(tex[0], objectdir, texture_names[0], texinfo);
+	if (!texture_names[1].empty())
 	{
-		content.load(miscmap1, objectdir, texture_names[1], texinfo);
+		content.load(tex[1], objectdir, texture_names[1], texinfo);
+		data.textures.insert(tex[1]);
 	}
-	if (texture_names[2].length() > 0)
+	else
+	{
+		tex[1] = content.getFactory<Texture>().getZero();
+	}
+	if (!texture_names[2].empty())
 	{
 		texinfo.compress = false;
-		content.load(miscmap2, objectdir, texture_names[2], texinfo);
+		content.load(tex[2], objectdir, texture_names[2], texinfo);
+		data.textures.insert(tex[2]);
+	}
+	else
+	{
+		tex[2] = content.getFactory<Texture>().getZero();
 	}
 
 	// setup drawable
 	Drawable & drawable = body.drawable;
-	drawable.SetModel(model);
-	drawable.SetDiffuseMap(diffuse);
-	drawable.SetMiscMap1(miscmap1);
-	drawable.SetMiscMap2(miscmap2);
+	drawable.SetModel(*model);
+	drawable.SetTextures(tex[0]->GetID(), tex[1]->GetID(), tex[2]->GetID());
 	drawable.SetDecal(alphablend);
 	drawable.SetCull(data.cull && !doublesided, false);
-	drawable.SetObjectCenter(model.GetCenter());
-	drawable.SetRadius(!skybox ? model.GetRadius() : 0.0f);
+	drawable.SetObjectCenter(model->GetCenter());
+	drawable.SetRadius(!skybox ? model->GetRadius() : 0.0f);
 
 	return bodies.insert(std::make_pair(name, body)).first;
 }
@@ -662,11 +659,9 @@ bool Track::Loader::BeginOld()
 {
 	CalculateNumOld();
 
-	data.models.reserve(numobjects);
-
 	if (!get(objectfile, params_per_object))
 	{
-			return false;
+		return false;
 	}
 
 	if (params_per_object != expected_params)
@@ -680,7 +675,7 @@ bool Track::Loader::BeginOld()
 
 bool Track::Loader::AddObject(const Object & object)
 {
-	data.models.push_back(object.model);
+	data.models.insert(object.model);
 
 	TextureInfo texinfo;
 	texinfo.mipmap = object.mipmap || anisotropy; //always mipmap if anisotropy is on
@@ -688,27 +683,36 @@ bool Track::Loader::AddObject(const Object & object)
 	texinfo.repeatu = object.clamptexture != 1 && object.clamptexture != 2;
 	texinfo.repeatv = object.clamptexture != 1 && object.clamptexture != 3;
 
-	std::tr1::shared_ptr<Texture> diffuse_texture;
-	content.load(diffuse_texture, objectdir, object.texture, texinfo);
-
-	std::tr1::shared_ptr<Texture> miscmap1_texture;
+	std::tr1::shared_ptr<Texture> texture0, texture1, texture2;
 	{
-		std::string texture_name = object.texture.substr(0, std::max(0, (int)object.texture.length()-4)) + "-misc1.png";
-		std::string filepath = objectpath + "/" + texture_name;
+		content.load(texture0, objectdir, object.texture, texinfo);
+		data.textures.insert(texture0);
+	}
+	{
+		std::string texname = object.texture.substr(0, std::max(0u, object.texture.length()-4)) + "-misc1.png";
+		std::string filepath = objectpath + "/" + texname;
 		if (std::ifstream(filepath.c_str()))
 		{
-			content.load(miscmap1_texture, objectdir, texture_name, texinfo);
+			content.load(texture1, objectdir, texname, texinfo);
+			data.textures.insert(texture1);
+		}
+		else
+		{
+			texture1 = content.getFactory<Texture>().getZero();
 		}
 	}
-
-	std::tr1::shared_ptr<Texture> miscmap2_texture;
 	{
 		texinfo.compress = false;
-		std::string texture_name = object.texture.substr(0, std::max(0, (int)object.texture.length()-4)) + "-misc2.png";
-		std::string filepath = objectpath + "/" + texture_name;
+		std::string texname = object.texture.substr(0, std::max(0u, object.texture.length()-4)) + "-misc2.png";
+		std::string filepath = objectpath + "/" + texname;
 		if (std::ifstream(filepath.c_str()))
 		{
-			content.load(miscmap2_texture, objectdir, texture_name, texinfo);
+			content.load(texture2, objectdir, texname, texinfo);
+			data.textures.insert(texture2);
+		}
+		else
+		{
+			texture2 = content.getFactory<Texture>().getZero();
 		}
 	}
 
@@ -737,9 +741,7 @@ bool Track::Loader::AddObject(const Object & object)
 	keyed_container <Drawable>::handle dref = dlist->insert(Drawable());
 	Drawable & drawable = dlist->get(dref);
 	drawable.SetModel(*object.model);
-	drawable.SetDiffuseMap(diffuse_texture);
-	drawable.SetMiscMap1(miscmap1_texture);
-	drawable.SetMiscMap2(miscmap2_texture);
+	drawable.SetTextures(texture0->GetID(), texture1->GetID(), texture2->GetID());
 	drawable.SetDecal(transparent);
 	drawable.SetCull(data.cull && (object.transparent_blend!=2), false);
 	drawable.SetObjectCenter(object.model->GetCenter());
@@ -818,25 +820,9 @@ std::pair<bool, bool> Track::Loader::ContinueOld()
 		content.load(object.model, objectdir, model_name);
 	}
 
-	if (agressive_combining)
+	if (!AddObject(object))
 	{
-		std::map<std::string, Object>::iterator i = combined.find(object.texture);
-		if (i != combined.end() && !i->second.cached)
-		{
-			i->second.model->SetVertexArray(i->second.model->GetVertexArray() + object.model->GetVertexArray());
-		}
-		else
-		{
-			object.cached = content.get(object.model, objectdir, object.texture);
-			combined[object.texture] = object;
-		}
-	}
-	else
-	{
-		if (!AddObject(object))
-		{
-			return std::make_pair(true, false);
-		}
+		return std::make_pair(true, false);
 	}
 
 	return std::make_pair(false, true);

@@ -1700,17 +1700,16 @@ bool Game::LoadTrack(const std::string & trackname)
 	ShowLoadingScreen(0.0, 1.0, false, "", 0.5, 0.5);
 
 	if (!track.DeferredLoad(
-			content, dynamics,
-			info_output, error_output,
-			pathmanager.GetTracksPath(trackname),
-			pathmanager.GetTracksDir()+"/"+trackname,
-			pathmanager.GetEffectsTextureDir(),
-			pathmanager.GetTrackPartsPath(),
-			settings.GetAnisotropy(),
-			settings.GetTrackReverse(),
-			settings.GetTrackDynamic(),
-			graphics_interface->GetShadows(),
-			settings.GetBatchGeometry()))
+		content, dynamics,
+		info_output, error_output,
+		pathmanager.GetTracksPath(trackname),
+		pathmanager.GetTracksDir()+"/"+trackname,
+		pathmanager.GetEffectsTextureDir(),
+		pathmanager.GetTrackPartsPath(),
+		settings.GetAnisotropy(),
+		settings.GetTrackReverse(),
+		settings.GetTrackDynamic(),
+		graphics_interface->GetShadows()))
 	{
 		error_output << "Error loading track: " << trackname << std::endl;
 		return false;
@@ -1791,8 +1790,7 @@ void Game::LoadGarage()
 		pathmanager.GetTrackPartsPath(),
 		settings.GetAnisotropy(),
 		track_reverse, track_dynamic,
-		graphics_interface->GetShadows(),
-		settings.GetBatchGeometry()))
+		graphics_interface->GetShadows()))
 	{
 		error_output << "Error loading garage: " << settings.GetSkin() << std::endl;
 		return;

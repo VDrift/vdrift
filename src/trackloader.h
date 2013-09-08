@@ -68,8 +68,7 @@ public:
 		const int anisotropy,
 		const bool reverse,
 		const bool dynamic_shadows,
-		const bool dynamic_objects,
-		const bool agressive_combining);
+		const bool dynamic_objects);
 
 	~Loader();
 
@@ -95,7 +94,6 @@ private:
 	const int anisotropy;
 	const bool dynamic_objects;
 	const bool dynamic_shadows;
-	const bool agressive_combining;
 
 	std::string objectpath;
 	std::string objectdir;
@@ -132,22 +130,6 @@ private:
 	typedef std::map<std::string, Body>::const_iterator body_iterator;
 	std::map<std::string, Body> bodies;
 
-	// batch static geometry with same diffuse texture
-	struct Object
-	{
-		std::tr1::shared_ptr<Model> model;
-		std::string texture;
-		int transparent_blend;
-		int clamptexture;
-		int surface;
-		bool mipmap;
-		bool nolighting;
-		bool skybox;
-		bool collideable;
-		bool cached;
-	};
-	std::map<std::string, Object> combined;
-
 	// compound track shape
 	btCompoundShape * track_shape;
 
@@ -182,14 +164,13 @@ private:
 
 	bool LoadNode(const PTree & sec);
 
-	bool LoadModel(const std::string & name);
-
 	bool LoadShape(const PTree & body_cfg, const Model & body_model, Body & body);
 
 	body_iterator LoadBody(const PTree & cfg);
 
 	void AddBody(SceneNode & scene, const Body & body);
 
+	struct Object;
 	bool AddObject(const Object & object);
 
 	void Clear();

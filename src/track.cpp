@@ -45,8 +45,7 @@ bool Track::DeferredLoad(
 	const int anisotropy,
 	const bool reverse,
 	const bool dynamicobjects,
-	const bool dynamicshadows,
-	const bool agressivecombine)
+	const bool dynamicshadows)
 {
 	Clear();
 
@@ -61,8 +60,7 @@ bool Track::DeferredLoad(
 			texturedir,	sharedobjectpath,
 			anisotropy, reverse,
 			dynamicobjects,
-			dynamicshadows,
-			agressivecombine));
+			dynamicshadows));
 
 	return loader->BeginLoad();
 }

@@ -24,12 +24,14 @@
 #include "graphics/vertexarray.h"
 #include "mathvector.h"
 #include "quaternion.h"
+#include "memory.h"
 
 #include <string>
 #include <utility> // std::pair
 #include <vector>
 
 class ContentManager;
+class Texture;
 
 class ParticleSystem
 {
@@ -109,6 +111,7 @@ private:
 	Vec3 direction;
 
 	keyed_container<Drawable>::handle draw;
+	std::tr1::shared_ptr<Texture> texture;
 	VertexArray varrays[2]; ///< use double buffered vertex array
 	SceneNode node;
 

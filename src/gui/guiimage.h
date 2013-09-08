@@ -23,9 +23,10 @@
 #include "guiwidget.h"
 #include "graphics/scenenode.h"
 #include "graphics/vertexarray.h"
+#include "memory.h"
 
-class Texture;
 class ContentManager;
+class Texture;
 
 class GuiImage : public GuiWidget
 {
@@ -51,6 +52,7 @@ private:
 	ContentManager * m_content;
 	std::string m_path, m_name, m_ext;
 	keyed_container <Drawable>::handle m_draw;
+	std::tr1::shared_ptr<Texture> m_texture;
 	VertexArray m_varray;
 	bool m_load;
 

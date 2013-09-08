@@ -98,7 +98,7 @@ bool Factory<Model>::create(
 	return false;
 }
 
-std::tr1::shared_ptr<Model> Factory<Model>::getDefault() const
+const std::tr1::shared_ptr<Model> & Factory<Model>::getDefault() const
 {
 	return m_default;
 }

@@ -19,20 +19,25 @@
 
 #include "loaddrawable.h"
 #include "content/contentmanager.h"
-#include "graphics/textureinfo.h"
+#include "graphics/texture.h"
 #include "graphics/model.h"
 #include "cfg/ptree.h"
+
+#include <string>
+#include <vector>
 
 LoadDrawable::LoadDrawable(
 	const std::string & path,
 	const int anisotropy,
 	ContentManager & content,
-	std::list<std::tr1::shared_ptr<Model> > & modellist,
+	std::set<std::tr1::shared_ptr<Model> > & models,
+	std::set<std::tr1::shared_ptr<Texture> > & textures,
 	std::ostream & error) :
 	path(path),
 	anisotropy(anisotropy),
 	content(content),
-	modellist(modellist),
+	models(models),
+	textures(textures),
 	error(error)
 {
 	// ctor
@@ -64,31 +69,41 @@ bool LoadDrawable::operator()(
 	Drawable drawable;
 
 	// set textures
+	std::tr1::shared_ptr<Texture> tex[3];
 	TextureInfo texinfo;
 	texinfo.mipmap = true;
 	texinfo.anisotropy = anisotropy;
-	std::tr1::shared_ptr<Texture> tex;
-	if (texname.size() == 0)
+	if (texname.empty())
 	{
 		error << "No texture defined" << std::endl;
 		return false;
 	}
-	if (texname.size() > 0)
+	else
 	{
-		content.load(tex, path, texname[0], texinfo);
-		drawable.SetDiffuseMap(tex);
+		content.load(tex[0], path, texname[0], texinfo);
+		textures.insert(tex[0]);
 	}
 	if (texname.size() > 1)
 	{
-		content.load(tex, path, texname[1], texinfo);
-		drawable.SetMiscMap1(tex);
+		content.load(tex[1], path, texname[1], texinfo);
+		textures.insert(tex[1]);
+	}
+	else
+	{
+		tex[1] = content.getFactory<Texture>().getZero();
 	}
 	if (texname.size() > 2)
 	{
+		// don't compress normal map
 		texinfo.compress = false;
-		content.load(tex, path, texname[2], texinfo);
-		drawable.SetMiscMap2(tex);
+		content.load(tex[2], path, texname[2], texinfo);
+		textures.insert(tex[2]);
 	}
+	else
+	{
+		tex[2] = content.getFactory<Texture>().getZero();
+	}
+	drawable.SetTextures(tex[0]->GetID(), tex[1]->GetID(), tex[2]->GetID());
 
 	// set mesh
 	std::tr1::shared_ptr<Model> mesh;
@@ -107,7 +122,7 @@ bool LoadDrawable::operator()(
 		content.load(mesh, path, meshname + scalestr, meshva);
 	}
 	drawable.SetModel(*mesh);
-	modellist.push_back(mesh);
+	models.insert(mesh);
 
 	// set color
 	Vec4 col(1);

@@ -291,7 +291,7 @@ void RenderInputScene::EnableCarPaint(GraphicsState & glstate)
 		Drawable & d = *dynamic_drawlist_ptr->front();
 
 		// setup first combiner
-		glstate.BindTexture2D(0, d.GetDiffuseMap());
+		glstate.BindTexture2D(0, d.GetTexture0());
 		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
 		glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_INTERPOLATE);
 		glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB, GL_TEXTURE);
@@ -307,10 +307,10 @@ void RenderInputScene::EnableCarPaint(GraphicsState & glstate)
 
 		// setup second combiner explicitly
 		// statemanager doesnt allow to enable/disable textures per tu
-		//glstate.BindTexture2D(1, d.GetDiffuseMap());
+		//glstate.BindTexture2D(1, d.GetTexture0());
 		glActiveTexture(GL_TEXTURE1);
 		glEnable(GL_TEXTURE_2D);
-		glBindTexture(GL_TEXTURE_2D, d.GetDiffuseMap()->GetID());
+		glBindTexture(GL_TEXTURE_2D, d.GetTexture0());
 		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
 		glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
 		glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB, GL_PREVIOUS);
@@ -559,15 +559,13 @@ void RenderInputScene::SetFlags(const Drawable & d, GraphicsState & glstate)
 
 void RenderInputScene::SetTextures(const Drawable & d, GraphicsState & glstate)
 {
-	const Texture * diffusetexture = d.GetDiffuseMap();
-
-	if (!diffusetexture || !diffusetexture->Loaded())
+	if (!d.GetTexture0())
 	{
 		glstate.Disable(GL_TEXTURE_2D);
 		return;
 	}
 
-	glstate.BindTexture2D(0, d.GetDiffuseMap());
+	glstate.BindTexture2D(0, d.GetTexture0());
 
 	if (carpainthack)
 	{
@@ -576,8 +574,8 @@ void RenderInputScene::SetTextures(const Drawable & d, GraphicsState & glstate)
 
 	if (shaders)
 	{
-		glstate.BindTexture2D(1, d.GetMiscMap1());
-		glstate.BindTexture2D(2, d.GetMiscMap2());
+		glstate.BindTexture2D(1, d.GetTexture1());
+		glstate.BindTexture2D(2, d.GetTexture2());
 	}
 }
 

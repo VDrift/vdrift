@@ -18,6 +18,7 @@
 /************************************************************************/
 
 #include "roadstrip.h"
+#include "graphics/texture.h"
 #include <algorithm>
 
 RoadStrip::RoadStrip() :
@@ -147,14 +148,17 @@ bool RoadStrip::Collide(
 
 void RoadStrip::CreateRacingLine(
 	SceneNode & parentnode,
-	std::tr1::shared_ptr<Texture> racingline_texture)
+	const std::tr1::shared_ptr<Texture> & texture)
 {
+	assert(texture);
+	racingline_texture = texture;
+
 	for (std::vector<RoadPatch>::iterator i = patches.begin(); i != patches.end(); ++i)
 	{
 		std::vector<RoadPatch>::iterator n = i + 1;
 		if (n == patches.end())
 			n = patches.begin();
 
-		i->AddRacinglineScenenode(parentnode, *n, racingline_texture);
+		i->AddRacinglineScenenode(parentnode, *n, racingline_texture->GetID());
 	}
 }

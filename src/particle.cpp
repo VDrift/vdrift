@@ -19,7 +19,7 @@
 
 #include "particle.h"
 #include "content/contentmanager.h"
-#include "graphics/textureinfo.h"
+#include "graphics/texture.h"
 #include "unittest.h"
 
 static inline float clamp(float v, float vmin, float vmax)
@@ -54,14 +54,13 @@ void ParticleSystem::Load(
 {
 	TextureInfo texinfo;
 	texinfo.anisotropy = anisotropy;
-	std::tr1::shared_ptr<Texture> texture_atlas;
-	content.load(texture_atlas, texpath, texname, texinfo);
+	content.load(texture, texpath, texname, texinfo);
 
 	draw = GetDrawlist(node).insert(Drawable());
 	Drawable & drawref = GetDrawlist(node).get(draw);
 	drawref.SetDrawEnable(false);
 	drawref.SetVertArray(&varrays[cur_varray]);
-	drawref.SetDiffuseMap(texture_atlas);
+	drawref.SetTextures(texture->GetID());
 	drawref.SetCull(false, false);
 }
 

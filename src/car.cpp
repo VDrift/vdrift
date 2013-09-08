@@ -276,7 +276,7 @@ bool Car::LoadLight(
 		varray.Scale(radius, radius, radius);
 		content.load(mesh, "", "cube" + radiusstr, varray);
 	}
-    models.push_back(mesh);
+	models.insert(mesh);
 
 	keyed_container <Drawable> & dlist = GetDrawlist(node, OMNI);
 	lights.back().draw = dlist.insert(Drawable());
@@ -306,7 +306,7 @@ bool Car::LoadGraphics(
 	cartype = carname;
 
 	// init drawable load functor
-	LoadDrawable loadDrawable(carpath, anisotropy, content, models, error_output);
+	LoadDrawable loadDrawable(carpath, anisotropy, content, models, textures, error_output);
 
 	// load body first
 	const PTree * cfg_body;

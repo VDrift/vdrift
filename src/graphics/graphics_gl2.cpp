@@ -954,7 +954,7 @@ void GraphicsGL2::DisableShaders(std::ostream & error_output)
 	if (sky_dynamic)
 	{
 		texture_inputs.erase("sky");
-		sky.reset(0);
+		sky.reset();
 	}
 }
 

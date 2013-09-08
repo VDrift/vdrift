@@ -26,12 +26,15 @@
 #include "graphics/scenenode.h"
 #include "physics/motionstate.h"
 #include "physics/tracksurface.h"
+#include "memory.h"
 
 #include <iosfwd>
 #include <list>
-#include <memory>
+#include <set>
 #include <vector>
 
+class Model;
+class Texture;
 class RoadStrip;
 class DynamicsWorld;
 class ContentManager;
@@ -61,8 +64,7 @@ public:
 		const int anisotropy,
 		const bool reverse,
 		const bool dynamicobjects,
-		const bool dynamicshadowsenabled,
-		const bool doagressivecombining);
+		const bool dynamicshadows);
 
 	bool ContinueDeferredLoad();
 
@@ -153,10 +155,13 @@ private:
 	{
 		DynamicsWorld* world;
 
+		// content used by track
+		std::set<std::tr1::shared_ptr<Model> > models;
+		std::set<std::tr1::shared_ptr<Texture> > textures;
+
 		// static track objects
 		SceneNode static_node;
 		std::vector<TrackSurface> surfaces;
-		std::vector<std::tr1::shared_ptr<Model> > models;
 		std::vector<btStridingMeshInterface*> meshes;
 		std::vector<btCollisionShape*> shapes;
 		std::vector<btCollisionObject*> objects;

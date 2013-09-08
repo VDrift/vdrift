@@ -27,9 +27,17 @@
 #include "tobullet.h"
 #include "joeserialize.h"
 #include "macros.h"
+#include "memory.h"
+
+#include <iosfwd>
+#include <list>
+#include <set>
+#include <string>
+#include <vector>
 
 class Bezier;
 class Camera;
+class Texture;
 class Model;
 class Sound;
 class PTree;
@@ -185,7 +193,7 @@ public:
 		return dynamics.GetMaxSpeedMPS();
 	}
 
-	std::string GetCarType() const
+	const std::string & GetCarType() const
 	{
 		return cartype;
 	}
@@ -330,7 +338,10 @@ protected:
 		keyed_container<Drawable>::handle draw;
 	};
 	std::list<Light> lights;
-	std::list<std::tr1::shared_ptr<Model> > models;
+
+	// models and textures used by this car instance
+	std::set<std::tr1::shared_ptr<Model> > models;
+	std::set<std::tr1::shared_ptr<Texture> > textures;
 
 	CrashDetection crashdetection;
 	std::vector<Camera*> cameras;

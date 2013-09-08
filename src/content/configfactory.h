@@ -50,7 +50,7 @@ public:
 		const std::string & name,
 		const P & param);
 
-	std::tr1::shared_ptr<PTree> getDefault() const;
+	const std::tr1::shared_ptr<PTree> & getDefault() const;
 
 private:
 	std::tr1::shared_ptr<PTree> m_default;

@@ -23,10 +23,8 @@
 #include "rendermodelext_drawable.h"
 #include "mathvector.h"
 #include "matrix4.h"
-#include "memory.h"
 
 class Model;
-class Texture;
 class VertexArray;
 class StringIdMap;
 
@@ -40,14 +38,10 @@ public:
 	unsigned GetDrawList() const;
 	void SetModel(const Model & model);
 
-	const Texture * GetDiffuseMap() const;
-	void SetDiffuseMap(const std::tr1::shared_ptr<Texture> & value);
-
-	const Texture * GetMiscMap1() const;
-	void SetMiscMap1(const std::tr1::shared_ptr<Texture> & value);
-
-	const Texture * GetMiscMap2() const;
-	void SetMiscMap2(const std::tr1::shared_ptr<Texture> & value);
+	unsigned GetTexture0() const;
+	unsigned GetTexture1() const;
+	unsigned GetTexture2() const;
+	void SetTextures(unsigned id0, unsigned id1 = 0, unsigned id2 = 0);
 
 	const VertexArray * GetVertArray() const;
 	void SetVertArray(const VertexArray * value);
@@ -89,12 +83,10 @@ public:
 	/// it returns a reference to the RenderModelExternal structure
 	RenderModelExt & GenRenderModelData(StringIdMap & stringMap);
 
-	void SetVertexArrayObject(GLuint vao, unsigned int elementCount);
+	void SetVertexArrayObject(unsigned vao, unsigned elementCount);
 
 private:
-	std::tr1::shared_ptr<Texture> diffuse_map;
-	std::tr1::shared_ptr<Texture> misc_map1;
-	std::tr1::shared_ptr<Texture> misc_map2;
+	unsigned tex_id[3];
 	unsigned list_id;
 	const VertexArray * vert_array;
 	float linesize;
@@ -124,19 +116,19 @@ inline unsigned Drawable::GetDrawList() const
 	return list_id;
 }
 
-inline const Texture * Drawable::GetDiffuseMap() const
+inline unsigned Drawable::GetTexture0() const
 {
-	return diffuse_map.get();
+	return tex_id[0];
 }
 
-inline const Texture * Drawable::GetMiscMap1() const
+inline unsigned Drawable::GetTexture1() const
 {
-	return misc_map1.get();
+	return tex_id[1];
 }
 
-inline const Texture * Drawable::GetMiscMap2() const
+inline unsigned Drawable::GetTexture2() const
 {
-	return misc_map2.get();
+	return tex_id[2];
 }
 
 inline const VertexArray * Drawable::GetVertArray() const

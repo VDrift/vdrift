@@ -19,7 +19,7 @@
 
 #include "sprite2d.h"
 #include "content/contentmanager.h"
-#include "graphics/textureinfo.h"
+#include "graphics/texture.h"
 
 #include <cassert>
 
@@ -40,7 +40,6 @@ bool Sprite2D::Load(
 	texinfo.repeatu = false;
 	texinfo.repeatv = false;
 	texinfo.npot = false;
-	std::tr1::shared_ptr<Texture> texture;
 	content.load(texture, texturepath, texturename, texinfo);
 
 	node = parent.AddNode();
@@ -48,7 +47,7 @@ bool Sprite2D::Load(
 	draw = noderef.GetDrawlist().twodim.insert(Drawable());
 	Drawable & drawref = GetDrawableFromNode(noderef);
 
-	drawref.SetDiffuseMap(texture);
+	drawref.SetTextures(texture->GetID());
 	drawref.SetVertArray(&varray);
 	drawref.SetDrawOrder(draworder);
 	drawref.SetCull(false, false);
@@ -61,20 +60,23 @@ bool Sprite2D::Load(
 
 bool Sprite2D::Load(
 	SceneNode & parent,
-	std::tr1::shared_ptr<Texture> texture2d,
+	std::tr1::shared_ptr<Texture> & texture2d,
 	float draworder)
 {
 	Unload(parent);
 
 	assert(!draw.valid());
 	assert(!node.valid());
+	assert(texture2d);
+
+	texture = texture2d;
 
 	node = parent.AddNode();
 	SceneNode & noderef = parent.GetNode(node);
 	draw = noderef.GetDrawlist().twodim.insert(Drawable());
 	Drawable & drawref = GetDrawableFromNode(noderef);
 
-	drawref.SetDiffuseMap(texture2d);
+	drawref.SetTextures(texture->GetID());
 	drawref.SetVertArray(&varray);
 	drawref.SetDrawOrder(draworder);
 	drawref.SetCull(false, false);

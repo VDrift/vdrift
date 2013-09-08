@@ -121,7 +121,6 @@ bool Hud::Init(
 	boxtexinfo.mipmap = false;
 	boxtexinfo.repeatu = true;
 	boxtexinfo.repeatv = false;
-	std::tr1::shared_ptr<Texture> boxtex;
 	content.load(boxtex, texturepath, "timerbox.png", boxtexinfo);
 
 	{
@@ -148,7 +147,7 @@ bool Hud::Init(
 		float y1 = timerboxdimy * 0.9;
 
 		timerboxverts.SetTo2DBox(x, y, w, h, timerboxdimx, timerboxdimy);
-		timerboxdrawref.SetDiffuseMap(boxtex);
+		timerboxdrawref.SetTextures(boxtex->GetID());
 		timerboxdrawref.SetVertArray(&timerboxverts);
 		timerboxdrawref.SetCull(false, false);
 		timerboxdrawref.SetColor(1, 1, 1, opacity);
@@ -200,7 +199,7 @@ bool Hud::Init(
 		float y1 = infoboxdimy * 0.9;
 
 		infoboxverts.SetTo2DBox(x, y, w, h, infoboxdimx, infoboxdimy);
-		infoboxdrawref.SetDiffuseMap(boxtex);
+		infoboxdrawref.SetTextures(boxtex->GetID());
 		infoboxdrawref.SetVertArray(&infoboxverts);
 		infoboxdrawref.SetCull(false, false);
 		infoboxdrawref.SetColor(1, 1, 1, opacity);
@@ -255,8 +254,6 @@ bool Hud::Init(
 	texinfo.mipmap = false;
 	texinfo.repeatu = false;
 	texinfo.repeatv = false;
-
-	std::tr1::shared_ptr<Texture> bartex, progbartex;
 	content.load(bartex, texturepath, "hudbox.png", texinfo);
 	content.load(progbartex, texturepath, "progressbar.png", texinfo);
 
@@ -265,21 +262,21 @@ bool Hud::Init(
 	rpmbox = AddDrawable(hudroot);
 
 	Drawable & rpmboxref = GetDrawable(hudroot, rpmbox);
-	rpmboxref.SetDiffuseMap(progbartex);
+	rpmboxref.SetTextures(progbartex->GetID());
 	rpmboxref.SetVertArray(&rpmboxverts);
 	rpmboxref.SetDrawOrder(2);
 	rpmboxref.SetCull(false, false);
 	rpmboxref.SetColor(0.3, 0.3, 0.3, 0.4);
 
 	Drawable & rpmbarref = GetDrawable(hudroot, rpmbar);
-	rpmbarref.SetDiffuseMap(progbartex);
+	rpmbarref.SetTextures(progbartex->GetID());
 	rpmbarref.SetVertArray(&rpmbarverts);
 	rpmbarref.SetDrawOrder(3);
 	rpmbarref.SetCull(false, false);
 	rpmbarref.SetColor(1.0, 1.0, 1.0, 0.7);
 
 	Drawable & rpmredbarref = GetDrawable(hudroot, rpmredbar);
-	rpmredbarref.SetDiffuseMap(progbartex);
+	rpmredbarref.SetTextures(progbartex->GetID());
 	rpmredbarref.SetVertArray(&rpmredbarverts);
 	rpmredbarref.SetColor(1.0, 0.2, 0.2, 0.7);
 	rpmredbarref.SetDrawOrder(3);
@@ -340,8 +337,7 @@ bool Hud::Init(
 		tinfo.height = 1;
 		tinfo.bytespp = 4;
 		tinfo.mipmap = false;
-		std::tr1::shared_ptr<Texture> texture;
-		content.load(texture, "", "white1x1", tinfo);
+		content.load(bartex, "", "white1x1", tinfo);
 
 		float r = 0.12;
 		float x0 = 0.15;
@@ -352,10 +348,10 @@ bool Hud::Init(
 		float angle_min = 315.0 / 180.0 * M_PI;
 		float angle_max = 45.0 / 180.0 * M_PI;
 
-		rpmgauge.Set(hudroot, texture, gaugefont, screenhwratio, x0, y0, r,
+		rpmgauge.Set(hudroot, bartex, gaugefont, screenhwratio, x0, y0, r,
 			angle_min, angle_max, 0, maxrpm * 0.001, 1);
 
-		speedgauge.Set(hudroot, texture, gaugefont, screenhwratio, x1, y0, r,
+		speedgauge.Set(hudroot, bartex, gaugefont, screenhwratio, x1, y0, r,
 			angle_min, angle_max, 0, maxspeed * speedscale, 10);
 
 		float w = w0;

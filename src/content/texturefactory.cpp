@@ -24,6 +24,7 @@
 
 Factory<Texture>::Factory() :
 	m_default(new Texture()),
+	m_zero(new Texture()),
 	m_size(TextureInfo::LARGE),
 	m_compress(true),
 	m_srgb(false)
@@ -39,16 +40,22 @@ void Factory<Texture>::init(int max_size, bool use_srgb, bool compress)
 
 	// init default texture
 	std::stringstream error;
-	unsigned char white[] = {255, 255, 255, 255};
+	unsigned char one[] = {255u, 255u, 255u, 255u};
+	unsigned char zero[] = {0u, 0u, 0u, 0u};
+
 	TextureInfo info;
-	info.data = white;
 	info.width = 1;
 	info.height = 1;
 	info.bytespp = 4;
 	info.maxsize = TextureInfo::Size(m_size);
 	info.mipmap = false;
 	info.srgb = m_srgb;
+
+	info.data = one;
 	m_default->Load("", info, error);
+
+	info.data = zero;
+	m_zero->Load("", info, error);
 }
 
 template <>
@@ -77,7 +84,12 @@ bool Factory<Texture>::create(
 	return false;
 }
 
-std::tr1::shared_ptr<Texture> Factory<Texture>::getDefault() const
+const std::tr1::shared_ptr<Texture> & Factory<Texture>::getDefault() const
 {
 	return m_default;
+}
+
+const std::tr1::shared_ptr<Texture> & Factory<Texture>::getZero() const
+{
+	return m_zero;
 }

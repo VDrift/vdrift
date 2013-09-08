@@ -28,6 +28,7 @@
 #include "render_input_postprocess.h"
 #include "render_input_scene.h"
 #include "render_output.h"
+#include "memory.h"
 
 struct GraphicsCamera;
 class Shader;
@@ -167,7 +168,7 @@ private:
 	camera_map_type cameras;
 
 	Vec3 light_direction;
-	std::auto_ptr<Sky> sky;
+	std::tr1::shared_ptr<Sky> sky;
 	bool sky_dynamic;
 
 	void ChangeDisplay(

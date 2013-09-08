@@ -44,7 +44,7 @@ public:
 		const std::string & name,
 		const P & param);
 
-	std::tr1::shared_ptr<Model> getDefault() const;
+	const std::tr1::shared_ptr<Model> & getDefault() const;
 
 private:
 	std::tr1::shared_ptr<Model> m_default;

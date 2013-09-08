@@ -48,7 +48,7 @@ public:
 		std::ostream & error_output,
 		bool mipmap = false);
 
-	const std::tr1::shared_ptr<Texture> GetFontTexture() const
+	const std::tr1::shared_ptr<Texture> & GetFontTexture() const
 	{
 		return font_texture;
 	}

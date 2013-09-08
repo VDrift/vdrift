@@ -112,13 +112,12 @@ public:
 		}
 	}
 
-	void BindTexture2D(unsigned tu, const Texture * texture)
+	void BindTexture2D(unsigned tu, unsigned id)
 	{
 		if (tu >= tex2d.size())
 			tex2d.resize(tu + 1, 0);
 
 		GLuint & curid = tex2d[tu];
-		GLuint id = texture ? texture->GetID() : 0;
 		if (curid != id)
 		{
 			if (curtu != tu)

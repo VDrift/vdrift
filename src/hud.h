@@ -23,12 +23,14 @@
 #include "gui/text_draw.h"
 #include "hudgauge.h"
 #include "hudbar.h"
+#include "memory.h"
 
 #include <iosfwd>
 #include <string>
 #include <list>
 
 class Font;
+class Texture;
 class GuiLanguage;
 class ContentManager;
 
@@ -68,6 +70,9 @@ public:
 private:
 	SceneNode hudroot;
 	keyed_container<SceneNode>::handle infonode;
+	std::tr1::shared_ptr<Texture> boxtex;
+	std::tr1::shared_ptr<Texture> bartex;
+	std::tr1::shared_ptr<Texture> progbartex;
 
 	// timer
 	keyed_container<Drawable>::handle timerboxdraw;

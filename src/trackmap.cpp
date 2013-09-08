@@ -206,7 +206,6 @@ bool TrackMap::BuildMap(
 	texinfo.bytespp = surface->format->BitsPerPixel / 8;
 	texinfo.repeatu = false;
 	texinfo.repeatv = false;
-	std::tr1::shared_ptr<Texture> track_map;
 	content.load(track_map, "", trackname, texinfo);
 
 	SDL_FreeSurface(surface);
@@ -231,7 +230,7 @@ bool TrackMap::BuildMap(
 	mapverts.SetToBillboard(position[0], position[1], position[0]+size[0], position[1]+size[1]);
 	mapdraw = mapnode.GetDrawlist().twodim.insert(Drawable());
 	Drawable & mapdrawref = mapnode.GetDrawlist().twodim.get(mapdraw);
-	mapdrawref.SetDiffuseMap(track_map);
+	mapdrawref.SetTextures(track_map->GetID());
 	mapdrawref.SetVertArray(&mapverts);
 	mapdrawref.SetCull(false, false);
 	mapdrawref.SetColor(1,1,1,0.7);

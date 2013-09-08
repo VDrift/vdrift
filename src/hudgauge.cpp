@@ -19,6 +19,8 @@
 
 #include "hudgauge.h"
 #include "gui/text_draw.h"
+#include "graphics/texture.h"
+#include <cassert>
 #include <sstream>
 
 static keyed_container<Drawable>::handle AddDrawable(SceneNode & node)
@@ -85,6 +87,8 @@ void HudGauge::Set(
 	float endvalue,
 	float valuedelta)
 {
+	assert(texture);
+
 	// calculate number of segments (max 9)
 	float segments = (endvalue - startvalue) / valuedelta;
 	float factor = ceil(segments / 9.0f);
@@ -144,7 +148,7 @@ void HudGauge::Set(
 
 		dial_draw = AddDrawable(parent);
 		Drawable & drawref = GetDrawable(parent, dial_draw);
-		drawref.SetDiffuseMap(texture);
+		drawref.SetTextures(texture->GetID());
 		drawref.SetVertArray(&dial_marks);
 		drawref.SetCull(false, false);
 		//drawref.SetColor(1, 1, 1, 0.5);
@@ -177,7 +181,7 @@ void HudGauge::Set(
 
 		dialnum_draw = AddTextDrawable(parent);
 		Drawable & drawref = GetTextDrawable(parent, dialnum_draw);
-		drawref.SetDiffuseMap(font.GetFontTexture());
+		drawref.SetTextures(font.GetFontTexture()->GetID());
 		drawref.SetVertArray(&dial_label);
 		drawref.SetCull(false, false);
 		//drawref.SetColor(1, 1, 1, 0.5);
@@ -196,7 +200,7 @@ void HudGauge::Set(
 
 		pointer_draw = AddDrawable(parent);
 		Drawable & drawref = GetDrawable(parent, pointer_draw);
-		drawref.SetDiffuseMap(texture);
+		drawref.SetTextures(texture->GetID());
 		drawref.SetVertArray(&pointer_rotated);
 		drawref.SetCull(false, false);
 		//drawref.SetColor(1, 1, 1, 0.5);

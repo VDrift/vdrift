@@ -19,10 +19,11 @@
 
 #include "hudbar.h"
 #include "graphics/scenenode.h"
+#include "graphics/texture.h"
 
 void HudBar::Set(
 	SceneNode & parent,
-	std::tr1::shared_ptr<Texture> bartex,
+	std::tr1::shared_ptr<Texture> & tex,
 	float x, float y, float w, float h,
 	float opacity,
 	bool flip)
@@ -30,11 +31,13 @@ void HudBar::Set(
 	draw = parent.GetDrawlist().twodim.insert(Drawable());
 	Drawable & drawref = parent.GetDrawlist().twodim.get(draw);
 
-	drawref.SetDiffuseMap(bartex);
+	drawref.SetTextures(tex->GetID());
 	drawref.SetVertArray(&verts);
 	drawref.SetCull(false, false);
 	drawref.SetColor(1,1,1,opacity);
 	drawref.SetDrawOrder(1);
+
+	texture = tex;
 
 	verts.SetTo2DButton(x, y, w, h, h*0.75, flip);
 }

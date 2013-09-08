@@ -22,6 +22,7 @@
 
 #include "graphics/vertexarray.h"
 #include "graphics/drawable.h"
+#include "memory.h"
 
 class SceneNode;
 class Texture;
@@ -31,7 +32,7 @@ class HudBar
 public:
 	void Set(
 		SceneNode & parent,
-		std::tr1::shared_ptr<Texture> bartex,
+		std::tr1::shared_ptr<Texture> & tex,
 		float x, float y, float w, float h,
 		float opacity,
 		bool flip);
@@ -40,6 +41,7 @@ public:
 
 private:
 	keyed_container<Drawable>::handle draw;
+	std::tr1::shared_ptr<Texture> texture;
 	VertexArray verts;
 };
 

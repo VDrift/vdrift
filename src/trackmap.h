@@ -22,6 +22,7 @@
 
 #include "mathvector.h"
 #include "graphics/scenenode.h"
+#include "graphics/texture.h"
 #include "roadstrip.h"
 
 #include <list>
@@ -80,7 +81,7 @@ private:
 	keyed_container <Drawable>::handle mapdraw;
 	VertexArray mapverts;
 
-	// car dot textures
+	std::tr1::shared_ptr<Texture> track_map;
 	std::tr1::shared_ptr<Texture> cardot0;
 	std::tr1::shared_ptr<Texture> cardot1;
 	std::tr1::shared_ptr<Texture> cardot0_focused;
@@ -91,7 +92,7 @@ private:
 		public:
 			void Init(
 				SceneNode & topnode,
-				std::tr1::shared_ptr<Texture> tex,
+				std::tr1::shared_ptr<Texture> & tex,
 				const Vec2 & corner1,
 				const Vec2 & corner2)
 			{
@@ -104,10 +105,11 @@ private:
 				Retexture(topnode, tex);
 				Reposition(corner1, corner2);
 			}
-			void Retexture(SceneNode & topnode, std::tr1::shared_ptr<Texture> newtex)
+			void Retexture(SceneNode & topnode, std::tr1::shared_ptr<Texture> & newtex)
 			{
 				assert(newtex.get());
-				GetDrawable(topnode).SetDiffuseMap(newtex);
+				texture = newtex;
+				GetDrawable(topnode).SetTextures(texture->GetID());
 			}
 			void Reposition(const Vec2 & corner1, const Vec2 & corner2)
 			{
@@ -120,7 +122,7 @@ private:
 			void DebugPrint(SceneNode & topnode, std::ostream & out) const
 			{
 				const Drawable & drawref = GetDrawable(topnode);
-				out << &drawref << ": enable=" << drawref.GetDrawEnable() << ", tex=" << drawref.GetDiffuseMap() << ", verts=" << drawref.GetVertArray() << std::endl;
+				out << &drawref << ": enable=" << drawref.GetDrawEnable() << ", tex=" << drawref.GetTexture0() << ", verts=" << drawref.GetVertArray() << std::endl;
 			}
 			keyed_container <Drawable>::handle & GetDrawableHandle()
 			{
@@ -129,6 +131,7 @@ private:
 
 		private:
 			keyed_container <Drawable>::handle dotdraw;
+			std::tr1::shared_ptr<Texture> texture;
 			VertexArray dotverts;
 
 			Drawable & GetDrawable(SceneNode & topnode)

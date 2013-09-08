@@ -22,10 +22,12 @@
 
 #include "graphics/scenenode.h"
 #include "graphics/vertexarray.h"
+#include "memory.h"
 
 #include <string>
 
 class ContentManager;
+class Texture;
 
 /// A higher level class using Texture, Drawable, and VertexArray objects to create a 2D sprite
 class Sprite2D
@@ -42,7 +44,7 @@ public:
 
 	bool Load(
 		SceneNode & parent,
-		std::tr1::shared_ptr<Texture> texture2d,
+		std::tr1::shared_ptr<Texture> & texture2d,
 		float draworder);
 
 	void Unload(SceneNode & parent);
@@ -85,9 +87,10 @@ public:
 	void SetTo2DQuad(float x1, float y1, float x2, float y2, float u1, float v1, float u2, float v2, float z);
 
 private:
-	VertexArray varray;
-	keyed_container <Drawable>::handle draw;
 	keyed_container <SceneNode>::handle node;
+	keyed_container <Drawable>::handle draw;
+	std::tr1::shared_ptr<Texture> texture;
+	VertexArray varray;
 	float r, g, b, a;
 
 	Drawable & GetDrawableFromParent(SceneNode & parent);

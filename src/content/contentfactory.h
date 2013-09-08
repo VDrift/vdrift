@@ -36,7 +36,7 @@ public:
 		const std::string & name,
 		const P & param);
 
-	std::tr1::shared_ptr<Content> getDefault() const;
+	const std::tr1::shared_ptr<Content> & getDefault() const;
 };
 
 #endif // _CONTENTFACTORY_H
