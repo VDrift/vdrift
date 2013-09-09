@@ -66,25 +66,25 @@ class FrameBufferTexture : public TextureInterface
 			attached(false),
 			sizew(0),
 			sizeh(0),
-			texture_target(NORMAL),
+			target(NORMAL),
 			mipmap(false),
 			multisample(0),
-			texture_attachment(GL_COLOR_ATTACHMENT0),
-			texture_format(RGB8),
+			attachment(GL_COLOR_ATTACHMENT0),
+			format(RGB8),
 			cur_side(POSX),
 			depthcomparisonenabled(true)
 			{}
 		~FrameBufferTexture() {DeInit();}
-		void Init(int sizex, int sizey, TARGET target, FORMAT newformat, bool filternearest, bool usemipmap, std::ostream & error_output, int newmultisample = 0, bool newdepthcomparisonenabled = true);
+		void Init(int sizex, int sizey, TARGET newtarget, FORMAT newformat, bool filternearest, bool usemipmap, std::ostream & error_output, int newmultisample = 0, bool newdepthcomparisonenabled = true);
 		void DeInit();
 		virtual void Activate() const;
 		virtual void Deactivate() const;
 		virtual bool Loaded() const {return inited;}
 		//void Screenshot(GLSTATEMANAGER & glstate, const std::string & filename, std::ostream & error_output);
-		virtual bool IsRect() const {return (texture_target == RECTANGLE);}
+		virtual bool IsRect() const {return (target == RECTANGLE);}
 		virtual unsigned int GetW() const {return sizew;}
 		virtual unsigned int GetH() const {return sizeh;}
-		bool IsCubemap() const {return (texture_target == CUBEMAP);}
+		bool IsCubemap() const {return (target == CUBEMAP);}
 
 	private:
 		GLuint fbtexture;
@@ -93,11 +93,11 @@ class FrameBufferTexture : public TextureInterface
 		bool attached;
 		int sizew, sizeh;
 
-		TARGET texture_target;
+		TARGET target;
 		bool mipmap;
 		int multisample;
-		int texture_attachment;
-		FORMAT texture_format;
+		int attachment;
+		FORMAT format;
 		CUBE_SIDE cur_side;
 		bool depthcomparisonenabled;
 };

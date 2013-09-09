@@ -44,7 +44,8 @@ public:
 
 	void Screenshot(GraphicsState & glstate, const std::string & filename, std::ostream & error_output);
 
-	void SetCubeSide(FrameBufferTexture::CUBE_SIDE side); ///< attach a specified cube side to the texture_attachment. for cube map FBOs only.
+	///< attach a specified cube side, for cube map FBOs only.
+	void SetCubeSide(FrameBufferTexture::CUBE_SIDE side);
 
 	int GetWidth() const {return width;}
 

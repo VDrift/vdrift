@@ -26,7 +26,7 @@
 #include <sstream>
 #include <string>
 
-void FrameBufferTexture::Init(int sizex, int sizey, TARGET target, FORMAT newformat, bool filternearest, bool usemipmap, std::ostream & error_output, int newmultisample, bool newdepthcomparisonenabled)
+void FrameBufferTexture::Init(int sizex, int sizey, TARGET newtarget, FORMAT newformat, bool filternearest, bool usemipmap, std::ostream & error_output, int newmultisample, bool newdepthcomparisonenabled)
 {
 	assert(!attached);
 
@@ -41,7 +41,7 @@ void FrameBufferTexture::Init(int sizex, int sizey, TARGET target, FORMAT newfor
 
 	depthcomparisonenabled = newdepthcomparisonenabled;
 
-	texture_format = newformat;
+	format = newformat;
 
 	inited = true;
 
@@ -50,14 +50,14 @@ void FrameBufferTexture::Init(int sizex, int sizey, TARGET target, FORMAT newfor
 
 	mipmap = usemipmap;
 
-	texture_target = target;
+	target = newtarget;
 
 	multisample = newmultisample;
 	if (!(GLEW_EXT_framebuffer_multisample && GLEW_EXT_framebuffer_blit))
 		multisample = 0;
 
 	//set texture info
-	if (texture_target == GL_TEXTURE_RECTANGLE)
+	if (target == GL_TEXTURE_RECTANGLE)
 	{
 		assert(GLEW_ARB_texture_rectangle);
 	}
@@ -66,7 +66,7 @@ void FrameBufferTexture::Init(int sizex, int sizey, TARGET target, FORMAT newfor
 	int data_format = GL_RGB;
 	int data_type = GL_UNSIGNED_BYTE;
 
-	switch (texture_format)
+	switch (format)
 	{
 		case LUM8:
 		texture_format = GL_LUMINANCE8;
@@ -111,11 +111,11 @@ void FrameBufferTexture::Init(int sizex, int sizey, TARGET target, FORMAT newfor
 
 	//initialize the texture
 	glGenTextures(1, &fbtexture);
-	glBindTexture(texture_target, fbtexture);
+	glBindTexture(target, fbtexture);
 
 	CheckForOpenGLErrors("FBTEX texture generation and initial bind", error_output);
 
-	if (texture_target == CUBEMAP)
+	if (target == CUBEMAP)
 	{
 		// generate storage for each of the six sides
 		for (int i = 0; i < 6; i++)
@@ -125,57 +125,55 @@ void FrameBufferTexture::Init(int sizex, int sizey, TARGET target, FORMAT newfor
 	}
 	else
 	{
-		glTexImage2D(texture_target, 0, texture_format, sizex, sizey, 0, data_format, data_type, NULL);
+		glTexImage2D(target, 0, texture_format, sizex, sizey, 0, data_format, data_type, NULL);
 	}
 
 	CheckForOpenGLErrors("FBTEX texture storage initialization", error_output);
 
-	//glTexParameteri(texture_target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_BORDER);
-	//glTexParameteri(texture_target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_BORDER);
-	glTexParameteri(texture_target, GL_TEXTURE_WRAP_S, GL_CLAMP);
-	glTexParameteri(texture_target, GL_TEXTURE_WRAP_T, GL_CLAMP);
-	glTexParameteri(texture_target, GL_TEXTURE_WRAP_R, GL_CLAMP);
+	glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	glTexParameteri(target, GL_TEXTURE_WRAP_R, GL_CLAMP);
 
 	if (filternearest)
 	{
 		if (mipmap)
-			glTexParameteri(texture_target, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
+			glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_NEAREST_MIPMAP_NEAREST);
 		else
-			glTexParameteri(texture_target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+			glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 
-		glTexParameteri(texture_target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 	}
 	else
 	{
 		if (mipmap)
-			glTexParameteri(texture_target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+			glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 		else
-			glTexParameteri(texture_target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+			glTexParameteri(target, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-		glTexParameteri(texture_target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(target, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	}
 
 	if (data_format == GL_DEPTH_COMPONENT)
 	{
-		glTexParameteri(texture_target, GL_DEPTH_TEXTURE_MODE, GL_LUMINANCE);
-		glTexParameteri(texture_target, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+		glTexParameteri(target, GL_DEPTH_TEXTURE_MODE, GL_LUMINANCE);
+		glTexParameteri(target, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
 
 		if (depthcomparisonenabled)
-			glTexParameteri(texture_target, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
+			glTexParameteri(target, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
 		else
-			glTexParameteri(texture_target, GL_TEXTURE_COMPARE_MODE, GL_NONE);
+			glTexParameteri(target, GL_TEXTURE_COMPARE_MODE, GL_NONE);
 	}
 
 	CheckForOpenGLErrors("FBTEX texture setup", error_output);
 
 	if (mipmap)
 	{
-		glGenerateMipmap(texture_target);
+		glGenerateMipmap(target);
 
 		CheckForOpenGLErrors("FBTEX initial mipmap generation", error_output);
 	}
 
-	glBindTexture(texture_target, 0); // don't leave the texture bound
+	glBindTexture(target, 0); // don't leave the texture bound
 
 	CheckForOpenGLErrors("FBTEX texture unbinding", error_output);
 }
@@ -192,11 +190,11 @@ void FrameBufferTexture::Activate() const
 {
 	assert(inited);
 
-	glBindTexture(texture_target, fbtexture);
+	glBindTexture(target, fbtexture);
 }
 
 void FrameBufferTexture::Deactivate() const
 {
-    glDisable(texture_target);
-    glBindTexture(texture_target,0);
+	glDisable(target);
+	glBindTexture(target,0);
 }

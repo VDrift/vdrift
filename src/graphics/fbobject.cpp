@@ -127,7 +127,7 @@ void FrameBufferObject::Init(GraphicsState & glstate, std::vector <FrameBufferTe
 
 	for (std::vector <FrameBufferTexture*>::iterator i = textures.begin(); i != textures.end(); i++)
 	{
-		if ((*i)->texture_format == FrameBufferTexture::DEPTH24)
+		if ((*i)->format == FrameBufferTexture::DEPTH24)
 			depth_textures.push_back(*i);
 		else
 			color_textures.push_back(*i);
@@ -149,7 +149,7 @@ void FrameBufferObject::Init(GraphicsState & glstate, std::vector <FrameBufferTe
 
 	for (std::vector <FrameBufferTexture*>::iterator i = color_textures.begin(); i != color_textures.end(); i++)
 	{
-		if ((*i)->texture_target == FrameBufferTexture::CUBEMAP)
+		if ((*i)->target == FrameBufferTexture::CUBEMAP)
 		{
 			if (verbose) error_output << "INFO: found cubemap" << std::endl;
 
@@ -257,7 +257,7 @@ void FrameBufferObject::Init(GraphicsState & glstate, std::vector <FrameBufferTe
 			// need a separate multisample color buffer
 			glGenRenderbuffers(1, &(*i)->renderbuffer_multisample);
 			glBindRenderbuffer(GL_RENDERBUFFER, (*i)->renderbuffer_multisample);
-			glRenderbufferStorageMultisample(GL_RENDERBUFFER, multisample, (*i)->texture_format, width, height);
+			glRenderbufferStorageMultisample(GL_RENDERBUFFER, multisample, (*i)->format, width, height);
 			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0+count, GL_RENDERBUFFER, (*i)->renderbuffer_multisample);
 
 			if (verbose) error_output << "INFO: generating separate multisample color buffer " << count << std::endl;
@@ -272,21 +272,21 @@ void FrameBufferObject::Init(GraphicsState & glstate, std::vector <FrameBufferTe
 		int count = 0;
 		for (std::vector <FrameBufferTexture*>::iterator i = color_textures.begin(); i != color_textures.end(); i++,count++)
 		{
-			int texture_attachment = GL_COLOR_ATTACHMENT0+count;
-			if ((*i)->texture_target == FrameBufferTexture::CUBEMAP)
+			int attachment = GL_COLOR_ATTACHMENT0+count;
+			if ((*i)->target == FrameBufferTexture::CUBEMAP)
 			{
 				// if we're using a cubemap, arbitrarily pick one of the faces to activate so we can check that the FBO is complete
-				glFramebufferTexture2D(GL_FRAMEBUFFER, texture_attachment, GL_TEXTURE_CUBE_MAP_POSITIVE_X, (*i)->fbtexture, 0);
+				glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, GL_TEXTURE_CUBE_MAP_POSITIVE_X, (*i)->fbtexture, 0);
 
 				if (verbose) error_output << "INFO: attaching arbitrary cubemap face to color attachment " << count << std::endl;
 			}
 			else
 			{
-				glFramebufferTexture2D(GL_FRAMEBUFFER, texture_attachment, (*i)->texture_target, (*i)->fbtexture, 0);
+				glFramebufferTexture2D(GL_FRAMEBUFFER, attachment, (*i)->target, (*i)->fbtexture, 0);
 
 				if (verbose) error_output << "INFO: attaching texture to color attachment " << count << std::endl;
 			}
-			(*i)->texture_attachment = texture_attachment;
+			(*i)->attachment = attachment;
 		}
 	}
 
@@ -296,7 +296,7 @@ void FrameBufferObject::Init(GraphicsState & glstate, std::vector <FrameBufferTe
 		int count = 0;
 		for (std::vector <FrameBufferTexture*>::iterator i = depth_textures.begin(); i != depth_textures.end(); i++,count++)
 		{
-			if ((*i)->texture_target == FrameBufferTexture::CUBEMAP)
+			if ((*i)->target == FrameBufferTexture::CUBEMAP)
 			{
 				// if we're using a cubemap, arbitrarily pick one of the faces to activate so we can check that the FBO is complete
 				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_CUBE_MAP_POSITIVE_X, (*i)->fbtexture, 0);
@@ -305,7 +305,7 @@ void FrameBufferObject::Init(GraphicsState & glstate, std::vector <FrameBufferTe
 			}
 			else
 			{
-				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, (*i)->texture_target, (*i)->fbtexture, 0);
+				glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, (*i)->target, (*i)->fbtexture, 0);
 
 				if (verbose) error_output << "INFO: attaching depth texture" << std::endl;
 			}
@@ -337,7 +337,7 @@ void FrameBufferObject::Init(GraphicsState & glstate, std::vector <FrameBufferTe
 		int count = 0;
 		for (std::vector <FrameBufferTexture*>::iterator i = textures.begin(); i != textures.end(); i++)
 		{
-			error_output << "\t" << count << ". " << TargetToString((*i)->texture_target) << ": " << FormatToString((*i)->texture_format) << std::endl;
+			error_output << "\t" << count << ". " << TargetToString((*i)->target) << ": " << FormatToString((*i)->format) << std::endl;
 			count++;
 		}
 	}
@@ -406,13 +406,13 @@ bool FrameBufferObject::CheckStatus(std::ostream & error_output)
 void FrameBufferObject::SetCubeSide(FrameBufferTexture::CUBE_SIDE side)
 {
 	assert(textures.size() == 1);
-	assert(textures.back()->texture_target == FrameBufferTexture::CUBEMAP);
+	assert(textures.back()->target == FrameBufferTexture::CUBEMAP);
 	textures.back()->cur_side = side;
 }
 
 bool FrameBufferObject::IsCubemap() const
 {
-	return (textures.size() == 1 && textures.back()->texture_target == FrameBufferTexture::CUBEMAP);
+	return (textures.size() == 1 && textures.back()->target == FrameBufferTexture::CUBEMAP);
 }
 
 void FrameBufferObject::DeInit()
@@ -449,9 +449,9 @@ void FrameBufferObject::Begin(GraphicsState & glstate, std::ostream & error_outp
 
 	CheckForOpenGLErrors("FBO bind to framebuffer", error_output);
 
-	if (textures.back()->texture_target == FrameBufferTexture::CUBEMAP)
+	if (textures.back()->target == FrameBufferTexture::CUBEMAP)
 	{
-		glFramebufferTexture2D(GL_FRAMEBUFFER, textures.back()->texture_attachment, textures.back()->cur_side, textures.back()->fbtexture, 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, textures.back()->attachment, textures.back()->cur_side, textures.back()->fbtexture, 0);
 		CheckForOpenGLErrors("FBO cubemap side attachment", error_output);
 	}
 
@@ -500,9 +500,9 @@ void FrameBufferObject::End(GraphicsState & glstate, std::ostream & error_output
 	{
 		if ((*i)->mipmap)
 		{
-			glBindTexture((*i)->texture_target, (*i)->fbtexture);
-			glGenerateMipmap((*i)->texture_target);
-			glBindTexture((*i)->texture_target, 0);
+			glBindTexture((*i)->target, (*i)->fbtexture);
+			glGenerateMipmap((*i)->target);
+			glBindTexture((*i)->target, 0);
 		}
 	}
 
