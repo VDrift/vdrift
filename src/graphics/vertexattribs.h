@@ -22,7 +22,7 @@
 
 namespace VertexAttribs
 {
-	enum VERTEX_ATTRIBS
+	enum Enum
 	{
 		VERTEX_POSITION,
 		VERTEX_NORMAL,

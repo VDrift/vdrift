@@ -31,15 +31,15 @@ using std::ios_base;
 
 struct JoePack::Impl
 {
-	struct FADATA
+	struct FatEntry
 	{
-		FADATA() : offset(0), length(0) { }
+		FatEntry() : offset(0), length(0) { }
 		unsigned offset;
 		unsigned length;
 	};
 	const std::string versionstr;
-	std::map <std::string, FADATA> fat;
-	std::map <std::string, FADATA>::iterator curfa;
+	std::map <std::string, FatEntry> fat;
+	std::map <std::string, FatEntry>::iterator curfa;
 	std::ifstream f;
 
 	Impl();
@@ -92,7 +92,7 @@ bool JoePack::Impl::Load(const string & fn)
 		//load FAT
 		for (unsigned int i = 0; i < numobjs; i++)
 		{
-			FADATA fa;
+			FatEntry fa;
 			f.read((char*)(&(fa.offset)), sizeof(unsigned int));
 			fa.offset = ENDIAN_SWAP_32(fa.offset);
 			f.read((char*)(&(fa.length)), sizeof(unsigned int));

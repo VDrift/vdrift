@@ -234,8 +234,8 @@ public:
 		return INTERSECT;
 	}
 
-	struct INTERSECT_ALWAYS{};
-	IntersectionEnum Intersect(INTERSECT_ALWAYS always) const {return IN;}
+	struct IntersectAlways{};
+	IntersectionEnum Intersect(IntersectAlways always) const {return IN;}
 };
 
 #endif

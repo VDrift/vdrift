@@ -66,9 +66,9 @@ static void GetTimeString(float time, std::string & outtime)
 	}
 }
 
-enum HUDStrEnum
+enum HudStrEnum
 {
-	LAPTIME, LASTLAP, BESTLAP, SCORE, LAP, Place,
+	LAPTIME, LASTLAP, BESTLAP, SCORE, LAP, PLACE,
 	READY, GO, YOUWON, YOULOST, MPH, KPH, STRNUM
 };
 
@@ -106,7 +106,7 @@ bool Hud::Init(
 	str[BESTLAP] = lang("Best lap:");
 	str[SCORE] = lang("Score:");
 	str[LAP] = lang("Lap:");
-	str[Place] = lang("Place:");
+	str[PLACE] = lang("Place:");
 	str[READY] = lang("Ready");
 	str[GO] = lang("GO");
 	str[YOUWON] = lang("You won!");
@@ -205,7 +205,7 @@ bool Hud::Init(
 		infoboxdrawref.SetColor(1, 1, 1, opacity);
 		infoboxdrawref.SetDrawOrder(0.1);
 
-		place_label.Init(infonoderef, sansfont, str[Place], x0, y0, fontscalex, fontscaley);
+		place_label.Init(infonoderef, sansfont, str[PLACE], x0, y0, fontscalex, fontscaley);
 		place_label.SetDrawOrder(infonoderef, 0.2);
 
 		lap_label.Init(infonoderef, sansfont, str[LAP], x1, y0, fontscalex, fontscaley);

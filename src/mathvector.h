@@ -273,189 +273,186 @@ public:
 template <class T>
 class MathVector <T, 3>
 {
-	friend class joeserialize::Serializer;
-	private:
-		struct MATHVECTOR_XYZ
-		{
-			T x,y,z;
-			inline T & operator[](const int i) { return ((T*)this)[i]; }
-			inline const T & operator[](const int i) const { return ((T*)this)[i]; }
+friend class joeserialize::Serializer;
+private:
+	struct Vector3
+	{
+		T x,y,z;
+		inline T & operator[](const int i) { return ((T*)this)[i]; }
+		inline const T & operator[](const int i) const { return ((T*)this)[i]; }
 
-			MATHVECTOR_XYZ() : x(0), y(0), z(0) {}
-			MATHVECTOR_XYZ(const T& t) : x(t), y(t), z(t) {}
-			MATHVECTOR_XYZ(const T nx, const T ny, const T nz) : x(nx),y(ny),z(nz) {}
-		} v;
+		Vector3() : x(0), y(0), z(0) {}
+		Vector3(const T& t) : x(t), y(t), z(t) {}
+		Vector3(const T nx, const T ny, const T nz) : x(nx),y(ny),z(nz) {}
+	} v;
 
-	public:
-		MathVector()
-		{
-		}
+public:
+	MathVector()
+	{
+	}
 
-		MathVector(const T& t) : v(t)
-		{
-		}
+	MathVector(const T& t) : v(t)
+	{
+	}
 
-		MathVector(const T x, const T y, const T z) : v(x,y,z)
-		{
-		}
+	MathVector(const T x, const T y, const T z) : v(x,y,z)
+	{
+	}
 
-		template <typename T2>
-		MathVector (const MathVector <T2, 3> & other)
-		{
-			*this = other;
-		}
+	template <typename T2>
+	MathVector (const MathVector <T2, 3> & other)
+	{
+		*this = other;
+	}
 
-		inline const T Magnitude() const
-		{
-			return sqrt(MagnitudeSquared());
-		}
-		inline const T MagnitudeSquared() const
-		{
-			return v.x*v.x+v.y*v.y+v.z*v.z;
-		}
+	inline const T Magnitude() const
+	{
+		return sqrt(MagnitudeSquared());
+	}
+	inline const T MagnitudeSquared() const
+	{
+		return v.x*v.x+v.y*v.y+v.z*v.z;
+	}
 
-		///set all vector values to val1
-		inline void Set(const T val1)
-		{
-			v.x = v.y = v.z = val1;
-		}
+	///set all vector values to val1
+	inline void Set(const T val1)
+	{
+		v.x = v.y = v.z = val1;
+	}
 
-		inline void Set(const T val1, const T val2, const T val3)
-		{
-			v.x = val1;
-			v.y = val2;
-			v.z = val3;
-		}
+	inline void Set(const T val1, const T val2, const T val3)
+	{
+		v.x = val1;
+		v.y = val2;
+		v.z = val3;
+	}
 
-		///careful, there's no way to check the bounds of the array
-		inline void Set(const T * array_pointer)
-		{
-			std::memcpy(&v,array_pointer,sizeof(MATHVECTOR_XYZ)); //high performance, but portability issues?
-			/*v.x = array_pointer[0];
-			v.y = array_pointer[1];
-			v.z = array_pointer[2];*/
-		}
+	///careful, there's no way to check the bounds of the array
+	inline void Set(const T * array_pointer)
+	{
+		std::memcpy(&v,array_pointer,sizeof(Vector3)); //high performance, but portability issues?
+		/*v.x = array_pointer[0];
+		v.y = array_pointer[1];
+		v.z = array_pointer[2];*/
+	}
 
-		///return a normalized vector
-		MathVector <T, 3> Normalize() const
-		{
-			const T mag = Magnitude();
-			assert(mag != 0);
-			const T maginv = (1.0/mag);
+	///return a normalized vector
+	MathVector <T, 3> Normalize() const
+	{
+		const T mag = Magnitude();
+		assert(mag != 0);
+		const T maginv = (1.0/mag);
 
-			return MathVector <T, 3> (v.x*maginv, v.y*maginv, v.z*maginv);
-		}
+		return MathVector <T, 3> (v.x*maginv, v.y*maginv, v.z*maginv);
+	}
 
-		///return the scalar dot product between this and other
-		inline const T dot(const MathVector <T, 3> & other) const
-		{
-			return v.x*other.v.x+v.y*other.v.y+v.z*other.v.z;
-		}
+	///return the scalar dot product between this and other
+	inline const T dot(const MathVector <T, 3> & other) const
+	{
+		return v.x*other.v.x+v.y*other.v.y+v.z*other.v.z;
+	}
 
-		///return the cross product between this vector and the given vector
-		const MathVector <T, 3> cross(const MathVector <T, 3> & other) const
-		{
-			return MathVector <T, 3> (v[1]*other.v[2] - v[2]*other.v[1],
-					v[2]*other.v[0] - v[0]*other.v[2],
-					v[0]*other.v[1] - v[1]*other.v[0]);
-		}
+	///return the cross product between this vector and the given vector
+	const MathVector <T, 3> cross(const MathVector <T, 3> & other) const
+	{
+		return MathVector <T, 3> (v[1]*other.v[2] - v[2]*other.v[1],
+				v[2]*other.v[0] - v[0]*other.v[2],
+				v[0]*other.v[1] - v[1]*other.v[0]);
+	}
 
-		///return the reflection of this vector around the given normal (must be unit length)
-		const MathVector <T, 3> reflect(const MathVector <T, 3> & other) const
-		{
-			return (*this)-other*T(2.0)*other.dot(*this);
-		}
+	///return the reflection of this vector around the given normal (must be unit length)
+	const MathVector <T, 3> reflect(const MathVector <T, 3> & other) const
+	{
+		return (*this)-other*T(2.0)*other.dot(*this);
+	}
 
-		inline const T & operator[](const int n) const
-		{
-			assert(n < 3);
-			return v[n];
-		}
+	inline const T & operator[](const int n) const
+	{
+		assert(n < 3);
+		return v[n];
+	}
 
-		inline T & operator[](const int n)
-		{
-			assert(n < 3);
-			return v[n];
-		}
+	inline T & operator[](const int n)
+	{
+		assert(n < 3);
+		return v[n];
+	}
 
-		///scalar multiplication
-		MathVector <T, 3> operator * (const T & scalar) const
-		{
-			return MathVector <T, 3> (v.x*scalar,v.y*scalar,v.z*scalar);
-		}
+	///scalar multiplication
+	MathVector <T, 3> operator * (const T & scalar) const
+	{
+		return MathVector <T, 3> (v.x*scalar,v.y*scalar,v.z*scalar);
+	}
 
-		///scalar division
-		MathVector <T, 3> operator / (const T & scalar) const
-		{
-			assert(scalar != 0);
-			T invscalar = 1.0/scalar;
-			return (*this)*invscalar;
-		}
+	///scalar division
+	MathVector <T, 3> operator / (const T & scalar) const
+	{
+		assert(scalar != 0);
+		T invscalar = 1.0/scalar;
+		return (*this)*invscalar;
+	}
 
-		MathVector <T, 3> operator + (const MathVector <T, 3> & other) const
-		{
-			return MathVector <T, 3> (v.x+other.v.x,v.y+other.v.y,v.z+other.v.z);
-		}
+	MathVector <T, 3> operator + (const MathVector <T, 3> & other) const
+	{
+		return MathVector <T, 3> (v.x+other.v.x,v.y+other.v.y,v.z+other.v.z);
+	}
 
-		MathVector <T, 3> operator - (const MathVector <T, 3> & other) const
-		{
-			return MathVector <T, 3> (v.x-other.v.x,v.y-other.v.y,v.z-other.v.z);;
-		}
+	MathVector <T, 3> operator - (const MathVector <T, 3> & other) const
+	{
+		return MathVector <T, 3> (v.x-other.v.x,v.y-other.v.y,v.z-other.v.z);;
+	}
 
-		template <typename T2>
-		const MathVector <T, 3> & operator = (const MathVector <T2, 3> & other)
-		{
-			v.x = other[0];
-			v.y = other[1];
-			v.z = other[2];
+	template <typename T2>
+	const MathVector <T, 3> & operator = (const MathVector <T2, 3> & other)
+	{
+		v.x = other[0];
+		v.y = other[1];
+		v.z = other[2];
 
-			return *this;
-		}
+		return *this;
+	}
 
-		template <typename T2>
-		inline bool operator== (const MathVector <T2, 3> & other) const
-		{
-			//return (std::memcmp(&v,&other.v,sizeof(MATHVECTOR_XYZ)) == 0);
-			return (v.x == other[0] && v.y == other[1] && v.z == other[2]);
-		}
+	template <typename T2>
+	inline bool operator== (const MathVector <T2, 3> & other) const
+	{
+		//return (std::memcmp(&v,&other.v,sizeof(MATHVECTOR_XYZ)) == 0);
+		return (v.x == other[0] && v.y == other[1] && v.z == other[2]);
+	}
 
-		template <typename T2>
-		inline bool operator!= (const MathVector <T2, 3> & other) const
-		{
-			return !(*this == other);
-		}
+	template <typename T2>
+	inline bool operator!= (const MathVector <T2, 3> & other) const
+	{
+		return !(*this == other);
+	}
 
-		///inversion
-		MathVector <T, 3> operator-() const
-		{
-			return MathVector <T, 3> (-v.x, -v.y, -v.z);
-		}
+	///inversion
+	MathVector <T, 3> operator-() const
+	{
+		return MathVector <T, 3> (-v.x, -v.y, -v.z);
+	}
 
-		///set all vector components to be positive
-		inline void absify()
-		{
-			/*v.x = v.x > 0 ? v.x : -v.x;
-			v.y = v.y > 0 ? v.y : -v.y;
-			v.z = v.z > 0 ? v.z : -v.z;*/
-			v.x = fabs(v.x);
-			v.y = fabs(v.y);
-			v.z = fabs(v.z);
-		}
+	///set all vector components to be positive
+	inline void absify()
+	{
+		v.x = fabs(v.x);
+		v.y = fabs(v.y);
+		v.z = fabs(v.z);
+	}
 
-		///project this vector onto the vector 'vec'.  neither needs to be a unit vector
-		MathVector <T, 3> project(const MathVector <T, 3> & vec) const
-		{
-			T scalar_projection = dot(vec.Normalize());
-			return vec.Normalize() * scalar_projection;
-		}
+	///project this vector onto the vector 'vec'.  neither needs to be a unit vector
+	MathVector <T, 3> project(const MathVector <T, 3> & vec) const
+	{
+		T scalar_projection = dot(vec.Normalize());
+		return vec.Normalize() * scalar_projection;
+	}
 
-		bool Serialize(joeserialize::Serializer & s)
-		{
-			if (!s.Serialize("x",v.x)) return false;
-			if (!s.Serialize("y",v.y)) return false;
-			if (!s.Serialize("z",v.z)) return false;
-			return true;
-		}
+	bool Serialize(joeserialize::Serializer & s)
+	{
+		if (!s.Serialize("x",v.x)) return false;
+		if (!s.Serialize("y",v.y)) return false;
+		if (!s.Serialize("z",v.z)) return false;
+		return true;
+	}
 };
 
 template <typename T, unsigned int dimension>

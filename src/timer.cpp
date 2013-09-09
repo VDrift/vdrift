@@ -47,7 +47,7 @@ bool Timer::Load(const std::string & trackrecordspath, float stagingtime)
 
 int Timer::AddCar(const std::string & cartype)
 {
-	car.push_back(LAPINFO(cartype));
+	car.push_back(LapInfo(cartype));
 	return car.size()-1;
 }
 
@@ -79,7 +79,7 @@ void Timer::Tick(float dt)
 
 	assert(elapsed_time >= 0);
 
-	for (vector <LAPINFO>::iterator i = car.begin(); i != car.end(); ++i)
+	for (vector <LapInfo>::iterator i = car.begin(); i != car.end(); ++i)
 		i->Tick(elapsed_time);
 }
 
@@ -127,23 +127,23 @@ void Timer::DebugPrint(std::ostream & out) const
 
 class Place
 {
-    private:
-        int index;
-        int laps;
-        double distance;
+private:
+	int index;
+	int laps;
+	double distance;
 
-    public:
-		Place(int newindex, int newlaps, double newdistance) : index(newindex), laps(newlaps), distance(newdistance) {}
+public:
+	Place(int newindex, int newlaps, double newdistance) : index(newindex), laps(newlaps), distance(newdistance) {}
 
-        int GetIndex() const {return index;}
+	int GetIndex() const {return index;}
 
-		bool operator< (const Place & other) const
-        {
-            if (laps == other.laps)
-                return distance > other.distance;
-            else
-                return laps > other.laps;
-        }
+	bool operator< (const Place & other) const
+	{
+		if (laps == other.laps)
+			return distance > other.distance;
+		else
+			return laps > other.laps;
+	}
 };
 
 std::pair <int, int> Timer::GetCarPlace(int index)

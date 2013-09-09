@@ -50,7 +50,7 @@ public:
 	void Screenshot(GraphicsState & glstate, const std::string & filename, std::ostream & error_output);
 
 	///< attach a specified cube side, for cube map FBOs only.
-	void SetCubeSide(FrameBufferTexture::CUBE_SIDE side);
+	void SetCubeSide(FrameBufferTexture::CubeSide side);
 
 	int GetWidth() const {return width;}
 

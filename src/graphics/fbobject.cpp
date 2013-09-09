@@ -57,7 +57,7 @@
 #define _CASE_(x) case FrameBufferTexture::x:\
 return #x;
 
-static std::string TargetToString(FrameBufferTexture::TARGET value)
+static std::string TargetToString(FrameBufferTexture::Target value)
 {
 	switch (value)
 	{
@@ -68,7 +68,7 @@ static std::string TargetToString(FrameBufferTexture::TARGET value)
 	return "UNKNOWN";
 }
 
-static std::string FormatToString(FrameBufferTexture::FORMAT value)
+static std::string FormatToString(FrameBufferTexture::Format value)
 {
 	switch (value)
 	{
@@ -402,7 +402,7 @@ bool FrameBufferObject::CheckStatus(std::ostream & error_output)
 	return true;
 }
 
-void FrameBufferObject::SetCubeSide(FrameBufferTexture::CUBE_SIDE side)
+void FrameBufferObject::SetCubeSide(FrameBufferTexture::CubeSide side)
 {
 	assert(textures.size() == 1);
 	assert(textures.back()->target == FrameBufferTexture::CUBEMAP);

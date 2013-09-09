@@ -35,7 +35,7 @@ const unsigned tiles_v = 4;
 const unsigned tiles_num = tiles_u * tiles_v;
 const unsigned sides_num = 5;
 
-const FrameBufferTexture::CUBE_SIDE side_enum[sides_num] = {
+const FrameBufferTexture::CubeSide side_enum[sides_num] = {
 	FrameBufferTexture::POSX,
 	FrameBufferTexture::NEGX,
 	FrameBufferTexture::POSY,

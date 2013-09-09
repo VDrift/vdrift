@@ -56,7 +56,7 @@ static void ReportOnce(const void * id, const std::string & message, std::ostrea
 	}
 }
 
-static FrameBufferTexture::FORMAT TextureFormatFromString(const std::string & format)
+static FrameBufferTexture::Format TextureFormatFromString(const std::string & format)
 {
 	if (format == "depth" || format == "depthshadow")
 		return FrameBufferTexture::DEPTH24;
@@ -848,7 +848,7 @@ void GraphicsGL2::EnableShaders(std::ostream & info_output, std::ostream & error
 			else
 			{
 				FrameBufferTexture & fbtex = texture_outputs[i->name];
-				FrameBufferTexture::TARGET type = FrameBufferTexture::NORMAL;
+				FrameBufferTexture::Target type = FrameBufferTexture::NORMAL;
 				if (i->type == "rectangle")
 					type = FrameBufferTexture::RECTANGLE;
 				else if (i->type == "cube")
@@ -858,7 +858,7 @@ void GraphicsGL2::EnableShaders(std::ostream & info_output, std::ostream & error
 					fbms = fsaa;
 
 				// check texture format
-				FrameBufferTexture::FORMAT format = TextureFormatFromString(i->format);
+				FrameBufferTexture::Format format = TextureFormatFromString(i->format);
 				if (!has_texture_float && (format == FrameBufferTexture::RGBA16 || format == FrameBufferTexture::RGB16))
 				{
 					error_output << "Your video card doesn't support floating point textures." << std::endl;
@@ -1065,7 +1065,7 @@ void GraphicsGL2::CullScenePass(
 					return;
 				}
 
-				container->Query(Aabb<float>::INTERSECT_ALWAYS(), culled_static_drawlist[key]);
+				container->Query(Aabb<float>::IntersectAlways(), culled_static_drawlist[key]);
 			}
 		}
 	}

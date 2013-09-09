@@ -44,7 +44,7 @@ static inline T clamp(T val, T min, T max)
 	return (val < max) ? (val > min) ? val : min : max;
 }
 
-enum WHICHDRAWLIST
+enum DrawlistEnum
 {
 	BLEND,
 	NOBLEND,
@@ -52,7 +52,7 @@ enum WHICHDRAWLIST
 	OMNI
 };
 
-static keyed_container <Drawable> & GetDrawlist(SceneNode & node, WHICHDRAWLIST which)
+static keyed_container <Drawable> & GetDrawlist(SceneNode & node, DrawlistEnum which)
 {
 	switch (which)
 	{

@@ -131,8 +131,8 @@ public:
 	}
 
 private:
-	class LAPINFO;
-	std::vector <LAPINFO> car;
+	class LapInfo;
+	std::vector <LapInfo> car;
 
 	Config trackrecords; //the track records configfile
 	std::string trackrecordsfile; //the filename for the track records
@@ -140,14 +140,14 @@ private:
 	unsigned int playercarindex; //the index for the player's car; defaults to zero
 	bool loaded;
 
-	class LAPTIME
+	class LapTime
 	{
 	private:
 		bool havetime;
 		double time;
 
 	public:
-		LAPTIME() {Reset();}
+		LapTime() {Reset();}
 		void Reset()
 		{
 			havetime = false;
@@ -175,7 +175,7 @@ private:
 		}
 	};
 
-	class DRIFTSCORE
+	class DriftScore
 	{
 	private:
 		float score;
@@ -185,7 +185,7 @@ private:
 		float max_speed;
 
 	public:
-		DRIFTSCORE() : score(0), thisdriftscore(0), drifting(false), max_angle(0), max_speed(0) {}
+		DriftScore() : score(0), thisdriftscore(0), drifting(false), max_angle(0), max_speed(0) {}
 
 		void Reset()
 		{
@@ -263,20 +263,20 @@ private:
 		}
 	};
 
-	class LAPINFO
+	class LapInfo
 	{
 	private:
 		double time; //running time for this lap
-		LAPTIME lastlap; //last lap time for player & opponents
-		LAPTIME bestlap; //best lap time for player & opponents
+		LapTime lastlap; //last lap time for player & opponents
+		LapTime bestlap; //best lap time for player & opponents
 		double totaltime; //total time of a race for player & opponents
 		int num_laps; //current lap
 		std::string cartype;
 		double lapdistance; //total track distance driven this lap in meters
-		DRIFTSCORE driftscore;
+		DriftScore driftscore;
 
 	public:
-		LAPINFO(const std::string & newcartype) : cartype(newcartype) {Reset();}
+		LapInfo(const std::string & newcartype) : cartype(newcartype) {Reset();}
 
 		void Reset()
 		{
@@ -340,12 +340,12 @@ private:
 
 		double GetLapDistance() const {return lapdistance;}
 
-		const DRIFTSCORE & GetDriftScore() const
+		const DriftScore & GetDriftScore() const
 		{
 			return driftscore;
 		}
 
-		DRIFTSCORE & GetDriftScore()
+		DriftScore & GetDriftScore()
 		{
 			return driftscore;
 		}

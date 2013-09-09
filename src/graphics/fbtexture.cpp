@@ -26,7 +26,7 @@
 #include <sstream>
 #include <string>
 
-void FrameBufferTexture::Init(int sizex, int sizey, TARGET newtarget, FORMAT newformat, bool filternearest, bool usemipmap, std::ostream & error_output, int newmultisample, bool newdepthcomparisonenabled)
+void FrameBufferTexture::Init(int sizex, int sizey, Target newtarget, Format newformat, bool filternearest, bool usemipmap, std::ostream & error_output, int newmultisample, bool newdepthcomparisonenabled)
 {
 	assert(!attached);
 

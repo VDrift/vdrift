@@ -411,7 +411,7 @@ void GraphicsGL3::assembleDrawList(const AabbTreeNodeAdapter <Drawable> & adapte
 	if (frustum)
 		adapter.Query(*frustum, queryResults);
 	else
-		adapter.Query(Aabb<float>::INTERSECT_ALWAYS(), queryResults);
+		adapter.Query(Aabb<float>::IntersectAlways(), queryResults);
 
 	const std::vector <Drawable*> & drawables = queryResults;
 
