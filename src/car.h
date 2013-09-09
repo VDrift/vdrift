@@ -22,8 +22,7 @@
 
 #include "physics/cardynamics.h"
 #include "graphics/scenenode.h"
-#include "crashdetection.h"
-#include "enginesoundinfo.h"
+#include "carsound.h"
 #include "tobullet.h"
 #include "joeserialize.h"
 #include "macros.h"
@@ -39,7 +38,6 @@ class Bezier;
 class Camera;
 class Texture;
 class Model;
-class Sound;
 class PTree;
 class ContentManager;
 
@@ -65,7 +63,7 @@ public:
 	bool LoadSounds(
 		const std::string & carpath,
 		const std::string & carname,
-		Sound & sound,
+		Sound & soundsystem,
 		ContentManager & content,
 		std::ostream & error_output);
 
@@ -324,9 +322,10 @@ public:
 protected:
 	friend class joeserialize::Serializer;
 
-	SceneNode topnode;
 	CarDynamics dynamics;
+	CarSound sound;
 
+	SceneNode topnode;
 	keyed_container<SceneNode>::handle bodynode;
 	keyed_container<SceneNode>::handle steernode;
 	keyed_container<Drawable>::handle brakelights;
@@ -343,24 +342,7 @@ protected:
 	std::set<std::tr1::shared_ptr<Model> > models;
 	std::set<std::tr1::shared_ptr<Texture> > textures;
 
-	CrashDetection crashdetection;
 	std::vector<Camera*> cameras;
-
-	std::vector<EngineSoundInfo> enginesounds;
-	size_t tiresqueal[WHEEL_POSITION_SIZE];
-	size_t tirebump[WHEEL_POSITION_SIZE];
-	size_t grasssound[WHEEL_POSITION_SIZE];
-	size_t gravelsound[WHEEL_POSITION_SIZE];
-	size_t crashsound;
-	size_t gearsound;
-	size_t brakesound;
-	size_t handbrakesound;
-	size_t roadnoise;
-	Sound * psound;
-
-	int gearsound_check;
-	bool brakesound_check;
-	bool handbrakesound_check;
 
 	// steering wheel
 	Quat steer_orientation;
@@ -379,10 +361,6 @@ protected:
 	float applied_brakes; // cached so we can update the brake light
 
 	float mz_nominalmax; //the nominal maximum Mz force, used to scale force feedback
-
-	void RemoveSounds();
-
-	void UpdateSounds(float dt);
 
 	void UpdateGraphics();
 

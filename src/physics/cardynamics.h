@@ -165,6 +165,8 @@ public:
 
 	btScalar GetFeedback() const;
 
+	btScalar GetTireSquealAmount(WheelPosition i) const;
+
 	// This is needed for ray casts in the AI implementation.
 	DynamicsWorld* getDynamicsWorld() const {return world;}
 

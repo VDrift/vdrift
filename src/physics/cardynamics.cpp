@@ -992,6 +992,29 @@ btScalar CarDynamics::GetFeedback() const
 	return feedback;
 }
 
+btScalar CarDynamics::GetTireSquealAmount(WheelPosition i) const
+{
+	const TrackSurface & surface = GetWheelContact(i).GetSurface();
+	if (surface.type == TrackSurface::NONE) return 0;
+
+	btQuaternion wheelspace = GetUprightOrientation(i);
+	btVector3 groundvel = quatRotate(wheelspace.inverse(), GetWheelVelocity(i));
+	btScalar wheelspeed = GetWheel(i).GetAngularVelocity() * GetWheel(i).GetRadius();
+	groundvel[0] -= wheelspeed;
+	groundvel[1] *= 2.0;
+	groundvel[2] = 0;
+	btScalar squeal = (groundvel.length() - 3.0) * 0.2;
+
+	btScalar sr = GetTire(i).getSlip() / GetTire(i).getIdealSlip();
+	btScalar ar = GetTire(i).getSlipAngle() / GetTire(i).getIdealSlipAngle();
+	btScalar maxratio = std::max(std::abs(sr), std::abs(ar));
+	btScalar squealfactor = std::max(0.0, maxratio - 1.0);
+	squeal *= squealfactor;
+	btClamp(squeal, btScalar(0), btScalar(1));
+
+	return squeal;
+}
+
 void CarDynamics::UpdateTelemetry(btScalar dt)
 {
 	for (std::list<CarTelemetry>::iterator i = telemetry.begin(); i != telemetry.end(); ++i)

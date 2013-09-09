@@ -17,31 +17,59 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _ENGINESOUNDINFO_H
-#define _ENGINESOUNDINFO_H
+#ifndef _CARSOUND_H
+#define _CARSOUND_H
 
-struct EngineSoundInfo
+#include "physics/carwheelposition.h"
+#include "crashdetection.h"
+#include "enginesoundinfo.h"
+
+#include <iosfwd>
+#include <vector>
+
+class Sound;
+class CarDynamics;
+class ContentManager;
+
+class CarSound
 {
-	float minrpm, maxrpm, naturalrpm, fullgainrpmstart, fullgainrpmend;
-	enum { POWERON, POWEROFF, BOTH } power;
-	unsigned sound_source;
+public:
+	CarSound();
 
-	EngineSoundInfo() :
-		minrpm(1.0),
-		maxrpm(100000.0),
-		naturalrpm(7000.0),
-		fullgainrpmstart(minrpm),
-		fullgainrpmend(maxrpm),
-		power(BOTH),
-		sound_source(0)
-	{
-		// ctor
-	}
+	~CarSound();
 
-	bool operator < (const EngineSoundInfo & other) const
-	{
-		return minrpm < other.minrpm;
-	}
+	bool Load(
+		const std::string & carpath,
+		const std::string & carname,
+		Sound & sound,
+		ContentManager & content,
+		std::ostream & error_output);
+
+	void Update(const CarDynamics & dynamics, float dt);
+
+	void EnableInteriorSounds(bool value);
+
+private:
+	CrashDetection crashdetection;
+	std::vector<EngineSoundInfo> enginesounds;
+	unsigned tiresqueal[WHEEL_POSITION_SIZE];
+	unsigned tirebump[WHEEL_POSITION_SIZE];
+	unsigned grasssound[WHEEL_POSITION_SIZE];
+	unsigned gravelsound[WHEEL_POSITION_SIZE];
+	unsigned crashsound;
+	unsigned gearsound;
+	unsigned brakesound;
+	unsigned handbrakesound;
+	unsigned roadnoise;
+	Sound * psound;
+
+	int gearsound_check;
+	bool brakesound_check;
+	bool handbrakesound_check;
+	bool interior;
+
+	void Clear();
 };
 
-#endif // _ENGINESOUNDINFO_H
+#endif // _CARSOUND_H
+
