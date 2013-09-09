@@ -21,23 +21,17 @@
 #define _CAR_H
 
 #include "physics/cardynamics.h"
-#include "graphics/scenenode.h"
+#include "cargraphics.h"
 #include "carsound.h"
 #include "tobullet.h"
 #include "joeserialize.h"
 #include "macros.h"
-#include "memory.h"
 
 #include <iosfwd>
-#include <list>
-#include <set>
 #include <string>
 #include <vector>
 
 class Bezier;
-class Camera;
-class Texture;
-class Model;
 class PTree;
 class ContentManager;
 
@@ -80,15 +74,21 @@ public:
 		const bool defaulttcs,
 		const bool damage);
 
-	// change car color
-	void SetColor(float r, float g, float b);
-
-	// will align car relative to track surface
 	void SetPosition(const Vec3 & position);
 
+	/// update car sdtate from car inputs
+	void Update(const std::vector <float> & inputs);
+
+	/// update car state from car dynamics
 	void Update(double dt);
 
-	// interpolated
+	void SetInteriorView(bool value);
+
+	void SetColor(float r, float g, float b)
+	{
+		graphics.SetColor(r, g, b);
+	}
+
 	const Vec3 GetWheelPosition(const WheelPosition wpos) const
 	{
 		return ToMathVector<float>(dynamics.GetWheelPosition(wpos));
@@ -104,11 +104,9 @@ public:
 		return dynamics.GetWheelContact(wheel_index);
 	}
 
-	void HandleInputs(const std::vector <float> & inputs);
-
 	const std::vector<Camera*> & GetCameras() const
 	{
-		return cameras;
+		return graphics.GetCameras();
 	}
 
 	int GetEngineRedline() const
@@ -213,7 +211,7 @@ public:
 
 	float GetLastSteer() const
 	{
-		return last_steer;
+		return steer_value;
 	}
 
 	float GetSpeed()
@@ -221,21 +219,22 @@ public:
 		return dynamics.GetSpeed();
 	}
 
-	float GetFeedback();
+	float GetFeedback() const
+	{
+		return dynamics.GetFeedback() / mz_nominalmax;
+	}
 
 	// returns a float from 0.0 to 1.0 with the amount of tire squealing going on
-	float GetTireSquealAmount(WheelPosition i) const;
-
-	void SetInteriorView(bool value);
+	float GetTireSquealAmount(WheelPosition i) const
+	{
+		return dynamics.GetTireSquealAmount(i);
+	}
 
 	void DebugPrint(std::ostream & out, bool p1, bool p2, bool p3, bool p4) const
 	{
 		dynamics.DebugPrint(out, p1, p2, p3, p4);
 	}
 
-	bool Serialize(joeserialize::Serializer & s);
-
-/// AI interface
 	int GetEngineRPM() const
 	{
 		return dynamics.GetTachoRPM();
@@ -307,67 +306,43 @@ public:
 	}
 
 	// allows to create raycasts
-	DynamicsWorld* GetDynamicsWorld()
+	DynamicsWorld * GetDynamicsWorld()
 	{
 		return dynamics.getDynamicsWorld();
 	}
 
-	CarDynamics& GetCarDynamics()
+	CarDynamics & GetCarDynamics()
 	{
 		return dynamics;
 	}
 
-	SceneNode & GetNode() {return topnode;}
+	SceneNode & GetNode()
+	{
+		return graphics.GetNode();
+	}
+
+	bool Serialize(joeserialize::Serializer & s);
 
 protected:
 	friend class joeserialize::Serializer;
 
+	std::string cartype;
 	CarDynamics dynamics;
+	CarGraphics graphics;
 	CarSound sound;
 
-	SceneNode topnode;
-	keyed_container<SceneNode>::handle bodynode;
-	keyed_container<SceneNode>::handle steernode;
-	keyed_container<Drawable>::handle brakelights;
-	keyed_container<Drawable>::handle reverselights;
-
-	struct Light
-	{
-		keyed_container<SceneNode>::handle node;
-		keyed_container<Drawable>::handle draw;
-	};
-	std::list<Light> lights;
-
-	// models and textures used by this car instance
-	std::set<std::tr1::shared_ptr<Model> > models;
-	std::set<std::tr1::shared_ptr<Texture> > textures;
-
-	std::vector<Camera*> cameras;
-
-	// steering wheel
-	Quat steer_orientation;
-	Quat steer_rotation;
-	float steer_angle_max;
-
 	// internal variables that might change during driving (so, they need to be serialized)
-	float last_steer;
+	float steer_value;
 	bool nos_active;
-	bool driver_view;
 
-	std::string cartype;
-	int sector; // the last lap timing sector that the car hit
-	const Bezier * curpatch[WHEEL_POSITION_SIZE]; //the last bezier patch that each wheel hit
+	// nominal maximum Mz force, used to scale force feedback
+	float mz_nominalmax;
 
-	float applied_brakes; // cached so we can update the brake light
+	// last lap timing sector that the car hit
+	int sector;
 
-	float mz_nominalmax; //the nominal maximum Mz force, used to scale force feedback
-
-	void UpdateGraphics();
-
-	bool LoadLight(
-		const PTree & cfg,
-		ContentManager & content,
-		std::ostream & error_output);
+	// last bezier patch that each wheel hit
+	const Bezier * curpatch[WHEEL_POSITION_SIZE];
 };
 
 #endif

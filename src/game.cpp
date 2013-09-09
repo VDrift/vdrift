@@ -1369,7 +1369,7 @@ void Game::UpdateCarInputs(int carid, Car & car)
 		carinputs[CarInput::BRAKE] = 1.0;
 	}
 
-	car.HandleInputs(carinputs);
+	car.Update(carinputs);
 
 	// Record car state.
 	if (replay.GetRecording())

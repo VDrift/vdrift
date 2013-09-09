@@ -27,8 +27,9 @@ src = Split("""
 		camera_free.cpp
 		camera_mount.cpp
 		camera_orbit.cpp
-		carcontrolmap.cpp
 		car.cpp
+		carcontrolmap.cpp
+		cargraphics.cpp
 		carsound.cpp
 		cfg/config.cpp
 		cfg/ptree.cpp
