@@ -265,10 +265,9 @@ void FrameBufferObject::Init(GraphicsState & glstate, std::vector <FrameBufferTe
 			CheckForOpenGLErrors("FBO multisample color renderbuffer", error_output);
 		}
 	}
-
-	// attach any color textures to the FBO
-	if (multisample == 0)
+	else
 	{
+		// attach any color textures to the FBO
 		int count = 0;
 		for (std::vector <FrameBufferTexture*>::iterator i = color_textures.begin(); i != color_textures.end(); i++,count++)
 		{
@@ -288,13 +287,9 @@ void FrameBufferObject::Init(GraphicsState & glstate, std::vector <FrameBufferTe
 			}
 			(*i)->attachment = attachment;
 		}
-	}
 
-	// attach the depth texture to the FBO, if there is one
-	if (multisample == 0)
-	{
-		int count = 0;
-		for (std::vector <FrameBufferTexture*>::iterator i = depth_textures.begin(); i != depth_textures.end(); i++,count++)
+		// attach the depth texture to the FBO, if there is one
+		for (std::vector <FrameBufferTexture*>::iterator i = depth_textures.begin(); i != depth_textures.end(); i++)
 		{
 			if ((*i)->target == FrameBufferTexture::CUBEMAP)
 			{
