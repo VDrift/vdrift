@@ -22,7 +22,7 @@
 
 #include "glew.h"
 #include "renderuniformvector.h"
-#include <iostream>
+#include <iosfwd>
 #include <vector>
 #include <map>
 

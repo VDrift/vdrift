@@ -23,7 +23,8 @@
 #define MAXUNIFORMSIZE 16
 
 #include <vector>
-#include <cstring>
+#include <cstring> // std::memcpy
+#include <cassert>
 
 /// an optimized vector class for use in sending opengl uniforms to the renderer
 /// it's set up for speed, not safety or memory use

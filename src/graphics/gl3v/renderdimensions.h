@@ -20,7 +20,7 @@
 #ifndef _RENDERDIMENSIONS
 #define _RENDERDIMENSIONS
 
-#include <iostream>
+#include <iosfwd>
 
 class RenderDimensions
 {

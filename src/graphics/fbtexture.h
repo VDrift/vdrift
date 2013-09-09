@@ -24,7 +24,7 @@
 #include "glstatemanager.h"
 #include "glew.h"
 
-#include <iostream>
+#include <iosfwd>
 
 class FrameBufferObject;
 

@@ -39,7 +39,7 @@
 #include "unordered_map.h"
 
 #include <vector>
-#include <iostream>
+#include <iosfwd>
 #include <map>
 #include <set>
 

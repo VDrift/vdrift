@@ -20,6 +20,7 @@
 #include "graphics_config.h"
 
 #include <sstream>
+#include <fstream>
 #include <cassert>
 #include <map>
 
@@ -417,6 +418,17 @@ bool GraphicsConfigPass::Load(std::istream & f, std::ostream & error_output, int
 	ASSIGNVAR(depthtest);
 
 	return true;
+}
+
+bool GraphicsConfig::Load(const std::string & filename, std::ostream & error_output)
+{
+	std::ifstream f(filename.c_str(), std::ifstream::binary); // binary mode to avoid newline/seekg issues
+	if (!f)
+	{
+		error_output << "Unable to open graphics config file: " << filename << std::endl;
+		return false;
+	}
+	return Load(f, error_output);
 }
 
 bool GraphicsConfig::Load(std::istream & f, std::ostream & error_output)

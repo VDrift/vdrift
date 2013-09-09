@@ -23,10 +23,9 @@
 #include "graphics_config_condition.h"
 
 #include <string>
+#include <iosfwd>
 #include <vector>
 #include <map>
-#include <fstream>
-#include <iostream>
 #include <set>
 
 struct GraphicsConfigShader
@@ -117,16 +116,7 @@ struct GraphicsConfig
 	std::vector <GraphicsConfigOutput> outputs;
 	std::vector <GraphicsConfigPass> passes;
 
-	bool Load(const std::string & filename, std::ostream & error_output)
-	{
-		std::ifstream f(filename.c_str(), std::ifstream::binary); // binary mode to avoid newline/seekg issues
-		if (!f)
-		{
-			error_output << "Unable to open graphics config file: " << filename << std::endl;
-			return false;
-		}
-		return Load(f, error_output);
-	}
+	bool Load(const std::string & filename, std::ostream & error_output);
 
 	bool Load(std::istream & f, std::ostream & error_output);
 };

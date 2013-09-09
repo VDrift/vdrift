@@ -26,7 +26,7 @@
 #include <vector>
 #include <map>
 #include <list>
-#include <iostream>
+#include <iosfwd>
 #include <cassert>
 
 #if SDL_VERSION_ATLEAST(2,0,0)

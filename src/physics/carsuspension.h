@@ -26,7 +26,7 @@
 #include "joeserialize.h"
 #include "macros.h"
 
-#include <iostream>
+#include <iosfwd>
 
 class PTree;
 
