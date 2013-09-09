@@ -21,7 +21,6 @@
 #define _FBTEXTURE_H
 
 #include "texture_interface.h"
-#include "glstatemanager.h"
 #include "glew.h"
 
 #include <iosfwd>
@@ -80,7 +79,6 @@ class FrameBufferTexture : public TextureInterface
 		virtual void Activate() const;
 		virtual void Deactivate() const;
 		virtual bool Loaded() const {return inited;}
-		//void Screenshot(GLSTATEMANAGER & glstate, const std::string & filename, std::ostream & error_output);
 		virtual bool IsRect() const {return (target == RECTANGLE);}
 		virtual unsigned int GetW() const {return sizew;}
 		virtual unsigned int GetH() const {return sizeh;}

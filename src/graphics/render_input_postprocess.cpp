@@ -19,7 +19,7 @@
 
 #include "render_input_postprocess.h"
 #include "glutil.h"
-#include "glstatemanager.h"
+#include "graphicsstate.h"
 #include "matrix4.h"
 #include "shader.h"
 

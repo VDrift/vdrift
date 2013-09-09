@@ -18,7 +18,7 @@
 /************************************************************************/
 
 #include "render_output.h"
-#include "glstatemanager.h"
+#include "graphicsstate.h"
 
 RenderOutput::RenderOutput() :
 	target(RENDER_TO_FRAMEBUFFER)

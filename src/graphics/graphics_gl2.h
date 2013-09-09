@@ -22,7 +22,7 @@
 
 #include "graphics.h"
 #include "graphics_config.h"
-#include "glstatemanager.h"
+#include "graphicsstate.h"
 #include "texture.h"
 #include "staticdrawables.h"
 #include "render_input_postprocess.h"

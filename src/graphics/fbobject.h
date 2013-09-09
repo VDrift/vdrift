@@ -21,11 +21,12 @@
 #define _FBOBJECT_H
 
 #include "fbtexture.h"
-#include "glstatemanager.h"
 #include "glew.h"
 
 #include <iosfwd>
 #include <vector>
+
+class GraphicsState;
 
 class FrameBufferObject
 {

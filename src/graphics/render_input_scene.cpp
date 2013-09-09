@@ -19,7 +19,7 @@
 
 #include "render_input_scene.h"
 #include "glutil.h"
-#include "glstatemanager.h"
+#include "graphicsstate.h"
 #include "drawable.h"
 #include "texture.h"
 #include "shader.h"
