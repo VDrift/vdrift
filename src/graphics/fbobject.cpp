@@ -99,7 +99,11 @@ FrameBufferObject::~FrameBufferObject()
 	DeInit();
 }
 
-void FrameBufferObject::Init(GraphicsState & glstate, std::vector <FrameBufferTexture*> newtextures, std::ostream & error_output, bool force_multisample_off)
+void FrameBufferObject::Init(
+	GraphicsState & glstate,
+	const std::vector <FrameBufferTexture*> & newtextures,
+	std::ostream & error_output,
+	bool force_multisample_off)
 {
 	CheckForOpenGLErrors("FBO init start", error_output);
 

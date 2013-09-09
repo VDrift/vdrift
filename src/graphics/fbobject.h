@@ -34,7 +34,11 @@ public:
 
 	~FrameBufferObject();
 
-	void Init(GraphicsState & glstate, std::vector <FrameBufferTexture*> newtextures, std::ostream & error_output, bool force_multisample_off = false);
+	void Init(
+		GraphicsState & glstate,
+		const std::vector <FrameBufferTexture*> & newtextures,
+		std::ostream & error_output,
+		bool force_multisample_off = false);
 
 	void DeInit();
 
