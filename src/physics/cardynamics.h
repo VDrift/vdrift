@@ -53,8 +53,8 @@ class PTree;
 
 class CarDynamics : public btActionInterface
 {
-friend class PERFORMANCE_TESTING;
 friend class joeserialize::Serializer;
+
 public:
 	CarDynamics();
 
@@ -73,6 +73,21 @@ public:
 		const btVector3 & position,
 		const btQuaternion & rotation,
 		const bool damage);
+
+	// set body position
+	void SetPosition(const btVector3 & pos);
+
+	// move the car along z-axis until it is touching the ground
+	void AlignWithGround();
+
+	// fime: move into car input vector?
+	void SetAutoClutch(bool value);
+	void SetAutoShift(bool value);
+	void SetABS(bool value);
+	void SetTCS(bool value);
+
+	// update dynamics from car input vector
+	void Update(const std::vector<float> & inputs);
 
 	// bullet interface
 	void updateAction(btCollisionWorld * collisionWorld, btScalar dt);
@@ -102,17 +117,6 @@ public:
 	btScalar GetInvMass() const;
 	btScalar GetSpeed() const;
 
-	// driveline control
-	void StartEngine();
-	void ShiftGear(int value);
-	void SetThrottle(btScalar value);
-	void SetNOS(btScalar value);
-	void SetClutch(btScalar value);
-	void SetBrake(btScalar value);
-	void SetHandBrake(btScalar value);
-	void SetAutoClutch(bool value);
-	void SetAutoShift(bool value);
-
 	// speedometer reading front left wheel in m/s
 	btScalar GetSpeedMPS() const;
 
@@ -131,26 +135,10 @@ public:
 	const CarTire & GetTire(WheelPosition pos) const {return tire[pos];}
 	btScalar GetNosAmount() const {return engine.GetNosAmount();}
 	bool GetOutOfGas() const {return fuel_tank.Empty();}
-
-	// traction control
-	void SetABS(const bool newabs);
 	bool GetABSEnabled() const;
 	bool GetABSActive() const;
-	void SetTCS(const bool newtcs);
 	bool GetTCSEnabled() const;
 	bool GetTCSActive() const;
-
-	// set body position
-	void SetPosition(const btVector3 & pos);
-
-	// move the car along z-axis until it is touching the ground
-	void AlignWithGround();
-
-	// rotate car back onto it's wheels after rollover
-	void RolloverRecover();
-
-	// set the steering angle to "value", where 1.0 is maximum right lock and -1.0 is maximum left lock.
-	void SetSteering(const btScalar value);
 
 	// get the maximum steering angle in degrees
 	btScalar GetMaxSteeringAngle() const;
@@ -168,9 +156,9 @@ public:
 	btScalar GetTireSquealAmount(WheelPosition i) const;
 
 	// This is needed for ray casts in the AI implementation.
-	DynamicsWorld* getDynamicsWorld() const {return world;}
+	DynamicsWorld * getDynamicsWorld() const {return world;}
 
-	const btCollisionObject& getCollisionObject() const;
+	const btCollisionObject & getCollisionObject() const;
 
 	btVector3 LocalToWorld(const btVector3 & local) const;
 
@@ -305,6 +293,26 @@ protected:
 
 	// max speed in m/s calculated from maxrpm, maxgear, finalgear ratios
 	btScalar CalculateMaxSpeed() const;
+
+	// car controls
+
+	void SetSteering(const btScalar value);
+
+	void StartEngine();
+
+	void ShiftGear(int value);
+
+	void SetThrottle(btScalar value);
+
+	void SetNOS(btScalar value);
+
+	void SetClutch(btScalar value);
+
+	void SetBrake(btScalar value);
+
+	void SetHandBrake(btScalar value);
+
+	void RolloverRecover();
 };
 
 #endif

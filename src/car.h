@@ -74,8 +74,6 @@ public:
 		const bool defaulttcs,
 		const bool damage);
 
-	void SetPosition(const Vec3 & position);
-
 	/// update car sdtate from car inputs
 	void Update(const std::vector <float> & inputs);
 
@@ -137,11 +135,6 @@ public:
 	int GetGear() const
 	{
 		return dynamics.GetTransmission().GetGear();
-	}
-
-    void SetGear(int gear)
-	{
-	    dynamics.ShiftGear(gear);
 	}
 
 	float GetClutch()

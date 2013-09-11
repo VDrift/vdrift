@@ -18,6 +18,7 @@
 /************************************************************************/
 
 #include "performance_testing.h"
+#include "physics/carinput.h"
 #include "physics/dynamicsworld.h"
 #include "physics/tracksurface.h"
 #include "content/contentmanager.h"
@@ -131,19 +132,20 @@ void PerformanceTesting::ResetCar()
 	joeserialize::BinaryInputSerializer serialize_input(statestream);
 	car.Serialize(serialize_input);
 
-	car.SetTCS(true);
-	car.SetABS(true);
 	car.SetAutoShift(true);
 	car.SetAutoClutch(true);
-	car.ShiftGear(1);
-	car.SetBrake(1);
+	car.SetTCS(true);
+	car.SetABS(true);
+
+	carinput.clear();
+	carinput.resize(CarInput::INVALID, 0.0f);
+	carinput[CarInput::THROTTLE] = 1.0f;
+	carinput[CarInput::BRAKE] = 1.0f;
 }
 
 void PerformanceTesting::TestMaxSpeed(std::ostream & info_output, std::ostream & error_output)
 {
 	info_output << "Testing maximum speed" << std::endl;
-
-	ResetCar();
 
 	double maxtime = 300.0;
 	double t = 0.;
@@ -165,14 +167,18 @@ void PerformanceTesting::TestMaxSpeed(std::ostream & info_output, std::ostream &
 	float quarterspeed = 0;
 
 	std::string downforcestr = "N/A";
+
+	ResetCar();
+
 	while (t < maxtime)
 	{
-		car.SetThrottle(1.0f);
 		if (car.GetTransmission().GetGear() == 1 &&
 			car.GetEngine().GetRPM() > 0.8 * car.GetEngine().GetRedline())
 		{
-			car.SetBrake(0.0f);
+			carinput[CarInput::BRAKE] = 0.0f;
 		}
+
+		car.Update(carinput);
 
 		world.update(dt);
 
@@ -233,9 +239,6 @@ void PerformanceTesting::TestStoppingDistance(bool abs, std::ostream & info_outp
 {
 	info_output << "Testing stopping distance" << std::endl;
 
-	ResetCar();
-	car.SetABS(abs);
-
 	double maxtime = 300.0;
 	double t = 0.;
 	double dt = 1/90.0;
@@ -246,19 +249,25 @@ void PerformanceTesting::TestStoppingDistance(bool abs, std::ostream & info_outp
 	float brakestartspeed = 26.82; //speed at which to start braking, in m/s (26.82 m/s is 60 mph)
 
 	bool accelerating = true; //switches to false once 60 mph is reached
+
+	ResetCar();
+
+	car.SetABS(abs);
+
 	while (t < maxtime)
 	{
 		if (accelerating)
 		{
-			car.SetThrottle(1);
-			car.SetBrake(0);
+			carinput[CarInput::THROTTLE] = 1.0f;
+			carinput[CarInput::BRAKE] = 0.0f;
 		}
 		else
 		{
-			car.SetThrottle(0);
-			car.SetBrake(1);
-			car.ShiftGear(0);
+			carinput[CarInput::THROTTLE] = 0.0f;
+			carinput[CarInput::BRAKE] = 1.0f;
 		}
+
+		car.Update(carinput);
 
 		world.update(dt);
 

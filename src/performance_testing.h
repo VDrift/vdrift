@@ -40,8 +40,10 @@ public:
 private:
 	DynamicsWorld & world;
 	TrackSurface surface;
-	CarDynamics car;
+
+	std::vector<float> carinput;
 	std::string carstate;
+	CarDynamics car;
 
 	/// flat plane test track
 	btCollisionObject * track;

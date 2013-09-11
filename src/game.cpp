@@ -1686,10 +1686,6 @@ bool Game::LoadCar(
 
 		// Setup auto clutch and auto shift.
 		ProcessNewSettings();
-
-		// Shift into first gear if autoshift enabled.
-		if (carcontrols_local.first && settings.GetAutoShift())
-			carcontrols_local.first->SetGear(1);
 	}
 
 	return true;

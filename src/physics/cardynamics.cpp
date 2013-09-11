@@ -18,6 +18,7 @@
 /************************************************************************/
 
 #include "cardynamics.h"
+#include "carinput.h"
 #include "tracksurface.h"
 #include "dynamicsworld.h"
 #include "fracturebody.h"
@@ -692,9 +693,128 @@ bool CarDynamics::Load(
 	return true;
 }
 
+void CarDynamics::SetPosition(const btVector3 & position)
+{
+	body->translate(position - body->getCenterOfMassPosition());
+
+	transform.setOrigin(position);
+	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
+		wheel_position[i] = LocalToWorld(suspension[i]->GetWheelPosition());
+}
+
+void CarDynamics::AlignWithGround()
+{
+	UpdateWheelContacts();
+
+	btScalar min_height = 0;
+	bool no_min_height = true;
+	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
+	{
+		btScalar height = wheel_contact[i].GetDepth() - 2 * wheel[i].GetRadius();
+		if (height < min_height || no_min_height)
+		{
+			min_height = height;
+			no_min_height = false;
+		}
+	}
+
+	btVector3 delta = GetDownVector() * min_height;
+	btVector3 trimmed_position = transform.getOrigin() + delta;
+
+	SetPosition(trimmed_position);
+	UpdateWheelContacts();
+
+	body->setAngularVelocity(btVector3(0, 0, 0));
+	body->setLinearVelocity(btVector3(0, 0, 0));
+}
+
+void CarDynamics::SetAutoClutch(bool value)
+{
+	autoclutch = value;
+}
+
+void CarDynamics::SetAutoShift(bool value)
+{
+	autoshift = value;
+
+	// shift into first gear when autoshift enabled
+	if (autoshift && GetTransmission().GetGear() == 0)
+		ShiftGear(1);
+}
+
+void CarDynamics::SetABS(bool value)
+{
+	abs = value;
+}
+
+void CarDynamics::SetTCS(bool value)
+{
+	tcs = value;
+}
+
+void CarDynamics::Update(const std::vector<float> & inputs)
+{
+	SetBrake(inputs[CarInput::BRAKE]);
+
+	SetHandBrake(inputs[CarInput::HANDBRAKE]);
+
+	// do steering
+	float steer_value = inputs[CarInput::STEER_RIGHT] - inputs[CarInput::STEER_LEFT];
+	SetSteering(steer_value);
+
+	// do shifting
+	int gear_change = 0;
+	if (inputs[CarInput::SHIFT_UP] == 1.0)
+		gear_change = 1;
+	if (inputs[CarInput::SHIFT_DOWN] == 1.0)
+		gear_change = -1;
+	int cur_gear = GetTransmission().GetGear();
+	int new_gear = cur_gear + gear_change;
+
+	if (inputs[CarInput::REVERSE])
+		new_gear = -1;
+	if (inputs[CarInput::NEUTRAL])
+		new_gear = 0;
+	if (inputs[CarInput::FIRST_GEAR])
+		new_gear = 1;
+	if (inputs[CarInput::SECOND_GEAR])
+		new_gear = 2;
+	if (inputs[CarInput::THIRD_GEAR])
+		new_gear = 3;
+	if (inputs[CarInput::FOURTH_GEAR])
+		new_gear = 4;
+	if (inputs[CarInput::FIFTH_GEAR])
+		new_gear = 5;
+	if (inputs[CarInput::SIXTH_GEAR])
+		new_gear = 6;
+
+	ShiftGear(new_gear);
+
+	SetThrottle(inputs[CarInput::THROTTLE]);
+
+	SetClutch(1 - inputs[CarInput::CLUTCH]);
+
+	SetNOS(inputs[CarInput::NOS]);
+
+	// start the engine if requested
+	if (inputs[CarInput::START_ENGINE])
+		StartEngine();
+
+	// do driver aid toggles
+	if (inputs[CarInput::ABS_TOGGLE])
+		SetABS(!GetABSEnabled());
+
+	if (inputs[CarInput::TCS_TOGGLE])
+		SetTCS(!GetTCSEnabled());
+
+	// reset car after a rollover
+	if (inputs[CarInput::ROLLOVER])
+		RolloverRecover();
+}
+
 void CarDynamics::debugDraw(btIDebugDraw*)
 {
-
+	// void
 }
 
 btVector3 CarDynamics::GetEnginePosition() const
@@ -780,66 +900,6 @@ const btVector3 & CarDynamics::GetVelocity() const
 	return body->getLinearVelocity();
 }
 
-void CarDynamics::StartEngine()
-{
-	engine.StartEngine();
-}
-
-void CarDynamics::ShiftGear(int value)
-{
-	if (shifted &&
-		value != transmission.GetGear() &&
-		value <= transmission.GetForwardGears() &&
-		value >= -transmission.GetReverseGears())
-	{
-		remaining_shift_time = transmission.GetShiftTime();
-		shift_gear = value;
-		shifted = false;
-	}
-}
-
-void CarDynamics::SetThrottle(btScalar value)
-{
-	engine.SetThrottle(value);
-}
-
-void CarDynamics::SetNOS(btScalar value)
-{
-	engine.SetNosBoost(value);
-}
-
-void CarDynamics::SetClutch(btScalar value)
-{
-	clutch.SetClutch(value);
-}
-
-void CarDynamics::SetBrake(btScalar value)
-{
-	brake_value = value;
-	for (int i = 0; i < brake.size(); ++i)
-	{
-		brake[i].SetBrakeFactor(value);
-	}
-}
-
-void CarDynamics::SetHandBrake(btScalar value)
-{
-	for (int i = 0; i < brake.size(); ++i)
-	{
-		brake[i].SetHandbrakeFactor(value);
-	}
-}
-
-void CarDynamics::SetAutoClutch(bool value)
-{
-	autoclutch = value;
-}
-
-void CarDynamics::SetAutoShift(bool value)
-{
-	autoshift = value;
-}
-
 btScalar CarDynamics::GetSpeedMPS() const
 {
 	return wheel[0].GetRadius() * wheel[0].GetAngularVelocity();
@@ -855,11 +915,6 @@ btScalar CarDynamics::GetTachoRPM() const
 	return tacho_rpm;
 }
 
-void CarDynamics::SetABS(const bool newabs)
-{
-	abs = newabs;
-}
-
 bool CarDynamics::GetABSEnabled() const
 {
 	return abs;
@@ -870,11 +925,6 @@ bool CarDynamics::GetABSActive() const
 	return abs && ( abs_active[0]||abs_active[1]||abs_active[2]||abs_active[3] );
 }
 
-void CarDynamics::SetTCS ( const bool newtcs )
-{
-	tcs = newtcs;
-}
-
 bool CarDynamics::GetTCSEnabled() const
 {
 	return tcs;
@@ -883,73 +933,6 @@ bool CarDynamics::GetTCSEnabled() const
 bool CarDynamics::GetTCSActive() const
 {
 	return tcs && ( tcs_active[0]||tcs_active[1]||tcs_active[2]||tcs_active[3] );
-}
-
-void CarDynamics::SetPosition(const btVector3 & position)
-{
-	body->translate(position - body->getCenterOfMassPosition());
-
-	transform.setOrigin(position);
-	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
-		wheel_position[i] = LocalToWorld(suspension[i]->GetWheelPosition());
-}
-
-void CarDynamics::AlignWithGround()
-{
-	UpdateWheelContacts();
-
-	btScalar min_height = 0;
-	bool no_min_height = true;
-	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
-	{
-		btScalar height = wheel_contact[i].GetDepth() - 2 * wheel[i].GetRadius();
-		if (height < min_height || no_min_height)
-		{
-			min_height = height;
-			no_min_height = false;
-		}
-	}
-
-	btVector3 delta = GetDownVector() * min_height;
-	btVector3 trimmed_position = transform.getOrigin() + delta;
-
-	SetPosition(trimmed_position);
-	UpdateWheelContacts();
-
-	body->setAngularVelocity(btVector3(0, 0, 0));
-	body->setLinearVelocity(btVector3(0, 0, 0));
-}
-
-// ugh, ugly code
-void CarDynamics::RolloverRecover()
-{
-	btVector3 z(Direction::up);
-	btVector3 y_car = transform.getBasis() * Direction::forward;
-	y_car = y_car - z * z.dot(y_car);
-	y_car.normalize();
-
-	btVector3 z_car = transform.getBasis() * Direction::up;
-	z_car = z_car - y_car * y_car.dot(z_car);
-	z_car.normalize();
-
-	btScalar angle = z_car.angle(z);
-	if (fabs(angle) < M_PI / 4.0) return;
-
-	btQuaternion rot(y_car, angle);
-	rot = rot * transform.getRotation();
-
-	transform.setRotation(rot);
-	body->setCenterOfMassTransform(transform);
-
-	AlignWithGround();
-}
-
-void CarDynamics::SetSteering(const btScalar value)
-{
-	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
-	{
-		suspension[i]->SetSteering(value);
-	}
 }
 
 btScalar CarDynamics::GetMaxSteeringAngle() const
@@ -1953,6 +1936,87 @@ btScalar CarDynamics::CalculateMaxSpeed() const
 	return maxspeed;
 }
 
+void CarDynamics::SetSteering(const btScalar value)
+{
+	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
+	{
+		suspension[i]->SetSteering(value);
+	}
+}
+
+void CarDynamics::StartEngine()
+{
+	engine.StartEngine();
+}
+
+void CarDynamics::ShiftGear(int value)
+{
+	if (shifted &&
+		value != transmission.GetGear() &&
+		value <= transmission.GetForwardGears() &&
+		value >= -transmission.GetReverseGears())
+	{
+		remaining_shift_time = transmission.GetShiftTime();
+		shift_gear = value;
+		shifted = false;
+	}
+}
+
+void CarDynamics::SetThrottle(btScalar value)
+{
+	engine.SetThrottle(value);
+}
+
+void CarDynamics::SetNOS(btScalar value)
+{
+	engine.SetNosBoost(value);
+}
+
+void CarDynamics::SetClutch(btScalar value)
+{
+	clutch.SetClutch(value);
+}
+
+void CarDynamics::SetBrake(btScalar value)
+{
+	brake_value = value;
+	for (int i = 0; i < brake.size(); ++i)
+	{
+		brake[i].SetBrakeFactor(value);
+	}
+}
+
+void CarDynamics::SetHandBrake(btScalar value)
+{
+	for (int i = 0; i < brake.size(); ++i)
+	{
+		brake[i].SetHandbrakeFactor(value);
+	}
+}
+
+void CarDynamics::RolloverRecover()
+{
+	btVector3 z(Direction::up);
+	btVector3 y_car = transform.getBasis() * Direction::forward;
+	y_car = y_car - z * z.dot(y_car);
+	y_car.normalize();
+
+	btVector3 z_car = transform.getBasis() * Direction::up;
+	z_car = z_car - y_car * y_car.dot(z_car);
+	z_car.normalize();
+
+	btScalar angle = z_car.angle(z);
+	if (fabs(angle) < M_PI / 4.0) return;
+
+	btQuaternion rot(y_car, angle);
+	rot = rot * transform.getRotation();
+
+	transform.setRotation(rot);
+	body->setCenterOfMassTransform(transform);
+
+	AlignWithGround();
+}
+
 bool CarDynamics::WheelContactCallback(
 	btManifoldPoint& cp,
 	const btCollisionObjectWrapper* col0,
@@ -1989,6 +2053,7 @@ bool CarDynamics::WheelContactCallback(
 	}
 	return false;
 }
-const btCollisionObject& CarDynamics::getCollisionObject() const {
+const btCollisionObject & CarDynamics::getCollisionObject() const
+{
 	return *static_cast<btCollisionObject*>(body);
 }

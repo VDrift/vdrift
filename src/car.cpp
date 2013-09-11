@@ -106,76 +106,15 @@ bool Car::LoadSounds(
 	return sound.Load(carpath, carname, soundsystem, content, error_output);
 }
 
-void Car::SetPosition(const Vec3 & new_position)
-{
-	dynamics.SetPosition(ToBulletVector(new_position));
-	dynamics.AlignWithGround();
-}
-
 void Car::Update(const std::vector <float> & inputs)
 {
-	// ensure that our inputs vector contains exactly one item per input
 	assert(inputs.size() >= CarInput::INVALID);
 
-	// recover from a rollover
-	if (inputs[CarInput::ROLLOVER])
-		dynamics.RolloverRecover();
-
-	// set brakes
-	dynamics.SetBrake(inputs[CarInput::BRAKE]);
-	dynamics.SetHandBrake(inputs[CarInput::HANDBRAKE]);
-
-	// do steering
 	steer_value = inputs[CarInput::STEER_RIGHT] - inputs[CarInput::STEER_LEFT];
-	dynamics.SetSteering(steer_value);
 
-    // start the engine if requested
-	if (inputs[CarInput::START_ENGINE])
-		dynamics.StartEngine();
+	nos_active = inputs[CarInput::NOS] > 0;
 
-	// do shifting
-	int gear_change = 0;
-	if (inputs[CarInput::SHIFT_UP] == 1.0)
-		gear_change = 1;
-	if (inputs[CarInput::SHIFT_DOWN] == 1.0)
-		gear_change = -1;
-	int cur_gear = dynamics.GetTransmission().GetGear();
-	int new_gear = cur_gear + gear_change;
-
-	if (inputs[CarInput::REVERSE])
-		new_gear = -1;
-	if (inputs[CarInput::NEUTRAL])
-		new_gear = 0;
-	if (inputs[CarInput::FIRST_GEAR])
-		new_gear = 1;
-	if (inputs[CarInput::SECOND_GEAR])
-		new_gear = 2;
-	if (inputs[CarInput::THIRD_GEAR])
-		new_gear = 3;
-	if (inputs[CarInput::FOURTH_GEAR])
-		new_gear = 4;
-	if (inputs[CarInput::FIFTH_GEAR])
-		new_gear = 5;
-	if (inputs[CarInput::SIXTH_GEAR])
-		new_gear = 6;
-
-	float throttle = inputs[CarInput::THROTTLE];
-	float clutch = 1 - inputs[CarInput::CLUTCH];
-	float nos = inputs[CarInput::NOS];
-
-	nos_active = nos > 0;
-
-	dynamics.ShiftGear(new_gear);
-	dynamics.SetThrottle(throttle);
-	dynamics.SetClutch(clutch);
-	dynamics.SetNOS(nos);
-
-	// do driver aid toggles
-	if (inputs[CarInput::ABS_TOGGLE])
-		dynamics.SetABS(!dynamics.GetABSEnabled());
-
-	if (inputs[CarInput::TCS_TOGGLE])
-		dynamics.SetTCS(!dynamics.GetTCSEnabled());
+	dynamics.Update(inputs);
 
 	graphics.Update(inputs);
 }
