@@ -17,39 +17,16 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _CARINPUT_H
-#define _CARINPUT_H
+#ifndef _GAMEINPUT_H
+#define _GAMEINPUT_H
 
-namespace CarInput
+#include "physics/carinput.h"
+
+namespace GameInput
 {
 enum Enum
 {
-	// actual car inputs that the car uses
-	THROTTLE,
-	NOS,
-	BRAKE,
-	HANDBRAKE,
-	CLUTCH,
-	STEER_LEFT,
-	STEER_RIGHT,
-	SHIFT_UP,
-	SHIFT_DOWN,
-	START_ENGINE,
-	ABS_TOGGLE,
-	TCS_TOGGLE,
-	NEUTRAL,
-	FIRST_GEAR,
-	SECOND_GEAR,
-	THIRD_GEAR,
-	FOURTH_GEAR,
-	FIFTH_GEAR,
-	SIXTH_GEAR,
-	REVERSE,
-	ROLLOVER_RECOVER,
-
-	// inputs that are used elsewhere in the game only
-	GAME_ONLY_INPUTS_START_HERE,
-	VIEW_REAR,
+	VIEW_REAR = CarInput::INVALID,
 	VIEW_PREV,
 	VIEW_NEXT,
 	VIEW_HOOD,
@@ -78,9 +55,9 @@ enum Enum
 	GUI_DOWN,
 	GUI_SELECT,
 	GUI_CANCEL,
-
 	INVALID
 };
-}
+};
 
-#endif
+#endif // _GAMEINPUT_H
+

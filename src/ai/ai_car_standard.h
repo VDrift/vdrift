@@ -22,7 +22,7 @@
 
 #include "ai_car.h"
 #include "ai_factory.h"
-#include "carinput.h"
+#include "physics/carinput.h"
 #include "reseatable_reference.h"
 #include "graphics/scenenode.h"
 #include "bezier.h"

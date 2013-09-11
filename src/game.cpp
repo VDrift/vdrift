@@ -969,7 +969,7 @@ void Game::AdvanceGameLogic()
 void Game::ProcessGameInputs()
 {
 	// Most game inputs are allowed whether or not there's a car in the game.
-	if (carcontrols_local.second.GetInput(CarInput::SCREENSHOT) == 1.0)
+	if (carcontrols_local.second.GetInput(GameInput::SCREENSHOT) == 1.0)
 	{
 		// Determine filename.
 		std::string shotfile;
@@ -995,7 +995,7 @@ void Game::ProcessGameInputs()
 			error_output << "Couldn't find a file to which to save the captured screenshot" << std::endl;
 	}
 
-	if (carcontrols_local.second.GetInput(CarInput::RELOAD_SHADERS) == 1.0)
+	if (carcontrols_local.second.GetInput(GameInput::RELOAD_SHADERS) == 1.0)
 	{
 		info_output << "Reloading shaders" << std::endl;
 		if (!graphics_interface->ReloadShaders(info_output, error_output))
@@ -1004,7 +1004,7 @@ void Game::ProcessGameInputs()
 		}
 	}
 
-	if (carcontrols_local.second.GetInput(CarInput::RELOAD_GUI) == 1.0)
+	if (carcontrols_local.second.GetInput(GameInput::RELOAD_GUI) == 1.0)
 	{
 		info_output << "Reloading GUI" << std::endl;
 
@@ -1021,7 +1021,7 @@ void Game::ProcessGameInputs()
 	// Some game inputs are only allowed when there's a car in the game.
 	if (carcontrols_local.first)
 	{
-		if (carcontrols_local.second.GetInput(CarInput::PAUSE) == 1.0)
+		if (carcontrols_local.second.GetInput(GameInput::PAUSE) == 1.0)
 		{
 			pause = !pause;
 		}
@@ -1154,12 +1154,12 @@ void Game::ProcessGUIInputs()
 		eventsystem.GetMousePosition()[1] / (float)window.GetH(),
 		eventsystem.GetMouseButtonState(1).down,
 		eventsystem.GetMouseButtonState(1).just_up,
-		carcontrols_local.second.GetInput(CarInput::GUI_LEFT),
-		carcontrols_local.second.GetInput(CarInput::GUI_RIGHT),
-		carcontrols_local.second.GetInput(CarInput::GUI_UP),
-		carcontrols_local.second.GetInput(CarInput::GUI_DOWN),
-		carcontrols_local.second.GetInput(CarInput::GUI_SELECT),
-		carcontrols_local.second.GetInput(CarInput::GUI_CANCEL));
+		carcontrols_local.second.GetInput(GameInput::GUI_LEFT),
+		carcontrols_local.second.GetInput(GameInput::GUI_RIGHT),
+		carcontrols_local.second.GetInput(GameInput::GUI_UP),
+		carcontrols_local.second.GetInput(GameInput::GUI_DOWN),
+		carcontrols_local.second.GetInput(GameInput::GUI_SELECT),
+		carcontrols_local.second.GetInput(GameInput::GUI_CANCEL));
 }
 
 bool Game::AssignControl()
@@ -1409,35 +1409,35 @@ void Game::UpdateCarInputs(int carid, Car & car)
 	Camera * old_camera = active_camera;
 	CarControlMap & carcontrol = carcontrols_local.second;
 	unsigned camera_id = settings.GetCamera();
-	if (carcontrol.GetInput(CarInput::VIEW_HOOD))
+	if (carcontrol.GetInput(GameInput::VIEW_HOOD))
 	{
 		camera_id = 0;
 	}
-	else if (carcontrol.GetInput(CarInput::VIEW_INCAR))
+	else if (carcontrol.GetInput(GameInput::VIEW_INCAR))
 	{
 		camera_id = 1;
 	}
-	else if (carcontrol.GetInput(CarInput::VIEW_CHASERIGID))
+	else if (carcontrol.GetInput(GameInput::VIEW_CHASERIGID))
 	{
 		camera_id = 2;
 	}
-	else if (carcontrol.GetInput(CarInput::VIEW_CHASE))
+	else if (carcontrol.GetInput(GameInput::VIEW_CHASE))
 	{
 		camera_id = 3;
 	}
-	else if (carcontrol.GetInput(CarInput::VIEW_ORBIT))
+	else if (carcontrol.GetInput(GameInput::VIEW_ORBIT))
 	{
 		camera_id = 4;
 	}
-	else if (carcontrol.GetInput(CarInput::VIEW_FREE))
+	else if (carcontrol.GetInput(GameInput::VIEW_FREE))
 	{
 		camera_id = 5;
 	}
-	else if (carcontrol.GetInput(CarInput::VIEW_NEXT))
+	else if (carcontrol.GetInput(GameInput::VIEW_NEXT))
 	{
 		++camera_id;
 	}
-	else if (carcontrol.GetInput(CarInput::VIEW_PREV))
+	else if (carcontrol.GetInput(GameInput::VIEW_PREV))
 	{
 		--camera_id;
 	}
@@ -1455,7 +1455,7 @@ void Game::UpdateCarInputs(int carid, Car & car)
 
 	Vec3 pos = car.GetPosition();
 	Quat rot = car.GetOrientation();
-	if (carcontrol.GetInput(CarInput::VIEW_REAR))
+	if (carcontrol.GetInput(GameInput::VIEW_REAR))
 	{
 		rot.Rotate(M_PI, 0, 0, 1);
 	}
@@ -1469,9 +1469,9 @@ void Game::UpdateCarInputs(int carid, Car & car)
 	}
 
 	// Handle camera inputs.
-	float left = timestep * (carcontrol.GetInput(CarInput::PAN_LEFT) - carcontrol.GetInput(CarInput::PAN_RIGHT));
-	float up = timestep * (carcontrol.GetInput(CarInput::PAN_UP) - carcontrol.GetInput(CarInput::PAN_DOWN));
-	float dy = timestep * (carcontrol.GetInput(CarInput::ZOOM_IN) - carcontrol.GetInput(CarInput::ZOOM_OUT));
+	float left = timestep * (carcontrol.GetInput(GameInput::PAN_LEFT) - carcontrol.GetInput(GameInput::PAN_RIGHT));
+	float up = timestep * (carcontrol.GetInput(GameInput::PAN_UP) - carcontrol.GetInput(GameInput::PAN_DOWN));
+	float dy = timestep * (carcontrol.GetInput(GameInput::ZOOM_IN) - carcontrol.GetInput(GameInput::ZOOM_OUT));
 	Vec3 zoom(Direction::Forward * 4 * dy);
 	active_camera->Rotate(up, left);
 	active_camera->Move(zoom[0], zoom[1], zoom[2]);

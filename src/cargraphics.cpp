@@ -18,7 +18,7 @@
 /************************************************************************/
 
 #include "cargraphics.h"
-#include "carinput.h"
+#include "physics/carinput.h"
 #include "loaddrawable.h"
 #include "loadcamera.h"
 #include "camera.h"

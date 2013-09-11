@@ -20,14 +20,14 @@
 #include "replay.h"
 #include "unittest.h"
 #include "cfg/ptree.h"
-#include "carinput.h"
+#include "physics/carinput.h"
 #include "car.h"
 
 #include <sstream>
 #include <fstream>
 
 Replay::Replay(float framerate) :
-	version_info("VDRIFTREPLAYV16", CarInput::GAME_ONLY_INPUTS_START_HERE, framerate),
+	version_info("VDRIFTREPLAYV16", CarInput::INVALID, framerate),
 	replaymode(IDLE)
 {
 	// ctor
@@ -99,7 +99,7 @@ void Replay::StopRecording(const std::string & replayfilename)
 const std::vector<float> & Replay::PlayFrame(unsigned carid, Car & car)
 {
 	assert(carid < carstate.size());
-	assert(unsigned(version_info.inputs_supported) == CarInput::GAME_ONLY_INPUTS_START_HERE);
+	assert(unsigned(version_info.inputs_supported) == CarInput::INVALID);
 
 	if (GetPlaying() && !carstate[carid].PlayFrame(car))
 	{
@@ -111,7 +111,7 @@ const std::vector<float> & Replay::PlayFrame(unsigned carid, Car & car)
 void Replay::RecordFrame(unsigned carid, const std::vector <float> & inputs, Car & car)
 {
 	assert(carid < carstate.size());
-	assert(unsigned(version_info.inputs_supported)== CarInput::GAME_ONLY_INPUTS_START_HERE);
+	assert(unsigned(version_info.inputs_supported)== CarInput::INVALID);
 
 	if (GetRecording())
 	{
@@ -125,11 +125,11 @@ void Replay::RecordFrame(unsigned carid, const std::vector <float> & inputs, Car
 
 void Replay::CarState::RecordFrame(const std::vector <float> & inputs, Car & car)
 {
-	assert(inputbuffer.size() == CarInput::GAME_ONLY_INPUTS_START_HERE);
+	assert(inputbuffer.size() == CarInput::INVALID);
 
 	// record inputs, delta encoding
 	InputFrame newinputframe(frame);
-	for (unsigned i = 0; i < CarInput::GAME_ONLY_INPUTS_START_HERE; i++)
+	for (unsigned i = 0; i < CarInput::INVALID; i++)
 	{
 		if (inputs[i] != inputbuffer[i])
 		{
@@ -158,7 +158,7 @@ bool Replay::CarState::PlayFrame(Car & car)
 {
 	frame++;
 
-	assert(inputbuffer.size() == CarInput::GAME_ONLY_INPUTS_START_HERE);
+	assert(inputbuffer.size() == CarInput::INVALID);
 
 	// fast forward through the inputframes until we're up to date
 	while (cur_inputframe < inputframes.size() &&
@@ -404,7 +404,7 @@ bool Replay::CarState::Empty() const
 void Replay::CarState::Reset()
 {
 	inputbuffer.clear();
-	inputbuffer.resize(CarInput::GAME_ONLY_INPUTS_START_HERE, 0);
+	inputbuffer.resize(CarInput::INVALID, 0);
 	cur_inputframe = 0;
 	cur_stateframe = 0;
 	frame = 0;

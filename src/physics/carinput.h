@@ -17,42 +17,37 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _AI_CAR_H
-#define _AI_CAR_H
+#ifndef _CARINPUT_H
+#define _CARINPUT_H
 
-#include "physics/carinput.h"
-
-#include <vector>
-#include <list>
-
-class Car;
-
-/// AI Car controller interface.
-class AiCar
+namespace CarInput
 {
-protected:
-	Car* car;
-	float difficulty;
-
-	/// Contains the car inputs, which is the output of the AI.
-	/// The vector is indexed by CARINPUT values.
-	std::vector <float> inputs;
-
-public:
-	AiCar(Car* _car, float _difficulty) :
-		car(_car), difficulty(_difficulty), inputs(CarInput::INVALID, 0.0)
-	{ }
-	virtual ~AiCar(){}
-
-	Car*						GetCar() { return car; }
-	float						GetDifficulty() { return difficulty; }
-	const std::vector<float>&	GetInputs() { return inputs; }
-
-	virtual void Update(float dt, const std::list<Car>& othercars) = 0;
-
-	/// This is optional for drawing debug stuff.
-	/// It will only be called, when VISUALIZE_AI_DEBUG macro is defined.
-	virtual void Visualize() { }
+enum Enum
+{
+	THROTTLE = 0,
+	NOS,
+	BRAKE,
+	HANDBRAKE,
+	CLUTCH,
+	STEER_LEFT,
+	STEER_RIGHT,
+	SHIFT_UP,
+	SHIFT_DOWN,
+	START_ENGINE,
+	ABS_TOGGLE,
+	TCS_TOGGLE,
+	NEUTRAL,
+	FIRST_GEAR,
+	SECOND_GEAR,
+	THIRD_GEAR,
+	FOURTH_GEAR,
+	FIFTH_GEAR,
+	SIXTH_GEAR,
+	REVERSE,
+	ROLLOVER,
+	INVALID
 };
+}
 
-#endif // _AI_CAR_H
+#endif
+

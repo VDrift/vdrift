@@ -95,12 +95,12 @@ static const std::string invalid("INVALID");
 
 const std::vector<std::string> CarControlMap::carinput_strings = CarControlMap::InitCarInputStrings();
 
-const std::map <std::string, CarInput::Enum> CarControlMap::carinput_stringmap = CarControlMap::InitCarInputStringMap();
+const std::map <std::string, unsigned> CarControlMap::carinput_stringmap = CarControlMap::InitCarInputStringMap();
 
 const std::map <std::string, int> CarControlMap::keycode_stringmap = CarControlMap::InitKeycodeStringMap();
 
 CarControlMap::CarControlMap() :
-	controls(CarInput::INVALID)
+	controls(GameInput::INVALID)
 {
 	// constructor
 }
@@ -115,15 +115,15 @@ bool CarControlMap::Load(const std::string & controlfile, std::ostream & info_ou
 	}
 
 	controls.clear();
-	controls.resize(CarInput::INVALID);
+	controls.resize(GameInput::INVALID);
 	for (Config::const_iterator i = controls_config.begin(); i != controls_config.end(); ++i)
 	{
 		std::string type, name;
 		if (!controls_config.get(i, "type", type)) continue;
 		if (!controls_config.get(i, "name", name)) continue;
 
-		CarInput::Enum carinput = GetInputFromString(name);
-		if (carinput == CarInput::INVALID)
+		unsigned newinput = GetInputFromString(name);
+		if (newinput == GameInput::INVALID)
 		{
 			error_output << "Unknown input type in section " << i->first << std::endl;
 			continue;
@@ -280,11 +280,11 @@ bool CarControlMap::Load(const std::string & controlfile, std::ostream & info_ou
 			continue;
 		}
 
-		controls[carinput].push_back(newctrl);
+		controls[newinput].push_back(newctrl);
 	}
 
-	inputs.resize(CarInput::INVALID, 0.0); //this looks weird, but it initialize all inputs and sets them to zero
-	lastinputs.resize(CarInput::INVALID, 0.0); //this looks weird, but it initialize all inputs and sets them to zero
+	inputs.resize(GameInput::INVALID, 0.0); //this looks weird, but it initialize all inputs and sets them to zero
+	lastinputs.resize(GameInput::INVALID, 0.0); //this looks weird, but it initialize all inputs and sets them to zero
 	return true;
 }
 
@@ -400,8 +400,8 @@ void CarControlMap::Save(Config & controls_config)
 const std::vector <float> & CarControlMap::ProcessInput(const std::string & joytype, EventSystem & eventsystem, float steerpos, float dt, bool joy_200, float carms, float speedsens, int screenw, int screenh, float button_ramp, bool hgateshifter)
 {
 	//this looks weird, but it ensures that our inputs vector contains exactly one item per input
-	assert(inputs.size() == CarInput::INVALID);
-	assert(lastinputs.size() == CarInput::INVALID);
+	assert(inputs.size() == GameInput::INVALID);
+	assert(lastinputs.size() == GameInput::INVALID);
 
 	for (size_t n = 0; n < controls.size(); ++n)
 	{
@@ -637,7 +637,7 @@ const std::vector <float> & CarControlMap::ProcessInput(const std::string & joyt
 
 void CarControlMap::GetControlsInfo(std::map<std::string, std::string> & info) const
 {
-	for (size_t n = 0; n < CarInput::INVALID; ++n)
+	for (size_t n = 0; n < GameInput::INVALID; ++n)
 	{
 		CarInput::Enum input = CarInput::Enum(n);
 		const std::string inputstr = GetStringFromInput(input);
@@ -666,7 +666,7 @@ void CarControlMap::GetControlsInfo(std::map<std::string, std::string> & info) c
 CarControlMap::Control CarControlMap::GetControl(const std::string & inputname, size_t controlid)
 {
 	size_t input = GetInputFromString(inputname);
-	if (input == CarInput::INVALID)
+	if (input == GameInput::INVALID)
 		return Control();
 
 	std::vector<Control> & input_controls = controls[input];
@@ -678,8 +678,8 @@ CarControlMap::Control CarControlMap::GetControl(const std::string & inputname, 
 
 void CarControlMap::SetControl(const std::string & inputname, size_t controlid, const Control & control)
 {
-	CarInput::Enum input = GetInputFromString(inputname);
-	if (input == CarInput::INVALID)
+	unsigned input = GetInputFromString(inputname);
+	if (input == GameInput::INVALID)
 		return;
 
 	std::vector<Control> & input_controls = controls[input];
@@ -694,8 +694,8 @@ void CarControlMap::SetControl(const std::string & inputname, size_t controlid, 
 
 void CarControlMap::DeleteControl(const std::string & inputname, size_t controlid)
 {
-	CarInput::Enum input = GetInputFromString(inputname);
-	if (input == CarInput::INVALID)
+	unsigned input = GetInputFromString(inputname);
+	if (input == GameInput::INVALID)
 		return;
 
 	std::vector<Control> & input_controls = controls[input];
@@ -708,9 +708,9 @@ void CarControlMap::DeleteControl(const std::string & inputname, size_t controli
 	input_controls.pop_back();
 }
 
-std::map <std::string, CarInput::Enum> CarControlMap::InitCarInputStringMap()
+std::map <std::string, unsigned> CarControlMap::InitCarInputStringMap()
 {
-	std::map <std::string, CarInput::Enum> stringmap;
+	std::map <std::string, unsigned> stringmap;
 	for (size_t i = 0; i < carinput_strings.size(); ++i)
 	{
 		stringmap[carinput_strings[i]] = CarInput::Enum(i);
@@ -720,7 +720,7 @@ std::map <std::string, CarInput::Enum> CarControlMap::InitCarInputStringMap()
 
 std::vector<std::string> CarControlMap::InitCarInputStrings()
 {
-	std::vector<std::string> strings(CarInput::INVALID);
+	std::vector<std::string> strings(GameInput::INVALID);
 	strings[CarInput::THROTTLE] = "gas";
 	strings[CarInput::NOS] = "nos";
 	strings[CarInput::BRAKE] = "brake";
@@ -741,36 +741,36 @@ std::vector<std::string> CarControlMap::InitCarInputStrings()
 	strings[CarInput::FIFTH_GEAR] = "fifth_gear";
 	strings[CarInput::SIXTH_GEAR] = "sixth_gear";
 	strings[CarInput::REVERSE] = "reverse";
-	strings[CarInput::ROLLOVER_RECOVER] = "rollover_recover";
-	strings[CarInput::VIEW_REAR] = "rear_view";
-	strings[CarInput::VIEW_PREV] = "view_prev";
-	strings[CarInput::VIEW_NEXT] = "view_next";
-	strings[CarInput::VIEW_HOOD] = "view_hood";
-	strings[CarInput::VIEW_INCAR] = "view_incar";
-	strings[CarInput::VIEW_CHASERIGID] = "view_chaserigid";
-	strings[CarInput::VIEW_CHASE] = "view_chase";
-	strings[CarInput::VIEW_ORBIT] = "view_orbit";
-	strings[CarInput::VIEW_FREE] = "view_free";
-	strings[CarInput::FOCUS_PREV] = "focus_prev_car";
-	strings[CarInput::FOCUS_NEXT] = "focus_next_car";
-	strings[CarInput::PAN_LEFT] = "pan_left";
-	strings[CarInput::PAN_RIGHT] = "pan_right";
-	strings[CarInput::PAN_UP] = "pan_up";
-	strings[CarInput::PAN_DOWN] = "pan_down";
-	strings[CarInput::ZOOM_IN] = "zoom_in";
-	strings[CarInput::ZOOM_OUT] = "zoom_out";
-	strings[CarInput::REPLAY_FF] = "replay_ff";
-	strings[CarInput::REPLAY_RW] = "replay_rw";
-	strings[CarInput::SCREENSHOT] = "screen_shot";
-	strings[CarInput::PAUSE] = "pause";
-	strings[CarInput::RELOAD_SHADERS] = "reload_shaders";
-	strings[CarInput::RELOAD_GUI] = "reload_gui";
-	strings[CarInput::GUI_LEFT] = "gui_left";
-	strings[CarInput::GUI_RIGHT] = "gui_right";
-	strings[CarInput::GUI_UP] = "gui_up";
-	strings[CarInput::GUI_DOWN] = "gui_down";
-	strings[CarInput::GUI_SELECT] = "gui_select";
-	strings[CarInput::GUI_CANCEL] = "gui_cancel";
+	strings[CarInput::ROLLOVER] = "rollover_recover";
+	strings[GameInput::VIEW_REAR] = "rear_view";
+	strings[GameInput::VIEW_PREV] = "view_prev";
+	strings[GameInput::VIEW_NEXT] = "view_next";
+	strings[GameInput::VIEW_HOOD] = "view_hood";
+	strings[GameInput::VIEW_INCAR] = "view_incar";
+	strings[GameInput::VIEW_CHASERIGID] = "view_chaserigid";
+	strings[GameInput::VIEW_CHASE] = "view_chase";
+	strings[GameInput::VIEW_ORBIT] = "view_orbit";
+	strings[GameInput::VIEW_FREE] = "view_free";
+	strings[GameInput::FOCUS_PREV] = "focus_prev_car";
+	strings[GameInput::FOCUS_NEXT] = "focus_next_car";
+	strings[GameInput::PAN_LEFT] = "pan_left";
+	strings[GameInput::PAN_RIGHT] = "pan_right";
+	strings[GameInput::PAN_UP] = "pan_up";
+	strings[GameInput::PAN_DOWN] = "pan_down";
+	strings[GameInput::ZOOM_IN] = "zoom_in";
+	strings[GameInput::ZOOM_OUT] = "zoom_out";
+	strings[GameInput::REPLAY_FF] = "replay_ff";
+	strings[GameInput::REPLAY_RW] = "replay_rw";
+	strings[GameInput::SCREENSHOT] = "screen_shot";
+	strings[GameInput::PAUSE] = "pause";
+	strings[GameInput::RELOAD_SHADERS] = "reload_shaders";
+	strings[GameInput::RELOAD_GUI] = "reload_gui";
+	strings[GameInput::GUI_LEFT] = "gui_left";
+	strings[GameInput::GUI_RIGHT] = "gui_right";
+	strings[GameInput::GUI_UP] = "gui_up";
+	strings[GameInput::GUI_DOWN] = "gui_down";
+	strings[GameInput::GUI_SELECT] = "gui_select";
+	strings[GameInput::GUI_CANCEL] = "gui_cancel";
 	return strings;
 }
 
@@ -928,18 +928,18 @@ std::map <std::string, int> CarControlMap::InitKeycodeStringMap()
 	return keycodes;
 }
 
-const std::string & CarControlMap::GetStringFromInput(const CarInput::Enum input)
+const std::string & CarControlMap::GetStringFromInput(const unsigned input)
 {
 	return carinput_strings[input];
 }
 
-CarInput::Enum CarControlMap::GetInputFromString(const std::string & str)
+unsigned CarControlMap::GetInputFromString(const std::string & str)
 {
-	std::map <std::string, CarInput::Enum>::const_iterator i = carinput_stringmap.find(str);
+	std::map <std::string, unsigned>::const_iterator i = carinput_stringmap.find(str);
 	if (i != carinput_stringmap.end())
 		return i->second;
 
-	return CarInput::INVALID;
+	return GameInput::INVALID;
 }
 
 const std::string & CarControlMap::GetStringFromKeycode(const int code)
@@ -962,8 +962,8 @@ int CarControlMap::GetKeycodeFromString(const std::string & str)
 
 void CarControlMap::AddControl(Control newctrl, const std::string & inputname, std::ostream & error_output)
 {
-	CarInput::Enum input = GetInputFromString(inputname);
-	if (input != CarInput::INVALID)
+	unsigned input = GetInputFromString(inputname);
+	if (input != GameInput::INVALID)
 		controls[input].push_back(newctrl);
 	else
 		error_output << "Input named " << inputname << " couldn't be assigned because it isn't used" << std::endl;

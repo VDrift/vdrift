@@ -21,7 +21,7 @@
 #include "car.h"
 #include "bezier.h"
 #include "track.h"
-#include "carinput.h"
+#include "physics/carinput.h"
 #include "mathvector.h"
 #include "physics/carwheelposition.h"
 #include "coordinatesystem.h"

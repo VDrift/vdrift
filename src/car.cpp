@@ -18,7 +18,7 @@
 /************************************************************************/
 
 #include "car.h"
-#include "carinput.h"
+#include "physics/carinput.h"
 #include "graphics/model.h"
 #include "content/contentmanager.h"
 #include "cfg/ptree.h"
@@ -118,7 +118,7 @@ void Car::Update(const std::vector <float> & inputs)
 	assert(inputs.size() >= CarInput::INVALID);
 
 	// recover from a rollover
-	if (inputs[CarInput::ROLLOVER_RECOVER])
+	if (inputs[CarInput::ROLLOVER])
 		dynamics.RolloverRecover();
 
 	// set brakes
