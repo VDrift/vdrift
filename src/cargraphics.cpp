@@ -371,6 +371,8 @@ bool CarGraphics::Load(
 
 void CarGraphics::Update(const std::vector<float> & inputs)
 {
+	assert(inputs.size() >= CarInput::INVALID);
+
 	applied_brakes = inputs[CarInput::BRAKE];
 
 	float steer_value = inputs[CarInput::STEER_RIGHT] - inputs[CarInput::STEER_LEFT];

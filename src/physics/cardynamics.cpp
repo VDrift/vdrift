@@ -754,6 +754,8 @@ void CarDynamics::SetTCS(bool value)
 
 void CarDynamics::Update(const std::vector<float> & inputs)
 {
+	assert(inputs.size() >= CarInput::INVALID);
+
 	SetBrake(inputs[CarInput::BRAKE]);
 
 	SetHandBrake(inputs[CarInput::HANDBRAKE]);
