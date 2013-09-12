@@ -1363,10 +1363,15 @@ void Game::UpdateCarInputs(int carid, Car & car)
 		assert(carinputs.size() == CarInput::INVALID);
 	}
 
-	// Force brake once the race is over.
-	if (timer.Staging() ||  ((int)timer.GetCurrentLap(cartimerids[&car]) > race_laps && race_laps > 0))
+	// Force brake at start and once the race is over.
+	if (timer.Staging())
 	{
 		carinputs[CarInput::BRAKE] = 1.0;
+	}
+	else if (race_laps > 0 && (int)timer.GetCurrentLap(cartimerids[&car]) > race_laps)
+	{
+		carinputs[CarInput::BRAKE] = 1.0;
+		carinputs[CarInput::THROTTLE] = 0.0;
 	}
 
 	car.Update(carinputs);
