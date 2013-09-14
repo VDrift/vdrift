@@ -36,34 +36,6 @@ static inline T clamp(T val, T min, T max)
 	return (val < max) ? (val > min) ? val : min : max;
 }
 
-enum DrawlistEnum
-{
-	BLEND,
-	NOBLEND,
-	EMISSIVE,
-	OMNI
-};
-
-static keyed_container <Drawable> & GetDrawlist(SceneNode & node, DrawlistEnum which)
-{
-	switch (which)
-	{
-		case BLEND:
-		return node.GetDrawlist().normal_blend;
-
-		case NOBLEND:
-		return node.GetDrawlist().car_noblend;
-
-		case EMISSIVE:
-		return node.GetDrawlist().lights_emissive;
-
-		case OMNI:
-		return node.GetDrawlist().lights_omni;
-	};
-	assert(0);
-	return node.GetDrawlist().car_noblend;
-}
-
 struct LoadBody
 {
 	SceneNode & topnode;
@@ -402,17 +374,17 @@ void CarGraphics::Update(const CarDynamics & dynamics)
 	for (std::list<Light>::iterator i = lights.begin(); i != lights.end(); i++)
 	{
 		SceneNode & node = bodynoderef.GetNode(i->node);
-		Drawable & draw = GetDrawlist(node, OMNI).get(i->draw);
+		Drawable & draw = node.GetDrawlist().lights_omni.get(i->draw);
 		draw.SetDrawEnable(applied_brakes > 0);
 	}
 	if (brakelights.valid())
 	{
-		Drawable & draw = GetDrawlist(bodynoderef, EMISSIVE).get(brakelights);
+		Drawable & draw = bodynoderef.GetDrawlist().lights_emissive.get(brakelights);
 		draw.SetDrawEnable(applied_brakes > 0);
 	}
 	if (reverselights.valid())
 	{
-		Drawable & draw = GetDrawlist(bodynoderef, EMISSIVE).get(reverselights);
+		Drawable & draw = bodynoderef.GetDrawlist().lights_emissive.get(reverselights);
 		draw.SetDrawEnable(dynamics.GetTransmission().GetGear() < 0);
 	}
 
@@ -489,7 +461,7 @@ bool CarGraphics::LoadLight(
 	}
 	models.insert(mesh);
 
-	keyed_container <Drawable> & dlist = GetDrawlist(node, OMNI);
+	keyed_container <Drawable> & dlist = node.GetDrawlist().lights_omni;
 	lights.back().draw = dlist.insert(Drawable());
 
 	Drawable & draw = dlist.get(lights.back().draw);
