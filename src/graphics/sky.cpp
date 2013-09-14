@@ -43,7 +43,6 @@ const FrameBufferTexture::CubeSide side_enum[sides_num] = {
 	FrameBufferTexture::POSZ,
 };
 
-typedef Vec3 Vec3;
 const Vec3 side_xyz[sides_num][3] = {
 	{Vec3( 0,  0, -1), Vec3( 0, -1,  0), Vec3( 1,  0,  0)},	// POSX
 	{Vec3( 0,  0,  1), Vec3( 0, -1,  0), Vec3(-1,  0,  0)},	// NEGX
