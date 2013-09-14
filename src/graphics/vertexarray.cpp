@@ -540,7 +540,7 @@ void VertexArray::Translate(float x, float y, float z)
 		vert[0] += x;
 		vert[1] += y;
 		vert[2] += z;
-    }
+	}
 }
 
 void VertexArray::Rotate(float a, float x, float y, float z)
@@ -553,14 +553,14 @@ void VertexArray::Rotate(float a, float x, float y, float z)
 	{
 		float * vert = &*i;
 		q.RotateVector(vert);
-    }
+	}
 
 	assert(normals.size() % 3 == 0);
 	for (std::vector <float>::iterator i = normals.begin(); i != normals.end(); i += 3)
 	{
 		float * n = &*i;
 		q.RotateVector(n);
-    }
+	}
 }
 
 void VertexArray::Scale(float x, float y, float z)
@@ -572,22 +572,29 @@ void VertexArray::Scale(float x, float y, float z)
 		vert[0] *= x;
 		vert[1] *= y;
 		vert[2] *= z;
-    }
+	}
+
+	assert(normals.size() % 3 == 0);
 	for (std::vector <float>::iterator i = normals.begin(), e = normals.end(); i != e; i += 3)
 	{
 		float * n = &*i;
 		n[0] *= x;
 		n[1] *= y;
 		n[2] *= z;
-		float len = sqrtf(n[0]*n[0] + n[1]*n[1] + n[2]*n[2]);
-		if (len > 0.0)
+		float len2 = n[0] * n[0] + n[1] * n[1] + n[2] * n[2];
+		if (len2 > 0.0)
 		{
-			len = 1 / len;
+			float len = 1 / sqrtf(len2);
 			n[0] *= len;
 			n[1] *= len;
 			n[2] *= len;
 		}
-    }
+	}
+
+	if (x < 0.0f || y < 0.0f || z < 0.0f)
+	{
+		FixWindingOrder();
+	}
 }
 
 void VertexArray::FlipNormals()
@@ -596,6 +603,42 @@ void VertexArray::FlipNormals()
 	for (std::vector <float>::iterator i = normals.begin(); i != normals.end(); i++)
 	{
 		*i = -*i;
+	}
+}
+
+void VertexArray::FlipWindingOrder()
+{
+	assert(faces.size() % 3 == 0);
+	for (std::vector <int>::iterator i = faces.begin(); i != faces.end(); i += 3)
+	{
+		const int i1 = i[1];
+		const int i2 = i[2];
+		i[1] = i2;
+		i[2] = i1;
+	}
+}
+
+void VertexArray::FixWindingOrder()
+{
+	assert(faces.size() % 3 == 0);
+	for (std::vector <int>::iterator i = faces.begin(); i != faces.end(); i += 3)
+	{
+		const float * n0 = &normals[i[0] * 3];
+		const float * v0 = &vertices[i[0] * 3];
+		const float * v1 = &vertices[i[1] * 3];
+		const float * v2 = &vertices[i[2] * 3];
+		const Vec3 norm0(n0[0], n0[1], n0[2]);
+		const Vec3 vec0(v0[0], v0[1], v0[2]);
+		const Vec3 vec1(v1[0], v1[1], v1[2]);
+		const Vec3 vec2(v2[0], v2[1], v2[2]);
+		const Vec3 norm1 = (vec1 - vec0).cross(vec2 - vec1);
+		if (norm0.dot(norm1) < 0.0f)
+		{
+			const int i1 = i[1];
+			const int i2 = i[2];
+			i[1] = i2;
+			i[2] = i1;
+		}
 	}
 }
 

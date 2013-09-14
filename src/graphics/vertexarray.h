@@ -165,7 +165,14 @@ public:
 
 	void Scale(float x, float y, float z);
 
+	// scale normals by -1
 	void FlipNormals();
+
+	// reverse face vertices winding order
+	void FlipWindingOrder();
+
+	// set winding order to match normal direction, used by scale
+	void FixWindingOrder();
 
 	bool Serialize(joeserialize::Serializer & s);
 
