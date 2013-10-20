@@ -406,7 +406,8 @@ void GraphicsGL2::SetupScene(
 	{
 		GraphicsCamera & cam = cameras["skybox"];
 		cam = cameras["default"];
-		cam.view_distance = 10000.0;
+		cam.view_distance = 10000;
+		cam.pos = Vec3(0);
 	}
 
 	// create a camera for the dynamic reflections
@@ -415,16 +416,17 @@ void GraphicsGL2::SetupScene(
 		cam.pos = dynamic_reflection_sample_pos;
 		cam.fov = 90; // this gets automatically overridden with the correct fov (which is 90 anyway)
 		cam.orient.LoadIdentity(); // this gets automatically rotated for each cube side
-		cam.view_distance = 100.f;
-		cam.w = 1.f; // this gets automatically overridden with the cubemap dimensions
-		cam.h = 1.f; // this gets automatically overridden with the cubemap dimensions
+		cam.view_distance = 100;
+		cam.w = 1; // this gets automatically overridden with the cubemap dimensions
+		cam.h = 1; // this gets automatically overridden with the cubemap dimensions
 	}
 
 	// create a camera for the dynamic reflection skybox
 	{
 		GraphicsCamera & cam = cameras["dynamic_reflection_skybox"];
 		cam = cameras["dynamic_reflection"];
-		cam.view_distance = 10000.f;
+		cam.view_distance = 10000;
+		cam.pos = Vec3(0);
 	}
 
 	// create an ortho camera for 2d drawing
@@ -433,8 +435,8 @@ void GraphicsGL2::SetupScene(
 
 		// this is the glOrtho call we want: glOrtho( 0, 1, 1, 0, -1, 1 );
 		cam.orthomode = true;
-		cam.orthomin = Vec3 (0, 1, -1);
-		cam.orthomax = Vec3 (1, 0, 1);
+		cam.orthomin = Vec3(0, 1, -1);
+		cam.orthomax = Vec3(1, 0, 1);
 	}
 
 	// put the default camera transform into texture3, needed by shaders only
