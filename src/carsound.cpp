@@ -325,37 +325,37 @@ void CarSound::Update(const CarDynamics & dynamics, float dt)
 		float maxgain = 0.3;
 		float pitchvariation = 0.4;
 
-		size_t * sound_active;
+		unsigned sound_active = 0;
 		const TrackSurface & surface = dynamics.GetWheelContact(WheelPosition(i)).GetSurface();
 		if (surface.type == TrackSurface::ASPHALT)
 		{
-			sound_active = tiresqueal;
+			sound_active = tiresqueal[i];
 		}
 		else if (surface.type == TrackSurface::GRASS)
 		{
-			sound_active = grasssound;
+			sound_active = grasssound[i];
 			maxgain = 0.4; // up the grass sound volume a little
 		}
 		else if (surface.type == TrackSurface::GRAVEL)
 		{
-			sound_active = gravelsound;
+			sound_active = gravelsound[i];
 			maxgain = 0.4;
 		}
 		else if (surface.type == TrackSurface::CONCRETE)
 		{
-			sound_active = tiresqueal;
+			sound_active = tiresqueal[i];
 			maxgain = 0.3;
 			pitchvariation = 0.25;
 		}
 		else if (surface.type == TrackSurface::SAND)
 		{
-			sound_active = grasssound;
+			sound_active = grasssound[i];
 			maxgain = 0.25; // quieter for sand
 			pitchvariation = 0.25;
 		}
 		else
 		{
-			sound_active = tiresqueal;
+			sound_active = tiresqueal[i];
 			maxgain = 0.0;
 		}
 
@@ -368,9 +368,9 @@ void CarSound::Update(const CarDynamics & dynamics, float dt)
 		pitch = pitch + (1.0 - pitchvariation);
 		pitch = clamp(pitch, 0.1f, 4.0f);
 
-		psound->SetSourcePosition(sound_active[i], pos_wheel[0], pos_wheel[1], pos_wheel[2]);
-		psound->SetSourcePitch(sound_active[i], pitch);
-		psound->SetSourceGain(sound_active[i], squeal * maxgain);
+		psound->SetSourcePosition(sound_active, pos_wheel[0], pos_wheel[1], pos_wheel[2]);
+		psound->SetSourcePitch(sound_active, pitch);
+		psound->SetSourceGain(sound_active, squeal * maxgain);
 	}
 
 	// update road noise sound
