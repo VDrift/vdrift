@@ -689,7 +689,7 @@ bool Track::Loader::AddObject(const Object & object)
 		data.textures.insert(texture0);
 	}
 	{
-		std::string texname = object.texture.substr(0, std::max(0u, object.texture.length()-4)) + "-misc1.png";
+		std::string texname = object.texture.substr(0, std::max<int>(0, object.texture.length()-4)) + "-misc1.png";
 		std::string filepath = objectpath + "/" + texname;
 		if (std::ifstream(filepath.c_str()))
 		{
@@ -703,7 +703,7 @@ bool Track::Loader::AddObject(const Object & object)
 	}
 	{
 		texinfo.compress = false;
-		std::string texname = object.texture.substr(0, std::max(0u, object.texture.length()-4)) + "-misc2.png";
+		std::string texname = object.texture.substr(0, std::max<int>(0, object.texture.length()-4)) + "-misc2.png";
 		std::string filepath = objectpath + "/" + texname;
 		if (std::ifstream(filepath.c_str()))
 		{
