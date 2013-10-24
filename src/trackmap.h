@@ -56,6 +56,14 @@ public:
 
 	SceneNode & GetNode() {return mapnode;}
 
+	/// raterize vxy triangle into 32bit rgba color buffer, stride is in bytes
+	static void RasterizeTriangle(
+		const float vx[3],
+		const float vy[3],
+		unsigned color,
+		void * color_buffer,
+		int stride);
+
 private:
 	//track map size in real world
 	Vec2 mapsize;
