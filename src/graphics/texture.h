@@ -43,10 +43,6 @@ public:
 
 	virtual unsigned GetID() const {return m_id;}
 
-	/// scale factor from original size.  allows the user to determine
-	/// what the texture size scaling did to the texture dimensions
-	float GetScale() const {return m_scale;}
-
 	bool IsCube() const {return m_cube;}
 
 	bool Load(const std::string & path, const TextureInfo & info, std::ostream & error);
@@ -55,9 +51,8 @@ public:
 
 private:
 	unsigned m_id;
-	unsigned m_w, m_h;	///< w and h are post-texture-size transform
-	float m_scale;		///< amount of scaling applied by the texture-size transform
-	bool m_alpha;
+	unsigned m_w;
+	unsigned m_h;
 	bool m_cube;
 
 	bool LoadCubeVerticalCross(const std::string & path, const TextureInfo & info, std::ostream & error);

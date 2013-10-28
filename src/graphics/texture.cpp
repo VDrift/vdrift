@@ -24,10 +24,8 @@
 
 #ifdef __APPLE__
 #include <SDL_image/SDL_image.h>
-#include <SDL_gfx/SDL_rotozoom.h>
 #else
 #include <SDL/SDL_image.h>
-#include <SDL/SDL_rotozoom.h>
 #endif
 
 #include <string>
@@ -41,38 +39,183 @@ static bool IsPowerOfTwo(int x)
 	return ((x != 0) && !(x & (x - 1)));
 }
 
-static float Scale(TextureInfo::Size size, float width, float height)
+// averaging downsampler
+// bytespp is the size of a pixel (number of channels)
+// dst width/height are multiples of src width, height in pixels
+// pitch is size of a pixel row in bytes
+template <unsigned bytespp>
+static void SampleDownAvg(
+	const unsigned src_width,
+	const unsigned src_height,
+	const unsigned src_pitch,
+	const unsigned char src[],
+	const unsigned dst_width,
+	const unsigned dst_height,
+	const unsigned dst_pitch,
+	unsigned char dst[])
 {
-	float maxsize, minscale;
-	if (size == TextureInfo::SMALL)
+	const unsigned scalex = src_width / dst_width;
+	const unsigned scaley = src_height / dst_height;
+	const unsigned div = scalex * scaley;
+	assert(scalex * dst_width == src_width);
+	assert(scaley * dst_height == src_height);
+
+	unsigned acc[bytespp];
+	for (unsigned y = 0; y < dst_height; ++y)
 	{
-		maxsize = 128;
-		minscale = 0.25;
+		unsigned char * dp = dst + y * dst_pitch;
+		const unsigned char * spy = src + y * src_pitch * scaley;
+		for (unsigned x = 0; x < dst_width; ++x)
+		{
+			const unsigned char * sp = spy + x * scalex * bytespp;
+			for (unsigned i = 0; i < bytespp; ++i)
+				acc[i] = 0;
+			for (unsigned dy = 0; dy < scaley; ++dy)
+			{
+				for (unsigned dx = 0; dx < scalex; ++dx)
+				{
+					for (unsigned i = 0; i < bytespp; ++i, ++sp)
+						acc[i] += *sp;
+				}
+				sp += (src_pitch - scalex * bytespp);
+			}
+			for (unsigned i = 0; i < bytespp; ++i, ++dp)
+				*dp = acc[i] / div;
+		}
 	}
-	else if (size == TextureInfo::MEDIUM)
+}
+
+// bilinear upsampler (16 bit precision)
+// bytespp is the size of a pixel (number of channels)
+// dst width/eight are greater than src width, height in pixels
+// pitch is size of a pixel row in bytes
+template <unsigned bytespp>
+static void SampleUpBilin(
+	const unsigned src_width,
+	const unsigned src_height,
+	const unsigned src_pitch,
+	const unsigned char src[],
+	const unsigned dst_width,
+	const unsigned dst_height,
+	const unsigned dst_pitch,
+	unsigned char dst[])
+{
+	assert(dst_width >= src_width);
+	assert(dst_height >= src_height);
+	const unsigned dx = (src_width << 16) / dst_width;
+	const unsigned dy = (src_height << 16) / dst_height;
+	for (unsigned y = 0; y < dst_height; ++y)
 	{
-		maxsize = 256;
-		minscale = 0.5;
+		unsigned char * dp = dst + y * dst_pitch;
+		const unsigned sy = y * dy;
+		const unsigned fy1 = sy & 0xffff;
+		const unsigned fy0 = (1 << 16) - fy1;
+		const unsigned char * spy = src + (sy >> 16) * src_pitch;
+		for (unsigned x = 0; x < dst_width; ++x)
+		{
+			const unsigned sx = x * dx;
+			const unsigned fx1 = sx & 0xffff;
+			const unsigned fx0 = (1 << 16) - fx1;
+			const unsigned char * sp0 = spy + (sx >> 16) * bytespp;
+			const unsigned char * sp1 = sp0 + src_pitch;
+			for (unsigned i = 0; i < bytespp; ++i, ++dp)
+			{
+				const unsigned t0 = (sp0[i] * fx0 + sp0[i + bytespp] * fx1) >> 16;
+				const unsigned t1 = (sp1[i] * fx0 + sp1[i + bytespp] * fx1) >> 16;
+				const unsigned c = (t0 * fy0 + t1 * fy1) >> 16;
+				*dp = c;
+			}
+		}
+	}
+}
+
+static void SampleDownAvg(
+	const unsigned bytespp,
+	const unsigned src_width,
+	const unsigned src_height,
+	const unsigned src_pitch,
+	const unsigned char src[],
+	const unsigned dst_width,
+	const unsigned dst_height,
+	const unsigned dst_pitch,
+	unsigned char dst[])
+{
+	if (bytespp == 1)
+	{
+		SampleDownAvg<1>(
+			src_width, src_height, src_pitch, src,
+			dst_width, dst_height, dst_pitch, dst);
+	}
+	else if (bytespp == 2)
+	{
+		SampleDownAvg<2>(
+			src_width, src_height, src_pitch, src,
+			dst_width, dst_height, dst_pitch, dst);
+	}
+	else if (bytespp == 3)
+	{
+		SampleDownAvg<3>(
+			src_width, src_height, src_pitch, src,
+			dst_width, dst_height, dst_pitch, dst);
+	}
+	else if (bytespp == 4)
+	{
+		SampleDownAvg<4>(
+			src_width, src_height, src_pitch, src,
+			dst_width, dst_height, dst_pitch, dst);
 	}
 	else
 	{
-		return 1.0;
+		assert(0);
 	}
+}
 
-	float scalew = (width > maxsize) ? maxsize / width : 1.0;
-	float scaleh = (height > maxsize) ? maxsize / height : 1.0;
-	float scale = (scalew < scaleh) ? scalew : scaleh;
-	if (scale < minscale) scale = minscale;
-
-	return scale;
+static void SampleUpBilin(
+	const unsigned bytespp,
+	const unsigned src_width,
+	const unsigned src_height,
+	const unsigned src_pitch,
+	const unsigned char src[],
+	const unsigned dst_width,
+	const unsigned dst_height,
+	const unsigned dst_pitch,
+	unsigned char dst[])
+{
+	if (bytespp == 1)
+	{
+		SampleUpBilin<1>(
+			src_width, src_height, src_pitch, src,
+			dst_width, dst_height, dst_pitch, dst);
+	}
+	else if (bytespp == 2)
+	{
+		SampleUpBilin<2>(
+			src_width, src_height, src_pitch, src,
+			dst_width, dst_height, dst_pitch, dst);
+	}
+	else if (bytespp == 3)
+	{
+		SampleUpBilin<3>(
+			src_width, src_height, src_pitch, src,
+			dst_width, dst_height, dst_pitch, dst);
+	}
+	else if (bytespp == 4)
+	{
+		SampleUpBilin<4>(
+			src_width, src_height, src_pitch, src,
+			dst_width, dst_height, dst_pitch, dst);
+	}
+	else
+	{
+		assert(0);
+	}
 }
 
 static void GetTextureFormat(
 	const SDL_Surface * surface,
 	const TextureInfo & info,
 	int & internalformat,
-	int & format,
-	bool & alpha)
+	int & format)
 {
 	bool compress = info.compress && (surface->w > 512 || surface->h > 512);
 	bool srgb = info.srgb;
@@ -83,12 +226,10 @@ static void GetTextureFormat(
 		case 1:
 			internalformat = compress ? GL_COMPRESSED_LUMINANCE : GL_LUMINANCE;
 			format = GL_LUMINANCE;
-			alpha = false;
 			break;
 		case 2:
 			internalformat = compress ? GL_COMPRESSED_LUMINANCE_ALPHA : GL_LUMINANCE_ALPHA;
 			format = GL_LUMINANCE_ALPHA;
-			alpha = true;
 			break;
 		case 3:
 			internalformat = compress ? (srgb ? GL_COMPRESSED_SRGB : GL_COMPRESSED_RGB) : (srgb ? GL_SRGB8 : GL_RGB);
@@ -97,7 +238,6 @@ static void GetTextureFormat(
 #else
 			format = GL_RGB;
 #endif
-			alpha = false;
 			break;
 		case 4:
 			internalformat = compress ? (srgb ? GL_COMPRESSED_SRGB_ALPHA : GL_COMPRESSED_RGBA) : (srgb ? GL_SRGB8_ALPHA8 : GL_RGBA);
@@ -106,7 +246,6 @@ static void GetTextureFormat(
 #else
 			format = GL_RGBA;
 #endif
-			alpha = true;
 			break;
 		default:
 #ifdef __APPLE__
@@ -175,40 +314,10 @@ static void SetSampler(const TextureInfo & info, bool hasmiplevels = false)
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, (float)info.anisotropy);
 }
 
-static void GenTexture(
-	const SDL_Surface * surface,
-	const TextureInfo & info,
-	unsigned & id,
-	bool & alpha,
-	std::ostream & error)
-{
-	// detect channels
-	int internalformat, format;
-	GetTextureFormat(surface, info, internalformat, format, alpha);
-
-	// gen texture
-	glGenTextures(1, &id);
-	CheckForOpenGLErrors("Texture ID generation", error);
-
-	// init texture
-	glBindTexture(GL_TEXTURE_2D, id);
-
-	SetSampler(info);
-
-	glTexImage2D(GL_TEXTURE_2D, 0, internalformat, surface->w, surface->h, 0, format, GL_UNSIGNED_BYTE, surface->pixels);
-	CheckForOpenGLErrors("Texture creation", error);
-
-	// If we support generatemipmap, go ahead and do it regardless of the info.mipmap setting.
-	// In the GL3 renderer the sampler decides whether or not to do mip filtering, so we conservatively make mipmaps available for all textures.
-	GenerateMipmap(GL_TEXTURE_2D);
-}
-
 Texture::Texture():
 	m_id(0),
 	m_w(0),
 	m_h(0),
-	m_scale(1.0),
-	m_alpha(false),
 	m_cube(false)
 {
 	// ctor
@@ -250,6 +359,7 @@ void Texture::Deactivate() const
 
 bool Texture::Load(const std::string & path, const TextureInfo & info, std::ostream & error)
 {
+
 	if (m_id)
 	{
 		error << "Tried to double load texture " << path << std::endl;
@@ -263,7 +373,9 @@ bool Texture::Load(const std::string & path, const TextureInfo & info, std::ostr
 	}
 
 	if (!info.data && LoadDDS(path, info, error))
+	{
 		return true;
+	}
 
 	m_cube = info.cube;
 	if (m_cube)
@@ -271,7 +383,7 @@ bool Texture::Load(const std::string & path, const TextureInfo & info, std::ostr
 		return LoadCube(path, info, error);
 	}
 
-	SDL_Surface * orig_surface = 0;
+	SDL_Surface * surface = 0;
 	if (info.data)
 	{
 		Uint32 rmask, gmask, bmask, amask;
@@ -286,77 +398,106 @@ bool Texture::Load(const std::string & path, const TextureInfo & info, std::ostr
 		bmask = 0x00ff0000;
 		amask = 0xff000000;
 #endif
-		orig_surface = SDL_CreateRGBSurfaceFrom(
+		surface = SDL_CreateRGBSurfaceFrom(
 			info.data, info.width, info.height,
 			info.bytespp * 8, info.width * info.bytespp,
 			rmask, gmask, bmask, amask);
 	}
-	if (!orig_surface)
+	else
 	{
-		orig_surface = IMG_Load(path.c_str());
-		if (!orig_surface)
-		{
-			error << "Error loading texture file: " << path << std::endl;
-			error << IMG_GetError() << std::endl;
-			return false;
-		}
+		surface = IMG_Load(path.c_str());
 	}
 
-	SDL_Surface * surface = orig_surface;
-	if (surface)
+	if (!surface)
 	{
-		m_scale = Scale(info.maxsize, orig_surface->w, orig_surface->h);
-		float scalew = m_scale;
-		float scaleh = m_scale;
-
-		// scale to power of two if necessary
-		bool norescale = (IsPowerOfTwo(orig_surface->w) && IsPowerOfTwo(orig_surface->h)) ||
-					(info.npot && (GLEW_VERSION_2_0 || GLEW_ARB_texture_non_power_of_two));
-
-		if (!norescale)
-		{
-			int maxsize = 2048;
-			int new_w = orig_surface->w;
-			int new_h = orig_surface->h;
-
-			if (!IsPowerOfTwo(orig_surface->w))
-			{
-				for (new_w = 1; new_w <= maxsize && new_w <= orig_surface->w * m_scale; new_w = new_w * 2);
-			}
-
-			if (!IsPowerOfTwo(orig_surface->h))
-			{
-				 for (new_h = 1; new_h <= maxsize && new_h <= orig_surface->h * m_scale; new_h = new_h * 2);
-			}
-
-			scalew = ((float)new_w + 0.5) / orig_surface->w;
-			scaleh = ((float)new_h + 0.5) / orig_surface->h;
-		}
-
-		// scale texture down if necessary
-		if (scalew < 1.0 || scaleh < 1.0)
-		{
-			surface = zoomSurface(orig_surface, scalew, scaleh, SMOOTHING_ON);
-		}
-
-		// store dimensions
-		m_w = surface->w;
-		m_h = surface->h;
-
-		GenTexture(surface, info, m_id, m_alpha, error);
+		error << "Error loading texture file: " << path << std::endl;
+		error << IMG_GetError() << std::endl;
+		return false;
 	}
 
-	// free the texture surface separately if it's a scaled copy of the original
-	if (surface && surface != orig_surface )
+	const unsigned char * pixels = (const unsigned char *)surface->pixels;
+	const unsigned bytespp = surface->format->BytesPerPixel;
+	unsigned pitch = surface->pitch;
+	unsigned w = surface->w;
+	unsigned h = surface->h;
+
+	// upsample texture to next closest pot if npot not supported
+	std::vector<unsigned char> pixelsu;
+	bool ispot = IsPowerOfTwo(surface->w) && IsPowerOfTwo(surface->h);
+	bool npotok = GLEW_VERSION_2_0 || GLEW_ARB_texture_non_power_of_two;
+	if (!ispot && !npotok)
 	{
-		SDL_FreeSurface(surface);
+		unsigned wu, hu;
+		for (wu = 1; wu < w; wu = wu * 2);
+		for (hu = 1; hu < h; hu = hu * 2);
+		assert(wu <= 4096);
+		assert(hu <= 4096);
+
+		pixelsu.resize(wu * hu * bytespp);
+
+		SampleUpBilin(
+			bytespp, w, h, pitch, pixels,
+			wu, hu, wu * bytespp, &pixelsu[0]);
+
+		pixels = &pixelsu[0];
+		pitch = wu * bytespp;
+		w = wu;
+		h = hu;
 	}
 
-	// free the original surface if it's not a custom surface (used for the track map)
-	if (!info.data && orig_surface)
+	// downsample if requested by application
+	std::vector<unsigned char> pixelsd;
+	unsigned wd = w;
+	unsigned hd = h;
+	if (info.maxsize == TextureInfo::SMALL)
 	{
-		SDL_FreeSurface(orig_surface);
+		if (wd > 128) wd = w / 4;
+		if (hd > 128) hd = h / 4;
 	}
+	else if (info.maxsize == TextureInfo::MEDIUM)
+	{
+		if (wd > 256) wd = w / 2;
+		if (hd > 256) hd = h / 2;
+	}
+	if (wd < w || hd < h)
+	{
+		pixelsd.resize(wd * hd * bytespp);
+
+		SampleDownAvg(
+			bytespp, w, h, pitch, pixels,
+			wd, hd, wd * bytespp, &pixelsd[0]);
+
+		pixels = &pixelsd[0];
+		pitch = wd * bytespp;
+		w = wd;
+		h = hd;
+	}
+
+	// store dimensions
+	m_w = w;
+	m_h = h;
+
+	// gen texture
+	glGenTextures(1, &m_id);
+	CheckForOpenGLErrors("Texture ID generation", error);
+
+	// setup texture
+	glBindTexture(GL_TEXTURE_2D, m_id);
+	SetSampler(info);
+
+	int internalformat, format;
+	GetTextureFormat(surface, info, internalformat, format);
+
+	// upload texture data
+	glTexImage2D(GL_TEXTURE_2D, 0, internalformat, w, h, 0, format, GL_UNSIGNED_BYTE, pixels);
+	CheckForOpenGLErrors("Texture creation", error);
+
+	// If we support generatemipmap, go ahead and do it regardless of the info.mipmap setting.
+	// In the GL3 renderer the sampler decides whether or not to do mip filtering,
+	// so we conservatively make mipmaps available for all textures.
+	GenerateMipmap(GL_TEXTURE_2D);
+
+	SDL_FreeSurface(surface);
 
 	return true;
 }
@@ -655,8 +796,6 @@ bool Texture::LoadDDS(const std::string & path, const TextureInfo & info, std::o
 	// set properties
 	m_w = width;
 	m_h = height;
-	m_scale = 1.0f;
-	m_alpha = (format != GL_BGR);
 	m_cube = false;
 
 	// gl3 renderer expects srgb

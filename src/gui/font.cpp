@@ -84,9 +84,10 @@ bool Font::Load(
 		return false;
 	}
 
+	const std::string scalestr("scale=");
 	const std::string sizestr("size=");
-	const float sw = font_texture->GetScale() / font_texture->GetW();
-	const float sh = font_texture->GetScale() / font_texture->GetH();
+	float font_scale = 256;
+	float font_size = 40;
 	while (fontinfo)
 	{
 		std::string curstr;
@@ -105,24 +106,34 @@ bool Font::Load(
 			if (!Parse("yoffset=", info.yoffset, fontinfo, fontinfopath, error_output)) return false;
 			if (!Parse("xadvance=", info.xadvance, fontinfo, fontinfopath, error_output)) return false;
 			fontinfo >> curstr >> curstr; //don't care
-
-			info.x *= sw;
-			info.y *= sh;
-			info.width *= sw;
-			info.height *= sh;
-			info.xoffset *= sw;
-			info.yoffset *= sh;
-			info.xadvance *= sw;
 			info.loaded = true;
+		}
+		else if (curstr.compare(0, scalestr.size(), scalestr) == 0)
+		{
+			if (!VerifyParse(scalestr, curstr.substr(0, scalestr.size()), fontinfopath, error_output)) return false;
+			GetNumber(curstr.substr(scalestr.size()), font_scale);
 		}
 		else if (curstr.compare(0, sizestr.size(), sizestr) == 0)
 		{
-			float size(0);
 			if (!VerifyParse(sizestr, curstr.substr(0, sizestr.size()), fontinfopath, error_output)) return false;
-			GetNumber(curstr.substr(sizestr.size()), size);
-			inv_size = 1 / (size * sh);
+			GetNumber(curstr.substr(sizestr.size()), font_size);
 		}
 	}
+
+	const float inv_scale = 1 / font_scale;
+	for (size_t i = 0; i < charinfo.size(); ++i)
+	{
+		CharInfo & info = charinfo[i];
+		info.x *= inv_scale;
+		info.y *= inv_scale;
+		info.width *= inv_scale;
+		info.height *= inv_scale;
+		info.xoffset *= inv_scale;
+		info.yoffset *= inv_scale;
+		info.xadvance *= inv_scale;
+	}
+
+	inv_size = font_scale / font_size;
 
 	return true;
 }
