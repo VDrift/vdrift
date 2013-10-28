@@ -45,7 +45,7 @@ if (sys.platform == 'freebsd6') or (sys.platform == 'freebsd7') or (sys.platform
         LIBPATH = ['.', '#lib', LOCALBASE + '/lib'],
         LINKFLAGS = ['-pthread','-lintl'],
         options = opts)
-    check_headers = ['GL/gl.h', 'GL/glu.h', 'SDL/SDL.h', 'SDL/SDL_image.h', 'SDL/SDL_rotozoom.h', 'vorbis/vorbisfile.h', 'GL/glew.h', 'bullet/btBulletCollisionCommon.h']
+    check_headers = ['GL/gl.h', 'GL/glu.h', 'SDL/SDL.h', 'SDL/SDL_image.h', 'vorbis/vorbisfile.h', 'GL/glew.h', 'bullet/btBulletCollisionCommon.h']
     check_libs = []
     if 'CC' in os.environ:
         env.Replace(CC = os.environ['CC'])
@@ -145,7 +145,7 @@ else:
         env['CXXFLAGS'] += SCons.Util.CLVar(os.environ['CXXFLAGS'])
     if os.environ.has_key('LDFLAGS'):
         env['LINKFLAGS'] += SCons.Util.CLVar(os.environ['LDFLAGS'])
-    check_headers = ['GL/gl.h', 'GL/glu.h', 'SDL/SDL.h', 'SDL/SDL_image.h', 'SDL/SDL_rotozoom.h', 'vorbis/vorbisfile.h', 'GL/glew.h', 'curl/curl.h', 'bullet/btBulletCollisionCommon.h', 'archive.h']
+    check_headers = ['GL/gl.h', 'GL/glu.h', 'SDL/SDL.h', 'SDL/SDL_image.h', 'vorbis/vorbisfile.h', 'GL/glew.h', 'curl/curl.h', 'bullet/btBulletCollisionCommon.h', 'archive.h']
     check_libs = [ ['GLEW', 'GL/glew.h', 'glDeleteSamplers(0, NULL);', 'Your GLEW library is out of date.'] ]
 
 if ARGUMENTS.get('verbose') != "1":
