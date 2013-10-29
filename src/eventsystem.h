@@ -22,16 +22,12 @@
 
 #include "toggle.h"
 
-#include <SDL/SDL.h>
+#include <SDL2/SDL.h>
 #include <vector>
 #include <map>
 #include <list>
 #include <iosfwd>
 #include <cassert>
-
-#if SDL_VERSION_ATLEAST(2,0,0)
-typedef SDL_Keycode SDLKey;
-#endif
 
 class EventSystem
 {
@@ -139,9 +135,9 @@ public:
 
 	ButtonState GetMouseButtonState(int id) const;
 
-	ButtonState GetKeyState(SDLKey id) const;
+	ButtonState GetKeyState(SDL_Keycode id) const;
 
-	std::map <SDLKey, Toggle> & GetKeyMap() {return keymap;}
+	std::map <SDL_Keycode, Toggle> & GetKeyMap() {return keymap;}
 
 	///returns a 2 element vector (x,y)
 	std::vector <int> GetMousePosition() const;
@@ -211,7 +207,7 @@ private:
 	bool quit;
 
 	std::vector <Joystick> joystick;
-	std::map <SDLKey, Toggle> keymap;
+	std::map <SDL_Keycode, Toggle> keymap;
 	std::map <int, Toggle> mbutmap;
 
 	int mousex, mousey, mousexrel, mouseyrel;
@@ -232,7 +228,7 @@ private:
 
 	void HandleMouseButton(DirectionEnum dir, int id);
 
-	void HandleKey(DirectionEnum dir, SDLKey id);
+	void HandleKey(DirectionEnum dir, SDL_Keycode id);
 
 	void RecordFPS(const float fps);
 

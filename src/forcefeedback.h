@@ -20,15 +20,9 @@
 #ifndef _FORCEFEEDBACK_H
 #define _FORCEFEEDBACK_H
 
+#include <SDL2/SDL_haptic.h>
 #include <iosfwd>
 #include <string>
-
-#include <SDL/SDL_version.h>
-#if SDL_VERSION_ATLEAST(2,0,0)
-#include <SDL/SDL_haptic.h>
-#elif defined(linux) || defined(__linux)
-#include <linux/input.h>
-#endif
 
 class ForceFeedback
 {
@@ -58,13 +52,9 @@ private:
 	int axis_max;
 	double lastforce;
 
-#if SDL_VERSION_ATLEAST(2,0,0)
 	SDL_Haptic * haptic;
 	SDL_HapticEffect effect;
 	int effect_id;
-#elif defined(linux) || defined(__linux)
-	struct ff_effect effect;
-#endif
 };
 
 #endif // _FORCEFEEDBACK_H

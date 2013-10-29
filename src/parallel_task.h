@@ -22,8 +22,8 @@
 #ifndef _PARALLEL_TASK_H_
 #define _PARALLEL_TASK_H_
 
-#include <SDL/SDL.h>
-#include <SDL/SDL_thread.h>
+#include <SDL2/SDL.h>
+#include <SDL2/SDL_thread.h>
 
 #include <cassert>
 #include <iostream>
@@ -61,11 +61,7 @@ class Task
 			quit = false;
 			sem_frame_start = SDL_CreateSemaphore(0);
 			sem_frame_end = SDL_CreateSemaphore(0);
-#if SDL_VERSION_ATLEAST(2,0,0)
 			thread = SDL_CreateThread(Dispatch, NULL, this);
-#else
-			thread = SDL_CreateThread(Dispatch, this);
-#endif
 		}
 
 		~Task()

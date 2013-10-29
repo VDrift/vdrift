@@ -60,21 +60,18 @@ void EventSystem::Init(std::ostream & info_output)
 		info_output << ":" << endl;
 	else
 		info_output << "." << endl;
-	for (int i=0; i < SDL_NumJoysticks(); i++ )
-	{
-		info_output << "    " << i << ". " << SDL_JoystickName(i) << endl;
-	}
 
 	SDL_JoystickEventState(SDL_ENABLE);
 
-	int j;
-	for (j = 0; j < SDL_NumJoysticks(); j++)
+	for (int i = 0; i < SDL_NumJoysticks(); ++i)
 	{
-		SDL_Joystick * ptr = SDL_JoystickOpen(j);
+		SDL_Joystick * ptr = SDL_JoystickOpen(i);
 		assert(ptr);
+
 		joystick.push_back(Joystick(ptr, SDL_JoystickNumAxes(ptr), SDL_JoystickNumButtons(ptr), SDL_JoystickNumHats(ptr)));
+		
+		info_output << "    " << i << ". " << SDL_JoystickName(ptr) << endl;
 	}
-	assert((int)joystick.size() == SDL_NumJoysticks());
 }
 
 void EventSystem::BeginFrame()
@@ -105,7 +102,7 @@ void EventSystem::ProcessEvents()
 {
 	SDL_Event event;
 
-	AgeToggles <SDLKey> (keymap);
+	AgeToggles <SDL_Keycode> (keymap);
 	AgeToggles <int> (mbutmap);
 	for (std::vector <Joystick>::iterator i = joystick.begin(); i != joystick.end(); i++)
 	{
@@ -132,17 +129,17 @@ void EventSystem::ProcessEvents()
 			HandleKey(UP, event.key.keysym.sym);
 			break;
 		case SDL_JOYBUTTONDOWN:
-			assert(event.jbutton.which < joystick.size()); //ensure the event came from a known joystick
+			assert(size_t(event.jbutton.which) < joystick.size()); //ensure the event came from a known joystick
 			joystick[event.jbutton.which].SetButton(event.jbutton.button, true);
 			break;
 		case SDL_JOYBUTTONUP:
-			assert(event.jbutton.which < joystick.size()); //ensure the event came from a known joystick
+			assert(size_t(event.jbutton.which) < joystick.size()); //ensure the event came from a known joystick
 			joystick[event.jbutton.which].SetButton(event.jbutton.button, false);
 			break;
 		case SDL_JOYHATMOTION:
 			break;
 		case SDL_JOYAXISMOTION:
-			assert(event.jaxis.which < joystick.size()); //ensure the event came from a known joystick
+			assert(size_t(event.jaxis.which) < joystick.size()); //ensure the event came from a known joystick
 			joystick[event.jaxis.which].SetAxis(event.jaxis.axis, event.jaxis.value / 32768.0f);
 			//std::cout << "Joy " << (int) event.jaxis.which << " axis " << (int) event.jaxis.axis << " value " << event.jaxis.value / 32768.0f << endl;
 			break;
@@ -170,10 +167,10 @@ void EventSystem::HandleMouseButton(DirectionEnum dir, int id)
 	HandleToggle <int> (mbutmap, dir, id);
 }
 
-void EventSystem::HandleKey(DirectionEnum dir, SDLKey id)
+void EventSystem::HandleKey(DirectionEnum dir, SDL_Keycode id)
 {
 	//if (dir == DOWN) std::cout << "Key #" << (int)id << " pressed" << endl;
-	HandleToggle <SDLKey> (keymap, dir, id);
+	HandleToggle <SDL_Keycode> (keymap, dir, id);
 }
 
 EventSystem::ButtonState EventSystem::GetMouseButtonState(int id) const
@@ -181,9 +178,9 @@ EventSystem::ButtonState EventSystem::GetMouseButtonState(int id) const
 	return GetToggle <int> (mbutmap, id);
 }
 
-EventSystem::ButtonState EventSystem::GetKeyState(SDLKey id) const
+EventSystem::ButtonState EventSystem::GetKeyState(SDL_Keycode id) const
 {
-	return GetToggle <SDLKey> (keymap, id);
+	return GetToggle <SDL_Keycode> (keymap, id);
 }
 
 vector <int> EventSystem::GetMousePosition() const
@@ -208,7 +205,7 @@ void EventSystem::TestStim(StimEnum stim)
 {
 	if (stim == STIM_AGE_KEYS)
 	{
-		AgeToggles <SDLKey> (keymap);
+		AgeToggles <SDL_Keycode> (keymap);
 	}
 	if (stim == STIM_AGE_MBUT)
 	{

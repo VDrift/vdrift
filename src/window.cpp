@@ -19,7 +19,7 @@
 
 #include "window.h"
 #include "glew.h"
-#include <SDL/SDL.h>
+#include <SDL2/SDL.h>
 #include <sstream>
 #include <cassert>
 #include <cstdlib>
@@ -38,13 +38,12 @@ Window::Window() :
 
 Window::~Window()
 {
-#if SDL_VERSION_ATLEAST(2,0,0)
 	if (glcontext)
 		SDL_GL_DeleteContext(glcontext);
 
 	if (window)
 		SDL_DestroyWindow(window);
-#endif
+
 	if (initialized)
 		SDL_Quit();
 }
@@ -57,10 +56,7 @@ void Window::Init(
 	std::ostream & info_output,
 	std::ostream & error_output)
 {
-	Uint32 sdl_flags = SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK;
-#if SDL_VERSION_ATLEAST(2,0,0)
-	sdl_flags |= SDL_INIT_HAPTIC;
-#endif
+	Uint32 sdl_flags = SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK | SDL_INIT_HAPTIC;
 	if (SDL_Init(sdl_flags) < 0)
 	{
 		error_output << "SDL initialization failed: " << SDL_GetError() << std::endl;
@@ -69,11 +65,7 @@ void Window::Init(
 
 	ChangeDisplay(resx, resy, bpp, depthbpp, fullscreen, antialiasing, info_output, error_output);
 
-#if SDL_VERSION_ATLEAST(2,0,0)
 	SDL_SetWindowTitle(window, windowcaption.c_str());
-#else
-	SDL_WM_SetCaption(windowcaption.c_str(), NULL);
-#endif
 
 	// initialize GLEW
 	GLenum glew_err = glewInit();
@@ -94,11 +86,7 @@ void Window::Init(
 
 void Window::SwapBuffers()
 {
-#if SDL_VERSION_ATLEAST(2,0,0)
 	SDL_GL_SwapWindow(window);
-#else
-	SDL_GL_SwapBuffers();
-#endif
 }
 
 void Window::ShowMouseCursor(bool value)
@@ -106,20 +94,12 @@ void Window::ShowMouseCursor(bool value)
 	if (value)
 	{
 		SDL_ShowCursor(SDL_ENABLE);
-#if SDL_VERSION_ATLEAST(2,0,0)
 		SDL_SetWindowGrab(window, SDL_FALSE);
-#else
-		SDL_WM_GrabInput(SDL_GRAB_OFF);
-#endif
 	}
 	else
 	{
 		SDL_ShowCursor(SDL_DISABLE);
-#if SDL_VERSION_ATLEAST(2,0,0)
 		SDL_SetWindowGrab(window, SDL_TRUE);
-#else
-		SDL_WM_GrabInput(SDL_GRAB_ON);
-#endif
 	}
 }
 
@@ -162,7 +142,6 @@ float Window::GetWHRatio() const
 	return (float)w / (float)h;
 }
 
-#if SDL_VERSION_ATLEAST(2,0,0)
 static int GetVideoDisplay()
 {
 	const char *variable = SDL_getenv("SDL_VIDEO_FULLSCREEN_DISPLAY");
@@ -190,7 +169,6 @@ bool Window::ResizeWindow(int width, int height)
 	h = height;
 	return true;
 }
-#endif
 
 void Window::ChangeDisplay(
 	int width, int height,
@@ -216,7 +194,6 @@ void Window::ChangeDisplay(
 		info_output << "Disabling antialiasing" << std::endl;
 	}
 
-#if SDL_VERSION_ATLEAST(2,0,0)
 	SDL_DisplayMode desktop_mode;
 	int display = GetVideoDisplay();
 
@@ -268,37 +245,6 @@ void Window::ChangeDisplay(
 	{
 		assert(0);
 	}
-
-#else
-	const SDL_VideoInfo *videoInfo = SDL_GetVideoInfo();
-	if (!videoInfo)
-	{
-		error_output << "SDL video query failed: " << SDL_GetError() << std::endl;
-		assert (0);
-	}
-
-	int videoFlags = SDL_OPENGL | SDL_GL_DOUBLEBUFFER | SDL_HWPALETTE;
-	if (fullscreen)
-		videoFlags |= (SDL_HWSURFACE | SDL_ANYFORMAT | SDL_FULLSCREEN);
-	else
-		videoFlags |= (SDL_SWSURFACE | SDL_ANYFORMAT);
-
-	if (surface != NULL)
-	{
-		SDL_FreeSurface(surface);
-		surface = NULL;
-	}
-	surface = SDL_SetVideoMode(width, height, bpp, videoFlags);
-	if (!surface)
-	{
-		error_output << "Display change failed: " << width << "x" << height << "x" << bpp << " " << dbpp << "z fullscreen=" << fullscreen << std::endl << "Error: " << SDL_GetError() << std::endl;
-		assert (0);
-	}
-	else
-	{
-		info_output << "Display change was successful: " << width << "x" << height << "x" << bpp << " " << dbpp << "z fullscreen=" << fullscreen << std::endl;
-	}
-#endif
 
 	w = width;
 	h = height;

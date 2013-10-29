@@ -164,22 +164,22 @@ SConsignFile()
 #--------------------------#
 appdir = ""
 vdrift_install = None
-common_libs = ['SDL_image', 'SDL_gfx', 'vorbisfile', 'curl', 'archive']
+common_libs = ['SDL2_image', 'vorbisfile', 'curl', 'archive']
 
 if (sys.platform == 'freebsd6') or (sys.platform == 'freebsd7') or (sys.platform == 'freebsd8') or (sys.platform == 'freebsd9'):
     common_libs.append('libLinearMath')
     common_libs.append('libBulletCollision')
-    local_env.ParseConfig('sdl-config --cflags --libs')
+    local_env.ParseConfig('sdl2-config --cflags --libs')
     local_env.Append(LIBPATH = ['/usr/X11R6/lib'])
     libs_link = ['GLU', 'GLEW', 'pthread', common_libs]
 elif ( 'darwin' == sys.platform ):
-    common_libs = ['SDL_image', 'SDL_gfx', 'Vorbis', 'libcurl']
+    common_libs = ['SDL2_image', 'Vorbis', 'libcurl']
     vdrift_install = "${PRODUCT_NAME}.app"
     pkgbase = "%s/Contents" % vdrift_install
     appdir = "%s/MacOS/" % pkgbase
     pkgsrc = "../tools/osx"
 
-    common_libs.append( 'SDL' )
+    common_libs.append( 'SDL2' )
     common_libs.append( 'GLEW' )
     def batch_copy( target, source, env): 
         # Do a mini svn export... this funtion could possibly
@@ -214,13 +214,13 @@ elif ( 'darwin' == sys.platform ):
         #    batch_copy )  ] )
     libs_link = ['objc']
     local_env.Append( FRAMEWORKS = [ common_libs, 'Foundation', 'AppKit'] )
-    src.append(['../tools/osx/SDLMain.m', '../tools/osx/config_mac.mm'])
+    src.append(['../tools/osx/SDL2Main.m', '../tools/osx/config_mac.mm'])
 elif ( 'win32' == sys.platform or 'cygwin' == sys.platform ):
 	local_env.Append(LIBPATH = ['/usr/lib/mingw', '#tools/win/lib', '#build'])
-	libs_link = ['opengl32', 'glu32', 'glew32', 'mingw32', 'SDLmain', 'SDL', 'ws2_32', 'intl', 'iconv', common_libs ]
+	libs_link = ['opengl32', 'glu32', 'glew32', 'mingw32', 'SDL2main', 'SDL2', 'ws2_32', 'intl', 'iconv', common_libs ]
 else:
-    local_env.ParseConfig('sdl-config --cflags --libs')
-    local_env.Append(LIBPATH = ['/usr/X11R6/lib'])
+    local_env.ParseConfig('sdl2-config --cflags --libs')
+    #local_env.Append(LIBPATH = ['/usr/X11R6/lib'])
     libs_link = ['GL', 'GLU', 'GLEW', 'pthread', common_libs]
 
 local_env.Append(LIBS = libs_link)

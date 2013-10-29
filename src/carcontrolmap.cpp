@@ -188,34 +188,29 @@ bool CarControlMap::Load(const std::string & controlfile, std::ostream & info_ou
 		}
 		else if (type == "key")
 		{
-			newctrl.type = Control::KEY;
-			int keycode = 0;
-			bool key_down = false;
-			bool key_once = false;
-#if !SDL_VERSION_ATLEAST(2,0,0)
-			// use keyname to get keycode for backward compatibility, temporary
-			if (!controls_config.get(i, "keycode", keycode))
-#endif
-			{
-				std::string keyname;
-				if (!controls_config.get(i, "key", keyname, error_output)) continue;
+			std::string keyname;
+			if (!controls_config.get(i, "key", keyname, error_output))
+				continue;
 
-				keycode = GetKeycodeFromString(keyname);
-				if (keycode == 0)
-				{
-					error_output << "Unknown keyname \"" << keyname << "\" parsing controls in section " << i->first << std::endl;
-					continue;
-				}
+			int keycode = GetKeycodeFromString(keyname);
+			if (keycode == 0)
+			{
+				error_output << "Unknown keyname \"" << keyname << "\" parsing controls in section " << i->first << std::endl;
+				continue;
 			}
 
+			bool key_down = false;
+			bool key_once = false;
 			if (!controls_config.get(i, "down", key_down, error_output)) continue;
+				
 			if (!controls_config.get(i, "once", key_once, error_output)) continue;
 			if (keycode != SDLK_UNKNOWN)
 			{
-				newctrl.keycode = SDLKey(keycode);
+				newctrl.keycode = SDL_Keycode(keycode);
 			}
 			newctrl.pushdown = key_down;
 			newctrl.onetime = key_once;
+			newctrl.type = Control::KEY;
 		}
 		else if (type == "mouse")
 		{
@@ -471,7 +466,7 @@ const std::vector <float> & CarControlMap::ProcessInput(const std::string & joyt
 			{
 				//cout << "type key" << std::endl;
 
-				EventSystem::ButtonState keystate = eventsystem.GetKeyState(SDLKey(i->keycode));
+				EventSystem::ButtonState keystate = eventsystem.GetKeyState(SDL_Keycode(i->keycode));
 
 				if (i->onetime)
 				{
@@ -888,7 +883,6 @@ std::map <std::string, int> CarControlMap::InitKeycodeStringMap()
 	keycodes["LCTRL"] = SDLK_LCTRL;
 	keycodes["RALT"] = SDLK_RALT;
 	keycodes["LALT"] = SDLK_LALT;
-#if SDL_VERSION_ATLEAST(2,0,0)
 	keycodes["KP0"] = SDLK_KP_0;
 	keycodes["KP1"] = SDLK_KP_1;
 	keycodes["KP2"] = SDLK_KP_2;
@@ -906,25 +900,6 @@ std::map <std::string, int> CarControlMap::InitKeycodeStringMap()
 	keycodes["LMETA"] = SDLK_LGUI;
 	keycodes["LSUPER"] = SDLK_LGUI;
 	keycodes["RSUPER"] = SDLK_RGUI;
-#else
-	keycodes["KP0"] = SDLK_KP0;
-	keycodes["KP1"] = SDLK_KP1;
-	keycodes["KP2"] = SDLK_KP2;
-	keycodes["KP3"] = SDLK_KP3;
-	keycodes["KP4"] = SDLK_KP4;
-	keycodes["KP5"] = SDLK_KP5;
-	keycodes["KP6"] = SDLK_KP6;
-	keycodes["KP7"] = SDLK_KP7;
-	keycodes["KP8"] = SDLK_KP8;
-	keycodes["KP9"] = SDLK_KP9;
-	keycodes["COMPOSE"] = SDLK_COMPOSE;
-	keycodes["NUMLOCK"] = SDLK_NUMLOCK;
-	keycodes["SCROLLLOCK"] = SDLK_SCROLLOCK;
-	keycodes["LMETA"] = SDLK_LMETA;
-	keycodes["RMETA"] = SDLK_RMETA;
-	keycodes["LSUPER"] = SDLK_LSUPER;
-	keycodes["RSUPER"] = SDLK_RSUPER;
-#endif
 	return keycodes;
 }
 

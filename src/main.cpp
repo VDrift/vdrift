@@ -35,21 +35,8 @@ using std::endl;
 #include <fstream>
 #include <sstream>
 
-#ifndef _WIN32
-#include <fenv.h>
-#include <signal.h>
-void release_mouse(int a);
-#endif
-
 int main (int argc, char * argv[])
 {
-#ifndef _WIN32
-	// Handle an ABORT so we can release the mouse.
-	struct sigaction act;
-	act.sa_handler = release_mouse;
-	sigaction(SIGABRT,&act, NULL);
-#endif
-
 	// Find the path of the log file.
 	PathManager paths;
 	std::stringstream dummy;
@@ -87,11 +74,3 @@ int main (int argc, char * argv[])
 
 	return EXIT_SUCCESS;
 }
-
-#ifndef _WIN32
-void release_mouse(int a)
-{
-	std::cout << "INFO: SIGABRT detected, releasing the mouse" << std::endl;
-	SDL_WM_GrabInput(SDL_GRAB_OFF);
-}
-#endif

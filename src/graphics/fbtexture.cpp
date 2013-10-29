@@ -20,8 +20,6 @@
 #include "fbtexture.h"
 #include "glutil.h"
 
-#include <SDL/SDL.h>
-
 #include <cassert>
 #include <sstream>
 #include <string>

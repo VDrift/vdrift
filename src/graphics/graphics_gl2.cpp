@@ -247,6 +247,8 @@ bool GraphicsGL2::Init(
 	renderconfigfile = renderconfig;
 	shaderpath = newshaderpath;
 	sky_dynamic = dynamicsky;
+	
+	assert(!renderconfig.empty());
 
 	if (reflection_type == 1)
 		reflection_status = REFLECTION_STATIC;

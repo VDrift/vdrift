@@ -18,10 +18,7 @@
 /************************************************************************/
 
 #include "fbobject.h"
-
 #include "glutil.h"
-
-#include <SDL/SDL.h>
 
 #include <cassert>
 #include <sstream>

@@ -139,8 +139,8 @@ The required libraries include:
 - libcurl - Multiprotocol file transfer library (minimum version 7.21.6).
 - libvorbis - The Vorbis General Audio Compression Codec Library (minimum version 1.2.0).
 - vorbisfile - File loading library for the ogg vorbis format.
-- sdl - Simple DirectMedia Layer Library (minimum version 1.2.14).
-- sdl-image - Image file loading library (minimum version 1.2.10).
+- sdl - Simple DirectMedia Layer Library (minimum version 2.0.0).
+- sdl-image - Image file loading library (minimum version 2.0.0).
 
 Installing Dependencies on FreeBSD
 ----------------------------------
@@ -162,7 +162,7 @@ Installing Dependencies on Fedora Linux
 
 All required packages can be installed using this command:
 
-    sudo yum install bullet-devel gcc-c++ glew-devel libarchive-devel scons SDL-devel SDL_image-devel curl-devel
+    sudo yum install bullet-devel gcc-c++ glew-devel libarchive-devel scons SDL2-devel SDL2_image-devel curl-devel
 
 
 Installing Dependencies on Ubuntu Linux
@@ -191,7 +191,7 @@ All other required packages can be installed using this command:
     sudo apt-get install g++ libarchive-dev libcurl4-gnutls-dev \
                          libdrm-dev libgl1-mesa-dev \
                          libglu1-mesa-dev libkms1 mesa-common-dev \
-                         libsdl-image1.2-dev libvorbis-dev \
+                         libsdl-image2.0-dev libvorbis-dev \
                          freeglut3 libbullet0 \
                          libbullet-dev scons
 

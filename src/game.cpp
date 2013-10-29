@@ -1165,8 +1165,8 @@ void Game::ProcessGUIInputs()
 bool Game::AssignControl()
 {
 	// Check for key inputs.
-	std::map <SDLKey, Toggle> & keymap = eventsystem.GetKeyMap();
-	for (std::map <SDLKey, Toggle>::iterator i = keymap.begin(); i != keymap.end(); ++i)
+	std::map <SDL_Keycode, Toggle> & keymap = eventsystem.GetKeyMap();
+	for (std::map <SDL_Keycode, Toggle>::iterator i = keymap.begin(); i != keymap.end(); ++i)
 	{
 		if (i->second.GetImpulseRising())
 		{
