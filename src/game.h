@@ -79,7 +79,7 @@ private:
 
 	bool ParseArguments(std::list <std::string> & args);
 
-	void InitCoreSubsystems();
+	bool InitCoreSubsystems();
 
 	void InitThreading();
 

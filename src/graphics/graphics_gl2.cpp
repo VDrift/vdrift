@@ -238,6 +238,12 @@ bool GraphicsGL2::Init(
 	std::ostream & info_output,
 	std::ostream & error_output)
 {
+	if (!GLEW_VERSION_2_0)
+	{
+		error_output << "Graphics card or driver does not support required GL_VERSION_2_0." << std::endl;
+		return false;
+	}
+
 	shadows = enableshadows;
 	shadow_distance = new_shadow_distance;
 	shadow_quality = new_shadow_quality;
@@ -247,7 +253,7 @@ bool GraphicsGL2::Init(
 	renderconfigfile = renderconfig;
 	shaderpath = newshaderpath;
 	sky_dynamic = dynamicsky;
-	
+
 	assert(!renderconfig.empty());
 
 	if (reflection_type == 1)
@@ -268,21 +274,6 @@ bool GraphicsGL2::Init(
 
 	if (renderconfigfile == "noshaders.conf")
 	{
-		DisableShaders(error_output);
-	}
-	else if (!GLEW_ARB_multitexture)
-	{
-		info_output << "Your video card doesn't support multitexturing.  Disabling shaders." << std::endl;
-		DisableShaders(error_output);
-	}
-	else if (!GLEW_ARB_texture_cube_map)
-	{
-		info_output << "Your video card doesn't support cube maps.  Disabling shaders." << std::endl;
-		DisableShaders(error_output);
-	}
-	else if (!GLEW_ARB_texture_non_power_of_two)
-	{
-		info_output << "Your video card doesn't support non-power-of-two textures.  Disabling shaders." << std::endl;
 		DisableShaders(error_output);
 	}
 	else
@@ -309,37 +300,29 @@ bool GraphicsGL2::Init(
 			renderconfigfile = "nofbos.conf";
 		}
 
-		if (GLEW_VERSION_2_0 && GLEW_ARB_shading_language_100 && GLEW_ARB_fragment_shader)
+		if ((reflection_status == REFLECTION_STATIC || reflection_status == REFLECTION_DYNAMIC) && !static_reflectionmap_file.empty())
 		{
-			if ((reflection_status == REFLECTION_STATIC || reflection_status == REFLECTION_DYNAMIC) && !static_reflectionmap_file.empty())
-			{
-				TextureInfo t;
-				t.cube = true;
-				t.verticalcross = true;
-				t.mipmap = true;
-				t.anisotropy = anisotropy;
-				t.maxsize = TextureInfo::Size(texturesize);
-				static_reflection.Load(static_reflectionmap_file, t, error_output);
-			}
-
-			if (!static_ambientmap_file.empty())
-			{
-				TextureInfo t;
-				t.cube = true;
-				t.verticalcross = true;
-				t.mipmap = false;
-				t.anisotropy = anisotropy;
-				t.maxsize = TextureInfo::Size(texturesize);
-				static_ambient.Load(static_ambientmap_file, t, error_output);
-			}
-
-			EnableShaders(info_output, error_output);
+			TextureInfo t;
+			t.cube = true;
+			t.verticalcross = true;
+			t.mipmap = true;
+			t.anisotropy = anisotropy;
+			t.maxsize = TextureInfo::Size(texturesize);
+			static_reflection.Load(static_reflectionmap_file, t, error_output);
 		}
-		else
+
+		if (!static_ambientmap_file.empty())
 		{
-			info_output << "Your video card doesn't support shaders. Fall back to noshaders.conf." << std::endl;
-			DisableShaders(error_output);
+			TextureInfo t;
+			t.cube = true;
+			t.verticalcross = true;
+			t.mipmap = false;
+			t.anisotropy = anisotropy;
+			t.maxsize = TextureInfo::Size(texturesize);
+			static_ambient.Load(static_ambientmap_file, t, error_output);
 		}
+
+		EnableShaders(info_output, error_output);
 	}
 
 	info_output << "Renderer: " << shaderpath << "/" << renderconfigfile << std::endl;

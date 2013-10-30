@@ -159,7 +159,10 @@ void Game::Start(std::list <std::string> & args)
 
 	info_output << "Starting VDrift: " << VERSION << ", Revision: " << REVISION << ", O/S: " << OS_NAME << std::endl;
 
-	InitCoreSubsystems();
+	if (!InitCoreSubsystems())
+	{
+		return;
+	}
 
 	// Load controls.
 	info_output << "Loading car controls from: " << pathmanager.GetCarControlsFile() << std::endl;
@@ -320,7 +323,7 @@ void Game::End()
 }
 
 /* Initialize the most important, basic subsystems... */
-void Game::InitCoreSubsystems()
+bool Game::InitCoreSubsystems()
 {
 	pathmanager.Init(info_output, error_output);
 	http.SetTemporaryFolder(pathmanager.GetTemporaryFolder());
@@ -410,6 +413,12 @@ void Game::InitCoreSubsystems()
 		}
 	}
 
+	if (!graphics_interface)
+	{
+		error_output << "Failed to create renderer." << std::endl;
+		return false;
+	}
+
 	Vec3 ldir(-0.250, -0.588, 0.769);
 	ldir = ldir.Normalize();
 	graphics_interface->SetSunDirection(ldir);
@@ -429,6 +438,8 @@ void Game::InitCoreSubsystems()
 	content.addSharedPath(pathmanager.GetTrackPartsPath());
 
 	eventsystem.Init(info_output);
+
+	return true;
 }
 
 /* Write the scenegraph to the output drawlist... */
