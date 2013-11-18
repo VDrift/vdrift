@@ -29,9 +29,9 @@ using std::vector;
 using std::pair;
 
 TrackMap::TrackMap() :
-	scale(1.0),
-	MAP_WIDTH(256),
-	MAP_HEIGHT(256)
+	map_width(256),
+	map_height(256),
+	map_scale(1.0)
 {
 	// ctor
 }
@@ -49,8 +49,9 @@ void TrackMap::Unload()
 }
 
 bool TrackMap::BuildMap(
+	const int screen_width,
+	const int screen_height,
 	const std::list <RoadStrip> & roads,
-	int w, int h,
 	const std::string & trackname,
 	const std::string & texturepath,
 	ContentManager & content,
@@ -58,15 +59,14 @@ bool TrackMap::BuildMap(
 {
 	Unload();
 
-	const int outsizex = MAP_WIDTH;
-	const int outsizey = MAP_HEIGHT;
+	pixel_size[0] = 1.0f / screen_width;
+	pixel_size[1] = 1.0f / screen_height;
 
-	//find the map width and height
-	map_w_min = +1E6;
-	map_w_max = -1E6;
-	map_h_min = +1E6;
-	map_h_max = -1E6;
-
+	// track aabb
+	track_min[0] = +1E6;
+	track_min[1] = +1E6;
+	track_max[0] = -1E6;
+	track_max[1] = -1E6;
 	for (list <RoadStrip>::const_iterator road = roads.begin(); road != roads.end(); road++)
 	{
 		for (vector<RoadPatch>::const_iterator curp = road->GetPatches().begin();
@@ -78,38 +78,37 @@ bool TrackMap::BuildMap(
 				for (int j = 0; j < 4; j++)
 				{
 					const Vec3 & p = b[i + j * 4];
-					if (p[1] < map_w_min)
+					if (p[1] < track_min[0])
 					{
-						map_w_min = p[1];
+						track_min[0] = p[1];
 					}
-					if (p[1] > map_w_max)
+					if (p[1] > track_max[0])
 					{
-						map_w_max = p[1];
+						track_max[0] = p[1];
 					}
-					if (p[0] < map_h_min)
+					if (p[0] < track_min[1])
 					{
-						map_h_min = p[0];
+						track_min[1] = p[0];
 					}
-					if (p[0] > map_h_max)
+					if (p[0] > track_max[1])
 					{
-						map_h_max = p[0];
+						track_max[1] = p[0];
 					}
 				}
 			}
 		}
 	}
 
-	mapsize[0] = map_w_max - map_w_min;
-	mapsize[1] = map_h_max - map_h_min;
+	// determine the scaling factor
+	// we will leave a 1 pixel border
+	const float track_width = track_max[0] - track_min[0];
+	const float track_height = track_max[1] - track_min[1];
+	const float map_scale_w = (map_width - 2) / track_width;
+	const float map_scale_h = (map_height - 2) / track_height;
+	map_scale = (map_scale_w < map_scale_h) ? map_scale_w : map_scale_h;
 
-	//determine the scaling factor
-	//we will leave a 1 pixel border
-	float scale_w = (outsizex - 2) / mapsize[0];
-	float scale_h = (outsizey - 2) / mapsize[1];
-	scale = (scale_w < scale_h) ? scale_w : scale_h;
-
-	std::vector<unsigned> pixels(outsizex * outsizey, 0);
-	const int stride = outsizex * sizeof(unsigned);
+	std::vector<unsigned> pixels(map_width * map_height, 0);
+	const int stride = map_width * sizeof(unsigned);
 	const unsigned color = 0xffffffff;
 
 	for (list <RoadStrip>::const_iterator road = roads.begin(); road != roads.end(); road++)
@@ -124,16 +123,16 @@ bool TrackMap::BuildMap(
 			const Vec3 & fr = b.GetFR();
 
 			float x[6], y[6];
-			x[2] = (bl[1] - map_w_min) * scale + 1;
-			y[2] = (bl[0] - map_h_min) * scale + 1;
-			x[1] = (fl[1] - map_w_min) * scale + 1;
-			y[1] = (fl[0] - map_h_min) * scale + 1;
-			x[0] = (fr[1] - map_w_min) * scale + 1;
-			y[0] = (fr[0] - map_h_min) * scale + 1;
+			x[2] = (bl[1] - track_min[0]) * map_scale + 1;
+			y[2] = (bl[0] - track_min[1]) * map_scale + 1;
+			x[1] = (fl[1] - track_min[0]) * map_scale + 1;
+			y[1] = (fl[0] - track_min[1]) * map_scale + 1;
+			x[0] = (fr[1] - track_min[0]) * map_scale + 1;
+			y[0] = (fr[0] - track_min[1]) * map_scale + 1;
 			x[3] = x[2];
 			y[3] = y[2];
-			x[4] = (br[1] - map_w_min) * scale + 1;
-			y[4] = (br[0] - map_h_min) * scale + 1;
+			x[4] = (br[1] - track_min[0]) * map_scale + 1;
+			y[4] = (br[0] - track_min[1]) * map_scale + 1;
 			x[5] = x[0];
 			y[5] = y[0];
 
@@ -144,27 +143,27 @@ bool TrackMap::BuildMap(
 /*
 	// should operate on alpha only or on each channel?
 	// horizontal blur 3x3
-	for (int y = 1; y < outsizey - 1; ++y)
+	for (int y = 1; y < map_height - 1; ++y)
 	{
-		unsigned * line = &pixels[0] + y * outsizex;
+		unsigned * line = &pixels[0] + y * map_width;
 		unsigned p = line[0];
-		for (int x = 1; x < outsizex - 1; ++x)
+		for (int x = 1; x < map_width - 1; ++x)
 		{
 			//unsigned v = (line0[x] + (line1[x] << 1) + line2[x]) >> 2;
 			unsigned v = (line[x-1] >> 2) + (line[x] >> 1) + (line[x+1] >> 2);
 			line[x-1] = p;
 			p = v;
 		}
-		line[outsizex - 2] = p;
+		line[map_width - 2] = p;
 	}
 	// vertical blur 3x3
-	std::vector<unsigned> linep(outsizex, 0);
-	for (int y = 1; y < outsizey - 1; ++y)
+	std::vector<unsigned> linep(map_width, 0);
+	for (int y = 1; y < map_height - 1; ++y)
 	{
-		unsigned * line0 = &pixels[0] + (y - 1) * outsizex;
-		unsigned * line1 = &pixels[0] + y * outsizex;
-		unsigned * line2 = &pixels[0] + (y + 1) * outsizex;
-		for (int x = 1; x < outsizex - 1; ++x)
+		unsigned * line0 = &pixels[0] + (y - 1) * map_width;
+		unsigned * line1 = &pixels[0] + y * map_width;
+		unsigned * line2 = &pixels[0] + (y + 1) * map_width;
+		for (int x = 1; x < map_width - 1; ++x)
 		{
 			//unsigned v = (line0[x] + (line1[x] << 1) + line2[x]) >> 2;
 			unsigned v = (line0[x] >> 2) + (line1[x] >> 1) + (line2[x] >> 2);
@@ -173,39 +172,39 @@ bool TrackMap::BuildMap(
 		}
 	}
 */
-	//draw a black border around the track
+	// draw a black border around the track
 	const unsigned rgbmask = 0x00ffffff;
 	const unsigned amask = 0xff000000;
-	for (int x = 0; x < outsizex; x++)
+	for (int x = 0; x < map_width; x++)
 	{
-		for (int y = 0; y < outsizey; y++)
+		for (int y = 0; y < map_height; y++)
 		{
-			//if this pixel is black
-			if (pixels[outsizex * y + x] == 0)
+			// if this pixel is black
+			if (pixels[map_width * y + x] == 0)
 			{
-				//if the pixel above this one is non-black
-				if ((y > 0) && ((pixels[outsizex * (y-1) + x] & rgbmask) > 0))
+				// if the pixel above this one is non-black
+				if ((y > 0) && ((pixels[map_width * (y-1) + x] & rgbmask) > 0))
 				{
-					//set this pixel to non-transparent
-					pixels[outsizex * y + x] |= amask;
+					// set this pixel to non-transparent
+					pixels[map_width * y + x] |= amask;
 				}
-				//if the pixel left of this one is non-black
-				if ((x > 0) && ((pixels[outsizex * y + x - 1] & rgbmask) > 0))
+				// if the pixel left of this one is non-black
+				if ((x > 0) && ((pixels[map_width * y + x - 1] & rgbmask) > 0))
 				{
-					//set this pixel to non-transparent
-					pixels[outsizex * y + x] |= amask;
+					// set this pixel to non-transparent
+					pixels[map_width * y + x] |= amask;
 				}
-				//if the pixel right of this one is non-black
-				if ((x < (outsizex - 1)) && ((pixels[outsizex * y + x + 1] & rgbmask) > 0))
+				// if the pixel right of this one is non-black
+				if ((x < (map_width - 1)) && ((pixels[map_width * y + x + 1] & rgbmask) > 0))
 				{
-					//set this pixel to non-transparent
-					pixels[outsizex * y + x] |= amask;
+					// set this pixel to non-transparent
+					pixels[map_width * y + x] |= amask;
 				}
-				//if the pixel below this one is non-black
-				if ((y < (outsizey - 1)) && ((pixels[outsizex * (y+1) + x] & rgbmask) > 0))
+				// if the pixel below this one is non-black
+				if ((y < (map_height - 1)) && ((pixels[map_width * (y+1) + x] & rgbmask) > 0))
 				{
-					//set this pixel to non-transparent
-					pixels[outsizex * y + x] |= amask;
+					// set this pixel to non-transparent
+					pixels[map_width * y + x] |= amask;
 				}
 			}
 		}
@@ -213,8 +212,8 @@ bool TrackMap::BuildMap(
 
 	TextureInfo texinfo;
 	texinfo.data = (unsigned char*)&pixels[0];
-	texinfo.width = outsizex;
-	texinfo.height = outsizey;
+	texinfo.width = map_width;
+	texinfo.height = map_height;
 	texinfo.bytespp = sizeof(unsigned);
 	texinfo.repeatu = false;
 	texinfo.repeatv = false;
@@ -227,23 +226,23 @@ bool TrackMap::BuildMap(
 	content.load(cardot0_focused, texturepath, "cardot0_focused.png", dotinfo);
 	content.load(cardot1_focused, texturepath, "cardot1_focused.png", dotinfo);
 
-	// calculate map position, size
-	screen[0] = (float)w;
-	screen[1] = (float)h;
-	position[0] = 1.0 - MAP_WIDTH / screen[0];
-	position[1] = 0.12;
-	size[0] = MAP_WIDTH / screen[0];
-	size[1] = MAP_HEIGHT / screen[1];
-	dot_size[0] = cardot0->GetW() / 2.0 / screen[0];
-	dot_size[1] = cardot0->GetH() / 2.0 / screen[1];
+	// map position on screen: right side 16 pixel padding
+	map_min[0] = 1.0 - (track_width * map_scale + 16)  * pixel_size[0];
+	map_min[1] = 0.5 - 0.5 * track_height * map_scale * pixel_size[1];
 
-	mapverts.SetToBillboard(position[0], position[1], position[0]+size[0], position[1]+size[1]);
+	map_max[0] = map_min[0] + map_width * pixel_size[0];
+	map_max[1] = map_min[1] + map_height * pixel_size[1];
+
+	dot_size[0] = 0.5 * cardot0->GetW() * pixel_size[0];
+	dot_size[1] = 0.5 * cardot0->GetH() * pixel_size[1];
+
+	mapverts.SetToBillboard(map_min[0], map_min[1], map_max[0], map_max[1]);
 	mapdraw = mapnode.GetDrawlist().twodim.insert(Drawable());
 	Drawable & mapdrawref = mapnode.GetDrawlist().twodim.get(mapdraw);
 	mapdrawref.SetTextures(track_map->GetID());
 	mapdrawref.SetVertArray(&mapverts);
 	mapdrawref.SetCull(false, false);
-	mapdrawref.SetColor(1,1,1,0.7);
+	//mapdrawref.SetColor(1, 1, 1, 0.7);
 	mapdrawref.SetDrawOrder(0);
 
 	return true;
@@ -265,9 +264,9 @@ void TrackMap::Update(bool mapvisible, const std::list <std::pair<Vec3, bool> > 
 				tex = cardot1;
 
 			//find the coordinates of the dot
-			Vec2 dotpos = position;
-			dotpos[0] += ((car->first[1] - map_w_min)*scale + 1) / screen[0];
-			dotpos[1] += ((car->first[0] - map_h_min)*scale + 1) / screen[1];
+			Vec2 dotpos = map_min;
+			dotpos[0] += ((car->first[1] - track_min[0]) * map_scale + 1) * pixel_size[0];
+			dotpos[1] += ((car->first[0] - track_min[1]) * map_scale + 1) * pixel_size[1];
 			Vec2 corner1 = dotpos - dot_size;
 			Vec2 corner2 = dotpos + dot_size;
 
@@ -334,13 +333,13 @@ void TrackMap::RasterizeTriangle(
 	// see http://devmaster.net/posts/6145/advanced-rasterization
 
 	// 28.4 fixed-point coordinates
-	const int X1 = 16.0f * vx[0];
-	const int X2 = 16.0f * vx[1];
-	const int X3 = 16.0f * vx[2];
+	const int X1 = 16.0f * vx[0] + 0.5f;
+	const int X2 = 16.0f * vx[1] + 0.5f;
+	const int X3 = 16.0f * vx[2] + 0.5f;
 
-	const int Y1 = 16.0f * vy[0];
-	const int Y2 = 16.0f * vy[1];
-	const int Y3 = 16.0f * vy[2];
+	const int Y1 = 16.0f * vy[0] + 0.5f;
+	const int Y2 = 16.0f * vy[1] + 0.5f;
+	const int Y3 = 16.0f * vy[2] + 0.5f;
 
 	// Deltas
 	const int DX12 = X1 - X2;

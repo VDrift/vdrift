@@ -39,11 +39,12 @@ public:
 
 	~TrackMap();
 
-	///w and h are the display device dimensions in pixels.  returns true if successful.
+	/// w and h are the display device dimensions in pixels
+	/// returns true if successful
 	bool BuildMap(
+		const int screen_width,
+		const int screen_height,
 		const std::list <RoadStrip> & roads,
-		int w,
-		int h,
 		const std::string & trackname,
 		const std::string & texturepath,
 		ContentManager & content,
@@ -51,7 +52,8 @@ public:
 
 	void Unload();
 
-	///update the map with provided information for map visibility, as well as a list of car positions and whether or not they're the player car
+	/// update the map with provided information for map visibility,
+	/// as well as a list of car positions and whether or not they're the player car
 	void Update(bool mapvisible, const std::list <std::pair<Vec3, bool> > & carpositions);
 
 	SceneNode & GetNode() {return mapnode;}
@@ -65,24 +67,25 @@ public:
 		int stride);
 
 private:
-	//track map size in real world
-	Vec2 mapsize;
-	float map_w_min, map_w_max;
-	float map_h_min, map_h_max;
-	float scale;
-	const int MAP_WIDTH;
-	const int MAP_HEIGHT;
+	// map texture size
+	const int map_width;
+	const int map_height;
 
-	//screen size
-	Vec2 screen;
+	// track to map scale factor
+	float map_scale;
 
-	//position of the trackmap on screen
-	Vec2 position;
+	// track aabb in world space
+	Vec2 track_min;
+	Vec2 track_max;
 
-	//size of the trackmap on screen
-	Vec2 size;
+	// map aabb in screen space
+	Vec2 map_min;
+	Vec2 map_max;
 
-	//size of the car dot on screen
+	// size of a pixel in screen space
+	Vec2 pixel_size;
+
+	// size of the car dot in screen space
 	Vec2 dot_size;
 
 	SceneNode mapnode;

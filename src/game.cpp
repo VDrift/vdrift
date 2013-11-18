@@ -1751,9 +1751,9 @@ bool Game::LoadTrack(const std::string & trackname)
 
 	// Generate the track map.
 	if (!trackmap.BuildMap(
-			track.GetRoadList(),
 			window.GetW(),
 			window.GetH(),
+			track.GetRoadList(),
 			trackname,
 			pathmanager.GetHUDTextureDir(),
 			content,
