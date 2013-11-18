@@ -50,7 +50,7 @@ static bool has_extension(const std::string & str, const std::string & ext)
 void PathManager::Init(std::ostream & info_output, std::ostream & error_output)
 {
 	// Figure out the user's home directory.
-	const char* homedir;
+	const char * homedir;
 #ifndef _WIN32
 	if ((homedir = getenv("HOME")) == NULL)
 	{
@@ -65,35 +65,36 @@ void PathManager::Init(std::ostream & info_output, std::ostream & error_output)
 #endif
 	home_directory += homedir;
 
-	// Find data dir.
+	// Set data dir.
 	const char * datadir = getenv("VDRIFT_DATA_DIRECTORY");
 	if (datadir == NULL)
 #if !defined(_WIN32) && !defined(__APPLE__)
 		if (FileExists("data/settings/options.config"))
 			data_directory = "data";
-        else
+		else
 			data_directory = DATA_DIR;
 #elif __APPLE__
-        data_directory = get_mac_data_dir();
+		data_directory = get_mac_data_dir();
 #else
 		data_directory = "data";
 #endif
-    else
-        data_directory = std::string(datadir);
+	else
+		data_directory = std::string(datadir);
 
-	// Find settings file.
-	settings_path = home_directory;
+	// Set settings dir.
 #ifdef _WIN32
-	settings_path += "\\Documents\\VDrift";
-	MakeDir(settings_path);
+	const char * appdata = getenv("APPDATA");
+	if (appdata)
+		settings_path = std::string(appdata) + "\\VDrift";
+	else
+		settings_path = home_directory + "\\VDrift";
 #else
-	settings_path += "/";
-	settings_path += SETTINGS_DIR;
-	MakeDir(settings_path);
+	settings_path = home_directory + "/" + SETTINGS_DIR;
 #endif
 
-	temporary_folder = settings_path+"/tmp";
+	temporary_folder = settings_path + "/tmp";
 
+	MakeDir(settings_path);
 	MakeDir(GetTrackRecordsPath());
 	MakeDir(GetReplayPath());
 	MakeDir(GetScreenshotPath());
@@ -101,9 +102,8 @@ void PathManager::Init(std::ostream & info_output, std::ostream & error_output)
 
 	// Print diagnostic info.
 	info_output << "Home directory: " << home_directory << std::endl;
-	bool settings_file_present = FileExists(GetSettingsFile());
 	info_output << "Settings file: " << GetSettingsFile();
-	if (!settings_file_present)
+	if (!FileExists(GetSettingsFile()))
 		info_output << " (does not exist, will be created)";
 	info_output << std::endl;
 	info_output << "Data directory: " << data_directory;
@@ -121,7 +121,7 @@ void PathManager::SetProfile(const std::string & value)
 {
 	// Assert that Init() hasn't been called yet.
 	assert(data_directory.empty());
-	profile_suffix = "."+value;
+	profile_suffix = "." + value;
 }
 
 bool PathManager::GetFileList(std::string folderpath, std::list <std::string> & outputfolderlist, std::string extension) const
