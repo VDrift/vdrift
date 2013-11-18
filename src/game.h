@@ -29,6 +29,7 @@
 #include "track.h"
 #include "mathvector.h"
 #include "quaternion.h"
+#include "http.h"
 #include "gui/gui.h"
 #include "gui/text_draw.h"
 #include "gui/font.h"
@@ -49,9 +50,7 @@
 #include "forcefeedback.h"
 #include "particle.h"
 #include "ai/ai.h"
-#include "quickmp.h"
 #include "content/contentmanager.h"
-#include "http.h"
 #include "updatemanager.h"
 #include "game_downloader.h"
 
