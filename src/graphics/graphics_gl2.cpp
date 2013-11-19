@@ -325,6 +325,15 @@ bool GraphicsGL2::Init(
 		EnableShaders(info_output, error_output);
 	}
 
+	// gl state setup
+	glEnable(GL_LINE_SMOOTH);
+	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
+	glShadeModel(GL_SMOOTH);
+	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+	glClearColor(0, 0, 0, 0);
+	glClearDepth(1);
+	glPolygonOffset(-1, -1);
+
 	info_output << "Renderer: " << shaderpath << "/" << renderconfigfile << std::endl;
 	initialized = true;
 	return true;
@@ -342,19 +351,12 @@ void GraphicsGL2::Deinit()
 
 void GraphicsGL2::BeginScene(std::ostream & error_output)
 {
+	// reset gl state (todo: move this into config file?)
 	glstate.Disable(GL_TEXTURE_2D);
-	glstate.Enable(GL_LINE_SMOOTH);
-	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-	glShadeModel(GL_SMOOTH);
-	glClearColor(0,0,0,0);
-	glClearDepth(1.0f);
 	glstate.Enable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LEQUAL);
-	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 	glstate.Disable(GL_LIGHTING);
-	glstate.SetColor(0.5,0.5,0.5,1.0);
-	glPolygonOffset(-1.0,-1.0);
-
+	glstate.SetColor(0.5, 0.5, 0.5, 1.0);
 	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 	CheckForOpenGLErrors("BeginScene", error_output);
