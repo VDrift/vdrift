@@ -357,7 +357,7 @@ void GraphicsGL2::BeginScene(std::ostream & error_output)
 	glDepthFunc(GL_LEQUAL);
 	glstate.Disable(GL_LIGHTING);
 	glstate.SetColor(0.5, 0.5, 0.5, 1.0);
-	glClear (GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glstate.ClearDrawBuffer(true, true);
 
 	CheckForOpenGLErrors("BeginScene", error_output);
 }

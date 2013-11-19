@@ -61,12 +61,7 @@ void RenderInputPostprocess::Render(GraphicsState & glstate, std::ostream & erro
 	glstate.SetColorMask(writecolor, writealpha);
 	glstate.SetDepthMask(writedepth);
 
-	if (clearcolor && cleardepth)
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	else if (clearcolor)
-		glClear(GL_COLOR_BUFFER_BIT);
-	else if (cleardepth)
-		glClear(GL_DEPTH_BUFFER_BIT);
+	glstate.ClearDrawBuffer(clearcolor, cleardepth);
 
 	shader->Enable();
 

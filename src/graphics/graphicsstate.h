@@ -54,6 +54,16 @@ public:
 		Set(stateid, false);
 	}
 
+	void ClearDrawBuffer(bool color, bool depth)
+	{
+		if (color && depth)
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		else if (color)
+			glClear(GL_COLOR_BUFFER_BIT);
+		else if (depth)
+			glClear(GL_DEPTH_BUFFER_BIT);
+	}
+
 	void SetColor(float nr, float ng, float nb, float na)
 	{
 		if (r != nr || g != ng || b != nb || a != na)

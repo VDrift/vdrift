@@ -192,12 +192,7 @@ void RenderInputScene::Render(GraphicsState & glstate, std::ostream & error_outp
 	glstate.SetColorMask(writecolor, writealpha);
 	glstate.SetDepthMask(writedepth);
 
-	if (clearcolor && cleardepth)
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	else if (clearcolor)
-		glClear(GL_COLOR_BUFFER_BIT);
-	else if (cleardepth)
-		glClear(GL_DEPTH_BUFFER_BIT);
+	glstate.ClearDrawBuffer(clearcolor, cleardepth);
 
 	if (writedepth || depth_mode != GL_ALWAYS)
 		glstate.Enable(GL_DEPTH_TEST);
