@@ -695,7 +695,7 @@ bool Game::ParseArguments(std::list <std::string> & args)
 	}
 	arghelp["-benchmark"] = "Run in benchmark mode.";
 
-	arghelp["-render FILE"] = "Load the specified render configuration file instead of the default gl3/vdrift1.rhr.";
+	arghelp["-render FILE"] = "Load the specified render configuration file instead of the default gl3/deferred.conf.";
 	if (!argmap["-render"].empty())
 	{
 		renderconfigfile = argmap["-render"];
