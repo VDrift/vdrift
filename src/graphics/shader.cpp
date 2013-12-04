@@ -167,7 +167,12 @@ bool Shader::Load(const std::string & vertex_filename, const std::string & fragm
 
 void Shader::Unload()
 {
-	if (loaded) glDeleteObjectARB(program);
+	if (loaded)
+	{
+		glDeleteObjectARB(program);
+		glDeleteObjectARB(vertex_shader);
+		glDeleteObjectARB(fragment_shader);
+	}
 	loaded = false;
 }
 
