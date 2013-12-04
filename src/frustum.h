@@ -23,18 +23,18 @@
 struct Frustum
 {
 	Frustum() {}
-	Frustum(float cfrustum[][4])
+	Frustum(const float cfrustum[][4])
 	{
 		Set(cfrustum);
 	}
-	void Set(float cfrustum[][4])
+	void Set(const float cfrustum[][4])
 	{
 		for (int i = 0; i < 6; i++)
 			for (int n = 0; n < 4; n++)
 				frustum[i][n] = cfrustum[i][n];
 	}
 
-	void Extract(float * proj, float * view)
+	void Extract(const float proj[16], const float view[16])
 	{
 		float   clip[16];
 		float   t;
