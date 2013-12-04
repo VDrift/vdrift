@@ -20,16 +20,21 @@
 #ifndef _TEXTURE_INTERFACE_H
 #define _TEXTURE_INTERFACE_H
 
-/// an abstract base class for a simple texture interface
 class TextureInterface
 {
 public:
-	virtual bool Loaded() const = 0;
-	virtual void Activate() const = 0;
-	virtual void Deactivate() const = 0;
-	virtual bool IsRect() const {return false;}
-	virtual unsigned GetW() const = 0;
-	virtual unsigned GetH() const = 0;
+	TextureInterface() : target(0), texid(0), width(0), height(0) { }
+	virtual ~TextureInterface() { };
+	unsigned GetTarget() const { return target; }
+	unsigned GetId() const { return texid; }
+	unsigned GetW() const { return width; }
+	unsigned GetH() const { return height; }
+
+protected:
+	unsigned target;
+	unsigned texid;
+	unsigned width;
+	unsigned height;
 };
 
 #endif // _TEXTURE_INTERFACE_H

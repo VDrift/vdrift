@@ -458,7 +458,7 @@ Track::Loader::body_iterator Track::Loader::LoadBody(const PTree & cfg)
 	// setup drawable
 	Drawable & drawable = body.drawable;
 	drawable.SetModel(*model);
-	drawable.SetTextures(tex[0]->GetID(), tex[1]->GetID(), tex[2]->GetID());
+	drawable.SetTextures(tex[0]->GetId(), tex[1]->GetId(), tex[2]->GetId());
 	drawable.SetDecal(alphablend);
 	drawable.SetCull(data.cull && !doublesided, false);
 	drawable.SetObjectCenter(model->GetCenter());
@@ -741,7 +741,7 @@ bool Track::Loader::AddObject(const Object & object)
 	keyed_container <Drawable>::handle dref = dlist->insert(Drawable());
 	Drawable & drawable = dlist->get(dref);
 	drawable.SetModel(*object.model);
-	drawable.SetTextures(texture0->GetID(), texture1->GetID(), texture2->GetID());
+	drawable.SetTextures(texture0->GetId(), texture1->GetId(), texture2->GetId());
 	drawable.SetDecal(transparent);
 	drawable.SetCull(data.cull && (object.transparent_blend!=2), false);
 	drawable.SetObjectCenter(object.model->GetCenter());

@@ -25,6 +25,7 @@
 #include "quaternion.h"
 #include <vector>
 
+struct GraphicsCamera;
 class TextureInterface;
 class Shader;
 
@@ -35,54 +36,40 @@ public:
 
 	~RenderInputPostprocess();
 
-	void SetSourceTextures(const std::vector <TextureInterface*> & textures);
-
 	void SetShader(Shader * newshader);
 
-	virtual void Render(GraphicsState & glstate, std::ostream & error_output);
+	void ClearOutput(GraphicsState & glstate, bool clearcolor, bool cleardepth);
 
-	void SetWriteColor(bool write);
+	void SetColorMask(GraphicsState & glstate, bool write_color, bool write_alpha);
 
-	void SetWriteAlpha(bool write);
+	void SetDepthMode(GraphicsState & glstate, int mode, bool write_depth);
 
-	void SetWriteDepth(bool write);
+	void SetBlendMode(GraphicsState & glstate, BlendMode::BLENDMODE mode);
 
-	void SetDepthMode(int mode);
-
-	void SetClear(bool newclearcolor, bool newcleardepth);
-
-	void SetBlendMode(BlendMode::BLENDMODE mode);
-
-	void SetContrast(float value);
+	void SetTextures(
+		GraphicsState & glstate,
+		const std::vector <TextureInterface*> & textures,
+		std::ostream & error_output);
 
 	// these are used only to upload uniforms to the shaders
-	void SetCameraInfo(
-		const Vec3 & newpos,
-		const Quat & newrot,
-		float newfov, float newlodfar,
-		float neww, float newh);
+	void SetCamera(const GraphicsCamera & cam);
 
 	void SetSunDirection(const Vec3 & newsun);
 
+	void SetContrast(float value);
+
+	virtual void Render(GraphicsState & glstate, std::ostream & error_output);
+
 private:
-	std::vector <TextureInterface*> source_textures;
 	Shader * shader;
-	bool writealpha;
-	bool writecolor;
-	bool writedepth;
-	Vec3 lightposition;
 	Quat cam_rotation;
 	Vec3 cam_position;
-	float w, h;
-	float camfov;
-	float lod_far;
-	int depth_mode;
-	bool clearcolor;
-	bool cleardepth;
-	BlendMode::BLENDMODE blendmode;
+	Vec3 frustum_corners[4];
+	Vec3 frustum_corners_ws[4];
+	Vec3 lightposition;
 	float contrast;
-
-	void SetBlendMode(GraphicsState & glstate);
+	float maxu;
+	float maxv;
 };
 
 #endif // _RENDER_INPUT_POSTPROCESS_H

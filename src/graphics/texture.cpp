@@ -314,11 +314,7 @@ static void SetSampler(const TextureInfo & info, bool hasmiplevels = false)
 		glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAX_ANISOTROPY_EXT, (float)info.anisotropy);
 }
 
-Texture::Texture():
-	m_id(0),
-	m_w(0),
-	m_h(0),
-	m_cube(false)
+Texture::Texture()
 {
 	// ctor
 }
@@ -328,39 +324,10 @@ Texture::~Texture()
 	Unload();
 }
 
-void Texture::Activate() const
-{
-	assert(m_id);
-	if (m_cube)
-	{
-		glEnable(GL_TEXTURE_CUBE_MAP);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, m_id);
-	}
-	else
-	{
-		glEnable(GL_TEXTURE_2D);
-		glBindTexture(GL_TEXTURE_2D, m_id);
-	}
-}
-
-void Texture::Deactivate() const
-{
-	if (m_cube)
-	{
-		glDisable(GL_TEXTURE_CUBE_MAP);
-		glBindTexture(GL_TEXTURE_CUBE_MAP, 0);
-	}
-	else
-	{
-		glDisable(GL_TEXTURE_2D);
-		glBindTexture(GL_TEXTURE_2D, 0);
-	}
-}
-
 bool Texture::Load(const std::string & path, const TextureInfo & info, std::ostream & error)
 {
 
-	if (m_id)
+	if (texid)
 	{
 		error << "Tried to double load texture " << path << std::endl;
 		return false;
@@ -377,8 +344,7 @@ bool Texture::Load(const std::string & path, const TextureInfo & info, std::ostr
 		return true;
 	}
 
-	m_cube = info.cube;
-	if (m_cube)
+	if (info.cube)
 	{
 		return LoadCube(path, info, error);
 	}
@@ -474,15 +440,17 @@ bool Texture::Load(const std::string & path, const TextureInfo & info, std::ostr
 	}
 
 	// store dimensions
-	m_w = w;
-	m_h = h;
+	width = w;
+	height = h;
+
+	target = GL_TEXTURE_2D;
 
 	// gen texture
-	glGenTextures(1, &m_id);
+	glGenTextures(1, &texid);
 	CheckForOpenGLErrors("Texture ID generation", error);
 
 	// setup texture
-	glBindTexture(GL_TEXTURE_2D, m_id);
+	glBindTexture(GL_TEXTURE_2D, texid);
 	SetSampler(info);
 
 	int internalformat, format;
@@ -504,9 +472,9 @@ bool Texture::Load(const std::string & path, const TextureInfo & info, std::ostr
 
 void Texture::Unload()
 {
-	if (m_id)
-		glDeleteTextures(1, &m_id);
-	m_id = 0;
+	if (texid)
+		glDeleteTextures(1, &texid);
+	texid = 0;
 }
 
 bool Texture::LoadCubeVerticalCross(const std::string & path, const TextureInfo & info, std::ostream & error)
@@ -519,10 +487,12 @@ bool Texture::LoadCubeVerticalCross(const std::string & path, const TextureInfo 
 		return false;
 	}
 
-	unsigned id = 0;
-	glGenTextures(1, &id);
+	target = GL_TEXTURE_CUBE_MAP;
+
+	glGenTextures(1, &texid);
 	CheckForOpenGLErrors("Cubemap ID generation", error);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, id);
+
+	glBindTexture(GL_TEXTURE_CUBE_MAP, texid);
 	glEnable(GL_TEXTURE_CUBE_MAP);
 
 	// set sampler
@@ -538,13 +508,12 @@ bool Texture::LoadCubeVerticalCross(const std::string & path, const TextureInfo 
 			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_GENERATE_MIPMAP, GL_TRUE);
 	}
 
-	m_id = id;
-	m_w = surface->w / 3;
-	m_h = surface->h / 4;
+	width = surface->w / 3;
+	height = surface->h / 4;
 
 	// upload texture
 	unsigned bytespp = surface->format->BytesPerPixel;
-	std::vector<unsigned char> cubeface(m_w * m_h * bytespp);
+	std::vector<unsigned char> cubeface(width * height * bytespp);
 	for (int i = 0; i < 6; ++i)
 	{
 		// detect channels
@@ -577,37 +546,37 @@ bool Texture::LoadCubeVerticalCross(const std::string & path, const TextureInfo 
 		{
 			targetparam = GL_TEXTURE_CUBE_MAP_NEGATIVE_X;
 			offsetx = 0;
-			offsety = m_h;
+			offsety = height;
 		}
 		else if (i == 1)
 		{
 			targetparam = GL_TEXTURE_CUBE_MAP_POSITIVE_X;
-			offsetx = m_w*2;
-			offsety = m_h;
+			offsetx = width*2;
+			offsety = height;
 		}
 		else if (i == 2)
 		{
 			targetparam = GL_TEXTURE_CUBE_MAP_NEGATIVE_Y;
-			offsetx = m_w;
-			offsety = m_h*2;
+			offsetx = width;
+			offsety = height*2;
 		}
 		else if (i == 3)
 		{
 			targetparam = GL_TEXTURE_CUBE_MAP_POSITIVE_Y;
-			offsetx = m_w;
+			offsetx = width;
 			offsety = 0;
 		}
 		else if (i == 4)
 		{
 			targetparam = GL_TEXTURE_CUBE_MAP_NEGATIVE_Z;
-			offsetx = m_w;
-			offsety = m_h*3;
+			offsetx = width;
+			offsety = height*3;
 		}
 		else if (i == 5)
 		{
 			targetparam = GL_TEXTURE_CUBE_MAP_POSITIVE_Z;
-			offsetx = m_w;
-			offsety = m_h;
+			offsetx = width;
+			offsety = height;
 		}
 		else
 		{
@@ -617,14 +586,14 @@ bool Texture::LoadCubeVerticalCross(const std::string & path, const TextureInfo 
 
 		if (i == 4) //special case for negative z
 		{
-			for (unsigned yi = 0; yi < m_h; yi++)
+			for (unsigned yi = 0; yi < height; yi++)
 			{
-				for (unsigned xi = 0; xi < m_w; xi++)
+				for (unsigned xi = 0; xi < width; xi++)
 				{
 					for (unsigned ci = 0; ci < bytespp; ci++)
 					{
-						int idx1 = ((m_h - yi - 1) + offsety) * surface->w * bytespp + (m_w - xi - 1 + offsetx) * bytespp + ci;
-						int idx2 = yi * m_w * bytespp + xi * bytespp + ci;
+						int idx1 = ((height - yi - 1) + offsety) * surface->w * bytespp + (width - xi - 1 + offsetx) * bytespp + ci;
+						int idx2 = yi * width * bytespp + xi * bytespp + ci;
 						cubeface[idx2] = ((unsigned char *)(surface->pixels))[idx1];
 					}
 				}
@@ -632,20 +601,20 @@ bool Texture::LoadCubeVerticalCross(const std::string & path, const TextureInfo 
 		}
 		else
 		{
-			for (unsigned yi = 0; yi < m_h; yi++)
+			for (unsigned yi = 0; yi < height; yi++)
 			{
-				for (unsigned xi = 0; xi < m_w; xi++)
+				for (unsigned xi = 0; xi < width; xi++)
 				{
 					for (unsigned ci = 0; ci < bytespp; ci++)
 					{
 						int idx1 = (yi + offsety) * surface->w * bytespp + (xi + offsetx) * bytespp + ci;
-						int idx2 = yi * m_w * bytespp + xi * bytespp + ci;
+						int idx2 = yi * width * bytespp + xi * bytespp + ci;
 						cubeface[idx2] = ((unsigned char *)(surface->pixels))[idx1];
 					}
 				}
 			}
 		}
-		glTexImage2D(targetparam, 0, format, m_w, m_h, 0, format, GL_UNSIGNED_BYTE, &cubeface[0]);
+		glTexImage2D(targetparam, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, &cubeface[0]);
 	}
 
 	if (info.mipmap)
@@ -675,11 +644,12 @@ bool Texture::LoadCube(const std::string & path, const TextureInfo & info, std::
 	cubefiles[4] = path+"-zn.png";
 	cubefiles[5] = path+"-zp.png";
 
-	unsigned id = 0;
-	glGenTextures(1, &id);
+	target = GL_TEXTURE_CUBE_MAP;
+
+	glGenTextures(1, &texid);
 	CheckForOpenGLErrors("Cubemap texture ID generation", error);
-	glBindTexture(GL_TEXTURE_CUBE_MAP, id);
-	m_id = id;
+
+	glBindTexture(GL_TEXTURE_CUBE_MAP, texid);
 
 	for (int i = 0; i < 6; ++i)
 	{
@@ -692,13 +662,13 @@ bool Texture::LoadCube(const std::string & path, const TextureInfo & info, std::
 		}
 
 		// store dimensions
-		if (i != 0 && ((m_w != (unsigned)surface->w) || (m_h != (unsigned)surface->h)))
+		if (i != 0 && ((width != (unsigned)surface->w) || (height != (unsigned)surface->h)))
 		{
 			error << "Cube map sides aren't equal sizes" << std::endl;
 			return false;
 		}
-		m_w = surface->w;
-		m_h = surface->h;
+		width = surface->w;
+		height = surface->h;
 
 		// detect channels
 		int format = GL_RGB;
@@ -794,9 +764,9 @@ bool Texture::LoadDDS(const std::string & path, const TextureInfo & info, std::o
 	}
 
 	// set properties
-	m_w = width;
-	m_h = height;
-	m_cube = false;
+	width = width;
+	height = height;
+	target = GL_TEXTURE_2D;
 
 	// gl3 renderer expects srgb
 	unsigned iformat = format;
@@ -815,11 +785,11 @@ bool Texture::LoadDDS(const std::string & path, const TextureInfo & info, std::o
 	}
 
 	// load texture
-	assert(!m_id);
-	glGenTextures(1, &m_id);
+	assert(!texid);
+	glGenTextures(1, &texid);
 	CheckForOpenGLErrors("Texture ID generation", error);
 
-	glBindTexture(GL_TEXTURE_2D, m_id);
+	glBindTexture(GL_TEXTURE_2D, texid);
 
 	SetSampler(info, levels > 1);
 

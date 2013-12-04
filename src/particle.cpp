@@ -60,7 +60,7 @@ void ParticleSystem::Load(
 	Drawable & drawref = GetDrawlist(node).get(draw);
 	drawref.SetDrawEnable(false);
 	drawref.SetVertArray(&varrays[cur_varray]);
-	drawref.SetTextures(texture->GetID());
+	drawref.SetTextures(texture->GetId());
 	drawref.SetCull(false, false);
 }
 

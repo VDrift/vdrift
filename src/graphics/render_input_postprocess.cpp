@@ -18,21 +18,18 @@
 /************************************************************************/
 
 #include "render_input_postprocess.h"
-#include "glutil.h"
+#include "texture_interface.h"
+#include "graphics_camera.h"
 #include "graphicsstate.h"
+#include "glutil.h"
 #include "matrix4.h"
 #include "shader.h"
 
 RenderInputPostprocess::RenderInputPostprocess() :
 	shader(NULL),
-	writealpha(true),
-	writecolor(true),
-	writedepth(false),
-	depth_mode(GL_LEQUAL),
-	clearcolor(false),
-	cleardepth(false),
-	blendmode(BlendMode::DISABLED),
-	contrast(1.0)
+	contrast(1),
+	maxu(1),
+	maxv(1)
 {
 	//ctor
 }
@@ -42,14 +39,134 @@ RenderInputPostprocess::~RenderInputPostprocess()
 	//dtor
 }
 
-void RenderInputPostprocess::SetSourceTextures(const std::vector <TextureInterface*> & textures)
-{
-	source_textures = textures;
-}
-
 void RenderInputPostprocess::SetShader(Shader * newshader)
 {
 	shader = newshader;
+}
+
+void RenderInputPostprocess::ClearOutput(GraphicsState & glstate, bool color, bool depth)
+{
+	glstate.ClearDrawBuffer(color, depth);
+}
+
+void RenderInputPostprocess::SetColorMask(GraphicsState & glstate, bool write_color, bool write_alpha)
+{
+	glstate.ColorMask(write_color, write_alpha);
+}
+
+void RenderInputPostprocess::SetDepthMode(GraphicsState & glstate, int mode, bool write_depth)
+{
+	glstate.DepthTest(mode, write_depth);
+}
+
+void RenderInputPostprocess::SetBlendMode(GraphicsState & glstate, BlendMode::BLENDMODE mode)
+{
+	assert(mode != BlendMode::ALPHATEST);
+	switch (mode)
+	{
+		case BlendMode::DISABLED:
+		{
+			glstate.AlphaTest(false);
+			glstate.Blend(false);
+		}
+		break;
+
+		case BlendMode::ADD:
+		{
+			glstate.AlphaTest(false);
+			glstate.Blend(true);
+			glstate.BlendFunc(GL_ONE, GL_ONE);
+		}
+		break;
+
+		case BlendMode::ALPHABLEND:
+		{
+			glstate.AlphaTest(false);
+			glstate.Blend(true);
+			glstate.BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		}
+		break;
+
+		case BlendMode::PREMULTIPLIED_ALPHA:
+		{
+			glstate.AlphaTest(false);
+			glstate.Blend(true);
+			glstate.BlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+		}
+		break;
+
+		default:
+		assert(0);
+		break;
+	}
+}
+
+void RenderInputPostprocess::SetTextures(
+	GraphicsState & glstate,
+	const std::vector <TextureInterface*> & textures,
+	std::ostream & error_output)
+{
+	maxu = 1;
+	maxv = 1;
+	int num_nonnull = 0;
+	for (unsigned i = 0; i < textures.size(); i++)
+	{
+		const TextureInterface * t = textures[i];
+		if (t)
+		{
+			glstate.BindTexture(i, t->GetTarget(), t->GetId());
+			if (t->GetTarget() == GL_TEXTURE_RECTANGLE)
+			{
+				maxu = t->GetW();
+				maxv = t->GetH();
+			}
+			num_nonnull++;
+		}
+	}
+	if (textures.size() && !num_nonnull)
+	{
+		error_output << "Out of the " << textures.size() << " input textures provided as inputs to this postprocess stage, zero are available. This stage will have no effect." << std::endl;
+		return;
+	}
+	CheckForOpenGLErrors("postprocess texture set", error_output);
+}
+
+void RenderInputPostprocess::SetCamera(const GraphicsCamera & cam)
+{
+	cam_rotation = cam.rot;
+	cam_position = cam.pos;
+
+	// get frustum far plane corners
+	const Mat4 proj_inv = GetProjMatrixInv(cam);
+	const float lod_far = cam.view_distance;
+	frustum_corners[0].Set(-lod_far, -lod_far, -lod_far); // BL
+	frustum_corners[1].Set( lod_far, -lod_far, -lod_far); // BR
+	frustum_corners[2].Set( lod_far,  lod_far, -lod_far); // TR
+	frustum_corners[3].Set(-lod_far,  lod_far, -lod_far); // TL
+	for (int i = 0; i < 4; i++)
+	{
+		proj_inv.TransformVectorOut(frustum_corners[i][0], frustum_corners[i][1], frustum_corners[i][2]);
+		frustum_corners[i][2] = -lod_far;
+	}
+
+	// frustum corners in world space for dynamic sky shader
+	Mat4 view_rot_inv;
+	(-cam.rot).GetMatrix4(view_rot_inv);
+	for (int i = 0; i < 4; i++)
+	{
+		frustum_corners_ws[i] = frustum_corners[i];
+		view_rot_inv.TransformVectorOut(frustum_corners_ws[i][0], frustum_corners_ws[i][1], frustum_corners_ws[i][2]);
+	}
+}
+
+void RenderInputPostprocess::SetSunDirection(const Vec3 & newsun)
+{
+	lightposition = newsun;
+}
+
+void RenderInputPostprocess::SetContrast(float value)
+{
+	contrast = value;
 }
 
 void RenderInputPostprocess::Render(GraphicsState & glstate, std::ostream & error_output)
@@ -58,10 +175,7 @@ void RenderInputPostprocess::Render(GraphicsState & glstate, std::ostream & erro
 
 	CheckForOpenGLErrors("postprocess begin", error_output);
 
-	glstate.SetColorMask(writecolor, writealpha);
-	glstate.SetDepthMask(writedepth);
-
-	glstate.ClearDrawBuffer(clearcolor, cleardepth);
+	glstate.SetColor(1,1,1,1);
 
 	shader->Enable();
 
@@ -77,75 +191,11 @@ void RenderInputPostprocess::Render(GraphicsState & glstate, std::ostream & erro
 	glMatrixMode(GL_MODELVIEW);
 	glLoadMatrixf(viewMatrix.GetArray());
 
-	glstate.SetColor(1,1,1,1);
-
-	SetBlendMode(glstate);
-
-	if (writedepth || depth_mode != GL_ALWAYS)
-		glstate.Enable(GL_DEPTH_TEST);
-	else
-		glstate.Disable(GL_DEPTH_TEST);
-	glDepthFunc( depth_mode );
-	glstate.Enable(GL_TEXTURE_2D);
-
-	glActiveTexture(GL_TEXTURE0);
+	glstate.ActiveTexture(0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE);
 	glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_LUMINANCE);
 
 	CheckForOpenGLErrors("postprocess flag set", error_output);
-
-
-	float maxu = 1.f;
-	float maxv = 1.f;
-
-	int num_nonnull = 0;
-	for (unsigned int i = 0; i < source_textures.size(); i++)
-	{
-		//std::cout << i << ": " << source_textures[i] << std::endl;
-		glActiveTexture(GL_TEXTURE0+i);
-		if (source_textures[i])
-		{
-			source_textures[i]->Activate();
-			num_nonnull++;
-			if (source_textures[i]->IsRect())
-			{
-				maxu = source_textures[i]->GetW();
-				maxv = source_textures[i]->GetH();
-			}
-		}
-	}
-	if (source_textures.size() && !num_nonnull)
-	{
-		error_output << "Out of the " << source_textures.size() << " input textures provided as inputs to this postprocess stage, zero are available. This stage will have no effect." << std::endl;
-		return;
-	}
-	glActiveTexture(GL_TEXTURE0);
-
-	CheckForOpenGLErrors("postprocess texture set", error_output);
-
-	// build the frustum corners
-	float ratio = w/h;
-	std::vector <Vec3 > frustum_corners(4);
-	frustum_corners[0].Set(-lod_far,-lod_far,-lod_far);	//BL
-	frustum_corners[1].Set(lod_far,-lod_far,-lod_far);	//BR
-	frustum_corners[2].Set(lod_far,lod_far,-lod_far);	//TR
-	frustum_corners[3].Set(-lod_far,lod_far,-lod_far);	//TL
-	Mat4 inv_proj;
-	inv_proj.InvPerspective(camfov, ratio, 0.1, lod_far);
-	for (int i = 0; i < 4; i++)
-	{
-		inv_proj.TransformVectorOut(frustum_corners[i][0], frustum_corners[i][1], frustum_corners[i][2]);
-		frustum_corners[i][2] = -lod_far;
-	}
-	// frustum corners in world space for dynamic sky shader
-	std::vector <Vec3 > frustum_corners_w(4);
-	Mat4 inv_view_rot;
-	(-cam_rotation).GetMatrix4(inv_view_rot);
-	for (int i = 0; i < 4; i++)
-	{
-		frustum_corners_w[i] = frustum_corners[i];
-		inv_view_rot.TransformVectorOut(frustum_corners_w[i][0], frustum_corners_w[i][1], frustum_corners_w[i][2]);
-	}
 
 	// send shader parameters
 	{
@@ -156,8 +206,8 @@ void RenderInputPostprocess::Render(GraphicsState & glstate, std::ostream & erro
 		shader->UploadActiveShaderParameter1f("znear", 0.1);
 		//std::cout << lightvec << std::endl;
 		shader->UploadActiveShaderParameter3f("frustum_corner_bl", frustum_corners[0]);
-		shader->UploadActiveShaderParameter3f("frustum_corner_br_delta", frustum_corners[1]-frustum_corners[0]);
-		shader->UploadActiveShaderParameter3f("frustum_corner_tl_delta", frustum_corners[3]-frustum_corners[0]);
+		shader->UploadActiveShaderParameter3f("frustum_corner_br_delta", frustum_corners[1] - frustum_corners[0]);
+		shader->UploadActiveShaderParameter3f("frustum_corner_tl_delta", frustum_corners[3] - frustum_corners[0]);
 	}
 
 	// draw a quad
@@ -187,10 +237,10 @@ void RenderInputPostprocess::Render(GraphicsState & glstate, std::ostream & erro
 	};
 	// fructum corners in world space in uv set 2
 	float tc2[4 * 3] = {
-		frustum_corners_w[0][0], frustum_corners_w[0][1], frustum_corners_w[0][2],
-		frustum_corners_w[1][0], frustum_corners_w[1][1], frustum_corners_w[1][2],
-		frustum_corners_w[2][0], frustum_corners_w[2][1], frustum_corners_w[2][2],
-		frustum_corners_w[3][0], frustum_corners_w[3][1], frustum_corners_w[3][2],
+		frustum_corners_ws[0][0], frustum_corners_ws[0][1], frustum_corners_ws[0][2],
+		frustum_corners_ws[1][0], frustum_corners_ws[1][1], frustum_corners_ws[1][2],
+		frustum_corners_ws[2][0], frustum_corners_ws[2][1], frustum_corners_ws[2][2],
+		frustum_corners_ws[3][0], frustum_corners_ws[3][1], frustum_corners_ws[3][2],
 	};
 
 	glEnableClientState(GL_VERTEX_ARRAY);
@@ -221,119 +271,4 @@ void RenderInputPostprocess::Render(GraphicsState & glstate, std::ostream & erro
 	glDisableClientState(GL_VERTEX_ARRAY);
 
 	CheckForOpenGLErrors("postprocess draw", error_output);
-
-	glstate.Enable(GL_DEPTH_TEST);
-	glstate.Disable(GL_TEXTURE_2D);
-
-	for (unsigned int i = 0; i < source_textures.size(); i++)
-	{
-		//std::cout << i << ": " << source_textures[i] << std::endl;
-		glActiveTexture(GL_TEXTURE0+i);
-		if (source_textures[i])
-			source_textures[i]->Deactivate();
-	}
-	glActiveTexture(GL_TEXTURE0);
-
-	CheckForOpenGLErrors("postprocess end", error_output);
-}
-
-void RenderInputPostprocess::SetWriteColor(bool write)
-{
-	writecolor = write;
-}
-
-void RenderInputPostprocess::SetWriteAlpha(bool write)
-{
-	writealpha = write;
-}
-
-void RenderInputPostprocess::SetWriteDepth(bool write)
-{
-	writedepth = write;
-}
-
-void RenderInputPostprocess::SetDepthMode(int mode)
-{
-	depth_mode = mode;
-}
-
-void RenderInputPostprocess::SetClear(bool newclearcolor, bool newcleardepth)
-{
-	clearcolor = newclearcolor;
-	cleardepth = newcleardepth;
-}
-
-void RenderInputPostprocess::SetBlendMode(BlendMode::BLENDMODE mode)
-{
-	blendmode = mode;
-}
-
-void RenderInputPostprocess::SetContrast(float value)
-{
-	contrast = value;
-}
-
-void RenderInputPostprocess::SetCameraInfo(
-	const Vec3 & newpos,
-	const Quat & newrot,
-	float newfov, float newlodfar,
-	float neww, float newh)
-{
-	cam_position = newpos;
-	cam_rotation = newrot;
-	camfov = newfov;
-	lod_far = newlodfar;
-	w = neww;
-	h = newh;
-}
-
-void RenderInputPostprocess::SetSunDirection(const Vec3 & newsun)
-{
-	lightposition = newsun;
-}
-
-void RenderInputPostprocess::SetBlendMode(GraphicsState & glstate)
-{
-	assert(blendmode != BlendMode::ALPHATEST);
-	switch (blendmode)
-	{
-		case BlendMode::DISABLED:
-		{
-			glstate.Disable(GL_ALPHA_TEST);
-			glstate.Disable(GL_BLEND);
-			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-		}
-		break;
-
-		case BlendMode::ADD:
-		{
-			glstate.Disable(GL_ALPHA_TEST);
-			glstate.Enable(GL_BLEND);
-			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-			glstate.SetBlendFunc(GL_ONE, GL_ONE);
-		}
-		break;
-
-		case BlendMode::ALPHABLEND:
-		{
-			glstate.Disable(GL_ALPHA_TEST);
-			glstate.Enable(GL_BLEND);
-			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-			glstate.SetBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		}
-		break;
-
-		case BlendMode::PREMULTIPLIED_ALPHA:
-		{
-			glstate.Disable(GL_ALPHA_TEST);
-			glstate.Enable(GL_BLEND);
-			glstate.Disable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-			glstate.SetBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-		}
-		break;
-
-		default:
-		assert(0);
-		break;
-	}
 }

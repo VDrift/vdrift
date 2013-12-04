@@ -70,14 +70,6 @@ public:
 
 	bool Loaded() const;
 
-	void Activate() const;
-
-	void Deactivate() const;
-
-	unsigned GetW() const;
-
-	unsigned GetH() const;
-
 private:
 	std::ostream & error_output;
 	GraphicsGL2 & graphics;

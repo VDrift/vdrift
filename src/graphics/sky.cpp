@@ -74,8 +74,12 @@ Sky::Sky(GraphicsGL2 & gfx, std::ostream & error) :
 {
 	assert(graphics.GetUsingShaders());
 
-	sky_textures[0].Init(texture_size, texture_size, FrameBufferTexture::CUBEMAP, FrameBufferTexture::RGB8, true, false, error_output);
-	sky_textures[1].Init(texture_size, texture_size, FrameBufferTexture::CUBEMAP, FrameBufferTexture::RGB8, true, false, error_output);
+	target = FrameBufferTexture::CUBEMAP;
+	width = texture_size;
+	height = texture_size;
+
+	sky_textures[0].Init(width, height, FrameBufferTexture::CUBEMAP, FrameBufferTexture::RGB8, true, false, error_output);
+	sky_textures[1].Init(width, height, FrameBufferTexture::CUBEMAP, FrameBufferTexture::RGB8, true, false, error_output);
 
 	sky_fbos[0].Init(graphics.GetState(), std::vector<FrameBufferTexture*>(1, &sky_textures[0]), error_output);
 	sky_fbos[1].Init(graphics.GetState(), std::vector<FrameBufferTexture*>(1, &sky_textures[1]), error_output);
@@ -181,10 +185,9 @@ void Sky::UpdateComplete()
 void Sky::Draw(unsigned elems, const unsigned faces[], const float pos[], const float tco[])
 {
 	// disable blending, depth write
-	graphics.GetState().Disable(GL_ALPHA_TEST);
-	graphics.GetState().Disable(GL_BLEND);
-	graphics.GetState().Disable(GL_DEPTH_TEST);
-	graphics.GetState().SetDepthMask(false);
+	graphics.GetState().DepthTest(GL_ALWAYS, false);
+	graphics.GetState().AlphaTest(false);
+	graphics.GetState().Blend(false);
 
 	// bind fbo
 	unsigned texture_updated = (texture_active + 1) % 2;
@@ -280,6 +283,7 @@ void Sky::UpdateSky()
 			// set fully updated texture as active
 			unsigned texture_updated = (texture_active + 1) % 2;
 			texture_active = texture_updated;
+			texid = sky_textures[texture_active].GetId();
 
 			// reset side counter and update flag
 			side_updated = 0;
@@ -405,24 +409,4 @@ float Sky::GetAzimuth() const
 bool Sky::Loaded() const
 {
 	return sky_textures[texture_active].Loaded();
-}
-
-void Sky::Activate() const
-{
-	return sky_textures[texture_active].Activate();
-}
-
-void Sky::Deactivate() const
-{
-	return sky_textures[texture_active].Deactivate();
-}
-
-unsigned Sky::GetW() const
-{
-	return sky_textures[texture_active].GetW();
-}
-
-unsigned Sky::GetH() const
-{
-	return sky_textures[texture_active].GetH();
 }

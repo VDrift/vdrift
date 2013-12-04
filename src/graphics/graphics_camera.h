@@ -20,15 +20,14 @@
 #ifndef _GRAPHICS_CAMERA_H
 #define _GRAPHICS_CAMERA_H
 
-#include "mathvector.h"
-#include "quaternion.h"
+#include "matrix4.h"
 
 struct GraphicsCamera
 {
 	float fov;
 	float view_distance;
 	Vec3 pos;
-	Quat orient;
+	Quat rot;
 	float w;
 	float h;
 
@@ -44,5 +43,33 @@ struct GraphicsCamera
 		orthomode(false)
 		{}
 };
+
+inline Mat4 GetViewMatrix(const GraphicsCamera & c)
+{
+	Mat4 m;
+	c.rot.GetMatrix4(m);
+	float t[4] = {-c.pos[0], -c.pos[1], -c.pos[2], 0};
+	m.MultiplyVector4(t);
+	m.Translate(t[0], t[1], t[2]);
+	return m;
+}
+
+inline Mat4 GetProjMatrix(const GraphicsCamera & c)
+{
+	Mat4 m;
+	if (c.orthomode)
+		m.SetOrthographic(c.orthomin[0], c.orthomax[0], c.orthomin[1], c.orthomax[1], c.orthomin[2], c.orthomax[2]);
+	else
+		m.Perspective(c.fov, c.w / c.h, 0.1f, c.view_distance);
+	return m;
+}
+
+inline Mat4 GetProjMatrixInv(const GraphicsCamera & c)
+{
+	assert(!c.orthomode);
+	Mat4 m;
+	m.InvPerspective(c.fov, c.w / c.h, 0.1f, c.view_distance);
+	return m;
+}
 
 #endif // _GRAPHICS_CAMERA_H

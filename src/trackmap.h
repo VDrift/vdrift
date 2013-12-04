@@ -120,7 +120,7 @@ private:
 			{
 				assert(newtex.get());
 				texture = newtex;
-				GetDrawable(topnode).SetTextures(texture->GetID());
+				GetDrawable(topnode).SetTextures(texture->GetId());
 			}
 			void Reposition(const Vec2 & corner1, const Vec2 & corner2)
 			{

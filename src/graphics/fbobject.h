@@ -62,18 +62,20 @@ public:
 
 private:
 	GLuint framebuffer_object;
-	std::vector <FrameBufferObject> multisample_dest_singlesample_framebuffer_object;
-	GLuint renderbuffer_depth;
 	bool inited;
 	int width;
 	int height;
 
 	std::vector <FrameBufferTexture*> textures;
+	std::vector <GLuint> multisample_renderbuffers;
+	GLuint depth_renderbuffer;
+
+	// if we're multisampling, the result is blit to a single sampled framebuffer
+	// which is attached to the single sample fbtextures (color textures)
+	FrameBufferObject * singlesample_framebuffer_object;
 
 	/// returns true if status is OK
 	bool CheckStatus(std::ostream & error_output);
-
-	FrameBufferTexture & GetCubemapTexture();
 };
 
 #endif

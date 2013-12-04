@@ -148,7 +148,7 @@ void HudGauge::Set(
 
 		dial_draw = AddDrawable(parent);
 		Drawable & drawref = GetDrawable(parent, dial_draw);
-		drawref.SetTextures(texture->GetID());
+		drawref.SetTextures(texture->GetId());
 		drawref.SetVertArray(&dial_marks);
 		drawref.SetCull(false, false);
 		//drawref.SetColor(1, 1, 1, 0.5);
@@ -181,7 +181,7 @@ void HudGauge::Set(
 
 		dialnum_draw = AddTextDrawable(parent);
 		Drawable & drawref = GetTextDrawable(parent, dialnum_draw);
-		drawref.SetTextures(font.GetFontTexture()->GetID());
+		drawref.SetTextures(font.GetFontTexture()->GetId());
 		drawref.SetVertArray(&dial_label);
 		drawref.SetCull(false, false);
 		//drawref.SetColor(1, 1, 1, 0.5);
@@ -200,7 +200,7 @@ void HudGauge::Set(
 
 		pointer_draw = AddDrawable(parent);
 		Drawable & drawref = GetDrawable(parent, pointer_draw);
-		drawref.SetTextures(texture->GetID());
+		drawref.SetTextures(texture->GetId());
 		drawref.SetVertArray(&pointer_rotated);
 		drawref.SetCull(false, false);
 		//drawref.SetColor(1, 1, 1, 0.5);

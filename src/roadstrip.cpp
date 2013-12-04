@@ -159,6 +159,6 @@ void RoadStrip::CreateRacingLine(
 		if (n == patches.end())
 			n = patches.begin();
 
-		i->AddRacinglineScenenode(parentnode, *n, racingline_texture->GetID());
+		i->AddRacinglineScenenode(parentnode, *n, racingline_texture->GetId());
 	}
 }

@@ -45,7 +45,7 @@ void GuiImage::Update(SceneNode & scene, float dt)
 		texinfo.repeatu = false;
 		texinfo.repeatv = false;
 		m_content->load(m_texture, m_path, m_name + m_ext, texinfo);
-		d.SetTextures(m_texture->GetID());
+		d.SetTextures(m_texture->GetId());
 		m_load = false;
 	}
 }

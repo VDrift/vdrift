@@ -239,7 +239,7 @@ bool TrackMap::BuildMap(
 	mapverts.SetToBillboard(map_min[0], map_min[1], map_max[0], map_max[1]);
 	mapdraw = mapnode.GetDrawlist().twodim.insert(Drawable());
 	Drawable & mapdrawref = mapnode.GetDrawlist().twodim.get(mapdraw);
-	mapdrawref.SetTextures(track_map->GetID());
+	mapdrawref.SetTextures(track_map->GetId());
 	mapdrawref.SetVertArray(&mapverts);
 	mapdrawref.SetCull(false, false);
 	//mapdrawref.SetColor(1, 1, 1, 0.7);

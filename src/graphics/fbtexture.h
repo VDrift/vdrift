@@ -24,12 +24,10 @@
 #include "glew.h"
 
 #include <iosfwd>
-
-class FrameBufferObject;
+#include <cassert>
 
 class FrameBufferTexture : public TextureInterface
 {
-friend class FrameBufferObject;
 public:
 	enum Target
 	{
@@ -58,40 +56,38 @@ public:
 		DEPTH24 = GL_DEPTH_COMPONENT24
 	};
 
-	FrameBufferTexture() :
-		fbtexture(0),
-		renderbuffer_multisample(0),
-		inited(false),
-		attached(false),
-		sizew(0),
-		sizeh(0),
-		target(NORMAL),
-		mipmap(false),
-		multisample(0),
-		attachment(GL_COLOR_ATTACHMENT0),
-		format(RGB8),
-		cur_side(POSX),
-		depthcomparisonenabled(true)
-		{}
-	~FrameBufferTexture() {DeInit();}
-	void Init(int sizex, int sizey, Target newtarget, Format newformat, bool filternearest, bool usemipmap, std::ostream & error_output, int newmultisample = 0, bool newdepthcomparisonenabled = true);
+	FrameBufferTexture();
+
+	~FrameBufferTexture();
+
+	void Init(
+		int sizex, int sizey,
+		Target newtarget, Format newformat,
+		bool filternearest, bool usemipmap,
+		std::ostream & error_output,
+		int newmultisample = 0,
+		bool newdepthcomparisonenabled = true);
+
 	void DeInit();
-	virtual void Activate() const;
-	virtual void Deactivate() const;
-	virtual bool Loaded() const {return inited;}
-	virtual bool IsRect() const {return (target == RECTANGLE);}
-	virtual unsigned int GetW() const {return sizew;}
-	virtual unsigned int GetH() const {return sizeh;}
-	bool IsCubemap() const {return (target == CUBEMAP);}
+
+	void SetAttachment(int value) { attachment = value; }
+
+	int GetAttachment() const { return attachment; }
+
+	void SetSide(CubeSide side) { assert(target == CUBEMAP); cur_side = side; }
+
+	CubeSide GetSide() const { return cur_side; }
+
+	Format GetFormat() const { return format; }
+
+	int GetMultiSample() const { return multisample; }
+
+	bool HasMipMap() const { return mipmap; }
+
+	bool Loaded() const { return inited; }
 
 private:
-	GLuint fbtexture;
-	GLuint renderbuffer_multisample;
 	bool inited;
-	bool attached;
-	int sizew, sizeh;
-
-	Target target;
 	bool mipmap;
 	int multisample;
 	int attachment;

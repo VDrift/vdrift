@@ -90,7 +90,7 @@ void TextDraw::SetText(
 	VertexArray & output_array)
 {
 	RenderText(font, text, x, y, scalex, scaley, output_array);
-	draw.SetTextures(font.GetFontTexture()->GetID());
+	draw.SetTextures(font.GetFontTexture()->GetId());
 	draw.SetVertArray(&output_array);
 	draw.SetCull(false, false);
 	draw.SetColor(r, g, b, 1.0);

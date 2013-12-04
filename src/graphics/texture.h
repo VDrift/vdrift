@@ -31,30 +31,11 @@ public:
 
 	virtual ~Texture();
 
-	virtual void Activate() const;
-
-	virtual void Deactivate() const;
-
-	virtual bool Loaded() const {return m_id;}
-
-	virtual unsigned GetW() const {return m_w;}
-
-	virtual unsigned GetH() const {return m_h;}
-
-	virtual unsigned GetID() const {return m_id;}
-
-	bool IsCube() const {return m_cube;}
-
 	bool Load(const std::string & path, const TextureInfo & info, std::ostream & error);
 
 	void Unload();
 
 private:
-	unsigned m_id;
-	unsigned m_w;
-	unsigned m_h;
-	bool m_cube;
-
 	bool LoadCubeVerticalCross(const std::string & path, const TextureInfo & info, std::ostream & error);
 
 	bool LoadCube(const std::string & path, const TextureInfo & info, std::ostream & error);

@@ -73,7 +73,7 @@ bool LoadingScreen::Init(
 	Drawable & boxdrawref = root.GetDrawlist().twodim.get(boxdraw);
 	Drawable & barbackdrawref = root.GetDrawlist().twodim.get(barbackdraw);
 
-	boxdrawref.SetTextures(boxtex->GetID());
+	boxdrawref.SetTextures(boxtex->GetId());
 	boxdrawref.SetVertArray(&boxverts);
 	boxdrawref.SetDrawOrder(10000);
 	boxdrawref.SetCull(false, false);
@@ -82,7 +82,7 @@ bool LoadingScreen::Init(
 	w = 128.0/displayw*3.;
 	h = 128.0/displayw;
 
-	barbackdrawref.SetTextures(bartex->GetID());
+	barbackdrawref.SetTextures(bartex->GetId());
 	barbackdrawref.SetVertArray(&barbackverts);
 	barbackdrawref.SetDrawOrder(10001);
 	barbackdrawref.SetCull(false, false);
@@ -90,7 +90,7 @@ bool LoadingScreen::Init(
 
 	hscale = 0.3;
 
-	bardrawref.SetTextures(bartex->GetID());
+	bardrawref.SetTextures(bartex->GetId());
 	bardrawref.SetVertArray(&barverts);
 	bardrawref.SetDrawOrder(10002);
 	bardrawref.SetCull(false, false);

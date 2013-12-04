@@ -24,9 +24,32 @@
 #include <sstream>
 #include <string>
 
-void FrameBufferTexture::Init(int sizex, int sizey, Target newtarget, Format newformat, bool filternearest, bool usemipmap, std::ostream & error_output, int newmultisample, bool newdepthcomparisonenabled)
+FrameBufferTexture::FrameBufferTexture() :
+	inited(false),
+	mipmap(false),
+	multisample(0),
+	attachment(0),
+	format(RGB8),
+	cur_side(POSX),
+	depthcomparisonenabled(true)
 {
-	assert(!attached);
+	// ctor
+}
+
+FrameBufferTexture::~FrameBufferTexture()
+{
+	DeInit();
+}
+
+void FrameBufferTexture::Init(
+	int sizex, int sizey,
+	Target newtarget, Format newformat,
+	bool filternearest, bool usemipmap,
+	std::ostream & error_output,
+	int newmultisample,
+	bool newdepthcomparisonenabled)
+{
+	assert(!attachment);
 
 	CheckForOpenGLErrors("FBTEX init start", error_output);
 
@@ -39,16 +62,14 @@ void FrameBufferTexture::Init(int sizex, int sizey, Target newtarget, Format new
 
 	depthcomparisonenabled = newdepthcomparisonenabled;
 
-	format = newformat;
-
 	inited = true;
 
-	sizew = sizex;
-	sizeh = sizey;
-
-	mipmap = usemipmap;
-
 	target = newtarget;
+	width = sizex;
+	height = sizey;
+
+	format = newformat;
+	mipmap = usemipmap;
 
 	multisample = newmultisample;
 	if (!(GLEW_EXT_framebuffer_multisample && GLEW_EXT_framebuffer_blit))
@@ -108,8 +129,8 @@ void FrameBufferTexture::Init(int sizex, int sizey, Target newtarget, Format new
 	}
 
 	//initialize the texture
-	glGenTextures(1, &fbtexture);
-	glBindTexture(target, fbtexture);
+	glGenTextures(1, &texid);
+	glBindTexture(target, texid);
 
 	CheckForOpenGLErrors("FBTEX texture generation and initial bind", error_output);
 
@@ -178,21 +199,8 @@ void FrameBufferTexture::Init(int sizex, int sizey, Target newtarget, Format new
 
 void FrameBufferTexture::DeInit()
 {
-	if (fbtexture > 0)
-		glDeleteTextures(1, &fbtexture);
+	if (texid > 0)
+		glDeleteTextures(1, &texid);
 
 	inited = false;
-}
-
-void FrameBufferTexture::Activate() const
-{
-	assert(inited);
-
-	glBindTexture(target, fbtexture);
-}
-
-void FrameBufferTexture::Deactivate() const
-{
-	glDisable(target);
-	glBindTexture(target,0);
 }

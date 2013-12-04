@@ -72,8 +72,6 @@ public:
 
 	virtual void DrawScene(std::ostream & error_output) = 0;
 
-	virtual void EndScene(std::ostream & error_output) = 0;
-
 	virtual int GetMaxAnisotropy() const = 0;
 
 	virtual bool AntialiasingSupported() const = 0;

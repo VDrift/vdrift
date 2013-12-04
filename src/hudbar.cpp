@@ -31,7 +31,7 @@ void HudBar::Set(
 	draw = parent.GetDrawlist().twodim.insert(Drawable());
 	Drawable & drawref = parent.GetDrawlist().twodim.get(draw);
 
-	drawref.SetTextures(tex->GetID());
+	drawref.SetTextures(tex->GetId());
 	drawref.SetVertArray(&verts);
 	drawref.SetCull(false, false);
 	drawref.SetColor(1,1,1,opacity);

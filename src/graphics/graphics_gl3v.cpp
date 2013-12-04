@@ -568,11 +568,6 @@ void GraphicsGL3::DrawScene(std::ostream & error_output)
 	logNextGlFrame = false;
 }
 
-void GraphicsGL3::EndScene(std::ostream & error_output)
-{
-
-}
-
 int GraphicsGL3::GetMaxAnisotropy() const
 {
 	int max_anisotropy = 1;
@@ -647,10 +642,9 @@ bool GraphicsGL3::ReloadShaders(std::ostream & info_output, std::ostream & error
 			renderer.setGlobalUniform(viewportSizeUniform);
 
 			// set static reflection texture
-			if (static_reflection.Loaded())
+			if (static_reflection.GetId())
 			{
-				assert(static_reflection.IsCube());
-				renderer.setGlobalTexture(stringMap.addStringId("reflectionCube"), RenderTextureEntry(stringMap.addStringId("reflectionCube"), static_reflection.GetID(), GL_TEXTURE_CUBE_MAP));
+				renderer.setGlobalTexture(stringMap.addStringId("reflectionCube"), RenderTextureEntry(stringMap.addStringId("reflectionCube"), static_reflection.GetId(), GL_TEXTURE_CUBE_MAP));
 			}
 
 			if (initialized)

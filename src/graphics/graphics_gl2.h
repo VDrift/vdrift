@@ -79,8 +79,6 @@ public:
 
 	virtual void DrawScene(std::ostream & error_output);
 
-	virtual void EndScene(std::ostream & error_output);
-
 	virtual int GetMaxAnisotropy() const;
 
 	virtual bool AntialiasingSupported() const;
@@ -153,6 +151,7 @@ private:
 	// render outputs
 	typedef std::map <std::string, RenderOutput> render_output_map_type;
 	render_output_map_type render_outputs;
+
 	typedef std::map <std::string, FrameBufferTexture> texture_output_map_type;
 	texture_output_map_type texture_outputs;
 
@@ -216,41 +215,6 @@ private:
 
 	void UnbindInputTextures(
 		const std::vector <TextureInterface*> & textures,
-		std::ostream & error_output);
-
-	void DrawScenePassLayer(
-		const std::string & layer,
-		const GraphicsConfigPass & pass,
-		const std::vector <TextureInterface*> & input_textures,
-		const std::map <std::string, PtrVector <Drawable> > & culled_static_drawlist,
-		RenderOutput & render_output,
-		std::ostream & error_output);
-
-	void RenderDrawlist(
-		const std::vector <Drawable*> & drawlist,
-		RenderInputScene & render_scene,
-		RenderOutput & render_output,
-		std::ostream & error_output);
-
-	void RenderDrawlists(
-		const std::vector <Drawable*> & dynamic_drawlist,
-		const std::vector <Drawable*> & static_drawlist,
-		const std::vector <TextureInterface*> & extra_textures,
-		RenderInputScene & render_scene,
-		RenderOutput & render_output,
-		std::ostream & error_output);
-
-	void RenderPostProcess(
-		const std::string & shadername,
-		const std::vector <TextureInterface*> & textures,
-		RenderOutput & render_output,
-		bool write_color,
-		bool write_alpha,
-		std::ostream & error_output);
-
-	void Render(
-		RenderInput * input,
-		RenderOutput & output,
 		std::ostream & error_output);
 };
 

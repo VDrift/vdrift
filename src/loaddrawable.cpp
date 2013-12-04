@@ -103,7 +103,7 @@ bool LoadDrawable::operator()(
 	{
 		tex[2] = content.getFactory<Texture>().getZero();
 	}
-	drawable.SetTextures(tex[0]->GetID(), tex[1]->GetID(), tex[2]->GetID());
+	drawable.SetTextures(tex[0]->GetId(), tex[1]->GetId(), tex[2]->GetId());
 
 	// set mesh
 	std::tr1::shared_ptr<Model> mesh;

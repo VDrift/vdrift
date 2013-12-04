@@ -27,7 +27,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <cerrno>
-
+/*
 #if defined(WIN32) || defined(_WIN32)
 // inbuf not const due to iconv interface (posix wtf!?)
 size_t iconv(iconv_t cd, char** inbuf, size_t* inbytesleft, char** outbuf, size_t* outbytesleft)
@@ -35,7 +35,7 @@ size_t iconv(iconv_t cd, char** inbuf, size_t* inbytesleft, char** outbuf, size_
 	return iconv(cd, (const char**)inbuf, inbytesleft, outbuf, outbytesleft);
 }
 #endif
-
+*/
 // language to codepage mapping
 static const std::map<std::string, std::string> InitCP();
 static const std::map<std::string, std::string> codepages(InitCP());

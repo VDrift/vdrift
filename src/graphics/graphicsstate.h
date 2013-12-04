@@ -20,48 +20,104 @@
 #ifndef _GRAPHICS_STATE_H
 #define _GRAPHICS_STATE_H
 
-#include "texture.h"
 #include "glew.h"
-#include <vector>
 #include <cassert>
+
+// allow to run with fbo ext on older gpus (experimental compile time option)
+#ifdef FBOEXT
+
+#undef glGenFramebuffers
+#undef glBindFramebuffer
+#undef glGenRenderbuffers
+#undef glBindRenderbuffer
+#undef glRenderbufferStorage
+#undef glFramebufferRenderbuffer
+#undef glFramebufferTexture2D
+#undef glCheckFramebufferStatus
+#undef glDeleteFramebuffers
+#undef glDeleteRenderbuffers
+#undef glBlitFramebuffer
+
+#define glGenFramebuffers GLEW_GET_FUN(__glewGenFramebuffersEXT)
+#define glBindFramebuffer GLEW_GET_FUN(__glewBindFramebufferEXT)
+#define glGenRenderbuffers GLEW_GET_FUN(__glewGenRenderbuffersEXT)
+#define glBindRenderbuffer GLEW_GET_FUN(__glewBindRenderbufferEXT)
+#define glRenderbufferStorage GLEW_GET_FUN(__glewRenderbufferStorageEXT)
+#define glFramebufferRenderbuffer GLEW_GET_FUN(__glewFramebufferRenderbufferEXT)
+#define glFramebufferTexture2D GLEW_GET_FUN(__glewFramebufferTexture2DEXT)
+#define glCheckFramebufferStatus GLEW_GET_FUN(__glewCheckFramebufferStatusEXT)
+#define glDeleteFramebuffers GLEW_GET_FUN(__glewDeleteFramebuffersEXT)
+#define glDeleteRenderbuffers GLEW_GET_FUN(__glewDeleteRenderbuffersEXT)
+#define glBlitFramebuffer GLEW_GET_FUN(__glewBlitFramebufferEXT)
+
+#endif // FBOEXT
 
 class GraphicsState
 {
 public:
 	GraphicsState() :
-		used(65536, false),
-		state(65536),
-		curtu(255),
+		tutgt(),
+		tutex(),
+		tuactive(0),
+		fbread(0),
+		fbdraw(0),
 		r(1),g(1),b(1),a(1),
-		depthmask(true),
-		alphamode(GL_NEVER),
 		alphavalue(0),
+		alphamode(GL_NEVER),
 		blendsource(GL_ZERO),
 		blenddest(GL_ZERO),
 		cullmode(GL_BACK),
-		colormask(true),
-		alphamask(true)
+		depthmode(GL_LESS),
+		colormask(GL_TRUE),
+		alphamask(GL_TRUE),
+		depthmask(GL_TRUE),
+		depthoffset(false),
+		depthtest(false),
+		alphatest(false),
+		samplea2c(false),
+		blend(false),
+		cull(false)
 	{
+		// ctor
 	}
 
-	inline void Enable(int stateid)
-	{
-		Set(stateid, true);
-	}
-
-	inline void Disable(int stateid)
-	{
-		Set(stateid, false);
-	}
-
+	// clear independent of currently set writemasks
 	void ClearDrawBuffer(bool color, bool depth)
 	{
 		if (color && depth)
+		{
+			if (!colormask || !alphamask)
+				glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+			if (!depthmask)
+				glDepthMask(GL_TRUE);
+
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+			if (!colormask || !alphamask)
+				glColorMask(colormask, colormask, colormask, alphamask);
+			if (!depthmask)
+				glDepthMask(GL_FALSE);
+		}
 		else if (color)
+		{
+			if (!colormask || !alphamask)
+				glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+
 			glClear(GL_COLOR_BUFFER_BIT);
+
+			if (!colormask || !alphamask)
+				glColorMask(colormask, colormask, colormask, alphamask);
+		}
 		else if (depth)
+		{
+			if (!depthmask)
+				glDepthMask(GL_TRUE);
+
 			glClear(GL_DEPTH_BUFFER_BIT);
+
+			if (!depthmask)
+				glDepthMask(GL_FALSE);
+		}
 	}
 
 	void SetColor(float nr, float ng, float nb, float na)
@@ -73,27 +129,81 @@ public:
 		}
 	}
 
-	void SetDepthMask(bool newdepthmask)
+	void ColorMask(GLboolean writecolor, GLboolean writealpha)
 	{
-		if (newdepthmask != depthmask)
+		if (writecolor != colormask || writealpha != alphamask)
 		{
-			depthmask = newdepthmask;
-			glDepthMask(depthmask ? 1 : 0);
+			colormask = writecolor;
+			alphamask = writealpha;
+			glColorMask(colormask, colormask, colormask, alphamask);
 		}
 	}
 
-	void SetColorMask(bool newcolormask, bool newalphamask)
+	void DepthTest(GLenum testdepth, GLboolean writedepth)
 	{
-		if (newcolormask != colormask || newalphamask != alphamask)
+		bool test = writedepth || testdepth != GL_ALWAYS;
+		if (writedepth != depthmask)
 		{
-			colormask = newcolormask;
-			alphamask = newalphamask;
-			GLboolean val = colormask ? GL_TRUE : GL_FALSE;
-			glColorMask(val, val, val, alphamask ? GL_TRUE : GL_FALSE);
+			depthmask = writedepth;
+			glDepthMask(depthmask);
+		}
+		if (testdepth != depthmode)
+		{
+			depthmode = testdepth;
+			glDepthFunc(depthmode);
+		}
+		if (test != depthtest)
+		{
+			depthtest = test;
+			depthtest ? glEnable(GL_DEPTH_TEST) : glDisable(GL_DEPTH_TEST);
 		}
 	}
 
-	void SetAlphaFunc(GLenum mode, float value)
+	void DepthOffset(bool enable)
+	{
+		if (enable != depthoffset)
+		{
+			depthoffset = enable;
+			depthoffset ? glEnable(GL_POLYGON_OFFSET_FILL) :
+				glDisable(GL_POLYGON_OFFSET_FILL);
+		}
+	}
+
+	void AlphaTest(bool enable, bool alpha_to_coverage = false)
+	{
+		if (enable != alphatest)
+		{
+			alphatest = enable;
+			alphatest ? glEnable(GL_ALPHA_TEST) : glDisable(GL_ALPHA_TEST);
+		}
+
+		if (alpha_to_coverage != samplea2c)
+		{
+			samplea2c = alpha_to_coverage;
+			samplea2c ? glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE) :
+				glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE);
+		}
+	}
+
+	void Blend(bool enable)
+	{
+		if (enable != blend)
+		{
+			blend = enable;
+			blend ? glEnable(GL_BLEND) : glDisable(GL_BLEND);
+		}
+	}
+
+	void CullFace(bool enable)
+	{
+		if (enable != cull)
+		{
+			cull = enable;
+			cull ? glEnable(GL_CULL_FACE) :	glDisable(GL_CULL_FACE);
+		}
+	}
+
+	void AlphaFunc(GLenum mode, float value)
 	{
 		if (mode != alphamode || value != alphavalue)
 		{
@@ -103,7 +213,7 @@ public:
 		}
 	}
 
-	void SetBlendFunc(GLenum s, GLenum d)
+	void BlendFunc(GLenum s, GLenum d)
 	{
 		if (blendsource != s || blenddest != d)
 		{
@@ -113,7 +223,7 @@ public:
 		}
 	}
 
-	void SetCullFace(GLenum mode)
+	void CullFaceMode(GLenum mode)
 	{
 		if (mode != cullmode)
 		{
@@ -122,68 +232,79 @@ public:
 		}
 	}
 
-	void BindTexture2D(unsigned tu, unsigned id)
+	void ActiveTexture(GLuint texunit)
 	{
-		if (tu >= tex2d.size())
-			tex2d.resize(tu + 1, 0);
-
-		GLuint & curid = tex2d[tu];
-		if (curid != id)
+		assert(texunit < 16);
+		if (tuactive != texunit)
 		{
-			if (curtu != tu)
-			{
-				glActiveTexture(GL_TEXTURE0 + tu);
-				curtu = tu;
-			}
+			tuactive = texunit;
+			glActiveTexture(GL_TEXTURE0 + tuactive);
+		}
+	}
 
-			Enable(GL_TEXTURE_2D); // fixme: should be done per texture unit
+	void BindTexture(GLuint texunit, GLenum target, GLuint texture)
+	{
+		assert(texunit < 16);
+		if (tutgt[texunit] != target || tutex[texunit] != texture)
+		{
+			ActiveTexture(texunit);
 
-			glBindTexture(GL_TEXTURE_2D, id);
-			curid = id;
+			if (!tutex[texunit])
+				glEnable(target);
+
+			glBindTexture(target, texture);
+
+			if (!texture)
+				glDisable(target);
+
+			tutgt[texunit] = target;
+			tutex[texunit] = texture;
+		}
+	}
+
+	void BindFramebuffer(GLenum target, GLuint framebuffer)
+	{
+		if (target == GL_READ_FRAMEBUFFER && fbread != framebuffer)
+		{
+			fbread = framebuffer;
+			glBindFramebuffer(target, framebuffer);
+		}
+		else if (target == GL_DRAW_FRAMEBUFFER && fbdraw != framebuffer)
+		{
+			fbdraw = framebuffer;
+			glBindFramebuffer(target, framebuffer);
+		}
+		else if (target == GL_FRAMEBUFFER && (fbread != framebuffer || fbdraw != framebuffer))
+		{
+			fbread = framebuffer;
+			fbdraw = framebuffer;
+			glBindFramebuffer(target, framebuffer);
 		}
 	}
 
 private:
-	std::vector <bool> used; //on modern compilers this should result in a lower memory usage bit_vector-type arrangement
-	std::vector <bool> state;
-	std::vector <GLuint> tex2d; //active textures
-	unsigned curtu; //selected texture unit
-
+	//struct TexUnit {GLenum target; GLuint texture; bool enable};
+	GLenum tutgt[16];   // texture unit target
+	GLuint tutex[16];   // texture unit texture
+	GLuint tuactive;
+	GLuint fbread;
+	GLuint fbdraw;
 	float r, g, b, a;
-	bool depthmask;
-	GLenum alphamode;
 	float alphavalue;
+	GLenum alphamode;
 	GLenum blendsource;
 	GLenum blenddest;
 	GLenum cullmode;
-	bool colormask;
-	bool alphamask;
-
-	void Set(int stateid, bool newval)
-	{
-		assert(stateid <= 65535);
-
-		if (used[stateid])
-		{
-			if (state[stateid] != newval)
-			{
-				state[stateid] = newval;
-				if (newval)
-					glEnable(stateid);
-				else
-					glDisable(stateid);
-			}
-		}
-		else
-		{
-			used[stateid] = true;
-			state[stateid] = newval;
-			if (newval)
-				glEnable(stateid);
-			else
-				glDisable(stateid);
-		}
-	}
+	GLenum depthmode;
+	GLboolean colormask;
+	GLboolean alphamask;
+	GLboolean depthmask;
+	bool depthoffset;
+	bool depthtest;
+	bool alphatest;
+	bool samplea2c;
+	bool blend;
+	bool cull;
 };
 
 #endif // _GRAPHICS_STATE_H

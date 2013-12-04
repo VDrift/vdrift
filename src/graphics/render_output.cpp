@@ -51,6 +51,8 @@ void RenderOutput::Begin(GraphicsState & glstate, std::ostream & error_output)
 {
 	if (target == RENDER_TO_FBO)
 		fbo.Begin(glstate, error_output);
+	else
+		glstate.BindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
 void RenderOutput::End(GraphicsState & glstate, std::ostream & error_output)

@@ -753,7 +753,7 @@ void Game::Test()
 
 void Game::BeginDraw(float dt)
 {
-	PROFILER.beginBlock("render");
+	PROFILER.beginBlock("render setup");
 	// Send scene information to the graphics subsystem.
 	if (active_camera)
 	{
@@ -775,7 +775,7 @@ void Game::BeginDraw(float dt)
 	graphics_interface->UpdateScene(dt);
 
 	graphics_interface->BeginScene(error_output);
-	PROFILER.endBlock("render");
+	PROFILER.endBlock("render setup");
 
 	PROFILER.beginBlock("scenegraph");
 
@@ -795,20 +795,19 @@ void Game::BeginDraw(float dt)
 	{
 		TraverseScene<false>(i->GetNode(), graphics_interface->GetDynamicDrawlist());
 	}
-
 	//gui.GetNode().DebugPrint(info_output);
 	PROFILER.endBlock("scenegraph");
-	PROFILER.beginBlock("render");
+
+	PROFILER.beginBlock("render draw");
 	graphics_interface->DrawScene(error_output);
-	PROFILER.endBlock("render");
+	PROFILER.endBlock("render draw");
 }
 
 void Game::FinishDraw()
 {
-	PROFILER.beginBlock("render");
-	graphics_interface->EndScene(error_output);
+	PROFILER.beginBlock("render swap");
 	window.SwapBuffers();
-	PROFILER.endBlock("render");
+	PROFILER.endBlock("render swap");
 }
 
 /* The main game loop... */
@@ -825,14 +824,8 @@ void Game::MainLoop()
 		// Do CPU intensive stuff in parallel with the GPU...
 		Tick(eventsystem.Get_dt());
 
-		UpdateParticleGraphics();
-
-		gui.Update(eventsystem.Get_dt());
-
 		// Sync CPU and GPU (flip the page).
 		FinishDraw();
-
-		SyncParticleGraphics();
 
 		BeginDraw(eventsystem.Get_dt());
 
@@ -884,6 +877,12 @@ void Game::Tick(float deltat)
 	{
 		info_output << "Current FPS: " << eventsystem.GetFPS() << std::endl;
 	}
+
+	UpdateParticleGraphics();
+
+	SyncParticleGraphics();
+
+	gui.Update(eventsystem.Get_dt());
 }
 
 /* Increment game logic by one frame... */
@@ -2292,7 +2291,6 @@ void Game::ShowLoadingScreen(float progress, float max, bool drawGui, const std:
 	graphics_interface->SetupScene(45.0, 100.0, Vec3 (), Quat (), Vec3 ());
 	graphics_interface->BeginScene(error_output);
 	graphics_interface->DrawScene(error_output);
-	graphics_interface->EndScene(error_output);
 	window.SwapBuffers();
 }
 

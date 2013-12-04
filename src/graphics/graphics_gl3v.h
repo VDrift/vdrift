@@ -69,7 +69,6 @@ public:
 	virtual void SetupScene(float fov, float new_view_distance, const Vec3 cam_position, const Quat & cam_rotation,
 					const Vec3 & dynamic_reflection_sample_pos);
 	virtual void DrawScene(std::ostream & error_output);
-	virtual void EndScene(std::ostream & error_output);
 	virtual int GetMaxAnisotropy() const;
 	virtual bool AntialiasingSupported() const;
 	virtual bool GetUsingShaders() const;

@@ -147,7 +147,7 @@ bool Hud::Init(
 		float y1 = timerboxdimy * 0.9;
 
 		timerboxverts.SetTo2DBox(x, y, w, h, timerboxdimx, timerboxdimy);
-		timerboxdrawref.SetTextures(boxtex->GetID());
+		timerboxdrawref.SetTextures(boxtex->GetId());
 		timerboxdrawref.SetVertArray(&timerboxverts);
 		timerboxdrawref.SetCull(false, false);
 		timerboxdrawref.SetColor(1, 1, 1, opacity);
@@ -199,7 +199,7 @@ bool Hud::Init(
 		float y1 = infoboxdimy * 0.9;
 
 		infoboxverts.SetTo2DBox(x, y, w, h, infoboxdimx, infoboxdimy);
-		infoboxdrawref.SetTextures(boxtex->GetID());
+		infoboxdrawref.SetTextures(boxtex->GetId());
 		infoboxdrawref.SetVertArray(&infoboxverts);
 		infoboxdrawref.SetCull(false, false);
 		infoboxdrawref.SetColor(1, 1, 1, opacity);
@@ -262,21 +262,21 @@ bool Hud::Init(
 	rpmbox = AddDrawable(hudroot);
 
 	Drawable & rpmboxref = GetDrawable(hudroot, rpmbox);
-	rpmboxref.SetTextures(progbartex->GetID());
+	rpmboxref.SetTextures(progbartex->GetId());
 	rpmboxref.SetVertArray(&rpmboxverts);
 	rpmboxref.SetDrawOrder(2);
 	rpmboxref.SetCull(false, false);
 	rpmboxref.SetColor(0.3, 0.3, 0.3, 0.4);
 
 	Drawable & rpmbarref = GetDrawable(hudroot, rpmbar);
-	rpmbarref.SetTextures(progbartex->GetID());
+	rpmbarref.SetTextures(progbartex->GetId());
 	rpmbarref.SetVertArray(&rpmbarverts);
 	rpmbarref.SetDrawOrder(3);
 	rpmbarref.SetCull(false, false);
 	rpmbarref.SetColor(1.0, 1.0, 1.0, 0.7);
 
 	Drawable & rpmredbarref = GetDrawable(hudroot, rpmredbar);
-	rpmredbarref.SetTextures(progbartex->GetID());
+	rpmredbarref.SetTextures(progbartex->GetId());
 	rpmredbarref.SetVertArray(&rpmredbarverts);
 	rpmredbarref.SetColor(1.0, 0.2, 0.2, 0.7);
 	rpmredbarref.SetDrawOrder(3);
