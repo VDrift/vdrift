@@ -208,14 +208,6 @@ private:
 	void GetScenePassInputTextures(
 		const GraphicsConfigInputs & inputs,
 		std::vector <TextureInterface*> & input_textures);
-
-	void BindInputTextures(
-		const std::vector <TextureInterface*> & textures,
-		std::ostream & error_output);
-
-	void UnbindInputTextures(
-		const std::vector <TextureInterface*> & textures,
-		std::ostream & error_output);
 };
 
 #endif
