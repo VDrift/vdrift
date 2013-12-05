@@ -21,7 +21,9 @@
 #include "graphicsstate.h"
 
 RenderOutput::RenderOutput() :
-	target(RENDER_TO_FRAMEBUFFER)
+	use_framebuffer(true),
+	fb_width(0),
+	fb_height(0)
 {
 	// ctor
 }
@@ -33,30 +35,40 @@ RenderOutput::~RenderOutput()
 
 FrameBufferObject & RenderOutput::RenderToFBO()
 {
-	target = RENDER_TO_FBO;
+	use_framebuffer = false;
 	return fbo;
 }
 
-void RenderOutput::RenderToFramebuffer()
+void RenderOutput::RenderToFramebuffer(int width, int height)
 {
-	target = RENDER_TO_FRAMEBUFFER;
+	use_framebuffer = true;
+	fb_width = width;
+	fb_height = height;
 }
 
 bool RenderOutput::IsFBO() const
 {
-	return target == RENDER_TO_FBO;
+	return !use_framebuffer;
 }
 
 void RenderOutput::Begin(GraphicsState & glstate, std::ostream & error_output)
 {
-	if (target == RENDER_TO_FBO)
+	if (!use_framebuffer)
+	{
 		fbo.Begin(glstate, error_output);
+	}
 	else
+	{
+		assert(fb_width != 0 && fb_height != 0);
 		glstate.BindFramebuffer(GL_FRAMEBUFFER, 0);
+		glstate.SetViewport(fb_width, fb_height);
+	}
 }
 
 void RenderOutput::End(GraphicsState & glstate, std::ostream & error_output)
 {
-	if (target == RENDER_TO_FBO)
+	if (!use_framebuffer)
+	{
 		fbo.End(glstate, error_output);
+	}
 }

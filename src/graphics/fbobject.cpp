@@ -426,8 +426,7 @@ void FrameBufferObject::Begin(GraphicsState & glstate, std::ostream & error_outp
 	bool status_ok = CheckStatus(error_output);
 	assert(status_ok);
 
-	glPushAttrib(GL_VIEWPORT_BIT);
-	glViewport(0, 0, int(tex->GetW() * viewscale), int(tex->GetH() * viewscale));
+	glstate.SetViewport(int(tex->GetW() * viewscale), int(tex->GetH() * viewscale));
 
 	CheckForOpenGLErrors("during FBO begin", error_output);
 }
@@ -454,8 +453,6 @@ void FrameBufferObject::End(GraphicsState & glstate, std::ostream & error_output
 	}
 
 	CheckForOpenGLErrors("FBO multisample blit", error_output);
-
-	glPopAttrib(); // viewport attrib
 
 	// optionally rebuild mipmaps
 	for (std::vector <FrameBufferTexture*>::const_iterator i = textures.begin(); i != textures.end(); i++)

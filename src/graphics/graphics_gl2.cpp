@@ -623,7 +623,7 @@ void GraphicsGL2::ChangeDisplay(
 	const int width, const int height,
 	std::ostream & error_output)
 {
-	glViewport(0, 0, (GLint)width, (GLint)height);
+	glstate.SetViewport(width, height);
 
 	GLfloat ratio = (GLfloat)width / (GLfloat)height;
 	Mat4 m;
@@ -838,7 +838,7 @@ void GraphicsGL2::EnableShaders(std::ostream & info_output, std::ostream & error
 
 			if (i->type == "framebuffer")
 			{
-				render_outputs[i->name].RenderToFramebuffer();
+				render_outputs[i->name].RenderToFramebuffer(w, h);
 			}
 			else
 			{
@@ -868,7 +868,7 @@ void GraphicsGL2::EnableShaders(std::ostream & info_output, std::ostream & error
 		}
 	}
 
-	render_outputs["framebuffer"].RenderToFramebuffer();
+	render_outputs["framebuffer"].RenderToFramebuffer(w, h);
 
 	// go through all pass outputs and construct the actual FBOs, which can consist of one or more fbtextures
 	for (std::vector <GraphicsConfigPass>::const_iterator i = config.passes.begin(); i != config.passes.end(); i++)
@@ -936,7 +936,7 @@ void GraphicsGL2::DisableShaders(std::ostream & error_output)
 		assert(0); // uh oh, now we're really boned
 	}
 
-	render_outputs["framebuffer"].RenderToFramebuffer();
+	render_outputs["framebuffer"].RenderToFramebuffer(w, h);
 
 	if (sky_dynamic)
 	{

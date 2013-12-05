@@ -61,6 +61,8 @@ public:
 		tuactive(0),
 		fbread(0),
 		fbdraw(0),
+		vpwidth(0),
+		vpheight(0),
 		r(1),g(1),b(1),a(1),
 		alphavalue(0),
 		alphamode(GL_NEVER),
@@ -282,6 +284,16 @@ public:
 		}
 	}
 
+	void SetViewport(int width, int height)
+	{
+		if (width != vpwidth || height != vpheight)
+		{
+			vpwidth = width;
+			vpheight = height;
+			glViewport(0, 0, vpwidth, vpheight);
+		}
+	}
+
 private:
 	//struct TexUnit {GLenum target; GLuint texture; bool enable};
 	GLenum tutgt[16];   // texture unit target
@@ -289,6 +301,8 @@ private:
 	GLuint tuactive;
 	GLuint fbread;
 	GLuint fbdraw;
+	int vpwidth;
+	int vpheight;
 	float r, g, b, a;
 	float alphavalue;
 	GLenum alphamode;

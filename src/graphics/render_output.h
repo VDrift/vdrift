@@ -35,7 +35,7 @@ public:
 	/// returns the FBO that the user should set up as necessary
 	FrameBufferObject & RenderToFBO();
 
-	void RenderToFramebuffer();
+	void RenderToFramebuffer(int width, int height);
 
 	bool IsFBO() const;
 
@@ -45,11 +45,9 @@ public:
 
 private:
 	FrameBufferObject fbo;
-	enum
-	{
-		RENDER_TO_FBO,
-		RENDER_TO_FRAMEBUFFER
-	} target;
+	bool use_framebuffer;
+	int fb_width;
+	int fb_height;
 };
 
 #endif // _RENDER_OUTPUT_H
