@@ -44,14 +44,14 @@ public:
 	bool Load(const std::string & vertex_filename, const std::string & fragment_filename, const std::vector <std::string> & preprocessor_defines, std::ostream & info_output, std::ostream & error_output);
 	void Enable();
 	void EndScene();
-	bool UploadMat16(const std::string & varname, float * mat16);
-	bool UploadActiveShaderParameter1i(const std::string & param, int val);
-	bool UploadActiveShaderParameter1f(const std::string & param, float val);
-	bool UploadActiveShaderParameter3f(const std::string & param, float val1, float val2, float val3);
+	bool SetUniformMat16(const std::string & name, const float val[16]);
+	bool SetUniform1i(const std::string & name, int val);
+	bool SetUniform1f(const std::string & name, float val);
+	bool SetUniform3f(const std::string & name, float val1, float val2, float val3);
 	template <typename T>
-	bool UploadActiveShaderParameter3f(const std::string & param, T vector)
+	bool SetUniform3f(const std::string & name, T vec)
 	{
-		return UploadActiveShaderParameter3f(param, vector[0], vector[1], vector[2]);
+		return SetUniform3f(name, vec[0], vec[1], vec[2]);
 	}
 	bool GetLoaded() const {return loaded;}
 };

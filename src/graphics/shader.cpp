@@ -183,41 +183,41 @@ void Shader::Enable()
 	glUseProgramObjectARB(program);
 }
 
-bool Shader::UploadMat16(const string & varname, float * mat16)
+bool Shader::SetUniformMat16(const string & name, const float val[16])
 {
 	Enable();
 
-	int mat_loc = glGetUniformLocation(program, varname.c_str());
-	if (mat_loc >= 0) glUniformMatrix4fv(mat_loc, 1, GL_FALSE, mat16);
+	int mat_loc = glGetUniformLocation(program, name.c_str());
+	if (mat_loc >= 0) glUniformMatrix4fv(mat_loc, 1, GL_FALSE, val);
 	return (mat_loc >= 0);
 }
 
 ///returns true on successful upload
-bool Shader::UploadActiveShaderParameter1i(const string & param, int val)
+bool Shader::SetUniform1i(const string & name, int val)
 {
 	Enable();
 
-	int loc = glGetUniformLocation(program, param.c_str());
+	int loc = glGetUniformLocation(program, name.c_str());
 	if (loc >= 0) glUniform1i(loc, val);
 	return (loc >= 0);
 }
 
 ///returns true on successful upload
-bool Shader::UploadActiveShaderParameter1f(const string & param, float val)
+bool Shader::SetUniform1f(const string & name, float val)
 {
 	Enable();
 
-	int loc = glGetUniformLocation(program, param.c_str());
+	int loc = glGetUniformLocation(program, name.c_str());
 	if (loc >= 0) glUniform1f(loc, val);
 	return (loc >= 0);
 }
 
 ///returns true on successful upload
-bool Shader::UploadActiveShaderParameter3f(const std::string & param, float val1, float val2, float val3)
+bool Shader::SetUniform3f(const std::string & name, float val1, float val2, float val3)
 {
 	Enable();
 
-	int loc = glGetUniformLocation(program, param.c_str());
+	int loc = glGetUniformLocation(program, name.c_str());
 	if (loc >= 0) glUniform3f(loc, val1, val2, val3);
 	return (loc >= 0);
 }

@@ -265,7 +265,7 @@ void Sky::UpdateSky()
 		return;
 	}
 	shader->Enable();
-	shader->UploadActiveShaderParameter3f("uLightDirection", sundir[0], sundir[1], sundir[2]);
+	shader->SetUniform3f("uLightDirection", sundir[0], sundir[1], sundir[2]);
 
 	// draw tile
 	Draw(6, faces, pos, tco);

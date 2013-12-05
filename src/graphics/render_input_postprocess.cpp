@@ -201,13 +201,13 @@ void RenderInputPostprocess::Render(GraphicsState & glstate, std::ostream & erro
 	{
 		Vec3 lightvec = lightposition;
 		cam_rotation.RotateVector(lightvec);
-		shader->UploadActiveShaderParameter3f("directlight_eyespace_direction", lightvec);
-		shader->UploadActiveShaderParameter1f("contrast", contrast);
-		shader->UploadActiveShaderParameter1f("znear", 0.1);
+		shader->SetUniform3f("directlight_eyespace_direction", lightvec);
+		shader->SetUniform1f("contrast", contrast);
+		shader->SetUniform1f("znear", 0.1);
 		//std::cout << lightvec << std::endl;
-		shader->UploadActiveShaderParameter3f("frustum_corner_bl", frustum_corners[0]);
-		shader->UploadActiveShaderParameter3f("frustum_corner_br_delta", frustum_corners[1] - frustum_corners[0]);
-		shader->UploadActiveShaderParameter3f("frustum_corner_tl_delta", frustum_corners[3] - frustum_corners[0]);
+		shader->SetUniform3f("frustum_corner_bl", frustum_corners[0]);
+		shader->SetUniform3f("frustum_corner_br_delta", frustum_corners[1] - frustum_corners[0]);
+		shader->SetUniform3f("frustum_corner_tl_delta", frustum_corners[3] - frustum_corners[0]);
 	}
 
 	// draw a quad

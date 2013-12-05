@@ -207,8 +207,8 @@ void RenderInputScene::Render(GraphicsState & glstate, std::ostream & error_outp
 		Vec3 lightvec = lightposition;
 		(cam_rotation).RotateVector(lightvec);
 		shader->Enable();
-		shader->UploadActiveShaderParameter3f("lightposition", lightvec[0], lightvec[1], lightvec[2]);
-		shader->UploadActiveShaderParameter1f("contrast", contrast);
+		shader->SetUniform3f("lightposition", lightvec[0], lightvec[1], lightvec[2]);
+		shader->SetUniform1f("contrast", contrast);
 	}
 	else
 	{
