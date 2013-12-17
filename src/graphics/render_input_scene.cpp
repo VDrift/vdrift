@@ -32,9 +32,9 @@ static T * end(T (&ar)[N])
 	return ar + N;
 }
 static const char * ustr[RenderInputScene::UniformNum] = {
+	"reflection_matrix",
 	"lightposition",
-	"contrast",
-	"reflection_matrix"
+	"contrast"
 };
 const std::vector<std::string> RenderInputScene::uniforms(ustr, end(ustr));
 
@@ -199,7 +199,6 @@ void RenderInputScene::Render(GraphicsState & glstate, std::ostream & error_outp
 	// send information to the shaders
 	if (shader)
 	{
-		// cubemap transform goes in texture 2
 		Quat cam_look;
 		cam_look.Rotate(M_PI_2, 1, 0, 0);
 		cam_look.Rotate(-M_PI_2, 0, 0, 1);

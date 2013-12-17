@@ -63,6 +63,7 @@ public:
 	///< uniforms used by post process render pass
 	enum UniformEnum
 	{
+		ReflectionMatrix,
 		LightDirection,
 		Contrast,
 		ZNear,

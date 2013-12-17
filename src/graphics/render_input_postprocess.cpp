@@ -31,6 +31,7 @@ static T * end(T (&ar)[N])
 	return ar + N;
 }
 static const char * ustr[RenderInputPostprocess::UniformNum] = {
+	"reflection_matrix",
 	"directlight_eyespace_direction",
 	"contrast",
 	"znear",
@@ -214,10 +215,20 @@ void RenderInputPostprocess::Render(GraphicsState & glstate, std::ostream & erro
 
 	// send shader parameters
 	{
+		Quat cam_look;
+		cam_look.Rotate(M_PI_2, 1, 0, 0);
+		cam_look.Rotate(-M_PI_2, 0, 0, 1);
+		Quat cube_rotation;
+		cube_rotation = (-cam_look) * (-cam_rotation); // experimentally derived
+		float cube_matrix[9];
+		cube_rotation.GetMatrix3(cube_matrix);
+
 		Vec3 lightvec = lightposition;
 		cam_rotation.RotateVector(lightvec);
+
 		shader->SetUniform3f(LightDirection, lightvec);
 		shader->SetUniform1f(Contrast, contrast);
+		shader->SetUniformMat3f(ReflectionMatrix, cube_matrix);
 		shader->SetUniform1f(ZNear, 0.1);
 		shader->SetUniform3f(FrustumCornerBL, frustum_corners[0]);
 		shader->SetUniform3f(FrustumCornerBRDelta, frustum_corners[1] - frustum_corners[0]);

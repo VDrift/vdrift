@@ -76,9 +76,9 @@ public:
 	///< uniforms used by render scene pass
 	enum UniformEnum
 	{
+		ReflectionMatrix,
 		LightDirection,
 		Contrast,
-		ReflectionMatrix,
 		UniformNum
 	};
 	static const std::vector<std::string> uniforms;
