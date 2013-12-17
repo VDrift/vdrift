@@ -54,6 +54,8 @@ const Vec3 side_xyz[sides_num][3] = {
 Sky::Sky(GraphicsGL2 & gfx, std::ostream & error) :
 	error_output(error),
 	graphics(gfx),
+	sky_shader(NULL),
+	sundir_uniform(0),
 	texture_active(0),
 	side_updated(0),
 	tile_updated(0),
@@ -73,6 +75,11 @@ Sky::Sky(GraphicsGL2 & gfx, std::ostream & error) :
 	need_update(false)
 {
 	assert(graphics.GetUsingShaders());
+
+	sky_shader = graphics.GetShader("skygen");
+	assert(sky_shader);
+
+	sundir_uniform = sky_shader->RegisterUniform("uLightDirection");
 
 	target = FrameBufferTexture::CUBEMAP;
 	width = texture_size;
@@ -219,6 +226,7 @@ void Sky::ResetSky()
 
 void Sky::UpdateSky()
 {
+	assert(sky_shader);
 	assert(tile_updated < tiles_num);
 	assert(side_updated < sides_num);
 
@@ -257,15 +265,8 @@ void Sky::UpdateSky()
 		v01[0],  v01[1], v01[2],
 	};
 
-	// set shader
-	Shader * shader = graphics.GetShader("skygen");
-	if (!shader)
-	{
-		assert(0);
-		return;
-	}
-	shader->Enable();
-	shader->SetUniform3f("uLightDirection", sundir[0], sundir[1], sundir[2]);
+	sky_shader->Enable();
+	sky_shader->SetUniform3f(sundir_uniform, sundir);
 
 	// draw tile
 	Draw(6, faces, pos, tco);

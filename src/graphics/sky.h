@@ -25,6 +25,7 @@
 #include "mathvector.h"
 
 class GraphicsGL2;
+class Shader;
 struct tm;
 
 // Sky is double buffered to spread texture updates over multiple frames.
@@ -73,6 +74,9 @@ public:
 private:
 	std::ostream & error_output;
 	GraphicsGL2 & graphics;
+
+	Shader * sky_shader;
+	int sundir_uniform;
 
 	FrameBufferObject sky_fbos[2];
 	FrameBufferTexture sky_textures[2];	// double buffered sky cube map

@@ -26,6 +26,18 @@
 #include "vertexarray.h"
 #include "glutil.h"
 
+template <typename T, size_t N>
+static T * end(T (&ar)[N])
+{
+	return ar + N;
+}
+static const char * ustr[RenderInputScene::UniformNum] = {
+	"lightposition",
+	"contrast",
+	"reflection_matrix"
+};
+const std::vector<std::string> RenderInputScene::uniforms(ustr, end(ustr));
+
 RenderInputScene::RenderInputScene():
 	last_transform_valid(false),
 	lod_far(1000),
@@ -188,27 +200,22 @@ void RenderInputScene::Render(GraphicsState & glstate, std::ostream & error_outp
 	if (shader)
 	{
 		// cubemap transform goes in texture 2
-		Quat camlook;
-		camlook.Rotate(M_PI_2, 1, 0, 0);
-		camlook.Rotate(-M_PI_2, 0, 0, 1);
-		Quat cuberotation;
-		cuberotation = (-camlook) * (-cam_rotation); // experimentally derived
-		Mat4 cubeMatrix;
-		cuberotation.GetMatrix4(cubeMatrix);
-
-		glstate.ActiveTexture(2);
-		glMatrixMode(GL_TEXTURE);
-		glLoadMatrixf(cubeMatrix.GetArray());
-
-		glstate.ActiveTexture(0);
-		glMatrixMode(GL_MODELVIEW);
+		Quat cam_look;
+		cam_look.Rotate(M_PI_2, 1, 0, 0);
+		cam_look.Rotate(-M_PI_2, 0, 0, 1);
+		Quat cube_rotation;
+		cube_rotation = (-cam_look) * (-cam_rotation); // experimentally derived
+		float cube_matrix[9];
+		cube_rotation.GetMatrix3(cube_matrix);
 
 		// send light position to the shaders
 		Vec3 lightvec = lightposition;
 		(cam_rotation).RotateVector(lightvec);
+
 		shader->Enable();
-		shader->SetUniform3f("lightposition", lightvec[0], lightvec[1], lightvec[2]);
-		shader->SetUniform1f("contrast", contrast);
+		shader->SetUniform3f(LightDirection, lightvec[0], lightvec[1], lightvec[2]);
+		shader->SetUniform1f(Contrast, contrast);
+		shader->SetUniformMat3f(ReflectionMatrix, cube_matrix);
 	}
 	else
 	{

@@ -51,7 +51,7 @@ public:
 		const std::vector <TextureInterface*> & textures,
 		std::ostream & error_output);
 
-	// these are used only to upload uniforms to the shaders
+	///< these are used to upload uniforms to the shader
 	void SetCamera(const GraphicsCamera & cam);
 
 	void SetSunDirection(const Vec3 & newsun);
@@ -59,6 +59,19 @@ public:
 	void SetContrast(float value);
 
 	virtual void Render(GraphicsState & glstate, std::ostream & error_output);
+
+	///< uniforms used by post process render pass
+	enum UniformEnum
+	{
+		LightDirection,
+		Contrast,
+		ZNear,
+		FrustumCornerBL,
+		FrustumCornerBRDelta,
+		FrustumCornerTLDelta,
+		UniformNum
+	};
+	static const std::vector<std::string> uniforms;
 
 private:
 	Shader * shader;

@@ -25,6 +25,21 @@
 #include "matrix4.h"
 #include "shader.h"
 
+template <typename T, size_t N>
+static T * end(T (&ar)[N])
+{
+	return ar + N;
+}
+static const char * ustr[RenderInputPostprocess::UniformNum] = {
+	"directlight_eyespace_direction",
+	"contrast",
+	"znear",
+	"frustum_corner_bl",
+	"frustum_corner_br_delta",
+	"frustum_corner_tl_delta"
+};
+const std::vector<std::string> RenderInputPostprocess::uniforms(ustr, end(ustr));
+
 RenderInputPostprocess::RenderInputPostprocess() :
 	shader(NULL),
 	contrast(1),
@@ -201,13 +216,12 @@ void RenderInputPostprocess::Render(GraphicsState & glstate, std::ostream & erro
 	{
 		Vec3 lightvec = lightposition;
 		cam_rotation.RotateVector(lightvec);
-		shader->SetUniform3f("directlight_eyespace_direction", lightvec);
-		shader->SetUniform1f("contrast", contrast);
-		shader->SetUniform1f("znear", 0.1);
-		//std::cout << lightvec << std::endl;
-		shader->SetUniform3f("frustum_corner_bl", frustum_corners[0]);
-		shader->SetUniform3f("frustum_corner_br_delta", frustum_corners[1] - frustum_corners[0]);
-		shader->SetUniform3f("frustum_corner_tl_delta", frustum_corners[3] - frustum_corners[0]);
+		shader->SetUniform3f(LightDirection, lightvec);
+		shader->SetUniform1f(Contrast, contrast);
+		shader->SetUniform1f(ZNear, 0.1);
+		shader->SetUniform3f(FrustumCornerBL, frustum_corners[0]);
+		shader->SetUniform3f(FrustumCornerBRDelta, frustum_corners[1] - frustum_corners[0]);
+		shader->SetUniform3f(FrustumCornerTLDelta, frustum_corners[3] - frustum_corners[0]);
 	}
 
 	// draw a quad

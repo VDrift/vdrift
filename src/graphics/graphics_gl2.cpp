@@ -353,9 +353,9 @@ void GraphicsGL2::Deinit()
 {
 	if (GLEW_ARB_shading_language_100)
 	{
-		if (!shadermap.empty())
+		if (!shaders.empty())
 			glUseProgramObjectARB(0);
-		shadermap.clear();
+		shaders.clear();
 	}
 }
 
@@ -607,8 +607,8 @@ GraphicsState & GraphicsGL2::GetState()
 
 Shader * GraphicsGL2::GetShader(const std::string & name)
 {
-	shader_map_type::iterator it = shadermap.find(name);
-	if (it != shadermap.end())
+	shader_map_type::iterator it = shaders.find(name);
+	if (it != shaders.end())
 		return &it->second;
 	else
 		return 0;
@@ -642,17 +642,9 @@ void GraphicsGL2::ChangeDisplay(
 	h = height;
 }
 
-bool GraphicsGL2::LoadShader(
-	const std::string & shader_name,
-	const std::string & shader_defines,
-	const std::string & shader_path,
-	const std::string & vert_shader_name,
-	const std::string & frag_shader_name,
-	std::ostream & info_output,
-	std::ostream & error_output)
+void GraphicsGL2::GetShaderDefines(std::vector <std::string> & defines) const
 {
-	//generate defines
-	std::vector <std::string> defines;
+	defines.clear();
 
 	{
 		std::stringstream s;
@@ -699,44 +691,21 @@ bool GraphicsGL2::LoadShader(
 
 	if (lighting == 2)
 		defines.push_back("_SSAO_HIGH_");
-
-	if (!shader_defines.empty())
-	{
-		std::stringstream s(shader_defines);
-		while (s)
-		{
-			std::string newdefine;
-			s >> newdefine;
-			if (!newdefine.empty())
-				defines.push_back(newdefine);
-		}
-	}
-
-	std::pair <shader_map_type::iterator, bool> result = shadermap.insert(std::make_pair(shader_name, Shader()));
-	assert(result.second);
-
-	Shader & shader = result.first->second;
-	bool success = shader.Load(
-		shader_path + "/" + vert_shader_name,
-		shader_path + "/" + frag_shader_name,
-		defines, info_output, error_output);
-
-	return success;
 }
 
 void GraphicsGL2::EnableShaders(std::ostream & info_output, std::ostream & error_output)
 {
-	bool shader_load_success = true;
-
 	CheckForOpenGLErrors("EnableShaders: start", error_output);
+
+	using_shaders = true;
 
 	// unload current shaders
 	glUseProgramObjectARB(0);
-	for (shader_map_type::iterator i = shadermap.begin(); i != shadermap.end(); i++)
+	for (shader_map_type::iterator i = shaders.begin(); i != shaders.end(); i++)
 	{
 		i->second.Unload();
 	}
-	shadermap.clear();
+	shaders.clear();
 
 	CheckForOpenGLErrors("EnableShaders: shader unload", error_output);
 
@@ -746,31 +715,9 @@ void GraphicsGL2::EnableShaders(std::ostream & info_output, std::ostream & error
 	if (!config.Load(rcpath, error_output))
 	{
 		error_output << "Error loading render configuration file: " << rcpath << std::endl;
-		shader_load_success = false;
-	}
-
-	// reload shaders
-	std::set <std::string> shadernames;
-	for (std::vector <GraphicsConfigShader>::const_iterator s = config.shaders.begin(); s != config.shaders.end(); s++)
-	{
-		assert(shadernames.find(s->name) == shadernames.end());
-		shadernames.insert(s->name);
-		shader_load_success = shader_load_success &&
-			LoadShader(s->name, s->defines, shaderpath, s->vertex, s->fragment, info_output, error_output);
-	}
-
-	CheckForOpenGLErrors("EnableShaders: shader loading", error_output);
-
-	if (!shader_load_success)
-	{
-		// no shaders fallback
-		error_output << "Disabling shaders due to shader loading error" << std::endl;
 		DisableShaders(error_output);
 		return;
 	}
-
-	info_output << "Successfully enabled shaders" << std::endl;
-	using_shaders = true;
 
 	// unload current outputs
 	render_outputs.clear();
@@ -824,85 +771,123 @@ void GraphicsGL2::EnableShaders(std::ostream & info_output, std::ostream & error
 		texture_inputs["reflection_cube"] = static_reflection;
 	texture_inputs["ambient_cube"] = static_ambient;
 
-	bool has_texture_float = GLEW_ARB_texture_float && GLEW_ARB_half_float_pixel;
-
+	// setup frame buffer textures
+	const bool has_texture_float = GLEW_ARB_texture_float && GLEW_ARB_half_float_pixel;
 	for (std::vector <GraphicsConfigOutput>::const_iterator i = config.outputs.begin(); i != config.outputs.end(); i++)
 	{
-		if (i->conditions.Satisfied(conditions))
+		if (!i->conditions.Satisfied(conditions))
+			continue;
+
+		if (texture_outputs.find(i->name) != texture_outputs.end())
 		{
-			if (texture_outputs.find(i->name) != texture_outputs.end())
-			{
-				error_output << "Detected duplicate output name in render config: " << i->name << ", only the first output will be constructed." << std::endl;
-				continue;
-			}
-
-			if (i->type == "framebuffer")
-			{
-				render_outputs[i->name].RenderToFramebuffer(w, h);
-			}
-			else
-			{
-				int fbms = (i->multisample < 0) ? fsaa : 0;
-				FrameBufferTexture & fbtex = texture_outputs[i->name];
-				FrameBufferTexture::Target target = TextureTargetFromString(i->type);
-				FrameBufferTexture::Format format = TextureFormatFromString(i->format);
-				if (!has_texture_float && (format == FrameBufferTexture::RGBA16 || format == FrameBufferTexture::RGB16))
-				{
-					error_output << "Your video card doesn't support floating point textures." << std::endl;
-					error_output << "Failed to load render output: " << i->name << " " << i->type << std::endl;
-					DisableShaders(error_output);
-					return;
-				}
-
-				// initialize fbtexture
-				fbtex.Init(
-					i->width.GetSize(w), i->height.GetSize(h),
-					target, format, (i->filter == "nearest"), i->mipmap,
-					error_output, fbms, (i->format == "depthshadow"));
-
-				// map to input texture
-				texture_inputs[i->name] = fbtex;
-			}
-
-			info_output << "Initialized render output: " << i->name << (i->type != "framebuffer" ? " (FBO)" : " (framebuffer alias)") << std::endl;
+			error_output << "Detected duplicate output name in render config: " << i->name << ", only the first output will be constructed." << std::endl;
+			continue;
 		}
-	}
 
+		if (i->type == "framebuffer")
+		{
+			render_outputs[i->name].RenderToFramebuffer(w, h);
+		}
+		else
+		{
+			FrameBufferTexture::Target target = TextureTargetFromString(i->type);
+			FrameBufferTexture::Format format = TextureFormatFromString(i->format);
+			if (!has_texture_float && (format == FrameBufferTexture::RGBA16 || format == FrameBufferTexture::RGB16))
+			{
+				error_output << "Your video card doesn't support floating point textures." << std::endl;
+				error_output << "Failed to load render output: " << i->name << " " << i->type << std::endl;
+				DisableShaders(error_output);
+				return;
+			}
+
+			// initialize fbtexture
+			int multisampling = (i->multisample < 0) ? fsaa : 0;
+			FrameBufferTexture & fbtex = texture_outputs[i->name];
+			fbtex.Init(
+				i->width.GetSize(w), i->height.GetSize(h),
+				target, format, (i->filter == "nearest"), i->mipmap,
+				error_output, multisampling, (i->format == "depthshadow"));
+
+			// register texture as input
+			texture_inputs[i->name] = fbtex;
+		}
+
+		info_output << "Initialized render output: " << i->name << (i->type != "framebuffer" ? " (FBO)" : " (framebuffer alias)") << std::endl;
+	}
 	render_outputs["framebuffer"].RenderToFramebuffer(w, h);
 
-	// go through all pass outputs and construct the actual FBOs, which can consist of one or more fbtextures
+	// gen graphics config shaders map
+	typedef std::map <std::string, const GraphicsConfigShader *> ConfigShaderMap;
+	ConfigShaderMap config_shaders;
+	for (std::vector <GraphicsConfigShader>::const_iterator s = config.shaders.begin(); s != config.shaders.end(); s++)
+	{
+		std::pair <ConfigShaderMap::iterator, bool> result = config_shaders.insert(std::make_pair(s->name, &*s));
+		if (!result.second)
+			error_output << "Ignore second definition of shader: " << s->name << std::endl;
+	}
+
+	// setup frame buffer objects and shaders
+	std::vector <std::string> shader_defines;
+	GetShaderDefines(shader_defines);
 	for (std::vector <GraphicsConfigPass>::const_iterator i = config.passes.begin(); i != config.passes.end(); i++)
 	{
-		if (i->conditions.Satisfied(conditions))
+		// check conditions
+		if (!i->conditions.Satisfied(conditions))
+			continue;
+
+		// load pass output
+		const std::string & outname = i->output;
+		if (render_outputs.find(outname) == render_outputs.end())
 		{
-			// see if it already exists
-			std::string outname = i->output;
-			render_output_map_type::iterator curout = render_outputs.find(outname);
-			if (curout == render_outputs.end())
+			// collect a list of textures for the outputs
+			std::vector <std::string> outputs = Tokenize(outname, " ");
+			std::vector <FrameBufferTexture*> fbotex;
+			for (std::vector <std::string>::const_iterator o = outputs.begin(); o != outputs.end(); o++)
 			{
-				// tokenize the output list
-				std::vector <std::string> outputs = Tokenize(outname, " ");
-
-				// collect a list of textures for the outputs
-				std::vector <FrameBufferTexture*> fbotex;
-				for (std::vector <std::string>::const_iterator o = outputs.begin(); o != outputs.end(); o++)
+				texture_output_map_type::iterator to = texture_outputs.find(*o);
+				if (to != texture_outputs.end())
 				{
-					texture_output_map_type::iterator to = texture_outputs.find(*o);
-					if (to != texture_outputs.end())
-					{
-						fbotex.push_back(&to->second);
-					}
+					fbotex.push_back(&to->second);
 				}
+			}
+			if (fbotex.empty())
+			{
+				error_output << "None of these outputs are active: " << outname << std::endl;
+				return DisableShaders(error_output);
+			}
 
-				if (fbotex.empty())
-				{
-					error_output << "None of these outputs are active: " << error_output << ", this pass will not have an output." << std::endl;
-					continue;
-				}
+			// initialize fbo
+			FrameBufferObject & fbo = render_outputs[outname].RenderToFBO();
+			fbo.Init(glstate, fbotex, error_output);
+		}
 
-				// initialize fbo
-				FrameBufferObject & fbo = render_outputs[outname].RenderToFBO();
-				fbo.Init(glstate, fbotex, error_output);
+		// load pass shader
+		const std::string & shadername = i->shader;
+		if (shaders.find(shadername) == shaders.end())
+		{
+			ConfigShaderMap::const_iterator csi = config_shaders.find(shadername);
+			if (csi == config_shaders.end())
+			{
+				error_output << "Shader not defined: " << shadername << std::endl;
+				return DisableShaders(error_output);
+			}
+			const GraphicsConfigShader * cs = csi->second;
+
+			std::vector <std::string> defines = Tokenize(cs->defines, " ");
+			defines.reserve(defines.size() + shader_defines.size());
+			defines.insert(defines.end(), shader_defines.begin(), shader_defines.end());
+
+			const std::vector <std::string> & uniforms =
+				(i->draw.back() == "postprocess") ? postprocess.uniforms : renderscene.uniforms;
+
+			Shader & shader = shaders[cs->name];
+			if (!shader.Load(
+				shaderpath + "/" + cs->vertex,
+				shaderpath + "/" + cs->fragment,
+				defines, uniforms,
+				info_output, error_output))
+			{
+				return DisableShaders(error_output);
 			}
 		}
 	}
@@ -923,13 +908,13 @@ void GraphicsGL2::DisableShaders(std::ostream & error_output)
 	}
 
 	renderconfigfile = "noshaders.conf";
-	shadermap.clear();
+	shaders.clear();
 	using_shaders = false;
 	shadows = false;
 
 	// load non-shader configuration
 	config = GraphicsConfig();
-	std::string rcpath = shaderpath + "/" + renderconfigfile;
+	const std::string rcpath = shaderpath + "/" + renderconfigfile;
 	if (!config.Load(rcpath, error_output))
 	{
 		error_output << "Error loading non-shader render configuration file: " << rcpath << std::endl;
@@ -1061,8 +1046,8 @@ void GraphicsGL2::DrawScenePass(
 	// setup shader
 	if (using_shaders)
 	{
-		shader_map_type::iterator si = shadermap.find(pass.shader);
-		if (si == shadermap.end())
+		shader_map_type::iterator si = shaders.find(pass.shader);
+		if (si == shaders.end())
 		{
 			ReportOnce(&pass, "Shader " + pass.shader + " couldn't be found", error_output);
 			return;
@@ -1163,8 +1148,8 @@ void GraphicsGL2::DrawScenePassPost(
 	if (!pass.conditions.Satisfied(conditions))
 		return;
 
-	shader_map_type::iterator si = shadermap.find(pass.shader);
-	if (si == shadermap.end())
+	shader_map_type::iterator si = shaders.find(pass.shader);
+	if (si == shaders.end())
 	{
 		ReportOnce(&pass, "Shader " + pass.shader + " couldn't be found", error_output);
 		return;

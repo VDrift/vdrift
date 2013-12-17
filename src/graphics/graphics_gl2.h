@@ -142,7 +142,7 @@ private:
 
 	// shaders
 	typedef std::map <std::string, Shader> shader_map_type;
-	shader_map_type shadermap;
+	shader_map_type shaders;
 
 	// scenegraph output
 	DrawableContainer <PtrVector> dynamic_drawlist; //used for objects that move or change
@@ -173,6 +173,9 @@ private:
 	void ChangeDisplay(
 		const int width, const int height,
 		std::ostream & error_output);
+
+	/// common graphics config shader defines
+	void GetShaderDefines(std::vector <std::string> & defines) const;
 
 	/// shader name is used to distinquish between shaders with different defines set
 	/// shader_defines is a space delimited list of defines

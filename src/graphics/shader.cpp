@@ -53,27 +53,69 @@ void PrintWithLineNumbers(ostream & out, const string & str)
 	}
 }
 
-bool Shader::Load(const std::string & vertex_filename, const std::string & fragment_filename, const std::vector <std::string> & preprocessor_defines, std::ostream & info_output, std::ostream & error_output)
+Shader::Shader() :
+	program(0),
+	vertex_shader(0),
+	fragment_shader(0)
+{
+	// ctor
+}
+
+Shader::~Shader()
+{
+	Unload();
+}
+
+void Shader::Unload()
+{
+	uniform_locations.clear();
+
+	if (program)
+	{
+		glDeleteObjectARB(program);
+		program = 0;
+	}
+
+	if (vertex_shader)
+	{
+		glDeleteObjectARB(vertex_shader);
+		vertex_shader = 0;
+	}
+
+	if (fragment_shader)
+	{
+		glDeleteObjectARB(fragment_shader);
+		fragment_shader = 0;
+	}
+}
+
+bool Shader::Load(
+	const std::string & vertex_filename,
+	const std::string & fragment_filename,
+	const std::vector<std::string> & defines,
+	const std::vector<std::string> & uniforms,
+	std::ostream & info_output,
+	std::ostream & error_output)
 {
 	assert(GLEW_ARB_shading_language_100);
 
 	Unload();
 
-	string vertexshader_source = Utils::LoadFileIntoString(vertex_filename, error_output);
-	string fragmentshader_source = Utils::LoadFileIntoString(fragment_filename, error_output);
+	// get shader sources
+	std::string vertexshader_source = Utils::LoadFileIntoString(vertex_filename, error_output);
+	std::string fragmentshader_source = Utils::LoadFileIntoString(fragment_filename, error_output);
 	assert(!vertexshader_source.empty());
 	assert(!fragmentshader_source.empty());
 
-	// prepend #define values
-	for (std::vector <std::string>::const_iterator i = preprocessor_defines.begin(); i != preprocessor_defines.end(); ++i)
+	// prepend #version and #define values
+	std::stringstream dstr;
+	dstr << "#version 120\n";
+	for (std::vector<std::string>::const_iterator i = defines.begin(); i != defines.end(); ++i)
 	{
-		vertexshader_source = "#define " + *i + "\n" + vertexshader_source;
-		fragmentshader_source = "#define " + *i + "\n" + fragmentshader_source;
+		dstr << "#define " << *i << "\n";
 	}
-
-	// prepend #version
-	vertexshader_source = "#version 120\n" + vertexshader_source;
-	fragmentshader_source = "#version 120\n" + fragmentshader_source;
+	vertexshader_source = dstr.str() + vertexshader_source;
+	fragmentshader_source = dstr.str() + fragmentshader_source;
 
 	// create shader objects
 	program = glCreateProgramObjectARB();
@@ -81,17 +123,10 @@ bool Shader::Load(const std::string & vertex_filename, const std::string & fragm
 	fragment_shader = glCreateShaderObjectARB(GL_FRAGMENT_SHADER);
 
 	// load shader sources
-	GLcharARB * vertshad = new GLcharARB[vertexshader_source.length()+1];
-	strcpy(vertshad, vertexshader_source.c_str());
-	const GLcharARB * vertshad2 = vertshad;
-	glShaderSource(vertex_shader, 1, &vertshad2, NULL);
-	delete [] vertshad;
-
-	GLcharARB * fragshad = new GLcharARB[fragmentshader_source.length()+1];
-	strcpy(fragshad, fragmentshader_source.c_str());
-	const GLcharARB * fragshad2 = fragshad;
-	glShaderSource(fragment_shader, 1, &fragshad2, NULL);
-	delete [] fragshad;
+	const GLcharARB * vertshad = vertexshader_source.c_str();
+	const GLcharARB * fragshad = fragmentshader_source.c_str();
+	glShaderSource(vertex_shader, 1, &vertshad, NULL);
+	glShaderSource(fragment_shader, 1, &fragshad, NULL);
 
 	// compile the shaders
 	glCompileShader(vertex_shader);
@@ -133,7 +168,7 @@ bool Shader::Load(const std::string & vertex_filename, const std::string & fragm
 		PrintWithLineNumbers(error_output, fragmentshader_source);
 		error_output << endl;
 
-		loaded = false;
+		Unload();
 	}
 	else
 	{
@@ -146,6 +181,7 @@ bool Shader::Load(const std::string & vertex_filename, const std::string & fragm
 			stringstream tustring;
 			tustring << "tu" << i;
 			int tu_loc;
+
 			tu_loc = glGetUniformLocation(program, (tustring.str()+"_2D").c_str());
 			if (tu_loc >= 0) glUniform1i(tu_loc, i);
 
@@ -153,71 +189,75 @@ bool Shader::Load(const std::string & vertex_filename, const std::string & fragm
 			if (tu_loc >= 0) glUniform1i(tu_loc, i);
 
 			tu_loc = glGetUniformLocation(program, (tustring.str()+"_cube").c_str());
-			if (tu_loc >= 0)
-			{
-				glUniform1i(tu_loc, i);
-			}
+			if (tu_loc >= 0) glUniform1i(tu_loc, i);
 		}
 
-		loaded = true;
+		// cache uniform locations
+		uniform_locations.reserve(uniforms.size());
+		for (std::vector<std::string>::const_iterator i = uniforms.begin(); i != uniforms.end(); ++i)
+		{
+			const int loc = glGetUniformLocation(program, i->c_str());
+			uniform_locations.push_back(loc);
+		}
 	}
 
-	return loaded;
+	return GetLoaded();
 }
 
-void Shader::Unload()
+bool Shader::GetLoaded() const
 {
-	if (loaded)
-	{
-		glDeleteObjectARB(program);
-		glDeleteObjectARB(vertex_shader);
-		glDeleteObjectARB(fragment_shader);
-	}
-	loaded = false;
+	return program != 0;
 }
 
 void Shader::Enable()
 {
-	assert(loaded);
-
+	assert(program);
 	glUseProgramObjectARB(program);
 }
 
-bool Shader::SetUniformMat16(const string & name, const float val[16])
+int Shader::RegisterUniform(const char name[])
 {
-	Enable();
-
-	int mat_loc = glGetUniformLocation(program, name.c_str());
-	if (mat_loc >= 0) glUniformMatrix4fv(mat_loc, 1, GL_FALSE, val);
-	return (mat_loc >= 0);
+	const int loc = glGetUniformLocation(program, name);
+	uniform_locations.push_back(loc);
+	return uniform_locations.size() - 1;
 }
 
-///returns true on successful upload
-bool Shader::SetUniform1i(const string & name, int val)
+bool Shader::SetUniformMat4f(int id, const float val[16])
 {
-	Enable();
+	assert (id >= 0 && id < (int)uniform_locations.size());
+	const int loc = uniform_locations[id];
+	if (loc >= 0) glUniformMatrix4fv(loc, 1, GL_FALSE, val);
+	return (loc >= 0);
+}
 
-	int loc = glGetUniformLocation(program, name.c_str());
+bool Shader::SetUniformMat3f(int id, const float val[9])
+{
+	assert (id >= 0 && id < (int)uniform_locations.size());
+	const int loc = uniform_locations[id];
+	if (loc >= 0) glUniformMatrix3fv(loc, 1, GL_FALSE, val);
+	return (loc >= 0);
+}
+
+bool Shader::SetUniform1i(int id, int val)
+{
+	assert (id >= 0 && id < (int)uniform_locations.size());
+	const int loc = uniform_locations[id];
 	if (loc >= 0) glUniform1i(loc, val);
 	return (loc >= 0);
 }
 
-///returns true on successful upload
-bool Shader::SetUniform1f(const string & name, float val)
+bool Shader::SetUniform1f(int id, float val)
 {
-	Enable();
-
-	int loc = glGetUniformLocation(program, name.c_str());
+	assert (id >= 0 && id < (int)uniform_locations.size());
+	const int loc = uniform_locations[id];
 	if (loc >= 0) glUniform1f(loc, val);
 	return (loc >= 0);
 }
 
-///returns true on successful upload
-bool Shader::SetUniform3f(const std::string & name, float val1, float val2, float val3)
+bool Shader::SetUniform3f(int id, float val1, float val2, float val3)
 {
-	Enable();
-
-	int loc = glGetUniformLocation(program, name.c_str());
+	assert (id >= 0 && id < (int)uniform_locations.size());
+	const int loc = uniform_locations[id];
 	if (loc >= 0) glUniform3f(loc, val1, val2, val3);
 	return (loc >= 0);
 }
