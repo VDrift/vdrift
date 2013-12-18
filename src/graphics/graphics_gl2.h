@@ -62,8 +62,6 @@ public:
 
 	virtual void Deinit();
 
-	virtual void BeginScene(std::ostream & error_output);
-
 	virtual DrawableContainer <PtrVector> & GetDynamicDrawlist();
 
 	virtual void AddStaticNode(SceneNode & node, bool clearcurrent = true);

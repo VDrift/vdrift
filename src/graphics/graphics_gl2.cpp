@@ -359,11 +359,6 @@ void GraphicsGL2::Deinit()
 	}
 }
 
-void GraphicsGL2::BeginScene(std::ostream & error_output)
-{
-
-}
-
 DrawableContainer <PtrVector> & GraphicsGL2::GetDynamicDrawlist()
 {
 	return dynamic_drawlist;

@@ -109,11 +109,6 @@ void GraphicsGL3::Deinit()
 	renderer.clear();
 }
 
-void GraphicsGL3::BeginScene(std::ostream & error_output)
-{
-
-}
-
 DrawableContainer <PtrVector> & GraphicsGL3::GetDynamicDrawlist()
 {
 	return dynamic_drawlist;

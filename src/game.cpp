@@ -753,8 +753,8 @@ void Game::Test()
 
 void Game::BeginDraw(float dt)
 {
-	PROFILER.beginBlock("render setup");
 	// Send scene information to the graphics subsystem.
+	PROFILER.beginBlock("render setup");
 	if (active_camera)
 	{
 		float fov = active_camera->GetFOV() > 0 ? active_camera->GetFOV() : settings.GetFOV();
@@ -773,12 +773,9 @@ void Game::BeginDraw(float dt)
 
 	graphics_interface->SetContrast(settings.GetContrast());
 	graphics_interface->UpdateScene(dt);
-
-	graphics_interface->BeginScene(error_output);
 	PROFILER.endBlock("render setup");
 
 	PROFILER.beginBlock("scenegraph");
-
 	TraverseScene<true>(debugnode, graphics_interface->GetDynamicDrawlist());
 	TraverseScene<false>(gui.GetNode(), graphics_interface->GetDynamicDrawlist());
 	TraverseScene<false>(track.GetRacinglineNode(), graphics_interface->GetDynamicDrawlist());
@@ -2289,7 +2286,6 @@ void Game::ShowLoadingScreen(float progress, float max, bool drawGui, const std:
 	TraverseScene<false>(loadingscreen.GetNode(), graphics_interface->GetDynamicDrawlist());
 
 	graphics_interface->SetupScene(45.0, 100.0, Vec3 (), Quat (), Vec3 ());
-	graphics_interface->BeginScene(error_output);
 	graphics_interface->DrawScene(error_output);
 	window.SwapBuffers();
 }

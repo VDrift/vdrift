@@ -45,7 +45,7 @@ class SceneNode;
 class GraphicsGL3 : public Graphics
 {
 public:
-	///reflection_type is 0 (low=OFF), 1 (medium=static), 2 (high=dynamic)
+	/// reflection_type is 0 (low=OFF), 1 (medium=static), 2 (high=dynamic)
 	/// returns true on success
 	virtual bool Init(
 		const std::string & shaderpath,
@@ -62,24 +62,41 @@ public:
 		const std::string & renderconfig,
 		std::ostream & info_output,
 		std::ostream & error_output);
+
 	virtual void Deinit();
-	virtual void BeginScene(std::ostream & error_output);
+
 	virtual DrawableContainer <PtrVector> & GetDynamicDrawlist();
+
 	virtual void AddStaticNode(SceneNode & node, bool clearcurrent = true);
-	virtual void SetupScene(float fov, float new_view_distance, const Vec3 cam_position, const Quat & cam_rotation,
-					const Vec3 & dynamic_reflection_sample_pos);
+
+	virtual void SetupScene(
+		float fov, float new_view_distance,
+		const Vec3 cam_position,
+		const Quat & cam_rotation,
+		const Vec3 & dynamic_reflection_sample_pos);
+
 	virtual void DrawScene(std::ostream & error_output);
+
 	virtual int GetMaxAnisotropy() const;
+
 	virtual bool AntialiasingSupported() const;
+
 	virtual bool GetUsingShaders() const;
+
 	virtual bool ReloadShaders(std::ostream & info_output, std::ostream & error_output);
+
 	virtual void SetCloseShadow ( float value );
+
 	virtual bool GetShadows() const;
+
 	virtual void SetSunDirection(const Vec3 & value);
+
 	virtual void SetContrast(float value);
+
 	virtual void printProfilingInfo(std::ostream & out) const {renderer.printProfilingInfo(out);}
 
 	GraphicsGL3(StringIdMap & map);
+
 	~GraphicsGL3() {};
 
 private:
