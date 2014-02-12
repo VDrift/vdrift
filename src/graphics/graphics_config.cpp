@@ -349,7 +349,7 @@ bool GraphicsConfigPass::Load(std::istream & f, std::ostream & error_output, int
 	reqd.push_back("draw");
 	//reqd.push_back("light");
 	reqd.push_back("output");
-	//reqd.push_back("shader"); //not required because non-shader path is specified using these files
+	reqd.push_back("shader");
 
 	std::map <std::string, std::string> vars;
 	if (!readSection(f, error_output, line, reqd, vars))
