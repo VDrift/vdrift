@@ -43,9 +43,7 @@ RenderInputScene::RenderInputScene():
 	lod_far(1000),
 	shader(NULL),
 	fsaa(0),
-	contrast(1.0),
-	carpainthack(false),
-	vlighting(false)
+	contrast(1.0)
 {
 	Vec3 front(1,0,0);
 	lightposition = front;
@@ -173,11 +171,6 @@ void RenderInputScene::SetContrast(float value)
 	contrast = value;
 }
 
-void RenderInputScene::SetCarPaintHack(bool hack)
-{
-	carpainthack = hack;
-}
-
 void RenderInputScene::SetDrawLists(
 	const std::vector <Drawable*> & dl_dynamic,
 	const std::vector <Drawable*> & dl_static)
@@ -188,6 +181,8 @@ void RenderInputScene::SetDrawLists(
 
 void RenderInputScene::Render(GraphicsState & glstate, std::ostream & error_output)
 {
+	assert(shader && "RenderInputScene::Render No shader set.");
+
 	glstate.SetColor(1,1,1,1);
 
 	glMatrixMode(GL_PROJECTION);
@@ -196,117 +191,26 @@ void RenderInputScene::Render(GraphicsState & glstate, std::ostream & error_outp
 	glMatrixMode(GL_MODELVIEW);
 	glLoadMatrixf(viewMatrix.GetArray());
 
-	// send information to the shaders
-	if (shader)
-	{
-		Quat cam_look;
-		cam_look.Rotate(M_PI_2, 1, 0, 0);
-		cam_look.Rotate(-M_PI_2, 0, 0, 1);
-		Quat cube_rotation;
-		cube_rotation = (-cam_look) * (-cam_rotation); // experimentally derived
-		float cube_matrix[9];
-		cube_rotation.GetMatrix3(cube_matrix);
+	Quat cam_look;
+	cam_look.Rotate(M_PI_2, 1, 0, 0);
+	cam_look.Rotate(-M_PI_2, 0, 0, 1);
+	Quat cube_rotation;
+	cube_rotation = (-cam_look) * (-cam_rotation); // experimentally derived
+	float cube_matrix[9];
+	cube_rotation.GetMatrix3(cube_matrix);
 
-		// send light position to the shaders
-		Vec3 lightvec = lightposition;
-		(cam_rotation).RotateVector(lightvec);
+	Vec3 lightvec = lightposition;
+	(cam_rotation).RotateVector(lightvec);
 
-		shader->Enable();
-		shader->SetUniform3f(LightDirection, lightvec[0], lightvec[1], lightvec[2]);
-		shader->SetUniform1f(Contrast, contrast);
-		shader->SetUniformMat3f(ReflectionMatrix, cube_matrix);
-	}
-	else
-	{
-		// carpainthack is only used with dynamic objects(cars)
-		if (carpainthack && !dynamic_drawlist_ptr->empty())
-			EnableCarPaint(glstate);
-		else
-			DisableCarPaint(glstate);
-	}
+	shader->Enable();
+	shader->SetUniform3f(LightDirection, lightvec[0], lightvec[1], lightvec[2]);
+	shader->SetUniform1f(Contrast, contrast);
+	shader->SetUniformMat3f(ReflectionMatrix, cube_matrix);
 
 	last_transform_valid = false;
 
 	Draw(glstate, *dynamic_drawlist_ptr, false);
 	Draw(glstate, *static_drawlist_ptr, true);
-}
-
-void RenderInputScene::EnableCarPaint(GraphicsState & glstate)
-{
-	// turn on lighting for cars only atm
-	if (!vlighting)
-	{
-		Vec3 lightvec = lightposition;
-		cam_rotation.RotateVector(lightvec);
-
-		// push some sane values, should be configurable maybe?
-		// vcol = light_ambient * material_ambient
-		// vcol += L.N * light_diffuse * material_diffuse
-		// vcol += (H.N)^n * light_specular * material_specular
-		GLfloat pos[] = {lightvec[0], lightvec[1], lightvec[2], 0.0f};
-		GLfloat diffuse[] = {0.4f, 0.4f, 0.4f, 1.0f};
-		GLfloat ambient[] = {0.6f, 0.6f, 0.6f, 1.0f};
-		glEnable(GL_LIGHTING);
-		glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
-		glLightfv(GL_LIGHT0, GL_AMBIENT, ambient);
-		glLightfv(GL_LIGHT0, GL_POSITION, pos);
-		glEnable(GL_LIGHT0);
-
-		GLfloat mcolor[] = {1.0f, 1.0f, 1.0f, 1.0f};
-		glMaterialfv(GL_FRONT, GL_AMBIENT_AND_DIFFUSE, mcolor);
-
-		vlighting = true;
-
-		// dummy texture required to set the combiner
-		Drawable & d = *dynamic_drawlist_ptr->front();
-
-		// setup first combiner
-		glstate.BindTexture(0, GL_TEXTURE_2D, d.GetTexture0());
-		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_INTERPOLATE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB, GL_TEXTURE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB, GL_CONSTANT);
-		glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE2_RGB, GL_TEXTURE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
-		glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_COLOR);
-		glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND2_RGB, GL_SRC_ALPHA);
-		// don't care about alpha, set it to something harmless
-		glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA, GL_CONSTANT);
-		glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
-
-		// setup second combiner
-		glstate.BindTexture(1, GL_TEXTURE_2D, d.GetTexture0());
-		glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_COMBINE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_RGB, GL_MODULATE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_RGB, GL_PREVIOUS);
-		glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE1_RGB, GL_PRIMARY_COLOR);
-		glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_RGB, GL_SRC_COLOR);
-		glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND1_RGB, GL_SRC_COLOR);
-		// don't care about alpha, set it to something harmless
-		glTexEnvi(GL_TEXTURE_ENV, GL_COMBINE_ALPHA, GL_REPLACE);
-		glTexEnvi(GL_TEXTURE_ENV, GL_SOURCE0_ALPHA, GL_PREVIOUS);
-		glTexEnvi(GL_TEXTURE_ENV, GL_OPERAND0_ALPHA, GL_SRC_ALPHA);
-	}
-}
-
-void RenderInputScene::DisableCarPaint(GraphicsState & glstate)
-{
-	if (vlighting)
-	{
-		// turn off lighting for everything else
-		glDisable(GL_LIGHTING);
-
-		// reset second texture combiner explicitly
-		glstate.BindTexture(1, GL_TEXTURE_2D, 0);
-
-		// reset first texture combiner
-		glstate.BindTexture(0, GL_TEXTURE_2D, 0);
-
-		vlighting = false;
-	}
-
-	glTexEnvi(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 }
 
 void RenderInputScene::Draw(GraphicsState & glstate, const std::vector <Drawable*> & drawlist, bool preculled)
@@ -462,17 +366,8 @@ void RenderInputScene::SetFlags(const Drawable & d, GraphicsState & glstate)
 void RenderInputScene::SetTextures(const Drawable & d, GraphicsState & glstate)
 {
 	glstate.BindTexture(0, GL_TEXTURE_2D, d.GetTexture0());
-
-	if (carpainthack)
-	{
-		glTexEnvfv(GL_TEXTURE_ENV, GL_TEXTURE_ENV_COLOR, &d.GetColor()[0]);
-	}
-
-	if (shader)
-	{
-		glstate.BindTexture(1, GL_TEXTURE_2D, d.GetTexture1());
-		glstate.BindTexture(2, GL_TEXTURE_2D, d.GetTexture2());
-	}
+	glstate.BindTexture(1, GL_TEXTURE_2D, d.GetTexture1());
+	glstate.BindTexture(2, GL_TEXTURE_2D, d.GetTexture2());
 }
 
 void RenderInputScene::SetTransform(const Drawable & d, GraphicsState & glstate)

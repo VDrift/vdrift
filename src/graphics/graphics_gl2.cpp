@@ -1059,9 +1059,6 @@ void GraphicsGL2::DrawScenePass(
 		{
 			const std::string & layer = *d;
 
-			// car paint hack for non-shader path
-			renderscene.SetCarPaintHack(false);
-
 			// setup dynamic drawlist
 			reseatable_reference <PtrVector <Drawable> > container_dynamic = dynamic_drawlist.GetByName(layer);
 			if (!container_dynamic)

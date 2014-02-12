@@ -65,8 +65,6 @@ public:
 
 	void SetContrast(float value);
 
-	void SetCarPaintHack(bool hack);
-
 	void SetDrawLists(
 		const std::vector <Drawable*> & dl_dynamic,
 		const std::vector <Drawable*> & dl_static);
@@ -98,12 +96,6 @@ private:
 	Shader * shader;
 	unsigned fsaa;
 	float contrast;
-	bool carpainthack;
-	bool vlighting;
-
-	void EnableCarPaint(GraphicsState & glstate);
-
-	void DisableCarPaint(GraphicsState & glstate);
 
 	void Draw(GraphicsState & glstate, const std::vector <Drawable*> & drawlist, bool preculled);
 
