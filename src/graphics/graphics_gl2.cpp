@@ -562,11 +562,6 @@ bool GraphicsGL2::AntialiasingSupported() const
 	return GLEW_ARB_multisample;
 }
 
-bool GraphicsGL2::GetUsingShaders() const
-{
-	return true;
-}
-
 bool GraphicsGL2::ReloadShaders(std::ostream & info_output, std::ostream & error_output)
 {
 	return EnableShaders(info_output, error_output);

@@ -81,8 +81,6 @@ public:
 
 	virtual bool AntialiasingSupported() const;
 
-	virtual bool GetUsingShaders() const;
-
 	virtual bool ReloadShaders(std::ostream & info_output, std::ostream & error_output);
 
 	virtual void SetCloseShadow ( float value );

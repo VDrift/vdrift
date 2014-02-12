@@ -576,11 +576,6 @@ bool GraphicsGL3::AntialiasingSupported() const
 	return true;
 }
 
-bool GraphicsGL3::GetUsingShaders() const
-{
-	return true;
-}
-
 int upper(int c)
 {
   return std::toupper((unsigned char)c);

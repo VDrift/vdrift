@@ -74,8 +74,6 @@ Sky::Sky(GraphicsGL2 & gfx, std::ostream & error) :
 	time_delta(0),
 	need_update(false)
 {
-	assert(graphics.GetUsingShaders());
-
 	sky_shader = graphics.GetShader("skygen");
 	assert(sky_shader);
 
