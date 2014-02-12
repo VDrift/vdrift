@@ -1879,22 +1879,13 @@ void Game::SetCarColor()
 
 bool Game::LoadFonts()
 {
-	std::string fontdir = pathmanager.GetFontDir(settings.GetSkin());
-	std::string fontpath = pathmanager.GetDataPath()+"/"+fontdir;
+	const std::string fontdir = pathmanager.GetFontDir(settings.GetSkin());
+	const std::string fontpath = pathmanager.GetDataPath()+"/"+fontdir;
 
-	if (graphics_interface->GetUsingShaders())
-	{
-		if (!fonts["freesans"].Load(fontpath+"/freesans.txt",fontdir, "freesans.png", content, error_output)) return false;
-		if (!fonts["lcd"].Load(fontpath+"/lcd.txt",fontdir, "lcd.png", content, error_output)) return false;
-		if (!fonts["futuresans"].Load(fontpath+"/futuresans.txt",fontdir, "futuresans.png", content, error_output)) return false;
-		if (!fonts["futuresans-noshader"].Load(fontpath+"/futuresans.txt",fontdir, "futuresans_noshaders.png", content, error_output)) return false;
-	}
-	else
-	{
-		if (!fonts["freesans"].Load(fontpath+"/freesans.txt",fontdir, "freesans_noshaders.png", content, error_output)) return false;
-		if (!fonts["lcd"].Load(fontpath+"/lcd.txt",fontdir, "lcd_noshaders.png", content,  error_output)) return false;
-		if (!fonts["futuresans"].Load(fontpath+"/futuresans.txt",fontdir, "futuresans_noshaders.png", content, error_output)) return false;
-	}
+	if (!fonts["freesans"].Load(fontpath+"/freesans.txt",fontdir, "freesans.png", content, error_output)) return false;
+	if (!fonts["lcd"].Load(fontpath+"/lcd.txt",fontdir, "lcd.png", content, error_output)) return false;
+	if (!fonts["futuresans"].Load(fontpath+"/futuresans.txt",fontdir, "futuresans.png", content, error_output)) return false;
+	if (!fonts["futuresans-noshader"].Load(fontpath+"/futuresans.txt",fontdir, "futuresans_noshaders.png", content, error_output)) return false;
 
 	info_output << "Loaded fonts successfully" << std::endl;
 
