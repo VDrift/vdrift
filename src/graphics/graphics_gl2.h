@@ -117,7 +117,6 @@ private:
 	// configuration variables, internal data
 	int w, h;
 	bool initialized;
-	bool using_shaders;
 	GLint max_anisotropy;
 	bool shadows;
 	int shadow_distance;
@@ -186,7 +185,9 @@ private:
 		std::ostream & info_output,
 		std::ostream & error_output);
 
-	void EnableShaders(std::ostream & info_output, std::ostream & error_output);
+	/// load render configuration
+	/// return false on error
+	bool EnableShaders(std::ostream & info_output, std::ostream & error_output);
 
 	void DisableShaders(std::ostream & error_output);
 

@@ -209,7 +209,6 @@ static void AttachCubeSide(int i, FrameBufferObject & reflection_fbo, std::ostre
 
 GraphicsGL2::GraphicsGL2() :
 	initialized(false),
-	using_shaders(false),
 	max_anisotropy(0),
 	shadows(false),
 	closeshadow(5.0),
@@ -219,7 +218,7 @@ GraphicsGL2::GraphicsGL2() :
 	normalmaps(false),
 	contrast(1.0),
 	reflection_status(REFLECTION_DISABLED),
-	renderconfigfile("noshaders.conf"),
+	renderconfigfile("basic.conf"),
 	sky_dynamic(false)
 {
 	// ctor
@@ -248,6 +247,8 @@ bool GraphicsGL2::Init(
 	std::ostream & info_output,
 	std::ostream & error_output)
 {
+	assert(!renderconfig.empty() && "Render configuration name string empty.");
+
 	if (!GLEW_VERSION_2_0)
 	{
 		error_output << "Graphics card or driver does not support required GL_VERSION_2_0." << std::endl;
@@ -264,75 +265,85 @@ bool GraphicsGL2::Init(
 	shaderpath = newshaderpath;
 	sky_dynamic = dynamicsky;
 
-	assert(!renderconfig.empty());
-
 	if (reflection_type == 1)
 		reflection_status = REFLECTION_STATIC;
 	else if (reflection_type == 2)
 		reflection_status = REFLECTION_DYNAMIC;
 
-	ChangeDisplay(resx, resy, error_output);
+	fsaa = (antialiasing > 1) ? antialiasing : 1;
 
-	fsaa = 1;
-	if (antialiasing > 1)
-		fsaa = antialiasing;
+	ChangeDisplay(resx, resy, error_output);
 
 	if (GLEW_EXT_texture_filter_anisotropic)
 		glGetIntegerv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &max_anisotropy);
-
 	info_output << "Maximum anisotropy: " << max_anisotropy << std::endl;
 
-	if (renderconfigfile == "noshaders.conf")
+	GLint maxattach;
+	glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxattach);
+	info_output << "Maximum color attachments: " << maxattach << std::endl;
+
+	const GLint mrtreq = 1;
+	GLint mrt = 0;
+	glGetIntegerv(GL_MAX_DRAW_BUFFERS, &mrt);
+	info_output << "Maximum draw buffers (" << mrtreq << " required): " << mrt << std::endl;
+
+	#ifndef FBOEXT
+	bool use_fbos = GLEW_ARB_framebuffer_object && mrt >= mrtreq && maxattach >= mrtreq;
+	#else
+	bool use_fbos = GLEW_EXT_framebuffer_object && mrt >= mrtreq && maxattach >= mrtreq;
+	#endif
+
+	if (renderconfigfile != "basic.conf" && !use_fbos)
 	{
-		DisableShaders(error_output);
+		info_output << "Graphics card doesn't support framebuffer objects." << std::endl;
+
+		shadows = false;
+		sky_dynamic = false;
+		renderconfigfile = "basic.conf";
+		info_output << "Fall back to: " << renderconfigfile << std::endl;
 	}
-	else
+
+	if (!static_reflectionmap_file.empty() && reflection_status != REFLECTION_DISABLED)
 	{
-		GLint maxattach;
-		glGetIntegerv(GL_MAX_COLOR_ATTACHMENTS, &maxattach);
-		info_output << "Maximum color attachments: " << maxattach << std::endl;
+		TextureInfo t;
+		t.cube = true;
+		t.verticalcross = true;
+		t.mipmap = true;
+		t.anisotropy = anisotropy;
+		t.maxsize = TextureInfo::Size(texturesize);
+		static_reflection.Load(static_reflectionmap_file, t, error_output);
+	}
 
-		const GLint mrtreq = 1;
-		GLint mrt = 0;
-		glGetIntegerv(GL_MAX_DRAW_BUFFERS, &mrt);
-		info_output << "Maximum draw buffers (" << mrtreq << " required): " << mrt << std::endl;
+	if (!static_ambientmap_file.empty())
+	{
+		TextureInfo t;
+		t.cube = true;
+		t.verticalcross = true;
+		t.mipmap = false;
+		t.anisotropy = anisotropy;
+		t.maxsize = TextureInfo::Size(texturesize);
+		static_ambient.Load(static_ambientmap_file, t, error_output);
+	}
 
-		#ifndef FBOEXT
-		bool use_fbos = GLEW_ARB_framebuffer_object && mrt >= mrtreq && maxattach >= mrtreq;
-		#else
-		bool use_fbos = GLEW_EXT_framebuffer_object && mrt >= mrtreq && maxattach >= mrtreq;
-		#endif
-
-		if (renderconfigfile != "nofbos.conf" && !use_fbos)
+	if (!EnableShaders(info_output, error_output))
+	{
+		// try to fall back to basic.conf
+		if (renderconfigfile != "basic.conf")
 		{
-			info_output << "Your video card doesn't support framebuffer objects." << std::endl;
-			info_output << "Fall back to nofbos.conf." << std::endl;
-			renderconfigfile = "nofbos.conf";
-		}
+			shadows = false;
+			sky_dynamic = false;
+			renderconfigfile = "basic.conf";
+			info_output << "Fall back to: " << renderconfigfile << std::endl;
 
-		if ((reflection_status == REFLECTION_STATIC || reflection_status == REFLECTION_DYNAMIC) && !static_reflectionmap_file.empty())
-		{
-			TextureInfo t;
-			t.cube = true;
-			t.verticalcross = true;
-			t.mipmap = true;
-			t.anisotropy = anisotropy;
-			t.maxsize = TextureInfo::Size(texturesize);
-			static_reflection.Load(static_reflectionmap_file, t, error_output);
+			if (!EnableShaders(info_output, error_output))
+				return false;
 		}
+	}
 
-		if (!static_ambientmap_file.empty())
-		{
-			TextureInfo t;
-			t.cube = true;
-			t.verticalcross = true;
-			t.mipmap = false;
-			t.anisotropy = anisotropy;
-			t.maxsize = TextureInfo::Size(texturesize);
-			static_ambient.Load(static_ambientmap_file, t, error_output);
-		}
-
-		EnableShaders(info_output, error_output);
+	if (sky_dynamic)
+	{
+		sky.reset(new Sky(*this, error_output));
+		texture_inputs["sky"] = sky.get();
 	}
 
 	// gl state setup
@@ -346,15 +357,15 @@ bool GraphicsGL2::Init(
 
 	info_output << "Renderer: " << shaderpath << "/" << renderconfigfile << std::endl;
 	initialized = true;
+
 	return true;
 }
 
 void GraphicsGL2::Deinit()
 {
-	if (GLEW_ARB_shading_language_100)
+	if (!shaders.empty())
 	{
-		if (!shaders.empty())
-			glUseProgramObjectARB(0);
+		glUseProgramObjectARB(0);
 		shaders.clear();
 	}
 }
@@ -553,14 +564,12 @@ bool GraphicsGL2::AntialiasingSupported() const
 
 bool GraphicsGL2::GetUsingShaders() const
 {
-	return using_shaders;
+	return true;
 }
 
 bool GraphicsGL2::ReloadShaders(std::ostream & info_output, std::ostream & error_output)
 {
-	EnableShaders(info_output, error_output);
-
-	return GetUsingShaders();
+	return EnableShaders(info_output, error_output);
 }
 
 void GraphicsGL2::SetCloseShadow(float value)
@@ -688,38 +697,29 @@ void GraphicsGL2::GetShaderDefines(std::vector <std::string> & defines) const
 		defines.push_back("_SSAO_HIGH_");
 }
 
-void GraphicsGL2::EnableShaders(std::ostream & info_output, std::ostream & error_output)
+bool GraphicsGL2::EnableShaders(std::ostream & info_output, std::ostream & error_output)
 {
 	CheckForOpenGLErrors("EnableShaders: start", error_output);
 
-	using_shaders = true;
-
-	// unload current shaders
+	// unload shaders
 	glUseProgramObjectARB(0);
-	for (shader_map_type::iterator i = shaders.begin(); i != shaders.end(); i++)
-	{
-		i->second.Unload();
-	}
 	shaders.clear();
-
 	CheckForOpenGLErrors("EnableShaders: shader unload", error_output);
+
+	// unload inputs/outputs
+	render_outputs.clear();
+	texture_outputs.clear();
+	texture_inputs.clear();
+	CheckForOpenGLErrors("EnableShaders: FBO deinit", error_output);
 
 	// reload configuration
 	config = GraphicsConfig();
 	std::string rcpath = shaderpath + "/" + renderconfigfile;
 	if (!config.Load(rcpath, error_output))
 	{
-		error_output << "Error loading render configuration file: " << rcpath << std::endl;
-		DisableShaders(error_output);
-		return;
+		error_output << "EnableShaders: Error loading render configuration file: " << rcpath << std::endl;
+		return false;
 	}
-
-	// unload current outputs
-	render_outputs.clear();
-	texture_outputs.clear();
-	texture_inputs.clear();
-
-	CheckForOpenGLErrors("EnableShaders: FBO deinit", error_output);
 
 	bool ssao = (lighting > 0);
 	bool ssao_low = (lighting == 1);
@@ -775,7 +775,7 @@ void GraphicsGL2::EnableShaders(std::ostream & info_output, std::ostream & error
 
 		if (texture_outputs.find(i->name) != texture_outputs.end())
 		{
-			error_output << "Detected duplicate output name in render config: " << i->name << ", only the first output will be constructed." << std::endl;
+			error_output << "Ignore duplicate definiion of output: " << i->name << std::endl;
 			continue;
 		}
 
@@ -791,8 +791,7 @@ void GraphicsGL2::EnableShaders(std::ostream & info_output, std::ostream & error
 			{
 				error_output << "Your video card doesn't support floating point textures." << std::endl;
 				error_output << "Failed to load render output: " << i->name << " " << i->type << std::endl;
-				DisableShaders(error_output);
-				return;
+				return false;
 			}
 
 			// initialize fbtexture
@@ -807,7 +806,8 @@ void GraphicsGL2::EnableShaders(std::ostream & info_output, std::ostream & error
 			texture_inputs[i->name] = fbtex;
 		}
 
-		info_output << "Initialized render output: " << i->name << (i->type != "framebuffer" ? " (FBO)" : " (framebuffer alias)") << std::endl;
+		info_output << "Initialized render output: " << i->name;
+		info_output << (i->type != "framebuffer" ? " (FBO)" : " (framebuffer alias)") << std::endl;
 	}
 	render_outputs["framebuffer"].RenderToFramebuffer(w, h);
 
@@ -818,7 +818,7 @@ void GraphicsGL2::EnableShaders(std::ostream & info_output, std::ostream & error
 	{
 		std::pair <ConfigShaderMap::iterator, bool> result = config_shaders.insert(std::make_pair(s->name, &*s));
 		if (!result.second)
-			error_output << "Ignore second definition of shader: " << s->name << std::endl;
+			error_output << "Ignore duplicate definition of shader: " << s->name << std::endl;
 	}
 
 	// setup frame buffer objects and shaders
@@ -848,7 +848,7 @@ void GraphicsGL2::EnableShaders(std::ostream & info_output, std::ostream & error
 			if (fbotex.empty())
 			{
 				error_output << "None of these outputs are active: " << outname << std::endl;
-				return DisableShaders(error_output);
+				return false;
 			}
 
 			// initialize fbo
@@ -864,7 +864,7 @@ void GraphicsGL2::EnableShaders(std::ostream & info_output, std::ostream & error
 			if (csi == config_shaders.end())
 			{
 				error_output << "Shader not defined: " << shadername << std::endl;
-				return DisableShaders(error_output);
+				return false;
 			}
 			const GraphicsConfigShader * cs = csi->second;
 
@@ -882,47 +882,12 @@ void GraphicsGL2::EnableShaders(std::ostream & info_output, std::ostream & error
 				defines, uniforms,
 				info_output, error_output))
 			{
-				return DisableShaders(error_output);
+				return false;
 			}
 		}
 	}
 
-	if (sky_dynamic)
-	{
-		sky.reset(new Sky(*this, error_output));
-		texture_inputs["sky"] = sky.get();
-		//sky->UpdateComplete();
-	}
-}
-
-void GraphicsGL2::DisableShaders(std::ostream & error_output)
-{
-	if (using_shaders)
-	{
-		glUseProgramObjectARB(0);
-	}
-
-	renderconfigfile = "noshaders.conf";
-	shaders.clear();
-	using_shaders = false;
-	shadows = false;
-
-	// load non-shader configuration
-	config = GraphicsConfig();
-	const std::string rcpath = shaderpath + "/" + renderconfigfile;
-	if (!config.Load(rcpath, error_output))
-	{
-		error_output << "Error loading non-shader render configuration file: " << rcpath << std::endl;
-		assert(0); // uh oh, now we're really boned
-	}
-
-	render_outputs["framebuffer"].RenderToFramebuffer(w, h);
-
-	if (sky_dynamic)
-	{
-		texture_inputs.erase("sky");
-		sky.reset();
-	}
+	return true;
 }
 
 void GraphicsGL2::CullScenePass(
@@ -1039,16 +1004,13 @@ void GraphicsGL2::DrawScenePass(
 		return;
 
 	// setup shader
-	if (using_shaders)
+	shader_map_type::iterator si = shaders.find(pass.shader);
+	if (si == shaders.end())
 	{
-		shader_map_type::iterator si = shaders.find(pass.shader);
-		if (si == shaders.end())
-		{
-			ReportOnce(&pass, "Shader " + pass.shader + " couldn't be found", error_output);
-			return;
-		}
-		renderscene.SetShader(&si->second);
+		ReportOnce(&pass, "Shader " + pass.shader + " couldn't be found", error_output);
+		return;
 	}
+	renderscene.SetShader(&si->second);
 
 	// setup textures
 	std::vector <TextureInterface*> input_textures;
@@ -1103,8 +1065,7 @@ void GraphicsGL2::DrawScenePass(
 			const std::string & layer = *d;
 
 			// car paint hack for non-shader path
-			bool carhack = !using_shaders && (layer == "car_noblend");
-			renderscene.SetCarPaintHack(carhack);
+			renderscene.SetCarPaintHack(false);
 
 			// setup dynamic drawlist
 			reseatable_reference <PtrVector <Drawable> > container_dynamic = dynamic_drawlist.GetByName(layer);

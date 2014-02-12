@@ -343,7 +343,9 @@ bool Game::InitCoreSubsystems()
 
 	if (!LastStartWasSuccessful())
 	{
-		info_output << "The last VDrift startup was unsuccessful.\nSettings have been set to failsafe defaults.\nYour original VDrift.config file was backed up to VDrift.config.backup" << std::endl;
+		info_output << "The last VDrift startup was unsuccessful.\n";
+		info_output << "Settings have been set to failsafe defaults.\n";
+		info_output << "Your original VDrift.config file was backed up to VDrift.config.backup" << std::endl;
 		settings.Save(pathmanager.GetSettingsFile()+".backup", error_output);
 		settings.SetFailsafeSettings();
 	}

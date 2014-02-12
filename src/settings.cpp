@@ -116,9 +116,9 @@ Settings::Settings() :
 void Settings::SetFailsafeSettings()
 {
 	*this = Settings();
-	depthbpp = 16;
-	renderer = "gl2/noshaders.conf";
+	renderer = "gl2/basic.conf";
 	texture_size = "medium";
+	depthbpp = 16;
 }
 
 void Settings::Serialize(bool write, Config & config)
