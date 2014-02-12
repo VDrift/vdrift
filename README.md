@@ -43,13 +43,12 @@ CPU.
 GPU
 ---
 
-VDrift requires a recent nVidia or ATI graphics card. Intel graphics cards are
-not recommended.
+VDrift requires an OpenGL 2.0 capable graphics card, OpenGL 3.3 is recommended.
 
-A nVidia GeForce 7-series or ATI Radeon X1000-Series card is recommended in
-order to enable all the visual effects. By reducing or disabling some of the
-display options, it should be possible to play VDrift with a nVidia GeForce 2
-or an ATI Radeon 7000.
+A nVidia GeForce 8 Series or ATI Radeon HD 4800 Series card is recommended in
+order to enjoy all visual effects. By reducing or disabling some of the
+graphics options, it should be possible to play VDrift with a nVidia GeForce 6 Series
+or an ATI Radeon 9000 Series (AGP).
 
 Hard Disk Drive
 ---------------
