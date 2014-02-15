@@ -187,9 +187,7 @@ private:
 
 	std::string GetReplayRecordingFilename();
 
-	void BeginDraw(float dt);
-
-	void FinishDraw();
+	void Draw(float dt);
 
 	void BeginStartingUp();
 

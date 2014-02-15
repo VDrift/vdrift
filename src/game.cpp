@@ -753,7 +753,7 @@ void Game::Test()
 	info_output << std::endl;
 }
 
-void Game::BeginDraw(float dt)
+void Game::Draw(float dt)
 {
 	// Send scene information to the graphics subsystem.
 	PROFILER.beginBlock("render setup");
@@ -797,16 +797,14 @@ void Game::BeginDraw(float dt)
 	//gui.GetNode().DebugPrint(info_output);
 	PROFILER.endBlock("scenegraph");
 
+	// Sync CPU and GPU (flip the page).
+	PROFILER.beginBlock("render sync");
+	window.SwapBuffers();
+	PROFILER.endBlock("render sync");
+
 	PROFILER.beginBlock("render draw");
 	graphics_interface->DrawScene(error_output);
 	PROFILER.endBlock("render draw");
-}
-
-void Game::FinishDraw()
-{
-	PROFILER.beginBlock("render swap");
-	window.SwapBuffers();
-	PROFILER.endBlock("render swap");
 }
 
 /* The main game loop... */
@@ -823,10 +821,7 @@ void Game::MainLoop()
 		// Do CPU intensive stuff in parallel with the GPU...
 		Tick(eventsystem.Get_dt());
 
-		// Sync CPU and GPU (flip the page).
-		FinishDraw();
-
-		BeginDraw(eventsystem.Get_dt());
+		Draw(eventsystem.Get_dt());
 
 		eventsystem.EndFrame();
 
