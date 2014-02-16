@@ -258,13 +258,11 @@ void Window::LogOpenGLInfo(std::ostream & info_output)
 	cardinfo << "GL Renderer: " << glGetString(GL_RENDERER) << std::endl;
 	cardinfo << "GL Version: " << glGetString(GL_VERSION) << std::endl;
 
-	GLint texUnits(0), texSize(0), maxFloats(0);
+	GLint texUnits(0), texSize(0);
 	glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &texUnits);
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &texSize);
-	glGetIntegerv(GL_MAX_VARYING_FLOATS_ARB, &maxFloats);
 	cardinfo << "Texture units: " << texUnits << std::endl;
 	cardinfo << "Maximum texture size: " << texSize << std::endl;
-	cardinfo << "Maximum varying floats: " << maxFloats;
 
 	info_output << cardinfo.str() << std::endl;
 }
