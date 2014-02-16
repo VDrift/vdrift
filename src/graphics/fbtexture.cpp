@@ -149,9 +149,9 @@ void FrameBufferTexture::Init(
 
 	CheckForOpenGLErrors("FBTEX texture storage initialization", error_output);
 
-	glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_CLAMP);
-	glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_CLAMP);
-	glTexParameteri(target, GL_TEXTURE_WRAP_R, GL_CLAMP);
+	glTexParameteri(target, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(target, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(target, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
 	if (filternearest)
 	{
