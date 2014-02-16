@@ -30,7 +30,9 @@
 
 #define breakOnError false
 #define logEveryGlCall false
+#ifdef DEBUG
 #define enableErrorChecking true
+#endif
 
 const char * REQUIRED_GL_VERSION = "GL_VERSION_3_3";
 const GLEnums GLEnumHelper;
