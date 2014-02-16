@@ -493,7 +493,6 @@ bool Texture::LoadCubeVerticalCross(const std::string & path, const TextureInfo 
 	CheckForOpenGLErrors("Cubemap ID generation", error);
 
 	glBindTexture(GL_TEXTURE_CUBE_MAP, texid);
-	glEnable(GL_TEXTURE_CUBE_MAP);
 
 	// set sampler
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -620,8 +619,6 @@ bool Texture::LoadCubeVerticalCross(const std::string & path, const TextureInfo 
 	if (info.mipmap)
 		GenerateMipmap(GL_TEXTURE_CUBE_MAP);
 
-	glDisable(GL_TEXTURE_CUBE_MAP);
-
 	CheckForOpenGLErrors("Cubemap creation", error);
 
 	SDL_FreeSurface(surface);
@@ -722,8 +719,6 @@ bool Texture::LoadCube(const std::string & path, const TextureInfo & info, std::
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
-	glDisable(GL_TEXTURE_CUBE_MAP);
 
 	CheckForOpenGLErrors("Cubemap creation", error);
 

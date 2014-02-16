@@ -250,15 +250,7 @@ public:
 		if (tutgt[texunit] != target || tutex[texunit] != texture)
 		{
 			ActiveTexture(texunit);
-
-			if (!tutex[texunit])
-				glEnable(target);
-
 			glBindTexture(target, texture);
-
-			if (!texture)
-				glDisable(target);
-
 			tutgt[texunit] = target;
 			tutex[texunit] = texture;
 		}
