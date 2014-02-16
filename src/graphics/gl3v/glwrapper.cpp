@@ -30,8 +30,11 @@
 
 #define breakOnError false
 #define logEveryGlCall false
+
 #ifdef DEBUG
 #define enableErrorChecking true
+#else
+#define enableErrorChecking false
 #endif
 
 const char * REQUIRED_GL_VERSION = "GL_VERSION_3_3";
