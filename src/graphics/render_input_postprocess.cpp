@@ -75,21 +75,18 @@ void RenderInputPostprocess::SetDepthMode(GraphicsState & glstate, int mode, boo
 	glstate.DepthTest(mode, write_depth);
 }
 
-void RenderInputPostprocess::SetBlendMode(GraphicsState & glstate, BlendMode::BLENDMODE mode)
+void RenderInputPostprocess::SetBlendMode(GraphicsState & glstate, BlendMode::Enum mode)
 {
-	assert(mode != BlendMode::ALPHATEST);
 	switch (mode)
 	{
 		case BlendMode::DISABLED:
 		{
-			glstate.AlphaTest(false);
 			glstate.Blend(false);
 		}
 		break;
 
 		case BlendMode::ADD:
 		{
-			glstate.AlphaTest(false);
 			glstate.Blend(true);
 			glstate.BlendFunc(GL_ONE, GL_ONE);
 		}
@@ -97,7 +94,6 @@ void RenderInputPostprocess::SetBlendMode(GraphicsState & glstate, BlendMode::BL
 
 		case BlendMode::ALPHABLEND:
 		{
-			glstate.AlphaTest(false);
 			glstate.Blend(true);
 			glstate.BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		}
@@ -105,7 +101,6 @@ void RenderInputPostprocess::SetBlendMode(GraphicsState & glstate, BlendMode::BL
 
 		case BlendMode::PREMULTIPLIED_ALPHA:
 		{
-			glstate.AlphaTest(false);
 			glstate.Blend(true);
 			glstate.BlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 		}

@@ -191,7 +191,6 @@ void Sky::Draw(unsigned elems, const unsigned faces[], const float pos[], const 
 {
 	// disable blending, depth write
 	graphics.GetState().DepthTest(GL_ALWAYS, false);
-	graphics.GetState().AlphaTest(false);
 	graphics.GetState().Blend(false);
 
 	// bind fbo

@@ -377,7 +377,7 @@ bool GraphicsConfigPass::Load(std::istream & f, std::ostream & error_output, int
 
 	std::string blendmodes = "disabled alphablend add alphablend_premultiplied";
 
-	if (!isOf(vars, "blendmode", postprocess ? blendmodes : blendmodes + " alphatest", &error_output, sectionstart)) return false;
+	if (!isOf(vars, "blendmode", blendmodes, &error_output, sectionstart)) return false;
 	if (!isOf(vars, "depthtest", "lequal equal gequal disabled", &error_output, sectionstart)) return false;
 
 

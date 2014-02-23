@@ -52,7 +52,7 @@ public:
 	void SetDepthMode(GraphicsState & glstate, int mode, bool write_depth);
 
 	/// blend mode setup depends on current shader and fsaa value, make sure to set them first
-	void SetBlendMode(GraphicsState & glstate, BlendMode::BLENDMODE mode);
+	void SetBlendMode(GraphicsState & glstate, BlendMode::Enum mode);
 
 	void SetTextures(
 		GraphicsState & glstate,

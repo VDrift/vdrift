@@ -75,8 +75,6 @@ public:
 		depthmask(GL_TRUE),
 		depthoffset(false),
 		depthtest(false),
-		alphatest(false),
-		samplea2c(false),
 		blend(false),
 		cull(false)
 	{
@@ -171,22 +169,6 @@ public:
 		}
 	}
 
-	void AlphaTest(bool enable, bool alpha_to_coverage = false)
-	{
-		if (enable != alphatest)
-		{
-			alphatest = enable;
-			alphatest ? glEnable(GL_ALPHA_TEST) : glDisable(GL_ALPHA_TEST);
-		}
-
-		if (alpha_to_coverage != samplea2c)
-		{
-			samplea2c = alpha_to_coverage;
-			samplea2c ? glEnable(GL_SAMPLE_ALPHA_TO_COVERAGE) :
-				glDisable(GL_SAMPLE_ALPHA_TO_COVERAGE);
-		}
-	}
-
 	void Blend(bool enable)
 	{
 		if (enable != blend)
@@ -202,16 +184,6 @@ public:
 		{
 			cull = enable;
 			cull ? glEnable(GL_CULL_FACE) :	glDisable(GL_CULL_FACE);
-		}
-	}
-
-	void AlphaFunc(GLenum mode, float value)
-	{
-		if (mode != alphamode || value != alphavalue)
-		{
-			alphamode = mode;
-			alphavalue = value;
-			glAlphaFunc(mode, value);
 		}
 	}
 
@@ -307,8 +279,6 @@ private:
 	GLboolean depthmask;
 	bool depthoffset;
 	bool depthtest;
-	bool alphatest;
-	bool samplea2c;
 	bool blend;
 	bool cull;
 };

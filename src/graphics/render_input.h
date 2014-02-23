@@ -27,14 +27,13 @@ class GraphicsState;
 /// supported blend modes
 namespace BlendMode
 {
-enum BLENDMODE
-{
-	DISABLED,
-	ADD,
-	ALPHABLEND,
-	PREMULTIPLIED_ALPHA,
-	ALPHATEST
-};
+	enum Enum
+	{
+		DISABLED,
+		ADD,
+		ALPHABLEND,
+		PREMULTIPLIED_ALPHA
+	};
 }
 
 /// purely abstract base class

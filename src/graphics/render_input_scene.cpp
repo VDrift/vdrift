@@ -82,20 +82,18 @@ void RenderInputScene::SetDepthMode(GraphicsState & glstate, int mode, bool writ
 	glstate.DepthTest(mode, write_depth);
 }
 
-void RenderInputScene::SetBlendMode(GraphicsState & glstate, BlendMode::BLENDMODE mode)
+void RenderInputScene::SetBlendMode(GraphicsState & glstate, BlendMode::Enum mode)
 {
 	switch (mode)
 	{
 		case BlendMode::DISABLED:
 		{
-			glstate.AlphaTest(false);
 			glstate.Blend(false);
 		}
 		break;
 
 		case BlendMode::ADD:
 		{
-			glstate.AlphaTest(false);
 			glstate.Blend(true);
 			glstate.BlendFunc(GL_SRC_ALPHA, GL_ONE);
 		}
@@ -103,7 +101,6 @@ void RenderInputScene::SetBlendMode(GraphicsState & glstate, BlendMode::BLENDMOD
 
 		case BlendMode::ALPHABLEND:
 		{
-			glstate.AlphaTest(false);
 			glstate.Blend(true);
 			glstate.BlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		}
@@ -111,17 +108,8 @@ void RenderInputScene::SetBlendMode(GraphicsState & glstate, BlendMode::BLENDMOD
 
 		case BlendMode::PREMULTIPLIED_ALPHA:
 		{
-			glstate.AlphaTest(false);
 			glstate.Blend(true);
 			glstate.BlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-		}
-		break;
-
-		case BlendMode::ALPHATEST:
-		{
-			glstate.AlphaTest(true, fsaa > 1 && shader);
-			glstate.AlphaFunc(GL_GREATER, 0.5f);
-			glstate.Blend(false);
 		}
 		break;
 

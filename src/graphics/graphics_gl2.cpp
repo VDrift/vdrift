@@ -102,7 +102,7 @@ static GLint DepthModeFromString(const std::string & mode)
 	return GL_LEQUAL;
 }
 
-static BlendMode::BLENDMODE BlendModeFromString(const std::string & mode)
+static BlendMode::Enum BlendModeFromString(const std::string & mode)
 {
 	if (mode == "disabled")
 		return BlendMode::DISABLED;
@@ -112,8 +112,6 @@ static BlendMode::BLENDMODE BlendModeFromString(const std::string & mode)
 		return BlendMode::ALPHABLEND;
 	else if (mode == "alphablend_premultiplied")
 		return BlendMode::PREMULTIPLIED_ALPHA;
-	else if (mode == "alphatest")
-		return BlendMode::ALPHATEST;
 	else
 		assert(0);
 
