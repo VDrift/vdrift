@@ -80,11 +80,16 @@ bool Model::Load(const std::string & strFileName, std::ostream & error_output, b
 
 bool Model::Load(const VertexArray & varray, std::ostream & error_output, bool genlist)
 {
-	BuildFromVertexArray(varray);
+	Clear();
+
+	SetVertexArray(varray);
+	GenerateMeshMetrics();
+
 	if (genlist)
 		GenerateListID(error_output);
 	else
 		GenerateVertexArrayObject(error_output);
+
 	return true;
 }
 
@@ -317,13 +322,12 @@ void Model::ClearVertexArrayObject()
 		if (vao != 0)
 		{
 			glBindVertexArray(0);
-            if (vaoDebug)
-                std::cout << "deleting vao " << vao << std::endl;
+			if (vaoDebug)
+				std::cout << "deleting vao " << vao << std::endl;
 			glDeleteVertexArrays(1,&vao);
 			vao = 0;
 		}
 	}
-	listid = 0;
 }
 
 bool Model::GetVertexArrayObject(GLuint & vao_out, unsigned int & elementCount_out) const
@@ -424,14 +428,7 @@ const VertexArray & Model::GetVertexArray() const
 
 void Model::SetVertexArray(const VertexArray & newmesh)
 {
-	Clear();
 	m_mesh = newmesh;
-}
-
-void Model::BuildFromVertexArray(const VertexArray & newmesh)
-{
-	SetVertexArray(newmesh);
-	GenerateMeshMetrics();
 }
 
 bool Model::Loaded()

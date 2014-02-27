@@ -88,8 +88,6 @@ public:
 
 	void SetVertexArray(const VertexArray & newmesh);
 
-	void BuildFromVertexArray(const VertexArray & newmesh);
-
 	bool Loaded();
 
 protected:
