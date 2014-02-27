@@ -181,7 +181,8 @@ Track::Data::Data() :
 	world(0),
 	reverse(false),
 	loaded(false),
-	cull(true)
+	cull(true),
+	vertical_tracking_skyboxes(false)
 {
 	// Constructor.
 }

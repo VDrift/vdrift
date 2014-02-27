@@ -177,6 +177,7 @@ bool Track::Loader::BeginLoad()
 	PTree info;
 	read_ini(file, info);
 	info.get("cull faces", data.cull);
+	info.get("vertical tracking skyboxes", data.vertical_tracking_skyboxes);
 
 	if (!LoadStartPositions(info))
 	{
@@ -362,7 +363,6 @@ Track::Loader::body_iterator Track::Loader::LoadBody(const PTree & cfg)
 	std::string model_name;
 	int clampuv = 0;
 	bool mipmap = true;
-	bool skybox = false;
 	bool alphablend = false;
 	bool doublesided = false;
 	bool isashadow = false;
@@ -462,7 +462,7 @@ Track::Loader::body_iterator Track::Loader::LoadBody(const PTree & cfg)
 	drawable.SetDecal(alphablend);
 	drawable.SetCull(data.cull && !doublesided, false);
 	drawable.SetObjectCenter(model->GetCenter());
-	drawable.SetRadius(!skybox ? model->GetRadius() : 0.0f);
+	drawable.SetRadius(model->GetRadius());
 
 	return bodies.insert(std::make_pair(name, body)).first;
 }
@@ -818,6 +818,16 @@ std::pair<bool, bool> Track::Loader::ContinueOld()
 	else
 	{
 		content.load(object.model, objectdir, model_name);
+	}
+
+	// fixme: ugly hack to make vertical tracking work
+	// should be fixed in the model data instead
+	if (object.skybox && data.vertical_tracking_skyboxes)
+	{
+		const bool genlist = object.model->HaveListID();
+		VertexArray va = object.model->GetVertexArray();
+		va.Translate(0, 0, -object.model->GetCenter()[2]);
+		object.model->Load(va, error_output, genlist);
 	}
 
 	if (!AddObject(object))

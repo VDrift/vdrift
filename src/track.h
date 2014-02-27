@@ -184,6 +184,7 @@ private:
 		bool reverse;
 		bool loaded;
 		bool cull;
+		bool vertical_tracking_skyboxes;
 
 		Data();
 	};
