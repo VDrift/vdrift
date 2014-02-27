@@ -114,10 +114,6 @@ static bool LoadWheel(
 			diskva.Translate(-0.75 * 0.5, 0, 0);
 			diskva.Scale(width, diameter, diameter);
 			content.load(mesh, path, meshname, rimva + diskva);
-
-			//MODEL_OBJ mo("wheel.obj", error_output);
-			//mo.SetVertexArray(mesh->GetVertexArray());
-			//mo.Save("wheel.obj", error_output);
 		}
 	}
 
@@ -140,10 +136,6 @@ static bool LoadWheel(
 				VertexArray tireva;
 				MeshGen::mg_tire(tireva, size[0], size[1], size[2]);
 				content.load(mesh, path, meshname, tireva);
-
-				//MODEL_OBJ mo("wheel.obj", error_output);
-				//mo.SetVertexArray(mesh->GetVertexArray());
-				//mo.Save("tire.obj", error_output);
 			}
 		}
 
