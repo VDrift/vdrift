@@ -5,8 +5,10 @@ from time import gmtime, strftime
 # Build Options #
 #---------------#
 opts = Variables('vdrift.conf', ARGUMENTS)
-opts.Add('destdir', 'Staging area to install VDrift to.  Useful for packagers. ', '')
 opts.Add('arch', 'Target architecture to compile vdrift for (x86, 686, p4, axp, a64, prescott, nocona, core2)', 'x86')
+opts.Add('destdir', 'Staging area to install VDrift to.  Useful for packagers. ', '')
+opts.Add('builddir_release', 'Release build directory.', 'build')
+opts.Add('builddir_debug', 'Debug build directory.', 'build')
 opts.Add(BoolVariable('minimal', 'Only install minimal data (3 cars and 2 tracks)', 0))
 opts.Add(BoolVariable('cache', 'Cache options in vdrift.conf', 1))
 opts.Add(BoolVariable('release', 'Turn off debug option during build', 0))
@@ -41,7 +43,7 @@ if (sys.platform == 'freebsd6') or (sys.platform == 'freebsd7') or (sys.platform
     else:
         LOCALBASE = '/usr/local/'
     env = Environment(ENV = os.environ,
-        CPPPATH = ['#include','#src',LOCALBASE + '/include',LOCALBASE + '/include/bullet'],
+        CPPPATH = ['#src',LOCALBASE + '/include',LOCALBASE + '/include/bullet'],
         LIBPATH = ['.', '#lib', LOCALBASE + '/lib'],
         LINKFLAGS = ['-pthread','-lintl'],
         options = opts)
@@ -68,7 +70,7 @@ elif sys.platform == 'darwin':
     opts.Add('SDK', 'the path to an SDK directory', '')
 
     env = Environment(ENV = os.environ,
-        CPPPATH = ['#include', '#src', '#tools/osx/Frameworks', '#tools/osx/Frameworks/SDL.framework/Headers'],
+        CPPPATH = ['#src', '#tools/osx/Frameworks', '#tools/osx/Frameworks/SDL.framework/Headers'],
         CCFLAGS = ['-Wall', '-Wextra'],
         CXXFLAGS = Split("$CCFLAGS -Wno-non-virtual-dtor -Wunused-parameter"),
         LIBPATH = ['.'],
@@ -117,8 +119,8 @@ elif sys.platform == 'darwin':
 #---------------#
 elif ( 'win32' == sys.platform or 'cygwin' == sys.platform ):
     env = Environment(ENV = os.environ, tools = ['mingw'],
-        CCFLAGS = ['-Wall', '-Wextra', '-Wno-unused-parameters', '-O2', '-pipe', '-mwindows', '-mno-cygwin'],
-        CPPPATH = ['#include', '#vdrift-win/include', '#vdrift-win/bullet'],
+        CCFLAGS = ['-Wall', '-Wextra', '-Wno-unused-parameters', '-mwindows', '-mno-cygwin'],
+        CPPPATH = ['#vdrift-win/include', '#vdrift-win/bullet'],
         LIBPATH = ['#vdrift-win/dll'],
 		LINKFLAGS = ['-static-libgcc', '-static-libstdc++'],
         CPPDEFINES = ['_REENTRANT'],
@@ -132,10 +134,10 @@ elif ( 'win32' == sys.platform or 'cygwin' == sys.platform ):
 #-------------#
 else:
     env = Environment(ENV = os.environ,
-        CPPPATH = ['#include', '#src'],
-        CCFLAGS = ['-Wall', '-Wextra', '-Wno-unused-parameter', '-pthread'],
+        CPPPATH = ['#src'],
+        CCFLAGS = ['-Wall', '-Wextra', '-Wno-unused-parameter'],#, '-pthread'],
         LIBPATH = ['.', '#lib'],
-        LINKFLAGS = ['-pthread'],
+        #LINKFLAGS = ['-pthread'],
         CC = 'gcc', CXX = 'g++',
         options = opts)
     # Take environment variables into account
@@ -326,7 +328,9 @@ Type: 'scons' to compile with the default options.
       'scons datadir=' to install data files into an alternate directory.
       'scons bindir=games/bin' to install executable into an alternate directory.
       'scons localedir=/usr/share/locale' to install language files into an alternate directory.
-      'scons release=1' to turn off compiler optimizations and debugging info.
+      'scons release=1' to turn on compiler optimizations and disable debugging info.
+      'scons builddir_release=build' to set release build directory.
+      'scons builddir_debug=build' to set debug build directory.
       'scons settings=.VDrift' to change settings directory.
       'scons install' (as root) to install VDrift.
       'scons wrapper' to build the Python wrapper used by track editor
@@ -383,15 +387,17 @@ else:
 # Version, debug/release #
 #------------------------#
 version = strftime("%Y-%m-%d")
+build_dir = 'build'
 if env['release']:
     # release build, debugging off, optimizations on
-    if (sys.platform != 'freebsd6') and (sys.platform != 'freebsd7') and (sys.platform != 'freebsd8') and (sys.platform != 'freebsd9') and (sys.platform != 'win32') and (sys.platform != 'cygwin'):
-        env.Append(CCFLAGS = ['-O1', '-pipe'])
+    env.Append(CCFLAGS = ['-O3', '-pipe'])
+    build_dir = env['builddir_release']
 else:
     # debug build, lots of debugging, no optimizations
     env.Append(CCFLAGS = ['-g3'])
     cppdefines.append(('DEBUG','1'))
-    version = "development"
+    build_dir = env['builddir_debug']
+    version = 'development'
 
 if env['minimal']:
     version += "-minimal"
@@ -404,8 +410,6 @@ else:
 if env['profiling']:
     env.Append(CCFLAGS = ['-pg'])
     env.Append(LINKFLAGS = ['-pg'])
-    env.Append(CCFLAGS = ['-g3'])
-    env.Append(CCFLAGS = ['-O1'])
 
 #------------------------------------#
 # compile-time efficiency assessment #
@@ -481,11 +485,11 @@ write_definitions(cppdefines)
 #-----------------#
 # Create Archives #
 #-----------------#
-src_dir_name = 'build/vdrift-%s-src' % version
-bin_dir_name = 'build/vdrift-%s-bin' % version
+src_dir_name = build_dir + '/vdrift-%s-src' % version
+bin_dir_name = build_dir + '/vdrift-%s-bin' % version
 
 env.Distribute(src_dir_name, ['SConstruct'])
-env.Distribute(bin_dir_name, ['build/vdrift'])
+env.Distribute(bin_dir_name, [build_dir + '/vdrift'])
 src_dir = Dir( src_dir_name )
 bin_dir = Dir( bin_dir_name )
 
@@ -518,4 +522,4 @@ if 'data-package' in COMMAND_LINE_TARGETS:
 if 'autopackage' in COMMAND_LINE_TARGETS:
     os.system("CXX1=g++-3.4 CXX2=g++-4.1 APBUILD_CXX1=g++-3.4 APBUILD_NO_STATIC_X=1 VDRIFT_VERSION=%s VDRIFT_MINIMAL=%d VDRIFT_RELEASE=%d makepackage tools/autopackage/vdrift.apspec" % (version, env['minimal'], env['release']))
 
-SConscript('src/SConscript', variant_dir='build', duplicate = 0)
+SConscript('src/SConscript', variant_dir = build_dir, duplicate = 0)
