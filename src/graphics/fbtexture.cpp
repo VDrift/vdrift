@@ -174,7 +174,6 @@ void FrameBufferTexture::Init(
 
 	if (data_format == GL_DEPTH_COMPONENT)
 	{
-		glTexParameteri(target, GL_DEPTH_TEXTURE_MODE, GL_LUMINANCE);
 		glTexParameteri(target, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
 
 		if (depthcomparisonenabled)
