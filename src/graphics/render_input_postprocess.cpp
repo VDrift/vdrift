@@ -204,6 +204,7 @@ void RenderInputPostprocess::Render(GraphicsState & glstate, std::ostream & erro
 
 	glstate.ActiveTexture(0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE);
+	glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_LUMINANCE);
 
 	CheckForOpenGLErrors("postprocess flag set", error_output);
 
