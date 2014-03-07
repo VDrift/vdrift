@@ -21,7 +21,15 @@
 #include "graphics_camera.h"
 #include "glutil.h"
 #include "shader.h"
+#include "uniforms.h"
 #include "sky.h"
+
+/// array end ptr
+template <typename T, size_t N>
+static T * end(T (&ar)[N])
+{
+	return ar + N;
+}
 
 /// break up the input into a vector of strings using the token characters given
 std::vector <std::string> Tokenize(const std::string & input, const std::string & tokens)
@@ -815,6 +823,7 @@ bool GraphicsGL2::EnableShaders(std::ostream & info_output, std::ostream & error
 	}
 
 	// setup frame buffer objects and shaders
+	std::vector <std::string> shader_uniforms(Uniforms::str, end(Uniforms::str));
 	std::vector <std::string> shader_defines;
 	GetShaderDefines(shader_defines);
 	for (std::vector <GraphicsConfigPass>::const_iterator i = config.passes.begin(); i != config.passes.end(); i++)
@@ -865,14 +874,11 @@ bool GraphicsGL2::EnableShaders(std::ostream & info_output, std::ostream & error
 			defines.reserve(defines.size() + shader_defines.size());
 			defines.insert(defines.end(), shader_defines.begin(), shader_defines.end());
 
-			const std::vector <std::string> & uniforms =
-				(i->draw.back() == "postprocess") ? postprocess.uniforms : renderscene.uniforms;
-
 			Shader & shader = shaders[cs->name];
 			if (!shader.Load(
 				shaderpath + "/" + cs->vertex,
 				shaderpath + "/" + cs->fragment,
-				defines, uniforms,
+				defines, shader_uniforms,
 				info_output, error_output))
 			{
 				return false;

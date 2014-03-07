@@ -71,16 +71,6 @@ public:
 
 	virtual void Render(GraphicsState & glstate, std::ostream & error_output);
 
-	///< uniforms used by render scene pass
-	enum UniformEnum
-	{
-		ReflectionMatrix,
-		LightDirection,
-		Contrast,
-		UniformNum
-	};
-	static const std::vector<std::string> uniforms;
-
 private:
 	reseatable_reference <const std::vector <Drawable*> > dynamic_drawlist_ptr;
 	reseatable_reference <const std::vector <Drawable*> > static_drawlist_ptr;

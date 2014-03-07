@@ -23,20 +23,9 @@
 #include "graphicsstate.h"
 #include "drawable.h"
 #include "shader.h"
+#include "uniforms.h"
 #include "vertexarray.h"
 #include "glutil.h"
-
-template <typename T, size_t N>
-static T * end(T (&ar)[N])
-{
-	return ar + N;
-}
-static const char * ustr[RenderInputScene::UniformNum] = {
-	"reflection_matrix",
-	"lightposition",
-	"contrast"
-};
-const std::vector<std::string> RenderInputScene::uniforms(ustr, end(ustr));
 
 RenderInputScene::RenderInputScene():
 	last_transform_valid(false),
@@ -191,9 +180,9 @@ void RenderInputScene::Render(GraphicsState & glstate, std::ostream & error_outp
 	(cam_rotation).RotateVector(lightvec);
 
 	shader->Enable();
-	shader->SetUniform3f(LightDirection, lightvec[0], lightvec[1], lightvec[2]);
-	shader->SetUniform1f(Contrast, contrast);
-	shader->SetUniformMat3f(ReflectionMatrix, cube_matrix);
+	shader->SetUniform3f(Uniforms::LightDirection, lightvec[0], lightvec[1], lightvec[2]);
+	shader->SetUniform1f(Uniforms::Contrast, contrast);
+	shader->SetUniformMat3f(Uniforms::ReflectionMatrix, cube_matrix);
 
 	last_transform_valid = false;
 

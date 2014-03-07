@@ -17,59 +17,34 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _RENDER_INPUT_POSTPROCESS_H
-#define _RENDER_INPUT_POSTPROCESS_H
+#ifndef _UNIFORMS_H
+#define _UNIFORMS_H
 
-#include "render_input.h"
-#include "mathvector.h"
-#include "quaternion.h"
-#include <vector>
-
-struct GraphicsCamera;
-class TextureInterface;
-class Shader;
-
-class RenderInputPostprocess : public RenderInput
+/// gl2 renderer built-in uniforms
+namespace Uniforms
 {
-public:
-	RenderInputPostprocess();
+	enum Enum
+	{
+		ReflectionMatrix,
+		LightDirection,
+		Contrast,
+		ZNear,
+		FrustumCornerBL,
+		FrustumCornerBRDelta,
+		FrustumCornerTLDelta,
+		UniformNum
+	};
 
-	~RenderInputPostprocess();
+	static const char * const str[] =
+	{
+		"reflection_matrix",
+		"light_direction",
+		"contrast",
+		"znear",
+		"frustum_corner_bl",
+		"frustum_corner_br_delta",
+		"frustum_corner_tl_delta"
+	};
+}
 
-	void SetShader(Shader * newshader);
-
-	void ClearOutput(GraphicsState & glstate, bool clearcolor, bool cleardepth);
-
-	void SetColorMask(GraphicsState & glstate, bool write_color, bool write_alpha);
-
-	void SetDepthMode(GraphicsState & glstate, int mode, bool write_depth);
-
-	void SetBlendMode(GraphicsState & glstate, BlendMode::Enum mode);
-
-	void SetTextures(
-		GraphicsState & glstate,
-		const std::vector <TextureInterface*> & textures,
-		std::ostream & error_output);
-
-	///< these are used to upload uniforms to the shader
-	void SetCamera(const GraphicsCamera & cam);
-
-	void SetSunDirection(const Vec3 & newsun);
-
-	void SetContrast(float value);
-
-	virtual void Render(GraphicsState & glstate, std::ostream & error_output);
-
-private:
-	Shader * shader;
-	Quat cam_rotation;
-	Vec3 cam_position;
-	Vec3 frustum_corners[4];
-	Vec3 frustum_corners_ws[4];
-	Vec3 lightposition;
-	float contrast;
-	float maxu;
-	float maxv;
-};
-
-#endif // _RENDER_INPUT_POSTPROCESS_H
+#endif
