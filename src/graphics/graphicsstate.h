@@ -63,9 +63,6 @@ public:
 		fbdraw(0),
 		vpwidth(0),
 		vpheight(0),
-		r(1),g(1),b(1),a(1),
-		alphavalue(0),
-		alphamode(GL_NEVER),
 		blendsource(GL_ZERO),
 		blenddest(GL_ZERO),
 		cullmode(GL_BACK),
@@ -117,15 +114,6 @@ public:
 
 			if (!depthmask)
 				glDepthMask(GL_FALSE);
-		}
-	}
-
-	void SetColor(float nr, float ng, float nb, float na)
-	{
-		if (r != nr || g != ng || b != nb || a != na)
-		{
-			r=nr;g=ng;b=nb;a=na;
-			glColor4f(r,g,b,a);
 		}
 	}
 
@@ -267,9 +255,6 @@ private:
 	GLuint fbdraw;
 	int vpwidth;
 	int vpheight;
-	float r, g, b, a;
-	float alphavalue;
-	GLenum alphamode;
 	GLenum blendsource;
 	GLenum blenddest;
 	GLenum cullmode;

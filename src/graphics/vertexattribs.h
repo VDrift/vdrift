@@ -24,14 +24,26 @@ namespace VertexAttribs
 {
 	enum Enum
 	{
-		VERTEX_POSITION,
-		VERTEX_NORMAL,
-		VERTEX_TANGENT,
-		VERTEX_BITANGENT,
-		VERTEX_COLOR,
-		VERTEX_UV0,
-		VERTEX_UV1,
-		VERTEX_UV2
+		VertexPosition,
+		VertexNormal,
+		VertexTangent,
+		VertexBitangent,
+		VertexColor,
+		VertexTexCoord0,
+		VertexTexCoord1,
+		VertexTexCoord2
+	};
+
+	static const char * const str[] =
+	{
+		"VertexPosition",
+		"VertexNormal",
+		"VertexTangent",
+		"VertexBitangent",
+		"VertexColor",
+		"VertexTexCoord0",
+		"VertexTexCoord1",
+		"VertexTexCoord2"
 	};
 }
 

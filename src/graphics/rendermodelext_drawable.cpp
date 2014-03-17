@@ -38,33 +38,33 @@ void RenderModelExtDrawable::draw(GLWrapper & gl) const
 		vert_array->GetVertices(verts, vertcount);
 		if (verts)
 		{
-			gl.VertexAttribPointer(VERTEX_POSITION, 3, GL_FLOAT, GL_FALSE, 0, verts);
-			gl.EnableVertexAttribArray(VERTEX_POSITION);
+			gl.VertexAttribPointer(VertexPosition, 3, GL_FLOAT, GL_FALSE, 0, verts);
+			gl.EnableVertexAttribArray(VertexPosition);
 
 			const float * norms = 0;
 			int normcount = 0;
 			vert_array->GetNormals(norms, normcount);
 			if (norms)
 			{
-				gl.VertexAttribPointer(VERTEX_NORMAL, 3, GL_FLOAT, GL_FALSE, 0, norms);
-				gl.EnableVertexAttribArray(VERTEX_NORMAL);
+				gl.VertexAttribPointer(VertexNormal, 3, GL_FLOAT, GL_FALSE, 0, norms);
+				gl.EnableVertexAttribArray(VertexNormal);
 			}
 			else
-				gl.DisableVertexAttribArray(VERTEX_NORMAL);
+				gl.DisableVertexAttribArray(VertexNormal);
 
-			gl.DisableVertexAttribArray(VERTEX_TANGENT);
-			gl.DisableVertexAttribArray(VERTEX_BITANGENT);
+			gl.DisableVertexAttribArray(VertexTangent);
+			gl.DisableVertexAttribArray(VertexBitangent);
 
 			const unsigned char * cols = 0;
 			int colcount = 0;
 			vert_array->GetColors(cols, colcount);
 			if (cols)
 			{
-				gl.VertexAttribPointer(VERTEX_COLOR, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, cols);
-				gl.EnableVertexAttribArray(VERTEX_COLOR);
+				gl.VertexAttribPointer(VertexColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, cols);
+				gl.EnableVertexAttribArray(VertexColor);
 			}
 			else
-				gl.DisableVertexAttribArray(VERTEX_COLOR);
+				gl.DisableVertexAttribArray(VertexColor);
 
 			const float * tc[1] = {0};
 			int tccount[1] = {0};
@@ -72,28 +72,27 @@ void RenderModelExtDrawable::draw(GLWrapper & gl) const
 			{
 				// TODO: make this work for UV1 and UV2
 				vert_array->GetTexCoords(0, tc[0], tccount[0]);
-				assert(tc[0]);
-				gl.VertexAttribPointer(VERTEX_UV0, 2, GL_FLOAT, GL_FALSE, 0, tc[0]);
-				gl.EnableVertexAttribArray(VERTEX_UV0);
+				gl.VertexAttribPointer(VertexTexCoord0, 2, GL_FLOAT, GL_FALSE, 0, tc[0]);
+				gl.EnableVertexAttribArray(VertexTexCoord0);
 			}
 			else
-				gl.DisableVertexAttribArray(VERTEX_UV0);
+				gl.DisableVertexAttribArray(VertexTexCoord0);
 
-			gl.DisableVertexAttribArray(VERTEX_UV1);
-			gl.DisableVertexAttribArray(VERTEX_UV2);
+			gl.DisableVertexAttribArray(VertexTexCoord1);
+			gl.DisableVertexAttribArray(VertexTexCoord2);
 
 			const int * faces = 0;
 			int facecount = 0;
 			vert_array->GetFaces(faces, facecount);
-            if (faces)
-            {
-                gl.DrawElements(GL_TRIANGLES, facecount, GL_UNSIGNED_INT, faces);
-            }
-            else
-            {
-                gl.LineWidth(linesize);
-                gl.DrawArrays(GL_LINES, 0, vertcount/3);
-            }
+			if (faces)
+			{
+				gl.DrawElements(GL_TRIANGLES, facecount, GL_UNSIGNED_INT, faces);
+			}
+			else
+			{
+				gl.LineWidth(linesize);
+				gl.DrawArrays(GL_LINES, 0, vertcount/3);
+			}
 		}
 	}
 }

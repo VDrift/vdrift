@@ -75,7 +75,8 @@ private:
 	reseatable_reference <const std::vector <Drawable*> > dynamic_drawlist_ptr;
 	reseatable_reference <const std::vector <Drawable*> > static_drawlist_ptr;
 	bool last_transform_valid;
-	Mat4 last_transform;
+	Mat4 last_transform; // cache last transform
+	Vec4 drawable_color; // cache color
 	Quat cam_rotation; // used for the skybox effect
 	Vec3 cam_position;
 	Vec3 lightposition;

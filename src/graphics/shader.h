@@ -39,6 +39,7 @@ public:
 		const std::string & fragment_filename,
 		const std::vector<std::string> & defines,
 		const std::vector<std::string> & uniforms,
+		const std::vector<std::string> & attributes,
 		std::ostream & info_output,
 		std::ostream & error_output);
 
@@ -62,6 +63,8 @@ public:
 
 	bool SetUniform3f(int id, float val1, float val2, float val3);
 
+	bool SetUniform4f(int id, const float val[4]);
+
 	template <typename T>
 	bool SetUniform3f(int id, T vec)
 	{
@@ -69,14 +72,16 @@ public:
 	}
 
 private:
-	GLhandleARB program;
-	GLhandleARB vertex_shader;
-	GLhandleARB fragment_shader;
+	GLuint program;
+	GLuint vertex_shader;
+	GLuint fragment_shader;
 	std::vector <int> uniform_locations;
 
-	void PrintShaderLog(GLhandleARB & shader, const std::string & name, std::ostream & out);
+	/// query the card for the shader compile log and print it out
+	void PrintShaderLog(const GLuint pshader, const std::string & name, std::ostream & out);
 
-	void PrintProgramLog(GLhandleARB & program, const std::string & name, std::ostream & out);
+	/// query the card for the shader program link log and print it out
+	void PrintProgramLog(const GLuint program, const std::string & name, std::ostream & out);
 };
 
 #endif

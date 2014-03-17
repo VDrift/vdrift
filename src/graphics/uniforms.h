@@ -27,6 +27,7 @@ namespace Uniforms
 	{
 		ReflectionMatrix,
 		LightDirection,
+		ColorTint,
 		Contrast,
 		ZNear,
 		FrustumCornerBL,
@@ -39,6 +40,7 @@ namespace Uniforms
 	{
 		"reflection_matrix",
 		"light_direction",
+		"color_tint",
 		"contrast",
 		"znear",
 		"frustum_corner_bl",

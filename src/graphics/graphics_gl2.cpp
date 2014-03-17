@@ -22,11 +22,12 @@
 #include "glutil.h"
 #include "shader.h"
 #include "uniforms.h"
+#include "vertexattribs.h"
 #include "sky.h"
 
 /// array end ptr
 template <typename T, size_t N>
-static T * end(T (&ar)[N])
+static T * End(T (&ar)[N])
 {
 	return ar + N;
 }
@@ -371,7 +372,7 @@ void GraphicsGL2::Deinit()
 {
 	if (!shaders.empty())
 	{
-		glUseProgramObjectARB(0);
+		glUseProgram(0);
 		shaders.clear();
 	}
 }
@@ -703,7 +704,7 @@ bool GraphicsGL2::EnableShaders(std::ostream & info_output, std::ostream & error
 	CheckForOpenGLErrors("EnableShaders: start", error_output);
 
 	// unload shaders
-	glUseProgramObjectARB(0);
+	glUseProgram(0);
 	shaders.clear();
 	CheckForOpenGLErrors("EnableShaders: shader unload", error_output);
 
@@ -823,9 +824,10 @@ bool GraphicsGL2::EnableShaders(std::ostream & info_output, std::ostream & error
 	}
 
 	// setup frame buffer objects and shaders
-	std::vector <std::string> shader_uniforms(Uniforms::str, end(Uniforms::str));
-	std::vector <std::string> shader_defines;
-	GetShaderDefines(shader_defines);
+	const std::vector <std::string> attributes(VertexAttribs::str, End(VertexAttribs::str));
+	const std::vector <std::string> uniforms(Uniforms::str, End(Uniforms::str));
+	std::vector <std::string> global_defines;
+	GetShaderDefines(global_defines);
 	for (std::vector <GraphicsConfigPass>::const_iterator i = config.passes.begin(); i != config.passes.end(); i++)
 	{
 		// check conditions
@@ -871,14 +873,14 @@ bool GraphicsGL2::EnableShaders(std::ostream & info_output, std::ostream & error
 			const GraphicsConfigShader * cs = csi->second;
 
 			std::vector <std::string> defines = Tokenize(cs->defines, " ");
-			defines.reserve(defines.size() + shader_defines.size());
-			defines.insert(defines.end(), shader_defines.begin(), shader_defines.end());
+			defines.reserve(defines.size() + global_defines.size());
+			defines.insert(defines.end(), global_defines.begin(), global_defines.end());
 
 			Shader & shader = shaders[cs->name];
 			if (!shader.Load(
 				shaderpath + "/" + cs->vertex,
 				shaderpath + "/" + cs->fragment,
-				defines, shader_uniforms,
+				defines, uniforms, attributes,
 				info_output, error_output))
 			{
 				return false;

@@ -176,23 +176,24 @@ void Model::GenerateListID(std::ostream & error_output)
 	assert(facecount > 0);
 	assert(vertcount > 0);
 	assert(normcount > 0);
-	assert (tccount[0] > 0);
+	assert(tccount[0] > 0);
 
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_NORMAL_ARRAY);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 
-	glVertexPointer(3, GL_FLOAT, 0, verts);
-	glNormalPointer(GL_FLOAT, 0, norms);
-	glTexCoordPointer(2, GL_FLOAT, 0, tc[0]);
+	glEnableVertexAttribArray(VertexPosition);
+	glEnableVertexAttribArray(VertexNormal);
+	glEnableVertexAttribArray(VertexTexCoord0);
+
+	glVertexAttribPointer(VertexPosition, 3, GL_FLOAT, GL_FALSE, 0, verts);
+	glVertexAttribPointer(VertexNormal, 3, GL_FLOAT, GL_FALSE, 0, norms);
+	glVertexAttribPointer(VertexTexCoord0, 2, GL_FLOAT, GL_FALSE, 0, tc[0]);
 
 	glNewList(listid, GL_COMPILE);
 	glDrawElements(GL_TRIANGLES, facecount, GL_UNSIGNED_INT, faces);
 	glEndList();
 
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-	glDisableClientState(GL_NORMAL_ARRAY);
-	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableVertexAttribArray(VertexPosition);
+	glDisableVertexAttribArray(VertexNormal);
+	glDisableVertexAttribArray(VertexTexCoord0);
 
 	CheckForOpenGLErrors("model list ID generation", error_output);
 }
@@ -246,23 +247,23 @@ void Model::GenerateVertexArrayObject(std::ostream & error_output)
 	unsigned int vertexCount = vertcount/3;
 
 	// Generate buffer object for vertex positions.
-	vbos.push_back(GenerateBufferObject(error_output, VERTEX_POSITION, verts, vertexCount, 3));
+	vbos.push_back(GenerateBufferObject(error_output, VertexPosition, verts, vertexCount, 3));
 
 	// Generate buffer object for normals.
 	const float * norms;
 	int normcount;
 	m_mesh.GetNormals(norms, normcount);
 	if (!norms || normcount <= 0)
-		glDisableVertexAttribArray(VERTEX_NORMAL);
+		glDisableVertexAttribArray(VertexNormal);
 	else
 	{
 		assert((unsigned int)normcount == vertexCount*3);
-		vbos.push_back(GenerateBufferObject(error_output, VERTEX_NORMAL, norms, vertexCount, 3));
+		vbos.push_back(GenerateBufferObject(error_output, VertexNormal, norms, vertexCount, 3));
 	}
 
 	// TODO: Generate tangent and bitangent.
-	glDisableVertexAttribArray(VERTEX_TANGENT);
-	glDisableVertexAttribArray(VERTEX_BITANGENT);
+	glDisableVertexAttribArray(VertexTangent);
+	glDisableVertexAttribArray(VertexBitangent);
 
 	// Generate buffer object for colors.
 	const unsigned char * cols = 0;
@@ -271,10 +272,10 @@ void Model::GenerateVertexArrayObject(std::ostream & error_output)
 	if (cols && colcount)
 	{
 		assert((unsigned int)colcount == vertexCount*4);
-		vbos.push_back(GenerateBufferObject(error_output, VERTEX_COLOR, cols, vertexCount, 4, GL_UNSIGNED_BYTE, true));
+		vbos.push_back(GenerateBufferObject(error_output, VertexColor, cols, vertexCount, 4, GL_UNSIGNED_BYTE, true));
 	}
 	else
-		glDisableVertexAttribArray(VERTEX_COLOR);
+		glDisableVertexAttribArray(VertexColor);
 
 	// Generate buffer object for texture coordinates.
 	const float * tc[1];
@@ -284,13 +285,13 @@ void Model::GenerateVertexArrayObject(std::ostream & error_output)
 		// TODO: Make this work for UV1 and UV2.
 		m_mesh.GetTexCoords(0, tc[0], tccount[0]);
 		assert((unsigned int)tccount[0] == vertexCount*2);
-		vbos.push_back(GenerateBufferObject(error_output, VERTEX_UV0, tc[0], vertexCount, 2));
+		vbos.push_back(GenerateBufferObject(error_output, VertexTexCoord0, tc[0], vertexCount, 2));
 	}
 	else
-		glDisableVertexAttribArray(VERTEX_UV0);
+		glDisableVertexAttribArray(VertexTexCoord0);
 
-	glDisableVertexAttribArray(VERTEX_UV1);
-	glDisableVertexAttribArray(VERTEX_UV2);
+	glDisableVertexAttribArray(VertexTexCoord1);
+	glDisableVertexAttribArray(VertexTexCoord2);
 
 	// Don't leave anything bound.
 	glBindVertexArray(0);

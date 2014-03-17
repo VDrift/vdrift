@@ -25,6 +25,7 @@
 #include "matrix4.h"
 #include "shader.h"
 #include "uniforms.h"
+#include "vertexattribs.h"
 
 RenderInputPostprocess::RenderInputPostprocess() :
 	shader(NULL),
@@ -171,8 +172,6 @@ void RenderInputPostprocess::Render(GraphicsState & glstate, std::ostream & erro
 
 	CheckForOpenGLErrors("postprocess begin", error_output);
 
-	glstate.SetColor(1,1,1,1);
-
 	shader->Enable();
 
 	CheckForOpenGLErrors("postprocess shader enable", error_output);
@@ -205,7 +204,10 @@ void RenderInputPostprocess::Render(GraphicsState & glstate, std::ostream & erro
 		Vec3 lightvec = lightposition;
 		cam_rotation.RotateVector(lightvec);
 
+		const float color[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+
 		shader->SetUniform3f(Uniforms::LightDirection, lightvec);
+		shader->SetUniform4f(Uniforms::ColorTint, color);
 		shader->SetUniform1f(Uniforms::Contrast, contrast);
 		shader->SetUniformMat3f(Uniforms::ReflectionMatrix, cube_matrix);
 		shader->SetUniform1f(Uniforms::ZNear, 0.1);
@@ -247,32 +249,25 @@ void RenderInputPostprocess::Render(GraphicsState & glstate, std::ostream & erro
 		frustum_corners_ws[3][0], frustum_corners_ws[3][1], frustum_corners_ws[3][2],
 	};
 
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glVertexPointer(3, GL_FLOAT, 0, pos);
+	using namespace VertexAttribs;
 
-	glClientActiveTexture(GL_TEXTURE0);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-	glTexCoordPointer(2, GL_FLOAT, 0, tc0);
 
-	glClientActiveTexture(GL_TEXTURE1);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-	glTexCoordPointer(3, GL_FLOAT, 0, tc1);
+	glEnableVertexAttribArray(VertexPosition);
+	glEnableVertexAttribArray(VertexTexCoord0);
+	glEnableVertexAttribArray(VertexTexCoord1);
+	glEnableVertexAttribArray(VertexTexCoord2);
 
-	glClientActiveTexture(GL_TEXTURE2);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-	glTexCoordPointer(3, GL_FLOAT, 0, tc2);
+	glVertexAttribPointer(VertexPosition, 3, GL_FLOAT, GL_FALSE, 0, pos);
+	glVertexAttribPointer(VertexTexCoord0, 2, GL_FLOAT, GL_FALSE, 0, tc0);
+	glVertexAttribPointer(VertexTexCoord1, 3, GL_FLOAT, GL_FALSE, 0, tc1);
+	glVertexAttribPointer(VertexTexCoord2, 3, GL_FLOAT, GL_FALSE, 0, tc2);
 
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, faces);
 
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
-	glClientActiveTexture(GL_TEXTURE1);
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
-	glClientActiveTexture(GL_TEXTURE0);
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
-	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableVertexAttribArray(VertexPosition);
+	glDisableVertexAttribArray(VertexTexCoord0);
+	glDisableVertexAttribArray(VertexTexCoord1);
+	glDisableVertexAttribArray(VertexTexCoord2);
 
 	CheckForOpenGLErrors("postprocess draw", error_output);
 }

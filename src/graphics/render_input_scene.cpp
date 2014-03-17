@@ -24,6 +24,7 @@
 #include "drawable.h"
 #include "shader.h"
 #include "uniforms.h"
+#include "vertexattribs.h"
 #include "vertexarray.h"
 #include "glutil.h"
 
@@ -160,13 +161,13 @@ void RenderInputScene::Render(GraphicsState & glstate, std::ostream & error_outp
 {
 	assert(shader && "RenderInputScene::Render No shader set.");
 
-	glstate.SetColor(1,1,1,1);
-
 	glMatrixMode(GL_PROJECTION);
 	glLoadMatrixf(projMatrix.GetArray());
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadMatrixf(viewMatrix.GetArray());
+
+	drawable_color = Vec4(1.0f);
 
 	Quat cam_look;
 	cam_look.Rotate(M_PI_2, 1, 0, 0);
@@ -181,6 +182,7 @@ void RenderInputScene::Render(GraphicsState & glstate, std::ostream & error_outp
 
 	shader->Enable();
 	shader->SetUniform3f(Uniforms::LightDirection, lightvec[0], lightvec[1], lightvec[2]);
+	shader->SetUniform4f(Uniforms::ColorTint, &drawable_color[0]);
 	shader->SetUniform1f(Uniforms::Contrast, contrast);
 	shader->SetUniformMat3f(Uniforms::ReflectionMatrix, cube_matrix);
 
@@ -217,21 +219,24 @@ void RenderInputScene::Draw(GraphicsState & glstate, const std::vector <Drawable
 
 void RenderInputScene::DrawVertexArray(const VertexArray & va, float linesize) const
 {
+	using namespace VertexAttribs;
+
 	const float * verts;
 	int vertcount;
 	va.GetVertices(verts, vertcount);
 	if (verts)
 	{
-		glVertexPointer(3, GL_FLOAT, 0, verts);
-		glEnableClientState(GL_VERTEX_ARRAY);
+
+		glVertexAttribPointer(VertexPosition, 3, GL_FLOAT, GL_FALSE, 0, verts);
+		glEnableVertexAttribArray(VertexPosition);
 
 		const unsigned char * cols;
 		int colcount;
 		va.GetColors(cols, colcount);
 		if (cols)
 		{
-			glColorPointer(4, GL_UNSIGNED_BYTE, 0, cols);
-			glEnableClientState(GL_COLOR_ARRAY);
+			glVertexAttribPointer(VertexColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, cols);
+			glEnableVertexAttribArray(VertexColor);
 		}
 
 		const int * faces;
@@ -244,8 +249,8 @@ void RenderInputScene::DrawVertexArray(const VertexArray & va, float linesize) c
 			va.GetNormals(norms, normcount);
 			if (norms)
 			{
-				glNormalPointer(GL_FLOAT, 0, norms);
-				glEnableClientState(GL_NORMAL_ARRAY);
+				glVertexAttribPointer(VertexNormal, 3, GL_FLOAT, GL_FALSE, 0, norms);
+				glEnableVertexAttribArray(VertexNormal);
 			}
 
 			const float * tc = 0;
@@ -253,20 +258,17 @@ void RenderInputScene::DrawVertexArray(const VertexArray & va, float linesize) c
 			if (va.GetTexCoordSets() > 0)
 			{
 				va.GetTexCoords(0, tc, tccount);
-				if (tc)
-				{
-					glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-					glTexCoordPointer(2, GL_FLOAT, 0, tc);
-				}
+				glVertexAttribPointer(VertexTexCoord0, 2, GL_FLOAT, GL_FALSE, 0, tc);
+				glEnableVertexAttribArray(VertexTexCoord0);
 			}
 
 			glDrawElements(GL_TRIANGLES, facecount, GL_UNSIGNED_INT, faces);
 
 			if (tc)
-				glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+				glDisableVertexAttribArray(VertexTexCoord0);
 
 			if (norms)
-				glDisableClientState(GL_NORMAL_ARRAY);
+				glDisableVertexAttribArray(VertexNormal);
 		}
 		else if (linesize > 0)
 		{
@@ -275,9 +277,9 @@ void RenderInputScene::DrawVertexArray(const VertexArray & va, float linesize) c
 		}
 
 		if (cols)
-			glDisableClientState(GL_COLOR_ARRAY);
+			glDisableVertexAttribArray(VertexColor);
 
-		glDisableClientState(GL_VERTEX_ARRAY);
+		glDisableVertexAttribArray(VertexPosition);
 	}
 }
 
@@ -336,8 +338,11 @@ void RenderInputScene::SetFlags(const Drawable & d, GraphicsState & glstate)
 		glstate.CullFace(false);
 	}
 
-	const Vec4 & color = d.GetColor();
-	glstate.SetColor(color[0], color[1], color[2], color[3]);
+	if (drawable_color != d.GetColor())
+	{
+		drawable_color = d.GetColor();
+		shader->SetUniform4f(Uniforms::ColorTint, &drawable_color[0]);
+	}
 }
 
 void RenderInputScene::SetTextures(const Drawable & d, GraphicsState & glstate)
