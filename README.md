@@ -161,7 +161,7 @@ Installing Dependencies on Fedora Linux
 
 All required packages can be installed using this command:
 
-    sudo yum install bullet-devel gcc-c++ glew-devel libarchive-devel scons SDL2-devel SDL2_image-devel curl-devel
+    sudo yum install bullet-devel gcc-c++ glew-devel libarchive-devel libvorbis-devel scons SDL2-devel SDL2_image-devel curl-devel
 
 
 Installing Dependencies on Ubuntu Linux
