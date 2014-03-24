@@ -43,7 +43,7 @@ static std::string FormatToString(FrameBufferTexture::Format value)
 {
 	switch (value)
 	{
-		_CASE_(LUM8);
+		_CASE_(R8);
 		_CASE_(RGB8);
 		_CASE_(RGBA8);
 		_CASE_(RGB16);

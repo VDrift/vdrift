@@ -48,7 +48,7 @@ public:
 
 	enum Format
 	{
-		LUM8 = GL_LUMINANCE8,
+		R8 = GL_R8,
 		RGB8 = GL_RGB,
 		RGBA8 = GL_RGBA,
 		RGB16 = GL_RGB16,

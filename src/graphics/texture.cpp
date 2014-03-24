@@ -224,12 +224,12 @@ static void GetTextureFormat(
 	switch (surface->format->BytesPerPixel)
 	{
 		case 1:
-			internalformat = compress ? GL_COMPRESSED_LUMINANCE : GL_LUMINANCE;
-			format = GL_LUMINANCE;
+			internalformat = compress ? GL_COMPRESSED_RED : GL_RED;
+			format = GL_RED;
 			break;
 		case 2:
-			internalformat = compress ? GL_COMPRESSED_LUMINANCE_ALPHA : GL_LUMINANCE_ALPHA;
-			format = GL_LUMINANCE_ALPHA;
+			internalformat = compress ? GL_COMPRESSED_RG : GL_RG;
+			format = GL_RG;
 			break;
 		case 3:
 			internalformat = compress ? (srgb ? GL_COMPRESSED_SRGB : GL_COMPRESSED_RGB) : (srgb ? GL_SRGB8 : GL_RGB);
@@ -520,10 +520,10 @@ bool Texture::LoadCubeVerticalCross(const std::string & path, const TextureInfo 
 		switch (bytespp)
 		{
 			case 1:
-				format = GL_LUMINANCE;
+				format = GL_RED;
 				break;
 			case 2:
-				format = GL_LUMINANCE_ALPHA;
+				format = GL_RG;
 				break;
 			case 3:
 				format = GL_RGB;
@@ -672,10 +672,10 @@ bool Texture::LoadCube(const std::string & path, const TextureInfo & info, std::
 		switch (surface->format->BytesPerPixel)
 		{
 			case 1:
-				format = GL_LUMINANCE;
+				format = GL_RED;
 				break;
 			case 2:
-				format = GL_LUMINANCE_ALPHA;
+				format = GL_RG;
 				break;
 			case 3:
 				format = GL_RGB;

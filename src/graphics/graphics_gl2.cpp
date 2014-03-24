@@ -69,8 +69,8 @@ static FrameBufferTexture::Format TextureFormatFromString(const std::string & fo
 {
 	if (format == "depth" || format == "depthshadow")
 		return FrameBufferTexture::DEPTH24;
-	else if (format == "luminance8")
-		return FrameBufferTexture::LUM8;
+	else if (format == "R8")
+		return FrameBufferTexture::R8;
 	else if (format == "RGBA8")
 		return FrameBufferTexture::RGBA8;
 	else if (format == "RGB8")
