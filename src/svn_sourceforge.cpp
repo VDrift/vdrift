@@ -37,20 +37,21 @@ std::map <std::string, int> SvnSourceforge::ParseFolderView(const std::string & 
 	std::stringstream s(folderfile);
 
 	// Fast forward to the start of the list.
-	Utils::SeekTo(s,"&nbsp;Parent&nbsp;Directory");
+	Utils::SeekTo(s, "<tbody>");
 
 	// Loop through each entry.
 	while (s)
 	{
-		Utils::SeekTo(s,"<a name=\"");
-		std::string name = Utils::SeekTo(s,"\"");
-		Utils::SeekTo(s,"title=\"View directory revision log\"><strong>");
-		std::string revstr = Utils::SeekTo(s,"</strong>");
+		Utils::SeekTo(s, "\"ico folder\"></b>\n          <span>");
+		const std::string name = Utils::SeekTo(s, "<");
 
-		if (name != "SConscript" && !name.empty() && !revstr.empty())
+		Utils::SeekTo(s, "[r");
+		const std::string revstr = Utils::SeekTo(s, "]");
+
+		if (!name.empty() && !revstr.empty())
 		{
 			std::stringstream converter(revstr);
-			int rev(0);
+			int rev = 0;
 			converter >> rev;
 			if (rev != 0)
 				folders[name] = rev;
@@ -64,15 +65,15 @@ QT_TEST(svn_sourceforge)
 {
 	Http http("data/test");
 	SvnSourceforge svn;
-	std::string testurl = "http://vdrift.svn.sourceforge.net/viewvc/vdrift/vdrift-data/cars/";
+	const std::string url = "http://sourceforge.net/p/vdrift/code/HEAD/tree/vdrift-data/cars/";
 
-	QT_CHECK(http.Request(testurl, std::cerr));
+	QT_CHECK(http.Request(url, std::cerr));
 	HttpInfo curinfo;
 	while (http.Tick());
-	QT_CHECK(http.GetRequestInfo(testurl, curinfo));
+	QT_CHECK(http.GetRequestInfo(url, curinfo));
 	QT_CHECK(curinfo.state == HttpInfo::COMPLETE);
 
-	std::string page = Utils::LoadFileIntoString(http.GetDownloadPath(testurl), std::cerr);
+	std::string page = Utils::LoadFileIntoString(http.GetDownloadPath(url), std::cerr);
 	std::map <std::string, int> res = svn.ParseFolderView(page);
 
 	QT_CHECK(res.size() > 10);

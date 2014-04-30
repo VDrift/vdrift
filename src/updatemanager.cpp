@@ -290,7 +290,7 @@ bool UpdateManager::DownloadRemoteConfig(GameDownloader downloader)
 		return true;
 	}
 
-	std::string url = autoupdate.GetUrl() + "settings/updates.config";
+	std::string url = autoupdate.GetUrl() + "settings/updates.config?format=raw";
 	info_output << "DownloadRemoteConfig: attempting to download " + url << std::endl;
 	bool success = downloader(url);
 	if (!success)
