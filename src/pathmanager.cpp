@@ -192,6 +192,13 @@ bool PathManager::FileExists(const std::string & filename) const
 		return false;
 }
 
+void PathManager::CopyFileTo(const std::string & oldname, const std::string & newname)
+{
+	std::ifstream fi(oldname.c_str(), std::ios::binary);
+	std::ofstream fo(newname.c_str(), std::ios::binary);
+	fo << fi.rdbuf();
+}
+
 void PathManager::MakeDir(const std::string & dir)
 {
 #ifndef _WIN32
@@ -201,7 +208,16 @@ void PathManager::MakeDir(const std::string & dir)
 #endif
 }
 
-void PathManager::DeleteFile1(const std::string & path)
+void PathManager::RemoveDir(const std::string & dir)
+{
+#ifndef _WIN32
+	rmdir(dir.c_str());
+#else
+	_rmdir(dir.c_str());
+#endif
+}
+
+void PathManager::RemoveFile(const std::string & path)
 {
 	remove(path.c_str());
 }
