@@ -59,16 +59,15 @@ std::map <std::string, int> SvnSourceForge::ParseFolderView(std::istream & page)
 	return folders;
 }
 
-// Download files from sourceforge svn web view page, preserve folder structure.
-bool SvnSourceForge::DownloadFolder(
+// Download files and folders lists from sourceforge svn web view page
+static bool DownloadFolder(
 	const std::string & page_url,
-	const std::string & folder_path,
+	const std::string & folder,
 	GameDownloader & download,
+	std::vector<std::string> & folders,
+	std::vector<std::string> & files,
 	std::ostream & error_output)
 {
-	// Ensure the folder exists.
-	PathManager::MakeDir(folder_path);
-
 	// Download folder page.
 	if (!download(page_url))
 	{
@@ -89,7 +88,6 @@ bool SvnSourceForge::DownloadFolder(
 	Utils::SeekTo(page, "<ul>");
 
 	// Loop through each entry.
-	std::vector<std::string> names;
 	while (page)
 	{
 		Utils::SeekTo(page, "<li><a href=\"");
@@ -98,46 +96,74 @@ bool SvnSourceForge::DownloadFolder(
 		if (name.empty() || name == "../" || name == "Sconscript")
 			continue;
 
+		// Download sub folder.
 		if (*name.rbegin() == '/')
 		{
-			// Download sub folder.
-			if (!DownloadFolder(page_url + name, folder_path + name, download, error_output))
+			if (!DownloadFolder(page_url + name, folder + name, download,
+								folders, files, error_output))
 			{
-				while (!names.empty())
-				{
-					PathManager::RemoveFile(folder_path + names.back());
-					names.pop_back();
-				}
-				PathManager::RemoveDir(folder_path);
 				return false;
 			}
+
+			folders.push_back(folder + name);
 			continue;
 		}
 
 		// Download file.
-		names.push_back(name);
 		const std::string file_url = page_url + name;
 		if (!download(file_url))
 		{
 			error_output << "Download failed: " << file_url << std::endl;
-			while (!names.empty())
-			{
-				PathManager::RemoveFile(folder_path + names.back());
-				names.pop_back();
-			}
-			PathManager::RemoveDir(folder_path);
 			return false;
 		}
 
-		// Copy file into folder.
-		const std::string temp_path = download.GetHttp().GetDownloadPath(file_url);
-		const std::string file_path = folder_path + name;
-		PathManager::CopyFileTo(temp_path, file_path);
-		PathManager::RemoveFile(temp_path);
+		files.push_back(folder + name);
 	}
 
 	page.close();
 	PathManager::RemoveFile(page_path);
+	return true;
+}
+
+// Download files from sourceforge svn web view page, preserve folder structure.
+bool SvnSourceForge::DownloadFolder(
+	const std::string & page_url,
+	const std::string & folder_path,
+	GameDownloader & download,
+	std::ostream & error_output)
+{
+	// Download files.
+	std::vector<std::string> folders;
+	std::vector<std::string> files;
+	if (!DownloadFolder(page_url, "", download, folders, files, error_output))
+	{
+		while (!files.empty())
+		{
+			const std::string temp_path = download.GetHttp().GetDownloadPath(files.back());
+			PathManager::RemoveFile(temp_path);
+			files.pop_back();
+		}
+		return false;
+	}
+
+	// Creare folders.
+	PathManager::MakeDir(folder_path);
+	while (!folders.empty())
+	{
+		PathManager::MakeDir(folder_path + folders.back());
+		folders.pop_back();
+	}
+
+	// Copy files.
+	while (!files.empty())
+	{
+		const std::string temp_path = download.GetHttp().GetDownloadPath(files.back());
+		const std::string file_path = folder_path + files.back();
+		PathManager::CopyFileTo(temp_path, file_path);
+		PathManager::RemoveFile(temp_path);
+		files.pop_back();
+	}
+
 	return true;
 }
 
