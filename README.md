@@ -134,7 +134,6 @@ The required libraries include:
 
 - bullet - Open Source Physics Library (minimum version 2.78).
 - glew - OpenGL Extension Wrangler Library (minimum version 1.5.7).
-- libarchive - Multi-format archive and compression library (minimum version 2.8.3).
 - libcurl - Multiprotocol file transfer library (minimum version 7.21.6).
 - libvorbis - The Vorbis General Audio Compression Codec Library (minimum version 1.2.0).
 - vorbisfile - File loading library for the ogg vorbis format.
@@ -161,7 +160,7 @@ Installing Dependencies on Fedora Linux
 
 All required packages can be installed using this command:
 
-    sudo yum install bullet-devel gcc-c++ glew-devel libarchive-devel libvorbis-devel scons SDL2-devel SDL2_image-devel curl-devel
+    sudo yum install bullet-devel gcc-c++ glew-devel libvorbis-devel scons SDL2-devel SDL2_image-devel curl-devel
 
 
 Installing Dependencies on Ubuntu Linux
@@ -187,7 +186,7 @@ libglew1.6 and its development headers:
 
 All other required packages can be installed using this command:
 
-    sudo apt-get install g++ libarchive-dev libcurl4-gnutls-dev \
+    sudo apt-get install g++ libcurl4-gnutls-dev \
                          libdrm-dev libgl1-mesa-dev \
                          libglu1-mesa-dev libkms1 mesa-common-dev \
                          libsdl-image2.0-dev libvorbis-dev \

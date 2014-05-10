@@ -20,7 +20,6 @@ src = Split("""
 		ai/ai_car_experimental.cpp
 		ai/ai_car_standard.cpp
 		ai/ai.cpp
-		archiveutils.cpp
 		autoupdate.cpp
 		bezier.cpp
 		camera_chase.cpp
@@ -164,7 +163,7 @@ SConsignFile()
 #--------------------------#
 appdir = ""
 vdrift_install = None
-common_libs = ['SDL2_image', 'vorbisfile', 'curl', 'archive']
+common_libs = ['SDL2_image', 'vorbisfile', 'curl']
 
 if (sys.platform == 'freebsd6') or (sys.platform == 'freebsd7') or (sys.platform == 'freebsd8') or (sys.platform == 'freebsd9'):
     common_libs.append('libLinearMath')

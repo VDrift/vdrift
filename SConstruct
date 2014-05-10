@@ -147,7 +147,7 @@ else:
         env['CXXFLAGS'] += SCons.Util.CLVar(os.environ['CXXFLAGS'])
     if os.environ.has_key('LDFLAGS'):
         env['LINKFLAGS'] += SCons.Util.CLVar(os.environ['LDFLAGS'])
-    check_headers = ['GL/gl.h', 'GL/glu.h', 'GL/glew.h', 'SDL2/SDL.h', 'SDL2/SDL_image.h', 'vorbis/vorbisfile.h', 'curl/curl.h', 'bullet/btBulletCollisionCommon.h', 'archive.h']
+    check_headers = ['GL/gl.h', 'GL/glu.h', 'GL/glew.h', 'SDL2/SDL.h', 'SDL2/SDL_image.h', 'vorbis/vorbisfile.h', 'curl/curl.h', 'bullet/btBulletCollisionCommon.h']
     check_libs = [ ['GLEW', 'GL/glew.h', 'glDeleteSamplers(0, NULL);', 'Your GLEW library is out of date.'] ]
 
 if ARGUMENTS.get('verbose') != "1":
