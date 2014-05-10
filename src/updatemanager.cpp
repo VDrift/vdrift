@@ -71,7 +71,7 @@ void UpdateManager::StartCheckForUpdates(GameDownloader downloader, Gui & gui)
 	gui.ActivatePage("Downloading", 0.25, error_output);
 
 	// download svn folder view to a temporary folder
-	std::string url = autoupdate.GetMetaUrl() + group + "/";
+	const std::string url = autoupdate.GetMetaUrl() + group + "/";
 	if (!downloader(url))
 	{
 		gui.ActivatePage("DataConnectionError", 0.25, error_output);
