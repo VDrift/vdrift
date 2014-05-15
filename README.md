@@ -166,32 +166,15 @@ All required packages can be installed using this command:
 Installing Dependencies on Ubuntu Linux
 ---------------------------------------
 
-Ubuntu does not include a libbullet package, but getdeb does. To add the
-getdeb-repository to your sources-list.d:
+Ubuntu 12.04 does not include libbullet and SDL2 packages. They are available in following ppas though:
 
-    wget -q -O - http://archive.getdeb.net/getdeb-archive.key | sudo apt-key add -
-    sudo sh -c 'echo "deb http://archive.getdeb.net/ubuntu natty-getdeb games" > /etc/apt/sources.list.d/getdeb.list'
-    sudo apt-get update
+    sudo add-apt-repository ppa:roblib/ppa
+    sudo add-apt-repository ppa:zoogie/sdl2-snapshots
 
-Ubuntu 11.04 (Natty Narwhal) does contain libglew1.5, only. To install
-libglew1.6 and its development headers:
+All required packages can be installed using this command:
 
-    wget http://archive.ubuntu.com/ubuntu/pool/universe/g/glew/libglew1.6_1.6.0-3_amd64.deb
-    sudo dpkg -i libglew1.6_1.6.0-3_amd64.deb
-    rm libglew1.6_1.6.0-3_amd64.deb
+    sudo apt-get install g++ scons libglew-dev libsdl2-dev libsdl2-image-dev libbullet-dev libvorbis-dev libcurl4-gnutls-dev
 
-    wget http://archive.ubuntu.com/ubuntu/pool/universe/g/glew/libglew1.6-dev_1.6.0-3_amd64.deb
-    sudo dpkg -i libglew1.6-dev_1.6.0-3_amd64.deb
-    rm libglew1.6-dev_1.6.0-3_amd64.deb
-
-All other required packages can be installed using this command:
-
-    sudo apt-get install g++ libcurl4-gnutls-dev \
-                         libdrm-dev libgl1-mesa-dev \
-                         libglu1-mesa-dev libkms1 mesa-common-dev \
-                         libsdl-image2.0-dev libvorbis-dev \
-                         freeglut3 libbullet0 \
-                         libbullet-dev scons
 
 Installing Dependencies on Mac OS
 ---------------------------------
