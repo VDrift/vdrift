@@ -919,9 +919,6 @@ bool Track::Loader::LoadRoads()
 
 bool Track::Loader::CreateRacingLines()
 {
-	TextureInfo texinfo;
-	content.load(data.racingline_texture, texturedir, "racingline.png", texinfo);
-
 	K1999 k1999data;
 	for (std::list <RoadStrip>::iterator i = data.roads.begin(); i != data.roads.end(); ++i)
 	{
@@ -930,12 +927,110 @@ bool Track::Loader::CreateRacingLines()
 			k1999data.CalcRaceLine();
 			k1999data.UpdateRoadStrip(*i);
 		}
-		//else error_output << "Couldn't create racing line for roadstrip " << n << std::endl;
+		CreateRacingLine(*i);
+	}
+	return true;
+}
 
-		i->CreateRacingLine(data.racingline_node, data.racingline_texture);
+template <bool set_faces>
+static void AddRacingLineSegment(
+	const RoadPatch & patch,
+	std::vector<float> & vertices,
+	std::vector<float> & texcoords,
+	std::vector<int> & faces,
+	Vec3 & prev_segment,
+	float & distance)
+{
+	if (set_faces)
+	{
+		const int n = texcoords.size() / 2;
+		const int fs[6] = {n, n + 1, n + 3, n + 3, n + 2, n};
+		faces.insert(faces.end(), fs, fs + 6);
 	}
 
-	return true;
+	const Bezier & p = patch.GetPatch();
+	distance += (p.GetRacingLine() - prev_segment).Magnitude();
+	prev_segment = p.GetRacingLine();
+
+	const float tc[4] = {0, distance, 1, distance};
+	texcoords.insert(texcoords.end(), tc, tc + 4);
+
+	const float hwidth = 0.2;
+	const Vec3 zoffset(0.0, 0.0, 0.1);
+	const Vec3 r = p.GetRacingLine() + zoffset;
+	const Vec3 t = (p.GetPoint(0, 0) - p.GetPoint(0, 3)).Normalize();
+	const Vec3 v0 = r - t * hwidth;
+	const Vec3 v1 = r + t * hwidth;
+
+	const float vc[6] = {v0[0], v0[1], v0[2], v1[0], v1[1], v1[2]};
+	vertices.insert(vertices.end(), vc, vc + 6);
+}
+
+void Track::Loader::CreateRacingLine(const RoadStrip & strip)
+{
+	if (strip.GetPatches().empty())
+		return;
+
+	// get texture
+	std::tr1::shared_ptr<Texture> texture;
+	content.load(texture, texturedir, "racingline.png", TextureInfo());
+	data.textures.insert(texture);
+
+	// get model genlist setting hack
+	const bool genlist = content.getFactory<Model>().getDefault()->HaveListID();
+
+	// calculate batch size per drawable
+	const size_t batch_max_size = 256;
+	const size_t strip_size = strip.GetPatches().size();
+	const size_t batch_count = (strip_size + batch_max_size - 1) / batch_max_size;
+	const size_t batch_size = strip_size / batch_count;
+
+	// allocate batch vertex data
+	VertexArray vertex_array;
+	vertex_array.SetTexCoordSets(1);
+
+	std::vector<float> vertices;
+	std::vector<float> texcoords;
+	std::vector<int> faces;
+	vertices.reserve((batch_size + 1) * 6);
+	texcoords.reserve((batch_size + 1) * 4);
+	faces.reserve(batch_size * 6);
+
+	// generate racing line
+	float line_length = 0;
+	Vec3 line_center = strip.GetPatches()[0].GetPatch().GetRacingLine();
+	for (size_t n = 0, m = 0; n < batch_count; ++n)
+	{
+		// fill batch
+		for (size_t me = std::min(m + batch_size, strip_size); m < me; ++m)
+		{
+			AddRacingLineSegment<true>(strip.GetPatches()[m], vertices, texcoords, faces, line_center, line_length);
+		}
+		// cap batch
+		const size_t mc = (m + 1 < strip_size) ? m + 1 : 0;
+		AddRacingLineSegment<false>(strip.GetPatches()[mc], vertices, texcoords, faces, line_center, line_length);
+
+		// set vertex array
+		vertex_array.SetVertices(&vertices[0], vertices.size());
+		vertex_array.SetTexCoords(0, &texcoords[0], texcoords.size());
+		vertex_array.SetFaces(&faces[0], faces.size());
+
+		// create model
+		std::tr1::shared_ptr<Model> model(new Model());
+		model->Load(vertex_array, error_output, genlist);
+		data.models.insert(model);
+
+		// register drawable
+		keyed_container <Drawable>::handle dh = data.racingline_node.GetDrawlist().normal_blend.insert(Drawable());
+		Drawable & d = data.racingline_node.GetDrawlist().normal_blend.get(dh);
+		d.SetTextures(texture->GetId());
+		d.SetModel(*model);
+		//d.SetDecal(true);
+
+		vertices.clear();
+		texcoords.clear();
+		faces.clear();
+	}
 }
 
 bool Track::Loader::LoadStartPositions(const PTree & info)

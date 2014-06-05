@@ -20,17 +20,17 @@
 #ifndef _TRACKMAP_H
 #define _TRACKMAP_H
 
-#include "mathvector.h"
 #include "graphics/scenenode.h"
 #include "graphics/texture.h"
+#include "graphics/vertexarray.h"
+#include "mathvector.h"
 #include "roadstrip.h"
+#include "memory.h"
 
+#include <iosfwd>
 #include <list>
-#include <string>
-#include <ostream>
 
 class ContentManager;
-class Texture;
 
 class TrackMap
 {

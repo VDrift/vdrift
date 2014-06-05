@@ -175,25 +175,29 @@ void Model::GenerateListID(std::ostream & error_output)
 
 	assert(facecount > 0);
 	assert(vertcount > 0);
-	assert(normcount > 0);
-	assert(tccount[0] > 0);
-
 
 	glEnableVertexAttribArray(VertexPosition);
-	glEnableVertexAttribArray(VertexNormal);
-	glEnableVertexAttribArray(VertexTexCoord0);
-
 	glVertexAttribPointer(VertexPosition, 3, GL_FLOAT, GL_FALSE, 0, verts);
-	glVertexAttribPointer(VertexNormal, 3, GL_FLOAT, GL_FALSE, 0, norms);
-	glVertexAttribPointer(VertexTexCoord0, 2, GL_FLOAT, GL_FALSE, 0, tc[0]);
+	if (normcount)
+	{
+		glEnableVertexAttribArray(VertexNormal);
+		glVertexAttribPointer(VertexNormal, 3, GL_FLOAT, GL_FALSE, 0, norms);
+	}
+	if (tccount[0])
+	{
+		glEnableVertexAttribArray(VertexTexCoord0);
+		glVertexAttribPointer(VertexTexCoord0, 2, GL_FLOAT, GL_FALSE, 0, tc[0]);
+	}
 
 	glNewList(listid, GL_COMPILE);
 	glDrawElements(GL_TRIANGLES, facecount, GL_UNSIGNED_INT, faces);
 	glEndList();
 
 	glDisableVertexAttribArray(VertexPosition);
-	glDisableVertexAttribArray(VertexNormal);
-	glDisableVertexAttribArray(VertexTexCoord0);
+	if (normcount)
+		glDisableVertexAttribArray(VertexNormal);
+	if (tccount[0])
+		glDisableVertexAttribArray(VertexTexCoord0);
 
 	CheckForOpenGLErrors("model list ID generation", error_output);
 }

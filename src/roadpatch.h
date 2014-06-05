@@ -21,10 +21,6 @@
 #define _ROADPATCH_H
 
 #include "bezier.h"
-#include "mathvector.h"
-#include "graphics/vertexarray.h"
-
-class SceneNode;
 
 class RoadPatch
 {
@@ -66,16 +62,10 @@ public:
 		patch.have_racingline = true;
 	}
 
-	void AddRacinglineScenenode(
-		SceneNode & node,
-		const RoadPatch & nextpatch,
-		unsigned texture_id);
-
 private:
 	Bezier patch;
 	float track_curvature;
 	Vec3 racing_line;
-	VertexArray racingline_vertexarray;
 };
 
 #endif // _ROADPATCH_H

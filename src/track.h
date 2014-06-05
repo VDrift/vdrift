@@ -176,9 +176,7 @@ private:
 		std::list<RoadStrip> roads;
 		std::vector<std::pair<Vec3, Quat > > start_positions;
 
-		// racing line data
 		SceneNode racingline_node;
-		std::tr1::shared_ptr<Texture> racingline_texture;
 
 		// track state
 		bool reverse;
