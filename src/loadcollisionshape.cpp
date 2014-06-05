@@ -29,7 +29,7 @@ static inline std::istream & operator >> (std::istream & lhs, btVector3 & rhs)
 	for (int i = 0; i < 3 && !lhs.eof(); ++i)
 	{
 		std::getline(lhs, str, ',');
-		std::stringstream s(str);
+		std::istringstream s(str);
 		s >> rhs[i];
 	}
 	return lhs;

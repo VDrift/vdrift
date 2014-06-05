@@ -293,7 +293,7 @@ bool UpdateManager::DownloadRemoteConfig(GameDownloader downloader)
 		return false;
 	}
 
-	std::stringstream f(updatesconfig);
+	std::istringstream f(updatesconfig);
 	remoteconfig.clear();
 	if (!remoteconfig.load(f))
 	{

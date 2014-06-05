@@ -39,7 +39,7 @@ void Factory<Texture>::init(int max_size, bool use_srgb, bool compress)
 	m_compress = compress;
 
 	// init default texture
-	std::stringstream error;
+	std::ostringstream error;
 	unsigned char one[] = {255u, 255u, 255u, 255u};
 	unsigned char zero[] = {0u, 0u, 0u, 0u};
 

@@ -39,7 +39,7 @@ int main (int argc, char * argv[])
 {
 	// Find the path of the log file.
 	PathManager paths;
-	std::stringstream dummy;
+	std::ostringstream dummy;
 	paths.Init(dummy, dummy);
 	string logfilename = paths.GetLogFile();
 

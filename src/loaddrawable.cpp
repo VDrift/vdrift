@@ -114,7 +114,7 @@ bool LoadDrawable::operator()(
 		!content.get(mesh, path, meshname + scalestr))
 	{
 		Vec3 scale;
-		std::stringstream s(scalestr);
+		std::istringstream s(scalestr);
 		s >> scale;
 
 		VertexArray meshva = mesh->GetVertexArray();

@@ -979,7 +979,7 @@ void Game::ProcessGameInputs()
 		std::string shotfile;
 		for (int i = 1; i < 999; i++)
 		{
-			std::stringstream s;
+			std::ostringstream s;
 			s << pathmanager.GetScreenshotPath() << "/shot";
 			s.width(3);
 			s.fill('0');
@@ -1392,7 +1392,7 @@ void Game::UpdateCarInputs(int carid, Car & car)
 
 	inputgraph.Update(carinputs);
 
-	std::stringstream debug_info1, debug_info2, debug_info3, debug_info4;
+	std::ostringstream debug_info1, debug_info2, debug_info3, debug_info4;
 	if (debugmode)
 	{
 		car.DebugPrint(debug_info1, true, false, false, false);
@@ -1596,7 +1596,7 @@ bool Game::NewGame(bool playreplay, bool addopponents, int num_laps)
 				std::tr1::shared_ptr<PTree> carcfg;
 				content.load(carcfg, cardir, carname + ".car");
 
-				std::stringstream carstream;
+				std::ostringstream carstream;
 				write_ini(*carcfg, carstream);
 				info.config = carstream.str();
 
@@ -1623,7 +1623,7 @@ std::string Game::GetReplayRecordingFilename()
 	strftime(timestr, sizeof(timestr), format, &now);
 
 	// Replay file name.
-	std::stringstream s;
+	std::ostringstream s;
 	s << pathmanager.GetReplayPath() << "/" << timestr << "-" << settings.GetTrack() << ".vdr";
 	return s.str();
 }
@@ -1651,7 +1651,7 @@ bool Game::LoadCar(
 	else
 	{
 		carconf.reset(new PTree());
-		std::stringstream carstream(info.config);
+		std::istringstream carstream(info.config);
 		read_ini(carstream, *carconf);
 	}
 
@@ -1902,7 +1902,7 @@ void Game::CalculateFPS()
 	}
 	fps_avg /= 10.0;
 
-	std::stringstream fpsstr;
+	std::ostringstream fpsstr;
 	fpsstr << "FPS: " << (int)fps_avg;
 
 	// Don't start looking an min/max until we've put out a few frames.
@@ -1939,7 +1939,7 @@ void Game::CalculateFPS()
 	if (profilingmode && frame % 10 == 0)
 	{
 		std::string cpuProfile = PROFILER.getAvgSummary(quickprof::MICROSECONDS);
-		std::stringstream summary;
+		std::ostringstream summary;
 		summary << "CPU:\n" << cpuProfile << "\n\nGPU:\n";
 		graphics_interface->printProfilingInfo(summary);
 		profiling_text.Revise(summary.str());
@@ -2333,7 +2333,7 @@ bool Game::Download(const std::vector <std::string> & urls)
 				return false;
 			}
 
-			std::stringstream text;
+			std::ostringstream text;
 			text << HttpInfo::GetString(info.state);
 			if (info.state == HttpInfo::DOWNLOADING)
 			{
@@ -3011,7 +3011,7 @@ void Game::SetCarsNum(const std::string & value)
 
 void Game::SetControl(const std::string & value)
 {
-	std::stringstream vs(value);
+	std::istringstream vs(value);
 	std::string inputstr, idstr, oncestr, downstr;
 	getline(vs, inputstr, ':');
 	getline(vs, idstr, ':');
@@ -3019,7 +3019,7 @@ void Game::SetControl(const std::string & value)
 	getline(vs, downstr);
 
 	size_t id = 0;
-	std::stringstream ns(idstr);
+	std::istringstream ns(idstr);
 	ns >> id;
 
 	controlgrab_control = carcontrols_local.second.GetControl(inputstr, id);

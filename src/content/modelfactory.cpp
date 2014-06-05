@@ -33,7 +33,7 @@ void Factory<Model>::init(bool use_vbo)
 	m_vbo = use_vbo;
 
 	// init default model
-	std::stringstream error;
+	std::ostringstream error;
 	VertexArray va;
 	va.SetToUnitCube();
 	va.Scale(0.5, 0.5, 0.5);

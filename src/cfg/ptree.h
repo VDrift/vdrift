@@ -40,7 +40,7 @@ inline std::istream & operator>>(std::istream & stream, std::vector<T> & out)
 		{
 			std::string str;
 			std::getline(stream, str, ',');
-			std::stringstream s(str);
+			std::istringstream s(str);
 			s >> out[i];
 		}
 	}
@@ -51,7 +51,7 @@ inline std::istream & operator>>(std::istream & stream, std::vector<T> & out)
 		{
 			std::string str;
 			std::getline(stream, str, ',');
-			std::stringstream s(str);
+			std::istringstream s(str);
 			T value;
 			s >> value;
 			out.push_back(value);
@@ -318,7 +318,7 @@ inline std::string PTree::fullname(const std::string & name) const
 template <typename T>
 inline void PTree::_get(const PTree & p, T & value) const
 {
-	std::stringstream s(p._value);
+	std::istringstream s(p._value);
 	s >> value;
 }
 

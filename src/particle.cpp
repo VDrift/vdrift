@@ -251,7 +251,7 @@ void ParticleSystem::SetParameters(
 
 QT_TEST(particle_test)
 {
-	std::stringstream out;
+	std::ostringstream out;
 	ParticleSystem s;
 	ContentManager c(out);
 	s.SetParameters(4,1.0,1.0,0.5,1.0,1.0,1.0,1.0,1.0,Vec3(0,1,0));

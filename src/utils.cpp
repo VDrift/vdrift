@@ -92,7 +92,7 @@ QT_TEST(utils)
 {
 	std::string res;
 	{
-		std::stringstream s("testing 123");
+		std::istringstream s("testing 123");
 		res = SeekTo(s,"1");
 		QT_CHECK_EQUAL(res,"testing ");
 		res = SeekTo(s,"2");
@@ -101,7 +101,7 @@ QT_TEST(utils)
 		QT_CHECK_EQUAL(res,"3");
 	}
 	{
-		std::stringstream s("testing 123");
+		std::istringstream s("testing 123");
 		res = SeekTo(s,"test");
 		QT_CHECK_EQUAL(res,"");
 		res = SeekTo(s," ");
@@ -110,7 +110,7 @@ QT_TEST(utils)
 		QT_CHECK_EQUAL(res,"");
 	}
 	{
-		std::stringstream s("testing 123");
+		std::istringstream s("testing 123");
 		res = SeekTo(s,"esting");
 		QT_CHECK_EQUAL(res,"t");
 		res = SeekTo(s,"2");
@@ -119,7 +119,7 @@ QT_TEST(utils)
 		QT_CHECK_EQUAL(res,"");
 	}
 	{
-		std::stringstream s("testing 123");
+		std::istringstream s("testing 123");
 		res = SeekTo(s," ");
 		QT_CHECK_EQUAL(res,"testing");
 		res = SeekTo(s," ");

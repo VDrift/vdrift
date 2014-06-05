@@ -49,9 +49,9 @@ std::map <std::string, int> SvnSourceForge::ParseFolderView(std::istream & page)
 		if (name.empty() || revstr.empty())
 			continue;
 
-		std::stringstream converter(revstr);
+		std::istringstream s(revstr);
 		int rev = 0;
-		converter >> rev;
+		s >> rev;
 		if (rev != 0)
 			folders[name] = rev;
 	}

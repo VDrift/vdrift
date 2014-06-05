@@ -73,7 +73,7 @@ void GuiOption::SetValues(const std::string & curvalue, const List & newvalues)
 {
 	m_values = newvalues;
 
-	std::stringstream s;
+	std::ostringstream s;
 	s << m_values.size();
 	signal_update(s.str());
 

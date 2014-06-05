@@ -30,7 +30,7 @@ using std::ifstream;
 using std::string;
 
 #include <sstream>
-using std::stringstream;
+using std::istringstream;
 
 #include <iostream>
 using std::ostream;
@@ -70,7 +70,7 @@ bool ExtractRepeating(std::vector <T> & output_vector, unsigned int repeats, std
 		string strformat = ReadFromStream(s);
 		if (strformat.empty())
 			return false;
-		stringstream reformat(strformat);
+		istringstream reformat(strformat);
 		T reformatted;
 		reformat >> reformatted;
 		output_vector.push_back(reformatted);
@@ -116,7 +116,7 @@ bool BuildVertex(VertexArray::VertexData & outputvert, vector <VertexArray::Floa
 
 	string facestr2 = facestr;
 	std::replace(facestr2.begin(), facestr2.end(), '/', ' ');
-	stringstream s(facestr2);
+	istringstream s(facestr2);
 	int v(-1),t(-1),n(-1);
 	s >> v >> t >> n;
 	if (v <= 0 || t <= 0 || n <= 0)

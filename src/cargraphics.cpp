@@ -289,7 +289,7 @@ bool CarGraphics::Load(
 			return false;
 		}
 
-		std::stringstream sstr;
+		std::ostringstream sstr;
 		sstr << ++i;
 		istr = sstr.str();
 	}
@@ -303,7 +303,7 @@ bool CarGraphics::Load(
 			return false;
 		}
 
-		std::stringstream sstr;
+		std::ostringstream sstr;
 		sstr << ++i;
 		istr = sstr.str();
 	}

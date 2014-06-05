@@ -469,7 +469,7 @@ bool Renderer::loadShader(const std::string & path, const std::string & name, co
 	}
 
 	// Create a block of #defines.
-	std::stringstream blockstream;
+	std::ostringstream blockstream;
 	for (std::set <std::string>::const_iterator i = defines.begin(); i != defines.end(); i++)
 		if (!i->empty())
 			blockstream << "#define " << *i << std::endl;
@@ -481,14 +481,14 @@ bool Renderer::loadShader(const std::string & path, const std::string & name, co
 		shaderSource = blockstream.str() + shaderSource;
 
 	GLuint handle(0);
-	std::stringstream shaderOutput;
+	std::ostringstream shaderOutput;
 	bool success = gl.createAndCompileShader(shaderSource, shaderType, handle, shaderOutput);
 
 	if (success)
 	{
 		RenderShader shader;
 		shader.handle = handle;
-        shader.defines = defines; // for debug only
+		shader.defines = defines; // for debug only
 		shaders.insert(std::make_pair(name, shader));
 	}
 	else

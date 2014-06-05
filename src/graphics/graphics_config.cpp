@@ -123,7 +123,7 @@ std::map <std::string, std::string> readValuePairs(std::istream & f, int & line)
 
 	while (f && (peekTrimmedLine(f).empty() || peekTrimmedLine(f)[0] != terminator))
 	{
-		std::stringstream lineparse(getTrimmedLine(f));
+		std::istringstream lineparse(getTrimmedLine(f));
 		line++;
 
 		std::string name = strTrim(skipUntil(lineparse, "="));
@@ -157,12 +157,12 @@ bool readSection(std::istream & f, std::ostream & error_output, int & line, cons
 
 #define ASSIGNVAR(x) x = vars[#x]
 #define ASSIGNPARSE(x) x.Parse(vars[#x])
-#define ASSIGNOTHER(x) {std::stringstream defparser(vars[#x]);defparser >> x;}
+#define ASSIGNOTHER(x) {std::istringstream defparser(vars[#x]);defparser >> x;}
 #define ASSIGNBOOL(x) {x = (vars[#x] == "true");}
 
 bool isOf(const std::string & val, const std::string & list, std::ostream * error_output, int line)
 {
-	std::stringstream parser(list);
+	std::istringstream parser(list);
 	while (parser)
 	{
 		std::string item;
@@ -211,7 +211,7 @@ bool GraphicsConfigShader::Load(std::istream & f, std::ostream & error_output, i
 
 void GraphicsConfigOutput::Size::Parse(const std::string & str)
 {
-	std::stringstream parser(str);
+	std::istringstream parser(str);
 	std::string lhs = strTrim(skipUntil(parser, "/*"));
 	bool mult = false;
 	bool div = false;
@@ -237,7 +237,7 @@ void GraphicsConfigOutput::Size::Parse(const std::string & str)
 	{
 		if (mult || div)
 		{
-			std::stringstream parser2(rhs);
+			std::istringstream parser2(rhs);
 			if (div)
 				parser2 >> fb_div;
 			else
@@ -246,7 +246,7 @@ void GraphicsConfigOutput::Size::Parse(const std::string & str)
 	}
 	else
 	{
-		std::stringstream parser2(lhs);
+		std::istringstream parser2(lhs);
 		parser2 >> value;
 	}
 }
@@ -309,7 +309,7 @@ bool GraphicsConfigOutput::Load(std::istream & f, std::ostream & error_output, i
 void GraphicsConfigInputs::Parse(const std::string & str)
 {
 	int tucount = 0;
-	std::stringstream parser(str);
+	std::istringstream parser(str);
 	while (parser)
 	{
 		std::string raw;
@@ -328,7 +328,7 @@ void GraphicsConfigInputs::Parse(const std::string & str)
 		else
 		{
 			// colon
-			std::stringstream parser2(raw.substr(0, pos));
+			std::istringstream parser2(raw.substr(0, pos));
 			parser2 >> tucount;
 			std::string texname = raw.substr(pos+1);
 			if (!texname.empty())
@@ -387,7 +387,7 @@ bool GraphicsConfigPass::Load(std::istream & f, std::ostream & error_output, int
 			draw.push_back("postprocess");
 		else
 		{
-			std::stringstream parser(vars["draw"]);
+			std::istringstream parser(vars["draw"]);
 			std::string layer;
 			while (parser >> layer)
 			{

@@ -40,7 +40,7 @@ static inline std::istream & operator >> (std::istream & lhs, btVector3 & rhs)
 	for (int i = 0; i < 3 && !lhs.eof(); ++i)
 	{
 		std::getline(lhs, str, ',');
-		std::stringstream s(str);
+		std::istringstream s(str);
 		s >> rhs[i];
 	}
 	return lhs;
@@ -79,7 +79,7 @@ static bool LoadTransmission(
 	if (!cfg_trans->get("gears", gears, error_output)) return false;
 	for (int i = 0; i < gears; ++i)
 	{
-		std::stringstream s;
+		std::ostringstream s;
 		s << "gear-ratio-" << i+1;
 		if (!cfg_trans->get(s.str(), ratio, error_output)) return false;
 		transmission.SetGearRatio(i+1, ratio);
@@ -224,25 +224,25 @@ static bool LoadTire(const PTree & cfg_wheel, const PTree & cfg, CarTire & tire,
 			numinfile = 112;
 		else if (i > 12)
 			numinfile -= 1;
-		std::stringstream st;
-		st << "a" << numinfile;
-		if (!cfg.get(st.str(), info.lateral[i], error_output)) return false;
+		std::ostringstream s;
+		s << "a" << numinfile;
+		if (!cfg.get(s.str(), info.lateral[i], error_output)) return false;
 	}
 
 	// read longitudinal
 	for (int i = 0; i < 11; i++)
 	{
-		std::stringstream st;
-		st << "b" << i;
-		if (!cfg.get(st.str(), info.longitudinal[i], error_output)) return false;
+		std::ostringstream s;
+		s << "b" << i;
+		if (!cfg.get(s.str(), info.longitudinal[i], error_output)) return false;
 	}
 
 	// read aligning
 	for (int i = 0; i < 18; i++)
 	{
-		std::stringstream st;
-		st << "c" << i;
-		if (!cfg.get(st.str(), info.aligning[i], error_output)) return false;
+		std::ostringstream s;
+		s << "c" << i;
+		if (!cfg.get(s.str(), info.aligning[i], error_output)) return false;
 	}
 
 	// asymmetric tires support (left right facing direction)

@@ -28,7 +28,8 @@
 
 using std::string;
 using std::ostream;
-using std::stringstream;
+using std::istringstream;
+using std::ostringstream;
 using std::ifstream;
 using std::pair;
 using std::endl;
@@ -36,14 +37,14 @@ using std::strcpy;
 
 void PrintWithLineNumbers(ostream & out, const string & str)
 {
-	stringstream in(str);
+	istringstream in(str);
 	int count = 0;
 	while (in && count < 10000)
 	{
 		count++;
 		string linestr;
 		getline(in, linestr);
-		stringstream countstream;
+		ostringstream countstream;
 		countstream << count;
 		string countstr = countstream.str();
 		out << countstr;
@@ -107,7 +108,7 @@ bool Shader::Load(
 	assert(!fragmentshader_source.empty());
 
 	// prepend #version and #define values
-	std::stringstream dstr;
+	std::ostringstream dstr;
 	dstr << "#version 120\n";
 	for (std::vector<std::string>::const_iterator i = defines.begin(); i != defines.end(); ++i)
 	{
@@ -190,7 +191,7 @@ bool Shader::Load(
 		// set passed variable information for tus
 		for (int i = 0; i < 16; i++)
 		{
-			stringstream tustring;
+			ostringstream tustring;
 			tustring << "tu" << i;
 			int tu_loc;
 

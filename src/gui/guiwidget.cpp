@@ -99,7 +99,7 @@ void GuiWidget::SetColor(const std::string & value)
 {
 	if (value.empty()) return;
 
-	std::stringstream s(value);
+	std::istringstream s(value);
 	Vec3 v;
 	s >> v;
 	SetRGB(v[0], v[1], v[2]);
@@ -109,7 +109,7 @@ void GuiWidget::SetOpacity(const std::string & value)
 {
 	if (value.empty()) return;
 
-	std::stringstream s(value);
+	std::istringstream s(value);
 	float v;
 	s >> v;
 	SetOpacity(v);
@@ -119,7 +119,7 @@ void GuiWidget::SetHue(const std::string & value)
 {
 	if (value.empty()) return;
 
-	std::stringstream s(value);
+	std::istringstream s(value);
 	float v;
 	s >> v;
 	SetHue(v);
@@ -129,7 +129,7 @@ void GuiWidget::SetSat(const std::string & value)
 {
 	if (value.empty()) return;
 
-	std::stringstream s(value);
+	std::istringstream s(value);
 	float v;
 	s >> v;
 	SetSat(v);
@@ -139,7 +139,7 @@ void GuiWidget::SetVal(const std::string & value)
 {
 	if (value.empty()) return;
 
-	std::stringstream s(value);
+	std::istringstream s(value);
 	float v;
 	s >> v;
 	SetVal(v);

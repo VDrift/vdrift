@@ -35,7 +35,7 @@ static inline std::istream & operator >> (std::istream & lhs, btVector3 & rhs)
 	for (int i = 0; i < 3 && !lhs.eof(); ++i)
 	{
 		std::getline(lhs, str, ',');
-		std::stringstream s(str);
+		std::istringstream s(str);
 		s >> rhs[i];
 	}
 	return lhs;
@@ -47,7 +47,7 @@ static inline std::istream & operator >> (std::istream & lhs, std::vector<std::s
 	for (size_t i = 0; i < rhs.size() && !lhs.eof(); ++i)
 	{
 		std::getline(lhs, str, ',');
-		std::stringstream s(str);
+		std::istringstream s(str);
 		s >> rhs[i];
 	}
 	return lhs;
@@ -378,7 +378,7 @@ Track::Loader::body_iterator Track::Loader::LoadBody(const PTree & cfg)
 	cfg.get("nolighting", body.nolighting);
 
 	std::vector<std::string> texture_names(3);
-	std::stringstream s(texture_str);
+	std::istringstream s(texture_str);
 	s >> texture_names;
 
 	// set relative path for models and textures, ugly hack
@@ -630,8 +630,8 @@ static bool get(std::ifstream & f, T & output)
 
 	if (!f.good() && !instr.empty() && instr[0] == '#') return false;
 
-	std::stringstream sstr(instr);
-	sstr >> output;
+	std::istringstream s(instr);
+	s >> output;
 	return true;
 }
 
@@ -1036,12 +1036,12 @@ void Track::Loader::CreateRacingLine(const RoadStrip & strip)
 bool Track::Loader::LoadStartPositions(const PTree & info)
 {
 	int sp_num = 0;
-	std::stringstream sp_name;
+	std::ostringstream sp_name;
 	sp_name << "start position " << sp_num;
 	std::vector<float> f3(3);
 	while (info.get(sp_name.str(), f3))
 	{
-		std::stringstream so_name;
+		std::ostringstream so_name;
 		so_name << "start orientation " << sp_num;
 		Quat q;
 		std::vector <float> angle(3, 0.0);
@@ -1092,7 +1092,7 @@ bool Track::Loader::LoadLapSections(const PTree & info)
 		for (int l = 0; l < lapmarkers; l++)
 		{
 			std::vector<float> lapraw(3);
-			std::stringstream lapname;
+			std::ostringstream lapname;
 			lapname << "lap sequence " << l;
 			info.get(lapname.str(), lapraw);
 			int roadid = lapraw[0];

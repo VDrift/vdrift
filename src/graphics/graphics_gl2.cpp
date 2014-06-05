@@ -653,12 +653,12 @@ void GraphicsGL2::GetShaderDefines(std::vector <std::string> & defines) const
 	defines.clear();
 
 	{
-		std::stringstream s;
+		std::ostringstream s;
 		s << "SCREENRESX " << w;
 		defines.push_back(s.str());
 	}
 	{
-		std::stringstream s;
+		std::ostringstream s;
 		s << "SCREENRESY " << h;
 		defines.push_back(s.str());
 	}
@@ -925,9 +925,9 @@ void GraphicsGL2::CullScenePass(
 
 				// build a name for the sub camera
 				{
-					std::stringstream converter;
-					converter << pass.camera << "_cubeside" << cubeside;
-					cameraname = converter.str();
+					std::ostringstream s;
+					s << pass.camera << "_cubeside" << cubeside;
+					cameraname = s.str();
 				}
 
 				// get the base camera
@@ -1041,9 +1041,9 @@ void GraphicsGL2::DrawScenePass(
 		if (cubemap)
 		{
 			// build a name for the sub camera
-			std::stringstream converter;
-			converter << pass.camera << "_cubeside" << cubeside;
-			cameraname = converter.str();
+			std::ostringstream s;
+			s << pass.camera << "_cubeside" << cubeside;
+			cameraname = s.str();
 
 			// attach the correct cube side on the render output
 			AttachCubeSide(cubeside, output.RenderToFBO(), error_output);

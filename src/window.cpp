@@ -252,7 +252,7 @@ void Window::ChangeDisplay(
 
 void Window::LogOpenGLInfo(std::ostream & info_output)
 {
-	std::stringstream cardinfo;
+	std::ostringstream cardinfo;
 	cardinfo << "Video card information:" << std::endl;
 	cardinfo << "GL Vendor: " << glGetString(GL_VENDOR) << std::endl;
 	cardinfo << "GL Renderer: " << glGetString(GL_RENDERER) << std::endl;

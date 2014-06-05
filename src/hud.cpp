@@ -54,7 +54,7 @@ static void GetTimeString(float time, std::string & outtime)
 
 	if (time != 0.0)
 	{
-		std::stringstream s;
+		std::ostringstream s;
 		s << std::setfill('0');
 		s << std::setw(2) << min << ":";
 		s << std::fixed << std::setprecision(3) << std::setw(6) << secs;
@@ -474,7 +474,7 @@ void Hud::Update(
 	speedgauge.Update(hudroot, fabs(speed) * speedscale);
 
 	// gear
-	std::stringstream gearstr;
+	std::ostringstream gearstr;
 	if (newgear == -1)
 		gearstr << "R";
 	else if (newgear == 0)
@@ -489,7 +489,7 @@ void Hud::Update(
 	geartextdrawref.SetColor(1, 1, 1, geartext_alpha);
 
 	// speed
-	std::stringstream sstr;
+	std::ostringstream sstr;
 	sstr << std::abs(int(speed * speedscale));
 	//float sx = mphtext.GetScale().first;
 	//float sy = mphtext.GetScale().second;
@@ -498,7 +498,7 @@ void Hud::Update(
 	//float y = 1 - sy * 0.5;
 	mphtext.Revise(gaugefont, sstr.str());//, x, y, fontscalex, fontscaley);
 #else
-	std::stringstream gearstr;
+	std::ostringstream gearstr;
 	if (newgear == -1)
 		gearstr << "R";
 	else if (newgear == 0)
@@ -529,7 +529,7 @@ void Hud::Update(
 	rpmredbarverts.SetToBillboard(rpmredx, rpmy, rpmredxend, rpmy + rpmheight);
 	rpmboxverts.SetToBillboard(rpmxstart, rpmy, rpmxstart + rpmwidth, rpmy + rpmheight);
 
-	std::stringstream speedo;
+	std::ostringstream speedo;
 	if (mph)
 		speedo << std::abs((int)(2.23693629 * speed)) << " " << str[MPH];
 	else
@@ -605,19 +605,19 @@ void Hud::Update(
 	if (numlaps > 0)
 	{
 		//update lap
-		std::stringstream lapstream;
+		std::ostringstream lapstream;
 		lapstream << std::max(1, std::min(curlapnum, numlaps)) << "/" << numlaps;
 		lapindicator.Revise(lapstream.str());
 
 		//update place
-		std::stringstream stream;
+		std::ostringstream stream;
 		stream << curplace << "/" << numcars;
 		placeindicator.Revise(stream.str());
 
 		//update race prompt
 		if (stagingtimeleft > 0.5)
 		{
-			std::stringstream s;
+			std::ostringstream s;
 			s << (int)stagingtimeleft + 1;
 			rps = s.str();
 			raceprompt.SetColor(hudroot, 1,0,0);
@@ -656,13 +656,13 @@ void Hud::Update(
 	if (!racecomplete)
 	{
 		//update drift score
-		std::stringstream scorestream;
+		std::ostringstream scorestream;
 		scorestream << (int)driftscore;
 		driftscoreindicator.Revise(scorestream.str());
 
 		if (drifting && rps.empty())
 		{
-			std::stringstream s;
+			std::ostringstream s;
 			s << "+" << (int)thisdriftscore;
 			rps = s.str();
 			raceprompt.SetColor(hudroot, 1, 0, 0);

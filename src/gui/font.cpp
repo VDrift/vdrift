@@ -27,7 +27,7 @@
 template <typename T>
 static void GetNumber(const std::string & numberstr, T & num_output)
 {
-	std::stringstream s(numberstr);
+	std::istringstream s(numberstr);
 	s >> num_output;
 }
 

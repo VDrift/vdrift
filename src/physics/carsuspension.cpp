@@ -353,7 +353,7 @@ private:
 static void LoadPoints(const PTree & cfg, const std::string & name, LinearInterp<btScalar> & points)
 {
 	int i = 1;
-	std::stringstream s;
+	std::ostringstream s;
 	s << std::setw(1) << i;
 	std::vector<btScalar> point(2);
 	while (cfg.get(name+s.str(), point) && i < 10)

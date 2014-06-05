@@ -166,13 +166,11 @@ void HudGauge::Set(
 		float value_delta = (endvalue - startvalue) / segments;
 		for (int i = 0; i <= segments; ++i)
 		{
-			std::stringstream sstr;
-			std::string text;
-			sstr << value;
-			sstr >> text;
+			std::ostringstream s;
+			s << value;
 			float x = centerx + 0.75 * sin(angle) * radius * hwratio;
 			float y = centery + 0.75 * cos(angle) * radius;
-			float xn = TextDraw::RenderText(font, text, x, y, w, h, temp);
+			float xn = TextDraw::RenderText(font, s.str(), x, y, w, h, temp);
 			temp.Translate((x - xn) * 0.5, 0, 0);
 			dial_label = dial_label + temp;
 			angle += angle_delta;
