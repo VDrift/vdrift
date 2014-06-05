@@ -18,16 +18,13 @@
 /************************************************************************/
 
 #include "updatemanager.h"
-
 #include "svn_sourceforge.h"
+#include "pathmanager.h"
 #include "gui/gui.h"
 #include "http.h"
-#include "pathmanager.h"
 #include "utils.h"
-#include "containeralgorithm.h"
-#include "archiveutils.h"
 
-typedef SvnSourceforge repo_type;
+#define REPO SvnSourceForge
 
 UpdateManager::UpdateManager(AutoUpdate &update, std::ostream & info, std::ostream & err) :
 	autoupdate(update),
@@ -73,9 +70,8 @@ void UpdateManager::StartCheckForUpdates(GameDownloader downloader, Gui & gui)
 	const bool verbose = true;
 	gui.ActivatePage("Downloading", 0.25, error_output);
 
-	// download the SVN folder views to a temporary folder
-	repo_type svn;
-	std::string url = autoupdate.GetUrl() + group + "/";
+	// download svn folder view to a temporary folder
+	const std::string url = autoupdate.GetMetaUrl() + group + "/";
 	if (!downloader(url))
 	{
 		gui.ActivatePage("DataConnectionError", 0.25, error_output);
@@ -84,8 +80,14 @@ void UpdateManager::StartCheckForUpdates(GameDownloader downloader, Gui & gui)
 
 	// get the downloaded page
 	info_output << "Checking for updates..." << std::endl;
-	std::string page = Utils::LoadFileIntoString(downloader.GetHttp().GetDownloadPath(url), error_output);
-	std::map <std::string, int> res = svn.ParseFolderView(page);
+	std::ifstream page(downloader.GetHttp().GetDownloadPath(url).c_str());
+	if (!page)
+	{
+		error_output << "File not found: " << downloader.GetHttp().GetDownloadPath(url) << std::endl;
+		gui.ActivatePage("DataConnectionError", 0.25, error_output);
+		return;
+	}
+	const std::map <std::string, int> res = REPO::ParseFolderView(page);
 
 	// check the current SVN picture against what's in our update manager to find things we can update
 	autoupdate.SetAvailableUpdates(group, res);
@@ -202,7 +204,6 @@ void UpdateManager::Show(Gui & gui)
 
 bool UpdateManager::ApplyUpdate(GameDownloader downloader, Gui & gui, const PathManager & pathmanager)
 {
-	const bool debug = false;
 	std::string objectname;
 	if (!gui.GetLabelText(guipage, "name", objectname))
 	{
@@ -242,41 +243,25 @@ bool UpdateManager::ApplyUpdate(GameDownloader downloader, Gui & gui, const Path
 		return false;
 	}
 
-	// download archive
-	std::string url = repo_type::GetDownloadLink(autoupdate.GetUrl(), group, objectname);
-	std::string archivepath = downloader.GetHttp().GetDownloadPath(url);
-	if (!(debug && pathmanager.FileExists(archivepath))) // if in debug mode, don't redownload files
-	{
-		info_output << "ApplyUpdate: attempting to download " + url << std::endl;
-		bool success = downloader(url);
-		if (!success)
-		{
-			error_output << "ApplyUpdate: download failed" << std::endl;
-			gui.ActivatePage("DataConnectionError", 0.25, error_output);
-			return false;
-		}
-	}
-	info_output << "ApplyUpdate: download successful: " << archivepath << std::endl;
+	// make sure group dir exists
+	PathManager::MakeDir(pathmanager.GetWriteableDataPath() + "/" + group + "/");
 
-	// decompress and write output
-	if (!Decompress(archivepath, pathmanager.GetWriteableDataPath()+"/"+group, info_output, error_output))
+	// download object
+	const std::string folder_url = autoupdate.GetFileUrl() + group + "/" + objectname + "/";
+	const std::string folder_path = pathmanager.GetWriteableDataPath() + "/" + group + "/" + objectname + "/";
+	if (!REPO::DownloadFolder(folder_url, folder_path, downloader, error_output))
 	{
-		error_output << "ApplyUpdate: unable to decompress update" << std::endl;
+		error_output << "ApplyUpdate: download failed" << std::endl;
 		gui.ActivatePage("DataConnectionError", 0.25, error_output);
 		return false;
 	}
+	info_output << "ApplyUpdate: download successful: " << folder_path << std::endl;
 
 	// record update
 	if (!autoupdate.empty())
 		autoupdate.Write(updatefilebackup); // save a backup before changing it
 	autoupdate.SetVersion(group, objectname, revs.second);
 	autoupdate.Write(updatefile);
-
-	// remove temporary file
-	if (!debug)
-	{
-		PathManager::DeleteFile1(archivepath);
-	}
 
 	gui.ActivatePage("UpdateSuccessful", 0.25, error_output);
 	return true;
@@ -290,19 +275,18 @@ bool UpdateManager::DownloadRemoteConfig(GameDownloader downloader)
 		return true;
 	}
 
-	std::string url = autoupdate.GetUrl() + "settings/updates.config";
+	const std::string url = autoupdate.GetFileUrl() + "settings/updates.config";
 	info_output << "DownloadRemoteConfig: attempting to download " + url << std::endl;
-	bool success = downloader(url);
-	if (!success)
+	if (!downloader(url))
 	{
 		error_output << "DownloadRemoteConfig: download failed" << std::endl;
 		return false;
 	}
 
-	std::string filepath = downloader.GetHttp().GetDownloadPath(url);
+	const std::string filepath = downloader.GetHttp().GetDownloadPath(url);
 	info_output << "DownloadRemoteConfig: download successful: " << filepath << std::endl;
 
-	std::string updatesconfig = Utils::LoadFileIntoString(filepath, error_output);
+	const std::string updatesconfig = Utils::LoadFileIntoString(filepath, error_output);
 	if (updatesconfig.empty())
 	{
 		error_output << "DownloadRemoteConfig: empty updates.config" << std::endl;
@@ -317,7 +301,7 @@ bool UpdateManager::DownloadRemoteConfig(GameDownloader downloader)
 		return false;
 	}
 
-	PathManager::DeleteFile1(filepath);
+	PathManager::RemoveFile(filepath);
 
 	return true;
 }

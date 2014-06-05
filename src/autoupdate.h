@@ -59,7 +59,10 @@ public:
 	void SetVersion(const std::string & group, const std::string & item, int newversion);
 
 	/// Get vdrift data url.
-	const std::string & GetUrl() const;
+	const std::string & GetFileUrl() const;
+
+	/// Get vdrift svn info url.
+	const std::string & GetMetaUrl() const;
 
 	/// Returns true if we have no update data.
 	bool empty() const;
@@ -72,7 +75,8 @@ private:
 	GroupType groups;
 	GroupType available_updates;
 	PairType formats;
-	std::string url;
+	std::string file_url;
+	std::string meta_url;
 };
 
 #endif

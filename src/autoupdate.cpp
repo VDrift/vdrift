@@ -17,14 +17,15 @@
 /*                                                                      */
 /************************************************************************/
 
-#include <sstream>
 #include "autoupdate.h"
 #include "cfg/config.h"
+#include <sstream>
 
 const std::string AVAILABLE_PREFIX = "available_";
 
 AutoUpdate::AutoUpdate() :
-	url("http://vdrift.svn.sourceforge.net/viewvc/vdrift/vdrift-data/")
+	file_url("http://svn.code.sf.net/p/vdrift/code/vdrift-data/"),
+	meta_url("http://sourceforge.net/p/vdrift/code/HEAD/tree/vdrift-data/")
 {
 	// Constructor
 }
@@ -59,7 +60,8 @@ bool AutoUpdate::Write(const std::string & path) const
 		conf.set("formats", p->first, p->second);
 
 	// Write data url.
-	conf.set("", "url", url);
+	conf.set("", "meta_url", meta_url);
+	conf.set("", "file_url", file_url);
 
 	// Write to disk.
 	return conf.write(path);
@@ -76,7 +78,8 @@ bool AutoUpdate::Load(const std::string & path)
 	groups.clear();
 
 	// Get data url
-	conf.get("", "url", url);
+	conf.get("", "meta_url", meta_url);
+	conf.get("", "file_url", file_url);
 
 	// Iterate over all sections.
 	for (Config::const_iterator s = conf.begin(); s != conf.end(); s++)
@@ -223,7 +226,12 @@ void AutoUpdate::SetVersion(const std::string & group, const std::string & item,
 	groups[group][item] = newversion;
 }
 
-const std::string & AutoUpdate::GetUrl() const
+const std::string & AutoUpdate::GetFileUrl() const
 {
-	return url;
+	return file_url;
+}
+
+const std::string & AutoUpdate::GetMetaUrl() const
+{
+	return meta_url;
 }

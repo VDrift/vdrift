@@ -19,21 +19,27 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _SVN_SOURCEFORGE_H
-#define _SVN_SOURCEFORGE_H
+#ifndef _SVN_SOURCE_FORGE_H
+#define _SVN_SOURCE_FORGE_H
 
+#include <iosfwd>
 #include <string>
 #include <map>
 
-/// A cheesy HTML parser that mines sourceforge SVN web viewer pages to get repo info.
-class SvnSourceforge
-{
-public:
-	/// Returns the download URL for any particular group (car, track) given a name.
-	static std::string GetDownloadLink(const std::string & dataurl, const std::string & group, const std::string & name);
+class GameDownloader;
 
+namespace SvnSourceForge
+{
 	/// Given a sourceforge web svn folder view, return a map of folder names and revisions.
-	std::map <std::string, int> ParseFolderView(const std::string & folderfile);
+	std::map <std::string, int> ParseFolderView(std::istream & page);
+
+	/// Given a sourceforge file folder url and download folder path,
+	/// download the folder incusive all files. Return fase on error.
+	bool DownloadFolder(
+		const std::string & page_url,
+		const std::string & folder_path,
+		GameDownloader & download,
+		std::ostream & error_output);
 };
 
 #endif

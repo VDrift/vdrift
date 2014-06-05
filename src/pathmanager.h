@@ -36,8 +36,10 @@ public:
 	bool GetFileList(std::string folderpath, std::list <std::string> & outputfolderlist, std::string extension="") const;
 
 	bool FileExists(const std::string & filename) const;
+	static void CopyFileTo(const std::string & oldname, const std::string & newname);
 	static void MakeDir(const std::string & dir);
-	static void DeleteFile1(const std::string & path);
+	static void RemoveDir(const std::string & dir);
+	static void RemoveFile(const std::string & path);
 
 	std::string GetDataPath() const;
 	std::string GetWriteableDataPath() const;
