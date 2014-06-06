@@ -217,32 +217,32 @@ void RenderInputPostprocess::Render(GraphicsState & glstate, std::ostream & erro
 	}
 
 	// draw a quad
-	unsigned faces[2 * 3] = {
+	const unsigned faces[2 * 3] = {
 		0, 1, 2,
 		2, 3, 0,
 	};
-	float pos[4 * 3] = {
+	const float pos[4 * 3] = {
 		0.0f,  0.0f, 0.0f,
 		1.0f,  0.0f, 0.0f,
 		1.0f,  1.0f, 0.0f,
 		0.0f,  1.0f, 0.0f,
 	};
-	// send the UV corners in UV set 0
-	float tc0[4 * 2] = {
+	// send the uv corners as tex coords
+	const float tco[4 * 2] = {
 		0.0f, 0.0f,
 		maxu, 0.0f,
 		maxu, maxv,
 		0.0f, maxv,
 	};
-	// send the frustum corners in UV set 1
-	float tc1[4 * 3] = {
+	// send the frustum corners as normal
+	const float fcl[4 * 3] = {
 		frustum_corners[0][0], frustum_corners[0][1], frustum_corners[0][2],
 		frustum_corners[1][0], frustum_corners[1][1], frustum_corners[1][2],
 		frustum_corners[2][0], frustum_corners[2][1], frustum_corners[2][2],
 		frustum_corners[3][0], frustum_corners[3][1], frustum_corners[3][2],
 	};
-	// fructum corners in world space in uv set 2
-	float tc2[4 * 3] = {
+	// fructum corners in world space as tangent
+	const float fcw[4 * 3] = {
 		frustum_corners_ws[0][0], frustum_corners_ws[0][1], frustum_corners_ws[0][2],
 		frustum_corners_ws[1][0], frustum_corners_ws[1][1], frustum_corners_ws[1][2],
 		frustum_corners_ws[2][0], frustum_corners_ws[2][1], frustum_corners_ws[2][2],
@@ -253,21 +253,21 @@ void RenderInputPostprocess::Render(GraphicsState & glstate, std::ostream & erro
 
 
 	glEnableVertexAttribArray(VertexPosition);
-	glEnableVertexAttribArray(VertexTexCoord0);
-	glEnableVertexAttribArray(VertexTexCoord1);
-	glEnableVertexAttribArray(VertexTexCoord2);
+	glEnableVertexAttribArray(VertexTexCoord);
+	glEnableVertexAttribArray(VertexNormal);
+	glEnableVertexAttribArray(VertexTangent);
 
 	glVertexAttribPointer(VertexPosition, 3, GL_FLOAT, GL_FALSE, 0, pos);
-	glVertexAttribPointer(VertexTexCoord0, 2, GL_FLOAT, GL_FALSE, 0, tc0);
-	glVertexAttribPointer(VertexTexCoord1, 3, GL_FLOAT, GL_FALSE, 0, tc1);
-	glVertexAttribPointer(VertexTexCoord2, 3, GL_FLOAT, GL_FALSE, 0, tc2);
+	glVertexAttribPointer(VertexTexCoord, 2, GL_FLOAT, GL_FALSE, 0, tco);
+	glVertexAttribPointer(VertexNormal, 3, GL_FLOAT, GL_FALSE, 0, fcl);
+	glVertexAttribPointer(VertexTangent, 3, GL_FLOAT, GL_FALSE, 0, fcw);
 
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, faces);
 
 	glDisableVertexAttribArray(VertexPosition);
-	glDisableVertexAttribArray(VertexTexCoord0);
-	glDisableVertexAttribArray(VertexTexCoord1);
-	glDisableVertexAttribArray(VertexTexCoord2);
+	glDisableVertexAttribArray(VertexTexCoord);
+	glDisableVertexAttribArray(VertexNormal);
+	glDisableVertexAttribArray(VertexTangent);
 
 	CheckForOpenGLErrors("postprocess draw", error_output);
 }

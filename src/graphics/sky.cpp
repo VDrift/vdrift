@@ -207,15 +207,15 @@ void Sky::Draw(unsigned elems, const unsigned faces[], const float pos[], const 
 	glBindVertexArray(0);
 
 	glEnableVertexAttribArray(VertexPosition);
-	glEnableVertexAttribArray(VertexTexCoord0);
+	glEnableVertexAttribArray(VertexTexCoord);
 
 	glVertexAttribPointer(VertexPosition, 3, GL_FLOAT, GL_FALSE, 0, pos);
-	glVertexAttribPointer(VertexTexCoord0, 3, GL_FLOAT, GL_FALSE, 0, tco);
+	glVertexAttribPointer(VertexTexCoord, 3, GL_FLOAT, GL_FALSE, 0, tco);
 
 	glDrawElements(GL_TRIANGLES, elems, GL_UNSIGNED_INT, faces);
 
 	glDisableVertexAttribArray(VertexPosition);
-	glDisableVertexAttribArray(VertexTexCoord0);
+	glDisableVertexAttribArray(VertexTexCoord);
 
 	// unbind fbo
 	fbo.End(graphics.GetState(), error_output);

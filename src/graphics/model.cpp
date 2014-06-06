@@ -185,8 +185,8 @@ void Model::GenerateListID(std::ostream & error_output)
 	}
 	if (tccount[0])
 	{
-		glEnableVertexAttribArray(VertexTexCoord0);
-		glVertexAttribPointer(VertexTexCoord0, 2, GL_FLOAT, GL_FALSE, 0, tc[0]);
+		glEnableVertexAttribArray(VertexTexCoord);
+		glVertexAttribPointer(VertexTexCoord, 2, GL_FLOAT, GL_FALSE, 0, tc[0]);
 	}
 
 	glNewList(listid, GL_COMPILE);
@@ -197,7 +197,7 @@ void Model::GenerateListID(std::ostream & error_output)
 	if (normcount)
 		glDisableVertexAttribArray(VertexNormal);
 	if (tccount[0])
-		glDisableVertexAttribArray(VertexTexCoord0);
+		glDisableVertexAttribArray(VertexTexCoord);
 
 	CheckForOpenGLErrors("model list ID generation", error_output);
 }
@@ -289,13 +289,14 @@ void Model::GenerateVertexArrayObject(std::ostream & error_output)
 		// TODO: Make this work for UV1 and UV2.
 		m_mesh.GetTexCoords(0, tc[0], tccount[0]);
 		assert((unsigned int)tccount[0] == vertexCount*2);
-		vbos.push_back(GenerateBufferObject(error_output, VertexTexCoord0, tc[0], vertexCount, 2));
+		vbos.push_back(GenerateBufferObject(error_output, VertexTexCoord, tc[0], vertexCount, 2));
 	}
 	else
-		glDisableVertexAttribArray(VertexTexCoord0);
+		glDisableVertexAttribArray(VertexTexCoord);
 
-	glDisableVertexAttribArray(VertexTexCoord1);
-	glDisableVertexAttribArray(VertexTexCoord2);
+	glDisableVertexAttribArray(VertexBlendIndices);
+	glDisableVertexAttribArray(VertexBlendWeights);
+	glDisableVertexAttribArray(VertexColor);
 
 	// Don't leave anything bound.
 	glBindVertexArray(0);

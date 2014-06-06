@@ -70,16 +70,16 @@ void RenderModelExtDrawable::draw(GLWrapper & gl) const
 			int tccount[1] = {0};
 			if (vert_array->GetTexCoordSets() > 0)
 			{
-				// TODO: make this work for UV1 and UV2
 				vert_array->GetTexCoords(0, tc[0], tccount[0]);
-				gl.VertexAttribPointer(VertexTexCoord0, 2, GL_FLOAT, GL_FALSE, 0, tc[0]);
-				gl.EnableVertexAttribArray(VertexTexCoord0);
+				gl.VertexAttribPointer(VertexTexCoord, 2, GL_FLOAT, GL_FALSE, 0, tc[0]);
+				gl.EnableVertexAttribArray(VertexTexCoord);
 			}
 			else
-				gl.DisableVertexAttribArray(VertexTexCoord0);
+				gl.DisableVertexAttribArray(VertexTexCoord);
 
-			gl.DisableVertexAttribArray(VertexTexCoord1);
-			gl.DisableVertexAttribArray(VertexTexCoord2);
+			gl.DisableVertexAttribArray(VertexBlendIndices);
+			gl.DisableVertexAttribArray(VertexBlendWeights);
+			gl.DisableVertexAttribArray(VertexColor);
 
 			const int * faces = 0;
 			int facecount = 0;

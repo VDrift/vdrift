@@ -258,14 +258,14 @@ void RenderInputScene::DrawVertexArray(const VertexArray & va, float linesize) c
 			if (va.GetTexCoordSets() > 0)
 			{
 				va.GetTexCoords(0, tc, tccount);
-				glVertexAttribPointer(VertexTexCoord0, 2, GL_FLOAT, GL_FALSE, 0, tc);
-				glEnableVertexAttribArray(VertexTexCoord0);
+				glVertexAttribPointer(VertexTexCoord, 2, GL_FLOAT, GL_FALSE, 0, tc);
+				glEnableVertexAttribArray(VertexTexCoord);
 			}
 
 			glDrawElements(GL_TRIANGLES, facecount, GL_UNSIGNED_INT, faces);
 
 			if (tc)
-				glDisableVertexAttribArray(VertexTexCoord0);
+				glDisableVertexAttribArray(VertexTexCoord);
 
 			if (norms)
 				glDisableVertexAttribArray(VertexNormal);

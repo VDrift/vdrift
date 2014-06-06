@@ -28,10 +28,10 @@ namespace VertexAttribs
 		VertexNormal,
 		VertexTangent,
 		VertexBitangent,
+		VertexTexCoord,
+		VertexBlendIndices,
+		VertexBlendWeights,
 		VertexColor,
-		VertexTexCoord0,
-		VertexTexCoord1,
-		VertexTexCoord2
 	};
 
 	static const char * const str[] =
@@ -40,10 +40,10 @@ namespace VertexAttribs
 		"VertexNormal",
 		"VertexTangent",
 		"VertexBitangent",
+		"VertexTexCoord",
+		"VertexBlendIndices",
+		"VertexBlendWeights",
 		"VertexColor",
-		"VertexTexCoord0",
-		"VertexTexCoord1",
-		"VertexTexCoord2"
 	};
 }
 
