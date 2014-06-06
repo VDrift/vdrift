@@ -526,11 +526,6 @@ void VertexArray::BuildFromFaces(const std::vector <Face> & newfaces)
 	assert(vertices.size()/3 <= faces.size());
 }
 
-void VertexArray::SetColor(float r, float g, float b, float a)
-{
-	assert(0); // fixme
-}
-
 void VertexArray::Translate(float x, float y, float z)
 {
 	assert(vertices.size() % 3 == 0);

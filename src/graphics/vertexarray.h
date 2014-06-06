@@ -156,9 +156,6 @@ public:
 
 	void BuildFromFaces(const std::vector <Face> & faces);
 
-	/// set color for all vertices
-	void SetColor(float r, float g, float b, float a);
-
 	void Translate(float x, float y, float z);
 
 	void Rotate(float a, float x, float y, float z);
