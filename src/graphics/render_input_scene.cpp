@@ -222,8 +222,8 @@ void RenderInputScene::DrawVertexArray(const VertexArray & va, float linesize) c
 	using namespace VertexAttribs;
 
 	const float * verts;
-	int vertcount;
-	va.GetVertices(verts, vertcount);
+	int vcount;
+	va.GetVertices(verts, vcount);
 	if (verts)
 	{
 
@@ -231,8 +231,8 @@ void RenderInputScene::DrawVertexArray(const VertexArray & va, float linesize) c
 		glEnableVertexAttribArray(VertexPosition);
 
 		const unsigned char * cols;
-		int colcount;
-		va.GetColors(cols, colcount);
+		int ccount;
+		va.GetColors(cols, ccount);
 		if (cols)
 		{
 			glVertexAttribPointer(VertexColor, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, cols);
@@ -240,31 +240,31 @@ void RenderInputScene::DrawVertexArray(const VertexArray & va, float linesize) c
 		}
 
 		const int * faces;
-		int facecount;
-		va.GetFaces(faces, facecount);
+		int fcount;
+		va.GetFaces(faces, fcount);
 		if (faces)
 		{
 			const float * norms;
-			int normcount;
-			va.GetNormals(norms, normcount);
+			int ncount;
+			va.GetNormals(norms, ncount);
 			if (norms)
 			{
 				glVertexAttribPointer(VertexNormal, 3, GL_FLOAT, GL_FALSE, 0, norms);
 				glEnableVertexAttribArray(VertexNormal);
 			}
 
-			const float * tc = 0;
-			int tccount;
-			if (va.GetTexCoordSets() > 0)
+			const float * tcos = 0;
+			int tcount;
+			va.GetTexCoords(tcos, tcount);
+			if (tcos)
 			{
-				va.GetTexCoords(0, tc, tccount);
-				glVertexAttribPointer(VertexTexCoord, 2, GL_FLOAT, GL_FALSE, 0, tc);
+				glVertexAttribPointer(VertexTexCoord, 2, GL_FLOAT, GL_FALSE, 0, tcos);
 				glEnableVertexAttribArray(VertexTexCoord);
 			}
 
-			glDrawElements(GL_TRIANGLES, facecount, GL_UNSIGNED_INT, faces);
+			glDrawElements(GL_TRIANGLES, fcount, GL_UNSIGNED_INT, faces);
 
-			if (tc)
+			if (tcos)
 				glDisableVertexAttribArray(VertexTexCoord);
 
 			if (norms)
@@ -273,7 +273,7 @@ void RenderInputScene::DrawVertexArray(const VertexArray & va, float linesize) c
 		else if (linesize > 0)
 		{
 			glLineWidth(linesize);
-			glDrawArrays(GL_LINES, 0, vertcount / 3);
+			glDrawArrays(GL_LINES, 0, vcount / 3);
 		}
 
 		if (cols)

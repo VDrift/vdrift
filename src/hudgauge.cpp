@@ -122,16 +122,14 @@ void HudGauge::Set(
 		int f[] = {0, 2, 1, 0, 3, 2};
 		VertexArray bm;
 		bm.SetVertices(pb, 12);
-		bm.SetTexCoordSets(1);
-		bm.SetTexCoords(0, t, 8);
+		bm.SetTexCoords(t, 8);
 		bm.SetFaces(f, 6);
 
 		// small marker
 		float ps[] = {-0.01, 1, 0, 0.01, 1, 0, 0.01, 0.95, 0, -0.01, 0.95, 0};
 		VertexArray sm;
 		sm.SetVertices(ps, 12);
-		sm.SetTexCoordSets(1);
-		sm.SetTexCoords(0, t, 8);
+		sm.SetTexCoords(t, 8);
 		sm.SetFaces(f, 6);
 
 		float delta = (endangle - startangle) / (3.0 * segments);
@@ -192,8 +190,7 @@ void HudGauge::Set(
 		float t[] = {0, 0, 1, 0, 1, 1, 0, 1};
 		int f[] = {0, 2, 1, 0, 3, 2};
 		pointer.SetVertices(p, 12);
-		pointer.SetTexCoordSets(1);
-		pointer.SetTexCoords(0, t, 8);
+		pointer.SetTexCoords(t, 8);
 		pointer.SetFaces(f, 6);
 
 		pointer_draw = AddDrawable(parent);

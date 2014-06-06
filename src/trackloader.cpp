@@ -987,8 +987,6 @@ void Track::Loader::CreateRacingLine(const RoadStrip & strip)
 
 	// allocate batch vertex data
 	VertexArray vertex_array;
-	vertex_array.SetTexCoordSets(1);
-
 	std::vector<float> vertices;
 	std::vector<float> texcoords;
 	std::vector<int> faces;
@@ -1012,7 +1010,7 @@ void Track::Loader::CreateRacingLine(const RoadStrip & strip)
 
 		// set vertex array
 		vertex_array.SetVertices(&vertices[0], vertices.size());
-		vertex_array.SetTexCoords(0, &texcoords[0], texcoords.size());
+		vertex_array.SetTexCoords(&texcoords[0], texcoords.size());
 		vertex_array.SetFaces(&faces[0], faces.size());
 
 		// create model

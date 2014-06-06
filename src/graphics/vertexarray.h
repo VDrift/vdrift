@@ -35,34 +35,13 @@ public:
 
 	~VertexArray();
 
-	VertexArray operator+ (const VertexArray & v) const;
-
 	void Clear();
 
-	void SetColors(const unsigned char array[], size_t count, size_t offset = 0);
-
-	void SetNormals(const float array[], size_t count, size_t offset = 0);
-
-	void SetVertices(const float array[], size_t count, size_t offset = 0);
-
-	void SetFaces(const int array[], size_t count, size_t offset = 0, size_t idoffset = 0);
-
-	void SetTexCoordSets(int newtcsets);
-
-	/// set is zero indexed
-	void SetTexCoords(size_t set, const float array[], size_t count, size_t offset = 0);
-
-	/// assumes there is 1 tex coord set
-	void Add(
-		const unsigned char newcol[], int newcolcount,
-		const float newnorm[], int newnormcount,
-		const float newvert[], int newvertcount,
-		const int newfaces[], int newfacecount,
-		const float newtc[], int newtccount);
-
-	/// C style interface functions
+	VertexArray operator+ (const VertexArray & v) const;
 
 	void GetColors(const unsigned char * & output_array_pointer, int & output_array_num) const;
+
+	void GetTexCoords(const float * & output_array_pointer, int & output_array_num) const;
 
 	void GetNormals(const float * & output_array_pointer, int & output_array_num) const;
 
@@ -70,11 +49,24 @@ public:
 
 	void GetFaces(const int * & output_array_pointer, int & output_array_num) const;
 
-	inline int GetTexCoordSets() const { return texcoords.size(); }
-
-	void GetTexCoords(size_t set, const float * & output_array_pointer, int & output_array_num) const;
-
 	int GetNumFaces() const { return faces.size(); }
+
+	void SetColors(const unsigned char array[], size_t count, size_t offset = 0);
+
+	void SetTexCoords(const float array[], size_t count, size_t offset = 0);
+
+	void SetNormals(const float array[], size_t count, size_t offset = 0);
+
+	void SetVertices(const float array[], size_t count, size_t offset = 0);
+
+	void SetFaces(const int array[], size_t count, size_t offset = 0, size_t idoffset = 0);
+
+	void Add(
+		const unsigned char newcol[], int newcolcount,
+		const float newnorm[], int newnormcount,
+		const float newvert[], int newvertcount,
+		const int newfaces[], int newfacecount,
+		const float newtc[], int newtccount);
 
 	/// helper functions
 
@@ -176,8 +168,8 @@ public:
 private:
 	friend class joeserialize::Serializer;
 	friend class ModelObj;
-	std::vector < std::vector <float> > texcoords;
 	std::vector <unsigned char> colors;
+	std::vector <float> texcoords;
 	std::vector <float> normals;
 	std::vector <float> vertices;
 	std::vector <int> faces;

@@ -162,41 +162,41 @@ void Model::GenerateListID(std::ostream & error_output)
 	const int * faces;
 	const float * verts;
 	const float * norms;
-	const float * tc[1];
-	int facecount;
-	int vertcount;
-	int normcount;
-	int tccount[1];
+	const float * tcos;
+	int fcount;
+	int vcount;
+	int ncount;
+	int tcount;
 
-	m_mesh.GetFaces(faces, facecount);
-	m_mesh.GetVertices(verts, vertcount);
-	m_mesh.GetNormals(norms, normcount);
-	m_mesh.GetTexCoords(0, tc[0], tccount[0]);
+	m_mesh.GetFaces(faces, fcount);
+	m_mesh.GetVertices(verts, vcount);
+	m_mesh.GetNormals(norms, ncount);
+	m_mesh.GetTexCoords(tcos, tcount);
 
-	assert(facecount > 0);
-	assert(vertcount > 0);
+	assert(fcount > 0);
+	assert(vcount > 0);
 
 	glEnableVertexAttribArray(VertexPosition);
 	glVertexAttribPointer(VertexPosition, 3, GL_FLOAT, GL_FALSE, 0, verts);
-	if (normcount)
+	if (ncount)
 	{
 		glEnableVertexAttribArray(VertexNormal);
 		glVertexAttribPointer(VertexNormal, 3, GL_FLOAT, GL_FALSE, 0, norms);
 	}
-	if (tccount[0])
+	if (tcount)
 	{
 		glEnableVertexAttribArray(VertexTexCoord);
-		glVertexAttribPointer(VertexTexCoord, 2, GL_FLOAT, GL_FALSE, 0, tc[0]);
+		glVertexAttribPointer(VertexTexCoord, 2, GL_FLOAT, GL_FALSE, 0, tcos);
 	}
 
 	glNewList(listid, GL_COMPILE);
-	glDrawElements(GL_TRIANGLES, facecount, GL_UNSIGNED_INT, faces);
+	glDrawElements(GL_TRIANGLES, fcount, GL_UNSIGNED_INT, faces);
 	glEndList();
 
 	glDisableVertexAttribArray(VertexPosition);
-	if (normcount)
+	if (ncount)
 		glDisableVertexAttribArray(VertexNormal);
-	if (tccount[0])
+	if (tcount)
 		glDisableVertexAttribArray(VertexTexCoord);
 
 	CheckForOpenGLErrors("model list ID generation", error_output);
@@ -235,33 +235,33 @@ void Model::GenerateVertexArrayObject(std::ostream & error_output)
 
 	// Buffer object for faces.
 	const int * faces;
-	int facecount;
-	m_mesh.GetFaces(faces, facecount);
-	assert(faces && facecount > 0);
+	int fcount;
+	m_mesh.GetFaces(faces, fcount);
+	assert(faces && fcount > 0);
 	glGenBuffers(1, &elementVbo);ERROR_CHECK;
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementVbo);ERROR_CHECK;
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, facecount*sizeof(GLuint), faces, GL_STATIC_DRAW);ERROR_CHECK;
-	elementCount = facecount;
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, fcount * sizeof(GLuint), faces, GL_STATIC_DRAW);ERROR_CHECK;
+	elementCount = fcount;
 
-	// Calculate the number of vertices (vertcount is the size of the verts array).
+	// Calculate the number of vertices (vcount is the size of the verts array).
 	const float * verts;
-	int vertcount;
-	m_mesh.GetVertices(verts, vertcount);
-	assert(verts && vertcount > 0);
-	unsigned int vertexCount = vertcount/3;
+	int vcount;
+	m_mesh.GetVertices(verts, vcount);
+	assert(verts && vcount > 0);
+	const int vertexCount = vcount / 3;
 
 	// Generate buffer object for vertex positions.
 	vbos.push_back(GenerateBufferObject(error_output, VertexPosition, verts, vertexCount, 3));
 
 	// Generate buffer object for normals.
 	const float * norms;
-	int normcount;
-	m_mesh.GetNormals(norms, normcount);
-	if (!norms || normcount <= 0)
+	int ncount;
+	m_mesh.GetNormals(norms, ncount);
+	if (!norms || ncount <= 0)
 		glDisableVertexAttribArray(VertexNormal);
 	else
 	{
-		assert((unsigned int)normcount == vertexCount*3);
+		assert(ncount == vertexCount * 3);
 		vbos.push_back(GenerateBufferObject(error_output, VertexNormal, norms, vertexCount, 3));
 	}
 
@@ -269,30 +269,29 @@ void Model::GenerateVertexArrayObject(std::ostream & error_output)
 	glDisableVertexAttribArray(VertexTangent);
 	glDisableVertexAttribArray(VertexBitangent);
 
+	// Generate buffer object for texture coordinates.
+	const float * tcos;
+	int tcount;
+	m_mesh.GetTexCoords(tcos, tcount);
+	if (tcos && tcount)
+	{
+		assert(tcount == vertexCount * 2);
+		vbos.push_back(GenerateBufferObject(error_output, VertexTexCoord, tcos, vertexCount, 2));
+	}
+	else
+		glDisableVertexAttribArray(VertexTexCoord);
+
 	// Generate buffer object for colors.
 	const unsigned char * cols = 0;
-	int colcount = 0;
-	m_mesh.GetColors(cols, colcount);
-	if (cols && colcount)
+	int ccount = 0;
+	m_mesh.GetColors(cols, ccount);
+	if (cols && ccount)
 	{
-		assert((unsigned int)colcount == vertexCount*4);
+		assert(ccount == vertexCount * 4);
 		vbos.push_back(GenerateBufferObject(error_output, VertexColor, cols, vertexCount, 4, GL_UNSIGNED_BYTE, true));
 	}
 	else
 		glDisableVertexAttribArray(VertexColor);
-
-	// Generate buffer object for texture coordinates.
-	const float * tc[1];
-	int tccount[1];
-	if (m_mesh.GetTexCoordSets() > 0)
-	{
-		// TODO: Make this work for UV1 and UV2.
-		m_mesh.GetTexCoords(0, tc[0], tccount[0]);
-		assert((unsigned int)tccount[0] == vertexCount*2);
-		vbos.push_back(GenerateBufferObject(error_output, VertexTexCoord, tc[0], vertexCount, 2));
-	}
-	else
-		glDisableVertexAttribArray(VertexTexCoord);
 
 	glDisableVertexAttribArray(VertexBlendIndices);
 	glDisableVertexAttribArray(VertexBlendWeights);

@@ -39,22 +39,11 @@ float TextDraw::RenderCharacter(
 	float v1 = ci->y;
 	float v2 = v1 + ci->height;
 
-	float v[] = {x1, y1, 0, x2, y1, 0, x2, y2, 0, x1, y2, 0};
-	float t[] = {u1, v1, u2, v1, u2, v2, u1, v2};
-	int f[] = {0, 1, 2, 0, 2, 3};
+	const float v[] = {x1, y1, 0, x2, y1, 0, x2, y2, 0, x1, y2, 0};
+	const float t[] = {u1, v1, u2, v1, u2, v2, u1, v2};
+	const int f[] = {0, 1, 2, 0, 2, 3};
 
-	if (output_array.GetTexCoordSets() == 0)
-	{
-		output_array.SetFaces(f, 6);
-		output_array.SetVertices(v, 12);
-		output_array.SetTexCoordSets(1);
-		output_array.SetTexCoords(0, t, 8);
-	}
-	else
-	{
-		float * n = 0;
-		output_array.Add(0, 0, n, 0, v, 12, f, 6, t, 8);
-	}
+	output_array.Add(0, 0, 0, 0, v, 12, f, 6, t, 8);
 
 	return ci->xadvance * invsize * scalex;
 }

@@ -231,7 +231,7 @@ bool ModelObj::Save(const std::string & strFileName, std::ostream & error_output
 
 	WriteVectorGroupings(f, m_mesh.vertices, "v", 3);
 	f << endl;
-	WriteVectorGroupings(f, m_mesh.texcoords[0], "vt", 2);
+	WriteVectorGroupings(f, m_mesh.texcoords, "vt", 2);
 	f << endl;
 	WriteVectorGroupings(f, m_mesh.normals, "vn", 3);
 	f << endl;

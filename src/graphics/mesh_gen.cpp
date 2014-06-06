@@ -724,11 +724,10 @@ void mg_tire(VertexArray & tire, float sectionWidth_mm, float aspectRatio, float
 
 	//////////////////////////////////////////////
 	// VERTEXARRAY will copy this data
-	tire.SetVertices(&vertexData.front(), vertexFloatCount);
 	tire.SetFaces(&triData.front(), triVIndexCount);
-	tire.SetTexCoordSets(1);
-	tire.SetTexCoords(0, &texData.front(), texCoordFloats);
+	tire.SetVertices(&vertexData.front(), vertexFloatCount);
 	tire.SetNormals(&normalData.front(), vertexFloatCount);
+	tire.SetTexCoords(&texData.front(), texCoordFloats);
 
 	//printf("tire created: v=%u, tri=%u\n", vertexCount, (triVIndexCount/3));
 }
@@ -1191,12 +1190,10 @@ void mg_rim(VertexArray & rim, float sectionWidth_mm, float aspectRatio, float r
 
 	//////////////////////////////////////////////
 	// VERTEXARRAY will copy this data
-	rim.SetVertices(&vertexData.front(), vertexFloatCount);
 	rim.SetFaces(&triData.front(), triVIndexCount);
-
-	rim.SetTexCoordSets(1);
-	rim.SetTexCoords(0, &texData.front(), texCoordFloats);
+	rim.SetVertices(&vertexData.front(), vertexFloatCount);
 	rim.SetNormals(&normalData.front(), vertexFloatCount);
+	rim.SetTexCoords(&texData.front(), texCoordFloats);
 
 	//	printf("wheel_edge created: v=%u, tri=%u\n", vertexCount, (triVIndexCount/3) );
 
@@ -1518,13 +1515,10 @@ void mg_brake_rotor(VertexArray & rotor, float diameter_mm, float thickness_mm)
 
 
 
-
-    rotor.SetVertices(vertexData, vertexFloatCount);
 	rotor.SetFaces((int*)triData, triVIndexCount);
-	rotor.SetTexCoordSets(1);
-	rotor.SetTexCoords(0, texData, texCoordFloats);
+	rotor.SetVertices(vertexData, vertexFloatCount);
 	rotor.SetNormals(normalData, vertexFloatCount);
-
+	rotor.SetTexCoords(texData, texCoordFloats);
 
 	// free up the temp data
 	delete[] vertexData;

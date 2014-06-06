@@ -119,7 +119,6 @@ void ParticleSystem::UpdateGraphics(
 
 	// update vertex data
 	varrays[cur_varray].Clear();
-	varrays[cur_varray].SetTexCoordSets(1);
 	for (size_t i = 0; i < particles.size(); ++i)
 	{
 		// cull particles outside of [znear, zfar]

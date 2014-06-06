@@ -476,7 +476,6 @@ void ModelJoe03::ReadData ( FILE * m_FilePointer, const JoePack * pack, JoeObjec
 	m_mesh.SetFaces(&v_faces[0], v_faces.size());
 	m_mesh.SetVertices(&v_vertices[0], v_vertices.size());
 	m_mesh.SetNormals(&v_normals[0], v_normals.size());
-	m_mesh.SetTexCoordSets(1);
-	m_mesh.SetTexCoords(0, &v_texcoords[0], v_texcoords.size());
+	m_mesh.SetTexCoords(&v_texcoords[0], v_texcoords.size());
 }
 

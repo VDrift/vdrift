@@ -66,12 +66,13 @@ void RenderModelExtDrawable::draw(GLWrapper & gl) const
 			else
 				gl.DisableVertexAttribArray(VertexColor);
 
-			const float * tc[1] = {0};
-			int tccount[1] = {0};
-			if (vert_array->GetTexCoordSets() > 0)
+			const float * tcos = 0;
+			int tccount = 0;
+			vert_array->GetTexCoords(tcos, tccount);
+			if (tcos)
 			{
-				vert_array->GetTexCoords(0, tc[0], tccount[0]);
-				gl.VertexAttribPointer(VertexTexCoord, 2, GL_FLOAT, GL_FALSE, 0, tc[0]);
+
+				gl.VertexAttribPointer(VertexTexCoord, 2, GL_FLOAT, GL_FALSE, 0, tcos);
 				gl.EnableVertexAttribArray(VertexTexCoord);
 			}
 			else
