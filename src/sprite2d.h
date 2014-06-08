@@ -87,7 +87,7 @@ public:
 	void SetTo2DQuad(float x1, float y1, float x2, float y2, float u1, float v1, float u2, float v2, float z);
 
 private:
-	keyed_container <SceneNode>::handle node;
+	SceneNode::Handle node;
 	keyed_container <Drawable>::handle draw;
 	std::tr1::shared_ptr<Texture> texture;
 	VertexArray varray;

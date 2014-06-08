@@ -523,8 +523,8 @@ bool Track::Loader::LoadNode(const PTree & sec)
 		if (has_transform)
 		{
 			// static geometry instanced
-			keyed_container <SceneNode>::handle sh = data.static_node.AddNode();
-			SceneNode & node = data.static_node.GetNode(sh);
+			SceneNode::Handle h = data.static_node.AddNode();
+			SceneNode & node = data.static_node.GetNode(h);
 			node.GetTransform().SetTranslation(position);
 			node.GetTransform().SetRotation(rotation);
 			AddBody(node, body);
@@ -600,8 +600,8 @@ bool Track::Loader::LoadNode(const PTree & sec)
 			data.objects.push_back(object);
 			world.addCollisionObject(object);
 
-			keyed_container <SceneNode>::handle sh = data.static_node.AddNode();
-			SceneNode & node = data.static_node.GetNode(sh);
+			SceneNode::Handle h = data.static_node.AddNode();
+			SceneNode & node = data.static_node.GetNode(h);
 			node.GetTransform().SetTranslation(position);
 			node.GetTransform().SetRotation(rotation);
 			AddBody(node, body);
