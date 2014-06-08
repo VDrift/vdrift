@@ -24,7 +24,7 @@
 #include "drawable.h"
 #include "shader.h"
 #include "uniforms.h"
-#include "vertexattribs.h"
+#include "vertexattrib.h"
 #include "vertexarray.h"
 #include "glutil.h"
 
@@ -219,7 +219,7 @@ void RenderInputScene::Draw(GraphicsState & glstate, const std::vector <Drawable
 
 void RenderInputScene::DrawVertexArray(const VertexArray & va, float linesize) const
 {
-	using namespace VertexAttribs;
+	using namespace VertexAttrib;
 
 	const float * verts;
 	int vcount;

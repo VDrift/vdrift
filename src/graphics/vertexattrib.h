@@ -17,10 +17,10 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef VERTEX_ATTRIBS_H
-#define VERTEX_ATTRIBS_H
+#ifndef VERTEX_ATTRIB_H
+#define VERTEX_ATTRIB_H
 
-namespace VertexAttribs
+namespace VertexAttrib
 {
 	enum Enum
 	{

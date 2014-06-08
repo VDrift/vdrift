@@ -20,7 +20,7 @@
 #include "sky.h"
 #include "graphics_gl2.h"
 #include "shader.h"
-#include "vertexattribs.h"
+#include "vertexattrib.h"
 //#include "config.h"
 
 #include <time.h>
@@ -191,7 +191,7 @@ void Sky::UpdateComplete()
 
 void Sky::Draw(unsigned elems, const unsigned faces[], const float pos[], const float tco[])
 {
-	using namespace VertexAttribs;
+	using namespace VertexAttrib;
 
 	// disable blending, depth write
 	graphics.GetState().DepthTest(GL_ALWAYS, false);

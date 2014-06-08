@@ -25,7 +25,7 @@
 #include "matrix4.h"
 #include "shader.h"
 #include "uniforms.h"
-#include "vertexattribs.h"
+#include "vertexattrib.h"
 
 RenderInputPostprocess::RenderInputPostprocess() :
 	shader(NULL),
@@ -249,8 +249,7 @@ void RenderInputPostprocess::Render(GraphicsState & glstate, std::ostream & erro
 		frustum_corners_ws[3][0], frustum_corners_ws[3][1], frustum_corners_ws[3][2],
 	};
 
-	using namespace VertexAttribs;
-
+	using namespace VertexAttrib;
 
 	glEnableVertexAttribArray(VertexPosition);
 	glEnableVertexAttribArray(VertexTexCoord);

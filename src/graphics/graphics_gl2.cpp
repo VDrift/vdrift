@@ -22,7 +22,7 @@
 #include "glutil.h"
 #include "shader.h"
 #include "uniforms.h"
-#include "vertexattribs.h"
+#include "vertexattrib.h"
 #include "sky.h"
 
 /// array end ptr
@@ -824,7 +824,7 @@ bool GraphicsGL2::EnableShaders(std::ostream & info_output, std::ostream & error
 	}
 
 	// setup frame buffer objects and shaders
-	const std::vector <std::string> attributes(VertexAttribs::str, End(VertexAttribs::str));
+	const std::vector <std::string> attributes(VertexAttrib::str, End(VertexAttrib::str));
 	const std::vector <std::string> uniforms(Uniforms::str, End(Uniforms::str));
 	std::vector <std::string> global_defines;
 	GetShaderDefines(global_defines);

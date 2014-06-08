@@ -19,11 +19,11 @@
 
 #include "model.h"
 #include "utils.h"
-#include "vertexattribs.h"
+#include "vertexattrib.h"
 #include "glutil.h"
 #include <limits>
 
-using namespace VertexAttribs;
+using namespace VertexAttrib;
 
 #define ERROR_CHECK CheckForOpenGLErrors(std::string(__PRETTY_FUNCTION__)+":"+__FILE__+":"+Utils::tostr(__LINE__), error_output)
 

@@ -20,8 +20,9 @@
 #include "rendermodelext_drawable.h"
 
 #include "vertexarray.h"
-#include "vertexattribs.h"
-using namespace VertexAttribs;
+#include "vertexattrib.h"
+
+using namespace VertexAttrib;
 
 void RenderModelExtDrawable::draw(GLWrapper & gl) const
 {
