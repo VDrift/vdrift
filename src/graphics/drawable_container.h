@@ -105,21 +105,14 @@ void AddDrawablesToContainer(ContainerType & source, U & dest, const Mat4 & tran
 }
 }
 
-/// pointer vector, drawable_container template parameter
-template <typename T>
-class PtrVector : public std::vector<T*>
-{};
-
 template <template <typename U> class Container>
 struct DrawableContainer
 {
-	// all of the layers of the scene
-
+	// you can add new drawable containers by modifying drawables.def
+	// see http://en.wikipedia.org/wiki/C_preprocessor#X-Macros
 	#define X(Y) Container <Drawable> Y;
 	#include "drawables.def"
 	#undef X
-	// you can add new drawable containers by modifying drawables.def
-	// see http://en.wikipedia.org/wiki/C_preprocessor#X-Macros
 
 	template <typename T>
 	void ForEach(T func)
@@ -130,9 +123,9 @@ struct DrawableContainer
 	}
 
 	template <typename T>
-	void ForEachWithName(T func)
+	void ForEach(T func) const
 	{
-		#define X(Y) func(#Y,Y);
+		#define X(Y) func(Y);
 		#include "drawables.def"
 		#undef X
 	}
@@ -170,9 +163,8 @@ struct DrawableContainer
 
 	unsigned int size() const
 	{
-		DrawableContainer <Container> * me = const_cast<DrawableContainer <Container> *>(this); // messy, but avoids more typing. const correctness is enforced in AccumulateSize::operator()
 		unsigned int count = 0;
-		me->ForEach(DrawableContainerHelper::AccumulateSize(count));
+		ForEach(DrawableContainerHelper::AccumulateSize(count));
 		return count;
 	}
 

@@ -33,6 +33,7 @@ class SceneNode;
 class Graphics
 {
 public:
+	template <typename T> class PtrVector : public std::vector<T*> {};
 	typedef DrawableContainer <PtrVector> dynamicdrawlist_type;
 
 	/// reflection_type is 0 (low=OFF), 1 (medium=static), 2 (high=dynamic)
