@@ -22,6 +22,15 @@
 
 namespace VertexAttrib
 {
+	struct Format
+	{
+		int index;	// attribute id
+		int size;	// 1 to 4 components
+		int type;	// component type GL_BYTE, GL_SHORT, GL_FLOAT ...
+		int offset;	// attribute offset in the vertex
+		bool norm;	// normalize attribute to the range [-1, 1] or [0, 1]
+	};
+
 	enum Enum
 	{
 		VertexPosition,
