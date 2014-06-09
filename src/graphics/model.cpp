@@ -29,12 +29,9 @@ using namespace VertexAttrib;
 
 static const std::string file_magic = "OGLVARRAYV01";
 
-static const bool vaoDebug = false;
-
 Model::Model() :
 	vao(0),
-	elementVbo(0),
-	elementCount(0),
+	element_count(0),
 	listid(0),
 	radius(0),
 	generatedmetrics(false),
@@ -45,8 +42,7 @@ Model::Model() :
 
 Model::Model(const std::string & filepath, std::ostream & error_output) :
 	vao(0),
-	elementVbo(0),
-	elementCount(0),
+	element_count(0),
 	listid(0),
 	radius(0),
 	generatedmetrics(false),
@@ -203,23 +199,22 @@ void Model::GenerateListID(std::ostream & error_output)
 }
 
 template <typename T>
-GLuint GenerateBufferObject(
+GLuint GenerateBuffer(
 	std::ostream & error_output,
-	unsigned attribId,
+	unsigned attrib_id,
 	const T * data,
-	unsigned vertexCount,
-	unsigned elementsPerVertex,
+	unsigned vertex_count,
+	unsigned elems_per_vertex,
 	GLenum type = GL_FLOAT,
 	bool normalized = false)
 {
-	GLuint vboHandle;
-	glGenBuffers(1, &vboHandle);ERROR_CHECK;
-	glBindBuffer(GL_ARRAY_BUFFER, vboHandle);ERROR_CHECK;
-	glBufferData(GL_ARRAY_BUFFER, vertexCount*elementsPerVertex*sizeof(T), data, GL_STATIC_DRAW);ERROR_CHECK;
-	glVertexAttribPointer(attribId, elementsPerVertex, type, normalized, 0, 0);ERROR_CHECK;
-	glEnableVertexAttribArray(attribId);ERROR_CHECK;
-
-	return vboHandle;
+	GLuint vbo = 0;
+	glGenBuffers(1, &vbo);ERROR_CHECK;
+	glBindBuffer(GL_ARRAY_BUFFER, vbo);ERROR_CHECK;
+	glBufferData(GL_ARRAY_BUFFER, vertex_count * elems_per_vertex * sizeof(T), data, GL_STATIC_DRAW);ERROR_CHECK;
+	glVertexAttribPointer(attrib_id, elems_per_vertex, type, normalized, 0, 0);ERROR_CHECK;
+	glEnableVertexAttribArray(attrib_id);ERROR_CHECK;
+	return vbo;
 }
 
 void Model::GenerateVertexArrayObject(std::ostream & error_output)
@@ -229,8 +224,6 @@ void Model::GenerateVertexArrayObject(std::ostream & error_output)
 
 	// Generate vertex array object.
 	glGenVertexArrays(1, &vao);ERROR_CHECK;
-    if (vaoDebug)
-        std::cout << "created vao " << vao << std::endl;
 	glBindVertexArray(vao);ERROR_CHECK;
 
 	// Buffer object for faces.
@@ -238,20 +231,20 @@ void Model::GenerateVertexArrayObject(std::ostream & error_output)
 	int fcount;
 	m_mesh.GetFaces(faces, fcount);
 	assert(faces && fcount > 0);
-	glGenBuffers(1, &elementVbo);ERROR_CHECK;
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementVbo);ERROR_CHECK;
+	element_count = fcount;
+	GLuint evbo = 0;
+	glGenBuffers(1, &evbo);ERROR_CHECK;
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, evbo);ERROR_CHECK;
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, fcount * sizeof(GLuint), faces, GL_STATIC_DRAW);ERROR_CHECK;
-	elementCount = fcount;
+	vbos.push_back(evbo);
 
-	// Calculate the number of vertices (vcount is the size of the verts array).
+	// Generate buffer object for vertex positions.
 	const float * verts;
 	int vcount;
 	m_mesh.GetVertices(verts, vcount);
 	assert(verts && vcount > 0);
-	const int vertexCount = vcount / 3;
-
-	// Generate buffer object for vertex positions.
-	vbos.push_back(GenerateBufferObject(error_output, VertexPosition, verts, vertexCount, 3));
+	const int vertex_count = vcount / 3;
+	vbos.push_back(GenerateBuffer(error_output, VertexPosition, verts, vertex_count, 3));
 
 	// Generate buffer object for normals.
 	const float * norms;
@@ -261,8 +254,8 @@ void Model::GenerateVertexArrayObject(std::ostream & error_output)
 		glDisableVertexAttribArray(VertexNormal);
 	else
 	{
-		assert(ncount == vertexCount * 3);
-		vbos.push_back(GenerateBufferObject(error_output, VertexNormal, norms, vertexCount, 3));
+		assert(ncount == vertex_count * 3);
+		vbos.push_back(GenerateBuffer(error_output, VertexNormal, norms, vertex_count, 3));
 	}
 
 	// TODO: Generate tangent and bitangent.
@@ -275,11 +268,14 @@ void Model::GenerateVertexArrayObject(std::ostream & error_output)
 	m_mesh.GetTexCoords(tcos, tcount);
 	if (tcos && tcount)
 	{
-		assert(tcount == vertexCount * 2);
-		vbos.push_back(GenerateBufferObject(error_output, VertexTexCoord, tcos, vertexCount, 2));
+		assert(tcount == vertex_count * 2);
+		vbos.push_back(GenerateBuffer(error_output, VertexTexCoord, tcos, vertex_count, 2));
 	}
 	else
 		glDisableVertexAttribArray(VertexTexCoord);
+
+	glDisableVertexAttribArray(VertexBlendIndices);
+	glDisableVertexAttribArray(VertexBlendWeights);
 
 	// Generate buffer object for colors.
 	const unsigned char * cols = 0;
@@ -287,15 +283,11 @@ void Model::GenerateVertexArrayObject(std::ostream & error_output)
 	m_mesh.GetColors(cols, ccount);
 	if (cols && ccount)
 	{
-		assert(ccount == vertexCount * 4);
-		vbos.push_back(GenerateBufferObject(error_output, VertexColor, cols, vertexCount, 4, GL_UNSIGNED_BYTE, true));
+		assert(ccount == vertex_count * 4);
+		vbos.push_back(GenerateBuffer(error_output, VertexColor, cols, vertex_count, 4, GL_UNSIGNED_BYTE, true));
 	}
 	else
 		glDisableVertexAttribArray(VertexColor);
-
-	glDisableVertexAttribArray(VertexBlendIndices);
-	glDisableVertexAttribArray(VertexBlendWeights);
-	glDisableVertexAttribArray(VertexColor);
 
 	// Don't leave anything bound.
 	glBindVertexArray(0);
@@ -319,29 +311,22 @@ void Model::ClearVertexArrayObject()
 		if (!vbos.empty())
 			glDeleteBuffers(vbos.size(), &vbos[0]);
 
-		if (elementVbo != 0)
-		{
-			glDeleteBuffers(1, &elementVbo);
-			elementVbo = 0;
-		}
 		if (vao != 0)
 		{
 			glBindVertexArray(0);
-			if (vaoDebug)
-				std::cout << "deleting vao " << vao << std::endl;
 			glDeleteVertexArrays(1,&vao);
 			vao = 0;
 		}
 	}
 }
 
-bool Model::GetVertexArrayObject(GLuint & vao_out, unsigned int & elementCount_out) const
+bool Model::GetVertexArrayObject(GLuint & vao_out, unsigned int & element_count_out) const
 {
 	if (!generatedvao)
 		return false;
 
 	vao_out = vao;
-	elementCount_out = elementCount;
+	element_count_out = element_count;
 
 	return true;
 }

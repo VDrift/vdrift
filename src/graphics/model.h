@@ -59,7 +59,7 @@ public:
 
 	/// Returns true if we have a vertex array object and stores the VAO handle and element count in the provided arguments.
 	/// Returns false if we have no vertex array object.
-	bool GetVertexArrayObject(GLuint & vao_out, unsigned int & elementCount_out) const;
+	bool GetVertexArrayObject(GLuint & vao_out, unsigned int & element_count_out) const;
 
 	void GenerateMeshMetrics();
 
@@ -95,14 +95,12 @@ protected:
 	VertexArray m_mesh;
 
 private:
-	/// VAO means vertex array object.
-	GLuint vao;
-	std::vector <GLuint> vbos;
-	GLuint elementVbo;
-	unsigned elementCount;
+	GLuint vao;					///< vertex array object
+	std::vector <GLuint> vbos;	///< vertex buffer objects
+	unsigned element_count;		///< number of indices
 	unsigned listid;			///< listid 0 is invalid, means no display list compiled
 
-	// Metrics.
+	/// Metrics
 	Vec3 min;
 	Vec3 max;
 	float radius;
