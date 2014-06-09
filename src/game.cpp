@@ -446,7 +446,7 @@ bool Game::InitCoreSubsystems()
 
 /* Write the scenegraph to the output drawlist... */
 template <bool clearfirst>
-void TraverseScene(SceneNode & node, Graphics::dynamicdrawlist_type & output)
+void TraverseScene(SceneNode & node, Graphics::DynamicDrawables & output)
 {
 	if (clearfirst)
 	{

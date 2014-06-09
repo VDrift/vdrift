@@ -377,7 +377,7 @@ void GraphicsGL2::Deinit()
 	}
 }
 
-DrawableContainer <Graphics::PtrVector> & GraphicsGL2::GetDynamicDrawlist()
+Graphics::DynamicDrawables & GraphicsGL2::GetDynamicDrawlist()
 {
 	return dynamic_drawlist;
 }

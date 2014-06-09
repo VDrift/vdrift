@@ -34,7 +34,7 @@ class Graphics
 {
 public:
 	template <typename T> class PtrVector : public std::vector<T*> {};
-	typedef DrawableContainer <PtrVector> dynamicdrawlist_type;
+	typedef DrawableContainer <PtrVector> DynamicDrawables;
 
 	/// reflection_type is 0 (low=OFF), 1 (medium=static), 2 (high=dynamic)
 	/// returns true on success
@@ -56,7 +56,7 @@ public:
 
 	virtual void Deinit() = 0;
 
-	virtual DrawableContainer <PtrVector> & GetDynamicDrawlist() = 0;
+	virtual DynamicDrawables & GetDynamicDrawlist() = 0;
 
 	virtual void AddStaticNode(SceneNode & node, bool clearcurrent = true) = 0;
 

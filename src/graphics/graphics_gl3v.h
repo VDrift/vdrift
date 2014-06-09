@@ -65,7 +65,7 @@ public:
 
 	virtual void Deinit();
 
-	virtual DrawableContainer <PtrVector> & GetDynamicDrawlist();
+	virtual DynamicDrawables & GetDynamicDrawlist();
 
 	virtual void AddStaticNode(SceneNode & node, bool clearcurrent = true);
 
@@ -135,7 +135,7 @@ private:
 	std::string getCameraForPass(StringId pass) const;
 
 	// scenegraph output
-	DrawableContainer <PtrVector> dynamic_drawlist; //used for objects that move or change
+	DynamicDrawables dynamic_drawlist; //used for objects that move or change
 	StaticDrawables static_drawlist; //used for objects that will never change
 
 	// a special drawable that's used for fullscreen quad passes

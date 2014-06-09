@@ -109,7 +109,7 @@ void GraphicsGL3::Deinit()
 	renderer.clear();
 }
 
-DrawableContainer <Graphics::PtrVector> & GraphicsGL3::GetDynamicDrawlist()
+Graphics::DynamicDrawables & GraphicsGL3::GetDynamicDrawlist()
 {
 	return dynamic_drawlist;
 }
