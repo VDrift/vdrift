@@ -291,8 +291,8 @@ void Model::GenerateVertexArrayObject(std::ostream & error_output)
 
 	// Don't leave anything bound.
 	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER,0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 
 	generatedvao = true;
 }
@@ -304,19 +304,22 @@ bool Model::HaveVertexArrayObject() const
 
 void Model::ClearVertexArrayObject()
 {
-	if (generatedvao)
-	{
-		glBindBuffer(GL_ARRAY_BUFFER,0);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
-		if (!vbos.empty())
-			glDeleteBuffers(vbos.size(), &vbos[0]);
+	if (!generatedvao)
+		return;
 
-		if (vao != 0)
-		{
-			glBindVertexArray(0);
-			glDeleteVertexArrays(1,&vao);
-			vao = 0;
-		}
+	if (!vbos.empty())
+	{
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		glDeleteBuffers(vbos.size(), &vbos[0]);
+		vbos.clear();
+	}
+
+	if (vao)
+	{
+		glBindVertexArray(0);
+		glDeleteVertexArrays(1, &vao);
+		vao = 0;
 	}
 }
 
