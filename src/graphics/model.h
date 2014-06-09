@@ -106,7 +106,6 @@ private:
 	float radius;
 
 	bool generatedmetrics;
-	bool generatedvao;
 
 	void RequireMetrics() const;
 

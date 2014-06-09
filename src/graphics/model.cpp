@@ -34,8 +34,7 @@ Model::Model() :
 	element_count(0),
 	listid(0),
 	radius(0),
-	generatedmetrics(false),
-	generatedvao(false)
+	generatedmetrics(false)
 {
 	// Constructor.
 }
@@ -45,8 +44,7 @@ Model::Model(const std::string & filepath, std::ostream & error_output) :
 	element_count(0),
 	listid(0),
 	radius(0),
-	generatedmetrics(false),
-	generatedvao(false)
+	generatedmetrics(false)
 {
 	if (filepath.size() > 4 && filepath.substr(filepath.size()-4) == ".ova")
 		ReadFromFile(filepath, error_output, false);
@@ -219,7 +217,7 @@ GLuint GenerateBuffer(
 
 void Model::GenerateVertexArrayObject(std::ostream & error_output)
 {
-	if (generatedvao)
+	if (HaveVertexArrayObject())
 		return;
 
 	// Generate vertex array object.
@@ -293,18 +291,16 @@ void Model::GenerateVertexArrayObject(std::ostream & error_output)
 	glBindVertexArray(0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-
-	generatedvao = true;
 }
 
 bool Model::HaveVertexArrayObject() const
 {
-	return generatedvao;
+	return vao;
 }
 
 void Model::ClearVertexArrayObject()
 {
-	if (!generatedvao)
+	if (!HaveVertexArrayObject())
 		return;
 
 	if (!vbos.empty())
@@ -325,7 +321,7 @@ void Model::ClearVertexArrayObject()
 
 bool Model::GetVertexArrayObject(GLuint & vao_out, unsigned int & element_count_out) const
 {
-	if (!generatedvao)
+	if (!HaveVertexArrayObject())
 		return false;
 
 	vao_out = vao;
