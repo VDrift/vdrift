@@ -25,17 +25,17 @@
 Drawable::Drawable() :
 	list_id(0),
 	vert_array(NULL),
-	linesize(0),
-	objcenter(0),
+	center(0),
 	radius(0),
 	color(1),
 	draw_order(0),
+	linesize(0),
 	decal(false),
 	drawenabled(true),
 	cull(false),
 	cull_front(false),
-	texturesChanged(true),
-	uniformsChanged(true)
+	textures_changed(true),
+	uniforms_changed(true)
 {
 	tex_id[0] = 0;
 	tex_id[1] = 0;
@@ -47,35 +47,35 @@ void Drawable::SetTextures(unsigned id0, unsigned id1, unsigned id2)
 	tex_id[0] = id0;
 	tex_id[1] = id1;
 	tex_id[2] = id2;
-	texturesChanged = true;
+	textures_changed = true;
 }
 
 void Drawable::SetVertArray(const VertexArray* value)
 {
 	vert_array = value;
-	renderModel.SetVertArray(vert_array);
+	render_model.SetVertArray(vert_array);
 }
 
-void Drawable::SetVertexArrayObject(unsigned vao, unsigned elementCount)
+void Drawable::SetVertexArrayObject(unsigned vao, unsigned element_count)
 {
-	renderModel.setVertexArrayObject(vao, elementCount);
+	render_model.setVertexArrayObject(vao, element_count);
 }
 
 void Drawable::SetLineSize(float size)
 {
 	linesize = size;
-	renderModel.SetLineSize(size);
+	render_model.SetLineSize(size);
 }
 
 void Drawable::SetTransform(const Mat4 & value)
 {
 	transform = value;
-	uniformsChanged = true;
+	uniforms_changed = true;
 }
 
 void Drawable::SetObjectCenter(const Vec3 & value)
 {
-	objcenter = value;
+	center = value;
 }
 
 void Drawable::SetRadius(float value)
@@ -89,7 +89,7 @@ void Drawable::SetColor(float r, float g, float b, float a)
 	color[1] = g;
 	color[2] = b;
 	color[3] = a;
-	uniformsChanged = true;
+	uniforms_changed = true;
 }
 
 void Drawable::SetColor(float r, float g, float b)
@@ -97,13 +97,13 @@ void Drawable::SetColor(float r, float g, float b)
 	color[0] = r;
 	color[1] = g;
 	color[2] = b;
-	uniformsChanged = true;
+	uniforms_changed = true;
 }
 
 void Drawable::SetAlpha(float a)
 {
 	color[3] = a;
-	uniformsChanged = true;
+	uniforms_changed = true;
 }
 
 void Drawable::SetDrawOrder(float value)
@@ -114,7 +114,7 @@ void Drawable::SetDrawOrder(float value)
 void Drawable::SetDecal(bool value)
 {
 	decal = value;
-	uniformsChanged = true;
+	uniforms_changed = true;
 }
 
 void Drawable::SetCull(bool newcull, bool newcullfront)
@@ -123,49 +123,49 @@ void Drawable::SetCull(bool newcull, bool newcullfront)
 	cull_front = newcullfront;
 }
 
-RenderModelExt & Drawable::GenRenderModelData(StringIdMap & stringMap)
+RenderModelExt & Drawable::GenRenderModelData(StringIdMap & string_map)
 {
-	// copy data over to the GL3V renderModel object
+	// copy data over to the GL3V render_model object
 	// eventually this should only be done when we update the values, but for now
 	// we call this every time we draw the drawable
 
 	// cache off the stringId values
-	static StringId diffuseId = stringMap.addStringId("diffuseTexture");
-	static StringId misc1Id = stringMap.addStringId("misc1Texture");
-	static StringId misc2Id = stringMap.addStringId("normalMapTexture");
-	static StringId transformId = stringMap.addStringId("modelMatrix");
-	static StringId colorId = stringMap.addStringId("colorTint");
+	static StringId tex0_id = string_map.addStringId("diffuseTexture");
+	static StringId tex1_id = string_map.addStringId("misc1Texture");
+	static StringId tex2_id = string_map.addStringId("normalMapTexture");
+	static StringId transform_id = string_map.addStringId("modelMatrix");
+	static StringId color_id = string_map.addStringId("colorTint");
 
 	// textures
-	if (texturesChanged)
+	if (textures_changed)
 	{
-		renderModel.clearTextureCache();
-		renderModel.textures.clear();
+		render_model.clearTextureCache();
+		render_model.textures.clear();
 		if (tex_id[0])
 		{
-			renderModel.textures.push_back(RenderTextureEntry(diffuseId, tex_id[0], GL_TEXTURE_2D));
+			render_model.textures.push_back(RenderTextureEntry(tex0_id, tex_id[0], GL_TEXTURE_2D));
 		}
 		if (tex_id[1])
 		{
-			renderModel.textures.push_back(RenderTextureEntry(misc1Id, tex_id[1], GL_TEXTURE_2D));
+			render_model.textures.push_back(RenderTextureEntry(tex1_id, tex_id[1], GL_TEXTURE_2D));
 		}
 		if (tex_id[2])
 		{
-			renderModel.textures.push_back(RenderTextureEntry(misc2Id, tex_id[2], GL_TEXTURE_2D));
+			render_model.textures.push_back(RenderTextureEntry(tex2_id, tex_id[2], GL_TEXTURE_2D));
 		}
 
-		texturesChanged = false;
+		textures_changed = false;
 	}
 
 	// uniforms
-	if (uniformsChanged)
+	if (uniforms_changed)
 	{
-		renderModel.clearUniformCache();
-		renderModel.uniforms.clear();
+		render_model.clearUniformCache();
+		render_model.uniforms.clear();
 
 		// only add it if it's not the identity matrix
 		if (transform != Mat4())
-			renderModel.uniforms.push_back(RenderUniformEntry(transformId, transform.GetArray(), 16));
+			render_model.uniforms.push_back(RenderUniformEntry(transform_id, transform.GetArray(), 16));
 
 		// only add it if it's not the default
 		if (color != Vec4(1))
@@ -175,13 +175,13 @@ RenderModelExt & Drawable::GenRenderModelData(StringIdMap & stringMap)
 			srgba[1] = color[1] < 1 ? pow(color[1], 2.2f) : color[1];
 			srgba[2] = color[2] < 1 ? pow(color[2], 2.2f) : color[2];
 			srgba[3] = color[3];
-			renderModel.uniforms.push_back(RenderUniformEntry(colorId, srgba, 4));
+			render_model.uniforms.push_back(RenderUniformEntry(color_id, srgba, 4));
 		}
 
-		uniformsChanged = false;
+		uniforms_changed = false;
 	}
 
-	return renderModel;
+	return render_model;
 }
 
 void Drawable::SetModel(const Model & model)
@@ -193,10 +193,10 @@ void Drawable::SetModel(const Model & model)
 
 	if (model.HaveVertexArrayObject())
 	{
-		GLuint vao;
-		unsigned int elementCount;
-		bool haveVao = model.GetVertexArrayObject(vao, elementCount);
-		if (haveVao)
-			SetVertexArrayObject(vao, elementCount);
+		GLuint vao = 0;
+		unsigned int element_count = 0;
+		bool have_vao = model.GetVertexArrayObject(vao, element_count);
+		if (have_vao)
+			SetVertexArrayObject(vao, element_count);
 	}
 }

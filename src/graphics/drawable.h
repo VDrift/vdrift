@@ -80,30 +80,30 @@ public:
 	void SetCull(bool newcull, bool newcullfront);
 
 	/// this gets called if we are using the GL3 renderer
-	/// it returns a reference to the RenderModelExternal structure
-	RenderModelExt & GenRenderModelData(StringIdMap & stringMap);
-
-	void SetVertexArrayObject(unsigned vao, unsigned elementCount);
+	/// returns a reference to the RenderModelExternal structure
+	RenderModelExt & GenRenderModelData(StringIdMap & string_map);
 
 private:
 	unsigned tex_id[3];
 	unsigned list_id;
 	const VertexArray * vert_array;
-	float linesize;
 	Mat4 transform;
-	Vec3 objcenter;
+	Vec3 center;
 	float radius;
 	Vec4 color;
 	float draw_order;
+	float linesize;
 	bool decal;
 	bool drawenabled;
 	bool cull;
 	bool cull_front;
 
-	bool texturesChanged;
-	bool uniformsChanged;
+	bool textures_changed;
+	bool uniforms_changed;
+	RenderModelExtDrawable render_model;
 
-	RenderModelExtDrawable renderModel;
+	/// set render model vao
+	void SetVertexArrayObject(unsigned vao, unsigned element_count);
 };
 
 inline bool Drawable::operator < (const Drawable & other) const
@@ -148,7 +148,7 @@ inline const Mat4 & Drawable::GetTransform() const
 
 inline const Vec3 & Drawable::GetObjectCenter() const
 {
-	return objcenter;
+	return center;
 }
 
 inline float Drawable::GetRadius() const
