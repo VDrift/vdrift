@@ -77,12 +77,12 @@ bool Model::Load(const VertexArray & varray, std::ostream & error_output, bool g
 	Clear();
 
 	SetVertexArray(varray);
-	GenerateMeshMetrics();
+	GenMeshMetrics();
 
 	if (genlist)
-		GenerateListID(error_output);
+		GenDrawList(error_output);
 	else
-		GenerateVertexArrayObject(error_output);
+		GenVertexArrayObject(error_output);
 
 	return true;
 }
@@ -104,7 +104,7 @@ bool Model::WriteToFile(const std::string & filepath)
 	return Serialize(s);
 }
 
-bool Model::ReadFromFile(const std::string & filepath, std::ostream & error_output, bool generatelistid)
+bool Model::ReadFromFile(const std::string & filepath, std::ostream & error_output, bool genlist)
 {
 	std::ifstream filein(filepath.c_str(), std::ios_base::binary);
 	if (!filein)
@@ -135,22 +135,20 @@ bool Model::ReadFromFile(const std::string & filepath, std::ostream & error_outp
 		return false;
 	}
 
-	ClearListID();
+	ClearDrawList();
 	ClearMetrics();
-	GenerateMeshMetrics();
+	GenMeshMetrics();
 
-	if (generatelistid)
-		GenerateListID(error_output);
+	if (genlist)
+		GenDrawList(error_output);
 
 	return true;
 }
 
-void Model::GenerateListID(std::ostream & error_output)
+void Model::GenDrawList(std::ostream & error_output)
 {
-	if (HaveListID())
-		return;
+	ClearDrawList();
 
-	ClearListID();
 	listid = glGenLists(1);
 
 	const int * faces;
@@ -215,7 +213,7 @@ GLuint GenerateBuffer(
 	return vbo;
 }
 
-void Model::GenerateVertexArrayObject(std::ostream & error_output)
+void Model::GenVertexArrayObject(std::ostream & error_output)
 {
 	if (HaveVertexArrayObject())
 		return;
@@ -330,7 +328,7 @@ bool Model::GetVertexArrayObject(GLuint & vao_out, unsigned int & element_count_
 	return true;
 }
 
-void Model::GenerateMeshMetrics()
+void Model::GenMeshMetrics()
 {
 	const float flt_max = std::numeric_limits<float>::max();
 	const float flt_min = std::numeric_limits<float>::min();
@@ -365,9 +363,9 @@ void Model::ClearMeshData()
 	m_mesh.Clear();
 }
 
-unsigned Model::GetListID() const
+unsigned Model::GetDrawList() const
 {
-	RequireListID();
+	RequireDrawList();
 	return listid;
 }
 
@@ -397,15 +395,10 @@ bool Model::HaveMeshMetrics() const
 	return generatedmetrics;
 }
 
-bool Model::HaveListID() const
-{
-	return listid;
-}
-
 void Model::Clear()
 {
 	ClearMeshData();
-	ClearListID();
+	ClearDrawList();
 	ClearVertexArrayObject();
 	ClearMetrics();
 }
@@ -431,13 +424,13 @@ void Model::RequireMetrics() const
 	assert(generatedmetrics);
 }
 
-void Model::RequireListID() const
+void Model::RequireDrawList() const
 {
 	// Mesh id needs to be generated.
 	assert(listid);
 }
 
-void Model::ClearListID()
+void Model::ClearDrawList()
 {
 	if (listid)
 		glDeleteLists(listid, 1);

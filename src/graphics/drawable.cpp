@@ -186,10 +186,7 @@ RenderModelExt & Drawable::GenRenderModelData(StringIdMap & string_map)
 
 void Drawable::SetModel(const Model & model)
 {
-	if (model.HaveListID())
-	{
-		list_id = model.GetListID();
-	}
+	list_id = model.GetDrawList();
 
 	if (model.HaveVertexArrayObject())
 	{

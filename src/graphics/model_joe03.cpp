@@ -216,12 +216,12 @@ bool ModelJoe03::Load ( const std::string & filename, std::ostream & err_output,
 		if (genlist)
 		{
 			//optimize into a static display list
-			GenerateListID(err_output);
+			GenDrawList(err_output);
 		}
 		else
 		{
 			//optimize into vertex array/buffers
-			GenerateVertexArrayObject(err_output);
+			GenVertexArrayObject(err_output);
 		}
 	}
 	else
@@ -262,7 +262,7 @@ bool ModelJoe03::LoadFromHandle ( FILE * m_FilePointer, const JoePack * pack, st
 	ReadData ( m_FilePointer, pack, Object );
 
 	//generate metrics such as bounding box, etc
-	GenerateMeshMetrics();
+	GenMeshMetrics();
 
 	// Return a success
 	return true;

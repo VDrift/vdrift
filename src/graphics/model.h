@@ -49,11 +49,11 @@ public:
 
 	bool WriteToFile(const std::string & filepath);
 
-	bool ReadFromFile(const std::string & filepath, std::ostream & error_output, bool generatelistid=true);
+	bool ReadFromFile(const std::string & filepath, std::ostream & error_output, bool genlist);
 
-	void GenerateListID(std::ostream & error_output);
+	void GenDrawList(std::ostream & error_output);
 
-	void GenerateVertexArrayObject(std::ostream & error_output);
+	void GenVertexArrayObject(std::ostream & error_output);
 	bool HaveVertexArrayObject() const;
 	void ClearVertexArrayObject();
 
@@ -61,11 +61,11 @@ public:
 	/// Returns false if we have no vertex array object.
 	bool GetVertexArrayObject(GLuint & vao_out, unsigned int & element_count_out) const;
 
-	void GenerateMeshMetrics();
+	void GenMeshMetrics();
 
 	void ClearMeshData();
 
-	unsigned GetListID() const;
+	unsigned GetDrawList() const;
 
 	/// Get aabb size.
 	Vec3 GetSize() const;
@@ -79,8 +79,6 @@ public:
 	bool HaveMeshData() const;
 
 	bool HaveMeshMetrics() const;
-
-	bool HaveListID() const;
 
 	void Clear();
 
@@ -109,9 +107,9 @@ private:
 
 	void RequireMetrics() const;
 
-	void RequireListID() const;
+	void RequireDrawList() const;
 
-	void ClearListID();
+	void ClearDrawList();
 
 	void ClearMetrics();
 };

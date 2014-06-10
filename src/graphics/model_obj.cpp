@@ -183,9 +183,9 @@ bool ModelObj::Load(const std::string & filepath, std::ostream & error_log, bool
 	}
 
 	m_mesh.BuildFromFaces(faces);
-	GenerateMeshMetrics();
+	GenMeshMetrics();
 	if (genlist)
-		GenerateListID(error_log);
+		GenDrawList(error_log);
 
 	return true;
 }
