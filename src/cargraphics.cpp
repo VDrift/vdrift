@@ -39,12 +39,12 @@ static inline T clamp(T val, T min, T max)
 struct LoadBody
 {
 	SceneNode & topnode;
-	keyed_container<SceneNode>::handle & bodynode;
+	SceneNode::Handle & bodynode;
 	LoadDrawable & loadDrawable;
 
 	LoadBody(
 		SceneNode & topnode,
-		keyed_container<SceneNode>::handle & bodynode,
+		SceneNode::Handle & bodynode,
 		LoadDrawable & loadDrawable) :
 		topnode(topnode),
 		bodynode(bodynode),
@@ -76,7 +76,7 @@ static bool LoadWheel(
 	SceneNode & topnode,
 	std::ostream & error_output)
 {
-	keyed_container<SceneNode>::handle wheelnode = topnode.AddNode();
+	SceneNode::Handle wheelnode = topnode.AddNode();
 	ContentManager & content = loadDrawable.content;
 	const std::string& path = loadDrawable.path;
 
@@ -349,11 +349,11 @@ void CarGraphics::Update(const std::vector<float> & inputs)
 void CarGraphics::Update(const CarDynamics & dynamics)
 {
 	if (!bodynode.valid()) return;
-	assert(dynamics.GetNumBodies() == topnode.Nodes());
+	assert(dynamics.GetNumBodies() == topnode.GetNodelist().size());
 
 	unsigned i = 0;
-	keyed_container<SceneNode> & childlist = topnode.GetNodelist();
-	for (keyed_container<SceneNode>::iterator ni = childlist.begin(); ni != childlist.end(); ++ni, ++i)
+	SceneNode::List & childlist = topnode.GetNodelist();
+	for (SceneNode::List::iterator ni = childlist.begin(); ni != childlist.end(); ++ni, ++i)
 	{
 		Vec3 pos = ToMathVector<float>(dynamics.GetPosition(i));
 		Quat rot = ToQuaternion<float>(dynamics.GetOrientation(i));

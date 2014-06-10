@@ -71,8 +71,8 @@ public:
 
 private:
 	SceneNode topnode;
-	keyed_container<SceneNode>::handle bodynode;
-	keyed_container<SceneNode>::handle steernode;
+	SceneNode::Handle bodynode;
+	SceneNode::Handle steernode;
 	keyed_container<Drawable>::handle brakelights;
 	keyed_container<Drawable>::handle reverselights;
 
@@ -82,7 +82,7 @@ private:
 	// car lights
 	struct Light
 	{
-		keyed_container<SceneNode>::handle node;
+		SceneNode::Handle node;
 		keyed_container<Drawable>::handle draw;
 	};
 	std::list<Light> lights;

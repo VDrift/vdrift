@@ -69,7 +69,7 @@ public:
 
 private:
 	SceneNode hudroot;
-	keyed_container<SceneNode>::handle infonode;
+	SceneNode::Handle infonode;
 	std::tr1::shared_ptr<Texture> boxtex;
 	std::tr1::shared_ptr<Texture> bartex;
 	std::tr1::shared_ptr<Texture> progbartex;
@@ -96,7 +96,7 @@ private:
 	TextDrawable raceprompt;
 
 	// debug info
-	keyed_container<SceneNode>::handle debugnode;
+	SceneNode::Handle debugnode;
 	keyed_container<Drawable>::handle debugtextdraw1;
 	keyed_container<Drawable>::handle debugtextdraw2;
 	keyed_container<Drawable>::handle debugtextdraw3;

@@ -578,7 +578,7 @@ bool Track::Loader::LoadNode(const PTree & sec)
 			data.objects.push_back(object);
 			world.addRigidBody(object);
 
-			keyed_container<SceneNode>::handle node_handle = data.dynamic_node.AddNode();
+			SceneNode::Handle node_handle = data.dynamic_node.AddNode();
 			SceneNode & node = data.dynamic_node.GetNode(node_handle);
 			node.GetTransform().SetTranslation(position);
 			node.GetTransform().SetRotation(rotation);
@@ -824,7 +824,7 @@ std::pair<bool, bool> Track::Loader::ContinueOld()
 	// should be fixed in the model data instead
 	if (object.skybox && data.vertical_tracking_skyboxes)
 	{
-		const bool genlist = object.model->HaveListID();
+		const bool genlist = object.model->GetDrawList();
 		VertexArray va = object.model->GetVertexArray();
 		va.Translate(0, 0, -object.model->GetCenter()[2]);
 		object.model->Load(va, error_output, genlist);
@@ -977,7 +977,7 @@ void Track::Loader::CreateRacingLine(const RoadStrip & strip)
 	data.textures.insert(texture);
 
 	// get model genlist setting hack
-	const bool genlist = content.getFactory<Model>().getDefault()->HaveListID();
+	const bool genlist = content.getFactory<Model>().getDefault()->GetDrawList();
 
 	// calculate batch size per drawable
 	const size_t batch_max_size = 256;

@@ -46,7 +46,7 @@ LoadDrawable::LoadDrawable(
 bool LoadDrawable::operator()(
 	const PTree & cfg,
 	SceneNode & topnode,
-	keyed_container<SceneNode>::handle * nodehandle,
+	SceneNode::Handle * nodehandle,
 	keyed_container<Drawable>::handle * drawhandle)
 {
 	std::vector<std::string> texname;
@@ -63,7 +63,7 @@ bool LoadDrawable::operator()(
 	const std::vector<std::string> & texname,
 	const PTree & cfg,
 	SceneNode & topnode,
-	keyed_container<SceneNode>::handle * nodeptr,
+	SceneNode::Handle * nodeptr,
 	keyed_container<Drawable>::handle * drawptr)
 {
 	Drawable drawable;
@@ -149,7 +149,7 @@ bool LoadDrawable::operator()(
 		if (node == &topnode)
 		{
 			// position relative to parent, create child node
-			keyed_container <SceneNode>::handle nodehandle = topnode.AddNode();
+			SceneNode::Handle nodehandle = topnode.AddNode();
 			node = &topnode.GetNode(nodehandle);
 		}
 		node->GetTransform().SetTranslation(pos);
