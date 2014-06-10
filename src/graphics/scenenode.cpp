@@ -57,7 +57,7 @@ void SceneNode::DebugPrint(std::ostream & out, int curdepth) const
 {
 	for (int i = 0; i < curdepth; i++)
 		out << "-";
-	out << "Children: " << Nodes() << ", Drawables: " << Drawables() << std::endl;
+	out << "Children: " << childlist.size() << ", Drawables: " << drawlist.size() << std::endl;
 
 	for (List::const_iterator i = childlist.begin(); i != childlist.end(); ++i)
 	{

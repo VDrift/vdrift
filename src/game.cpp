@@ -455,9 +455,6 @@ void TraverseScene(SceneNode & node, Graphics::DynamicDrawables & output)
 
 	Mat4 identity;
 	node.Traverse(output, identity);
-
-	//std::cout << output.size() << std::endl;
-	//std::cout << node.Nodes() << "," << node.Drawables() << std::endl;
 }
 
 void Game::InitPlayerCar()
