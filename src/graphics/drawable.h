@@ -117,12 +117,7 @@ inline bool Drawable::operator < (const Drawable & other) const
 {
 	return draw_order < other.draw_order;
 }
-/*
-inline unsigned Drawable::GetDrawList() const
-{
-	return list_id;
-}
-*/
+
 inline unsigned Drawable::GetTexture0() const
 {
 	return tex_id[0];
