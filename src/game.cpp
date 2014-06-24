@@ -119,7 +119,7 @@ Game::Game(std::ostream & info_out, std::ostream & error_out) :
 	replay(timestep),
 	http("/tmp")
 {
-	carcontrols_local.first = 0;
+	carcontrols_local.first = NULL;
 	dynamics.setContactAddedCallback(&CarDynamics::WheelContactCallback);
 	RegisterActions();
 }
@@ -1833,6 +1833,7 @@ void Game::SetGarageCar()
 
 	// clear previous car
 	cars.clear();
+	carcontrols_local.first = NULL;
 
 	// remove previous car sounds
 	sound.Update(true);
