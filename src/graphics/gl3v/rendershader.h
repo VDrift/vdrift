@@ -28,8 +28,8 @@ struct RenderShader
 {
 	GLuint handle;
 
-    // for debug only
-    std::set <std::string> defines;
+	// for debug only
+	std::set <std::string> defines;
 };
 
 #endif

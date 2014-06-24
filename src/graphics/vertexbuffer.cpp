@@ -125,7 +125,7 @@ struct VertexBuffer::BindVertexData
 
 		// get object
 		std::vector<Object> & obs = ctx.objects[vf];
-        if (obs.empty() || (obs.back().vcount + vcount) * VertexFormat::Get(vf).stride > max_buffer_size)
+		if (obs.empty() || (obs.back().vcount + vcount) * VertexFormat::Get(vf).stride > max_buffer_size)
 		{
 			obs.push_back(Object());
 			assert(obs.size() <= max_object_count);
@@ -133,7 +133,7 @@ struct VertexBuffer::BindVertexData
 		Object & ob = obs.back();
 
 		// set object buffers
-        if (ob.vbuffer == 0)
+		if (ob.vbuffer == 0)
 		{
 			glGenBuffers(1, &ob.ibuffer);
 			glGenBuffers(1, &ob.vbuffer);
@@ -318,7 +318,7 @@ void VertexBuffer::Draw(unsigned int & vobject, const Segment & s)
 
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ob.ibuffer);
 			glBindBuffer(GL_ARRAY_BUFFER, ob.vbuffer);
-            SetVertexFormat(VertexFormat::Get(ob.vformat));
+			SetVertexFormat(VertexFormat::Get(ob.vformat));
 			vobject = ob.vbuffer;
 		}
 	}

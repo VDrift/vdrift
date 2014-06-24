@@ -26,35 +26,35 @@
 
 std::string strLTrim(std::string instr)
 {
-        return instr.erase(0, instr.find_first_not_of(" \t\r\377"));
+	return instr.erase(0, instr.find_first_not_of(" \t\r\377"));
 }
 
 std::string strRTrim(std::string instr)
 {
-        if (instr.find_last_not_of(" \t\r\377") != std::string::npos)
-                return instr.erase(instr.find_last_not_of(" \t\r\377") + 1);
-        else
-                return instr;
+	if (instr.find_last_not_of(" \t\r\377") != std::string::npos)
+		return instr.erase(instr.find_last_not_of(" \t\r\377") + 1);
+	else
+		return instr;
 }
 
 std::string strTrim(std::string instr)
 {
-        return strLTrim(strRTrim(instr));
+	return strLTrim(strRTrim(instr));
 }
 
 std::string getTrimmedLine(std::istream & in)
 {
-        std::string linestr;
-        std::getline(in, linestr);
-        return strTrim(linestr);
+	std::string linestr;
+	std::getline(in, linestr);
+	return strTrim(linestr);
 }
 
 std::string peekTrimmedLine(std::istream & in)
 {
-        std::streampos pos = in.tellg();
-        std::string line = getTrimmedLine(in);
-        in.seekg(pos);
-        return line;
+	std::streampos pos = in.tellg();
+	std::string line = getTrimmedLine(in);
+	in.seekg(pos);
+	return line;
 }
 
 const char comment = ';';

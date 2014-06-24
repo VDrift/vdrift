@@ -77,10 +77,10 @@ bool GraphicsGL3::Init(
 	ADDCONDITION(shadows);
 	#undef ADDCONDITION
 
-    if (reflection_type >= 1)
-        conditions.insert("reflections_low");
-    if (reflection_type >= 2)
-        conditions.insert("reflections_high");
+	if (reflection_type >= 1)
+		conditions.insert("reflections_low");
+	if (reflection_type >= 2)
+		conditions.insert("reflections_high");
 
 	// load the reflection cubemap
 	if (!static_reflectionmap_file.empty())
