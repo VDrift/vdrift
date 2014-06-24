@@ -213,12 +213,7 @@ bool ModelJoe03::Load ( const std::string & filename, std::ostream & err_output,
 
 	if (val)
 	{
-		if (genlist)
-		{
-			//optimize into a static display list
-			GenDrawList(err_output);
-		}
-		else
+		if (!genlist)
 		{
 			//optimize into vertex array/buffers
 			GenVertexArrayObject(err_output);
@@ -473,9 +468,10 @@ void ModelJoe03::ReadData ( FILE * m_FilePointer, const JoePack * pack, JoeObjec
 		cout << v_vertices[i*3] << "," << v_vertices[i*3+1] << "," << v_vertices[i*3+2] << endl;*/
 
 	//assign to our mesh
-	m_mesh.SetFaces(&v_faces[0], v_faces.size());
-	m_mesh.SetVertices(&v_vertices[0], v_vertices.size());
-	m_mesh.SetNormals(&v_normals[0], v_normals.size());
-	m_mesh.SetTexCoords(&v_texcoords[0], v_texcoords.size());
+	m_mesh.Add(
+		&v_faces[0], v_faces.size(),
+		&v_vertices[0], v_vertices.size(),
+		&v_texcoords[0], v_texcoords.size(),
+		&v_normals[0], v_normals.size());
 }
 

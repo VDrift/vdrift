@@ -184,8 +184,8 @@ bool ModelObj::Load(const std::string & filepath, std::ostream & error_log, bool
 
 	m_mesh.BuildFromFaces(faces);
 	GenMeshMetrics();
-	if (genlist)
-		GenDrawList(error_log);
+	if (!genlist)
+		GenVertexArrayObject(error_log);
 
 	return true;
 }

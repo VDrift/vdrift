@@ -226,6 +226,7 @@ GraphicsGL2::GraphicsGL2() :
 	contrast(1.0),
 	reflection_status(REFLECTION_DISABLED),
 	renderconfigfile("basic.conf"),
+	renderscene(vertex_buffer),
 	sky_dynamic(false)
 {
 	// ctor
@@ -375,6 +376,11 @@ void GraphicsGL2::Deinit()
 		glUseProgram(0);
 		shaders.clear();
 	}
+}
+
+void GraphicsGL2::BindVertexData(SceneNode * nodes[], unsigned int nodes_count)
+{
+	vertex_buffer.Set(nodes, nodes_count);
 }
 
 Graphics::DynamicDrawables & GraphicsGL2::GetDynamicDrawlist()
@@ -543,6 +549,13 @@ void GraphicsGL2::DrawScene(std::ostream & error_output)
 	{
 		CullScenePass(*i, culled_static_drawlist, error_output);
 	}
+
+	// vertex object might have been modified ouside, reset it
+	if (glBindVertexArray)
+		glBindVertexArray(0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glstate.VertexObject() = 0;
 
 	// draw the passes
 	for (std::vector <GraphicsConfigPass>::const_iterator i = config.passes.begin(); i != config.passes.end(); i++)

@@ -61,6 +61,7 @@ public:
 		tuactive(0),
 		fbread(0),
 		fbdraw(0),
+		vobject(0),
 		vpwidth(0),
 		vpheight(0),
 		blendsource(GL_ZERO),
@@ -246,6 +247,11 @@ public:
 		}
 	}
 
+	GLuint & VertexObject()
+	{
+		return vobject;
+	}
+
 private:
 	//struct TexUnit {GLenum target; GLuint texture; bool enable};
 	GLenum tutgt[16];   // texture unit target
@@ -253,6 +259,7 @@ private:
 	GLuint tuactive;
 	GLuint fbread;
 	GLuint fbdraw;
+	GLuint vobject;		// currently bound vertex buffer/array object
 	int vpwidth;
 	int vpheight;
 	GLenum blendsource;

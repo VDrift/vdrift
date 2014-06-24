@@ -18,21 +18,19 @@
 /************************************************************************/
 
 #include "model.h"
-#include "utils.h"
 #include "vertexattrib.h"
 #include "glutil.h"
+#include "glew.h"
+#include "utils.h"
 #include <limits>
-
-using namespace VertexAttrib;
 
 #define ERROR_CHECK CheckForOpenGLErrors(std::string(__PRETTY_FUNCTION__)+":"+__FILE__+":"+Utils::tostr(__LINE__), error_output)
 
 static const std::string file_magic = "OGLVARRAYV01";
 
 Model::Model() :
-	vao(0),
 	element_count(0),
-	listid(0),
+	vao(0),
 	radius(0),
 	generatedmetrics(false)
 {
@@ -40,9 +38,8 @@ Model::Model() :
 }
 
 Model::Model(const std::string & filepath, std::ostream & error_output) :
-	vao(0),
 	element_count(0),
-	listid(0),
+	vao(0),
 	radius(0),
 	generatedmetrics(false)
 {
@@ -76,12 +73,11 @@ bool Model::Load(const VertexArray & varray, std::ostream & error_output, bool g
 {
 	Clear();
 
-	SetVertexArray(varray);
+	m_mesh = varray;
+
 	GenMeshMetrics();
 
-	if (genlist)
-		GenDrawList(error_output);
-	else
+	if (!genlist)
 		GenVertexArrayObject(error_output);
 
 	return true;
@@ -135,63 +131,12 @@ bool Model::ReadFromFile(const std::string & filepath, std::ostream & error_outp
 		return false;
 	}
 
-	ClearDrawList();
-	ClearMetrics();
 	GenMeshMetrics();
 
-	if (genlist)
-		GenDrawList(error_output);
+	if (!genlist)
+		GenVertexArrayObject(error_output);
 
 	return true;
-}
-
-void Model::GenDrawList(std::ostream & error_output)
-{
-	ClearDrawList();
-
-	listid = glGenLists(1);
-
-	const int * faces;
-	const float * verts;
-	const float * norms;
-	const float * tcos;
-	int fcount;
-	int vcount;
-	int ncount;
-	int tcount;
-
-	m_mesh.GetFaces(faces, fcount);
-	m_mesh.GetVertices(verts, vcount);
-	m_mesh.GetNormals(norms, ncount);
-	m_mesh.GetTexCoords(tcos, tcount);
-
-	assert(fcount > 0);
-	assert(vcount > 0);
-
-	glEnableVertexAttribArray(VertexPosition);
-	glVertexAttribPointer(VertexPosition, 3, GL_FLOAT, GL_FALSE, 0, verts);
-	if (ncount)
-	{
-		glEnableVertexAttribArray(VertexNormal);
-		glVertexAttribPointer(VertexNormal, 3, GL_FLOAT, GL_FALSE, 0, norms);
-	}
-	if (tcount)
-	{
-		glEnableVertexAttribArray(VertexTexCoord);
-		glVertexAttribPointer(VertexTexCoord, 2, GL_FLOAT, GL_FALSE, 0, tcos);
-	}
-
-	glNewList(listid, GL_COMPILE);
-	glDrawElements(GL_TRIANGLES, fcount, GL_UNSIGNED_INT, faces);
-	glEndList();
-
-	glDisableVertexAttribArray(VertexPosition);
-	if (ncount)
-		glDisableVertexAttribArray(VertexNormal);
-	if (tcount)
-		glDisableVertexAttribArray(VertexTexCoord);
-
-	CheckForOpenGLErrors("model list ID generation", error_output);
 }
 
 template <typename T>
@@ -215,6 +160,8 @@ GLuint GenerateBuffer(
 
 void Model::GenVertexArrayObject(std::ostream & error_output)
 {
+	using namespace VertexAttrib;
+
 	if (HaveVertexArrayObject())
 		return;
 
@@ -317,7 +264,7 @@ void Model::ClearVertexArrayObject()
 	}
 }
 
-bool Model::GetVertexArrayObject(GLuint & vao_out, unsigned int & element_count_out) const
+bool Model::GetVertexArrayObject(unsigned & vao_out, unsigned int & element_count_out) const
 {
 	if (!HaveVertexArrayObject())
 		return false;
@@ -358,17 +305,6 @@ void Model::GenMeshMetrics()
 	generatedmetrics = true;
 }
 
-void Model::ClearMeshData()
-{
-	m_mesh.Clear();
-}
-
-unsigned Model::GetDrawList() const
-{
-	RequireDrawList();
-	return listid;
-}
-
 Vec3 Model::GetSize() const
 {
 	return max - min;
@@ -385,20 +321,9 @@ float Model::GetRadius() const
 	return radius;
 }
 
-bool Model::HaveMeshData() const
-{
-	return (m_mesh.GetNumFaces() > 0);
-}
-
-bool Model::HaveMeshMetrics() const
-{
-	return generatedmetrics;
-}
-
 void Model::Clear()
 {
 	ClearMeshData();
-	ClearDrawList();
 	ClearVertexArrayObject();
 	ClearMetrics();
 }
@@ -408,14 +333,9 @@ const VertexArray & Model::GetVertexArray() const
 	return m_mesh;
 }
 
-void Model::SetVertexArray(const VertexArray & newmesh)
+bool Model::Loaded() const
 {
-	m_mesh = newmesh;
-}
-
-bool Model::Loaded()
-{
-	return (m_mesh.GetNumFaces() > 0);
+	return (m_mesh.GetNumIndices() > 0);
 }
 
 void Model::RequireMetrics() const
@@ -424,20 +344,12 @@ void Model::RequireMetrics() const
 	assert(generatedmetrics);
 }
 
-void Model::RequireDrawList() const
-{
-	// Mesh id needs to be generated.
-	assert(listid);
-}
-
-void Model::ClearDrawList()
-{
-	if (listid)
-		glDeleteLists(listid, 1);
-	listid = 0;
-}
-
 void Model::ClearMetrics()
 {
 	generatedmetrics = false;
+}
+
+void Model::ClearMeshData()
+{
+	m_mesh.Clear();
 }

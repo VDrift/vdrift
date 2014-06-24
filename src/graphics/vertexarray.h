@@ -20,11 +20,11 @@
 #ifndef _VERTEXARRAY_H
 #define _VERTEXARRAY_H
 
+#include "vertexformat.h"
 #include "joeserialize.h"
 #include "macros.h"
 
 #include <vector>
-#include <cassert>
 
 class ModelObj;
 
@@ -49,24 +49,18 @@ public:
 
 	void GetFaces(const int * & output_array_pointer, int & output_array_num) const;
 
-	int GetNumFaces() const { return faces.size(); }
+	int GetNumVertices() const { return vertices.size() / 3; }
 
-	void SetColors(const unsigned char array[], size_t count, size_t offset = 0);
+	int GetNumIndices() const { return faces.size(); }
 
-	void SetTexCoords(const float array[], size_t count, size_t offset = 0);
-
-	void SetNormals(const float array[], size_t count, size_t offset = 0);
-
-	void SetVertices(const float array[], size_t count, size_t offset = 0);
-
-	void SetFaces(const int array[], size_t count, size_t offset = 0, size_t idoffset = 0);
+	VertexFormat::Enum GetVertexFormat() const { return format; }
 
 	void Add(
-		const unsigned char newcol[], int newcolcount,
-		const float newnorm[], int newnormcount,
-		const float newvert[], int newvertcount,
 		const int newfaces[], int newfacecount,
-		const float newtc[], int newtccount);
+		const float newvert[], int newvertcount,
+		const float newtco[] = 0, int newtcocount = 0,
+		const float newnorm[] = 0, int newnormcount = 0,
+		const unsigned char newcol[] = 0, int newcolcount = 0);
 
 	/// helper functions
 
@@ -173,6 +167,17 @@ private:
 	std::vector <float> normals;
 	std::vector <float> vertices;
 	std::vector <int> faces;
+	VertexFormat::Enum format;
+
+	void SetColors(const unsigned char array[], size_t count, size_t offset = 0);
+
+	void SetTexCoords(const float array[], size_t count, size_t offset = 0);
+
+	void SetNormals(const float array[], size_t count, size_t offset = 0);
+
+	void SetVertices(const float array[], size_t count, size_t offset = 0);
+
+	void SetFaces(const int array[], size_t count, size_t offset = 0, size_t idoffset = 0);
 };
 
 #endif

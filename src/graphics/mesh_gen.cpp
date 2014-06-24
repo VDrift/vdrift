@@ -724,10 +724,11 @@ void mg_tire(VertexArray & tire, float sectionWidth_mm, float aspectRatio, float
 
 	//////////////////////////////////////////////
 	// VERTEXARRAY will copy this data
-	tire.SetFaces(&triData.front(), triVIndexCount);
-	tire.SetVertices(&vertexData.front(), vertexFloatCount);
-	tire.SetNormals(&normalData.front(), vertexFloatCount);
-	tire.SetTexCoords(&texData.front(), texCoordFloats);
+	tire.Add(
+		&triData.front(), triVIndexCount,
+		&vertexData.front(), vertexFloatCount,
+		&texData.front(), texCoordFloats,
+		&normalData.front(), vertexFloatCount);
 
 	//printf("tire created: v=%u, tri=%u\n", vertexCount, (triVIndexCount/3));
 }
@@ -1190,10 +1191,11 @@ void mg_rim(VertexArray & rim, float sectionWidth_mm, float aspectRatio, float r
 
 	//////////////////////////////////////////////
 	// VERTEXARRAY will copy this data
-	rim.SetFaces(&triData.front(), triVIndexCount);
-	rim.SetVertices(&vertexData.front(), vertexFloatCount);
-	rim.SetNormals(&normalData.front(), vertexFloatCount);
-	rim.SetTexCoords(&texData.front(), texCoordFloats);
+	rim.Add(
+		&triData.front(), triVIndexCount,
+		&vertexData.front(), vertexFloatCount,
+		&texData.front(), texCoordFloats,
+		&normalData.front(), vertexFloatCount);
 
 	//	printf("wheel_edge created: v=%u, tri=%u\n", vertexCount, (triVIndexCount/3) );
 
@@ -1230,8 +1232,8 @@ void mg_brake_rotor(VertexArray & rotor, float diameter_mm, float thickness_mm)
     unsigned int vertexCount = vertexesAround*4;            // the two caps have 1 extra vertex in the center.  each ring of the sides has one extra dupe vertex for the texture map to wrap correctly
     unsigned int vertexFloatCount = vertexCount *3;
 
-    float *vertexData = new float[vertexFloatCount];
-
+    std::vector<float> vertexData;
+    vertexData.resize(vertexFloatCount);
 
     // first cap, first vertex
     vertexData[0+0] = -1.0f * thickness_m / 2.0f;
@@ -1300,7 +1302,9 @@ void mg_brake_rotor(VertexArray & rotor, float diameter_mm, float thickness_mm)
     unsigned int trianglesPerStrip = segmentsAround * 2;
 
 	unsigned int triVIndexCount = (2*trianglesPerCap + 2*trianglesPerStrip) * 3;
-	unsigned int *triData = new unsigned int [ triVIndexCount ];
+
+	std::vector<unsigned int> triData;
+	triData.resize(triVIndexCount);
 
 	unsigned int triIndex = 0;
 
@@ -1396,7 +1400,8 @@ void mg_brake_rotor(VertexArray & rotor, float diameter_mm, float thickness_mm)
     ///////////////////////////////////////////
     // texture coordinates
     unsigned int texCoordFloats = vertexCount * 2;
-    float *texData = new float[ texCoordFloats ];
+    std::vector<float> texData;
+	texData.resize(texCoordFloats);
 
 
     // first cap, first texcoord
@@ -1466,18 +1471,8 @@ void mg_brake_rotor(VertexArray & rotor, float diameter_mm, float thickness_mm)
 
     /////////////////////////////////////////
     // finally vertex normals
-    float *normalData = new float[vertexFloatCount];
-
-
-
-    //////////////////////
-    // zero everything out
-    /*for ( unsigned int nzlv=0 ; nzlv<vertexFloatCount ; nzlv++)
-    {
-        normalData[nzlv] = 0;
-    }*/
-
-
+    std::vector<float> normalData;
+    normalData.resize(vertexFloatCount);
 
 
     for ( unsigned int nlv=0 ; nlv<vertexCount ; nlv++ )
@@ -1514,17 +1509,11 @@ void mg_brake_rotor(VertexArray & rotor, float diameter_mm, float thickness_mm)
     }
 
 
-
-	rotor.SetFaces((int*)triData, triVIndexCount);
-	rotor.SetVertices(vertexData, vertexFloatCount);
-	rotor.SetNormals(normalData, vertexFloatCount);
-	rotor.SetTexCoords(texData, texCoordFloats);
-
-	// free up the temp data
-	delete[] vertexData;
-	delete[] triData;
-	delete[] texData;
-	delete[] normalData;
+	rotor.Add(
+		(int *)&triData.front(), triVIndexCount,
+		&vertexData.front(), vertexFloatCount,
+		&texData.front(), texCoordFloats,
+		&normalData.front(), vertexFloatCount);
 }
 
 

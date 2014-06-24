@@ -17,44 +17,26 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _VERTEX_ATTRIB_H
-#define _VERTEX_ATTRIB_H
+#ifndef _VERTEX_FORMAT_H
+#define _VERTEX_FORMAT_H
 
-namespace VertexAttrib
+#include "vertexattrib.h"
+
+struct VertexFormat
 {
-	struct Format
-	{
-		int index;	///< attribute id <= LastAttrib
-		int size;	///< 1 to 4 components
-		int type;	///< component type GL_BYTE, GL_SHORT, GL_FLOAT ...
-		int offset;	///< attribute byte offset in the vertex
-		bool norm;	///< normalize attribute to the range [-1, 1] or [0, 1]
-	};
+	VertexAttrib::Format attribs[VertexAttrib::LastAttrib + 1];	///< unused attribs have size 0
+	unsigned int stride;										///< cached vertex size
 
+	/// predefined vertex formats
 	enum Enum
 	{
-		VertexPosition,
-		VertexNormal,
-		VertexTangent,
-		VertexBitangent,
-		VertexTexCoord,
-		VertexBlendIndices,
-		VertexBlendWeights,
-		VertexColor,
-		LastAttrib = VertexColor
+		PNT332,
+		PTC324,
+		PT32,
+		P3,
+		LastFormat = P3
 	};
+	static const VertexFormat & Get(Enum e);
+};
 
-	static const char * const str[] =
-	{
-		"VertexPosition",
-		"VertexNormal",
-		"VertexTangent",
-		"VertexBitangent",
-		"VertexTexCoord",
-		"VertexBlendIndices",
-		"VertexBlendWeights",
-		"VertexColor"
-	};
-}
-
-#endif // _VERTEX_ATTRIB_H
+#endif // _VERTEX_FORMAT_H

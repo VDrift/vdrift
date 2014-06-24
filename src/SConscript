@@ -82,6 +82,8 @@ src = Split("""
 		graphics/sky.cpp
 		graphics/texture.cpp
 		graphics/vertexarray.cpp
+		graphics/vertexbuffer.cpp
+		graphics/vertexformat.cpp
 		gui/font.cpp
 		gui/guicontrol.cpp
 		gui/guicontrollist.cpp

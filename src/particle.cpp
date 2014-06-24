@@ -177,7 +177,7 @@ void ParticleSystem::UpdateGraphics(
 			255, 255, 255, alpha,
 		};
 
-		varrays[cur_varray].Add(cols, 16, 0, 0, verts, 12, faces, 6, uvs, 8);
+		varrays[cur_varray].Add(faces, 6, verts, 12, uvs, 8, 0, 0, cols, 16);
 	}
 }
 
@@ -188,7 +188,7 @@ void ParticleSystem::SyncGraphics()
 
 	Drawable & drawref = GetDrawlist(node).get(draw);
 	drawref.SetVertArray(&varrays[cur_varray]);
-	drawref.SetDrawEnable(varrays[cur_varray].GetNumFaces());
+	drawref.SetDrawEnable(varrays[cur_varray].GetNumIndices());
 	cur_varray = (cur_varray + 1) % 2;
 }
 

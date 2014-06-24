@@ -43,7 +43,7 @@ float TextDraw::RenderCharacter(
 	const float t[] = {u1, v1, u2, v1, u2, v2, u1, v2};
 	const int f[] = {0, 1, 2, 0, 2, 3};
 
-	output_array.Add(0, 0, 0, 0, v, 12, f, 6, t, 8);
+	output_array.Add(f, 6, v, 12, t, 8);
 
 	return ci->xadvance * invsize * scalex;
 }

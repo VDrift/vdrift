@@ -203,9 +203,14 @@ void Sky::Draw(unsigned elems, const unsigned faces[], const float pos[], const 
 	fbo.SetCubeSide(side_enum[side_updated]);
 	fbo.Begin(graphics.GetState(), error_output);
 
-	// draw
-	glBindVertexArray(0);
+	// reset buffer state
+	if (glBindVertexArray)
+		glBindVertexArray(0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	graphics.GetState().VertexObject() = 0;
 
+	// draw
 	glEnableVertexAttribArray(VertexPosition);
 	glEnableVertexAttribArray(VertexTexCoord);
 

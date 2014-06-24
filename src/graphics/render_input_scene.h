@@ -33,11 +33,12 @@ class Drawable;
 class VertexArray;
 class TextureInterface;
 class Shader;
+class VertexBuffer;
 
 class RenderInputScene : public RenderInput
 {
 public:
-	RenderInputScene();
+	RenderInputScene(VertexBuffer & buffer);
 
 	~RenderInputScene();
 
@@ -72,6 +73,7 @@ public:
 	virtual void Render(GraphicsState & glstate, std::ostream & error_output);
 
 private:
+	VertexBuffer & vertex_buffer;
 	reseatable_reference <const std::vector <Drawable*> > dynamic_drawlist_ptr;
 	reseatable_reference <const std::vector <Drawable*> > static_drawlist_ptr;
 	bool last_transform_valid;

@@ -23,8 +23,8 @@
 #include <cmath>
 
 Drawable::Drawable() :
-	list_id(0),
 	vert_array(NULL),
+	model(NULL),
 	center(0),
 	radius(0),
 	color(1),
@@ -184,15 +184,14 @@ RenderModelExt & Drawable::GenRenderModelData(StringIdMap & string_map)
 	return render_model;
 }
 
-void Drawable::SetModel(const Model & model)
+void Drawable::SetModel(Model & newmodel)
 {
-	list_id = model.GetDrawList();
-
-	if (model.HaveVertexArrayObject())
+	model = &newmodel;
+	if (model->HaveVertexArrayObject())
 	{
 		GLuint vao = 0;
 		unsigned int element_count = 0;
-		bool have_vao = model.GetVertexArrayObject(vao, element_count);
+		bool have_vao = model->GetVertexArrayObject(vao, element_count);
 		if (have_vao)
 			SetVertexArrayObject(vao, element_count);
 	}

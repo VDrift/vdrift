@@ -109,6 +109,11 @@ void GraphicsGL3::Deinit()
 	renderer.clear();
 }
 
+void GraphicsGL3::BindVertexData(SceneNode * nodes[], unsigned int nodes_count)
+{
+	// todo
+}
+
 Graphics::DynamicDrawables & GraphicsGL3::GetDynamicDrawlist()
 {
 	return dynamic_drawlist;

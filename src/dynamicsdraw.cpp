@@ -45,12 +45,8 @@ void DynamicsDraw::drawLine(
 	const btVector3& to,
 	const btVector3& color)
 {
-	int vcount = 6;
 	float verts[6] = {from.x(), from.y(), from.z(), to.x(), to.y(), to.z()};
-	int vsize;
-	const float* vbase;
-	m_shapes.GetVertices(vbase, vsize);
-	m_shapes.SetVertices(verts, vcount, vsize);
+	m_shapes.Add(0, 0, verts, 6);
 }
 
 void DynamicsDraw::drawContactPoint(
@@ -63,12 +59,8 @@ void DynamicsDraw::drawContactPoint(
 	btVector3 from = pointOnB;
 	btVector3 to = pointOnB + normalOnB;
 
-	int vcount = 6;
 	float verts[6] = {from.x(), from.y(), from.z(), to.x(), to.y(), to.z()};
-	int vsize;
-	const float* vbase;
-	m_contacts.GetVertices(vbase, vsize);
-	m_contacts.SetVertices(verts, vcount, vsize);
+	m_contacts.Add(0, 0, verts, 6);
 }
 
 void DynamicsDraw::reportErrorWarning(const char* warningString)

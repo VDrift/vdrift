@@ -62,6 +62,8 @@ public:
 
 	virtual void Deinit();
 
+	virtual void BindVertexData(SceneNode * nodes[], unsigned int nodes_count);
+
 	virtual DynamicDrawables & GetDynamicDrawlist();
 
 	virtual void AddStaticNode(SceneNode & node, bool clearcurrent = true);
@@ -138,6 +140,9 @@ private:
 	// shaders
 	typedef std::map <std::string, Shader> shader_map_type;
 	shader_map_type shaders;
+
+	// vertex data buffer
+	VertexBuffer vertex_buffer;
 
 	// scenegraph output
 	DynamicDrawables dynamic_drawlist; //used for objects that move or change

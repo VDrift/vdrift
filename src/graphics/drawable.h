@@ -21,6 +21,7 @@
 #define _DRAWABLE_H
 
 #include "rendermodelext_drawable.h"
+#include "vertexbuffer.h"
 #include "mathvector.h"
 #include "matrix4.h"
 
@@ -34,9 +35,6 @@ public:
 	Drawable();
 
 	bool operator < (const Drawable & other) const;
-
-	unsigned GetDrawList() const;
-	void SetModel(const Model & model);
 
 	unsigned GetTexture0() const;
 	unsigned GetTexture1() const;
@@ -83,10 +81,19 @@ public:
 	/// returns a reference to the RenderModelExternal structure
 	RenderModelExt & GenRenderModelData(StringIdMap & string_map);
 
+	Model * GetModel() const;
+	void SetModel(Model & newmodel);
+
+	/// vertex buffer interface
+	const VertexBuffer::Segment & GetVertexBufferSegment() const;
+	void SetVertexBufferSegment(const VertexBuffer::Segment & segment);
+
 private:
 	unsigned tex_id[3];
-	unsigned list_id;
+	VertexBuffer::Segment vsegment;
 	const VertexArray * vert_array;
+	Model * model;
+
 	Mat4 transform;
 	Vec3 center;
 	float radius;
@@ -110,12 +117,12 @@ inline bool Drawable::operator < (const Drawable & other) const
 {
 	return draw_order < other.draw_order;
 }
-
+/*
 inline unsigned Drawable::GetDrawList() const
 {
 	return list_id;
 }
-
+*/
 inline unsigned Drawable::GetTexture0() const
 {
 	return tex_id[0];
@@ -189,6 +196,21 @@ inline bool Drawable::GetCull() const
 inline bool Drawable::GetCullFront() const
 {
 	return cull_front;
+}
+
+inline Model * Drawable::GetModel() const
+{
+	return model;
+}
+
+inline const VertexBuffer::Segment & Drawable::GetVertexBufferSegment() const
+{
+	return vsegment;
+}
+
+inline void Drawable::SetVertexBufferSegment(const VertexBuffer::Segment & segment)
+{
+	vsegment = segment;
 }
 
 #endif // _DRAWABLE_H

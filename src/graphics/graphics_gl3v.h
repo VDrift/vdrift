@@ -65,6 +65,8 @@ public:
 
 	virtual void Deinit();
 
+	virtual void BindVertexData(SceneNode * nodes[], unsigned int nodes_count);
+
 	virtual DynamicDrawables & GetDynamicDrawlist();
 
 	virtual void AddStaticNode(SceneNode & node, bool clearcurrent = true);

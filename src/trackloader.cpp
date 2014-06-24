@@ -824,10 +824,10 @@ std::pair<bool, bool> Track::Loader::ContinueOld()
 	// should be fixed in the model data instead
 	if (object.skybox && data.vertical_tracking_skyboxes)
 	{
-		const bool genlist = object.model->GetDrawList();
+		const bool vao = object.model->HaveVertexArrayObject();
 		VertexArray va = object.model->GetVertexArray();
 		va.Translate(0, 0, -object.model->GetCenter()[2]);
-		object.model->Load(va, error_output, genlist);
+		object.model->Load(va, error_output, !vao);
 	}
 
 	if (!AddObject(object))
@@ -976,8 +976,8 @@ void Track::Loader::CreateRacingLine(const RoadStrip & strip)
 	content.load(texture, texturedir, "racingline.png", TextureInfo());
 	data.textures.insert(texture);
 
-	// get model genlist setting hack
-	const bool genlist = content.getFactory<Model>().getDefault()->GetDrawList();
+	// get model vao setting hack
+	const bool vao = content.getFactory<Model>().getDefault()->HaveVertexArrayObject();
 
 	// calculate batch size per drawable
 	const size_t batch_max_size = 256;
@@ -1009,13 +1009,15 @@ void Track::Loader::CreateRacingLine(const RoadStrip & strip)
 		AddRacingLineSegment<false>(strip.GetPatches()[mc], vertices, texcoords, faces, line_center, line_length);
 
 		// set vertex array
-		vertex_array.SetVertices(&vertices[0], vertices.size());
-		vertex_array.SetTexCoords(&texcoords[0], texcoords.size());
-		vertex_array.SetFaces(&faces[0], faces.size());
+		vertex_array.Clear();
+		vertex_array.Add(
+			&faces[0], faces.size(),
+			&vertices[0], vertices.size(),
+			&texcoords[0], texcoords.size());
 
 		// create model
 		std::tr1::shared_ptr<Model> model(new Model());
-		model->Load(vertex_array, error_output, genlist);
+		model->Load(vertex_array, error_output, !vao);
 		data.models.insert(model);
 
 		// register drawable

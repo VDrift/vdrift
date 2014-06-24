@@ -28,7 +28,8 @@
 #include "vertexarray.h"
 #include "glutil.h"
 
-RenderInputScene::RenderInputScene():
+RenderInputScene::RenderInputScene(VertexBuffer & buffer):
+	vertex_buffer(buffer),
 	last_transform_valid(false),
 	lod_far(1000),
 	shader(NULL),
@@ -205,12 +206,21 @@ void RenderInputScene::Draw(GraphicsState & glstate, const std::vector <Drawable
 
 			SetTransform(d, glstate);
 
-			if (d.GetDrawList())
+			if (!d.GetVertArray())
 			{
-				glCallList(d.GetDrawList());
+				vertex_buffer.Draw(glstate.VertexObject(), d.GetVertexBufferSegment());
 			}
-			else if (d.GetVertArray())
+			else
 			{
+				// reset buffer state
+				if (glstate.VertexObject())
+				{
+					if (glBindVertexArray)
+						glBindVertexArray(0);
+					glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+					glBindBuffer(GL_ARRAY_BUFFER, 0);
+					glstate.VertexObject() = 0;
+				}
 				DrawVertexArray(*d.GetVertArray(), d.GetLineSize());
 			}
 		}
@@ -226,7 +236,6 @@ void RenderInputScene::DrawVertexArray(const VertexArray & va, float linesize) c
 	va.GetVertices(verts, vcount);
 	if (verts)
 	{
-
 		glVertexAttribPointer(VertexPosition, 3, GL_FLOAT, GL_FALSE, 0, verts);
 		glEnableVertexAttribArray(VertexPosition);
 

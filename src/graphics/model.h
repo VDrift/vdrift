@@ -21,8 +21,8 @@
 #define _MODEL_H
 
 #include "vertexarray.h"
+#include "vertexbuffer.h"
 #include "mathvector.h"
-#include "glew.h"
 
 /// Loading data into the mesh vertexarray is implemented by derived classes.
 class Model
@@ -51,21 +51,21 @@ public:
 
 	bool ReadFromFile(const std::string & filepath, std::ostream & error_output, bool genlist);
 
-	void GenDrawList(std::ostream & error_output);
-
 	void GenVertexArrayObject(std::ostream & error_output);
+
 	bool HaveVertexArrayObject() const;
+
 	void ClearVertexArrayObject();
 
 	/// Returns true if we have a vertex array object and stores the VAO handle and element count in the provided arguments.
 	/// Returns false if we have no vertex array object.
-	bool GetVertexArrayObject(GLuint & vao_out, unsigned int & element_count_out) const;
+	bool GetVertexArrayObject(unsigned & vao_out, unsigned & element_count_out) const;
 
+	/// vertex buffer interface
+	VertexBuffer::Segment & GetVertexBufferSegment() { return vbs; };
+
+	/// Recalculate mesh bounding box and radius
 	void GenMeshMetrics();
-
-	void ClearMeshData();
-
-	unsigned GetDrawList() const;
 
 	/// Get aabb size.
 	Vec3 GetSize() const;
@@ -76,42 +76,32 @@ public:
 	/// Get bounding radius relative to center.
 	float GetRadius() const;
 
-	bool HaveMeshData() const;
-
-	bool HaveMeshMetrics() const;
-
 	void Clear();
 
 	const VertexArray & GetVertexArray() const;
 
-	void SetVertexArray(const VertexArray & newmesh);
-
-	bool Loaded();
+	bool Loaded() const;
 
 protected:
-	/// To be filled by the derived classes.
-	VertexArray m_mesh;
+	VertexArray m_mesh;			///< to be filled by the derived classes
 
 private:
-	GLuint vao;					///< vertex array object
-	std::vector <GLuint> vbos;	///< vertex buffer objects
+	VertexBuffer::Segment vbs;	///< vertex buffer segment
+	std::vector<unsigned> vbos;	///< vertex buffer objects
 	unsigned element_count;		///< number of indices
-	unsigned listid;			///< listid 0 is invalid, means no display list compiled
+	unsigned vao;				///< vertex array object, 0 is reserved as invalid
 
 	/// Metrics
 	Vec3 min;
 	Vec3 max;
 	float radius;
-
 	bool generatedmetrics;
 
 	void RequireMetrics() const;
 
-	void RequireDrawList() const;
-
-	void ClearDrawList();
-
 	void ClearMetrics();
+
+	void ClearMeshData();
 };
 
 #endif
