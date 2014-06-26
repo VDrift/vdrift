@@ -511,6 +511,10 @@ if 'install' in COMMAND_LINE_TARGETS:
     if not os.path.isfile('data/SConscript'):
         raise 'VDrift data not found. Please make sure data is placed in vdrift directory. See README.md and http://wiki.vdrift.net.' 
     SConscript('data/SConscript')
+    # desktop appdata installation
+    install_desktop = env.Install(env['destdir'] + env['prefix'] + '/share/applications', 'vdrift.desktop')
+    install_appdata = env.Install(env['destdir'] + env['prefix'] + '/share/appdata', 'vdrift.appdata.xml')
+    env.Alias('install', [install_desktop, install_appdata])
 
 if 'src-package' in COMMAND_LINE_TARGETS:
     SConscript('tools/SConscript')
