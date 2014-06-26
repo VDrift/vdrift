@@ -31,7 +31,7 @@ cppdefines = []
 default_settingsdir = ".vdrift"
 default_prefix = "/usr/local"
 default_datadir = "share/games/vdrift/data"
-default_localedir = "/usr/share/locale"
+default_localedir = "share/locale"
 default_bindir = "bin"
 
 #---------------#
@@ -318,6 +318,15 @@ env.Append (BUILDERS =
     {'ProcessTemplate': Builder(action = process_template ) })
 
 #------------#
+# Mo Builder #
+#------------#
+def mo_builder(target, source, env):
+    args = ['msgfmt', '-c', '-o', target[0].get_path(), source[0].get_path()]
+    return os.spawnvp (os.P_WAIT, 'msgfmt', args)
+
+env.Append (BUILDERS = {'MoBuild' : Builder(action = mo_builder)})
+
+#------------#
 # Build Help #
 #------------#
 Help("""
@@ -367,6 +376,7 @@ env = conf.Finish()
 # directories #
 #-------------#
 env['data_directory'] = env['destdir'] + env['prefix'] + '/' + env['datadir']
+env['locale_directory'] = env['destdir'] + env['prefix'] + '/' + env['localedir']
 cppdefines.append(("SETTINGS_DIR", '"%s"' % env['settings']))
 if ( 'win32' == sys.platform or 'cygwin' == sys.platform ):
     env['use_binreloc'] = False
@@ -379,9 +389,8 @@ if ( 'win32' == sys.platform or 'cygwin' == sys.platform ):
 #elif ('darwin' == env['PLATFORM']):
     #cppdefines.append(("DATA_DIR", "get_mac_data_dir()"))
 else:
-    temp = env['prefix'] + '/' + env['datadir']
-    cppdefines.append(("DATA_DIR", '"%s"' % temp))
-    cppdefines.append(("LOCALE_DIR", '"%s"' % env['localedir']))
+    cppdefines.append(("DATA_DIR", '"%s"' % (env['prefix'] + '/' + env['datadir'])))
+    cppdefines.append(("LOCALE_DIR", '"%s"' % (env['prefix'] + '/' + env['localedir'])))
 
 #------------------------#
 # Version, debug/release #
