@@ -343,7 +343,6 @@ void CarControlMap::Save(Config & controls_config)
 				controls_config.set(section, "type", "key");
 				std::string keyname = GetStringFromKeycode(curctrl.keycode);
 				controls_config.set(section, "key", keyname);
-				controls_config.set(section, "keycode", curctrl.keycode);
 				controls_config.set(section, "once", curctrl.onetime);
 				controls_config.set(section, "down", curctrl.pushdown);
 			}
