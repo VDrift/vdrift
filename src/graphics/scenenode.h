@@ -27,7 +27,8 @@
 class SceneNode
 {
 public:
-	typedef DrawableContainer <keyed_container> DrawList;
+	typedef DrawableContainer <keyed_container> DrawableList;
+	typedef keyed_container<Drawable>::handle DrawableHandle;
 	typedef keyed_container<SceneNode> List;
 	typedef List::handle Handle;
 
@@ -39,8 +40,8 @@ public:
 	List & GetNodelist() {return childlist;}
 	const List & GetNodelist() const {return childlist;}
 
-	DrawList & GetDrawlist() {return drawlist;}
-	const DrawList & GetDrawlist() const {return drawlist;}
+	DrawableList & GetDrawlist() {return drawlist;}
+	const DrawableList & GetDrawlist() const {return drawlist;}
 
 	Transform & GetTransform() {return transform;}
 	const Transform & GetTransform() const {return transform;}
@@ -112,7 +113,7 @@ public:
 
 private:
 	List childlist;
-	DrawList drawlist;
+	DrawableList drawlist;
 	Transform transform;
 	Mat4 cached_transform;
 };

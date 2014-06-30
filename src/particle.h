@@ -110,7 +110,7 @@ private:
 	std::pair<float,float> size_range;
 	Vec3 direction;
 
-	keyed_container<Drawable>::handle draw;
+	SceneNode::DrawableHandle draw;
 	std::tr1::shared_ptr<Texture> texture;
 	VertexArray varrays[2]; ///< use double buffered vertex array
 	SceneNode node;

@@ -89,7 +89,7 @@ private:
 	Vec2 dot_size;
 
 	SceneNode mapnode;
-	keyed_container <Drawable>::handle mapdraw;
+	SceneNode::DrawableHandle mapdraw;
 	VertexArray mapverts;
 
 	std::tr1::shared_ptr<Texture> track_map;
@@ -135,13 +135,13 @@ private:
 				const Drawable & drawref = GetDrawable(topnode);
 				out << &drawref << ": enable=" << drawref.GetDrawEnable() << ", tex=" << drawref.GetTexture0() << ", verts=" << drawref.GetVertArray() << std::endl;
 			}
-			keyed_container <Drawable>::handle & GetDrawableHandle()
+			SceneNode::DrawableHandle & GetDrawableHandle()
 			{
 				return dotdraw;
 			}
 
 		private:
-			keyed_container <Drawable>::handle dotdraw;
+			SceneNode::DrawableHandle dotdraw;
 			std::tr1::shared_ptr<Texture> texture;
 			VertexArray dotverts;
 

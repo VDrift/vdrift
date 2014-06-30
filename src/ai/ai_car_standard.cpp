@@ -831,7 +831,7 @@ double AiCarStandard::Angle(double x1, double y1)
 	return atan2(y1, x1) * 180.0 / M_PI;
 }
 #ifdef VISUALIZE_AI_DEBUG
-void AiCarStandard::ConfigureDrawable(keyed_container <Drawable>::handle & ref, SceneNode & topnode, float r, float g, float b)
+void AiCarStandard::ConfigureDrawable(SceneNode::DrawableHandle & ref, SceneNode & topnode, float r, float g, float b)
 {
 	if (!ref.valid())
 	{

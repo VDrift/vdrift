@@ -63,7 +63,7 @@ struct LoadDrawable
 		const PTree & cfg,
 		SceneNode & topnode,
 		SceneNode::Handle * nodehandle = 0,
-		keyed_container<Drawable>::handle * drawhandle = 0);
+		SceneNode::DrawableHandle * drawhandle = 0);
 
 	bool operator()(
 		const std::string & meshname,
@@ -71,7 +71,7 @@ struct LoadDrawable
 		const PTree & cfg,
 		SceneNode & topnode,
 		SceneNode::Handle * nodeptr = 0,
-		keyed_container<Drawable>::handle * drawptr = 0);
+		SceneNode::DrawableHandle * drawptr = 0);
 };
 
 #endif // _LOADDRAWABLE_H

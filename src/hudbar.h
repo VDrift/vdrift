@@ -21,10 +21,9 @@
 #define _HUDBAR_H
 
 #include "graphics/vertexarray.h"
-#include "graphics/drawable.h"
+#include "graphics/scenenode.h"
 #include "memory.h"
 
-class SceneNode;
 class Texture;
 
 class HudBar
@@ -40,7 +39,7 @@ public:
 	void SetVisible(SceneNode & parent, bool newvis);
 
 private:
-	keyed_container<Drawable>::handle draw;
+	SceneNode::DrawableHandle draw;
 	std::tr1::shared_ptr<Texture> texture;
 	VertexArray verts;
 };

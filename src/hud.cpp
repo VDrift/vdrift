@@ -24,23 +24,23 @@
 
 //#define GAUGES
 
-static keyed_container<Drawable>::handle AddDrawable(SceneNode & node)
+static SceneNode::DrawableHandle AddDrawable(SceneNode & node)
 {
 	return node.GetDrawlist().twodim.insert(Drawable());
 }
 
-static Drawable & GetDrawable(SceneNode & node, const keyed_container <Drawable>::handle & drawhandle)
+static Drawable & GetDrawable(SceneNode & node, const SceneNode::DrawableHandle & drawhandle)
 {
 	return node.GetDrawlist().twodim.get(drawhandle);
 }
 
-static keyed_container <Drawable>::handle SetupText(
+static SceneNode::DrawableHandle SetupText(
 	SceneNode & parent, TextDraw & textdraw,
 	const std::string & str, const Font & font,
 	float x, float y, float scalex, float scaley,
 	float r, float g , float b, float zorder = 0)
 {
-	keyed_container<Drawable>::handle draw = parent.GetDrawlist().text.insert(Drawable());
+	SceneNode::DrawableHandle draw = parent.GetDrawlist().text.insert(Drawable());
 	Drawable & drawref = parent.GetDrawlist().text.get(draw);
 	textdraw.Set(drawref, font, str, x, y, scalex, scaley, r, g, b);
 	drawref.SetDrawOrder(zorder);

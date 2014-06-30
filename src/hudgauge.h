@@ -58,9 +58,9 @@ public:
 	void Update(float value);
 
 private:
-	keyed_container<Drawable>::handle pointer_draw;
-	keyed_container<Drawable>::handle dialnum_draw;
-	keyed_container<Drawable>::handle dial_draw;
+	SceneNode::DrawableHandle pointer_draw;
+	SceneNode::DrawableHandle dialnum_draw;
+	SceneNode::DrawableHandle dial_draw;
 	std::tr1::shared_ptr<Texture> texture;
 	VertexArray pointer_rotated;
 	VertexArray pointer;

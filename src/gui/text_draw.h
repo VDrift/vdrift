@@ -171,7 +171,7 @@ public:
 
 private:
 	TextDraw text;
-	keyed_container <Drawable>::handle draw;
+	SceneNode::DrawableHandle draw;
 	const Font * font;
 	float curx, cury;
 	float cr,cg,cb,ca;

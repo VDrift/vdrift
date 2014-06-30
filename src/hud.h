@@ -75,7 +75,7 @@ private:
 	std::tr1::shared_ptr<Texture> progbartex;
 
 	// timer
-	keyed_container<Drawable>::handle timerboxdraw;
+	SceneNode::DrawableHandle timerboxdraw;
 	VertexArray timerboxverts;
 	TextDrawable laptime_label;
 	TextDrawable lastlaptime_label;
@@ -85,7 +85,7 @@ private:
 	TextDrawable bestlaptime;
 
 	// race info
-	keyed_container<Drawable>::handle infoboxdraw;
+	SceneNode::DrawableHandle infoboxdraw;
 	VertexArray infoboxverts;
 	TextDrawable place_label;
 	TextDrawable lap_label;
@@ -97,10 +97,10 @@ private:
 
 	// debug info
 	SceneNode::Handle debugnode;
-	keyed_container<Drawable>::handle debugtextdraw1;
-	keyed_container<Drawable>::handle debugtextdraw2;
-	keyed_container<Drawable>::handle debugtextdraw3;
-	keyed_container<Drawable>::handle debugtextdraw4;
+	SceneNode::DrawableHandle debugtextdraw1;
+	SceneNode::DrawableHandle debugtextdraw2;
+	SceneNode::DrawableHandle debugtextdraw3;
+	SceneNode::DrawableHandle debugtextdraw4;
 	TextDraw debugtext1;
 	TextDraw debugtext2;
 	TextDraw debugtext3;
@@ -108,16 +108,16 @@ private:
 
 	// rpm/speed bar
 	std::list<HudBar> bars;
-	keyed_container<Drawable>::handle rpmbar;
-	keyed_container<Drawable>::handle rpmredbar;
-	keyed_container<Drawable>::handle rpmbox;
+	SceneNode::DrawableHandle rpmbar;
+	SceneNode::DrawableHandle rpmredbar;
+	SceneNode::DrawableHandle rpmbox;
 	VertexArray rpmbarverts;
 	VertexArray rpmredbarverts;
 	VertexArray rpmboxverts;
 
 	// gear/speed values
-	keyed_container<Drawable>::handle geartextdraw;
-	keyed_container<Drawable>::handle mphtextdraw;
+	SceneNode::DrawableHandle geartextdraw;
+	SceneNode::DrawableHandle mphtextdraw;
 	TextDraw geartext;
 	TextDraw mphtext;
 

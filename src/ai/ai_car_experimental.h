@@ -119,12 +119,12 @@ private:
 	VertexArray raycastshape;
 	std::vector <Bezier> brakelook;
 	std::vector <Bezier> steerlook;
-	keyed_container <Drawable>::handle brakedraw;
-	keyed_container <Drawable>::handle steerdraw;
-	keyed_container <Drawable>::handle avoidancedraw;
-	keyed_container <Drawable>::handle raycastdraw;
+	SceneNode::DrawableHandle brakedraw;
+	SceneNode::DrawableHandle steerdraw;
+	SceneNode::DrawableHandle avoidancedraw;
+	SceneNode::DrawableHandle raycastdraw;
 
-	static void ConfigureDrawable(keyed_container <Drawable>::handle & ref, SceneNode & topnode, float r, float g, float b);
+	static void ConfigureDrawable(SceneNode::DrawableHandle & ref, SceneNode & topnode, float r, float g, float b);
 	static void AddLinePoint(VertexArray & va, const Vec3 & p);
 #endif
 

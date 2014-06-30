@@ -738,7 +738,7 @@ bool Track::Loader::AddObject(const Object & object)
 			dlist = &data.static_node.GetDrawlist().skybox_noblend;
 		}
 	}
-	keyed_container <Drawable>::handle dref = dlist->insert(Drawable());
+	SceneNode::DrawableHandle dref = dlist->insert(Drawable());
 	Drawable & drawable = dlist->get(dref);
 	drawable.SetModel(*object.model);
 	drawable.SetTextures(texture0->GetId(), texture1->GetId(), texture2->GetId());
@@ -1021,7 +1021,7 @@ void Track::Loader::CreateRacingLine(const RoadStrip & strip)
 		data.models.insert(model);
 
 		// register drawable
-		keyed_container <Drawable>::handle dh = data.racingline_node.GetDrawlist().normal_blend.insert(Drawable());
+		SceneNode::DrawableHandle dh = data.racingline_node.GetDrawlist().normal_blend.insert(Drawable());
 		Drawable & d = data.racingline_node.GetDrawlist().normal_blend.get(dh);
 		d.SetTextures(texture->GetId());
 		d.SetModel(*model);

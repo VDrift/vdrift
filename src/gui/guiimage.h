@@ -51,7 +51,7 @@ public:
 private:
 	ContentManager * m_content;
 	std::string m_path, m_name, m_ext;
-	keyed_container <Drawable>::handle m_draw;
+	SceneNode::DrawableHandle m_draw;
 	std::tr1::shared_ptr<Texture> m_texture;
 	VertexArray m_varray;
 	bool m_load;

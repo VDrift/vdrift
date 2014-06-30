@@ -48,7 +48,7 @@ public:
 	Slot1<const std::string &> set_value;
 
 private:
-	keyed_container<Drawable>::handle m_draw;
+	SceneNode::DrawableHandle m_draw;
 	TextDraw m_text_draw;
 	std::string m_text;
 	const Font * m_font;

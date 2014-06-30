@@ -88,7 +88,7 @@ public:
 
 private:
 	SceneNode::Handle node;
-	keyed_container <Drawable>::handle draw;
+	SceneNode::DrawableHandle draw;
 	std::tr1::shared_ptr<Texture> texture;
 	VertexArray varray;
 	float r, g, b, a;

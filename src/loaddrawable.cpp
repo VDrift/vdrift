@@ -47,7 +47,7 @@ bool LoadDrawable::operator()(
 	const PTree & cfg,
 	SceneNode & topnode,
 	SceneNode::Handle * nodehandle,
-	keyed_container<Drawable>::handle * drawhandle)
+	SceneNode::DrawableHandle * drawhandle)
 {
 	std::vector<std::string> texname;
 	if (!cfg.get("texture", texname)) return true;
@@ -64,7 +64,7 @@ bool LoadDrawable::operator()(
 	const PTree & cfg,
 	SceneNode & topnode,
 	SceneNode::Handle * nodeptr,
-	keyed_container<Drawable>::handle * drawptr)
+	SceneNode::DrawableHandle * drawptr)
 {
 	Drawable drawable;
 
@@ -157,8 +157,8 @@ bool LoadDrawable::operator()(
 	}
 
 	// set drawable
-	keyed_container<Drawable>::handle drawtemp;
-	keyed_container<Drawable>::handle * draw = &drawtemp;
+	SceneNode::DrawableHandle drawtemp;
+	SceneNode::DrawableHandle * draw = &drawtemp;
 	if (drawptr != 0) draw = drawptr;
 
 	std::string drawtype;
