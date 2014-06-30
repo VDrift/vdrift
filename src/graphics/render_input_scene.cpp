@@ -168,7 +168,7 @@ void RenderInputScene::Render(GraphicsState & glstate, std::ostream & error_outp
 	glMatrixMode(GL_MODELVIEW);
 	glLoadMatrixf(viewMatrix.GetArray());
 
-	drawable_color = Vec4(1.0f);
+	drawable_color = Vec4(-1.0f); // invalidate color
 
 	Quat cam_look;
 	cam_look.Rotate(M_PI_2, 1, 0, 0);
