@@ -349,10 +349,10 @@ void CarGraphics::Update(const std::vector<float> & inputs)
 void CarGraphics::Update(const CarDynamics & dynamics)
 {
 	if (!bodynode.valid()) return;
-	assert(dynamics.GetNumBodies() == topnode.GetNodelist().size());
+	assert(dynamics.GetNumBodies() == topnode.GetNodeList().size());
 
 	unsigned i = 0;
-	SceneNode::List & childlist = topnode.GetNodelist();
+	SceneNode::List & childlist = topnode.GetNodeList();
 	for (SceneNode::List::iterator ni = childlist.begin(); ni != childlist.end(); ++ni, ++i)
 	{
 		Vec3 pos = ToMathVector<float>(dynamics.GetPosition(i));

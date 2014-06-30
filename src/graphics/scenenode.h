@@ -37,8 +37,8 @@ public:
 	SceneNode & GetNode(Handle handle) {return childlist.get(handle);}
 	const SceneNode & GetNode(Handle handle) const {return childlist.get(handle);}
 
-	List & GetNodelist() {return childlist;}
-	const List & GetNodelist() const {return childlist;}
+	List & GetNodeList() {return childlist;}
+	const List & GetNodeList() const {return childlist;}
 
 	DrawableList & GetDrawlist() {return drawlist;}
 	const DrawableList & GetDrawlist() const {return drawlist;}
