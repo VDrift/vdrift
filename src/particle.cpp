@@ -56,8 +56,8 @@ void ParticleSystem::Load(
 	texinfo.anisotropy = anisotropy;
 	content.load(texture, texpath, texname, texinfo);
 
-	draw = GetDrawlist(node).insert(Drawable());
-	Drawable & drawref = GetDrawlist(node).get(draw);
+	draw = GetDrawList(node).insert(Drawable());
+	Drawable & drawref = GetDrawList(node).get(draw);
 	drawref.SetDrawEnable(false);
 	drawref.SetVertArray(&varrays[cur_varray]);
 	drawref.SetTextures(texture->GetId());
@@ -186,7 +186,7 @@ void ParticleSystem::SyncGraphics()
 	if (max_particles == 0)
 		return;
 
-	Drawable & drawref = GetDrawlist(node).get(draw);
+	Drawable & drawref = GetDrawList(node).get(draw);
 	drawref.SetVertArray(&varrays[cur_varray]);
 	drawref.SetDrawEnable(varrays[cur_varray].GetNumIndices());
 	cur_varray = (cur_varray + 1) % 2;

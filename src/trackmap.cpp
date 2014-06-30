@@ -237,8 +237,8 @@ bool TrackMap::BuildMap(
 	dot_size[1] = 0.5 * cardot0->GetH() * pixel_size[1];
 
 	mapverts.SetToBillboard(map_min[0], map_min[1], map_max[0], map_max[1]);
-	mapdraw = mapnode.GetDrawlist().twodim.insert(Drawable());
-	Drawable & mapdrawref = mapnode.GetDrawlist().twodim.get(mapdraw);
+	mapdraw = mapnode.GetDrawList().twodim.insert(Drawable());
+	Drawable & mapdrawref = mapnode.GetDrawList().twodim.get(mapdraw);
 	mapdrawref.SetTextures(track_map->GetId());
 	mapdrawref.SetVertArray(&mapverts);
 	mapdrawref.SetCull(false, false);
@@ -294,13 +294,13 @@ void TrackMap::Update(bool mapvisible, const std::list <std::pair<Vec3, bool> > 
 			count++;
 		}
 		for (list <CarDot>::iterator i = dot; i != dotlist.end(); ++i)
-			mapnode.GetDrawlist().twodim.erase(i->GetDrawableHandle());
+			mapnode.GetDrawList().twodim.erase(i->GetDrawableHandle());
 		dotlist.erase(dot,dotlist.end());
 	}
 
 	if (mapdraw.valid())
 	{
-		Drawable & mapdrawref = mapnode.GetDrawlist().twodim.get(mapdraw);
+		Drawable & mapdrawref = mapnode.GetDrawList().twodim.get(mapdraw);
 		mapdrawref.SetDrawEnable(mapvisible);
 	}
 	for (list <CarDot>::iterator i = dotlist.begin(); i != dotlist.end(); ++i)

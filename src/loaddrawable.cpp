@@ -167,16 +167,16 @@ bool LoadDrawable::operator()(
 		if (drawtype == "emissive")
 		{
 			drawable.SetDecal(true);
-			*draw = node->GetDrawlist().lights_emissive.insert(drawable);
+			*draw = node->GetDrawList().lights_emissive.insert(drawable);
 		}
 		else if (drawtype == "transparent")
 		{
-			*draw = node->GetDrawlist().normal_blend.insert(drawable);
+			*draw = node->GetDrawList().normal_blend.insert(drawable);
 		}
 	}
 	else
 	{
-		*draw = node->GetDrawlist().car_noblend.insert(drawable);
+		*draw = node->GetDrawList().car_noblend.insert(drawable);
 	}
 
 	return true;

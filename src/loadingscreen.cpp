@@ -66,12 +66,12 @@ bool LoadingScreen::Init(
 	content.load(boxtex, texturepath, "loadingbox.png", texinfo);
 	content.load(bartex, texturepath, "loadingbar.png", texinfo);
 
-	bardraw = root.GetDrawlist().twodim.insert(Drawable());
-	boxdraw = root.GetDrawlist().twodim.insert(Drawable());
-	barbackdraw = root.GetDrawlist().twodim.insert(Drawable());
-	Drawable & bardrawref = root.GetDrawlist().twodim.get(bardraw);
-	Drawable & boxdrawref = root.GetDrawlist().twodim.get(boxdraw);
-	Drawable & barbackdrawref = root.GetDrawlist().twodim.get(barbackdraw);
+	bardraw = root.GetDrawList().twodim.insert(Drawable());
+	boxdraw = root.GetDrawList().twodim.insert(Drawable());
+	barbackdraw = root.GetDrawList().twodim.insert(Drawable());
+	Drawable & bardrawref = root.GetDrawList().twodim.get(bardraw);
+	Drawable & boxdrawref = root.GetDrawList().twodim.get(boxdraw);
+	Drawable & barbackdrawref = root.GetDrawList().twodim.get(barbackdraw);
 
 	boxdrawref.SetTextures(boxtex->GetId());
 	boxdrawref.SetVertArray(&boxverts);

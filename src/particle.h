@@ -115,9 +115,9 @@ private:
 	VertexArray varrays[2]; ///< use double buffered vertex array
 	SceneNode node;
 
-	static keyed_container<Drawable> & GetDrawlist(SceneNode & node)
+	static keyed_container<Drawable> & GetDrawList(SceneNode & node)
 	{
-		return node.GetDrawlist().particle;
+		return node.GetDrawList().particle;
 	}
 };
 

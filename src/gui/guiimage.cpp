@@ -61,7 +61,7 @@ void GuiImage::SetupDrawable(
 	m_path = path;
 	m_ext = ext;
 	m_varray.SetToBillboard(x - w * 0.5f, y - h * 0.5f, x + w * 0.5f, y + h * 0.5f);
-	m_draw = scene.GetDrawlist().twodim.insert(Drawable());
+	m_draw = scene.GetDrawList().twodim.insert(Drawable());
 	m_visible = false;
 	Drawable & d = GetDrawable(scene);
 	d.SetVertArray(&m_varray);

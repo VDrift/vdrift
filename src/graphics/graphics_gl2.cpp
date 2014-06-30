@@ -982,7 +982,7 @@ void GraphicsGL2::CullScenePass(
 					frustum.Extract(GetProjMatrix(cam).GetArray(), GetViewMatrix(cam).GetArray());
 
 					reseatable_reference <AabbTreeNodeAdapter <Drawable> > container =
-						static_drawlist.GetDrawlist().GetByName(*d);
+						static_drawlist.GetDrawList().GetByName(*d);
 					if (!container)
 					{
 						ReportOnce(&pass, "Drawable container "+*d+" couldn't be found", error_output);
@@ -995,7 +995,7 @@ void GraphicsGL2::CullScenePass(
 			else
 			{
 				reseatable_reference <AabbTreeNodeAdapter <Drawable> > container =
-					static_drawlist.GetDrawlist().GetByName(*d);
+					static_drawlist.GetDrawList().GetByName(*d);
 				if (!container)
 				{
 					ReportOnce(&pass, "Drawable container "+*d+" couldn't be found", error_output);

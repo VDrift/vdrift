@@ -40,8 +40,8 @@ public:
 	List & GetNodeList() {return childlist;}
 	const List & GetNodeList() const {return childlist;}
 
-	DrawableList & GetDrawlist() {return drawlist;}
-	const DrawableList & GetDrawlist() const {return drawlist;}
+	DrawableList & GetDrawList() {return drawlist;}
+	const DrawableList & GetDrawList() const {return drawlist;}
 
 	Transform & GetTransform() {return transform;}
 	const Transform & GetTransform() const {return transform;}

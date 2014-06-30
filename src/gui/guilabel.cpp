@@ -52,7 +52,7 @@ void GuiLabel::SetupDrawable(
 	m_scaley = scaley;
 	m_align = align;
 
-	m_draw = scene.GetDrawlist().text.insert(Drawable());
+	m_draw = scene.GetDrawList().text.insert(Drawable());
 	Drawable & drawref = GetDrawable(scene);
 	drawref.SetDrawOrder(z);
 
@@ -82,5 +82,5 @@ const std::string & GuiLabel::GetText() const
 
 Drawable & GuiLabel::GetDrawable(SceneNode & scene)
 {
-	return scene.GetDrawlist().text.get(m_draw);
+	return scene.GetDrawList().text.get(m_draw);
 }

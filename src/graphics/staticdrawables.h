@@ -68,7 +68,7 @@ public:
 		drawables.ForEach(OptimizeFunctor());
 	}
 
-	DrawableContainer <AabbTreeNodeAdapter> & GetDrawlist() {return drawables;}
+	DrawableContainer <AabbTreeNodeAdapter> & GetDrawList() {return drawables;}
 
 private:
 	DrawableContainer <AabbTreeNodeAdapter> drawables;

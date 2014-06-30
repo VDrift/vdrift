@@ -26,12 +26,12 @@
 
 static SceneNode::DrawableHandle AddDrawable(SceneNode & node)
 {
-	return node.GetDrawlist().twodim.insert(Drawable());
+	return node.GetDrawList().twodim.insert(Drawable());
 }
 
 static Drawable & GetDrawable(SceneNode & node, const SceneNode::DrawableHandle & drawhandle)
 {
-	return node.GetDrawlist().twodim.get(drawhandle);
+	return node.GetDrawList().twodim.get(drawhandle);
 }
 
 static SceneNode::DrawableHandle SetupText(
@@ -40,8 +40,8 @@ static SceneNode::DrawableHandle SetupText(
 	float x, float y, float scalex, float scaley,
 	float r, float g , float b, float zorder = 0)
 {
-	SceneNode::DrawableHandle draw = parent.GetDrawlist().text.insert(Drawable());
-	Drawable & drawref = parent.GetDrawlist().text.get(draw);
+	SceneNode::DrawableHandle draw = parent.GetDrawList().text.insert(Drawable());
+	Drawable & drawref = parent.GetDrawList().text.get(draw);
 	textdraw.Set(drawref, font, str, x, y, scalex, scaley, r, g, b);
 	drawref.SetDrawOrder(zorder);
 	return draw;
@@ -485,7 +485,7 @@ void Hud::Update(
 
 	float geartext_alpha = clutch * 0.5 + 0.5;
 	if (newgear == 0) geartext_alpha = 1;
-	Drawable & geartextdrawref = hudroot.GetDrawlist().text.get(geartextdraw);
+	Drawable & geartextdrawref = hudroot.GetDrawList().text.get(geartextdraw);
 	geartextdrawref.SetColor(1, 1, 1, geartext_alpha);
 
 	// speed
@@ -508,7 +508,7 @@ void Hud::Update(
 	geartext.Revise(lcdfont, gearstr.str());
 
 	float geartext_alpha = (newgear == 0) ? 1 : clutch * 0.5 + 0.5;
-	Drawable & geartextdrawref = hudroot.GetDrawlist().text.get(geartextdraw);
+	Drawable & geartextdrawref = hudroot.GetDrawList().text.get(geartextdraw);
 	geartextdrawref.SetColor(1, 1, 1, geartext_alpha);
 
 	float rpmpercent = std::min(1.0f, rpm / maxrpm);

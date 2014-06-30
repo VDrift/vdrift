@@ -88,7 +88,7 @@ public:
 	{
 		assert(font == NULL);
 
-		draw = parentnode.GetDrawlist().text.insert(Drawable());
+		draw = parentnode.GetDrawList().text.insert(Drawable());
 		Drawable & drawref = GetDrawable(parentnode);
 		font = &newfont;
 		curx = x;
@@ -166,7 +166,7 @@ public:
 
 	Drawable & GetDrawable(SceneNode & parentnode)
 	{
-		return parentnode.GetDrawlist().text.get(draw);
+		return parentnode.GetDrawList().text.get(draw);
 	}
 
 private:

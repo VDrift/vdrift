@@ -58,7 +58,7 @@ private:
 
 	Drawable & GetDrawable(SceneNode & scene)
 	{
-		return scene.GetDrawlist().twodim.get(m_draw);
+		return scene.GetDrawList().twodim.get(m_draw);
 	}
 
 	GuiImage(const GuiImage & other);

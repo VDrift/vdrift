@@ -107,7 +107,7 @@ private:
 				const Vec2 & corner1,
 				const Vec2 & corner2)
 			{
-				dotdraw = topnode.GetDrawlist().twodim.insert(Drawable());
+				dotdraw = topnode.GetDrawList().twodim.insert(Drawable());
 				Drawable & drawref = GetDrawable(topnode);
 				drawref.SetVertArray(&dotverts);
 				drawref.SetCull(false, false);
@@ -147,12 +147,12 @@ private:
 
 			Drawable & GetDrawable(SceneNode & topnode)
 			{
-				return topnode.GetDrawlist().twodim.get(dotdraw);
+				return topnode.GetDrawList().twodim.get(dotdraw);
 			}
 
 			const Drawable & GetDrawable(SceneNode & topnode) const
 			{
-				return topnode.GetDrawlist().twodim.get(dotdraw);
+				return topnode.GetDrawList().twodim.get(dotdraw);
 			}
 	};
 

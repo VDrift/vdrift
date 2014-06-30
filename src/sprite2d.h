@@ -218,12 +218,12 @@ inline const Drawable & Sprite2D::GetDrawableFromParent(const SceneNode & parent
 
 inline Drawable & Sprite2D::GetDrawableFromNode(SceneNode & noderef)
 {
-	return noderef.GetDrawlist().twodim.get(draw);
+	return noderef.GetDrawList().twodim.get(draw);
 }
 
 inline const Drawable & Sprite2D::GetDrawableFromNode(const SceneNode & noderef) const
 {
-	return noderef.GetDrawlist().twodim.get(draw);
+	return noderef.GetDrawList().twodim.get(draw);
 }
 
 #endif

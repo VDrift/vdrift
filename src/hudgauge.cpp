@@ -25,38 +25,38 @@
 
 static SceneNode::DrawableHandle AddDrawable(SceneNode & node)
 {
-	return node.GetDrawlist().twodim.insert(Drawable());
+	return node.GetDrawList().twodim.insert(Drawable());
 }
 
 static Drawable & GetDrawable(SceneNode & node, const SceneNode::DrawableHandle & drawhandle)
 {
-	return node.GetDrawlist().twodim.get(drawhandle);
+	return node.GetDrawList().twodim.get(drawhandle);
 }
 
 static void EraseDrawable(SceneNode & node, SceneNode::DrawableHandle & drawhandle)
 {
 	if (drawhandle.valid())
 	{
-		node.GetDrawlist().twodim.erase(drawhandle);
+		node.GetDrawList().twodim.erase(drawhandle);
 		drawhandle.invalidate();
 	}
 }
 
 static SceneNode::DrawableHandle AddTextDrawable(SceneNode & node)
 {
-	return node.GetDrawlist().twodim.insert(Drawable());
+	return node.GetDrawList().twodim.insert(Drawable());
 }
 
 static Drawable & GetTextDrawable(SceneNode & node, const SceneNode::DrawableHandle & drawhandle)
 {
-	return node.GetDrawlist().twodim.get(drawhandle);
+	return node.GetDrawList().twodim.get(drawhandle);
 }
 
 static void EraseTextDrawable(SceneNode & node, SceneNode::DrawableHandle & drawhandle)
 {
 	if (drawhandle.valid())
 	{
-		node.GetDrawlist().twodim.erase(drawhandle);
+		node.GetDrawList().twodim.erase(drawhandle);
 		drawhandle.invalidate();
 	}
 }

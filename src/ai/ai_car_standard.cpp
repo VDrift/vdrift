@@ -74,11 +74,11 @@ AiCarStandard::~AiCarStandard ()
 	SceneNode& topnode  = car->GetNode();
 	if (brakedraw.valid())
 	{
-		topnode.GetDrawlist().normal_noblend.erase(brakedraw);
+		topnode.GetDrawList().normal_noblend.erase(brakedraw);
 	}
 	if (steerdraw.valid())
 	{
-		topnode.GetDrawlist().normal_noblend.erase(steerdraw);
+		topnode.GetDrawList().normal_noblend.erase(steerdraw);
 	}
 #endif
 }
@@ -835,8 +835,8 @@ void AiCarStandard::ConfigureDrawable(SceneNode::DrawableHandle & ref, SceneNode
 {
 	if (!ref.valid())
 	{
-		ref = topnode.GetDrawlist().normal_noblend.insert(Drawable());
-		Drawable & d = topnode.GetDrawlist().normal_noblend.get(ref);
+		ref = topnode.GetDrawList().normal_noblend.insert(Drawable());
+		Drawable & d = topnode.GetDrawList().normal_noblend.get(ref);
 		d.SetColor(r,g,b,1);
 		d.SetDecal(true);
 	}
@@ -869,8 +869,8 @@ void AiCarStandard::Visualize()
 	ConfigureDrawable(steerdraw, topnode, 0,0,1);
 	//ConfigureDrawable(avoidancedraw, topnode, 1,0,0);
 
-	Drawable & brakedrawable = topnode.GetDrawlist().normal_noblend.get(brakedraw);
-	Drawable & steerdrawable = topnode.GetDrawlist().normal_noblend.get(steerdraw);
+	Drawable & brakedrawable = topnode.GetDrawList().normal_noblend.get(brakedraw);
+	Drawable & steerdrawable = topnode.GetDrawList().normal_noblend.get(steerdraw);
 
 	brakedrawable.SetLineSize(4);
 	brakedrawable.SetVertArray(&brakeshape);

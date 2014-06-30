@@ -528,7 +528,7 @@ void GraphicsGL3::DrawScene(std::ostream & error_output)
 					}
 
 					// assemble static entries
-					reseatable_reference <AabbTreeNodeAdapter <Drawable> > staticDrawablesPtr = static_drawlist.GetDrawlist().GetByName(drawGroupString);
+					reseatable_reference <AabbTreeNodeAdapter <Drawable> > staticDrawablesPtr = static_drawlist.GetDrawList().GetByName(drawGroupString);
 					if (staticDrawablesPtr)
 					{
 						const AabbTreeNodeAdapter <Drawable> & staticDrawables = *staticDrawablesPtr;
@@ -558,7 +558,7 @@ void GraphicsGL3::DrawScene(std::ostream & error_output)
 	}
 	std::cout << "----------" << std::endl;*/
 	//if (enableContributionCull) std::cout << "Contribution cull count: " << assembler.contributionCullCount << std::endl;
-	//std::cout << "normal_noblend: " << drawGroups[stringMap.addStringId("normal_noblend")].size() << "/" << static_drawlist.GetDrawlist().GetByName("normal_noblend")->size() << std::endl;
+	//std::cout << "normal_noblend: " << drawGroups[stringMap.addStringId("normal_noblend")].size() << "/" << static_drawlist.GetDrawList().GetByName("normal_noblend")->size() << std::endl;
 
 	// render!
 	gl.logging(logNextGlFrame);
