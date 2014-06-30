@@ -551,11 +551,7 @@ void GraphicsGL2::DrawScene(std::ostream & error_output)
 	}
 
 	// vertex object might have been modified ouside, reset it
-	if (glBindVertexArray)
-		glBindVertexArray(0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glstate.VertexObject() = 0;
+	glstate.ResetVertexObject();
 
 	// draw the passes
 	for (std::vector <GraphicsConfigPass>::const_iterator i = config.passes.begin(); i != config.passes.end(); i++)

@@ -212,15 +212,9 @@ void RenderInputScene::Draw(GraphicsState & glstate, const std::vector <Drawable
 			}
 			else
 			{
-				// reset buffer state
 				if (glstate.VertexObject())
-				{
-					if (glBindVertexArray)
-						glBindVertexArray(0);
-					glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-					glBindBuffer(GL_ARRAY_BUFFER, 0);
-					glstate.VertexObject() = 0;
-				}
+					glstate.ResetVertexObject();
+
 				DrawVertexArray(*d.GetVertArray(), d.GetLineSize());
 			}
 		}

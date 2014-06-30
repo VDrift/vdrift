@@ -252,6 +252,16 @@ public:
 		return vobject;
 	}
 
+	// reset vao/vbo/ibo state and clear vobject
+	void ResetVertexObject()
+	{
+		if (glBindVertexArray)
+			glBindVertexArray(0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		vobject = 0;
+	}
+
 private:
 	//struct TexUnit {GLenum target; GLuint texture; bool enable};
 	GLenum tutgt[16];   // texture unit target
