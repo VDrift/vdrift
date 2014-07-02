@@ -148,6 +148,15 @@ private:
 	DynamicDrawables dynamic_drawlist; //used for objects that move or change
 	StaticDrawables static_drawlist; //used for objects that will never change
 
+	struct CulledDrawList
+	{
+		CulledDrawList() : valid(false) {};
+		PtrVector <Drawable> drawables;
+		bool valid;
+	};
+	typedef std::map <std::string, CulledDrawList> CulledDrawListMap;
+	CulledDrawListMap culled_drawlists;
+
 	// render outputs
 	typedef std::map <std::string, RenderOutput> render_output_map_type;
 	render_output_map_type render_outputs;
@@ -194,14 +203,14 @@ private:
 
 	void DisableShaders(std::ostream & error_output);
 
+	void ClearCulledDrawLists();
+
 	void CullScenePass(
 		const GraphicsConfigPass & pass,
-		std::map <std::string, PtrVector <Drawable> > & culled_static_drawlist,
 		std::ostream & error_output);
 
 	void DrawScenePass(
 		const GraphicsConfigPass & pass,
-		std::map <std::string, PtrVector <Drawable> > & culled_static_drawlist,
 		std::ostream & error_output);
 
 	/// draw postprocess scene pass

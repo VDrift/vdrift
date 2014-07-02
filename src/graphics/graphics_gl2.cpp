@@ -544,10 +544,10 @@ void GraphicsGL2::DrawScene(std::ostream & error_output)
 	std::sort(dynamic_drawlist.twodim.begin(), dynamic_drawlist.twodim.end(), &SortDraworder);
 
 	// do fast culling queries for static geometry per pass
-	std::map <std::string, PtrVector <Drawable> > culled_static_drawlist;
+	ClearCulledDrawLists();
 	for (std::vector <GraphicsConfigPass>::const_iterator i = config.passes.begin(); i != config.passes.end(); i++)
 	{
-		CullScenePass(*i, culled_static_drawlist, error_output);
+		CullScenePass(*i, error_output);
 	}
 
 	// vertex object might have been modified ouside, reset it
@@ -558,7 +558,7 @@ void GraphicsGL2::DrawScene(std::ostream & error_output)
 	{
 		assert(!i->draw.empty());
 		if (i->draw.back() != "postprocess")
-			DrawScenePass(*i, culled_static_drawlist, error_output);
+			DrawScenePass(*i, error_output);
 		else
 			DrawScenePassPost(*i, error_output);
 	}
@@ -900,9 +900,17 @@ bool GraphicsGL2::EnableShaders(std::ostream & info_output, std::ostream & error
 	return true;
 }
 
+void GraphicsGL2::ClearCulledDrawLists()
+{
+	for(CulledDrawListMap::iterator i = culled_drawlists.begin(); i != culled_drawlists.end(); i++)
+	{
+		i->second.drawables.clear();
+		i->second.valid = false;
+	}
+}
+
 void GraphicsGL2::CullScenePass(
 	const GraphicsConfigPass & pass,
-	std::map <std::string, PtrVector <Drawable> > & culled_static_drawlist,
 	std::ostream & error_output)
 {
 	// for each pass, we have which camera and which draw layer to use
@@ -961,32 +969,34 @@ void GraphicsGL2::CullScenePass(
 				cam.h = fbo.GetHeight();
 			}
 
-			std::string key = BuildKey(cameraname, *d);
+			const std::string drawlist_name = BuildKey(cameraname, *d);
+			CulledDrawList & drawlist = culled_drawlists[drawlist_name];
+			if (drawlist.valid)
+				break;
+
+			drawlist.valid = true;
 			if (pass.cull)
 			{
+				reseatable_reference <AabbTreeNodeAdapter <Drawable> > container =
+					static_drawlist.GetDrawList().GetByName(*d);
+				if (!container)
+				{
+					ReportOnce(&pass, "Drawable container "+*d+" couldn't be found", error_output);
+					return;
+				}
+
 				camera_map_type::iterator ci = cameras.find(cameraname);
 				if (ci == cameras.end())
 				{
 					ReportOnce(&pass, "Camera "+cameraname+" couldn't be found", error_output);
 					return;
 				}
+				const GraphicsCamera & cam = ci->second;
 
-				GraphicsCamera & cam = ci->second;
-				if (culled_static_drawlist.find(key) == culled_static_drawlist.end())
-				{
-					Frustum frustum;
-					frustum.Extract(GetProjMatrix(cam).GetArray(), GetViewMatrix(cam).GetArray());
+				Frustum frustum;
+				frustum.Extract(GetProjMatrix(cam).GetArray(), GetViewMatrix(cam).GetArray());
 
-					reseatable_reference <AabbTreeNodeAdapter <Drawable> > container =
-						static_drawlist.GetDrawList().GetByName(*d);
-					if (!container)
-					{
-						ReportOnce(&pass, "Drawable container "+*d+" couldn't be found", error_output);
-						return;
-					}
-
-					container->Query(frustum, culled_static_drawlist[key]);
-				}
+				container->Query(frustum, drawlist.drawables);
 			}
 			else
 			{
@@ -998,7 +1008,7 @@ void GraphicsGL2::CullScenePass(
 					return;
 				}
 
-				container->Query(Aabb<float>::IntersectAlways(), culled_static_drawlist[key]);
+				container->Query(Aabb<float>::IntersectAlways(), drawlist.drawables);
 			}
 		}
 	}
@@ -1006,7 +1016,6 @@ void GraphicsGL2::CullScenePass(
 
 void GraphicsGL2::DrawScenePass(
 	const GraphicsConfigPass & pass,
-	std::map <std::string, PtrVector <Drawable> > & culled_static_drawlist,
 	std::ostream & error_output)
 {
 	// log failure here?
@@ -1083,17 +1092,17 @@ void GraphicsGL2::DrawScenePass(
 			}
 
 			// setup static drawlist
-			const std::string drawlist_key = BuildKey(cameraname, layer);
-			std::map <std::string, PtrVector <Drawable> >::const_iterator container_static = culled_static_drawlist.find(drawlist_key);
-			if (container_static == culled_static_drawlist.end())
+			const std::string drawlist_name = BuildKey(cameraname, layer);
+			CulledDrawListMap::const_iterator drawlist_it = culled_drawlists.find(drawlist_name);
+			if (drawlist_it == culled_drawlists.end())
 			{
-				ReportOnce(&pass, "Couldn't find culled static drawlist for camera/draw combination: " + drawlist_key, error_output);
+				ReportOnce(&pass, "Couldn't find culled static drawlist for camera/draw combination: " + drawlist_name, error_output);
 				return;
 			}
 
-			if (!container_dynamic->empty() || !container_static->second.empty())
+			if (!container_dynamic->empty() || !drawlist_it->second.drawables.empty())
 			{
-				renderscene.SetDrawLists(*container_dynamic, container_static->second);
+				renderscene.SetDrawLists(*container_dynamic, drawlist_it->second.drawables);
 				renderscene.Render(glstate, error_output);
 			}
 		}
