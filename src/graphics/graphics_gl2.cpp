@@ -214,6 +214,24 @@ static void AttachCubeSide(int i, FrameBufferObject & reflection_fbo, std::ostre
 	CheckForOpenGLErrors("cubemap generation: FBO cube side attachment", error_output);
 }
 
+static bool Cull(const Frustum & f, const Drawable & d)
+{
+	const float radius = d.GetRadius();
+	Vec3 center = d.GetObjectCenter();
+	d.GetTransform().TransformVectorOut(center[0], center[1], center[2]);
+	for (int i = 0; i < 6; i++)
+	{
+		const float rd =
+			f.frustum[i][0] * center[0] +
+			f.frustum[i][1] * center[1] +
+			f.frustum[i][2] * center[2] +
+			f.frustum[i][3];
+		if (rd <= -radius)
+			return true;
+	}
+	return false;
+}
+
 GraphicsGL2::GraphicsGL2() :
 	initialized(false),
 	max_anisotropy(0),
@@ -938,8 +956,6 @@ void GraphicsGL2::CullScenePass(
 		{
 			if (cubemap)
 			{
-				// build sub-camera
-
 				// build a name for the sub camera
 				{
 					std::ostringstream s;
@@ -949,10 +965,9 @@ void GraphicsGL2::CullScenePass(
 
 				// get the base camera
 				camera_map_type::iterator bci = cameras.find(pass.camera);
-
 				if (bci == cameras.end())
 				{
-					ReportOnce(&pass, "Camera "+pass.camera+" couldn't be found", error_output);
+					ReportOnce(&pass, "Camera " + pass.camera + " couldn't be found", error_output);
 					return;
 				}
 
@@ -977,18 +992,19 @@ void GraphicsGL2::CullScenePass(
 			drawlist.valid = true;
 			if (pass.cull)
 			{
+				// cull static drawlist
 				reseatable_reference <AabbTreeNodeAdapter <Drawable> > container =
 					static_drawlist.GetDrawList().GetByName(*d);
 				if (!container)
 				{
-					ReportOnce(&pass, "Drawable container "+*d+" couldn't be found", error_output);
+					ReportOnce(&pass, "Drawable container " + *d + " couldn't be found", error_output);
 					return;
 				}
 
 				camera_map_type::iterator ci = cameras.find(cameraname);
 				if (ci == cameras.end())
 				{
-					ReportOnce(&pass, "Camera "+cameraname+" couldn't be found", error_output);
+					ReportOnce(&pass, "Camera " + cameraname + " couldn't be found", error_output);
 					return;
 				}
 				const GraphicsCamera & cam = ci->second;
@@ -997,18 +1013,43 @@ void GraphicsGL2::CullScenePass(
 				frustum.Extract(GetProjMatrix(cam).GetArray(), GetViewMatrix(cam).GetArray());
 
 				container->Query(frustum, drawlist.drawables);
+
+				// cull dynamic drawlist
+				reseatable_reference <PtrVector <Drawable> > container_dynamic = dynamic_drawlist.GetByName(*d);
+				if (!container_dynamic)
+				{
+					ReportOnce(&pass, "Drawable container " + *d + " couldn't be found", error_output);
+					return;
+				}
+				for (size_t i = 0; i < container_dynamic->size(); ++i)
+				{
+					if (!Cull(frustum, *(*container_dynamic)[i]))
+						drawlist.drawables.push_back((*container_dynamic)[i]);
+				}
 			}
 			else
 			{
+				// copy static drawlist
 				reseatable_reference <AabbTreeNodeAdapter <Drawable> > container =
 					static_drawlist.GetDrawList().GetByName(*d);
 				if (!container)
 				{
-					ReportOnce(&pass, "Drawable container "+*d+" couldn't be found", error_output);
+					ReportOnce(&pass, "Drawable container " + *d + " couldn't be found", error_output);
 					return;
 				}
-
 				container->Query(Aabb<float>::IntersectAlways(), drawlist.drawables);
+
+				// copy dynamic drawlist
+				reseatable_reference <PtrVector <Drawable> > container_dynamic = dynamic_drawlist.GetByName(*d);
+				if (!container_dynamic)
+				{
+					ReportOnce(&pass, "Drawable container " + *d + " couldn't be found", error_output);
+					return;
+				}
+				drawlist.drawables.insert(
+					drawlist.drawables.end(),
+					container_dynamic->begin(),
+					container_dynamic->end());
 			}
 		}
 	}
@@ -1081,18 +1122,7 @@ void GraphicsGL2::DrawScenePass(
 		renderscene.ClearOutput(glstate, pass.clear_color, pass.clear_depth);
 		for (std::vector <std::string>::const_iterator d = pass.draw.begin(); d != pass.draw.end(); d++)
 		{
-			const std::string & layer = *d;
-
-			// setup dynamic drawlist
-			reseatable_reference <PtrVector <Drawable> > container_dynamic = dynamic_drawlist.GetByName(layer);
-			if (!container_dynamic)
-			{
-				ReportOnce(&pass, "Drawable container " + layer + " couldn't be found", error_output);
-				return;
-			}
-
-			// setup static drawlist
-			const std::string drawlist_name = BuildKey(cameraname, layer);
+			const std::string drawlist_name = BuildKey(cameraname, *d);
 			CulledDrawListMap::const_iterator drawlist_it = culled_drawlists.find(drawlist_name);
 			if (drawlist_it == culled_drawlists.end())
 			{
@@ -1100,9 +1130,9 @@ void GraphicsGL2::DrawScenePass(
 				return;
 			}
 
-			if (!container_dynamic->empty() || !drawlist_it->second.drawables.empty())
+			if (!drawlist_it->second.drawables.empty())
 			{
-				renderscene.SetDrawLists(*container_dynamic, drawlist_it->second.drawables);
+				renderscene.SetDrawList(drawlist_it->second.drawables);
 				renderscene.Render(glstate, error_output);
 			}
 		}

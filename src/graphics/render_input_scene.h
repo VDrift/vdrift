@@ -66,16 +66,13 @@ public:
 
 	void SetContrast(float value);
 
-	void SetDrawLists(
-		const std::vector <Drawable*> & dl_dynamic,
-		const std::vector <Drawable*> & dl_static);
+	void SetDrawList(const std::vector <Drawable*> & drawlist);
 
 	virtual void Render(GraphicsState & glstate, std::ostream & error_output);
 
 private:
 	VertexBuffer & vertex_buffer;
-	reseatable_reference <const std::vector <Drawable*> > dynamic_drawlist_ptr;
-	reseatable_reference <const std::vector <Drawable*> > static_drawlist_ptr;
+	reseatable_reference <const std::vector <Drawable*> > drawlist_ptr;
 	bool last_transform_valid;
 	Mat4 last_transform; // cache last transform
 	Vec4 drawable_color; // cache color
@@ -90,7 +87,7 @@ private:
 	unsigned fsaa;
 	float contrast;
 
-	void Draw(GraphicsState & glstate, const std::vector <Drawable*> & drawlist, bool preculled);
+	void Draw(GraphicsState & glstate, const std::vector <Drawable*> & drawlist);
 
 	void DrawVertexArray(const VertexArray & va, float linesize) const;
 

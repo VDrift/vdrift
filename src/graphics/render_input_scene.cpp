@@ -150,12 +150,9 @@ void RenderInputScene::SetContrast(float value)
 	contrast = value;
 }
 
-void RenderInputScene::SetDrawLists(
-	const std::vector <Drawable*> & dl_dynamic,
-	const std::vector <Drawable*> & dl_static)
+void RenderInputScene::SetDrawList(const std::vector <Drawable*> & drawlist)
 {
-	dynamic_drawlist_ptr = &dl_dynamic;
-	static_drawlist_ptr = &dl_static;
+	drawlist_ptr = &drawlist;
 }
 
 void RenderInputScene::Render(GraphicsState & glstate, std::ostream & error_output)
@@ -189,34 +186,27 @@ void RenderInputScene::Render(GraphicsState & glstate, std::ostream & error_outp
 
 	last_transform_valid = false;
 
-	Draw(glstate, *dynamic_drawlist_ptr, false);
-	Draw(glstate, *static_drawlist_ptr, true);
+	Draw(glstate, *drawlist_ptr);
 }
 
-void RenderInputScene::Draw(GraphicsState & glstate, const std::vector <Drawable*> & drawlist, bool preculled)
+void RenderInputScene::Draw(GraphicsState & glstate, const std::vector <Drawable*> & drawlist)
 {
 	for (std::vector <Drawable*>::const_iterator ptr = drawlist.begin(); ptr != drawlist.end(); ++ptr)
 	{
 		const Drawable & d = **ptr;
-		if (preculled || !FrustumCull(d))
+		SetFlags(d, glstate);
+		SetTextures(d, glstate);
+		SetTransform(d, glstate);
+		if (!d.GetVertArray())
 		{
-			SetFlags(d, glstate);
+			vertex_buffer.Draw(glstate.VertexObject(), d.GetVertexBufferSegment());
+		}
+		else
+		{
+			if (glstate.VertexObject())
+				glstate.ResetVertexObject();
 
-			SetTextures(d, glstate);
-
-			SetTransform(d, glstate);
-
-			if (!d.GetVertArray())
-			{
-				vertex_buffer.Draw(glstate.VertexObject(), d.GetVertexBufferSegment());
-			}
-			else
-			{
-				if (glstate.VertexObject())
-					glstate.ResetVertexObject();
-
-				DrawVertexArray(*d.GetVertArray(), d.GetLineSize());
-			}
+			DrawVertexArray(*d.GetVertArray(), d.GetLineSize());
 		}
 	}
 }
@@ -286,43 +276,6 @@ void RenderInputScene::DrawVertexArray(const VertexArray & va, float linesize) c
 	}
 }
 
-bool RenderInputScene::FrustumCull(const Drawable & d) const
-{
-	const float radius = d.GetRadius();
-	if (radius > 0.0)
-	{
-		// get object center in world space
-		Vec3 objpos = d.GetObjectCenter();
-		d.GetTransform().TransformVectorOut(objpos[0], objpos[1], objpos[2]);
-
-		// get distance to camera
-		const float dx = objpos[0] - cam_position[0];
-		const float dy = objpos[1] - cam_position[1];
-		const float dz = objpos[2] - cam_position[2];
-		const float rc = dx * dx + dy * dy + dz * dz;
-
-		// test against camera position (assuming near plane is zero)
-		if (rc < radius * radius)
-			return false;
-
-		// test against camera far plane
-		const float temp_lod_far = lod_far + radius;
-		if (rc > temp_lod_far * temp_lod_far)
-			return true;
-
-		// test against all frustum planes
-		for (int i = 0; i < 6; i++)
-		{
-			const float rd = frustum.frustum[i][0] * objpos[0] +
-				frustum.frustum[i][1] * objpos[1] +
-				frustum.frustum[i][2] * objpos[2] +
-				frustum.frustum[i][3];
-			if (rd <= -radius)
-				return true;
-		}
-	}
-	return false;
-}
 
 void RenderInputScene::SetFlags(const Drawable & d, GraphicsState & glstate)
 {
