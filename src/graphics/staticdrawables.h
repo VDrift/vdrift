@@ -57,16 +57,15 @@ private:
 class StaticDrawables
 {
 public:
-	void Generate(SceneNode & node, bool clearfirst = true)
+	void Generate(SceneNode & node)
 	{
-		if (clearfirst)
-			drawables.clear();
-
 		Mat4 identity;
 		node.Traverse(drawables, identity);
 
 		drawables.ForEach(OptimizeFunctor());
 	}
+
+	void Clear() {drawables.clear();}
 
 	DrawableContainer <AabbTreeNodeAdapter> & GetDrawList() {return drawables;}
 

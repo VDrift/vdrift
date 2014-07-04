@@ -69,7 +69,9 @@ public:
 
 	virtual DynamicDrawables & GetDynamicDrawlist();
 
-	virtual void AddStaticNode(SceneNode & node, bool clearcurrent = true);
+	virtual void AddStaticNode(SceneNode & node);
+
+	virtual void ClearStaticDrawList();
 
 	virtual void SetupScene(
 		float fov, float new_view_distance,

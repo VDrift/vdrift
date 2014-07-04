@@ -406,9 +406,14 @@ Graphics::DynamicDrawables & GraphicsGL2::GetDynamicDrawlist()
 	return dynamic_drawlist;
 }
 
-void GraphicsGL2::AddStaticNode(SceneNode & node, bool clearcurrent)
+void GraphicsGL2::AddStaticNode(SceneNode & node)
 {
-	static_drawlist.Generate(node, clearcurrent);
+	static_drawlist.Generate(node);
+}
+
+void GraphicsGL2::ClearStaticDrawList()
+{
+	static_drawlist.Clear();
 }
 
 void GraphicsGL2::SetupScene(

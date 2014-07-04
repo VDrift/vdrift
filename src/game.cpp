@@ -1777,6 +1777,7 @@ bool Game::LoadTrack(const std::string & trackname)
 
 	// Build static drawlist.
 #ifdef USE_STATIC_OPTIMIZATION_FOR_TRACK
+	graphics_interface->ClearStaticDrawList();
 	graphics_interface->AddStaticNode(track.GetTrackNode());
 #endif
 
@@ -1830,6 +1831,7 @@ void Game::LoadGarage()
 
 	// Build static drawlist.
 #ifdef USE_STATIC_OPTIMIZATION_FOR_TRACK
+	graphics_interface->ClearStaticDrawList();
 	graphics_interface->AddStaticNode(track.GetTrackNode());
 #endif
 
@@ -2567,9 +2569,7 @@ void Game::LeaveGame()
 	gui.SetInGame(false);
 	gui.ActivatePage("Main", 0.25, error_output);
 
-	// Clear out the static drawables.
-	SceneNode empty;
-	graphics_interface->AddStaticNode(empty, true);
+	graphics_interface->ClearStaticDrawList();
 
 	track.Clear();
 	cars.clear();

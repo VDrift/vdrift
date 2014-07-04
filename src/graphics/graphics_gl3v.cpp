@@ -119,6 +119,16 @@ Graphics::DynamicDrawables & GraphicsGL3::GetDynamicDrawlist()
 	return dynamic_drawlist;
 }
 
+void GraphicsGL3::AddStaticNode(SceneNode & node)
+{
+	static_drawlist.Generate(node);
+}
+
+void GraphicsGL3::ClearStaticDrawList()
+{
+	static_drawlist.Clear();
+}
+
 GraphicsGL3::CameraMatrices & GraphicsGL3::setCameraPerspective(const std::string & name,
 	const Vec3 & position,
 	const Quat & rotation,
@@ -663,11 +673,6 @@ bool GraphicsGL3::ReloadShaders(std::ostream & info_output, std::ostream & error
 		logNextGlFrame = true;
 
 	return true;
-}
-
-void GraphicsGL3::AddStaticNode(SceneNode & node, bool clearcurrent)
-{
-	static_drawlist.Generate(node, clearcurrent);
 }
 
 void GraphicsGL3::SetCloseShadow ( float value )

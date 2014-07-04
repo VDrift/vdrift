@@ -66,7 +66,9 @@ public:
 
 	virtual DynamicDrawables & GetDynamicDrawlist();
 
-	virtual void AddStaticNode(SceneNode & node, bool clearcurrent = true);
+	virtual void AddStaticNode(SceneNode & node);
+
+	virtual void ClearStaticDrawList();
 
 	/// Setup scene cameras
 	virtual void SetupScene(
