@@ -24,7 +24,7 @@
 #include "graphics_config.h"
 #include "graphicsstate.h"
 #include "texture.h"
-#include "staticdrawables.h"
+#include "aabb_tree_adapter.h"
 #include "render_input_postprocess.h"
 #include "render_input_scene.h"
 #include "render_output.h"
@@ -32,7 +32,6 @@
 
 struct GraphicsCamera;
 class Shader;
-class SceneNode;
 class Sky;
 
 class GraphicsGL2 : public Graphics
@@ -148,6 +147,8 @@ private:
 
 	// scenegraph output
 	DynamicDrawables dynamic_drawlist; //used for objects that move or change
+
+	typedef DrawableContainer<AabbTreeNodeAdapter> StaticDrawables;
 	StaticDrawables static_drawlist; //used for objects that will never change
 
 	struct CulledDrawList

@@ -19,6 +19,7 @@
 
 #include "graphics_gl2.h"
 #include "graphics_camera.h"
+#include "scenenode.h"
 #include "glutil.h"
 #include "shader.h"
 #include "uniforms.h"
@@ -408,12 +409,14 @@ Graphics::DynamicDrawables & GraphicsGL2::GetDynamicDrawlist()
 
 void GraphicsGL2::AddStaticNode(SceneNode & node)
 {
-	static_drawlist.Generate(node);
+	Mat4 identity;
+	node.Traverse(static_drawlist, identity);
+	static_drawlist.ForEach(OptimizeFunctor());
 }
 
 void GraphicsGL2::ClearStaticDrawList()
 {
-	static_drawlist.Clear();
+	static_drawlist.clear();
 }
 
 void GraphicsGL2::SetupScene(
@@ -998,8 +1001,7 @@ void GraphicsGL2::CullScenePass(
 			if (pass.cull)
 			{
 				// cull static drawlist
-				reseatable_reference <AabbTreeNodeAdapter <Drawable> > container =
-					static_drawlist.GetDrawList().GetByName(*d);
+				reseatable_reference <AabbTreeNodeAdapter <Drawable> > container = static_drawlist.GetByName(*d);
 				if (!container)
 				{
 					ReportOnce(&pass, "Drawable container " + *d + " couldn't be found", error_output);
@@ -1035,8 +1037,7 @@ void GraphicsGL2::CullScenePass(
 			else
 			{
 				// copy static drawlist
-				reseatable_reference <AabbTreeNodeAdapter <Drawable> > container =
-					static_drawlist.GetDrawList().GetByName(*d);
+				reseatable_reference <AabbTreeNodeAdapter <Drawable> > container = static_drawlist.GetByName(*d);
 				if (!container)
 				{
 					ReportOnce(&pass, "Drawable container " + *d + " couldn't be found", error_output);

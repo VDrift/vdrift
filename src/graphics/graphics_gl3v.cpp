@@ -18,6 +18,7 @@
 /************************************************************************/
 
 #include "graphics_gl3v.h"
+#include "scenenode.h"
 #include "joeserialize.h"
 #include "unordered_map.h"
 #include "utils.h"
@@ -121,12 +122,15 @@ Graphics::DynamicDrawables & GraphicsGL3::GetDynamicDrawlist()
 
 void GraphicsGL3::AddStaticNode(SceneNode & node)
 {
-	static_drawlist.Generate(node);
+	Mat4 identity;
+	node.Traverse(static_drawlist, identity);
+
+	static_drawlist.ForEach(OptimizeFunctor());
 }
 
 void GraphicsGL3::ClearStaticDrawList()
 {
-	static_drawlist.Clear();
+	static_drawlist.clear();
 }
 
 GraphicsGL3::CameraMatrices & GraphicsGL3::setCameraPerspective(const std::string & name,
@@ -538,7 +542,7 @@ void GraphicsGL3::DrawScene(std::ostream & error_output)
 					}
 
 					// assemble static entries
-					reseatable_reference <AabbTreeNodeAdapter <Drawable> > staticDrawablesPtr = static_drawlist.GetDrawList().GetByName(drawGroupString);
+					reseatable_reference <AabbTreeNodeAdapter <Drawable> > staticDrawablesPtr = static_drawlist.GetByName(drawGroupString);
 					if (staticDrawablesPtr)
 					{
 						const AabbTreeNodeAdapter <Drawable> & staticDrawables = *staticDrawablesPtr;

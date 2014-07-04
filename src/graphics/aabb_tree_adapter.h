@@ -17,12 +17,10 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _STATICDRAWABLES_H
-#define _STATICDRAWABLES_H
+#ifndef _AABB_TREE_ADAPTER_H
+#define _AABB_TREE_ADAPTER_H
 
 #include "aabbtree.h"
-#include "scenenode.h"
-
 #include <vector>
 
 #define OBJECTS_PER_NODE 64
@@ -30,7 +28,6 @@
 template <typename T>
 class AabbTreeNodeAdapter
 {
-friend class StaticDrawables;
 public:
 	AabbTreeNodeAdapter() : count(0) {}
 
@@ -43,43 +40,42 @@ public:
 		box.SetFromSphere(objpos, radius);
 		spacetree.Add(drawable, box);
 	}
-	unsigned int size() const {return count;}
-	void clear() {spacetree.Clear();}
-	void Optimize() {spacetree.Optimize();count=spacetree.size();}
+
+	unsigned int size() const
+	{
+		return count;
+	}
+
+	void clear()
+	{
+		spacetree.Clear();
+	}
+
+	void Optimize()
+	{
+		spacetree.Optimize();
+		count = spacetree.size();
+	}
+
 	template <typename U>
-	void Query(const U & object, std::vector <T*> & output) const {spacetree.Query(object, output);}
+	void Query(const U & object, std::vector <T*> & output) const
+	{
+		spacetree.Query(object, output);
+	}
 
 private:
 	AabbTreeNode <T*,OBJECTS_PER_NODE> spacetree;
 	unsigned int count; ///< cached from spacetree.size()
 };
 
-class StaticDrawables
+/// adapter helper functor
+struct OptimizeFunctor
 {
-public:
-	void Generate(SceneNode & node)
+	template <typename T>
+	void operator()(AabbTreeNodeAdapter <T> & container)
 	{
-		Mat4 identity;
-		node.Traverse(drawables, identity);
-
-		drawables.ForEach(OptimizeFunctor());
+		container.Optimize();
 	}
-
-	void Clear() {drawables.clear();}
-
-	DrawableContainer <AabbTreeNodeAdapter> & GetDrawList() {return drawables;}
-
-private:
-	DrawableContainer <AabbTreeNodeAdapter> drawables;
-
-	struct OptimizeFunctor
-	{
-		template <typename T>
-		void operator()(AabbTreeNodeAdapter <T> & container)
-		{
-			container.Optimize();
-		}
-	};
 };
 
 #undef OBJECTS_PER_NODE

@@ -22,8 +22,7 @@
 
 #include "graphics.h"
 #include "mathvector.h"
-#include "scenenode.h"
-#include "staticdrawables.h"
+#include "aabb_tree_adapter.h"
 #include "matrix4.h"
 #include "texture.h"
 #include "vertexarray.h"
@@ -140,6 +139,8 @@ private:
 
 	// scenegraph output
 	DynamicDrawables dynamic_drawlist; //used for objects that move or change
+
+	typedef DrawableContainer<AabbTreeNodeAdapter> StaticDrawables;
 	StaticDrawables static_drawlist; //used for objects that will never change
 
 	// a special drawable that's used for fullscreen quad passes
