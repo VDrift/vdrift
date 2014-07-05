@@ -21,8 +21,8 @@
 #define _GRAPHICS_GL3V_H
 
 #include "graphics.h"
-#include "mathvector.h"
 #include "aabb_tree_adapter.h"
+#include "drawable_container.h"
 #include "matrix4.h"
 #include "texture.h"
 #include "vertexarray.h"
@@ -66,9 +66,11 @@ public:
 
 	virtual void BindVertexData(SceneNode * nodes[], unsigned int nodes_count);
 
-	virtual DynamicDrawables & GetDynamicDrawlist();
+	virtual void AddDynamicNode(SceneNode & node);
 
 	virtual void AddStaticNode(SceneNode & node);
+
+	virtual void ClearDynamicDrawList();
 
 	virtual void ClearStaticDrawList();
 
@@ -138,6 +140,8 @@ private:
 	std::string getCameraForPass(StringId pass) const;
 
 	// scenegraph output
+	template <typename T> class PtrVector : public std::vector<T*> {};
+	typedef DrawableContainer <PtrVector> DynamicDrawables;
 	DynamicDrawables dynamic_drawlist; //used for objects that move or change
 
 	typedef DrawableContainer<AabbTreeNodeAdapter> StaticDrawables;

@@ -402,9 +402,10 @@ void GraphicsGL2::BindVertexData(SceneNode * nodes[], unsigned int nodes_count)
 	vertex_buffer.Set(nodes, nodes_count);
 }
 
-Graphics::DynamicDrawables & GraphicsGL2::GetDynamicDrawlist()
+void GraphicsGL2::AddDynamicNode(SceneNode & node)
 {
-	return dynamic_drawlist;
+	Mat4 identity;
+	node.Traverse(dynamic_drawlist, identity);
 }
 
 void GraphicsGL2::AddStaticNode(SceneNode & node)
@@ -412,6 +413,11 @@ void GraphicsGL2::AddStaticNode(SceneNode & node)
 	Mat4 identity;
 	node.Traverse(static_drawlist, identity);
 	static_drawlist.ForEach(OptimizeFunctor());
+}
+
+void GraphicsGL2::ClearDynamicDrawList()
+{
+	dynamic_drawlist.clear();
 }
 
 void GraphicsGL2::ClearStaticDrawList()

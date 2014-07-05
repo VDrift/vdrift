@@ -115,17 +115,22 @@ void GraphicsGL3::BindVertexData(SceneNode * nodes[], unsigned int nodes_count)
 	// todo
 }
 
-Graphics::DynamicDrawables & GraphicsGL3::GetDynamicDrawlist()
+void GraphicsGL3::AddDynamicNode(SceneNode & node)
 {
-	return dynamic_drawlist;
+	Mat4 identity;
+	node.Traverse(dynamic_drawlist, identity);
 }
 
 void GraphicsGL3::AddStaticNode(SceneNode & node)
 {
 	Mat4 identity;
 	node.Traverse(static_drawlist, identity);
-
 	static_drawlist.ForEach(OptimizeFunctor());
+}
+
+void GraphicsGL3::ClearDynamicDrawList()
+{
+	dynamic_drawlist.clear();
 }
 
 void GraphicsGL3::ClearStaticDrawList()

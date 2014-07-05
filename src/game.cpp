@@ -444,19 +444,6 @@ bool Game::InitCoreSubsystems()
 	return true;
 }
 
-/* Write the scenegraph to the output drawlist... */
-template <bool clearfirst>
-void TraverseScene(SceneNode & node, Graphics::DynamicDrawables & output)
-{
-	if (clearfirst)
-	{
-		output.clear();
-	}
-
-	Mat4 identity;
-	node.Traverse(output, identity);
-}
-
 void Game::InitPlayerCar()
 {
 	Vec3 hsv;
@@ -775,21 +762,22 @@ void Game::Draw(float dt)
 	PROFILER.endBlock("render setup");
 
 	PROFILER.beginBlock("scenegraph");
-	TraverseScene<true>(debugnode, graphics_interface->GetDynamicDrawlist());
-	TraverseScene<false>(gui.GetNode(), graphics_interface->GetDynamicDrawlist());
-	TraverseScene<false>(track.GetRacinglineNode(), graphics_interface->GetDynamicDrawlist());
-	TraverseScene<false>(dynamicsdraw.getNode(), graphics_interface->GetDynamicDrawlist());
+	graphics_interface->ClearDynamicDrawList();
+	graphics_interface->AddDynamicNode(debugnode);
+	graphics_interface->AddDynamicNode(gui.GetNode());
+	graphics_interface->AddDynamicNode(track.GetRacinglineNode());
+	graphics_interface->AddDynamicNode(dynamicsdraw.getNode());
 #ifndef USE_STATIC_OPTIMIZATION_FOR_TRACK
-	TraverseScene<false>(track.GetTrackNode(), graphics_interface->GetDynamicDrawlist());
+	graphics_interface->AddDynamicNode(track.GetTrackNode());
 #endif
-	TraverseScene<false>(track.GetBodyNode(), graphics_interface->GetDynamicDrawlist());
-	TraverseScene<false>(hud.GetNode(), graphics_interface->GetDynamicDrawlist());
-	TraverseScene<false>(trackmap.GetNode(), graphics_interface->GetDynamicDrawlist());
-	TraverseScene<false>(inputgraph.GetNode(), graphics_interface->GetDynamicDrawlist());
-	TraverseScene<false>(tire_smoke.GetNode(), graphics_interface->GetDynamicDrawlist());
+	graphics_interface->AddDynamicNode(track.GetBodyNode());
+	graphics_interface->AddDynamicNode(hud.GetNode());
+	graphics_interface->AddDynamicNode(trackmap.GetNode());
+	graphics_interface->AddDynamicNode(inputgraph.GetNode());
+	graphics_interface->AddDynamicNode(tire_smoke.GetNode());
 	for (std::list <Car>::iterator i = cars.begin(); i != cars.end(); ++i)
 	{
-		TraverseScene<false>(i->GetNode(), graphics_interface->GetDynamicDrawlist());
+		graphics_interface->AddDynamicNode(i->GetNode());
 	}
 	//gui.GetNode().DebugPrint(info_output);
 	PROFILER.endBlock("scenegraph");
@@ -2285,12 +2273,12 @@ void Game::ShowLoadingScreen(float progress, float max, bool drawGui, const std:
 	assert(max > 0);
 	loadingscreen.Update(progress/max, optionalText, x, y);
 
-	graphics_interface->GetDynamicDrawlist().clear();
+	graphics_interface->ClearDynamicDrawList();
 	if (drawGui)
 	{
-		TraverseScene<false>(gui.GetNode(), graphics_interface->GetDynamicDrawlist());
+		graphics_interface->AddDynamicNode(gui.GetNode());
 	}
-	TraverseScene<false>(loadingscreen.GetNode(), graphics_interface->GetDynamicDrawlist());
+	graphics_interface->AddDynamicNode(loadingscreen.GetNode());
 
 	graphics_interface->SetupScene(45.0, 100.0, Vec3 (), Quat (), Vec3 ());
 	graphics_interface->DrawScene(error_output);

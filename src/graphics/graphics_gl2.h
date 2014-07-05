@@ -25,9 +25,11 @@
 #include "graphicsstate.h"
 #include "texture.h"
 #include "aabb_tree_adapter.h"
+#include "drawable_container.h"
 #include "render_input_postprocess.h"
 #include "render_input_scene.h"
 #include "render_output.h"
+#include "vertexbuffer.h"
 #include "memory.h"
 
 struct GraphicsCamera;
@@ -63,9 +65,11 @@ public:
 
 	virtual void BindVertexData(SceneNode * nodes[], unsigned int nodes_count);
 
-	virtual DynamicDrawables & GetDynamicDrawlist();
+	virtual void AddDynamicNode(SceneNode & node);
 
 	virtual void AddStaticNode(SceneNode & node);
+
+	virtual void ClearDynamicDrawList();
 
 	virtual void ClearStaticDrawList();
 
@@ -146,6 +150,8 @@ private:
 	VertexBuffer vertex_buffer;
 
 	// scenegraph output
+	template <typename T> class PtrVector : public std::vector<T*> {};
+	typedef DrawableContainer <PtrVector> DynamicDrawables;
 	DynamicDrawables dynamic_drawlist; //used for objects that move or change
 
 	typedef DrawableContainer<AabbTreeNodeAdapter> StaticDrawables;

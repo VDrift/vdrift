@@ -22,7 +22,6 @@
 
 #include "mathvector.h"
 #include "quaternion.h"
-#include "drawable_container.h"
 
 #include <iosfwd>
 
@@ -33,9 +32,6 @@ class SceneNode;
 class Graphics
 {
 public:
-	template <typename T> class PtrVector : public std::vector<T*> {};
-	typedef DrawableContainer <PtrVector> DynamicDrawables;
-
 	/// reflection_type is 0 (low=OFF), 1 (medium=static), 2 (high=dynamic)
 	/// returns true on success
 	virtual bool Init(
@@ -58,9 +54,11 @@ public:
 
 	virtual void BindVertexData(SceneNode * nodes[], unsigned int nodes_count) = 0;
 
-	virtual DynamicDrawables & GetDynamicDrawlist() = 0;
+	virtual void AddDynamicNode(SceneNode & node) = 0;
 
 	virtual void AddStaticNode(SceneNode & node) = 0;
+
+	virtual void ClearDynamicDrawList() = 0;
 
 	virtual void ClearStaticDrawList() = 0;
 
