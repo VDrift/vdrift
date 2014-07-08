@@ -245,7 +245,7 @@ void VertexBuffer::UploadVertexData(
 		vertex_buffer.resize(ob.vcount * vertex_size);
 		unsigned int icount = 0;
 		unsigned int vcount = 0;
-		while (icount < ob.icount)
+		while (vcount < ob.vcount)
 		{
 			assert(varray_index < varrays.size());
 			const VertexArray & va = *varrays[varray_index];
