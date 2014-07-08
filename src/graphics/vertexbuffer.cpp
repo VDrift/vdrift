@@ -330,20 +330,17 @@ void VertexBuffer::Draw(unsigned int & vobject, const Segment & s)
 
 void VertexBuffer::SetVertexFormat(const VertexFormat & vf)
 {
-	// TODO: Cache enabled / disabled attributes?
-	for (int n = 0; n <= VertexAttrib::LastAttrib; ++n)
+	for (unsigned int n = 0; n < vf.attribs_count; ++n)
 	{
 		const VertexAttrib::Format & af = vf.attribs[n];
-		if (af.size > 0)
-		{
-			glEnableVertexAttribArray(af.index);
-			glVertexAttribPointer(
-				af.index, af.size, af.type, af.norm,
-				vf.stride, (const void *)af.offset);
-		}
-		else
-		{
-			glDisableVertexAttribArray(af.index);
-		}
+		glEnableVertexAttribArray(af.index);
+		glVertexAttribPointer(
+			af.index, af.size, af.type, af.norm,
+			vf.stride, (const void *)af.offset);
+	}
+	// TODO: Cache enabled / disabled attributes?
+	for (unsigned int n = vf.attribs_count; n <= VertexAttrib::LastAttrib; ++n)
+	{
+		glDisableVertexAttribArray(vf.attribs[n].index);
 	}
 }

@@ -30,13 +30,14 @@ const VertexFormat & VertexFormat::Get(Enum e)
 			{
 				{VertexPosition,     3, GL_FLOAT, 0, false},
 				{VertexNormal,       3, GL_FLOAT, 3 * sizeof(float), false},
-				{VertexTangent,      0},
-				{VertexBitangent,    0},
 				{VertexTexCoord,     2, GL_FLOAT, 6 * sizeof(float), false},
-				{VertexBlendIndices, 0},
-				{VertexBlendWeights, 0},
-				{VertexColor,        0},
+				{VertexTangent,      0, GL_FLOAT, 0, false},
+				{VertexBitangent,    0, GL_FLOAT, 0, false},
+				{VertexBlendIndices, 0, GL_UNSIGNED_BYTE, 0, false},
+				{VertexBlendWeights, 0, GL_UNSIGNED_BYTE, 0, true},
+				{VertexColor,        0, GL_UNSIGNED_BYTE, 0, true},
 			},
+			3,
 			8 * sizeof(float)
 		},
 
@@ -44,14 +45,15 @@ const VertexFormat & VertexFormat::Get(Enum e)
 			// PTC324
 			{
 				{VertexPosition,     3, GL_FLOAT, 0, false},
-				{VertexNormal,       0},
-				{VertexTangent,      0},
-				{VertexBitangent,    0},
 				{VertexTexCoord,     2, GL_FLOAT, 3 * sizeof(float), false},
-				{VertexBlendIndices, 0},
-				{VertexBlendWeights, 0},
 				{VertexColor,        4, GL_UNSIGNED_BYTE, 5 * sizeof(float), true},
+				{VertexNormal,       0, GL_FLOAT, 0, false},
+				{VertexTangent,      0, GL_FLOAT, 0, false},
+				{VertexBitangent,    0, GL_FLOAT, 0, false},
+				{VertexBlendIndices, 0, GL_UNSIGNED_BYTE, 0, false},
+				{VertexBlendWeights, 0, GL_UNSIGNED_BYTE, 0, true},
 			},
+			3,
 			5 * sizeof(float) + 4
 		},
 
@@ -59,14 +61,15 @@ const VertexFormat & VertexFormat::Get(Enum e)
 			// PT32
 			{
 				{VertexPosition,     3, GL_FLOAT, 0, false},
-				{VertexNormal,       0},
-				{VertexTangent,      0},
-				{VertexBitangent,    0},
 				{VertexTexCoord,     2, GL_FLOAT, 3 * sizeof(float), false},
-				{VertexBlendIndices, 0},
-				{VertexBlendWeights, 0},
-				{VertexColor,        0},
+				{VertexNormal,       0, GL_FLOAT, 0, false},
+				{VertexTangent,      0, GL_FLOAT, 0, false},
+				{VertexBitangent,    0, GL_FLOAT, 0, false},
+				{VertexBlendIndices, 0, GL_UNSIGNED_BYTE, 0, false},
+				{VertexBlendWeights, 0, GL_UNSIGNED_BYTE, 0, true},
+				{VertexColor,        0, GL_UNSIGNED_BYTE, 0, true},
 			},
+			2,
 			5 * sizeof(float)
 		},
 
@@ -74,14 +77,15 @@ const VertexFormat & VertexFormat::Get(Enum e)
 			// P3
 			{
 				{VertexPosition,     3, GL_FLOAT, 0, false},
-				{VertexNormal,       0},
-				{VertexTangent,      0},
-				{VertexBitangent,    0},
-				{VertexTexCoord,     0},
-				{VertexBlendIndices, 0},
-				{VertexBlendWeights, 0},
-				{VertexColor,        0},
+				{VertexNormal,       0, GL_FLOAT, 0, false},
+				{VertexTangent,      0, GL_FLOAT, 0, false},
+				{VertexBitangent,    0, GL_FLOAT, 0, false},
+				{VertexTexCoord,     0, GL_FLOAT, 0, false},
+				{VertexBlendIndices, 0, GL_UNSIGNED_BYTE, 0, false},
+				{VertexBlendWeights, 0, GL_UNSIGNED_BYTE, 0, true},
+				{VertexColor,        0, GL_UNSIGNED_BYTE, 0, true},
 			},
+			1,
 			3 * sizeof(float)
 		}
 	};

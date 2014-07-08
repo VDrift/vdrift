@@ -24,8 +24,9 @@
 
 struct VertexFormat
 {
-	VertexAttrib::Format attribs[VertexAttrib::LastAttrib + 1];	///< unused attribs have size 0
-	unsigned int stride;										///< cached vertex size
+	VertexAttrib::Format attribs[VertexAttrib::LastAttrib + 1];
+	unsigned int attribs_count;
+	unsigned int stride;
 
 	/// predefined vertex formats
 	enum Enum
