@@ -25,66 +25,6 @@
 
 static const unsigned int max_buffer_size = 4 * 1024 * 1024; // 4 MB buffer limit
 
-VertexBuffer::VertexBuffer() :
-	age(1),
-	use_vao(false)
-{
-	// ctor
-}
-
-VertexBuffer::Segment::Segment() :
-	ioffset(0),
-	icount(0),
-	voffset(0),
-	vcount(0),
-	vbuffer(0),
-	vformat(VertexFormat::LastFormat),
-	object(0),
-	age(0)
-{
-	// ctor
-}
-
-VertexBuffer::Object::Object() :
-	icount(0),
-	vcount(0),
-	ibuffer(0),
-	vbuffer(0),
-	varray(0),
-	vformat(VertexFormat::LastFormat)
-{
-	// ctor
-}
-
-VertexBuffer::~VertexBuffer()
-{
-	Clear();
-}
-
-void VertexBuffer::Clear()
-{
-	// reset buffer state
-	if (use_vao)
-		glBindVertexArray(0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-	for (size_t n = 0; n <= VertexFormat::LastFormat; ++n)
-	{
-		for (size_t i = 0; i < objects[n].size(); ++i)
-		{
-			const Object & ob = objects[n][i];
-			if (use_vao)
-				glDeleteVertexArrays(1, &ob.varray);
-			glDeleteBuffers(1, &ob.ibuffer);
-			glDeleteBuffers(1, &ob.vbuffer);
-		}
-		objects[n].clear();
-	}
-
-	age += 2;
-}
-
 template <typename Functor>
 struct Wrapper
 {
@@ -168,106 +108,64 @@ struct VertexBuffer::BindVertexData
 	}
 };
 
-void VertexBuffer::UploadVertexData(
-	const std::vector<Object> & objects,
-	const std::vector<const VertexArray *> & varrays,
-	std::vector<float> & vertex_buffer,
-	std::vector<int> & index_buffer,
-	const bool use_vao)
+VertexBuffer::VertexBuffer() :
+	age(1),
+	use_vao(false)
 {
-	size_t varray_index = 0;
-	for (size_t i = 0; i < objects.size(); ++i)
+	// ctor
+}
+
+VertexBuffer::Segment::Segment() :
+	ioffset(0),
+	icount(0),
+	voffset(0),
+	vcount(0),
+	vbuffer(0),
+	vformat(VertexFormat::LastFormat),
+	object(0),
+	age(0)
+{
+	// ctor
+}
+
+VertexBuffer::Object::Object() :
+	icount(0),
+	vcount(0),
+	ibuffer(0),
+	vbuffer(0),
+	varray(0),
+	vformat(VertexFormat::LastFormat)
+{
+	// ctor
+}
+
+VertexBuffer::~VertexBuffer()
+{
+	Clear();
+}
+
+void VertexBuffer::Clear()
+{
+	// reset buffer state
+	if (use_vao)
+		glBindVertexArray(0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	for (size_t n = 0; n <= VertexFormat::LastFormat; ++n)
 	{
-		const Object & ob = objects[i];
-		const VertexFormat & vf = VertexFormat::Get(ob.vformat);
-		const int vertex_size = vf.stride / sizeof(float);
-
-		// fill staging buffers
-		index_buffer.resize(ob.icount);
-		vertex_buffer.resize(ob.vcount * vertex_size);
-		unsigned int icount = 0;
-		unsigned int vcount = 0;
-		while (icount < ob.icount)
+		for (size_t i = 0; i < objects[n].size(); ++i)
 		{
-			assert(varray_index < varrays.size());
-			const VertexArray & va = *varrays[varray_index];
-
-			// get indices
-			const int * faces = NULL;
-			int fn;
-			va.GetFaces(faces, fn);
-
-			// fill indices
-			int * ib = &index_buffer[icount];
-			assert(ib + fn <= &index_buffer.back() + 1);
-			for (int j = 0; j < fn; ++j)
-			{
-				ib[j] = faces[j] + vcount;
-			}
-			icount += fn;
-
-			// get vertices (fixme: use VertexFormat info)
-			const int vat_count = 4;
-			const void * vat_ptrs[4] = {0, 0, 0, 0};
-			int vn, nn, tn, cn;
-			va.GetVertices((const float *&)vat_ptrs[0], vn);
-			va.GetNormals((const float *&)vat_ptrs[1], nn);
-			va.GetTexCoords((const float *&)vat_ptrs[2], tn);
-			va.GetColors((const unsigned char *&)vat_ptrs[3], cn);
-
-			// calculate vertex element sizes and offsets in sizeof(float)
-			int vat_sizes[4] = {3, 3, 2, 1};
-			int vat_offsets[4] = {0, 3, 6, 8};
-			for (int j = 0; j < vat_count; ++j)
-			{
-				if (vat_ptrs[j] == 0)
-					vat_sizes[j] = 0;
-			}
-			for (int j = 1; j < vat_count; ++j)
-			{
-				vat_offsets[j] = vat_offsets[j - 1] + vat_sizes[j - 1];
-			}
-
-			// fill vertices
-			float * vb = &vertex_buffer[vcount * vertex_size];
-			assert(vb + vn / 3 * vertex_size <= &vertex_buffer.back() + 1);
-			for (int j = 0; j < vn / 3 ; ++j)
-			{
-				float * v = vb + j * vertex_size;
-				for (int k = 0; k < vat_count; ++k)
-				{
-					const float * vat = (const float *)vat_ptrs[k] + j * vat_sizes[k];
-					for (int m = 0; m < vat_sizes[k]; ++m)
-					{
-						v[vat_offsets[k] + m] = vat[m];
-					}
-				}
-			}
-			vcount += vn / 3;
-
-			varray_index++;
+			const Object & ob = objects[n][i];
+			if (use_vao)
+				glDeleteVertexArrays(1, &ob.varray);
+			glDeleteBuffers(1, &ob.ibuffer);
+			glDeleteBuffers(1, &ob.vbuffer);
 		}
-		assert(icount == ob.icount);
-		assert(vcount == ob.vcount);
-
-		// upload buffers
-		if (use_vao)
-			glBindVertexArray(ob.varray);
-
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ob.ibuffer);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, ob.icount * sizeof(int), &index_buffer[0], GL_STATIC_DRAW);
-
-		glBindBuffer(GL_ARRAY_BUFFER, ob.vbuffer);
-		glBufferData(GL_ARRAY_BUFFER, ob.vcount * vf.stride, &vertex_buffer[0], GL_STATIC_DRAW);
-
-		SetVertexFormat(vf);
-
-		// reset buffer state
-		if (use_vao)
-			glBindVertexArray(0);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		objects[n].clear();
 	}
+
+	age += 2;
 }
 
 void VertexBuffer::Set(SceneNode * nodes[], unsigned int nodes_count)
@@ -326,6 +224,123 @@ void VertexBuffer::Draw(unsigned int & vobject, const Segment & s)
 	glDrawRangeElements(
 		GL_TRIANGLES, s.voffset, s.voffset + s.vcount - 1,
 		s.icount, GL_UNSIGNED_INT, (const void *)s.ioffset);
+}
+
+void VertexBuffer::UploadVertexData(
+	const std::vector<Object> & objects,
+	const std::vector<const VertexArray *> & varrays,
+	std::vector<float> & vertex_buffer,
+	std::vector<int> & index_buffer,
+	const bool use_vao)
+{
+	size_t varray_index = 0;
+	for (size_t i = 0; i < objects.size(); ++i)
+	{
+		const Object & ob = objects[i];
+		const VertexFormat & vf = VertexFormat::Get(ob.vformat);
+		const unsigned int vertex_size = vf.stride / sizeof(float);
+
+		// fill staging buffers
+		index_buffer.resize(ob.icount);
+		vertex_buffer.resize(ob.vcount * vertex_size);
+		unsigned int icount = 0;
+		unsigned int vcount = 0;
+		while (icount < ob.icount)
+		{
+			assert(varray_index < varrays.size());
+			const VertexArray & va = *varrays[varray_index];
+			icount = WriteIndices(va, icount, vcount, index_buffer);
+			vcount = WriteVertices(va, vcount, vertex_size, vertex_buffer);
+			varray_index++;
+		}
+		assert(icount == ob.icount);
+		assert(vcount == ob.vcount);
+
+		// upload buffers
+		if (use_vao)
+			glBindVertexArray(ob.varray);
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ob.ibuffer);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, ob.icount * sizeof(int), &index_buffer[0], GL_STATIC_DRAW);
+
+		glBindBuffer(GL_ARRAY_BUFFER, ob.vbuffer);
+		glBufferData(GL_ARRAY_BUFFER, ob.vcount * vf.stride, &vertex_buffer[0], GL_STATIC_DRAW);
+
+		SetVertexFormat(vf);
+
+		// reset buffer state
+		if (use_vao)
+			glBindVertexArray(0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+}
+
+unsigned int VertexBuffer::WriteIndices(
+	const VertexArray & va,
+	const unsigned int icount,
+	const unsigned int vcount,
+	std::vector<int> & index_buffer)
+{
+	const int * faces = 0;
+	int fn;
+	va.GetFaces(faces, fn);
+
+	assert(icount + fn <= index_buffer.size());
+	int * ib = &index_buffer[icount];
+	for (int j = 0; j < fn; ++j)
+	{
+		ib[j] = faces[j] + vcount;
+	}
+
+	return icount + fn;
+}
+
+unsigned int VertexBuffer::WriteVertices(
+	const VertexArray & va,
+	const unsigned int vcount,
+	const unsigned int vertex_size,
+	std::vector<float> & vertex_buffer)
+{
+	// get vertices (fixme: use VertexFormat info here)
+	const int vat_count = 4;
+	const void * vat_ptrs[4] = {0, 0, 0, 0};
+	int vn, nn, tn, cn;
+	va.GetVertices((const float *&)vat_ptrs[0], vn);
+	va.GetNormals((const float *&)vat_ptrs[1], nn);
+	va.GetTexCoords((const float *&)vat_ptrs[2], tn);
+	va.GetColors((const unsigned char *&)vat_ptrs[3], cn);
+
+	// calculate vertex element sizes and offsets in sizeof(float)
+	int vat_sizes[4] = {3, 3, 2, 1};
+	int vat_offsets[4] = {0, 3, 6, 8};
+	for (int j = 0; j < vat_count; ++j)
+	{
+		if (vat_ptrs[j] == 0)
+			vat_sizes[j] = 0;
+	}
+	for (int j = 1; j < vat_count; ++j)
+	{
+		vat_offsets[j] = vat_offsets[j - 1] + vat_sizes[j - 1];
+	}
+
+	// fill vertices
+	assert((vcount + vn / 3) * vertex_size <= vertex_buffer.size());
+	float * vb = &vertex_buffer[vcount * vertex_size];
+	for (int j = 0; j < vn / 3 ; ++j)
+	{
+		float * v = vb + j * vertex_size;
+		for (int k = 0; k < vat_count; ++k)
+		{
+			const float * vat = (const float *)vat_ptrs[k] + j * vat_sizes[k];
+			for (int m = 0; m < vat_sizes[k]; ++m)
+			{
+				v[vat_offsets[k] + m] = vat[m];
+			}
+		}
+	}
+
+	return vcount + vn / 3;
 }
 
 void VertexBuffer::SetVertexFormat(const VertexFormat & vf)

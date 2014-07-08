@@ -90,6 +90,20 @@ private:
 		std::vector<int> & index_buffer,
 		const bool use_vao);
 
+	/// \brief Write vertex array indices into staging buffer
+	static unsigned int WriteIndices(
+		const VertexArray & va,
+		const unsigned int icount,
+		const unsigned int vcount,
+		std::vector<int> & index_buffer);
+
+	/// \brief Write vertex array vertices into staging buffer
+	static unsigned int WriteVertices(
+		const VertexArray & va,
+		const unsigned int vcount,
+		const unsigned int vertex_size,
+		std::vector<float> & vertex_buffer);
+
 	/// \brief Set vertex format of currently bound vertex array
 	static void SetVertexFormat(const VertexFormat & vf);
 };
