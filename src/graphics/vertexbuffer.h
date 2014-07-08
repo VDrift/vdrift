@@ -48,12 +48,13 @@ public:
 	{
 		Segment();
 
-		unsigned int ioffset;		///< index start byte offset
+		unsigned int ioffset;		///< index start offset in bytes
 		unsigned int icount;		///< index count
 		unsigned int voffset;		///< vertex start element index
 		unsigned int vcount;		///< vertex count
 		unsigned int vbuffer;		///< vertex buffer / array object
-		unsigned short object;		///< object this segment belongs to
+		unsigned char vformat;		///< vertex format
+		unsigned char object;		///< object this segment belongs to
 		unsigned short age;			///< segment age
 	};
 

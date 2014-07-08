@@ -24,8 +24,6 @@
 //#define VAO_BROKEN
 
 static const unsigned int max_buffer_size = 4 * 1024 * 1024; // 4 MB buffer limit
-static const unsigned int object_index_mask = 255;
-static const unsigned int max_object_count = object_index_mask + 1;
 
 VertexBuffer::VertexBuffer() :
 	age(1),
@@ -40,6 +38,7 @@ VertexBuffer::Segment::Segment() :
 	voffset(0),
 	vcount(0),
 	vbuffer(0),
+	vformat(VertexFormat::LastFormat),
 	object(0),
 	age(0)
 {
@@ -128,7 +127,7 @@ struct VertexBuffer::BindVertexData
 		if (obs.empty() || (obs.back().vcount + vcount) * VertexFormat::Get(vf).stride > max_buffer_size)
 		{
 			obs.push_back(Object());
-			assert(obs.size() <= max_object_count);
+			assert(obs.size() <= 256);
 		}
 		Object & ob = obs.back();
 
@@ -152,7 +151,8 @@ struct VertexBuffer::BindVertexData
 			sg.voffset = ob.vcount;
 			sg.vcount = vcount;
 			sg.vbuffer = ctx.use_vao ? ob.varray : ob.vbuffer;
-			sg.object = vf * max_object_count + (obs.size() - 1);
+			sg.vformat = vf;
+			sg.object = obs.size() - 1;
 			sg.age = ctx.age;
 
 			// store va for vertex data upload
@@ -304,17 +304,17 @@ void VertexBuffer::Draw(unsigned int & vobject, const Segment & s)
 			vobject = s.vbuffer;
 			#ifdef VAO_BROKEN
 				// broken vao implementations handling
-				const unsigned int object_vector = s.object / max_object_count;
-				const unsigned int object_index = s.object & object_index_mask;
-				const Object & ob = objects[object_vector][object_index];
+				assert(s.vformat <= VertexAttrib::LastAttrib);
+				assert(s.object < objects[s.vformat].size());
+				const Object & ob = objects[s.vformat][s.object];
 				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ob.ibuffer);
 			#endif
 		}
 		else
 		{
-			const unsigned int object_vector = s.object / max_object_count;
-			const unsigned int object_index = s.object & object_index_mask;
-			const Object & ob = objects[object_vector][object_index];
+			assert(s.vformat <= VertexAttrib::LastAttrib);
+			assert(s.object < objects[s.vformat].size());
+			const Object & ob = objects[s.vformat][s.object];
 
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ob.ibuffer);
 			glBindBuffer(GL_ARRAY_BUFFER, ob.vbuffer);
