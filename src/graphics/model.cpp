@@ -277,10 +277,9 @@ bool Model::GetVertexArrayObject(unsigned & vao_out, unsigned int & element_coun
 
 void Model::GenMeshMetrics()
 {
-	const float flt_max = std::numeric_limits<float>::max();
-	const float flt_min = std::numeric_limits<float>::min();
-	float maxv[3] = {flt_min, flt_min, flt_min};
-	float minv[3] = {flt_max, flt_max, flt_max};
+	const float fmax = std::numeric_limits<float>::max();
+	float maxv[3] = {-fmax, -fmax, -fmax};
+	float minv[3] = {+fmax, +fmax, +fmax};
 
 	const float * verts;
 	int vnum3;
