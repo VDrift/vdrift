@@ -21,6 +21,7 @@
 #include "joepack.h"
 #include "mathvector.h"
 #include "endian_utility.h"
+#include "unordered_map.h"
 
 #include <vector>
 using std::vector;
@@ -81,19 +82,33 @@ struct JoeObject
 	std::vector<JoeFrame> frames;
 };
 
-struct VertEntry
+// Unique vertex entry
+struct Vert
 {
-	VertEntry() :
-		original_index(JOE_MAX_VERTS),
-		norm_index(JOE_MAX_VERTS),
-		tex_index(JOE_MAX_VERTS)
+	unsigned short vi;
+	unsigned short ti;
+	unsigned short ni;
+
+	Vert(unsigned short nvi, unsigned short nti, unsigned short nni) :
+		vi(nvi), ti(nti), ni(nni)
 	{
 		// ctor
 	}
 
-	unsigned int original_index;
-	unsigned int norm_index;
-	unsigned int tex_index;
+	bool operator ==(const Vert & v) const
+	{
+		return (vi == v.vi) && (ti == v.ti) && (ni == v.ni);
+	}
+};
+
+struct VertHash
+{
+	size_t operator ()(const Vert & v) const
+	{
+		const size_t h1 = (size_t(v.vi) << 16) | size_t(v.ti);
+		const size_t h2 = (size_t(v.ti) << 16) | size_t(v.ni);
+		return std::tr1::hash<size_t>()(h1) ^ std::tr1::hash<size_t>()(h2);
+	}
 };
 
 static void CorrectEndian(std::vector<JoeFace> & p)
@@ -374,78 +389,43 @@ void ModelJoe03::ReadData ( FILE * m_FilePointer, const JoePack * pack, JoeObjec
 
 	//build unique vertices
 	//cout << "building unique vertices...." << endl;
-	unsigned int frame = 0;
 
-	vector <VertEntry> vert_master (object.frames[frame].num_verts);
-	vert_master.reserve(object.frames[frame].num_verts*2);
+	typedef std::tr1::unordered_map<Vert, unsigned int, VertHash> VertMap;
+	VertMap vmap(object.info.num_faces * 3);
 
-	vector <unsigned int> v_faces(object.info.num_faces*3);
+	vector <unsigned int> v_faces(object.info.num_faces * 3);
 
+	unsigned int vnum = 0;
 	for (unsigned int i = 0; i < object.info.num_faces; i++)
 	{
-		for (unsigned int v = 0; v < 3; v++)
+		const JoeFace & f = object.frames[0].faces[i];
+		for (unsigned int j = 0; j < 3; j++)
 		{
-			VertEntry & ve = vert_master[object.frames[frame].faces[i].vertexIndex[v]];
-			if (ve.original_index == JOE_MAX_VERTS) //first entry
-			{
-				ve.original_index = object.frames[frame].faces[i].vertexIndex[v];
-				ve.norm_index = object.frames[frame].faces[i].normalIndex[v];
-				ve.tex_index = object.frames[frame].faces[i].textureIndex[v];
-				assert(ve.tex_index != JOE_MAX_VERTS);
+			const Vert vert(f.vertexIndex[j], f.textureIndex[j], f.normalIndex[j]);
+			std::pair<VertMap::iterator, bool> r = vmap.insert(std::make_pair(vert, vnum));
+			if (r.second)
+				vnum++;
 
-				v_faces[i*3+v] = object.frames[frame].faces[i].vertexIndex[v];
-			}
-			else
-			{
-				//see if we match the pre-existing entry
-				if (ve.norm_index == object.frames[frame].faces[i].normalIndex[v] &&
-					ve.tex_index == object.frames[frame].faces[i].textureIndex[v])
-				{
-					v_faces[i*3+v] = object.frames[frame].faces[i].vertexIndex[v];
-					assert(ve.tex_index != JOE_MAX_VERTS);
-				}
-				else
-				{
-					//create a new entry
-					vert_master.push_back(VertEntry());
-					vert_master.back().original_index = object.frames[frame].faces[i].vertexIndex[v];
-					vert_master.back().norm_index = object.frames[frame].faces[i].normalIndex[v];
-					vert_master.back().tex_index = object.frames[frame].faces[i].textureIndex[v];
-					assert(vert_master.back().tex_index != JOE_MAX_VERTS);
-
-					v_faces[i*3+v] = vert_master.size() - 1;
-				}
-			}
+			v_faces[i * 3 + j] = r.first->second;
 		}
 	}
 
-	unsigned int newvertnum = vert_master.size();
-
-	//now, fill up the vertices, normals, and texcoords
-	vector <float> v_vertices(newvertnum*3);
-	vector <float> v_texcoords(newvertnum*2);
-	vector <float> v_normals(newvertnum*3);
-	for (unsigned int i = 0; i < newvertnum; ++i)
+	vector <float> v_vertices(vnum * 3);
+	vector <float> v_texcoords(vnum * 2);
+	vector <float> v_normals(vnum * 3);
+	for (VertMap::const_iterator i = vmap.begin(); i != vmap.end(); i++)
 	{
-		if (vert_master[i].original_index != JOE_MAX_VERTS)
-		{
-			for (unsigned int d = 0; d < 3; d++)
-				v_vertices[i*3+d] = object.frames[frame].verts[vert_master[i].original_index].vertex[d];
+		const Vert & v = i->first;
+		const unsigned int vi = i->second;
 
-			for (unsigned int d = 0; d < 3; d++)
-				v_normals[i*3+d] = object.frames[frame].normals[vert_master[i].norm_index].vertex[d];
+		for (unsigned int j = 0; j < 3; j++)
+			v_vertices[vi * 3 + j] = object.frames[0].verts[v.vi].vertex[j];
 
-			if (vert_master[i].tex_index < object.frames[frame].num_texcoords)
-			{
-				v_texcoords[i*2+0] = object.frames[frame].texcoords[vert_master[i].tex_index].u;
-				v_texcoords[i*2+1] = object.frames[frame].texcoords[vert_master[i].tex_index].v;
-			}
-			else
-			{
-				v_texcoords[i*2+0] = 0;
-				v_texcoords[i*2+1] = 0;
-			}
-		}
+		for (unsigned int j = 0; j < 3; j++)
+			v_normals[vi * 3 + j] = object.frames[0].normals[v.ni].vertex[j];
+
+		v_texcoords[vi * 2 + 0] = object.frames[0].texcoords[v.ti].u;
+		v_texcoords[vi * 2 + 1] = object.frames[0].texcoords[v.ti].v;
 	}
 
 	//assign to our mesh
