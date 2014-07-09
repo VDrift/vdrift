@@ -157,7 +157,7 @@ void VertexBuffer::Clear()
 		for (size_t i = 0; i < objects[n].size(); ++i)
 		{
 			const Object & ob = objects[n][i];
-			if (use_vao)
+			if (ob.varray)
 				glDeleteVertexArrays(1, &ob.varray);
 			glDeleteBuffers(1, &ob.ibuffer);
 			glDeleteBuffers(1, &ob.vbuffer);
@@ -185,7 +185,7 @@ void VertexBuffer::Set(SceneNode * nodes[], unsigned int nodes_count)
 	std::vector<int> index_buffer;
 	for (unsigned int i = 0; i <= VertexFormat::LastFormat; ++i)
 	{
-		UploadVertexData(objects[i], data.varrays[i], vertex_buffer, index_buffer, use_vao);
+		UploadVertexData(objects[i], data.varrays[i], vertex_buffer, index_buffer);
 	}
 }
 
@@ -230,8 +230,7 @@ void VertexBuffer::UploadVertexData(
 	const std::vector<Object> & objects,
 	const std::vector<const VertexArray *> & varrays,
 	std::vector<float> & vertex_buffer,
-	std::vector<int> & index_buffer,
-	const bool use_vao)
+	std::vector<int> & index_buffer)
 {
 	size_t varray_index = 0;
 	for (size_t i = 0; i < objects.size(); ++i)
@@ -249,6 +248,7 @@ void VertexBuffer::UploadVertexData(
 		{
 			assert(varray_index < varrays.size());
 			const VertexArray & va = *varrays[varray_index];
+
 			icount = WriteIndices(va, icount, vcount, index_buffer);
 			vcount = WriteVertices(va, vcount, vertex_size, vertex_buffer);
 			varray_index++;
@@ -256,23 +256,7 @@ void VertexBuffer::UploadVertexData(
 		assert(icount == ob.icount);
 		assert(vcount == ob.vcount);
 
-		// upload buffers
-		if (use_vao)
-			glBindVertexArray(ob.varray);
-
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ob.ibuffer);
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, ob.icount * sizeof(int), &index_buffer[0], GL_STATIC_DRAW);
-
-		glBindBuffer(GL_ARRAY_BUFFER, ob.vbuffer);
-		glBufferData(GL_ARRAY_BUFFER, ob.vcount * vf.stride, &vertex_buffer[0], GL_STATIC_DRAW);
-
-		SetVertexFormat(vf);
-
-		// reset buffer state
-		if (use_vao)
-			glBindVertexArray(0);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		UploadBuffers(ob, vertex_buffer, index_buffer);
 	}
 }
 
@@ -341,6 +325,31 @@ unsigned int VertexBuffer::WriteVertices(
 	}
 
 	return vcount + vn / 3;
+}
+
+void VertexBuffer::UploadBuffers(
+	const Object & object,
+	const std::vector<float> & vertex_buffer,
+	const std::vector<int> & index_buffer)
+{
+	const VertexFormat & vformat = VertexFormat::Get(object.vformat);
+
+	if (object.varray)
+		glBindVertexArray(object.varray);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, object.ibuffer);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, object.icount * sizeof(int), &index_buffer[0], GL_STATIC_DRAW);
+
+	glBindBuffer(GL_ARRAY_BUFFER, object.vbuffer);
+	glBufferData(GL_ARRAY_BUFFER, object.vcount * vformat.stride, &vertex_buffer[0], GL_STATIC_DRAW);
+
+	SetVertexFormat(vformat);
+
+	// reset buffer state
+	if (object.varray)
+		glBindVertexArray(0);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void VertexBuffer::SetVertexFormat(const VertexFormat & vf)

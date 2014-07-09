@@ -87,8 +87,7 @@ private:
 		const std::vector<Object> & objects,
 		const std::vector<const VertexArray *> & varrays,
 		std::vector<float> & vertex_buffer,
-		std::vector<int> & index_buffer,
-		const bool use_vao);
+		std::vector<int> & index_buffer);
 
 	/// \brief Write vertex array indices into staging buffer
 	static unsigned int WriteIndices(
@@ -103,6 +102,12 @@ private:
 		const unsigned int vcount,
 		const unsigned int vertex_size,
 		std::vector<float> & vertex_buffer);
+
+	/// \brief Upload staging data into object vbo/ibo
+	static void UploadBuffers(
+		const Object & object,
+		const std::vector<float> & vertex_buffer,
+		const std::vector<int> & index_buffer);
 
 	/// \brief Set vertex format of currently bound vertex array
 	static void SetVertexFormat(const VertexFormat & vf);
