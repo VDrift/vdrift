@@ -429,7 +429,7 @@ void ModelJoe03::ReadData ( FILE * m_FilePointer, const JoePack * pack, JoeObjec
 	}
 
 	//assign to our mesh
-	m_mesh.Add(
+	varray.Add(
 		&v_faces[0], v_faces.size(),
 		&v_vertices[0], v_vertices.size(),
 		&v_texcoords[0], v_texcoords.size(),

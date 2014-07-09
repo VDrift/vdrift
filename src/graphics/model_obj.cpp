@@ -182,7 +182,7 @@ bool ModelObj::Load(const std::string & filepath, std::ostream & error_log, bool
 		}
 	}
 
-	m_mesh.BuildFromFaces(faces);
+	varray.BuildFromFaces(faces);
 	GenMeshMetrics();
 	if (!genlist)
 		GenVertexArrayObject(error_log);
@@ -229,19 +229,19 @@ bool ModelObj::Save(const std::string & strFileName, std::ostream & error_output
 
 	f << "# Model conversion utility by Joe Venzon" << endl << endl;
 
-	WriteVectorGroupings(f, m_mesh.vertices, "v", 3);
+	WriteVectorGroupings(f, varray.vertices, "v", 3);
 	f << endl;
-	WriteVectorGroupings(f, m_mesh.texcoords, "vt", 2);
+	WriteVectorGroupings(f, varray.texcoords, "vt", 2);
 	f << endl;
-	WriteVectorGroupings(f, m_mesh.normals, "vn", 3);
+	WriteVectorGroupings(f, varray.normals, "vn", 3);
 	f << endl;
 
-	for (unsigned int i = 0; i < m_mesh.faces.size() / 3; i++)
+	for (unsigned int i = 0; i < varray.faces.size() / 3; i++)
 	{
 		f << "f ";
 		for (int v = 0; v < 3; v++)
 		{
-			WriteFace(f, m_mesh.faces[i*3+v]+1);
+			WriteFace(f, varray.faces[i*3+v]+1);
 			f << " ";
 		}
 		f << endl;

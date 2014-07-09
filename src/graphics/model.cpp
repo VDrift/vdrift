@@ -69,11 +69,11 @@ bool Model::Load(const std::string & strFileName, std::ostream & error_output, b
 	return false;
 }
 
-bool Model::Load(const VertexArray & varray, std::ostream & error_output, bool genlist)
+bool Model::Load(const VertexArray & nvarray, std::ostream & error_output, bool genlist)
 {
 	Clear();
 
-	m_mesh = varray;
+	varray = nvarray;
 
 	GenMeshMetrics();
 
@@ -85,7 +85,7 @@ bool Model::Load(const VertexArray & varray, std::ostream & error_output, bool g
 
 bool Model::Serialize(joeserialize::Serializer & s)
 {
-	_SERIALIZE_(s, m_mesh);
+	_SERIALIZE_(s, varray);
 	return true;
 }
 
@@ -172,7 +172,7 @@ void Model::GenVertexArrayObject(std::ostream & error_output)
 	// Buffer object for faces.
 	const unsigned int * faces;
 	int fcount;
-	m_mesh.GetFaces(faces, fcount);
+	varray.GetFaces(faces, fcount);
 	assert(faces && fcount > 0);
 	element_count = fcount;
 	GLuint evbo = 0;
@@ -184,7 +184,7 @@ void Model::GenVertexArrayObject(std::ostream & error_output)
 	// Generate buffer object for vertex positions.
 	const float * verts;
 	int vcount;
-	m_mesh.GetVertices(verts, vcount);
+	varray.GetVertices(verts, vcount);
 	assert(verts && vcount > 0);
 	const int vertex_count = vcount / 3;
 	vbos.push_back(GenerateBuffer(error_output, VertexPosition, verts, vertex_count, 3));
@@ -192,7 +192,7 @@ void Model::GenVertexArrayObject(std::ostream & error_output)
 	// Generate buffer object for normals.
 	const float * norms;
 	int ncount;
-	m_mesh.GetNormals(norms, ncount);
+	varray.GetNormals(norms, ncount);
 	if (!norms || ncount <= 0)
 		glDisableVertexAttribArray(VertexNormal);
 	else
@@ -208,7 +208,7 @@ void Model::GenVertexArrayObject(std::ostream & error_output)
 	// Generate buffer object for texture coordinates.
 	const float * tcos;
 	int tcount;
-	m_mesh.GetTexCoords(tcos, tcount);
+	varray.GetTexCoords(tcos, tcount);
 	if (tcos && tcount)
 	{
 		assert(tcount == vertex_count * 2);
@@ -223,7 +223,7 @@ void Model::GenVertexArrayObject(std::ostream & error_output)
 	// Generate buffer object for colors.
 	const unsigned char * cols = 0;
 	int ccount = 0;
-	m_mesh.GetColors(cols, ccount);
+	varray.GetColors(cols, ccount);
 	if (cols && ccount)
 	{
 		assert(ccount == vertex_count * 4);
@@ -283,7 +283,7 @@ void Model::GenMeshMetrics()
 
 	const float * verts;
 	int vnum3;
-	m_mesh.GetVertices(verts, vnum3);
+	varray.GetVertices(verts, vnum3);
 	assert(vnum3);
 
 	for (int n = 0; n < vnum3; n += 3)
@@ -329,12 +329,12 @@ void Model::Clear()
 
 const VertexArray & Model::GetVertexArray() const
 {
-	return m_mesh;
+	return varray;
 }
 
 bool Model::Loaded() const
 {
-	return (m_mesh.GetNumIndices() > 0);
+	return (varray.GetNumIndices() > 0);
 }
 
 void Model::RequireMetrics() const
@@ -350,5 +350,5 @@ void Model::ClearMetrics()
 
 void Model::ClearMeshData()
 {
-	m_mesh.Clear();
+	varray.Clear();
 }

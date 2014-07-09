@@ -43,7 +43,7 @@ public:
 
 	virtual bool Load(const std::string & strFileName, std::ostream & error_output, bool genlist);
 
-	bool Load(const VertexArray & varray, std::ostream & error_output, bool genlist);
+	bool Load(const VertexArray & nvarray, std::ostream & error_output, bool genlist);
 
 	bool Serialize(joeserialize::Serializer & s);
 
@@ -83,7 +83,7 @@ public:
 	bool Loaded() const;
 
 protected:
-	VertexArray m_mesh;			///< to be filled by the derived classes
+	VertexArray varray;			///< to be filled by the derived classes
 
 private:
 	VertexBuffer::Segment vbs;	///< vertex buffer segment
