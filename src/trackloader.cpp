@@ -67,8 +67,8 @@ static btIndexedMesh GetIndexedMesh(const Model & model)
 	btIndexedMesh mesh;
 	mesh.m_numTriangles = fcount / 3;
 	mesh.m_triangleIndexBase = (const unsigned char *)faces;
-	mesh.m_triangleIndexStride = sizeof(int) * 3;
-	mesh.m_numVertices = vcount;
+	mesh.m_triangleIndexStride = sizeof(unsigned int) * 3;
+	mesh.m_numVertices = vcount / 3;
 	mesh.m_vertexBase = (const unsigned char *)vertices;
 	mesh.m_vertexStride = sizeof(float) * 3;
 	mesh.m_vertexType = PHY_FLOAT;
