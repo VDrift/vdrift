@@ -87,14 +87,14 @@ private:
 		const std::vector<Object> & objects,
 		const std::vector<const VertexArray *> & varrays,
 		std::vector<float> & vertex_buffer,
-		std::vector<int> & index_buffer);
+		std::vector<unsigned int> & index_buffer);
 
 	/// \brief Write vertex array indices into staging buffer
 	static unsigned int WriteIndices(
 		const VertexArray & va,
 		const unsigned int icount,
 		const unsigned int vcount,
-		std::vector<int> & index_buffer);
+		std::vector<unsigned int> & index_buffer);
 
 	/// \brief Write vertex array vertices into staging buffer
 	static unsigned int WriteVertices(
@@ -107,7 +107,7 @@ private:
 	static void UploadBuffers(
 		const Object & object,
 		const std::vector<float> & vertex_buffer,
-		const std::vector<int> & index_buffer);
+		const std::vector<unsigned int> & index_buffer);
 
 	/// \brief Set vertex format of currently bound vertex array
 	static void SetVertexFormat(const VertexFormat & vf);

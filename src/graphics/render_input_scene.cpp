@@ -232,7 +232,7 @@ void RenderInputScene::DrawVertexArray(const VertexArray & va, float linesize) c
 			glEnableVertexAttribArray(VertexColor);
 		}
 
-		const int * faces;
+		const unsigned int * faces;
 		int fcount;
 		va.GetFaces(faces, fcount);
 		if (faces)

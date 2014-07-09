@@ -41,7 +41,7 @@ float TextDraw::RenderCharacter(
 
 	const float v[] = {x1, y1, 0, x2, y1, 0, x2, y2, 0, x1, y2, 0};
 	const float t[] = {u1, v1, u2, v1, u2, v2, u1, v2};
-	const int f[] = {0, 1, 2, 0, 2, 3};
+	const unsigned int f[] = {0, 1, 2, 0, 2, 3};
 
 	output_array.Add(f, 6, v, 12, t, 8);
 

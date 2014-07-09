@@ -154,7 +154,7 @@ void ParticleSystem::UpdateGraphics(
 		float y2 = sizescale * 4 / 3.0f;
 		unsigned char alpha = trans * 255;
 
-		const int faces[6] = {
+		const unsigned int faces[6] = {
 			0, 2, 1,
 			0, 3, 2,
 		};

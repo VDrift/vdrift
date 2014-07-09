@@ -57,7 +57,7 @@ static btIndexedMesh GetIndexedMesh(const Model & model)
 {
 	const float * vertices;
 	int vcount;
-	const int * faces;
+	const unsigned int * faces;
 	int fcount;
 	model.GetVertexArray().GetVertices(vertices, vcount);
 	model.GetVertexArray().GetFaces(faces, fcount);
@@ -937,14 +937,14 @@ static void AddRacingLineSegment(
 	const RoadPatch & patch,
 	std::vector<float> & vertices,
 	std::vector<float> & texcoords,
-	std::vector<int> & faces,
+	std::vector<unsigned int> & faces,
 	Vec3 & prev_segment,
 	float & distance)
 {
 	if (set_faces)
 	{
-		const int n = texcoords.size() / 2;
-		const int fs[6] = {n, n + 1, n + 3, n + 3, n + 2, n};
+		const unsigned int n = texcoords.size() / 2;
+		const unsigned int fs[6] = {n, n + 1, n + 3, n + 3, n + 2, n};
 		faces.insert(faces.end(), fs, fs + 6);
 	}
 
@@ -989,7 +989,7 @@ void Track::Loader::CreateRacingLine(const RoadStrip & strip)
 	VertexArray vertex_array;
 	std::vector<float> vertices;
 	std::vector<float> texcoords;
-	std::vector<int> faces;
+	std::vector<unsigned int> faces;
 	vertices.reserve((batch_size + 1) * 6);
 	texcoords.reserve((batch_size + 1) * 4);
 	faces.reserve(batch_size * 6);

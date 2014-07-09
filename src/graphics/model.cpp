@@ -170,7 +170,7 @@ void Model::GenVertexArrayObject(std::ostream & error_output)
 	glBindVertexArray(vao);ERROR_CHECK;
 
 	// Buffer object for faces.
-	const int * faces;
+	const unsigned int * faces;
 	int fcount;
 	m_mesh.GetFaces(faces, fcount);
 	assert(faces && fcount > 0);

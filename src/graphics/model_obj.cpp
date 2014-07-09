@@ -205,7 +205,7 @@ void WriteRange(std::ostream & s, const vector <float> & v, int startidx, int en
 void WriteVectorGroupings(std::ostream & s, const vector <float> & v, const std::string & id, int groupsize)
 {
 	assert(groupsize > 0);
-	for (int i = 0; i < (int)v.size()/groupsize; i++)
+	for (unsigned int i = 0; i < v.size() / groupsize; i++)
 	{
 		s << id << " ";
 		WriteRange(s, v, i*groupsize, i*groupsize+groupsize);
@@ -236,7 +236,7 @@ bool ModelObj::Save(const std::string & strFileName, std::ostream & error_output
 	WriteVectorGroupings(f, m_mesh.normals, "vn", 3);
 	f << endl;
 
-	for (int i = 0; i < (int)m_mesh.faces.size()/3; i++)
+	for (unsigned int i = 0; i < m_mesh.faces.size() / 3; i++)
 	{
 		f << "f ";
 		for (int v = 0; v < 3; v++)

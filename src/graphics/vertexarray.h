@@ -47,16 +47,16 @@ public:
 
 	void GetVertices(const float * & output_array_pointer, int & output_array_num) const;
 
-	void GetFaces(const int * & output_array_pointer, int & output_array_num) const;
+	void GetFaces(const unsigned int * & output_array_pointer, int & output_array_num) const;
 
-	int GetNumVertices() const { return vertices.size() / 3; }
+	unsigned int GetNumVertices() const { return vertices.size() / 3; }
 
-	int GetNumIndices() const { return faces.size(); }
+	unsigned int GetNumIndices() const { return faces.size(); }
 
 	VertexFormat::Enum GetVertexFormat() const { return format; }
 
 	void Add(
-		const int newfaces[], int newfacecount,
+		const unsigned int newfaces[], int newfacecount,
 		const float newvert[], int newvertcount,
 		const float newtco[] = 0, int newtcocount = 0,
 		const float newnorm[] = 0, int newnormcount = 0,
@@ -72,7 +72,7 @@ public:
 
 	void SetTo2DQuad(float x1, float y1, float x2, float y2, float u1, float v1, float u2, float v2, float z=0.f);
 
-	void SetVertexData2DQuad(float x1, float y1, float x2, float y2, float u1, float v1, float u2, float v2, float * vcorners, float * uvs, int * bfaces, int faceoffset=0) const;
+	void SetVertexData2DQuad(float x1, float y1, float x2, float y2, float u1, float v1, float u2, float v2, float * vcorners, float * uvs, unsigned int * bfaces, unsigned int faceoffset=0) const;
 
 	void SetToUnitCube();
 
@@ -166,7 +166,7 @@ private:
 	std::vector <float> texcoords;
 	std::vector <float> normals;
 	std::vector <float> vertices;
-	std::vector <int> faces;
+	std::vector <unsigned int> faces;
 	VertexFormat::Enum format;
 
 	void SetColors(const unsigned char array[], size_t count, size_t offset = 0);
@@ -177,7 +177,7 @@ private:
 
 	void SetVertices(const float array[], size_t count, size_t offset = 0);
 
-	void SetFaces(const int array[], size_t count, size_t offset = 0, size_t idoffset = 0);
+	void SetFaces(const unsigned int array[], size_t count, size_t offset = 0, size_t idoffset = 0);
 };
 
 #endif

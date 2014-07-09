@@ -93,7 +93,7 @@ void VertexArray::GetVertices(const float * & output_array_pointer, int & output
 	output_array_pointer = vertices.empty() ? NULL : &vertices[0];
 }
 
-void VertexArray::GetFaces(const int * & output_array_pointer, int & output_array_num) const
+void VertexArray::GetFaces(const unsigned int * & output_array_pointer, int & output_array_num) const
 {
 	output_array_num = faces.size();
 	output_array_pointer = faces.empty() ? NULL : &faces[0];
@@ -167,7 +167,7 @@ void VertexArray::SetVertices(const float array[], size_t count, size_t offset)
 	}
 }
 
-void VertexArray::SetFaces(const int array[], size_t count, size_t offset, size_t idoffset)
+void VertexArray::SetFaces(const unsigned int array[], size_t count, size_t offset, size_t idoffset)
 {
 	// Tried to assign values that aren't in sets of 3
 	assert (count % 3 == 0);
@@ -177,7 +177,7 @@ void VertexArray::SetFaces(const int array[], size_t count, size_t offset, size_
 	if (size != faces.size())
 		faces.resize(size);
 
-	int * myarray = &(faces[offset]);
+	unsigned int * myarray = &(faces[offset]);
 	for (size_t i = 0; i < count; ++i)
 	{
 		myarray[i] = array[i] + idoffset;
@@ -185,7 +185,7 @@ void VertexArray::SetFaces(const int array[], size_t count, size_t offset, size_
 }
 
 void VertexArray::Add(
-	const int newfaces[], int newfacecount,
+	const unsigned int newfaces[], int newfacecount,
 	const float newvert[], int newvertcount,
 	const float newtco[], int newtcocount,
 	const float newnorm[], int newnormcount ,
@@ -210,7 +210,7 @@ void VertexArray::Add(
 
 void VertexArray::SetToBillboard(float x1, float y1, float x2, float y2)
 {
-	int bfaces[6];
+	unsigned int bfaces[6];
 	bfaces[0] = 0;
 	bfaces[1] = 1;
 	bfaces[2] = 2;
@@ -220,7 +220,7 @@ void VertexArray::SetToBillboard(float x1, float y1, float x2, float y2)
 	SetFaces(bfaces, 6);
 /*
 	float normals[12];
-	for (int i = 0; i < 12; i+=3)
+	for (unsigned int i = 0; i < 12; i+=3)
 	{
 		normals[i] = 0;
 		normals[i+1] = 0;
@@ -253,9 +253,9 @@ void VertexArray::SetTo2DQuad(float x1, float y1, float x2, float y2, float u1, 
 {
 	float vcorners[12];
 	float uvs[8];
-	int bfaces[6];
+	unsigned int bfaces[6];
 	SetVertexData2DQuad(x1,y1,x2,y2,u1,v1,u2,v2, vcorners, uvs, bfaces);
-	for (int i = 2; i < 12; i += 3)
+	for (unsigned int i = 2; i < 12; i += 3)
 		vcorners[i] = z;
 
 	SetFaces(bfaces, 6);
@@ -265,7 +265,7 @@ void VertexArray::SetTo2DQuad(float x1, float y1, float x2, float y2, float u1, 
 	format = VertexFormat::PT32;
 }
 
-void VertexArray::SetVertexData2DQuad(float x1, float y1, float x2, float y2, float u1, float v1, float u2, float v2, float * vcorners, float * uvs, int * bfaces, int faceoffset) const
+void VertexArray::SetVertexData2DQuad(float x1, float y1, float x2, float y2, float u1, float v1, float u2, float v2, float * vcorners, float * uvs, unsigned int * bfaces, unsigned int faceoffset) const
 {
 	vcorners[0] = x1;
 	vcorners[1] = y1;
@@ -301,7 +301,7 @@ void VertexArray::SetTo2DButton(float x, float y, float w, float h, float sidewi
 {
 	float vcorners[12*3];
 	float uvs[8*3];
-	int bfaces[6*3];
+	unsigned int bfaces[6*3];
 
 	//y1 = 1.0 - y1;
 	//y2 = 1.0 - y2;
@@ -348,7 +348,7 @@ void VertexArray::SetTo2DBox(float x, float y, float w, float h, float marginwid
 	const unsigned int quads = 9;
 	float vcorners[12*quads];
 	float uvs[8*quads];
-	int bfaces[6*quads];
+	unsigned int bfaces[6*quads];
 
 	//y1 = 1.0 - y1;
 	//y2 = 1.0 - y2;
@@ -585,10 +585,10 @@ void VertexArray::FlipNormals()
 void VertexArray::FlipWindingOrder()
 {
 	assert(faces.size() % 3 == 0);
-	for (std::vector <int>::iterator i = faces.begin(); i != faces.end(); i += 3)
+	for (std::vector <unsigned int>::iterator i = faces.begin(); i != faces.end(); i += 3)
 	{
-		const int i1 = i[1];
-		const int i2 = i[2];
+		const unsigned int i1 = i[1];
+		const unsigned int i2 = i[2];
 		i[1] = i2;
 		i[2] = i1;
 	}
@@ -597,7 +597,7 @@ void VertexArray::FlipWindingOrder()
 void VertexArray::FixWindingOrder()
 {
 	assert(faces.size() % 3 == 0);
-	for (std::vector <int>::iterator i = faces.begin(); i != faces.end(); i += 3)
+	for (std::vector <unsigned int>::iterator i = faces.begin(); i != faces.end(); i += 3)
 	{
 		const float * n0 = &normals[i[0] * 3];
 		const float * v0 = &vertices[i[0] * 3];
@@ -610,8 +610,8 @@ void VertexArray::FixWindingOrder()
 		const Vec3 norm1 = (vec1 - vec0).cross(vec2 - vec1);
 		if (norm0.dot(norm1) < 0.0f)
 		{
-			const int i1 = i[1];
-			const int i2 = i[2];
+			const unsigned int i1 = i[1];
+			const unsigned int i2 = i[2];
 			i[1] = i2;
 			i[2] = i1;
 		}
@@ -751,7 +751,7 @@ QT_TEST(vertexarray_buldfromfaces_test)
 	varray.BuildFromFaces(cubesides);
 
 	const float * tempfloat(NULL);
-	const int * tempint(NULL);
+	const unsigned int * tempint(NULL);
 	int tempnum;
 
 	varray.GetNormals(tempfloat, tempnum);

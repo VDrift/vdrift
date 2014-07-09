@@ -47,13 +47,11 @@ public:
 
 	bool Load(const std::string & strFileName, std::ostream & error_output, bool genlist, const JoePack * pack);
 
-
-
-private:
-	static const int JOE_MAX_FACES;
-	static const int JOE_VERSION;
+	static const unsigned int JOE_MAX_FACES;
+	static const unsigned int JOE_VERSION;
 	static const float MODEL_SCALE;
 
+private:
 	// This reads in the data from the MD2 file and stores it in the member variable
 	void ReadData(FILE * m_FilePointer, const JoePack * pack, JoeObject & Object);
 

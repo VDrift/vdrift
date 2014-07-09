@@ -119,7 +119,7 @@ void HudGauge::Set(
 		// big marker
 		float pb[] = {-0.02, 1, 0, 0.02, 1, 0, 0.02, 0.92, 0, -0.02, 0.92, 0};
 		float t[] = {0, 0, 1, 0, 1, 1, 0, 1};
-		int f[] = {0, 2, 1, 0, 3, 2};
+		unsigned int f[] = {0, 2, 1, 0, 3, 2};
 		VertexArray bm;
 		bm.Add(f, 6, pb, 12, t, 8);
 
@@ -184,7 +184,7 @@ void HudGauge::Set(
 	{
 		float p[] = {-0.015, 0.92, 0, 0.015, 0.92, 0, 0.025, -0.1, 0, -0.025, -0.1, 0};
 		float t[] = {0, 0, 1, 0, 1, 1, 0, 1};
-		int f[] = {0, 2, 1, 0, 3, 2};
+		unsigned int f[] = {0, 2, 1, 0, 3, 2};
 		pointer.Clear();
 		pointer.Add(f, 6, p, 12, t, 8);
 

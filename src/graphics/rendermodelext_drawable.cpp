@@ -83,7 +83,7 @@ void RenderModelExtDrawable::draw(GLWrapper & gl) const
 			gl.DisableVertexAttribArray(VertexBlendWeights);
 			gl.DisableVertexAttribArray(VertexColor);
 
-			const int * faces = 0;
+			const unsigned int * faces = 0;
 			int facecount = 0;
 			vert_array->GetFaces(faces, facecount);
 			if (faces)
