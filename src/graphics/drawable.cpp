@@ -187,6 +187,9 @@ RenderModelExt & Drawable::GenRenderModelData(StringIdMap & string_map)
 void Drawable::SetModel(Model & newmodel)
 {
 	model = &newmodel;
+	center = newmodel.GetCenter();
+	radius = newmodel.GetRadius();
+
 	if (model->HaveVertexArrayObject())
 	{
 		GLuint vao = 0;

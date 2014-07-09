@@ -51,11 +51,11 @@ public:
 	const Mat4 & GetTransform() const;
 	void SetTransform(const Mat4 & value);
 
-	/// bounding sphere frustum culling
+	/// bounding sphere center in local space
 	const Vec3 & GetObjectCenter() const;
 	void SetObjectCenter(const Vec3 & value);
 
-	/// bounding sphere frustum culling
+	/// bounding sphere radius
 	float GetRadius() const;
 	void SetRadius(float value);
 
@@ -81,6 +81,7 @@ public:
 	/// returns a reference to the RenderModelExternal structure
 	RenderModelExt & GenRenderModelData(StringIdMap & string_map);
 
+	/// setting model will also set bounding sphere center and radius
 	Model * GetModel() const;
 	void SetModel(Model & newmodel);
 
