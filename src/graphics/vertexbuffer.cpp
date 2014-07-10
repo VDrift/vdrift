@@ -189,16 +189,23 @@ void VertexBuffer::Set(SceneNode * nodes[], unsigned int nodes_count)
 	}
 }
 
-void VertexBuffer::Draw(unsigned int & vbuffer, const Segment & s)
+void VertexBuffer::Draw(unsigned int & vbuffer, const Segment & s) const
 {
 	assert(age == s.age);
 
 	if (vbuffer != s.vbuffer)
 		BindSegmentBuffer(vbuffer, s);
 
-	glDrawRangeElements(
-		GL_TRIANGLES, s.voffset, s.voffset + s.vcount - 1,
-		s.icount, GL_UNSIGNED_INT, (const void *)s.ioffset);
+	if (s.icount != 0)
+	{
+		glDrawRangeElements(
+			GL_TRIANGLES, s.voffset, s.voffset + s.vcount - 1,
+			s.icount, GL_UNSIGNED_INT, (const void *)s.ioffset);
+	}
+	else
+	{
+		glDrawArrays(GL_LINES, s.voffset, s.vcount);
+	}
 }
 
 void VertexBuffer::BindSegmentBuffer(unsigned int & vbuffer, const Segment & s) const

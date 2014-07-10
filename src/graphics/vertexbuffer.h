@@ -61,7 +61,7 @@ public:
 	/// \brief Draw vertex buffer segment
 	/// \param vbuffer is the currently bound vertex buffer / array object
 	/// \param segment is the segment to be drawn
-	void Draw(unsigned int & vbuffer, const Segment & segment);
+	void Draw(unsigned int & vbuffer, const Segment & segment) const;
 
 private:
 	struct Object
