@@ -29,7 +29,6 @@ Drawable::Drawable() :
 	radius(0),
 	color(1),
 	draw_order(0),
-	linesize(0),
 	decal(false),
 	drawenabled(true),
 	cull(false),
@@ -58,12 +57,6 @@ void Drawable::SetVertArray(const VertexArray* value)
 void Drawable::SetVertexArrayObject(unsigned vao, unsigned element_count)
 {
 	render_model.setVertexArrayObject(vao, element_count);
-}
-
-void Drawable::SetLineSize(float size)
-{
-	linesize = size;
-	render_model.SetLineSize(size);
 }
 
 void Drawable::SetTransform(const Mat4 & value)

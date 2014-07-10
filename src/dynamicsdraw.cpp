@@ -23,7 +23,6 @@ DynamicsDraw::DynamicsDraw() :
 	m_debugMode(DBG_NoDebug)
 {
 	Drawable drawable;
-	drawable.SetLineSize(1.0);
 	drawable.SetDrawEnable(true);
 
 	drawable.SetColor(1, 0, 0);

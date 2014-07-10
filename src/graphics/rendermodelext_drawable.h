@@ -37,9 +37,6 @@ class RenderModelExtDrawable : public RenderModelExt
 
 	private:
 		const VertexArray * vert_array;
-		void SetLineSize(float size) { linesize = size; }
-
-		float linesize;
 };
 
 #endif

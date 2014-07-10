@@ -206,12 +206,12 @@ void RenderInputScene::Draw(GraphicsState & glstate, const std::vector <Drawable
 			if (glstate.VertexObject())
 				glstate.ResetVertexObject();
 
-			DrawVertexArray(*d.GetVertArray(), d.GetLineSize());
+			DrawVertexArray(*d.GetVertArray());
 		}
 	}
 }
 
-void RenderInputScene::DrawVertexArray(const VertexArray & va, float linesize) const
+void RenderInputScene::DrawVertexArray(const VertexArray & va) const
 {
 	using namespace VertexAttrib;
 
@@ -263,9 +263,8 @@ void RenderInputScene::DrawVertexArray(const VertexArray & va, float linesize) c
 			if (norms)
 				glDisableVertexAttribArray(VertexNormal);
 		}
-		else if (linesize > 0)
+		else
 		{
-			glLineWidth(linesize);
 			glDrawArrays(GL_LINES, 0, vcount / 3);
 		}
 

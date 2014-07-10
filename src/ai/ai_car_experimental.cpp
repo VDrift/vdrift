@@ -1004,7 +1004,6 @@ void AiCarExperimental::Visualize()
 	Drawable & steerdrawable = topnode.GetDrawList().normal_noblend.get(steerdraw);
 	Drawable & raycastdrawable = topnode.GetDrawList().normal_noblend.get(raycastdraw);
 
-	brakedrawable.SetLineSize(4);
 	brakedrawable.SetVertArray(&brakeshape);
 	brakeshape.Clear();
 	for (std::vector <Bezier>::iterator i = brakelook.begin(); i != brakelook.end(); ++i)
@@ -1017,7 +1016,6 @@ void AiCarExperimental::Visualize()
 		AddLinePoint(brakeshape, patch.GetBL());
 	}
 
-	steerdrawable.SetLineSize(4);
 	steerdrawable.SetVertArray(&steershape);
 	steershape.Clear();
 	for (std::vector <Bezier>::iterator i = steerlook.begin(); i != steerlook.end(); ++i)
@@ -1030,7 +1028,6 @@ void AiCarExperimental::Visualize()
 		AddLinePoint(steershape, patch.GetBL());
 	}
 
-	raycastdrawable.SetLineSize(4);
 	raycastdrawable.SetVertArray(&raycastshape);
 }
 #endif

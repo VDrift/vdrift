@@ -92,7 +92,6 @@ void RenderModelExtDrawable::draw(GLWrapper & gl) const
 			}
 			else
 			{
-				gl.LineWidth(linesize);
 				gl.DrawArrays(GL_LINES, 0, vertcount/3);
 			}
 		}

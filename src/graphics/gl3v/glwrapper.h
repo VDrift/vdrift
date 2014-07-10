@@ -150,7 +150,6 @@ public:
 	void ClearColor(GLfloat r, GLfloat g, GLfloat b, GLfloat a);
 	void ClearDepth(GLfloat d);
 	void ClearStencil(GLint s);
-	void LineWidth(GLfloat width);
 
 	/// Writes errors to the log.
 	/// Returns false if there was an error.

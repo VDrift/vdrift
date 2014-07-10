@@ -44,10 +44,6 @@ public:
 	const VertexArray * GetVertArray() const;
 	void SetVertArray(const VertexArray * value);
 
-	/// draw vertex array as line segments if size > 0
-	float GetLineSize() const;
-	void SetLineSize(float size);
-
 	const Mat4 & GetTransform() const;
 	void SetTransform(const Mat4 & value);
 
@@ -99,7 +95,6 @@ private:
 	float radius;
 	Vec4 color;
 	float draw_order;
-	float linesize;
 	bool decal;
 	bool drawenabled;
 	bool cull;
@@ -135,11 +130,6 @@ inline unsigned Drawable::GetTexture2() const
 inline const VertexArray * Drawable::GetVertArray() const
 {
 	return vert_array;
-}
-
-inline float Drawable::GetLineSize() const
-{
-	return linesize;
 }
 
 inline const Mat4 & Drawable::GetTransform() const

@@ -638,11 +638,6 @@ void GLWrapper::ClearStencil(GLint s)
 	GLLOG(glClearStencil(s));ERROR_CHECK;
 }
 
-void GLWrapper::LineWidth(GLfloat width)
-{
-	GLLOG(glLineWidth(width));ERROR_CHECK;
-}
-
 bool GLWrapper::checkForOpenGLErrors(const char * function, const char * file, int line) const
 {
 	if (enableErrorChecking)
