@@ -79,6 +79,9 @@ private:
 	unsigned short age;
 	bool use_vao;
 
+	/// \brief Bind vao/vbo+ibo of segment and update vbuffer value
+	void BindSegmentBuffer(unsigned int & vbuffer, const Segment & segment) const;
+
 	/// \brief Scene node visitor
 	struct BindVertexData;
 

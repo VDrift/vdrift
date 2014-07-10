@@ -189,41 +189,43 @@ void VertexBuffer::Set(SceneNode * nodes[], unsigned int nodes_count)
 	}
 }
 
-void VertexBuffer::Draw(unsigned int & vobject, const Segment & s)
+void VertexBuffer::Draw(unsigned int & vbuffer, const Segment & s)
 {
-	assert(s.age == age);
+	assert(age == s.age);
 
-	if (s.vbuffer != vobject)
-	{
-		// bind array / buffer
-		if (use_vao)
-		{
-			glBindVertexArray(s.vbuffer);
-			vobject = s.vbuffer;
-			#ifdef VAO_BROKEN
-				// broken vao implementations handling
-				assert(s.vformat <= VertexAttrib::LastAttrib);
-				assert(s.object < objects[s.vformat].size());
-				const Object & ob = objects[s.vformat][s.object];
-				glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ob.ibuffer);
-			#endif
-		}
-		else
-		{
-			assert(s.vformat <= VertexAttrib::LastAttrib);
-			assert(s.object < objects[s.vformat].size());
-			const Object & ob = objects[s.vformat][s.object];
-
-			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ob.ibuffer);
-			glBindBuffer(GL_ARRAY_BUFFER, ob.vbuffer);
-			SetVertexFormat(VertexFormat::Get(ob.vformat));
-			vobject = ob.vbuffer;
-		}
-	}
+	if (vbuffer != s.vbuffer)
+		BindSegmentBuffer(vbuffer, s);
 
 	glDrawRangeElements(
 		GL_TRIANGLES, s.voffset, s.voffset + s.vcount - 1,
 		s.icount, GL_UNSIGNED_INT, (const void *)s.ioffset);
+}
+
+void VertexBuffer::BindSegmentBuffer(unsigned int & vbuffer, const Segment & s) const
+{
+	if (use_vao)
+	{
+		glBindVertexArray(s.vbuffer);
+		#ifdef VAO_BROKEN
+			// broken vao implementations handling
+			assert(s.vformat <= VertexAttrib::LastAttrib);
+			assert(s.object < objects[s.vformat].size());
+			const Object & ob = objects[s.vformat][s.object];
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ob.ibuffer);
+		#endif
+		vbuffer = s.vbuffer;
+	}
+	else
+	{
+		assert(s.vformat <= VertexAttrib::LastAttrib);
+		assert(s.object < objects[s.vformat].size());
+		const Object & ob = objects[s.vformat][s.object];
+
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ob.ibuffer);
+		glBindBuffer(GL_ARRAY_BUFFER, ob.vbuffer);
+		SetVertexFormat(VertexFormat::Get(ob.vformat));
+		vbuffer = ob.vbuffer;
+	}
 }
 
 void VertexBuffer::UploadVertexData(
