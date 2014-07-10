@@ -276,24 +276,10 @@ void RenderInputScene::DrawVertexArray(const VertexArray & va, float linesize) c
 	}
 }
 
-
 void RenderInputScene::SetFlags(const Drawable & d, GraphicsState & glstate)
 {
 	glstate.DepthOffset(d.GetDecal());
-
-	if (d.GetCull())
-	{
-		glstate.CullFace(true);
-		if (d.GetCullFront())
-			glstate.CullFaceMode(GL_FRONT);
-		else
-			glstate.CullFaceMode(GL_BACK);
-	}
-	else
-	{
-		glstate.CullFace(false);
-	}
-
+	glstate.CullFace(d.GetCull());
 	if (drawable_color != d.GetColor())
 	{
 		drawable_color = d.GetColor();

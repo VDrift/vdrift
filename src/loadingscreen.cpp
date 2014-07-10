@@ -76,7 +76,7 @@ bool LoadingScreen::Init(
 	boxdrawref.SetTextures(boxtex->GetId());
 	boxdrawref.SetVertArray(&boxverts);
 	boxdrawref.SetDrawOrder(10000);
-	boxdrawref.SetCull(false, false);
+	boxdrawref.SetCull(false);
 	boxdrawref.SetColor(1, 1, 1, 1);
 
 	w = 128.0/displayw*3.;
@@ -85,7 +85,7 @@ bool LoadingScreen::Init(
 	barbackdrawref.SetTextures(bartex->GetId());
 	barbackdrawref.SetVertArray(&barbackverts);
 	barbackdrawref.SetDrawOrder(10001);
-	barbackdrawref.SetCull(false, false);
+	barbackdrawref.SetCull(false);
 	barbackdrawref.SetColor(0.3, 0.3, 0.3, 0.4);
 
 	hscale = 0.3;
@@ -93,7 +93,7 @@ bool LoadingScreen::Init(
 	bardrawref.SetTextures(bartex->GetId());
 	bardrawref.SetVertArray(&barverts);
 	bardrawref.SetDrawOrder(10002);
-	bardrawref.SetCull(false, false);
+	bardrawref.SetCull(false);
 	bardrawref.SetColor(1, 1, 1, 0.7);
 
 	float screenhwratio = displayh/(float)displayw;

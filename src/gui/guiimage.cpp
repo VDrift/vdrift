@@ -65,7 +65,7 @@ void GuiImage::SetupDrawable(
 	m_visible = false;
 	Drawable & d = GetDrawable(scene);
 	d.SetVertArray(&m_varray);
-	d.SetCull(false, false);
+	d.SetCull(false);
 	d.SetDrawOrder(z);
 }
 

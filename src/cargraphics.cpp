@@ -459,7 +459,7 @@ bool CarGraphics::LoadLight(
 	Drawable & draw = dlist.get(lights.back().draw);
 	draw.SetColor(col[0], col[1], col[2]);
 	draw.SetModel(*mesh);
-	draw.SetCull(true, true);
+	draw.SetCull(true);
 	draw.SetDrawEnable(false);
 
 	return true;

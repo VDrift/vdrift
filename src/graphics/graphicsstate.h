@@ -66,7 +66,6 @@ public:
 		vpheight(0),
 		blendsource(GL_ZERO),
 		blenddest(GL_ZERO),
-		cullmode(GL_BACK),
 		depthmode(GL_LESS),
 		colormask(GL_TRUE),
 		alphamask(GL_TRUE),
@@ -186,15 +185,6 @@ public:
 		}
 	}
 
-	void CullFaceMode(GLenum mode)
-	{
-		if (mode != cullmode)
-		{
-			cullmode = mode;
-			glCullFace(cullmode);
-		}
-	}
-
 	void ActiveTexture(GLuint texunit)
 	{
 		assert(texunit < 16);
@@ -274,7 +264,6 @@ private:
 	int vpheight;
 	GLenum blendsource;
 	GLenum blenddest;
-	GLenum cullmode;
 	GLenum depthmode;
 	GLboolean colormask;
 	GLboolean alphamask;

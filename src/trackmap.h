@@ -110,7 +110,7 @@ private:
 				dotdraw = topnode.GetDrawList().twodim.insert(Drawable());
 				Drawable & drawref = GetDrawable(topnode);
 				drawref.SetVertArray(&dotverts);
-				drawref.SetCull(false, false);
+				drawref.SetCull(false);
 				drawref.SetColor(1,1,1,0.7);
 				drawref.SetDrawOrder(0.1);
 				Retexture(topnode, tex);

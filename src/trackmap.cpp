@@ -241,7 +241,7 @@ bool TrackMap::BuildMap(
 	Drawable & mapdrawref = mapnode.GetDrawList().twodim.get(mapdraw);
 	mapdrawref.SetTextures(track_map->GetId());
 	mapdrawref.SetVertArray(&mapverts);
-	mapdrawref.SetCull(false, false);
+	mapdrawref.SetCull(false);
 	//mapdrawref.SetColor(1, 1, 1, 0.7);
 	mapdrawref.SetDrawOrder(0);
 

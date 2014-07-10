@@ -61,7 +61,7 @@ void ParticleSystem::Load(
 	drawref.SetDrawEnable(false);
 	drawref.SetVertArray(&varrays[cur_varray]);
 	drawref.SetTextures(texture->GetId());
-	drawref.SetCull(false, false);
+	drawref.SetCull(false);
 }
 
 void ParticleSystem::Update(float dt)

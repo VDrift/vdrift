@@ -74,8 +74,7 @@ public:
 	void SetDrawEnable(bool value);
 
 	bool GetCull() const;
-	bool GetCullFront() const;
-	void SetCull(bool newcull, bool newcullfront);
+	void SetCull(bool newcull);
 
 	/// this gets called if we are using the GL3 renderer
 	/// returns a reference to the RenderModelExternal structure
@@ -104,7 +103,6 @@ private:
 	bool decal;
 	bool drawenabled;
 	bool cull;
-	bool cull_front;
 
 	bool textures_changed;
 	bool uniforms_changed;
@@ -184,14 +182,14 @@ inline void Drawable::SetDrawEnable(bool value)
 	drawenabled = value;
 }
 
+inline void Drawable::SetCull(bool newcull)
+{
+	cull = newcull;
+}
+
 inline bool Drawable::GetCull() const
 {
 	return cull;
-}
-
-inline bool Drawable::GetCullFront() const
-{
-	return cull_front;
 }
 
 inline Model * Drawable::GetModel() const

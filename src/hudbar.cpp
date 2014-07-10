@@ -33,7 +33,7 @@ void HudBar::Set(
 
 	drawref.SetTextures(tex->GetId());
 	drawref.SetVertArray(&verts);
-	drawref.SetCull(false, false);
+	drawref.SetCull(false);
 	drawref.SetColor(1,1,1,opacity);
 	drawref.SetDrawOrder(1);
 

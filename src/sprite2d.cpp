@@ -50,7 +50,7 @@ bool Sprite2D::Load(
 	drawref.SetTextures(texture->GetId());
 	drawref.SetVertArray(&varray);
 	drawref.SetDrawOrder(draworder);
-	drawref.SetCull(false, false);
+	drawref.SetCull(false);
 	drawref.SetColor(r,g,b,a);
 
 	//std::cout << "Sprite draworder: " << draworder << std::endl;
@@ -79,7 +79,7 @@ bool Sprite2D::Load(
 	drawref.SetTextures(texture->GetId());
 	drawref.SetVertArray(&varray);
 	drawref.SetDrawOrder(draworder);
-	drawref.SetCull(false, false);
+	drawref.SetCull(false);
 	drawref.SetColor(r,g,b,a);
 
 	return true;

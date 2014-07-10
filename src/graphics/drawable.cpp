@@ -33,7 +33,6 @@ Drawable::Drawable() :
 	decal(false),
 	drawenabled(true),
 	cull(false),
-	cull_front(false),
 	textures_changed(true),
 	uniforms_changed(true)
 {
@@ -115,12 +114,6 @@ void Drawable::SetDecal(bool value)
 {
 	decal = value;
 	uniforms_changed = true;
-}
-
-void Drawable::SetCull(bool newcull, bool newcullfront)
-{
-	cull = newcull;
-	cull_front = newcullfront;
 }
 
 RenderModelExt & Drawable::GenRenderModelData(StringIdMap & string_map)
