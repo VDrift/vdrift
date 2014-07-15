@@ -739,6 +739,27 @@ void Game::Test()
 
 void Game::Draw(float dt)
 {
+	PROFILER.beginBlock("scenegraph");
+	graphics_interface->ClearDynamicDrawables();
+	graphics_interface->AddDynamicNode(debugnode);
+	graphics_interface->AddDynamicNode(gui.GetNode());
+	graphics_interface->AddDynamicNode(track.GetRacinglineNode());
+	graphics_interface->AddDynamicNode(dynamicsdraw.getNode());
+#ifndef USE_STATIC_OPTIMIZATION_FOR_TRACK
+	graphics_interface->AddDynamicNode(track.GetTrackNode());
+#endif
+	graphics_interface->AddDynamicNode(track.GetBodyNode());
+	graphics_interface->AddDynamicNode(hud.GetNode());
+	graphics_interface->AddDynamicNode(trackmap.GetNode());
+	graphics_interface->AddDynamicNode(inputgraph.GetNode());
+	graphics_interface->AddDynamicNode(tire_smoke.GetNode());
+	for (std::list <Car>::iterator i = cars.begin(); i != cars.end(); ++i)
+	{
+		graphics_interface->AddDynamicNode(i->GetNode());
+	}
+	//gui.GetNode().DebugPrint(info_output);
+	PROFILER.endBlock("scenegraph");
+
 	// Send scene information to the graphics subsystem.
 	PROFILER.beginBlock("render setup");
 	if (active_camera)
@@ -760,27 +781,6 @@ void Game::Draw(float dt)
 	graphics_interface->SetContrast(settings.GetContrast());
 	graphics_interface->UpdateScene(dt);
 	PROFILER.endBlock("render setup");
-
-	PROFILER.beginBlock("scenegraph");
-	graphics_interface->ClearDynamicDrawables();
-	graphics_interface->AddDynamicNode(debugnode);
-	graphics_interface->AddDynamicNode(gui.GetNode());
-	graphics_interface->AddDynamicNode(track.GetRacinglineNode());
-	graphics_interface->AddDynamicNode(dynamicsdraw.getNode());
-#ifndef USE_STATIC_OPTIMIZATION_FOR_TRACK
-	graphics_interface->AddDynamicNode(track.GetTrackNode());
-#endif
-	graphics_interface->AddDynamicNode(track.GetBodyNode());
-	graphics_interface->AddDynamicNode(hud.GetNode());
-	graphics_interface->AddDynamicNode(trackmap.GetNode());
-	graphics_interface->AddDynamicNode(inputgraph.GetNode());
-	graphics_interface->AddDynamicNode(tire_smoke.GetNode());
-	for (std::list <Car>::iterator i = cars.begin(); i != cars.end(); ++i)
-	{
-		graphics_interface->AddDynamicNode(i->GetNode());
-	}
-	//gui.GetNode().DebugPrint(info_output);
-	PROFILER.endBlock("scenegraph");
 
 	// Sync CPU and GPU (flip the page).
 	PROFILER.beginBlock("render sync");
