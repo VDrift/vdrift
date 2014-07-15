@@ -659,7 +659,7 @@ GraphicsState & GraphicsGL2::GetState()
 
 Shader * GraphicsGL2::GetShader(const std::string & name)
 {
-	shader_map_type::iterator it = shaders.find(name);
+	ShaderMap::iterator it = shaders.find(name);
 	if (it != shaders.end())
 		return &it->second;
 	else
@@ -889,7 +889,7 @@ bool GraphicsGL2::EnableShaders(std::ostream & info_output, std::ostream & error
 			std::vector <FrameBufferTexture*> fbotex;
 			for (std::vector <std::string>::const_iterator o = outputs.begin(); o != outputs.end(); o++)
 			{
-				texture_output_map_type::iterator to = texture_outputs.find(*o);
+				TextureOutputMap::iterator to = texture_outputs.find(*o);
 				if (to != texture_outputs.end())
 				{
 					fbotex.push_back(&to->second);
@@ -961,7 +961,7 @@ void GraphicsGL2::CullScenePass(
 	for (std::vector <std::string>::const_iterator d = pass.draw.begin(); d != pass.draw.end(); d++)
 	{
 		// determine if we're dealing with a cubemap
-		render_output_map_type::iterator oi = render_outputs.find(pass.output);
+		RenderOutputMap::iterator oi = render_outputs.find(pass.output);
 		if (oi == render_outputs.end())
 		{
 			ReportOnce(&pass, "Render output "+pass.output+" couldn't be found", error_output);
@@ -983,7 +983,7 @@ void GraphicsGL2::CullScenePass(
 				}
 
 				// get the base camera
-				camera_map_type::iterator bci = cameras.find(pass.camera);
+				CameraMap::iterator bci = cameras.find(pass.camera);
 				if (bci == cameras.end())
 				{
 					ReportOnce(&pass, "Camera " + pass.camera + " couldn't be found", error_output);
@@ -1019,7 +1019,7 @@ void GraphicsGL2::CullScenePass(
 					return;
 				}
 
-				camera_map_type::iterator ci = cameras.find(cameraname);
+				CameraMap::iterator ci = cameras.find(cameraname);
 				if (ci == cameras.end())
 				{
 					ReportOnce(&pass, "Camera " + cameraname + " couldn't be found", error_output);
@@ -1081,7 +1081,7 @@ void GraphicsGL2::DrawScenePass(
 		return;
 
 	// setup shader
-	shader_map_type::iterator si = shaders.find(pass.shader);
+	ShaderMap::iterator si = shaders.find(pass.shader);
 	if (si == shaders.end())
 	{
 		ReportOnce(&pass, "Shader " + pass.shader + " couldn't be found", error_output);
@@ -1100,7 +1100,7 @@ void GraphicsGL2::DrawScenePass(
 	renderscene.SetBlendMode(glstate, BlendModeFromString(pass.blendmode));
 
 	// setup output
-	render_output_map_type::iterator oi = render_outputs.find(pass.output);
+	RenderOutputMap::iterator oi = render_outputs.find(pass.output);
 	if (oi == render_outputs.end())
 	{
 		ReportOnce(&pass, "Render output " + pass.output + " couldn't be found", error_output);
@@ -1126,7 +1126,7 @@ void GraphicsGL2::DrawScenePass(
 		}
 
 		// setup camera
-		camera_map_type::iterator ci = cameras.find(cameraname);
+		CameraMap::iterator ci = cameras.find(cameraname);
 		if (ci == cameras.end())
 		{
 			ReportOnce(&pass, "Camera " + pass.camera + " couldn't be found", error_output);
@@ -1167,7 +1167,7 @@ void GraphicsGL2::DrawScenePassPost(
 	if (!pass.conditions.Satisfied(conditions))
 		return;
 
-	shader_map_type::iterator si = shaders.find(pass.shader);
+	ShaderMap::iterator si = shaders.find(pass.shader);
 	if (si == shaders.end())
 	{
 		ReportOnce(&pass, "Shader " + pass.shader + " couldn't be found", error_output);
@@ -1183,7 +1183,7 @@ void GraphicsGL2::DrawScenePassPost(
 	postprocess.SetDepthMode(glstate, DepthModeFromString(pass.depthtest), pass.write_depth);
 	postprocess.SetBlendMode(glstate, BlendModeFromString(pass.blendmode));
 
-	render_output_map_type::iterator oi = render_outputs.find(pass.output);
+	RenderOutputMap::iterator oi = render_outputs.find(pass.output);
 	if (oi == render_outputs.end())
 	{
 		ReportOnce(&pass, "Render output " + pass.output + " couldn't be found", error_output);
@@ -1194,7 +1194,7 @@ void GraphicsGL2::DrawScenePassPost(
 	// setup camera, even though we don't use it directly for the post process
 	// we want to have some info available
 	std::string cameraname = pass.camera;
-	camera_map_type::iterator ci = cameras.find(cameraname);
+	CameraMap::iterator ci = cameras.find(cameraname);
 	if (ci == cameras.end())
 	{
 		ReportOnce(&pass, "Camera " + cameraname + " couldn't be found", error_output);

@@ -145,8 +145,8 @@ private:
 	GraphicsConfig config;
 
 	// shaders
-	typedef std::map <std::string, Shader> shader_map_type;
-	shader_map_type shaders;
+	typedef std::map <std::string, Shader> ShaderMap;
+	ShaderMap shaders;
 
 	// vertex data buffer
 	VertexBuffer vertex_buffer;
@@ -169,11 +169,11 @@ private:
 	CulledDrawListMap culled_drawlists;
 
 	// render outputs
-	typedef std::map <std::string, RenderOutput> render_output_map_type;
-	render_output_map_type render_outputs;
+	typedef std::map <std::string, RenderOutput> RenderOutputMap;
+	RenderOutputMap render_outputs;
 
-	typedef std::map <std::string, FrameBufferTexture> texture_output_map_type;
-	texture_output_map_type texture_outputs;
+	typedef std::map <std::string, FrameBufferTexture> TextureOutputMap;
+	TextureOutputMap texture_outputs;
 
 	// outputs and other textures used as inputs
 	std::map <std::string, reseatable_reference <TextureInterface> > texture_inputs;
@@ -183,8 +183,8 @@ private:
 	RenderInputPostprocess postprocess;
 
 	// camera data
-	typedef std::map <std::string, GraphicsCamera> camera_map_type;
-	camera_map_type cameras;
+	typedef std::map <std::string, GraphicsCamera> CameraMap;
+	CameraMap cameras;
 
 	Vec3 light_direction;
 	std::tr1::shared_ptr<Sky> sky;
