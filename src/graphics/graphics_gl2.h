@@ -71,9 +71,9 @@ public:
 
 	virtual void AddStaticNode(SceneNode & node);
 
-	virtual void ClearDynamicDrawList();
+	virtual void ClearDynamicDrawables();
 
-	virtual void ClearStaticDrawList();
+	virtual void ClearStaticDrawables();
 
 	/// Setup scene cameras
 	virtual void SetupScene(

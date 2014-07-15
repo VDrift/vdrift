@@ -72,9 +72,9 @@ public:
 
 	virtual void AddStaticNode(SceneNode & node);
 
-	virtual void ClearDynamicDrawList();
+	virtual void ClearDynamicDrawables();
 
-	virtual void ClearStaticDrawList();
+	virtual void ClearStaticDrawables();
 
 	virtual void SetupScene(
 		float fov, float new_view_distance,

@@ -133,12 +133,12 @@ void GraphicsGL3::AddStaticNode(SceneNode & node)
 	static_drawlist.ForEach(OptimizeFunctor());
 }
 
-void GraphicsGL3::ClearDynamicDrawList()
+void GraphicsGL3::ClearDynamicDrawables()
 {
 	dynamic_drawlist.clear();
 }
 
-void GraphicsGL3::ClearStaticDrawList()
+void GraphicsGL3::ClearStaticDrawables()
 {
 	static_drawlist.clear();
 }

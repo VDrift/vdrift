@@ -420,12 +420,12 @@ void GraphicsGL2::AddStaticNode(SceneNode & node)
 	static_drawlist.ForEach(OptimizeFunctor());
 }
 
-void GraphicsGL2::ClearDynamicDrawList()
+void GraphicsGL2::ClearDynamicDrawables()
 {
 	dynamic_drawlist.clear();
 }
 
-void GraphicsGL2::ClearStaticDrawList()
+void GraphicsGL2::ClearStaticDrawables()
 {
 	static_drawlist.clear();
 }

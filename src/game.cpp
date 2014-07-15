@@ -762,7 +762,7 @@ void Game::Draw(float dt)
 	PROFILER.endBlock("render setup");
 
 	PROFILER.beginBlock("scenegraph");
-	graphics_interface->ClearDynamicDrawList();
+	graphics_interface->ClearDynamicDrawables();
 	graphics_interface->AddDynamicNode(debugnode);
 	graphics_interface->AddDynamicNode(gui.GetNode());
 	graphics_interface->AddDynamicNode(track.GetRacinglineNode());
@@ -1765,7 +1765,7 @@ bool Game::LoadTrack(const std::string & trackname)
 
 	// Build static drawlist.
 #ifdef USE_STATIC_OPTIMIZATION_FOR_TRACK
-	graphics_interface->ClearStaticDrawList();
+	graphics_interface->ClearStaticDrawables();
 	graphics_interface->AddStaticNode(track.GetTrackNode());
 #endif
 
@@ -1819,7 +1819,7 @@ void Game::LoadGarage()
 
 	// Build static drawlist.
 #ifdef USE_STATIC_OPTIMIZATION_FOR_TRACK
-	graphics_interface->ClearStaticDrawList();
+	graphics_interface->ClearStaticDrawables();
 	graphics_interface->AddStaticNode(track.GetTrackNode());
 #endif
 
@@ -2272,7 +2272,7 @@ void Game::ShowLoadingScreen(float progress, float max, bool drawGui, const std:
 	assert(max > 0);
 	loadingscreen.Update(progress/max, optionalText, x, y);
 
-	graphics_interface->ClearDynamicDrawList();
+	graphics_interface->ClearDynamicDrawables();
 	if (drawGui)
 	{
 		graphics_interface->AddDynamicNode(gui.GetNode());
@@ -2556,7 +2556,7 @@ void Game::LeaveGame()
 	gui.SetInGame(false);
 	gui.ActivatePage("Main", 0.25, error_output);
 
-	graphics_interface->ClearStaticDrawList();
+	graphics_interface->ClearStaticDrawables();
 
 	track.Clear();
 	cars.clear();
