@@ -82,7 +82,7 @@ Game::Game(std::ostream & info_out, std::ostream & error_out) :
 	clocktime(0),
 	target_time(0),
 	timestep(1/90.0),
-	graphics_interface(NULL),
+	graphics(NULL),
 	content(error_out),
 	carupdater(autoupdate, info_out, error_out),
 	trackupdater(autoupdate, info_out, error_out),
@@ -318,8 +318,8 @@ void Game::End()
 	// Save settings first incase later deinits cause crashes.
 	settings.Save(pathmanager.GetSettingsFile(), error_output);
 
-	graphics_interface->Deinit();
-	delete graphics_interface;
+	graphics->Deinit();
+	delete graphics;
 }
 
 /* Initialize the most important, basic subsystems... */
@@ -383,14 +383,14 @@ bool Game::InitCoreSubsystems()
 		// Attempt to enable the GL3 renderer...
 		if (using_gl3)
 		{
-			graphics_interface = new GraphicsGL3(stringMap);
+			graphics = new GraphicsGL3(stringMap);
 		}
 		else
 		{
-			graphics_interface = new GraphicsGL2();
+			graphics = new GraphicsGL2();
 		}
 
-		bool success = graphics_interface->Init(
+		bool success = graphics->Init(
 			pathmanager.GetShaderPath() + "/" + render_ver,
 			settings.GetResolutionX(), settings.GetResolutionY(),
 			settings.GetBpp(), settings.GetDepthbpp(), settings.GetFullscreen(),
@@ -408,14 +408,14 @@ bool Game::InitCoreSubsystems()
 		}
 		else
 		{
-			delete graphics_interface;
-			graphics_interface = NULL;
+			delete graphics;
+			graphics = NULL;
 			render_ver = "gl2";
 			using_gl3 = false;
 		}
 	}
 
-	if (!graphics_interface)
+	if (!graphics)
 	{
 		error_output << "Failed to create renderer." << std::endl;
 		return false;
@@ -423,9 +423,9 @@ bool Game::InitCoreSubsystems()
 
 	Vec3 ldir(-0.250, -0.588, 0.769);
 	ldir = ldir.Normalize();
-	graphics_interface->SetSunDirection(ldir);
-	graphics_interface->SetLocalTime(settings.GetSkyTime());
-	graphics_interface->SetLocalTimeSpeed(settings.GetSkyTimeSpeed());
+	graphics->SetSunDirection(ldir);
+	graphics->SetLocalTime(settings.GetSkyTime());
+	graphics->SetLocalTimeSpeed(settings.GetSkyTimeSpeed());
 
 	// Init content factories
 	content.getFactory<Texture>().init(texture_size, using_gl3, settings.GetTextureCompress());
@@ -740,29 +740,29 @@ void Game::Test()
 void Game::Draw(float dt)
 {
 	PROFILER.beginBlock("scenegraph");
-	graphics_interface->ClearDynamicDrawables();
-	graphics_interface->AddDynamicNode(debugnode);
-	graphics_interface->AddDynamicNode(gui.GetNode());
-	graphics_interface->AddDynamicNode(track.GetRacinglineNode());
-	graphics_interface->AddDynamicNode(dynamicsdraw.getNode());
+	graphics->ClearDynamicDrawables();
+	graphics->AddDynamicNode(debugnode);
+	graphics->AddDynamicNode(gui.GetNode());
+	graphics->AddDynamicNode(track.GetRacinglineNode());
+	graphics->AddDynamicNode(dynamicsdraw.getNode());
 #ifndef USE_STATIC_OPTIMIZATION_FOR_TRACK
-	graphics_interface->AddDynamicNode(track.GetTrackNode());
+	graphics->AddDynamicNode(track.GetTrackNode());
 #endif
-	graphics_interface->AddDynamicNode(track.GetBodyNode());
-	graphics_interface->AddDynamicNode(hud.GetNode());
-	graphics_interface->AddDynamicNode(trackmap.GetNode());
-	graphics_interface->AddDynamicNode(inputgraph.GetNode());
-	graphics_interface->AddDynamicNode(tire_smoke.GetNode());
+	graphics->AddDynamicNode(track.GetBodyNode());
+	graphics->AddDynamicNode(hud.GetNode());
+	graphics->AddDynamicNode(trackmap.GetNode());
+	graphics->AddDynamicNode(inputgraph.GetNode());
+	graphics->AddDynamicNode(tire_smoke.GetNode());
 	for (std::list <Car>::iterator i = cars.begin(); i != cars.end(); ++i)
 	{
-		graphics_interface->AddDynamicNode(i->GetNode());
+		graphics->AddDynamicNode(i->GetNode());
 	}
 	//gui.GetNode().DebugPrint(info_output);
 	PROFILER.endBlock("scenegraph");
 
 	// Send scene information to the graphics subsystem.
 	PROFILER.beginBlock("render setup");
-	graphics_interface->SetContrast(settings.GetContrast());
+	graphics->SetContrast(settings.GetContrast());
 	if (active_camera)
 	{
 		float fov = active_camera->GetFOV() > 0 ? active_camera->GetFOV() : settings.GetFOV();
@@ -775,7 +775,7 @@ void Game::Draw(float dt)
 		camlook.Rotate(M_PI_2, 1, 0, 0);
 		Quat camorientation = -(active_camera->GetOrientation() * camlook);
 
-		graphics_interface->SetupScene(
+		graphics->SetupScene(
 			fov, settings.GetViewDistance(),
 			active_camera->GetPosition(),
 			camorientation,
@@ -784,12 +784,12 @@ void Game::Draw(float dt)
 	}
 	else
 	{
-		graphics_interface->SetupScene(
+		graphics->SetupScene(
 			settings.GetFOV(), settings.GetViewDistance(),
 			Vec3(), Quat(), Vec3(),
 			error_output);
 	}
-	graphics_interface->UpdateScene(dt);
+	graphics->UpdateScene(dt);
 	PROFILER.endBlock("render setup");
 
 	// Sync CPU and GPU (flip the page).
@@ -798,7 +798,7 @@ void Game::Draw(float dt)
 	PROFILER.endBlock("render sync");
 
 	PROFILER.beginBlock("render draw");
-	graphics_interface->DrawScene(error_output);
+	graphics->DrawScene(error_output);
 	PROFILER.endBlock("render draw");
 }
 
@@ -997,7 +997,7 @@ void Game::ProcessGameInputs()
 	if (carcontrols_local.second.GetInput(GameInput::RELOAD_SHADERS) == 1.0)
 	{
 		info_output << "Reloading shaders" << std::endl;
-		if (!graphics_interface->ReloadShaders(info_output, error_output))
+		if (!graphics->ReloadShaders(info_output, error_output))
 		{
 			error_output << "Error reloading shaders" << std::endl;
 		}
@@ -1484,7 +1484,7 @@ void Game::UpdateCarInputs(int carid, Car & car)
 	car.SetInteriorView(incar);
 
 	// Move up the close shadow distance if we're in the cockpit.
-	graphics_interface->SetCloseShadow(incar ? 1.0 : 5.0);
+	graphics->SetCloseShadow(incar ? 1.0 : 5.0);
 }
 
 bool Game::NewGame(bool playreplay, bool addopponents, int num_laps)
@@ -1570,7 +1570,7 @@ bool Game::NewGame(bool playreplay, bool addopponents, int num_laps)
 	{
 		nodes.push_back(&i->GetNode());
 	}
-	graphics_interface->BindStaticVertexData(nodes);
+	graphics->BindStaticVertexData(nodes);
 
 	// Set up GUI.
 	gui.SetInGame(true);
@@ -1720,7 +1720,7 @@ bool Game::LoadTrack(const std::string & trackname)
 		settings.GetAnisotropy(),
 		settings.GetTrackReverse(),
 		settings.GetTrackDynamic(),
-		graphics_interface->GetShadows()))
+		graphics->GetShadows()))
 	{
 		error_output << "Error loading track: " << trackname << std::endl;
 		return false;
@@ -1775,8 +1775,8 @@ bool Game::LoadTrack(const std::string & trackname)
 
 	// Build static drawlist.
 #ifdef USE_STATIC_OPTIMIZATION_FOR_TRACK
-	graphics_interface->ClearStaticDrawables();
-	graphics_interface->AddStaticNode(track.GetTrackNode());
+	graphics->ClearStaticDrawables();
+	graphics->AddStaticNode(track.GetTrackNode());
 #endif
 
 	return true;
@@ -1802,7 +1802,7 @@ void Game::LoadGarage()
 		pathmanager.GetTrackPartsPath(),
 		settings.GetAnisotropy(),
 		track_reverse, track_dynamic,
-		graphics_interface->GetShadows()))
+		graphics->GetShadows()))
 	{
 		error_output << "Error loading garage: " << settings.GetSkin() << std::endl;
 		return;
@@ -1829,8 +1829,8 @@ void Game::LoadGarage()
 
 	// Build static drawlist.
 #ifdef USE_STATIC_OPTIMIZATION_FOR_TRACK
-	graphics_interface->ClearStaticDrawables();
-	graphics_interface->AddStaticNode(track.GetTrackNode());
+	graphics->ClearStaticDrawables();
+	graphics->AddStaticNode(track.GetTrackNode());
 #endif
 
 	// Load car.
@@ -1866,7 +1866,7 @@ void Game::SetGarageCar()
 	nodes.push_back(&track.GetTrackNode());
 	nodes.push_back(&track.GetBodyNode());
 	nodes.push_back(&cars.back().GetNode());
-	graphics_interface->BindStaticVertexData(nodes);
+	graphics->BindStaticVertexData(nodes);
 
 	// camera setup
 	Vec3 offset(1.5, 3.0, 0.5);
@@ -1957,7 +1957,7 @@ void Game::CalculateFPS()
 		std::string cpuProfile = PROFILER.getAvgSummary(quickprof::MICROSECONDS);
 		std::ostringstream summary;
 		summary << "CPU:\n" << cpuProfile << "\n\nGPU:\n";
-		graphics_interface->printProfilingInfo(summary);
+		graphics->printProfilingInfo(summary);
 		profiling_text.Revise(summary.str());
 	}
 }
@@ -2198,7 +2198,7 @@ void Game::PopulateAnisoList(GuiOption::List & anisolist)
 	anisolist.push_back(std::make_pair("0", "Off"));
 
 	int cur = 1;
-	int max_aniso = graphics_interface->GetMaxAnisotropy();
+	int max_aniso = graphics->GetMaxAnisotropy();
 	while (cur <= max_aniso)
 	{
 		std::string anisostr = cast(cur);
@@ -2211,7 +2211,7 @@ void Game::PopulateAntialiasList(GuiOption::List & antialiaslist)
 {
 	antialiaslist.clear();
 	antialiaslist.push_back(std::make_pair("0", "Off"));
-	if (graphics_interface->AntialiasingSupported())
+	if (graphics->AntialiasingSupported())
 	{
 		antialiaslist.push_back(std::make_pair("2", "2X"));
 		antialiaslist.push_back(std::make_pair("4", "4X"));
@@ -2282,15 +2282,15 @@ void Game::ShowLoadingScreen(float progress, float max, bool drawGui, const std:
 	assert(max > 0);
 	loadingscreen.Update(progress/max, optionalText, x, y);
 
-	graphics_interface->ClearDynamicDrawables();
+	graphics->ClearDynamicDrawables();
 	if (drawGui)
 	{
-		graphics_interface->AddDynamicNode(gui.GetNode());
+		graphics->AddDynamicNode(gui.GetNode());
 	}
-	graphics_interface->AddDynamicNode(loadingscreen.GetNode());
-	graphics_interface->SetupScene(45.0, 100.0, Vec3(), Quat(), Vec3(), error_output);
+	graphics->AddDynamicNode(loadingscreen.GetNode());
+	graphics->SetupScene(45.0, 100.0, Vec3(), Quat(), Vec3(), error_output);
 	window.SwapBuffers();
-	graphics_interface->DrawScene(error_output);
+	graphics->DrawScene(error_output);
 }
 
 bool GameDownloader::operator()(const std::string & file)
@@ -2565,7 +2565,7 @@ void Game::LeaveGame()
 	gui.SetInGame(false);
 	gui.ActivatePage("Main", 0.25, error_output);
 
-	graphics_interface->ClearStaticDrawables();
+	graphics->ClearStaticDrawables();
 
 	track.Clear();
 	cars.clear();
