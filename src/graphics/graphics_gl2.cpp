@@ -434,7 +434,8 @@ void GraphicsGL2::SetupScene(
 	float fov, float new_view_distance,
 	const Vec3 cam_position,
 	const Quat & cam_rotation,
-	const Vec3 & dynamic_reflection_sample_pos)
+	const Vec3 & dynamic_reflection_sample_pos,
+	std::ostream & error_output)
 {
 	// setup the default camera from the passed-in parameters
 	{
@@ -557,6 +558,23 @@ void GraphicsGL2::SetupScene(
 
 	glstate.ActiveTexture(0);
 	glMatrixMode(GL_MODELVIEW);
+
+	// sort the two dimentional drawlist so we get correct ordering
+	std::sort(dynamic_drawlist.twodim.begin(), dynamic_drawlist.twodim.end(), &SortDraworder);
+
+	// do fast culling queries for static geometry per pass
+	ClearCulledDrawLists();
+	for (std::vector <GraphicsConfigPass>::const_iterator i = config.passes.begin(); i != config.passes.end(); i++)
+	{
+		CullScenePass(*i, error_output);
+	}
+
+	renderscene.SetFSAA(fsaa);
+	renderscene.SetContrast(contrast);
+	renderscene.SetSunDirection(light_direction);
+
+	postprocess.SetContrast(contrast);
+	postprocess.SetSunDirection(light_direction);
 }
 
 void GraphicsGL2::UpdateScene(float dt)
@@ -570,22 +588,6 @@ void GraphicsGL2::UpdateScene(float dt)
 
 void GraphicsGL2::DrawScene(std::ostream & error_output)
 {
-	renderscene.SetFSAA(fsaa);
-	renderscene.SetContrast(contrast);
-	renderscene.SetSunDirection(light_direction);
-
-	postprocess.SetContrast(contrast);
-	postprocess.SetSunDirection(light_direction);
-
-	// sort the two dimentional drawlist so we get correct ordering
-	std::sort(dynamic_drawlist.twodim.begin(), dynamic_drawlist.twodim.end(), &SortDraworder);
-
-	// do fast culling queries for static geometry per pass
-	ClearCulledDrawLists();
-	for (std::vector <GraphicsConfigPass>::const_iterator i = config.passes.begin(); i != config.passes.end(); i++)
-	{
-		CullScenePass(*i, error_output);
-	}
 
 	// vertex object might have been modified ouside, reset it
 	glstate.ResetVertexObject();

@@ -80,7 +80,8 @@ public:
 		float fov, float new_view_distance,
 		const Vec3 cam_position,
 		const Quat & cam_rotation,
-		const Vec3 & dynamic_reflection_sample_pos);
+		const Vec3 & dynamic_reflection_sample_pos,
+		std::ostream & error_output);
 
 	virtual void DrawScene(std::ostream & error_output);
 
@@ -156,9 +157,15 @@ private:
 	// drawlist cache
 	std::map <std::string, std::vector <RenderModelExt*> > cameraDrawGroupDrawLists;
 
+	// this maps passes to maps of draw groups and draw list vector pointers
+	// so drawMap[passName][drawGroup] is a pointer to a vector of RenderModelExternal pointers
+	// this is complicated but it lets us do culling per camera position and draw group combination
+	std::map <StringId, std::map <StringId, std::vector <RenderModelExt*> *> > drawMap;
+
 	// drawlist assembly functions
-	void assembleDrawList(const std::vector <Drawable*> & drawables, std::vector <RenderModelExt*> & out, Frustum * frustum, const Vec3 & camPos);
-	void assembleDrawList(const AabbTreeNodeAdapter <Drawable> & adapter, std::vector <RenderModelExt*> & out, Frustum * frustum, const Vec3 & camPos);
+	void AssembleDrawList(const std::vector <Drawable*> & drawables, std::vector <RenderModelExt*> & out, Frustum * frustum, const Vec3 & camPos);
+	void AssembleDrawList(const AabbTreeNodeAdapter <Drawable> & adapter, std::vector <RenderModelExt*> & out, Frustum * frustum, const Vec3 & camPos);
+	void AssembleDrawMap(std::ostream & error_output);
 
 	// a map that stores which camera each pass uses
 	std::map <std::string, std::string> passNameToCameraName;

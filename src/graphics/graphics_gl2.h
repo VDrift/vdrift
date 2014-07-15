@@ -75,12 +75,12 @@ public:
 
 	virtual void ClearStaticDrawables();
 
-	/// Setup scene cameras
 	virtual void SetupScene(
 		float fov, float new_view_distance,
 		const Vec3 cam_position,
 		const Quat & cam_rotation,
-		const Vec3 & dynamic_reflection_sample_pos);
+		const Vec3 & dynamic_reflection_sample_pos,
+		std::ostream & error_output);
 
 	virtual void UpdateScene(float dt);
 

@@ -64,10 +64,13 @@ public:
 
 	virtual void ClearStaticDrawables() = 0;
 
+	/// Prepare scene for drawing. All non gpu setup happens here: culling, sorting etc
+	/// Vertex data and node binds should have happened before.
 	virtual void SetupScene(
 		float fov, float new_view_distance,
 		const Vec3 cam_position, const Quat & cam_rotation,
-		const Vec3 & dynamic_reflection_sample_pos) = 0;
+		const Vec3 & dynamic_reflection_sample_pos,
+		std::ostream & error_output) = 0;
 
 	/// optional (atm) scene animation update function
 	/// to be called after SetupScene and before DrawScene

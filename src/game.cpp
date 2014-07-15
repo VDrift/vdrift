@@ -762,6 +762,7 @@ void Game::Draw(float dt)
 
 	// Send scene information to the graphics subsystem.
 	PROFILER.beginBlock("render setup");
+	graphics_interface->SetContrast(settings.GetContrast());
 	if (active_camera)
 	{
 		float fov = active_camera->GetFOV() > 0 ? active_camera->GetFOV() : settings.GetFOV();
@@ -772,13 +773,22 @@ void Game::Draw(float dt)
 
 		Quat camlook;
 		camlook.Rotate(M_PI_2, 1, 0, 0);
-		Quat camorient = -(active_camera->GetOrientation() * camlook);
-		graphics_interface->SetupScene(fov, settings.GetViewDistance(), active_camera->GetPosition(), camorient, reflection_sample_location);
+		Quat camorientation = -(active_camera->GetOrientation() * camlook);
+
+		graphics_interface->SetupScene(
+			fov, settings.GetViewDistance(),
+			active_camera->GetPosition(),
+			camorientation,
+			reflection_sample_location,
+			error_output);
 	}
 	else
-		graphics_interface->SetupScene(settings.GetFOV(), settings.GetViewDistance(), Vec3 (), Quat (), Vec3 ());
-
-	graphics_interface->SetContrast(settings.GetContrast());
+	{
+		graphics_interface->SetupScene(
+			settings.GetFOV(), settings.GetViewDistance(),
+			Vec3(), Quat(), Vec3(),
+			error_output);
+	}
 	graphics_interface->UpdateScene(dt);
 	PROFILER.endBlock("render setup");
 
@@ -2278,10 +2288,9 @@ void Game::ShowLoadingScreen(float progress, float max, bool drawGui, const std:
 		graphics_interface->AddDynamicNode(gui.GetNode());
 	}
 	graphics_interface->AddDynamicNode(loadingscreen.GetNode());
-
-	graphics_interface->SetupScene(45.0, 100.0, Vec3 (), Quat (), Vec3 ());
-	graphics_interface->DrawScene(error_output);
+	graphics_interface->SetupScene(45.0, 100.0, Vec3(), Quat(), Vec3(), error_output);
 	window.SwapBuffers();
+	graphics_interface->DrawScene(error_output);
 }
 
 bool GameDownloader::operator()(const std::string & file)
