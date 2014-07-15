@@ -52,7 +52,9 @@ public:
 
 	virtual void Deinit() = 0;
 
-	virtual void BindVertexData(SceneNode * nodes[], unsigned int nodes_count) = 0;
+	virtual void BindDynamicVertexData(std::vector<SceneNode*> nodes) = 0;
+
+	virtual void BindStaticVertexData(std::vector<SceneNode*> nodes) = 0;
 
 	virtual void AddDynamicNode(SceneNode & node) = 0;
 

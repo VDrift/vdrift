@@ -397,9 +397,14 @@ void GraphicsGL2::Deinit()
 	}
 }
 
-void GraphicsGL2::BindVertexData(SceneNode * nodes[], unsigned int nodes_count)
+void GraphicsGL2::BindDynamicVertexData(std::vector<SceneNode*> nodes)
 {
-	vertex_buffer.Set(nodes, nodes_count);
+	vertex_buffer.SetDynamicVertexData(&nodes[0], nodes.size());
+}
+
+void GraphicsGL2::BindStaticVertexData(std::vector<SceneNode*> nodes)
+{
+	vertex_buffer.SetStaticVertexData(&nodes[0], nodes.size());
 }
 
 void GraphicsGL2::AddDynamicNode(SceneNode & node)

@@ -38,16 +38,19 @@ public:
 	/// \brief Clear all buffers and objects, will reset gl vbo, vao state
 	void Clear();
 
-	/// \brief Bind scene node drawables vertex data and upload it to gpu
+	/// \brief Bind dynamic scene node drawables vertex data and upload it to gpu
 	/// \param nodes is the node pointer array to be processed
-	/// \param nodes_count is the size of the node array
-	void Set(SceneNode * nodes[], unsigned int nodes_count);
+	/// \param count is the size of the node array
+	void SetDynamicVertexData(SceneNode * nodes[], unsigned int count);
+
+	/// \brief Bind static scene node drawables vertex data and upload it to gpu
+	/// \param nodes is the node pointer array to be processed
+	/// \param count is the size of the node array
+	void SetStaticVertexData(SceneNode * nodes[], unsigned int count);
 
 	/// \brief A vertex buffer segment
 	struct Segment
 	{
-		Segment();
-
 		unsigned int ioffset;		///< index start offset in bytes
 		unsigned int icount;		///< index count
 		unsigned int voffset;		///< vertex start element index
@@ -56,6 +59,7 @@ public:
 		unsigned char vformat;		///< vertex format
 		unsigned char object;		///< object this segment belongs to
 		unsigned short age;			///< segment age
+		Segment();
 	};
 
 	/// \brief Draw vertex buffer segment
@@ -64,33 +68,53 @@ public:
 	void Draw(unsigned int & vbuffer, const Segment & segment) const;
 
 private:
+	/// \brief Buffer objects store gpu buffer state
 	struct Object
 	{
-		Object();
-
+		unsigned int icapacity;		///< index buffer size
+		unsigned int vcapacity;		///< vertex buffer size
 		unsigned int icount;		///< index count
 		unsigned int vcount;		///< vertex count
 		unsigned int ibuffer;		///< index buffer object
 		unsigned int vbuffer;		///< vertex buffer object
 		unsigned int varray;		///< vertex array object
 		VertexFormat::Enum vformat;	///< vertex format
+		Object();
 	};
 	std::vector<Object> objects[VertexFormat::LastFormat + 1];
-	unsigned short age;
+
+	/// Staging buffers for dynamic vertex data updates
+	std::vector<unsigned int> staging_index_buffer[VertexFormat::LastFormat + 1];
+	std::vector<float> staging_vertex_buffer[VertexFormat::LastFormat + 1];
+
+	/// Buffer age counters used for debugging
+	unsigned short age_dynamic;
+	unsigned short age_static;
+
 	bool use_vao;
+
+	/// \brief Scene node visitors
+	struct BindStaticVertexData;
+	struct BindDynamicVertexData;
 
 	/// \brief Bind vao/vbo+ibo of segment and update vbuffer value
 	void BindSegmentBuffer(unsigned int & vbuffer, const Segment & segment) const;
 
-	/// \brief Scene node visitor
-	struct BindVertexData;
+	/// \brief Init dynamic vertex data objects
+	void InitDynamicBufferObjects();
 
-	/// \brief Upload vertex data to gpu
-	static void UploadVertexData(
-		const std::vector<Object> & objects,
+	/// \brief Upload dynamic vertex data to gpu
+	static void UploadDynamicVertexData(
+		std::vector<Object> & objects,
+		const std::vector<unsigned int> & index_buffer,
+		const std::vector<float> & vertex_buffer);
+
+	/// \brief Upload static vertex data to gpu
+	static void UploadStaticVertexData(
+		std::vector<Object> & objects,
 		const std::vector<const VertexArray *> & varrays,
-		std::vector<float> & vertex_buffer,
-		std::vector<unsigned int> & index_buffer);
+		std::vector<unsigned int> & index_buffer,
+		std::vector<float> & vertex_buffer);
 
 	/// \brief Write vertex array indices into staging buffer
 	static unsigned int WriteIndices(
@@ -108,9 +132,9 @@ private:
 
 	/// \brief Upload staging data into object vbo/ibo
 	static void UploadBuffers(
-		const Object & object,
-		const std::vector<float> & vertex_buffer,
-		const std::vector<unsigned int> & index_buffer);
+		Object & object,
+		const std::vector<unsigned int> & index_buffer,
+		const std::vector<float> & vertex_buffer);
 
 	/// \brief Set vertex format of currently bound vertex array
 	static void SetVertexFormat(const VertexFormat & vf);

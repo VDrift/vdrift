@@ -24,6 +24,8 @@
 //#define VAO_BROKEN
 
 static const unsigned int max_buffer_size = 4 * 1024 * 1024; // 4 MB buffer limit
+static const unsigned int min_dynamic_vertex_buffer_size = 64 * 1024;
+static const unsigned int min_dynamic_index_buffer_size = 4 * 1024;
 
 template <typename Functor>
 struct Wrapper
@@ -39,12 +41,83 @@ struct Wrapper
 	}
 };
 
-struct VertexBuffer::BindVertexData
+// Assuming dynamic vertex data amount is small (~64 KB), write it directly
+// into staging buffers, while deferring gpu upload to a separate pass.
+struct VertexBuffer::BindDynamicVertexData
+{
+	VertexBuffer & ctx;
+
+	BindDynamicVertexData(VertexBuffer & vb) :
+		ctx(vb)
+	{
+		// ctor
+	}
+
+	void operator() (Drawable & drawable)
+	{
+		if (!drawable.GetDrawEnable())
+			return;
+
+		Segment sg = drawable.GetVertexBufferSegment();
+		assert(drawable.GetVertArray());
+
+		const VertexArray & va = *drawable.GetVertArray();
+		const VertexFormat::Enum vf = va.GetVertexFormat();
+		const unsigned int vsize = VertexFormat::Get(vf).stride / sizeof(float);
+		const unsigned int vcount = va.GetNumVertices();
+		const unsigned int icount = va.GetNumIndices();
+		assert(vcount > 0);
+
+		// get dynamic vertex data object (first object in the vector)
+		const unsigned int obindex = 0;
+		assert(!ctx.objects[vf].empty());
+		Object & ob = ctx.objects[vf][obindex];
+
+		// gen object buffers
+		if (ob.vbuffer == 0)
+		{
+			glGenBuffers(1, &ob.ibuffer);
+			glGenBuffers(1, &ob.vbuffer);
+			if (ctx.use_vao)
+				glGenVertexArrays(1, &ob.varray);
+			ob.vformat = vf;
+		}
+
+		// set segment
+		sg.ioffset = ob.icount * sizeof(unsigned int);
+		sg.icount = icount;
+		sg.voffset = ob.vcount;
+		sg.vcount = vcount;
+		sg.vbuffer = ctx.use_vao ? ob.varray : ob.vbuffer;
+		sg.vformat = vf;
+		sg.object = obindex;
+		sg.age = ctx.age_dynamic;
+
+		drawable.SetVertexBufferSegment(sg);
+
+		// upload data into staging buffers
+		std::vector<unsigned int> & index_buffer = ctx.staging_index_buffer[vf];
+		std::vector<float> & vertex_buffer = ctx.staging_vertex_buffer[vf];
+		const unsigned int ibn = (ob.icount + icount);
+		const unsigned int vbn = (ob.vcount + vcount) * vsize;
+		if (index_buffer.size() < ibn)
+			index_buffer.resize(std::max(ibn, min_dynamic_index_buffer_size / sizeof(unsigned int)));
+		if (vertex_buffer.size() < vbn)
+			vertex_buffer.resize(std::max(vbn, min_dynamic_vertex_buffer_size / sizeof(float)));
+		ob.icount = WriteIndices(va, ob.icount, ob.vcount, index_buffer);
+		ob.vcount = WriteVertices(va, ob.vcount, vsize, vertex_buffer);
+	}
+};
+
+// The idea is to initialize drawable vertex buffer segments and allocate
+// buffer objects, while deferring vertex data upload to a later separate pass,
+// to avoid staging buffers reallocations (up to 4 MB).
+struct VertexBuffer::BindStaticVertexData
 {
 	VertexBuffer & ctx;
 	std::vector<const VertexArray *> varrays[VertexFormat::LastFormat + 1];
 
-	BindVertexData(VertexBuffer & vb) :
+	BindStaticVertexData(VertexBuffer & vb) :
 		ctx(vb)
 	{
 		// ctor
@@ -55,23 +128,32 @@ struct VertexBuffer::BindVertexData
 		Model * mo = drawable.GetModel();
 		assert(mo);
 
+		// early out if model already bound
+		Segment & sg = mo->GetVertexBufferSegment();
+		if (sg.age == ctx.age_static)
+		{
+			drawable.SetVertexBufferSegment(sg);
+			return;
+		}
+
 		const VertexArray & va = mo->GetVertexArray();
 		const VertexFormat::Enum vf = va.GetVertexFormat();
+		const unsigned int vsize = VertexFormat::Get(vf).stride;
 		const unsigned int vcount = va.GetNumVertices();
 		const unsigned int icount = va.GetNumIndices();
+		assert(vcount > 0);
 
-		assert(vf < VertexFormat::LastFormat);
-
-		// get object
+		// get object (first object is reserved for dynamic vertex data)
 		std::vector<Object> & obs = ctx.objects[vf];
-		if (obs.empty() || (obs.back().vcount + vcount) * VertexFormat::Get(vf).stride > max_buffer_size)
+		if (obs.size() < 2 || (obs.back().vcount + vcount) * vsize > max_buffer_size)
 		{
 			obs.push_back(Object());
 			assert(obs.size() <= 256);
 		}
-		Object & ob = obs.back();
+		const unsigned int obindex = obs.size() - 1;
+		Object & ob = obs[obindex];
 
-		// set object buffers
+		// gen object buffers
 		if (ob.vbuffer == 0)
 		{
 			glGenBuffers(1, &ob.ibuffer);
@@ -81,35 +163,28 @@ struct VertexBuffer::BindVertexData
 			ob.vformat = vf;
 		}
 
-		// check if model already in buffer
-		Segment & sg = mo->GetVertexBufferSegment();
-		if (sg.age != ctx.age)
-		{
-			// set model segment
-			sg.ioffset = ob.icount * sizeof(int);
-			sg.icount = icount;
-			sg.voffset = ob.vcount;
-			sg.vcount = vcount;
-			sg.vbuffer = ctx.use_vao ? ob.varray : ob.vbuffer;
-			sg.vformat = vf;
-			sg.object = obs.size() - 1;
-			sg.age = ctx.age;
+		// set segment
+		sg.ioffset = ob.icount * sizeof(unsigned int);
+		sg.icount = icount;
+		sg.voffset = ob.vcount;
+		sg.vcount = vcount;
+		sg.vbuffer = ctx.use_vao ? ob.varray : ob.vbuffer;
+		sg.vformat = vf;
+		sg.object = obindex;
+		sg.age = ctx.age_static;
 
-			// store va for vertex data upload
-			varrays[vf].push_back(&va);
-
-			// update buffer counts
-			ob.icount += icount;
-			ob.vcount += vcount;
-		}
-
-		// set drawable segment
 		drawable.SetVertexBufferSegment(sg);
+
+		// store va for vertex data upload and update buffer counts
+		varrays[vf].push_back(&va);
+		ob.icount += icount;
+		ob.vcount += vcount;
 	}
 };
 
 VertexBuffer::VertexBuffer() :
-	age(1),
+	age_dynamic(1),
+	age_static(1),
 	use_vao(false)
 {
 	// ctor
@@ -129,6 +204,8 @@ VertexBuffer::Segment::Segment() :
 }
 
 VertexBuffer::Object::Object() :
+	icapacity(0),
+	vcapacity(0),
 	icount(0),
 	vcount(0),
 	ibuffer(0),
@@ -164,34 +241,57 @@ void VertexBuffer::Clear()
 		}
 		objects[n].clear();
 	}
-
-	age += 2;
 }
 
-void VertexBuffer::Set(SceneNode * nodes[], unsigned int nodes_count)
+void VertexBuffer::SetDynamicVertexData(SceneNode * nodes[], unsigned int count)
 {
 	use_vao = glBindVertexArray ? true : false;
 
-	Clear();
+	age_dynamic += 2;
 
-	BindVertexData data(*this);
-	for (unsigned int i = 0; i < nodes_count; ++i)
+	InitDynamicBufferObjects();
+
+	BindDynamicVertexData bind_data(*this);
+	for (unsigned int i = 0; i < count; ++i)
 	{
 		assert(nodes[i]);
-		nodes[i]->ApplyDrawableFunctor(Wrapper<BindVertexData>(data));
+		nodes[i]->ApplyDrawableFunctor(Wrapper<BindDynamicVertexData>(bind_data));
 	}
 
-	std::vector<float> vertex_buffer;
-	std::vector<unsigned int> index_buffer;
 	for (unsigned int i = 0; i <= VertexFormat::LastFormat; ++i)
 	{
-		UploadVertexData(objects[i], data.varrays[i], vertex_buffer, index_buffer);
+		UploadDynamicVertexData(objects[i], staging_index_buffer[i], staging_vertex_buffer[i]);
+	}
+}
+
+void VertexBuffer::SetStaticVertexData(SceneNode * nodes[], unsigned int count)
+{
+	use_vao = glBindVertexArray ? true : false;
+
+	age_static += 2;
+
+	Clear();
+
+	InitDynamicBufferObjects(); // make sure dynamic objects are allocated
+
+	BindStaticVertexData bind_data(*this);
+	for (unsigned int i = 0; i < count; ++i)
+	{
+		assert(nodes[i]);
+		nodes[i]->ApplyDrawableFunctor(Wrapper<BindStaticVertexData>(bind_data));
+	}
+
+	std::vector<unsigned int> index_buffer;
+	std::vector<float> vertex_buffer;
+	for (unsigned int i = 0; i <= VertexFormat::LastFormat; ++i)
+	{
+		UploadStaticVertexData(objects[i], bind_data.varrays[i], index_buffer, vertex_buffer);
 	}
 }
 
 void VertexBuffer::Draw(unsigned int & vbuffer, const Segment & s) const
 {
-	assert(age == s.age);
+	assert(s.age == ((s.object != 0) ? age_static : age_dynamic));
 
 	if (vbuffer != s.vbuffer)
 		BindSegmentBuffer(vbuffer, s);
@@ -235,16 +335,46 @@ void VertexBuffer::BindSegmentBuffer(unsigned int & vbuffer, const Segment & s) 
 	}
 }
 
-void VertexBuffer::UploadVertexData(
-	const std::vector<Object> & objects,
+void VertexBuffer::InitDynamicBufferObjects()
+{
+	for (unsigned int i = 0; i <= VertexFormat::LastFormat; ++i)
+	{
+		std::vector<Object> & obs = objects[i];
+		if (obs.empty())
+		{
+			Object ob;
+			ob.icapacity = min_dynamic_index_buffer_size;
+			ob.vcapacity = min_dynamic_vertex_buffer_size;
+			obs.push_back(ob);
+		}
+		obs[0].icount = 0;
+		obs[0].vcount = 0;
+	}
+}
+
+void VertexBuffer::UploadDynamicVertexData(
+	std::vector<Object> & objects,
+	const std::vector<unsigned int> & index_buffer,
+	const std::vector<float> & vertex_buffer)
+{
+	assert(!objects.empty());
+	Object & ob = objects[0];
+	if (ob.vcount)
+	{
+		UploadBuffers(ob, index_buffer, vertex_buffer);
+	}
+}
+
+void VertexBuffer::UploadStaticVertexData(
+	std::vector<Object> & objects,
 	const std::vector<const VertexArray *> & varrays,
-	std::vector<float> & vertex_buffer,
-	std::vector<unsigned int> & index_buffer)
+	std::vector<unsigned int> & index_buffer,
+	std::vector<float> & vertex_buffer)
 {
 	unsigned int varray_index = 0;
-	for (unsigned int i = 0; i < objects.size(); ++i)
+	for (unsigned int i = 1; i < objects.size(); ++i)
 	{
-		const Object & ob = objects[i];
+		Object & ob = objects[i];
 		const VertexFormat & vf = VertexFormat::Get(ob.vformat);
 		const unsigned int vertex_size = vf.stride / sizeof(float);
 
@@ -265,7 +395,7 @@ void VertexBuffer::UploadVertexData(
 		assert(icount == ob.icount);
 		assert(vcount == ob.vcount);
 
-		UploadBuffers(ob, vertex_buffer, index_buffer);
+		UploadBuffers(ob, index_buffer, vertex_buffer);
 	}
 }
 
@@ -337,20 +467,44 @@ unsigned int VertexBuffer::WriteVertices(
 }
 
 void VertexBuffer::UploadBuffers(
-	const Object & object,
-	const std::vector<float> & vertex_buffer,
-	const std::vector<unsigned int> & index_buffer)
+	Object & object,
+	const std::vector<unsigned int> & index_buffer,
+	const std::vector<float> & vertex_buffer)
 {
 	const VertexFormat & vformat = VertexFormat::Get(object.vformat);
+	const unsigned int icapacity = object.icount * sizeof(unsigned int);
+	const unsigned int vcapacity = object.vcount * vformat.stride;
 
 	if (object.varray)
 		glBindVertexArray(object.varray);
 
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, object.ibuffer);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, object.icount * sizeof(unsigned int), &index_buffer[0], GL_STATIC_DRAW);
+	if (object.ibuffer)
+	{
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, object.ibuffer);
+		if (object.icapacity > icapacity)
+		{
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, object.icapacity, NULL, GL_STATIC_DRAW);
+			glBufferSubData(GL_ELEMENT_ARRAY_BUFFER, 0, icapacity, &index_buffer[0]);
+		}
+		else
+		{
+			glBufferData(GL_ELEMENT_ARRAY_BUFFER, icapacity, &index_buffer[0], GL_STATIC_DRAW);
+			object.icapacity = icapacity;
+		}
+	}
 
+	assert(object.vbuffer);
 	glBindBuffer(GL_ARRAY_BUFFER, object.vbuffer);
-	glBufferData(GL_ARRAY_BUFFER, object.vcount * vformat.stride, &vertex_buffer[0], GL_STATIC_DRAW);
+	if (object.vcapacity > vcapacity)
+	{
+		glBufferData(GL_ARRAY_BUFFER, object.vcapacity, NULL, GL_STATIC_DRAW);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, vcapacity, &vertex_buffer[0]);
+	}
+	else
+	{
+		glBufferData(GL_ARRAY_BUFFER, vcapacity, &vertex_buffer[0], GL_STATIC_DRAW);
+		object.vcapacity = vcapacity;
+	}
 
 	SetVertexFormat(vformat);
 

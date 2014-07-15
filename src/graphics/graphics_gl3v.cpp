@@ -110,7 +110,12 @@ void GraphicsGL3::Deinit()
 	renderer.clear();
 }
 
-void GraphicsGL3::BindVertexData(SceneNode * nodes[], unsigned int nodes_count)
+void GraphicsGL3::BindDynamicVertexData(std::vector<SceneNode*> nodes)
+{
+	// todo
+}
+
+void GraphicsGL3::BindStaticVertexData(std::vector<SceneNode*> nodes)
 {
 	// todo
 }

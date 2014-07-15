@@ -1560,7 +1560,7 @@ bool Game::NewGame(bool playreplay, bool addopponents, int num_laps)
 	{
 		nodes.push_back(&i->GetNode());
 	}
-	graphics_interface->BindVertexData(&nodes[0], nodes.size());
+	graphics_interface->BindStaticVertexData(nodes);
 
 	// Set up GUI.
 	gui.SetInGame(true);
@@ -1852,12 +1852,11 @@ void Game::SetGarageCar()
 	}
 
 	// bind vertex data
-	SceneNode * nodes[3] = {
-		&track.GetTrackNode(),
-		&track.GetBodyNode(),
-		&cars.back().GetNode()
-	};
-	graphics_interface->BindVertexData(nodes, 3);
+	std::vector<SceneNode *> nodes;
+	nodes.push_back(&track.GetTrackNode());
+	nodes.push_back(&track.GetBodyNode());
+	nodes.push_back(&cars.back().GetNode());
+	graphics_interface->BindStaticVertexData(nodes);
 
 	// camera setup
 	Vec3 offset(1.5, 3.0, 0.5);
