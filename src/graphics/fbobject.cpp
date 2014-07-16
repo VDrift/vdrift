@@ -282,8 +282,7 @@ void FrameBufferObject::Init(
 	if (verbose) error_output << "INFO: set draw buffers: " << buffers[0] << ", " << buffers[1] << ", " << buffers[2] << ", " << buffers[3] << std::endl;
 	if (verbose) error_output << "INFO: set read buffer: " << buffers[0] << std::endl;
 
-	bool status_ok = CheckStatus(error_output);
-	if (!status_ok)
+	if (!CheckStatus(error_output))
 	{
 		error_output << "Error initializing FBO:" << std::endl;
 		int count = 0;
@@ -423,8 +422,7 @@ void FrameBufferObject::Begin(GraphicsState & glstate, std::ostream & error_outp
 		CheckForOpenGLErrors("FBO cubemap side attachment", error_output);
 	}
 
-	bool status_ok = CheckStatus(error_output);
-	assert(status_ok);
+	assert(CheckStatus(error_output));
 
 	glstate.SetViewport(int(tex->GetW() * viewscale), int(tex->GetH() * viewscale));
 
