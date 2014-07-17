@@ -740,18 +740,29 @@ void Game::Test()
 void Game::Draw(float dt)
 {
 	PROFILER.beginBlock("scenegraph");
+	std::vector<SceneNode*> nodes;
+	nodes.reserve(7);
+	nodes.push_back(&debugnode);
+	nodes.push_back(&gui.GetNode());
+	nodes.push_back(&hud.GetNode());
+	nodes.push_back(&inputgraph.GetNode());
+	nodes.push_back(&dynamicsdraw.getNode());
+	nodes.push_back(&trackmap.GetNode());
+	nodes.push_back(&tire_smoke.GetNode());
+	graphics->BindDynamicVertexData(nodes);
+
 	graphics->ClearDynamicDrawables();
 	graphics->AddDynamicNode(debugnode);
 	graphics->AddDynamicNode(gui.GetNode());
-	graphics->AddDynamicNode(track.GetRacinglineNode());
+	graphics->AddDynamicNode(hud.GetNode());
+	graphics->AddDynamicNode(inputgraph.GetNode());
 	graphics->AddDynamicNode(dynamicsdraw.getNode());
 #ifndef USE_STATIC_OPTIMIZATION_FOR_TRACK
 	graphics->AddDynamicNode(track.GetTrackNode());
 #endif
 	graphics->AddDynamicNode(track.GetBodyNode());
-	graphics->AddDynamicNode(hud.GetNode());
+	graphics->AddDynamicNode(track.GetRacinglineNode());
 	graphics->AddDynamicNode(trackmap.GetNode());
-	graphics->AddDynamicNode(inputgraph.GetNode());
 	graphics->AddDynamicNode(tire_smoke.GetNode());
 	for (std::list <Car>::iterator i = cars.begin(); i != cars.end(); ++i)
 	{
@@ -2282,12 +2293,17 @@ void Game::ShowLoadingScreen(float progress, float max, bool drawGui, const std:
 	assert(max > 0);
 	loadingscreen.Update(progress/max, optionalText, x, y);
 
+	std::vector<SceneNode*> nodes;
+	if (drawGui)
+		nodes.push_back(&gui.GetNode());
+	nodes.push_back(&loadingscreen.GetNode());
+	graphics->BindDynamicVertexData(nodes);
+
 	graphics->ClearDynamicDrawables();
 	if (drawGui)
-	{
 		graphics->AddDynamicNode(gui.GetNode());
-	}
 	graphics->AddDynamicNode(loadingscreen.GetNode());
+
 	graphics->SetupScene(45.0, 100.0, Vec3(), Quat(), Vec3(), error_output);
 	window.SwapBuffers();
 	graphics->DrawScene(error_output);

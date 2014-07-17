@@ -21,9 +21,7 @@
 #include "scenenode.h"
 #include "model.h"
 
-//#define VAO_BROKEN
-
-static const unsigned int max_buffer_size = 4 * 1024 * 1024; // 4 MB buffer limit
+static const unsigned int max_buffer_size = 4 * 1024 * 1024;
 static const unsigned int min_dynamic_vertex_buffer_size = 64 * 1024;
 static const unsigned int min_dynamic_index_buffer_size = 4 * 1024;
 
@@ -58,15 +56,24 @@ struct VertexBuffer::BindDynamicVertexData
 		if (!drawable.GetDrawEnable())
 			return;
 
-		Segment sg = drawable.GetVertexBufferSegment();
 		assert(drawable.GetVertArray());
-
 		const VertexArray & va = *drawable.GetVertArray();
 		const VertexFormat::Enum vf = va.GetVertexFormat();
 		const unsigned int vsize = VertexFormat::Get(vf).stride / sizeof(float);
 		const unsigned int vcount = va.GetNumVertices();
 		const unsigned int icount = va.GetNumIndices();
-		assert(vcount > 0);
+
+		// FIXME: text drawables can contain empty vertex arrays,
+		// they should be culled before getting here
+		if (vcount == 0)
+		{
+			// reset segment as we might miss text drawable vcount change
+			// happens with Tracks/Cars scroll onfocus tooltip update
+			// need to investigate this
+			if (drawable.GetVertexBufferSegment().age)
+				drawable.SetVertexBufferSegment(Segment());
+			return;
+		}
 
 		// get dynamic vertex data object (first object in the vector)
 		const unsigned int obindex = 0;
@@ -84,6 +91,7 @@ struct VertexBuffer::BindDynamicVertexData
 		}
 
 		// set segment
+		Segment sg;
 		sg.ioffset = ob.icount * sizeof(unsigned int);
 		sg.icount = icount;
 		sg.voffset = ob.vcount;
@@ -92,7 +100,6 @@ struct VertexBuffer::BindDynamicVertexData
 		sg.vformat = vf;
 		sg.object = obindex;
 		sg.age = ctx.age_dynamic;
-
 		drawable.SetVertexBufferSegment(sg);
 
 		// upload data into staging buffers
@@ -172,7 +179,6 @@ struct VertexBuffer::BindStaticVertexData
 		sg.vformat = vf;
 		sg.object = obindex;
 		sg.age = ctx.age_static;
-
 		drawable.SetVertexBufferSegment(sg);
 
 		// store va for vertex data upload and update buffer counts
@@ -272,7 +278,8 @@ void VertexBuffer::SetStaticVertexData(SceneNode * nodes[], unsigned int count)
 
 	Clear();
 
-	InitDynamicBufferObjects(); // make sure dynamic objects are allocated
+	// make sure dynamic buffer objects are allocated
+	InitDynamicBufferObjects();
 
 	BindStaticVertexData bind_data(*this);
 	for (unsigned int i = 0; i < count; ++i)
@@ -291,7 +298,17 @@ void VertexBuffer::SetStaticVertexData(SceneNode * nodes[], unsigned int count)
 
 void VertexBuffer::Draw(unsigned int & vbuffer, const Segment & s) const
 {
-	assert(s.age == ((s.object != 0) ? age_static : age_dynamic));
+	// FIXME: text drawables can contain empty vertex arrays,
+	// they should be culled before getting here
+	if (s.vcount == 0)
+		return;
+
+	const unsigned short age = (s.object != 0) ? age_static : age_dynamic;
+	if (s.age != age)
+	{
+		assert(0);
+		return;
+	}
 
 	if (vbuffer != s.vbuffer)
 		BindSegmentBuffer(vbuffer, s);

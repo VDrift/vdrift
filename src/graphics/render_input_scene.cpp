@@ -197,17 +197,7 @@ void RenderInputScene::Draw(GraphicsState & glstate, const std::vector <Drawable
 		SetFlags(d, glstate);
 		SetTextures(d, glstate);
 		SetTransform(d, glstate);
-		if (!d.GetVertArray())
-		{
-			vertex_buffer.Draw(glstate.VertexObject(), d.GetVertexBufferSegment());
-		}
-		else
-		{
-			if (glstate.VertexObject())
-				glstate.ResetVertexObject();
-
-			DrawVertexArray(*d.GetVertArray());
-		}
+		vertex_buffer.Draw(glstate.VertexObject(), d.GetVertexBufferSegment());
 	}
 }
 
