@@ -89,11 +89,6 @@ private:
 
 	void Draw(GraphicsState & glstate, const std::vector <Drawable*> & drawlist);
 
-	void DrawVertexArray(const VertexArray & va) const;
-
-	/// returns true if the object was culled and should not be drawn
-	bool FrustumCull(const Drawable & d) const;
-
 	void SetFlags(const Drawable & d, GraphicsState & glstate);
 
 	void SetTextures(const Drawable & d, GraphicsState & glstate);
