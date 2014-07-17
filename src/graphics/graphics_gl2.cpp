@@ -1089,7 +1089,7 @@ void GraphicsGL2::DrawScenePass(
 		ReportOnce(&pass, "Shader " + pass.shader + " couldn't be found", error_output);
 		return;
 	}
-	renderscene.SetShader(&si->second);
+	renderscene.SetShader(si->second);
 
 	// setup textures
 	std::vector <TextureInterface*> input_textures;

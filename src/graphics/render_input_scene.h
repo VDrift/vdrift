@@ -30,9 +30,8 @@
 
 struct GraphicsCamera;
 class Drawable;
-class VertexArray;
-class TextureInterface;
 class Shader;
+class TextureInterface;
 class VertexBuffer;
 
 class RenderInputScene : public RenderInput
@@ -42,7 +41,7 @@ public:
 
 	~RenderInputScene();
 
-	void SetShader(Shader * newshader);
+	void SetShader(Shader & newshader);
 
 	void SetFSAA(unsigned value);
 

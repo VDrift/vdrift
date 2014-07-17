@@ -24,8 +24,6 @@
 #include "drawable.h"
 #include "shader.h"
 #include "uniforms.h"
-#include "vertexattrib.h"
-#include "vertexarray.h"
 #include "glutil.h"
 
 RenderInputScene::RenderInputScene(VertexBuffer & buffer):
@@ -48,9 +46,9 @@ RenderInputScene::~RenderInputScene()
 	//dtor
 }
 
-void RenderInputScene::SetShader(Shader * newshader)
+void RenderInputScene::SetShader(Shader & newshader)
 {
-	shader = newshader;
+	shader = &newshader;
 }
 
 void RenderInputScene::SetFSAA(unsigned value)
@@ -180,7 +178,6 @@ void RenderInputScene::Render(GraphicsState & glstate, std::ostream & error_outp
 
 	shader->Enable();
 	shader->SetUniform3f(Uniforms::LightDirection, lightvec[0], lightvec[1], lightvec[2]);
-	shader->SetUniform4f(Uniforms::ColorTint, &drawable_color[0]);
 	shader->SetUniform1f(Uniforms::Contrast, contrast);
 	shader->SetUniformMat3f(Uniforms::ReflectionMatrix, cube_matrix);
 
