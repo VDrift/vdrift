@@ -374,10 +374,6 @@ bool GraphicsGL2::Init(
 	}
 
 	// gl state setup
-	glEnable(GL_LINE_SMOOTH);
-	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-	glShadeModel(GL_SMOOTH);
-	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
 	glClearColor(0, 0, 0, 0);
 	glClearDepth(1);
 	glPolygonOffset(-1, -1);
