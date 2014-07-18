@@ -374,8 +374,6 @@ bool GraphicsGL2::Init(
 	}
 
 	// gl state setup
-	glClearColor(0, 0, 0, 0);
-	glClearDepth(1);
 	glPolygonOffset(-1, -1);
 
 	info_output << "Renderer: " << shaderpath << "/" << renderconfigfile << std::endl;
