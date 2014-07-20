@@ -31,12 +31,21 @@
 #define enableContributionCull true
 
 GraphicsGL3::GraphicsGL3(StringIdMap & map) :
-	stringMap(map), renderer(gl), logNextGlFrame(false), initialized(false),
+	stringMap(map),
+	gl(vertex_buffer),
+	renderer(gl),
+	logNextGlFrame(false),
+	initialized(false),
 	closeshadow(5.f)
 {
 	// initialize the full screen quad
 	fullscreenquadVertices.SetTo2DQuad(0,0,1,1, 0,1,1,0, 0);
 	fullscreenquad.SetVertArray(&fullscreenquadVertices);
+}
+
+GraphicsGL3::~GraphicsGL3()
+{
+	// dtor
 }
 
 bool GraphicsGL3::Init(
@@ -112,12 +121,19 @@ void GraphicsGL3::Deinit()
 
 void GraphicsGL3::BindDynamicVertexData(std::vector<SceneNode*> nodes)
 {
-	// todo
+	// TODO: This doesn't look very efficient...
+	SceneNode quad_node;
+	SceneNode::DrawableHandle d = quad_node.GetDrawList().twodim.insert(fullscreenquad);
+	nodes.push_back(&quad_node);
+
+	vertex_buffer.SetDynamicVertexData(&nodes[0], nodes.size());
+
+	fullscreenquad = quad_node.GetDrawList().twodim.get(d);
 }
 
 void GraphicsGL3::BindStaticVertexData(std::vector<SceneNode*> nodes)
 {
-	// todo
+	vertex_buffer.SetStaticVertexData(&nodes[0], nodes.size());
 }
 
 void GraphicsGL3::AddDynamicNode(SceneNode & node)
@@ -590,6 +606,9 @@ void GraphicsGL3::AssembleDrawMap(std::ostream & error_output)
 
 void GraphicsGL3::DrawScene(std::ostream & error_output)
 {
+	// reset active vertex array in case it has been modified outside
+	gl.unbindVertexArray();
+
 	gl.logging(logNextGlFrame);
 	renderer.render(w, h, stringMap, drawMap, error_output);
 	gl.logging(false);

@@ -184,8 +184,6 @@ bool ModelObj::Load(const std::string & filepath, std::ostream & error_log, bool
 
 	varray.BuildFromFaces(faces);
 	GenMeshMetrics();
-	if (!genlist)
-		GenVertexArrayObject(error_log);
 
 	return true;
 }

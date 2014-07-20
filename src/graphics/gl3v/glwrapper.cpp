@@ -40,7 +40,13 @@
 const char * REQUIRED_GL_VERSION = "GL_VERSION_3_3";
 const GLEnums GLEnumHelper;
 
-GLWrapper::GLWrapper() : initialized(false), infoOutput(NULL), errorOutput(NULL), logEnable(false)
+GLWrapper::GLWrapper(VertexBuffer & vb) :
+	vertexBuffer(vb),
+	curActiveVertexArray(0),
+	infoOutput(NULL),
+	errorOutput(NULL),
+	initialized(false),
+	logEnable(false)
 {
 	clearCaches();
 }
@@ -141,6 +147,7 @@ void GLWrapper::applyUniformDelayed(GLint location, const RenderUniformVector <T
 
 void GLWrapper::drawGeometry(GLuint vao, GLuint elementCount)
 {
+	curActiveVertexArray = vao;
 	GLLOG(glBindVertexArray(vao));ERROR_CHECK1(vao);
 	GLLOG(glDrawElements(GL_TRIANGLES, elementCount, GL_UNSIGNED_INT, 0));ERROR_CHECK2(vao,elementCount);
 }
@@ -556,11 +563,13 @@ GLuint GLWrapper::GenVertexArray()
 
 void GLWrapper::BindVertexArray(GLuint handle)
 {
+	curActiveVertexArray = handle;
 	GLLOG(glBindVertexArray(handle));ERROR_CHECK;
 }
 
 void GLWrapper::unbindVertexArray()
 {
+	curActiveVertexArray = 0;
 	GLLOG(glBindVertexArray(0));ERROR_CHECK;
 }
 

@@ -17,26 +17,41 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _RENDERMODELEXTDRAWABLE
-#define _RENDERMODELEXTDRAWABLE
+#ifndef _RENDER_MODEL_EXT_DRAWABLE
+#define _RENDER_MODEL_EXT_DRAWABLE
 
 #include "gl3v/rendermodelext.h"
-
-class VertexArray;
-class Drawable;
+#include "vertexbuffer.h"
 
 class RenderModelExtDrawable : public RenderModelExt
 {
-	friend class Drawable;
-	public:
-		void SetVertArray(const VertexArray* value) {vert_array = value;if (vert_array) enabled = true;}
-		virtual void draw(GLWrapper & gl) const;
+friend class Drawable;
+public:
+	virtual void draw(GLWrapper & gl) const
+	{
+		assert(vsegment);
+		gl.GetVertexBuffer().Draw(gl.GetActiveVertexArray(), *vsegment);
+	}
 
-		RenderModelExtDrawable() : vert_array(NULL) {}
-		~RenderModelExtDrawable() {}
+	void SetVertData(const VertexBuffer::Segment & vs)
+	{
+		vsegment = &vs;
+		enabled = (vs.vcount != 0);
+	}
 
-	private:
-		const VertexArray * vert_array;
+	RenderModelExtDrawable() :
+		vsegment(NULL)
+	{
+		// ctor
+	}
+
+	~RenderModelExtDrawable()
+	{
+		// dtor
+	}
+
+private:
+	const VertexBuffer::Segment * vsegment;
 };
 
 #endif

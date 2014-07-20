@@ -48,15 +48,9 @@ void Drawable::SetTextures(unsigned id0, unsigned id1, unsigned id2)
 	textures_changed = true;
 }
 
-void Drawable::SetVertArray(const VertexArray* value)
+void Drawable::SetVertArray(const VertexArray * value)
 {
 	vert_array = value;
-	render_model.SetVertArray(vert_array);
-}
-
-void Drawable::SetVertexArrayObject(unsigned vao, unsigned element_count)
-{
-	render_model.setVertexArrayObject(vao, element_count);
 }
 
 void Drawable::SetTransform(const Mat4 & value)
@@ -167,6 +161,8 @@ RenderModelExt & Drawable::GenRenderModelData(StringIdMap & string_map)
 		uniforms_changed = false;
 	}
 
+	render_model.SetVertData(vsegment);
+
 	return render_model;
 }
 
@@ -175,13 +171,4 @@ void Drawable::SetModel(Model & newmodel)
 	model = &newmodel;
 	center = newmodel.GetCenter();
 	radius = newmodel.GetRadius();
-
-	if (model->HaveVertexArrayObject())
-	{
-		GLuint vao = 0;
-		unsigned int element_count = 0;
-		bool have_vao = model->GetVertexArrayObject(vao, element_count);
-		if (have_vao)
-			SetVertexArrayObject(vao, element_count);
-	}
 }

@@ -102,9 +102,6 @@ private:
 	bool textures_changed;
 	bool uniforms_changed;
 	RenderModelExtDrawable render_model;
-
-	/// set render model vao
-	void SetVertexArrayObject(unsigned vao, unsigned element_count);
 };
 
 inline bool Drawable::operator < (const Drawable & other) const

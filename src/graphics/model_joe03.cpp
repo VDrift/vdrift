@@ -228,7 +228,7 @@ bool ModelJoe03::Load ( const std::string & filename, std::ostream & err_output,
 		}
 	}
 
-	bool val = LoadFromHandle ( m_FilePointer, pack, err_output );
+	bool loaded = LoadFromHandle ( m_FilePointer, pack, err_output );
 
 	// Clean up after everything
 	if ( pack == NULL )
@@ -236,20 +236,10 @@ bool ModelJoe03::Load ( const std::string & filename, std::ostream & err_output,
 	else
 		pack->fclose();
 
-	if (val)
-	{
-		if (!genlist)
-		{
-			//optimize into vertex array/buffers
-			GenVertexArrayObject(err_output);
-		}
-	}
-	else
-	{
+	if (!loaded)
 		err_output << "in " << filename << std::endl;
-	}
 
-	return val;
+	return loaded;
 }
 
 bool ModelJoe03::LoadFromHandle ( FILE * m_FilePointer, const JoePack * pack, std::ostream & err_output )

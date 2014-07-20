@@ -103,10 +103,11 @@ public:
 
 	GraphicsGL3(StringIdMap & map);
 
-	~GraphicsGL3() {};
+	~GraphicsGL3();
 
 private:
 	StringIdMap & stringMap;
+	VertexBuffer vertex_buffer;
 	GLWrapper gl;
 	Renderer renderer;
 	std::string rendercfg;

@@ -26,13 +26,15 @@
 #include <vector>
 #include <map>
 
+class VertexBuffer;
+
 /// A wrapper around all OpenGL functions.
 /// All GL functions should go through this class only; this allows it to cache state changes and perform other optimizations.
 class GLWrapper
 {
 public:
 
-	GLWrapper();
+	GLWrapper(VertexBuffer & vb);
 
 	/// This must be called before you can use any other functions from this class.
 	/// An already created window reference must be passed in.
@@ -151,6 +153,9 @@ public:
 	void ClearDepth(GLfloat d);
 	void ClearStencil(GLint s);
 
+	VertexBuffer & GetVertexBuffer() { return vertexBuffer; }
+	unsigned int & GetActiveVertexArray() { return curActiveVertexArray; }
+
 	/// Writes errors to the log.
 	/// Returns false if there was an error.
 	bool checkForOpenGLErrors(const char * function, const char * file, int line) const;
@@ -159,9 +164,12 @@ public:
 	void logging(bool log);
 
 private:
-	bool initialized;
+	VertexBuffer & vertexBuffer;
+	unsigned int curActiveVertexArray;
+
 	std::ostream * infoOutput;
 	std::ostream * errorOutput;
+	bool initialized;
 	bool logEnable; // Only does anything if logEveryGlCall in glwrapper.cpp is true.
 
 	// Cached state.

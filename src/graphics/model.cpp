@@ -77,9 +77,6 @@ bool Model::Load(const VertexArray & nvarray, std::ostream & error_output, bool 
 
 	GenMeshMetrics();
 
-	if (!genlist)
-		GenVertexArrayObject(error_output);
-
 	return true;
 }
 
@@ -132,9 +129,6 @@ bool Model::ReadFromFile(const std::string & filepath, std::ostream & error_outp
 	}
 
 	GenMeshMetrics();
-
-	if (!genlist)
-		GenVertexArrayObject(error_output);
 
 	return true;
 }
