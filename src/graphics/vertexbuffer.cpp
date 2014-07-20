@@ -546,7 +546,7 @@ void VertexBuffer::SetVertexFormat(const VertexFormat & vf)
 		glEnableVertexAttribArray(af.index);
 		glVertexAttribPointer(
 			af.index, af.size, af.type, af.norm,
-			vf.stride, (const void *)af.offset);
+			vf.stride, (const void *)(size_t)af.offset);
 	}
 	// TODO: Cache enabled / disabled attributes?
 	for (unsigned int n = vf.attribs_count; n <= VertexAttrib::LastAttrib; ++n)
