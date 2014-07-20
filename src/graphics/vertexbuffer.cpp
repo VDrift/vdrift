@@ -108,9 +108,15 @@ struct VertexBuffer::BindDynamicVertexData
 		const unsigned int ibn = (ob.icount + icount);
 		const unsigned int vbn = (ob.vcount + vcount) * vsize;
 		if (index_buffer.size() < ibn)
-			index_buffer.resize(std::max(ibn, min_dynamic_index_buffer_size / sizeof(unsigned int)));
+		{
+			const unsigned int ibmin = min_dynamic_index_buffer_size / sizeof(unsigned int);
+			index_buffer.resize(std::max(ibn, ibmin));
+		}
 		if (vertex_buffer.size() < vbn)
-			vertex_buffer.resize(std::max(vbn, min_dynamic_vertex_buffer_size / sizeof(float)));
+		{
+			const unsigned int vbmin = min_dynamic_vertex_buffer_size / sizeof(float);
+			vertex_buffer.resize(std::max(vbn, vbmin));
+		}
 		ob.icount = WriteIndices(va, ob.icount, ob.vcount, index_buffer);
 		ob.vcount = WriteVertices(va, ob.vcount, vsize, vertex_buffer);
 	}
@@ -317,7 +323,7 @@ void VertexBuffer::Draw(unsigned int & vbuffer, const Segment & s) const
 	{
 		glDrawRangeElements(
 			GL_TRIANGLES, s.voffset, s.voffset + s.vcount - 1,
-			s.icount, GL_UNSIGNED_INT, (const void *)s.ioffset);
+			s.icount, GL_UNSIGNED_INT, (const void *)(size_t)s.ioffset);
 	}
 	else
 	{
