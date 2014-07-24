@@ -371,11 +371,17 @@ bool Game::InitCoreSubsystems()
 	if (settings.GetShadows() && depth_bpp < 24)
 		depth_bpp = 24;
 
-	window.Init("VDrift",
-		settings.GetResolutionX(), settings.GetResolutionY(),
-		settings.GetBpp(), depth_bpp,
-		settings.GetFullscreen(), antialiasing,
-		info_output, error_output);
+	window.Init(
+		"VDrift",
+		settings.GetResolutionX(),
+		settings.GetResolutionY(),
+		settings.GetBpp(),
+		depth_bpp,
+		antialiasing,
+		settings.GetFullscreen(),
+		settings.GetVsync(),
+		info_output,
+		error_output);
 
 	const int renderer_count = 2;
 	for (int i = 0; i < renderer_count; i++)

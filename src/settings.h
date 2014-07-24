@@ -69,6 +69,11 @@ public:
 		return fullscreen;
 	}
 
+	bool GetVsync() const
+	{
+		return vsync;
+	}
+
 	const std::string & GetRenderer() const
 	{
 		return renderer;
@@ -398,6 +403,7 @@ private:
 	int bpp;
 	int depthbpp;
 	bool fullscreen;
+	bool vsync;
 	std::string renderer;
 	std::string skin;
 	std::string language;

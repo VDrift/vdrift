@@ -22,7 +22,6 @@
 
 #include <iosfwd>
 
-struct SDL_Surface;
 struct SDL_Window;
 
 class Window
@@ -33,10 +32,14 @@ public:
 	~Window();
 
 	void Init(
-		const std::string & windowcaption,
-		unsigned int resx, unsigned int resy,
-		unsigned int bpp, unsigned int depthbpp,
-		bool fullscreen, unsigned int antialiasing,
+		const std::string & caption,
+		int resx,
+		int resy,
+		int color_bpp,
+		int depth_bpp,
+		int antialiasing,
+		bool fullscreen,
+		bool vsync,
 		std::ostream & info_output,
 		std::ostream & error_output);
 
@@ -51,24 +54,23 @@ public:
 
 	int GetH() const;
 
-	float GetWHRatio() const;
-
 private:
-	// Configuration variables, internal data.
-	int w, h;
-	bool initialized;
-	unsigned int fsaa;
-	SDL_Surface * surface;
 	SDL_Window * window;
 	void * glcontext;
+	int fsaa;
+	int w, h;
+	bool initialized;
 
 	bool ResizeWindow(int width, int height);
 
 	void ChangeDisplay(
-		int width, int height,
-		int bpp, int dbpp,
+		int width,
+		int height,
+		int color_bpp,
+		int depth_bpp,
+		int antialiasing,
 		bool fullscreen,
-		unsigned int antialiasing,
+		bool vsync,
 		std::ostream & info_output,
 		std::ostream & error_output);
 

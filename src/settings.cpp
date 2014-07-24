@@ -44,6 +44,7 @@ Settings::Settings() :
 	bpp(32),
 	depthbpp(24),
 	fullscreen(false),
+	vsync(false),
 	renderer("gl3/deferred.conf"),
 	skin("simple"),
 	language("en"),
@@ -153,6 +154,7 @@ void Settings::Serialize(bool write, Config & config)
 	Param(config, write, section, "depth", bpp);
 	Param(config, write, section, "zdepth", depthbpp);
 	Param(config, write, section, "fullscreen", fullscreen);
+	Param(config, write, section, "vsync", vsync);
 	Param(config, write, section, "renderer", renderer);
 	Param(config, write, section, "skin", skin);
 	Param(config, write, section, "language", language);

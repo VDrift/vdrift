@@ -26,12 +26,12 @@
 #include <cstring>
 
 Window::Window() :
-	w(0), h(0),
-	initialized(false),
-	fsaa(1),
-	surface(NULL),
 	window(NULL),
-	glcontext(NULL)
+	glcontext(NULL),
+	fsaa(1),
+	w(0),
+	h(0),
+	initialized(false)
 {
 	// Constructor.
 }
@@ -49,10 +49,14 @@ Window::~Window()
 }
 
 void Window::Init(
-	const std::string & windowcaption,
-	unsigned int resx, unsigned int resy,
-	unsigned int bpp, unsigned int depthbpp,
-	bool fullscreen, unsigned int antialiasing,
+	const std::string & caption,
+	int resx,
+	int resy,
+	int color_bpp,
+	int depth_bpp,
+	int antialiasing,
+	bool fullscreen,
+	bool vsync,
 	std::ostream & info_output,
 	std::ostream & error_output)
 {
@@ -63,9 +67,12 @@ void Window::Init(
 		assert(0);
 	}
 
-	ChangeDisplay(resx, resy, bpp, depthbpp, fullscreen, antialiasing, info_output, error_output);
+	ChangeDisplay(
+		resx, resy, color_bpp, depth_bpp,
+		antialiasing, fullscreen, vsync,
+		info_output, error_output);
 
-	SDL_SetWindowTitle(window, windowcaption.c_str());
+	SDL_SetWindowTitle(window, caption.c_str());
 
 	// initialize GLEW
 	GLenum glew_err = glewInit();
@@ -137,11 +144,6 @@ int Window::GetH() const
 	return h;
 }
 
-float Window::GetWHRatio() const
-{
-	return (float)w / (float)h;
-}
-
 static int GetVideoDisplay()
 {
 	const char *variable = SDL_getenv("SDL_VIDEO_FULLSCREEN_DISPLAY");
@@ -171,16 +173,19 @@ bool Window::ResizeWindow(int width, int height)
 }
 
 void Window::ChangeDisplay(
-	int width, int height,
-	int bpp, int dbpp,
+	int width,
+	int height,
+	int color_bpp,
+	int depth_bpp,
+	int antialiasing,
 	bool fullscreen,
-	unsigned int antialiasing,
+	bool vsync,
 	std::ostream & info_output,
 	std::ostream & error_output)
 {
 
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, dbpp);
+	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, depth_bpp);
 
 	fsaa = 1;
 	if (antialiasing > 1)
@@ -205,8 +210,8 @@ void Window::ChangeDisplay(
 	if (height == 0)
 		height = desktop_mode.h;
 
-	if (bpp == 0)
-		bpp = SDL_BITSPERPIXEL(desktop_mode.format);
+	if (color_bpp == 0)
+		color_bpp = SDL_BITSPERPIXEL(desktop_mode.format);
 
 	// Try to resize the existing window and surface
 	if (!fullscreen && ResizeWindow(width, height))
@@ -241,9 +246,23 @@ void Window::ChangeDisplay(
 	{
 		assert(0);
 	}
+
 	if (SDL_GL_MakeCurrent(window, glcontext) < 0)
 	{
 		assert(0);
+	}
+
+	int vsync_set = SDL_GL_SetSwapInterval(vsync ? 1 : 0);
+	if (vsync_set != -1)
+	{
+		if (vsync)
+			info_output << "Enabling vertical synchronization." << std::endl;
+		else
+			info_output << "Disabling vertical synchronization." << std::endl;
+	}
+	else
+	{
+		info_output << "Setting vertical synchronization not supported." << std::endl;
 	}
 
 	w = width;
