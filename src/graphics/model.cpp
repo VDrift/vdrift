@@ -18,19 +18,13 @@
 /************************************************************************/
 
 #include "model.h"
-#include "vertexattrib.h"
-#include "glutil.h"
-#include "glew.h"
-#include "utils.h"
+#include <fstream>
+#include <string>
 #include <limits>
-
-#define ERROR_CHECK CheckForOpenGLErrors(std::string(__PRETTY_FUNCTION__)+":"+__FILE__+":"+Utils::tostr(__LINE__), error_output)
 
 static const std::string file_magic = "OGLVARRAYV01";
 
 Model::Model() :
-	element_count(0),
-	vao(0),
 	radius(0),
 	generatedmetrics(false)
 {
@@ -38,15 +32,13 @@ Model::Model() :
 }
 
 Model::Model(const std::string & filepath, std::ostream & error_output) :
-	element_count(0),
-	vao(0),
 	radius(0),
 	generatedmetrics(false)
 {
 	if (filepath.size() > 4 && filepath.substr(filepath.size()-4) == ".ova")
-		ReadFromFile(filepath, error_output, false);
+		ReadFromFile(filepath, error_output);
 	else
-		Load(filepath, error_output, false);
+		Load(filepath, error_output);
 }
 
 Model::~Model()
@@ -64,12 +56,12 @@ bool Model::Save(const std::string & strFileName, std::ostream & error_output) c
 	return false;
 }
 
-bool Model::Load(const std::string & strFileName, std::ostream & error_output, bool genlist)
+bool Model::Load(const std::string & strFileName, std::ostream & error_output)
 {
 	return false;
 }
 
-bool Model::Load(const VertexArray & nvarray, std::ostream & error_output, bool genlist)
+bool Model::Load(const VertexArray & nvarray, std::ostream & error_output)
 {
 	Clear();
 
@@ -97,7 +89,7 @@ bool Model::WriteToFile(const std::string & filepath)
 	return Serialize(s);
 }
 
-bool Model::ReadFromFile(const std::string & filepath, std::ostream & error_output, bool genlist)
+bool Model::ReadFromFile(const std::string & filepath, std::ostream & error_output)
 {
 	std::ifstream filein(filepath.c_str(), std::ios_base::binary);
 	if (!filein)
@@ -129,142 +121,6 @@ bool Model::ReadFromFile(const std::string & filepath, std::ostream & error_outp
 	}
 
 	GenMeshMetrics();
-
-	return true;
-}
-
-template <typename T>
-GLuint GenerateBuffer(
-	std::ostream & error_output,
-	unsigned attrib_id,
-	const T * data,
-	unsigned vertex_count,
-	unsigned elems_per_vertex,
-	GLenum type = GL_FLOAT,
-	bool normalized = false)
-{
-	GLuint vbo = 0;
-	glGenBuffers(1, &vbo);ERROR_CHECK;
-	glBindBuffer(GL_ARRAY_BUFFER, vbo);ERROR_CHECK;
-	glBufferData(GL_ARRAY_BUFFER, vertex_count * elems_per_vertex * sizeof(T), data, GL_STATIC_DRAW);ERROR_CHECK;
-	glVertexAttribPointer(attrib_id, elems_per_vertex, type, normalized, 0, 0);ERROR_CHECK;
-	glEnableVertexAttribArray(attrib_id);ERROR_CHECK;
-	return vbo;
-}
-
-void Model::GenVertexArrayObject(std::ostream & error_output)
-{
-	using namespace VertexAttrib;
-
-	if (HaveVertexArrayObject())
-		return;
-
-	// Generate vertex array object.
-	glGenVertexArrays(1, &vao);ERROR_CHECK;
-	glBindVertexArray(vao);ERROR_CHECK;
-
-	// Buffer object for faces.
-	const unsigned int * faces;
-	int fcount;
-	varray.GetFaces(faces, fcount);
-	assert(faces && fcount > 0);
-	element_count = fcount;
-	GLuint evbo = 0;
-	glGenBuffers(1, &evbo);ERROR_CHECK;
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, evbo);ERROR_CHECK;
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, fcount * sizeof(GLuint), faces, GL_STATIC_DRAW);ERROR_CHECK;
-	vbos.push_back(evbo);
-
-	// Generate buffer object for vertex positions.
-	const float * verts;
-	int vcount;
-	varray.GetVertices(verts, vcount);
-	assert(verts && vcount > 0);
-	const int vertex_count = vcount / 3;
-	vbos.push_back(GenerateBuffer(error_output, VertexPosition, verts, vertex_count, 3));
-
-	// Generate buffer object for normals.
-	const float * norms;
-	int ncount;
-	varray.GetNormals(norms, ncount);
-	if (!norms || ncount <= 0)
-		glDisableVertexAttribArray(VertexNormal);
-	else
-	{
-		assert(ncount == vertex_count * 3);
-		vbos.push_back(GenerateBuffer(error_output, VertexNormal, norms, vertex_count, 3));
-	}
-
-	// TODO: Generate tangent and bitangent.
-	glDisableVertexAttribArray(VertexTangent);
-	glDisableVertexAttribArray(VertexBitangent);
-
-	// Generate buffer object for texture coordinates.
-	const float * tcos;
-	int tcount;
-	varray.GetTexCoords(tcos, tcount);
-	if (tcos && tcount)
-	{
-		assert(tcount == vertex_count * 2);
-		vbos.push_back(GenerateBuffer(error_output, VertexTexCoord, tcos, vertex_count, 2));
-	}
-	else
-		glDisableVertexAttribArray(VertexTexCoord);
-
-	glDisableVertexAttribArray(VertexBlendIndices);
-	glDisableVertexAttribArray(VertexBlendWeights);
-
-	// Generate buffer object for colors.
-	const unsigned char * cols = 0;
-	int ccount = 0;
-	varray.GetColors(cols, ccount);
-	if (cols && ccount)
-	{
-		assert(ccount == vertex_count * 4);
-		vbos.push_back(GenerateBuffer(error_output, VertexColor, cols, vertex_count, 4, GL_UNSIGNED_BYTE, true));
-	}
-	else
-		glDisableVertexAttribArray(VertexColor);
-
-	// Don't leave anything bound.
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-}
-
-bool Model::HaveVertexArrayObject() const
-{
-	return vao;
-}
-
-void Model::ClearVertexArrayObject()
-{
-	if (!HaveVertexArrayObject())
-		return;
-
-	if (!vbos.empty())
-	{
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
-		glDeleteBuffers(vbos.size(), &vbos[0]);
-		vbos.clear();
-	}
-
-	if (vao)
-	{
-		glBindVertexArray(0);
-		glDeleteVertexArrays(1, &vao);
-		vao = 0;
-	}
-}
-
-bool Model::GetVertexArrayObject(unsigned & vao_out, unsigned int & element_count_out) const
-{
-	if (!HaveVertexArrayObject())
-		return false;
-
-	vao_out = vao;
-	element_count_out = element_count;
 
 	return true;
 }
@@ -317,7 +173,6 @@ float Model::GetRadius() const
 void Model::Clear()
 {
 	ClearMeshData();
-	ClearVertexArrayObject();
 	ClearMetrics();
 }
 

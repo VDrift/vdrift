@@ -820,10 +820,9 @@ std::pair<bool, bool> Track::Loader::ContinueOld()
 	// should be fixed in the model data instead
 	if (object.skybox && data.vertical_tracking_skyboxes)
 	{
-		const bool vao = object.model->HaveVertexArrayObject();
 		VertexArray va = object.model->GetVertexArray();
 		va.Translate(0, 0, -object.model->GetCenter()[2]);
-		object.model->Load(va, error_output, !vao);
+		object.model->Load(va, error_output);
 	}
 
 	if (!AddObject(object))
@@ -972,9 +971,6 @@ void Track::Loader::CreateRacingLine(const RoadStrip & strip)
 	content.load(texture, texturedir, "racingline.png", TextureInfo());
 	data.textures.insert(texture);
 
-	// get model vao setting hack
-	const bool vao = content.getFactory<Model>().getDefault()->HaveVertexArrayObject();
-
 	// calculate batch size per drawable
 	const size_t batch_max_size = 256;
 	const size_t strip_size = strip.GetPatches().size();
@@ -1013,7 +1009,7 @@ void Track::Loader::CreateRacingLine(const RoadStrip & strip)
 
 		// create model
 		std::tr1::shared_ptr<Model> model(new Model());
-		model->Load(vertex_array, error_output, !vao);
+		model->Load(vertex_array, error_output);
 		data.models.insert(model);
 
 		// register drawable

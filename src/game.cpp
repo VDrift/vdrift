@@ -435,7 +435,6 @@ bool Game::InitCoreSubsystems()
 
 	// Init content factories
 	content.getFactory<Texture>().init(texture_size, using_gl3, settings.GetTextureCompress());
-	content.getFactory<Model>().init(using_gl3);
 	content.getFactory<PTree>().init(read_ini, write_ini, content);
 
 	// Init content paths

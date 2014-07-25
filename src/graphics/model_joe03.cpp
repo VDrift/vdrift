@@ -203,7 +203,7 @@ static bool NeedsNormalSwap(JoeObject & object)
 	return need_normal_flip;
 }
 
-bool ModelJoe03::Load ( const std::string & filename, std::ostream & err_output, bool genlist, const JoePack * pack)
+bool ModelJoe03::Load ( const std::string & filename, std::ostream & err_output, const JoePack * pack)
 {
 	Clear();
 

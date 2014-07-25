@@ -129,7 +129,7 @@ bool BuildVertex(VertexArray::VertexData & outputvert, vector <VertexArray::Floa
 	return true;
 }
 
-bool ModelObj::Load(const std::string & filepath, std::ostream & error_log, bool genlist)
+bool ModelObj::Load(const std::string & filepath, std::ostream & error_log)
 {
 	ifstream f(filepath.c_str());
 	if (!f)

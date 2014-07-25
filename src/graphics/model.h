@@ -23,6 +23,7 @@
 #include "vertexarray.h"
 #include "vertexbuffer.h"
 #include "mathvector.h"
+#include <iosfwd>
 
 /// Loading data into the mesh vertexarray is implemented by derived classes.
 class Model
@@ -41,25 +42,15 @@ public:
 	/// Optional capability.
 	virtual bool Save(const std::string & strFileName, std::ostream & error_output) const;
 
-	virtual bool Load(const std::string & strFileName, std::ostream & error_output, bool genlist);
+	virtual bool Load(const std::string & strFileName, std::ostream & error_output);
 
-	bool Load(const VertexArray & nvarray, std::ostream & error_output, bool genlist);
+	bool Load(const VertexArray & nvarray, std::ostream & error_output);
 
 	bool Serialize(joeserialize::Serializer & s);
 
 	bool WriteToFile(const std::string & filepath);
 
-	bool ReadFromFile(const std::string & filepath, std::ostream & error_output, bool genlist);
-
-	void GenVertexArrayObject(std::ostream & error_output);
-
-	bool HaveVertexArrayObject() const;
-
-	void ClearVertexArrayObject();
-
-	/// Returns true if we have a vertex array object and stores the VAO handle and element count in the provided arguments.
-	/// Returns false if we have no vertex array object.
-	bool GetVertexArrayObject(unsigned & vao_out, unsigned & element_count_out) const;
+	bool ReadFromFile(const std::string & filepath, std::ostream & error_output);
 
 	/// vertex buffer interface
 	VertexBuffer::Segment & GetVertexBufferSegment() { return vbs; };
@@ -87,9 +78,6 @@ protected:
 
 private:
 	VertexBuffer::Segment vbs;	///< vertex buffer segment
-	std::vector<unsigned> vbos;	///< vertex buffer objects
-	unsigned element_count;		///< number of indices
-	unsigned vao;				///< vertex array object, 0 is reserved as invalid
 
 	/// Metrics
 	Vec3 min;

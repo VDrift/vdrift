@@ -31,7 +31,7 @@ public:
 	ModelObj(const std::string & filepath, std::ostream & error_output) : Model(filepath, error_output) {}
 
 	///returns true on success
-	virtual bool Load(const std::string & filepath, std::ostream & error_log, bool genlist = true);
+	virtual bool Load(const std::string & filepath, std::ostream & error_log);
 	virtual bool CanSave() const {return true;}
 	virtual bool Save(const std::string & strFileName, std::ostream & error_output) const;
 };

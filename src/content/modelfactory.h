@@ -32,9 +32,6 @@ public:
 
 	Factory();
 
-	/// use VBOs instead of draw lists for models
-	void init(bool use_vbo);
-
 	template <class P>
 	bool create(
 		std::tr1::shared_ptr<Model> & sptr,
@@ -48,7 +45,6 @@ public:
 
 private:
 	std::tr1::shared_ptr<Model> m_default;
-	bool m_vbo;
 };
 
 #endif // _MODELFACTORY_H
