@@ -197,7 +197,8 @@ struct VertexBuffer::BindStaticVertexData
 VertexBuffer::VertexBuffer() :
 	age_dynamic(1),
 	age_static(1),
-	use_vao(false)
+	use_vao(false),
+	bind_ibo(false)
 {
 	// ctor
 }
@@ -231,6 +232,11 @@ VertexBuffer::Object::Object() :
 VertexBuffer::~VertexBuffer()
 {
 	Clear();
+}
+
+void VertexBuffer::BindElementBufferExplicitely()
+{
+	bind_ibo = true;
 }
 
 void VertexBuffer::Clear()
@@ -342,12 +348,14 @@ void VertexBuffer::BindSegmentBuffer(unsigned int & vbuffer, const Segment & s) 
 	if (use_vao)
 	{
 		glBindVertexArray(s.vbuffer);
-		#ifdef VAO_BROKEN
-			// broken vao implementations handling
+		#ifdef _WIN32
+		if (bind_ibo)
+		{
 			assert(s.vformat <= VertexAttrib::LastAttrib);
 			assert(s.object < objects[s.vformat].size());
 			const Object & ob = objects[s.vformat][s.object];
 			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, ob.ibuffer);
+		}
 		#endif
 		vbuffer = s.vbuffer;
 	}

@@ -282,6 +282,15 @@ bool GraphicsGL2::Init(
 		return false;
 	}
 
+	#ifdef _WIN32
+	// workaround for broken vao implementation Intel/Windows
+	{
+		const std::string vendor = (const char*)glGetString(GL_VENDOR);
+		if (vendor == "Intel")
+			vertex_buffer.BindElementBufferExplicitely();
+	}
+	#endif
+
 	shadows = enableshadows;
 	shadow_distance = new_shadow_distance;
 	shadow_quality = new_shadow_quality;

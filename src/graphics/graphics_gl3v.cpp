@@ -76,6 +76,15 @@ bool GraphicsGL3::Init(
 		return false;
 	}
 
+	#ifdef _WIN32
+	// workaround for broken vao implementation Intel/Windows
+	{
+		const std::string vendor = (const char*)glGetString(GL_VENDOR);
+		if (vendor == "Intel")
+			vertex_buffer.BindElementBufferExplicitely();
+	}
+	#endif
+
 	// set up our graphical configuration option conditions
 	bool fsaa = (antialiasing > 1);
 

@@ -35,6 +35,9 @@ public:
 
 	~VertexBuffer();
 
+	/// \brief Intel vao implementation doesn't store ibo binding workaround
+	void BindElementBufferExplicitely();
+
 	/// \brief Clear all buffers and objects, will reset gl vbo, vao state
 	void Clear();
 
@@ -92,6 +95,7 @@ private:
 	unsigned short age_static;
 
 	bool use_vao;
+	bool bind_ibo; ///< workaround for broken vao implementation
 
 	/// \brief Scene node visitors
 	struct BindStaticVertexData;
