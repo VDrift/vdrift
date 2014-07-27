@@ -885,8 +885,6 @@ void Game::Tick(float deltat)
 
 	UpdateParticleGraphics();
 
-	SyncParticleGraphics();
-
 	gui.Update(eventsystem.Get_dt());
 }
 
@@ -2473,11 +2471,6 @@ void Game::UpdateParticleGraphics()
 		float zfar = settings.GetViewDistance();
 		tire_smoke.UpdateGraphics(camorient, campos, znear, zfar);
 	}
-}
-
-void Game::SyncParticleGraphics()
-{
-	tire_smoke.SyncGraphics();
 }
 
 void Game::UpdateDriftScore(Car & car, double dt)

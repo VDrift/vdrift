@@ -61,11 +61,6 @@ public:
 		float znear, float zfar,
 		float fovy = 0, float fovz = 0);
 
-	/// Particle system is double buffered
-	/// Call SyncGraphics between FinishDraw and BeginDraw
-	/// to submit latest particle state for drawing
-	void SyncGraphics();
-
 	void Clear();
 
 	void SetParameters(
@@ -102,7 +97,6 @@ private:
 	unsigned max_particles;
 	unsigned texture_tiles;
 	unsigned cur_texture_tile;
-	unsigned cur_varray;
 
 	std::pair<float,float> transparency_range;
 	std::pair<float,float> longevity_range;
@@ -112,7 +106,7 @@ private:
 
 	SceneNode::DrawableHandle draw;
 	std::tr1::shared_ptr<Texture> texture;
-	VertexArray varrays[2]; ///< use double buffered vertex array
+	VertexArray varray;
 	SceneNode node;
 
 	static keyed_container<Drawable> & GetDrawList(SceneNode & node)

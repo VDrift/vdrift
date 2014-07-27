@@ -36,7 +36,6 @@ ParticleSystem::ParticleSystem() :
 	max_particles(512),
 	texture_tiles(9),
 	cur_texture_tile(0),
-	cur_varray(0),
 	transparency_range(0.5,1),
 	longevity_range(5,14),
 	speed_range(0.3,1),
@@ -59,7 +58,7 @@ void ParticleSystem::Load(
 	draw = GetDrawList(node).insert(Drawable());
 	Drawable & drawref = GetDrawList(node).get(draw);
 	drawref.SetDrawEnable(false);
-	drawref.SetVertArray(&varrays[cur_varray]);
+	drawref.SetVertArray(&varray);
 	drawref.SetTextures(texture->GetId());
 	drawref.SetCull(false);
 }
@@ -118,7 +117,7 @@ void ParticleSystem::UpdateGraphics(
 	// sort particles by distance to camera
 
 	// update vertex data
-	varrays[cur_varray].Clear();
+	varray.Clear();
 	for (size_t i = 0; i < particles.size(); ++i)
 	{
 		// cull particles outside of [znear, zfar]
@@ -177,19 +176,10 @@ void ParticleSystem::UpdateGraphics(
 			255, 255, 255, alpha,
 		};
 
-		varrays[cur_varray].Add(faces, 6, verts, 12, uvs, 8, 0, 0, cols, 16);
+		varray.Add(faces, 6, verts, 12, uvs, 8, 0, 0, cols, 16);
 	}
-}
 
-void ParticleSystem::SyncGraphics()
-{
-	if (max_particles == 0)
-		return;
-
-	Drawable & drawref = GetDrawList(node).get(draw);
-	drawref.SetVertArray(&varrays[cur_varray]);
-	drawref.SetDrawEnable(varrays[cur_varray].GetNumIndices());
-	cur_varray = (cur_varray + 1) % 2;
+	GetDrawList(node).get(draw).SetDrawEnable(varray.GetNumIndices() > 0);
 }
 
 void ParticleSystem::AddParticle(
