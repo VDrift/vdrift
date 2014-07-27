@@ -81,7 +81,7 @@ bool GraphicsGL3::Init(
 	{
 		const std::string vendor = (const char*)glGetString(GL_VENDOR);
 		if (vendor == "Intel")
-			vertex_buffer.BindElementBufferExplicitely();
+			vertex_buffer.BindElementBufferExplicitly();
 	}
 	#endif
 

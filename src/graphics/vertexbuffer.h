@@ -36,7 +36,7 @@ public:
 	~VertexBuffer();
 
 	/// \brief Intel vao implementation doesn't store ibo binding workaround
-	void BindElementBufferExplicitely();
+	void BindElementBufferExplicitly();
 
 	/// \brief Clear all buffers and objects, will reset gl vbo, vao state
 	void Clear();

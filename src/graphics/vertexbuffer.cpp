@@ -234,7 +234,7 @@ VertexBuffer::~VertexBuffer()
 	Clear();
 }
 
-void VertexBuffer::BindElementBufferExplicitely()
+void VertexBuffer::BindElementBufferExplicitly()
 {
 	bind_ibo = true;
 }
