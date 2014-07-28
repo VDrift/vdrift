@@ -323,12 +323,7 @@ bool GraphicsGL2::Init(
 	glGetIntegerv(GL_MAX_DRAW_BUFFERS, &mrt);
 	info_output << "Maximum draw buffers (" << mrtreq << " required): " << mrt << std::endl;
 
-	#ifndef FBOEXT
 	bool use_fbos = GLEW_ARB_framebuffer_object && mrt >= mrtreq && maxattach >= mrtreq;
-	#else
-	bool use_fbos = GLEW_EXT_framebuffer_object && mrt >= mrtreq && maxattach >= mrtreq;
-	#endif
-
 	if (renderconfigfile != "basic.conf" && !use_fbos)
 	{
 		info_output << "Graphics card doesn't support framebuffer objects." << std::endl;

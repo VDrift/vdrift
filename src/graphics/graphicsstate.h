@@ -23,35 +23,6 @@
 #include "glew.h"
 #include <cassert>
 
-// allow to run with fbo ext on older gpus (experimental compile time option)
-#ifdef FBOEXT
-
-#undef glGenFramebuffers
-#undef glBindFramebuffer
-#undef glGenRenderbuffers
-#undef glBindRenderbuffer
-#undef glRenderbufferStorage
-#undef glFramebufferRenderbuffer
-#undef glFramebufferTexture2D
-#undef glCheckFramebufferStatus
-#undef glDeleteFramebuffers
-#undef glDeleteRenderbuffers
-#undef glBlitFramebuffer
-
-#define glGenFramebuffers GLEW_GET_FUN(__glewGenFramebuffersEXT)
-#define glBindFramebuffer GLEW_GET_FUN(__glewBindFramebufferEXT)
-#define glGenRenderbuffers GLEW_GET_FUN(__glewGenRenderbuffersEXT)
-#define glBindRenderbuffer GLEW_GET_FUN(__glewBindRenderbufferEXT)
-#define glRenderbufferStorage GLEW_GET_FUN(__glewRenderbufferStorageEXT)
-#define glFramebufferRenderbuffer GLEW_GET_FUN(__glewFramebufferRenderbufferEXT)
-#define glFramebufferTexture2D GLEW_GET_FUN(__glewFramebufferTexture2DEXT)
-#define glCheckFramebufferStatus GLEW_GET_FUN(__glewCheckFramebufferStatusEXT)
-#define glDeleteFramebuffers GLEW_GET_FUN(__glewDeleteFramebuffersEXT)
-#define glDeleteRenderbuffers GLEW_GET_FUN(__glewDeleteRenderbuffersEXT)
-#define glBlitFramebuffer GLEW_GET_FUN(__glewBlitFramebufferEXT)
-
-#endif // FBOEXT
-
 class GraphicsState
 {
 public:

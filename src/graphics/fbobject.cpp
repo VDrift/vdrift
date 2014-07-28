@@ -463,11 +463,5 @@ void FrameBufferObject::End(GraphicsState & glstate, std::ostream & error_output
 		}
 	}
 
-	#ifdef FBOEXT
-	// explicitely unbind framebuffer object
-	// on intel gen4 binding other fbo will result in opengl errors
-	glstate.BindFramebuffer(GL_FRAMEBUFFER, 0);
-	#endif
-
 	CheckForOpenGLErrors("end of FBO end", error_output);
 }
