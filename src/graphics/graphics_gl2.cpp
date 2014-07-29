@@ -675,17 +675,6 @@ void GraphicsGL2::ChangeDisplay(
 {
 	glstate.SetViewport(width, height);
 
-	GLfloat ratio = (GLfloat)width / (GLfloat)height;
-	Mat4 m;
-
-	glMatrixMode(GL_PROJECTION);
-	m.Perspective(45.0f, ratio, 0.1f, 100.0f);
-	glLoadMatrixf(m.GetArray());
-
-	glMatrixMode(GL_MODELVIEW);
-	m.LoadIdentity();
-	glLoadMatrixf(m.GetArray());
-
 	CheckForOpenGLErrors("ChangeDisplay", error_output);
 
 	w = width;
