@@ -168,53 +168,46 @@ void RenderInputPostprocess::SetContrast(float value)
 
 void RenderInputPostprocess::Render(GraphicsState & glstate, std::ostream & error_output)
 {
-	assert(shader);
-
 	CheckForOpenGLErrors("postprocess begin", error_output);
+
+	assert(shader && "RenderInputPostprocess::Render No shader set.");
 
 	shader->Enable();
 
 	CheckForOpenGLErrors("postprocess shader enable", error_output);
-
-	Mat4 projMatrix, viewMatrix;
-	projMatrix.SetOrthographic(0, 1, 0, 1, -1, 1);
-	viewMatrix.LoadIdentity();
-
-	glMatrixMode(GL_PROJECTION);
-	glLoadMatrixf(projMatrix.GetArray());
-
-	glMatrixMode(GL_MODELVIEW);
-	glLoadMatrixf(viewMatrix.GetArray());
 
 	glstate.ActiveTexture(0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE);
 
 	CheckForOpenGLErrors("postprocess flag set", error_output);
 
-	// send shader parameters
-	{
-		Quat cam_look;
-		cam_look.Rotate(M_PI_2, 1, 0, 0);
-		cam_look.Rotate(-M_PI_2, 0, 0, 1);
-		Quat cube_rotation;
-		cube_rotation = (-cam_look) * (-cam_rotation); // experimentally derived
-		float cube_matrix[9];
-		cube_rotation.GetMatrix3(cube_matrix);
+	Mat4 projMatrix, viewMatrix;
+	projMatrix.SetOrthographic(0, 1, 0, 1, -1, 1);
+	viewMatrix.LoadIdentity();
 
-		Vec3 lightvec = lightposition;
-		cam_rotation.RotateVector(lightvec);
+	Quat cam_look;
+	cam_look.Rotate(M_PI_2, 1, 0, 0);
+	cam_look.Rotate(-M_PI_2, 0, 0, 1);
+	Quat cube_rotation;
+	cube_rotation = (-cam_look) * (-cam_rotation); // experimentally derived
+	float cube_matrix[9];
+	cube_rotation.GetMatrix3(cube_matrix);
 
-		const float color[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+	Vec3 lightvec = lightposition;
+	cam_rotation.RotateVector(lightvec);
 
-		shader->SetUniform3f(Uniforms::LightDirection, lightvec);
-		shader->SetUniform4f(Uniforms::ColorTint, color);
-		shader->SetUniform1f(Uniforms::Contrast, contrast);
-		shader->SetUniformMat3f(Uniforms::ReflectionMatrix, cube_matrix);
-		shader->SetUniform1f(Uniforms::ZNear, 0.1);
-		shader->SetUniform3f(Uniforms::FrustumCornerBL, frustum_corners[0]);
-		shader->SetUniform3f(Uniforms::FrustumCornerBRDelta, frustum_corners[1] - frustum_corners[0]);
-		shader->SetUniform3f(Uniforms::FrustumCornerTLDelta, frustum_corners[3] - frustum_corners[0]);
-	}
+	const float color[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+
+	shader->SetUniformMat4f(Uniforms::ModelViewMatrix, viewMatrix.GetArray());
+	shader->SetUniformMat4f(Uniforms::ProjectionMatrix, projMatrix.GetArray());
+	shader->SetUniformMat3f(Uniforms::ReflectionMatrix, cube_matrix);
+	shader->SetUniform3f(Uniforms::LightDirection, lightvec);
+	shader->SetUniform4f(Uniforms::ColorTint, color);
+	shader->SetUniform1f(Uniforms::Contrast, contrast);
+	shader->SetUniform1f(Uniforms::ZNear, 0.1);
+	shader->SetUniform3f(Uniforms::FrustumCornerBL, frustum_corners[0]);
+	shader->SetUniform3f(Uniforms::FrustumCornerBRDelta, frustum_corners[1] - frustum_corners[0]);
+	shader->SetUniform3f(Uniforms::FrustumCornerTLDelta, frustum_corners[3] - frustum_corners[0]);
 
 	// draw a quad
 	const unsigned faces[2 * 3] = {

@@ -72,8 +72,7 @@ public:
 private:
 	VertexBuffer & vertex_buffer;
 	reseatable_reference <const std::vector <Drawable*> > drawlist_ptr;
-	bool last_transform_valid;
-	Mat4 last_transform; // cache last transform
+	Mat4 drawable_transform; // cache transform
 	Vec4 drawable_color; // cache color
 	Quat cam_rotation; // used for the skybox effect
 	Vec3 cam_position;

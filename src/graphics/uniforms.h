@@ -25,6 +25,9 @@ namespace Uniforms
 {
 	enum Enum
 	{
+		ModelViewProjMatrix,
+		ModelViewMatrix,
+		ProjectionMatrix,
 		ReflectionMatrix,
 		LightDirection,
 		ColorTint,
@@ -38,7 +41,10 @@ namespace Uniforms
 
 	static const char * const str[] =
 	{
-		"reflection_matrix",
+		"ModelViewProjMatrix",
+		"ModelViewMatrix",
+		"ProjectionMatrix",
+		"ReflectionMatrix",
 		"light_direction",
 		"color_tint",
 		"contrast",

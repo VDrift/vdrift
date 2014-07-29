@@ -28,16 +28,14 @@
 
 RenderInputScene::RenderInputScene(VertexBuffer & buffer):
 	vertex_buffer(buffer),
-	last_transform_valid(false),
 	lod_far(1000),
 	shader(NULL),
 	fsaa(0),
 	contrast(1.0)
 {
-	Vec3 front(1,0,0);
-	lightposition = front;
+	lightposition = Vec3(1, 0, 0);
 	Quat ldir;
-	ldir.Rotate(3.141593*0.5,1,0,0);
+	ldir.Rotate(3.141593 * 0.5, 1, 0, 0);
 	ldir.RotateVector(lightposition);
 }
 
@@ -157,13 +155,9 @@ void RenderInputScene::Render(GraphicsState & glstate, std::ostream & error_outp
 {
 	assert(shader && "RenderInputScene::Render No shader set.");
 
-	glMatrixMode(GL_PROJECTION);
-	glLoadMatrixf(projMatrix.GetArray());
-
-	glMatrixMode(GL_MODELVIEW);
-	glLoadMatrixf(viewMatrix.GetArray());
-
-	drawable_color = Vec4(-1.0f); // invalidate color
+	// invalidate color and transform
+	drawable_color = Vec4(-1.0f);
+	drawable_transform.Scale(0.0);
 
 	Quat cam_look;
 	cam_look.Rotate(M_PI_2, 1, 0, 0);
@@ -177,11 +171,10 @@ void RenderInputScene::Render(GraphicsState & glstate, std::ostream & error_outp
 	(cam_rotation).RotateVector(lightvec);
 
 	shader->Enable();
+	shader->SetUniformMat4f(Uniforms::ProjectionMatrix, projMatrix.GetArray());
+	shader->SetUniformMat3f(Uniforms::ReflectionMatrix, cube_matrix);
 	shader->SetUniform3f(Uniforms::LightDirection, lightvec[0], lightvec[1], lightvec[2]);
 	shader->SetUniform1f(Uniforms::Contrast, contrast);
-	shader->SetUniformMat3f(Uniforms::ReflectionMatrix, cube_matrix);
-
-	last_transform_valid = false;
 
 	Draw(glstate, *drawlist_ptr);
 }
@@ -218,11 +211,12 @@ void RenderInputScene::SetTextures(const Drawable & d, GraphicsState & glstate)
 
 void RenderInputScene::SetTransform(const Drawable & d, GraphicsState & glstate)
 {
-	if (!last_transform_valid || !last_transform.Equals(d.GetTransform()))
+	if (!drawable_transform.Equals(d.GetTransform()))
 	{
-		Mat4 worldTrans = d.GetTransform().Multiply(viewMatrix);
-		glLoadMatrixf(worldTrans.GetArray());
-		last_transform = d.GetTransform();
-		last_transform_valid = true;
+		drawable_transform = d.GetTransform();
+		const Mat4 mv = drawable_transform.Multiply(viewMatrix);
+		const Mat4 mvp = mv.Multiply(projMatrix);
+		shader->SetUniformMat4f(Uniforms::ModelViewProjMatrix, mvp.GetArray());
+		shader->SetUniformMat4f(Uniforms::ModelViewMatrix, mv.GetArray());
 	}
 }
