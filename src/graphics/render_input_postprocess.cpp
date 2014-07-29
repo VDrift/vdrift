@@ -181,9 +181,10 @@ void RenderInputPostprocess::Render(GraphicsState & glstate, std::ostream & erro
 
 	CheckForOpenGLErrors("postprocess flag set", error_output);
 
-	Mat4 projMatrix, viewMatrix;
-	projMatrix.SetOrthographic(0, 1, 0, 1, -1, 1);
-	viewMatrix.LoadIdentity();
+	Mat4 proj_matrix, view_matrix, view_proj_matrix;
+	proj_matrix.SetOrthographic(0, 1, 0, 1, -1, 1);
+	view_matrix.LoadIdentity();
+	view_proj_matrix = view_matrix.Multiply(proj_matrix);
 
 	Quat cam_look;
 	cam_look.Rotate(M_PI_2, 1, 0, 0);
@@ -198,8 +199,9 @@ void RenderInputPostprocess::Render(GraphicsState & glstate, std::ostream & erro
 
 	const float color[4] = {1.0f, 1.0f, 1.0f, 1.0f};
 
-	shader->SetUniformMat4f(Uniforms::ModelViewMatrix, viewMatrix.GetArray());
-	shader->SetUniformMat4f(Uniforms::ProjectionMatrix, projMatrix.GetArray());
+	shader->SetUniformMat4f(Uniforms::ModelViewProjMatrix, view_proj_matrix.GetArray());
+	shader->SetUniformMat4f(Uniforms::ModelViewMatrix, view_matrix.GetArray());
+	shader->SetUniformMat4f(Uniforms::ProjectionMatrix, proj_matrix.GetArray());
 	shader->SetUniformMat3f(Uniforms::ReflectionMatrix, cube_matrix);
 	shader->SetUniform3f(Uniforms::LightDirection, lightvec);
 	shader->SetUniform4f(Uniforms::ColorTint, color);
