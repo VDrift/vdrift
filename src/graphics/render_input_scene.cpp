@@ -28,8 +28,10 @@
 
 RenderInputScene::RenderInputScene(VertexBuffer & buffer):
 	vertex_buffer(buffer),
-	lod_far(1000),
+	shadow_matrix(NULL),
+	shadow_count(0),
 	shader(NULL),
+	lod_far(1000),
 	fsaa(0),
 	contrast(1.0)
 {
@@ -106,6 +108,12 @@ void RenderInputScene::SetBlendMode(GraphicsState & glstate, BlendMode::Enum mod
 	}
 }
 
+void RenderInputScene::SetShadowMatrix(const Mat4 shadow_mat[], const unsigned int count)
+{
+	shadow_matrix = shadow_mat;
+	shadow_count = count;
+}
+
 void RenderInputScene::SetTextures(
 	GraphicsState & glstate,
 	const std::vector <TextureInterface*> & textures,
@@ -171,6 +179,10 @@ void RenderInputScene::Render(GraphicsState & glstate, std::ostream & error_outp
 	(cam_rotation).RotateVector(lightvec);
 
 	shader->Enable();
+	if (shadow_matrix)
+	{
+		shader->SetUniformMat4f(Uniforms::ShadowMatrix, shadow_matrix[0].GetArray(), shadow_count);
+	}
 	shader->SetUniformMat4f(Uniforms::ProjectionMatrix, projMatrix.GetArray());
 	shader->SetUniformMat3f(Uniforms::ReflectionMatrix, cube_matrix);
 	shader->SetUniform3f(Uniforms::LightDirection, lightvec[0], lightvec[1], lightvec[2]);

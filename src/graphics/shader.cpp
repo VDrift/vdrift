@@ -235,19 +235,19 @@ int Shader::RegisterUniform(const char name[])
 	return uniform_locations.size() - 1;
 }
 
-bool Shader::SetUniformMat4f(int id, const float val[16])
+bool Shader::SetUniformMat4f(int id, const float val[], const int count)
 {
 	assert (id >= 0 && id < (int)uniform_locations.size());
 	const int loc = uniform_locations[id];
-	if (loc >= 0) glUniformMatrix4fv(loc, 1, GL_FALSE, val);
+	if (loc >= 0) glUniformMatrix4fv(loc, count, GL_FALSE, val);
 	return (loc >= 0);
 }
 
-bool Shader::SetUniformMat3f(int id, const float val[9])
+bool Shader::SetUniformMat3f(int id, const float val[], const int count)
 {
 	assert (id >= 0 && id < (int)uniform_locations.size());
 	const int loc = uniform_locations[id];
-	if (loc >= 0) glUniformMatrix3fv(loc, 1, GL_FALSE, val);
+	if (loc >= 0) glUniformMatrix3fv(loc, count, GL_FALSE, val);
 	return (loc >= 0);
 }
 

@@ -53,9 +53,9 @@ public:
 
 	///< id is the uniform name index in the uniform list passed during shader loading
 	///< Enable() shader before using SetUniform calls
-	bool SetUniformMat4f(int id, const float val[16]);
+	bool SetUniformMat4f(int id, const float val[16], const int count = 1);
 
-	bool SetUniformMat3f(int id, const float val[9]);
+	bool SetUniformMat3f(int id, const float val[9], const int count = 1);
 
 	bool SetUniform1i(int id, int val);
 

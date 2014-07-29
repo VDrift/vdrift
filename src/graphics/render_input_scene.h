@@ -54,6 +54,8 @@ public:
 	/// blend mode setup depends on current shader and fsaa value, make sure to set them first
 	void SetBlendMode(GraphicsState & glstate, BlendMode::Enum mode);
 
+	void SetShadowMatrix(const Mat4 shadow_mat[], const unsigned int count);
+
 	void SetTextures(
 		GraphicsState & glstate,
 		const std::vector <TextureInterface*> & textures,
@@ -72,6 +74,9 @@ public:
 private:
 	VertexBuffer & vertex_buffer;
 	reseatable_reference <const std::vector <Drawable*> > drawlist_ptr;
+	const Mat4 * shadow_matrix;
+	unsigned int shadow_count;
+	Shader * shader;
 	Mat4 drawable_transform; // cache transform
 	Vec4 drawable_color; // cache color
 	Quat cam_rotation; // used for the skybox effect
@@ -81,7 +86,6 @@ private:
 	Mat4 viewMatrix;
 	Frustum frustum; // used for frustum culling
 	float lod_far; // used for distance culling
-	Shader * shader;
 	unsigned fsaa;
 	float contrast;
 

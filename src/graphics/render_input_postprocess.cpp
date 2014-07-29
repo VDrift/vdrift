@@ -28,6 +28,8 @@
 #include "vertexattrib.h"
 
 RenderInputPostprocess::RenderInputPostprocess() :
+	shadow_matrix(NULL),
+	shadow_count(0),
 	shader(NULL),
 	contrast(1),
 	maxu(1),
@@ -96,6 +98,12 @@ void RenderInputPostprocess::SetBlendMode(GraphicsState & glstate, BlendMode::En
 		assert(0);
 		break;
 	}
+}
+
+void RenderInputPostprocess::SetShadowMatrix(const Mat4 shadow_mat[], const unsigned int count)
+{
+	shadow_matrix = shadow_mat;
+	shadow_count = count;
 }
 
 void RenderInputPostprocess::SetTextures(
@@ -199,6 +207,10 @@ void RenderInputPostprocess::Render(GraphicsState & glstate, std::ostream & erro
 
 	const float color[4] = {1.0f, 1.0f, 1.0f, 1.0f};
 
+	if (shadow_matrix)
+	{
+		shader->SetUniformMat4f(Uniforms::ShadowMatrix, shadow_matrix[0].GetArray(), shadow_count);
+	}
 	shader->SetUniformMat4f(Uniforms::ModelViewProjMatrix, view_proj_matrix.GetArray());
 	shader->SetUniformMat4f(Uniforms::ModelViewMatrix, view_matrix.GetArray());
 	shader->SetUniformMat4f(Uniforms::ProjectionMatrix, proj_matrix.GetArray());

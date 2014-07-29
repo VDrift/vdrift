@@ -236,8 +236,8 @@ static bool Cull(const Frustum & f, const Drawable & d)
 GraphicsGL2::GraphicsGL2() :
 	initialized(false),
 	max_anisotropy(0),
-	shadows(false),
 	closeshadow(5.0),
+	shadows(false),
 	fsaa(1),
 	lighting(0),
 	bloom(false),
@@ -483,22 +483,16 @@ void GraphicsGL2::SetupScene(
 		cam.orthomax = Vec3(1, 0, 1);
 	}
 
-	glMatrixMode(GL_TEXTURE);
-
-	// put the default camera transform into texture3, needed by shaders only
-	Mat4 viewMatrix;
-	cam_rotation.GetMatrix4(viewMatrix);
-	float translate[4] = {-cam_position[0], -cam_position[1], -cam_position[2], 0};
-	viewMatrix.MultiplyVector4(translate);
-	viewMatrix.Translate(translate[0], translate[1], translate[2]);
-
-	glstate.ActiveTexture(3);
-	glLoadMatrixf(viewMatrix.GetArray());
-
 	// create cameras for shadow passes
 	if (shadows)
 	{
-		Mat4 viewMatrixInv = viewMatrix.Inverse();
+		Mat4 view_matrix;
+		cam_rotation.GetMatrix4(view_matrix);
+		float translate[4] = {-cam_position[0], -cam_position[1], -cam_position[2], 0};
+		view_matrix.MultiplyVector4(translate);
+		view_matrix.Translate(translate[0], translate[1], translate[2]);
+
+		Mat4 view_matrix_inv = view_matrix.Inverse();
 
 		// derive light rotation quaternion from light direction vector
 		Quat light_rotation;
@@ -539,23 +533,27 @@ void GraphicsGL2::SetupScene(
 			const Mat4 cam_proj_mat = GetProjMatrix(cam);
 			const Mat4 cam_view_mat = GetViewMatrix(cam);
 
-			Mat4 clip_mat;
-			clip_mat.Scale(0.5f);
-			clip_mat.Translate(0.5f, 0.5f, 0.5f);
-			clip_mat = cam_proj_mat.Multiply(clip_mat);
-			clip_mat = cam_view_mat.Multiply(clip_mat);
+			Mat4 clip_matrix;
+			clip_matrix.Scale(0.5f);
+			clip_matrix.Translate(0.5f, 0.5f, 0.5f);
+			clip_matrix = cam_proj_mat.Multiply(clip_matrix);
+			clip_matrix = cam_view_mat.Multiply(clip_matrix);
 
 			// premultiply the clip matrix with default camera view inverse matrix
-			clip_mat = viewMatrixInv.Multiply(clip_mat);
+			clip_matrix = view_matrix_inv.Multiply(clip_matrix);
 
-			// storing it in a texture matrix
-			glstate.ActiveTexture(4 + i);
-			glLoadMatrixf(clip_mat.GetArray());
+			shadow_matrix[i] = clip_matrix;
 		}
-	}
 
-	glstate.ActiveTexture(0);
-	glMatrixMode(GL_MODELVIEW);
+		assert(shadow_distance < 3);
+		renderscene.SetShadowMatrix(shadow_matrix, shadow_distance + 1);
+		postprocess.SetShadowMatrix(shadow_matrix, shadow_distance + 1);
+	}
+	else
+	{
+		renderscene.SetShadowMatrix(NULL, 0);
+		postprocess.SetShadowMatrix(NULL, 0);
+	}
 
 	// sort the two dimentional drawlist so we get correct ordering
 	std::sort(dynamic_drawlist.twodim.begin(), dynamic_drawlist.twodim.end(), &SortDraworder);

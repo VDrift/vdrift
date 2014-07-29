@@ -125,10 +125,14 @@ private:
 	int w, h;
 	bool initialized;
 	GLint max_anisotropy;
-	bool shadows;
+
+	// shadow state
+	Mat4 shadow_matrix[3];
 	int shadow_distance;
 	int shadow_quality;
 	float closeshadow;
+	bool shadows;
+
 	unsigned int fsaa;
 	int lighting; ///<lighting quality; see data/settings/options.config for definition of values
 	bool bloom;
