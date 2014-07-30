@@ -74,7 +74,8 @@ void Window::Init(
 
 	SDL_SetWindowTitle(window, caption.c_str());
 
-	// initialize GLEW
+	// Initialize GLEW
+	glewExperimental = GL_TRUE;
 	GLenum glew_err = glewInit();
 	if (glew_err != GLEW_OK)
 	{
@@ -87,6 +88,9 @@ void Window::Init(
 		info_output << "Using GLEW " << glewGetString(GLEW_VERSION) << std::endl;
 		initialized = true;
 	}
+
+	// Clear GL_INVALID_ENUM caused by glew in core profile by calling glGetString(GL_EXTENSIONS)
+	glGetError();
 
 	LogOpenGLInfo(info_output);
 }
