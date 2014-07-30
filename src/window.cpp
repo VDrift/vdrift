@@ -281,7 +281,7 @@ void Window::LogOpenGLInfo(std::ostream & info_output)
 	glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &texUnits);
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &texSize);
 	cardinfo << "Texture units: " << texUnits << std::endl;
-	cardinfo << "Maximum texture size: " << texSize << std::endl;
+	cardinfo << "Maximum texture size: " << texSize;
 
 	info_output << cardinfo.str() << std::endl;
 }
