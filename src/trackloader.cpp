@@ -975,7 +975,7 @@ void Track::Loader::CreateRacingLine(const RoadStrip & strip)
 	const size_t batch_max_size = 256;
 	const size_t strip_size = strip.GetPatches().size();
 	const size_t batch_count = (strip_size + batch_max_size - 1) / batch_max_size;
-	const size_t batch_size = strip_size / batch_count;
+	const size_t batch_size = strip_size - (strip_size / batch_count) * (batch_count - 1);
 
 	// allocate batch vertex data
 	VertexArray vertex_array;
@@ -997,7 +997,7 @@ void Track::Loader::CreateRacingLine(const RoadStrip & strip)
 			AddRacingLineSegment<true>(strip.GetPatches()[m], vertices, texcoords, faces, line_center, line_length);
 		}
 		// cap batch
-		const size_t mc = (m + 1 < strip_size) ? m + 1 : 0;
+		const size_t mc = (m < strip_size) ? m : 0;
 		AddRacingLineSegment<false>(strip.GetPatches()[mc], vertices, texcoords, faces, line_center, line_length);
 
 		// set vertex array
