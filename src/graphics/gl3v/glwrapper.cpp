@@ -37,7 +37,6 @@
 #define enableErrorChecking false
 #endif
 
-const char * REQUIRED_GL_VERSION = "GL_VERSION_3_3";
 const GLEnums GLEnumHelper;
 
 GLWrapper::GLWrapper(VertexBuffer & vb) :
@@ -53,16 +52,17 @@ GLWrapper::GLWrapper(VertexBuffer & vb) :
 
 bool GLWrapper::initialize()
 {
-	// Check through all OpenGL versions to determine the highest supported OpenGL version.
-	bool supportsRequiredVersion = glewIsSupported(REQUIRED_GL_VERSION);
+	int major_version = 0;
+	int minor_version = 0;
+	glGetIntegerv(GL_MAJOR_VERSION, &major_version);ERROR_CHECK;
+	glGetIntegerv(GL_MINOR_VERSION, &minor_version);ERROR_CHECK;
 
-	if (!supportsRequiredVersion)
+	if (major_version < 3 || (major_version == 3 && minor_version < 3))
 	{
-		logError(std::string("Graphics card or driver does not support required ")+REQUIRED_GL_VERSION);
+		logError("Graphics card or driver does not support required GL Version: 3.3");
 		return false;
 	}
-
-	return ERROR_CHECK;
+	return true;
 }
 
 void GLWrapper::setErrorOutput(std::ostream & newOutput)
