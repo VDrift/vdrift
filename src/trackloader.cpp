@@ -921,8 +921,8 @@ bool Track::Loader::CreateRacingLines()
 		{
 			k1999data.CalcRaceLine();
 			k1999data.UpdateRoadStrip(*i);
+			CreateRacingLine(*i);
 		}
-		CreateRacingLine(*i);
 	}
 	return true;
 }
