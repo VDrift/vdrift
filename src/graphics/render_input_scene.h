@@ -30,18 +30,18 @@
 
 struct GraphicsCamera;
 class Drawable;
-class VertexArray;
-class TextureInterface;
 class Shader;
+class TextureInterface;
+class VertexBuffer;
 
 class RenderInputScene : public RenderInput
 {
 public:
-	RenderInputScene();
+	RenderInputScene(VertexBuffer & buffer);
 
 	~RenderInputScene();
 
-	void SetShader(Shader * newshader);
+	void SetShader(Shader & newshader);
 
 	void SetFSAA(unsigned value);
 
@@ -54,6 +54,8 @@ public:
 	/// blend mode setup depends on current shader and fsaa value, make sure to set them first
 	void SetBlendMode(GraphicsState & glstate, BlendMode::Enum mode);
 
+	void SetShadowMatrix(const Mat4 shadow_mat[], const unsigned int count);
+
 	void SetTextures(
 		GraphicsState & glstate,
 		const std::vector <TextureInterface*> & textures,
@@ -65,17 +67,18 @@ public:
 
 	void SetContrast(float value);
 
-	void SetDrawLists(
-		const std::vector <Drawable*> & dl_dynamic,
-		const std::vector <Drawable*> & dl_static);
+	void SetDrawList(const std::vector <Drawable*> & drawlist);
 
 	virtual void Render(GraphicsState & glstate, std::ostream & error_output);
 
 private:
-	reseatable_reference <const std::vector <Drawable*> > dynamic_drawlist_ptr;
-	reseatable_reference <const std::vector <Drawable*> > static_drawlist_ptr;
-	bool last_transform_valid;
-	Mat4 last_transform;
+	VertexBuffer & vertex_buffer;
+	reseatable_reference <const std::vector <Drawable*> > drawlist_ptr;
+	const Mat4 * shadow_matrix;
+	unsigned int shadow_count;
+	Shader * shader;
+	Mat4 drawable_transform; // cache transform
+	Vec4 drawable_color; // cache color
 	Quat cam_rotation; // used for the skybox effect
 	Vec3 cam_position;
 	Vec3 lightposition;
@@ -83,16 +86,10 @@ private:
 	Mat4 viewMatrix;
 	Frustum frustum; // used for frustum culling
 	float lod_far; // used for distance culling
-	Shader * shader;
 	unsigned fsaa;
 	float contrast;
 
-	void Draw(GraphicsState & glstate, const std::vector <Drawable*> & drawlist, bool preculled);
-
-	void DrawVertexArray(const VertexArray & va, float linesize) const;
-
-	/// returns true if the object was culled and should not be drawn
-	bool FrustumCull(const Drawable & d) const;
+	void Draw(GraphicsState & glstate, const std::vector <Drawable*> & drawlist);
 
 	void SetFlags(const Drawable & d, GraphicsState & glstate);
 

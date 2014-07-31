@@ -45,7 +45,7 @@ const char * HttpInfo::GetString(StateEnum state)
 
 std::string HttpInfo::FormatSize(double bytes)
 {
-	std::stringstream s;
+	std::ostringstream s;
 	s.precision(2);
 	s << std::fixed;
 	if (bytes < 0)
@@ -61,7 +61,7 @@ std::string HttpInfo::FormatSize(double bytes)
 
 std::string HttpInfo::FormatSpeed(double bytes)
 {
-	std::stringstream s;
+	std::ostringstream s;
 	s.precision(2);
 	s << std::fixed;
 	if (bytes < 0)

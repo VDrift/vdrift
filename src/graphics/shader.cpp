@@ -28,7 +28,8 @@
 
 using std::string;
 using std::ostream;
-using std::stringstream;
+using std::istringstream;
+using std::ostringstream;
 using std::ifstream;
 using std::pair;
 using std::endl;
@@ -36,14 +37,14 @@ using std::strcpy;
 
 void PrintWithLineNumbers(ostream & out, const string & str)
 {
-	stringstream in(str);
+	istringstream in(str);
 	int count = 0;
 	while (in && count < 10000)
 	{
 		count++;
 		string linestr;
 		getline(in, linestr);
-		stringstream countstream;
+		ostringstream countstream;
 		countstream << count;
 		string countstr = countstream.str();
 		out << countstr;
@@ -72,19 +73,19 @@ void Shader::Unload()
 
 	if (program)
 	{
-		glDeleteObjectARB(program);
+		glDeleteProgram(program);
 		program = 0;
 	}
 
 	if (vertex_shader)
 	{
-		glDeleteObjectARB(vertex_shader);
+		glDeleteShader(vertex_shader);
 		vertex_shader = 0;
 	}
 
 	if (fragment_shader)
 	{
-		glDeleteObjectARB(fragment_shader);
+		glDeleteShader(fragment_shader);
 		fragment_shader = 0;
 	}
 }
@@ -94,11 +95,10 @@ bool Shader::Load(
 	const std::string & fragment_filename,
 	const std::vector<std::string> & defines,
 	const std::vector<std::string> & uniforms,
+	const std::vector<std::string> & attributes,
 	std::ostream & info_output,
 	std::ostream & error_output)
 {
-	assert(GLEW_ARB_shading_language_100);
-
 	Unload();
 
 	// get shader sources
@@ -108,7 +108,7 @@ bool Shader::Load(
 	assert(!fragmentshader_source.empty());
 
 	// prepend #version and #define values
-	std::stringstream dstr;
+	std::ostringstream dstr;
 	dstr << "#version 120\n";
 	for (std::vector<std::string>::const_iterator i = defines.begin(); i != defines.end(); ++i)
 	{
@@ -118,13 +118,13 @@ bool Shader::Load(
 	fragmentshader_source = dstr.str() + fragmentshader_source;
 
 	// create shader objects
-	program = glCreateProgramObjectARB();
-	vertex_shader = glCreateShaderObjectARB(GL_VERTEX_SHADER);
-	fragment_shader = glCreateShaderObjectARB(GL_FRAGMENT_SHADER);
+	program = glCreateProgram();
+	vertex_shader = glCreateShader(GL_VERTEX_SHADER);
+	fragment_shader = glCreateShader(GL_FRAGMENT_SHADER);
 
 	// load shader sources
-	const GLcharARB * vertshad = vertexshader_source.c_str();
-	const GLcharARB * fragshad = fragmentshader_source.c_str();
+	const GLchar * vertshad = vertexshader_source.c_str();
+	const GLchar * fragshad = fragmentshader_source.c_str();
 	glShaderSource(vertex_shader, 1, &vertshad, NULL);
 	glShaderSource(fragment_shader, 1, &fragshad, NULL);
 
@@ -135,8 +135,8 @@ bool Shader::Load(
 	GLint vertex_compiled(0);
 	GLint fragment_compiled(0);
 
-	glGetObjectParameterivARB(vertex_shader, GL_OBJECT_COMPILE_STATUS_ARB, &vertex_compiled);
-	glGetObjectParameterivARB(fragment_shader, GL_OBJECT_COMPILE_STATUS_ARB, &fragment_compiled);
+	glGetShaderiv(vertex_shader, GL_COMPILE_STATUS, &vertex_compiled);
+	glGetShaderiv(fragment_shader, GL_COMPILE_STATUS, &fragment_compiled);
 
 	if (!vertex_compiled)
 		PrintShaderLog(vertex_shader, vertex_filename, error_output);
@@ -145,12 +145,25 @@ bool Shader::Load(
 		PrintShaderLog(fragment_shader, fragment_filename, error_output);
 
 	// attach shader objects to the program object
-	glAttachObjectARB(program, vertex_shader);
-	glAttachObjectARB(program, fragment_shader);
+	glAttachShader(program, vertex_shader);
+	glAttachShader(program, fragment_shader);
+
+	// bind vertex attributes
+	for (GLint i = 0, n = attributes.size(); i < n; ++i)
+	{
+		glBindAttribLocation(program, i, attributes[i].c_str());
+	}
 
 	// link the program
 	glLinkProgram(program);
-
+/*
+	// verify attributes
+	for (GLint i = 0, n = attributes.size(); i < n; ++i)
+	{
+		GLint loc = glGetAttribLocation(program, attributes[i].c_str());
+		error_output << loc << " " << i << " " << attributes[i] << "\n";
+	}
+*/
 	GLint program_linked(0);
 	glGetProgramiv(program, GL_LINK_STATUS, &program_linked);
 
@@ -173,12 +186,12 @@ bool Shader::Load(
 	else
 	{
 		// need to enable to be able to set passed variable info
-		glUseProgramObjectARB(program);
+		glUseProgram(program);
 
 		// set passed variable information for tus
 		for (int i = 0; i < 16; i++)
 		{
-			stringstream tustring;
+			ostringstream tustring;
 			tustring << "tu" << i;
 			int tu_loc;
 
@@ -212,7 +225,7 @@ bool Shader::GetLoaded() const
 void Shader::Enable()
 {
 	assert(program);
-	glUseProgramObjectARB(program);
+	glUseProgram(program);
 }
 
 int Shader::RegisterUniform(const char name[])
@@ -222,19 +235,19 @@ int Shader::RegisterUniform(const char name[])
 	return uniform_locations.size() - 1;
 }
 
-bool Shader::SetUniformMat4f(int id, const float val[16])
+bool Shader::SetUniformMat4f(int id, const float val[], const int count)
 {
 	assert (id >= 0 && id < (int)uniform_locations.size());
 	const int loc = uniform_locations[id];
-	if (loc >= 0) glUniformMatrix4fv(loc, 1, GL_FALSE, val);
+	if (loc >= 0) glUniformMatrix4fv(loc, count, GL_FALSE, val);
 	return (loc >= 0);
 }
 
-bool Shader::SetUniformMat3f(int id, const float val[9])
+bool Shader::SetUniformMat3f(int id, const float val[], const int count)
 {
 	assert (id >= 0 && id < (int)uniform_locations.size());
 	const int loc = uniform_locations[id];
-	if (loc >= 0) glUniformMatrix3fv(loc, 1, GL_FALSE, val);
+	if (loc >= 0) glUniformMatrix3fv(loc, count, GL_FALSE, val);
 	return (loc >= 0);
 }
 
@@ -262,13 +275,20 @@ bool Shader::SetUniform3f(int id, float val1, float val2, float val3)
 	return (loc >= 0);
 }
 
-///query the card for the shader program link log and print it out
-void Shader::PrintProgramLog(GLhandleARB & program, const std::string & name, std::ostream & out)
+bool Shader::SetUniform4f(int id, const float val[4])
+{
+	assert (id >= 0 && id < (int)uniform_locations.size());
+	const int loc = uniform_locations[id];
+	if (loc >= 0) glUniform4fv(loc, 1, val);
+	return (loc >= 0);
+}
+
+void Shader::PrintProgramLog(const GLuint program, const std::string & name, std::ostream & out)
 {
 	const unsigned int logsize = 65536;
 	char shaderlog[logsize];
 	GLsizei loglength;
-	glGetInfoLogARB(program, logsize, &loglength, shaderlog);
+	glGetProgramInfoLog(program, logsize, &loglength, shaderlog);
 	if (loglength > 0)
 	{
 		out << "----- Start Shader Link Log for " + name + " -----" << endl;
@@ -277,13 +297,12 @@ void Shader::PrintProgramLog(GLhandleARB & program, const std::string & name, st
 	}
 }
 
-///query the card for the shader compile log and print it out
-void Shader::PrintShaderLog(GLhandleARB & shader, const std::string & name, std::ostream & out)
+void Shader::PrintShaderLog(const GLuint shader, const std::string & name, std::ostream & out)
 {
 	const unsigned int logsize = 65536;
 	char shaderlog[logsize];
 	GLsizei loglength;
-	glGetInfoLogARB(shader, logsize, &loglength, shaderlog);
+	glGetShaderInfoLog(shader, logsize, &loglength, shaderlog);
 	if (loglength > 0)
 	{
 		out << "----- Start Shader Compile Log for " + name + " -----" << endl;

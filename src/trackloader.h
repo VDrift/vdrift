@@ -144,6 +144,8 @@ private:
 
 	bool CreateRacingLines();
 
+	void CreateRacingLine(const RoadStrip & strip);
+
 	bool LoadStartPositions(const PTree & info);
 
 	bool LoadLapSections(const PTree & info);

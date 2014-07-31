@@ -26,7 +26,7 @@
 using std::string;
 using std::endl;
 using std::vector;
-using std::stringstream;
+using std::ostringstream;
 
 bool Timer::Load(const std::string & trackrecordspath, float stagingtime)
 {
@@ -89,7 +89,7 @@ void Timer::Lap(const unsigned int carid, const int nextsector, const bool count
 
 	if (countit && carid == playercarindex)
 	{
-		stringstream secstr;
+		ostringstream secstr;
 		secstr << "sector " << nextsector;
 		string lastcar;
 		/*if (trackrecords.get("last.car", lastcar))

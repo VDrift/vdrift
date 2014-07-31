@@ -87,8 +87,8 @@ public:
 	void SetTo2DQuad(float x1, float y1, float x2, float y2, float u1, float v1, float u2, float v2, float z);
 
 private:
-	keyed_container <SceneNode>::handle node;
-	keyed_container <Drawable>::handle draw;
+	SceneNode::Handle node;
+	SceneNode::DrawableHandle draw;
 	std::tr1::shared_ptr<Texture> texture;
 	VertexArray varray;
 	float r, g, b, a;
@@ -218,12 +218,12 @@ inline const Drawable & Sprite2D::GetDrawableFromParent(const SceneNode & parent
 
 inline Drawable & Sprite2D::GetDrawableFromNode(SceneNode & noderef)
 {
-	return noderef.GetDrawlist().twodim.get(draw);
+	return noderef.GetDrawList().twodim.get(draw);
 }
 
 inline const Drawable & Sprite2D::GetDrawableFromNode(const SceneNode & noderef) const
 {
-	return noderef.GetDrawlist().twodim.get(draw);
+	return noderef.GetDrawList().twodim.get(draw);
 }
 
 #endif

@@ -21,8 +21,9 @@
 #define _MODEL_H
 
 #include "vertexarray.h"
+#include "vertexbuffer.h"
 #include "mathvector.h"
-#include "glew.h"
+#include <iosfwd>
 
 /// Loading data into the mesh vertexarray is implemented by derived classes.
 class Model
@@ -41,31 +42,21 @@ public:
 	/// Optional capability.
 	virtual bool Save(const std::string & strFileName, std::ostream & error_output) const;
 
-	virtual bool Load(const std::string & strFileName, std::ostream & error_output, bool genlist);
+	virtual bool Load(const std::string & strFileName, std::ostream & error_output);
 
-	bool Load(const VertexArray & varray, std::ostream & error_output, bool genlist);
+	bool Load(const VertexArray & nvarray, std::ostream & error_output);
 
 	bool Serialize(joeserialize::Serializer & s);
 
 	bool WriteToFile(const std::string & filepath);
 
-	bool ReadFromFile(const std::string & filepath, std::ostream & error_output, bool generatelistid=true);
+	bool ReadFromFile(const std::string & filepath, std::ostream & error_output);
 
-	void GenerateListID(std::ostream & error_output);
+	/// vertex buffer interface
+	VertexBuffer::Segment & GetVertexBufferSegment() { return vbs; };
 
-	void GenerateVertexArrayObject(std::ostream & error_output);
-	bool HaveVertexArrayObject() const;
-	void ClearVertexArrayObject();
-
-	/// Returns true if we have a vertex array object and stores the VAO handle and element count in the provided arguments.
-	/// Returns false if we have no vertex array object.
-	bool GetVertexArrayObject(GLuint & vao_out, unsigned int & elementCount_out) const;
-
-	void GenerateMeshMetrics();
-
-	void ClearMeshData();
-
-	unsigned GetListID() const;
+	/// Recalculate mesh bounding box and radius
+	void GenMeshMetrics();
 
 	/// Get aabb size.
 	Vec3 GetSize() const;
@@ -76,47 +67,29 @@ public:
 	/// Get bounding radius relative to center.
 	float GetRadius() const;
 
-	bool HaveMeshData() const;
-
-	bool HaveMeshMetrics() const;
-
-	bool HaveListID() const;
-
 	void Clear();
 
 	const VertexArray & GetVertexArray() const;
 
-	void SetVertexArray(const VertexArray & newmesh);
-
-	bool Loaded();
+	bool Loaded() const;
 
 protected:
-	/// To be filled by the derived classes.
-	VertexArray m_mesh;
+	VertexArray varray;			///< to be filled by the derived classes
 
 private:
-	/// VAO means vertex array object.
-	GLuint vao;
-	std::vector <GLuint> vbos;
-	GLuint elementVbo;
-	unsigned elementCount;
-	unsigned listid;			///< listid 0 is invalid, means no display list compiled
+	VertexBuffer::Segment vbs;	///< vertex buffer segment
 
-	// Metrics.
+	/// Metrics
 	Vec3 min;
 	Vec3 max;
 	float radius;
-
 	bool generatedmetrics;
-	bool generatedvao;
 
 	void RequireMetrics() const;
 
-	void RequireListID() const;
-
-	void ClearListID();
-
 	void ClearMetrics();
+
+	void ClearMeshData();
 };
 
 #endif

@@ -202,7 +202,7 @@ bool CarControlMap::Load(const std::string & controlfile, std::ostream & info_ou
 			bool key_down = false;
 			bool key_once = false;
 			if (!controls_config.get(i, "down", key_down, error_output)) continue;
-				
+
 			if (!controls_config.get(i, "once", key_once, error_output)) continue;
 			if (keycode != SDLK_UNKNOWN)
 			{
@@ -301,11 +301,11 @@ void CarControlMap::Save(Config & controls_config)
 
 		for (size_t i = 0; i < controls[n].size(); ++i)
 		{
-			std::stringstream ss;
-			ss << "control mapping " << std::setfill('0') << std::setw(2) << id;
+			std::ostringstream s;
+			s << "control mapping " << std::setfill('0') << std::setw(2) << id;
 
 			Config::iterator section;
-			controls_config.get(ss.str(), section);
+			controls_config.get(s.str(), section);
 			controls_config.set(section, "name", ctrl_name);
 
 			Control & curctrl = controls[n][i];
@@ -638,19 +638,19 @@ void CarControlMap::GetControlsInfo(std::map<std::string, std::string> & info) c
 		const std::vector<Control> & ct = controls[input];
 		for (size_t m = 0; m < ct.size(); ++m)
 		{
-			std::stringstream s;
+			std::ostringstream s;
 			s << "control." << inputstr << "." << m;
 			info[s.str()] = ct[m].GetInfo();
 		}
 		if (ct.size() < max_controls)
 		{
-			std::stringstream s;
+			std::ostringstream s;
 			s << "control." << inputstr << "." << ct.size();
 			info[s.str()] = "new";
 		}
 		for (size_t m = ct.size() + 1; m < max_controls; ++m)
 		{
-			std::stringstream s;
+			std::ostringstream s;
 			s << "control." << inputstr << "." << m;
 			info[s.str()] = "";
 		}
@@ -1070,7 +1070,7 @@ std::string CarControlMap::Control::GetInfo() const
 
 	if (type == JOY)
 	{
-		std::stringstream s;
+		std::ostringstream s;
 
 		if (joytype == JOYAXIS)
 		{
@@ -1099,7 +1099,7 @@ std::string CarControlMap::Control::GetInfo() const
 
 	if (type == MOUSE)
 	{
-		std::stringstream s;
+		std::ostringstream s;
 		s << "MOUSE";
 
 		if (mousetype == MOUSEBUTTON)
@@ -1144,23 +1144,12 @@ bool CarControlMap::Control::operator==(const Control & other) const
 	them.exponent = 1;
 	them.gain = 1;
 
-	std::stringstream mestr;
-	std::stringstream themstr;
+	std::ostringstream mestr;
+	std::ostringstream themstr;
 	me.DebugPrint(mestr);
 	them.DebugPrint(themstr);
 
 	return (mestr.str() == themstr.str());
-
-	/*std::cout << "Checking:" << std::endl;
-	me.DebugPrint(std::cout);
-	me.MemDump(std::cout);
-	them.DebugPrint(std::cout);
-	them.MemDump(std::cout);
-	std::cout << "Equality check: " << (std::memcmp(&me,&them,sizeof(CONTROL)) == 0) << std::endl;
-
-	return (std::memcmp(&me,&them,sizeof(CONTROL)) == 0);*/
-
-	//bool equality = (type == other.type) && (type == other.type) &&
 }
 
 bool CarControlMap::Control::operator<(const Control & other) const
@@ -1179,8 +1168,8 @@ bool CarControlMap::Control::operator<(const Control & other) const
 	them.exponent = 1;
 	them.gain = 1;
 
-	std::stringstream mestr;
-	std::stringstream themstr;
+	std::ostringstream mestr;
+	std::ostringstream themstr;
 	me.DebugPrint(mestr);
 	them.DebugPrint(themstr);
 

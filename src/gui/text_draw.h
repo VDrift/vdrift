@@ -88,7 +88,7 @@ public:
 	{
 		assert(font == NULL);
 
-		draw = parentnode.GetDrawlist().text.insert(Drawable());
+		draw = parentnode.GetDrawList().text.insert(Drawable());
 		Drawable & drawref = GetDrawable(parentnode);
 		font = &newfont;
 		curx = x;
@@ -166,12 +166,12 @@ public:
 
 	Drawable & GetDrawable(SceneNode & parentnode)
 	{
-		return parentnode.GetDrawlist().text.get(draw);
+		return parentnode.GetDrawList().text.get(draw);
 	}
 
 private:
 	TextDraw text;
-	keyed_container <Drawable>::handle draw;
+	SceneNode::DrawableHandle draw;
 	const Font * font;
 	float curx, cury;
 	float cr,cg,cb,ca;

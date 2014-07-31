@@ -17,65 +17,42 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _WINDOW_H
-#define _WINDOW_H
+#ifndef _VERTEX_ATTRIB_H
+#define _VERTEX_ATTRIB_H
 
-#include <iosfwd>
-
-struct SDL_Window;
-
-class Window
+namespace VertexAttrib
 {
-public:
-	Window();
+	struct Format
+	{
+		int index;	///< attribute id <= LastAttrib
+		int size;	///< 1 to 4 components
+		int type;	///< component type GL_BYTE, GL_SHORT, GL_FLOAT ...
+		int offset;	///< attribute byte offset in the vertex
+		bool norm;	///< normalize attribute to the range [-1, 1] or [0, 1]
+	};
 
-	~Window();
+	enum Enum
+	{
+		VertexPosition,
+		VertexNormal,
+		VertexTangent,
+		VertexTexCoord,
+		VertexBlendIndices,
+		VertexBlendWeights,
+		VertexColor,
+		LastAttrib = VertexColor
+	};
 
-	void Init(
-		const std::string & caption,
-		int resx,
-		int resy,
-		int color_bpp,
-		int depth_bpp,
-		int antialiasing,
-		bool fullscreen,
-		bool vsync,
-		std::ostream & info_output,
-		std::ostream & error_output);
+	static const char * const str[] =
+	{
+		"VertexPosition",
+		"VertexNormal",
+		"VertexTangent",
+		"VertexTexCoord",
+		"VertexBlendIndices",
+		"VertexBlendWeights",
+		"VertexColor"
+	};
+}
 
-	void SwapBuffers();
-
-	/// Note that when the mouse cursor is hidden, it is also grabbed (confined to the application window)
-	void ShowMouseCursor(bool value);
-
-	void Screenshot(const std::string & filename);
-
-	int GetW() const;
-
-	int GetH() const;
-
-private:
-	SDL_Window * window;
-	void * glcontext;
-	int fsaa;
-	int w, h;
-	bool initialized;
-
-	bool ResizeWindow(int width, int height);
-
-	void ChangeDisplay(
-		int width,
-		int height,
-		int color_bpp,
-		int depth_bpp,
-		int antialiasing,
-		bool fullscreen,
-		bool vsync,
-		std::ostream & info_output,
-		std::ostream & error_output);
-
-	void LogOpenGLInfo(std::ostream & info_output);
-};
-
-#endif
-
+#endif // _VERTEX_ATTRIB_H

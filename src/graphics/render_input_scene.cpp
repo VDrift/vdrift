@@ -24,20 +24,20 @@
 #include "drawable.h"
 #include "shader.h"
 #include "uniforms.h"
-#include "vertexarray.h"
 #include "glutil.h"
 
-RenderInputScene::RenderInputScene():
-	last_transform_valid(false),
-	lod_far(1000),
+RenderInputScene::RenderInputScene(VertexBuffer & buffer):
+	vertex_buffer(buffer),
+	shadow_matrix(NULL),
+	shadow_count(0),
 	shader(NULL),
+	lod_far(1000),
 	fsaa(0),
 	contrast(1.0)
 {
-	Vec3 front(1,0,0);
-	lightposition = front;
+	lightposition = Vec3(1, 0, 0);
 	Quat ldir;
-	ldir.Rotate(3.141593*0.5,1,0,0);
+	ldir.Rotate(3.141593 * 0.5, 1, 0, 0);
 	ldir.RotateVector(lightposition);
 }
 
@@ -46,9 +46,9 @@ RenderInputScene::~RenderInputScene()
 	//dtor
 }
 
-void RenderInputScene::SetShader(Shader * newshader)
+void RenderInputScene::SetShader(Shader & newshader)
 {
-	shader = newshader;
+	shader = &newshader;
 }
 
 void RenderInputScene::SetFSAA(unsigned value)
@@ -108,6 +108,12 @@ void RenderInputScene::SetBlendMode(GraphicsState & glstate, BlendMode::Enum mod
 	}
 }
 
+void RenderInputScene::SetShadowMatrix(const Mat4 shadow_mat[], const unsigned int count)
+{
+	shadow_matrix = shadow_mat;
+	shadow_count = count;
+}
+
 void RenderInputScene::SetTextures(
 	GraphicsState & glstate,
 	const std::vector <TextureInterface*> & textures,
@@ -148,25 +154,18 @@ void RenderInputScene::SetContrast(float value)
 	contrast = value;
 }
 
-void RenderInputScene::SetDrawLists(
-	const std::vector <Drawable*> & dl_dynamic,
-	const std::vector <Drawable*> & dl_static)
+void RenderInputScene::SetDrawList(const std::vector <Drawable*> & drawlist)
 {
-	dynamic_drawlist_ptr = &dl_dynamic;
-	static_drawlist_ptr = &dl_static;
+	drawlist_ptr = &drawlist;
 }
 
 void RenderInputScene::Render(GraphicsState & glstate, std::ostream & error_output)
 {
 	assert(shader && "RenderInputScene::Render No shader set.");
 
-	glstate.SetColor(1,1,1,1);
-
-	glMatrixMode(GL_PROJECTION);
-	glLoadMatrixf(projMatrix.GetArray());
-
-	glMatrixMode(GL_MODELVIEW);
-	glLoadMatrixf(viewMatrix.GetArray());
+	// invalidate color and transform
+	drawable_color = Vec4(-1.0f);
+	drawable_transform.Scale(0.0);
 
 	Quat cam_look;
 	cam_look.Rotate(M_PI_2, 1, 0, 0);
@@ -180,164 +179,39 @@ void RenderInputScene::Render(GraphicsState & glstate, std::ostream & error_outp
 	(cam_rotation).RotateVector(lightvec);
 
 	shader->Enable();
+	if (shadow_matrix)
+	{
+		shader->SetUniformMat4f(Uniforms::ShadowMatrix, shadow_matrix[0].GetArray(), shadow_count);
+	}
+	shader->SetUniformMat4f(Uniforms::ProjectionMatrix, projMatrix.GetArray());
+	shader->SetUniformMat3f(Uniforms::ReflectionMatrix, cube_matrix);
 	shader->SetUniform3f(Uniforms::LightDirection, lightvec[0], lightvec[1], lightvec[2]);
 	shader->SetUniform1f(Uniforms::Contrast, contrast);
-	shader->SetUniformMat3f(Uniforms::ReflectionMatrix, cube_matrix);
 
-	last_transform_valid = false;
-
-	Draw(glstate, *dynamic_drawlist_ptr, false);
-	Draw(glstate, *static_drawlist_ptr, true);
+	Draw(glstate, *drawlist_ptr);
 }
 
-void RenderInputScene::Draw(GraphicsState & glstate, const std::vector <Drawable*> & drawlist, bool preculled)
+void RenderInputScene::Draw(GraphicsState & glstate, const std::vector <Drawable*> & drawlist)
 {
 	for (std::vector <Drawable*>::const_iterator ptr = drawlist.begin(); ptr != drawlist.end(); ++ptr)
 	{
 		const Drawable & d = **ptr;
-		if (preculled || !FrustumCull(d))
-		{
-			SetFlags(d, glstate);
-
-			SetTextures(d, glstate);
-
-			SetTransform(d, glstate);
-
-			if (d.GetDrawList())
-			{
-				glCallList(d.GetDrawList());
-			}
-			else if (d.GetVertArray())
-			{
-				DrawVertexArray(*d.GetVertArray(), d.GetLineSize());
-			}
-		}
+		SetFlags(d, glstate);
+		SetTextures(d, glstate);
+		SetTransform(d, glstate);
+		vertex_buffer.Draw(glstate.VertexObject(), d.GetVertexBufferSegment());
 	}
-}
-
-void RenderInputScene::DrawVertexArray(const VertexArray & va, float linesize) const
-{
-	const float * verts;
-	int vertcount;
-	va.GetVertices(verts, vertcount);
-	if (verts)
-	{
-		glVertexPointer(3, GL_FLOAT, 0, verts);
-		glEnableClientState(GL_VERTEX_ARRAY);
-
-		const unsigned char * cols;
-		int colcount;
-		va.GetColors(cols, colcount);
-		if (cols)
-		{
-			glColorPointer(4, GL_UNSIGNED_BYTE, 0, cols);
-			glEnableClientState(GL_COLOR_ARRAY);
-		}
-
-		const int * faces;
-		int facecount;
-		va.GetFaces(faces, facecount);
-		if (faces)
-		{
-			const float * norms;
-			int normcount;
-			va.GetNormals(norms, normcount);
-			if (norms)
-			{
-				glNormalPointer(GL_FLOAT, 0, norms);
-				glEnableClientState(GL_NORMAL_ARRAY);
-			}
-
-			const float * tc = 0;
-			int tccount;
-			if (va.GetTexCoordSets() > 0)
-			{
-				va.GetTexCoords(0, tc, tccount);
-				if (tc)
-				{
-					glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-					glTexCoordPointer(2, GL_FLOAT, 0, tc);
-				}
-			}
-
-			glDrawElements(GL_TRIANGLES, facecount, GL_UNSIGNED_INT, faces);
-
-			if (tc)
-				glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
-			if (norms)
-				glDisableClientState(GL_NORMAL_ARRAY);
-		}
-		else if (linesize > 0)
-		{
-			glLineWidth(linesize);
-			glDrawArrays(GL_LINES, 0, vertcount / 3);
-		}
-
-		if (cols)
-			glDisableClientState(GL_COLOR_ARRAY);
-
-		glDisableClientState(GL_VERTEX_ARRAY);
-	}
-}
-
-bool RenderInputScene::FrustumCull(const Drawable & d) const
-{
-	const float radius = d.GetRadius();
-	if (radius > 0.0)
-	{
-		// get object center in world space
-		Vec3 objpos = d.GetObjectCenter();
-		d.GetTransform().TransformVectorOut(objpos[0], objpos[1], objpos[2]);
-
-		// get distance to camera
-		const float dx = objpos[0] - cam_position[0];
-		const float dy = objpos[1] - cam_position[1];
-		const float dz = objpos[2] - cam_position[2];
-		const float rc = dx * dx + dy * dy + dz * dz;
-
-		// test against camera position (assuming near plane is zero)
-		if (rc < radius * radius)
-			return false;
-
-		// test against camera far plane
-		const float temp_lod_far = lod_far + radius;
-		if (rc > temp_lod_far * temp_lod_far)
-			return true;
-
-		// test against all frustum planes
-		for (int i = 0; i < 6; i++)
-		{
-			const float rd = frustum.frustum[i][0] * objpos[0] +
-				frustum.frustum[i][1] * objpos[1] +
-				frustum.frustum[i][2] * objpos[2] +
-				frustum.frustum[i][3];
-			if (rd <= -radius)
-				return true;
-		}
-	}
-	return false;
 }
 
 void RenderInputScene::SetFlags(const Drawable & d, GraphicsState & glstate)
 {
 	glstate.DepthOffset(d.GetDecal());
-
-	if (d.GetCull())
+	glstate.CullFace(d.GetCull());
+	if (drawable_color != d.GetColor())
 	{
-		glstate.CullFace(true);
-		if (d.GetCullFront())
-			glstate.CullFaceMode(GL_FRONT);
-		else
-			glstate.CullFaceMode(GL_BACK);
+		drawable_color = d.GetColor();
+		shader->SetUniform4f(Uniforms::ColorTint, &drawable_color[0]);
 	}
-	else
-	{
-		glstate.CullFace(false);
-	}
-
-	const Vec4 & color = d.GetColor();
-	glstate.SetColor(color[0], color[1], color[2], color[3]);
 }
 
 void RenderInputScene::SetTextures(const Drawable & d, GraphicsState & glstate)
@@ -349,11 +223,12 @@ void RenderInputScene::SetTextures(const Drawable & d, GraphicsState & glstate)
 
 void RenderInputScene::SetTransform(const Drawable & d, GraphicsState & glstate)
 {
-	if (!last_transform_valid || !last_transform.Equals(d.GetTransform()))
+	if (!drawable_transform.Equals(d.GetTransform()))
 	{
-		Mat4 worldTrans = d.GetTransform().Multiply(viewMatrix);
-		glLoadMatrixf(worldTrans.GetArray());
-		last_transform = d.GetTransform();
-		last_transform_valid = true;
+		drawable_transform = d.GetTransform();
+		const Mat4 mv = drawable_transform.Multiply(viewMatrix);
+		const Mat4 mvp = mv.Multiply(projMatrix);
+		shader->SetUniformMat4f(Uniforms::ModelViewProjMatrix, mvp.GetArray());
+		shader->SetUniformMat4f(Uniforms::ModelViewMatrix, mv.GetArray());
 	}
 }

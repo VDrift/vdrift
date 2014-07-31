@@ -21,7 +21,8 @@
 #include "quaternion.h"
 #include "unittest.h"
 
-VertexArray::VertexArray()
+VertexArray::VertexArray() :
+	format(VertexFormat::P3)
 {
 	// ctor
 }
@@ -29,6 +30,73 @@ VertexArray::VertexArray()
 VertexArray::~VertexArray()
 {
 	Clear();
+}
+
+void VertexArray::Clear()
+{
+	colors.clear();
+	texcoords.clear();
+	normals.clear();
+	vertices.clear();
+	faces.clear();
+}
+
+#define COMBINEVECTORS(vname) {out.vname.reserve(vname.size() + v.vname.size());out.vname.insert(out.vname.end(), vname.begin(), vname.end());out.vname.insert(out.vname.end(), v.vname.begin(), v.vname.end());}
+
+VertexArray VertexArray::operator+ (const VertexArray & v) const
+{
+	VertexArray out;
+
+	COMBINEVECTORS(colors);
+
+	COMBINEVECTORS(texcoords);
+
+	COMBINEVECTORS(normals);
+
+	COMBINEVECTORS(vertices);
+
+	const int offset = vertices.size() / 3;
+	out.faces.reserve(faces.size() + v.faces.size());
+	out.faces.insert(out.faces.end(), faces.begin(), faces.end());
+	for (size_t i = 0; i < v.faces.size(); i++)
+	{
+		out.faces.push_back(v.faces[i] + offset);
+	}
+
+	assert(format == v.format);
+	out.format = format;
+
+	return out;
+}
+
+void VertexArray::GetColors(const unsigned char * & output_array_pointer, int & output_array_num) const
+{
+	output_array_num = colors.size();
+	output_array_pointer = colors.empty() ? NULL : &colors[0];
+}
+
+void VertexArray::GetTexCoords(const float * & output_array_pointer, int & output_array_num) const
+{
+	output_array_num = texcoords.size();
+	output_array_pointer = texcoords.empty() ? NULL : &texcoords[0];
+}
+
+void VertexArray::GetNormals(const float * & output_array_pointer, int & output_array_num) const
+{
+	output_array_num = normals.size();
+	output_array_pointer = normals.empty() ? NULL : &normals[0];
+}
+
+void VertexArray::GetVertices(const float * & output_array_pointer, int & output_array_num) const
+{
+	output_array_num = vertices.size();
+	output_array_pointer = vertices.empty() ? NULL : &vertices[0];
+}
+
+void VertexArray::GetFaces(const unsigned int * & output_array_pointer, int & output_array_num) const
+{
+	output_array_num = faces.size();
+	output_array_pointer = faces.empty() ? NULL : &faces[0];
 }
 
 void VertexArray::SetColors(const unsigned char array[], size_t count, size_t offset)
@@ -42,6 +110,23 @@ void VertexArray::SetColors(const unsigned char array[], size_t count, size_t of
 		colors.resize(size);
 
 	unsigned char * myarray = &(colors[offset]);
+	for (size_t i = 0; i < count; ++i)
+	{
+		myarray[i] = array[i];
+	}
+}
+
+void VertexArray::SetTexCoords(const float array[], size_t count, size_t offset)
+{
+	// Tried to assign values that aren't in sets of 2
+	assert(count % 2 == 0);
+
+	size_t size = offset + count;
+
+	if (size != texcoords.size())
+		texcoords.resize(size);
+
+	float * myarray = &(texcoords[offset]);
 	for (size_t i = 0; i < count; ++i)
 	{
 		myarray[i] = array[i];
@@ -82,9 +167,9 @@ void VertexArray::SetVertices(const float array[], size_t count, size_t offset)
 	}
 }
 
-void VertexArray::SetFaces(const int array[], size_t count, size_t offset, size_t idoffset)
+void VertexArray::SetFaces(const unsigned int array[], size_t count, size_t offset, size_t idoffset)
 {
-	//Tried to assign values that aren't in sets of 3
+	// Tried to assign values that aren't in sets of 3
 	assert (count % 3 == 0);
 
 	size_t size = offset + count;
@@ -92,148 +177,40 @@ void VertexArray::SetFaces(const int array[], size_t count, size_t offset, size_
 	if (size != faces.size())
 		faces.resize(size);
 
-	int * myarray = &(faces[offset]);
+	unsigned int * myarray = &(faces[offset]);
 	for (size_t i = 0; i < count; ++i)
 	{
 		myarray[i] = array[i] + idoffset;
 	}
 }
 
-void VertexArray::SetTexCoordSets(int newtcsets)
-{
-	texcoords.clear();
-	texcoords.resize(newtcsets);
-}
-
-void VertexArray::SetTexCoords(size_t set, const float array[], size_t count, size_t offset)
-{
-	//Tried to assign a tex coord set beyond the allocated number of sets
-	assert(set < texcoords.size());
-
-	//Tried to assign values that aren't in sets of 2
-	assert(count % 2 == 0);
-
-	size_t size = offset + count;
-
-	if (size != texcoords[set].size())
-		texcoords[set].resize(size);
-
-	float * myarray = &(texcoords[set][offset]);
-	for (size_t i = 0; i < count; ++i)
-	{
-		myarray[i] = array[i];
-	}
-}
-
-void VertexArray::GetColors(const unsigned char * & output_array_pointer, int & output_array_num) const
-{
-	output_array_num = colors.size();
-	output_array_pointer = colors.empty() ? NULL : &colors[0];
-}
-
-void VertexArray::GetNormals(const float * & output_array_pointer, int & output_array_num) const
-{
-	output_array_num = normals.size();
-	output_array_pointer = normals.empty() ? NULL : &normals[0];
-}
-
-void VertexArray::GetVertices(const float * & output_array_pointer, int & output_array_num) const
-{
-	output_array_num = vertices.size();
-	output_array_pointer = vertices.empty() ? NULL : &vertices[0];
-}
-
-void VertexArray::GetFaces(const int * & output_array_pointer, int & output_array_num) const
-{
-	output_array_num = faces.size();
-	//output_array_pointer = faces.empty() ? NULL : &faces[0];
-	if (faces.size() < 1)
-		output_array_pointer = NULL;
-	else
-		output_array_pointer = &faces[0];
-}
-
-void VertexArray::GetTexCoords(size_t set, const float * & output_array_pointer, int & output_array_num) const
-{
-	//Tried to get a tex coord set beyond the allocated number of sets
-	assert(set < texcoords.size());
-
-	output_array_num = texcoords[set].size();
-	output_array_pointer = texcoords[set].empty() ? NULL : &texcoords[set][0];
-}
-
-#define COMBINEVECTORS(vname) {out.vname.reserve(vname.size() + v.vname.size());out.vname.insert(out.vname.end(), vname.begin(), vname.end());out.vname.insert(out.vname.end(), v.vname.begin(), v.vname.end());}
-
-VertexArray VertexArray::operator+ (const VertexArray & v) const
-{
-	VertexArray out;
-
-	COMBINEVECTORS(colors);
-
-	COMBINEVECTORS(normals);
-
-	COMBINEVECTORS(vertices);
-
-	int idxoffset = vertices.size() / 3;
-	out.faces.reserve(faces.size() + v.faces.size());
-	out.faces.insert(out.faces.end(), faces.begin(), faces.end());
-	for (size_t i = 0; i < v.faces.size(); i++)
-	{
-		out.faces.push_back(v.faces[i]+idxoffset);
-	}
-
-	int maxtcsets = GetTexCoordSets();
-	if (v.GetTexCoordSets() > maxtcsets)
-		maxtcsets = v.GetTexCoordSets();
-	int tcsets1 = GetTexCoordSets();
-	int tcsets2 = v.GetTexCoordSets();
-	out.SetTexCoordSets(maxtcsets);
-	for (int i = 0; i < maxtcsets; i++)
-	{
-		if (i >= tcsets1 && i < tcsets2)
-		{
-			out.texcoords[i] = v.texcoords[i];
-		}
-		else if (i < tcsets1 && i >= tcsets2)
-		{
-			out.texcoords[i] = texcoords[i];
-		}
-		else if (i < tcsets1 && i < tcsets2)
-		{
-			COMBINEVECTORS(texcoords[i]);
-		}
-	}
-
-	return out;
-}
-
-void VertexArray::Clear()
-{
-	texcoords.clear();
-	colors.clear();
-	normals.clear();
-	vertices.clear();
-	faces.clear();
-}
-
 void VertexArray::Add(
-	const unsigned char newcol[], int newcolcount,
-	const float newnorm[], int newnormcount,
+	const unsigned int newfaces[], int newfacecount,
 	const float newvert[], int newvertcount,
-	const int newfaces[], int newfacecount,
-	const float newtc[], int newtccount)
+	const float newtco[], int newtcocount,
+	const float newnorm[], int newnormcount ,
+	const unsigned char newcol[], int newcolcount)
 {
-	assert(texcoords.size() == 1);
 	SetFaces(newfaces, newfacecount, faces.size(), vertices.size() / 3);
 	SetVertices(newvert, newvertcount, vertices.size());
 	SetNormals(newnorm, newnormcount, normals.size());
+	SetTexCoords(newtco, newtcocount, texcoords.size());
 	SetColors(newcol, newcolcount, colors.size());
-	SetTexCoords(0, newtc, newtccount, texcoords[0].size());
+
+	assert(!vertices.empty());
+	format = VertexFormat::P3;
+	if (!texcoords.empty())
+	{
+		if (!normals.empty())
+			format = VertexFormat::PNT332;
+		else
+			format = colors.empty() ? VertexFormat::PT32 : VertexFormat::PTC324;
+	}
 }
 
 void VertexArray::SetToBillboard(float x1, float y1, float x2, float y2)
 {
-	int bfaces[6];
+	unsigned int bfaces[6];
 	bfaces[0] = 0;
 	bfaces[1] = 1;
 	bfaces[2] = 2;
@@ -241,16 +218,16 @@ void VertexArray::SetToBillboard(float x1, float y1, float x2, float y2)
 	bfaces[4] = 2;
 	bfaces[5] = 3;
 	SetFaces(bfaces, 6);
-
+/*
 	float normals[12];
-	for (int i = 0; i < 12; i+=3)
+	for (unsigned int i = 0; i < 12; i+=3)
 	{
 		normals[i] = 0;
 		normals[i+1] = 0;
 		normals[i+2] = 1;
 	}
 	SetNormals(normals, 12);
-
+*/
 	//build this:
 	//x1, y1, 0
 	//x2, y1, 0
@@ -267,25 +244,28 @@ void VertexArray::SetToBillboard(float x1, float y1, float x2, float y2)
 	float tc[8];
 	tc[0] = tc[1] = tc[3] = tc[6] = 0.0;
 	tc[2] = tc[4] = tc[5] = tc[7] = 1.0;
-	SetTexCoordSets(1);
-	SetTexCoords(0, tc, 8);
+	SetTexCoords(tc, 8);
+
+	format = VertexFormat::PT32;
 }
 
 void VertexArray::SetTo2DQuad(float x1, float y1, float x2, float y2, float u1, float v1, float u2, float v2, float z)
 {
 	float vcorners[12];
 	float uvs[8];
-	int bfaces[6];
+	unsigned int bfaces[6];
 	SetVertexData2DQuad(x1,y1,x2,y2,u1,v1,u2,v2, vcorners, uvs, bfaces);
-	for (int i = 2; i < 12; i += 3)
+	for (unsigned int i = 2; i < 12; i += 3)
 		vcorners[i] = z;
+
 	SetFaces(bfaces, 6);
 	SetVertices(vcorners, 12);
-	SetTexCoordSets(1);
-	SetTexCoords(0, uvs, 8);
+	SetTexCoords(uvs, 8);
+
+	format = VertexFormat::PT32;
 }
 
-void VertexArray::SetVertexData2DQuad(float x1, float y1, float x2, float y2, float u1, float v1, float u2, float v2, float * vcorners, float * uvs, int * bfaces, int faceoffset) const
+void VertexArray::SetVertexData2DQuad(float x1, float y1, float x2, float y2, float u1, float v1, float u2, float v2, float * vcorners, float * uvs, unsigned int * bfaces, unsigned int faceoffset) const
 {
 	vcorners[0] = x1;
 	vcorners[1] = y1;
@@ -321,7 +301,7 @@ void VertexArray::SetTo2DButton(float x, float y, float w, float h, float sidewi
 {
 	float vcorners[12*3];
 	float uvs[8*3];
-	int bfaces[6*3];
+	unsigned int bfaces[6*3];
 
 	//y1 = 1.0 - y1;
 	//y2 = 1.0 - y2;
@@ -358,8 +338,9 @@ void VertexArray::SetTo2DButton(float x, float y, float w, float h, float sidewi
 
 	SetFaces(bfaces, 6*3);
 	SetVertices(vcorners, 12*3);
-	SetTexCoordSets(1);
-	SetTexCoords(0, uvs, 8*3);
+	SetTexCoords(uvs, 8*3);
+
+	format = VertexFormat::PT32;
 }
 
 void VertexArray::SetTo2DBox(float x, float y, float w, float h, float marginwidth, float marginheight, float clipx)
@@ -367,7 +348,7 @@ void VertexArray::SetTo2DBox(float x, float y, float w, float h, float marginwid
 	const unsigned int quads = 9;
 	float vcorners[12*quads];
 	float uvs[8*quads];
-	int bfaces[6*quads];
+	unsigned int bfaces[6*quads];
 
 	//y1 = 1.0 - y1;
 	//y2 = 1.0 - y2;
@@ -435,8 +416,9 @@ void VertexArray::SetTo2DBox(float x, float y, float w, float h, float marginwid
 
 	SetFaces(bfaces, 6*quads);
 	SetVertices(vcorners, 12*quads);
-	SetTexCoordSets(1);
-	SetTexCoords(0, uvs, 8*quads);
+	SetTexCoords(uvs, 8*quads);
+
+	format = VertexFormat::PT32;
 }
 
 void VertexArray::SetToUnitCube()
@@ -486,10 +468,9 @@ void VertexArray::SetToUnitCube()
 
 void VertexArray::BuildFromFaces(const std::vector <Face> & newfaces)
 {
-	std::map <VertexData, unsigned int> indexmap;
 	Clear();
-	texcoords.resize(1);
 
+	std::map <VertexData, unsigned int> indexmap;
 	for (std::vector <Face>::const_iterator i = newfaces.begin(); i != newfaces.end(); ++i) //loop through input triangles
 	{
 		for (int n = 0; n < 3; n++) //loop through vertices in triangle
@@ -509,8 +490,8 @@ void VertexArray::BuildFromFaces(const std::vector <Face> & newfaces)
 				normals.push_back(curvertdata.normal.y);
 				normals.push_back(curvertdata.normal.z);
 
-				texcoords[0].push_back(curvertdata.texcoord.u);
-				texcoords[0].push_back(curvertdata.texcoord.v);
+				texcoords.push_back(curvertdata.texcoord.u);
+				texcoords.push_back(curvertdata.texcoord.v);
 
 				faces.push_back(newidx);
 			}
@@ -519,16 +500,11 @@ void VertexArray::BuildFromFaces(const std::vector <Face> & newfaces)
 		}
 	}
 
-	//std::cout << faces.size() << ", " << newfaces.size() << ", " << vertices.size() << ", " << normals.size() << ", " << texcoords[0].size() << std::endl;
+	format = VertexFormat::PNT332;
 
 	assert(faces.size()/3 == newfaces.size());
-	assert(vertices.size()/3 == normals.size()/3 && normals.size()/3 == texcoords[0].size()/2);
+	assert(vertices.size()/3 == normals.size()/3 && normals.size()/3 == texcoords.size()/2);
 	assert(vertices.size()/3 <= faces.size());
-}
-
-void VertexArray::SetColor(float r, float g, float b, float a)
-{
-	assert(0); // fixme
 }
 
 void VertexArray::Translate(float x, float y, float z)
@@ -609,10 +585,10 @@ void VertexArray::FlipNormals()
 void VertexArray::FlipWindingOrder()
 {
 	assert(faces.size() % 3 == 0);
-	for (std::vector <int>::iterator i = faces.begin(); i != faces.end(); i += 3)
+	for (std::vector <unsigned int>::iterator i = faces.begin(); i != faces.end(); i += 3)
 	{
-		const int i1 = i[1];
-		const int i2 = i[2];
+		const unsigned int i1 = i[1];
+		const unsigned int i2 = i[2];
 		i[1] = i2;
 		i[2] = i1;
 	}
@@ -621,7 +597,7 @@ void VertexArray::FlipWindingOrder()
 void VertexArray::FixWindingOrder()
 {
 	assert(faces.size() % 3 == 0);
-	for (std::vector <int>::iterator i = faces.begin(); i != faces.end(); i += 3)
+	for (std::vector <unsigned int>::iterator i = faces.begin(); i != faces.end(); i += 3)
 	{
 		const float * n0 = &normals[i[0] * 3];
 		const float * v0 = &vertices[i[0] * 3];
@@ -634,8 +610,8 @@ void VertexArray::FixWindingOrder()
 		const Vec3 norm1 = (vec1 - vec0).cross(vec2 - vec1);
 		if (norm0.dot(norm1) < 0.0f)
 		{
-			const int i1 = i[1];
-			const int i2 = i[2];
+			const unsigned int i1 = i[1];
+			const unsigned int i2 = i[2];
 			i[1] = i2;
 			i[2] = i1;
 		}
@@ -651,7 +627,7 @@ bool VertexArray::Serialize(joeserialize::Serializer & s)
 	_SERIALIZE_(s,faces);
 	return true;
 }
-
+/* fixme
 QT_TEST(vertexarray_test)
 {
 	VertexArray testarray;
@@ -672,13 +648,11 @@ QT_TEST(vertexarray_test)
 
 	//by similarity, the vertex and face assignment functions are OK if the above normal test is OK
 
-	testarray.SetTexCoordSets(2);
-	QT_CHECK_EQUAL(testarray.GetTexCoordSets(), 2);
-	testarray.GetTexCoords(0, ptr, ptrnum);
+	testarray.GetTexCoords(ptr, ptrnum);
 	QT_CHECK_EQUAL(ptrnum, 0);
 	QT_CHECK_EQUAL(ptr, 0);
-	testarray.SetTexCoords(1, somevec, 2);
-	testarray.GetTexCoords(1, ptr, ptrnum);
+	testarray.SetTexCoords(somevec, 2);
+	testarray.GetTexCoords(ptr, ptrnum);
 	QT_CHECK_EQUAL(ptrnum, 2);
 	QT_CHECK_EQUAL(ptr[1], 1000.0);
 
@@ -730,7 +704,7 @@ QT_TEST(vertexarray_test)
 	QT_CHECK_EQUAL(ptri[1], 1);
 	QT_CHECK_EQUAL(ptri[4], 2);
 }
-
+*/
 QT_TEST(vertexarray_buldfromfaces_test)
 {
 	std::vector <VertexArray::Float3> verts;
@@ -777,7 +751,7 @@ QT_TEST(vertexarray_buldfromfaces_test)
 	varray.BuildFromFaces(cubesides);
 
 	const float * tempfloat(NULL);
-	const int * tempint(NULL);
+	const unsigned int * tempint(NULL);
 	int tempnum;
 
 	varray.GetNormals(tempfloat, tempnum);
@@ -788,9 +762,7 @@ QT_TEST(vertexarray_buldfromfaces_test)
 	QT_CHECK(tempfloat != NULL);
 	QT_CHECK_EQUAL(tempnum,72);
 
-	QT_CHECK_EQUAL(varray.GetTexCoordSets(),1);
-
-	varray.GetTexCoords(0, tempfloat, tempnum);
+	varray.GetTexCoords(tempfloat, tempnum);
 	QT_CHECK(tempfloat != NULL);
 	QT_CHECK_EQUAL(tempnum,48);
 

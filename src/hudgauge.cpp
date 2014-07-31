@@ -23,40 +23,40 @@
 #include <cassert>
 #include <sstream>
 
-static keyed_container<Drawable>::handle AddDrawable(SceneNode & node)
+static SceneNode::DrawableHandle AddDrawable(SceneNode & node)
 {
-	return node.GetDrawlist().twodim.insert(Drawable());
+	return node.GetDrawList().twodim.insert(Drawable());
 }
 
-static Drawable & GetDrawable(SceneNode & node, const keyed_container<Drawable>::handle & drawhandle)
+static Drawable & GetDrawable(SceneNode & node, const SceneNode::DrawableHandle & drawhandle)
 {
-	return node.GetDrawlist().twodim.get(drawhandle);
+	return node.GetDrawList().twodim.get(drawhandle);
 }
 
-static void EraseDrawable(SceneNode & node, keyed_container<Drawable>::handle & drawhandle)
+static void EraseDrawable(SceneNode & node, SceneNode::DrawableHandle & drawhandle)
 {
 	if (drawhandle.valid())
 	{
-		node.GetDrawlist().twodim.erase(drawhandle);
+		node.GetDrawList().twodim.erase(drawhandle);
 		drawhandle.invalidate();
 	}
 }
 
-static keyed_container<Drawable>::handle AddTextDrawable(SceneNode & node)
+static SceneNode::DrawableHandle AddTextDrawable(SceneNode & node)
 {
-	return node.GetDrawlist().twodim.insert(Drawable());
+	return node.GetDrawList().twodim.insert(Drawable());
 }
 
-static Drawable & GetTextDrawable(SceneNode & node, const keyed_container<Drawable>::handle & drawhandle)
+static Drawable & GetTextDrawable(SceneNode & node, const SceneNode::DrawableHandle & drawhandle)
 {
-	return node.GetDrawlist().twodim.get(drawhandle);
+	return node.GetDrawList().twodim.get(drawhandle);
 }
 
-static void EraseTextDrawable(SceneNode & node, keyed_container<Drawable>::handle & drawhandle)
+static void EraseTextDrawable(SceneNode & node, SceneNode::DrawableHandle & drawhandle)
 {
 	if (drawhandle.valid())
 	{
-		node.GetDrawlist().twodim.erase(drawhandle);
+		node.GetDrawList().twodim.erase(drawhandle);
 		drawhandle.invalidate();
 	}
 }
@@ -119,20 +119,14 @@ void HudGauge::Set(
 		// big marker
 		float pb[] = {-0.02, 1, 0, 0.02, 1, 0, 0.02, 0.92, 0, -0.02, 0.92, 0};
 		float t[] = {0, 0, 1, 0, 1, 1, 0, 1};
-		int f[] = {0, 2, 1, 0, 3, 2};
+		unsigned int f[] = {0, 2, 1, 0, 3, 2};
 		VertexArray bm;
-		bm.SetVertices(pb, 12);
-		bm.SetTexCoordSets(1);
-		bm.SetTexCoords(0, t, 8);
-		bm.SetFaces(f, 6);
+		bm.Add(f, 6, pb, 12, t, 8);
 
 		// small marker
 		float ps[] = {-0.01, 1, 0, 0.01, 1, 0, 0.01, 0.95, 0, -0.01, 0.95, 0};
 		VertexArray sm;
-		sm.SetVertices(ps, 12);
-		sm.SetTexCoordSets(1);
-		sm.SetTexCoords(0, t, 8);
-		sm.SetFaces(f, 6);
+		sm.Add(f, 6, ps, 12, t, 8);
 
 		float delta = (endangle - startangle) / (3.0 * segments);
 		float angle = startangle;
@@ -150,7 +144,7 @@ void HudGauge::Set(
 		Drawable & drawref = GetDrawable(parent, dial_draw);
 		drawref.SetTextures(texture->GetId());
 		drawref.SetVertArray(&dial_marks);
-		drawref.SetCull(false, false);
+		drawref.SetCull(false);
 		//drawref.SetColor(1, 1, 1, 0.5);
 		drawref.SetDrawOrder(1);
 	}
@@ -166,13 +160,11 @@ void HudGauge::Set(
 		float value_delta = (endvalue - startvalue) / segments;
 		for (int i = 0; i <= segments; ++i)
 		{
-			std::stringstream sstr;
-			std::string text;
-			sstr << value;
-			sstr >> text;
+			std::ostringstream s;
+			s << value;
 			float x = centerx + 0.75 * sin(angle) * radius * hwratio;
 			float y = centery + 0.75 * cos(angle) * radius;
-			float xn = TextDraw::RenderText(font, text, x, y, w, h, temp);
+			float xn = TextDraw::RenderText(font, s.str(), x, y, w, h, temp);
 			temp.Translate((x - xn) * 0.5, 0, 0);
 			dial_label = dial_label + temp;
 			angle += angle_delta;
@@ -183,7 +175,7 @@ void HudGauge::Set(
 		Drawable & drawref = GetTextDrawable(parent, dialnum_draw);
 		drawref.SetTextures(font.GetFontTexture()->GetId());
 		drawref.SetVertArray(&dial_label);
-		drawref.SetCull(false, false);
+		drawref.SetCull(false);
 		//drawref.SetColor(1, 1, 1, 0.5);
 		drawref.SetDrawOrder(1);
 	}
@@ -192,17 +184,15 @@ void HudGauge::Set(
 	{
 		float p[] = {-0.015, 0.92, 0, 0.015, 0.92, 0, 0.025, -0.1, 0, -0.025, -0.1, 0};
 		float t[] = {0, 0, 1, 0, 1, 1, 0, 1};
-		int f[] = {0, 2, 1, 0, 3, 2};
-		pointer.SetVertices(p, 12);
-		pointer.SetTexCoordSets(1);
-		pointer.SetTexCoords(0, t, 8);
-		pointer.SetFaces(f, 6);
+		unsigned int f[] = {0, 2, 1, 0, 3, 2};
+		pointer.Clear();
+		pointer.Add(f, 6, p, 12, t, 8);
 
 		pointer_draw = AddDrawable(parent);
 		Drawable & drawref = GetDrawable(parent, pointer_draw);
 		drawref.SetTextures(texture->GetId());
 		drawref.SetVertArray(&pointer_rotated);
-		drawref.SetCull(false, false);
+		drawref.SetCull(false);
 		//drawref.SetColor(1, 1, 1, 0.5);
 		drawref.SetDrawOrder(2);
 	}

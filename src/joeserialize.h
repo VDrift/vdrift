@@ -110,7 +110,7 @@ class Serializer
 				int count = 1;
 				for (typename std::list <T>::iterator i = t.begin(); i != t.end(); ++i, ++count)
 				{
-					std::stringstream itemname;
+					std::ostringstream itemname;
 					itemname << "*item" << count;
 					if (!this->Serialize(itemname.str(), *i)) return false;
 				}
@@ -124,7 +124,7 @@ class Serializer
 
 				for (int i = 0; i < listsize; i++)
 				{
-					std::stringstream itemname;
+					std::ostringstream itemname;
 					itemname << "*item" << i+1;
 					t.push_back(T());
 					if (!this->Serialize(itemname.str(), t.back())) return false;
@@ -148,7 +148,7 @@ class Serializer
 				int count = 1;
 				for (typename std::set <T>::iterator i = t.begin(); i != t.end(); ++i, ++count)
 				{
-					std::stringstream itemname;
+					std::ostringstream itemname;
 					itemname << "*item" << count;
 					if (!this->Serialize(itemname.str(), const_cast<T&>(*i))) return false;
 				}
@@ -162,7 +162,7 @@ class Serializer
 
 				for (int i = 0; i < listsize; i++)
 				{
-					std::stringstream itemname;
+					std::ostringstream itemname;
 					itemname << "*item" << i+1;
 					//t.push_back(T());
 					//if (!this->Serialize(itemname.str(), t.back())) return false;
@@ -189,7 +189,7 @@ class Serializer
 				int count = 1;
 				for (typename std::vector <T>::iterator i = t.begin(); i != t.end(); ++i, ++count)
 				{
-					std::stringstream itemname;
+					std::ostringstream itemname;
 					itemname << "*item" << count;
 					if (!this->Serialize(itemname.str(), *i)) return false;
 				}
@@ -203,7 +203,7 @@ class Serializer
 
 				for (int i = 0; i < listsize; i++)
 				{
-					std::stringstream itemname;
+					std::ostringstream itemname;
 					itemname << "*item" << i+1;
 					//t.push_back(T());
 					//if (!this->Serialize(itemname.str(), t.back())) return false;
@@ -226,7 +226,7 @@ class Serializer
 				int count = 1;
 				for (std::vector <bool>::iterator i = t.begin(); i != t.end(); ++i, ++count)
 				{
-					std::stringstream itemname;
+					std::ostringstream itemname;
 					itemname << "*item" << count;
 					bool booli = *i;
 					if (!this->Serialize(itemname.str(), booli)) return false;
@@ -241,7 +241,7 @@ class Serializer
 
 				for (int i = 0; i < listsize; i++)
 				{
-					std::stringstream itemname;
+					std::ostringstream itemname;
 					itemname << "*item" << i+1;
 					//t.push_back(T());
 					//if (!this->Serialize(itemname.str(), t.back())) return false;
@@ -268,7 +268,7 @@ class Serializer
 				int count = 1;
 				for (typename std::deque <T>::iterator i = t.begin(); i != t.end(); ++i, ++count)
 				{
-					std::stringstream itemname;
+					std::ostringstream itemname;
 					itemname << "*item" << count;
 					if (!this->Serialize(itemname.str(), *i)) return false;
 				}
@@ -282,7 +282,7 @@ class Serializer
 
 				for (int i = 0; i < listsize; i++)
 				{
-					std::stringstream itemname;
+					std::ostringstream itemname;
 					itemname << "*item" << i+1;
 					//t.push_back(T());
 					//if (!this->Serialize(itemname.str(), t.back())) return false;
@@ -307,7 +307,7 @@ class Serializer
 				int count = 1;
 				for (typename std::map <U,T>::iterator i = t.begin(); i != t.end(); ++i, ++count)
 				{
-					std::stringstream countstr;
+					std::ostringstream countstr;
 					countstr << count;
 
 					std::string keystr = "*key" + countstr.str();
@@ -327,7 +327,7 @@ class Serializer
 
 				for (int i = 0; i < listsize; i++)
 				{
-					std::stringstream countstr;
+					std::ostringstream countstr;
 					countstr << i+1;
 
 					std::string keystr = "*key" + countstr.str();
@@ -357,7 +357,7 @@ class Serializer
 				int count = 1;
 				for (typename std::tr1::unordered_map <U,T>::iterator i = t.begin(); i != t.end(); ++i, ++count)
 				{
-					std::stringstream countstr;
+					std::ostringstream countstr;
 					countstr << count;
 
 					std::string keystr = "*key" + countstr.str();
@@ -377,7 +377,7 @@ class Serializer
 
 				for (int i = 0; i < listsize; i++)
 				{
-					std::stringstream countstr;
+					std::ostringstream countstr;
 					countstr << i+1;
 
 					std::string keystr = "*key" + countstr.str();
@@ -406,7 +406,7 @@ class Serializer
 				int count = 1;
 				for (typename std::tr1::unordered_set <T>::iterator i = t.begin(); i != t.end(); ++i, ++count)
 				{
-					std::stringstream itemname;
+					std::ostringstream itemname;
 					itemname << "*item" << count;
 					if (!this->Serialize(itemname.str(), const_cast<T&>(*i))) return false;
 				}
@@ -420,7 +420,7 @@ class Serializer
 
 				for (int i = 0; i < listsize; i++)
 				{
-					std::stringstream itemname;
+					std::ostringstream itemname;
 					itemname << "*item" << i+1;
 					//t.push_back(T());
 					//if (!this->Serialize(itemname.str(), t.back())) return false;
@@ -461,7 +461,7 @@ struct StringHelpers
 	template <typename T>
 	static void ConvertStringToOther(const std::string & string_representation, T & i)
 	{
-		std::stringstream converter(string_representation);
+		std::istringstream converter(string_representation);
 		converter >> i;
 	}
 
@@ -473,21 +473,21 @@ struct StringHelpers
 	template <typename T>
 	static std::string ConvertOtherToString(T & i)
 	{
-		std::stringstream converter;
+		std::ostringstream converter;
 		converter << i;
 		return converter.str();
 	}
 
 	static std::string ConvertOtherToString(float & i)
 	{
-		std::stringstream converter;
+		std::ostringstream converter;
 		converter << std::scientific << std::setprecision (20) << i;
 		return converter.str();
 	}
 
 	static std::string ConvertOtherToString(double & i)
 	{
-		std::stringstream converter;
+		std::ostringstream converter;
 		converter << std::scientific << std::setprecision (20) << i;
 		return converter.str();
 	}
@@ -893,7 +893,7 @@ class TextInputSerializer : public SerializerInput
 				}
 			}
 
-			std::stringstream converter(string_representation);
+			std::istringstream converter(string_representation);
 			converter >> i;
 
 			serialization_location_.pop_back();
@@ -960,7 +960,7 @@ class TextInputSerializer : public SerializerInput
 				linenum += ConsumeWhitespace(in); //get rid of cruft
 				std::string line = SeekTo(in, '\n'); //read in this line
 				linenum++;
-				std::stringstream linestream(line);
+				std::istringstream linestream(line);
 				std::string name = SeekTo(linestream, '=');
 				name = strTrim(name);
 				std::string origname = name;
@@ -979,7 +979,7 @@ class TextInputSerializer : public SerializerInput
 					curcount++;
 					parsed_data_tree_.SetLeaf(tree_location_temp, StringHelpers::ConvertOtherToString(curcount));
 
-					std::stringstream newname;
+					std::ostringstream newname;
 					newname << "*item" << curcount;
 					name = newname.str();
 				}
@@ -995,7 +995,7 @@ class TextInputSerializer : public SerializerInput
 					curcount++;
 					parsed_data_tree_.SetLeaf(tree_location_temp, StringHelpers::ConvertOtherToString(curcount));
 
-					std::stringstream newname;
+					std::ostringstream newname;
 					newname << "*key" << curcount;
 					name = newname.str();
 				}
@@ -1009,7 +1009,7 @@ class TextInputSerializer : public SerializerInput
 					parsed_data_tree_.GetLeaf(tree_location_temp, curcountstr);
 					StringHelpers::ConvertStringToOther(curcountstr, curcount);
 
-					std::stringstream newname;
+					std::ostringstream newname;
 					newname << "*value" << curcount;
 					name = newname.str();
 				}
@@ -1476,7 +1476,7 @@ class ReflectionSerializer : public Serializer
 		std::deque <std::string> Explode(const std::string & delimited_string, char delimiter='.') const
 		{
 			std::deque <std::string> container;
-			std::stringstream instr(delimited_string);
+			std::istringstream instr(delimited_string);
 
 			while (instr)
 			{

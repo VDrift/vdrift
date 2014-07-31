@@ -71,12 +71,12 @@ bool CarEngineInfo::Load(const PTree & cfg, std::ostream & error_output)
 		torque.push_back(std::pair<btScalar, btScalar>(torque_point[0], torque_point[1]));
 
 		curve_num++;
-		std::stringstream str;
-		str << "torque-curve-";
-		str.width(2);
-		str.fill('0');
-		str << curve_num;
-		torque_str = str.str();
+		std::ostringstream s;
+		s << "torque-curve-";
+		s.width(2);
+		s.fill('0');
+		s << curve_num;
+		torque_str = s.str();
 	}
 	if (torque.size() <= 1)
 	{

@@ -157,7 +157,7 @@ void GuiWidgetList::UpdateList(const std::string & vnum)
 	if (!get_values.connected())
 		return;
 
-	std::stringstream s(vnum);
+	std::istringstream s(vnum);
 	s >> m_list_size;
 
 	if (m_list_size <= m_list_offset)

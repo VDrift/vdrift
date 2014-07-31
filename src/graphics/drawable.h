@@ -21,6 +21,7 @@
 #define _DRAWABLE_H
 
 #include "rendermodelext_drawable.h"
+#include "vertexbuffer.h"
 #include "mathvector.h"
 #include "matrix4.h"
 
@@ -35,9 +36,6 @@ public:
 
 	bool operator < (const Drawable & other) const;
 
-	unsigned GetDrawList() const;
-	void SetModel(const Model & model);
-
 	unsigned GetTexture0() const;
 	unsigned GetTexture1() const;
 	unsigned GetTexture2() const;
@@ -46,18 +44,14 @@ public:
 	const VertexArray * GetVertArray() const;
 	void SetVertArray(const VertexArray * value);
 
-	/// draw vertex array as line segments if size > 0
-	float GetLineSize() const;
-	void SetLineSize(float size);
-
 	const Mat4 & GetTransform() const;
 	void SetTransform(const Mat4 & value);
 
-	/// bounding sphere frustum culling
+	/// bounding sphere center in local space
 	const Vec3 & GetObjectCenter() const;
 	void SetObjectCenter(const Vec3 & value);
 
-	/// bounding sphere frustum culling
+	/// bounding sphere radius
 	float GetRadius() const;
 	void SetRadius(float value);
 
@@ -76,44 +70,43 @@ public:
 	void SetDrawEnable(bool value);
 
 	bool GetCull() const;
-	bool GetCullFront() const;
-	void SetCull(bool newcull, bool newcullfront);
+	void SetCull(bool newcull);
 
 	/// this gets called if we are using the GL3 renderer
-	/// it returns a reference to the RenderModelExternal structure
-	RenderModelExt & GenRenderModelData(StringIdMap & stringMap);
+	/// returns a reference to the RenderModelExternal structure
+	RenderModelExt & GenRenderModelData(StringIdMap & string_map);
 
-	void SetVertexArrayObject(unsigned vao, unsigned elementCount);
+	/// setting model will also set bounding sphere center and radius
+	Model * GetModel() const;
+	void SetModel(Model & newmodel);
+
+	/// vertex buffer interface
+	const VertexBuffer::Segment & GetVertexBufferSegment() const;
+	void SetVertexBufferSegment(const VertexBuffer::Segment & segment);
 
 private:
 	unsigned tex_id[3];
-	unsigned list_id;
+	VertexBuffer::Segment vsegment;
 	const VertexArray * vert_array;
-	float linesize;
+	Model * model;
+
 	Mat4 transform;
-	Vec3 objcenter;
+	Vec3 center;
 	float radius;
 	Vec4 color;
 	float draw_order;
 	bool decal;
 	bool drawenabled;
 	bool cull;
-	bool cull_front;
 
-	bool texturesChanged;
-	bool uniformsChanged;
-
-	RenderModelExtDrawable renderModel;
+	bool textures_changed;
+	bool uniforms_changed;
+	RenderModelExtDrawable render_model;
 };
 
 inline bool Drawable::operator < (const Drawable & other) const
 {
 	return draw_order < other.draw_order;
-}
-
-inline unsigned Drawable::GetDrawList() const
-{
-	return list_id;
 }
 
 inline unsigned Drawable::GetTexture0() const
@@ -136,11 +129,6 @@ inline const VertexArray * Drawable::GetVertArray() const
 	return vert_array;
 }
 
-inline float Drawable::GetLineSize() const
-{
-	return linesize;
-}
-
 inline const Mat4 & Drawable::GetTransform() const
 {
 	return transform;
@@ -148,7 +136,7 @@ inline const Mat4 & Drawable::GetTransform() const
 
 inline const Vec3 & Drawable::GetObjectCenter() const
 {
-	return objcenter;
+	return center;
 }
 
 inline float Drawable::GetRadius() const
@@ -181,14 +169,29 @@ inline void Drawable::SetDrawEnable(bool value)
 	drawenabled = value;
 }
 
+inline void Drawable::SetCull(bool newcull)
+{
+	cull = newcull;
+}
+
 inline bool Drawable::GetCull() const
 {
 	return cull;
 }
 
-inline bool Drawable::GetCullFront() const
+inline Model * Drawable::GetModel() const
 {
-	return cull_front;
+	return model;
+}
+
+inline const VertexBuffer::Segment & Drawable::GetVertexBufferSegment() const
+{
+	return vsegment;
+}
+
+inline void Drawable::SetVertexBufferSegment(const VertexBuffer::Segment & segment)
+{
+	vsegment = segment;
 }
 
 #endif // _DRAWABLE_H

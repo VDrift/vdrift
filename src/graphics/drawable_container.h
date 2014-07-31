@@ -105,35 +105,42 @@ void AddDrawablesToContainer(ContainerType & source, U & dest, const Mat4 & tran
 }
 }
 
-/// pointer vector, drawable_container template parameter
-template <typename T>
-class PtrVector : public std::vector<T*>
-{};
-
 template <template <typename U> class Container>
 struct DrawableContainer
 {
-	// all of the layers of the scene
+	// you can add new drawable containers by modifying drawables list
+	// see http://en.wikipedia.org/wiki/C_preprocessor#X-Macros
+	#define DRAWABLES_LIST\
+		X(normal_noblend)\
+		X(normal_noblend_nolighting)\
+		X(car_noblend)\
+		X(normal_blend)\
+		X(skybox_blend)\
+		X(skybox_noblend)\
+		X(text)\
+		X(twodim)\
+		X(particle)\
+		X(lights_emissive)\
+		X(lights_omni)\
+		X(debug_lines)
 
 	#define X(Y) Container <Drawable> Y;
-	#include "drawables.def"
+	DRAWABLES_LIST
 	#undef X
-	// you can add new drawable containers by modifying drawables.def
-	// see http://en.wikipedia.org/wiki/C_preprocessor#X-Macros
 
 	template <typename T>
 	void ForEach(T func)
 	{
 		#define X(Y) func(Y);
-		#include "drawables.def"
+		DRAWABLES_LIST
 		#undef X
 	}
 
 	template <typename T>
-	void ForEachWithName(T func)
+	void ForEach(T func) const
 	{
-		#define X(Y) func(#Y,Y);
-		#include "drawables.def"
+		#define X(Y) func(Y);
+		DRAWABLES_LIST
 		#undef X
 	}
 
@@ -142,7 +149,7 @@ struct DrawableContainer
 	void AppendTo(DrawableContainer <ContainerU> & dest, const Mat4 & transform)
 	{
 		#define X(Y) DrawableContainerHelper::AddDrawablesToContainer<Drawable, Container<Drawable>, ContainerU<Drawable>, use_transform> (Y, dest.Y, transform);
-		#include "drawables.def"
+		DRAWABLES_LIST
 		#undef X
 	}
 
@@ -151,7 +158,7 @@ struct DrawableContainer
 	{
 		reseatable_reference <Container <Drawable> > ref;
 		#define X(Y) if (name == #Y) return Y;
-		#include "drawables.def"
+		DRAWABLES_LIST
 		#undef X
 		return ref;
 	}
@@ -170,9 +177,8 @@ struct DrawableContainer
 
 	unsigned int size() const
 	{
-		DrawableContainer <Container> * me = const_cast<DrawableContainer <Container> *>(this); // messy, but avoids more typing. const correctness is enforced in AccumulateSize::operator()
 		unsigned int count = 0;
-		me->ForEach(DrawableContainerHelper::AccumulateSize(count));
+		ForEach(DrawableContainerHelper::AccumulateSize(count));
 		return count;
 	}
 
@@ -190,6 +196,8 @@ struct DrawableContainer
 	{
 		ForEach(DrawableContainerHelper::SetAlpha(a));
 	}
+
+	#undef DRAWABLES_LIST
 };
 
 #endif // _DRAWABLE_CONTAINER_H

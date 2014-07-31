@@ -25,8 +25,11 @@
 #include "matrix4.h"
 #include "shader.h"
 #include "uniforms.h"
+#include "vertexattrib.h"
 
 RenderInputPostprocess::RenderInputPostprocess() :
+	shadow_matrix(NULL),
+	shadow_count(0),
 	shader(NULL),
 	contrast(1),
 	maxu(1),
@@ -95,6 +98,12 @@ void RenderInputPostprocess::SetBlendMode(GraphicsState & glstate, BlendMode::En
 		assert(0);
 		break;
 	}
+}
+
+void RenderInputPostprocess::SetShadowMatrix(const Mat4 shadow_mat[], const unsigned int count)
+{
+	shadow_matrix = shadow_mat;
+	shadow_count = count;
 }
 
 void RenderInputPostprocess::SetTextures(
@@ -167,112 +176,107 @@ void RenderInputPostprocess::SetContrast(float value)
 
 void RenderInputPostprocess::Render(GraphicsState & glstate, std::ostream & error_output)
 {
-	assert(shader);
-
 	CheckForOpenGLErrors("postprocess begin", error_output);
 
-	glstate.SetColor(1,1,1,1);
+	assert(shader && "RenderInputPostprocess::Render No shader set.");
 
 	shader->Enable();
 
 	CheckForOpenGLErrors("postprocess shader enable", error_output);
-
-	Mat4 projMatrix, viewMatrix;
-	projMatrix.SetOrthographic(0, 1, 0, 1, -1, 1);
-	viewMatrix.LoadIdentity();
-
-	glMatrixMode(GL_PROJECTION);
-	glLoadMatrixf(projMatrix.GetArray());
-
-	glMatrixMode(GL_MODELVIEW);
-	glLoadMatrixf(viewMatrix.GetArray());
 
 	glstate.ActiveTexture(0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE);
 
 	CheckForOpenGLErrors("postprocess flag set", error_output);
 
-	// send shader parameters
+	Mat4 proj_matrix, view_matrix, view_proj_matrix;
+	proj_matrix.SetOrthographic(0, 1, 0, 1, -1, 1);
+	view_matrix.LoadIdentity();
+	view_proj_matrix = view_matrix.Multiply(proj_matrix);
+
+	Quat cam_look;
+	cam_look.Rotate(M_PI_2, 1, 0, 0);
+	cam_look.Rotate(-M_PI_2, 0, 0, 1);
+	Quat cube_rotation;
+	cube_rotation = (-cam_look) * (-cam_rotation); // experimentally derived
+	float cube_matrix[9];
+	cube_rotation.GetMatrix3(cube_matrix);
+
+	Vec3 lightvec = lightposition;
+	cam_rotation.RotateVector(lightvec);
+
+	const float color[4] = {1.0f, 1.0f, 1.0f, 1.0f};
+
+	if (shadow_matrix)
 	{
-		Quat cam_look;
-		cam_look.Rotate(M_PI_2, 1, 0, 0);
-		cam_look.Rotate(-M_PI_2, 0, 0, 1);
-		Quat cube_rotation;
-		cube_rotation = (-cam_look) * (-cam_rotation); // experimentally derived
-		float cube_matrix[9];
-		cube_rotation.GetMatrix3(cube_matrix);
-
-		Vec3 lightvec = lightposition;
-		cam_rotation.RotateVector(lightvec);
-
-		shader->SetUniform3f(Uniforms::LightDirection, lightvec);
-		shader->SetUniform1f(Uniforms::Contrast, contrast);
-		shader->SetUniformMat3f(Uniforms::ReflectionMatrix, cube_matrix);
-		shader->SetUniform1f(Uniforms::ZNear, 0.1);
-		shader->SetUniform3f(Uniforms::FrustumCornerBL, frustum_corners[0]);
-		shader->SetUniform3f(Uniforms::FrustumCornerBRDelta, frustum_corners[1] - frustum_corners[0]);
-		shader->SetUniform3f(Uniforms::FrustumCornerTLDelta, frustum_corners[3] - frustum_corners[0]);
+		shader->SetUniformMat4f(Uniforms::ShadowMatrix, shadow_matrix[0].GetArray(), shadow_count);
 	}
+	shader->SetUniformMat4f(Uniforms::ModelViewProjMatrix, view_proj_matrix.GetArray());
+	shader->SetUniformMat4f(Uniforms::ModelViewMatrix, view_matrix.GetArray());
+	shader->SetUniformMat4f(Uniforms::ProjectionMatrix, proj_matrix.GetArray());
+	shader->SetUniformMat3f(Uniforms::ReflectionMatrix, cube_matrix);
+	shader->SetUniform3f(Uniforms::LightDirection, lightvec);
+	shader->SetUniform4f(Uniforms::ColorTint, color);
+	shader->SetUniform1f(Uniforms::Contrast, contrast);
+	shader->SetUniform1f(Uniforms::ZNear, 0.1);
+	shader->SetUniform3f(Uniforms::FrustumCornerBL, frustum_corners[0]);
+	shader->SetUniform3f(Uniforms::FrustumCornerBRDelta, frustum_corners[1] - frustum_corners[0]);
+	shader->SetUniform3f(Uniforms::FrustumCornerTLDelta, frustum_corners[3] - frustum_corners[0]);
 
 	// draw a quad
-	unsigned faces[2 * 3] = {
+	const unsigned faces[2 * 3] = {
 		0, 1, 2,
 		2, 3, 0,
 	};
-	float pos[4 * 3] = {
+	const float pos[4 * 3] = {
 		0.0f,  0.0f, 0.0f,
 		1.0f,  0.0f, 0.0f,
 		1.0f,  1.0f, 0.0f,
 		0.0f,  1.0f, 0.0f,
 	};
-	// send the UV corners in UV set 0
-	float tc0[4 * 2] = {
+	// send the uv corners as tex coords
+	const float tco[4 * 2] = {
 		0.0f, 0.0f,
 		maxu, 0.0f,
 		maxu, maxv,
 		0.0f, maxv,
 	};
-	// send the frustum corners in UV set 1
-	float tc1[4 * 3] = {
+	// send the frustum corners as normal
+	const float fcl[4 * 3] = {
 		frustum_corners[0][0], frustum_corners[0][1], frustum_corners[0][2],
 		frustum_corners[1][0], frustum_corners[1][1], frustum_corners[1][2],
 		frustum_corners[2][0], frustum_corners[2][1], frustum_corners[2][2],
 		frustum_corners[3][0], frustum_corners[3][1], frustum_corners[3][2],
 	};
-	// fructum corners in world space in uv set 2
-	float tc2[4 * 3] = {
+	// fructum corners in world space as tangent
+	const float fcw[4 * 3] = {
 		frustum_corners_ws[0][0], frustum_corners_ws[0][1], frustum_corners_ws[0][2],
 		frustum_corners_ws[1][0], frustum_corners_ws[1][1], frustum_corners_ws[1][2],
 		frustum_corners_ws[2][0], frustum_corners_ws[2][1], frustum_corners_ws[2][2],
 		frustum_corners_ws[3][0], frustum_corners_ws[3][1], frustum_corners_ws[3][2],
 	};
 
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glVertexPointer(3, GL_FLOAT, 0, pos);
+	if (glstate.VertexObject())
+		glstate.ResetVertexObject();
 
-	glClientActiveTexture(GL_TEXTURE0);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-	glTexCoordPointer(2, GL_FLOAT, 0, tc0);
+	using namespace VertexAttrib;
 
-	glClientActiveTexture(GL_TEXTURE1);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-	glTexCoordPointer(3, GL_FLOAT, 0, tc1);
+	glEnableVertexAttribArray(VertexPosition);
+	glEnableVertexAttribArray(VertexTexCoord);
+	glEnableVertexAttribArray(VertexNormal);
+	glEnableVertexAttribArray(VertexTangent);
 
-	glClientActiveTexture(GL_TEXTURE2);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-	glTexCoordPointer(3, GL_FLOAT, 0, tc2);
+	glVertexAttribPointer(VertexPosition, 3, GL_FLOAT, GL_FALSE, 0, pos);
+	glVertexAttribPointer(VertexTexCoord, 2, GL_FLOAT, GL_FALSE, 0, tco);
+	glVertexAttribPointer(VertexNormal, 3, GL_FLOAT, GL_FALSE, 0, fcl);
+	glVertexAttribPointer(VertexTangent, 3, GL_FLOAT, GL_FALSE, 0, fcw);
 
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, faces);
 
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
-	glClientActiveTexture(GL_TEXTURE1);
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
-	glClientActiveTexture(GL_TEXTURE0);
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
-	glDisableClientState(GL_VERTEX_ARRAY);
+	glDisableVertexAttribArray(VertexPosition);
+	glDisableVertexAttribArray(VertexTexCoord);
+	glDisableVertexAttribArray(VertexNormal);
+	glDisableVertexAttribArray(VertexTangent);
 
 	CheckForOpenGLErrors("postprocess draw", error_output);
 }

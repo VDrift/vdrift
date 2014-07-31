@@ -38,7 +38,7 @@ std::string LoadFileIntoString(const std::string & filepath, std::ostream & erro
 template <typename T>
 std::string tostr(T val)
 {
-	std::stringstream s;
+	std::ostringstream s;
 	s << val;
 	return s.str();
 }
@@ -47,7 +47,7 @@ template <typename T>
 T fromstr(const std::string & str)
 {
 	T val;
-	std::stringstream s(str);
+	std::istringstream s(str);
 	s >> val;
 	return val;
 }

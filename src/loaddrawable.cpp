@@ -46,8 +46,8 @@ LoadDrawable::LoadDrawable(
 bool LoadDrawable::operator()(
 	const PTree & cfg,
 	SceneNode & topnode,
-	keyed_container<SceneNode>::handle * nodehandle,
-	keyed_container<Drawable>::handle * drawhandle)
+	SceneNode::Handle * nodehandle,
+	SceneNode::DrawableHandle * drawhandle)
 {
 	std::vector<std::string> texname;
 	if (!cfg.get("texture", texname)) return true;
@@ -63,8 +63,8 @@ bool LoadDrawable::operator()(
 	const std::vector<std::string> & texname,
 	const PTree & cfg,
 	SceneNode & topnode,
-	keyed_container<SceneNode>::handle * nodeptr,
-	keyed_container<Drawable>::handle * drawptr)
+	SceneNode::Handle * nodeptr,
+	SceneNode::DrawableHandle * drawptr)
 {
 	Drawable drawable;
 
@@ -114,7 +114,7 @@ bool LoadDrawable::operator()(
 		!content.get(mesh, path, meshname + scalestr))
 	{
 		Vec3 scale;
-		std::stringstream s(scalestr);
+		std::istringstream s(scalestr);
 		s >> scale;
 
 		VertexArray meshva = mesh->GetVertexArray();
@@ -149,7 +149,7 @@ bool LoadDrawable::operator()(
 		if (node == &topnode)
 		{
 			// position relative to parent, create child node
-			keyed_container <SceneNode>::handle nodehandle = topnode.AddNode();
+			SceneNode::Handle nodehandle = topnode.AddNode();
 			node = &topnode.GetNode(nodehandle);
 		}
 		node->GetTransform().SetTranslation(pos);
@@ -157,8 +157,8 @@ bool LoadDrawable::operator()(
 	}
 
 	// set drawable
-	keyed_container<Drawable>::handle drawtemp;
-	keyed_container<Drawable>::handle * draw = &drawtemp;
+	SceneNode::DrawableHandle drawtemp;
+	SceneNode::DrawableHandle * draw = &drawtemp;
 	if (drawptr != 0) draw = drawptr;
 
 	std::string drawtype;
@@ -167,16 +167,16 @@ bool LoadDrawable::operator()(
 		if (drawtype == "emissive")
 		{
 			drawable.SetDecal(true);
-			*draw = node->GetDrawlist().lights_emissive.insert(drawable);
+			*draw = node->GetDrawList().lights_emissive.insert(drawable);
 		}
 		else if (drawtype == "transparent")
 		{
-			*draw = node->GetDrawlist().normal_blend.insert(drawable);
+			*draw = node->GetDrawList().normal_blend.insert(drawable);
 		}
 	}
 	else
 	{
-		*draw = node->GetDrawlist().car_noblend.insert(drawable);
+		*draw = node->GetDrawList().car_noblend.insert(drawable);
 	}
 
 	return true;

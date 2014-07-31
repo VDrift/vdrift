@@ -20,11 +20,11 @@
 #ifndef _VERTEXARRAY_H
 #define _VERTEXARRAY_H
 
+#include "vertexformat.h"
 #include "joeserialize.h"
 #include "macros.h"
 
 #include <vector>
-#include <cassert>
 
 class ModelObj;
 
@@ -35,46 +35,32 @@ public:
 
 	~VertexArray();
 
-	VertexArray operator+ (const VertexArray & v) const;
-
 	void Clear();
 
-	void SetColors(const unsigned char array[], size_t count, size_t offset = 0);
-
-	void SetNormals(const float array[], size_t count, size_t offset = 0);
-
-	void SetVertices(const float array[], size_t count, size_t offset = 0);
-
-	void SetFaces(const int array[], size_t count, size_t offset = 0, size_t idoffset = 0);
-
-	void SetTexCoordSets(int newtcsets);
-
-	/// set is zero indexed
-	void SetTexCoords(size_t set, const float array[], size_t count, size_t offset = 0);
-
-	/// assumes there is 1 tex coord set
-	void Add(
-		const unsigned char newcol[], int newcolcount,
-		const float newnorm[], int newnormcount,
-		const float newvert[], int newvertcount,
-		const int newfaces[], int newfacecount,
-		const float newtc[], int newtccount);
-
-	/// C style interface functions
+	VertexArray operator+ (const VertexArray & v) const;
 
 	void GetColors(const unsigned char * & output_array_pointer, int & output_array_num) const;
+
+	void GetTexCoords(const float * & output_array_pointer, int & output_array_num) const;
 
 	void GetNormals(const float * & output_array_pointer, int & output_array_num) const;
 
 	void GetVertices(const float * & output_array_pointer, int & output_array_num) const;
 
-	void GetFaces(const int * & output_array_pointer, int & output_array_num) const;
+	void GetFaces(const unsigned int * & output_array_pointer, int & output_array_num) const;
 
-	inline int GetTexCoordSets() const { return texcoords.size(); }
+	unsigned int GetNumVertices() const { return vertices.size() / 3; }
 
-	void GetTexCoords(size_t set, const float * & output_array_pointer, int & output_array_num) const;
+	unsigned int GetNumIndices() const { return faces.size(); }
 
-	int GetNumFaces() const { return faces.size(); }
+	VertexFormat::Enum GetVertexFormat() const { return format; }
+
+	void Add(
+		const unsigned int newfaces[], int newfacecount,
+		const float newvert[], int newvertcount,
+		const float newtco[] = 0, int newtcocount = 0,
+		const float newnorm[] = 0, int newnormcount = 0,
+		const unsigned char newcol[] = 0, int newcolcount = 0);
 
 	/// helper functions
 
@@ -86,7 +72,7 @@ public:
 
 	void SetTo2DQuad(float x1, float y1, float x2, float y2, float u1, float v1, float u2, float v2, float z=0.f);
 
-	void SetVertexData2DQuad(float x1, float y1, float x2, float y2, float u1, float v1, float u2, float v2, float * vcorners, float * uvs, int * bfaces, int faceoffset=0) const;
+	void SetVertexData2DQuad(float x1, float y1, float x2, float y2, float u1, float v1, float u2, float v2, float * vcorners, float * uvs, unsigned int * bfaces, unsigned int faceoffset=0) const;
 
 	void SetToUnitCube();
 
@@ -156,9 +142,6 @@ public:
 
 	void BuildFromFaces(const std::vector <Face> & faces);
 
-	/// set color for all vertices
-	void SetColor(float r, float g, float b, float a);
-
 	void Translate(float x, float y, float z);
 
 	void Rotate(float a, float x, float y, float z);
@@ -179,11 +162,22 @@ public:
 private:
 	friend class joeserialize::Serializer;
 	friend class ModelObj;
-	std::vector < std::vector <float> > texcoords;
 	std::vector <unsigned char> colors;
+	std::vector <float> texcoords;
 	std::vector <float> normals;
 	std::vector <float> vertices;
-	std::vector <int> faces;
+	std::vector <unsigned int> faces;
+	VertexFormat::Enum format;
+
+	void SetColors(const unsigned char array[], size_t count, size_t offset = 0);
+
+	void SetTexCoords(const float array[], size_t count, size_t offset = 0);
+
+	void SetNormals(const float array[], size_t count, size_t offset = 0);
+
+	void SetVertices(const float array[], size_t count, size_t offset = 0);
+
+	void SetFaces(const unsigned int array[], size_t count, size_t offset = 0, size_t idoffset = 0);
 };
 
 #endif

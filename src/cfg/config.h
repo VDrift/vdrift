@@ -165,8 +165,8 @@ inline bool Config::get(const const_iterator & section, const std::string & para
 	Section::const_iterator i = section->second.find(param);
 	if (i != section->second.end())
 	{
-		std::stringstream st(i->second);
-		st >> std::boolalpha >> output;
+		std::istringstream s(i->second);
+		s >> std::boolalpha >> output;
 		return true;
 	}
 	return false;
@@ -179,7 +179,7 @@ inline bool Config::get(const const_iterator & section, const std::string & para
 	Section::const_iterator i = section->second.find(param);
 	if (i != section->second.end())
 	{
-		std::stringstream st(i->second);
+		std::istringstream st(i->second);
 		if (out.size() > 0)
 		{
 			// set vector
@@ -187,7 +187,7 @@ inline bool Config::get(const const_iterator & section, const std::string & para
 			{
 				std::string str;
 				std::getline(st, str, ',');
-				std::stringstream s(str);
+				std::istringstream s(str);
 				s >> out[i];
 			}
 		}
@@ -198,7 +198,7 @@ inline bool Config::get(const const_iterator & section, const std::string & para
 			{
 				std::string str;
 				std::getline(st, str, ',');
-				std::stringstream s(str);
+				std::istringstream s(str);
 				T value;
 				s >> value;
 				out.push_back(value);
@@ -240,9 +240,9 @@ inline void Config::set(iterator section, const std::string & param, const T & i
 {
 	if (section != sections.end())
 	{
-		std::stringstream st;
-		st << std::boolalpha << invar;
-		section->second[param] = st.str();
+		std::ostringstream s;
+		s << std::boolalpha << invar;
+		section->second[param] = s.str();
 	}
 }
 
@@ -251,14 +251,14 @@ inline void Config::set(iterator section, const std::string & param, const std::
 {
 	if (section != sections.end())
 	{
-		std::stringstream st;
+		std::ostringstream s;
 		typename std::vector<T>::const_iterator it = invar.begin();
 		while (it < invar.end() - 1)
 		{
-			st << *it++ << ",";
+			s << *it++ << ",";
 		}
-		st << *it;
-		section->second[param] = st.str();
+		s << *it;
+		section->second[param] = s.str();
 	}
 }
 

@@ -503,7 +503,7 @@ bool GuiPage::Load(
 			if (!pagefile.get(section, GuiControl::signal_names[j], actions))
 				continue;
 
-			std::stringstream st(actions);
+			std::istringstream st(actions);
 			while(st.good())
 			{
 				std::string action;
@@ -550,7 +550,7 @@ bool GuiPage::Load(
 			if (!pagefile.get(section, GuiControlList::signal_names[j], actions))
 				continue;
 
-			std::stringstream st(actions);
+			std::istringstream st(actions);
 			while(st.good())
 			{
 				std::string action;

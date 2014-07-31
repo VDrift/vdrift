@@ -22,7 +22,6 @@
 
 #include "mathvector.h"
 #include "quaternion.h"
-#include "drawable_container.h"
 
 #include <iosfwd>
 
@@ -33,8 +32,6 @@ class SceneNode;
 class Graphics
 {
 public:
-	typedef DrawableContainer <PtrVector> dynamicdrawlist_type;
-
 	/// reflection_type is 0 (low=OFF), 1 (medium=static), 2 (high=dynamic)
 	/// returns true on success
 	virtual bool Init(
@@ -55,14 +52,25 @@ public:
 
 	virtual void Deinit() = 0;
 
-	virtual DrawableContainer <PtrVector> & GetDynamicDrawlist() = 0;
+	virtual void BindDynamicVertexData(std::vector<SceneNode*> nodes) = 0;
 
-	virtual void AddStaticNode(SceneNode & node, bool clearcurrent = true) = 0;
+	virtual void BindStaticVertexData(std::vector<SceneNode*> nodes) = 0;
 
+	virtual void AddDynamicNode(SceneNode & node) = 0;
+
+	virtual void AddStaticNode(SceneNode & node) = 0;
+
+	virtual void ClearDynamicDrawables() = 0;
+
+	virtual void ClearStaticDrawables() = 0;
+
+	/// Prepare scene for drawing. All non gpu setup happens here: culling, sorting etc
+	/// Vertex data and node binds should have happened before.
 	virtual void SetupScene(
 		float fov, float new_view_distance,
 		const Vec3 cam_position, const Quat & cam_rotation,
-		const Vec3 & dynamic_reflection_sample_pos) = 0;
+		const Vec3 & dynamic_reflection_sample_pos,
+		std::ostream & error_output) = 0;
 
 	/// optional (atm) scene animation update function
 	/// to be called after SetupScene and before DrawScene

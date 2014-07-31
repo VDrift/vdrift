@@ -44,13 +44,13 @@ bool Sprite2D::Load(
 
 	node = parent.AddNode();
 	SceneNode & noderef = parent.GetNode(node);
-	draw = noderef.GetDrawlist().twodim.insert(Drawable());
+	draw = noderef.GetDrawList().twodim.insert(Drawable());
 	Drawable & drawref = GetDrawableFromNode(noderef);
 
 	drawref.SetTextures(texture->GetId());
 	drawref.SetVertArray(&varray);
 	drawref.SetDrawOrder(draworder);
-	drawref.SetCull(false, false);
+	drawref.SetCull(false);
 	drawref.SetColor(r,g,b,a);
 
 	//std::cout << "Sprite draworder: " << draworder << std::endl;
@@ -73,13 +73,13 @@ bool Sprite2D::Load(
 
 	node = parent.AddNode();
 	SceneNode & noderef = parent.GetNode(node);
-	draw = noderef.GetDrawlist().twodim.insert(Drawable());
+	draw = noderef.GetDrawList().twodim.insert(Drawable());
 	Drawable & drawref = GetDrawableFromNode(noderef);
 
 	drawref.SetTextures(texture->GetId());
 	drawref.SetVertArray(&varray);
 	drawref.SetDrawOrder(draworder);
-	drawref.SetCull(false, false);
+	drawref.SetCull(false);
 	drawref.SetColor(r,g,b,a);
 
 	return true;
@@ -90,7 +90,7 @@ void Sprite2D::Unload(SceneNode & parent)
 	if (node.valid())
 	{
 		SceneNode & noderef = GetNode(parent);
-		noderef.GetDrawlist().twodim.erase(draw);
+		noderef.GetDrawList().twodim.erase(draw);
 		parent.Delete(node);
 	}
 	node.invalidate();

@@ -28,12 +28,12 @@ void HudBar::Set(
 	float opacity,
 	bool flip)
 {
-	draw = parent.GetDrawlist().twodim.insert(Drawable());
-	Drawable & drawref = parent.GetDrawlist().twodim.get(draw);
+	draw = parent.GetDrawList().twodim.insert(Drawable());
+	Drawable & drawref = parent.GetDrawList().twodim.get(draw);
 
 	drawref.SetTextures(tex->GetId());
 	drawref.SetVertArray(&verts);
-	drawref.SetCull(false, false);
+	drawref.SetCull(false);
 	drawref.SetColor(1,1,1,opacity);
 	drawref.SetDrawOrder(1);
 
@@ -44,6 +44,6 @@ void HudBar::Set(
 
 void HudBar::SetVisible(SceneNode & parent, bool newvis)
 {
-	Drawable & drawref = parent.GetDrawlist().twodim.get(draw);
+	Drawable & drawref = parent.GetDrawList().twodim.get(draw);
 	drawref.SetDrawEnable(newvis);
 }

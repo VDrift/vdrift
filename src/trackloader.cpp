@@ -35,7 +35,7 @@ static inline std::istream & operator >> (std::istream & lhs, btVector3 & rhs)
 	for (int i = 0; i < 3 && !lhs.eof(); ++i)
 	{
 		std::getline(lhs, str, ',');
-		std::stringstream s(str);
+		std::istringstream s(str);
 		s >> rhs[i];
 	}
 	return lhs;
@@ -47,7 +47,7 @@ static inline std::istream & operator >> (std::istream & lhs, std::vector<std::s
 	for (size_t i = 0; i < rhs.size() && !lhs.eof(); ++i)
 	{
 		std::getline(lhs, str, ',');
-		std::stringstream s(str);
+		std::istringstream s(str);
 		s >> rhs[i];
 	}
 	return lhs;
@@ -57,7 +57,7 @@ static btIndexedMesh GetIndexedMesh(const Model & model)
 {
 	const float * vertices;
 	int vcount;
-	const int * faces;
+	const unsigned int * faces;
 	int fcount;
 	model.GetVertexArray().GetVertices(vertices, vcount);
 	model.GetVertexArray().GetFaces(faces, fcount);
@@ -67,8 +67,8 @@ static btIndexedMesh GetIndexedMesh(const Model & model)
 	btIndexedMesh mesh;
 	mesh.m_numTriangles = fcount / 3;
 	mesh.m_triangleIndexBase = (const unsigned char *)faces;
-	mesh.m_triangleIndexStride = sizeof(int) * 3;
-	mesh.m_numVertices = vcount;
+	mesh.m_triangleIndexStride = sizeof(unsigned int) * 3;
+	mesh.m_numVertices = vcount / 3;
 	mesh.m_vertexBase = (const unsigned char *)vertices;
 	mesh.m_vertexStride = sizeof(float) * 3;
 	mesh.m_vertexType = PHY_FLOAT;
@@ -378,7 +378,7 @@ Track::Loader::body_iterator Track::Loader::LoadBody(const PTree & cfg)
 	cfg.get("nolighting", body.nolighting);
 
 	std::vector<std::string> texture_names(3);
-	std::stringstream s(texture_str);
+	std::istringstream s(texture_str);
 	s >> texture_names;
 
 	// set relative path for models and textures, ugly hack
@@ -460,9 +460,7 @@ Track::Loader::body_iterator Track::Loader::LoadBody(const PTree & cfg)
 	drawable.SetModel(*model);
 	drawable.SetTextures(tex[0]->GetId(), tex[1]->GetId(), tex[2]->GetId());
 	drawable.SetDecal(alphablend);
-	drawable.SetCull(data.cull && !doublesided, false);
-	drawable.SetObjectCenter(model->GetCenter());
-	drawable.SetRadius(model->GetRadius());
+	drawable.SetCull(data.cull && !doublesided);
 
 	return bodies.insert(std::make_pair(name, body)).first;
 }
@@ -471,27 +469,27 @@ void Track::Loader::AddBody(SceneNode & scene, const Body & body)
 {
 	bool nolighting = body.nolighting;
 	bool alphablend = body.drawable.GetDecal();
-	keyed_container<Drawable> * dlist = &scene.GetDrawlist().normal_noblend;
+	keyed_container<Drawable> * dlist = &scene.GetDrawList().normal_noblend;
 	if (body.skybox)
 	{
 		if (alphablend)
 		{
-			dlist = &scene.GetDrawlist().skybox_blend;
+			dlist = &scene.GetDrawList().skybox_blend;
 		}
 		else
 		{
-			dlist = &scene.GetDrawlist().skybox_noblend;
+			dlist = &scene.GetDrawList().skybox_noblend;
 		}
 	}
 	else
 	{
 		if (alphablend)
 		{
-			dlist = &scene.GetDrawlist().normal_blend;
+			dlist = &scene.GetDrawList().normal_blend;
 		}
 		else if (nolighting)
 		{
-			dlist = &scene.GetDrawlist().normal_noblend_nolighting;
+			dlist = &scene.GetDrawList().normal_noblend_nolighting;
 		}
 	}
 	dlist->insert(body.drawable);
@@ -523,8 +521,8 @@ bool Track::Loader::LoadNode(const PTree & sec)
 		if (has_transform)
 		{
 			// static geometry instanced
-			keyed_container <SceneNode>::handle sh = data.static_node.AddNode();
-			SceneNode & node = data.static_node.GetNode(sh);
+			SceneNode::Handle h = data.static_node.AddNode();
+			SceneNode & node = data.static_node.GetNode(h);
 			node.GetTransform().SetTranslation(position);
 			node.GetTransform().SetRotation(rotation);
 			AddBody(node, body);
@@ -578,7 +576,7 @@ bool Track::Loader::LoadNode(const PTree & sec)
 			data.objects.push_back(object);
 			world.addRigidBody(object);
 
-			keyed_container<SceneNode>::handle node_handle = data.dynamic_node.AddNode();
+			SceneNode::Handle node_handle = data.dynamic_node.AddNode();
 			SceneNode & node = data.dynamic_node.GetNode(node_handle);
 			node.GetTransform().SetTranslation(position);
 			node.GetTransform().SetRotation(rotation);
@@ -600,8 +598,8 @@ bool Track::Loader::LoadNode(const PTree & sec)
 			data.objects.push_back(object);
 			world.addCollisionObject(object);
 
-			keyed_container <SceneNode>::handle sh = data.static_node.AddNode();
-			SceneNode & node = data.static_node.GetNode(sh);
+			SceneNode::Handle h = data.static_node.AddNode();
+			SceneNode & node = data.static_node.GetNode(h);
 			node.GetTransform().SetTranslation(position);
 			node.GetTransform().SetRotation(rotation);
 			AddBody(node, body);
@@ -630,8 +628,8 @@ static bool get(std::ifstream & f, T & output)
 
 	if (!f.good() && !instr.empty() && instr[0] == '#') return false;
 
-	std::stringstream sstr(instr);
-	sstr >> output;
+	std::istringstream s(instr);
+	s >> output;
 	return true;
 }
 
@@ -718,34 +716,32 @@ bool Track::Loader::AddObject(const Object & object)
 
 	//use a different drawlist layer where necessary
 	bool transparent = (object.transparent_blend==1);
-	keyed_container <Drawable> * dlist = &data.static_node.GetDrawlist().normal_noblend;
+	keyed_container <Drawable> * dlist = &data.static_node.GetDrawList().normal_noblend;
 	if (transparent)
 	{
-		dlist = &data.static_node.GetDrawlist().normal_blend;
+		dlist = &data.static_node.GetDrawList().normal_blend;
 	}
 	else if (object.nolighting)
 	{
-		dlist = &data.static_node.GetDrawlist().normal_noblend_nolighting;
+		dlist = &data.static_node.GetDrawList().normal_noblend_nolighting;
 	}
 	if (object.skybox)
 	{
 		if (transparent)
 		{
-			dlist = &data.static_node.GetDrawlist().skybox_blend;
+			dlist = &data.static_node.GetDrawList().skybox_blend;
 		}
 		else
 		{
-			dlist = &data.static_node.GetDrawlist().skybox_noblend;
+			dlist = &data.static_node.GetDrawList().skybox_noblend;
 		}
 	}
-	keyed_container <Drawable>::handle dref = dlist->insert(Drawable());
+	SceneNode::DrawableHandle dref = dlist->insert(Drawable());
 	Drawable & drawable = dlist->get(dref);
 	drawable.SetModel(*object.model);
 	drawable.SetTextures(texture0->GetId(), texture1->GetId(), texture2->GetId());
 	drawable.SetDecal(transparent);
-	drawable.SetCull(data.cull && (object.transparent_blend!=2), false);
-	drawable.SetObjectCenter(object.model->GetCenter());
-	drawable.SetRadius(object.model->GetRadius());
+	drawable.SetCull(data.cull && (object.transparent_blend != 2));
 
 	if (object.collideable)
 	{
@@ -824,10 +820,9 @@ std::pair<bool, bool> Track::Loader::ContinueOld()
 	// should be fixed in the model data instead
 	if (object.skybox && data.vertical_tracking_skyboxes)
 	{
-		const bool genlist = object.model->HaveListID();
 		VertexArray va = object.model->GetVertexArray();
 		va.Translate(0, 0, -object.model->GetCenter()[2]);
-		object.model->Load(va, error_output, genlist);
+		object.model->Load(va, error_output);
 	}
 
 	if (!AddObject(object))
@@ -919,9 +914,6 @@ bool Track::Loader::LoadRoads()
 
 bool Track::Loader::CreateRacingLines()
 {
-	TextureInfo texinfo;
-	content.load(data.racingline_texture, texturedir, "racingline.png", texinfo);
-
 	K1999 k1999data;
 	for (std::list <RoadStrip>::iterator i = data.roads.begin(); i != data.roads.end(); ++i)
 	{
@@ -929,24 +921,119 @@ bool Track::Loader::CreateRacingLines()
 		{
 			k1999data.CalcRaceLine();
 			k1999data.UpdateRoadStrip(*i);
+			CreateRacingLine(*i);
 		}
-		//else error_output << "Couldn't create racing line for roadstrip " << n << std::endl;
+	}
+	return true;
+}
 
-		i->CreateRacingLine(data.racingline_node, data.racingline_texture);
+template <bool set_faces>
+static void AddRacingLineSegment(
+	const RoadPatch & patch,
+	std::vector<float> & vertices,
+	std::vector<float> & texcoords,
+	std::vector<unsigned int> & faces,
+	Vec3 & prev_segment,
+	float & distance)
+{
+	if (set_faces)
+	{
+		const unsigned int n = texcoords.size() / 2;
+		const unsigned int fs[6] = {n, n + 1, n + 3, n + 3, n + 2, n};
+		faces.insert(faces.end(), fs, fs + 6);
 	}
 
-	return true;
+	const Bezier & p = patch.GetPatch();
+	distance += (p.GetRacingLine() - prev_segment).Magnitude();
+	prev_segment = p.GetRacingLine();
+
+	const float tc[4] = {0, distance, 1, distance};
+	texcoords.insert(texcoords.end(), tc, tc + 4);
+
+	const float hwidth = 0.2;
+	const Vec3 zoffset(0.0, 0.0, 0.1);
+	const Vec3 r = p.GetRacingLine() + zoffset;
+	const Vec3 t = (p.GetPoint(0, 0) - p.GetPoint(0, 3)).Normalize();
+	const Vec3 v0 = r - t * hwidth;
+	const Vec3 v1 = r + t * hwidth;
+
+	const float vc[6] = {v0[0], v0[1], v0[2], v1[0], v1[1], v1[2]};
+	vertices.insert(vertices.end(), vc, vc + 6);
+}
+
+void Track::Loader::CreateRacingLine(const RoadStrip & strip)
+{
+	if (strip.GetPatches().empty())
+		return;
+
+	// get texture
+	std::tr1::shared_ptr<Texture> texture;
+	content.load(texture, texturedir, "racingline.png", TextureInfo());
+	data.textures.insert(texture);
+
+	// calculate batch size per drawable
+	const size_t batch_max_size = 256;
+	const size_t strip_size = strip.GetPatches().size();
+	const size_t batch_count = (strip_size + batch_max_size - 1) / batch_max_size;
+	const size_t batch_size = strip_size - (strip_size / batch_count) * (batch_count - 1);
+
+	// allocate batch vertex data
+	VertexArray vertex_array;
+	std::vector<float> vertices;
+	std::vector<float> texcoords;
+	std::vector<unsigned int> faces;
+	vertices.reserve((batch_size + 1) * 6);
+	texcoords.reserve((batch_size + 1) * 4);
+	faces.reserve(batch_size * 6);
+
+	// generate racing line
+	float line_length = 0;
+	Vec3 line_center = strip.GetPatches()[0].GetPatch().GetRacingLine();
+	for (size_t n = 0, m = 0; n < batch_count; ++n)
+	{
+		// fill batch
+		for (size_t me = std::min(m + batch_size, strip_size); m < me; ++m)
+		{
+			AddRacingLineSegment<true>(strip.GetPatches()[m], vertices, texcoords, faces, line_center, line_length);
+		}
+		// cap batch
+		const size_t mc = (m < strip_size) ? m : 0;
+		AddRacingLineSegment<false>(strip.GetPatches()[mc], vertices, texcoords, faces, line_center, line_length);
+
+		// set vertex array
+		vertex_array.Clear();
+		vertex_array.Add(
+			&faces[0], faces.size(),
+			&vertices[0], vertices.size(),
+			&texcoords[0], texcoords.size());
+
+		// create model
+		std::tr1::shared_ptr<Model> model(new Model());
+		model->Load(vertex_array, error_output);
+		data.models.insert(model);
+
+		// register drawable
+		SceneNode::DrawableHandle dh = data.racingline_node.GetDrawList().normal_blend.insert(Drawable());
+		Drawable & d = data.racingline_node.GetDrawList().normal_blend.get(dh);
+		d.SetTextures(texture->GetId());
+		d.SetModel(*model);
+		//d.SetDecal(true);
+
+		vertices.clear();
+		texcoords.clear();
+		faces.clear();
+	}
 }
 
 bool Track::Loader::LoadStartPositions(const PTree & info)
 {
 	int sp_num = 0;
-	std::stringstream sp_name;
+	std::ostringstream sp_name;
 	sp_name << "start position " << sp_num;
 	std::vector<float> f3(3);
 	while (info.get(sp_name.str(), f3))
 	{
-		std::stringstream so_name;
+		std::ostringstream so_name;
 		so_name << "start orientation " << sp_num;
 		Quat q;
 		std::vector <float> angle(3, 0.0);
@@ -997,7 +1084,7 @@ bool Track::Loader::LoadLapSections(const PTree & info)
 		for (int l = 0; l < lapmarkers; l++)
 		{
 			std::vector<float> lapraw(3);
-			std::stringstream lapname;
+			std::ostringstream lapname;
 			lapname << "lap sequence " << l;
 			info.get(lapname.str(), lapraw);
 			int roadid = lapraw[0];

@@ -21,9 +21,8 @@
 #define _GRAPHICS_GL3V_H
 
 #include "graphics.h"
-#include "mathvector.h"
-#include "scenenode.h"
-#include "staticdrawables.h"
+#include "aabb_tree_adapter.h"
+#include "drawable_container.h"
 #include "matrix4.h"
 #include "texture.h"
 #include "vertexarray.h"
@@ -65,15 +64,24 @@ public:
 
 	virtual void Deinit();
 
-	virtual DrawableContainer <PtrVector> & GetDynamicDrawlist();
+	virtual void BindDynamicVertexData(std::vector<SceneNode*> nodes);
 
-	virtual void AddStaticNode(SceneNode & node, bool clearcurrent = true);
+	virtual void BindStaticVertexData(std::vector<SceneNode*> nodes);
+
+	virtual void AddDynamicNode(SceneNode & node);
+
+	virtual void AddStaticNode(SceneNode & node);
+
+	virtual void ClearDynamicDrawables();
+
+	virtual void ClearStaticDrawables();
 
 	virtual void SetupScene(
 		float fov, float new_view_distance,
 		const Vec3 cam_position,
 		const Quat & cam_rotation,
-		const Vec3 & dynamic_reflection_sample_pos);
+		const Vec3 & dynamic_reflection_sample_pos,
+		std::ostream & error_output);
 
 	virtual void DrawScene(std::ostream & error_output);
 
@@ -95,10 +103,11 @@ public:
 
 	GraphicsGL3(StringIdMap & map);
 
-	~GraphicsGL3() {};
+	~GraphicsGL3();
 
 private:
 	StringIdMap & stringMap;
+	VertexBuffer vertex_buffer;
 	GLWrapper gl;
 	Renderer renderer;
 	std::string rendercfg;
@@ -135,7 +144,11 @@ private:
 	std::string getCameraForPass(StringId pass) const;
 
 	// scenegraph output
-	DrawableContainer <PtrVector> dynamic_drawlist; //used for objects that move or change
+	template <typename T> class PtrVector : public std::vector<T*> {};
+	typedef DrawableContainer <PtrVector> DynamicDrawables;
+	DynamicDrawables dynamic_drawlist; //used for objects that move or change
+
+	typedef DrawableContainer<AabbTreeNodeAdapter> StaticDrawables;
 	StaticDrawables static_drawlist; //used for objects that will never change
 
 	// a special drawable that's used for fullscreen quad passes
@@ -145,9 +158,15 @@ private:
 	// drawlist cache
 	std::map <std::string, std::vector <RenderModelExt*> > cameraDrawGroupDrawLists;
 
+	// this maps passes to maps of draw groups and draw list vector pointers
+	// so drawMap[passName][drawGroup] is a pointer to a vector of RenderModelExternal pointers
+	// this is complicated but it lets us do culling per camera position and draw group combination
+	std::map <StringId, std::map <StringId, std::vector <RenderModelExt*> *> > drawMap;
+
 	// drawlist assembly functions
-	void assembleDrawList(const std::vector <Drawable*> & drawables, std::vector <RenderModelExt*> & out, Frustum * frustum, const Vec3 & camPos);
-	void assembleDrawList(const AabbTreeNodeAdapter <Drawable> & adapter, std::vector <RenderModelExt*> & out, Frustum * frustum, const Vec3 & camPos);
+	void AssembleDrawList(const std::vector <Drawable*> & drawables, std::vector <RenderModelExt*> & out, Frustum * frustum, const Vec3 & camPos);
+	void AssembleDrawList(const AabbTreeNodeAdapter <Drawable> & adapter, std::vector <RenderModelExt*> & out, Frustum * frustum, const Vec3 & camPos);
+	void AssembleDrawMap(std::ostream & error_output);
 
 	// a map that stores which camera each pass uses
 	std::map <std::string, std::string> passNameToCameraName;

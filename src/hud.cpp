@@ -24,24 +24,24 @@
 
 //#define GAUGES
 
-static keyed_container<Drawable>::handle AddDrawable(SceneNode & node)
+static SceneNode::DrawableHandle AddDrawable(SceneNode & node)
 {
-	return node.GetDrawlist().twodim.insert(Drawable());
+	return node.GetDrawList().twodim.insert(Drawable());
 }
 
-static Drawable & GetDrawable(SceneNode & node, const keyed_container <Drawable>::handle & drawhandle)
+static Drawable & GetDrawable(SceneNode & node, const SceneNode::DrawableHandle & drawhandle)
 {
-	return node.GetDrawlist().twodim.get(drawhandle);
+	return node.GetDrawList().twodim.get(drawhandle);
 }
 
-static keyed_container <Drawable>::handle SetupText(
+static SceneNode::DrawableHandle SetupText(
 	SceneNode & parent, TextDraw & textdraw,
 	const std::string & str, const Font & font,
 	float x, float y, float scalex, float scaley,
 	float r, float g , float b, float zorder = 0)
 {
-	keyed_container<Drawable>::handle draw = parent.GetDrawlist().text.insert(Drawable());
-	Drawable & drawref = parent.GetDrawlist().text.get(draw);
+	SceneNode::DrawableHandle draw = parent.GetDrawList().text.insert(Drawable());
+	Drawable & drawref = parent.GetDrawList().text.get(draw);
 	textdraw.Set(drawref, font, str, x, y, scalex, scaley, r, g, b);
 	drawref.SetDrawOrder(zorder);
 	return draw;
@@ -54,7 +54,7 @@ static void GetTimeString(float time, std::string & outtime)
 
 	if (time != 0.0)
 	{
-		std::stringstream s;
+		std::ostringstream s;
 		s << std::setfill('0');
 		s << std::setw(2) << min << ":";
 		s << std::fixed << std::setprecision(3) << std::setw(6) << secs;
@@ -149,7 +149,7 @@ bool Hud::Init(
 		timerboxverts.SetTo2DBox(x, y, w, h, timerboxdimx, timerboxdimy);
 		timerboxdrawref.SetTextures(boxtex->GetId());
 		timerboxdrawref.SetVertArray(&timerboxverts);
-		timerboxdrawref.SetCull(false, false);
+		timerboxdrawref.SetCull(false);
 		timerboxdrawref.SetColor(1, 1, 1, opacity);
 		timerboxdrawref.SetDrawOrder(0.1);
 
@@ -201,7 +201,7 @@ bool Hud::Init(
 		infoboxverts.SetTo2DBox(x, y, w, h, infoboxdimx, infoboxdimy);
 		infoboxdrawref.SetTextures(boxtex->GetId());
 		infoboxdrawref.SetVertArray(&infoboxverts);
-		infoboxdrawref.SetCull(false, false);
+		infoboxdrawref.SetCull(false);
 		infoboxdrawref.SetColor(1, 1, 1, opacity);
 		infoboxdrawref.SetDrawOrder(0.1);
 
@@ -265,14 +265,14 @@ bool Hud::Init(
 	rpmboxref.SetTextures(progbartex->GetId());
 	rpmboxref.SetVertArray(&rpmboxverts);
 	rpmboxref.SetDrawOrder(2);
-	rpmboxref.SetCull(false, false);
+	rpmboxref.SetCull(false);
 	rpmboxref.SetColor(0.3, 0.3, 0.3, 0.4);
 
 	Drawable & rpmbarref = GetDrawable(hudroot, rpmbar);
 	rpmbarref.SetTextures(progbartex->GetId());
 	rpmbarref.SetVertArray(&rpmbarverts);
 	rpmbarref.SetDrawOrder(3);
-	rpmbarref.SetCull(false, false);
+	rpmbarref.SetCull(false);
 	rpmbarref.SetColor(1.0, 1.0, 1.0, 0.7);
 
 	Drawable & rpmredbarref = GetDrawable(hudroot, rpmredbar);
@@ -280,7 +280,7 @@ bool Hud::Init(
 	rpmredbarref.SetVertArray(&rpmredbarverts);
 	rpmredbarref.SetColor(1.0, 0.2, 0.2, 0.7);
 	rpmredbarref.SetDrawOrder(3);
-	rpmredbarref.SetCull(false, false);
+	rpmredbarref.SetCull(false);
 
 	//lower left bar
 	bars.push_back(HudBar());
@@ -474,7 +474,7 @@ void Hud::Update(
 	speedgauge.Update(hudroot, fabs(speed) * speedscale);
 
 	// gear
-	std::stringstream gearstr;
+	std::ostringstream gearstr;
 	if (newgear == -1)
 		gearstr << "R";
 	else if (newgear == 0)
@@ -485,11 +485,11 @@ void Hud::Update(
 
 	float geartext_alpha = clutch * 0.5 + 0.5;
 	if (newgear == 0) geartext_alpha = 1;
-	Drawable & geartextdrawref = hudroot.GetDrawlist().text.get(geartextdraw);
+	Drawable & geartextdrawref = hudroot.GetDrawList().text.get(geartextdraw);
 	geartextdrawref.SetColor(1, 1, 1, geartext_alpha);
 
 	// speed
-	std::stringstream sstr;
+	std::ostringstream sstr;
 	sstr << std::abs(int(speed * speedscale));
 	//float sx = mphtext.GetScale().first;
 	//float sy = mphtext.GetScale().second;
@@ -498,7 +498,7 @@ void Hud::Update(
 	//float y = 1 - sy * 0.5;
 	mphtext.Revise(gaugefont, sstr.str());//, x, y, fontscalex, fontscaley);
 #else
-	std::stringstream gearstr;
+	std::ostringstream gearstr;
 	if (newgear == -1)
 		gearstr << "R";
 	else if (newgear == 0)
@@ -508,7 +508,7 @@ void Hud::Update(
 	geartext.Revise(lcdfont, gearstr.str());
 
 	float geartext_alpha = (newgear == 0) ? 1 : clutch * 0.5 + 0.5;
-	Drawable & geartextdrawref = hudroot.GetDrawlist().text.get(geartextdraw);
+	Drawable & geartextdrawref = hudroot.GetDrawList().text.get(geartextdraw);
 	geartextdrawref.SetColor(1, 1, 1, geartext_alpha);
 
 	float rpmpercent = std::min(1.0f, rpm / maxrpm);
@@ -529,7 +529,7 @@ void Hud::Update(
 	rpmredbarverts.SetToBillboard(rpmredx, rpmy, rpmredxend, rpmy + rpmheight);
 	rpmboxverts.SetToBillboard(rpmxstart, rpmy, rpmxstart + rpmwidth, rpmy + rpmheight);
 
-	std::stringstream speedo;
+	std::ostringstream speedo;
 	if (mph)
 		speedo << std::abs((int)(2.23693629 * speed)) << " " << str[MPH];
 	else
@@ -605,19 +605,19 @@ void Hud::Update(
 	if (numlaps > 0)
 	{
 		//update lap
-		std::stringstream lapstream;
+		std::ostringstream lapstream;
 		lapstream << std::max(1, std::min(curlapnum, numlaps)) << "/" << numlaps;
 		lapindicator.Revise(lapstream.str());
 
 		//update place
-		std::stringstream stream;
+		std::ostringstream stream;
 		stream << curplace << "/" << numcars;
 		placeindicator.Revise(stream.str());
 
 		//update race prompt
 		if (stagingtimeleft > 0.5)
 		{
-			std::stringstream s;
+			std::ostringstream s;
 			s << (int)stagingtimeleft + 1;
 			rps = s.str();
 			raceprompt.SetColor(hudroot, 1,0,0);
@@ -656,13 +656,13 @@ void Hud::Update(
 	if (!racecomplete)
 	{
 		//update drift score
-		std::stringstream scorestream;
+		std::ostringstream scorestream;
 		scorestream << (int)driftscore;
 		driftscoreindicator.Revise(scorestream.str());
 
 		if (drifting && rps.empty())
 		{
-			std::stringstream s;
+			std::ostringstream s;
 			s << "+" << (int)thisdriftscore;
 			rps = s.str();
 			raceprompt.SetColor(hudroot, 1, 0, 0);

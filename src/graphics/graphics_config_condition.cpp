@@ -22,7 +22,7 @@
 
 void GraphicsConfigCondition::Parse(const std::string & str)
 {
-	std::stringstream parser(str);
+	std::istringstream parser(str);
 	while (parser)
 	{
 		std::string condition;

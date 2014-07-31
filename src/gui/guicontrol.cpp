@@ -67,7 +67,7 @@ void GuiControl::Signal(Event ev)
 		{
 			float sx = (m_focusx - m_xmin) / (m_xmax - m_xmin);
 			sx = (sx <= 1) ? (sx >= 0) ? sx : 0 : 1;
-			std::stringstream s;
+			std::ostringstream s;
 			s << sx;
 			m_signalv[SELECTX](s.str());
 		}
@@ -75,7 +75,7 @@ void GuiControl::Signal(Event ev)
 		if (m_signalv[SELECTX].connected())
 		{
 			float sy = (m_focusy - m_ymin) / (m_ymax - m_ymin);
-			std::stringstream s;
+			std::ostringstream s;
 			s << sy;
 			m_signalv[SELECTY](s.str());
 		}
@@ -125,7 +125,7 @@ void GuiControl::SetActions(
 	const std::string & actionstr,
 	Signal0 & signal)
 {
-	std::stringstream st(actionstr);
+	std::istringstream st(actionstr);
 	while (st.good())
 	{
 		std::string action;
@@ -141,7 +141,7 @@ void GuiControl::SetActions(
 	const std::string & actionstr,
 	Signal1<const std::string &> & signal)
 {
-	std::stringstream st(actionstr);
+	std::istringstream st(actionstr);
 	while (st.good())
 	{
 		std::string action;

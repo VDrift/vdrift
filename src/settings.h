@@ -69,6 +69,11 @@ public:
 		return fullscreen;
 	}
 
+	bool GetVsync() const
+	{
+		return vsync;
+	}
+
 	const std::string & GetRenderer() const
 	{
 		return renderer;
@@ -246,11 +251,6 @@ public:
 		return trackdynamic;
 	}
 
-	bool GetBatchGeometry() const
-	{
-		return batch_geometry;
-	}
-
 	bool GetShadows() const
 	{
 		return shadows;
@@ -398,6 +398,7 @@ private:
 	int bpp;
 	int depthbpp;
 	bool fullscreen;
+	bool vsync;
 	std::string renderer;
 	std::string skin;
 	std::string language;
@@ -433,7 +434,6 @@ private:
 	bool ff_invert;
 	bool trackreverse;
 	bool trackdynamic;
-	bool batch_geometry;
 	bool shadows;
 	int shadow_distance;
 	int shadow_quality;

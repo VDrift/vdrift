@@ -207,7 +207,7 @@ bool Sound::Init(int buffersize, std::ostream & info_output, std::ostream & erro
 		return false;
 	}
 
-	std::stringstream dout;
+	std::ostringstream dout;
 	dout << "Obtained audio device:" << std::endl;
 	dout << "Frequency: " << frequency << std::endl;
 	dout << "Format: " << obtained.format << std::endl;

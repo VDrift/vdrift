@@ -82,7 +82,7 @@ Game::Game(std::ostream & info_out, std::ostream & error_out) :
 	clocktime(0),
 	target_time(0),
 	timestep(1/90.0),
-	graphics_interface(NULL),
+	graphics(NULL),
 	content(error_out),
 	carupdater(autoupdate, info_out, error_out),
 	trackupdater(autoupdate, info_out, error_out),
@@ -119,7 +119,7 @@ Game::Game(std::ostream & info_out, std::ostream & error_out) :
 	replay(timestep),
 	http("/tmp")
 {
-	carcontrols_local.first = 0;
+	carcontrols_local.first = NULL;
 	dynamics.setContactAddedCallback(&CarDynamics::WheelContactCallback);
 	RegisterActions();
 }
@@ -318,8 +318,8 @@ void Game::End()
 	// Save settings first incase later deinits cause crashes.
 	settings.Save(pathmanager.GetSettingsFile(), error_output);
 
-	graphics_interface->Deinit();
-	delete graphics_interface;
+	graphics->Deinit();
+	delete graphics;
 }
 
 /* Initialize the most important, basic subsystems... */
@@ -371,11 +371,17 @@ bool Game::InitCoreSubsystems()
 	if (settings.GetShadows() && depth_bpp < 24)
 		depth_bpp = 24;
 
-	window.Init("VDrift",
-		settings.GetResolutionX(), settings.GetResolutionY(),
-		settings.GetBpp(), depth_bpp,
-		settings.GetFullscreen(), antialiasing,
-		info_output, error_output);
+	window.Init(
+		"VDrift",
+		settings.GetResolutionX(),
+		settings.GetResolutionY(),
+		settings.GetBpp(),
+		depth_bpp,
+		antialiasing,
+		settings.GetFullscreen(),
+		settings.GetVsync(),
+		info_output,
+		error_output);
 
 	const int renderer_count = 2;
 	for (int i = 0; i < renderer_count; i++)
@@ -383,14 +389,14 @@ bool Game::InitCoreSubsystems()
 		// Attempt to enable the GL3 renderer...
 		if (using_gl3)
 		{
-			graphics_interface = new GraphicsGL3(stringMap);
+			graphics = new GraphicsGL3(stringMap);
 		}
 		else
 		{
-			graphics_interface = new GraphicsGL2();
+			graphics = new GraphicsGL2();
 		}
 
-		bool success = graphics_interface->Init(
+		bool success = graphics->Init(
 			pathmanager.GetShaderPath() + "/" + render_ver,
 			settings.GetResolutionX(), settings.GetResolutionY(),
 			settings.GetBpp(), settings.GetDepthbpp(), settings.GetFullscreen(),
@@ -408,14 +414,14 @@ bool Game::InitCoreSubsystems()
 		}
 		else
 		{
-			delete graphics_interface;
-			graphics_interface = NULL;
+			delete graphics;
+			graphics = NULL;
 			render_ver = "gl2";
 			using_gl3 = false;
 		}
 	}
 
-	if (!graphics_interface)
+	if (!graphics)
 	{
 		error_output << "Failed to create renderer." << std::endl;
 		return false;
@@ -423,13 +429,12 @@ bool Game::InitCoreSubsystems()
 
 	Vec3 ldir(-0.250, -0.588, 0.769);
 	ldir = ldir.Normalize();
-	graphics_interface->SetSunDirection(ldir);
-	graphics_interface->SetLocalTime(settings.GetSkyTime());
-	graphics_interface->SetLocalTimeSpeed(settings.GetSkyTimeSpeed());
+	graphics->SetSunDirection(ldir);
+	graphics->SetLocalTime(settings.GetSkyTime());
+	graphics->SetLocalTimeSpeed(settings.GetSkyTimeSpeed());
 
 	// Init content factories
 	content.getFactory<Texture>().init(texture_size, using_gl3, settings.GetTextureCompress());
-	content.getFactory<Model>().init(using_gl3);
 	content.getFactory<PTree>().init(read_ini, write_ini, content);
 
 	// Init content paths
@@ -442,22 +447,6 @@ bool Game::InitCoreSubsystems()
 	eventsystem.Init(info_output);
 
 	return true;
-}
-
-/* Write the scenegraph to the output drawlist... */
-template <bool clearfirst>
-void TraverseScene(SceneNode & node, Graphics::dynamicdrawlist_type & output)
-{
-	if (clearfirst)
-	{
-		output.clear();
-	}
-
-	Mat4 identity;
-	node.Traverse(output, identity);
-
-	//std::cout << output.size() << std::endl;
-	//std::cout << node.Nodes() << "," << node.Drawables() << std::endl;
 }
 
 void Game::InitPlayerCar()
@@ -755,8 +744,41 @@ void Game::Test()
 
 void Game::Draw(float dt)
 {
+	PROFILER.beginBlock("scenegraph");
+	std::vector<SceneNode*> nodes;
+	nodes.reserve(7);
+	nodes.push_back(&debugnode);
+	nodes.push_back(&gui.GetNode());
+	nodes.push_back(&hud.GetNode());
+	nodes.push_back(&inputgraph.GetNode());
+	nodes.push_back(&dynamicsdraw.getNode());
+	nodes.push_back(&trackmap.GetNode());
+	nodes.push_back(&tire_smoke.GetNode());
+	graphics->BindDynamicVertexData(nodes);
+
+	graphics->ClearDynamicDrawables();
+	graphics->AddDynamicNode(debugnode);
+	graphics->AddDynamicNode(gui.GetNode());
+	graphics->AddDynamicNode(hud.GetNode());
+	graphics->AddDynamicNode(inputgraph.GetNode());
+	graphics->AddDynamicNode(dynamicsdraw.getNode());
+#ifndef USE_STATIC_OPTIMIZATION_FOR_TRACK
+	graphics->AddDynamicNode(track.GetTrackNode());
+#endif
+	graphics->AddDynamicNode(track.GetBodyNode());
+	graphics->AddDynamicNode(track.GetRacinglineNode());
+	graphics->AddDynamicNode(trackmap.GetNode());
+	graphics->AddDynamicNode(tire_smoke.GetNode());
+	for (std::list <Car>::iterator i = cars.begin(); i != cars.end(); ++i)
+	{
+		graphics->AddDynamicNode(i->GetNode());
+	}
+	//gui.GetNode().DebugPrint(info_output);
+	PROFILER.endBlock("scenegraph");
+
 	// Send scene information to the graphics subsystem.
 	PROFILER.beginBlock("render setup");
+	graphics->SetContrast(settings.GetContrast());
 	if (active_camera)
 	{
 		float fov = active_camera->GetFOV() > 0 ? active_camera->GetFOV() : settings.GetFOV();
@@ -767,35 +789,24 @@ void Game::Draw(float dt)
 
 		Quat camlook;
 		camlook.Rotate(M_PI_2, 1, 0, 0);
-		Quat camorient = -(active_camera->GetOrientation() * camlook);
-		graphics_interface->SetupScene(fov, settings.GetViewDistance(), active_camera->GetPosition(), camorient, reflection_sample_location);
+		Quat camorientation = -(active_camera->GetOrientation() * camlook);
+
+		graphics->SetupScene(
+			fov, settings.GetViewDistance(),
+			active_camera->GetPosition(),
+			camorientation,
+			reflection_sample_location,
+			error_output);
 	}
 	else
-		graphics_interface->SetupScene(settings.GetFOV(), settings.GetViewDistance(), Vec3 (), Quat (), Vec3 ());
-
-	graphics_interface->SetContrast(settings.GetContrast());
-	graphics_interface->UpdateScene(dt);
-	PROFILER.endBlock("render setup");
-
-	PROFILER.beginBlock("scenegraph");
-	TraverseScene<true>(debugnode, graphics_interface->GetDynamicDrawlist());
-	TraverseScene<false>(gui.GetNode(), graphics_interface->GetDynamicDrawlist());
-	TraverseScene<false>(track.GetRacinglineNode(), graphics_interface->GetDynamicDrawlist());
-	TraverseScene<false>(dynamicsdraw.getNode(), graphics_interface->GetDynamicDrawlist());
-#ifndef USE_STATIC_OPTIMIZATION_FOR_TRACK
-	TraverseScene<false>(track.GetTrackNode(), graphics_interface->GetDynamicDrawlist());
-#endif
-	TraverseScene<false>(track.GetBodyNode(), graphics_interface->GetDynamicDrawlist());
-	TraverseScene<false>(hud.GetNode(), graphics_interface->GetDynamicDrawlist());
-	TraverseScene<false>(trackmap.GetNode(), graphics_interface->GetDynamicDrawlist());
-	TraverseScene<false>(inputgraph.GetNode(), graphics_interface->GetDynamicDrawlist());
-	TraverseScene<false>(tire_smoke.GetNode(), graphics_interface->GetDynamicDrawlist());
-	for (std::list <Car>::iterator i = cars.begin(); i != cars.end(); ++i)
 	{
-		TraverseScene<false>(i->GetNode(), graphics_interface->GetDynamicDrawlist());
+		graphics->SetupScene(
+			settings.GetFOV(), settings.GetViewDistance(),
+			Vec3(), Quat(), Vec3(),
+			error_output);
 	}
-	//gui.GetNode().DebugPrint(info_output);
-	PROFILER.endBlock("scenegraph");
+	graphics->UpdateScene(dt);
+	PROFILER.endBlock("render setup");
 
 	// Sync CPU and GPU (flip the page).
 	PROFILER.beginBlock("render sync");
@@ -803,7 +814,7 @@ void Game::Draw(float dt)
 	PROFILER.endBlock("render sync");
 
 	PROFILER.beginBlock("render draw");
-	graphics_interface->DrawScene(error_output);
+	graphics->DrawScene(error_output);
 	PROFILER.endBlock("render draw");
 }
 
@@ -873,8 +884,6 @@ void Game::Tick(float deltat)
 	}
 
 	UpdateParticleGraphics();
-
-	SyncParticleGraphics();
 
 	gui.Update(eventsystem.Get_dt());
 }
@@ -979,7 +988,7 @@ void Game::ProcessGameInputs()
 		std::string shotfile;
 		for (int i = 1; i < 999; i++)
 		{
-			std::stringstream s;
+			std::ostringstream s;
 			s << pathmanager.GetScreenshotPath() << "/shot";
 			s.width(3);
 			s.fill('0');
@@ -1002,7 +1011,7 @@ void Game::ProcessGameInputs()
 	if (carcontrols_local.second.GetInput(GameInput::RELOAD_SHADERS) == 1.0)
 	{
 		info_output << "Reloading shaders" << std::endl;
-		if (!graphics_interface->ReloadShaders(info_output, error_output))
+		if (!graphics->ReloadShaders(info_output, error_output))
 		{
 			error_output << "Error reloading shaders" << std::endl;
 		}
@@ -1392,7 +1401,7 @@ void Game::UpdateCarInputs(int carid, Car & car)
 
 	inputgraph.Update(carinputs);
 
-	std::stringstream debug_info1, debug_info2, debug_info3, debug_info4;
+	std::ostringstream debug_info1, debug_info2, debug_info3, debug_info4;
 	if (debugmode)
 	{
 		car.DebugPrint(debug_info1, true, false, false, false);
@@ -1489,7 +1498,7 @@ void Game::UpdateCarInputs(int carid, Car & car)
 	car.SetInteriorView(incar);
 
 	// Move up the close shadow distance if we're in the cockpit.
-	graphics_interface->SetCloseShadow(incar ? 1.0 : 5.0);
+	graphics->SetCloseShadow(incar ? 1.0 : 5.0);
 }
 
 bool Game::NewGame(bool playreplay, bool addopponents, int num_laps)
@@ -1566,6 +1575,17 @@ bool Game::NewGame(bool playreplay, bool addopponents, int num_laps)
 		count++;
 	}
 
+	// bind vertex data
+	std::vector<SceneNode *> nodes;
+	nodes.push_back(&track.GetRacinglineNode());
+	nodes.push_back(&track.GetTrackNode());
+	nodes.push_back(&track.GetBodyNode());
+	for (std::list<Car>::iterator i = cars.begin(); i != cars.end(); ++i)
+	{
+		nodes.push_back(&i->GetNode());
+	}
+	graphics->BindStaticVertexData(nodes);
+
 	// Set up GUI.
 	gui.SetInGame(true);
 	gui.Deactivate();
@@ -1596,7 +1616,7 @@ bool Game::NewGame(bool playreplay, bool addopponents, int num_laps)
 				std::tr1::shared_ptr<PTree> carcfg;
 				content.load(carcfg, cardir, carname + ".car");
 
-				std::stringstream carstream;
+				std::ostringstream carstream;
 				write_ini(*carcfg, carstream);
 				info.config = carstream.str();
 
@@ -1623,7 +1643,7 @@ std::string Game::GetReplayRecordingFilename()
 	strftime(timestr, sizeof(timestr), format, &now);
 
 	// Replay file name.
-	std::stringstream s;
+	std::ostringstream s;
 	s << pathmanager.GetReplayPath() << "/" << timestr << "-" << settings.GetTrack() << ".vdr";
 	return s.str();
 }
@@ -1651,7 +1671,7 @@ bool Game::LoadCar(
 	else
 	{
 		carconf.reset(new PTree());
-		std::stringstream carstream(info.config);
+		std::istringstream carstream(info.config);
 		read_ini(carstream, *carconf);
 	}
 
@@ -1714,7 +1734,7 @@ bool Game::LoadTrack(const std::string & trackname)
 		settings.GetAnisotropy(),
 		settings.GetTrackReverse(),
 		settings.GetTrackDynamic(),
-		graphics_interface->GetShadows()))
+		graphics->GetShadows()))
 	{
 		error_output << "Error loading track: " << trackname << std::endl;
 		return false;
@@ -1769,7 +1789,8 @@ bool Game::LoadTrack(const std::string & trackname)
 
 	// Build static drawlist.
 #ifdef USE_STATIC_OPTIMIZATION_FOR_TRACK
-	graphics_interface->AddStaticNode(track.GetTrackNode());
+	graphics->ClearStaticDrawables();
+	graphics->AddStaticNode(track.GetTrackNode());
 #endif
 
 	return true;
@@ -1795,7 +1816,7 @@ void Game::LoadGarage()
 		pathmanager.GetTrackPartsPath(),
 		settings.GetAnisotropy(),
 		track_reverse, track_dynamic,
-		graphics_interface->GetShadows()))
+		graphics->GetShadows()))
 	{
 		error_output << "Error loading garage: " << settings.GetSkin() << std::endl;
 		return;
@@ -1822,7 +1843,8 @@ void Game::LoadGarage()
 
 	// Build static drawlist.
 #ifdef USE_STATIC_OPTIMIZATION_FOR_TRACK
-	graphics_interface->AddStaticNode(track.GetTrackNode());
+	graphics->ClearStaticDrawables();
+	graphics->AddStaticNode(track.GetTrackNode());
 #endif
 
 	// Load car.
@@ -1836,6 +1858,7 @@ void Game::SetGarageCar()
 
 	// clear previous car
 	cars.clear();
+	carcontrols_local.first = NULL;
 
 	// remove previous car sounds
 	sound.Update(true);
@@ -1851,6 +1874,13 @@ void Game::SetGarageCar()
 		car.Update(timestep);
 		sound.Update(true);
 	}
+
+	// bind vertex data
+	std::vector<SceneNode *> nodes;
+	nodes.push_back(&track.GetTrackNode());
+	nodes.push_back(&track.GetBodyNode());
+	nodes.push_back(&cars.back().GetNode());
+	graphics->BindStaticVertexData(nodes);
 
 	// camera setup
 	Vec3 offset(1.5, 3.0, 0.5);
@@ -1902,7 +1932,7 @@ void Game::CalculateFPS()
 	}
 	fps_avg /= 10.0;
 
-	std::stringstream fpsstr;
+	std::ostringstream fpsstr;
 	fpsstr << "FPS: " << (int)fps_avg;
 
 	// Don't start looking an min/max until we've put out a few frames.
@@ -1939,9 +1969,9 @@ void Game::CalculateFPS()
 	if (profilingmode && frame % 10 == 0)
 	{
 		std::string cpuProfile = PROFILER.getAvgSummary(quickprof::MICROSECONDS);
-		std::stringstream summary;
+		std::ostringstream summary;
 		summary << "CPU:\n" << cpuProfile << "\n\nGPU:\n";
-		graphics_interface->printProfilingInfo(summary);
+		graphics->printProfilingInfo(summary);
 		profiling_text.Revise(summary.str());
 	}
 }
@@ -2182,7 +2212,7 @@ void Game::PopulateAnisoList(GuiOption::List & anisolist)
 	anisolist.push_back(std::make_pair("0", "Off"));
 
 	int cur = 1;
-	int max_aniso = graphics_interface->GetMaxAnisotropy();
+	int max_aniso = graphics->GetMaxAnisotropy();
 	while (cur <= max_aniso)
 	{
 		std::string anisostr = cast(cur);
@@ -2195,7 +2225,7 @@ void Game::PopulateAntialiasList(GuiOption::List & antialiaslist)
 {
 	antialiaslist.clear();
 	antialiaslist.push_back(std::make_pair("0", "Off"));
-	if (graphics_interface->AntialiasingSupported())
+	if (graphics->AntialiasingSupported())
 	{
 		antialiaslist.push_back(std::make_pair("2", "2X"));
 		antialiaslist.push_back(std::make_pair("4", "4X"));
@@ -2266,16 +2296,20 @@ void Game::ShowLoadingScreen(float progress, float max, bool drawGui, const std:
 	assert(max > 0);
 	loadingscreen.Update(progress/max, optionalText, x, y);
 
-	graphics_interface->GetDynamicDrawlist().clear();
+	std::vector<SceneNode*> nodes;
 	if (drawGui)
-	{
-		TraverseScene<false>(gui.GetNode(), graphics_interface->GetDynamicDrawlist());
-	}
-	TraverseScene<false>(loadingscreen.GetNode(), graphics_interface->GetDynamicDrawlist());
+		nodes.push_back(&gui.GetNode());
+	nodes.push_back(&loadingscreen.GetNode());
+	graphics->BindDynamicVertexData(nodes);
 
-	graphics_interface->SetupScene(45.0, 100.0, Vec3 (), Quat (), Vec3 ());
-	graphics_interface->DrawScene(error_output);
+	graphics->ClearDynamicDrawables();
+	if (drawGui)
+		graphics->AddDynamicNode(gui.GetNode());
+	graphics->AddDynamicNode(loadingscreen.GetNode());
+
+	graphics->SetupScene(45.0, 100.0, Vec3(), Quat(), Vec3(), error_output);
 	window.SwapBuffers();
+	graphics->DrawScene(error_output);
 }
 
 bool GameDownloader::operator()(const std::string & file)
@@ -2333,7 +2367,7 @@ bool Game::Download(const std::vector <std::string> & urls)
 				return false;
 			}
 
-			std::stringstream text;
+			std::ostringstream text;
 			text << HttpInfo::GetString(info.state);
 			if (info.state == HttpInfo::DOWNLOADING)
 			{
@@ -2437,11 +2471,6 @@ void Game::UpdateParticleGraphics()
 		float zfar = settings.GetViewDistance();
 		tire_smoke.UpdateGraphics(camorient, campos, znear, zfar);
 	}
-}
-
-void Game::SyncParticleGraphics()
-{
-	tire_smoke.SyncGraphics();
 }
 
 void Game::UpdateDriftScore(Car & car, double dt)
@@ -2550,9 +2579,7 @@ void Game::LeaveGame()
 	gui.SetInGame(false);
 	gui.ActivatePage("Main", 0.25, error_output);
 
-	// Clear out the static drawables.
-	SceneNode empty;
-	graphics_interface->AddStaticNode(empty, true);
+	graphics->ClearStaticDrawables();
 
 	track.Clear();
 	cars.clear();
@@ -3011,7 +3038,7 @@ void Game::SetCarsNum(const std::string & value)
 
 void Game::SetControl(const std::string & value)
 {
-	std::stringstream vs(value);
+	std::istringstream vs(value);
 	std::string inputstr, idstr, oncestr, downstr;
 	getline(vs, inputstr, ':');
 	getline(vs, idstr, ':');
@@ -3019,7 +3046,7 @@ void Game::SetControl(const std::string & value)
 	getline(vs, downstr);
 
 	size_t id = 0;
-	std::stringstream ns(idstr);
+	std::istringstream ns(idstr);
 	ns >> id;
 
 	controlgrab_control = carcontrols_local.second.GetControl(inputstr, id);

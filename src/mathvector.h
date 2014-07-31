@@ -261,7 +261,7 @@ public:
 	{
 		for (unsigned int i = 0; i < dimension; i++)
 		{
-			std::stringstream namestr;
+			std::ostringstream namestr;
 			namestr << "v" << i;
 			if (!s.Serialize(namestr.str(),v[i])) return false;
 		}
@@ -472,7 +472,7 @@ std::istream & operator >> (std::istream &is, MathVector <T, dimension> & v)
 	std::string value;
 	for (size_t i = 0; i < dimension && std::getline(is, value, ','); ++i)
 	{
-		std::stringstream s(value);
+		std::istringstream s(value);
 		s >> v[i];
 	}
 	return is;

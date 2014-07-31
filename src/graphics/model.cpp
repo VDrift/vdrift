@@ -18,44 +18,27 @@
 /************************************************************************/
 
 #include "model.h"
-#include "utils.h"
-#include "vertexattribs.h"
-#include "glutil.h"
+#include <fstream>
+#include <string>
 #include <limits>
-
-using namespace VertexAttribs;
-
-#define ERROR_CHECK CheckForOpenGLErrors(std::string(__PRETTY_FUNCTION__)+":"+__FILE__+":"+Utils::tostr(__LINE__), error_output)
 
 static const std::string file_magic = "OGLVARRAYV01";
 
-static const bool vaoDebug = false;
-
 Model::Model() :
-	vao(0),
-	elementVbo(0),
-	elementCount(0),
-	listid(0),
 	radius(0),
-	generatedmetrics(false),
-	generatedvao(false)
+	generatedmetrics(false)
 {
 	// Constructor.
 }
 
 Model::Model(const std::string & filepath, std::ostream & error_output) :
-	vao(0),
-	elementVbo(0),
-	elementCount(0),
-	listid(0),
 	radius(0),
-	generatedmetrics(false),
-	generatedvao(false)
+	generatedmetrics(false)
 {
 	if (filepath.size() > 4 && filepath.substr(filepath.size()-4) == ".ova")
-		ReadFromFile(filepath, error_output, false);
+		ReadFromFile(filepath, error_output);
 	else
-		Load(filepath, error_output, false);
+		Load(filepath, error_output);
 }
 
 Model::~Model()
@@ -73,29 +56,25 @@ bool Model::Save(const std::string & strFileName, std::ostream & error_output) c
 	return false;
 }
 
-bool Model::Load(const std::string & strFileName, std::ostream & error_output, bool genlist)
+bool Model::Load(const std::string & strFileName, std::ostream & error_output)
 {
 	return false;
 }
 
-bool Model::Load(const VertexArray & varray, std::ostream & error_output, bool genlist)
+bool Model::Load(const VertexArray & nvarray, std::ostream & error_output)
 {
 	Clear();
 
-	SetVertexArray(varray);
-	GenerateMeshMetrics();
+	varray = nvarray;
 
-	if (genlist)
-		GenerateListID(error_output);
-	else
-		GenerateVertexArrayObject(error_output);
+	GenMeshMetrics();
 
 	return true;
 }
 
 bool Model::Serialize(joeserialize::Serializer & s)
 {
-	_SERIALIZE_(s, m_mesh);
+	_SERIALIZE_(s, varray);
 	return true;
 }
 
@@ -110,7 +89,7 @@ bool Model::WriteToFile(const std::string & filepath)
 	return Serialize(s);
 }
 
-bool Model::ReadFromFile(const std::string & filepath, std::ostream & error_output, bool generatelistid)
+bool Model::ReadFromFile(const std::string & filepath, std::ostream & error_output)
 {
 	std::ifstream filein(filepath.c_str(), std::ios_base::binary);
 	if (!filein)
@@ -141,216 +120,20 @@ bool Model::ReadFromFile(const std::string & filepath, std::ostream & error_outp
 		return false;
 	}
 
-	ClearListID();
-	ClearMetrics();
-	GenerateMeshMetrics();
-
-	if (generatelistid)
-		GenerateListID(error_output);
+	GenMeshMetrics();
 
 	return true;
 }
 
-void Model::GenerateListID(std::ostream & error_output)
+void Model::GenMeshMetrics()
 {
-	if (HaveListID())
-		return;
-
-	ClearListID();
-	listid = glGenLists(1);
-
-	const int * faces;
-	const float * verts;
-	const float * norms;
-	const float * tc[1];
-	int facecount;
-	int vertcount;
-	int normcount;
-	int tccount[1];
-
-	m_mesh.GetFaces(faces, facecount);
-	m_mesh.GetVertices(verts, vertcount);
-	m_mesh.GetNormals(norms, normcount);
-	m_mesh.GetTexCoords(0, tc[0], tccount[0]);
-
-	assert(facecount > 0);
-	assert(vertcount > 0);
-	assert(normcount > 0);
-	assert (tccount[0] > 0);
-
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_NORMAL_ARRAY);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-
-	glVertexPointer(3, GL_FLOAT, 0, verts);
-	glNormalPointer(GL_FLOAT, 0, norms);
-	glTexCoordPointer(2, GL_FLOAT, 0, tc[0]);
-
-	glNewList(listid, GL_COMPILE);
-	glDrawElements(GL_TRIANGLES, facecount, GL_UNSIGNED_INT, faces);
-	glEndList();
-
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-	glDisableClientState(GL_NORMAL_ARRAY);
-	glDisableClientState(GL_VERTEX_ARRAY);
-
-	CheckForOpenGLErrors("model list ID generation", error_output);
-}
-
-template <typename T>
-GLuint GenerateBufferObject(
-	std::ostream & error_output,
-	unsigned attribId,
-	const T * data,
-	unsigned vertexCount,
-	unsigned elementsPerVertex,
-	GLenum type = GL_FLOAT,
-	bool normalized = false)
-{
-	GLuint vboHandle;
-	glGenBuffers(1, &vboHandle);ERROR_CHECK;
-	glBindBuffer(GL_ARRAY_BUFFER, vboHandle);ERROR_CHECK;
-	glBufferData(GL_ARRAY_BUFFER, vertexCount*elementsPerVertex*sizeof(T), data, GL_STATIC_DRAW);ERROR_CHECK;
-	glVertexAttribPointer(attribId, elementsPerVertex, type, normalized, 0, 0);ERROR_CHECK;
-	glEnableVertexAttribArray(attribId);ERROR_CHECK;
-
-	return vboHandle;
-}
-
-void Model::GenerateVertexArrayObject(std::ostream & error_output)
-{
-	if (generatedvao)
-		return;
-
-	// Generate vertex array object.
-	glGenVertexArrays(1, &vao);ERROR_CHECK;
-    if (vaoDebug)
-        std::cout << "created vao " << vao << std::endl;
-	glBindVertexArray(vao);ERROR_CHECK;
-
-	// Buffer object for faces.
-	const int * faces;
-	int facecount;
-	m_mesh.GetFaces(faces, facecount);
-	assert(faces && facecount > 0);
-	glGenBuffers(1, &elementVbo);ERROR_CHECK;
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, elementVbo);ERROR_CHECK;
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, facecount*sizeof(GLuint), faces, GL_STATIC_DRAW);ERROR_CHECK;
-	elementCount = facecount;
-
-	// Calculate the number of vertices (vertcount is the size of the verts array).
-	const float * verts;
-	int vertcount;
-	m_mesh.GetVertices(verts, vertcount);
-	assert(verts && vertcount > 0);
-	unsigned int vertexCount = vertcount/3;
-
-	// Generate buffer object for vertex positions.
-	vbos.push_back(GenerateBufferObject(error_output, VERTEX_POSITION, verts, vertexCount, 3));
-
-	// Generate buffer object for normals.
-	const float * norms;
-	int normcount;
-	m_mesh.GetNormals(norms, normcount);
-	if (!norms || normcount <= 0)
-		glDisableVertexAttribArray(VERTEX_NORMAL);
-	else
-	{
-		assert((unsigned int)normcount == vertexCount*3);
-		vbos.push_back(GenerateBufferObject(error_output, VERTEX_NORMAL, norms, vertexCount, 3));
-	}
-
-	// TODO: Generate tangent and bitangent.
-	glDisableVertexAttribArray(VERTEX_TANGENT);
-	glDisableVertexAttribArray(VERTEX_BITANGENT);
-
-	// Generate buffer object for colors.
-	const unsigned char * cols = 0;
-	int colcount = 0;
-	m_mesh.GetColors(cols, colcount);
-	if (cols && colcount)
-	{
-		assert((unsigned int)colcount == vertexCount*4);
-		vbos.push_back(GenerateBufferObject(error_output, VERTEX_COLOR, cols, vertexCount, 4, GL_UNSIGNED_BYTE, true));
-	}
-	else
-		glDisableVertexAttribArray(VERTEX_COLOR);
-
-	// Generate buffer object for texture coordinates.
-	const float * tc[1];
-	int tccount[1];
-	if (m_mesh.GetTexCoordSets() > 0)
-	{
-		// TODO: Make this work for UV1 and UV2.
-		m_mesh.GetTexCoords(0, tc[0], tccount[0]);
-		assert((unsigned int)tccount[0] == vertexCount*2);
-		vbos.push_back(GenerateBufferObject(error_output, VERTEX_UV0, tc[0], vertexCount, 2));
-	}
-	else
-		glDisableVertexAttribArray(VERTEX_UV0);
-
-	glDisableVertexAttribArray(VERTEX_UV1);
-	glDisableVertexAttribArray(VERTEX_UV2);
-
-	// Don't leave anything bound.
-	glBindVertexArray(0);
-	glBindBuffer(GL_ARRAY_BUFFER,0);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
-
-	generatedvao = true;
-}
-
-bool Model::HaveVertexArrayObject() const
-{
-	return generatedvao;
-}
-
-void Model::ClearVertexArrayObject()
-{
-	if (generatedvao)
-	{
-		glBindBuffer(GL_ARRAY_BUFFER,0);
-		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,0);
-		if (!vbos.empty())
-			glDeleteBuffers(vbos.size(), &vbos[0]);
-
-		if (elementVbo != 0)
-		{
-			glDeleteBuffers(1, &elementVbo);
-			elementVbo = 0;
-		}
-		if (vao != 0)
-		{
-			glBindVertexArray(0);
-			if (vaoDebug)
-				std::cout << "deleting vao " << vao << std::endl;
-			glDeleteVertexArrays(1,&vao);
-			vao = 0;
-		}
-	}
-}
-
-bool Model::GetVertexArrayObject(GLuint & vao_out, unsigned int & elementCount_out) const
-{
-	if (!generatedvao)
-		return false;
-
-	vao_out = vao;
-	elementCount_out = elementCount;
-
-	return true;
-}
-
-void Model::GenerateMeshMetrics()
-{
-	const float flt_max = std::numeric_limits<float>::max();
-	const float flt_min = std::numeric_limits<float>::min();
-	float maxv[3] = {flt_min, flt_min, flt_min};
-	float minv[3] = {flt_max, flt_max, flt_max};
+	const float fmax = std::numeric_limits<float>::max();
+	float maxv[3] = {-fmax, -fmax, -fmax};
+	float minv[3] = {+fmax, +fmax, +fmax};
 
 	const float * verts;
 	int vnum3;
-	m_mesh.GetVertices(verts, vnum3);
+	varray.GetVertices(verts, vnum3);
 	assert(vnum3);
 
 	for (int n = 0; n < vnum3; n += 3)
@@ -371,17 +154,6 @@ void Model::GenerateMeshMetrics()
 	generatedmetrics = true;
 }
 
-void Model::ClearMeshData()
-{
-	m_mesh.Clear();
-}
-
-unsigned Model::GetListID() const
-{
-	RequireListID();
-	return listid;
-}
-
 Vec3 Model::GetSize() const
 {
 	return max - min;
@@ -398,42 +170,20 @@ float Model::GetRadius() const
 	return radius;
 }
 
-bool Model::HaveMeshData() const
-{
-	return (m_mesh.GetNumFaces() > 0);
-}
-
-bool Model::HaveMeshMetrics() const
-{
-	return generatedmetrics;
-}
-
-bool Model::HaveListID() const
-{
-	return listid;
-}
-
 void Model::Clear()
 {
 	ClearMeshData();
-	ClearListID();
-	ClearVertexArrayObject();
 	ClearMetrics();
 }
 
 const VertexArray & Model::GetVertexArray() const
 {
-	return m_mesh;
+	return varray;
 }
 
-void Model::SetVertexArray(const VertexArray & newmesh)
+bool Model::Loaded() const
 {
-	m_mesh = newmesh;
-}
-
-bool Model::Loaded()
-{
-	return (m_mesh.GetNumFaces() > 0);
+	return (varray.GetNumIndices() > 0);
 }
 
 void Model::RequireMetrics() const
@@ -442,20 +192,12 @@ void Model::RequireMetrics() const
 	assert(generatedmetrics);
 }
 
-void Model::RequireListID() const
-{
-	// Mesh id needs to be generated.
-	assert(listid);
-}
-
-void Model::ClearListID()
-{
-	if (listid)
-		glDeleteLists(listid, 1);
-	listid = 0;
-}
-
 void Model::ClearMetrics()
 {
 	generatedmetrics = false;
+}
+
+void Model::ClearMeshData()
+{
+	varray.Clear();
 }

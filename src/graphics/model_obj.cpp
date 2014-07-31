@@ -30,7 +30,7 @@ using std::ifstream;
 using std::string;
 
 #include <sstream>
-using std::stringstream;
+using std::istringstream;
 
 #include <iostream>
 using std::ostream;
@@ -70,7 +70,7 @@ bool ExtractRepeating(std::vector <T> & output_vector, unsigned int repeats, std
 		string strformat = ReadFromStream(s);
 		if (strformat.empty())
 			return false;
-		stringstream reformat(strformat);
+		istringstream reformat(strformat);
 		T reformatted;
 		reformat >> reformatted;
 		output_vector.push_back(reformatted);
@@ -116,7 +116,7 @@ bool BuildVertex(VertexArray::VertexData & outputvert, vector <VertexArray::Floa
 
 	string facestr2 = facestr;
 	std::replace(facestr2.begin(), facestr2.end(), '/', ' ');
-	stringstream s(facestr2);
+	istringstream s(facestr2);
 	int v(-1),t(-1),n(-1);
 	s >> v >> t >> n;
 	if (v <= 0 || t <= 0 || n <= 0)
@@ -129,7 +129,7 @@ bool BuildVertex(VertexArray::VertexData & outputvert, vector <VertexArray::Floa
 	return true;
 }
 
-bool ModelObj::Load(const std::string & filepath, std::ostream & error_log, bool genlist)
+bool ModelObj::Load(const std::string & filepath, std::ostream & error_log)
 {
 	ifstream f(filepath.c_str());
 	if (!f)
@@ -182,10 +182,8 @@ bool ModelObj::Load(const std::string & filepath, std::ostream & error_log, bool
 		}
 	}
 
-	m_mesh.BuildFromFaces(faces);
-	GenerateMeshMetrics();
-	if (genlist)
-		GenerateListID(error_log);
+	varray.BuildFromFaces(faces);
+	GenMeshMetrics();
 
 	return true;
 }
@@ -205,7 +203,7 @@ void WriteRange(std::ostream & s, const vector <float> & v, int startidx, int en
 void WriteVectorGroupings(std::ostream & s, const vector <float> & v, const std::string & id, int groupsize)
 {
 	assert(groupsize > 0);
-	for (int i = 0; i < (int)v.size()/groupsize; i++)
+	for (unsigned int i = 0; i < v.size() / groupsize; i++)
 	{
 		s << id << " ";
 		WriteRange(s, v, i*groupsize, i*groupsize+groupsize);
@@ -229,19 +227,19 @@ bool ModelObj::Save(const std::string & strFileName, std::ostream & error_output
 
 	f << "# Model conversion utility by Joe Venzon" << endl << endl;
 
-	WriteVectorGroupings(f, m_mesh.vertices, "v", 3);
+	WriteVectorGroupings(f, varray.vertices, "v", 3);
 	f << endl;
-	WriteVectorGroupings(f, m_mesh.texcoords[0], "vt", 2);
+	WriteVectorGroupings(f, varray.texcoords, "vt", 2);
 	f << endl;
-	WriteVectorGroupings(f, m_mesh.normals, "vn", 3);
+	WriteVectorGroupings(f, varray.normals, "vn", 3);
 	f << endl;
 
-	for (int i = 0; i < (int)m_mesh.faces.size()/3; i++)
+	for (unsigned int i = 0; i < varray.faces.size() / 3; i++)
 	{
 		f << "f ";
 		for (int v = 0; v < 3; v++)
 		{
-			WriteFace(f, m_mesh.faces[i*3+v]+1);
+			WriteFace(f, varray.faces[i*3+v]+1);
 			f << " ";
 		}
 		f << endl;

@@ -20,7 +20,9 @@
 #include "sky.h"
 #include "graphics_gl2.h"
 #include "shader.h"
+#include "vertexattrib.h"
 //#include "config.h"
+
 #include <time.h>
 
 #ifdef _WIN32
@@ -189,6 +191,8 @@ void Sky::UpdateComplete()
 
 void Sky::Draw(unsigned elems, const unsigned faces[], const float pos[], const float tco[])
 {
+	using namespace VertexAttrib;
+
 	// disable blending, depth write
 	graphics.GetState().DepthTest(GL_ALWAYS, false);
 	graphics.GetState().Blend(false);
@@ -199,16 +203,20 @@ void Sky::Draw(unsigned elems, const unsigned faces[], const float pos[], const 
 	fbo.SetCubeSide(side_enum[side_updated]);
 	fbo.Begin(graphics.GetState(), error_output);
 
-	// draw
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-	glEnableClientState(GL_VERTEX_ARRAY);
+	// reset vertex state
+	graphics.GetState().ResetVertexObject();
 
-	glVertexPointer(3, GL_FLOAT, 0, pos);
-	glTexCoordPointer(3, GL_FLOAT, 0, tco);
+	// draw
+	glEnableVertexAttribArray(VertexPosition);
+	glEnableVertexAttribArray(VertexTexCoord);
+
+	glVertexAttribPointer(VertexPosition, 3, GL_FLOAT, GL_FALSE, 0, pos);
+	glVertexAttribPointer(VertexTexCoord, 3, GL_FLOAT, GL_FALSE, 0, tco);
+
 	glDrawElements(GL_TRIANGLES, elems, GL_UNSIGNED_INT, faces);
 
-	glDisableClientState(GL_VERTEX_ARRAY);
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+	glDisableVertexAttribArray(VertexPosition);
+	glDisableVertexAttribArray(VertexTexCoord);
 
 	// unbind fbo
 	fbo.End(graphics.GetState(), error_output);

@@ -23,6 +23,7 @@
 #include "render_input.h"
 #include "mathvector.h"
 #include "quaternion.h"
+#include "matrix4.h"
 #include <vector>
 
 struct GraphicsCamera;
@@ -46,6 +47,8 @@ public:
 
 	void SetBlendMode(GraphicsState & glstate, BlendMode::Enum mode);
 
+	void SetShadowMatrix(const Mat4 shadow_mat[], const unsigned int count);
+
 	void SetTextures(
 		GraphicsState & glstate,
 		const std::vector <TextureInterface*> & textures,
@@ -61,6 +64,8 @@ public:
 	virtual void Render(GraphicsState & glstate, std::ostream & error_output);
 
 private:
+	const Mat4 * shadow_matrix;
+	unsigned int shadow_count;
 	Shader * shader;
 	Quat cam_rotation;
 	Vec3 cam_position;

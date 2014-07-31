@@ -75,14 +75,14 @@ static bool LoadOptionValues(
 
 			for (int n = 0; n < valuenum; n++)
 			{
-				std::stringstream tstr;
-				tstr.width(2);
-				tstr.fill('0');
-				tstr << n;
+				std::ostringstream ns;
+				ns.width(2);
+				ns.fill('0');
+				ns << n;
 
 				std::string displaystr, storestr;
-				if (!cfg.get(ci, "opt"+tstr.str(), displaystr, error_output)) return false;
-				if (!cfg.get(ci, "val"+tstr.str(), storestr, error_output)) return false;
+				if (!cfg.get(ci, "opt"+ns.str(), displaystr, error_output)) return false;
+				if (!cfg.get(ci, "val"+ns.str(), storestr, error_output)) return false;
 				opvals.push_back(std::make_pair(storestr, lang(displaystr)));
 			}
 		}

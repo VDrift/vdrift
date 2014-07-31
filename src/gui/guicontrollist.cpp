@@ -99,7 +99,7 @@ void GuiControlList::SetActions(
 	const std::string & actionstr,
 	Signal1<int> & signal)
 {
-	std::stringstream st(actionstr);
+	std::istringstream st(actionstr);
 	while (st.good())
 	{
 		std::string action;
@@ -112,7 +112,7 @@ void GuiControlList::SetActions(
 
 void GuiControlList::UpdateList(const std::string & value)
 {
-	std::stringstream s(value);
+	std::istringstream s(value);
 	s >> m_list_size;
 
 	int list_item = m_active_element + m_list_offset;
@@ -141,7 +141,7 @@ void GuiControlList::UpdateList(const std::string & value)
 void GuiControlList::SetToNth(const std::string & value)
 {
 	int list_item(0);
-	std::stringstream s(value);
+	std::istringstream s(value);
 	s >> list_item;
 
 	if (list_item != m_active_element + m_list_offset)

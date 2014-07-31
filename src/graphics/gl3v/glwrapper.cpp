@@ -37,26 +37,32 @@
 #define enableErrorChecking false
 #endif
 
-const char * REQUIRED_GL_VERSION = "GL_VERSION_3_3";
 const GLEnums GLEnumHelper;
 
-GLWrapper::GLWrapper() : initialized(false), infoOutput(NULL), errorOutput(NULL), logEnable(false)
+GLWrapper::GLWrapper(VertexBuffer & vb) :
+	vertexBuffer(vb),
+	curActiveVertexArray(0),
+	infoOutput(NULL),
+	errorOutput(NULL),
+	initialized(false),
+	logEnable(false)
 {
 	clearCaches();
 }
 
 bool GLWrapper::initialize()
 {
-	// Check through all OpenGL versions to determine the highest supported OpenGL version.
-	bool supportsRequiredVersion = glewIsSupported(REQUIRED_GL_VERSION);
+	int major_version = 0;
+	int minor_version = 0;
+	glGetIntegerv(GL_MAJOR_VERSION, &major_version);ERROR_CHECK;
+	glGetIntegerv(GL_MINOR_VERSION, &minor_version);ERROR_CHECK;
 
-	if (!supportsRequiredVersion)
+	if (major_version < 3 || (major_version == 3 && minor_version < 3))
 	{
-		logError(std::string("Graphics card or driver does not support required ")+REQUIRED_GL_VERSION);
+		logError("Graphics card or driver does not support required GL Version: 3.3");
 		return false;
 	}
-
-	return ERROR_CHECK;
+	return true;
 }
 
 void GLWrapper::setErrorOutput(std::ostream & newOutput)
@@ -141,6 +147,7 @@ void GLWrapper::applyUniformDelayed(GLint location, const RenderUniformVector <T
 
 void GLWrapper::drawGeometry(GLuint vao, GLuint elementCount)
 {
+	curActiveVertexArray = vao;
 	GLLOG(glBindVertexArray(vao));ERROR_CHECK1(vao);
 	GLLOG(glDrawElements(GL_TRIANGLES, elementCount, GL_UNSIGNED_INT, 0));ERROR_CHECK2(vao,elementCount);
 }
@@ -556,11 +563,13 @@ GLuint GLWrapper::GenVertexArray()
 
 void GLWrapper::BindVertexArray(GLuint handle)
 {
+	curActiveVertexArray = handle;
 	GLLOG(glBindVertexArray(handle));ERROR_CHECK;
 }
 
 void GLWrapper::unbindVertexArray()
 {
+	curActiveVertexArray = 0;
 	GLLOG(glBindVertexArray(0));ERROR_CHECK;
 }
 
@@ -636,11 +645,6 @@ void GLWrapper::ClearDepth(GLfloat d)
 void GLWrapper::ClearStencil(GLint s)
 {
 	GLLOG(glClearStencil(s));ERROR_CHECK;
-}
-
-void GLWrapper::LineWidth(GLfloat width)
-{
-	GLLOG(glLineWidth(width));ERROR_CHECK;
 }
 
 bool GLWrapper::checkForOpenGLErrors(const char * function, const char * file, int line) const

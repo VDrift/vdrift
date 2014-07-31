@@ -36,7 +36,6 @@ ParticleSystem::ParticleSystem() :
 	max_particles(512),
 	texture_tiles(9),
 	cur_texture_tile(0),
-	cur_varray(0),
 	transparency_range(0.5,1),
 	longevity_range(5,14),
 	speed_range(0.3,1),
@@ -56,12 +55,12 @@ void ParticleSystem::Load(
 	texinfo.anisotropy = anisotropy;
 	content.load(texture, texpath, texname, texinfo);
 
-	draw = GetDrawlist(node).insert(Drawable());
-	Drawable & drawref = GetDrawlist(node).get(draw);
+	draw = GetDrawList(node).insert(Drawable());
+	Drawable & drawref = GetDrawList(node).get(draw);
 	drawref.SetDrawEnable(false);
-	drawref.SetVertArray(&varrays[cur_varray]);
+	drawref.SetVertArray(&varray);
 	drawref.SetTextures(texture->GetId());
-	drawref.SetCull(false, false);
+	drawref.SetCull(false);
 }
 
 void ParticleSystem::Update(float dt)
@@ -118,8 +117,7 @@ void ParticleSystem::UpdateGraphics(
 	// sort particles by distance to camera
 
 	// update vertex data
-	varrays[cur_varray].Clear();
-	varrays[cur_varray].SetTexCoordSets(1);
+	varray.Clear();
 	for (size_t i = 0; i < particles.size(); ++i)
 	{
 		// cull particles outside of [znear, zfar]
@@ -155,7 +153,7 @@ void ParticleSystem::UpdateGraphics(
 		float y2 = sizescale * 4 / 3.0f;
 		unsigned char alpha = trans * 255;
 
-		const int faces[6] = {
+		const unsigned int faces[6] = {
 			0, 2, 1,
 			0, 3, 2,
 		};
@@ -178,19 +176,10 @@ void ParticleSystem::UpdateGraphics(
 			255, 255, 255, alpha,
 		};
 
-		varrays[cur_varray].Add(cols, 16, 0, 0, verts, 12, faces, 6, uvs, 8);
+		varray.Add(faces, 6, verts, 12, uvs, 8, 0, 0, cols, 16);
 	}
-}
 
-void ParticleSystem::SyncGraphics()
-{
-	if (max_particles == 0)
-		return;
-
-	Drawable & drawref = GetDrawlist(node).get(draw);
-	drawref.SetVertArray(&varrays[cur_varray]);
-	drawref.SetDrawEnable(varrays[cur_varray].GetNumFaces());
-	cur_varray = (cur_varray + 1) % 2;
+	GetDrawList(node).get(draw).SetDrawEnable(varray.GetNumIndices() > 0);
 }
 
 void ParticleSystem::AddParticle(
@@ -251,7 +240,7 @@ void ParticleSystem::SetParameters(
 
 QT_TEST(particle_test)
 {
-	std::stringstream out;
+	std::ostringstream out;
 	ParticleSystem s;
 	ContentManager c(out);
 	s.SetParameters(4,1.0,1.0,0.5,1.0,1.0,1.0,1.0,1.0,Vec3(0,1,0));

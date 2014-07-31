@@ -17,22 +17,67 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef VERTEX_ATTRIBS_H
-#define VERTEX_ATTRIBS_H
+#ifndef _AABB_TREE_ADAPTER_H
+#define _AABB_TREE_ADAPTER_H
 
-namespace VertexAttribs
+#include "aabbtree.h"
+#include <vector>
+
+#define OBJECTS_PER_NODE 64
+
+template <typename T>
+class AabbTreeNodeAdapter
 {
-	enum Enum
+public:
+	AabbTreeNodeAdapter() : count(0) {}
+
+	void push_back(T * drawable)
 	{
-		VERTEX_POSITION,
-		VERTEX_NORMAL,
-		VERTEX_TANGENT,
-		VERTEX_BITANGENT,
-		VERTEX_COLOR,
-		VERTEX_UV0,
-		VERTEX_UV1,
-		VERTEX_UV2
-	};
-}
+		Vec3 objpos(drawable->GetObjectCenter());
+		drawable->GetTransform().TransformVectorOut(objpos[0],objpos[1],objpos[2]);
+		float radius = drawable->GetRadius();
+		Aabb <float> box;
+		box.SetFromSphere(objpos, radius);
+		spacetree.Add(drawable, box);
+	}
+
+	unsigned int size() const
+	{
+		return count;
+	}
+
+	void clear()
+	{
+		spacetree.Clear();
+	}
+
+	void Optimize()
+	{
+		spacetree.Optimize();
+		count = spacetree.size();
+	}
+
+	template <typename U>
+	void Query(const U & object, std::vector <T*> & output) const
+	{
+		spacetree.Query(object, output);
+	}
+
+private:
+	AabbTreeNode <T*,OBJECTS_PER_NODE> spacetree;
+	unsigned int count; ///< cached from spacetree.size()
+};
+
+/// adapter helper functor
+struct OptimizeFunctor
+{
+	template <typename T>
+	void operator()(AabbTreeNodeAdapter <T> & container)
+	{
+		container.Optimize();
+	}
+};
+
+#undef OBJECTS_PER_NODE
 
 #endif

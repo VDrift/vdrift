@@ -92,7 +92,7 @@ private:
 	std::vector <GuiWidget *> widgets;				// passive widgets
 	GuiControl * default_control;					// default active control
 	GuiControl * active_control;					// current active control
-	keyed_container <SceneNode>::handle s;
+	SceneNode::Handle s;
 	std::string name;
 
 	// each control registers a ControlCB

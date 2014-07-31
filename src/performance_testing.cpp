@@ -110,7 +110,7 @@ void PerformanceTesting::Test(
 			"Mass (kg) including driver and fuel: " << 1 / car.GetInvMass() << "\n" <<
 			"Center of mass (m): " << car.GetCenterOfMass() << std::endl;
 
-	std::stringstream statestream;
+	std::ostringstream statestream;
 	joeserialize::BinaryOutputSerializer serialize_output(statestream);
 	if (!car.Serialize(serialize_output))
 	{
@@ -128,7 +128,7 @@ void PerformanceTesting::Test(
 
 void PerformanceTesting::ResetCar()
 {
-	std::stringstream statestream(carstate);
+	std::istringstream statestream(carstate);
 	joeserialize::BinaryInputSerializer serialize_input(statestream);
 	car.Serialize(serialize_input);
 
@@ -188,7 +188,7 @@ void PerformanceTesting::TestMaxSpeed(std::ostream & info_output, std::ostream &
 		{
 			maxspeed.first = t;
 			maxspeed.second = car.GetSpeed();
-			std::stringstream dfs;
+			std::ostringstream dfs;
 			dfs << -car.GetTotalAero()[2] << " N; " << -car.GetTotalAero()[2]/car.GetTotalAero()[0] << ":1 lift/drag";
 			downforcestr = dfs.str();
 		}

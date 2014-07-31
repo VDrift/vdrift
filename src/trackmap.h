@@ -20,17 +20,17 @@
 #ifndef _TRACKMAP_H
 #define _TRACKMAP_H
 
-#include "mathvector.h"
 #include "graphics/scenenode.h"
 #include "graphics/texture.h"
+#include "graphics/vertexarray.h"
+#include "mathvector.h"
 #include "roadstrip.h"
+#include "memory.h"
 
+#include <iosfwd>
 #include <list>
-#include <string>
-#include <ostream>
 
 class ContentManager;
-class Texture;
 
 class TrackMap
 {
@@ -89,7 +89,7 @@ private:
 	Vec2 dot_size;
 
 	SceneNode mapnode;
-	keyed_container <Drawable>::handle mapdraw;
+	SceneNode::DrawableHandle mapdraw;
 	VertexArray mapverts;
 
 	std::tr1::shared_ptr<Texture> track_map;
@@ -107,10 +107,10 @@ private:
 				const Vec2 & corner1,
 				const Vec2 & corner2)
 			{
-				dotdraw = topnode.GetDrawlist().twodim.insert(Drawable());
+				dotdraw = topnode.GetDrawList().twodim.insert(Drawable());
 				Drawable & drawref = GetDrawable(topnode);
 				drawref.SetVertArray(&dotverts);
-				drawref.SetCull(false, false);
+				drawref.SetCull(false);
 				drawref.SetColor(1,1,1,0.7);
 				drawref.SetDrawOrder(0.1);
 				Retexture(topnode, tex);
@@ -135,24 +135,24 @@ private:
 				const Drawable & drawref = GetDrawable(topnode);
 				out << &drawref << ": enable=" << drawref.GetDrawEnable() << ", tex=" << drawref.GetTexture0() << ", verts=" << drawref.GetVertArray() << std::endl;
 			}
-			keyed_container <Drawable>::handle & GetDrawableHandle()
+			SceneNode::DrawableHandle & GetDrawableHandle()
 			{
 				return dotdraw;
 			}
 
 		private:
-			keyed_container <Drawable>::handle dotdraw;
+			SceneNode::DrawableHandle dotdraw;
 			std::tr1::shared_ptr<Texture> texture;
 			VertexArray dotverts;
 
 			Drawable & GetDrawable(SceneNode & topnode)
 			{
-				return topnode.GetDrawlist().twodim.get(dotdraw);
+				return topnode.GetDrawList().twodim.get(dotdraw);
 			}
 
 			const Drawable & GetDrawable(SceneNode & topnode) const
 			{
-				return topnode.GetDrawlist().twodim.get(dotdraw);
+				return topnode.GetDrawList().twodim.get(dotdraw);
 			}
 	};
 

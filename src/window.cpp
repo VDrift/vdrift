@@ -26,12 +26,12 @@
 #include <cstring>
 
 Window::Window() :
-	w(0), h(0),
-	initialized(false),
-	fsaa(1),
-	surface(NULL),
 	window(NULL),
-	glcontext(NULL)
+	glcontext(NULL),
+	fsaa(1),
+	w(0),
+	h(0),
+	initialized(false)
 {
 	// Constructor.
 }
@@ -49,10 +49,14 @@ Window::~Window()
 }
 
 void Window::Init(
-	const std::string & windowcaption,
-	unsigned int resx, unsigned int resy,
-	unsigned int bpp, unsigned int depthbpp,
-	bool fullscreen, unsigned int antialiasing,
+	const std::string & caption,
+	int resx,
+	int resy,
+	int color_bpp,
+	int depth_bpp,
+	int antialiasing,
+	bool fullscreen,
+	bool vsync,
 	std::ostream & info_output,
 	std::ostream & error_output)
 {
@@ -63,11 +67,15 @@ void Window::Init(
 		assert(0);
 	}
 
-	ChangeDisplay(resx, resy, bpp, depthbpp, fullscreen, antialiasing, info_output, error_output);
+	ChangeDisplay(
+		resx, resy, color_bpp, depth_bpp,
+		antialiasing, fullscreen, vsync,
+		info_output, error_output);
 
-	SDL_SetWindowTitle(window, windowcaption.c_str());
+	SDL_SetWindowTitle(window, caption.c_str());
 
-	// initialize GLEW
+	// Initialize GLEW
+	glewExperimental = GL_TRUE;
 	GLenum glew_err = glewInit();
 	if (glew_err != GLEW_OK)
 	{
@@ -80,6 +88,9 @@ void Window::Init(
 		info_output << "Using GLEW " << glewGetString(GLEW_VERSION) << std::endl;
 		initialized = true;
 	}
+
+	// Clear GL_INVALID_ENUM caused by glew in core profile by calling glGetString(GL_EXTENSIONS)
+	glGetError();
 
 	LogOpenGLInfo(info_output);
 }
@@ -137,11 +148,6 @@ int Window::GetH() const
 	return h;
 }
 
-float Window::GetWHRatio() const
-{
-	return (float)w / (float)h;
-}
-
 static int GetVideoDisplay()
 {
 	const char *variable = SDL_getenv("SDL_VIDEO_FULLSCREEN_DISPLAY");
@@ -171,16 +177,23 @@ bool Window::ResizeWindow(int width, int height)
 }
 
 void Window::ChangeDisplay(
-	int width, int height,
-	int bpp, int dbpp,
+	int width,
+	int height,
+	int color_bpp,
+	int depth_bpp,
+	int antialiasing,
 	bool fullscreen,
-	unsigned int antialiasing,
+	bool vsync,
 	std::ostream & info_output,
 	std::ostream & error_output)
 {
-
+#ifdef GL3CORE
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+#endif
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, dbpp);
+	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, depth_bpp);
 
 	fsaa = 1;
 	if (antialiasing > 1)
@@ -205,8 +218,8 @@ void Window::ChangeDisplay(
 	if (height == 0)
 		height = desktop_mode.h;
 
-	if (bpp == 0)
-		bpp = SDL_BITSPERPIXEL(desktop_mode.format);
+	if (color_bpp == 0)
+		color_bpp = SDL_BITSPERPIXEL(desktop_mode.format);
 
 	// Try to resize the existing window and surface
 	if (!fullscreen && ResizeWindow(width, height))
@@ -241,9 +254,23 @@ void Window::ChangeDisplay(
 	{
 		assert(0);
 	}
+
 	if (SDL_GL_MakeCurrent(window, glcontext) < 0)
 	{
 		assert(0);
+	}
+
+	int vsync_set = SDL_GL_SetSwapInterval(vsync ? 1 : 0);
+	if (vsync_set != -1)
+	{
+		if (vsync)
+			info_output << "Enabling vertical synchronization." << std::endl;
+		else
+			info_output << "Disabling vertical synchronization." << std::endl;
+	}
+	else
+	{
+		info_output << "Setting vertical synchronization not supported." << std::endl;
 	}
 
 	w = width;
@@ -252,7 +279,7 @@ void Window::ChangeDisplay(
 
 void Window::LogOpenGLInfo(std::ostream & info_output)
 {
-	std::stringstream cardinfo;
+	std::ostringstream cardinfo;
 	cardinfo << "Video card information:" << std::endl;
 	cardinfo << "GL Vendor: " << glGetString(GL_VENDOR) << std::endl;
 	cardinfo << "GL Renderer: " << glGetString(GL_RENDERER) << std::endl;
@@ -262,7 +289,7 @@ void Window::LogOpenGLInfo(std::ostream & info_output)
 	glGetIntegerv(GL_MAX_TEXTURE_IMAGE_UNITS, &texUnits);
 	glGetIntegerv(GL_MAX_TEXTURE_SIZE, &texSize);
 	cardinfo << "Texture units: " << texUnits << std::endl;
-	cardinfo << "Maximum texture size: " << texSize << std::endl;
+	cardinfo << "Maximum texture size: " << texSize;
 
 	info_output << cardinfo.str() << std::endl;
 }

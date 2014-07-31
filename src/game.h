@@ -274,7 +274,7 @@ private:
 	PathManager pathmanager;
 	Settings settings;
 	Window window;
-	Graphics * graphics_interface;
+	Graphics * graphics;
 	StringIdMap stringMap;
 	EventSystem eventsystem;
 	ContentManager content;

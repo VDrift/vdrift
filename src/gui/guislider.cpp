@@ -66,7 +66,7 @@ void GuiSlider::SetupDrawable(
 void GuiSlider::SetValue(const std::string & valuestr)
 {
 	float value;
-	std::stringstream s(valuestr);
+	std::istringstream s(valuestr);
 	s >> value;
 	if (value != m_value)
 	{

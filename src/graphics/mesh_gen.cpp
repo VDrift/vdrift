@@ -43,7 +43,7 @@ namespace MeshGen
 void mg_tire(VertexArray & tire, float sectionWidth_mm, float aspectRatio, float rimDiameter_in)
 {
 	// configurable parameters - set to defaults
-	int segmentsAround = 32;
+	unsigned int segmentsAround = 32;
 	float innerRadius = 0.65f;
 	float innerWidth = 0.60f;
 
@@ -134,42 +134,42 @@ void mg_tire(VertexArray & tire, float sectionWidth_mm, float aspectRatio, float
 
 
 	// non-configurable parameters
-	int vertexRings = 8;
+	unsigned int vertexRings = 8;
 	float angleIncrement = 360.0f / (float) segmentsAround;
 
 	/////////////////////////////////////
 	//
 	// vertices (temporary data)
 	//
-	int vertexesAround = segmentsAround + 1;
-	int vertexCount = vertexesAround * vertexRings;
-	int vertexFloatCount = vertexCount * 3;	// * 3 cause there are 3 floats in a vertex
+	unsigned int vertexesAround = segmentsAround + 1;
+	unsigned int vertexCount = vertexesAround * vertexRings;
+	unsigned int vertexFloatCount = vertexCount * 3;	// * 3 cause there are 3 floats in a vertex
 	std::vector<float> vertexData;
 	vertexData.resize(vertexFloatCount);
 
 	// Right-side, Inner Ring
-	for (int lv=0 ; lv<vertexesAround ; lv++)
+	for (unsigned int lv=0 ; lv<vertexesAround ; lv++)
 	{
 		vertexData[(lv+vertexesAround * 0) * 3 + 0] = 1.0f * (innerWidth / 2.0f);
 		vertexData[(lv+vertexesAround * 0) * 3 + 1] = innerRadius * cosD(angleIncrement * lv);
 		vertexData[(lv+vertexesAround * 0) * 3 + 2] = innerRadius * sinD(angleIncrement * lv);
 	}
 	// Right-side, Sidewall Ring
-	for (int lv=0 ; lv<vertexesAround ; lv++)
+	for (unsigned int lv=0 ; lv<vertexesAround ; lv++)
 	{
 		vertexData[(lv+vertexesAround * 1) * 3 + 0] = 1.0f * (treadWidth / 2.0f + sidewallBulge);
 		vertexData[(lv+vertexesAround * 1) * 3 + 1] = sidewallRadius * cosD(angleIncrement * lv);
 		vertexData[(lv+vertexesAround * 1) * 3 + 2] = sidewallRadius * sinD(angleIncrement * lv);
 	}
 	// Right-side, Shoulder Ring
-	for (int lv=0 ; lv<vertexesAround ; lv++)
+	for (unsigned int lv=0 ; lv<vertexesAround ; lv++)
 	{
 		vertexData[(lv+vertexesAround * 2) * 3 + 0] = 1.0f * (treadWidth / 2.0f + shoulderBulge);
 		vertexData[(lv+vertexesAround * 2) * 3 + 1] = shoulderRadius * cosD(angleIncrement * lv);
 		vertexData[(lv+vertexesAround * 2) * 3 + 2] = shoulderRadius * sinD(angleIncrement * lv);
 	}
 	// Right-side, Tread Ring
-	for (int lv=0 ; lv<vertexesAround ; lv++)
+	for (unsigned int lv=0 ; lv<vertexesAround ; lv++)
 	{
 		vertexData[(lv+vertexesAround * 3) * 3 + 0] = 1.0f * (treadWidth / 2.0f);
 		vertexData[(lv+vertexesAround * 3) * 3 + 1] = treadRadius * cosD(angleIncrement * lv);
@@ -178,28 +178,28 @@ void mg_tire(VertexArray & tire, float sectionWidth_mm, float aspectRatio, float
 
 
 	// Left-side, Tread Ring
-	for (int lv=0 ; lv<vertexesAround ; lv++)
+	for (unsigned int lv=0 ; lv<vertexesAround ; lv++)
 	{
 		vertexData[(lv+vertexesAround * 4) * 3 + 0] = -1.0f * (treadWidth / 2.0f);
 		vertexData[(lv+vertexesAround * 4) * 3 + 1] = treadRadius * cosD(angleIncrement * lv);
 		vertexData[(lv+vertexesAround * 4) * 3 + 2] = treadRadius * sinD(angleIncrement * lv);
 	}
 	// Left-side, Shoulder Ring
-	for (int lv=0 ; lv<vertexesAround ; lv++)
+	for (unsigned int lv=0 ; lv<vertexesAround ; lv++)
 	{
 		vertexData[(lv+vertexesAround * 5) * 3 + 0] = -1.0f * (treadWidth / 2.0f + shoulderBulge);
 		vertexData[(lv+vertexesAround * 5) * 3 + 1] = shoulderRadius * cosD(angleIncrement * lv);
 		vertexData[(lv+vertexesAround * 5) * 3 + 2] = shoulderRadius * sinD(angleIncrement * lv);
 	}
 	// Left-side, Sidewall Ring
-	for (int lv=0 ; lv<vertexesAround ; lv++)
+	for (unsigned int lv=0 ; lv<vertexesAround ; lv++)
 	{
 		vertexData[(lv+vertexesAround * 6) * 3 + 0] = -1.0f * (treadWidth / 2.0f + sidewallBulge);
 		vertexData[(lv+vertexesAround * 6) * 3 + 1] = sidewallRadius * cosD(angleIncrement * lv);
 		vertexData[(lv+vertexesAround * 6) * 3 + 2] = sidewallRadius * sinD(angleIncrement * lv);
 	}
 	// Left-side, Inner Ring
-	for (int lv=0 ; lv<vertexesAround ; lv++)
+	for (unsigned int lv=0 ; lv<vertexesAround ; lv++)
 	{
 		vertexData[(lv+vertexesAround * 7) * 3 + 0] = -1.0f * (innerWidth / 2.0f);
 		vertexData[(lv+vertexesAround * 7) * 3 + 1] = innerRadius * cosD(angleIncrement * lv);
@@ -214,12 +214,12 @@ void mg_tire(VertexArray & tire, float sectionWidth_mm, float aspectRatio, float
 	//
 	//  now let's build triangles
 	//
-	int triVIndexCount = 2 * segmentsAround * (vertexRings-1) * 3;	// 2 * triangles make a square,   * 3 indexes in a triangle
-	std::vector<int> triData;
+	unsigned int triVIndexCount = 2 * segmentsAround * (vertexRings-1) * 3;	// 2 * triangles make a square,   * 3 indexes in a triangle
+	std::vector<unsigned int> triData;
 	triData.resize(triVIndexCount);
 
-	int triIndex = 0;
-	for (int circleSegment=0; circleSegment<segmentsAround; circleSegment++)
+	unsigned int triIndex = 0;
+	for (unsigned int circleSegment=0; circleSegment<segmentsAround; circleSegment++)
 	{
 		// 1st triangle (Right-side - Inner to Sidewall)
 		triData[ (triIndex+0)*3 + 0 ] = circleSegment;
@@ -311,12 +311,12 @@ void mg_tire(VertexArray & tire, float sectionWidth_mm, float aspectRatio, float
 	// though wider tires will experience more tread stretching
 	// unless they also have a texture with a more appropriate
 	// resolution.
-	int texCoordFloats = vertexCount * 2;
+	unsigned int texCoordFloats = vertexCount * 2;
 	std::vector<float> texData;
 	texData.resize(texCoordFloats);
 
 
-	for ( int uvl=0 ; uvl< vertexCount ; uvl++ )
+	for ( unsigned int uvl=0 ; uvl< vertexCount ; uvl++ )
 	{
 		// U coord
 		float u = uvl % vertexesAround;
@@ -379,7 +379,7 @@ void mg_tire(VertexArray & tire, float sectionWidth_mm, float aspectRatio, float
     Vec3 triUpEdge;       // one of the edges that wraps around the tire's tread which both faces share, not used on the last vertex ring
     Vec3 triDownEdge;     // the other edges that wraps around the tire's tread which both faces share, not used on the first vertex ring
 
-	for (int nlv=0 ; nlv<vertexCount ; nlv++)
+	for (unsigned int nlv=0 ; nlv<vertexCount ; nlv++)
 	{
 
 		/*// one way, not too bad, but not accurate
@@ -724,11 +724,11 @@ void mg_tire(VertexArray & tire, float sectionWidth_mm, float aspectRatio, float
 
 	//////////////////////////////////////////////
 	// VERTEXARRAY will copy this data
-	tire.SetVertices(&vertexData.front(), vertexFloatCount);
-	tire.SetFaces(&triData.front(), triVIndexCount);
-	tire.SetTexCoordSets(1);
-	tire.SetTexCoords(0, &texData.front(), texCoordFloats);
-	tire.SetNormals(&normalData.front(), vertexFloatCount);
+	tire.Add(
+		&triData.front(), triVIndexCount,
+		&vertexData.front(), vertexFloatCount,
+		&texData.front(), texCoordFloats,
+		&normalData.front(), vertexFloatCount);
 
 	//printf("tire created: v=%u, tri=%u\n", vertexCount, (triVIndexCount/3));
 }
@@ -754,7 +754,7 @@ void mg_tire(VertexArray & tire, float sectionWidth_mm, float aspectRatio, float
 // mg_wheelEdge
 void mg_rim(VertexArray & rim, float sectionWidth_mm, float aspectRatio, float rimDiameter_in, float flangeDisplacement_mm)
 {
-    int segmentsAround = 32;
+    unsigned int segmentsAround = 32;
 
     float vertexNormalLength = 0.025f;
 
@@ -794,28 +794,28 @@ void mg_rim(VertexArray & rim, float sectionWidth_mm, float aspectRatio, float r
 
 
 	// non-configurable parameters
-	int vertexRings = 6;
+	unsigned int vertexRings = 6;
 	float angleIncrement = 360.0f / (float) segmentsAround;
 
 	/////////////////////////////////////
 	//
 	// vertices (temporary data)
 	//
-	int vertexesAround = segmentsAround + 1;
-	int vertexCount = vertexesAround * vertexRings;
-	int vertexFloatCount = vertexCount * 3;	// * 3 cause there are 3 floats in a vertex
+	unsigned int vertexesAround = segmentsAround + 1;
+	unsigned int vertexCount = vertexesAround * vertexRings;
+	unsigned int vertexFloatCount = vertexCount * 3;	// * 3 cause there are 3 floats in a vertex
 	std::vector<float> vertexData;
 	vertexData.resize(vertexFloatCount);
 
 	// Right-side bevel, outer lip
-	for (int lv=0 ; lv<vertexesAround ; lv++)
+	for (unsigned int lv=0 ; lv<vertexesAround ; lv++)
 	{
 		vertexData[(lv+vertexesAround * 0) * 3 + 0] = 1.0f * (flangeOutsideWidth / 2.0f);
 		vertexData[(lv+vertexesAround * 0) * 3 + 1] = flangeOuterRadius * cosD(angleIncrement * lv);
 		vertexData[(lv+vertexesAround * 0) * 3 + 2] = flangeOuterRadius * sinD(angleIncrement * lv);
 	}
 	// Right-side bevel, inner lip
-	for (int lv=0 ; lv<vertexesAround ; lv++)
+	for (unsigned int lv=0 ; lv<vertexesAround ; lv++)
 	{
 		vertexData[(lv+vertexesAround * 1) * 3 + 0] = 1.0f * (innerWidth / 2.0f);
 		vertexData[(lv+vertexesAround * 1) * 3 + 1] = (innerRadius) * cosD(angleIncrement * lv);
@@ -824,14 +824,14 @@ void mg_rim(VertexArray & rim, float sectionWidth_mm, float aspectRatio, float r
 
 
 	// Right-side of main cylinder
-	for (int lv=0 ; lv<vertexesAround ; lv++)
+	for (unsigned int lv=0 ; lv<vertexesAround ; lv++)
 	{
 		vertexData[(lv+vertexesAround * 2) * 3 + 0] = 1.0f * (innerWidth / 2.0f);
 		vertexData[(lv+vertexesAround * 2) * 3 + 1] = (innerRadius) * cosD(angleIncrement * lv);
 		vertexData[(lv+vertexesAround * 2) * 3 + 2] = (innerRadius) * sinD(angleIncrement * lv);
 	}
 	// Left-side of main cylinder,
-	for (int lv=0 ; lv<vertexesAround ; lv++)
+	for (unsigned int lv=0 ; lv<vertexesAround ; lv++)
 	{
 		vertexData[(lv+vertexesAround * 3) * 3 + 0] = -1.0f * (innerWidth / 2.0f);
 		vertexData[(lv+vertexesAround * 3) * 3 + 1] = (innerRadius) * cosD(angleIncrement * lv);
@@ -839,14 +839,14 @@ void mg_rim(VertexArray & rim, float sectionWidth_mm, float aspectRatio, float r
 	}
 
 	// Left-side bevel, inner lip
-	for (int lv=0 ; lv<vertexesAround ; lv++)
+	for (unsigned int lv=0 ; lv<vertexesAround ; lv++)
 	{
 		vertexData[(lv+vertexesAround * 4) * 3 + 0] = -1.0f * (innerWidth / 2.0f);
 		vertexData[(lv+vertexesAround * 4) * 3 + 1] = innerRadius * cosD(angleIncrement * lv);
 		vertexData[(lv+vertexesAround * 4) * 3 + 2] = innerRadius * sinD(angleIncrement * lv);
 	}
 	// Left-side bevel, outer lip
-	for (int lv=0 ; lv<vertexesAround ; lv++)
+	for (unsigned int lv=0 ; lv<vertexesAround ; lv++)
 	{
 		vertexData[(lv+vertexesAround * 5) * 3 + 0] = -1.0f * (flangeOutsideWidth / 2.0f);
 		vertexData[(lv+vertexesAround * 5) * 3 + 1] = (flangeOuterRadius) * cosD(angleIncrement * lv);
@@ -863,12 +863,12 @@ void mg_rim(VertexArray & rim, float sectionWidth_mm, float aspectRatio, float r
 	//  build triangles
 	//  different from the last one
     //                            2 triangles * segmentsAround * 3 VertexIndexes * 3 completely separate tubes
-	int triVIndexCount = 2 * segmentsAround * 3 * 3;
-	std::vector<int> triData(triVIndexCount, 0);
+	unsigned int triVIndexCount = 2 * segmentsAround * 3 * 3;
+	std::vector<unsigned int> triData(triVIndexCount, 0);
 	//triData.resize(triVIndexCount);
 
-	int triIndex = 0;
-	for (int circleSegment=0 ; circleSegment<segmentsAround; circleSegment++)
+	unsigned int triIndex = 0;
+	for (unsigned int circleSegment=0 ; circleSegment<segmentsAround; circleSegment++)
 	{
 		// 1st triangle (Right-side - Inner to Sidewall)
 		triData[ (triIndex+0)*3 + 0 ] = circleSegment;
@@ -883,7 +883,7 @@ void mg_rim(VertexArray & rim, float sectionWidth_mm, float aspectRatio, float r
 		triIndex +=2;
 	}
 
-	for (int circleSegment=0 ; circleSegment<segmentsAround; circleSegment++)
+	for (unsigned int circleSegment=0 ; circleSegment<segmentsAround; circleSegment++)
 	{
 		// 1st triangle (Right-side - Inner to Sidewall)
 		triData[ (triIndex+0)*3 + 0 ] = (2*vertexesAround)+circleSegment;
@@ -898,7 +898,7 @@ void mg_rim(VertexArray & rim, float sectionWidth_mm, float aspectRatio, float r
 		triIndex +=2;
 	}
 
-	for (int circleSegment=0 ; circleSegment<segmentsAround; circleSegment++)
+	for (unsigned int circleSegment=0 ; circleSegment<segmentsAround; circleSegment++)
 	{
 		// 1st triangle (Right-side - Inner to Sidewall)
 		triData[ (triIndex+0)*3 + 0 ] = (4*vertexesAround)+circleSegment+0;
@@ -922,12 +922,12 @@ void mg_rim(VertexArray & rim, float sectionWidth_mm, float aspectRatio, float r
 
     //////////////////////////////////////////////
     // Texture Coordinates
-	int texCoordFloats = vertexCount * 2;
+	unsigned int texCoordFloats = vertexCount * 2;
 	std::vector<float> texData;
 	texData.resize(texCoordFloats);
 
     // set them all to zero for the time being
-    for ( int tlv=0 ; tlv< vertexCount ; tlv++ )
+    for ( unsigned int tlv=0 ; tlv< vertexCount ; tlv++ )
     {
         float u = tlv % vertexesAround;
 		u = u / segmentsAround;
@@ -975,7 +975,7 @@ void mg_rim(VertexArray & rim, float sectionWidth_mm, float aspectRatio, float r
     Vec3 tri2Edge;        // one of the edges of a triangle that goes around the tire's circle
     Vec3 triUpEdge;
 
-    for (int nlv=0 ; nlv<vertexCount ; nlv++)
+    for (unsigned int nlv=0 ; nlv<vertexCount ; nlv++)
     {
         normalData[nlv*3+0] = 0.1;
         normalData[nlv*3+1] = 0;
@@ -983,7 +983,7 @@ void mg_rim(VertexArray & rim, float sectionWidth_mm, float aspectRatio, float r
     }
 
 
-    for (int nlv=0 ; nlv<vertexCount ; nlv++)
+    for (unsigned int nlv=0 ; nlv<vertexCount ; nlv++)
     {
         if ( nlv < vertexesAround*1 )       // first ring of vertexes
 		{
@@ -1191,12 +1191,11 @@ void mg_rim(VertexArray & rim, float sectionWidth_mm, float aspectRatio, float r
 
 	//////////////////////////////////////////////
 	// VERTEXARRAY will copy this data
-	rim.SetVertices(&vertexData.front(), vertexFloatCount);
-	rim.SetFaces(&triData.front(), triVIndexCount);
-
-	rim.SetTexCoordSets(1);
-	rim.SetTexCoords(0, &texData.front(), texCoordFloats);
-	rim.SetNormals(&normalData.front(), vertexFloatCount);
+	rim.Add(
+		&triData.front(), triVIndexCount,
+		&vertexData.front(), vertexFloatCount,
+		&texData.front(), texCoordFloats,
+		&normalData.front(), vertexFloatCount);
 
 	//	printf("wheel_edge created: v=%u, tri=%u\n", vertexCount, (triVIndexCount/3) );
 
@@ -1233,8 +1232,8 @@ void mg_brake_rotor(VertexArray & rotor, float diameter_mm, float thickness_mm)
     unsigned int vertexCount = vertexesAround*4;            // the two caps have 1 extra vertex in the center.  each ring of the sides has one extra dupe vertex for the texture map to wrap correctly
     unsigned int vertexFloatCount = vertexCount *3;
 
-    float *vertexData = new float[vertexFloatCount];
-
+    std::vector<float> vertexData;
+    vertexData.resize(vertexFloatCount);
 
     // first cap, first vertex
     vertexData[0+0] = -1.0f * thickness_m / 2.0f;
@@ -1303,7 +1302,9 @@ void mg_brake_rotor(VertexArray & rotor, float diameter_mm, float thickness_mm)
     unsigned int trianglesPerStrip = segmentsAround * 2;
 
 	unsigned int triVIndexCount = (2*trianglesPerCap + 2*trianglesPerStrip) * 3;
-	unsigned int *triData = new unsigned int [ triVIndexCount ];
+
+	std::vector<unsigned int> triData;
+	triData.resize(triVIndexCount);
 
 	unsigned int triIndex = 0;
 
@@ -1399,7 +1400,8 @@ void mg_brake_rotor(VertexArray & rotor, float diameter_mm, float thickness_mm)
     ///////////////////////////////////////////
     // texture coordinates
     unsigned int texCoordFloats = vertexCount * 2;
-    float *texData = new float[ texCoordFloats ];
+    std::vector<float> texData;
+	texData.resize(texCoordFloats);
 
 
     // first cap, first texcoord
@@ -1469,18 +1471,8 @@ void mg_brake_rotor(VertexArray & rotor, float diameter_mm, float thickness_mm)
 
     /////////////////////////////////////////
     // finally vertex normals
-    float *normalData = new float[vertexFloatCount];
-
-
-
-    //////////////////////
-    // zero everything out
-    /*for ( unsigned int nzlv=0 ; nzlv<vertexFloatCount ; nzlv++)
-    {
-        normalData[nzlv] = 0;
-    }*/
-
-
+    std::vector<float> normalData;
+    normalData.resize(vertexFloatCount);
 
 
     for ( unsigned int nlv=0 ; nlv<vertexCount ; nlv++ )
@@ -1517,20 +1509,11 @@ void mg_brake_rotor(VertexArray & rotor, float diameter_mm, float thickness_mm)
     }
 
 
-
-
-    rotor.SetVertices(vertexData, vertexFloatCount);
-	rotor.SetFaces((int*)triData, triVIndexCount);
-	rotor.SetTexCoordSets(1);
-	rotor.SetTexCoords(0, texData, texCoordFloats);
-	rotor.SetNormals(normalData, vertexFloatCount);
-
-
-	// free up the temp data
-	delete[] vertexData;
-	delete[] triData;
-	delete[] texData;
-	delete[] normalData;
+	rotor.Add(
+		&triData.front(), triVIndexCount,
+		&vertexData.front(), vertexFloatCount,
+		&texData.front(), texCoordFloats,
+		&normalData.front(), vertexFloatCount);
 }
 
 

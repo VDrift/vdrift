@@ -22,13 +22,9 @@
 
 #include "roadpatch.h"
 #include "aabbtree.h"
-#include "optional.h"
-#include "memory.h"
 
 #include <iosfwd>
 #include <vector>
-
-class Texture;
 
 class RoadStrip
 {
@@ -49,10 +45,6 @@ public:
 		const Bezier * & colpatch,
 		Vec3 & normal) const;
 
-	void CreateRacingLine(
-		SceneNode & parentnode,
-		const std::tr1::shared_ptr<Texture> & texture);
-
 	const std::vector<RoadPatch> & GetPatches() const
 	{
 		return patches;
@@ -69,7 +61,6 @@ public:
 	}
 
 private:
-	std::tr1::shared_ptr<Texture> racingline_texture;
 	std::vector<RoadPatch> patches;
 	AabbTreeNode <unsigned> aabb_part;
 	bool closed;

@@ -18,6 +18,7 @@
 /************************************************************************/
 
 #include "graphics_gl3v.h"
+#include "scenenode.h"
 #include "joeserialize.h"
 #include "unordered_map.h"
 #include "utils.h"
@@ -30,12 +31,21 @@
 #define enableContributionCull true
 
 GraphicsGL3::GraphicsGL3(StringIdMap & map) :
-	stringMap(map), renderer(gl), logNextGlFrame(false), initialized(false),
+	stringMap(map),
+	gl(vertex_buffer),
+	renderer(gl),
+	logNextGlFrame(false),
+	initialized(false),
 	closeshadow(5.f)
 {
 	// initialize the full screen quad
 	fullscreenquadVertices.SetTo2DQuad(0,0,1,1, 0,1,1,0, 0);
 	fullscreenquad.SetVertArray(&fullscreenquadVertices);
+}
+
+GraphicsGL3::~GraphicsGL3()
+{
+	// dtor
 }
 
 bool GraphicsGL3::Init(
@@ -66,6 +76,15 @@ bool GraphicsGL3::Init(
 		return false;
 	}
 
+	#ifdef _WIN32
+	// workaround for broken vao implementation Intel/Windows
+	{
+		const std::string vendor = (const char*)glGetString(GL_VENDOR);
+		if (vendor == "Intel")
+			vertex_buffer.BindElementBufferExplicitly();
+	}
+	#endif
+
 	// set up our graphical configuration option conditions
 	bool fsaa = (antialiasing > 1);
 
@@ -77,10 +96,10 @@ bool GraphicsGL3::Init(
 	ADDCONDITION(shadows);
 	#undef ADDCONDITION
 
-    if (reflection_type >= 1)
-        conditions.insert("reflections_low");
-    if (reflection_type >= 2)
-        conditions.insert("reflections_high");
+	if (reflection_type >= 1)
+		conditions.insert("reflections_low");
+	if (reflection_type >= 2)
+		conditions.insert("reflections_high");
 
 	// load the reflection cubemap
 	if (!static_reflectionmap_file.empty())
@@ -109,9 +128,44 @@ void GraphicsGL3::Deinit()
 	renderer.clear();
 }
 
-DrawableContainer <PtrVector> & GraphicsGL3::GetDynamicDrawlist()
+void GraphicsGL3::BindDynamicVertexData(std::vector<SceneNode*> nodes)
 {
-	return dynamic_drawlist;
+	// TODO: This doesn't look very efficient...
+	SceneNode quad_node;
+	SceneNode::DrawableHandle d = quad_node.GetDrawList().twodim.insert(fullscreenquad);
+	nodes.push_back(&quad_node);
+
+	vertex_buffer.SetDynamicVertexData(&nodes[0], nodes.size());
+
+	fullscreenquad = quad_node.GetDrawList().twodim.get(d);
+}
+
+void GraphicsGL3::BindStaticVertexData(std::vector<SceneNode*> nodes)
+{
+	vertex_buffer.SetStaticVertexData(&nodes[0], nodes.size());
+}
+
+void GraphicsGL3::AddDynamicNode(SceneNode & node)
+{
+	Mat4 identity;
+	node.Traverse(dynamic_drawlist, identity);
+}
+
+void GraphicsGL3::AddStaticNode(SceneNode & node)
+{
+	Mat4 identity;
+	node.Traverse(static_drawlist, identity);
+	static_drawlist.ForEach(OptimizeFunctor());
+}
+
+void GraphicsGL3::ClearDynamicDrawables()
+{
+	dynamic_drawlist.clear();
+}
+
+void GraphicsGL3::ClearStaticDrawables()
+{
+	static_drawlist.clear();
 }
 
 GraphicsGL3::CameraMatrices & GraphicsGL3::setCameraPerspective(const std::string & name,
@@ -169,8 +223,12 @@ GraphicsGL3::CameraMatrices & GraphicsGL3::setCameraOrthographic(const std::stri
 	return matrices;
 }
 
-void GraphicsGL3::SetupScene(float fov, float new_view_distance, const Vec3 cam_position, const Quat & cam_rotation,
-				const Vec3 & dynamic_reflection_sample_pos)
+void GraphicsGL3::SetupScene(
+	float fov, float new_view_distance,
+	const Vec3 cam_position,
+	const Quat & cam_rotation,
+	const Vec3 & dynamic_reflection_sample_pos,
+	std::ostream & error_output)
 {
 	lastCameraPosition = cam_position;
 
@@ -329,6 +387,30 @@ void GraphicsGL3::SetupScene(float fov, float new_view_distance, const Vec3 cam_
 		directionalLightColor[i] = 8.3;
 	directionalLightColor[3] = 1.;
 	renderer.setGlobalUniform(RenderUniformEntry(stringMap.addStringId("directionalLightColor"), directionalLightColor, 4));
+
+	AssembleDrawMap(error_output);
+}
+
+// returns empty string if no camera
+std::string GraphicsGL3::getCameraForPass(StringId pass) const
+{
+	std::string passString = stringMap.getString(pass);
+	std::string cameraString;
+	std::map <std::string, std::string>::const_iterator camIter = passNameToCameraName.find(passString);
+	if (camIter != passNameToCameraName.end())
+		cameraString = camIter->second;
+	return cameraString;
+}
+
+std::string GraphicsGL3::getCameraDrawGroupKey(StringId pass, StringId group) const
+{
+	return getCameraForPass(pass)+"/"+stringMap.getString(group);
+}
+
+static bool SortDraworder(Drawable * d1, Drawable * d2)
+{
+	assert(d1 && d2);
+	return (d1->GetDrawOrder() < d2->GetDrawOrder());
 }
 
 // returns true for cull, false for don't-cull
@@ -371,7 +453,7 @@ static bool frustumCull(const Drawable * d, const Frustum & frustum)
 }
 
 // if frustum is NULL, don't do frustum or contribution culling
-void GraphicsGL3::assembleDrawList(const std::vector <Drawable*> & drawables, std::vector <RenderModelExt*> & out, Frustum * frustum, const Vec3 & camPos)
+void GraphicsGL3::AssembleDrawList(const std::vector <Drawable*> & drawables, std::vector <RenderModelExt*> & out, Frustum * frustum, const Vec3 & camPos)
 {
 	if (frustum && enableContributionCull)
 	{
@@ -399,7 +481,7 @@ void GraphicsGL3::assembleDrawList(const std::vector <Drawable*> & drawables, st
 }
 
 // if frustum is NULL, don't do frustum or contribution culling
-void GraphicsGL3::assembleDrawList(const AabbTreeNodeAdapter <Drawable> & adapter, std::vector <RenderModelExt*> & out, Frustum * frustum, const Vec3 & camPos)
+void GraphicsGL3::AssembleDrawList(const AabbTreeNodeAdapter <Drawable> & adapter, std::vector <RenderModelExt*> & out, Frustum * frustum, const Vec3 & camPos)
 {
 	static std::vector <Drawable*> queryResults;
 	queryResults.clear();
@@ -427,32 +509,12 @@ void GraphicsGL3::assembleDrawList(const AabbTreeNodeAdapter <Drawable> & adapte
 	}
 }
 
-// returns empty string if no camera
-std::string GraphicsGL3::getCameraForPass(StringId pass) const
-{
-	std::string passString = stringMap.getString(pass);
-	std::string cameraString;
-	std::map <std::string, std::string>::const_iterator camIter = passNameToCameraName.find(passString);
-	if (camIter != passNameToCameraName.end())
-		cameraString = camIter->second;
-	return cameraString;
-}
-
-std::string GraphicsGL3::getCameraDrawGroupKey(StringId pass, StringId group) const
-{
-	return getCameraForPass(pass)+"/"+stringMap.getString(group);
-}
-
-static bool SortDraworder(Drawable * d1, Drawable * d2)
-{
-	assert(d1 && d2);
-	return (d1->GetDrawOrder() < d2->GetDrawOrder());
-}
-
-void GraphicsGL3::DrawScene(std::ostream & error_output)
+void GraphicsGL3::AssembleDrawMap(std::ostream & error_output)
 {
 	//sort the two dimentional drawlist so we get correct ordering
 	std::sort(dynamic_drawlist.twodim.begin(),dynamic_drawlist.twodim.end(),&SortDraworder);
+
+	drawMap.clear();
 
 	// for each pass, we have which camera and which draw groups to use
 	// we want to do culling for each unique camera and draw group combination
@@ -466,11 +528,6 @@ void GraphicsGL3::DrawScene(std::ostream & error_output)
 	// because the cameraDrawGroupDrawLists are cached, this is how we keep track of which combinations
 	// we have already generated
 	std::set <std::string> cameraDrawGroupCombinationsGenerated;
-
-	// this maps passes to maps of draw groups and draw list vector pointers
-	// so drawMap[passName][drawGroup] is a pointer to a vector of RenderModelExternal pointers
-	// this is complicated but it lets us do culling per camera position and draw group combination
-	std::map <StringId, std::map <StringId, std::vector <RenderModelExt*> *> > drawMap;
 
 	// for each pass, do culling of the dynamic and static drawlists and put the results into the cameraDrawGroupDrawLists
 	std::vector <StringId> passes = renderer.getPassNames();
@@ -518,16 +575,16 @@ void GraphicsGL3::DrawScene(std::ostream & error_output)
 					if (dynamicDrawablesPtr)
 					{
 						const std::vector <Drawable*> & dynamicDrawables = *dynamicDrawablesPtr;
-						//assembleDrawList(dynamicDrawables, outDrawList, frustumPtr, lastCameraPosition);
-						assembleDrawList(dynamicDrawables, outDrawList, NULL, lastCameraPosition); // TODO: the above line is commented out because frustum culling dynamic drawables doesen't work at the moment; is the object center in the drawable for the car in the correct space??
+						//AssembleDrawList(dynamicDrawables, outDrawList, frustumPtr, lastCameraPosition);
+						AssembleDrawList(dynamicDrawables, outDrawList, NULL, lastCameraPosition); // TODO: the above line is commented out because frustum culling dynamic drawables doesen't work at the moment; is the object center in the drawable for the car in the correct space??
 					}
 
 					// assemble static entries
-					reseatable_reference <AabbTreeNodeAdapter <Drawable> > staticDrawablesPtr = static_drawlist.GetDrawlist().GetByName(drawGroupString);
+					reseatable_reference <AabbTreeNodeAdapter <Drawable> > staticDrawablesPtr = static_drawlist.GetByName(drawGroupString);
 					if (staticDrawablesPtr)
 					{
 						const AabbTreeNodeAdapter <Drawable> & staticDrawables = *staticDrawablesPtr;
-						assembleDrawList(staticDrawables, outDrawList, frustumPtr, lastCameraPosition);
+						AssembleDrawList(staticDrawables, outDrawList, frustumPtr, lastCameraPosition);
 					}
 
 					// if it's requesting the full screen rect draw group, feed it our special drawable
@@ -535,7 +592,7 @@ void GraphicsGL3::DrawScene(std::ostream & error_output)
 					{
 						std::vector <Drawable*> rect;
 						rect.push_back(&fullscreenquad);
-						assembleDrawList(rect, outDrawList, NULL, lastCameraPosition);
+						AssembleDrawList(rect, outDrawList, NULL, lastCameraPosition);
 					}
 				}
 
@@ -553,9 +610,14 @@ void GraphicsGL3::DrawScene(std::ostream & error_output)
 	}
 	std::cout << "----------" << std::endl;*/
 	//if (enableContributionCull) std::cout << "Contribution cull count: " << assembler.contributionCullCount << std::endl;
-	//std::cout << "normal_noblend: " << drawGroups[stringMap.addStringId("normal_noblend")].size() << "/" << static_drawlist.GetDrawlist().GetByName("normal_noblend")->size() << std::endl;
+	//std::cout << "normal_noblend: " << drawGroups[stringMap.addStringId("normal_noblend")].size() << "/" << static_drawlist.GetDrawList().GetByName("normal_noblend")->size() << std::endl;
+}
 
-	// render!
+void GraphicsGL3::DrawScene(std::ostream & error_output)
+{
+	// reset active vertex array in case it has been modified outside
+	gl.unbindVertexArray();
+
 	gl.logging(logNextGlFrame);
 	renderer.render(w, h, stringMap, drawMap, error_output);
 	gl.logging(false);
@@ -658,11 +720,6 @@ bool GraphicsGL3::ReloadShaders(std::ostream & info_output, std::ostream & error
 		logNextGlFrame = true;
 
 	return true;
-}
-
-void GraphicsGL3::AddStaticNode(SceneNode & node, bool clearcurrent)
-{
-	static_drawlist.Generate(node, clearcurrent);
 }
 
 void GraphicsGL3::SetCloseShadow ( float value )

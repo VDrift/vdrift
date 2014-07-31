@@ -43,7 +43,7 @@ static std::string FormatToString(FrameBufferTexture::Format value)
 {
 	switch (value)
 	{
-		_CASE_(LUM8);
+		_CASE_(R8);
 		_CASE_(RGB8);
 		_CASE_(RGBA8);
 		_CASE_(RGB16);
@@ -282,8 +282,7 @@ void FrameBufferObject::Init(
 	if (verbose) error_output << "INFO: set draw buffers: " << buffers[0] << ", " << buffers[1] << ", " << buffers[2] << ", " << buffers[3] << std::endl;
 	if (verbose) error_output << "INFO: set read buffer: " << buffers[0] << std::endl;
 
-	bool status_ok = CheckStatus(error_output);
-	if (!status_ok)
+	if (!CheckStatus(error_output))
 	{
 		error_output << "Error initializing FBO:" << std::endl;
 		int count = 0;
@@ -423,8 +422,7 @@ void FrameBufferObject::Begin(GraphicsState & glstate, std::ostream & error_outp
 		CheckForOpenGLErrors("FBO cubemap side attachment", error_output);
 	}
 
-	bool status_ok = CheckStatus(error_output);
-	assert(status_ok);
+	assert(CheckStatus(error_output));
 
 	glstate.SetViewport(int(tex->GetW() * viewscale), int(tex->GetH() * viewscale));
 
@@ -464,12 +462,6 @@ void FrameBufferObject::End(GraphicsState & glstate, std::ostream & error_output
 			glstate.BindTexture(0, (*i)->GetTarget(), 0);
 		}
 	}
-
-	#ifdef FBOEXT
-	// explicitely unbind framebuffer object
-	// on intel gen4 binding other fbo will result in opengl errors
-	glstate.BindFramebuffer(GL_FRAMEBUFFER, 0);
-	#endif
 
 	CheckForOpenGLErrors("end of FBO end", error_output);
 }

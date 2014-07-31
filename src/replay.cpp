@@ -143,7 +143,7 @@ void Replay::CarState::RecordFrame(const std::vector <float> & inputs, Car & car
 	// record every 30th state, input frame
 	if (frame % 30 == 0)
 	{
-		std::stringstream statestream;
+		std::ostringstream statestream;
 		joeserialize::BinaryOutputSerializer serialize_output(statestream);
 		car.Serialize(serialize_output);
 		stateframes.push_back(StateFrame(frame));
@@ -198,7 +198,7 @@ void Replay::CarState::ProcessPlayStateFrame(const StateFrame & frame, Car & car
 	}
 
 	// process binary car state
-	std::stringstream statestream(frame.GetBinaryStateData());
+	std::istringstream statestream(frame.GetBinaryStateData());
 	joeserialize::BinaryInputSerializer serialize_input(statestream);
 	car.Serialize(serialize_input);
 }
@@ -422,7 +422,7 @@ QT_TEST(replay_test)
 	/*//basic version validity check
 	{
 		REPLAY replay(0.004);
-		stringstream teststream;
+		std::ostringstream teststream;
 		replay.Save(teststream);
 		QT_CHECK(replay.Load(teststream, std::cerr));
 	}*/

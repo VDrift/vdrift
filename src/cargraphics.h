@@ -71,10 +71,10 @@ public:
 
 private:
 	SceneNode topnode;
-	keyed_container<SceneNode>::handle bodynode;
-	keyed_container<SceneNode>::handle steernode;
-	keyed_container<Drawable>::handle brakelights;
-	keyed_container<Drawable>::handle reverselights;
+	SceneNode::Handle bodynode;
+	SceneNode::Handle steernode;
+	SceneNode::DrawableHandle brakelights;
+	SceneNode::DrawableHandle reverselights;
 
 	// car cameras
 	std::vector<Camera*> cameras;
@@ -82,8 +82,8 @@ private:
 	// car lights
 	struct Light
 	{
-		keyed_container<SceneNode>::handle node;
-		keyed_container<Drawable>::handle draw;
+		SceneNode::Handle node;
+		SceneNode::DrawableHandle draw;
 	};
 	std::list<Light> lights;
 

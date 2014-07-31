@@ -111,11 +111,11 @@ bool Factory<PTree>::create(
 	const std::string & name,
 	const std::string& file)
 {
-	std::stringstream sstream(file);
-	if (sstream.good())
+	std::istringstream s(file);
+	if (s.good())
 	{
 		std::tr1::shared_ptr<PTree> temp(new PTree());
-		m_read(sstream, *temp, 0);
+		m_read(s, *temp, 0);
 		sptr = temp;
 		return true;
 	}

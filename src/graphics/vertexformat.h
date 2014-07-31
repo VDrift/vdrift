@@ -17,65 +17,27 @@
 /*                                                                      */
 /************************************************************************/
 
-#ifndef _WINDOW_H
-#define _WINDOW_H
+#ifndef _VERTEX_FORMAT_H
+#define _VERTEX_FORMAT_H
 
-#include <iosfwd>
+#include "vertexattrib.h"
 
-struct SDL_Window;
-
-class Window
+struct VertexFormat
 {
-public:
-	Window();
+	VertexAttrib::Format attribs[VertexAttrib::LastAttrib + 1];
+	unsigned int attribs_count;
+	unsigned int stride;
 
-	~Window();
-
-	void Init(
-		const std::string & caption,
-		int resx,
-		int resy,
-		int color_bpp,
-		int depth_bpp,
-		int antialiasing,
-		bool fullscreen,
-		bool vsync,
-		std::ostream & info_output,
-		std::ostream & error_output);
-
-	void SwapBuffers();
-
-	/// Note that when the mouse cursor is hidden, it is also grabbed (confined to the application window)
-	void ShowMouseCursor(bool value);
-
-	void Screenshot(const std::string & filename);
-
-	int GetW() const;
-
-	int GetH() const;
-
-private:
-	SDL_Window * window;
-	void * glcontext;
-	int fsaa;
-	int w, h;
-	bool initialized;
-
-	bool ResizeWindow(int width, int height);
-
-	void ChangeDisplay(
-		int width,
-		int height,
-		int color_bpp,
-		int depth_bpp,
-		int antialiasing,
-		bool fullscreen,
-		bool vsync,
-		std::ostream & info_output,
-		std::ostream & error_output);
-
-	void LogOpenGLInfo(std::ostream & info_output);
+	/// predefined vertex formats
+	enum Enum
+	{
+		PNT332,
+		PTC324,
+		PT32,
+		P3,
+		LastFormat = P3
+	};
+	static const VertexFormat & Get(Enum e);
 };
 
-#endif
-
+#endif // _VERTEX_FORMAT_H

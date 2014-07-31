@@ -87,9 +87,9 @@ void FrameBufferTexture::Init(
 
 	switch (format)
 	{
-		case LUM8:
-		texture_format = GL_LUMINANCE8;
-		data_format = GL_LUMINANCE;
+		case R8:
+		texture_format = GL_R8;
+		data_format = GL_RED;
 		data_type = GL_UNSIGNED_BYTE;
 		break;
 

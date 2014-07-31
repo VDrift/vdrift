@@ -22,22 +22,14 @@
 #include <fstream>
 
 Factory<Model>::Factory() :
-	m_default(new Model()),
-	m_vbo(false)
+	m_default(new Model())
 {
-	// ctor
-}
-
-void Factory<Model>::init(bool use_vbo)
-{
-	m_vbo = use_vbo;
-
 	// init default model
-	std::stringstream error;
+	std::ostringstream error;
 	VertexArray va;
 	va.SetToUnitCube();
 	va.Scale(0.5, 0.5, 0.5);
-	m_default->Load(va, error, !m_vbo);
+	m_default->Load(va, error);
 }
 
 template <>
@@ -53,7 +45,7 @@ bool Factory<Model>::create(
 	if (std::ifstream(abspath.c_str()))
 	{
 		std::tr1::shared_ptr<ModelJoe03> temp(new ModelJoe03());
-		if (temp->Load(abspath, error, !m_vbo))
+		if (temp->Load(abspath, error))
 		{
 			sptr = temp;
 			return true;
@@ -72,7 +64,7 @@ bool Factory<Model>::create(
 	const JoePack& pack)
 {
 	std::tr1::shared_ptr<ModelJoe03> temp(new ModelJoe03());
-	if (temp->Load(name, error, !m_vbo, &pack))
+	if (temp->Load(name, error, &pack))
 	{
 		sptr = temp;
 		return true;
@@ -90,7 +82,7 @@ bool Factory<Model>::create(
 	const VertexArray& varray)
 {
 	std::tr1::shared_ptr<Model> temp(new Model());
-	if (temp->Load(varray, error, !m_vbo))
+	if (temp->Load(varray, error))
 	{
 		sptr = temp;
 		return true;

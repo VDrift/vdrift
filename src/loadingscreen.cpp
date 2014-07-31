@@ -66,17 +66,17 @@ bool LoadingScreen::Init(
 	content.load(boxtex, texturepath, "loadingbox.png", texinfo);
 	content.load(bartex, texturepath, "loadingbar.png", texinfo);
 
-	bardraw = root.GetDrawlist().twodim.insert(Drawable());
-	boxdraw = root.GetDrawlist().twodim.insert(Drawable());
-	barbackdraw = root.GetDrawlist().twodim.insert(Drawable());
-	Drawable & bardrawref = root.GetDrawlist().twodim.get(bardraw);
-	Drawable & boxdrawref = root.GetDrawlist().twodim.get(boxdraw);
-	Drawable & barbackdrawref = root.GetDrawlist().twodim.get(barbackdraw);
+	bardraw = root.GetDrawList().twodim.insert(Drawable());
+	boxdraw = root.GetDrawList().twodim.insert(Drawable());
+	barbackdraw = root.GetDrawList().twodim.insert(Drawable());
+	Drawable & bardrawref = root.GetDrawList().twodim.get(bardraw);
+	Drawable & boxdrawref = root.GetDrawList().twodim.get(boxdraw);
+	Drawable & barbackdrawref = root.GetDrawList().twodim.get(barbackdraw);
 
 	boxdrawref.SetTextures(boxtex->GetId());
 	boxdrawref.SetVertArray(&boxverts);
 	boxdrawref.SetDrawOrder(10000);
-	boxdrawref.SetCull(false, false);
+	boxdrawref.SetCull(false);
 	boxdrawref.SetColor(1, 1, 1, 1);
 
 	w = 128.0/displayw*3.;
@@ -85,7 +85,7 @@ bool LoadingScreen::Init(
 	barbackdrawref.SetTextures(bartex->GetId());
 	barbackdrawref.SetVertArray(&barbackverts);
 	barbackdrawref.SetDrawOrder(10001);
-	barbackdrawref.SetCull(false, false);
+	barbackdrawref.SetCull(false);
 	barbackdrawref.SetColor(0.3, 0.3, 0.3, 0.4);
 
 	hscale = 0.3;
@@ -93,7 +93,7 @@ bool LoadingScreen::Init(
 	bardrawref.SetTextures(bartex->GetId());
 	bardrawref.SetVertArray(&barverts);
 	bardrawref.SetDrawOrder(10002);
-	bardrawref.SetCull(false, false);
+	bardrawref.SetCull(false);
 	bardrawref.SetColor(1, 1, 1, 0.7);
 
 	float screenhwratio = displayh/(float)displayw;

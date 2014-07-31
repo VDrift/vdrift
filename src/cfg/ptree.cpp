@@ -23,7 +23,7 @@
 
 QT_TEST(ptree)
 {
-	std::stringstream err;
+	std::ostringstream err;
 	std::string str;
 
 	PTree ptree("test.cfg");

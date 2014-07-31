@@ -123,7 +123,7 @@ bool Config::load(std::istream & f)
 
 	// create empty section
 	iterator section = sections.insert(std::pair<std::string, Section>("", Section())).first;
-	
+
 	// start parsing
 	std::string line;
 	while (f && !f.eof())
@@ -280,8 +280,7 @@ bool Config::write(std::string save_as) const
 
 QT_TEST(configfile_test)
 {
-	std::stringstream instream;
-	instream <<
+	std::istringstream instream(
 		"\n#comment on the FIRST LINE??\n\n"
 		"variable outside of=a section\n\n"
 		"test section numero UNO\n"
@@ -297,7 +296,7 @@ QT_TEST(configfile_test)
 		"this is a duplicate = 1\n"
 		"random = intermediary\n"
 		"this is a duplicate = 2\n"
-		"unterminated line = good?";
+		"unterminated line = good?");
 
 	Config testconfig;
 	testconfig.load(instream);

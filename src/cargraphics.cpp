@@ -39,12 +39,12 @@ static inline T clamp(T val, T min, T max)
 struct LoadBody
 {
 	SceneNode & topnode;
-	keyed_container<SceneNode>::handle & bodynode;
+	SceneNode::Handle & bodynode;
 	LoadDrawable & loadDrawable;
 
 	LoadBody(
 		SceneNode & topnode,
-		keyed_container<SceneNode>::handle & bodynode,
+		SceneNode::Handle & bodynode,
 		LoadDrawable & loadDrawable) :
 		topnode(topnode),
 		bodynode(bodynode),
@@ -76,7 +76,7 @@ static bool LoadWheel(
 	SceneNode & topnode,
 	std::ostream & error_output)
 {
-	keyed_container<SceneNode>::handle wheelnode = topnode.AddNode();
+	SceneNode::Handle wheelnode = topnode.AddNode();
 	ContentManager & content = loadDrawable.content;
 	const std::string& path = loadDrawable.path;
 
@@ -289,7 +289,7 @@ bool CarGraphics::Load(
 			return false;
 		}
 
-		std::stringstream sstr;
+		std::ostringstream sstr;
 		sstr << ++i;
 		istr = sstr.str();
 	}
@@ -303,7 +303,7 @@ bool CarGraphics::Load(
 			return false;
 		}
 
-		std::stringstream sstr;
+		std::ostringstream sstr;
 		sstr << ++i;
 		istr = sstr.str();
 	}
@@ -349,11 +349,11 @@ void CarGraphics::Update(const std::vector<float> & inputs)
 void CarGraphics::Update(const CarDynamics & dynamics)
 {
 	if (!bodynode.valid()) return;
-	assert(dynamics.GetNumBodies() == topnode.Nodes());
+	assert(dynamics.GetNumBodies() == topnode.GetNodeList().size());
 
 	unsigned i = 0;
-	keyed_container<SceneNode> & childlist = topnode.GetNodelist();
-	for (keyed_container<SceneNode>::iterator ni = childlist.begin(); ni != childlist.end(); ++ni, ++i)
+	SceneNode::List & childlist = topnode.GetNodeList();
+	for (SceneNode::List::iterator ni = childlist.begin(); ni != childlist.end(); ++ni, ++i)
 	{
 		Vec3 pos = ToMathVector<float>(dynamics.GetPosition(i));
 		Quat rot = ToQuaternion<float>(dynamics.GetOrientation(i));
@@ -366,17 +366,17 @@ void CarGraphics::Update(const CarDynamics & dynamics)
 	for (std::list<Light>::iterator i = lights.begin(); i != lights.end(); i++)
 	{
 		SceneNode & node = bodynoderef.GetNode(i->node);
-		Drawable & draw = node.GetDrawlist().lights_omni.get(i->draw);
+		Drawable & draw = node.GetDrawList().lights_omni.get(i->draw);
 		draw.SetDrawEnable(applied_brakes > 0);
 	}
 	if (brakelights.valid())
 	{
-		Drawable & draw = bodynoderef.GetDrawlist().lights_emissive.get(brakelights);
+		Drawable & draw = bodynoderef.GetDrawList().lights_emissive.get(brakelights);
 		draw.SetDrawEnable(applied_brakes > 0);
 	}
 	if (reverselights.valid())
 	{
-		Drawable & draw = bodynoderef.GetDrawlist().lights_emissive.get(reverselights);
+		Drawable & draw = bodynoderef.GetDrawList().lights_emissive.get(reverselights);
 		draw.SetDrawEnable(dynamics.GetTransmission().GetGear() < 0);
 	}
 
@@ -391,7 +391,7 @@ void CarGraphics::Update(const CarDynamics & dynamics)
 void CarGraphics::SetColor(float r, float g, float b)
 {
 	SceneNode & bodynoderef = topnode.GetNode(bodynode);
-	keyed_container<Drawable> & car_noblend = bodynoderef.GetDrawlist().car_noblend;
+	keyed_container<Drawable> & car_noblend = bodynoderef.GetDrawList().car_noblend;
 	for (keyed_container<Drawable>::iterator i = car_noblend.begin(); i != car_noblend.end(); ++i)
 	{
 		i->SetColor(r, g, b, 1);
@@ -405,7 +405,7 @@ void CarGraphics::EnableInteriorView(bool value)
 	// disable glass drawing
 	interior_view = value;
 	SceneNode & bodynoderef = topnode.GetNode(bodynode);
-	keyed_container<Drawable> & normal_blend = bodynoderef.GetDrawlist().normal_blend;
+	keyed_container<Drawable> & normal_blend = bodynoderef.GetDrawList().normal_blend;
 	for (keyed_container<Drawable>::iterator i = normal_blend.begin(); i != normal_blend.end(); ++i)
 	{
 		i->SetDrawEnable(!interior_view);
@@ -453,13 +453,13 @@ bool CarGraphics::LoadLight(
 	}
 	models.insert(mesh);
 
-	keyed_container <Drawable> & dlist = node.GetDrawlist().lights_omni;
+	keyed_container <Drawable> & dlist = node.GetDrawList().lights_omni;
 	lights.back().draw = dlist.insert(Drawable());
 
 	Drawable & draw = dlist.get(lights.back().draw);
 	draw.SetColor(col[0], col[1], col[2]);
 	draw.SetModel(*mesh);
-	draw.SetCull(true, true);
+	draw.SetCull(true);
 	draw.SetDrawEnable(false);
 
 	return true;

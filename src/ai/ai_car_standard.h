@@ -107,11 +107,11 @@ private:
 	VertexArray avoidanceshape;
 	std::vector <Bezier> brakelook;
 	std::vector <Bezier> steerlook;
-	keyed_container <Drawable>::handle brakedraw;
-	keyed_container <Drawable>::handle steerdraw;
-	keyed_container <Drawable>::handle avoidancedraw;
+	SceneNode::DrawableHandle brakedraw;
+	SceneNode::DrawableHandle steerdraw;
+	SceneNode::DrawableHandle avoidancedraw;
 
-	static void ConfigureDrawable(keyed_container <Drawable>::handle & ref, SceneNode & topnode, float r, float g, float b);
+	static void ConfigureDrawable(SceneNode::DrawableHandle & ref, SceneNode & topnode, float r, float g, float b);
 	static void AddLinePoint(VertexArray & va, const Vec3 & p);
 #endif
 

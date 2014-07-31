@@ -19,14 +19,16 @@
 
 #include "graphics_gl2.h"
 #include "graphics_camera.h"
+#include "scenenode.h"
 #include "glutil.h"
 #include "shader.h"
 #include "uniforms.h"
+#include "vertexattrib.h"
 #include "sky.h"
 
 /// array end ptr
 template <typename T, size_t N>
-static T * end(T (&ar)[N])
+static T * End(T (&ar)[N])
 {
 	return ar + N;
 }
@@ -68,8 +70,8 @@ static FrameBufferTexture::Format TextureFormatFromString(const std::string & fo
 {
 	if (format == "depth" || format == "depthshadow")
 		return FrameBufferTexture::DEPTH24;
-	else if (format == "luminance8")
-		return FrameBufferTexture::LUM8;
+	else if (format == "R8")
+		return FrameBufferTexture::R8;
 	else if (format == "RGBA8")
 		return FrameBufferTexture::RGBA8;
 	else if (format == "RGB8")
@@ -213,11 +215,29 @@ static void AttachCubeSide(int i, FrameBufferObject & reflection_fbo, std::ostre
 	CheckForOpenGLErrors("cubemap generation: FBO cube side attachment", error_output);
 }
 
+static bool Cull(const Frustum & f, const Drawable & d)
+{
+	const float radius = d.GetRadius();
+	Vec3 center = d.GetObjectCenter();
+	d.GetTransform().TransformVectorOut(center[0], center[1], center[2]);
+	for (int i = 0; i < 6; i++)
+	{
+		const float rd =
+			f.frustum[i][0] * center[0] +
+			f.frustum[i][1] * center[1] +
+			f.frustum[i][2] * center[2] +
+			f.frustum[i][3];
+		if (rd <= -radius)
+			return true;
+	}
+	return false;
+}
+
 GraphicsGL2::GraphicsGL2() :
 	initialized(false),
 	max_anisotropy(0),
-	shadows(false),
 	closeshadow(5.0),
+	shadows(false),
 	fsaa(1),
 	lighting(0),
 	bloom(false),
@@ -225,6 +245,7 @@ GraphicsGL2::GraphicsGL2() :
 	contrast(1.0),
 	reflection_status(REFLECTION_DISABLED),
 	renderconfigfile("basic.conf"),
+	renderscene(vertex_buffer),
 	sky_dynamic(false)
 {
 	// ctor
@@ -261,6 +282,15 @@ bool GraphicsGL2::Init(
 		return false;
 	}
 
+	#ifdef _WIN32
+	// workaround for broken vao implementation Intel/Windows
+	{
+		const std::string vendor = (const char*)glGetString(GL_VENDOR);
+		if (vendor == "Intel")
+			vertex_buffer.BindElementBufferExplicitly();
+	}
+	#endif
+
 	shadows = enableshadows;
 	shadow_distance = new_shadow_distance;
 	shadow_quality = new_shadow_quality;
@@ -293,12 +323,7 @@ bool GraphicsGL2::Init(
 	glGetIntegerv(GL_MAX_DRAW_BUFFERS, &mrt);
 	info_output << "Maximum draw buffers (" << mrtreq << " required): " << mrt << std::endl;
 
-	#ifndef FBOEXT
 	bool use_fbos = GLEW_ARB_framebuffer_object && mrt >= mrtreq && maxattach >= mrtreq;
-	#else
-	bool use_fbos = GLEW_EXT_framebuffer_object && mrt >= mrtreq && maxattach >= mrtreq;
-	#endif
-
 	if (renderconfigfile != "basic.conf" && !use_fbos)
 	{
 		info_output << "Graphics card doesn't support framebuffer objects." << std::endl;
@@ -353,12 +378,6 @@ bool GraphicsGL2::Init(
 	}
 
 	// gl state setup
-	glEnable(GL_LINE_SMOOTH);
-	glHint(GL_LINE_SMOOTH_HINT, GL_NICEST);
-	glShadeModel(GL_SMOOTH);
-	glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-	glClearColor(0, 0, 0, 0);
-	glClearDepth(1);
 	glPolygonOffset(-1, -1);
 
 	info_output << "Renderer: " << shaderpath << "/" << renderconfigfile << std::endl;
@@ -371,26 +390,50 @@ void GraphicsGL2::Deinit()
 {
 	if (!shaders.empty())
 	{
-		glUseProgramObjectARB(0);
+		glUseProgram(0);
 		shaders.clear();
 	}
 }
 
-DrawableContainer <PtrVector> & GraphicsGL2::GetDynamicDrawlist()
+void GraphicsGL2::BindDynamicVertexData(std::vector<SceneNode*> nodes)
 {
-	return dynamic_drawlist;
+	vertex_buffer.SetDynamicVertexData(&nodes[0], nodes.size());
 }
 
-void GraphicsGL2::AddStaticNode(SceneNode & node, bool clearcurrent)
+void GraphicsGL2::BindStaticVertexData(std::vector<SceneNode*> nodes)
 {
-	static_drawlist.Generate(node, clearcurrent);
+	vertex_buffer.SetStaticVertexData(&nodes[0], nodes.size());
+}
+
+void GraphicsGL2::AddDynamicNode(SceneNode & node)
+{
+	Mat4 identity;
+	node.Traverse(dynamic_drawlist, identity);
+}
+
+void GraphicsGL2::AddStaticNode(SceneNode & node)
+{
+	Mat4 identity;
+	node.Traverse(static_drawlist, identity);
+	static_drawlist.ForEach(OptimizeFunctor());
+}
+
+void GraphicsGL2::ClearDynamicDrawables()
+{
+	dynamic_drawlist.clear();
+}
+
+void GraphicsGL2::ClearStaticDrawables()
+{
+	static_drawlist.clear();
 }
 
 void GraphicsGL2::SetupScene(
 	float fov, float new_view_distance,
 	const Vec3 cam_position,
 	const Quat & cam_rotation,
-	const Vec3 & dynamic_reflection_sample_pos)
+	const Vec3 & dynamic_reflection_sample_pos,
+	std::ostream & error_output)
 {
 	// setup the default camera from the passed-in parameters
 	{
@@ -440,22 +483,16 @@ void GraphicsGL2::SetupScene(
 		cam.orthomax = Vec3(1, 0, 1);
 	}
 
-	glMatrixMode(GL_TEXTURE);
-
-	// put the default camera transform into texture3, needed by shaders only
-	Mat4 viewMatrix;
-	cam_rotation.GetMatrix4(viewMatrix);
-	float translate[4] = {-cam_position[0], -cam_position[1], -cam_position[2], 0};
-	viewMatrix.MultiplyVector4(translate);
-	viewMatrix.Translate(translate[0], translate[1], translate[2]);
-
-	glstate.ActiveTexture(3);
-	glLoadMatrixf(viewMatrix.GetArray());
-
 	// create cameras for shadow passes
 	if (shadows)
 	{
-		Mat4 viewMatrixInv = viewMatrix.Inverse();
+		Mat4 view_matrix;
+		cam_rotation.GetMatrix4(view_matrix);
+		float translate[4] = {-cam_position[0], -cam_position[1], -cam_position[2], 0};
+		view_matrix.MultiplyVector4(translate);
+		view_matrix.Translate(translate[0], translate[1], translate[2]);
+
+		Mat4 view_matrix_inv = view_matrix.Inverse();
 
 		// derive light rotation quaternion from light direction vector
 		Quat light_rotation;
@@ -496,23 +533,44 @@ void GraphicsGL2::SetupScene(
 			const Mat4 cam_proj_mat = GetProjMatrix(cam);
 			const Mat4 cam_view_mat = GetViewMatrix(cam);
 
-			Mat4 clip_mat;
-			clip_mat.Scale(0.5f);
-			clip_mat.Translate(0.5f, 0.5f, 0.5f);
-			clip_mat = cam_proj_mat.Multiply(clip_mat);
-			clip_mat = cam_view_mat.Multiply(clip_mat);
+			Mat4 clip_matrix;
+			clip_matrix.Scale(0.5f);
+			clip_matrix.Translate(0.5f, 0.5f, 0.5f);
+			clip_matrix = cam_proj_mat.Multiply(clip_matrix);
+			clip_matrix = cam_view_mat.Multiply(clip_matrix);
 
 			// premultiply the clip matrix with default camera view inverse matrix
-			clip_mat = viewMatrixInv.Multiply(clip_mat);
+			clip_matrix = view_matrix_inv.Multiply(clip_matrix);
 
-			// storing it in a texture matrix
-			glstate.ActiveTexture(4 + i);
-			glLoadMatrixf(clip_mat.GetArray());
+			shadow_matrix[i] = clip_matrix;
 		}
+
+		assert(shadow_distance < 3);
+		renderscene.SetShadowMatrix(shadow_matrix, shadow_distance + 1);
+		postprocess.SetShadowMatrix(shadow_matrix, shadow_distance + 1);
+	}
+	else
+	{
+		renderscene.SetShadowMatrix(NULL, 0);
+		postprocess.SetShadowMatrix(NULL, 0);
 	}
 
-	glstate.ActiveTexture(0);
-	glMatrixMode(GL_MODELVIEW);
+	// sort the two dimentional drawlist so we get correct ordering
+	std::sort(dynamic_drawlist.twodim.begin(), dynamic_drawlist.twodim.end(), &SortDraworder);
+
+	// do fast culling queries for static geometry per pass
+	ClearCulledDrawLists();
+	for (std::vector <GraphicsConfigPass>::const_iterator i = config.passes.begin(); i != config.passes.end(); i++)
+	{
+		CullScenePass(*i, error_output);
+	}
+
+	renderscene.SetFSAA(fsaa);
+	renderscene.SetContrast(contrast);
+	renderscene.SetSunDirection(light_direction);
+
+	postprocess.SetContrast(contrast);
+	postprocess.SetSunDirection(light_direction);
 }
 
 void GraphicsGL2::UpdateScene(float dt)
@@ -526,29 +584,16 @@ void GraphicsGL2::UpdateScene(float dt)
 
 void GraphicsGL2::DrawScene(std::ostream & error_output)
 {
-	renderscene.SetFSAA(fsaa);
-	renderscene.SetContrast(contrast);
-	renderscene.SetSunDirection(light_direction);
 
-	postprocess.SetContrast(contrast);
-	postprocess.SetSunDirection(light_direction);
-
-	// sort the two dimentional drawlist so we get correct ordering
-	std::sort(dynamic_drawlist.twodim.begin(), dynamic_drawlist.twodim.end(), &SortDraworder);
-
-	// do fast culling queries for static geometry per pass
-	std::map <std::string, PtrVector <Drawable> > culled_static_drawlist;
-	for (std::vector <GraphicsConfigPass>::const_iterator i = config.passes.begin(); i != config.passes.end(); i++)
-	{
-		CullScenePass(*i, culled_static_drawlist, error_output);
-	}
+	// vertex object might have been modified ouside, reset it
+	glstate.ResetVertexObject();
 
 	// draw the passes
 	for (std::vector <GraphicsConfigPass>::const_iterator i = config.passes.begin(); i != config.passes.end(); i++)
 	{
 		assert(!i->draw.empty());
 		if (i->draw.back() != "postprocess")
-			DrawScenePass(*i, culled_static_drawlist, error_output);
+			DrawScenePass(*i, error_output);
 		else
 			DrawScenePassPost(*i, error_output);
 	}
@@ -612,7 +657,7 @@ GraphicsState & GraphicsGL2::GetState()
 
 Shader * GraphicsGL2::GetShader(const std::string & name)
 {
-	shader_map_type::iterator it = shaders.find(name);
+	ShaderMap::iterator it = shaders.find(name);
 	if (it != shaders.end())
 		return &it->second;
 	else
@@ -630,17 +675,6 @@ void GraphicsGL2::ChangeDisplay(
 {
 	glstate.SetViewport(width, height);
 
-	GLfloat ratio = (GLfloat)width / (GLfloat)height;
-	Mat4 m;
-
-	glMatrixMode(GL_PROJECTION);
-	m.Perspective(45.0f, ratio, 0.1f, 100.0f);
-	glLoadMatrixf(m.GetArray());
-
-	glMatrixMode(GL_MODELVIEW);
-	m.LoadIdentity();
-	glLoadMatrixf(m.GetArray());
-
 	CheckForOpenGLErrors("ChangeDisplay", error_output);
 
 	w = width;
@@ -652,12 +686,12 @@ void GraphicsGL2::GetShaderDefines(std::vector <std::string> & defines) const
 	defines.clear();
 
 	{
-		std::stringstream s;
+		std::ostringstream s;
 		s << "SCREENRESX " << w;
 		defines.push_back(s.str());
 	}
 	{
-		std::stringstream s;
+		std::ostringstream s;
 		s << "SCREENRESY " << h;
 		defines.push_back(s.str());
 	}
@@ -703,7 +737,7 @@ bool GraphicsGL2::EnableShaders(std::ostream & info_output, std::ostream & error
 	CheckForOpenGLErrors("EnableShaders: start", error_output);
 
 	// unload shaders
-	glUseProgramObjectARB(0);
+	glUseProgram(0);
 	shaders.clear();
 	CheckForOpenGLErrors("EnableShaders: shader unload", error_output);
 
@@ -823,9 +857,10 @@ bool GraphicsGL2::EnableShaders(std::ostream & info_output, std::ostream & error
 	}
 
 	// setup frame buffer objects and shaders
-	std::vector <std::string> shader_uniforms(Uniforms::str, end(Uniforms::str));
-	std::vector <std::string> shader_defines;
-	GetShaderDefines(shader_defines);
+	const std::vector <std::string> attributes(VertexAttrib::str, End(VertexAttrib::str));
+	const std::vector <std::string> uniforms(Uniforms::str, End(Uniforms::str));
+	std::vector <std::string> global_defines;
+	GetShaderDefines(global_defines);
 	for (std::vector <GraphicsConfigPass>::const_iterator i = config.passes.begin(); i != config.passes.end(); i++)
 	{
 		// check conditions
@@ -841,7 +876,7 @@ bool GraphicsGL2::EnableShaders(std::ostream & info_output, std::ostream & error
 			std::vector <FrameBufferTexture*> fbotex;
 			for (std::vector <std::string>::const_iterator o = outputs.begin(); o != outputs.end(); o++)
 			{
-				texture_output_map_type::iterator to = texture_outputs.find(*o);
+				TextureOutputMap::iterator to = texture_outputs.find(*o);
 				if (to != texture_outputs.end())
 				{
 					fbotex.push_back(&to->second);
@@ -871,14 +906,14 @@ bool GraphicsGL2::EnableShaders(std::ostream & info_output, std::ostream & error
 			const GraphicsConfigShader * cs = csi->second;
 
 			std::vector <std::string> defines = Tokenize(cs->defines, " ");
-			defines.reserve(defines.size() + shader_defines.size());
-			defines.insert(defines.end(), shader_defines.begin(), shader_defines.end());
+			defines.reserve(defines.size() + global_defines.size());
+			defines.insert(defines.end(), global_defines.begin(), global_defines.end());
 
 			Shader & shader = shaders[cs->name];
 			if (!shader.Load(
 				shaderpath + "/" + cs->vertex,
 				shaderpath + "/" + cs->fragment,
-				defines, shader_uniforms,
+				defines, uniforms, attributes,
 				info_output, error_output))
 			{
 				return false;
@@ -889,9 +924,17 @@ bool GraphicsGL2::EnableShaders(std::ostream & info_output, std::ostream & error
 	return true;
 }
 
+void GraphicsGL2::ClearCulledDrawLists()
+{
+	for(CulledDrawListMap::iterator i = culled_drawlists.begin(); i != culled_drawlists.end(); i++)
+	{
+		i->second.drawables.clear();
+		i->second.valid = false;
+	}
+}
+
 void GraphicsGL2::CullScenePass(
 	const GraphicsConfigPass & pass,
-	std::map <std::string, PtrVector <Drawable> > & culled_static_drawlist,
 	std::ostream & error_output)
 {
 	// for each pass, we have which camera and which draw layer to use
@@ -905,7 +948,7 @@ void GraphicsGL2::CullScenePass(
 	for (std::vector <std::string>::const_iterator d = pass.draw.begin(); d != pass.draw.end(); d++)
 	{
 		// determine if we're dealing with a cubemap
-		render_output_map_type::iterator oi = render_outputs.find(pass.output);
+		RenderOutputMap::iterator oi = render_outputs.find(pass.output);
 		if (oi == render_outputs.end())
 		{
 			ReportOnce(&pass, "Render output "+pass.output+" couldn't be found", error_output);
@@ -919,21 +962,18 @@ void GraphicsGL2::CullScenePass(
 		{
 			if (cubemap)
 			{
-				// build sub-camera
-
 				// build a name for the sub camera
 				{
-					std::stringstream converter;
-					converter << pass.camera << "_cubeside" << cubeside;
-					cameraname = converter.str();
+					std::ostringstream s;
+					s << pass.camera << "_cubeside" << cubeside;
+					cameraname = s.str();
 				}
 
 				// get the base camera
-				camera_map_type::iterator bci = cameras.find(pass.camera);
-
+				CameraMap::iterator bci = cameras.find(pass.camera);
 				if (bci == cameras.end())
 				{
-					ReportOnce(&pass, "Camera "+pass.camera+" couldn't be found", error_output);
+					ReportOnce(&pass, "Camera " + pass.camera + " couldn't be found", error_output);
 					return;
 				}
 
@@ -950,44 +990,70 @@ void GraphicsGL2::CullScenePass(
 				cam.h = fbo.GetHeight();
 			}
 
-			std::string key = BuildKey(cameraname, *d);
+			const std::string drawlist_name = BuildKey(cameraname, *d);
+			CulledDrawList & drawlist = culled_drawlists[drawlist_name];
+			if (drawlist.valid)
+				break;
+
+			drawlist.valid = true;
 			if (pass.cull)
 			{
-				camera_map_type::iterator ci = cameras.find(cameraname);
-				if (ci == cameras.end())
+				// cull static drawlist
+				reseatable_reference <AabbTreeNodeAdapter <Drawable> > container = static_drawlist.GetByName(*d);
+				if (!container)
 				{
-					ReportOnce(&pass, "Camera "+cameraname+" couldn't be found", error_output);
+					ReportOnce(&pass, "Drawable container " + *d + " couldn't be found", error_output);
 					return;
 				}
 
-				GraphicsCamera & cam = ci->second;
-				if (culled_static_drawlist.find(key) == culled_static_drawlist.end())
+				CameraMap::iterator ci = cameras.find(cameraname);
+				if (ci == cameras.end())
 				{
-					Frustum frustum;
-					frustum.Extract(GetProjMatrix(cam).GetArray(), GetViewMatrix(cam).GetArray());
+					ReportOnce(&pass, "Camera " + cameraname + " couldn't be found", error_output);
+					return;
+				}
+				const GraphicsCamera & cam = ci->second;
 
-					reseatable_reference <AabbTreeNodeAdapter <Drawable> > container =
-						static_drawlist.GetDrawlist().GetByName(*d);
-					if (!container)
-					{
-						ReportOnce(&pass, "Drawable container "+*d+" couldn't be found", error_output);
-						return;
-					}
+				Frustum frustum;
+				frustum.Extract(GetProjMatrix(cam).GetArray(), GetViewMatrix(cam).GetArray());
 
-					container->Query(frustum, culled_static_drawlist[key]);
+				container->Query(frustum, drawlist.drawables);
+
+				// cull dynamic drawlist
+				reseatable_reference <PtrVector <Drawable> > container_dynamic = dynamic_drawlist.GetByName(*d);
+				if (!container_dynamic)
+				{
+					ReportOnce(&pass, "Drawable container " + *d + " couldn't be found", error_output);
+					return;
+				}
+				for (size_t i = 0; i < container_dynamic->size(); ++i)
+				{
+					if (!Cull(frustum, *(*container_dynamic)[i]))
+						drawlist.drawables.push_back((*container_dynamic)[i]);
 				}
 			}
 			else
 			{
-				reseatable_reference <AabbTreeNodeAdapter <Drawable> > container =
-					static_drawlist.GetDrawlist().GetByName(*d);
+				// copy static drawlist
+				reseatable_reference <AabbTreeNodeAdapter <Drawable> > container = static_drawlist.GetByName(*d);
 				if (!container)
 				{
-					ReportOnce(&pass, "Drawable container "+*d+" couldn't be found", error_output);
+					ReportOnce(&pass, "Drawable container " + *d + " couldn't be found", error_output);
 					return;
 				}
+				container->Query(Aabb<float>::IntersectAlways(), drawlist.drawables);
 
-				container->Query(Aabb<float>::IntersectAlways(), culled_static_drawlist[key]);
+				// copy dynamic drawlist
+				reseatable_reference <PtrVector <Drawable> > container_dynamic = dynamic_drawlist.GetByName(*d);
+				if (!container_dynamic)
+				{
+					ReportOnce(&pass, "Drawable container " + *d + " couldn't be found", error_output);
+					return;
+				}
+				drawlist.drawables.insert(
+					drawlist.drawables.end(),
+					container_dynamic->begin(),
+					container_dynamic->end());
 			}
 		}
 	}
@@ -995,7 +1061,6 @@ void GraphicsGL2::CullScenePass(
 
 void GraphicsGL2::DrawScenePass(
 	const GraphicsConfigPass & pass,
-	std::map <std::string, PtrVector <Drawable> > & culled_static_drawlist,
 	std::ostream & error_output)
 {
 	// log failure here?
@@ -1003,13 +1068,13 @@ void GraphicsGL2::DrawScenePass(
 		return;
 
 	// setup shader
-	shader_map_type::iterator si = shaders.find(pass.shader);
+	ShaderMap::iterator si = shaders.find(pass.shader);
 	if (si == shaders.end())
 	{
 		ReportOnce(&pass, "Shader " + pass.shader + " couldn't be found", error_output);
 		return;
 	}
-	renderscene.SetShader(&si->second);
+	renderscene.SetShader(si->second);
 
 	// setup textures
 	std::vector <TextureInterface*> input_textures;
@@ -1022,7 +1087,7 @@ void GraphicsGL2::DrawScenePass(
 	renderscene.SetBlendMode(glstate, BlendModeFromString(pass.blendmode));
 
 	// setup output
-	render_output_map_type::iterator oi = render_outputs.find(pass.output);
+	RenderOutputMap::iterator oi = render_outputs.find(pass.output);
 	if (oi == render_outputs.end())
 	{
 		ReportOnce(&pass, "Render output " + pass.output + " couldn't be found", error_output);
@@ -1039,16 +1104,16 @@ void GraphicsGL2::DrawScenePass(
 		if (cubemap)
 		{
 			// build a name for the sub camera
-			std::stringstream converter;
-			converter << pass.camera << "_cubeside" << cubeside;
-			cameraname = converter.str();
+			std::ostringstream s;
+			s << pass.camera << "_cubeside" << cubeside;
+			cameraname = s.str();
 
 			// attach the correct cube side on the render output
 			AttachCubeSide(cubeside, output.RenderToFBO(), error_output);
 		}
 
 		// setup camera
-		camera_map_type::iterator ci = cameras.find(cameraname);
+		CameraMap::iterator ci = cameras.find(cameraname);
 		if (ci == cameras.end())
 		{
 			ReportOnce(&pass, "Camera " + pass.camera + " couldn't be found", error_output);
@@ -1061,28 +1126,17 @@ void GraphicsGL2::DrawScenePass(
 		renderscene.ClearOutput(glstate, pass.clear_color, pass.clear_depth);
 		for (std::vector <std::string>::const_iterator d = pass.draw.begin(); d != pass.draw.end(); d++)
 		{
-			const std::string & layer = *d;
-
-			// setup dynamic drawlist
-			reseatable_reference <PtrVector <Drawable> > container_dynamic = dynamic_drawlist.GetByName(layer);
-			if (!container_dynamic)
+			const std::string drawlist_name = BuildKey(cameraname, *d);
+			CulledDrawListMap::const_iterator drawlist_it = culled_drawlists.find(drawlist_name);
+			if (drawlist_it == culled_drawlists.end())
 			{
-				ReportOnce(&pass, "Drawable container " + layer + " couldn't be found", error_output);
+				ReportOnce(&pass, "Couldn't find culled static drawlist for camera/draw combination: " + drawlist_name, error_output);
 				return;
 			}
 
-			// setup static drawlist
-			const std::string drawlist_key = BuildKey(cameraname, layer);
-			std::map <std::string, PtrVector <Drawable> >::const_iterator container_static = culled_static_drawlist.find(drawlist_key);
-			if (container_static == culled_static_drawlist.end())
+			if (!drawlist_it->second.drawables.empty())
 			{
-				ReportOnce(&pass, "Couldn't find culled static drawlist for camera/draw combination: " + drawlist_key, error_output);
-				return;
-			}
-
-			if (!container_dynamic->empty() || !container_static->second.empty())
-			{
-				renderscene.SetDrawLists(*container_dynamic, container_static->second);
+				renderscene.SetDrawList(drawlist_it->second.drawables);
 				renderscene.Render(glstate, error_output);
 			}
 		}
@@ -1100,7 +1154,7 @@ void GraphicsGL2::DrawScenePassPost(
 	if (!pass.conditions.Satisfied(conditions))
 		return;
 
-	shader_map_type::iterator si = shaders.find(pass.shader);
+	ShaderMap::iterator si = shaders.find(pass.shader);
 	if (si == shaders.end())
 	{
 		ReportOnce(&pass, "Shader " + pass.shader + " couldn't be found", error_output);
@@ -1116,7 +1170,7 @@ void GraphicsGL2::DrawScenePassPost(
 	postprocess.SetDepthMode(glstate, DepthModeFromString(pass.depthtest), pass.write_depth);
 	postprocess.SetBlendMode(glstate, BlendModeFromString(pass.blendmode));
 
-	render_output_map_type::iterator oi = render_outputs.find(pass.output);
+	RenderOutputMap::iterator oi = render_outputs.find(pass.output);
 	if (oi == render_outputs.end())
 	{
 		ReportOnce(&pass, "Render output " + pass.output + " couldn't be found", error_output);
@@ -1127,7 +1181,7 @@ void GraphicsGL2::DrawScenePassPost(
 	// setup camera, even though we don't use it directly for the post process
 	// we want to have some info available
 	std::string cameraname = pass.camera;
-	camera_map_type::iterator ci = cameras.find(cameraname);
+	CameraMap::iterator ci = cameras.find(cameraname);
 	if (ci == cameras.end())
 	{
 		ReportOnce(&pass, "Camera " + cameraname + " couldn't be found", error_output);

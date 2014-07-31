@@ -168,7 +168,7 @@ private:
 
 		// dynamic track objects
 		SceneNode dynamic_node;
-		std::vector<keyed_container<SceneNode>::handle> body_nodes;
+		std::vector<SceneNode::Handle> body_nodes;
 		std::list<MotionState> body_transforms;
 
 		// road information
@@ -176,9 +176,7 @@ private:
 		std::list<RoadStrip> roads;
 		std::vector<std::pair<Vec3, Quat > > start_positions;
 
-		// racing line data
 		SceneNode racingline_node;
-		std::tr1::shared_ptr<Texture> racingline_texture;
 
 		// track state
 		bool reverse;

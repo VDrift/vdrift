@@ -44,9 +44,9 @@ public:
 
 private:
 	SceneNode root;
-	keyed_container <Drawable>::handle bardraw;
-	keyed_container <Drawable>::handle barbackdraw;
-	keyed_container <Drawable>::handle boxdraw;
+	SceneNode::DrawableHandle bardraw;
+	SceneNode::DrawableHandle barbackdraw;
+	SceneNode::DrawableHandle boxdraw;
 	std::tr1::shared_ptr<Texture> bartex;
 	std::tr1::shared_ptr<Texture> boxtex;
 	VertexArray barverts;

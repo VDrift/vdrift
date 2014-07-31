@@ -24,15 +24,16 @@
 #include "graphics_config.h"
 #include "graphicsstate.h"
 #include "texture.h"
-#include "staticdrawables.h"
+#include "aabb_tree_adapter.h"
+#include "drawable_container.h"
 #include "render_input_postprocess.h"
 #include "render_input_scene.h"
 #include "render_output.h"
+#include "vertexbuffer.h"
 #include "memory.h"
 
 struct GraphicsCamera;
 class Shader;
-class SceneNode;
 class Sky;
 
 class GraphicsGL2 : public Graphics
@@ -62,16 +63,24 @@ public:
 
 	virtual void Deinit();
 
-	virtual DrawableContainer <PtrVector> & GetDynamicDrawlist();
+	virtual void BindDynamicVertexData(std::vector<SceneNode*> nodes);
 
-	virtual void AddStaticNode(SceneNode & node, bool clearcurrent = true);
+	virtual void BindStaticVertexData(std::vector<SceneNode*> nodes);
 
-	/// Setup scene cameras
+	virtual void AddDynamicNode(SceneNode & node);
+
+	virtual void AddStaticNode(SceneNode & node);
+
+	virtual void ClearDynamicDrawables();
+
+	virtual void ClearStaticDrawables();
+
 	virtual void SetupScene(
 		float fov, float new_view_distance,
 		const Vec3 cam_position,
 		const Quat & cam_rotation,
-		const Vec3 & dynamic_reflection_sample_pos);
+		const Vec3 & dynamic_reflection_sample_pos,
+		std::ostream & error_output);
 
 	virtual void UpdateScene(float dt);
 
@@ -116,10 +125,14 @@ private:
 	int w, h;
 	bool initialized;
 	GLint max_anisotropy;
-	bool shadows;
+
+	// shadow state
+	Mat4 shadow_matrix[3];
 	int shadow_distance;
 	int shadow_quality;
 	float closeshadow;
+	bool shadows;
+
 	unsigned int fsaa;
 	int lighting; ///<lighting quality; see data/settings/options.config for definition of values
 	bool bloom;
@@ -136,19 +149,35 @@ private:
 	GraphicsConfig config;
 
 	// shaders
-	typedef std::map <std::string, Shader> shader_map_type;
-	shader_map_type shaders;
+	typedef std::map <std::string, Shader> ShaderMap;
+	ShaderMap shaders;
+
+	// vertex data buffer
+	VertexBuffer vertex_buffer;
 
 	// scenegraph output
-	DrawableContainer <PtrVector> dynamic_drawlist; //used for objects that move or change
+	template <typename T> class PtrVector : public std::vector<T*> {};
+	typedef DrawableContainer <PtrVector> DynamicDrawables;
+	DynamicDrawables dynamic_drawlist; //used for objects that move or change
+
+	typedef DrawableContainer<AabbTreeNodeAdapter> StaticDrawables;
 	StaticDrawables static_drawlist; //used for objects that will never change
 
-	// render outputs
-	typedef std::map <std::string, RenderOutput> render_output_map_type;
-	render_output_map_type render_outputs;
+	struct CulledDrawList
+	{
+		CulledDrawList() : valid(false) {};
+		PtrVector <Drawable> drawables;
+		bool valid;
+	};
+	typedef std::map <std::string, CulledDrawList> CulledDrawListMap;
+	CulledDrawListMap culled_drawlists;
 
-	typedef std::map <std::string, FrameBufferTexture> texture_output_map_type;
-	texture_output_map_type texture_outputs;
+	// render outputs
+	typedef std::map <std::string, RenderOutput> RenderOutputMap;
+	RenderOutputMap render_outputs;
+
+	typedef std::map <std::string, FrameBufferTexture> TextureOutputMap;
+	TextureOutputMap texture_outputs;
 
 	// outputs and other textures used as inputs
 	std::map <std::string, reseatable_reference <TextureInterface> > texture_inputs;
@@ -158,8 +187,8 @@ private:
 	RenderInputPostprocess postprocess;
 
 	// camera data
-	typedef std::map <std::string, GraphicsCamera> camera_map_type;
-	camera_map_type cameras;
+	typedef std::map <std::string, GraphicsCamera> CameraMap;
+	CameraMap cameras;
 
 	Vec3 light_direction;
 	std::tr1::shared_ptr<Sky> sky;
@@ -189,14 +218,14 @@ private:
 
 	void DisableShaders(std::ostream & error_output);
 
+	void ClearCulledDrawLists();
+
 	void CullScenePass(
 		const GraphicsConfigPass & pass,
-		std::map <std::string, PtrVector <Drawable> > & culled_static_drawlist,
 		std::ostream & error_output);
 
 	void DrawScenePass(
 		const GraphicsConfigPass & pass,
-		std::map <std::string, PtrVector <Drawable> > & culled_static_drawlist,
 		std::ostream & error_output);
 
 	/// draw postprocess scene pass

@@ -101,7 +101,7 @@ bool AutoUpdate::Load(const std::string & path)
 		{
 			// Convert the configfile string var to an int.
 			int revnum(0);
-			std::stringstream s(p->second);
+			std::istringstream s(p->second);
 			s >> revnum;
 			(*group)[p->first] = revnum;
 		}

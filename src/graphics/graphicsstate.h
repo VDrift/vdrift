@@ -23,35 +23,6 @@
 #include "glew.h"
 #include <cassert>
 
-// allow to run with fbo ext on older gpus (experimental compile time option)
-#ifdef FBOEXT
-
-#undef glGenFramebuffers
-#undef glBindFramebuffer
-#undef glGenRenderbuffers
-#undef glBindRenderbuffer
-#undef glRenderbufferStorage
-#undef glFramebufferRenderbuffer
-#undef glFramebufferTexture2D
-#undef glCheckFramebufferStatus
-#undef glDeleteFramebuffers
-#undef glDeleteRenderbuffers
-#undef glBlitFramebuffer
-
-#define glGenFramebuffers GLEW_GET_FUN(__glewGenFramebuffersEXT)
-#define glBindFramebuffer GLEW_GET_FUN(__glewBindFramebufferEXT)
-#define glGenRenderbuffers GLEW_GET_FUN(__glewGenRenderbuffersEXT)
-#define glBindRenderbuffer GLEW_GET_FUN(__glewBindRenderbufferEXT)
-#define glRenderbufferStorage GLEW_GET_FUN(__glewRenderbufferStorageEXT)
-#define glFramebufferRenderbuffer GLEW_GET_FUN(__glewFramebufferRenderbufferEXT)
-#define glFramebufferTexture2D GLEW_GET_FUN(__glewFramebufferTexture2DEXT)
-#define glCheckFramebufferStatus GLEW_GET_FUN(__glewCheckFramebufferStatusEXT)
-#define glDeleteFramebuffers GLEW_GET_FUN(__glewDeleteFramebuffersEXT)
-#define glDeleteRenderbuffers GLEW_GET_FUN(__glewDeleteRenderbuffersEXT)
-#define glBlitFramebuffer GLEW_GET_FUN(__glewBlitFramebufferEXT)
-
-#endif // FBOEXT
-
 class GraphicsState
 {
 public:
@@ -61,14 +32,11 @@ public:
 		tuactive(0),
 		fbread(0),
 		fbdraw(0),
+		vobject(0),
 		vpwidth(0),
 		vpheight(0),
-		r(1),g(1),b(1),a(1),
-		alphavalue(0),
-		alphamode(GL_NEVER),
 		blendsource(GL_ZERO),
 		blenddest(GL_ZERO),
-		cullmode(GL_BACK),
 		depthmode(GL_LESS),
 		colormask(GL_TRUE),
 		alphamask(GL_TRUE),
@@ -117,15 +85,6 @@ public:
 
 			if (!depthmask)
 				glDepthMask(GL_FALSE);
-		}
-	}
-
-	void SetColor(float nr, float ng, float nb, float na)
-	{
-		if (r != nr || g != ng || b != nb || a != na)
-		{
-			r=nr;g=ng;b=nb;a=na;
-			glColor4f(r,g,b,a);
 		}
 	}
 
@@ -197,15 +156,6 @@ public:
 		}
 	}
 
-	void CullFaceMode(GLenum mode)
-	{
-		if (mode != cullmode)
-		{
-			cullmode = mode;
-			glCullFace(cullmode);
-		}
-	}
-
 	void ActiveTexture(GLuint texunit)
 	{
 		assert(texunit < 16);
@@ -258,6 +208,21 @@ public:
 		}
 	}
 
+	GLuint & VertexObject()
+	{
+		return vobject;
+	}
+
+	// reset vao/vbo/ibo state and clear vobject
+	void ResetVertexObject()
+	{
+		if (glBindVertexArray)
+			glBindVertexArray(0);
+		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+		vobject = 0;
+	}
+
 private:
 	//struct TexUnit {GLenum target; GLuint texture; bool enable};
 	GLenum tutgt[16];   // texture unit target
@@ -265,14 +230,11 @@ private:
 	GLuint tuactive;
 	GLuint fbread;
 	GLuint fbdraw;
+	GLuint vobject;		// currently bound vertex buffer/array object
 	int vpwidth;
 	int vpheight;
-	float r, g, b, a;
-	float alphavalue;
-	GLenum alphamode;
 	GLenum blendsource;
 	GLenum blenddest;
-	GLenum cullmode;
 	GLenum depthmode;
 	GLboolean colormask;
 	GLboolean alphamask;
