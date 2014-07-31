@@ -16,7 +16,6 @@ script:
 branches:
   only:
     - master
-	- vertex
 notifications:
   email:
     recipients:
