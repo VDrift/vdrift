@@ -231,20 +231,6 @@ void RenderInputPostprocess::Render(GraphicsState & glstate, std::ostream & erro
 		1.0f, 1.0f,
 		0.0f, 1.0f,
 	};
-	// send the frustum corners as normal
-	const float fcl[4 * 3] = {
-		frustum_corners[0][0], frustum_corners[0][1], frustum_corners[0][2],
-		frustum_corners[1][0], frustum_corners[1][1], frustum_corners[1][2],
-		frustum_corners[2][0], frustum_corners[2][1], frustum_corners[2][2],
-		frustum_corners[3][0], frustum_corners[3][1], frustum_corners[3][2],
-	};
-	// fructum corners in world space as tangent
-	const float fcw[4 * 3] = {
-		frustum_corners_ws[0][0], frustum_corners_ws[0][1], frustum_corners_ws[0][2],
-		frustum_corners_ws[1][0], frustum_corners_ws[1][1], frustum_corners_ws[1][2],
-		frustum_corners_ws[2][0], frustum_corners_ws[2][1], frustum_corners_ws[2][2],
-		frustum_corners_ws[3][0], frustum_corners_ws[3][1], frustum_corners_ws[3][2],
-	};
 
 	if (glstate.VertexObject())
 		glstate.ResetVertexObject();
@@ -253,20 +239,14 @@ void RenderInputPostprocess::Render(GraphicsState & glstate, std::ostream & erro
 
 	glEnableVertexAttribArray(VertexPosition);
 	glEnableVertexAttribArray(VertexTexCoord);
-	glEnableVertexAttribArray(VertexNormal);
-	glEnableVertexAttribArray(VertexTangent);
 
 	glVertexAttribPointer(VertexPosition, 3, GL_FLOAT, GL_FALSE, 0, pos);
 	glVertexAttribPointer(VertexTexCoord, 2, GL_FLOAT, GL_FALSE, 0, tco);
-	glVertexAttribPointer(VertexNormal, 3, GL_FLOAT, GL_FALSE, 0, fcl);
-	glVertexAttribPointer(VertexTangent, 3, GL_FLOAT, GL_FALSE, 0, fcw);
 
 	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, faces);
 
 	glDisableVertexAttribArray(VertexPosition);
 	glDisableVertexAttribArray(VertexTexCoord);
-	glDisableVertexAttribArray(VertexNormal);
-	glDisableVertexAttribArray(VertexTangent);
 
 	CheckForOpenGLErrors("postprocess draw", error_output);
 }
