@@ -137,6 +137,7 @@ private:
 	int lighting; ///<lighting quality; see data/settings/options.config for definition of values
 	bool bloom;
 	bool normalmaps;
+	bool glsl_330;
 	float contrast;
 	enum {REFLECTION_DISABLED, REFLECTION_STATIC, REFLECTION_DYNAMIC} reflection_status;
 	Texture static_reflection;

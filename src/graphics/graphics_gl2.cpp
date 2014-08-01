@@ -242,6 +242,7 @@ GraphicsGL2::GraphicsGL2() :
 	lighting(0),
 	bloom(false),
 	normalmaps(false),
+	glsl_330(false),
 	contrast(1.0),
 	reflection_status(REFLECTION_DISABLED),
 	renderconfigfile("basic.conf"),
@@ -276,11 +277,18 @@ bool GraphicsGL2::Init(
 {
 	assert(!renderconfig.empty() && "Render configuration name string empty.");
 
-	if (!GLEW_VERSION_2_0)
+	int major_version = 0;
+	int minor_version = 0;
+	glGetIntegerv(GL_MAJOR_VERSION, &major_version);
+	glGetIntegerv(GL_MINOR_VERSION, &minor_version);
+
+	if (major_version < 2)
 	{
-		error_output << "Graphics card or driver does not support required GL_VERSION_2_0." << std::endl;
+		error_output << "Graphics card or driver does not support required GL Version: 2.0" << std::endl;
 		return false;
 	}
+
+	glsl_330 = (major_version > 3 || (major_version == 3 && minor_version >= 3));
 
 	#ifdef _WIN32
 	// workaround for broken vao implementation Intel/Windows
@@ -869,10 +877,10 @@ bool GraphicsGL2::EnableShaders(std::ostream & info_output, std::ostream & error
 
 		// load pass output
 		const std::string & outname = i->output;
+		const std::vector <std::string> outputs = Tokenize(outname, " ");
 		if (render_outputs.find(outname) == render_outputs.end())
 		{
 			// collect a list of textures for the outputs
-			std::vector <std::string> outputs = Tokenize(outname, " ");
 			std::vector <FrameBufferTexture*> fbotex;
 			for (std::vector <std::string>::const_iterator o = outputs.begin(); o != outputs.end(); o++)
 			{
@@ -911,6 +919,7 @@ bool GraphicsGL2::EnableShaders(std::ostream & info_output, std::ostream & error
 
 			Shader & shader = shaders[cs->name];
 			if (!shader.Load(
+				glsl_330, outputs.size(),
 				shaderpath + "/" + cs->vertex,
 				shaderpath + "/" + cs->fragment,
 				defines, uniforms, attributes,

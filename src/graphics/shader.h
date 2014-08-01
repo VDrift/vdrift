@@ -35,6 +35,8 @@ public:
 	void Unload();
 
 	bool Load(
+		const bool glsl_330,
+		const unsigned int output_count,
 		const std::string & vertex_filename,
 		const std::string & fragment_filename,
 		const std::vector<std::string> & defines,

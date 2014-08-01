@@ -91,6 +91,8 @@ void Shader::Unload()
 }
 
 bool Shader::Load(
+	const bool glsl_330,
+	const unsigned int output_count,
 	const std::string & vertex_filename,
 	const std::string & fragment_filename,
 	const std::vector<std::string> & defines,
@@ -109,7 +111,7 @@ bool Shader::Load(
 
 	// prepend #version and #define values
 	std::ostringstream dstr;
-	dstr << "#version 120\n";
+	glsl_330 ? dstr << "#version 330\n" : dstr << "#version 120\n";
 	for (std::vector<std::string>::const_iterator i = defines.begin(); i != defines.end(); ++i)
 	{
 		dstr << "#define " << *i << "\n";
@@ -149,9 +151,27 @@ bool Shader::Load(
 	glAttachShader(program, fragment_shader);
 
 	// bind vertex attributes
-	for (GLint i = 0, n = attributes.size(); i < n; ++i)
+	for (GLuint i = 0; i < attributes.size(); ++i)
 	{
 		glBindAttribLocation(program, i, attributes[i].c_str());
+	}
+
+	// bind fragmen shader outputs
+	if (glsl_330)
+	{
+		assert(glBindFragDataLocation);
+		if (output_count > 1)
+		{
+			const GLchar * outputs[3] = {"FragData0", "FragData1", "FragData2"};
+			for (GLuint i = 0; i < sizeof(outputs) / sizeof(outputs[0]); ++i)
+			{
+				glBindFragDataLocation(program, i, outputs[i]);
+			}
+		}
+		else
+		{
+			glBindFragDataLocation(program, 0, "FragColor");
+		}
 	}
 
 	// link the program
