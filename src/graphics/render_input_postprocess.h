@@ -29,11 +29,13 @@
 struct GraphicsCamera;
 class TextureInterface;
 class Shader;
+class Drawable;
+class VertexBuffer;
 
 class RenderInputPostprocess : public RenderInput
 {
 public:
-	RenderInputPostprocess();
+	RenderInputPostprocess(VertexBuffer & vertex_buffer, Drawable & screen_quad);
 
 	~RenderInputPostprocess();
 
@@ -64,6 +66,8 @@ public:
 	virtual void Render(GraphicsState & glstate, std::ostream & error_output);
 
 private:
+	VertexBuffer & vertex_buffer;
+	Drawable & screen_quad;
 	const Mat4 * shadow_matrix;
 	unsigned int shadow_count;
 	Shader * shader;

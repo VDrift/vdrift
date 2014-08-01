@@ -29,6 +29,7 @@
 #include "render_input_postprocess.h"
 #include "render_input_scene.h"
 #include "render_output.h"
+#include "vertexarray.h"
 #include "vertexbuffer.h"
 #include "memory.h"
 
@@ -155,6 +156,10 @@ private:
 
 	// vertex data buffer
 	VertexBuffer vertex_buffer;
+
+	// a special drawable that's used for fullscreen draw passes
+	Drawable screen_quad;
+	VertexArray screen_quad_verts;
 
 	// scenegraph output
 	template <typename T> class PtrVector : public std::vector<T*> {};

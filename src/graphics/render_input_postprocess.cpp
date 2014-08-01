@@ -25,9 +25,12 @@
 #include "matrix4.h"
 #include "shader.h"
 #include "uniforms.h"
-#include "vertexattrib.h"
+#include "drawable.h"
+#include "vertexbuffer.h"
 
-RenderInputPostprocess::RenderInputPostprocess() :
+RenderInputPostprocess::RenderInputPostprocess(VertexBuffer & buffer, Drawable & quad) :
+	vertex_buffer(buffer),
+	screen_quad(quad),
 	shadow_matrix(NULL),
 	shadow_count(0),
 	shader(NULL),
@@ -213,40 +216,7 @@ void RenderInputPostprocess::Render(GraphicsState & glstate, std::ostream & erro
 	shader->SetUniform3f(Uniforms::FrustumCornerBRDelta, frustum_corners[1] - frustum_corners[0]);
 	shader->SetUniform3f(Uniforms::FrustumCornerTLDelta, frustum_corners[3] - frustum_corners[0]);
 
-	// draw a quad
-	const unsigned faces[2 * 3] = {
-		0, 1, 2,
-		2, 3, 0,
-	};
-	const float pos[4 * 3] = {
-		0.0f,  0.0f, 0.0f,
-		1.0f,  0.0f, 0.0f,
-		1.0f,  1.0f, 0.0f,
-		0.0f,  1.0f, 0.0f,
-	};
-	// send the uv corners as tex coords
-	const float tco[4 * 2] = {
-		0.0f, 0.0f,
-		1.0f, 0.0f,
-		1.0f, 1.0f,
-		0.0f, 1.0f,
-	};
-
-	if (glstate.VertexObject())
-		glstate.ResetVertexObject();
-
-	using namespace VertexAttrib;
-
-	glEnableVertexAttribArray(VertexPosition);
-	glEnableVertexAttribArray(VertexTexCoord);
-
-	glVertexAttribPointer(VertexPosition, 3, GL_FLOAT, GL_FALSE, 0, pos);
-	glVertexAttribPointer(VertexTexCoord, 2, GL_FLOAT, GL_FALSE, 0, tco);
-
-	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, faces);
-
-	glDisableVertexAttribArray(VertexPosition);
-	glDisableVertexAttribArray(VertexTexCoord);
+	vertex_buffer.Draw(glstate.VertexObject(), screen_quad.GetVertexBufferSegment());
 
 	CheckForOpenGLErrors("postprocess draw", error_output);
 }
