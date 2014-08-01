@@ -73,8 +73,6 @@ private:
 	Vec3 frustum_corners_ws[4];
 	Vec3 lightposition;
 	float contrast;
-	float maxu;
-	float maxv;
 };
 
 #endif // _RENDER_INPUT_POSTPROCESS_H

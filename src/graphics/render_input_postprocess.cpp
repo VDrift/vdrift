@@ -31,9 +31,7 @@ RenderInputPostprocess::RenderInputPostprocess() :
 	shadow_matrix(NULL),
 	shadow_count(0),
 	shader(NULL),
-	contrast(1),
-	maxu(1),
-	maxv(1)
+	contrast(1)
 {
 	//ctor
 }
@@ -111,20 +109,12 @@ void RenderInputPostprocess::SetTextures(
 	const std::vector <TextureInterface*> & textures,
 	std::ostream & error_output)
 {
-	maxu = 1;
-	maxv = 1;
-	int num_nonnull = 0;
-	for (unsigned i = 0; i < textures.size(); i++)
+	unsigned int num_nonnull = 0;
+	for (unsigned int i = 0; i < textures.size(); i++)
 	{
-		const TextureInterface * t = textures[i];
-		if (t)
+		if (textures[i])
 		{
-			glstate.BindTexture(i, t->GetTarget(), t->GetId());
-			if (t->GetTarget() == GL_TEXTURE_RECTANGLE)
-			{
-				maxu = t->GetW();
-				maxv = t->GetH();
-			}
+			glstate.BindTexture(i, textures[i]->GetTarget(), textures[i]->GetId());
 			num_nonnull++;
 		}
 	}
@@ -237,9 +227,9 @@ void RenderInputPostprocess::Render(GraphicsState & glstate, std::ostream & erro
 	// send the uv corners as tex coords
 	const float tco[4 * 2] = {
 		0.0f, 0.0f,
-		maxu, 0.0f,
-		maxu, maxv,
-		0.0f, maxv,
+		1.0f, 0.0f,
+		1.0f, 1.0f,
+		0.0f, 1.0f,
 	};
 	// send the frustum corners as normal
 	const float fcl[4 * 3] = {
