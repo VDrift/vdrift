@@ -277,18 +277,20 @@ bool GraphicsGL2::Init(
 {
 	assert(!renderconfig.empty() && "Render configuration name string empty.");
 
-	int major_version = 0;
-	int minor_version = 0;
-	glGetIntegerv(GL_MAJOR_VERSION, &major_version);
-	glGetIntegerv(GL_MINOR_VERSION, &minor_version);
-
-	if (major_version < 2)
+	const GLubyte * version = glGetString(GL_VERSION);
+	if (version[0] < '2')
 	{
 		error_output << "Graphics card or driver does not support required GL Version: 2.0" << std::endl;
 		return false;
 	}
-
-	glsl_330 = (major_version > 3 || (major_version == 3 && minor_version >= 3));
+	if (version[0] > '2')
+	{
+		int major_version = 0;
+		int minor_version = 0;
+		glGetIntegerv(GL_MAJOR_VERSION, &major_version);
+		glGetIntegerv(GL_MINOR_VERSION, &minor_version);
+		glsl_330 = (major_version > 3 || (major_version == 3 && minor_version >= 3));
+	}
 
 	#ifdef _WIN32
 	// workaround for broken vao implementation Intel/Windows
