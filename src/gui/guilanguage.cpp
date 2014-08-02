@@ -62,10 +62,10 @@ void GuiLanguage::Init(std::ostream & error)
 	setlocale(LC_ALL, "");
 
 	#ifndef _WIN32
-	std::string app_locale = setlocale(LC_MESSAGES, m_lang_id.c_str());
-	if (app_locale.empty())
+	const char * app_locale = setlocale(LC_MESSAGES, m_lang_id.c_str());
+	if (app_locale == NULL)
 	{
-		error << "Set LANGUAGE to " << m_lang_id << std::endl;
+		error << "Override LANGUAGE=" << m_lang_id << std::endl;
 		setenv("LANGUAGE", m_lang_id.c_str(), 1);
 	}
 	#else
