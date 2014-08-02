@@ -71,6 +71,7 @@ private:
 		int antialiasing,
 		bool fullscreen,
 		bool vsync,
+		bool gl3_core,
 		std::ostream & info_output,
 		std::ostream & error_output);
 

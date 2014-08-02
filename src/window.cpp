@@ -67,10 +67,23 @@ void Window::Init(
 		assert(0);
 	}
 
+	bool gl3_core = true;
 	ChangeDisplay(
-		resx, resy, color_bpp, depth_bpp,
-		antialiasing, fullscreen, vsync,
+		resx, resy, color_bpp, depth_bpp, antialiasing,
+		fullscreen, vsync, gl3_core,
 		info_output, error_output);
+
+	// try again in case gl3 core failed
+	if (glcontext == NULL)
+	{
+		gl3_core = false;
+		ChangeDisplay(
+			resx, resy, color_bpp, depth_bpp, antialiasing,
+			fullscreen, vsync, gl3_core,
+			info_output, error_output);
+		// if we fail again we are screwed
+		assert(glcontext);
+	}
 
 	SDL_SetWindowTitle(window, caption.c_str());
 
@@ -163,7 +176,7 @@ static int GetVideoDisplay()
 bool Window::ResizeWindow(int width, int height)
 {
 	// We can't resize something we don't have.
-	if (!window)
+	if (!window || !glcontext)
 		return false;
 
 	// Resize window
@@ -184,27 +197,10 @@ void Window::ChangeDisplay(
 	int antialiasing,
 	bool fullscreen,
 	bool vsync,
+	bool gl3_core,
 	std::ostream & info_output,
 	std::ostream & error_output)
 {
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
-	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, depth_bpp);
-
-	fsaa = 1;
-	if (antialiasing > 1)
-	{
-		fsaa = antialiasing;
-		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, fsaa);
-		info_output << "Enabling antialiasing: " << fsaa << "X" << std::endl;
-	}
-	else
-	{
-		info_output << "Disabling antialiasing" << std::endl;
-	}
-
 	SDL_DisplayMode desktop_mode;
 	int display = GetVideoDisplay();
 
@@ -234,6 +230,34 @@ void Window::ChangeDisplay(
 		SDL_DestroyWindow(window);
 	}
 
+	if (gl3_core)
+	{
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 3);
+		info_output << "Request OpenGL 3.3 Core Profile context." << std::endl;
+	}
+	else
+	{
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, 0);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 0);
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+		info_output << "Fall back to default OpenGL context." << std::endl;
+	}
+	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, depth_bpp);
+	if (antialiasing > 1)
+	{
+		fsaa = antialiasing;
+		SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, fsaa);
+		info_output << "Enabling antialiasing: " << fsaa << "X" << std::endl;
+	}
+	else
+	{
+		fsaa = 1;
+		info_output << "Disabling antialiasing" << std::endl;
+	}
+
 	// Create a new window
 	Uint32 window_flags = SDL_WINDOW_SHOWN | SDL_WINDOW_OPENGL;
 	if (fullscreen)
@@ -244,18 +268,24 @@ void Window::ChangeDisplay(
 		width, height, window_flags);
 	if (!window)
 	{
+		error_output << SDL_GetError() << std::endl;
 		assert(0);
+		return;
 	}
 
 	glcontext = SDL_GL_CreateContext(window);
 	if (!glcontext)
 	{
-		assert(0);
+		error_output << SDL_GetError() << std::endl;
+		SDL_ClearError();
+		return;
 	}
 
 	if (SDL_GL_MakeCurrent(window, glcontext) < 0)
 	{
+		error_output << SDL_GetError() << std::endl;
 		assert(0);
+		return;
 	}
 
 	int vsync_set = SDL_GL_SetSwapInterval(vsync ? 1 : 0);
