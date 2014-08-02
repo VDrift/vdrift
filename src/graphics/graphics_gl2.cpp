@@ -837,7 +837,8 @@ bool GraphicsGL2::EnableShaders(std::ostream & info_output, std::ostream & error
 	texture_inputs["ambient_cube"] = static_ambient;
 
 	// setup frame buffer textures
-	const bool has_texture_float = GLEW_ARB_texture_float && GLEW_ARB_half_float_pixel;
+	// GLEW_ARB*float* fails with gl3 core profile on Linux/Mesa, assume they are available
+	const bool has_texture_float = glsl_330 || (GLEW_ARB_texture_float && GLEW_ARB_half_float_pixel);
 	for (std::vector <GraphicsConfigOutput>::const_iterator i = config.outputs.begin(); i != config.outputs.end(); i++)
 	{
 		if (!i->conditions.Satisfied(conditions))
