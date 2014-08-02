@@ -54,9 +54,12 @@ bool GLWrapper::initialize()
 {
 	int major_version = 0;
 	int minor_version = 0;
-	glGetIntegerv(GL_MAJOR_VERSION, &major_version);ERROR_CHECK;
-	glGetIntegerv(GL_MINOR_VERSION, &minor_version);ERROR_CHECK;
-
+	const GLubyte * version = glGetString(GL_VERSION);
+	if (version[0] > '2')
+	{
+		glGetIntegerv(GL_MAJOR_VERSION, &major_version);ERROR_CHECK;
+		glGetIntegerv(GL_MINOR_VERSION, &minor_version);ERROR_CHECK;
+	}
 	if (major_version < 3 || (major_version == 3 && minor_version < 3))
 	{
 		logError("Graphics card or driver does not support required GL Version: 3.3");
