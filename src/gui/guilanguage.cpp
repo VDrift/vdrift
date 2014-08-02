@@ -19,6 +19,7 @@
 
 #include "guilanguage.h"
 #include "definitions.h"
+#include <ostream>
 #include <libintl.h>
 #include <cstdlib>
 
