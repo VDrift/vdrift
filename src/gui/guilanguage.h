@@ -35,17 +35,15 @@ public:
 	void Set(const std::string & lang_id, std::ostream & error);
 
 	/// translation operator
-	const std::string & operator()(const std::string & str) const;
+	std::string operator()(const std::string & str) const;
 
 	/// get code page string from language id
-	static const std::string & GetCodePageId(const std::string & lang_id);
+	std::string GetCodePage() const;
 
 private:
 	std::string m_lang_id;
-	void * m_iconv;
 
-	/// load current language string map
-	void LoadLanguage(std::ostream & error);
+	void Init(std::ostream & error);
 };
 
 #endif // _GUILANGUAGE_H

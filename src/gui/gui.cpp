@@ -227,7 +227,7 @@ bool Gui::Load(
 	lang.Set(language, error_output);
 
 	// load font (hardcoded for now)
-	const std::string fontcp = lang.GetCodePageId(language);
+	const std::string fontcp = lang.GetCodePage();
 	const std::string fonttex = "robotobold_" + fontcp + "_sdf.png";
 	const std::string fontinfo = fontpath + "/robotobold_" + fontcp + ".txt";
 	if (!font.Load(fontinfo, fonttexpath, fonttex, content, error_output))
