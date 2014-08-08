@@ -34,11 +34,6 @@
 #include <vector>
 #include <cassert>
 
-static bool IsPowerOfTwo(int x)
-{
-	return ((x != 0) && !(x & (x - 1)));
-}
-
 // averaging downsampler
 // bytespp is the size of a pixel (number of channels)
 // dst width/height are multiples of src width, height in pixels
@@ -85,50 +80,6 @@ static void SampleDownAvg(
 	}
 }
 
-// bilinear upsampler (16 bit precision)
-// bytespp is the size of a pixel (number of channels)
-// dst width/eight are greater than src width, height in pixels
-// pitch is size of a pixel row in bytes
-template <unsigned bytespp>
-static void SampleUpBilin(
-	const unsigned src_width,
-	const unsigned src_height,
-	const unsigned src_pitch,
-	const unsigned char src[],
-	const unsigned dst_width,
-	const unsigned dst_height,
-	const unsigned dst_pitch,
-	unsigned char dst[])
-{
-	assert(dst_width >= src_width);
-	assert(dst_height >= src_height);
-	const unsigned dx = (src_width << 16) / dst_width;
-	const unsigned dy = (src_height << 16) / dst_height;
-	for (unsigned y = 0; y < dst_height; ++y)
-	{
-		unsigned char * dp = dst + y * dst_pitch;
-		const unsigned sy = y * dy;
-		const unsigned fy1 = sy & 0xffff;
-		const unsigned fy0 = (1 << 16) - fy1;
-		const unsigned char * spy = src + (sy >> 16) * src_pitch;
-		for (unsigned x = 0; x < dst_width; ++x)
-		{
-			const unsigned sx = x * dx;
-			const unsigned fx1 = sx & 0xffff;
-			const unsigned fx0 = (1 << 16) - fx1;
-			const unsigned char * sp0 = spy + (sx >> 16) * bytespp;
-			const unsigned char * sp1 = sp0 + src_pitch;
-			for (unsigned i = 0; i < bytespp; ++i, ++dp)
-			{
-				const unsigned t0 = (sp0[i] * fx0 + sp0[i + bytespp] * fx1) >> 16;
-				const unsigned t1 = (sp1[i] * fx0 + sp1[i + bytespp] * fx1) >> 16;
-				const unsigned c = (t0 * fy0 + t1 * fy1) >> 16;
-				*dp = c;
-			}
-		}
-	}
-}
-
 static void SampleDownAvg(
 	const unsigned bytespp,
 	const unsigned src_width,
@@ -161,47 +112,6 @@ static void SampleDownAvg(
 	else if (bytespp == 4)
 	{
 		SampleDownAvg<4>(
-			src_width, src_height, src_pitch, src,
-			dst_width, dst_height, dst_pitch, dst);
-	}
-	else
-	{
-		assert(0);
-	}
-}
-
-static void SampleUpBilin(
-	const unsigned bytespp,
-	const unsigned src_width,
-	const unsigned src_height,
-	const unsigned src_pitch,
-	const unsigned char src[],
-	const unsigned dst_width,
-	const unsigned dst_height,
-	const unsigned dst_pitch,
-	unsigned char dst[])
-{
-	if (bytespp == 1)
-	{
-		SampleUpBilin<1>(
-			src_width, src_height, src_pitch, src,
-			dst_width, dst_height, dst_pitch, dst);
-	}
-	else if (bytespp == 2)
-	{
-		SampleUpBilin<2>(
-			src_width, src_height, src_pitch, src,
-			dst_width, dst_height, dst_pitch, dst);
-	}
-	else if (bytespp == 3)
-	{
-		SampleUpBilin<3>(
-			src_width, src_height, src_pitch, src,
-			dst_width, dst_height, dst_pitch, dst);
-	}
-	else if (bytespp == 4)
-	{
-		SampleUpBilin<4>(
 			src_width, src_height, src_pitch, src,
 			dst_width, dst_height, dst_pitch, dst);
 	}
@@ -376,41 +286,22 @@ bool Texture::Load(const std::string & path, const TextureInfo & info, std::ostr
 	unsigned w = surface->w;
 	unsigned h = surface->h;
 
-	// upsample texture to next closest pot if npot not supported
-	std::vector<unsigned char> pixelsu;
-	bool ispot = IsPowerOfTwo(surface->w) && IsPowerOfTwo(surface->h);
-	bool npotok = GLEW_VERSION_2_0 || GLEW_ARB_texture_non_power_of_two;
-	if (!ispot && !npotok)
-	{
-		unsigned wu, hu;
-		for (wu = 1; wu < w; wu = wu * 2);
-		for (hu = 1; hu < h; hu = hu * 2);
-		assert(wu <= 4096);
-		assert(hu <= 4096);
-
-		pixelsu.resize(wu * hu * bytespp);
-
-		SampleUpBilin(
-			bytespp, w, h, pitch, pixels,
-			wu, hu, wu * bytespp, &pixelsu[0]);
-
-		pixels = &pixelsu[0];
-		pitch = wu * bytespp;
-		w = wu;
-		h = hu;
-	}
-
 	// downsample if requested by application
 	std::vector<unsigned char> pixelsd;
 	unsigned wd = w;
 	unsigned hd = h;
 	if (info.maxsize == TextureInfo::SMALL)
 	{
-		if (wd > 128) wd = w / 4;
-		if (hd > 128) hd = h / 4;
+		// drop mip levels 0 and 1
+		if (wd > 256) wd = w / 4;
+		if (hd > 256) hd = h / 4;
+		// drop mip level 0
+		if (wd > 128) wd = w / 2;
+		if (hd > 128) hd = h / 2;
 	}
 	else if (info.maxsize == TextureInfo::MEDIUM)
 	{
+		// drop mip level 0
 		if (wd > 256) wd = w / 2;
 		if (hd > 256) hd = h / 2;
 	}
