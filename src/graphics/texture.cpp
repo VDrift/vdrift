@@ -630,7 +630,8 @@ bool Texture::LoadDDS(const std::string & path, const TextureInfo & info, std::o
 	// load dds
 	const char * texdata(0);
 	unsigned long texlen(0);
-	unsigned format(0), width(0), height(0), levels(0);
+	unsigned format(0);
+	unsigned levels(0);
 	if (!ReadDDS(
 		(void*)&data[0], length,
 		(const void*&)texdata, texlen,
@@ -638,11 +639,6 @@ bool Texture::LoadDDS(const std::string & path, const TextureInfo & info, std::o
 	{
 		return false;
 	}
-
-	// set properties
-	width = width;
-	height = height;
-	target = GL_TEXTURE_2D;
 
 	// gl3 renderer expects srgb
 	unsigned iformat = format;
@@ -661,6 +657,8 @@ bool Texture::LoadDDS(const std::string & path, const TextureInfo & info, std::o
 	}
 
 	// load texture
+	target = GL_TEXTURE_2D;
+
 	assert(!texid);
 	glGenTextures(1, &texid);
 	CheckForOpenGLErrors("Texture ID generation", error);
