@@ -41,8 +41,8 @@ static void Param(
 Settings::Settings() :
 	resolution(2),
 	res_override(false),
-	bpp(32),
-	depthbpp(24),
+	color_bpp(32),
+	depth_bpp(24),
 	fullscreen(false),
 	vsync(false),
 	renderer("gl3/deferred.conf"),
@@ -118,7 +118,7 @@ void Settings::SetFailsafeSettings()
 	*this = Settings();
 	renderer = "gl2/basic.conf";
 	texture_size = "medium";
-	depthbpp = 16;
+	depth_bpp = 16;
 }
 
 void Settings::Serialize(bool write, Config & config)
@@ -149,8 +149,8 @@ void Settings::Serialize(bool write, Config & config)
 	config.get("display", section);
 	if (!res_override)
 		Param(config, write, section, "resolution", resolution);
-	Param(config, write, section, "depth", bpp);
-	Param(config, write, section, "zdepth", depthbpp);
+	Param(config, write, section, "depth", color_bpp);
+	Param(config, write, section, "zdepth", depth_bpp);
 	Param(config, write, section, "fullscreen", fullscreen);
 	Param(config, write, section, "vsync", vsync);
 	Param(config, write, section, "renderer", renderer);

@@ -54,14 +54,14 @@ public:
 		return resolution[1];
 	}
 
-	unsigned int GetBpp() const
+	unsigned int GetColorBpp() const
 	{
-		return bpp;
+		return color_bpp;
 	}
 
-	unsigned int GetDepthbpp() const
+	unsigned int GetDepthBpp() const
 	{
-		return depthbpp;
+		return depth_bpp;
 	}
 
 	bool GetFullscreen() const
@@ -395,8 +395,8 @@ public:
 private:
 	std::vector<unsigned> resolution;
 	bool res_override;
-	int bpp;
-	int depthbpp;
+	int color_bpp;
+	int depth_bpp;
 	bool fullscreen;
 	bool vsync;
 	std::string renderer;

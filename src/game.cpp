@@ -367,7 +367,7 @@ bool Game::InitCoreSubsystems()
 	unsigned antialiasing = using_gl3 ? 0 : settings.GetAntialiasing();
 
 	// make sure to use at least 24bit depth buffer for shadows
-	unsigned depth_bpp = settings.GetDepthbpp();
+	unsigned depth_bpp = settings.GetDepthBpp();
 	if (settings.GetShadows() && depth_bpp < 24)
 		depth_bpp = 24;
 
@@ -375,7 +375,7 @@ bool Game::InitCoreSubsystems()
 		"VDrift",
 		settings.GetResolutionX(),
 		settings.GetResolutionY(),
-		settings.GetBpp(),
+		settings.GetColorBpp(),
 		depth_bpp,
 		antialiasing,
 		settings.GetFullscreen(),
@@ -405,7 +405,7 @@ bool Game::InitCoreSubsystems()
 		bool success = graphics->Init(
 			pathmanager.GetShaderPath() + "/" + render_ver,
 			settings.GetResolutionX(), settings.GetResolutionY(),
-			settings.GetBpp(), settings.GetDepthbpp(), settings.GetFullscreen(),
+			settings.GetColorBpp(), settings.GetDepthBpp(), settings.GetFullscreen(),
 			settings.GetAntialiasing(), settings.GetShadows(),
 			settings.GetShadowDistance(), settings.GetShadowQuality(), settings.GetReflections(),
 			pathmanager.GetStaticReflectionMap(), pathmanager.GetStaticAmbientMap(),
