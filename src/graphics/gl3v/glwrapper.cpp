@@ -657,7 +657,7 @@ bool GLWrapper::checkForOpenGLErrors(const char * function, const char * file, i
 		GLenum gl_error = glGetError();
 		if (gl_error != GL_NO_ERROR)
 		{
-			const GLubyte *err_string = gluErrorString(gl_error);
+			const GLubyte *err_string = glcErrorString(gl_error);
 			std::string activity_description = std::string(function)+":"+file+":"+Utils::tostr(line);
 			logError(std::string("OpenGL error \"")+Utils::tostr(err_string)+"\" during: "+activity_description);
 			assert(!breakOnError);

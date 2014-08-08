@@ -18,8 +18,8 @@
 /************************************************************************/
 
 #include "texture.h"
+#include "glcore.h"
 #include "glutil.h"
-#include "glew.h"
 #include "dds.h"
 
 #ifdef __APPLE__

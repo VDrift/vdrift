@@ -47,7 +47,7 @@ if (sys.platform == 'freebsd6') or (sys.platform == 'freebsd7') or (sys.platform
         LIBPATH = ['.', '#lib', LOCALBASE + '/lib'],
         LINKFLAGS = ['-pthread','-lintl'],
         options = opts)
-    check_headers = ['GL/gl.h', 'GL/glu.h', 'GL/glew.h', 'SDL2/SDL.h', 'SDL2/SDL_image.h', 'vorbis/vorbisfile.h', 'bullet/btBulletCollisionCommon.h']
+    check_headers = ['GL/gl.h', 'SDL2/SDL.h', 'SDL2/SDL_image.h', 'vorbis/vorbisfile.h', 'bullet/btBulletCollisionCommon.h']
     check_libs = []
     if 'CC' in os.environ:
         env.Replace(CC = os.environ['CC'])
@@ -110,7 +110,7 @@ elif sys.platform == 'darwin':
     default_datadir = "data"
     default_bindir = ""
 
-    check_headers = ['OpenGL/gl.h', 'OpenGL/glu.h', 'SDL2/sdl.h']
+    check_headers = ['OpenGL/gl.h', 'SDL2/sdl.h']
     check_libs = []
     cppdefines.append(("_DEFINE_OSX_HELPERS"))
 
@@ -147,8 +147,8 @@ else:
         env['CXXFLAGS'] += SCons.Util.CLVar(os.environ['CXXFLAGS'])
     if os.environ.has_key('LDFLAGS'):
         env['LINKFLAGS'] += SCons.Util.CLVar(os.environ['LDFLAGS'])
-    check_headers = ['GL/gl.h', 'GL/glu.h', 'GL/glew.h', 'SDL2/SDL.h', 'SDL2/SDL_image.h', 'vorbis/vorbisfile.h', 'curl/curl.h', 'bullet/btBulletCollisionCommon.h']
-    check_libs = [ ['GLEW', 'GL/glew.h', 'glDeleteSamplers(0, NULL);', 'Your GLEW library is out of date.'] ]
+    check_headers = ['GL/gl.h', 'SDL2/SDL.h', 'SDL2/SDL_image.h', 'vorbis/vorbisfile.h', 'curl/curl.h', 'bullet/btBulletCollisionCommon.h', 'bullet/btBulletDynamicsCommon.h']
+    check_libs = []
 
 if ARGUMENTS.get('verbose') != "1":
        env['ARCOMSTR'] = "\tARCH $TARGET"

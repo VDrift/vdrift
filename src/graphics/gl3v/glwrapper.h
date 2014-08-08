@@ -20,8 +20,8 @@
 #ifndef _GLWRAPPER
 #define _GLWRAPPER
 
-#include "glew.h"
 #include "renderuniformvector.h"
+#include "../glcore.h"
 #include <iosfwd>
 #include <vector>
 #include <map>

@@ -50,6 +50,8 @@ public:
 
 	void Screenshot(const std::string & filename);
 
+	bool Initialized() const;
+
 	int GetW() const;
 
 	int GetH() const;

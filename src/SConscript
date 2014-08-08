@@ -64,6 +64,7 @@ src = Split("""
 		graphics/gl3v/renderuniform.cpp
 		graphics/gl3v/renderuniformentry.cpp
 		graphics/gl3v/stringidmap.cpp
+		graphics/glcore.cpp
 		graphics/glutil.cpp
 		graphics/graphics_config_condition.cpp
 		graphics/graphics_config.cpp
@@ -171,7 +172,7 @@ if (sys.platform == 'freebsd6') or (sys.platform == 'freebsd7') or (sys.platform
     common_libs.append('libBulletCollision')
     local_env.ParseConfig('sdl2-config --cflags --libs')
     local_env.Append(LIBPATH = ['/usr/X11R6/lib'])
-    libs_link = ['GLU', 'GLEW', 'pthread', common_libs]
+    libs_link = ['pthread', common_libs]
 elif ( 'darwin' == sys.platform ):
     common_libs = ['SDL2_image', 'Vorbis', 'libcurl']
     vdrift_install = "${PRODUCT_NAME}.app"
@@ -180,7 +181,6 @@ elif ( 'darwin' == sys.platform ):
     pkgsrc = "../tools/osx"
 
     common_libs.append( 'SDL2' )
-    common_libs.append( 'GLEW' )
     def batch_copy( target, source, env): 
         # Do a mini svn export... this funtion could possibly
         # be useful in general ( as a builder ), but I don't 
@@ -217,11 +217,11 @@ elif ( 'darwin' == sys.platform ):
     src.append(['../tools/osx/SDL2Main.m', '../tools/osx/config_mac.mm'])
 elif ( 'win32' == sys.platform or 'cygwin' == sys.platform ):
 	local_env.Append(LIBPATH = ['/usr/lib/mingw', '#tools/win/lib', '#build'])
-	libs_link = ['opengl32', 'glu32', 'glew32', 'mingw32', 'SDL2main', 'SDL2', 'ws2_32', 'intl', 'iconv', common_libs ]
+	libs_link = ['opengl32', 'mingw32', 'SDL2main', 'SDL2', 'ws2_32', 'intl', 'iconv', common_libs ]
 else:
     local_env.ParseConfig('sdl2-config --cflags --libs')
     #local_env.Append(LIBPATH = ['/usr/X11R6/lib'])
-    libs_link = ['GL', 'GLU', 'GLEW', 'pthread', common_libs]
+    libs_link = ['GL','pthread', common_libs]
 
 local_env.Append(LIBS = libs_link)
 

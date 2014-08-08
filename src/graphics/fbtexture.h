@@ -21,7 +21,7 @@
 #define _FBTEXTURE_H
 
 #include "texture_interface.h"
-#include "glew.h"
+#include "glcore.h"
 
 #include <iosfwd>
 #include <cassert>

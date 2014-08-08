@@ -22,7 +22,7 @@
 
 #include "renderuniformentry.h"
 #include "renderuniformvector.h"
-#include "glew.h"
+#include "../glcore.h"
 
 /// The bare minimum required to update uniforms.
 struct RenderUniform : public RenderUniformBase

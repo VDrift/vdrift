@@ -338,7 +338,7 @@ bool GraphicsGL2::Init(
 
 	ChangeDisplay(resx, resy, error_output);
 
-	if (GLEW_EXT_texture_filter_anisotropic)
+	if (GLC_EXT_texture_filter_anisotropic)
 		glGetIntegerv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &max_anisotropy);
 	info_output << "Maximum anisotropy: " << max_anisotropy << std::endl;
 
@@ -351,7 +351,7 @@ bool GraphicsGL2::Init(
 	glGetIntegerv(GL_MAX_DRAW_BUFFERS, &mrt);
 	info_output << "Maximum draw buffers (" << mrtreq << " required): " << mrt << std::endl;
 
-	bool use_fbos = GLEW_ARB_framebuffer_object && mrt >= mrtreq && maxattach >= mrtreq;
+	bool use_fbos = GLC_ARB_framebuffer_object && mrt >= mrtreq && maxattach >= mrtreq;
 	if (renderconfigfile != "basic.conf" && !use_fbos)
 	{
 		info_output << "Graphics card doesn't support framebuffer objects." << std::endl;
@@ -645,7 +645,7 @@ int GraphicsGL2::GetMaxAnisotropy() const
 
 bool GraphicsGL2::AntialiasingSupported() const
 {
-	return GLEW_ARB_multisample;
+	return GLC_ARB_multisample;
 }
 
 bool GraphicsGL2::ReloadShaders(std::ostream & info_output, std::ostream & error_output)
@@ -837,8 +837,7 @@ bool GraphicsGL2::EnableShaders(std::ostream & info_output, std::ostream & error
 	texture_inputs["ambient_cube"] = static_ambient;
 
 	// setup frame buffer textures
-	// GLEW_ARB*float* fails with gl3 core profile on Linux/Mesa, assume they are available
-	const bool has_texture_float = glsl_330 || (GLEW_ARB_texture_float && GLEW_ARB_half_float_pixel);
+	const bool has_texture_float = GLC_ARB_texture_float && GLC_ARB_half_float_pixel;
 	for (std::vector <GraphicsConfigOutput>::const_iterator i = config.outputs.begin(); i != config.outputs.end(); i++)
 	{
 		if (!i->conditions.Satisfied(conditions))

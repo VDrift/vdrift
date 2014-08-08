@@ -18,7 +18,7 @@
 /************************************************************************/
 
 #include "vertexformat.h"
-#include "glew.h"
+#include "glcore.h"
 
 const VertexFormat & VertexFormat::Get(Enum e)
 {

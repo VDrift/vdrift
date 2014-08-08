@@ -383,6 +383,12 @@ bool Game::InitCoreSubsystems()
 		info_output,
 		error_output);
 
+	if (!window.Initialized())
+	{
+		error_output << "Failed to create window." << std::endl;
+		return false;
+	}
+
 	const int renderer_count = 2;
 	for (int i = 0; i < renderer_count; i++)
 	{

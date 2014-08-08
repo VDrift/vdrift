@@ -20,7 +20,7 @@
 #ifndef _GRAPHICS_STATE_H
 #define _GRAPHICS_STATE_H
 
-#include "glew.h"
+#include "glcore.h"
 #include <cassert>
 
 class GraphicsState

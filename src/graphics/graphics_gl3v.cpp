@@ -628,7 +628,7 @@ void GraphicsGL3::DrawScene(std::ostream & error_output)
 int GraphicsGL3::GetMaxAnisotropy() const
 {
 	int max_anisotropy = 1;
-	if (GLEW_EXT_texture_filter_anisotropic)
+	if (GLC_EXT_texture_filter_anisotropic)
 		gl.GetIntegerv(GL_MAX_TEXTURE_MAX_ANISOTROPY_EXT, &max_anisotropy);
 	return max_anisotropy;
 }

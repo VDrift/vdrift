@@ -20,7 +20,7 @@
 #ifndef _SHADER_H
 #define _SHADER_H
 
-#include "glew.h"
+#include "glcore.h"
 #include <iosfwd>
 #include <string>
 #include <vector>

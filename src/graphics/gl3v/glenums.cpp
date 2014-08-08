@@ -17,7 +17,7 @@
 /*                                                                      */
 /************************************************************************/
 
-#include "glew.h"
+#include "../glcore.h"
 #include "glenums.h"
 #include <iostream>
 #include <cassert>

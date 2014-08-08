@@ -18,7 +18,7 @@
 /************************************************************************/
 
 #include "glutil.h"
-#include "glew.h"
+#include "glcore.h"
 #include <ostream>
 
 bool CheckForOpenGLErrors(
@@ -30,8 +30,8 @@ bool CheckForOpenGLErrors(
 	GLenum error = glGetError();
 	if (error != GL_NO_ERROR)
 	{
-		const GLubyte *err_string = gluErrorString(error);
-		error_output << "OpenGL error \"" << err_string << "\" during: " << activity_description << std::endl;
+		const GLubyte * error_string = glcErrorString(error);
+		error_output << "OpenGL error \"" << error_string << "\" during: " << activity_description << std::endl;
 		return true;
 	}
 #endif // DEBUG

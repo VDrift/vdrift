@@ -76,7 +76,7 @@ void FrameBufferTexture::Init(
 	//set texture info
 	if (target == GL_TEXTURE_RECTANGLE)
 	{
-		assert(GLEW_ARB_texture_rectangle);
+		assert(GLC_ARB_texture_rectangle);
 	}
 
 	int texture_format = GL_RGB;

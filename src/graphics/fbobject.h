@@ -21,7 +21,7 @@
 #define _FBOBJECT_H
 
 #include "fbtexture.h"
-#include "glew.h"
+#include "glcore.h"
 
 #include <iosfwd>
 #include <vector>

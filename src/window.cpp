@@ -18,7 +18,7 @@
 /************************************************************************/
 
 #include "window.h"
-#include "glew.h"
+#include "graphics/glcore.h"
 #include <SDL2/SDL.h>
 #include <sstream>
 #include <cassert>
@@ -87,23 +87,15 @@ void Window::Init(
 
 	SDL_SetWindowTitle(window, caption.c_str());
 
-	// Initialize GLEW
-	glewExperimental = GL_TRUE;
-	GLenum glew_err = glewInit();
-	if (glew_err != GLEW_OK)
+	if (glcLoadFunctions() == GLC_LOAD_FAILED)
 	{
-		error_output << "GLEW failed to initialize: " << glewGetErrorString(glew_err) << std::endl;
-		assert(glew_err == GLEW_OK);
+		error_output << "OpenGL initialization failed." << std::endl;
 		initialized = false;
 	}
 	else
 	{
-		info_output << "Using GLEW " << glewGetString(GLEW_VERSION) << std::endl;
 		initialized = true;
 	}
-
-	// Clear GL_INVALID_ENUM caused by glew in core profile by calling glGetString(GL_EXTENSIONS)
-	glGetError();
 
 	LogOpenGLInfo(info_output);
 }
@@ -149,6 +141,11 @@ void Window::Screenshot(const std::string & filename)
 
 	SDL_SaveBMP(temp, filename.c_str());
 	SDL_FreeSurface(temp);
+}
+
+bool Window::Initialized() const
+{
+	return initialized;
 }
 
 int Window::GetW() const
