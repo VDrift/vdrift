@@ -32,7 +32,7 @@ public:
 
 	/// langage id is a two char string
 	/// en, de, fr, ru ...
-	void Set(const std::string & lang_id, std::ostream & error);
+	void Set(const std::string & lang_id, std::ostream & info, std::ostream & error);
 
 	/// translation operator
 	std::string operator()(const std::string & str) const;
@@ -43,7 +43,7 @@ public:
 private:
 	std::string m_lang_id;
 
-	void Init(std::ostream & error);
+	void Init(std::ostream & info, std::ostream & error);
 };
 
 #endif // _GUILANGUAGE_H

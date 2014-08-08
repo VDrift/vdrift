@@ -34,12 +34,12 @@ GuiLanguage::~GuiLanguage()
 	// dtor
 }
 
-void GuiLanguage::Set(const std::string & lang_id, std::ostream & error)
+void GuiLanguage::Set(const std::string & lang_id, std::ostream & info, std::ostream & error)
 {
 	if (m_lang_id != lang_id)
 	{
 		m_lang_id = lang_id;
-		Init(error);
+		Init(info, error);
 	}
 }
 
@@ -56,26 +56,42 @@ std::string GuiLanguage::GetCodePage() const
 	return cp;
 }
 
-void GuiLanguage::Init(std::ostream & error)
+void GuiLanguage::Init(std::ostream & info, std::ostream & error)
 {
-	// set system locale
-	setlocale(LC_ALL, "");
+	const char * sys_locale = setlocale(LC_ALL, "");
+	info << "Default locale LC_ALL = " << sys_locale << std::endl;
 
 	#ifndef _WIN32
 	const char * app_locale = setlocale(LC_MESSAGES, m_lang_id.c_str());
 	if (app_locale == NULL)
 	{
-		error << "Override LANGUAGE=" << m_lang_id << std::endl;
+		error << "Failed to set LC_MESSAGES = " << m_lang_id << std::endl;
+
 		setenv("LANGUAGE", m_lang_id.c_str(), 1);
+		info << "Set LANGUAGE = " << m_lang_id << std::endl;
+	}
+	else
+	{
+		info << "Set LC_MESSAGES = " << app_locale << std::endl;
 	}
 	#else
 	// force locale on windows
 	_putenv_s("LANGUAGE", m_lang_id.c_str());
+	info << "Set LANGUAGE = " << m_lang_id << std::endl;
 	#endif
 
 	textdomain("vdrift");
-	bindtextdomain("vdrift", LOCALE_DIR);
+
+	const char * locale_dir = bindtextdomain("vdrift", LOCALE_DIR);
+	if (locale_dir == NULL)
+		error << "Failed to set locale base directory to: " << LOCALE_DIR << std::endl;
+	else
+		info << "Set locale base directory to: " << locale_dir << std::endl;
 
 	std::string cp = "CP" + GetCodePage();
-	bind_textdomain_codeset("vdrift", cp.c_str());
+	const char * codeset = bind_textdomain_codeset("vdrift", cp.c_str());
+	if (codeset == NULL)
+		error << "Failed to set output codeset to: " << cp << std::endl;
+	else
+		info << "Set output codeset to: " << codeset << std::endl;
 }
