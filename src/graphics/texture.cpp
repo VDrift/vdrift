@@ -292,18 +292,23 @@ bool Texture::Load(const std::string & path, const TextureInfo & info, std::ostr
 	unsigned hd = h;
 	if (info.maxsize == TextureInfo::SMALL)
 	{
-		// drop mip levels 0 and 1
-		if (wd > 256) wd = w / 4;
-		if (hd > 256) hd = h / 4;
-		// drop mip level 0
-		if (wd > 128) wd = w / 2;
-		if (hd > 128) hd = h / 2;
+		if (w > 256)
+			wd = w / 4;
+		else if (w > 128)
+			wd = w / 2;
+
+		if (h > 256)
+			hd = h / 4;
+		else if (h > 128)
+			hd = h / 2;
 	}
 	else if (info.maxsize == TextureInfo::MEDIUM)
 	{
-		// drop mip level 0
-		if (wd > 256) wd = w / 2;
-		if (hd > 256) hd = h / 2;
+		if (w > 256)
+			wd = w / 2;
+
+		if (h > 256)
+			hd = h / 2;
 	}
 	if (wd < w || hd < h)
 	{
