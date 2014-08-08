@@ -163,7 +163,7 @@ void FrameBufferObject::Init(
 
 	if (verbose) error_output << "INFO: multisample " << multisample << " found, " << force_multisample_off << std::endl;
 
-	if (force_multisample_off || !GLEW_EXT_framebuffer_multisample)
+	if (force_multisample_off)
 		multisample = 0;
 
 	// either we have no multisample or multisample and no depth texture

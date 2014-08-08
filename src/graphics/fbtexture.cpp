@@ -72,8 +72,6 @@ void FrameBufferTexture::Init(
 	mipmap = usemipmap;
 
 	multisample = newmultisample;
-	if (!(GLEW_EXT_framebuffer_multisample && GLEW_EXT_framebuffer_blit))
-		multisample = 0;
 
 	//set texture info
 	if (target == GL_TEXTURE_RECTANGLE)
