@@ -80,7 +80,7 @@ Settings::Settings() :
 	ff_invert(false),
 	trackreverse(false),
 	trackdynamic(false),
-	shadows(false),
+	shadows(true),
 	shadow_distance(1),
 	shadow_quality(1),
 	reflections(1),
