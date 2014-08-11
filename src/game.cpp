@@ -1157,17 +1157,6 @@ void Game::ProcessGUIInputs()
 		return;
 	}
 
-	if (controlgrab)
-	{
-		// Handle control assignment
-		if (AssignControl())
-		{
-			controlgrab = false;
-			EditControl();
-		}
-		return;
-	}
-
 	gui.ProcessInput(
 		eventsystem.GetMousePosition()[0] / (float)window.GetW(),
 		eventsystem.GetMousePosition()[1] / (float)window.GetH(),
@@ -1179,6 +1168,12 @@ void Game::ProcessGUIInputs()
 		carcontrols_local.second.GetInput(GameInput::GUI_DOWN),
 		carcontrols_local.second.GetInput(GameInput::GUI_SELECT),
 		carcontrols_local.second.GetInput(GameInput::GUI_CANCEL));
+
+	if (controlgrab && AssignControl())
+	{
+		controlgrab = false;
+		EditControl();
+	}
 }
 
 bool Game::AssignControl()
