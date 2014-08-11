@@ -21,27 +21,27 @@
 #define _AABB_H
 
 #include "mathvector.h"
-#include "mathplane.h"
 #include "frustum.h"
-
 #include <ostream>
 
 template <typename T>
 class Aabb
 {
-private:
-	MathVector <T, 3> pos; ///< minimum corner (center-size*0.5)
-	MathVector <T, 3> center; ///< exact center of AABB
-	MathVector <T, 3> size; ///< size of AABB
-	float radius; ///< size.Magnitude()*0.5
-
-	void recomputeRadius()
+public:
+	Aabb(const Aabb <T> & other) :
+		pos(other.pos), center(other.center), size(other.size), radius(other.radius)
 	{
-		radius = size.Magnitude()*0.5;
+		// ctor
 	}
 
-public:
-	Aabb(const Aabb <T> & other) : pos(other.pos), center(other.center), size(other.size), radius(other.radius) {}
+	Aabb(const MathVector <T, 3> & min, const MathVector <T, 3> & max)
+	{
+		pos = min;
+		center = (min + max) * 0.5;
+		size = max - min;
+		radius = size.Magnitude() * 0.5;
+	}
+
 	Aabb() : radius(0) {}
 
 	Aabb <T> & operator = (const Aabb <T> & other)
@@ -50,12 +50,13 @@ public:
 		center = other.center;
 		size = other.size;
 		radius = other.radius;
-
 		return *this;
 	}
 
 	const MathVector <T, 3> & GetPos() const {return pos;}
+
 	const MathVector <T, 3> & GetSize() const {return size;}
+
 	const MathVector <T, 3> & GetCenter() const {return center;}
 
 	void DebugPrint(std::ostream & o) const
@@ -104,23 +105,24 @@ public:
 		pos = c1mod;
 		size = c2mod - c1mod;
 		center = pos + size * 0.5;
-		recomputeRadius();
+		radius = size.Magnitude() * 0.5;
 	}
 
 	void CombineWith(const Aabb <T> & other)
 	{
-		const MathVector <T, 3> & otherpos(other.GetPos());
-		MathVector <T, 3> min(0), max(0);
-		min = pos;
-		max = pos + size;
-		if (otherpos[0] < min[0])
-			min[0] = otherpos[0];
-		if (otherpos[1] < min[1])
-			min[1] = otherpos[1];
-		if (otherpos[2] < min[2])
-			min[2] = otherpos[2];
+		const MathVector <T, 3> othermin = other.GetPos();
+		const MathVector <T, 3> othermax = othermin + other.GetSize();
 
-		const MathVector <T, 3> & othermax(otherpos + other.GetSize());
+		MathVector <T, 3> min = pos;
+		MathVector <T, 3> max = pos + size;
+
+		if (othermin[0] < min[0])
+			min[0] = othermin[0];
+		if (othermin[1] < min[1])
+			min[1] = othermin[1];
+		if (othermin[2] < min[2])
+			min[2] = othermin[2];
+
 		if (othermax[0] > max[0])
 			max[0] = othermax[0];
 		if (othermax[1] > max[1])
@@ -128,7 +130,7 @@ public:
 		if (othermax[2] > max[2])
 			max[2] = othermax[2];
 
-		SetFromCorners(min, max);
+		*this = Aabb(min, max);
 	}
 
 	// for intersection test returns
@@ -137,6 +139,11 @@ public:
 		OUT,
 		INTERSECT,
 		IN
+	};
+
+	struct IntersectAlways
+	{
+		// placebo
 	};
 
 	class Ray
@@ -234,8 +241,16 @@ public:
 		return INTERSECT;
 	}
 
-	struct IntersectAlways{};
-	IntersectionEnum Intersect(IntersectAlways always) const {return IN;}
+	IntersectionEnum Intersect(IntersectAlways always) const
+	{
+		return IN;
+	}
+
+private:
+	MathVector <T, 3> pos; ///< minimum corner (center-size*0.5)
+	MathVector <T, 3> center; ///< exact center of AABB
+	MathVector <T, 3> size; ///< size of AABB
+	float radius; ///< size.Magnitude()*0.5
 };
 
 #endif
