@@ -62,7 +62,7 @@ Aabb <float> Bezier::GetAABB() const
 			{
 				if (temp[n] > maxv[n])
 					maxv[n] = temp[n];
-				else if (temp[n] < minv[n])
+				if (temp[n] < minv[n])
 					minv[n] = temp[n];
 			}
 		}
