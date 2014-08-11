@@ -46,39 +46,22 @@ Bezier::Bezier()
 
 Bezier::~Bezier()
 {
-
+ // dtor
 }
 
 Aabb <float> Bezier::GetAABB() const
 {
-	float maxv[3] = {0, 0, 0};
-	float minv[3] = {0, 0, 0};
-	bool havevals[6];
-	for (int n = 0; n < 6; n++)
-		havevals[n] = false;
-
+	float maxv[3] = {-1E38, -1E38, -1E38};
+	float minv[3] = {+1E38, +1E38, +1E38};
 	for (int x = 0; x < 4; x++)
 	{
 		for (int y = 0; y < 4; y++)
 		{
-			Vec3 temp(points[x][y]);
-
-			//cache for bbox stuff
-			for ( int n = 0; n < 3; n++ )
+			const Vec3 temp = points[x][y];
+			for (int n = 0; n < 3; n++)
 			{
-				if (!havevals[n])
-				{
+				if (temp[n] > maxv[n])
 					maxv[n] = temp[n];
-					havevals[n] = true;
-				}
-				else if (temp[n] > maxv[n])
-					maxv[n] = temp[n];
-
-				if (!havevals[n+3])
-				{
-					minv[n] = temp[n];
-					havevals[n+3] = true;
-				}
 				else if (temp[n] < minv[n])
 					minv[n] = temp[n];
 			}
@@ -87,9 +70,7 @@ Aabb <float> Bezier::GetAABB() const
 
 	Vec3 bboxmin(minv[0], minv[1], minv[2]);
 	Vec3 bboxmax(maxv[0], maxv[1], maxv[2]);
-
-	Aabb <float> box;
-	box.SetFromCorners(bboxmin, bboxmax);
+	Aabb <float> box(bboxmin, bboxmax);
 	return box;
 }
 
