@@ -2193,15 +2193,15 @@ void Game::PopulateGUISkinList(GuiOption::List & skinlist)
 void Game::PopulateGUILangList(GuiOption::List & langlist)
 {
 	std::list<std::string> languages;
-	std::string skinfolder = pathmanager.GetDataPath() + "/" + pathmanager.GetGUILanguageDir(settings.GetSkin()) + "/";
-	pathmanager.GetFileList(skinfolder, languages, ".txt");
+	std::string path = pathmanager.GetDataPath() + "/locale/";
+	pathmanager.GetFileList(path, languages, ".po");
 
 	langlist.clear();
 	for (std::list<std::string>::iterator i = languages.begin(); i != languages.end(); ++i)
 	{
-		if (pathmanager.FileExists(skinfolder + *i))
+		if (pathmanager.FileExists(path + *i))
 		{
-			std::string value = i->substr(0, i->length()-4);
+			std::string value = i->substr(0, i->length()-3);
 			langlist.push_back(std::make_pair(value, value));
 		}
 	}
