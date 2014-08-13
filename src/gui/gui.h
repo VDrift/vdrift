@@ -117,12 +117,14 @@ private:
 	PageMap pages;
 	PageMap::iterator last_active_page;
 	PageMap::iterator active_page;
+	PageMap::iterator next_active_page;
 	SceneNode node;
 	GuiLanguage lang;
 	Font font;
 	float m_cursorx, m_cursory;			///< cache cursor position
 	float animation_counter;
 	float animation_count_start;
+	float next_animation_count_start;
 	bool ingame;
 
 	/// page activate callback

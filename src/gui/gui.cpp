@@ -137,9 +137,12 @@ Gui::Gui() :
 	m_cursory(0),
 	animation_counter(0),
 	animation_count_start(0),
+	next_animation_count_start(0),
 	ingame(false)
 {
-	active_page = last_active_page = pages.end();
+	last_active_page = pages.end();
+	active_page = pages.end();
+	next_active_page = pages.end();
 }
 
 const std::string & Gui::GetActivePageName() const
@@ -182,21 +185,24 @@ void Gui::SetInGame(bool value)
 
 void Gui::Unload()
 {
-    // clear out maps
-    pages.clear();
-    options.clear();
-    page_activate.clear();
+	// clear out maps
+	pages.clear();
+	options.clear();
+	page_activate.clear();
 
-    // clear out the scenegraph
-    node.Clear();
+	// clear out the scenegraph
+	node.Clear();
 
-    // reset variables
-    animation_counter = 0;
-    animation_count_start = 0;
-    active_page = last_active_page = pages.end();
+	// reset variables
+	animation_counter = 0;
+	animation_count_start = 0;
+	next_animation_count_start = 0;
+	last_active_page = pages.end();
+	active_page = pages.end();
+	next_active_page = pages.end();
 
-    // some things we don't want to reset incase we're in the middle of a reload;
-    // for example we don't want to reset ingame
+	// some things we don't want to reset incase we're in the middle of a reload;
+	// for example we don't want to reset ingame
 }
 
 bool Gui::Load(
@@ -316,7 +322,9 @@ void Gui::Deactivate()
 	{
 		i->second.SetVisible(node, false);
 	}
+	last_active_page = pages.end();
 	active_page = pages.end();
+	next_active_page = pages.end();
 }
 
 void Gui::ProcessInput(
@@ -351,6 +359,8 @@ void Gui::Update(float dt)
 
 	if (active_page != pages.end())
 	{
+		// Update has to happen before SetAlpha and SetVisible
+		// as it overrides them with widget visible and alpha state
 		active_page->second.Update(node, dt);
 		if (fadein)
 		{
@@ -358,7 +368,7 @@ void Gui::Update(float dt)
 			float p = 1.0 - animation_counter / animation_count_start;
 			float alpha = 3 * p * p - 2 * p * p * p;
 			active_page->second.SetAlpha(node, alpha);
-			//std::cout << "fade in: " << alpha << std::endl;
+			//dlog << active_page->first << " fade in: " << alpha << std::endl;
 		}
 	}
 
@@ -370,12 +380,29 @@ void Gui::Update(float dt)
 			float p = animation_counter / animation_count_start;
 			float alpha = 3 * p * p - 2 * p * p * p;
 			last_active_page->second.SetAlpha(node, alpha);
-			//std::cout << "fade out: " << alpha << std::endl;
+			//dlog << last_active_page->first << " fade out: " << alpha << std::endl;
 		}
-		else
+	}
+
+	if (!fadein && next_active_page != pages.end())
+	{
+		if (last_active_page != pages.end())
 		{
 			last_active_page->second.SetVisible(node, false);
+			//dlog << last_active_page->first << " deactivate" << std::endl;
 		}
+
+		// activate new page
+		last_active_page = active_page;
+		active_page = next_active_page;
+		next_active_page = pages.end();
+
+		active_page->second.SetVisible(node, true);
+		active_page->second.SetAlpha(node, 0.0);
+		//dlog << active_page->first << " activate" << std::endl;
+
+		// reset animation counter
+		animation_counter = animation_count_start = next_animation_count_start;
 	}
 }
 
@@ -427,16 +454,11 @@ bool Gui::ActivatePage(
 	const std::string & pagename,
 	float activation_time)
 {
-	// check whether a page is faded in
-	if (animation_counter > 0)
-		return true;
-
-	// check whether page already active
+	// check whether page is already active
 	if (active_page != pages.end() && active_page->first == pagename)
 		return true;
 
 	// get new page
-	PageMap::iterator next_active_page;
 	if (ingame && pagename == "Main")
 		next_active_page = pages.find("InGameMain");
 	else
@@ -445,14 +467,7 @@ bool Gui::ActivatePage(
 	if (next_active_page == pages.end())
 		return false;
 
-	// activate new page
-	last_active_page = active_page;
-	active_page = next_active_page;
-	active_page->second.SetVisible(node, true);
-
-	// reset animation counter
-	animation_counter = animation_count_start = activation_time;
-	//std::cout << "activate: " << active_page->first << std::endl;
+	next_animation_count_start = activation_time;
 
 	return true;
 }

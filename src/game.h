@@ -171,7 +171,7 @@ private:
 	/// Look for keyboard, mouse, joystick input, assign local car controls.
 	bool AssignControl();
 
-	void LoadControlsIntoGUIPage();
+	void LoadControlsIntoGUIPage(const std::string & page_name);
 
 	void LoadControlsIntoGUI();
 
@@ -217,7 +217,7 @@ private:
 	void TrackManagerNext();
 	void TrackManagerPrev();
 	void ApplyTrackUpdate();
-	void EditControl();
+	void ActivateEditControlPage();
 	void CancelControl();
 	void DeleteControl();
 	void SetButtonControl();

@@ -1172,12 +1172,14 @@ void Game::ProcessGUIInputs()
 	if (controlgrab && AssignControl())
 	{
 		controlgrab = false;
-		EditControl();
+		ActivateEditControlPage();
 	}
 }
 
 bool Game::AssignControl()
 {
+	assert(controlgrab && "Trying to assign control with no control grabbed.");
+
 	// Check for key inputs.
 	std::map <SDL_Keycode, Toggle> & keymap = eventsystem.GetKeyMap();
 	for (std::map <SDL_Keycode, Toggle>::iterator i = keymap.begin(); i != keymap.end(); ++i)
@@ -1270,11 +1272,11 @@ bool Game::AssignControl()
 	return false;
 }
 
-void Game::LoadControlsIntoGUIPage()
+void Game::LoadControlsIntoGUIPage(const std::string & page_name)
 {
 	std::map<std::string, std::string> label_text;
 	carcontrols_local.second.GetControlsInfo(label_text);
-	gui.SetLabelText(gui.GetActivePageName(), label_text);
+	gui.SetLabelText(page_name, label_text);
 }
 
 void Game::LoadControlsIntoGUI()
@@ -2712,7 +2714,7 @@ void Game::ApplyTrackUpdate()
 	trackupdater.ApplyUpdate(GameDownloader(*this, http), gui, pathmanager);
 }
 
-void Game::EditControl()
+void Game::ActivateEditControlPage()
 {
 	if (controlgrab_control.IsAnalog())
 	{
@@ -2747,14 +2749,15 @@ void Game::EditControl()
 void Game::CancelControl()
 {
 	gui.ActivatePage(controlgrab_page, 0.25, error_output);
-	LoadControlsIntoGUIPage();
+	LoadControlsIntoGUIPage(controlgrab_page);
 }
 
 void Game::DeleteControl()
 {
 	carcontrols_local.second.DeleteControl(controlgrab_input, controlgrab_id);
+
 	gui.ActivatePage(controlgrab_page, 0.25, error_output);
-	LoadControlsIntoGUIPage();
+	LoadControlsIntoGUIPage(controlgrab_page);
 }
 
 void Game::SetButtonControl()
@@ -2762,8 +2765,9 @@ void Game::SetButtonControl()
 	controlgrab_control.onetime = (gui.GetOptionValue("controledit.once") == "true");
 	controlgrab_control.pushdown = (gui.GetOptionValue("controledit.down") == "true");
 	carcontrols_local.second.SetControl(controlgrab_input, controlgrab_id, controlgrab_control);
+
 	gui.ActivatePage(controlgrab_page, 0.25, error_output);
-	LoadControlsIntoGUIPage();
+	LoadControlsIntoGUIPage(controlgrab_page);
 }
 
 void Game::SetAnalogControl()
@@ -2772,8 +2776,9 @@ void Game::SetAnalogControl()
 	controlgrab_control.exponent = cast<float>(gui.GetOptionValue("controledit.exponent"));
 	controlgrab_control.gain = cast<float>(gui.GetOptionValue("controledit.gain"));
 	carcontrols_local.second.SetControl(controlgrab_input, controlgrab_id, controlgrab_control);
+
 	gui.ActivatePage(controlgrab_page, 0.25, error_output);
-	LoadControlsIntoGUIPage();
+	LoadControlsIntoGUIPage(controlgrab_page);
 }
 
 void Game::LoadControls()
@@ -2783,7 +2788,7 @@ void Game::LoadControls()
 		info_output,
 		error_output);
 
-	LoadControlsIntoGUIPage();
+	LoadControlsIntoGUIPage(gui.GetActivePageName());
 }
 
 void Game::SaveControls()
@@ -3039,6 +3044,12 @@ void Game::SetCarsNum(const std::string & value)
 
 void Game::SetControl(const std::string & value)
 {
+	if (controlgrab)
+	{
+		assert(0 && "Trying to set a control while assigning one.");
+		return;
+	}
+
 	std::istringstream vs(value);
 	std::string inputstr, idstr, oncestr, downstr;
 	getline(vs, inputstr, ':');
@@ -3067,12 +3078,14 @@ void Game::SetControl(const std::string & value)
 		if (!downstr.empty())
 			controlgrab_control.pushdown = (downstr == "down");
 
-		gui.ActivatePage("AssignControl", 0.25, error_output);
 		controlgrab = true;
-		return;
-	}
 
-	EditControl();
+		gui.ActivatePage("AssignControl", 0.25, error_output);
+	}
+	else
+	{
+		ActivateEditControlPage();
+	}
 }
 
 void Game::BindActionsToGUI()
