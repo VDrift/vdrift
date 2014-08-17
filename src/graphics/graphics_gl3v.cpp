@@ -248,7 +248,7 @@ void GraphicsGL3::SetupScene(
 		skyboxCamPosition,
 		cam_rotation,
 		fov,
-		0.0001f,
+		nearDistance,
 		10000.f,
 		w,
 		h);
