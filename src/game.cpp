@@ -931,7 +931,7 @@ void Game::AdvanceGameLogic()
 	{
 		PROFILER.beginBlock("ai");
 		ai.Visualize();
-		ai.update(timestep, cars);
+		ai.Update(timestep, cars);
 		PROFILER.endBlock("ai");
 
 		PROFILER.beginBlock("physics");
@@ -1357,12 +1357,12 @@ void Game::UpdateCarInputs(int carid, Car & car)
 				if (aiControlled)
 				{
 					info_output << "Switching to AI controlled player." << std::endl;
-					ai.add_car(&car, 1.0);
+					ai.AddCar(&car, 1.0);
 				}
 				else
 				{
 					info_output << "Switching to user controlled player." << std::endl;
-					ai.remove_car(&car);
+					ai.RemoveCar(&car);
 				}
 			}
 		}
@@ -1556,7 +1556,7 @@ bool Game::NewGame(bool playreplay, bool addopponents, int num_laps)
 		}
 		if (car_info[i].driver != "user")
 		{
-			ai.add_car(&cars.back(), car_info[i].ailevel, car_info[i].driver);
+			ai.AddCar(&cars.back(), car_info[i].ailevel, car_info[i].driver);
 		}
 	}
 
@@ -2561,7 +2561,7 @@ void Game::QuitGame()
 
 void Game::LeaveGame()
 {
-	ai.clear_cars();
+	ai.ClearCars();
 
 	carcontrols_local.first = NULL;
 
