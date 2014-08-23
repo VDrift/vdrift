@@ -304,7 +304,7 @@ public:
 		return dynamics.getDynamicsWorld();
 	}
 
-	CarDynamics & GetCarDynamics()
+	const CarDynamics & GetCarDynamics() const
 	{
 		return dynamics;
 	}

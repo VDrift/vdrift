@@ -25,17 +25,18 @@
 #include <vector>
 #include <list>
 
+class CarDynamics;
 class Car;
 
 /// AI Car controller interface.
 class AiCar
 {
 public:
-	AiCar(Car * car, float difficulty);
+	AiCar(const CarDynamics * car, float difficulty);
 
 	virtual ~AiCar();
 
-	Car * GetCar();
+	const CarDynamics * GetCar() const;
 
 	const std::vector<float> & GetInputs() const;
 
@@ -46,7 +47,7 @@ public:
 	virtual void Visualize();
 
 protected:
-	Car * car;
+	const CarDynamics * car;
 	float difficulty;
 
 	/// Contains the car inputs, which is the output of the AI.
@@ -55,7 +56,7 @@ protected:
 };
 
 
-inline AiCar::AiCar(Car * car, float difficulty) :
+inline AiCar::AiCar(const CarDynamics * car, float difficulty) :
 	car(car),
 	difficulty(difficulty),
 	inputs(CarInput::INVALID, 0.0)
@@ -68,7 +69,7 @@ inline AiCar::~AiCar()
 	// dtor
 }
 
-inline Car * AiCar::GetCar()
+inline const CarDynamics * AiCar::GetCar() const
 {
 	return car;
 }

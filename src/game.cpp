@@ -1375,7 +1375,7 @@ void Game::UpdateCarInputs(int carid, Car & car)
 	}
 	else
 	{
-		carinputs = ai.GetInputs(&car);
+		carinputs = ai.GetInputs(&car.GetCarDynamics());
 		assert(carinputs.size() == CarInput::INVALID);
 	}
 
@@ -1556,7 +1556,9 @@ bool Game::NewGame(bool playreplay, bool addopponents, int num_laps)
 		}
 		if (car_info[i].driver != "user")
 		{
-			ai.AddCar(&cars.back(), car_info[i].ailevel, car_info[i].driver);
+			cars.back().SetAutoShift(true);
+			cars.back().SetAutoClutch(true);
+			ai.AddCar(&cars.back().GetCarDynamics(), car_info[i].ailevel, car_info[i].driver);
 		}
 	}
 
