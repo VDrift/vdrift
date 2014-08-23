@@ -30,29 +30,57 @@ class Car;
 /// AI Car controller interface.
 class AiCar
 {
+public:
+	AiCar(Car * car, float difficulty);
+
+	virtual ~AiCar();
+
+	Car * GetCar();
+
+	const std::vector<float> & GetInputs() const;
+
+	virtual void Update(float dt, const std::list<Car> & othercars) = 0;
+
+	/// This is optional for drawing debug stuff.
+	/// It will only be called, when VISUALIZE_AI_DEBUG macro is defined.
+	virtual void Visualize();
+
 protected:
-	Car* car;
+	Car * car;
 	float difficulty;
 
 	/// Contains the car inputs, which is the output of the AI.
 	/// The vector is indexed by CARINPUT values.
 	std::vector <float> inputs;
-
-public:
-	AiCar(Car* _car, float _difficulty) :
-		car(_car), difficulty(_difficulty), inputs(CarInput::INVALID, 0.0)
-	{ }
-	virtual ~AiCar(){}
-
-	Car*						GetCar() { return car; }
-	float						GetDifficulty() { return difficulty; }
-	const std::vector<float>&	GetInputs() { return inputs; }
-
-	virtual void Update(float dt, const std::list<Car>& othercars) = 0;
-
-	/// This is optional for drawing debug stuff.
-	/// It will only be called, when VISUALIZE_AI_DEBUG macro is defined.
-	virtual void Visualize() { }
 };
+
+
+inline AiCar::AiCar(Car * car, float difficulty) :
+	car(car),
+	difficulty(difficulty),
+	inputs(CarInput::INVALID, 0.0)
+{
+	// ctor
+}
+
+inline AiCar::~AiCar()
+{
+	// dtor
+}
+
+inline Car * AiCar::GetCar()
+{
+	return car;
+}
+
+inline const std::vector<float> & AiCar::GetInputs() const
+{
+	return inputs;
+}
+
+inline void AiCar::Visualize()
+{
+	// optional
+}
 
 #endif // _AI_CAR_H
