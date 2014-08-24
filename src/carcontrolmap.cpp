@@ -391,7 +391,7 @@ void CarControlMap::Save(Config & controls_config)
 	}
 }
 
-const std::vector <float> & CarControlMap::ProcessInput(const std::string & joytype, EventSystem & eventsystem, float steerpos, float dt, bool joy_200, float carms, float speedsens, int screenw, int screenh, float button_ramp, bool hgateshifter)
+const std::vector <float> & CarControlMap::ProcessInput(const std::string & joytype, EventSystem & eventsystem, float dt, bool joy_200, float carms, float speedsens, int screenw, int screenh, float button_ramp, bool hgateshifter)
 {
 	//this looks weird, but it ensures that our inputs vector contains exactly one item per input
 	assert(inputs.size() == GameInput::INVALID);
@@ -620,6 +620,8 @@ const std::vector <float> & CarControlMap::ProcessInput(const std::string & joyt
 		if (!havegear)
 			inputs[CarInput::NEUTRAL] = 1.0;
 	}
+
+	float steerpos = lastinputs[CarInput::STEER_RIGHT] - lastinputs[CarInput::STEER_LEFT];
 
 	lastinputs = inputs;
 

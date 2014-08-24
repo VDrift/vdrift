@@ -901,17 +901,13 @@ void Game::AdvanceGameLogic()
 
 	eventsystem.ProcessEvents();
 
-	float last_steer = 0;
 	float car_speed = 0;
 	if (carcontrols_local.first)
-	{
-		last_steer = carcontrols_local.first->GetLastSteer();
 		car_speed = carcontrols_local.first->GetSpeed();
-	}
+
 	carcontrols_local.second.ProcessInput(
 			settings.GetJoyType(),
 			eventsystem,
-			last_steer,
 			timestep,
 			settings.GetJoy200(),
 			car_speed,

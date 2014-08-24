@@ -202,11 +202,6 @@ public:
 		return dynamics.GetWheelContact(wheel).GetPatch();
 	}
 
-	float GetLastSteer() const
-	{
-		return steer_value;
-	}
-
 	float GetSpeed()
 	{
 		return dynamics.GetSpeed();
@@ -325,7 +320,6 @@ protected:
 	CarSound sound;
 
 	// internal variables that might change during driving (so, they need to be serialized)
-	float steer_value;
 	bool nos_active;
 
 	// nominal maximum Mz force, used to scale force feedback

@@ -24,7 +24,6 @@
 #include "cfg/ptree.h"
 
 Car::Car() :
-	steer_value(0),
 	nos_active(false),
 	sector(-1)
 {
@@ -110,8 +109,6 @@ void Car::Update(const std::vector <float> & inputs)
 {
 	assert(inputs.size() >= CarInput::INVALID);
 
-	steer_value = inputs[CarInput::STEER_RIGHT] - inputs[CarInput::STEER_LEFT];
-
 	nos_active = inputs[CarInput::NOS] > 0;
 
 	dynamics.Update(inputs);
@@ -134,6 +131,5 @@ void Car::SetInteriorView(bool value)
 bool Car::Serialize(joeserialize::Serializer & s)
 {
 	_SERIALIZE_(s, dynamics);
-	_SERIALIZE_(s, steer_value);
 	return true;
 }
