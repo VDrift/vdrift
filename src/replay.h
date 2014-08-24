@@ -27,7 +27,7 @@
 #include <iosfwd>
 #include <string>
 
-class Car;
+class CarDynamics;
 
 class Replay
 {
@@ -57,10 +57,10 @@ public:
 	bool GetRecording() const;
 
 	/// set car state, return car inputs
-	const std::vector<float> & PlayFrame(unsigned carid, Car & car);
+	const std::vector<float> & PlayFrame(unsigned carid, CarDynamics & car);
 
 	/// record car inputs and state
-	void RecordFrame(unsigned carid, const std::vector <float> & inputs, Car & car);
+	void RecordFrame(unsigned carid, const std::vector <float> & inputs, CarDynamics & car);
 
 	bool Serialize(joeserialize::Serializer & s);
 
@@ -164,14 +164,14 @@ private:
 		bool Serialize(joeserialize::Serializer & s);
 
 		/// set car, update inputbuffer, false if we are out of frames
-		bool PlayFrame(Car & car);
+		bool PlayFrame(CarDynamics & car);
 
 		/// get car state, save input delta frame
-		void RecordFrame(const std::vector<float> & inputs, Car & car);
+		void RecordFrame(const std::vector<float> & inputs, CarDynamics & car);
 
 		void ProcessPlayInputFrame(const InputFrame & frame);
 
-		void ProcessPlayStateFrame(const StateFrame & frame, Car & car);
+		void ProcessPlayStateFrame(const StateFrame & frame, CarDynamics & car);
 	};
 
 	/// serialized

@@ -1327,7 +1327,7 @@ void Game::UpdateCarInputs(int carid, Car & car)
 	std::vector <float> carinputs(CarInput::INVALID, 0.0f);
 	if (replay.GetPlaying())
 	{
-		const std::vector<float> inputs = replay.PlayFrame(carid, car);
+		const std::vector<float> inputs = replay.PlayFrame(carid, car.GetCarDynamics());
 		assert(inputs.size() <= carinputs.size());
 		for (size_t i = 0; i < inputs.size(); ++i)
 		{
@@ -1391,7 +1391,7 @@ void Game::UpdateCarInputs(int carid, Car & car)
 	// Record car state.
 	if (replay.GetRecording())
 	{
-		replay.RecordFrame(carid, carinputs, car);
+		replay.RecordFrame(carid, carinputs, car.GetCarDynamics());
 	}
 
 	// Local player input processing starts here.

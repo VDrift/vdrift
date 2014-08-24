@@ -21,7 +21,7 @@
 #include "unittest.h"
 #include "cfg/ptree.h"
 #include "physics/carinput.h"
-#include "car.h"
+#include "physics/cardynamics.h"
 
 #include <sstream>
 #include <fstream>
@@ -96,7 +96,7 @@ void Replay::StopRecording(const std::string & replayfilename)
 	}
 }
 
-const std::vector<float> & Replay::PlayFrame(unsigned carid, Car & car)
+const std::vector<float> & Replay::PlayFrame(unsigned carid, CarDynamics & car)
 {
 	assert(carid < carstate.size());
 	assert(unsigned(version_info.inputs_supported) == CarInput::INVALID);
@@ -108,7 +108,7 @@ const std::vector<float> & Replay::PlayFrame(unsigned carid, Car & car)
 	return carstate[carid].inputbuffer;
 }
 
-void Replay::RecordFrame(unsigned carid, const std::vector <float> & inputs, Car & car)
+void Replay::RecordFrame(unsigned carid, const std::vector <float> & inputs, CarDynamics & car)
 {
 	assert(carid < carstate.size());
 	assert(unsigned(version_info.inputs_supported)== CarInput::INVALID);
@@ -123,7 +123,7 @@ void Replay::RecordFrame(unsigned carid, const std::vector <float> & inputs, Car
 	}
 }
 
-void Replay::CarState::RecordFrame(const std::vector <float> & inputs, Car & car)
+void Replay::CarState::RecordFrame(const std::vector <float> & inputs, CarDynamics & car)
 {
 	assert(inputbuffer.size() == CarInput::INVALID);
 
@@ -154,7 +154,7 @@ void Replay::CarState::RecordFrame(const std::vector <float> & inputs, Car & car
 	frame++;
 }
 
-bool Replay::CarState::PlayFrame(Car & car)
+bool Replay::CarState::PlayFrame(CarDynamics & car)
 {
 	frame++;
 
@@ -189,7 +189,7 @@ void Replay::CarState::ProcessPlayInputFrame(const InputFrame & frame)
 	}
 }
 
-void Replay::CarState::ProcessPlayStateFrame(const StateFrame & frame, Car & car)
+void Replay::CarState::ProcessPlayStateFrame(const StateFrame & frame, CarDynamics & car)
 {
 	// process input snapshot
 	for (unsigned i = 0; i < inputbuffer.size() && i < frame.GetInputSnapshot().size(); i++)
