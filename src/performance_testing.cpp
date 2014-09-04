@@ -96,8 +96,9 @@ void PerformanceTesting::Test(
 	// position is the center of a 2 x 4 x 1 meter box on track surface
 	btVector3 pos(0.0, -2.0, 0.5);
 	btQuaternion rot = btQuaternion::getIdentity();
-	bool damage = false;
-	if (!car.Load(error_output, content, world, *cfg, cardir, "", pos, rot, damage))
+	const std::string tire = "";
+	const bool damage = false;
+	if (!car.Load(*cfg, cardir, tire, pos, rot, damage, world, content, error_output))
 	{
 		return;
 	}

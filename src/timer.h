@@ -42,7 +42,7 @@ public:
 	///add a car of the given type and return the integer identifier that the track system will use
 	int AddCar(const std::string & cartype);
 
-	void SetPlayerCarID(int newid) {playercarindex = newid;}
+	void SetPlayerCarId(int newid) {playercarindex = newid;}
 
 	void Unload();
 
@@ -50,7 +50,7 @@ public:
 
 	void Tick(float dt);
 
-	void Lap(const unsigned int carid, const int nextsector, const bool countit);
+	void Lap(const unsigned int carid, const int nextsector);
 
 	void UpdateDistance(const unsigned int carid, const double newdistance);
 
@@ -80,9 +80,11 @@ public:
 			return curbestlap;
 	}
 
-	int GetPlayerCurrentLap() {return GetCurrentLap(playercarindex);}
+	int GetPlayerCurrentLap() const {return GetCurrentLap(playercarindex);}
 
-	int GetCurrentLap(unsigned int index) {assert(index<car.size());return car[index].GetCurrentLap();}
+	int GetCurrentLap(unsigned int index) const {assert(index<car.size()); return car[index].GetCurrentLap();}
+
+	int GetLastSector(unsigned int index) const {assert(index<car.size()); return car[index].GetSector();}
 
 	float GetStagingTimeLeft() const {return pretime;}
 
@@ -271,12 +273,17 @@ private:
 		LapTime bestlap; //best lap time for player & opponents
 		double totaltime; //total time of a race for player & opponents
 		int num_laps; //current lap
+		int sector;
 		std::string cartype;
 		double lapdistance; //total track distance driven this lap in meters
 		DriftScore driftscore;
 
 	public:
-		LapInfo(const std::string & newcartype) : cartype(newcartype) {Reset();}
+		LapInfo(const std::string & newcartype) :
+			cartype(newcartype)
+		{
+			Reset();
+		}
 
 		void Reset()
 		{
@@ -284,6 +291,7 @@ private:
 			lastlap.Reset();
 			bestlap.Reset();
 			num_laps = 0;
+			sector = -1;
 		}
 
 		void Tick(float dt)
@@ -304,7 +312,10 @@ private:
 			num_laps++;
 		}
 
-		const std::string & GetCarType() const {return cartype;}
+		const std::string & GetCarType() const
+		{
+			return cartype;
+		}
 
 		void DebugPrint(std::ostream & out) const
 		{
@@ -333,12 +344,25 @@ private:
 			return num_laps;
 		}
 
+		void SetSector(int nextsector)
+		{
+			sector = nextsector;
+		}
+
+		int GetSector() const
+		{
+			return sector;
+		}
+
 		void UpdateLapDistance(double newdistance)
 		{
 			lapdistance = newdistance;
 		}
 
-		double GetLapDistance() const {return lapdistance;}
+		double GetLapDistance() const
+		{
+			return lapdistance;
+		}
 
 		const DriftScore & GetDriftScore() const
 		{

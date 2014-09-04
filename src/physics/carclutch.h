@@ -68,12 +68,12 @@ public:
 		max_torque = sliding_friction * max_pressure * area * radius;
 	}
 
-	void SetClutch(btScalar value)
+	void SetPosition(btScalar value)
 	{
 		clutch_position = value;
 	}
 
-	btScalar GetClutch() const
+	btScalar GetPosition() const
 	{
 		return clutch_position;
 	}

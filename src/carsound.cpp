@@ -40,6 +40,24 @@ CarSound::CarSound() :
 	// ctor
 }
 
+CarSound::CarSound(const CarSound & other) :
+	psound(0),
+	gearsound_check(0),
+	brakesound_check(false),
+	handbrakesound_check(false),
+	interior(false)
+{
+	// we don't really support copying of these suckers
+	assert(!other.psound);
+}
+
+CarSound & CarSound::operator= (const CarSound & other)
+{
+	// we don't really support copying of these suckers
+	assert(!other.psound && !psound);
+	return *this;
+}
+
 CarSound::~CarSound()
 {
 	Clear();
@@ -52,7 +70,7 @@ bool CarSound::Load(
 	ContentManager & content,
 	std::ostream & error_output)
 {
-	psound = &sound;
+	assert(!psound);
 
 	// check for sound specification file
 	std::string path_aud = carpath + "/" + carname + ".aud";
@@ -224,6 +242,8 @@ bool CarSound::Load(
 		content.load(soundptr, carpath, "wind");
 		roadnoise = sound.AddSource(soundptr, 0, true, true);
 	}
+
+	psound = &sound;
 
 	return true;
 }
@@ -476,7 +496,7 @@ void CarSound::Update(const CarDynamics & dynamics, float dt)
 */
 }
 
-void CarSound::EnableInteriorSounds(bool value)
+void CarSound::EnableInteriorSound(bool value)
 {
 	interior = value;
 }
@@ -506,4 +526,6 @@ void CarSound::Clear()
 
 	for (int i = enginesounds.size() - 1; i >= 0; --i)
 		psound->RemoveSource(enginesounds[i].sound_source);
+
+	psound = 0;
 }

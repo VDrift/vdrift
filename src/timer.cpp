@@ -83,11 +83,12 @@ void Timer::Tick(float dt)
 		i->Tick(elapsed_time);
 }
 
-void Timer::Lap(const unsigned int carid, const int nextsector, const bool countit)
+void Timer::Lap(const unsigned int carid, const int nextsector)
 {
 	assert(carid < car.size());
 
-	if (countit && carid == playercarindex)
+	bool countlap = (car[carid].GetSector() >= 0);
+	if (countlap && carid == playercarindex)
 	{
 		ostringstream secstr;
 		secstr << "sector " << nextsector;
@@ -106,8 +107,9 @@ void Timer::Lap(const unsigned int carid, const int nextsector, const bool count
 			trackrecords.set(car[carid].GetCarType(), secstr.str(), (float) car[carid].GetTime());
 	}
 
+	car[carid].SetSector(nextsector);
 	if (nextsector == 0)
-		car[carid].Lap(countit);
+		car[carid].Lap(countlap);
 }
 
 void Timer::UpdateDistance(const unsigned int carid, const double newdistance)

@@ -445,95 +445,40 @@ struct BodyLoader
 	}
 };
 
-CarDynamics::CarDynamics() :
-	world(0),
-	body(0),
-	transform(btTransform::getIdentity()),
-	linear_velocity(0,0,0),
-	angular_velocity(0,0,0),
-	drive(NONE),
-	driveshaft_rpm(0),
-	tacho_rpm(0),
-	autoclutch(true),
-	autoshift(false),
-	shifted(true),
-	shift_gear(0),
-	remaining_shift_time(0),
-	clutch_value(1),
-	brake_value(0),
-	abs(false),
-	tcs(false),
-	maxangle(0),
-	maxspeed(0),
-	feedback(0)
+CarDynamics::CarDynamics()
 {
-	suspension.resize(WHEEL_POSITION_SIZE);
-	wheel.resize(WHEEL_POSITION_SIZE);
-	tire.resize(WHEEL_POSITION_SIZE);
-	brake.resize(WHEEL_POSITION_SIZE);
-	suspension_force.resize(WHEEL_POSITION_SIZE);
-	wheel_velocity.resize(WHEEL_POSITION_SIZE);
-	wheel_position.resize(WHEEL_POSITION_SIZE);
-	wheel_orientation.resize(WHEEL_POSITION_SIZE);
-	wheel_contact.resize(WHEEL_POSITION_SIZE);
-	abs_active.resize(WHEEL_POSITION_SIZE, false);
-	tcs_active.resize(WHEEL_POSITION_SIZE, false);
+	Init();
+}
+
+CarDynamics::CarDynamics(const CarDynamics & other)
+{
+	// we don't really support copying of these suckers
+	assert(!other.body);
+	Init();
+}
+
+CarDynamics & CarDynamics::operator= (const CarDynamics & other)
+{
+	// we don't really support copying of these suckers
+	assert(!other.body && !body);
+	return *this;
 }
 
 CarDynamics::~CarDynamics()
 {
-	if (!body) return;
-
-	// delete children
-	for (int i = 0; i < body->getNumChildren(); ++i)
-	{
-		btRigidBody* child = body->getChildBody(i);
-		if (child->isInWorld())
-		{
-			world->removeRigidBody(child);
-			delete child->getCollisionShape();
-		}
-		delete child;
-	}
-
-	// delete body
-	if (world)
-	{
-		world->removeAction(this);
-		world->removeRigidBody(body);
-	}
-	if (body->getCollisionShape()->isCompound())
-	{
-		const btCompoundShape* shape = static_cast<btCompoundShape*>(body->getCollisionShape());
-		for (int i = 0; i < shape->getNumChildShapes(); ++i)
-		{
-			delete shape->getChildShape(i);
-		}
-	}
-	delete body->getCollisionShape();
-	delete body;
-
-	for (int i = 0; i < suspension.size(); ++i)
-	{
-		delete suspension[i];
-	}
-
-	for (int i = 0; i < aerodevice.size(); ++i)
-	{
-		delete static_cast<AeroDeviceFracture*>(aerodevice[i].GetUserPointer());
-	}
+	Clear();
 }
 
 bool CarDynamics::Load(
-	std::ostream & error,
-	ContentManager & content,
-	DynamicsWorld & world,
 	const PTree & cfg,
 	const std::string & cardir,
 	const std::string & cartire,
 	const btVector3 & position,
 	const btQuaternion & rotation,
-	const bool damage)
+	const bool damage,
+	DynamicsWorld & world,
+	ContentManager & content,
+	std::ostream & error)
 {
 	if (!LoadClutch(cfg, clutch, error)) return false;
 	if (!LoadTransmission(cfg, transmission, error)) return false;
@@ -573,7 +518,7 @@ bool CarDynamics::Load(
 	int wheel_count = cfg_wheels->size();
 	if (wheel_count != WHEEL_POSITION_SIZE)
 	{
-		error << WHEEL_POSITION_SIZE << " are required." << std::endl;
+		error << "Wheels loaded: " << wheel_count << ". Required: " << WHEEL_POSITION_SIZE << std::endl;
 		return false;
 	}
 
@@ -615,7 +560,6 @@ bool CarDynamics::Load(
 		if (!loadBody(it->second, error)) return false;
 	}
 
-	// create default shape if no shapes loaded
 	if (bodyinfo.m_shape->getNumChildShapes() == wheel_count)
 	{
 		error << "No collision shape defined." << std::endl;
@@ -644,24 +588,15 @@ bool CarDynamics::Load(
 	btVector3 up_offset = -up * (0.5 + bmin.z());
 	SetPosition(body->getCenterOfMassPosition() + up_offset + fwd_offset);
 
-	// realign with ground
-	//AlignWithGround();
-
 	// init cached state
 	linear_velocity = body->getLinearVelocity();
 	angular_velocity = body->getAngularVelocity();
 	for (int i = 0; i < WHEEL_POSITION_SIZE; ++i)
 	{
 		wheel_orientation[i] = LocalToWorld(suspension[i]->GetWheelOrientation());
-		wheel_velocity[i].setValue(0, 0, 0);
-		suspension_force[i].setValue(0, 0, 0);
+		wheel_velocity[i].setZero();
+		suspension_force[i].setZero();
 	}
-
-	// initialize telemetry
-	telemetry.clear();
-	//telemetry.push_back(CARTELEMETRY("brakes"));
-	//telemetry.push_back(CARTELEMETRY("suspension"));
-	//etc
 
 	maxspeed = CalculateMaxSpeed();
 
@@ -973,14 +908,6 @@ btScalar CarDynamics::GetTireSquealAmount(WheelPosition i) const
 	btClamp(squeal, btScalar(0), btScalar(1));
 
 	return squeal;
-}
-
-void CarDynamics::UpdateTelemetry(btScalar dt)
-{
-	for (std::list<CarTelemetry>::iterator i = telemetry.begin(); i != telemetry.end(); ++i)
-	{
-		i->Update(dt);
-	}
 }
 
 static std::ostream & operator << (std::ostream & os, const btVector3 & v)
@@ -1299,7 +1226,7 @@ void CarDynamics::DoTCS ( int i, btScalar suspension_force )
 
 			if ( tcs_active[i] )
 			{
-				btScalar curclutch = clutch.GetClutch();
+				btScalar curclutch = clutch.GetPosition();
 				if ( curclutch > 1 ) curclutch = 1;
 				if ( curclutch < 0 ) curclutch = 0;
 
@@ -1622,8 +1549,6 @@ void CarDynamics::updateAction(btCollisionWorld * collisionWorld, btScalar dt)
 	const float tacho_factor = 0.1;
 	tacho_rpm = engine.GetRPM() * tacho_factor + tacho_rpm * (1.0 - tacho_factor);
 
-	UpdateTelemetry(dt);
-
 	linear_velocity = body->getLinearVelocity();
 	angular_velocity = body->getAngularVelocity();
 }
@@ -1770,7 +1695,7 @@ void CarDynamics::UpdateTransmission(btScalar dt)
 		engine.SetThrottle(throttle);
 
 		btScalar new_clutch = AutoClutch(dt);
-		clutch.SetClutch(new_clutch);
+		clutch.SetPosition(new_clutch);
 	}
 }
 
@@ -1859,7 +1784,7 @@ int CarDynamics::NextGear() const
 	int gear = transmission.GetGear();
 
 	// only autoshift if a shift is not in progress
-	if (shifted && clutch.GetClutch() == 1.0)
+	if (shifted && clutch.GetPosition() == 1.0)
 	{
 		// shift up when driveshaft speed exceeds engine redline
 		// we do not shift up from neutral/reverse
@@ -1951,7 +1876,7 @@ void CarDynamics::SetNOS(btScalar value)
 
 void CarDynamics::SetClutch(btScalar value)
 {
-	clutch.SetClutch(value);
+	clutch.SetPosition(value);
 }
 
 void CarDynamics::SetBrake(btScalar value)
@@ -1994,6 +1919,86 @@ void CarDynamics::RolloverRecover()
 	AlignWithGround();
 }
 
+void CarDynamics::Clear()
+{
+	if (!body) return;
+
+	assert(world);
+	for (int i = 0; i < body->getNumChildren(); ++i)
+	{
+		btRigidBody * child = body->getChildBody(i);
+		if (child->isInWorld())
+		{
+			world->removeRigidBody(child);
+			delete child->getCollisionShape();
+		}
+		delete child;
+	}
+	world->removeAction(this);
+	world->removeRigidBody(body);
+	world = 0;
+
+	if (body->getCollisionShape()->isCompound())
+	{
+		const btCompoundShape * shape = static_cast<btCompoundShape*>(body->getCollisionShape());
+		for (int i = 0; i < shape->getNumChildShapes(); ++i)
+		{
+			delete shape->getChildShape(i);
+		}
+	}
+	delete body->getCollisionShape();
+	delete body;
+	body = 0;
+
+	for (int i = 0; i < suspension.size(); ++i)
+	{
+		delete suspension[i];
+		suspension[i] = 0;
+	}
+
+	for (int i = 0; i < aerodevice.size(); ++i)
+	{
+		delete static_cast<AeroDeviceFracture*>(aerodevice[i].GetUserPointer());
+	}
+	aerodevice.clear();
+}
+
+void CarDynamics::Init()
+{
+	world = 0;
+	body = 0;
+	transform.setIdentity();
+	linear_velocity.setZero();
+	angular_velocity.setZero();
+	drive = NONE;
+	driveshaft_rpm = 0;
+	tacho_rpm = 0;
+	autoclutch = true;
+	autoshift = false;
+	shifted = true;
+	shift_gear = 0;
+	remaining_shift_time = 0;
+	clutch_value = 1;
+	brake_value = 0;
+	abs = false;
+	tcs = false;
+	maxangle = 0;
+	maxspeed = 0;
+	feedback = 0;
+
+	suspension.resize(WHEEL_POSITION_SIZE, 0);
+	wheel.resize(WHEEL_POSITION_SIZE);
+	tire.resize(WHEEL_POSITION_SIZE);
+	brake.resize(WHEEL_POSITION_SIZE);
+	suspension_force.resize(WHEEL_POSITION_SIZE);
+	wheel_velocity.resize(WHEEL_POSITION_SIZE);
+	wheel_position.resize(WHEEL_POSITION_SIZE);
+	wheel_orientation.resize(WHEEL_POSITION_SIZE);
+	wheel_contact.resize(WHEEL_POSITION_SIZE);
+	abs_active.resize(WHEEL_POSITION_SIZE, false);
+	tcs_active.resize(WHEEL_POSITION_SIZE, false);
+}
+
 bool CarDynamics::WheelContactCallback(
 	btManifoldPoint& cp,
 	const btCollisionObjectWrapper* col0,
@@ -2030,6 +2035,7 @@ bool CarDynamics::WheelContactCallback(
 	}
 	return false;
 }
+
 const btCollisionObject & CarDynamics::getCollisionObject() const
 {
 	return *static_cast<btCollisionObject*>(body);

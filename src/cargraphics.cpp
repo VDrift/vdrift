@@ -183,17 +183,32 @@ static bool LoadWheel(
 CarGraphics::CarGraphics() :
 	steer_angle_max(0),
 	applied_brakes(0),
-	interior_view(false)
+	interior_view(false),
+	loaded(false)
 {
 	// ctor
 }
 
+CarGraphics::CarGraphics(const CarGraphics & other) :
+	steer_angle_max(0),
+	applied_brakes(0),
+	interior_view(false),
+	loaded(false)
+{
+	// we don't really support copying of these suckers
+	assert(!other.loaded);
+}
+
+CarGraphics & CarGraphics::operator= (const CarGraphics & other)
+{
+	// we don't really support copying of these suckers
+	assert(!other.loaded && !loaded);
+	return *this;
+}
+
 CarGraphics::~CarGraphics()
 {
-	for (size_t i = 0; i < cameras.size(); ++i)
-	{
-		delete cameras[i];
-	}
+	ClearCameras();
 }
 
 bool CarGraphics::Load(
@@ -208,6 +223,8 @@ bool CarGraphics::Load(
 	ContentManager & content,
 	std::ostream & error_output)
 {
+	assert(!loaded);
+
 	// init drawable load functor
 	LoadDrawable loadDrawable(carpath, anisotropy, content, models, textures, error_output);
 
@@ -328,9 +345,14 @@ bool CarGraphics::Load(
 		}
 	}
 
-	SetColor(carcolor[0], carcolor[1], carcolor[2]);
+	if (!LoadCameras(cfg, camerabounce, error_output))
+	{
+		return false;
+	}
 
-	return LoadCameras(cfg, camerabounce, error_output);
+	SetColor(carcolor[0], carcolor[1], carcolor[2]);
+	loaded = true;
+	return true;
 }
 
 void CarGraphics::Update(const std::vector<float> & inputs)
@@ -486,10 +508,22 @@ bool CarGraphics::LoadCameras(
 	for (PTree::const_iterator i = cfg_cams->begin(); i != cfg_cams->end(); ++i)
 	{
 		Camera * cam = LoadCamera(i->second, cambounce, error_output);
-		if (!cam) return false;
-
+		if (!cam)
+		{
+			ClearCameras();
+			return false;
+		}
 		cameras.push_back(cam);
 	}
 
 	return true;
+}
+
+void CarGraphics::ClearCameras()
+{
+	for (size_t i = 0; i < cameras.size(); ++i)
+	{
+		delete cameras[i];
+	}
+	cameras.clear();
 }

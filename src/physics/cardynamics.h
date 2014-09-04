@@ -32,7 +32,6 @@
 #include "carwheelposition.h"
 #include "aerodevice.h"
 #include "collision_contact.h"
-#include "cartelemetry.h"
 #include "motionstate.h"
 #include "joeserialize.h"
 #include "BulletDynamics/Dynamics/btActionInterface.h"
@@ -58,19 +57,23 @@ friend class joeserialize::Serializer;
 public:
 	CarDynamics();
 
+	CarDynamics(const CarDynamics & other);
+
+	CarDynamics & operator= (const CarDynamics & other);
+
 	~CarDynamics();
 
 	// tirealt is optional tire config, overrides default tire type
 	bool Load(
-		std::ostream & error,
-		ContentManager & content,
-		DynamicsWorld & world,
 		const PTree & cfg,
 		const std::string & cardir,
 		const std::string & cartire,
 		const btVector3 & position,
 		const btQuaternion & rotation,
-		const bool damage);
+		const bool damage,
+		DynamicsWorld & world,
+		ContentManager & content,
+		std::ostream & error);
 
 	// set body position
 	void SetPosition(const btVector3 & pos);
@@ -131,8 +134,8 @@ public:
 	const CarBrake & GetBrake(WheelPosition pos) const {return brake[pos];}
 	const CarWheel & GetWheel(WheelPosition pos) const {return wheel[pos];}
 	const CarTire & GetTire(WheelPosition pos) const {return tire[pos];}
+	btScalar GetFuelAmount() const {return fuel_tank.FuelPercent();}
 	btScalar GetNosAmount() const {return engine.GetNosAmount();}
-	bool GetOutOfGas() const {return fuel_tank.Empty();}
 	bool GetABSEnabled() const;
 	bool GetABSActive() const;
 	bool GetTCSEnabled() const;
@@ -160,8 +163,6 @@ public:
 
 	btVector3 LocalToWorld(const btVector3 & local) const;
 
-	void UpdateTelemetry(btScalar dt);
-
 	// print debug info to the given ostream.  set p1, p2, etc if debug info part 1, and/or part 2, etc is desired
 	void DebugPrint(std::ostream & out, bool p1, bool p2, bool p3, bool p4) const;
 
@@ -177,8 +178,8 @@ public:
 		int index1);
 
 protected:
-	DynamicsWorld* world;
-	FractureBody* body;
+	DynamicsWorld * world;
+	FractureBody * body;
 
 	// body state
 	btTransform transform;
@@ -224,7 +225,6 @@ protected:
 	bool tcs;
 	std::vector<int> abs_active;
 	std::vector<int> tcs_active;
-	std::list<CarTelemetry> telemetry;
 
 	btScalar maxangle;
 	btScalar maxspeed;
@@ -311,6 +311,10 @@ protected:
 	void SetHandBrake(btScalar value);
 
 	void RolloverRecover();
+
+	void Clear();
+
+	void Init();
 };
 
 #endif

@@ -80,12 +80,12 @@ void Ai::ClearCars()
 	ai_cars.clear();
 }
 
-void Ai::Update(float dt, const std::list <Car> & othercars)
+void Ai::Update(float dt, const std::vector<CarDynamics> & checkcars)
 {
 	int size = ai_cars.size();
 	for (int i = 0; i < size; i++)
 	{
-		ai_cars[i]->Update(dt, othercars);
+		ai_cars[i]->Update(dt, checkcars);
 	}
 }
 

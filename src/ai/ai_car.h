@@ -21,12 +21,9 @@
 #define _AI_CAR_H
 
 #include "physics/carinput.h"
-
 #include <vector>
-#include <list>
 
 class CarDynamics;
-class Car;
 
 /// AI Car controller interface.
 class AiCar
@@ -40,7 +37,7 @@ public:
 
 	const std::vector<float> & GetInputs() const;
 
-	virtual void Update(float dt, const std::list<Car> & othercars) = 0;
+	virtual void Update(float dt, const std::vector<CarDynamics> & checkcars) = 0;
 
 	/// This is optional for drawing debug stuff.
 	/// It will only be called, when VISUALIZE_AI_DEBUG macro is defined.

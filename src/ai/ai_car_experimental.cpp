@@ -22,7 +22,6 @@
 #include "physics/dynamicsworld.h"
 #include "tobullet.h"
 #include "track.h"
-#include "car.h"
 #include "unittest.h"
 
 #include <cassert>
@@ -110,7 +109,7 @@ float AiCarExperimental::RateLimit(float old_value, float new_value, float rate_
 		return new_value;
 }
 
-void AiCarExperimental::Update(float dt, const std::list <Car> & checkcars)
+void AiCarExperimental::Update(float dt, const std::vector<CarDynamics> & checkcars)
 {
 	float lastThrottle = inputs[CarInput::THROTTLE];
 	float lastBreak = inputs[CarInput::BRAKE];
@@ -765,14 +764,14 @@ float AiCarExperimental::BrakeFromOthers(float speed_diff)
 	return bias;
 }
 
-void AiCarExperimental::AnalyzeOthers(float dt, const std::list <Car> & checkcars)
+void AiCarExperimental::AnalyzeOthers(float dt, const std::vector<CarDynamics> & checkcars)
 {
 	const float half_carlength = 1.25;
 	const btVector3 throttle_axis = Direction::forward;
 
-	for (std::list <Car>::const_iterator i = checkcars.begin(); i != checkcars.end(); ++i)
+	for (std::vector<CarDynamics>::const_iterator i = checkcars.begin(); i != checkcars.end(); ++i)
 	{
-		const CarDynamics * icar = &i->GetCarDynamics();
+		const CarDynamics * icar = &*i;
 		if (icar != car)
 		{
 			OtherCarInfo & info = othercars[icar];

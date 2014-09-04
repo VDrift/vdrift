@@ -34,6 +34,7 @@
 #include "svn_sourceforge.h"
 #include "game_downloader.h"
 #include "containeralgorithm.h"
+#include "tobullet.h"
 #include "hsvtorgb.h"
 #include "camera_orbit.h"
 
@@ -99,10 +100,10 @@ Game::Game(std::ostream & info_out, std::ostream & error_out) :
 	controlgrab_id(0),
 	controlgrab(false),
 	garage_camera("garagecam"),
+	active_camera(0),
 	car_info(1),
 	player_car_id(0),
 	car_edit_id(0),
-	active_camera(0),
 	race_laps(0),
 	practice(true),
 	collisiondispatch(
@@ -775,7 +776,7 @@ void Game::Draw(float dt)
 	graphics->AddDynamicNode(track.GetRacinglineNode());
 	graphics->AddDynamicNode(trackmap.GetNode());
 	graphics->AddDynamicNode(tire_smoke.GetNode());
-	for (std::list <Car>::iterator i = cars.begin(); i != cars.end(); ++i)
+	for (std::vector<CarGraphics>::iterator i = car_graphics.begin(); i != car_graphics.end(); ++i)
 	{
 		graphics->AddDynamicNode(i->GetNode());
 	}
@@ -789,19 +790,19 @@ void Game::Draw(float dt)
 	{
 		float fov = active_camera->GetFOV() > 0 ? active_camera->GetFOV() : settings.GetFOV();
 
-		Vec3 reflection_sample_location = active_camera->GetPosition();
+		Vec3 reflection_location = active_camera->GetPosition();
 		if (carcontrols_local.first)
-			reflection_sample_location = carcontrols_local.first->GetCenterOfMassPosition();
+			reflection_location = ToMathVector<float>(carcontrols_local.first->GetCenterOfMass());
 
 		Quat camlook;
 		camlook.Rotate(M_PI_2, 1, 0, 0);
-		Quat camorientation = -(active_camera->GetOrientation() * camlook);
+		Quat cam_orientation = -(active_camera->GetOrientation() * camlook);
 
 		graphics->SetupScene(
 			fov, settings.GetViewDistance(),
 			active_camera->GetPosition(),
-			camorientation,
-			reflection_sample_location,
+			cam_orientation,
+			reflection_location,
 			error_output);
 	}
 	else
@@ -927,7 +928,7 @@ void Game::AdvanceGameLogic()
 	{
 		PROFILER.beginBlock("ai");
 		ai.Visualize();
-		ai.Update(timestep, cars);
+		ai.Update(timestep, car_dynamics);
 		PROFILER.endBlock("ai");
 
 		PROFILER.beginBlock("physics");
@@ -935,11 +936,7 @@ void Game::AdvanceGameLogic()
 		PROFILER.endBlock("physics");
 
 		PROFILER.beginBlock("car");
-		unsigned carid = 0;
-		for (std::list <Car>::iterator i = cars.begin(); i != cars.end(); ++i)
-		{
-			UpdateCar(carid++, *i, timestep);
-		}
+		UpdateCars(timestep);
 		PROFILER.endBlock("car");
 
 		// Update dynamic track objects.
@@ -1046,7 +1043,7 @@ void Game::ProcessGameInputs()
 void Game::UpdateTimer()
 {
 	// Check for cars doing a lap.
-	for (std::list <Car>::iterator i = cars.begin(); i != cars.end(); ++i)
+	for (std::vector<CarDynamics>::iterator i = car_dynamics.begin(); i != car_dynamics.end(); ++i)
 	{
 		int carid = cartimerids[&(*i)];
 
@@ -1054,39 +1051,30 @@ void Game::UpdateTimer()
 		int nextsector = 0;
 		if (track.GetSectors() > 0)
 		{
-			nextsector = (i->GetSector() + 1) % track.GetSectors();
-			//cout << "next " << nextsector << ", cur " << i->GetSector() << ", track " << track.GetSectors() << std::endl;
+			nextsector = (timer.GetLastSector(carid) + 1) % track.GetSectors();
 			for (int p = 0; p < 4; ++p)
 			{
-				if (i->GetCurPatch(WheelPosition(p)) == track.GetSectorPatch(nextsector))
+				const Bezier * patch = i->GetWheelContact(WheelPosition(p)).GetPatch();
+				if (patch == track.GetSectorPatch(nextsector))
 				{
 					advance = true;
-					//info_output << "New sector " << nextsector << "/" << track.GetSectors();
-					//info_output << " patch " << i->GetCurPatch(WHEEL_POSITION(p)) << std::endl;
-					//info_output <<  ", " << track.GetSectorPatch(nextsector) << std::endl;
 				}
-				//else cout << p << ". " << i->GetCurPatch(p) << ", " << track.GetSectorPatch(nextsector) << std::endl;
 			}
 		}
 
 		if (advance)
-		{
-			// Only count it if the car's current sector isn't -1 which is the default value when the car is loaded...
-			timer.Lap(carid, nextsector, (i->GetSector() >= 0));
-			i->SetSector(nextsector);
-		}
+			timer.Lap(carid, nextsector);
 
 		// Update how far the car is on the track...
 		// Find the patch under the front left wheel...
-		const Bezier * curpatch = i->GetCurPatch(FRONT_LEFT);
+		const Bezier * curpatch = i->GetWheelContact(FRONT_LEFT).GetPatch();
 		if (!curpatch)
-			// Try the other wheel...
-			curpatch = i->GetCurPatch(FRONT_RIGHT);
+			curpatch = i->GetWheelContact(FRONT_RIGHT).GetPatch();
 
 		// Only update if car is on track.
 		if (curpatch)
 		{
-			Vec3 pos = i->GetCenterOfMassPosition();
+			Vec3 pos = ToMathVector<float>(i->GetCenterOfMass());
 			Vec3 back_left, back_right, front_left;
 			if (!track.IsReversed())
 			{
@@ -1128,10 +1116,11 @@ void Game::UpdateTimer()
 void Game::UpdateTrackMap()
 {
 	std::list <std::pair<Vec3, bool> > carpositions;
-	for (std::list <Car>::iterator i = cars.begin(); i != cars.end(); ++i)
+	for (std::vector<CarDynamics>::iterator i = car_dynamics.begin(); i != car_dynamics.end(); ++i)
 	{
-		bool playercar = (carcontrols_local.first == &(*i));
-		carpositions.push_back(std::make_pair(i->GetCenterOfMassPosition(), playercar));
+		bool player = (carcontrols_local.first == &(*i));
+		Vec3 carpos = ToMathVector<float>(i->GetCenterOfMass());
+		carpositions.push_back(std::make_pair(carpos, player));
 	}
 
 	trackmap.Update(settings.GetTrackmap(), carpositions);
@@ -1314,20 +1303,32 @@ void Game::UpdateCarInfo()
 	gui.SetOptionValue("game.ai_level", cast(info.ailevel));
 }
 
-void Game::UpdateCar(int carid, Car & car, double dt)
+void Game::UpdateCars(float dt)
 {
-	car.Update(dt);
-	UpdateCarInputs(carid, car);
-	AddTireSmokeParticles(dt, car);
-	UpdateDriftScore(car, dt);
+	for (size_t i = 0; i < car_dynamics.size(); ++i)
+	{
+		UpdateCarInputs(i);
+
+		car_graphics[i].Update(car_dynamics[i]);
+
+		car_sounds[i].Update(car_dynamics[i], dt);
+
+		AddTireSmokeParticles(car_dynamics[i], dt);
+
+		UpdateDriftScore(car_dynamics[i], dt);
+	}
 }
 
-void Game::UpdateCarInputs(int carid, Car & car)
+void Game::UpdateCarInputs(int carid)
 {
+	CarDynamics & car = car_dynamics[carid];
+	CarGraphics & car_gfx = car_graphics[carid];
+	CarSound & car_snd = car_sounds[carid];
+
 	std::vector <float> carinputs(CarInput::INVALID, 0.0f);
 	if (replay.GetPlaying())
 	{
-		const std::vector<float> inputs = replay.PlayFrame(carid, car.GetCarDynamics());
+		const std::vector<float> inputs = replay.PlayFrame(carid, car);
 		assert(inputs.size() <= carinputs.size());
 		for (size_t i = 0; i < inputs.size(); ++i)
 		{
@@ -1371,7 +1372,7 @@ void Game::UpdateCarInputs(int carid, Car & car)
 	}
 	else
 	{
-		carinputs = ai.GetInputs(&car.GetCarDynamics());
+		carinputs = ai.GetInputs(&car);
 		assert(carinputs.size() == CarInput::INVALID);
 	}
 
@@ -1387,11 +1388,12 @@ void Game::UpdateCarInputs(int carid, Car & car)
 	}
 
 	car.Update(carinputs);
+	car_gfx.Update(carinputs);
 
 	// Record car state.
 	if (replay.GetRecording())
 	{
-		replay.RecordFrame(carid, carinputs, car.GetCarDynamics());
+		replay.RecordFrame(carid, carinputs, car);
 	}
 
 	// Local player input processing starts here.
@@ -1409,81 +1411,63 @@ void Game::UpdateCarInputs(int carid, Car & car)
 		car.DebugPrint(debug_info4, false, false, false, true);
 	}
 
-	std::pair <int, int> curplace = timer.GetPlayerPlace();
-	int tid = cartimerids[&car];
+	const std::pair <int, int> curplace = timer.GetPlayerPlace();
+	const int tid = cartimerids[&car];
 	hud.Update(
 		gui.GetFont(), fonts["lcd"], window.GetW(), window.GetH(),
 		timer.GetPlayerTime(), timer.GetLastLap(), timer.GetBestLap(), timer.GetStagingTimeLeft(),
-		timer.GetPlayerCurrentLap(), race_laps, curplace.first, curplace.second,
-		car.GetEngineRPM(), car.GetEngineRedline(), car.GetEngineRPMLimit(),
-		car.GetSpeedMPS(), car.GetMaxSpeedMPS(), settings.GetMPH(), car.GetClutch(), car.GetGear(),
-		debug_info1.str(), debug_info2.str(), debug_info3.str(), debug_info4.str(),
+		timer.GetPlayerCurrentLap(), race_laps, curplace.first, curplace.second, settings.GetMPH(),
+		car.GetTachoRPM(), car.GetEngine().GetRedline(), car.GetEngine().GetRPMLimit(),
+		car.GetSpeedMPS(), car.GetMaxSpeedMPS(),
+		car.GetClutch().GetPosition(), car.GetTransmission().GetGear(),
+		car.GetFuelAmount(), car.GetNosAmount(), carinputs[CarInput::NOS],
 		car.GetABSEnabled(), car.GetABSActive(), car.GetTCSEnabled(), car.GetTCSActive(),
-		car.GetOutOfGas(), car.GetNosActive(), car.GetNosAmount(),
-		timer.GetIsDrifting(tid), timer.GetDriftScore(tid), timer.GetThisDriftScore(tid));
+		timer.GetIsDrifting(tid), timer.GetDriftScore(tid), timer.GetThisDriftScore(tid),
+		debug_info1.str(), debug_info2.str(), debug_info3.str(), debug_info4.str());
 
 	// Handle camera mode change inputs.
 	Camera * old_camera = active_camera;
 	CarControlMap & carcontrol = carcontrols_local.second;
-	unsigned camera_id = settings.GetCamera();
+	unsigned int camera_id = settings.GetCamera();
 	if (carcontrol.GetInput(GameInput::VIEW_HOOD))
-	{
 		camera_id = 0;
-	}
 	else if (carcontrol.GetInput(GameInput::VIEW_INCAR))
-	{
 		camera_id = 1;
-	}
 	else if (carcontrol.GetInput(GameInput::VIEW_CHASERIGID))
-	{
 		camera_id = 2;
-	}
 	else if (carcontrol.GetInput(GameInput::VIEW_CHASE))
-	{
 		camera_id = 3;
-	}
 	else if (carcontrol.GetInput(GameInput::VIEW_ORBIT))
-	{
 		camera_id = 4;
-	}
 	else if (carcontrol.GetInput(GameInput::VIEW_FREE))
-	{
 		camera_id = 5;
-	}
 	else if (carcontrol.GetInput(GameInput::VIEW_NEXT))
-	{
-		++camera_id;
-	}
+		camera_id++;
 	else if (carcontrol.GetInput(GameInput::VIEW_PREV))
-	{
-		--camera_id;
-	}
-	if (camera_id > car.GetCameras().size())
-	{
-		camera_id = car.GetCameras().size() - 1;
-	}
-	else if (camera_id == car.GetCameras().size())
-	{
-		camera_id = 0;
-	}
-	active_camera = car.GetCameras()[camera_id];
-	settings.SetCamera(camera_id);
-	bool incar = (camera_id == 0 || camera_id == 1);
+		camera_id--;
 
-	Vec3 pos = car.GetPosition();
-	Quat rot = car.GetOrientation();
+	// wrap around
+	const unsigned int camera_count = car_gfx.GetCameras().size();
+	if (camera_id > camera_count)
+		camera_id = camera_count - 1;
+	else if (camera_id == camera_count)
+		camera_id = 0;
+
+	// set active camear
+	active_camera = car_gfx.GetCameras()[camera_id];
+	settings.SetCamera(camera_id);
+
+	// handle rear view
+	Vec3 pos = ToMathVector<float>(car.GetPosition());
+	Quat rot = ToQuaternion<float>(car.GetOrientation());
 	if (carcontrol.GetInput(GameInput::VIEW_REAR))
-	{
 		rot.Rotate(M_PI, 0, 0, 1);
-	}
+
+	// reset camera on change
 	if (old_camera != active_camera)
-	{
 		active_camera->Reset(pos, rot);
-	}
 	else
-	{
 		active_camera->Update(pos, rot, timestep);
-	}
 
 	// Handle camera inputs.
 	float left = timestep * (carcontrol.GetInput(GameInput::PAN_LEFT) - carcontrol.GetInput(GameInput::PAN_RIGHT));
@@ -1494,7 +1478,9 @@ void Game::UpdateCarInputs(int carid, Car & car)
 	active_camera->Move(zoom[0], zoom[1], zoom[2]);
 
 	// Hide glass if we're inside the car, adjust sounds.
-	car.SetInteriorView(incar);
+	bool incar = (camera_id == 0 || camera_id == 1);
+	car_gfx.EnableInteriorView(incar);
+	car_snd.EnableInteriorSound(incar);
 
 	// Move up the close shadow distance if we're in the cockpit.
 	graphics->SetCloseShadow(incar ? 1.0 : 5.0);
@@ -1544,18 +1530,13 @@ bool Game::NewGame(bool playreplay, bool addopponents, int num_laps)
 	}
 
 	// Load cars.
+	car_dynamics.reserve(cars_num);
+	car_graphics.reserve(cars_num);
+	car_sounds.reserve(cars_num);
 	for (size_t i = 0; i < cars_num; ++i)
 	{
-		if (!LoadCar(car_info[i], track.GetStart(i).first, track.GetStart(i).second))
-		{
+		if (!LoadCar(car_info[i], track.GetStart(i).first, track.GetStart(i).second, sound.Enabled()))
 			return false;
-		}
-		if (car_info[i].driver != "user")
-		{
-			cars.back().SetAutoShift(true);
-			cars.back().SetAutoClutch(true);
-			ai.AddCar(&cars.back().GetCarDynamics(), car_info[i].ailevel, car_info[i].driver);
-		}
 	}
 
 	// Load timer.
@@ -1567,13 +1548,11 @@ bool Game::NewGame(bool playreplay, bool addopponents, int num_laps)
 	}
 
 	// Add cars to the timer system.
-	int count = 0;
-	for (std::list<Car>::iterator i = cars.begin(); i != cars.end(); ++i)
+	for (size_t i = 0; i < car_dynamics.size(); ++i)
 	{
-		cartimerids[&(*i)] = timer.AddCar(i->GetCarType());
-		if (carcontrols_local.first == &(*i))
-			timer.SetPlayerCarID(count);
-		count++;
+		cartimerids[&car_dynamics[i]] = timer.AddCar(car_info[i].name);
+		if (carcontrols_local.first == &car_dynamics[i])
+			timer.SetPlayerCarId(i);
 	}
 
 	// bind vertex data
@@ -1581,7 +1560,7 @@ bool Game::NewGame(bool playreplay, bool addopponents, int num_laps)
 	nodes.push_back(&track.GetRacinglineNode());
 	nodes.push_back(&track.GetTrackNode());
 	nodes.push_back(&track.GetBodyNode());
-	for (std::list<Car>::iterator i = cars.begin(); i != cars.end(); ++i)
+	for (std::vector<CarGraphics>::iterator i = car_graphics.begin(); i != car_graphics.end(); ++i)
 	{
 		nodes.push_back(&i->GetNode());
 	}
@@ -1652,7 +1631,8 @@ std::string Game::GetReplayRecordingFilename()
 bool Game::LoadCar(
 	const CarInfo & info,
 	const Vec3 & position,
-	const Quat & orientation)
+	const Quat & orientation,
+	const bool sound_enabled)
 {
 	const size_t n0 = info.name.find("/");
 	const size_t n1 = info.name.length();
@@ -1665,7 +1645,7 @@ bool Game::LoadCar(
 		content.load(carconf, cardir, carname + ".car");
 		if (!carconf->size())
 		{
-			error_output << "Failed to load " << info.name << std::endl;
+			error_output << "Failed to load car config: " << info.name << std::endl;
 			return false;
 		}
 	}
@@ -1679,44 +1659,56 @@ bool Game::LoadCar(
 	Vec3 color;
 	HSVtoRGB(info.hsv[0], info.hsv[1], info.hsv[2], color[0], color[1], color[2]);
 
-	cars.push_back(Car());
-	Car & car = cars.back();
-	if (!car.LoadGraphics(
+	car_graphics.push_back(CarGraphics());
+	CarGraphics & car_gfx = car_graphics.back();
+	if (!car_gfx.Load(
 		*carconf, cardir, carname, info.wheel, info.paint, color,
 		settings.GetAnisotropy(), settings.GetCameraBounce(),
 		content, error_output))
 	{
-		error_output << "Error loading car: " << info.name << std::endl;
-		cars.pop_back();
+		error_output << "Failed to load graphics for car: " << info.name << std::endl;
+		car_graphics.pop_back();
 		return false;
 	}
 
-	if (sound.Enabled() && !car.LoadSounds(cardir, carname, sound, content, error_output))
+	car_sounds.push_back(CarSound());
+	CarSound & car_snd = car_sounds.back();
+	if (sound_enabled && !car_snd.Load(cardir, carname, sound, content, error_output))
 	{
-		error_output << "Failed to load sounds for car " << info.name << std::endl;
+		error_output << "Failed to load sounds for car: " << info.name << std::endl;
+		car_graphics.pop_back();
+		car_sounds.pop_back();
+		return false;
+	}
+
+	car_dynamics.push_back(CarDynamics());
+	CarDynamics & car = car_dynamics.back();
+	if (!car.Load(
+		*carconf, cardir, info.tire,
+		ToBulletVector(position),
+		ToBulletQuaternion(orientation),
+		settings.GetVehicleDamage(),
+		dynamics, content, error_output))
+	{
+		error_output << "Failed to load physics for car: " << info.name << std::endl;
+		car_graphics.pop_back();
+		car_sounds.pop_back();
+		car_dynamics.pop_back();
 		return false;
 	}
 
 	bool isai = (info.driver != "user");
-	if (!car.LoadPhysics(
-		error_output, content, dynamics,
-		*carconf, cardir, info.tire, position, orientation,
-		settings.GetABS() || isai, settings.GetTCS() || isai,
-		settings.GetVehicleDamage()))
-	{
-		error_output << "Failed to load physics for car " << info.name << std::endl;
-		return false;
-	}
+	if (!isai)
+		carcontrols_local.first = &car;
+	else
+		ai.AddCar(&car, info.ailevel, info.driver);
+
+	car.SetAutoClutch(settings.GetAutoClutch() || isai);
+	car.SetAutoShift(settings.GetAutoShift() || isai);
+	car.SetABS(settings.GetABS() || isai);
+	car.SetTCS(settings.GetTCS() || isai);
 
 	info_output << "Car loading was successful: " << info.name << std::endl;
-	if (!isai)
-	{
-		// Load local controls.
-		carcontrols_local.first = &cars.back();
-
-		// Setup auto clutch and auto shift.
-		ProcessNewSettings();
-	}
 
 	return true;
 }
@@ -1858,30 +1850,23 @@ void Game::SetGarageCar()
 		return;
 
 	// clear previous car
-	cars.clear();
 	carcontrols_local.first = NULL;
-
-	// remove previous car sounds
-	sound.Update(true);
+	car_dynamics.clear();
+	car_graphics.clear();
+	car_sounds.clear();
 
 	// load car
 	std::vector<SceneNode *> nodes;
 	Vec3 car_pos = track.GetStart(0).first;
 	Quat car_rot = track.GetStart(0).second;
-	if (LoadCar(car_info[car_edit_id], car_pos, car_rot))
+	if (LoadCar(car_info[car_edit_id], car_pos, car_rot, false))
 	{
-		// set car
-		Car & car = cars.back();
+		// update car position
 		dynamics.update(timestep);
-		car.Update(timestep);
-		sound.Update(true);
-
-		nodes.push_back(&cars.back().GetNode());
+		car_graphics.back().Update(car_dynamics.back());
+		nodes.push_back(&car_graphics.back().GetNode());
 	}
-
-	// bind vertex data
 	nodes.push_back(&track.GetTrackNode());
-	nodes.push_back(&track.GetBodyNode());
 	graphics->BindStaticVertexData(nodes);
 
 	// camera setup
@@ -1895,12 +1880,12 @@ void Game::SetGarageCar()
 
 void Game::SetCarColor()
 {
-	if (!gui.GetInGame() && !cars.empty())
+	if (!gui.GetInGame() && !car_graphics.empty())
 	{
 		float r, g, b;
 		const Vec3 & hsv = car_info[car_edit_id].hsv;
 		HSVtoRGB(hsv[0], hsv[1], hsv[2], r, g, b);
-		cars.back().SetColor(r, g, b);
+		car_graphics.back().SetColor(r, g, b);
 	}
 }
 
@@ -2436,7 +2421,7 @@ void Game::UpdateForceFeedback(float dt)
 	}
 }
 
-void Game::AddTireSmokeParticles(float dt, Car & car)
+void Game::AddTireSmokeParticles(const CarDynamics & car, float dt)
 {
 	// Only spawn particles every so often...
 	unsigned int interval = 0.2 / dt;
@@ -2447,9 +2432,8 @@ void Game::AddTireSmokeParticles(float dt, Car & car)
 			float squeal = car.GetTireSquealAmount(WheelPosition(i));
 			if (squeal > 0)
 			{
-				tire_smoke.AddParticle(
-					car.GetWheelPosition(WheelPosition(i)) - Vec3(0,0,car.GetWheelRadius(WheelPosition(i))),
-					0.5);
+				btVector3 p = car.GetWheelContact(WheelPosition(i)).GetPosition();
+				tire_smoke.AddParticle(ToMathVector<float>(p), 0.5);
 			}
 		}
 	}
@@ -2475,53 +2459,53 @@ void Game::UpdateParticleGraphics()
 	}
 }
 
-void Game::UpdateDriftScore(Car & car, double dt)
+void Game::UpdateDriftScore(const CarDynamics & car, float dt)
 {
 	// Assert that the car is registered with the timer system.
 	assert(cartimerids.find(&car) != cartimerids.end());
 
 	// Make sure the car is not off track.
 	int wheel_count = 0;
-	for (int i=0; i < 4; i++)
+	for (int i = 0; i < 4; i++)
 	{
-		if ( car.GetCurPatch ( WheelPosition(i) ) ) wheel_count++;
+		if (car.GetWheelContact(WheelPosition(i)).GetPatch())
+			wheel_count++;
 	}
 
-	bool on_track = ( wheel_count > 1 );
+	bool on_track = (wheel_count > 1);
 	bool is_drifting = false;
 	bool spin_out = false;
-	if ( on_track )
+	if (on_track)
 	{
 		// Car's velocity on the horizontal plane (should use surface plane here).
-		Vec3 car_velocity = car.GetVelocity();
+		btVector3 car_velocity = car.GetVelocity();
 		car_velocity[2] = 0;
-		float car_speed = car_velocity.Magnitude();
+		float car_speed = car_velocity.length();
 
 		// Car's direction on the horizontal plane.
-		Vec3 car_direction = Direction::Forward;
-		car.GetOrientation().RotateVector(car_direction);
+		btVector3 car_direction = quatRotate(car.GetOrientation(), Direction::forward);
 		car_direction[2] = 0;
-		float dir_mag = car_direction.Magnitude();
+		float dir_mag = car_direction.length();
 
 		// Speed must be above 10 m/s and orientation must be valid.
-		if ( car_speed > 10 && dir_mag > 0.01)
+		if (car_speed > 10 && dir_mag > 0.01)
 		{
 			// Angle between car's direction and velocity.
 			float cos_angle = car_direction.dot(car_velocity) / (car_speed * dir_mag);
 			if (cos_angle > 1) cos_angle = 1;
 			else if (cos_angle < -1) cos_angle = -1;
-			float car_angle = acos(cos_angle);
+			float car_angle = acosf(cos_angle);
 
 			// Drift starts when the angle > 0.2 (around 11.5 degrees).
 			// Drift ends when the angle < 0.1 (aournd 5.7 degrees).
 			float angle_threshold(0.2);
-			if ( timer.GetIsDrifting(cartimerids[&car]) ) angle_threshold = 0.1;
+			if (timer.GetIsDrifting(cartimerids[&car])) angle_threshold = 0.1;
 
-			is_drifting = ( car_angle > angle_threshold && car_angle <= M_PI/2.0 );
-			spin_out = ( car_angle > M_PI/2.0 );
+			is_drifting = (car_angle > angle_threshold && car_angle <= M_PI / 2.0);
+			spin_out = (car_angle > M_PI / 2.0);
 
 			// Calculate score.
-			if ( is_drifting )
+			if (is_drifting)
 			{
 				// Base score is the drift distance.
 				timer.IncrementThisDriftScore(cartimerids[&car], dt * car_speed);
@@ -2583,8 +2567,11 @@ void Game::LeaveGame()
 
 	graphics->ClearStaticDrawables();
 
+	tire_smoke.Clear();
 	track.Clear();
-	cars.clear();
+	car_dynamics.clear();
+	car_graphics.clear();
+	car_sounds.clear();
 	sound.Update(true);
 	hud.SetVisible(false);
 	inputgraph.Hide();
@@ -2593,7 +2580,6 @@ void Game::LeaveGame()
 	active_camera = 0;
 	pause = false;
 	race_laps = 0;
-	tire_smoke.Clear();
 }
 
 void Game::StartPractice()

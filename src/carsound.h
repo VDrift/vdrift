@@ -36,6 +36,10 @@ class CarSound
 public:
 	CarSound();
 
+	CarSound(const CarSound & other);
+
+	CarSound & operator= (const CarSound & other);
+
 	~CarSound();
 
 	bool Load(
@@ -47,7 +51,7 @@ public:
 
 	void Update(const CarDynamics & dynamics, float dt);
 
-	void EnableInteriorSounds(bool value);
+	void EnableInteriorSound(bool value);
 
 private:
 	CrashDetection crashdetection;

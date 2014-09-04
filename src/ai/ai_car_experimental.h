@@ -45,7 +45,7 @@ public:
 
 	~AiCarExperimental();
 
-	void Update(float dt, const std::list <Car> & checkcars);
+	void Update(float dt, const std::vector<CarDynamics> & checkcars);
 
 #ifdef VISUALIZE_AI_DEBUG
 	void Visualize();
@@ -80,7 +80,7 @@ private:
 
 	void UpdateSteer();
 
-	void AnalyzeOthers(float dt, const std::list <Car> & othercars);
+	void AnalyzeOthers(float dt, const std::vector<CarDynamics> & checkcars);
 
 	///< returns a float that should be added into the steering wheel command
 	float SteerAwayFromOthers();

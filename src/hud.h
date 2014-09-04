@@ -54,14 +54,14 @@ public:
 		const Font & sansfont, const Font & lcdfont,
 		float displaywidth, float displayheight,
 		float curlap, float lastlap, float bestlap, float stagingtimeleft,
-		int curlapnum, int numlaps, int curplace, int numcars,
+		int curlapnum, int numlaps, int curplace, int numcars, bool mph,
 		float rpm, float redrpm, float maxrpm,
-		float speed, float maxspeed, bool mph, float clutch, int newgear,
-		const std::string & debug_string1, const std::string & debug_string2,
-		const std::string & debug_string3, const std::string & debug_string4,
+		float speed, float maxspeed, float clutch, int newgear,
+		float fuelamount, float nosamount, bool nosactive,
 		bool absenabled, bool absactive, bool tcsenabled, bool tcsactive,
-		bool outofgas, bool nosactive, float nosamount,
-		bool drifting, float driftscore, float thisdriftscore);
+		bool drifting, float driftscore, float thisdriftscore,
+		const std::string & debug_string1, const std::string & debug_string2,
+		const std::string & debug_string3, const std::string & debug_string4);
 
 	SceneNode & GetNode();
 

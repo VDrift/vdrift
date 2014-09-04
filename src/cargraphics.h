@@ -41,6 +41,10 @@ class CarGraphics
 public:
 	CarGraphics();
 
+	CarGraphics(const CarGraphics & other);
+
+	CarGraphics & operator= (const CarGraphics & other);
+
 	~CarGraphics();
 
 	bool Load(
@@ -100,6 +104,7 @@ private:
 	float applied_brakes;
 
 	bool interior_view;
+	bool loaded;
 
 	bool LoadLight(
 		const PTree & cfg,
@@ -110,6 +115,8 @@ private:
 		const PTree & cfg,
 		const float cambounce,
 		std::ostream & error_output);
+
+	void ClearCameras();
 };
 
 #endif // _CARGRAPHICS_H

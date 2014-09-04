@@ -33,11 +33,13 @@
 #include "gui/gui.h"
 #include "gui/text_draw.h"
 #include "gui/font.h"
-#include "car.h"
-#include "carinfo.h"
 #include "physics/dynamicsworld.h"
+#include "physics/cardynamics.h"
 #include "dynamicsdraw.h"
 #include "carcontrolmap.h"
+#include "cargraphics.h"
+#include "carsound.h"
+#include "carinfo.h"
 #include "hud.h"
 #include "inputgraph.h"
 #include "sound/sound.h"
@@ -96,11 +98,9 @@ private:
 
 	void AdvanceGameLogic();
 
-	void UpdateCar(int carid, Car & car, double dt);
+	void UpdateCars(float dt);
 
-	void UpdateDriftScore(Car & car, double dt);
-
-	void UpdateCarInputs(int carid, Car & car);
+	void UpdateCarInputs(int carid);
 
 	void UpdateTimer();
 
@@ -120,7 +120,8 @@ private:
 	bool LoadCar(
 		const CarInfo & carinfo,
 		const Vec3 & position,
-		const Quat & orientation);
+		const Quat & orientation,
+		const bool sound_enabled);
 
 	bool LoadTrack(const std::string & trackname);
 
@@ -177,13 +178,13 @@ private:
 
 	void UpdateForceFeedback(float dt);
 
+	void AddTireSmokeParticles(const CarDynamics & car, float dt);
+
 	void UpdateParticles(float dt);
 
 	void UpdateParticleGraphics();
 
-	void SyncParticleGraphics();
-
-	void AddTireSmokeParticles(float dt, Car & car);
+	void UpdateDriftScore(const CarDynamics & car, float dt);
 
 	std::string GetReplayRecordingFilename();
 
@@ -310,14 +311,16 @@ private:
 	bool controlgrab;
 
 	CameraFree garage_camera;
+	Camera * active_camera;
+
+	std::pair <CarDynamics *, CarControlMap> carcontrols_local;
+	std::map <const CarDynamics *, int> cartimerids;
+	std::vector <CarDynamics> car_dynamics;
+	std::vector <CarGraphics> car_graphics;
+	std::vector <CarSound> car_sounds;
 	std::vector <CarInfo> car_info;
 	size_t player_car_id;
 	size_t car_edit_id;
-
-	Camera * active_camera;
-	std::pair <Car *, CarControlMap> carcontrols_local;
-	std::map <Car *, int> cartimerids;
-	std::list <Car> cars;
 	int race_laps;
 	bool practice;
 
