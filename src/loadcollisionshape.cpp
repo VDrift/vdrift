@@ -18,6 +18,7 @@
 /************************************************************************/
 
 #include "BulletCollision/CollisionShapes/btCompoundShape.h"
+#include "BulletCollision/CollisionShapes/btMultiSphereShape.h"
 #include "BulletCollision/CollisionShapes/btConvexHullShape.h"
 #include "BulletCollision/CollisionShapes/btCapsuleShape.h"
 #include "BulletCollision/CollisionShapes/btBoxShape.h"
@@ -108,16 +109,32 @@ void LoadHullShape(
 	btCollisionShape *& shape,
 	btCompoundShape *& compound)
 {
-	btVector3 point;
-	btConvexHullShape * hull = new btConvexHullShape();
+	btAlignedObjectArray<btVector3> points;
+	btAlignedObjectArray<btScalar> radii;
+	btScalar has_radius = 0;
 	for (PTree::const_iterator i = cfg.begin(); i != cfg.end(); ++i)
 	{
+		btVector3 point(0, 0, 0);
+		btScalar radius = 0;
+
 		std::istringstream str(i->second.value());
 		str >> point;
-		hull->addPoint(transform * point);
+		str >> radius;
+		has_radius += radius;
+
+		points.push_back(transform * point);
+		radii.push_back(radius);
 	}
 
-	shape = hull;
+	if (has_radius > 0)
+	{
+		shape = new btMultiSphereShape(&points[0], &radii[0], points.size());
+	}
+	else
+	{
+		shape = new btConvexHullShape(&points[0][0], points.size());
+	}
+
 	if (compound)
 	{
 		compound->addChildShape(btTransform::getIdentity(), shape);
@@ -131,10 +148,10 @@ void LoadCollisionShape(
 	btCompoundShape *& compound)
 {
 	if (shape && compound)
-    {
-        compound->addChildShape(transform, shape);
-        return;
-    }
+	{
+		compound->addChildShape(transform, shape);
+		return;
+	}
 
 	const PTree * cfg_shape = 0;
 	if (cfg.get("hull", cfg_shape))
