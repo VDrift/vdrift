@@ -1865,6 +1865,7 @@ void Game::SetGarageCar()
 	sound.Update(true);
 
 	// load car
+	std::vector<SceneNode *> nodes;
 	Vec3 car_pos = track.GetStart(0).first;
 	Quat car_rot = track.GetStart(0).second;
 	if (LoadCar(car_info[car_edit_id], car_pos, car_rot))
@@ -1874,13 +1875,13 @@ void Game::SetGarageCar()
 		dynamics.update(timestep);
 		car.Update(timestep);
 		sound.Update(true);
+
+		nodes.push_back(&cars.back().GetNode());
 	}
 
 	// bind vertex data
-	std::vector<SceneNode *> nodes;
 	nodes.push_back(&track.GetTrackNode());
 	nodes.push_back(&track.GetBodyNode());
-	nodes.push_back(&cars.back().GetNode());
 	graphics->BindStaticVertexData(nodes);
 
 	// camera setup
