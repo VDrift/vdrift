@@ -319,28 +319,6 @@ static bool LoadDifferential(
 	return true;
 }
 
-// use btMultiSphereShape(4 spheres) to approximate bounding box
-static btMultiSphereShape * CreateCollisionShape(const btVector3 & center, const btVector3 & size)
-{
-	btVector3 hsize = 0.5 * size;
-	int min = hsize.minAxis();
-	int max = hsize.maxAxis();
-	btVector3 maxAxis(0, 0, 0);
-	maxAxis[max] = 1;
-	int numSpheres = 4;
-	btScalar radius = hsize[min];
-	btScalar radii[4] = {radius, radius, radius, radius};
-	btVector3 positions[4];
-	btVector3 offset0 = hsize - btVector3(radius, radius, radius);
-	btVector3 offset1 = offset0 - 2 * offset0[max] * maxAxis;
-	positions[0] = center + offset0;
-	positions[1] = center + offset1;
-	positions[2] = center - offset0;
-	positions[3] = center - offset1;
-
-	return new btMultiSphereShape(positions, radii, numSpheres);
-}
-
 struct AeroDeviceFracture : public FractureCallback
 {
 	btAlignedObjectArray<AeroDevice> & aerodevice;
@@ -553,8 +531,6 @@ bool CarDynamics::Load(
 	const PTree & cfg,
 	const std::string & cardir,
 	const std::string & cartire,
-	const btVector3 & meshsize,
-	const btVector3 & meshcenter,
 	const btVector3 & position,
 	const btQuaternion & rotation,
 	const bool damage)
@@ -642,9 +618,8 @@ bool CarDynamics::Load(
 	// create default shape if no shapes loaded
 	if (bodyinfo.m_shape->getNumChildShapes() == wheel_count)
 	{
-		bodyinfo.m_shape->addChildShape(
-			btTransform::getIdentity(),
-			CreateCollisionShape(meshcenter, meshsize));
+		error << "No collision shape defined." << std::endl;
+		return false;
 	}
 
 	transform.setRotation(rotation);

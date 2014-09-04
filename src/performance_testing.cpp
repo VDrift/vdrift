@@ -95,12 +95,9 @@ void PerformanceTesting::Test(
 
 	// position is the center of a 2 x 4 x 1 meter box on track surface
 	btVector3 pos(0.0, -2.0, 0.5);
-	btQuaternion rot(btQuaternion::getIdentity());
-	// collision shape
-	btVector3 size(1.0, 2.0, 0.2);
-	btVector3 center(0, 0, 0);
+	btQuaternion rot = btQuaternion::getIdentity();
 	bool damage = false;
-	if (!car.Load(error_output, content, world, *cfg, cardir, "", size, center, pos, rot, damage))
+	if (!car.Load(error_output, content, world, *cfg, cardir, "", pos, rot, damage))
 	{
 		return;
 	}

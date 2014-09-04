@@ -68,8 +68,6 @@ public:
 		const PTree & cfg,
 		const std::string & cardir,
 		const std::string & cartire,
-		const btVector3 & meshsize,
-		const btVector3 & meshcenter,
 		const btVector3 & position,
 		const btQuaternion & rotation,
 		const bool damage);

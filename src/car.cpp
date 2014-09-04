@@ -66,22 +66,13 @@ bool Car::LoadPhysics(
 	const bool defaulttcs,
 	const bool damage)
 {
-	std::string carmodel;
-	if (!cfg.get("body.mesh", carmodel, error_output))
-		return false;
-
-	std::tr1::shared_ptr<Model> model;
-	content.load(model, carpath, carmodel);
-
-	btVector3 size = ToBulletVector(model->GetSize());
-	btVector3 center = ToBulletVector(model->GetCenter());
 	btVector3 position = ToBulletVector(initial_position);
 	btQuaternion rotation = ToBulletQuaternion(initial_orientation);
 
 	if (!dynamics.Load(
 		error_output, content, world,
 		cfg, carpath, cartire,
-		size, center, position, rotation,
+		position, rotation,
 		damage))
 	{
 		return false;
