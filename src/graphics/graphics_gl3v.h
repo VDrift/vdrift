@@ -48,8 +48,7 @@ public:
 	/// returns true on success
 	virtual bool Init(
 		const std::string & shaderpath,
-		unsigned resx, unsigned resy,
-		unsigned colorbpp, unsigned depthbpp,
+		unsigned resx, unsigned resy, unsigned depthbpp,
 		bool fullscreen, unsigned antialiasing,
 		bool enableshadows, int shadow_distance,
 		int shadow_quality, int reflection_type,

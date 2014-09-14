@@ -54,11 +54,6 @@ public:
 		return resolution[1];
 	}
 
-	unsigned int GetColorBpp() const
-	{
-		return color_bpp;
-	}
-
 	unsigned int GetDepthBpp() const
 	{
 		return depth_bpp;
@@ -395,7 +390,6 @@ public:
 private:
 	std::vector<unsigned> resolution;
 	bool res_override;
-	int color_bpp;
 	int depth_bpp;
 	bool fullscreen;
 	bool vsync;

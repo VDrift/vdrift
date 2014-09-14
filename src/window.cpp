@@ -52,7 +52,6 @@ void Window::Init(
 	const std::string & caption,
 	int resx,
 	int resy,
-	int color_bpp,
 	int depth_bpp,
 	int antialiasing,
 	bool fullscreen,
@@ -69,7 +68,7 @@ void Window::Init(
 
 	bool gl3_core = true;
 	ChangeDisplay(
-		resx, resy, color_bpp, depth_bpp, antialiasing,
+		resx, resy, depth_bpp, antialiasing,
 		fullscreen, vsync, gl3_core,
 		info_output, error_output);
 
@@ -78,7 +77,7 @@ void Window::Init(
 	{
 		gl3_core = false;
 		ChangeDisplay(
-			resx, resy, color_bpp, depth_bpp, antialiasing,
+			resx, resy, depth_bpp, antialiasing,
 			fullscreen, vsync, gl3_core,
 			info_output, error_output);
 		// if we fail again we are screwed
@@ -189,7 +188,6 @@ bool Window::ResizeWindow(int width, int height)
 void Window::ChangeDisplay(
 	int width,
 	int height,
-	int color_bpp,
 	int depth_bpp,
 	int antialiasing,
 	bool fullscreen,
@@ -208,9 +206,6 @@ void Window::ChangeDisplay(
 
 	if (height == 0)
 		height = desktop_mode.h;
-
-	if (color_bpp == 0)
-		color_bpp = SDL_BITSPERPIXEL(desktop_mode.format);
 
 	// Try to resize the existing window and surface
 	if (!fullscreen && ResizeWindow(width, height))

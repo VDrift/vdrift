@@ -50,8 +50,7 @@ GraphicsGL3::~GraphicsGL3()
 
 bool GraphicsGL3::Init(
 	const std::string & shader_path,
-	unsigned resx, unsigned resy,
-	unsigned colorbpp, unsigned depthbpp,
+	unsigned resx, unsigned resy, unsigned depthbpp,
 	bool fullscreen, unsigned antialiasing,
 	bool shadows, int shadow_distance,
 	int shadow_quality, int reflection_type,

@@ -41,7 +41,6 @@ static void Param(
 Settings::Settings() :
 	resolution(2),
 	res_override(false),
-	color_bpp(32),
 	depth_bpp(24),
 	fullscreen(false),
 	vsync(false),
@@ -149,7 +148,6 @@ void Settings::Serialize(bool write, Config & config)
 	config.get("display", section);
 	if (!res_override)
 		Param(config, write, section, "resolution", resolution);
-	Param(config, write, section, "depth", color_bpp);
 	Param(config, write, section, "zdepth", depth_bpp);
 	Param(config, write, section, "fullscreen", fullscreen);
 	Param(config, write, section, "vsync", vsync);

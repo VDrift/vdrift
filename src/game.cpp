@@ -376,7 +376,6 @@ bool Game::InitCoreSubsystems()
 		"VDrift",
 		settings.GetResolutionX(),
 		settings.GetResolutionY(),
-		settings.GetColorBpp(),
 		depth_bpp,
 		antialiasing,
 		settings.GetFullscreen(),
@@ -406,7 +405,7 @@ bool Game::InitCoreSubsystems()
 		bool success = graphics->Init(
 			pathmanager.GetShaderPath() + "/" + render_ver,
 			settings.GetResolutionX(), settings.GetResolutionY(),
-			settings.GetColorBpp(), settings.GetDepthBpp(), settings.GetFullscreen(),
+			settings.GetDepthBpp(), settings.GetFullscreen(),
 			settings.GetAntialiasing(), settings.GetShadows(),
 			settings.GetShadowDistance(), settings.GetShadowQuality(), settings.GetReflections(),
 			pathmanager.GetStaticReflectionMap(), pathmanager.GetStaticAmbientMap(),

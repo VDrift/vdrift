@@ -35,7 +35,6 @@ public:
 		const std::string & caption,
 		int resx,
 		int resy,
-		int color_bpp,
 		int depth_bpp,
 		int antialiasing,
 		bool fullscreen,
@@ -68,7 +67,6 @@ private:
 	void ChangeDisplay(
 		int width,
 		int height,
-		int color_bpp,
 		int depth_bpp,
 		int antialiasing,
 		bool fullscreen,
