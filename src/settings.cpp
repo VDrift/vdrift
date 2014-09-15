@@ -117,7 +117,6 @@ void Settings::SetFailsafeSettings()
 	*this = Settings();
 	renderer = "gl2/basic.conf";
 	texture_size = "medium";
-	depth_bpp = 16;
 }
 
 void Settings::Serialize(bool write, Config & config)
