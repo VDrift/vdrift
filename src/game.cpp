@@ -509,7 +509,6 @@ bool Game::InitGUI(const std::string & pagename)
 			pathmanager.GetOptionsFile(),
 			settings.GetSkin(),
 			settings.GetLanguage(),
-			settings.GetTextureSize(),
 			(float)window.GetH() / window.GetW(),
 			actionmap,
 			content,

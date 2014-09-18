@@ -51,7 +51,6 @@ public:
 		const std::string & optionsfile,
 		const std::string & skinname,
 		const std::string & language,
-		const std::string & texsize,
 		const float screenhwratio,
 		std::map <std::string, Slot0*> actionmap,
 		ContentManager & content,
