@@ -351,7 +351,7 @@ void Gui::ProcessInput(
 
 void Gui::Update(float dt)
 {
-	bool fadein = animation_counter > 0;
+	bool fade = animation_counter > 0 && animation_count_start > 0;
 
 	animation_counter -= dt;
 	if (animation_counter < 0)
@@ -359,12 +359,11 @@ void Gui::Update(float dt)
 
 	if (active_page != pages.end())
 	{
-		// Update has to happen before SetAlpha and SetVisible
-		// as it overrides them with widget visible and alpha state
 		active_page->second.Update(node, dt);
-		if (fadein)
+		if (fade)
 		{
-			// ease curve: 3*p^2-2*p^3
+			// fade in new active page
+			// ease curve: 3 * p^2 - 2 * p^3
 			float p = 1.0 - animation_counter / animation_count_start;
 			float alpha = 3 * p * p - 2 * p * p * p;
 			active_page->second.SetAlpha(node, alpha);
@@ -372,37 +371,48 @@ void Gui::Update(float dt)
 		}
 	}
 
-	if (last_active_page != pages.end())
+	if (fade && last_active_page != pages.end())
 	{
-		last_active_page->second.Update(node, dt);
-		if (fadein)
-		{
-			float p = animation_counter / animation_count_start;
-			float alpha = 3 * p * p - 2 * p * p * p;
-			last_active_page->second.SetAlpha(node, alpha);
-			//dlog << last_active_page->first << " fade out: " << alpha << std::endl;
-		}
+		// fade out previous active page
+		float p = animation_counter / animation_count_start;
+		float alpha = 3 * p * p - 2 * p * p * p;
+		last_active_page->second.SetAlpha(node, alpha);
+		//dlog << last_active_page->first << " fade out: " << alpha << std::endl;
 	}
 
-	if (!fadein && next_active_page != pages.end())
+	if (!fade && next_active_page != pages.end())
 	{
-		if (last_active_page != pages.end())
+		// deactivate previously active page after fading out
+		if (animation_count_start > 0 && last_active_page != pages.end())
 		{
 			last_active_page->second.SetVisible(node, false);
 			//dlog << last_active_page->first << " deactivate" << std::endl;
 		}
 
-		// activate new page
 		last_active_page = active_page;
 		active_page = next_active_page;
 		next_active_page = pages.end();
 
+		// activate new page
 		active_page->second.SetVisible(node, true);
-		active_page->second.SetAlpha(node, 0.0);
+		active_page->second.Update(node, dt);
 		//dlog << active_page->first << " activate" << std::endl;
 
+		if (next_animation_count_start > 0)
+		{
+			// start fading in new active page
+			active_page->second.SetAlpha(node, 0.0);
+		}
+		else if (last_active_page != pages.end())
+		{
+			// deactivate previously active page
+			last_active_page->second.SetVisible(node, false);
+			//dlog << last_active_page->first << " deactivate" << std::endl;
+		}
+
 		// reset animation counter
-		animation_counter = animation_count_start = next_animation_count_start;
+		animation_count_start = next_animation_count_start;
+		animation_counter = next_animation_count_start;
 	}
 }
 
