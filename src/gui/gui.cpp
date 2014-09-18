@@ -143,6 +143,9 @@ Gui::Gui() :
 	last_active_page = pages.end();
 	active_page = pages.end();
 	next_active_page = pages.end();
+
+	activate_page.call.bind<Gui, &Gui::ActivatePage>(this);
+	activate_prev_page.call.bind<Gui, &Gui::ActivatePrevPage>(this);
 }
 
 const std::string & Gui::GetActivePageName() const
@@ -188,7 +191,6 @@ void Gui::Unload()
 	// clear out maps
 	pages.clear();
 	options.clear();
-	page_activate.clear();
 
 	// clear out the scenegraph
 	node.Clear();
@@ -258,6 +260,10 @@ bool Gui::Load(
 	StrSlotMap vactionmap;
 	RegisterOptions(vsignalmap, vnactionmap, vactionmap, nactionmap, actionmap);
 
+	// register page activation callbacks
+	vactionmap["gui.page"] = &activate_page;
+	actionmap["gui.page.prev"] = &activate_prev_page;
+
 	// init pages
 	size_t pagecount = 0;
 	for (std::list <std::string>::const_iterator i = pagelist.begin(); i != pagelist.end(); ++i)
@@ -265,20 +271,6 @@ bool Gui::Load(
 		pages.insert(std::make_pair(*i, GuiPage()));
 		pagecount++;
 	}
-
-	// register page activation callbacks
-	page_activate.reserve(pagecount + 1);
-	for (PageMap::iterator i = pages.begin(); i != pages.end(); ++i)
-	{
-		page_activate.push_back(PageCb());
-		page_activate.back().gui = this;
-		page_activate.back().page = i->first;
-		actionmap[i->first] = &page_activate.back().action;
-	}
-	// register previous page activation callback
-	page_activate.push_back(PageCb());
-	page_activate.back().gui = this;
-	actionmap["gui.page.prev"] = &page_activate.back().action;
 
 	// load pages
 	for (PageMap::iterator i = pages.begin(); i != pages.end(); ++i)
@@ -481,6 +473,16 @@ bool Gui::ActivatePage(
 	return true;
 }
 
+void Gui::ActivatePage(const std::string & pagename)
+{
+	ActivatePage(pagename, 0.25);
+}
+
+void Gui::ActivatePrevPage()
+{
+	ActivatePage(GetLastPageName(), 0.25);
+}
+
 void Gui::RegisterOptions(
 	StrSignalMap & vsignalmap,
 	StrVecSlotlMap & vnactionmap,
@@ -594,32 +596,4 @@ const GuiLanguage & Gui::GetLanguageDict() const
 const Font & Gui::GetFont() const
 {
 	return font;
-}
-
-Gui::PageCb::PageCb()
-{
-	action.call.bind<PageCb, &PageCb::call>(this);
-	gui = 0;
-}
-
-Gui::PageCb::PageCb(const PageCb & other)
-{
-	*this = other;
-}
-
-Gui::PageCb & Gui::PageCb::operator=(const PageCb & other)
-{
-	action.call.bind<PageCb, &PageCb::call>(this);
-	gui = other.gui;
-	page = other.page;
-	return *this;
-}
-
-void Gui::PageCb::call()
-{
-	assert(gui);
-	if (!page.empty())
-		gui->ActivatePage(page, 0.25);
-	else if (!gui->GetLastPageName().empty())
-		gui->ActivatePage(gui->GetLastPageName(), 0.25);
 }

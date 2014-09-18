@@ -126,25 +126,20 @@ private:
 	float next_animation_count_start;
 	bool ingame;
 
-	/// page activate callback
-	struct PageCb
-	{
-		Gui * gui;
-		std::string page;
-		Slot0 action;
-
-		PageCb();
-		PageCb(const PageCb & other);
-		PageCb & operator=(const PageCb & other);
-		void call();
-	};
-	std::vector<PageCb> page_activate;
+	/// page activation callbacks
+	Slot1<const std::string&> activate_page;
+	Slot0 activate_prev_page;
 
 	/// return false on failure
-	/// on empty page name will attempt to load prev(last active) page
 	bool ActivatePage(
 		const std::string & pagename,
 		float activation_time);
+
+	/// activate page using default 0.25 sec fading time
+	void ActivatePage(const std::string & pagename);
+
+	/// activate last active page using default 0.25 sec fading time
+	void ActivatePrevPage();
 
 	/// add option slots to action map
 	void RegisterOptions(
