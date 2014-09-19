@@ -2181,6 +2181,7 @@ void Game::PopulateGUILangList(GuiOption::List & langlist)
 	pathmanager.GetFileList(path, languages, ".po");
 
 	langlist.clear();
+	langlist.push_back(std::make_pair("en", "en"));
 	for (std::list<std::string>::iterator i = languages.begin(); i != languages.end(); ++i)
 	{
 		if (pathmanager.FileExists(path + *i))
