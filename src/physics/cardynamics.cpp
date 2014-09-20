@@ -600,6 +600,10 @@ bool CarDynamics::Load(
 
 	maxspeed = CalculateMaxSpeed();
 
+	// calculate steering feedback scale factor
+	// assuming 4 wheels with even weight distribution
+	feedback_scale = 1 / tire[0].getMaxMz(0.25 / body->getInvMass(), 0);
+
 	return true;
 }
 
@@ -1540,6 +1544,7 @@ void CarDynamics::updateAction(btCollisionWorld * collisionWorld, btScalar dt)
 		feedback += tire[FRONT_LEFT].getMz() + tire[FRONT_RIGHT].getMz();
 	}
 	feedback /= repeats;
+	feedback *= feedback_scale;
 
 	//update fuel tank
 	fuel_tank.Consume ( engine.FuelRate() * dt );
@@ -1984,6 +1989,7 @@ void CarDynamics::Init()
 	tcs = false;
 	maxangle = 0;
 	maxspeed = 0;
+	feedback_scale = 0;
 	feedback = 0;
 
 	suspension.resize(WHEEL_POSITION_SIZE, 0);

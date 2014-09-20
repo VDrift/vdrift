@@ -228,6 +228,7 @@ protected:
 
 	btScalar maxangle;
 	btScalar maxspeed;
+	btScalar feedback_scale;
 	btScalar feedback;
 
 	btVector3 GetDownVector() const;
