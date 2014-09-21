@@ -468,7 +468,8 @@ bool Gui::ActivatePage(
 	if (next_active_page == pages.end())
 		return false;
 
-	next_animation_count_start = activation_time;
+	// FIXME: Fading animation disabled due to half-transparent gui elements flickering.
+	next_animation_count_start = 0.0;//activation_time;
 
 	return true;
 }
