@@ -441,12 +441,11 @@ void Sound::ProcessSources()
 				float len = relvec.Magnitude();
 				if (len < 0.1f) len = 0.1f;
 
-				// distance attenuation
-				// v1: 1.5 at 1m, 0 at 200m distance
-				//float cgain = log(1000.0 / pow((double)len, 1.3)) / log(100.0);
-				// scaled v1 by 0.5: 0.75 at 1m, 0 at 200m distance
-				float cgain = 0.5f / log(100.f) * (log(1000.f) - 1.3f * log(len));
-				cgain = clamp(cgain, 0.0f, 1.0f);
+				// distance attenuation 1/r
+				float attenuation = 1.0f;
+				float mindist = 0.5f;
+				float dist = std::max(mindist, len);
+				float cgain = mindist / (mindist + attenuation * (dist - mindist));
 
 				// directional attenuation
 				// maximum at 0.75 (source on opposite side)
