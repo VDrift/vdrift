@@ -287,28 +287,38 @@ void ModelJoe03::ReadData ( FILE * m_FilePointer, const JoePack * pack, JoeObjec
 
 	for ( unsigned int i = 0; i < num_frames; i++ )
 	{
-		object.frames[i].faces.resize(num_faces);
+		JoeFrame & frame = object.frames[i];
 
-		BinaryRead ( &object.frames[i].faces[0], sizeof ( JoeFace ), num_faces, m_FilePointer, pack );
-		CorrectEndian ( object.frames[i].faces );
+		frame.faces.resize(num_faces);
 
-		BinaryRead ( &object.frames[i].num_verts, sizeof ( unsigned int ), 1, m_FilePointer, pack );
-		object.frames[i].num_verts = ENDIAN_SWAP_32 ( object.frames[i].num_verts );
-		BinaryRead ( &object.frames[i].num_texcoords, sizeof ( unsigned int ), 1, m_FilePointer, pack );
-		object.frames[i].num_texcoords = ENDIAN_SWAP_32 ( object.frames[i].num_texcoords );
-		BinaryRead ( &object.frames[i].num_normals, sizeof ( unsigned int ), 1, m_FilePointer, pack );
-		object.frames[i].num_normals = ENDIAN_SWAP_32 ( object.frames[i].num_normals );
+		BinaryRead ( &frame.faces[0], sizeof ( JoeFace ), num_faces, m_FilePointer, pack );
+		CorrectEndian ( frame.faces );
 
-		object.frames[i].verts.resize(object.frames[i].num_verts);
-		object.frames[i].normals.resize(object.frames[i].num_normals);
-		object.frames[i].texcoords.resize(object.frames[i].num_texcoords);
+		BinaryRead ( &frame.num_verts, sizeof ( unsigned int ), 1, m_FilePointer, pack );
+		frame.num_verts = ENDIAN_SWAP_32 ( frame.num_verts );
+		BinaryRead ( &frame.num_texcoords, sizeof ( unsigned int ), 1, m_FilePointer, pack );
+		frame.num_texcoords = ENDIAN_SWAP_32 ( frame.num_texcoords );
+		BinaryRead ( &frame.num_normals, sizeof ( unsigned int ), 1, m_FilePointer, pack );
+		frame.num_normals = ENDIAN_SWAP_32 ( frame.num_normals );
 
-		BinaryRead ( &object.frames[i].verts[0], sizeof ( JoeVertex ), object.frames[i].num_verts, m_FilePointer, pack );
-		CorrectEndian ( object.frames[i].verts );
-		BinaryRead ( &object.frames[i].normals[0], sizeof ( JoeVertex ), object.frames[i].num_normals, m_FilePointer, pack );
-		CorrectEndian ( object.frames[i].normals );
-		BinaryRead ( &object.frames[i].texcoords[0], sizeof ( JoeTexCoord ), object.frames[i].num_texcoords, m_FilePointer, pack );
-		CorrectEndian ( object.frames[i].texcoords );
+		frame.verts.resize(frame.num_verts);
+		frame.normals.resize(frame.num_normals);
+		frame.texcoords.resize(frame.num_texcoords);
+
+		BinaryRead ( &frame.verts[0], sizeof ( JoeVertex ), frame.num_verts, m_FilePointer, pack );
+		CorrectEndian ( frame.verts );
+		BinaryRead ( &frame.normals[0], sizeof ( JoeVertex ), frame.num_normals, m_FilePointer, pack );
+		CorrectEndian ( frame.normals );
+		BinaryRead ( &frame.texcoords[0], sizeof ( JoeTexCoord ), frame.num_texcoords, m_FilePointer, pack );
+		CorrectEndian ( frame.texcoords );
+
+		// there seem to be models without texcoords like ct/glass.joe, why???
+		if (frame.texcoords.empty())
+		{
+			frame.texcoords.resize(1);
+			frame.texcoords[0].u = 0;
+			frame.texcoords[0].v = 0;
+		}
 	}
 
 	//cout << "!!! loading " << modelpath << endl;
@@ -380,6 +390,9 @@ void ModelJoe03::ReadData ( FILE * m_FilePointer, const JoePack * pack, JoeObjec
 	//build unique vertices
 	//cout << "building unique vertices...." << endl;
 
+	assert(!object.frames.empty());
+	const JoeFrame & frame = object.frames[0];
+
 	typedef std::tr1::unordered_map<Vert, unsigned int, VertHash> VertMap;
 	VertMap vmap(object.info.num_faces * 3);
 
@@ -388,7 +401,7 @@ void ModelJoe03::ReadData ( FILE * m_FilePointer, const JoePack * pack, JoeObjec
 	unsigned int vnum = 0;
 	for (unsigned int i = 0; i < object.info.num_faces; i++)
 	{
-		const JoeFace & f = object.frames[0].faces[i];
+		const JoeFace & f = frame.faces[i];
 		for (unsigned int j = 0; j < 3; j++)
 		{
 			const Vert vert(f.vertexIndex[j], f.textureIndex[j], f.normalIndex[j]);
@@ -409,13 +422,13 @@ void ModelJoe03::ReadData ( FILE * m_FilePointer, const JoePack * pack, JoeObjec
 		const unsigned int vi = i->second;
 
 		for (unsigned int j = 0; j < 3; j++)
-			v_vertices[vi * 3 + j] = object.frames[0].verts[v.vi].vertex[j];
+			v_vertices[vi * 3 + j] = frame.verts[v.vi].vertex[j];
 
 		for (unsigned int j = 0; j < 3; j++)
-			v_normals[vi * 3 + j] = object.frames[0].normals[v.ni].vertex[j];
+			v_normals[vi * 3 + j] = frame.normals[v.ni].vertex[j];
 
-		v_texcoords[vi * 2 + 0] = object.frames[0].texcoords[v.ti].u;
-		v_texcoords[vi * 2 + 1] = object.frames[0].texcoords[v.ti].v;
+		v_texcoords[vi * 2 + 0] = frame.texcoords[v.ti].u;
+		v_texcoords[vi * 2 + 1] = frame.texcoords[v.ti].v;
 	}
 
 	//assign to our mesh
