@@ -54,6 +54,9 @@ public:
 	// active sources limit can be adjusted at runtime
 	void SetMaxActiveSources(size_t value);
 
+	// attenuation: y = a * (x - b)^c + d
+	void SetAttenuation(const float attenuation[4]);
+
 	size_t AddSource(std::tr1::shared_ptr<SoundBuffer> buffer, float offset, bool is3d, bool loop);
 
 	void RemoveSource(size_t id);
@@ -87,6 +90,7 @@ private:
 	Vec3 listener_pos;
 	Vec3 listener_vel;
 	Quat listener_rot;
+	float attenuation[4];
 	float sound_volume;
 	bool initdone;
 	bool disable;

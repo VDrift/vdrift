@@ -110,6 +110,11 @@ Settings::Settings() :
 {
 	resolution[0] = 800;
 	resolution[1] = 600;
+
+	sound_attenuation[0] =  0.9146065;
+	sound_attenuation[1] =  0.2729276;
+	sound_attenuation[2] = -0.2313740;
+	sound_attenuation[3] = -0.2884304;
 }
 
 void Settings::SetFailsafeSettings()
@@ -181,6 +186,10 @@ void Settings::Serialize(bool write, Config & config)
 	Param(config, write, section, "sky_time_speed", sky_time_speed);
 
 	config.get("sound", section);
+	Param(config, write, section, "attenuation_scale", sound_attenuation[0]);
+	Param(config, write, section, "attenuation_shift", sound_attenuation[1]);
+	Param(config, write, section, "attenuation_exponent", sound_attenuation[2]);
+	Param(config, write, section, "attenuation_offset", sound_attenuation[3]);
 	Param(config, write, section, "sources", sound_sources);
 	Param(config, write, section, "volume", sound_volume);
 	Param(config, write, section, "music_volume", music_volume);

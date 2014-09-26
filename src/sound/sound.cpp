@@ -151,6 +151,11 @@ Sound::Sound() :
 	samplers_num(0),
 	samplers_pause(true)
 {
+	attenuation[0] =  0.9146065;
+	attenuation[1] =  0.2729276;
+	attenuation[2] = -0.2313740;
+	attenuation[3] = -0.2884304;
+
 	sources.reserve(64);
 	samplers.reserve(64);
 }
@@ -253,6 +258,14 @@ void Sound::Disable()
 void Sound::SetMaxActiveSources(size_t value)
 {
 	max_active_sources = value;
+}
+
+void Sound::SetAttenuation(const float nattenuation[4])
+{
+	attenuation[0] = nattenuation[0];
+	attenuation[1] = nattenuation[1];
+	attenuation[2] = nattenuation[2];
+	attenuation[3] = nattenuation[3];
 }
 
 size_t Sound::AddSource(std::tr1::shared_ptr<SoundBuffer> buffer, float offset, bool is3d, bool loop)
@@ -441,11 +454,10 @@ void Sound::ProcessSources()
 				float len = relvec.Magnitude();
 				if (len < 0.1f) len = 0.1f;
 
-				// distance attenuation 1/r
-				float attenuation = 1.0f;
-				float mindist = 0.5f;
-				float dist = std::max(mindist, len);
-				float cgain = mindist / (mindist + attenuation * (dist - mindist));
+				// distance attenuation
+				// y = a * (x - b)^c + d
+				float cgain = attenuation[0] * powf(len - attenuation[1], attenuation[2]) + attenuation[3];
+				cgain = clamp(cgain, 0.0f, 1.0f);
 
 				// directional attenuation
 				// maximum at 0.75 (source on opposite side)

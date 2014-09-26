@@ -99,6 +99,12 @@ public:
 		return sound_sources;
 	}
 
+	// get sound attenuation[4] coefficients
+	const float * GetSoundAttenuation() const
+	{
+		return sound_attenuation;
+	}
+
 	bool GetMPH() const
 	{
 		return mph;
@@ -400,6 +406,7 @@ private:
 	float music_volume;
 	float sound_volume;
 	int sound_sources;
+	float sound_attenuation[4];
 	bool mph; //if false, KPH
 	std::string track;
 	int antialiasing; //0 or 1 mean off

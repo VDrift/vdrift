@@ -2265,6 +2265,7 @@ void Game::ProcessNewSettings()
 
 	sound.SetVolume(settings.GetSoundVolume());
 	sound.SetMaxActiveSources(settings.GetMaxSoundSources());
+	sound.SetAttenuation(settings.GetSoundAttenuation());
 }
 
 void Game::ShowHUD(bool value)
