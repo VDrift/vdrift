@@ -74,7 +74,7 @@ void EventSystem::Init(std::ostream & info_output)
 		const int id = SDL_JoystickInstanceID(jp);
 		assert(id >= 0 && id < num_joysticks);
 
-		joysticks[i] = Joystick(jp, SDL_JoystickNumAxes(jp), SDL_JoystickNumButtons(jp), SDL_JoystickNumHats(jp));
+		joysticks[id] = Joystick(jp, SDL_JoystickNumAxes(jp), SDL_JoystickNumButtons(jp), SDL_JoystickNumHats(jp));
 
 		info_output << "    " << id << " " << SDL_JoystickName(jp) << endl;
 	}
