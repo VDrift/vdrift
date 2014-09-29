@@ -65,7 +65,7 @@ void EventSystem::Init(std::ostream & info_output)
 
 	SDL_JoystickEventState(SDL_ENABLE);
 
-	joystick.resize(num_joysticks);
+	joysticks.resize(num_joysticks);
 	for (int i = 0; i < num_joysticks; ++i)
 	{
 		SDL_Joystick * jp = SDL_JoystickOpen(i);
@@ -74,7 +74,7 @@ void EventSystem::Init(std::ostream & info_output)
 		const int id = SDL_JoystickInstanceID(jp);
 		assert(id >= 0 && id < num_joysticks);
 
-		joystick[i] = Joystick(jp, SDL_JoystickNumAxes(jp), SDL_JoystickNumButtons(jp), SDL_JoystickNumHats(jp));
+		joysticks[i] = Joystick(jp, SDL_JoystickNumAxes(jp), SDL_JoystickNumButtons(jp), SDL_JoystickNumHats(jp));
 
 		info_output << "    " << id << " " << SDL_JoystickName(jp) << endl;
 	}
@@ -110,7 +110,7 @@ void EventSystem::ProcessEvents()
 
 	AgeToggles <SDL_Keycode> (keymap);
 	AgeToggles <int> (mbutmap);
-	for (std::vector <Joystick>::iterator i = joystick.begin(); i != joystick.end(); i++)
+	for (std::vector <Joystick>::iterator i = joysticks.begin(); i != joysticks.end(); i++)
 	{
 		i->AgeToggles();
 	}
@@ -135,18 +135,18 @@ void EventSystem::ProcessEvents()
 			HandleKey(UP, event.key.keysym.sym);
 			break;
 		case SDL_JOYBUTTONDOWN:
-			assert(size_t(event.jbutton.which) < joystick.size()); //ensure the event came from a known joystick
-			joystick[event.jbutton.which].SetButton(event.jbutton.button, true);
+			assert(size_t(event.jbutton.which) < joysticks.size()); //ensure the event came from a known joystick
+			joysticks[event.jbutton.which].SetButton(event.jbutton.button, true);
 			break;
 		case SDL_JOYBUTTONUP:
-			assert(size_t(event.jbutton.which) < joystick.size()); //ensure the event came from a known joystick
-			joystick[event.jbutton.which].SetButton(event.jbutton.button, false);
+			assert(size_t(event.jbutton.which) < joysticks.size()); //ensure the event came from a known joystick
+			joysticks[event.jbutton.which].SetButton(event.jbutton.button, false);
 			break;
 		case SDL_JOYHATMOTION:
 			break;
 		case SDL_JOYAXISMOTION:
-			assert(size_t(event.jaxis.which) < joystick.size()); //ensure the event came from a known joystick
-			joystick[event.jaxis.which].SetAxis(event.jaxis.axis, event.jaxis.value / 32768.0f);
+			assert(size_t(event.jaxis.which) < joysticks.size()); //ensure the event came from a known joystick
+			joysticks[event.jaxis.which].SetAxis(event.jaxis.axis, event.jaxis.value / 32768.0f);
 			//std::cout << "Joy " << (int) event.jaxis.which << " axis " << (int) event.jaxis.axis << " value " << event.jaxis.value / 32768.0f << endl;
 			break;
 		case SDL_QUIT:

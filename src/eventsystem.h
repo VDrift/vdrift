@@ -163,44 +163,44 @@ public:
 
 	float GetJoyAxis(unsigned int joynum, int axisnum) const
 	{
-		if (joynum < joystick.size())
-			return joystick[joynum].GetAxis(axisnum);
+		if (joynum < joysticks.size())
+			return joysticks[joynum].GetAxis(axisnum);
 		else
 			return 0.0;
 	}
 
 	Toggle GetJoyButton(unsigned int joynum, int buttonnum) const
 	{
-		if (joynum < joystick.size())
-			return joystick[joynum].GetButton(buttonnum);
+		if (joynum < joysticks.size())
+			return joysticks[joynum].GetButton(buttonnum);
 		else
 			return Toggle();
 	}
 
 	int GetNumJoysticks() const
 	{
-		return joystick.size();
+		return joysticks.size();
 	}
 
 	int GetNumAxes(unsigned int joynum) const
 	{
-		if (joynum < joystick.size())
-			return joystick[joynum].GetNumAxes();
+		if (joynum < joysticks.size())
+			return joysticks[joynum].GetNumAxes();
 		else
 			return 0;
 	}
 
 	int GetNumButtons(unsigned int joynum) const
 	{
-		if (joynum < joystick.size())
-			return joystick[joynum].GetNumButtons();
+		if (joynum < joysticks.size())
+			return joysticks[joynum].GetNumButtons();
 		else
 			return 0;
 	}
 
 	std::vector <Joystick> & GetJoysticks()
 	{
-		return joystick;
+		return joysticks;
 	}
 
 private:
@@ -208,7 +208,7 @@ private:
 	double dt;
 	bool quit;
 
-	std::vector <Joystick> joystick;
+	std::vector <Joystick> joysticks;
 	std::map <SDL_Keycode, Toggle> keymap;
 	std::map <int, Toggle> mbutmap;
 
