@@ -602,7 +602,7 @@ bool CarDynamics::Load(
 
 	// calculate steering feedback scale factor
 	// assuming 4 wheels with even weight distribution
-	feedback_scale = 1 / tire[0].getMaxMz(0.25 / body->getInvMass(), 0);
+	feedback_scale = 1 / tire[0].getMaxMz(9.81 * 0.25 / body->getInvMass(), 0);
 
 	return true;
 }
