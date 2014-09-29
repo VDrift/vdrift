@@ -52,25 +52,31 @@ EventSystem::~EventSystem()
 
 void EventSystem::Init(std::ostream & info_output)
 {
-	info_output << SDL_NumJoysticks() << " joystick";
-	if (SDL_NumJoysticks() != 1)
+	const int num_joysticks = SDL_NumJoysticks();
+
+	info_output << num_joysticks << " joystick";
+	if (num_joysticks != 1)
 		info_output << "s";
 	info_output << " found";
-	if (SDL_NumJoysticks() > 0)
+	if (num_joysticks > 0)
 		info_output << ":" << endl;
 	else
 		info_output << "." << endl;
 
 	SDL_JoystickEventState(SDL_ENABLE);
 
-	for (int i = 0; i < SDL_NumJoysticks(); ++i)
+	joystick.resize(num_joysticks);
+	for (int i = 0; i < num_joysticks; ++i)
 	{
-		SDL_Joystick * ptr = SDL_JoystickOpen(i);
-		assert(ptr);
+		SDL_Joystick * jp = SDL_JoystickOpen(i);
+		assert(jp);
 
-		joystick.push_back(Joystick(ptr, SDL_JoystickNumAxes(ptr), SDL_JoystickNumButtons(ptr), SDL_JoystickNumHats(ptr)));
-		
-		info_output << "    " << i << ". " << SDL_JoystickName(ptr) << endl;
+		const int id = SDL_JoystickInstanceID(jp);
+		assert(id >= 0 && id < num_joysticks);
+
+		joystick[i] = Joystick(jp, SDL_JoystickNumAxes(jp), SDL_JoystickNumButtons(jp), SDL_JoystickNumHats(jp));
+
+		info_output << "    " << id << " " << SDL_JoystickName(jp) << endl;
 	}
 }
 

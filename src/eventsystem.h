@@ -64,6 +64,8 @@ public:
 			std::vector <HatPosition> hat;
 
 		public:
+			Joystick() : sdl_joyptr(NULL) {}
+
 			Joystick(SDL_Joystick * ptr, int numaxes, int numbuttons, int numhats) : sdl_joyptr(ptr)
 			{
 				axis.resize(numaxes, 0);
