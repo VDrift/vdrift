@@ -2389,18 +2389,19 @@ bool Game::Download(const std::vector <std::string> & urls)
 
 void Game::UpdateForceFeedback(float dt)
 {
+	const float ffdt = 0.02;
+
 	if (carcontrols_local.first)
 	{
-		//static ofstream file("ff_output.txt");
 		ff_update_time += dt;
-		const double ffdt = 0.02;
 		if (ff_update_time >= ffdt )
 		{
 			ff_update_time = 0.0;
-			double feedback = -carcontrols_local.first->GetFeedback();
+
+			float feedback = carcontrols_local.first->GetFeedback();
 
 			// scale
-			feedback = feedback * settings.GetFFGain() * 0.2;
+			feedback = feedback * settings.GetFFGain();
 
 			// invert
 			if (settings.GetFFInvert()) feedback = -feedback;
@@ -2409,15 +2410,13 @@ void Game::UpdateForceFeedback(float dt)
 			if (feedback > 1.0) feedback = 1.0;
 			if (feedback < -1.0) feedback = -1.0;
 
-			double force = feedback;
-			forcefeedback->update(force, &feedback, ffdt, error_output);
+			forcefeedback->update(feedback, ffdt, error_output);
 		}
 	}
 
 	if (pause && dt == 0)
 	{
-		double pos=0;
-		forcefeedback->update(0, &pos, 0.02, error_output);
+		forcefeedback->update(0.0f, ffdt, error_output);
 	}
 }
 

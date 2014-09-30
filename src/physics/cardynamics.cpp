@@ -601,8 +601,10 @@ bool CarDynamics::Load(
 	maxspeed = CalculateMaxSpeed();
 
 	// calculate steering feedback scale factor
-	// assuming 4 wheels with even weight distribution
-	feedback_scale = 1 / tire[0].getMaxMz(9.81 * 0.25 / body->getInvMass(), 0);
+	// use max Mz of the 2 front wheels assuming even weight distribution
+	// and a fudge factor of 8 to get feedback into -1, 1 range
+	const float max_wheel_load = 0.25 * 9.81 / body->getInvMass() ;
+	feedback_scale = 1 / (8 * 2 * tire[0].getMaxMz(max_wheel_load, 0));
 
 	return true;
 }

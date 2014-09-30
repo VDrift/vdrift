@@ -75,7 +75,7 @@ Settings::Settings() :
 	texture_compress(true),
 	button_ramp(5),
 	ff_device("/dev/input/event0"),
-	ff_gain(2.0),
+	ff_gain(1.0),
 	ff_invert(false),
 	trackreverse(false),
 	trackdynamic(false),

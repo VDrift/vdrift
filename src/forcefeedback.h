@@ -35,9 +35,8 @@ public:
 	~ForceFeedback();
 
 	void update(
-		double force,
-		double * position,
-		double dt,
+		float force,
+		float dt,
 		std::ostream & error_output);
 
 	void disable();
@@ -50,7 +49,7 @@ private:
 	int axis_code;
 	int axis_min;
 	int axis_max;
-	double lastforce;
+	float lastforce;
 
 	SDL_Haptic * haptic;
 	SDL_HapticEffect effect;

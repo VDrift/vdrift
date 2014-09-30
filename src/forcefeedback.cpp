@@ -35,28 +35,22 @@ ForceFeedback::ForceFeedback(
 {
 	// Close haptic if already open.
 	if (haptic)
-		SDL_HapticClose(haptic);
-
-	// Does the device support haptic?
-	//if (!SDL_JoystickIsHaptic(joystick))
-	//	return;
-
-	// Try to create haptic device.
-	//haptic = SDL_HapticOpenFromJoystick(joystick);
-
-	// Does the device support haptic?
-	int haptic_id = 0;
-	int haptic_num = SDL_NumHaptics();/*
-	while (haptic_id < haptic_num)
 	{
-		std::string haptic_name(SDL_HapticName(haptic_id++));
-		if (haptic_name == device_name)
-			break;
-	}*/
-	if (haptic_id == haptic_num)
+		SDL_HapticClose(haptic);
+		haptic = NULL;
+	}
+
+	// Do we have force feedback devices?
+	int haptic_num = SDL_NumHaptics();
+	if (haptic_num == 0)
+	{
+		info_output << "No force feedback devices found." << std::endl;
 		return;
+	}
+	info_output << "Number of force feedback devices: " << haptic_num << std::endl;
 
 	// Try to create haptic device.
+	int haptic_id = 0;
 	haptic = SDL_HapticOpen(haptic_id);
 	if (!haptic)
 	{
@@ -68,8 +62,7 @@ ForceFeedback::ForceFeedback(
 	unsigned int haptic_query = SDL_HapticQuery(haptic);
 	if (!(haptic_query & SDL_HAPTIC_CONSTANT))
 	{
-		SDL_HapticClose(haptic);
-		haptic = NULL;
+		error_output << "Constant force feedback not supported: " << SDL_GetError();
 		return;
 	}
 
@@ -107,12 +100,11 @@ ForceFeedback::~ForceFeedback()
 }
 
 void ForceFeedback::update(
-	double force,
-	double * position,
-	double dt,
+	float force,
+	float dt,
 	std::ostream & error_output)
 {
-	if (!enabled || !haptic || (effect_id != -1))
+	if (!enabled || !haptic || (effect_id == -1))
 		return;
 
 	// Clamp force.
@@ -127,8 +119,8 @@ void ForceFeedback::update(
 	int new_effect_id = SDL_HapticUpdateEffect(haptic, effect_id, &effect);
 	if (new_effect_id == -1)
 	{
-		//error_output << "Failed to update force feedback effect: " << SDL_GetError();
-		//return;
+		error_output << "Failed to update force feedback effect: " << SDL_GetError();
+		return;
 	}
 	else
 	{
