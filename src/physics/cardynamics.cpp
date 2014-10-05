@@ -989,17 +989,6 @@ void CarDynamics::DebugPrint ( std::ostream & out, bool p1, bool p2, bool p3, bo
 		wheel[FRONT_LEFT].DebugPrint ( out );
 		out << tire[FRONT_LEFT] << "\n";
 
-		out << "(front right)" << "\n";
-		brake[FRONT_RIGHT].DebugPrint ( out );
-		out << "\n";
-		suspension[FRONT_RIGHT]->DebugPrint ( out );
-		out << "\n";
-		wheel[FRONT_RIGHT].DebugPrint ( out );
-		out << tire[FRONT_RIGHT] << "\n";
-	}
-
-	if ( p3 )
-	{
 		out << "(rear left)" << "\n";
 		brake[REAR_LEFT].DebugPrint ( out );
 		out << "\n";
@@ -1007,6 +996,17 @@ void CarDynamics::DebugPrint ( std::ostream & out, bool p1, bool p2, bool p3, bo
 		out << "\n";
 		wheel[REAR_LEFT].DebugPrint ( out );
 		out << tire[REAR_LEFT] << "\n";
+	}
+
+	if ( p3 )
+	{
+		out << "(front right)" << "\n";
+		brake[FRONT_RIGHT].DebugPrint ( out );
+		out << "\n";
+		suspension[FRONT_RIGHT]->DebugPrint ( out );
+		out << "\n";
+		wheel[FRONT_RIGHT].DebugPrint ( out );
+		out << tire[FRONT_RIGHT] << "\n";
 
 		out << "(rear right)" << "\n";
 		brake[REAR_RIGHT].DebugPrint ( out );
