@@ -239,13 +239,14 @@ bool Hud::Init(
 	{
 		float fontscaley = 0.02;
 		float fontscalex = screenhwratio * fontscaley;
+		float y = 2 * fontscaley + 60.0 / displayheight;
 
 		debugnode = hudroot.AddNode();
 		SceneNode & debugnoderef = hudroot.GetNode(debugnode);
-		debugtextdraw1 = SetupText(debugnoderef, debugtext1, "", sansfont, 0.01, fontscaley, fontscalex, fontscaley, 1, 1, 1, 10);
-		debugtextdraw2 = SetupText(debugnoderef, debugtext2, "", sansfont, 0.25, fontscaley, fontscalex, fontscaley, 1, 1, 1, 10);
-		debugtextdraw3 = SetupText(debugnoderef, debugtext3, "", sansfont, 0.50, fontscaley, fontscalex, fontscaley, 1, 1, 1, 10);
-		debugtextdraw4 = SetupText(debugnoderef, debugtext4, "", sansfont, 0.75, fontscaley, fontscalex, fontscaley, 1, 1, 1, 10);
+		debugtextdraw1 = SetupText(debugnoderef, debugtext1, "", sansfont, 0.01, y, fontscalex, fontscaley, 1, 1, 1, 10);
+		debugtextdraw2 = SetupText(debugnoderef, debugtext2, "", sansfont, 0.25, y, fontscalex, fontscaley, 1, 1, 1, 10);
+		debugtextdraw3 = SetupText(debugnoderef, debugtext3, "", sansfont, 0.50, y, fontscalex, fontscaley, 1, 1, 1, 10);
+		debugtextdraw4 = SetupText(debugnoderef, debugtext4, "", sansfont, 0.75, y, fontscalex, fontscaley, 1, 1, 1, 10);
 	}
 
 #ifndef GAUGES
