@@ -262,6 +262,11 @@ public:
 		return reflections;
 	}
 
+	bool GetDebugInfo() const
+	{
+		return debug_info;
+	}
+
 	bool GetInputGraph() const
 	{
 		return input_graph;
@@ -439,6 +444,7 @@ private:
 	int shadow_distance;
 	int shadow_quality;
 	int reflections;
+	bool debug_info;
 	bool input_graph;
 	int lighting;
 	bool bloom;

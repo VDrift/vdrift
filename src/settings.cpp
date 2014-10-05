@@ -83,6 +83,7 @@ Settings::Settings() :
 	shadow_distance(1),
 	shadow_quality(1),
 	reflections(1),
+	debug_info(false),
 	input_graph(false),
 	lighting(0),
 	bloom(false),
@@ -173,6 +174,7 @@ void Settings::Serialize(bool write, Config & config)
 	Param(config, write, section, "shadow_distance", shadow_distance);
 	Param(config, write, section, "shadow_quality", shadow_quality);
 	Param(config, write, section, "reflections", reflections);
+	Param(config, write, section, "debug_info", debug_info);
 	Param(config, write, section, "input_graph", input_graph);
 	Param(config, write, section, "lighting", lighting);
 	Param(config, write, section, "bloom", bloom);

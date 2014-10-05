@@ -297,7 +297,6 @@ private:
 
 	bool multithreaded;
 	bool profilingmode;
-	bool debugmode;
 	bool benchmode;
 	bool dumpfps;
 	bool pause;

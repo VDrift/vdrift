@@ -93,7 +93,6 @@ Game::Game(std::ostream & info_out, std::ostream & error_out) :
 	fps_max(0),
 	multithreaded(false),
 	profilingmode(false),
-	debugmode(false),
 	benchmode(false),
 	dumpfps(false),
 	pause(false),
@@ -242,8 +241,8 @@ void Game::Start(std::list <std::string> & args)
 	if (!hud.Init(
 		pathmanager.GetGUITextureDir(settings.GetSkin()),
 		gui.GetLanguageDict(), gui.GetFont(), fonts["lcd"],
-		window.GetW(), window.GetH(),
-		debugmode, content, error_output))
+		window.GetW(), window.GetH(), settings.GetDebugInfo(),
+		content, error_output))
 	{
 		error_output << "Error initializing HUD" << std::endl;
 		return;
@@ -591,12 +590,6 @@ bool Game::ParseArguments(std::list <std::string> & args)
 		continue_game = false;
 	}
 	arghelp["-test"] = "Run unit tests.";
-
-	if (argmap.find("-debug") != argmap.end())
-	{
-		debugmode = true;
-	}
-	arghelp["-debug"] = "Display car debugging information.";
 
 	if (!argmap["-cartest"].empty())
 	{
@@ -1401,7 +1394,7 @@ void Game::UpdateCarInputs(int carid)
 	inputgraph.Update(carinputs);
 
 	std::ostringstream debug_info1, debug_info2, debug_info3, debug_info4;
-	if (debugmode)
+	if (settings.GetDebugInfo())
 	{
 		car.DebugPrint(debug_info1, true, false, false, false);
 		car.DebugPrint(debug_info2, false, true, false, false);
