@@ -936,9 +936,10 @@ static std::ostream & operator << (std::ostream & os, const CarTire & tire)
 /// print debug info to the given ostream.  set p1, p2, etc if debug info part 1, and/or part 2, etc is desired
 void CarDynamics::DebugPrint ( std::ostream & out, bool p1, bool p2, bool p3, bool p4 ) const
 {
+	out << std::fixed << std::setprecision(3);
+
 	if ( p1 )
 	{
-		out << std::fixed << std::setprecision(3);
 		out << "---Body---\n";
 		out << "Velocity: " << GetVelocity() << "\n";
 		out << "Position: " << GetPosition() << "\n";
@@ -980,52 +981,40 @@ void CarDynamics::DebugPrint ( std::ostream & out, bool p1, bool p2, bool p3, bo
 
 	if ( p2 )
 	{
-		out << std::fixed << std::setprecision(3);
-		out << "(front left)" << "\n";
-		suspension[FRONT_LEFT]->DebugPrint ( out );
-		out << "\n";
-		out << "(front right)" << "\n";
-		suspension[FRONT_RIGHT]->DebugPrint ( out );
-		out << "\n";
-		out << "(rear left)" << "\n";
-		suspension[REAR_LEFT]->DebugPrint ( out );
-		out << "\n";
-		out << "(rear right)" << "\n";
-		suspension[REAR_RIGHT]->DebugPrint ( out );
-		out << "\n";
-
 		out << "(front left)" << "\n";
 		brake[FRONT_LEFT].DebugPrint ( out );
 		out << "\n";
+		suspension[FRONT_LEFT]->DebugPrint ( out );
+		out << "\n";
+		wheel[FRONT_LEFT].DebugPrint ( out );
+		out << tire[FRONT_LEFT] << "\n";
+
 		out << "(front right)" << "\n";
 		brake[FRONT_RIGHT].DebugPrint ( out );
 		out << "\n";
-		out << "(rear left)" << "\n";
-		brake[REAR_LEFT].DebugPrint ( out );
+		suspension[FRONT_RIGHT]->DebugPrint ( out );
 		out << "\n";
-		out << "(rear right)" << "\n";
-		brake[REAR_RIGHT].DebugPrint ( out );
+		wheel[FRONT_RIGHT].DebugPrint ( out );
+		out << tire[FRONT_RIGHT] << "\n";
 	}
 
 	if ( p3 )
 	{
-		out << std::fixed << std::setprecision(3);
-		out << "\n";
-		out << "(front left)" << "\n";
-		wheel[FRONT_LEFT].DebugPrint ( out );
-		out << tire[FRONT_LEFT] << "\n";
-		out << "\n";
-		out << "(front right)" << "\n";
-		wheel[FRONT_RIGHT].DebugPrint ( out );
-		out << tire[FRONT_RIGHT] << "\n";
-		out << "\n";
 		out << "(rear left)" << "\n";
+		brake[REAR_LEFT].DebugPrint ( out );
+		out << "\n";
+		suspension[REAR_LEFT]->DebugPrint ( out );
+		out << "\n";
 		wheel[REAR_LEFT].DebugPrint ( out );
 		out << tire[REAR_LEFT] << "\n";
-		out << "\n";
+
 		out << "(rear right)" << "\n";
+		brake[REAR_RIGHT].DebugPrint ( out );
+		out << "\n";
+		suspension[REAR_RIGHT]->DebugPrint ( out );
+		out << "\n";
 		wheel[REAR_RIGHT].DebugPrint ( out );
-		out << tire[REAR_RIGHT];
+		out << tire[REAR_RIGHT] << "\n";
 	}
 
 	if ( p4 )
