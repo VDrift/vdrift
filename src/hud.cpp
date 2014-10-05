@@ -77,7 +77,7 @@ Hud::Hud() :
 	maxspeed(240),
 	speedscale(3.6),
 	mph(false),
-	debug_hud_info(false),
+	debuginfo(false),
 	racecomplete(false),
 	lastvisible(true)
 {
@@ -91,7 +91,6 @@ bool Hud::Init(
 	const Font & lcdfont,
 	float displaywidth,
 	float displayheight,
-	bool debugon,
 	ContentManager & content,
 	std::ostream & error_output)
 {
@@ -416,8 +415,6 @@ bool Hud::Init(
 
 	SetVisible(false);
 
-	debug_hud_info = debugon;
-
 	return true;
 }
 
@@ -437,15 +434,23 @@ void Hud::Update(
 	if (!lastvisible)
 		return;
 
-	float screenhwratio = displayheight/displaywidth;
-
-	if (debug_hud_info)
+	bool debuginfo_new = !debug_string1.empty() || !debug_string2.empty() ||
+						 !debug_string3.empty() || !debug_string4.empty();
+	if (debuginfo_new != debuginfo)
+	{
+		debuginfo = debuginfo_new;
+		hudroot.GetNode(debugnode).SetChildVisibility(debuginfo);
+	}
+	if (debuginfo)
 	{
 		debugtext1.Revise(sansfont, debug_string1);
 		debugtext2.Revise(sansfont, debug_string2);
 		debugtext3.Revise(sansfont, debug_string3);
 		debugtext4.Revise(sansfont, debug_string4);
 	}
+
+	float screenhwratio = displayheight / displaywidth;
+
 #ifdef GAUGES
     FONT & gaugefont = sansfont_noshader;
 
@@ -694,12 +699,7 @@ void Hud::SetVisible(bool value)
 	{
 		hudroot.SetChildVisibility(value);
 		//hudroot.GetNode(timernode).SetChildVisibility(value);
-		SetDebugVisible(value && debug_hud_info);
+		hudroot.GetNode(debugnode).SetChildVisibility(debuginfo && value);
 		lastvisible = value;
 	}
-}
-
-void Hud::SetDebugVisible(bool value)
-{
-	hudroot.GetNode(debugnode).SetChildVisibility(value);
 }

@@ -46,7 +46,6 @@ public:
 		const Font & lcdfont,
 		float displaywidth,
 		float displayheight,
-		bool debugon,
 		ContentManager & content,
 		std::ostream & error_output);
 
@@ -143,11 +142,10 @@ private:
 	// hud strings
 	std::vector<std::string> str;
 
-	bool debug_hud_info;
+	bool debuginfo;
 	bool racecomplete;
 	bool lastvisible;
 
-	void SetDebugVisible(bool value);
 };
 
 #endif

@@ -241,7 +241,7 @@ void Game::Start(std::list <std::string> & args)
 	if (!hud.Init(
 		pathmanager.GetGUITextureDir(settings.GetSkin()),
 		gui.GetLanguageDict(), gui.GetFont(), fonts["lcd"],
-		window.GetW(), window.GetH(), settings.GetDebugInfo(),
+		window.GetW(), window.GetH(),
 		content, error_output))
 	{
 		error_output << "Error initializing HUD" << std::endl;
