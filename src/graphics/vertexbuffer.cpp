@@ -86,7 +86,11 @@ struct VertexBuffer::BindDynamicVertexData
 			glGenBuffers(1, &ob.ibuffer);
 			glGenBuffers(1, &ob.vbuffer);
 			if (ctx.use_vao)
+			{
 				glGenVertexArrays(1, &ob.varray);
+				if (ob.varray == 0)
+					ctx.use_vao = ctx.good_vao = false;
+			}
 			ob.vformat = vf;
 		}
 
@@ -96,7 +100,7 @@ struct VertexBuffer::BindDynamicVertexData
 		sg.icount = icount;
 		sg.voffset = ob.vcount;
 		sg.vcount = vcount;
-		sg.vbuffer = ctx.use_vao ? ob.varray : ob.vbuffer;
+		sg.vbuffer = ob.varray ? ob.varray : ob.vbuffer;
 		sg.vformat = vf;
 		sg.object = obindex;
 		sg.age = ctx.age_dynamic;
@@ -172,7 +176,11 @@ struct VertexBuffer::BindStaticVertexData
 			glGenBuffers(1, &ob.ibuffer);
 			glGenBuffers(1, &ob.vbuffer);
 			if (ctx.use_vao)
+			{
 				glGenVertexArrays(1, &ob.varray);
+				if (ob.varray == 0)
+					ctx.use_vao = ctx.good_vao = false;
+			}
 			ob.vformat = vf;
 		}
 
@@ -181,7 +189,7 @@ struct VertexBuffer::BindStaticVertexData
 		sg.icount = icount;
 		sg.voffset = ob.vcount;
 		sg.vcount = vcount;
-		sg.vbuffer = ctx.use_vao ? ob.varray : ob.vbuffer;
+		sg.vbuffer = ob.varray ? ob.varray : ob.vbuffer;
 		sg.vformat = vf;
 		sg.object = obindex;
 		sg.age = ctx.age_static;
@@ -198,6 +206,7 @@ VertexBuffer::VertexBuffer() :
 	age_dynamic(1),
 	age_static(1),
 	use_vao(false),
+	good_vao(true),
 	bind_ibo(false)
 {
 	// ctor
@@ -242,7 +251,7 @@ void VertexBuffer::BindElementBufferExplicitly()
 void VertexBuffer::Clear()
 {
 	// reset buffer state
-	if (use_vao)
+	if (glBindVertexArray)
 		glBindVertexArray(0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -263,7 +272,7 @@ void VertexBuffer::Clear()
 
 void VertexBuffer::SetDynamicVertexData(SceneNode * nodes[], unsigned int count)
 {
-	use_vao = glBindVertexArray ? true : false;
+	use_vao = glBindVertexArray && good_vao;
 
 	age_dynamic += 2;
 
@@ -284,7 +293,7 @@ void VertexBuffer::SetDynamicVertexData(SceneNode * nodes[], unsigned int count)
 
 void VertexBuffer::SetStaticVertexData(SceneNode * nodes[], unsigned int count)
 {
-	use_vao = glBindVertexArray ? true : false;
+	use_vao = glBindVertexArray && good_vao;
 
 	age_static += 2;
 

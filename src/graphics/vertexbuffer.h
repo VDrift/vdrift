@@ -95,6 +95,7 @@ private:
 	unsigned short age_static;
 
 	bool use_vao;
+	bool good_vao; ///< handle implementations returning vao 0
 	bool bind_ibo; ///< workaround for broken vao implementation
 
 	/// \brief Scene node visitors
