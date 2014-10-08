@@ -325,6 +325,13 @@ void VertexBuffer::Draw(unsigned int & vbuffer, const Segment & s) const
 	if (vbuffer != s.vbuffer)
 		BindSegmentBuffer(vbuffer, s);
 
+	// don't attempt to draw with no buffer bound
+	if (vbuffer == 0)
+	{
+		assert(0);
+		return;
+	}
+
 	if (s.icount != 0)
 	{
 		glDrawElements(GL_TRIANGLES, s.icount, GL_UNSIGNED_INT, (const void *)(size_t)s.ioffset);
