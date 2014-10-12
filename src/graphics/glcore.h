@@ -147,6 +147,7 @@ extern "C" {
 extern int GLC_EXT_texture_compression_s3tc;
 extern int GLC_EXT_texture_sRGB;
 extern int GLC_EXT_texture_filter_anisotropic;
+extern int GLC_ARB_vertex_array_object;
 extern int GLC_ARB_framebuffer_object;
 extern int GLC_ARB_half_float_pixel;
 extern int GLC_ARB_texture_float;
