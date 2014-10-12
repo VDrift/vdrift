@@ -191,8 +191,8 @@ static void SetSampler(const TextureInfo & info, bool hasmiplevels = false)
 			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
 		}
-		// automatic mipmap generation (deprecated in GL3)
-		if (!hasmiplevels && info.mipmap && !glGenerateMipmap)
+		// automatic mipmap generation fallback
+		if (!hasmiplevels && info.mipmap && !GLC_ARB_framebuffer_object)
 			glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
 	}
 	else
@@ -348,7 +348,7 @@ bool Texture::Load(const std::string & path, const TextureInfo & info, std::ostr
 	// If we support generatemipmap, go ahead and do it regardless of the info.mipmap setting.
 	// In the GL3 renderer the sampler decides whether or not to do mip filtering,
 	// so we conservatively make mipmaps available for all textures.
-	if (glGenerateMipmap)
+	if (GLC_ARB_framebuffer_object)
 		glGenerateMipmap(GL_TEXTURE_2D);
 
 	SDL_FreeSurface(surface);
@@ -389,7 +389,8 @@ bool Texture::LoadCubeVerticalCross(const std::string & path, const TextureInfo 
 	if (info.mipmap)
 	{
 		glTexParameteri(GL_TEXTURE_CUBE_MAP,GL_TEXTURE_MIN_FILTER,GL_LINEAR_MIPMAP_LINEAR);
-		if (!glGenerateMipmap)
+		// automatic mipmap generation fallback
+		if (!GLC_ARB_framebuffer_object)
 			glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_GENERATE_MIPMAP, GL_TRUE);
 	}
 
@@ -502,7 +503,7 @@ bool Texture::LoadCubeVerticalCross(const std::string & path, const TextureInfo 
 		glTexImage2D(targetparam, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, &cubeface[0]);
 	}
 
-	if (info.mipmap && glGenerateMipmap)
+	if (info.mipmap && GLC_ARB_framebuffer_object)
 		glGenerateMipmap(GL_TEXTURE_CUBE_MAP);
 
 	CheckForOpenGLErrors("Cubemap creation", error);
@@ -698,7 +699,7 @@ bool Texture::LoadDDS(const std::string & path, const TextureInfo & info, std::o
 	}
 
 	// force mipmaps for GL3
-	if (levels == 1 && glGenerateMipmap)
+	if (levels == 1 && GLC_ARB_framebuffer_object)
 		glGenerateMipmap(GL_TEXTURE_2D);
 
 	return true;
