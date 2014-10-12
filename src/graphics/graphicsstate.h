@@ -216,7 +216,7 @@ public:
 	// reset vao/vbo/ibo state and clear vobject
 	void ResetVertexObject()
 	{
-		if (glBindVertexArray)
+		if (GLC_ARB_vertex_array_object)
 			glBindVertexArray(0);
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);

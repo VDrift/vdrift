@@ -251,7 +251,7 @@ void VertexBuffer::BindElementBufferExplicitly()
 void VertexBuffer::Clear()
 {
 	// reset buffer state
-	if (glBindVertexArray)
+	if (GLC_ARB_vertex_array_object)
 		glBindVertexArray(0);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -272,7 +272,7 @@ void VertexBuffer::Clear()
 
 void VertexBuffer::SetDynamicVertexData(SceneNode * nodes[], unsigned int count)
 {
-	use_vao = glBindVertexArray && good_vao;
+	use_vao = GLC_ARB_vertex_array_object && good_vao;
 
 	age_dynamic += 2;
 
@@ -293,7 +293,7 @@ void VertexBuffer::SetDynamicVertexData(SceneNode * nodes[], unsigned int count)
 
 void VertexBuffer::SetStaticVertexData(SceneNode * nodes[], unsigned int count)
 {
-	use_vao = glBindVertexArray && good_vao;
+	use_vao = GLC_ARB_vertex_array_object && good_vao;
 
 	age_static += 2;
 
