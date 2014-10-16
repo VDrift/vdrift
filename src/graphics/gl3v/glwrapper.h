@@ -22,7 +22,9 @@
 
 #include "renderuniformvector.h"
 #include "../glcore.h"
+
 #include <iosfwd>
+#include <string>
 #include <vector>
 #include <map>
 

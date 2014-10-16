@@ -21,6 +21,7 @@
 #define _GLUTIL_H
 
 #include <iosfwd>
+#include <string>
 
 /// returns true on error
 bool CheckForOpenGLErrors(

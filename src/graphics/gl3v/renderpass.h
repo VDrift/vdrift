@@ -40,6 +40,7 @@
 
 #include <vector>
 #include <iosfwd>
+#include <string>
 #include <map>
 #include <set>
 

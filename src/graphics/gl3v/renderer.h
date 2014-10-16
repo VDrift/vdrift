@@ -22,8 +22,10 @@
 
 #include "stringidmap.h"
 #include "renderpass.h"
+
 #include <vector>
 #include <iosfwd>
+#include <string>
 #include <map>
 
 /// StringIds are used to speed up use of the friendly names for texture samplers, uniform locations, and draw groups.

@@ -21,6 +21,7 @@
 #define _RENDER_OUTPUT_H
 
 #include "fbobject.h"
+
 #include <iosfwd>
 
 class GraphicsState;

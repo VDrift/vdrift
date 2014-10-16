@@ -21,8 +21,10 @@
 #define _FONT_H
 
 #include "memory.h"
+
 #include <vector>
 #include <iosfwd>
+#include <string>
 
 class ContentManager;
 class Texture;

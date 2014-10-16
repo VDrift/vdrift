@@ -21,6 +21,7 @@
 #define _WINDOW_H
 
 #include <iosfwd>
+#include <string>
 
 struct SDL_Window;
 

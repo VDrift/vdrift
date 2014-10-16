@@ -25,8 +25,8 @@
 
 #include <map>
 #include <vector>
-#include <string>
 #include <iosfwd>
+#include <string>
 
 class GuiLanguage;
 class GuiWidget;

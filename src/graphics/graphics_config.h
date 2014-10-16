@@ -22,8 +22,8 @@
 
 #include "graphics_config_condition.h"
 
-#include <string>
 #include <iosfwd>
+#include <string>
 #include <vector>
 #include <map>
 #include <set>

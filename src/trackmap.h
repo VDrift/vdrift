@@ -28,6 +28,7 @@
 #include "memory.h"
 
 #include <iosfwd>
+#include <string>
 #include <list>
 
 class ContentManager;

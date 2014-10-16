@@ -24,6 +24,7 @@
 #include "quaternion.h"
 
 #include <iosfwd>
+#include <string>
 
 class SceneNode;
 

@@ -23,7 +23,9 @@
 #include "vertexarray.h"
 #include "vertexbuffer.h"
 #include "mathvector.h"
+
 #include <iosfwd>
+#include <string>
 
 /// Loading data into the mesh vertexarray is implemented by derived classes.
 class Model

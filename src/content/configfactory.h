@@ -21,7 +21,6 @@
 #define _CONFIGFACTORY_H
 
 #include "contentfactory.h"
-#include <iosfwd>
 
 class PTree;
 class ContentManager;

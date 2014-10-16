@@ -23,10 +23,10 @@
 #include "eventsystem.h"
 #include "gameinput.h"
 
-#include <map>
-#include <string>
 #include <iosfwd>
+#include <string>
 #include <vector>
+#include <map>
 
 class Config;
 

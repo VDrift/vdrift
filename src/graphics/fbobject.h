@@ -24,6 +24,7 @@
 #include "glcore.h"
 
 #include <iosfwd>
+#include <string>
 #include <vector>
 
 class GraphicsState;

@@ -21,7 +21,9 @@
 #define _CONTENTFACTORY_H
 
 #include "memory.h"
+
 #include <iosfwd>
+#include <string>
 
 template <class Content>
 class Factory

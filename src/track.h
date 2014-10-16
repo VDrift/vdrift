@@ -29,6 +29,7 @@
 #include "memory.h"
 
 #include <iosfwd>
+#include <string>
 #include <list>
 #include <set>
 #include <vector>

@@ -25,6 +25,7 @@
 #include "enginesoundinfo.h"
 
 #include <iosfwd>
+#include <string>
 #include <vector>
 
 class Sound;

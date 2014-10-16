@@ -21,8 +21,8 @@
 #define _PATHMANAGER_H
 
 #include <list>
-#include <string>
 #include <iosfwd>
+#include <string>
 
 class PathManager
 {
