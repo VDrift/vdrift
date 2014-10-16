@@ -919,7 +919,7 @@ void Game::AdvanceGameLogic()
 	{
 		PROFILER.beginBlock("ai");
 		ai.Visualize();
-		ai.Update(timestep, car_dynamics);
+		ai.Update(timestep, &car_dynamics[0], car_dynamics.size());
 		PROFILER.endBlock("ai");
 
 		PROFILER.beginBlock("physics");
@@ -1034,9 +1034,10 @@ void Game::ProcessGameInputs()
 void Game::UpdateTimer()
 {
 	// Check for cars doing a lap.
-	for (std::vector<CarDynamics>::iterator i = car_dynamics.begin(); i != car_dynamics.end(); ++i)
+	for (int i = 0; i != car_dynamics.size(); ++i)
 	{
-		int carid = cartimerids[&(*i)];
+		const CarDynamics & car = car_dynamics[i];
+		int carid = cartimerids[&car];
 
 		bool advance = false;
 		int nextsector = 0;
@@ -1045,7 +1046,7 @@ void Game::UpdateTimer()
 			nextsector = (timer.GetLastSector(carid) + 1) % track.GetSectors();
 			for (int p = 0; p < 4; ++p)
 			{
-				const Bezier * patch = i->GetWheelContact(WheelPosition(p)).GetPatch();
+				const Bezier * patch = car.GetWheelContact(WheelPosition(p)).GetPatch();
 				if (patch == track.GetSectorPatch(nextsector))
 				{
 					advance = true;
@@ -1058,14 +1059,14 @@ void Game::UpdateTimer()
 
 		// Update how far the car is on the track...
 		// Find the patch under the front left wheel...
-		const Bezier * curpatch = i->GetWheelContact(FRONT_LEFT).GetPatch();
+		const Bezier * curpatch = car.GetWheelContact(FRONT_LEFT).GetPatch();
 		if (!curpatch)
-			curpatch = i->GetWheelContact(FRONT_RIGHT).GetPatch();
+			curpatch = car.GetWheelContact(FRONT_RIGHT).GetPatch();
 
 		// Only update if car is on track.
 		if (curpatch)
 		{
-			Vec3 pos = ToMathVector<float>(i->GetCenterOfMass());
+			Vec3 pos = ToMathVector<float>(car.GetCenterOfMass());
 			Vec3 back_left, back_right, front_left;
 			if (!track.IsReversed())
 			{
@@ -1107,10 +1108,11 @@ void Game::UpdateTimer()
 void Game::UpdateTrackMap()
 {
 	std::list <std::pair<Vec3, bool> > carpositions;
-	for (std::vector<CarDynamics>::iterator i = car_dynamics.begin(); i != car_dynamics.end(); ++i)
+	for (int i = 0; i != car_dynamics.size(); ++i)
 	{
-		bool player = (carcontrols_local.first == &(*i));
-		Vec3 carpos = ToMathVector<float>(i->GetCenterOfMass());
+		const CarDynamics & car = car_dynamics[i];
+		bool player = (carcontrols_local.first == &car);
+		Vec3 carpos = ToMathVector<float>(car.GetCenterOfMass());
 		carpositions.push_back(std::make_pair(carpos, player));
 	}
 
@@ -1296,7 +1298,7 @@ void Game::UpdateCarInfo()
 
 void Game::UpdateCars(float dt)
 {
-	for (size_t i = 0; i < car_dynamics.size(); ++i)
+	for (int i = 0; i < car_dynamics.size(); ++i)
 	{
 		UpdateCarInputs(i);
 
@@ -1539,7 +1541,7 @@ bool Game::NewGame(bool playreplay, bool addopponents, int num_laps)
 	}
 
 	// Add cars to the timer system.
-	for (size_t i = 0; i < car_dynamics.size(); ++i)
+	for (int i = 0; i < car_dynamics.size(); ++i)
 	{
 		cartimerids[&car_dynamics[i]] = timer.AddCar(car_info[i].name);
 		if (carcontrols_local.first == &car_dynamics[i])
@@ -1673,7 +1675,7 @@ bool Game::LoadCar(
 	}
 
 	car_dynamics.push_back(CarDynamics());
-	CarDynamics & car = car_dynamics.back();
+	CarDynamics & car = car_dynamics[car_dynamics.size() - 1];
 	if (!car.Load(
 		*carconf, cardir, info.tire,
 		ToBulletVector(position),
@@ -1854,7 +1856,7 @@ void Game::SetGarageCar()
 	{
 		// update car position
 		dynamics.update(timestep);
-		car_graphics.back().Update(car_dynamics.back());
+		car_graphics.back().Update(car_dynamics[car_dynamics.size() - 1]);
 		nodes.push_back(&car_graphics.back().GetNode());
 	}
 	nodes.push_back(&track.GetTrackNode());

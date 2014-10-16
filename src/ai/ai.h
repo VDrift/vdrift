@@ -41,7 +41,7 @@ public:
 
 	void ClearCars();
 
-	void Update(float dt, const std::vector<CarDynamics> & checkcars);
+	void Update(float dt, const CarDynamics cars[], const int cars_num);
 
 	///< Returns an empty vector if the car isn't AI-controlled.
 	const std::vector<float> & GetInputs(const CarDynamics * car) const;

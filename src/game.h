@@ -314,7 +314,7 @@ private:
 
 	std::pair <CarDynamics *, CarControlMap> carcontrols_local;
 	std::map <const CarDynamics *, int> cartimerids;
-	std::vector <CarDynamics> car_dynamics;
+	btAlignedObjectArray <CarDynamics> car_dynamics;
 	std::vector <CarGraphics> car_graphics;
 	std::vector <CarSound> car_sounds;
 	std::vector <CarInfo> car_info;

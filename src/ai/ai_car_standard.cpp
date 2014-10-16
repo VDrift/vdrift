@@ -103,9 +103,9 @@ float AiCarStandard::RateLimit(float old_value, float new_value, float rate_limi
 		return new_value;
 }
 
-void AiCarStandard::Update(float dt, const std::vector<CarDynamics> & checkcars)
+void AiCarStandard::Update(float dt, const CarDynamics cars[], const int cars_num)
 {
-	AnalyzeOthers(dt, checkcars);
+	AnalyzeOthers(dt, cars, cars_num);
 	UpdateGasBrake();
 	UpdateSteer();
 }
@@ -639,14 +639,14 @@ float AiCarStandard::BrakeFromOthers(float speed_diff)
 	return bias;
 }
 
-void AiCarStandard::AnalyzeOthers(float dt, const std::vector<CarDynamics> & checkcars)
+void AiCarStandard::AnalyzeOthers(float dt, const CarDynamics cars[], const int cars_num)
 {
 	const float half_carlength = 1.25;
 	const btVector3 throttle_axis = Direction::forward;
 
-	for (std::vector<CarDynamics>::const_iterator i = checkcars.begin(); i != checkcars.end(); ++i)
+	for (int i = 0; i != cars_num; ++i)
 	{
-		const CarDynamics * icar = &*i;
+		const CarDynamics * icar = &cars[i];
 		if (icar != car)
 		{
 			OtherCarInfo & info = othercars[icar];

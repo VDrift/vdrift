@@ -37,7 +37,7 @@ public:
 
 	const std::vector<float> & GetInputs() const;
 
-	virtual void Update(float dt, const std::vector<CarDynamics> & checkcars) = 0;
+	virtual void Update(float dt, const CarDynamics cars[], const int cars_num) = 0;
 
 	/// This is optional for drawing debug stuff.
 	/// It will only be called, when VISUALIZE_AI_DEBUG macro is defined.
