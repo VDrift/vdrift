@@ -38,7 +38,7 @@ gen_definitions_h = function()
 	if _OPTIONS["binreloc"] == "yes" then
 		f:write("#define ENABLE_BINRELOC\n")
 	end
-	f:write("#define VERSION \"development-full\"\n")
+	f:write("#define VERSION \"development\"\n")
 	f:write("#define REVISION \"latest\"\n")
 	f:write("#endif // _DEFINITIONS_H\n")
 	f:close()
@@ -161,7 +161,7 @@ solution "VDrift"
 		defines {"HAVE_LIBC"} --SDL2
 		includedirs {"vdrift-win/include", "vdrift-win/bullet"}
 		libdirs {"vdrift-win/lib"}
-		links {"opengl32", "glu32", "glew32", "SDL2main", "SDL2", "SDL2_image", "vorbisfile", "iconv2", "intl", "curl", "archive-2", "wsock32", "ws2_32"}
+		links {"opengl32", "SDL2main", "SDL2", "SDL2_image", "vorbisfile", "iconv2", "intl", "curl", "wsock32", "ws2_32"}
 		files {"vdrift-win/bullet/**.h", "vdrift-win/bullet/**.cpp"}
 		postbuildcommands {"xcopy /d /y /f .\\vdrift-win\\lib\\*.dll .\\"}
 
