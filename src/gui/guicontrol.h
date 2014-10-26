@@ -61,10 +61,6 @@ public:
 	/// Signal to slots attached to events
 	virtual void Signal(Event ev);
 
-	const std::string & GetDescription() const;
-
-	void SetDescription(const std::string & value);
-
 	/// Set control rectangle
 	void SetRect(float xmin, float ymin, float xmax, float ymax);
 
@@ -77,7 +73,6 @@ public:
 protected:
 	float m_xmin, m_ymin, m_xmax, m_ymax;
 	float m_focusx, m_focusy;
-	std::string m_description;
 };
 
 #endif //_GUICONTROL_H

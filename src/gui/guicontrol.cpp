@@ -83,16 +83,6 @@ void GuiControl::Signal(Event ev)
 	m_signal[ev]();
 }
 
-const std::string & GuiControl::GetDescription() const
-{
-	return m_description;
-}
-
-void GuiControl::SetDescription(const std::string & value)
-{
-	m_description = value;
-}
-
 void GuiControl::SetRect(float xmin, float ymin, float xmax, float ymax)
 {
 	m_xmin = xmin;
