@@ -210,12 +210,11 @@ static void ConnectAction(
 		slot.call(valuestr);
 }
 
-template <class ActionMap, class Signal, class Stream>
+template <class ActionMap, class Signal>
 static void ConnectActions(
 	const std::string & actionstr,
 	const ActionMap & actionmap,
-	Signal & signal,
-	Stream & logerr)
+	Signal & signal)
 {
 	size_t len = actionstr.size();
 	size_t pos = 0;
@@ -235,8 +234,6 @@ static void ConnectActions(
 		typename ActionMap::const_iterator it = actionmap.find(action);
 		if (it != actionmap.end())
 			it->second->connect(signal);
-		else
-			logerr << "Action <" << action << "> from <" << actionstr << "> not available." << std::endl;
 	}
 }
 
@@ -674,12 +671,12 @@ bool GuiPage::Load(
 		for (size_t j = 0; j < GuiControl::EVENTNUM; ++j)
 		{
 			if (pagefile.get(controlit[i], GuiControl::signal_names[j], actionstr))
-				ConnectActions(actionstr, actionmap, controls[i]->m_signal[j], error_output);
+				ConnectActions(actionstr, actionmap, controls[i]->m_signal[j]);
 		}
 		for (size_t j = 0; j < GuiControl::EVENTVNUM; ++j)
 		{
 			if (pagefile.get(controlit[i], GuiControl::signal_names[GuiControl::EVENTNUM + j], actionstr))
-				ConnectActions(actionstr, vactionmap, controls[i]->m_signalv[j], error_output);
+				ConnectActions(actionstr, vactionmap, controls[i]->m_signalv[j]);
 		}
 	}
 	for (size_t i = 0; i < controlnit.size(); ++i)
@@ -688,7 +685,7 @@ bool GuiPage::Load(
 		for (size_t j = 0; j < GuiControl::EVENTNUM; ++j)
 		{
 			if (pagefile.get(controlnit[i], GuiControl::signal_names[j], actionstr))
-				ConnectActions(actionstr, nactionmap, controllists[i]->m_signaln[j], error_output);
+				ConnectActions(actionstr, nactionmap, controllists[i]->m_signaln[j]);
 		}
 	}
 
@@ -696,10 +693,10 @@ bool GuiPage::Load(
 	{
 		std::string actionstr;
 		if (pagefile.get("", "onfocus", actionstr))
-			ConnectActions(actionstr, actionmap, onfocus, error_output);
+			ConnectActions(actionstr, actionmap, onfocus);
 
 		if (pagefile.get("", "oncancel", actionstr))
-			ConnectActions(actionstr, actionmap, oncancel, error_output);
+			ConnectActions(actionstr, actionmap, oncancel);
 	}
 
 	// set active control
