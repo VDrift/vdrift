@@ -54,6 +54,21 @@ void GuiWidget::SetVisible(SceneNode & scene, bool value)
 	GetDrawable(scene).SetDrawEnable(m_visible & value);
 }
 
+bool GuiWidget::GetProperty(const std::string & name, Slot1<const std::string &> *& slot)
+{
+	if (name == "hue")
+		return (slot = &set_hue);
+	if (name == "sat")
+		return (slot = &set_sat);
+	if (name == "val")
+		return (slot = &set_val);
+	if (name == "opacity")
+		return (slot = &set_opacity);
+	if (name == "color")
+		return (slot = &set_color);
+	return NULL;
+}
+
 void GuiWidget::SetHSV(float h, float s, float v)
 {
 	m_h = h; m_s = s; m_v = v;

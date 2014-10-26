@@ -68,34 +68,16 @@ public:
 	/// Set control rectangle
 	void SetRect(float xmin, float ymin, float xmax, float ymax);
 
-	/// Register event actions
-	void RegisterActions(
-		const std::map<std::string, Slot1<const std::string &>*> & vactionmap,
-		const std::map<std::string, Slot0*> & actionmap,
-		const Config::const_iterator section,
-		const Config & cfg);
-
-	/// Register event actions to signal
-	static void SetActions(
-		const std::map<std::string, Slot0*> & actionmap,
-		const std::string & actionstr,
-		Signal0 & signal);
-
-	/// Register event value actions to signal (onselectx, onselecty)
-	static void SetActions(
-		const std::map<std::string, Slot1<const std::string &>*> & actionmap,
-		const std::string & actionstr,
-		Signal1<const std::string &> & signal);
-
 	/// available control signals
 	static const std::vector<std::string> signal_names;
+
+	Signal0 m_signal[EVENTNUM];
+	Signal1<const std::string &> m_signalv[EVENTVNUM];
 
 protected:
 	float m_xmin, m_ymin, m_xmax, m_ymax;
 	float m_focusx, m_focusy;
 	std::string m_description;
-	Signal0 m_signal[EVENTNUM];
-	Signal1<const std::string &> m_signalv[EVENTVNUM];
 };
 
 #endif //_GUICONTROL_H

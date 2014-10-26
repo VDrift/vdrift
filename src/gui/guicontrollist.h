@@ -37,18 +37,6 @@ public:
 	/// Signal slots attached to events
 	void Signal(Event ev);
 
-	/// Register event actions
-	void RegisterActions(
-		const std::map<std::string, Slot1<int>*> & actionmap,
-		const Config::const_iterator section,
-		const Config & cfg);
-
-	/// Register event actions to signal
-	static void SetActions(
-		const std::map<std::string, Slot1<int>*> & actionmap,
-		const std::string & actionstr,
-		Signal1<int> & signal);
-
 	/// List update slot, parameter holds list item count
 	Slot1<const std::string &> update_list;
 
@@ -59,8 +47,9 @@ public:
 	Slot0 scroll_fwd;
 	Slot0 scroll_rev;
 
-private:
 	Signal1<int> m_signaln[EVENTNUM];
+
+private:
 	int m_active_element;
 
 	void UpdateList(const std::string & value);

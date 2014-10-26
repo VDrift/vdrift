@@ -44,6 +44,8 @@ public:
 		const std::string & ext,
 		float x, float y, float w, float h, float z);
 
+	bool GetProperty(const std::string & name, Slot1<const std::string &> *& slot);
+
 	void SetImage(const std::string & value);
 
 	Slot1<const std::string &> set_image;

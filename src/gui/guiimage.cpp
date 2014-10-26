@@ -69,6 +69,13 @@ void GuiImage::SetupDrawable(
 	d.SetDrawOrder(z);
 }
 
+bool GuiImage::GetProperty(const std::string & name, Slot1<const std::string &> *& slot)
+{
+	if (name == "image")
+		return (slot = &set_image);
+	return GuiWidget::GetProperty(name, slot);
+}
+
 void GuiImage::SetImage(const std::string & value)
 {
 	if (m_name != value)

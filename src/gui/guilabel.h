@@ -41,6 +41,8 @@ public:
 		float centerx, float centery,
 		float w, float h, float z);
 
+	bool GetProperty(const std::string & name, Slot1<const std::string &> *& slot);
+
 	void SetText(const std::string & text);
 
 	const std::string & GetText() const;

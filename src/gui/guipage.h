@@ -134,10 +134,8 @@ private:
 		void call(int n);
 	};
 	std::vector<ControlCb> control_set;		// control focus callbacks
-	std::vector<SignalVal> widget_set;		// widget property callbacks
-	std::vector<SignalValn> widgetn_set;	// widget list property callbacks
 	std::vector<SignalVal> action_set;		// action value callbacks
-	Signal1<const std::string &> tooltip;	// tooltip text signal
+	std::vector<SignalValn> action_setn;	// action value nth callbacks
 	Signal0 onfocus, oncancel;				// page action signals
 
 	void Clear(SceneNode & parentnode);

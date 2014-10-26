@@ -81,35 +81,6 @@ void GuiControlList::Signal(Event ev)
 	}
 }
 
-void GuiControlList::RegisterActions(
-	const std::map<std::string, Slot1<int>*> & actionmap,
-	const Config::const_iterator section,
-	const Config & cfg)
-{
-	std::string actionstr;
-	for (size_t i = 0; i < EVENTNUM; ++i)
-	{
-		if (cfg.get(section, signal_names[i], actionstr))
-			SetActions(actionmap, actionstr, m_signaln[i]);
-	}
-}
-
-void GuiControlList::SetActions(
-	const std::map<std::string, Slot1<int>*> & actionmap,
-	const std::string & actionstr,
-	Signal1<int> & signal)
-{
-	std::istringstream st(actionstr);
-	while (st.good())
-	{
-		std::string action;
-		st >> action;
-		std::map<std::string, Slot1<int>*>::const_iterator it = actionmap.find(action);
-		if (it != actionmap.end())
-			it->second->connect(signal);
-	}
-}
-
 void GuiControlList::UpdateList(const std::string & value)
 {
 	std::istringstream s(value);

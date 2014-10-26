@@ -43,7 +43,9 @@ public:
 	/// override visibility
 	void SetVisible(SceneNode & scene, bool value);
 
-	/// element property setters
+	/// element properties
+	virtual bool GetProperty(const std::string & name, Slot2<int, const std::string &> *& slot);
+
 	void SetColor(int n, const std::string & value);
 	void SetOpacity(int n, const std::string & value);
 	void SetHue(int n, const std::string & value);
@@ -56,13 +58,12 @@ public:
 	/// update list, parameter holds list item count
 	void UpdateList(const std::string & vnum);
 
-	/// element property slots
-	Slot2<int, const std::string &> set_color;
-	Slot2<int, const std::string &> set_opacity;
-	Slot2<int, const std::string &> set_hue;
-	Slot2<int, const std::string &> set_sat;
-	Slot2<int, const std::string &> set_val;
-	Slot2<int, const std::string &> scroll_list;
+	Slot2<int, const std::string &> setn_color;
+	Slot2<int, const std::string &> setn_opacity;
+	Slot2<int, const std::string &> setn_hue;
+	Slot2<int, const std::string &> setn_sat;
+	Slot2<int, const std::string &> setn_val;
+	Slot2<int, const std::string &> scroll;
 	Slot1<const std::string &> update_list;
 
 	/// value list range access signal
@@ -81,11 +82,11 @@ protected:
 	virtual void UpdateElements(SceneNode & scene) = 0;
 
 	/// override widget property callbacks
-	void SetColor1(const std::string & value);
-	void SetOpacity1(const std::string & value);
-	void SetHue1(const std::string & value);
-	void SetSat1(const std::string & value);
-	void SetVal1(const std::string & value);
+	void SetColorAll(const std::string & value);
+	void SetOpacityAll(const std::string & value);
+	void SetHueAll(const std::string & value);
+	void SetSatAll(const std::string & value);
+	void SetValAll(const std::string & value);
 
 	/// ugh, dead weight
 	Drawable & GetDrawable(SceneNode & scene);

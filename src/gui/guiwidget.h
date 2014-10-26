@@ -46,6 +46,8 @@ public:
 	virtual Drawable & GetDrawable(SceneNode & scene) = 0;
 
 	/// properties
+	virtual bool GetProperty(const std::string & name, Slot1<const std::string &> *& slot);
+
 	void SetHSV(float h, float s, float v);
 	void SetRGB(float r, float g, float b);
 	void SetOpacity(float value);

@@ -63,6 +63,13 @@ void GuiLabel::SetupDrawable(
 	m_text_draw.Set(drawref, font, m_text, x, y, scalex, scaley, m_r, m_g, m_b);
 }
 
+bool GuiLabel::GetProperty(const std::string & name, Slot1<const std::string &> *& slot)
+{
+	if (name == "text")
+		return (slot = &set_value);
+	return GuiWidget::GetProperty(name, slot);
+}
+
 void GuiLabel::SetText(const std::string & text)
 {
 	assert(m_font);
