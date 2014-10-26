@@ -210,11 +210,12 @@ static void ConnectAction(
 		slot.call(valuestr);
 }
 
-template <class ActionMap, class Signal>
+template <class ActionMap, class Signal, class Stream>
 static void ConnectActions(
 	const std::string & actionstr,
 	const ActionMap & actionmap,
-	Signal & signal)
+	Signal & signal,
+	Stream & logerr)
 {
 	size_t len = actionstr.size();
 	size_t pos = 0;
@@ -227,13 +228,15 @@ static void ConnectActions(
 		size_t posn = actionstr.find(' ', pos);
 		size_t n = actionstr.find(':', pos);
 		if (n < posn && n + 1 < len && actionstr[n + 1] == '"')
-			posn = actionstr.find('"', n + 2);
+			posn = actionstr.find('"', n + 2) + 1;
 		std::string action = actionstr.substr(pos, posn - pos);
 		pos = posn;
 
 		typename ActionMap::const_iterator it = actionmap.find(action);
 		if (it != actionmap.end())
 			it->second->connect(signal);
+		else
+			logerr << "Action <" << action << "> from <" << actionstr << "> not available." << std::endl;
 	}
 }
 
@@ -283,8 +286,10 @@ bool GuiPage::Load(
 		return false;
 	}
 
-	if (!pagefile.get("", "name", name))
+	if (!pagefile.get("", "name", name, error_output))
 		return false;
+
+	//error_output << "Loading " << path << std::endl;
 
 	// load widgets and controls
 	active_control = 0;
@@ -531,7 +536,7 @@ bool GuiPage::Load(
 				}
 
 				if (n + 1 < len && actions[n + 1] == '"')
-					posn = actions.find('"', n + 2);
+					posn = actions.find('"', n + 2) + 1;
 
 				std::string action = actions.substr(pos, posn - pos);
 				std::string aname = actions.substr(pos, n - pos);
@@ -592,7 +597,7 @@ bool GuiPage::Load(
 				}
 
 				if (n + 1 < len && actions[n + 1] == '"')
-					posn = actions.find('"', n + 2);
+					posn = actions.find('"', n + 2) + 1;
 
 				std::string action = actions.substr(pos, posn - pos);
 				std::string aname = actions.substr(pos, n - pos);
@@ -635,11 +640,12 @@ bool GuiPage::Load(
 		action_set.push_back(SignalVal());
 		SignalVal & cb = action_set.back();
 
-		size_t n = i->first.find(':') + 1;
-		if (i->first[n] == '"')
-			cb.value = lang(i->first.substr(n + 1));
+		const std::string & value = i->first;
+		size_t n = value.find(':') + 1;
+		if (value[n] == '"')
+			cb.value = lang(value.substr(n + 1, value.size() - n - 2));
 		else
-			cb.value = i->first.substr(n);
+			cb.value = value.substr(n);
 		i->second->connect(cb.signal);
 
 		actionmap[i->first] = &cb.action;
@@ -650,11 +656,12 @@ bool GuiPage::Load(
 		action_setn.push_back(SignalValn());
 		SignalValn & cb = action_setn.back();
 
-		size_t n = i->first.find(':') + 1;
-		if (i->first[n] == '"')
-			cb.value = lang(i->first.substr(n + 1));
+		const std::string & value = i->first;
+		size_t n = value.find(':') + 1;
+		if (value[n] == '"')
+			cb.value = lang(value.substr(n + 1, value.size() - n - 2));
 		else
-			cb.value = i->first.substr(n);
+			cb.value = value.substr(n);
 		i->second->connect(cb.signal);
 
 		nactionmap[i->first] = &cb.action;
@@ -667,12 +674,12 @@ bool GuiPage::Load(
 		for (size_t j = 0; j < GuiControl::EVENTNUM; ++j)
 		{
 			if (pagefile.get(controlit[i], GuiControl::signal_names[j], actionstr))
-				ConnectActions(actionstr, actionmap, controls[i]->m_signal[j]);
+				ConnectActions(actionstr, actionmap, controls[i]->m_signal[j], error_output);
 		}
 		for (size_t j = 0; j < GuiControl::EVENTVNUM; ++j)
 		{
 			if (pagefile.get(controlit[i], GuiControl::signal_names[GuiControl::EVENTNUM + j], actionstr))
-				ConnectActions(actionstr, vactionmap, controls[i]->m_signalv[j]);
+				ConnectActions(actionstr, vactionmap, controls[i]->m_signalv[j], error_output);
 		}
 	}
 	for (size_t i = 0; i < controlnit.size(); ++i)
@@ -681,7 +688,7 @@ bool GuiPage::Load(
 		for (size_t j = 0; j < GuiControl::EVENTNUM; ++j)
 		{
 			if (pagefile.get(controlnit[i], GuiControl::signal_names[j], actionstr))
-				ConnectActions(actionstr, nactionmap, controllists[i]->m_signaln[j]);
+				ConnectActions(actionstr, nactionmap, controllists[i]->m_signaln[j], error_output);
 		}
 	}
 
@@ -689,10 +696,10 @@ bool GuiPage::Load(
 	{
 		std::string actionstr;
 		if (pagefile.get("", "onfocus", actionstr))
-			ConnectActions(actionstr, actionmap, onfocus);
+			ConnectActions(actionstr, actionmap, onfocus, error_output);
 
 		if (pagefile.get("", "oncancel", actionstr))
-			ConnectActions(actionstr, actionmap, oncancel);
+			ConnectActions(actionstr, actionmap, oncancel, error_output);
 	}
 
 	// set active control
