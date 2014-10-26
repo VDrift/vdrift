@@ -493,10 +493,6 @@ bool GuiPage::Load(
 			controlit.push_back(section);
 			controls.push_back(control);
 
-			std::string desc;
-			if (pagefile.get(section, "tip", desc))
-				control->SetDescription(lang(desc));
-
 			if (focus)
 				active_control = control;
 		}
@@ -640,9 +636,10 @@ bool GuiPage::Load(
 		SignalVal & cb = action_set.back();
 
 		size_t n = i->first.find(':') + 1;
-		if (i->first[n] == '"') n++;
-
-		cb.value = i->first.substr(n);
+		if (i->first[n] == '"')
+			cb.value = lang(i->first.substr(n + 1));
+		else
+			cb.value = i->first.substr(n);
 		i->second->connect(cb.signal);
 
 		actionmap[i->first] = &cb.action;
@@ -654,9 +651,10 @@ bool GuiPage::Load(
 		SignalValn & cb = action_setn.back();
 
 		size_t n = i->first.find(':') + 1;
-		if (i->first[n] == '"') n++;
-
-		cb.value = i->first.substr(n);
+		if (i->first[n] == '"')
+			cb.value = lang(i->first.substr(n + 1));
+		else
+			cb.value = i->first.substr(n);
 		i->second->connect(cb.signal);
 
 		nactionmap[i->first] = &cb.action;
