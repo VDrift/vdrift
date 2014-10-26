@@ -66,7 +66,7 @@ bool GuiWidget::GetProperty(const std::string & name, Slot1<const std::string &>
 		return (slot = &set_opacity);
 	if (name == "color")
 		return (slot = &set_color);
-	return NULL;
+	return (slot = NULL);
 }
 
 void GuiWidget::SetHSV(float h, float s, float v)

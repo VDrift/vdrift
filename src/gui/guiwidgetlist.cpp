@@ -91,7 +91,7 @@ bool GuiWidgetList::GetProperty(const std::string & name, Slot2<int, const std::
 		return (slot = &setn_color);
 	if (name == "scroll")
 		return (slot = &scroll);
-	return NULL;
+	return (slot = NULL);
 }
 
 void GuiWidgetList::SetColor(int n, const std::string & value)
