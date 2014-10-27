@@ -56,7 +56,7 @@ public:
 		const float screenhwratio,
 		const GuiLanguage & lang,
 		const Font & font,
-		StrSignalMap vsignalmap,
+		const StrSignalMap & vsignalmap,
 		const StrVecSlotlMap & vnactionmap,
 		const StrSlotMap & vactionmap,
 		IntSlotMap nactionmap,
