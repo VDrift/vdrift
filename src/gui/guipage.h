@@ -38,7 +38,7 @@ class ContentManager;
 class PathManager;
 
 typedef std::map<std::string, Signal1<const std::string &>*> StrSignalMap;
-typedef std::map<std::string, Slot2<int, std::vector<std::string> &>*> StrVecSlotlMap;
+typedef std::map<std::string, Slot2<int, std::vector<std::string> &>*> StrVecSlotMap;
 typedef std::map<std::string, Slot1<const std::string &>*> StrSlotMap;
 typedef std::map<std::string, Slot1<int>*> IntSlotMap;
 typedef std::map<std::string, Slot0*> SlotMap;
@@ -57,7 +57,7 @@ public:
 		const GuiLanguage & lang,
 		const Font & font,
 		const StrSignalMap & vsignalmap,
-		const StrVecSlotlMap & vnactionmap,
+		const StrVecSlotMap & vnactionmap,
 		const StrSlotMap & vactionmap,
 		IntSlotMap nactionmap,
 		SlotMap actionmap,

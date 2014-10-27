@@ -144,7 +144,7 @@ private:
 	/// add option slots to action map
 	void RegisterOptions(
 		StrSignalMap & vsignalmap,
-		StrVecSlotlMap & vnactionmap,
+		StrVecSlotMap & vnactionmap,
 		StrSlotMap & vactionmap,
 		IntSlotMap & nactionmap,
 		SlotMap & actionmap);

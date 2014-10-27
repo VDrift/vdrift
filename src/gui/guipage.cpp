@@ -263,7 +263,7 @@ bool GuiPage::Load(
 	const GuiLanguage & lang,
 	const Font & font,
 	const StrSignalMap & vsignalmap,
-	const StrVecSlotlMap & vnactionmap,
+	const StrVecSlotMap & vnactionmap,
 	const StrSlotMap & vactionmap,
 	IntSlotMap nactionmap,
 	SlotMap actionmap,
@@ -327,7 +327,7 @@ bool GuiPage::Load(
 			if (LoadList(pagefile, section, x0, y0, x1, y1, hwratio, widget_list))
 			{
 				// connect with the value list
-				StrVecSlotlMap::const_iterator vni = vnactionmap.find(value);
+				StrVecSlotMap::const_iterator vni = vnactionmap.find(value);
 				if (vni != vnactionmap.end())
 				{
 					StrSignalMap::const_iterator vsi = vsignalmap.find(value + ".update");
@@ -380,7 +380,7 @@ bool GuiPage::Load(
 				widget_list->SetupDrawable(sref, content, path, ext, r.z);
 
 				// connect with the value list
-				StrVecSlotlMap::const_iterator vni = vnactionmap.find(value);
+				StrVecSlotMap::const_iterator vni = vnactionmap.find(value);
 				if (vni != vnactionmap.end())
 				{
 					StrSignalMap::const_iterator vsi = vsignalmap.find(value + ".update");

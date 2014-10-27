@@ -255,7 +255,7 @@ bool Gui::Load(
 
 	// register options
 	StrSignalMap vsignalmap;
-	StrVecSlotlMap vnactionmap;
+	StrVecSlotMap vnactionmap;
 	IntSlotMap nactionmap;
 	StrSlotMap vactionmap;
 	RegisterOptions(vsignalmap, vnactionmap, vactionmap, nactionmap, actionmap);
@@ -486,7 +486,7 @@ void Gui::ActivatePrevPage()
 
 void Gui::RegisterOptions(
 	StrSignalMap & vsignalmap,
-	StrVecSlotlMap & vnactionmap,
+	StrVecSlotMap & vnactionmap,
 	StrSlotMap & vactionmap,
 	IntSlotMap & nactionmap,
 	SlotMap & actionmap)
